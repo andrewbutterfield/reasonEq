@@ -1,6 +1,10 @@
+{-# LANGUAGE PatternSynonyms #-}
 module Proto
     ( someProto
-    ) where
+    , pattern F
+    , Test(K,V,L)
+    , dbl )
+where
 
 type Embed = Double
 
@@ -38,8 +42,10 @@ data Test
  | L String Test
  deriving (Eq,Ord,Show,Read)
 
+pattern F s t = A (V s) t
 
-
+dbl (F "2" tst) = A tst tst
+dbl tst = tst
 
 lshow = unlines . lshow'
 

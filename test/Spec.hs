@@ -1,2 +1,7 @@
+module Main where
+import Proto
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = do putStrLn ""
+          someProto
+          putStrLn " == someProto"

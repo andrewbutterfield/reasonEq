@@ -1,0 +1,462 @@
+
+%
+% (c) Andrew Butterfield, 2010--11
+%
+
+\def\UTP2{\ensuremath{U\!\!\cdot\!(TP)^2}}
+
+%
+% >>> incorporating zed-csp  <<<
+%
+% (c) Jim Davies, January 1995
+
+% You may copy and distribute this file freely.  Any queries and
+% complaints should be forwarded to Jim.Davies@comlab.ox.ac.uk.
+
+% If you make any changes to this file, please do not distribute
+% the results under the name `zed-csp.sty'.
+
+% Lots of Z/CSP specific stuff removed
+
+\def\bbold#1{\mathbb{#1}}
+
+\def \bind      {\mathrel{\leadsto}}
+\def \bindsto   {\mathrel{\leadsto}}
+
+\def \lblot     {{\langle}\mkern -3.5mu{|}}
+\def \rblot     {{|}\mkern -3.5mu{\rangle}}
+
+\let\lbind=\lblot
+\let\rbind=\rblot
+
+\def \defs      {\mathrel{~\widehat{=\!\!\!\!=}}~}
+\def \power     {\strut@op{\bbold P}}
+\let \cross     \times
+\def \lambda    {\strut@op{\xlambda}}
+\def \mu        {\strut@op{\xmu}}
+\def\ldbrack{{[}\mkern-2mu{[}}
+\def\rdbrack{{]}\mkern-2mu{]}}
+\let \lbag      \ldbrack
+\let \rbag      \rdbrack
+\def \lnot      {\neg\;}
+\def \land      {\mathrel{\wedge}}
+\def \lor       {\mathrel{\vee}}
+\let \implies   \Rightarrow
+\let \iff       \Leftrightarrow
+\def \forall    {\strut@op{\xforall}}
+\def \exists    {\strut@op{\xexists}}
+\def \hide      {\mathrel{\backslash}}
+\DeclareMathSymbol{\project}{\mathrel}{AMSa}{"16}
+\def \pre       {{\mathrm{pre}}\;}
+\def \semi      {\mathrel{\comp}}
+\def \ldata     {\langle\!\langle}
+\def \rdata     {\rangle\!\rangle}
+\let \shows     \vdash
+\def \pipe      {\mathord>\!\!\mathord>}
+\def \LET       {{\mathbf{let}}\;}
+\def \IF        {{\mathbf{if}}\;}
+\def \THEN      {\mathrel{\mathbf{then}}}
+\def \ELSEIF    {\mathrel{\mathbf{elseif}}}
+\def \ELSE      {\mathrel{\mathbf{else}}}
+
+\let \rel       \leftrightarrow
+\def \dom       {\mathop{\mathrm{dom}}}
+\def \ran       {\mathop{\mathrm{ran}}}
+\def \id        {\mathop{\mathrm{id}}}
+
+\def\comp{\mathbin{\raise 0.6ex\hbox{\small\oalign{\hfil%
+          $\scriptscriptstyle\mathrm{o}$\hfil%
+          \cr\hfil$\scriptscriptstyle\mathrm{9}$\hfil}}}}
+\DeclareMathSymbol{\dres}{\mathbin}{AMSa}{"43}
+\DeclareMathSymbol{\rres}{\mathbin}{AMSa}{"42}
+\def \ndres     {\mathbin{\rlap{\raise.05ex\hbox{$-$}}{\dres}}}
+\def \nrres     {\mathbin{\rlap{\raise.05ex\hbox{$-$}}{\rres}}}
+\def \inv       {^\sim}
+\def \limg      {(\!|}
+\def \rimg      {|\!)}
+
+\def\@p#1{\mathrel{\ooalign{\hfil$\mapstochar\mkern
+      5mu$\hfil\cr$#1$}}}
+\def \pfun      {\@p\fun}
+\let \fun       \rightarrow
+\let \inj       \rightarrowtail
+\def \pinj {\@p\inj}
+\def \surj {\mathrel{\ooalign{$\fun$\hfil\cr$\mkern4mu\fun$}}}
+\def \bij  {\mathrel{\ooalign{$\inj$\hfil\cr$\mkern5mu\fun$}}}
+\def \psurj     {\@p\surj}
+\def \pbij      {\@p\bij}
+\def \nat       {{\bbold N}}
+\def \num       {{\bbold Z}}
+\def \div       {\mathbin{\mathsf{div}}}
+\def \mod       {\mathbin{\mathsf{mod}}}
+\def \upto      {\mathbin{\ldotp\ldotp}}
+\def \plus      {^+}
+\def \star      {^*}
+\def \finset    {\strut@op{{\bbold F}}}
+\def\@f#1{\mathrel{\ooalign{\hfil$\mapstochar\mkern 3mu
+      \mapstochar\mkern 5mu$\hfil\cr$#1$}}}
+\def \ffun      {\@f\fun}
+\def \finj      {\@f\inj}
+\def \seq       {\mathop{\mathrm{seq}}}
+\def \iseq      {\mathop{\mathrm{iseq}}}
+\def \cat       {\mathbin{\raise 0.8ex\hbox{$\smallfrown$}}}
+\def \filter    {\mathbin{\project}}
+\def \dcat      {\mathop{\cat/}}
+\def \bag       {\mathop{\mathrm{bag}}}
+\def \bcount    {\mathbin{\sharp}}
+\def \inbag     {\mathrel{\mathrm{in}}}
+\let \subbageq  \sqsubseteq
+\def \disjoint  {{\mathsf{disjoint}}\;}
+\def \partition {\mathrel{\mathsf{partition}}}
+\def \prefix    {\mathrel{\mathsf{prefix}}}
+\def \suffix    {\mathrel{\mathsf{suffix}}}
+\def \inseq     {\mathrel{\mathsf{in}}}
+\def \extract   {\mathrel{\upharpoonleft}}
+
+\def \uminus@sym{\setbox0=\hbox{$\cup$}\rlap{\hbox
+    to\wd0{\hss\raise0.3ex\hbox{$\scriptscriptstyle{-}$}\hss}}\box0}
+\def \uminus    {\mathrel{\uminus@sym}}
+
+
+
+%
+%
+%   (c) Andrew Butterfield   - local UTP/Circus stuff
+%
+%
+\def\Circus{\textsf{\textit{Circus}}}
+\def\CHECK#1{\textsc{\textbf{Check: }#1}}
+%
+% generic mathematics
+\def\nequiv{\not\equiv}
+\def\setof#1{\{#1\}}
+\def\seqof#1{\langle #1\rangle}
+\def\mapof#1{\setof{#1}}
+\def\to{\!\mapsto\!}
+\def\maplet#1#2{\mapof{{#1}\to{#2}}}
+\def\cond#1{\mathbin{\lhd{#1}\rhd}}
+\def\sem#1{[\![#1]\!]}
+
+\def\fn#1{\mathop{\textsl{\textsf{#1}}}}
+\def\stdfn#1{\mathop{\mathsf{#1}}}
+
+\def\id{\stdfn{id}}
+\def\elems{\stdfn{elems}}
+\def\dom{\stdfn{dom}}
+\def\rng{\stdfn{rng}}
+\def\len{\stdfn{len}}
+\def\then{\rightarrow}
+\def\Bool{{\bbold B}}
+\def\Int{{\bbold Z}}
+\def\Nat{{\bbold N}}
+\def\otherwise{\mathrm{otherwise}}
+\def\qed{~{\blacksquare}}
+\def\lcons{\mathbin{\raise 0.6ex\hbox{\small\oalign{\hfil%
+          $\scriptscriptstyle\mathrm{o}$\hfil%
+          \cr\hfil$\scriptscriptstyle\mathrm{o}$\hfil}}}}
+\def\implies{\Rightarrow}
+\def\impliedby{\Leftarrow}
+\def\amp{\&}
+\def\tvarname#1{#1}
+\def\reducep#1{\mathop{{}^{#1}\!/}}
+
+
+\def\vec#1{\overrightarrow{#1}}
+\def\quant{\mathcal{Q}}
+\def\qsep{\mathbin{;\!\!}}
+\def\std#1{{#1}_{\circ}}
+\def\lst#1{{#1}{\scriptstyle\$}}
+\def\lstvec#1{\vec{\lst{#1}}}
+\def\lit#1{\mbox{`\texttt{#1}'}}
+\def\litm#1{\mbox{`$\mathtt{#1}$'}}
+\def\DISJ{\mathrel{\not\!\cap~}}
+\def\isCond{\mathop{\mathtt{c.\!}}}
+\def\isFresh{\mathop{!\!}}
+\def\impliedBy{\mathrel{\Leftarrow}}
+\def\arbitrarytype{T}
+\def\arbitarytype{T}
+\def\BS{\char`\\}
+\def\TLD{\raise.17ex\hbox{$\scriptstyle\mathbb{\mathtt{\sim}}$}}
+
+\def\less#1{{}\!\setminus\!{}_{#1}}
+
+\def\override{\mathbin{\dagger}}
+\def\extend{\mathbin{\sqcup}}
+
+\def\wefind{\mathrel{~\vdash~}}
+\def\matches{\mathrel{\doteqdot}}
+\def\smatches{\matches_!}
+\def\withbind{\mathrel{~|~}}
+\def\deferred{\Vvdash}
+\def\MATCH#1#2#3#4{{#1}\wefind{#2}\matches{#3}\withbind{#4}}
+\def\existsMu{{\scriptscriptstyle\exists\!\mu\!\bullet\!}}
+\def\disjRSV{\mathrel{\existsMu\!\not{\!\cap}}}
+\def\notObsInRSV{\mathrel{\existsMu\!\notin}}
+
+\def\ProofName#1{\textbf{#1}}
+
+% generic proof
+\def\coz#1{\mbox{``#1''}}
+\def\EQV#1{\\&\equiv&\coz{#1}}
+\def\IMP#1{\\&\implies&\coz{#1}}
+\def\PMI#1{\\&\impliedby&\coz{#1}}
+
+\def\qed{\\\Box}
+
+\def\bool{B}
+\def\cross{\times}
+\def\fun{\rightarrow}
+\def\pfun{\rightsquigarrow}
+\def\names{::}
+\def\Chr{\mathbb{U}}
+
+
+\newenvironment{theoryid}%
+  {\begin{center}}%
+  {\end{center}}
+\def\theoryNameVersion#1#2{\large Theory: \textbf{{#1}\${#2}}}
+
+
+\newenvironment{typedefs}{\begin{eqnarray*}}{\end{eqnarray*}}
+\newenvironment{consts}{\begin{eqnarray*}}{\end{eqnarray*}}
+\newenvironment{exprs}{\begin{eqnarray*}}{\end{eqnarray*}}
+\newenvironment{preds}{\begin{eqnarray*}}{\end{eqnarray*}}
+\newenvironment{obs}{\begin{eqnarray*}}{\end{eqnarray*}}
+\newenvironment{precs}{\begin{eqnarray*}}{\end{eqnarray*}}
+\newenvironment{types}{\begin{eqnarray*}}{\end{eqnarray*}}
+\newenvironment{alphas}{\begin{eqnarray*}}{\end{eqnarray*}}
+\newenvironment{laws}{\begin{eqnarray*}}{\end{eqnarray*}}
+\newenvironment{conjectures}{\begin{eqnarray*}}{\end{eqnarray*}}
+\newenvironment{theorems}{\begin{eqnarray*}}{\end{eqnarray*}}
+
+\newenvironment{ppproof}{\begin{eqnarray*}}{\end{eqnarray*}}
+
+% from amsmath FAQ:
+\newcommand{\boxedm}[1]{%
+    \fbox{%
+        \addtolength{\linewidth}{-2\fboxsep}%
+        \addtolength{\linewidth}{-2\fboxrule}%
+        \begin{minipage}{\linewidth}%
+        {#1}%
+        \end{minipage}%
+      }%
+  }
+
+% Builtin Specific
+\def\integer{\mathbb{Z}}
+
+%% UTP specific
+%\def\HH#1#2{\ensuremath{\mathbf{{#1}{#2}}}}
+%\def\H{\HH{H}{}}
+%\def\RR#1{\HH{R}{#1}}
+%\def\CSP#1{\HH{CSP}{#1}}
+%\def\Skip{\mathit{II}}
+%\def\FALSE{\mathbf{false}}
+%\def\TRUE{\mathbf{true}}
+%\def\refines{\sqsupseteq}
+%\def\refinedby{\sqsubseteq}
+%\def\seqcomp{\mathop{;}}
+
+% UTP specific
+\def\HH#1#2{\ensuremath{\mathbf{{#1}{#2}}}}
+\def\mkHH#1#2{\ensuremath{\mathbf{{mk#1}{#2}}}}
+\def\isHH#1#2{\ensuremath{\mathbf{{is#1}{#2}}}}
+
+\def\H{\HH{H}{}}
+\def\isH{\isHH{H}{}}
+\def\mkH{\mkHH{H}{}}
+\def\DD{\HH{D}{}}
+\def\RR#1{\HH{R}{#1}}
+\def\CSP#1{\HH{CSP}{#1}}
+
+\def\Skip{\mathit{II}}
+\def\FALSE{\mathbf{false}}
+\def\TRUE{\mathbf{true}}
+\def\False{\textsc{False}}
+\def\True{\textsc{True}}
+\def\refines{\sqsupseteq}
+\def\refinedby{\sqsubseteq}
+\def\design{\vdash}
+
+\def\seqcomp{\mathrel{;}}
+
+
+% Logic specific
+\def\F{{\small\textsc{False}}}
+%\def\pseudo#1{{}_p\!{#1}}
+\def\pseudo#1{\tilde{#1}}
+\def\infer{\vdash}
+\def\INFER#1#2{\mprset{fraction={-{\smash -}-}}\inferrule{#1}{#2}}
+\def\AXIOM#1{\mprset{fraction={-{\smash -}-}}\inferrule{~}{#1}}
+\def\BINFER#1#2{\mprset{fraction={===}} \inferrule{#1}{#2}}
+\def\LNAME#1{\small{\textsc{$\llcorner$#1$\urcorner$}}}
+\def\INTRO#1{\LNAME{{#1}--I}}
+\def\ELIM#1{\LNAME{{#1}--E}}
+\def\INFERN#1#2#3{\INFER{#1}{#2}\;#3}
+\def\RRULES#1{
+  $$\begin{array}{c@{\quad}l}
+    #1
+  \end{array}$$
+}
+\def\quant{\mathcal{Q}}
+
+
+% FM Specific
+\def\PFX#1{\mathrm{#1}\mbox{-}}
+\def\Inv#1{\PFX{inv}{#1}}
+\def\Pre#1{\PFX{pre}{#1}}
+\def\Post#1{\PFX{post}{#1}}
+
+%%% SAOITIHN new stuff
+\def\environmenttype{Env}
+\def\power{\mathcal{P}}
+\def\seq{\textsf{seq-}\!}
+\def\seqp{\textsf{seq1-}\!}
+\def\elambda{\lambda}
+\def\plambda{\Lambda}
+\def\propname#1{\textsf{#1}}
+\def\arbitrarytype{T}
+
+\def\rby{\!\triangleright\!}
+\def\Mcong{\doteq}
+\def\Mmerge{\uplus}
+\def\Mresolve{\Re}
+\def\Mmatchable{\curlyvee}
+
+
+% Logic Background
+
+\def\mkelabel#1{\textsf{[~#1~]}}
+\def\elabel#1{\mkelabel{#1}\label{#1}}
+\def\ecite#1{\mkelabel{#1}}
+\def\eref#1{\mkelabel{#1}\pageref{#1}}
+
+\def\RLEQNS#1{
+  {$$\begin{array}{lcl@{\quad}l}
+    #1
+  \end{array}$$}
+}
+
+\def\MRULES#1{
+  {\[\begin{array}{r@{~~\wefind\quad}r@{~\matches~}l@{\quad\withbind\quad}l}
+    #1
+  \end{array}\]}
+}
+
+% meta-Logic
+\def\AND{\mathrel{\textbf{and}}}
+\def\OR{\mathrel{\textbf{or}}}
+\def\IMPLIES{\mathrel{\textbf{implies}}}
+\def\FORALL{\mathrel{\textbf{for-all}}}
+\def\WEHAVE{\mathrel{\textbf{we-have}}}
+\def\EXISTS{\mathrel{\textbf{there-exists}}}
+\def\SUCHTHAT{\mathrel{\textbf{such-that}}}
+\def\IFF{\mathrel{\textbf{iff}}}
+
+\def\LET{\mathrel{\textbf{let}}}
+\def\IN{\mathrel{\textbf{in}}}
+\def\WHERE{\mathrel{\textbf{where}}}
+\def\DO{\mathrel{\textbf{do}}}
+
+\def\synf#1{\ensuremath{\mathsf{#1}}}
+\def\fv{\synf{fv}}
+\def\bv{\synf{bv}}
+\def\fpre{\synf{fpre}}
+\def\opre{\synf{opre}}
+\def\nocapture{\synf{nocapture}}
+\def\nf{\synf{nf}}
+
+\def\semf#1{\ensuremath{\mathrm{#1}}}
+\def\ctype{\semf{ctype}}
+\def\isbasic{\semf{isbasic}}
+\def\ispartial{\semf{ispartial}}
+\def\val{\semf{val}}
+\def\tval{\semf{tval}}
+\def\pval{\semf{pval}}
+
+\def\alfeqvsym{\stackrel\alpha\sim}
+\def\alfeqv{\mathbin{~\alfeqvsym~}}
+\def\balfeqv#1#2{\mathbin{~{}_{#1}\!\!\alfeqvsym_{#2}~}}
+
+\def\defined{\downarrow}
+\def\Defd{\mathcal D}
+\def\carrier#1{\mathbin{|\!\!#1\!|}}
+\def\valsat{\mathrel{\vdash\!\!\!\vdash}}
+
+\def\sthen{\Rrightarrow}
+\def\ssthen{\Rrightarrow\mkern-14mu\Rrightarrow}
+
+\def\vdepends{\stackrel{v}\hookleftarrow}
+\def\vdetermines{\stackrel{v}\hookrightarrow}
+\def\ndepends{\stackrel{n}\hookleftarrow}
+\def\ndetermines{\stackrel{n}\hookrightarrow}
+
+% =========================== Standard Infix Symbols =================================
+%
+% At LaTeX level, we need to disambiguate overloaded symbols, such as \le used for
+% numbers, sequences, etc...
+%
+
+% Sequences
+
+\def\sle{\leq}
+\def\slt{<}
+\def\sge{\geq}
+\def\sgt{>}
+\def\cat{\frown}
+\def\ssub{-}
+
+
+%
+% Gries/Dijkstra Proof Style suitable for  eqnarray* environments
+%
+\def\coz#1{\quad\textrm{`` #1 ''}}
+\def\mcoz#1{\coz{\ensuremath{#1}}}
+\def\overleaf{\\&& \mbox{see overleaf\ldots}}
+\def\COZ#1{\\&&\coz{#1}}
+\def\EQ#1{\\&=&\coz{#1}}
+\def\NEQ#1{\\&\neq&\coz{#1}}
+\def\IMP#1{\\&\implies&\coz{#1}}
+\def\PMI#1{\\&\impliedby&\coz{#1}}
+\def\REF#1{\\&\refines&\coz{#1}}
+\def\EQV#1{\\&\equiv&\coz{#1}}
+\def\EQm#1{\\&=&\mcoz{#1}}
+\def\IMPm#1{\\&\implies&\mcoz{#1}}
+\def\PMIm#1{\\&\impliedby&\mcoz{#1}}
+\def\REFm#1{\\&\refines&\mcoz{#1}}
+\def\EQVm#1{\\&\equiv&\mcoz{#1}}
+%
+\def\EQDEFN#1{\EQ{defn. \ensuremath{#1}}}
+\def\EQVDEFN#1{\EQV{defn. \ensuremath{#1}}}
+\def\EQCASE#1{\EQ{Case Split: \ensuremath{#1}}}
+\def\EQVCASE#1{\EQV{Case Split: \ensuremath{#1}}}
+\def\EQBETA{\EQ{$\beta$-reduction}}
+\def\EQETA{\EQ{$\eta$-reduction}}
+\def\EQSETTH{\EQ{set theory}}
+\def\EQVSETTH{\EQV{set theory}}
+\def\PROPC{\EQV{prop. calc.}}
+\def\REFL{\EQV{refl.}}
+%\def\TRUE{\\&& \True}
+\def\tRUE{\\&& true}
+\def\ALERT#1{\\&!!&\coz{#1}}
+%
+\def\infer{\vdash}
+% \def\INFER#1#2{\frac{\textstyle {#1}}{\textstyle {#2}}}
+\def\Infer#1#2{\frac{\scriptstyle {#1}}{\scriptstyle {#2}}}
+\def\IRULE#1{\ensuremath{\textstyle[\texttt{#1}]}}
+\def\Irule#1{\ensuremath{\scriptstyle[\texttt{#1}]}}
+%
+\def\eqnname#1{[\textsf{#1}]}
+\def\elabel#1{\eqnname{#1}\label{#1}}
+\def\eref#1{\eqnname{#1}:p\pageref{#1}}
+\def\ecite#1{\eqnname{#1}}
+\def\prfref#1#2{\ecite{#1}:p\pageref{#2}}
+
+%
+% saoithin-latex.sty
+%
+%\def\theoryid#1#2{\textsc{Theory: }\textit{#1(#2)}}
+
+\def\propname#1{[\textsf{#1}]}
+\def\utype{\mathrel{:\!\!{\scriptstyle{\Bool}}\!\!:}}
+\def\wild{\spadesuit}

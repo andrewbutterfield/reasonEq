@@ -1,10 +1,36 @@
-\section{Data Types}
+\section{Abstract Syntax}
+
+\subsection{AST Introduction}
+
+We want to implement a collection of terms that include
+expressions and predicates defined over a range of variables
+that can stand for behaviour observations, terms and program variables.
+We distinguish between observations of the program variable values,
+and the variable itself.
+This latter facility is only required, in the ``book'', for operational semantics.
+We also want to support the notion of list-variables that denote lists of variables.
+
+We consider a term as having the following forms:
+\begin{description}
+  \item [K] A constant value of an appropriate type.
+  \item [V] A variable.
+  \item [C] A constructor that builds a term out of zero or more sub-terms.
+  \item [B] A binding construct that introduces local variables.
+  \item [S] A term with an explicit substitution of terms for variables.
+  \item [I] An iteration of a term over a sequence of list-variables.
+\end{description}
+Here we don't distinguish variables and list-variables:
+\begin{eqnarray}
+   k &\in& Value
+\\ n &\in& Name
+\\ v &\in& Var = \dots
+\\ t \in T  &::=&  K~k | V~n | C~n~t^* | B~n~v^+~t | S~t~(v,t)^+ | I~n~n~v^+
+\end{eqnarray}
 
 \begin{code}
 module AST where
 \end{code}
 
-\newpage
 \subsection{Variables}
 
 A variable has a \emph{name}.

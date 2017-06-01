@@ -10,6 +10,10 @@ module AST ( Name
            , pattern ObsVar, pattern ExprVar, pattern PredVar
            , pattern PreVar, pattern MidVar, pattern PostVar
            , pattern PreCond, pattern PostCond
+           , ListVar
+           , pattern ObsLVar, pattern ExprLVar, pattern PredLVar
+           , pattern PreVars, pattern PostVars, pattern MidVars
+           , pattern PreExprs
            ) where
 import Data.Char
 \end{code}
@@ -155,29 +159,49 @@ pattern PreCond  i    = VP RB i
 pattern PostCond i    = VP RA i
 \end{code}
 
+\subsubsection{List Variables}
+
 
 We also need to introduce the idea of lists of variables,
 for use in binding constructs,
 which may themselves contain special variables
 that denote lists of variables.
-We start by defining a list-variable as a variable with the addition
-of a list of names, corresponding to variable `roots'
-\begin{verbatim}
-type ListVar
- = ( Variable -- variable denoting a list of variables
-   , [Name]   -- list of roots to be ignored)
-   )
-\end{verbatim}
+We only require this facility for dynamic variables.
+We define a list-variable as a specially marked variable with the addition
+of a list of identifiers, corresponding to variable `roots'
+
+\begin{code}
+data ListVar
+ = LO VarRole Identifier [Identifier]
+ | LE VarRole Identifier [Identifier]
+ | LP VarRole Identifier [Identifier]
+ deriving (Eq, Ord, Show, Read)
+
+pattern ObsLVar  r i rs = LO r i rs
+pattern ExprLVar r i rs = LE r i rs
+pattern PredLVar r i rs = LP r i rs
+\end{code}
+
+Pre-wrapped patterns:
+\begin{code}
+pattern PreVars  i    =  LO RB i []
+pattern PostVars i    =  LO RA i []
+pattern MidVars  i n  =  LO (RD n) i []
+pattern PreExprs i    =  LE RB i []
+\end{code}
+
+\subsubsection{Variable Lists}
+
 A variable-list is composed in general of a mix of normal variables
 and list-variables.
 We gather these into a `general' variable type
-\begin{verbatim}
+\begin{code}
 data GenVar
- = V Variable -- regular variable
- | L ListVar  -- variable denoting a list of variables
- deriving (Eq, Ord, Show)
+ = GV Variable -- regular variable
+ | GL ListVar  -- variable denoting a list of variables
+ deriving (Eq, Ord, Show, Read)
 type VarList = [GenVar]
-\end{verbatim}
+\end{code}
 
 \newpage
 \subsection{Substitutions}

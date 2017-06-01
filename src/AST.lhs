@@ -2,13 +2,14 @@
 
 \subsection{AST Introduction}
 
+We start by giving an overview of the ``design space''
+and noting some key implementation decisions we have to take.
+
+\subsubsection{Terms}
+
 We want to implement a collection of terms that include
 expressions and predicates defined over a range of variables
 that can stand for behaviour observations, terms and program variables.
-We distinguish between observations of the program variable values,
-and the variable itself.
-This latter facility is only required, in the ``book'', for operational semantics.
-We also want to support the notion of list-variables that denote lists of variables.
 
 We consider a term as having the following forms:
 \begin{description}
@@ -19,24 +20,100 @@ We consider a term as having the following forms:
   \item [S] A term with an explicit substitution of terms for variables.
   \item [I] An iteration of a term over a sequence of list-variables.
 \end{description}
-Here we don't distinguish variables and list-variables:
 \begin{eqnarray}
    k &\in& Value
 \\ n &\in& Name
 \\ v &\in& Var = \dots
 \\ t \in T  &::=&  K~k | V~n | C~n~t^* | B~n~v^+~t | S~t~(v,t)^+ | I~n~n~v^+
 \end{eqnarray}
+We need to distinguish between predicate terms and expression terms.
+Do we have mutually recursive datatypes or an explicit tag?
+
+In \cite{UTP-book} we find the notion of texts, in chapters 6 and 10.
+We can represent these using the proposed term concept,
+so they don't need special handling or representation.
+
+\subsubsection{Variables}
+
+We want to implement a range of variables
+that can stand for behaviour observations, and arbitrary terms.
+We also want to support the notion of list-variables that denote lists of variables.
+
+Variables are either:
+\begin{description}
+  \item[Static]
+    that capture context-sensitive information that does not change during
+    the lifetime of a program.
+  \item[Dynamic]
+    that represent behaviour
+    with observations that change as the program runs.
+    These can have added `decorations' that can limit their scope
+    to pre, post, and intermediate states of execution.
+\end{description}
+Dynamic variables can:
+\begin{itemize}
+  \item
+     track a single observable aspect of the behaviour as the program
+    runs,
+  \item
+    denote arbitrary expressions whose values depend on dynamic observables,
+    or
+  \item
+    denote arbitrary predicates whose truth value depend on dynamic observables.
+\end{itemize}
+The latter two cases are the main mechanism for defining semantics
+and laws.
+
+In places where list of variables occur,
+it is very useful to have (single) variables
+that are intended to represent such lists.
+We call these list-variables,
+and they generally can take similar decorations as dynamic variables.
+Such lists occur in binders, substitutions and iterated terms.
+
+\newpage
+\begin{code}
+module AST ( Name
+           , Identifier, ident
+           ) where
+import Data.Char
+\end{code}
+
+\subsection{Naming}
+
+We consider `names' to be arbitrary strings,
+while `identifiers' are names that satisfy a fairly standard convention
+for program variables, namely starting with an alpha character,
+followed by zero of more alphas, digits and underscores.
 
 \begin{code}
-module AST where
+type Name = String
+
+newtype Identifier = Identifier Name deriving (Eq, Ord)
+
+ident :: Monad m => Name -> m Identifier
+ident nm@(c:cs)
+ | isAlpha c && all isIdContChar cs  = return $ Identifier nm
+ident nm = fail ("'"++nm++"' is not an Identifier")
+
+isIdContChar c = isAlpha c || isDigit c || c == '_'
+
+instance Show Identifier where show (Identifier name) = name
+
+instance Read Identifier where
+  readsPrec _ name
+    = do idnt <- ident name
+         return (idnt,"")
 \end{code}
+
+
 
 \subsection{Variables}
 
 A variable has a \emph{name}.
-\begin{code}
+\begin{verbatim}
 type Name = String -- no whitespace !
-\end{code}
+\end{verbatim}
 
 A variable will have one of the following \emph{kinds}:
 \begin{description}
@@ -56,13 +133,13 @@ A variable will have one of the following \emph{kinds}:
 \end{description}
 The above kinds all have different roles in the logic underlying UTP.
 
-\begin{code}
+\begin{verbatim}
 data VKind = VObs
            | VExpr
            | VPred
            | VScript
            deriving (Eq, Ord, Show)
-\end{code}
+\end{verbatim}
 
 In addition, with most of the variable kinds above,
 we can associate one of the following \emph{roles}:
@@ -87,7 +164,7 @@ These distinct roles do not effect how the underlying logic handles
 variables, but are used to tailor definitional shorthands that
 assume that these are enacting the relevant UTP variable conventions.
 
-\begin{code}
+\begin{verbatim}
 data VRole = VAny -- can play any role, useful for generic laws
            | VStatic
            | VPre
@@ -95,23 +172,23 @@ data VRole = VAny -- can play any role, useful for generic laws
            | VRel          -- VExpr, VPred only
            | VInter String -- VObs, VList VObs only
            deriving (Eq, Ord, Show)
-\end{code}
+\end{verbatim}
 
 
 A variable has a name, kind and role:
-\begin{code}
+\begin{verbatim}
 type Variable = ( Name
                 , VKind
                 , VRole
                 )
-\end{code}
+\end{verbatim}
 
 Invariant:
 \begin{enumerate}
   \item only kinds \texttt{VExpr} and \texttt{VPred} can have role \texttt{VRel}.
   \item only kind \texttt{VObs} can have role \texttt{VInter}.
 \end{enumerate}
-\begin{code}
+\begin{verbatim}
 invVariable reserved (name, kind, role, roots)
  = (role == VRel)    `implies`  (kind `elem` [VExpr,VPred])
    &&
@@ -123,7 +200,7 @@ isVInter _          = False
 implies :: Bool -> Bool -> Bool
 False `implies` _ = True
 True `implies` b  = b
-\end{code}
+\end{verbatim}
 
 We also need to introduce the idea of lists of variables,
 for use in binding constructs,
@@ -131,22 +208,22 @@ which may themselves contain special variables
 that denote lists of variables.
 We start by defining a list-variable as a variable with the addition
 of a list of names, corresponding to variable `roots'
-\begin{code}
+\begin{verbatim}
 type ListVar
  = ( Variable -- variable denoting a list of variables
    , [Name]   -- list of roots to be ignored)
    )
-\end{code}
+\end{verbatim}
 A variable-list is composed in general of a mix of normal variables
 and list-variables.
 We gather these into a `general' variable type
-\begin{code}
+\begin{verbatim}
 data GenVar
  = V Variable -- regular variable
  | L ListVar  -- variable denoting a list of variables
  deriving (Eq, Ord, Show)
 type VarList = [GenVar]
-\end{code}
+\end{verbatim}
 
 \newpage
 \subsection{Substitutions}
@@ -156,22 +233,22 @@ with some (quantified) variables.
 We also want to allow list-variables of the appropriate kind
 to occur for things, but only when the target variable is also
 a list variable.
-\begin{code}
+\begin{verbatim}
 type Substn v lv a
   =  ( [(v,a)]     -- target variable, then replacememt object
      , [(lv,lv)] ) -- target list-variable, then replacement l.v.
-\end{code}
+\end{verbatim}
 
 \subsection{Types}
 
 For now, type variables are strings:
-\begin{code}
+\begin{verbatim}
 type TVar = String
-\end{code}
+\end{verbatim}
 
 The ordering of data-constructors here is important,
 as type-inference relies on it.
-\begin{code}
+\begin{verbatim}
 data Type -- most general types first
  = Tarb
  | Tvar TVar
@@ -183,7 +260,7 @@ data Type -- most general types first
  | B
  | Terror String Type
  deriving (Eq,Ord,Show)
-\end{code}
+\end{verbatim}
 
 \newpage
 \subsection{Type-Tables}
@@ -192,18 +269,18 @@ we need to maintain tables mapping variables to types.
 Given the presence of binders/quantifiers,
 these tables need to be nested.
 We shall use integer tags to identify the tables:
-\begin{code}
+\begin{verbatim}
 type TTTag = Int
-\end{code}
+\end{verbatim}
 
 At each level we have a table mapping variables to types,
 and then we maintain a master table mapping type-table tags to such
 tables:
-\begin{code}
+\begin{verbatim}
 type VarTypes = [(String,Type)]  -- Trie Type            -- Var -+-> Type
 type TVarTypes = [(String,Type)] -- Trie Type            -- TVar -+-> Type
 type TypeTables = [(TTTag,VarTypes)] -- Btree TTTag VarTypes
-\end{code}
+\end{verbatim}
 Quantifiers induce nested scopes which we capture as a list of
 type-table tags. Tag 0 is special and always denotes the topmost global
 table.
@@ -266,7 +343,7 @@ So we really have:
 \subsection{Expressions}
 
 We have a very simple expression abstract syntax
-\begin{code}
+\begin{verbatim}
 data Expr
  = Num Int
  | Var Variable
@@ -281,14 +358,14 @@ n_Eerror = "EXPR_ERR: "
 eerror str = App (n_Eerror ++ str) []
 
 type ESubst = Substn Variable ListVar Expr
-\end{code}
+\end{verbatim}
 
 We need some builders that perform
 tidying up for corner cases:
-\begin{code}
+\begin{verbatim}
 mkEsub e ([],[]) = e
 mkEsub e sub = ESub e sub
-\end{code}
+\end{verbatim}
 
 
 \newpage
@@ -297,7 +374,7 @@ mkEsub e sub = ESub e sub
 Again, a very simple abstract syntax,
 but with the add of a typing hook,
 and an explicit 2-place predicate construct.
-\begin{code}
+\begin{verbatim}
 data Pred
  = TRUE
  | FALSE
@@ -313,11 +390,11 @@ data Pred
 
 
 type PSubst = Substn Variable ListVar Pred
-\end{code}
+\end{verbatim}
 
 We define two constructor functions to handle
 the \texttt{Expr}/\texttt{Pred} ``crossovers'':
-\begin{code}
+\begin{verbatim}
 ePred (PExpr e)             =  e
 ePred (PVar v)              =  Var v
 ePred (Sub (PExpr e) sub)   =  ESub e sub
@@ -327,14 +404,14 @@ pExpr (EPred pr)            =  pr
 pExpr (Var v)               =  PVar v
 pExpr (ESub (EPred pr) sub) =  Sub pr sub
 pExpr e                     =  PExpr e
-\end{code}
+\end{verbatim}
 
 We also define smart constructors for certain constructs
 to deal with corner cases.
 
 THIS NEEDS TO GO TO A SPECIAL "builtins" MODULE
 
-\begin{code}
+\begin{verbatim}
 n_Not = "Not"
 mkNot p = PApp n_Not [p]
 
@@ -383,12 +460,12 @@ mkPeabs qvs p = PAbs "Peabs" 0 qvs [p]
 
 n_Equal = "Equal"
 mkEqual e1 e2 = App n_Equal [e1,e2]
-\end{code}
+\end{verbatim}
 Some query functions:
-\begin{code}
+\begin{verbatim}
 isObs (PExpr _) = True
 isObs _       = False
-\end{code}
+\end{verbatim}
 
 variables, and then ``all the rest''.
 
@@ -406,18 +483,18 @@ capturing the peculiarities of a given semantic model%
 \footnote{
 Often referred to in the literature, as \emph{auxiliary} variables
 }.
-\begin{code}
+\begin{verbatim}
 data OClass = Model | Script deriving (Eq,Ord,Show)
 
 type ObsKind = (Variable,OClass,Type)
-\end{code}
+\end{verbatim}
 
 \newpage
 \subsection{Side-Conditions}
 
 A side-condition is a syntactic property,
 and therefore in principle ought to be statically checkable.
-\begin{code}
+\begin{verbatim}
 data MType = ObsM | TypeM | ExprM | PredM deriving (Eq,Ord,Show)
 
 data SideCond
@@ -429,4 +506,4 @@ data SideCond
  | SCfresh MType Variable                    -- ObsM for now
  | SCAnd [SideCond]
  deriving (Eq,Ord,Show)
-\end{code}
+\end{verbatim}

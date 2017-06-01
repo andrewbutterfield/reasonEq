@@ -5,3 +5,5 @@
 *.log
 MAIN.pdf
 *.gz
+*.bbl
+*.blg

@@ -1,4 +1,18 @@
 \section{Abstract Syntax}
+\begin{code}
+{-# LANGUAGE PatternSynonyms #-}
+module AST ( Name
+           , Identifier, ident, idName
+           , VarRole, pattern NoRole
+           , pattern Before, pattern During, pattern After
+           , Variable
+           , pattern StaticVar
+           , pattern ObsVar, pattern ExprVar, pattern PredVar
+           , pattern PreVar, pattern MidVar, pattern PostVar
+           , pattern PreCond, pattern PostCond
+           ) where
+import Data.Char
+\end{code}
 
 \subsection{AST Introduction}
 
@@ -10,6 +24,7 @@ and noting some key implementation decisions we have to take.
 We want to implement a collection of terms that include
 expressions and predicates defined over a range of variables
 that can stand for behaviour observations, terms and program variables.
+
 
 We consider a term as having the following forms:
 \begin{description}
@@ -44,10 +59,11 @@ Variables are either:
   \item[Static]
     that capture context-sensitive information that does not change during
     the lifetime of a program.
+    These always take values that range over appropriate program observations.
   \item[Dynamic]
     that represent behaviour
     with observations that change as the program runs.
-    These can have added `decorations' that can limit their scope
+    These can have added `decorations' that limit their scope
     to pre, post, and intermediate states of execution.
 \end{description}
 Dynamic variables can:
@@ -71,13 +87,6 @@ We call these list-variables,
 and they generally can take similar decorations as dynamic variables.
 Such lists occur in binders, substitutions and iterated terms.
 
-\newpage
-\begin{code}
-module AST ( Name
-           , Identifier, ident
-           ) where
-import Data.Char
-\end{code}
 
 \subsection{Naming}
 
@@ -89,118 +98,63 @@ followed by zero of more alphas, digits and underscores.
 \begin{code}
 type Name = String
 
-newtype Identifier = Identifier Name deriving (Eq, Ord)
+newtype Identifier = Id Name deriving (Eq, Ord, Show, Read)
 
 ident :: Monad m => Name -> m Identifier
 ident nm@(c:cs)
- | isAlpha c && all isIdContChar cs  = return $ Identifier nm
+ | isAlpha c && all isIdContChar cs  = return $ Id nm
 ident nm = fail ("'"++nm++"' is not an Identifier")
 
 isIdContChar c = isAlpha c || isDigit c || c == '_'
 
-instance Show Identifier where show (Identifier name) = name
-
-instance Read Identifier where
-  readsPrec _ name
-    = do idnt <- ident name
-         return (idnt,"")
+idName :: Identifier -> Name
+idName (Id nm) = nm
 \end{code}
-
-
 
 \subsection{Variables}
 
-A variable has a \emph{name}.
-\begin{verbatim}
-type Name = String -- no whitespace !
-\end{verbatim}
+We use short constructors for the datatypes,
+and define pattern synonyms with more meaning names.
 
-A variable will have one of the following \emph{kinds}:
-\begin{description}
-  \item[Observational]
-    Corresponds to some observation that can be made of a program,
-    and hence belongs, in UTP,  to the alphabet of the corresponding predicate.
-  \item[Schematic]
-    Stands for an arbitrary chunk of abstract syntax,
-    of which we recognise two broad classes:
-    \begin{description}
-      \item[Expression] denotes an arbitrary expression
-      \item[Predicate] denotes an arbitrary predicate
-    \end{description}
-  \item[Script]
-    Represents an actual program variable itself,
-    rather than any associated value it may take.
-\end{description}
-The above kinds all have different roles in the logic underlying UTP.
+We start by defining the various roles for dynamic variables
+\begin{code}
+data VarRole -- Variable role
+  = RN -- None
+  | RB -- Before (pre)
+  | RD Name -- During (intermediate)
+  | RA -- After (post)
+  deriving (Eq, Ord, Show, Read)
 
-\begin{verbatim}
-data VKind = VObs
-           | VExpr
-           | VPred
-           | VScript
-           deriving (Eq, Ord, Show)
-\end{verbatim}
+pattern NoRole = RN
+pattern Before = RB
+pattern During n = RD n
+pattern After  = RA
+\end{code}
 
-In addition, with most of the variable kinds above,
-we can associate one of the following \emph{roles}:
-\begin{description}
-  \item[Static]
-    variables whose values a fixed for the life of a (program) behaviour
-  \item[Dynamic]
-    variables whose values are expected to change over the life of a behaviour.
-    \begin{description}
-      \item[Pre]
-        variables that record the values taken when a behaviour starts
-      \item[Post]
-        variables that record the values taken when a behaviour ends
-      \item[Relational]
-        Expression or Predicate variables that denote relations
-        between the start and end of behaviours.
-      \item[Intermediate]
-        indexed variables that record values that arise between successive behaviours
-    \end{description}
-\end{description}
-These distinct roles do not effect how the underlying logic handles
-variables, but are used to tailor definitional shorthands that
-assume that these are enacting the relevant UTP variable conventions.
+\begin{code}
+data Variable
+ = VS Identifier -- Static
+ | VO VarRole Identifier -- Dynamic Observation
+ | VE VarRole Identifier -- Dynamic Expression
+ | VP VarRole Identifier -- Dynamic Predicate
+ deriving (Eq,Ord,Show,Read)
 
-\begin{verbatim}
-data VRole = VAny -- can play any role, useful for generic laws
-           | VStatic
-           | VPre
-           | VPost
-           | VRel          -- VExpr, VPred only
-           | VInter String -- VObs, VList VObs only
-           deriving (Eq, Ord, Show)
-\end{verbatim}
+pattern StaticVar i = VS i
 
+pattern ObsVar  r i = VO r i
+pattern ExprVar r i = VE r i
+pattern PredVar r i = VP r i
+\end{code}
 
-A variable has a name, kind and role:
-\begin{verbatim}
-type Variable = ( Name
-                , VKind
-                , VRole
-                )
-\end{verbatim}
+We also have some pre-wrapped patterns for common cases:
+\begin{code}
+pattern PreVar   i    = VO RB i
+pattern PostVar  i    = VO RA i
+pattern MidVar   i n  = VO (RD n) i
+pattern PreCond  i    = VP RB i
+pattern PostCond i    = VP RA i
+\end{code}
 
-Invariant:
-\begin{enumerate}
-  \item only kinds \texttt{VExpr} and \texttt{VPred} can have role \texttt{VRel}.
-  \item only kind \texttt{VObs} can have role \texttt{VInter}.
-\end{enumerate}
-\begin{verbatim}
-invVariable reserved (name, kind, role, roots)
- = (role == VRel)    `implies`  (kind `elem` [VExpr,VPred])
-   &&
-   isVInter role     `implies`  (kind == VObs)
-
-isVInter (VInter _) = True
-isVInter _          = False
-
-implies :: Bool -> Bool -> Bool
-False `implies` _ = True
-True `implies` b  = b
-\end{verbatim}
 
 We also need to introduce the idea of lists of variables,
 for use in binding constructs,

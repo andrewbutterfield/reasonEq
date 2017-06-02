@@ -14,45 +14,42 @@ module AST ( Name
            , pattern ObsLVar, pattern ExprLVar, pattern PredLVar
            , pattern PreVars, pattern PostVars, pattern MidVars
            , pattern PreExprs
+           , GenVar, pattern StdVar, pattern LstVar
+           , VarList
            ) where
 import Data.Char
 \end{code}
 
 \subsection{AST Introduction}
 
-We start by giving an overview of the ``design space''
-and noting some key implementation decisions we have to take.
+We implement names, identifiers, a number of variants of variables,
+terms that cover expressions and predicates, and a side-condition language.
 
-\subsubsection{Terms}
+\subsection{Naming}
 
-We want to implement a collection of terms that include
-expressions and predicates defined over a range of variables
-that can stand for behaviour observations, terms and program variables.
+We consider `names' to be arbitrary strings,
+while `identifiers' are names that satisfy a fairly standard convention
+for program variables, namely starting with an alpha character,
+followed by zero of more alphas, digits and underscores.
+
+\begin{code}
+type Name = String
+
+newtype Identifier = Id Name deriving (Eq, Ord, Show, Read)
+
+ident :: Monad m => Name -> m Identifier
+ident nm@(c:cs)
+ | isAlpha c && all isIdContChar cs  = return $ Id nm
+ident nm = fail ("'"++nm++"' is not an Identifier")
+
+isIdContChar c = isAlpha c || isDigit c || c == '_'
+
+idName :: Identifier -> Name
+idName (Id nm) = nm
+\end{code}
 
 
-We consider a term as having the following forms:
-\begin{description}
-  \item [K] A constant value of an appropriate type.
-  \item [V] A variable.
-  \item [C] A constructor that builds a term out of zero or more sub-terms.
-  \item [B] A binding construct that introduces local variables.
-  \item [S] A term with an explicit substitution of terms for variables.
-  \item [I] An iteration of a term over a sequence of list-variables.
-\end{description}
-\begin{eqnarray}
-   k &\in& Value
-\\ n &\in& Name
-\\ v &\in& Var = \dots
-\\ t \in T  &::=&  K~k | V~n | C~n~t^* | B~n~v^+~t | S~t~(v,t)^+ | I~n~n~v^+
-\end{eqnarray}
-We need to distinguish between predicate terms and expression terms.
-Do we have mutually recursive datatypes or an explicit tag?
-
-In \cite{UTP-book} we find the notion of texts, in chapters 6 and 10.
-We can represent these using the proposed term concept,
-so they don't need special handling or representation.
-
-\subsubsection{Variables}
+\subsection{Variables}
 
 We want to implement a range of variables
 that can stand for behaviour observations, and arbitrary terms.
@@ -91,32 +88,6 @@ We call these list-variables,
 and they generally can take similar decorations as dynamic variables.
 Such lists occur in binders, substitutions and iterated terms.
 
-
-\subsection{Naming}
-
-We consider `names' to be arbitrary strings,
-while `identifiers' are names that satisfy a fairly standard convention
-for program variables, namely starting with an alpha character,
-followed by zero of more alphas, digits and underscores.
-
-\begin{code}
-type Name = String
-
-newtype Identifier = Id Name deriving (Eq, Ord, Show, Read)
-
-ident :: Monad m => Name -> m Identifier
-ident nm@(c:cs)
- | isAlpha c && all isIdContChar cs  = return $ Id nm
-ident nm = fail ("'"++nm++"' is not an Identifier")
-
-isIdContChar c = isAlpha c || isDigit c || c == '_'
-
-idName :: Identifier -> Name
-idName (Id nm) = nm
-\end{code}
-
-\subsection{Variables}
-
 We use short constructors for the datatypes,
 and define pattern synonyms with more meaning names.
 
@@ -135,6 +106,7 @@ pattern During n = RD n
 pattern After  = RA
 \end{code}
 
+Then we view variables as having four flavours:
 \begin{code}
 data Variable
  = VS Identifier -- Static
@@ -159,8 +131,8 @@ pattern PreCond  i    = VP RB i
 pattern PostCond i    = VP RA i
 \end{code}
 
+\newpage
 \subsubsection{List Variables}
-
 
 We also need to introduce the idea of lists of variables,
 for use in binding constructs,
@@ -200,10 +172,14 @@ data GenVar
  = GV Variable -- regular variable
  | GL ListVar  -- variable denoting a list of variables
  deriving (Eq, Ord, Show, Read)
+
+pattern StdVar v = GV v
+pattern LstVar lv = GL lv
+
 type VarList = [GenVar]
 \end{code}
 
-\newpage
+
 \subsection{Substitutions}
 
 Substitutions associate a list of things (types,expressions,predicates)
@@ -216,6 +192,45 @@ type Substn v lv a
   =  ( [(v,a)]     -- target variable, then replacememt object
      , [(lv,lv)] ) -- target list-variable, then replacement l.v.
 \end{verbatim}
+
+
+\subsection{Terms}
+
+We want to implement a collection of terms that include
+expressions and predicates defined over a range of variables
+that can stand for behaviour observations, terms and program variables.
+
+
+We consider a term as having the following forms:
+\begin{description}
+  \item [K] A constant value of an appropriate type.
+  \item [V] A variable.
+  \item [C] A constructor that builds a term out of zero or more sub-terms.
+  \item [B] A binding construct that introduces local variables.
+  \item [S] A term with an explicit substitution of terms for variables.
+  \item [I] An iteration of a term over a sequence of list-variables.
+\end{description}
+\begin{eqnarray}
+   k &\in& Value
+\\ n &\in& Name
+\\ v &\in& Var = \dots
+\\ t \in T  &::=&  K~k | V~n | C~n~t^* | B~n~v^+~t | S~t~(v,t)^+ | I~n~n~v^+
+\end{eqnarray}
+We need to distinguish between predicate terms and expression terms.
+Do we have mutually recursive datatypes or an explicit tag?
+
+In \cite{UTP-book} we find the notion of texts, in chapters 6 and 10.
+We can represent these using the proposed term concept,
+so they don't need special handling or representation.
+
+
+
+\newpage
+
+\subsection{OLD DATATYPES}
+
+EVERYTHING BELOW HERE IS FROM OLD Saoithin/UTP2.
+
 
 \subsection{Types}
 

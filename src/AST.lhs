@@ -21,6 +21,9 @@ module AST ( Name
            , pattern ArbType,  pattern TypeVar, pattern TypeApp
            , pattern DataType, pattern FunType, pattern GivenType
            , _NAME, nametype, _ENV, envtype
+           , Text, Value, pattern Boolean, pattern Integer, pattern Text
+           , TermKind(..)
+           , Term
            ) where
 import Data.Char
 \end{code}
@@ -269,7 +272,109 @@ The key difference is that predicates are all of ``type'' $Env \fun \Bool$,
 whereas expressions can have different types.
 This means that expression matching requires type information,
 while that for predicates does not.
+
+\subsubsection{Values}
+
+For predicates,
+the only constants we require are $\True$ and $\False$.
+For expressions, the situation is more complicated,
+at least as far as `basic' values are concerned.
+With the types as proposed (esp. \verb"TD"),
+and the term constructors and bindings,
+we could develop values from the ground up,
+but we would much prefer to have some built-in,
+like numbers of various kinds, and maybe characters?
+For now we start with booleans, integers and text.
+\begin{code}
+type Text = String
+data Value
+ = VB Bool
+ | VI Integer
+ | VT Text
+ deriving (Eq, Ord, Show, Read)
+
+pattern Boolean b = VB b
+pattern Integer i = VI i
+pattern Text    t = VT t
+\end{code}
+
+
+\subsubsection{Expressions and Predicates}
+
 Do we have mutually recursive datatypes or an explicit tag?
+With mutually recursive types
+we know which we are handling and just match the appropriate patterns,
+except,
+we need to embed each in the other,
+so there always has to be a case which looks for such an embedding
+and handles it.
+\begin{verbatim}
+handleExpr :: Expr -> ....
+handleExpr (EK ke) = ...
+handleExpr (EV ve) = ...
+...
+handleExpr (EP pr) = handlePred pr
+
+handlePred :: Pred -> ....
+handlePred (PK kp) = ...
+handlePred (PV vp) = ...
+...
+handlePred (PE e) = handleExpr e
+\end{verbatim}
+With one recursive type we need to check the expr/predicate tag,
+but no longer know that we have one kind of term or the other.
+So we still have to check for the two term kinds and handle them both.
+\begin{verbatim}
+handleTerm :: Term -> ....
+handleTerm (K E ke) = ...
+handleTerm (K P kp) = ...
+handleTerm (V E ve) = ...
+handleTerm (V P vp) = ...
+...
+...
+\end{verbatim}
+From a coding point of view, given pattern synonyms in particular,
+there is little to differentiate the two approaches.
+One possible advantage of the latter is that if had something
+whose handling did not depend on it being expression or predicate,
+then we might just need one way to handle it.
+A possible candidate here are variables:
+\begin{verbatim}
+handleTerm (V _ v) = ...
+\end{verbatim}
+However, `naked' verbs in predicates are always of type boolean,
+while those in expressions can have arbitrary types.
+
+\newpage
+\subsubsection{Term Kinds}
+
+Given the role played by types,
+it makes sense that what marks the distinction between expressions
+and predicates is the presence/absence of type information.
+\begin{code}
+data TermKind
+ = P -- predicate
+ | E Type -- expression (with type annotation)
+ deriving (Eq, Ord, Show, Read)
+\end{code}
+This is equivalent to \verb"Maybe Type",
+but we want it less verbose.
+
+\subsubsection{Terms}
+
+So we shall go with a single term type (\verb"Term"),
+with an annotation that is equivalent to \verb"Maybe Type".
+\begin{code}
+data Term
+ = K TermKind Value -- value
+ | V TermKind Variable -- variable
+ | C TermKind Identifier [Term] -- constructor
+ | B TermKind Identifier VarList Term -- binder
+ | S TermKind Term (Substn Term) -- substitution
+ | I TermKind Identifier Identifier [ListVar]
+ deriving (Eq, Ord, Show, Read)
+\end{code}
+
 
 In \cite{UTP-book} we find the notion of texts, in chapters 6 and 10.
 We can represent these using this proposed term concept,

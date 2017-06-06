@@ -16,6 +16,11 @@ module AST ( Name
            , pattern PreExprs
            , GenVar, pattern StdVar, pattern LstVar
            , VarList
+           , Substn
+           , Type
+           , pattern ArbType,  pattern TypeVar, pattern TypeApp
+           , pattern DataType, pattern FunType, pattern GivenType
+           , _NAME, nametype, _ENV, envtype
            ) where
 import Data.Char
 \end{code}
@@ -47,8 +52,12 @@ isIdContChar c = isAlpha c || isDigit c || c == '_'
 idName :: Identifier -> Name
 idName (Id nm) = nm
 \end{code}
+We will allow the definition, in this module only,
+of identifiers whose names start with an underscore.
+These will usually be intended to provide some ``base names'',
+to key builtin entities that we wish to protect from outside interference.
 
-
+\newpage
 \subsection{Variables}
 
 We want to implement a range of variables
@@ -131,7 +140,6 @@ pattern PreCond  i    = VP RB i
 pattern PostCond i    = VP RA i
 \end{code}
 
-\newpage
 \subsubsection{List Variables}
 
 We also need to introduce the idea of lists of variables,
@@ -182,17 +190,57 @@ type VarList = [GenVar]
 
 \subsection{Substitutions}
 
-Substitutions associate a list of things (types,expressions,predicates)
-with some (quantified) variables.
+Substitutions associate a list of terms (types,expressions,predicates)
+with some variables.
 We also want to allow list-variables of the appropriate kind
 to occur for things, but only when the target variable is also
 a list variable.
-\begin{verbatim}
-type Substn v lv a
-  =  ( [(v,a)]     -- target variable, then replacememt object
-     , [(lv,lv)] ) -- target list-variable, then replacement l.v.
-\end{verbatim}
+\begin{code}
+type Substn t
+  =  ( [(Variable,t)]        -- target variable, then replacememt term
+     , [(ListVar,ListVar)] ) -- target list-variable, then replacement l.v.
+\end{code}
 
+\newpage
+\subsection{Types}
+
+Types are a restrictive form of terms,
+whose main reason here is to prevent large numbers of spurious matches
+occurring with expressions.
+
+The ordering of data-constructors here is important,
+as type-inference relies on it.
+\begin{code}
+data Type -- most general types first
+ = T  -- arbitrary type
+ | TV Identifier -- type variable
+ | TA Identifier [Type] -- type application
+ | TD Identifier [(Identifier,[Type])] -- ADT
+ | TF Type Type -- function type
+ | TG Identifier -- given type
+ deriving (Eq, Ord, Show, Read)
+
+pattern ArbType = T
+pattern TypeVar i  = TV i
+pattern TypeApp i ts = TA i ts
+pattern DataType i fs = TD i fs
+pattern FunType tf ta = TF tf ta
+pattern GivenType i = TG i
+\end{code}
+
+We will define a two special ``types'' at this point: one that denotes
+``names'', and the other that denotes ``environments'',
+which are mappings from variable names, to a pair of a type and a value.
+For now we just introduce special identifiers for these:
+\begin{code}
+_NAME = Id "_NAME"
+nametype :: Type
+nametype = TG _NAME
+
+_ENV  = Id "_ENV"
+envtype :: Type
+envtype = TG _ENV
+\end{code}
 
 \subsection{Terms}
 
@@ -217,10 +265,14 @@ We consider a term as having the following forms:
 \\ t \in T  &::=&  K~k | V~n | C~n~t^* | B~n~v^+~t | S~t~(v,t)^+ | I~n~n~v^+
 \end{eqnarray}
 We need to distinguish between predicate terms and expression terms.
+The key difference is that predicates are all of ``type'' $Env \fun \Bool$,
+whereas expressions can have different types.
+This means that expression matching requires type information,
+while that for predicates does not.
 Do we have mutually recursive datatypes or an explicit tag?
 
 In \cite{UTP-book} we find the notion of texts, in chapters 6 and 10.
-We can represent these using the proposed term concept,
+We can represent these using this proposed term concept,
 so they don't need special handling or representation.
 
 
@@ -234,26 +286,6 @@ EVERYTHING BELOW HERE IS FROM OLD Saoithin/UTP2.
 
 \subsection{Types}
 
-For now, type variables are strings:
-\begin{verbatim}
-type TVar = String
-\end{verbatim}
-
-The ordering of data-constructors here is important,
-as type-inference relies on it.
-\begin{verbatim}
-data Type -- most general types first
- = Tarb
- | Tvar TVar
- | TApp String [Type]
- | Tfree String [(String,[Type])]
- | Tfun Type Type
- | Tenv
- | Z
- | B
- | Terror String Type
- deriving (Eq,Ord,Show)
-\end{verbatim}
 
 \newpage
 \subsection{Type-Tables}

@@ -24,6 +24,11 @@ module AST ( Name
            , Text, Value, pattern Boolean, pattern Integer, pattern Text
            , TermKind(..)
            , Term
+           , pattern EVal, pattern EVar, pattern ECons
+           , pattern EBind, pattern ESub, pattern EIter
+           , pattern PVal, pattern PVar, pattern PCons
+           , pattern PBind, pattern PSub, pattern PIter
+           , pattern E2, pattern P2
            ) where
 import Data.Char
 \end{code}
@@ -366,19 +371,49 @@ So we shall go with a single term type (\verb"Term"),
 with an annotation that is equivalent to \verb"Maybe Type".
 \begin{code}
 data Term
- = K TermKind Value -- value
- | V TermKind Variable -- variable
- | C TermKind Identifier [Term] -- constructor
- | B TermKind Identifier VarList Term -- binder
- | S TermKind Term (Substn Term) -- substitution
- | I TermKind Identifier Identifier [ListVar]
+ = K TermKind Value                    -- Value
+ | V TermKind Variable                 -- Variable
+ | C TermKind Identifier [Term]        -- Constructor
+ | B TermKind Identifier VarList Term  -- Binder
+ | S TermKind Term (Substn Term)       -- Substitution
+ | I TermKind                          -- Iterator
+     Identifier  -- top grouping constructor
+     Identifier  -- component constructor
+     [ListVar]   -- list-variables, same length as component arity
  deriving (Eq, Ord, Show, Read)
+\end{code}
+
+Patterns for expressions:
+\begin{code}
+pattern EVal t k = K (E t) k
+pattern EVar t v = V (E t) v
+pattern ECons t n ts = C (E t) n ts
+pattern EBind t n vl tm = B (E t) n vl tm
+pattern ESub t tm s = S (E t) tm s
+pattern EIter t na ni lvs = I (E t) na ni lvs
+\end{code}
+
+Patterns for predicates:
+\begin{code}
+pattern PVal k = K P k
+pattern PVar v = V P v
+pattern PCons n ts = C P n ts
+pattern PBind n vl tm = B P n vl tm
+pattern PSub tm s = S P tm s
+pattern PIter na ni lvs = I P na ni lvs
+\end{code}
+
+Patterns for binary constructions:
+\begin{code}
+pattern E2 t n t1 t2 = C (E t) n [t1,t2]
+pattern P2 n t1 t2   = C P n [t1,t2]
 \end{code}
 
 
 In \cite{UTP-book} we find the notion of texts, in chapters 6 and 10.
 We can represent these using this proposed term concept,
-so they don't need special handling or representation.
+as values of type \verb"Text", or as terms with modified names.
+They don't need special handling or representation here.
 
 
 

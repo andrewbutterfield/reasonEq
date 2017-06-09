@@ -29,6 +29,8 @@ module AST ( Name
            , pattern PVal, pattern PVar, pattern PCons
            , pattern PBind, pattern PSub, pattern PIter
            , pattern E2, pattern P2
+           , FreeVarRel(..)
+           , SideCond
            ) where
 import Data.Char
 \end{code}
@@ -417,258 +419,73 @@ They don't need special handling or representation here.
 
 
 
-\newpage
-
-\subsection{OLD DATATYPES}
-
-EVERYTHING BELOW HERE IS FROM OLD Saoithin/UTP2.
-
-
-\subsection{Types}
-
-
-\newpage
-\subsection{Type-Tables}
-When we do type-inference,
-we need to maintain tables mapping variables to types.
-Given the presence of binders/quantifiers,
-these tables need to be nested.
-We shall use integer tags to identify the tables:
-\begin{verbatim}
-type TTTag = Int
-\end{verbatim}
-
-At each level we have a table mapping variables to types,
-and then we maintain a master table mapping type-table tags to such
-tables:
-\begin{verbatim}
-type VarTypes = [(String,Type)]  -- Trie Type            -- Var -+-> Type
-type TVarTypes = [(String,Type)] -- Trie Type            -- TVar -+-> Type
-type TypeTables = [(TTTag,VarTypes)] -- Btree TTTag VarTypes
-\end{verbatim}
-Quantifiers induce nested scopes which we capture as a list of
-type-table tags. Tag 0 is special and always denotes the topmost global
-table.
-
-
-\newpage
-\subsection{Terms}
-
-We can posit a very general notion of terms ($t$),
-within which we can also embed some other term syntax ($s$).
-Terms are parameterised by a notion of constants ($k$)
-and with some fixed notion of variables ($v$)
-and a distinct notion of \emph{names} ($n$).
-\begin{eqnarray*}
-   n &\in& Names
-\\ k &\in& Constants
-\\ v &\in& Variables
-\\ \ell &\in& GenVar
-\\ vs \in VarList &=& (v | \ell)^*
-\\ s &\in& Syntax (other)
-\\ t \in Term~k~s
-   &::=& k
-\\ & | & v
-\\ & | & n(t,\dots,t)
-\\ & | & n~vs~@ (t,\dots,t)
-\\ & | & t[t,\dots,t/v,\dots,v]
-\\ & | & [s]
-\end{eqnarray*}
-
-So, we expect to have two mutually recursive instantiations
-of terms: Expressions ($E$) and Predicates ($P$).
-\begin{eqnarray*}
-   E &\simeq& Term~\Int~P
-\\ P &\simeq& Term~\Bool~E
-\end{eqnarray*}
-
-We need to consider zippers.
-For term alone, assuming fixed $s$:
-\begin{eqnarray*}
-   t' \in Term'~k~s
-   &::=& n(t,\dots,t,[\_]t,\dots,t)
-\\ & | & n~vs~@ (t,\dots,t,[\_]t,\dots,t)
-\\ & | & \_[t,\dots,t/v,\dots,v]
-\\ & | & t[t,\dots,t,[\_]t,\dots,t/v,\dots,v,v,v,\dots,v]
-\end{eqnarray*}
-Intuitively, if we have descended into $s$, then
-we should have $s'$ here.
-So we really have:
-\begin{eqnarray*}
-   t' \in Term'~k~s
-   &::=& n(t,\dots,t [\_]t,\dots,t)
-\\ & | & n~vs~@ (t,\dots,t [\_]t,\dots,t)
-\\ & | & \_[t,\dots,t/v,\dots,v]
-\\ & | & t[t,\dots,t,[\_]t,\dots,t/v,\dots,v,v,v,\dots,v]
-\\ & | & [s']
-\end{eqnarray*}
-
-
-\newpage
-\subsection{Expressions}
-
-We have a very simple expression abstract syntax
-\begin{verbatim}
-data Expr
- = Num Int
- | Var Variable
- | App String [Expr]
- | Abs String TTTag VarList [Expr]
- | ESub Expr ESubst
- | EPred Pred
- deriving (Eq, Ord, Show)
-
-
-n_Eerror = "EXPR_ERR: "
-eerror str = App (n_Eerror ++ str) []
-
-type ESubst = Substn Variable ListVar Expr
-\end{verbatim}
-
-We need some builders that perform
-tidying up for corner cases:
-\begin{verbatim}
-mkEsub e ([],[]) = e
-mkEsub e sub = ESub e sub
-\end{verbatim}
-
-
-\newpage
-\subsection{Predicates}
-
-Again, a very simple abstract syntax,
-but with the add of a typing hook,
-and an explicit 2-place predicate construct.
-\begin{verbatim}
-data Pred
- = TRUE
- | FALSE
- | PVar Variable
- | PApp String [Pred]
- | PAbs String TTTag VarList [Pred]
- | Sub Pred ESubst
- | PExpr Expr
- | TypeOf Expr Type
- | P2 String ListVar ListVar
- deriving (Eq, Ord, Show)
-
-
-
-type PSubst = Substn Variable ListVar Pred
-\end{verbatim}
-
-We define two constructor functions to handle
-the \texttt{Expr}/\texttt{Pred} ``crossovers'':
-\begin{verbatim}
-ePred (PExpr e)             =  e
-ePred (PVar v)              =  Var v
-ePred (Sub (PExpr e) sub)   =  ESub e sub
-ePred pr                    =  EPred pr
-
-pExpr (EPred pr)            =  pr
-pExpr (Var v)               =  PVar v
-pExpr (ESub (EPred pr) sub) =  Sub pr sub
-pExpr e                     =  PExpr e
-\end{verbatim}
-
-We also define smart constructors for certain constructs
-to deal with corner cases.
-
-THIS NEEDS TO GO TO A SPECIAL "builtins" MODULE
-
-\begin{verbatim}
-n_Not = "Not"
-mkNot p = PApp n_Not [p]
-
-n_And = "And"
-mkAnd [] = TRUE
-mkAnd [pr] = pr
-mkAnd prs = PApp "And" prs
-
-n_Or = "Or"
-mkOr [] = FALSE
-mkOr [pr] = pr
-mkOr prs = PApp "Or" prs
-
-n_Eqv = "Eqv"
-mkEqv pr1 pr2 = PApp n_Eqv [pr1,pr2]
-
-n_Forall = "Forall"
-mkForall ([]) p = p
-mkForall qvs p = PAbs "Forall" 0 qvs [p]
-
-n_Exists = "Exists"
-mkExists ([]) p = p
-mkExists qvs p = PAbs "Exists" 0 qvs [p]
-
-n_Exists1 = "Exists1"
-mkExists1 ([]) p = FALSE
-mkExists1 qvs p = PAbs "Exists1" 0 qvs [p]
-
-n_Univ = "Univ"
-mkUniv p =  PAbs n_Univ 0 [] [p]
-
-mkSub p ([],[]) = p
-mkSub p sub = Sub p sub
-
-n_Pforall = "Pforall"
-mkPforall ([]) p  = p
-mkPforall qvs p = PAbs "Pforall" 0 qvs [p]
-
-n_Pexists = "Pexists"
-mkPexists ([]) p  = p
-mkPexists qvs p = PAbs "Pexists" 0 qvs [p]
-
-n_Peabs = "Peabs"
-mkPeabs ([]) p  = p
-mkPeabs qvs p = PAbs "Peabs" 0 qvs [p]
-
-n_Equal = "Equal"
-mkEqual e1 e2 = App n_Equal [e1,e2]
-\end{verbatim}
-Some query functions:
-\begin{verbatim}
-isObs (PExpr _) = True
-isObs _       = False
-\end{verbatim}
-
-variables, and then ``all the rest''.
-
-\newpage
-\subsection{Observation Variables}
-
-UTP is based on the notion of alphabetised predicates,
-which we support by maintaining information about
-variables in the alphabet.
-In addition to alphabet membership,
-it is useful to be able to distinguish observation variables
-that corresponds to program/specification variables ($Script$),
-and those that describe other aspects of a languages behaviour ($Model$),
-capturing the peculiarities of a given semantic model%
-\footnote{
-Often referred to in the literature, as \emph{auxiliary} variables
-}.
-\begin{verbatim}
-data OClass = Model | Script deriving (Eq,Ord,Show)
-
-type ObsKind = (Variable,OClass,Type)
-\end{verbatim}
-
-\newpage
 \subsection{Side-Conditions}
 
 A side-condition is a syntactic property,
 and therefore in principle ought to be statically checkable.
-\begin{verbatim}
-data MType = ObsM | TypeM | ExprM | PredM deriving (Eq,Ord,Show)
+However, given expression and predicate variables this is not always
+possible.
 
+A side condition is about a relationship between the free variables
+of an expression or predicate, itself denoted by a variable ($e$, $P$),
+and a list of other (general) variables ($x,\lst v$)
+The relationship can have the form:
+\begin{eqnarray*}
+   x,\lst v   \notin  \fv(e) \mbox{ or } \fv(P) && \mbox{disjoint}
+\\ x,\lst v      =    \fv(e) \mbox{ or } \fv(P) && \mbox{exact}
+\\ x,\lst v \supseteq \fv(e) \mbox{ or } \fv(P) && \mbox{covering}
+\end{eqnarray*}
+Let $D$, $X$ and $C$ denote sets of variables
+that are meant to be be disjoint, exact, and covering respectively.
+Let $F$ denote the free variables of the expression or predicate variable
+under consideration.
+\begin{code}
+data FreeVarRel
+ = FVD  -- disjoint, D and F do not overlap
+ | FVX  -- exact, X = F
+ | FVC -- covering, C contains F
+ deriving (Eq, Ord, Show, Read)
+\end{code}
+
+We also have requirements for fresh variables,
+asserting that expressions and predicates have only pre-variables,
+trivial true side-conditions, and conjunctions
+of all of the above.
+These conditions can conflict with each other,
+and can also be simplfified by each others presence.
+Let $N$ denote fresh (new) variables.
+\begin{code}
 data SideCond
- = SCtrue
- | SCisCond MType String                     -- Mvar
- | SCnotFreeIn MType [Variable] String       -- Qvars, Mvar
- | SCareTheFreeOf MType [Variable] String    -- Qvars, Mvar
- | SCcoverTheFreeOf MType [Variable] String  -- Qvars, Mvar
- | SCfresh MType Variable                    -- ObsM for now
- | SCAnd [SideCond]
+ = SCR FreeVarRel
+       VarList -- D, X, or C
+       Variable -- VE, VP only
+ | SCF VarList -- fresh, N does not occur
+ | SCC Variable -- condition, F has no dashed vars, must be VE, VP
+ | SCT -- trivial/true
+ | SCAnd [SideCond] -- non empty, non conflicting, SCR,SCF,SCC only
  deriving (Eq,Ord,Show)
-\end{verbatim}
+\end{code}
+
+\subsubsection{Side Condition Conflicts}
+
+Here we use $D$, $X$, $C$, $N$, to represent themselves
+and be a shorthand for $D \cap F = \emptyset$,
+$X = F$, $F \subseteq C$,
+and $fresh(N)$ respectively.
+Which is which should be clear from context.
+
+\begin{eqnarray*}
+   D_1 \land D_2 &=& D_1 \cup D_2
+\\ X_1 \land X_2 &=& X_1 = X_2 \land X_1
+\\ C_1 \land C_2 &=& C_1 \cap C_2
+\\ D_1 \land X_2 &=& D_1 \cap X_2 = \emptyset \land X_2
+\\ D_1 \land C_2 &=& D_1 \land (C_2 \setminus D_1)
+\\ X_1 \land C_2 &=& X_1 \subseteq C_2 \land X_1
+\\ N \land X &=& N \cap X = \emptyset \land N \land X
+\\ N \land C &=& N \cap C = \emptyset \land N \land C
+\end{eqnarray*}
+
+\subsubsection{Side Condition Invariant}
+
+We have some non-trivial invariants here.
+So we have non-constructor patterns in places.

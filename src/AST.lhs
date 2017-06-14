@@ -36,6 +36,8 @@ module AST ( Name
            ) where
 import Data.Char
 import Data.List
+import Data.Set(Set)
+import qualified Data.Set as S
 \end{code}
 
 \subsection{AST Introduction}
@@ -437,30 +439,12 @@ The relationship can have the form:
 \\ x,\lst v      =    \fv(e) \mbox{ or } \fv(P) && \mbox{exact}
 \\ x,\lst v \supseteq \fv(e) \mbox{ or } \fv(P) && \mbox{covering}
 \end{eqnarray*}
-We represent variable sets as unique ordered variable-lists:
+We represent variable sets as distinct from variable-lists:
 \begin{code}
-newtype VarSet = VSt VarList deriving (Eq, Ord, Show, Read)
+type VarSet = Set GenVar
 
-mkVarSet :: VarList -> VarSet
-mkVarSet = VSt . nub . sort
-
-vsNull :: VarSet
-vsNull = VSt []
-
--- we could exploit the ordering to do these faster....
-vsUnion :: VarSet -> VarSet -> VarSet
-vsUnion (VSt vl1) (VSt vl2) = mkVarSet (vl1++vl2)
-
-vsInt :: VarSet -> VarSet -> VarSet
-vsInt (VSt vl1) (VSt vl2) = mkVarSet (vl1 `intersect` vl2)
-
-vsDiff :: VarSet -> VarSet -> VarSet
-vsDiff (VSt vl1) (VSt vl2) = mkVarSet (vl1\\vl2)
-
-vsSubset :: VarSet -> VarSet -> Bool
-vsSubset (VSt vl1) (VSt vl2) = (vl1\\vl2) == []
-
-(VSt vs1) `overlaps` (VSt vs2) = vs1 `intersect` vs2 /= []
+overlaps :: Ord a => Set a -> Set a -> Bool
+s1 `overlaps` s2 = not $ S.null (s1 `S.intersection` s2)
 \end{code}
 Let $D$, $X$ and $C$ denote sets of variables
 that are meant to be be disjoint, exact, and covering respectively.
@@ -538,7 +522,7 @@ mergeSideCond sc1@(IsCond v1) (IsCond v2)
 mergeSideCond sc1 sc2@(IsCond _)  =  [sc1,sc2]
 
 -- SCF Handling: N1 /\ N2 = N1 U N2
-mergeSideCond (Fresh vs1) (Fresh vs2) = [Fresh (vs1 `vsUnion` vs2)]
+mergeSideCond (Fresh vs1) (Fresh vs2) = [Fresh (vs1 `S.union` vs2)]
 -- SCF Handling: X /\ N =  disjoint(X,N) /\ X /\ N
 mergeSideCond sc1@(vs1 `Is` v) sc2@(Fresh vs2)
  | vs1 `overlaps` vs2  =  []
@@ -556,7 +540,7 @@ mergeSideCond sc1@(SCR _ _ v1) sc2@(SCR _ _ v2)
 
 -- SCR FVD Handling: D1 /\ D2 = D1 U D2
 mergeSideCond sc1@(vs1 `NotIn` v1) sc2@(vs2 `NotIn` v2)
- = [(vs1 `vsUnion` vs2) `NotIn` v1]
+ = [(vs1 `S.union` vs2) `NotIn` v1]
 -- SCR FVD Handling: D /\ X = disjoint(D,X) /\ X
 mergeSideCond sc1@(vs1 `NotIn` v1) sc2@(vs2 `Is` v2)
  | vs1 `overlaps` vs2  =  []
@@ -564,7 +548,7 @@ mergeSideCond sc1@(vs1 `NotIn` v1) sc2@(vs2 `Is` v2)
 -- SCR FVD Handling: D /\ C = disjoint(D,C) /\ (C\D)
 mergeSideCond sc1@(vs1 `NotIn` v1) sc2@(vs2 `Covers` v2)
  | vs1 `overlaps` vs2  =  []
- | otherwise  =  [(vs2 `vsDiff` vs1) `Covers` v1]
+ | otherwise  =  [(vs2 `S.difference` vs1) `Covers` v1]
 
 -- SCR FVX Handling: X1 /\ X2 = X1 = X2 /\ X1
 mergeSideCond sc1@(vs1 `Is` _) sc2@(vs2 `Is` _)
@@ -572,12 +556,12 @@ mergeSideCond sc1@(vs1 `Is` _) sc2@(vs2 `Is` _)
  | otherwise  =  []
 -- SCR FVX Handling: X /\ C = X <= C /\ X
 mergeSideCond sc1@(vs1 `Is` _) sc2@(vs2 `Covers` _)
- | vs1 `vsSubset` vs2  = [sc1]
+ | vs1 `S.isSubsetOf` vs2  = [sc1]
  | otherwise  =  []
 
 -- SCR FVC Handling: C1 /\ C2 = C1 intersect C2
 mergeSideCond sc1@(vs1 `Covers` v1) sc2@(vs2 `Covers` _)
- = [(vs1 `vsInt` vs2) `Covers` v1]
+ = [(vs1 `S.intersection` vs2) `Covers` v1]
 
 -- atomic side-conditions only
 mergeSideCond _ (AndC _) = []

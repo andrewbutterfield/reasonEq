@@ -10,6 +10,7 @@ module AST ( Name
            , pattern ObsVar, pattern ExprVar, pattern PredVar
            , pattern PreVar, pattern MidVar, pattern PostVar
            , pattern PreCond, pattern PostCond
+           , pattern PreExpr, pattern PostExpr
            , ListVar
            , pattern ObsLVar, pattern ExprLVar, pattern PredLVar
            , pattern PreVars, pattern PostVars, pattern MidVars
@@ -33,6 +34,14 @@ module AST ( Name
            , FreeVarRel(..)
            , SideCond
            , mergeSideCond
+           -- tests
+           , ast_tst_CT, ast_res_CT
+           , ast_tst_TC, ast_res_TC
+           , ast_tst_NN, ast_res_NN
+           , ast_tst_N1N2, ast_res_N1N2
+           , ast_tst_N2N1, ast_res_N2N1
+           , ast_tst_cc, ast_res_cc
+           , ast_tst_c1c2, ast_res_c1c2
            ) where
 import Data.Char
 import Data.List
@@ -157,6 +166,8 @@ pattern PostVar  i    = VO RA i
 pattern MidVar   i n  = VO (RD n) i
 pattern PreCond  i    = VP RB i
 pattern PostCond i    = VP RA i
+pattern PreExpr  i    = VE RB i
+pattern PostExpr i    = VE RA i
 \end{code}
 
 \subsubsection{List Variables}
@@ -474,20 +485,20 @@ data SideCond
  = SCR FreeVarRel
        VarSet -- D, X, or C
        Variable -- VE, VP only
- | SCF VarSet -- fresh, N does not occur
+ | SCF VarSet -- fresh, non-empty, N does not occur
  | SCC Variable -- condition, F has no dashed vars, must be VE, VP
  | SCT -- trivial/true
- | SCA [SideCond] -- non empty, non conflicting, unique SCR,SCF,SCC only
+ | SCA [SideCond] -- non empty, non conflicting, unique ordered SCR,SCF,SCC only
  deriving (Eq,Ord,Show)
 \end{code}
 
 We want concise matches for \verb"SCR FreeVarRel":
 \begin{code}
-pattern NotIn vs v = SCR FVD vs v
-pattern Is vs v = SCR FVX vs v
-pattern Covers vs v = SCR FVC vs v
-pattern Fresh vs = SCF vs
-pattern IsCond v = SCC v
+pattern NotIn vs v <- SCR FVD vs v
+pattern Is vs v <- SCR FVX vs v
+pattern Covers vs v <- SCR FVC vs v
+pattern Fresh vs <- SCF vs
+pattern IsCond v <- SCC v
 pattern TrueC = SCT
 pattern AndC scs <- SCA scs
 \end{code}
@@ -519,6 +530,7 @@ mergeSideCond :: SideCond -> SideCond -> [SideCond]
 
 -- SCT Handling:  C /\ T = C
 mergeSideCond sc1 TrueC = [sc1]
+mergeSideCond TrueC sc2 = [sc2]
 
 -- SCC Handling:  iscond(v) /\ iscond(v) = iscond(v)
 mergeSideCond sc1@(IsCond v1) (IsCond v2)
@@ -526,7 +538,7 @@ mergeSideCond sc1@(IsCond v1) (IsCond v2)
 mergeSideCond sc1 sc2@(IsCond _)  =  [sc1,sc2]
 
 -- SCF Handling: N1 /\ N2 = N1 U N2
-mergeSideCond (Fresh vs1) (Fresh vs2) = [Fresh (vs1 `S.union` vs2)]
+mergeSideCond (Fresh vs1) (Fresh vs2) = [SCF (vs1 `S.union` vs2)]
 -- SCF Handling: X /\ N =  disjoint(X,N) /\ X /\ N
 mergeSideCond sc1@(vs1 `Is` v) sc2@(Fresh vs2)
  | vs1 `overlaps` vs2  =  []
@@ -544,7 +556,7 @@ mergeSideCond sc1@(SCR _ _ v1) sc2@(SCR _ _ v2)
 
 -- SCR FVD Handling: D1 /\ D2 = D1 U D2
 mergeSideCond sc1@(vs1 `NotIn` v1) sc2@(vs2 `NotIn` v2)
- = [(vs1 `S.union` vs2) `NotIn` v1]
+ = [SCR FVD (vs1 `S.union` vs2) v1]
 -- SCR FVD Handling: D /\ X = disjoint(D,X) /\ X
 mergeSideCond sc1@(vs1 `NotIn` v1) sc2@(vs2 `Is` v2)
  | vs1 `overlaps` vs2  =  []
@@ -552,7 +564,7 @@ mergeSideCond sc1@(vs1 `NotIn` v1) sc2@(vs2 `Is` v2)
 -- SCR FVD Handling: D /\ C = disjoint(D,C) /\ (C\D)
 mergeSideCond sc1@(vs1 `NotIn` v1) sc2@(vs2 `Covers` v2)
  | vs1 `overlaps` vs2  =  []
- | otherwise  =  [(vs2 `S.difference` vs1) `Covers` v1]
+ | otherwise  =  [SCR FVC (vs2 `S.difference` vs1) v1]
 
 -- SCR FVX Handling: X1 /\ X2 = X1 = X2 /\ X1
 mergeSideCond sc1@(vs1 `Is` _) sc2@(vs2 `Is` _)
@@ -565,13 +577,45 @@ mergeSideCond sc1@(vs1 `Is` _) sc2@(vs2 `Covers` _)
 
 -- SCR FVC Handling: C1 /\ C2 = C1 intersect C2
 mergeSideCond sc1@(vs1 `Covers` v1) sc2@(vs2 `Covers` _)
- = [(vs1 `S.intersection` vs2) `Covers` v1]
+ = [SCR FVC (vs1 `S.intersection` vs2) v1]
 
 -- atomic side-conditions only
 mergeSideCond _ (AndC _) = []
 mergeSideCond sc1 sc2 = mergeSideCond sc2 sc1
 \end{code}
-We really, really need tests here!
+
+\subsubsection{Conflict Tests}
+
+Test values:
+\begin{code}
+t = TrueC
+
+v_a = StdVar $ PreVar $ Id "a"
+v_b = StdVar $ PreVar $ Id "b"
+
+n0 = SCF $ S.fromList []
+n1 = SCF $ S.fromList [v_a]
+n2 = SCF $ S.fromList [v_b]
+n12 = SCF $ S.fromList [v_a,v_b]
+
+cd1 = SCC $ PreExpr $ Id "e"
+cd2 = SCC $ PreExpr $ Id "f"
+\end{code}
+
+Tests:
+\begin{code}
+ast_tst_CT = mergeSideCond n1 t; ast_res_CT = [n1]
+ast_tst_TC = mergeSideCond t n1; ast_res_TC = [n1]
+
+ast_tst_cc = mergeSideCond cd1 cd1; ast_res_cc = [cd1]
+ast_tst_c1c2 = mergeSideCond cd1 cd2; ast_res_c1c2 = [cd1,cd2]
+
+ast_tst_NN = mergeSideCond n1 n1; ast_res_NN = [n1]
+ast_tst_N1N2 = mergeSideCond n1 n2; ast_res_N1N2 = [n12]
+ast_tst_N2N1 = mergeSideCond n2 n1; ast_res_N2N1 = [n12]
+\end{code}
+
+
 \subsubsection{Side Condition Invariant}
 
 We have some non-trivial invariants here.

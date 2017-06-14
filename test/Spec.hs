@@ -14,9 +14,13 @@ import AST
 
 {- HUnit Tests -}
 
-test_ident_fail =  ident "42" @?= Nothing
-test_ident_ok   =  idName (fromJust $ ident "forty2") @?= "forty2"
-
+test_CT = ast_tst_CT @?= ast_res_CT
+test_TC = ast_tst_TC @?= ast_res_TC
+test_cc = ast_tst_cc @?= ast_res_cc
+test_c1c2 = ast_tst_c1c2 @?= ast_res_c1c2
+test_NN = ast_tst_NN @?= ast_res_NN
+test_N1N2 = ast_tst_N1N2 @?= ast_res_N1N2
+test_N2N1 = ast_tst_N2N1 @?= ast_res_N2N1
 
 {- QuickCheck Tests -}
 
@@ -34,10 +38,15 @@ main = defaultMain tests
 
 tests :: [TF.Test]
 tests
- = [ testGroup "HUnit Ident"
+ = [ testGroup "\nSide Condition Conflicts"
      [
-       testCase "Ident should Fail" test_ident_fail
-    ,  testCase "Ident is OK" test_ident_ok
+       testCase "TrueC is right-identity" test_CT
+     , testCase "TrueC is left-identity" test_TC
+     , testCase "IsCond is self-Idempotent" test_cc
+     , testCase "IsCond is Independent" test_c1c2
+     , testCase "Fresh is self-Idempotent" test_NN
+     , testCase "Fresh merges with Union (1)" test_N1N2
+     , testCase "Fresh merges with Union (2)" test_N2N1
      ]
 {-  , testGroup "QuickCheck Ident"
      [

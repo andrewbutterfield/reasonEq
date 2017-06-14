@@ -447,11 +447,20 @@ mkVarSet = VSt . nub . sort
 vsNull :: VarSet
 vsNull = VSt []
 
+-- we could exploit the ordering to do these faster....
 vsUnion :: VarSet -> VarSet -> VarSet
 vsUnion (VSt vl1) (VSt vl2) = mkVarSet (vl1++vl2)
--- we would exploit the ordering to do this faster....
 
-(VSt vs1) `overlaps` (VSt vs2) = vs1 `intersect` vs2 == []
+vsInt :: VarSet -> VarSet -> VarSet
+vsInt (VSt vl1) (VSt vl2) = mkVarSet (vl1 `intersect` vl2)
+
+vsDiff :: VarSet -> VarSet -> VarSet
+vsDiff (VSt vl1) (VSt vl2) = mkVarSet (vl1\\vl2)
+
+vsSubset :: VarSet -> VarSet -> Bool
+vsSubset (VSt vl1) (VSt vl2) = (vl1\\vl2) == []
+
+(VSt vs1) `overlaps` (VSt vs2) = vs1 `intersect` vs2 /= []
 \end{code}
 Let $D$, $X$ and $C$ denote sets of variables
 that are meant to be be disjoint, exact, and covering respectively.
@@ -540,18 +549,41 @@ mergeSideCond sc1@(vs1 `Covers` v) sc2@(Fresh vs2)
   | otherwise           = [sc1,sc2]
 mergeSideCond sc1 sc2@(Fresh _)  =  [sc1,sc2]
 
+-- SCR of different variables don't interact
+mergeSideCond sc1@(SCR _ _ v1) sc2@(SCR _ _ v2)
+ | v1 /= v2  =  [sc1,sc2]
+-- v1 == v2 everywhere below
+
 -- SCR FVD Handling: D1 /\ D2 = D1 U D2
+mergeSideCond sc1@(vs1 `NotIn` v1) sc2@(vs2 `NotIn` v2)
+ = [(vs1 `vsUnion` vs2) `NotIn` v1]
 -- SCR FVD Handling: D /\ X = disjoint(D,X) /\ X
+mergeSideCond sc1@(vs1 `NotIn` v1) sc2@(vs2 `Is` v2)
+ | vs1 `overlaps` vs2  =  []
+ | otherwise  =  [sc2]
 -- SCR FVD Handling: D /\ C = disjoint(D,C) /\ (C\D)
+mergeSideCond sc1@(vs1 `NotIn` v1) sc2@(vs2 `Covers` v2)
+ | vs1 `overlaps` vs2  =  []
+ | otherwise  =  [(vs2 `vsDiff` vs1) `Covers` v1]
 
 -- SCR FVX Handling: X1 /\ X2 = X1 = X2 /\ X1
--- SCR FVX Handling: X1 /\ X2 = X1 = X2 /\ X1
--- ...
+mergeSideCond sc1@(vs1 `Is` _) sc2@(vs2 `Is` _)
+ | vs1 == vs2  = [sc1]
+ | otherwise  =  []
+-- SCR FVX Handling: X /\ C = X <= C /\ X
+mergeSideCond sc1@(vs1 `Is` _) sc2@(vs2 `Covers` _)
+ | vs1 `vsSubset` vs2  = [sc1]
+ | otherwise  =  []
+
+-- SCR FVC Handling: C1 /\ C2 = C1 intersect C2
+mergeSideCond sc1@(vs1 `Covers` v1) sc2@(vs2 `Covers` _)
+ = [(vs1 `vsInt` vs2) `Covers` v1]
+
+-- atomic side-conditions only
 mergeSideCond _ (AndC _) = []
 mergeSideCond sc1 sc2 = mergeSideCond sc2 sc1
 \end{code}
 We really, really need tests here!
-
 \subsubsection{Side Condition Invariant}
 
 We have some non-trivial invariants here.

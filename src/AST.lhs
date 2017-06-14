@@ -2,7 +2,7 @@
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module AST ( Name
-           , Identifier, ident, idName
+           , Identifier, validIdent, ident, idName
            , VarRole, pattern NoRole
            , pattern Before, pattern During, pattern After
            , Variable
@@ -57,9 +57,13 @@ type Name = String
 
 newtype Identifier = Id Name deriving (Eq, Ord, Show, Read)
 
+validIdent :: Name -> Bool
+validIdent (c:cs) =  isAlpha c && all isIdContChar cs
+validIdent _      =  False
+
 ident :: Monad m => Name -> m Identifier
-ident nm@(c:cs)
- | isAlpha c && all isIdContChar cs  = return $ Id nm
+ident nm
+ | validIdent nm  = return $ Id nm
 ident nm = fail ("'"++nm++"' is not an Identifier")
 
 isIdContChar c = isAlpha c || isDigit c || c == '_'

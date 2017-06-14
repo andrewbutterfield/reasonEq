@@ -29,10 +29,13 @@ module AST ( Name
            , pattern PVal, pattern PVar, pattern PCons
            , pattern PBind, pattern PSub, pattern PIter
            , pattern E2, pattern P2
+           , VarSet
            , FreeVarRel(..)
            , SideCond
+           , mergeSideCond
            ) where
 import Data.Char
+import Data.List
 \end{code}
 
 \subsection{AST Introduction}
@@ -196,7 +199,6 @@ pattern LstVar lv = GL lv
 
 type VarList = [GenVar]
 \end{code}
-
 
 \subsection{Substitutions}
 
@@ -428,13 +430,29 @@ possible.
 
 A side condition is about a relationship between the free variables
 of an expression or predicate, itself denoted by a variable ($e$, $P$),
-and a list of other (general) variables ($x,\lst v$)
+and a list (set!) of other (general) variables ($x,\lst v$)
 The relationship can have the form:
 \begin{eqnarray*}
    x,\lst v   \notin  \fv(e) \mbox{ or } \fv(P) && \mbox{disjoint}
 \\ x,\lst v      =    \fv(e) \mbox{ or } \fv(P) && \mbox{exact}
 \\ x,\lst v \supseteq \fv(e) \mbox{ or } \fv(P) && \mbox{covering}
 \end{eqnarray*}
+We represent variable sets as unique ordered variable-lists:
+\begin{code}
+newtype VarSet = VSt VarList deriving (Eq, Ord, Show, Read)
+
+mkVarSet :: VarList -> VarSet
+mkVarSet = VSt . nub . sort
+
+vsNull :: VarSet
+vsNull = VSt []
+
+vsUnion :: VarSet -> VarSet -> VarSet
+vsUnion (VSt vl1) (VSt vl2) = mkVarSet (vl1++vl2)
+-- we would exploit the ordering to do this faster....
+
+(VSt vs1) `overlaps` (VSt vs2) = vs1 `intersect` vs2 == []
+\end{code}
 Let $D$, $X$ and $C$ denote sets of variables
 that are meant to be be disjoint, exact, and covering respectively.
 Let $F$ denote the free variables of the expression or predicate variable
@@ -457,13 +475,24 @@ Let $N$ denote fresh (new) variables.
 \begin{code}
 data SideCond
  = SCR FreeVarRel
-       VarList -- D, X, or C
+       VarSet -- D, X, or C
        Variable -- VE, VP only
- | SCF VarList -- fresh, N does not occur
+ | SCF VarSet -- fresh, N does not occur
  | SCC Variable -- condition, F has no dashed vars, must be VE, VP
  | SCT -- trivial/true
- | SCAnd [SideCond] -- non empty, non conflicting, SCR,SCF,SCC only
+ | SCA [SideCond] -- non empty, non conflicting, unique SCR,SCF,SCC only
  deriving (Eq,Ord,Show)
+\end{code}
+
+We want concise matches for \verb"SCR FreeVarRel":
+\begin{code}
+pattern NotIn vs v = SCR FVD vs v
+pattern Is vs v = SCR FVX vs v
+pattern Covers vs v = SCR FVC vs v
+pattern Fresh vs = SCF vs
+pattern IsCond v = SCC v
+pattern TrueC = SCT
+pattern AndC scs <- SCA scs
 \end{code}
 
 \subsubsection{Side Condition Conflicts}
@@ -475,15 +504,53 @@ and $fresh(N)$ respectively.
 Which is which should be clear from context.
 
 \begin{eqnarray*}
-   D_1 \land D_2 &=& D_1 \cup D_2
+   N_1 \land N_2 &=& N_1 \cup N_2
+\\ D_1 \land D_2 &=& D_1 \cup D_2
 \\ X_1 \land X_2 &=& X_1 = X_2 \land X_1
 \\ C_1 \land C_2 &=& C_1 \cap C_2
+\\
+\\ N_1 \land X_2 &=& N_1 \cap X_2 = \emptyset \land N_1 \land X_1
+\\ N_1 \land C_2 &=& N_1 \cap C_1 = \emptyset \land N_1 \land C_1
 \\ D_1 \land X_2 &=& D_1 \cap X_2 = \emptyset \land X_2
 \\ D_1 \land C_2 &=& D_1 \land (C_2 \setminus D_1)
 \\ X_1 \land C_2 &=& X_1 \subseteq C_2 \land X_1
-\\ N \land X &=& N \cap X = \emptyset \land N \land X
-\\ N \land C &=& N \cap C = \emptyset \land N \land C
 \end{eqnarray*}
+
+We start with a function to merge two non-\verb"SCAnd" \verb"SideCond":
+\begin{code}
+mergeSideCond :: SideCond -> SideCond -> [SideCond]
+
+-- SCT Handling:  C /\ T = C
+mergeSideCond sc1 TrueC = [sc1]
+
+-- SCC Handling:  iscond(v) /\ iscond(v) = iscond(v)
+mergeSideCond sc1@(IsCond v1) (IsCond v2)
+ | v1 == v2  =  [sc1]
+mergeSideCond sc1 sc2@(IsCond _)  =  [sc1,sc2]
+
+-- SCF Handling: N1 /\ N2 = N1 U N2
+mergeSideCond (Fresh vs1) (Fresh vs2) = [Fresh (vs1 `vsUnion` vs2)]
+-- SCF Handling: X /\ N =  disjoint(X,N) /\ X /\ N
+mergeSideCond sc1@(vs1 `Is` v) sc2@(Fresh vs2)
+ | vs1 `overlaps` vs2  =  []
+ | otherwise           = [sc1,sc2]
+-- SCF Handling: C /\ N =  disjoint(C,N) /\ C /\ N
+mergeSideCond sc1@(vs1 `Covers` v) sc2@(Fresh vs2)
+  | vs1 `overlaps` vs2  =  []
+  | otherwise           = [sc1,sc2]
+mergeSideCond sc1 sc2@(Fresh _)  =  [sc1,sc2]
+
+-- SCR FVD Handling: D1 /\ D2 = D1 U D2
+-- SCR FVD Handling: D /\ X = disjoint(D,X) /\ X
+-- SCR FVD Handling: D /\ C = disjoint(D,C) /\ (C\D)
+
+-- SCR FVX Handling: X1 /\ X2 = X1 = X2 /\ X1
+-- SCR FVX Handling: X1 /\ X2 = X1 = X2 /\ X1
+-- ...
+mergeSideCond _ (AndC _) = []
+mergeSideCond sc1 sc2 = mergeSideCond sc2 sc1
+\end{code}
+We really, really need tests here!
 
 \subsubsection{Side Condition Invariant}
 

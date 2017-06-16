@@ -33,20 +33,26 @@ module AST ( Name
            , VarSet
            , FreeVarRel(..)
            , SideCond
-           , mergeSideCond
-           -- tests
-           , ast_tst_CT, ast_res_CT
-           , ast_tst_TC, ast_res_TC
-           , ast_tst_NN, ast_res_NN
-           , ast_tst_N1N2, ast_res_N1N2
-           , ast_tst_N2N1, ast_res_N2N1
-           , ast_tst_cc, ast_res_cc
-           , ast_tst_c1c2, ast_res_c1c2
+           , pattern TrueC
+           , pattern Fresh
+           , pattern IsCond
+           , pattern NotIn
+           , pattern Is
+           , pattern Covers
+           , pattern AndC
+           , scFresh, isTermVar, scIsCond, scNotIn, scIs, scCovers, scAnd
+           , test_AST
            ) where
 import Data.Char
 import Data.List
 import Data.Set(Set)
 import qualified Data.Set as S
+
+import Test.HUnit
+import Test.Framework as TF (defaultMain, testGroup, Test)
+import Test.Framework.Providers.HUnit (testCase)
+import Test.Framework.Providers.QuickCheck2 (testProperty)
+--import Test.QuickCheck ((==>))
 \end{code}
 
 \subsection{AST Introduction}
@@ -467,9 +473,9 @@ Let $F$ denote the free variables of the expression or predicate variable
 under consideration.
 \begin{code}
 data FreeVarRel
- = FVD  -- disjoint, D and F do not overlap
- | FVX  -- exact, X = F
- | FVC -- covering, C contains F
+ = FVD  -- "D" : disjoint, D and F do not overlap
+ | FVX  -- "X" : exact, X = F
+ | FVC  -- "C" : covering, C contains F
  deriving (Eq, Ord, Show, Read)
 \end{code}
 
@@ -480,27 +486,75 @@ of all of the above.
 These conditions can conflict with each other,
 and can also be simplfified by each others presence.
 Let $N$ denote fresh (new) variables.
+We also have an explicit false side-condition as a sentinel value.
 \begin{code}
 data SideCond
- = SCR FreeVarRel
-       VarSet -- D, X, or C
-       Variable -- VE, VP only
- | SCF VarSet -- fresh, non-empty, N does not occur
- | SCC Variable -- condition, F has no dashed vars, must be VE, VP
- | SCT -- trivial/true
- | SCA [SideCond] -- non empty, non conflicting, unique ordered SCR,SCF,SCC only
+ = SCT            -- "T" : trivial/true
+ | SCF VarSet     -- "N" : new/fresh, N does not occur ANYWHERE
+                        -- set must be non-empty
+ | SCC Variable   -- "c" : condition, F has no dashed vars,
+                        -- variable must be VE, VP
+ | SCR FreeVarRel -- "D", "X", or "C"
+       VarSet           -- D, X, or C, non-empty for D, C
+       Variable         -- VE, VP only
+ | SCA [SideCond] -- "A" : non empty, non conflicting,
+                        -- unique ordered SCF,SCC,SCR only
+ | SCINVALID      -- "0" : invalid side-condition
  deriving (Eq,Ord,Show)
 \end{code}
 
-We want concise matches for \verb"SCR FreeVarRel":
+We want meaningful matches for \verb"SideCond":
 \begin{code}
-pattern NotIn vs v <- SCR FVD vs v
-pattern Is vs v <- SCR FVX vs v
-pattern Covers vs v <- SCR FVC vs v
-pattern Fresh vs <- SCF vs
-pattern IsCond v <- SCC v
-pattern TrueC = SCT
-pattern AndC scs <- SCA scs
+pattern TrueC = SCT                 -- T
+pattern Fresh vs <- SCF vs          -- N
+pattern IsCond v <- SCC v           -- c
+pattern NotIn vs v <- SCR FVD vs v  -- D
+pattern Is vs v <- SCR FVX vs v     -- X
+pattern Covers vs v <- SCR FVC vs v -- C
+pattern AndC scs <- SCA scs         -- A
+\end{code}
+
+Invariant preserving builders:
+\begin{code}
+scFresh :: VarList -> SideCond
+scFresh [] = TrueC
+scFresh vl = SCF $ S.fromList vl
+
+isTermVar :: Variable -> Bool
+isTermVar v@(VE _ _) = True
+isTermVar v@(VP _ _) = True
+isTermVar _          = False
+
+scIsCond :: Variable -> SideCond
+scIsCond v
+ | isTermVar v  =  SCC v
+ | otherwise    =  SCINVALID
+
+scNotIn :: VarList -> Variable -> SideCond
+scNotIn vl v
+ | not (isTermVar v)  =  SCINVALID
+ | null vl            =  TrueC  -- D is empty, so always disjoint !
+ | otherwise          =  SCR FVD (S.fromList vl) v
+
+scIs :: VarList -> Variable -> SideCond
+scIs vl v
+ | not (isTermVar v)  =  SCINVALID
+ | otherwise          =  SCR FVX (S.fromList vl) v
+
+scCovers :: VarList -> Variable -> SideCond
+scCovers vl v
+ | not (isTermVar v)  =  SCINVALID
+ | null vl            =  SCR FVX (S.fromList vl) v
+ | otherwise          =  SCR FVC (S.fromList vl) v
+
+scAnd :: [SideCond] -> SideCond
+scAnd [] = TrueC
+scAnd scs
+ = case mergeSideConds $ sort scs of
+    []    -> SCINVALID
+    [sc'] -> sc'
+    scs'  -> SCA scs'
+ where mergeSideConds = id -- temporary
 \end{code}
 
 \subsubsection{Side Condition Conflicts}
@@ -524,9 +578,14 @@ Which is which should be clear from context.
 \\ X_1 \land C_2 &=& X_1 \subseteq C_2 \land X_1
 \end{eqnarray*}
 
-We start with a function to merge two non-\verb"SCAnd" \verb"SideCond":
+We start with a function to merge two non-\verb"SCAnd" \verb"SideCond",
+that returns a list, because we can have between zero and two results inclusive.
 \begin{code}
 mergeSideCond :: SideCond -> SideCond -> [SideCond]
+
+-- Invalid Handling:  C /\ 0 = 0
+mergeSideCond sc1 SCINVALID = []
+mergeSideCond SCINVALID sc2 = []
 
 -- SCT Handling:  C /\ T = C
 mergeSideCond sc1 TrueC = [sc1]
@@ -584,9 +643,16 @@ mergeSideCond _ (AndC _) = []
 mergeSideCond sc1 sc2 = mergeSideCond sc2 sc1
 \end{code}
 
+\subsubsection{Side Condition Invariant}
+
+We have some non-trivial invariants here.
+
+\newpage
+\subsection{Internal Test Export}
+
 \subsubsection{Conflict Tests}
 
-Test values:
+\paragraph{Test values}
 \begin{code}
 t = TrueC
 
@@ -602,21 +668,78 @@ cd1 = SCC $ PreExpr $ Id "e"
 cd2 = SCC $ PreExpr $ Id "f"
 \end{code}
 
-Tests:
+\paragraph{Tests}
 \begin{code}
+-- Invalid SC Handling:  sc /\ 0 = 0
+ast_tst_C0 = mergeSideCond n1 SCINVALID; ast_res_C0 = []
+ast_tst_0C = mergeSideCond SCINVALID n1; ast_res_T0C = []
+
+-- SCT Handling:  sc /\ T = sc
 ast_tst_CT = mergeSideCond n1 t; ast_res_CT = [n1]
 ast_tst_TC = mergeSideCond t n1; ast_res_TC = [n1]
 
+-- SCC Handling:  iscond(v) /\ iscond(v) = iscond(v)
 ast_tst_cc = mergeSideCond cd1 cd1; ast_res_cc = [cd1]
 ast_tst_c1c2 = mergeSideCond cd1 cd2; ast_res_c1c2 = [cd1,cd2]
 
+-- SCF Handling: N1 /\ N2 = N1 U N2
 ast_tst_NN = mergeSideCond n1 n1; ast_res_NN = [n1]
 ast_tst_N1N2 = mergeSideCond n1 n2; ast_res_N1N2 = [n12]
 ast_tst_N2N1 = mergeSideCond n2 n1; ast_res_N2N1 = [n12]
+
+-- SCF Handling: X /\ N =  disjoint(X,N) /\ X /\ N
+-- SCF Handling: C /\ N =  disjoint(C,N) /\ C /\ N
+-- SCR of different variables don't interact
+-- SCR FVD Handling: D1 /\ D2 = D1 U D2
+-- SCR FVD Handling: D /\ X = disjoint(D,X) /\ X
+-- SCR FVD Handling: D /\ C = disjoint(D,C) /\ (C\D)
+-- SCR FVX Handling: X1 /\ X2 = X1 = X2 /\ X1
+-- SCR FVX Handling: X /\ C = X <= C /\ X
+-- SCR FVC Handling: C1 /\ C2 = C1 intersect C2
 \end{code}
 
 
-\subsubsection{Side Condition Invariant}
 
-We have some non-trivial invariants here.
-So we have non-constructor patterns in places.
+\subsubsection{HUnit Tests}
+
+\begin{code}
+test_CT = ast_tst_CT @?= ast_res_CT
+test_TC = ast_tst_TC @?= ast_res_TC
+test_cc = ast_tst_cc @?= ast_res_cc
+test_c1c2 = ast_tst_c1c2 @?= ast_res_c1c2
+test_NN = ast_tst_NN @?= ast_res_NN
+test_N1N2 = ast_tst_N1N2 @?= ast_res_N1N2
+test_N2N1 = ast_tst_N2N1 @?= ast_res_N2N1
+\end{code}
+
+\subsubsection{QuickCheck Tests}
+
+\begin{code}
+  {-
+ prop_ident str
+  =  validIdent str
+     ==>
+     idName (fromJust $ ident str) @?= str
+-}
+\end{code}
+
+\subsubsection{AST internal tests}
+\begin{code}
+test_AST :: [TF.Test]
+test_AST
+ = [ testGroup "\nSide Condition Conflicts"
+     [
+       testCase "TrueC is right-identity" test_CT
+     , testCase "TrueC is left-identity" test_TC
+     , testCase "IsCond is self-Idempotent" test_cc
+     , testCase "IsCond is Independent" test_c1c2
+     , testCase "Fresh is self-Idempotent" test_NN
+     , testCase "Fresh merges with Union (1)" test_N1N2
+     , testCase "Fresh merges with Union (2)" test_N2N1
+     ]
+{-  , testGroup "QuickCheck Ident"
+     [
+       testProperty "Idents Always" prop_ident
+     ] -}
+   ]
+\end{code}

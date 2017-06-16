@@ -18,6 +18,11 @@ library
   exposed-modules:     AST,Lib,Proto
   build-depends:       base >= 4.7 && < 5
                      , containers
+                     , HUnit
+                     , QuickCheck
+                     , test-framework
+                     , test-framework-hunit
+                     , test-framework-quickcheck2
   default-language:    Haskell2010
 
 executable reasonEq-exe

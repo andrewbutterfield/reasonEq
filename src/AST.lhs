@@ -490,7 +490,7 @@ We also have an explicit false side-condition as a sentinel value.
 \begin{code}
 data SideCond
  = SCT            -- "T" : trivial/true
- | SCF VarSet     -- "N" : new/fresh, N does not occur ANYWHERE
+ | SCF VarSet     -- "N" : new/fresh, N does not occur free in matched term
                         -- set must be non-empty
  | SCC Variable   -- "c" : condition, F has no dashed vars,
                         -- variable must be VE, VP
@@ -574,7 +574,7 @@ Which is which should be clear from context.
 \\ N_1 \land X_2 &=& N_1 \cap X_2 = \emptyset \land N_1 \land X_1
 \\ N_1 \land C_2 &=& N_1 \cap C_1 = \emptyset \land N_1 \land C_1
 \\ D_1 \land X_2 &=& D_1 \cap X_2 = \emptyset \land X_2
-\\ D_1 \land C_2 &=& D_1 \land (C_2 \setminus D_1)
+\\ D_1 \land C_2 &=& C_2 \not\subseteq D_1 \land D_1 \land (C_2 \setminus D_1)
 \\ X_1 \land C_2 &=& X_1 \subseteq C_2 \land X_1
 \end{eqnarray*}
 
@@ -620,10 +620,10 @@ mergeSideCond sc1@(vs1 `NotIn` v1) sc2@(vs2 `NotIn` v2)
 mergeSideCond sc1@(vs1 `NotIn` v1) sc2@(vs2 `Is` v2)
  | vs1 `overlaps` vs2  =  []
  | otherwise  =  [sc2]
--- SCR FVD Handling: D /\ C = disjoint(D,C) /\ (C\D)
+-- SCR FVD Handling: D /\ C = not(C<= D) /\ D /\ (C\D)
 mergeSideCond sc1@(vs1 `NotIn` v1) sc2@(vs2 `Covers` v2)
- | vs1 `overlaps` vs2  =  []
- | otherwise  =  [SCR FVC (vs2 `S.difference` vs1) v1]
+ | vs2 `S.isSubsetOf` vs1  =  []
+ | otherwise  =  [sc1,SCR FVC (vs2 `S.difference` vs1) v1]
 
 -- SCR FVX Handling: X1 /\ X2 = X1 = X2 /\ X1
 mergeSideCond sc1@(vs1 `Is` _) sc2@(vs2 `Is` _)
@@ -636,7 +636,9 @@ mergeSideCond sc1@(vs1 `Is` _) sc2@(vs2 `Covers` _)
 
 -- SCR FVC Handling: C1 /\ C2 = C1 intersect C2
 mergeSideCond sc1@(vs1 `Covers` v1) sc2@(vs2 `Covers` _)
- = [SCR FVC (vs1 `S.intersection` vs2) v1]
+ | S.null vs'  =  []
+ | otherwise   =  [SCR FVC vs' v1]
+ where vs' = vs1 `S.intersection` vs2
 
 -- atomic side-conditions only
 mergeSideCond _ (AndC _) = []
@@ -659,58 +661,144 @@ t = TrueC
 v_a = StdVar $ PreVar $ Id "a"
 v_b = StdVar $ PreVar $ Id "b"
 
-n0 = SCF $ S.fromList []
-n1 = SCF $ S.fromList [v_a]
-n2 = SCF $ S.fromList [v_b]
-n12 = SCF $ S.fromList [v_a,v_b]
+s0 = S.fromList [] :: VarSet
+sa = S.fromList [v_a]
+sb = S.fromList [v_b]
+sab = S.fromList [v_a,v_b]
 
-cd1 = SCC $ PreExpr $ Id "e"
-cd2 = SCC $ PreExpr $ Id "f"
+n1 = SCF sa
+n2 = SCF sb
+n12 = SCF sab
+
+v_e = PreExpr $ Id "e"
+v_f = PreExpr $ Id "f"
+
+cd1 = SCC v_e
+cd2 = SCC v_f
+
+x0  = SCR FVX s0 v_e
+x1  = SCR FVX sa v_e
+x2  = SCR FVX sb v_e
+x2f = SCR FVX sb v_f
+x12 = SCR FVX sab v_e
+
+c1  = SCR FVC sa v_e
+c2  = SCR FVC sb v_e
+c2f = SCR FVC sb v_f
+c12 = SCR FVC sab v_e
+
+
+d1  =  SCR FVD sa v_e
+d2  =  SCR FVD sb v_e
+d2f = SCR FVD sb v_f
+d12 = SCR FVD sab v_e
 \end{code}
 
 \paragraph{Tests}
 \begin{code}
 -- Invalid SC Handling:  sc /\ 0 = 0
-ast_tst_C0 = mergeSideCond n1 SCINVALID; ast_res_C0 = []
-ast_tst_0C = mergeSideCond SCINVALID n1; ast_res_T0C = []
+test_C0
+ = testCase "SCINVALID is right-zero" (mergeSideCond n1 SCINVALID @?= [])
+test_0C
+ = testCase "SCINVALID is left-zero" (mergeSideCond SCINVALID n1 @?= [])
 
 -- SCT Handling:  sc /\ T = sc
-ast_tst_CT = mergeSideCond n1 t; ast_res_CT = [n1]
-ast_tst_TC = mergeSideCond t n1; ast_res_TC = [n1]
+test_CT = testCase "TrueC is right-identity" (mergeSideCond n1 t @?= [n1])
+test_TC = testCase "TrueC is left-identity" (mergeSideCond t n1 @?= [n1])
 
 -- SCC Handling:  iscond(v) /\ iscond(v) = iscond(v)
-ast_tst_cc = mergeSideCond cd1 cd1; ast_res_cc = [cd1]
-ast_tst_c1c2 = mergeSideCond cd1 cd2; ast_res_c1c2 = [cd1,cd2]
+test_cc
+ = testCase "IsCond is self-Idempotent" (mergeSideCond cd1 cd1 @?= [cd1])
+test_c1c2
+ = testCase "IsCond is Independent" (mergeSideCond cd1 cd2 @?= [cd1,cd2])
 
 -- SCF Handling: N1 /\ N2 = N1 U N2
-ast_tst_NN = mergeSideCond n1 n1; ast_res_NN = [n1]
-ast_tst_N1N2 = mergeSideCond n1 n2; ast_res_N1N2 = [n12]
-ast_tst_N2N1 = mergeSideCond n2 n1; ast_res_N2N1 = [n12]
+test_NN
+ = testCase "Fresh is self-Idempotent" (mergeSideCond n1 n1 @?= [n1])
+test_N1N2
+ = testCase "Fresh merges with Union (1)" (mergeSideCond n1 n2 @?= [n12])
+test_N2N1
+ = testCase "Fresh merges with Union (2)" (mergeSideCond n2 n1 @?= [n12])
 
 -- SCF Handling: X /\ N =  disjoint(X,N) /\ X /\ N
+test_XN0
+ = testCase "Is left-conflicts with Fresh" (mergeSideCond x1 n1 @?= [])
+test_NX0
+ = testCase "Fresh left-conflicts with Is" (mergeSideCond n1 x1 @?= [])
+test_XN
+ = testCase "Is left-compatible with Fresh" (mergeSideCond x1 n2 @?= [x1,n2])
+test_NX
+ = testCase "Fresh left-compatible with Is" (mergeSideCond n2 x1 @?= [x1,n2])
+
 -- SCF Handling: C /\ N =  disjoint(C,N) /\ C /\ N
--- SCR of different variables don't interact
+test_CN0 = testCase "Covers left-conflicts with Fresh"
+                    (mergeSideCond c1 n1 @?= [])
+test_NC0 = testCase "Fresh left-conflicts with Covers"
+                    (mergeSideCond n1 c1 @?= [])
+test_CN  = testCase "Covers left-compatible with Fresh"
+                    (mergeSideCond c1 n2 @?= [c1,n2])
+test_NC  = testCase "Fresh left-compatible with Covers"
+                    (mergeSideCond n2 c1 @?= [c1,n2])
+
 -- SCR FVD Handling: D1 /\ D2 = D1 U D2
+test_DD
+ = testCase "NotIn merges with union" (mergeSideCond d1 d2 @?= [d12])
+
 -- SCR FVD Handling: D /\ X = disjoint(D,X) /\ X
--- SCR FVD Handling: D /\ C = disjoint(D,C) /\ (C\D)
+test_XD0
+ = testCase "Is left-conflicts with NotIn" (mergeSideCond x1 d1 @?= [])
+test_DX0
+ = testCase "NotIn left-conflicts with Is" (mergeSideCond d1 x1 @?= [])
+test_XD
+ = testCase "Is left-subsumes NotIn" (mergeSideCond x1 d2 @?= [x1])
+test_DX
+ = testCase "Is right-subsumes NotIn" (mergeSideCond d2 x1 @?= [x1])
+
+-- SCR FVD Handling: D /\ C = not (C <= D) /\ D /\ (C\D)
+test_CD0
+ = testCase "Covers left-conflicts with NotIn" (mergeSideCond c1 d12 @?= [])
+test_DC0
+ = testCase "NotIn left-conflicts with Covers" (mergeSideCond d12 c1 @?= [])
+test_CD
+ = testCase "Covers left-subsumes NotIn" (mergeSideCond c12 d2 @?= [d2,c1])
+test_DC
+ = testCase "Covers right-subsumes NotIn" (mergeSideCond d2 c12 @?= [d2,c1])
+
 -- SCR FVX Handling: X1 /\ X2 = X1 = X2 /\ X1
+test_XX0
+ = testCase "Is conflicts if different" (mergeSideCond x1 x2 @?= [])
+test_XX
+ = testCase "Is OK if identical" (mergeSideCond x1 x1 @?= [x1])
+
 -- SCR FVX Handling: X /\ C = X <= C /\ X
+test_XC0
+ = testCase "Is left-conflicts with Covers" (mergeSideCond x12 c1 @?= [])
+test_CX0
+ = testCase "Covers left-conflicts with Is" (mergeSideCond c1 x12 @?= [])
+test_XC
+ = testCase "Is left-subsumes Covers" (mergeSideCond x1 c12 @?= [x1])
+test_CX
+ = testCase "Is right-subsumes Covers" (mergeSideCond c12 x1 @?= [x1])
+
 -- SCR FVC Handling: C1 /\ C2 = C1 intersect C2
+test_CC0
+ = testCase "Covers conflicts if disjoint" (mergeSideCond c1 c2 @?= [])
+test_CC
+ = testCase "Covers merge with intersection" (mergeSideCond c12 c1 @?= [c1])
+
+-- SCR of different variables don't interact
+test_D1X2 = testCase "Diff. Vars Independent (NotIn,Is)"
+                     (mergeSideCond d1 x2f @?= [d1,x2f])
+test_X2D1 = testCase "Diff. Vars Independent (Is,NotIn)"
+                     (mergeSideCond x2f d1 @?= [x2f,d1])
+test_D1C2 = testCase "Diff. Vars Independent (NotIn,Covers)"
+                     (mergeSideCond d1 c2f @?= [d1,c2f])
+test_C2D1 = testCase "Diff. Vars Independent (Covers,NotIn)"
+                     (mergeSideCond c2f d1 @?= [c2f,d1])
 \end{code}
 
 
 
-\subsubsection{HUnit Tests}
-
-\begin{code}
-test_CT = ast_tst_CT @?= ast_res_CT
-test_TC = ast_tst_TC @?= ast_res_TC
-test_cc = ast_tst_cc @?= ast_res_cc
-test_c1c2 = ast_tst_c1c2 @?= ast_res_c1c2
-test_NN = ast_tst_NN @?= ast_res_NN
-test_N1N2 = ast_tst_N1N2 @?= ast_res_N1N2
-test_N2N1 = ast_tst_N2N1 @?= ast_res_N2N1
-\end{code}
 
 \subsubsection{QuickCheck Tests}
 
@@ -727,15 +815,19 @@ test_N2N1 = ast_tst_N2N1 @?= ast_res_N2N1
 \begin{code}
 test_AST :: [TF.Test]
 test_AST
- = [ testGroup "\nSide Condition Conflicts"
+ = [ testGroup "\nSide Condition Conflicts (AST.mergeSideCond)"
      [
-       testCase "TrueC is right-identity" test_CT
-     , testCase "TrueC is left-identity" test_TC
-     , testCase "IsCond is self-Idempotent" test_cc
-     , testCase "IsCond is Independent" test_c1c2
-     , testCase "Fresh is self-Idempotent" test_NN
-     , testCase "Fresh merges with Union (1)" test_N1N2
-     , testCase "Fresh merges with Union (2)" test_N2N1
+       test_C0, test_0C, test_CT, test_TC, test_cc, test_c1c2
+     , test_NN, test_N1N2, test_N2N1
+     , test_XN0, test_NX0, test_XN, test_NX
+     , test_CN0, test_NC0, test_CN, test_NC
+     , test_DD
+     , test_XD0, test_DX0, test_XD, test_DX
+     , test_CD0, test_DC0, test_CD, test_DC
+     , test_XX0, test_XX
+     , test_XC0, test_CX0, test_XC, test_CX
+     , test_CC0, test_CC
+     , test_D1X2, test_X2D1, test_D1C2, test_C2D1
      ]
 {-  , testGroup "QuickCheck Ident"
      [

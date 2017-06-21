@@ -18,6 +18,7 @@ library
   exposed-modules:     AST,Lib,Proto
   build-depends:       base >= 4.7 && < 5
                      , containers
+                     -- we need to support internal tests for some modules
                      , HUnit
                      , QuickCheck
                      , test-framework

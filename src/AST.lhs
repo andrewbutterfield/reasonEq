@@ -550,11 +550,24 @@ scCovers vl v
 scAnd :: [SideCond] -> SideCond
 scAnd [] = TrueC
 scAnd scs
- = case mergeSideConds $ sort scs of
-    []    -> SCINVALID
-    [sc'] -> sc'
-    scs'  -> SCA scs'
- where mergeSideConds = id -- temporary
+ | flattened == [TrueC]  =  TrueC
+ | otherwise  = case mergeSideConds $ sort flattened of
+                 []    -> SCINVALID
+                 [sc'] -> sc'
+                 scs'  -> SCA scs'
+  where flattened = flattenSCAnds scs
+\end{code}
+
+\subsubsection{Flattening \texttt{SCAnds}.}
+
+\begin{code}
+flattenSCAnds :: [SideCond] -> [SideCond]
+flattenSCAnds []                =  []
+flattenSCAnds t@[TrueC]         =  t
+flattenSCAnds (SCINVALID :scs)  =  []
+flattenSCAnds ((SCA scas):scs)  =  (flattenSCAnds scas) ++ flattenSCAnds scs
+flattenSCAnds ( TrueC    :scs)  =  flattenSCAnds scs
+flattenSCAnds ( sc       :scs)  =  sc : flattenSCAnds scs
 \end{code}
 
 \subsubsection{Side Condition Conflicts}
@@ -568,14 +581,14 @@ Which is which should be clear from context.
 \begin{eqnarray*}
    N_1 \land N_2 &=& N_1 \cup N_2
 \\ D_1 \land D_2 &=& D_1 \cup D_2
-\\ X_1 \land X_2 &=& X_1 = X_2 \land X_1
+\\ X_1 \land X_2 &=& X_1 = X_2 \;\land\; X_1
 \\ C_1 \land C_2 &=& C_1 \cap C_2
 \\
-\\ N_1 \land X_2 &=& N_1 \cap X_2 = \emptyset \land N_1 \land X_1
-\\ N_1 \land C_2 &=& N_1 \cap C_1 = \emptyset \land N_1 \land C_1
-\\ D_1 \land X_2 &=& D_1 \cap X_2 = \emptyset \land X_2
-\\ D_1 \land C_2 &=& C_2 \not\subseteq D_1 \land D_1 \land (C_2 \setminus D_1)
-\\ X_1 \land C_2 &=& X_1 \subseteq C_2 \land X_1
+\\ N_1 \land X_2 &=& N_1 \cap X_2 = \emptyset \;\land\; N_1 \;\land\; X_1
+\\ N_1 \land C_2 &=& N_1 \cap C_1 = \emptyset \;\land\; N_1 \;\land\; C_1
+\\ D_1 \land X_2 &=& D_1 \cap X_2 = \emptyset \;\land\; X_2
+\\ D_1 \land C_2 &=& C_2 \not\subseteq D_1 \;\land\; D_1 \;\land\; (C_2 \setminus D_1)
+\\ X_1 \land C_2 &=& X_1 \subseteq C_2 \;\land\; X_1
 \end{eqnarray*}
 
 We start with a function to merge two non-\verb"SCAnd" \verb"SideCond",
@@ -643,6 +656,19 @@ mergeSideCond sc1@(vs1 `Covers` v1) sc2@(vs2 `Covers` _)
 -- atomic side-conditions only
 mergeSideCond _ (AndC _) = []
 mergeSideCond sc1 sc2 = mergeSideCond sc2 sc1
+\end{code}
+
+We use \verb"mergeSideCond" to implement a function
+to merge a sorted list of atomic side-conditions,
+where neither \verb"SCINVALID" nor \verb"TrueC" occur.
+We first partition the given list into sub-lists: one containing all \verb"SCF",
+the others, for each \verb"ExprVar" and \verb"PredVar" found in the list,
+containing all the \verb"SCC" and \verb"SCR" referring to that variable.
+We merge all the \verb"SCF" into one, and then add that onto the front of the other variable-specific lists. Each of which is then systematically merged.
+What remains, if no conflicts are found, is merged and sorted.
+\begin{code}
+mergeSideConds :: [SideCond] -> [SideCond]
+mergeSideConds = id -- for now
 \end{code}
 
 \subsubsection{Side Condition Invariant}

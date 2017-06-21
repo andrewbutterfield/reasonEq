@@ -514,6 +514,13 @@ pattern Covers vs v <- SCR FVC vs v -- C
 pattern AndC scs <- SCA scs         -- A
 \end{code}
 
+Useful to have predicates as well:
+\begin{code}
+isFresh :: SideCond -> Bool
+isFresh (Fresh _) = True
+isFresh _         = False
+\end{code}
+
 Invariant preserving builders:
 \begin{code}
 scFresh :: VarList -> SideCond
@@ -658,6 +665,19 @@ mergeSideCond _ (AndC _) = []
 mergeSideCond sc1 sc2 = mergeSideCond sc2 sc1
 \end{code}
 
+Function \verb"mergeFold" reduces a non-empty list of side-conditions to a single one,
+provided all the side-conditions are so-reducible.
+\begin{code}
+mergeFold :: [SideCond] -> SideCond
+mergeFold []   = TrueC
+mergeFold [sc] = sc
+mergeFold (sc:scs)
+ = case mergeSideCond sc $ mergeFold scs of
+     []      -> SCINVALID
+     (sc':_) -> sc'
+\end{code}
+
+
 We use \verb"mergeSideCond" to implement a function
 to merge a sorted list of atomic side-conditions,
 where neither \verb"SCINVALID" nor \verb"TrueC" occur.
@@ -668,7 +688,11 @@ We merge all the \verb"SCF" into one, and then add that onto the front of the ot
 What remains, if no conflicts are found, is merged and sorted.
 \begin{code}
 mergeSideConds :: [SideCond] -> [SideCond]
-mergeSideConds = id -- for now
+mergeSideConds scs
+ = let
+   (ns,vscs) = span isFresh scs
+   n' = mergeFold ns
+   in (n':vscs)
 \end{code}
 
 \subsubsection{Side Condition Invariant}
@@ -678,9 +702,7 @@ We have some non-trivial invariants here.
 \newpage
 \subsection{Internal Test Export}
 
-\subsubsection{Conflict Tests}
-
-\paragraph{Test values}
+\subsubsection{Test values}
 \begin{code}
 t = TrueC
 
@@ -720,7 +742,7 @@ d2f = SCR FVD sb v_f
 d12 = SCR FVD sab v_e
 \end{code}
 
-\paragraph{Tests}
+\subsubsection{Tests}
 \begin{code}
 -- Invalid SC Handling:  sc /\ 0 = 0
 test_C0
@@ -824,20 +846,7 @@ test_C2D1 = testCase "Diff. Vars Independent (Covers,NotIn)"
 \end{code}
 
 
-
-
-\subsubsection{QuickCheck Tests}
-
-\begin{code}
-  {-
- prop_ident str
-  =  validIdent str
-     ==>
-     idName (fromJust $ ident str) @?= str
--}
-\end{code}
-
-\subsubsection{AST internal tests}
+\subsubsection{Exported Test Group}
 \begin{code}
 test_AST :: [TF.Test]
 test_AST

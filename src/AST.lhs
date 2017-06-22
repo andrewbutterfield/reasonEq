@@ -1,4 +1,9 @@
 \section{Abstract Syntax}
+\begin{verbatim}
+Copyright  Andrew Buttefield (c) 2017
+
+LICENSE: BSD3, see file LICENSE at reasonEq root
+\end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module AST ( Name
@@ -22,7 +27,8 @@ module AST ( Name
            , VarList
            , VarSet
            , isPreVarSet
-           , Substn
+           , TermSub, LVarSub, Substn, pattern Substn
+           , pattern TermSub, pattern LVarSub, substn
            , Type
            , pattern ArbType,  pattern TypeVar, pattern TypeApp
            , pattern DataType, pattern FunType, pattern GivenType
@@ -37,9 +43,9 @@ module AST ( Name
            , pattern E2, pattern P2
            , VarSideCond, pattern Exact, pattern Approx
            , pattern Disjoint, pattern Covers, pattern DisjCov, pattern PreDisj
-           , nullVSC
+           , vscTrue
            , addPreSC, addExactSC, addDisjSC, addCoverSC, checkNewSC
-           , VarSCMap, SideCond
+           , VarSCMap, SideCond, scTrue
            , pattern SC, pattern Fresh, pattern VarSCs, sidecond
            , test_AST
            ) where
@@ -54,7 +60,6 @@ import Test.HUnit
 import Test.Framework as TF (defaultMain, testGroup, Test)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
---import Test.QuickCheck ((==>))
 \end{code}
 
 \subsection{AST Introduction}
@@ -62,12 +67,13 @@ import Test.Framework.Providers.QuickCheck2 (testProperty)
 We implement names, identifiers, a number of variants of variables,
 terms that cover expressions and predicates, and a side-condition language.
 
+\newpage
 \subsection{Naming}
 
 We consider `names' to be arbitrary strings,
 while `identifiers' are names that satisfy a fairly standard convention
 for program variables, namely starting with an alpha character,
-followed by zero of more alphas, digits and underscores.
+followed by zero or more alphas, digits and underscores.
 
 \begin{code}
 type Name = String
@@ -88,10 +94,48 @@ isIdContChar c = isAlpha c || isDigit c || c == '_'
 idName :: Identifier -> Name
 idName (Id nm) = nm
 \end{code}
+
+Tests:
+\begin{code}
+test_ident_null  =  testCase "ident \"\""  ( ident ""   @?=  Nothing )
+
+test_ident_a  =  testCase "ident \"a\"" ( ident "a"  @?=  Just (Id "a") )
+test_ident_Z  =  testCase "ident \"Z\"" ( ident "Z"  @?=  Just (Id "Z") )
+test_ident__  =  testCase "ident \"_\"" ( ident "_"  @?=  Nothing )
+test_ident_'  =  testCase "ident \"'\""   ( ident "'"  @?=  Nothing )
+test_ident_5  =  testCase "ident \"5\""   ( ident "5"  @?=  Nothing )
+
+test_ident_aq  =  testCase "ident \"a?\"" ( ident "a?"  @?=  Nothing )
+test_ident_Zat =  testCase "ident \"Z@\"" ( ident "Z@"  @?=  Nothing )
+test_ident__a  =  testCase "ident \"_a\"" ( ident "_a"  @?=  Nothing )
+test_ident_'a  =  testCase "ident \"'a\"" ( ident "'a"  @?=  Nothing )
+test_ident_5a  =  testCase "ident \"5a\"" ( ident "5a"  @?=  Nothing )
+
+test_ident_Mp  =  testCase "ident \"Mp\"" ( ident "Mp"  @?=  Just (Id "Mp") )
+test_ident_N5  =  testCase "ident \"N5\"" ( ident "N5"  @?=  Just (Id "N5") )
+test_ident_R_  =  testCase "ident \"R_\"" ( ident "R_"  @?=  Just (Id "R_") )
+
+identTests
+ = testGroup "AST.ident"
+    [ test_ident_null
+    , test_ident_a, test_ident_Z, test_ident__, test_ident_', test_ident_5
+    , test_ident_aq, test_ident_Zat, test_ident__a, test_ident_'a, test_ident_5a
+    , test_ident_Mp, test_ident_N5, test_ident_R_
+    ]
+\end{code}
 We will allow the definition, in this module only,
 of identifiers whose names start with an underscore.
 These will usually be intended to provide some ``base names'',
 to key builtin entities that we wish to protect from outside interference.
+
+Test values:
+\begin{code}
+i_a = Id "a"
+i_b = Id "b"
+i_e = Id "e"
+i_f = Id "f"
+\end{code}
+
 
 \newpage
 \subsection{Variables}
@@ -187,6 +231,18 @@ isPreVar (PreCond _) = True
 isPreVar _           = False
 \end{code}
 
+\subsubsection{Variable test values}
+\begin{code}
+v_a = StdVar $ PreVar $ i_a
+v_b = StdVar $ PreVar $ i_b
+v_e = PreExpr $ i_e
+v_f = PreExpr $ i_f
+v_a' = StdVar $ PostVar $ i_a
+v_b' = StdVar $ PostVar $ i_b
+v_e' = PostExpr $ i_e
+v_f' = PostExpr $ i_f
+\end{code}
+
 \subsubsection{List Variables}
 
 We also need to introduce the idea of lists of variables,
@@ -227,6 +283,14 @@ isPreListVar (PrePreds _) = True
 isPreListVar _            = False
 \end{code}
 
+\subsubsection{List Variable test values}
+\begin{code}
+lva = ObsLVar Before (i_a) []
+lvb = ObsLVar After (i_b) []
+lve = ExprLVar Before (i_e) []
+lvf = ExprLVar Before (i_f) []
+\end{code}
+
 \subsubsection{Variable Lists}
 
 A variable-list is composed in general of a mix of normal variables
@@ -264,6 +328,19 @@ isPreVarSet :: VarSet -> Bool
 isPreVarSet = all isPreGenVar . S.toList
 \end{code}
 
+\subsubsection{Variable Set test values}
+\begin{code}
+s0   = S.fromList [] :: VarSet
+sa   = S.fromList [v_a]
+sa'  = S.fromList [v_a']
+sb   = S.fromList [v_b]
+sab  = S.fromList [v_a,v_b]
+saa' = S.fromList [v_a,v_a']
+sab' = S.fromList [v_a,v_b']
+sbb' = S.fromList [v_b,v_b']
+\end{code}
+
+\newpage
 \subsection{Substitutions}
 
 Substitutions associate a list of terms (types,expressions,predicates)
@@ -272,9 +349,55 @@ We also want to allow list-variables of the appropriate kind
 to occur for things, but only when the target variable is also
 a list variable.
 \begin{code}
-type Substn t
-  =  ( [(Variable,t)]        -- target variable, then replacememt term
-     , [(ListVar,ListVar)] ) -- target list-variable, then replacement l.v.
+type TermSub = [(Variable,Term)] -- target variable, then replacememt term
+type LVarSub = [(ListVar,ListVar)] -- target list-variable, then replacement l.v.
+data Substn --  pair-lists below are ordered and unique in fst part
+  = SN TermSub LVarSub
+  deriving (Eq,Ord,Show,Read)
+\end{code}
+
+Patterns and builders:
+\begin{code}
+pattern Substn ts lvs <- SC ts lvs
+pattern TermSub ts   <- SC ts _
+pattern LVarSub lvs  <- SC _  lvs
+
+substn :: Monad m => TermSub -> LVarSub -> m Substn
+substn ts lvs
+ | dupKeys ts'  =  fail "Term substitution has duplicate variables"
+ | dupKeys lvs' =  fail "List-var subst. has duplicate variables"
+ | otherwise    = return $ SN ts' lvs'
+ where
+  ts'  = sort ts
+  lvs' = sort lvs
+
+dupKeys :: Eq a => [(a,b)] -> Bool
+-- assumes list is ordered
+dupKeys ((a1,_):next@((a2,_):_))  =  a1 == a2 || dupKeys next
+dupKeys _                         =  False
+\end{code}
+
+Tests for substitution construction:
+\begin{code}
+lvs_ord_unq = [(lva,lvf),(lvb,lve)]
+test_substn_lvs_id = testCase "LVarSub ordered, unique"
+ ( substn [] lvs_ord_unq  @?= Just (SN [] lvs_ord_unq) )
+
+lvs_unord_unq = [(lvb,lve),(lva,lvf)]
+
+test_substn_lvs_sort = testCase "LVarSub unordered, unique"
+ ( substn [] lvs_unord_unq  @?= Just (SN [] lvs_ord_unq) )
+
+lvs_unord_dup = [(lva,lva),(lvb,lve),(lva,lvf)]
+
+test_substn_lvs_dup = testCase "LVarSub with duplicates"
+ ( substn [] lvs_unord_dup  @?= Nothing )
+
+substnTests = testGroup "AST.substn"
+               [ test_substn_lvs_id
+               , test_substn_lvs_sort
+               , test_substn_lvs_dup
+               ]
 \end{code}
 
 \newpage
@@ -318,6 +441,7 @@ envtype :: Type
 envtype = TG _ENV
 \end{code}
 
+\newpage
 \subsection{Terms}
 
 We want to implement a collection of terms that include
@@ -445,7 +569,7 @@ data Term
  | C TermKind Identifier [Term]        -- Constructor
  | B TermKind Identifier VarSet Term   -- Binder (unordered)
  | L TermKind Identifier VarList Term  -- Binder (ordered)
- | S TermKind Term (Substn Term)       -- Substitution
+ | S TermKind Term Substn              -- Substitution
  | I TermKind                          -- Iterator
      Identifier  -- top grouping constructor
      Identifier  -- component constructor
@@ -488,7 +612,7 @@ as values of type \verb"Text", or as terms with modified names.
 They don't need special handling or representation here.
 
 
-
+\newpage
 \subsection{Side-Conditions}
 
 A side-condition is property used in laws,
@@ -553,6 +677,8 @@ In fact we see that our representation either consists solely of $X$,
 or else contains one or more of $pre$, $D$, or $C$.
 If both $pre$ and $C$ were specified, then we will have checked that all relevant variables in $C$ satisfy $pre$, and hence it becomes superfluous.
 
+\newpage
+\subsubsection{Variable side-conditions}
 So, a side-condition associated with a term variable is either exact,
 or approximate:
 \begin{code}
@@ -573,74 +699,259 @@ pattern PreDisj pre d <- A pre (Just d) _
 
 Typically a variable side-condition will be built
 from fragments that specify one of $pre$, $D$, $X$ or $C$,
-starting with a ``null'' condition.
+starting with a condition where all parts are ``null'',
+signalling a trivially true side-condition.
 \begin{code}
-nullVSC :: VarSideCond
-nullVSC = A False Nothing Nothing
+vscTrue :: VarSideCond
+vscTrue = A False Nothing Nothing
 \end{code}
 
 We will want to merge a set with a maybe-set below:
 \begin{code}
-mergeSet  :: Ord a
+mrgSet  :: Ord a
           => (Set a -> Set a -> Set a) -> Set a -> Maybe (Set a)
-          -> Maybe (Set a)
-mergeSet op s Nothing   = Just (s)
-mergeSet op s (Just s') = Just (s `op` s')
+          -> Set a
+mrgSet op s Nothing    =  s
+mrgSet op s (Just s')  =  s `op` s'
+
+jmrgSet op s ms = Just $ mrgSet op s ms
 \end{code}
 
-Adding $pre$: check against any pre-existing $X$ or $C$
+Variable Side-Condition test values:
+\begin{code}
+sc_pre          =  A True Nothing Nothing
+sc_exact_a      =  Exact sa
+sc_exact_b      =  Exact sb
+sc_exact_ab     =  Exact sab
+sc_exact_ab'    =  Exact sab'
+sc_cover_a      =  A False Nothing $ Just sa
+sc_cover_ab     =  A False Nothing $ Just sab
+sc_cover_ab'    =  A False Nothing $ Just sab'
+sc_disjoint_a   =  A False (Just sa) Nothing
+sc_disjoint_b   =  A False (Just sb) Nothing
+sc_disjoint_ab  =  A False (Just sab) Nothing
+sc_D_a_C_b      =  A False (Just sa) (Just sb)
+sc_D_a_C_bb'    =  A False (Just sa) (Just sbb')
+\end{code}
+
+\newpage
+\paragraph{Adding $pre$:} check against any pre-existing $X$ or $C$
 \begin{code}
 addPreSC :: Monad m => VarSideCond -> m VarSideCond
+
 addPreSC vsc@(Exact x)
  | isPreVarSet x   =  return vsc
  | otherwise       =  fail "AST.addPreSC: exact set is not a precondition"
+
 addPreSC vsc@(Covers vs)
  | isPreVarSet vs   =  return vsc
  | otherwise        =  fail "AST.addPreSC: covering set is not a precondition"
+
 addPreSC (Approx _ mD mC) = return $ A True mD mC
 \end{code}
 
-Adding $D$, check against any pre-existing $X$ or $C$
+Tests:
+\begin{code}
+test_add_pre_to_true = testCase "Add pre to trivial SC"
+ ( addPreSC vscTrue  @?=  Just sc_pre )
+
+test_add_pre_to_exact_ok = testCase "Add pre to exact SC (OK)"
+ ( addPreSC sc_exact_ab  @?=  Just sc_exact_ab )
+
+test_add_pre_to_exact_fail = testCase "Add pre to exact SC (Fail)"
+ ( addPreSC sc_exact_ab'  @?=  Nothing )
+
+test_add_pre_to_cover_ok = testCase "Add pre to cover SC (OK)"
+ ( addPreSC sc_cover_ab  @?=  Just sc_cover_ab )
+
+test_add_pre_to_cover_fail = testCase "Add pre to cover SC (Fail)"
+ ( addPreSC sc_cover_ab'  @?=  Nothing )
+
+test_add_pre_to_disjoint = testCase "Add pre to disjoint"
+ ( addPreSC sc_disjoint_ab  @?=  Just (A True (Just sab) Nothing) )
+
+addPreTests = testGroup "AST.addPreSC"
+               [ test_add_pre_to_true
+               , test_add_pre_to_exact_ok
+               , test_add_pre_to_exact_fail
+               , test_add_pre_to_cover_ok
+               , test_add_pre_to_cover_fail
+               , test_add_pre_to_disjoint
+               ]
+\end{code}
+
+\newpage
+\paragraph{Adding $D$:} check against any pre-existing $X$ or $C$
 \begin{code}
 addDisjSC :: Monad m => VarSet -> VarSideCond -> m VarSideCond
+
 addDisjSC d vsc@(Exact x)
  | d `disjoint` x  =  return vsc
  | otherwise       =  fail "AST.addDisjSC: exact and disjoint sets overlap"
+
 addDisjSC d (Approx pre mD mC@(Just c))
- | c `disjoint` d  =  fail "AST.addDisjSC: covering and disjoint sets overlap"
- | otherwise           = return $ A pre (mergeSet S.union d mD) mC
+ | c `disjoint` d  =  return $ A pre (jmrgSet S.union d mD) mC
+ | otherwise       =  fail "AST.addDisjSC: covering and disjoint sets overlap"
+
 addDisjSC d (Approx pre mD mC)
-  = return $ A pre (mergeSet S.union d mD) mC
+  = return $ A pre (jmrgSet S.union d mD) mC
 \end{code}
 
-Adding $X$, check against any pre-existing $pre$, $D$, $X$ or $C$
+Tests:
+\begin{code}
+test_add_disj_to_true = testCase "Add disjoint to trivial SC"
+ ( addDisjSC sab vscTrue  @?=  Just sc_disjoint_ab)
+
+test_add_disj_to_exact_ok = testCase "Add disjoint to exact (Ok)"
+ ( addDisjSC sb sc_exact_a  @?=  Just sc_exact_a )
+
+test_add_disj_to_exact_fail = testCase "Add disjoint to exact (Fail)"
+ ( addDisjSC sb sc_exact_ab  @?=  Nothing )
+
+test_add_disj_to_cover_ok = testCase "Add disjoint to cover (Ok)"
+ ( addDisjSC sb sc_cover_a  @?=  Just (A False (Just sb) (Just sa)) )
+
+test_add_disj_to_cover_fail = testCase "Add disjoint to cover (Fail)"
+ ( addDisjSC sb sc_cover_ab  @?=  Nothing )
+
+test_add_disj_to_disj = testCase "Add disjoint to disjoint"
+ ( addDisjSC sa sc_disjoint_b  @?=  Just sc_disjoint_ab )
+
+test_add_disj_to_mixed = testCase "Add disjoint to disjoint and cover"
+ ( addDisjSC sa' sc_D_a_C_b  @?=  Just (A False (Just saa') (Just sb)) )
+
+addDisjTests = testGroup "AST.addDisjSC"
+               [ test_add_disj_to_true
+               , test_add_disj_to_exact_ok
+               , test_add_disj_to_exact_fail
+               , test_add_disj_to_cover_ok
+               , test_add_disj_to_cover_fail
+               , test_add_disj_to_disj
+               , test_add_disj_to_mixed
+               ]
+\end{code}
+
+\newpage
+\paragraph{Adding $X$:} check against any pre-existing $pre$, $D$, $X$ or $C$
 \begin{code}
 addExactSC :: Monad m => VarSet -> VarSideCond -> m VarSideCond
+
 addExactSC x vsc@(Exact x0)
  | x == x0    =  return vsc
  | otherwise  =  fail "AST.addExactSC: differing exact sets"
+
 addExactSC x (Approx pre _ _)
  | pre && not (isPreVarSet x) = fail "AST.addExactSC: exact set not pre-condition"
+
 addExactSC x (Disjoint d)
  | x `overlaps` d = fail "AST.addExactSC: exact and disjoint sets overlap"
+
 addExactSC x (Covers c)
  | not(x `S.isSubsetOf` c) = fail "AST.addExactSC: exact not inside covering set"
+
 addExactSC x _ = return $ Exact x
 \end{code}
 
-Adding $C$, check against any pre-existing $pre$, $D$, or $X$
+Tests:
+\begin{code}
+test_add_exact_to_true = testCase "Add exact to trivial SC"
+ ( addExactSC sab vscTrue  @?=  Just sc_exact_ab)
+
+test_add_exact_to_exact_ok = testCase "Add exact to exact (Ok)"
+ ( addExactSC sa sc_exact_a  @?=  Just sc_exact_a )
+
+test_add_exact_to_exact_fail = testCase "Add exact to exact (Fail)"
+ ( addExactSC sb sc_exact_ab  @?=  Nothing )
+
+test_add_exact_to_cover_ok = testCase "Add exact to cover (Ok)"
+ ( addExactSC sa sc_cover_ab  @?=  Just sc_exact_a )
+
+test_add_exact_to_cover_fail = testCase "Add exact to cover (Fail)"
+ ( addExactSC sb sc_cover_a  @?=  Nothing )
+
+test_add_exact_to_disj = testCase "Add exact to disjoint"
+ ( addExactSC sa sc_disjoint_b  @?=  Just sc_exact_a )
+
+test_add_exact_to_mixed = testCase "Add exact to disjoint and cover"
+ ( addExactSC sb sc_D_a_C_b  @?=  Just sc_exact_b )
+
+addExactTests = testGroup "AST.addExactSC"
+               [ test_add_exact_to_true
+               , test_add_exact_to_exact_ok
+               , test_add_exact_to_exact_fail
+               , test_add_exact_to_cover_ok
+               , test_add_exact_to_cover_fail
+               , test_add_exact_to_disj
+               , test_add_exact_to_mixed
+               ]
+\end{code}
+
+\newpage
+\paragraph{Adding $C$:} check against any pre-existing $pre$, $D$, or $X$
 \begin{code}
 addCoverSC :: Monad m => VarSet -> VarSideCond -> m VarSideCond
+
 addCoverSC c vsc@(Exact x)
  | x `S.isSubsetOf` c  =  return vsc
  | otherwise           =  fail "AST.addCoverSC: exact set not inside covering set"
+
 addCoverSC c (Approx pre _ _)
  | pre && not (isPreVarSet c) = fail "AST.addCoverSC: cover set not pre-condition"
+
 addCoverSC c (Disjoint d)
  | c `overlaps` d = fail "AST.addCoverSC: cover and disjoint sets overlap"
+
 addCoverSC c (Approx pre mD mC)
- = return $ A pre mD $ mergeSet S.intersection c mC
+ | S.null c'  =  return $ Exact S.empty
+ | otherwise  =  return $ A pre mD $ Just c'
+ where c' = mrgSet S.intersection c mC
 \end{code}
+
+Tests:
+\begin{code}
+test_add_cover_to_true = testCase "Add cover to trivial SC"
+ ( addCoverSC sab vscTrue  @?=  Just sc_cover_ab)
+
+test_add_cover_to_exact_ok = testCase "Add cover to exact (Ok)"
+ ( addCoverSC sab sc_exact_a  @?=  Just sc_exact_a )
+
+test_add_cover_to_exact_fail = testCase "Add cover to exact (Fail)"
+ ( addCoverSC sb sc_exact_ab  @?=  Nothing )
+
+test_add_cover_to_cover_c = testCase "Add cover to cover (still cover)"
+ ( addCoverSC sa sc_cover_ab  @?=  Just sc_cover_a )
+
+test_add_cover_to_cover_x = testCase "Add cover to cover (exact)"
+ ( addCoverSC sb sc_cover_a  @?=  Just (Exact s0) )
+
+test_add_cover_to_disj = testCase "Add cover to disjoint"
+ ( addCoverSC sb sc_disjoint_a  @?=  Just sc_D_a_C_b )
+
+test_add_cover_to_mixed = testCase "Add cover to disjoint and cover"
+ ( addCoverSC sb sc_D_a_C_bb'  @?=  Just sc_D_a_C_b )
+
+addCoverTests = testGroup "AST.addCoverSC"
+               [ test_add_cover_to_true
+               , test_add_cover_to_exact_ok
+               , test_add_cover_to_exact_fail
+               , test_add_cover_to_cover_c
+               , test_add_cover_to_cover_x
+               , test_add_cover_to_disj
+               , test_add_cover_to_mixed
+               ]
+\end{code}
+
+\subsubsection{Variable condition-add tests}
+\begin{code}
+varSCTests = testGroup "Adding Variable Side-Conditions"
+                [ addPreTests
+                , addDisjTests
+                , addExactTests
+                , addCoverTests
+                ]
+\end{code}
+
+\subsubsection{Full Side Conditions}
 
 Checking $N$ against a variable-side condition, looking at $X$ and $C$.
 \begin{code}
@@ -655,9 +966,23 @@ with a mapping from term variables to variable side-conditions.
 \begin{code}
 type VarSCMap = Map Variable VarSideCond
 data SideCond
- = SC { fresh :: VarSet
-      , varSCs :: VarSCMap}
+ = SC VarSet VarSCMap
  deriving (Eq,Ord,Show,Read)
+\end{code}
+If both entities are empty, then we have the trivial side-condition,
+which is always true:
+\begin{code}
+scTrue :: SideCond
+scTrue = SC S.empty M.empty
+\end{code}
+
+Test values:
+\begin{code}
+m_e_pre = M.fromList [(v_e,sc_pre)]
+m_e_exact_a = M.fromList [(v_e,sc_exact_a)]
+m_e_cover_a = M.fromList [(v_e,sc_cover_a)]
+m_e_disjoint_ab = M.fromList [(v_e,sc_disjoint_ab)]
+m_e_X_b_f_C_ab = M.fromList [(v_e,sc_exact_b),(v_f,sc_cover_ab)]
 \end{code}
 
 Pattern synonyms and builder
@@ -671,35 +996,60 @@ sidecond n vmap
  | all (checkNewSC n) $ M.elems vmap  =  return $ SC n vmap
  | otherwise  =  fail "fresh set conflicts with variable side-condition"
 \end{code}
+
+Tests:
+\begin{code}
+test_sidecond_empty = testCase "Trivial side-condition"
+ ( sidecond S.empty M.empty @?=  Just scTrue)
+
+test_sidecond_freshonly = testCase "Only Freshness"
+ ( sidecond sab M.empty @?=  Just (SC sab M.empty) )
+
+test_sidecond_one_pre = testCase "One Precondition"
+ ( sidecond S.empty m_e_pre @?=  Just (SC S.empty m_e_pre) )
+
+test_sidecond_fresh_exact_ok = testCase "Freshness and Exact (Ok)"
+ ( sidecond sb m_e_exact_a @?=  Just (SC sb m_e_exact_a) )
+
+test_sidecond_fresh_exact_fail = testCase "Freshness and Exact (Fail)"
+ ( sidecond sa m_e_exact_a @?=  Nothing )
+
+test_sidecond_fresh_cover_ok = testCase "Freshness and Cover (Ok)"
+ ( sidecond sb m_e_cover_a @?=  Just (SC sb m_e_cover_a) )
+
+test_sidecond_fresh_cover_fail = testCase "Freshness and Cover (Fail)"
+ ( sidecond sa m_e_cover_a @?=  Nothing )
+
+test_sidecond_fresh_exact_cover_fail = testCase "Freshness, Exact and Cover (Fail)"
+ ( sidecond sa m_e_X_b_f_C_ab @?=  Nothing )
+
+test_sidecond_fresh_disjoint = testCase "Freshness and Disjoint"
+ ( sidecond saa' m_e_disjoint_ab @?=  Just (SC saa' m_e_disjoint_ab) )
+
+sidecondTests = testGroup "AST.sidecond"
+               [ test_sidecond_empty
+               , test_sidecond_freshonly
+               , test_sidecond_one_pre
+               , test_sidecond_fresh_exact_ok
+               , test_sidecond_fresh_exact_fail
+               , test_sidecond_fresh_cover_ok
+               , test_sidecond_fresh_cover_fail
+               , test_sidecond_fresh_exact_cover_fail 
+               , test_sidecond_fresh_disjoint
+               ]
+\end{code}
+
 \newpage
-\subsection{Internal Test Export}
 
-\subsubsection{Test values}
-\begin{code}
-v_a = StdVar $ PreVar $ Id "a"
-v_b = StdVar $ PreVar $ Id "b"
-
-s0 = S.fromList [] :: VarSet
-sa = S.fromList [v_a]
-sb = S.fromList [v_b]
-sab = S.fromList [v_a,v_b]
-
-v_e = PreExpr $ Id "e"
-v_f = PreExpr $ Id "f"
-\end{code}
-
-\subsubsection{Tests}
-\begin{code}
--- TBD
-\end{code}
-
-
-\subsubsection{Exported Test Group}
+\subsection{Exported Test Group}
 \begin{code}
 test_AST :: [TF.Test]
 test_AST
- = [ testGroup "\nSide Condition Conflicts (AST.mergeSideCond)"
-     [
+ = [ testGroup "\nAST Internal"
+     [ identTests
+     , substnTests
+     , varSCTests
+     , sidecondTests
      ]
 {-  , testGroup "QuickCheck Ident"
      [

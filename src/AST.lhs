@@ -11,12 +11,17 @@ module AST ( Name
            , pattern PreVar, pattern MidVar, pattern PostVar
            , pattern PreCond, pattern PostCond
            , pattern PreExpr, pattern PostExpr
+           , isPreVar
            , ListVar
            , pattern ObsLVar, pattern ExprLVar, pattern PredLVar
            , pattern PreVars, pattern PostVars, pattern MidVars
-           , pattern PreExprs
+           , pattern PreExprs, pattern PrePreds
+           , isPreListVar
            , GenVar, pattern StdVar, pattern LstVar
+           , isPreGenVar
            , VarList
+           , VarSet
+           , isPreVarSet
            , Substn
            , Type
            , pattern ArbType,  pattern TypeVar, pattern TypeApp
@@ -26,27 +31,24 @@ module AST ( Name
            , TermKind(..)
            , Term
            , pattern EVal, pattern EVar, pattern ECons
-           , pattern EBind, pattern ESub, pattern EIter
+           , pattern EBind, pattern ELam, pattern ESub, pattern EIter
            , pattern PVal, pattern PVar, pattern PCons
-           , pattern PBind, pattern PSub, pattern PIter
+           , pattern PBind, pattern PLam, pattern PSub, pattern PIter
            , pattern E2, pattern P2
-           , VarSet
-           , FreeVarRel(..)
-           , SideCond
-           , pattern TrueC
-           , pattern Fresh
-           , pattern IsCond
-           , pattern NotIn
-           , pattern Is
-           , pattern Covers
-           , pattern AndC
-           , scFresh, isTermVar, scIsCond, scNotIn, scIs, scCovers, scAnd
+           , VarSideCond, pattern Exact, pattern Approx
+           , pattern Disjoint, pattern Covers, pattern DisjCov, pattern PreDisj
+           , nullVSC
+           , addPreSC, addExactSC, addDisjSC, addCoverSC, checkNewSC
+           , VarSCMap, SideCond
+           , pattern SC, pattern Fresh, pattern VarSCs, sidecond
            , test_AST
            ) where
 import Data.Char
 import Data.List
 import Data.Set(Set)
 import qualified Data.Set as S
+import Data.Map(Map)
+import qualified Data.Map as M
 
 import Test.HUnit
 import Test.Framework as TF (defaultMain, testGroup, Test)
@@ -176,6 +178,15 @@ pattern PreExpr  i    = VE RB i
 pattern PostExpr i    = VE RA i
 \end{code}
 
+Some variable predicates:
+\begin{code}
+isPreVar :: Variable -> Bool
+isPreVar (PreVar _)  = True
+isPreVar (PreExpr _) = True
+isPreVar (PreCond _) = True
+isPreVar _           = False
+\end{code}
+
 \subsubsection{List Variables}
 
 We also need to introduce the idea of lists of variables,
@@ -200,10 +211,20 @@ pattern PredLVar r i rs = LP r i rs
 
 Pre-wrapped patterns:
 \begin{code}
-pattern PreVars  i    =  LO RB i []
-pattern PostVars i    =  LO RA i []
-pattern MidVars  i n  =  LO (RD n) i []
-pattern PreExprs i    =  LE RB i []
+pattern PreVars  i    <-  LO RB i _
+pattern PostVars i    <-  LO RA i _
+pattern MidVars  i n  <-  LO (RD n) i _
+pattern PreExprs i    <-  LE RB i _
+pattern PrePreds i    <-  LP RB i _
+\end{code}
+
+Useful predicates:
+\begin{code}
+isPreListVar :: ListVar -> Bool
+isPreListVar (PreVars _)  = True
+isPreListVar (PreExprs _) = True
+isPreListVar (PrePreds _) = True
+isPreListVar _            = False
 \end{code}
 
 \subsubsection{Variable Lists}
@@ -221,6 +242,26 @@ pattern StdVar v = GV v
 pattern LstVar lv = GL lv
 
 type VarList = [GenVar]
+\end{code}
+
+Some useful predicates:
+\begin{code}
+isPreGenVar :: GenVar -> Bool
+isPreGenVar (StdVar v) = isPreVar v
+isPreGenVar (LstVar lv) = isPreListVar lv
+\end{code}
+
+
+We also want variable sets:
+\begin{code}
+type VarSet = Set GenVar
+
+disjoint, overlaps :: Ord a => Set a -> Set a -> Bool
+s1 `disjoint` s2 = S.null (s1 `S.intersection` s2)
+s1 `overlaps` s2 = not (s1 `disjoint` s2)
+
+isPreVarSet :: VarSet -> Bool
+isPreVarSet = all isPreGenVar . S.toList
 \end{code}
 
 \subsection{Substitutions}
@@ -289,7 +330,8 @@ We consider a term as having the following forms:
   \item [K] A constant value of an appropriate type.
   \item [V] A variable.
   \item [C] A constructor that builds a term out of zero or more sub-terms.
-  \item [B] A binding construct that introduces local variables.
+  \item [B] A binding construct that introduces sets of local variables.
+  \item [L] A binding construct that introduces lists of local variables.
   \item [S] A term with an explicit substitution of terms for variables.
   \item [I] An iteration of a term over a sequence of list-variables.
 \end{description}
@@ -297,7 +339,7 @@ We consider a term as having the following forms:
    k &\in& Value
 \\ n &\in& Name
 \\ v &\in& Var = \dots
-\\ t \in T  &::=&  K~k | V~n | C~n~t^* | B~n~v^+~t | S~t~(v,t)^+ | I~n~n~v^+
+\\ t \in T  &::=&  K~k | V~n | C~n~t^* | (B|L)~n~v^+~t | S~t~(v,t)^+ | I~n~n~v^+
 \end{eqnarray}
 We need to distinguish between predicate terms and expression terms.
 The key difference is that predicates are all of ``type'' $Env \fun \Bool$,
@@ -401,7 +443,8 @@ data Term
  = K TermKind Value                    -- Value
  | V TermKind Variable                 -- Variable
  | C TermKind Identifier [Term]        -- Constructor
- | B TermKind Identifier VarList Term  -- Binder
+ | B TermKind Identifier VarSet Term   -- Binder (unordered)
+ | L TermKind Identifier VarList Term  -- Binder (ordered)
  | S TermKind Term (Substn Term)       -- Substitution
  | I TermKind                          -- Iterator
      Identifier  -- top grouping constructor
@@ -416,6 +459,7 @@ pattern EVal t k = K (E t) k
 pattern EVar t v = V (E t) v
 pattern ECons t n ts = C (E t) n ts
 pattern EBind t n vl tm = B (E t) n vl tm
+pattern ELam t n vs tm = L (E t) n vs tm
 pattern ESub t tm s = S (E t) tm s
 pattern EIter t na ni lvs = I (E t) na ni lvs
 \end{code}
@@ -426,6 +470,7 @@ pattern PVal k = K P k
 pattern PVar v = V P v
 pattern PCons n ts = C P n ts
 pattern PBind n vl tm = B P n vl tm
+pattern PLam n vs tm = L P n vs tm
 pattern PSub tm s = S P tm s
 pattern PIter na ni lvs = I P na ni lvs
 \end{code}
@@ -446,145 +491,37 @@ They don't need special handling or representation here.
 
 \subsection{Side-Conditions}
 
-A side-condition is a syntactic property,
-and therefore in principle ought to be statically checkable.
-However, given expression and predicate variables this is not always
-possible.
+A side-condition is property used in laws,
+typically putting a constraint on the free variables of some term.
+In many logics, these can be checked by simple inspection of a term.
+However, given a logic like ours with explict expression and predicate (a.k.a. \emph{schematic}) variables this is not always possible.
 
 A side condition is about a relationship between the free variables
-of an expression or predicate, itself denoted by a variable ($e$, $P$),
-and a list (set!) of other (general) variables ($x,\lst v$)
+of term ($T$),
+and a set of other (general) variables ($x,\lst v$)
 The relationship can have the form:
 \begin{eqnarray*}
-   x,\lst v   \notin  \fv(e) \mbox{ or } \fv(P) && \mbox{disjoint}
-\\ x,\lst v      =    \fv(e) \mbox{ or } \fv(P) && \mbox{exact}
-\\ x,\lst v \supseteq \fv(e) \mbox{ or } \fv(P) && \mbox{covering}
+   x,\lst v   \notin  \fv(T) && \mbox{disjoint}
+\\ x,\lst v      =    \fv(T) && \mbox{exact}
+\\ x,\lst v \supseteq \fv(T) && \mbox{covering}
+\\ pre      \supseteq \fv(T) && \mbox{pre-condition}
 \end{eqnarray*}
-We represent variable sets as distinct from variable-lists:
-\begin{code}
-type VarSet = Set GenVar
-
-overlaps :: Ord a => Set a -> Set a -> Bool
-s1 `overlaps` s2 = not $ S.null (s1 `S.intersection` s2)
-\end{code}
 Let $D$, $X$ and $C$ denote sets of variables
 that are meant to be be disjoint, exact, and covering respectively.
+Let $pre$ denote the assertion that the term has only pre-variables.
 Let $F$ denote the free variables of the expression or predicate variable
 under consideration.
-\begin{code}
-data FreeVarRel
- = FVD  -- "D" : disjoint, D and F do not overlap
- | FVX  -- "X" : exact, X = F
- | FVC  -- "C" : covering, C contains F
- deriving (Eq, Ord, Show, Read)
-\end{code}
 
-We also have requirements for fresh variables,
-asserting that expressions and predicates have only pre-variables,
-trivial true side-conditions, and conjunctions
-of all of the above.
-These conditions can conflict with each other,
-and can also be simplfified by each others presence.
-Let $N$ denote fresh (new) variables.
-We also have an explicit false side-condition as a sentinel value.
-\begin{code}
-data SideCond
- = SCT            -- "T" : trivial/true
- | SCF VarSet     -- "N" : new/fresh, N does not occur free in matched term
-                        -- set must be non-empty
- | SCC Variable   -- "c" : condition, F has no dashed vars,
-                        -- variable must be VE, VP
- | SCR FreeVarRel -- "D", "X", or "C"
-       VarSet           -- D, X, or C, non-empty for D, C
-       Variable         -- VE, VP only
- | SCA [SideCond] -- "A" : non empty, non conflicting,
-                        -- unique ordered SCF,SCC,SCR only
- | SCINVALID      -- "0" : invalid side-condition
- deriving (Eq,Ord,Show)
-\end{code}
-
-We want meaningful matches for \verb"SideCond":
-\begin{code}
-pattern TrueC = SCT                 -- T
-pattern Fresh vs <- SCF vs          -- N
-pattern IsCond v <- SCC v           -- c
-pattern NotIn vs v <- SCR FVD vs v  -- D
-pattern Is vs v <- SCR FVX vs v     -- X
-pattern Covers vs v <- SCR FVC vs v -- C
-pattern AndC scs <- SCA scs         -- A
-\end{code}
-
-Useful to have predicates as well:
-\begin{code}
-isFresh :: SideCond -> Bool
-isFresh (Fresh _) = True
-isFresh _         = False
-\end{code}
-
-Invariant preserving builders:
-\begin{code}
-scFresh :: VarList -> SideCond
-scFresh [] = TrueC
-scFresh vl = SCF $ S.fromList vl
-
-isTermVar :: Variable -> Bool
-isTermVar v@(VE _ _) = True
-isTermVar v@(VP _ _) = True
-isTermVar _          = False
-
-scIsCond :: Variable -> SideCond
-scIsCond v
- | isTermVar v  =  SCC v
- | otherwise    =  SCINVALID
-
-scNotIn :: VarList -> Variable -> SideCond
-scNotIn vl v
- | not (isTermVar v)  =  SCINVALID
- | null vl            =  TrueC  -- D is empty, so always disjoint !
- | otherwise          =  SCR FVD (S.fromList vl) v
-
-scIs :: VarList -> Variable -> SideCond
-scIs vl v
- | not (isTermVar v)  =  SCINVALID
- | otherwise          =  SCR FVX (S.fromList vl) v
-
-scCovers :: VarList -> Variable -> SideCond
-scCovers vl v
- | not (isTermVar v)  =  SCINVALID
- | null vl            =  SCR FVX (S.fromList vl) v
- | otherwise          =  SCR FVC (S.fromList vl) v
-
-scAnd :: [SideCond] -> SideCond
-scAnd [] = TrueC
-scAnd scs
- | flattened == [TrueC]  =  TrueC
- | otherwise  = case mergeSideConds $ sort flattened of
-                 []    -> SCINVALID
-                 [sc'] -> sc'
-                 scs'  -> SCA scs'
-  where flattened = flattenSCAnds scs
-\end{code}
-
-\subsubsection{Flattening \texttt{SCAnds}.}
-
-\begin{code}
-flattenSCAnds :: [SideCond] -> [SideCond]
-flattenSCAnds []                =  []
-flattenSCAnds t@[TrueC]         =  t
-flattenSCAnds (SCINVALID :scs)  =  []
-flattenSCAnds ((SCA scas):scs)  =  (flattenSCAnds scas) ++ flattenSCAnds scs
-flattenSCAnds ( TrueC    :scs)  =  flattenSCAnds scs
-flattenSCAnds ( sc       :scs)  =  sc : flattenSCAnds scs
-\end{code}
-
-\subsubsection{Side Condition Conflicts}
+In addition we may also have a requirement that certain variables are new, or fresh. This applies to the whole term being matched, and not just those terms signified by expression and prediate variables. Let $N$ denote this set.
 
 Here we use $D$, $X$, $C$, $N$, to represent themselves
-and be a shorthand for $D \cap F = \emptyset$,
+and also be a shorthand for $D \cap F = \emptyset$,
 $X = F$, $F \subseteq C$,
 and $fresh(N)$ respectively.
 Which is which should be clear from context.
 
+There are a number of laws that govern how
+different combinations of the above side-conditions interact.
 \begin{eqnarray*}
    N_1 \land N_2 &=& N_1 \cup N_2
 \\ D_1 \land D_2 &=& D_1 \cup D_2
@@ -594,118 +531,151 @@ Which is which should be clear from context.
 \\ N_1 \land X_2 &=& N_1 \cap X_2 = \emptyset \;\land\; N_1 \;\land\; X_1
 \\ N_1 \land C_2 &=& N_1 \cap C_1 = \emptyset \;\land\; N_1 \;\land\; C_1
 \\ D_1 \land X_2 &=& D_1 \cap X_2 = \emptyset \;\land\; X_2
-\\ D_1 \land C_2 &=& C_2 \not\subseteq D_1 \;\land\; D_1 \;\land\; (C_2 \setminus D_1)
+\\ D_1 \land C_2 &=& C_2 \cap D_1 = \emptyset \;\land\; D_1 \;\land\; C_2
 \\ X_1 \land C_2 &=& X_1 \subseteq C_2 \;\land\; X_1
 \end{eqnarray*}
+Given that variable matching will respect variable roles (\verb"VarRole"),
+if we have either $C$ or $X$ specified, then we check $pre$ at side-condition generation time.
+We can summarise by saying, given a satisfiable side-condition involving $N$, $D$, $X$, and $C$, then there is a faithful representation
+where the following invariant holds:
+\[
+N \not\!\cap\; X
+\land
+N \not\!\cap\; C
+\land
+D \not\!\cap\; X
+\land
+D \not\!\cap\; C
+\land
+X \subseteq C
+\]
+In fact we see that our representation either consists solely of $X$,
+or else contains one or more of $pre$, $D$, or $C$.
+If both $pre$ and $C$ were specified, then we will have checked that all relevant variables in $C$ satisfy $pre$, and hence it becomes superfluous.
 
-We start with a function to merge two non-\verb"SCAnd" \verb"SideCond",
-that returns a list, because we can have between zero and two results inclusive.
+So, a side-condition associated with a term variable is either exact,
+or approximate:
 \begin{code}
-mergeSideCond :: SideCond -> SideCond -> [SideCond]
+data VarSideCond
+ = X VarSet
+ | A Bool -- true if term must be a pre-condition
+     (Maybe VarSet) -- D
+     (Maybe VarSet) -- C
+ deriving (Eq,Ord,Show,Read)
 
--- Invalid Handling:  C /\ 0 = 0
-mergeSideCond sc1 SCINVALID = []
-mergeSideCond SCINVALID sc2 = []
-
--- SCT Handling:  C /\ T = C
-mergeSideCond sc1 TrueC = [sc1]
-mergeSideCond TrueC sc2 = [sc2]
-
--- SCC Handling:  iscond(v) /\ iscond(v) = iscond(v)
-mergeSideCond sc1@(IsCond v1) (IsCond v2)
- | v1 == v2  =  [sc1]
-mergeSideCond sc1 sc2@(IsCond _)  =  [sc1,sc2]
-
--- SCF Handling: N1 /\ N2 = N1 U N2
-mergeSideCond (Fresh vs1) (Fresh vs2) = [SCF (vs1 `S.union` vs2)]
--- SCF Handling: X /\ N =  disjoint(X,N) /\ X /\ N
-mergeSideCond sc1@(vs1 `Is` v) sc2@(Fresh vs2)
- | vs1 `overlaps` vs2  =  []
- | otherwise           = [sc1,sc2]
--- SCF Handling: C /\ N =  disjoint(C,N) /\ C /\ N
-mergeSideCond sc1@(vs1 `Covers` v) sc2@(Fresh vs2)
-  | vs1 `overlaps` vs2  =  []
-  | otherwise           = [sc1,sc2]
-mergeSideCond sc1 sc2@(Fresh _)  =  [sc1,sc2]
-
--- SCR of different variables don't interact
-mergeSideCond sc1@(SCR _ _ v1) sc2@(SCR _ _ v2)
- | v1 /= v2  =  [sc1,sc2]
--- v1 == v2 everywhere below
-
--- SCR FVD Handling: D1 /\ D2 = D1 U D2
-mergeSideCond sc1@(vs1 `NotIn` v1) sc2@(vs2 `NotIn` v2)
- = [SCR FVD (vs1 `S.union` vs2) v1]
--- SCR FVD Handling: D /\ X = disjoint(D,X) /\ X
-mergeSideCond sc1@(vs1 `NotIn` v1) sc2@(vs2 `Is` v2)
- | vs1 `overlaps` vs2  =  []
- | otherwise  =  [sc2]
--- SCR FVD Handling: D /\ C = not(C<= D) /\ D /\ (C\D)
-mergeSideCond sc1@(vs1 `NotIn` v1) sc2@(vs2 `Covers` v2)
- | vs2 `S.isSubsetOf` vs1  =  []
- | otherwise  =  [sc1,SCR FVC (vs2 `S.difference` vs1) v1]
-
--- SCR FVX Handling: X1 /\ X2 = X1 = X2 /\ X1
-mergeSideCond sc1@(vs1 `Is` _) sc2@(vs2 `Is` _)
- | vs1 == vs2  = [sc1]
- | otherwise  =  []
--- SCR FVX Handling: X /\ C = X <= C /\ X
-mergeSideCond sc1@(vs1 `Is` _) sc2@(vs2 `Covers` _)
- | vs1 `S.isSubsetOf` vs2  = [sc1]
- | otherwise  =  []
-
--- SCR FVC Handling: C1 /\ C2 = C1 intersect C2
-mergeSideCond sc1@(vs1 `Covers` v1) sc2@(vs2 `Covers` _)
- | S.null vs'  =  []
- | otherwise   =  [SCR FVC vs' v1]
- where vs' = vs1 `S.intersection` vs2
-
--- atomic side-conditions only
-mergeSideCond _ (AndC _) = []
-mergeSideCond sc1 sc2 = mergeSideCond sc2 sc1
+pattern Exact vs = X vs
+pattern Approx pre mD mC <- A pre mD mC
+pattern Disjoint d <- A _ (Just d) _
+pattern Covers c <- A _ _ (Just c)
+pattern DisjCov d c <- A _ (Just d) (Just c)
+pattern PreDisj pre d <- A pre (Just d) _
 \end{code}
 
-Function \verb"mergeFold" reduces a non-empty list of side-conditions to a single one,
-provided all the side-conditions are so-reducible.
+Typically a variable side-condition will be built
+from fragments that specify one of $pre$, $D$, $X$ or $C$,
+starting with a ``null'' condition.
 \begin{code}
-mergeFold :: [SideCond] -> SideCond
-mergeFold []   = TrueC
-mergeFold [sc] = sc
-mergeFold (sc:scs)
- = case mergeSideCond sc $ mergeFold scs of
-     []      -> SCINVALID
-     (sc':_) -> sc'
+nullVSC :: VarSideCond
+nullVSC = A False Nothing Nothing
 \end{code}
 
-
-We use \verb"mergeSideCond" to implement a function
-to merge a sorted list of atomic side-conditions,
-where neither \verb"SCINVALID" nor \verb"TrueC" occur.
-We first partition the given list into sub-lists: one containing all \verb"SCF",
-the others, for each \verb"ExprVar" and \verb"PredVar" found in the list,
-containing all the \verb"SCC" and \verb"SCR" referring to that variable.
-We merge all the \verb"SCF" into one, and then add that onto the front of the other variable-specific lists. Each of which is then systematically merged.
-What remains, if no conflicts are found, is merged and sorted.
+We will want to merge a set with a maybe-set below:
 \begin{code}
-mergeSideConds :: [SideCond] -> [SideCond]
-mergeSideConds scs
- = let
-   (ns,vscs) = span isFresh scs
-   n' = mergeFold ns
-   in (n':vscs)
+mergeSet  :: Ord a
+          => (Set a -> Set a -> Set a) -> Set a -> Maybe (Set a)
+          -> Maybe (Set a)
+mergeSet op s Nothing   = Just (s)
+mergeSet op s (Just s') = Just (s `op` s')
 \end{code}
 
-\subsubsection{Side Condition Invariant}
+Adding $pre$: check against any pre-existing $X$ or $C$
+\begin{code}
+addPreSC :: Monad m => VarSideCond -> m VarSideCond
+addPreSC vsc@(Exact x)
+ | isPreVarSet x   =  return vsc
+ | otherwise       =  fail "AST.addPreSC: exact set is not a precondition"
+addPreSC vsc@(Covers vs)
+ | isPreVarSet vs   =  return vsc
+ | otherwise        =  fail "AST.addPreSC: covering set is not a precondition"
+addPreSC (Approx _ mD mC) = return $ A True mD mC
+\end{code}
 
-We have some non-trivial invariants here.
+Adding $D$, check against any pre-existing $X$ or $C$
+\begin{code}
+addDisjSC :: Monad m => VarSet -> VarSideCond -> m VarSideCond
+addDisjSC d vsc@(Exact x)
+ | d `disjoint` x  =  return vsc
+ | otherwise       =  fail "AST.addDisjSC: exact and disjoint sets overlap"
+addDisjSC d (Approx pre mD mC@(Just c))
+ | c `disjoint` d  =  fail "AST.addDisjSC: covering and disjoint sets overlap"
+ | otherwise           = return $ A pre (mergeSet S.union d mD) mC
+addDisjSC d (Approx pre mD mC)
+  = return $ A pre (mergeSet S.union d mD) mC
+\end{code}
 
+Adding $X$, check against any pre-existing $pre$, $D$, $X$ or $C$
+\begin{code}
+addExactSC :: Monad m => VarSet -> VarSideCond -> m VarSideCond
+addExactSC x vsc@(Exact x0)
+ | x == x0    =  return vsc
+ | otherwise  =  fail "AST.addExactSC: differing exact sets"
+addExactSC x (Approx pre _ _)
+ | pre && not (isPreVarSet x) = fail "AST.addExactSC: exact set not pre-condition"
+addExactSC x (Disjoint d)
+ | x `overlaps` d = fail "AST.addExactSC: exact and disjoint sets overlap"
+addExactSC x (Covers c)
+ | not(x `S.isSubsetOf` c) = fail "AST.addExactSC: exact not inside covering set"
+addExactSC x _ = return $ Exact x
+\end{code}
+
+Adding $C$, check against any pre-existing $pre$, $D$, or $X$
+\begin{code}
+addCoverSC :: Monad m => VarSet -> VarSideCond -> m VarSideCond
+addCoverSC c vsc@(Exact x)
+ | x `S.isSubsetOf` c  =  return vsc
+ | otherwise           =  fail "AST.addCoverSC: exact set not inside covering set"
+addCoverSC c (Approx pre _ _)
+ | pre && not (isPreVarSet c) = fail "AST.addCoverSC: cover set not pre-condition"
+addCoverSC c (Disjoint d)
+ | c `overlaps` d = fail "AST.addCoverSC: cover and disjoint sets overlap"
+addCoverSC c (Approx pre mD mC)
+ = return $ A pre mD $ mergeSet S.intersection c mC
+\end{code}
+
+Checking $N$ against a variable-side condition, looking at $X$ and $C$.
+\begin{code}
+checkNewSC :: VarSet -> VarSideCond -> Bool
+checkNewSC n (Exact x)   =  n `disjoint` x
+checkNewSC n (Covers c)  =  n `disjoint` c
+checkNewSC _ _           =  True
+\end{code}
+
+A side-condition for a law lumps together $N$
+with a mapping from term variables to variable side-conditions.
+\begin{code}
+type VarSCMap = Map Variable VarSideCond
+data SideCond
+ = SC { fresh :: VarSet
+      , varSCs :: VarSCMap}
+ deriving (Eq,Ord,Show,Read)
+\end{code}
+
+Pattern synonyms and builder
+\begin{code}
+pattern SideCond n vmap <- SC n vmap
+pattern Fresh n <- SC n _
+pattern VarSCs vmap <- SC _ vmap
+
+sidecond :: Monad m => VarSet -> VarSCMap -> m SideCond
+sidecond n vmap
+ | all (checkNewSC n) $ M.elems vmap  =  return $ SC n vmap
+ | otherwise  =  fail "fresh set conflicts with variable side-condition"
+\end{code}
 \newpage
 \subsection{Internal Test Export}
 
 \subsubsection{Test values}
 \begin{code}
-t = TrueC
-
 v_a = StdVar $ PreVar $ Id "a"
 v_b = StdVar $ PreVar $ Id "b"
 
@@ -714,135 +684,13 @@ sa = S.fromList [v_a]
 sb = S.fromList [v_b]
 sab = S.fromList [v_a,v_b]
 
-n1 = SCF sa
-n2 = SCF sb
-n12 = SCF sab
-
 v_e = PreExpr $ Id "e"
 v_f = PreExpr $ Id "f"
-
-cd1 = SCC v_e
-cd2 = SCC v_f
-
-x0  = SCR FVX s0 v_e
-x1  = SCR FVX sa v_e
-x2  = SCR FVX sb v_e
-x2f = SCR FVX sb v_f
-x12 = SCR FVX sab v_e
-
-c1  = SCR FVC sa v_e
-c2  = SCR FVC sb v_e
-c2f = SCR FVC sb v_f
-c12 = SCR FVC sab v_e
-
-
-d1  =  SCR FVD sa v_e
-d2  =  SCR FVD sb v_e
-d2f = SCR FVD sb v_f
-d12 = SCR FVD sab v_e
 \end{code}
 
 \subsubsection{Tests}
 \begin{code}
--- Invalid SC Handling:  sc /\ 0 = 0
-test_C0
- = testCase "SCINVALID is right-zero" (mergeSideCond n1 SCINVALID @?= [])
-test_0C
- = testCase "SCINVALID is left-zero" (mergeSideCond SCINVALID n1 @?= [])
-
--- SCT Handling:  sc /\ T = sc
-test_CT = testCase "TrueC is right-identity" (mergeSideCond n1 t @?= [n1])
-test_TC = testCase "TrueC is left-identity" (mergeSideCond t n1 @?= [n1])
-
--- SCC Handling:  iscond(v) /\ iscond(v) = iscond(v)
-test_cc
- = testCase "IsCond is self-Idempotent" (mergeSideCond cd1 cd1 @?= [cd1])
-test_c1c2
- = testCase "IsCond is Independent" (mergeSideCond cd1 cd2 @?= [cd1,cd2])
-
--- SCF Handling: N1 /\ N2 = N1 U N2
-test_NN
- = testCase "Fresh is self-Idempotent" (mergeSideCond n1 n1 @?= [n1])
-test_N1N2
- = testCase "Fresh merges with Union (1)" (mergeSideCond n1 n2 @?= [n12])
-test_N2N1
- = testCase "Fresh merges with Union (2)" (mergeSideCond n2 n1 @?= [n12])
-
--- SCF Handling: X /\ N =  disjoint(X,N) /\ X /\ N
-test_XN0
- = testCase "Is left-conflicts with Fresh" (mergeSideCond x1 n1 @?= [])
-test_NX0
- = testCase "Fresh left-conflicts with Is" (mergeSideCond n1 x1 @?= [])
-test_XN
- = testCase "Is left-compatible with Fresh" (mergeSideCond x1 n2 @?= [x1,n2])
-test_NX
- = testCase "Fresh left-compatible with Is" (mergeSideCond n2 x1 @?= [x1,n2])
-
--- SCF Handling: C /\ N =  disjoint(C,N) /\ C /\ N
-test_CN0 = testCase "Covers left-conflicts with Fresh"
-                    (mergeSideCond c1 n1 @?= [])
-test_NC0 = testCase "Fresh left-conflicts with Covers"
-                    (mergeSideCond n1 c1 @?= [])
-test_CN  = testCase "Covers left-compatible with Fresh"
-                    (mergeSideCond c1 n2 @?= [c1,n2])
-test_NC  = testCase "Fresh left-compatible with Covers"
-                    (mergeSideCond n2 c1 @?= [c1,n2])
-
--- SCR FVD Handling: D1 /\ D2 = D1 U D2
-test_DD
- = testCase "NotIn merges with union" (mergeSideCond d1 d2 @?= [d12])
-
--- SCR FVD Handling: D /\ X = disjoint(D,X) /\ X
-test_XD0
- = testCase "Is left-conflicts with NotIn" (mergeSideCond x1 d1 @?= [])
-test_DX0
- = testCase "NotIn left-conflicts with Is" (mergeSideCond d1 x1 @?= [])
-test_XD
- = testCase "Is left-subsumes NotIn" (mergeSideCond x1 d2 @?= [x1])
-test_DX
- = testCase "Is right-subsumes NotIn" (mergeSideCond d2 x1 @?= [x1])
-
--- SCR FVD Handling: D /\ C = not (C <= D) /\ D /\ (C\D)
-test_CD0
- = testCase "Covers left-conflicts with NotIn" (mergeSideCond c1 d12 @?= [])
-test_DC0
- = testCase "NotIn left-conflicts with Covers" (mergeSideCond d12 c1 @?= [])
-test_CD
- = testCase "Covers left-subsumes NotIn" (mergeSideCond c12 d2 @?= [d2,c1])
-test_DC
- = testCase "Covers right-subsumes NotIn" (mergeSideCond d2 c12 @?= [d2,c1])
-
--- SCR FVX Handling: X1 /\ X2 = X1 = X2 /\ X1
-test_XX0
- = testCase "Is conflicts if different" (mergeSideCond x1 x2 @?= [])
-test_XX
- = testCase "Is OK if identical" (mergeSideCond x1 x1 @?= [x1])
-
--- SCR FVX Handling: X /\ C = X <= C /\ X
-test_XC0
- = testCase "Is left-conflicts with Covers" (mergeSideCond x12 c1 @?= [])
-test_CX0
- = testCase "Covers left-conflicts with Is" (mergeSideCond c1 x12 @?= [])
-test_XC
- = testCase "Is left-subsumes Covers" (mergeSideCond x1 c12 @?= [x1])
-test_CX
- = testCase "Is right-subsumes Covers" (mergeSideCond c12 x1 @?= [x1])
-
--- SCR FVC Handling: C1 /\ C2 = C1 intersect C2
-test_CC0
- = testCase "Covers conflicts if disjoint" (mergeSideCond c1 c2 @?= [])
-test_CC
- = testCase "Covers merge with intersection" (mergeSideCond c12 c1 @?= [c1])
-
--- SCR of different variables don't interact
-test_D1X2 = testCase "Diff. Vars Independent (NotIn,Is)"
-                     (mergeSideCond d1 x2f @?= [d1,x2f])
-test_X2D1 = testCase "Diff. Vars Independent (Is,NotIn)"
-                     (mergeSideCond x2f d1 @?= [x2f,d1])
-test_D1C2 = testCase "Diff. Vars Independent (NotIn,Covers)"
-                     (mergeSideCond d1 c2f @?= [d1,c2f])
-test_C2D1 = testCase "Diff. Vars Independent (Covers,NotIn)"
-                     (mergeSideCond c2f d1 @?= [c2f,d1])
+-- TBD
 \end{code}
 
 
@@ -852,17 +700,6 @@ test_AST :: [TF.Test]
 test_AST
  = [ testGroup "\nSide Condition Conflicts (AST.mergeSideCond)"
      [
-       test_C0, test_0C, test_CT, test_TC, test_cc, test_c1c2
-     , test_NN, test_N1N2, test_N2N1
-     , test_XN0, test_NX0, test_XN, test_NX
-     , test_CN0, test_NC0, test_CN, test_NC
-     , test_DD
-     , test_XD0, test_DX0, test_XD, test_DX
-     , test_CD0, test_DC0, test_CD, test_DC
-     , test_XX0, test_XX
-     , test_XC0, test_CX0, test_XC, test_CX
-     , test_CC0, test_CC
-     , test_D1X2, test_X2D1, test_D1C2, test_C2D1
      ]
 {-  , testGroup "QuickCheck Ident"
      [

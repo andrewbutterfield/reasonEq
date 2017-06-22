@@ -11,11 +11,27 @@
 \parindent=0pt % I hate first line indentation
 \parskip=3pt   % I like a visual white gap between paragraphs
 
+\def\reasonEq{\textit{\textsf{reasonEq}}}
+
+\author{Andrew Butterfield}
+\title{\reasonEq: Computer-Aided Equational Reasoning }
+
 \input{doc/defTables}
 
 \begin{document}
 
+\maketitle
+\tableofcontents
+
+\chapter{\reasonEq\ Libraries}
+
+\newpage
 \input{src/AST.lhs}
+
+\chapter{\reasonEq\ Application}
+
+\newpage
+\input{app/Main.lhs}
 
 \bibliographystyle{alpha}
 \bibliography{MAIN}

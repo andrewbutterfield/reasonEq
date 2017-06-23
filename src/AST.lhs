@@ -40,6 +40,7 @@ module AST ( Name
            , pattern EBind, pattern ELam, pattern ESub, pattern EIter
            , pattern PVal, pattern PVar, pattern PCons
            , pattern PBind, pattern PLam, pattern PSub, pattern PIter
+           , pattern Type
            , pattern E2, pattern P2
            , VarSideCond, pattern Exact, pattern Approx
            , pattern Disjoint, pattern Covers, pattern DisjCov, pattern PreDisj
@@ -458,12 +459,14 @@ We consider a term as having the following forms:
   \item [L] A binding construct that introduces lists of local variables.
   \item [S] A term with an explicit substitution of terms for variables.
   \item [I] An iteration of a term over a sequence of list-variables.
+  \item [T] An embedding of Types
 \end{description}
 \begin{eqnarray}
    k &\in& Value
 \\ n &\in& Name
+\\ \tau &\in& Type
 \\ v &\in& Var = \dots
-\\ t \in T  &::=&  K~k | V~n | C~n~t^* | (B|L)~n~v^+~t | S~t~(v,t)^+ | I~n~n~v^+
+\\ t \in T  &::=&  K~k | V~n | C~n~t^* | (B|L)~n~v^+~t | S~t~(v,t)^+ | I~n~n~v^+ | T~\tau
 \end{eqnarray}
 We need to distinguish between predicate terms and expression terms.
 The key difference is that predicates are all of ``type'' $Env \fun \Bool$,
@@ -574,29 +577,33 @@ data Term
      Identifier  -- top grouping constructor
      Identifier  -- component constructor
      [ListVar]   -- list-variables, same length as component arity
+ | T Type                              -- Embedded TypeVar
  deriving (Eq, Ord, Show, Read)
 \end{code}
 
 Patterns for expressions:
 \begin{code}
-pattern EVal t k = K (E t) k
-pattern EVar t v = V (E t) v
-pattern ECons t n ts = C (E t) n ts
-pattern EBind t n vl tm = B (E t) n vl tm
-pattern ELam t n vs tm = L (E t) n vs tm
-pattern ESub t tm s = S (E t) tm s
-pattern EIter t na ni lvs = I (E t) na ni lvs
+pattern EVal t k           =  K (E t) k
+pattern EVar t v           =  V (E t) v
+pattern ECons t n ts       =  C (E t) n ts
+pattern EBind t n vl tm    =  B (E t) n vl tm
+pattern ELam t n vs tm     =  L (E t) n vs tm
+pattern ESub t tm s        =  S (E t) tm s
+pattern EIter t na ni lvs  =  I (E t) na ni lvs
 \end{code}
-
 Patterns for predicates:
 \begin{code}
-pattern PVal k = K P k
-pattern PVar v = V P v
-pattern PCons n ts = C P n ts
-pattern PBind n vl tm = B P n vl tm
-pattern PLam n vs tm = L P n vs tm
-pattern PSub tm s = S P tm s
-pattern PIter na ni lvs = I P na ni lvs
+pattern PVal k             =  K P k
+pattern PVar v             =  V P v
+pattern PCons n ts         =  C P n ts
+pattern PBind n vl tm      =  B P n vl tm
+pattern PLam n vs tm       =  L P n vs tm
+pattern PSub tm s          =  S P tm s
+pattern PIter na ni lvs    =  I P na ni lvs
+\end{code}
+Pattern for embedded types:
+\begin{code}
+pattern Type t             =  T t
 \end{code}
 
 Patterns for binary constructions:
@@ -1034,7 +1041,7 @@ sidecondTests = testGroup "AST.sidecond"
                , test_sidecond_fresh_exact_fail
                , test_sidecond_fresh_cover_ok
                , test_sidecond_fresh_cover_fail
-               , test_sidecond_fresh_exact_cover_fail 
+               , test_sidecond_fresh_exact_cover_fail
                , test_sidecond_fresh_disjoint
                ]
 \end{code}

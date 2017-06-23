@@ -15,7 +15,8 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     AST,Lib,Proto
+  exposed-modules:     AST
+                     , Syntax
   build-depends:       base >= 4.7 && < 5
                      , containers
                      -- we need to support internal tests for some modules

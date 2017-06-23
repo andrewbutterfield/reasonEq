@@ -8,8 +8,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Main where
 
 import AST
+import Syntax
 
-version = "0.1.0.0"
+version = "0.1.0.0++"
 main :: IO ()
 main
   = do putStrLn ("\n\tWelcome to reasonEq "++version++"\n")

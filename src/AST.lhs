@@ -36,12 +36,15 @@ module AST ( Name
            , Text, Value, pattern Boolean, pattern Integer, pattern Text
            , TermKind(..)
            , Term
+           , pattern Val, pattern Var, pattern Cons
+           , pattern Bind, pattern Lam, pattern Sub, pattern Iter
            , pattern EVal, pattern EVar, pattern ECons
            , pattern EBind, pattern ELam, pattern ESub, pattern EIter
            , pattern PVal, pattern PVar, pattern PCons
            , pattern PBind, pattern PLam, pattern PSub, pattern PIter
            , pattern Type
            , pattern E2, pattern P2
+           , termkind, isExpr, isPred
            , VarSideCond, pattern Exact, pattern Approx
            , pattern Disjoint, pattern Covers, pattern DisjCov, pattern PreDisj
            , vscTrue
@@ -577,10 +580,20 @@ data Term
      Identifier  -- top grouping constructor
      Identifier  -- component constructor
      [ListVar]   -- list-variables, same length as component arity
- | T Type                              -- Embedded TypeVar
+ | ET Type                              -- Embedded TypeVar
  deriving (Eq, Ord, Show, Read)
 \end{code}
 
+Kind-neutral patterns:
+\begin{code}
+pattern Val tk k           =  K tk k
+pattern Var tk v           =  V tk v
+pattern Cons tk n ts       =  C tk n ts
+pattern Bind tk n vl tm    =  B tk n vl tm
+pattern Lam tk n vs tm     =  L tk n vs tm
+pattern Sub tk tm s        =  S tk tm s
+pattern Iter tk na ni lvs  =  I tk na ni lvs
+\end{code}
 Patterns for expressions:
 \begin{code}
 pattern EVal t k           =  K (E t) k
@@ -603,7 +616,7 @@ pattern PIter na ni lvs    =  I P na ni lvs
 \end{code}
 Pattern for embedded types:
 \begin{code}
-pattern Type t             =  T t
+pattern Type t             =  ET t
 \end{code}
 
 Patterns for binary constructions:
@@ -612,6 +625,21 @@ pattern E2 t n t1 t2 = C (E t) n [t1,t2]
 pattern P2 n t1 t2   = C P n [t1,t2]
 \end{code}
 
+It can help to test if a term is an expression or predicate:
+\begin{code}
+termkind :: Term -> TermKind
+termkind (Val tk k)           =  tk
+termkind (Var tk v)           =  tk
+termkind (Cons tk n ts)       =  tk
+termkind (Bind tk n vl tm)    =  tk
+termkind (Lam tk n vs tm)     =  tk
+termkind (Sub tk tm s)        =  tk
+termkind (Iter tk na ni lvs)  =  tk
+
+isExpr, isPred :: Term -> Bool
+isExpr t = termkind t /= P
+isPred t = termkind t == P
+\end{code}
 
 In \cite{UTP-book} we find the notion of texts, in chapters 6 and 10.
 We can represent these using this proposed term concept,

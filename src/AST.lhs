@@ -6,9 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module AST ( Name
-           , Identifier, validIdent, ident, idName
-           , VarRole, pattern NoRole
+module AST ( VarRole, pattern NoRole
            , pattern Before, pattern During, pattern After
            , Variable
            , pattern StaticVar
@@ -32,7 +30,6 @@ module AST ( Name
            , Type
            , pattern ArbType,  pattern TypeVar, pattern TypeApp
            , pattern DataType, pattern FunType, pattern GivenType
-           , _NAME, nametype, _ENV, envtype
            , Text, Value, pattern Boolean, pattern Integer, pattern Text
            , TermKind(..)
            , Term
@@ -55,10 +52,13 @@ module AST ( Name
            ) where
 import Data.Char
 import Data.List
+import Data.Maybe (fromJust)
 import Data.Set(Set)
 import qualified Data.Set as S
 import Data.Map(Map)
 import qualified Data.Map as M
+
+import LexBase
 
 import Test.HUnit
 import Test.Framework as TF (defaultMain, testGroup, Test)
@@ -68,78 +68,9 @@ import Test.Framework.Providers.QuickCheck2 (testProperty)
 
 \subsection{AST Introduction}
 
-We implement names, identifiers, a number of variants of variables,
-terms that cover expressions and predicates, and a side-condition language.
-
-\newpage
-\subsection{Naming}
-
-We consider `names' to be arbitrary strings,
-while `identifiers' are names that satisfy a fairly standard convention
-for program variables, namely starting with an alpha character,
-followed by zero or more alphas, digits and underscores.
-
-\begin{code}
-type Name = String
-
-newtype Identifier = Id Name deriving (Eq, Ord, Show, Read)
-
-validIdent :: Name -> Bool
-validIdent (c:cs) =  isAlpha c && all isIdContChar cs
-validIdent _      =  False
-
-ident :: Monad m => Name -> m Identifier
-ident nm
- | validIdent nm  = return $ Id nm
-ident nm = fail ("'"++nm++"' is not an Identifier")
-
-isIdContChar c = isAlpha c || isDigit c || c == '_'
-
-idName :: Identifier -> Name
-idName (Id nm) = nm
-\end{code}
-
-Tests:
-\begin{code}
-test_ident_null  =  testCase "ident \"\""  ( ident ""   @?=  Nothing )
-
-test_ident_a  =  testCase "ident \"a\"" ( ident "a"  @?=  Just (Id "a") )
-test_ident_Z  =  testCase "ident \"Z\"" ( ident "Z"  @?=  Just (Id "Z") )
-test_ident__  =  testCase "ident \"_\"" ( ident "_"  @?=  Nothing )
-test_ident_'  =  testCase "ident \"'\""   ( ident "'"  @?=  Nothing )
-test_ident_5  =  testCase "ident \"5\""   ( ident "5"  @?=  Nothing )
-
-test_ident_aq  =  testCase "ident \"a?\"" ( ident "a?"  @?=  Nothing )
-test_ident_Zat =  testCase "ident \"Z@\"" ( ident "Z@"  @?=  Nothing )
-test_ident__a  =  testCase "ident \"_a\"" ( ident "_a"  @?=  Nothing )
-test_ident_'a  =  testCase "ident \"'a\"" ( ident "'a"  @?=  Nothing )
-test_ident_5a  =  testCase "ident \"5a\"" ( ident "5a"  @?=  Nothing )
-
-test_ident_Mp  =  testCase "ident \"Mp\"" ( ident "Mp"  @?=  Just (Id "Mp") )
-test_ident_N5  =  testCase "ident \"N5\"" ( ident "N5"  @?=  Just (Id "N5") )
-test_ident_R_  =  testCase "ident \"R_\"" ( ident "R_"  @?=  Just (Id "R_") )
-
-identTests
- = testGroup "AST.ident"
-    [ test_ident_null
-    , test_ident_a, test_ident_Z, test_ident__, test_ident_', test_ident_5
-    , test_ident_aq, test_ident_Zat, test_ident__a, test_ident_'a, test_ident_5a
-    , test_ident_Mp, test_ident_N5, test_ident_R_
-    ]
-\end{code}
-We will allow the definition, in this module only,
-of identifiers whose names start with an underscore.
-These will usually be intended to provide some ``base names'',
-to key builtin entities that we wish to protect from outside interference.
-
-Test values:
-\begin{code}
-i_a = Id "a"
-i_b = Id "b"
-i_e = Id "e"
-i_f = Id "f"
-\end{code}
-
+We implement a number of variants of variables,
+terms that cover expressions and predicates,
+and a side-condition language.
 
 \newpage
 \subsection{Variables}
@@ -189,7 +120,7 @@ We start by defining the various roles for dynamic variables
 data VarRole -- Variable role
   = RN -- None
   | RB -- Before (pre)
-  | RD Name -- During (intermediate)
+  | RD String -- During (intermediate)
   | RA -- After (post)
   deriving (Eq, Ord, Show, Read)
 
@@ -235,8 +166,13 @@ isPreVar (PreCond _) = True
 isPreVar _           = False
 \end{code}
 
-\subsubsection{Variable test values}
+\subsubsection{Identifier and Variable test values}
 \begin{code}
+i_a = fromJust $ ident "a"
+i_b = fromJust $ ident "b"
+i_e = fromJust $ ident "e"
+i_f = fromJust $ ident "f"
+
 v_a = StdVar $ PreVar $ i_a
 v_b = StdVar $ PreVar $ i_b
 v_e = PreExpr $ i_e
@@ -429,20 +365,6 @@ pattern TypeApp i ts = TA i ts
 pattern DataType i fs = TD i fs
 pattern FunType tf ta = TF tf ta
 pattern GivenType i = TG i
-\end{code}
-
-We will define a two special ``types'' at this point: one that denotes
-``names'', and the other that denotes ``environments'',
-which are mappings from variable names, to a pair of a type and a value.
-For now we just introduce special identifiers for these:
-\begin{code}
-_NAME = Id "_NAME"
-nametype :: Type
-nametype = TG _NAME
-
-_ENV  = Id "_ENV"
-envtype :: Type
-envtype = TG _ENV
 \end{code}
 
 \newpage
@@ -1081,8 +1003,7 @@ sidecondTests = testGroup "AST.sidecond"
 test_AST :: [TF.Test]
 test_AST
  = [ testGroup "\nAST Internal"
-     [ identTests
-     , substnTests
+     [ substnTests
      , varSCTests
      , sidecondTests
      ]

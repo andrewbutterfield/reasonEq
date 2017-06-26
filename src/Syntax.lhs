@@ -11,15 +11,17 @@ module Syntax ( BasicComp
               , pattern ExprSyn, pattern PredSyn
               , PostAmble
               , pattern NoPostamble, pattern Postamble, postamble
-              , FormSpec
-              , pattern FormSpec, formSpec
-              , defaultFormSpec
+              , FormSpec(..)
+              , pattern FormSpec
+              , nullFormSpec, defaultFormSpec
               , ConstructSpec(..)
               , defaultConstructSpec
               , ConstructSpecTable
               ) where
 import Data.Maybe (fromJust)
 import qualified Data.Map as M
+
+import LexBase
 import AST
 \end{code}
 
@@ -137,7 +139,7 @@ postamble i cs
 \end{code}
 
 Our constructor form-specification language is now defined as
-a pre-amble, followed by a post-amble, where at least one of them is non-empty.
+a pre-amble, followed by a post-amble.
 \begin{eqnarray*}
    f \in FormSpec &::=&  c^*~p
 \end{eqnarray*}
@@ -146,12 +148,12 @@ data FormSpec
  = FS [BasicComp]  -- Preamble
       PostAmble
  deriving (Eq,Ord,Show,Read)
-pattern FormSpec pre post <- FS pre post
-formSpec :: Monad m => [BasicComp] -> PostAmble -> m FormSpec
-formSpec pre post
- | null pre && post == NoPostamble
-              =  fail "Syntax.formSpec: empty pre- and post-ambles"
- | otherwise  =  return $ FS pre post
+pattern FormSpec pre post = FS pre post
+\end{code}
+Note that it is possible to have a construct with no added terms:
+\begin{code}
+nullFormSpec :: FormSpec
+nullFormSpec = FormSpec [] NoPostamble
 \end{code}
 To illustrate, here are all the above examples with possible specifications:
 $$\begin{array}{c@{\qquad}l}
@@ -179,7 +181,7 @@ $$\begin{array}{c@{\qquad}l}
 If no specification is provided for a construct, then we use the default specification $\seqof{}~X^*$, namely a list of zero or more arbitrary terms.
 \begin{code}
 defaultFormSpec :: FormSpec
-defaultFormSpec = fromJust $ formSpec [] $ fromJust $ postamble 0 [AnySyn]
+defaultFormSpec = FormSpec [] $ fromJust $ postamble 0 [AnySyn]
 \end{code}
 
 \subsection{Construct Specifications}
@@ -287,3 +289,9 @@ t          `csat` ExprSyn  =  isExpr t
 t          `csat` PredSyn  =  isPred t
 _          `csat` _        =  False
 \end{code}
+
+\subsection{Concrete Syntax Specification}
+
+Given an identifer associated with a form specification,
+we also want to be able to give a description of a concrete way to
+parse and render it.

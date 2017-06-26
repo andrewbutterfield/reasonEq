@@ -7,6 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 module Main where
 
+import LexBase
 import AST
 import Syntax
 

@@ -37,10 +37,10 @@ is how to specify the \emph{form} of various named constructs.
 All these constructs have an identifier component,
 and the key idea is that it is used to lookup customisable information
 about how that construct should appear.
-In the event of no such cusotm information existing,
+In the event of no such custom information existing,
 a default approach is adopted.
 
-\subsubsection{Diversity of Forms}
+\subsection{Diversity of Forms}
 
 In our abstract syntax,
 we have basically three ways to represent composite terms:
@@ -89,7 +89,7 @@ and those that take an arbitrary number of terms of the same kind
 or even arbitrary numbers of some kind of ``term-cluster''
 (e.g., $[ a \mapsto 97, b \mapsto 98, c \mapsto 99 ]$).
 
-\subsubsection{Specifying Forms}
+\subsection{Specifying Forms}
 
 We assume all forms are built from basic components of four kinds:
 variables; types, expressions; and predicates.
@@ -139,9 +139,10 @@ postamble i cs
 \end{code}
 
 Our constructor form-specification language is now defined as
-a pre-amble, followed by a post-amble.
+a pre-amble, followed by a post-amble,
+that we seperate here with a bullet ($\bullet$) for clarity.
 \begin{eqnarray*}
-   f \in FormSpec &::=&  c^*~p
+   f \in FormSpec &::=&  c^*~\bullet~p
 \end{eqnarray*}
 \begin{code}
 data FormSpec
@@ -158,37 +159,104 @@ nullFormSpec = FormSpec [] NoPostamble
 To illustrate, here are all the above examples with possible specifications:
 $$\begin{array}{c@{\qquad}l}
    P \land Q
- & \seqof{}~P^{2+}
+ & \bullet~2~P
 \\ P \land Q \land R
- & \seqof{}~P^{2+}
+ & \bullet~2~P
 \\ \rho : \mathbb N^*
- & \seqof{V,T}~\epsilon
+ & V~T~\bullet
 \\ \{ 1, 2, 3, 4, 5 \}
- & \seqof{}~E^*
+ & \bullet~0~E
 \\ ~[ a \mapsto 97, b \mapsto 98, c \mapsto 99 ]
- & \seqof{}~\seqof{V,E}^*
+ & \bullet~0~V~E
 \\ P \cond c Q
- & \seqof{P,E,P}~\epsilon
+ & P~E~P~\bullet
 \\ \bigcap_{i \in 1 \dots k} R_i
- & \seqof{V,E,E,P}~\epsilon
+ & V~E~E~P~\bullet
 \\ x := e
- & \seqof{V,E}~\epsilon
-\\ \textbf{while } c \textbf{ do } \{ s_1 ; s_2 \}
- & \seqof{E,P}~\epsilon
+ & V~E~\bullet
+\\ \textbf{while } c \textbf{ do } P
+ & E~P~\bullet
 \\ \textbf{for } ( i :=0 | i \leq n | \textsf{inc}~i)\textbf{ do } f(i)
- & \seqof{P,P,E,P}~\epsilon
+ & P~P~E~P~\bullet
 \end{array}$$
-If no specification is provided for a construct, then we use the default specification $\seqof{}~X^*$, namely a list of zero or more arbitrary terms.
+If no specification is provided for a construct,
+then we use the default specification $\seqof{}~X^*$,
+namely a list of zero or more arbitrary terms.
 \begin{code}
 defaultFormSpec :: FormSpec
 defaultFormSpec = FormSpec [] $ fromJust $ postamble 0 [AnySyn]
 \end{code}
 
-\subsection{Construct Specifications}
+\subsection{Concrete Syntax Specification}
+
+Given a FormSpec, we also want a way to describe its concrete syntax.
+In effect this amounts to describing
+which lexical tokens can occur ``around'' the terms that make up the construct.
+Let us consider the following general construct specification
+\[
+ c_1~c_2~\dots~c_p~m~c'_1~c'_2~\dots~c'_q
+ \qquad p \geq 0, \quad q \geq 1
+\]
+where $c_i$ are the basic components of the preamble in order,
+$m$ is the minimum repetition factor or the postamble,
+and the $c'_j$ are the basic components of the post-amble.
+
+A concrete syntax specification simply indicates which tokens get interspersed,
+where tokens are basic lexical units, which,
+for this purpose at least, may include whitespace.
+
+\def\T{\mathtt{t}}
+\[
+ \T_{s}~c_1~\T_1~c_2~\T_3~\dots~\T_{p-1}~c_p
+ ~\T_{m}~m~
+ c'_1~\T'_1~c'_2~\T'_2~\dots~\T'_{q-1}~c'_q~\T_{e}
+\]
+Here $\T_s$, $\T_m$, $\T_r$ and $\T_e$ are the \textit{start},
+\textit{mid}, \textit{repeat} and \textit{end} tokens, respectively.
+The $\T_i$ and $\T'_i$ are the tokens
+that occurr between the $i$th and $i+1$th components of the preamble
+and the post-amble, respectively.
+The token $\T_r$ occurs between each repetition of the post-amble.
+If the preamble is null, then the $\T_i$ and $\T_m$ are ommitted.
+If the postamble is null, then $\T_m$, the $\T'_j$ and $\T_r$ are ommitted.
+
+To illustrate, here are all the above examples with corresponding
+concrete syntax elements,
+where whitespace tokens are shown as $\textvisiblespace$.
+$$\begin{array}{c@{\qquad}l}
+   P \land Q
+ & \textvisiblespace~\bullet~2~P~\land~\textvisiblespace
+\\ P \land Q \land R
+ & \textvisiblespace~\bullet~2~P~\land~\textvisiblespace
+\\ \rho : \mathbb N^*
+ & \textvisiblespace~V~:~T~\bullet~\textvisiblespace
+\\ \{ 1, 2, 3, 4, 5 \}
+ & \{~\bullet~0~E~,~\}
+\\ ~[ a \mapsto 97, b \mapsto 98, c \mapsto 99 ]
+ & ~[~\bullet~0~V~\mapsto~E~,~]
+\\ P \cond c Q
+ & \textvisiblespace~P~\lhd~E~\rhd~P~\bullet~\textvisiblespace
+\\ \bigcap_{i \in 1 \dots k} R_i
+ & \bigcap~._s~V~._s\in~._s~E~._s\dots~._s~E~\textvisiblespace~P~\bullet~\textvisiblespace
+\\ x := e
+ & \textvisiblespace~V~:=~E~\bullet~\textvisiblespace
+\\ \textbf{while } c \textbf{ do } P
+ & \textbf{while}~E~\textbf{do}~P~\bullet~\textvisiblespace
+\\ \textbf{for } ( i :=0 | i \leq n | \textsf{inc}~i)\textbf{ do } f(i)
+ & \textbf{for}(~P~|~P~|~E~)\textbf{do}~P~\bullet~\textvisiblespace
+\end{array}$$
+We also have tokens $._s$ and $.^s$ that make the following term get rendered
+in subscript or superscript form respectively.
+
+\textbf{Hmmm. This looks very ``renderable'', but not at all ``parseable''!!}
+
+
+\subsection{Complete Construct Specifications}
 
 A complete specification of a construct consists of its \texttt{FormSpec},
 and its \texttt{TermKind}.
-If it is an expression, the type associated with it can be arbitrary (\texttt{T}),
+If it is an expression,
+the type associated with it can be arbitrary (\texttt{T}),
 or can specify more detail, if required.
 \begin{code}
 data ConstructSpec = CS TermKind FormSpec deriving (Eq,Ord,Show,Read)

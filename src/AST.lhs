@@ -48,7 +48,7 @@ module AST ( VarRole, pattern NoRole
            , addPreSC, addExactSC, addDisjSC, addCoverSC, checkNewSC
            , VarSCMap, SideCond, scTrue
            , pattern SC, pattern Fresh, pattern VarSCs, sidecond
-           , test_AST
+           , int_tst_AST
            ) where
 import Data.Char
 import Data.List
@@ -1000,8 +1000,8 @@ sidecondTests = testGroup "AST.sidecond"
 
 \subsection{Exported Test Group}
 \begin{code}
-test_AST :: [TF.Test]
-test_AST
+int_tst_AST :: [TF.Test]
+int_tst_AST
  = [ testGroup "\nAST Internal"
      [ substnTests
      , varSCTests

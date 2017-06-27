@@ -8,4 +8,4 @@ main = defaultMain tests
 
 tests :: [TF.Test]
 tests
- = test_LexBase ++ test_AST
+ = int_tst_LexBase ++ int_tst_AST

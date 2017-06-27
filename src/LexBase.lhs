@@ -7,8 +7,12 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module LexBase
- ( Identifier, validIdent, ident, idName
- , test_LexBase
+ ( Identifier
+ , pattern Identifier, ident
+ , validIdent, idName
+ , Token
+ , pattern IdTok
+ , int_tst_LexBase
  ) where
 
 import Data.Char
@@ -40,6 +44,7 @@ followed by zero or more alphas, and digits.
 We don't allow underscores, dollars, primes or dots in identifiers.
 \begin{code}
 newtype Identifier = Id String deriving (Eq, Ord, Show, Read)
+pattern Identifier nm <- Id nm
 
 validIdent :: String -> Bool
 validIdent (c:cs) =  isAlpha c && all isIdContChar cs
@@ -56,7 +61,7 @@ idName :: Identifier -> String
 idName (Id nm) = nm
 \end{code}
 
-Tests:
+Identifier Tests:
 \begin{code}
 identTests
  = testGroup "LexBase.ident"
@@ -77,10 +82,22 @@ identTests
     ]
 \end{code}
 
+\newpage
+\subsection{Tokens}
+
+We define a basic notion of tokens as the union of the above ``wrapped'' strings
+\begin{code}
+data Token
+ = TI Identifier
+ deriving (Eq,Ord,Show,Read)
+pattern IdTok i = TI i
+\end{code}
+
+\newpage
 \subsection{Exported Test Group}
 \begin{code}
-test_LexBase :: [TF.Test]
-test_LexBase
+int_tst_LexBase :: [TF.Test]
+int_tst_LexBase
  = [ testGroup "\nLexBase Internal"
      [ identTests
      ]

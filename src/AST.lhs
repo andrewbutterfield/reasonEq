@@ -579,7 +579,7 @@ However, given a logic like ours with explict expression and predicate (a.k.a. \
 
 A side condition is about a relationship between the free variables
 of term ($T$),
-and a set of other (general) variables ($x,\lst v$)
+and a set of other (general) variables ($x,\lst{v}$)
 The relationship can have the form:
 \begin{eqnarray*}
    x,\lst v   \notin  \fv(T) && \mbox{disjoint}

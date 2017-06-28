@@ -66,7 +66,17 @@ P \land Q
 
 P \land Q \land R
 
+\exists x,y,\lst z \bullet  P
+
+(+ v ~|~  v < 42 : v^2 )
+
+F(P,Q)
+
 \rho : \mathbb N^*
+
+f(x,y)
+
+f~x~y
 
 \{ 1, 2, 3, 4, 5 \}
 
@@ -222,7 +232,7 @@ If the postamble is null, then $\T_m$, the $\T'_j$ and $\T_r$ are ommitted.
 
 To illustrate, here are all the above examples with corresponding
 concrete syntax elements,
-where whitespace tokens are shown as $\textvisiblespace$.
+where whitespace tokens are shown as \textvisiblespace.
 $$\begin{array}{c@{\qquad}l}
    P \land Q
  & \textvisiblespace~\bullet~2~P~\land~\textvisiblespace

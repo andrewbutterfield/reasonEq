@@ -9,10 +9,14 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Syntax ( BasicComp
               , pattern AnySyn,  pattern VarSyn, pattern TypeSyn
               , pattern ExprSyn, pattern PredSyn
-              , PostAmble
-              , pattern NoPostamble, pattern Postamble, postamble
-              , FormSpec(..)
-              , pattern FormSpec
+              , SimpleForm
+              , pattern SimpleForm, simpleform
+              , ClosedFormKind
+              , LengthConstraint, pattern LenConstraint
+              , pattern ClosedMixfix, pattern DelimContainer, pattern NameAppl
+              , FormSpec
+              , pattern CMixfix, pattern DelimC, pattern NAppl
+              , pattern OFixed, pattern ORepeat
               , nullFormSpec, defaultFormSpec
               , ConstructSpec(..)
               , defaultConstructSpec
@@ -36,7 +40,7 @@ that is independent of the choice of conrete renderings just discussed,
 is how to specify the \emph{form} of various named constructs.
 All these constructs have an identifier component,
 and the key idea is that it is used to lookup customisable information
-about how that construct should appear.
+about that construct's \emph{concrete syntax}.
 In the event of no such custom information existing,
 a default approach is adopted.
 
@@ -64,11 +68,7 @@ Here we have examples of the range of forms we might encounter:
 \begin{mathpar}
 P \land Q
 
-P \land Q \land R
-
-\exists x,y,\lst z \bullet  P
-
-(+ v ~|~  v < 42 : v^2 )
+P \equiv Q \equiv R
 
 F(P,Q)
 
@@ -99,15 +99,128 @@ and those that take an arbitrary number of terms of the same kind
 or even arbitrary numbers of some kind of ``term-cluster''
 (e.g., $[ a \mapsto 97, b \mapsto 98, c \mapsto 99 ]$).
 
+We note that while binders are simpler,
+as they only have one term sub-component,
+we still need to be able to specify aspects of their concrete syntax,
+as exemplified by the following examples:
+\begin{mathpar}
+\exists x,y,\lst z \bullet  P
+
+\lambda \lst a,b \bullet e
+
+(+ v ~|~  v < 42 : v^2 )
+\end{mathpar}
+
 \subsection{Specifying Forms}
 
+We want to write form specifications whose semantics are
+a set of sequences built over basic components that match that form.
+Howevever a general approach to this tends to result in specifications
+that are easy to \emph{verify} (check that a given list of terms is correct),
+and easy to \emph{render}
+(generate the correct concrete syntax from a correct list of terms),
+but are very difficult to \emph{parse}
+(identify and extract from an putative instance of concrete syntax).
+Instead we find that we need an abstraction that identifies a number
+of common idiomatic forms, that cover the vast range of concrete syntaxes
+in use, without guaranteeing complete generality.
+
+Note however, that there is an important separation of concerns here.
+The form that a construct can take
+is essentially a structural semantics notion.
+Any given construct instance must satisfy this structural semantics,
+but may be written with different concrete syntax in different situations.
+While the need for feasible parsing requires us to describe possible
+form specifications using idioms, it does not mean that the form and concrete syntax are essentially the same.
+
+Consider the following simple example, that of the logical-and construct.
+Idiommatically we specify this an associative binary operator,
+whose form is a list of predicates of length at least two:
+\[
+   \mbox{``And''} :  Pred^*,  \mbox{length} \geq 2
+\]
+However, the logical-and of the three predicates $P$, $Q$, and $R$,
+could have many concrete forms, not all of which need use an infix notation:
+\[
+\begin{array}{c}
+   P \land Q \land R
+\\ And(P,Q,R)
+\end{array}
+\]
+
+\subsubsection{Open and Closed Forms}
+
+We start by observing that most syntactic idioms can be
+classified on a ``open/closed'' spectrum.
+A fully closed idiom is one where the syntactic construct starts
+and ends with distinguished tokens. Examples include:
+\begin{mathpar}
+\{ 1, 2, 3, 4, 5 \}
+
+[ a \mapsto 97, b \mapsto 98, c \mapsto 99 ]
+
+\textbf{begin }  s_1 ; s_2 ; \dots ; s_n \textbf{ end}
+
+(+ v ~|~  v < 42 : v^2 )
+\end{mathpar}
+A fully open idiom is a construct that can both start and end with
+an arbitrary term, e.g.:
+\begin{mathpar}
+P \land Q
+
+P \equiv Q \equiv R
+
+\rho : \mathbb N^*
+
+f~x~y
+
+P \cond c Q
+
+x := e
+\end{mathpar}
+We can also have constructs that are half-and-half, such as:
+\begin{mathpar}
+F(P,Q)
+
+f(x,y)
+
+\textbf{while } c \textbf{ do } \{ s_1 ; s_2 \}
+
+\textbf{for } ( i :=0 | i \leq n | \textsf{inc}~i)\textbf{ do }+ f(i)
+
+\exists x,y,\lst z \bullet  P
+
+\lambda \lst a,b \bullet e
+\end{mathpar}
+Interestingly, these are all left-closed,
+except for the first one, ``traditional function application'',
+which is right-closed.
+We have a notion of semi-closed/semi-open too,
+where the starting and/or  finishing term is not arbitrary,
+but is instead drawn from a restricted set of terms built
+from a single token of a designated kind,
+usually being identifiers or names.
+Examples here can include the following,
+where $F$, $f$ and $x$ are restricted to being identifiers,
+and not arbitrary terms.
+\begin{mathpar}
+F(P,Q)
+
+f(x,y)
+
+f~x~y
+
+x := e
+\end{mathpar}
+
+\subsubsection{Basic Components}
+
 We assume all forms are built from basic components of four kinds:
-variables; types, expressions; and predicates.
+variables ($V$); types ($T$); expressions ($E$); and predicates ($P$).
 \begin{eqnarray*}
-   c \in BasicComp &::=& X | V | T | E | P
+   c \in BasicComp &::=& X ~|~ V ~|~ T ~|~ E ~|~ P
 \end{eqnarray*}
-where $V$, $T$, $E$ and $P$ stand for the four basic component kinds,
-and $X$ is a wildcard allowing any kind of term.
+where $X$ is a wildcard allowing any kind of term.
 \begin{code}
 data BasicComp = CX | CV | CT | CE | CP deriving (Eq,Ord,Show,Read)
 pattern AnySyn   =  CX
@@ -117,148 +230,121 @@ pattern ExprSyn  =  CE
 pattern PredSyn  =  CP
 \end{code}
 
-We want to write form specifications whose semantics are a set of sequences built over basic components that match that form.
-We start by defining an ``amble''
-to be a non-empty sequence of basic components.
-\begin{eqnarray*}
-   a \in Amble &::=& c^+
-\end{eqnarray*}
-Given that the main distinction we seen between forms
-is between those of fixed and varying length,
-we propose that a form is described as a sequence of two parts:
-an preamble of a fixed length, which can be zero, with the component kind at each location fixed;
-followed by an optional postamble, which is a list of ``ambles'',
-whose minimum length is also specified.
-\begin{eqnarray*}
-   p \in PostAmble &::=& a^0 | a^{m+}
-\end{eqnarray*}
-A postamble is either absent ($a^0$)
-or we set its minimum permitted length to be $m$ ($a^{m+}$).
+We will introduce the idea of a ``simple form''
+as a (typically short) non-empty sequence of basic components.
 \begin{code}
-data PostAmble
- = PZ                 -- No Postamble
- | PL Int [BasicComp] -- Postamble Min. length and Amble (non-empty)
- deriving (Eq,Ord,Show,Read)
-pattern NoPostamble = PZ
-pattern Postamble i cs <- PL i cs
-postamble :: Monad m => Int -> [BasicComp] -> m PostAmble
-postamble _ []  =  fail "Syntax.postamble: 'amble' cannot be empty."
-postamble i cs
- | i < 0      =  return $ PL 0 cs
- | otherwise  =  return $ PL i cs
+newtype SimpleForm = SF [BasicComp] deriving (Eq,Ord,Show,Read)
+pattern SimpleForm bs <- SF bs
+simpleform :: Monad m => [BasicComp] -> m SimpleForm
+simpleform []  =  fail "Syntax.simpleform: empty basic-comp list."
+simpleform bs  =  return $ SF bs
 \end{code}
 
-Our constructor form-specification language is now defined as
-a pre-amble, followed by a post-amble,
-that we seperate here with a bullet ($\bullet$) for clarity.
-\begin{eqnarray*}
-   f \in FormSpec &::=&  c^*~\bullet~p
-\end{eqnarray*}
+\subsubsection{Specifying Closed Forms}
+
+Closed, and some left semi-closed forms are easy to specify
+in a manner that makes them parseable.
+They can either be expressed as:
+\begin{description}
+  \item[Closed-mixfix:]
+    An interleaving of specific tokens with particular kinds of terms.
+    This is specified as a simple form.
+    \\
+    Example:
+    $\textbf{if } c \textbf{ then } s_1 \textbf{ else } s_2 \textbf{ endif}$
+    \\Form: an expression followed by two predicates: $\seqof{E,P,P}$.
+  \item[Delimited-container:]
+    A collection of grouped terms with three tokens that act as seperator,
+    and left- and right-delimiters.
+    This is specified with a simple form describing the term-group.
+    \\
+    Example: $[ a \mapsto 97, b \mapsto 98, c \mapsto 99 ]$
+    \\Group Form: a variable followed by an expression $\seqof{V,E}$.
+  \item[Name-application:]
+    A variable followed immediately by a delimited container
+    of a fixed length.
+    This always has a variable as its first term,
+    and all we need to do is provide a simple form for the argument-list
+    \\
+    Example: $f(a,b,c)$
+    \\ Arguments Form: three expressions $\seqof{E,E,E}$.
+\end{description}
+We see that a closed-form specification identifies
+one of the three cases above, along with the required simple form.
+\begin{code}
+data ClosedFormKind
+ = CM  -- Closed Mixfix
+ | DC  -- Delimited Container
+ | NA  -- Name Application
+ deriving (Eq,Ord,Show,Read)
+pattern ClosedMixfix = CM
+pattern DelimContainer = DC
+pattern NameAppl = NA
+\end{code}
+
+\subsubsection{Specifying Open Forms}
+
+Open forms arise mainly from the use of infix operator symbols.
+Less common are bracket-free function application,
+and open mixfix notations.
+In any case we really only have two variations:
+\begin{description}
+  \item[Open-fixed:]
+    An interleaving of particular kinds of terms,
+    with specific tokens.
+    This is specificed as a simple form.
+    \\
+    Example: $P \cond c Q$
+    \\Form: an expression in between two predicates: $\seqof{P,E,P}$.
+  \item[Open-Iterated:]
+    A list of terms of the same kind, with some possible length constraints.
+    \\
+    Example (1):
+    $P_1 \land P_2 \land \dots \land P_n$
+    \\ Form: a basic component ($P$) and a constraint $\mbox{length} \geq 2$.
+    \\
+    Example (2):
+    $f~a_1~a_2~ \dots ~a_k, \quad k \leq A$, where $A$ is the arity of $f$.
+    \\Form: a basic component ($E$) and a constraint $\mbox{length} \leq A$.
+\end{description}
+An open-form specification is one of the two cases above,
+with a simple form in the first case,
+and basic component plus a length constraint in the second.
+\begin{code}
+data LengthConstraint = LC Ordering Int deriving (Eq,Ord,Show,Read)
+pattern LenConstraint ord i = LC ord i
+\end{code}
+
+
+
+
+\subsubsection{Form Specification}
+
+A form specification is either closed, or open.
 \begin{code}
 data FormSpec
- = FS [BasicComp]  -- Preamble
-      PostAmble
+ = CS ClosedFormKind SimpleForm
+ | OF SimpleForm
+ | OI BasicComp LengthConstraint
  deriving (Eq,Ord,Show,Read)
-pattern FormSpec pre post = FS pre post
+
+pattern CMixfix sf    = CS ClosedMixfix   sf
+pattern DelimC  sf    = CS DelimContainer sf
+pattern NAppl   sf    = CS NameAppl       sf
+pattern OFixed  sf    = OF                sf
+pattern ORepeat bc lc = OI bc lc
+
+nullFormSpec     =  ORepeat AnySyn $ LenConstraint EQ 0
+defaultFormSpec  =  ORepeat AnySyn $ LenConstraint GT (-1)
 \end{code}
-Note that it is possible to have a construct with no added terms:
-\begin{code}
-nullFormSpec :: FormSpec
-nullFormSpec = FormSpec [] NoPostamble
-\end{code}
-To illustrate, here are all the above examples with possible specifications:
-$$\begin{array}{c@{\qquad}l}
-   P \land Q
- & \bullet~2~P
-\\ P \land Q \land R
- & \bullet~2~P
-\\ \rho : \mathbb N^*
- & V~T~\bullet
-\\ \{ 1, 2, 3, 4, 5 \}
- & \bullet~0~E
-\\ ~[ a \mapsto 97, b \mapsto 98, c \mapsto 99 ]
- & \bullet~0~V~E
-\\ P \cond c Q
- & P~E~P~\bullet
-\\ \bigcap_{i \in 1 \dots k} R_i
- & V~E~E~P~\bullet
-\\ x := e
- & V~E~\bullet
-\\ \textbf{while } c \textbf{ do } P
- & E~P~\bullet
-\\ \textbf{for } ( i :=0 | i \leq n | \textsf{inc}~i)\textbf{ do } f(i)
- & P~P~E~P~\bullet
-\end{array}$$
-If no specification is provided for a construct,
-then we use the default specification $\seqof{}~X^*$,
-namely a list of zero or more arbitrary terms.
-\begin{code}
-defaultFormSpec :: FormSpec
-defaultFormSpec = FormSpec [] $ fromJust $ postamble 0 [AnySyn]
-\end{code}
+
+
 
 \subsection{Concrete Syntax Specification}
 
 Given a FormSpec, we also want a way to describe its concrete syntax.
 In effect this amounts to describing
 which lexical tokens can occur ``around'' the terms that make up the construct.
-Let us consider the following general construct specification
-\[
- c_1~c_2~\dots~c_p~m~c'_1~c'_2~\dots~c'_q
- \qquad p \geq 0, \quad q \geq 1
-\]
-where $c_i$ are the basic components of the preamble in order,
-$m$ is the minimum repetition factor or the postamble,
-and the $c'_j$ are the basic components of the post-amble.
-
-A concrete syntax specification simply indicates which tokens get interspersed,
-where tokens are basic lexical units, which,
-for this purpose at least, may include whitespace.
-
-\def\T{\mathtt{t}}
-\[
- \T_{s}~c_1~\T_1~c_2~\T_3~\dots~\T_{p-1}~c_p
- ~\T_{m}~m~
- c'_1~\T'_1~c'_2~\T'_2~\dots~\T'_{q-1}~c'_q~\T_{e}
-\]
-Here $\T_s$, $\T_m$, $\T_r$ and $\T_e$ are the \textit{start},
-\textit{mid}, \textit{repeat} and \textit{end} tokens, respectively.
-The $\T_i$ and $\T'_i$ are the tokens
-that occurr between the $i$th and $i+1$th components of the preamble
-and the post-amble, respectively.
-The token $\T_r$ occurs between each repetition of the post-amble.
-If the preamble is null, then the $\T_i$ and $\T_m$ are ommitted.
-If the postamble is null, then $\T_m$, the $\T'_j$ and $\T_r$ are ommitted.
-
-To illustrate, here are all the above examples with corresponding
-concrete syntax elements,
-where whitespace tokens are shown as \textvisiblespace.
-$$\begin{array}{c@{\qquad}l}
-   P \land Q
- & \textvisiblespace~\bullet~2~P~\land~\textvisiblespace
-\\ P \land Q \land R
- & \textvisiblespace~\bullet~2~P~\land~\textvisiblespace
-\\ \rho : \mathbb N^*
- & \textvisiblespace~V~:~T~\bullet~\textvisiblespace
-\\ \{ 1, 2, 3, 4, 5 \}
- & \{~\bullet~0~E~,~\}
-\\ ~[ a \mapsto 97, b \mapsto 98, c \mapsto 99 ]
- & ~[~\bullet~0~V~\mapsto~E~,~]
-\\ P \cond c Q
- & \textvisiblespace~P~\lhd~E~\rhd~P~\bullet~\textvisiblespace
-\\ \bigcap_{i \in 1 \dots k} R_i
- & \bigcap~._s~V~._s\in~._s~E~._s\dots~._s~E~\textvisiblespace~P~\bullet~\textvisiblespace
-\\ x := e
- & \textvisiblespace~V~:=~E~\bullet~\textvisiblespace
-\\ \textbf{while } c \textbf{ do } P
- & \textbf{while}~E~\textbf{do}~P~\bullet~\textvisiblespace
-\\ \textbf{for } ( i :=0 | i \leq n | \textsf{inc}~i)\textbf{ do } f(i)
- & \textbf{for}(~P~|~P~|~E~)\textbf{do}~P~\bullet~\textvisiblespace
-\end{array}$$
-We also have tokens $._s$ and $.^s$ that make the following term get rendered
-in subscript or superscript form respectively.
-
-\textbf{Hmmm. This looks very ``renderable'', but not at all ``parseable''!!}
 
 
 \subsection{Complete Construct Specifications}
@@ -269,12 +355,12 @@ If it is an expression,
 the type associated with it can be arbitrary (\texttt{T}),
 or can specify more detail, if required.
 \begin{code}
-data ConstructSpec = CS TermKind FormSpec deriving (Eq,Ord,Show,Read)
+data ConstructSpec = XS TermKind FormSpec deriving (Eq,Ord,Show,Read)
 \end{code}
 We define a default construct specification, as one that defines a predicate:
 \begin{code}
 defaultConstructSpec :: ConstructSpec
-defaultConstructSpec = CS P defaultFormSpec
+defaultConstructSpec = XS P defaultFormSpec
 \end{code}
 
 \subsection{Recording Construct Specifications}
@@ -312,60 +398,7 @@ buildConstruct :: Monad m
                -> Identifier
                -> [Term]
                -> m Term
-buildConstruct (CS tk fs) i ts
- | ts `sat` fs  =  return $ Cons tk i ts
- | otherwise    =  fail "Syntax.buildConstruct: construct spec. violation."
-\end{code}
-Construct satisfaction:
-\begin{code}
-sat :: [Term] -> FormSpec -> Bool
-sat ts (FormSpec pre post)
- = case preWalk ts pre of
-     Nothing   ->  False
-     Just ts'  ->  case postWalk ts' post of
-                     Nothing  ->  False
-                     Just _   ->  True
-\end{code}
-Preamble ``walk'':
-\begin{code}
-preWalk :: Monad m => [Term] -> [BasicComp] -> m [Term]
-preWalk [] []  =  return []
-preWalk (t:ts) (c:cs)
- | t `csat` c  =  preWalk ts cs
- | otherwise   =  fail "Syntax.preWalk: preamble component mismatch."
-preWalk _ _    =  fail "Syntax.preWalk: preamble length mismatch."
-\end{code}
-Postamble ``walk'':
-\begin{code}
-postWalk :: Monad m => [Term] -> PostAmble -> m [Term]
-postWalk ts NoPostamble
- | null ts  =  return []
- | otherwise  =  fail "Syntax.postWalk: unexpected postamble."
-postWalk ts (Postamble i cs)  =  ambleWalk cs i cs ts
-\end{code}
-``Amble-walk'':
-\begin{code}
-ambleWalk _   0 _      []      =  return []
-ambleWalk cs0 0 (c:cs) (t:ts)
- | t `csat` c                  =  ambleWalk cs0 0 cs ts
- | otherwise                   =  fail "Syntax.ambleWalk: postamble comp. mismatch."
-ambleWalk cs0 0 []     ts      =  ambleWalk cs0 0 cs0 ts
-ambleWalk _   _ _      []      =  fail "Syntax.ambleWalk: terms end prematurely."
-ambleWalk cs0 n []     ts      =  ambleWalk cs0 (n-1) cs0 ts
-ambleWalk cs0 n (c:cs) (t:ts)
- | t `csat` c                  =  ambleWalk cs0 n cs ts
- | otherwise                   =  fail "Syntax.ambleWalk: postamble comp. mismatch."
-\end{code}
-Component satisfsaction:
-\begin{code}
-csat :: Term -> BasicComp -> Bool
-_          `csat` AnySyn   =  True
-(Var _ _)  `csat` VarSyn   =  True
-(EVar _ _) `csat` ExprSyn  =  True
-(Type _)   `csat` TypeSyn  =  True
-t          `csat` ExprSyn  =  isExpr t
-t          `csat` PredSyn  =  isPred t
-_          `csat` _        =  False
+buildConstruct (XS tk fs) i ts =  fail "Syntax.buildConstruct: NYI"
 \end{code}
 
 \subsection{Concrete Syntax Specification}

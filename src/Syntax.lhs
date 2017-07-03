@@ -29,6 +29,7 @@ module Syntax ( BasicComp
               , nameApplication
               , openFixed
               , openIterated
+              , int_tst_Syntax
               ) where
 import Data.Maybe (fromJust)
 import qualified Data.Map as M
@@ -36,6 +37,11 @@ import qualified Data.Map as M
 import Utilities
 import LexBase
 import AST
+
+import Test.HUnit
+import Test.Framework as TF (defaultMain, testGroup, Test)
+import Test.Framework.Providers.HUnit (testCase)
+import Test.Framework.Providers.QuickCheck2 (testProperty)
 \end{code}
 
 \subsection{Syntax Introduction}
@@ -249,6 +255,17 @@ simpleform []  =  fail "Syntax.simpleform: empty basic-comp list."
 simpleform bs  =  return $ SF bs
 \end{code}
 
+Tests:
+\begin{code}
+simpleFormTests
+ = [ testCase "Empty Simple-Form (Fail)"
+     ( simpleform []
+       @?=  But "Syntax.simpleform: empty basic-comp list.")
+   , testCase "Singleton Simple-Form (Ok)"
+     ( simpleform [AnySyn]
+       @?= Yes (SF [AnySyn]) )
+   ]
+\end{code}
 \subsubsection{Specifying Closed Forms}
 
 Closed, and some left semi-closed forms are easy to specify
@@ -333,6 +350,10 @@ pattern IterateSpec bc lc  =  FI bc lc
 
 nullFormSpec     =  IterateSpec AnySyn $ LenConstraint EQ 0
 defaultFormSpec  =  IterateSpec AnySyn $ LenConstraint GT (-1)
+\end{code}
+Test values:
+\begin{code}
+anything = FS (SF [AnySyn])
 \end{code}
 
 
@@ -430,6 +451,14 @@ delimOpen, delimClosed :: [Token] -> Token -> Token -> Token -> SyntaxSpec
 delimOpen   toks ldelim sep rdelim = DelimContainer Open   toks ldelim sep rdelim
 delimClosed toks ldelim sep rdelim = DelimContainer Closed toks ldelim sep rdelim
 \end{code}
+Test tokens:
+\begin{code}
+t1 = IdTok $ fromJust $ ident "t1"
+t2 = IdTok $ fromJust $ ident "t2"
+t3 = IdTok $ fromJust $ ident "t3"
+t12 =[t1,t2]
+t123 = [t1,t2,t3]
+\end{code}
 
 \subsection{Form with Concrete Syntax}
 
@@ -457,6 +486,21 @@ closedMixfix fs@(SimpleSpec (SimpleForm sf)) toks
  where
     lsf = length sf
     ltoks = length toks
+\end{code}
+Tests:
+\begin{code}
+closedMixfixTests
+ = testGroup "Syntax.closedMixfix"
+    [ testCase "Closed Mixfix for Iteration Spec. (Fail)"
+      ( closedMixfix defaultFormSpec [] @?=
+        But "Syntax.closedMixfix: not compatible with the iteration form." )
+    , testCase "Closed Mixfix for singleton spec (Fail)"
+      ( closedMixfix anything [t1] @?=
+        But "Syntax.closedMixfix: #toks(1) is not #form(1)+1." )
+    , testCase "Closed Mixfix for singleton spec (Ok)"
+      ( closedMixfix anything t12 @?=
+        Yes (XF anything $ ClosedMixfix t12) )
+    ]
 \end{code}
 
 \subsubsection{Delimited Container (Open) Concrete Form}
@@ -539,4 +583,15 @@ openIterated (SimpleSpec _) _
  = fail "Syntax.openIterated: not compatible with the simple form."
 openIterated fs@(IterateSpec bc (LenConstraint ord n)) tok
  = return $ XF fs $ OpenIterated tok
+\end{code}
+
+\newpage
+\subsection{Exported Test Group}
+\begin{code}
+int_tst_Syntax :: [TF.Test]
+int_tst_Syntax
+ = [ testGroup "\nSyntax Internal"
+     simpleFormTests
+   , closedMixfixTests
+   ]
 \end{code}

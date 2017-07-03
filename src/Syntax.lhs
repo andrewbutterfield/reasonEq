@@ -11,13 +11,13 @@ module Syntax ( BasicComp
               , pattern ExprSyn, pattern PredSyn
               , SimpleForm
               , pattern SimpleForm, simpleform
-              , ClosedFormKind
               , LengthConstraint, pattern LenConstraint
-              , pattern ClosedMixfix, pattern DelimContainer, pattern NameAppl
               , FormSpec
-              , pattern CMixfix, pattern DelimC, pattern NAppl
-              , pattern OFixed, pattern ORepeat
+              , pattern SimpleSpec, pattern IterateSpec
               , nullFormSpec, defaultFormSpec
+              , SyntaxSpec
+              , pattern ClosedMixfix, pattern DelimContainer, pattern NameAppl
+              , pattern OpenFixed, pattern OpenIterated
               , ConstructSpec(..)
               , defaultConstructSpec
               , ConstructSpecTable
@@ -269,18 +269,9 @@ They can either be expressed as:
     Example: $f(a,b,c)$
     \\ Arguments Form: three expressions $\seqof{E,E,E}$.
 \end{description}
-We see that a closed-form specification identifies
-one of the three cases above, along with the required simple form.
-\begin{code}
-data ClosedFormKind
- = CM  -- Closed Mixfix
- | DC  -- Delimited Container
- | NA  -- Name Application
- deriving (Eq,Ord,Show,Read)
-pattern ClosedMixfix = CM
-pattern DelimContainer = DC
-pattern NameAppl = NA
-\end{code}
+We want to keep form distinct from concrete syntax,
+so all that we observe for now is that all three of the above cases
+have the simple form.
 
 \subsubsection{Specifying Open Forms}
 
@@ -304,8 +295,8 @@ In any case we really only have two variations:
     \\ Form: a basic component ($P$) and a constraint $\mbox{length} \geq 2$.
     \\
     Example (2):
-    $f~a_1~a_2~ \dots ~a_k, \quad k \leq A$, where $A$ is the arity of $f$.
-    \\Form: a basic component ($E$) and a constraint $\mbox{length} \leq A$.
+    $f~a_1~a_2~ \dots ~a_k, \quad k \leq A+1$, where $A$ is the arity of $f$.
+    \\Form: a basic component ($E$) and a constraint $\mbox{length} \leq A+1$.
 \end{description}
 An open-form specification is one of the two cases above,
 with a simple form in the first case,
@@ -320,22 +311,19 @@ pattern LenConstraint ord i = LC ord i
 
 \subsubsection{Form Specification}
 
-A form specification is either closed, or open.
+A form specification is either a simple form,
+or a list of basic components with a length constraint.
 \begin{code}
 data FormSpec
- = CS ClosedFormKind SimpleForm
- | OF SimpleForm
- | OI BasicComp LengthConstraint
+ = FS SimpleForm
+ | FI BasicComp LengthConstraint
  deriving (Eq,Ord,Show,Read)
 
-pattern CMixfix sf    = CS ClosedMixfix   sf
-pattern DelimC  sf    = CS DelimContainer sf
-pattern NAppl   sf    = CS NameAppl       sf
-pattern OFixed  sf    = OF                sf
-pattern ORepeat bc lc = OI bc lc
+pattern SimpleSpec  sf     =  FS sf
+pattern IterateSpec bc lc  =  FI bc lc
 
-nullFormSpec     =  ORepeat AnySyn $ LenConstraint EQ 0
-defaultFormSpec  =  ORepeat AnySyn $ LenConstraint GT (-1)
+nullFormSpec     =  IterateSpec AnySyn $ LenConstraint EQ 0
+defaultFormSpec  =  IterateSpec AnySyn $ LenConstraint GT (-1)
 \end{code}
 
 
@@ -345,6 +333,79 @@ defaultFormSpec  =  ORepeat AnySyn $ LenConstraint GT (-1)
 Given a FormSpec, we also want a way to describe its concrete syntax.
 In effect this amounts to describing
 which lexical tokens can occur ``around'' the terms that make up the construct.
+
+
+We saw earlier that closed-form syntax has
+three different cases,
+while open-form syntax has two.
+This gives us five different syntactic idioms we need to describe:
+\begin{description}
+  \item[Closed-mixfix:]
+    An interleaving of specific tokens with particular kinds of terms.
+    It has a simple form and we have to specify a list of tokens
+    whose length is one greater than that of the simple form.
+    \\
+    Example:
+    $\textbf{if } c \textbf{ then } s_1 \textbf{ else } s_2 \textbf{ endif}$
+    \\Form: an expression followed by two predicates: $\seqof{E,P,P}$.
+    \\Syntax: $\seqof{\texttt{if},\texttt{then},\texttt{else},\texttt{endif}}$
+  \item[Delimited-container:]
+    A collection of grouped terms with three tokens that act as seperator,
+    and left- and right-delimiters.
+    It has a simple form that describes a term-group,
+    and we have to specify the syntax of that group as well as three
+    tokens, giving the start and finish delimiters, and the group separator.
+    The group itself can either have closed-mixfix or open-fixed syntax.
+    \\Example: $[ a \mapsto 97, b \mapsto 98, c \mapsto 99 ]$
+    \\Group Form: a variable followed by an expression $\seqof{V,E}$.
+    \\Group Syntax: open-fixed, $\seqof{\mapsto}$
+    \\Collection Syntax: $\seqof{\texttt{[},\texttt{,},\texttt{]}}$
+  \item[Name-application:]
+    A variable followed immediately by a delimited container
+    of a fixed length, always with a variable as its first term,
+    and all we need to do is provide a simple form for the argument-list.
+    We provide three tokens giving the start and finish delimiters, and the arguemnt terma separator.
+    \\
+    Example: $f(a,b,c)$
+    \\ Arguments Form: three expressions $\seqof{E,E,E}$.
+    \\ Arguments Syntax: $\seqof{\texttt{(},\texttt{,},\texttt{)}}$
+  \item[Open-fixed:]
+    An interleaving of particular kinds of terms,
+    with specific tokens.
+    It has a simple form and we have to specify a list of tokens
+    whose length is one less than that of the simple form.
+    \\
+    Example: $P \cond c Q$
+    \\Form: an expression in between two predicates: $\seqof{P,E,P}$.
+    \\Syntax: $\seqof{\lhd,\rhd}$
+  \item[Open-Iterated:]
+    A list of terms of the same kind, with some possible length constraints.
+    We have to specify a single token, that is interspersed among the terms.
+    \\
+    Example (1):
+    $P_1 \land P_2 \land \dots \land P_n$
+    \\ Form: a basic component ($P$) and a constraint $\mbox{length} \geq 2$.
+    \\ Syntax: $\land$.
+    Example (2):
+    $f~a_1~a_2~ \dots ~a_k, \quad k \leq A+1$, where $A$ is the arity of $f$.
+    \\Form: a basic component ($E$) and a constraint $\mbox{length} \leq A+1$.
+    \\Syntax: $\textvisiblespace$ (whitespace).
+\end{description}
+This leads to the following concrete syntax specifier:
+\begin{code}
+data SyntaxSpec
+ = CM [Token]                   -- Closed Mixfix
+ | DC [Token] Token Token Token -- Delimited Container
+ | NA Token Token Token         -- Name Application
+ | OF [Token]                   -- Open Fixed
+ | OI Token                     -- Open Iterated
+ deriving (Eq,Ord,Show,Read)
+pattern ClosedMixfix toks = CM toks
+pattern DelimContainer toks ldelim sep rdelim = DC toks ldelim sep rdelim
+pattern NameAppl ldelim sep rdelim = NA ldelim sep rdelim
+pattern OpenFixed toks = OF toks
+pattern OpenIterated tok = OI tok
+\end{code}
 
 
 \subsection{Complete Construct Specifications}

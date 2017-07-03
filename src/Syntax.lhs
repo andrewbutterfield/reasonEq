@@ -15,16 +15,25 @@ module Syntax ( BasicComp
               , FormSpec
               , pattern SimpleSpec, pattern IterateSpec
               , nullFormSpec, defaultFormSpec
+              , OpnCls
+              , pattern Open, pattern Closed
               , SyntaxSpec
               , pattern ClosedMixfix, pattern DelimContainer, pattern NameAppl
               , pattern OpenFixed, pattern OpenIterated
-              , ConstructSpec(..)
-              , defaultConstructSpec
-              , ConstructSpecTable
+              , pattern DelimOpen, pattern DelimClosed
+              , delimOpen, delimClosed
+              , ConcreteForm
+              , pattern ConcreteForm
+              , closedMixfix
+              , delimContOpen, delimContClosed
+              , nameApplication
+              , openFixed
+              , openIterated
               ) where
 import Data.Maybe (fromJust)
 import qualified Data.Map as M
 
+import Utilities
 import LexBase
 import AST
 \end{code}
@@ -334,7 +343,6 @@ Given a FormSpec, we also want a way to describe its concrete syntax.
 In effect this amounts to describing
 which lexical tokens can occur ``around'' the terms that make up the construct.
 
-
 We saw earlier that closed-form syntax has
 three different cases,
 while open-form syntax has two.
@@ -360,11 +368,17 @@ This gives us five different syntactic idioms we need to describe:
     \\Group Form: a variable followed by an expression $\seqof{V,E}$.
     \\Group Syntax: open-fixed, $\seqof{\mapsto}$
     \\Collection Syntax: $\seqof{\texttt{[},\texttt{,},\texttt{]}}$
+    \\We need to be able to mark delimited groups as open or closed:
+\begin{code}
+data OpnCls = OPN | CLS deriving (Eq,Ord,Show,Read)
+pattern Open = OPN
+pattern Closed = CLS
+\end{code}
   \item[Name-application:]
     A variable followed immediately by a delimited container
     of a fixed length, always with a variable as its first term,
     and all we need to do is provide a simple form for the argument-list.
-    We provide three tokens giving the start and finish delimiters, and the arguemnt terma separator.
+    We provide three tokens giving the start and finish delimiters, and the arguemnt term separator.
     \\
     Example: $f(a,b,c)$
     \\ Arguments Form: three expressions $\seqof{E,E,E}$.
@@ -394,76 +408,135 @@ This gives us five different syntactic idioms we need to describe:
 This leads to the following concrete syntax specifier:
 \begin{code}
 data SyntaxSpec
- = CM [Token]                   -- Closed Mixfix
- | DC [Token] Token Token Token -- Delimited Container
- | NA Token Token Token         -- Name Application
- | OF [Token]                   -- Open Fixed
- | OI Token                     -- Open Iterated
+ = CM [Token]           -- Closed Mixfix
+ | DC                   -- Delimited Container
+      OpnCls [Token]      -- group syntax
+      Token Token Token   -- l. delim., sep., r. delim.
+ | NA Token Token Token -- Name Application
+ | OF [Token]           -- Open Fixed
+ | OI Token             -- Open Iterated
  deriving (Eq,Ord,Show,Read)
+
 pattern ClosedMixfix toks = CM toks
-pattern DelimContainer toks ldelim sep rdelim = DC toks ldelim sep rdelim
+pattern DelimContainer oc toks ldelim sep rdelim = DC oc toks ldelim sep rdelim
 pattern NameAppl ldelim sep rdelim = NA ldelim sep rdelim
 pattern OpenFixed toks = OF toks
 pattern OpenIterated tok = OI tok
+
+pattern DelimOpen   toks ldelim sep rdelim <- DC Open   toks ldelim sep rdelim
+pattern DelimClosed toks ldelim sep rdelim <- DC Closed toks ldelim sep rdelim
+
+delimOpen, delimClosed :: [Token] -> Token -> Token -> Token -> SyntaxSpec
+delimOpen   toks ldelim sep rdelim = DelimContainer Open   toks ldelim sep rdelim
+delimClosed toks ldelim sep rdelim = DelimContainer Closed toks ldelim sep rdelim
 \end{code}
 
+\subsection{Form with Concrete Syntax}
 
-\subsection{Complete Construct Specifications}
-
-A complete specification of a construct consists of its \texttt{FormSpec},
-and its \texttt{TermKind}.
-If it is an expression,
-the type associated with it can be arbitrary (\texttt{T}),
-or can specify more detail, if required.
+We want to bring a form specification together with
+a syntax specification.
 \begin{code}
-data ConstructSpec = XS TermKind FormSpec deriving (Eq,Ord,Show,Read)
+data ConcreteForm = XF FormSpec SyntaxSpec deriving (Eq,Ord,Show,Read)
+pattern ConcreteForm fs ss <- XF fs ss
 \end{code}
-We define a default construct specification, as one that defines a predicate:
+We define six constructor functions, that check arguments.
+
+\subsubsection{Closed-Mixfix Concrete Form}
 \begin{code}
-defaultConstructSpec :: ConstructSpec
-defaultConstructSpec = XS P defaultFormSpec
+closedMixfix :: Monad m => FormSpec -> [Token] -> m ConcreteForm
+closedMixfix (IterateSpec _ _) _
+ = fail "Syntax.closedMixfix: not compatible with the iteration form."
+closedMixfix fs@(SimpleSpec (SimpleForm sf)) toks
+ | ltoks /= lsf + 1  = fail ( "Syntax.closedMixfix: #toks("
+                            ++ show ltoks
+                            ++ ") is not #form("
+                            ++ show lsf
+                            ++ ")+1." )
+ | hasdup toks  =  fail "Syntax.closedMixfix: duplicate tokens not allowed."
+ | otherwise    =  return $ XF fs $ ClosedMixfix toks
+ where
+    lsf = length sf
+    ltoks = length toks
 \end{code}
 
-\subsection{Recording Construct Specifications}
-
-We keep a table, indexed by identifiers,
-that records construct specifications.
+\subsubsection{Delimited Container (Open) Concrete Form}
 \begin{code}
-type ConstructSpecTable = M.Map Identifier ConstructSpec
+delimContOpen :: Monad m => FormSpec
+              -> [Token] -> Token -> Token -> Token
+              -> m ConcreteForm
+delimContOpen (IterateSpec _ _) _ _ _ _
+ = fail "Syntax.delimContOpen: not compatible with the iteration form."
+delimContOpen fs@(SimpleSpec (SimpleForm sf)) toks ldelim sep rdelim
+ | ltoks /= lsf - 1  = fail ( "Syntax.delimContOpen: #toks("
+                            ++ show ltoks
+                            ++ ") is not #form("
+                            ++ show lsf
+                            ++ ")-1." )
+ | hasdup (ldelim:sep:rdelim:toks)
+                =  fail "Syntax.delimContOpen: duplicate tokens not allowed."
+ | otherwise    =  return $ XF fs $ DelimContainer Open toks ldelim sep rdelim
+ where
+    lsf = length sf
+    ltoks = length toks
 \end{code}
-In practise, we expect to have a list of such tables,
-that we search front to back.
-These arise because we have `layers' of theories,
-each with its own scope, and corresponding tables.
 
-We have a total lookup that returns the default specification
-if it cannot find an entry for the supplied identifier:
+\subsubsection{Delimited Container (Closed) Concrete Form}
 \begin{code}
-getConstructSpec :: [ConstructSpecTable] -> Identifier -> ConstructSpec
-getConstructSpec [] _  =  defaultConstructSpec
-getConstructSpec (cst:csts) i
- = case M.lookup i cst of
-     Just cs  ->  cs
-     Nothing  ->  getConstructSpec csts i
+delimContClosed :: Monad m => FormSpec
+                -> [Token] -> Token -> Token -> Token
+                -> m ConcreteForm
+delimContClosed (IterateSpec _ _) _ _ _ _
+ = fail "Syntax.delimContClosed: not compatible with the iteration form."
+delimContClosed fs@(SimpleSpec (SimpleForm sf)) toks ldelim sep rdelim
+ | ltoks /= lsf + 1  = fail ( "Syntax.delimContClosed: #toks("
+                            ++ show ltoks
+                            ++ ") is not #form("
+                            ++ show lsf
+                            ++ ")+1." )
+ | hasdup (ldelim:sep:rdelim:toks)
+                =  fail "Syntax.delimContClosed: duplicate tokens not allowed."
+ | otherwise    =  return $ XF fs $ DelimContainer Closed toks ldelim sep rdelim
+ where
+    lsf = length sf
+    ltoks = length toks
 \end{code}
 
-\newpage
-\subsection{Constructing Forms}
-
-Given an identifier, a construct specification, and a list of terms,
-we want to build the relevant constructor term,
-so long as it satisfies the specification:
+\subsubsection{Name Application Concrete Form}
 \begin{code}
-buildConstruct :: Monad m
-               => ConstructSpec
-               -> Identifier
-               -> [Term]
-               -> m Term
-buildConstruct (XS tk fs) i ts =  fail "Syntax.buildConstruct: NYI"
+nameApplication :: Monad m => FormSpec
+                -> Token -> Token -> Token
+                -> m ConcreteForm
+nameApplication (IterateSpec _ _) _ _ _
+ = fail "Syntax.nameApplication: not compatible with the iteration form."
+nameApplication fs@(SimpleSpec (SimpleForm sf)) ldelim sep rdelim
+ | hasdup [ldelim,sep,rdelim]
+       =  fail "Syntax.nameApplication: duplicate tokens not allowed."
+ | otherwise    =  return $ XF fs $ NameAppl ldelim sep rdelim
 \end{code}
 
-\subsection{Concrete Syntax Specification}
+\subsubsection{Open Fixed Concrete Form}
+\begin{code}
+openFixed :: Monad m => FormSpec -> [Token] -> m ConcreteForm
+openFixed (IterateSpec _ _) _
+ = fail "Syntax.openFixed: not compatible with the iteration form."
+openFixed fs@(SimpleSpec (SimpleForm sf)) toks
+ | ltoks /= lsf - 1  = fail ( "Syntax.openFixed: #toks("
+                            ++ show ltoks
+                            ++ ") is not #form("
+                            ++ show lsf
+                            ++ ")-1." )
+ | hasdup toks  =  fail "Syntax.openFixed: duplicate tokens not allowed."
+ | otherwise    =  return $ XF fs $ OpenFixed toks
+ where
+    lsf = length sf
+    ltoks = length toks
+\end{code}
 
-Given an identifer associated with a form specification,
-we also want to be able to give a description of a concrete way to
-parse and render it.
+\subsubsection{Open Iterated Concrete Form}
+\begin{code}
+openIterated :: Monad m => FormSpec -> Token -> m ConcreteForm
+openIterated (SimpleSpec _) _
+ = fail "Syntax.openIterated: not compatible with the simple form."
+openIterated fs@(IterateSpec bc (LenConstraint ord n)) tok
+ = return $ XF fs $ OpenIterated tok
+\end{code}

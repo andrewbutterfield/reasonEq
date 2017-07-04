@@ -1,4 +1,4 @@
-\section{Concrete Syntax}
+delimContClosed\section{Concrete Syntax}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2017
 
@@ -456,10 +456,13 @@ Test tokens:
 t1 = IdTok $ fromJust $ ident "t1"
 t2 = IdTok $ fromJust $ ident "t2"
 t3 = IdTok $ fromJust $ ident "t3"
+t4 = IdTok $ fromJust $ ident "t4"
+t5 = IdTok $ fromJust $ ident "t5"
 t12 =[t1,t2]
 t123 = [t1,t2,t3]
 \end{code}
 
+\newpage
 \subsection{Form with Concrete Syntax}
 
 We want to bring a form specification together with
@@ -487,6 +490,7 @@ closedMixfix fs@(SimpleSpec (SimpleForm sf)) toks
     lsf = length sf
     ltoks = length toks
 \end{code}
+
 Tests:
 \begin{code}
 closedMixfixTests
@@ -503,6 +507,7 @@ closedMixfixTests
     ]
 \end{code}
 
+\newpage
 \subsubsection{Delimited Container (Open) Concrete Form}
 \begin{code}
 delimContOpen :: Monad m => FormSpec
@@ -524,6 +529,27 @@ delimContOpen fs@(SimpleSpec (SimpleForm sf)) toks ldelim sep rdelim
     ltoks = length toks
 \end{code}
 
+Tests:
+\begin{code}
+delimContOpenTests
+ = testGroup "Syntax.delimContOpen"
+    [ testCase "Delimited Open for Iteration Spec. (Fail)"
+      ( delimContOpen defaultFormSpec [] t1 t2 t3 @?=
+        But "Syntax.delimContOpen: not compatible with the iteration form." )
+    , testCase "Delimited Open for singleton spec (Fail)"
+      ( delimContOpen anything [t1] t2 t3 t4 @?=
+        But "Syntax.delimContOpen: #toks(1) is not #form(1)-1." )
+    , testCase "Delimited Open for singleton spec (Fail)"
+      ( delimContOpen anything [] t3 t4 t3 @?=
+        But "Syntax.delimContOpen: duplicate tokens not allowed." )
+    , testCase "Delimited Open for singleton spec (Ok)"
+      ( delimContOpen anything [] t3 t4 t5 @?=
+        Yes (XF anything $ DelimContainer Open [] t3 t4 t5) )
+    ]
+\end{code}
+
+
+\newpage
 \subsubsection{Delimited Container (Closed) Concrete Form}
 \begin{code}
 delimContClosed :: Monad m => FormSpec
@@ -545,6 +571,27 @@ delimContClosed fs@(SimpleSpec (SimpleForm sf)) toks ldelim sep rdelim
     ltoks = length toks
 \end{code}
 
+Tests:
+\begin{code}
+delimContClosedTests
+ = testGroup "Syntax.delimContClosed"
+    [ testCase "Delimited Closed for Iteration Spec. (Fail)"
+      ( delimContClosed defaultFormSpec [] t1 t2 t3 @?=
+        But "Syntax.delimContClosed: not compatible with the iteration form." )
+    , testCase "Delimited Closed for singleton spec (Fail)"
+      ( delimContClosed anything [t1] t2 t3 t4 @?=
+        But "Syntax.delimContClosed: #toks(1) is not #form(1)+1." )
+    , testCase "Delimited Closed for singleton spec (Fail)"
+      ( delimContClosed anything t12 t3 t4 t2 @?=
+        But "Syntax.delimContClosed: duplicate tokens not allowed." )
+    , testCase "Delimited Closed for singleton spec (Ok)"
+      ( delimContClosed anything t12 t3 t4 t5 @?=
+        Yes (XF anything $ DelimContainer Closed t12 t3 t4 t5) )
+    ]
+\end{code}
+
+
+\newpage
 \subsubsection{Name Application Concrete Form}
 \begin{code}
 nameApplication :: Monad m => FormSpec
@@ -558,6 +605,23 @@ nameApplication fs@(SimpleSpec (SimpleForm sf)) ldelim sep rdelim
  | otherwise    =  return $ XF fs $ NameAppl ldelim sep rdelim
 \end{code}
 
+Tests:
+\begin{code}
+nameApplTests
+ = testGroup "Syntax.nameApplication"
+    [ testCase "Delimited Closed for Iteration Spec. (Fail)"
+      ( nameApplication defaultFormSpec t1 t2 t3 @?=
+        But "Syntax.nameApplication: not compatible with the iteration form." )
+    , testCase "Delimited Closed for singleton spec (Fail)"
+      ( nameApplication anything t3 t4 t3 @?=
+        But "Syntax.nameApplication: duplicate tokens not allowed." )
+    , testCase "Delimited Closed for singleton spec (Ok)"
+      ( nameApplication anything t3 t4 t5 @?=
+        Yes (XF anything $ NameAppl t3 t4 t5) )
+    ]
+\end{code}
+
+\newpage
 \subsubsection{Open Fixed Concrete Form}
 \begin{code}
 openFixed :: Monad m => FormSpec -> [Token] -> m ConcreteForm
@@ -576,13 +640,45 @@ openFixed fs@(SimpleSpec (SimpleForm sf)) toks
     ltoks = length toks
 \end{code}
 
+Tests:
+\begin{code}
+openFixedTests
+ = testGroup "Syntax.openFixed"
+    [ testCase "Open Fixed for Iteration Spec. (Fail)"
+      ( openFixed defaultFormSpec [] @?=
+        But "Syntax.openFixed: not compatible with the iteration form." )
+    , testCase "Open Fixed for singleton spec (Fail)"
+      ( openFixed anything [t1] @?=
+        But "Syntax.openFixed: #toks(1) is not #form(1)-1." )
+    , testCase "Open Fixed for singleton spec (Ok)"
+      ( openFixed anything [] @?=
+        Yes (XF anything $ OpenFixed []) )
+    ]
+\end{code}
+
+
+
+\newpage
 \subsubsection{Open Iterated Concrete Form}
 \begin{code}
 openIterated :: Monad m => FormSpec -> Token -> m ConcreteForm
 openIterated (SimpleSpec _) _
  = fail "Syntax.openIterated: not compatible with the simple form."
-openIterated fs@(IterateSpec bc (LenConstraint ord n)) tok
+openIterated fs@(IterateSpec _ _) tok
  = return $ XF fs $ OpenIterated tok
+\end{code}
+
+Tests:
+\begin{code}
+openIteratedTests
+ = testGroup "Syntax.openIterated"
+    [ testCase "Open Fixed for Simple Spec. (Fail)"
+      ( openIterated anything t1 @?=
+        But "Syntax.openIterated: not compatible with the simple form." )
+    , testCase "Open Fixed for singleton spec (Ok)"
+      ( openIterated defaultFormSpec t1 @?=
+        Yes (XF defaultFormSpec $ OpenIterated t1) )
+    ]
 \end{code}
 
 \newpage
@@ -593,5 +689,10 @@ int_tst_Syntax
  = [ testGroup "\nSyntax Internal"
      simpleFormTests
    , closedMixfixTests
+   , delimContOpenTests
+   , delimContClosedTests
+   , nameApplTests
+   , openFixedTests
+   , openIteratedTests
    ]
 \end{code}

@@ -34,11 +34,24 @@ Here we define very basic lexical elements on which both the concrete
 and abstracts will be built.
 The key design issues here are to be able to easily support common UTP
 idioms, while making it easy for the user to define their own notation.
+For now we recognise the following kinds of tokens:
+\begin{description}
+  \item[Whitespace]
+    longest sequence of characters satisfying \texttt{isSpace}.
+  \item[Numeric]
+    longest sequence of characters satisfying \texttt{isDigit}.
+  \item[Numeric]
+    longest sequence of characters satisfying \texttt{isSymbol}.
+  \item[Identifier]
+    longest sequence of characters satisfying the requirements of
+    an identifier as defined in this module.
+\end{description}
+Anything else is `arbitrary`.
 
 \newpage
 \subsection{Identifiers}
 
-We consider`identifiers' to be strings that satisfy a fairly standard convention
+We consider `identifiers' to be strings that satisfy a fairly standard convention
 for program variables, namely starting with an alpha character,
 followed by zero or more alphas, and digits.
 We don't allow underscores, dollars, primes or dots in identifiers.

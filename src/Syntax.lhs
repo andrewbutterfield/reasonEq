@@ -291,7 +291,7 @@ They can either be expressed as:
   \item[Name-application:]
     A variable followed immediately by a delimited container
     of a fixed length or arbitrary length.
-    This always has a variable/name as its first term,
+    This always has a name as its first term,
     and all we need to do is provide a simple form for the argument-list,
     if it has a fixed length, or a basic component and length constraints
     if the length is arbitrary.
@@ -303,7 +303,12 @@ They can either be expressed as:
 \end{description}
 We want to keep form distinct from concrete syntax,
 so all that we observe for now is that all three of the above cases
-have the simple form.
+have the simple form, while the third can also be a basic component
+plus a length constraint.
+\begin{code}
+data LengthConstraint = LC Ordering Int deriving (Eq,Ord,Show,Read)
+pattern LenConstraint ord i = LC ord i
+\end{code}
 
 \subsubsection{Specifying Open Forms}
 
@@ -333,14 +338,9 @@ In any case we really only have two variations:
 An open-form specification is one of the two cases above,
 with a simple form in the first case,
 and basic component plus a length constraint in the second.
-\begin{code}
-data LengthConstraint = LC Ordering Int deriving (Eq,Ord,Show,Read)
-pattern LenConstraint ord i = LC ord i
-\end{code}
 
 
-
-
+\newpage
 \subsubsection{Form Specification}
 
 A form specification is either a simple form,
@@ -410,11 +410,11 @@ pattern Closed = CLS
     if the length is arbitrary.
     \\ Example (1) : $f(a,b,c)$
     \\ Arguments Form: three expressions $\seqof{E,E,E}$.
-    \\ Arguments Syntax: $\seqof{\texttt{(},\texttt{,},\texttt{)}}$
+    \\ Syntax: $\seqof{\texttt{f},\texttt{(},\texttt{,},\texttt{)}}$
     \\ Example (2) : $and(P,Q,R,...)$
     \\ Arguments Form: a basic component ($P$)
        and a constraint $\mbox{length} \geq 2$.
-    \\ Arguments Syntax: $\seqof{\texttt{(},\texttt{,},\texttt{)}}$
+    \\ Syntax: $\seqof{\texttt{and},\texttt{(},\texttt{,},\texttt{)}}$
   \item[Open-fixed:]
     An interleaving of particular kinds of terms,
     with specific tokens.
@@ -445,14 +445,16 @@ data SyntaxSpec
  | DC                   -- Delimited Container
       OpnCls [Token]      -- group syntax
       Token Token Token   -- l. delim., sep., r. delim.
- | NA Token Token Token -- Name Application (Fixed)
+ | NA                   -- Name Application
+      Token               -- nameApplication
+      Token Token Token   -- l. delim., sep., r. delim.
  | OF [Token]           -- Open Fixed
  | OI Token             -- Open Iterated
  deriving (Eq,Ord,Show,Read)
 
 pattern ClosedMixfix toks = CM toks
 pattern DelimContainer oc toks ldelim sep rdelim = DC oc toks ldelim sep rdelim
-pattern NameAppl ldelim sep rdelim = NA ldelim sep rdelim
+pattern NameAppl nm ldelim sep rdelim = NA nm ldelim sep rdelim
 pattern OpenFixed toks = OF toks
 pattern OpenIterated tok = OI tok
 
@@ -470,6 +472,7 @@ t2 = IdTok $ fromJust $ ident "t2"
 t3 = IdTok $ fromJust $ ident "t3"
 t4 = IdTok $ fromJust $ ident "t4"
 t5 = IdTok $ fromJust $ ident "t5"
+t6 = IdTok $ fromJust $ ident "t6"
 tnorm = ArbTok "|"
 t12 =[t1,t2]
 t123 = [t1,t2,t3]
@@ -616,12 +619,12 @@ delimContClosedTests
 \subsubsection{Name Application Concrete Form}
 \begin{code}
 nameApplication :: Monad m => FormSpec
-                -> Token -> Token -> Token
+                -> Token -> Token -> Token -> Token
                 -> m ConcreteForm
-nameApplication fs ldelim sep rdelim
- | hasdup [ldelim,sep,rdelim]
+nameApplication fs nm ldelim sep rdelim
+ | hasdup [nm,ldelim,sep,rdelim]
        =  fail "Syntax.nameApplication: duplicate tokens not allowed."
- | otherwise    =  return $ XF fs $ NameAppl ldelim sep rdelim
+ | otherwise    =  return $ XF fs $ NameAppl nm ldelim sep rdelim
 \end{code}
 
 Tests:
@@ -629,14 +632,14 @@ Tests:
 nameApplTests
  = testGroup "Syntax.nameApplication"
     [ testCase "Duplicate tokens (Fail)"
-      ( nameApplication anything t3 t4 t3 @?=
+      ( nameApplication anything t3 t4 t3 t5 @?=
         But "Syntax.nameApplication: duplicate tokens not allowed." )
     , testCase "Singleton Simple Form (Ok)"
-      ( nameApplication anything t3 t4 t5 @?=
-        Yes (XF anything $ NameAppl t3 t4 t5) )
+      ( nameApplication anything t1 t3 t4 t5 @?=
+        Yes (XF anything $ NameAppl t1 t3 t4 t5) )
     , testCase "Iteration Form (Ok)"
-      ( nameApplication defaultFormSpec t3 t4 t5 @?=
-        Yes (XF defaultFormSpec $ NameAppl t3 t4 t5) )
+      ( nameApplication defaultFormSpec t1 t3 t4 t5 @?=
+        Yes (XF defaultFormSpec $ NameAppl t1 t3 t4 t5) )
     ]
 \end{code}
 
@@ -706,7 +709,8 @@ nullConcrete = XF nullFormSpec $ OpenIterated tnull
 
 tnull = ArbTok ""
 
-defaultConcrete = XF defaultFormSpec $ NameAppl tlbr tcomma trbr
+defaultConcrete nm
+  = XF defaultFormSpec $ NameAppl (ArbTok nm) tlbr tcomma trbr
 
 tlbr   = ArbTok "("
 tcomma = ArbTok ","
@@ -717,8 +721,8 @@ concreteTests
     [ testCase "'Null' Concrete"
        ( Yes nullConcrete @?= openIterated nullFormSpec tnull )
     , testCase "'Default' Concrete"
-       ( Yes defaultConcrete @?=
-         nameApplication defaultFormSpec tlbr tcomma trbr )
+       ( Yes (defaultConcrete "") @?=
+         nameApplication defaultFormSpec tnull tlbr tcomma trbr )
     ]
 \end{code}
 

@@ -29,6 +29,8 @@ module Syntax ( BasicComp
               , nameApplication
               , openFixed
               , openIterated
+              , nullConcrete
+              , defaultConcrete
               , int_tst_Syntax
               ) where
 import Data.Maybe (fromJust)
@@ -288,12 +290,16 @@ They can either be expressed as:
     \\Group Form: a variable followed by an expression $\seqof{V,E}$.
   \item[Name-application:]
     A variable followed immediately by a delimited container
-    of a fixed length.
-    This always has a variable as its first term,
-    and all we need to do is provide a simple form for the argument-list
-    \\
-    Example: $f(a,b,c)$
+    of a fixed length or arbitrary length.
+    This always has a variable/name as its first term,
+    and all we need to do is provide a simple form for the argument-list,
+    if it has a fixed length, or a basic component and length constraints
+    if the length is arbitrary.
+    \\ Example (1) : $f(a,b,c)$
     \\ Arguments Form: three expressions $\seqof{E,E,E}$.
+    \\ Example (2) : $and(P,Q,R,...)$
+    \\ Arguments Form: a basic component ($P$)
+       and a constraint $\mbox{length} \geq 2$.
 \end{description}
 We want to keep form distinct from concrete syntax,
 so all that we observe for now is that all three of the above cases
@@ -397,12 +403,17 @@ pattern Closed = CLS
 \end{code}
   \item[Name-application:]
     A variable followed immediately by a delimited container
-    of a fixed length, always with a variable as its first term,
-    and all we need to do is provide a simple form for the argument-list.
-    We provide three tokens giving the start and finish delimiters, and the arguemnt term separator.
-    \\
-    Example: $f(a,b,c)$
+    of a fixed length or arbitrary length.
+    This always has a variable/name as its first term,
+    and all we need to do is provide a simple form for the argument-list,
+    if it has a fixed length, or a basic component and length constraints
+    if the length is arbitrary.
+    \\ Example (1) : $f(a,b,c)$
     \\ Arguments Form: three expressions $\seqof{E,E,E}$.
+    \\ Arguments Syntax: $\seqof{\texttt{(},\texttt{,},\texttt{)}}$
+    \\ Example (2) : $and(P,Q,R,...)$
+    \\ Arguments Form: a basic component ($P$)
+       and a constraint $\mbox{length} \geq 2$.
     \\ Arguments Syntax: $\seqof{\texttt{(},\texttt{,},\texttt{)}}$
   \item[Open-fixed:]
     An interleaving of particular kinds of terms,
@@ -426,6 +437,7 @@ pattern Closed = CLS
     \\Form: a basic component ($E$) and a constraint $\mbox{length} \leq A+1$.
     \\Syntax: $\textvisiblespace$ (whitespace).
 \end{description}
+\newpage
 This leads to the following concrete syntax specifier:
 \begin{code}
 data SyntaxSpec
@@ -433,7 +445,7 @@ data SyntaxSpec
  | DC                   -- Delimited Container
       OpnCls [Token]      -- group syntax
       Token Token Token   -- l. delim., sep., r. delim.
- | NA Token Token Token -- Name Application
+ | NA Token Token Token -- Name Application (Fixed)
  | OF [Token]           -- Open Fixed
  | OI Token             -- Open Iterated
  deriving (Eq,Ord,Show,Read)
@@ -458,6 +470,7 @@ t2 = IdTok $ fromJust $ ident "t2"
 t3 = IdTok $ fromJust $ ident "t3"
 t4 = IdTok $ fromJust $ ident "t4"
 t5 = IdTok $ fromJust $ ident "t5"
+tnorm = ArbTok "|"
 t12 =[t1,t2]
 t123 = [t1,t2,t3]
 \end{code}
@@ -490,20 +503,28 @@ closedMixfix fs@(SimpleSpec (SimpleForm sf)) toks
     lsf = length sf
     ltoks = length toks
 \end{code}
+We note that the rule aboput duplicate tokens is perhaps a little
+too strict---it outlaws syntax like $|x|$.
 
 Tests:
 \begin{code}
 closedMixfixTests
  = testGroup "Syntax.closedMixfix"
-    [ testCase "Closed Mixfix for Iteration Spec. (Fail)"
+    [ testCase "Try for Iteration Spec. (Fail)"
       ( closedMixfix defaultFormSpec [] @?=
         But "Syntax.closedMixfix: not compatible with the iteration form." )
-    , testCase "Closed Mixfix for singleton spec (Fail)"
+    , testCase "Incorrect Token count (Fail)"
       ( closedMixfix anything [t1] @?=
         But "Syntax.closedMixfix: #toks(1) is not #form(1)+1." )
-    , testCase "Closed Mixfix for singleton spec (Ok)"
+    , testCase "Duplicate tokens (Fail)"
+      ( closedMixfix anything [t1,t1] @?=
+        But "Syntax.closedMixfix: duplicate tokens not allowed." )
+    , testCase "Singleton Spec (Ok)"
       ( closedMixfix anything t12 @?=
         Yes (XF anything $ ClosedMixfix t12) )
+    , testCase "'norm' notation (Fail, but should be OK!)"
+      ( closedMixfix (SimpleSpec (SF [ExprSyn])) [tnorm,tnorm] @?=
+        But "Syntax.closedMixfix: duplicate tokens not allowed." )
     ]
 \end{code}
 
@@ -533,16 +554,16 @@ Tests:
 \begin{code}
 delimContOpenTests
  = testGroup "Syntax.delimContOpen"
-    [ testCase "Delimited Open for Iteration Spec. (Fail)"
+    [ testCase "Try for Iteration Spec. (Fail)"
       ( delimContOpen defaultFormSpec [] t1 t2 t3 @?=
         But "Syntax.delimContOpen: not compatible with the iteration form." )
-    , testCase "Delimited Open for singleton spec (Fail)"
+    , testCase "Incorrect Token count (Fail)"
       ( delimContOpen anything [t1] t2 t3 t4 @?=
         But "Syntax.delimContOpen: #toks(1) is not #form(1)-1." )
-    , testCase "Delimited Open for singleton spec (Fail)"
+    , testCase "Duplicate tokens (Fail)"
       ( delimContOpen anything [] t3 t4 t3 @?=
         But "Syntax.delimContOpen: duplicate tokens not allowed." )
-    , testCase "Delimited Open for singleton spec (Ok)"
+    , testCase "Singleton spec (Ok)"
       ( delimContOpen anything [] t3 t4 t5 @?=
         Yes (XF anything $ DelimContainer Open [] t3 t4 t5) )
     ]
@@ -575,16 +596,16 @@ Tests:
 \begin{code}
 delimContClosedTests
  = testGroup "Syntax.delimContClosed"
-    [ testCase "Delimited Closed for Iteration Spec. (Fail)"
+    [ testCase "Try for Iteration Spec. (Fail)"
       ( delimContClosed defaultFormSpec [] t1 t2 t3 @?=
         But "Syntax.delimContClosed: not compatible with the iteration form." )
-    , testCase "Delimited Closed for singleton spec (Fail)"
+    , testCase "Incorrect Token count (Fail)"
       ( delimContClosed anything [t1] t2 t3 t4 @?=
         But "Syntax.delimContClosed: #toks(1) is not #form(1)+1." )
-    , testCase "Delimited Closed for singleton spec (Fail)"
+    , testCase "Duplicate tokens (Fail)"
       ( delimContClosed anything t12 t3 t4 t2 @?=
         But "Syntax.delimContClosed: duplicate tokens not allowed." )
-    , testCase "Delimited Closed for singleton spec (Ok)"
+    , testCase "Singleton spec (Ok)"
       ( delimContClosed anything t12 t3 t4 t5 @?=
         Yes (XF anything $ DelimContainer Closed t12 t3 t4 t5) )
     ]
@@ -597,9 +618,7 @@ delimContClosedTests
 nameApplication :: Monad m => FormSpec
                 -> Token -> Token -> Token
                 -> m ConcreteForm
-nameApplication (IterateSpec _ _) _ _ _
- = fail "Syntax.nameApplication: not compatible with the iteration form."
-nameApplication fs@(SimpleSpec (SimpleForm sf)) ldelim sep rdelim
+nameApplication fs ldelim sep rdelim
  | hasdup [ldelim,sep,rdelim]
        =  fail "Syntax.nameApplication: duplicate tokens not allowed."
  | otherwise    =  return $ XF fs $ NameAppl ldelim sep rdelim
@@ -609,15 +628,15 @@ Tests:
 \begin{code}
 nameApplTests
  = testGroup "Syntax.nameApplication"
-    [ testCase "Delimited Closed for Iteration Spec. (Fail)"
-      ( nameApplication defaultFormSpec t1 t2 t3 @?=
-        But "Syntax.nameApplication: not compatible with the iteration form." )
-    , testCase "Delimited Closed for singleton spec (Fail)"
+    [ testCase "Duplicate tokens (Fail)"
       ( nameApplication anything t3 t4 t3 @?=
         But "Syntax.nameApplication: duplicate tokens not allowed." )
-    , testCase "Delimited Closed for singleton spec (Ok)"
+    , testCase "Singleton Simple Form (Ok)"
       ( nameApplication anything t3 t4 t5 @?=
         Yes (XF anything $ NameAppl t3 t4 t5) )
+    , testCase "Iteration Form (Ok)"
+      ( nameApplication defaultFormSpec t3 t4 t5 @?=
+        Yes (XF defaultFormSpec $ NameAppl t3 t4 t5) )
     ]
 \end{code}
 
@@ -644,13 +663,13 @@ Tests:
 \begin{code}
 openFixedTests
  = testGroup "Syntax.openFixed"
-    [ testCase "Open Fixed for Iteration Spec. (Fail)"
+    [ testCase "Try for Iteration Spec. (Fail)"
       ( openFixed defaultFormSpec [] @?=
         But "Syntax.openFixed: not compatible with the iteration form." )
-    , testCase "Open Fixed for singleton spec (Fail)"
+    , testCase "Incorrect Token count (Fail)"
       ( openFixed anything [t1] @?=
         But "Syntax.openFixed: #toks(1) is not #form(1)-1." )
-    , testCase "Open Fixed for singleton spec (Ok)"
+    , testCase "Singleton spec (Ok)"
       ( openFixed anything [] @?=
         Yes (XF anything $ OpenFixed []) )
     ]
@@ -672,12 +691,34 @@ Tests:
 \begin{code}
 openIteratedTests
  = testGroup "Syntax.openIterated"
-    [ testCase "Open Fixed for Simple Spec. (Fail)"
+    [ testCase "Try for Simple Spec. (Fail)"
       ( openIterated anything t1 @?=
         But "Syntax.openIterated: not compatible with the simple form." )
-    , testCase "Open Fixed for singleton spec (Ok)"
+    , testCase "Singleton spec (Ok)"
       ( openIterated defaultFormSpec t1 @?=
         Yes (XF defaultFormSpec $ OpenIterated t1) )
+    ]
+\end{code}
+
+Special Values:
+\begin{code}
+nullConcrete = XF nullFormSpec $ OpenIterated tnull
+
+tnull = ArbTok ""
+
+defaultConcrete = XF defaultFormSpec $ NameAppl tlbr tcomma trbr
+
+tlbr   = ArbTok "("
+tcomma = ArbTok ","
+trbr   = ArbTok ")"
+
+concreteTests
+ = testGroup "Special ConcreteForm Values"
+    [ testCase "'Null' Concrete"
+       ( Yes nullConcrete @?= openIterated nullFormSpec tnull )
+    , testCase "'Default' Concrete"
+       ( Yes defaultConcrete @?=
+         nameApplication defaultFormSpec tlbr tcomma trbr )
     ]
 \end{code}
 
@@ -694,5 +735,6 @@ int_tst_Syntax
    , nameApplTests
    , openFixedTests
    , openIteratedTests
+   , concreteTests
    ]
 \end{code}

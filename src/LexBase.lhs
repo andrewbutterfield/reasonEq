@@ -11,7 +11,7 @@ module LexBase
  , pattern Identifier, ident
  , validIdent, idName
  , Token
- , pattern IdTok
+ , pattern ArbTok, pattern IdTok
  , int_tst_LexBase
  ) where
 
@@ -88,8 +88,10 @@ identTests
 We define a basic notion of tokens as the union of the above ``wrapped'' strings
 \begin{code}
 data Token
- = TI Identifier
+ = TA String
+ | TI Identifier
  deriving (Eq,Ord,Show,Read)
+pattern ArbTok s = TA s
 pattern IdTok i = TI i
 \end{code}
 

@@ -10,6 +10,7 @@ module Main where
 import LexBase
 import AST
 import Syntax
+import Builder
 
 version = "0.1.0.0++"
 main :: IO ()

@@ -38,7 +38,6 @@ import qualified Data.Map as M
 
 import Utilities
 import LexBase
-import AST
 
 import Test.HUnit
 import Test.Framework as TF (defaultMain, testGroup, Test)

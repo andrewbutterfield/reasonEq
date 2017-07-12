@@ -6,13 +6,19 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module Builder ( int_tst_Builder
+module Builder ( BadItemKind(..)
+               , BadLength(..)
+               , BuildFail(..)
+               , BuildResult
+               , buildTerm
+               , basicCompSat
+               , int_tst_Builder
                ) where
 --import Data.Maybe (fromJust)
 --import qualified Data.Map as M
 
 --import Utilities
---import LexBase
+import LexBase
 import AST
 import Syntax
 
@@ -90,17 +96,50 @@ data BuildFail
  = BuildFail [BadItemKind] (Maybe BadLength)
  deriving (Eq,Ord,Show,Read)
 \end{code}
-
 We define a build-result as either success returing a term,
 or failure with a report.
 \begin{code}
-newtype BuildResult t = BR (Either BuildFail t)
+type BuildResult = Either BuildFail Term
+nullBFail :: BuildResult
+nullBFail = Left $ BuildFail [] Nothing
+\end{code}
 
-instance Functor BuildResult where
-  fmap f (BR (Left bf))  =  BR $ Left bf
-  fmap f (BR (Right x))  =  BR $ Right $ f x
+\newpage
+\subsection{Building Forms}
 
+We now provide a function that takes a form specification,
+an identifier, and a list of terms,
+and returns the corresponding build-result:
+\begin{code}
+buildTerm :: FormSpec -> Identifier -> [Term] -> BuildResult
+buildTerm (SimpleSpec (SimpleForm sf)) i ts = simpleFormTerm  sf i ts
+buildTerm (IterateSpec bc lc)          i ts = iterFormTerm bc lc i ts
+\end{code}
 
+\subsubsection{Basic Component Satisfaction}
+
+\begin{code}
+basicCompSat :: Term -> BasicComp -> Bool
+basicCompSat _         AnySyn   =  True
+basicCompSat (Var _ _) VarSyn   =  True
+basicCompSat (Type _)  TypeSyn  =  True
+basicCompSat t         ExprSyn  =  isExpr t
+basicCompSat t         PredSyn  =  isPred t
+basicCompSat _         _        =  False
+\end{code}
+\subsubsection{Building Simple Forms}
+
+\begin{code}
+simpleFormTerm :: [BasicComp] -> Identifier -> [Term] -> BuildResult
+simpleFormTerm sf i ts = nullBFail
+\end{code}
+
+\subsubsection{Building Iterated Forms}
+
+\begin{code}
+iterFormTerm :: BasicComp -> LengthConstraint -> Identifier -> [Term]
+             -> BuildResult
+iterFormTerm bc lc i ts = nullBFail
 \end{code}
 
 \newpage

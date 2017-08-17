@@ -30,7 +30,8 @@ module AST ( VarRole, pattern NoRole
            , Type
            , pattern ArbType,  pattern TypeVar, pattern TypeApp
            , pattern DataType, pattern FunType, pattern GivenType
-           , Text, Value, pattern Boolean, pattern Integer, pattern Text
+           , Txt
+           , Value, pattern Boolean, pattern Integer, pattern Txt
            , TermKind(..)
            , Term
            , pattern Val, pattern Var, pattern Cons
@@ -412,16 +413,16 @@ but we would much prefer to have some built-in,
 like numbers of various kinds, and maybe characters?
 For now we start with booleans, integers and text.
 \begin{code}
-type Text = String
+type Txt = String
 data Value
  = VB Bool
  | VI Integer
- | VT Text
+ | VT Txt
  deriving (Eq, Ord, Show, Read)
 
 pattern Boolean b = VB b
 pattern Integer i = VI i
-pattern Text    t = VT t
+pattern Txt    t = VT t
 \end{code}
 
 
@@ -565,7 +566,7 @@ isPred t = termkind t == P
 
 In \cite{UTP-book} we find the notion of texts, in chapters 6 and 10.
 We can represent these using this proposed term concept,
-as values of type \verb"Text", or as terms with modified names.
+as values of type \verb"Txt", or as terms with modified names.
 They don't need special handling or representation here.
 
 

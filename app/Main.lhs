@@ -9,6 +9,7 @@ module Main where
 
 import LexBase
 import AST
+import VarData
 import Syntax
 import Builder
 

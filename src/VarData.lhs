@@ -9,6 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module VarData ( VarMatchRole
                , pattern KnownConst, pattern KnownVar, pattern UnknownVar
                , VarTable
+               , vtList
                , newVarTable
                , addKnownConst
                , addKnownVar
@@ -31,11 +32,13 @@ can belong to one of three categories as regards matching:
   \item[Known Constant]
     The variable is a shorthand for a known fixed value.
     It can only match itself, or that known value.
-    Thr value can be basic like a number,
-    or it could denote somethoing somewhat higher-order,
+    The value can be basic like a number,
+    or it could denote something somewhat higher-order,
     such as a function or predicate.
   \item[Known Variable]
-    The variable can take many possible values from a defined type,
+    The variable,
+    whose flavour must either be Static or Dynamic Observation,
+    can take many possible values from a defined type,
     but it
     has a predefined interpretation.
     It can only match itself.
@@ -67,7 +70,13 @@ We use a newtype so we can control access.
 \begin{code}
 newtype VarTable
   = VT (M.Map Variable VarMatchRole)
-  deriving (Show, Read)
+  deriving (Eq, Show, Read)
+\end{code}
+
+We will want to inspect tables.
+\begin{code}
+vtList :: VarTable -> [(Variable,VarMatchRole)]
+vtList (VT table) = M.toList table
 \end{code}
 
 \subsubsection{Creating New Table}
@@ -81,12 +90,23 @@ newVarTable = VT M.empty
 
 Adding values into a table overwrites any previous values
 without any warning.
+
+Any variable may name a constant:
 \begin{code}
 addKnownConst :: Variable -> Term -> VarTable -> VarTable
 addKnownConst var trm (VT table) =   VT $ M.insert var (KC trm) table
+\end{code}
 
-addKnownVar :: Variable -> Type -> VarTable -> VarTable
-addKnownVar var typ (VT table) =   VT $ M.insert var (KV typ) table
+Only Static or Dynamic Observation variables can
+range over values of a given type.
+\begin{code}
+addKnownVar :: Monad m => Variable -> Type -> VarTable -> m VarTable
+addKnownVar var@(StaticVar _) typ (VT table)
+                                     = return $ VT $ M.insert var (KV typ) table
+addKnownVar var@(ObsVar _ _) typ (VT table)
+                                     = return $ VT $ M.insert var (KV typ) table
+addKnownVar var typ (VT table)
+   =  fail "addKnownVar: Expression/Predicate Variables cannot range over types"
 \end{code}
 
 \subsubsection{Table Lookup}

@@ -71,23 +71,23 @@ z = ObsVar After $ fromJust $ ident "z"
 
 tst_lookupVarTable
  = testGroup "lookupVarTable"
-     [ testCase "k in empty table"
+     [ testCase "k not in empty table"
        ( lookupVarTable newVarTable k @?= UnknownVar)
-     , testCase "k in complete table"
+     , testCase "k in  complete table"
        ( lookupVarTable kvepTable k @?= KnownVar tBool)
-     , testCase "v in empty table"
+     , testCase "v not in empty table"
        ( lookupVarTable newVarTable v @?= UnknownVar)
-     , testCase "v in complete table"
+     , testCase "v in  complete table"
        ( lookupVarTable kvepTable v @?= KnownVar tInt)
-     , testCase "e in empty table"
+     , testCase "e not in empty table"
        ( lookupVarTable newVarTable e @?= UnknownVar)
-     , testCase "e in complete table"
+     , testCase "e in  complete table"
        ( lookupVarTable kvepTable e @?= KnownConst k99)
-     , testCase "p in empty table"
+     , testCase "p not in empty table"
        ( lookupVarTable newVarTable p @?= UnknownVar)
-     , testCase "p in complete table"
+     , testCase "p in  complete table"
        ( lookupVarTable kvepTable p @?= KnownConst pTrue)
-     , testCase "z in complete table"
+     , testCase "z not in complete table"
        ( lookupVarTable kvepTable z @?= UnknownVar )
      ]
 
@@ -96,7 +96,9 @@ tst_lookupVarTable
 -- -----------------------------------------------------------------------------
 tst_VarData :: [TF.Test]
 tst_VarData
- = [ tst_addKnownConst
-   , tst_addKnownVar
-   , tst_lookupVarTable
-   ]
+  = [ testGroup "\nVarData"
+      [ tst_addKnownConst
+      , tst_addKnownVar
+      , tst_lookupVarTable
+      ]
+    ]

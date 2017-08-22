@@ -159,8 +159,8 @@ Some tests:
 \begin{code}
 condForm = [PredSyn,ExprSyn,PredSyn]
 i_cond = fromJust $ ident "cond"
-i_P = fromJust $ ident "P" ; v_P = PredVar NoRole i_P ; p = PVar v_P
-i_Q = fromJust $ ident "Q" ; v_Q = PredVar NoRole i_Q ; q = PVar v_Q
+i_P = fromJust $ ident "P" ; v_P = PredVar i_P Static; p = PVar v_P
+i_Q = fromJust $ ident "Q" ; v_Q = PredVar i_Q Static; q = PVar v_Q
 i_c = fromJust $ ident "c" ; v_c = PreExpr i_c        ; c = EVar ArbType v_c
 mkCond ts = simpleFormTerm condForm P i_cond ts
 

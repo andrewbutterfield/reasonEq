@@ -14,10 +14,12 @@ import LexBase
 import AST
 import VarData
 
-k = StaticVar    $  fromJust $ ident "k"
-v = ObsVar  Before (fromJust $ ident "v")
-e = ExprVar Before (fromJust $ ident "e")
-p = PredVar Before (fromJust $ ident "P")
+k = ObsVar  (fromJust $ ident "k") Static
+v = ObsVar  (fromJust $ ident "v") (Dynamic Before)
+e = ExprVar (fromJust $ ident "e") (Dynamic Before)
+len = ExprVar (fromJust $ ident "len") Static
+p = PredVar (fromJust $ ident "P") (Dynamic Before)
+pT = PredVar (fromJust $ ident "T") Static
 
 -- -----------------------------------------------------------------------------
 tst_addKnownConst :: TF.Test
@@ -29,13 +31,20 @@ pTrue = PVal $ Boolean True
 tst_addKnownConst
  = testGroup "addKnownConst"
      [ testCase "k known as 42"
-       ( vtList (addKnownConst k k42 newVarTable) @?= [(k,KnownConst k42)] )
+       ( vtList (fromJust (addKnownConst k k42 newVarTable))
+         @?= [(k,KnownConst k42)] )
      , testCase "v known as 99"
-       ( vtList (addKnownConst v k99 newVarTable) @?= [(v,KnownConst k99)] )
+       ( addKnownConst v k99 newVarTable @?= Nothing )
      , testCase "e known as 99"
-       ( vtList (addKnownConst e k99 newVarTable) @?= [(e,KnownConst k99)] )
-     , testCase "p known as True"
-       ( vtList (addKnownConst p pTrue newVarTable) @?= [(p,KnownConst pTrue)] )
+       ( addKnownConst e k99 newVarTable @?= Nothing )
+     , testCase "len known as 99"
+       ( vtList (fromJust (addKnownConst len k99 newVarTable))
+         @?= [(len,KnownConst k99)] )
+     , testCase "P known as True"
+       ( addKnownConst p pTrue newVarTable @?= Nothing )
+     , testCase "T known as True"
+       ( vtList (fromJust (addKnownConst pT pTrue newVarTable))
+         @?= [(pT,KnownConst pTrue)] )
      ]
 
 -- -----------------------------------------------------------------------------
@@ -54,20 +63,20 @@ tst_addKnownVar
          @?= [(v,KnownVar tInt)] )
      , testCase "e : Int "
        ( addKnownVar e tInt newVarTable @?= Nothing )
-     , testCase "p : Bool"
-       ( addKnownVar p tBool newVarTable @?= Nothing )
+     , testCase "T : Bool"
+       ( addKnownVar pT tBool newVarTable @?= Nothing )
      ]
 
 -- -----------------------------------------------------------------------------
 tst_lookupVarTable :: TF.Test
 
 kvepTable
-  = addKnownConst p pTrue
-  $ addKnownConst e k99
+  = fromJust $ addKnownConst pT pTrue
+  $ fromJust $ addKnownConst len k99
   $ fromJust $ addKnownVar v tInt
   $ fromJust $ addKnownVar k tBool newVarTable
 
-z = ObsVar After $ fromJust $ ident "z"
+z = ObsVar (fromJust $ ident "z") Static
 
 tst_lookupVarTable
  = testGroup "lookupVarTable"
@@ -79,14 +88,14 @@ tst_lookupVarTable
        ( lookupVarTable newVarTable v @?= UnknownVar)
      , testCase "v in  complete table"
        ( lookupVarTable kvepTable v @?= KnownVar tInt)
-     , testCase "e not in empty table"
+     , testCase "len not in empty table"
        ( lookupVarTable newVarTable e @?= UnknownVar)
-     , testCase "e in  complete table"
-       ( lookupVarTable kvepTable e @?= KnownConst k99)
-     , testCase "p not in empty table"
-       ( lookupVarTable newVarTable p @?= UnknownVar)
-     , testCase "p in  complete table"
-       ( lookupVarTable kvepTable p @?= KnownConst pTrue)
+     , testCase "len in  complete table"
+       ( lookupVarTable kvepTable len @?= KnownConst k99)
+     , testCase "T not in empty table"
+       ( lookupVarTable newVarTable pT @?= UnknownVar)
+     , testCase "T in  complete table"
+       ( lookupVarTable kvepTable pT @?= KnownConst pTrue)
      , testCase "z not in complete table"
        ( lookupVarTable kvepTable z @?= UnknownVar )
      ]

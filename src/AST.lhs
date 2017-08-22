@@ -1,4 +1,4 @@
-\section{Abstract Syntax}
+VR\section{Abstract Syntax}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2017
 
@@ -6,10 +6,13 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module AST ( VarRole, pattern NoRole
+module AST ( VarWhat
+           , pattern ObsV, pattern ExprV, pattern PredV
+           , VarWhen
            , pattern Before, pattern During, pattern After
+           , pattern Static, pattern Dynamic
            , Variable
-           , pattern StaticVar
+           , pattern Vbl
            , pattern ObsVar, pattern ExprVar, pattern PredVar
            , pattern PreVar, pattern MidVar, pattern PostVar
            , pattern PreCond, pattern PostCond
@@ -80,19 +83,13 @@ We want to implement a range of variables
 that can stand for behaviour observations, and arbitrary terms.
 We also want to support the notion of list-variables that denote lists of variables.
 
-Variables are either:
-\begin{description}
-  \item[Static]
-    that capture context-sensitive information that does not change during
-    the lifetime of a program.
-    These always take values that range over appropriate program observations.
-  \item[Dynamic]
-    that represent behaviour
-    with observations that change as the program runs.
-    These can have added `decorations' that limit their scope
-    to pre, post, and intermediate states of execution.
-\end{description}
-Dynamic variables can:
+Variables have a root identifier,
+can represent either obervations,expressions or predicates,
+and can be static or dynamic.
+A dynamic variable has to be classified regarding
+when in program execution history it applies: before, during or after.
+
+Variables can:
 \begin{itemize}
   \item
      track a single observable aspect of the behaviour as the program
@@ -103,68 +100,84 @@ Dynamic variables can:
   \item
     denote arbitrary predicates whose truth value depend on dynamic observables.
 \end{itemize}
-The latter two cases are the main mechanism for defining semantics
-and laws.
-
-In places where list of variables occur,
-it is very useful to have (single) variables
-that are intended to represent such lists.
-We call these list-variables,
-and they generally can take similar decorations as dynamic variables.
-Such lists occur in binders, substitutions and iterated terms.
-
-We use short constructors for the datatypes,
-and define pattern synonyms with more meaning names.
-
-We start by defining the various roles for dynamic variables
 \begin{code}
-data VarRole -- Variable role
-  = RN -- None
-  | RB -- Before (pre)
-  | RD String -- During (intermediate)
-  | RA -- After (post)
+data VarWhat -- variable kind
+  = VO -- Observation
+  | VE -- Expression
+  | VP -- Predicate
   deriving (Eq, Ord, Show, Read)
 
-pattern NoRole = RN
-pattern Before = RB
-pattern During n = RD n
-pattern After  = RA
+pattern ObsV = VO
+pattern ExprV = VE
+pattern PredV = VP
 \end{code}
 
-Then we view variables as having four flavours:
+
+Variables are either:
+\begin{description}
+  \item[Static]
+    that capture information, or define terms, that do not change during
+    the lifetime of a program.
+  \item[Dynamic]
+    that represent behaviour
+    with observations that change as the program runs.
+    These can have added `decorations' that limit their scope
+    to pre, post, and intermediate states of execution.
+\end{description}
+
+
+We start by defining the various ``timings'' for dynamic variables
 \begin{code}
-data Variable
- = VS Identifier -- Static
- | VO VarRole Identifier -- Dynamic Observation
- | VE VarRole Identifier -- Dynamic Expression
- | VP VarRole Identifier -- Dynamic Predicate
+data VarWhen -- Variable role
+  = WB -- Before (pre)
+  | WD String -- During (intermediate)
+  | WA -- After (post)
+  deriving (Eq, Ord, Show, Read)
+
+pattern Before = WB
+pattern During n = WD n
+pattern After  = WA
+\end{code}
+
+We define the two variable kinds:
+\begin{code}
+data VarKind
+  = KS -- Static
+  | KD VarWhen -- Dynamic
+  deriving (Eq, Ord, Show, Read)
+
+pattern Static = KS
+pattern Dynamic w = KD w
+\end{code}
+
+A variable is a triple: identifier, what, and kind
+\begin{code}
+newtype Variable  = VR (Identifier, VarWhat, VarKind)
  deriving (Eq,Ord,Show,Read)
 
-pattern StaticVar i = VS i
+pattern Vbl  i wt kd = VR (i, wt, kd)
 
-pattern ObsVar  r i = VO r i
-pattern ExprVar r i = VE r i
-pattern PredVar r i = VP r i
+pattern ObsVar  i k = Vbl i VO k
+pattern ExprVar i k = VR (i, VE, k)
+pattern PredVar i k = VR (i, VP, k)
 \end{code}
 
 We also have some pre-wrapped patterns for common cases:
 \begin{code}
-pattern PreVar   i    = VO RB i
-pattern PostVar  i    = VO RA i
-pattern MidVar   i n  = VO (RD n) i
-pattern PreCond  i    = VP RB i
-pattern PostCond i    = VP RA i
-pattern PreExpr  i    = VE RB i
-pattern PostExpr i    = VE RA i
+pattern PreVar   i    = VR (i, VO, (KD WB))
+pattern PostVar  i    = VR (i, VO, (KD WA))
+pattern MidVar   i n  = VR (i, VO, (KD (WD n)))
+pattern PreCond  i    = VR (i, VP, (KD WB))
+pattern PostCond i    = VR (i, VP, (KD WA))
+pattern PreExpr  i    = VR (i, VE, (KD WB))
+pattern PostExpr i    = VR (i, VE, (KD WA))
 \end{code}
 
 Some variable predicates:
 \begin{code}
 isPreVar :: Variable -> Bool
-isPreVar (PreVar _)  = True
-isPreVar (PreExpr _) = True
-isPreVar (PreCond _) = True
-isPreVar _           = False
+isPreVar (VR (_, _, (KD WB)))  =  True
+isPreVar _                     =  False
 \end{code}
 
 \subsubsection{Identifier and Variable test values}
@@ -186,6 +199,13 @@ v_f' = PostExpr $ i_f
 
 \subsubsection{List Variables}
 
+In places where list of variables occur,
+it is very useful to have (single) variables
+that are intended to represent such lists.
+We call these list-variables,
+and they generally can take similar decorations as dynamic variables.
+Such lists occur in binders, substitutions and iterated terms.
+
 We also need to introduce the idea of lists of variables,
 for use in binding constructs,
 which may themselves contain special variables
@@ -196,9 +216,9 @@ of a list of identifiers, corresponding to variable `roots'
 
 \begin{code}
 data ListVar
- = LO VarRole Identifier [Identifier]
- | LE VarRole Identifier [Identifier]
- | LP VarRole Identifier [Identifier]
+ = LO VarWhen Identifier [Identifier]
+ | LE VarWhen Identifier [Identifier]
+ | LP VarWhen Identifier [Identifier]
  deriving (Eq, Ord, Show, Read)
 
 pattern ObsLVar  r i rs = LO r i rs
@@ -208,11 +228,11 @@ pattern PredLVar r i rs = LP r i rs
 
 Pre-wrapped patterns:
 \begin{code}
-pattern PreVars  i    <-  LO RB i _
-pattern PostVars i    <-  LO RA i _
-pattern MidVars  i n  <-  LO (RD n) i _
-pattern PreExprs i    <-  LE RB i _
-pattern PrePreds i    <-  LP RB i _
+pattern PreVars  i    <-  LO WB i _
+pattern PostVars i    <-  LO WA i _
+pattern MidVars  i n  <-  LO (WD n) i _
+pattern PreExprs i    <-  LE WB i _
+pattern PrePreds i    <-  LP WB i _
 \end{code}
 
 Useful predicates:
@@ -616,7 +636,7 @@ different combinations of the above side-conditions interact.
 \\ D_1 \land C_2 &=& C_2 \cap D_1 = \emptyset \;\land\; D_1 \;\land\; C_2
 \\ X_1 \land C_2 &=& X_1 \subseteq C_2 \;\land\; X_1
 \end{eqnarray*}
-Given that variable matching will respect variable roles (\verb"VarRole"),
+Given that variable matching will respect variable roles (\verb"VarWhen"),
 if we have either $C$ or $X$ specified, then we check $pre$ at side-condition generation time.
 We can summarise by saying, given a satisfiable side-condition involving $N$, $D$, $X$, and $C$, then there is a faithful representation
 where the following invariant holds:

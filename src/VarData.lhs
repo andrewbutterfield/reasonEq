@@ -30,18 +30,17 @@ whether of static, or any dynamic flavour,
 can belong to one of three categories as regards matching:
 \begin{description}
   \item[Known Constant]
-    The variable is a shorthand for a known fixed value.
+    The variable is static,
+    and is a shorthand for a known fixed value.
     It can only match itself, or that known value.
     The value can be basic like a number,
     or it could denote something somewhat higher-order,
     such as a function or predicate.
   \item[Known Variable]
-    The variable,
-    whose flavour must either be Static or Dynamic Observation,
-    can take many possible values from a defined type,
-    but it
-    has a predefined interpretation.
-    It can only match itself.
+    The variable is an observation
+    and can take many possible values from a defined type.
+    it has a predefined interpretation,
+    and can only match itself.
   \item[Unknown]
     Nothing specific is known about the variable.
     It can match anything of the appropriate flavour.
@@ -91,22 +90,21 @@ newVarTable = VT M.empty
 Adding values into a table overwrites any previous values
 without any warning.
 
-Any variable may name a constant:
+Only static variables may name a constant:
 \begin{code}
-addKnownConst :: Variable -> Term -> VarTable -> VarTable
-addKnownConst var trm (VT table) =   VT $ M.insert var (KC trm) table
+addKnownConst :: Monad m => Variable -> Term -> VarTable -> m VarTable
+addKnownConst var@(Vbl _ _ Static) trm (VT table)
+                                    =  return $ VT $ M.insert var (KC trm) table
+addKnownConst _ _ _ = fail "addKnownConst: not for Dynamic Variables."
 \end{code}
 
-Only Static or Dynamic Observation variables can
+Only observation variables can
 range over values of a given type.
 \begin{code}
 addKnownVar :: Monad m => Variable -> Type -> VarTable -> m VarTable
-addKnownVar var@(StaticVar _) typ (VT table)
-                                     = return $ VT $ M.insert var (KV typ) table
 addKnownVar var@(ObsVar _ _) typ (VT table)
                                      = return $ VT $ M.insert var (KV typ) table
-addKnownVar var typ (VT table)
-   =  fail "addKnownVar: Expression/Predicate Variables cannot range over types"
+addKnownVar _ _ _ = fail "addKnownVar: not for Expr/Pred Variables."
 \end{code}
 
 \subsubsection{Table Lookup}

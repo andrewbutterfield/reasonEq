@@ -89,7 +89,7 @@ and can be static or dynamic.
 A dynamic variable has to be classified regarding
 when in program execution history it applies: before, during or after.
 
-Variables can:
+Variables can be classified into those that:
 \begin{itemize}
   \item
      track a single observable aspect of the behaviour as the program
@@ -101,7 +101,7 @@ Variables can:
     denote arbitrary predicates whose truth value depend on dynamic observables.
 \end{itemize}
 \begin{code}
-data VarWhat -- variable kind
+data VarWhat -- Classification
   = VO -- Observation
   | VE -- Expression
   | VP -- Predicate

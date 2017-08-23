@@ -18,9 +18,27 @@ import Matching
 
 -- -----------------------------------------------------------------------------
 tst_Matching :: [TF.Test]
+
+pv = ObsVar (fromJust $ ident "pv") Static
+cv = ObsVar (fromJust $ ident "cv") Static
+
 tst_Matching
-  = [ testGroup "\nMatching"
+  = [ testGroup "\nBinding (in Matching)"
+      [ testGroup "lookupBind after bindVarToVar"
+        [ testCase "pv -> cv"
+          ( ( let (BindVar cv')
+                    = fromJust (lookupBind
+                                 (fromJust (bindVarToVar pv cv emptyBinding))
+                                 pv )
+              in cv'
+            )
+            @?=
+            cv
+          )
+        ]
+      ]
+    , testGroup "\nMatching"
       [ testCase "1+1=2" (1+1 @?= 2)
-      , testCase "2+2=5" (2+2 @?= 5)  
+      , testCase "2+2=5" (2+2 @?= 5)
       ]
     ]

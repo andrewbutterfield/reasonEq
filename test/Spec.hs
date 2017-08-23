@@ -6,6 +6,7 @@ import AST
 import Syntax
 import Builder
 import VarDataTest
+import MatchingTest
 
 main = defaultMain tests
 
@@ -16,3 +17,4 @@ tests
  ++ int_tst_Syntax
  ++ int_tst_Builder
  ++ tst_VarData
+ ++ tst_Matching

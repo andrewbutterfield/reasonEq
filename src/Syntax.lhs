@@ -261,7 +261,7 @@ Tests:
 simpleFormTests
  = [ testCase "Empty Simple-Form (Fail)"
      ( simpleform []
-       @?=  But "Syntax.simpleform: empty basic-comp list.")
+       @?=  But ["Syntax.simpleform: empty basic-comp list."])
    , testCase "Singleton Simple-Form (Ok)"
      ( simpleform [AnySyn]
        @?= Yes (SF [AnySyn]) )
@@ -514,19 +514,19 @@ closedMixfixTests
  = testGroup "Syntax.closedMixfix"
     [ testCase "Try for Iteration Spec. (Fail)"
       ( closedMixfix defaultFormSpec [] @?=
-        But "Syntax.closedMixfix: not compatible with the iteration form." )
+        But ["Syntax.closedMixfix: not compatible with the iteration form."] )
     , testCase "Incorrect Token count (Fail)"
       ( closedMixfix anything [t1] @?=
-        But "Syntax.closedMixfix: #toks(1) is not #form(1)+1." )
+        But ["Syntax.closedMixfix: #toks(1) is not #form(1)+1."] )
     , testCase "Duplicate tokens (Fail)"
       ( closedMixfix anything [t1,t1] @?=
-        But "Syntax.closedMixfix: duplicate tokens not allowed." )
+        But ["Syntax.closedMixfix: duplicate tokens not allowed."] )
     , testCase "Singleton Spec (Ok)"
       ( closedMixfix anything t12 @?=
         Yes (XF anything $ ClosedMixfix t12) )
     , testCase "'norm' notation (Fail, but should be OK!)"
       ( closedMixfix (SimpleSpec (SF [ExprSyn])) [tnorm,tnorm] @?=
-        But "Syntax.closedMixfix: duplicate tokens not allowed." )
+        But ["Syntax.closedMixfix: duplicate tokens not allowed."] )
     ]
 \end{code}
 
@@ -558,13 +558,13 @@ delimContOpenTests
  = testGroup "Syntax.delimContOpen"
     [ testCase "Try for Iteration Spec. (Fail)"
       ( delimContOpen defaultFormSpec [] t1 t2 t3 @?=
-        But "Syntax.delimContOpen: not compatible with the iteration form." )
+        But ["Syntax.delimContOpen: not compatible with the iteration form."] )
     , testCase "Incorrect Token count (Fail)"
       ( delimContOpen anything [t1] t2 t3 t4 @?=
-        But "Syntax.delimContOpen: #toks(1) is not #form(1)-1." )
+        But ["Syntax.delimContOpen: #toks(1) is not #form(1)-1."] )
     , testCase "Duplicate tokens (Fail)"
       ( delimContOpen anything [] t3 t4 t3 @?=
-        But "Syntax.delimContOpen: duplicate tokens not allowed." )
+        But ["Syntax.delimContOpen: duplicate tokens not allowed."] )
     , testCase "Singleton spec (Ok)"
       ( delimContOpen anything [] t3 t4 t5 @?=
         Yes (XF anything $ DelimContainer Open [] t3 t4 t5) )
@@ -600,13 +600,13 @@ delimContClosedTests
  = testGroup "Syntax.delimContClosed"
     [ testCase "Try for Iteration Spec. (Fail)"
       ( delimContClosed defaultFormSpec [] t1 t2 t3 @?=
-        But "Syntax.delimContClosed: not compatible with the iteration form." )
+        But ["Syntax.delimContClosed: not compatible with the iteration form."] )
     , testCase "Incorrect Token count (Fail)"
       ( delimContClosed anything [t1] t2 t3 t4 @?=
-        But "Syntax.delimContClosed: #toks(1) is not #form(1)+1." )
+        But ["Syntax.delimContClosed: #toks(1) is not #form(1)+1."] )
     , testCase "Duplicate tokens (Fail)"
       ( delimContClosed anything t12 t3 t4 t2 @?=
-        But "Syntax.delimContClosed: duplicate tokens not allowed." )
+        But ["Syntax.delimContClosed: duplicate tokens not allowed."] )
     , testCase "Singleton spec (Ok)"
       ( delimContClosed anything t12 t3 t4 t5 @?=
         Yes (XF anything $ DelimContainer Closed t12 t3 t4 t5) )
@@ -632,7 +632,7 @@ nameApplTests
  = testGroup "Syntax.nameApplication"
     [ testCase "Duplicate tokens (Fail)"
       ( nameApplication anything t3 t4 t3 t5 @?=
-        But "Syntax.nameApplication: duplicate tokens not allowed." )
+        But ["Syntax.nameApplication: duplicate tokens not allowed."] )
     , testCase "Singleton Simple Form (Ok)"
       ( nameApplication anything t1 t3 t4 t5 @?=
         Yes (XF anything $ NameAppl t1 t3 t4 t5) )
@@ -667,10 +667,10 @@ openFixedTests
  = testGroup "Syntax.openFixed"
     [ testCase "Try for Iteration Spec. (Fail)"
       ( openFixed defaultFormSpec [] @?=
-        But "Syntax.openFixed: not compatible with the iteration form." )
+        But ["Syntax.openFixed: not compatible with the iteration form."] )
     , testCase "Incorrect Token count (Fail)"
       ( openFixed anything [t1] @?=
-        But "Syntax.openFixed: #toks(1) is not #form(1)-1." )
+        But ["Syntax.openFixed: #toks(1) is not #form(1)-1."] )
     , testCase "Singleton spec (Ok)"
       ( openFixed anything [] @?=
         Yes (XF anything $ OpenFixed []) )
@@ -695,7 +695,7 @@ openIteratedTests
  = testGroup "Syntax.openIterated"
     [ testCase "Try for Simple Spec. (Fail)"
       ( openIterated anything t1 @?=
-        But "Syntax.openIterated: not compatible with the simple form." )
+        But ["Syntax.openIterated: not compatible with the simple form."] )
     , testCase "Singleton spec (Ok)"
       ( openIterated defaultFormSpec t1 @?=
         Yes (XF defaultFormSpec $ OpenIterated t1) )

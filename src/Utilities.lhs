@@ -28,7 +28,7 @@ hasdup xs = xs /= nub xs
 \begin{code}
 data YesBut t
  = Yes t
- | But String
+ | But [String]
  deriving (Eq,Show)
 \end{code}
 
@@ -37,18 +37,18 @@ data YesBut t
 \begin{code}
 instance Functor YesBut where
   fmap f (Yes x)    =  Yes $ f x
-  fmap f (But msg)  =  But msg
+  fmap f (But msgs)  =  But msgs
 
 instance Applicative YesBut where
   pure x = Yes x
 
-  Yes f <*> Yes x    =  Yes $ f x
-  Yes f <*> But msg  =  But msg
-  But msg <*> _      =  But msg
+  Yes f <*> Yes x          =  Yes $ f x
+  Yes f <*> But msgs       =  But msgs
+  But msgs1 <*> But msgs2  =  But (msgs1++msgs2)
 
 instance Monad YesBut where
   Yes x   >>= f   =  f x
-  But msg >>= f   =  But msg
+  But msgs >>= f   =  But msgs
 
-  fail msg        =  But msg
+  fail msg        =  But [msg]
 \end{code}

@@ -6,6 +6,8 @@ module Proto
     , dbl )
 where
 
+import Control.Monad
+
 type Embed = Double
 
 embed :: Int -> Double
@@ -61,3 +63,9 @@ save t = writeFile "test.sav" $ lshow t
 
 restore :: IO Test
 restore = fmap read $ readFile "test.sav"
+
+likeEvens :: MonadPlus mp => Int -> mp Int
+likeEvens 0 = return 0
+likeEvens i
+ | odd i = fail "Don't like odd numbers :-("
+ | otherwise  = return i `mplus` likeEvens (i `div` 2)

@@ -17,12 +17,12 @@ module AST ( VarWhat
            , pattern PreVar, pattern MidVar, pattern PostVar
            , pattern PreCond, pattern PostCond
            , pattern PreExpr, pattern PostExpr
-           , isPreVar
+           , isPreVar, isObsVar, isExprVar, isPredVar
            , ListVar
            , pattern ObsLVar, pattern ExprLVar, pattern PredLVar
            , pattern PreVars, pattern PostVars, pattern MidVars
            , pattern PreExprs, pattern PrePreds
-           , isPreListVar
+           , isPreListVar, isObsLVar, isExprLVar, isPredLVar
            , GenVar, pattern StdVar, pattern LstVar
            , isPreGenVar
            , VarList
@@ -178,6 +178,9 @@ Some variable predicates:
 isPreVar :: Variable -> Bool
 isPreVar (VR (_, _, (KD WB)))  =  True
 isPreVar _                     =  False
+isObsVar (VR (_, vw, _))   =  vw == VO
+isExprVar (VR (_, vw, _))  =  vw == VE
+isPredVar (VR (_, vw, _))  =  vw == VP
 \end{code}
 
 \subsubsection{Identifier and Variable test values}
@@ -228,11 +231,11 @@ pattern PredLVar r i rs = LP r i rs
 
 Pre-wrapped patterns:
 \begin{code}
-pattern PreVars  i    <-  LO WB i _
-pattern PostVars i    <-  LO WA i _
-pattern MidVars  i n  <-  LO (WD n) i _
-pattern PreExprs i    <-  LE WB i _
-pattern PrePreds i    <-  LP WB i _
+pattern PreVars  i    =  LO WB i []
+pattern PostVars i    =  LO WA i []
+pattern MidVars  i n  =  LO (WD n) i []
+pattern PreExprs i    =  LE WB i []
+pattern PrePreds i    =  LP WB i []
 \end{code}
 
 Useful predicates:
@@ -242,6 +245,13 @@ isPreListVar (PreVars _)  = True
 isPreListVar (PreExprs _) = True
 isPreListVar (PrePreds _) = True
 isPreListVar _            = False
+
+isObsLVar (LO _ _ _) = True
+isObsLVar _ = False
+isExprLVar (LE _ _ _) = True
+isExprLVar _ = False
+isPredLVar (LP _ _ _) = True
+isPredLVar _ = False
 \end{code}
 
 \subsubsection{List Variable test values}
@@ -274,6 +284,13 @@ Some useful predicates:
 isPreGenVar :: GenVar -> Bool
 isPreGenVar (StdVar v) = isPreVar v
 isPreGenVar (LstVar lv) = isPreListVar lv
+
+isObsGVar  (GV v)   =  isObsVar v
+isObsGVar  (GL lv)  =  isObsLVar lv
+isExprGVar (GV v)   =  isExprVar v
+isExprGVar (GL lv)  =  isExprLVar lv
+isPredGVar (GV v)   =  isPredVar v
+isPredGVar (GL lv)  =  isPredLVar lv
 \end{code}
 
 

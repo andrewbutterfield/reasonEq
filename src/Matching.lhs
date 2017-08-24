@@ -10,9 +10,11 @@ module Matching ( VarBindRange
                 , pattern BindVar, pattern BindTerm
                 , Binding
                 , emptyBinding
+                , lookupBind
+                , lookupLstBind
                 , bindVarToVar
                 , bindVarToTerm
-                , lookupBind
+                , bindLVarToVList
                 ) where
 --import Data.Maybe (fromJust)
 import qualified Data.Map as M
@@ -59,7 +61,12 @@ We are not normally interested in the reason why a match fails,
 so will generally use the \texttt{Maybe} type constructor.
 However we code for a general monad with meaningful \texttt{fail} messages
 to make it easier to debug or test.
+We also need to support the idea that some patterns may match a given
+candidate in more than one way,
+so we would like occaisionally to return a list of bindings.
+This leads us to adopt the \texttt{MonadPlus} class.
 
+\newpage
 \subsection{Bindings}
 
 \subsubsection{Binding Types}
@@ -87,7 +94,7 @@ type ListVarBind = M.Map ListVar VarList
 
 We put these together:
 \begin{code}
-newtype Binding = BD (VarBind, ListVarBind) deriving (Show, Read)
+newtype Binding = BD (VarBind, ListVarBind) deriving (Eq, Show, Read)
 
 emptyBinding :: Binding
 emptyBinding = BD (M.empty, M.empty)
@@ -128,14 +135,41 @@ We shall adopt the principle of failing in a general monadic setting,
 noting however that the matching code we develop
 should never fail in this way.
 
-\paragraph{Binding Variable to Variable}~
+\newpage
+\paragraph{Binding Variable to Variable}
+
+Only observation variables can bind to variables.
+
 \begin{code}
 bindVarToVar :: Monad m => Variable -> Variable -> Binding -> m Binding
-bindVarToVar pv cv bind = fail "bindVarToVar N.Y.I"
+bindVarToVar pv@(ObsVar _ _) cv (BD (vbinds,lbinds))
+  = return $ BD (M.insert pv (BV cv) vbinds,lbinds)
+bindVarToVar _ _ _ = fail "bindVarToVar: cannot bind non-obs. var. to var."
 \end{code}
 
-\paragraph{Binding Variable to Term}~
+\paragraph{Binding Variable to Term}
+
+An observation or expression variable can bind to an expression
+while a predicate variable can only bind to a predicate.
+
 \begin{code}
 bindVarToTerm :: Monad m => Variable -> Term -> Binding -> m Binding
-bindVarToTerm pv ct bind = fail "bindVarToTerm N.Y.I"
+bindVarToTerm pv@(ObsVar _ _) ct (BD (vbinds,lbinds))
+  | isExpr ct  = return $ BD (M.insert pv (BT ct) vbinds,lbinds)
+bindVarToTerm pv@(ExprVar _ _) ct (BD (vbinds,lbinds))
+  | isExpr ct  = return $ BD (M.insert pv (BT ct) vbinds,lbinds)
+bindVarToTerm pv@(PredVar _ _) ct (BD (vbinds,lbinds))
+  | isPred ct  = return $ BD (M.insert pv (BT ct) vbinds,lbinds)
+bindVarToTerm _ _ _ = fail "bindVarToTerm: invalid var. -> term binding."
+\end{code}
+
+\paragraph{Binding List-Variables to Variable-Lists}
+
+An observation list-variable can bind to list that is
+a mix of observation and expression general variables.
+Expression/Predicate list-variables can only bind to lists
+of the same class of general variable.
+\begin{code}
+bindLVarToVList :: Monad m => ListVar -> VarList -> Binding -> m Binding
+bindLVarToVList lv vl bind = fail "bindLVarToVList: N.Y.I."
 \end{code}

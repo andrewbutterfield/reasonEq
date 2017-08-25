@@ -65,18 +65,31 @@ tst_bindVarToTerm
 tst_bindLVarToVList :: TF.Test
 llBindLook = bindLook lookupLstBind bindLVarToVList
 
-gpov = StdVar pov
 gcov = StdVar cov
-gpev = StdVar pev
-gppv = StdVar ppv
+gcev = StdVar pev
+gcpv = StdVar ppv
 
 polv = PreVars $ fromJust $ ident "polv"
+pelv = PreExprs $ fromJust $ ident "pelv"
+pplv = PrePreds $ fromJust $ ident "pplv"
 
 tst_bindLVarToVList
   = testGroup "lookupBind after bindLVarToVListVarToVar"
-      [ testCase "polv -> [gpov] (Ok)"
-        ( ( llBindLook polv [gpov] ) @?= [gpov] )
-      ]
+    [ testCase "polv -> [gcov] (Ok)" ( llBindLook polv [gcov] @?= [gcov] )
+    , testCase "polv -> [gcev] (Ok)" ( llBindLook polv [gcev] @?= [gcev] )
+    , testCase "pelv -> [gcev] (Ok)" ( llBindLook pelv [gcev] @?= [gcev] )
+    , testCase "pplv -> [gcpv] (Ok)" ( llBindLook pplv [gcpv] @?= [gcpv] )
+    , testCase "polv -> [gcpv] (Nok)"
+      ( bindLVarToVList polv [gcpv] emptyBinding @?= Nothing )
+    , testCase "pelv -> [gcov] (Nok)"
+      ( bindLVarToVList pelv [gcov] emptyBinding @?= Nothing )
+    , testCase "pelv -> [gcpv] (Nok)"
+      ( bindLVarToVList pelv [gcpv] emptyBinding @?= Nothing )
+    , testCase "pplv -> [gcov] (Nok)"
+      ( bindLVarToVList pplv [gcov] emptyBinding @?= Nothing )
+    , testCase "pplv -> [gcev] (Nok)"
+      ( bindLVarToVList pplv [gcev] emptyBinding @?= Nothing )
+    ]
 
 
 -- -----------------------------------------------------------------------------

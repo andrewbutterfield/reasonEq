@@ -24,7 +24,7 @@ module AST ( VarWhat
            , pattern PreExprs, pattern PrePreds
            , isPreListVar, isObsLVar, isExprLVar, isPredLVar
            , GenVar, pattern StdVar, pattern LstVar
-           , isPreGenVar
+           , isPreGenVar, isObsGVar, isExprGVar, isPredGVar
            , VarList
            , VarSet
            , isPreVarSet

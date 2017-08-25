@@ -165,11 +165,21 @@ bindVarToTerm _ _ _ = fail "bindVarToTerm: invalid var. -> term binding."
 
 \paragraph{Binding List-Variables to Variable-Lists}
 
-An observation list-variable can bind to list that is
+An observation list-variable can bind to a list that is
 a mix of observation and expression general variables.
+\begin{code}
+isObsOrExpr gv = isObsGVar gv || isExprGVar gv
+\end{code}
 Expression/Predicate list-variables can only bind to lists
 of the same class of general variable.
 \begin{code}
 bindLVarToVList :: Monad m => ListVar -> VarList -> Binding -> m Binding
-bindLVarToVList lv vl bind = fail "bindLVarToVList: N.Y.I."
+bindLVarToVList lv vl (BD (vbinds,lbinds))
+ | isObsLVar lv && all isObsOrExpr vl
+                                  = return $ BD (vbinds,M.insert lv vl lbinds)
+ | isExprLVar lv && all isExprGVar vl
+                                  = return $ BD (vbinds,M.insert lv vl lbinds)
+ | isPredLVar lv && all isPredGVar vl
+                                  = return $ BD (vbinds,M.insert lv vl lbinds)
+bindLVarToVList _ _ _ = fail "bindLVarToVList: invalid lvar. -> vlist binding."
 \end{code}

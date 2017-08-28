@@ -69,3 +69,8 @@ likeEvens 0 = return 0
 likeEvens i
  | odd i = fail "Don't like odd numbers :-("
  | otherwise  = return i `mplus` likeEvens (i `div` 2)
+
+fail2 :: MonadPlus mp => mp Int
+fail2 = (return 42 >> fail "Ouch!")
+        `mplus`
+        (fail "Oof!" >> return 24)

@@ -17,10 +17,21 @@ import Binding
 import Matching
 
 -- -----------------------------------------------------------------------------
+tst_match :: TF.Test
+
+k42 = EVal ArbType $ Integer 42
+
+tst_match =
+  testGroup "match"
+      [ testCase "42 matches 42"
+        (match [] k42 k42 @?= [emptyBinding] )
+      ]
+
+-- -----------------------------------------------------------------------------
 tst_Matching :: [TF.Test]
 
 tst_Matching
   = [ testGroup "\nMatching"
-      [ testCase "1+1=2" (1+1 @?= 2)
+      [ tst_match
       ]
     ]

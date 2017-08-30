@@ -169,9 +169,8 @@ tMatch vts bind cbvs pbvs tC (Var tkP vP)
   | tkP == termkind tC  =  vMatch vts bind cbvs pbvs tC vP
 \end{code}
 
-
+Remaining Term Variants:
 \begin{verbatim}
-Var tk v
 Bind tk n vl tm
 Lam tk n vs tm
 Sub tk tm s
@@ -207,6 +206,14 @@ vMatch :: MonadPlus mp
        => [VarTable] -> Binding -> CBVS -> PBVS
        -> Candidate -> Variable -> mp Binding
 \end{code}
+
+$$
+\inferrule
+   {?}
+   {\kappa s;\beta;(B_C,B_P) \vdash t_C :: v_P \leadsto \beta'}
+   \quad
+   \texttt{vMatch ?}
+$$
 
 Any other case results in failure.
 \begin{code}

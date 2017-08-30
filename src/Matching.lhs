@@ -56,6 +56,10 @@ directly into it.
 $$
 \kappa;\beta;(B_C,B_P) \vdash C :: P \leadsto \beta'
 $$
+We also posit a binary partial operator ($\uplus$) that merges two bindings
+as long as overlapping entries agree,
+so the assertion $\beta = \beta_1 \uplus \beta_2$ is true only if all overlapping entries in the $\beta_i$ agree,
+and $\beta$ corresponds to their union.
 
 We are not normally interested in the reason why a match fails,
 so will generally use the \texttt{Maybe} type constructor.
@@ -69,6 +73,7 @@ $$
 $$
 This leads us to adopt the \texttt{MonadPlus} class.
 
+\newpage
 \subsection{Matching Types}
 
 We introduce some type and value synonyms,
@@ -124,12 +129,48 @@ $$
    \texttt{tMatch Val}
 $$
 \begin{code}
-tMatch vts bind _ _ kC@(Val _ _) kP@(Val _ _)
+tMatch _ bind _ _ kC@(Val _ _) kP@(Val _ _)
  | kC == kP  =  return bind
 \end{code}
 
+\subsubsection{Constructor Term-Pattern (\texttt{Cons})}
+Constructors match if they have the same name and kind
+and the term-lists are of the same length and corresponding terms match.
+$$
+\inferrule
+   { n_C = n_P
+     \and
+     \kappa s;\beta;(B_C,B_P) \vdash t_{C_i} :: t_{P_i} \leadsto \beta_i
+     \and
+     \beta' = \uplus\{\beta_i\}
+   }
+   {\kappa s;\beta;(B_C,B_P) \vdash C~n_C~ts_C :: C~n_P~ts_P \leadsto \beta'}
+   \quad
+   \texttt{tMatch Cons}
+$$
+Here $ts_X = \langle t_{X_1}, t_{X_2}, \dots t_{X_n} \rangle$.
+\begin{code}
+tMatch vts bind cbvs pbvs (Cons tkC nC tsC) (Cons tkP nP tsP)
+ | tkC == tkP && nC == nP  =  tsMatch vts bind cbvs pbvs tsC tsP
+\end{code}
+
+\subsubsection{Variable Term-Pattern (\texttt{Var})}
+Variable matching is complicated, so we farm it out,
+as long as \texttt{TermKind}s match.
+$$
+\inferrule
+   {\kappa s;\beta;(B_C,B_P) \vdash t_C :: v_P \leadsto \beta'}
+   {\kappa s;\beta;(B_C,B_P) \vdash t_C :: V~v_P \leadsto \beta'}
+   \quad
+   \texttt{tMatch Var}
+$$
+\begin{code}
+tMatch vts bind cbvs pbvs tC (Var tkP vP)
+  | tkP == termkind tC  =  vMatch vts bind cbvs pbvs tC vP
+\end{code}
+
+
 \begin{verbatim}
-Cons tk n ts
 Var tk v
 Bind tk n vl tm
 Lam tk n vs tm
@@ -139,5 +180,35 @@ Iter tk na ni lvs
 
 Any other case results in failure:
 \begin{code}
-tMatch _ _ _ _ _ _ = fail "tMatch: structural mismatch."
+tMatch _ _ _ _ _ _  =  fail "tMatch: structural mismatch."
+\end{code}
+
+\subsection{Term-List Matching}
+
+For now a simple zip-like walk along both lists
+(no precomputing length to abort early).
+\begin{code}
+tsMatch :: MonadPlus mp
+        => [VarTable] -> Binding -> CBVS -> PBVS
+        -> [Candidate] -> [Pattern] -> mp Binding
+tsMatch _ bind _ _ [] [] = return bind
+tsMatch vts bind cbvs pvbs (tC:tsC) (tP:tsP)
+ = do bind1 <- tMatch vts bind cbvs pvbs tC tP
+      tsMatch vts bind1 cbvs pvbs tsC tsP
+tsMatch _ _ _ _ _ _  =  fail "tsMatch: structural mismatch."
+\end{code}
+
+\subsection{Variable Matching}
+
+We assume here that candidate term and pattern variable
+had the same \texttt{TermKind}.
+\begin{code}
+vMatch :: MonadPlus mp
+       => [VarTable] -> Binding -> CBVS -> PBVS
+       -> Candidate -> Variable -> mp Binding
+\end{code}
+
+Any other case results in failure.
+\begin{code}
+vMatch vts bind cbvs pbvs tC vP = fail "vMatch N.Y.I"
 \end{code}

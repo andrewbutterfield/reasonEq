@@ -59,7 +59,8 @@ ex = EVar ArbType x
 tst_vMatch =
   testGroup "vMatch (via match)"
       [ testCase "42 :: x (OK)"
-        (match [] k42 ex @?= [emptyBinding] )
+        ( (match [] k42 ex :: [Binding] )
+          @?= bindVarToTerm x k42 emptyBinding )
       ]
 
 -- -----------------------------------------------------------------------------

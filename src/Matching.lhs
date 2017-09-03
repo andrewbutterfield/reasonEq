@@ -7,6 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Matching ( match
+                , tMatch, tsMatch
+                , vMatch, bvMatch, kvMatch
                 ) where
 import Data.Maybe (isJust,fromJust)
 import Data.Map (Map)
@@ -67,12 +69,17 @@ However we code for a general monad with meaningful \texttt{fail} messages
 to make it easier to debug or test.
 We also need to support the idea that some patterns may match a given
 candidate in more than one way,
-so we would like to return a list of bindings.
+so we would like to return a list of bindings,
+leading us to adopt the \texttt{MonadPlus} class.
 $$
-\kappa;\beta;(B_C,B_P) \vdash C :: P \leadsto \beta s
+\kappa;\beta;(B_C,B_P) \vdash C :: P
+\leadsto \langle \beta'_1 , \dots , \beta'_n \rangle
 $$
-This leads us to adopt the \texttt{MonadPlus} class.
-
+Each of the $\beta'_i$
+has the general form $\beta'_{i1} \uplus \dots \uplus \beta'_{ik_i}$,
+and a rule applies provided at least one of the $\beta'_i$ is defined.
+We write $\langle\beta\rangle$ as $\beta$
+and in most rules we omit irrelevant parts of the context.
 \newpage
 \subsection{Matching Types}
 
@@ -124,7 +131,7 @@ Values only match themselves.
 $$
 \inferrule
    {k_C = k_P}
-   {\kappa s;\beta;(B_C,B_P) \vdash k_C :: k_P \leadsto \beta}
+   {\beta \vdash k_C :: k_P \leadsto \beta}
    \quad
    \texttt{tMatch Val}
 $$
@@ -140,11 +147,9 @@ $$
 \inferrule
    { n_C = n_P
      \and
-     \kappa s;\beta;(B_C,B_P) \vdash t_{C_i} :: t_{P_i} \leadsto \beta_i
-     \and
-     \beta' = \uplus\{\beta_i\}
+     \beta \vdash t_{C_i} :: t_{P_i} \leadsto \beta_i
    }
-   {\kappa s;\beta;(B_C,B_P) \vdash C~n_C~ts_C :: C~n_P~ts_P \leadsto \beta'}
+   {\beta \vdash C~n_C~ts_C :: C~n_P~ts_P \leadsto \uplus\{\beta_i\}}
    \quad
    \texttt{tMatch Cons}
 $$
@@ -159,14 +164,14 @@ Variable matching is complicated, so we farm it out,
 as long as \texttt{TermKind}s match.
 $$
 \inferrule
-   {\kappa s;\beta;(B_C,B_P) \vdash t_C :: v_P \leadsto \beta'}
-   {\kappa s;\beta;(B_C,B_P) \vdash t_C :: V~v_P \leadsto \beta'}
+   {\beta \vdash t_C :: v_P \leadsto \beta'}
+   {\beta \vdash t_C :: V~v_P \leadsto \beta'}
    \quad
    \texttt{tMatch Var}
 $$
 \begin{code}
 tMatch vts bind cbvs pbvs tC (Var tkP vP)
-  | tkP == termkind tC  =  vMatch vts bind cbvs pbvs tC vP
+  | tkP == termkind tC  =  vMatch vts bind cbvs pbvs tC tkP vP
 \end{code}
 
 Remaining Term Variants:
@@ -202,32 +207,32 @@ tsMatch _ _ _ _ _ _  =  fail "tsMatch: structural mismatch."
 We assume here that candidate term and pattern variable
 had the same \texttt{TermKind}.
 \begin{code}
-vMatch :: MonadPlus mp
+vMatch :: Monad m
        => [VarTable] -> Binding -> CBVS -> PBVS
-       -> Candidate -> Variable -> mp Binding
+       -> Candidate -> TermKind -> Variable -> m Binding
 \end{code}
 We do a case split on the status of the pattern variable:
 bound, known, or arbitrary.
 \begin{code}
-vMatch vts bind cbvs pvbs tC vP
+vMatch vts bind cbvs pvbs tC tkP vP
  | StdVar vP `S.member` pvbs  =  bvMatch vts bind cbvs tC vP
- | isJust vPres               =  kvMatch vts bind tC (fromJust vPres) vP
+ | vPmr /= UnknownVar         =  kvMatch vts bind tC vPmr tkP vP
 \end{code}
 \subsubsection{Arbitrary Pattern Variable}
 $$
 \inferrule
-   { v_P \notin B_P \cup \mathbf{dom}\,\kappa s
-     \and
-     \beta' = \beta \uplus \{ v_P \mapsto t_C \}
-   }
-   {\kappa s;\beta;(B_C,B_P) \vdash t_C :: v_P \leadsto \beta'}
+   { v_P \notin B_P \cup \mathbf{dom}\,\kappa s}
+   { \kappa s;\beta;B_P \vdash t_C :: v_P
+    \leadsto
+    \beta \uplus \{ v_P \mapsto t_C \}
+  }
    \quad
    \texttt{vMatch Arbitrary}
 $$
 \begin{code}
  | otherwise                  =  bindVarToTerm vP tC bind
  where
-   vPres = lookupBind bind vP
+   vPmr = lookupVarTables vts vP
 \end{code}
 
 \subsubsection{Bound Pattern Variable}
@@ -238,31 +243,41 @@ $$
      t_C = v_C
      \and
      v_C \in B_C
-     \and
-     \beta' = \beta \uplus \{ v_P \mapsto v_C \}
    }
-   {\kappa s;\beta;(B_C,B_P) \vdash t_C :: v_P \leadsto \beta'}
+   {\beta;(B_C,B_P) \vdash t_C :: v_P
+    \leadsto \beta \uplus \{ v_P \mapsto v_C \}}
    \quad
    \texttt{vMatch Bound-Var}
 $$
 \begin{code}
-bvMatch vts bind cbvs tC vP = fail "bvMatch N.Y.I."
+bvMatch :: Monad m => [VarTable] -> Binding -> CBVS
+        -> Candidate -> Variable -> m Binding
+-- we know vP is in pbvs
+bvMatch vts bind cbvs (Var _ vC) vP
+ | StdVar vC `S.member` cbvs  =  bindVarToVar vP vC bind
+ | otherwise  =  fail "bvMatch: candidate not a bound variable"
 \end{code}
 
 \subsubsection{Known Pattern Variable}
+
+\begin{code}
+kvMatch :: Monad m => [VarTable] -> Binding
+       ->  Candidate -> VarMatchRole -> TermKind -> Variable -> m Binding
+-- know vP is not in pbvs, in vts, and it maps to whatP
+\end{code}
 $$
 \inferrule
    { v_P \notin B_P
      \and
      v_P \in \mathbf{dom}\,\kappa s
      \and
-     t_C = v_C
+     t_C = V~v_C
      \and
      v_P = v_C
-     \\\\
-     \beta' = \beta \uplus \{ v_P \mapsto v_P \}
   }
-   {\kappa s;\beta;(B_C,B_P) \vdash t_C :: v_P \leadsto \beta'}
+   {\kappa s;\beta;B_P \vdash t_C :: v_P
+   \leadsto
+   \beta \uplus \{ v_P \mapsto v_P \}}
    \quad
    \texttt{vMatch Known-Var-Refl}
 $$
@@ -272,15 +287,37 @@ $$
      \and
      v_P \in \mathbf{dom}\,\kappa s
      \and
-     t_C = v_C
+     t_C = V~v_C
      \and
-     v_C = \kappa s(v_P)
-     \\\\
-     \beta' = \beta \uplus \{ v_P \mapsto v_C \}
+     t_C = \kappa s(v_P)
   }
-   {\kappa s;\beta;(B_C,B_P) \vdash t_C :: v_P \leadsto \beta'}
+   {\kappa s;\beta;B_P \vdash t_C :: v_P
+    \leadsto
+    \beta \uplus \{ v_P \mapsto v_C \}}
    \quad
    \texttt{vMatch Known-Var-Var}
+$$
+\begin{code}
+-- know vP is not in pbvs, in vts, and it maps to whatP
+kvMatch vts bind tC@(Var _ vC) whatP tkP vP
+ | vC == vP                                    =  bindVarToVar vP vP bind
+ | isKnownConst whatP && tC == vmrConst whatP  =  bindVarToVar vP vC bind
+\end{code}
+$$
+\inferrule
+   { v_P \notin B_P
+     \and
+     v_P \in \mathbf{dom}\,\kappa s
+     \and
+     t_C \neq V~v_c
+     \and
+     t_C = \kappa s(v_P)
+  }
+   {\kappa s;\beta;B_P \vdash t_C :: v_P
+    \leadsto
+    \beta \uplus \{ v_P \mapsto t_C \}}
+   \quad
+   \texttt{vMatch Known-Var-TVal}
 $$
 $$
 \inferrule
@@ -288,16 +325,21 @@ $$
      \and
      v_P \in \mathbf{dom}\,\kappa s
      \and
-     t_C \neq v_c
+     t_C : T
      \and
-     t_C = \kappa s(v_P)
-     \\\\
-     \beta' = \beta \uplus \{ v_P \mapsto t_C \}
+     \kappa s(v_P) : T
   }
-   {\kappa s;\beta;(B_C,B_P) \vdash t_C :: v_P \leadsto \beta'}
+   {\kappa s;\beta;B_P \vdash t_C :: v_P
+    \leadsto
+    \beta \uplus \{ v_P \mapsto t_C \}}
    \quad
-   \texttt{vMatch Known-Var-Term}
+   \texttt{vMatch Known-Var-TType}
 $$
 \begin{code}
-kvMatch vts bind tC whatP vP = fail "kvMatch N.Y.I."
+-- know vP is not in pbvs, in vts, and it maps to whatP
+kvMatch vts bind tC whatP tkP vP
+ | isKnownConst whatP && tC == vmrConst whatP     =  bindVarToTerm vP tC bind
+ | isExprKind tkP && isKnownVar whatP
+   && vmrType whatP == ekType tkP                 =  bindVarToTerm vP tC bind
+kvMatch _ _ _ _ _ _ = fail "kvMatch: candidate not this known variable."
 \end{code}

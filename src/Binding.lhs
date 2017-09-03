@@ -108,9 +108,12 @@ bindVarToVar _ _ _ = fail "bindVarToVar: cannot bind non-obs. var. to var."
 
 An observation or expression variable can bind to an expression
 while a predicate variable can only bind to a predicate.
-
+If we are binding an observation to a term with variant \texttt{Var},
+we bind to the underlying variable.
 \begin{code}
 bindVarToTerm :: Monad m => Variable -> Term -> Binding -> m Binding
+bindVarToTerm pv@(ObsVar _ _) ct@(Var _ cv) (BD (vbinds,lbinds))
+  | isExpr ct  = return $ BD (M.insert pv (BV cv) vbinds,lbinds)
 bindVarToTerm pv@(ObsVar _ _) ct (BD (vbinds,lbinds))
   | isExpr ct  = return $ BD (M.insert pv (BT ct) vbinds,lbinds)
 bindVarToTerm pv@(ExprVar _ _) ct (BD (vbinds,lbinds))

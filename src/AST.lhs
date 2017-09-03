@@ -36,6 +36,7 @@ module AST ( VarWhat
            , Txt
            , Value, pattern Boolean, pattern Integer, pattern Txt
            , TermKind(..)
+           , isPredKind, isExprKind, ekType 
            , Term
            , pattern Val, pattern Var, pattern Cons
            , pattern Bind, pattern Lam, pattern Sub, pattern Iter
@@ -520,6 +521,13 @@ data TermKind
  = P -- predicate
  | E Type -- expression (with type annotation)
  deriving (Eq, Ord, Show, Read)
+
+isPredKind, isExprKind :: TermKind -> Bool
+isPredKind P     = True; isPredKind _ = False
+isExprKind (E _) = True; isExprKind _ = False
+
+ekType :: TermKind -> Type
+ekType (E typ)  =  typ
 \end{code}
 This is equivalent to \verb"Maybe Type",
 but we want it less verbose.

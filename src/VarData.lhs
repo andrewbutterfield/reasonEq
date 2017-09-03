@@ -8,6 +8,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module VarData ( VarMatchRole
                , pattern KnownConst, pattern KnownVar, pattern UnknownVar
+               , isKnownConst, isKnownVar, isUnknownVar
+               , vmrConst, vmrType
                , VarTable
                , vtList
                , newVarTable
@@ -58,6 +60,24 @@ data VarMatchRole -- Variable Matching Role
 pattern KnownConst trm = KC trm
 pattern KnownVar typ   = KV typ
 pattern UnknownVar     = UV
+
+isKnownConst, isKnownVar, isUnknownVar :: VarMatchRole -> Bool
+isKnownConst (KC _) = True
+isKnownConst _ = False
+isKnownVar (KV _) = True
+isKnownVar _= False
+isUnknownVar UV = True
+isUnknownVar _ = False
+
+vmrConst :: VarMatchRole -> Term
+vmrConst (KC trm)  =  trm
+vmrConst (KV _)    =  error "vmrCont: var. match role is KnownVar"
+vmrConst UV        =  error "vmrCont: var. match role is UnknownVar"
+
+vmrType :: VarMatchRole -> Type
+vmrType (KV typ)  =  typ
+vmrType (KC _)    =  error "vmrType: var. match role is KnownConst"
+vmrType UV        =  error "vmrType: var. match role is UnknownVar"
 \end{code}
 
 \newpage

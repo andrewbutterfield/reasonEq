@@ -1,4 +1,4 @@
-VR\section{Abstract Syntax}
+\section{Abstract Syntax}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2017
 
@@ -36,7 +36,7 @@ module AST ( VarWhat
            , Txt
            , Value, pattern Boolean, pattern Integer, pattern Txt
            , TermKind(..)
-           , isPredKind, isExprKind, ekType 
+           , isPredKind, isExprKind, ekType
            , Term
            , pattern Val, pattern Var, pattern Cons
            , pattern Bind, pattern Lam, pattern Sub, pattern Iter
@@ -557,8 +557,8 @@ Kind-neutral patterns:
 pattern Val tk k           =  K tk k
 pattern Var tk v           =  V tk v
 pattern Cons tk n ts       =  C tk n ts
-pattern Bind tk n vl tm    =  B tk n vl tm
-pattern Lam tk n vs tm     =  L tk n vs tm
+pattern Bind tk n vs tm    =  B tk n vs tm
+pattern Lam tk n vl tm     =  L tk n vl tm
 pattern Sub tk tm s        =  S tk tm s
 pattern Iter tk na ni lvs  =  I tk na ni lvs
 \end{code}
@@ -567,8 +567,8 @@ Patterns for expressions:
 pattern EVal t k           =  K (E t) k
 pattern EVar t v           =  V (E t) v
 pattern ECons t n ts       =  C (E t) n ts
-pattern EBind t n vl tm    =  B (E t) n vl tm
-pattern ELam t n vs tm     =  L (E t) n vs tm
+pattern EBind t n vs tm    =  B (E t) n vs tm
+pattern ELam t n vl tm     =  L (E t) n vl tm
 pattern ESub t tm s        =  S (E t) tm s
 pattern EIter t na ni lvs  =  I (E t) na ni lvs
 \end{code}
@@ -577,8 +577,8 @@ Patterns for predicates:
 pattern PVal k             =  K P k
 pattern PVar v             =  V P v
 pattern PCons n ts         =  C P n ts
-pattern PBind n vl tm      =  B P n vl tm
-pattern PLam n vs tm       =  L P n vs tm
+pattern PBind n vs tm      =  B P n vs tm
+pattern PLam n vl tm       =  L P n vl tm
 pattern PSub tm s          =  S P tm s
 pattern PIter na ni lvs    =  I P na ni lvs
 \end{code}

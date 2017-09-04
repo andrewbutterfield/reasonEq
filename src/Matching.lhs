@@ -95,6 +95,16 @@ type CBVS = BVS
 noBVS = S.empty
 \end{code}
 
+We will want to add in sets and lists of variables
+into the bound-variable sets.
+\begin{code}
+addBoundVarSet :: VarSet -> BVS -> BVS
+vs `addBoundVarSet` bvs  =  vs `S.union` bvs
+
+addBoundVarList :: VarList -> BVS -> BVS
+vl `addBoundVarList` bvs  =  (S.fromList vl) `S.union` bvs
+\end{code}
+
 \subsection{Top-level Matching}
 
 At the top-level we have the known-variable information
@@ -174,10 +184,62 @@ tMatch vts bind cbvs pbvs tC (Var tkP vP)
   | tkP == termkind tC  =  vMatch vts bind cbvs pbvs tC tkP vP
 \end{code}
 
+\subsubsection{Binding Term-Pattern (\texttt{Bind})}
+
+$$
+\inferrule
+   {n_C = n_P
+    \and
+    \beta;(B_C\cup vs_C,B_P\cup vs_P) \vdash t_C :: t_P \leadsto \beta'_t
+    \and
+    \beta \vdash vs_C :: vs_P \leadsto \beta'_{vs}
+   }
+   { \beta;(B_C,B_P) \vdash B~n_C~vs_C~t_C :: B~n_P~vs_P~t_P
+     \leadsto
+     \beta \uplus \beta'_t \uplus \beta'_{vs}
+   }
+   \quad
+   \texttt{tMatch Binding}
+$$
+\begin{code}
+tMatch vts bind cbvs pbvs (Bind tkC nC vsC tC) (Bind tkP nP vsP tP)
+  | tkP == tkC && nC == nP
+    =  do let cbvs' = vsC `addBoundVarSet` cbvs
+          let pbvs' = vsP `addBoundVarSet` pbvs
+          bindT  <-  tMatch vts bind cbvs' pbvs' tC tP
+          vsMatch vts bindT cbvs' pbvs' vsC vsP
+\end{code}
+
+\subsubsection{Lambda Term-Pattern (\texttt{Lam})}
+
+$$
+\inferrule
+   {n_C = n_P
+    \and
+    \beta;(B_C\cup vs_C,B_P\cup vs_P) \vdash t_C :: t_P \leadsto \beta'_t
+    \and
+    \beta \vdash vl_C :: vl_P \leadsto \beta'_{vl}
+   }
+   { \beta;(B_C,B_P) \vdash L~n_C~vl_C~t_C :: L~n_P~vl_P~t_P
+     \leadsto
+     \beta \uplus \beta'_t \uplus \beta'_{vl}
+   }
+   \quad
+   \texttt{tMatch Binding}
+$$
+\begin{code}
+tMatch vts bind cbvs pbvs (Lam tkC nC vlC tC) (Lam tkP nP vlP tP)
+  | tkP == tkC && nC == nP
+    =  do let cbvs' = vlC `addBoundVarList` cbvs
+          let pbvs' = vlP `addBoundVarList` pbvs
+          bindT  <-  tMatch vts bind cbvs' pbvs' tC tP
+          vlMatch vts bindT cbvs' pbvs' vlC vlP
+\end{code}
+
+
+
 Remaining Term Variants:
 \begin{verbatim}
-Bind tk n vl tm
-Lam tk n vs tm
 Sub tk tm s
 Iter tk na ni lvs
 \end{verbatim}
@@ -342,4 +404,16 @@ kvMatch vts bind tC whatP tkP vP
  | isExprKind tkP && isKnownVar whatP
    && vmrType whatP == ekType tkP                 =  bindVarToTerm vP tC bind
 kvMatch _ _ _ _ _ _ = fail "kvMatch: candidate not this known variable."
+\end{code}
+
+\subsection{Variable-Set Matching}
+
+\begin{code}
+vsMatch vts bind cbvs pbvc vsC vsP  = fail "vsMatch: N.Y.I."
+\end{code}
+
+\subsection{Variable-List Matching}
+
+\begin{code}
+vlMatch vts bind cbvs pbvc vlC vlP  = fail "vlMatch: N.Y.I."
 \end{code}

@@ -416,8 +416,8 @@ that can stand for behaviour observations, terms and program variables.
 
 We consider a term as having the following forms:
 \begin{description}
-  \item [K] A constant value of an appropriate type.
-  \item [V] A variable.
+  \item [K] A constant value of an appropriate type: $\K k$ or $\kk k$.
+  \item [V] A variable: $\V v$ or $\vv v$. 
   \item [C] A constructor that builds a term out of zero or more sub-terms.
   \item [B] A binding construct that introduces sets of local variables.
   \item [L] A binding construct that introduces lists of local variables.
@@ -430,7 +430,7 @@ We consider a term as having the following forms:
 \\ n &\in& Name
 \\ \tau &\in& Type
 \\ v &\in& Var = \dots
-\\ t \in T  &::=&  K~k | V~n | C~n~t^* | (B|L)~n~v^+~t | S~t~(v,t)^+ | I~n~n~v^+ | T~\tau
+\\ t \in T  &::=&  \K k | V~v | C~n~t^* | (B|L)~n~v^+~t | S~t~(v,t)^+ | I~n~n~v^+ | T~\tau
 \end{eqnarray}
 We need to distinguish between predicate terms and expression terms.
 The key difference is that predicates are all of ``type'' $Env \fun \Bool$,

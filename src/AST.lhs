@@ -416,21 +416,45 @@ that can stand for behaviour observations, terms and program variables.
 
 We consider a term as having the following forms:
 \begin{description}
-  \item [K] A constant value of an appropriate type: $\K k$ or $\kk k$.
-  \item [V] A variable: $\V v$ or $\vv v$. 
-  \item [C] A constructor that builds a term out of zero or more sub-terms.
-  \item [B] A binding construct that introduces sets of local variables.
-  \item [L] A binding construct that introduces lists of local variables.
-  \item [S] A term with an explicit substitution of terms for variables.
-  \item [I] An iteration of a term over a sequence of list-variables.
-  \item [T] An embedding of Types
+  \item [K] A constant value of an appropriate type:
+    $\K k$ or $\kk k$.
+  \item [V] A variable:
+    $\V v$ or $\vv v$.
+  \item [C] A constructor that builds a term out of zero or more sub-terms:
+    $\C n {ts}$, $\cc n {ts}$,
+    $\C {\!\oplus\!} {ts}$ or $t_1 \oplus t_2 \oplus \dots \oplus t_n$.
+  \item [B] A binding construct that introduces sets of local variables:
+    $\B n {v^+} t$ or $\bb n {v^+} t$.
+  \item [L] A binding construct that introduces lists of local variables:
+    $\L n {v^+} t$ or $\ll n {v^+} t$.
+  \item [S] A term with an explicit substitution of terms for variables:
+    $\S t v t$  or $\ss t {v^n} {t^n}$.
+  \item [I] An iteration of a term over a sequence of list-variables:
+    $\I \oplus n {v^+}$ or $\ii \bigoplus n {ts}$.
+  \item [T] An embedding of Types: $\T \tau$ or $\tt\tau$.
 \end{description}
+
 \begin{eqnarray}
    k &\in& Value
 \\ n &\in& Name
 \\ \tau &\in& Type
 \\ v &\in& Var = \dots
-\\ t \in T  &::=&  \K k | V~v | C~n~t^* | (B|L)~n~v^+~t | S~t~(v,t)^+ | I~n~n~v^+ | T~\tau
+\\ t \in T  &::=&  \K k
+                ~|~ \V v
+                ~|~ \C n {t^*}
+                ~|~ \B n {v^+} T
+                ~|~ \L n {v^+} T
+                ~|~ \S t V T
+                ~|~ \I \oplus n {v+}
+                ~|~ \T \tau
+\\ &=& \kk k
+     ~|~ \vv v
+     ~|~ \cc n {ts}
+     ~|~ \bb n {v^+} t
+     ~|~ \ll n {v^+} t
+     ~|~ \ss t {v^n} {t^n}
+     ~|~ \ii \bigoplus n {ts}
+     ~|~ \tt \tau
 \end{eqnarray}
 We need to distinguish between predicate terms and expression terms.
 The key difference is that predicates are all of ``type'' $Env \fun \Bool$,

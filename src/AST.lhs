@@ -428,9 +428,9 @@ We consider a term as having the following forms:
   \item [L] A binding construct that introduces lists of local variables:
     $\L n {v^+} t$ or $\ll n {v^+} t$.
   \item [S] A term with an explicit substitution of terms for variables:
-    $\S t v t$  or $\ss t {v^n} {t^n}$.
+    $\S t v t$, $\ss t {v^n} {t^n}$ or $t\sigma$.
   \item [I] An iteration of a term over a sequence of list-variables:
-    $\I \oplus n {v^+}$ or $\ii \bigoplus n {ts}$.
+    $\I \oplus n {lv^+}$ or $\ii \bigoplus n {lvs}$.
   \item [T] An embedding of Types: $\T \tau$ or $\tt\tau$.
 \end{description}
 
@@ -445,7 +445,7 @@ We consider a term as having the following forms:
                 ~|~ \B n {v^+} T
                 ~|~ \L n {v^+} T
                 ~|~ \S t V T
-                ~|~ \I \oplus n {v+}
+                ~|~ \I \oplus n {lv^+}
                 ~|~ \T \tau
 \\ &=& \kk k
      ~|~ \vv v
@@ -453,7 +453,7 @@ We consider a term as having the following forms:
      ~|~ \bb n {v^+} t
      ~|~ \ll n {v^+} t
      ~|~ \ss t {v^n} {t^n}
-     ~|~ \ii \bigoplus n {ts}
+     ~|~ \ii \bigoplus n {lvs}
      ~|~ \tt \tau
 \end{eqnarray}
 We need to distinguish between predicate terms and expression terms.

@@ -140,8 +140,8 @@ and then proceed to look at variable, binder and substitution patterns.
 Values only match themselves.
 $$
 \inferrule
-   {k_C = k_P}
-   {\beta \vdash k_C :: k_P \leadsto \beta}
+   {{\kk k}_C = {\kk k}_P}
+   {\beta \vdash {\kk k}_C :: {\kk k}_P \leadsto \beta}
    \quad
    \texttt{tMatch Val}
 $$
@@ -149,6 +149,22 @@ $$
 tMatch _ bind _ _ kC@(Val _ _) kP@(Val _ _)
  | kC == kP  =  return bind
 \end{code}
+
+\subsubsection{Variable Term-Pattern (\texttt{Var})}
+Variable matching is complicated, so we farm it out,
+as long as \texttt{TermKind}s match.
+$$
+\inferrule
+   {\beta \vdash t_C :: v_P \leadsto \beta'}
+   {\beta \vdash t_C :: {\vv v}_P \leadsto \beta'}
+   \quad
+   \texttt{tMatch Var}
+$$
+\begin{code}
+tMatch vts bind cbvs pbvs tC (Var tkP vP)
+  | tkP == termkind tC  =  vMatch vts bind cbvs pbvs tC tkP vP
+\end{code}
+
 
 \subsubsection{Constructor Term-Pattern (\texttt{Cons})}
 Constructors match if they have the same name and kind
@@ -159,7 +175,7 @@ $$
      \and
      \beta \vdash t_{C_i} :: t_{P_i} \leadsto \beta_i
    }
-   {\beta \vdash C~n_C~ts_C :: C~n_P~ts_P \leadsto \uplus\{\beta_i\}}
+   {\beta \vdash \cc{n_C}{ts_C} :: \cc{n_P}{ts_P} \leadsto \uplus\{\beta_i\}}
    \quad
    \texttt{tMatch Cons}
 $$
@@ -167,21 +183,6 @@ Here $ts_X = \langle t_{X_1}, t_{X_2}, \dots t_{X_n} \rangle$.
 \begin{code}
 tMatch vts bind cbvs pbvs (Cons tkC nC tsC) (Cons tkP nP tsP)
  | tkC == tkP && nC == nP  =  tsMatch vts bind cbvs pbvs tsC tsP
-\end{code}
-
-\subsubsection{Variable Term-Pattern (\texttt{Var})}
-Variable matching is complicated, so we farm it out,
-as long as \texttt{TermKind}s match.
-$$
-\inferrule
-   {\beta \vdash t_C :: v_P \leadsto \beta'}
-   {\beta \vdash t_C :: V~v_P \leadsto \beta'}
-   \quad
-   \texttt{tMatch Var}
-$$
-\begin{code}
-tMatch vts bind cbvs pbvs tC (Var tkP vP)
-  | tkP == termkind tC  =  vMatch vts bind cbvs pbvs tC tkP vP
 \end{code}
 
 \subsubsection{Binding Term-Pattern (\texttt{Bind})}
@@ -194,7 +195,7 @@ $$
     \and
     \beta \vdash vs_C :: vs_P \leadsto \beta'_{vs}
    }
-   { \beta;(B_C,B_P) \vdash B~n_C~vs_C~t_C :: B~n_P~vs_P~t_P
+   { \beta;(B_C,B_P) \vdash \bb{n_C}{vs_C}{t_C} :: \bb{n_P}{vs_P}{t_P}
      \leadsto
      \beta \uplus \beta'_t \uplus \beta'_{vs}
    }
@@ -220,7 +221,7 @@ $$
     \and
     \beta \vdash vl_C :: vl_P \leadsto \beta'_{vl}
    }
-   { \beta;(B_C,B_P) \vdash L~n_C~vl_C~t_C :: L~n_P~vl_P~t_P
+   { \beta;(B_C,B_P) \vdash \ll{n_C}{vl_C}{t_C} :: \ll{n_P}{vl_P}{t_P}
      \leadsto
      \beta \uplus \beta'_t \uplus \beta'_{vl}
    }
@@ -270,7 +271,7 @@ $$
     \and
     \beta \vdash lvs_C :: lvs_P \leadsto \beta'
    }
-   { \beta \vdash I~na_C~ni_C~lvs_C :: I~na_P~ni_P~lvs_
+   { \beta \vdash \ii{na_C}{ni_C}{lvs_C} :: \ii{na_P}{ni_P}{lvs_P}
      \leadsto
      \beta \uplus \beta\
    }

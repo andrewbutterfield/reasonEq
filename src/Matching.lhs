@@ -237,12 +237,55 @@ tMatch vts bind cbvs pbvs (Lam tkC nC vlC tC) (Lam tkP nP vlP tP)
 \end{code}
 
 
+\subsubsection{Substitution Term-Pattern (\texttt{Sub})}
 
-Remaining Term Variants:
-\begin{verbatim}
-Sub tk tm s
-Iter tk na ni lvs
-\end{verbatim}
+$$
+\inferrule
+   {n_C = n_P
+    \and
+    \beta \vdash t_C :: t_P \leadsto \beta'_t
+    \and
+    \beta \vdash \sigma_C :: \sigma_P \leadsto \beta'_\sigma
+   }
+   { \beta \vdash t_C\sigma_C :: t_P\sigma_P
+     \leadsto
+     \beta \uplus \beta'_t \uplus \beta'_\sigma
+   }
+   \quad
+   \texttt{tMatch Subst}
+$$
+\begin{code}
+tMatch vts bind cbvs pbvs (Sub tkC tC subC) (Sub tkP tP subP)
+  | tkP == tkC
+    =  do bindT  <-  tMatch vts bind cbvs pbvs tC tP
+          sMatch vts bindT cbvs pbvs subC subP
+\end{code}
+
+
+\subsubsection{Iterated Term-Pattern (\texttt{Iter})}
+
+$$
+\inferrule
+   {na_C = na_P \land ni_C = ni_P
+    \and
+    \beta \vdash lvs_C :: lvs_P \leadsto \beta'
+   }
+   { \beta \vdash I~na_C~ni_C~lvs_C :: I~na_P~ni_P~lvs_
+     \leadsto
+     \beta \uplus \beta\
+   }
+   \quad
+   \texttt{tMatch Iter}
+$$
+Plus a more complicated rule !
+\begin{code}
+tMatch vts bind cbvs pbvs (Iter tkC naC niC lvsC) (Iter tkP naP niP lvsP)
+  | tkP == tkC && naC == naP && niC == niP
+    =  fail "tMatch Iter :: Iter N.Y.I."
+tMatch vts bind cbvs pbvs tC (Iter tkP naP niP lvsP)
+  | tkP == termkind tC
+    =  fail "tMatch non-Iter :: Iter N.Y.I."
+\end{code}
 
 Any other case results in failure:
 \begin{code}
@@ -264,6 +307,7 @@ tsMatch vts bind cbvs pvbs (tC:tsC) (tP:tsP)
 tsMatch _ _ _ _ _ _  =  fail "tsMatch: structural mismatch."
 \end{code}
 
+\newpage
 \subsection{Variable Matching}
 
 We assume here that candidate term and pattern variable
@@ -320,6 +364,7 @@ bvMatch vts bind cbvs (Var _ vC) vP
  | otherwise  =  fail "bvMatch: candidate not a bound variable"
 \end{code}
 
+\newpage
 \subsubsection{Known Pattern Variable}
 
 \begin{code}
@@ -406,14 +451,29 @@ kvMatch vts bind tC whatP tkP vP
 kvMatch _ _ _ _ _ _ = fail "kvMatch: candidate not this known variable."
 \end{code}
 
+\newpage
 \subsection{Variable-Set Matching}
 
 \begin{code}
+vsMatch :: MonadPlus mp => [VarTable] -> Binding -> CBVS -> PBVS
+        -> VarSet -> VarSet -> mp Binding
+-- vsC `subset` cbvs && vsP `subset` pbvc
 vsMatch vts bind cbvs pbvc vsC vsP  = fail "vsMatch: N.Y.I."
 \end{code}
 
+\newpage
 \subsection{Variable-List Matching}
 
 \begin{code}
+vlMatch :: MonadPlus mp => [VarTable] -> Binding -> CBVS -> PBVS
+        -> VarList -> VarList -> mp Binding
+-- vsC `subset` cbvs && vsP `subset` pbvc
 vlMatch vts bind cbvs pbvc vlC vlP  = fail "vlMatch: N.Y.I."
+\end{code}
+
+\newpage
+\subsection{Substitution Matching}
+
+\begin{code}
+sMatch vts bindT cbvs pbvs subC subP = fail "sMatch: N.Y.I"
 \end{code}

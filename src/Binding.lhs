@@ -6,16 +6,18 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module Binding ( VarBindRange
-                , pattern BindVar, pattern BindTerm
-                , Binding
-                , emptyBinding
-                , lookupBind
-                , lookupLstBind
-                , bindVarToVar
-                , bindVarToTerm
-                , bindLVarToVList
-                ) where
+module Binding
+( VarBindRange
+, pattern BindVar, pattern BindTerm
+, Binding
+, emptyBinding
+, lookupBind
+, lookupLstBind
+, bindVarToVar
+, bindVarToTerm
+, bindLVarToVList
+, bindGVarToVList
+) where
 --import Data.Maybe (fromJust)
 import qualified Data.Map as M
 
@@ -142,4 +144,16 @@ bindLVarToVList lv vl (BD (vbinds,lbinds))
  | isPredLVar lv && all isPredGVar vl
                                   = return $ BD (vbinds,M.insert lv vl lbinds)
 bindLVarToVList _ _ _ = fail "bindLVarToVList: invalid lvar. -> vlist binding."
+\end{code}
+
+\subsubsection{Binding General-Variables to Variable-Lists}
+
+An list-variable can bind to a list of any length,
+while a standard-variable can only bind to the standard variable inside
+a singletom list.
+\begin{code}
+bindGVarToVList :: Monad m => GenVar -> VarList -> Binding -> m Binding
+bindGVarToVList (LstVar lv) vl binds = bindLVarToVList lv vl binds
+bindGVarToVList (StdVar pv) [StdVar cv] binds = bindVarToVar pv cv binds
+bindGVarToVList _ _ _ = fail "bindGVarToVList: invalid gvar. -> vlist binding."
 \end{code}

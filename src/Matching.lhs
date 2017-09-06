@@ -6,10 +6,13 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module Matching ( match
-                , tMatch, tsMatch
-                , vMatch, bvMatch, kvMatch
-                ) where
+module Matching
+( match
+, tMatch, tsMatch
+, vMatch, bvMatch, kvMatch
+, vsMatch, vlMatch
+, sMatch
+) where
 import Data.Maybe (isJust,fromJust)
 import Data.Map (Map)
 import qualified Data.Map as M
@@ -468,8 +471,37 @@ vsMatch vts bind cbvs pbvc vsC vsP  = fail "vsMatch: N.Y.I."
 \begin{code}
 vlMatch :: MonadPlus mp => [VarTable] -> Binding -> CBVS -> PBVS
         -> VarList -> VarList -> mp Binding
--- vsC `subset` cbvs && vsP `subset` pbvc
-vlMatch vts bind cbvs pbvc vlC vlP  = fail "vlMatch: N.Y.I."
+\end{code}
+
+Matching a non-empty candidate variable-list
+against a non-empty pattern variable-list is non-trivial,
+so we perform a number of phases.
+The first phase tries to reconcile the pre-existing bindings
+with the standard pattern variables.
+If this succeeds,
+we will have split the original list-variable matching problem
+into a list of smaller problems.
+These can then be solved in turn.
+\begin{code}
+-- vlC `subset` cbvs && vlP `subset` pbvc
+vlMatch vts bind cbvs pbvc vlC@(_:_) vlP@(_:_)
+  = do subMatches <- applyStdBindings bind [] ([],[]) vlC vlP
+       return bind -- for now
+\end{code}
+
+Two empty-lists always match,
+but just one of the two lists being empty results in failure.
+\begin{code}
+vlMatch _ _ _ _ [] []  =  return emptyBinding
+vlMatch _ _ _ _  _  _  =  fail "vlMatch: structural mismatch"
+\end{code}
+
+\subsubsection{Applying Standard Bindings}
+
+This is tail-recursive code, where we accumulate submatching problems.
+\begin{code}
+applyStdBindings bind smSofar smInProgress vlC vlP
+ = fail "applyStdBindings: N.Y.I."
 \end{code}
 
 \newpage

@@ -485,7 +485,7 @@ These can then be solved in turn.
 \begin{code}
 -- vlC `subset` cbvs && vlP `subset` pbvc
 vlMatch vts bind cbvs pbvc vlC@(_:_) vlP@(_:_)
-  = do subMatches <- applyStdBindings bind [] ([],[]) vlC vlP
+  = do subMatches <- applyStdBindings bind vlC vlP
        return bind -- for now
 \end{code}
 
@@ -498,10 +498,110 @@ vlMatch _ _ _ _  _  _  =  fail "vlMatch: structural mismatch"
 
 \subsubsection{Applying Standard Bindings}
 
-This is tail-recursive code, where we accumulate submatching problems.
+The first step in trying to match a candidate variable-list
+$vl_C$
+against a pattern variable-list
+$vl_P$
+is to try to simplify the problem by using existing
+binding information.
+We are going to work through both the pattern and candidate lists,
+plugging in any pre-existing bindings for standard pattern variables.
+This will either demonstrate that no match is possible,
+or will break the original match into a number of smaller matches.
+The picture we expect to get is as follows, where the notation $\ell$
+stands for zero or more list-variables, and we use $p_j$ and $c_i$
+to refer respectively to the pattern and candidate standard variables.
+
+$$\begin{matrix}
+vl_C =& \ell & c_1 & \ell \dots \ell & c_i & \ell \dots \ell & c_n & \ell \\
+      &      &     &                 & \arrowvert_\beta \\
+vl_P =& \ell & p_1 & \ell \dots \ell & p_j & \ell \dots \ell & p_m & \ell \\
+\end{matrix}$$
+
+Here for illustrative purposes
+we assume that $p_j \in \dom \beta$ and $\beta(p_j) = c_j$.
+If $j < i$ then a match is impossible, because every $p_j$ must match
+exactly one $c_i$.
+Note that this implies that we must have $m \leq n$ for a match.
+If $j \geq i$, then a match is still possible,
+so we get two shorter matching problems:
+$$\begin{matrix}
+vl'_C =& \ell & c_1 & \ell \dots \ell
+& \qquad &
+vl''_C =& \ell \dots \ell & c_n & \ell
+\\
+vl'_P =& \ell & p_1 & \ell \dots \ell
+& \qquad &
+vl''_P =& \ell \dots \ell & p_m & \ell
+\\
+\end{matrix}$$
+When we have done this for all $p_j \in \dom \beta$,
+then we have sub-problems that only contain $p_j$
+that haven't already been bound.
+
+We walk through both lists using a tail-recursive algorithm
+that accumulates the shorter sub-match problems
+as it goes.
+Usually tail-recursion on lists requires list reversal
+when the final result is returned,
+but here we exploit a property of our list matching
+that says its outcome is the same if both lists are reversed:
+$$
+\inferrule
+ {\beta \vdash \mathrm{rev}(vl_C) :: \mathrm{rev}(vl_P) \leadsto \beta'}
+ {\beta \vdash vl_C :: vl_P \leadsto \beta'}
+$$
+We need to track the following things:
+\begin{itemize}
+  \item
+    the indices of the most recent standard variable seen in both lists:
+    \texttt{iC iP}; both initialised to zero.
+  \item
+    the next sub-problem to emerge: \texttt{vlC' vlP'};
+    both initialised as empty lists.
+  \item
+    all the completed matching sub-problems encountered so far: \texttt{subM};
+    initialised as empty.
+\end{itemize}
 \begin{code}
-applyStdBindings bind smSofar smInProgress vlC vlP
- = fail "applyStdBindings: N.Y.I."
+applyStdBindings :: MonadPlus mp
+                 => Binding -> VarList -> VarList -> mp [(VarList,VarList)]
+applyStdBindings bind vlC vlP = applyStdBindings' bind [] [] [] 0 0 vlC vlP
+
+applyStdBindings' :: MonadPlus mp
+                 => Binding -> [(VarList,VarList)]
+                 -> VarList -> VarList
+                 -> Int -> Int
+                 -> VarList -> VarList -> mp [(VarList,VarList)]
+\end{code}
+
+Both variable lists are null:
+return the accumulated sub-problems.
+\begin{code}
+applyStdBindings' bind subM vlC' vlP' iC iP [] [] = return ((vlC',vlP'):subM)
+\end{code}
+
+One variable list is null, the other not:
+Accumlate the non-null one until it is null.
+\begin{code}
+applyStdBindings' bind subM vlC' vlP' iC iP [] (gP:vlP)
+ = applyStdBindings' bind subM vlC' (gP:vlP') iC iP [] vlP
+
+applyStdBindings' bind subM vlC' vlP' iC iP (gC:vlC) []
+ = applyStdBindings' bind subM (gC:vlC') vlP' iC iP vlC []
+\end{code}
+
+Both lists are not null:
+work along the pattern list looking for a standard variable
+that is in the binding.
+\begin{code}
+applyStdBindings' bind subM vlC' vlP' iC iP vlC (gP@(LstVar _):vlP)
+ = applyStdBindings' bind subM vlC' (gP:vlP') iC iP vlC vlP
+
+applyStdBindings' bind subM vlC' vlP' iC iP vlC (gP@(StdVar vP):vlP)
+ = case lookupBind bind vP of
+     Nothing  -> applyStdBindings' bind subM vlC' (gP:vlP') iC (iP+1) vlC vlP
+     _ -> fail "applyStdBindings' N.Y.F.I."
 \end{code}
 
 \newpage

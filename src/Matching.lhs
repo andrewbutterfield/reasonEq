@@ -600,10 +600,26 @@ applyStdBindings' bind subM vlC' vlP' iC iP vlC (gP@(LstVar _):vlP)
 
 applyStdBindings' bind subM vlC' vlP' iC iP vlC (gP@(StdVar vP):vlP)
  = case lookupBind bind vP of
+     Just (BindTerm _)  ->  fail "applyStdBindings: std. patn. var bound to expr."
      Nothing  -> applyStdBindings' bind subM vlC' (gP:vlP') iC (iP+1) vlC vlP
-     _ -> fail "applyStdBindings' N.Y.F.I."
+     Just (BindVar rv)
+       ->  gotStdBinding bind subM vlC' vlP' iC (iP+1) vlP rv vlC
 \end{code}
 
+Found \texttt{vP} bound to \texttt{rv}.
+Now need to search \texttt{vlC} for \texttt{rv}.
+\begin{code}
+gotStdBinding bind subM vlC' vlP' iC iP vlP rv []
+  =  fail "gotStdBinding: no counterpart for bound patn. var. "
+gotStdBinding bind subM vlC' vlP' iC iP vlP rv (gC@(LstVar _):vlC)
+  =  gotStdBinding bind subM (gC:vlC') vlP' iC iP vlP rv vlC
+gotStdBinding bind subM vlC' vlP' iC iP vlP rv (gC@(StdVar vC):vlC)
+  | vC /= rv  =  gotStdBinding bind subM (gC:vlC') vlP' iC' iP vlP rv vlC
+  | iP < iC'  = fail "gotStdBinding: too few cand. std. vars."
+  | otherwise -- vC == rv && iP >= iC', store subpatn, move on
+     = applyStdBindings' bind ((vlC',vlP'):subM) [] [] iC' iP vlC vlP
+  where iC' = iC+1
+\end{code}
 \newpage
 \subsection{Substitution Matching}
 

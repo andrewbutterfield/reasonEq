@@ -477,7 +477,7 @@ Matching a non-empty candidate variable-list
 against a non-empty pattern variable-list is non-trivial,
 so we perform a number of phases.
 The first phase tries to reconcile the pre-existing bindings
-with the standard pattern variables.
+with the pattern variables.
 If this succeeds,
 we will have split the original list-variable matching problem
 into a list of smaller problems.
@@ -485,7 +485,7 @@ These can then be solved in turn.
 \begin{code}
 -- vlC `subset` cbvs && vlP `subset` pbvc
 vlMatch vts bind cbvs pbvc vlC@(_:_) vlP@(_:_)
-  = do subMatches <- applyStdBindings bind vlC vlP
+  = do subMatches <- applyBindingsToLists bind vlC vlP
        return bind -- for now
 \end{code}
 
@@ -496,8 +496,10 @@ vlMatch _ _ _ _ [] []  =  return emptyBinding
 vlMatch _ _ _ _  _  _  =  fail "vlMatch: structural mismatch"
 \end{code}
 
-\subsubsection{Applying Standard Bindings}
+\subsubsection{Applying Bindings to Lists}
 
+{
+\def\LL{\ell\ell}
 The first step in trying to match a candidate variable-list
 $vl_C$
 against a pattern variable-list
@@ -505,17 +507,17 @@ $vl_P$
 is to try to simplify the problem by using existing
 binding information.
 We are going to work through both the pattern and candidate lists,
-plugging in any pre-existing bindings for standard pattern variables.
+plugging in any pre-existing bindings for pattern variables.
 This will either demonstrate that no match is possible,
 or will break the original match into a number of smaller matches.
-The picture we expect to get is as follows, where the notation $\ell$
+The picture we expect to get is as follows, where the notation $\LL$
 stands for zero or more list-variables, and we use $p_j$ and $c_i$
 to refer respectively to the pattern and candidate standard variables.
 
 $$\begin{matrix}
-vl_C =& \ell & c_1 & \ell \dots \ell & c_i & \ell \dots \ell & c_n & \ell \\
+vl_C =& \LL_0 & c_1 & \LL_1 \dots \LL_{i-1} & c_i & \LL_i \dots \LL_{n-1} & c_n & \LL_n \\
       &      &     &                 & \arrowvert_\beta \\
-vl_P =& \ell & p_1 & \ell \dots \ell & p_j & \ell \dots \ell & p_m & \ell \\
+vl_P =& \LL_0 & p_1 & \LL_1 \dots \LL_{j-1} & p_j & \LL_j \dots \LL_{m-1} & p_m & \LL_m \\
 \end{matrix}$$
 
 Here for illustrative purposes
@@ -526,31 +528,26 @@ Note that this implies that we must have $m \leq n$ for a match.
 If $j \geq i$, then a match is still possible,
 so we get two shorter matching problems:
 $$\begin{matrix}
-vl'_C =& \ell & c_1 & \ell \dots \ell
+vl'_C =& \LL_0 & c_1 & \LL_1 \dots \LL_{i-1}
 & \qquad &
-vl''_C =& \ell \dots \ell & c_n & \ell
+vl''_C =& \LL_i \dots \LL_{n-1} & c_n & \LL_n
 \\
-vl'_P =& \ell & p_1 & \ell \dots \ell
+vl'_P =& \LL_0 & p_1 & \LL_1 \dots \LL_{j-1}
 & \qquad &
-vl''_P =& \ell \dots \ell & p_m & \ell
+vl''_P =& \LL_j \dots \LL_{m-1} & p_m & \LL_m
 \\
 \end{matrix}$$
 When we have done this for all $p_j \in \dom \beta$,
 then we have sub-problems that only contain $p_j$
 that haven't already been bound.
+A similar line of reasoning means that we can also
+eliminate any pattern list-variable that has a binding,
+along with its target variable-list,
+further subdividing the matching problems.
 
 We walk through both lists using a tail-recursive algorithm
 that accumulates the shorter sub-match problems
 as it goes.
-Usually tail-recursion on lists requires list reversal
-when the final result is returned,
-but here we exploit a property of our list matching
-that says its outcome is the same if both lists are reversed:
-$$
-\inferrule
- {\beta \vdash \mathrm{rev}(vl_C) :: \mathrm{rev}(vl_P) \leadsto \beta'}
- {\beta \vdash vl_C :: vl_P \leadsto \beta'}
-$$
 We need to track the following things:
 \begin{itemize}
   \item
@@ -563,12 +560,14 @@ We need to track the following things:
     all the completed matching sub-problems encountered so far: \texttt{subM};
     initialised as empty.
 \end{itemize}
+}
 \begin{code}
-applyStdBindings :: MonadPlus mp
+applyBindingsToLists :: MonadPlus mp
                  => Binding -> VarList -> VarList -> mp [(VarList,VarList)]
-applyStdBindings bind vlC vlP = applyStdBindings' bind [] [] [] 0 0 vlC vlP
+applyBindingsToLists bind vlC vlP
+                               = applyBindingsToLists' bind [] [] [] 0 0 vlC vlP
 
-applyStdBindings' :: MonadPlus mp
+applyBindingsToLists' :: MonadPlus mp
                  => Binding -> [(VarList,VarList)]
                  -> VarList -> VarList
                  -> Int -> Int
@@ -578,34 +577,42 @@ applyStdBindings' :: MonadPlus mp
 Both variable lists are null:
 return the accumulated sub-problems.
 \begin{code}
-applyStdBindings' bind subM vlC' vlP' iC iP [] [] = return ((vlC',vlP'):subM)
+applyBindingsToLists' bind subM vlC' vlP' iC iP [] []
+  = return ((reverse vlC',reverse vlP'):subM)
 \end{code}
 
 One variable list is null, the other not:
 Accumlate the non-null one until it is null.
 \begin{code}
-applyStdBindings' bind subM vlC' vlP' iC iP [] (gP:vlP)
- = applyStdBindings' bind subM vlC' (gP:vlP') iC iP [] vlP
+applyBindingsToLists' bind subM vlC' vlP' iC iP [] (gP:vlP)
+ = applyBindingsToLists' bind subM vlC' (gP:vlP') iC iP [] vlP
 
-applyStdBindings' bind subM vlC' vlP' iC iP (gC:vlC) []
- = applyStdBindings' bind subM (gC:vlC') vlP' iC iP vlC []
+applyBindingsToLists' bind subM vlC' vlP' iC iP (gC:vlC) []
+ = applyBindingsToLists' bind subM (gC:vlC') vlP' iC iP vlC []
 \end{code}
 
 Both lists are not null:
-work along the pattern list looking for a standard variable
+work along the pattern list looking for a pattern variable
 that is in the binding.
 \begin{code}
-applyStdBindings' bind subM vlC' vlP' iC iP vlC (gP@(LstVar _):vlP)
- = applyStdBindings' bind subM vlC' (gP:vlP') iC iP vlC vlP
-
-applyStdBindings' bind subM vlC' vlP' iC iP vlC (gP@(StdVar vP):vlP)
+applyBindingsToLists' bind subM vlC' vlP' iC iP vlC (gP@(StdVar vP):vlP)
  = case lookupBind bind vP of
-     Just (BindTerm _)  ->  fail "applyStdBindings: std. patn. var bound to expr."
-     Nothing  -> applyStdBindings' bind subM vlC' (gP:vlP') iC (iP+1) vlC vlP
+     Just (BindTerm _)
+       ->  fail "applyBindingsToLists: std. patn. var bound to expr."
+     Nothing
+       -> applyBindingsToLists' bind subM vlC' (gP:vlP') iC (iP+1) vlC vlP
      Just (BindVar rv)
        ->  gotStdBinding bind subM vlC' vlP' iC (iP+1) vlP rv vlC
+
+applyBindingsToLists' bind subM vlC' vlP' iC iP vlC (gP@(LstVar lvP):vlP)
+ = case lookupLstBind bind lvP of
+     Nothing
+       -> applyBindingsToLists' bind subM (gP:vlC') vlP' (iC+1) iP vlC vlP
+     Just rvl
+       -> gotLstBinding bind subM vlC' vlP' (iC+1) iP vlP rvl vlC
 \end{code}
 
+\paragraph{Got Standard Pattern-Variable Binding}
 Found \texttt{vP} bound to \texttt{rv}.
 Now need to search \texttt{vlC} for \texttt{rv}.
 \begin{code}
@@ -617,9 +624,21 @@ gotStdBinding bind subM vlC' vlP' iC iP vlP rv (gC@(StdVar vC):vlC)
   | vC /= rv  =  gotStdBinding bind subM (gC:vlC') vlP' iC' iP vlP rv vlC
   | iP < iC'  = fail "gotStdBinding: too few cand. std. vars."
   | otherwise -- vC == rv && iP >= iC', store subpatn, move on
-     = applyStdBindings' bind ((vlC',vlP'):subM) [] [] iC' iP vlC vlP
+     = applyBindingsToLists'
+                    bind ((reverse vlC',reverse vlP'):subM) [] [] iC' iP vlC vlP
   where iC' = iC+1
 \end{code}
+
+\paragraph{Got List Pattern-Variable Binding}
+Found \texttt{vlP} bound to \texttt{rlv}.
+Now need to search \texttt{vlC} for \texttt{rlv}.
+\begin{code}
+gotLstBinding bind subM vlC' vlP' iC iP vlP rvl vlc
+  =  fail "gotLstBinding: N.Y.I."
+\end{code}
+
+
+
 \newpage
 \subsection{Substitution Matching}
 

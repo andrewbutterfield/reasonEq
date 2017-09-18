@@ -1,6 +1,7 @@
+\section{Matching Features}\label{sec:match-feat}
+
 In order to support alphabet-based laws and definitions,
 we introduce the notion of ``list variables'',
-(those whose decoration starts with a dollar-symbol)
 that match against zero or more variables satisfying some property.
 These list-variables encode simple expressions that give
 some flexibility in how they match.
@@ -48,25 +49,31 @@ and typically we cannot complete the match of $S\less x$
 until
 other context information tells us to which variables $S$ must match.
 \par
-We have more than one subtracted variable:
+We can have more than one subtracted variable:
 $$
   x,y := e,f ~\defs~ ok \implies ok' \land x' = e \land y'=f
     \land S'\less{x,y} = S\less{x,y}
 $$
 \item[Simultaneous Assignment]
+Way more than just two subtracted variables!
 \begin{eqnarray*}
   \lefteqn{x_1,\ldots,x_n ::= e_1, \ldots , e_n}
 \\ &\defs&
      ok \implies ok'
      \land x'_1 = e_1 \land \ldots \land x'_n = e_n
      \land S'\less{x_1,\ldots,x_n} = S\less{x_1,\ldots,x_n}
+\\ &=& ok \implies ok'
+    \land \lst x := \lst e \land
+     \land S'\less{\lst x} = S\less{\lst x}
 \end{eqnarray*}
-\begin{verbatim}
-x$ ::= e$  ==  ok => ok' /\ x$' = e$ /\ S'\x$ = S\x$
-\end{verbatim}
 In the mathematical form, we use indices and ellipsis
 to suggest that we have lists of variables and expressions
 of the same length.
+\item[Skip]
+\begin{eqnarray*}
+  \Skip &\defs& ok \implies ok' \land S'=S
+\end{eqnarray*}
+A simple form of a simple simultaneous assignment!
 \end{description}
 
 From the above examples,
@@ -78,9 +85,7 @@ a number of general observations can be made:
     \begin{itemize}
       \item quantifier binding variable lists
       \item replacement/target lists in substitutions
-      \item \texttt{LList}/\texttt{LCount} [\texttt{LVar}/\texttt{LElem}]
-            items in \texttt{Lang} constructs.
-      \item in 2-place (atomic) predicates, provided both places
+       \item in 2-place (atomic) predicates, provided both places
         are occupied by a single meta-variable.
     \end{itemize}
   \item
@@ -106,12 +111,12 @@ a number of general observations can be made:
     but could also appear in test/goal predicates,
     so we could imagine the following predicate fragment:
     $$
-       \exists ok_m,S_m @ \ldots
+       \exists ok_m,S_m \bullet \ldots
     $$
     matching against a similar fragment from the definition of
     sequential composition:
     $$
-      \exists O_n @ \ldots
+      \exists O_n \bullet \ldots
     $$
     Here the match binding would include
     $O_n \mapsto \setof{ok_m} \cup S_m$.

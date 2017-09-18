@@ -1,0 +1,126 @@
+In order to support alphabet-based laws and definitions,
+we introduce the notion of ``list variables'',
+(those whose decoration starts with a dollar-symbol)
+that match against zero or more variables satisfying some property.
+These list-variables encode simple expressions that give
+some flexibility in how they match.
+We further classify as follows:
+\begin{description}
+  \item[Reserved:]  $O$, $M$, $S$
+  \item[Generic:] $\lst v$, $\lst e$, \ldots (lowercase)
+\end{description}
+Here are some examples of laws that require this list-matching facility:
+\begin{description}
+%
+\item[Sequential Composition]
+$$
+  P ; Q ~\defs~ \exists O_m \bullet P[O_m/O'] \land Q[O_m/O]
+$$
+Here the $O$ list-variable matches all the undecorated
+observation variables., i.e. the alphabet, of the theory.
+In practise we also need a side condition that says all the $O_m$
+are fresh --- we don't want to rely on $P$ and $Q$ only having free variables
+in that alphabet.
+The idea is that \texttt{O}, \texttt{M} and \texttt{S} are reserved-variable root strings that
+correspond to $O$, $M$ and $S$, respectively.
+%
+\item[Assignment]
+$$
+  x := e ~\defs~ ok \implies ok' \land x' = e
+    \land S'\less x = S\less x
+$$
+List-variable $S$ refers to all the program or user variables,
+those that appear explicitly in the programming notation (script) under study.
+This are different from the model variables (often referred to as
+``auxiliary''), denoted by $M$ that capture observable aspects
+of system behaviour beyond what can be expressed with just the $S$
+values. Examples of variables in $M$ include $ok$, $wait$, $tr$, etc.
+The expression $S'\less x = S\less x$
+denotes the conjunction of identities of the form $v'=v$
+where $v \in S\setminus\setof x$.
+If $x$ is an observation variable
+then the above law only works for that variable,
+and in fact could be expanded out (given $S$)
+to an explicit law for that variable.
+If $x$ is not an observation variable,
+then it stands for an arbitrary variable,
+and typically we cannot complete the match of $S\less x$
+until
+other context information tells us to which variables $S$ must match.
+\par
+We have more than one subtracted variable:
+$$
+  x,y := e,f ~\defs~ ok \implies ok' \land x' = e \land y'=f
+    \land S'\less{x,y} = S\less{x,y}
+$$
+\item[Simultaneous Assignment]
+\begin{eqnarray*}
+  \lefteqn{x_1,\ldots,x_n ::= e_1, \ldots , e_n}
+\\ &\defs&
+     ok \implies ok'
+     \land x'_1 = e_1 \land \ldots \land x'_n = e_n
+     \land S'\less{x_1,\ldots,x_n} = S\less{x_1,\ldots,x_n}
+\end{eqnarray*}
+\begin{verbatim}
+x$ ::= e$  ==  ok => ok' /\ x$' = e$ /\ S'\x$ = S\x$
+\end{verbatim}
+In the mathematical form, we use indices and ellipsis
+to suggest that we have lists of variables and expressions
+of the same length.
+\end{description}
+
+From the above examples,
+a number of general observations can be made:
+\begin{itemize}
+  \item
+    All list-variables match against lists of things (zero or more).
+    This means they can only occur in certain places:
+    \begin{itemize}
+      \item quantifier binding variable lists
+      \item replacement/target lists in substitutions
+      \item \texttt{LList}/\texttt{LCount} [\texttt{LVar}/\texttt{LElem}]
+            items in \texttt{Lang} constructs.
+      \item in 2-place (atomic) predicates, provided both places
+        are occupied by a single meta-variable.
+    \end{itemize}
+  \item
+    A predicate involving two list-variables mandates that both
+    match lists of the same size, and the predicate
+    is interpreted as the \emph{conjunction} of instances of that predicate
+    over corresponding pairs from the match-list.
+    It can also match a single such predicate also using two list-variables.
+  \item
+    Some list-variables ($O$, $S$, $M$)
+    denote specific sets of variables.
+    The matching rules for these differ from those for regular variables,
+    in that $O$ and $O'$ can only match themselves or their expansions,
+    while $O_a$ and $O_b$ can match with a binding---subscript decorations
+    are viewed as general patterns, and are not considered ``known''.
+  \item
+    Other list-variables  ($x_1$, $e_1$, \ldots)
+    are local names used as general placeholder.
+    These simply match all the variables/ expressions /whatever
+    that occur in the relevant position.
+  \item
+    These list-variables won't only appear in match patterns,
+    but could also appear in test/goal predicates,
+    so we could imagine the following predicate fragment:
+    $$
+       \exists ok_m,S_m @ \ldots
+    $$
+    matching against a similar fragment from the definition of
+    sequential composition:
+    $$
+      \exists O_n @ \ldots
+    $$
+    Here the match binding would include
+    $O_n \mapsto \setof{ok_m} \cup S_m$.
+  \item
+    The reserved list-variables are \emph{precise},
+    in the sense that on any given matching context,
+    they match a known fixed collection of variables
+    (so there shouldn't be a need in most cases to defer a match).
+    An exception is in a generic theory that has no specific observation
+    variables defined, when these list-variables can only match
+    themselves, and $O$ being able to match $S,M$.
+\end{itemize}

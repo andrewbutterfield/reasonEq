@@ -7,20 +7,22 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module AST ( VarWhat
-           , pattern ObsV, pattern ExprV, pattern PredV
+           , pattern ObsV, pattern VarV, pattern ExprV, pattern PredV
            , VarWhen
            , pattern Before, pattern During, pattern After
            , pattern Static, pattern Dynamic
            , Variable
            , pattern Vbl
-           , pattern ObsVar, pattern ExprVar, pattern PredVar
+           , pattern ObsVar, pattern VarVar, pattern ExprVar, pattern PredVar
            , pattern PreVar, pattern MidVar, pattern PostVar
+           , pattern ScriptVar
            , pattern PreCond, pattern PostCond
            , pattern PreExpr, pattern PostExpr
            , isPreVar, isObsVar, isExprVar, isPredVar
            , ListVar
-           , pattern ObsLVar, pattern ExprLVar, pattern PredLVar
+           , pattern ObsLVar, pattern VarLVar, pattern ExprLVar, pattern PredLVar
            , pattern PreVars, pattern PostVars, pattern MidVars
+           , pattern ScriptVars
            , pattern PreExprs, pattern PrePreds
            , isPreListVar, isObsLVar, isExprLVar, isPredLVar
            , GenVar, pattern StdVar, pattern LstVar
@@ -96,6 +98,8 @@ Variables can be classified into those that:
      track a single observable aspect of the behaviour as the program
     runs,
   \item
+    denote an arbitrary variable, as when defining a language construct,
+  \item
     denote arbitrary expressions whose values depend on dynamic observables,
     or
   \item
@@ -104,11 +108,13 @@ Variables can be classified into those that:
 \begin{code}
 data VarWhat -- Classification
   = VO -- Observation
+  | VV -- Variable
   | VE -- Expression
   | VP -- Predicate
   deriving (Eq, Ord, Show, Read)
 
-pattern ObsV = VO
+pattern ObsV  = VO
+pattern VarV  = VV
 pattern ExprV = VE
 pattern PredV = VP
 \end{code}
@@ -159,6 +165,7 @@ newtype Variable  = VR (Identifier, VarWhat, VarKind)
 pattern Vbl  i wt kd = VR (i, wt, kd)
 
 pattern ObsVar  i k = Vbl i VO k
+pattern VarVar  i k = Vbl i VV k
 pattern ExprVar i k = VR (i, VE, k)
 pattern PredVar i k = VR (i, VP, k)
 \end{code}
@@ -168,6 +175,7 @@ We also have some pre-wrapped patterns for common cases:
 pattern PreVar   i    = VR (i, VO, (KD WB))
 pattern PostVar  i    = VR (i, VO, (KD WA))
 pattern MidVar   i n  = VR (i, VO, (KD (WD n)))
+pattern ScriptVar i   = VR (i, VV, KS)
 pattern PreCond  i    = VR (i, VP, (KD WB))
 pattern PostCond i    = VR (i, VP, (KD WA))
 pattern PreExpr  i    = VR (i, VE, (KD WB))
@@ -190,13 +198,16 @@ i_a = fromJust $ ident "a"
 i_b = fromJust $ ident "b"
 i_e = fromJust $ ident "e"
 i_f = fromJust $ ident "f"
+i_v = fromJust $ ident "v"
 
-v_a = StdVar $ PreVar $ i_a
-v_b = StdVar $ PreVar $ i_b
-v_e = PreExpr $ i_e
-v_f = PreExpr $ i_f
-v_a' = StdVar $ PostVar $ i_a
-v_b' = StdVar $ PostVar $ i_b
+v_a =  PreVar    $ i_a
+v_b =  PreVar    $ i_b
+v_v =  ScriptVar $ i_v
+v_a' = PostVar   $ i_a
+v_b' = PostVar   $ i_b
+
+v_e  = PreExpr  $ i_e
+v_f  = PreExpr  $ i_f
 v_e' = PostExpr $ i_e
 v_f' = PostExpr $ i_f
 \end{code}
@@ -221,11 +232,13 @@ of a list of identifiers, corresponding to variable `roots'
 \begin{code}
 data ListVar
  = LO VarWhen Identifier [Identifier]
+ | LV VarWhen Identifier [Identifier]
  | LE VarWhen Identifier [Identifier]
  | LP VarWhen Identifier [Identifier]
  deriving (Eq, Ord, Show, Read)
 
 pattern ObsLVar  r i rs = LO r i rs
+pattern VarLVar  r i rs = LV r i rs
 pattern ExprLVar r i rs = LE r i rs
 pattern PredLVar r i rs = LP r i rs
 \end{code}
@@ -235,6 +248,7 @@ Pre-wrapped patterns:
 pattern PreVars  i    =  LO WB i []
 pattern PostVars i    =  LO WA i []
 pattern MidVars  i n  =  LO (WD n) i []
+pattern ScriptVars i  =  LV WB i []
 pattern PreExprs i    =  LE WB i []
 pattern PrePreds i    =  LP WB i []
 \end{code}
@@ -294,6 +308,15 @@ isPredGVar (GV v)   =  isPredVar v
 isPredGVar (GL lv)  =  isPredLVar lv
 \end{code}
 
+Test values:
+\begin{code}
+gv_a =  StdVar v_a
+gv_b =  StdVar v_b
+gv_v =  StdVar v_v
+gv_a' = StdVar v_a'
+gv_b' = StdVar v_b'
+\end{code}
+
 
 We also want variable sets:
 \begin{code}
@@ -310,13 +333,13 @@ isPreVarSet = all isPreGenVar . S.toList
 \subsubsection{Variable Set test values}
 \begin{code}
 s0   = S.fromList [] :: VarSet
-sa   = S.fromList [v_a]
-sa'  = S.fromList [v_a']
-sb   = S.fromList [v_b]
-sab  = S.fromList [v_a,v_b]
-saa' = S.fromList [v_a,v_a']
-sab' = S.fromList [v_a,v_b']
-sbb' = S.fromList [v_b,v_b']
+sa   = S.fromList [gv_a]
+sa'  = S.fromList [gv_a']
+sb   = S.fromList [gv_b]
+sab  = S.fromList [gv_a,gv_b]
+saa' = S.fromList [gv_a,gv_a']
+sab' = S.fromList [gv_a,gv_b']
+sbb' = S.fromList [gv_b,gv_b']
 \end{code}
 
 \newpage

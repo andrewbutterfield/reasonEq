@@ -225,32 +225,31 @@ We also need to introduce the idea of lists of variables,
 for use in binding constructs,
 which may themselves contain special variables
 that denote lists of variables.
-We only require this facility for dynamic variables.
 We define a list-variable as a specially marked variable with the addition
 of a list of identifiers, corresponding to variable `roots'
 
 \begin{code}
 data ListVar
- = LO VarWhen Identifier [Identifier]
- | LV VarWhen Identifier [Identifier]
- | LE VarWhen Identifier [Identifier]
- | LP VarWhen Identifier [Identifier]
+ = LO VarKind Identifier [Identifier]
+ | LV VarKind Identifier [Identifier]
+ | LE VarKind Identifier [Identifier]
+ | LP VarKind Identifier [Identifier]
  deriving (Eq, Ord, Show, Read)
 
-pattern ObsLVar  r i rs = LO r i rs
-pattern VarLVar  r i rs = LV r i rs
-pattern ExprLVar r i rs = LE r i rs
-pattern PredLVar r i rs = LP r i rs
+pattern ObsLVar  k i is = LO k i is
+pattern VarLVar  k i is = LV k i is
+pattern ExprLVar k i is = LE k i is
+pattern PredLVar k i is = LP k i is
 \end{code}
 
 Pre-wrapped patterns:
 \begin{code}
-pattern PreVars  i    =  LO WB i []
-pattern PostVars i    =  LO WA i []
-pattern MidVars  i n  =  LO (WD n) i []
-pattern ScriptVars i  =  LV WB i []
-pattern PreExprs i    =  LE WB i []
-pattern PrePreds i    =  LP WB i []
+pattern PreVars  i    =  LO (KD WB) i []
+pattern PostVars i    =  LO (KD WA) i []
+pattern MidVars  i n  =  LO (KD (WD n)) i []
+pattern ScriptVars i  =  LV (KD WB) i []
+pattern PreExprs i    =  LE (KD WB) i []
+pattern PrePreds i    =  LP (KD WB) i []
 \end{code}
 
 Useful predicates:
@@ -271,10 +270,10 @@ isPredLVar _ = False
 
 \subsubsection{List Variable test values}
 \begin{code}
-lva = ObsLVar Before (i_a) []
-lvb = ObsLVar After (i_b) []
-lve = ExprLVar Before (i_e) []
-lvf = ExprLVar Before (i_f) []
+lva = ObsLVar  (Dynamic Before) (i_a) []
+lvb = ObsLVar  (Dynamic After)  (i_b) []
+lve = ExprLVar (Dynamic Before) (i_e) []
+lvf = ExprLVar (Dynamic Before) (i_f) []
 \end{code}
 
 \subsubsection{Variable Lists}
@@ -668,7 +667,9 @@ They don't need special handling or representation here.
 A side-condition is property used in laws,
 typically putting a constraint on the free variables of some term.
 In many logics, these can be checked by simple inspection of a term.
-However, given a logic like ours with explict expression and predicate (a.k.a. \emph{schematic}) variables this is not always possible.
+However,
+given a logic like ours with explict expression and predicate
+(a.k.a. \emph{schematic}) variables this is not always possible.
 
 A side condition is about a relationship between the free variables
 of term ($T$),
@@ -686,7 +687,11 @@ Let $pre$ denote the assertion that the term has only pre-variables.
 Let $F$ denote the free variables of the expression or predicate variable
 under consideration.
 
-In addition we may also have a requirement that certain variables are new, or fresh. This applies to the whole term being matched, and not just those terms signified by expression and prediate variables. Let $N$ denote this set.
+In addition we may also have a requirement
+that certain variables are new, or fresh.
+This applies to the whole term being matched,
+and not just those terms signified by expression and prediate variables.
+Let $N$ denote this set.
 
 Here we use $D$, $X$, $C$, $N$, to represent themselves
 and also be a shorthand for $D \cap F = \emptyset$,
@@ -709,8 +714,11 @@ different combinations of the above side-conditions interact.
 \\ X_1 \land C_2 &=& X_1 \subseteq C_2 \;\land\; X_1
 \end{eqnarray*}
 Given that variable matching will respect variable roles (\verb"VarWhen"),
-if we have either $C$ or $X$ specified, then we check $pre$ at side-condition generation time.
-We can summarise by saying, given a satisfiable side-condition involving $N$, $D$, $X$, and $C$, then there is a faithful representation
+if we have either $C$ or $X$ specified,
+then we check $pre$ at side-condition generation time.
+We can summarise by saying,
+given a satisfiable side-condition involving $N$, $D$, $X$, and $C$,
+then there is a faithful representation
 where the following invariant holds:
 \[
 N \not\!\cap\; X
@@ -725,12 +733,14 @@ X \subseteq C
 \]
 In fact we see that our representation either consists solely of $X$,
 or else contains one or more of $pre$, $D$, or $C$.
-If both $pre$ and $C$ were specified, then we will have checked that all relevant variables in $C$ satisfy $pre$, and hence it becomes superfluous.
+If both $pre$ and $C$ were specified,
+then we will have checked that all relevant variables in $C$ satisfy $pre$,
+and hence it becomes superfluous.
 
 \newpage
 \subsubsection{Variable side-conditions}
-So, a side-condition associated with a term variable is either exact,
-or approximate:
+So, a side-condition associated with a term variable is either exact (\texttt{X}),
+or approximate (\texttt{A}):
 \begin{code}
 data VarSideCond
  = X VarSet

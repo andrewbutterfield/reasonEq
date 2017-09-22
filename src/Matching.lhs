@@ -285,10 +285,10 @@ Plus a more complicated rule !
 \begin{code}
 tMatch vts bind cbvs pbvs (Iter tkC naC niC lvsC) (Iter tkP naP niP lvsP)
   | tkP == tkC && naC == naP && niC == niP
-    =  fail "tMatch Iter :: Iter N.Y.I."
+    =  error "tMatch Iter :: Iter N.Y.I."
 tMatch vts bind cbvs pbvs tC (Iter tkP naP niP lvsP)
   | tkP == termkind tC
-    =  fail "tMatch non-Iter :: Iter N.Y.I."
+    =  error "tMatch non-Iter :: Iter N.Y.I."
 \end{code}
 
 Any other case results in failure:
@@ -462,7 +462,7 @@ kvMatch _ _ _ _ _ _ = fail "kvMatch: candidate not this known variable."
 vsMatch :: MonadPlus mp => [VarTable] -> Binding -> CBVS -> PBVS
         -> VarSet -> VarSet -> mp Binding
 -- vsC `subset` cbvs && vsP `subset` pbvc
-vsMatch vts bind cbvs pbvc vsC vsP  = fail "vsMatch: N.Y.I."
+vsMatch vts bind cbvs pbvc vsC vsP  = error "vsMatch: N.Y.I."
 \end{code}
 
 \newpage
@@ -480,13 +480,13 @@ The first phase tries to reconcile the pre-existing bindings
 with the pattern variables.
 If this succeeds,
 we will have split the original list-variable matching problem
-into a list of smaller problems.
+into a list of smaller ``freer'' problems.
 These can then be solved in turn.
 \begin{code}
 -- vlC `subset` cbvs && vlP `subset` pbvc
 vlMatch vts bind cbvs pbvc vlC@(_:_) vlP@(_:_)
   = do subMatches <- applyBindingsToLists bind vlC vlP
-       return bind -- for now
+       vlFreeMatches vts bind subMatches
 \end{code}
 
 Two empty-lists always match,
@@ -630,18 +630,63 @@ gotStdBinding bind subM vlC' vlP' iC iP vlP rv (gC@(StdVar vC):vlC)
 \end{code}
 
 \paragraph{Got List Pattern-Variable Binding}
-Found \texttt{vlP} bound to \texttt{rlv}.
+Found \texttt{vlP} bound to \texttt{rvl}.
 Now need to search \texttt{vlC} for \texttt{rlv}.
 \begin{code}
 gotLstBinding bind subM vlC' vlP' iC iP vlP rvl vlc
-  =  fail "gotLstBinding: N.Y.I."
+  =  error "gotLstBinding: N.Y.I."
 \end{code}
 
+\subsubsection{Free Variable-List Matching}
+
+Here we are doing variable-list matching where all of the
+pattern variables are free, \textit{i.e.}, not already in the binding.
+First, working down the free-match lists:
+\begin{code}
+vlFreeMatches :: MonadPlus mp
+              => [VarTable] -> Binding -> [(VarList,VarList)]
+              -> mp Binding
+
+vlFreeMatches vts bind [] = return bind
+vlFreeMatches vts bind ((vlC,vlP):rest)
+ = do bind' <- vlFreeMatch vts bind vlC vlP
+      vlFreeMatches vts bind' rest
+\end{code}
+
+Handling one free variable-list match:
+\begin{code}
+vlFreeMatch :: MonadPlus mp
+              => [VarTable] -> Binding -> VarList -> VarList
+              -> mp Binding
+\end{code}
+
+Both lists empty: we are done.
+\begin{code}
+vlFreeMatch vts bind [] [] = return bind
+\end{code}
+
+Pattern used up, but candidates left over: fail.
+\begin{code}
+vlFreeMatch vts bind _ [] = fail "vlFreeMatch: too many candidate variables"
+\end{code}
+
+Candidates used, but patterns leftover:
+succeed if all patterns are arbitrary list-variables,
+otherwise fail.
+\begin{code}
+vlFreeMatch vts bind [] vlP
+-- | xxxx vlP = ffff bind vlP
+ | otherwise = fail "vlFreeMatch: not enough candidate variables"
+\end{code}
+
+\begin{code}
+vlFreeMatch vts bind vlC vlP = error "vlFreeMatch N.Y.F.I."
+\end{code}
 
 
 \newpage
 \subsection{Substitution Matching}
 
 \begin{code}
-sMatch vts bindT cbvs pbvs subC subP = fail "sMatch: N.Y.I"
+sMatch vts bindT cbvs pbvs subC subP = error "sMatch: N.Y.I"
 \end{code}

@@ -672,18 +672,58 @@ vlFreeMatch vts bind _ [] = fail "vlFreeMatch: too many candidate variables"
 
 Candidates used, but patterns leftover:
 succeed if all patterns are arbitrary list-variables,
+binding them to empty variable-lists,
 otherwise fail.
 \begin{code}
-vlFreeMatch vts bind [] vlP
--- | xxxx vlP = ffff bind vlP
- | otherwise = fail "vlFreeMatch: not enough candidate variables"
+vlFreeMatch vts bind [] vlP = recordEmptylistBindings bind vlP
 \end{code}
 
+Pattern and candidate start with standard variable:
+bind pattern to candidate
 \begin{code}
-vlFreeMatch vts bind vlC vlP = error "vlFreeMatch N.Y.F.I."
+vlFreeMatch vts bind (StdVar vC:vlC) (StdVar vP:vlP)
+ = do bind' <- bindVarToVar vP vC bind
+      vlFreeMatch vts bind' vlC vlP
 \end{code}
 
+Pattern starts with list-variable:
+try to guess how many candidate variables it should match, somehow!
+\begin{code}
+vlFreeMatch vts bind vlC (LstVar lvP:vlP)
+ = vlFreeListVarMatch vts bind vlC lvP vlP
+\end{code}
 
+Otherwise we have a standard pattern with a list-variable candidate,
+so we must fail.
+\begin{code}
+vlFreeMatch vts bind _ _  = fail "vlFreeMatch: structural mismatch"
+\end{code}
+
+Auxilliary:
+\begin{code}
+recordEmptylistBindings bind [] = return bind
+recordEmptylistBindings bind ((LstVar lv):vl)
+ = do bind' <- bindLVarToVList lv [] bind
+      recordEmptylistBindings bind' vl
+recordEmptylistBindings bind _
+  = fail "vlFreeMatch: too many std. pattern variables"
+\end{code}
+
+\newpage
+\subsubsection{List Variable Matching }
+
+If we arrive here, we are trying to match two variable-lists
+that contain no patterns that are already bound,
+and we now have a pattern list that starts with a list-variable.
+This can match zero or more general candidate variables,
+but how do we determine the correct number?
+\begin{code}
+vlFreeListVarMatch :: MonadPlus mp
+                   => [VarTable] -> Binding -> VarList -> ListVar -> VarList
+                   -> mp Binding
+vlFreeListVarMatch vts bind vlC lvP vlP
+ = error "vlFreeListVarMatch: N.Y.I."
+\end{code}
 \newpage
 \subsection{Substitution Matching}
 

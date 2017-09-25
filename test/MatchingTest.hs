@@ -155,7 +155,7 @@ tst_vlMatch =
       ( (vlMatch [] emptyBinding b0 b0 [cs1] [ps1] ::[Binding])
         @?= bindGVarToVList ps1 [cs1] emptyBinding  )
     , testCase "[cs2] :: [ps1] where ps1 |-> cs1 (FAIL)"
-      ( vlMatch [] bindPSi2CSi b0 b0 [cs1] [ps1] @?= [] )
+      ( vlMatch [] bindPSi2CSi b0 b0 [cs2] [ps1] @?= [] )
     , testCase "[cs2,cs1] :: [ps1,ps2] where ps_i |-> cs+i (FAIL)"
       ( vlMatch [] bindPSi2CSi b0 b0 [cs2,cs1] [ps1,ps2] @?= [] )
     , testCase "[cs_i,cl_i] :: [ps_i,pl_i], no pre-bind  (OK)"

@@ -667,7 +667,7 @@ vlFreeMatch vts bind [] [] = return bind
 
 Pattern used up, but candidates left over: fail.
 \begin{code}
-vlFreeMatch vts bind _ [] = fail "vlFreeMatch: too many candidate variables"
+vlFreeMatch vts bind _ [] = error "vlFreeMatch: too many candidate variables"
 \end{code}
 
 Candidates used, but patterns leftover:
@@ -696,7 +696,11 @@ vlFreeMatch vts bind vlC (LstVar lvP:vlP)
 Otherwise we have a standard pattern with a list-variable candidate,
 so we must fail.
 \begin{code}
-vlFreeMatch vts bind _ _  = fail "vlFreeMatch: structural mismatch"
+vlFreeMatch vts bind vlC vlP
+  = error $ unlines
+     [ "vlFreeMatch: structural mismatch"
+     , "vlC = "++show vlC
+     , "vlP = "++show vlP ]
 \end{code}
 
 Auxilliary:
@@ -706,7 +710,7 @@ recordEmptylistBindings bind ((LstVar lv):vl)
  = do bind' <- bindLVarToVList lv [] bind
       recordEmptylistBindings bind' vl
 recordEmptylistBindings bind _
-  = fail "vlFreeMatch: too many std. pattern variables"
+  = error "vlFreeMatch: too many std. pattern variables"
 \end{code}
 
 \newpage

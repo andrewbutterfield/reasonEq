@@ -19,8 +19,9 @@ import qualified Data.Map as M
 import Data.Set (Set)
 import qualified Data.Set as S
 import Control.Monad
+import Data.List
 
---import Utilities
+import Utilities
 import LexBase
 import AST
 import VarData
@@ -523,7 +524,7 @@ applyBindingsToLists' bind vlC' vlP' vlC (gP@(StdVar vP):vlP)
  = case lookupBind bind vP of
     Nothing           -> applyBindingsToLists' bind vlC' (gP:vlP') vlC vlP
     Just (BindTerm _) -> fail "vlMatch: pattern var already bound to term"
-    Just (BindVar bv) -> findStdCandidate bind vlC' vlP' vlC bv vlP
+    Just (BindVar vB) -> findStdCandidate bind vlC' vlP' vlC vB vlP
 \end{code}
 
 First pattern variable is a list-variable:
@@ -531,32 +532,37 @@ First pattern variable is a list-variable:
 applyBindingsToLists' bind vlC' vlP' vlC (gP@(LstVar lvP):vlP)
  = case lookupLstBind bind lvP of
     Nothing  -> applyBindingsToLists' bind vlC' (gP:vlP') vlC vlP
-    Just bvl -> findLstCandidate bind vlC' vlP' vlC bvl vlP
+    Just vlB -> findLstCandidate bind vlC' vlP' vlC vlB vlP
 \end{code}
 
 
 \paragraph{Find Standard Pattern-Variable Binding}
-Found \texttt{vP} bound to \texttt{bv}.
-Now need to search \texttt{vlC} for \texttt{bv}.
+Found \texttt{vP} bound to \texttt{vB}.
+Now need to search \texttt{vlC} for \texttt{vB}.
 \begin{code}
-findStdCandidate bind vlC' vlP' [] bv vlP
+findStdCandidate bind vlC' vlP' [] vB vlP
   = fail "vlMatch: std-pattern var's binding not in candidate list"
-findStdCandidate bind vlC' vlP' (gC@(StdVar vC):vlC) bv vlP
- | vC == bv  = applyBindingsToLists' bind vlC' vlP' vlC vlP
- | otherwise = findStdCandidate bind (gC:vlC') vlP' vlC bv vlP
-findStdCandidate bind vlC' vlP' (gC:vlC) bv vlP
-  =  findStdCandidate bind (gC:vlC') vlP' vlC bv vlP
+findStdCandidate bind vlC' vlP' (gC@(StdVar vC):vlC) vB vlP
+ | vC == vB  = applyBindingsToLists' bind vlC' vlP' vlC vlP
+ | otherwise = findStdCandidate bind (gC:vlC') vlP' vlC vB vlP
+findStdCandidate bind vlC' vlP' (gC:vlC) vB vlP
+  =  findStdCandidate bind (gC:vlC') vlP' vlC vB vlP
 \end{code}
 
 \paragraph{Find List Pattern-Variable Binding}
-Found \texttt{vlP} bound to \texttt{bvl}.
-Now need to search \texttt{vlC} for \texttt{bvl}.
+Found \texttt{vlP} bound to \texttt{vlB}.
+Now need to search \texttt{vlC} for \texttt{vlB}.
 \begin{code}
 findLstCandidate bind vlC' vlP' vlC [] vlP
   = applyBindingsToLists' bind vlC' vlP' vlC vlP
-findLstCandidate bind vlC' vlP' [] bvl vlP
+findLstCandidate bind vlC' vlP' [] vlB vlP
   = fail "vlMatch: pattern list-var's binding not in candidate list"
-findLstCandidate bind vlC' vlP' vlC bvl vlP =  error "\n\tfindLstCandidate N.Y.F.I.\n"
+findLstCandidate bind vlC' vlP' vlC@(gC:vlC_) vlB@(gB:vlB_) vlP
+ | gC == gB && found
+   = applyBindingsToLists' bind vlC' vlP' vlCrest vlP
+ | otherwise = findLstCandidate bind (gC:vlC') vlP' vlC_ vlB vlP
+ where
+  (found,vlCrest) = vlB_ `pulledFrom` vlC_
 \end{code}
 
 \subsubsection{Free Variable-List Matching}

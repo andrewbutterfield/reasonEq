@@ -21,6 +21,16 @@ hasdup :: Eq a => [a] -> Bool
 hasdup xs = xs /= nub xs
 \end{code}
 
+\subsubsection{Pulling Prefix from a List}
+\begin{code}
+pulledFrom :: Eq a => [a] -> [a] -> (Bool, [a])
+[]     `pulledFrom` ys  =  (True, ys)
+xs     `pulledFrom` []  =  (False,[])
+(x:xs) `pulledFrom` (y:ys)
+ | x == y     =  xs `pulledFrom` ys
+ | otherwise  =  (False,ys)
+\end{code}
+
 \subsection{Possible Failure Monad}
 
 \subsubsection{Datatype: Yes, But \dots}

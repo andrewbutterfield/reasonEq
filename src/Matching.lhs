@@ -1,4 +1,4 @@
-\section{Matching}
+tbvMatchtvMatch\section{Matching}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2017
 
@@ -9,7 +9,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Matching
 ( match
 , tMatch, tsMatch
-, vMatch, bvMatch, kvMatch
+, tvMatch, tkvMatch
+, vMatch, bvMatch
 , vsMatch, vlMatch
 , sMatch
 ) where
@@ -166,7 +167,7 @@ $$
 $$
 \begin{code}
 tMatch vts bind cbvs pbvs tC (Var tkP vP)
-  | tkP == termkind tC  =  vMatch vts bind cbvs pbvs tC tkP vP
+  | tkP == termkind tC  =  tvMatch vts bind cbvs pbvs tC tkP vP
 \end{code}
 
 
@@ -313,21 +314,29 @@ tsMatch _ _ _ _ _ _  =  fail "tsMatch: structural mismatch."
 \end{code}
 
 \newpage
-\subsection{Variable Matching}
+\subsection{Term-Variable Matching}
 
 We assume here that candidate term and pattern variable
 had the same \texttt{TermKind}.
 \begin{code}
-vMatch :: Monad m
+tvMatch :: Monad m
        => [VarTable] -> Binding -> CBVS -> PBVS
        -> Candidate -> TermKind -> Variable -> m Binding
 \end{code}
-We do a case split on the status of the pattern variable:
-bound, known, or arbitrary.
+First, if the candidate is a variable
+we go to do variable-on-variable matching:
 \begin{code}
-vMatch vts bind cbvs pvbs tC tkP vP
- | StdVar vP `S.member` pvbs  =  bvMatch vts bind cbvs tC vP
- | vPmr /= UnknownVar         =  kvMatch vts bind tC vPmr tkP vP
+tvMatch vts bind cbvs pbvs (Var tkC vC) tkP vP
+  = vMatch vts bind cbvs pbvs vC vP
+\end{code}
+
+Otherwise we check if the pattern is
+bound, known, or arbitrary,
+and act accordingly.
+\begin{code}
+tvMatch vts bind cbvs pvbs tC tkP vP
+ | StdVar vP `S.member` pvbs  =  fail "tvMatch: bound pattern cannot match term"
+ | vPmr /= UnknownVar         =  tkvMatch vts bind tC vPmr tkP vP
 \end{code}
 \subsubsection{Arbitrary Pattern Variable}
 $$
@@ -338,7 +347,7 @@ $$
     \beta \uplus \{ v_P \mapsto t_C \}
   }
    \quad
-   \texttt{vMatch Arbitrary}
+   \texttt{tvMatch Arbitrary}
 $$
 \begin{code}
  | otherwise                  =  bindVarToTerm vP tC bind
@@ -346,34 +355,11 @@ $$
    vPmr = lookupVarTables vts vP
 \end{code}
 
-\subsubsection{Bound Pattern Variable}
-$$
-\inferrule
-   { v_P \in B_P
-     \and
-     t_C = v_C
-     \and
-     v_C \in B_C
-   }
-   {\beta;(B_C,B_P) \vdash t_C :: v_P
-    \leadsto \beta \uplus \{ v_P \mapsto v_C \}}
-   \quad
-   \texttt{vMatch Bound-Var}
-$$
-\begin{code}
-bvMatch :: Monad m => [VarTable] -> Binding -> CBVS
-        -> Candidate -> Variable -> m Binding
--- we know vP is in pbvs
-bvMatch vts bind cbvs (Var _ vC) vP
- | StdVar vC `S.member` cbvs  =  bindVarToVar vP vC bind
- | otherwise  =  fail "bvMatch: candidate not a bound variable"
-\end{code}
-
 \newpage
 \subsubsection{Known Pattern Variable}
 
 \begin{code}
-kvMatch :: Monad m => [VarTable] -> Binding
+tkvMatch :: Monad m => [VarTable] -> Binding
        ->  Candidate -> VarMatchRole -> TermKind -> Variable -> m Binding
 -- know vP is not in pbvs, in vts, and it maps to whatP
 \end{code}
@@ -391,7 +377,7 @@ $$
    \leadsto
    \beta \uplus \{ v_P \mapsto v_P \}}
    \quad
-   \texttt{vMatch Known-Var-Refl}
+   \texttt{tvMatch Known-Var-Refl}
 $$
 $$
 \inferrule
@@ -407,11 +393,11 @@ $$
     \leadsto
     \beta \uplus \{ v_P \mapsto v_C \}}
    \quad
-   \texttt{vMatch Known-Var-Var}
+   \texttt{tvMatch Known-Var-Var}
 $$
 \begin{code}
 -- know vP is not in pbvs, in vts, and it maps to whatP
-kvMatch vts bind tC@(Var _ vC) whatP tkP vP
+tkvMatch vts bind tC@(Var _ vC) whatP tkP vP
  | vC == vP                                    =  bindVarToVar vP vP bind
  | isKnownConst whatP && tC == vmrConst whatP  =  bindVarToVar vP vC bind
 \end{code}
@@ -429,7 +415,7 @@ $$
     \leadsto
     \beta \uplus \{ v_P \mapsto t_C \}}
    \quad
-   \texttt{vMatch Known-Var-TVal}
+   \texttt{tvMatch Known-Var-TVal}
 $$
 $$
 \inferrule
@@ -445,16 +431,51 @@ $$
     \leadsto
     \beta \uplus \{ v_P \mapsto t_C \}}
    \quad
-   \texttt{vMatch Known-Var-TType}
+   \texttt{tvMatch Known-Var-TType}
 $$
 \begin{code}
 -- know vP is not in pbvs, in vts, and it maps to whatP
-kvMatch vts bind tC whatP tkP vP
+tkvMatch vts bind tC whatP tkP vP
  | isKnownConst whatP && tC == vmrConst whatP     =  bindVarToTerm vP tC bind
  | isExprKind tkP && isKnownVar whatP
    && vmrType whatP == ekType tkP                 =  bindVarToTerm vP tC bind
-kvMatch _ _ _ _ _ _ = fail "kvMatch: candidate not this known variable."
+tkvMatch _ _ _ _ _ _ = fail "tkvMatch: candidate not this known variable."
 \end{code}
+
+\newpage
+\subsection{Variable Matching}
+
+\begin{code}
+vMatch vts bind cbvs pvbs vC vP
+ | StdVar vP `S.member` pvbs  =  bvMatch vts bind cbvs vC vP
+ | vPmr /= UnknownVar         =  error "\n\tvMatch: known not yet handled"
+                               -- tkvMatch vts bind (Var tkP vC) vPmr tkP vP
+ | otherwise                  =  bindVarToVar vP vC bind
+ where
+   vPmr = lookupVarTables vts vP
+\end{code}
+
+\subsubsection{Bound Pattern Variable}
+$$
+\inferrule
+   { v_P \in B_P
+      \and
+     v_C \in B_C
+   }
+   {\beta;(B_C,B_P) \vdash v_C :: v_P
+    \leadsto \beta \uplus \{ v_P \mapsto v_C \}}
+   \quad
+   \texttt{vMatch Bound-Var}
+$$
+\begin{code}
+bvMatch :: Monad m => [VarTable] -> Binding -> CBVS
+        -> Variable -> Variable -> m Binding
+-- we know vP is in pbvs
+bvMatch vts bind cbvs vC vP
+ | StdVar vC `S.member` cbvs  =  bindVarToVar vP vC bind
+ | otherwise  =  fail "bvMatch: candidate not a bound variable"
+\end{code}
+
 
 \newpage
 \subsection{Variable-Set Matching}
@@ -569,6 +590,11 @@ findLstCandidate bind vlC' vlP' vlC@(gC:vlC_) vlB@(gB:vlB_) vlP
 
 Here we are doing variable-list matching where all of the
 pattern variables are free, \textit{i.e.}, not already in the binding.
+We do not attempt a complete solutions,
+as in fact there can be many possible bindings.
+We adopt a heuristic that simply walks the pattern list
+from left to right and tries to bind the head pattern variable
+against some prefix of the candidate list.
 \begin{code}
 vlFreeMatch :: MonadPlus mp
               => [VarTable] -> Binding
@@ -577,9 +603,43 @@ vlFreeMatch :: MonadPlus mp
               -> mp Binding
 \end{code}
 
+If both lists are empty, we are done:
+\begin{code}
+vlFreeMatch vts bind cbvs pbvs [] [] = return bind
+\end{code}
+
+If there are leftover candidate variables, we fail
+\begin{code}
+vlFreeMatch vts bind cbvs pbvs vlC []
+  = fail "vlMatch: too many candidate variables."
+\end{code}
+
+If there are leftover pattern variables,
+we suceed if they are all list-variables,
+as they can be bound to the empty variable-list.
+Otherwise we fail:
+\begin{code}
+vlFreeMatch vts bind cbvs pbvs [] (StdVar vP:_)
+  = fail "vlMatch: too many std. pattern variables."
+vlFreeMatch vts bind cbvs pbvs [] (LstVar lvP:vlP)
+  = do bind' <- bindLVarToVList lvP [] bind
+       vlFreeMatch vts bind' cbvs pbvs [] vlP
+\end{code}
+
+Standard pattern variable matches are easy.
+The head of the candidate list must be a pattern variable.
+It must also match according to the rules for variable matching.
+\begin{code}
+vlFreeMatch vts bind cbvs pbvs ((StdVar vC):vlC) ((StdVar vP):vlP)
+  = do bind' <- vMatch vts bind cbvs pbvs vC vP
+       vlFreeMatch vts bind cbvs pbvs vlC vlP
+\end{code}
+
+
+A pattern list-variable can match zero or more candidate general variables.
 \begin{code}
 vlFreeMatch vts bind cbvs pbvs vlC vlP
-  = error "\n\tvlFreeMatch NYI\n"
+  = error "\n\tvlFreeMatch NYFI\n"
 \end{code}
 
 

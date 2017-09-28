@@ -62,7 +62,7 @@ ey = EVar ArbType y
 
 
 tst_vMatchVm =
-  testGroup "vMatch (via match)"
+  testGroup "tvMatch (via match)"
       [ testCase "42 :: V x (OK)"
         ( (match [] k42 ex :: [Binding] )
           @?= bindVarToTerm x k42 emptyBinding )
@@ -89,31 +89,31 @@ vt = fromJust $ addKnownVar ok bool
 
 
 tst_vMatch =
-  testGroup "vMatch (direct)"
+  testGroup "tvMatch (direct)"
       [ testCase "V y :: x, both bound (Ok)"
-        ( (vMatch [] emptyBinding by bx ey xk x :: [Binding] )
+        ( (tvMatch [] emptyBinding by bx ey xk x :: [Binding] )
           @?= bindVarToVar x y emptyBinding )
       , testCase "V y :: x, only x bound (FAIL)"
-        ( vMatch [] emptyBinding b0 bx ey xk x @?= [] )
+        ( tvMatch [] emptyBinding b0 bx ey xk x @?= [] )
       , testCase "V y :: x, only y bound (OK)"
-        ( (vMatch [] emptyBinding by b0 ey xk x :: [Binding])
+        ( (tvMatch [] emptyBinding by b0 ey xk x :: [Binding])
           @?= bindVarToTerm x ey emptyBinding  )
       , testCase "V y :: x, both free (OK)"
-        ( (vMatch [] emptyBinding b0 b0 ey xk x :: [Binding])
+        ( (tvMatch [] emptyBinding b0 b0 ey xk x :: [Binding])
           @?= bindVarToTerm x ey emptyBinding  )
       , testCase "V ok :: ok, known (Ok)"
-        ( (vMatch [vt] emptyBinding b0 b0 eok okk ok :: [Binding] )
+        ( (tvMatch [vt] emptyBinding b0 b0 eok okk ok :: [Binding] )
           @?= bindVarToVar ok ok emptyBinding )
       , testCase "42 :: v42, known (Ok)"
-        ( (vMatch [vt] emptyBinding b0 b0 k42 v42k v42 :: [Binding] )
+        ( (tvMatch [vt] emptyBinding b0 b0 k42 v42k v42 :: [Binding] )
           @?= bindVarToTerm v42 k42 emptyBinding )
       , testCase "58 :: v42, known (FAIL)"
-        ( vMatch [vt] emptyBinding b0 b0 k58 v42k v42 @?= [] )
+        ( tvMatch [vt] emptyBinding b0 b0 k58 v42k v42 @?= [] )
       , testCase "V ok :: oK, known (Ok)"
-        ( (vMatch [vt] emptyBinding b0 b0 eok oKk oK :: [Binding] )
+        ( (tvMatch [vt] emptyBinding b0 b0 eok oKk oK :: [Binding] )
           @?= bindVarToVar oK ok emptyBinding )
       , testCase "true :: ok, known (Ok)"
-        ( (vMatch [vt] emptyBinding b0 b0 true okk ok :: [Binding] )
+        ( (tvMatch [vt] emptyBinding b0 b0 true okk ok :: [Binding] )
           @?= bindVarToTerm ok true emptyBinding )
       ]
 

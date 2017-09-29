@@ -598,6 +598,17 @@ data Term
  deriving (Eq, Ord, Show, Read)
 \end{code}
 
+\textbf{Note:}
+\textit{
+We shall need to have a correlation between some terms
+and the variables they use.
+In particular the \texttt{TermKind} of a \texttt{V} \texttt{Term}
+will have to correspond to the \texttt{VarWhat} value of the variable.
+Also in B and L all the general variables will have to agree on
+\texttt{VarWhat} (\texttt{VO},\texttt{VV},\texttt{VE},\texttt{VP}),
+or the list-variable equivalent (\texttt{LO},\texttt{LV},\texttt{LE},\texttt{LP}).
+}
+
 Kind-neutral patterns:
 \begin{code}
 pattern Val tk k           =  K tk k

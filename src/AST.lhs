@@ -229,27 +229,23 @@ We define a list-variable as a specially marked variable with the addition
 of a list of identifiers, corresponding to variable `roots'
 
 \begin{code}
-data ListVar
- = LO VarKind Identifier [Identifier]
- | LV VarKind Identifier [Identifier]
- | LE VarKind Identifier [Identifier]
- | LP VarKind Identifier [Identifier]
+newtype ListVar = LV (Variable, [Identifier])
  deriving (Eq, Ord, Show, Read)
 
-pattern ObsLVar  k i is = LO k i is
-pattern VarLVar  k i is = LV k i is
-pattern ExprLVar k i is = LE k i is
-pattern PredLVar k i is = LP k i is
+pattern ObsLVar  k i is = LV (VR (i,VO,k),is)
+pattern VarLVar  k i is = LV (VR (i,VV,k),is)
+pattern ExprLVar k i is = LV (VR (i,VE,k),is)
+pattern PredLVar k i is = LV (VR (i,VP,k),is)
 \end{code}
 
 Pre-wrapped patterns:
 \begin{code}
-pattern PreVars  i    =  LO (KD WB) i []
-pattern PostVars i    =  LO (KD WA) i []
-pattern MidVars  i n  =  LO (KD (WD n)) i []
-pattern ScriptVars i  =  LV (KD WB) i []
-pattern PreExprs i    =  LE (KD WB) i []
-pattern PrePreds i    =  LP (KD WB) i []
+pattern PreVars  i    =  LV (VR (i,VO,(KD WB)),[])
+pattern PostVars i    =  LV (VR (i,VO,(KD WA)),[])
+pattern MidVars  i n  =  LV (VR (i,VO,(KD (WD n))),[])
+pattern ScriptVars i  =  LV (VR (i,VV,(KD WB)),[])
+pattern PreExprs i    =  LV (VR (i,VE,(KD WB)),[])
+pattern PrePreds i    =  LV (VR (i,VP,(KD WB)),[])
 \end{code}
 
 Useful predicates:
@@ -260,12 +256,9 @@ isPreListVar (PreExprs _) = True
 isPreListVar (PrePreds _) = True
 isPreListVar _            = False
 
-isObsLVar (LO _ _ _) = True
-isObsLVar _ = False
-isExprLVar (LE _ _ _) = True
-isExprLVar _ = False
-isPredLVar (LP _ _ _) = True
-isPredLVar _ = False
+isObsLVar  (LV (v,_)) = isObsVar v
+isExprLVar (LV (v,_)) = isExprVar v
+isPredLVar (LV (v,_)) = isPredVar v
 \end{code}
 
 \subsubsection{List Variable test values}

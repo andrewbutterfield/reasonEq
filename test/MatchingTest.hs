@@ -57,8 +57,8 @@ tst_vMatch, tst_vMatchVm :: TF.Test
 x = PreVar $ fromJust $ ident "x"
 xk = E ArbType
 y = PreVar $ fromJust $ ident "y"
-ex = EVar ArbType x
-ey = EVar ArbType y
+ex = fromJust $ eVar ArbType x
+ey = fromJust $ eVar ArbType y
 
 
 tst_vMatchVm =
@@ -77,7 +77,7 @@ by = S.singleton $ StdVar y
 ok = PreVar $ fromJust $ ident "ok"
 bool = GivenType $ fromJust $ ident "B"
 okk = E bool
-eok = EVar bool ok
+eok = fromJust $ eVar bool ok
 true = EVal bool $ Boolean True
 v42 = Vbl (fromJust $ ident "v42") ObsV Static
 v42k = E ArbType

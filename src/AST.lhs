@@ -42,10 +42,13 @@ module AST ( VarWhat
            , Term
            , pattern Val, pattern Var, pattern Cons
            , pattern Bind, pattern Lam, pattern Sub, pattern Iter
+           , var
            , pattern EVal, pattern EVar, pattern ECons
            , pattern EBind, pattern ELam, pattern ESub, pattern EIter
+           , eVar
            , pattern PVal, pattern PVar, pattern PCons
            , pattern PBind, pattern PLam, pattern PSub, pattern PIter
+           , pVar
            , pattern Type
            , pattern E2, pattern P2
            , termkind, isExpr, isPred
@@ -605,33 +608,57 @@ or the list-variable equivalent (\texttt{LO},\texttt{LV},\texttt{LE},\texttt{LP}
 Kind-neutral patterns:
 \begin{code}
 pattern Val tk k           =  K tk k
-pattern Var tk v           =  V tk v
+pattern Var tk v          <-  V tk v
 pattern Cons tk n ts       =  C tk n ts
-pattern Bind tk n vs tm    =  B tk n vs tm
-pattern Lam tk n vl tm     =  L tk n vl tm
+pattern Bind tk n vs tm   <-  B tk n vs tm
+pattern Lam tk n vl tm    <-  L tk n vl tm
 pattern Sub tk tm s        =  S tk tm s
 pattern Iter tk na ni lvs  =  I tk na ni lvs
 \end{code}
+
+Smart constructors for variables and binders.
+\begin{code}
+var :: Monad m => TermKind -> Variable -> m Term
+var P        v@(VR (_,VP,_))             =  return $ V P v
+var tk@(E _) v@(VR (_,vw,_)) | vw /= VP  =  return $ V tk v
+var _ _  =  fail "var: TermKind/VarWhat mismatch"
+\end{code}
+
+
 Patterns for expressions:
 \begin{code}
 pattern EVal t k           =  K (E t) k
-pattern EVar t v           =  V (E t) v
+pattern EVar t v          <-  V (E t) v
 pattern ECons t n ts       =  C (E t) n ts
-pattern EBind t n vs tm    =  B (E t) n vs tm
-pattern ELam t n vl tm     =  L (E t) n vl tm
+pattern EBind t n vs tm   <-  B (E t) n vs tm
+pattern ELam t n vl tm    <-  L (E t) n vl tm
 pattern ESub t tm s        =  S (E t) tm s
 pattern EIter t na ni lvs  =  I (E t) na ni lvs
 \end{code}
+
+Smart constructors for variable and binder expressions.
+\begin{code}
+eVar t (VR (_,VP,_)) = fail "eVar: cannot be PredVar"
+eVar t v = return $ V (E t) v
+\end{code}
+
 Patterns for predicates:
 \begin{code}
 pattern PVal k             =  K P k
-pattern PVar v             =  V P v
+pattern PVar v            <-  V P v
 pattern PCons n ts         =  C P n ts
-pattern PBind n vs tm      =  B P n vs tm
-pattern PLam n vl tm       =  L P n vl tm
+pattern PBind n vs tm     <-  B P n vs tm
+pattern PLam n vl tm      <-  L P n vl tm
 pattern PSub tm s          =  S P tm s
 pattern PIter na ni lvs    =  I P na ni lvs
 \end{code}
+
+Smart constructors for variable and binder predicates.
+\begin{code}
+pVar v@(VR (_,VP,_))= return $ V P v
+pVar v  = fail "pVar: must be PredVar"
+\end{code}
+
 Pattern for embedded types:
 \begin{code}
 pattern Type t             =  ET t

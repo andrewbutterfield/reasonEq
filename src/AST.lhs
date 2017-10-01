@@ -42,13 +42,13 @@ module AST ( VarWhat
            , Term
            , pattern Val, pattern Var, pattern Cons
            , pattern Bind, pattern Lam, pattern Sub, pattern Iter
-           , var
+           , var,  eVar,  pVar
+           , bind, eBind, pBind
+           , lam,  eLam,  pLam
            , pattern EVal, pattern EVar, pattern ECons
            , pattern EBind, pattern ELam, pattern ESub, pattern EIter
-           , eVar
            , pattern PVal, pattern PVar, pattern PCons
            , pattern PBind, pattern PLam, pattern PSub, pattern PIter
-           , pVar
            , pattern Type
            , pattern E2, pattern P2
            , termkind, isExpr, isPred
@@ -185,7 +185,7 @@ pattern PreExpr  i    = VR (i, VE, (KD WB))
 pattern PostExpr i    = VR (i, VE, (KD WA))
 \end{code}
 
-Some variable predicates:
+Some variable predicates/functions:
 \begin{code}
 isPreVar :: Variable -> Bool
 isPreVar (VR (_, _, (KD WB)))  =  True
@@ -193,6 +193,8 @@ isPreVar _                     =  False
 isObsVar (VR (_, vw, _))   =  vw == VO
 isExprVar (VR (_, vw, _))  =  vw == VE
 isPredVar (VR (_, vw, _))  =  vw == VP
+
+whatVar   (VR (_, vw, _))  =  vw
 \end{code}
 
 \subsubsection{Identifier and Variable test values}
@@ -202,6 +204,8 @@ i_b = fromJust $ ident "b"
 i_e = fromJust $ ident "e"
 i_f = fromJust $ ident "f"
 i_v = fromJust $ ident "v"
+i_P = fromJust $ ident "P"
+i_Q = fromJust $ ident "Q"
 
 v_a =  PreVar    $ i_a
 v_b =  PreVar    $ i_b
@@ -213,6 +217,9 @@ v_e  = PreExpr  $ i_e
 v_f  = PreExpr  $ i_f
 v_e' = PostExpr $ i_e
 v_f' = PostExpr $ i_f
+
+v_P  = PreCond  i_P
+v_Q' = PostCond i_Q
 \end{code}
 
 \subsubsection{List Variables}
@@ -251,7 +258,7 @@ pattern PreExprs i    =  LV (VR (i,VE,(KD WB)),[])
 pattern PrePreds i    =  LV (VR (i,VP,(KD WB)),[])
 \end{code}
 
-Useful predicates:
+Useful predicates/functiond:
 \begin{code}
 isPreListVar :: ListVar -> Bool
 isPreListVar (PreVars _)  = True
@@ -262,6 +269,8 @@ isPreListVar _            = False
 isObsLVar  (LV (v,_)) = isObsVar v
 isExprLVar (LV (v,_)) = isExprVar v
 isPredLVar (LV (v,_)) = isPredVar v
+
+whatLVar (LV (v,_)) = whatVar v
 \end{code}
 
 \subsubsection{List Variable test values}
@@ -289,7 +298,7 @@ pattern LstVar lv = GL lv
 type VarList = [GenVar]
 \end{code}
 
-Some useful predicates:
+Some useful predicates/functions:
 \begin{code}
 isPreGenVar :: GenVar -> Bool
 isPreGenVar (StdVar v) = isPreVar v
@@ -301,6 +310,9 @@ isExprGVar (GV v)   =  isExprVar v
 isExprGVar (GL lv)  =  isExprLVar lv
 isPredGVar (GV v)   =  isPredVar v
 isPredGVar (GL lv)  =  isPredLVar lv
+
+whatGVar (GV v)   =  whatVar v
+whatGVar (GL lv)  =  whatLVar lv
 \end{code}
 
 Test values:
@@ -617,11 +629,50 @@ pattern Iter tk na ni lvs  =  I tk na ni lvs
 \end{code}
 
 Smart constructors for variables and binders.
+
+Variable must match term-kind.
 \begin{code}
 var :: Monad m => TermKind -> Variable -> m Term
 var P        v@(VR (_,VP,_))             =  return $ V P v
 var tk@(E _) v@(VR (_,vw,_)) | vw /= VP  =  return $ V tk v
 var _ _  =  fail "var: TermKind/VarWhat mismatch"
+eVar t v = var (E t) v
+pVar   v = var P v
+\end{code}
+
+All variables in a binder variable-set must have the same kind.
+\begin{code}
+bind tk n vs tm
+ | S.null vs  =  return tm  -- vacuous binder
+ | uniformVarSet vs  =  return $ B tk n vs tm
+ | otherwise = fail "bind: var.-set has mixed variables."
+
+eBind typ n vs tm  =  bind (E typ) n vs tm
+pBind     n vs tm  =  bind P       n vs tm
+\end{code}
+
+All variables in a lambda variable-list must have the same kind.
+\begin{code}
+lam tk n vl tm
+ | null vl  =  return tm  -- vacuous binder
+ | uniformVarList vl  =  return $ L tk n vl tm
+ | otherwise = fail "lam: var.-list has mixed variables."
+
+eLam typ n vl tm  =  lam (E typ) n vl tm
+pLam     n vl tm  =  lam P       n vl tm
+\end{code}
+
+\begin{code}
+uniformVarSet s = uniformVarList $ S.toList s
+
+uniformVarList [] = True
+uniformVarList [_] = True
+uniformVarList (gv:vl) = uvl (whatGVar gv) vl
+ where
+   uvl _ [] = True
+   uvl what (gv:vl)
+     | whatGVar gv == what  =  uvl what vl
+     | otherwise            =  False
 \end{code}
 
 
@@ -636,12 +687,6 @@ pattern ESub t tm s        =  S (E t) tm s
 pattern EIter t na ni lvs  =  I (E t) na ni lvs
 \end{code}
 
-Smart constructors for variable and binder expressions.
-\begin{code}
-eVar t (VR (_,VP,_)) = fail "eVar: cannot be PredVar"
-eVar t v = return $ V (E t) v
-\end{code}
-
 Patterns for predicates:
 \begin{code}
 pattern PVal k             =  K P k
@@ -653,11 +698,6 @@ pattern PSub tm s          =  S P tm s
 pattern PIter na ni lvs    =  I P na ni lvs
 \end{code}
 
-Smart constructors for variable and binder predicates.
-\begin{code}
-pVar v@(VR (_,VP,_))= return $ V P v
-pVar v  = fail "pVar: must be PredVar"
-\end{code}
 
 Pattern for embedded types:
 \begin{code}
@@ -691,6 +731,81 @@ We can represent these using this proposed term concept,
 as values of type \verb"Txt", or as terms with modified names.
 They don't need special handling or representation here.
 
+\subsubsection{Term Tests}
+
+Test values:
+\begin{code}
+lv_a = ObsLVar  KS i_a []
+lv_b = VarLVar  KS i_b []
+lv_e = ExprLVar KS i_e []
+lv_P = PredLVar KS i_P []
+
+t42 = Val (E ArbType) $ VI 42
+n = fromJust $ ident "n"
+\end{code}
+
+We need to test the variable and binder smart constructors
+\begin{code}
+varConstructTests  = testGroup "AST.var,eVar,pVar"
+ [ testCase "var P P (Ok)"
+   ( var P v_P  @?= Just (V P (VR(i_P,VP,(KD WB)))) )
+ , testCase "var (E ArbType) P (Fail)"
+   ( var (E ArbType) v_P  @?= Nothing )
+ , testCase "var P a (Fail)"
+   ( var P v_a  @?= Nothing )
+ , testCase "var (E ArbType) a (Ok)"
+   ( var (E ArbType) v_a
+      @?= Just (V (E ArbType) (VR(i_a,VO,(KD WB)))) )
+ , testCase "eVar tarb P (Fail)" ( eVar ArbType v_P  @?= Nothing )
+ , testCase "eVar tarb a (Ok)"
+   ( eVar ArbType v_a @?= Just (V (E ArbType) (VR(i_a,VO,(KD WB)))) )
+ , testCase "pVar a (Fail)" ( pVar v_a  @?= Nothing )
+ , testCase "pVar P (Ok)"
+   ( pVar v_P @?= Just (V P (VR(i_P,VP,(KD WB)))) )
+ ]
+
+bindConstructTests  =  testGroup "AST.bind"
+ [ testCase "bind P n {} t42 (Ok)"
+   ( bind P n S.empty t42 @?= Just t42 )
+ , testCase "bind P n {a} t42 (Ok)"
+   ( bind P n (S.fromList [gv_a]) t42
+     @?= Just (B P n (S.fromList [gv_a]) t42) )
+ , testCase "bind P n {a$} t42 (Ok)"
+   ( bind P n (S.fromList [LstVar lv_a]) t42
+     @?= Just (B P n (S.fromList [LstVar lv_a]) t42) )
+ , testCase "bind P n {a,a$} t42 (Ok)"
+   ( bind P n (S.fromList [gv_a,LstVar lv_a]) t42
+     @?= Just (B P n (S.fromList [gv_a,LstVar lv_a]) t42) )
+ , testCase "bind P n {a,e$} t42 (Fail)"
+   ( bind P n (S.fromList [gv_a,LstVar lv_e]) t42 @?= Nothing )
+ , testCase "bind P n {e$,a} t42 (Fail)"
+   ( bind P n (S.fromList [LstVar lv_e,gv_a]) t42 @?= Nothing )
+ , testCase "bind P n {a,b,e$} t42 (Fail)"
+   ( bind P n (S.fromList [gv_a,gv_b,LstVar lv_e]) t42 @?= Nothing )
+ ]
+
+lamConstructTests  =  testGroup "AST.lam"
+ [ testCase "lam P n [] t42 (Ok)"
+   ( lam P n [] t42 @?= Just t42 )
+ , testCase "lam P n [a] t42 (Ok)"
+   ( lam P n [gv_a] t42 @?= Just (L P n [gv_a] t42) )
+ , testCase "lam P n [a$] t42 (Ok)"
+   ( lam P n [LstVar lv_a] t42
+     @?= Just (L P n [LstVar lv_a] t42) )
+ , testCase "lam P n [a,a$] t42 (Ok)"
+   ( lam P n [gv_a,LstVar lv_a] t42
+     @?= Just (L P n [gv_a,LstVar lv_a] t42) )
+ , testCase "lam P n [a,e$] t42 (Fail)"
+   ( lam P n [gv_a,LstVar lv_e] t42 @?= Nothing )
+ , testCase "lam P n [e$,a] t42 (Fail)"
+   ( lam P n [LstVar lv_e,gv_a] t42 @?= Nothing )
+ , testCase "lam P n [a,b,e$] t42 (Fail)"
+   ( lam P n [gv_a,gv_b,LstVar lv_e] t42 @?= Nothing )
+ ]
+
+termConstructTests  =  testGroup "Term Smart Constructors"
+  [ varConstructTests, bindConstructTests,lamConstructTests ]
+\end{code}
 
 \newpage
 \subsection{Side-Conditions}
@@ -1138,6 +1253,7 @@ int_tst_AST :: [TF.Test]
 int_tst_AST
  = [ testGroup "\nAST Internal"
      [ substnTests
+     , termConstructTests
      , varSCTests
      , sidecondTests
      ]

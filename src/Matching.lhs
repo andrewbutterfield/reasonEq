@@ -592,7 +592,7 @@ already bound, and then search for what they are bound to, in the candidate
 list.
 We remove both, and continue.
 
-We use tail-recursion and acumulate the un-bound (or ``free'') part of both
+We use tail-recursion and accumulate the un-bound (or ``free'') part of both
 lists.
 \begin{code}
 applyBindingsToLists :: MonadPlus mp
@@ -726,8 +726,33 @@ sMatch vts bindT cbvs pbvs subC subP = error "sMatch: N.Y.I"
 \newpage
 \subsection{Sub-Typing}
 
+No surprises here.
 \begin{code}
-isSubTypeOf :: Type -> Type -> Bool  
+isSubTypeOf :: Type -> Type -> Bool
 _ `isSubTypeOf` ArbType  =  True
 ArbType `isSubTypeOf` _  =  False
+_ `isSubTypeOf` (TypeVar _)  =  True
+(TypeApp i1 ts1) `isSubTypeOf` (TypeApp i2 ts2)
+ | i1 == i2  =  ts1 `areSubTypesOf` ts2
+(DataType i1 fs1) `isSubTypeOf` (DataType i2 fs2)
+ | i1 == i2  =  fs1 `areSubFieldsOf` fs2
+(FunType tf1 ta1) `isSubTypeOf` (FunType tf2 ta2) -- tf contravariant !
+   = tf2 `isSubTypeOf` tf1 && ta1 `isSubTypeOf` ta2
+(GivenType i1) `isSubTypeOf` (GivenType i2)  = i1 == i2
+_ `isSubTypeOf` _ = False
+\end{code}
+
+\begin{code}
+areSubTypesOf :: [Type] -> [Type] -> Bool
+[]       `areSubTypesOf` []        =  True
+(t1:ts1) `areSubTypesOf` (t2:ts2)  =  t1 `isSubTypeOf` t2 && ts1 `areSubTypesOf` ts2
+_        `areSubTypesOf` _         =  False
+\end{code}
+
+\begin{code}
+areSubFieldsOf :: [(Identifier,[Type])] -> [(Identifier,[Type])] -> Bool
+[] `areSubFieldsOf` []  =  True
+((i1,ts1):fs1) `areSubFieldsOf` ((i2,ts2):fs2)
+ | i1 == i2             =  ts1 `areSubTypesOf` ts2 && fs1 `areSubFieldsOf` fs2
+_ `areSubFieldsOf` _    =  False
 \end{code}

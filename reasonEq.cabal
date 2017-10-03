@@ -23,6 +23,7 @@ library
                      , Matching
                      , Syntax
                      , Builder
+                     , TRYOUT
   build-depends:       base >= 4.7 && < 5
                      , containers
                      -- we need to support internal tests for some modules

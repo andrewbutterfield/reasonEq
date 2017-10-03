@@ -580,9 +580,9 @@ resulting in a smaller ``freer'' problem.
 This can then be solved in turn.
 \begin{code}
 -- vlC `subset` cbvs && vlP `subset` pbvc
-vlMatch vts bind cbvs pbvc vlC vlP
+vlMatch vts bind cbvs pbvs vlC vlP
   = do (vlC',vlP') <- applyBindingsToLists bind vlC vlP
-       vlFreeMatch vts bind cbvs pbvc vlC' vlP'
+       vlFreeMatch vts bind cbvs pbvs vlC' vlP'
 \end{code}
 
 \subsubsection{Applying Bindings to Lists}
@@ -705,16 +705,33 @@ It must also match according to the rules for variable matching.
 \begin{code}
 vlFreeMatch vts bind cbvs pbvs ((StdVar vC):vlC) ((StdVar vP):vlP)
   = do bind' <- vMatch vts bind cbvs pbvs vC vP
-       vlFreeMatch vts bind cbvs pbvs vlC vlP
+       vlFreeMatch vts bind' cbvs pbvs vlC vlP
+vlFreeMatch vts bind cbvs pbvs vlC ((StdVar _):_)
+  = fail "vlMatch: std pattern cannot match list candidate."
 \end{code}
 
 
 A pattern list-variable can match zero or more candidate general variables.
+So here we come face-to-face with non-determinism.
+For now we simply attempt to match by letting the list-variable
+match the next $n$ candidate variables, for $n$ in the range $0\dots N$,
+for some fixed $N$.
 \begin{code}
-vlFreeMatch vts bind cbvs pbvs vlC vlP
-  = error "\n\tvlFreeMatch NYFI\n"
+vlFreeMatch vts bind cbvs pbvs vlC ((LstVar lvP):vlP)
+  = vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 0
+    `mplus`
+    vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 1
+    `mplus`
+    vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 2
 \end{code}
+For now, we take $N=2$.
 
+\begin{code}
+vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP n
+ = do bind' <- bindLVarToVList lvP firstnC bind
+      vlFreeMatch vts bind' cbvs pbvs restC vlP
+ where (firstnC,restC) = splitAt n vlC
+\end{code}
 
 \newpage
 \subsection{Substitution Matching}

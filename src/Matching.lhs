@@ -1,4 +1,4 @@
-tbvMatchtvMatch\section{Matching}
+\section{Matching}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2017
 
@@ -127,17 +127,32 @@ $$
 $$
 \begin{code}
 match :: MonadPlus mp => [VarTable] -> Candidate -> Pattern -> mp Binding
-match vts c p = tMatch vts emptyBinding noBVS noBVS c p
+match vts c p  =  tMatch vts emptyBinding noBVS noBVS c p
 \end{code}
 
 \subsection{Term Matching}
 
-Term-matching is defined inductively over the pattern type.
 \begin{code}
-tMatch :: MonadPlus mp
-       => [VarTable] -> Binding -> CBVS -> PBVS
-       -> Candidate -> Pattern -> mp Binding
+tMatch, tMatch' ::
+  MonadPlus mp => [VarTable] -> Binding -> CBVS -> PBVS
+               -> Candidate -> Pattern -> mp Binding
 \end{code}
+
+We note that the \texttt{TermKind} of pattern and candidate must match.
+Either both are predicates,
+or both are expressions with the type of the candidate
+being an sub-type of the pattern.
+\begin{code}
+tMatch vts bind cbvs pbvs tC tP
+ = case (termkind tC, termkind tP) of
+    (P,P)                       ->  tMatch' vts bind cbvs pbvs tC tP
+    (E typC, E typP)
+      | typC `isSubTypeOf` typP   ->  tMatch' vts bind cbvs pbvs tC tP
+    _ -> fail "tMatch: incompatible termkinds."
+\end{code}
+
+Term-matching is defined inductively over the pattern type.
+
 We start with the simple value and structural composite matches,
 and then proceed to look at variable, binder and substitution patterns.
 
@@ -151,7 +166,7 @@ $$
    \texttt{tMatch Val}
 $$
 \begin{code}
-tMatch _ bind _ _ kC@(Val _ _) kP@(Val _ _)
+tMatch' _ bind _ _ kC@(Val _ _) kP@(Val _ _)
  | kC == kP  =  return bind
 \end{code}
 
@@ -166,7 +181,7 @@ $$
    \texttt{tMatch Var}
 $$
 \begin{code}
-tMatch vts bind cbvs pbvs tC (Var tkP vP)
+tMatch' vts bind cbvs pbvs tC (Var tkP vP)
   | tkP == termkind tC  =  tvMatch vts bind cbvs pbvs tC tkP vP
 \end{code}
 
@@ -186,7 +201,7 @@ $$
 $$
 Here $ts_X = \langle t_{X_1}, t_{X_2}, \dots t_{X_n} \rangle$.
 \begin{code}
-tMatch vts bind cbvs pbvs (Cons tkC nC tsC) (Cons tkP nP tsP)
+tMatch' vts bind cbvs pbvs (Cons tkC nC tsC) (Cons tkP nP tsP)
  | tkC == tkP && nC == nP  =  tsMatch vts bind cbvs pbvs tsC tsP
 \end{code}
 
@@ -208,7 +223,7 @@ $$
    \texttt{tMatch Binding}
 $$
 \begin{code}
-tMatch vts bind cbvs pbvs (Bind tkC nC vsC tC) (Bind tkP nP vsP tP)
+tMatch' vts bind cbvs pbvs (Bind tkC nC vsC tC) (Bind tkP nP vsP tP)
   | tkP == tkC && nC == nP
     =  do let cbvs' = vsC `addBoundVarSet` cbvs
           let pbvs' = vsP `addBoundVarSet` pbvs
@@ -234,7 +249,7 @@ $$
    \texttt{tMatch Binding}
 $$
 \begin{code}
-tMatch vts bind cbvs pbvs (Lam tkC nC vlC tC) (Lam tkP nP vlP tP)
+tMatch' vts bind cbvs pbvs (Lam tkC nC vlC tC) (Lam tkP nP vlP tP)
   | tkP == tkC && nC == nP
     =  do let cbvs' = vlC `addBoundVarList` cbvs
           let pbvs' = vlP `addBoundVarList` pbvs
@@ -261,7 +276,7 @@ $$
    \texttt{tMatch Subst}
 $$
 \begin{code}
-tMatch vts bind cbvs pbvs (Sub tkC tC subC) (Sub tkP tP subP)
+tMatch' vts bind cbvs pbvs (Sub tkC tC subC) (Sub tkP tP subP)
   | tkP == tkC
     =  do bindT  <-  tMatch vts bind cbvs pbvs tC tP
           sMatch vts bindT cbvs pbvs subC subP
@@ -285,17 +300,17 @@ $$
 $$
 Plus a more complicated rule !
 \begin{code}
-tMatch vts bind cbvs pbvs (Iter tkC naC niC lvsC) (Iter tkP naP niP lvsP)
+tMatch' vts bind cbvs pbvs (Iter tkC naC niC lvsC) (Iter tkP naP niP lvsP)
   | tkP == tkC && naC == naP && niC == niP
     =  error "\n\ttMatch Iter :: Iter N.Y.I."
-tMatch vts bind cbvs pbvs tC (Iter tkP naP niP lvsP)
+tMatch' vts bind cbvs pbvs tC (Iter tkP naP niP lvsP)
   | tkP == termkind tC
     =  error "\n\ttMatch non-Iter :: Iter N.Y.I."
 \end{code}
 
 Any other case results in failure:
 \begin{code}
-tMatch _ _ _ _ _ _  =  fail "tMatch: structural mismatch."
+tMatch' _ _ _ _ _ _  =  fail "tMatch: structural mismatch."
 \end{code}
 
 \subsection{Term-List Matching}
@@ -323,6 +338,42 @@ tvMatch :: Monad m
        => [VarTable] -> Binding -> CBVS -> PBVS
        -> Candidate -> TermKind -> Variable -> m Binding
 \end{code}
+
+The rules regarding suitable matches for pattern variables
+depend on what class of variable we have (\texttt{VarWhat})
+and what we know about them (\texttt{VarMatchRole}).
+
+First, rules based on classification:
+
+\begin{tabular}{|c|c|c|}
+\hline
+Class & \texttt{VarWhat} & Allowed Candidates
+\\\hline
+ Observation & \texttt{ObsV} & Observation, Expression
+\\\hline
+ Variable & \texttt{VarV} & Variable
+\\\hline
+ Expression & \texttt{ExprV} & Expression
+\\\hline
+  Predicate & \texttt{PredV} & Predicate
+\\\hline
+\end{tabular}
+
+Next, rules based on knowledge:
+
+\begin{tabular}{|c|c|c|}
+\hline
+Knowledge & \texttt{VarMatchRole} & Allowed Candidates
+\\\hline
+Unknown & \texttt{UnknownVar} & Anything as per classification.
+\\\hline
+Known variable & \texttt{KnownVar} & Itself only
+\\\hline
+Known constant & \texttt{KnownConst} & Itself or the constant
+\\\hline
+\end{tabular}
+
+
 First, if the candidate is a variable
 we go to do variable-on-variable matching:
 \begin{code}
@@ -334,8 +385,9 @@ Otherwise we check if the pattern is
 bound, known, or arbitrary,
 and act accordingly.
 \begin{code}
-tvMatch vts bind cbvs pvbs tC tkP vP
- | StdVar vP `S.member` pvbs  =  fail "tvMatch: bound pattern cannot match term"
+tvMatch vts bind cbvs pvbs tC tkP vP@(Vbl _ vw _)
+ | vw == VarV                 =  fail "tvMatch: var-variable cannot match term."
+ | StdVar vP `S.member` pvbs  =  fail "tvMatch: bound pattern cannot match term."
  | vPmr /= UnknownVar         =  tkvMatch vts bind tC vPmr tkP vP
 \end{code}
 \subsubsection{Arbitrary Pattern Variable}
@@ -446,13 +498,32 @@ tkvMatch _ _ _ _ _ _ = fail "tkvMatch: candidate not this known variable."
 \subsection{Variable Matching}
 
 \begin{code}
-vMatch vts bind cbvs pvbs vC vP
- | StdVar vP `S.member` pvbs  =  bvMatch vts bind cbvs vC vP
- | vPmr /= UnknownVar         =  error "\n\tvMatch: known not yet handled"
-                               -- tkvMatch vts bind (Var tkP vC) vPmr tkP vP
- | otherwise                  =  bindVarToVar vP vC bind
+vMatch :: Monad m
+       => [VarTable] -> Binding -> CBVS -> PBVS
+       -> Variable -> Variable
+       -> m Binding
+\end{code}
+
+Observation pattern variables may match either
+observation or expression variables,
+while other variable classes may only match their own class.
+\begin{code}
+vMatch vts bind cbvs pvbs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
+ | StdVar vP `S.member` pvbs    =  bvMatch vts bind cbvs vC vP
+ | vC == vP                     =  bindVarToVar vP vC bind
+ | vwC == vwP                   =  vMatch' (lookupVarTables vts vP) vC vP
+ | vwC == ExprV && vwP == ObsV  =  vMatch' (lookupVarTables vts vP) vC vP
+ | otherwise                    =  fail "vMatch: class mismatch"
  where
-   vPmr = lookupVarTables vts vP
+\end{code}
+
+Variable classes are compatible, but is the pattern ``known''?
+\begin{code}
+   -- vC /= vP
+   vMatch' UnknownVar vC vP              =  bindVarToVar vP vC bind
+   vMatch' (KnownVar typ) vC vP          =  bindVarToVar vP vC bind  -- unsure!!
+   vMatch' (KnownConst (Var _ v)) vC vP  =  bindVarToVar vP vC bind
+   vMatch' _ _ _  =  fail "vMatch: knowledge mismatch."
 \end{code}
 
 \subsubsection{Bound Pattern Variable}
@@ -467,13 +538,15 @@ $$
    \quad
    \texttt{vMatch Bound-Var}
 $$
+In addition, both variables must have the same class.
 \begin{code}
 bvMatch :: Monad m => [VarTable] -> Binding -> CBVS
         -> Variable -> Variable -> m Binding
 -- we know vP is in pbvs
-bvMatch vts bind cbvs vC vP
+bvMatch vts bind cbvs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
+ | vwC /= vwP  =  fail "bvMatch: variable class mismatch."
  | StdVar vC `S.member` cbvs  =  bindVarToVar vP vC bind
- | otherwise  =  fail "bvMatch: candidate not a bound variable"
+ | otherwise  =  fail "bvMatch: candidate not a bound variable."
 \end{code}
 
 
@@ -648,4 +721,13 @@ vlFreeMatch vts bind cbvs pbvs vlC vlP
 
 \begin{code}
 sMatch vts bindT cbvs pbvs subC subP = error "sMatch: N.Y.I"
+\end{code}
+
+\newpage
+\subsection{Sub-Typing}
+
+\begin{code}
+isSubTypeOf :: Type -> Type -> Bool  
+_ `isSubTypeOf` ArbType  =  True
+ArbType `isSubTypeOf` _  =  False
 \end{code}

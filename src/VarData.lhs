@@ -48,7 +48,7 @@ can belong to one of three categories as regards matching:
     and can only match itself.
   \item[Unknown]
     Nothing specific is known about the variable.
-    It can match anything of the appropriate flavour.
+    It can match anything of the appropriate ``flavour''.
 \end{description}
 We refer, simply,
 to variables in the first two categories above as ``known'',

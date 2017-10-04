@@ -339,41 +339,6 @@ tvMatch :: Monad m
        -> Candidate -> TermKind -> Variable -> m Binding
 \end{code}
 
-The rules regarding suitable matches for pattern variables
-depend on what class of variable we have (\texttt{VarWhat})
-and what we know about them (\texttt{VarMatchRole}).
-
-First, rules based on classification:
-
-\begin{tabular}{|c|c|c|}
-\hline
-Class & \texttt{VarWhat} & Allowed Candidates
-\\\hline
- Observation & \texttt{ObsV} & Observation, Expression
-\\\hline
- Variable & \texttt{VarV} & Variable
-\\\hline
- Expression & \texttt{ExprV} & Expression
-\\\hline
-  Predicate & \texttt{PredV} & Predicate
-\\\hline
-\end{tabular}
-
-Next, rules based on knowledge:
-
-\begin{tabular}{|c|c|c|}
-\hline
-Knowledge & \texttt{VarMatchRole} & Allowed Candidates
-\\\hline
-Unknown & \texttt{UnknownVar} & Anything as per classification.
-\\\hline
-Known variable & \texttt{KnownVar} & Itself only
-\\\hline
-Known constant & \texttt{KnownConst} & Itself or the constant
-\\\hline
-\end{tabular}
-
-
 First, if the candidate is a variable
 we go to do variable-on-variable matching:
 \begin{code}
@@ -497,6 +462,62 @@ tkvMatch _ _ _ _ _ _ = fail "tkvMatch: candidate not this known variable."
 \newpage
 \subsection{Variable Matching}
 
+The rules regarding suitable matches for pattern variables
+depend on what class of variable we have (\texttt{VarWhat})
+and what we know about them (\texttt{VarMatchRole}).
+
+First, rules based on classification:
+
+\begin{tabular}{|c|c|c|}
+\hline
+Class & \texttt{VarWhat} & Allowed Candidates
+\\\hline
+ Observation & \texttt{ObsV} & Observation, Expression
+\\\hline
+ Variable & \texttt{VarV} & Variable
+\\\hline
+ Expression & \texttt{ExprV} & Expression
+\\\hline
+  Predicate & \texttt{PredV} & Predicate
+\\\hline
+\end{tabular}
+
+Next, rules based on knowledge:
+
+\begin{tabular}{|c|c|c|}
+\hline
+Knowledge & \texttt{VarMatchRole} & Allowed Candidates
+\\\hline
+Unknown & \texttt{UnknownVar} & Anything as per classification.
+\\\hline
+Known variable & \texttt{KnownVar} & Itself only
+\\\hline
+Known constant & \texttt{KnownConst} & Itself or the constant
+\\\hline
+\end{tabular}
+
+Finally, rules based on the static or dynamic nature of known variables,
+that do not apply if the variable is bound.
+\begin{itemize}
+  \item Static variables can match static or dynamic variables.
+  \item Dynamic variables can only match those that have the
+  same \texttt{VarWhen} value,
+  except that the string in \texttt{During} may differ.
+\end{itemize}
+\begin{code}
+whenCompVar :: Variable -> Variable -> Bool
+whenCompVar (Vbl _ _ vkC) (Vbl _ _ vkP) = whenCompKind vkC vkP
+
+whenCompKind :: VarKind -> VarKind -> Bool  -- candidate, pattern
+whenCompKind _                    Static                =  True
+whenCompKind (Dynamic Before)     (Dynamic Before)      =  True
+whenCompKind (Dynamic (During _)) (Dynamic (During _))  =  True
+whenCompKind (Dynamic After)      (Dynamic After)       =  True
+whenCompKind _                    _                     =  False
+\end{code}
+
+Now, onto variable matching:
+
 \begin{code}
 vMatch :: Monad m
        => [VarTable] -> Binding -> CBVS -> PBVS
@@ -519,11 +540,13 @@ vMatch vts bind cbvs pvbs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
 
 Variable classes are compatible, but is the pattern ``known''?
 \begin{code}
-   -- vC /= vP
-   vMatch' UnknownVar vC vP              =  bindVarToVar vP vC bind
-   vMatch' (KnownVar typ) vC vP          =  bindVarToVar vP vC bind  -- unsure!!
-   vMatch' (KnownConst (Var _ v)) vC vP  =  bindVarToVar vP vC bind
-   vMatch' _ _ _  =  fail "vMatch: knowledge mismatch."
+  -- vC /= vP
+  vMatch' UnknownVar vC vP               =  bindVarToVar vP vC bind
+  vMatch' (KnownVar typ) vC vP
+    | whenCompVar vC vP                  =  bindVarToVar vP vC bind
+  vMatch' (KnownConst (Var _ v)) vC vP
+    | vC == v                            =  bindVarToVar vP vC bind
+  vMatch' _ _ _  =  fail "vMatch: knowledge mismatch."
 \end{code}
 
 \subsubsection{Bound Pattern Variable}
@@ -706,6 +729,7 @@ So here we come face-to-face with non-determinism.
 For now we simply attempt to match by letting the list-variable
 match the next $n$ candidate variables, for $n$ in the range $0\dots N$,
 for some fixed $N$.
+For now, we take $N=2$.
 \begin{code}
 vlFreeMatch vts bind cbvs pbvs vlC ((LstVar lvP):vlP)
   = vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 0
@@ -714,7 +738,6 @@ vlFreeMatch vts bind cbvs pbvs vlC ((LstVar lvP):vlP)
     `mplus`
     vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 2
 \end{code}
-For now, we take $N=2$.
 
 \begin{code}
 vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP n
@@ -786,7 +809,7 @@ applyBindingsToSets' bind vlP' vsC (gP@(LstVar lvP):vlP)
 
 Here we are doing variable-set matching where all of the
 pattern variables are free, \textit{i.e.}, not already in the binding.
-We do not attempt a complete solutions,
+We do not attempt a complete solution,
 as in fact there can be many possible bindings.
 \begin{code}
 vsFreeMatch :: MonadPlus mp
@@ -807,6 +830,16 @@ vsFreeMatch vts bind cbvs pbvs vsC vsP
                  else fail "vsMatch: too many std. pattern variables."
 \end{code}
 
+If both sets are non-empty,
+we have potentially non-deterministic outcomes.
+First we try to pattern-match the standard variables.
+Then we will attempt the list-variable matching.
+\begin{code}
+ | otherwise = vsFreeStdMatch vts bind cbvs pbvs lvsC lvsP svsC svsP
+ where
+   (lvsC, svsC) = S.partition isLstV vsC
+   (lvsP, svsP) = S.partition isLstV vsP
+\end{code}
 
 \begin{code}
 bindLVarSetToNull bind [] = return bind
@@ -814,6 +847,19 @@ bindLVarSetToNull bind ((LstVar lv):vl)
  = do bind' <- bindLVarToVList lv [] bind
       bindLVarSetToNull bind' vl
 bindLVarSetToNull _ (_:_) = fail "bindLVarSetToNull: std. variables not allowed."
+\end{code}
+
+First, pairing up very standard pattern variable
+with one standard candidate variable,
+if possible.
+First we break down both sets into variables of the four various
+classifications,
+and check their sizes.
+We simply sort all sets and match in order, for now.
+\begin{code}
+vsFreeStdMatch vts bind cbvs pbvs lvsC lvsP svsC svsP
+ | S.size svsP > S.size svsC = fail "vsMatch: too many std. pattern variables."
+ | otherwise = error "\n\t vsFreeStdMatch NYFI\n"
 \end{code}
 
 \newpage

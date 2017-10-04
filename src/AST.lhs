@@ -10,6 +10,7 @@ module AST ( VarWhat
            , pattern ObsV, pattern VarV, pattern ExprV, pattern PredV
            , VarWhen
            , pattern Before, pattern During, pattern After
+           , VarKind
            , pattern Static, pattern Dynamic
            , Variable
            , pattern Vbl

@@ -551,16 +551,6 @@ bvMatch vts bind cbvs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
 
 
 \newpage
-\subsection{Variable-Set Matching}
-
-\begin{code}
-vsMatch :: MonadPlus mp => [VarTable] -> Binding -> CBVS -> PBVS
-        -> VarSet -> VarSet -> mp Binding
--- vsC `subset` cbvs && vsP `subset` pbvc
-vsMatch vts bind cbvs pbvc vsC vsP  = error "\n\tvsMatch: N.Y.I."
-\end{code}
-
-\newpage
 \subsection{Variable-List Matching}
 
 \begin{code}
@@ -731,6 +721,99 @@ vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP n
  = do bind' <- bindLVarToVList lvP firstnC bind
       vlFreeMatch vts bind' cbvs pbvs restC vlP
  where (firstnC,restC) = splitAt n vlC
+\end{code}
+
+\newpage
+\subsection{Variable-Set Matching}
+
+We follow a similar pattern to variable-list matching.
+First apply any bindings we have, and then try to match what is left.
+The key difference here, obviously, is that order does not matter.
+\begin{code}
+vsMatch :: MonadPlus mp => [VarTable] -> Binding -> CBVS -> PBVS
+        -> VarSet -> VarSet -> mp Binding
+-- vsC `subset` cbvs && vsP `subset` pbvc
+vsMatch vts bind cbvs pbvc vsC vsP
+  = do (vsC',vsP') <- applyBindingsToSets bind vsC vsP
+       vsFreeMatch vts bind cbvs pbvc vsC' vsP'
+\end{code}
+
+\subsubsection{Applying Bindings to Sets}
+
+\begin{code}
+applyBindingsToSets
+  :: MonadPlus mp
+  => Binding -> VarSet -> VarSet -> mp (VarSet,VarSet)
+applyBindingsToSets bind vsC vsP
+ = applyBindingsToSets' bind [] vsC $ S.toList vsP
+
+applyBindingsToSets'
+  :: MonadPlus mp
+  => Binding -> VarList -> VarSet -> VarList -> mp (VarSet,VarSet)
+\end{code}
+
+Pattern list (set) empty, return the leftovers
+\begin{code}
+applyBindingsToSets' bind vlP' vsC [] = return (vsC,S.fromList vlP')
+\end{code}
+
+First pattern variable is standard:
+\begin{code}
+applyBindingsToSets' bind vlP' vsC (gP@(StdVar vP):vlP)
+ = case lookupBind bind vP of
+    Nothing -> applyBindingsToSets' bind (gP:vlP') vsC vlP
+    Just (BindTerm _) -> fail "vsMatch: pattern var already bound to term."
+    Just (BindVar vB)
+     -> let gB = StdVar vB in
+        if gB `S.member` vsC
+        then applyBindingsToSets' bind vlP' (S.delete gB vsC) vlP
+        else fail "vsMatch: std-pattern var's binding not in candidate set."
+\end{code}
+
+First pattern variable is a list-variable:
+\begin{code}
+applyBindingsToSets' bind vlP' vsC (gP@(LstVar lvP):vlP)
+ = case lookupLstBind bind lvP of
+    Nothing -> applyBindingsToSets' bind (gP:vlP') vsC vlP
+    Just vlB
+     -> let vsB = S.fromList vlB in
+        if vsB `S.isSubsetOf` vsC
+        then applyBindingsToSets' bind vlP' ((S.\\) vsC vsB) vlP
+        else fail "vsMatch: pattern list-var's binding not in candidate set."
+\end{code}
+
+\subsubsection{Free Variable-Set Matching}
+
+Here we are doing variable-set matching where all of the
+pattern variables are free, \textit{i.e.}, not already in the binding.
+We do not attempt a complete solutions,
+as in fact there can be many possible bindings.
+\begin{code}
+vsFreeMatch :: MonadPlus mp
+              => [VarTable] -> Binding
+              -> CBVS -> PBVS
+              -> VarSet -> VarSet
+              -> mp Binding
+\end{code}
+
+If one of both sets are empty then we can easily resolve matters,
+\begin{code}
+vsFreeMatch vts bind cbvs pbvs vsC vsP
+ | S.null vsP  = if S.null vsC
+                 then return bind
+                 else fail "vsMatch: too many candidate variables."
+ | S.null vsC  = if S.null $ S.filter isStdV vsP
+                 then bindLVarSetToNull bind (S.toList vsP)
+                 else fail "vsMatch: too many std. pattern variables."
+\end{code}
+
+
+\begin{code}
+bindLVarSetToNull bind [] = return bind
+bindLVarSetToNull bind ((LstVar lv):vl)
+ = do bind' <- bindLVarToVList lv [] bind
+      bindLVarSetToNull bind' vl
+bindLVarSetToNull _ (_:_) = fail "bindLVarSetToNull: std. variables not allowed."
 \end{code}
 
 \newpage

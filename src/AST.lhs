@@ -26,6 +26,7 @@ module AST ( VarWhat
            , pattern PreExprs, pattern PrePreds
            , isPreListVar, isObsLVar, isExprLVar, isPredLVar
            , GenVar, pattern StdVar, pattern LstVar
+           , isStdV, isLstV
            , isPreGenVar, isObsGVar, isExprGVar, isPredGVar
            , VarList
            , VarSet
@@ -300,6 +301,9 @@ type VarList = [GenVar]
 
 Some useful predicates/functions:
 \begin{code}
+isStdV (StdVar _)  =  True ;  isStdV _  =  False
+isLstV (LstVar _)  =  True ;  isLstV _  =  False
+
 isPreGenVar :: GenVar -> Bool
 isPreGenVar (StdVar v) = isPreVar v
 isPreGenVar (LstVar lv) = isPreListVar lv

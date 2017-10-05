@@ -20,15 +20,18 @@ module AST ( VarWhat
            , pattern PreCond, pattern PostCond
            , pattern PreExpr, pattern PostExpr
            , isPreVar, isObsVar, isExprVar, isPredVar
+           , whatVar, whenVar
            , ListVar
            , pattern ObsLVar, pattern VarLVar, pattern ExprLVar, pattern PredLVar
            , pattern PreVars, pattern PostVars, pattern MidVars
            , pattern ScriptVars
            , pattern PreExprs, pattern PrePreds
            , isPreListVar, isObsLVar, isExprLVar, isPredLVar
+           , whatLVar, whenLVar
            , GenVar, pattern StdVar, pattern LstVar
            , isStdV, isLstV
            , isPreGenVar, isObsGVar, isExprGVar, isPredGVar
+           , whatGVar, whenGVar
            , VarList
            , VarSet
            , isPreVarSet
@@ -196,7 +199,8 @@ isObsVar (VR (_, vw, _))   =  vw == VO
 isExprVar (VR (_, vw, _))  =  vw == VE
 isPredVar (VR (_, vw, _))  =  vw == VP
 
-whatVar   (VR (_, vw, _))  =  vw
+whatVar (VR (_, vw, _))  =  vw
+whenVar (VR (_, _, vw))  =  vw
 \end{code}
 
 \subsubsection{Identifier and Variable test values}
@@ -273,6 +277,7 @@ isExprLVar (LV (v,_)) = isExprVar v
 isPredLVar (LV (v,_)) = isPredVar v
 
 whatLVar (LV (v,_)) = whatVar v
+whenLVar (LV (v,_)) = whenVar v
 \end{code}
 
 \subsubsection{List Variable test values}
@@ -318,6 +323,8 @@ isPredGVar (GL lv)  =  isPredLVar lv
 
 whatGVar (GV v)   =  whatVar v
 whatGVar (GL lv)  =  whatLVar lv
+whenGVar (GV v)   =  whenVar v
+whenGVar (GL lv)  =  whenLVar lv
 \end{code}
 
 Test values:

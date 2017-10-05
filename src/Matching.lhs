@@ -862,6 +862,22 @@ vsFreeStdMatch vts bind cbvs pbvs lvsC lvsP svsC svsP
  | otherwise = error "\n\t vsFreeStdMatch NYFI\n"
 \end{code}
 
+
+This code, and its local definitions, may belong somewhere else.
+\begin{code}
+whenPartition :: VarSet -> (VarSet,VarSet,VarSet,VarSet)
+whenPartition vs = (vsStatic,vsBefore,vsDuring,vsAfter)
+ where
+  isStatic gv  =  whenGVar gv == Static
+  isBefore gv  =  whenGVar gv == Dynamic Before
+  isAfter gv   =  whenGVar gv == Dynamic After
+  isDuring gv  =  case whenGVar gv of
+                    Dynamic (During _) -> True ; _ -> False
+  (vsStatic,vs1)      =  S.partition isStatic vs
+  (vsBefore,vs2)      =  S.partition isBefore vs1
+  (vsDuring,vsAfter)  =  S.partition isDuring vs2
+\end{code}
+
 \newpage
 \subsection{Substitution Matching}
 

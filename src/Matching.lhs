@@ -835,10 +835,7 @@ we have potentially non-deterministic outcomes.
 First we try to pattern-match the standard variables.
 Then we will attempt the list-variable matching.
 \begin{code}
- | otherwise = vsFreeStdMatch vts bind cbvs pbvs lvsC lvsP svsC svsP
- where
-   (lvsC, svsC) = S.partition isLstV vsC
-   (lvsP, svsP) = S.partition isLstV vsP
+ | otherwise = vsFreeStdMatch vts bind cbvs pbvs vsC vsP
 \end{code}
 
 \begin{code}
@@ -853,15 +850,51 @@ First, pairing up very standard pattern variable
 with one standard candidate variable,
 if possible.
 First we break down both sets into variables of the four various
-classifications,
+temporal classifications
+(static${}_s$, dynamic(before${}_b$, during${}_d$, after${}_a$)),
 and check their sizes.
-We simply sort all sets and match in order, for now.
-\begin{code}
-vsFreeStdMatch vts bind cbvs pbvs lvsC lvsP svsC svsP
- | S.size svsP > S.size svsC = fail "vsMatch: too many std. pattern variables."
- | otherwise = error "\n\t vsFreeStdMatch NYFI\n"
-\end{code}
+Let $p_s$, $p_b$, $p_d$, and $p_a$ denote the
+number of standard pattern variables of each class,
+and $c_s$, $c_b$, $c_d$, and $c_a$ denote similarly
+for the standard candidate variables.
+Given that each standard pattern must bind
+to exactly one distinct candidate variable,
+we get the following size constraints that must be satisfied:
+\begin{eqnarray*}
+   p_b \leq c_b && e_b = c_b - p_b
+\\ p_d \leq c_d && e_d = c_d - p_d
+\\ p_a \leq c_a && e_a = c_a - p_a
+\\ p_s &\leq& c_s + e_b + e_d + e_a
+\end{eqnarray*}
 
+We first split the standard variables of both pattern and candidate sets,
+check the inequalities above,
+and then proceed to match the dynamics sets first,
+followed by the static matching.
+\begin{code}
+vsFreeStdMatch vts bind cbvs pbvs vsC vsP
+  | eb < 0  =  fail "vsMatch: too few std. candidate Before variables."
+  | ed < 0  =  fail "vsMatch: too few std. candidate During variables."
+  | ed < 0  =  fail "vsMatch: too few std. candidate After variables."
+  | S.size vsPs > S.size vsCs + eb + ed + ea
+            =  fail "vsMatch: too many std. pattern Static variables."
+  | otherwise
+    =  do (bindb,vsCb') <- vsFreeStdMatch' vts bind  cbvs pbvs vsCb vsPb
+          (bindd,vsCd') <- vsFreeStdMatch' vts bindb cbvs pbvs vsCd vsPd
+          (binda,vsCa') <- vsFreeStdMatch' vts bindd cbvs pbvs vsCa vsPa
+          -- Static matches anything
+          let vsCs' = S.unions [vsCs,vsCb',vsCd',vsCa']
+          (binds,svsC') <- vsFreeStdMatch' vts bindd cbvs pbvs vsCs' vsPs
+          vsFreeLstMatch vts binds cbvs pbvs (S.union lvsC svsC') lvsP
+  where
+    (lvsC,svsC) = S.partition isLstV vsC
+    (lvsP,svsP) = S.partition isLstV vsP
+    (vsCs,vsCb,vsCd,vsCa) = whenPartition svsC
+    (vsPs,vsPb,vsPd,vsPa) = whenPartition svsP
+    eb = S.size vsCb - S.size vsPb
+    ed = S.size vsCd - S.size vsPd
+    ea = S.size vsCa - S.size vsPa
+\end{code}
 
 This code, and its local definitions, may belong somewhere else.
 \begin{code}
@@ -876,6 +909,19 @@ whenPartition vs = (vsStatic,vsBefore,vsDuring,vsAfter)
   (vsStatic,vs1)      =  S.partition isStatic vs
   (vsBefore,vs2)      =  S.partition isBefore vs1
   (vsDuring,vsAfter)  =  S.partition isDuring vs2
+\end{code}
+
+
+\begin{code}
+-- all variables are standard, of the same temporality.
+vsFreeStdMatch' vts bind cbvs pbvs vsC vsP
+ = error "\n\t vsFreeStdMatch': NYI\n"
+\end{code}
+
+\begin{code}
+-- pattern is only list-variables.
+vsFreeLstMatch vts binds cbvs pbvs vsC lvsP
+ = error "\n\t vsFreeStdMatch: NYI\n"
 \end{code}
 
 \newpage

@@ -911,17 +911,38 @@ whenPartition vs = (vsStatic,vsBefore,vsDuring,vsAfter)
   (vsDuring,vsAfter)  =  S.partition isDuring vs2
 \end{code}
 
-
+Matching $m$ pattern variables against $n$ candidate variables
+allows for $n!/(m-n)!$ possible outcomes.
+For now, we simply match variables in order
 \begin{code}
 -- all variables are standard, of the same temporality.
+-- #vsC >= #vsP
 vsFreeStdMatch' vts bind cbvs pbvs vsC vsP
- = error "\n\t vsFreeStdMatch': NYI\n"
+ = do bind' <- zipVarVarBind bind vlC vlP
+      return (bind',S.fromList vlC')
+ where
+   (vlC,vlC') = splitAt (S.size vsP) $ S.toList vsC ; vlP = S.toList vsP
 \end{code}
 
 \begin{code}
+-- both lists should be  the same length
+zipVarVarBind bind [] []  =  return bind
+zipVarVarBind bind (gC:vlC) (gP:vlP)
+ = do bind' <- bindGVarToGVar gP gC bind
+      zipVarVarBind bind' vlC vlP
+-- defensive programming
+zipVarVarBind bind  _ []  =  return bind
+zipVarVarBind bind []  _  =  return bind
+\end{code}
+
+
+\begin{code}
 -- pattern is only list-variables.
-vsFreeLstMatch vts binds cbvs pbvs vsC lvsP
- = error "\n\t vsFreeStdMatch: NYI\n"
+vsFreeLstMatch vts bind cbvs pbvs vsC lvsP
+ | null lvsP = if null vsC then return bind
+               else fail "vsMatch: too many candidate variables."
+ | null vsC  =  vlFreeMatch vts bind cbvs pbvs [] (S.toList lvsP)
+ | otherwise  = error "\n\t vsFreeLstMatch: nyFi\n"
 \end{code}
 
 \newpage

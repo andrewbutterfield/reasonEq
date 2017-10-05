@@ -16,6 +16,7 @@ module Binding
 , bindVarToVar
 , bindVarToTerm
 , bindLVarToVList
+, bindGVarToGVar
 , bindGVarToVList
 ) where
 --import Data.Maybe (fromJust)
@@ -146,11 +147,22 @@ bindLVarToVList lv vl (BD (vbinds,lbinds))
 bindLVarToVList _ _ _ = fail "bindLVarToVList: invalid lvar. -> vlist binding."
 \end{code}
 
+\subsubsection{Binding General-Variables to General-Variables}
+
+An list-variable can bind to a singleton list of any general variable,
+while a standard-variable can only bind to a standard variable.
+\begin{code}
+bindGVarToGVar :: Monad m => GenVar -> GenVar -> Binding -> m Binding
+bindGVarToGVar (LstVar lv) gv binds = bindLVarToVList lv [gv] binds
+bindGVarToGVar (StdVar pv) (StdVar cv) binds = bindVarToVar pv cv binds
+bindGVarToGVar _ _ _ = fail "bindGVarToGVar: invalid stdvar. -> lstvar. binding."
+\end{code}
+
 \subsubsection{Binding General-Variables to Variable-Lists}
 
 An list-variable can bind to a list of any length,
 while a standard-variable can only bind to the standard variable inside
-a singletom list.
+a singleton list.
 \begin{code}
 bindGVarToVList :: Monad m => GenVar -> VarList -> Binding -> m Binding
 bindGVarToVList (LstVar lv) vl binds = bindLVarToVList lv vl binds

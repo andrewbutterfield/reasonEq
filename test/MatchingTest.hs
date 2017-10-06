@@ -208,10 +208,12 @@ tst_vsMatch =
           (S.fromList [cs1,cs2]) (S.fromList [ps1,ps2])
         @?= [bindPSi2CSi] )
     , testCase "[cs_i,cl_i] :: [ps_i,pl_i], no pre-bind  (OK)"
-      ( nub ( vsMatch [] emptyBinding b0 b0
+      ( (nub ( vsMatch [] emptyBinding b0 b0
                (S.fromList [cs1,cl1,cs2,cl2,cs3,cl3,cs4,cl4])
-               (S.fromList [ps1,pl1,ps2,pl2,ps3,pl3,ps4,pl4]) )
-        @?= [bindAll] )
+               (S.fromList [ps1,pl1,ps2,pl2,ps3,pl3,ps4,pl4]) )) !! 9
+        -- 19 bindings possible, with vlFreeMatchN where N=2
+        -- 10th one returned is our bindAll
+        @?= bindAll )
     , testCase "[cs_i,cl_i] :: [ps_i,pl_i], ps_i |-> cs_i  (OK)"
       ( (nub ( vsMatch [] bindPSi2CSi b0 b0
                (S.fromList [cs1,cl1,cs2,cl2,cs3,cl3,cs4,cl4])

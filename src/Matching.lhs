@@ -936,13 +936,13 @@ zipVarVarBind bind []  _  =  return bind
 \end{code}
 
 
+We check for errors, and then just use \texttt{vlFreeMatch} for now.
 \begin{code}
 -- pattern is only list-variables.
 vsFreeLstMatch vts bind cbvs pbvs vsC lvsP
  | null lvsP = if null vsC then return bind
                else fail "vsMatch: too many candidate variables."
- | null vsC  =  vlFreeMatch vts bind cbvs pbvs [] (S.toList lvsP)
- | otherwise  = error "\n\t vsFreeLstMatch: nyFi\n"
+ | otherwise  = vlFreeMatch vts bind cbvs pbvs (S.toList vsC) (S.toList lvsP)
 \end{code}
 
 \newpage

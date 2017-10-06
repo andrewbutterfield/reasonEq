@@ -229,6 +229,20 @@ tst_vsMatch =
     ]
 
 -- -----------------------------------------------------------------------------
+tst_sMatch :: TF.Test
+
+k42_for v= fromJust $ substn [(v,k42)] []
+
+tst_sMatch
+ = testGroup "\nsMatch"
+   [ testCase "[42/y] :: [42/x]"
+     ( sMatch [] emptyBinding b0 b0 (k42_for y) (k42_for x)
+       @?= Just (bindVV (StdVar x) (StdVar y) emptyBinding)
+     )
+   ]
+
+
+-- -----------------------------------------------------------------------------
 tst_Matching :: [TF.Test]
 
 tst_Matching
@@ -239,5 +253,6 @@ tst_Matching
       , tst_vMatch
       , tst_vlMatch
       , tst_vsMatch
+      , tst_sMatch
       ]
     ]

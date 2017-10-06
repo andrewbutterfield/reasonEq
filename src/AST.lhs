@@ -35,8 +35,9 @@ module AST ( VarWhat
            , VarList
            , VarSet
            , isPreVarSet
-           , TermSub, LVarSub, Substn, pattern Substn
-           , pattern TermSub, pattern LVarSub, substn
+           , TermSub, LVarSub
+           , Substn, pattern Substn, substn
+           , pattern TermSub, pattern LVarSub
            , Type
            , pattern ArbType,  pattern TypeVar, pattern TypeApp
            , pattern DataType, pattern FunType, pattern GivenType
@@ -370,24 +371,25 @@ We also want to allow list-variables of the appropriate kind
 to occur for things, but only when the target variable is also
 a list variable.
 \begin{code}
-type TermSub = [(Variable,Term)] -- target variable, then replacememt term
-type LVarSub = [(ListVar,ListVar)] -- target list-variable, then replacement l.v.
-data Substn --  pair-lists below are ordered and unique in fst part
+type TermSub = Set (Variable,Term) -- target variable, then replacememt term
+type LVarSub = Set (ListVar,ListVar) -- target list-variable, then replacement l.v.
+data Substn --  pair-sets below are unique in fst part
   = SN TermSub LVarSub
   deriving (Eq,Ord,Show,Read)
 \end{code}
 
 Patterns and builders:
 \begin{code}
-pattern Substn ts lvs <- SC ts lvs
-pattern TermSub ts   <- SC ts _
-pattern LVarSub lvs  <- SC _  lvs
+pattern Substn ts lvs  <-  SN ts lvs
+pattern TermSub ts     <-  SN ts _
+pattern LVarSub lvs    <-  SN _  lvs
 
-substn :: Monad m => TermSub -> LVarSub -> m Substn
+substn :: Monad m => [(Variable,Term)] -> [(ListVar,ListVar)] -> m Substn
 substn ts lvs
- | dupKeys ts'  =  fail "Term substitution has duplicate variables"
- | dupKeys lvs' =  fail "List-var subst. has duplicate variables"
- | otherwise    = return $ SN ts' lvs'
+ | null ts && null lvs = fail "Empty substitution."
+ | dupKeys ts'  =  fail "Term substitution has duplicate variables."
+ | dupKeys lvs' =  fail "List-var subst. has duplicate variables."
+ | otherwise    = return $ SN (S.fromList ts') (S.fromList lvs')
  where
   ts'  = sort ts
   lvs' = sort lvs
@@ -402,12 +404,12 @@ Tests for substitution construction:
 \begin{code}
 lvs_ord_unq = [(lva,lvf),(lvb,lve)]
 test_substn_lvs_id = testCase "LVarSub ordered, unique"
- ( substn [] lvs_ord_unq  @?= Just (SN [] lvs_ord_unq) )
+ ( substn [] lvs_ord_unq  @?= Just (SN S.empty (S.fromList lvs_ord_unq)) )
 
 lvs_unord_unq = [(lvb,lve),(lva,lvf)]
 
 test_substn_lvs_sort = testCase "LVarSub unordered, unique"
- ( substn [] lvs_unord_unq  @?= Just (SN [] lvs_ord_unq) )
+ ( substn [] lvs_unord_unq  @?= Just (SN S.empty (S.fromList lvs_ord_unq)) )
 
 lvs_unord_dup = [(lva,lva),(lvb,lve),(lva,lvf)]
 

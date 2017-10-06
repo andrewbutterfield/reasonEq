@@ -935,7 +935,6 @@ zipVarVarBind bind  _ []  =  return bind
 zipVarVarBind bind []  _  =  return bind
 \end{code}
 
-
 We check for errors, and then just use \texttt{vlFreeMatch} for now.
 \begin{code}
 -- pattern is only list-variables.
@@ -948,8 +947,23 @@ vsFreeLstMatch vts bind cbvs pbvs vsC lvsP
 \newpage
 \subsection{Substitution Matching}
 
+We match substitutions by first ignoring the replacement terms,
+and doing a variable-set match on the variables.
+We then use the new bindings to identify the corresponding terms,
+and check that they match.
 \begin{code}
-sMatch vts bindT cbvs pbvs subC subP = error "sMatch: N.Y.I"
+sMatch vts bind cbvs pbvs (Substn tsC lvsC) (Substn tsP lvsP)
+ = do bind' <- vsMatch vts bind cbvs pbvs vsC vsP
+      sMatchCheck bind' vts cbvs pbvs tsC lvsC tsP lvsP
+ where
+  vsC = S.map (StdVar . fst) tsC `S.union` S.map (LstVar . fst) lvsC
+  vsP = S.map (StdVar . fst) tsP `S.union` S.map (LstVar . fst) lvsP
+\end{code}
+
+All the general variables
+\begin{code}
+sMatchCheck bind vts cbvs pbvs tsC lvsC tsP lvsP
+ = error "\n\t sMatchCheck: NYI\n"
 \end{code}
 
 \newpage

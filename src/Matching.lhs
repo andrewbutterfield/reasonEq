@@ -953,17 +953,33 @@ We then use the new bindings to identify the corresponding terms,
 and check that they match.
 \begin{code}
 sMatch vts bind cbvs pbvs (Substn tsC lvsC) (Substn tsP lvsP)
- = do bind' <- vsMatch vts bind cbvs pbvs vsC vsP
-      sMatchCheck bind' vts cbvs pbvs tsC lvsC tsP lvsP
+ = do bind'  <- vsMatch      vts  bind  cbvs pbvs vsC vsP
+      bind'' <- tsMatchCheck vts  bind' cbvs pbvs tsC $ S.toList tsP
+      lvsMatchCheck vts bind'' cbvs pbvs lvsC $ S.toList lvsP
  where
   vsC = S.map (StdVar . fst) tsC `S.union` S.map (LstVar . fst) lvsC
   vsP = S.map (StdVar . fst) tsP `S.union` S.map (LstVar . fst) lvsP
 \end{code}
 
-All the general variables
+All the variable/term matches
 \begin{code}
-sMatchCheck bind vts cbvs pbvs tsC lvsC tsP lvsP
- = error "\n\t sMatchCheck: NYI\n"
+tsMatchCheck vts bind cbvs pbvs tsC []  =  return bind
+tsMatchCheck vts bind cbvs pbvs tsC ((vP,tP):tsP)
+ = do bind' <- vtMatchCheck vts bind cbvs pbvs tsC tP vP
+      tsMatchCheck vts bind' cbvs pbvs tsC tsP
+
+vtMatchCheck vts bind cbvs pbvs tsC tP vP
+ = case lookupBind bind vP of
+     Nothing            ->  fail "vsMatch: SHOULD NOT OCCUR!"
+     Just (BindTerm _)  ->  fail "vsMatch: SHOULD NOT OCCUR!"
+     Just (BindVar vB)
+       ->  error "\n\t vtMatchCheck: NYFI\n"
+\end{code}
+
+All the list-var/list-var matches
+\begin{code}
+lvsMatchCheck vts bind cbvs pbvs lvsC lvsP
+ = error "\n\t lvsMatchCheck: NYI\n"
 \end{code}
 
 \newpage

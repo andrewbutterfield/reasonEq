@@ -970,16 +970,21 @@ tsMatchCheck vts bind cbvs pbvs tsC ((vP,tP):tsP)
 
 vtMatchCheck vts bind cbvs pbvs tsC tP vP
  = case lookupBind bind vP of
-     Nothing            ->  fail "vsMatch: SHOULD NOT OCCUR!"
-     Just (BindTerm _)  ->  fail "vsMatch: SHOULD NOT OCCUR!"
+     Nothing            ->  fail "vsMatch: Nothing SHOULD NOT OCCUR!"
+     Just (BindTerm _)  ->  fail "vsMatch: BindTerm SHOULD NOT OCCUR!"
      Just (BindVar vB)
-       ->  error "\n\t vtMatchCheck: NYFI\n"
+       -> let tsB = S.filter ((==vB).fst) tsC
+          in if S.size tsB /= 1
+              then fail "vsMatch: #tsB /= 1 SHOULD NOT OCCUR!"
+              else let tB = snd $ S.elemAt 0 tsB
+                   in tMatch vts bind cbvs pbvs tB tP
 \end{code}
 
 All the list-var/list-var matches
 \begin{code}
+lvsMatchCheck vts bind cbvs pbvs lvsC []  =  return bind
 lvsMatchCheck vts bind cbvs pbvs lvsC lvsP
- = error "\n\t lvsMatchCheck: NYI\n"
+ =  error "\n\t lvsMatchCheck: nyFi\n"
 \end{code}
 
 \newpage

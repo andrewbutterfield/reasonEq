@@ -130,6 +130,7 @@ mkCL i = LstVar $ PreVars $ identi "cl" i
 bindVV (StdVar pv)  (StdVar cv)   =  fromJust . bindVarToVar pv cv
 bindLL (LstVar plv) cgv  =  fromJust . bindLVarToVList plv [cgv]
 
+
 [ps1,ps2,ps3,ps4] = map mkPS [1..4]  -- std pattern vars
 [pl1,pl2,pl3,pl4] = map mkPL [1..4]  -- lst pattern vars
 [cs1,cs2,cs3,cs4] = map mkCS [1..4]  -- std candidate vars
@@ -231,13 +232,23 @@ tst_vsMatch =
 -- -----------------------------------------------------------------------------
 tst_sMatch :: TF.Test
 
-k42_for v= fromJust $ substn [(v,k42)] []
+k42_for v = fromJust $ substn [(v,k42)] []
+e =  ExprVar (fromJust $ ident "e") Static
+e_for v = fromJust $ substn [(v,fromJust $ eVar ArbType $ e)] []
+bindVT (StdVar pv)  ct   =  fromJust . bindVarToTerm pv ct
 
 tst_sMatch
  = testGroup "\nsMatch"
    [ testCase "[42/y] :: [42/x]"
      ( sMatch [] emptyBinding b0 b0 (k42_for y) (k42_for x)
        @?= Just (bindVV (StdVar x) (StdVar y) emptyBinding)
+     )
+   , testCase "[42/y] :: [e/x]"
+     ( sMatch [] emptyBinding b0 b0 (k42_for y) (e_for x)
+       @?=
+       (Just ( bindVV (StdVar x) (StdVar y)
+             $ bindVT (StdVar e) k42
+             $ (emptyBinding)) )
      )
    ]
 

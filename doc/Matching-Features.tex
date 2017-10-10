@@ -58,13 +58,14 @@ $$
 Way more than just two subtracted variables!
 \begin{eqnarray*}
   \lefteqn{x_1,\ldots,x_n ::= e_1, \ldots , e_n}
+\\ &=& \lst x := \lst e
 \\ &\defs&
      ok \implies ok'
      \land x'_1 = e_1 \land \ldots \land x'_n = e_n
      \land S'\less{x_1,\ldots,x_n} = S\less{x_1,\ldots,x_n}
 \\ &=& ok \implies ok'
-    \land \lst x := \lst e \land
-     \land S'\less{\lst x} = S\less{\lst x}
+    \land \lst x' = \lst e
+    \land S'\less{\lst x} = S\less{\lst x}
 \end{eqnarray*}
 In the mathematical form, we use indices and ellipsis
 to suggest that we have lists of variables and expressions

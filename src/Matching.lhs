@@ -508,7 +508,7 @@ that do not apply if the variable is bound.
 whenCompVar :: Variable -> Variable -> Bool
 whenCompVar (Vbl _ _ vkC) (Vbl _ _ vkP) = whenCompKind vkC vkP
 
-whenCompKind :: VarKind -> VarKind -> Bool  -- candidate, pattern
+whenCompKind :: VarTime -> VarTime -> Bool  -- candidate, pattern
 whenCompKind _                    Static                =  True
 whenCompKind (Dynamic Before)     (Dynamic Before)      =  True
 whenCompKind (Dynamic (During _)) (Dynamic (During _))  =  True

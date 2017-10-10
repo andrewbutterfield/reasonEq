@@ -97,12 +97,9 @@ Script observations regarding values of program variables.
    x,x',y,y',z,z'  &:&   \Int
 \end{eqnarray*}
 \begin{code}
-x   = PreVar  $ fromJust $ ident "x"  ;  xVMR   =  KnownVar int
-x'  = PostVar $ fromJust $ ident "x"  ;  x'VMR  =  KnownVar int
-y   = PreVar  $ fromJust $ ident "y"  ;  yVMR   =  KnownVar int
-y'  = PostVar $ fromJust $ ident "y"  ;  y'VMR  =  KnownVar int
-z   = PreVar  $ fromJust $ ident "z"  ;  zVMR   =  KnownVar int
-z'  = PostVar $ fromJust $ ident "z"  ;  z'VMR  =  KnownVar int
+x = PreVar  $ fromJust $ ident "x"  ;  x' = PostVar $ fromJust $ ident "x"
+y = PreVar  $ fromJust $ ident "y"  ;  y' = PostVar $ fromJust $ ident "y"
+z = PreVar  $ fromJust $ ident "z"  ;  z' = PostVar $ fromJust $ ident "z"
 \end{code}
 
 List-variables that classify observations.
@@ -115,14 +112,9 @@ List-variables that classify observations.
 \\ O'            &\defs& S'\cup M'
 \end{eqnarray*}
 \begin{code}
-lS   =  PreVars  $ fromJust $ ident "S" ; sVMR  = KnownVarList $ vwrap [x,y,z]
-lS'  =  PostVars $ fromJust $ ident "S" ; s'VMR  = KnownVarList $ vwrap [x',y',z']
-lM   =  PreVars  $ fromJust $ ident "M" ; mVMR  = KnownVarList $ vwrap [ok]
-lM'  =  PostVars $ fromJust $ ident "M" ; m'VMR = KnownVarList $ vwrap [ok']
-lO   =  PreVars  $ fromJust $ ident "O" ; oVMR  = KnownVarList $ lwrap [lS,lM]
-lO'  =  PostVars $ fromJust $ ident "O" ; o'VMR  = KnownVarList $ lwrap [lS',lM']
-vwrap = sort . map StdVar
-lwrap = sort . map LstVar
+lS = PreVars  $ fromJust $ ident "S"  ;  lS' = PostVars $ fromJust $ ident "S"
+lM = PreVars  $ fromJust $ ident "M"  ;  lM' = PostVars $ fromJust $ ident "M"
+lO = PreVars  $ fromJust $ ident "O"  ;  lO' = PostVars $ fromJust $ ident "O"
 \end{code}
 
 Wrap it all up in a ``Design'' variable-table:
@@ -130,9 +122,40 @@ Wrap it all up in a ``Design'' variable-table:
 vtDesign =
     akv ok bool $ akv ok' bool
   $ akv x int $ akv x' int $ akv y int $ akv y' int $ akv z int $ akv z' int
+  $ aklv lS (vwrap [x,y,z]) $ aklv lS' (vwrap [x',y',z'])
+  $ aklv lM (vwrap [ok])    $ aklv lM' (vwrap [ok'])
+  $ aklv lO (lwrap [lS,lM]) $ aklv lO' (lwrap [lS',lM'])
   $ newVarTable
 
+vwrap = sort . map StdVar
+lwrap = sort . map LstVar
 akv v t tbl = fromJust $ addKnownVar v t tbl
+aklv lv vl tbl = fromJust $ addKnownListVar lv vl tbl
+\end{code}
+
+Tests:
+\begin{code}
+tst_reserved_listvars
+ = [ testGroup "Reserved List Variables"
+     [ testCase "|-  x,y,z :: S  fails"
+       ( vlMatch [] emptyBinding S.empty S.empty
+            (vwrap [x,y,z])
+            (lwrap [lS])
+         @?= Nothing )
+     , testCase "Design |-  x,y,z :: S  succeeds"
+       ( vlMatch [vtDesign] emptyBinding S.empty S.empty
+            (vwrap [x,y,z])
+            (lwrap [lS])
+       @?= ( bindLVarToVList lS (vwrap [x,y,z]) emptyBinding :: [Binding] ))
+     , testCase "x,y,z,S @ Design  |-  x,y,z :: S  succeeds"
+       ( vlMatch [vtDesign] emptyBinding
+            (S.fromList $ vwrap [x,y,z])
+            (S.fromList $ lwrap [lS])
+            (vwrap [x,y,z])
+            (lwrap [lS])
+       @?= ( bindLVarToVList lS (vwrap [x,y,z]) emptyBinding :: [Binding] ))
+     ]
+   ]
 \end{code}
 
 \newpage
@@ -142,8 +165,6 @@ tst_match_scenarios :: [TF.Test]
 
 tst_match_scenarios
   = [ testGroup "\nMatching Scenarios"
-      [ testCase "1+1=2 - succeeds" (1+1 @?= 2)
-      , testCase "2+2=5 - fails" (2+2 @?= 5)
-      ]
+       tst_reserved_listvars
     ]
 \end{code}

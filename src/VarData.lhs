@@ -17,6 +17,7 @@ module VarData ( VarMatchRole
                , newVarTable
                , addKnownConst
                , addKnownVar
+               , addKnownListVar
                , lookupVarTable, lookupVarTables
                , lookupLVarTable, lookupLVarTables
                ) where
@@ -147,6 +148,15 @@ addKnownVar :: Monad m => Variable -> Type -> VarTable -> m VarTable
 addKnownVar var@(ObsVar _ _) typ (VT (vtable, ltable))
   = return $ VT ( M.insert var (KV typ) vtable, ltable )
 addKnownVar _ _ _ = fail "addKnownVar: not for Expr/Pred Variables."
+\end{code}
+
+For now only observation-list variables
+can be defined as equal to a list of general variables,
+with the same temporality
+(except if static, these can mix and match temporal aspects).
+\begin{code}
+addKnownListVar :: Monad m => ListVar -> VarList -> VarTable -> m VarTable
+addKnownListVar lv vl vt = error "\n\t addKnownListVar: NYI\n"
 \end{code}
 
 \subsubsection{Table Lookup}

@@ -10,7 +10,7 @@ module AST ( VarWhat
            , pattern ObsV, pattern VarV, pattern ExprV, pattern PredV
            , VarWhen
            , pattern Before, pattern During, pattern After
-           , VarKind
+           , VarTime
            , pattern Static, pattern Dynamic
            , Variable
            , pattern Vbl
@@ -155,9 +155,13 @@ pattern During n = WD n
 pattern After  = WA
 \end{code}
 
-We define the two variable kinds:
+Variables may have a particular interpretation
+with respect to time, (``temporality''),
+being either static (independent of time),
+or dynamic, distinguishing between before, durimg or after
+some behaviour of interest.
 \begin{code}
-data VarKind
+data VarTime
   = KS -- Static
   | KD VarWhen -- Dynamic
   deriving (Eq, Ord, Show, Read)
@@ -168,7 +172,7 @@ pattern Dynamic w = KD w
 
 A variable is a triple: identifier, what, and kind
 \begin{code}
-newtype Variable  = VR (Identifier, VarWhat, VarKind)
+newtype Variable  = VR (Identifier, VarWhat, VarTime)
  deriving (Eq,Ord,Show,Read)
 
 pattern Vbl  i wt kd = VR (i, wt, kd)

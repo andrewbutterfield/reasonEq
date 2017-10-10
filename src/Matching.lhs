@@ -947,6 +947,13 @@ vsFreeLstMatch vts bind cbvs pbvs vsC lvsP
 \newpage
 \subsection{Substitution Matching}
 
+\begin{code}
+sMatch :: MonadPlus mp
+       => [VarTable] -> Binding -> CBVS -> PBVS
+       -> Substn -> Substn
+       -> mp Binding
+\end{code}
+
 We match substitutions by first ignoring the replacement terms,
 and doing a variable-set match on the variables.
 We then use the new bindings to identify the corresponding terms,
@@ -961,31 +968,68 @@ sMatch vts bind cbvs pbvs (Substn tsC lvsC) (Substn tsP lvsP)
   vsP = S.map (StdVar . fst) tsP `S.union` S.map (LstVar . fst) lvsP
 \end{code}
 
-All the variable/term matches
+All the variable/term matches.
 \begin{code}
+tsMatchCheck :: MonadPlus mp
+             => [VarTable] -> Binding -> CBVS -> PBVS
+             -> TermSub -> [(Variable,Term)]
+             -> mp Binding
+
 tsMatchCheck vts bind cbvs pbvs tsC []  =  return bind
 tsMatchCheck vts bind cbvs pbvs tsC ((vP,tP):tsP)
  = do bind' <- vtMatchCheck vts bind cbvs pbvs tsC tP vP
       tsMatchCheck vts bind' cbvs pbvs tsC tsP
+\end{code}
+
+\begin{code}
+vtMatchCheck :: MonadPlus mp
+             => [VarTable] -> Binding -> CBVS -> PBVS
+             -> TermSub -> Term -> Variable
+             -> mp Binding
 
 vtMatchCheck vts bind cbvs pbvs tsC tP vP
  = case lookupBind bind vP of
-     Nothing            ->  fail "vsMatch: Nothing SHOULD NOT OCCUR!"
-     Just (BindTerm _)  ->  fail "vsMatch: BindTerm SHOULD NOT OCCUR!"
+     Nothing            ->  fail "vtMatchCheck: Nothing SHOULD NOT OCCUR!"
+     Just (BindTerm _)  ->  fail "vtMatchCheck: BindTerm SHOULD NOT OCCUR!"
      Just (BindVar vB)
        -> let tsB = S.filter ((==vB).fst) tsC
           in if S.size tsB /= 1
-              then fail "vsMatch: #tsB /= 1 SHOULD NOT OCCUR!"
+              then fail "vtMatchCheck: #tsB /= 1 SHOULD NOT OCCUR!"
               else let tB = snd $ S.elemAt 0 tsB
                    in tMatch vts bind cbvs pbvs tB tP
 \end{code}
-
-All the list-var/list-var matches
+All the list-var/list-var matches.
 \begin{code}
+lvsMatchCheck :: MonadPlus mp
+       => [VarTable] -> Binding -> CBVS -> PBVS
+       -> LVarSub -> [(ListVar,ListVar)]
+       -> mp Binding
+
 lvsMatchCheck vts bind cbvs pbvs lvsC []  =  return bind
-lvsMatchCheck vts bind cbvs pbvs lvsC lvsP
- =  error "\n\t lvsMatchCheck: nyFi\n"
+lvsMatchCheck vts bind cbvs pbvs lvsC ((tlvP,rlvP):lvsP)
+ = do bind' <- lvlvMatchCheck vts bind cbvs pbvs lvsC rlvP tlvP
+      lvsMatchCheck vts bind' cbvs pbvs lvsC lvsP
 \end{code}
+
+\newpage
+\begin{code}
+lvlvMatchCheck :: MonadPlus mp
+               => [VarTable] -> Binding -> CBVS -> PBVS
+               -> LVarSub -> ListVar -> ListVar
+               -> mp Binding
+
+lvlvMatchCheck vts bind cbvs pbvs lvsC rlvP tlvP
+ = case lookupLstBind bind tlvP of
+     Nothing            ->  fail "lvlvMatchCheck: Nothing SHOULD NOT OCCUR!"
+     Just [(LstVar tlvC)]
+       -> let lvsB = S.filter ((==tlvC).fst) lvsC
+          in if S.size lvsB /= 1
+              then fail "lvlvMatchCheck: #lvsB /= 1 SHOULD NOT OCCUR!"
+              else let rlvC = snd $ S.elemAt 0 lvsB
+                   in bindLVarToVList rlvP [LstVar rlvC] bind
+     _ -> fail "lvlvMatchCheck: #(lookup tlvP) /= 1, or StdVar, SHOULD NOT OCCUR!"
+\end{code}
+
 
 \newpage
 \subsection{Sub-Typing}

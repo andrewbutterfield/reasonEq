@@ -233,23 +233,71 @@ tst_vsMatch =
 tst_sMatch :: TF.Test
 
 k42_for v = fromJust $ substn [(v,k42)] []
+k58_for v = fromJust $ substn [(v,k58)] []
 e =  ExprVar (fromJust $ ident "e") Static
+f =  ExprVar (fromJust $ ident "f") Static
+ee = fromJust $ eVar ArbType e
+ef = fromJust $ eVar ArbType f
 e_for v = fromJust $ substn [(v,fromJust $ eVar ArbType $ e)] []
 bindVT (StdVar pv)  ct   =  fromJust . bindVarToTerm pv ct
+a = PreVar $ fromJust $ ident "a"
+b = PreVar $ fromJust $ ident "b"
+
+l1 = PreVars $ fromJust $ ident "l1"
+l2 = PreVars $ fromJust $ ident "l2"
+la = PreVars $ fromJust $ ident "la"
+lb = PreVars $ fromJust $ ident "lb"
 
 tst_sMatch
  = testGroup "\nsMatch"
-   [ testCase "[42/y] :: [42/x]"
+   [ testCase "[42/y] :: [42/x] - succeeds"
      ( sMatch [] emptyBinding b0 b0 (k42_for y) (k42_for x)
        @?= Just (bindVV (StdVar x) (StdVar y) emptyBinding)
      )
-   , testCase "[42/y] :: [e/x]"
+   , testCase "[42/y] :: [58/x] - fails"
+       ( sMatch [] emptyBinding b0 b0 (k42_for y) (k58_for x) @?= Nothing )
+   , testCase "[42/y] :: [e/x] - succeeds"
      ( sMatch [] emptyBinding b0 b0 (k42_for y) (e_for x)
        @?=
        (Just ( bindVV (StdVar x) (StdVar y)
              $ bindVT (StdVar e) k42
-             $ (emptyBinding)) )
+             $ emptyBinding ))
      )
+   , testCase "[42,58/a,b] :: [e,f/x,y] - succeeds"
+     ( sMatch [] emptyBinding b0 b0
+         (fromJust $ substn [(a,k42),(b,k58)] [])
+         (fromJust $ substn [ (x,ee), (y,ef)] [])
+       @?=
+       ([ ( bindVV (StdVar x) (StdVar a)
+          $ bindVT (StdVar e) k42
+          $ bindVV (StdVar y) (StdVar b)
+          $ bindVT (StdVar f) k58
+          $ emptyBinding )])
+     )
+   , testCase "[la/lb] :: [l1/l2]  - succeeds"
+       ( sMatch [] emptyBinding b0 b0
+           (fromJust $ substn [] [(lb,la)])
+           (fromJust $ substn [] [(l2,l1)])
+       @?= (Just ( bindLL (LstVar l1) (LstVar la)
+                 $ bindLL (LstVar l2) (LstVar lb)
+                 $ emptyBinding  ))
+       )
+   , testCase "[la/lb] :: [e/x]  - fails"
+       ( sMatch [] emptyBinding b0 b0
+           (fromJust $ substn []       [(lb,la)])
+           (fromJust $ substn [(x,ee)] []       )
+         @?=  Nothing )
+   , testCase "[42,la/a,lb] :: [e,l1/x,l2]  - succeeds"
+       ( nub ( sMatch [] emptyBinding b0 b0
+                 (fromJust $ substn [(a,k42)] [(lb,la)])
+                 (fromJust $ substn [(x,ee)] [(l2,l1)]) )
+         @?=
+         ([ ( bindVV (StdVar x) (StdVar a)
+            $ bindVT (StdVar e) k42
+            $ bindLL (LstVar l1) (LstVar la)
+            $ bindLL (LstVar l2) (LstVar lb)
+            $ emptyBinding )])
+       )
    ]
 
 

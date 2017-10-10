@@ -8,6 +8,7 @@ import Builder
 import VarDataTest
 import BindingTest
 import MatchingTest
+import MatchScenarios
 
 main = defaultMain tests
 
@@ -20,3 +21,4 @@ tests
  ++ tst_VarData
  ++ tst_Binding
  ++ tst_Matching
+ ++ tst_match_scenarios

@@ -146,16 +146,76 @@ tst_reserved_listvars
        ( vlMatch [vtDesign] emptyBinding S.empty S.empty
             (vwrap [x,y,z])
             (lwrap [lS])
-       @?= ( bindLVarToVList lS (vwrap [x,y,z]) emptyBinding :: [Binding] ))
+         @?= ( bindLVarToVList lS (vwrap [x,y,z]) emptyBinding :: [Binding] ))
      , testCase "x,y,z,S @ Design  |-  x,y,z :: S  succeeds"
        ( vlMatch [vtDesign] emptyBinding
             (S.fromList $ vwrap [x,y,z])
             (S.fromList $ lwrap [lS])
             (vwrap [x,y,z])
             (lwrap [lS])
-       @?= ( bindLVarToVList lS (vwrap [x,y,z]) emptyBinding :: [Binding] ))
+         @?= ( bindLVarToVList lS (vwrap [x,y,z]) emptyBinding :: [Binding] ) )
+     , testCase "Design  |-  x',y',z' :: S  fails"
+       ( vlMatch [vtDesign] emptyBinding S.empty S.empty
+            (vwrap [x',y',z'])
+            (lwrap [lS])
+         @?= Nothing )
+     , testCase "Design  |-  x,y',z :: S  fails"
+       ( vlMatch [vtDesign] emptyBinding S.empty S.empty
+            (vwrap [x,y',z])
+            (lwrap [lS])
+         @?= Nothing )
+     , testCase "Design  |-  x,y,z :: S'  fails"
+       ( vlMatch [vtDesign] emptyBinding S.empty S.empty
+            (vwrap [x,y,z])
+            (lwrap [lS'])
+         @?= Nothing )
+     , testCase "Design  |-  x',y',z' :: S'  succeeds"
+       ( vlMatch [vtDesign] emptyBinding S.empty S.empty
+            (vwrap [x',y',z'])
+            (lwrap [lS'])
+         @?=
+         ( bindLVarToVList lS' (vwrap [x',y',z']) emptyBinding :: [Binding] ) )
+     , testCase "Design  |-  M,S :: O  succeeds"
+       ( vlMatch [vtDesign] emptyBinding S.empty S.empty
+            (lwrap [lM,lS])
+            (lwrap [lO])
+         @?=
+         ( bindLVarToVList lO (lwrap [lM,lS]) emptyBinding :: [Binding] ) )
+     , testCase "|-  M,S :: O  succeeds"
+       ( vlMatch [] emptyBinding S.empty S.empty
+            (lwrap [lM,lS])
+            (lwrap [lO])
+         @?=
+         ( bindLVarToVList lO (lwrap [lM,lS]) emptyBinding :: [Binding] ) )
+     , testCase "Design  |-  ok,S :: O  succeeds"
+       ( vlMatch [vtDesign] emptyBinding S.empty S.empty
+            (vwrap [ok] ++lwrap [lS])
+            (lwrap [lO])
+         @?=
+         ( bindLVarToVList lO (vwrap [ok] ++lwrap [lS]) emptyBinding
+           :: [Binding] ) )
+     , testCase "|-  x,y :: O  succeeds"
+       ( vlMatch [] emptyBinding S.empty S.empty
+            (vwrap [x,y])
+            (lwrap [lO])
+         @?=
+         ( bindLVarToVList lO (vwrap [x,y]) emptyBinding :: [Binding] ) )
+     , testCase "|-  x,y' :: O  succeeds"
+       ( vlMatch [] emptyBinding S.empty S.empty
+            (vwrap [x,y'])
+            (lwrap [lO])
+         @?=
+         ( bindLVarToVList lO (vwrap [x,y']) emptyBinding :: [Binding] ) )
+     , testCase "|-  e,x :: O  succeeds"
+       ( vlMatch [] emptyBinding S.empty S.empty
+            (vwrap [e,x])
+            (lwrap [lO])
+         @?=
+         ( bindLVarToVList lO (vwrap [e,x]) emptyBinding :: [Binding] ) )
      ]
    ]
+
+e = PreExpr $ fromJust $ ident "e"
 \end{code}
 
 \newpage

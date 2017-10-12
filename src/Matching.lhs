@@ -9,10 +9,11 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Matching
 ( match
 , tMatch, tsMatch
-, tvMatch, tkvMatch
+, tvMatch, tkvMatch 
 , vMatch, bvMatch
 , vsMatch, vlMatch
 , sMatch
+, knownLstVarExpand
 ) where
 import Data.Maybe (isJust,fromJust)
 import Data.Map (Map)
@@ -725,18 +726,48 @@ vlFreeMatch vts bind cbvs pbvs vlC ((StdVar _):_)
 
 
 A pattern list-variable can match zero or more candidate general variables.
-So here we come face-to-face with non-determinism.
+If it known, it can only match itself,
+or the list against which it is defined.
+Otherwise, we come face-to-face with non-determinism.
 For now we simply attempt to match by letting the list-variable
 match the next $n$ candidate variables, for $n$ in the range $0\dots N$,
 for some fixed $N$.
 For now, we take $N=2$.
 \begin{code}
-vlFreeMatch vts bind cbvs pbvs vlC ((LstVar lvP):vlP)
-  = vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 0
-    `mplus`
-    vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 1
-    `mplus`
-    vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 2
+vlFreeMatch vts bind cbvs pbvs vlC (gvP@(LstVar lvP):vlP)
+  = case lookupLVarTables vts lvP of
+     KnownVarList vlK
+       -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs vlC vlK gvP
+             vlFreeMatch vts bind' cbvs pbvs vlC' vlP
+     AnyVarList
+       -> vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 0
+          `mplus`
+          vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 1
+          `mplus`
+          vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 2
+\end{code}
+
+\begin{code}
+vlKnownMatch vts bind cbvs pbvs vlC vlK gvP@(LstVar lvP) -- ListVar !
+ | gvP `elem` vlC
+    = do bind' <- bindLVarToVList lvP [gvP] bind
+         return (bind',vlC \\ [gvP])
+ | vlK `isInfixOf` vlC
+    = do bind' <- bindLVarToVList lvP vlK bind
+         return (bind',vlC \\ vlK)
+ | vlKx `isInfixOf` vlC
+    = do bind' <- bindLVarToVList lvP vlKx bind
+         return (bind',vlC \\ vlKx)
+ | otherwise  = fail "vlMatch: no candidates match known list-var."
+ where vlKx = sort $ concat $ map (knownLstVarExpand vts) vlK
+\end{code}
+
+\begin{code}
+knownLstVarExpand vts gv@(LstVar lv)
+  = case lookupLVarTables vts lv of
+     KnownVarList kvl     ->  kvl
+     AnyVarList           ->  [gv]
+knownLstVarExpand vts gv  =   [gv]
 \end{code}
 
 \begin{code}

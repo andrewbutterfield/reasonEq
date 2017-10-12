@@ -23,6 +23,7 @@ module VarData ( VarMatchRole
                ) where
 --import Data.Maybe (fromJust)
 import qualified Data.Map as M
+import Data.List (nub)
 
 --import Utilities
 import LexBase
@@ -156,7 +157,10 @@ with the same temporality
 (except if static, these can mix and match temporal aspects).
 \begin{code}
 addKnownListVar :: Monad m => ListVar -> VarList -> VarTable -> m VarTable
-addKnownListVar lv vl vt = error "\n\t addKnownListVar: NYI\n"
+addKnownListVar lv vl (VT (vtable, ltable))
+ | [whatLVar lv] == nub (map whatGVar vl)
+                             =  return $ VT (vtable, M.insert lv (KL vl) ltable)
+ | otherwise = fail  "addKnownListVar: inconsistent variable classifications."
 \end{code}
 
 \subsubsection{Table Lookup}

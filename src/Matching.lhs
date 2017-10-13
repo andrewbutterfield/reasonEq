@@ -9,7 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Matching
 ( match
 , tMatch, tsMatch
-, tvMatch, tkvMatch 
+, tvMatch, tkvMatch
 , vMatch, bvMatch
 , vsMatch, vlMatch
 , sMatch
@@ -702,15 +702,22 @@ vlFreeMatch vts bind cbvs pbvs vlC []
 \end{code}
 
 If there are leftover pattern variables,
-we suceed if they are all list-variables,
+we suceed if they are all ``unknown'' list-variables,
 as they can be bound to the empty variable-list.
+For our purposes here a list-variable is unkown if it not known,
+or is known to be defined as a empty variable-list%
+\footnote{
+This can happen, particularly in UTP theories with only model observations
+and no script variables, such as the CSP theory.
+}.
 Otherwise we fail:
 \begin{code}
 vlFreeMatch vts bind cbvs pbvs [] (StdVar vP:_)
   = fail "vlMatch: too many std. pattern variables."
 vlFreeMatch vts bind cbvs pbvs [] (LstVar lvP:vlP)
-  = do bind' <- bindLVarToVList lvP [] bind
-       vlFreeMatch vts bind' cbvs pbvs [] vlP
+  | canMatchNull vts lvP  =  do bind' <- bindLVarToVList lvP [] bind
+                                vlFreeMatch vts bind' cbvs pbvs [] vlP
+  | otherwise  =  fail "vlMatch: known list pattern can't match null."
 \end{code}
 
 Standard pattern variable matches are easy.
@@ -728,12 +735,13 @@ vlFreeMatch vts bind cbvs pbvs vlC ((StdVar _):_)
 A pattern list-variable can match zero or more candidate general variables.
 If it known, it can only match itself,
 or the list against which it is defined.
-Otherwise, we come face-to-face with non-determinism.
+If unknown, we come face-to-face with non-determinism.
 For now we simply attempt to match by letting the list-variable
 match the next $n$ candidate variables, for $n$ in the range $0\dots N$,
 for some fixed $N$.
 For now, we take $N=2$.
 \begin{code}
+-- not null vlC
 vlFreeMatch vts bind cbvs pbvs vlC (gvP@(LstVar lvP):vlP)
   = case lookupLVarTables vts lvP of
      KnownVarList vlK
@@ -748,18 +756,32 @@ vlFreeMatch vts bind cbvs pbvs vlC (gvP@(LstVar lvP):vlP)
 \end{code}
 
 \begin{code}
+canMatchNull :: [VarTable] -> ListVar -> Bool
+canMatchNull vts lv
+  = case lookupLVarTables vts lv of
+      KnownVarList vl  ->  null vl
+      _                ->  True
+\end{code}
+
+\begin{code}
+-- not null vlC
 vlKnownMatch vts bind cbvs pbvs vlC vlK gvP@(LstVar lvP) -- ListVar !
- | gvP `elem` vlC
+ | gvP == head vlC
     = do bind' <- bindLVarToVList lvP [gvP] bind
-         return (bind',vlC \\ [gvP])
- | vlK `isInfixOf` vlC
+         return (bind',tail vlC)
+ | vlK `isPrefixOf` vlC
     = do bind' <- bindLVarToVList lvP vlK bind
          return (bind',vlC \\ vlK)
- | vlKx `isInfixOf` vlC
+ | vlKx `isPrefixOf` vlC
     = do bind' <- bindLVarToVList lvP vlKx bind
          return (bind',vlC \\ vlKx)
- | otherwise  = fail "vlMatch: no candidates match known list-var."
- where vlKx = sort $ concat $ map (knownLstVarExpand vts) vlK
+ | otherwise
+   = fail $ unlines [ "vlMatch: no candidates match known list-var."
+                    , "lvP =", show lvP
+                    , "vlK =", show vlK
+                    , "vlKx =", show vlKx
+                    , "vlC =", show vlC ]
+ where vlKx = concat $ map (knownLstVarExpand vts) vlK
 \end{code}
 
 \begin{code}
@@ -857,7 +879,7 @@ vsFreeMatch vts bind cbvs pbvs vsC vsP
                  then return bind
                  else fail "vsMatch: too many candidate variables."
  | S.null vsC  = if S.null $ S.filter isStdV vsP
-                 then bindLVarSetToNull bind (S.toList vsP)
+                 then bindLVarSetToNull vts bind (S.toList vsP)
                  else fail "vsMatch: too many std. pattern variables."
 \end{code}
 
@@ -869,12 +891,15 @@ Then we will attempt the list-variable matching.
  | otherwise = vsFreeStdMatch vts bind cbvs pbvs vsC vsP
 \end{code}
 
+Once more, we need to check for list-variables that are known,
+and defined as non-null variable lists.
 \begin{code}
-bindLVarSetToNull bind [] = return bind
-bindLVarSetToNull bind ((LstVar lv):vl)
- = do bind' <- bindLVarToVList lv [] bind
-      bindLVarSetToNull bind' vl
-bindLVarSetToNull _ (_:_) = fail "bindLVarSetToNull: std. variables not allowed."
+bindLVarSetToNull vts bind [] = return bind
+bindLVarSetToNull vts bind ((LstVar lv):vl)
+ | canMatchNull vts lv  =  do bind' <- bindLVarToVList lv [] bind
+                              bindLVarSetToNull vts bind' vl
+ | otherwise  =  fail "vsMatch: known list-var. cannot match null."
+bindLVarSetToNull _ _ (_:_) = fail "bindLVarSetToNull: std. variables not allowed."
 \end{code}
 
 First, pairing up very standard pattern variable

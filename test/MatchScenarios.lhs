@@ -187,6 +187,23 @@ tst_reserved_listvars
             (lwrap [lO])
          @?=
          ( bindLVarToVList lO (lwrap [lM,lS]) emptyBinding :: [Binding] ) )
+     , testCase "Design |-  ok,x,y,z :: M,S  succeeds"
+       ( vlMatch [vtDesign] emptyBinding S.empty S.empty
+            (vwrap [ok,x,y,z])
+            (lwrap [lM,lS])
+         @?=
+         (  (bindLVarToVList lM (vwrap [ok]) $ fromJust $
+            bindLVarToVList lS (vwrap [x,y,z]) emptyBinding) :: Maybe Binding ) )
+     , testCase "Design |-  ok,x,y,z :: S,M  fails"
+       ( vlMatch [vtDesign] emptyBinding S.empty S.empty
+            (vwrap [ok,x,y,z])
+            (lwrap [lS,lM])
+         @?= Nothing )
+     , testCase "Design |-  x,y,z,ok :: M,S  fails"
+       ( vlMatch [vtDesign] emptyBinding S.empty S.empty
+            (vwrap [x,y,z,ok])
+            (lwrap [lM,lS])
+         @?= Nothing )
      , testCase "Design  |-  ok,S :: O  succeeds"
        ( vlMatch [vtDesign] emptyBinding S.empty S.empty
             (vwrap [ok] ++lwrap [lS])
@@ -194,6 +211,11 @@ tst_reserved_listvars
          @?=
          ( bindLVarToVList lO (vwrap [ok] ++lwrap [lS]) emptyBinding
            :: [Binding] ) )
+     , testCase "Design  |-  ok :: M,S  fails"
+       ( vlMatch [vtDesign] emptyBinding S.empty S.empty
+            (vwrap [ok] )
+            (lwrap [lM,lS])
+         @?= Nothing )
      , testCase "|-  x,y :: O  succeeds"
        ( vlMatch [] emptyBinding S.empty S.empty
             (vwrap [x,y])
@@ -212,6 +234,16 @@ tst_reserved_listvars
             (lwrap [lO])
          @?=
          ( bindLVarToVList lO (vwrap [e,x]) emptyBinding :: [Binding] ) )
+     , testCase "Design  |-  {x,y,z} :: {S'}  fails"
+       ( vsMatch [vtDesign] emptyBinding S.empty S.empty
+            (S.fromList $ vwrap [x,y,z])
+            (S.fromList $ lwrap [lS'])
+         @?= Nothing )
+     , testCase "Design  |-  {x,y,z} :: {S}  succeeds"
+       ( vsMatch [vtDesign] emptyBinding S.empty S.empty
+            (S.fromList $ vwrap [x,y,z])
+            (S.fromList $ lwrap [lS])
+         @?= ( bindLVarToVList lS (vwrap [x,y,z]) emptyBinding :: [Binding] ) )
      ]
    ]
 

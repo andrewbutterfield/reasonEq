@@ -127,8 +127,8 @@ vtDesign =
   $ aklv lO (lwrap [lS,lM]) $ aklv lO' (lwrap [lS',lM'])
   $ newVarTable
 
-vwrap = sort . map StdVar
-lwrap = sort . map LstVar
+vwrap = map StdVar ;  vswrap = sort . vwrap
+lwrap = map LstVar ;  lswrap = sort . lwrap
 akv v t tbl = fromJust $ addKnownVar v t tbl
 aklv lv vl tbl = fromJust $ addKnownListVar lv vl tbl
 \end{code}
@@ -137,109 +137,109 @@ Tests:
 \begin{code}
 tst_reserved_listvars
  = [ testGroup "Reserved List Variables"
-     [ testCase "|-  x,y,z :: S  fails"
+     [ testCase "|-  x,y,z :: S  -- shouldn't match."
        ( vlMatch [] emptyBinding S.empty S.empty
             (vwrap [x,y,z])
             (lwrap [lS])
          @?= Nothing )
-     , testCase "Design |-  x,y,z :: S  succeeds"
+     , testCase "Design |-  x,y,z :: S  -- matches at least once."
        ( vlMatch [vtDesign] emptyBinding S.empty S.empty
             (vwrap [x,y,z])
             (lwrap [lS])
          @?= ( bindLVarToVList lS (vwrap [x,y,z]) emptyBinding :: [Binding] ))
-     , testCase "x,y,z,S @ Design  |-  x,y,z :: S  succeeds"
+     , testCase "x,y,z,S @ Design  |-  x,y,z :: S  -- matches at least once."
        ( vlMatch [vtDesign] emptyBinding
             (S.fromList $ vwrap [x,y,z])
             (S.fromList $ lwrap [lS])
             (vwrap [x,y,z])
             (lwrap [lS])
          @?= ( bindLVarToVList lS (vwrap [x,y,z]) emptyBinding :: [Binding] ) )
-     , testCase "Design  |-  x',y',z' :: S  fails"
+     , testCase "Design  |-  x',y',z' :: S  -- shouldn't match."
        ( vlMatch [vtDesign] emptyBinding S.empty S.empty
             (vwrap [x',y',z'])
             (lwrap [lS])
          @?= Nothing )
-     , testCase "Design  |-  x,y',z :: S  fails"
+     , testCase "Design  |-  x,y',z :: S  -- shouldn't match."
        ( vlMatch [vtDesign] emptyBinding S.empty S.empty
             (vwrap [x,y',z])
             (lwrap [lS])
          @?= Nothing )
-     , testCase "Design  |-  x,y,z :: S'  fails"
+     , testCase "Design  |-  x,y,z :: S'  -- shouldn't match."
        ( vlMatch [vtDesign] emptyBinding S.empty S.empty
             (vwrap [x,y,z])
             (lwrap [lS'])
          @?= Nothing )
-     , testCase "Design  |-  x',y',z' :: S'  succeeds"
+     , testCase "Design  |-  x',y',z' :: S'  -- matches at least once."
        ( vlMatch [vtDesign] emptyBinding S.empty S.empty
             (vwrap [x',y',z'])
             (lwrap [lS'])
          @?=
          ( bindLVarToVList lS' (vwrap [x',y',z']) emptyBinding :: [Binding] ) )
-     , testCase "Design  |-  M,S :: O  succeeds"
+     , testCase "Design  |-  M,S :: O  -- matches at least once."
        ( vlMatch [vtDesign] emptyBinding S.empty S.empty
             (lwrap [lM,lS])
             (lwrap [lO])
          @?=
          ( bindLVarToVList lO (lwrap [lM,lS]) emptyBinding :: [Binding] ) )
-     , testCase "|-  M,S :: O  succeeds"
+     , testCase "|-  M,S :: O  -- matches at least once."
        ( vlMatch [] emptyBinding S.empty S.empty
             (lwrap [lM,lS])
             (lwrap [lO])
          @?=
          ( bindLVarToVList lO (lwrap [lM,lS]) emptyBinding :: [Binding] ) )
-     , testCase "Design |-  ok,x,y,z :: M,S  succeeds"
+     , testCase "Design |-  ok,x,y,z :: M,S  -- matches at least once."
        ( vlMatch [vtDesign] emptyBinding S.empty S.empty
             (vwrap [ok,x,y,z])
             (lwrap [lM,lS])
          @?=
          (  (bindLVarToVList lM (vwrap [ok]) $ fromJust $
             bindLVarToVList lS (vwrap [x,y,z]) emptyBinding) :: Maybe Binding ) )
-     , testCase "Design |-  ok,x,y,z :: S,M  fails"
+     , testCase "Design |-  ok,x,y,z :: S,M  -- shouldn't match."
        ( vlMatch [vtDesign] emptyBinding S.empty S.empty
             (vwrap [ok,x,y,z])
             (lwrap [lS,lM])
          @?= Nothing )
-     , testCase "Design |-  x,y,z,ok :: M,S  fails"
+     , testCase "Design |-  x,y,z,ok :: M,S  -- shouldn't match."
        ( vlMatch [vtDesign] emptyBinding S.empty S.empty
             (vwrap [x,y,z,ok])
             (lwrap [lM,lS])
          @?= Nothing )
-     , testCase "Design  |-  ok,S :: O  succeeds"
+     , testCase "Design  |-  ok,S :: O  -- matches at least once."
        ( vlMatch [vtDesign] emptyBinding S.empty S.empty
             (vwrap [ok] ++lwrap [lS])
             (lwrap [lO])
          @?=
          ( bindLVarToVList lO (vwrap [ok] ++lwrap [lS]) emptyBinding
            :: [Binding] ) )
-     , testCase "Design  |-  ok :: M,S  fails"
+     , testCase "Design  |-  ok :: M,S  -- shouldn't match."
        ( vlMatch [vtDesign] emptyBinding S.empty S.empty
             (vwrap [ok] )
             (lwrap [lM,lS])
          @?= Nothing )
-     , testCase "|-  x,y :: O  succeeds"
+     , testCase "|-  x,y :: O  -- matches at least once."
        ( vlMatch [] emptyBinding S.empty S.empty
             (vwrap [x,y])
             (lwrap [lO])
          @?=
          ( bindLVarToVList lO (vwrap [x,y]) emptyBinding :: [Binding] ) )
-     , testCase "|-  x,y' :: O  succeeds"
+     , testCase "|-  x,y' :: O  -- matches at least once."
        ( vlMatch [] emptyBinding S.empty S.empty
             (vwrap [x,y'])
             (lwrap [lO])
          @?=
          ( bindLVarToVList lO (vwrap [x,y']) emptyBinding :: [Binding] ) )
-     , testCase "|-  e,x :: O  succeeds"
+     , testCase "|-  e,x :: O  -- matches at least once."
        ( vlMatch [] emptyBinding S.empty S.empty
             (vwrap [e,x])
             (lwrap [lO])
          @?=
          ( bindLVarToVList lO (vwrap [e,x]) emptyBinding :: [Binding] ) )
-     , testCase "Design  |-  {x,y,z} :: {S'}  fails"
+     , testCase "Design  |-  {x,y,z} :: {S'}  -- shouldn't match."
        ( vsMatch [vtDesign] emptyBinding S.empty S.empty
             (S.fromList $ vwrap [x,y,z])
             (S.fromList $ lwrap [lS'])
          @?= Nothing )
-     , testCase "Design  |-  {x,y,z} :: {S}  succeeds"
+     , testCase "Design  |-  {x,y,z} :: {S}  -- matches at least once."
        ( vsMatch [vtDesign] emptyBinding S.empty S.empty
             (S.fromList $ vwrap [x,y,z])
             (S.fromList $ lwrap [lS])

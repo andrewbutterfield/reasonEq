@@ -677,7 +677,7 @@ findLstCandidate bind vlC' vlP' vlC@(gC:vlC_) vlB@(gB:vlB_) vlP
 
 Here we are doing variable-list matching where all of the
 pattern variables are free, \textit{i.e.}, not already in the binding.
-We do not attempt a complete solutions,
+We do not attempt a complete solution,
 as in fact there can be many possible bindings.
 We adopt a heuristic that simply walks the pattern list
 from left to right and tries to bind the head pattern variable

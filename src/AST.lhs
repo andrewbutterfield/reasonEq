@@ -33,6 +33,7 @@ module AST ( VarWhat
            , isPreGenVar, isObsGVar, isExprGVar, isPredGVar
            , whatGVar, whenGVar
            , VarList
+           , stdVarsOf, listVarsOf
            , VarSet
            , isPreVarSet
            , TermSub, LVarSub
@@ -314,6 +315,16 @@ Some useful predicates/functions:
 \begin{code}
 isStdV (StdVar _)  =  True ;  isStdV _  =  False
 isLstV (LstVar _)  =  True ;  isLstV _  =  False
+
+stdVarsOf :: VarList -> [Variable]
+stdVarsOf []             =  []
+stdVarsOf ((GV sv:gvs))  =  sv:stdVarsOf gvs
+stdVarsOf (_:gvs)        =  stdVarsOf gvs
+
+listVarsOf :: VarList -> [ListVar]
+listVarsOf []             =  []
+listVarsOf ((GL lv:gvs))  =  lv:listVarsOf gvs
+listVarsOf (_:gvs)        =  listVarsOf gvs
 
 isPreGenVar :: GenVar -> Bool
 isPreGenVar (StdVar v) = isPreVar v

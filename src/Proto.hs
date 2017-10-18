@@ -132,10 +132,22 @@ insannihil = ins1 annihilCheck
 
  Check each insertion on the fly.
 
+ This requires us to compute the reflexive transitive image
+ under the relation of each new range element.
+
 -}
 ins2 :: Ord a => InsertOp a
-ins2 a bs m  =  error "ins2: NYI"
+ins2 a bs m
+ | a `S.member`  rtImage m bs  =  Nothing
+ | otherwise                   =  Just $ rext a bs m
 
+-- reflexive, transitive relational image
+rtImage :: Ord a => Rel a -> Set a -> Set a
+rtImage m bs = untilSame (rrImage m) bs
+
+-- reflexive relation image   rrImage(m,bs) = bs `union` m(bs)
+rrImage :: Ord a => Rel a -> Set a -> Set a
+rrImage m bs = S.unions (bs:map (rlkp m) (S.toList bs))
 
 {- -----------------------------------------------------------------------------
 

@@ -1,0 +1,36 @@
+*Proto> timedtests [instrans, insannihil, ins2] $ auto 1
+0.000112s
+0.000048s
+0.000028s
+*Proto> timedtests [instrans, insannihil, ins2] $ auto 5
+0.002986s
+0.00136s
+0.000475s
+*Proto> timedtests [instrans, insannihil, ins2] $ auto 10
+0.047842s
+0.021456s
+0.00333s
+*Proto> timedtests [instrans, insannihil, ins2] $ auto 15
+0.308326s
+0.13724s
+0.014361s
+*Proto> timedtests [instrans, insannihil, ins2] $ auto 20
+1.248041s
+0.566338s
+0.041856s
+*Proto> timedtests [instrans, insannihil, ins2] $ auto 25
+3.953532s
+1.746431s
+0.106121s
+*Proto> timedtests [instrans, insannihil, ins2] $ auto 30
+10.214037s
+4.609918s
+0.21445s
+*Proto> timedtests [instrans, insannihil, ins2] $ auto 35
+23.588404s
+10.417426s
+0.412417s
+*Proto> timedtests [instrans, insannihil, ins2] $ auto 40
+49.199608s
+22.036669s
+0.726038s

@@ -15,7 +15,8 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Utilities
+  exposed-modules:     Proto
+                     , Utilities
                      , LexBase
                      , AST
                      , VarData
@@ -26,6 +27,7 @@ library
                      , TRYOUT
   build-depends:       base >= 4.7 && < 5
                      , containers
+                     , time
                      -- we need to support internal tests for some modules
                      , HUnit
                      , QuickCheck

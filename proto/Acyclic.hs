@@ -5,7 +5,7 @@
  We use Data.Set and Data.Map rather than lists
  as these already have some efficiencies.
 -}
-module Proto where
+module Acyclic where
 
 import Data.List
 import Data.Set (Set)

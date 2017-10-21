@@ -133,7 +133,66 @@ newVarTable :: VarTable
 newVarTable = VT (M.empty, M.empty)
 \end{code}
 
-\subsubsection{Inserting into Table}
+\newpage
+\subsection{Ensuring \texttt{VarTable} Acyclicity}
+
+We have an invariant that there are no cycles in any \texttt{VarTable}.
+
+We do this by a recursive walk over the mappings,
+building a mapping from each variable type to a set of the same type.
+\begin{code}
+type ItemDep v = Map v (Set v)
+\end{code}
+Given a mapping and a specialised list-valued lookup,
+we build an item dependency map,
+checking for self-inclusion all the way.
+\begin{code}
+isAcyclic :: Ord d
+          => Map d r -- the map, where 'r' contains one or more 'd's.
+          -> (Map d r -> d -> Set d) -- specialised lookup
+          -> Bool  -- true if map is acyclic in 'd'
+isAcyclic m lkp = isAcyclic' m lkp M.empty (M.keys m)
+\end{code}
+We work through the keys accumulating the item-dependency map.
+\begin{code}
+isAcyclic' :: Ord d
+           => Map d r -- the map, where 'r' contains one or more 'd's.
+           -> (Map d r -> d -> Set d) -- specialised lookup
+           -> ItemDep d -- accumulating map
+           -> [d]  -- keys remaining to be processed
+           -> Bool
+isAcyclic' _ _ dds [] = isAcyclic'' dds
+isAcyclic' m lkp dds (d:ds)
+  = isAcyclic' m lkp (M.insertWith (S.union) d (lkp m d) dds) ds
+\end{code}
+We test the dependency map for cycles,
+which first involves computing the transitive closure.
+\begin{code}
+isAcyclic'' dds = False
+\end{code}
+
+Everytime the mapping is extended we check for self-inclusion.
+\begin{code}
+isAcyclicVarTable :: VarTable -> Bool
+isAcyclicVarTable (VT (vtable, ltable))
+ = isAcyclic vtable vlkp
+   &&
+   isAcyclic ltable llkp
+ where
+
+   vlkp vtbl v
+     = case M.lookup v vtbl of
+         Just (KnownConst (Var _ v@(Vbl _ _ _)))  ->  S.singleton v
+         _                                        ->  S.empty
+
+   llkp ltbl lv
+     = case M.lookup lv ltbl of
+        Just (KnownVarList vl)  ->  S.fromList $ listVarsOf vl
+        _                       ->  S.empty
+
+\end{code}
+
+\subsubsection{Inserting into Tables}
 
 Adding values into a table overwrites any previous values
 without any warning.
@@ -202,62 +261,4 @@ lookupLVarTables (VT (_,ltable):rest) lvar
  = case M.lookup lvar ltable of
      Just lvmr  ->  lvmr
      Nothing    ->  lookupLVarTables rest lvar
-\end{code}
-
-\newpage
-\subsection{Ensuring \texttt{VarTable} Acyclicity}
-
-We need to ensure that there are no cycles in any \texttt{VarTable}.
-We do this by a recursive walk over the mappings,
-building a mapping from each variable type to a set of the same type.
-\begin{code}
-type ItemDep v = Map v (Set v)
-\end{code}
-Given a mapping and a specialised list-valued lookup,
-we build an item dependency map,
-checking for self-inclusion all the way.
-\begin{code}
-isAcyclic :: Ord d
-          => Map d r -- the map, where 'r' contains one or more 'd's.
-          -> (Map d r -> d -> Set d) -- specialised lookup
-          -> Bool  -- true if map is acyclic in 'd'
-isAcyclic m lkp = isAcyclic' m lkp M.empty (M.keys m)
-\end{code}
-We work through the keys accumulating the item-dependency map.
-\begin{code}
-isAcyclic' :: Ord d
-           => Map d r -- the map, where 'r' contains one or more 'd's.
-           -> (Map d r -> d -> Set d) -- specialised lookup
-           -> ItemDep d -- accumulating map
-           -> [d]  -- keys remaining to be processed
-           -> Bool
-isAcyclic' _ _ dds [] = isAcyclic'' dds
-isAcyclic' m lkp dds (d:ds)
-  = isAcyclic' m lkp (M.insertWith (S.union) d (lkp m d) dds) ds
-\end{code}
-We test the dependency map for cycles,
-which first involves computing the transitive closure.
-\begin{code}
-isAcyclic'' dds = False
-\end{code}
-
-Everytime the mapping is extended we check for self-inclusion.
-\begin{code}
-isAcyclicVarTable :: VarTable -> Bool
-isAcyclicVarTable (VT (vtable, ltable))
- = isAcyclic vtable vlkp
-   &&
-   isAcyclic ltable llkp
- where
-
-   vlkp vtbl v
-     = case M.lookup v vtbl of
-         Just (KnownConst (Var _ v@(Vbl _ _ _)))  ->  S.singleton v
-         _                                        ->  S.empty
-
-   llkp ltbl lv
-     = case M.lookup lv ltbl of
-        Just (KnownVarList vl)  ->  S.fromList $ listVarsOf vl
-        _                       ->  S.empty
-
 \end{code}

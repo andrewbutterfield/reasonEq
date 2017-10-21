@@ -14,9 +14,8 @@ extra-source-files:  README.md
 cabal-version:       >=1.10
 
 library
-  hs-source-dirs:      src
-  exposed-modules:     Proto
-                     , Utilities
+  hs-source-dirs:      src, proto
+  exposed-modules:     Utilities
                      , LexBase
                      , AST
                      , VarData
@@ -24,6 +23,8 @@ library
                      , Matching
                      , Syntax
                      , Builder
+                     -- in proto
+                     , Acyclic
                      , TRYOUT
   build-depends:       base >= 4.7 && < 5
                      , containers

@@ -137,60 +137,42 @@ newVarTable = VT (M.empty, M.empty)
 \subsection{Ensuring \texttt{VarTable} Acyclicity}
 
 We have an invariant that there are no cycles in any \texttt{VarTable}.
+Simplifying, we can imaginge we have a relation between variables
+expressed as a set-valued partial, finite map.
+\begin{equation}
+  \mu  \in Rel = V \fun \Set V
+\end{equation}
+So if  $\mu$ represents relation $R$,
+then we say that if $u R v$, then $v \in \mu(u)$.
 
-We do this by a recursive walk over the mappings,
-building a mapping from each variable type to a set of the same type.
-\begin{code}
-type ItemDep v = Map v (Set v)
-\end{code}
-Given a mapping and a specialised list-valued lookup,
-we build an item dependency map,
-checking for self-inclusion all the way.
-\begin{code}
-isAcyclic :: Ord d
-          => Map d r -- the map, where 'r' contains one or more 'd's.
-          -> (Map d r -> d -> Set d) -- specialised lookup
-          -> Bool  -- true if map is acyclic in 'd'
-isAcyclic m lkp = isAcyclic' m lkp M.empty (M.keys m)
-\end{code}
-We work through the keys accumulating the item-dependency map.
-\begin{code}
-isAcyclic' :: Ord d
-           => Map d r -- the map, where 'r' contains one or more 'd's.
-           -> (Map d r -> d -> Set d) -- specialised lookup
-           -> ItemDep d -- accumulating map
-           -> [d]  -- keys remaining to be processed
-           -> Bool
-isAcyclic' _ _ dds [] = isAcyclic'' dds
-isAcyclic' m lkp dds (d:ds)
-  = isAcyclic' m lkp (M.insertWith (S.union) d (lkp m d) dds) ds
-\end{code}
-We test the dependency map for cycles,
-which first involves computing the transitive closure.
-\begin{code}
-isAcyclic'' dds = False
-\end{code}
+There are many ways to check for acyclicity.
+The most well-known computes $R^+$,
+the transitive closure of the relation,
+and then checks for all $u \in \dom R$ that $\lnot(uR^+u)$.
+Another, based on MMA's thesis%
+\footnote{Conceptual Modelling, University of Dublin, 1990}%
+uses a annihilator, an operator that removes all tuples $(u,v)$
+from a relation, where $v$ does not itself appear in the lhs of a relation tuple.
+Repeated application of the annihilator will reduce any relation down to just its cycles, or the empty relation, if there are no cycles.
 
-Everytime the mapping is extended we check for self-inclusion.
-\begin{code}
-isAcyclicVarTable :: VarTable -> Bool
-isAcyclicVarTable (VT (vtable, ltable))
- = isAcyclic vtable vlkp
-   &&
-   isAcyclic ltable llkp
- where
+Another technique is ensure acyclicity from the outset,
+by checking a new maplet against the map to see if it will introduce a cycle.
+Given a map $\mu$, and a set of variables $V$,
+its \emph{relational image} w.r.t. $V$, denoted by $\mu(V)$ is
+the union of all the $\mu(v)$ obtained for each $v \in V$.
+The \emph{reflexive transitive image closure}
+$\mu^*(V) = V \cup \mu(V) \cup \mu(\mu(V)) \cup \dots$.
+When inserting a mapping from $u$ to $V$ into $\mu$,
+we simply compute $\mu^*(V)$ and check that $u$ does not occur in it.
 
-   vlkp vtbl v
-     = case M.lookup v vtbl of
-         Just (KnownConst (Var _ v@(Vbl _ _ _)))  ->  S.singleton v
-         _                                        ->  S.empty
+Tests in \texttt{proto/Acyclic.hs} show that the annihilator approach to
+after-insertion acyclicity checking
+is three times faster, approximately, than the transitive closure approach.
+However, the insert-time check based on image closure is almost two
+orders of magnitude faster than either acyclic check.
+So here we ensure at table insertion time that
+we are not about to create such cycles.
 
-   llkp ltbl lv
-     = case M.lookup lv ltbl of
-        Just (KnownVarList vl)  ->  S.fromList $ listVarsOf vl
-        _                       ->  S.empty
-
-\end{code}
 
 \subsubsection{Inserting into Tables}
 

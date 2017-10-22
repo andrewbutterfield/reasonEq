@@ -14,6 +14,8 @@ import LexBase
 import AST
 import VarData
 
+i = ObsVar  (fromJust $ ident "i") Static
+j = ObsVar  (fromJust $ ident "j") Static
 k = ObsVar  (fromJust $ ident "k") Static
 v = ObsVar  (fromJust $ ident "v") (Dynamic Before)
 e = ExprVar (fromJust $ ident "e") (Dynamic Before)
@@ -27,6 +29,9 @@ tst_addKnownConst :: TF.Test
 k42 = EVal ArbType $ Integer 42
 k99 = EVal ArbType $ Integer 99
 pTrue = PVal $ Boolean True
+ki = fromJust $ eVar ArbType i
+kj = fromJust $ eVar ArbType j
+kk = fromJust $ eVar ArbType k
 
 tst_addKnownConst
  = testGroup "addKnownConst"
@@ -45,6 +50,25 @@ tst_addKnownConst
      , testCase "T known as True"
        ( vtList (fromJust (addKnownConst pT pTrue newVarTable))
          @?= [(pT,KnownConst pTrue)] )
+     , testCase "k |-> j should succeed"
+       ( vtList (fromJust (addKnownConst k kj newVarTable))
+         @?= [(k,KnownConst kj)] )
+     , testCase "j |-> k should succeed"
+       ( vtList (fromJust (addKnownConst j kk newVarTable))
+         @?= [(j,KnownConst kk)] )
+     , testCase "i -> j -> k should succeed"
+       ( vtList (fromJust (addKnownConst j kk
+                (fromJust (addKnownConst i kj newVarTable))))
+         @?= [(i,KnownConst kj),(j,KnownConst kk)] )
+     , testCase "k -> j -> k should fail"
+       ( (addKnownConst j kk
+             (fromJust (addKnownConst k kj newVarTable)))
+         @?= Nothing )
+     , testCase "i -> j -> k -> i should fail"
+       ( (addKnownConst k ki
+                (fromJust (addKnownConst j kk
+                (fromJust (addKnownConst i kj newVarTable)))))
+         @?= Nothing )
      ]
 
 -- -----------------------------------------------------------------------------
@@ -100,6 +124,22 @@ tst_lookupVarTable
        ( lookupVarTable kvepTable z @?= UnknownVar )
      ]
 
+-- -----------------------------------------------------------------------------
+tst_addKnownListVar :: TF.Test
+
+
+tst_addKnownListVar
+ = testGroup "addKnownListVar)"
+     [ testCase "NO TESTS !"
+       ( True @?= False )
+     ]
+
+tst_lookupLVarTable
+ = testGroup "lookupLVarTable)"
+     [ testCase "NO TESTS !"
+       ( True @?= False )
+     ]
+
 
 
 -- -----------------------------------------------------------------------------
@@ -109,5 +149,7 @@ tst_VarData
       [ tst_addKnownConst
       , tst_addKnownVar
       , tst_lookupVarTable
-      ]
+      , tst_addKnownListVar
+       , tst_lookupLVarTable
+       ]
     ]

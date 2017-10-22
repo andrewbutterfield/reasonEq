@@ -20,7 +20,6 @@ module VarData ( VarMatchRole
                , addKnownListVar
                , lookupVarTable, lookupVarTables
                , lookupLVarTable, lookupLVarTables
-               , isAcyclicVarTable
                ) where
 --import Data.Maybe (fromJust)
 import Data.Map (Map)
@@ -29,7 +28,7 @@ import Data.Set (Set)
 import qualified Data.Set as S
 import Data.List (nub)
 
---import Utilities
+import Utilities
 import LexBase
 import AST
 \end{code}
@@ -150,7 +149,7 @@ The most well-known computes $R^+$,
 the transitive closure of the relation,
 and then checks for all $u \in \dom R$ that $\lnot(uR^+u)$.
 Another, based on MMA's thesis%
-\footnote{Conceptual Modelling, University of Dublin, 1990}%
+\footnote{M\'iche\'al Mac An Airchinnigh, Conceptual Modelling, University of Dublin, 1990.}%
 uses a annihilator, an operator that removes all tuples $(u,v)$
 from a relation, where $v$ does not itself appear in the lhs of a relation tuple.
 Repeated application of the annihilator will reduce any relation down to just its cycles, or the empty relation, if there are no cycles.
@@ -167,21 +166,81 @@ we simply compute $\mu^*(V)$ and check that $u$ does not occur in it.
 
 Tests in \texttt{proto/Acyclic.hs} show that the annihilator approach to
 after-insertion acyclicity checking
-is three times faster, approximately, than the transitive closure approach.
-However, the insert-time check based on image closure is almost two
-orders of magnitude faster than either acyclic check.
-So here we ensure at table insertion time that
-we are not about to create such cycles.
+is two-and-a-half times faster, approximately, than the transitive closure approach.
+However, the insert-time check based on image closure is almost an
+order of magnitude faster than either acyclic check.
+So here we decide to use the insert-time check
+to ensure that we are not about to create such cycles.
+
+We have two mappings, but can consider them seperately.
+The standard variable mapping is of the form \texttt{Variable -> Variable},
+and so any cycles must remain within in it.
+The list-variable mapping has form \texttt{ListVar -> Set GenVar},
+which can include \texttt{Variable}.
+However any pointers to \texttt{StdVar} will jump over
+to the standard variable mapping and stay there.
+Only pointers to \texttt{LstVar} have the potential to lead to cycles.
+
+\subsubsection{Standard Variable Reflexive-Transitive Image}
+
+Reflexive, transitive relational image:
+\begin{code}
+rtStdImage :: Map Variable VarMatchRole -> Set Variable -> Set Variable
+rtStdImage vtable vs = untilEq (rrStdImage vtable) vs
+\end{code}
+
+Reflexive relation image:
+\begin{code}
+rrStdImage :: Map Variable VarMatchRole -> Set Variable
+           -> Set Variable
+rrStdImage vtable vs = S.unions (vs:map (stdVVlkp vtable) (S.toList vs))
+\end{code}
+
+Looking up the \texttt{Variable -> Variable} fragment of a \texttt{VarTable}:
+\begin{code}
+stdVVlkp vtable v
+ = case M.lookup v vtable of
+    Just (KC (Var _ v'))  ->  S.singleton v'
+    _                     ->  S.empty
+\end{code}
+
+\newpage
+\subsubsection{List-Variable Reflexive-Transitive Image}
+
+Reflexive, transitive relational image:
+\begin{code}
+rtLstImage :: Map ListVar LstVarMatchRole -> Set ListVar -> Set ListVar
+rtLstImage ltable lvs = untilEq (rrLstImage ltable) lvs
+\end{code}
+
+Reflexive relation image:
+\begin{code}
+rrLstImage :: Map ListVar LstVarMatchRole -> Set ListVar
+           -> Set ListVar
+rrLstImage ltable lvs = S.unions (lvs:map (lstVVlkp ltable) (S.toList lvs))
+\end{code}
+
+Looking up the \texttt{ListVar -> VarList} fragment of a \texttt{VarTable}:
+\begin{code}
+lstVVlkp ltable lv
+ = case M.lookup lv ltable of
+    Just (KL gvs)  ->  S.fromList $ listVarsOf gvs
+    _              ->  S.empty
+\end{code}
 
 
-\subsubsection{Inserting into Tables}
+\subsection{Inserting into Tables}
 
 Adding values into a table overwrites any previous values
 without any warning.
 
-Only static variables may name a constant:
+Only static variables may name a constant,
+amd we must check that we won't introduce any cycles:
 \begin{code}
 addKnownConst :: Monad m => Variable -> Term -> VarTable -> m VarTable
+addKnownConst var@(Vbl _ _ Static) (Var _ tvar) (VT (vtable,ltable))
+  | var `S.member` rtStdImage vtable (S.singleton tvar)
+     = fail "addKnownConst: must not create variable cycle."
 addKnownConst var@(Vbl _ _ Static) trm (VT (vtable,ltable))
   =  return $ VT ( M.insert var (KC trm) vtable, ltable )
 addKnownConst _ _ _ = fail "addKnownConst: not for Dynamic Variables."
@@ -200,9 +259,12 @@ For now only observation-list variables
 can be defined as equal to a list of general variables,
 with the same temporality
 (except if static, these can mix and match temporal aspects).
+We also need to check to avoid cycles.
 \begin{code}
 addKnownListVar :: Monad m => ListVar -> VarList -> VarTable -> m VarTable
 addKnownListVar lv vl (VT (vtable, ltable))
+ | lv `S.member` rtLstImage ltable (S.fromList $ listVarsOf vl)
+     = fail "addKnownListVar: must not create list-variable cycle."
  | [whatLVar lv] == nub (map whatGVar vl)
                              =  return $ VT (vtable, M.insert lv (KL vl) ltable)
  | otherwise = fail  "addKnownListVar: inconsistent variable classifications."

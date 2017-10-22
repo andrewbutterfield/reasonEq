@@ -31,6 +31,18 @@ xs     `pulledFrom` []  =  (False,[])
  | otherwise  =  (False,ys)
 \end{code}
 
+\subsection{Control-Floe Functions}
+
+\subsubsection{Repeat Until Equal}
+
+\begin{code}
+untilEq :: Eq a => (a -> a) -> a -> a
+untilEq f x
+ | x' == x  =  x
+ | otherwise  =  untilEq f x'
+ where x' = f x
+\end{code}
+
 \subsection{Possible Failure Monad}
 
 \subsubsection{Datatype: Yes, But \dots}

@@ -127,15 +127,38 @@ tst_lookupVarTable
 -- -----------------------------------------------------------------------------
 tst_addKnownListVar :: TF.Test
 
+-- pattern PreVars  i    =  LV (VR (i,VO,(KD WB)),[])
+-- pattern PostVars i    =  LV (VR (i,VO,(KD WA)),[])
+-- pattern MidVars  i n  =  LV (VR (i,VO,(KD (WD n))),[])
+-- pattern ScriptVars i  =  LV (VR (i,VV,(KD WB)),[])
+-- pattern PreExprs i    =  LV (VR (i,VE,(KD WB)),[])
+-- pattern PrePreds i    =  LV (VR (i,VP,(KD WB)),[])
+lu  = PreVars  $ fromJust $ ident "lu"     ; glu  = LstVar lu
+lv  = PreVars  $ fromJust $ ident "lv"     ; glv  = LstVar lv
+lw  = PreVars  $ fromJust $ ident "lw"     ; glw  = LstVar lw
+lv' = PostVars $ fromJust $ ident "lv"     ; glv' = LstVar lv'
+lvm = MidVars  (fromJust $ ident "lv") "m" ; glvm = LstVar lvm
+le  = PreExprs $ fromJust $ ident "le"     ; gle  = LstVar le
+lP  = PrePreds $ fromJust $ ident "lP"     ; glP  = LstVar lP
 
 tst_addKnownListVar
- = testGroup "addKnownListVar)"
-     [ testCase "NO TESTS !"
-       ( True @?= False )
+ = testGroup "addKnownListVar"
+     [ testCase "lu |-> lv, succeeds"
+       ( ltList (fromJust (addKnownListVar lu [glv] newVarTable))
+         @?= [(lu,KnownVarList [glv])] )
+     , testCase "lu |-> lv, lv -> lw succeeds"
+       ( ltList (fromJust (addKnownListVar lu [glv]
+                 (fromJust (addKnownListVar lv [glw] newVarTable))))
+         @?= [(lu,KnownVarList [glv]),(lv,KnownVarList [glw])] )
+     , testCase "lu |-> lv, lv -> lw, lw -> lu fails"
+       ( addKnownListVar lu [glv]
+                (fromJust (addKnownListVar lv [glw]
+                (fromJust (addKnownListVar lw [glu] newVarTable))))
+         @?= Nothing )
      ]
 
 tst_lookupLVarTable
- = testGroup "lookupLVarTable)"
+ = testGroup "lookupLVarTable"
      [ testCase "NO TESTS !"
        ( True @?= False )
      ]
@@ -150,6 +173,6 @@ tst_VarData
       , tst_addKnownVar
       , tst_lookupVarTable
       , tst_addKnownListVar
-       , tst_lookupLVarTable
-       ]
+      , tst_lookupLVarTable
+      ]
     ]

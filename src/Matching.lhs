@@ -13,7 +13,7 @@ module Matching
 , vMatch, bvMatch
 , vsMatch, vlMatch
 , sMatch
-, knownLstVarExpand
+, expandKnown
 ) where
 import Data.Maybe (isJust,fromJust)
 import Data.Map (Map)
@@ -87,7 +87,7 @@ and a rule applies provided at least one of the $\beta'_i$ is defined.
 We write $\langle\beta\rangle$ as $\beta$
 and in most rules we omit irrelevant parts of the context.
 \newpage
-\subsection{Matching Types}
+\subsection{Haskell Types for Matching}
 
 We introduce some type and value synonyms,
 to make type-signatures more informative.
@@ -288,13 +288,13 @@ tMatch' vts bind cbvs pbvs (Sub tkC tC subC) (Sub tkP tP subP)
 
 $$
 \inferrule
-   {na_C = na_P \land ni_C = ni_P
+   {na_C = na_P \and ni_C = ni_P
     \and
     \beta \vdash lvs_C :: lvs_P \leadsto \beta'
    }
    { \beta \vdash \ii{na_C}{ni_C}{lvs_C} :: \ii{na_P}{ni_P}{lvs_P}
      \leadsto
-     \beta \uplus \beta\
+     \beta \uplus \beta'
    }
    \quad
    \texttt{tMatch Iter}
@@ -702,7 +702,7 @@ vlFreeMatch vts bind cbvs pbvs vlC []
 \end{code}
 
 If there are leftover pattern variables,
-we suceed if they are all ``unknown'' list-variables,
+we succeed if they are all ``unknown'' list-variables,
 as they can be bound to the empty variable-list.
 For our purposes here a list-variable is unkown if it not known,
 or is known to be defined as a empty variable-list%
@@ -763,6 +763,16 @@ canMatchNull vts lv
       _                ->  True
 \end{code}
 
+Here we have a list-variable \texttt{lvP} that is known to expand as \texttt{vlK}.
+Now, \texttt{vlK} may also contain known variables.
+Simlarly, so might the relevant prefix of \texttt{vlC}.
+We need to expand \texttt{vlK} so the result \texttt{vlKx} contains no known variables.
+We can then try to match incrementally along \texttt{vlC},
+fully expanding known candidate variables as we go along.
+If this succeeds, we return a binding between the original \texttt{lvP}
+and the corresponding prefix of the orignal \texttt{vlC},
+rather than involving any of the expansions (esp. \texttt{vlK}!).
+This is why we do not allow cycles in \texttt{VarTable}s.
 \begin{code}
 -- not null vlC
 vlKnownMatch vts bind cbvs pbvs vlC vlK gvP@(LstVar lvP) -- ListVar !
@@ -772,25 +782,47 @@ vlKnownMatch vts bind cbvs pbvs vlC vlK gvP@(LstVar lvP) -- ListVar !
  | vlK `isPrefixOf` vlC
     = do bind' <- bindLVarToVList lvP vlK bind
          return (bind',vlC \\ vlK)
- | vlKx `isPrefixOf` vlC
-    = do bind' <- bindLVarToVList lvP vlKx bind
-         return (bind',vlC \\ vlKx)
  | otherwise
-   = fail $ unlines [ "vlMatch: no candidates match known list-var."
-                    , "lvP =", show lvP
-                    , "vlK =", show vlK
-                    , "vlKx =", show vlKx
-                    , "vlC =", show vlC ]
- where vlKx = concat $ map (knownLstVarExpand vts) vlK
+    = do (vlC1,vlC2) <- unkKnVLMatch vts [] vlC vlKx
+         bind' <- bindLVarToVList lvP vlC1 bind
+         return (bind',vlC2)
+ where vlKx = concat $ map (expandKnown vts) vlK
 \end{code}
 
+We want to match a fully-expanded pattern variable-list
+against a candidate variable-list that may only be partially expanded.
+The second argument accummulates the original \texttt{vlC} variables.
 \begin{code}
-knownLstVarExpand vts gv@(LstVar lv)
-  = case lookupLVarTables vts lv of
-     KnownVarList kvl     ->  kvl
-     AnyVarList           ->  [gv]
-knownLstVarExpand vts gv  =   [gv]
+unkKnVLMatch vts rvlC1 vlC2 []  =  return (reverse rvlC1, vlC2)
+
+unkKnVLMatch vts rvlC1 [] _ = fail "vlMatch: not enough candidate variables."
+
+unkKnVLMatch vts rvlC1 (gvC:vlC2) vlKx@(gvP:vlKx')
+ |  gvC == gvP  =  unkKnVLMatch vts (gvC:rvlC1) vlC2 vlKx'
+ |  otherwise   =  do vlKx'' <- unkUknVLMatch (expandKnown vts gvC) vlKx
+                      unkKnVLMatch vts (gvC:rvlC1) vlC2 vlKx''
 \end{code}
+
+Here we have two fully expanded segemtns, so we seek a simple prefix property:
+\begin{code}
+unkUknVLMatch gvCx vlKx
+ |  gvCx `isPrefixOf` vlKx  =  return (vlKx \\ gvCx)
+ | otherwise = fail "vlMatch: list-var. mismatch."
+\end{code}
+
+We keep expanding known variables.
+\begin{code}
+expandKnown :: [VarTable] -> GenVar -> VarList
+expandKnown vts gv@(LstVar lv)
+  = case lookupLVarTables vts lv of
+      KnownVarList kvl  ->  concat $ map (expandKnown vts) kvl
+      AnyVarList        ->  [gv]
+expandKnown vts gv@(StdVar v)
+  = case lookupVarTables vts v of
+      KnownConst (Var _ kc)  ->  expandKnown vts $ StdVar kc
+      _                      ->  [gv]
+\end{code}
+
 
 \begin{code}
 vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP n

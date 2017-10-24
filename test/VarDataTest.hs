@@ -155,12 +155,25 @@ tst_addKnownListVar
                 (fromJust (addKnownListVar lv [glw]
                 (fromJust (addKnownListVar lw [glu] newVarTable))))
          @?= Nothing )
-     ]
+     , testCase "lu |-> lv', succeeds"
+       ( ltList (fromJust (addKnownListVar lu [glv'] newVarTable))
+         @?= [(lu,KnownVarList [glv'])] )
+     , testCase "lu |-> le, fails (SHOULD IT?)"
+       ( addKnownListVar lu [gle] newVarTable @?= Nothing )
+      , testCase "le |-> lu, fails (SHOULD IT?)"
+        ( addKnownListVar le [glu] newVarTable @?= Nothing )
+      , testCase "lP |-> le, fails (SHOULD IT?)"
+        ( addKnownListVar lP [gle] newVarTable @?= Nothing )
+      ]
+
+lulvTable = fromJust $ addKnownListVar lu [glv] newVarTable
 
 tst_lookupLVarTable
  = testGroup "lookupLVarTable"
-     [ testCase "NO TESTS !"
-       ( True @?= False )
+     [ testCase "lu in empty table, should be AnyVarList"
+       ( lookupLVarTable newVarTable lu @?= AnyVarList )
+     , testCase "lu in lulvTable, should be AnyVarList"
+       ( lookupLVarTable lulvTable lu @?= KnownVarList [glv] )
      ]
 
 

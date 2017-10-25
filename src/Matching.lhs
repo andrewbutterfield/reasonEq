@@ -803,11 +803,15 @@ unkKnVLMatch vts rvlC1 (gvC:vlC2) vlKx@(gvP:vlKx')
                       unkKnVLMatch vts (gvC:rvlC1) vlC2 vlKx''
 \end{code}
 
-Here we have two fully expanded segemtns, so we seek a simple prefix property:
+Here we have two fully expanded segments, so we seek a simple prefix property:
 \begin{code}
 unkUknVLMatch gvCx vlKx
  |  gvCx `isPrefixOf` vlKx  =  return (vlKx \\ gvCx)
- | otherwise = fail "vlMatch: list-var. mismatch."
+ | otherwise = fail $ unlines
+                 [ "vlMatch: list-var. mismatch."
+                 , "gvCx = " ++ show gvCx
+                 , "vlKx = " ++ show vlKx
+                 ]
 \end{code}
 
 We keep expanding known variables.

@@ -3,10 +3,11 @@ where
 
 import Data.Maybe(fromJust)
 import Data.Map as M (fromList)
+import Data.Set as S (singleton)
 
 import Test.HUnit
-import Test.Framework as TF (testGroup, Test)
---import Test.Framework as TF (defaultMain, testGroup, Test)
+--import Test.Framework as TF (testGroup, Test)
+import Test.Framework as TF (defaultMain, testGroup, Test)
 import Test.Framework.Providers.HUnit (testCase)
 --import Test.Framework.Providers.QuickCheck2 (testProperty)
 
@@ -141,32 +142,58 @@ lvm = MidVars  (fromJust $ ident "lv") "m" ; glvm = LstVar lvm
 le  = PreExprs $ fromJust $ ident "le"     ; gle  = LstVar le
 lP  = PrePreds $ fromJust $ ident "lP"     ; glP  = LstVar lP
 
+sngl = S.singleton
+
 tst_addKnownListVar
- = testGroup "addKnownListVar"
-     [ testCase "lu |-> lv, succeeds"
-       ( ltList (fromJust (addKnownListVar lu [glv] newVarTable))
+ = testGroup "addKnownVarList"
+     [ testCase "lu |-> <lv>, succeeds"
+       ( ltList (fromJust (addKnownVarList lu [glv] newVarTable))
          @?= [(lu,KnownVarList [glv])] )
-     , testCase "lu |-> lv, lv -> lw succeeds"
-       ( ltList (fromJust (addKnownListVar lu [glv]
-                 (fromJust (addKnownListVar lv [glw] newVarTable))))
+     , testCase "lu |-> <lv>, lv -> <lw> succeeds"
+       ( ltList (fromJust (addKnownVarList lu [glv]
+                 (fromJust (addKnownVarList lv [glw] newVarTable))))
          @?= [(lu,KnownVarList [glv]),(lv,KnownVarList [glw])] )
-     , testCase "lu |-> lv, lv -> lw, lw -> lu fails"
-       ( addKnownListVar lu [glv]
-                (fromJust (addKnownListVar lv [glw]
-                (fromJust (addKnownListVar lw [glu] newVarTable))))
+     , testCase "lu |-> <lv>, lv -> <lw>, lw -> <lu> fails"
+       ( addKnownVarList lu [glv]
+                (fromJust (addKnownVarList lv [glw]
+                (fromJust (addKnownVarList lw [glu] newVarTable))))
          @?= Nothing )
-     , testCase "lu |-> lv', succeeds"
-       ( ltList (fromJust (addKnownListVar lu [glv'] newVarTable))
+     , testCase "lu |-> {lv}, succeeds"
+        ( ltList (fromJust (addKnownVarSet lu (sngl glv) newVarTable))
+          @?= [(lu,KnownVarSet (sngl glv))] )
+     , testCase "lu |-> {lv}, lv -> {lw} succeeds"
+        ( ltList (fromJust (addKnownVarSet lu (sngl glv)
+                  (fromJust (addKnownVarSet lv (sngl glw) newVarTable))))
+          @?= [(lu,KnownVarSet (sngl glv)),(lv,KnownVarSet (sngl glw))] )
+     , testCase "lu |-> {lv}, lv -> {lw}, lw -> {lu} fails"
+        ( addKnownVarSet lu (sngl glv)
+                 (fromJust (addKnownVarSet lv (sngl glw)
+                 (fromJust (addKnownVarSet lw (sngl glu) newVarTable))))
+          @?= Nothing )
+     , testCase "lu |-> {lv}, lv -> {lw} succeeds"
+        ( ltList (fromJust (addKnownVarSet lu (sngl glv)
+                  (fromJust (addKnownVarSet lv (sngl glw) newVarTable))))
+          @?= [(lu,KnownVarSet (sngl glv)),(lv,KnownVarSet (sngl glw))] )
+     , testCase "lu |-> {lv}, lv -> <lw> fails"
+        ( addKnownVarSet lu (sngl glv)
+                  (fromJust (addKnownVarList lv [glw] newVarTable))
+          @?= Nothing )
+     , testCase "lu |-> <lv>, lv -> {lw} fails"
+        ( addKnownVarList lu [glv]
+                  (fromJust (addKnownVarSet lv (sngl glw) newVarTable))
+          @?= Nothing )
+     , testCase "lu |-> <lv'>, succeeds"
+       ( ltList (fromJust (addKnownVarList lu [glv'] newVarTable))
          @?= [(lu,KnownVarList [glv'])] )
-     , testCase "lu |-> le, fails (SHOULD IT?)"
-       ( addKnownListVar lu [gle] newVarTable @?= Nothing )
-      , testCase "le |-> lu, fails (SHOULD IT?)"
-        ( addKnownListVar le [glu] newVarTable @?= Nothing )
-      , testCase "lP |-> le, fails (SHOULD IT?)"
-        ( addKnownListVar lP [gle] newVarTable @?= Nothing )
+     , testCase "lu |-> <le>, fails (SHOULD IT?)"
+       ( addKnownVarList lu [gle] newVarTable @?= Nothing )
+      , testCase "le |-> <lu>, fails (SHOULD IT?)"
+        ( addKnownVarList le [glu] newVarTable @?= Nothing )
+      , testCase "lP |-> <le>, fails (SHOULD IT?)"
+        ( addKnownVarList lP [gle] newVarTable @?= Nothing )
       ]
 
-lulvTable = fromJust $ addKnownListVar lu [glv] newVarTable
+lulvTable = fromJust $ addKnownVarList lu [glv] newVarTable
 
 tst_lookupLVarTable
  = testGroup "lookupLVarTable"

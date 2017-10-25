@@ -11,13 +11,14 @@ module VarData ( VarMatchRole
                , isKnownConst, isKnownVar, isUnknownVar
                , vmrConst, vmrType
                , LstVarMatchRole
-               , pattern KnownVarList, pattern AnyVarList
+               , pattern KnownVarList, pattern KnownVarSet
+               , pattern AnyVarList, pattern AnyVarSet
                , VarTable
                , vtList, ltList
                , newVarTable
                , addKnownConst
                , addKnownVar
-               , addKnownListVar
+               , addKnownVarList , addKnownVarSet
                , lookupVarTable, lookupVarTables
                , lookupLVarTable, lookupLVarTables
                ) where
@@ -88,19 +89,24 @@ vmrType (KC _)    =  error "vmrType: var. match role is KnownConst"
 vmrType UV        =  error "vmrType: var. match role is UnknownVar"
 \end{code}
 
+\newpage
 \subsection{List-Variable Matching Categories}
 
-List-variables can match either any list of variables,
+List-variables can match either any list or set of variables,
 or can also be ``known'',
-as a name for a specific list of variables.
+as a name for a specific list or set of variables.
 \begin{code}
 data LstVarMatchRole -- ListVar Matching Roles
  = KL VarList -- Known Variable-List
+ | KS VarSet  -- Known Variable-Set
  | AL         -- Arbitrary Variable-List
+ | AS         -- Arbitrary Variable-Set
  deriving (Eq, Ord, Show, Read)
 
 pattern KnownVarList vl = KL vl
+pattern KnownVarSet  vl = KS vl
 pattern AnyVarList      = AL
+pattern AnyVarSet       = AS
 \end{code}
 
 \newpage
@@ -136,7 +142,7 @@ newVarTable = VT (M.empty, M.empty)
 \subsection{Ensuring \texttt{VarTable} Acyclicity}
 
 We have an invariant that there are no cycles in any \texttt{VarTable}.
-Simplifying, we can imaginge we have a relation between variables
+Simplifying, we can imagine we have a relation between variables
 expressed as a set-valued partial, finite map.
 \begin{equation}
   \mu  \in Rel = V \fun \Set V
@@ -185,7 +191,8 @@ Only pointers to \texttt{LstVar} have the potential to lead to cycles.
 
 Reflexive, transitive relational image:
 \begin{code}
-rtStdImage :: Map Variable VarMatchRole -> Set Variable -> Set Variable
+rtStdImage :: Map Variable VarMatchRole -> Set Variable
+           -> Set Variable
 rtStdImage vtable vs = untilEq (rrStdImage vtable) vs
 \end{code}
 
@@ -207,25 +214,56 @@ stdVVlkp vtable v
 \newpage
 \subsubsection{List-Variable Reflexive-Transitive Image}
 
+There is an additional invariant which states
+that if we have a relational chain of list-variables,
+then either they all map to variable-lists, or variable-sets,
+but not both.
+So $\{ lu \mapsto \seqof{lv}, lv \mapsto \seqof{lw} \}$
+and $\{ lu \mapsto \setof{lv}, lv \mapsto \setof{lw} \}$
+are ``uniform'', hence OK,
+while $\{ lu \mapsto \seqof{lv}, lv \mapsto \setof{lw} \}$
+or $\{ lu \mapsto \setof{lv}, lv \mapsto \seqof{lw} \}$
+are ``mixed'', and therefore not OK.
+\begin{code}
+data CT = CTunknown | CTset | CTlist | CTmixed  deriving (Eq, Show)
+
+mix CTunknown ct = ct
+mix ct CTunknown = ct
+mix CTmixed _ = CTmixed
+mix _ CTmixed = CTmixed
+mix ct1 ct2
+ | ct1 == ct2  =  ct1
+ | otherwise   =  CTmixed
+
+mixes = foldl mix CTunknown
+\end{code}
+We keep track of chain types when computing relation images (next).
+
+
 Reflexive, transitive relational image:
 \begin{code}
-rtLstImage :: Map ListVar LstVarMatchRole -> Set ListVar -> Set ListVar
-rtLstImage ltable lvs = untilEq (rrLstImage ltable) lvs
+rtLstImage :: Map ListVar LstVarMatchRole -> CT -> Set ListVar
+           -> ( CT, Set ListVar )
+rtLstImage ltable ct lvs = untilEq (rrLstImage ltable) (ct, lvs)
 \end{code}
 
 Reflexive relation image:
 \begin{code}
-rrLstImage :: Map ListVar LstVarMatchRole -> Set ListVar
-           -> Set ListVar
-rrLstImage ltable lvs = S.unions (lvs:map (lstVVlkp ltable) (S.toList lvs))
+rrLstImage :: Map ListVar LstVarMatchRole -> ( CT, Set ListVar )
+           -> ( CT, Set ListVar )
+rrLstImage ltable (ct, lvs)
+   = ( mixes (ct:cts), S.unions (lvs:imgs) )
+  where
+    ( cts, imgs) = unzip $ map (lstVVlkp ltable) (S.toList lvs)
 \end{code}
 
 Looking up the \texttt{ListVar -> VarList} fragment of a \texttt{VarTable}:
 \begin{code}
 lstVVlkp ltable lv
  = case M.lookup lv ltable of
-    Just (KL gvs)  ->  S.fromList $ listVarsOf gvs
-    _              ->  S.empty
+    Just (KL gvl)  ->  ( CTlist, S.fromList $ listVarsOf gvl )
+    Just (KS gvs)  ->  ( CTset,  listVarSetOf gvs )
+    _              ->  ( CTunknown, S.empty )
 \end{code}
 
 
@@ -255,19 +293,38 @@ addKnownVar var@(ObsVar _ _) typ (VT (vtable, ltable))
 addKnownVar _ _ _ = fail "addKnownVar: not for Expr/Pred Variables."
 \end{code}
 
-For now only observation-list variables
-can be defined as equal to a list of general variables,
-with the same temporality
-(except if static, these can mix and match temporal aspects).
-We also need to check to avoid cycles.
+For now list-variables
+can only be defined as equal to a list of general variables,
+with the same class.
+We also need to check to avoid cycles, or a crossover to variable-sets
 \begin{code}
-addKnownListVar :: Monad m => ListVar -> VarList -> VarTable -> m VarTable
-addKnownListVar lv vl (VT (vtable, ltable))
- | lv `S.member` rtLstImage ltable (S.fromList $ listVarsOf vl)
-     = fail "addKnownListVar: must not create list-variable cycle."
+addKnownVarList :: Monad m => ListVar -> VarList -> VarTable -> m VarTable
+addKnownVarList lv vl (VT (vtable, ltable))
+ | ct == CTmixed
+     = fail "addKnownVarList: some list-variables map to sets."
+ | lv `S.member` img
+     = fail "addKnownVarList: must not create list-variable cycle."
  | [whatLVar lv] == nub (map whatGVar vl)
                              =  return $ VT (vtable, M.insert lv (KL vl) ltable)
- | otherwise = fail  "addKnownListVar: inconsistent variable classifications."
+ | otherwise = fail  "addKnownVarList: inconsistent variable classifications."
+ where ( ct, img ) = rtLstImage ltable CTlist (S.fromList $ listVarsOf vl)
+\end{code}
+
+For now list-variables
+can only be defined as equal to a set of general variables,
+with the same class.
+We also need to check to avoid cycles, or a crossover to variable-lists
+\begin{code}
+addKnownVarSet :: Monad m => ListVar -> VarSet -> VarTable -> m VarTable
+addKnownVarSet lv vs (VT (vtable, ltable))
+ | ct == CTmixed
+     = fail "addKnownVarSet: some list-variables map to lists."
+ | lv `S.member` img
+     = fail "addKnownVarSet: must not create list-variable cycle."
+ | S.singleton (whatLVar lv) == S.map whatGVar vs
+                             =  return $ VT (vtable, M.insert lv (KS vs) ltable)
+ | otherwise = fail  "addKnownVarSet: inconsistent variable classifications."
+ where ( ct, img ) = rtLstImage ltable CTset (listVarSetOf vs)
 \end{code}
 
 \subsubsection{Table Lookup}

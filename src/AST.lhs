@@ -34,7 +34,7 @@ module AST ( VarWhat
            , whatGVar, whenGVar
            , VarList
            , stdVarsOf, listVarsOf
-           , VarSet
+           , VarSet, stdVarSetOf, listVarSetOf
            , isPreVarSet
            , TermSub, LVarSub
            , Substn, pattern Substn, substn
@@ -163,12 +163,12 @@ or dynamic, distinguishing between before, durimg or after
 some behaviour of interest.
 \begin{code}
 data VarTime
-  = KS -- Static
-  | KD VarWhen -- Dynamic
+  = TS -- Static
+  | TD VarWhen -- Dynamic
   deriving (Eq, Ord, Show, Read)
 
-pattern Static = KS
-pattern Dynamic w = KD w
+pattern Static = TS
+pattern Dynamic w = TD w
 \end{code}
 
 A variable is a triple: identifier, what, and kind
@@ -186,20 +186,20 @@ pattern PredVar i k = VR (i, VP, k)
 
 We also have some pre-wrapped patterns for common cases:
 \begin{code}
-pattern PreVar   i    = VR (i, VO, (KD WB))
-pattern PostVar  i    = VR (i, VO, (KD WA))
-pattern MidVar   i n  = VR (i, VO, (KD (WD n)))
-pattern ScriptVar i   = VR (i, VV, KS)
-pattern PreCond  i    = VR (i, VP, (KD WB))
-pattern PostCond i    = VR (i, VP, (KD WA))
-pattern PreExpr  i    = VR (i, VE, (KD WB))
-pattern PostExpr i    = VR (i, VE, (KD WA))
+pattern PreVar   i    = VR (i, VO, (TD WB))
+pattern PostVar  i    = VR (i, VO, (TD WA))
+pattern MidVar   i n  = VR (i, VO, (TD (WD n)))
+pattern ScriptVar i   = VR (i, VV, TS)
+pattern PreCond  i    = VR (i, VP, (TD WB))
+pattern PostCond i    = VR (i, VP, (TD WA))
+pattern PreExpr  i    = VR (i, VE, (TD WB))
+pattern PostExpr i    = VR (i, VE, (TD WA))
 \end{code}
 
 Some variable predicates/functions:
 \begin{code}
 isPreVar :: Variable -> Bool
-isPreVar (VR (_, _, (KD WB)))  =  True
+isPreVar (VR (_, _, (TD WB)))  =  True
 isPreVar _                     =  False
 isObsVar (VR (_, vw, _))   =  vw == VO
 isExprVar (VR (_, vw, _))  =  vw == VE
@@ -262,12 +262,12 @@ pattern PredLVar k i is = LV (VR (i,VP,k),is)
 
 Pre-wrapped patterns:
 \begin{code}
-pattern PreVars  i    =  LV (VR (i,VO,(KD WB)),[])
-pattern PostVars i    =  LV (VR (i,VO,(KD WA)),[])
-pattern MidVars  i n  =  LV (VR (i,VO,(KD (WD n))),[])
-pattern ScriptVars i  =  LV (VR (i,VV,(KD WB)),[])
-pattern PreExprs i    =  LV (VR (i,VE,(KD WB)),[])
-pattern PrePreds i    =  LV (VR (i,VP,(KD WB)),[])
+pattern PreVars  i    =  LV (VR (i,VO,(TD WB)),[])
+pattern PostVars i    =  LV (VR (i,VO,(TD WA)),[])
+pattern MidVars  i n  =  LV (VR (i,VO,(TD (WD n))),[])
+pattern ScriptVars i  =  LV (VR (i,VV,(TD WB)),[])
+pattern PreExprs i    =  LV (VR (i,VE,(TD WB)),[])
+pattern PrePreds i    =  LV (VR (i,VP,(TD WB)),[])
 \end{code}
 
 Useful predicates/functiond:
@@ -365,6 +365,15 @@ isPreVarSet :: VarSet -> Bool
 isPreVarSet = all isPreGenVar . S.toList
 \end{code}
 
+\begin{code}
+stdVarSetOf :: VarSet -> Set Variable
+stdVarSetOf vs  =  S.map getV $ S.filter isStdV vs where getV (GV v)  = v
+
+listVarSetOf :: VarSet -> Set ListVar
+listVarSetOf vs =  S.map getL $ S.filter isLstV vs where getL (GL lv) = lv
+
+\end{code}
+
 \subsubsection{Variable Set test values}
 \begin{code}
 s0   = S.fromList [] :: VarSet
@@ -451,16 +460,16 @@ as type-inference relies on it.
 data Type -- most general types first
  = T  -- arbitrary type
  | TV Identifier -- type variable
- | TA Identifier [Type] -- type application
- | TD Identifier [(Identifier,[Type])] -- ADT
+ | TC Identifier [Type] -- type constructor, applied
+ | TA Identifier [(Identifier,[Type])] -- algebraic data type
  | TF Type Type -- function type
  | TG Identifier -- given type
  deriving (Eq, Ord, Show, Read)
 
 pattern ArbType = T
 pattern TypeVar i  = TV i
-pattern TypeApp i ts = TA i ts
-pattern DataType i fs = TD i fs
+pattern TypeApp i ts = TC i ts
+pattern DataType i fs = TA i fs
 pattern FunType tf ta = TF tf ta
 pattern GivenType i = TG i
 \end{code}
@@ -527,7 +536,7 @@ For predicates,
 the only constants we require are $\True$ and $\False$.
 For expressions, the situation is more complicated,
 at least as far as `basic' values are concerned.
-With the types as proposed (esp. \verb"TD"),
+With the types as proposed (esp. \verb"TA"),
 and the term constructors and bindings,
 we could develop values from the ground up,
 but we would much prefer to have some built-in,
@@ -764,10 +773,10 @@ They don't need special handling or representation here.
 
 Test values:
 \begin{code}
-lv_a = ObsLVar  KS i_a []
-lv_b = VarLVar  KS i_b []
-lv_e = ExprLVar KS i_e []
-lv_P = PredLVar KS i_P []
+lv_a = ObsLVar  TS i_a []
+lv_b = VarLVar  TS i_b []
+lv_e = ExprLVar TS i_e []
+lv_P = PredLVar TS i_P []
 
 t42 = Val (E ArbType) $ VI 42
 n = fromJust $ ident "n"
@@ -777,20 +786,20 @@ We need to test the variable and binder smart constructors
 \begin{code}
 varConstructTests  = testGroup "AST.var,eVar,pVar"
  [ testCase "var P P (Ok)"
-   ( var P v_P  @?= Just (V P (VR(i_P,VP,(KD WB)))) )
+   ( var P v_P  @?= Just (V P (VR(i_P,VP,(TD WB)))) )
  , testCase "var (E ArbType) P (Fail)"
    ( var (E ArbType) v_P  @?= Nothing )
  , testCase "var P a (Fail)"
    ( var P v_a  @?= Nothing )
  , testCase "var (E ArbType) a (Ok)"
    ( var (E ArbType) v_a
-      @?= Just (V (E ArbType) (VR(i_a,VO,(KD WB)))) )
+      @?= Just (V (E ArbType) (VR(i_a,VO,(TD WB)))) )
  , testCase "eVar tarb P (Fail)" ( eVar ArbType v_P  @?= Nothing )
  , testCase "eVar tarb a (Ok)"
-   ( eVar ArbType v_a @?= Just (V (E ArbType) (VR(i_a,VO,(KD WB)))) )
+   ( eVar ArbType v_a @?= Just (V (E ArbType) (VR(i_a,VO,(TD WB)))) )
  , testCase "pVar a (Fail)" ( pVar v_a  @?= Nothing )
  , testCase "pVar P (Ok)"
-   ( pVar v_P @?= Just (V P (VR(i_P,VP,(KD WB)))) )
+   ( pVar v_P @?= Just (V P (VR(i_P,VP,(TD WB)))) )
  ]
 
 bindConstructTests  =  testGroup "AST.bind"

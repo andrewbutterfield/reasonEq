@@ -9,6 +9,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Binding
 ( VarBindRange
 , pattern BindVar, pattern BindTerm
+, LstVarBindRange
+, pattern BindList, pattern BindSet
 , Binding
 , emptyBinding
 , lookupBind
@@ -21,6 +23,7 @@ module Binding
 ) where
 --import Data.Maybe (fromJust)
 import qualified Data.Map as M
+import qualified Data.Set as S
 
 --import Utilities
 import LexBase
@@ -40,15 +43,23 @@ data VarBindRange
   | BT Term
   deriving (Eq, Ord, Show, Read)
 
-pattern BindVar v <- BV v
+pattern BindVar  v <- BV v
 pattern BindTerm t <- BT t
 
 type VarBind = M.Map Variable VarBindRange
 \end{code}
 
-The other part maps a list variable to a list of variables.
+The other part maps a list variable to a list or set of variables.
 \begin{code}
-type ListVarBind = M.Map ListVar VarList
+data LstVarBindRange
+ = BL VarList
+ | BS VarSet
+ deriving (Eq, Ord, Show, Read)
+
+pattern BindList vl <- BL vl
+pattern BindSet  vs <- BS vs
+
+type ListVarBind = M.Map ListVar LstVarBindRange
 \end{code}
 
 We put these together:
@@ -72,11 +83,11 @@ lookupBind (BD (vbinds,_)) v
       Nothing   ->  fail ("lookupBind: Variable "++show v++" not found.")
       Just vbr  ->  return vbr
 
-lookupLstBind :: Monad m => Binding -> ListVar -> m VarList
+lookupLstBind :: Monad m => Binding -> ListVar -> m LstVarBindRange
 lookupLstBind (BD (_,lbinds)) lv
   = case M.lookup lv lbinds of
       Nothing    ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
-      Just vlst  ->  return vlst
+      Just lvbr  ->  return lvbr
 \end{code}
 
 \subsection{Binding Insertion}
@@ -139,12 +150,31 @@ of the same class of general variable.
 bindLVarToVList :: Monad m => ListVar -> VarList -> Binding -> m Binding
 bindLVarToVList lv vl (BD (vbinds,lbinds))
  | isObsLVar lv && all isObsOrExpr vl
-                                  = return $ BD (vbinds,M.insert lv vl lbinds)
+                               = return $ BD (vbinds,M.insert lv (BL vl) lbinds)
  | isExprLVar lv && all isExprGVar vl
-                                  = return $ BD (vbinds,M.insert lv vl lbinds)
+                               = return $ BD (vbinds,M.insert lv (BL vl) lbinds)
  | isPredLVar lv && all isPredGVar vl
-                                  = return $ BD (vbinds,M.insert lv vl lbinds)
+                               = return $ BD (vbinds,M.insert lv (BL vl) lbinds)
 bindLVarToVList _ _ _ = fail "bindLVarToVList: invalid lvar. -> vlist binding."
+\end{code}
+
+\subsubsection{Binding List-Variables to Variable-Sets}
+
+An observation list-variable can bind to a set that is
+a mix of observation and expression general variables.
+Expression/Predicate list-variables can only bind to sets
+of the same class of general variable.
+\begin{code}
+bindLVarToVSet :: Monad m => ListVar -> VarSet -> Binding -> m Binding
+bindLVarToVSet lv vs (BD (vbinds,lbinds))
+ | isObsLVar lv && all isObsOrExpr vl
+                               = return $ BD (vbinds,M.insert lv (BS vs) lbinds)
+ | isExprLVar lv && all isExprGVar vl
+                               = return $ BD (vbinds,M.insert lv (BS vs) lbinds)
+ | isPredLVar lv && all isPredGVar vl
+                               = return $ BD (vbinds,M.insert lv (BS vs) lbinds)
+ where vl = S.toList vs
+bindLVarToVSet _ _ _ = fail "bindLVarToVSet: invalid lvar. -> vset binding."
 \end{code}
 
 \subsubsection{Binding General-Variables to General-Variables}

@@ -160,6 +160,16 @@ tst_reserved_listvars
             (vwrap [x,y,z])
             (lwrap [lS])
          @?= ( bindLVarToVList lS (vwrap [x,y,z]) emptyBinding :: [Binding] ))
+     , testCase "S_Design |-  x,y,z :: S  -- matches at least once."
+       ( vlMatch [vtS_Design] emptyBinding S.empty S.empty
+            (vwrap [x,y,z])
+            (lwrap [lS])
+         @?= ( bindLVarToVList lS (vwrap [x,y,z]) emptyBinding :: [Binding] ))
+     , testCase "S_Design |-  {x,y,z} :: {S}  -- matches at least once."
+       ( vsMatch [vtS_Design] emptyBinding S.empty S.empty
+            (vswrap [x,y,z])
+            (lswrap [lS])
+         @?= ( bindLVarToVSet lS (vswrap [x,y,z]) emptyBinding :: [Binding] ))
      , testCase "x,y,z,S @ L_Design  |-  x,y,z :: S  -- matches at least once."
        ( vlMatch [vtL_Design] emptyBinding
             (S.fromList $ vwrap [x,y,z])

@@ -18,6 +18,7 @@ module Binding
 , bindVarToVar
 , bindVarToTerm
 , bindLVarToVList
+, bindLVarToVSet
 , bindGVarToGVar
 , bindGVarToVList
 ) where
@@ -43,8 +44,8 @@ data VarBindRange
   | BT Term
   deriving (Eq, Ord, Show, Read)
 
-pattern BindVar  v <- BV v
-pattern BindTerm t <- BT t
+pattern BindVar  v = BV v
+pattern BindTerm t = BT t
 
 type VarBind = M.Map Variable VarBindRange
 \end{code}
@@ -56,8 +57,8 @@ data LstVarBindRange
  | BS VarSet
  deriving (Eq, Ord, Show, Read)
 
-pattern BindList vl <- BL vl
-pattern BindSet  vs <- BS vs
+pattern BindList vl = BL vl
+pattern BindSet  vs = BS vs
 
 type ListVarBind = M.Map ListVar LstVarBindRange
 \end{code}

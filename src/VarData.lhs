@@ -104,7 +104,7 @@ data LstVarMatchRole -- ListVar Matching Roles
  deriving (Eq, Ord, Show, Read)
 
 pattern KnownVarList vl = KL vl
-pattern KnownVarSet  vl = KS vl
+pattern KnownVarSet  vs = KS vs
 pattern AnyVarList      = AL
 pattern AnyVarSet       = AS
 \end{code}

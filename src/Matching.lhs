@@ -13,7 +13,7 @@ module Matching
 , vMatch, bvMatch
 , vsMatch, vlMatch
 , sMatch
-, expandKnown
+, expandKnownList
 ) where
 import Data.Maybe (isJust,fromJust)
 import Data.Map (Map)
@@ -582,6 +582,7 @@ vlMatch :: MonadPlus mp => [VarTable] -> Binding -> CBVS -> PBVS
         -> VarList -> VarList -> mp Binding
 \end{code}
 
+
 Matching a non-empty candidate variable-list
 against a non-empty pattern variable-list is non-trivial,
 so we perform a number of phases.
@@ -592,6 +593,11 @@ we will have removed the already bound portions
 from both variable lists,
 resulting in a smaller ``freer'' problem.
 This can then be solved in turn.
+
+This kind of match will always fail
+if any of the candidate or pattern list-variables are recorded as
+\texttt{KnownVarSet}, or already in the bindings so far as \texttt{BindSet}.
+
 \begin{code}
 -- vlC `subset` cbvs && vlP `subset` pbvc
 vlMatch vts bind cbvs pbvs vlC vlP
@@ -640,7 +646,8 @@ First pattern variable is a list-variable:
 applyBindingsToLists' bind vlC' vlP' vlC (gP@(LstVar lvP):vlP)
  = case lookupLstBind bind lvP of
     Nothing  -> applyBindingsToLists' bind vlC' (gP:vlP') vlC vlP
-    Just vlB -> findLstCandidate bind vlC' vlP' vlC vlB vlP
+    Just (BindList vlB) -> findLstCandidate bind vlC' vlP' vlC vlB vlP
+    _ -> fail "vlMatch: list-variable bound to variable-set."
 \end{code}
 
 
@@ -715,8 +722,8 @@ Otherwise we fail:
 vlFreeMatch vts bind cbvs pbvs [] (StdVar vP:_)
   = fail "vlMatch: too many std. pattern variables."
 vlFreeMatch vts bind cbvs pbvs [] (LstVar lvP:vlP)
-  | canMatchNull vts lvP  =  do bind' <- bindLVarToVList lvP [] bind
-                                vlFreeMatch vts bind' cbvs pbvs [] vlP
+  | canMatchNullList vts lvP  =  do bind' <- bindLVarToVList lvP [] bind
+                                    vlFreeMatch vts bind' cbvs pbvs [] vlP
   | otherwise  =  fail "vlMatch: known list pattern can't match null."
 \end{code}
 
@@ -753,11 +760,12 @@ vlFreeMatch vts bind cbvs pbvs vlC (gvP@(LstVar lvP):vlP)
           vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 1
           `mplus`
           vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 2
+     _ -> fail "vlMatch: variable-sets not supported."
 \end{code}
 
 \begin{code}
-canMatchNull :: [VarTable] -> ListVar -> Bool
-canMatchNull vts lv
+canMatchNullList :: [VarTable] -> ListVar -> Bool
+canMatchNullList vts lv
   = case lookupLVarTables vts lv of
       KnownVarList vl  ->  null vl
       _                ->  True
@@ -783,10 +791,10 @@ vlKnownMatch vts bind cbvs pbvs vlC vlK gvP@(LstVar lvP) -- ListVar !
     = do bind' <- bindLVarToVList lvP vlK bind
          return (bind',vlC \\ vlK)
  | otherwise
-    = do (vlC1,vlC2) <- unkKnVLMatch vts [] vlC vlKx
+    = do vlKx <- expandKnownLists vts vlK
+         (vlC1,vlC2) <- unkKnVLMatch vts [] vlC vlKx
          bind' <- bindLVarToVList lvP vlC1 bind
          return (bind',vlC2)
- where vlKx = concat $ map (expandKnown vts) vlK
 \end{code}
 
 We want to match a fully-expanded pattern variable-list
@@ -799,7 +807,8 @@ unkKnVLMatch vts rvlC1 [] _ = fail "vlMatch: not enough candidate variables."
 
 unkKnVLMatch vts rvlC1 (gvC:vlC2) vlKx@(gvP:vlKx')
  |  gvC == gvP  =  unkKnVLMatch vts (gvC:rvlC1) vlC2 vlKx'
- |  otherwise   =  do vlKx'' <- unkUknVLMatch (expandKnown vts gvC) vlKx
+ |  otherwise   =  do gvCx <- expandKnownList vts gvC
+                      vlKx'' <- unkUknVLMatch gvCx vlKx
                       unkKnVLMatch vts (gvC:rvlC1) vlC2 vlKx''
 \end{code}
 
@@ -814,20 +823,26 @@ unkUknVLMatch gvCx vlKx
                  ]
 \end{code}
 
-We keep expanding known variables.
+We keep expanding variables known as lists of (other) variables.
 \begin{code}
-expandKnown :: [VarTable] -> GenVar -> VarList
-expandKnown vts gv@(LstVar lv)
+expandKnownList :: Monad m => [VarTable] -> GenVar -> m VarList
+expandKnownList vts gv@(LstVar lv)
   = case lookupLVarTables vts lv of
-      KnownVarList kvl  ->  concat $ map (expandKnown vts) kvl
-      AnyVarList        ->  [gv]
-expandKnown vts gv@(StdVar v)
+      KnownVarList kvl  ->  expandKnownLists vts kvl
+      AnyVarList        ->  return [gv]
+      _                 ->  fail "expandKnownList: found variable-sets!"
+expandKnownList vts gv@(StdVar v)
   = case lookupVarTables vts v of
-      KnownConst (Var _ kc)  ->  expandKnown vts $ StdVar kc
-      _                      ->  [gv]
+      KnownConst (Var _ kc)  ->  expandKnownList vts $ StdVar kc
+      _                      ->  return [gv]
+
+expandKnownLists :: Monad m => [VarTable] -> VarList -> m VarList
+expandKnownLists vts vl = fmap concat $ sequence $ map (expandKnownList vts) vl
 \end{code}
 
 
+Finally we have a simple, ``slightly greedy'' algorithm
+that matches a list-variable against the first \texttt{n} candidates.
 \begin{code}
 vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP n
  = do bind' <- bindLVarToVList lvP firstnC bind
@@ -840,7 +855,9 @@ vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP n
 
 We follow a similar pattern to variable-list matching.
 First apply any bindings we have, and then try to match what is left.
-The key difference here, obviously, is that order does not matter.
+The key difference here, obviously, is that order does not matter,
+and we expect list-variables, if known, to be known as variable-sets,
+not lists.
 \begin{code}
 vsMatch :: MonadPlus mp => [VarTable] -> Binding -> CBVS -> PBVS
         -> VarSet -> VarSet -> mp Binding
@@ -887,11 +904,11 @@ First pattern variable is a list-variable:
 applyBindingsToSets' bind vlP' vsC (gP@(LstVar lvP):vlP)
  = case lookupLstBind bind lvP of
     Nothing -> applyBindingsToSets' bind (gP:vlP') vsC vlP
-    Just vlB
-     -> let vsB = S.fromList vlB in
-        if vsB `S.isSubsetOf` vsC
+    Just (BindSet vsB)
+     -> if vsB `S.isSubsetOf` vsC
         then applyBindingsToSets' bind vlP' ((S.\\) vsC vsB) vlP
         else fail "vsMatch: pattern list-var's binding not in candidate set."
+    _ -> fail "vsMatch: list-variable bound to variable-list.c"
 \end{code}
 
 \subsubsection{Free Variable-Set Matching}
@@ -932,11 +949,20 @@ and defined as non-null variable lists.
 \begin{code}
 bindLVarSetToNull vts bind [] = return bind
 bindLVarSetToNull vts bind ((LstVar lv):vl)
- | canMatchNull vts lv  =  do bind' <- bindLVarToVList lv [] bind
-                              bindLVarSetToNull vts bind' vl
+ | canMatchNullSet vts lv  =  do bind' <- bindLVarToVList lv [] bind
+                                 bindLVarSetToNull vts bind' vl
  | otherwise  =  fail "vsMatch: known list-var. cannot match null."
 bindLVarSetToNull _ _ (_:_) = fail "bindLVarSetToNull: std. variables not allowed."
 \end{code}
+
+\begin{code}
+canMatchNullSet :: [VarTable] -> ListVar -> Bool
+canMatchNullSet vts lv
+  = case lookupLVarTables vts lv of
+      KnownVarSet vs  ->  S.null vs
+      _               ->  True
+\end{code}
+
 
 First, pairing up very standard pattern variable
 with one standard candidate variable,
@@ -1036,6 +1062,24 @@ vsFreeLstMatch vts bind cbvs pbvs vsC lvsP
  | otherwise  = vlFreeMatch vts bind cbvs pbvs (S.toList vsC) (S.toList lvsP)
 \end{code}
 
+We keep expanding variables known as sets of (other) variables.
+\begin{code}
+expandKnownSet :: Monad m => [VarTable] -> GenVar -> m VarSet
+expandKnownSet vts gv@(LstVar lv)
+  = case lookupLVarTables vts lv of
+      KnownVarSet kvs  ->  expandKnownSets vts kvs
+      AnyVarSet       ->  return $ S.singleton gv
+      _                 ->  fail "expandKnownSet: found variable-lists!"
+expandKnownSet vts gv@(StdVar v)
+  = case lookupVarTables vts v of
+      KnownConst (Var _ kc)  ->  expandKnownSet vts $ StdVar kc
+      _                      ->  return $ S.singleton gv
+
+expandKnownSets :: Monad m => [VarTable] -> VarSet -> m VarSet
+expandKnownSets vts vs
+  = fmap S.unions $ sequence $ map (expandKnownSet vts) $ S.toList vs
+\end{code}
+
 \newpage
 \subsection{Substitution Matching}
 
@@ -1113,8 +1157,15 @@ lvlvMatchCheck :: MonadPlus mp
 lvlvMatchCheck vts bind cbvs pbvs lvsC rlvP tlvP
  = case lookupLstBind bind tlvP of
      Nothing            ->  fail "lvlvMatchCheck: Nothing SHOULD NOT OCCUR!"
-     Just [(LstVar tlvC)]
+     Just (BindList [(LstVar tlvC)])
        -> let lvsB = S.filter ((==tlvC).fst) lvsC
+          in if S.size lvsB /= 1
+              then fail "lvlvMatchCheck: #lvsB /= 1 SHOULD NOT OCCUR!"
+              else let rlvC = snd $ S.elemAt 0 lvsB
+                   in bindLVarToVList rlvP [LstVar rlvC] bind
+     Just (BindSet one_tlvC) | S.size one_tlvC == 1 && all isLstV one_tlvC
+       -> let (LstVar tlvC) = S.elemAt 0 one_tlvC
+              lvsB = S.filter ((==tlvC).fst) lvsC
           in if S.size lvsB /= 1
               then fail "lvlvMatchCheck: #lvsB /= 1 SHOULD NOT OCCUR!"
               else let rlvC = snd $ S.elemAt 0 lvsB

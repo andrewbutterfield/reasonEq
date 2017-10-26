@@ -949,7 +949,7 @@ and defined as non-null variable lists.
 \begin{code}
 bindLVarSetToNull vts bind [] = return bind
 bindLVarSetToNull vts bind ((LstVar lv):vl)
- | canMatchNullSet vts lv  =  do bind' <- bindLVarToVList lv [] bind
+ | canMatchNullSet vts lv  =  do bind' <- bindLVarToVSet lv S.empty bind
                                  bindLVarSetToNull vts bind' vl
  | otherwise  =  fail "vsMatch: known list-var. cannot match null."
 bindLVarSetToNull _ _ (_:_) = fail "bindLVarSetToNull: std. variables not allowed."
@@ -1053,13 +1053,56 @@ zipVarVarBind bind  _ []  =  return bind
 zipVarVarBind bind []  _  =  return bind
 \end{code}
 
-We check for errors, and then just use \texttt{vlFreeMatch} for now.
+If our pattern is empty,
+then we succeed if the candidate is also empty,
+otherwise we fail.
 \begin{code}
--- pattern is only list-variables.
+-- variable-set pattern lvsP contains only list-variables.
 vsFreeLstMatch vts bind cbvs pbvs vsC lvsP
- | null lvsP = if null vsC then return bind
-               else fail "vsMatch: too many candidate variables."
- | otherwise  = vlFreeMatch vts bind cbvs pbvs (S.toList vsC) (S.toList lvsP)
+  | null lvsP = if null vsC then return bind
+                else fail "vsMatch: too many candidate variables."
+\end{code}
+If the candidate is empty then we succeed only if
+all the remaining pattern variables can bind to the empty set.
+\begin{code}
+--vsFreeLstMatch vts bind cbvs pbvs vsC lvsP
+  | null vsC = let lvs = listVarSetOf lvsP in
+               if all (canMatchNullSet vts) lvs
+               then bindLVarSetToNull vts bind $ S.toList lvsP
+               else fail "vsMatch: known list pattern can't match null."
+\end{code}
+We extract a pattern list variable,
+and handle it much in the same way as \texttt{vlFreeMatch} above.
+Here we also try some non-deterministic matching, also with $N=2$.
+\begin{code}
+--vsFreeLstMatch vts bind cbvs pbvs vsC lvsP -- vsC, lvsP not null
+  | otherwise
+    = case lookupLVarTables vts lvP of
+       KnownVarSet vsK
+        -> do (bind',vsC') <- vsKnownMatch vts bind cbvs pbvs vsC vsK gvP
+              vsFreeLstMatch vts bind' cbvs pbvs vsC' lvsP'
+       AnyVarSet
+        -> vsFreeMatchN vts bind cbvs pbvs vsC lvP lvsP' 0
+           `mplus`
+           vsFreeMatchN vts bind cbvs pbvs vsC lvP lvsP' 1
+           `mplus`
+           vsFreeMatchN vts bind cbvs pbvs vsC lvP lvsP' 2
+       _ ->fail "vsMatch: variable-lists not supported."
+  where (gvP@(LstVar lvP),lvsP') = (S.elemAt 0 lvsP, S.deleteAt 0 lvsP)
+\end{code}
+
+Similarly to \texttt{vlKnownMatch} above, we need to expand all known
+variables in both \texttt{vsK} and \texttt{vsC}.
+\begin{code}
+-- not null vsC
+vsKnownMatch vts bind cbvs pbvs vsC vsK gvP@(LstVar lvP) -- ListVar !
+ | gvP `S.member` vsC
+    = do bind' <- bindLVarToVSet lvP (S.singleton gvP) bind
+         return (bind',S.delete gvP vsC)
+ | vsK `S.isSubsetOf` vsC
+    = do bind' <- bindLVarToVSet lvP vsK bind
+         return (bind',(S.\\) vsC vsK)
+ | otherwise = error "\n\t vsKnownMatch: nyFi\n"
 \end{code}
 
 We keep expanding variables known as sets of (other) variables.
@@ -1078,6 +1121,17 @@ expandKnownSet vts gv@(StdVar v)
 expandKnownSets :: Monad m => [VarTable] -> VarSet -> m VarSet
 expandKnownSets vts vs
   = fmap S.unions $ sequence $ map (expandKnownSet vts) $ S.toList vs
+\end{code}
+
+We match \texttt{lvP} against upto \texttt{n} candidate variables.
+\begin{code}
+vsFreeMatchN vts bind cbvs pbvs vsC lvP lvsP n
+ = do bind' <- bindLVarToVSet lvP firstnC bind
+      vsFreeLstMatch vts bind cbvs pbvs restC lvsP
+ where
+  (fv,rv) = splitAt n $ S.toList vsC
+  firstnC = S.fromList fv
+  restC = S.fromList rv
 \end{code}
 
 \newpage

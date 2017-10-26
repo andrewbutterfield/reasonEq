@@ -1102,7 +1102,21 @@ vsKnownMatch vts bind cbvs pbvs vsC vsK gvP@(LstVar lvP) -- ListVar !
  | vsK `S.isSubsetOf` vsC
     = do bind' <- bindLVarToVSet lvP vsK bind
          return (bind',(S.\\) vsC vsK)
- | otherwise = error "\n\t vsKnownMatch: nyFi\n"
+ | otherwise
+    = do vsKx <- expandKnownSets vts vsK
+         (vsC1,vsC2) <- unkKnVSMatch vts [] vsC $ S.toList vsKx
+         bind' <- bindLVarToVSet lvP vsC1 bind
+         return (bind',vsC2)
+\end{code}
+
+Matching fully-expanded pattern variable-set against
+partially-expanded candidate variable-set,
+using 2nd arument to accumulate original \texttt{vsC} variables.
+\begin{code}
+unkKnVSMatch vts rvsC1 vsC2 [] = return (S.fromList rvsC1, vsC2)
+unkKnVSMatch vts rvsC1 vsC2 vlKx@(gvP:vlKx')
+ | S.null vsC2  =  fail "vsMatch: not enough candidate variables"
+ | gvP `S.member` vsC2 = unkKnVSMatch vts (gvP:rvsC1) (S.delete gvP vsC2) vlKx'
 \end{code}
 
 We keep expanding variables known as sets of (other) variables.

@@ -911,6 +911,7 @@ applyBindingsToSets' bind vlP' vsC (gP@(LstVar lvP):vlP)
     _ -> fail "vsMatch: list-variable bound to variable-list.c"
 \end{code}
 
+\newpage
 \subsubsection{Free Variable-Set Matching}
 
 Here we are doing variable-set matching where all of the
@@ -989,6 +990,8 @@ We first split the standard variables of both pattern and candidate sets,
 check the inequalities above,
 and then proceed to match the dynamics sets first,
 followed by the static matching.
+Once the standard matching is done,
+we proceed to look at the list-variable patterns.
 \begin{code}
 vsFreeStdMatch vts bind cbvs pbvs vsC vsP
   | eb < 0  =  fail "vsMatch: too few std. candidate Before variables."
@@ -1053,6 +1056,19 @@ zipVarVarBind bind  _ []  =  return bind
 zipVarVarBind bind []  _  =  return bind
 \end{code}
 
+\newpage
+
+We have a collection of unbound pattern list-variables
+that we want to match against the remaining candidate variables,
+inlcuding all the list-variables,
+plus any standard variables left by the previous standard matching phase.
+\begin{code}
+vsFreeLstMatch :: MonadPlus mp
+               => [VarTable] -> Binding -> CBVS -> PBVS
+               -> VarSet -> VarSet
+               -> mp Binding
+\end{code}
+
 If our pattern is empty,
 then we succeed if the candidate is also empty,
 otherwise we fail.
@@ -1091,9 +1107,17 @@ Here we also try some non-deterministic matching, also with $N=2$.
   where (gvP@(LstVar lvP),lvsP') = (S.elemAt 0 lvsP, S.deleteAt 0 lvsP)
 \end{code}
 
-Similarly to \texttt{vlKnownMatch} above, we need to expand all known
+\newpage
+Similarly to \texttt{vlKnownMatch} above, we may need to expand all known
 variables in both \texttt{vsK} and \texttt{vsC}.
+
+\includegraphics[scale=0.5]{doc/images/matching-known-varsets}
+
 \begin{code}
+vsKnownMatch :: MonadPlus mp
+             => [VarTable] -> Binding -> CBVS -> PBVS
+             -> VarSet -> VarSet -> GenVar
+             -> mp ( Binding, VarSet )
 -- not null vsC
 vsKnownMatch vts bind cbvs pbvs vsC vsK gvP@(LstVar lvP) -- ListVar !
  | gvP `S.member` vsC

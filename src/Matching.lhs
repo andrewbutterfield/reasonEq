@@ -749,6 +749,7 @@ for some fixed $N$.
 For now, we take $N=2$.
 \begin{code}
 -- not null vlC
+-- !!! currently ignoring 'less' part of lvP !!!
 vlFreeMatch vts bind cbvs pbvs vlC (gvP@(LstVar lvP):vlP)
   = case lookupLVarTables vts lvP of
      KnownVarList vlK
@@ -901,6 +902,7 @@ applyBindingsToSets' bind vlP' vsC (gP@(StdVar vP):vlP)
 
 First pattern variable is a list-variable:
 \begin{code}
+-- !!! currently ignoring 'less' part of lvP !!!!
 applyBindingsToSets' bind vlP' vsC (gP@(LstVar lvP):vlP)
  = case lookupLstBind bind lvP of
     Nothing -> applyBindingsToSets' bind (gP:vlP') vsC vlP
@@ -1111,8 +1113,6 @@ Here we also try some non-deterministic matching, also with $N=2$.
 Similarly to \texttt{vlKnownMatch} above, we may need to expand all known
 variables in both \texttt{vsK} and \texttt{vsC}.
 
-\includegraphics[scale=0.5]{doc/images/matching-known-varsets}
-
 \begin{code}
 vsKnownMatch :: MonadPlus mp
              => [VarTable] -> Binding -> CBVS -> PBVS
@@ -1126,21 +1126,12 @@ vsKnownMatch vts bind cbvs pbvs vsC vsK gvP@(LstVar lvP) -- ListVar !
  | vsK `S.isSubsetOf` vsC
     = do bind' <- bindLVarToVSet lvP vsK bind
          return (bind',(S.\\) vsC vsK)
- | otherwise
+ | otherwise -- quick matches don't work, need to go to full expansions
     = do vsKx <- expandKnownSets vts vsK
-         (vsC1,vsC2) <- unkKnVSMatch vts [] vsC $ S.toList vsKx
+         vsCx <- expandKnownSets vts vsC
+         (vsC1,vsC2) <- vsKnownXMatch vts vsC vsCx vsKx
          bind' <- bindLVarToVSet lvP vsC1 bind
          return (bind',vsC2)
-\end{code}
-
-Matching fully-expanded pattern variable-set against
-partially-expanded candidate variable-set,
-using 2nd arument to accumulate original \texttt{vsC} variables.
-\begin{code}
-unkKnVSMatch vts rvsC1 vsC2 [] = return (S.fromList rvsC1, vsC2)
-unkKnVSMatch vts rvsC1 vsC2 vlKx@(gvP:vlKx')
- | S.null vsC2  =  fail "vsMatch: not enough candidate variables"
- | gvP `S.member` vsC2 = unkKnVSMatch vts (gvP:rvsC1) (S.delete gvP vsC2) vlKx'
 \end{code}
 
 We keep expanding variables known as sets of (other) variables.
@@ -1159,6 +1150,34 @@ expandKnownSet vts gv@(StdVar v)
 expandKnownSets :: Monad m => [VarTable] -> VarSet -> m VarSet
 expandKnownSets vts vs
   = fmap S.unions $ sequence $ map (expandKnownSet vts) $ S.toList vs
+\end{code}
+
+
+\includegraphics[scale=0.5]{doc/images/matching-known-varsets}
+
+Matching fully-expanded pattern variable-set against
+partially-expanded candidate variable-set.
+\begin{code}
+vsKnownXMatch vts vsC vsCx vsKx
+  | vsKx `S.isSubsetOf` vsCx
+     = do vsCm <- getCorrCandidates vts [] vsKx $ S.toList vsC
+          return (vsCm, vsC S.\\ vsC)
+  | otherwise = fail "vsMatch: some pattern var-set is not in candidate."
+\end{code}
+
+Find the candidate variables in \texttt{vsC} that expand into
+variables within \texttt{vsKx}.
+\begin{code}
+getCorrCandidates vts rvsC vsKx []
+ | S.null vsKx  =  return $ S.fromList rvsC
+ | otherwise    =   fail "vsMatch: not all pattern-set covered."
+getCorrCandidates vts rvsC vsKx (gvC:vsC)
+ = case expandKnownSet vts gvC of
+    Nothing  ->  fail "vsMatch: expandKnownSet fails."
+    Just gvCx
+     | gvCx `S.isSubsetOf` vsKx
+                        -> getCorrCandidates vts (gvC:rvsC) (vsKx S.\\ gvCx) vsC
+     | otherwise        -> getCorrCandidates vts rvsC       vsKx             vsC
 \end{code}
 
 We match \texttt{lvP} against upto \texttt{n} candidate variables.

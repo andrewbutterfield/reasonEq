@@ -966,7 +966,7 @@ canMatchNullSet vts lv
       _               ->  True
 \end{code}
 
-
+\newpage
 First, pairing up very standard pattern variable
 with one standard candidate variable,
 if possible.
@@ -1034,6 +1034,7 @@ whenPartition vs = (vsStatic,vsBefore,vsDuring,vsAfter)
   (vsDuring,vsAfter)  =  S.partition isDuring vs2
 \end{code}
 
+\newpage
 Matching $m$ pattern variables against $n$ candidate variables
 allows for $n!/(m-n)!$ possible outcomes.
 For now, we simply match variables in order
@@ -1180,11 +1181,12 @@ getCorrCandidates vts rvsC vsKx (gvC:vsC)
      | otherwise        -> getCorrCandidates vts rvsC       vsKx             vsC
 \end{code}
 
+\newpage
 We match \texttt{lvP} against upto \texttt{n} candidate variables.
 \begin{code}
 vsFreeMatchN vts bind cbvs pbvs vsC lvP lvsP n
  = do bind' <- bindLVarToVSet lvP firstnC bind
-      vsFreeLstMatch vts bind cbvs pbvs restC lvsP
+      vsFreeLstMatch vts bind' cbvs pbvs restC lvsP
  where
   (fv,rv) = splitAt n $ S.toList vsC
   firstnC = S.fromList fv

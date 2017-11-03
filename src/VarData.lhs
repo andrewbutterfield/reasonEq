@@ -12,7 +12,7 @@ module VarData ( VarMatchRole
                , vmrConst, vmrType
                , LstVarMatchRole
                , pattern KnownVarList, pattern KnownVarSet
-               , pattern AnyVarList, pattern AnyVarSet
+               , pattern UnknownListVar
                , VarTable
                , vtList, ltList
                , newVarTable
@@ -99,14 +99,12 @@ as a name for a specific list or set of variables.
 data LstVarMatchRole -- ListVar Matching Roles
  = KL VarList -- Known Variable-List
  | KS VarSet  -- Known Variable-Set
- | AL         -- Arbitrary Variable-List
- | AS         -- Arbitrary Variable-Set
+ | UL         -- Unknown List-Variable
  deriving (Eq, Ord, Show, Read)
 
-pattern KnownVarList vl = KL vl
-pattern KnownVarSet  vs = KS vs
-pattern AnyVarList      = AL
-pattern AnyVarSet       = AS
+pattern KnownVarList vl  =  KL vl
+pattern KnownVarSet  vs  =  KS vs
+pattern UnknownListVar   =  UL
 \end{code}
 
 \newpage
@@ -353,11 +351,11 @@ Repeating for list-variables:
 lookupLVarTable :: VarTable -> ListVar -> LstVarMatchRole
 lookupLVarTable (VT (_,ltable)) lvar
  = case M.lookup lvar ltable of
-     Nothing    ->  AL
+     Nothing    ->  UL
      Just lvmr  ->  lvmr
 
 lookupLVarTables :: [VarTable] -> ListVar -> LstVarMatchRole
-lookupLVarTables [] _ = AL
+lookupLVarTables [] _ = UL
 lookupLVarTables (VT (_,ltable):rest) lvar
  = case M.lookup lvar ltable of
      Just lvmr  ->  lvmr

@@ -129,6 +129,7 @@ mkCS i = StdVar $ PreVar  $ identi "cs" i
 mkCL i = LstVar $ PreVars $ identi "cl" i
 bindVV (StdVar pv)  (StdVar cv)   =  fromJust . bindVarToVar pv cv
 bindLL (LstVar plv) cgv  =  fromJust . bindLVarToVList plv [cgv]
+bindL0 (LstVar plv)      =  fromJust . bindLVarToVList plv []
 
 
 [ps1,ps2,ps3,ps4] = map mkPS [1..4]  -- std pattern vars
@@ -144,6 +145,9 @@ bindPLi2CLi
 bindAll
  = bindVV ps1 cs1 $ bindVV ps2 cs2 $ bindVV ps3 cs3 $ bindVV ps4 cs4
  $ bindLL pl1 cl1 $ bindLL pl2 cl2 $ bindLL pl3 cl3 $ bindLL pl4 cl4 emptyBinding
+bindSpl2
+ = bindVV ps1 cs1 $ bindVV ps2 cs2 $ bindVV ps3 cs3 $ bindVV ps4 cs4
+ $ bindL0 pl1     $ bindLL pl2 cl2 $ bindL0 pl3     $ bindL0 pl4     emptyBinding
 
 tst_vlMatch =
   testGroup "vlMatch"
@@ -170,6 +174,11 @@ tst_vlMatch =
                  [cl1,cs1,cl2,cs2,cl3,cs3,cl4,cs4]
                  [pl1,ps1,pl2,ps2,pl3,ps3,pl4,ps4] )
         @?= [bindAll] )
+    , testCase "[cs_1,cs_2,cl_2,cs_3,cs_4] :: [ps_i,pl_i], no pre-bind  (OK)"
+      ( nub ( vlMatch [] emptyBinding b0 b0
+               [cs1,    cs2,cl2,cs3,    cs4]
+               [ps1,pl1,ps2,pl2,ps3,pl3,ps4,pl4] )
+        @?= [bindSpl2] )
     , testCase "[cs_i,cl_i] :: [ps_i,pl_i], ps_i |-> cs_i  (OK)"
       ( (nub ( vlMatch [] bindPSi2CSi b0 b0
                [cs1,cl1,cs2,cl2,cs3,cl3,cs4,cl4]
@@ -188,6 +197,7 @@ tst_vlMatch =
 tst_vsMatch :: TF.Test
 
 bindLS (LstVar plv) cgv  =  fromJust . bindLVarToVSet plv (S.singleton cgv)
+bindLN (LstVar plv)      =  fromJust . bindLVarToVSet plv S.empty
 
 bindPS12CS12
  = bindVV ps1 cs1 $ bindVV ps2 cs2 emptyBinding
@@ -196,6 +206,9 @@ bindPSSi2CSSi
 bindAllS
  = bindVV ps1 cs1 $ bindVV ps2 cs2 $ bindVV ps3 cs3 $ bindVV ps4 cs4
  $ bindLS pl1 cl1 $ bindLS pl2 cl2 $ bindLS pl3 cl3 $ bindLS pl4 cl4 emptyBinding
+bindSpl2S
+ = bindVV ps1 cs1 $ bindVV ps2 cs2 $ bindVV ps3 cs3 $ bindVV ps4 cs4
+ $ bindLN pl1     $ bindLS pl2 cl2 $ bindLN pl3     $ bindLN pl4     emptyBinding
 
 tst_vsMatch =
   testGroup "vsMatch"
@@ -218,17 +231,22 @@ tst_vsMatch =
     , testCase "{cs_i,cl_i} :: {ps_i,pl_i}, no pre-bind  (OK)"
       ( (nub ( vsMatch [] emptyBinding b0 b0
                (S.fromList [cs1,cl1,cs2,cl2,cs3,cl3,cs4,cl4])
-               (S.fromList [ps1,pl1,ps2,pl2,ps3,pl3,ps4,pl4]) )) !! 9
-        -- 19 bindings possible, with vlFreeMatchN where N=2
-        -- 10th one returned is our bindAll
-        @?= bindAllS )
+               (S.fromList [ps1,pl1,ps2,pl2,ps3,pl3,ps4,pl4]) )) -- !! 9
+        -- 3 bindings possible, with vlFreeMatchN where N=2
+        -- none returned is our bindAll
+        @?= [bindAllS] )
+    , testCase "{cs_1,cs_2,cl_2,cs_3,cs_4} :: {ps_i,pl_i}, no pre-bind  (OK)"
+      ( nub ( vsMatch [] emptyBinding b0 b0
+               (S.fromList [cs1,    cs2,cl2,cs3,    cs4])
+               (S.fromList [ps1,pl1,ps2,pl2,ps3,pl3,ps4,pl4]) )
+        @?= [bindSpl2S] )
     , testCase "{cs_i,cl_i} :: {ps_i,pl_i}, ps_i |-> cs_i  (OK)"
       ( (nub ( vsMatch [] bindPSSi2CSSi b0 b0
                (S.fromList [cs1,cl1,cs2,cl2,cs3,cl3,cs4,cl4])
                (S.fromList [ps1,pl1,ps2,pl2,ps3,pl3,ps4,pl4]) )) !! 0
         -- 19 bindings possible, with vlFreeMatchN where N=2
         -- 10th one returned is our bindAll
-        @?= bindAllS )
+        @?= bindAllS)
     , testCase "{cs_i,cl_i} :: {ps_i,pl_i}, pl_i |-> {cl_i}  (OK)"
       ( nub ( vsMatch [] bindPSSi2CSSi b0 b0
                (S.fromList [cs1,cl1,cs2,cl2,cs3,cl3,cs4,cl4])

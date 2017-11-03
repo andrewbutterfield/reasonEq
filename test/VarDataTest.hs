@@ -193,14 +193,17 @@ tst_addKnownListVar
         ( addKnownVarList lP [gle] newVarTable @?= Nothing )
       ]
 
-lulvTable = fromJust $ addKnownVarList lu [glv] newVarTable
+lulvTable = fromJust $ addKnownVarList lu [glv]             newVarTable
+lulwTable = fromJust $ addKnownVarSet  lu (S.singleton glw) newVarTable
 
 tst_lookupLVarTable
  = testGroup "lookupLVarTable"
-     [ testCase "lu in empty table, should be AnyVarList"
-       ( lookupLVarTable newVarTable lu @?= AnyVarList )
-     , testCase "lu in lulvTable, should be AnyVarList"
+     [ testCase "lu in empty table, should be UnknownListVar"
+       ( lookupLVarTable newVarTable lu @?= UnknownListVar )
+     , testCase "lu in lulvTable, should be [lv]"
        ( lookupLVarTable lulvTable lu @?= KnownVarList [glv] )
+     , testCase "lu in lulwTable, should be {lw}"
+       ( lookupLVarTable lulwTable lu @?= KnownVarSet (S.singleton glw) )
      ]
 
 

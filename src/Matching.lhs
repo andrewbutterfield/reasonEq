@@ -755,7 +755,7 @@ vlFreeMatch vts bind cbvs pbvs vlC (gvP@(LstVar lvP):vlP)
      KnownVarList vlK
        -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs vlC vlK gvP
              vlFreeMatch vts bind' cbvs pbvs vlC' vlP
-     AnyVarList
+     UnknownListVar
        -> vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 0
           `mplus`
           vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 1
@@ -830,7 +830,7 @@ expandKnownList :: Monad m => [VarTable] -> GenVar -> m VarList
 expandKnownList vts gv@(LstVar lv)
   = case lookupLVarTables vts lv of
       KnownVarList kvl  ->  expandKnownLists vts kvl
-      AnyVarList        ->  return [gv]
+      UnknownListVar    ->  return [gv]
       _                 ->  fail "expandKnownList: found variable-sets!"
 expandKnownList vts gv@(StdVar v)
   = case lookupVarTables vts v of
@@ -1099,7 +1099,7 @@ Here we also try some non-deterministic matching, also with $N=2$.
        KnownVarSet vsK
         -> do (bind',vsC') <- vsKnownMatch vts bind cbvs pbvs vsC vsK gvP
               vsFreeLstMatch vts bind' cbvs pbvs vsC' lvsP'
-       AnyVarSet
+       UnknownListVar
         -> vsFreeMatchN vts bind cbvs pbvs vsC lvP lvsP' 0
            `mplus`
            vsFreeMatchN vts bind cbvs pbvs vsC lvP lvsP' 1
@@ -1140,8 +1140,8 @@ expandKnownSet :: Monad m => [VarTable] -> GenVar -> m VarSet
 expandKnownSet vts gv@(LstVar lv)
   = case lookupLVarTables vts lv of
       KnownVarSet kvs  ->  expandKnownSets vts kvs
-      AnyVarSet       ->  return $ S.singleton gv
-      _                 ->  fail "expandKnownSet: found variable-lists!"
+      UnknownListVar   ->  return $ S.singleton gv
+      _                ->  fail "expandKnownSet: found variable-lists!"
 expandKnownSet vts gv@(StdVar v)
   = case lookupVarTables vts v of
       KnownConst (Var _ kc)  ->  expandKnownSet vts $ StdVar kc

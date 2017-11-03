@@ -271,7 +271,7 @@ tst_reserved_listvars
             (lwrap [lO])
          @?=
          ( bindLVarToVList lO (vwrap [x,y']) emptyBinding :: [Binding] ) )
-     , testCase "|-  e,x :: O  -- matches."
+     , testCase "|-  e,x :: O  -- matches ."
        ( vlMatch [] emptyBinding S.empty S.empty
             (vwrap [e,x])
             (lwrap [lO])

@@ -231,10 +231,10 @@ tst_vsMatch =
     , testCase "{cs_i,cl_i} :: {ps_i,pl_i}, no pre-bind  (OK)"
       ( (nub ( vsMatch [] emptyBinding b0 b0
                (S.fromList [cs1,cl1,cs2,cl2,cs3,cl3,cs4,cl4])
-               (S.fromList [ps1,pl1,ps2,pl2,ps3,pl3,ps4,pl4]) )) -- !! 9
-        -- 3 bindings possible, with vlFreeMatchN where N=2
-        -- none returned is our bindAll
-        @?= [bindAllS] )
+               (S.fromList [ps1,pl1,ps2,pl2,ps3,pl3,ps4,pl4]) )) !! 9
+        -- 19 bindings possible, with vlFreeMatchN where N=2
+        -- 10th one returned is our bindAll
+        @?= bindAllS )
     , testCase "{cs_1,cs_2,cl_2,cs_3,cs_4} :: {ps_i,pl_i}, no pre-bind  (OK)"
       ( (nub ( vsMatch [] emptyBinding b0 b0
                (S.fromList [cs1,    cs2,cl2,cs3,    cs4])

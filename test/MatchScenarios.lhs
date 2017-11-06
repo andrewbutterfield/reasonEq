@@ -64,8 +64,16 @@ Here is our initial set of scenarios:
         \land \lst x' = \lst e
         \land S'\less{\lst x} = S\less{\lst x}
     \end{eqnarray*}
+  \item[Skip]
+    \begin{eqnarray*}
+      \Skip &\defs& ok \implies ok' \land S'=S
+    \end{eqnarray*}
+    A simple form of a simple simultaneous assignment!
 \end{description}
-\subsection{Predefined Types}
+
+\subsection{Pre-defined Values and Builders}
+
+\subsubsection{Pre-defined Types}
 
 We assume the existence of types
 for boolean ($\Bool$)
@@ -75,21 +83,36 @@ bool = GivenType $ fromJust $ ident "B"
 int  = GivenType $ fromJust $ ident "Z"
 \end{code}
 
+\subsubsection{Pre-defined Table Builders}
+
+The builders are designed to work with ``safe'' arguments
+and will exhibit runtime failures if used improperly.
+\begin{code}
+vwrap = map StdVar ;  vswrap = S.fromList . vwrap
+lwrap = map LstVar ;  lswrap = S.fromList . lwrap
+v  ^=   t  =  fromJust . addKnownConst   v  t
+v  .:.  t  =  fromJust . addKnownVar     v  t
+lv ->> vl  =  fromJust . addKnownVarList lv (lwrap vl)
+lv -.> vl  =  fromJust . addKnownVarList lv (vwrap vl)
+lv -~> vs  =  fromJust . addKnownVarSet  lv (vswrap vs)
+lv ~~> vs  =  fromJust . addKnownVarSet  lv (lswrap vs)
+\end{code}
+
 \newpage
 \subsection{Reserved List-Variables}
 
 We shall assume an imperative language with three program variables,
 $x$, $y$, and $z$, and model observations $ok$ and $ok'$.
 
-We have the following ``known'' variables:
+\subsubsection{Observation Variables}
 
 Model observations regarding termination.
 \begin{eqnarray*}
    ok, ok'         &:&   \Bool
 \end{eqnarray*}
 \begin{code}
-ok  = PreVar  $ fromJust $ ident "ok" ; okVMR  = KnownVar bool
-ok' = PostVar $ fromJust $ ident "ok" ; ok'VMR = KnownVar bool
+ok  = PreVar  $ fromJust $ ident "ok"
+ok' = PostVar $ fromJust $ ident "ok"
 \end{code}
 
 Script observations regarding values of program variables.
@@ -102,14 +125,13 @@ y = PreVar  $ fromJust $ ident "y"  ;  y' = PostVar $ fromJust $ ident "y"
 z = PreVar  $ fromJust $ ident "z"  ;  z' = PostVar $ fromJust $ ident "z"
 \end{code}
 
+\subsubsection{Observation Classifiers}
+
 List-variables that classify observations.
 \begin{eqnarray*}
-   S             &\defs& \setof{x,y,z}
-\\ S'            &\defs& \setof{x',y',z'}
-\\ M             &\defs& \setof{ok}
-\\ M'            &\defs& \setof{ok'}
-\\ O             &\defs& M \cup S
-\\ O'            &\defs& M'\cup S'
+   S \defs \setof{x,y,z} && S' \defs \setof{x',y',z'}
+\\ M \defs \setof{ok}    && M' \defs \setof{ok'}
+\\ O \defs M \cup S      && O' \defs M'\cup S'
 \end{eqnarray*}
 \begin{code}
 lS = PreVars  $ fromJust $ ident "S"  ;  lS' = PostVars $ fromJust $ ident "S"
@@ -117,36 +139,33 @@ lM = PreVars  $ fromJust $ ident "M"  ;  lM' = PostVars $ fromJust $ ident "M"
 lO = PreVars  $ fromJust $ ident "O"  ;  lO' = PostVars $ fromJust $ ident "O"
 \end{code}
 
-Wrap it all up in a ``Design'' variable-table.
+\subsubsection{``Design'' Variable-Table}
+
 We have two variants,
-one which defines $O$, $S$ and $M$ in terms of listsm
+one which defines $O$, $S$ and $M$ in terms of lists,
 the other doing it in terms of sets.
 \begin{code}
 kvDesign =
-    akv ok bool $ akv ok' bool
-  $ akv x int $ akv x' int $ akv y int $ akv y' int $ akv z int $ akv z' int
+    ok .:. bool $ ok' .:. bool
+  $  x .:. int  $  x' .:. int  $ y .:. int $ y' .:. int $ z .:. int $ z' .:. int
   $ newVarTable
 
 vtL_Design =
-    aklv lS (vwrap [x,y,z]) $ aklv lS' (vwrap [x',y',z'])
-  $ aklv lM (vwrap [ok])    $ aklv lM' (vwrap [ok'])
-  $ aklv lO (lwrap [lM,lS]) $ aklv lO' (lwrap [lM',lS'])
+    lS -.> [x,y,z] $ lS' -.> [x',y',z']
+  $ lM -.> [ok]    $ lM' -.> [ok']
+  $ lO ->> [lM,lS] $ lO' ->> [lM',lS']
   $ kvDesign
 
 vtS_Design =
-    aksv lS (vswrap [x,y,z]) $ aksv lS' (vswrap [x',y',z'])
-  $ aksv lM (vswrap [ok])    $ aksv lM' (vswrap [ok'])
-  $ aksv lO (lswrap [lM,lS]) $ aksv lO' (lswrap [lM',lS'])
+    lS -~> [x,y,z] $ lS' -~> [x',y',z']
+  $ lM -~> [ok]    $ lM' -~> [ok']
+  $ lO ~~> [lM,lS] $ lO' ~~> [lM',lS']
   $ kvDesign
-
-vwrap = map StdVar ;  vswrap = S.fromList . vwrap
-lwrap = map LstVar ;  lswrap = S.fromList . lwrap
-akv v t tbl = fromJust $ addKnownVar v t tbl
-aklv lv vl tbl = fromJust $ addKnownVarList lv vl tbl
-aksv lv vs tbl = fromJust $ addKnownVarSet lv vs tbl
 \end{code}
 
-Tests:
+\newpage
+\subsubsection{Reserved List-Variable Tests}
+
 \begin{code}
 tst_reserved_listvars
  = [ testGroup "Reserved List Variables"

@@ -1,26 +1,26 @@
-    [la/lb] :: [l1/l2]  - succeeds: [Failed]
+*MatchScenarios> eOpAq
 
-expected:
+B P (Id "exists")
+    (fromList [GL (LV (VR (Id "O",VO,TD (WD "m")),[]))])
+    (C P (Id "land")
+         [ S P (V P (VR (Id "P",VP,TS)))
+               (SN (fromList []) 
+                   (fromList [ ( LV (VR (Id "O",VO,TD WA),[])
+                               , LV (VR (Id "O",VO,TD (WD "m")),[])
+                               )
+                             ]
+                   )
+               )
+          ,S P (V P (VR (Id "P",VP,TS)))
+               (SN (fromList [])
+                   (fromList [ ( LV (VR (Id "O",VO,TD WA),[])
+                               , LV (VR (Id "O",VO,TD WB),[])
+                               )
+                             ]
+                   )
+               )
+         ]
+    )
 
-Just (BD (fromList []
-         ,fromList [(LV (VR (Id "l1",VO,TD WB),[]),BS (fromList [GL (LV (VR (Id "la",VO,TD WB),[]))]))
-                   ,(LV (VR (Id "l2",VO,TD WB),[]),BS (fromList [GL (LV (VR (Id "lb",VO,TD WB),[]))]))]))
 
-but got:
-
-Just (BD (fromList []
-         ,fromList [(LV (VR (Id "l1",VO,TD WB),[]),BL [GL (LV (VR (Id "la",VO,TD WB),[]))])
-                   ,(LV (VR (Id "l2",VO,TD WB),[]),BS (fromList [GL (LV (VR (Id "lb",VO,TD WB),[]))]))]))
-
-
-
-
-    [42,la/a,lb] :: [e,l1/x,l2]  - succeeds: [Failed]
-
-expected:
-
-[BD (fromList [(VR (Id "e",VE,TS),BT (K (E T) (VI 42))),(VR (Id "x",VO,TD WB),BV (VR (Id "a",VO,TD WB)))],fromList [(LV (VR (Id "l1",VO,TD WB),[]),BS (fromList [GL (LV (VR (Id "la",VO,TD WB),[]))])),(LV (VR (Id "l2",VO,TD WB),[]),BS (fromList [GL (LV (VR (Id "lb",VO,TD WB),[]))]))])]
-
-but got:
-
-[BD (fromList [(VR (Id "e",VE,TS),BT (K (E T) (VI 42))),(VR (Id "x",VO,TD WB),BV (VR (Id "a",VO,TD WB)))],fromList [(LV (VR (Id "l1",VO,TD WB),[]),BL [GL (LV (VR (Id "la",VO,TD WB),[]))]),(LV (VR (Id "l2",VO,TD WB),[]),BS (fromList [GL (LV (VR (Id "lb",VO,TD WB),[]))]))])]
+*MatchScenarios>

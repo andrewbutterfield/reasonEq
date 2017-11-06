@@ -167,8 +167,10 @@ vtS_Design =
 \subsubsection{Reserved List-Variable Tests}
 
 \begin{code}
+e = PreExpr $ fromJust $ ident "e"
+
 tst_reserved_listvars
- = [ testGroup "Reserved List Variables"
+ = testGroup "Reserved List Variables"
      [ testCase "|-  x,y :: S  -- succeeds."
        ( vlMatch [] emptyBinding S.empty S.empty
             (vwrap [x,y])
@@ -297,9 +299,56 @@ tst_reserved_listvars
          @?=
          ( bindLVarToVList lO (vwrap [e,x]) emptyBinding :: [Binding] ) )
      ]
-   ]
+\end{code}
 
-e = PreExpr $ fromJust $ ident "e"
+\newpage
+\subsection{Sequential Composition}
+
+Consider the standard generic definition of sequential composition:
+$$
+    P ; Q
+    ~\defs~
+    \exists O_m \bullet P[O_m/O'] \land Q[O_m/O]
+$$
+We want to match here using the definitions regard $O$ and friends from above.
+
+We need to have subscripted used of $O$.
+\begin{code}
+lOs s = MidVars  (fromJust $ ident "O") s
+lOm = lOs "m" ; lOn = lOs "n"
+\end{code}
+
+We need to define shorthands for
+known predicate operators $;$, $\exists$ and $\land$.
+\begin{code}
+semi = fromJust $ ident "seqc"
+exists = fromJust $ ident "exists"
+land = fromJust $ ident "land"
+
+p `seqComp` q = PCons semi [p,q]
+eX vs p = fromJust $ pBind exists (S.fromList $ vs) p
+p `lAnd` q = PCons land [p,q]
+\end{code}
+
+We also need some predicates to throw around ($P$, $Q$):
+\begin{code}
+p = fromJust $ pVar $ PredVar (fromJust $ ident "P") Static
+q = fromJust $ pVar $ PredVar (fromJust $ ident "Q") Static
+end2mid p = PSub p $ fromJust $ substn [] [(lO',lOm)]
+beg2mid p = PSub p $ fromJust $ substn [] [(lO',lO)]
+eOpAq = eX [LstVar lOm] (end2mid p `lAnd` beg2mid q)
+\end{code}
+
+\subsubsection{Sequential Composition Tests}
+\begin{code}
+tst_sequential_composition
+ = testGroup "Sequential Composition"
+    [ testCase "1+1=2" (1+1 @?= 2)
+    , testCase "2+2=5" (2+2 @?= 5)
+    , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches itself"
+       (tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAq eOpAq
+        @?= Just emptyBinding)
+    ]
 \end{code}
 
 \newpage
@@ -309,6 +358,8 @@ tst_match_scenarios :: [TF.Test]
 
 tst_match_scenarios
   = [ testGroup "\nMatching Scenarios"
-       tst_reserved_listvars
+       [ tst_reserved_listvars
+       , tst_sequential_composition
+       ]
     ]
 \end{code}

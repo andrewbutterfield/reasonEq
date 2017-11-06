@@ -1,59 +1,26 @@
-    {cs_1,cs_2,cl_2,cs_3,cs_4} :: {ps_i,pl_i}, no pre-bind  (OK): [Failed]
+    [la/lb] :: [l1/l2]  - succeeds: [Failed]
 
 expected:
 
-[BD ( [("ps1"),("cs1"))
-              ,("ps2"),("cs2"))
-              ,("ps3"),("cs3"))
-              ,("ps4"),("cs4"))]
-     , [("pl1" -> {})
-               ,("pl2" -> {("cl2")])
-               ,("pl3" -> {})
-               ,("pl4" -> {})])]
+Just (BD (fromList []
+         ,fromList [(LV (VR (Id "l1",VO,TD WB),[]),BS (fromList [GL (LV (VR (Id "la",VO,TD WB),[]))]))
+                   ,(LV (VR (Id "l2",VO,TD WB),[]),BS (fromList [GL (LV (VR (Id "lb",VO,TD WB),[]))]))]))
 
 but got:
 
-[BD (std-bind
-    , [("pl1" -> {}),("pl2" -> {})
-              ,("pl3" -> {}),("pl4" -> {("cl2")])])
-,BD (std-bind
-    , [("pl1" -> {}),("pl2" -> {})
-              ,("pl3" -> {("cl2")]),("pl4" -> {})])
-,BD (std-bind
-    , [("pl1" -> {}),("pl2" -> {("cl2")])
-              ,("pl3" -> {}),("pl4" -> {})])
-,BD (std-bind
-    , [("pl1" -> {("cl2")]),("pl2" -> {})
-              ,("pl3" -> {}),("pl4" -> {})])]
+Just (BD (fromList []
+         ,fromList [(LV (VR (Id "l1",VO,TD WB),[]),BL [GL (LV (VR (Id "la",VO,TD WB),[]))])
+                   ,(LV (VR (Id "l2",VO,TD WB),[]),BS (fromList [GL (LV (VR (Id "lb",VO,TD WB),[]))]))]))
 
 
-    {cs_i,cl_i} :: {ps_i,pl_i}, no pre-bind  (OK): [Failed]
+
+
+    [42,la/a,lb] :: [e,l1/x,l2]  - succeeds: [Failed]
 
 expected:
 
-[BD  [("pl1" -> {("cl1")]),("pl2" -> {("cl2")]),("pl3" -> {("cl3")]),("pl4" -> {("cl4")])])]
-
+[BD (fromList [(VR (Id "e",VE,TS),BT (K (E T) (VI 42))),(VR (Id "x",VO,TD WB),BV (VR (Id "a",VO,TD WB)))],fromList [(LV (VR (Id "l1",VO,TD WB),[]),BS (fromList [GL (LV (VR (Id "la",VO,TD WB),[]))])),(LV (VR (Id "l2",VO,TD WB),[]),BS (fromList [GL (LV (VR (Id "lb",VO,TD WB),[]))]))])]
 
 but got:
 
-[BD  [("pl1" -> {}),("pl2" -> {}),("pl3" -> {("cl1","cl2")]),("pl4" -> {("cl3","cl4")])])
-,BD  [("pl1" -> {}),("pl2" -> {("cl1")]),("pl3" -> {("cl2")]),("pl4" -> {("cl3","cl4")])])
-,BD  [("pl1" -> {}),("pl2" -> {("cl1")]),("pl3" -> {("cl2","cl3")]),("pl4" -> {("cl4")])])
-,BD  [("pl1" -> {}),("pl2" -> {("cl1","cl2")]),("pl3" -> {}),("pl4" -> {("cl3","cl4")])])
-,BD  [("pl1" -> {}),("pl2" -> {("cl1","cl2")]),("pl3" -> {("cl3")]),("pl4" -> {("cl4")])])
-,BD  [("pl1" -> {}),("pl2" -> {("cl1","cl2")]),("pl3" -> {("cl3","cl4")]),("pl4" -> {})])
-,BD  [("pl1" -> {("cl1")]),("pl2" -> {}),("pl3" -> {("cl2")]),("pl4" -> {("cl3","cl4")])])
-,BD  [("pl1" -> {("cl1")]),("pl2" -> {}),("pl3" -> {("cl2","cl3")]),("pl4" -> {("cl4")])])
-,BD  [("pl1" -> {("cl1")]),("pl2" -> {("cl2")]),("pl3" -> {}),("pl4" -> {("cl3","cl4")])])
-,BD  [("pl1" -> {("cl1")]),("pl2" -> {("cl2")]),("pl3" -> {("cl3")]),("pl4" -> {("cl4")])])
-,BD  [("pl1" -> {("cl1")]),("pl2" -> {("cl2")]),("pl3" -> {("cl3","cl4")]),("pl4" -> {})])
-,BD  [("pl1" -> {("cl1")]),("pl2" -> {("cl2","cl3")]),("pl3" -> {}),("pl4" -> {("cl4")])])
-,BD  [("pl1" -> {("cl1")]),("pl2" -> {("cl2","cl3")]),("pl3" -> {("cl4")]),("pl4" -> {})])
-,BD  [("pl1" -> {("cl1","cl2")]),("pl2" -> {}),("pl3" -> {}),("pl4" -> {("cl3","cl4")])])
-,BD  [("pl1" -> {("cl1","cl2")]),("pl2" -> {}),("pl3" -> {("cl3")]),("pl4" -> {("cl4")])])
-,BD  [("pl1" -> {("cl1","cl2")]),("pl2" -> {}),("pl3" -> {("cl3","cl4")]),("pl4" -> {})])
-,BD  [("pl1" -> {("cl1","cl2")]),("pl2" -> {("cl3")]),("pl3" -> {}),("pl4" -> {("cl4")])])
-,BD  [("pl1" -> {("cl1","cl2")]),("pl2" -> {("cl3")]),("pl3" -> {("cl4")]),("pl4" -> {})])
-,BD  [("pl1" -> {("cl1","cl2")]),("pl2" -> {("cl3","cl4")]),("pl3" -> {}),("pl4" -> {})])]
-
-    {cs_1,cs_2,cl_2,cs_3,cs_4} :: {ps_i,pl_i}, no pre-bind  (OK): [OK]
+[BD (fromList [(VR (Id "e",VE,TS),BT (K (E T) (VI 42))),(VR (Id "x",VO,TD WB),BV (VR (Id "a",VO,TD WB)))],fromList [(LV (VR (Id "l1",VO,TD WB),[]),BL [GL (LV (VR (Id "la",VO,TD WB),[]))]),(LV (VR (Id "l2",VO,TD WB),[]),BS (fromList [GL (LV (VR (Id "lb",VO,TD WB),[]))]))])]

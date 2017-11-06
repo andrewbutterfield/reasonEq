@@ -303,8 +303,8 @@ tst_sMatch
        ( sMatch [] emptyBinding b0 b0
            (fromJust $ substn [] [(lb,la)])
            (fromJust $ substn [] [(l2,l1)])
-       @?= (Just ( bindLL (LstVar l1) (LstVar la)
-                 $ bindLL (LstVar l2) (LstVar lb)
+       @?= (Just ( bindLS (LstVar l1) (LstVar la)
+                 $ bindLS (LstVar l2) (LstVar lb)
                  $ emptyBinding  ))
        )
    , testCase "[la/lb] :: [e/x]  - fails"
@@ -319,8 +319,8 @@ tst_sMatch
          @?=
          ([ ( bindVV (StdVar x) (StdVar a)
             $ bindVT (StdVar e) k42
-            $ bindLL (LstVar l1) (LstVar la)
-            $ bindLL (LstVar l2) (LstVar lb)
+            $ bindLS (LstVar l1) (LstVar la)
+            $ bindLS (LstVar l2) (LstVar lb)
             $ emptyBinding )])
        )
    ]

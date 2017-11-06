@@ -1275,14 +1275,14 @@ lvlvMatchCheck vts bind cbvs pbvs lvsC rlvP tlvP
           in if S.size lvsB /= 1
               then fail "lvlvMatchCheck: #lvsB /= 1 SHOULD NOT OCCUR!"
               else let rlvC = snd $ S.elemAt 0 lvsB
-                   in bindLVarToVList rlvP [LstVar rlvC] bind
+                   in bindLVarToVSet rlvP (S.singleton $LstVar rlvC) bind
      Just (BindSet one_tlvC) | S.size one_tlvC == 1 && all isLstV one_tlvC
        -> let (LstVar tlvC) = S.elemAt 0 one_tlvC
               lvsB = S.filter ((==tlvC).fst) lvsC
           in if S.size lvsB /= 1
               then fail "lvlvMatchCheck: #lvsB /= 1 SHOULD NOT OCCUR!"
               else let rlvC = snd $ S.elemAt 0 lvsB
-                   in bindLVarToVList rlvP [LstVar rlvC] bind
+                   in bindLVarToVSet rlvP (S.singleton $ LstVar rlvC) bind
      _ -> fail "lvlvMatchCheck: #(lookup tlvP) /= 1, or StdVar, SHOULD NOT OCCUR!"
 \end{code}
 

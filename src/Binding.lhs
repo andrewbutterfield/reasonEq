@@ -109,13 +109,29 @@ should never fail in this way.
 
 \subsubsection{Binding Variable to Variable}
 
-Only observation variables can bind to variables.
+Variables can only bind to variables with the same
 
 \begin{code}
 bindVarToVar :: Monad m => Variable -> Variable -> Binding -> m Binding
-bindVarToVar pv@(ObsVar _ _) cv (BD (vbinds,lbinds))
-  = return $ BD (M.insert pv (BV cv) vbinds,lbinds)
-bindVarToVar _ _ _ = fail "bindVarToVar: cannot bind non-obs. var. to var."
+bindVarToVar pv cv (BD (vbinds,lbinds))
+ | compatibleVV pv cv
+    = return $ BD (M.insert pv (BV cv) vbinds,lbinds)
+ | otherwise
+    = fail $ unlines
+        [ "bindVarToVar: incompatible variables"
+        , "pv = " ++ show pv
+        , "cv = " ++ show cv
+        ]
+\end{code}
+
+Compatible var.-var. bindings:
+\begin{code}
+compatibleVV (ObsVar _ _) (ObsVar _ _) = True
+compatibleVV (ObsVar _ _) (ExprVar _ _) = True
+compatibleVV (VarVar _ _) (VarVar _ _) = True
+compatibleVV (ExprVar _ _) (ExprVar _ _) = True
+compatibleVV (PredVar _ _) (PredVar _ _) = True
+compatibleVV _ _  = False
 \end{code}
 
 \newpage

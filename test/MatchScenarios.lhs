@@ -374,8 +374,8 @@ p `lAnd` q = PCons land [p,q]
 
 We also need some predicates to throw around ($P$, $Q$):
 \begin{code}
-p = fromJust $ pVar $ PredVar (jId "P") Static
-q = fromJust $ pVar $ PredVar (jId "Q") Static
+vp = PredVar (jId "P") Static ; p = fromJust $ pVar vp
+vq = PredVar (jId "Q") Static ; q = fromJust $ pVar vq
 end2mid p = PSub p $ fromJust $ substn [] [(lO',lOm)]
 beg2mid p = PSub p $ fromJust $ substn [] [(lO',lO)]
 eOpAq = eX [LstVar lOm] (end2mid p `lAnd` beg2mid q)
@@ -387,7 +387,7 @@ test_sequential_composition
  = testGroup "Sequential Composition"
     [ testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches itself"
        (tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAq eOpAq
-        @?= Just emptyBinding)
+        @?= Just (emptyBinding))
     ]
 
 tstSeqComp = defaultMain [test_sequential_composition]

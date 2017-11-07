@@ -1035,10 +1035,10 @@ This code, and its local definitions, may belong somewhere else.
 whenPartition :: VarSet -> (VarSet,VarSet,VarSet,VarSet)
 whenPartition vs = (vsStatic,vsBefore,vsDuring,vsAfter)
  where
-  isStatic gv  =  whenGVar gv == Static
-  isBefore gv  =  whenGVar gv == Dynamic Before
-  isAfter gv   =  whenGVar gv == Dynamic After
-  isDuring gv  =  case whenGVar gv of
+  isStatic gv  =  timeGVar gv == Static
+  isBefore gv  =  timeGVar gv == Dynamic Before
+  isAfter gv   =  timeGVar gv == Dynamic After
+  isDuring gv  =  case timeGVar gv of
                     Dynamic (During _) -> True ; _ -> False
   (vsStatic,vs1)      =  S.partition isStatic vs
   (vsBefore,vs2)      =  S.partition isBefore vs1

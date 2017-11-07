@@ -349,6 +349,9 @@ checkLVarListMap lv vl
   where vtime = timeLVar lv
 \end{code}
 
+\newpage
+\subsubsection{Neutralising \texttt{During} Subscripts}
+
 We neutralise a \texttt{During} variable by setting the subscript string to
 empty.
 \begin{code}
@@ -390,7 +393,10 @@ checkLVarSetMap lv vs
 \end{code}
 
 \newpage
-\subsubsection{Table Lookup}
+\subsection{Table Lookup}
+
+
+\subsubsection{Variable Lookup}
 
 Variable lookup is total, returning \texttt{UV} if the variable is not present.
 \begin{code}
@@ -400,6 +406,50 @@ lookupVarTable (VT (vtable, _, _)) var
      Nothing   ->  UV
      Just vmr  ->  vmr
 \end{code}
+
+
+\subsubsection{List-Variable Lookup}
+
+
+For list-variables we need to distinguish between
+those whose temporality is \texttt{During},
+and the others.
+\begin{code}
+lookupLVarTable :: VarTable -> ListVar -> LstVarMatchRole
+
+lookupLVarTable (VT (_,_,dtable)) lvar@(LVbl (Vbl _ _ (Dynamic (During s ))) _)
+ = case M.lookup (neutralD lvar) dtable of
+     Nothing    ->  UL
+     Just lvmr  ->  lvmrMap (specialiseD s) lvmr
+
+lookupLVarTable (VT (_,ltable,_)) lvar
+ = case M.lookup lvar ltable of
+     Nothing    ->  UL
+     Just lvmr  ->  lvmr
+\end{code}
+
+We do a simple map for \texttt{LstVarMatchRole}:
+\begin{code}
+lvmrMap f (KL vl)  =  KL $ map f vl
+lvmrMap f (KS vs)  =  KS $ S.map f vs
+lvmrMap _ lvmr     =  lvmr
+\end{code}
+
+\subsubsection{Specialising \texttt{During} Subscripts}
+
+Once we have looked up the table with a neutralised list-variable,
+we want to replace all the empty-string subscripts
+with that associated with the list-variable actually being looked up.
+\begin{code}
+specialiseD s (StdVar (Vbl id vw (Dynamic (During _))))
+ = StdVar $ Vbl id vw $ Dynamic $ During s
+specialiseD s (LstVar (LVbl (Vbl id vw (Dynamic (During _))) is))
+ = LstVar (LVbl (Vbl id vw $ Dynamic $ During s) is)
+specialiseD _ gv = gv
+\end{code}
+
+\newpage
+\subsubsection{Searching Lists of Tables}
 
 We also have a version that searches a list of tables:
 \begin{code}
@@ -411,14 +461,9 @@ lookupVarTables (VT (vtable,_,_):rest) var
      Nothing   ->  lookupVarTables rest var
 \end{code}
 
-Repeating for list-variables:
-\begin{code}
-lookupLVarTable :: VarTable -> ListVar -> LstVarMatchRole
-lookupLVarTable (VT (_,ltable,dtable)) lvar
- = case M.lookup lvar ltable of
-     Nothing    ->  UL
-     Just lvmr  ->  lvmr
 
+Again, we want to be able to search lists of tables.
+\begin{code}
 lookupLVarTables :: [VarTable] -> ListVar -> LstVarMatchRole
 lookupLVarTables [] _ = UL
 lookupLVarTables (VT (_,ltable,dtable):rest) lvar

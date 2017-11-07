@@ -182,16 +182,15 @@ tst_addKnownListVar
         ( addKnownVarList lu [glv]
                   (fromJust (addKnownVarSet lv (sngl glw) newVarTable))
           @?= Nothing )
-     , testCase "lu |-> <lv'>, succeeds"
-       ( ltList (fromJust (addKnownVarList lu [glv'] newVarTable))
-         @?= [(lu,KnownVarList [glv'])] )
-     , testCase "lu |-> <le>, fails (SHOULD IT?)"
-       ( addKnownVarList lu [gle] newVarTable @?= Nothing )
-      , testCase "le |-> <lu>, fails (SHOULD IT?)"
+     , testCase "lu |-> <lv'>, fails"
+       ( addKnownVarList lu [glv'] newVarTable @?= Nothing )
+     , testCase "lu |-> <le>, fails"
+       ( addKnownVarList lu [gle]  newVarTable @?= Nothing )
+     , testCase "le |-> <lu>, fails"
         ( addKnownVarList le [glu] newVarTable @?= Nothing )
-      , testCase "lP |-> <le>, fails (SHOULD IT?)"
+     , testCase "lP |-> <le>, fails"
         ( addKnownVarList lP [gle] newVarTable @?= Nothing )
-      ]
+     ]
 
 lulvTable = fromJust $ addKnownVarList lu [glv]             newVarTable
 lulwTable = fromJust $ addKnownVarSet  lu (S.singleton glw) newVarTable

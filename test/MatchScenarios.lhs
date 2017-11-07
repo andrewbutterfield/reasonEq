@@ -171,7 +171,7 @@ vtS_Design =
 \begin{code}
 e = PreExpr $ jId "e"
 okn = MidVar k "n" ; xn = MidVar ex "n" ; yn = MidVar wy "n" ; zn = MidVar ze "n"
-lOn = MidVars o "n" ; lMn = MidVars m "n" ; lSn = MidVars m "n"
+lOn = MidVars o "n" ; lMn = MidVars m "n" ; lSn = MidVars s "n"
 
 test_reserved_listvars
  = testGroup "Reserved List Variables"

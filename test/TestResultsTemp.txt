@@ -1,13 +1,31 @@
-    S_Design |-  {On} :: {Om}  -- matches .: [Failed]
+vsMatch [vtS_Design] emptyBinding S.empty S.empty (S. [StdVar okn, LstVar lSn]) (lswrap [lOm])
 
-expected:
+BD ( []
+   , [ ("O" (WD "m")),[])
+               ,BS ( [GV ("ok" (WD "n")))
+                             ,GL ("M" (WD "n")),[]))]))])
 
-[BD ( fromList []
-    , fromList [( LV (VR (Id "M",VO,TD (WD "m")),[])
-                , BS (fromList [GL (LV (VR (Id "O",VO,TD (WD "n")),[]))]))])]
 
-but got:
 
-[BD ( fromList []
-    , fromList [( LV (VR (Id "M",VO,TD (WD "m")),[])
-                , BS (fromList [GL (LV (VR (Id "O",VO,TD (WD "n")),[]))]))]),BD (fromList [],fromList [(LV (VR (Id "M",VO,TD (WD "m")),[]),BS (fromList [GL (LV (VR (Id "O",VO,TD (WD "n")),[]))]))])]
+VT ( [("ok" WB):"B"))),("ok" WA):"B")))
+     ,("x" WB):"Z"))),("x" WA):"Z"))),("y" WB):"Z")))
+     ,("y" WA):"Z"))),("z" WB):"Z"))),("z" WA):"Z")))]
+   , [("M" WB),[]),KS ( [GV ("ok" WB))]))
+     ,("M" WA),[]),KS ( [GV ("ok" WA))]))
+     ,("O" WB),[]),KS ( [GL ("M" WB),[])),GL ("S" WB),[]))]))
+     ,("O" WA),[]),KS ( [GL ("M" WA),[])),GL ("S" WA),[]))]))
+     ,("S" WB),[]),KS ( [GV ("x" WB)),GV ("y" WB)),GV ("z" WB))]))
+     ,("S" WA),[]),KS ( [GV ("x" WA)),GV ("y" WA)),GV ("z" WA))]))]
+   , [("M" (WD "")),[]),KS ( [GV ("ok" (WD "m")))]))
+     ,("O" (WD "")),[]),KS ( [GL ("M" (WD "m")),[])),GL ("S" (WD "m")),[]))]))
+     ,("S" (WD "")),[]),KS ( [GV ("x" (WD "m"))),GV ("y" (WD "m"))),GV ("z" (WD "m")))]))])
+
+
+
+BD ( [],
+     [ ( LV (VR (Id "O",VO,TD (WD "m")),[])
+       , BS ( [ GV (VR (Id "ok",VO,TD (WD "n")))
+              , GL (LV (VR (Id "S",VO,TD (WD "n")),[]))])
+       )
+     ]
+   )

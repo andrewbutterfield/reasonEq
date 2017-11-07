@@ -1174,7 +1174,12 @@ vsKnownXMatch vts vsC vsCx vsKx
   | vsKx `S.isSubsetOf` vsCx
      = do vsCm <- getCorrCandidates vts [] vsKx $ S.toList vsC
           return (vsCm, vsC S.\\ vsC)
-  | otherwise = fail "vsMatch: some pattern var-set is not in candidate."
+  | otherwise
+      = fail $ unlines
+          [ "vsMatch: some pattern var-set is not in candidate."
+          , "vsKx = " ++ show vsKx
+          , "vsCx = " ++ show vsCx
+          ]
 \end{code}
 
 Find the candidate variables in \texttt{vsC} that expand into

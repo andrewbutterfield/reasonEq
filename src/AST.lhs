@@ -10,6 +10,7 @@ module AST ( VarWhat
            , pattern ObsV, pattern VarV, pattern ExprV, pattern PredV
            , VarWhen
            , pattern Before, pattern During, pattern After
+           , isDuring
            , VarTime
            , pattern Static, pattern Dynamic
            , Variable
@@ -20,18 +21,19 @@ module AST ( VarWhat
            , pattern PreCond, pattern PostCond
            , pattern PreExpr, pattern PostExpr
            , isPreVar, isObsVar, isExprVar, isPredVar
-           , whatVar, whenVar
+           , whatVar, timeVar
            , ListVar
+           , pattern LVbl
            , pattern ObsLVar, pattern VarLVar, pattern ExprLVar, pattern PredLVar
            , pattern PreVars, pattern PostVars, pattern MidVars
            , pattern ScriptVars
            , pattern PreExprs, pattern PrePreds
            , isPreListVar, isObsLVar, isExprLVar, isPredLVar
-           , whatLVar, whenLVar
+           , whatLVar, timeLVar
            , GenVar, pattern StdVar, pattern LstVar
            , isStdV, isLstV
            , isPreGenVar, isObsGVar, isExprGVar, isPredGVar
-           , whatGVar, whenGVar
+           , whatGVar, timeGVar
            , VarList
            , stdVarsOf, listVarsOf
            , VarSet, stdVarSetOf, listVarSetOf
@@ -169,9 +171,12 @@ data VarTime
 
 pattern Static = TS
 pattern Dynamic w = TD w
+
+isDuring (Dynamic (During _)) = True
+isDuring _                    = False
 \end{code}
 
-A variable is a triple: identifier, what, and kind
+A variable is a triple: identifier, what, and time
 \begin{code}
 newtype Variable  = VR (Identifier, VarWhat, VarTime)
  deriving (Eq,Ord,Show,Read)
@@ -206,7 +211,7 @@ isExprVar (VR (_, vw, _))  =  vw == VE
 isPredVar (VR (_, vw, _))  =  vw == VP
 
 whatVar (VR (_, vw, _))  =  vw
-whenVar (VR (_, _, vw))  =  vw
+timeVar (VR (_, _, vt))  =  vt
 \end{code}
 
 \subsubsection{Identifier and Variable test values}
@@ -254,6 +259,8 @@ of a list of identifiers, corresponding to variable `roots'
 newtype ListVar = LV (Variable, [Identifier])
  deriving (Eq, Ord, Show, Read)
 
+pattern LVbl v is = LV (v,is)
+
 pattern ObsLVar  k i is = LV (VR (i,VO,k),is)
 pattern VarLVar  k i is = LV (VR (i,VV,k),is)
 pattern ExprLVar k i is = LV (VR (i,VE,k),is)
@@ -283,7 +290,7 @@ isExprLVar (LV (v,_)) = isExprVar v
 isPredLVar (LV (v,_)) = isPredVar v
 
 whatLVar (LV (v,_)) = whatVar v
-whenLVar (LV (v,_)) = whenVar v
+timeLVar (LV (v,_)) = timeVar v
 \end{code}
 
 \subsubsection{List Variable test values}
@@ -339,8 +346,8 @@ isPredGVar (GL lv)  =  isPredLVar lv
 
 whatGVar (GV v)   =  whatVar v
 whatGVar (GL lv)  =  whatLVar lv
-whenGVar (GV v)   =  whenVar v
-whenGVar (GL lv)  =  whenLVar lv
+timeGVar (GV v)   =  timeVar v
+timeGVar (GL lv)  =  timeLVar lv
 \end{code}
 
 Test values:

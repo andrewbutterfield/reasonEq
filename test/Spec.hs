@@ -21,4 +21,4 @@ tests
  ++ tst_VarData
  ++ tst_Binding
  ++ tst_Matching
- ++ tst_match_scenarios
+ ++ test_match_scenarios

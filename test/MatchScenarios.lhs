@@ -6,7 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module MatchScenarios ( tst_match_scenarios ) where
+module MatchScenarios ( test_match_scenarios ) where
 
 import Data.Maybe(fromJust)
 import Data.Map as M (fromList)
@@ -114,7 +114,7 @@ Model observations regarding termination.
 \end{eqnarray*}
 \begin{code}
 k = jId "ok"
-ok = PreVar k ; ok' = PostVar k ; okm = MidVar k "m" ; okn = MidVar k "n"
+ok = PreVar k ; ok' = PostVar k ; okm = MidVar k "m"
 \end{code}
 
 Script observations regarding values of program variables.
@@ -138,7 +138,7 @@ List-variables that classify observations.
 \begin{code}
 s = jId "S"  ;  lS = PreVars s  ;  lS' = PostVars s  ;  lSm = MidVars s "m"
 m = jId "M"  ;  lM = PreVars m  ;  lM' = PostVars m  ;  lMm = MidVars m "m"
-o = jId "O"  ;  lO = PreVars o  ;  lO' = PostVars o  ;  lOm = MidVars m "m"
+o = jId "O"  ;  lO = PreVars o  ;  lO' = PostVars o  ;  lOm = MidVars o "m"
 \end{code}
 
 \subsubsection{``Design'' Variable-Table}
@@ -153,15 +153,15 @@ kvDesign =
   $ newVarTable
 
 vtL_Design =
-    lS -.> [x,y,z] $ lS' -.> [x',y',z']
-  $ lM -.> [ok]    $ lM' -.> [ok']
-  $ lO ->> [lM,lS] $ lO' ->> [lM',lS']
+    lS -.> [x,y,z] $ lS' -.> [x',y',z'] $ lSm -.> [xm,ym,zm]
+  $ lM -.> [ok]    $ lM' -.> [ok']      $ lMm -.> [okm]
+  $ lO ->> [lM,lS] $ lO' ->> [lM',lS']  $ lOm ->> [lMm,lSm]
   $ kvDesign
 
 vtS_Design =
-    lS -~> [x,y,z] $ lS' -~> [x',y',z']
-  $ lM -~> [ok]    $ lM' -~> [ok']
-  $ lO ~~> [lM,lS] $ lO' ~~> [lM',lS']
+    lS -~> [x,y,z] $ lS' -~> [x',y',z'] $ lSm -~> [xm,ym,zm]
+  $ lM -~> [ok]    $ lM' -~> [ok']      $ lMm -~> [okm]
+  $ lO ~~> [lM,lS] $ lO' ~~> [lM',lS']  $ lOm ~~> [lMm,lSm]
   $ kvDesign
 \end{code}
 
@@ -170,11 +170,15 @@ vtS_Design =
 
 \begin{code}
 e = PreExpr $ jId "e"
-xn = MidVar ex "n"  ; yn = MidVar wy "n"  ; zn = MidVar ze "n"
+okn = MidVar k "n" ; xn = MidVar ex "n" ; yn = MidVar wy "n" ; zn = MidVar ze "n"
 lOn = MidVars o "n" ; lMn = MidVars m "n" ; lSn = MidVars m "n"
 
-tst_reserved_listvars
+test_reserved_listvars
  = testGroup "Reserved List Variables"
+     [test_none_reserved, test_reserved_as_lists, test_reserved_as_sets]
+
+test_none_reserved
+ = testGroup "O,M,S not reserved"
      [ testCase "|-  x,y :: S  -- succeeds."
        ( vlMatch [] emptyBinding S.empty S.empty
             (vwrap [x,y])
@@ -185,21 +189,39 @@ tst_reserved_listvars
             (vwrap [x,y,z])
             (lwrap [lS])
          @?= Nothing )
-     , testCase "L_Design |-  x,y,z :: S  -- matches."
+     , testCase "|-  M,S :: O  -- matches ."
+       ( vlMatch [] emptyBinding S.empty S.empty
+            (lwrap [lM,lS])
+            (lwrap [lO])
+         @?=
+         ( bindLVarToVList lO (lwrap [lM,lS]) emptyBinding :: [Binding] ) )
+     , testCase "|-  x,y :: O  -- matches."
+       ( vlMatch [] emptyBinding S.empty S.empty
+            (vwrap [x,y])
+            (lwrap [lO])
+         @?=
+         ( bindLVarToVList lO (vwrap [x,y]) emptyBinding :: [Binding] ) )
+     , testCase "|-  x,y' :: O  -- matches."
+       ( vlMatch [] emptyBinding S.empty S.empty
+            (vwrap [x,y'])
+            (lwrap [lO])
+         @?=
+         ( bindLVarToVList lO (vwrap [x,y']) emptyBinding :: [Binding] ) )
+     , testCase "|-  e,x :: O  -- matches ."
+       ( vlMatch [] emptyBinding S.empty S.empty
+            (vwrap [e,x])
+            (lwrap [lO])
+         @?=
+         ( bindLVarToVList lO (vwrap [e,x]) emptyBinding :: [Binding] ) )
+     ]
+
+test_reserved_as_lists
+ = testGroup "O,M,S reserved as [ok,x,y,z]"
+     [ testCase "L_Design |-  x,y,z :: S  -- matches."
        ( vlMatch [vtL_Design] emptyBinding S.empty S.empty
             (vwrap [x,y,z])
             (lwrap [lS])
          @?= ( bindLVarToVList lS (vwrap [x,y,z]) emptyBinding :: [Binding] ))
-     , testCase "S_Design |-  x,y,z :: S  -- fails."
-       ( vlMatch [vtS_Design] emptyBinding S.empty S.empty
-            (vwrap [x,y,z])
-            (lwrap [lS])
-         @?= Nothing )
-     , testCase "S_Design |-  {x,y,z} :: {S}  -- matches at least once."
-       ( vsMatch [vtS_Design] emptyBinding S.empty S.empty
-            (vswrap [x,y,z])
-            (lswrap [lS])
-         @?= ( bindLVarToVSet lS (vswrap [x,y,z]) emptyBinding :: [Binding] ))
      , testCase "L_Design |-  {x,y,z} :: {S}  -- fails."
        ( vsMatch [vtL_Design] emptyBinding S.empty S.empty
             (vswrap [x,y,z])
@@ -244,12 +266,6 @@ tst_reserved_listvars
             (lwrap [lS,lM])
             (lwrap [lO])
          @?= Nothing )
-     , testCase "|-  M,S :: O  -- matches ."
-       ( vlMatch [] emptyBinding S.empty S.empty
-            (lwrap [lM,lS])
-            (lwrap [lO])
-         @?=
-         ( bindLVarToVList lO (lwrap [lM,lS]) emptyBinding :: [Binding] ) )
      , testCase "L_Design |-  ok,x,y,z :: M,S  -- matches."
        ( vlMatch [vtL_Design] emptyBinding S.empty S.empty
             (vwrap [ok,x,y,z])
@@ -284,24 +300,20 @@ tst_reserved_listvars
             (vwrap [ok] )
             (lwrap [lM,lS])
          @?= Nothing )
-     , testCase "|-  x,y :: O  -- matches."
-       ( vlMatch [] emptyBinding S.empty S.empty
-            (vwrap [x,y])
-            (lwrap [lO])
-         @?=
-         ( bindLVarToVList lO (vwrap [x,y]) emptyBinding :: [Binding] ) )
-     , testCase "|-  x,y' :: O  -- matches."
-       ( vlMatch [] emptyBinding S.empty S.empty
-            (vwrap [x,y'])
-            (lwrap [lO])
-         @?=
-         ( bindLVarToVList lO (vwrap [x,y']) emptyBinding :: [Binding] ) )
-     , testCase "|-  e,x :: O  -- matches ."
-       ( vlMatch [] emptyBinding S.empty S.empty
-            (vwrap [e,x])
-            (lwrap [lO])
-         @?=
-         ( bindLVarToVList lO (vwrap [e,x]) emptyBinding :: [Binding] ) )
+     ]
+
+test_reserved_as_sets
+ = testGroup "O,M,S reserved as {ok,x,y,z}"
+     [ testCase "S_Design |-  x,y,z :: S  -- fails."
+       ( vlMatch [vtS_Design] emptyBinding S.empty S.empty
+            (vwrap [x,y,z])
+            (lwrap [lS])
+         @?= Nothing )
+     , testCase "S_Design |-  {x,y,z} :: {S}  -- matches at least once."
+       ( vsMatch [vtS_Design] emptyBinding S.empty S.empty
+            (vswrap [x,y,z])
+            (lswrap [lS])
+         @?= ( bindLVarToVSet lS (vswrap [x,y,z]) emptyBinding :: [Binding] ))
      , testCase "S_Design |-  {Om} :: {Om}  -- matches ."
        ( nub( vsMatch [vtS_Design] emptyBinding S.empty S.empty
                  (lswrap [lOm]) (lswrap [lOm]) )
@@ -329,6 +341,11 @@ tst_reserved_listvars
                  oknlSn (lswrap [lOm]) )
          @?= ( bindLVarToVSet lOm oknlSn emptyBinding :: [Binding] ) ))
      ]
+
+tstNoneReserved = defaultMain [test_none_reserved]
+tstListReserved = defaultMain [test_reserved_as_lists]
+tstSetReserved  = defaultMain [test_reserved_as_sets]
+tstReserved     = defaultMain [test_reserved_listvars]
 \end{code}
 
 \newpage
@@ -366,23 +383,27 @@ eOpAq = eX [LstVar lOm] (end2mid p `lAnd` beg2mid q)
 
 \subsubsection{Sequential Composition Tests}
 \begin{code}
-tst_sequential_composition
+test_sequential_composition
  = testGroup "Sequential Composition"
     [ testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches itself"
        (tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAq eOpAq
         @?= Just emptyBinding)
     ]
+
+tstSeqComp = defaultMain [test_sequential_composition]
 \end{code}
 
 \newpage
 \subsection{Exported Tests}
 \begin{code}
-tst_match_scenarios :: [TF.Test]
+test_match_scenarios :: [TF.Test]
 
-tst_match_scenarios
+test_match_scenarios
   = [ testGroup "\nMatching Scenarios"
-       [ tst_reserved_listvars
-       , tst_sequential_composition
+       [ test_reserved_listvars
+       , test_sequential_composition
        ]
     ]
+
+tstMatchScenarios = defaultMain test_match_scenarios
 \end{code}

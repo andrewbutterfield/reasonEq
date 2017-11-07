@@ -24,6 +24,7 @@ import AST
 import VarData
 import Binding
 import Matching
+import MkTestBind
 \end{code}
 
 \newpage
@@ -372,22 +373,55 @@ eX vs p = fromJust $ pBind exists (S.fromList $ vs) p
 p `lAnd` q = PCons land [p,q]
 \end{code}
 
-We also need some predicates to throw around ($P$, $Q$):
+Also we need to insert our known list-variables into general-vars:
 \begin{code}
-vp = PredVar (jId "P") Static ; p = fromJust $ pVar vp
-vq = PredVar (jId "Q") Static ; q = fromJust $ pVar vq
-end2mid p = PSub p $ fromJust $ substn [] [(lO',lOm)]
-beg2mid p = PSub p $ fromJust $ substn [] [(lO',lO)]
-eOpAq = eX [LstVar lOm] (end2mid p `lAnd` beg2mid q)
+gO = LstVar lO ; gO' = LstVar lO' ; gOm = LstVar lOm ; gOn = LstVar lOn
+gM = LstVar lM ; gM' = LstVar lM' ; gMm = LstVar lMm ; gMn = LstVar lMn
+gS = LstVar lS ; gS' = LstVar lS' ; gSm = LstVar lSm ; gSn = LstVar lSn
 \end{code}
 
+We also need some predicates to throw around ($P$, $Q$):
+\begin{code}
+vp = PredVar (jId "P") Static ; gvp = StdVar vp
+p = fromJust $ pVar vp
+vq = PredVar (jId "Q") Static ; gvq = StdVar vq
+q = fromJust $ pVar vq
+endO2mid n p = PSub p $ fromJust $ substn [] [(lO',lvDurRen n lOm)]
+begO2mid n p = PSub p $ fromJust $ substn [] [(lO,lvDurRen n lOm)]
+eOpAq n = eX [gvDurRen n gOm] (endO2mid n p `lAnd` begO2mid n q)
+eOpAqm = eOpAq "m"
+eOpAqn = eOpAq "n"
+endMS2mid n p
+  = PSub p $ fromJust $ substn [] [(lM',lvDurRen n lMm),(lS',lvDurRen n lSm)]
+begMS2mid n p
+  = PSub p $ fromJust $ substn [] [(lM,lvDurRen n lMm),(lS,lvDurRen n lSm)]
+eMSpAq n
+ = eX [gvDurRen n gMm,gvDurRen n gSm] (endMS2mid n p `lAnd` begMS2mid n q)
+eMSpAqm = eMSpAq "m" 
+\end{code}
+
+
 \subsubsection{Sequential Composition Tests}
+
+
 \begin{code}
 test_sequential_composition
  = testGroup "Sequential Composition"
     [ testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches itself"
-       (tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAq eOpAq
-        @?= Just (emptyBinding))
+       (tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAqm eOpAqm
+        @?= [ bindVV gvp gvp $ bindVV gvq gvq $
+              bindLS gO gO $ bindLS gO' gO' $ bindLS gOm gOm $
+              emptyBinding] )
+    , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when n replaces m"
+       (tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAqn eOpAqm
+        @?= [ bindVV gvp gvp $ bindVV gvq gvq $
+              bindLS gO gO $ bindLS gO' gO' $ bindLS gOm gOn $
+              emptyBinding] )
+    , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when M,S replaces O"
+       (tMatch [vtS_Design] emptyBinding S.empty S.empty eMSpAqm eOpAqm
+        @?= [ bindVV gvp gvp $ bindVV gvq gvq $
+              bindLS gO gO $ bindLS gO' gO' $ bindLS gOm gOn $
+              emptyBinding] )
     ]
 
 tstSeqComp = defaultMain [test_sequential_composition]

@@ -1,26 +1,13 @@
-*MatchScenarios> eOpAq
+    S_Design |-  {On} :: {Om}  -- matches .: [Failed]
 
-B P (Id "exists")
-    (fromList [GL (LV (VR (Id "O",VO,TD (WD "m")),[]))])
-    (C P (Id "land")
-         [ S P (V P (VR (Id "P",VP,TS)))
-               (SN (fromList []) 
-                   (fromList [ ( LV (VR (Id "O",VO,TD WA),[])
-                               , LV (VR (Id "O",VO,TD (WD "m")),[])
-                               )
-                             ]
-                   )
-               )
-          ,S P (V P (VR (Id "P",VP,TS)))
-               (SN (fromList [])
-                   (fromList [ ( LV (VR (Id "O",VO,TD WA),[])
-                               , LV (VR (Id "O",VO,TD WB),[])
-                               )
-                             ]
-                   )
-               )
-         ]
-    )
+expected:
 
+[BD ( fromList []
+    , fromList [( LV (VR (Id "M",VO,TD (WD "m")),[])
+                , BS (fromList [GL (LV (VR (Id "O",VO,TD (WD "n")),[]))]))])]
 
-*MatchScenarios>
+but got:
+
+[BD ( fromList []
+    , fromList [( LV (VR (Id "M",VO,TD (WD "m")),[])
+                , BS (fromList [GL (LV (VR (Id "O",VO,TD (WD "n")),[]))]))]),BD (fromList [],fromList [(LV (VR (Id "M",VO,TD (WD "m")),[]),BS (fromList [GL (LV (VR (Id "O",VO,TD (WD "n")),[]))]))])]

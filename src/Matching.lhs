@@ -368,6 +368,7 @@ $$
    \texttt{tvMatch Arbitrary}
 $$
 \begin{code}
+--tvMatch vts bind cbvs pvbs tC tkP vP@(Vbl _ vw _)
  | otherwise                  =  bindVarToTerm vP tC bind
  where
    vPmr = lookupVarTables vts vP
@@ -944,7 +945,9 @@ we have potentially non-deterministic outcomes.
 First we try to pattern-match the standard variables.
 Then we will attempt the list-variable matching.
 \begin{code}
- | otherwise = vsFreeStdMatch vts bind cbvs pbvs vsC vsP
+ | otherwise
+    = do (bind',svsC',lvsP') <- vsFreeStdMatch vts bind cbvs pbvs vsC vsP
+         vsFreeLstMatch vts bind' cbvs pbvs svsC' lvsP'
 \end{code}
 
 Once more, we need to check for list-variables that are known,
@@ -967,6 +970,14 @@ canMatchNullSet vts lv
 \end{code}
 
 \newpage
+
+\begin{code}
+vsFreeStdMatch :: Monad m
+               => [VarTable] -> Binding -> CBVS -> PBVS
+               -> Set GenVar -> Set GenVar
+               -> m (Binding, Set GenVar, Set GenVar)
+\end{code}
+
 First, pairing up very standard pattern variable
 with one standard candidate variable,
 if possible.
@@ -1007,8 +1018,8 @@ vsFreeStdMatch vts bind cbvs pbvs vsC vsP
           (binda,vsCa') <- vsFreeStdMatch' vts bindd cbvs pbvs vsCa vsPa
           -- Static matches anything
           let vsCs' = S.unions [vsCs,vsCb',vsCd',vsCa']
-          (binds,svsC') <- vsFreeStdMatch' vts bindd cbvs pbvs vsCs' vsPs
-          vsFreeLstMatch vts binds cbvs pbvs (S.union lvsC svsC') lvsP
+          (binds,svsC') <- vsFreeStdMatch' vts binda cbvs pbvs vsCs' vsPs
+          return (binds,S.union lvsC svsC',lvsP)
   where
     (lvsC,svsC) = S.partition isLstV vsC
     (lvsP,svsP) = S.partition isLstV vsP

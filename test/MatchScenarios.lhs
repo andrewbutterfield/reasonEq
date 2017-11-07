@@ -73,21 +73,12 @@ Here is our initial set of scenarios:
 
 \subsection{Pre-defined Values and Builders}
 
-\subsubsection{Pre-defined Types}
-
-We assume the existence of types
-for boolean ($\Bool$)
-and integer ($\Int$) values.
-\begin{code}
-bool = GivenType $ fromJust $ ident "B"
-int  = GivenType $ fromJust $ ident "Z"
-\end{code}
-
 \subsubsection{Pre-defined Table Builders}
 
 The builders are designed to work with ``safe'' arguments
 and will exhibit runtime failures if used improperly.
 \begin{code}
+jId = fromJust . ident
 vwrap = map StdVar ;  vswrap = S.fromList . vwrap
 lwrap = map LstVar ;  lswrap = S.fromList . lwrap
 v  ^=   t  =  fromJust . addKnownConst   v  t
@@ -97,6 +88,17 @@ lv -.> vl  =  fromJust . addKnownVarList lv (vwrap vl)
 lv -~> vs  =  fromJust . addKnownVarSet  lv (vswrap vs)
 lv ~~> vs  =  fromJust . addKnownVarSet  lv (lswrap vs)
 \end{code}
+
+\subsubsection{Pre-defined Types}
+
+We assume the existence of types
+for boolean ($\Bool$)
+and integer ($\Int$) values.
+\begin{code}
+bool = GivenType $ jId "B"
+int  = GivenType $ jId "Z"
+\end{code}
+
 
 \newpage
 \subsection{Reserved List-Variables}
@@ -111,8 +113,8 @@ Model observations regarding termination.
    ok, ok'         &:&   \Bool
 \end{eqnarray*}
 \begin{code}
-ok  = PreVar  $ fromJust $ ident "ok"
-ok' = PostVar $ fromJust $ ident "ok"
+k = jId "ok"
+ok = PreVar k ; ok' = PostVar k ; okm = MidVar k "m" ; okn = MidVar k "n"
 \end{code}
 
 Script observations regarding values of program variables.
@@ -120,9 +122,9 @@ Script observations regarding values of program variables.
    x,x',y,y',z,z'  &:&   \Int
 \end{eqnarray*}
 \begin{code}
-x = PreVar  $ fromJust $ ident "x"  ;  x' = PostVar $ fromJust $ ident "x"
-y = PreVar  $ fromJust $ ident "y"  ;  y' = PostVar $ fromJust $ ident "y"
-z = PreVar  $ fromJust $ ident "z"  ;  z' = PostVar $ fromJust $ ident "z"
+ex = jId "x"  ;  x = PreVar ex  ;  x' = PostVar ex  ;  xm = MidVar ex "m"
+wy = jId "y"  ;  y = PreVar wy  ;  y' = PostVar wy  ;  ym = MidVar wy "m"
+ze = jId "z"  ;  z = PreVar ze  ;  z' = PostVar ze  ;  zm = MidVar ze "m"
 \end{code}
 
 \subsubsection{Observation Classifiers}
@@ -134,9 +136,9 @@ List-variables that classify observations.
 \\ O \defs M \cup S      && O' \defs M'\cup S'
 \end{eqnarray*}
 \begin{code}
-lS = PreVars  $ fromJust $ ident "S"  ;  lS' = PostVars $ fromJust $ ident "S"
-lM = PreVars  $ fromJust $ ident "M"  ;  lM' = PostVars $ fromJust $ ident "M"
-lO = PreVars  $ fromJust $ ident "O"  ;  lO' = PostVars $ fromJust $ ident "O"
+s = jId "S"  ;  lS = PreVars s  ;  lS' = PostVars s  ;  lSm = MidVars s "m"
+m = jId "M"  ;  lM = PreVars m  ;  lM' = PostVars m  ;  lMm = MidVars m "m"
+o = jId "O"  ;  lO = PreVars o  ;  lO' = PostVars o  ;  lOm = MidVars m "m"
 \end{code}
 
 \subsubsection{``Design'' Variable-Table}
@@ -167,7 +169,9 @@ vtS_Design =
 \subsubsection{Reserved List-Variable Tests}
 
 \begin{code}
-e = PreExpr $ fromJust $ ident "e"
+e = PreExpr $ jId "e"
+xn = MidVar ex "n"  ; yn = MidVar wy "n"  ; zn = MidVar ze "n"
+lOn = MidVars o "n" ; lMn = MidVars m "n" ; lSn = MidVars m "n"
 
 tst_reserved_listvars
  = testGroup "Reserved List Variables"
@@ -298,6 +302,32 @@ tst_reserved_listvars
             (lwrap [lO])
          @?=
          ( bindLVarToVList lO (vwrap [e,x]) emptyBinding :: [Binding] ) )
+     , testCase "S_Design |-  {Om} :: {Om}  -- matches ."
+       ( nub( vsMatch [vtS_Design] emptyBinding S.empty S.empty
+                 (lswrap [lOm]) (lswrap [lOm]) )
+         @?= ( bindLVarToVSet lOm (lswrap [lOm]) emptyBinding :: [Binding] ) )
+     , testCase "S_Design |-  {On} :: {Om}  -- matches ."
+       ( nub (vsMatch [vtS_Design] emptyBinding S.empty S.empty
+                 (lswrap [lOn]) (lswrap [lOm]) )
+         @?= ( bindLVarToVSet lOm (lswrap [lOn]) emptyBinding :: [Binding] ) )
+     , testCase "S_Design |-  {Mm,Sm} :: {Om}  -- matches ."
+       ( nub( vsMatch [vtS_Design] emptyBinding S.empty S.empty
+                 (lswrap [lMm,lSm]) (lswrap [lOm]) )
+         @?= ( bindLVarToVSet lOm (lswrap [lMm,lSm]) emptyBinding :: [Binding] ) )
+     , testCase "S_Design |-  {Mn,Sn} :: {Om}  -- matches ."
+       ( nub (vsMatch [vtS_Design] emptyBinding S.empty S.empty
+                 (lswrap [lMn,lSn]) (lswrap [lOm]) )
+         @?= ( bindLVarToVSet lOm (lswrap [lMn,lSn]) emptyBinding :: [Binding] ) )
+     , testCase "S_Design |-  {okm,Sm} :: {Om}  -- matches ."
+       (let okmlSm = S.fromList [StdVar okm, LstVar lSm] in
+       ( nub( vsMatch [vtS_Design] emptyBinding S.empty S.empty
+                 okmlSm (lswrap [lOm]) )
+         @?= ( bindLVarToVSet lOm okmlSm emptyBinding :: [Binding] ) ))
+     , testCase "S_Design |-  {okn,Sn} :: {Om}  -- matches ."
+       (let oknlSn = S.fromList [StdVar okn, LstVar lSn] in
+       ( nub (vsMatch [vtS_Design] emptyBinding S.empty S.empty
+                 oknlSn (lswrap [lOm]) )
+         @?= ( bindLVarToVSet lOm oknlSn emptyBinding :: [Binding] ) ))
      ]
 \end{code}
 
@@ -312,18 +342,13 @@ $$
 $$
 We want to match here using the definitions regard $O$ and friends from above.
 
-We need to have subscripted used of $O$.
-\begin{code}
-lOs s = MidVars  (fromJust $ ident "O") s
-lOm = lOs "m" ; lOn = lOs "n"
-\end{code}
 
 We need to define shorthands for
 known predicate operators $;$, $\exists$ and $\land$.
 \begin{code}
-semi = fromJust $ ident "seqc"
-exists = fromJust $ ident "exists"
-land = fromJust $ ident "land"
+semi = jId "seqc"
+exists = jId "exists"
+land = jId "land"
 
 p `seqComp` q = PCons semi [p,q]
 eX vs p = fromJust $ pBind exists (S.fromList $ vs) p
@@ -332,8 +357,8 @@ p `lAnd` q = PCons land [p,q]
 
 We also need some predicates to throw around ($P$, $Q$):
 \begin{code}
-p = fromJust $ pVar $ PredVar (fromJust $ ident "P") Static
-q = fromJust $ pVar $ PredVar (fromJust $ ident "Q") Static
+p = fromJust $ pVar $ PredVar (jId "P") Static
+q = fromJust $ pVar $ PredVar (jId "Q") Static
 end2mid p = PSub p $ fromJust $ substn [] [(lO',lOm)]
 beg2mid p = PSub p $ fromJust $ substn [] [(lO',lO)]
 eOpAq = eX [LstVar lOm] (end2mid p `lAnd` beg2mid q)
@@ -343,9 +368,7 @@ eOpAq = eX [LstVar lOm] (end2mid p `lAnd` beg2mid q)
 \begin{code}
 tst_sequential_composition
  = testGroup "Sequential Composition"
-    [ testCase "1+1=2" (1+1 @?= 2)
-    , testCase "2+2=5" (2+2 @?= 5)
-    , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches itself"
+    [ testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches itself"
        (tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAq eOpAq
         @?= Just emptyBinding)
     ]

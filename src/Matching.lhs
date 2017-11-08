@@ -1283,23 +1283,28 @@ lvlvMatchCheck :: MonadPlus mp
                -> LVarSub -> ListVar -> ListVar
                -> mp Binding
 
-lvlvMatchCheck vts bind cbvs pbvs lvsC rlvP tlvP
- = case lookupLstBind bind tlvP of
-     Nothing            ->  fail "lvlvMatchCheck: Nothing SHOULD NOT OCCUR!"
-     Just (BindList [(LstVar tlvC)])
-       -> let lvsB = S.filter ((==tlvC).fst) lvsC
-          in if S.size lvsB /= 1
-              then fail "lvlvMatchCheck: #lvsB /= 1 SHOULD NOT OCCUR!"
-              else let rlvC = snd $ S.elemAt 0 lvsB
-                   in bindLVarToVSet rlvP (S.singleton $LstVar rlvC) bind
-     Just (BindSet one_tlvC) | S.size one_tlvC == 1 && all isLstV one_tlvC
-       -> let (LstVar tlvC) = S.elemAt 0 one_tlvC
-              lvsB = S.filter ((==tlvC).fst) lvsC
-          in if S.size lvsB /= 1
-              then fail "lvlvMatchCheck: #lvsB /= 1 SHOULD NOT OCCUR!"
-              else let rlvC = snd $ S.elemAt 0 lvsB
-                   in bindLVarToVSet rlvP (S.singleton $ LstVar rlvC) bind
-     _ -> fail "lvlvMatchCheck: #(lookup tlvP) /= 1, or StdVar, SHOULD NOT OCCUR!"
+lvlvMatchCheck vts bind cbvs pbvs lvsC rlvP tlvP =
+ case lookupLstBind bind tlvP of
+   Nothing            ->  fail "lvlvMatchCheck: Nothing SHOULD NOT OCCUR!"
+   Just (BindList [(LstVar tlvC)]) ->
+    let lvsB = S.filter ((==tlvC).fst) lvsC
+    in if S.size lvsB /= 1
+    then fail "lvlvMatchCheck: #lvsB /= 1 SHOULD NOT OCCUR!"
+    else let rlvC = snd $ S.elemAt 0 lvsB
+         in bindLVarToVSet rlvP (S.singleton $LstVar rlvC) bind
+   Just (BindSet one_tlvC) | S.size one_tlvC == 1 && all isLstV one_tlvC ->
+    let (LstVar tlvC) = S.elemAt 0 one_tlvC
+        lvsB = S.filter ((==tlvC).fst) lvsC
+    in if S.size lvsB /= 1
+    then fail "lvlvMatchCheck: #lvsB /= 1 SHOULD NOT OCCUR!"
+    else let rlvC = snd $ S.elemAt 0 lvsB
+             in bindLVarToVSet rlvP (S.singleton $ LstVar rlvC) bind
+   _ -> fail $ unlines
+         [ "lvlvMatchCheck: #(lookup tlvP) /= 1, or StdVar, SHOULD NOT OCCUR!"
+         , "lvsC = " ++ show lvsC
+         , "rlvP = " ++ show rlvP
+         , "tlvP = " ++ show tlvP
+         ]
 \end{code}
 
 

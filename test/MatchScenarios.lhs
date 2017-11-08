@@ -19,6 +19,7 @@ import Test.Framework as TF (defaultMain, testGroup, Test)
 import Test.Framework.Providers.HUnit (testCase)
 --import Test.Framework.Providers.QuickCheck2 (testProperty)
 
+import Utilities
 import LexBase
 import AST
 import VarData
@@ -397,7 +398,7 @@ begMS2mid n p
   = PSub p $ fromJust $ substn [] [(lM,lvDurRen n lMm),(lS,lvDurRen n lSm)]
 eMSpAq n
  = eX [gvDurRen n gMm,gvDurRen n gSm] (endMS2mid n p `lAnd` begMS2mid n q)
-eMSpAqm = eMSpAq "m" 
+eMSpAqm = eMSpAq "m"
 \end{code}
 
 

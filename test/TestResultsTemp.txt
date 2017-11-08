@@ -1,19 +1,4 @@
-pContents [] [] "A B, C"
- = do (st,toks') <- pShowTree "A B, C " ;...
-  = do (contents,toks') <- pContents [] [A] "B, C " ;...
-   = do (st,toks') <- pShowTree "B, C " ;...
 
 
 
-
-
-expected [[A,B],[C]]
-
-
-pContents [] [] "A, B C"
-= do (st,toks') <- pShowTree "A, B C "
-
-
-
-
-expected [[A],[B,C]]
+fromList [(LV (VR (Id \"M\",VO,TD WA),[]),LV (VR (Id \"M\",VO,TD (WD \"m\")),[])),(LV (VR (Id \"S\",VO,TD WA),[]),LV (VR (Id \"S\",VO,TD (WD \"m\")),[]))]

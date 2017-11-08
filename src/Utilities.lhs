@@ -197,10 +197,12 @@ display1 st = disp1 0 st
 
 disp1 (-1) (STtext s) =  s
 disp1 i (STtext s) = nl i ++ s
+
 disp1 i (STapp [])  = nl i ++ ""
 disp1 i (STapp (st@(STtext _):sts))
    = ' ':disp1 (-1) st ++ " " ++ (concat $ intersperse " " $ map (disp1 i) sts)
 disp1 i (STapp sts) = concat $ intersperse " " $ map (disp1 i) sts
+
 disp1 i (STlist []) = nl i ++ "[]"
 disp1 i (STlist (st@(STtext _):sts))
  = nl i ++ "[ "
@@ -209,9 +211,17 @@ disp1 i (STlist (st@(STtext _):sts))
 disp1 i (STlist sts)
  = nl i ++ "[" ++ (concat $ intersperse (cma i) $ map (disp1 (i+2)) sts) ++ " ]"
 
+disp1 i (STpair []) = nl i ++ "()"
+disp1 i (STpair (st@(STtext _):sts))
+ = nl i ++ "( "
+        ++ disp1 (-1) st ++ (concat $ intersperse (cma i) $ map (disp1 (i+2)) sts)
+        ++ " )"
+disp1 i (STpair sts)
+ = nl i ++ "(" ++ (concat $ intersperse (cma i) $ map (disp1 (i+2)) sts) ++ " )"
+
 ind i = replicate i ' '
 nl i = '\n' : ind i
-cma i = ',' : nl i
+cma i = "," --  ',' : nl i
 \end{code}
 
 \newpage

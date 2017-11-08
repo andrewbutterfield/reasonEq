@@ -14,6 +14,7 @@ import Data.Char
 
 Here we provide odds and ends not found elswhere.
 
+\newpage
 \subsection{List Functions}
 
 \subsubsection{Predicate: has duplicates}
@@ -32,6 +33,7 @@ xs     `pulledFrom` []  =  (False,[])
  | otherwise  =  (False,ys)
 \end{code}
 
+\newpage
 \subsection{Control-Flow Functions}
 
 \subsubsection{Repeat Until Equal}
@@ -44,6 +46,7 @@ untilEq f x
  where x' = f x
 \end{code}
 
+\newpage
 \subsection{Pretty-printing Derived Show}
 
 A utility that parses the output of \texttt{derived} instances of \texttt{show}
@@ -51,14 +54,19 @@ to make debugging easier.
 
 \begin{code}
 ppshow :: Show t => t -> IO ()
-ppshow = putStrLn . pp . show
+ppshow = putPP . show
+
+putPP :: String -> IO ()
+putPP = putStrLn . pp
 
 pp :: String -> String
-pp = show . lexify
+pp = display1 . pShowTree . lexify
 \end{code}
 
 Basically we look for brackets (\texttt{[]()}) and punctuation (\texttt{,})
 and build a tree.
+
+\subsubsection{Pretty-printing Tokens}
 
 Tokens are the five bracketing and punctuation symbols above,
 plus any remaining contiguous runs of non-whitespace characters.
@@ -91,6 +99,9 @@ lex' nekot (c:cs)
 rrun nekot = Run $ reverse nekot
 \end{code}
 
+\newpage
+\subsubsection{Parsing Tokens}
+
 We parse into a ``Show-Tree''
 \begin{code}
 data ShowTree
@@ -103,46 +114,107 @@ data ShowTree
 
 The parser
 \begin{code}
-pShowTree :: Monad m => [ShowTreeTok] -> m (ShowTree, [ShowTreeTok])
-pShowTree []     = fail "no tokens"
-pShowTree (LSqr:toks) = pContainer STlist RSqr toks
-pShowTree (LPar:toks) = pContainer STpair RPar toks
-pShowTree (Run s:toks)
-  = do (contents,toks') <- pContents [] [STtext s] toks
-       return (wrapContents stapp contents, toks')
-pShowTree toks = tfail toks "invalid start token"
+pShowTree :: [ShowTreeTok] -> ShowTree
+pShowTree toks
+ = case pContents [] [] toks of
+     Nothing  ->  STtext "?"
+     Just (contents,[])  ->  wrapContents stapp contents
+     Just (contents,_ )  ->  STpair [wrapContents stapp contents,STtext "??"]
+\end{code}
+
+Here we accumulate lists within lists.
+Internal list contents are sperated by (imaginary) whitespace,
+while external lists have internal lists as components,
+separated by commas.
+\begin{code}
+pContents :: Monad m
+          => [[ShowTree]] -- completed internal lists
+          -> [ShowTree]   -- internal list currently under construction
+          -> [ShowTreeTok] -> m ([[ShowTree]], [ShowTreeTok])
+
+-- no tokens left
+pContents pairs []  [] = return (reverse pairs, [])
+pContents pairs app [] = return (reverse (reverse app:pairs), [])
+
+-- ',' starts a new internal list
+pContents pairs app (Comma:toks)  =  pContents (reverse app:pairs) [] toks
+
+-- a run is just added onto internal list being built.
+pContents pairs app (Run s:toks)  =  pContents pairs (STtext s:app) toks
+
+-- '[' triggers a deep dive, to be terminated by a ']'
+pContents pairs app (LSqr:toks)
+ =  do (st,toks') <- pContainer STlist RSqr toks
+       pContents pairs (st:app) toks'
+pContents pairs app toks@(RSqr:_)  = return (reverse (reverse app:pairs), toks)
+
+-- '(' triggers a deep dive, to be terminated by a ')'
+pContents pairs app (LPar:toks)
+ =  do (st,toks') <- pContainer STpair RPar toks
+       pContents pairs (st:app) toks'
+pContents pairs app toks@(RPar:_)  = return (reverse (reverse app:pairs), toks)
+\end{code}
+
+A recursive dive for a bracketed construct:
+\begin{code}
+pContainer :: Monad m
+           => ([ShowTree] -> ShowTree) -- STapp, STlist, or STpair
+           -> ShowTreeTok              -- terminator, RSqr, or RPar
+           -> [ShowTreeTok] -> m (ShowTree, [ShowTreeTok])
 
 pContainer cons term toks
  = do (contents,toks') <- pContents [] [] toks
       if null toks' then fail "container end missing"
       else if head toks' == term
            then return (wrapContents cons contents, tail toks')
-           else fail "bad container end"
+           else tfail toks' "bad container end"
+\end{code}
 
-pContents pairs []  [] = return (reverse pairs, [])
-pContents pairs app [] = return (reverse (reverse app:pairs), [])
-pContents pairs app toks@(RSqr:_)  = return (reverse (reverse app:pairs), toks)
-pContents pairs app toks@(RPar:_)  = return (reverse (reverse app:pairs), toks)
-pContents pairs app (Comma:toks)  =  pContents (reverse app:pairs) [] toks
-pContents pairs app toks
- = do (st,toks') <- pShowTree toks
-      if null toks' then return (reverse ((reverse (st:app)):pairs), [])
-      else if head toks' == Comma
-           then pContents (reverse (st:app):pairs) [] $ tail toks'
-           else pContents pairs (st:app) toks'
-
-wrapContents cons [[st]] = st
+Building the final result:
+\begin{code}
+--wrapContents cons [[st]] = st
 wrapContents cons contents = cons $ map stapp contents
+\end{code}
 
+Avoiding too many nested uses of \texttt{STapp}:
+\begin{code}
 stapp [STapp sts] = stapp sts
 stapp [st] = st
 stapp sts = STapp sts
+\end{code}
 
+Informative error:
+\begin{code}
 tfail toks str = fail $ unlines [str,"Remaining tokens = " ++ show toks]
 \end{code}
 
+\subsubsection{Displaying Show-Trees}
 
+Heuristic One: Each list/pair on a new line, and commas induce line breaks
+\begin{code}
+display1 :: ShowTree -> String
+display1 st = disp1 0 st
 
+disp1 (-1) (STtext s) =  s
+disp1 i (STtext s) = nl i ++ s
+disp1 i (STapp [])  = nl i ++ ""
+disp1 i (STapp (st@(STtext _):sts))
+   = ' ':disp1 (-1) st ++ " " ++ (concat $ intersperse " " $ map (disp1 i) sts)
+disp1 i (STapp sts) = concat $ intersperse " " $ map (disp1 i) sts
+disp1 i (STlist []) = nl i ++ "[]"
+disp1 i (STlist (st@(STtext _):sts))
+ = nl i ++ "[ "
+        ++ disp1 (-1) st ++ (concat $ intersperse (cma i) $ map (disp1 (i+2)) sts)
+        ++ " ]"
+disp1 i (STlist sts)
+ = nl i ++ "[" ++ (concat $ intersperse (cma i) $ map (disp1 (i+2)) sts) ++ " ]"
+
+ind i = replicate i ' '
+nl i = '\n' : ind i
+cma i = ',' : nl i
+\end{code}
+
+\newpage
 \subsection{Possible Failure Monad}
 
 \subsubsection{Datatype: Yes, But \dots}

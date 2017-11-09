@@ -1,1 +1,10 @@
 fromList [(LV (VR (Id \"M\",VO,TD WA),[]),LV (VR (Id \"M\",VO,TD (WD \"m\")),[])),(LV (VR (Id \"S\",VO,TD WA),[]),LV (VR (Id \"S\",VO,TD (WD \"m\")),[]))]
+
+"A [B C, D E] F"
+
+A
+[ B
+  C,
+  D
+  E]
+D

@@ -178,6 +178,7 @@ pContents pairs app toks@(RPar:_)
  | otherwise  =  return (reverse (reverse app:pairs), toks)
 \end{code}
 
+\newpage
 A recursive dive for a bracketed construct:
 \begin{code}
 pContainer :: Monad m
@@ -246,7 +247,8 @@ disp1c i (st:sts) = "\n" ++ ind i ++ ", " ++  disp1 (i+2) st ++ disp1c i sts
 ind i = replicate i ' '
 \end{code}
 
-Proposed Heuristic 2:  designated text values at start of \texttt{STapp}
+\newpage
+Heuristic 2:  designated text values at start of \texttt{STapp}
 mean it is inlined as per Heuristic Zero.
 \begin{code}
 display2 :: ShowTree -> String
@@ -260,6 +262,7 @@ disp2 i app@(STapp (st:sts)) -- length always >=2, see stapp above,
  | otherwise = disp2 i st ++  '\n' : (unlines' $ map ((ind i ++) . disp2 i) sts)
 disp2 i (STlist []) = "[]"
 disp2 i (STlist (st:sts)) = "[ "++ disp2 (i+2) st ++ disp2c i sts ++ " ]"
+disp2 i (STpair []) = "()"
 disp2 i (STpair (st:sts)) = "( "++ disp2 (i+2) st ++ disp2c i sts ++ " )"
 
 disp2c i [] = ""

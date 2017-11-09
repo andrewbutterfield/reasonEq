@@ -1212,6 +1212,26 @@ vsFreeMatchN vts bind cbvs pbvs vsC lvP lvsP n
 \newpage
 \subsection{Substitution Matching}
 
+Here $G$ denotes either one standard variable,
+or a collection of general variables,
+while $g$ denotes one general variable.
+Similarly, $r$ denotes on one substutition replacement (list-variable or term)
+while $R$ is a collection of same.
+
+$$
+\inferrule
+   { \beta \vdash G_{C_j} :: g_{P_i} \leadsto \beta_{t_i}
+     \and
+     \beta \uplus \{\beta_{t_i}\} \vdash R_{C_j} :: r_{P_i} \leadsto \beta_{r_i}
+   }
+   { \beta \vdash [R_{C_j}/G_{C_j}]_j :: [r_{P_i}/g_{P_i}]_i
+     \leadsto
+     \uplus \{\beta_{t_i}\uplus\beta_{r_i}\}
+   }
+   \quad
+   \texttt{sMatch}
+$$
+
 \begin{code}
 sMatch :: MonadPlus mp
        => [VarTable] -> Binding -> CBVS -> PBVS

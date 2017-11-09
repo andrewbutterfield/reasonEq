@@ -1,17 +1,14 @@
+
+lvsC =
 fromList [(LV (VR (Id \"M\",VO,TD WA),[]),LV (VR (Id \"M\",VO,TD (WD \"m\")),[])),(LV (VR (Id \"S\",VO,TD WA),[]),LV (VR (Id \"S\",VO,TD (WD \"m\")),[]))]
 
-putPP "F [ (V (N i, X Y)) ]"
+rlvP =
+LV (VR (Id \"O\",VO,TD (WD \"m\")),[])
 
-F
-[ (     V
-    (       N
-      i
+tlvP =
+LV (VR (Id \"O\",VO,TD WA),[])
 
-    ,       X
-      Y
- )
- ) ]
 
-disp1 0 {F [ (V (N i, X Y)) ]}
- = " disp1 0 (STapp <F, [...]>) "
-unlines
+vlMatch [vtL_Design] emptyBinding S.empty S.empty (vwrap [ok,x,y,z]) (lwrap [lM,lS])
+
+BD (fromList [],fromList [(LV (VR (Id \"M\",VO,TD WB),[]),BL [GV (VR (Id \"ok\",VO,TD WB))]),(LV (VR (Id \"S\",VO,TD WB),[]),BL [GV (VR (Id \"x\",VO,TD WB)),GV (VR (Id \"y\",VO,TD WB)),GV (VR (Id \"z\",VO,TD WB))])])

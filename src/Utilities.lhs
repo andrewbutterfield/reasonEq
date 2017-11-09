@@ -14,6 +14,13 @@ import Data.Char
 
 Here we provide odds and ends not found elswhere.
 
+\begin{code}
+utilities
+ = do putStrLn "Useful interactive Utilities"
+      putStrLn " putShow :: Show t =>      t -> IO ()"
+      putStrLn " putPP   ::           String -> IO ()"
+\end{code}
+
 \newpage
 \subsection{List Functions}
 
@@ -60,15 +67,16 @@ A utility that parses the output of \texttt{derived} instances of \texttt{show}
 to make debugging easier.
 
 \begin{code}
-ppshow :: Show t => t -> IO ()
-ppshow = putPP . show
+putShow :: Show t => t -> IO ()
+putShow = putPP . show
 
 putPP :: String -> IO ()
 putPP = putStrLn . pp
 
 pp :: String -> String
 --pp = display0 . pShowTree . lexify
-pp = display1 . showP
+--pp = display1 . showP
+pp = display2 . showP
 
 showP :: String -> ShowTree
 showP = pShowTree . lexify
@@ -120,7 +128,7 @@ data ShowTree
  | STapp [ShowTree]  -- e.g., Id "x"
  | STlist [ShowTree]
  | STpair [ShowTree]
- deriving Show
+ deriving (Eq, Show)
 \end{code}
 
 The parser
@@ -220,11 +228,10 @@ display0 (STpair sts)
  = "(" ++ (concat $ intersperse ", " $ map display0 sts) ++")"
 \end{code}
 
-Heuristic One: Each list/pair on a new line, and commas induce line breaks
+Heuristic One: Each run on a new line, with indentation.
 \begin{code}
 display1 :: ShowTree -> String
 display1 st = disp1 0 st
-
 
 disp1 _ (STtext s) = s
 disp1 i (STapp (st:sts)) -- length always >=2, see stapp above,
@@ -236,41 +243,30 @@ disp1 i (STpair (st:sts)) = "( "++ disp1 (i+2) st ++ disp1c i sts ++ " )"
 disp1c i [] = ""
 disp1c i (st:sts) = "\n" ++ ind i ++ ", " ++  disp1 (i+2) st ++ disp1c i sts
 
-attop = True ; inside = False
-
-ws True = "" ; ws False = " "
-
-dispX w (-1) (STtext s) =  s
-dispX w i (STtext s) = nl i ++ s
-
-dispX w i (STapp [])  = nl i ++ ""
-dispX w i (STapp (st@(STtext _):sts))
-   = ws w ++ dispX w (-1) st
-          ++ " " ++ (concat $ intersperse " " $ map (dispX w i) sts)
-dispX w i (STapp sts) = concat $ intersperse " " $ map (dispX w i) sts
-
-dispX w i (STlist []) = nl i ++ "[]"
-dispX w i (STlist (st@(STtext _):sts))
- = nl i ++ "[ " ++ dispX inside (-1) st
-   ++ cma i ++ (concat $ intersperse (cma i) $ map (dispX inside (i+2)) sts)
-   ++ " ]"
-dispX w i (STlist sts)
- = nl i ++ "["
-   ++ (concat $ intersperse (cma i) $ map (dispX inside (i+2)) sts) ++ " ]"
-
-dispX w i (STpair []) = nl i ++ "()"
-dispX w i (STpair (st@(STtext _):sts))
- = nl i ++ "( " ++ dispX inside (-1) st
-   ++ cma i ++ (concat $ intersperse (cma i) $ map (dispX inside (i+2)) sts)
-   ++ " )"
-dispX w i (STpair sts)
- = nl i ++ "("
-   ++ (concat $ intersperse (cma i) $ map (dispX inside (i+2)) sts) ++ " )"
-
 ind i = replicate i ' '
-nl i = '\n' : ind i
-cma i = ",\n" --  ',' : nl i
 \end{code}
+
+Proposed Heuristic 2:  designated text values at start of \texttt{STapp}
+mean it is inlined as per Heuristic Zero.
+\begin{code}
+display2 :: ShowTree -> String
+display2 st = disp2 0 st
+
+inlineKeys = map STtext ["GL","GV","LV","VR","Id","WD"]
+
+disp2 _ (STtext s) = s
+disp2 i app@(STapp (st:sts)) -- length always >=2, see stapp above,
+ | st `elem` inlineKeys  = display0 app
+ | otherwise = disp2 i st ++  '\n' : (unlines' $ map ((ind i ++) . disp2 i) sts)
+disp2 i (STlist []) = "[]"
+disp2 i (STlist (st:sts)) = "[ "++ disp2 (i+2) st ++ disp2c i sts ++ " ]"
+disp2 i (STpair (st:sts)) = "( "++ disp2 (i+2) st ++ disp2c i sts ++ " )"
+
+disp2c i [] = ""
+disp2c i (st:sts) = "\n" ++ ind i ++ ", " ++  disp2 (i+2) st ++ disp2c i sts
+\end{code}
+
+
 
 \newpage
 \subsection{Possible Failure Monad}

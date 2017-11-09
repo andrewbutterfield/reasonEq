@@ -1,10 +1,17 @@
 fromList [(LV (VR (Id \"M\",VO,TD WA),[]),LV (VR (Id \"M\",VO,TD (WD \"m\")),[])),(LV (VR (Id \"S\",VO,TD WA),[]),LV (VR (Id \"S\",VO,TD (WD \"m\")),[]))]
 
-"A [B C, D E] F"
+putPP "F [ (V (N i, X Y)) ]"
 
-A
-[ B
-  C,
-  D
-  E]
-D
+F
+[ (     V
+    (       N
+      i
+
+    ,       X
+      Y
+ )
+ ) ]
+
+disp1 0 {F [ (V (N i, X Y)) ]}
+ = " disp1 0 (STapp <F, [...]>) "
+unlines

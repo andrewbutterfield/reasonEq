@@ -33,6 +33,13 @@ xs     `pulledFrom` []  =  (False,[])
  | otherwise  =  (False,ys)
 \end{code}
 
+\subsubsection{Un-lining without a trailing newline}
+\begin{code}
+unlines' [] = ""
+unlines' [s] = s
+unlines' (s:ss) = s ++ '\n':unlines' ss
+\end{code}
+
 \newpage
 \subsection{Control-Flow Functions}
 
@@ -60,8 +67,11 @@ putPP :: String -> IO ()
 putPP = putStrLn . pp
 
 pp :: String -> String
-pp = display0 . pShowTree . lexify
---pp = display1 . pShowTree . lexify
+--pp = display0 . pShowTree . lexify
+pp = display1 . showP
+
+showP :: String -> ShowTree
+showP = pShowTree . lexify
 \end{code}
 
 Basically we look for brackets (\texttt{[]()}) and punctuation (\texttt{,})
@@ -147,13 +157,17 @@ pContents pairs app (Run s:toks)  =  pContents pairs (STtext s:app) toks
 pContents pairs app (LSqr:toks)
  =  do (st,toks') <- pContainer STlist RSqr toks
        pContents pairs (st:app) toks'
-pContents pairs app toks@(RSqr:_)  = return (reverse (reverse app:pairs), toks)
+pContents pairs app toks@(RSqr:_)
+ | null app   =  return (reverse pairs, toks)
+ | otherwise  =  return (reverse (reverse app:pairs), toks)
 
 -- '(' triggers a deep dive, to be terminated by a ')'
 pContents pairs app (LPar:toks)
  =  do (st,toks') <- pContainer STpair RPar toks
        pContents pairs (st:app) toks'
-pContents pairs app toks@(RPar:_)  = return (reverse (reverse app:pairs), toks)
+pContents pairs app toks@(RPar:_)
+ | null app   =  return (reverse pairs, toks)
+ | otherwise  =  return (reverse (reverse app:pairs), toks)
 \end{code}
 
 A recursive dive for a bracketed construct:
@@ -177,8 +191,12 @@ Building the final result:
 wrapContents cons contents = cons $ map stapp contents
 \end{code}
 
-Avoiding too many nested uses of \texttt{STapp}:
+Avoiding too many nested uses of \texttt{STapp},
+and complain if any are empty.
+A consequence of this is that all \texttt{STapp}
+will have length greater than one.
 \begin{code}
+stapp [] = error "stapp: empty application!"
 stapp [STapp sts] = stapp sts
 stapp [st] = st
 stapp sts = STapp sts
@@ -205,38 +223,49 @@ display0 (STpair sts)
 Heuristic One: Each list/pair on a new line, and commas induce line breaks
 \begin{code}
 display1 :: ShowTree -> String
-display1 st = disp1 attop 0 st
+display1 st = disp1 0 st
+
+
+disp1 _ (STtext s) = s
+disp1 i (STapp (st:sts)) -- length always >=2, see stapp above,
+  = disp1 i st ++  '\n' : (unlines' $ map ((ind i ++) . disp1 i) sts)
+disp1 i (STlist []) = "[]"
+disp1 i (STlist (st:sts)) = "[ "++ disp1 (i+2) st ++ disp1c i sts ++ " ]"
+disp1 i (STpair (st:sts)) = "( "++ disp1 (i+2) st ++ disp1c i sts ++ " )"
+
+disp1c i [] = ""
+disp1c i (st:sts) = "\n" ++ ind i ++ ", " ++  disp1 (i+2) st ++ disp1c i sts
 
 attop = True ; inside = False
 
 ws True = "" ; ws False = " "
 
-disp1 w (-1) (STtext s) =  s
-disp1 w i (STtext s) = nl i ++ s
+dispX w (-1) (STtext s) =  s
+dispX w i (STtext s) = nl i ++ s
 
-disp1 w i (STapp [])  = nl i ++ ""
-disp1 w i (STapp (st@(STtext _):sts))
-   = ws w ++ disp1 w (-1) st
-          ++ " " ++ (concat $ intersperse " " $ map (disp1 w i) sts)
-disp1 w i (STapp sts) = concat $ intersperse " " $ map (disp1 w i) sts
+dispX w i (STapp [])  = nl i ++ ""
+dispX w i (STapp (st@(STtext _):sts))
+   = ws w ++ dispX w (-1) st
+          ++ " " ++ (concat $ intersperse " " $ map (dispX w i) sts)
+dispX w i (STapp sts) = concat $ intersperse " " $ map (dispX w i) sts
 
-disp1 w i (STlist []) = nl i ++ "[]"
-disp1 w i (STlist (st@(STtext _):sts))
- = nl i ++ "[ " ++ disp1 inside (-1) st
-   ++ cma i ++ (concat $ intersperse (cma i) $ map (disp1 inside (i+2)) sts)
+dispX w i (STlist []) = nl i ++ "[]"
+dispX w i (STlist (st@(STtext _):sts))
+ = nl i ++ "[ " ++ dispX inside (-1) st
+   ++ cma i ++ (concat $ intersperse (cma i) $ map (dispX inside (i+2)) sts)
    ++ " ]"
-disp1 w i (STlist sts)
+dispX w i (STlist sts)
  = nl i ++ "["
-   ++ (concat $ intersperse (cma i) $ map (disp1 inside (i+2)) sts) ++ " ]"
+   ++ (concat $ intersperse (cma i) $ map (dispX inside (i+2)) sts) ++ " ]"
 
-disp1 w i (STpair []) = nl i ++ "()"
-disp1 w i (STpair (st@(STtext _):sts))
- = nl i ++ "( " ++ disp1 inside (-1) st
-   ++ cma i ++ (concat $ intersperse (cma i) $ map (disp1 inside (i+2)) sts)
+dispX w i (STpair []) = nl i ++ "()"
+dispX w i (STpair (st@(STtext _):sts))
+ = nl i ++ "( " ++ dispX inside (-1) st
+   ++ cma i ++ (concat $ intersperse (cma i) $ map (dispX inside (i+2)) sts)
    ++ " )"
-disp1 w i (STpair sts)
+dispX w i (STpair sts)
  = nl i ++ "("
-   ++ (concat $ intersperse (cma i) $ map (disp1 inside (i+2)) sts) ++ " )"
+   ++ (concat $ intersperse (cma i) $ map (dispX inside (i+2)) sts) ++ " )"
 
 ind i = replicate i ' '
 nl i = '\n' : ind i

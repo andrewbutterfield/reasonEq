@@ -60,7 +60,8 @@ putPP :: String -> IO ()
 putPP = putStrLn . pp
 
 pp :: String -> String
-pp = display1 . pShowTree . lexify
+pp = display0 . pShowTree . lexify
+--pp = display1 . pShowTree . lexify
 \end{code}
 
 Basically we look for brackets (\texttt{[]()}) and punctuation (\texttt{,})
@@ -190,38 +191,56 @@ tfail toks str = fail $ unlines [str,"Remaining tokens = " ++ show toks]
 
 \subsubsection{Displaying Show-Trees}
 
+Heuristic Zero: all on one line:
+\begin{code}
+display0 :: ShowTree -> String
+display0 (STtext s) = s
+display0 (STapp sts) = concat $ intersperse " " $ map display0 sts
+display0 (STlist sts)
+ = "[" ++ (concat $ intersperse ", " $ map display0 sts) ++"]"
+display0 (STpair sts)
+ = "(" ++ (concat $ intersperse ", " $ map display0 sts) ++")"
+\end{code}
+
 Heuristic One: Each list/pair on a new line, and commas induce line breaks
 \begin{code}
 display1 :: ShowTree -> String
-display1 st = disp1 0 st
+display1 st = disp1 attop 0 st
 
-disp1 (-1) (STtext s) =  s
-disp1 i (STtext s) = nl i ++ s
+attop = True ; inside = False
 
-disp1 i (STapp [])  = nl i ++ ""
-disp1 i (STapp (st@(STtext _):sts))
-   = ' ':disp1 (-1) st ++ " " ++ (concat $ intersperse " " $ map (disp1 i) sts)
-disp1 i (STapp sts) = concat $ intersperse " " $ map (disp1 i) sts
+ws True = "" ; ws False = " "
 
-disp1 i (STlist []) = nl i ++ "[]"
-disp1 i (STlist (st@(STtext _):sts))
- = nl i ++ "[ "
-        ++ disp1 (-1) st ++ (concat $ intersperse (cma i) $ map (disp1 (i+2)) sts)
-        ++ " ]"
-disp1 i (STlist sts)
- = nl i ++ "[" ++ (concat $ intersperse (cma i) $ map (disp1 (i+2)) sts) ++ " ]"
+disp1 w (-1) (STtext s) =  s
+disp1 w i (STtext s) = nl i ++ s
 
-disp1 i (STpair []) = nl i ++ "()"
-disp1 i (STpair (st@(STtext _):sts))
- = nl i ++ "( "
-        ++ disp1 (-1) st ++ (concat $ intersperse (cma i) $ map (disp1 (i+2)) sts)
-        ++ " )"
-disp1 i (STpair sts)
- = nl i ++ "(" ++ (concat $ intersperse (cma i) $ map (disp1 (i+2)) sts) ++ " )"
+disp1 w i (STapp [])  = nl i ++ ""
+disp1 w i (STapp (st@(STtext _):sts))
+   = ws w ++ disp1 w (-1) st
+          ++ " " ++ (concat $ intersperse " " $ map (disp1 w i) sts)
+disp1 w i (STapp sts) = concat $ intersperse " " $ map (disp1 w i) sts
+
+disp1 w i (STlist []) = nl i ++ "[]"
+disp1 w i (STlist (st@(STtext _):sts))
+ = nl i ++ "[ " ++ disp1 inside (-1) st
+   ++ cma i ++ (concat $ intersperse (cma i) $ map (disp1 inside (i+2)) sts)
+   ++ " ]"
+disp1 w i (STlist sts)
+ = nl i ++ "["
+   ++ (concat $ intersperse (cma i) $ map (disp1 inside (i+2)) sts) ++ " ]"
+
+disp1 w i (STpair []) = nl i ++ "()"
+disp1 w i (STpair (st@(STtext _):sts))
+ = nl i ++ "( " ++ disp1 inside (-1) st
+   ++ cma i ++ (concat $ intersperse (cma i) $ map (disp1 inside (i+2)) sts)
+   ++ " )"
+disp1 w i (STpair sts)
+ = nl i ++ "("
+   ++ (concat $ intersperse (cma i) $ map (disp1 inside (i+2)) sts) ++ " )"
 
 ind i = replicate i ' '
 nl i = '\n' : ind i
-cma i = "," --  ',' : nl i
+cma i = ",\n" --  ',' : nl i
 \end{code}
 
 \newpage

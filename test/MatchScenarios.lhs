@@ -399,6 +399,7 @@ begMS2mid n p
 eMSpAq n
  = eX [gvDurRen n gMm,gvDurRen n gSm] (endMS2mid n p `lAnd` begMS2mid n q)
 eMSpAqm = eMSpAq "m"
+eMSpAqn = eMSpAq "n"
 \end{code}
 
 
@@ -421,7 +422,12 @@ test_sequential_composition
     , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when M,S replaces O"
        (tMatch [vtS_Design] emptyBinding S.empty S.empty eMSpAqm eOpAqm
         @?= [ bindVV gvp gvp $ bindVV gvq gvq $
-              bindLS gO gO $ bindLS gO' gO' $ bindLS gOm gOn $
+              bindLs gO [gM,gS] $ bindLs gO' [gM',gS'] $ bindLs gOm [gMm,gSm] $
+              emptyBinding] )
+    , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when M,S;n replaces O;m"
+       (tMatch [vtS_Design] emptyBinding S.empty S.empty eMSpAqn eOpAqm
+        @?= [ bindVV gvp gvp $ bindVV gvq gvq $
+              bindLs gO [gM,gS] $ bindLs gO' [gM',gS'] $ bindLs gOm [gMn,gSn] $
               emptyBinding] )
     ]
 

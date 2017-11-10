@@ -1,5 +1,5 @@
 module MkTestBind
- ( bindVV, bindLL, bindVT, bindL0, bindLS, bindLN
+ ( bindVV, bindLL, bindLl, bindVT, bindL0, bindLS, bindLs, bindLN
  , vDurRen, lvDurRen, gvDurRen
  )
 where
@@ -12,19 +12,23 @@ import Binding
 
 -- (mostly) partial functions for use in tests
 
-bindVV :: GenVar -> GenVar  -> Binding -> Binding
-bindVT :: GenVar -> Term    -> Binding -> Binding
-bindLL :: GenVar -> GenVar  -> Binding -> Binding
-bindL0 :: GenVar            -> Binding -> Binding
-bindLS :: GenVar -> GenVar  -> Binding -> Binding
-bindLN :: GenVar            -> Binding -> Binding
+bindVV :: GenVar -> GenVar   -> Binding -> Binding
+bindVT :: GenVar -> Term     -> Binding -> Binding
+bindLL :: GenVar -> GenVar   -> Binding -> Binding
+bindLl :: GenVar -> [GenVar] -> Binding -> Binding
+bindL0 :: GenVar             -> Binding -> Binding
+bindLS :: GenVar -> GenVar   -> Binding -> Binding
+bindLs :: GenVar -> [GenVar] -> Binding -> Binding
+bindLN :: GenVar             -> Binding -> Binding
 
 bindVV (StdVar pv)  (StdVar cv)   =  fromJust . bindVarToVar pv cv
-bindVT (StdVar pv)  ct   =  fromJust . bindVarToTerm pv ct
-bindLL (LstVar plv) cgv  =  fromJust . bindLVarToVList plv [cgv]
-bindL0 (LstVar plv)      =  fromJust . bindLVarToVList plv []
-bindLS (LstVar plv) cgv  =  fromJust . bindLVarToVSet plv (S.singleton cgv)
-bindLN (LstVar plv)      =  fromJust . bindLVarToVSet plv S.empty
+bindVT (StdVar pv)  ct    =  fromJust . bindVarToTerm pv ct
+bindLL (LstVar plv) cgv   =  fromJust . bindLVarToVList plv [cgv]
+bindLl (LstVar plv) cgvs  =  fromJust . bindLVarToVList plv cgvs
+bindL0 (LstVar plv)       =  fromJust . bindLVarToVList plv []
+bindLS (LstVar plv) cgv   =  fromJust . bindLVarToVSet plv (S.singleton cgv)
+bindLs (LstVar plv) cgvs  =  fromJust . bindLVarToVSet plv (S.fromList cgvs)
+bindLN (LstVar plv)       =  fromJust . bindLVarToVSet plv S.empty
 
 vDurRen  :: String -> Variable -> Variable
 lvDurRen :: String -> ListVar  -> ListVar

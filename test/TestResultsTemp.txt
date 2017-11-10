@@ -1,14 +1,35 @@
+expected:
 
-lvsC =
-fromList [(LV (VR (Id \"M\",VO,TD WA),[]),LV (VR (Id \"M\",VO,TD (WD \"m\")),[])),(LV (VR (Id \"S\",VO,TD WA),[]),LV (VR (Id \"S\",VO,TD (WD \"m\")),[]))]
+[ BD
+  ( fromList
+    [ ( LV (VR (Id "O", VO, TD WB), [])
+      , BS
+        ( fromList
+          [ GL (LV (VR (Id "O", VO, TD WB), [])) ] ) )
+    , ( LV (VR (Id "O", VO, TD (WD "m")), [])
+      , BS
+        ( fromList
+          [ GL (LV (VR (Id "O", VO, TD (WD "n")), [])) ] ) )
+    , ( LV (VR (Id "O", VO, TD WA), [])
+      , BS
+        ( fromList
+          [ GL (LV (VR (Id "O", VO, TD WA), [])) ] ) ) ] ) ]
+but got:
 
-rlvP =
-LV (VR (Id \"O\",VO,TD (WD \"m\")),[])
-
-tlvP =
-LV (VR (Id \"O\",VO,TD WA),[])
-
-
-vlMatch [vtL_Design] emptyBinding S.empty S.empty (vwrap [ok,x,y,z]) (lwrap [lM,lS])
-
-BD (fromList [],fromList [(LV (VR (Id \"M\",VO,TD WB),[]),BL [GV (VR (Id \"ok\",VO,TD WB))]),(LV (VR (Id \"S\",VO,TD WB),[]),BL [GV (VR (Id \"x\",VO,TD WB)),GV (VR (Id \"y\",VO,TD WB)),GV (VR (Id \"z\",VO,TD WB))])])
+[ BD
+  ( fromList
+    [ ( LV (VR (Id "O", VO, TD WB), [])
+      , BS
+        ( fromList
+          [ GL (LV (VR (Id "M", VO, TD WB), []))
+          , GL (LV (VR (Id "S", VO, TD WB), [])) ] ) )
+    , ( LV (VR (Id "O", VO, TD (WD "m")), [])
+      , BS
+        ( fromList
+          [ GL (LV (VR (Id "M", VO, TD (WD "m")), []))
+          , GL (LV (VR (Id "S", VO, TD (WD "m")), [])) ] ) )
+    , ( LV (VR (Id "O", VO, TD WA), [])
+      , BS
+        ( fromList
+          [ GL (LV (VR (Id "M", VO, TD WA), []))
+          , GL (LV (VR (Id "S", VO, TD WA), [])) ] ) ) ] ) ]

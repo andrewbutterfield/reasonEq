@@ -1254,6 +1254,12 @@ sMatch vts bind cbvs pbvs (Substn tsC lvsC) (Substn tsP lvsP)
 \end{code}
 
 All the variable/term matches.
+$$ \beta \uplus \{\beta_{t_i}\} \vdash R_{C_j} :: r_{P_i} \leadsto \beta_{r_i} $$
+where $R$ is a single term $t$, and $r$ is a standard variable $v$,
+so giving
+$$ \beta \uplus \{\beta_{t_i}\} \vdash t_{C_j} :: v_{P_i} \leadsto \beta_{r_i}. $$
+For every $(v_P,t_P)$ we search for a $(v_C,t_C)$ where $\beta(v_P)=v_C$,
+and then we attempt to match $t_C$ against $t_P$.
 \begin{code}
 tsMatchCheck :: MonadPlus mp
              => [VarTable] -> Binding -> CBVS -> PBVS
@@ -1266,6 +1272,8 @@ tsMatchCheck vts bind cbvs pbvs tsC ((vP,tP):tsP)
       tsMatchCheck vts bind' cbvs pbvs tsC tsP
 \end{code}
 
+Given a $(v_P,t_P)$, search for a $(v_C,t_C)$ where $\beta(v_P)=v_C$,
+and attempt to match $t_C$ against $t_P$.
 \begin{code}
 vtMatchCheck :: MonadPlus mp
              => [VarTable] -> Binding -> CBVS -> PBVS
@@ -1283,7 +1291,16 @@ vtMatchCheck vts bind cbvs pbvs tsC tP vP
               else let tB = snd $ S.elemAt 0 tsB
                    in tMatch vts bind cbvs pbvs tB tP
 \end{code}
+
 All the list-var/list-var matches.
+$$ \beta \uplus \{\beta_{t_i}\} \vdash R_{C_j} :: r_{P_i} \leadsto \beta_{r_i} $$
+where $R$ is a list or set of general variables term $gs$,
+and $r$ is a list-variable $lv$,
+so giving
+$$ \beta \uplus \{\beta_{t_i}\} \vdash gs_{C_j} :: lv_{P_i} \leadsto \beta_{r_i}. $$
+For every $(tlv_P,rlv_P)$ we search for all $(tlv_C,rlv_C)$
+where $tlv_C \in \beta(tlv_P)$,
+and attempt to bind $rlv_P$ to all the corresponding $rlv_C$.
 \begin{code}
 lvsMatchCheck :: MonadPlus mp
        => [VarTable] -> Binding -> CBVS -> PBVS
@@ -1296,35 +1313,33 @@ lvsMatchCheck vts bind cbvs pbvs lvsC ((tlvP,rlvP):lvsP)
       lvsMatchCheck vts bind' cbvs pbvs lvsC lvsP
 \end{code}
 
-\newpage
+Given a $(tlv_P,rlv_P)$, search for all $(tlv_C,rlv_C)$
+where $tlv_C \in \beta(tlv_P)$,
+and then we attempt to bind $rlv_P$ to all the corresponding $rlv_C$.
 \begin{code}
 lvlvMatchCheck :: MonadPlus mp
                => [VarTable] -> Binding -> CBVS -> PBVS
                -> LVarSub -> ListVar -> ListVar
                -> mp Binding
 
-lvlvMatchCheck vts bind cbvs pbvs lvsC rlvP tlvP =
- case lookupLstBind bind tlvP of
-   Nothing            ->  fail "lvlvMatchCheck: Nothing SHOULD NOT OCCUR!"
-   Just (BindList [(LstVar tlvC)]) ->
-    let lvsB = S.filter ((==tlvC).fst) lvsC
-    in if S.size lvsB /= 1
-    then fail "lvlvMatchCheck: #lvsB /= 1 SHOULD NOT OCCUR!"
-    else let rlvC = snd $ S.elemAt 0 lvsB
-         in bindLVarToVSet rlvP (S.singleton $LstVar rlvC) bind
-   Just (BindSet one_tlvC) | S.size one_tlvC == 1 && all isLstV one_tlvC ->
-    let (LstVar tlvC) = S.elemAt 0 one_tlvC
-        lvsB = S.filter ((==tlvC).fst) lvsC
-    in if S.size lvsB /= 1
-    then fail "lvlvMatchCheck: #lvsB /= 1 SHOULD NOT OCCUR!"
-    else let rlvC = snd $ S.elemAt 0 lvsB
-             in bindLVarToVSet rlvP (S.singleton $ LstVar rlvC) bind
-   _ -> fail $ unlines
-         [ "lvlvMatchCheck: #(lookup tlvP) /= 1, or StdVar, SHOULD NOT OCCUR!"
-         , "lvsC = " ++ show lvsC
-         , "rlvP = " ++ show rlvP
-         , "tlvP = " ++ show tlvP
-         ]
+lvlvMatchCheck vts bind cbvs pbvs lvsC rlvP tlvP
+ = case lookupLstBind bind tlvP of
+     Nothing            ->  fail "lvlvMatchCheck: Nothing SHOULD NOT OCCUR!"
+     Just (BindList bvlC) | all isLstV bvlC ->
+      let lvlB = S.toList $ S.filter ((inlist bvlC).fst) lvsC
+      in bindLVarToVList rlvP (map (LstVar . snd) lvlB) bind
+     Just (BindSet bvsC)  ->
+      let lvsB = S.filter ((inset bvsC).fst) lvsC
+      in bindLVarToVSet rlvP (S.map (LstVar . snd) lvsB) bind
+     _ -> fail $ unlines
+           [ "lvlvMatchCheck: lookup tlvP contains StdVar, SHOULD NOT OCCUR!"
+           , "tlvP = " ++ show tlvP
+           , "bind(tlvP) = "
+              ++ show (lookupLstBind bind tlvP :: Maybe LstVarBindRange)
+           ]
+ where
+   inlist vl lv  =  LstVar lv   `elem`   vl
+   inset  vs lv  =  LstVar lv `S.member` vs
 \end{code}
 
 

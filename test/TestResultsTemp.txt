@@ -1,25 +1,35 @@
+-------------- Assignment Syntax ------------
+ex .:= e42
 
-[okm,xm,ym,zm/ok,x,y,z] :: [okm,Sm/ok,S]
-sMatch [vtS_Design] emptyBinding S.empty S.empty sub_okxyz sub_ok_S
-=
-BD
-( fromList
-  [ ( VR (Id "ok", VO, TD WB)
-    , BV
-      ( VR (Id "ok", VO, TD WB) ) )
-  , ( VR (Id "ok", VO, TD (WD "m"))
-    , BV
-      ( VR (Id "ok", VO, TD (WD "m")) ) ) ]
-, fromList
-  [ ( LV (VR (Id "S", VO, TD WB), [])
-    , BS
-      ( fromList
-        [ GV (VR (Id "x", VO, TD WB))
-        , GV (VR (Id "y", VO, TD WB))
-        , GV (VR (Id "z", VO, TD WB)) ] ) )
-  , ( LV (VR (Id "S", VO, TD (WD "m")), [])
-    , BS
-      ( fromList
-        [ GV (VR (Id "x", VO, TD (WD "m")))
-        , GV (VR (Id "y", VO, TD (WD "m")))
-        , GV (VR (Id "z", VO, TD (WD "m"))) ] ) ) ] )
+C
+P
+( Id "becomes" )
+[ V (E T) (VR (Id "x", VV, TS))
+, K
+  ( E (TG (Id "Z")) )
+  ( VI 42 ) ]
+
+-------------- Assignment Definition ------------
+ex `assigned` e42
+
+C
+P
+( Id "implies" )
+[ V (E (TG (Id "B"))) (VR (Id "ok", VO, TD WB))
+, C
+  P
+  ( Id "land" )
+  [ V (E (TG (Id "B"))) (VR (Id "ok", VO, TD WA))
+  , C
+    P
+    ( Id "equal" )
+    [ V (E T) (VR (Id "x", VO, TD WA))
+    , K
+      ( E (TG (Id "Z")) )
+      ( VI 42 ) ]
+  , I
+    P
+    ( Id "land" )
+    ( Id "equal" )
+    [ LV (VR (Id "S", VO, TD WA), [])
+    , LV (VR (Id "S", VO, TD WB), []) ] ] ]

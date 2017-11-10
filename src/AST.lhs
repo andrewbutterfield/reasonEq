@@ -751,11 +751,11 @@ pattern Type t             =  ET t
 
 Patterns for binary constructions:
 \begin{code}
-pattern E2 t n t1 t2 = C (E t) n [t1,t2]
-pattern P2 n t1 t2   = C P n [t1,t2]
+pattern E2 t n t1 t2  = C (E t) n [t1,t2]
+pattern P2   n t1 t2  = C P     n [t1,t2]
 \end{code}
 
-It can help to test if a term is an expression or predicate:
+It can help to test if a term is an variable, expression or predicate:
 \begin{code}
 termkind :: Term -> TermKind
 termkind (Val tk k)           =  tk

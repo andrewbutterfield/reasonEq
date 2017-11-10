@@ -11,7 +11,7 @@ module MatchScenarios ( test_match_scenarios ) where
 import Data.Maybe(fromJust)
 import Data.Map as M (fromList)
 import qualified Data.Set as S
-import Data.List (nub, sort)
+import Data.List (nub, sort, (\\))
 
 import Test.HUnit
 --import Test.Framework as TF (testGroup, Test)
@@ -483,6 +483,46 @@ tstSub = defaultMain [test_substitution]
 test_sequential_composition
  = testGroup "Defn. of Sequential Composition"
      [ test_substitution, test_composition]
+\end{code}
+
+\newpage
+\subsection{Assignment}
+
+    $$
+      x := e
+      ~\defs~
+      ok \implies ok' \land x' = e \land S'\less x = S\less x
+    $$
+
+We start with syntax definitions of assignment, equality
+and implication.
+\begin{code}
+asg = jId "becomes"
+implies = jId "implies"
+eq = jId "equal"
+
+v .:= e        =  PCons asg [fromJust $ eVar ArbType $ ScriptVar v, e]
+p `impl` q     =  PCons implies [p,q]
+e1 `equal` e2  =  PCons eq [e1,e2]
+\end{code}
+
+Now, turning $ok$ into a term, subtracting from list-variables,
+and defining assigment
+\begin{code}
+tok = fromJust $ eVar bool ok ; tok' = fromJust $ eVar bool ok'
+
+(LVbl v is) `less` il  = LVbl v (is\\il)
+
+v `assigned` e
+  = tok `impl` PCons land [ tok' , v' `equal` e ,  _S_v'_is_S_v ]
+  where
+    v' = fromJust $ eVar ArbType $ PostVar v
+    _S_v'_is_S_v = PIter land eq [lS' `less` [v], lS `less` [v]]
+\end{code}
+
+Test values:
+\begin{code}
+e42 = EVal int $ Integer 42
 \end{code}
 
 \newpage

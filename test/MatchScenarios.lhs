@@ -374,11 +374,16 @@ eX vs p = fromJust $ pBind exists (S.fromList $ vs) p
 p `lAnd` q = PCons land [p,q]
 \end{code}
 
-Also we need to insert our known list-variables into general-vars:
+Also we need to insert our known variables and
+list-variables into general-vars:
 \begin{code}
-gO = LstVar lO ; gO' = LstVar lO' ; gOm = LstVar lOm ; gOn = LstVar lOn
-gM = LstVar lM ; gM' = LstVar lM' ; gMm = LstVar lMm ; gMn = LstVar lMn
-gS = LstVar lS ; gS' = LstVar lS' ; gSm = LstVar lSm ; gSn = LstVar lSn
+gok = StdVar ok ; gok' = StdVar ok' ; gokm = StdVar okm
+gx  = StdVar x  ; gx'  = StdVar x'  ; gxm  = StdVar xm
+gy  = StdVar y  ; gy'  = StdVar y'  ; gym  = StdVar ym
+gz  = StdVar z  ; gz'  = StdVar z'  ; gzm  = StdVar zm
+gO  = LstVar lO ; gO'  = LstVar lO' ; gOm  = LstVar lOm  ; gOn = LstVar lOn
+gM  = LstVar lM ; gM'  = LstVar lM' ; gMm  = LstVar lMm  ; gMn = LstVar lMn
+gS  = LstVar lS ; gS'  = LstVar lS' ; gSm  = LstVar lSm  ; gSn = LstVar lSn
 \end{code}
 
 We also need some predicates to throw around ($P$, $Q$):
@@ -387,19 +392,32 @@ vp = PredVar (jId "P") Static ; gvp = StdVar vp
 p = fromJust $ pVar vp
 vq = PredVar (jId "Q") Static ; gvq = StdVar vq
 q = fromJust $ pVar vq
+
+-- builder for exists Om @ P[...] /\ Q[...]
+eOpAqm = eOpAq "m" ; eOpAqn = eOpAq "n"
+eOpAq n = eX [gvDurRen n gOm] (endO2mid n p `lAnd` begO2mid n q)
 endO2mid n p = PSub p $ fromJust $ substn [] [(lO',lvDurRen n lOm)]
 begO2mid n p = PSub p $ fromJust $ substn [] [(lO,lvDurRen n lOm)]
-eOpAq n = eX [gvDurRen n gOm] (endO2mid n p `lAnd` begO2mid n q)
-eOpAqm = eOpAq "m"
-eOpAqn = eOpAq "n"
+
+-- builder for exists Mm,Sm @ P[...] /\ Q[...]
+eMSpAqm = eMSpAq "m" ; eMSpAqn = eMSpAq "n"
+eMSpAq n
+ = eX [gvDurRen n gMm,gvDurRen n gSm] (endMS2mid n p `lAnd` begMS2mid n q)
 endMS2mid n p
   = PSub p $ fromJust $ substn [] [(lM',lvDurRen n lMm),(lS',lvDurRen n lSm)]
 begMS2mid n p
   = PSub p $ fromJust $ substn [] [(lM,lvDurRen n lMm),(lS,lvDurRen n lSm)]
-eMSpAq n
- = eX [gvDurRen n gMm,gvDurRen n gSm] (endMS2mid n p `lAnd` begMS2mid n q)
-eMSpAqm = eMSpAq "m"
-eMSpAqn = eMSpAq "n"
+
+-- builder for exists ok,Sm @ P[...] /\ Q[...]
+eoSpAqm = eoSpAq "m" ; eoSpAqn = eoSpAq "n"
+eoSpAq n
+ = eX [gvDurRen n gokm,gvDurRen n gSm] (endoS2mid n p `lAnd` begoS2mid n q)
+endoS2mid n p
+  = PSub p $ fromJust $ substn [(ok',evar bool $ vDurRen n okm)] [(lS',lvDurRen n lSm)]
+begoS2mid n p
+  = PSub p $ fromJust $ substn [(ok,evar bool $ vDurRen n okm)] [(lS,lvDurRen n lSm)]
+
+evar t v = fromJust $ eVar t v
 \end{code}
 
 
@@ -407,8 +425,8 @@ eMSpAqn = eMSpAq "n"
 
 
 \begin{code}
-test_sequential_composition
- = testGroup "Sequential Composition"
+test_composition
+ = testGroup "Composition"
     [ testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches itself"
        (tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAqm eOpAqm
         @?= [ bindVV gvp gvp $ bindVV gvq gvq $
@@ -429,9 +447,42 @@ test_sequential_composition
         @?= [ bindVV gvp gvp $ bindVV gvq gvq $
               bindLs gO [gM,gS] $ bindLs gO' [gM',gS'] $ bindLs gOm [gMn,gSn] $
               emptyBinding] )
+    , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when ok,S replaces O"
+       (tMatch [vtS_Design] emptyBinding S.empty S.empty eoSpAqm eOpAqm
+        @?= [ bindVV gvp gvp $ bindVV gvq gvq $
+              bindLs gO [gok,gS] $ bindLs gO' [gok',gS'] $ bindLs gOm [gokm,gSm] $
+              emptyBinding] )
     ]
 
-tstSeqComp = defaultMain [test_sequential_composition]
+sub_O = fromJust $ substn [] [(lO,lOm)]
+sub_ok_S = fromJust $ substn [(ok,evar bool okm)] [(lS,lSm)]
+sub_okxyz
+ = fromJust $ substn
+    [ (ok,evar bool okm)
+    , (x,evar int xm), (y,evar int ym), (z,evar int zm)
+    ] []
+
+test_substitution
+ = testGroup "Substitutions"
+    [ testCase "[okm,Sm/ok,S] :: [Om/O] - succeeds"
+       (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_ok_S sub_O
+        @?= [ bindLs gO [gok,gS] $ bindLs gOm [gokm,gSm] $ emptyBinding ] )
+    , testCase "[okm,xm,ym,zm/ok,x,y,z] :: [Om/O] - succeeds"
+       (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_okxyz sub_O
+        @?= [ bindLs gO [gok,gx,gy,gz] $ bindLs gOm [gokm,gxm,gym,gzm] $ emptyBinding ] )
+    , testCase "[okm,xm,ym,zm/ok,x,y,z] :: [okm,Sm/ok,S] - succeeds"
+       (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_okxyz sub_ok_S
+        @?= [ bindVV gok gok $ bindVV gokm gokm $
+              bindLs gS [gx,gy,gz] $ bindLs gSm [gxm,gym,gzm] $
+              emptyBinding ] )
+    ]
+
+tstComp = defaultMain [test_composition]
+tstSub = defaultMain [test_substitution]
+
+test_sequential_composition
+ = testGroup "Defn. of Sequential Composition"
+     [ test_substitution, test_composition]
 \end{code}
 
 \newpage

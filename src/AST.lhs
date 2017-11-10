@@ -60,7 +60,7 @@ module AST ( VarWhat
            , pattern PBind, pattern PLam, pattern PSub, pattern PIter
            , pattern Type
            , pattern E2, pattern P2
-           , termkind, isExpr, isPred
+           , termkind, isVar, isExpr, isPred
            , VarSideCond, pattern Exact, pattern Approx
            , pattern Disjoint, pattern Covers, pattern DisjCov, pattern PreDisj
            , vscTrue
@@ -766,7 +766,8 @@ termkind (Lam tk n vs tm)     =  tk
 termkind (Sub tk tm s)        =  tk
 termkind (Iter tk na ni lvs)  =  tk
 
-isExpr, isPred :: Term -> Bool
+isVar, isExpr, isPred :: Term -> Bool
+isVar (Var _ _) = True ; isVar _ = False
 isExpr t = termkind t /= P
 isPred t = termkind t == P
 \end{code}

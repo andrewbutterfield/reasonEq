@@ -932,9 +932,11 @@ vsFreeMatch :: MonadPlus mp
 If one of both sets are empty then we can easily resolve matters,
 \begin{code}
 vsFreeMatch vts bind cbvs pbvs vsC vsP
- | S.null vsP  = if S.null vsC
-                 then return bind
-                 else fail "vsMatch: too many candidate variables."
+ | S.null vsP
+    = if S.null vsC then return bind
+      else fail $ unlines
+        [ "vsFreeMatch: too many candidate variables."
+        , "vsC = " ++ show vsC ]
  | S.null vsC  = if S.null $ S.filter isStdV vsP
                  then bindLVarSetToNull vts bind (S.toList vsP)
                  else fail "vsMatch: too many std. pattern variables."
@@ -1090,7 +1092,7 @@ otherwise we fail.
 -- variable-set pattern lvsP contains only list-variables.
 vsFreeLstMatch vts bind cbvs pbvs vsC lvsP
   | null lvsP = if null vsC then return bind
-                else fail "vsMatch: too many candidate variables."
+                else fail "vsFreeLstMatch: too many candidate variables."
 \end{code}
 If the candidate is empty then we succeed only if
 all the remaining pattern variables can bind to the empty set.
@@ -1246,13 +1248,24 @@ and check that they match.
 \begin{code}
 sMatch vts bind cbvs pbvs (Substn tsC lvsC) (Substn tsP lvsP)
  = do bind'  <- vsMatch      vts  bind  cbvs pbvs vsC vsP
-      bind'' <- tsMatchCheck vts  bind' cbvs pbvs tsC $ S.toList tsP
-      lvsMatchCheck vts bind'' cbvs pbvs lvsC $ S.toList lvsP
+      (bind'',tsC') <- tsMatchCheck vts  bind' cbvs pbvs tsC $ S.toList tsP
+      if all (isVar . snd) tsC'
+      then lvsMatchCheck vts bind'' cbvs pbvs (tsC' +++ lvsC) $ S.toList lvsP
+      else fail $ unlines
+             [ "sMatch: some leftover std-replacement is not a Var."
+             , "tsP  = " ++ show tsP
+             , "tsC  = " ++ show tsC
+             , "tsC' = " ++ show tsC'
+             ]
  where
   vsC = S.map (StdVar . fst) tsC `S.union` S.map (LstVar . fst) lvsC
   vsP = S.map (StdVar . fst) tsP `S.union` S.map (LstVar . fst) lvsP
+  ts +++ lvs = (S.map liftVV ts `S.union` S.map liftLL lvs)
+  liftVV (v,(Var _ u))  =  (StdVar v, StdVar u )
+  liftLL (lv,lu      )  =  (LstVar lv,LstVar lu)
 \end{code}
 
+\newpage
 All the variable/term matches.
 $$ \beta \uplus \{\beta_{t_i}\} \vdash R_{C_j} :: r_{P_i} \leadsto \beta_{r_i} $$
 where $R$ is a single term $t$, and $r$ is a standard variable $v$,
@@ -1260,16 +1273,17 @@ so giving
 $$ \beta \uplus \{\beta_{t_i}\} \vdash t_{C_j} :: v_{P_i} \leadsto \beta_{r_i}. $$
 For every $(v_P,t_P)$ we search for a $(v_C,t_C)$ where $\beta(v_P)=v_C$,
 and then we attempt to match $t_C$ against $t_P$.
+We need to return all pairs in the \texttt{TermSub} not found in this process.
 \begin{code}
 tsMatchCheck :: MonadPlus mp
              => [VarTable] -> Binding -> CBVS -> PBVS
              -> TermSub -> [(Variable,Term)]
-             -> mp Binding
+             -> mp (Binding, TermSub)
 
-tsMatchCheck vts bind cbvs pbvs tsC []  =  return bind
+tsMatchCheck vts bind cbvs pbvs tsC []  =  return (bind,tsC)
 tsMatchCheck vts bind cbvs pbvs tsC ((vP,tP):tsP)
- = do bind' <- vtMatchCheck vts bind cbvs pbvs tsC tP vP
-      tsMatchCheck vts bind' cbvs pbvs tsC tsP
+ = do (bind',tsC') <- vtMatchCheck vts bind cbvs pbvs tsC tP vP
+      tsMatchCheck vts bind' cbvs pbvs tsC' tsP
 \end{code}
 
 Given a $(v_P,t_P)$, search for a $(v_C,t_C)$ where $\beta(v_P)=v_C$,
@@ -1278,7 +1292,7 @@ and attempt to match $t_C$ against $t_P$.
 vtMatchCheck :: MonadPlus mp
              => [VarTable] -> Binding -> CBVS -> PBVS
              -> TermSub -> Term -> Variable
-             -> mp Binding
+             -> mp (Binding,TermSub)
 
 vtMatchCheck vts bind cbvs pbvs tsC tP vP
  = case lookupBind bind vP of
@@ -1289,10 +1303,12 @@ vtMatchCheck vts bind cbvs pbvs tsC tP vP
           in if S.size tsB /= 1
               then fail "vtMatchCheck: #tsB /= 1 SHOULD NOT OCCUR!"
               else let tB = snd $ S.elemAt 0 tsB
-                   in tMatch vts bind cbvs pbvs tB tP
+                   in do bind' <- tMatch vts bind cbvs pbvs tB tP
+                         return (bind', tsC S.\\ tsB)
 \end{code}
 
-All the list-var/list-var matches.
+\newpage
+All the list-var/list-var matches, along with leftover standard vars.
 $$ \beta \uplus \{\beta_{t_i}\} \vdash R_{C_j} :: r_{P_i} \leadsto \beta_{r_i} $$
 where $R$ is a list or set of general variables term $gs$,
 and $r$ is a list-variable $lv$,
@@ -1304,13 +1320,13 @@ and attempt to bind $rlv_P$ to all the corresponding $rlv_C$.
 \begin{code}
 lvsMatchCheck :: MonadPlus mp
        => [VarTable] -> Binding -> CBVS -> PBVS
-       -> LVarSub -> [(ListVar,ListVar)]
+       -> Set (GenVar,GenVar) -> [(ListVar,ListVar)]
        -> mp Binding
 
-lvsMatchCheck vts bind cbvs pbvs lvsC []  =  return bind
-lvsMatchCheck vts bind cbvs pbvs lvsC ((tlvP,rlvP):lvsP)
- = do bind' <- lvlvMatchCheck vts bind cbvs pbvs lvsC rlvP tlvP
-      lvsMatchCheck vts bind' cbvs pbvs lvsC lvsP
+lvsMatchCheck vts bind cbvs pbvs gvsC []  =  return bind
+lvsMatchCheck vts bind cbvs pbvs gvsC ((tlvP,rlvP):lvsP)
+ = do bind' <- lvlvMatchCheck vts bind cbvs pbvs gvsC rlvP tlvP
+      lvsMatchCheck vts bind' cbvs pbvs gvsC lvsP
 \end{code}
 
 Given a $(tlv_P,rlv_P)$, search for all $(tlv_C,rlv_C)$
@@ -1319,18 +1335,18 @@ and then we attempt to bind $rlv_P$ to all the corresponding $rlv_C$.
 \begin{code}
 lvlvMatchCheck :: MonadPlus mp
                => [VarTable] -> Binding -> CBVS -> PBVS
-               -> LVarSub -> ListVar -> ListVar
+               -> Set (GenVar,GenVar) -> ListVar -> ListVar
                -> mp Binding
 
-lvlvMatchCheck vts bind cbvs pbvs lvsC rlvP tlvP
+lvlvMatchCheck vts bind cbvs pbvs gvsC rlvP tlvP
  = case lookupLstBind bind tlvP of
      Nothing            ->  fail "lvlvMatchCheck: Nothing SHOULD NOT OCCUR!"
-     Just (BindList bvlC) | all isLstV bvlC ->
-      let lvlB = S.toList $ S.filter ((inlist bvlC).fst) lvsC
-      in bindLVarToVList rlvP (map (LstVar . snd) lvlB) bind
-     Just (BindSet bvsC)  ->
-      let lvsB = S.filter ((inset bvsC).fst) lvsC
-      in bindLVarToVSet rlvP (S.map (LstVar . snd) lvsB) bind
+     Just (BindList bvlC) ->
+      let gvlB = S.toList $ S.filter ((inlist bvlC).fst) gvsC
+      in bindLVarToVList rlvP (map snd gvlB) bind
+     Just (BindSet bvsC) ->
+      let gvsB = S.filter ((inset bvsC).fst) gvsC
+      in bindLVarToVSet rlvP (S.map snd gvsB) bind
      _ -> fail $ unlines
            [ "lvlvMatchCheck: lookup tlvP contains StdVar, SHOULD NOT OCCUR!"
            , "tlvP = " ++ show tlvP
@@ -1338,8 +1354,8 @@ lvlvMatchCheck vts bind cbvs pbvs lvsC rlvP tlvP
               ++ show (lookupLstBind bind tlvP :: Maybe LstVarBindRange)
            ]
  where
-   inlist vl lv  =  LstVar lv   `elem`   vl
-   inset  vs lv  =  LstVar lv `S.member` vs
+   inlist vl gv  =  gv   `elem`   vl
+   inset  vs gv  =  gv `S.member` vs
 \end{code}
 
 

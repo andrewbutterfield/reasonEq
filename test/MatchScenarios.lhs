@@ -522,7 +522,42 @@ v `assigned` e
 
 Test values:
 \begin{code}
+v = jId "v"
+vv = ScriptVar v
+gv = StdVar vv
+sy = ScriptVar wy
+gsy = StdVar sy
+ee = fromJust $ eVar int e
+ge = StdVar e
 e42 = EVal int $ Integer 42
+\end{code}
+
+\subsubsection{Assignment Tests}
+
+\begin{code}
+test_assignment
+ = testGroup "Assignment"
+    [ test_simple_assignment, test_simultaneous_assignment ]
+
+test_simple_assignment
+ = testGroup "Simple Assignment"
+    [ testCase "Design |- y := 42  :: v := e, should succeed"
+       ( tMatch [vtS_Design] emptyBinding S.empty S.empty
+           (wy .:= e42) (v .:= ee)
+           @?= (Just $ bindVV gv gsy $ bindVT ge e42 $ emptyBinding)
+       )
+    , testCase "Design |- << y := 42 >> :: << v := e >>, should succeed"
+       ( tMatch [vtS_Design] emptyBinding S.empty S.empty
+           (wy `assigned` e42) (v `assigned` ee)
+           @?= (Just $ bindVV gv gsy $ bindVT ge e42 $ emptyBinding)
+       )
+    ]
+
+test_simultaneous_assignment
+ = testGroup "Simultaneous Assignment"
+     []
+
+tstAsg = defaultMain [test_assignment]
 \end{code}
 
 \newpage
@@ -534,6 +569,7 @@ test_match_scenarios
   = [ testGroup "\nMatching Scenarios"
        [ test_reserved_listvars
        , test_sequential_composition
+       , test_assignment
        ]
     ]
 

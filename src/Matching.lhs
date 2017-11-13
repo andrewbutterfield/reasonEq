@@ -303,7 +303,7 @@ Plus a more complicated rule !
 \begin{code}
 tMatch' vts bind cbvs pbvs (Iter tkC naC niC lvsC) (Iter tkP naP niP lvsP)
   | tkP == tkC && naC == naP && niC == niP
-    =  error "\n\ttMatch Iter :: Iter N.Y.I."
+    =  vlMatch vts bind cbvs pbvs (map LstVar lvsC) (map LstVar lvsP)
 tMatch' vts bind cbvs pbvs tC (Iter tkP naP niP lvsP)
   | tkP == termkind tC
     =  error "\n\ttMatch non-Iter :: Iter N.Y.I."
@@ -311,7 +311,12 @@ tMatch' vts bind cbvs pbvs tC (Iter tkP naP niP lvsP)
 
 Any other case results in failure:
 \begin{code}
-tMatch' _ _ _ _ _ _  =  fail "tMatch: structural mismatch."
+tMatch' _ _ _ _ tC tP
+ = fail $ unlines
+    [ "tMatch: structural mismatch."
+    , "tC = " ++ show tC
+    ,  "tP = " ++ show tP
+    ]
 \end{code}
 
 \subsection{Term-List Matching}
@@ -756,13 +761,15 @@ vlFreeMatch vts bind cbvs pbvs vlC (gvP@(LstVar lvP):vlP)
      KnownVarList vlK
        -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs vlC vlK gvP
              vlFreeMatch vts bind' cbvs pbvs vlC' vlP
-     UnknownListVar
+     KnownVarSet vsK
+       -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs vlC (S.toList vsK) gvP
+             vlFreeMatch vts bind' cbvs pbvs vlC' vlP
+     _
        -> vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 0
           `mplus`
           vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 1
           `mplus`
           vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 2
-     _ -> fail "vlMatch: variable-sets not supported."
 \end{code}
 
 \begin{code}
@@ -1113,13 +1120,16 @@ Here we also try some non-deterministic matching, also with $N=2$.
        KnownVarSet vsK
         -> do (bind',vsC') <- vsKnownMatch vts bind cbvs pbvs vsC vsK gvP
               vsFreeLstMatch vts bind' cbvs pbvs vsC' lvsP'
-       UnknownListVar
+       KnownVarList vlK
+        -> do (bind',vsC')
+                     <- vsKnownMatch vts bind cbvs pbvs vsC (S.fromList vlK) gvP
+              vsFreeLstMatch vts bind' cbvs pbvs vsC' lvsP'
+       _
         -> vsFreeMatchN vts bind cbvs pbvs vsC lvP lvsP' 0
            `mplus`
            vsFreeMatchN vts bind cbvs pbvs vsC lvP lvsP' 1
            `mplus`
            vsFreeMatchN vts bind cbvs pbvs vsC lvP lvsP' 2
-       _ ->fail "vsMatch: variable-lists not supported."
   where (gvP@(LstVar lvP),lvsP') = (S.elemAt 0 lvsP, S.deleteAt 0 lvsP)
 \end{code}
 

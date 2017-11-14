@@ -177,7 +177,8 @@ lOn = MidVars o "n" ; lMn = MidVars m "n" ; lSn = MidVars s "n"
 
 test_reserved_listvars
  = testGroup "Reserved List Variables"
-     [test_none_reserved, test_reserved_as_lists, test_reserved_as_sets]
+     [ test_none_reserved, test_reserved_as_lists
+     , test_reserved_as_sets, test_less_reserved ]
 
 test_none_reserved
  = testGroup "O,M,S not reserved"
@@ -224,11 +225,11 @@ test_reserved_as_lists
             (vwrap [x,y,z])
             (lwrap [lS])
          @?= ( bindLVarToVList lS (vwrap [x,y,z]) emptyBinding :: [Binding] ))
-     , testCase "L_Design |-  {x,y,z} :: {S}  -- fails."
+     , testCase "L_Design |-  {x,y,z} :: {S}  -- succeeds."
        ( vsMatch [vtL_Design] emptyBinding S.empty S.empty
             (vswrap [x,y,z])
             (lswrap [lS])
-         @?= Nothing )
+         @?= ( bindLVarToVSet lS (vswrap [x,y,z]) emptyBinding :: [Binding] ) )
      , testCase "x,y,z,S @ L_Design  |-  x,y,z :: S  -- matches."
        ( vlMatch [vtL_Design] emptyBinding
             (S.fromList $ vwrap [x,y,z])
@@ -306,11 +307,11 @@ test_reserved_as_lists
 
 test_reserved_as_sets
  = testGroup "O,M,S reserved as {ok,x,y,z}"
-     [ testCase "S_Design |-  x,y,z :: S  -- fails."
+     [ testCase "S_Design |-  x,y,z :: S  -- succeeds."
        ( vlMatch [vtS_Design] emptyBinding S.empty S.empty
             (vwrap [x,y,z])
             (lwrap [lS])
-         @?= Nothing )
+         @?= ( bindLVarToVList lS (vwrap [x,y,z]) emptyBinding :: [Binding] ) )
      , testCase "S_Design |-  {x,y,z} :: {S}  -- matches at least once."
        ( vsMatch [vtS_Design] emptyBinding S.empty S.empty
             (vswrap [x,y,z])
@@ -344,9 +345,20 @@ test_reserved_as_sets
          @?= ( bindLVarToVSet lOm oknlSn emptyBinding :: [Binding] ) ))
      ]
 
+
+test_less_reserved
+ = testGroup "S reserved as {x,y,z}, less x,y,z or more" -- []
+     [ testCase "S_Design |- (y,{x,z}) :: (v,S\v) -- succeeds"
+        ( vsMatch [vtS_Design] emptyBinding S.empty S.empty
+            (vswrap [x,y,z]) (vswrap [vv] `S.union` lswrap [lS `less` [v]])
+          @?= Nothing
+        )
+     ]
+
 tstNoneReserved = defaultMain [test_none_reserved]
 tstListReserved = defaultMain [test_reserved_as_lists]
 tstSetReserved  = defaultMain [test_reserved_as_sets]
+tstLessReserved = defaultMain [test_less_reserved]
 tstReserved     = defaultMain [test_reserved_listvars]
 \end{code}
 
@@ -511,7 +523,7 @@ and defining assigment
 \begin{code}
 tok = fromJust $ eVar bool ok ; tok' = fromJust $ eVar bool ok'
 
-(LVbl v is) `less` il  = LVbl v (is\\il)
+(LVbl v is) `less` il  = LVbl v $ nub $ sort (is++il)
 
 v `assigned` e
   = tok `impl` PCons land [ tok' , v' `equal` e ,  _S_v'_is_S_v ]
@@ -549,7 +561,11 @@ test_simple_assignment
     , testCase "Design |- << y := 42 >> :: << v := e >>, should succeed"
        ( tMatch [vtS_Design] emptyBinding S.empty S.empty
            (wy `assigned` e42) (v `assigned` ee)
-           @?= (Just $ bindVV gv gsy $ bindVT ge e42 $ emptyBinding)
+           @?= ( Just $ bindVV gv gsy $ bindVT ge e42
+               $ bindVV gok gok $ bindVV gok' gok'
+               $ bindLS (LstVar (lS  `less` [v])) (LstVar (lS  `less` [wy]))
+               $ bindLS (LstVar (lS' `less` [v])) (LstVar (lS' `less` [wy]))
+               $ emptyBinding )
        )
     ]
 

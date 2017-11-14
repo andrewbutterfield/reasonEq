@@ -254,7 +254,8 @@ mean it is inlined as per Heuristic Zero.
 display2 :: ShowTree -> String
 display2 st = disp2 0 st
 
-inlineKeys = map STtext ["E","VB","VI","VT","V","GL","GV","LV","VR","Id","WD"]
+inlineKeys = map STtext
+  ["BV","BT","E","K","VB","VI","VT","V","GL","GV","LV","VR","Id","WD"]
 
 disp2 _ (STtext s) = s
 disp2 i app@(STapp (st:sts)) -- length always >=2, see stapp above,

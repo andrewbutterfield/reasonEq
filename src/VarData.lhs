@@ -129,7 +129,7 @@ of the particular subscript value.
 
 \begin{code}
 newtype VarTable
-  = VT ( Map Variable VarMatchRole
+  = VD ( Map Variable VarMatchRole
        , Map ListVar  LstVarMatchRole
        , Map ListVar  LstVarMatchRole )
   deriving (Eq, Show, Read)
@@ -138,11 +138,11 @@ newtype VarTable
 We will want to inspect tables.
 \begin{code}
 vtList :: VarTable -> [(Variable,VarMatchRole)]
-vtList (VT (vtable, _, _)) = M.toList vtable
+vtList (VD (vtable, _, _)) = M.toList vtable
 ltList :: VarTable -> [(ListVar,LstVarMatchRole)]
-ltList (VT (_, ltable, _)) = M.toList ltable
+ltList (VD (_, ltable, _)) = M.toList ltable
 dtList :: VarTable -> [(ListVar,LstVarMatchRole)]
-dtList (VT (_, _, dtable)) = M.toList dtable
+dtList (VD (_, _, dtable)) = M.toList dtable
 \end{code}
 
 
@@ -150,7 +150,7 @@ dtList (VT (_, _, dtable)) = M.toList dtable
 
 \begin{code}
 newVarTable :: VarTable
-newVarTable = VT (M.empty, M.empty,M.empty)
+newVarTable = VD (M.empty, M.empty,M.empty)
 \end{code}
 
 \newpage
@@ -293,14 +293,14 @@ Only static variables may name a constant,
 amd we must check that we won't introduce any cycles:
 \begin{code}
 addKnownConst :: Monad m => Variable -> Term -> VarTable -> m VarTable
-addKnownConst var@(Vbl _ _ Static) (Var _ tvar) (VT (vtable,ltable,dtable))
+addKnownConst var@(Vbl _ _ Static) (Var _ tvar) (VD (vtable,ltable,dtable))
   | var `S.member` rtStdImage vtable (S.singleton tvar)
      = fail "addKnownConst: must not create variable cycle."
-addKnownConst var@(Vbl _ _ Static) (Var _ v) (VT (vtable,ltable,dtable))
+addKnownConst var@(Vbl _ _ Static) (Var _ v) (VD (vtable,ltable,dtable))
   | var `S.member` rtStdImage vtable (S.singleton v)
     = fail "addKnownConst: must not create variable cycle."
-addKnownConst var@(Vbl _ _ Static) trm (VT (vtable,ltable,dtable))
-  =  return $ VT ( M.insert var (KC trm) vtable, ltable, dtable )
+addKnownConst var@(Vbl _ _ Static) trm (VD (vtable,ltable,dtable))
+  =  return $ VD ( M.insert var (KC trm) vtable, ltable, dtable )
 addKnownConst _ _ _ = fail "addKnownConst: not for Dynamic Variables."
 \end{code}
 
@@ -310,8 +310,8 @@ Only observation variables can
 range over values of a given type.
 \begin{code}
 addKnownVar :: Monad m => Variable -> Type -> VarTable -> m VarTable
-addKnownVar var@(ObsVar _ _) typ (VT (vtable, ltable, dtable))
-  = return $ VT ( M.insert var (KV typ) vtable, ltable, dtable )
+addKnownVar var@(ObsVar _ _) typ (VD (vtable, ltable, dtable))
+  = return $ VD ( M.insert var (KV typ) vtable, ltable, dtable )
 addKnownVar _ _ _ = fail "addKnownVar: not for Expr/Pred Variables."
 \end{code}
 
@@ -323,16 +323,16 @@ with the same class and appropriate temporality.
 We also need to check to avoid cycles, or a crossover to variable-sets
 \begin{code}
 addKnownVarList :: Monad m => ListVar -> VarList -> VarTable -> m VarTable
-addKnownVarList lv vl (VT (vtable, ltable, dtable))
+addKnownVarList lv vl (VD (vtable, ltable, dtable))
  | ct == CTmixed
      = fail "addKnownVarList: some list-variables map to sets."
  | lv `S.member` img
      = fail "addKnownVarList: must not create list-variable cycle."
  | mixed = fail  "addKnownVarList: inconsistent variable classifications."
  | isDuring vtime
-     =  return $ VT (vtable, ltable, M.insert (neutralD lv) (KL vl) dtable)
+     =  return $ VD (vtable, ltable, M.insert (neutralD lv) (KL vl) dtable)
  | otherwise
-     =  return $ VT (vtable, M.insert lv (KL vl) ltable, dtable)
+     =  return $ VD (vtable, M.insert lv (KL vl) ltable, dtable)
  where
   ( ct, img ) = rtLstImage ltable CTlist (S.fromList $ listVarsOf vl)
   ( vtime, mixed )  =  checkLVarListMap lv vl
@@ -368,16 +368,16 @@ with the same class.
 We also need to check to avoid cycles, or a crossover to variable-lists
 \begin{code}
 addKnownVarSet :: Monad m => ListVar -> VarSet -> VarTable -> m VarTable
-addKnownVarSet lv vs (VT (vtable, ltable, dtable))
+addKnownVarSet lv vs (VD (vtable, ltable, dtable))
  | ct == CTmixed
      = fail "addKnownVarSet: some list-variables map to lists."
  | lv `S.member` img
      = fail "addKnownVarSet: must not create list-variable cycle."
  | mixed = fail  "addKnownVarSet: inconsistent variable classifications."
  | isDuring vtime
-     =  return $ VT (vtable, ltable, M.insert (neutralD lv) (KS vs) dtable)
+     =  return $ VD (vtable, ltable, M.insert (neutralD lv) (KS vs) dtable)
  | otherwise
-     =  return $ VT (vtable, M.insert lv (KS vs) ltable, dtable)
+     =  return $ VD (vtable, M.insert lv (KS vs) ltable, dtable)
  where
    ( ct, img ) = rtLstImage ltable CTset (listVarSetOf vs)
    ( vtime, mixed )  =  checkLVarSetMap lv vs
@@ -401,7 +401,7 @@ checkLVarSetMap lv vs
 Variable lookup is total, returning \texttt{UV} if the variable is not present.
 \begin{code}
 lookupVarTable :: VarTable -> Variable -> VarMatchRole
-lookupVarTable (VT (vtable, _, _)) var
+lookupVarTable (VD (vtable, _, _)) var
  = case M.lookup var vtable of
      Nothing   ->  UV
      Just vmr  ->  vmr
@@ -417,12 +417,12 @@ and the others.
 \begin{code}
 lookupLVarTable :: VarTable -> ListVar -> LstVarMatchRole
 
-lookupLVarTable (VT (_,_,dtable)) lvar@(LVbl (Vbl _ _ (Dynamic (During s ))) _)
+lookupLVarTable (VD (_,_,dtable)) lvar@(LVbl (Vbl _ _ (Dynamic (During s ))) _)
  = case M.lookup (neutralD lvar) dtable of
      Nothing    ->  UL
      Just lvmr  ->  lvmrMap (specialiseD s) lvmr
 
-lookupLVarTable (VT (_,ltable,_)) lvar
+lookupLVarTable (VD (_,ltable,_)) lvar
  = case M.lookup lvar ltable of
      Nothing    ->  UL
      Just lvmr  ->  lvmr
@@ -455,7 +455,7 @@ We also have a version that searches a list of tables:
 \begin{code}
 lookupVarTables :: [VarTable] -> Variable -> VarMatchRole
 lookupVarTables [] _ = UV
-lookupVarTables (VT (vtable,_,_):rest) var
+lookupVarTables (VD (vtable,_,_):rest) var
  = case M.lookup var vtable of
      Just vmr  ->  vmr
      Nothing   ->  lookupVarTables rest var
@@ -466,7 +466,7 @@ Again, we want to be able to search lists of tables.
 \begin{code}
 lookupLVarTables :: [VarTable] -> ListVar -> LstVarMatchRole
 lookupLVarTables [] _ = UL
-lookupLVarTables (VT (_,ltable,dtable):rest) lvar
+lookupLVarTables (VD (_,ltable,dtable):rest) lvar
  = case M.lookup lvar ltable of
      Just lvmr  ->  lvmr
      Nothing    ->  lookupLVarTables rest lvar

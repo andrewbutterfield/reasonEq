@@ -1,16 +1,5 @@
--------------- Assignment Syntax ------------
-ex .:= e42
 
-C
-P
-( Id "becomes" )
-[ V (E T) (VR (Id "x", VV, TS))
-, K
-  ( E (TG (Id "Z")) )
-  ( VI 42 ) ]
-
--------------- Assignment Definition ------------
-ex `assigned` e42
+v `assigned` ee
 
 C
 P
@@ -23,13 +12,78 @@ P
   , C
     P
     ( Id "equal" )
-    [ V (E T) (VR (Id "x", VO, TD WA))
-    , K
-      ( E (TG (Id "Z")) )
-      ( VI 42 ) ]
+    [ V (E T) (VR (Id "v", VO, TD WA))
+    , V (E (TG (Id "Z"))) (VR (Id "e", VE, TD WB)) ]
   , I
     P
     ( Id "land" )
     ( Id "equal" )
-    [ LV (VR (Id "S", VO, TD WA), [])
-    , LV (VR (Id "S", VO, TD WB), []) ] ] ]
+    [ LV (VR (Id "S", VO, TD WA), [Id "v"])
+    , LV (VR (Id "S", VO, TD WB), [Id "v"]) ] ] ]
+
+wy `assigned` e42
+
+C
+P
+( Id "implies" )
+[ V (E (TG (Id "B"))) (VR (Id "ok", VO, TD WB))
+, C
+  P
+  ( Id "land" )
+  [ V (E (TG (Id "B"))) (VR (Id "ok", VO, TD WA))
+  , C
+    P
+    ( Id "equal" )
+    [ V (E T) (VR (Id "y", VO, TD WA))
+    , K ( E (TG (Id "Z"))) ( VI 42 ) ]
+  , I
+    P
+    ( Id "land" )
+    ( Id "equal" )
+    [ LV (VR (Id "S", VO, TD WA), [Id "y"])
+    , LV (VR (Id "S", VO, TD WB), [Id "y"]) ] ] ]
+
+
+tMatch [vtS_Design] emptyBinding S.empty S.empty (wy `assigned` e42) (v `assigned` ee)
+
+BD
+( fromList
+  [ ( VR (Id "e", VE, TD WB)
+    , BT (K (E (TG (Id "Z"))) (VI 42)) )
+  , ( VR (Id "ok", VO, TD WB)
+    , BV (VR (Id "ok", VO, TD WB)) )
+  , ( VR (Id "ok", VO, TD WA)
+    , BV (VR (Id "ok", VO, TD WA)) )
+  , ( VR (Id "v", VO, TD WA)
+    , BV (VR (Id "y", VO, TD WA)) ) ]
+, fromList
+  [ ( LV (VR (Id "S", VO, TD WB), [Id "v"])
+    , BL
+      [ GL (LV (VR (Id "S", VO, TD WA), [Id "y"]))
+      , GL (LV (VR (Id "S", VO, TD WB), [Id "y"])) ] )
+  , ( LV (VR (Id "S", VO, TD WA), [Id "v"])
+    , BL
+      [] ) ] )
+
+
+bindVV gv gsy $ bindVT ge e42 $ bindVV gok gok $ bindVV gok' gok' $ bindLS (LstVar (lS  `less` [v])) (LstVar (lS  `less` [wy])) $ bindLS (LstVar (lS' `less` [v])) (LstVar (lS' `less` [wy])) $ emptyBinding
+
+BD
+( fromList
+  [ ( VR (Id "e", VE, TD WB)
+    , BT (K (E (TG (Id "Z"))) (VI 42)) )
+  , ( VR (Id "ok", VO, TD WB)
+    , BV (VR (Id "ok", VO, TD WB)) )
+  , ( VR (Id "ok", VO, TD WA)
+    , BV (VR (Id "ok", VO, TD WA)) )
+  , ( VR (Id "v", VV, TS)
+    , BV (VR (Id "y", VV, TS)) ) ]
+, fromList
+  [ ( LV (VR (Id "S", VO, TD WB), [Id "v"])
+    , BS
+      ( fromList
+        [ GL (LV (VR (Id "S", VO, TD WB), [Id "y"])) ] ) )
+  , ( LV (VR (Id "S", VO, TD WA), [Id "v"])
+    , BS
+      ( fromList
+        [ GL (LV (VR (Id "S", VO, TD WA), [Id "y"])) ] ) ) ] )

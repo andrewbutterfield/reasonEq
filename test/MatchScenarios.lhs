@@ -348,7 +348,7 @@ test_reserved_as_sets
 
 test_less_reserved
  = testGroup "S reserved as {x,y,z}, less x,y,z or more" -- []
-     [ testCase "S_Design |- (y,{x,z}) :: (v,S\v) -- succeeds"
+     [ testCase "S_Design |- {x,y,z} :: {v,S\\v} -- succeeds 3 ways"
         ( vsMatch [vtS_Design] emptyBinding S.empty S.empty
             (vswrap [x,y,z]) (vswrap [vv] `S.union` lswrap [lS `less` [v]])
           @?= Nothing

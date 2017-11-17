@@ -12,6 +12,7 @@ import Test.Framework.Providers.HUnit (testCase)
 --import Test.Framework.Providers.QuickCheck2 (testProperty)
 
 import LexBase
+import Variables
 import AST
 import VarData
 import Binding

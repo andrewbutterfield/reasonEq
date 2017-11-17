@@ -19,6 +19,7 @@ import Data.Maybe (fromJust)
 
 --import Utilities
 import LexBase
+import Variables
 import AST
 import Syntax
 

@@ -21,6 +21,7 @@ import Test.Framework.Providers.HUnit (testCase)
 
 import Utilities
 import LexBase
+import Variables
 import AST
 import VarData
 import Binding

@@ -17,6 +17,7 @@ library
   hs-source-dirs:      src, proto
   exposed-modules:     Utilities
                      , LexBase
+                     , Variables
                      , AST
                      , VarData
                      , Binding

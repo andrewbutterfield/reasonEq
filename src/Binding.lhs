@@ -28,6 +28,7 @@ import qualified Data.Set as S
 
 --import Utilities
 import LexBase
+import Variables
 import AST
 import VarData
 \end{code}

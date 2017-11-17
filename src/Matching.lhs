@@ -25,6 +25,7 @@ import Data.List
 
 import Utilities
 import LexBase
+import Variables
 import AST
 import VarData
 import Binding

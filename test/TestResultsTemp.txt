@@ -1,4 +1,7 @@
 
+vsMatch [vtS_Design] emptyBinding S.empty S.empty (vswrap [x,y,z]) (vswrap [vv] `S.union` lswrap [lS `less` [v]])
+
+
 v `assigned` ee
 
 C

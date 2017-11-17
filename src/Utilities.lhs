@@ -10,6 +10,8 @@ where
 
 import Data.List
 import Data.Char
+import Data.Set(Set)
+import qualified Data.Set as S
 \end{code}
 
 Here we provide odds and ends not found elswhere.
@@ -22,7 +24,7 @@ utilities
 \end{code}
 
 \newpage
-\subsection{List Functions}
+\subsection{List and Set Functions}
 
 \subsubsection{Predicate: has duplicates}
 \begin{code}
@@ -46,6 +48,22 @@ unlines' [] = ""
 unlines' [s] = s
 unlines' (s:ss) = s ++ '\n':unlines' ss
 \end{code}
+
+\subsubsection{Set disjointness}
+
+\begin{code}
+disjoint, overlaps :: Ord a => Set a -> Set a -> Bool
+s1 `disjoint` s2 = S.null (s1 `S.intersection` s2)
+\end{code}
+
+\subsubsection{Set overlap}
+
+\begin{code}
+s1 `overlaps` s2 = not (s1 `disjoint` s2)
+\end{code}
+
+
+
 
 \newpage
 \subsection{Control-Flow Functions}

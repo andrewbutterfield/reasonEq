@@ -31,6 +31,7 @@ import Data.List (nub)
 
 import Utilities
 import LexBase
+import Variables
 import AST
 \end{code}
 

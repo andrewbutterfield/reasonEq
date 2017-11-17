@@ -8,6 +8,7 @@ import Data.Maybe(fromJust)
 import qualified Data.Set as S
 
 import AST
+import Variables
 import Binding
 
 -- (mostly) partial functions for use in tests

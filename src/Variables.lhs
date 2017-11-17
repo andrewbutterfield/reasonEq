@@ -64,6 +64,45 @@ We want to implement a range of variables
 that can stand for behaviour observations, and arbitrary terms.
 We also want to support the notion of list-variables that denote lists of variables.
 
+We start with a table (Fig. \ref{fig:utp-vv}) that identifies
+the variety of variables we expect to support.
+
+\begin{figure}
+  \begin{center}
+    \begin{tabular}{l|cr|cc}
+       \multicolumn{1}{r|}{class}
+       & \multicolumn{2}{c|}{Obs}
+       & \multicolumn{2}{c}{Term}
+    \\ & & & &
+    \\ timing & Var & Categories & Expr & Pred
+    \\\hline
+       static/rel & $g$ & $O,M$ & $E$ & $P$
+    \\ before & $x$ & $O,M,S$ & $e$ & $p$
+    \\ during & $x_m$ & $O_m,M_m,S_m$ & $e_m$ & $p_m$
+    \\ after & $x'$ & $O',M',S'$ & $e'$ & $p'$
+    \\\hline
+       text & \texttt{x} & \texttt{O},\texttt{S} & \multicolumn{2}{c}{---}
+    \end{tabular}
+  \end{center}
+  \caption{UTP variable varieties}
+  \label{fig:utp-vv}
+\end{figure}
+
+Variables fall into two broad classes:
+\begin{description}
+  \item[Obs]
+    Variables that represent some aspect of an observation
+    that might be made of a program or its behaviour.
+  \item[Term]
+    Variables that stand for terms,
+    which can themselves be categorised as either expressions (Expr)
+or predicates (Pred).
+\end{description}
+
+The variables $x$, $x_m$, and $x'$ are
+linked by their common identifier \textsl{x},
+as are $e$ and $p$.
+
 Variables have a root identifier,
 can represent either obervations,expressions or predicates,
 and can be static or dynamic.
@@ -180,31 +219,7 @@ whatVar (VR (_, vw, _))  =  vw
 timeVar (VR (_, _, vt))  =  vt
 \end{code}
 
-\subsection{Identifier and Variable test values}
-\begin{code}
-i_a = fromJust $ ident "a"
-i_b = fromJust $ ident "b"
-i_e = fromJust $ ident "e"
-i_f = fromJust $ ident "f"
-i_v = fromJust $ ident "v"
-i_P = fromJust $ ident "P"
-i_Q = fromJust $ ident "Q"
-
-v_a =  PreVar    $ i_a
-v_b =  PreVar    $ i_b
-v_v =  ScriptVar $ i_v
-v_a' = PostVar   $ i_a
-v_b' = PostVar   $ i_b
-
-v_e  = PreExpr  $ i_e
-v_f  = PreExpr  $ i_f
-v_e' = PostExpr $ i_e
-v_f' = PostExpr $ i_f
-
-v_P  = PreCond  i_P
-v_Q' = PostCond i_Q
-\end{code}
-
+\newpage
 \subsection{List Variables}
 
 In places where list of variables occur,
@@ -259,14 +274,7 @@ whatLVar (LV (v,_)) = whatVar v
 timeLVar (LV (v,_)) = timeVar v
 \end{code}
 
-\subsection{List Variable test values}
-\begin{code}
-lva = ObsLVar  (Dynamic Before) (i_a) []
-lvb = ObsLVar  (Dynamic After)  (i_b) []
-lve = ExprLVar (Dynamic Before) (i_e) []
-lvf = ExprLVar (Dynamic Before) (i_f) []
-\end{code}
-
+\newpage
 \subsection{Variable Lists}
 
 A variable-list is composed in general of a mix of normal variables
@@ -316,16 +324,7 @@ timeGVar (GV v)   =  timeVar v
 timeGVar (GL lv)  =  timeLVar lv
 \end{code}
 
-Test values:
-\begin{code}
-gv_a =  StdVar v_a
-gv_b =  StdVar v_b
-gv_v =  StdVar v_v
-gv_a' = StdVar v_a'
-gv_b' = StdVar v_b'
-\end{code}
-
-
+\newpage
 \subsection{Variable Sets}
 
 We also want variable sets:
@@ -345,19 +344,6 @@ listVarSetOf vs =  S.map getL $ S.filter isLstV vs where getL (GL lv) = lv
 
 \end{code}
 
-\subsection{Variable Set test values}
-\begin{code}
-s0   = S.fromList [] :: VarSet
-sa   = S.fromList [gv_a]
-sa'  = S.fromList [gv_a']
-sb   = S.fromList [gv_b]
-sab  = S.fromList [gv_a,gv_b]
-saa' = S.fromList [gv_a,gv_a']
-sab' = S.fromList [gv_a,gv_b']
-sbb' = S.fromList [gv_b,gv_b']
-\end{code}
-
-
 
 \newpage
 
@@ -366,7 +352,7 @@ sbb' = S.fromList [gv_b,gv_b']
 int_tst_Variables :: [TF.Test]
 int_tst_Variables
  = [ testGroup "\nVariables Internal"
-     [ testCase "1+1=2" (1+1 @?= 2)
+     [ testCase "No tests currently defined" (1+1 @?= 2)
      ]
    ]
 \end{code}

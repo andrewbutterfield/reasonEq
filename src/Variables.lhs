@@ -69,19 +69,18 @@ the variety of variables we expect to support.
 
 \begin{figure}
   \begin{center}
-    \begin{tabular}{l|cr|cc}
+    \begin{tabular}{l|c|cc}
        \multicolumn{1}{r|}{class}
-       & \multicolumn{2}{c|}{Obs}
+       & Obs
        & \multicolumn{2}{c}{Term}
-    \\ & & & &
-    \\ timing & Var & Categories & Expr & Pred
+    \\ & & &
+    \\ timing & Var & Expr & Pred
     \\\hline
-       static/rel & $g$ & $O,M$ & $E$ & $P$
-    \\ before & $x$ & $O,M,S$ & $e$ & $p$
-    \\ during & $x_m$ & $O_m,M_m,S_m$ & $e_m$ & $p_m$
-    \\ after & $x'$ & $O',M',S'$ & $e'$ & $p'$
-    \\\hline
-       text & \texttt{x} & \texttt{O},\texttt{S} & \multicolumn{2}{c}{---}
+       Static/Rel & $g$ & $E$ & $P$
+    \\ ~~Text & \texttt{x} & \multicolumn{2}{c}{---}
+    \\ Before & $x$ & $e$ & $p$
+    \\ During & $x_m$ & $e_m$ & $p_m$
+    \\ After & $x'$ & $e'$ & $p'$
     \end{tabular}
   \end{center}
   \caption{UTP variable varieties}
@@ -96,54 +95,71 @@ Variables fall into two broad classes:
   \item[Term]
     Variables that stand for terms,
     which can themselves be categorised as either expressions (Expr)
-or predicates (Pred).
-
-Within these classes, we can also classify variables further
-in terms of their ``temporality'':
-
+    or predicates (Pred).
 \end{description}
 
-\subsubsection{Observational Variables}
+Within these classes, we can also classify variables further
+in terms of their ``temporality''.
+We describe behaviour in terms of relations between ``before''
+and ``after'' observations over some appropriate time interval.
+\begin{description}
+  \item[Static/Rel]
+    variables that represent a value ($g$), or relationship
+    between before- and after-values ($E$,$P$),
+    that does not change
+    over the lifetime of a program.
+    Also included here are (Text)
+    variables that denote themselves (\texttt{x}).
+  \item[Before]
+    variables that record the value of observations
+    at the start of the time interval under consideration ($x$),
+    or terms defined over starting values ($e,p$).
+  \item[After]
+    variables that record the value of observations
+    at the end of the time interval under consideration ($x'$),
+    or terms defined over final values ($e',p'$).
+  \item[During]
+    variables used to record the value of observations
+    at intermediate points within the time interval under consideration ($x_m$),
+    or terms defined at such in-between states ($e_m,p_m$.).
+    These are typically required when defining
+    sequential composition.
+\end{description}
 
-talk here about obsvars
+\subsubsection{More about variables}
 
-\subsubsection{Term Variables}
+\paragraph{Observational Variables}
+Observational variables record visible events/changes/values/histories
+associated with program behaviour.
+Observation or Term variables with a temporality of Text, Before, During or After,
+(\textit{e.g., } $\texttt{x},x,x_m,x'$), are linked by their common identifier
+(\textit{e.g.,} \textsl{x}).
+Static observational variables are also used for general predicate calculus
+purposes.
 
-talk here about predicate and expr vars.
+\paragraph{Term Variables}
+Term variables denote terms, either arbitrary or pre-determined in some way.
+If a term contains only observable variables of the same temporality,
+then it can be deoted by a term variable of that temporality.
+Term variables are sub-classified by those that denote expressions (Expr)
+and those that denote predicates (Pred).
+There are no term varoables that can denote both expressions and predicates.
+Static term variables may denote an term of the same sub-classification,
+with any temporality attribute.
 
-\subsubsection{Variables qua Variables}
-
+\paragraph{Variables qua Variables}
 Finally, for observational variables only,
-we have the notion of a variable standing for itslef,
+we have the notion of a (Text) variable standing for itself (\texttt{x}),
 rather than its value at some point in time.
+This is very important for the definition
+of language constructs involving variables in an essential way,
+such as assignment.
+In a sense, these variables are static.
+
+\newpage
+\textbf{THIS CODE BELOW NEEDS REVISING AS PER ABOVE}
 
 
-The variables $x$, $x_m$, and $x'$ are
-linked by their common identifier \textsl{x},
-as are $e$ and $p$.
-
-Variables have a root identifier,
-can represent either obervations,expressions or predicates,
-and can be static or dynamic.
-A dynamic variable has to be classified regarding
-when in program execution history it applies: before, during or after.
-
-
-\textbf{OLD STUFF BELOW - TO BE REVISED}
-
-Variables can be classified into those that:
-\begin{itemize}
-  \item
-     track a single observable aspect of the behaviour as the program
-    runs,
-  \item
-    denote an arbitrary variable, as when defining a language construct,
-  \item
-    denote arbitrary expressions whose values depend on dynamic observables,
-    or
-  \item
-    denote arbitrary predicates whose truth value depend on dynamic observables.
-\end{itemize}
 \begin{code}
 data VarWhat -- Classification
   = VO -- Observation
@@ -159,20 +175,6 @@ pattern PredV = VP
 \end{code}
 
 
-Variables are either:
-\begin{description}
-  \item[Static]
-    that capture information, or define terms, that do not change during
-    the lifetime of a program.
-  \item[Dynamic]
-    that represent behaviour
-    with observations that change as the program runs.
-    These can have added `decorations' that limit their scope
-    to pre, post, and intermediate states of execution.
-\end{description}
-
-
-We start by defining the various ``timings'' for dynamic variables
 \begin{code}
 data VarWhen -- Variable role
   = WB -- Before (pre)
@@ -185,11 +187,6 @@ pattern During n = WD n
 pattern After  = WA
 \end{code}
 
-Variables may have a particular interpretation
-with respect to time, (``temporality''),
-being either static (independent of time),
-or dynamic, distinguishing between before, durimg or after
-some behaviour of interest.
 \begin{code}
 data VarTime
   = TS -- Static
@@ -203,7 +200,7 @@ isDuring (Dynamic (During _)) = True
 isDuring _                    = False
 \end{code}
 
-A variable is a triple: identifier, what, and time
+A variable is a triple: identifier, class, and temporality/text
 \begin{code}
 newtype Variable  = VR (Identifier, VarWhat, VarTime)
  deriving (Eq,Ord,Show,Read)

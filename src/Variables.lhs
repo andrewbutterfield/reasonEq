@@ -97,7 +97,26 @@ Variables fall into two broad classes:
     Variables that stand for terms,
     which can themselves be categorised as either expressions (Expr)
 or predicates (Pred).
+
+Within these classes, we can also classify variables further
+in terms of their ``temporality'':
+
 \end{description}
+
+\subsubsection{Observational Variables}
+
+talk here about obsvars
+
+\subsubsection{Term Variables}
+
+talk here about predicate and expr vars.
+
+\subsubsection{Variables qua Variables}
+
+Finally, for observational variables only,
+we have the notion of a variable standing for itslef,
+rather than its value at some point in time.
+
 
 The variables $x$, $x_m$, and $x'$ are
 linked by their common identifier \textsl{x},
@@ -108,6 +127,9 @@ can represent either obervations,expressions or predicates,
 and can be static or dynamic.
 A dynamic variable has to be classified regarding
 when in program execution history it applies: before, during or after.
+
+
+\textbf{OLD STUFF BELOW - TO BE REVISED}
 
 Variables can be classified into those that:
 \begin{itemize}

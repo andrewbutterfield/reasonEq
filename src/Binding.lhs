@@ -33,6 +33,7 @@ import AST
 import VarData
 \end{code}
 
+\newpage
 \subsection{Binding Types}
 
 We have two parts to a binding,
@@ -72,7 +73,6 @@ emptyBinding :: Binding
 emptyBinding = BD (M.empty, M.empty)
 \end{code}
 
-\newpage
 \subsection{Binding Lookup}
 
 Binding lookup is very straightforward,
@@ -92,14 +92,55 @@ lookupLstBind (BD (_,lbinds)) lv
       Just lvbr  ->  return lvbr
 \end{code}
 
+\newpage
 \subsection{Binding Insertion}
 
 Insertion is more complicated,
-as we have to ensure that the variable classification
-matches the kind of thing to which it is being bound.
-Observation pattern variables can match variables and expressions,
-while expression and predicate pattern variables can only
-match expressions and predicates respectively.
+as we have to ensure that the pattern
+variable classification and temporality is compatible
+with the kind of thing to which it is being bound
+(Fig. \ref{fig:utp-perm-vbind}).
+
+\begin{figure}
+  \begin{center}
+    \begin{tabular}{|c|c|c|c|}
+      \hline
+      pattern & obs & expr & pred
+    \\\hline
+      cand. &&&
+    \\\hline
+      obs &&&
+    \\\hline
+      expr &&&
+    \\\hline
+      pred &&&
+    \\\hline
+    \end{tabular}
+  \end{center}
+  \caption{Permissible variable binding combinations}
+  \label{fig:utp-perm-vbind}
+\end{figure}
+
+
+Key ideas:
+\begin{itemize}
+  \item
+    Note we need to consider var-var matches
+    and var-term matches !
+  \item
+    Obs can bind to Obs, Expr
+  \item
+    Expr, Pred can only bind to Expr and Pred resp.
+  \item
+    In a scenario where $a$ binds to $b$,
+    if $a$ is dynamic,
+    then binding respects temporality
+    ($a \mapsto b, a' \mapsto b', a_m \mapsto b_n, \texttt{a} \mapsto \texttt{b}$).
+    Also any one of those bindings induces all the others.
+  \item
+    Basically static obs can bind any obs or expr,
+    while static expr (pred) can bind any expr (pred)
+\end{itemize}
 
 We have a design choice here: if we call the insertion function with
 an innappropriate variable/thing mix, do we simply return the binding

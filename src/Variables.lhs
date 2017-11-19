@@ -77,7 +77,7 @@ the variety of variables we expect to support.
     \\ timing & Var & Expr & Pred
     \\\hline
        Static/Rel & $g$ & $E$ & $P$
-    \\ ~~Text & \texttt{x} & \multicolumn{2}{c}{---}
+    \\ ~~Text & \texttt{x} & \texttt{e} & \texttt{p}
     \\ Before & $x$ & $e$ & $p$
     \\ During & $x_m$ & $e_m$ & $p_m$
     \\ After & $x'$ & $e'$ & $p'$
@@ -109,6 +109,7 @@ pattern ExprV = VE
 pattern PredV = VP
 \end{code}
 
+\newpage
 Within these classes, we can also classify variables further
 in terms of their ``temporality''.
 We describe behaviour in terms of relations between ``before''
@@ -120,7 +121,8 @@ and ``after'' observations over some appropriate time interval.
     that does not change
     over the lifetime of a program.
     Also included here are (Text)
-    variables that (statically) denote themselves (\texttt{x}).
+    variables that (statically) denote themselves if observational (\texttt{x}),
+    or expression (\texttt{e}) and predicate (\texttt{p}) texts, otherwise.
   \item[Before]
     variables that record the value of observations
     at the start of the time interval under consideration ($x$),
@@ -192,7 +194,7 @@ A variable is a triple: identifier, class, and temporality/text
 newtype Variable  = VR (Identifier, VarClass, VarWhen)
  deriving (Eq,Ord,Show,Read)
 
-pattern Vbl  idnt cls whn = VR (idnt, cls, whn)
+pattern Vbl idnt cls whn = VR (idnt, cls, whn)
 
 pattern ObsVar  i vw = VR (i, VO, vw)
 pattern ExprVar i vw = VR (i, VE, vw)

@@ -35,7 +35,7 @@ vDurRen  :: String -> Variable -> Variable
 lvDurRen :: String -> ListVar  -> ListVar
 gvDurRen :: String -> GenVar   -> GenVar
 
-vDurRen  n (Vbl i vw (Dynamic (During _)))  =  Vbl i vw $ Dynamic $ During n
-lvDurRen n (LVbl v is)                      =  LVbl (vDurRen n v) is
-gvDurRen n (StdVar v)                       =  StdVar $ vDurRen n v
-gvDurRen n (LstVar lv)                      =  LstVar $ lvDurRen n lv
+vDurRen  n (Vbl i vw (During _))  =  Vbl i vw $ During n
+lvDurRen n (LVbl v is)            =  LVbl (vDurRen n v) is
+gvDurRen n (StdVar v)             =  StdVar $ vDurRen n v
+gvDurRen n (LstVar lv)            =  LstVar $ lvDurRen n lv

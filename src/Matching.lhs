@@ -357,8 +357,8 @@ Otherwise we check if the pattern is
 bound, known, or arbitrary,
 and act accordingly.
 \begin{code}
-tvMatch vts bind cbvs pvbs tC tkP vP@(Vbl _ vw _)
- | vw == VarV                 =  fail "tvMatch: var-variable cannot match term."
+tvMatch vts bind cbvs pvbs tC tkP vP@(Vbl _ _ vt)
+ | vt == Textual              =  fail "tvMatch: var-variable cannot match term."
  | StdVar vP `S.member` pvbs  =  fail "tvMatch: bound pattern cannot match term."
  | vPmr /= UnknownVar         =  tkvMatch vts bind tC vPmr tkP vP
 \end{code}
@@ -516,12 +516,13 @@ that do not apply if the variable is bound.
 whenCompVar :: Variable -> Variable -> Bool
 whenCompVar (Vbl _ _ vkC) (Vbl _ _ vkP) = whenCompKind vkC vkP
 
-whenCompKind :: VarTime -> VarTime -> Bool  -- candidate, pattern
-whenCompKind _                    Static                =  True
-whenCompKind (Dynamic Before)     (Dynamic Before)      =  True
-whenCompKind (Dynamic (During _)) (Dynamic (During _))  =  True
-whenCompKind (Dynamic After)      (Dynamic After)       =  True
-whenCompKind _                    _                     =  False
+whenCompKind :: VarWhen -> VarWhen -> Bool  -- candidate, pattern
+whenCompKind _          Static      =  True
+whenCompKind Textual    Textual     =  True
+whenCompKind Before     Before      =  True
+whenCompKind (During _) (During _)  =  True
+whenCompKind After      After       =  True
+whenCompKind _          _           =  False
 \end{code}
 
 Now, onto variable matching:
@@ -1046,10 +1047,9 @@ whenPartition :: VarSet -> (VarSet,VarSet,VarSet,VarSet)
 whenPartition vs = (vsStatic,vsBefore,vsDuring,vsAfter)
  where
   isStatic gv  =  timeGVar gv == Static
-  isBefore gv  =  timeGVar gv == Dynamic Before
-  isAfter gv   =  timeGVar gv == Dynamic After
-  isDuring gv  =  case timeGVar gv of
-                    Dynamic (During _) -> True ; _ -> False
+  isBefore gv  =  timeGVar gv == Before
+  isAfter gv   =  timeGVar gv == After
+  isDuring gv  =  case timeGVar gv of During _ -> True ; _ -> False
   (vsStatic,vs1)      =  S.partition isStatic vs
   (vsBefore,vs2)      =  S.partition isBefore vs1
   (vsDuring,vsAfter)  =  S.partition isDuring vs2

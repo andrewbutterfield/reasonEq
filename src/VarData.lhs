@@ -356,8 +356,8 @@ checkLVarListMap lv vl
 We neutralise a \texttt{During} variable by setting the subscript string to
 empty.
 \begin{code}
-neutralD (LVbl (Vbl i vw (Dynamic (During _))) is)
-             =  LVbl (Vbl i vw (Dynamic (During ""))) is
+neutralD (LVbl (Vbl i vw (During _)) is)
+             =  LVbl (Vbl i vw (During "")) is
 neutralD lv  =  lv
 \end{code}
 
@@ -418,7 +418,7 @@ and the others.
 \begin{code}
 lookupLVarTable :: VarTable -> ListVar -> LstVarMatchRole
 
-lookupLVarTable (VD (_,_,dtable)) lvar@(LVbl (Vbl _ _ (Dynamic (During s ))) _)
+lookupLVarTable (VD (_,_,dtable)) lvar@(LVbl (Vbl _ _ (During s )) _)
  = case M.lookup (neutralD lvar) dtable of
      Nothing    ->  UL
      Just lvmr  ->  lvmrMap (specialiseD s) lvmr
@@ -442,10 +442,10 @@ Once we have looked up the table with a neutralised list-variable,
 we want to replace all the empty-string subscripts
 with that associated with the list-variable actually being looked up.
 \begin{code}
-specialiseD s (StdVar (Vbl id vw (Dynamic (During _))))
- = StdVar $ Vbl id vw $ Dynamic $ During s
-specialiseD s (LstVar (LVbl (Vbl id vw (Dynamic (During _))) is))
- = LstVar (LVbl (Vbl id vw $ Dynamic $ During s) is)
+specialiseD s (StdVar (Vbl id vw (During _)))
+ = StdVar $ Vbl id vw $ During s
+specialiseD s (LstVar (LVbl (Vbl id vw (During _)) is))
+ = LstVar (LVbl (Vbl id vw $ During s) is)
 specialiseD _ gv = gv
 \end{code}
 

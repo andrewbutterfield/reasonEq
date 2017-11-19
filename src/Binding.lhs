@@ -129,7 +129,6 @@ Compatible var.-var. bindings:
 \begin{code}
 compatibleVV (ObsVar _ _) (ObsVar _ _) = True
 compatibleVV (ObsVar _ _) (ExprVar _ _) = True
-compatibleVV (VarVar _ _) (VarVar _ _) = True
 compatibleVV (ExprVar _ _) (ExprVar _ _) = True
 compatibleVV (PredVar _ _) (PredVar _ _) = True
 compatibleVV _ _  = False

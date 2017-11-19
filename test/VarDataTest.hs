@@ -19,10 +19,10 @@ import VarData
 i = ObsVar  (fromJust $ ident "i") Static
 j = ObsVar  (fromJust $ ident "j") Static
 k = ObsVar  (fromJust $ ident "k") Static
-v = ObsVar  (fromJust $ ident "v") (Dynamic Before)
-e = ExprVar (fromJust $ ident "e") (Dynamic Before)
+v = ObsVar  (fromJust $ ident "v") Before
+e = ExprVar (fromJust $ ident "e") Before
 len = ExprVar (fromJust $ ident "len") Static
-p = PredVar (fromJust $ ident "P") (Dynamic Before)
+p = PredVar (fromJust $ ident "P") Before
 pT = PredVar (fromJust $ ident "T") Static
 
 -- -----------------------------------------------------------------------------

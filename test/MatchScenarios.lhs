@@ -74,6 +74,11 @@ Here is our initial set of scenarios:
     A simple form of a simple simultaneous assignment!
 \end{description}
 
+\textbf{
+NEED AND EXAMPLE OF AN OPERATIONAL SEMANTICS RULE
+THAT REQUIRES MATCHING AGAINST ``PROGRAM TEXTS.''
+}
+
 \subsection{Pre-defined Values and Builders}
 
 \subsubsection{Pre-defined Table Builders}

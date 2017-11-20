@@ -4,6 +4,7 @@ import Test.Framework as TF (defaultMain, Test)
 import LexBase
 import Variables
 import AST
+import Binding
 import Syntax
 import Builder
 import VarDataTest
@@ -18,6 +19,7 @@ tests
  =  int_tst_LexBase
  ++ int_tst_Variables
  ++ int_tst_AST
+ ++ int_tst_Binding
  ++ int_tst_Syntax
  ++ int_tst_Builder
  ++ tst_VarData

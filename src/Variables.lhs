@@ -10,9 +10,9 @@ module Variables
  ( VarClass
  , pattern ObsV, pattern ExprV, pattern PredV
  , VarWhen
- , pattern Static, pattern Textual
- , pattern Before, pattern During, pattern After
- , isDuring
+ , pattern Static
+ , pattern Before, pattern During, pattern After, pattern Textual
+ , isDynamic, isDuring
  , Variable
  , pattern Vbl
  , pattern ObsVar, pattern ExprVar, pattern PredVar
@@ -77,10 +77,10 @@ the variety of variables we expect to support.
     \\ timing & Var & Expr & Pred
     \\\hline
        Static/Rel & $g$ & $E$ & $P$
-    \\ ~~Text & \texttt{x} & \texttt{e} & \texttt{p}
     \\ Before & $x$ & $e$ & $p$
     \\ During & $x_m$ & $e_m$ & $p_m$
     \\ After & $x'$ & $e'$ & $p'$
+    \\ Textual & \texttt{x} & \texttt{e} & \texttt{p}
     \end{tabular}
   \end{center}
   \caption{UTP variable varieties}
@@ -120,9 +120,6 @@ and ``after'' observations over some appropriate time interval.
     between before- and after-values ($E$,$P$),
     that does not change
     over the lifetime of a program.
-    Also included here are (Text)
-    variables that (statically) denote themselves if observational (\texttt{x}),
-    or expression (\texttt{e}) and predicate (\texttt{p}) texts, otherwise.
   \item[Before]
     variables that record the value of observations
     at the start of the time interval under consideration ($x$),
@@ -137,24 +134,32 @@ and ``after'' observations over some appropriate time interval.
     or terms defined at such in-between states ($e_m,p_m$.).
     These are typically required when defining
     sequential composition.
+  \item[Textual]
+    variables that denote themselves if observational (\texttt{x}),
+    or expression (\texttt{e}) and predicate (\texttt{p}) texts, otherwise.
 \end{description}
 \begin{code}
 data VarWhen -- Variable role
-  = WS -- Static
-  | WT -- Text
-  | WB -- Before (pre)
-  | WD String -- During (intermediate)
-  | WA -- After (post)
+  = WS         --  Static
+  | WB         --  Before (pre)
+  | WD String  --  During (intermediate)
+  | WA         --  After (post)
+  | WT         --  Textual
   deriving (Eq, Ord, Show, Read)
 
 pattern Static = WS
-pattern Textual = WT
 pattern Before = WB
 pattern During n = WD n
 pattern After  = WA
+pattern Textual = WT
+\end{code}
 
-isDuring (During _)  =  True
-isDuring _           =  False
+Textual variables are considered dynamic
+as the generally have associated before, during and after dynamic observations.
+\begin{code}
+isDynamic, isDuring :: VarWhen -> Bool
+isDynamic Static      =  False  ; isDynamic _  = True
+isDuring  (During _)  =  True   ; isDuring  _  =  False
 \end{code}
 
 \subsubsection{More about variables}

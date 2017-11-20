@@ -21,10 +21,16 @@ module Binding
 , bindLVarToVSet
 , bindGVarToGVar
 , bindGVarToVList
+, int_tst_Binding
 ) where
---import Data.Maybe (fromJust)
+import Data.Maybe (fromJust)
 import qualified Data.Map as M
 import qualified Data.Set as S
+
+import Test.HUnit
+import Test.Framework as TF (testGroup, Test)
+--import Test.Framework as TF (defaultMain, testGroup, Test)
+import Test.Framework.Providers.HUnit (testCase)
 
 --import Utilities
 import LexBase
@@ -98,49 +104,78 @@ lookupLstBind (BD (_,lbinds)) lv
 Insertion is more complicated,
 as we have to ensure that the pattern
 variable classification and temporality is compatible
-with the kind of thing to which it is being bound
-(Fig. \ref{fig:utp-perm-vbind}).
+with the kind of thing to which it is being bound.
 
+
+Basically observation variables can be bound to both observation
+and expression variables,
+while expression and predicate variables can only be bound to
+variables of the same class
+(Fig. \ref{fig:utp-perm-class-bind}).
 \begin{figure}
   \begin{center}
     \begin{tabular}{|c|c|c|c|}
       \hline
-      pattern & obs & expr & pred
+       pattern: & \texttt{ObsV} & \texttt{ExprV} & \texttt{PredV}
+    \\ $\downarrow$ &&&
+    \\ \underline{candidate} &&&
     \\\hline
-      cand. &&&
+       \texttt{ObsV} & Yes & No &  No
     \\\hline
-      obs &&&
+       \texttt{ExprV} & Yes & Yes & No
     \\\hline
-      expr &&&
-    \\\hline
-      pred &&&
+       \texttt{PredV} & No & No & Yes
     \\\hline
     \end{tabular}
+  \caption{Permissible variable class binding combinations. }
+  \label{fig:utp-perm-class-bind}
   \end{center}
-  \caption{Permissible variable binding combinations}
-  \label{fig:utp-perm-vbind}
 \end{figure}
+\begin{code}
+validVarClassBinding :: VarClass -> VarClass -> Bool
+validVarClassBinding ObsV  ObsV   =  True
+validVarClassBinding ObsV  ExprV  =  True
+validVarClassBinding ExprV ExprV  =  True
+validVarClassBinding PredV PredV  =  True
+validVarClassBinding _     _      =  False
+\end{code}
 
+As far as temporality goes,
+Static can bind to anything except Textual,
+Textual can only bind to Textual \emph{variables},
+and other dynamics can only bind to the same temporality
+(Fig. \ref{fig:utp-perm-time-bind}).
+\begin{figure}
+  \begin{center}
+    \begin{tabular}{|c|c|l|}
+      \hline
+      pattern && allowed candidates
+    \\\hline
+       \texttt{Static}
+       &$\mapsto$&
+       \texttt{Static}, \texttt{Before}, \texttt{During}, \texttt{After}
+    \\\hline
+       $d$ &$\mapsto$&
+       $d$, for $d$ in
+       \texttt{Before}, \texttt{During}, \texttt{After}, \texttt{Textual}
+    \\\hline
+    \end{tabular}
+  \caption{Permissible variable temporality binding combinations. }
+  \label{fig:utp-perm-time-bind}
+  \end{center}
+\end{figure}
+In a scenario where $a$ binds to $b$,
+if $a$ is dynamic,
+then binding respects temporality
+($a \mapsto b, a' \mapsto b', a_m \mapsto b_n, \texttt{a} \mapsto \texttt{b}$).
+Also any one of those bindings induces all the others.
+\begin{code}
+validVarTimeBinding :: VarWhen -> VarWhen -> Bool
+validVarTimeBinding Static Textual  =  False
+validVarTimeBinding Static _        =  True
+validVarTimeBinding pwhen  cwhen    =  pwhen == cwhen
+\end{code}
 
-Key ideas:
-\begin{itemize}
-  \item
-    Note we need to consider var-var matches
-    and var-term matches !
-  \item
-    Obs can bind to Obs, Expr
-  \item
-    Expr, Pred can only bind to Expr and Pred resp.
-  \item
-    In a scenario where $a$ binds to $b$,
-    if $a$ is dynamic,
-    then binding respects temporality
-    ($a \mapsto b, a' \mapsto b', a_m \mapsto b_n, \texttt{a} \mapsto \texttt{b}$).
-    Also any one of those bindings induces all the others.
-  \item
-    Basically static obs can bind any obs or expr,
-    while static expr (pred) can bind any expr (pred)
-\end{itemize}
 
 We have a design choice here: if we call the insertion function with
 an innappropriate variable/thing mix, do we simply return the binding
@@ -256,4 +291,44 @@ bindGVarToVList :: Monad m => GenVar -> VarList -> Binding -> m Binding
 bindGVarToVList (LstVar lv) vl binds = bindLVarToVList lv vl binds
 bindGVarToVList (StdVar pv) [StdVar cv] binds = bindVarToVar pv cv binds
 bindGVarToVList _ _ _ = fail "bindGVarToVList: invalid gvar. -> vlist binding."
+\end{code}
+
+\newpage
+\subsection{Binding Internal Tests}
+
+\begin{code}
+int_tst_Binding :: [TF.Test]
+int_tst_Binding
+ = [tst_bind_VarToVar]
+
+
+tst_bind_VarToVar :: TF.Test
+
+osg = ObsVar (fromJust $ ident "g") Static
+osin = ObsVar (fromJust $ ident "in") Static
+osout = ObsVar (fromJust $ ident "out") Static
+
+v = fromJust $ ident "v"
+obv = ObsVar v Before ; odv = ObsVar v (During "m") ; oav = ObsVar v After
+otv = ObsVar v Textual
+x = fromJust $ ident "x"
+obx = ObsVar x Before  ; odx = ObsVar x (During "m") ; oax = ObsVar x After
+otx = ObsVar x Textual
+
+
+tst_bind_VarToVar
+ = testGroup "bind Var to Var"
+    [ testCase "Obs-Static g |-> in -- should succeed"
+        ( bindVarToVar osg osin emptyBinding
+          @?= Just (BD (M.fromList [(osg,BV osin)], M.empty)) )
+    , testCase "Obs-Before v |-> x -- should succeed, with dynamic inducing"
+        ( bindVarToVar obv obx emptyBinding
+          @?= Just (BD (M.fromList [ (obv,BV obx), (odv,BV odx)
+                                   , (oav,BV oax), (otv,BV otx)
+                                   ], M.empty)) )
+    , testCase "Static conflict  g,g |-> in,out -- should fail"
+        ( ( bindVarToVar osg osin $
+                         fromJust $ bindVarToVar osg osout $ emptyBinding )
+           @?= Nothing )
+    ]
 \end{code}

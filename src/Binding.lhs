@@ -7,20 +7,18 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Binding
-( VarBindRange
-, pattern BindVar, pattern BindTerm
-, LstVarBindRange
-, pattern BindList, pattern BindSet
+( VarBind(..)
+, LstVarBind(..)
 , Binding
 , emptyBinding
-, lookupBind
-, lookupLstBind
 , bindVarToVar
 , bindVarToTerm
 , bindLVarToVList
 , bindLVarToVSet
 , bindGVarToGVar
 , bindGVarToVList
+, lookupBind
+, lookupLstBind
 , int_tst_Binding
 ) where
 import Data.Maybe (fromJust)
@@ -28,8 +26,7 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 
 import Test.HUnit
-import Test.Framework as TF (testGroup, Test)
---import Test.Framework as TF (defaultMain, testGroup, Test)
+import Test.Framework as TF (defaultMain, testGroup, Test)
 import Test.Framework.Providers.HUnit (testCase)
 
 --import Utilities
@@ -39,73 +36,19 @@ import AST
 import VarData
 \end{code}
 
-\newpage
-\subsection{Binding Types}
+\subsection{Introduction}
 
-We have two parts to a binding,
-one for variables, the other for list-variables.
-The first part maps a variable to either a variable or a term
-of the appropriate form.
-\begin{code}
-data VarBindRange
-  = BV Variable
-  | BT Term
-  deriving (Eq, Ord, Show, Read)
-
-pattern BindVar  v = BV v
-pattern BindTerm t = BT t
-
-type VarBind = M.Map Variable VarBindRange
-\end{code}
-
-The other part maps a list variable to a list or set of variables.
-\begin{code}
-data LstVarBindRange
- = BL VarList
- | BS VarSet
- deriving (Eq, Ord, Show, Read)
-
-pattern BindList vl = BL vl
-pattern BindSet  vs = BS vs
-
-type ListVarBind = M.Map ListVar LstVarBindRange
-\end{code}
-
-We put these together:
-\begin{code}
-newtype Binding = BD (VarBind, ListVarBind) deriving (Eq, Show, Read)
-
-emptyBinding :: Binding
-emptyBinding = BD (M.empty, M.empty)
-\end{code}
-
-\subsection{Binding Lookup}
-
-Binding lookup is very straightforward,
-with the minor wrinkle that we want to do it
-in a general monadic setting.
-\begin{code}
-lookupBind :: Monad m => Binding -> Variable -> m VarBindRange
-lookupBind (BD (vbinds,_)) v
-  = case M.lookup v vbinds of
-      Nothing   ->  fail ("lookupBind: Variable "++show v++" not found.")
-      Just vbr  ->  return vbr
-
-lookupLstBind :: Monad m => Binding -> ListVar -> m LstVarBindRange
-lookupLstBind (BD (_,lbinds)) lv
-  = case M.lookup lv lbinds of
-      Nothing    ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
-      Just lvbr  ->  return lvbr
-\end{code}
-
-\newpage
-\subsection{Binding Insertion}
-
-Insertion is more complicated,
-as we have to ensure that the pattern
-variable classification and temporality is compatible
-with the kind of thing to which it is being bound.
-
+Bindings are the result of matching,
+mapping pattern variables to corresponding candidate variables or terms.
+From the outside a binding has two mappings:
+\begin{itemize}
+  \item \texttt{Variable} to \texttt{Variable} or \texttt{Term}.
+  \item \texttt{ListVar} to \texttt{VarList} or \texttt{VarSet}.
+\end{itemize}
+However,
+we have a number of constraints regarding compatibilty
+between pattern variables  and their corresponding candidate bindings,
+based on variable class and temporality.
 
 Basically observation variables can be bound to both observation
 and expression variables,
@@ -176,38 +119,129 @@ validVarTimeBinding Static _        =  True
 validVarTimeBinding pwhen  cwhen    =  pwhen == cwhen
 \end{code}
 
+Similar rules apply to list variables.
 
-We have a design choice here: if we call the insertion function with
-an innappropriate variable/thing mix, do we simply return the binding
-unaltered, or do we fail?
-We shall adopt the principle of failing in a general monadic setting,
-noting however that the matching code we develop
-should never fail in this way.
+\newpage
+\subsection{Binding Types}
+
+\subsubsection{Binding \texttt{Variable} to \texttt{Variable} or \texttt{Term}}
+
+Given that any binding of a dynamic variable
+requires bindings for all of its temporal variants,
+we avoid generating four such bindings, by binding from
+the variable identifier to a variable that is either \texttt{Static}
+or \texttt{During}.
+If binding to a term, we add in a \texttt{VarWhen} component
+that will serve the same purpose.
+The map lookup operation can use this information to re-constitute
+the appropriate variable or term.
+\begin{code}
+data VarBindRange
+  = BV Variable
+  | BT ( VarWhen -- need to know temporality of pattern variable
+       , Term )
+  deriving (Eq, Ord, Show, Read)
+
+type VarBinding = M.Map Identifier VarBindRange
+\end{code}
+We return just the variable or term from a lookup:
+\begin{code}
+data VarBind
+  = BindVar Variable | BindTerm Term deriving Show
+\end{code}
+
+\subsubsection{Binding \texttt{ListVar} to \texttt{VarList} or \texttt{VarSet}}
+
+A bit like the binding to terms for variables above,
+here we need to track if the temporality of the list variable.
+\begin{code}
+data LstVarBindRange
+ = BL VarWhen VarList
+ | BS VarWhen VarSet
+ deriving (Eq, Ord, Show, Read)
+
+type ListVarBinding = M.Map ListVar LstVarBindRange
+\end{code}
+We return just the variable list or set from a lookup:
+\begin{code}
+data LstVarBind
+  = BindList VarList | BindSet VarSet deriving Show
+\end{code}
+
+We put these together:
+\begin{code}
+newtype Binding = BD (VarBinding, ListVarBinding) deriving (Eq, Show, Read)
+
+emptyBinding :: Binding
+emptyBinding = BD (M.empty, M.empty)
+\end{code}
+
+\newpage
+\subsection{Binding Insertion}
+
+If a variable is already present,
+then the new binding must be the same,
+otherwise we fail.
 
 \subsubsection{Binding Variable to Variable}
 
-Variables can only bind to variables with the same
-
 \begin{code}
 bindVarToVar :: Monad m => Variable -> Variable -> Binding -> m Binding
-bindVarToVar pv cv (BD (vbinds,lbinds))
- | compatibleVV pv cv
-    = return $ BD (M.insert pv (BV cv) vbinds,lbinds)
- | otherwise
-    = fail $ unlines
-        [ "bindVarToVar: incompatible variables"
-        , "pv = " ++ show pv
-        , "cv = " ++ show cv
-        ]
 \end{code}
 
-Compatible var.-var. bindings:
+
+A \texttt{Static} variable can bind to
+any non-\texttt{Textual} thing in the appropriate class.
 \begin{code}
-compatibleVV (ObsVar _ _) (ObsVar _ _) = True
-compatibleVV (ObsVar _ _) (ExprVar _ _) = True
-compatibleVV (ExprVar _ _) (ExprVar _ _) = True
-compatibleVV (PredVar _ _) (PredVar _ _) = True
-compatibleVV _ _  = False
+bindVarToVar (Vbl v vc Static) cvar@(Vbl x xc xw) binds
+ | xw == Textual  =  fail "bindVarToVar: Static cannot bind to Textual"
+ | validVarClassBinding vc xc
+                  =  insertVV v cvar binds
+ | otherwise      =  fail "bindVarToVar: incompatible variable classes"
+\end{code}
+
+A \texttt{During} variable can only bind to a \texttt{During} variable in the appropriate class.
+One might expect us to be liberal here,
+but an attempt by the matcher to do this is an error,
+so we catch it here.
+\begin{code}
+bindVarToVar (Vbl v vc (During _)) cvar@(Vbl x xc (During _)) binds
+ | validVarClassBinding vc xc
+              =  insertVV v cvar binds
+ | otherwise  =  fail "bindVarToVar: incompatible variables"
+\end{code}
+
+A dynamic variable can only bind to a dynamic variable of the same
+temporality in the appropriate class.
+Here we construct a \texttt{During} instance with an empty subscript.
+\begin{code}
+bindVarToVar (Vbl  v vc vw) (Vbl x xc xw) binds
+ | vw /= xw   =  fail "bindVarToVar: different temporalities"
+ | validVarClassBinding vc xc
+              =  insertVV v (Vbl x xc $ During "") binds
+ | otherwise  =  fail "bindVarToVar: incompatible variables"
+\end{code}
+
+The insertion function first checks to see if the pattern variable
+is already bound.
+\begin{code}
+insertVV :: Monad m => Identifier -> Variable -> Binding -> m Binding
+insertVV i v (BD (vbinds,lbinds))
+  = case M.lookup i vbinds of
+      Nothing  ->  return $ BD (M.insert i (BV v) vbinds, lbinds)
+      Just (BV w) ->
+        if compatibleVV v w
+        then return $ BD (M.insert i (BV v) vbinds, lbinds)
+        else fail "bindVarToVar: variable already bound to different variable."
+      _ -> fail "bindVarToVar: variable already bound to term."
+\end{code}
+
+A pre-existing binding can only differ from one being added
+if they are both \texttt{During}, but the pre-existing one has
+an empty subscript, meaning it was induced.
+\begin{code}
+compatibleVV (Vbl v vc (During _)) (Vbl w wc (During "")) = v == w && vc == wc
+compatibleVV v w  = v == w
 \end{code}
 
 \newpage
@@ -294,6 +328,27 @@ bindGVarToVList _ _ _ = fail "bindGVarToVList: invalid gvar. -> vlist binding."
 \end{code}
 
 \newpage
+\subsection{Binding Lookup}
+
+Binding lookup is very straightforward,
+with the minor wrinkle that we want to do it
+in a general monadic setting.
+\begin{code}
+lookupBind :: Monad m => Binding -> Variable -> m VarBindRange
+lookupBind (BD (vbinds,_)) v
+  = case M.lookup v vbinds of
+      Nothing   ->  fail ("lookupBind: Variable "++show v++" not found.")
+      Just vbr  ->  return vbr
+
+lookupLstBind :: Monad m => Binding -> ListVar -> m LstVarBindRange
+lookupLstBind (BD (_,lbinds)) lv
+  = case M.lookup lv lbinds of
+      Nothing    ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
+      Just lvbr  ->  return lvbr
+\end{code}
+
+
+\newpage
 \subsection{Binding Internal Tests}
 
 \begin{code}
@@ -304,17 +359,20 @@ int_tst_Binding
 
 tst_bind_VarToVar :: TF.Test
 
+-- naming concention ct<varname>
+-- c = o (ObsV), e (ExprV), p (PredV)
+-- t = s (Static), b (Before), d (During), a (After), t (Textual)
+
 osg = ObsVar (fromJust $ ident "g") Static
 osin = ObsVar (fromJust $ ident "in") Static
 osout = ObsVar (fromJust $ ident "out") Static
 
 v = fromJust $ ident "v"
-obv = ObsVar v Before ; odv = ObsVar v (During "m") ; oav = ObsVar v After
-otv = ObsVar v Textual
+obv = ObsVar v Before ; oav = ObsVar v After ; otv = ObsVar v Textual
+odv = ObsVar v (During "") ; odvm = ObsVar v (During "m")
 x = fromJust $ ident "x"
-obx = ObsVar x Before  ; odx = ObsVar x (During "m") ; oax = ObsVar x After
-otx = ObsVar x Textual
-
+obx = ObsVar x Before  ; oax = ObsVar x After ; otx = ObsVar x Textual
+odx = ObsVar x (During "") ; odxm = ObsVar x (During "m")
 
 tst_bind_VarToVar
  = testGroup "bind Var to Var"
@@ -331,4 +389,6 @@ tst_bind_VarToVar
                          fromJust $ bindVarToVar osg osout $ emptyBinding )
            @?= Nothing )
     ]
+
+tstBVV = defaultMain [tst_bind_VarToVar]
 \end{code}

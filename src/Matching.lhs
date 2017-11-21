@@ -1358,12 +1358,6 @@ lvlvMatchCheck vts bind cbvs pbvs gvsC rlvP tlvP
      Just (BindSet bvsC) ->
       let gvsB = S.filter ((inset bvsC).fst) gvsC
       in bindLVarToVSet rlvP (S.map snd gvsB) bind
-     _ -> fail $ unlines
-           [ "lvlvMatchCheck: lookup tlvP contains StdVar, SHOULD NOT OCCUR!"
-           , "tlvP = " ++ show tlvP
-           , "bind(tlvP) = "
-              ++ show (lookupLstBind bind tlvP :: Maybe LstVarBindRange)
-           ]
  where
    inlist vl gv  =  gv   `elem`   vl
    inset  vs gv  =  gv `S.member` vs

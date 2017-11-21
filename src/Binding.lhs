@@ -155,25 +155,26 @@ type VarBinding = M.Map Identifier VarBindRange
 We return just the variable or term from a lookup:
 \begin{code}
 data VarBind
-  = BindVar Variable | BindTerm Term deriving Show
+  = BindVar Variable | BindTerm Term deriving (Eq, Show)
 \end{code}
 
 \subsubsection{Binding \texttt{ListVar} to \texttt{VarList} or \texttt{VarSet}}
 
-A bit like the binding to terms for variables above,
-here we need to track if the temporality of the list variable.
+We bibd to either a list or set of variables,
+and record the temporality (\texttt{Static} or \texttt{During}).
+We use the variable identifier and the list of `subtracted` identifiers
+as the map key.
 \begin{code}
 data LstVarBindRange
  = BL VarWhen VarList
  | BS VarWhen VarSet
  deriving (Eq, Ord, Show, Read)
 
-type ListVarBinding = M.Map ListVar LstVarBindRange
+type ListVarBinding = M.Map (Identifier,[Identifier]) LstVarBindRange
 \end{code}
 We return just the variable list or set from a lookup:
 \begin{code}
-data LstVarBind
-  = BindList VarList | BindSet VarSet deriving Show
+data LstVarBind = BindList VarList | BindSet VarSet deriving (Eq, Show)
 \end{code}
 
 We put these together:
@@ -405,14 +406,20 @@ Expression/Predicate list-variables can only bind to lists
 of the same class of general variable.
 \begin{code}
 bindLVarToVList :: Monad m => ListVar -> VarList -> Binding -> m Binding
-bindLVarToVList lv vl (BD (vbinds,lbinds))
- | isObsLVar lv && all isObsOrExpr vl
-                               = return $ BD (vbinds,M.insert lv (BL vl) lbinds)
- | isExprLVar lv && all isExprGVar vl
-                               = return $ BD (vbinds,M.insert lv (BL vl) lbinds)
- | isPredLVar lv && all isPredGVar vl
-                               = return $ BD (vbinds,M.insert lv (BL vl) lbinds)
+bindLVarToVList lv@(LVbl (Vbl i _ vw) is) vl binds
+ | isObsLVar lv && all isObsOrExpr vl  =  insertLL i is vw vl binds
+ | isExprLVar lv && all isExprGVar vl  =  insertLL i is vw vl binds
+ | isPredLVar lv && all isPredGVar vl  =  insertLL i is vw vl binds
 bindLVarToVList _ _ _ = fail "bindLVarToVList: invalid lvar. -> vlist binding."
+\end{code}
+
+\textbf{We need \texttt{insertLL} to check for pre-existing entries
+and compatibility !!!}
+\begin{code}
+insertLL :: Monad m => Identifier -> [Identifier] -> VarWhen -> VarList
+         -> Binding -> m Binding
+insertLL i is vw vl (BD (vbinds,lbinds))
+ = return $ BD (vbinds, M.insert (i,is) (BL vw vl) lbinds)
 \end{code}
 
 \subsubsection{Binding List-Variables to Variable-Sets}
@@ -423,15 +430,20 @@ Expression/Predicate list-variables can only bind to sets
 of the same class of general variable.
 \begin{code}
 bindLVarToVSet :: Monad m => ListVar -> VarSet -> Binding -> m Binding
-bindLVarToVSet lv vs (BD (vbinds,lbinds))
- | isObsLVar lv && all isObsOrExpr vl
-                               = return $ BD (vbinds,M.insert lv (BS vs) lbinds)
- | isExprLVar lv && all isExprGVar vl
-                               = return $ BD (vbinds,M.insert lv (BS vs) lbinds)
- | isPredLVar lv && all isPredGVar vl
-                               = return $ BD (vbinds,M.insert lv (BS vs) lbinds)
- where vl = S.toList vs
+bindLVarToVSet lv@(LVbl (Vbl i _ vw) is) vs binds
+ | isObsLVar lv && all isObsOrExpr vs  =  insertLS i is vw vs binds
+ | isExprLVar lv && all isExprGVar vs  =  insertLS i is vw vs binds
+ | isPredLVar lv && all isPredGVar vs  =  insertLS i is vw vs binds
 bindLVarToVSet _ _ _ = fail "bindLVarToVSet: invalid lvar. -> vset binding."
+\end{code}
+
+\textbf{We need \texttt{insertLL} to check for pre-existing entries
+and compatibility !!!}
+\begin{code}
+insertLS :: Monad m => Identifier -> [Identifier] -> VarWhen -> VarSet
+         -> Binding -> m Binding
+insertLS i is vw vs (BD (vbinds,lbinds))
+ = return $ BD (vbinds, M.insert (i,is) (BS vw vs) lbinds)
 \end{code}
 
 \subsubsection{Binding General-Variables to General-Variables}
@@ -461,20 +473,24 @@ bindGVarToVList _ _ _ = fail "bindGVarToVList: invalid gvar. -> vlist binding."
 \subsection{Binding Lookup}
 
 Binding lookup is very straightforward,
-with the minor wrinkle that we want to do it
-in a general monadic setting.
+with the minor wrinkle that we need to ensure that
+any found \texttt{During} subscripts are modified to be the
+same as that of the variable being looked up
+(it will be a \texttt{During} variable itself in that case).
 \begin{code}
-lookupBind :: Monad m => Binding -> Variable -> m VarBindRange
-lookupBind (BD (vbinds,_)) v
-  = case M.lookup v vbinds of
-      Nothing   ->  fail ("lookupBind: Variable "++show v++" not found.")
-      Just vbr  ->  return vbr
+lookupBind :: Monad m => Binding -> Variable -> m VarBind
+lookupBind (BD (vbinds,_)) (Vbl i _ _)
+  = case M.lookup i vbinds of
+      Nothing        ->  fail ("lookupBind: Variable "++show v++" not found.")
+      Just (BV v)    ->  return $ BindVar  v -- sync temporality !
+      Just (BT _ t)  ->  return $ BindTerm t -- sync temporality !
 
-lookupLstBind :: Monad m => Binding -> ListVar -> m LstVarBindRange
-lookupLstBind (BD (_,lbinds)) lv
-  = case M.lookup lv lbinds of
-      Nothing    ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
-      Just lvbr  ->  return lvbr
+lookupLstBind :: Monad m => Binding -> ListVar -> m LstVarBind
+lookupLstBind (BD (_,lbinds)) lv@(LVbl (Vbl i _ _) is)
+  = case M.lookup (i,is) lbinds of
+     Nothing         ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
+     Just (BL _ vl)  ->  return $ BindList vl -- sync temporality !
+     Just (BS _ vs)  ->  return $ BindSet  vs -- sync temporality !
 \end{code}
 
 
@@ -493,6 +509,7 @@ tst_bind_VarToVar :: TF.Test
 -- c = o (ObsV), e (ExprV), p (PredV)
 -- t = s (Static), b (Before), d (During), a (After), t (Textual)
 
+g = fromJust $ ident "g"
 osg = ObsVar (fromJust $ ident "g") Static
 osin = ObsVar (fromJust $ ident "in") Static
 osout = ObsVar (fromJust $ ident "out") Static
@@ -502,18 +519,23 @@ obv = ObsVar v Before ; oav = ObsVar v After ; otv = ObsVar v Textual
 odv = ObsVar v (During "") ; odvm = ObsVar v (During "m")
 x = fromJust $ ident "x"
 obx = ObsVar x Before  ; oax = ObsVar x After ; otx = ObsVar x Textual
-odx = ObsVar x (During "") ; odxm = ObsVar x (During "m")
+odx = ObsVar x (During "")
+odxm = ObsVar x (During "m") ; odxn = ObsVar x (During "n")
 
 tst_bind_VarToVar
  = testGroup "bind Var to Var"
     [ testCase "Obs-Static g |-> in -- should succeed"
         ( bindVarToVar osg osin emptyBinding
-          @?= Just (BD (M.fromList [(osg,BV osin)], M.empty)) )
+          @?= Just (BD (M.fromList [(g,BV osin)], M.empty)) )
     , testCase "Obs-Before v |-> x -- should succeed, with dynamic inducing"
         ( bindVarToVar obv obx emptyBinding
-          @?= Just (BD (M.fromList [ (obv,BV obx), (odv,BV odx)
-                                   , (oav,BV oax), (otv,BV otx)
-                                   ], M.empty)) )
+          @?= Just (BD (M.fromList [(v,BV odx)], M.empty)) )
+    , testCase "Obs-Before v_m |-> x_m -- should succeed, with dynamic inducing"
+        ( bindVarToVar obv obx emptyBinding
+          @?= Just (BD (M.fromList [(v,BV odxm)], M.empty)) )
+    , testCase "Obs-Before v_m |-> x_n -- should succeed, with dynamic inducing"
+        ( bindVarToVar obv obx emptyBinding
+          @?= Just (BD (M.fromList [(v,BV odxn)], M.empty)) )
     , testCase "Static conflict  g,g |-> in,out -- should fail"
         ( ( bindVarToVar osg osin $
                          fromJust $ bindVarToVar osg osout $ emptyBinding )

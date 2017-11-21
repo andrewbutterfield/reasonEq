@@ -82,6 +82,15 @@ validVarClassBinding ExprV ExprV  =  True
 validVarClassBinding PredV PredV  =  True
 validVarClassBinding _     _      =  False
 \end{code}
+A similar predicate for binding to terms:
+\begin{code}
+validVarTermBinding :: VarClass -> TermKind -> Bool
+validVarTermBinding ObsV  (E _)  =  True
+validVarTermBinding ObsV  (E _)  =  True
+validVarTermBinding ExprV (E _)  =  True
+validVarTermBinding PredV P      =  True
+validVarTermBinding _     _      =  False
+\end{code}
 
 As far as temporality goes,
 Static can bind to anything except Textual,
@@ -138,8 +147,7 @@ the appropriate variable or term.
 \begin{code}
 data VarBindRange
   = BV Variable
-  | BT ( VarWhen -- need to know temporality of pattern variable
-       , Term )
+  | BT VarWhen Term -- need to know temporality of pattern variable.
   deriving (Eq, Ord, Show, Read)
 
 type VarBinding = M.Map Identifier VarBindRange
@@ -240,8 +248,9 @@ A pre-existing binding can only differ from one being added
 if they are both \texttt{During}, but the pre-existing one has
 an empty subscript, meaning it was induced.
 \begin{code}
-compatibleVV (Vbl v vc (During _)) (Vbl w wc (During "")) = v == w && vc == wc
-compatibleVV v w  = v == w
+compatibleVV :: Variable -> Variable -> Bool
+compatibleVV (Vbl v vc (During _)) (Vbl w wc (During ""))  =  v == w && vc == wc
+compatibleVV newvar                oldvar                  =  newvar == oldvar
 \end{code}
 
 \newpage
@@ -249,21 +258,142 @@ compatibleVV v w  = v == w
 
 An observation or expression variable can bind to an expression
 while a predicate variable can only bind to a predicate.
-If we are binding an observation to a term with variant \texttt{Var},
-we bind to the underlying variable.
 \begin{code}
 bindVarToTerm :: Monad m => Variable -> Term -> Binding -> m Binding
-bindVarToTerm pv@(ObsVar _ _) ct@(Var _ cv) (BD (vbinds,lbinds))
-  | isExpr ct  = return $ BD (M.insert pv (BV cv) vbinds,lbinds)
-bindVarToTerm pv@(ObsVar _ _) ct (BD (vbinds,lbinds))
-  | isExpr ct  = return $ BD (M.insert pv (BT ct) vbinds,lbinds)
-bindVarToTerm pv@(ExprVar _ _) ct (BD (vbinds,lbinds))
-  | isExpr ct  = return $ BD (M.insert pv (BT ct) vbinds,lbinds)
-bindVarToTerm pv@(PredVar _ _) ct (BD (vbinds,lbinds))
-  | isPred ct  = return $ BD (M.insert pv (BT ct) vbinds,lbinds)
-bindVarToTerm _ _ _ = fail "bindVarToTerm: invalid var. -> term binding."
 \end{code}
 
+If we are binding to a term with variant \texttt{Var},
+we pass over to \texttt{bindVarToVar}.
+\begin{code}
+bindVarToTerm pv ct@(Var _ cv) binds = bindVarToVar pv cv binds
+\end{code}
+
+A \texttt{Textual} pattern variable cannot bind to a term
+\begin{code}
+bindVarToTerm pv@(Vbl _ _ Textual) _ binds
+ = fail "bindVarToTerm: textual patterns not allowed.,"
+\end{code}
+
+Static patterns bind to anything in the appropriate class,
+as per Fig.\ref{fig:utp-perm-class-bind}.
+\begin{code}
+bindVarToTerm pv@(Vbl v vc Static) ct binds
+ | validVarTermBinding vc (termkind ct) = insertVT v Static ct binds
+ | otherwise = fail "bindVarToTerm: incompatible variable and term."
+\end{code}
+
+All remaining pattern cases are non-\texttt{Textual} dynamic variables.
+
+Dynamic observables cannot bind to terms.
+\begin{code}
+bindVarToTerm pv@(Vbl v ObsV _) ct binds
+ = fail "bindVarToTerm: dynamic observable cannot bind to term."
+\end{code}
+
+Dynamic expression variables can only bind to
+expression terms, all of whose dynamic variables have the same temporality.
+\begin{code}
+bindVarToTerm pv@(Vbl v ExprV vt) ct binds
+ | isPred ct  =  fail "bindVarToTerm: expr. variable cannot bind to predicate."
+ | vt `isTemporalityOf` ct  =  insertVT v vt ct binds
+ | otherwise  = fail "bindVarToTerm: expr.-var. to mixed temporality"
+\end{code}
+Dynamic predicate variables can only bind to
+predicate terms, all of whose dynamic variables have the same temporality.
+\begin{code}
+bindVarToTerm pv@(Vbl v PredV vt) ct binds
+ | isExpr ct  =  fail "bindVarToTerm: pred. variable cannot bind to expression."
+ | vt `isTemporalityOf` ct  =  insertVT v vt ct binds
+ | otherwise  = fail "bindVarToTerm: pred.-var. to mixed temporality"
+\end{code}
+
+Catch-all
+\begin{code}
+bindVarToTerm pv ct _
+ = error $ unlines
+     [ "bindVarToTerm: fell off end"
+     , "pv = " ++ show pv
+     , "ct = " ++ show ct ]
+\end{code}
+
+The insertion function cannot check to see if all dynamic variables
+in the term have the same temporality as the variable.
+This has to be done by the matcher, as it only needs to hold
+for ``known'' observation variables.
+
+First, it checks if the pattern variable
+is already bound.
+\begin{code}
+insertVT :: Monad m => Identifier -> VarWhen -> Term -> Binding -> m Binding
+insertVT i vw t (BD (vbinds,lbinds))
+  = case M.lookup i vbinds of
+      Nothing  ->  return $ BD (M.insert i (BT vw t) vbinds, lbinds)
+      Just (BT ww s) ->
+        if vw == ww && compatibleTT t s
+        then return $ BD (M.insert i (BT vw t) vbinds, lbinds)
+        else fail "bindVarToTerm: variable already bound to different variable."
+      _ -> fail "bindVarToTerm: variable already bound to variable."
+\end{code}
+
+Checking all dynamic variables in a term have the specified temporality:
+\begin{code}
+isTemporalityOf :: VarWhen -> Term -> Bool
+
+(During _) `isTemporalityOf` (Var _ (Vbl _ _ (During _)))  =  True
+dt `isTemporalityOf` (Var _ (Vbl _ _ vdt))                 =  dt == vdt
+
+dt `isTemporalityOf` (Cons _ _ ts)   =  all (isTemporalityOf dt) ts
+dt `isTemporalityOf` (Bind _ _ _ t)  =  dt `isTemporalityOf` t
+dt `isTemporalityOf` (Lam _ _ _ t)   =  dt `isTemporalityOf` t
+dt `isTemporalityOf` (Sub _ t sub)   =  all (isTemporalityOf dt) (t:termsof sub)
+ where termsof (Substn tsub _)       =  map snd $ S.toList tsub
+dt `isTemporalityOf` _               =  True
+\end{code}
+
+\newpage
+A pre-existing bound term can only differ from one being added
+if they both contain just\texttt{During} dynamic variables,
+and those in the pre-existing term have empty subscripts.
+In effect we have an equality check with one weakening,
+so that new \verb'(During \_)' is fine against old \verb'(During "")'.
+\begin{code}
+compatibleTT :: Term -> Term -> Bool
+
+compatibleTT (Var nk (Vbl ni nc (During _))) (Var ok (Vbl oi oc (During "")))
+  =  ni == oi && nc == oc && nk == ok
+
+compatibleTT (Cons nk ni nts) (Cons ok oi ots)
+  =  ni == oi && nk == ok && compTTs nts ots
+compatibleTT (Bind nk ni nvs nt) (Bind ok oi ovs ot)
+  =  ni == oi && nk == ok && nvs == ovs && compatibleTT nt ot
+compatibleTT (Lam nk ni nvl nt) (Lam ok oi ovl ot)
+  =  ni == oi && nk == ok && nvl == ovl && compatibleTT nt ot
+compatibleTT (Sub nk nt ns) (Sub ok ot os)
+  =  nk == ok && compatibleTT nt ot && compSS ns os
+compatibleTT (Iter nk ni np nlvs) (Iter ok oi op olvs)
+  =  np == op && ni == oi && nk == ok && nlvs == olvs
+
+compatibleTT t s  =  t == s
+
+compTTs :: [Term] -> [Term] -> Bool
+compTTs [] [] = True
+compTTs (_:_) [] = False
+compTTs [] (_:_) = False
+compTTs (nt:nts) (ot:ots) = compatibleTT nt ot && compTTs nts ots
+
+compSS :: Substn -> Substn -> Bool
+compSS (Substn ntsub nlvsub) (Substn otsub olvsub)
+  = nlvsub == olvsub && compTSTS ntsub otsub
+
+compTSTS :: TermSub -> TermSub -> Bool
+compTSTS ntsub otsub
+ = nvs == ovs && compTTs nts ots
+ where
+   (nvs,nts) = unzip $ S.toList ntsub
+   (ovs,ots) = unzip $ S.toList otsub
+\end{code}
+
+\newpage
 \subsubsection{Binding List-Variables to Variable-Lists}
 
 An observation list-variable can bind to a list that is

@@ -658,13 +658,20 @@ applyBindingsToLists' bind vlC' vlP' vlC (gP@(LstVar lvP):vlP)
     _ -> fail "vlMatch: list-variable bound to variable-set."
 \end{code}
 
-
+\newpage
 \paragraph{Find Standard Pattern-Variable Binding}
 Found \texttt{vP} bound to \texttt{vB}.
 Now need to search \texttt{vlC} for \texttt{vB}.
 \begin{code}
 findStdCandidate bind vlC' vlP' [] vB vlP
-  = fail "vlMatch: std-pattern var's binding not in candidate list"
+  = fail $ unlines
+      [ "vlMatch: std-pattern var's binding not in candidate list"
+      , "bind = " ++ show bind
+      , "vlC' = " ++ show vlC'
+      , "vlP' = " ++ show vlP'
+      , "vB = " ++ show vB
+      , "vlP = " ++ show vlP
+      ]
 findStdCandidate bind vlC' vlP' (gC@(StdVar vC):vlC) vB vlP
  | vC == vB  = applyBindingsToLists' bind vlC' vlP' vlC vlP
  | otherwise = findStdCandidate bind (gC:vlC') vlP' vlC vB vlP

@@ -7,11 +7,11 @@ import qualified Data.Set as S
 import Data.List (nub)
 
 import Test.HUnit
-import Test.Framework as TF (testGroup, Test)
---import Test.Framework as TF (defaultMain, testGroup, Test)
+import Test.Framework as TF (defaultMain, testGroup, Test)
 import Test.Framework.Providers.HUnit (testCase)
 --import Test.Framework.Providers.QuickCheck2 (testProperty)
 
+import Utilities
 import LexBase
 import Variables
 import AST
@@ -341,3 +341,5 @@ tst_Matching
       , tst_sMatch
       ]
     ]
+
+tstMatch = defaultMain tst_Matching

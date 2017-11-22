@@ -1,92 +1,47 @@
-
-vsMatch [vtS_Design] emptyBinding S.empty S.empty (vswrap [x,y,z]) (vswrap [vv] `S.union` lswrap [lS `less` [v]])
-
-
-v `assigned` ee
-
-C
-P
-( Id "implies" )
-[ V (E (TG (Id "B"))) (VR (Id "ok", VO, TD WB))
-, C
-  P
-  ( Id "land" )
-  [ V (E (TG (Id "B"))) (VR (Id "ok", VO, TD WA))
-  , C
-    P
-    ( Id "equal" )
-    [ V (E T) (VR (Id "v", VO, TD WA))
-    , V (E (TG (Id "Z"))) (VR (Id "e", VE, TD WB)) ]
-  , I
-    P
-    ( Id "land" )
-    ( Id "equal" )
-    [ LV (VR (Id "S", VO, TD WA), [Id "v"])
-    , LV (VR (Id "S", VO, TD WB), [Id "v"]) ] ] ]
-
-wy `assigned` e42
-
-C
-P
-( Id "implies" )
-[ V (E (TG (Id "B"))) (VR (Id "ok", VO, TD WB))
-, C
-  P
-  ( Id "land" )
-  [ V (E (TG (Id "B"))) (VR (Id "ok", VO, TD WA))
-  , C
-    P
-    ( Id "equal" )
-    [ V (E T) (VR (Id "y", VO, TD WA))
-    , K ( E (TG (Id "Z"))) ( VI 42 ) ]
-  , I
-    P
-    ( Id "land" )
-    ( Id "equal" )
-    [ LV (VR (Id "S", VO, TD WA), [Id "y"])
-    , LV (VR (Id "S", VO, TD WB), [Id "y"]) ] ] ]
+vlMatch [] bindPSi2CSi b0 b0 [cs1,cl1,cs2,cl2,cs3,cl3,cs4,cl4] [ps1,pl1,ps2,pl2,ps3,pl3,ps4,pl4]
 
 
-tMatch [vtS_Design] emptyBinding S.empty S.empty (wy `assigned` e42) (v `assigned` ee)
+vlMatch: std-pattern var's binding not in candidate list
 
+bind =
 BD
 ( fromList
-  [ ( VR (Id "e", VE, TD WB)
-    , BT (K (E (TG (Id "Z"))) (VI 42)) )
-  , ( VR (Id "ok", VO, TD WB)
-    , BV (VR (Id "ok", VO, TD WB)) )
-  , ( VR (Id "ok", VO, TD WA)
-    , BV (VR (Id "ok", VO, TD WA)) )
-  , ( VR (Id "v", VO, TD WA)
-    , BV (VR (Id "y", VO, TD WA)) ) ]
+  [ ( Id "ps1"
+    , BV (VR (Id "cs1", VO, WD "")) )
+  , ( Id "ps2"
+    , BV (VR (Id "cs2", VO, WD "")) )
+  , ( Id "ps3"
+    , BV (VR (Id "cs3", VO, WD "")) )
+  , ( Id "ps4"
+    , BV (VR (Id "cs4", VO, WD "")) ) ]
 , fromList
-  [ ( LV (VR (Id "S", VO, TD WB), [Id "v"])
-    , BL
-      [ GL (LV (VR (Id "S", VO, TD WA), [Id "y"]))
-      , GL (LV (VR (Id "S", VO, TD WB), [Id "y"])) ] )
-  , ( LV (VR (Id "S", VO, TD WA), [Id "v"])
-    , BL
-      [] ) ] )
+  [] )
+
+vlC' =
+[ GL (LV (VR (Id "cl4", VO, WB), []))
+, GV (VR (Id "cs4", VO, WB))
+, GL (LV (VR (Id "cl3", VO, WB), []))
+, GV (VR (Id "cs3", VO, WB))
+, GL (LV (VR (Id "cl2", VO, WB), []))
+, GV (VR (Id "cs2", VO, WB))
+, GL (LV (VR (Id "cl1", VO, WB), []))
+, GV (VR (Id "cs1", VO, WB)) ]
+
+vlP' = []
 
 
-bindVV gv gsy $ bindVT ge e42 $ bindVV gok gok $ bindVV gok' gok' $ bindLS (LstVar (lS  `less` [v])) (LstVar (lS  `less` [wy])) $ bindLS (LstVar (lS' `less` [v])) (LstVar (lS' `less` [wy])) $ emptyBinding
+vB = VR (Id "cs1",VO,WD "")
 
-BD
-( fromList
-  [ ( VR (Id "e", VE, TD WB)
-    , BT (K (E (TG (Id "Z"))) (VI 42)) )
-  , ( VR (Id "ok", VO, TD WB)
-    , BV (VR (Id "ok", VO, TD WB)) )
-  , ( VR (Id "ok", VO, TD WA)
-    , BV (VR (Id "ok", VO, TD WA)) )
-  , ( VR (Id "v", VV, TS)
-    , BV (VR (Id "y", VV, TS)) ) ]
-, fromList
-  [ ( LV (VR (Id "S", VO, TD WB), [Id "v"])
-    , BS
-      ( fromList
-        [ GL (LV (VR (Id "S", VO, TD WB), [Id "y"])) ] ) )
-  , ( LV (VR (Id "S", VO, TD WA), [Id "v"])
-    , BS
-      ( fromList
-        [ GL (LV (VR (Id "S", VO, TD WA), [Id "y"])) ] ) ) ] )
+
+vlP =
+[ GL (LV (VR (Id "pl1", VO, WB), []))
+, GV (VR (Id "ps2", VO, WB))
+, GL (LV (VR (Id "pl2", VO, WB), []))
+, GV (VR (Id "ps3", VO, WB))
+, GL (LV (VR (Id "pl3", VO, WB), []))
+, GV (VR (Id "ps4", VO, WB))
+, GL (LV (VR (Id "pl4", VO, WB), [])) ]
+
+
+
+-- end stop - do not delete !

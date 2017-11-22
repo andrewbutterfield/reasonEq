@@ -479,20 +479,57 @@ same as that of the variable being looked up
 (it will be a \texttt{During} variable itself in that case).
 \begin{code}
 lookupBind :: Monad m => Binding -> Variable -> m VarBind
-lookupBind (BD (vbinds,_)) (Vbl i _ _)
+lookupBind (BD (vbinds,_)) (Vbl i _ vw)
   = case M.lookup i vbinds of
       Nothing        ->  fail ("lookupBind: Variable "++show v++" not found.")
-      Just (BV v)    ->  return $ BindVar  v -- sync temporality !
-      Just (BT _ t)  ->  return $ BindTerm t -- sync temporality !
+      Just (BV v)    ->  return $ BindVar  $ varTempSync  vw v
+      Just (BT _ t)  ->  return $ BindTerm $ termTempSync vw t
 
 lookupLstBind :: Monad m => Binding -> ListVar -> m LstVarBind
-lookupLstBind (BD (_,lbinds)) lv@(LVbl (Vbl i _ _) is)
+lookupLstBind (BD (_,lbinds)) lv@(LVbl (Vbl i _ vw) is)
   = case M.lookup (i,is) lbinds of
      Nothing         ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
-     Just (BL _ vl)  ->  return $ BindList vl -- sync temporality !
-     Just (BS _ vs)  ->  return $ BindSet  vs -- sync temporality !
+     Just (BL _ vl)  ->  return $ BindList $ map   (gvarTempSync vw) vl
+     Just (BS _ vs)  ->  return $ BindSet  $ S.map (gvarTempSync vw) vs
 \end{code}
 
+We need to ensure that that the returned variable,
+which, if dynamic,  is stored in the binding as \texttt{During},
+matches the temporality of the variable being looked up.
+If the lookup variable is \texttt{Static}, then we eave the result alone.
+\begin{code}
+varTempSync Static        v             =  v
+varTempSync vw@(During m) (Vbl i vc bw@(During n))
+ | null n                               =  Vbl i vc vw
+ | otherwise                            =  Vbl i vc bw
+varTempSync vw            (Vbl i vc _)  =  Vbl i vc vw
+
+lvarTempSync vw (LVbl v is) = LVbl (varTempSync vw v) is
+
+gvarTempSync vw (StdVar v)   =  StdVar (varTempSync vw v)
+gvarTempSync vw (LstVar lv)  =  LstVar (lvarTempSync vw lv)
+
+ {- The use of fromJust below will always succeed,
+    because none of the smart constructors care about temporality,
+    and all we are doing is rebuilding something that got past them
+    in the first instance -}
+termTempSync vw t@(Var tk v@(Vbl i vc bw))
+ | bw == Static                 =  t
+ | otherwise                    =  fromJust $ var tk $ varTempSync vw v
+termTempSync vw (Cons tk i ts)     =  Cons tk i $ map (termTempSync vw) ts
+termTempSync vw (Bind tk i vs t)   =  fromJust $ bind tk i vs $ termTempSync vw t
+termTempSync vw (Lam tk i vl t)    =  fromJust $ lam  tk i vl $ termTempSync vw t
+termTempSync vw (Sub tk t s)       =  Sub tk (termTempSync vw t) $ subTempSync vw s
+termTempSync vw (Iter tk a p lvs)  =  Iter tk a p $ map (lvarTempSync vw) lvs
+termTempSync vw t               =  t
+
+subTempSync vw (Substn tsub lsub)
+ = fromJust $ substn (map (tsubSync vw) $ S.toList tsub)
+                     (map (lsubSync vw) $ S.toList lsub)
+ where
+      tsubSync vw (v,  t )  =  (v,  termTempSync vw t )
+      lsubSync vw (lt, lr)  =  (lt, lvarTempSync vw lr)
+\end{code}
 
 \newpage
 \subsection{Binding Internal Tests}
@@ -530,12 +567,20 @@ tst_bind_VarToVar
     , testCase "Obs-Before v |-> x -- should succeed, with dynamic inducing"
         ( bindVarToVar obv obx emptyBinding
           @?= Just (BD (M.fromList [(v,BV odx)], M.empty)) )
-    , testCase "Obs-Before v_m |-> x_m -- should succeed, with dynamic inducing"
-        ( bindVarToVar obv obx emptyBinding
+    , testCase "Obs-During v_m |-> x_m -- should succeed, with dynamic inducing"
+        ( bindVarToVar odvm odxm emptyBinding
           @?= Just (BD (M.fromList [(v,BV odxm)], M.empty)) )
-    , testCase "Obs-Before v_m |-> x_n -- should succeed, with dynamic inducing"
-        ( bindVarToVar obv obx emptyBinding
+    , testCase "Obs-During v_m |-> x_n -- should succeed"
+        ( bindVarToVar odvm odxn emptyBinding
           @?= Just (BD (M.fromList [(v,BV odxn)], M.empty)) )
+    , testCase "Obs-Before-During v ; v_m |-> x ; x_n -- should succeed"
+        ( ( bindVarToVar odvm odxn $ fromJust
+          $ bindVarToVar obv obx emptyBinding )
+          @?= Just (BD (M.fromList [(v,BV odxn)], M.empty)) )
+    , testCase "Obs-During conflict v_m ; v_m |-> x_n ; x_m -- should fail"
+        ( ( bindVarToVar odvm odxm $ fromJust
+          $ bindVarToVar odvm odxn emptyBinding )
+          @?= Nothing )
     , testCase "Static conflict  g,g |-> in,out -- should fail"
         ( ( bindVarToVar osg osin $
                          fromJust $ bindVarToVar osg osout $ emptyBinding )

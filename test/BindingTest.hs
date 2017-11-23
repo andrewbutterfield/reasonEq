@@ -101,19 +101,19 @@ sngl = S.singleton
 
 tst_bind_lkp_LVarToVSet
  = testGroup "lookupBind after bindLVarToVSet"
-  [ testCase "polv -> [gcov] (Ok)" (lsBindLook polv (sngl gcov) @?= BindSet (sngl gcov))
-  , testCase "polv -> [gcev] (Ok)" (lsBindLook polv (sngl gcev) @?= BindSet (sngl gcev))
-  , testCase "pelv -> [gcev] (Ok)" (lsBindLook pelv (sngl gcev) @?= BindSet (sngl gcev))
-  , testCase "pplv -> [gcpv] (Ok)" (lsBindLook pplv (sngl gcpv) @?= BindSet (sngl gcpv))
-  , testCase "polv -> [gcpv] (Nok)"
+  [ testCase "polv -> {gcov} (Ok)" (lsBindLook polv (sngl gcov) @?= BindSet (sngl gcov))
+  , testCase "polv -> {gcev} (Ok)" (lsBindLook polv (sngl gcev) @?= BindSet (sngl gcev))
+  , testCase "pelv -> {gcev} (Ok)" (lsBindLook pelv (sngl gcev) @?= BindSet (sngl gcev))
+  , testCase "pplv -> {gcpv} (Ok)" (lsBindLook pplv (sngl gcpv) @?= BindSet (sngl gcpv))
+  , testCase "polv -> {gcpv} (Nok)"
     ( bindLVarToVSet polv (sngl gcpv) emptyBinding @?= Nothing )
-  , testCase "pelv -> [gcov] (Nok)"
+  , testCase "pelv -> {gcov} (Nok)"
     ( bindLVarToVSet pelv (sngl gcov) emptyBinding @?= Nothing )
-  , testCase "pelv -> [gcpv] (Nok)"
+  , testCase "pelv -> {gcpv} (Nok)"
     ( bindLVarToVSet pelv (sngl gcpv) emptyBinding @?= Nothing )
-  , testCase "pplv -> [gcov] (Nok)"
+  , testCase "pplv -> {gcov} (Nok)"
     ( bindLVarToVSet pplv (sngl gcov) emptyBinding @?= Nothing )
-  , testCase "pplv -> [gcev] (Nok)"
+  , testCase "pplv -> {gcev} (Nok)"
     ( bindLVarToVSet pplv (sngl gcev) emptyBinding @?= Nothing )
   ]
 

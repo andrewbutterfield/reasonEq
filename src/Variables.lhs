@@ -15,6 +15,7 @@ module Variables
  , isDynamic, isDuring
  , Variable
  , pattern Vbl
+ , varClass, varWhen
  , pattern ObsVar, pattern ExprVar, pattern PredVar
  , pattern PreVar, pattern MidVar, pattern PostVar
  , pattern ScriptVar
@@ -24,6 +25,7 @@ module Variables
  , whatVar, timeVar
  , ListVar
  , pattern LVbl
+ , lvarClass, lvarWhen
  , pattern ObsLVar, pattern VarLVar, pattern ExprLVar, pattern PredLVar
  , pattern PreVars, pattern PostVars, pattern MidVars
  , pattern ScriptVars
@@ -31,7 +33,7 @@ module Variables
  , isPreListVar, isObsLVar, isExprLVar, isPredLVar
  , whatLVar, timeLVar
  , GenVar, pattern StdVar, pattern LstVar
- , isStdV, isLstV
+ , isStdV, isLstV, gvarClass, gvarWhen
  , isPreGenVar, isObsGVar, isExprGVar, isPredGVar
  , whatGVar, timeGVar
  , VarList
@@ -200,10 +202,13 @@ newtype Variable  = VR (Identifier, VarClass, VarWhen)
  deriving (Eq,Ord,Show,Read)
 
 pattern Vbl idnt cls whn = VR (idnt, cls, whn)
+varClass (Vbl _ vc _)  =  vc
+varWhen  (Vbl _ _ vw)  =  vw
 
 pattern ObsVar  i vw = VR (i, VO, vw)
 pattern ExprVar i vw = VR (i, VE, vw)
 pattern PredVar i vw = VR (i, VP, vw)
+
 \end{code}
 
 We also have some pre-wrapped patterns for common cases:
@@ -254,6 +259,8 @@ newtype ListVar = LV (Variable, [Identifier])
  deriving (Eq, Ord, Show, Read)
 
 pattern LVbl v is = LV (v,is)
+lvarClass (LVbl v _)  =  varClass v
+lvarWhen  (LVbl v _)  =  varWhen  v
 
 pattern ObsLVar  k i is = LV (VR (i,VO,k),is)
 pattern VarLVar  i is = LV (VR (i,VO,WT),is)
@@ -301,6 +308,11 @@ data GenVar
 
 pattern StdVar v = GV v
 pattern LstVar lv = GL lv
+
+gvarClass (StdVar v)   =  varClass  v
+gvarClass (LstVar lv)  =  lvarClass lv
+gvarWhen  (StdVar v)   =  varWhen  v
+gvarWhen  (LstVar lv)  =  lvarWhen lv
 
 type VarList = [GenVar]
 \end{code}

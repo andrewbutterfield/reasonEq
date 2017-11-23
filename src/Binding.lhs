@@ -22,6 +22,7 @@ module Binding
 , int_tst_Binding
 ) where
 import Data.Maybe (fromJust)
+import Data.List (nub)
 import qualified Data.Map as M
 import qualified Data.Set as S
 
@@ -397,24 +398,64 @@ compTSTS ntsub otsub
 \newpage
 \subsubsection{Binding List-Variables to Variable-Lists}
 
-An observation list-variable can bind to a list that is
-a mix of observation and expression general variables.
+For list-variable binding we require all variables in the list
+to have a class compatible with the list variable,
+and to have the same temporality.
+The exception is if the list-variable is static,
+in which case we need to ensure that there are no textual variables present.
 \begin{code}
-isObsOrExpr gv = isObsGVar gv || isExprGVar gv
+validStaticGVarClass vc gvar
+  = gvarWhen gvar /= Textual && validVarClassBinding vc (gvarClass gvar)
+
+vlCompatible vc Static vl  =  all (validStaticGVarClass vc) vl
+vlCompatible vc vw vl      =  vlComp vc vw S.empty vl
+
+vlComp _ _ vws []  =  S.size vws <= 1
+vlComp vc vw vws (gv:gvs)
+ | gvw == Static                           =  False
+ | validVarClassBinding vc (gvarClass gv)  =  vlComp vc vw vws' gvs
+ | otherwise                               =  False
+ where
+   gvw = gvarWhen gv
+   vws' = S.insert gvw vws
+
+-- don't force Static
+forceVNullDuring v@(Vbl _ _  Static)  =  v
+forceVNullDuring   (Vbl i vc _     )  =  Vbl i vc (During "")
+
+forceLNullDuring (LVbl v is)  =  LVbl (forceVNullDuring v) is
+
+forceGNullDuring (StdVar v)   =  StdVar $ forceVNullDuring v
+forceGNullDuring (LstVar lv)  =  LstVar $ forceLNullDuring lv
 \end{code}
-Expression/Predicate list-variables can only bind to lists
-of the same class of general variable.
+
 \begin{code}
 bindLVarToVList :: Monad m => ListVar -> VarList -> Binding -> m Binding
-bindLVarToVList lv@(LVbl (Vbl i _ vw) is) vl binds
- | isObsLVar lv && all isObsOrExpr vl  =  insertLL i is vw vl binds
- | isExprLVar lv && all isExprGVar vl  =  insertLL i is vw vl binds
- | isPredLVar lv && all isPredGVar vl  =  insertLL i is vw vl binds
+\end{code}
+
+A Static list-variable binds to any list without \texttt{Textual} variables.
+\begin{code}
+bindLVarToVList lv@(LVbl (Vbl i vc Static) is) vl binds
+ | vlCompatible vc Static vl  =  insertLL i is Static vl binds
+\end{code}
+
+If our pattern list-variable has temporality \texttt{During},
+then we pass the the candidate variable list in unchanged.
+Otherwise,
+we map all \texttt{VarWhen} in the variable list to \texttt{During ""}.
+\begin{code}
+bindLVarToVList lv@(LVbl (Vbl i vc vw@(During _)) is) vl binds
+ | vlCompatible vc vw vl  =  insertLL i is vw vl binds
+bindLVarToVList lv@(LVbl (Vbl i vc vw) is) vl binds
+ | vlCompatible vc vw vl'  =  insertLL i is vw vl' binds
+ where vl' = map forceGNullDuring vl
+\end{code}
+
+Anything else fails.
+\begin{code}
 bindLVarToVList _ _ _ = fail "bindLVarToVList: invalid lvar. -> vlist binding."
 \end{code}
 
-\textbf{We need \texttt{insertLL} to check for pre-existing entries
-and compatibility !!!}
 \begin{code}
 insertLL :: Monad m => Identifier -> [Identifier] -> VarWhen -> VarList
          -> Binding -> m Binding
@@ -422,23 +463,30 @@ insertLL i is vw vl (BD (vbinds,lbinds))
  = return $ BD (vbinds, M.insert (i,is) (BL vw vl) lbinds)
 \end{code}
 
+\newpage
 \subsubsection{Binding List-Variables to Variable-Sets}
 
-An observation list-variable can bind to a set that is
-a mix of observation and expression general variables.
-Expression/Predicate list-variables can only bind to sets
-of the same class of general variable.
+Similar code to \texttt{bindLVarToVList} above, except we have sets.
+\begin{code}
+vsCompatible vc Static vs  =  all (validStaticGVarClass vc) vs
+vsCompatible vc vw vs      =  vlComp vc vw S.empty (S.toList vs)
+\end{code}
+
 \begin{code}
 bindLVarToVSet :: Monad m => ListVar -> VarSet -> Binding -> m Binding
-bindLVarToVSet lv@(LVbl (Vbl i _ vw) is) vs binds
- | isObsLVar lv && all isObsOrExpr vs  =  insertLS i is vw vs binds
- | isExprLVar lv && all isExprGVar vs  =  insertLS i is vw vs binds
- | isPredLVar lv && all isPredGVar vs  =  insertLS i is vw vs binds
+
+bindLVarToVSet lv@(LVbl (Vbl i vc Static) is) vs binds
+ | vsCompatible vc Static vs  =  insertLS i is Static vs binds
+
+bindLVarToVSet lv@(LVbl (Vbl i vc vw@(During _)) is) vs binds
+ | vsCompatible vc vw vs  =  insertLS i is vw vs binds
+bindLVarToVSet lv@(LVbl (Vbl i vc vw) is) vs binds
+ | vsCompatible vc vw vs'  =  insertLS i is vw vs' binds
+ where vs' = S.map forceGNullDuring vs
+
 bindLVarToVSet _ _ _ = fail "bindLVarToVSet: invalid lvar. -> vset binding."
 \end{code}
 
-\textbf{We need \texttt{insertLL} to check for pre-existing entries
-and compatibility !!!}
 \begin{code}
 insertLS :: Monad m => Identifier -> [Identifier] -> VarWhen -> VarSet
          -> Binding -> m Binding

@@ -1,47 +1,102 @@
-vlMatch [] bindPSi2CSi b0 b0 [cs1,cl1,cs2,cl2,cs3,cl3,cs4,cl4] [ps1,pl1,ps2,pl2,ps3,pl3,ps4,pl4]
+Substitutions:
 
+  [okm,Sm/ok,S] :: [Om/O] - succeeds: [Failed]
 
-vlMatch: std-pattern var's binding not in candidate list
+expected:
 
-bind =
+[ BD
+  ( fromList
+    []
+  , fromList
+    [ ( ( Id "O"
+        , [] )
+      , BS
+        WB
+        ( fromList
+          [ GV (VR (Id "ok", VO, WD ""))
+          , GL (LV (VR (Id "S", VO, WD ""), [])) ] ) ) ] ) ]
+
+ but got:
+
 BD
 ( fromList
-  [ ( Id "ps1"
-    , BV (VR (Id "cs1", VO, WD "")) )
-  , ( Id "ps2"
-    , BV (VR (Id "cs2", VO, WD "")) )
-  , ( Id "ps3"
-    , BV (VR (Id "cs3", VO, WD "")) )
-  , ( Id "ps4"
-    , BV (VR (Id "cs4", VO, WD "")) ) ]
+  []
 , fromList
-  [] )
+  [ ( ( Id "O"
+      , [] )
+    , BS
+      ( WD "m" )
+      ( fromList
+        [ GV (VR (Id "ok", VO, WD "m"))
+        , GL (LV (VR (Id "S", VO, WD "m"), [])) ] ) ) ] )
 
-vlC' =
-[ GL (LV (VR (Id "cl4", VO, WB), []))
-, GV (VR (Id "cs4", VO, WB))
-, GL (LV (VR (Id "cl3", VO, WB), []))
-, GV (VR (Id "cs3", VO, WB))
-, GL (LV (VR (Id "cl2", VO, WB), []))
-, GV (VR (Id "cs2", VO, WB))
-, GL (LV (VR (Id "cl1", VO, WB), []))
-, GV (VR (Id "cs1", VO, WB)) ]
+bindLs gOm [gokm,gSm] emptyBinding
+=
+BD
+( fromList
+  []
+, fromList
+  [ ( ( Id "O"
+      , [] )
+    , BS
+      ( WD "m" )
+      ( fromList
+        [ GV (VR (Id "ok", VO, WD "m"))
+        , GL (LV (VR (Id "S", VO, WD "m"), [])) ] ) ) ] )
 
-vlP' = []
+bindLs gO [gok,gS] $ bindLs gOm [gokm,gSm] emptyBinding
+=
+BD
+( fromList
+  []
+, fromList
+  [ ( ( Id "O"
+      , [] )
+    , BS
+      WB
+      ( fromList
+        [ GV (VR (Id "ok", VO, WD ""))
+        , GL (LV (VR (Id "S", VO, WD ""), [])) ] ) ) ] )
+
+bindLs gO [gok,gS] emptyBinding
+=
+BD
+( fromList
+  []
+, fromList
+  [ ( ( Id "O"
+      , [] )
+    , BS
+      WB
+      ( fromList
+        [ GV (VR (Id "ok", VO, WD ""))
+        , GL (LV (VR (Id "S", VO, WD ""), [])) ] ) ) ] )
+
+bindLs gOm [gokm,gSm] $ bindLs gO [gok,gS] emptyBinding
+=
+BD
+( fromList
+  []
+, fromList
+  [ ( ( Id "O"
+      , [] )
+    , BS
+      ( WD "m" )
+      ( fromList
+        [ GV (VR (Id "ok", VO, WD "m"))
+        , GL (LV (VR (Id "S", VO, WD "m"), [])) ] ) ) ] )
 
 
-vB = VR (Id "cs1",VO,WD "")
 
 
-vlP =
-[ GL (LV (VR (Id "pl1", VO, WB), []))
-, GV (VR (Id "ps2", VO, WB))
-, GL (LV (VR (Id "pl2", VO, WB), []))
-, GV (VR (Id "ps3", VO, WB))
-, GL (LV (VR (Id "pl3", VO, WB), []))
-, GV (VR (Id "ps4", VO, WB))
-, GL (LV (VR (Id "pl4", VO, WB), [])) ]
+----------------------
+
+  [okm,xm,ym,zm/ok,x,y,z] :: [Om/O] - succeeds: [Failed]
+expected: [BD (fromList [],fromList [((Id "O",[]),BS WB (fromList [GV (VR (Id "ok",VO,WD "")),GV (VR (Id "x",VO,WD "")),GV (VR (Id "y",VO,WD "")),GV (VR (Id "z",VO,WD ""))]))])]
+ but got: [BD (fromList [],fromList [((Id "O",[]),BS (WD "m") (fromList [GV (VR (Id "ok",VO,WD "m")),GV (VR (Id "x",VO,WD "m")),GV (VR (Id "y",VO,WD "m")),GV (VR (Id "z",VO,WD "m"))]))])]
 
 
+---------------------
 
--- end stop - do not delete !
+ [okm,xm,ym,zm/ok,x,y,z] :: [okm,Sm/ok,S] - succeeds: [Failed]
+ERROR: Maybe.fromJust: Nothing

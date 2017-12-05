@@ -129,6 +129,8 @@ validVarTimeBinding Static _        =  True
 validVarTimeBinding pwhen  cwhen    =  pwhen == cwhen
 \end{code}
 
+We can sum the rules as follows
+
 Similar rules apply to list variables.
 
 \newpage
@@ -206,53 +208,108 @@ any non-\texttt{Textual} thing in the appropriate class.
 bindVarToVar (Vbl v vc Static) cvar@(Vbl x xc xw) binds
  | xw == Textual  =  fail "bindVarToVar: Static cannot bind to Textual"
  | validVarClassBinding vc xc
-                  =  insertVV v cvar binds
+                  =  insertVV v Static cvar binds
  | otherwise      =  fail "bindVarToVar: incompatible variable classes"
 \end{code}
 
-A \texttt{During} variable can only bind to a \texttt{During} variable in the appropriate class.
-One might expect us to be liberal here,
-but an attempt by the matcher to do this is an error,
-so we catch it here.
+A \texttt{During} variable can only bind to a \texttt{During} variable
+in the appropriate class.
 \begin{code}
-bindVarToVar (Vbl v vc (During _)) cvar@(Vbl x xc (During _)) binds
+bindVarToVar (Vbl v vc vw@(During _)) cvar@(Vbl x xc (During _)) binds
  | validVarClassBinding vc xc
-              =  insertVV v cvar binds
+              =  insertVV v vw cvar binds
  | otherwise  =  fail "bindVarToVar: incompatible variables"
 \end{code}
 
 A dynamic variable can only bind to a dynamic variable of the same
 temporality in the appropriate class.
-Here we construct a \texttt{During} instance with an empty subscript.
+Regardless of the actual temporality,
+we construct a \texttt{During} instance with an empty subscript if new,
+or a pre-existing subscript if not.
 \begin{code}
 bindVarToVar (Vbl  v vc vw) (Vbl x xc xw) binds
  | vw /= xw   =  fail "bindVarToVar: different temporalities"
  | validVarClassBinding vc xc
-              =  insertVV v (Vbl x xc $ During "") binds
+              =  insertVV v newDuring (Vbl x xc $ newDuring) binds
  | otherwise  =  fail "bindVarToVar: incompatible variables"
 \end{code}
 
-The insertion function first checks to see if the pattern variable
-is already bound.
+We have a ``new''\texttt{During} value:
 \begin{code}
-insertVV :: Monad m => Identifier -> Variable -> Binding -> m Binding
-insertVV i v (BD (vbinds,lbinds))
-  = case M.lookup i vbinds of
-      Nothing  ->  return $ BD (M.insert i (BV v) vbinds, lbinds)
-      Just (BV w) ->
-        if compatibleVV v w
-        then return $ BD (M.insert i (BV v) vbinds, lbinds)
-        else fail "bindVarToVar: variable already bound to different variable."
-      _ -> fail "bindVarToVar: variable already bound to term."
+newDuring = During ""
 \end{code}
 
-A pre-existing binding can only differ from one being added
-if they are both \texttt{During}, but the pre-existing one has
-an empty subscript, meaning it was induced.
+\newpage
+The insertion function first checks to see if the pattern variable
+is already bound.
+We expect the following behaviour,
+where $s$ is \texttt{Static}, $\texttt{v}$ and $\texttt{x}$ are \texttt{Textual},
+and $v$ and $x$ with or without decoration, are any other \texttt{Dynamic},
+and $i_s$ and $i_v$ are the respective identifiers  underlying $s$ and the $v$s:
+
+\begin{tabular}{|c|c|c|c|}
+\hline
+   new entry: & $s \mapsto x$
+              & $v \mapsto x$, $v' \mapsto x'$, $\texttt{v} \mapsto \texttt{x}$
+              & $v_m \mapsto x_n$
+\\\hline
+  inserted as: & $i_s \mapsto x$
+             & $i_v \mapsto x_{\_}$
+             & $i_v \mapsto x_n$
+\\\hline
+  \underline{prior bind} &&&
+\\\hline
+  none & $i_s\mapsto x$ & $i_v \mapsto x_{\_}$ & $i_v \mapsto x_n$
+\\\hline
+  $i_s \mapsto x$ & $i_s\mapsto x$ &  &
+\\\hline
+  $i_s \mapsto y, y\neq x$ & FAIL &  &
+\\\hline
+  $i_v \mapsto x_{\_}$ && $i_v \mapsto x_{\_}$ & $i_v \mapsto x_n$
+\\\hline
+  $i_v \mapsto x_n$ && $i_v \mapsto x_n$ & $i_v \mapsto x_n$
+\\\hline
+  $i_v \mapsto x_a, a\neq n$ && $i_v \mapsto x_a$ & FAIL
+\\\hline
+  $i_v \mapsto y_a, y\neq x$ && FAIL & FAIL
+\\\hline
+\end{tabular}
+
+The following code expects:
+ the \texttt{VarWhen} argument to be \texttt{Static} or \texttt{During};
+  and the \texttt{Variable} argument
+to have \texttt{During} temporality
+if the \texttt{VarWhen} parameter is \texttt{During}.
 \begin{code}
-compatibleVV :: Variable -> Variable -> Bool
-compatibleVV (Vbl v vc (During _)) (Vbl w wc (During ""))  =  v == w && vc == wc
-compatibleVV newvar                oldvar                  =  newvar == oldvar
+insertVV :: Monad m => Identifier -> VarWhen -> Variable -> Binding -> m Binding
+
+insertVV i Static x binds@(BD (vbinds,lbinds))
+  = case M.lookup i vbinds of
+      Nothing  ->  return $ BD (M.insert i (BV x) vbinds, lbinds)
+      Just (BV w)
+       | w == x  ->  return binds
+       | otherwise -> fail "bindVarToVar: static-var. bound to other variable."
+      _ -> fail "bindVarToVar: static-var. already bound to term."
+
+insertVV i vw@(During m) x@(Vbl xi xc (During n)) binds@(BD (vbinds,lbinds))
+  = case M.lookup i vbinds of
+      Nothing  ->  return $ BD (M.insert i (BV x) vbinds, lbinds)
+      Just (BV w@(Vbl bi bc (During p)))
+        | bi /= xi ||  bc /= xc
+            ->  fail "bindVarToVar: variable bound to other variable."
+        | null p  ->  return $ BD (M.insert i (BV x) vbinds, lbinds)
+        | p == n  ->  return binds
+        | otherwise
+            ->  fail "bindVarToVar: variable bound to other subscript."
+      _  ->  fail "bindVarToVar: variable already bound to term."
+
+insertVV i vw x _
+  = error $ unlines
+      [ "bindVarToVar: unexpected argument combination"
+      , "i  =  " ++ show i
+      , "vw =  " ++ show vw
+      , "x  =  " ++ show x
+       ]
 \end{code}
 
 \newpage

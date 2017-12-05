@@ -107,9 +107,17 @@ tst_bind_lkp_VarToTerm
 tst_bind_lkp_LVarToVList :: TF.Test
 llBindLook = bindLook lookupLstBind bindLVarToVList
 
+obu = ObsVar  (fromJust $ ident "obu") Before
+ebv = ExprVar (fromJust $ ident "ebv") Before
+pbv = PredVar (fromJust $ ident "pbv") Before
+
 gosu = StdVar osu
 gesv = StdVar esv
 gpsv = StdVar psv
+
+gobu = StdVar obu
+gebv = StdVar ebv
+gpbv = StdVar pbv
 
 lobv = PreVars $ fromJust $ ident "lobv"
 lebv = PreExprs $ fromJust $ ident "lebv"
@@ -117,20 +125,20 @@ lpbv = PrePreds $ fromJust $ ident "lpbv"
 
 tst_bind_lkp_LVarToVList
  = testGroup "lookupBind after bindLVarToVList"
-  [ testCase "lobv -> [gosu] (Ok)" (llBindLook lobv [gosu] @?= BindList [gosu])
-  , testCase "lobv -> [gesv] (Ok)" (llBindLook lobv [gesv] @?= BindList [gesv])
-  , testCase "lebv -> [gesv] (Ok)" (llBindLook lebv [gesv] @?= BindList [gesv])
-  , testCase "lpbv -> [gpsv] (Ok)" (llBindLook lpbv [gpsv] @?= BindList [gpsv])
+  [ testCase "lobv -> [gobu] (Ok)" (llBindLook lobv [gobu] @?= BindList [gobu])
+  , testCase "lobv -> [gebv] (Ok)" (llBindLook lobv [gebv] @?= BindList [gebv])
+  , testCase "lebv -> [gebv] (Ok)" (llBindLook lebv [gebv] @?= BindList [gebv])
+  , testCase "lpbv -> [gpbv] (Ok)" (llBindLook lpbv [gpbv] @?= BindList [gpbv])
   , testCase "lobv -> [gpsv] (Nok)"
     ( bindLVarToVList lobv [gpsv] emptyBinding @?= Nothing )
-  , testCase "lebv -> [gosu] (Nok)"
-    ( bindLVarToVList lebv [gosu] emptyBinding @?= Nothing )
-  , testCase "lebv -> [gpsv] (Nok)"
-    ( bindLVarToVList lebv [gpsv] emptyBinding @?= Nothing )
+  , testCase "lebv -> [gobu] (Nok)"
+    ( bindLVarToVList lebv [gobu] emptyBinding @?= Nothing )
+  , testCase "lebv -> [gpbv] (Nok)"
+    ( bindLVarToVList lebv [gpbv] emptyBinding @?= Nothing )
   , testCase "lpbv -> [gosu] (Nok)"
-    ( bindLVarToVList lpbv [gosu] emptyBinding @?= Nothing )
+    ( bindLVarToVList lpbv [gobu] emptyBinding @?= Nothing )
   , testCase "lpbv -> [gesv] (Nok)"
-    ( bindLVarToVList lpbv [gesv] emptyBinding @?= Nothing )
+    ( bindLVarToVList lpbv [gebv] emptyBinding @?= Nothing )
   ]
 
 -- -----------------------------------------------------------------------------
@@ -141,20 +149,20 @@ sngl = S.singleton
 
 tst_bind_lkp_LVarToVSet
  = testGroup "lookupBind after bindLVarToVSet"
-  [ testCase "lobv -> {gosu} (Ok)" (lsBindLook lobv (sngl gosu) @?= BindSet (sngl gosu))
-  , testCase "lobv -> {gesv} (Ok)" (lsBindLook lobv (sngl gesv) @?= BindSet (sngl gesv))
-  , testCase "lebv -> {gesv} (Ok)" (lsBindLook lebv (sngl gesv) @?= BindSet (sngl gesv))
-  , testCase "lpbv -> {gpsv} (Ok)" (lsBindLook lpbv (sngl gpsv) @?= BindSet (sngl gpsv))
+  [ testCase "lobv -> {gobu} (Ok)" (lsBindLook lobv (sngl gobu) @?= BindSet (sngl gobu))
+  , testCase "lobv -> {gebv} (Ok)" (lsBindLook lobv (sngl gebv) @?= BindSet (sngl gebv))
+  , testCase "lebv -> {gebv} (Ok)" (lsBindLook lebv (sngl gebv) @?= BindSet (sngl gebv))
+  , testCase "lpbv -> {gpbv} (Ok)" (lsBindLook lpbv (sngl gpbv) @?= BindSet (sngl gpbv))
   , testCase "lobv -> {gpsv} (Nok)"
     ( bindLVarToVSet lobv (sngl gpsv) emptyBinding @?= Nothing )
-  , testCase "lebv -> {gosu} (Nok)"
-    ( bindLVarToVSet lebv (sngl gosu) emptyBinding @?= Nothing )
-  , testCase "lebv -> {gpsv} (Nok)"
-    ( bindLVarToVSet lebv (sngl gpsv) emptyBinding @?= Nothing )
-  , testCase "lpbv -> {gosu} (Nok)"
-    ( bindLVarToVSet lpbv (sngl gosu) emptyBinding @?= Nothing )
-  , testCase "lpbv -> {gesv} (Nok)"
-    ( bindLVarToVSet lpbv (sngl gesv) emptyBinding @?= Nothing )
+  , testCase "lebv -> {gobu} (Nok)"
+    ( bindLVarToVSet lebv (sngl gobu) emptyBinding @?= Nothing )
+  , testCase "lebv -> {gpbv} (Nok)"
+    ( bindLVarToVSet lebv (sngl gpbv) emptyBinding @?= Nothing )
+  , testCase "lpbv -> {gobu} (Nok)"
+    ( bindLVarToVSet lpbv (sngl gobu) emptyBinding @?= Nothing )
+  , testCase "lpbv -> {gebv} (Nok)"
+    ( bindLVarToVSet lpbv (sngl gebv) emptyBinding @?= Nothing )
   ]
 
 

@@ -439,9 +439,38 @@ evar t v = fromJust $ eVar t v
 \end{code}
 
 
+\newpage
 \subsubsection{Sequential Composition Tests}
 
+We start with some substitution tests:
+\begin{code}
+sub_O = fromJust $ substn [] [(lO,lOm)]
+sub_ok_S = fromJust $ substn [(ok,evar bool okm)] [(lS,lSm)]
+sub_okxyz
+ = fromJust $ substn
+    [ (ok,evar bool okm)
+    , (x,evar int xm), (y,evar int ym), (z,evar int zm)
+    ] []
 
+test_substitution
+ = testGroup "Substitutions"
+    [ testCase "[okm,Sm/ok,S] :: [Om/O] - succeeds"
+       (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_ok_S sub_O
+        @?= [ bindLs gO [gok,gS] $ bindLs gOm [gokm,gSm] $ emptyBinding ] )
+    , testCase "[okm,xm,ym,zm/ok,x,y,z] :: [Om/O] - succeeds"
+       (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_okxyz sub_O
+        @?= [ bindLs gO [gok,gx,gy,gz] $ bindLs gOm [gokm,gxm,gym,gzm] $ emptyBinding ] )
+    , testCase "[okm,xm,ym,zm/ok,x,y,z] :: [okm,Sm/ok,S] - succeeds"
+       (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_okxyz sub_ok_S
+        @?= [ bindVV gok gok $ bindVV gokm gokm $
+              bindLs gS [gx,gy,gz] $ bindLs gSm [gxm,gym,gzm] $
+              emptyBinding ] )
+    ]
+
+tstSub = defaultMain [test_substitution]
+\end{code}
+
+Now, the compositions:
 \begin{code}
 test_composition
  = testGroup "Composition"
@@ -472,31 +501,7 @@ test_composition
               emptyBinding] )
     ]
 
-sub_O = fromJust $ substn [] [(lO,lOm)]
-sub_ok_S = fromJust $ substn [(ok,evar bool okm)] [(lS,lSm)]
-sub_okxyz
- = fromJust $ substn
-    [ (ok,evar bool okm)
-    , (x,evar int xm), (y,evar int ym), (z,evar int zm)
-    ] []
-
-test_substitution
- = testGroup "Substitutions"
-    [ testCase "[okm,Sm/ok,S] :: [Om/O] - succeeds"
-       (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_ok_S sub_O
-        @?= [ bindLs gO [gok,gS] $ bindLs gOm [gokm,gSm] $ emptyBinding ] )
-    , testCase "[okm,xm,ym,zm/ok,x,y,z] :: [Om/O] - succeeds"
-       (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_okxyz sub_O
-        @?= [ bindLs gO [gok,gx,gy,gz] $ bindLs gOm [gokm,gxm,gym,gzm] $ emptyBinding ] )
-    , testCase "[okm,xm,ym,zm/ok,x,y,z] :: [okm,Sm/ok,S] - succeeds"
-       (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_okxyz sub_ok_S
-        @?= [ bindVV gok gok $ bindVV gokm gokm $
-              bindLs gS [gx,gy,gz] $ bindLs gSm [gxm,gym,gzm] $
-              emptyBinding ] )
-    ]
-
 tstComp = defaultMain [test_composition]
-tstSub = defaultMain [test_substitution]
 
 test_sequential_composition
  = testGroup "Defn. of Sequential Composition"

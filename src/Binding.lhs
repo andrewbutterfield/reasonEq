@@ -163,7 +163,7 @@ data VarBind
 
 \subsubsection{Binding \texttt{ListVar} to \texttt{VarList} or \texttt{VarSet}}
 
-We bibd to either a list or set of variables,
+We bind to either a list or set of variables,
 and record the temporality (\texttt{Static} or \texttt{During}).
 We use the variable identifier and the list of `subtracted` identifiers
 as the map key.
@@ -234,7 +234,7 @@ bindVarToVar (Vbl  v vc vw) (Vbl x xc xw) binds
  | otherwise  =  fail "bindVarToVar: incompatible variables"
 \end{code}
 
-We have a ``new''\texttt{During} value:
+We have a ``new'' \texttt{During} value:
 \begin{code}
 newDuring = During ""
 \end{code}
@@ -306,7 +306,7 @@ insertVV i vw@(During m) x@(Vbl xi xc (During n)) binds@(BD (vbinds,lbinds))
 
 insertVV i vw x _
   = error $ unlines
-      [ "bindVarToVar: unexpected argument combination"
+      [ "insertVV: unexpected argument combination"
       , "i  =  " ++ show i
       , "vw =  " ++ show vw
       , "x  =  " ++ show x
@@ -465,26 +465,37 @@ in which case we need to ensure that there are no textual variables present.
 validStaticGVarClass vc gvar
   = gvarWhen gvar /= Textual && validVarClassBinding vc (gvarClass gvar)
 
-vlCompatible vc Static vl  =  all (validStaticGVarClass vc) vl
-vlCompatible vc vw vl      =  vlComp vc vw S.empty vl
+vlCompatible :: VarClass -> VarWhen -> VarList -> (Bool, VarWhen)
+vlCompatible vc Static vl  =  (all (validStaticGVarClass vc) vl,Static)
+vlCompatible vc vw     vl  =  vlComp vc vw S.empty vl
 
-vlComp _ _ vws []  =  S.size vws <= 1
+vlComp _ vw vws []
+ | S.null vws  =  (True, vw)
+ | otherwise   =  (True, S.elemAt 0 vws)
 vlComp vc vw vws (gv:gvs)
- | gvw == Static                           =  False
- | validVarClassBinding vc (gvarClass gv)  =  vlComp vc vw vws' gvs
- | otherwise                               =  False
+ | gvw == Static                           =  (False, undefined)
+ | validVarClassBinding vc (gvarClass gv)
+   && S.size vws' <= 1                     =  vlComp vc vw vws' gvs
+ | otherwise                               =  (False, undefined)
  where
    gvw = gvarWhen gv
    vws' = S.insert gvw vws
 
--- don't force Static
-forceVNullDuring v@(Vbl _ _  Static)  =  v
-forceVNullDuring   (Vbl i vc _     )  =  Vbl i vc (During "")
+-- don't force Static, or During
+forceDuring Static        =  Static
+forceDuring d@(During _)  =  d
+forceDuring _             =  newDuring
+
+forceVNullDuring v@(Vbl _ _  Static    )  =  v
+forceVNullDuring v@(Vbl _ _  (During _))  =  v
+forceVNullDuring   (Vbl i vc _         )  =  Vbl i vc newDuring
 
 forceLNullDuring (LVbl v is)  =  LVbl (forceVNullDuring v) is
 
 forceGNullDuring (StdVar v)   =  StdVar $ forceVNullDuring v
 forceGNullDuring (LstVar lv)  =  LstVar $ forceLNullDuring lv
+
+lForceD = map forceGNullDuring
 \end{code}
 
 \begin{code}
@@ -494,19 +505,22 @@ bindLVarToVList :: Monad m => ListVar -> VarList -> Binding -> m Binding
 A Static list-variable binds to any list without \texttt{Textual} variables.
 \begin{code}
 bindLVarToVList lv@(LVbl (Vbl i vc Static) is) vl binds
- | vlCompatible vc Static vl  =  insertLL i is Static vl binds
+ | valid  =  insertLL i is Static vl vlw binds
+ where
+    (valid, vlw) = vlCompatible vc Static vl
 \end{code}
 
-If our pattern list-variable has temporality \texttt{During},
-then we pass the the candidate variable list in unchanged.
-Otherwise,
-we map all \texttt{VarWhen} in the variable list to \texttt{During ""}.
+
+A dynamic list-variable binds to any list of dynamic variables
+all of which have the same class and temporality as itself.
 \begin{code}
-bindLVarToVList lv@(LVbl (Vbl i vc vw@(During _)) is) vl binds
- | vlCompatible vc vw vl  =  insertLL i is vw vl binds
 bindLVarToVList lv@(LVbl (Vbl i vc vw) is) vl binds
- | vlCompatible vc vw vl'  =  insertLL i is vw vl' binds
- where vl' = map forceGNullDuring vl
+ | valid  =  insertLL i is vw' vl' vl'w binds
+ where
+   (valid, vlw) = vlCompatible vc vw vl
+   vw' =  forceDuring vw
+   vl' = lForceD vl
+   vl'w = forceDuring vlw
 \end{code}
 
 Anything else fails.
@@ -548,11 +562,65 @@ and $i_s$ and $i_v$ are the respective identifiers  underlying $s$ and the $v$s:
   $i_v \mapsto y_a, y\neq x$ && FAIL & FAIL
 \\\hline
 \end{tabular}
+
 \begin{code}
-insertLL :: Monad m => Identifier -> [Identifier] -> VarWhen -> VarList
+insertLL :: Monad m => Identifier -> [Identifier] -> VarWhen
+         -> VarList -> VarWhen
          -> Binding -> m Binding
-insertLL i is vw vl (BD (vbinds,lbinds))
- = return $ BD (vbinds, M.insert (i,is) (BL vw vl) lbinds)
+
+insertLL i is Static vl Static binds@(BD (vbinds,lbinds))
+ = case M.lookup (i,is) lbinds of
+     Nothing  ->  return $ BD (vbinds,M.insert (i,is) (BL Static vl) lbinds)
+     Just (BL Static wl)
+       | wl == vl  ->  return binds
+       | otherwise  ->  fail "bindLVarToVList: lvar. bound to other var-list."
+     _  ->  fail "bindLVarToVList: lvar. bound to set or other var-list."
+
+insertLL i is vw@(During m) vl vlw@(During n) binds@(BD (vbinds,lbinds))
+ = case M.lookup (i,is) lbinds of
+     Nothing  ->  return $ BD (vbinds,M.insert (i,is) (BL vlw vl) lbinds)
+     Just (BL (During p) wl)
+      | inconsistentVL vl wl
+          -> fail "bindLVarToVList: lvar. bound to other var-list."
+      | null p  -> return $ BD (vbinds,M.insert (i,is) (BL vlw vl) lbinds)
+      | p == n  ->  return binds
+      | otherwise
+          -> fail "bindLVarToVList: lvar. bound to other subscript."
+     _  ->  fail "bindLVarToVList: lvar. bound to set or other var-list."
+
+insertLL i is vw vl vlw _
+ = error $ unlines
+    [ "insertLL: unexpected argument combination"
+    , "i   = " ++ show i
+    , "is  = " ++ show is
+    , "vw  = " ++ show vw
+    , "vl  = " ++ show vl
+    , "vlw = " ++ show vlw
+    ]
+\end{code}
+
+Variable-lists are inconsistent if the variables at each position
+differ, except that a \texttt{(During "")} in the first
+list (``new'') can correspond to \texttt{(During n)} for any \texttt{n}
+in the second (``previous'').
+\begin{code}
+inconsistentVL [] []  =  False
+inconsistentVL []  _  =  True
+inconsistentVL _  []  =  True
+inconsistentVL (StdVar nv:nvl) (StdVar pv:pvl)
+                      =  inconsistentV  nv  pv  || inconsistentVL nvl pvl
+inconsistentVL (LstVar nlv:nvl) (LstVar plv:pvl)
+                      =  inconsistentLV nlv plv || inconsistentVL nvl pvl
+inconsistentVL  _  _  =  True
+
+inconsistentLV (LVbl nv nis) (LVbl pv pis)
+                      =  nis /= pis || inconsistentV nv pv
+
+inconsistentV (Vbl ni nc (During "")) (Vbl pi pc (During _))
+                      =  ni /= pi || nc /= pc
+inconsistentV (Vbl ni nc (During m)) (Vbl pi pc (During n))
+                      =  m /= n
+inconsistentV  _ _ = True -- any non-During should resut in failure
 \end{code}
 
 \newpage
@@ -560,21 +628,25 @@ insertLL i is vw vl (BD (vbinds,lbinds))
 
 Similar code to \texttt{bindLVarToVList} above, except we have sets.
 \begin{code}
-vsCompatible vc Static vs  =  all (validStaticGVarClass vc) vs
+vsCompatible vc Static vs  =  (all (validStaticGVarClass vc) vs, Static)
 vsCompatible vc vw vs      =  vlComp vc vw S.empty (S.toList vs)
+
+sForceD = S.map forceGNullDuring
 \end{code}
 
 \begin{code}
 bindLVarToVSet :: Monad m => ListVar -> VarSet -> Binding -> m Binding
 
 bindLVarToVSet lv@(LVbl (Vbl i vc Static) is) vs binds
- | vsCompatible vc Static vs  =  insertLS i is Static vs binds
+ | valid  =  insertLS i is Static vs vsw binds
+ where
+   (valid, vsw) = vsCompatible vc Static vs
 
-bindLVarToVSet lv@(LVbl (Vbl i vc vw@(During _)) is) vs binds
- | vsCompatible vc vw vs  =  insertLS i is vw vs binds
 bindLVarToVSet lv@(LVbl (Vbl i vc vw) is) vs binds
- | vsCompatible vc vw vs'  =  insertLS i is vw vs' binds
- where vs' = S.map forceGNullDuring vs
+ | valid  =  insertLS i is vw vs' vs'w binds
+ where
+   vs' = sForceD vs
+   (valid, vs'w) = vsCompatible vc vw vs'
 
 bindLVarToVSet _ _ _ = fail "bindLVarToVSet: invalid lvar. -> vset binding."
 \end{code}
@@ -613,10 +685,39 @@ and $i_s$ and $i_v$ are the respective identifiers  underlying $s$ and the $v$s:
 \\\hline
 \end{tabular}
 \begin{code}
-insertLS :: Monad m => Identifier -> [Identifier] -> VarWhen -> VarSet
+insertLS :: Monad m => Identifier -> [Identifier] -> VarWhen
+         -> VarSet -> VarWhen
          -> Binding -> m Binding
-insertLS i is vw vs (BD (vbinds,lbinds))
- = return $ BD (vbinds, M.insert (i,is) (BS vw vs) lbinds)
+
+insertLS i is Static vs Static binds@(BD (vbinds,lbinds))
+ = case M.lookup (i,is) lbinds of
+     Nothing  ->  return $ BD (vbinds,M.insert (i,is) (BS Static vs) lbinds)
+     Just (BS Static ws)
+       | ws == vs  ->  return binds
+       | otherwise  ->  fail "bindLVarToVSet: lvar. bound to other var-set."
+     _  ->  fail "bindLVarToVSet: lvar. bound to list or other set."
+
+insertLS i is vw@(During m) vs vsw@(During n) binds@(BD (vbinds,lbinds))
+ = case M.lookup (i,is) lbinds of
+     Nothing  ->  return $ BD (vbinds,M.insert (i,is) (BS vsw vs) lbinds)
+     Just (BS (During p) ws)
+      | inconsistentVL (S.toList vs) (S.toList ws)
+          -> fail "bindLVarToVSet: lvar. bound to other var-set."
+      | null p  -> return $ BD (vbinds,M.insert (i,is) (BS vsw vs) lbinds)
+      | p == n  ->  return binds
+      | otherwise
+          -> fail "bindLVarToVSet: lvar. bound to other subscript."
+     _  ->  fail "bindLVarToVSet: lvar. bound to list or other var-set."
+
+insertLS i is vw vs vsw _
+ = error $ unlines
+    [ "insertLS: unexpected argument combination"
+    , "i   = " ++ show i
+    , "is  = " ++ show is
+    , "vw  = " ++ show vw
+    , "vs  = " ++ show vs
+    , "vsw = " ++ show vsw
+    ]
 \end{code}
 
 \subsubsection{Binding General-Variables to General-Variables}

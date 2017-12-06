@@ -240,14 +240,10 @@ newDuring = During ""
 \end{code}
 
 \newpage
-The insertion function first checks to see if the pattern variable
-is already bound.
 
-We expect the following behaviour,
-where $s$ is \texttt{Static}, $\texttt{v}$ and $\texttt{x}$ are \texttt{Textual},
-and $v$ and $x$ with or without decoration, are any other \texttt{Dynamic},
-and $i_s$ and $i_v$ are the respective identifiers  underlying $s$ and the $v$s:
-
+We expect the behaviour shown in Fig. \ref{fig:dynamic-coherence}.
+\begin{figure}
+\begin{center}
 \begin{tabular}{|c|c|c|c|}
 \hline
    new entry: & $s \mapsto x$
@@ -275,12 +271,22 @@ and $i_s$ and $i_v$ are the respective identifiers  underlying $s$ and the $v$s:
   $i_v \mapsto y_a, y\neq x$ && FAIL & FAIL
 \\\hline
 \end{tabular}
-
-The following code expects:
- the \texttt{VarWhen} argument to be \texttt{Static} or \texttt{During};
-  and the \texttt{Variable} argument
+  \caption{
+    Managing Dynamic binding coherence, where
+    $s$ is \texttt{Static}, $\texttt{v}$ and $\texttt{x}$ are \texttt{Textual},
+    and $v$ and $x$ with or without decoration, are any other \texttt{Dynamic},
+    and $i_s$ and $i_v$ are the respective identifiers  underlying $s$ and the $v$s
+  }
+  \label{fig:dynamic-coherence}
+\end{center}
+\end{figure}
+The following code expects
+the \texttt{VarWhen} argument to be \texttt{Static} or \texttt{During};
+ and the \texttt{Variable} argument
 to have \texttt{During} temporality
 if the \texttt{VarWhen} parameter is \texttt{During}.
+The insertion function first checks to see if the pattern variable
+is already bound.
 \begin{code}
 insertVV :: Monad m => Identifier -> VarWhen -> Variable -> Binding -> m Binding
 
@@ -529,40 +535,8 @@ bindLVarToVList _ _ _ = fail "bindLVarToVList: invalid lvar. -> vlist binding."
 \end{code}
 
 \newpage
-As for standard variables,
-we expect the following behaviour,
-where $s$ is \texttt{Static}, $\texttt{v}$ and $\texttt{x}$ are \texttt{Textual},
-and $v$ and $x$ with or without decoration, are any other \texttt{Dynamic},
-and $i_s$ and $i_v$ are the respective identifiers  underlying $s$ and the $v$s:
-
-\begin{tabular}{|c|c|c|c|}
-\hline
-   new entry: & $s \mapsto x$
-              & $v \mapsto x$, $v' \mapsto x'$, $\texttt{v} \mapsto \texttt{x}$
-              & $v_m \mapsto x_n$
-\\\hline
-  inserted as: & $i_s \mapsto x$
-             & $i_v \mapsto x_{\_}$
-             & $i_v \mapsto x_n$
-\\\hline
-  \underline{prior bind} & \multicolumn{3}{|c|}{\underline{actual binding outcome}}
-\\\hline
-  none & $i_s\mapsto x$ & $i_v \mapsto x_{\_}$ & $i_v \mapsto x_n$
-\\\hline
-  $i_s \mapsto x$ & $i_s\mapsto x$ &  &
-\\\hline
-  $i_s \mapsto y, y\neq x$ & FAIL &  &
-\\\hline
-  $i_v \mapsto x_{\_}$ && $i_v \mapsto x_{\_}$ & $i_v \mapsto x_n$
-\\\hline
-  $i_v \mapsto x_n$ && $i_v \mapsto x_n$ & $i_v \mapsto x_n$
-\\\hline
-  $i_v \mapsto x_a, a\neq n$ && $i_v \mapsto x_a$ & FAIL
-\\\hline
-  $i_v \mapsto y_a, y\neq x$ && FAIL & FAIL
-\\\hline
-\end{tabular}
-
+We follow the behaviour described in Fig. \ref{fig:dynamic-coherence},
+generalised for variable lists.
 \begin{code}
 insertLL :: Monad m => Identifier -> [Identifier] -> VarWhen
          -> VarList -> VarWhen
@@ -643,47 +617,18 @@ bindLVarToVSet lv@(LVbl (Vbl i vc Static) is) vs binds
    (valid, vsw) = vsCompatible vc Static vs
 
 bindLVarToVSet lv@(LVbl (Vbl i vc vw) is) vs binds
- | valid  =  insertLS i is vw vs' vs'w binds
+ | valid  =  insertLS i is vw' vs' vs'w binds
  where
+   (valid, vsw) = vsCompatible vc vw vs
+   vw' = forceDuring vw
    vs' = sForceD vs
-   (valid, vs'w) = vsCompatible vc vw vs'
+   vs'w = forceDuring vsw
 
 bindLVarToVSet _ _ _ = fail "bindLVarToVSet: invalid lvar. -> vset binding."
 \end{code}
 
-As for standard variables and list variables,
-we expect the following behaviour,
-where $s$ is \texttt{Static}, $\texttt{v}$ and $\texttt{x}$ are \texttt{Textual},
-and $v$ and $x$ with or without decoration, are any other \texttt{Dynamic},
-and $i_s$ and $i_v$ are the respective identifiers  underlying $s$ and the $v$s:
-
-\begin{tabular}{|c|c|c|c|}
-\hline
-   new entry: & $s \mapsto x$
-              & $v \mapsto x$, $v' \mapsto x'$, $\texttt{v} \mapsto \texttt{x}$
-              & $v_m \mapsto x_n$
-\\\hline
-  inserted as: & $i_s \mapsto x$
-             & $i_v \mapsto x_{\_}$
-             & $i_v \mapsto x_n$
-\\\hline
-  \underline{prior bind} & \multicolumn{3}{|c|}{\underline{actual binding outcome}}
-\\\hline
-  none & $i_s\mapsto x$ & $i_v \mapsto x_{\_}$ & $i_v \mapsto x_n$
-\\\hline
-  $i_s \mapsto x$ & $i_s\mapsto x$ &  &
-\\\hline
-  $i_s \mapsto y, y\neq x$ & FAIL &  &
-\\\hline
-  $i_v \mapsto x_{\_}$ && $i_v \mapsto x_{\_}$ & $i_v \mapsto x_n$
-\\\hline
-  $i_v \mapsto x_n$ && $i_v \mapsto x_n$ & $i_v \mapsto x_n$
-\\\hline
-  $i_v \mapsto x_a, a\neq n$ && $i_v \mapsto x_a$ & FAIL
-\\\hline
-  $i_v \mapsto y_a, y\neq x$ && FAIL & FAIL
-\\\hline
-\end{tabular}
+We follow the behaviour described in Fig. \ref{fig:dynamic-coherence},
+generalised for variable sets.
 \begin{code}
 insertLS :: Monad m => Identifier -> [Identifier] -> VarWhen
          -> VarSet -> VarWhen

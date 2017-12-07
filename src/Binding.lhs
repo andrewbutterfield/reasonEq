@@ -557,9 +557,13 @@ insertLL i is vw@(During m) vl vlw@(During n) binds@(BD (vbinds,lbinds))
       | inconsistentVL vl wl
           -> fail "bindLVarToVList: lvar. bound to other var-list."
       | null p  -> return $ BD (vbinds,M.insert (i,is) (BL vlw vl) lbinds)
-      | p == n  ->  return binds
+      | null n || p == n  ->  return binds
       | otherwise
-          -> fail "bindLVarToVList: lvar. bound to other subscript."
+          -> fail $ unlines
+               [ "bindLVarToVList: lvar. bound to other subscript."
+               , "m = " ++ show m
+               , "n = " ++ show n
+               , "p = " ++ show p ]
      _  ->  fail "bindLVarToVList: lvar. bound to set or other var-list."
 
 insertLL i is vw vl vlw _
@@ -590,6 +594,8 @@ inconsistentVL  _  _  =  True
 inconsistentLV (LVbl nv nis) (LVbl pv pis)
                       =  nis /= pis || inconsistentV nv pv
 
+inconsistentV (Vbl ni nc (During _)) (Vbl pi pc (During ""))
+                      =  ni /= pi || nc /= pc
 inconsistentV (Vbl ni nc (During "")) (Vbl pi pc (During _))
                       =  ni /= pi || nc /= pc
 inconsistentV (Vbl ni nc (During m)) (Vbl pi pc (During n))
@@ -639,7 +645,11 @@ insertLS i is Static vs Static binds@(BD (vbinds,lbinds))
      Nothing  ->  return $ BD (vbinds,M.insert (i,is) (BS Static vs) lbinds)
      Just (BS Static ws)
        | ws == vs  ->  return binds
-       | otherwise  ->  fail "bindLVarToVSet: lvar. bound to other var-set."
+       | otherwise
+           ->  fail $ unlines
+                 [ "bindLVarToVSet: lvar. bound to other var-set."
+                 , "vs = " ++ show vs
+                 , "ws = " ++ show ws ]
      _  ->  fail "bindLVarToVSet: lvar. bound to list or other set."
 
 insertLS i is vw@(During m) vs vsw@(During n) binds@(BD (vbinds,lbinds))
@@ -647,11 +657,18 @@ insertLS i is vw@(During m) vs vsw@(During n) binds@(BD (vbinds,lbinds))
      Nothing  ->  return $ BD (vbinds,M.insert (i,is) (BS vsw vs) lbinds)
      Just (BS (During p) ws)
       | inconsistentVL (S.toList vs) (S.toList ws)
-          -> fail "bindLVarToVSet: lvar. bound to other var-set."
+          -> fail $ unlines
+               [ "bindLVarToVSet: lvar. bound to other var-set."
+               , "vs = " ++ show vs
+               , "ws = " ++ show ws ]
       | null p  -> return $ BD (vbinds,M.insert (i,is) (BS vsw vs) lbinds)
-      | p == n  ->  return binds
+      | null n || p == n  ->  return binds
       | otherwise
-          -> fail "bindLVarToVSet: lvar. bound to other subscript."
+          -> fail $ unlines
+               [ "bindLVarToVSet: lvar. bound to other subscript."
+               , "m = " ++ show m
+               , "n = " ++ show n
+               , "p = " ++ show p ]
      _  ->  fail "bindLVarToVSet: lvar. bound to list or other var-set."
 
 insertLS i is vw vs vsw _

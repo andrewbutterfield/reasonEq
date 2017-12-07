@@ -574,8 +574,8 @@ test_simple_assignment
            (wy `assigned` e42) (v `assigned` ee)
            @?= ( Just $ bindVV gv gsy $ bindVT ge e42
                $ bindVV gok gok $ bindVV gok' gok'
-               $ bindLS (LstVar (lS  `less` [v])) (LstVar (lS  `less` [wy]))
-               $ bindLS (LstVar (lS' `less` [v])) (LstVar (lS' `less` [wy]))
+               $ bindLL (LstVar (lS  `less` [v])) (LstVar (lS  `less` [wy]))
+               $ bindLL (LstVar (lS' `less` [v])) (LstVar (lS' `less` [wy]))
                $ emptyBinding )
        )
     ]

@@ -305,7 +305,7 @@ insertVV i vw@(During m) x@(Vbl xi xc (During n)) binds@(BD (vbinds,lbinds))
         | bi /= xi ||  bc /= xc
             ->  fail "bindVarToVar: variable bound to other variable."
         | null p  ->  return $ BD (M.insert i (BV x) vbinds, lbinds)
-        | p == n  ->  return binds
+        | null n || p == n  ->  return binds
         | otherwise
             ->  fail "bindVarToVar: variable bound to other subscript."
       _  ->  fail "bindVarToVar: variable already bound to term."
@@ -578,9 +578,9 @@ insertLL i is vw vl vlw _
 \end{code}
 
 Variable-lists are inconsistent if the variables at each position
-differ, except that a \texttt{(During "")} in the first
-list (``new'') can correspond to \texttt{(During n)} for any \texttt{n}
-in the second (``previous'').
+differ, except that a \texttt{(During "")} in the one
+list can correspond to \texttt{(During n)} for any \texttt{n}
+in the other list.
 \begin{code}
 inconsistentVL [] []  =  False
 inconsistentVL []  _  =  True

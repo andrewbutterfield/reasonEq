@@ -1,102 +1,58 @@
 Substitutions:
 
-  [okm,Sm/ok,S] :: [Om/O] - succeeds: [Failed]
-
-expected:
-
-[ BD
-  ( fromList
-    []
-  , fromList
-    [ ( ( Id "O"
-        , [] )
-      , BS
-        WB
-        ( fromList
-          [ GV (VR (Id "ok", VO, WD ""))
-          , GL (LV (VR (Id "S", VO, WD ""), [])) ] ) ) ] ) ]
-
- but got:
+LHS
+sMatch [vtS_Design] emptyBinding S.empty S.empty sub_okxyz sub_ok_S
 
 BD
 ( fromList
-  []
+  [ ( Id "ok"
+    , BV (VR (Id "ok", VO, WD "m")) ) ]
 , fromList
-  [ ( ( Id "O"
+  [ ( ( Id "S"
       , [] )
     , BS
       ( WD "m" )
       ( fromList
-        [ GV (VR (Id "ok", VO, WD "m"))
-        , GL (LV (VR (Id "S", VO, WD "m"), [])) ] ) ) ] )
+        [ GV (VR (Id "x", VO, WD "m"))
+        , GV (VR (Id "y", VO, WD "m"))
+        , GV (VR (Id "z", VO, WD "m")) ] ) ) ] )
 
-bindLs gOm [gokm,gSm] emptyBinding
+
+
+
+RHS
+bindVV gok gok $ bindVV gokm gokm $ bindLs gS [gx,gy,gz] $ bindLs gSm [gxm,gym,gzm] $ emptyBinding
+
+
+bindVV gokm gokm $ bindLs gS [gx,gy,gz] $ bindLs gSm [gxm,gym,gzm] $ emptyBinding
 =
 BD
 ( fromList
-  []
+  [ ( Id "ok"
+    , BV (VR (Id "ok", VO, WD "m")) ) ]
 , fromList
-  [ ( ( Id "O"
+  [ ( ( Id "S"
       , [] )
     , BS
       ( WD "m" )
       ( fromList
-        [ GV (VR (Id "ok", VO, WD "m"))
-        , GL (LV (VR (Id "S", VO, WD "m"), [])) ] ) ) ] )
+        [ GV (VR (Id "x", VO, WD "m"))
+        , GV (VR (Id "y", VO, WD "m"))
+        , GV (VR (Id "z", VO, WD "m")) ] ) ) ] )
 
-bindLs gO [gok,gS] $ bindLs gOm [gokm,gSm] emptyBinding
+bindVV okm okm it
 =
 BD
 ( fromList
-  []
+  [ ( Id "ok"
+    , BV (VR (Id "ok", VO, WD "m")) ) ]
 , fromList
-  [ ( ( Id "O"
-      , [] )
-    , BS
-      WB
-      ( fromList
-        [ GV (VR (Id "ok", VO, WD ""))
-        , GL (LV (VR (Id "S", VO, WD ""), [])) ] ) ) ] )
-
-bindLs gO [gok,gS] emptyBinding
-=
-BD
-( fromList
-  []
-, fromList
-  [ ( ( Id "O"
-      , [] )
-    , BS
-      WB
-      ( fromList
-        [ GV (VR (Id "ok", VO, WD ""))
-        , GL (LV (VR (Id "S", VO, WD ""), [])) ] ) ) ] )
-
-bindLs gOm [gokm,gSm] $ bindLs gO [gok,gS] emptyBinding
-=
-BD
-( fromList
-  []
-, fromList
-  [ ( ( Id "O"
+  [ ( ( Id "S"
       , [] )
     , BS
       ( WD "m" )
       ( fromList
-        [ GV (VR (Id "ok", VO, WD "m"))
-        , GL (LV (VR (Id "S", VO, WD "m"), [])) ] ) ) ] )
-
-
-
-
-----------------------
-
-  [okm,xm,ym,zm/ok,x,y,z] :: [Om/O] - succeeds: [Failed]
-expected: [BD (fromList [],fromList [((Id "O",[]),BS WB (fromList [GV (VR (Id "ok",VO,WD "")),GV (VR (Id "x",VO,WD "")),GV (VR (Id "y",VO,WD "")),GV (VR (Id "z",VO,WD ""))]))])]
- but got: [BD (fromList [],fromList [((Id "O",[]),BS (WD "m") (fromList [GV (VR (Id "ok",VO,WD "m")),GV (VR (Id "x",VO,WD "m")),GV (VR (Id "y",VO,WD "m")),GV (VR (Id "z",VO,WD "m"))]))])]
-
-
----------------------
-
- [okm,xm,ym,zm/ok,x,y,z] :: [okm,Sm/ok,S] - succeeds: [Failed]
-ERROR: Maybe.fromJust: Nothing
+        [ GV (VR (Id "x", VO, WD "m"))
+        , GV (VR (Id "y", VO, WD "m"))
+        , GV (VR (Id "z", VO, WD "m")) ] ) ) ] )
+--

@@ -75,7 +75,7 @@ Here is our initial set of scenarios:
 \end{description}
 
 \textbf{
-NEED AND EXAMPLE OF AN OPERATIONAL SEMANTICS RULE
+NEED AN EXAMPLE OF AN OPERATIONAL SEMANTICS RULE
 THAT REQUIRES MATCHING AGAINST ``PROGRAM TEXTS.''
 }
 
@@ -350,14 +350,38 @@ test_reserved_as_sets
                  oknlSn (lswrap [lOm]) )
          @?= ( bindLVarToVSet lOm oknlSn emptyBinding :: [Binding] ) ))
      ]
-
+\end{code}
+\newpage
+\begin{code}
+u = jId "u"  ;  vu = PreVar u  ;  gu = StdVar vu
+w = jId "w"  ;  vw = PreVar w  ;  gw = StdVar vw
 
 test_less_reserved
  = testGroup "S reserved as {x,y,z}, less x,y,z or more" -- []
-     [ testCase "S_Design |- {x,y,z} :: {v,S\\v} -- succeeds 3 ways"
+     [ testCase "S_Design |- {x,y,z} :: {u,S\\u} -- succeeds 3 ways"
         ( vsMatch [vtS_Design] emptyBinding S.empty S.empty
-            (vswrap [x,y,z]) (vswrap [vv] `S.union` lswrap [lS `less` [v]])
-          @?= Nothing
+            (vswrap [x,y,z]) (vswrap [vu] `S.union` lswrap [lS `less` [u]])
+          @?= [ bindVV gu gx $ bindLs (LstVar lS) [gy,gz] emptyBinding
+              , bindVV gu gy $ bindLs (LstVar lS) [gx,gz] emptyBinding
+              , bindVV gu gz $ bindLs (LstVar lS) [gx,gy] emptyBinding
+              ]
+        )
+     , testCase "S_Design |- {x,y,z} :: {u,w,S\\u,w} -- succeeds 6 ways"
+        ( vsMatch [vtS_Design] emptyBinding S.empty S.empty
+            (vswrap [x,y,z]) (vswrap [vu,vw] `S.union` lswrap [lS `less` [u,w]])
+          @?= [ bindVV gu gy $ bindVV gw gz
+                $ bindLs (LstVar lS) [gx] emptyBinding
+              , bindVV gu gx $ bindVV gw gz
+                $ bindLs (LstVar lS) [gy] emptyBinding
+              , bindVV gu gx $ bindVV gw gy
+                $ bindLs (LstVar lS) [gz] emptyBinding
+              , bindVV gu gz $ bindVV gw gy
+                $ bindLs (LstVar lS) [gx] emptyBinding
+              , bindVV gu gz $ bindVV gw gx
+                $ bindLs (LstVar lS) [gy] emptyBinding
+              , bindVV gu gy $ bindVV gw gx 
+                $ bindLs (LstVar lS) [gz] emptyBinding
+              ]
         )
      ]
 
@@ -367,7 +391,6 @@ tstSetReserved  = defaultMain [test_reserved_as_sets]
 tstLessReserved = defaultMain [test_less_reserved]
 tstReserved     = defaultMain [test_reserved_listvars]
 \end{code}
-
 \newpage
 \subsection{Sequential Composition}
 

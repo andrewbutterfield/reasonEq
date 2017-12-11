@@ -224,6 +224,9 @@ test_none_reserved
          ( bindLVarToVList lO (vwrap [e,x]) emptyBinding :: [Binding] ) )
      ]
 
+lSu  = lS `less` [u]
+lSuw = lS `less` [u,w]
+
 test_reserved_as_lists
  = testGroup "O,M,S reserved as [ok,x,y,z]"
      [ testCase "L_Design |-  x,y,z :: S  -- matches."
@@ -309,7 +312,20 @@ test_reserved_as_lists
             (vwrap [ok] )
             (lwrap [lM,lS])
          @?= Nothing )
-     ]
+     , testCase "L_Design |- [x,y,z] :: [u,S\\u] -- succeeds"
+         ( vlMatch [vtL_Design] emptyBinding S.empty S.empty
+             (vwrap [x,y,z]) (vwrap [vu] ++ lwrap [lSu])
+           @?= [ bindVV gu gx $ bindLl (LstVar lSu) [gy,gz] emptyBinding
+               ]
+         )
+     , testCase "L_Design |- [x,y,z] :: [u,w,S\\u,w] -- succeeds"
+         ( nub (vlMatch [vtL_Design] emptyBinding S.empty S.empty
+                  (vwrap [x,y,z]) (vwrap [vu,vw] ++ lwrap [lSuw]))
+           @?= [ bindVV gu gx $ bindVV gw gy
+                 $ bindLl (LstVar lSuw) [gz] emptyBinding
+               ]
+         )
+   ]
 
 test_reserved_as_sets
  = testGroup "O,M,S reserved as {ok,x,y,z}"
@@ -379,7 +395,7 @@ test_less_reserved
                 $ bindLs (LstVar lS) [gx] emptyBinding
               , bindVV gu gz $ bindVV gw gx
                 $ bindLs (LstVar lS) [gy] emptyBinding
-              , bindVV gu gy $ bindVV gw gx 
+              , bindVV gu gy $ bindVV gw gx
                 $ bindLs (LstVar lS) [gz] emptyBinding
               ]
         )
@@ -586,7 +602,7 @@ test_assignment
     [ test_simple_assignment, test_simultaneous_assignment ]
 
 test_simple_assignment
- = testGroup "Simple Assignment"
+ = testGroup "Simple Assignment (<< ... >> denotes definition expansion)"
     [ testCase "Design |- y := 42  :: v := e, should succeed"
        ( tMatch [vtS_Design] emptyBinding S.empty S.empty
            (wy .:= e42) (v .:= ee)
@@ -602,10 +618,54 @@ test_simple_assignment
                $ emptyBinding )
        )
     ]
+\end{code}
+
+\begin{code}
+vs `simasgn` es
+  = PCons land [ PIter land eq [vs', es]
+               , PIter land eq [lS' `less` [vs], lS `less` [vs]] ]
+  where vs' = PostVars vs
+
+
+vs_becomes_es = v `simasgn` (LVbl e [])
+es    = LVbl e []      ; ges   = LstVar es
+vs'   = PostVars v     ; gvs'  = LstVar vs'
+lSvs  = lS `less` [v]  ; gSvs  = LstVar lSvs
+lS'vs = lS' `less` [v] ; gS'vs = LstVar lS'vs
+
+f = PreExpr $ jId "f"
+
+us_becomes_fs = u `simasgn` (LVbl f [])
+fs    = LVbl f []      ; gfs   = LstVar fs
+us'   = PostVars u     ; gus'  = LstVar us'
+lSus  = lS `less` [u]  ; gSus  = LstVar lSus
+lS'us = lS' `less` [u] ; gS'us = LstVar lS'us
+
+e1 = EVal int $ Integer 1
+e2 = EVal int $ Integer 2
+
+x1y2 = ((evar int x `equal` e1) `lAnd` (evar int y `equal` e2))
+       `lAnd`
+       (PIter land eq [lS' `less` [ze],lS `less` [ze]])
 
 test_simultaneous_assignment
  = testGroup "Simultaneous Assignment"
-     []
+     [ testCase "<< v$ := e$>> :: << v$ := e$>>"
+         ( tMatch [vtS_Design] emptyBinding S.empty S.empty
+                  vs_becomes_es vs_becomes_es
+           @?= ( Just $ bindLL gvs' gvs' $ bindLL ges ges
+                $ bindLL gSvs gSvs $ bindLL gS'vs gS'vs $ emptyBinding ) )
+     , testCase "<< u$ := f$>> :: << v$ := e$>>"
+         ( tMatch [vtS_Design] emptyBinding S.empty S.empty
+                  us_becomes_fs vs_becomes_es
+           @?= ( Just $ bindLL gvs' gus' $ bindLL ges gfs
+                $ bindLL gSvs gSus $ bindLL gS'vs gS'us $ emptyBinding ) )
+     , testCase "(x'=1 /\\ y'=2) /\\ S'\\z = S\\z  :: << v$ := e$>>"
+         ( tMatch [vtS_Design] emptyBinding S.empty S.empty
+                  x1y2 vs_becomes_es
+           @?= ( Just $ bindLL gvs' gus' $ bindLL ges gfs
+                $ bindLL gSvs gSus $ bindLL gS'vs gS'us $ emptyBinding ) )
+     ]
 
 tstAsg = defaultMain [test_assignment]
 \end{code}

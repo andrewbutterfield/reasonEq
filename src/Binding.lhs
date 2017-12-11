@@ -167,6 +167,9 @@ We bind to either a list or set of variables,
 and record the temporality (\texttt{Static} or \texttt{During}).
 We use the variable identifier and the list of `subtracted` identifiers
 as the map key.
+
+\textbf{NOTE: We need to allow list variables to bind to lists or sets of Terms}
+
 \begin{code}
 data LstVarBindRange
  = BL VarWhen VarList

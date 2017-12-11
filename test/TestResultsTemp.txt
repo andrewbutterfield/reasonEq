@@ -1,15 +1,25 @@
 
+tMatch [vtS_Design] emptyBinding S.empty S.empty vs_becomes_es vs_becomes_es
+
+
 BD
 ( fromList
-  [ ( Id "u"
-    , BV (VR (Id "x", VO, WD "")) ) ]
+  []
 , fromList
   [ ( ( Id "S"
-      , [ Id "u" ] )
-    , BS
+      , [ Id "v" ] )
+    , BL
       ( WD "" )
-      ( fromList
-        [ GV (VR (Id "y", VO, WD ""))
-        , GV (VR (Id "z", VO, WD "")) ] ) ) ] )
+      [ GL (LV (VR (Id "S", VO, WD ""), [Id "v"])) ] )
+  , ( ( Id "e"
+      , [] )
+    , BL
+      ( WD "" )
+      [ GL (LV (VR (Id "e", VE, WD ""), [])) ] )
+  , ( ( Id "v"
+      , [] )
+    , BL
+      ( WD "" )
+      [ GL (LV (VR (Id "v", VO, WD ""), [])) ] ) ] )
 
 --

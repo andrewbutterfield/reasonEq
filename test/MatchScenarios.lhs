@@ -663,8 +663,9 @@ test_simultaneous_assignment
      , testCase "(x'=1 /\\ y'=2) /\\ S'\\z = S\\z  :: << v$ := e$>>"
          ( tMatch [vtS_Design] emptyBinding S.empty S.empty
                   x1y2 vs_becomes_es
-           @?= ( Just $ bindLL gvs' gus' $ bindLL ges gfs
-                $ bindLL gSvs gSus $ bindLL gS'vs gS'us $ emptyBinding ) )
+           @?= ( Just $ bindLl gvs' [gx,gy] $ bindL0 {- !! -} ges
+                 -- ges needs to bind to [e1,e2] !!!!!
+                $ bindLL gSvs gz $ bindLL gS'vs gz' $ emptyBinding ) )
      ]
 
 tstAsg = defaultMain [test_assignment]

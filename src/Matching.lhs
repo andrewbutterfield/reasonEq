@@ -290,39 +290,70 @@ tMatch' vts bind cbvs pbvs (Sub tkC tC subC) (Sub tkP tP subP)
 $$
 \inferrule
    {na_C = na_P \and ni_C = ni_P
-    \and
-    \beta \vdash lvs_C :: lvs_P \leadsto \beta'
+    \and \#lvs_C = \#lvs_P
    }
    { \beta \vdash \ii{na_C}{ni_C}{lvs_C} :: \ii{na_P}{ni_P}{lvs_P}
      \leadsto
-     \beta \uplus \beta'
+     \beta \uplus \beta \uplus \{lvs_P[i] \mapsto lvs_C[i]\}_{i \in 1\dots\#lvs_P}
    }
    \quad
-   \texttt{tMatch Iter2}
+   \texttt{tMatch Iter-Self}
 $$
 
+\begin{code}
+tMatch' vts bind cbvs pbvs (Iter tkC naC niC lvsC) (Iter tkP naP niP lvsP)
+  | tkP == tkC && naC == naP && niC == niP && length lvsP == length lvsC
+               =  ibind bind $ zip lvsP lvsC
+  | otherwise  =  fail "tMatch: incompatible Iter."
+  where
+    ibind bind [] = return bind
+    ibind bind ((lvP,lvC):rest)
+      = do bind' <- bindLVarToVList lvP [LstVar lvC] bind
+           ibind bind' rest
+\end{code}
+
+Plus a more complicated rule:
 $$
 \inferrule
    {na_C = na_P \and ni_C = ni_P
-    \and
-    \beta \vdash (lvs_{C})_i :: lvs_P \leadsto \beta'
+   \and
+   \and j \in 1 \dots\#\seqof{t_C}
+   \and
+   \#(\seqof{t_{C}}[j]) = \#lvs_P
    }
-   { \beta \vdash na_C({\cc{ni_C}{lvs_C}}_i) :: \ii{na_P}{ni_P}{lvs_P}
+   { \beta \vdash na_C(ni_C\seqof{t_C}_j) :: \ii{na_P}{ni_P}{lvs_P}
      \leadsto
-     \beta \uplus \beta'
+     \beta \uplus \{lvs_P[i] \mapsto \seqof{t_C[i]}_j\}_{i \in 1\dots\#lvs_P}
    }
    \quad
-   \texttt{tMatch Iter}
+   \texttt{tMatch Iter-Cons}
 $$
 
-Plus a more complicated rule !
 \begin{code}
-tMatch' vts bind cbvs pbvs (Iter tkC naC niC lvsC) (Iter tkP naP niP lvsP)
-  | tkP == tkC && naC == naP && niC == niP
-    =  vlMatch vts bind cbvs pbvs (map LstVar lvsC) (map LstVar lvsP)
-tMatch' vts bind cbvs pbvs tC (Iter tkP naP niP lvsP)
-  | tkP == termkind tC
-    =  error "\n\ttMatch non-Iter :: Iter N.Y.I."
+tMatch' vts bind cbvs pbvs tC@(Cons tkC naC tsC) (Iter tkP naP niP lvsP)
+  | tkP == tkC && naC == naP && all isNiP tsC
+               = ibind bind $ zip lvsP $ transpose $ map unNip tsC
+  | otherwise
+     = fail $ unlines
+         [ "tMatch: Cons not compatible with Iter."
+         , "tkP  = " ++ show tkP
+         , "tkC  = " ++ show tkC
+         , "naP  = " ++ show naP
+         , "naC  = " ++ show naC
+         , "niP  = " ++ show niP
+         , "lvsP = " ++ show lvsP
+         , "tsC  = " ++ show tsC
+         ]
+  where
+    arity = length lvsP
+    isNiP (Cons _ n ts)  =  n == niP && length ts == arity
+    isNiP _              =  False
+    unNiP (Cons _ _ ts)  =  ts
+    unNiP _              =  []
+    ibind bind [] = return bind
+    ibind bind ((lvP,tsC):rest)
+      =  do bind' <- bindLVarToTList lvP tsC bind
+            ibind bind' rest
 \end{code}
 
 Any other case results in failure:

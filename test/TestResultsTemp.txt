@@ -1,51 +1,41 @@
-S_Design |- {x,y,z} :: {u,w,S\u,w} -- succeeds 6 ways: [Failed]
+tMatch [vtS_Design] emptyBinding S.empty S.empty x1y2 vs_becomes_es
 
 expected:
 
-[ BD -- u |-> x, w |-> y, S\uw |-> z
+Just -- S\v |-> [z], e |-> [1,2], v |-> [x,y]
+( BD
   ( fromList
-    [ ( Id "u"
-      , BV (VR (Id "x", VO, WD "")) )
-    , ( Id "w"
-      , BV (VR (Id "y", VO, WD "")) ) ]
+    []
   , fromList
     [ ( ( Id "S"
-        , [ Id "u"
-          , Id "w" ] )
-      , BS
+        , [ Id "v" ] )
+      , BL
         ( WD "" )
-        ( fromList
-          [ GV (VR (Id "z", VO, WD "")) ] ) ) ] ) ]
+        [ GV (VR (Id "z", VO, WD "")) ] )
+    , ( ( Id "e"
+        , [] )
+      , BX
+        WB
+        [ K (E (TG (Id "Z"))) (VI 1)
+        , K (E (TG (Id "Z"))) (VI 2) ] )
+    , ( ( Id "v"
+        , [] )
+      , BL
+        ( WD "" )
+        [ GV (VR (Id "x", VO, WD ""))
+        , GV (VR (Id "y", VO, WD "")) ] ) ] ) )
+
 
 but got:
 
-[ BD -- u |-> x, w |-> y, S\uw |->z
+Just
+( BD -- S\v |-> S\z
   ( fromList
-    [ ( Id "u"
-      , BV (VR (Id "x", VO, WD "")) )
-    , ( Id "w"
-      , BV (VR (Id "y", VO, WD "")) ) ]
+    []
   , fromList
     [ ( ( Id "S"
-        , [ Id "u"
-          , Id "w" ] )
-      , BS
+        , [ Id "v" ] )
+      , BL
         ( WD "" )
-        ( fromList
-          [ GV (VR (Id "z", VO, WD "")) ] ) ) ] )
-, BD -- u |-> x, w |-> y, S\uw |-> z
-  ( fromList
-    [ ( Id "u"
-      , BV (VR (Id "x", VO, WD "")) )
-    , ( Id "w"
-      , BV (VR (Id "y", VO, WD "")) ) ]
-  , fromList
-    [ ( ( Id "S"
-        , [ Id "u"
-          , Id "w" ] )
-      , BS
-        ( WD "" )
-        ( fromList
-          [ GV (VR (Id "z", VO, WD "")) ] ) ) ] ) ]
-
+        [ GL (LV (VR (Id "S", VO, WD ""), [Id "z"])) ] ) ] ) )
 --

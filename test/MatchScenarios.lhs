@@ -372,31 +372,45 @@ test_reserved_as_sets
 u = jId "u"  ;  vu = PreVar u  ;  gu = StdVar vu
 w = jId "w"  ;  vw = PreVar w  ;  gw = StdVar vw
 
+
 test_less_reserved
  = testGroup "S reserved as {x,y,z}, less x,y,z or more" -- []
      [ testCase "S_Design |- {x,y,z} :: {u,S\\u} -- succeeds 3 ways"
         ( vsMatch [vtS_Design] emptyBinding S.empty S.empty
             (vswrap [x,y,z]) (vswrap [vu] `S.union` lswrap [lS `less` [u]])
-          @?= [ bindVV gu gx $ bindLs (LstVar lS) [gy,gz] emptyBinding
-              , bindVV gu gy $ bindLs (LstVar lS) [gx,gz] emptyBinding
-              , bindVV gu gz $ bindLs (LstVar lS) [gx,gy] emptyBinding
+          @?= [ bindVV gu gx $ bindLs (LstVar lSu) [gy,gz] emptyBinding
+              , bindVV gu gy $ bindLs (LstVar lSu) [gx,gz] emptyBinding
+              , bindVV gu gz $ bindLs (LstVar lSu) [gx,gy] emptyBinding
+              ]
+        )
+     , testCase "S_Design |- {x,y,z} :: {u,S\\u} -- SHOULD BE 3 WAYS"
+        ( vsMatch [vtS_Design] emptyBinding S.empty S.empty
+            (vswrap [x,y,z]) (vswrap [vu] `S.union` lswrap [lS `less` [u]])
+          @?= [ bindVV gu gx $ bindLs (LstVar lSu) [gy,gz] emptyBinding
               ]
         )
      , testCase "S_Design |- {x,y,z} :: {u,w,S\\u,w} -- succeeds 6 ways"
         ( vsMatch [vtS_Design] emptyBinding S.empty S.empty
             (vswrap [x,y,z]) (vswrap [vu,vw] `S.union` lswrap [lS `less` [u,w]])
-          @?= [ bindVV gu gy $ bindVV gw gz
-                $ bindLs (LstVar lS) [gx] emptyBinding
+          @?= [ bindVV gu gx $ bindVV gw gy
+                $ bindLs (LstVar lSuw) [gz] emptyBinding
+              , bindVV gu gy $ bindVV gw gz
+                $ bindLs (LstVar lSuw) [gx] emptyBinding
               , bindVV gu gx $ bindVV gw gz
-                $ bindLs (LstVar lS) [gy] emptyBinding
-              , bindVV gu gx $ bindVV gw gy
-                $ bindLs (LstVar lS) [gz] emptyBinding
+                $ bindLs (LstVar lSuw) [gy] emptyBinding
               , bindVV gu gz $ bindVV gw gy
-                $ bindLs (LstVar lS) [gx] emptyBinding
+                $ bindLs (LstVar lSuw) [gx] emptyBinding
               , bindVV gu gz $ bindVV gw gx
-                $ bindLs (LstVar lS) [gy] emptyBinding
+                $ bindLs (LstVar lSuw) [gy] emptyBinding
               , bindVV gu gy $ bindVV gw gx
-                $ bindLs (LstVar lS) [gz] emptyBinding
+                $ bindLs (LstVar lSuw) [gz] emptyBinding
+              ]
+        )
+     , testCase "S_Design |- {x,y,z} :: {u,w,S\\u,w} -- SHOULD BE 6 WAYS"
+        ( nub (vsMatch [vtS_Design] emptyBinding S.empty S.empty
+            (vswrap [x,y,z]) (vswrap [vu,vw] `S.union` lswrap [lS `less` [u,w]]) )
+          @?= [ bindVV gu gx $ bindVV gw gy
+                $ bindLs (LstVar lSuw) [gz] emptyBinding
               ]
         )
      ]
@@ -663,8 +677,7 @@ test_simultaneous_assignment
      , testCase "(x'=1 /\\ y'=2) /\\ S'\\z = S\\z  :: << v$ := e$>>"
          ( tMatch [vtS_Design] emptyBinding S.empty S.empty
                   x1y2 vs_becomes_es
-           @?= ( Just $ bindLl gvs' [gx,gy] $ bindL0 {- !! -} ges
-                 -- ges needs to bind to [e1,e2] !!!!!
+           @?= ( Just $ bindLl gvs' [gx,gy] $ bindLt ges [e1,e2]
                 $ bindLL gSvs gz $ bindLL gS'vs gz' $ emptyBinding ) )
      ]
 

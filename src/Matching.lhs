@@ -298,8 +298,23 @@ $$
      \beta \uplus \beta'
    }
    \quad
+   \texttt{tMatch Iter2}
+$$
+
+$$
+\inferrule
+   {na_C = na_P \and ni_C = ni_P
+    \and
+    \beta \vdash (lvs_{C})_i :: lvs_P \leadsto \beta'
+   }
+   { \beta \vdash na_C({\cc{ni_C}{lvs_C}}_i) :: \ii{na_P}{ni_P}{lvs_P}
+     \leadsto
+     \beta \uplus \beta'
+   }
+   \quad
    \texttt{tMatch Iter}
 $$
+
 Plus a more complicated rule !
 \begin{code}
 tMatch' vts bind cbvs pbvs (Iter tkC naC niC lvsC) (Iter tkP naP niP lvsP)
@@ -316,7 +331,7 @@ tMatch' _ _ _ _ tC tP
  = fail $ unlines
     [ "tMatch: structural mismatch."
     , "tC = " ++ show tC
-    ,  "tP = " ++ show tP
+    , "tP = " ++ show tP
     ]
 \end{code}
 

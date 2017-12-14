@@ -15,8 +15,10 @@ module Binding
 , bindVarToTerm
 , bindLVarToVList
 , bindLVarToVSet
+, bindLVarToTList
 , bindGVarToGVar
 , bindGVarToVList
+, bindGVarToTList
 , lookupBind
 , lookupLstBind
 , int_tst_Binding
@@ -44,7 +46,7 @@ mapping pattern variables to corresponding candidate variables or terms.
 From the outside a binding has two mappings:
 \begin{itemize}
   \item \texttt{Variable} to \texttt{Variable} or \texttt{Term}.
-  \item \texttt{ListVar} to \texttt{VarList} or \texttt{VarSet}.
+  \item \texttt{ListVar} to \texttt{VarList} or \texttt{VarSet} or \texttt{[Term]}.
 \end{itemize}
 However,
 we have a number of constraints regarding compatibilty
@@ -161,26 +163,32 @@ data VarBind
   = BindVar Variable | BindTerm Term deriving (Eq, Show)
 \end{code}
 
-\subsubsection{Binding \texttt{ListVar} to \texttt{VarList} or \texttt{VarSet}}
+\subsubsection{
+  Binding \texttt{ListVar} to
+  \texttt{VarList} or \texttt{VarSet} or \texttt{[Term]}
+}
 
-We bind to either a list or set of variables,
+We bind to either a list or set of variables, or a list of terms,
 and record the temporality (\texttt{Static} or \texttt{During}).
 We use the variable identifier and the list of `subtracted` identifiers
 as the map key.
-
-\textbf{NOTE: We need to allow list variables to bind to lists or sets of Terms}
 
 \begin{code}
 data LstVarBindRange
  = BL VarWhen VarList
  | BS VarWhen VarSet
+ | BX VarWhen [Term]
  deriving (Eq, Ord, Show, Read)
 
 type ListVarBinding = M.Map (Identifier,[Identifier]) LstVarBindRange
 \end{code}
-We return just the variable list or set from a lookup:
+We return just the variable list or set, or term-list from a lookup:
 \begin{code}
-data LstVarBind = BindList VarList | BindSet VarSet deriving (Eq, Show)
+data LstVarBind
+  = BindList VarList
+  | BindSet VarSet
+  | BindTerms [Term]
+  deriving (Eq, Show)
 \end{code}
 
 We put these together:
@@ -385,13 +393,9 @@ bindVarToTerm pv ct _
      , "ct = " ++ show ct ]
 \end{code}
 
-The insertion function cannot check to see if all dynamic variables
-in the term have the same temporality as the variable.
-This has to be done by the matcher, as it only needs to hold
-for ``known'' observation variables.
-
-First, it checks if the pattern variable
-is already bound.
+The insertion function
+checks if the pattern variable
+is already bound, and if so ensures that the new term is compatible.
 \begin{code}
 insertVT :: Monad m => Identifier -> VarWhen -> Term -> Binding -> m Binding
 insertVT i vw t (BD (vbinds,lbinds))
@@ -419,7 +423,6 @@ dt `isTemporalityOf` (Sub _ t sub)   =  all (isTemporalityOf dt) (t:termsof sub)
 dt `isTemporalityOf` _               =  True
 \end{code}
 
-\newpage
 A pre-existing bound term can only differ from one being added
 if they both contain just\texttt{During} dynamic variables,
 and those in the pre-existing term have empty subscripts.
@@ -507,6 +510,7 @@ forceGNullDuring (LstVar lv)  =  LstVar $ forceLNullDuring lv
 lForceD = map forceGNullDuring
 \end{code}
 
+\newpage
 \begin{code}
 bindLVarToVList :: Monad m => ListVar -> VarList -> Binding -> m Binding
 \end{code}
@@ -685,6 +689,97 @@ insertLS i is vw vs vsw _
     ]
 \end{code}
 
+
+\newpage
+\subsubsection{Binding List-Variables to Term-lists}
+
+An observation or expression list-variable can bind to expressions
+while a predicate list-variable can only bind to a predicates.
+\begin{code}
+bindLVarToTList :: Monad m => ListVar -> [Term] -> Binding -> m Binding
+\end{code}
+
+
+A \texttt{Textual} pattern variable cannot bind to a term
+\begin{code}
+bindLVarToTList (LVbl (Vbl _ _ Textual) _) _ binds
+ = fail "bindLVarToTList: textual list-vars. not allowed."
+\end{code}
+
+Static patterns bind to anything in the appropriate class,
+as per Fig.\ref{fig:utp-perm-class-bind}.
+\begin{code}
+bindLVarToTList (LVbl (Vbl v vc Static) is) cts binds
+ | all (validVarTermBinding vc) (map termkind cts)
+              =  insertLT v is Static cts binds
+ | otherwise  =  fail "bindLVarToTList: incompatible variable and terms."
+\end{code}
+
+All remaining pattern cases are non-\texttt{Textual} dynamic variables.
+
+Dynamic observables cannot bind to terms.
+\begin{code}
+bindLVarToTList (LVbl (Vbl _ ObsV _) _) cts binds
+ = fail "bindLVarToTList: dynamic list-obs. cannot bind to terms."
+\end{code}
+
+Dynamic expression list-variables can only bind to
+expression terms, all of whose dynamic variables have the same temporality.
+\begin{code}
+bindLVarToTList (LVbl (Vbl v ExprV vt) is) cts binds
+ | any isPred cts
+             =  fail "bindLVarToTList: expr. list-var. cannot bind to predicate."
+ | vt `areTemporalityOf` cts  =  insertLT v is vt cts binds
+ | otherwise  = fail "bindLVarToTList: expr. list-var. to mixed temporality"
+\end{code}
+Dynamic predicate list-variables can only bind to
+predicate terms, all of whose dynamic variables have the same temporality.
+\begin{code}
+bindLVarToTList (LVbl (Vbl v PredV vt) is) cts binds
+ | any isExpr cts
+           =  fail "bindLVarToTList: pred. list-var. cannot bind to expression."
+ | vt `areTemporalityOf` cts  =  insertLT v is vt cts binds
+ | otherwise  = fail "bindLVarToTList: pred. list.-var. to mixed temporality"
+\end{code}
+
+Catch-all
+\begin{code}
+bindLVarToTList plv cts _
+ = error $ unlines
+     [ "bindLVarToTList: fell off end"
+     , "plv = " ++ show plv
+     , "cts = " ++ show cts ]
+\end{code}
+
+\begin{code}
+vt `areTemporalityOf` cts = all (isTemporalityOf vt) cts
+\end{code}
+
+The insertion function
+checks if the pattern variable
+is already bound, and if so ensures that the new term is compatible.
+\begin{code}
+insertLT :: Monad m => Identifier -> [Identifier] -> VarWhen
+         -> [Term] -> Binding -> m Binding
+insertLT i is vw ts (BD (vbinds,lbinds))
+  = case M.lookup (i,is) lbinds of
+      Nothing  ->  return $ BD (vbinds, M.insert (i,is) (BX vw ts) lbinds)
+      Just (BX ww ss) ->
+        if vw == ww && compatibleTTs ts ss
+        then return $ BD (vbinds, M.insert (i,is) (BX vw ts) lbinds)
+        else fail "bindLVarToTList: list-var. already bound to different terms."
+      _ -> fail "bindVarToTerm: list-var. already bound to something else."
+\end{code}
+
+\begin{code}
+compatibleTTs [] []          =  True
+compatibleTTs _  []          =  False
+compatibleTTs [] _           =  False
+compatibleTTs (t:ts) (s:ss)  =  compatibleTT t s && compatibleTTs ts ss
+\end{code}
+
+\newpage
+
 \subsubsection{Binding General-Variables to General-Variables}
 
 An list-variable can bind to a singleton list of any general variable,
@@ -708,6 +803,18 @@ bindGVarToVList (StdVar pv) [StdVar cv] binds = bindVarToVar pv cv binds
 bindGVarToVList _ _ _ = fail "bindGVarToVList: invalid gvar. -> vlist binding."
 \end{code}
 
+\subsubsection{Binding General-Variables to Term-Lists}
+
+An list-variable can bind to a list of any length,
+while a standard-variable can only bind to the standard variable inside
+a singleton list.
+\begin{code}
+bindGVarToTList :: Monad m => GenVar -> [Term] -> Binding -> m Binding
+bindGVarToTList (LstVar lv) ts binds = bindLVarToTList lv ts binds
+bindGVarToTList (StdVar pv) [t] binds = bindVarToTerm pv t binds
+bindGVarToTList _ _ _ = fail "bindGVarToVList: invalid gvar. -> vlist binding."
+\end{code}
+
 \newpage
 \subsection{Binding Lookup}
 
@@ -728,12 +835,13 @@ lookupLstBind :: Monad m => Binding -> ListVar -> m LstVarBind
 lookupLstBind (BD (_,lbinds)) lv@(LVbl (Vbl i _ vw) is)
   = case M.lookup (i,is) lbinds of
      Nothing         ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
-     Just (BL _ vl)  ->  return $ BindList $ map   (gvarTempSync vw) vl
-     Just (BS _ vs)  ->  return $ BindSet  $ S.map (gvarTempSync vw) vs
+     Just (BL _ vl)  ->  return $ BindList  $ map   (gvarTempSync vw) vl
+     Just (BS _ vs)  ->  return $ BindSet   $ S.map (gvarTempSync vw) vs
+     Just (BX _ ts)  ->  return $ BindTerms $ map   (termTempSync vw) ts
 \end{code}
 
 We need to ensure that that the returned variable,
-which, if dynamic,  is stored in the binding as \texttt{During},
+which, if dynamic, is stored in the binding as \texttt{During},
 matches the temporality of the variable being looked up.
 If the lookup variable is \texttt{Static}, then we eave the result alone.
 \begin{code}
@@ -776,7 +884,10 @@ subTempSync vw (Substn tsub lsub)
 \begin{code}
 int_tst_Binding :: [TF.Test]
 int_tst_Binding
- = [tst_bind_VarToVar]
+ = [ testGroup "\nBinding Internal:"
+     [ tst_bind_VarToVar
+     ]
+   ]
 
 
 tst_bind_VarToVar :: TF.Test

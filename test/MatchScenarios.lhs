@@ -658,7 +658,7 @@ lS'us = lS' `less` [u] ; gS'us = LstVar lS'us
 e1 = EVal int $ Integer 1
 e2 = EVal int $ Integer 2
 
-x1y2 = ((evar int x `equal` e1) `lAnd` (evar int y `equal` e2))
+x'1y'2 = ((evar int x' `equal` e1) `lAnd` (evar int y' `equal` e2))
        `lAnd`
        (PIter land eq [lS' `less` [ze],lS `less` [ze]])
 
@@ -676,8 +676,8 @@ test_simultaneous_assignment
                 $ bindLL gSvs gSus $ bindLL gS'vs gS'us $ emptyBinding ) )
      , testCase "(x'=1 /\\ y'=2) /\\ S'\\z = S\\z  :: << v$ := e$>>"
          ( tMatch [vtS_Design] emptyBinding S.empty S.empty
-                  x1y2 vs_becomes_es
-           @?= ( Just $ bindLl gvs' [gx,gy] $ bindLt ges [e1,e2]
+                  x'1y'2 vs_becomes_es
+           @?= ( Just $ bindLl gvs' [gx',gy'] $ bindLt ges [e1,e2]
                 $ bindLL gSvs gz $ bindLL gS'vs gz' $ emptyBinding ) )
      ]
 

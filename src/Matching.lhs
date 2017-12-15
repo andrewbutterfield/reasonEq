@@ -332,7 +332,7 @@ $$
 \begin{code}
 tMatch' vts bind cbvs pbvs tC@(Cons tkC naC tsC) (Iter tkP naP niP lvsP)
   | tkP == tkC && naC == naP && all isNiP tsC
-               = ibind bind $ zip lvsP $ transpose $ map unNip tsC
+               = ibind bind $ zip lvsP $ transpose $ map unNiP tsC
   | otherwise
      = fail $ unlines
          [ "tMatch: Cons not compatible with Iter."

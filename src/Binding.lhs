@@ -717,21 +717,6 @@ bindLVarToTList (LVbl (Vbl v vc Static) is) cts binds
 
 All remaining pattern cases are non-\texttt{Textual} dynamic variables.
 
-Dynamic observables cannot bind to terms.
-\begin{code}
-bindLVarToTList (LVbl (Vbl _ ObsV _) _) cts binds
- = fail "bindLVarToTList: dynamic list-obs. cannot bind to terms."
-\end{code}
-
-Dynamic expression list-variables can only bind to
-expression terms, all of whose dynamic variables have the same temporality.
-\begin{code}
-bindLVarToTList (LVbl (Vbl v ExprV vt) is) cts binds
- | any isPred cts
-             =  fail "bindLVarToTList: expr. list-var. cannot bind to predicate."
- | vt `areTemporalityOf` cts  =  insertLT v is vt cts binds
- | otherwise  = fail "bindLVarToTList: expr. list-var. to mixed temporality"
-\end{code}
 Dynamic predicate list-variables can only bind to
 predicate terms, all of whose dynamic variables have the same temporality.
 \begin{code}
@@ -740,6 +725,16 @@ bindLVarToTList (LVbl (Vbl v PredV vt) is) cts binds
            =  fail "bindLVarToTList: pred. list-var. cannot bind to expression."
  | vt `areTemporalityOf` cts  =  insertLT v is vt cts binds
  | otherwise  = fail "bindLVarToTList: pred. list.-var. to mixed temporality"
+\end{code}
+
+Dynamic observable and expression list-variables can only bind to
+expression terms, all of whose dynamic variables have the same temporality.
+\begin{code}
+bindLVarToTList (LVbl (Vbl v _ vt) is) cts binds
+ | any isPred cts
+             =  fail "bindLVarToTList: obs./expr. list-var. cannot bind to predicate."
+ | vt `areTemporalityOf` cts  =  insertLT v is vt cts binds
+ | otherwise  = fail "bindLVarToTList: obs./expr. list-var. to mixed temporality"
 \end{code}
 
 Catch-all

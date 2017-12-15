@@ -1,41 +1,18 @@
-tMatch [vtS_Design] emptyBinding S.empty S.empty x1y2 vs_becomes_es
-
-expected:
-
-Just -- S\v |-> [z], e |-> [1,2], v |-> [x,y]
-( BD
-  ( fromList
-    []
-  , fromList
-    [ ( ( Id "S"
-        , [ Id "v" ] )
-      , BL
-        ( WD "" )
-        [ GV (VR (Id "z", VO, WD "")) ] )
-    , ( ( Id "e"
-        , [] )
-      , BX
-        WB
-        [ K (E (TG (Id "Z"))) (VI 1)
-        , K (E (TG (Id "Z"))) (VI 2) ] )
-    , ( ( Id "v"
-        , [] )
-      , BL
-        ( WD "" )
-        [ GV (VR (Id "x", VO, WD ""))
-        , GV (VR (Id "y", VO, WD "")) ] ) ] ) )
+BD  -- S\v |-> S\z, e$ |-> [1,2],  v$' |-> [x',y']
+( fromList
+  []
+, fromList
+  [ ( ( Id "S", [ Id "v" ] )
+    , BL ( WD "" )
+      [ GL (LV (VR (Id "S", VO, WD ""), [Id "z"])) ] )
+  , ( ( Id "e", [] )
+    , BX WB
+      [ K (E (TG (Id "Z"))) (VI 1)
+      , K (E (TG (Id "Z"))) (VI 2) ] )
+  , ( ( Id "v", [] )
+    , BX WA
+      [ V (E (TG (Id "Z"))) (VR (Id "x", VO, WA))
+      , V (E (TG (Id "Z"))) (VR (Id "y", VO, WA)) ] ) ] )
 
 
-but got:
-
-Just
-( BD -- S\v |-> S\z
-  ( fromList
-    []
-  , fromList
-    [ ( ( Id "S"
-        , [ Id "v" ] )
-      , BL
-        ( WD "" )
-        [ GL (LV (VR (Id "S", VO, WD ""), [Id "z"])) ] ) ] ) )
 --

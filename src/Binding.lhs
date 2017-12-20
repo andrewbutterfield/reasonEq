@@ -881,10 +881,12 @@ int_tst_Binding :: [TF.Test]
 int_tst_Binding
  = [ testGroup "\nBinding Internal:"
      [ tst_bind_VarToVar
+     , tst_bind_VarToTerm
      ]
    ]
+\end{code}
 
-
+\begin{code}
 tst_bind_VarToVar :: TF.Test
 
 -- naming concention ct<varname>
@@ -896,13 +898,15 @@ osg = ObsVar (fromJust $ ident "g") Static
 osin = ObsVar (fromJust $ ident "in") Static
 osout = ObsVar (fromJust $ ident "out") Static
 
+_m = During "m" ; _n = During "n"
+
 v = fromJust $ ident "v"
 obv = ObsVar v Before ; oav = ObsVar v After ; otv = ObsVar v Textual
-odv = ObsVar v (During "") ; odvm = ObsVar v (During "m")
+odv = ObsVar v (During "") ; odvm = ObsVar v _m
 x = fromJust $ ident "x"
 obx = ObsVar x Before  ; oax = ObsVar x After ; otx = ObsVar x Textual
 odx = ObsVar x (During "")
-odxm = ObsVar x (During "m") ; odxn = ObsVar x (During "n")
+odxm = ObsVar x _m ; odxn = ObsVar x _n
 
 tst_bind_VarToVar
  = testGroup "bind Var to Var"
@@ -933,4 +937,87 @@ tst_bind_VarToVar
     ]
 
 tstBVV = defaultMain [tst_bind_VarToVar]
+\end{code}
+
+\newpage
+\begin{code}
+tst_bind_VarToTerm :: TF.Test
+
+int  = GivenType $ fromJust $ ident "Z"
+tInt = E int
+mkV v = fromJust $ var tInt v
+n_add = fromJust $ ident "add"
+
+eadd v1 v2 = Cons tInt n_add [mkV v1, mkV v2]
+bradd vw v1 v2 = termTempSync vw $ eadd v1 v2
+
+u = fromJust $ ident "u"
+obu = ObsVar v Before ; oau = ObsVar v After ; otu = ObsVar v Textual
+odu = ObsVar v (During "") ; odum = ObsVar v _m
+y = fromJust $ ident "y"
+oby = ObsVar v Before ; oay = ObsVar v After ; otyu = ObsVar v Textual
+ody = ObsVar v (During "") ; odym = ObsVar v _m
+odyn = ObsVar v _n
+
+xy = eadd obx oby ; x'y' = eadd oax oay ; xy' = eadd obx oay
+uv = eadd obu obv ; u'v' = eadd oau oav
+
+x_y_ = bradd newDuring obx oby
+xmym = bradd _m obx oby
+xnyn = bradd _n obx oby
+xmyn = eadd odxm odyn ;
+e = fromJust $ ident "e"
+ebe = ExprVar e Before ; eae = ExprVar e After
+edem = ExprVar e $ _m ; eden = ExprVar e $ _n
+
+tst_bind_VarToTerm
+ = testGroup "bind Var to Term"
+    [ testCase "Obs-Static g |-> x+y -- should succeed"
+      ( bindVarToTerm osg xy emptyBinding
+        @?=
+        Just (BD (M.fromList [(g,BT Static xy)], M.empty)) )
+    , testCase "Obs-Static g |-> x'+y' -- should succeed"
+      ( bindVarToTerm osg x'y' emptyBinding
+        @?=
+        Just (BD (M.fromList [(g,BT Static x'y')], M.empty)) )
+    , testCase "Obs-Static g |-> x+y' -- should succeed"
+      ( bindVarToTerm osg xy' emptyBinding
+        @?=
+        Just (BD (M.fromList [(g,BT Static xy')], M.empty)) )
+    , testCase "Expr-Before e |-> x+y -- should succeed"
+      ( bindVarToTerm ebe xy emptyBinding
+        @?=
+        Just (BD (M.fromList [(e,BT newDuring x_y_)], M.empty)) )
+    , testCase "Expr-After e' |-> x'+y' -- should succeed"
+      ( bindVarToTerm eae x'y' emptyBinding
+        @?=
+        Just (BD (M.fromList [(e,BT newDuring x_y_)], M.empty)) )
+    , testCase "Expr-During em |-> x_m+y_m -- should succeed"
+      ( bindVarToTerm edem xmym emptyBinding
+        @?=
+        Just (BD (M.fromList [(e,BT _m xmym)], M.empty)) )
+    , testCase "Expr-During em |-> x_n+y_n -- should succeed"
+      ( bindVarToTerm edem xnyn emptyBinding
+        @?=
+        Just (BD (M.fromList [(e,BT _m xnyn)], M.empty)) )
+    -- all subsequent bind attempts should fail
+    , testCase "Obs-Before v |-> x+y -- should fail"
+      ( bindVarToTerm obv xy emptyBinding @?= Nothing )
+    , testCase "Expr-Before e |-> x+y' -- should fail"
+      ( bindVarToTerm ebe xy' emptyBinding @?= Nothing )
+    , testCase "Expr-Before e |-> x'+y' -- should fail"
+      ( bindVarToTerm ebe x'y' emptyBinding @?= Nothing )
+    , testCase "Expr-After e' |-> x+y -- should fail"
+      ( bindVarToTerm eae xy emptyBinding @?= Nothing )
+    , testCase "Expr-After e' |-> x+y' -- should fail"
+      ( bindVarToTerm eae xy' emptyBinding @?= Nothing )
+    , testCase "Expr-During em |-> x_m+y_n -- should fail"
+      ( bindVarToTerm edem xmyn emptyBinding @?= Nothing )
+    ]
+
+tstBVT = defaultMain [tst_bind_VarToTerm]
+\end{code}
+
+\begin{code}
+tstBind = defaultMain int_tst_Binding
 \end{code}

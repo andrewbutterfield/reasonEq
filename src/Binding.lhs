@@ -291,6 +291,22 @@ We expect the behaviour shown in Fig. \ref{fig:dynamic-coherence}.
   \label{fig:dynamic-coherence}
 \end{center}
 \end{figure}
+
+When we are entering a mapping for a \texttt{During} variable
+and find a pre-existing map, we need to check that the pre-existing
+\texttt{During} has either a null subscript,
+or the same one that we are currently trying to bind,
+unless that new subscript is null.
+In the latter case we succeed, but leave the binding unchanged.
+\begin{code}
+insertDuring :: Monad m =>
+  String -> String -> String -> Binding -> Binding -> m Binding
+insertDuring preSbscrpt newSbscrpt apiName binds binds'
+  | null preSbscrpt                              =  return binds'
+  | null newSbscrpt || preSbscrpt == newSbscrpt  =  return binds
+  | otherwise = fail (apiName++"bound to other subscript.")
+\end{code}
+
 The following code expects
 the \texttt{VarWhen} argument to be \texttt{Static} or \texttt{During};
  and the \texttt{Variable} argument
@@ -315,10 +331,9 @@ insertVV i vw@(During m) x@(Vbl xi xc (During n)) binds@(BD (vbinds,lbinds))
       Just (BV w@(Vbl bi bc (During p)))
         | bi /= xi ||  bc /= xc
             ->  fail "bindVarToVar: variable bound to other variable."
-        | null p  ->  return $ BD (M.insert i (BV x) vbinds, lbinds)
-        | null n || p == n  ->  return binds
         | otherwise
-            ->  fail "bindVarToVar: variable bound to other subscript."
+           -> insertDuring p n "bindVarToVar" binds
+                 $ BD (M.insert i (BV x) vbinds, lbinds)
       _  ->  fail "bindVarToVar: variable already bound to term."
 
 insertVV i vw x _
@@ -563,14 +578,17 @@ insertLL i is vw@(During m) vl vlw@(During n) binds@(BD (vbinds,lbinds))
      Just (BL (During p) wl)
       | inconsistentVL vl wl
           -> fail "bindLVarToVList: lvar. bound to other var-list."
-      | null p  -> return $ BD (vbinds,M.insert (i,is) (BL vlw vl) lbinds)
-      | null n || p == n  ->  return binds
       | otherwise
-          -> fail $ unlines
-               [ "bindLVarToVList: lvar. bound to other subscript."
-               , "m = " ++ show m
-               , "n = " ++ show n
-               , "p = " ++ show p ]
+          -> insertDuring p n "bindLVarToVList" binds
+               $ BD (vbinds,M.insert (i,is) (BL vlw vl) lbinds)
+      -- | null p  -> return $ BD (vbinds,M.insert (i,is) (BL vlw vl) lbinds)
+      -- | null n || p == n  ->  return binds
+      -- | otherwise
+      --     -> fail $ unlines
+      --          [ "bindLVarToVList: lvar. bound to other subscript."
+      --          , "m = " ++ show m
+      --          , "n = " ++ show n
+      --          , "p = " ++ show p ]
      _  ->  fail "bindLVarToVList: lvar. bound to set or other var-list."
 
 insertLL i is vw vl vlw _
@@ -668,14 +686,17 @@ insertLS i is vw@(During m) vs vsw@(During n) binds@(BD (vbinds,lbinds))
                [ "bindLVarToVSet: lvar. bound to other var-set."
                , "vs = " ++ show vs
                , "ws = " ++ show ws ]
-      | null p  -> return $ BD (vbinds,M.insert (i,is) (BS vsw vs) lbinds)
-      | null n || p == n  ->  return binds
       | otherwise
-          -> fail $ unlines
-               [ "bindLVarToVSet: lvar. bound to other subscript."
-               , "m = " ++ show m
-               , "n = " ++ show n
-               , "p = " ++ show p ]
+          -> insertDuring p n "bindLVarToVSet" binds
+               $ BD (vbinds,M.insert (i,is) (BS vsw vs) lbinds)
+      -- | null p  -> return $ BD (vbinds,M.insert (i,is) (BS vsw vs) lbinds)
+      -- | null n || p == n  ->  return binds
+      -- | otherwise
+      --     -> fail $ unlines
+      --          [ "bindLVarToVSet: lvar. bound to other subscript."
+      --          , "m = " ++ show m
+      --          , "n = " ++ show n
+      --          , "p = " ++ show p ]
      _  ->  fail "bindLVarToVSet: lvar. bound to list or other var-set."
 
 insertLS i is vw vs vsw _
@@ -1000,6 +1021,13 @@ tst_bind_VarToTerm
       ( bindVarToTerm edem xnyn emptyBinding
         @?=
         Just (BD (M.fromList [(e,BT _m xnyn)], M.empty)) )
+
+    , testCase "e' |-> x'+y' ; em |-> x_n+y_n -- should succeed"
+      ( ( bindVarToTerm edem xnyn $ fromJust
+          $ bindVarToTerm eae x'y' emptyBinding )
+        @?=
+        Just (BD (M.fromList [(e,BT _m xnyn)], M.empty)) )
+
     -- all subsequent bind attempts should fail
     , testCase "Obs-Before v |-> x+y -- should fail"
       ( bindVarToTerm obv xy emptyBinding @?= Nothing )

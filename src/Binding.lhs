@@ -119,19 +119,69 @@ and other dynamics can only bind to the same temporality
   \label{fig:utp-perm-time-bind}
   \end{center}
 \end{figure}
-In a scenario where $a$ binds to $b$,
-if $a$ is dynamic,
-then binding respects temporality
-($a \mapsto b, a' \mapsto b', a_m \mapsto b_n, \texttt{a} \mapsto \texttt{b}$).
-Also any one of those bindings induces all the others.
 \begin{code}
 validVarTimeBinding :: VarWhen -> VarWhen -> Bool
 validVarTimeBinding Static Textual  =  False
 validVarTimeBinding Static _        =  True
 validVarTimeBinding pwhen  cwhen    =  pwhen == cwhen
 \end{code}
+In a scenario where $a$ binds to $b$,
+if $a$ is dynamic,
+then binding respects temporality
+($a \mapsto b, a' \mapsto b', a_m \mapsto b_n, \texttt{a} \mapsto \texttt{b}$).
+Also any one of those bindings induces all the others.
 
-We can sum the rules as follows
+The following scenario illustrates how dynamic variable binding should work,
+given an initial empty binding:
+\begin{enumerate}
+  \item First, inserting a binding from $u$ to $x$ means that we
+    can now lookup both $u$ and $u'$ to get $x$ and $x'$ respectively.
+    However we cannot lookup $u_s$ for any subscript because we don't know
+    wast the corresponding subscript should be for $x$.
+  \item Next, adding a binding from $v_a$ to $y_m$ means we can now lookup
+    $v$, $v'$ and $v_a$ to get $y$, $y'$ and $y_m$.
+    But also, a lookup of $u_a$ will suceed, returning $x_m$,
+    because we now know that subscript $a$ binds to subscript $m$.
+  \item Finally, a binding from $u_b$ to $x_n$%
+  \footnote{If $u_b$ tries to bind to any subscripted variable other than $x$
+  then the attempt will fail.}
+   results in one new piece of binding information
+   that says that subscript $b$ binds to $n$.
+\end{enumerate}
+The key issue here is how each single binding inserted,
+of a given temporality,
+also induces bindings for the same variable identifiers,
+but with as many other temporalities as is possible.
+This is summarised in Figure. \ref{fig:utp-dynamic-inducing}.
+From all of this we can see that we need to record
+identifier-identifier bindings along with subscript-subscript bindings.
+\begin{figure}
+  \begin{center}
+    \begin{tabular}{|l|c|c|c|c|c|c|c|c|l|}
+    \hline
+      looking up:
+      & $u$ & $v$& $u'$ & $v'$& $u_a$ & $v_a$& $u_b$ & $v_b$
+      & Need to record:
+    \\\hline
+      after inserting\dots &&&&&&&&&
+    \\\hline
+      first  $u \mapsto x$ (1),
+      & $x$ & - & $x'$ & - & - & - & - & -
+      & $u \mapsto x$
+    \\\hline
+      then $v_a \mapsto y_m$ (2),
+      & $x$ & $y$ & $x'$ & $y'$ & $x_m$ & $y_m$ & - & - &
+      $u \mapsto x, v \mapsto y, a \mapsto m $
+    \\\hline
+      then  $u_b \mapsto x_n$ (3).
+      & $x$ & $y$ & $x'$ & $y'$ & $x_m$ & $y_m$ & $x_n$ & $y_m$ &
+      $u \mapsto x, v \mapsto y, a \mapsto m, b \mapsto n $
+    \\\hline
+    \end{tabular}
+  \caption{Inducing dynamic bindings---a scenario. }
+  \label{fig:utp-dynamic-inducing}
+  \end{center}
+\end{figure}
 
 Similar rules apply to list variables.
 
@@ -413,14 +463,31 @@ checks if the pattern variable
 is already bound, and if so ensures that the new term is compatible.
 \begin{code}
 insertVT :: Monad m => Identifier -> VarWhen -> Term -> Binding -> m Binding
-insertVT i vw t (BD (vbinds,lbinds))
+
+insertVT i Static t binds@(BD (vbinds,lbinds))
+  = case M.lookup i vbinds of
+      Nothing  ->  return $ BD (M.insert i (BT Static t) vbinds, lbinds)
+      Just (BT Static s) ->
+        if t == s
+        then return $ binds
+        else fail "bindVarToTerm: bound to different term."
+      _ -> fail "bindVarToTerm: already bound to variable."
+
+insertVT i vw@(During m) t (BD (vbinds,lbinds))
   = case M.lookup i vbinds of
       Nothing  ->  return $ BD (M.insert i (BT vw t) vbinds, lbinds)
-      Just (BT ww s) ->
+      Just (BT (During p) s) ->
         if vw == ww && compatibleTT t s
         then return $ BD (M.insert i (BT vw t) vbinds, lbinds)
-        else fail "bindVarToTerm: variable already bound to different variable."
-      _ -> fail "bindVarToTerm: variable already bound to variable."
+        else fail "bindVarToTerm: bound to different term."
+      _ -> fail "bindVarToTerm: already bound to variable."
+
+insertVT i vw t _
+ = error $ unlines
+    [ "insertVT: unexpected argument combination"
+    , "i = " ++ show i
+    , "vw = " ++ show vw
+    , "t = " ++ show t ]
 \end{code}
 
 Checking all dynamic variables in a term have the specified temporality:

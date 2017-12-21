@@ -476,7 +476,7 @@ insertVT i Static t binds@(BD (vbinds,lbinds))
 insertVT i vw@(During m) t (BD (vbinds,lbinds))
   = case M.lookup i vbinds of
       Nothing  ->  return $ BD (M.insert i (BT vw t) vbinds, lbinds)
-      Just (BT (During p) s) ->
+      Just (BT ww@(During p) s) ->
         if vw == ww && compatibleTT t s
         then return $ BD (M.insert i (BT vw t) vbinds, lbinds)
         else fail "bindVarToTerm: bound to different term."

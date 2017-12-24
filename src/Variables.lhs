@@ -9,7 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Variables
  ( VarClass
  , pattern ObsV, pattern ExprV, pattern PredV
- , VarWhen
+ , Subscript, VarWhen
  , pattern Static
  , pattern Before, pattern During, pattern After, pattern Textual
  , isDynamic, isDuring
@@ -141,12 +141,14 @@ and ``after'' observations over some appropriate time interval.
     or expression (\texttt{e}) and predicate (\texttt{p}) texts, otherwise.
 \end{description}
 \begin{code}
+type Subscript = String
+
 data VarWhen -- Variable role
-  = WS         --  Static
-  | WB         --  Before (pre)
-  | WD String  --  During (intermediate)
-  | WA         --  After (post)
-  | WT         --  Textual
+  = WS            --  Static
+  | WB            --  Before (pre)
+  | WD Subscript  --  During (intermediate)
+  | WA            --  After (post)
+  | WT            --  Textual
   deriving (Eq, Ord, Show, Read)
 
 pattern Static = WS

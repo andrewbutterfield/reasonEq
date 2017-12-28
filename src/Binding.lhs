@@ -34,7 +34,7 @@ import Test.HUnit
 import Test.Framework as TF (defaultMain, testGroup, Test)
 import Test.Framework.Providers.HUnit (testCase)
 
---import Utilities
+import Utilities
 import LexBase
 import Variables
 import AST
@@ -255,7 +255,8 @@ pattern BindTerms ts  =  BX ts
 
 We put these together:
 \begin{code}
-newtype Binding = BD (VarBinding, SubBinding, ListVarBinding) deriving (Eq, Show, Read)
+newtype Binding = BD (VarBinding, SubBinding, ListVarBinding)
+ deriving (Eq, Show, Read)
 
 emptyBinding :: Binding
 emptyBinding = BD (M.empty, M.empty, M.empty)
@@ -473,42 +474,72 @@ bindVarToTerm pv ct _
 Determining the temporality of a term:
 \begin{code}
 temporalityOf :: Term -> Set VarWhen
-temporalityOf t = tempOf S.empty [] t
+temporalityOf t = termTmpr S.empty [] t
 
--- for now we ignore the free/bound variable distinction
-tempOf vws ts (Var _ (Vbl _ _ vw))  =  tempsOf (S.insert vw vws) ts
-tempOf vws ts (Cons _ _ ts')        =  tempsOf vws (ts'++ts)
-tempOf vws ts (Bind _ _ _ t)        =  tempsOf vws (t:ts)
-tempOf vws ts (Lam _ _ _ t)         =  tempsOf vws (t:ts)
-tempOf vws ts (Sub _ t sub)         =  tempsOf vws (t:(termsof sub++ts))
- where termsof (Substn tsub _) = map snd $ S.toList tsub
-tempOf vws ts _ = tempsOf vws ts
+-- for now we process all variables in the same way,
+-- regardless of whether their occurrence is free, binding or bound.
+termTmpr vws ts (Var _ (Vbl _ _ vw))  =  termsTmpr (S.insert vw vws) ts
+termTmpr vws ts (Cons _ _ ts')        =  termsTmpr vws (ts'++ts)
+termTmpr vws ts (Bind _ _ vs t)       =  vlTmpr vws (t:ts) $ S.toList vs
+termTmpr vws ts (Lam _ _ vl t)        =  vlTmpr vws (t:ts) vl
+termTmpr vws ts (Sub _ t sub)         =  subTmpr   vws (t:ts) sub
+termTmpr vws ts _                     =  termsTmpr vws ts
 
 temporalitiesOf :: [Term] -> Set VarWhen
-temporalitiesOf ts = tempsOf S.empty ts
+temporalitiesOf ts = termsTmpr S.empty ts
 
-tempsOf vws []      =  vws
-tempsOf vws (t:ts)  =  tempOf vws ts t
+termsTmpr vws []      =  vws
+termsTmpr vws (t:ts)  =  termTmpr vws ts t
+
+vlTmpr vws ts []                                = termsTmpr vws ts
+vlTmpr vws ts (StdVar (Vbl _ _ vw):lv)          = vlTmpr (S.insert vw vws) ts lv
+vlTmpr vws ts (LstVar (LVbl (Vbl _ _ vw) _):lv) = vlTmpr (S.insert vw vws) ts lv
+
+subTmpr vws ts (Substn tsub lvsub)  =  lvsubTmpr vws ts tsub $ S.toList lvsub
+
+lvsubTmpr vws ts tsub []  =  tsubTmpr vws ts $ S.toList tsub
+lvsubTmpr vws ts tsub ((LVbl (Vbl _ _ vw1) _,LVbl (Vbl _ _ vw2) _):lvsub)
+ = lvsubTmpr (S.fromList [vw1,vw2] `S.union` vws) ts tsub lvsub
+
+tsubTmpr vws ts tsub = let (vs,ts') = unzip tsub in vsTmpr vws (ts'++ts) vs
+
+vsTmpr vws ts []                 =  termsTmpr vws ts
+vsTmpr vws ts ((Vbl _ _ vw):vs)  =  vsTmpr (S.insert vw vws) ts vs
 \end{code}
 
-When we store a dynamic term, we ``normalise'' it to before:
-\textbf{
-For now we ignore binding and bound occurrences of variables.
-We may need to address this later.
-}
+\newpage
+When we store a dynamic term,
+we ``normalise'' it by setting its temporality to \texttt{Before}.
 \begin{code}
 bterm :: Term -> VarBind
 bterm t = BT $ bterm' t
 bterm' v@(Var tk (Vbl vi vc vw))
   | vw == Static || vw == Textual || vw == Before  =  v
-  | otherwise            =  fromJust $ var  tk $ Vbl vi vc Before
-bterm' (Cons tk n ts)    =  Cons tk n $ map bterm' ts
-bterm' (Bind tk n vl t)  =  fromJust $ bind tk n vl $ bterm' t
-bterm' (Lam tk n vs t)   =  fromJust $ lam  tk n vs $ bterm' t
-bterm' (Sub tk t sub)    =  Sub  tk (bterm' t) $ bsub sub
+  | otherwise            =  btvar  tk $ Vbl vi vc Before
+bterm' (Cons tk n ts)    =  Cons   tk n $ map bterm' ts
+bterm' (Bind tk n vs t)  =  btbind tk n (S.map bgv vs) $ bterm' t
+bterm' (Lam tk n vl t)   =  btlam  tk n (  map bgv vl) $ bterm' t
+bterm' (Sub tk t sub)    =  Sub    tk (bterm' t) $ bsub sub
 bterm' t                 =  t
 
-bsub (Substn x y) = error "Binding.lhs: bsub (from bterm') NYI"
+bv v@(Vbl vi vc vw)
+  | vw == Static || vw == Textual || vw == Before  =  v
+  | otherwise                                      =  Vbl vi vc Before
+
+blv (LVbl v is)  =  LVbl (bv v) is
+bgv (StdVar v)   =  StdVar $ bv  v
+bgv (LstVar lv)  =  LstVar $ blv lv
+
+bsub (Substn tsub lvsub)
+ = btsubst (btsub $ S.toList tsub) (blvsub $ S.toList lvsub)
+
+btsub tsub = map bvt tsub ; bvt (v,t) = (bv v,bterm' t)
+blvsub lvsub = map blvlv lvsub ; blvlv (lv1,lv2) = (blv lv1,blv lv2 )
+
+btvar  tk       =  getJust "bterm var failed"  . var  tk
+btbind tk n vl  =  getJust "bterm bind failed" . bind tk n vl
+btlam  tk n vs  =  getJust "bterm lam failed"  . lam  tk n vs
+btsubst tsub lvsub = getJust "" $ substn tsub lvsub
 \end{code}
 
 
@@ -669,20 +700,20 @@ bindLVarToTList (LVbl (Vbl vi vc vt) is) cts (BD (vbind,sbind,lbind))
            =  fail "bindLVarToTList: non-pred. l-var. cannot bind to predicate."
  | wsize  > 1  =  fail "bindLVarToTList: p.-var. mixed term temporality."
  | wsize == 0  -- term has no variables
-   = do lbind' <- insertDR "bindLVarToTList(pv1)" (==) (vi,vc,is) (BX cts) lbind
+   = do lbind' <- insertDR "bindLVarToTList(pv1)" (==) (vi,vc,is) (bterms cts) lbind
         return $ BD (vbind,sbind,lbind')
  | otherwise
    = case (vt,thectw) of
       (During m, During n) ->
           do lbind' <- insertDR "bindLVarToTList(plv2)" (==)
-                                (vi,vc,is) (BX cts) lbind
+                                (vi,vc,is) (bterms cts) lbind
              sbind' <- insertDR "bindLVarToTList(plv3)" (==) m n sbind
              return $ BD (vbind,sbind',lbind')
       _ | vt /= thectw     ->
             fail "bindLVarToTList: p.-var different temporality"
         | otherwise ->
             do lbind' <- insertDR "bindLVarToTList(plv4)" (==)
-                                  (vi,vc,is) (BX cts) lbind
+                                  (vi,vc,is) (bterms cts) lbind
                return $ BD (vbind,sbind,lbind')
  where
    ctws = temporalitiesOf cts
@@ -699,6 +730,11 @@ bindLVarToTList plv cts _
      , "cts = " ++ show cts ]
 \end{code}
 
+We need to normalise lists of terms:
+\begin{code}
+bterms :: [Term] -> LstVarBind
+bterms ts = BX $ map bterm' ts
+\end{code}
 \newpage
 
 \subsubsection{Binding General-Variables to General-Variables}
@@ -816,6 +852,7 @@ We need to ensure that that the returned variable,
 which, if dynamic, is stored in the binding as \texttt{During},
 matches the temporality of the variable being looked up.
 If the lookup variable is \texttt{Static}, then we leave the result alone.
+\textbf{STILL NEED TO TEMPSYNC \texttt{VarList} AND \texttt{VarSet}.}
 \begin{code}
 varTempSync Static        v             =  v
 varTempSync vw@(During m) (Vbl i vc bw@(During n))
@@ -833,14 +870,16 @@ gvarTempSync vw (LstVar lv)  =  LstVar (lvarTempSync vw lv)
     and all we are doing is rebuilding something that got past them
     in the first instance -}
 termTempSync vw t@(Var tk v@(Vbl i vc bw))
- | bw == Static                 =  t
- | otherwise                    =  fromJust $ var tk $ varTempSync vw v
+ | bw == Static                    =  t
+ | otherwise                       =  ttsVar tk $ varTempSync vw v
 termTempSync vw (Cons tk i ts)     =  Cons tk i $ map (termTempSync vw) ts
 termTempSync vw (Bind tk i vs t)   =  fromJust $ bind tk i vs $ termTempSync vw t
 termTempSync vw (Lam tk i vl t)    =  fromJust $ lam  tk i vl $ termTempSync vw t
 termTempSync vw (Sub tk t s)       =  Sub tk (termTempSync vw t) $ subTempSync vw s
 termTempSync vw (Iter tk a p lvs)  =  Iter tk a p $ map (lvarTempSync vw) lvs
 termTempSync vw t               =  t
+
+ttsVar tk = getJust "termTempSync var failed." . var tk
 
 subTempSync vw (Substn tsub lsub)
  = fromJust $ substn (map (tsubSync vw) $ S.toList tsub)

@@ -74,8 +74,9 @@ tst_bind_lkp_VarToVar
         ( vvBindLook  odmv odnv  @?= BindVar odnv)
       , testCase "ob_v -> ob_u, lkp(oa_v)=oa_u (Ok)"
         ( vvBindLook2  ob_v ob_u oa_v @?= BindVar oa_u)
-      , testCase "ob_v -> ob_u, lkp(odm_v)=odm_u (Ok)"
-        ( vvBindLook2  ob_v ob_u odm_v @?= BindVar odm_u)
+      , testCase "ob_v -> ob_u, lkp(odm_v) (Not Ok)"
+        ( lookupBind (fromJust $ bindVarToVar ob_v ob_u emptyBinding) odm_v
+           @?= Nothing )
       , testCase "odm_v -> odm_v_u, lkp(ob_v)=ob_u (Ok)"
         ( vvBindLook2  odm_v odm_u ob_v @?= BindVar ob_u)
       ]

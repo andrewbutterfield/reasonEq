@@ -24,6 +24,17 @@ utilities
 \end{code}
 
 \newpage
+\subsubsection{Maybr and related}
+
+A version of \texttt{fromJust}
+that gives a more helpful error message.
+\begin{code}
+getJust :: String -> Maybe t -> t
+getJust _   (Just x)  =  x
+getJust msg Nothing   =  error msg
+\end{code}
+
+\newpage
 \subsection{List and Set Functions}
 
 \subsubsection{Predicate: has duplicates}

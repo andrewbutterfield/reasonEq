@@ -646,6 +646,8 @@ es    = LVbl e []      ; ges   = LstVar es
 vs'   = PostVars v     ; gvs'  = LstVar vs'
 lSvs  = lS `less` [v]  ; gSvs  = LstVar lSvs
 lS'vs = lS' `less` [v] ; gS'vs = LstVar lS'vs
+lSzs  = lS `less` [ze]  ; gSzs  = LstVar lSzs
+lS'zs = lS' `less` [ze] ; gS'zs = LstVar lS'zs
 
 f = PreExpr $ jId "f"
 
@@ -657,6 +659,9 @@ lS'us = lS' `less` [u] ; gS'us = LstVar lS'us
 
 e1 = EVal int $ Integer 1
 e2 = EVal int $ Integer 2
+
+tx' = fromJust $ eVar int x'
+ty' = fromJust $ eVar int y'
 
 x'1y'2 = ((evar int x' `equal` e1) `lAnd` (evar int y' `equal` e2))
        `lAnd`
@@ -677,8 +682,8 @@ test_simultaneous_assignment
      , testCase "(x'=1 /\\ y'=2) /\\ S'\\z = S\\z  :: << v$ := e$>>"
          ( tMatch [vtS_Design] emptyBinding S.empty S.empty
                   x'1y'2 vs_becomes_es
-           @?= ( Just $ bindLl gvs' [gx',gy'] $ bindLt ges [e1,e2]
-                $ bindLL gSvs gz $ bindLL gS'vs gz' $ emptyBinding ) )
+           @?= ( Just $ bindLt gvs' [tx',ty'] $ bindLt ges [e1,e2]
+                $ bindLL gSvs gSzs $ bindLL gS'vs gS'zs $ emptyBinding ) )
      ]
 
 tstAsg = defaultMain [test_assignment]

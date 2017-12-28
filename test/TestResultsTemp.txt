@@ -1,18 +1,101 @@
-BD  -- S\v |-> S\z, e$ |-> [1,2],  v$' |-> [x',y']
+x'1y'2 --   (x' = 1 /\ y' = 2) /\ S'\z = S\z
+=
+C
+P
+( Id "land" )
+[ C
+  P
+  ( Id "land" )
+  [ C
+    P
+    ( Id "equal" )
+    [ V (E (TG (Id "Z"))) (VR (Id "x", VO, WA))
+    , K (E (TG (Id "Z"))) (VI 1) ]
+  , C
+    P
+    ( Id "equal" )
+    [ V (E (TG (Id "Z"))) (VR (Id "y", VO, WA))
+    , K (E (TG (Id "Z"))) (VI 2) ] ]
+, I
+  P
+  ( Id "land" )
+  ( Id "equal" )
+  [ LV (VR (Id "S", VO, WA), [Id "z"])
+  , LV (VR (Id "S", VO, WB), [Id "z"]) ] ]
+
+vs_becomes_es --  /\(v$' = e$)* /\ /\(S'\v = S\v)*
+=
+C
+P
+( Id "land" )
+[ I
+  P
+  ( Id "land" )
+  ( Id "equal" )
+  [ LV (VR (Id "v", VO, WA), [])
+  , LV (VR (Id "e", VE, WB), []) ]
+, I
+  P
+  ( Id "land" )
+  ( Id "equal" )
+  [ LV (VR (Id "S", VO, WA), [Id "v"])
+  , LV (VR (Id "S", VO, WB), [Id "v"]) ] ]
+
+tMatch [vtS_Design] emptyBinding S.empty S.empty x'1y'2 vs_becomes_es
+=  -- (0,0,{S\v |-> S\z, e$ |-> <1,2>, v$ |-> <x,y>})
+BD
 ( fromList
   []
 , fromList
-  [ ( ( Id "S", [ Id "v" ] )
-    , BL ( WD "" )
-      [ GL (LV (VR (Id "S", VO, WD ""), [Id "z"])) ] )
-  , ( ( Id "e", [] )
-    , BX WB
+  []
+, fromList
+  [ ( ( Id "S"
+      , VO
+      , [ Id "v" ] )
+    , BL
+      [ GL (LV (VR (Id "S", VO, WB), [Id "z"])) ] )
+  , ( ( Id "e"
+      , VE
+      , [] )
+    , BX
       [ K (E (TG (Id "Z"))) (VI 1)
       , K (E (TG (Id "Z"))) (VI 2) ] )
-  , ( ( Id "v", [] )
-    , BX WA
-      [ V (E (TG (Id "Z"))) (VR (Id "x", VO, WA))
-      , V (E (TG (Id "Z"))) (VR (Id "y", VO, WA)) ] ) ] )
+  , ( ( Id "v"
+      , VO
+      , [] )
+    , BX
+      [ V (E (TG (Id "Z"))) (VR (Id "x", VO, WB))
+      , V (E (TG (Id "Z"))) (VR (Id "y", VO, WB)) ] ) ] )
+
+bindLl gvs' [gx',gy'] $ bindLt ges [e1,e2] $ bindLL gSvs gz $ bindLL gS'vs gz' $ emptyBinding
+=
+BD -- (0,0,{S\v |-> S\z, e$ |-> <1,2>, v$ |-> <x,y>})
+( fromList
+  []
+, fromList
+  []
+, fromList
+  [ ( ( Id "S"
+      , VO
+      , [ Id "v" ] )
+    , BL
+      [ GV (VR (Id "z", VO, WB)) ] )
+  , ( ( Id "e"
+      , VE
+      , [] )
+    , BX
+      [ K (E (TG (Id "Z"))) (VI 1)
+      , K (E (TG (Id "Z"))) (VI 2) ] )
+  , ( ( Id "v"
+      , VO
+      , [] )
+    , BL
+      [ GV (VR (Id "x", VO, WB))
+      , GV (VR (Id "y", VO, WB)) ] ) ] )
+
+[((Id "S",VO,[Id "v"]),BL [GV (VR (Id "z",VO,WB))]),((Id "e",VE,[]),BX [K (E (TG (Id "Z"))) (VI 1),K (E (TG (Id "Z"))) (VI 2)]),((Id "v",VO,[]),BX [V (E (TG (Id "Z"))) (VR (Id "x",VO,WB)),V (E (TG (Id "Z"))) (VR (Id "y",VO,WB))])]))
+
+[((Id "S",VO,[Id "v"]),BL [GL (LV (VR (Id "S",VO,WB),[Id "z"]))]),((Id "e",VE,[]),BX [K (E (TG (Id "Z"))) (VI 1),K (E (TG (Id "Z"))) (VI 2)]),((Id "v",VO,[]),BX [V (E (TG (Id "Z"))) (VR (Id "x",VO,WB)),V (E (TG (Id "Z"))) (VR (Id "y",VO,WB))])]))
 
 
 --

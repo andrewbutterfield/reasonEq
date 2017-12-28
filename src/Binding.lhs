@@ -271,16 +271,22 @@ otherwise we fail.
 
 We have a generic insertion function as follows:
 \begin{code}
-insertDR :: (Ord d, Monad m)
+insertDR :: (Show d, Show r, Ord d, Monad m)
          => String -> (r -> r -> Bool)
          -> d -> r -> Map d r
          -> m (Map d r)
-insertDR nAPI rEqv d r bind
- = case M.lookup d bind of
-     Nothing         ->  return $ M.insert d r bind
+insertDR nAPI rEqv d r binding
+ = case M.lookup d binding of
+     Nothing         ->  return $ M.insert d r binding
      Just r0
-      | r `rEqv` r0  ->  return bind
-      | otherwise    ->  fail (nAPI++": already bound differently.")
+      | r `rEqv` r0  ->  return binding
+      | otherwise    ->
+         fail $ unlines
+            [ (nAPI++": already bound differently.")
+            , "d = " ++ show d
+            , "r = " ++ show r
+            , "bind:\n" ++ show binding
+            ]
 \end{code}
 
 \subsubsection{Binding Variable to Variable}
@@ -606,12 +612,12 @@ bindLVarToVList lv@(LVbl (Vbl i vc vw) is) vl (BD (vbind,sbind,lbind))
    = case (vw,vlw) of
       (During m,During n) ->
             do lbind' <- insertDR "bindLVarToVList(dynamic)" (==)
-                                  (i,vc,is) (BL vl) lbind
+                                  (i,vc,is) (bvl vl) lbind
                sbind' <- insertDR "bindLVarToVList(subscript)" (==) m n sbind
                return $ BD (vbind,sbind',lbind')
       _ | vw == vlw       ->
             do lbind' <- insertDR "bindLVarToVList(static)" (==)
-                                  (i,vc,is) (BL vl) lbind
+                                  (i,vc,is) (bvl vl) lbind
                return $ BD (vbind,sbind,lbind')
         | otherwise       ->
             fail "bindLVarToVList: different temporality."
@@ -623,6 +629,11 @@ bindLVarToVList lv@(LVbl (Vbl i vc vw) is) vl (BD (vbind,sbind,lbind))
 Anything else fails.
 \begin{code}
 bindLVarToVList _ _ _ = fail "bindLVarToVList: invalid lvar. -> vlist binding."
+\end{code}
+
+We need to coerce dynamics temporality to \texttt{Before}.
+\begin{code}
+bvl = BL . map bgv
 \end{code}
 
 \newpage
@@ -651,12 +662,12 @@ bindLVarToVSet lv@(LVbl (Vbl i vc vw) is) vs (BD (vbind,sbind,lbind))
    = case (vw,vsw) of
       (During m,During n) ->
             do lbind' <- insertDR "bindLVarToVSet(dynamic)" (==)
-                                  (i,vc,is) (BS vs) lbind
+                                  (i,vc,is) (bvs vs) lbind
                sbind' <- insertDR "bindLVarToVSet(subscript)" (==) m n sbind
                return $ BD (vbind,sbind',lbind')
       _ | vw == vsw       ->
             do lbind' <- insertDR "bindLVarToVSet(static)" (==)
-                                  (i,vc,is) (BS vs) lbind
+                                  (i,vc,is) (bvs vs) lbind
                return $ BD (vbind,sbind,lbind')
         | otherwise       ->
             fail "bindLVarToVSet: different temporality."
@@ -665,6 +676,11 @@ bindLVarToVSet lv@(LVbl (Vbl i vc vw) is) vs (BD (vbind,sbind,lbind))
    (valid, vsw) = vsCompatible vc vw vs
 
 bindLVarToVSet _ _ _ = fail "bindLVarToVSet: invalid lvar. -> vset binding."
+\end{code}
+
+We need to coerce dynamics temporality to \texttt{Before}.
+\begin{code}
+bvs = BS . S.map bgv
 \end{code}
 
 \newpage

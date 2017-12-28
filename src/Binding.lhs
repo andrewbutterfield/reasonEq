@@ -418,16 +418,22 @@ bindVarToTerm v@(Vbl vi ExprV vt) ct (BD (vbind,sbind,lbind))
  | isPred ct   =  fail "bindVarToTerm: e.-var. cannot bind predicate."
  | wsize  > 1  =  fail "bindVarToTerm: e.-var. mixed term temporality."
  | wsize == 0  -- term has no variables
-   = do vbind' <- insertDR "bindVarToTerm(ev1)" (==) (vi,ExprV) (bterm ct) vbind
+   = do vbind' <- insertDR "bindVarToTerm(ev1)" (==) (vi,ExprV) (BT ct) vbind
         return $ BD (vbind',sbind,lbind)
- | otherwise
+ | otherwise -- term has one temporality
    = case (vt,thectw) of
       (During m, During n) ->
           do vbind' <- insertDR "bindVarToTerm(ev2)" (==) (vi,ExprV) (bterm ct) vbind
              sbind' <- insertDR "bindVarToTerm(ev3)" (==) m n sbind
              return $ BD (vbind',sbind',lbind)
       _ | vt /= thectw     ->
-            fail "bindVarToTerm: e.-var different temporality"
+            fail $ unlines
+               [ "bindVarToTerm: e.-var different temporality"
+               , "v =      " ++ show v
+               , "ct =     " ++ show ct
+               , "vt =     " ++ show vt
+               , "thectw = " ++ show thectw
+               ]
         | otherwise ->
             do vbind' <- insertDR "bindVarToTerm" (==) (vi,ExprV) (bterm ct) vbind
                return $ BD (vbind',sbind,lbind)
@@ -480,9 +486,10 @@ temporalityOf t = termTmpr S.empty [] t
 -- regardless of whether their occurrence is free, binding or bound.
 termTmpr vws ts (Var _ (Vbl _ _ vw))  =  termsTmpr (S.insert vw vws) ts
 termTmpr vws ts (Cons _ _ ts')        =  termsTmpr vws (ts'++ts)
-termTmpr vws ts (Bind _ _ vs t)       =  vlTmpr vws (t:ts) $ S.toList vs
-termTmpr vws ts (Lam _ _ vl t)        =  vlTmpr vws (t:ts) vl
+termTmpr vws ts (Bind _ _ vs t)       =  vlTmpr    vws (t:ts) $ S.toList vs
+termTmpr vws ts (Lam _ _ vl t)        =  vlTmpr    vws (t:ts) vl
 termTmpr vws ts (Sub _ t sub)         =  subTmpr   vws (t:ts) sub
+termTmpr vws ts (Iter tk a p lvs)     =  vlTmpr    vws ts $ map LstVar lvs
 termTmpr vws ts _                     =  termsTmpr vws ts
 
 temporalitiesOf :: [Term] -> Set VarWhen
@@ -520,6 +527,7 @@ bterm' (Cons tk n ts)    =  Cons   tk n $ map bterm' ts
 bterm' (Bind tk n vs t)  =  btbind tk n (S.map bgv vs) $ bterm' t
 bterm' (Lam tk n vl t)   =  btlam  tk n (  map bgv vl) $ bterm' t
 bterm' (Sub tk t sub)    =  Sub    tk (bterm' t) $ bsub sub
+bterm' (Iter tk a p lvs) =  Iter tk a p (map blv lvs)
 bterm' t                 =  t
 
 bv v@(Vbl vi vc vw)
@@ -851,14 +859,10 @@ lookupLstBind (BD (_,_,lbind)) lv@(LVbl (Vbl i vc vw) is)
 We need to ensure that that the returned variable,
 which, if dynamic, is stored in the binding as \texttt{During},
 matches the temporality of the variable being looked up.
-If the lookup variable is \texttt{Static}, then we leave the result alone.
-\textbf{STILL NEED TO TEMPSYNC \texttt{VarList} AND \texttt{VarSet}.}
+If the lookup variable is \texttt{Static} or \texttt{Textual}, then we leave the result alone.
 \begin{code}
-varTempSync Static        v             =  v
-varTempSync vw@(During m) (Vbl i vc bw@(During n))
- | null n                               =  Vbl i vc vw
- | otherwise                            =  Vbl i vc bw
-varTempSync vw            (Vbl i vc _)  =  Vbl i vc vw
+varTempSync Static v             =  v
+varTempSync vw     (Vbl i vc _)  =  Vbl i vc vw
 
 lvarTempSync vw (LVbl v is) = LVbl (varTempSync vw v) is
 
@@ -869,24 +873,29 @@ gvarTempSync vw (LstVar lv)  =  LstVar (lvarTempSync vw lv)
     because none of the smart constructors care about temporality,
     and all we are doing is rebuilding something that got past them
     in the first instance -}
-termTempSync vw t@(Var tk v@(Vbl i vc bw))
- | bw == Static                    =  t
- | otherwise                       =  ttsVar tk $ varTempSync vw v
+termTempSync vw t@(Var tk v@(Vbl vi vc bw))
+ | bw == Static || bw == Textual =  t
+ | otherwise                       =  ttsVar tk $ Vbl vi vc vw
 termTempSync vw (Cons tk i ts)     =  Cons tk i $ map (termTempSync vw) ts
-termTempSync vw (Bind tk i vs t)   =  fromJust $ bind tk i vs $ termTempSync vw t
-termTempSync vw (Lam tk i vl t)    =  fromJust $ lam  tk i vl $ termTempSync vw t
+termTempSync vw (Bind tk i vs t)
+ =  ttsBind tk i (S.map (gvarTempSync vw) vs) $ termTempSync vw t
+termTempSync vw (Lam tk i vl t)
+ =  ttsLam  tk i (map (gvarTempSync vw) vl) $ termTempSync vw t
 termTempSync vw (Sub tk t s)       =  Sub tk (termTempSync vw t) $ subTempSync vw s
 termTempSync vw (Iter tk a p lvs)  =  Iter tk a p $ map (lvarTempSync vw) lvs
 termTempSync vw t               =  t
 
-ttsVar tk = getJust "termTempSync var failed." . var tk
-
 subTempSync vw (Substn tsub lsub)
- = fromJust $ substn (map (tsubSync vw) $ S.toList tsub)
-                     (map (lsubSync vw) $ S.toList lsub)
+ = ttsSubstn (map (tsubSync vw) $ S.toList tsub)
+             (map (lsubSync vw) $ S.toList lsub)
  where
-      tsubSync vw (v,  t )  =  (v,  termTempSync vw t )
-      lsubSync vw (lt, lr)  =  (lt, lvarTempSync vw lr)
+      tsubSync vw (v,  t )  =  (varTempSync vw v,   termTempSync vw t )
+      lsubSync vw (lt, lr)  =  (lvarTempSync vw lt, lvarTempSync vw lr)
+
+ttsVar  tk           =  getJust "termTempSync var failed."   . var tk
+ttsBind tk i vs      =  getJust "termTempSync bind failed."  . bind tk i vs
+ttsLam  tk i vl      =  getJust "termTempSync lam failed."   . lam tk i vl
+ttsSubstn tsub lsub  =  getJust "subTempSync substn failed." $ substn tsub lsub
 \end{code}
 
 \newpage

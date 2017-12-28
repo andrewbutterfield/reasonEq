@@ -367,59 +367,6 @@ We expect the behaviour shown in Fig. \ref{fig:dynamic-coherence}.
 \end{center}
 \end{figure}
 
-% When we are entering a mapping for a \texttt{During} variable
-% and find a pre-existing map, we need to check that the pre-existing
-% \texttt{During} has either a null subscript,
-% or the same one that we are currently trying to bind,
-% unless that new subscript is null.
-% In the latter case we succeed, but leave the binding unchanged.
-% \begin{code}
-% insertDuring :: Monad m =>
-%   String -> String -> String -> Binding -> Binding -> m Binding
-% insertDuring preSbscrpt newSbscrpt apiName binds binds'
-%   | null preSbscrpt                              =  return binds'
-%   | null newSbscrpt || preSbscrpt == newSbscrpt  =  return binds
-%   | otherwise = fail (apiName++"bound to other subscript.")
-% \end{code}
-%
-% The following code expects
-% the \texttt{VarWhen} argument to be \texttt{Static} or \texttt{During};
-%  and the \texttt{Variable} argument
-% to have \texttt{During} temporality
-% if the \texttt{VarWhen} parameter is \texttt{During}.
-% The insertion function first checks to see if the pattern variable
-% is already bound.
-% \begin{code}
-% insertVV :: Monad m => Identifier -> VarWhen -> Variable -> Binding -> m Binding
-%
-% insertVV i Static x binds@(BD (vbinds,sbinds,lbinds))
-%   = case M.lookup i vbinds of
-%       Nothing  ->  return $ BD (M.insert i (BV x) vbinds, sbinds, lbinds)
-%       Just (BV w)
-%        | w == x  ->  return binds
-%        | otherwise -> fail "bindVarToVar: static-var. bound to other variable."
-%       _ -> fail "bindVarToVar: static-var. already bound to term."
-%
-% insertVV i vw@(During m) x@(Vbl xi xc (During n)) binds@(BD (vbinds,sbinds,lbinds))
-%   = case M.lookup i vbinds of
-%       Nothing  ->  return $ BD (M.insert i (BV x) vbinds, sbinds, lbinds)
-%       Just (BV w@(Vbl bi bc (During p)))
-%         | bi /= xi ||  bc /= xc
-%             ->  fail "bindVarToVar: variable bound to other variable."
-%         | otherwise
-%            -> insertDuring p n "bindVarToVar" binds
-%                  $ BD (M.insert i (BV x) vbinds, sbinds, lbinds)
-%       _  ->  fail "bindVarToVar: variable already bound to term."
-%
-% insertVV i vw x _
-%   = error $ unlines
-%       [ "insertVV: unexpected argument combination"
-%       , "i  =  " ++ show i
-%       , "vw =  " ++ show vw
-%       , "x  =  " ++ show x
-%        ]
-% \end{code}
-
 \newpage
 \subsubsection{Binding Variable to Term}
 
@@ -461,23 +408,27 @@ bindVarToTerm pv@(Vbl v ObsV _) ct binds
 
 Dynamic expression variables can only bind to
 expression terms, all of whose dynamic variables have the same temporality.
+Regardless of the temporality of the pattern variable,
+we always store the term with temporality \texttt{Before}.
+This avoids having to compare terms modulo temporality
+during insertion.
 \begin{code}
 bindVarToTerm v@(Vbl vi ExprV vt) ct (BD (vbind,sbind,lbind))
  | isPred ct   =  fail "bindVarToTerm: e.-var. cannot bind predicate."
  | wsize  > 1  =  fail "bindVarToTerm: e.-var. mixed term temporality."
  | wsize == 0  -- term has no variables
-   = do vbind' <- insertDR "bindVarToTerm(ev1)" (==) (vi,ExprV) (BT ct) vbind
+   = do vbind' <- insertDR "bindVarToTerm(ev1)" (==) (vi,ExprV) (bterm ct) vbind
         return $ BD (vbind',sbind,lbind)
  | otherwise
    = case (vt,thectw) of
       (During m, During n) ->
-          do vbind' <- insertDR "bindVarToTerm(ev2)" (==) (vi,ExprV) (BT ct) vbind
+          do vbind' <- insertDR "bindVarToTerm(ev2)" (==) (vi,ExprV) (bterm ct) vbind
              sbind' <- insertDR "bindVarToTerm(ev3)" (==) m n sbind
              return $ BD (vbind',sbind',lbind)
       _ | vt /= thectw     ->
             fail "bindVarToTerm: e.-var different temporality"
         | otherwise ->
-            do vbind' <- insertDR "bindVarToTerm" (==) (vi,ExprV) (BT ct) vbind
+            do vbind' <- insertDR "bindVarToTerm" (==) (vi,ExprV) (bterm ct) vbind
                return $ BD (vbind',sbind,lbind)
  where
    ctws = temporalityOf ct
@@ -491,18 +442,18 @@ bindVarToTerm v@(Vbl vi PredV vt) ct (BD (vbind,sbind,lbind))
  | isExpr ct  =  fail "bindVarToTerm: p.-var. cannot bind expression."
  | wsize  > 1  =  fail "bindVarToTerm: p.-var. mixed term temporality."
  | wsize == 0  -- term has no variables
-   = do vbind' <- insertDR "bindVarToTerm(pv1)" (==) (vi,PredV) (BT ct) vbind
+   = do vbind' <- insertDR "bindVarToTerm(pv1)" (==) (vi,PredV) (bterm ct) vbind
         return $ BD (vbind',sbind,lbind)
  | otherwise
    = case (vt,thectw) of
       (During m, During n) ->
-          do vbind' <- insertDR "bindVarToTerm(pv2)" (==) (vi,PredV) (BT ct) vbind
+          do vbind' <- insertDR "bindVarToTerm(pv2)" (==) (vi,PredV) (bterm ct) vbind
              sbind' <- insertDR "bindVarToTerm(pv3)" (==) m n sbind
              return $ BD (vbind',sbind',lbind)
       _ | vt /= thectw     ->
             fail "bindVarToTerm: p.-var different temporality"
         | otherwise ->
-            do vbind' <- insertDR "bindVarToTerm" (==) (vi,PredV) (BT ct) vbind
+            do vbind' <- insertDR "bindVarToTerm" (==) (vi,PredV) (bterm ct) vbind
                return $ BD (vbind',sbind,lbind)
  where
    ctws = temporalityOf ct
@@ -518,38 +469,6 @@ bindVarToTerm pv ct _
      , "pv = " ++ show pv
      , "ct = " ++ show ct ]
 \end{code}
-
-% The insertion function
-% checks if the pattern variable
-% is already bound, and if so ensures that the new term is compatible.
-% \begin{code}
-% insertVT :: Monad m => Identifier -> VarWhen -> Term -> Binding -> m Binding
-%
-% insertVT i Static t binds@(BD (vbinds,sbinds,lbinds))
-%   = case M.lookup i vbinds of
-%       Nothing  ->  return $ BD (M.insert i (BT t) vbinds, sbinds, lbinds)
-%       Just (BT s) ->
-%         if t == s
-%         then return $ binds
-%         else fail "bindVarToTerm: bound to different term."
-%       _ -> fail "bindVarToTerm: already bound to variable."
-%
-% insertVT i vw@(During m) t (BD (vbinds,sbinds,lbinds))
-%   = case M.lookup i vbinds of
-%       Nothing  ->  return $ BD (M.insert i (BT t) vbinds, sbinds, lbinds)
-%       Just (BT s) ->
-%         if vw == ww && compatibleTT t s
-%         then return $ BD (M.insert i (BT t) vbinds, sbinds, lbinds)
-%         else fail "bindVarToTerm: bound to different term."
-%       _ -> fail "bindVarToTerm: already bound to variable."
-%
-% insertVT i vw t _
-%  = error $ unlines
-%     [ "insertVT: unexpected argument combination"
-%     , "i = " ++ show i
-%     , "vw = " ++ show vw
-%     , "t = " ++ show t ]
-% \end{code}
 
 Determining the temporality of a term:
 \begin{code}
@@ -572,62 +491,27 @@ tempsOf vws []      =  vws
 tempsOf vws (t:ts)  =  tempOf vws ts t
 \end{code}
 
-% Checking all dynamic variables in a term have the specified temporality:
-% \begin{code}
-% isTemporalityOf :: VarWhen -> Term -> Bool
-%
-% (During _) `isTemporalityOf` (Var _ (Vbl _ _ (During _)))  =  True
-% dt `isTemporalityOf` (Var _ (Vbl _ _ vdt))                 =  dt == vdt
-%
-% dt `isTemporalityOf` (Cons _ _ ts)   =  all (isTemporalityOf dt) ts
-% dt `isTemporalityOf` (Bind _ _ _ t)  =  dt `isTemporalityOf` t
-% dt `isTemporalityOf` (Lam _ _ _ t)   =  dt `isTemporalityOf` t
-% dt `isTemporalityOf` (Sub _ t sub)   =  all (isTemporalityOf dt) (t:termsof sub)
-%  where termsof (Substn tsub _)       =  map snd $ S.toList tsub
-% dt `isTemporalityOf` _               =  True
-% \end{code}
+When we store a dynamic term, we ``normalise'' it to before:
+\textbf{
+For now we ignore binding and bound occurrences of variables.
+We may need to address this later.
+}
+\begin{code}
+bterm :: Term -> VarBind
+bterm t = BT $ bterm' t
+bterm' v@(Var tk (Vbl vi vc vw))
+  | vw == Static || vw == Textual || vw == Before  =  v
+  | otherwise            =  fromJust $ var  tk $ Vbl vi vc Before
+bterm' (Cons tk n ts)    =  Cons tk n $ map bterm' ts
+bterm' (Bind tk n vl t)  =  fromJust $ bind tk n vl $ bterm' t
+bterm' (Lam tk n vs t)   =  fromJust $ lam  tk n vs $ bterm' t
+bterm' (Sub tk t sub)    =  Sub  tk (bterm' t) $ bsub sub
+bterm' t                 =  t
 
-% A pre-existing bound term can only differ from one being added
-% if they both contain just\texttt{During} dynamic variables,
-% and those in the pre-existing term have empty subscripts.
-% In effect we have an equality check with one weakening,
-% so that new \verb'(During \_)' is fine against old \verb'(During "")'.
-% \begin{code}
-% compatibleTT :: Term -> Term -> Bool
-%
-% compatibleTT (Var nk (Vbl ni nc (During _))) (Var ok (Vbl oi oc (During "")))
-%   =  ni == oi && nc == oc && nk == ok
-%
-% compatibleTT (Cons nk ni nts) (Cons ok oi ots)
-%   =  ni == oi && nk == ok && compTTs nts ots
-% compatibleTT (Bind nk ni nvs nt) (Bind ok oi ovs ot)
-%   =  ni == oi && nk == ok && nvs == ovs && compatibleTT nt ot
-% compatibleTT (Lam nk ni nvl nt) (Lam ok oi ovl ot)
-%   =  ni == oi && nk == ok && nvl == ovl && compatibleTT nt ot
-% compatibleTT (Sub nk nt ns) (Sub ok ot os)
-%   =  nk == ok && compatibleTT nt ot && compSS ns os
-% compatibleTT (Iter nk ni np nlvs) (Iter ok oi op olvs)
-%   =  np == op && ni == oi && nk == ok && nlvs == olvs
-%
-% compatibleTT t s  =  t == s
-%
-% compTTs :: [Term] -> [Term] -> Bool
-% compTTs [] [] = True
-% compTTs (_:_) [] = False
-% compTTs [] (_:_) = False
-% compTTs (nt:nts) (ot:ots) = compatibleTT nt ot && compTTs nts ots
-%
-% compSS :: Substn -> Substn -> Bool
-% compSS (Substn ntsub nlvsub) (Substn otsub olvsub)
-%   = nlvsub == olvsub && compTSTS ntsub otsub
-%
-% compTSTS :: TermSub -> TermSub -> Bool
-% compTSTS ntsub otsub
-%  = nvs == ovs && compTTs nts ots
-%  where
-%    (nvs,nts) = unzip $ S.toList ntsub
-%    (ovs,ots) = unzip $ S.toList otsub
-% \end{code}
+bsub (Substn x y) = error "Binding.lhs: bsub (from bterm') NYI"
+\end{code}
+
+
 
 \newpage
 \subsubsection{Binding List-Variables to Variable-Lists}
@@ -656,22 +540,6 @@ vlComp vc vw vws (gv:gvs)
  where
    gvw = gvarWhen gv
    vws' = S.insert gvw vws
-
--- -- don't force Static, or During
--- forceDuring Static        =  Static
--- forceDuring d@(During _)  =  d
--- forceDuring _             =  newDuring
---
--- forceVNullDuring v@(Vbl _ _  Static    )  =  v
--- forceVNullDuring v@(Vbl _ _  (During _))  =  v
--- forceVNullDuring   (Vbl i vc _         )  =  Vbl i vc newDuring
---
--- forceLNullDuring (LVbl v is)  =  LVbl (forceVNullDuring v) is
---
--- forceGNullDuring (StdVar v)   =  StdVar $ forceVNullDuring v
--- forceGNullDuring (LstVar lv)  =  LstVar $ forceLNullDuring lv
---
--- lForceD = map forceGNullDuring
 \end{code}
 
 \newpage
@@ -718,78 +586,6 @@ Anything else fails.
 bindLVarToVList _ _ _ = fail "bindLVarToVList: invalid lvar. -> vlist binding."
 \end{code}
 
-% \newpage
-% We follow the behaviour described in Fig. \ref{fig:dynamic-coherence},
-% generalised for variable lists in the ``obvious'' way.
-% \begin{code}
-% insertLL :: Monad m => Identifier -> [Identifier] -> VarWhen
-%          -> VarList -> VarWhen
-%          -> Binding -> m Binding
-%
-% insertLL i is Static vl Static binds@(BD (vbinds,sbinds,lbinds))
-%  = case M.lookup (i,is) lbinds of
-%      Nothing  ->  return $ BD (vbinds,sbinds, M.insert (i,is) (BL vl) lbinds)
-%      Just (BL wl)
-%        | wl == vl  ->  return binds
-%        | otherwise  ->  fail "bindLVarToVList: lvar. bound to other var-list."
-%      _  ->  fail "bindLVarToVList: lvar. bound to set or other var-list."
-%
-% insertLL i is vw@(During m) vl vlw@(During n) binds@(BD (vbinds,sbinds,lbinds))
-%  = case M.lookup (i,is) lbinds of
-%      Nothing  ->  return $ BD (vbinds,sbinds,M.insert (i,is) (BL vl) lbinds)
-%      Just (BL wl)
-%       | inconsistentVL vl wl
-%           -> fail "bindLVarToVList: lvar. bound to other var-list."
-%       | otherwise
-%           -> insertDuring p n "bindLVarToVList" binds
-%                $ BD (vbinds,sbinds,M.insert (i,is) (BL vl) lbinds)
-%       -- | null p  -> return $ BD (vbinds,M.insert (i,is) (BL vlw vl) lbinds)
-%       -- | null n || p == n  ->  return binds
-%       -- | otherwise
-%       --     -> fail $ unlines
-%       --          [ "bindLVarToVList: lvar. bound to other subscript."
-%       --          , "m = " ++ show m
-%       --          , "n = " ++ show n
-%       --          , "p = " ++ show p ]
-%      _  ->  fail "bindLVarToVList: lvar. bound to set or other var-list."
-%
-% insertLL i is vw vl vlw _
-%  = error $ unlines
-%     [ "insertLL: unexpected argument combination"
-%     , "i   = " ++ show i
-%     , "is  = " ++ show is
-%     , "vw  = " ++ show vw
-%     , "vl  = " ++ show vl
-%     , "vlw = " ++ show vlw
-%     ]
-% \end{code}
-%
-% Variable-lists are inconsistent if the variables at each position
-% differ, except that a \texttt{(During "")} in the one
-% list can correspond to \texttt{(During n)} for any \texttt{n}
-% in the other list.
-% \begin{code}
-% inconsistentVL [] []  =  False
-% inconsistentVL []  _  =  True
-% inconsistentVL _  []  =  True
-% inconsistentVL (StdVar nv:nvl) (StdVar pv:pvl)
-%                       =  inconsistentV  nv  pv  || inconsistentVL nvl pvl
-% inconsistentVL (LstVar nlv:nvl) (LstVar plv:pvl)
-%                       =  inconsistentLV nlv plv || inconsistentVL nvl pvl
-% inconsistentVL  _  _  =  True
-%
-% inconsistentLV (LVbl nv nis) (LVbl pv pis)
-%                       =  nis /= pis || inconsistentV nv pv
-%
-% inconsistentV (Vbl ni nc (During _)) (Vbl pi pc (During ""))
-%                       =  ni /= pi || nc /= pc
-% inconsistentV (Vbl ni nc (During "")) (Vbl pi pc (During _))
-%                       =  ni /= pi || nc /= pc
-% inconsistentV (Vbl ni nc (During m)) (Vbl pi pc (During n))
-%                       =  m /= n
-% inconsistentV  _ _ = True -- any non-During should resut in failure
-% \end{code}
-
 \newpage
 \subsubsection{Binding List-Variables to Variable-Sets}
 
@@ -831,59 +627,6 @@ bindLVarToVSet lv@(LVbl (Vbl i vc vw) is) vs (BD (vbind,sbind,lbind))
 
 bindLVarToVSet _ _ _ = fail "bindLVarToVSet: invalid lvar. -> vset binding."
 \end{code}
-
-% We follow the behaviour described in Fig. \ref{fig:dynamic-coherence},
-% generalised for variable sets.
-% \begin{code}
-% insertLS :: Monad m => Identifier -> [Identifier] -> VarWhen
-%          -> VarSet -> VarWhen
-%          -> Binding -> m Binding
-%
-% insertLS i is Static vs Static binds@(BD (vbinds,sbinds,lbinds))
-%  = case M.lookup (i,is) lbinds of
-%      Nothing  ->  return $ BD (vbinds,sbinds,M.insert (i,is) (BS vs) lbinds)
-%      Just (BS ws)
-%        | ws == vs  ->  return binds
-%        | otherwise
-%            ->  fail $ unlines
-%                  [ "bindLVarToVSet: lvar. bound to other var-set."
-%                  , "vs = " ++ show vs
-%                  , "ws = " ++ show ws ]
-%      _  ->  fail "bindLVarToVSet: lvar. bound to list or other set."
-%
-% insertLS i is vw@(During m) vs vsw@(During n) binds@(BD (vbinds,sbinds,lbinds))
-%  = case M.lookup (i,is) lbinds of
-%      Nothing  ->  return $ BD (vbinds,sbinds,M.insert (i,is) (BS vs) lbinds)
-%      Just (BS ws)
-%       | inconsistentVL (S.toList vs) (S.toList ws)
-%           -> fail $ unlines
-%                [ "bindLVarToVSet: lvar. bound to other var-set."
-%                , "vs = " ++ show vs
-%                , "ws = " ++ show ws ]
-%       | otherwise
-%           -> insertDuring p n "bindLVarToVSet" binds
-%                $ BD (vbinds,sbinds,M.insert (i,is) (BS vs) lbinds)
-%       -- | null p  -> return $ BD (vbinds,M.insert (i,is) (BS vsw vs) lbinds)
-%       -- | null n || p == n  ->  return binds
-%       -- | otherwise
-%       --     -> fail $ unlines
-%       --          [ "bindLVarToVSet: lvar. bound to other subscript."
-%       --          , "m = " ++ show m
-%       --          , "n = " ++ show n
-%       --          , "p = " ++ show p ]
-%      _  ->  fail "bindLVarToVSet: lvar. bound to list or other var-set."
-%
-% insertLS i is vw vs vsw _
-%  = error $ unlines
-%     [ "insertLS: unexpected argument combination"
-%     , "i   = " ++ show i
-%     , "is  = " ++ show is
-%     , "vw  = " ++ show vw
-%     , "vs  = " ++ show vs
-%     , "vsw = " ++ show vsw
-%     ]
-% \end{code}
-
 
 \newpage
 \subsubsection{Binding List-Variables to Term-lists}
@@ -955,29 +698,6 @@ bindLVarToTList plv cts _
      , "plv = " ++ show plv
      , "cts = " ++ show cts ]
 \end{code}
-
-% The insertion function
-% checks if the pattern variable
-% is already bound, and if so ensures that the new term is compatible.
-% \begin{code}
-% insertLT :: Monad m => Identifier -> [Identifier] -> VarWhen
-%          -> [Term] -> Binding -> m Binding
-% insertLT i is vw ts (BD (vbinds,sbinds,lbinds))
-%   = case M.lookup (i,is) lbinds of
-%       Nothing  ->  return $ BD (vbinds, sbinds, M.insert (i,is) (BX ts) lbinds)
-%       Just (BX ss) ->
-%         if vw == ww && compatibleTTs ts ss
-%         then return $ BD (vbinds, sbinds, M.insert (i,is) (BX ts) lbinds)
-%         else fail "bindLVarToTList: list-var. already bound to different terms."
-%       _ -> fail "bindVarToTerm: list-var. already bound to something else."
-% \end{code}
-%
-% \begin{code}
-% compatibleTTs [] []          =  True
-% compatibleTTs _  []          =  False
-% compatibleTTs [] _           =  False
-% compatibleTTs (t:ts) (s:ss)  =  compatibleTT t s && compatibleTTs ts ss
-% \end{code}
 
 \newpage
 
@@ -1170,19 +890,22 @@ tst_bind_VarToVar
     [ testCase "Obs-Static g |-> in -- should succeed"
         ( bindVarToVar osg osin emptyBinding
           @?= Just (BD (M.fromList [((g,ObsV),BV osin)], M.empty, M.empty)) )
-    , testCase "Obs-Before v |-> x -- should succeed, with dynamic inducing"
+    , testCase "Obs-Before v |-> x -- should succeed"
         ( bindVarToVar obv obx emptyBinding
-          @?= Just (BD (M.fromList [((v,ObsV),BV odx)], M.empty, M.empty)) )
-    , testCase "Obs-During v_m |-> x_m -- should succeed, with dynamic inducing"
+          @?= Just (BD (M.fromList [((v,ObsV),BI x)], M.empty, M.empty)) )
+    , testCase "Obs-During v_m |-> x_m -- should succeed"
         ( bindVarToVar odvm odxm emptyBinding
-          @?= Just (BD (M.fromList [((v,ObsV),BV odxm)], M.empty, M.empty)) )
+          @?= Just (BD (M.fromList [((v,ObsV),BI x)],
+                       (M.fromList [("m","m")]), M.empty)) )
     , testCase "Obs-During v_m |-> x_n -- should succeed"
         ( bindVarToVar odvm odxn emptyBinding
-          @?= Just (BD (M.fromList [((v,ObsV),BV odxn)], M.empty, M.empty)) )
+          @?= Just (BD (M.fromList [((v,ObsV),BI x)],
+                       (M.fromList [("m","n")]), M.empty)) )
     , testCase "Obs-Before-During v ; v_m |-> x ; x_n -- should succeed"
         ( ( bindVarToVar odvm odxn $ fromJust
           $ bindVarToVar obv obx emptyBinding )
-          @?= Just (BD (M.fromList [((v,ObsV),BV odxn)], M.empty, M.empty)) )
+          @?= Just (BD (M.fromList [((v,ObsV),BI x)],
+                       (M.fromList [("m","n")]), M.empty)) )
     , testCase "Obs-During conflict v_m ; v_m |-> x_n ; x_m -- should fail"
         ( ( bindVarToVar odvm odxm $ fromJust
           $ bindVarToVar odvm odxn emptyBinding )
@@ -1244,24 +967,39 @@ tst_bind_VarToTerm
       ( bindVarToTerm ebe xy emptyBinding
         @?=
         Just (BD (M.fromList [((e,ExprV),BT xy)], M.empty, M.empty)) )
-    , testCase "Expr-After e' |-> x'+y' -- should succeed"
-      ( bindVarToTerm eae x'y' emptyBinding
-        @?=
-        Just (BD (M.fromList [((e,ExprV),BT x'y')], M.empty, M.empty)) )
     , testCase "Expr-During em |-> x_m+y_m -- should succeed"
       ( bindVarToTerm edem xmym emptyBinding
         @?=
-        Just (BD (M.fromList [((e,ExprV),BT xmym)], M.empty, M.empty)) )
+        Just (BD (M.fromList [((e,ExprV),BT xy)],
+                 (M.fromList [("m","m")]), M.empty)) )
     , testCase "Expr-During em |-> x_n+y_n -- should succeed"
       ( bindVarToTerm edem xnyn emptyBinding
         @?=
-        Just (BD (M.fromList [((e,ExprV),BT xnyn)], M.empty, M.empty)) )
-
+        Just (BD (M.fromList [((e,ExprV),BT xy)],
+                 (M.fromList [("m","n")]), M.empty)) )
+    , testCase "Expr-After e' |-> x'+y' -- should succeed"
+      ( bindVarToTerm eae x'y' emptyBinding
+        @?=
+        Just (BD (M.fromList [((e,ExprV),BT xy)], M.empty, M.empty)) )
+    , testCase "em |-> x_n+y_n onto previous x'+y'-- should succeed"
+      ( ( bindVarToTerm edem xnyn $
+          BD (M.fromList [((e,ExprV),BT xy)], M.empty, M.empty) )
+        @?=
+        Just (BD ( M.fromList [((e,ExprV),BT xy)],
+                   M.fromList [("m","n")], M.empty)) )
+    , testCase "e' |-> x'+y' onto previous xn+yn-- should succeed"
+      ( ( bindVarToTerm eae x'y' $
+          BD (M.fromList [((e,ExprV),BT xy)],
+              M.fromList [("m","n")], M.empty) )
+        @?=
+        Just (BD ( M.fromList [((e,ExprV),BT xy)]
+                 , M.fromList [("m","n")], M.empty) ) )
     , testCase "e' |-> x'+y' ; em |-> x_n+y_n -- should succeed"
       ( ( bindVarToTerm edem xnyn $ fromJust
           $ bindVarToTerm eae x'y' emptyBinding )
         @?=
-        Just (BD (M.fromList [((e,ExprV),BT xnyn)], M.empty, M.empty)) )
+        Just (BD (M.fromList [((e,ExprV),BT xy)],
+                  M.fromList [("m","n")], M.empty)) )
 
     -- all subsequent bind attempts should fail
     , testCase "Obs-Before v |-> x+y -- should fail"

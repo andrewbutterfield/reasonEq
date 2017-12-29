@@ -1016,10 +1016,14 @@ Then we will attempt the list-variable matching.
 
 Once more, we need to check for list-variables that are known,
 and defined as non-null variable lists.
+Note that a known-list variable can match null, if it has subtracted
+identifiers, but that will then induce bindings from the subtracted
+identifiers to the entirety of the corresponding known variable-list.
 \begin{code}
 bindLVarSetToNull vts bind [] = return bind
 bindLVarSetToNull vts bind ((LstVar lv):vl)
  | canMatchNullSet vts lv  =  do bind' <- bindLVarToVSet lv S.empty bind
+ -- Need to bind any 'less' ids to what's known (sub-match!)
                                  bindLVarSetToNull vts bind' vl
  | otherwise  =  fail "vsMatch: known list-var. cannot match null."
 bindLVarSetToNull _ _ (_:_) = fail "bindLVarSetToNull: std. variables not allowed."

@@ -7,8 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Binding
-( VarBind(..), pattern BindId, pattern BindVar, pattern BindTerm
-, LstVarBind(..), pattern BindList, pattern BindSet, pattern BindTerms
+( VarBind, pattern BindVar, pattern BindTerm
+, LstVarBind, pattern BindList, pattern BindSet, pattern BindTerms
 , Binding
 , emptyBinding
 , bindVarToVar
@@ -213,7 +213,6 @@ type VarBinding = M.Map (Identifier,VarClass) VarBind
 \end{code}
 We return just the variable or term from a lookup:
 \begin{code}
-pattern BindId   i  =  BI i
 pattern BindVar  v  =  BV v
 pattern BindTerm t  =  BT t
 \end{code}

@@ -226,6 +226,7 @@ test_none_reserved
 
 lSu  = lS `less` [u]
 lSuw = lS `less` [u,w]
+lSuvw = lS `less` [u,v,w]
 
 test_reserved_as_lists
  = testGroup "O,M,S reserved as [ok,x,y,z]"
@@ -370,6 +371,7 @@ test_reserved_as_sets
 \newpage
 \begin{code}
 u = jId "u"  ;  vu = PreVar u  ;  gu = StdVar vu
+ov = PreVar v ; gov = StdVar ov  -- vv used elsewhere for Textual 'v'
 w = jId "w"  ;  vw = PreVar w  ;  gw = StdVar vw
 
 
@@ -411,6 +413,13 @@ test_less_reserved
             (vswrap [x,y,z]) (vswrap [vu,vw] `S.union` lswrap [lS `less` [u,w]]) )
           @?= [ bindVV gu gx $ bindVV gw gy
                 $ bindLs (LstVar lSuw) [gz] emptyBinding
+              ]
+        )
+     , testCase "S_Design |- {x,y,z} :: {u,v,w,S\\u,v,w} -- SHOULD BE 6 WAYS"
+        ( nub (vsMatch [vtS_Design] emptyBinding S.empty S.empty
+            (vswrap [x,y,z]) (vswrap [vu,ov,vw] `S.union` lswrap [lS `less` [u,v,w]]) )
+          @?= [ bindVV gu gx $ bindVV gov gy $ bindVV gw gz
+                $ bindLs (LstVar lSuvw) [] emptyBinding
               ]
         )
      ]

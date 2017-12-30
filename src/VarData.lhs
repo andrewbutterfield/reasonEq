@@ -356,8 +356,8 @@ checkLVarListMap lv vl
 We neutralise a \texttt{During} variable by setting the subscript string to
 empty.
 \begin{code}
-neutralD (LVbl (Vbl i vw (During _)) is)
-             =  LVbl (Vbl i vw (During "")) is
+neutralD (LVbl (Vbl i vw (During _)) is js)
+             =  LVbl (Vbl i vw (During "")) is js
 neutralD lv  =  lv
 \end{code}
 
@@ -418,7 +418,7 @@ and the others.
 \begin{code}
 lookupLVarTable :: VarTable -> ListVar -> LstVarMatchRole
 
-lookupLVarTable (VD (_,_,dtable)) lvar@(LVbl (Vbl _ _ (During s )) _)
+lookupLVarTable (VD (_,_,dtable)) lvar@(LVbl (Vbl _ _ (During s )) _ _)
  = case M.lookup (neutralD lvar) dtable of
      Nothing    ->  UL
      Just lvmr  ->  lvmrMap (specialiseD s) lvmr
@@ -444,8 +444,8 @@ with that associated with the list-variable actually being looked up.
 \begin{code}
 specialiseD s (StdVar (Vbl id vw (During _)))
  = StdVar $ Vbl id vw $ During s
-specialiseD s (LstVar (LVbl (Vbl id vw (During _)) is))
- = LstVar (LVbl (Vbl id vw $ During s) is)
+specialiseD s (LstVar (LVbl (Vbl id vw (During _)) is js))
+ = LstVar (LVbl (Vbl id vw $ During s) is js)
 specialiseD _ gv = gv
 \end{code}
 

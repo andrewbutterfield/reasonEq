@@ -224,9 +224,9 @@ test_none_reserved
          ( bindLVarToVList lO (vwrap [e,x]) emptyBinding :: [Binding] ) )
      ]
 
-lSu  = lS `less` [u]
-lSuw = lS `less` [u,w]
-lSuvw = lS `less` [u,v,w]
+lSu  = lS `less` ([u],[])
+lSuw = lS `less` ([u,w],[])
+lSuvw = lS `less` ([u,v,w],[])
 
 test_reserved_as_lists
  = testGroup "O,M,S reserved as [ok,x,y,z]"
@@ -379,7 +379,8 @@ test_less_reserved
  = testGroup "S reserved as {x,y,z}, less x,y,z or more" -- []
      [ testCase "S_Design |- {x,y,z} :: {u,S\\u} -- succeeds 3 ways"
         ( vsMatch [vtS_Design] emptyBinding S.empty S.empty
-            (vswrap [x,y,z]) (vswrap [vu] `S.union` lswrap [lS `less` [u]])
+            (vswrap [x,y,z])
+            (vswrap [vu] `S.union` lswrap [lS `less` ([u],[])])
           @?= [ bindVV gu gx $ bindLs (LstVar lSu) [gy,gz] emptyBinding
               , bindVV gu gy $ bindLs (LstVar lSu) [gx,gz] emptyBinding
               , bindVV gu gz $ bindLs (LstVar lSu) [gx,gy] emptyBinding
@@ -387,13 +388,15 @@ test_less_reserved
         )
      , testCase "S_Design |- {x,y,z} :: {u,S\\u} -- SHOULD BE 3 WAYS"
         ( vsMatch [vtS_Design] emptyBinding S.empty S.empty
-            (vswrap [x,y,z]) (vswrap [vu] `S.union` lswrap [lS `less` [u]])
+            (vswrap [x,y,z])
+            (vswrap [vu] `S.union` lswrap [lS `less` ([u],[])])
           @?= [ bindVV gu gx $ bindLs (LstVar lSu) [gy,gz] emptyBinding
               ]
         )
      , testCase "S_Design |- {x,y,z} :: {u,w,S\\u,w} -- succeeds 6 ways"
         ( vsMatch [vtS_Design] emptyBinding S.empty S.empty
-            (vswrap [x,y,z]) (vswrap [vu,vw] `S.union` lswrap [lS `less` [u,w]])
+            (vswrap [x,y,z])
+            (vswrap [vu,vw] `S.union` lswrap [lS `less` ([u,w],[])])
           @?= [ bindVV gu gx $ bindVV gw gy
                 $ bindLs (LstVar lSuw) [gz] emptyBinding
               , bindVV gu gy $ bindVV gw gz
@@ -410,14 +413,16 @@ test_less_reserved
         )
      , testCase "S_Design |- {x,y,z} :: {u,w,S\\u,w} -- SHOULD BE 6 WAYS"
         ( nub (vsMatch [vtS_Design] emptyBinding S.empty S.empty
-            (vswrap [x,y,z]) (vswrap [vu,vw] `S.union` lswrap [lS `less` [u,w]]) )
+            (vswrap [x,y,z])
+            (vswrap [vu,vw] `S.union` lswrap [lS `less` ([u,w],[])]) )
           @?= [ bindVV gu gx $ bindVV gw gy
                 $ bindLs (LstVar lSuw) [gz] emptyBinding
               ]
         )
      , testCase "S_Design |- {x,y,z} :: {u,v,w,S\\u,v,w} -- SHOULD BE 6 WAYS"
         ( nub (vsMatch [vtS_Design] emptyBinding S.empty S.empty
-            (vswrap [x,y,z]) (vswrap [vu,ov,vw] `S.union` lswrap [lS `less` [u,v,w]]) )
+            (vswrap [x,y,z])
+            (vswrap [vu,ov,vw] `S.union` lswrap [lS `less` ([u,v,w],[])]) )
           @?= [ bindVV gu gx $ bindVV gov gy $ bindVV gw gz
                 $ bindLs (LstVar lSuvw) [] emptyBinding
               ]
@@ -596,13 +601,14 @@ and defining assigment
 \begin{code}
 tok = fromJust $ eVar bool ok ; tok' = fromJust $ eVar bool ok'
 
-(LVbl v is) `less` il  = LVbl v $ nub $ sort (is++il)
+(LVbl v is ij) `less` (iv,il)
+ = LVbl v (nub $ sort (is++iv)) (nub $ sort (is++il))
 
 v `assigned` e
   = tok `impl` PCons land [ tok' , v' `equal` e ,  _S_v'_is_S_v ]
   where
     v' = fromJust $ eVar ArbType $ PostVar v
-    _S_v'_is_S_v = PIter land eq [lS' `less` [v], lS `less` [v]]
+    _S_v'_is_S_v = PIter land eq [lS' `less` ([v],[]), lS `less` ([v],[])]
 \end{code}
 
 Test values:
@@ -636,8 +642,10 @@ test_simple_assignment
            (wy `assigned` e42) (v `assigned` ee)
            @?= ( Just $ bindVV gv gsy $ bindVT ge e42
                $ bindVV gok gok $ bindVV gok' gok'
-               $ bindLL (LstVar (lS  `less` [v])) (LstVar (lS  `less` [wy]))
-               $ bindLL (LstVar (lS' `less` [v])) (LstVar (lS' `less` [wy]))
+               $ bindLL (LstVar (lS  `less` ([v],[])))
+                        (LstVar (lS  `less` ([wy],[])))
+               $ bindLL (LstVar (lS' `less` ([v],[])))
+                        (LstVar (lS' `less` ([wy],[])))
                $ emptyBinding )
        )
     ]
@@ -646,25 +654,25 @@ test_simple_assignment
 \begin{code}
 vs `simasgn` es
   = PCons land [ PIter land eq [vs', es]
-               , PIter land eq [lS' `less` [vs], lS `less` [vs]] ]
+               , PIter land eq [lS' `less` ([vs],[]), lS `less` ([vs],[])] ]
   where vs' = PostVars vs
 
 
-vs_becomes_es = v `simasgn` (LVbl e [])
-es    = LVbl e []      ; ges   = LstVar es
-vs'   = PostVars v     ; gvs'  = LstVar vs'
-lSvs  = lS `less` [v]  ; gSvs  = LstVar lSvs
-lS'vs = lS' `less` [v] ; gS'vs = LstVar lS'vs
-lSzs  = lS `less` [ze]  ; gSzs  = LstVar lSzs
-lS'zs = lS' `less` [ze] ; gS'zs = LstVar lS'zs
+vs_becomes_es = v `simasgn` (LVbl e [] [])
+es    = LVbl e [] []         ; ges   = LstVar es
+vs'   = PostVars v           ; gvs'  = LstVar vs'
+lSvs  = lS `less` ([v],[])   ; gSvs  = LstVar lSvs
+lS'vs = lS' `less` ([v],[])  ; gS'vs = LstVar lS'vs
+lSzs  = lS `less` ([ze],[])  ; gSzs  = LstVar lSzs
+lS'zs = lS' `less` ([ze],[]) ; gS'zs = LstVar lS'zs
 
 f = PreExpr $ jId "f"
 
-us_becomes_fs = u `simasgn` (LVbl f [])
-fs    = LVbl f []      ; gfs   = LstVar fs
-us'   = PostVars u     ; gus'  = LstVar us'
-lSus  = lS `less` [u]  ; gSus  = LstVar lSus
-lS'us = lS' `less` [u] ; gS'us = LstVar lS'us
+us_becomes_fs = u `simasgn` (LVbl f [] [])
+fs    = LVbl f [] []        ; gfs   = LstVar fs
+us'   = PostVars u          ; gus'  = LstVar us'
+lSus  = lS `less` ([u],[])  ; gSus  = LstVar lSus
+lS'us = lS' `less` ([u],[]) ; gS'us = LstVar lS'us
 
 e1 = EVal int $ Integer 1
 e2 = EVal int $ Integer 2
@@ -674,7 +682,7 @@ ty' = fromJust $ eVar int y'
 
 x'1y'2 = ((evar int x' `equal` e1) `lAnd` (evar int y' `equal` e2))
        `lAnd`
-       (PIter land eq [lS' `less` [ze],lS `less` [ze]])
+       (PIter land eq [lS' `less` ([ze],[]),lS `less` ([ze],[])])
 
 test_simultaneous_assignment
  = testGroup "Simultaneous Assignment"

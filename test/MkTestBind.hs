@@ -40,6 +40,6 @@ lvDurRen :: String -> ListVar  -> ListVar
 gvDurRen :: String -> GenVar   -> GenVar
 
 vDurRen  n (Vbl i vw (During _))  =  Vbl i vw $ During n
-lvDurRen n (LVbl v is)            =  LVbl (vDurRen n v) is
+lvDurRen n (LVbl v is ij)         =  LVbl (vDurRen n v) is ij
 gvDurRen n (StdVar v)             =  StdVar $ vDurRen n v
 gvDurRen n (LstVar lv)            =  LstVar $ lvDurRen n lv

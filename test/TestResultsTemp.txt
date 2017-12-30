@@ -1,15 +1,20 @@
-vsMatch [vtS_Design] emptyBinding S.empty S.empty (vswrap [x,y,z]) (vswrap [vu,vv,vw] `S.union` lswrap [lS `less` [u,v,w]])
+vsMatch [vtS_Design] emptyBinding S.empty S.empty
+    (vswrap [x,y,z]) (vswrap [vu,ov,vw] `S.union` lswrap [lS `less` [u,v,w]])
 =
-BD -- ({u |-> x, w |-> y},0,{S\u,v,w |-> z})
+BD -- ({u |-> x, v |-> y, w |-> z},0,{S\u,v,w |-> {}})
 ( fromList
   [ ( ( Id "u"
       , VO )
     , BI
       ( Id "x" ) )
+  , ( ( Id "v"
+      , VO )
+    , BI
+      ( Id "y" ) )
   , ( ( Id "w"
       , VO )
     , BI
-      ( Id "y" ) ) ]
+      ( Id "z" ) ) ]
 , fromList
   []
 , fromList
@@ -20,7 +25,8 @@ BD -- ({u |-> x, w |-> y},0,{S\u,v,w |-> z})
         , Id "w" ] )
     , BS
       ( fromList
-        [ GV (VR (Id "z", VO, WB)) ] ) ) ] )
+        [] ) ) ] )
+
 
 
 

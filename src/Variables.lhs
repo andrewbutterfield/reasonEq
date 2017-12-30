@@ -134,7 +134,7 @@ and ``after'' observations over some appropriate time interval.
     variables used to record the value of observations
     at intermediate points within the time interval under consideration ($x_m$),
     or terms defined at such in-between states ($e_m,p_m$.).
-    These are typically required when defining
+    These are normally only required when dealing with
     sequential composition.
   \item[Textual]
     variables that denote themselves if observational (\texttt{x}),
@@ -151,11 +151,11 @@ data VarWhen -- Variable role
   | WT            --  Textual
   deriving (Eq, Ord, Show, Read)
 
-pattern Static = WS
-pattern Before = WB
-pattern During n = WD n
-pattern After  = WA
-pattern Textual = WT
+pattern Static    =  WS
+pattern Before    =  WB
+pattern During n  =  WD n
+pattern After     =  WA
+pattern Textual   =  WT
 \end{code}
 
 Textual variables are considered dynamic
@@ -254,30 +254,31 @@ for use in binding constructs,
 which may themselves contain special variables
 that denote lists of variables.
 We define a list-variable as a specially marked variable with the addition
-of a list of identifiers, corresponding to variable `roots'
+of two lists of identifiers,
+corresponding to ``subtracted'' variable  and list-variable `roots' respectively.
 
 \begin{code}
-newtype ListVar = LV (Variable, [Identifier])
+newtype ListVar = LV (Variable, [Identifier], [Identifier])
  deriving (Eq, Ord, Show, Read)
 
-pattern LVbl v is = LV (v,is)
-lvarClass (LVbl v _)  =  varClass v
-lvarWhen  (LVbl v _)  =  varWhen  v
+pattern LVbl v is js = LV (v,is,js)
+lvarClass (LVbl v _ _)  =  varClass v
+lvarWhen  (LVbl v _ _)  =  varWhen  v
 
-pattern ObsLVar  k i is = LV (VR (i,VO,k),is)
-pattern VarLVar  i is = LV (VR (i,VO,WT),is)
-pattern ExprLVar k i is = LV (VR (i,VE,k),is)
-pattern PredLVar k i is = LV (VR (i,VP,k),is)
+pattern ObsLVar  k i is js = LV (VR (i,VO,k), is,js)
+pattern VarLVar    i is js = LV (VR (i,VO,WT),is,js)
+pattern ExprLVar k i is js = LV (VR (i,VE,k), is,js)
+pattern PredLVar k i is js = LV (VR (i,VP,k), is,js)
 \end{code}
 
 Pre-wrapped patterns:
 \begin{code}
-pattern PreVars  i    =  LV (VR (i,VO,WB),[])
-pattern PostVars i    =  LV (VR (i,VO,WA),[])
-pattern MidVars  i n  =  LV (VR (i,VO,(WD n)),[])
-pattern ScriptVars i  =  LV (VR (i,VO,WT),[])
-pattern PreExprs i    =  LV (VR (i,VE,WB),[])
-pattern PrePreds i    =  LV (VR (i,VP,WB),[])
+pattern PreVars    i    =  LV (VR (i,VO,WB),    [],[])
+pattern PostVars   i    =  LV (VR (i,VO,WA),    [],[])
+pattern MidVars    i n  =  LV (VR (i,VO,(WD n)),[],[])
+pattern ScriptVars i    =  LV (VR (i,VO,WT),    [],[])
+pattern PreExprs   i    =  LV (VR (i,VE,WB),    [],[])
+pattern PrePreds   i    =  LV (VR (i,VP,WB),    [],[])
 \end{code}
 
 Useful predicates/functiond:
@@ -288,12 +289,12 @@ isPreListVar (PreExprs _) = True
 isPreListVar (PrePreds _) = True
 isPreListVar _            = False
 
-isObsLVar  (LV (v,_)) = isObsVar v
-isExprLVar (LV (v,_)) = isExprVar v
-isPredLVar (LV (v,_)) = isPredVar v
+isObsLVar  (LV (v,_,_)) = isObsVar v
+isExprLVar (LV (v,_,_)) = isExprVar v
+isPredLVar (LV (v,_,_)) = isPredVar v
 
-whatLVar (LV (v,_)) = whatVar v
-timeLVar (LV (v,_)) = timeVar v
+whatLVar (LV (v,_,_)) = whatVar v
+timeLVar (LV (v,_,_)) = timeVar v
 \end{code}
 
 \newpage

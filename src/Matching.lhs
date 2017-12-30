@@ -741,6 +741,7 @@ findLstCandidate bind vlC' vlP' vlC@(gC:vlC_) vlB@(gB:vlB_) vlP
   (found,vlCrest) = vlB_ `pulledFrom` vlC_
 \end{code}
 
+\newpage
 \subsubsection{Free Variable-List Matching}
 
 Here we are doing variable-list matching where all of the

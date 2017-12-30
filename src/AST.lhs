@@ -109,10 +109,10 @@ i_v = fromJust $ ident "v"
 i_P = fromJust $ ident "P"
 i_Q = fromJust $ ident "Q"
 
-lva = ObsLVar  Before (i_a) []
-lvb = ObsLVar  After  (i_b) []
-lve = ExprLVar Before (i_e) []
-lvf = ExprLVar Before (i_f) []
+lva = ObsLVar  Before (i_a) [] []
+lvb = ObsLVar  After  (i_b) [] []
+lve = ExprLVar Before (i_e) [] []
+lvf = ExprLVar Before (i_f) [] []
 
 lvs_ord_unq = [(lva,lvf),(lvb,lve)]
 test_substn_lvs_id = testCase "LVarSub ordered, unique"
@@ -462,10 +462,10 @@ They don't need special handling or representation here.
 
 Test values:
 \begin{code}
-lv_a = ObsLVar  Static i_a []
-lv_b = VarLVar         i_b []
-lv_e = ExprLVar Static i_e []
-lv_P = PredLVar Static i_P []
+lv_a = ObsLVar  Static i_a [] []
+lv_b = VarLVar         i_b [] []
+lv_e = ExprLVar Static i_e [] []
+lv_P = PredLVar Static i_P [] []
 
 t42 = Val (E ArbType) $ VI 42
 n = fromJust $ ident "n"

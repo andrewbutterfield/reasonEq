@@ -1041,7 +1041,7 @@ canMatchNullSet vts lv
 \newpage
 
 \begin{code}
-vsFreeStdMatch :: Monad m
+vsFreeStdMatch :: MonadPlus m
                => [VarTable] -> Binding -> CBVS -> PBVS
                -> Set GenVar -> Set GenVar
                -> m (Binding, Set GenVar, Set GenVar)
@@ -1099,6 +1099,49 @@ vsFreeStdMatch vts bind cbvs pbvs vsC vsP
     ea = S.size vsCa - S.size vsPa
 \end{code}
 
+
+\newpage
+Matching $m$ pattern variables against $n$ candidate variables
+allows for $n!/(m-n)!$ possible outcomes.
+\begin{code}
+vsFreeStdMatch' ::
+  MonadPlus m =>
+  [VarTable] -> Binding -> CBVS -> PBVS
+  -> Set GenVar -> Set GenVar
+  -> m (Binding, Set GenVar)
+\end{code}
+We now do a number of matches,
+based on a ``rotation'' of the set of pattern variables.
+This should result in $m$ matches.
+\begin{code}
+-- all variables are standard, of the same temporality.
+-- #vsC >= #vsP
+vsFreeStdMatch' vts bind cbvs pbvs vsC vsP
+ | psize == 0  =  return (bind,vsC)
+ | psize == 1  =  do bind' <- zipVarVarBind bind vlC vlP
+                     return (bind',S.fromList vlC')
+ | otherwise  =   do bind' <- vsFreeStdMatch'' vts bind cbvs pbvs vlC vlP []
+                     return (bind',S.fromList vlC')
+ where
+   psize = S.size vsP
+   (vlC,vlC') = splitAt psize $ S.toList vsC ; vlP = S.toList vsP
+\end{code}
+
+\begin{code}
+vsFreeStdMatch'' ::
+  MonadPlus m =>
+  [VarTable] -> Binding -> CBVS -> PBVS
+  -> [GenVar] -> [GenVar] -> [GenVar]
+  -> m Binding
+-- #vlC = #vlP1 + #vlP2
+vsFreeStdMatch'' vts bind cbvs pbvs vlC [] vlP2
+ = zipVarVarBind bind vlC vlP2
+vsFreeStdMatch'' vts bind cbvs pbvs vlC vlP1@(vP:vlP1') vlP2
+ = zipVarVarBind bind vlC (reverse vlP2 ++ vlP1)
+   `mplus`
+   vsFreeStdMatch'' vts bind cbvs pbvs vlC vlP1' (vP:vlP2)
+\end{code}
+
 This code, and its local definitions, may belong somewhere else.
 \begin{code}
 whenPartition :: VarSet -> (VarSet,VarSet,VarSet,VarSet)
@@ -1113,29 +1156,16 @@ whenPartition vs = (vsStatic,vsBefore,vsDuring,vsAfter)
   (vsDuring,vsAfter)  =  S.partition isDuring vs2
 \end{code}
 
-\newpage
-Matching $m$ pattern variables against $n$ candidate variables
-allows for $n!/(m-n)!$ possible outcomes.
-For now, we simply match variables in order
 \begin{code}
--- all variables are standard, of the same temporality.
--- #vsC >= #vsP
-vsFreeStdMatch' vts bind cbvs pbvs vsC vsP
- = do bind' <- zipVarVarBind bind vlC vlP
-      return (bind',S.fromList vlC')
- where
-   (vlC,vlC') = splitAt (S.size vsP) $ S.toList vsC ; vlP = S.toList vsP
-\end{code}
-
-\begin{code}
+zipVarVarBind :: Monad m => Binding -> [GenVar] -> [GenVar] -> m Binding
 -- both lists should be  the same length
 zipVarVarBind bind [] []  =  return bind
 zipVarVarBind bind (gC:vlC) (gP:vlP)
  = do bind' <- bindGVarToGVar gP gC bind
       zipVarVarBind bind' vlC vlP
 -- defensive programming
-zipVarVarBind bind  _ []  =  return bind
-zipVarVarBind bind []  _  =  return bind
+zipVarVarBind bind  _ []  =  error "zipVarVarBind: vlP too small"
+zipVarVarBind bind []  _  =  error "zipVarVarBind: vlp too large"
 \end{code}
 
 \newpage

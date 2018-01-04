@@ -256,7 +256,7 @@ pattern BindTerms ts  =  BX ts
 We put these together:
 \begin{code}
 newtype Binding = BD (VarBinding, SubBinding, ListVarBinding)
- deriving (Eq, Show, Read)
+ deriving (Eq, Ord, Show, Read)
 
 emptyBinding :: Binding
 emptyBinding = BD (M.empty, M.empty, M.empty)

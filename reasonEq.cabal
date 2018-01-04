@@ -60,6 +60,7 @@ test-suite reasonEq-test
                      , test-framework-quickcheck2
   other-modules:       VarDataTest
                      , MkTestBind
+                     , TestRendering
                      , BindingTest
                      , MatchingTest
                      , MatchScenarios

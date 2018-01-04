@@ -394,10 +394,11 @@ test_less_reserved
               ]
         )
      , testCase "S_Design |- {x,y,z} :: {u,w,S\\u,w} -- succeeds 6 ways"
-        ( vsMatch [vtS_Design] emptyBinding S.empty S.empty
+        ( sort (nub ( vsMatch [vtS_Design] emptyBinding S.empty S.empty
             (vswrap [x,y,z])
-            (vswrap [vu,vw] `S.union` lswrap [lS `less` ([u,w],[])])
-          @?= [ bindVV gu gx $ bindVV gw gy
+            (vswrap [vu,vw] `S.union` lswrap [lS `less` ([u,w],[])]) ))
+          @?= sort
+              [ bindVV gu gx $ bindVV gw gy
                 $ bindLs (LstVar lSuw) [gz] emptyBinding
               , bindVV gu gy $ bindVV gw gz
                 $ bindLs (LstVar lSuw) [gx] emptyBinding
@@ -417,6 +418,8 @@ test_less_reserved
             (vswrap [vu,vw] `S.union` lswrap [lS `less` ([u,w],[])]) )
           @?= [ bindVV gu gx $ bindVV gw gy
                 $ bindLs (LstVar lSuw) [gz] emptyBinding
+              , bindVV gu gy $ bindVV gw gx
+                    $ bindLs (LstVar lSuw) [gz] emptyBinding
               ]
         )
      , testCase "S_Design |- {x,y,z} :: {u,v,w,S\\u,v,w} -- SHOULD BE 6 WAYS"

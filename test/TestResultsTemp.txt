@@ -1,17 +1,19 @@
-
--- MatchingTest FAIL 2
-
-sMatch [] emptyBinding b0 b0 (fromJust $ substn [(a,k42),(b,k58)] []) (fromJust $ substn [ (x,ee), (y,ef)] [])
+sort ( vsMatch [vtS_Design] emptyBinding S.empty S.empty (vswrap [x,y,z]) (vswrap [vu,vw] `S.union` lswrap [lS `less` ([u,w],[])]) )
 =
-
-expected:
-
-[BD (fromList [((Id "e",VE),BT (K (E T) (VI 42))),((Id "f",VE),BT (K (E T) (VI 58))),((Id "x",VO),BI (Id "a")),((Id "y",VO),BI (Id "b"))],fromList [],fromList [])
-,BD (fromList [((Id "e",VE),BT (K (E T) (VI 58))),((Id "f",VE),BT (K (E T) (VI 42))),((Id "x",VO),BI (Id "b")),((Id "y",VO),BI (Id "a"))],fromList [],fromList [])]
-
- but got:
-
-[BD (fromList [((Id "e",VE),BT (K (E T) (VI 42))),((Id "f",VE),BT (K (E T) (VI 58))),((Id "x",VO),BI (Id "a")),((Id "y",VO),BI (Id "b"))],fromList [],fromList [])
-,BD (fromList [((Id "e",VE),BT (K (E T) (VI 42))),((Id "f",VE),BT (K (E T) (VI 58))),((Id "x",VO),BI (Id "a")),((Id "y",VO),BI (Id "b"))],fromList [],fromList []),BD (fromList [((Id "e",VE),BT (K (E T) (VI 58))),((Id "f",VE),BT (K (E T) (VI 42))),((Id "x",VO),BI (Id "b")),((Id "y",VO),BI (Id "a"))],fromList [],fromList [])]
-
+[ BD
+  ( fromList
+    [ ( ( Id "u" "x" ) )
+    , ( ( Id "w" "y" ) ) ]
+  , fromList
+    []
+  , fromList
+    [ ( ( Id "S\u,w"  "z", VO, WB)) ] ) ) ] )
+, BD
+  ( fromList
+    [ ( ( Id "u" "y" ) )
+    , ( ( Id "w" "x" ) ) ]
+  , fromList
+    []
+  , fromList
+    [ ( ( Id "S\u,w" "z", VO, WB)) ] ) ) ] ) ]
 --

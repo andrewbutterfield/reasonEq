@@ -207,6 +207,9 @@ bindPSSi2CSSi
 bindAllS
  = bindVV ps1 cs1 $ bindVV ps2 cs2 $ bindVV ps3 cs3 $ bindVV ps4 cs4
  $ bindLS pl1 cl1 $ bindLS pl2 cl2 $ bindLS pl3 cl3 $ bindLS pl4 cl4 emptyBinding
+bindAllT
+ = bindVV ps1 cs4 $ bindVV ps2 cs3 $ bindVV ps3 cs2 $ bindVV ps4 cs1
+ $ bindLS pl1 cl1 $ bindLS pl2 cl2 $ bindLS pl3 cl3 $ bindLS pl4 cl4 emptyBinding
 bindSpl2S
  = bindVV ps1 cs1 $ bindVV ps2 cs2 $ bindVV ps3 cs3 $ bindVV ps4 cs4
  $ bindLN pl1     $ bindLS pl2 cl2 $ bindLN pl3     $ bindLN pl4     emptyBinding
@@ -252,7 +255,7 @@ tst_vsMatch =
       ( nub ( vsMatch [] bindPSSi2CSSi b0 b0
                (S.fromList [cs1,cl1,cs2,cl2,cs3,cl3,cs4,cl4])
                (S.fromList [ps1,pl1,ps2,pl2,ps3,pl3,ps4,pl4]) )
-        @?= [bindAllS] )
+        @?= [bindAllS,bindAllT] )
     ]
 
 -- -----------------------------------------------------------------------------
@@ -289,16 +292,22 @@ tst_sMatch
              $ bindVT (StdVar e) k42
              $ emptyBinding ))
      )
-   , testCase "[42,58/a,b] :: [e,f/x,y] - succeeds"
-     ( sMatch [] emptyBinding b0 b0
-         (fromJust $ substn [(a,k42),(b,k58)] [])
-         (fromJust $ substn [ (x,ee), (y,ef)] [])
+   , testCase "[42,58/a,b] :: [e,f/x,y] - succeeds (Two ways)"
+     ( nub ( sMatch [] emptyBinding b0 b0
+              (fromJust $ substn [(a,k42),(b,k58)] [])
+              (fromJust $ substn [ (x,ee), (y,ef)] []) )
        @?=
        ([ ( bindVV (StdVar x) (StdVar a)
           $ bindVT (StdVar e) k42
           $ bindVV (StdVar y) (StdVar b)
           $ bindVT (StdVar f) k58
-          $ emptyBinding )])
+          $ emptyBinding )
+        , ( bindVV (StdVar x) (StdVar b)
+          $ bindVT (StdVar e) k58
+          $ bindVV (StdVar y) (StdVar a)
+          $ bindVT (StdVar f) k42
+          $ emptyBinding )
+        ])
      )
    , testCase "[la/lb] :: [l1/l2]  - succeeds"
        ( sMatch [] emptyBinding b0 b0

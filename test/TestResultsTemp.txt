@@ -1,73 +1,17 @@
--- MatchingTest FAIL 1
-
-bindPSSi2CSSi
-BD
-( fromList
-  []
-, fromList
-  []
-, fromList
-  [ ( ( Id "pl1" "cl1", VO, WB), [], [])) ] ) )
-  , ( ( Id "pl2" "cl2", VO, WB), [], [])) ] ) )
-  , ( ( Id "pl3" "cl3", VO, WB), [], [])) ] ) )
-  , ( ( Id "pl4" "cl4", VO, WB), [], [])) ] ) ) ] )
-
-
-
-nub $ vsMatch [] bindPSSi2CSSi b0 b0 (S.fromList [cs1,cl1,cs2,cl2,cs3,cl3,cs4,cl4]) (S.fromList [ps1,pl1,ps2,pl2,ps3,pl3,ps4,pl4])
-=
-[ BD
-  ( fromList
-    [ ( ( Id "ps1" "cs1" ) )
-    , ( ( Id "ps2" "cs2" ) )
-    , ( ( Id "ps3" "cs3" ) )
-    , ( ( Id "ps4" "cs4" ) ) ]
-  , fromList
-    []
-  , fromList
-    [ ( ( Id "pl1" "cl1", VO, WB), [], [])) ] ) )
-    , ( ( Id "pl2" "cl2", VO, WB), [], [])) ] ) )
-    , ( ( Id "pl3" "cl3", VO, WB), [], [])) ] ) )
-    , ( ( Id "pl4" "cl4", VO, WB), [], [])) ] ) ) ] )
-
-, BD
-  ( fromList
-    [ ( ( Id "ps1" "cs4" ) )
-    , ( ( Id "ps2" "cs3" ) )
-    , ( ( Id "ps3" "cs2" ) )
-    , ( ( Id "ps4" "cs1" ) ) ]
-  , fromList
-    []
-  , fromList
-    [ ( ( Id "pl1" "cl1", VO, WB), [], [])) ] ) )
-    , ( ( Id "pl2" "cl2", VO, WB), [], [])) ] ) )
-    , ( ( Id "pl3" "cl3", VO, WB), [], [])) ] ) )
-    , ( ( Id "pl4" "cl4", VO, WB), [], [])) ] ) ) ] ) ]
 
 -- MatchingTest FAIL 2
 
 sMatch [] emptyBinding b0 b0 (fromJust $ substn [(a,k42),(b,k58)] []) (fromJust $ substn [ (x,ee), (y,ef)] [])
 =
-[ BD
-  ( fromList
-    [ ( ( Id "e" 42)) )
-    , ( ( Id "f" 58)) )
-    , ( ( Id "x" "a" ) )
-    , ( ( Id "y" "b" ) ) ]
-  , fromList
-    []
-  , fromList
-    [] )
-, BD
-  ( fromList
-    [ ( ( Id "e" 58)) )
-    , ( ( Id "f" 42)) )
-    , ( ( Id "x" "b" ) )
-    , ( ( Id "y" "a" ) ) ]
-  , fromList
-    []
-  , fromList
-    [] ) ]
 
+expected:
+
+[BD (fromList [((Id "e",VE),BT (K (E T) (VI 42))),((Id "f",VE),BT (K (E T) (VI 58))),((Id "x",VO),BI (Id "a")),((Id "y",VO),BI (Id "b"))],fromList [],fromList [])
+,BD (fromList [((Id "e",VE),BT (K (E T) (VI 58))),((Id "f",VE),BT (K (E T) (VI 42))),((Id "x",VO),BI (Id "b")),((Id "y",VO),BI (Id "a"))],fromList [],fromList [])]
+
+ but got:
+
+[BD (fromList [((Id "e",VE),BT (K (E T) (VI 42))),((Id "f",VE),BT (K (E T) (VI 58))),((Id "x",VO),BI (Id "a")),((Id "y",VO),BI (Id "b"))],fromList [],fromList [])
+,BD (fromList [((Id "e",VE),BT (K (E T) (VI 42))),((Id "f",VE),BT (K (E T) (VI 58))),((Id "x",VO),BI (Id "a")),((Id "y",VO),BI (Id "b"))],fromList [],fromList []),BD (fromList [((Id "e",VE),BT (K (E T) (VI 58))),((Id "f",VE),BT (K (E T) (VI 42))),((Id "x",VO),BI (Id "b")),((Id "y",VO),BI (Id "a"))],fromList [],fromList [])]
 
 --

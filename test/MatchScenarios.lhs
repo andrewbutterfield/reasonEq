@@ -27,6 +27,7 @@ import VarData
 import Binding
 import Matching
 import MkTestBind
+import TestRendering
 \end{code}
 
 \newpage

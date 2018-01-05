@@ -1,0 +1,3 @@
+[submodule "nicesymbols"]
+	path = nicesymbols
+	url = https://github.com/andrewbutterfield/nicesymbols.git

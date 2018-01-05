@@ -9,7 +9,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module LexBase
  ( Identifier
  , pattern Identifier, ident
- , validIdent, idName
+ , validIdent, isNameId, isSymbId
+ , idName
  , Token
  , pattern ArbTok, pattern IdTok
  , int_tst_LexBase
@@ -51,24 +52,34 @@ Anything else is `arbitrary`.
 \newpage
 \subsection{Identifiers}
 
-We consider `identifiers' to be strings that satisfy a fairly standard convention
+We consider `identifiers' to either
+be strings that satisfy a fairly standard convention
 for program variables, namely starting with an alpha character,
-followed by zero or more alphas, and digits.
-We don't allow underscores, dollars, primes or dots in identifiers.
+followed by zero or more alphas, and digits,
+or a mix of ``symbols'', which do not include alphas.
+In addtion, we don't allow whitespace, quotes, underscores, dollars, primes or dots in
+either form of identifier.
 \begin{code}
 newtype Identifier = Id String deriving (Eq, Ord, Show, Read)
 pattern Identifier nm <- Id nm
 
+isValidSymbol c  =  not(isSpace c || isAlpha c || c `elem` "_$'.`\"")
+
+isIdContChar c = isAlpha c || isDigit c
+
 validIdent :: String -> Bool
-validIdent (c:cs) =  isAlpha c && all isIdContChar cs
-validIdent _      =  False
+validIdent str@(c:cs)  =  all isValidSymbol str
+                          || isAlpha c && all isIdContChar cs
+validIdent _           =  False -- no empty/null identifiers !
 
 ident :: Monad m => String -> m Identifier
 ident nm
  | validIdent nm  = return $ Id nm
 ident nm = fail ("'"++nm++"' is not an Identifier")
 
-isIdContChar c = isAlpha c || isDigit c
+isNameId, isSymbId :: Identifier -> Bool
+isNameId (Id (c:_))  =  isAlpha c
+isSymbId (Id (c:_))  =  isValidSymbol c
 
 idName :: Identifier -> String
 idName (Id nm) = nm
@@ -81,6 +92,8 @@ identTests
     [ testCase "ident \"\""   ( ident ""    @?=  Nothing )
     , testCase "ident \"a\""  ( ident "a"   @?=  Just (Id "a") )
     , testCase "ident \"Z\""  ( ident "Z"   @?=  Just (Id "Z") )
+    , testCase "ident \"++\"" ( ident "++"   @?=  Just (Id "++") )
+    , testCase "ident \"\172\"" ( ident "\172"   @?=  Just (Id "\172") )
     , testCase "ident \"_\""  ( ident "_"   @?=  Nothing )
     , testCase "ident \"'\""  ( ident "'"   @?=  Nothing )
     , testCase "ident \"5\""  ( ident "5"   @?=  Nothing )

@@ -21,6 +21,7 @@ module Binding
 , bindGVarToTList
 , lookupBind
 , lookupLstBind
+, dumpBinding
 , int_tst_Binding
 ) where
 import Data.Maybe (fromJust)
@@ -913,6 +914,21 @@ ttsVar  tk           =  getJust "termTempSync var failed."   . var tk
 ttsBind tk i vs      =  getJust "termTempSync bind failed."  . bind tk i vs
 ttsLam  tk i vl      =  getJust "termTempSync lam failed."   . lam tk i vl
 ttsSubstn tsub lsub  =  getJust "subTempSync substn failed." $ substn tsub lsub
+\end{code}
+
+\newpage
+\subsection{Binding Dump}
+
+Sometimes it is useful to dump all the binding results.
+\begin{code}
+dumpBinding :: Binding
+            -> ( [ ( (Identifier,VarClass)                      ,VarBind)    ]
+               , [ ( Subscript                                  ,Subscript)  ]
+               , [ ( (Identifier,VarClass,[Identifier],[Identifier])
+                                                                ,LstVarBind) ]
+               )
+dumpBinding (BD (vbind,sbind,lbind))
+  = (M.toList vbind, M.toList sbind, M.toList lbind)
 \end{code}
 
 \newpage

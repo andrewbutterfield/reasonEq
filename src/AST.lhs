@@ -18,7 +18,8 @@ module AST ( TermSub, LVarSub
            , isPredKind, isExprKind, ekType
            , Term
            , pattern Val, pattern Var, pattern Cons
-           , pattern Bind, pattern Lam, pattern Sub, pattern Iter
+           , pattern Bind, pattern Lam
+           , pattern Sub, pattern Iter, pattern Type
            , var,  eVar,  pVar
            , bind, eBind, pBind
            , lam,  eLam,  pLam
@@ -26,7 +27,6 @@ module AST ( TermSub, LVarSub
            , pattern EBind, pattern ELam, pattern ESub, pattern EIter
            , pattern PVal, pattern PVar, pattern PCons
            , pattern PBind, pattern PLam, pattern PSub, pattern PIter
-           , pattern Type
            , pattern E2, pattern P2
            , termkind, isVar, isExpr, isPred
            , VarSideCond, pattern Exact, pattern Approx

@@ -7,7 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module TestRendering (
- trId, trVar, trLVar, trGVar, trType, trValue, trTerm
+   trId, trVar, trLVar, trGVar, trType, trValue, trTerm, trBinding
+ , seeTerm, seeBind
 ) where
 
 import Data.Maybe(fromJust)
@@ -83,7 +84,9 @@ trType (DataType i itss)  =  "ADT"
 trType (FunType ta tr)    =  "("++ trType ta ++ " -> " ++ trType tr ++ ")"
 trType (GivenType i)      =  "["++trId i++"]"
 
-trTypes ts = concat $ intersperse " " $ map trType ts
+trTypes = seplist " " trType
+
+seplist sep tr = concat . intersperse sep . map tr
 \end{code}
 
 \newpage
@@ -113,7 +116,7 @@ trTerm i (Sub tk t sub)       =  trTerm i t ++ trSub i sub
 trTerm i (Iter tk na ni lvs)
  =  trId na ++ "{"
             ++ trId ni ++ "("
-                       ++ concat (intersperse "," $ map trLVar lvs)
+                       ++ seplist "," trLVar lvs
                        ++ ")"
             ++ "}"
 trTerm i (Type t)             =  trType t
@@ -136,12 +139,12 @@ trInfix i t1 s t2
 
 trApply i n (lbr,sep,rbr) ts  =  lbr ++ trTL i sep ts ++ rbr
 
-trTL i sep ts = concat $ intersperse sep $ map (trTerm i) ts
+trTL i sep ts = seplist sep (trTerm i) ts
 
 trAbs i tk n vl t
  = "("++trId n ++ ' ':trVL vl ++ ' ':_bullet ++ ' ':trTerm i t ++ ")"
 
-trVL vl = concat $ intersperse "," $ map trGVar vl
+trVL = seplist "," trGVar
 \end{code}
 
 \newpage
@@ -164,7 +167,7 @@ trBinding = trBinding' . dumpBinding
 trBinding' (vb,sb,lb)
  = unlines [ trAssoc trVB vb, trAssoc trSB sb, trAssoc trLB lb ]
 
-trAssoc tr pairs = "{ " ++ concat (intersperse ", " $ map tr pairs) ++ " }"
+trAssoc tr pairs = "{ " ++ seplist ", " tr pairs ++ " }"
 
 trVB ((i,vc),vb)
  = "(" ++ trId i ++ "," ++ trVC vc ++ ")" ++ ' ':_maplet ++ ' ':trVarBind vb
@@ -172,7 +175,17 @@ trVB ((i,vc),vb)
 trSB (s,t) = s ++ ' ':_maplet ++ ' ':t
 
 trLB ((i,vc,is,js),lvb)
-  = "("++")"
+  = "("  ++ trId i ++
+    ","  ++ trVC vc ++
+    "\\" ++ seplist "," trId is ++
+    ";"  ++ seplist "," trId js ++
+    ")"
     ++
     ' ':_maplet ++ ' ':trLstVarBind lvb
+\end{code}
+
+Seeing them in all their glory:
+\begin{code}
+seeTerm t = putStrLn $ trTerm 0 t
+seeBind = putStrLn . trBinding
 \end{code}

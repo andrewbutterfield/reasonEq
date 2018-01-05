@@ -19,6 +19,7 @@ import Test.Framework as TF (defaultMain, testGroup, Test)
 import Test.Framework.Providers.HUnit (testCase)
 --import Test.Framework.Providers.QuickCheck2 (testProperty)
 
+import NiceSymbols
 import Utilities
 import LexBase
 import Variables
@@ -454,9 +455,9 @@ We want to match here using the definitions regard $O$ and friends from above.
 We need to define shorthands for
 known predicate operators $;$, $\exists$ and $\land$.
 \begin{code}
-semi = jId "seqc"
-exists = jId "exists"
-land = jId "land"
+semi = jId ";"
+exists = jId _exists
+land = jId _land
 
 p `seqComp` q = PCons semi [p,q]
 eX vs p = fromJust $ pBind exists (S.fromList $ vs) p
@@ -543,6 +544,13 @@ tstSub = defaultMain [test_substitution]
 
 Now, the compositions:
 \begin{code}
+smBinding
+ = bindVV gvp gvp $ bindVV gvq gvq $
+      bindLS gO gO $ bindLS gO' gO' $ bindLS gOm gOm $
+      emptyBinding
+
+seeSMB = seeBind smBinding
+
 test_composition
  = testGroup "Composition"
     [ testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches itself"
@@ -591,9 +599,9 @@ test_sequential_composition
 We start with syntax definitions of assignment, equality
 and implication.
 \begin{code}
-asg = jId "becomes"
-implies = jId "implies"
-eq = jId "equal"
+asg = jId ":="
+implies = jId _implies
+eq = jId "="
 
 v .:= e        =  PCons asg [fromJust $ eVar ArbType $ ScriptVar v, e]
 p `impl` q     =  PCons implies [p,q]

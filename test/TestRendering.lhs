@@ -39,9 +39,14 @@ rendering of datatypes to ease debugging.
 trId :: Identifier -> String
 trId (Identifier s)  =  s
 
-trVC :: VarClass -> String -> String
-trVC ObsV s = s
-trVC _ s = bold s
+trVC :: VarClass -> String
+trVC ObsV   =       "O"
+trVC ExprV  =  bold "E"
+trVC PredV  =  bold "P"
+
+trVCf :: VarClass -> String -> String
+trVCf ObsV s = s
+trVCf _ s = bold s
 
 trVW :: VarWhen -> String
 trVW Static      =  "."
@@ -51,11 +56,11 @@ trVW After       =  "'"
 trVW Textual     =  "\""
 
 trVar :: Variable -> String
-trVar (Vbl i vc vw) = trVC vc (trId i) ++ trVW vw
+trVar (Vbl i vc vw) = trVCf vc (trId i) ++ trVW vw
 
 trLVar :: ListVar -> String
 trLVar (LVbl (Vbl i vc vw) is js)
- = trVC vc (trId i) ++ '$':trVW vw ++ trLess is js
+ = trVCf vc (trId i) ++ '$':trVW vw ++ trLess is js
 
 trLess [] []  =  ""
 trLess is js
@@ -101,7 +106,7 @@ trTerm i (Val tk k)           =  trValue k
 trTerm i (Var tk v)           =  trVar v
 trTerm i (Cons tk s [t1,t2])
  | isSymbId s                 = trInfix i t1 s t2
-trTerm i (Cons tk n ts)       =  trId n ++ trApply i n ("(",",",")") ts
+trTerm i (Cons tk n ts)       =  trId n ++ trApply i n ("( ",", "," )") ts
 trTerm i (Bind tk n vs t)     =  trAbs i tk n (S.toList vs) t
 trTerm i (Lam tk n vl t)      =  trAbs i tk n vl            t
 trTerm i (Sub tk t sub)       =  trTerm i t ++ trSub i sub
@@ -134,7 +139,7 @@ trApply i n (lbr,sep,rbr) ts  =  lbr ++ trTL i sep ts ++ rbr
 trTL i sep ts = concat $ intersperse sep $ map (trTerm i) ts
 
 trAbs i tk n vl t
- = "("++trId n ++ ' ':trVL vl ++ ' ':_bullet ++ " " ++ trTerm i t ++ ")"
+ = "("++trId n ++ ' ':trVL vl ++ ' ':_bullet ++ ' ':trTerm i t ++ ")"
 
 trVL vl = concat $ intersperse "," $ map trGVar vl
 \end{code}
@@ -143,6 +148,31 @@ trVL vl = concat $ intersperse "," $ map trGVar vl
 \subsection{Bindings}
 
 \begin{code}
+trVarBind (BindVar v) = trVar v
+trVarBind (BindTerm t) = trTerm 0 t
+trVarBind vb = _ll ++ show vb ++ _gg
+
+trLstVarBind (BindList vl)  =  _langle ++ trVL vl ++ _rangle
+trLstVarBind (BindSet vs)  =  "{" ++ trVL (S.toList vs) ++ "}"
+trLstVarBind (BindTerms ts)  =  _langle ++ trTL 0 ", " ts ++ _rangle
+\end{code}
+
+\begin{code}
 trBinding :: Binding -> String
-trBinding bind = show $ dumpBinding bind
+trBinding = trBinding' . dumpBinding
+
+trBinding' (vb,sb,lb)
+ = unlines [ trAssoc trVB vb, trAssoc trSB sb, trAssoc trLB lb ]
+
+trAssoc tr pairs = "{ " ++ concat (intersperse ", " $ map tr pairs) ++ " }"
+
+trVB ((i,vc),vb)
+ = "(" ++ trId i ++ "," ++ trVC vc ++ ")" ++ ' ':_maplet ++ ' ':trVarBind vb
+
+trSB (s,t) = s ++ ' ':_maplet ++ ' ':t
+
+trLB ((i,vc,is,js),lvb)
+  = "("++")"
+    ++
+    ' ':_maplet ++ ' ':trLstVarBind lvb
 \end{code}

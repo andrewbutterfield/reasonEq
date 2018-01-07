@@ -1,19 +1,21 @@
-sort ( vsMatch [vtS_Design] emptyBinding S.empty S.empty (vswrap [x,y,z]) (vswrap [vu,vw] `S.union` lswrap [lS `less` ([u,w],[])]) )
+tMatch [vtS_Design] emptyBinding S.empty S.empty vs_becomes_es vs_becomes_es
+
+vs_becomes_es  ==  (∧{=(v$',e$)}∧∧{=(S$'\v$,S$\v$)})
+
+tMatch [vtS_Design] emptyBinding S.empty S.empty
+         vs_becomes_es vs_becomes_es
 =
-[ BD
-  ( fromList
-    [ ( ( Id "u" "x" ) )
-    , ( ( Id "w" "y" ) ) ]
-  , fromList
-    []
-  , fromList
-    [ ( ( Id "S\u,w"  "z", VO, WB)) ] ) ) ] )
-, BD
-  ( fromList
-    [ ( ( Id "u" "y" ) )
-    , ( ( Id "w" "x" ) ) ]
-  , fromList
-    []
-  , fromList
-    [ ( ( Id "S\u,w" "z", VO, WB)) ] ) ) ] ) ]
+{  }
+{  }
+{ (S,O\;v) ↦ ⟨S$\v$⟩, (e,E\;) ↦ ⟨e$⟩, (v,O\;) ↦ ⟨v$⟩ }
+
+bindLL gvs' gvs' $ bindLL ges ges $ bindLL gSvs gSvs $ bindLL gS'vs gS'vs $ emptyBinding
+
+bindLL gvs' gvs' $ bindLL ges ges
+     $ bindLL gSvs gSvs $ bindLL gS'vs gS'vs $ emptyBinding
+=
+{  }
+{  }
+{ (S,O\;v) ↦ ⟨S$\v$⟩, (e,E\;) ↦ ⟨e$⟩, (v,O\;) ↦ ⟨v$⟩ }
+
 --

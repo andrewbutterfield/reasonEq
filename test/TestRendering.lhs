@@ -9,6 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module TestRendering (
    trId, trVar, trLVar, trGVar, trType, trValue, trTerm, trBinding
  , seeTerm, seeBind
+ , seeTerms, seeBinds
 ) where
 
 import Data.Maybe(fromJust)
@@ -188,4 +189,13 @@ Seeing them in all their glory:
 \begin{code}
 seeTerm t = putStrLn $ trTerm 0 t
 seeBind = putStrLn . trBinding
+
+seeMany see []      =  return ()
+seeMany see [x]     =  see x
+seeMany see (x:xs)  =  do see x
+                          putStrLn "--"
+                          seeMany see xs
+
+seeTerms = seeMany seeTerm
+seeBinds = seeMany seeBind
 \end{code}

@@ -424,12 +424,32 @@ test_less_reserved
                     $ bindLs (LstVar lSuw) [gz] emptyBinding
               ]
         )
+     , testCase "S_Design |- {x,y,z} :: {u,v,w,S\\u,v,w} -- succeeds 6 WAYS"
+        ( nub (vsMatch [vtS_Design] emptyBinding S.empty S.empty
+            (vswrap [x,y,z])
+            (vswrap [vu,ov,vw] `S.union` lswrap [lS `less` ([u,v,w],[])]) )
+          @?= [ bindVV gu gx $ bindVV gov gy $ bindVV gw gz
+                    $ bindLs (LstVar lSuvw) [] emptyBinding
+              , bindVV gu gx $ bindVV gov gz $ bindVV gw gy
+                    $ bindLs (LstVar lSuvw) [] emptyBinding
+              , bindVV gu gy $ bindVV gov gx $ bindVV gw gz
+                    $ bindLs (LstVar lSuvw) [] emptyBinding
+              , bindVV gu gy $ bindVV gov gz $ bindVV gw gx
+                    $ bindLs (LstVar lSuvw) [] emptyBinding
+              , bindVV gu gz $ bindVV gov gx $ bindVV gw gy
+                    $ bindLs (LstVar lSuvw) [] emptyBinding
+              , bindVV gu gz $ bindVV gov gy $ bindVV gw gx
+                    $ bindLs (LstVar lSuvw) [] emptyBinding
+              ]
+        )
      , testCase "S_Design |- {x,y,z} :: {u,v,w,S\\u,v,w} -- SHOULD BE 6 WAYS"
         ( nub (vsMatch [vtS_Design] emptyBinding S.empty S.empty
             (vswrap [x,y,z])
             (vswrap [vu,ov,vw] `S.union` lswrap [lS `less` ([u,v,w],[])]) )
           @?= [ bindVV gu gx $ bindVV gov gy $ bindVV gw gz
                 $ bindLs (LstVar lSuvw) [] emptyBinding
+              , bindVV gu gz $ bindVV gov gy $ bindVV gw gx
+                    $ bindLs (LstVar lSuvw) [] emptyBinding
               ]
         )
      ]
@@ -663,28 +683,39 @@ test_simple_assignment
     ]
 \end{code}
 
+\begin{eqnarray*}
+  \lefteqn{x_1,\ldots,x_n ::= e_1, \ldots , e_n}
+\\ &=& \lst x ::= \lst e
+\\ &\defs&
+     ok \implies ok'
+     \land x'_1 = e_1 \land \ldots \land x'_n = e_n
+     \land S'\less{x_1,\ldots,x_n} = S\less{x_1,\ldots,x_n}
+\\ &=& ok \implies ok'
+    \land \lst x' = \lst e
+    \land S'\less{\lst x} = S\less{\lst x}
+\end{eqnarray*}
 \begin{code}
 vs `simasgn` es
   = PCons land [ PIter land eq [vs', es]
-               , PIter land eq [lS' `less` ([vs],[]), lS `less` ([vs],[])] ]
+               , PIter land eq [lS' `less` ([],[vs]), lS `less` ([],[vs])] ]
   where vs' = PostVars vs
 
 
 vs_becomes_es = v `simasgn` (LVbl e [] [])
 es    = LVbl e [] []         ; ges   = LstVar es
 vs'   = PostVars v           ; gvs'  = LstVar vs'
-lSvs  = lS `less` ([v],[])   ; gSvs  = LstVar lSvs
-lS'vs = lS' `less` ([v],[])  ; gS'vs = LstVar lS'vs
-lSzs  = lS `less` ([ze],[])  ; gSzs  = LstVar lSzs
-lS'zs = lS' `less` ([ze],[]) ; gS'zs = LstVar lS'zs
+lSvs  = lS `less` ([],[v])   ; gSvs  = LstVar lSvs
+lS'vs = lS' `less` ([],[v])  ; gS'vs = LstVar lS'vs
+lSzs  = lS `less` ([],[ze])  ; gSzs  = LstVar lSzs
+lS'zs = lS' `less` ([],[ze]) ; gS'zs = LstVar lS'zs
 
 f = PreExpr $ jId "f"
 
 us_becomes_fs = u `simasgn` (LVbl f [] [])
 fs    = LVbl f [] []        ; gfs   = LstVar fs
 us'   = PostVars u          ; gus'  = LstVar us'
-lSus  = lS `less` ([u],[])  ; gSus  = LstVar lSus
-lS'us = lS' `less` ([u],[]) ; gS'us = LstVar lS'us
+lSus  = lS `less` ([],[u])  ; gSus  = LstVar lSus
+lS'us = lS' `less` ([],[u]) ; gS'us = LstVar lS'us
 
 e1 = EVal int $ Integer 1
 e2 = EVal int $ Integer 2
@@ -694,7 +725,7 @@ ty' = fromJust $ eVar int y'
 
 x'1y'2 = ((evar int x' `equal` e1) `lAnd` (evar int y' `equal` e2))
        `lAnd`
-       (PIter land eq [lS' `less` ([ze],[]),lS `less` ([ze],[])])
+       (PIter land eq [lS' `less` ([],[ze]),lS `less` ([],[ze])])
 
 test_simultaneous_assignment
  = testGroup "Simultaneous Assignment"

@@ -68,8 +68,8 @@ isValidSymbol c  =  not(isSpace c || isAlpha c || c `elem` "_$'.`\"")
 isIdContChar c = isAlpha c || isDigit c
 
 validIdent :: String -> Bool
-validIdent str@(c:cs)  =  all isValidSymbol str
-                          || isAlpha c && all isIdContChar cs
+validIdent str@(c:cs)  =  not (isDigit c) && all isValidSymbol str
+                          ||   isAlpha c  && all isIdContChar cs
 validIdent _           =  False -- no empty/null identifiers !
 
 ident :: Monad m => String -> m Identifier

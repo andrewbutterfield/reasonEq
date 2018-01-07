@@ -1,21 +1,35 @@
-tMatch [vtS_Design] emptyBinding S.empty S.empty vs_becomes_es vs_becomes_es
+*MatchScenarios> putStrLn $ trVarTable vtL_Design
 
-vs_becomes_es  ==  (∧{=(v$',e$)}∧∧{=(S$'\v$,S$\v$)})
+{ ok : 𝔹
+, ok' : 𝔹
+, x : ℤ
+, x' : ℤ
+, y : ℤ
+, y' : ℤ
+, z : ℤ
+, z' : ℤ }
+{ M$ ≜ ⟨ok⟩
+, M$' ≜ ⟨ok'⟩
+, O$ ≜ ⟨M$,S$⟩
+, O$' ≜ ⟨M$',S$'⟩
+, S$ ≜ ⟨x,y,z⟩
+, S$' ≜ ⟨x',y',z'⟩ }
+{ M$_ ≜ ⟨ok_m⟩
+, O$_ ≜ ⟨M$_m,S$_m⟩
+, S$_ ≜ ⟨x_m,y_m,z_m⟩ }
 
-tMatch [vtS_Design] emptyBinding S.empty S.empty
-         vs_becomes_es vs_becomes_es
-=
-{  }
-{  }
-{ (S,O\;v) ↦ ⟨S$\v$⟩, (e,E\;) ↦ ⟨e$⟩, (v,O\;) ↦ ⟨v$⟩ }
+*MatchScenarios> putStrLn $ trVarTable vtS_Design
+{ ok : 𝔹, ok' : 𝔹, x : ℤ, x' : ℤ, y : ℤ, y' : ℤ, z : ℤ, z' : ℤ }
+{ M$ ≜ {ok}
+, M$' ≜ {ok'}
+, O$ ≜ {M$,S$}
+, O$' ≜ {M$',S$'}
+, S$ ≜ {x,y,z}
+, S$' ≜ {x',y',z'} }
+{ M$_ ≜ {ok_m}
+, O$_ ≜ {M$_m,S$_m}
+, S$_ ≜ {x_m,y_m,z_m} }
 
-bindLL gvs' gvs' $ bindLL ges ges $ bindLL gSvs gSvs $ bindLL gS'vs gS'vs $ emptyBinding
 
-bindLL gvs' gvs' $ bindLL ges ges
-     $ bindLL gSvs gSvs $ bindLL gS'vs gS'vs $ emptyBinding
-=
-{  }
-{  }
-{ (S,O\;v) ↦ ⟨S$\v$⟩, (e,E\;) ↦ ⟨e$⟩, (v,O\;) ↦ ⟨v$⟩ }
 
 --

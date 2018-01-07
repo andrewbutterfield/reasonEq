@@ -145,6 +145,8 @@ lex' nekot (c:cs)
  | otherwise  =  lex' (c:nekot) cs
 
 rrun nekot = Run $ reverse nekot
+
+spaced s = ' ':s ++ " "
 \end{code}
 
 \newpage

@@ -14,7 +14,7 @@ module VarData ( VarMatchRole
                , pattern KnownVarList, pattern KnownVarSet
                , pattern UnknownListVar
                , VarTable
-               , vtList, ltList
+               , vtList, ltList, dtList
                , newVarTable
                , addKnownConst
                , addKnownVar

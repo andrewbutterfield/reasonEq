@@ -105,8 +105,8 @@ We assume the existence of types
 for boolean ($\Bool$)
 and integer ($\Int$) values.
 \begin{code}
-bool = GivenType $ jId "B"
-int  = GivenType $ jId "Z"
+bool = GivenType $ jId $ _mathbb "B"
+int  = GivenType $ jId $ _mathbb "Z"
 \end{code}
 
 

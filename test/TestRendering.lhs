@@ -7,8 +7,13 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module TestRendering (
-   trId, trVar, trLVar, trGVar, trType, trValue, trTerm, trBinding
- , seeTerm, seeBind
+   trId
+ , trVar, trLVar, trGVar
+ , trType
+ , trValue, trTerm
+ , trVarMatchRole, trLstVarMatchRole, trVarTable
+ , trBinding
+ , seeV, seeLV, seeGV, seeType, seeVal, seeTerm, seeBind
  , seeTerms, seeBinds
 ) where
 
@@ -42,9 +47,9 @@ trId :: Identifier -> String
 trId (Identifier s)  =  s
 
 trVC :: VarClass -> String
-trVC ObsV   =       "O"
-trVC ExprV  =  bold "E"
-trVC PredV  =  bold "P"
+trVC ObsV   =  _mathcal "O"
+trVC ExprV  =  _mathcal "E"
+trVC PredV  =  _mathcal "P"
 
 trVCf :: VarClass -> String -> String
 trVCf ObsV s = s
@@ -62,12 +67,13 @@ trVar (Vbl i vc vw) = trVCf vc (trId i) ++ trVW vw
 
 trLVar :: ListVar -> String
 trLVar (LVbl (Vbl i vc vw) is js)
- = trVCf vc (trId i) ++ '$':trVW vw ++ trLess is js
+ = trVCf vc (trLId i) ++ trVW vw ++ trLess is js
 
+trLId i = trId i ++ "$"
 trLess [] []  =  ""
 trLess is js
   = '\\'
-     : ( concat $ intersperse "," ( map trId is ++ map ((++ "$") . trId) js ) )
+     : ( concat $ intersperse "," ( map trId is ++ map trLId js ) )
 
 trGVar :: GenVar -> String
 trGVar (StdVar v)   =  trVar v
@@ -78,12 +84,12 @@ trGVar (LstVar lv)  =  trLVar lv
 
 \begin{code}
 trType :: Type -> String
-trType ArbType            =  "*"
+trType ArbType            =  _tau
 trType (TypeVar i)        =  trId i
-trType (TypeApp i ts)     =  "(" ++ trId i ++ trTypes ts ++ ")"
+trType (TypeApp i ts)     =  trId i ++ "(" ++ trTypes ts ++ ")"
 trType (DataType i itss)  =  "ADT"
-trType (FunType ta tr)    =  "("++ trType ta ++ " -> " ++ trType tr ++ ")"
-trType (GivenType i)      =  "["++trId i++"]"
+trType (FunType ta tr)    =  "("++ trType ta ++ spaced _fun ++ trType tr ++ ")"
+trType (GivenType i)      =  trId i
 
 trTypes = seplist " " trType
 
@@ -143,9 +149,41 @@ trApply i n (lbr,sep,rbr) ts  =  lbr ++ trTL i sep ts ++ rbr
 trTL i sep ts = seplist sep (trTerm i) ts
 
 trAbs i tk n vl t
- = "("++trId n ++ ' ':trVL vl ++ ' ':_bullet ++ ' ':trTerm i t ++ ")"
+ = "("++trId n ++ ' ':trVL vl ++ spaced _bullet ++ trTerm i t ++ ")"
 
 trVL = seplist "," trGVar
+\end{code}
+
+\newpage
+\subsection{Variable Data}
+
+\begin{code}
+trVarMatchRole :: VarMatchRole -> String
+trVarMatchRole (KnownConst t)  =  spaced _triangleq ++ trTerm 0 t
+trVarMatchRole (KnownVar t)    =  " : " ++ trType t
+trVarMatchRole UnknownVar      =  " ?"
+\end{code}
+
+\begin{code}
+trLstVarMatchRole :: LstVarMatchRole -> String
+trLstVarMatchRole (KnownVarList vl)
+  =  spaced _triangleq ++ _langle ++ trVL vl ++ _rangle
+trLstVarMatchRole (KnownVarSet  vs)
+  =  spaced _triangleq ++ "{" ++ trVL (S.toList vs) ++ "}"
+trLstVarMatchRole UnknownListVar     =  " ?"
+\end{code}
+
+\begin{code}
+trVarTable :: VarTable -> String
+trVarTable vt
+ = unlines [ trAssoc trVTVV $ vtList vt
+           , trAssoc trVTLV $ ltList vt
+           , trAssoc trVTLV $ dtList vt
+           ]
+
+trVTVV (v,vmr)    =  trVar  v  ++ trVarMatchRole    vmr
+
+trVTLV (lv,lvmr)  =  trLVar lv ++ trLstVarMatchRole lvmr
 \end{code}
 
 \newpage
@@ -171,22 +209,32 @@ trBinding' (vb,sb,lb)
 trAssoc tr pairs = "{ " ++ seplist ", " tr pairs ++ " }"
 
 trVB ((i,vc),vb)
- = "(" ++ trId i ++ "," ++ trVC vc ++ ")" ++ ' ':_maplet ++ ' ':trVarBind vb
+ = "(" ++ trId i ++ "." ++ trVC vc ++ ")" ++ spaced _maplet ++ trVarBind vb
 
-trSB (s,t) = s ++ ' ':_maplet ++ ' ':t
+trSB (s,t) = s ++ spaced _maplet ++ t
 
 trLB ((i,vc,is,js),lvb)
   = "("  ++ trId i ++
-    ","  ++ trVC vc ++
-    "\\" ++ seplist "," trId is ++
-    ";"  ++ seplist "," trId js ++
+    "$."  ++ trVC vc ++
+    (if nowt then "" else "\\") ++
+    (if noIs then "" else seplist "," trId is) ++
+    (if noJs then "" else ";" ++ seplist "," trId js) ++
     ")"
     ++
-    ' ':_maplet ++ ' ':trLstVarBind lvb
+    spaced _maplet ++ trLstVarBind lvb
+  where
+    noIs = null is
+    noJs = null js
+    nowt = noIs && noJs
 \end{code}
 
 Seeing them in all their glory:
 \begin{code}
+seeV = putStrLn . trVar
+seeLV = putStrLn . trLVar
+seeGV = putStrLn . trGVar
+seeType = putStrLn . trType
+seeVal = putStrLn . trValue
 seeTerm t = putStrLn $ trTerm 0 t
 seeBind = putStrLn . trBinding
 

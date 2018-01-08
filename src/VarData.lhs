@@ -405,6 +405,7 @@ addKnownVar var@(ObsVar _ _) typ (VD (vtable,stable,dtable))
   =  return $ VD ( M.insert var (KV typ) vtable,stable,dtable )
 \end{code}
 
+\newpage
 \subsubsection{Inserting Known Variable-List}
 
 \begin{code}
@@ -464,19 +465,6 @@ iacOf vl  =  iacOf' [] [] vl
 \end{code}
 
 \newpage
-\subsubsection{Neutralising \texttt{During} Subscripts}
-
-We neutralise a \texttt{During} variable by setting the subscript string to
-empty.
-\begin{code}
-neutralD (LVbl (Vbl i vw (During _)) is js)
-             =  LVbl (Vbl i vw (During "")) is js
-neutralD lv  =  lv
-
-neutralD' (LstVar lv)  =  LstVar $ neutralD lv
-neutralD' gv           =  gv
-\end{code}
-
 \subsubsection{Inserting Known Variable-Set}
 
 \begin{code}
@@ -565,20 +553,6 @@ lvmrMap f (KS vs)  =  KS $ S.map f vs
 lvmrMap _ lvmr     =  lvmr
 \end{code}
 
-\subsubsection{Specialising \texttt{During} Subscripts}
-
-Once we have looked up the table with a neutralised list-variable,
-we want to replace all the empty-string subscripts
-with that associated with the list-variable actually being looked up.
-\begin{code}
-specialiseD s (StdVar (Vbl id vw (During _)))
- = StdVar $ Vbl id vw $ During s
-specialiseD s (LstVar (LVbl (Vbl id vw (During _)) is js))
- = LstVar (LVbl (Vbl id vw $ During s) is js)
-specialiseD _ gv = gv
-\end{code}
-
-\newpage
 \subsubsection{Searching Lists of Tables}
 
 We also have a version that searches a list of tables:

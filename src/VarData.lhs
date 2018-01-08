@@ -14,7 +14,7 @@ module VarData ( VarMatchRole
                , pattern KnownVarList, pattern KnownVarSet
                , pattern UnknownListVar
                , VarTable
-               , vtList, ltList
+               , vtList, stList, dtList
                , newVarTable
                , addKnownConst
                , addKnownVar
@@ -48,11 +48,16 @@ can belong to one of three categories as regards matching:
     The value can be basic like a number,
     or it could denote something somewhat higher-order,
     such as a function or predicate.
-  \item[Known Variable]
-    The variable is an observation
-    and can take many possible values from a defined type.
-    it has a predefined interpretation,
-    and can only match itself.
+  \item[Known Variable]~\\
+    \begin{enumerate}
+      \item
+        The variable is an static or dynamic (before/after) observation
+        and can take many possible values from a defined type.
+        it has a predefined interpretation in some intended semantic model,
+        and can only match itself.
+     \item
+        The variable denotes expressions or predicates of a particular type.
+    \end{enumerate}
   \item[Unknown]
     Nothing specific is known about the variable.
     It can match anything of the appropriate ``flavour''.
@@ -94,8 +99,13 @@ vmrType UV        =  error "vmrType: var. match role is UnknownVar"
 \subsection{List-Variable Matching Categories}
 
 List-variables can match either any list or set of variables,
+of the same class,
 or can also be ``known'',
-as a name for a specific list or set of variables.
+as a name for a specific list or set of variables,
+in which case they can only match themselves,
+or that list or set.
+
+Static list-variables can match any variable list or set.
 \begin{code}
 data LstVarMatchRole -- ListVar Matching Roles
  = KL VarList -- Known Variable-List
@@ -106,6 +116,40 @@ data LstVarMatchRole -- ListVar Matching Roles
 pattern KnownVarList vl  =  KL vl
 pattern KnownVarSet  vs  =  KS vs
 pattern UnknownListVar   =  UL
+\end{code}
+
+Dynamic before/after variables can only match
+other dynamic ones in a consistent way regaridng temporality
+---
+if a ``before'' list-variable matches a list/set of (``before'') variables,
+then the corresponding ``after'' list-variable
+must match the same list/set of (``after'') variables.
+\begin{code}
+type IdAndClass = (Identifier, VarClass)
+
+data DynamicLstVarRole -- Dynamic ListVar Matching Roles
+ = DL [Identifier] -- Known-list, Variable identifiers
+      [Identifier] -- Known-list, List-Variable identifiers
+ | DS (Set Identifier)  -- Known-set, Variable identifiers
+      (Set Identifier)  -- Known-set, List-Variable identifiers
+ | UD         -- Unknown Dynamic List-Variable
+ deriving (Eq, Ord, Show, Read)
+\end{code}
+
+We will want to convert
+a \texttt{DynamicLstVarRole} into a \texttt{LstVarMatchRole}
+when results are returned.
+This can be done by providing a variable class and temporality:
+\begin{code}
+mapDLVRtoLVMR :: VarClass -> VarWhen -> DynamicLstVarRole -> LstVarMatchRole
+mapDLVRtoLVMR vc vw (DL is js)  =  KL ( map (id2var vc vw) is
+                                        ++ map (id2lvar vc vw) js )
+mapDLVRtoLVMR vc vw (DS is js)  =  KS ( S.map (id2var vc vw) is
+                                        `S.union` S.map (id2lvar vc vw) js )
+mapDLVRtoLVMR _ _ UD  =  UL
+
+id2var  vc vw i  =  StdVar       $ Vbl i vc vw
+id2lvar vc vw j  =  LstVar $ LVbl (Vbl j vc vw) [] []
 \end{code}
 
 \newpage
@@ -121,18 +165,25 @@ of the same temporality.
 Variables or list-variables that are \texttt{Static} can map to anything.
 \begin{code}
 newtype VarTable
-  = VD ( Map Variable VarMatchRole
-       , Map ListVar  LstVarMatchRole
+  = VD ( Map Variable   VarMatchRole
+       , Map ListVar    LstVarMatchRole
+       , Map IdAndClass DynamicLstVarRole
        )
   deriving (Eq, Show, Read)
 \end{code}
 
+
 We will want to inspect tables.
 \begin{code}
 vtList :: VarTable -> [(Variable,VarMatchRole)]
-vtList (VD (vtable, _)) = M.toList vtable
-ltList :: VarTable -> [(ListVar,LstVarMatchRole)]
-ltList (VD (_, ltable)) = M.toList ltable
+vtList (VD (vtable, _, _)) = M.toList vtable
+stList :: VarTable -> [(ListVar,LstVarMatchRole)]
+stList (VD (_, stable, _)) = M.toList stable
+dtList :: VarTable -> [(ListVar,LstVarMatchRole)]
+dtList (VD (_, _, dtable)) = map dtMap $ M.toList dtable
+
+dtMap ((i,vc),dlvr) = ( LVbl (Vbl i vc Before) [] []
+                      , mapDLVRtoLVMR vc Before dlvr )
 \end{code}
 
 
@@ -140,7 +191,7 @@ ltList (VD (_, ltable)) = M.toList ltable
 
 \begin{code}
 newVarTable :: VarTable
-newVarTable = VD (M.empty, M.empty)
+newVarTable = VD (M.empty, M.empty, M.empty)
 \end{code}
 
 \newpage
@@ -248,31 +299,70 @@ mixes = foldl mix CTunknown
 We keep track of chain types when computing relation images (next).
 
 
+\paragraph{Static Relational Chains}
+~
+
 Reflexive, transitive relational image:
 \begin{code}
 rtLstImage :: Map ListVar LstVarMatchRole -> CT -> Set ListVar
            -> ( CT, Set ListVar )
-rtLstImage ltable ct lvs = untilEq (rrLstImage ltable) (ct, lvs)
+rtLstImage stable ct lvs = untilEq (rrLstImage stable) (ct, lvs)
 \end{code}
 
 Reflexive relation image:
 \begin{code}
 rrLstImage :: Map ListVar LstVarMatchRole -> ( CT, Set ListVar )
            -> ( CT, Set ListVar )
-rrLstImage ltable (ct, lvs)
+rrLstImage stable (ct, lvs)
    = ( mixes (ct:cts), S.unions (lvs:imgs) )
   where
-    ( cts, imgs) = unzip $ map (lstVVlkp ltable) (S.toList lvs)
+    ( cts, imgs) = unzip $ map (lstVVlkp stable) (S.toList lvs)
 \end{code}
 
 Looking up the \texttt{ListVar -> VarList} fragment of a \texttt{VarTable}:
 \begin{code}
-lstVVlkp ltable lv
- = case M.lookup lv ltable of
+lstVVlkp stable lv
+ = case M.lookup lv stable of
     Just (KL gvl)  ->  ( CTlist, S.fromList $ listVarsOf gvl )
     Just (KS gvs)  ->  ( CTset,  listVarSetOf gvs )
     _              ->  ( CTunknown, S.empty )
 \end{code}
+
+
+\paragraph{Dynamic Relational Chains}
+~
+
+Reflexive, transitive relational image:
+\begin{code}
+rtDynImage :: Map IdAndClass DynamicLstVarRole -> CT -> Set IdAndClass
+           -> ( CT, Set IdAndClass )
+rtDynImage dtable ct iacs = untilEq (rrDynImage dtable) (ct, iacs)
+\end{code}
+
+Reflexive relation image:
+\begin{code}
+rrDynImage :: Map IdAndClass DynamicLstVarRole -> ( CT, Set IdAndClass )
+           -> ( CT, Set IdAndClass )
+rrDynImage dtable (ct, iacs)
+   = ( mixes (ct:cts), S.unions (iacs:imgs) )
+  where
+    ( cts, imgs) = unzip $ map (dynIIlkp dtable) (S.toList iacs)
+\end{code}
+
+Looking up the \texttt{IdAndClass -> ([Identifier],[Identifier])}
+fragment of a \texttt{VarTable}.
+We are conservative here, treating $x$ and $\lst x$ as the same.
+\begin{code}
+dynIIlkp dtable iac@(i,vc)
+ = case M.lookup iac dtable of
+    Just (DL il jl)  ->  ( CTlist, S.fromList $ zip (il++jl) vcOmega )
+    Just (DS is js)  ->  ( CTset,  S.map add_vc (is `S.union` js) )
+    _                ->  ( CTunknown, S.empty )
+ where
+   vcOmega = vc:vcOmega
+   add_vc i = (i,vc)
+\end{code}
+
 
 \newpage
 \subsection{Inserting into Tables}
@@ -282,53 +372,79 @@ without any warning.
 
 \subsubsection{Inserting Known Constant}
 
-Only static variables may name a constant,
-amd we must check that we won't introduce any cycles:
 \begin{code}
 addKnownConst :: Monad m => Variable -> Term -> VarTable -> m VarTable
-addKnownConst var@(Vbl _ _ Static) (Var _ tvar) (VD (vtable,ltable))
-  | var `S.member` rtStdImage vtable (S.singleton tvar)
-     = fail "addKnownConst: must not create variable cycle."
-addKnownConst var@(Vbl _ _ Static) (Var _ v) (VD (vtable,ltable))
+\end{code}
+
+Only static variables may name a constant,
+and we must check that we won't introduce any cycles:
+\begin{code}
+addKnownConst var@(Vbl _ _ Static) (Var _ v) (VD (vtable,stable,dtable))
   | var `S.member` rtStdImage vtable (S.singleton v)
     = fail "addKnownConst: must not create variable cycle."
-addKnownConst var@(Vbl _ _ Static) trm (VD (vtable,ltable))
-  =  return $ VD ( M.insert var (KC trm) vtable, ltable )
+
+addKnownConst var@(Vbl _ _ Static) trm (VD (vtable,stable,dtable))
+  =  return $ VD ( M.insert var (KC trm) vtable,stable,dtable )
+
 addKnownConst _ _ _ = fail "addKnownConst: not for Dynamic Variables."
 \end{code}
 
 \subsubsection{Inserting Known Variable}
 
-Only observation variables can
-range over values of a given type.
 \begin{code}
 addKnownVar :: Monad m => Variable -> Type -> VarTable -> m VarTable
-addKnownVar var@(ObsVar _ _) typ (VD (vtable, ltable))
-  = return $ VD ( M.insert var (KV typ) vtable, ltable )
-addKnownVar _ _ _ = fail "addKnownVar: not for Expr/Pred Variables."
+\end{code}
+
+Only static, textual and before/after variables can
+range over values of a given type.
+\begin{code}
+addKnownVar var@(ObsVar _ (During _)) typ (VD (vtable,stable,dtable))
+  =  fail "addKnownVar: not for During Variables."
+
+addKnownVar var@(ObsVar _ _) typ (VD (vtable,stable,dtable))
+  =  return $ VD ( M.insert var (KV typ) vtable,stable,dtable )
 \end{code}
 
 \subsubsection{Inserting Known Variable-List}
 
-For now list-variables
-can only be defined as equal to a list of general variables,
-with the same class and appropriate temporality.
-We also need to check to avoid cycles, or a crossover to variable-sets
 \begin{code}
 addKnownVarList :: Monad m => ListVar -> VarList -> VarTable -> m VarTable
-addKnownVarList lv vl (VD (vtable, ltable))
+\end{code}
+
+Static List variables match variable-lists of the corresponding class:
+\begin{code}
+addKnownVarList lv@(LVbl (Vbl _ _ Static) _ _) vl (VD (vtable,stable,dtable))
  | ct == CTmixed
-     = fail "addKnownVarList: some list-variables map to sets."
+     = fail "addKnownVarList(Static): some list-variables map to sets."
  | lv `S.member` img
-     = fail "addKnownVarList: must not create list-variable cycle."
+     = fail "addKnownVarList(Static): must not create list-variable cycle."
  | mixed = fail  "addKnownVarList: inconsistent variable classifications."
  | otherwise
-     =  return $ VD ( vtable
-                    , M.insert (neutralD lv) (KL $ map neutralD' vl) ltable )
+     =  return $ VD ( vtable, M.insert lv (KL vl) stable, dtable )
  where
-  ( ct, img ) =  rtLstImage ltable CTlist (S.fromList $ listVarsOf vl)
+  ( ct, img ) =  rtLstImage stable CTlist (S.fromList $ listVarsOf vl)
   mixed       =  checkLVarListMap lv vl
 \end{code}
+
+Dynamic list-variables
+can only be defined as equal to a list of general variables,
+with the same class and appropriate temporality.
+We also need to check to avoid cycles, or a crossover to variable-sets.
+\begin{code}
+addKnownVarList lv@(LVbl (Vbl i vc vw) _ _) vl (VD (vtable,stable,dtable))
+ | ct == CTmixed
+     = fail "addKnownVarList(dynamic): some list-variables map to sets."
+ | (i,vc) `S.member` img
+     = fail "addKnownVarList(dynamic): must not create list-variable cycle."
+ | mixed = fail  "addKnownVarList (dynamic): inconsistent variable classifications."
+ | otherwise
+     =  return $ VD ( vtable, stable, M.insert (i,vc) (DL is js) dtable )
+ where
+  ( ct, img ) =  rtDynImage dtable CTlist (iacOf vl)
+  mixed       =  checkLVarListMap lv vl
+  (is,js)     =  idsOf vl
+\end{code}
+
 
 A list-variable can only map to variables with the same \texttt{VarWhat} value,
 and, if not \texttt{Static}, the same \texttt{VarWhen} value:
@@ -337,6 +453,14 @@ checkLVarListMap lv vl
   = [whatLVar lv] /= nub (map whatGVar vl)
       || (vtime /= Static && [vtime] /= nub (map timeGVar vl))
   where vtime = timeLVar lv
+\end{code}
+
+\begin{code}
+iacOf vl  =  iacOf' [] [] vl
+ where
+  iacOf' si sj [] =  S.fromList (si++sj)
+  iacOf' si sj ((StdVar       (Vbl i vc _)     ):vl)  =  iacOf' ((i,vc):si) sj vl
+  iacOf' si sj ((LstVar (LVbl (Vbl j vc _) _ _)):vl)  =  iacOf' si ((j,vc):sj) vl
 \end{code}
 
 \newpage
@@ -355,24 +479,40 @@ neutralD' gv           =  gv
 
 \subsubsection{Inserting Known Variable-Set}
 
-For now list-variables
-can only be defined as equal to a set of general variables,
-with the same class.
-We also need to check to avoid cycles, or a crossover to variable-lists
 \begin{code}
 addKnownVarSet :: Monad m => ListVar -> VarSet -> VarTable -> m VarTable
-addKnownVarSet lv vs (VD (vtable, ltable))
+\end{code}
+See Variable-List insertion above.
+
+\begin{code}
+addKnownVarSet lv@(LVbl (Vbl i vc Static) _ _) vs (VD (vtable,stable,dtable))
  | ct == CTmixed
-     = fail "addKnownVarSet: some list-variables map to lists."
+     = fail "addKnownVarSet(Static): some list-variables map to lists."
  | lv `S.member` img
-     = fail "addKnownVarSet: must not create list-variable cycle."
- | mixed = fail  "addKnownVarSet: inconsistent variable classifications."
+     = fail "addKnownVarSet(Static): must not create list-variable cycle."
+ | mixed = fail  "addKnownVarSet(static): inconsistent variable classifications."
  | otherwise
-     =  return $ VD ( vtable
-                    , M.insert (neutralD lv) (KS $ S.map neutralD' vs) ltable )
+     =  return $ VD ( vtable, M.insert lv (KS vs) stable, dtable )
  where
-   ( ct, img )  =  rtLstImage ltable CTset (listVarSetOf vs)
+   ( ct, img )  =  rtLstImage stable CTset (listVarSetOf vs)
    mixed        =  checkLVarSetMap lv vs
+\end{code}
+
+\begin{code}
+addKnownVarSet lv@(LVbl (Vbl i vc vw) _ _) vs (VD (vtable,stable,dtable))
+  | ct == CTmixed
+      = fail "addKnownVarSet(dynamic): some list-variables map to sets."
+  | (i,vc) `S.member` img
+      = fail "addKnownVarList(dynamic): must not create list-variable cycle."
+  | mixed = fail  "addKnownVarList (dynamic): inconsistent variable classifications."
+  | otherwise
+      =  return $ VD ( vtable, stable
+                     , M.insert (i,vc)
+                                (DS (S.fromList is) (S.fromList js)) dtable )
+  where
+   ( ct, img ) =  rtDynImage dtable CTlist (iacOf $ S.toList vs)
+   mixed       =  checkLVarSetMap lv vs
+   (is,js)     =  idsOf $ S.toList vs
 \end{code}
 
 \begin{code}
@@ -391,7 +531,7 @@ checkLVarSetMap lv vs
 Variable lookup is total, returning \texttt{UV} if the variable is not present.
 \begin{code}
 lookupVarTable :: VarTable -> Variable -> VarMatchRole
-lookupVarTable (VD (vtable, _)) var
+lookupVarTable (VD (vtable, _, _)) var
  = case M.lookup var vtable of
      Nothing   ->  UV
      Just vmr  ->  vmr
@@ -407,15 +547,15 @@ and the others.
 \begin{code}
 lookupLVarTable :: VarTable -> ListVar -> LstVarMatchRole
 
-lookupLVarTable (VD (_,ltable)) lvar@(LVbl (Vbl _ _ (During s)) _ _)
- = case M.lookup (neutralD lvar) ltable of
-     Nothing    ->  UL
-     Just lvmr  ->  lvmrMap (specialiseD s) lvmr
-
-lookupLVarTable (VD (_,ltable)) lvar
- = case M.lookup lvar ltable of
+lookupLVarTable (VD (_,stable,_)) lvar@(LVbl (Vbl _ _ Static) _ _)
+ = case M.lookup lvar stable of
      Nothing    ->  UL
      Just lvmr  ->  lvmr
+
+lookupLVarTable (VD (_,_,dtable)) lvar@(LVbl (Vbl i vc vw) _ _)
+ = case M.lookup (i,vc) dtable of
+     Nothing    ->  UL
+     Just dlvr  ->  mapDLVRtoLVMR vc vw dlvr
 \end{code}
 
 We do a simple map for \texttt{LstVarMatchRole}:
@@ -445,10 +585,10 @@ We also have a version that searches a list of tables:
 \begin{code}
 lookupVarTables :: [VarTable] -> Variable -> VarMatchRole
 lookupVarTables [] _ = UV
-lookupVarTables (VD (vtable,_):rest) var
- = case M.lookup var vtable of
-     Just vmr  ->  vmr
-     Nothing   ->  lookupVarTables rest var
+lookupVarTables (vt:vts) v
+ = case lookupVarTable vt v of
+     UV   ->  lookupVarTables vts v
+     vmr  ->  vmr
 \end{code}
 
 
@@ -456,8 +596,8 @@ Again, we want to be able to search lists of tables.
 \begin{code}
 lookupLVarTables :: [VarTable] -> ListVar -> LstVarMatchRole
 lookupLVarTables [] _ = UL
-lookupLVarTables (VD (_,ltable):rest) lvar
- = case M.lookup lvar ltable of
-     Just lvmr  ->  lvmr
-     Nothing    ->  lookupLVarTables rest lvar
+lookupLVarTables (vt:vts) lv
+ = case lookupLVarTable vt lv of
+     UL    ->  lookupLVarTables vts lv
+     lvmr  ->  lvmr
 \end{code}

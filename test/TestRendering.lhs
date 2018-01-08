@@ -13,7 +13,7 @@ module TestRendering (
  , trValue, trTerm
  , trVarMatchRole, trLstVarMatchRole, trVarTable
  , trBinding
- , seeV, seeLV, seeGV, seeType, seeVal, seeTerm, seeBind
+ , seeV, seeLV, seeGV, seeType, seeVal, seeTerm, seeBind, seeVarTable
  , seeTerms, seeBinds
 ) where
 
@@ -178,7 +178,6 @@ trVarTable :: VarTable -> String
 trVarTable vt
  = unlines [ trAssoc trVTVV $ vtList vt
            , trAssoc trVTLV $ ltList vt
-           , trAssoc trVTLV $ dtList vt
            ]
 
 trVTVV (v,vmr)    =  trVar  v  ++ trVarMatchRole    vmr
@@ -237,6 +236,7 @@ seeType = putStrLn . trType
 seeVal = putStrLn . trValue
 seeTerm t = putStrLn $ trTerm 0 t
 seeBind = putStrLn . trBinding
+seeVarTable = putStrLn . trVarTable
 
 seeMany see []      =  return ()
 seeMany see [x]     =  see x

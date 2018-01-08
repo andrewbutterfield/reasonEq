@@ -14,7 +14,7 @@ module VarData ( VarMatchRole
                , pattern KnownVarList, pattern KnownVarSet
                , pattern UnknownListVar
                , VarTable
-               , vtList, ltList, dtList
+               , vtList, ltList
                , newVarTable
                , addKnownConst
                , addKnownVar
@@ -119,31 +119,20 @@ We have a key invariant regarding variable temporality (\texttt{VarWhen}).
 A variable or list-variable can only be mapped to variables and list-variables
 of the same temporality.
 Variables or list-variables that are \texttt{Static} can map to anything.
-
-We split the table for list-variables into two parts.
-The first handles most varieties of list-variables,
-while the second is used solely for list-variables whose temporality
-is \texttt{During}.
-These need special treatment,
-as we want both table entry and lookup to be independent
-of the particular subscript value.
-
 \begin{code}
 newtype VarTable
   = VD ( Map Variable VarMatchRole
        , Map ListVar  LstVarMatchRole
-       , Map ListVar  LstVarMatchRole )
+       )
   deriving (Eq, Show, Read)
 \end{code}
 
 We will want to inspect tables.
 \begin{code}
 vtList :: VarTable -> [(Variable,VarMatchRole)]
-vtList (VD (vtable, _, _)) = M.toList vtable
+vtList (VD (vtable, _)) = M.toList vtable
 ltList :: VarTable -> [(ListVar,LstVarMatchRole)]
-ltList (VD (_, ltable, _)) = M.toList ltable
-dtList :: VarTable -> [(ListVar,LstVarMatchRole)]
-dtList (VD (_, _, dtable)) = M.toList dtable
+ltList (VD (_, ltable)) = M.toList ltable
 \end{code}
 
 
@@ -151,7 +140,7 @@ dtList (VD (_, _, dtable)) = M.toList dtable
 
 \begin{code}
 newVarTable :: VarTable
-newVarTable = VD (M.empty, M.empty,M.empty)
+newVarTable = VD (M.empty, M.empty)
 \end{code}
 
 \newpage
@@ -171,7 +160,10 @@ The most well-known computes $R^+$,
 the transitive closure of the relation,
 and then checks for all $u \in \dom R$ that $\lnot(uR^+u)$.
 Another, based on MMA's thesis%
-\footnote{M\'iche\'al Mac An Airchinnigh, Conceptual Modelling, University of Dublin, 1990.}%
+\footnote{
+  M\'iche\'al Mac An Airchinnigh, Conceptual Modelling
+, University of Dublin, 1990.
+}
 uses a annihilator, an operator that removes all tuples $(u,v)$
 from a relation, where $v$ does not itself appear in the lhs of a relation tuple.
 Repeated application of the annihilator will reduce any relation down to just its cycles, or the empty relation, if there are no cycles.
@@ -294,14 +286,14 @@ Only static variables may name a constant,
 amd we must check that we won't introduce any cycles:
 \begin{code}
 addKnownConst :: Monad m => Variable -> Term -> VarTable -> m VarTable
-addKnownConst var@(Vbl _ _ Static) (Var _ tvar) (VD (vtable,ltable,dtable))
+addKnownConst var@(Vbl _ _ Static) (Var _ tvar) (VD (vtable,ltable))
   | var `S.member` rtStdImage vtable (S.singleton tvar)
      = fail "addKnownConst: must not create variable cycle."
-addKnownConst var@(Vbl _ _ Static) (Var _ v) (VD (vtable,ltable,dtable))
+addKnownConst var@(Vbl _ _ Static) (Var _ v) (VD (vtable,ltable))
   | var `S.member` rtStdImage vtable (S.singleton v)
     = fail "addKnownConst: must not create variable cycle."
-addKnownConst var@(Vbl _ _ Static) trm (VD (vtable,ltable,dtable))
-  =  return $ VD ( M.insert var (KC trm) vtable, ltable, dtable )
+addKnownConst var@(Vbl _ _ Static) trm (VD (vtable,ltable))
+  =  return $ VD ( M.insert var (KC trm) vtable, ltable )
 addKnownConst _ _ _ = fail "addKnownConst: not for Dynamic Variables."
 \end{code}
 
@@ -311,8 +303,8 @@ Only observation variables can
 range over values of a given type.
 \begin{code}
 addKnownVar :: Monad m => Variable -> Type -> VarTable -> m VarTable
-addKnownVar var@(ObsVar _ _) typ (VD (vtable, ltable, dtable))
-  = return $ VD ( M.insert var (KV typ) vtable, ltable, dtable )
+addKnownVar var@(ObsVar _ _) typ (VD (vtable, ltable))
+  = return $ VD ( M.insert var (KV typ) vtable, ltable )
 addKnownVar _ _ _ = fail "addKnownVar: not for Expr/Pred Variables."
 \end{code}
 
@@ -324,29 +316,26 @@ with the same class and appropriate temporality.
 We also need to check to avoid cycles, or a crossover to variable-sets
 \begin{code}
 addKnownVarList :: Monad m => ListVar -> VarList -> VarTable -> m VarTable
-addKnownVarList lv vl (VD (vtable, ltable, dtable))
+addKnownVarList lv vl (VD (vtable, ltable))
  | ct == CTmixed
      = fail "addKnownVarList: some list-variables map to sets."
  | lv `S.member` img
      = fail "addKnownVarList: must not create list-variable cycle."
  | mixed = fail  "addKnownVarList: inconsistent variable classifications."
- | isDuring vtime
-     =  return $ VD (vtable, ltable, M.insert (neutralD lv) (KL vl) dtable)
  | otherwise
-     =  return $ VD (vtable, M.insert lv (KL vl) ltable, dtable)
+     =  return $ VD ( vtable
+                    , M.insert (neutralD lv) (KL $ map neutralD' vl) ltable )
  where
-  ( ct, img ) = rtLstImage ltable CTlist (S.fromList $ listVarsOf vl)
-  ( vtime, mixed )  =  checkLVarListMap lv vl
+  ( ct, img ) =  rtLstImage ltable CTlist (S.fromList $ listVarsOf vl)
+  mixed       =  checkLVarListMap lv vl
 \end{code}
 
 A list-variable can only map to variables with the same \texttt{VarWhat} value,
 and, if not \texttt{Static}, the same \texttt{VarWhen} value:
 \begin{code}
 checkLVarListMap lv vl
-  = ( vtime
-    , [whatLVar lv] /= nub (map whatGVar vl)
+  = [whatLVar lv] /= nub (map whatGVar vl)
       || (vtime /= Static && [vtime] /= nub (map timeGVar vl))
-    )
   where vtime = timeLVar lv
 \end{code}
 
@@ -359,6 +348,9 @@ empty.
 neutralD (LVbl (Vbl i vw (During _)) is js)
              =  LVbl (Vbl i vw (During "")) is js
 neutralD lv  =  lv
+
+neutralD' (LstVar lv)  =  LstVar $ neutralD lv
+neutralD' gv           =  gv
 \end{code}
 
 \subsubsection{Inserting Known Variable-Set}
@@ -369,27 +361,24 @@ with the same class.
 We also need to check to avoid cycles, or a crossover to variable-lists
 \begin{code}
 addKnownVarSet :: Monad m => ListVar -> VarSet -> VarTable -> m VarTable
-addKnownVarSet lv vs (VD (vtable, ltable, dtable))
+addKnownVarSet lv vs (VD (vtable, ltable))
  | ct == CTmixed
      = fail "addKnownVarSet: some list-variables map to lists."
  | lv `S.member` img
      = fail "addKnownVarSet: must not create list-variable cycle."
  | mixed = fail  "addKnownVarSet: inconsistent variable classifications."
- | isDuring vtime
-     =  return $ VD (vtable, ltable, M.insert (neutralD lv) (KS vs) dtable)
  | otherwise
-     =  return $ VD (vtable, M.insert lv (KS vs) ltable, dtable)
+     =  return $ VD ( vtable
+                    , M.insert (neutralD lv) (KS $ S.map neutralD' vs) ltable )
  where
-   ( ct, img ) = rtLstImage ltable CTset (listVarSetOf vs)
-   ( vtime, mixed )  =  checkLVarSetMap lv vs
+   ( ct, img )  =  rtLstImage ltable CTset (listVarSetOf vs)
+   mixed        =  checkLVarSetMap lv vs
 \end{code}
 
 \begin{code}
 checkLVarSetMap lv vs
-  = ( vtime
-    , (S.singleton $ whatLVar lv) /= S.map whatGVar vs
+  = (S.singleton $ whatLVar lv) /= S.map whatGVar vs
       || (vtime /= Static && (S.singleton $ vtime) /= S.map timeGVar vs)
-    )
   where vtime = timeLVar lv
 \end{code}
 
@@ -402,7 +391,7 @@ checkLVarSetMap lv vs
 Variable lookup is total, returning \texttt{UV} if the variable is not present.
 \begin{code}
 lookupVarTable :: VarTable -> Variable -> VarMatchRole
-lookupVarTable (VD (vtable, _, _)) var
+lookupVarTable (VD (vtable, _)) var
  = case M.lookup var vtable of
      Nothing   ->  UV
      Just vmr  ->  vmr
@@ -418,12 +407,12 @@ and the others.
 \begin{code}
 lookupLVarTable :: VarTable -> ListVar -> LstVarMatchRole
 
-lookupLVarTable (VD (_,_,dtable)) lvar@(LVbl (Vbl _ _ (During s )) _ _)
- = case M.lookup (neutralD lvar) dtable of
+lookupLVarTable (VD (_,ltable)) lvar@(LVbl (Vbl _ _ (During s)) _ _)
+ = case M.lookup (neutralD lvar) ltable of
      Nothing    ->  UL
      Just lvmr  ->  lvmrMap (specialiseD s) lvmr
 
-lookupLVarTable (VD (_,ltable,_)) lvar
+lookupLVarTable (VD (_,ltable)) lvar
  = case M.lookup lvar ltable of
      Nothing    ->  UL
      Just lvmr  ->  lvmr
@@ -456,7 +445,7 @@ We also have a version that searches a list of tables:
 \begin{code}
 lookupVarTables :: [VarTable] -> Variable -> VarMatchRole
 lookupVarTables [] _ = UV
-lookupVarTables (VD (vtable,_,_):rest) var
+lookupVarTables (VD (vtable,_):rest) var
  = case M.lookup var vtable of
      Just vmr  ->  vmr
      Nothing   ->  lookupVarTables rest var
@@ -467,7 +456,7 @@ Again, we want to be able to search lists of tables.
 \begin{code}
 lookupLVarTables :: [VarTable] -> ListVar -> LstVarMatchRole
 lookupLVarTables [] _ = UL
-lookupLVarTables (VD (_,ltable,dtable):rest) lvar
+lookupLVarTables (VD (_,ltable):rest) lvar
  = case M.lookup lvar ltable of
      Just lvmr  ->  lvmr
      Nothing    ->  lookupLVarTables rest lvar

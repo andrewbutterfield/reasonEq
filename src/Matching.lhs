@@ -1250,15 +1250,17 @@ vsKnownMatch vts bind cbvs pbvs vsC vsK gvP@(LstVar lvP) -- ListVar !
 We keep expanding variables known as sets of (other) variables.
 \begin{code}
 expandKnownSet :: Monad m => [VarTable] -> GenVar -> m VarSet
+
+expandKnownSet vts gv@(StdVar v)
+  = case lookupVarTables vts v of
+      KnownConst (Var _ kc)  ->  expandKnownSet vts $ StdVar kc
+      _                      ->  return $ S.singleton gv
+
 expandKnownSet vts gv@(LstVar lv)
   = case lookupLVarTables vts lv of
       KnownVarSet kvs  ->  expandKnownSets vts kvs
       UnknownListVar   ->  return $ S.singleton gv
       _                ->  fail "expandKnownSet: found variable-lists!"
-expandKnownSet vts gv@(StdVar v)
-  = case lookupVarTables vts v of
-      KnownConst (Var _ kc)  ->  expandKnownSet vts $ StdVar kc
-      _                      ->  return $ S.singleton gv
 
 expandKnownSets :: Monad m => [VarTable] -> VarSet -> m VarSet
 expandKnownSets vts vs

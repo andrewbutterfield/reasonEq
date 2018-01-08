@@ -1,35 +1,25 @@
-*MatchScenarios> putStrLn $ trVarTable vtL_Design
-
-{ ok : 𝔹
-, ok' : 𝔹
-, x : ℤ
-, x' : ℤ
-, y : ℤ
-, y' : ℤ
-, z : ℤ
-, z' : ℤ }
-{ M$ ≜ ⟨ok⟩
-, M$' ≜ ⟨ok'⟩
-, O$ ≜ ⟨M$,S$⟩
-, O$' ≜ ⟨M$',S$'⟩
-, S$ ≜ ⟨x,y,z⟩
-, S$' ≜ ⟨x',y',z'⟩ }
-{ M$_ ≜ ⟨ok_m⟩
-, O$_ ≜ ⟨M$_m,S$_m⟩
-, S$_ ≜ ⟨x_m,y_m,z_m⟩ }
-
-*MatchScenarios> putStrLn $ trVarTable vtS_Design
+vtS_Design
+=
 { ok : 𝔹, ok' : 𝔹, x : ℤ, x' : ℤ, y : ℤ, y' : ℤ, z : ℤ, z' : ℤ }
-{ M$ ≜ {ok}
-, M$' ≜ {ok'}
-, O$ ≜ {M$,S$}
-, O$' ≜ {M$',S$'}
-, S$ ≜ {x,y,z}
-, S$' ≜ {x',y',z'} }
-{ M$_ ≜ {ok_m}
-, O$_ ≜ {M$_m,S$_m}
-, S$_ ≜ {x_m,y_m,z_m} }
+{ M$ ≜ {ok}, M$_m ≜ {ok_m}, M$' ≜ {ok'}, O$ ≜ {M$,S$}, O$_m ≜ {M$_m,S$_m}
+, O$' ≜ {M$',S$'}, S$ ≜ {x,y,z}, S$_m ≜ {x_m,y_m,z_m}, S$' ≜ {x',y',z'} }
+vsMatch [vtS_Design] emptyBinding S.empty S.empty (lswrap [lOn]) (lswrap [lOm])
+=
+*** Exception: user error
+(vsMatch: some pattern var-set is not in candidate.
+vsKx =  ok_m,x_m,y_m,z_m
+  fromList [ GV (VR (Id "ok",VO,WD "m"))
+           , GV (VR (Id "x",VO,WD "m"))
+           , GV (VR (Id "y",VO,WD "m"))
+           , GV (VR (Id "z",VO,WD "m"))]
+vsCx = O_n
+  fromList [GL (LV (VR (Id "O",VO,WD "n"),[],[]))]
+)
 
-
+bindLVarToVSet lOm (lswrap [lOn]) emptyBinding :: [Binding]
+=
+[ {  }
+  { m ↦ n }
+  { (O$.𝓞) ↦ {O$} } ]
 
 --

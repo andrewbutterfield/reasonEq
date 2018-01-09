@@ -69,7 +69,7 @@ trLVar :: ListVar -> String
 trLVar (LVbl (Vbl i vc vw) is js)
  = trVCf vc (trLId i) ++ trVW vw ++ trLess is js
 
-trLId i = trId i ++ "$"
+trLId i = concat $ map dia_line $ trId i 
 trLess [] []  =  ""
 trLess is js
   = '\\'

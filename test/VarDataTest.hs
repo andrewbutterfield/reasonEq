@@ -135,8 +135,8 @@ tst_addKnownListVar :: TF.Test
 -- pattern ScriptVars i  =  LV (VR (i,VV,(KD WB)),[])
 -- pattern PreExprs i    =  LV (VR (i,VE,(KD WB)),[])
 -- pattern PrePreds i    =  LV (VR (i,VP,(KD WB)),[])
-lu  = PreVars  $ fromJust $ ident "lu"     ; glu  = LstVar lu
-lv  = PreVars  $ fromJust $ ident "lv"     ; glv  = LstVar lv
+iu = fromJust $ ident "lu" ; lu = PreVars  iu ; glu  = LstVar lu
+iv = fromJust $ ident "lv" ; lv = PreVars  iv ; glv  = LstVar lv
 lw  = PreVars  $ fromJust $ ident "lw"     ; glw  = LstVar lw
 lv' = PostVars $ fromJust $ ident "lv"     ; glv' = LstVar lv'
 lvm = MidVars  (fromJust $ ident "lv") "m" ; glvm = LstVar lvm
@@ -148,10 +148,10 @@ sngl = S.singleton
 tst_addKnownListVar
  = testGroup "addKnownVarList"
      [ testCase "lu |-> <lv>, succeeds"
-       ( ltList (fromJust (addKnownVarList lu [glv] newVarTable))
+       ( dtList (fromJust (addKnownVarList lu [glv] newVarTable))
          @?= [(lu,KnownVarList [glv])] )
      , testCase "lu |-> <lv>, lv -> <lw> succeeds"
-       ( ltList (fromJust (addKnownVarList lu [glv]
+       ( dtList (fromJust (addKnownVarList lu [glv]
                  (fromJust (addKnownVarList lv [glw] newVarTable))))
          @?= [(lu,KnownVarList [glv]),(lv,KnownVarList [glw])] )
      , testCase "lu |-> <lv>, lv -> <lw>, lw -> <lu> fails"
@@ -160,10 +160,10 @@ tst_addKnownListVar
                 (fromJust (addKnownVarList lw [glu] newVarTable))))
          @?= Nothing )
      , testCase "lu |-> {lv}, succeeds"
-        ( ltList (fromJust (addKnownVarSet lu (sngl glv) newVarTable))
+        ( dtList (fromJust (addKnownVarSet lu (sngl glv) newVarTable))
           @?= [(lu,KnownVarSet (sngl glv))] )
      , testCase "lu |-> {lv}, lv -> {lw} succeeds"
-        ( ltList (fromJust (addKnownVarSet lu (sngl glv)
+        ( dtList (fromJust (addKnownVarSet lu (sngl glv)
                   (fromJust (addKnownVarSet lv (sngl glw) newVarTable))))
           @?= [(lu,KnownVarSet (sngl glv)),(lv,KnownVarSet (sngl glw))] )
      , testCase "lu |-> {lv}, lv -> {lw}, lw -> {lu} fails"
@@ -172,7 +172,7 @@ tst_addKnownListVar
                  (fromJust (addKnownVarSet lw (sngl glu) newVarTable))))
           @?= Nothing )
      , testCase "lu |-> {lv}, lv -> {lw} succeeds"
-        ( ltList (fromJust (addKnownVarSet lu (sngl glv)
+        ( dtList (fromJust (addKnownVarSet lu (sngl glv)
                   (fromJust (addKnownVarSet lv (sngl glw) newVarTable))))
           @?= [(lu,KnownVarSet (sngl glv)),(lv,KnownVarSet (sngl glw))] )
      , testCase "lu |-> {lv}, lv -> <lw> fails"

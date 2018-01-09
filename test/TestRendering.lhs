@@ -177,7 +177,8 @@ trLstVarMatchRole UnknownListVar     =  " ?"
 trVarTable :: VarTable -> String
 trVarTable vt
  = unlines [ trAssoc trVTVV $ vtList vt
-           , trAssoc trVTLV $ ltList vt
+           , trAssoc trVTLV $ stList vt
+           , trAssoc trVTLV $ dtList vt
            ]
 
 trVTVV (v,vmr)    =  trVar  v  ++ trVarMatchRole    vmr

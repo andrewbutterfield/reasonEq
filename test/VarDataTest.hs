@@ -134,9 +134,9 @@ sngl = S.singleton
 
 tst_addKnownListVar
  = testGroup "addKnownVarList/Set"
-     [ testCase "lu |-> <lv>, succeeds"
-       ( dtList (fromJust (addKnownVarList lu [glv] newVarTable))
-         @?= [(lu,KnownVarList [glv])] )
+     [ testCase "kvep |- le |-> <len>, succeeds"
+       ( dtList (fromJust (addKnownVarList le [StdVar len] kvepTable))
+         @?= [(le,KnownVarList [StdVar len])] )
      , testCase "lu |-> <lv>, lv -> <lw> succeeds"
        ( dtList (fromJust (addKnownVarList lu [glv]
                  (fromJust (addKnownVarList lv [glw] newVarTable))))

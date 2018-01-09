@@ -211,6 +211,9 @@ t `inside` vt  =  all (found vt) $ freeVars t
 
 found vt (StdVar v)   =  lookupVarTable vt v /= UV
 found vt (LstVar lv)  =  lookupLVarTable vt lv /= UL
+
+knownIn :: VarList -> VarTable -> Bool
+vl `knownIn` vt = all (found vt) vl
 \end{code}
 
 
@@ -258,16 +261,19 @@ addKnownVar var typ (VD (vtable,stable,dtable))
 addKnownVarList :: Monad m => ListVar -> VarList -> VarTable -> m VarTable
 \end{code}
 
-Static List variables match variable-lists of the corresponding class:
+Static List variables match lists of known variables
+of the same class as themselves.
 \begin{code}
-addKnownVarList lv@(LVbl (Vbl _ _ Static) _ _) vl (VD (vtable,stable,dtable))
- | mixed = fail  "addKnownVarList: inconsistent classifications."
- | ct == CTmixed
-     = fail "addKnownVarList(Static): some map to sets."
- | lv `S.member` img
-     = fail "addKnownVarList(Static): list-variable cycle."
+addKnownVarList lv@(LVbl (Vbl _ _ Static) _ _) vl vt@(VD (vtable,stable,dtable))
+ | mixed          =  fail "addKnownVarList: inconsistent classifications."
+ | ct == CTmixed  =  fail "addKnownVarList(Static): some map to sets."
  | otherwise
-     =  return $ VD ( vtable, M.insert lv (KL vl) stable, dtable )
+   = case M.lookup lv stable of
+      Nothing | vl `knownIn` vt
+                   -> return $ VD ( vtable, M.insert lv (KL vl) stable, dtable )
+      Just UL | vl `knownIn` vt
+                   -> return $ VD ( vtable, M.insert lv (KL vl) stable, dtable )
+      _ -> fail "addKnownVarList(Static): trying to update, or unknown vars in list."
  where
   mixed       =  checkLVarListMap lv vl
   ( ct, img ) =  rtLstImage stable CTlist (S.fromList $ listVarsOf vl)
@@ -278,14 +284,17 @@ can only be defined as equal to a list of general variables,
 with the same class and appropriate temporality.
 We also need to check to avoid cycles, or a crossover to variable-sets.
 \begin{code}
-addKnownVarList lv@(LVbl (Vbl i vc vw) _ _) vl (VD (vtable,stable,dtable))
+addKnownVarList lv@(LVbl (Vbl i vc vw) _ _) vl vt@(VD (vtable,stable,dtable))
  | mixed = fail  "addKnownVarList (dynamic): inconsistent classifications."
  | ct == CTmixed
      = fail "addKnownVarList(dynamic): some map to sets."
- | (i,vc) `S.member` img
-     = fail "addKnownVarList(dynamic): list-variable cycle."
  | otherwise
-     =  return $ VD ( vtable, stable, M.insert (i,vc) (DL is js) dtable )
+   = case M.lookup (i,vc) dtable of
+      Nothing | vl `knownIn` vt
+            -> return $ VD ( vtable, stable, M.insert (i,vc) (DL is js) dtable )
+      Just UD | vl `knownIn` vt
+           -> return $ VD ( vtable, stable, M.insert (i,vc) (DL is js) dtable )
+      _ -> fail "addKnownVarList(dynamic): trying to update, or unknown vars in list."
  where
   mixed       =  checkLVarListMap lv vl
   ( ct, img ) =  rtDynImage dtable CTlist (iacOf vl)
@@ -319,21 +328,27 @@ addKnownVarSet :: Monad m => ListVar -> VarSet -> VarTable -> m VarTable
 See Variable-List insertion above.
 
 \begin{code}
-addKnownVarSet lv@(LVbl (Vbl i vc Static) _ _) vs (VD (vtable,stable,dtable))
+addKnownVarSet lv@(LVbl (Vbl i vc Static) _ _) vs vt@(VD (vtable,stable,dtable))
  | mixed = fail "addKnownVarSet(static): inconsistent classifications."
  | ct == CTmixed
      = fail "addKnownVarSet(Static): some map to lists."
  | lv `S.member` img
      = fail "addKnownVarSet(Static): list-variable cycle."
  | otherwise
-     =  return $ VD ( vtable, M.insert lv (KS vs) stable, dtable )
+   = case M.lookup lv stable of
+      Nothing | vl `knownIn` vt
+                   -> return $ VD ( vtable, M.insert lv (KS vs) stable, dtable )
+      Just UL | vl `knownIn` vt
+                   -> return $ VD ( vtable, M.insert lv (KS vs) stable, dtable )
+      _ -> fail "addKnownVarSet(Static): trying to update, or unknown vars in list."
  where
    mixed        =  checkLVarSetMap lv vs
    ( ct, img )  =  rtLstImage stable CTset (listVarSetOf vs)
+   vl = S.toList vs
 \end{code}
 
 \begin{code}
-addKnownVarSet lv@(LVbl (Vbl i vc vw) _ _) vs (VD (vtable,stable,dtable))
+addKnownVarSet lv@(LVbl (Vbl i vc vw) _ _) vs vt@(VD (vtable,stable,dtable))
   | mixed = fail "addKnownVarSet (dynamic): inconsistent classifications."
   | ct == CTmixed
       = fail $ unlines
@@ -343,12 +358,20 @@ addKnownVarSet lv@(LVbl (Vbl i vc vw) _ _) vs (VD (vtable,stable,dtable))
   | (i,vc) `S.member` img
       = fail "addKnownVarSet(dynamic): list-variable cycle."
   | otherwise
-      =  return $ VD ( vtable, stable
-                     , M.insert (i,vc)
-                                (DS (S.fromList is) (S.fromList js)) dtable )
+   = case M.lookup (i,vc) dtable of
+      Nothing | vl `knownIn` vt
+       -> return $ VD ( vtable, stable
+                      , M.insert (i,vc)
+                                 (DS (S.fromList is) (S.fromList js)) dtable )
+      Just UD | vl `knownIn` vt
+       -> return $ VD ( vtable, stable
+                      , M.insert (i,vc)
+                                 (DS (S.fromList is) (S.fromList js)) dtable )
+      _ -> fail "addKnownVarSet(dynamic): trying to update, or unknown vars in list."
   where
    mixed       =  checkLVarSetMap lv vs
    ( ct, img ) =  rtDynImage dtable CTset (iacOf $ S.toList vs)
+   vl          =  S.toList vs
    (is,js)     =  idsOf $ S.toList vs
 \end{code}
 

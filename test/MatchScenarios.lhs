@@ -321,6 +321,12 @@ test_reserved_as_lists
            @?= [ bindVV gu gx $ bindLl (LstVar lSu) [gy,gz] emptyBinding
                ]
          )
+     , testCase "L_Design |- [y,z,x] :: [S\\u, u] -- SHOULD SUCCEED (TRICKY!)"
+         ( vlMatch [vtL_Design] emptyBinding S.empty S.empty
+             (vwrap [y,z,x]) (lwrap [lSu] ++ vwrap [vu])
+           @?= [ bindVV gu gx $ bindLl (LstVar lSu) [gy,gz] emptyBinding
+               ]
+         )
      , testCase "L_Design |- [x,y,z] :: [u,w,S\\u,w] -- succeeds"
          ( nub (vlMatch [vtL_Design] emptyBinding S.empty S.empty
                   (vwrap [x,y,z]) (vwrap [vu,vw] ++ lwrap [lSuw]))

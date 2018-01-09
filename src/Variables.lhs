@@ -40,6 +40,7 @@ module Variables
  , idsOf, stdVarsOf, listVarsOf
  , VarSet, stdVarSetOf, listVarSetOf
  , isPreVarSet
+ , liftLess
  , int_tst_Variables
  ) where
 import Data.Char
@@ -375,10 +376,19 @@ stdVarSetOf vs  =  S.map getV $ S.filter isStdV vs where getV (GV v)  = v
 
 listVarSetOf :: VarSet -> Set ListVar
 listVarSetOf vs =  S.map getL $ S.filter isLstV vs where getL (GL lv) = lv
-
 \end{code}
 
-
+Given a list-variable,
+we will sometimes want to produce from it,
+a variable-list that corresponds to the subtracted identifiers:
+\begin{code}
+liftLess :: ListVar -> VarList
+liftLess (LV (VR (_,vc,vw), is, js))
+  = map (GV . mkV) is ++ map (GL . mkL) js
+  where
+     mkV i = VR (i,vc,vw)
+     mkL j = LV (mkV j,[],[])
+\end{code}
 \newpage
 
 \subsection{Exported Test Group}

@@ -29,6 +29,9 @@ import Variables
 import AST
 import VarData
 import Binding
+
+import Debug.Trace
+dbg msg x = trace (msg ++ show x) x
 \end{code}
 
 \subsection{Matching Principles}
@@ -836,6 +839,19 @@ canMatchNullList vts lv
       _                ->  True
 \end{code}
 
+First we handle simple cases:
+\begin{code}
+-- not null vlC
+vlKnownMatch vts bind cbvs pbvs vlC vlK
+                 gvP@(LstVar lvP@(LVbl (Vbl i vc vw) is js)) -- ListVar !
+ | gvP == head vlC
+    = do bind' <- bindLVarToVList lvP [gvP] bind
+         return (bind',tail vlC)
+ | vlK `isPrefixOf` vlC
+    = do bind' <- bindLVarToVList lvP vlK bind
+         return (bind',vlC \\ vlK)
+\end{code}
+
 Here we have a list-variable \texttt{lvP} that is known to expand as \texttt{vlK}.
 Now, \texttt{vlK} may also contain known variables.
 Simlarly, so might the relevant prefix of \texttt{vlC}.
@@ -846,20 +862,24 @@ If this succeeds, we return a binding between the original \texttt{lvP}
 and the corresponding prefix of the orignal \texttt{vlC},
 rather than involving any of the expansions (esp. \texttt{vlK}!).
 This is why we do not allow cycles in \texttt{VarTable}s.
+
+In addition, \texttt{lvP} may have subtracted identifiers.
+We need to compare expansions
+of both \texttt{vlC} and \texttt{vlK} to see what is missing from the
+former, and attempt to match the missing variables against the subtracted
+identifiers.
 \begin{code}
--- not null vlC
-vlKnownMatch vts bind cbvs pbvs vlC vlK gvP@(LstVar lvP) -- ListVar !
- | gvP == head vlC
-    = do bind' <- bindLVarToVList lvP [gvP] bind
-         return (bind',tail vlC)
- | vlK `isPrefixOf` vlC
-    = do bind' <- bindLVarToVList lvP vlK bind
-         return (bind',vlC \\ vlK)
  | otherwise
     = do vlKx <- expandKnownLists vts vlK
-         (vlC1,vlC2) <- unkKnVLMatch vts [] vlC vlKx
-         bind' <- bindLVarToVList lvP vlC1 bind
-         return (bind',vlC2)
+         vlCx <- expandKnownLists vts vlC
+         let missing = vlKx \\ vlCx
+         let vsKm = S.fromList missing
+         let vsL = S.fromList $ liftLess lvP
+         bind' <- vsMatch vts bind cbvs pbvs vsKm vsL
+         let vlKx' = vlKx \\ missing
+         (vlC1,vlC2) <- unkKnVLMatch vts [] vlC vlKx'
+         bind'' <- bindLVarToVList lvP vlC1 bind'
+         return (bind'',vlC2)
 \end{code}
 
 We want to match a fully-expanded pattern variable-list
@@ -1000,9 +1020,15 @@ vsFreeMatch vts bind cbvs pbvs vsC vsP
       else fail $ unlines
         [ "vsFreeMatch: too many candidate variables."
         , "vsC = " ++ show vsC ]
- | S.null vsC  = if S.null $ S.filter isStdV vsP
-                 then bindLVarSetToNull vts bind (S.toList vsP)
-                 else fail "vsMatch: too many std. pattern variables."
+ | S.null vsC
+    = if S.null $ S.filter isStdV vsP
+      then bindLVarSetToNull vts bind (S.toList vsP)
+      else fail $ unlines
+        [ "vsMatch: too many std. pattern variables."
+        , "vsC = "  ++ show vsC
+        , "vsP = "  ++ show vsP
+        , "bind:"   ++ show bind
+        ]
 \end{code}
 
 If both sets are non-empty,

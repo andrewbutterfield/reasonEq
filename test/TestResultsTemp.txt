@@ -1,22 +1,27 @@
-addKnownVarSet lv (sngl glw) newVarTable
+     , testCase "L_Design |- [x,y,z] :: [u,S\\u] -- succeeds"
+         ( vlMatch [vtL_Design] emptyBinding S.empty S.empty
+             (vwrap [x,y,z]) (vwrap [vu] ++ lwrap [lSu])
+           @?= [ bindVV gu gx $ bindLl (LstVar lSu) [gy,gz] emptyBinding
+               ]
+         )
+
+vtL_Design
 =
+{ ok : 𝔹, ok' : 𝔹, x : ℤ, x' : ℤ, y : ℤ, y' : ℤ, z : ℤ, z' : ℤ }
 {  }
-{  }
-{ lv$ ≜ {lw$} }
+{ M$ ≜ ⟨ok⟩, O$ ≜ ⟨M$,S$⟩, S$ ≜ ⟨x,y,z⟩ }
 
-addKnownVarSet lu (sngl glv) newVarTable
+
+bindVV gu gx $ bindLl (LstVar lSu) [gy,gz] emptyBinding
 =
+{ (u.𝓞) ↦ «BI (Id "x")» }
 {  }
+{ (S$.𝓞\u) ↦ ⟨y,z⟩ }
+
+vlMatch [vtL_Design] emptyBinding S.empty S.empty (vwrap [x,y,z]) (vwrap [vu] ++ lwrap [lSu])
+=
+{ (u.𝓞) ↦ «BI (Id "x")» }
 {  }
-{ lu$ ≜ {lv$} }
-
-addKnownVarSet lu (sngl glv) (fromJust (addKnownVarSet lv (sngl glw) newVarTable))
-=
-
-
-dtList (fromJust (addKnownVarSet lu (sngl glv)
-          (fromJust (addKnownVarSet lv (sngl glw) newVarTable))))
-=
-
+{ (S$.𝓞\u) ↦ ⟨y,z⟩ }
 
 --

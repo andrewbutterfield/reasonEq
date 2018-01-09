@@ -29,6 +29,7 @@ module AST ( TermSub, LVarSub
            , pattern PBind, pattern PLam, pattern PSub, pattern PIter
            , pattern E2, pattern P2
            , termkind, isVar, isExpr, isPred
+           , freeVars
            , VarSideCond, pattern Exact, pattern Approx
            , pattern Disjoint, pattern Covers, pattern DisjCov, pattern PreDisj
            , vscTrue
@@ -547,6 +548,40 @@ lamConstructTests  =  testGroup "AST.lam"
 termConstructTests  =  testGroup "Term Smart Constructors"
   [ varConstructTests, bindConstructTests,lamConstructTests ]
 \end{code}
+
+\newpage
+\subsection{Free and Bound Variables}
+
+\begin{eqnarray*}
+   fv(\kk k) &=& \emptyset
+\\ fv(\vv v) &=& \setof v
+\\ fv(\cc n {ts}) &=& \bigcup fv(ts)
+\\ fv(\bb n {v^+} t) &=& fv(t) \setminus v^+
+\\ fv(\ll n {v^+} t) &=& fv(t) \setminus v^+
+\\ fv(\ss t {v^n} {t^n}) &=& fv(t) \setminus v^n \cup \bigcup fv(t^n)
+\\ fv(\ii \bigoplus n {lvs}) &=& \emptyset
+\\ fv(\tt \tau) &=& \emptyset
+\end{eqnarray*}
+\begin{code}
+freeVars :: Term -> VarSet
+freeVars (V _ v) = S.singleton $ StdVar v
+freeVars (C _ _ ts) = S.unions $ map freeVars ts
+freeVars (B _ _ vs t) = freeVars t `S.difference` vs
+freeVars (L _ _ vl t) = freeVars t `S.difference` (S.fromList vl)
+freeVars (S _ t (SN tsub lvsub))
+  = (freeVars t `S.difference` tvs) `S.union` rvs
+  where
+     (tsvl,rtl) = unzip $ S.toList tsub
+     (tlvl,rlvl) = unzip $ S.toList lvsub
+     tvs = S.fromList (map StdVar tsvl ++ map LstVar tlvl)
+     rvs = S.unions (map freeVars rtl)
+           `S.union`
+           (S.map LstVar $ S.fromList rlvl)
+-- freeVars (I _ _ _ lvs) = S.empty
+freeVars _ = S.empty
+\end{code}
+
+
 
 \newpage
 \subsection{Side-Conditions}

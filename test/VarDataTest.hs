@@ -2,7 +2,7 @@ module VarDataTest ( tst_VarData )
 where
 
 import Data.Maybe(fromJust)
-import Data.Map as M (fromList)
+import Data.Map as M (fromList, lookup, empty)
 import Data.Set as S (singleton)
 
 import Test.HUnit
@@ -53,24 +53,8 @@ tst_addKnownConst
      , testCase "T known as True"
        ( vtList (fromJust (addKnownConst pT pTrue newVarTable))
          @?= [(pT,KnownConst pTrue)] )
-     , testCase "k |-> j should succeed"
-       ( vtList (fromJust (addKnownConst k kj newVarTable))
-         @?= [(k,KnownConst kj)] )
-     , testCase "j |-> k should succeed"
-       ( vtList (fromJust (addKnownConst j kk newVarTable))
-         @?= [(j,KnownConst kk)] )
-     , testCase "i -> j -> k should succeed"
-       ( vtList (fromJust (addKnownConst j kk
-                (fromJust (addKnownConst i kj newVarTable))))
-         @?= [(i,KnownConst kj),(j,KnownConst kk)] )
-     , testCase "k -> j -> k should fail"
-       ( (addKnownConst j kk
-             (fromJust (addKnownConst k kj newVarTable)))
-         @?= Nothing )
-     , testCase "i -> j -> k -> i should fail"
-       ( (addKnownConst k ki
-                (fromJust (addKnownConst j kk
-                (fromJust (addKnownConst i kj newVarTable)))))
+     , testCase "k |-> 99 after k |-> 42 should fail"
+       ( addKnownConst k k99 (fromJust (addKnownConst k k42 newVarTable))
          @?= Nothing )
      ]
 

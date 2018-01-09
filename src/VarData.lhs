@@ -398,10 +398,10 @@ addKnownVar :: Monad m => Variable -> Type -> VarTable -> m VarTable
 Only static, textual and before/after variables can
 range over values of a given type.
 \begin{code}
-addKnownVar var@(ObsVar _ (During _)) typ (VD (vtable,stable,dtable))
+addKnownVar (ObsVar _ (During _)) _ _
   =  fail "addKnownVar: not for During Variables."
 
-addKnownVar var@(ObsVar _ _) typ (VD (vtable,stable,dtable))
+addKnownVar var typ (VD (vtable,stable,dtable))
   =  return $ VD ( M.insert var (KV typ) vtable,stable,dtable )
 \end{code}
 
@@ -415,16 +415,16 @@ addKnownVarList :: Monad m => ListVar -> VarList -> VarTable -> m VarTable
 Static List variables match variable-lists of the corresponding class:
 \begin{code}
 addKnownVarList lv@(LVbl (Vbl _ _ Static) _ _) vl (VD (vtable,stable,dtable))
+ | mixed = fail  "addKnownVarList: inconsistent classifications."
  | ct == CTmixed
-     = fail "addKnownVarList(Static): some list-variables map to sets."
+     = fail "addKnownVarList(Static): some map to sets."
  | lv `S.member` img
-     = fail "addKnownVarList(Static): must not create list-variable cycle."
- | mixed = fail  "addKnownVarList: inconsistent variable classifications."
+     = fail "addKnownVarList(Static): list-variable cycle."
  | otherwise
      =  return $ VD ( vtable, M.insert lv (KL vl) stable, dtable )
  where
-  ( ct, img ) =  rtLstImage stable CTlist (S.fromList $ listVarsOf vl)
   mixed       =  checkLVarListMap lv vl
+  ( ct, img ) =  rtLstImage stable CTlist (S.fromList $ listVarsOf vl)
 \end{code}
 
 Dynamic list-variables
@@ -433,16 +433,16 @@ with the same class and appropriate temporality.
 We also need to check to avoid cycles, or a crossover to variable-sets.
 \begin{code}
 addKnownVarList lv@(LVbl (Vbl i vc vw) _ _) vl (VD (vtable,stable,dtable))
+ | mixed = fail  "addKnownVarList (dynamic): inconsistent classifications."
  | ct == CTmixed
-     = fail "addKnownVarList(dynamic): some list-variables map to sets."
+     = fail "addKnownVarList(dynamic): some map to sets."
  | (i,vc) `S.member` img
-     = fail "addKnownVarList(dynamic): must not create list-variable cycle."
- | mixed = fail  "addKnownVarList (dynamic): inconsistent variable classifications."
+     = fail "addKnownVarList(dynamic): list-variable cycle."
  | otherwise
      =  return $ VD ( vtable, stable, M.insert (i,vc) (DL is js) dtable )
  where
-  ( ct, img ) =  rtDynImage dtable CTlist (iacOf vl)
   mixed       =  checkLVarListMap lv vl
+  ( ct, img ) =  rtDynImage dtable CTlist (iacOf vl)
   (is,js)     =  idsOf vl
 \end{code}
 
@@ -474,32 +474,35 @@ See Variable-List insertion above.
 
 \begin{code}
 addKnownVarSet lv@(LVbl (Vbl i vc Static) _ _) vs (VD (vtable,stable,dtable))
+ | mixed = fail "addKnownVarSet(static): inconsistent classifications."
  | ct == CTmixed
-     = fail "addKnownVarSet(Static): some list-variables map to lists."
+     = fail "addKnownVarSet(Static): some map to lists."
  | lv `S.member` img
-     = fail "addKnownVarSet(Static): must not create list-variable cycle."
- | mixed = fail  "addKnownVarSet(static): inconsistent variable classifications."
+     = fail "addKnownVarSet(Static): list-variable cycle."
  | otherwise
      =  return $ VD ( vtable, M.insert lv (KS vs) stable, dtable )
  where
-   ( ct, img )  =  rtLstImage stable CTset (listVarSetOf vs)
    mixed        =  checkLVarSetMap lv vs
+   ( ct, img )  =  rtLstImage stable CTset (listVarSetOf vs)
 \end{code}
 
 \begin{code}
 addKnownVarSet lv@(LVbl (Vbl i vc vw) _ _) vs (VD (vtable,stable,dtable))
+  | mixed = fail "addKnownVarSet (dynamic): inconsistent classifications."
   | ct == CTmixed
-      = fail "addKnownVarSet(dynamic): some list-variables map to sets."
+      = fail $ unlines
+          [ "addKnownVarSet(dynamic): some map to lists."
+          , "vs = "++show vs
+          , "dtable:", show dtable ]
   | (i,vc) `S.member` img
-      = fail "addKnownVarList(dynamic): must not create list-variable cycle."
-  | mixed = fail  "addKnownVarList (dynamic): inconsistent variable classifications."
+      = fail "addKnownVarSet(dynamic): list-variable cycle."
   | otherwise
       =  return $ VD ( vtable, stable
                      , M.insert (i,vc)
                                 (DS (S.fromList is) (S.fromList js)) dtable )
   where
-   ( ct, img ) =  rtDynImage dtable CTlist (iacOf $ S.toList vs)
    mixed       =  checkLVarSetMap lv vs
+   ( ct, img ) =  rtDynImage dtable CTset (iacOf $ S.toList vs)
    (is,js)     =  idsOf $ S.toList vs
 \end{code}
 

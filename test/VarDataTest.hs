@@ -15,6 +15,7 @@ import LexBase
 import Variables
 import AST
 import VarData
+import TestRendering
 
 i = ObsVar  (fromJust $ ident "i") Static
 j = ObsVar  (fromJust $ ident "j") Static
@@ -88,9 +89,11 @@ tst_addKnownVar
        ( vtList (fromJust (addKnownVar v tInt newVarTable))
          @?= [(v,KnownVar tInt)] )
      , testCase "e : Int "
-       ( addKnownVar e tInt newVarTable @?= Nothing )
+       ( vtList (fromJust (addKnownVar e tInt newVarTable))
+        @?= [(e,KnownVar tInt)] )
      , testCase "T : Bool"
-       ( addKnownVar pT tBool newVarTable @?= Nothing )
+       ( vtList (fromJust (addKnownVar pT tBool newVarTable))
+        @?= [(pT,KnownVar tBool)] )
      ]
 
 -- -----------------------------------------------------------------------------
@@ -146,7 +149,7 @@ lP  = PrePreds $ fromJust $ ident "lP"     ; glP  = LstVar lP
 sngl = S.singleton
 
 tst_addKnownListVar
- = testGroup "addKnownVarList"
+ = testGroup "addKnownVarList/Set"
      [ testCase "lu |-> <lv>, succeeds"
        ( dtList (fromJust (addKnownVarList lu [glv] newVarTable))
          @?= [(lu,KnownVarList [glv])] )

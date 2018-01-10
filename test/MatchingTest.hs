@@ -19,6 +19,7 @@ import VarData
 import Binding
 import Matching
 
+import TestRendering
 -- -----------------------------------------------------------------------------
 tst_match :: TF.Test
 
@@ -85,9 +86,10 @@ v42 = Vbl (fromJust $ ident "v42") ObsV Static
 v42k = E ArbType
 oK = Vbl (fromJust $ ident "oK") ObsV Static
 oKk = E ArbType
-vt = fromJust $ addKnownVar ok bool
-   $ fromJust $ addKnownConst v42 k42
-   $ fromJust $ addKnownConst oK eok $ newVarTable
+vt = fromJust $ addKnownConst v42 k42
+   $ fromJust $ addKnownConst oK eok
+   $ fromJust $ addKnownVar ok bool
+   $ newVarTable
 
 
 tst_vMatch =

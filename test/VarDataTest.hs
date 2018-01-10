@@ -1,9 +1,14 @@
 module VarDataTest ( tst_VarData )
+{-
+Copyright  Andrew Buttefield (c) 2017-18
+
+LICENSE: BSD3, see file LICENSE at reasonEq root
+-}
 where
 
 import Data.Maybe(fromJust)
 import Data.Map as M (fromList, lookup, empty)
-import Data.Set as S (singleton)
+import Data.Set as S (fromList, singleton, empty)
 
 import Test.HUnit
 --import Test.Framework as TF (testGroup, Test)
@@ -11,20 +16,82 @@ import Test.Framework as TF (defaultMain, testGroup, Test)
 import Test.Framework.Providers.HUnit (testCase)
 --import Test.Framework.Providers.QuickCheck2 (testProperty)
 
+import Utilities
 import LexBase
 import Variables
 import AST
 import VarData
 import TestRendering
 
-i = ObsVar  (fromJust $ ident "i") Static
-j = ObsVar  (fromJust $ ident "j") Static
-k = ObsVar  (fromJust $ ident "k") Static
-v = ObsVar  (fromJust $ ident "v") Before
-e = ExprVar (fromJust $ ident "e") Before
-len = ExprVar (fromJust $ ident "len") Static
-p = PredVar (fromJust $ ident "P") Before
-pT = PredVar (fromJust $ ident "T") Static
+i = ObsVar  (fromJust $ ident "i") Static; ti = fromJust $ eVar ArbType i
+j = ObsVar  (fromJust $ ident "j") Static; tj = fromJust $ eVar ArbType j
+k = ObsVar  (fromJust $ ident "k") Static; tk = fromJust $ eVar ArbType k
+u = ObsVar  (fromJust $ ident "u") Before; tu = fromJust $ eVar ArbType u
+v = ObsVar  (fromJust $ ident "v") Before; tv = fromJust $ eVar ArbType v
+v' = ObsVar  (fromJust $ ident "v") Before; tv' = fromJust $ eVar ArbType v'
+e = ExprVar (fromJust $ ident "e") Before; te = fromJust $ eVar ArbType e
+len = ExprVar (fromJust $ ident "len") Static; tlen = fromJust $ eVar ArbType len
+p = PredVar (fromJust $ ident "P") Before; tp = fromJust $ pVar p
+pT = PredVar (fromJust $ ident "T") Static; tT = fromJust $ pVar pT
+
+iu = fromJust $ ident "lu" ; lu = PreVars  iu ; glu  = LstVar lu
+iv = fromJust $ ident "lv" ; lv = PreVars  iv ; glv  = LstVar lv
+lw  = PreVars  $ fromJust $ ident "lw"     ; glw  = LstVar lw
+lv' = PostVars $ fromJust $ ident "lv"     ; glv' = LstVar lv'
+lvm = MidVars  (fromJust $ ident "lv") "m" ; glvm = LstVar lvm
+le  = PreExprs $ fromJust $ ident "le"     ; gle  = LstVar le
+lP  = PrePreds $ fromJust $ ident "lP"     ; glP  = LstVar lP
+
+x = ObsVar (fromJust $ ident "x") Static; lx = LVbl x [] []; glx = LstVar lx
+ll  = PreVars  $ fromJust $ ident "ll"     ; gll  = LstVar ll
+ls  = PreVars  $ fromJust $ ident "ls"     ; gls  = LstVar ls
+f = ExprVar (fromJust $ ident "f") Static ; lf = LVbl f [] []
+
+gi = StdVar i; gj = StdVar j
+gv = StdVar v; ge = StdVar e; gp = StdVar p
+
+aKC v t    =  fromJust . addKnownConst   v  t
+aKV v t    =  fromJust . addKnownVar     v  t
+aKL lv vl  =  fromJust . addKnownVarList lv vl
+aKS lv vs  =  fromJust . addKnownVarSet  lv vs
+
+tst_vardata_inserts -- not run as standard regression
+-- because some tests are meant to fail
+ = testGroup "Check VarData insertion shorthands"
+     [ testCase "aKC: i ^= j  fails"
+         ( vtList (aKC i tj newVarTable)
+           @?= [(i,KnownConst tj)] )
+     , testCase "aKV: i : tau succeeds"
+         ( vtList (aKV i ArbType newVarTable)
+           @?= [(i,KnownVar ArbType)] )
+     , testCase "aKC.aKV: i : tau, then j ^=i succeeds"
+         ( vtList (aKC j ti $ aKV i ArbType newVarTable)
+           @?= [(i,KnownVar ArbType),(j,KnownConst ti)] )
+     , testCase "aKL: lu ^= [glu] fails"
+         ( dtList (aKL lu [glu] newVarTable)
+           @?= [(lu,KnownVarList [glu])] )
+     , testCase "aKL: lu ^= [gi] fails"
+         ( dtList (aKL lu [gi] newVarTable)
+           @?= [(lu,KnownVarList [gi])] )
+     , testCase "aKL: lu ^= [gv] fails"
+         ( dtList (aKL lu [gv] newVarTable)
+           @?= [(lu,KnownVarList [gv])] )
+     , testCase "aKL.aKV: i : tau, then lu ^= [gi] fails"
+         ( dtList (aKL lu [gi] $ aKV i ArbType newVarTable)
+           @?= [(lu,KnownVarList [gi])] )
+     , testCase "dtList.aKL.aKV: v : tau, then lu ^= [gv] succeeds"
+         ( dtList (aKL lu [gv] $ aKV v ArbType newVarTable)
+           @?= [(lu,KnownVarList [gv])] )
+     , testCase "vtList.aKL.aKV: v : tau, then lu ^= [gv] succeeds"
+         ( vtList (aKL lu [gv] $ aKV v ArbType newVarTable)
+           @?= [(v,KnownVar ArbType)] )
+     , testCase "aKV.aKV: i : tau, then v : tau succeeds"
+         ( vtList (aKV v ArbType $ aKV i ArbType newVarTable)
+           @?= [(i,KnownVar ArbType),(v,KnownVar ArbType)] )
+     , testCase "aKL.aKV.aKV: i : tau, then v : tau, then lu ^= [gv,gi] fails"
+         ( vtList (aKL lu [gv,gi] $ aKV v ArbType $ aKV i ArbType newVarTable)
+           @?= [(v,KnownVar ArbType)] )
+     ]
 
 -- -----------------------------------------------------------------------------
 tst_addKnownConst :: TF.Test
@@ -116,68 +183,62 @@ tst_lookupVarTable
 -- -----------------------------------------------------------------------------
 tst_addKnownListVar :: TF.Test
 
--- pattern PreVars  i    =  LV (VR (i,VO,(KD WB)),[])
--- pattern PostVars i    =  LV (VR (i,VO,(KD WA)),[])
--- pattern MidVars  i n  =  LV (VR (i,VO,(KD (WD n))),[])
--- pattern ScriptVars i  =  LV (VR (i,VV,(KD WB)),[])
--- pattern PreExprs i    =  LV (VR (i,VE,(KD WB)),[])
--- pattern PrePreds i    =  LV (VR (i,VP,(KD WB)),[])
-iu = fromJust $ ident "lu" ; lu = PreVars  iu ; glu  = LstVar lu
-iv = fromJust $ ident "lv" ; lv = PreVars  iv ; glv  = LstVar lv
-lw  = PreVars  $ fromJust $ ident "lw"     ; glw  = LstVar lw
-lv' = PostVars $ fromJust $ ident "lv"     ; glv' = LstVar lv'
-lvm = MidVars  (fromJust $ ident "lv") "m" ; glvm = LstVar lvm
-le  = PreExprs $ fromJust $ ident "le"     ; gle  = LstVar le
-lP  = PrePreds $ fromJust $ ident "lP"     ; glP  = LstVar lP
-
 sngl = S.singleton
+
+-- setup vardata where i,j,u,len and T are known
+-- and ll and ls map to empty lists and sets respectively
+-- and lf maps to [len]
+iltVarData
+  = aKL lf [StdVar len] $
+    aKV i ArbType $ aKV j ArbType $ aKV u ArbType $
+    aKV len ArbType $ aKV pT ArbType $
+    aKL ll [] $ aKS ls S.empty  newVarTable
 
 tst_addKnownListVar
  = testGroup "addKnownVarList/Set"
-     [ testCase "kvep |- le |-> <len>, succeeds"
-       ( dtList (fromJust (addKnownVarList le [StdVar len] kvepTable))
-         @?= [(le,KnownVarList [StdVar len])] )
-     , testCase "lu |-> <lv>, lv -> <lw> succeeds"
-       ( dtList (fromJust (addKnownVarList lu [glv]
-                 (fromJust (addKnownVarList lv [glw] newVarTable))))
-         @?= [(lu,KnownVarList [glv]),(lv,KnownVarList [glw])] )
-     , testCase "lu |-> <lv>, lv -> <lw>, lw -> <lu> fails"
-       ( addKnownVarList lu [glv]
-                (fromJust (addKnownVarList lv [glw]
-                (fromJust (addKnownVarList lw [glu] newVarTable))))
-         @?= Nothing )
-     , testCase "lu |-> {lv}, succeeds"
-        ( dtList (fromJust (addKnownVarSet lu (sngl glv) newVarTable))
-          @?= [(lu,KnownVarSet (sngl glv))] )
-     , testCase "lu |-> {lv}, lv -> {lw} succeeds"
-        ( dtList (fromJust (addKnownVarSet lu (sngl glv)
-                  (fromJust (addKnownVarSet lv (sngl glw) newVarTable))))
-          @?= [(lu,KnownVarSet (sngl glv)),(lv,KnownVarSet (sngl glw))] )
-     , testCase "lu |-> {lv}, lv -> {lw}, lw -> {lu} fails"
-        ( addKnownVarSet lu (sngl glv)
-                 (fromJust (addKnownVarSet lv (sngl glw)
-                 (fromJust (addKnownVarSet lw (sngl glu) newVarTable))))
-          @?= Nothing )
-     , testCase "lu |-> {lv}, lv -> {lw} succeeds"
-        ( dtList (fromJust (addKnownVarSet lu (sngl glv)
-                  (fromJust (addKnownVarSet lv (sngl glw) newVarTable))))
-          @?= [(lu,KnownVarSet (sngl glv)),(lv,KnownVarSet (sngl glw))] )
-     , testCase "lu |-> {lv}, lv -> <lw> fails"
-        ( addKnownVarSet lu (sngl glv)
-                  (fromJust (addKnownVarList lv [glw] newVarTable))
-          @?= Nothing )
-     , testCase "lu |-> <lv>, lv -> {lw} fails"
-        ( addKnownVarList lu [glv]
-                  (fromJust (addKnownVarSet lv (sngl glw) newVarTable))
-          @?= Nothing )
-     , testCase "lu |-> <lv'>, fails"
+     [ -- inconsistent classifications
+       testCase "lu |-> <lv'>, inconsistent!"
        ( addKnownVarList lu [glv'] newVarTable @?= Nothing )
-     , testCase "lu |-> <le>, fails"
+     , testCase "lu |-> <le>, inconsistent!"
        ( addKnownVarList lu [gle]  newVarTable @?= Nothing )
-     , testCase "le |-> <lu>, fails"
+     , testCase "le |-> <lu>, inconsistent!"
         ( addKnownVarList le [glu] newVarTable @?= Nothing )
-     , testCase "lP |-> <le>, fails"
+     , testCase "lP |-> <le>, inconsistent!"
         ( addKnownVarList lP [gle] newVarTable @?= Nothing )
+     -- some map to ... the other
+     , testCase "lv |-> <ls>, set and list!"
+        ( addKnownVarList lv [gls] iltVarData @?= Nothing )
+     , testCase "lv |-> {ll}, set and list!"
+        ( addKnownVarSet lv (sngl gll) iltVarData @?= Nothing )
+     , testCase "lv |-> <ll,ls>, set and list!"
+        ( addKnownVarList lv [gll,gls] iltVarData @?= Nothing )
+     -- list-variable cycle
+     , testCase "ll |-> <ll>, cycle!"
+        ( addKnownVarList ll [gll] iltVarData @?= Nothing )
+     , testCase "ls |-> {ls}, cycle!"
+        ( addKnownVarSet ls (sngl gls) iltVarData @?= Nothing )
+     -- range list contains unknown variables
+     , testCase "lv |-> [lw], unknowns!"
+        ( addKnownVarList lv [glw] iltVarData @?= Nothing )
+     -- trying to update entry
+     , testCase "lf |-> [len,len], update!"
+        ( addKnownVarList lf [StdVar len,StdVar len] iltVarData @?= Nothing )
+     -- successful entries
+     , testCase "lu |-> [], succeeds"
+        ( dtList (aKL lu [] iltVarData)
+         @?= [(ll,KnownVarList [])
+             ,(ls,KnownVarSet S.empty)
+             ,(lu,KnownVarList [])] )
+     , testCase "lx |-> [], succeeds"
+        ( stList (aKL lx [] iltVarData)
+         @?= [(lf,KnownVarList [StdVar len]),(lx,KnownVarList [])] )
+     , testCase "lx |-> [i,j], succeeds"
+        ( stList (aKL lx [gi,gj] iltVarData)
+         @?= [(lf,KnownVarList [StdVar len]),(lx,KnownVarList [gi,gj])] )
+     , testCase "lx |-> {i,j}, succeeds"
+        ( stList (aKS lx (S.fromList [gi,gj]) iltVarData)
+         @?= [(lf,KnownVarList [StdVar len])
+             ,(lx,KnownVarSet (S.fromList [gi,gj]))] )
      ]
 
 lulvTable = fromJust $ addKnownVarList lu [glv]             newVarTable
@@ -187,10 +248,10 @@ tst_lookupLVarTable
  = testGroup "lookupLVarTable"
      [ testCase "lu in empty table, should be UnknownListVar"
        ( lookupLVarTable newVarTable lu @?= UnknownListVar )
-     , testCase "lu in lulvTable, should be [lv]"
-       ( lookupLVarTable lulvTable lu @?= KnownVarList [glv] )
-     , testCase "lu in lulwTable, should be {lw}"
-       ( lookupLVarTable lulwTable lu @?= KnownVarSet (S.singleton glw) )
+     , testCase "ll in iltVarData, should be []"
+       ( lookupLVarTable iltVarData ll @?= KnownVarList [] )
+     , testCase "ls in iltVarData, should be {}"
+       ( lookupLVarTable iltVarData ls @?= KnownVarSet S.empty )
      ]
 
 

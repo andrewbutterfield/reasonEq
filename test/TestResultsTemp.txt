@@ -1,27 +1,37 @@
-     , testCase "L_Design |- [x,y,z] :: [u,S\\u] -- succeeds"
-         ( vlMatch [vtL_Design] emptyBinding S.empty S.empty
-             (vwrap [x,y,z]) (vwrap [vu] ++ lwrap [lSu])
-           @?= [ bindVV gu gx $ bindLl (LstVar lSu) [gy,gz] emptyBinding
-               ]
-         )
-
-vtL_Design
-=
-{ ok : 𝔹, ok' : 𝔹, x : ℤ, x' : ℤ, y : ℤ, y' : ℤ, z : ℤ, z' : ℤ }
+*VarDataTest> putShow iltVarData
+VD
+( fromList
+  [ ( VR (Id "T", VP, WS)
+    , KV
+      T )
+  , ( VR (Id "i", VO, WS)
+    , KV
+      T )
+  , ( VR (Id "len", VE, WS)
+    , KV
+      T )
+  , ( VR (Id "u", VO, WB)
+    , KV
+      T ) ]
+, fromList
+  []
+, fromList
+  [ ( ( Id "ll"
+      , VO )
+    , DL
+      []
+      [] )
+  , ( ( Id "ls"
+      , VO )
+    , DS
+      ( fromList
+        [] )
+      ( fromList
+        [] ) ) ] )
+*VarDataTest> seeVarTable iltVarData
+{ T. : τ, i. : τ, len. : τ, u : τ }
 {  }
-{ M$ ≜ ⟨ok⟩, O$ ≜ ⟨M$,S$⟩, S$ ≜ ⟨x,y,z⟩ }
+{ l̅l̅ ≜ ⟨⟩, l̅s̅ ≜ {} }
 
-
-bindVV gu gx $ bindLl (LstVar lSu) [gy,gz] emptyBinding
-=
-{ (u.𝓞) ↦ «BI (Id "x")» }
-{  }
-{ (S$.𝓞\u) ↦ ⟨y,z⟩ }
-
-vlMatch [vtL_Design] emptyBinding S.empty S.empty (vwrap [x,y,z]) (vwrap [vu] ++ lwrap [lSu])
-=
-{ (u.𝓞) ↦ «BI (Id "x")» }
-{  }
-{ (S$.𝓞\u) ↦ ⟨y,z⟩ }
 
 --

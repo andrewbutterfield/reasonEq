@@ -1,6 +1,6 @@
 \section{Variable Data}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2017
+Copyright  Andrew Buttefield (c) 2017-18
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -33,6 +33,9 @@ import Utilities
 import LexBase
 import Variables
 import AST
+
+import Debug.Trace
+dbg msg x = trace (msg++show x) x
 \end{code}
 
 \subsection{Variable Matching Categories}
@@ -267,11 +270,15 @@ of the same class as themselves.
 addKnownVarList lv@(LVbl (Vbl _ _ Static) _ _) vl vt@(VD (vtable,stable,dtable))
  | mixed          =  fail "addKnownVarList: inconsistent classifications."
  | ct == CTmixed  =  fail "addKnownVarList(Static): some map to sets."
+ | lv `S.member` img
+     = fail "addKnownVarSet(Static): list-variable cycle."
  | otherwise
    = case M.lookup lv stable of
       Nothing | vl `knownIn` vt
                    -> return $ VD ( vtable, M.insert lv (KL vl) stable, dtable )
       Just UL | vl `knownIn` vt
+                   -> return $ VD ( vtable, M.insert lv (KL vl) stable, dtable )
+      Just (KL []) -- can update empty lists
                    -> return $ VD ( vtable, M.insert lv (KL vl) stable, dtable )
       _ -> fail "addKnownVarList(Static): trying to update, or unknown vars in list."
  where
@@ -288,11 +295,15 @@ addKnownVarList lv@(LVbl (Vbl i vc vw) _ _) vl vt@(VD (vtable,stable,dtable))
  | mixed = fail  "addKnownVarList (dynamic): inconsistent classifications."
  | ct == CTmixed
      = fail "addKnownVarList(dynamic): some map to sets."
+ | (i,vc) `S.member` img
+      = fail "addKnownVarList(dynamic): list-variable cycle."
  | otherwise
    = case M.lookup (i,vc) dtable of
       Nothing | vl `knownIn` vt
             -> return $ VD ( vtable, stable, M.insert (i,vc) (DL is js) dtable )
       Just UD | vl `knownIn` vt
+           -> return $ VD ( vtable, stable, M.insert (i,vc) (DL is js) dtable )
+      Just (DL [] []) -- can update empty lists
            -> return $ VD ( vtable, stable, M.insert (i,vc) (DL is js) dtable )
       _ -> fail "addKnownVarList(dynamic): trying to update, or unknown vars in list."
  where
@@ -305,6 +316,7 @@ addKnownVarList lv@(LVbl (Vbl i vc vw) _ _) vl vt@(VD (vtable,stable,dtable))
 A list-variable can only map to variables with the same \texttt{VarWhat} value,
 and, if not \texttt{Static}, the same \texttt{VarWhen} value:
 \begin{code}
+checkLVarListMap lv [] = False
 checkLVarListMap lv vl
   = [whatLVar lv] /= nub (map whatGVar vl)
       || (vtime /= Static && [vtime] /= nub (map timeGVar vl))
@@ -340,6 +352,8 @@ addKnownVarSet lv@(LVbl (Vbl i vc Static) _ _) vs vt@(VD (vtable,stable,dtable))
                    -> return $ VD ( vtable, M.insert lv (KS vs) stable, dtable )
       Just UL | vl `knownIn` vt
                    -> return $ VD ( vtable, M.insert lv (KS vs) stable, dtable )
+      Just (KS vs) | S.null vs -- can update empty sets
+                   -> return $ VD ( vtable, M.insert lv (KS vs) stable, dtable )
       _ -> fail "addKnownVarSet(Static): trying to update, or unknown vars in list."
  where
    mixed        =  checkLVarSetMap lv vs
@@ -367,6 +381,10 @@ addKnownVarSet lv@(LVbl (Vbl i vc vw) _ _) vs vt@(VD (vtable,stable,dtable))
        -> return $ VD ( vtable, stable
                       , M.insert (i,vc)
                                  (DS (S.fromList is) (S.fromList js)) dtable )
+      Just (DS is0 js0) | S.null is0 && S.null js0 -- can update empty sets
+       -> return $ VD ( vtable, stable
+                      , M.insert (i,vc)
+                                 (DS (S.fromList is) (S.fromList js)) dtable )
       _ -> fail "addKnownVarSet(dynamic): trying to update, or unknown vars in list."
   where
    mixed       =  checkLVarSetMap lv vs
@@ -377,8 +395,10 @@ addKnownVarSet lv@(LVbl (Vbl i vc vw) _ _) vs vt@(VD (vtable,stable,dtable))
 
 \begin{code}
 checkLVarSetMap lv vs
-  = (S.singleton $ whatLVar lv) /= S.map whatGVar vs
-      || (vtime /= Static && (S.singleton $ vtime) /= S.map timeGVar vs)
+  = not (S.null vs)
+    && ( (S.singleton $ whatLVar lv) /= S.map whatGVar vs
+         ||
+         (vtime /= Static && (S.singleton $ vtime) /= S.map timeGVar vs) )
   where vtime = timeLVar lv
 \end{code}
 

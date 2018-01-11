@@ -69,19 +69,19 @@ tst_vardata_inserts -- not run as standard regression
            @?= [(i,KnownVar ArbType),(j,KnownConst ti)] )
      , testCase "aKL: lu ^= [glu] fails"
          ( dtList (aKL lu [glu] newVarTable)
-           @?= [(lu,KnownVarList [glu])] )
+           @?= [(lu,KnownVarList [glu] [] 0)] )
      , testCase "aKL: lu ^= [gi] fails"
          ( dtList (aKL lu [gi] newVarTable)
-           @?= [(lu,KnownVarList [gi])] )
+           @?= [(lu,KnownVarList [gi] [] 0)] )
      , testCase "aKL: lu ^= [gv] fails"
          ( dtList (aKL lu [gv] newVarTable)
-           @?= [(lu,KnownVarList [gv])] )
+           @?= [(lu,KnownVarList [gv] [] 0)] )
      , testCase "aKL.aKV: i : tau, then lu ^= [gi] fails"
          ( dtList (aKL lu [gi] $ aKV i ArbType newVarTable)
-           @?= [(lu,KnownVarList [gi])] )
+           @?= [(lu,KnownVarList [gi] [] 0)] )
      , testCase "dtList.aKL.aKV: v : tau, then lu ^= [gv] succeeds"
          ( dtList (aKL lu [gv] $ aKV v ArbType newVarTable)
-           @?= [(lu,KnownVarList [gv])] )
+           @?= [(lu,KnownVarList [gv] [] 0)] )
      , testCase "vtList.aKL.aKV: v : tau, then lu ^= [gv] succeeds"
          ( vtList (aKL lu [gv] $ aKV v ArbType newVarTable)
            @?= [(v,KnownVar ArbType)] )
@@ -226,19 +226,21 @@ tst_addKnownListVar
      -- successful entries
      , testCase "lu |-> [], succeeds"
         ( dtList (aKL lu [] iltVarData)
-         @?= [(ll,KnownVarList [])
-             ,(ls,KnownVarSet S.empty)
-             ,(lu,KnownVarList [])] )
+         @?= [(ll,KnownVarList [] [] 0)
+             ,(ls,KnownVarSet S.empty S.empty 0)
+             ,(lu,KnownVarList [] [] 0)] )
      , testCase "lx |-> [], succeeds"
         ( stList (aKL lx [] iltVarData)
-         @?= [(lf,KnownVarList [StdVar len]),(lx,KnownVarList [])] )
+         @?= [ (lf,KnownVarList [StdVar len] [] 0)
+             , (lx,KnownVarList [] [] 0) ] )
      , testCase "lx |-> [i,j], succeeds"
         ( stList (aKL lx [gi,gj] iltVarData)
-         @?= [(lf,KnownVarList [StdVar len]),(lx,KnownVarList [gi,gj])] )
+         @?= [ (lf,KnownVarList [StdVar len] [] 0)
+             , (lx,KnownVarList [gi,gj] [] 0)] )
      , testCase "lx |-> {i,j}, succeeds"
         ( stList (aKS lx (S.fromList [gi,gj]) iltVarData)
-         @?= [(lf,KnownVarList [StdVar len])
-             ,(lx,KnownVarSet (S.fromList [gi,gj]))] )
+         @?= [ (lf,KnownVarList [StdVar len] [] 0)
+             , (lx,KnownVarSet (S.fromList [gi,gj]) S.empty 0)] )
      ]
 
 lulvTable = fromJust $ addKnownVarList lu [glv]             newVarTable
@@ -249,9 +251,9 @@ tst_lookupLVarTable
      [ testCase "lu in empty table, should be UnknownListVar"
        ( lookupLVarTable newVarTable lu @?= UnknownListVar )
      , testCase "ll in iltVarData, should be []"
-       ( lookupLVarTable iltVarData ll @?= KnownVarList [] )
+       ( lookupLVarTable iltVarData ll @?= KnownVarList [] [] 0)
      , testCase "ls in iltVarData, should be {}"
-       ( lookupLVarTable iltVarData ls @?= KnownVarSet S.empty )
+       ( lookupLVarTable iltVarData ls @?= KnownVarSet S.empty S.empty 0)
      ]
 
 

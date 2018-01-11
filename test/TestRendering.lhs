@@ -164,9 +164,9 @@ trVarMatchRole UnknownVar      =  " ?"
 
 \begin{code}
 trLstVarMatchRole :: LstVarMatchRole -> String
-trLstVarMatchRole (KnownVarList vl)
+trLstVarMatchRole (KnownVarList vl _ _)
   =  spaced _triangleq ++ _langle ++ trVL vl ++ _rangle
-trLstVarMatchRole (KnownVarSet  vs)
+trLstVarMatchRole (KnownVarSet  vs _ _)
   =  spaced _triangleq ++ "{" ++ trVL (S.toList vs) ++ "}"
 trLstVarMatchRole UnknownListVar     =  " ?"
 \end{code}

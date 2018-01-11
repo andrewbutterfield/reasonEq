@@ -888,10 +888,10 @@ For now, we take $N=2$.
 -- !!! currently ignoring 'less' part of lvP !!!
 vlFreeMatch vts bind cbvs pbvs vlC (gvP@(LstVar lvP):vlP)
   = case lookupLVarTables vts lvP of
-     KnownVarList vlK
+     KnownVarList vlK _ _
        -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs vlC vlK gvP
              vlFreeMatch vts bind' cbvs pbvs vlC' vlP
-     KnownVarSet vsK
+     KnownVarSet vsK _ _
        -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs vlC (S.toList vsK) gvP
              vlFreeMatch vts bind' cbvs pbvs vlC' vlP
      _
@@ -906,8 +906,8 @@ vlFreeMatch vts bind cbvs pbvs vlC (gvP@(LstVar lvP):vlP)
 canMatchNullList :: [VarTable] -> ListVar -> Bool
 canMatchNullList vts lv
   = case lookupLVarTables vts lv of
-      KnownVarList vl  ->  null vl
-      _                ->  True
+      KnownVarList vl _ _ ->  null vl
+      _                   ->  True
 \end{code}
 
 First we handle simple cases:
@@ -984,9 +984,9 @@ We keep expanding variables known as lists of (other) variables.
 expandKnownList :: Monad m => [VarTable] -> GenVar -> m VarList
 expandKnownList vts gv@(LstVar lv)
   = case lookupLVarTables vts lv of
-      KnownVarList kvl  ->  expandKnownLists vts kvl
-      UnknownListVar    ->  return [gv]
-      _                 ->  fail "expandKnownList: found variable-sets!"
+      KnownVarList kvl _ _ ->  expandKnownLists vts kvl
+      UnknownListVar       ->  return [gv]
+      _                    ->  fail "expandKnownList: found variable-sets!"
 expandKnownList vts gv@(StdVar v)
   = case lookupVarTables vts v of
       KnownConst (Var _ kc)  ->  expandKnownList vts $ StdVar kc
@@ -1131,8 +1131,8 @@ bindLVarSetToNull _ _ (_:_) = fail "bindLVarSetToNull: std. variables not allowe
 canMatchNullSet :: [VarTable] -> ListVar -> Bool
 canMatchNullSet vts lv
   = case lookupLVarTables vts lv of
-      KnownVarSet vs  ->  S.null vs
-      _               ->  True
+      KnownVarSet vs _ _  ->  S.null vs
+      _                   ->  True
 \end{code}
 
 \newpage
@@ -1303,10 +1303,10 @@ Here we also try some non-deterministic matching, also with $N=2$.
 --vsFreeLstMatch vts bind cbvs pbvs vsC lvsP -- vsC, lvsP not null
   | otherwise
     = case lookupLVarTables vts lvP of
-       KnownVarSet vsK
+       KnownVarSet vsK _ _
         -> do (bind',vsC') <- vsKnownMatch vts bind cbvs pbvs vsC vsK gvP
               vsFreeLstMatch vts bind' cbvs pbvs vsC' lvsP'
-       KnownVarList vlK
+       KnownVarList vlK _ _
         -> do (bind',vsC')
                      <- vsKnownMatch vts bind cbvs pbvs vsC (S.fromList vlK) gvP
               vsFreeLstMatch vts bind' cbvs pbvs vsC' lvsP'
@@ -1358,7 +1358,7 @@ expandKnownSet vts gv@(StdVar v)
 
 expandKnownSet vts gv@(LstVar lv)
   = case lookupLVarTables vts lv of
-      KnownVarSet kvs  ->  expandKnownSets vts kvs
+      KnownVarSet kvs _ _  ->  expandKnownSets vts kvs
       UnknownListVar   ->  return $ S.singleton gv
       _                ->  fail "expandKnownSet: found variable-lists!"
 

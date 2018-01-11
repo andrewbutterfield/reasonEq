@@ -1,21 +1,20 @@
-vsMatch [vtS_Design] emptyBinding S.empty S.empty (lswrap [lOn]) (lswrap [lOm])
+vsMatch [vtS_Design] emptyBinding S.empty S.empty (vswrap [x,y,z]) (vswrap [vu] `S.union` lswrap [lS `less` ([u],[])])
 
-vsMatch [vtS_Design] emptyBinding S.empty S.empty (lswrap [lOn]) (lswrap [lOm])
+vsMatch [vtS_Design] emptyBinding S.empty S.empty
+    (vswrap [x,y,z])
+    (vswrap [vu] `S.union` lswrap [lS `less` ([u],[])])
 =
+*MatchScenarios> vsMatch [vtS_Design] emptyBinding S.empty S.empty (vswrap [x,y,z]) (vswrap [vu] `S.union` lswrap [lS `less` ([u],[])])
+
+vsKM.vsC = {y,z}
+
+vsKM.gvP = S\u
+
 *** Exception: user error (vsMatch: some pattern var-set is not in candidate.
 
-vsKx =
-fromList [ GV (VR (Id "ok",VO,WD "m"))
-         , GV (VR (Id "x",VO,WD "m"))
-         , GV (VR (Id "y",VO,WD "m"))
-         , GV (VR (Id "z",VO,WD "m"))]
+vsKx = [x,y,z]
 
-vsCx =
-fromList [ GV (VR (Id "ok",VO,WD "n"))
-         , GV (VR (Id "x",VO,WD "n"))
-         , GV (VR (Id "y",VO,WD "n"))
-         , GV (VR (Id "z",VO,WD "n"))]
-
+vsCx = [y,z]
 )
 
 --

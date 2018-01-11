@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module VarData ( VarMatchRole
-               , pattern KnownConst, pattern KnownVar, pattern UnknownVar
+               , pattern KnownConst, patternq KnownVar, pattern UnknownVar
                , isKnownConst, isKnownVar, isUnknownVar
                , vmrConst, vmrType
                , LstVarMatchRole
@@ -110,19 +110,39 @@ as a name for a specific list or set of variables,
 themselves also ``known''.
 A known list-variables can only match itself,
 or any expansion of what is known about its associated variable-list.
+We also allow list variables to be abstract,
+in that they can be instantiated later on to specific known variables.
+An abstract list-variable can only match itself.
+
+A concrete list-variable ultimately resolves dowwn
+to a set or list of known variables.
+The contents and size of that collection are important,
+so we store this information explicilty here,
+to avoind the need for matching algorithsm to continually
+re-compute this.
+
+
 
 
 Static list-variables can match any variable list or set.
 \begin{code}
 data LstVarMatchRole -- ListVar Matching Roles
- = KL VarList -- Known Variable-List, all of which are themselves known
- | KS VarSet  -- Known Variable-Set, all of which are themselves known
- | UL         -- Unknown List-Variable
+ = KL VarList      -- Known Variable-List, all of which are themselves known
+      [Variable]   -- what it is known as
+      Int          -- length of the above
+ | KS VarSet       -- Known Variable-Set, all of which are themselves known
+      Set Variable -- what it is known as
+      Int          -- size of the above
+ | AL              -- Abstract Known Variable-List
+ | AS              -- Abstract Known Variable-Set
+ | UL              -- Unknown List-Variable
  deriving (Eq, Ord, Show, Read)
 
-pattern KnownVarList vl  =  KL vl
-pattern KnownVarSet  vs  =  KS vs
-pattern UnknownListVar   =  UL
+pattern KnownVarList vl vars len  =  KL vl vars len
+pattern KnownVarSet  vs vars siz  =  KS vs vars siz
+pattern AbstractList              =  AL
+pattern AbstractSet               =  AS
+pattern UnknownListVar            =  UL
 \end{code}
 
 Dynamic before/after variables can only match

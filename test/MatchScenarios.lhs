@@ -162,17 +162,9 @@ kvDesign =
   $  x .:. int  $  x' .:. int  $ y .:. int $ y' .:. int $ z .:. int $ z' .:. int
   $ newVarTable
 
-vtL_Design =
-    lS -.> [x,y,z] $ lS' -.> [x',y',z'] $ lSm -.> [xm,ym,zm]
-  $ lM -.> [ok]    $ lM' -.> [ok']      $ lMm -.> [okm]
-  $ lO ->> [lM,lS] $ lO' ->> [lM',lS']  $ lOm ->> [lMm,lSm]
-  $ kvDesign
+vtL_Design =  lO ->> [lM,lS] $ lS -.> [x,y,z] $ lM -.> [ok] $ kvDesign
 
-vtS_Design =
-    lS -~> [x,y,z] $ lS' -~> [x',y',z'] $ lSm -~> [xm,ym,zm]
-  $ lM -~> [ok]    $ lM' -~> [ok']      $ lMm -~> [okm]
-  $ lO ~~> [lM,lS] $ lO' ~~> [lM',lS']  $ lOm ~~> [lMm,lSm]
-  $ kvDesign
+vtS_Design  =  lO ~~> [lM,lS] $ lS -~> [x,y,z] $ lM -~> [ok] $ kvDesign
 \end{code}
 
 \newpage

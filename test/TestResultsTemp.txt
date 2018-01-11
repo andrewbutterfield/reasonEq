@@ -1,37 +1,21 @@
-*VarDataTest> putShow iltVarData
-VD
-( fromList
-  [ ( VR (Id "T", VP, WS)
-    , KV
-      T )
-  , ( VR (Id "i", VO, WS)
-    , KV
-      T )
-  , ( VR (Id "len", VE, WS)
-    , KV
-      T )
-  , ( VR (Id "u", VO, WB)
-    , KV
-      T ) ]
-, fromList
-  []
-, fromList
-  [ ( ( Id "ll"
-      , VO )
-    , DL
-      []
-      [] )
-  , ( ( Id "ls"
-      , VO )
-    , DS
-      ( fromList
-        [] )
-      ( fromList
-        [] ) ) ] )
-*VarDataTest> seeVarTable iltVarData
-{ T. : τ, i. : τ, len. : τ, u : τ }
-{  }
-{ l̅l̅ ≜ ⟨⟩, l̅s̅ ≜ {} }
+vsMatch [vtS_Design] emptyBinding S.empty S.empty (lswrap [lOn]) (lswrap [lOm])
 
+vsMatch [vtS_Design] emptyBinding S.empty S.empty (lswrap [lOn]) (lswrap [lOm])
+=
+*** Exception: user error (vsMatch: some pattern var-set is not in candidate.
+
+vsKx =
+fromList [ GV (VR (Id "ok",VO,WD "m"))
+         , GV (VR (Id "x",VO,WD "m"))
+         , GV (VR (Id "y",VO,WD "m"))
+         , GV (VR (Id "z",VO,WD "m"))]
+
+vsCx =
+fromList [ GV (VR (Id "ok",VO,WD "n"))
+         , GV (VR (Id "x",VO,WD "n"))
+         , GV (VR (Id "y",VO,WD "n"))
+         , GV (VR (Id "z",VO,WD "n"))]
+
+)
 
 --

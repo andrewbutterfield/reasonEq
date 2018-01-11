@@ -1311,6 +1311,39 @@ vsKnownXMatch vts vsC vsCx vsKx
           ]
 \end{code}
 
+When we compare both expansions,
+we must allow for \texttt{During} variables with
+different subscripts,
+and accumulate the relevant subscript bindings.
+\begin{code}
+withinS :: VarSet -> VarSet -> (Bool, [(Subscript,Subscript)])
+vs1 `withinS` vs2 = (S.toList vs1) `within` (S.toList vs2)
+
+within :: VarList -> VarList -> (Bool, [(Subscript,Subscript)])
+vl1 `within` vl2 -- for all v in vl1, v in vl2 (mod. During-subscripts)
+ = condense $ map (inside vl2) vl1
+
+inside :: VarList -> GenVar -> (Bool, [(Subscript,Subscript)])
+inside vl gv@(StdVar (Vbl i vw (During m))) = inside' gv vl
+inside vl gv@(LstVar (LVbl (Vbl i vw (During m)) is js)) = inside' gv vl
+inside vl gv = ( gv `elem` vl, [])
+
+inside' _ [] = (False,[])
+inside'  (StdVar (Vbl i vw (During m)))
+        ((StdVar (Vbl j uw (During n))):_)
+ | i==j && vw==uw  =  (True, [(m,n)])
+inside'  (LstVar (LVbl (Vbl i vw (During m)) is js))
+        ((LstVar (LVbl (Vbl j uw (During n)) ks ls)):_)
+ | i==j && vw==uw && is==ks && js==ls  =  (True, [(m,n)])
+inside' gv (_:gvs) = inside' gv gvs
+
+
+condense :: [(Bool, [(Subscript,Subscript)])] -> (Bool, [(Subscript,Subscript)])
+condense res
+  = (and bs, nub $ concat sss)
+  where (bs,sss) = unzip res
+\end{code}
+
 Find the candidate variables in \texttt{vsC} that expand into
 variables within \texttt{vsKx}.
 \begin{code}

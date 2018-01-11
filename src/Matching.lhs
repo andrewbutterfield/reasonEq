@@ -377,12 +377,83 @@ For now a simple zip-like walk along both lists
 tsMatch :: MonadPlus mp
         => [VarTable] -> Binding -> CBVS -> PBVS
         -> [Candidate] -> [Pattern] -> mp Binding
+tsMatch _ _ _ _ cts pts
+ | length cts /= length pts = fail "tsMatch: length mismatch"
 tsMatch _ bind _ _ [] [] = return bind
 tsMatch vts bind cbvs pvbs (tC:tsC) (tP:tsP)
  = do bind1 <- tMatch vts bind cbvs pvbs tC tP
       tsMatch vts bind1 cbvs pvbs tsC tsP
-tsMatch _ _ _ _ _ _  =  fail "tsMatch: structural mismatch."
+-- should not occur!
+tsMatch _ _ _ _ _ _  =  error "tsMatch: unexpected mismatch case."
 \end{code}
+
+\newpage
+\subsection{Operations ``modulo \texttt{During}''}
+
+When matching variable lists and sets,
+we often need to do equality comparisons
+that ignore \texttt{During} subscript values.
+\begin{code}
+dEq :: VarWhen -> VarWhen -> Bool
+(During _) `dEq` (During _)  =  True
+vw1        `dEq` vw2         =  vw1 == vw2
+
+dvEq :: Variable -> Variable -> Bool
+(Vbl i1 vc1 vw1) `dvEq` (Vbl i2 vc2 vw2)
+ = i1 == i2 && vc1 == vc2 && vw1 `dEq` vw2
+
+dlEq :: ListVar -> ListVar -> Bool
+(LVbl v1 is1 js1) `dlEq` (LVbl v2 is2 js2)
+ = v1 `dvEq` v2 && is1 == is2 && js1 == js2
+
+dgEq :: GenVar -> GenVar -> Bool
+(StdVar v1)  `dgEq` (StdVar v2)   =  v1 `dvEq` v2
+(LstVar lv1) `dgEq` (LstVar lv2)  =  lv1 `dlEq` lv2
+_            `dgEq` _             =  False
+\end{code}
+
+We need to various relations and operators
+to work with the above ``subscript-blind'' comparisons.
+
+\subsubsection{Subset Relation ``modulo \texttt{During}''}
+
+\begin{code}
+withinS :: VarSet -> VarSet -> Bool
+vs1 `withinS` vs2 = (S.toList vs1) `within` (S.toList vs2)
+
+within :: VarList -> VarList -> Bool
+vl1 `within` vl2 -- for all v in vl1, v in vl2 (mod. During-subscripts)
+ = all (inside vl2) vl1
+
+inside :: VarList -> GenVar -> Bool
+inside []       gv0  =  False
+inside (gv:gvs) gv0
+ | gv `dgEq` gv0     =  True
+ | otherwise         =  inside gvs gv0
+\end{code}
+
+\subsubsection{Difference Operation ``modulo \texttt{During}''}
+
+\begin{code}
+removeS  :: VarSet -> VarSet -> VarSet
+vs1 `removeS` vs2 = S.fromList (S.toList vs1 `remove` S.toList vs2)
+
+remove :: VarList -> VarList -> VarList
+vl1 `remove` vl2 = deleteFirstsBy dgEq vl1 vl2
+\end{code}
+
+\subsubsection{Intersect Operation ``modulo \texttt{During}''}
+
+Note that order is important here.
+All the intersection values will come from the first argument.
+\begin{code}
+intsctS  :: VarSet -> VarSet -> VarSet
+vs1 `intsctS` vs2 = S.fromList (S.toList vs1 `intsct` S.toList vs2)
+
+intsct :: VarList -> VarList -> VarList
+vl1 `intsct` vl2 = intersectBy dgEq vl1 vl2
+\end{code}
+
 
 \newpage
 \subsection{Term-Variable Matching}
@@ -1012,7 +1083,7 @@ vsFreeMatch :: MonadPlus mp
               -> mp Binding
 \end{code}
 
-If one of both sets are empty then we can easily resolve matters,
+If one or both sets are empty then we can easily resolve matters,
 \begin{code}
 vsFreeMatch vts bind cbvs pbvs vsC vsP
  | S.null vsP
@@ -1259,18 +1330,21 @@ vsKnownMatch :: MonadPlus mp
              -> mp ( Binding, VarSet )
 -- not null vsC
 vsKnownMatch vts bind cbvs pbvs vsC vsK gvP@(LstVar lvP) -- ListVar !
- | gvP `S.member` vsC
-    = do bind' <- bindLVarToVSet lvP (S.singleton gvP) bind
-         return (bind',S.delete gvP vsC)
- | vsK `S.isSubsetOf` vsC
-    = do bind' <- bindLVarToVSet lvP vsK bind
-         return (bind',(S.\\) vsC vsK)
+ | not $ S.null gvCs
+    = do bind' <- bindLVarToVSet lvP gvCs bind
+         return (bind',vsC `removeS` gvCs)
+ | vsK `withinS` vsC
+    = do bind' <- bindLVarToVSet lvP (vsC `intsctS` vsK) bind
+         return (bind',vsC `removeS` vsK)
  | otherwise -- quick matches don't work, need to go to full expansions
     = do vsKx <- expandKnownSets vts vsK
          vsCx <- expandKnownSets vts vsC
          (vsC1,vsC2) <- vsKnownXMatch vts vsC vsCx vsKx
          bind' <- bindLVarToVSet lvP vsC1 bind
          return (bind',vsC2)
+ where
+   gvCs = dbg "vsKM.vsC = " vsC `intsctS` S.singleton (dbg "vsKM.gvP =" gvP)
+   gvC  = S.elemAt 0 gvCs
 \end{code}
 
 We keep expanding variables known as sets of (other) variables.
@@ -1300,48 +1374,15 @@ Matching fully-expanded pattern variable-set against
 partially-expanded candidate variable-set.
 \begin{code}
 vsKnownXMatch vts vsC vsCx vsKx
-  | vsKx `S.isSubsetOf` vsCx
+  | vsKx `withinS` vsCx
      = do vsCm <- getCorrCandidates vts [] vsKx $ S.toList vsC
-          return (vsCm, vsC S.\\ vsC)
+          return (vsCm, vsC `removeS` vsCm)
   | otherwise
       = fail $ unlines
           [ "vsMatch: some pattern var-set is not in candidate."
           , "vsKx = " ++ show vsKx
           , "vsCx = " ++ show vsCx
           ]
-\end{code}
-
-When we compare both expansions,
-we must allow for \texttt{During} variables with
-different subscripts,
-and accumulate the relevant subscript bindings.
-\begin{code}
-withinS :: VarSet -> VarSet -> (Bool, [(Subscript,Subscript)])
-vs1 `withinS` vs2 = (S.toList vs1) `within` (S.toList vs2)
-
-within :: VarList -> VarList -> (Bool, [(Subscript,Subscript)])
-vl1 `within` vl2 -- for all v in vl1, v in vl2 (mod. During-subscripts)
- = condense $ map (inside vl2) vl1
-
-inside :: VarList -> GenVar -> (Bool, [(Subscript,Subscript)])
-inside vl gv@(StdVar (Vbl i vw (During m))) = inside' gv vl
-inside vl gv@(LstVar (LVbl (Vbl i vw (During m)) is js)) = inside' gv vl
-inside vl gv = ( gv `elem` vl, [])
-
-inside' _ [] = (False,[])
-inside'  (StdVar (Vbl i vw (During m)))
-        ((StdVar (Vbl j uw (During n))):_)
- | i==j && vw==uw  =  (True, [(m,n)])
-inside'  (LstVar (LVbl (Vbl i vw (During m)) is js))
-        ((LstVar (LVbl (Vbl j uw (During n)) ks ls)):_)
- | i==j && vw==uw && is==ks && js==ls  =  (True, [(m,n)])
-inside' gv (_:gvs) = inside' gv gvs
-
-
-condense :: [(Bool, [(Subscript,Subscript)])] -> (Bool, [(Subscript,Subscript)])
-condense res
-  = (and bs, nub $ concat sss)
-  where (bs,sss) = unzip res
 \end{code}
 
 Find the candidate variables in \texttt{vsC} that expand into
@@ -1354,9 +1395,9 @@ getCorrCandidates vts rvsC vsKx (gvC:vsC)
  = case expandKnownSet vts gvC of
     Nothing  ->  fail "vsMatch: expandKnownSet fails."
     Just gvCx
-     | gvCx `S.isSubsetOf` vsKx
-                        -> getCorrCandidates vts (gvC:rvsC) (vsKx S.\\ gvCx) vsC
-     | otherwise        -> getCorrCandidates vts rvsC       vsKx             vsC
+     | gvCx `withinS` vsKx
+                  -> getCorrCandidates vts (gvC:rvsC) (vsKx `removeS` gvCx) vsC
+     | otherwise  -> getCorrCandidates vts rvsC       vsKx             vsC
 \end{code}
 
 \newpage

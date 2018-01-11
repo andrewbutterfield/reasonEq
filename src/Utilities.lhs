@@ -252,12 +252,10 @@ tfail toks str = fail $ unlines [str,"Remaining tokens = " ++ show toks]
 Heuristic Zero: all on one line:
 \begin{code}
 display0 :: ShowTree -> String
-display0 (STtext s) = s
-display0 (STapp sts) = concat $ intersperse " " $ map display0 sts
-display0 (STlist sts)
- = "[" ++ (concat $ intersperse ", " $ map display0 sts) ++"]"
-display0 (STpair sts)
- = "(" ++ (concat $ intersperse ", " $ map display0 sts) ++")"
+display0 (STtext s)    =  s
+display0 (STapp sts)   =  intercalate " " $ map display0 sts
+display0 (STlist sts)  =  "[" ++ (intercalate ", " $ map display0 sts) ++"]"
+display0 (STpair sts)  =  "(" ++ (intercalate ", " $ map display0 sts) ++")"
 \end{code}
 
 Heuristic One: Each run on a new line, with indentation.

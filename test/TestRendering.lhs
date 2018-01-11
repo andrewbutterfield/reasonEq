@@ -20,7 +20,7 @@ module TestRendering (
 import Data.Maybe(fromJust)
 import Data.Map as M (fromList)
 import qualified Data.Set as S
-import Data.List (nub, sort, (\\), intersperse)
+import Data.List (nub, sort, (\\), intercalate)
 
 import NiceSymbols
 
@@ -69,11 +69,9 @@ trLVar :: ListVar -> String
 trLVar (LVbl (Vbl i vc vw) is js)
  = trVCf vc (trLId i) ++ trVW vw ++ trLess is js
 
-trLId i = concat $ map dia_line $ trId i 
+trLId i = concat $ map dia_line $ trId i
 trLess [] []  =  ""
-trLess is js
-  = '\\'
-     : ( concat $ intersperse "," ( map trId is ++ map trLId js ) )
+trLess is js  =  '\\' : ( intercalate "," ( map trId is ++ map trLId js ) )
 
 trGVar :: GenVar -> String
 trGVar (StdVar v)   =  trVar v
@@ -93,7 +91,7 @@ trType (GivenType i)      =  trId i
 
 trTypes = seplist " " trType
 
-seplist sep tr = concat . intersperse sep . map tr
+seplist sep tr = intercalate sep . map tr
 \end{code}
 
 \newpage

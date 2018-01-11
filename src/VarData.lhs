@@ -7,11 +7,12 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module VarData ( VarMatchRole
-               , pattern KnownConst, patternq KnownVar, pattern UnknownVar
+               , pattern KnownConst, pattern KnownVar, pattern UnknownVar
                , isKnownConst, isKnownVar, isUnknownVar
                , vmrConst, vmrType
                , LstVarMatchRole
                , pattern KnownVarList, pattern KnownVarSet
+               , pattern AbstractList, pattern AbstractSet
                , pattern UnknownListVar
                , VarTable
                , vtList, stList, dtList
@@ -118,24 +119,21 @@ A concrete list-variable ultimately resolves dowwn
 to a set or list of known variables.
 The contents and size of that collection are important,
 so we store this information explicilty here,
-to avoind the need for matching algorithsm to continually
+to avoind the need for matching algorithms to continually
 re-compute this.
-
-
-
 
 Static list-variables can match any variable list or set.
 \begin{code}
 data LstVarMatchRole -- ListVar Matching Roles
- = KL VarList      -- Known Variable-List, all of which are themselves known
-      [Variable]   -- what it is known as
-      Int          -- length of the above
- | KS VarSet       -- Known Variable-Set, all of which are themselves known
-      Set Variable -- what it is known as
-      Int          -- size of the above
- | AL              -- Abstract Known Variable-List
- | AS              -- Abstract Known Variable-Set
- | UL              -- Unknown List-Variable
+ = KL VarList        -- Known Variable-List, all of which are themselves known
+      [Variable]     -- full expansion
+      Int            -- length of full expansion
+ | KS VarSet         -- Known Variable-Set, all of which are themselves known
+      (Set Variable) -- full expansion
+      Int            -- size of full expansion
+ | AL                -- Abstract Known Variable-List
+ | AS                -- Abstract Known Variable-Set
+ | UL                -- Unknown List-Variable
  deriving (Eq, Ord, Show, Read)
 
 pattern KnownVarList vl vars len  =  KL vl vars len
@@ -146,7 +144,7 @@ pattern UnknownListVar            =  UL
 \end{code}
 
 Dynamic before/after variables can only match
-other dynamic ones in a consistent way regaridng temporality
+other dynamic ones in a consistent way regarding temporality
 ---
 if a ``before'' list-variable matches a list/set of (``before'') variables,
 then the corresponding ``after'' list-variable
@@ -155,10 +153,16 @@ must match the same list/set of (``after'') variables.
 type IdAndClass = (Identifier, VarClass)
 
 data DynamicLstVarRole -- Dynamic ListVar Matching Roles
- = DL [Identifier] -- Known-list, Variable identifiers
-      [Identifier] -- Known-list, List-Variable identifiers
+ = DL [Identifier]      -- Known-list, Variable identifiers
+      [Identifier]      -- Known-list, List-Variable identifiers
+      [Identifier]      -- full expansion
+      Int               -- length of full expansion
  | DS (Set Identifier)  -- Known-set, Variable identifiers
       (Set Identifier)  -- Known-set, List-Variable identifiers
+      (Set Identifier)  -- full expnasion
+      Int               -- size of full expansion
+ | DAL                  -- Abstract Known List
+ | DAS                  -- Abstract Known Set
  | UD         -- Unknown Dynamic List-Variable
  deriving (Eq, Ord, Show, Read)
 \end{code}
@@ -169,14 +173,19 @@ when results are returned.
 This can be done by providing a variable class and temporality:
 \begin{code}
 mapDLVRtoLVMR :: VarClass -> VarWhen -> DynamicLstVarRole -> LstVarMatchRole
-mapDLVRtoLVMR vc vw (DL is js)  =  KL ( map (id2var vc vw) is
-                                        ++ map (id2lvar vc vw) js )
-mapDLVRtoLVMR vc vw (DS is js)  =  KS ( S.map (id2var vc vw) is
-                                        `S.union` S.map (id2lvar vc vw) js )
-mapDLVRtoLVMR _ _ UD  =  UL
+mapDLVRtoLVMR vc vw (DL is js xs n)
+  =  KL (map (id2gvar vc vw) is ++ map (id2glvar vc vw) js)
+        (map (id2var vc vw) xs) n
+mapDLVRtoLVMR vc vw (DS is js xs n)
+  =  KS (S.map (id2gvar vc vw) is `S.union` S.map (id2glvar vc vw) js)
+        (S.map (id2var vc vw) xs)n
+mapDLVRtoLVMR _ _ DAL  =  AL
+mapDLVRtoLVMR _ _ DAS  =  AS
+mapDLVRtoLVMR _ _ UD   =  UL
 
-id2var  vc vw i  =  StdVar       $ Vbl i vc vw
-id2lvar vc vw j  =  LstVar $ LVbl (Vbl j vc vw) [] []
+id2var   vc vw i  =                 Vbl i vc vw
+id2gvar  vc vw i  =  StdVar       $ Vbl i vc vw
+id2glvar vc vw j  =  LstVar $ LVbl (Vbl j vc vw) [] []
 \end{code}
 
 \newpage
@@ -295,11 +304,11 @@ addKnownVarList lv@(LVbl (Vbl _ _ Static) _ _) vl vt@(VD (vtable,stable,dtable))
  | otherwise
    = case M.lookup lv stable of
       Nothing | vl `knownIn` vt
-                   -> return $ VD ( vtable, M.insert lv (KL vl) stable, dtable )
+                   -> return $ VD ( vtable, M.insert lv (KL vl [] 0) stable, dtable )
       Just UL | vl `knownIn` vt
-                   -> return $ VD ( vtable, M.insert lv (KL vl) stable, dtable )
-      Just (KL []) -- can update empty lists
-                   -> return $ VD ( vtable, M.insert lv (KL vl) stable, dtable )
+                   -> return $ VD ( vtable, M.insert lv (KL vl [] 0) stable, dtable )
+      Just AL | vl `knownIn` vt
+                   -> return $ VD ( vtable, M.insert lv (KL vl [] 0) stable, dtable )
       _ -> fail "addKnownVarList(Static): trying to update, or unknown vars in list."
  where
   mixed       =  checkLVarListMap lv vl
@@ -320,11 +329,11 @@ addKnownVarList lv@(LVbl (Vbl i vc vw) _ _) vl vt@(VD (vtable,stable,dtable))
  | otherwise
    = case M.lookup (i,vc) dtable of
       Nothing | vl `knownIn` vt
-            -> return $ VD ( vtable, stable, M.insert (i,vc) (DL is js) dtable )
+        -> return $ VD (vtable, stable, M.insert (i,vc) (DL is js [] 0) dtable)
       Just UD | vl `knownIn` vt
-           -> return $ VD ( vtable, stable, M.insert (i,vc) (DL is js) dtable )
-      Just (DL [] []) -- can update empty lists
-           -> return $ VD ( vtable, stable, M.insert (i,vc) (DL is js) dtable )
+        -> return $ VD (vtable, stable, M.insert (i,vc) (DL is js [] 0) dtable)
+      Just DAL | vl `knownIn` vt
+        -> return $ VD (vtable, stable, M.insert (i,vc) (DL is js [] 0) dtable)
       _ -> fail "addKnownVarList(dynamic): trying to update, or unknown vars in list."
  where
   mixed       =  checkLVarListMap lv vl
@@ -369,11 +378,11 @@ addKnownVarSet lv@(LVbl (Vbl i vc Static) _ _) vs vt@(VD (vtable,stable,dtable))
  | otherwise
    = case M.lookup lv stable of
       Nothing | vl `knownIn` vt
-                   -> return $ VD ( vtable, M.insert lv (KS vs) stable, dtable )
+        -> return $ VD (vtable, M.insert lv (KS vs S.empty 0) stable, dtable)
       Just UL | vl `knownIn` vt
-                   -> return $ VD ( vtable, M.insert lv (KS vs) stable, dtable )
-      Just (KS vs) | S.null vs -- can update empty sets
-                   -> return $ VD ( vtable, M.insert lv (KS vs) stable, dtable )
+        -> return $ VD (vtable, M.insert lv (KS vs S.empty 0) stable, dtable)
+      Just AL | vl `knownIn` vt
+        -> return $ VD (vtable, M.insert lv (KS vs S.empty 0) stable, dtable)
       _ -> fail "addKnownVarSet(Static): trying to update, or unknown vars in list."
  where
    mixed        =  checkLVarSetMap lv vs
@@ -396,15 +405,18 @@ addKnownVarSet lv@(LVbl (Vbl i vc vw) _ _) vs vt@(VD (vtable,stable,dtable))
       Nothing | vl `knownIn` vt
        -> return $ VD ( vtable, stable
                       , M.insert (i,vc)
-                                 (DS (S.fromList is) (S.fromList js)) dtable )
+                                 (DS (S.fromList is) (S.fromList js) S.empty 0)
+                                 dtable )
       Just UD | vl `knownIn` vt
        -> return $ VD ( vtable, stable
                       , M.insert (i,vc)
-                                 (DS (S.fromList is) (S.fromList js)) dtable )
-      Just (DS is0 js0) | S.null is0 && S.null js0 -- can update empty sets
+                                 (DS (S.fromList is) (S.fromList js) S.empty 0)
+                                 dtable )
+      Just DAS | vl `knownIn` vt
        -> return $ VD ( vtable, stable
                       , M.insert (i,vc)
-                                 (DS (S.fromList is) (S.fromList js)) dtable )
+                                 (DS (S.fromList is) (S.fromList js) S.empty 0)
+                                 dtable )
       _ -> fail "addKnownVarSet(dynamic): trying to update, or unknown vars in list."
   where
    mixed       =  checkLVarSetMap lv vs
@@ -456,13 +468,6 @@ lookupLVarTable (VD (_,_,dtable)) lvar@(LVbl (Vbl i vc vw) _ _)
  = case M.lookup (i,vc) dtable of
      Nothing    ->  UL
      Just dlvr  ->  mapDLVRtoLVMR vc vw dlvr
-\end{code}
-
-We do a simple map for \texttt{LstVarMatchRole}:
-\begin{code}
-lvmrMap f (KL vl)  =  KL $ map f vl
-lvmrMap f (KS vs)  =  KS $ S.map f vs
-lvmrMap _ lvmr     =  lvmr
 \end{code}
 
 \subsubsection{Searching Lists of Tables}
@@ -623,9 +628,9 @@ Looking up the \texttt{ListVar -> VarList} fragment of a \texttt{VarTable}:
 \begin{code}
 lstVVlkp stable lv
  = case M.lookup lv stable of
-    Just (KL gvl)  ->  ( CTlist, S.fromList $ listVarsOf gvl )
-    Just (KS gvs)  ->  ( CTset,  listVarSetOf gvs )
-    _              ->  ( CTunknown, S.empty )
+    Just (KL gvl _ _)  ->  ( CTlist, S.fromList $ listVarsOf gvl )
+    Just (KS gvs _ _)  ->  ( CTset,  listVarSetOf gvs )
+    _                  ->  ( CTunknown, S.empty )
 \end{code}
 
 
@@ -655,9 +660,9 @@ We are conservative here, treating $x$ and $\lst x$ as the same.
 \begin{code}
 dynIIlkp dtable iac@(i,vc)
  = case M.lookup iac dtable of
-    Just (DL il jl)  ->  ( CTlist, S.fromList $ zip (il++jl) vcOmega )
-    Just (DS is js)  ->  ( CTset,  S.map add_vc (is `S.union` js) )
-    _                ->  ( CTunknown, S.empty )
+    Just (DL il jl _ _)  ->  ( CTlist, S.fromList $ zip (il++jl) vcOmega )
+    Just (DS is js _ _)  ->  ( CTset,  S.map add_vc (is `S.union` js) )
+    _                    ->  ( CTunknown, S.empty )
  where
    vcOmega = vc:vcOmega
    add_vc i = (i,vc)

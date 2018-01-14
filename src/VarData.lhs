@@ -20,6 +20,7 @@ module VarData ( VarMatchRole
                , addKnownConst
                , addKnownVar
                , addKnownVarList , addKnownVarSet
+               , addAbstractVarList, addAbstractVarSet
                , lookupVarTable, lookupVarTables
                , lookupLVarTable, lookupLVarTables
                ) where
@@ -119,7 +120,7 @@ A concrete list-variable ultimately resolves dowwn
 to a set or list of known variables.
 The contents and size of that collection are important,
 so we store this information explicilty here,
-to avoind the need for matching algorithms to continually
+to avoid the need for matching algorithms to continually
 re-compute this.
 
 Static list-variables can match any variable list or set.
@@ -194,15 +195,20 @@ id2glvar vc vw j  =  LstVar $ LVbl (Vbl j vc vw) [] []
 We define simple lookup tables,
 into which we can insert entries for known variables and list-variables.
 We use a newtype so we can control access.
+We note that the subtracted-identifoer lists in list-variables
+are irrelevant here, so use a variable as the map domain
+element in each case.
 
 We have a key invariant regarding variable temporality (\texttt{VarWhen}).
-A variable or list-variable can only be mapped to variables and list-variables
+A dynamic variable or list-variable can only be mapped to variables and list-variables
 of the same temporality.
 Variables or list-variables that are \texttt{Static} can map to anything.
+This means that for synamic variables,
+we use domain and range types that do not mention temporality.
 \begin{code}
 newtype VarTable
   = VD ( Map Variable   VarMatchRole
-       , Map ListVar    LstVarMatchRole
+       , Map Variable   LstVarMatchRole
        , Map IdAndClass DynamicLstVarRole
        )
   deriving (Eq, Show, Read)
@@ -232,7 +238,7 @@ newVarTable = VD (M.empty, M.empty, M.empty)
 
 
 \newpage
-\subsection{Inserting into Tables}
+\subsection{Inserting Variable Entries}
 
 We place restrictions on which entries can be updated.
 One important one is that all free variables in a term
@@ -260,6 +266,7 @@ Only static variables may name a constant,
 and we must check that we won't introduce any cycles.
 \begin{code}
 addKnownConst var@(Vbl _ _ Static) trm vt@(VD (vtable,stable,dtable))
+  -- |  var `in` trm = fail "cycles not allowed"
   = case M.lookup var vtable of
       Nothing | trm `inside` vt
         -> return $ VD ( M.insert var (KC trm) vtable,stable,dtable )
@@ -269,6 +276,7 @@ addKnownConst var@(Vbl _ _ Static) trm vt@(VD (vtable,stable,dtable))
 
 addKnownConst _ _ _ = fail "addKnownConst: not for Dynamic Variables."
 \end{code}
+
 
 \subsubsection{Inserting Known Variable}
 
@@ -287,10 +295,57 @@ addKnownVar var typ (VD (vtable,stable,dtable))
 \end{code}
 
 \newpage
+\subsection{Inserting List-Variable Entries}
+
+List-variables entries can be concrete or abstract.
+Abstract entries mean the corresponding list-variable is to be treated as known,
+but currently is not associated with a specific variable-list.
+This is useful for very general theories that introduce key concepts
+that have a common definition across a wide range of more specific theories.
+The most obvious example of this is sequential composition.
+
+Concrete entries are those where the list-variable is
+defined to be equivalent to a given variable-list.
+Concrete list variable entries can only refer to (general) variables that are
+already known and are themselves concrete,
+i.e., already present in the tables.
+
+All variable entries (known or constant) are considered to be concrete.
+
+\subsubsection{Checking Variable Container Contents}
+
+We need to check a proposed variable-container (set/list)
+to see that it satisfies the requirements given above.
+We also need to ensure, if the list-variable is dynamic,
+that all the container variables have the same temporality
+as that list-variable.
+If a list-variable is to be defined as a list of variables,
+then none of the list-variables in that last can denote a variable-set.
+This is because there is no really good way to convert a
+set of variables into a list.
+There is no similar constraint for the converse case,
+where a proposed set of variables contains those that define lists,
+as there is a unique canonical way to convert a list to a set.
+
+We define a function to check all of the above
+that works with lists, preserving order.
+
+\begin{code}
+checkVariableList
+  :: Monad m
+  => Variable -- the variable component of the list-variable about to be defined
+  -> Bool     -- true if set-valued list-variables are allowed
+  -> VarList
+  -> m ( [Variable] -- the full expansion
+       , Int )      -- length of full expansion
+
+checkVariableList lv@(LVbl (Vbl)) setsOK vl = cVL lv setsOK [] 0 vl
+\end{code}
+
 \subsubsection{Inserting Known Variable-List}
 
 \begin{code}
-addKnownVarList :: Monad m => ListVar -> VarList -> VarTable -> m VarTable
+addKnownVarList :: Monad m => Variable -> VarList -> VarTable -> m VarTable
 \end{code}
 
 Static List variables match lists of known variables
@@ -342,7 +397,7 @@ addKnownVarList lv@(LVbl (Vbl i vc vw) _ _) vl vt@(VD (vtable,stable,dtable))
 \end{code}
 
 
-A list-variable can only map to variables with the same \texttt{VarWhat} value,
+A list-variable can only map to variables with the same \texttt{VarClass} value,
 and, if not \texttt{Static}, the same \texttt{VarWhen} value:
 \begin{code}
 checkLVarListMap lv [] = False
@@ -364,7 +419,7 @@ iacOf vl  =  iacOf' [] [] vl
 \subsubsection{Inserting Known Variable-Set}
 
 \begin{code}
-addKnownVarSet :: Monad m => ListVar -> VarSet -> VarTable -> m VarTable
+addKnownVarSet :: Monad m => Variable -> VarSet -> VarTable -> m VarTable
 \end{code}
 See Variable-List insertion above.
 
@@ -432,6 +487,38 @@ checkLVarSetMap lv vs
          ||
          (vtime /= Static && (S.singleton $ vtime) /= S.map timeGVar vs) )
   where vtime = timeLVar lv
+\end{code}
+
+\subsubsection{Inserting Abstract Variable-List}
+
+\begin{code}
+addAbstractVarList :: Monad m => Variable -> VarTable -> m VarTable
+
+addAbstractVarList lv@(LVbl (Vbl _ _ Static) _ _) (VD (vtable,stable,dtable))
+ = case M.lookup lv stable of
+     Nothing -> return $ VD(vtable,M.insert lv AL stable,dtable)
+     _ -> fail "addAbstractVarList(Static): already present"
+
+addAbstractVarList lv@(LVbl (Vbl i vc vw) _ _) (VD (vtable,stable,dtable))
+ = case M.lookup (i,vc) dtable of
+     Nothing -> return $ VD(vtable,stable,M.insert (i,vc) DAL dtable)
+     _ -> fail "addAbstractVarList(dynamic): already present"
+\end{code}
+
+\subsubsection{Inserting Abstract Variable-Set}
+
+\begin{code}
+addAbstractVarSet :: Monad m => Variable -> VarTable -> m VarTable
+
+addAbstractVarSet lv@(LVbl (Vbl _ _ Static) _ _) (VD (vtable,stable,dtable))
+ = case M.lookup lv stable of
+     Nothing -> return $ VD(vtable,M.insert lv AS stable,dtable)
+     _ -> fail "addAbstractVarSet(Static): already present"
+
+addAbstractVarSe lv@(LVbl (Vbl i vc vw) _ _) (VD (vtable,stable,dtable))
+ = case M.lookup (i,vc) dtable of
+     Nothing -> return $ VD(vtable,stable,M.insert (i,vc) DAS dtable)
+     _ -> fail "addAbstractVarSet(dynamic): already present"
 \end{code}
 
 \newpage

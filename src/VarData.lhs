@@ -23,13 +23,17 @@ module VarData ( VarMatchRole
                , addAbstractVarList, addAbstractVarSet
                , lookupVarTable, lookupVarTables
                , lookupLVarTable, lookupLVarTables
+               , dEq     -- , dvEq, dlEq, dgEq
+               , withinS -- , within, inside
+               , removeS -- , remove
+               , intsctS -- , intsct
                ) where
 --import Data.Maybe (fromJust)
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Set (Set)
 import qualified Data.Set as S
-import Data.List (nub)
+import Data.List (nub, deleteFirstsBy, intersectBy)
 
 import Utilities
 import LexBase
@@ -332,14 +336,40 @@ that works with lists, preserving order.
 \begin{code}
 checkVariableList
   :: Monad m
-  => Variable -- the variable component of the list-variable about to be defined
+  => VarTable  -- the table
+  -> Variable -- the variable component of the list-variable about to be defined
   -> Bool     -- true if set-valued list-variables are allowed
   -> VarList
   -> m ( [Variable] -- the full expansion
        , Int )      -- length of full expansion
 
-checkVariableList lv@(Vbl i vc vw) setsOK vl = cVL vc vw setsOK [] 0 vl
-cVL vc vw setsOK srav len vl = fail "checkVariableList: NYI"
+checkVariableList vt lv@(Vbl i vc0 vw0) setsOK vl
+ = case vw0 of
+     Static  ->  chkVL (const False)   [] 0 vl
+     _       ->  chkVL (not . dEq vw0) [] 0 vl
+ where
+
+  chkVL invalid srav len [] = return (reverse srav, len)
+
+  chkVL invalid srav len (StdVar v@(Vbl _ vc vw):vl)
+    | vc /= vc0   =  fail "checkVariableList: class mismatch"
+    | invalid vw  =  fail "checkVariableList: temporality mismatch"
+    | otherwise
+       = case lookupVarTable vt v of
+           UV  ->  fail "checkVariableList: unknown variable"
+           _   ->  chkVL invalid (v:srav) (len+1) vl
+
+  chkVL invalid srav len (LstVar (LVbl v@(Vbl _ vc vw) _ _):vl)
+    | vc /= vc0   =  fail "checkVariableList: class mismatch"
+    | invalid vw  =  fail "checkVariableList: temporality mismatch"
+    | otherwise
+       = case lookupLVarTable vt v of
+           KL _ kvl klen  ->  chkVL invalid (reverse kvl++srav) (len+klen) vl
+           AL             ->  chkVL invalid (v:srav)            (len+1)    vl
+           KS _ kvs ksize | setsOK
+                        ->  chkVL invalid (S.toList kvs++srav) (len+ksize) vl
+           AS | setsOK  ->  chkVL invalid (v:srav)             (len+1)     vl
+           UL  ->  fail "checkVariableList: unknown list-variable"
 \end{code}
 
 \subsubsection{Inserting Known Variable-List}
@@ -580,6 +610,74 @@ lookupLVarTables (vt:vts) lv
      UL    ->  lookupLVarTables vts lv
      lvmr  ->  lvmr
 \end{code}
+
+\newpage
+\subsection{Operations ``modulo \texttt{During}''}
+
+When matching variable lists and sets,
+we often need to do equality comparisons
+that ignore \texttt{During} subscript values.
+\begin{code}
+dEq :: VarWhen -> VarWhen -> Bool
+(During _) `dEq` (During _)  =  True
+vw1        `dEq` vw2         =  vw1 == vw2
+
+dvEq :: Variable -> Variable -> Bool
+(Vbl i1 vc1 vw1) `dvEq` (Vbl i2 vc2 vw2)
+ = i1 == i2 && vc1 == vc2 && vw1 `dEq` vw2
+
+dlEq :: ListVar -> ListVar -> Bool
+(LVbl v1 is1 js1) `dlEq` (LVbl v2 is2 js2)
+ = v1 `dvEq` v2 && is1 == is2 && js1 == js2
+
+dgEq :: GenVar -> GenVar -> Bool
+(StdVar v1)  `dgEq` (StdVar v2)   =  v1 `dvEq` v2
+(LstVar lv1) `dgEq` (LstVar lv2)  =  lv1 `dlEq` lv2
+_            `dgEq` _             =  False
+\end{code}
+
+We need to various relations and operators
+to work with the above ``subscript-blind'' comparisons.
+
+\subsubsection{Subset Relation ``modulo \texttt{During}''}
+
+\begin{code}
+withinS :: VarSet -> VarSet -> Bool
+vs1 `withinS` vs2 = (S.toList vs1) `withinL` (S.toList vs2)
+
+withinL :: VarList -> VarList -> Bool
+vl1 `withinL` vl2 -- for all v in vl1, v in vl2 (mod. During-subscripts)
+ = all (insideL vl2) vl1
+
+insideL :: VarList -> GenVar -> Bool
+insideL []       gv0  =  False
+insideL (gv:gvs) gv0
+ | gv `dgEq` gv0     =  True
+ | otherwise         =  insideL gvs gv0
+\end{code}
+
+\subsubsection{Difference Operation ``modulo \texttt{During}''}
+
+\begin{code}
+removeS  :: VarSet -> VarSet -> VarSet
+vs1 `removeS` vs2 = S.fromList (S.toList vs1 `removeL` S.toList vs2)
+
+removeL :: VarList -> VarList -> VarList
+vl1 `removeL` vl2 = deleteFirstsBy dgEq vl1 vl2
+\end{code}
+
+\subsubsection{Intersect Operation ``modulo \texttt{During}''}
+
+Note that order is important here.
+All the intersection values will come from the first argument.
+\begin{code}
+intsctS  :: VarSet -> VarSet -> VarSet
+vs1 `intsctS` vs2 = S.fromList (S.toList vs1 `intsctL` S.toList vs2)
+
+intsctL :: VarList -> VarList -> VarList
+vl1 `intsctL` vl2 = intersectBy dgEq vl1 vl2
+\end{code}
+
 
 \newpage
 \subsection{Ensuring \texttt{VarTable} Acyclicity}

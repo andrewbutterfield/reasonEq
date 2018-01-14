@@ -37,7 +37,7 @@ module Variables
  , isPreGenVar, isObsGVar, isExprGVar, isPredGVar
  , whatGVar, timeGVar
  , VarList
- , idsOf, stdVarsOf, listVarsOf
+ , varOf, idsOf, stdVarsOf, listVarsOf
  , VarSet, stdVarSetOf, listVarSetOf
  , isPreVarSet
  , liftLess
@@ -325,6 +325,9 @@ Some useful predicates/functions:
 \begin{code}
 isStdV (StdVar _)  =  True ;  isStdV _  =  False
 isLstV (LstVar _)  =  True ;  isLstV _  =  False
+
+varOf :: ListVar -> Variable
+varOf (LV (v,_,_)) = v
 
 idsOf :: VarList -> ([Identifier],[Identifier])
 idsOf vl =  idsOf' [] [] vl

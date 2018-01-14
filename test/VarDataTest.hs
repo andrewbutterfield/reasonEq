@@ -52,8 +52,10 @@ gv = StdVar v; ge = StdVar e; gp = StdVar p
 
 aKC v t    =  fromJust . addKnownConst   v  t
 aKV v t    =  fromJust . addKnownVar     v  t
-aKL lv vl  =  fromJust . addKnownVarList lv vl
-aKS lv vs  =  fromJust . addKnownVarSet  lv vs
+aKL lv vl  =  fromJust . addKnownVarList (varOf lv) vl
+aKS lv vs  =  fromJust . addKnownVarSet  (varOf lv) vs
+
+vlu = varOf lu
 
 tst_vardata_inserts -- not run as standard regression
 -- because some tests are meant to fail
@@ -69,19 +71,19 @@ tst_vardata_inserts -- not run as standard regression
            @?= [(i,KnownVar ArbType),(j,KnownConst ti)] )
      , testCase "aKL: lu ^= [glu] fails"
          ( dtList (aKL lu [glu] newVarTable)
-           @?= [(lu,KnownVarList [glu] [] 0)] )
+           @?= [(vlu,KnownVarList [glu] [] 0)] )
      , testCase "aKL: lu ^= [gi] fails"
          ( dtList (aKL lu [gi] newVarTable)
-           @?= [(lu,KnownVarList [gi] [] 0)] )
+           @?= [(vlu,KnownVarList [gi] [] 0)] )
      , testCase "aKL: lu ^= [gv] fails"
          ( dtList (aKL lu [gv] newVarTable)
-           @?= [(lu,KnownVarList [gv] [] 0)] )
+           @?= [(vlu,KnownVarList [gv] [] 0)] )
      , testCase "aKL.aKV: i : tau, then lu ^= [gi] fails"
          ( dtList (aKL lu [gi] $ aKV i ArbType newVarTable)
-           @?= [(lu,KnownVarList [gi] [] 0)] )
+           @?= [(vlu,KnownVarList [gi] [] 0)] )
      , testCase "dtList.aKL.aKV: v : tau, then lu ^= [gv] succeeds"
          ( dtList (aKL lu [gv] $ aKV v ArbType newVarTable)
-           @?= [(lu,KnownVarList [gv] [] 0)] )
+           @?= [(vlu,KnownVarList [gv] [] 0)] )
      , testCase "vtList.aKL.aKV: v : tau, then lu ^= [gv] succeeds"
          ( vtList (aKL lu [gv] $ aKV v ArbType newVarTable)
            @?= [(v,KnownVar ArbType)] )
@@ -194,66 +196,74 @@ iltVarData
     aKV len ArbType $ aKV pT ArbType $
     aKL ll [] $ aKS ls S.empty  newVarTable
 
+vle = varOf le
+vlP = varOf lP
+vlv = varOf lv
+vll = varOf ll
+vls = varOf ls
+vlf = varOf lf
+vlx = varOf lx
+
 tst_addKnownListVar
  = testGroup "addKnownVarList/Set"
      [ -- inconsistent classifications
        testCase "lu |-> <lv'>, inconsistent!"
-       ( addKnownVarList lu [glv'] newVarTable @?= Nothing )
+       ( addKnownVarList vlu [glv'] newVarTable @?= Nothing )
      , testCase "lu |-> <le>, inconsistent!"
-       ( addKnownVarList lu [gle]  newVarTable @?= Nothing )
+       ( addKnownVarList vlu [gle]  newVarTable @?= Nothing )
      , testCase "le |-> <lu>, inconsistent!"
-        ( addKnownVarList le [glu] newVarTable @?= Nothing )
+        ( addKnownVarList vle [glu] newVarTable @?= Nothing )
      , testCase "lP |-> <le>, inconsistent!"
-        ( addKnownVarList lP [gle] newVarTable @?= Nothing )
+        ( addKnownVarList vlP [gle] newVarTable @?= Nothing )
      -- some map to ... the other
      , testCase "lv |-> <ls>, set and list!"
-        ( addKnownVarList lv [gls] iltVarData @?= Nothing )
+        ( addKnownVarList vlv [gls] iltVarData @?= Nothing )
      , testCase "lv |-> {ll}, set and list!"
-        ( addKnownVarSet lv (sngl gll) iltVarData @?= Nothing )
+        ( addKnownVarSet vlv (sngl gll) iltVarData @?= Nothing )
      , testCase "lv |-> <ll,ls>, set and list!"
-        ( addKnownVarList lv [gll,gls] iltVarData @?= Nothing )
+        ( addKnownVarList vlv [gll,gls] iltVarData @?= Nothing )
      -- list-variable cycle
      , testCase "ll |-> <ll>, cycle!"
-        ( addKnownVarList ll [gll] iltVarData @?= Nothing )
+        ( addKnownVarList vll [gll] iltVarData @?= Nothing )
      , testCase "ls |-> {ls}, cycle!"
-        ( addKnownVarSet ls (sngl gls) iltVarData @?= Nothing )
+        ( addKnownVarSet vls (sngl gls) iltVarData @?= Nothing )
      -- range list contains unknown variables
      , testCase "lv |-> [lw], unknowns!"
-        ( addKnownVarList lv [glw] iltVarData @?= Nothing )
+        ( addKnownVarList vlv [glw] iltVarData @?= Nothing )
      -- trying to update entry
      , testCase "lf |-> [len,len], update!"
-        ( addKnownVarList lf [StdVar len,StdVar len] iltVarData @?= Nothing )
+        ( addKnownVarList vlf [StdVar len,StdVar len] iltVarData @?= Nothing )
      -- successful entries
      , testCase "lu |-> [], succeeds"
         ( dtList (aKL lu [] iltVarData)
-         @?= [(ll,KnownVarList [] [] 0)
-             ,(ls,KnownVarSet S.empty S.empty 0)
-             ,(lu,KnownVarList [] [] 0)] )
+         @?= [(vll,KnownVarList [] [] 0)
+             ,(vls,KnownVarSet S.empty S.empty 0)
+             ,(vlu,KnownVarList [] [] 0)] )
      , testCase "lx |-> [], succeeds"
         ( stList (aKL lx [] iltVarData)
-         @?= [ (lf,KnownVarList [StdVar len] [] 0)
-             , (lx,KnownVarList [] [] 0) ] )
+         @?= [ (vlf,KnownVarList [StdVar len] [] 0)
+             , (vlx,KnownVarList [] [] 0) ] )
      , testCase "lx |-> [i,j], succeeds"
         ( stList (aKL lx [gi,gj] iltVarData)
-         @?= [ (lf,KnownVarList [StdVar len] [] 0)
-             , (lx,KnownVarList [gi,gj] [] 0)] )
+         @?= [ (vlf,KnownVarList [StdVar len] [] 0)
+             , (vlx,KnownVarList [gi,gj] [] 0)] )
      , testCase "lx |-> {i,j}, succeeds"
         ( stList (aKS lx (S.fromList [gi,gj]) iltVarData)
-         @?= [ (lf,KnownVarList [StdVar len] [] 0)
-             , (lx,KnownVarSet (S.fromList [gi,gj]) S.empty 0)] )
+         @?= [ (vlf,KnownVarList [StdVar len] [] 0)
+             , (vlx,KnownVarSet (S.fromList [gi,gj]) S.empty 0)] )
      ]
 
-lulvTable = fromJust $ addKnownVarList lu [glv]             newVarTable
-lulwTable = fromJust $ addKnownVarSet  lu (S.singleton glw) newVarTable
+lulvTable = fromJust $ addKnownVarList vlu [glv]             newVarTable
+lulwTable = fromJust $ addKnownVarSet  vlu (S.singleton glw) newVarTable
 
 tst_lookupLVarTable
  = testGroup "lookupLVarTable"
      [ testCase "lu in empty table, should be UnknownListVar"
-       ( lookupLVarTable newVarTable lu @?= UnknownListVar )
+       ( lookupLVarTable newVarTable vlu @?= UnknownListVar )
      , testCase "ll in iltVarData, should be []"
-       ( lookupLVarTable iltVarData ll @?= KnownVarList [] [] 0)
+       ( lookupLVarTable iltVarData vll @?= KnownVarList [] [] 0)
      , testCase "ls in iltVarData, should be {}"
-       ( lookupLVarTable iltVarData ls @?= KnownVarSet S.empty S.empty 0)
+       ( lookupLVarTable iltVarData vls @?= KnownVarSet S.empty S.empty 0)
      ]
 
 

@@ -887,7 +887,7 @@ For now, we take $N=2$.
 -- not null vlC
 -- !!! currently ignoring 'less' part of lvP !!!
 vlFreeMatch vts bind cbvs pbvs vlC (gvP@(LstVar lvP):vlP)
-  = case lookupLVarTables vts lvP of
+  = case lookupLVarTables vts (varOf lvP) of
      KnownVarList vlK _ _
        -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs vlC vlK gvP
              vlFreeMatch vts bind' cbvs pbvs vlC' vlP
@@ -905,7 +905,7 @@ vlFreeMatch vts bind cbvs pbvs vlC (gvP@(LstVar lvP):vlP)
 \begin{code}
 canMatchNullList :: [VarTable] -> ListVar -> Bool
 canMatchNullList vts lv
-  = case lookupLVarTables vts lv of
+  = case lookupLVarTables vts (varOf lv) of
       KnownVarList vl _ _ ->  null vl
       _                   ->  True
 \end{code}
@@ -983,7 +983,7 @@ We keep expanding variables known as lists of (other) variables.
 \begin{code}
 expandKnownList :: Monad m => [VarTable] -> GenVar -> m VarList
 expandKnownList vts gv@(LstVar lv)
-  = case lookupLVarTables vts lv of
+  = case lookupLVarTables vts (varOf lv) of
       KnownVarList kvl _ _ ->  expandKnownLists vts kvl
       UnknownListVar       ->  return [gv]
       _                    ->  fail "expandKnownList: found variable-sets!"
@@ -1130,7 +1130,7 @@ bindLVarSetToNull _ _ (_:_) = fail "bindLVarSetToNull: std. variables not allowe
 \begin{code}
 canMatchNullSet :: [VarTable] -> ListVar -> Bool
 canMatchNullSet vts lv
-  = case lookupLVarTables vts lv of
+  = case lookupLVarTables vts (varOf lv) of
       KnownVarSet vs _ _  ->  S.null vs
       _                   ->  True
 \end{code}
@@ -1302,7 +1302,7 @@ Here we also try some non-deterministic matching, also with $N=2$.
 \begin{code}
 --vsFreeLstMatch vts bind cbvs pbvs vsC lvsP -- vsC, lvsP not null
   | otherwise
-    = case lookupLVarTables vts lvP of
+    = case lookupLVarTables vts (varOf lvP) of
        KnownVarSet vsK _ _
         -> do (bind',vsC') <- vsKnownMatch vts bind cbvs pbvs vsC vsK gvP
               vsFreeLstMatch vts bind' cbvs pbvs vsC' lvsP'
@@ -1357,7 +1357,7 @@ expandKnownSet vts gv@(StdVar v)
       _                      ->  return $ S.singleton gv
 
 expandKnownSet vts gv@(LstVar lv)
-  = case lookupLVarTables vts lv of
+  = case lookupLVarTables vts (varOf lv) of
       KnownVarSet kvs _ _  ->  expandKnownSets vts kvs
       UnknownListVar   ->  return $ S.singleton gv
       _                ->  fail "expandKnownSet: found variable-lists!"

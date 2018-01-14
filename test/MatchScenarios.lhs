@@ -93,10 +93,10 @@ vwrap = map StdVar ;  vswrap = S.fromList . vwrap
 lwrap = map LstVar ;  lswrap = S.fromList . lwrap
 v  ^=   t  =  fromJust . addKnownConst   v  t
 v  .:.  t  =  fromJust . addKnownVar     v  t
-lv ->> vl  =  fromJust . addKnownVarList lv (lwrap vl)
-lv -.> vl  =  fromJust . addKnownVarList lv (vwrap vl)
-lv -~> vs  =  fromJust . addKnownVarSet  lv (vswrap vs)
-lv ~~> vs  =  fromJust . addKnownVarSet  lv (lswrap vs)
+lv ->> vl  =  fromJust . addKnownVarList (varOf lv) (lwrap vl)
+lv -.> vl  =  fromJust . addKnownVarList (varOf lv) (vwrap vl)
+lv -~> vs  =  fromJust . addKnownVarSet  (varOf lv) (vswrap vs)
+lv ~~> vs  =  fromJust . addKnownVarSet  (varOf lv) (lswrap vs)
 \end{code}
 
 \subsubsection{Pre-defined Types}

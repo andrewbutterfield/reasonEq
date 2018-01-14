@@ -179,9 +179,9 @@ trVarTable vt
            , trAssoc trVTLV $ dtList vt
            ]
 
-trVTVV (v,vmr)    =  trVar  v  ++ trVarMatchRole    vmr
+trVTVV (v,vmr)   =  trVar v ++ trVarMatchRole    vmr
 
-trVTLV (lv,lvmr)  =  trLVar lv ++ trLstVarMatchRole lvmr
+trVTLV (v,lvmr)  =  trVar v ++ trLstVarMatchRole lvmr
 \end{code}
 
 \newpage

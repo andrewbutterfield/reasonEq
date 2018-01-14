@@ -219,13 +219,12 @@ We will want to inspect tables.
 \begin{code}
 vtList :: VarTable -> [(Variable,VarMatchRole)]
 vtList (VD (vtable, _, _)) = M.toList vtable
-stList :: VarTable -> [(ListVar,LstVarMatchRole)]
+stList :: VarTable -> [(Variable,LstVarMatchRole)]
 stList (VD (_, stable, _)) = M.toList stable
-dtList :: VarTable -> [(ListVar,LstVarMatchRole)]
+dtList :: VarTable -> [(Variable,LstVarMatchRole)]
 dtList (VD (_, _, dtable)) = map dtMap $ M.toList dtable
 
-dtMap ((i,vc),dlvr) = ( LVbl (Vbl i vc Before) [] []
-                      , mapDLVRtoLVMR vc Before dlvr )
+dtMap ((i,vc),dlvr) = ( Vbl i vc Before, mapDLVRtoLVMR vc Before dlvr )
 \end{code}
 
 
@@ -247,8 +246,8 @@ must already be known.
 inside :: Term -> VarTable -> Bool
 t `inside` vt  =  all (found vt) $ freeVars t
 
-found vt (StdVar v)   =  lookupVarTable vt v /= UV
-found vt (LstVar lv)  =  lookupLVarTable vt lv /= UL
+found vt (StdVar v)             =  lookupVarTable vt v /= UV
+found vt (LstVar (LVbl v _ _))  =  lookupLVarTable vt v /= UL
 
 knownIn :: VarList -> VarTable -> Bool
 vl `knownIn` vt = all (found vt) vl
@@ -339,7 +338,8 @@ checkVariableList
   -> m ( [Variable] -- the full expansion
        , Int )      -- length of full expansion
 
-checkVariableList lv@(LVbl (Vbl)) setsOK vl = cVL lv setsOK [] 0 vl
+checkVariableList lv@(Vbl i vc vw) setsOK vl = cVL vc vw setsOK [] 0 vl
+cVL vc vw setsOK srav len vl = fail "checkVariableList: NYI"
 \end{code}
 
 \subsubsection{Inserting Known Variable-List}
@@ -351,7 +351,7 @@ addKnownVarList :: Monad m => Variable -> VarList -> VarTable -> m VarTable
 Static List variables match lists of known variables
 of the same class as themselves.
 \begin{code}
-addKnownVarList lv@(LVbl (Vbl _ _ Static) _ _) vl vt@(VD (vtable,stable,dtable))
+addKnownVarList lv@(Vbl _ _ Static) vl vt@(VD (vtable,stable,dtable))
  | mixed          =  fail "addKnownVarList: inconsistent classifications."
  | ct == CTmixed  =  fail "addKnownVarList(Static): some map to sets."
  | lv `S.member` img
@@ -367,7 +367,8 @@ addKnownVarList lv@(LVbl (Vbl _ _ Static) _ _) vl vt@(VD (vtable,stable,dtable))
       _ -> fail "addKnownVarList(Static): trying to update, or unknown vars in list."
  where
   mixed       =  checkLVarListMap lv vl
-  ( ct, img ) =  rtLstImage stable CTlist (S.fromList $ listVarsOf vl)
+  ( ct, img ) =  rtLstImage stable CTlist
+                                        (S.fromList $ map varOf $ listVarsOf vl)
 \end{code}
 
 Dynamic list-variables
@@ -375,7 +376,7 @@ can only be defined as equal to a list of general variables,
 with the same class and appropriate temporality.
 We also need to check to avoid cycles, or a crossover to variable-sets.
 \begin{code}
-addKnownVarList lv@(LVbl (Vbl i vc vw) _ _) vl vt@(VD (vtable,stable,dtable))
+addKnownVarList lv@(Vbl i vc vw) vl vt@(VD (vtable,stable,dtable))
  | mixed = fail  "addKnownVarList (dynamic): inconsistent classifications."
  | ct == CTmixed
      = fail "addKnownVarList(dynamic): some map to sets."
@@ -400,11 +401,11 @@ addKnownVarList lv@(LVbl (Vbl i vc vw) _ _) vl vt@(VD (vtable,stable,dtable))
 A list-variable can only map to variables with the same \texttt{VarClass} value,
 and, if not \texttt{Static}, the same \texttt{VarWhen} value:
 \begin{code}
-checkLVarListMap lv [] = False
-checkLVarListMap lv vl
-  = [whatLVar lv] /= nub (map whatGVar vl)
+checkLVarListMap v [] = False
+checkLVarListMap v vl
+  = [whatVar v] /= nub (map whatGVar vl)
       || (vtime /= Static && [vtime] /= nub (map timeGVar vl))
-  where vtime = timeLVar lv
+  where vtime = timeVar v
 \end{code}
 
 \begin{code}
@@ -424,7 +425,7 @@ addKnownVarSet :: Monad m => Variable -> VarSet -> VarTable -> m VarTable
 See Variable-List insertion above.
 
 \begin{code}
-addKnownVarSet lv@(LVbl (Vbl i vc Static) _ _) vs vt@(VD (vtable,stable,dtable))
+addKnownVarSet lv@(Vbl i vc Static) vs vt@(VD (vtable,stable,dtable))
  | mixed = fail "addKnownVarSet(static): inconsistent classifications."
  | ct == CTmixed
      = fail "addKnownVarSet(Static): some map to lists."
@@ -441,12 +442,12 @@ addKnownVarSet lv@(LVbl (Vbl i vc Static) _ _) vs vt@(VD (vtable,stable,dtable))
       _ -> fail "addKnownVarSet(Static): trying to update, or unknown vars in list."
  where
    mixed        =  checkLVarSetMap lv vs
-   ( ct, img )  =  rtLstImage stable CTset (listVarSetOf vs)
+   ( ct, img )  =  rtLstImage stable CTset (S.map varOf $ listVarSetOf vs)
    vl = S.toList vs
 \end{code}
 
 \begin{code}
-addKnownVarSet lv@(LVbl (Vbl i vc vw) _ _) vs vt@(VD (vtable,stable,dtable))
+addKnownVarSet lv@(Vbl i vc vw) vs vt@(VD (vtable,stable,dtable))
   | mixed = fail "addKnownVarSet (dynamic): inconsistent classifications."
   | ct == CTmixed
       = fail $ unlines
@@ -483,10 +484,10 @@ addKnownVarSet lv@(LVbl (Vbl i vc vw) _ _) vs vt@(VD (vtable,stable,dtable))
 \begin{code}
 checkLVarSetMap lv vs
   = not (S.null vs)
-    && ( (S.singleton $ whatLVar lv) /= S.map whatGVar vs
+    && ( (S.singleton $ whatVar lv) /= S.map whatGVar vs
          ||
          (vtime /= Static && (S.singleton $ vtime) /= S.map timeGVar vs) )
-  where vtime = timeLVar lv
+  where vtime = timeVar lv
 \end{code}
 
 \subsubsection{Inserting Abstract Variable-List}
@@ -494,12 +495,12 @@ checkLVarSetMap lv vs
 \begin{code}
 addAbstractVarList :: Monad m => Variable -> VarTable -> m VarTable
 
-addAbstractVarList lv@(LVbl (Vbl _ _ Static) _ _) (VD (vtable,stable,dtable))
+addAbstractVarList lv@(Vbl _ _ Static) (VD (vtable,stable,dtable))
  = case M.lookup lv stable of
      Nothing -> return $ VD(vtable,M.insert lv AL stable,dtable)
      _ -> fail "addAbstractVarList(Static): already present"
 
-addAbstractVarList lv@(LVbl (Vbl i vc vw) _ _) (VD (vtable,stable,dtable))
+addAbstractVarList lv@(Vbl i vc vw) (VD (vtable,stable,dtable))
  = case M.lookup (i,vc) dtable of
      Nothing -> return $ VD(vtable,stable,M.insert (i,vc) DAL dtable)
      _ -> fail "addAbstractVarList(dynamic): already present"
@@ -510,12 +511,12 @@ addAbstractVarList lv@(LVbl (Vbl i vc vw) _ _) (VD (vtable,stable,dtable))
 \begin{code}
 addAbstractVarSet :: Monad m => Variable -> VarTable -> m VarTable
 
-addAbstractVarSet lv@(LVbl (Vbl _ _ Static) _ _) (VD (vtable,stable,dtable))
+addAbstractVarSet lv@(Vbl _ _ Static) (VD (vtable,stable,dtable))
  = case M.lookup lv stable of
      Nothing -> return $ VD(vtable,M.insert lv AS stable,dtable)
      _ -> fail "addAbstractVarSet(Static): already present"
 
-addAbstractVarSe lv@(LVbl (Vbl i vc vw) _ _) (VD (vtable,stable,dtable))
+addAbstractVarSe lv@(Vbl i vc vw) (VD (vtable,stable,dtable))
  = case M.lookup (i,vc) dtable of
      Nothing -> return $ VD(vtable,stable,M.insert (i,vc) DAS dtable)
      _ -> fail "addAbstractVarSet(dynamic): already present"
@@ -544,14 +545,14 @@ For list-variables we need to distinguish between
 those whose temporality is \texttt{During},
 and the others.
 \begin{code}
-lookupLVarTable :: VarTable -> ListVar -> LstVarMatchRole
+lookupLVarTable :: VarTable -> Variable -> LstVarMatchRole
 
-lookupLVarTable (VD (_,stable,_)) lvar@(LVbl (Vbl _ _ Static) _ _)
+lookupLVarTable (VD (_,stable,_)) lvar@(Vbl _ _ Static)
  = case M.lookup lvar stable of
      Nothing    ->  UL
      Just lvmr  ->  lvmr
 
-lookupLVarTable (VD (_,_,dtable)) lvar@(LVbl (Vbl i vc vw) _ _)
+lookupLVarTable (VD (_,_,dtable)) lvar@(Vbl i vc vw)
  = case M.lookup (i,vc) dtable of
      Nothing    ->  UL
      Just dlvr  ->  mapDLVRtoLVMR vc vw dlvr
@@ -572,7 +573,7 @@ lookupVarTables (vt:vts) v
 
 Again, we want to be able to search lists of tables.
 \begin{code}
-lookupLVarTables :: [VarTable] -> ListVar -> LstVarMatchRole
+lookupLVarTables :: [VarTable] -> Variable -> LstVarMatchRole
 lookupLVarTables [] _ = UL
 lookupLVarTables (vt:vts) lv
  = case lookupLVarTable vt lv of
@@ -696,15 +697,15 @@ We keep track of chain types when computing relation images (next).
 
 Reflexive, transitive relational image:
 \begin{code}
-rtLstImage :: Map ListVar LstVarMatchRole -> CT -> Set ListVar
-           -> ( CT, Set ListVar )
+rtLstImage :: Map Variable LstVarMatchRole -> CT -> Set Variable
+           -> ( CT, Set Variable )
 rtLstImage stable ct lvs = untilEq (rrLstImage stable) (ct, lvs)
 \end{code}
 
 Reflexive relation image:
 \begin{code}
-rrLstImage :: Map ListVar LstVarMatchRole -> ( CT, Set ListVar )
-           -> ( CT, Set ListVar )
+rrLstImage :: Map Variable LstVarMatchRole -> ( CT, Set Variable )
+           -> ( CT, Set Variable )
 rrLstImage stable (ct, lvs)
    = ( mixes (ct:cts), S.unions (lvs:imgs) )
   where
@@ -715,8 +716,8 @@ Looking up the \texttt{ListVar -> VarList} fragment of a \texttt{VarTable}:
 \begin{code}
 lstVVlkp stable lv
  = case M.lookup lv stable of
-    Just (KL gvl _ _)  ->  ( CTlist, S.fromList $ listVarsOf gvl )
-    Just (KS gvs _ _)  ->  ( CTset,  listVarSetOf gvs )
+    Just (KL gvl _ _)  ->  ( CTlist, S.fromList $ map varOf $ listVarsOf gvl )
+    Just (KS gvs _ _)  ->  ( CTset,  S.map varOf $ listVarSetOf gvs )
     _                  ->  ( CTunknown, S.empty )
 \end{code}
 

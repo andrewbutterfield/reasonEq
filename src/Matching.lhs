@@ -1,6 +1,6 @@
 \section{Matching}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2017
+Copyright  Andrew Buttefield (c) 2017-18
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -818,14 +818,14 @@ for some fixed $N$.
 For now, we take $N=2$.
 \begin{code}
 -- not null vlC
--- !!! currently ignoring 'less' part of lvP !!!
 vlFreeMatch vts bind cbvs pbvs vlC (gvP@(LstVar lvP):vlP)
   = case lookupLVarTables vts (varOf lvP) of
-     KnownVarList vlK _ _
-       -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs vlC vlK gvP
+     KnownVarList vlK vlX xLen
+       -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs vlC vlK vlX xLen gvP
              vlFreeMatch vts bind' cbvs pbvs vlC' vlP
-     KnownVarSet vsK _ _
-       -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs vlC (S.toList vsK) gvP
+     KnownVarSet vsK vsX xSize
+       -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs vlC
+                                  (S.toList vsK) (S.toList vsX) xSize gvP
              vlFreeMatch vts bind' cbvs pbvs vlC' vlP
      _
        -> vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 0
@@ -846,9 +846,9 @@ canMatchNullList vts lv
 First we handle simple cases:
 \begin{code}
 -- not null vlC
-vlKnownMatch vts bind cbvs pbvs vlC vlK
+vlKnownMatch vts bind cbvs pbvs vlC vlK vlX xLen
                  gvP@(LstVar lvP@(LVbl (Vbl i vc vw) is js)) -- ListVar !
- | gvP == head vlC
+ | gvP == head vlC -- covers lvP known to be Abstract
     = do bind' <- bindLVarToVList lvP [gvP] bind
          return (bind',tail vlC)
  | vlK `isPrefixOf` vlC
@@ -856,11 +856,9 @@ vlKnownMatch vts bind cbvs pbvs vlC vlK
          return (bind',vlC \\ vlK)
 \end{code}
 
-Here we have a list-variable \texttt{lvP} that is known to expand as \texttt{vlK}.
-Now, \texttt{vlK} may also contain known variables.
-Simlarly, so might the relevant prefix of \texttt{vlC}.
-We need to expand \texttt{vlK} so the result \texttt{vlKx} contains no known variables.
-We can then try to match incrementally along \texttt{vlC},
+Here we have a list-variable \texttt{lvP} that is defined to be \texttt{vlK},
+any will expand to a list of variables \texttt{vlX} of length \texttt{xLen}.
+We can now try to match incrementally along \texttt{vlC},
 fully expanding known candidate variables as we go along.
 If this succeeds, we return a binding between the original \texttt{lvP}
 and the corresponding prefix of the orignal \texttt{vlC},
@@ -872,11 +870,22 @@ We need to compare expansions
 of both \texttt{vlC} and \texttt{vlK} to see what is missing from the
 former, and attempt to match the missing variables against the subtracted
 identifiers.
+
+We guide the process by keeping track of how many variables we expect to match.
+The size of the list-variable underyling the known-pattern is \texttt{xLen}.
+Subtract one for every element of \texttt{is} to get an upper bound.
+It is exact if \texttt{js} is empty, otherwise we have to allow for them
+denoting more variables that have been subtracted.
+Depending on what we know about the \texttt{js},
+this revised bound can be precise, or vague --- as low as zero.
+Given such a bound, we now simply pull general variables
+off the head of the candidate list as long as their accumulated
+length fits within the bounds.
 \begin{code}
+-- vlKnownMatch vts bind cbvs pbvs vlC vlK vlX xLen
  | otherwise
-    = do vlKx <- expandKnownLists vts vlK
-         vlCx <- expandKnownLists vts vlC
-         let missing = vlKx \\ vlCx
+    = do (varsCx,cLen) <- expandKnownList vts vlC
+         let missing = vlX \\ vlCx
          let vsKm = S.fromList missing
          let vsL = S.fromList $ liftLess lvP
          bind' <- vsMatch vts bind cbvs pbvs vsKm vsL
@@ -914,19 +923,14 @@ unkUknVLMatch gvCx vlKx
 
 We keep expanding variables known as lists of (other) variables.
 \begin{code}
-expandKnownList :: Monad m => [VarTable] -> GenVar -> m VarList
+expandKnownList :: Monad m => [VarTable] -> GenVar -> m ([Variable],Int)
 expandKnownList vts gv@(LstVar lv)
   = case lookupLVarTables vts (varOf lv) of
-      KnownVarList kvl _ _ ->  expandKnownLists vts kvl
-      UnknownListVar       ->  return [gv]
-      _                    ->  fail "expandKnownList: found variable-sets!"
+      KnownVarList _ kX kLen  ->  return (kX kLen)
+      UnknownListVar          ->  fail "expandKnownList: not known!"
+      _                       ->  fail "expandKnownList: found variable-sets!"
 expandKnownList vts gv@(StdVar v)
-  = case lookupVarTables vts v of
-      KnownConst (Var _ kc)  ->  expandKnownList vts $ StdVar kc
-      _                      ->  return [gv]
-
-expandKnownLists :: Monad m => [VarTable] -> VarList -> m VarList
-expandKnownLists vts vl = fmap concat $ sequence $ map (expandKnownList vts) vl
+                               =  return ([v],1)
 \end{code}
 
 

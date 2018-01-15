@@ -1,20 +1,13 @@
-vsMatch [vtS_Design] emptyBinding S.empty S.empty (vswrap [x,y,z]) (vswrap [vu] `S.union` lswrap [lS `less` ([u],[])])
+vlMatch [vtL_Design] emptyBinding S.empty S.empty (vwrap [y,z,x]) (lwrap [lSu] ++ vwrap [vu])
 
-vsMatch [vtS_Design] emptyBinding S.empty S.empty
-    (vswrap [x,y,z])
-    (vswrap [vu] `S.union` lswrap [lS `less` ([u],[])])
+vtL_Design
 =
-*MatchScenarios> vsMatch [vtS_Design] emptyBinding S.empty S.empty (vswrap [x,y,z]) (vswrap [vu] `S.union` lswrap [lS `less` ([u],[])])
+{ ok : 𝔹, ok' : 𝔹, x : ℤ, x' : ℤ, y : ℤ, y' : ℤ, z : ℤ, z' : ℤ }
+{  }
+{ M ≜ ⟨ok⟩, O ≜ ⟨M̅,S̅⟩, S ≜ ⟨x,y,z⟩ }
 
-vsKM.vsC = {y,z}
-
-vsKM.gvP = S\u
-
-*** Exception: user error (vsMatch: some pattern var-set is not in candidate.
-
-vsKx = [x,y,z]
-
-vsCx = [y,z]
-)
+vlMatch [vtL_Design] emptyBinding S.empty S.empty
+    (vwrap [y,z,x]) (lwrap [lSu] ++ vwrap [vu])
+=
 
 --

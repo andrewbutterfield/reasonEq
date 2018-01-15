@@ -27,6 +27,7 @@ module VarData ( VarMatchRole
                , withinS -- , within, inside
                , removeS -- , remove
                , intsctS -- , intsct
+               , expandKnown
                ) where
 --import Data.Maybe (fromJust)
 import Data.Map (Map)
@@ -624,4 +625,54 @@ vs1 `intsctS` vs2 = S.fromList (S.toList vs1 `intsctL` S.toList vs2)
 
 intsctL :: VarList -> VarList -> VarList
 vl1 `intsctL` vl2 = intersectBy dgEq vl1 vl2
+\end{code}
+
+
+\newpage
+\subsection{Evaluating Known List-Variables}
+
+If a list variable $\lst K$ is ``known'' in a \texttt{VarTable},
+then we can obtain it's complete pure variable expansion.
+Given one with associated subtracted identifiers ($\lst K\less{is;js}$)
+we can derive some further information
+regarding what part of that expansion remains:
+\begin{description}
+  \item[Subtracted variables ($is$)]
+    If known, then they can be removed from the complete expansion.
+    Otherwise, we know that one (arbitrary?) variable can be removed
+    from that expansion.
+  \item[Subtracted list-variables ($js$)]
+     If known, their expansions can be removed.
+     Otherwise, zero or more variables can be removed from the expansion
+     of $\lst K$.
+\end{description}
+Here, we treat a list-variable,
+that has variables subtracted from it that are not part of its expansion,
+as being erroneous.
+\begin{code}
+expandKnown :: Monad m
+            => [VarTable] -> ListVar
+            -> m ( LstVarMatchRole
+                 , [Identifier]   -- remaining unknown is components
+                 , [Identifier] ) -- remaining unknown js components
+
+expandKnown vts lv@(LVbl v@(Vbl i vc vw) is js)
+ = case lookupLVarTables vts v of
+     KL kvl expL eLen -> listRemove kvl (expandLess is js) expL eLen
+     KS kvs expS eSiz -> setRemove  kvs (expandLess is js) expS eSiz
+     _ -> fail "expandKnown: not concretely known."
+\end{code}
+
+We return three lists: the known variables to be removed,
+plus the is and js that are not known.
+\begin{code}
+expandLess is js = error "expandLess: NYI"
+\end{code}
+
+\begin{code}
+listRemove kvl _ expL eLen = error "listRemove: NYI"
+\end{code}
+
+\begin{code}
+setRemove  kvs _ expS eSiz = error "setRemove: NYI"
 \end{code}

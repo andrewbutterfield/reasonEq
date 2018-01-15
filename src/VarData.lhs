@@ -239,23 +239,13 @@ newVarTable :: VarTable
 newVarTable = VD (M.empty, M.empty, M.empty)
 \end{code}
 
+As a general principle,
+we only support the addition of new entries for now.
+Updating in general involves more complicated checks
+and will be added if required.
 
 \newpage
 \subsection{Inserting Variable Entries}
-
-We place restrictions on which entries can be updated.
-One important one is that all free variables in a term
-must already be known.
-\begin{code}
-inside :: Term -> VarTable -> Bool
-t `inside` vt  =  all (found vt) $ freeVars t
-
-found vt (StdVar v)             =  lookupVarTable vt v /= UV
-found vt (LstVar (LVbl v _ _))  =  lookupLVarTable vt v /= UL
-
-knownIn :: VarList -> VarTable -> Bool
-vl `knownIn` vt = all (found vt) vl
-\end{code}
 
 
 \subsubsection{Inserting Known Constant}
@@ -263,19 +253,28 @@ vl `knownIn` vt = all (found vt) vl
 \begin{code}
 addKnownConst :: Monad m => Variable -> Term -> VarTable -> m VarTable
 \end{code}
-We can only update mappings to unknown variables.
+
+When adding a term entry
+we require that all free variables in a term
+must already be ``known'' in the table.
+\begin{code}
+absent vt (StdVar v)             =  lookupVarTable vt v == UV
+absent vt (LstVar (LVbl v _ _))  =  lookupLVarTable vt v == UL
+\end{code}
 
 Only static variables may name a constant,
 and we must check that we won't introduce any cycles.
 \begin{code}
 addKnownConst var@(Vbl _ _ Static) trm vt@(VD (vtable,stable,dtable))
-  -- |  var `in` trm = fail "cycles not allowed"
-  = case M.lookup var vtable of
-      Nothing | trm `inside` vt
-        -> return $ VD ( M.insert var (KC trm) vtable,stable,dtable )
-      Just UV | trm `inside` vt
-        -> return $ VD ( M.insert var (KC trm) vtable,stable,dtable )
-      _ -> fail "addKnownConst: trying to update, or unknown vars in term."
+  | StdVar var `S.member` freev  =  fail "addKnownConst: variable in term."
+  | any (absent vt) freev        =  fail "addKnownConst: term has unknowns."
+  | otherwise
+    = case M.lookup var vtable of
+        Nothing  ->  return $ VD ( M.insert var (KC trm) vtable,stable,dtable )
+        Just UV  ->  return $ VD ( M.insert var (KC trm) vtable,stable,dtable )
+        _ -> fail "addKnownConst: cannot update."
+  where
+     freev = freeVars trm
 
 addKnownConst _ _ _ = fail "addKnownConst: not for Dynamic Variables."
 \end{code}
@@ -289,10 +288,17 @@ addKnownVar :: Monad m => Variable -> Type -> VarTable -> m VarTable
 
 Only static, textual and before/after variables can
 range over values of a given type.
+We also note that just because a textual, before or after variable
+is added,
+this does not mean that we automatically induce its temporal counterparts.
+So adding $x:T$ (before) does mean that we have also added $x':T$.
+This is in contrast to the treatment of list-variables,
+where such induction always occurs.
 \begin{code}
 addKnownVar (ObsVar _ (During _)) _ _
   =  fail "addKnownVar: not for During Variables."
 
+-- we allow updating here as it does not effect table integrity.
 addKnownVar var typ (VD (vtable,stable,dtable))
   =  return $ VD ( M.insert var (KV typ) vtable,stable,dtable )
 \end{code}
@@ -364,12 +370,13 @@ checkVariableList vt lv@(Vbl i vc0 vw0) setsOK vl
     | invalid vw  =  fail "checkVariableList: temporality mismatch"
     | otherwise
        = case lookupLVarTable vt v of
+           UL  ->  fail "checkVariableList: unknown list-variable"
            KL _ kvl klen  ->  chkVL invalid (reverse kvl++srav) (len+klen) vl
            AL             ->  chkVL invalid (v:srav)            (len+1)    vl
            KS _ kvs ksize | setsOK
                         ->  chkVL invalid (S.toList kvs++srav) (len+ksize) vl
            AS | setsOK  ->  chkVL invalid (v:srav)             (len+1)     vl
-           UL  ->  fail "checkVariableList: unknown list-variable"
+           _ -> fail "checkVariableList: sets not permitted."
 \end{code}
 
 \subsubsection{Inserting Known Variable-List}
@@ -382,23 +389,14 @@ Static List variables match lists of known variables
 of the same class as themselves.
 \begin{code}
 addKnownVarList lv@(Vbl _ _ Static) vl vt@(VD (vtable,stable,dtable))
- | mixed          =  fail "addKnownVarList: inconsistent classifications."
- | ct == CTmixed  =  fail "addKnownVarList(Static): some map to sets."
- | lv `S.member` img
-     = fail "addKnownVarSet(Static): list-variable cycle."
- | otherwise
-   = case M.lookup lv stable of
-      Nothing | vl `knownIn` vt
-                   -> return $ VD ( vtable, M.insert lv (KL vl [] 0) stable, dtable )
-      Just UL | vl `knownIn` vt
-                   -> return $ VD ( vtable, M.insert lv (KL vl [] 0) stable, dtable )
-      Just AL | vl `knownIn` vt
-                   -> return $ VD ( vtable, M.insert lv (KL vl [] 0) stable, dtable )
-      _ -> fail "addKnownVarList(Static): trying to update, or unknown vars in list."
+ = case M.lookup lv stable of
+    Nothing  ->  newSKVL lv vl vt
+    Just UL  ->  newSKVL lv vl vt
+    _        ->  fail "addKnownVarList(Static): trying to update."
  where
-  mixed       =  checkLVarListMap lv vl
-  ( ct, img ) =  rtLstImage stable CTlist
-                                        (S.fromList $ map varOf $ listVarsOf vl)
+   newSKVL lv vl vt@(VD (vtable,stable,dtable))
+    = do ( expanse, size ) <- checkVariableList vt lv False vl
+         return $ VD (vtable, M.insert lv (KL vl expanse size) stable, dtable)
 \end{code}
 
 Dynamic list-variables
@@ -407,24 +405,17 @@ with the same class and appropriate temporality.
 We also need to check to avoid cycles, or a crossover to variable-sets.
 \begin{code}
 addKnownVarList lv@(Vbl i vc vw) vl vt@(VD (vtable,stable,dtable))
- | mixed = fail  "addKnownVarList (dynamic): inconsistent classifications."
- | ct == CTmixed
-     = fail "addKnownVarList(dynamic): some map to sets."
- | (i,vc) `S.member` img
-      = fail "addKnownVarList(dynamic): list-variable cycle."
- | otherwise
-   = case M.lookup (i,vc) dtable of
-      Nothing | vl `knownIn` vt
-        -> return $ VD (vtable, stable, M.insert (i,vc) (DL is js [] 0) dtable)
-      Just UD | vl `knownIn` vt
-        -> return $ VD (vtable, stable, M.insert (i,vc) (DL is js [] 0) dtable)
-      Just DAL | vl `knownIn` vt
-        -> return $ VD (vtable, stable, M.insert (i,vc) (DL is js [] 0) dtable)
-      _ -> fail "addKnownVarList(dynamic): trying to update, or unknown vars in list."
+ = case M.lookup iac dtable of
+    Nothing  ->  newDKVL lv vl vt
+    Just UD  ->  newDKVL lv vl vt
+    _        ->  fail "addKnownVarList(dynamic): trying to update."
  where
-  mixed       =  checkLVarListMap lv vl
-  ( ct, img ) =  rtDynImage dtable CTlist (iacOf vl)
-  (is,js)     =  idsOf vl
+   iac = (i,vc)
+   newDKVL lv vl vt@(VD (vtable,stable,dtable))
+    = do ( expanse, size ) <- checkVariableList vt lv False vl
+         let (is,js) = idsOf vl
+         let xis = map varId expanse
+         return $ VD (vtable, stable, M.insert iac (DL is js xis size) dtable)
 \end{code}
 
 
@@ -438,14 +429,6 @@ checkLVarListMap v vl
   where vtime = timeVar v
 \end{code}
 
-\begin{code}
-iacOf vl  =  iacOf' [] [] vl
- where
-  iacOf' si sj [] =  S.fromList (si++sj)
-  iacOf' si sj ((StdVar       (Vbl i vc _)     ):vl)  =  iacOf' ((i,vc):si) sj vl
-  iacOf' si sj ((LstVar (LVbl (Vbl j vc _) _ _)):vl)  =  iacOf' si ((j,vc):sj) vl
-\end{code}
-
 \newpage
 \subsubsection{Inserting Known Variable-Set}
 
@@ -456,68 +439,33 @@ See Variable-List insertion above.
 
 \begin{code}
 addKnownVarSet lv@(Vbl i vc Static) vs vt@(VD (vtable,stable,dtable))
- | mixed = fail "addKnownVarSet(static): inconsistent classifications."
- | ct == CTmixed
-     = fail "addKnownVarSet(Static): some map to lists."
- | lv `S.member` img
-     = fail "addKnownVarSet(Static): list-variable cycle."
- | otherwise
-   = case M.lookup lv stable of
-      Nothing | vl `knownIn` vt
-        -> return $ VD (vtable, M.insert lv (KS vs S.empty 0) stable, dtable)
-      Just UL | vl `knownIn` vt
-        -> return $ VD (vtable, M.insert lv (KS vs S.empty 0) stable, dtable)
-      Just AL | vl `knownIn` vt
-        -> return $ VD (vtable, M.insert lv (KS vs S.empty 0) stable, dtable)
-      _ -> fail "addKnownVarSet(Static): trying to update, or unknown vars in list."
+ = case M.lookup lv stable of
+    Nothing  ->  newSKVS lv vs vt
+    Just UL  ->  newSKVS lv vs vt
+    _        ->  fail "addKnownVarSet(Static): trying to update."
  where
-   mixed        =  checkLVarSetMap lv vs
-   ( ct, img )  =  rtLstImage stable CTset (S.map varOf $ listVarSetOf vs)
-   vl = S.toList vs
+   newSKVS lv vs vt@(VD (vtable,stable,dtable))
+    = do ( expanse, size ) <- checkVariableList vt lv True $ S.toList vs
+         let expS = S.fromList expanse
+         return $ VD (vtable, M.insert lv (KS vs expS size) stable, dtable)
 \end{code}
 
 \begin{code}
 addKnownVarSet lv@(Vbl i vc vw) vs vt@(VD (vtable,stable,dtable))
-  | mixed = fail "addKnownVarSet (dynamic): inconsistent classifications."
-  | ct == CTmixed
-      = fail $ unlines
-          [ "addKnownVarSet(dynamic): some map to lists."
-          , "vs = "++show vs
-          , "dtable:", show dtable ]
-  | (i,vc) `S.member` img
-      = fail "addKnownVarSet(dynamic): list-variable cycle."
-  | otherwise
-   = case M.lookup (i,vc) dtable of
-      Nothing | vl `knownIn` vt
-       -> return $ VD ( vtable, stable
-                      , M.insert (i,vc)
-                                 (DS (S.fromList is) (S.fromList js) S.empty 0)
-                                 dtable )
-      Just UD | vl `knownIn` vt
-       -> return $ VD ( vtable, stable
-                      , M.insert (i,vc)
-                                 (DS (S.fromList is) (S.fromList js) S.empty 0)
-                                 dtable )
-      Just DAS | vl `knownIn` vt
-       -> return $ VD ( vtable, stable
-                      , M.insert (i,vc)
-                                 (DS (S.fromList is) (S.fromList js) S.empty 0)
-                                 dtable )
-      _ -> fail "addKnownVarSet(dynamic): trying to update, or unknown vars in list."
-  where
-   mixed       =  checkLVarSetMap lv vs
-   ( ct, img ) =  rtDynImage dtable CTset (iacOf $ S.toList vs)
-   vl          =  S.toList vs
-   (is,js)     =  idsOf $ S.toList vs
-\end{code}
-
-\begin{code}
-checkLVarSetMap lv vs
-  = not (S.null vs)
-    && ( (S.singleton $ whatVar lv) /= S.map whatGVar vs
-         ||
-         (vtime /= Static && (S.singleton $ vtime) /= S.map timeGVar vs) )
-  where vtime = timeVar lv
+ = case M.lookup iac dtable of
+    Nothing  ->  newDKVS lv vs vt
+    Just UD  ->  newDKVS lv vs vt
+    _        ->  fail "addKnownVarSet(dynamic): trying to update."
+ where
+   iac = (i,vc)
+   vl = S.toList vs
+   newDKVS lv vs vt@(VD (vtable,stable,dtable))
+    = do ( expanse, size ) <- checkVariableList vt lv True vl
+         let (is,js) = idsOf vl
+         let iS = S.fromList is
+         let jS = S.fromList js
+         let xiS = S.fromList $ map varId expanse
+         return $ VD (vtable, stable, M.insert iac (DS iS jS xiS size) dtable)
 \end{code}
 
 \subsubsection{Inserting Abstract Variable-List}
@@ -676,180 +624,4 @@ vs1 `intsctS` vs2 = S.fromList (S.toList vs1 `intsctL` S.toList vs2)
 
 intsctL :: VarList -> VarList -> VarList
 vl1 `intsctL` vl2 = intersectBy dgEq vl1 vl2
-\end{code}
-
-
-\newpage
-\subsection{Ensuring \texttt{VarTable} Acyclicity}
-
-\textbf{
-THE FOLLOWING IS NOW NOT REQUIRED.
-BY REQUIRING ANY VARIABLE OR LIST-VARIABLE TO ONLY POINT
-AT KNOWN VARIABLES WE AUTOMATICALLY ENSURE ACYCLICITY.
-}
-
-We have an invariant that there are no cycles in any \texttt{VarTable}.
-Simplifying, we can imagine we have a relation between variables
-expressed as a set-valued partial, finite map.
-\begin{equation}
-  \mu  \in Rel = V \fun \Set V
-\end{equation}
-So if  $\mu$ represents relation $R$,
-then we say that if $u R v$, then $v \in \mu(u)$.
-
-There are many ways to check for acyclicity.
-The most well-known computes $R^+$,
-the transitive closure of the relation,
-and then checks for all $u \in \dom R$ that $\lnot(uR^+u)$.
-Another, based on MMA's thesis%
-\footnote{
-  M\'iche\'al Mac An Airchinnigh, Conceptual Modelling
-, University of Dublin, 1990.
-}
-uses a annihilator, an operator that removes all tuples $(u,v)$
-from a relation, where $v$ does not itself appear in the lhs of a relation tuple.
-Repeated application of the annihilator will reduce any relation down to just its cycles, or the empty relation, if there are no cycles.
-
-Another technique is ensure acyclicity from the outset,
-by checking a new maplet against the map to see if it will introduce a cycle.
-Given a map $\mu$, and a set of variables $V$,
-its \emph{relational image} w.r.t. $V$, denoted by $\mu(V)$ is
-the union of all the $\mu(v)$ obtained for each $v \in V$.
-The \emph{reflexive transitive image closure}
-$\mu^*(V) = V \cup \mu(V) \cup \mu(\mu(V)) \cup \dots$.
-When inserting a mapping from $u$ to $V$ into $\mu$,
-we simply compute $\mu^*(V)$ and check that $u$ does not occur in it.
-
-Tests in \texttt{proto/Acyclic.hs} show that the annihilator approach to
-after-insertion acyclicity checking
-is two-and-a-half times faster, approximately, than the transitive closure approach.
-However, the insert-time check based on image closure is almost an
-order of magnitude faster than either acyclic check.
-So here we decide to use the insert-time check
-to ensure that we are not about to create such cycles.
-
-We have two mappings, but can consider them seperately.
-The standard variable mapping is of the form \texttt{Variable -> Variable},
-and so any cycles must remain within in it.
-The list-variable mapping has form \texttt{ListVar -> Set GenVar},
-which can include \texttt{Variable}.
-However any pointers to \texttt{StdVar} will jump over
-to the standard variable mapping and stay there.
-Only pointers to \texttt{LstVar} have the potential to lead to cycles.
-
-\subsubsection{Standard Variable Reflexive-Transitive Image}
-
-Reflexive, transitive relational image:
-\begin{code}
-rtStdImage :: Map Variable VarMatchRole -> Set Variable
-           -> Set Variable
-rtStdImage vtable vs = untilEq (rrStdImage vtable) vs
-\end{code}
-
-Reflexive relation image:
-\begin{code}
-rrStdImage :: Map Variable VarMatchRole -> Set Variable
-           -> Set Variable
-rrStdImage vtable vs = S.unions (vs:map (stdVVlkp vtable) (S.toList vs))
-\end{code}
-
-Looking up the \texttt{Variable -> Variable} fragment of a \texttt{VarTable}:
-\begin{code}
-stdVVlkp vtable v
- = case M.lookup v vtable of
-    Just (KC (Var _ v'))  ->  S.singleton v'
-    _                     ->  S.empty
-\end{code}
-
-\newpage
-\subsubsection{List-Variable Reflexive-Transitive Image}
-
-There is an additional invariant which states
-that if we have a relational chain of list-variables,
-then either they all map to variable-lists, or variable-sets,
-but not both.
-So $\{ lu \mapsto \seqof{lv}, lv \mapsto \seqof{lw} \}$
-and $\{ lu \mapsto \setof{lv}, lv \mapsto \setof{lw} \}$
-are ``uniform'', hence OK,
-while $\{ lu \mapsto \seqof{lv}, lv \mapsto \setof{lw} \}$
-or $\{ lu \mapsto \setof{lv}, lv \mapsto \seqof{lw} \}$
-are ``mixed'', and therefore not OK.
-\begin{code}
-data CT = CTunknown | CTset | CTlist | CTmixed  deriving (Eq, Show)
-
-mix CTunknown ct = ct
-mix ct CTunknown = ct
-mix CTmixed _ = CTmixed
-mix _ CTmixed = CTmixed
-mix ct1 ct2
- | ct1 == ct2  =  ct1
- | otherwise   =  CTmixed
-
-mixes = foldl mix CTunknown
-\end{code}
-We keep track of chain types when computing relation images (next).
-
-
-\paragraph{Static Relational Chains}
-~
-
-Reflexive, transitive relational image:
-\begin{code}
-rtLstImage :: Map Variable LstVarMatchRole -> CT -> Set Variable
-           -> ( CT, Set Variable )
-rtLstImage stable ct lvs = untilEq (rrLstImage stable) (ct, lvs)
-\end{code}
-
-Reflexive relation image:
-\begin{code}
-rrLstImage :: Map Variable LstVarMatchRole -> ( CT, Set Variable )
-           -> ( CT, Set Variable )
-rrLstImage stable (ct, lvs)
-   = ( mixes (ct:cts), S.unions (lvs:imgs) )
-  where
-    ( cts, imgs) = unzip $ map (lstVVlkp stable) (S.toList lvs)
-\end{code}
-
-Looking up the \texttt{ListVar -> VarList} fragment of a \texttt{VarTable}:
-\begin{code}
-lstVVlkp stable lv
- = case M.lookup lv stable of
-    Just (KL gvl _ _)  ->  ( CTlist, S.fromList $ map varOf $ listVarsOf gvl )
-    Just (KS gvs _ _)  ->  ( CTset,  S.map varOf $ listVarSetOf gvs )
-    _                  ->  ( CTunknown, S.empty )
-\end{code}
-
-
-\paragraph{Dynamic Relational Chains}
-~
-
-Reflexive, transitive relational image:
-\begin{code}
-rtDynImage :: Map IdAndClass DynamicLstVarRole -> CT -> Set IdAndClass
-           -> ( CT, Set IdAndClass )
-rtDynImage dtable ct iacs = untilEq (rrDynImage dtable) (ct, iacs)
-\end{code}
-
-Reflexive relation image:
-\begin{code}
-rrDynImage :: Map IdAndClass DynamicLstVarRole -> ( CT, Set IdAndClass )
-           -> ( CT, Set IdAndClass )
-rrDynImage dtable (ct, iacs)
-   = ( mixes (ct:cts), S.unions (iacs:imgs) )
-  where
-    ( cts, imgs) = unzip $ map (dynIIlkp dtable) (S.toList iacs)
-\end{code}
-
-Looking up the \texttt{IdAndClass -> ([Identifier],[Identifier])}
-fragment of a \texttt{VarTable}.
-We are conservative here, treating $x$ and $\lst x$ as the same.
-\begin{code}
-dynIIlkp dtable iac@(i,vc)
- = case M.lookup iac dtable of
-    Just (DL il jl _ _)  ->  ( CTlist, S.fromList $ zip (il++jl) vcOmega )
-    Just (DS is js _ _)  ->  ( CTset,  S.map add_vc (is `S.union` js) )
-    _                    ->  ( CTunknown, S.empty )
- where
-   vcOmega = vc:vcOmega
-   add_vc i = (i,vc)
 \end{code}

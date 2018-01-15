@@ -218,8 +218,11 @@ tst_addKnownListVar
      -- some map to ... the other
      , testCase "lv |-> <ls>, set and list!"
         ( addKnownVarList vlv [gls] iltVarData @?= Nothing )
-     , testCase "lv |-> {ll}, set and list!"
-        ( addKnownVarSet vlv (sngl gll) iltVarData @?= Nothing )
+     , testCase "lv |-> {ll}, set and list - succeeds"
+        ( dtList (aKS lv (sngl gll) iltVarData)
+          @?= [(vll,KnownVarList [] [] 0)
+              ,(vls,KnownVarSet S.empty S.empty 0)
+              ,(vlv,KnownVarSet (sngl gll) S.empty 0)] )
      , testCase "lv |-> <ll,ls>, set and list!"
         ( addKnownVarList vlv [gll,gls] iltVarData @?= Nothing )
      -- list-variable cycle
@@ -241,16 +244,16 @@ tst_addKnownListVar
              ,(vlu,KnownVarList [] [] 0)] )
      , testCase "lx |-> [], succeeds"
         ( stList (aKL lx [] iltVarData)
-         @?= [ (vlf,KnownVarList [StdVar len] [] 0)
+         @?= [ (vlf,KnownVarList [StdVar len] [len] 1)
              , (vlx,KnownVarList [] [] 0) ] )
      , testCase "lx |-> [i,j], succeeds"
         ( stList (aKL lx [gi,gj] iltVarData)
-         @?= [ (vlf,KnownVarList [StdVar len] [] 0)
-             , (vlx,KnownVarList [gi,gj] [] 0)] )
+         @?= [ (vlf,KnownVarList [StdVar len] [len] 1)
+             , (vlx,KnownVarList [gi,gj] [i,j] 2)] )
      , testCase "lx |-> {i,j}, succeeds"
         ( stList (aKS lx (S.fromList [gi,gj]) iltVarData)
-         @?= [ (vlf,KnownVarList [StdVar len] [] 0)
-             , (vlx,KnownVarSet (S.fromList [gi,gj]) S.empty 0)] )
+         @?= [ (vlf,KnownVarList [StdVar len] [len] 1)
+             , (vlx,KnownVarSet (S.fromList [gi,gj]) (S.fromList [i,j]) 2)] )
      ]
 
 lulvTable = fromJust $ addKnownVarList vlu [glv]             newVarTable

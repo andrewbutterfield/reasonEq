@@ -1276,7 +1276,7 @@ vsKnownMatch vts bind cbvs pbvs vsC vsK gvP@(LstVar lvP) -- ListVar !
          bind' <- bindLVarToVSet lvP vsC1 bind
          return (bind',vsC2)
  where
-   gvCs = dbg "vsKM.vsC = " vsC `intsctS` S.singleton (dbg "vsKM.gvP =" gvP)
+   gvCs = vsC `intsctS` S.singleton gvP
    gvC  = S.elemAt 0 gvCs
 \end{code}
 

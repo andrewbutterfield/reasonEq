@@ -34,7 +34,7 @@ import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Set (Set)
 import qualified Data.Set as S
-import Data.List (nub, deleteFirstsBy, intersectBy)
+import Data.List (nub, deleteFirstsBy, intersectBy, (\\))
 
 import Utilities
 import LexBase
@@ -658,21 +658,83 @@ expandKnown :: Monad m
 
 expandKnown vts lv@(LVbl v@(Vbl i vc vw) is js)
  = case lookupLVarTables vts v of
-     KL kvl expL eLen -> listRemove kvl (expandLess is js) expL eLen
-     KS kvs expS eSiz -> setRemove  kvs (expandLess is js) expS eSiz
+     KL kvl expL eLen -> listRemove kvl expL eLen (expandLess vts vc vw is js)
+     KS kvs expS eSiz -> setRemove  kvs expS eSiz (expandLess vts vc vw is js)
      _ -> fail "expandKnown: not concretely known."
 \end{code}
 
-We return three lists: the known variables to be removed,
-plus the is and js that are not known.
+We return an integer and three lists: the known variables to be removed,
+plus the $is$ and $js$ that are not known.
+The integer is the length of the known variables list.
 \begin{code}
-expandLess is js = error "expandLess: NYI"
+expandLess :: [VarTable] -> VarClass -> VarWhen
+           -> [Identifier] -> [Identifier]
+           -> ( Int            -- no. of known vars
+              , [Variable]     -- known vars
+              , [Identifier]   -- unknown vars
+              , [Identifier] ) -- unknown list-vars
+expandLess vts vc vw is js
+ = expIS 0 [] [] is
+ where
+
+   expIS n kvs uis [] = expJS n kvs uis [] js
+   expIS n kvs uis (i:is)
+    = case lookupVarTables vts v of
+       UV  ->  expIS n kvs (i:uis) is
+       _   ->  expIS (n+1) (v:kvs) uis is
+    where v = Vbl i vc vw
+
+   expJS n kvs uis ujs [] = (n, reverse kvs, reverse uis, reverse ujs)
+   expJS n kvs uis ujs (j:js)
+    = case lookupLVarTables vts lv of
+       KL _ vs m  ->  expJS (n+m) (reverse vs++kvs)  uis ujs js
+       KS _ vs m  ->  expJS (n+m) (S.toList vs++kvs) uis ujs js
+       _ -> expJS n kvs uis (j:ujs) js
+    where lv = Vbl j vc vw
 \end{code}
 
+\newpage
+Given the result of \texttt{expandLess},
+we can now update the \texttt{LstVarMatchRole}
+to take account for the known subtracted variables.
+This will fail if we are subtracting too much,
+or the wrong things.
 \begin{code}
-listRemove kvl _ expL eLen = error "listRemove: NYI"
+listRemove :: Monad m
+           => VarList -> [Variable] -> Int
+           -> ( Int            -- no. of known vars
+              , [Variable]     -- known vars
+              , [Identifier]   -- unknown vars
+              , [Identifier] ) -- unknown list-vars
+           -> m ( LstVarMatchRole
+                 , [Identifier]   -- remaining unknown is components
+                 , [Identifier] ) -- remaining unknown js components
+listRemove kvl expL eLen (n,kvr,uis,ujs)
+  | eLen < n + luis = fail "expandKnown(listings): extra subtracted variables."
+  | null (kvr \\ expL)
+     = return ( KL kvl (expL \\ kvr) (eLen - n), uis, ujs)
+  | otherwise  =  fail "expandKnown(List): irrelevant subtracted variables."
+  where
+    luis = length uis
 \end{code}
 
+Doing it again, with sets
 \begin{code}
-setRemove  kvs _ expS eSiz = error "setRemove: NYI"
+setRemove  :: Monad m
+           => VarSet -> (Set Variable) -> Int
+           -> ( Int            -- no. of known vars
+              , [Variable]     -- known vars
+              , [Identifier]   -- unknown vars
+              , [Identifier] ) -- unknown list-vars
+           -> m ( LstVarMatchRole
+                 , [Identifier]   -- remaining unknown is components
+                 , [Identifier] ) -- remaining unknown js components
+setRemove  kvs expS eSiz (n,kvr,uis,ujs)
+  | eSiz < n + luis  =  fail "expandKnown(Set): extra subtracted variables"
+  | kvrS `S.isSubsetOf` expS
+     = return ( KS kvs (expS S.\\ kvrS) (eSiz - n), uis, ujs)
+  | otherwise  =  fail "expandKnown(Set): irrelevant subtracted variables"
+  where
+    luis = length uis
+    kvrS = S.fromList kvr
 \end{code}

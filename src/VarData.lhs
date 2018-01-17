@@ -660,7 +660,9 @@ expandKnown vts lv@(LVbl v@(Vbl i vc vw) is js)
  = case lookupLVarTables vts v of
      KL kvl expL eLen -> listRemove kvl expL eLen (expandLess vts vc vw is js)
      KS kvs expS eSiz -> setRemove  kvs expS eSiz (expandLess vts vc vw is js)
-     _ -> fail "expandKnown: not concretely known."
+     AL               -> return (AL, is, js)
+     AS               -> return (AS, is, js)
+     _ -> fail "expandKnown: not known."
 \end{code}
 
 We return an integer and three lists: the known variables to be removed,

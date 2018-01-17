@@ -807,10 +807,10 @@ vlFreeMatch vts bind cbvs pbvs vlC ((StdVar _):_)
   = fail "vlMatch: std pattern cannot match list candidate."
 \end{code}
 
-
+\newpage
 A pattern list-variable can match zero or more candidate general variables.
-If it known, it can only match itself,
-or the list against which it is defined.
+If it is known, it can only match itself,
+or, if not abstract, against the list against which it is defined.
 If unknown, we come face-to-face with non-determinism.
 For now we simply attempt to match by letting the list-variable
 match the next $n$ candidate variables, for $n$ in the range $0\dots N$,
@@ -819,45 +819,59 @@ For now, we take $N=2$.
 \begin{code}
 -- not null vlC
 vlFreeMatch vts bind cbvs pbvs vlC (gvP@(LstVar lvP):vlP)
-  = case lookupLVarTables vts (varOf lvP) of
-     KnownVarList vlK vlX xLen
-       -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs vlC vlK vlX xLen gvP
-             vlFreeMatch vts bind' cbvs pbvs vlC' vlP
-     KnownVarSet vsK vsX xSize
+  = case expandKnown vts lvP of
+     Just (KnownVarList vlK vlX xLen, uis, ujs)
        -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs vlC
-                                  (S.toList vsK) (S.toList vsX) xSize gvP
+                                                        vlK vlX xLen uis ujs gvP
              vlFreeMatch vts bind' cbvs pbvs vlC' vlP
-     _
+     Just (AbstractList, uis, ujs)
+       | gvP /= head vlC  ->  fail "vlMatch: abstract lvar. only matches self."
+       | otherwise
+           -> do bind' <- bindLVarToVList lvP [gvP] bind
+                 vlFreeMatch vts bind' cbvs pbvs (tail vlC) vlP
+     Nothing
        -> vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 0
           `mplus`
           vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 1
           `mplus`
           vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 2
+     _ -> fail "vlMatch: pattern list-variable is set-valued."
 \end{code}
 
+Returns true if the list variable is unknown,
+or known to be an empty \emph{list}.
 \begin{code}
 canMatchNullList :: [VarTable] -> ListVar -> Bool
 canMatchNullList vts lv
   = case lookupLVarTables vts (varOf lv) of
-      KnownVarList vl _ _ ->  null vl
-      _                   ->  True
+      KnownVarList vl _ _  ->  null vl
+      UnknownListVar       ->  True
+      _                    ->  False
 \end{code}
 
-First we handle simple cases:
+\paragraph{Matching a List-Variable, known to be a list.}
+First we handle simple cases, where either the list-variable,
+its definition, or its expansion as variables,
+are a prefix of the candidate list.
 \begin{code}
 -- not null vlC
-vlKnownMatch vts bind cbvs pbvs vlC vlK vlX xLen
-                 gvP@(LstVar lvP@(LVbl (Vbl i vc vw) is js)) -- ListVar !
+vlKnownMatch vts bind cbvs pbvs vlC vlK vlX xLen uis ujs
+                 gvP@(LstVar lvP@(LVbl (Vbl i vc vw) is js))
  | gvP == head vlC -- covers lvP known to be Abstract
     = do bind' <- bindLVarToVList lvP [gvP] bind
          return (bind',tail vlC)
  | vlK `isPrefixOf` vlC
     = do bind' <- bindLVarToVList lvP vlK bind
          return (bind',vlC \\ vlK)
+ | gvlX `isPrefixOf` vlC -- gvlX = map StdVar vlX, see below
+    = do bind' <- bindLVarToVList lvP gvlX bind
+         return (bind',vlC \\ gvlX)
 \end{code}
 
-Here we have a list-variable \texttt{lvP} that is defined to be \texttt{vlK},
-any will expand to a list of variables \texttt{vlX} of length \texttt{xLen}.
+At this point we have that \texttt{vlC} either does not match,
+or it contains as prefix a mixture of variables, and known list-variables
+whose expansion preciselymatches \texttt{vlX}, the full expansion of the pattern.
+
 We can now try to match incrementally along \texttt{vlC},
 fully expanding known candidate variables as we go along.
 If this succeeds, we return a binding between the original \texttt{lvP}
@@ -884,41 +898,9 @@ length fits within the bounds.
 \begin{code}
 -- vlKnownMatch vts bind cbvs pbvs vlC vlK vlX xLen
  | otherwise
-    = do (varsCx,cLen) <- expandKnownList vts vlC
-         let missing = vlX \\ vlCx
-         let vsKm = S.fromList missing
-         let vsL = S.fromList $ liftLess lvP
-         bind' <- vsMatch vts bind cbvs pbvs vsKm vsL
-         let vlKx' = vlKx \\ missing
-         (vlC1,vlC2) <- unkKnVLMatch vts [] vlC vlKx'
-         bind'' <- bindLVarToVList lvP vlC1 bind'
-         return (bind'',vlC2)
-\end{code}
-
-We want to match a fully-expanded pattern variable-list
-against a candidate variable-list that may only be partially expanded.
-The second argument accummulates the original \texttt{vlC} variables.
-\begin{code}
-unkKnVLMatch vts rvlC1 vlC2 []  =  return (reverse rvlC1, vlC2)
-
-unkKnVLMatch vts rvlC1 [] _ = fail "vlMatch: not enough candidate variables."
-
-unkKnVLMatch vts rvlC1 (gvC:vlC2) vlKx@(gvP:vlKx')
- |  gvC == gvP  =  unkKnVLMatch vts (gvC:rvlC1) vlC2 vlKx'
- |  otherwise   =  do gvCx <- expandKnownList vts gvC
-                      vlKx'' <- unkUknVLMatch gvCx vlKx
-                      unkKnVLMatch vts (gvC:rvlC1) vlC2 vlKx''
-\end{code}
-
-Here we have two fully expanded segments, so we seek a simple prefix property:
-\begin{code}
-unkUknVLMatch gvCx vlKx
- |  gvCx `isPrefixOf` vlKx  =  return (vlKx \\ gvCx)
- | otherwise = fail $ unlines
-                 [ "vlMatch: list-var. mismatch."
-                 , "gvCx = " ++ show gvCx
-                 , "vlKx = " ++ show vlKx
-                 ]
+    = fail "vlKnownMatch(mashup): NYI"
+  where
+    gvlX = map StdVar vlX
 \end{code}
 
 We keep expanding variables known as lists of (other) variables.
@@ -926,7 +908,7 @@ We keep expanding variables known as lists of (other) variables.
 expandKnownList :: Monad m => [VarTable] -> GenVar -> m ([Variable],Int)
 expandKnownList vts gv@(LstVar lv)
   = case lookupLVarTables vts (varOf lv) of
-      KnownVarList _ kX kLen  ->  return (kX kLen)
+      KnownVarList _ kX kLen  ->  return (kX,kLen)
       UnknownListVar          ->  fail "expandKnownList: not known!"
       _                       ->  fail "expandKnownList: found variable-sets!"
 expandKnownList vts gv@(StdVar v)

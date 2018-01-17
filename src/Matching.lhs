@@ -13,7 +13,6 @@ module Matching
 , vMatch, bvMatch
 , vsMatch, vlMatch
 , sMatch
-, expandKnownList
 ) where
 import Data.Maybe (isJust,fromJust)
 import Data.Map (Map)
@@ -820,21 +819,21 @@ For now, we take $N=2$.
 -- not null vlC
 vlFreeMatch vts bind cbvs pbvs vlC (gvP@(LstVar lvP):vlP)
   = case expandKnown vts lvP of
-     Just (KnownVarList vlK vlX xLen, uis, ujs)
-       -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs vlC
-                                                        vlK vlX xLen uis ujs gvP
-             vlFreeMatch vts bind' cbvs pbvs vlC' vlP
-     Just (AbstractList, uis, ujs)
-       | gvP /= head vlC  ->  fail "vlMatch: abstract lvar. only matches self."
-       | otherwise
-           -> do bind' <- bindLVarToVList lvP [gvP] bind
-                 vlFreeMatch vts bind' cbvs pbvs (tail vlC) vlP
      Nothing
        -> vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 0
           `mplus`
           vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 1
           `mplus`
           vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP 2
+     Just (AbstractList, uis, ujs)
+       | gvP /= head vlC  ->  fail "vlMatch: abstract lvar. only matches self."
+       | otherwise
+           -> do bind' <- bindLVarToVList lvP [gvP] bind
+                 vlFreeMatch vts bind' cbvs pbvs (tail vlC) vlP
+     Just (KnownVarList vlK vlX xLen, uis, ujs)
+       -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs vlC
+                                                        vlK vlX xLen uis ujs gvP
+             vlFreeMatch vts bind' cbvs pbvs vlC' vlP
      _ -> fail "vlMatch: pattern list-variable is set-valued."
 \end{code}
 
@@ -849,6 +848,15 @@ canMatchNullList vts lv
       _                    ->  False
 \end{code}
 
+We have a simple, ``slightly greedy'' algorithm
+that matches a list-variable against the first \texttt{n} candidates.
+\begin{code}
+vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP n
+ = do bind' <- bindLVarToVList lvP firstnC bind
+      vlFreeMatch vts bind' cbvs pbvs restC vlP
+ where (firstnC,restC) = splitAt n vlC
+\end{code}
+
 \paragraph{Matching a List-Variable, known to be a list.}
 First we handle simple cases, where either the list-variable,
 its definition, or its expansion as variables,
@@ -860,9 +868,10 @@ vlKnownMatch vts bind cbvs pbvs vlC vlK vlX xLen uis ujs
  | gvP == head vlC -- covers lvP known to be Abstract
     = do bind' <- bindLVarToVList lvP [gvP] bind
          return (bind',tail vlC)
- | vlK `isPrefixOf` vlC
+ | vlK `isPrefixOf` vlC && null uis
     = do bind' <- bindLVarToVList lvP vlK bind
-         return (bind',vlC \\ vlK)
+         bind'' <- bindLVarsToNull bind' (map (mkLV vc vw) ujs)
+         return (bind'',vlC \\ vlK)
  | gvlX `isPrefixOf` vlC -- gvlX = map StdVar vlX, see below
     = do bind' <- bindLVarToVList lvP gvlX bind
          return (bind',vlC \\ gvlX)
@@ -896,33 +905,20 @@ Given such a bound, we now simply pull general variables
 off the head of the candidate list as long as their accumulated
 length fits within the bounds.
 \begin{code}
--- vlKnownMatch vts bind cbvs pbvs vlC vlK vlX xLen
+-- vlKnownMatch vts bind cbvs pbvs vlC vlK vlX xLen uis ujs gvP@(..)
  | otherwise
     = fail "vlKnownMatch(mashup): NYI"
   where
     gvlX = map StdVar vlX
+    mkLV vc vw j = LVbl (Vbl i vc vw) [] []
 \end{code}
 
-We keep expanding variables known as lists of (other) variables.
+Binding a list of list-variables to null:
 \begin{code}
-expandKnownList :: Monad m => [VarTable] -> GenVar -> m ([Variable],Int)
-expandKnownList vts gv@(LstVar lv)
-  = case lookupLVarTables vts (varOf lv) of
-      KnownVarList _ kX kLen  ->  return (kX,kLen)
-      UnknownListVar          ->  fail "expandKnownList: not known!"
-      _                       ->  fail "expandKnownList: found variable-sets!"
-expandKnownList vts gv@(StdVar v)
-                               =  return ([v],1)
-\end{code}
-
-
-Finally we have a simple, ``slightly greedy'' algorithm
-that matches a list-variable against the first \texttt{n} candidates.
-\begin{code}
-vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP n
- = do bind' <- bindLVarToVList lvP firstnC bind
-      vlFreeMatch vts bind' cbvs pbvs restC vlP
- where (firstnC,restC) = splitAt n vlC
+bindLVarsToNull bind [] = return bind
+bindLVarsToNull bind (lv:lvs)
+ = do bind' <- bindLVarToVList lv [] bind
+      bindLVarsToNull bind' lvs
 \end{code}
 
 \newpage

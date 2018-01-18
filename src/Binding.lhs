@@ -21,6 +21,7 @@ module Binding
 , bindGVarToTList
 , lookupBind
 , lookupLstBind
+, bindLVarsToNull
 , dumpBinding
 , int_tst_Binding
 ) where
@@ -915,6 +916,18 @@ ttsBind tk i vs      =  getJust "termTempSync bind failed."  . bind tk i vs
 ttsLam  tk i vl      =  getJust "termTempSync lam failed."   . lam tk i vl
 ttsSubstn tsub lsub  =  getJust "subTempSync substn failed." $ substn tsub lsub
 \end{code}
+
+\newpage
+\subsection{Derived Binding Functions}
+
+Binding a list of list-variables to null:
+\begin{code}
+bindLVarsToNull bind [] = return bind
+bindLVarsToNull bind (lv:lvs)
+ = do bind' <- bindLVarToVList lv [] bind
+      bindLVarsToNull bind' lvs
+\end{code}
+
 
 \newpage
 \subsection{Binding Dump}

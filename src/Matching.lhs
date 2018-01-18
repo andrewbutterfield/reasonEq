@@ -857,6 +857,7 @@ vlFreeMatchN vts bind cbvs pbvs vlC lvP vlP n
  where (firstnC,restC) = splitAt n vlC
 \end{code}
 
+\newpage
 \paragraph{Matching a List-Variable, known to be a list.}
 First we handle simple cases, where either the list-variable,
 its definition, or its expansion as variables,
@@ -875,50 +876,80 @@ vlKnownMatch vts bind cbvs pbvs vlC vlK vlX xLen uis ujs
  | gvlX `isPrefixOf` vlC -- gvlX = map StdVar vlX, see below
     = do bind' <- bindLVarToVList lvP gvlX bind
          return (bind',vlC \\ gvlX)
-\end{code}
-
-At this point we have that \texttt{vlC} either does not match,
-or it contains as prefix a mixture of variables, and known list-variables
-whose expansion preciselymatches \texttt{vlX}, the full expansion of the pattern.
-
-We can now try to match incrementally along \texttt{vlC},
-fully expanding known candidate variables as we go along.
-If this succeeds, we return a binding between the original \texttt{lvP}
-and the corresponding prefix of the orignal \texttt{vlC},
-rather than involving any of the expansions (esp. \texttt{vlK}!).
-This is why we do not allow cycles in \texttt{VarTable}s.
-
-In addition, \texttt{lvP} may have subtracted identifiers.
-We need to compare expansions
-of both \texttt{vlC} and \texttt{vlK} to see what is missing from the
-former, and attempt to match the missing variables against the subtracted
-identifiers.
-
-We guide the process by keeping track of how many variables we expect to match.
-The size of the list-variable underyling the known-pattern is \texttt{xLen}.
-Subtract one for every element of \texttt{is} to get an upper bound.
-It is exact if \texttt{js} is empty, otherwise we have to allow for them
-denoting more variables that have been subtracted.
-Depending on what we know about the \texttt{js},
-this revised bound can be precise, or vague --- as low as zero.
-Given such a bound, we now simply pull general variables
-off the head of the candidate list as long as their accumulated
-length fits within the bounds.
-\begin{code}
--- vlKnownMatch vts bind cbvs pbvs vlC vlK vlX xLen uis ujs gvP@(..)
  | otherwise
-    = fail "vlKnownMatch(mashup): NYI"
-  where
+    = vlExpandMatch vts bind cbvs pbvs lvP [] vlC vlX uis ujs
+ where
     gvlX = map StdVar vlX
     mkLV vc vw j = LVbl (Vbl i vc vw) [] []
 \end{code}
 
-Binding a list of list-variables to null:
+At this point we have that \texttt{vlC} either does not match,
+or it contains as prefix a mixture of variables, and known list-variables
+whose expansion precisely matches \texttt{vlX}, the full expansion of the pattern.
+
+We can now try to match incrementally along \texttt{vlC},
+fully expanding known candidate variables as we go along.
+If this succeeds, we return a binding between the original \texttt{lvP}
+and the corresponding prefix of the original \texttt{vlC}.
+We are left with the unknown subtracted variables which need to
+be taken into account.
+What we do is use them, in a greedy fashion,when expansion matching fails,
+to generate a binding, and then continue, hoping for the best.
+\begin{verbatim}
+  REPEAT (vlExpandMatch)
+    pull head off vlC, if unknown list variable then FAIL, expand if known listvar
+    is head/expansion a prefix of vlX?
+    Yes: keep head(vlC), drop prefix from vlX, tail vlC, set expansion to null
+    No:
+      LOOP (expCandMatch)
+           No: are uis and ujs both null? If so, FAIL
+           if uis not null
+           then
+              BIND head uis to head expansion, tail expansion, uis
+           else -- uis null, ujs not null
+              BIND head ujs to head expansion, tail expansion, uis
+              -- not the smartest, should really try 1,2,3 bits of expansion
+      EXIT if null expansion or uis and ujs are null
+      if not null expansion then FAIL
+  UNTIL vlX or vlC are empty
+  if vlX and uis empty
+       then return gvP -> list of kept vlC variables, rest of vlC
+                     any ujs bind to null.
+  if not, FAIL (vlC is empty)
+\end{verbatim}
+
+\newpage
 \begin{code}
-bindLVarsToNull bind [] = return bind
-bindLVarsToNull bind (lv:lvs)
- = do bind' <- bindLVarToVList lv [] bind
-      bindLVarsToNull bind' lvs
+vlExpandMatch vts bind cbvs pbvs lvP@(LVbl (Vbl _ vc vw) _ _) kept vlC [] uis ujs
+  | null uis -- bind gvP to kept, ujs to null, return (bind',vlC)
+     = do bind' <- bindLVarToVList lvP (reverse kept) bind
+          bind'' <- bindLVarsToNull bind' lvjs
+          return (bind'',vlC)
+  | otherwise  = fail "vlExpandMatch: leftover subtracted vars."
+  where lvjs = map (\i -> LVbl (Vbl i vc vw) [] []) ujs
+
+vlExpandMatch vts bind cbvs pbvs gvP kept [] vlX uis ujs
+  = fail "vlExpandMatch: not enough candidate vars."
+
+vlExpandMatch vts bind cbvs pbvs gvP kept (vC:vlC) vlX uis ujs
+ = do vCx <- genListExpand vts vC -- fails if unknown lvar, or set-valued
+      if vCx `isPrefixOf` vlX
+       then vlExpandMatch vts bind cbvs pbvs gvP
+                                              (vC:kept) vlC (vlX \\ vCx) uis ujs
+       else expCandMatch vts bind cbvs pbvs gvP kept vlC vCx vlX uis ujs
+\end{code}
+
+\begin{code}
+expCandMatch vts bind cbvs pbvs gvP kept vlC vCx vlX uis ujs
+ = error "expCandMatch NYI"
+\end{code}
+
+\begin{code}
+genListExpand vts (StdVar v) = return [v]
+genListExpand vts (LstVar lv)
+ = case expandKnown vts lv of
+     Just ((KnownVarList _ expL _), _, _) -> return expL
+     _ -> fail "vlExpandMatch: unknow lvar, or set-valued."
 \end{code}
 
 \newpage

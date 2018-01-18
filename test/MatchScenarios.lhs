@@ -330,11 +330,11 @@ test_reserved_as_lists
 
 test_reserved_as_sets
  = testGroup "O,M,S reserved as {ok,x,y,z}"
-     [ testCase "S_Design |-  x,y,z :: S  -- succeeds."
+     [ testCase "S_Design |-  x,y,z :: S  -- fails."
        ( vlMatch [vtS_Design] emptyBinding S.empty S.empty
             (vwrap [x,y,z])
             (lwrap [lS])
-         @?= ( bindLVarToVList lS (vwrap [x,y,z]) emptyBinding :: [Binding] ) )
+         @?= Nothing )
      , testCase "S_Design |-  {x,y,z} :: {S}  -- matches at least once."
        ( vsMatch [vtS_Design] emptyBinding S.empty S.empty
             (vswrap [x,y,z])

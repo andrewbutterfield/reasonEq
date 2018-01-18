@@ -895,22 +895,15 @@ We are left with the unknown subtracted variables which need to
 be taken into account.
 What we do is use them, in a greedy fashion,when expansion matching fails,
 to generate a binding, and then continue, hoping for the best.
+
+\newpage
 \begin{verbatim}
-  REPEAT (vlExpandMatch)
+vlExpandMatch:
+  REPEAT
     pull head off vlC, if unknown list variable then FAIL, expand if known listvar
     is head/expansion a prefix of vlX?
     Yes: keep head(vlC), drop prefix from vlX, tail vlC, set expansion to null
-    No:
-      LOOP (expCandMatch)
-           No: are uis and ujs both null? If so, FAIL
-           if uis not null
-           then
-              BIND head uis to head expansion, tail expansion, uis
-           else -- uis null, ujs not null
-              BIND head ujs to head expansion, tail expansion, uis
-              -- not the smartest, should really try 1,2,3 bits of expansion
-      EXIT if null expansion or uis and ujs are null
-      if not null expansion then FAIL
+    No:  expCandMatch(...)
   UNTIL vlX or vlC are empty
   if vlX and uis empty
        then return gvP -> list of kept vlC variables, rest of vlC
@@ -918,7 +911,6 @@ to generate a binding, and then continue, hoping for the best.
   if not, FAIL (vlC is empty)
 \end{verbatim}
 
-\newpage
 \begin{code}
 vlExpandMatch vts bind cbvs pbvs lvP@(LVbl (Vbl _ vc vw) _ _) kept vlC [] uis ujs
   | null uis -- bind gvP to kept, ujs to null, return (bind',vlC)
@@ -932,24 +924,31 @@ vlExpandMatch vts bind cbvs pbvs gvP kept [] vlX uis ujs
   = fail "vlExpandMatch: not enough candidate vars."
 
 vlExpandMatch vts bind cbvs pbvs gvP kept (vC:vlC) vlX uis ujs
- = do vCx <- genListExpand vts vC -- fails if unknown lvar, or set-valued
+ = do vCx <- genExpandToList vts vC -- fails if unknown lvar, or set-valued
       if vCx `isPrefixOf` vlX
        then vlExpandMatch vts bind cbvs pbvs gvP
                                               (vC:kept) vlC (vlX \\ vCx) uis ujs
        else expCandMatch vts bind cbvs pbvs gvP kept vlC vCx vlX uis ujs
 \end{code}
 
+\newpage
+\begin{verbatim}
+expCandMatch:
+  LOOP
+     are uis and ujs both null? If so, FAIL
+     if uis not null
+     then
+        BIND head uis to head expansion, tail expansion, uis
+     else -- uis null, ujs not null
+        BIND head ujs to head expansion, tail expansion, uis
+        -- not the smartest, should really try 1,2,3 bits of expansion
+  EXIT if null expansion or uis and ujs are null
+  if not null expansion then FAIL
+\end{verbatim}
+
 \begin{code}
 expCandMatch vts bind cbvs pbvs gvP kept vlC vCx vlX uis ujs
  = error "expCandMatch NYI"
-\end{code}
-
-\begin{code}
-genListExpand vts (StdVar v) = return [v]
-genListExpand vts (LstVar lv)
- = case expandKnown vts lv of
-     Just ((KnownVarList _ expL _), _, _) -> return expL
-     _ -> fail "vlExpandMatch: unknow lvar, or set-valued."
 \end{code}
 
 \newpage

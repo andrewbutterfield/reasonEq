@@ -28,6 +28,8 @@ module VarData ( VarMatchRole
                , removeS -- , remove
                , intsctS -- , intsct
                , expandKnown
+               , genExpandToList
+               , genExpandToSet
                ) where
 --import Data.Maybe (fromJust)
 import Data.Map (Map)
@@ -739,4 +741,22 @@ setRemove  kvs expS eSiz (n,kvr,uis,ujs)
   where
     luis = length uis
     kvrS = S.fromList kvr
+\end{code}
+
+Sometimes we expect very specific expansion results.
+
+\begin{code}
+genExpandToList vts (StdVar v) = return [v]
+genExpandToList vts (LstVar lv)
+ = case expandKnown vts lv of
+     Just ((KnownVarList _ expL _), _, _) -> return expL
+     _ -> fail "vlExpandMatch: unknown lvar, or set-valued."
+\end{code}
+
+\begin{code}
+genExpandToSet vts (StdVar v) = return $ S.singleton v
+genExpandToSet vts (LstVar lv)
+ = case expandKnown vts lv of
+     Just ((KnownVarSet _ expS _), _, _) -> return expS
+     _ -> fail "vlExpandMatch: unknown lvar, or list-valued."
 \end{code}

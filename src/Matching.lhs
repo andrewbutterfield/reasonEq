@@ -801,7 +801,7 @@ It must also match according to the rules for variable matching.
 \begin{code}
 vlFreeMatch vts bind cbvs pbvs ((StdVar vC):vlC) ((StdVar vP):vlP)
   = do bind' <- vMatch vts bind cbvs pbvs vC vP
-       vlFreeMatch vts bind' cbvs pbvs vlC vlP
+       vlFreeMatch vts (dbg "vlFM Std bind update = " bind') cbvs pbvs vlC vlP
 vlFreeMatch vts bind cbvs pbvs vlC ((StdVar _):_)
   = fail "vlMatch: std pattern cannot match list candidate."
 \end{code}
@@ -903,7 +903,7 @@ vlExpandMatch:
     pull head off vlC, if unknown list variable then FAIL, expand if known listvar
     is head/expansion a prefix of vlX?
     Yes: keep head(vlC), drop prefix from vlX, tail vlC, set expansion to null
-    No:  expCandMatch(...)
+    No:  are uis and ujs both null? If so, FAIL, otherwise expCandMatch(...)
   UNTIL vlX or vlC are empty
   if vlX and uis empty
        then return gvP -> list of kept vlC variables, rest of vlC
@@ -928,14 +928,15 @@ vlExpandMatch vts bind cbvs pbvs gvP kept (vC:vlC) vlX uis ujs
       if vCx `isPrefixOf` vlX
        then vlExpandMatch vts bind cbvs pbvs gvP
                                               (vC:kept) vlC (vlX \\ vCx) uis ujs
-       else expCandMatch vts bind cbvs pbvs gvP kept vlC vCx vlX uis ujs
+       else if null uis && null ujs
+            then fail "vlExpandMatch: nothing to subtract."
+            else expCandMatch vts bind cbvs pbvs gvP kept vlC vCx vlX uis ujs
 \end{code}
 
 \newpage
 \begin{verbatim}
 expCandMatch:
   LOOP
-     are uis and ujs both null? If so, FAIL
      if uis not null
      then
         BIND head uis to head expansion, tail expansion, uis
@@ -947,8 +948,31 @@ expCandMatch:
 \end{verbatim}
 
 \begin{code}
+-- uis, ujs both null:
+expCandMatch vts bind cbvs pbvs gvP kept vlC vCx vlX [] []
+ | null vCx   =  vlExpandMatch vts bind cbvs pbvs gvP kept vlC vlX [] []
+ | otherwise  =  fail "expCandMatch: leftover candidate expansion."
+
+-- expansion null:
+expCandMatch vts bind cbvs pbvs gvP kept vlC [] vlX uis ujs
+ = vlExpandMatch vts bind cbvs pbvs gvP kept vlC vlX uis ujs
+
+-- expansion, uis non-null:
+expCandMatch vts bind cbvs pbvs gvP@(LVbl (Vbl _ vc vw) _ _)
+                                              kept vlC (vx:vCx) vlX (ui:uis) ujs
+ = do bind' <- bindVarToVar (dbg "eCaM.dv = " (Vbl ui vc vw))
+                            (dbg "eCaM.rv = " vx)
+                            $ dbg "eCam.bind = " bind
+      expCandMatch vts bind' cbvs pbvs gvP kept vlC vCx vlX uis ujs
+
+-- expansion, ujs non-null, uis null:
+expCandMatch vts bind cbvs pbvs gvP@(LVbl (Vbl _ vc vw) _ _)
+                                              kept vlC (vx:vCx) vlX [] (uj:ujs)
+ = do bind' <- bindLVarToVList (LVbl (Vbl uj vc vw) [] []) ([StdVar vx]) bind
+      expCandMatch vts bind' cbvs pbvs gvP kept vlC vCx vlX [] ujs
+
 expCandMatch vts bind cbvs pbvs gvP kept vlC vCx vlX uis ujs
- = error "expCandMatch NYI"
+ = error "expCandMatch: should be dead code!"
 \end{code}
 
 \newpage

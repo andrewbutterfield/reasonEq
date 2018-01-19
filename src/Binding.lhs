@@ -305,7 +305,7 @@ bindVarToVar (Vbl vi vc Static) x@(Vbl xi xc xw)
              (BD (vbind,sbind,lbind))
  | xw == Textual  =  fail "bindVarToVar: Static cannot bind to Textual"
  | validVarClassBinding vc xc
-   =  do vbind' <- insertDR "bindVarToVar" (==) (vi,vc) (BV x) vbind
+   =  do vbind' <- insertDR "bindVarToVar(Static)" (==) (vi,vc) (BV x) vbind
          return $ BD (vbind',sbind,lbind)
  | otherwise      =  fail "bindVarToVar: incompatible Static classes"
 \end{code}
@@ -316,8 +316,8 @@ in the appropriate class.
 bindVarToVar (Vbl vi vc (During m)) x@(Vbl xi xc (During n))
              (BD (vbind,sbind,lbind))
  | validVarClassBinding vc xc
-   =  do vbind' <- insertDR "bindVarToVar" (==) (vi,vc) (BI xi) vbind
-         sbind' <- insertDR "bindVarToVar" (==) m n sbind
+   =  do vbind' <- insertDR "bindVarToVar(During)" (==) (vi,vc) (BI xi) vbind
+         sbind' <- insertDR "bindVarToVar(Subscript)" (==) m n sbind
          return $ BD (vbind',sbind',lbind)
  | otherwise  =  fail "bindVarToVar: incompatible During classes"
 \end{code}
@@ -329,7 +329,7 @@ bindVarToVar (Vbl  vi vc vw) (Vbl xi xc xw)
              (BD (vbind,sbind,lbind))
  | vw /= xw   =  fail "bindVarToVar: different temporalities"
  | validVarClassBinding vc xc
-   =  do vbind' <- insertDR "bindVarToVar" (==) (vi,vc) (BI xi) vbind
+   =  do vbind' <- insertDR "bindVarToVar(dynamic)" (==) (vi,vc) (BI xi) vbind
          return $ BD (vbind',sbind,lbind)
  | otherwise  =  fail "bindVarToVar: incompatible variables"
 \end{code}

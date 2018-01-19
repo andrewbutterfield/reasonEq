@@ -877,7 +877,11 @@ vlKnownMatch vts bind cbvs pbvs vlC vlK vlX xLen uis ujs
     = do bind' <- bindLVarToVList lvP gvlX bind
          return (bind',vlC \\ gvlX)
  | otherwise
-    = vlExpandMatch vts bind cbvs pbvs lvP [] vlC vlX uis ujs
+    = vlExpandMatch vts bind cbvs pbvs (dbg "KM.lvP= " lvP) []
+                                       (dbg "KM.vlC= " vlC)
+                                       (dbg "KM.vlX= " vlX)
+                                       (dbg "KM.uis= " uis)
+                                       (dbg "KM.ujs= " ujs)
  where
     gvlX = map StdVar vlX
     mkLV vc vw j = LVbl (Vbl i vc vw) [] []
@@ -924,8 +928,8 @@ vlExpandMatch vts bind cbvs pbvs gvP kept [] vlX uis ujs
   = fail "vlExpandMatch: not enough candidate vars."
 
 vlExpandMatch vts bind cbvs pbvs gvP kept (vC:vlC) vlX uis ujs
- = do vCx <- genExpandToList vts vC -- fails if unknown lvar, or set-valued
-      if vCx `isPrefixOf` vlX
+ = do vCx <- genExpandToList vts (dbg "XM.vC= " vC) -- fails if unknown lvar, or set-valued
+      if (dbg "XM.vCx= " vCx) `isPrefixOf` vlX
        then vlExpandMatch vts bind cbvs pbvs gvP
                                               (vC:kept) vlC (vlX \\ vCx) uis ujs
        else if null uis && null ujs
@@ -951,19 +955,31 @@ expCandMatch:
 -- uis, ujs both null:
 expCandMatch vts bind cbvs pbvs gvP kept vlC vCx vlX [] []
  | null vCx   =  vlExpandMatch vts bind cbvs pbvs gvP kept vlC vlX [] []
- | otherwise  =  fail "expCandMatch: leftover candidate expansion."
+ | not (null vlX) &&  vp == vc
+    = vlExpandMatch vts bind cbvs pbvs gvP (StdVar vc:kept) (tail vlC) (tail vlX) [] []
+ | otherwise
+     =  fail $ unlines
+          [ "expCandMatch: leftover candidate expansion."
+          , "vlC = " ++ show vlC
+          , "vCx = " ++ show vCx
+          , "vlX = " ++ show vlX
+          , "gvP = " ++ show gvP
+          , "bind = " ++ show bind ]
+  where
+    vp = head vlX
+    vc = head vCx
 
 -- expansion null:
 expCandMatch vts bind cbvs pbvs gvP kept vlC [] vlX uis ujs
  = vlExpandMatch vts bind cbvs pbvs gvP kept vlC vlX uis ujs
 
--- expansion, uis non-null:
+-- vlX, expansion, uis non-null:
 expCandMatch vts bind cbvs pbvs gvP@(LVbl (Vbl _ vc vw) _ _)
-                                              kept vlC (vx:vCx) vlX (ui:uis) ujs
+                                              kept vlC vCx (vP:vlX) (ui:uis) ujs
  = do bind' <- bindVarToVar (dbg "eCaM.dv = " (Vbl ui vc vw))
-                            (dbg "eCaM.rv = " vx)
+                            (dbg "eCaM.rv = " vP)
                             $ dbg "eCam.bind = " bind
-      expCandMatch vts bind' cbvs pbvs gvP kept vlC vCx vlX uis ujs
+      expCandMatch vts bind' cbvs pbvs gvP kept vlC (dbg "eCaM.vCx = " vCx) (dbg "eCaM.vlX = " vlX) uis ujs
 
 -- expansion, ujs non-null, uis null:
 expCandMatch vts bind cbvs pbvs gvP@(LVbl (Vbl _ vc vw) _ _)

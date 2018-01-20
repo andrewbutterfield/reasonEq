@@ -23,6 +23,7 @@ module AST ( TermSub, LVarSub
            , var,  eVar,  pVar
            , bind, eBind, pBind
            , lam,  eLam,  pLam
+           , binderClass
            , pattern EVal, pattern EVar, pattern ECons
            , pattern EBind, pattern ELam, pattern ESub, pattern EIter
            , pattern PVal, pattern PVar, pattern PCons
@@ -333,16 +334,11 @@ data Term
  deriving (Eq, Ord, Show, Read)
 \end{code}
 
-\textbf{Note:}
-\textit{
-We shall need to have a correlation between some terms
+We  need to have a correlation between some terms
 and the variables they use.
 In particular the \texttt{TermKind} of a \texttt{V} \texttt{Term}
-will have to correspond to the \texttt{VarWhat} value of the variable.
-Also in B and L all the general variables will have to agree on
-\texttt{VarWhat} (\texttt{VO},\texttt{VV},\texttt{VE},\texttt{VP}),
-or the list-variable equivalent (\texttt{LO},\texttt{LV},\texttt{LE},\texttt{LP}).
-}
+will have to correspond to the \texttt{VarClass} value of the variable.
+Also in binding  constructs all the general variables being bound will have to agree on\texttt{VarClass}.
 
 Kind-neutral patterns:
 \begin{code}
@@ -357,17 +353,18 @@ pattern Iter tk na ni lvs  =  I tk na ni lvs
 
 Smart constructors for variables and binders.
 
-Variable must match term-kind.
+Variable must match term-class.
 \begin{code}
 var :: Monad m => TermKind -> Variable -> m Term
 var P        v |       isPredVar v  =  return $ V P v
 var tk@(E _) v | not $ isPredVar v  =  return $ V tk v
-var _       _   =   fail "var: TermKind/VarWhat mismatch"
+var _       _   =   fail "var: TermKind/VarClass mismatch"
 eVar t v = var (E t) v
 pVar   v = var P v
 \end{code}
 
-All variables in a binder variable-set must have the same kind.
+\newpage
+All variables in a binder variable-set must have the same class.
 \begin{code}
 bind tk n vs tm
  | S.null vs  =  return tm  -- vacuous binder
@@ -378,7 +375,7 @@ eBind typ n vs tm  =  bind (E typ) n vs tm
 pBind     n vs tm  =  bind P       n vs tm
 \end{code}
 
-All variables in a lambda variable-list must have the same kind.
+All variables in a lambda variable-list must have the same class.
 \begin{code}
 lam tk n vl tm
  | null vl  =  return tm  -- vacuous binder
@@ -402,6 +399,13 @@ uniformVarList (gv:vl) = uvl (whatGVar gv) vl
      | otherwise            =  False
 \end{code}
 
+It will also be good to enquire the class of a binder:
+\begin{code}
+binderClass :: Monad m => Term -> m VarClass
+binderClass (L _ _ (gv:_) _)  =  return $ whatGVar gv
+binderClass (B _ _ gvs    _)  =  return $ whatGVar $ S.elemAt 0 gvs
+binderClass _ = fail "binderClass: not a binding term."
+\end{code}
 
 Patterns for expressions:
 \begin{code}

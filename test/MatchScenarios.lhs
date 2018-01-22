@@ -210,12 +210,9 @@ test_none_reserved
             (lwrap [lO])
          @?=
          ( bindLVarToVList lO (vwrap [x,y']) emptyBinding :: [Binding] ) )
-     , testCase "|-  e,x :: O  -- matches ."
-       ( vlMatch [] emptyBinding S.empty S.empty
-            (vwrap [e,x])
-            (lwrap [lO])
-         @?=
-         ( bindLVarToVList lO (vwrap [e,x]) emptyBinding :: [Binding] ) )
+     , testCase "|-  e,x :: O  -- fails ."
+       ( vlMatch [] emptyBinding S.empty S.empty (vwrap [e,x]) (lwrap [lO])
+         @?= Nothing )
      ]
 
 lSu  = lS `less` ([u],[])

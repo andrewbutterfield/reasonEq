@@ -154,8 +154,8 @@ bindSpl2
 
 tst_vlMatch =
   testGroup "vlMatch"
-    [ testCase "[] :: [] (OK)"
-      ( vlMatch [] emptyBinding b0 b0 [] [] @?= [emptyBinding]  )
+    [ testCase "[] :: [] (FAIL)"
+      ( vlMatch [] emptyBinding b0 b0 [] [] @?= []  )
     , testCase "[] :: [ps1] (FAIL)"
       ( vlMatch [] emptyBinding b0 b0 [] [ps1] @?= []  )
     , testCase "[cs1] :: [] (FAIL)"

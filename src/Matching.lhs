@@ -840,7 +840,7 @@ vlFreeMatch vts bind cbvs pbvs bc vlC (gvP@(LstVar lvP):vlP)
                  vlFreeMatch vts bind' cbvs pbvs bc (tail vlC) vlP
      Just (KnownVarList vlK vlX xLen, uis, ujs)
        -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs bc vlC
-                                                        vlK vlX xLen uis ujs gvP
+                                                        gvP vlK vlX xLen uis ujs
              vlFreeMatch vts bind' cbvs pbvs bc vlC' vlP
      _ -> fail "vlMatch: pattern list-variable is set-valued."
 \end{code}
@@ -872,32 +872,34 @@ its definition, or its expansion as variables,
 are a prefix of the candidate list.
 \begin{code}
 -- not null vlC
-vlKnownMatch vts bind cbvs pbvs bc vlC vlK vlX xLen uis ujs
-                 gvP@(LstVar lvP@(LVbl (Vbl i vc vw) is js))
+vlKnownMatch vts bind cbvs pbvs bc vlC gvP@(LstVar lvP) vlK vlX xLen uis ujs
+ | uiLen > xLen = fail "vlMatch: too many subtracted vars!"
  | gvP == head vlC -- covers lvP known to be Abstract
     = do bind' <- bindLVarToVList lvP [gvP] bind
          return (bind',tail vlC)
- | vlK `isPrefixOf` vlC && null uis
+ | not (null uis) -- needs careful handling
+    = vlExpandMatch vts bind cbvs pbvs bc lvP [] vlC vlX xLen uis ujs
+ | vlK `isPrefixOf` vlC
     = do bind' <- bindLVarToVList lvP vlK bind
          bind'' <- bindLVarsToNull bind' (map (mkLV bc vw) ujs)
          return (bind'',vlC \\ vlK)
- | gvlX `isPrefixOf` vlC -- gvlX = map StdVar vlX, see below
+ | gvlX `isPrefixOf` vlC
     = do bind' <- bindLVarToVList lvP gvlX bind
-         return (bind',vlC \\ gvlX)
+         bind'' <- bindLVarsToNull bind' (map (mkLV bc vw) ujs)
+         return (bind'',vlC \\ vlK)
  | otherwise
-    = vlExpandMatch vts bind cbvs pbvs (dbg "KM.lvP= " lvP) []
-                                       (dbg "KM.vlC= " vlC)
-                                       (dbg "KM.vlX= " vlX)
-                                       (dbg "KM.uis= " uis)
-                                       (dbg "KM.ujs= " ujs)
+    = vlExpandMatch vts bind cbvs pbvs bc lvP [] vlC vlX xLen uis ujs
  where
     gvlX = map StdVar vlX
-    mkLV vc vw j = LVbl (Vbl i vc vw) [] []
+    mkLV vc vw j = LVbl (Vbl j vc vw) [] []
+    uiLen = length uis
+    vw = lvarWhen lvP
 \end{code}
 
 At this point we have that \texttt{vlC} either does not match,
 or it contains as prefix a mixture of variables, and known list-variables
-whose expansion precisely matches \texttt{vlX}, the full expansion of the pattern.
+whose expansion precisely matches \texttt{vlX},
+the full expansion of the pattern.
 
 We can now try to match incrementally along \texttt{vlC},
 fully expanding known candidate variables as we go along.
@@ -908,94 +910,92 @@ be taken into account.
 What we do is use them, in a greedy fashion,when expansion matching fails,
 to generate a binding, and then continue, hoping for the best.
 
-\newpage
-\begin{verbatim}
-vlExpandMatch:
-  REPEAT
-    pull head off vlC, if unknown list variable then FAIL, expand if known listvar
-    is head/expansion a prefix of vlX?
-    Yes: keep head(vlC), drop prefix from vlX, tail vlC, set expansion to null
-    No:  are uis and ujs both null? If so, FAIL, otherwise expCandMatch(...)
-  UNTIL vlX or vlC are empty
-  if vlX and uis empty
-       then return gvP -> list of kept vlC variables, rest of vlC
-                     any ujs bind to null.
-  if not, FAIL (vlC is empty)
-\end{verbatim}
-
 \begin{code}
-vlExpandMatch vts bind cbvs pbvs lvP@(LVbl (Vbl _ vc vw) _ _) kept vlC [] uis ujs
-  | null uis -- bind gvP to kept, ujs to null, return (bind',vlC)
-     = do bind' <- bindLVarToVList lvP (reverse kept) bind
-          bind'' <- bindLVarsToNull bind' lvjs
-          return (bind'',vlC)
-  | otherwise  = fail "vlExpandMatch: leftover subtracted vars."
-  where lvjs = map (\i -> LVbl (Vbl i vc vw) [] []) ujs
-
-vlExpandMatch vts bind cbvs pbvs gvP kept [] vlX uis ujs
-  = fail "vlExpandMatch: not enough candidate vars."
-
-vlExpandMatch vts bind cbvs pbvs gvP kept (vC:vlC) vlX uis ujs
- = do vCx <- genExpandToList vts (dbg "XM.vC= " vC) -- fails if unknown lvar, or set-valued
-      if (dbg "XM.vCx= " vCx) `isPrefixOf` vlX
-       then vlExpandMatch vts bind cbvs pbvs gvP
-                                              (vC:kept) vlC (vlX \\ vCx) uis ujs
-       else if null uis && null ujs
-            then fail "vlExpandMatch: nothing to subtract."
-            else expCandMatch vts bind cbvs pbvs gvP kept vlC vCx vlX uis ujs
+vlExpandMatch :: MonadPlus mp
+              => [VarTable] -> Binding -> CBVS -> PBVS
+              -> VarClass -> ListVar -> VarList
+              -> VarList -> [Variable] -> Int
+              -> [Identifier] -> [Identifier]
+              -> mp (Binding,VarList)
 \end{code}
 
-\newpage
-\begin{verbatim}
-expCandMatch:
-  LOOP
-     if uis not null
-     then
-        BIND head uis to head expansion, tail expansion, uis
-     else -- uis null, ujs not null
-        BIND head ujs to head expansion, tail expansion, uis
-        -- not the smartest, should really try 1,2,3 bits of expansion
-  EXIT if null expansion or uis and ujs are null
-  if not null expansion then FAIL
-\end{verbatim}
+At any point in time we have a full expansion of the pattern list-variable,
+along with sets of any unknown subtracted variables or list-variables
+that have not been accounted for:
+\[
+\seqof{x^P_1,\dots,x^P_m}
+\setminus
+\setof{u^P_1,\dots,u^P_n}
+;
+\seqof{\ell^P+1,\dots,\ell^P_q}
+, \qquad n \leq m
+\]
+The largest sequence of candidate expanded variables we can match
+has length $m-n$.
+If $n=m$ then we simply bind the $u^P_j$ to the $x^P_i$,
+and the $\ell^P_k$ to $\seqof{}$, and leave the candidate list untouched.
+Should $n > m$ we just fail---this is dealt with before
+\texttt{vlExpandMatch} is called, so we ignore it.
 
+Dealing with $m=n=0$, and no more candidates:
+\begin{code}
+vlExpandMatch vts bind cbvs pbvs bc lvP kept vlC [] 0 [] ujs
+  = do bind' <- bindLVarToVList lvP (reverse kept) bind
+       bind'' <- bindLVarsToNull bind' lvjs
+       return (bind'',vlC)
+  where lvjs = map (\i -> LVbl (Vbl i bc $ lvarWhen lvP) [] []) ujs
+
+vlExpandMatch vts bind cbvs pbvs bc lvP kept [] vlX xLen uis ujs
+  = fail "vlExpandMatch: not enough candidate vars."
+\end{code}
+
+Handling the general case  (NEEDS REVIEWING):
+\begin{code}
+vlExpandMatch vts bind cbvs pbvs bc lvP kept (vC:vlC) vlX xLen uis ujs
+ = do vCx <- genExpandToList vts vC -- fails if unknown lvar, or set-valued
+      if vCx `isPrefixOf` vlX
+       then vlExpandMatch vts bind cbvs pbvs bc lvP
+                          (vC:kept) vlC (vlX \\ vCx) (xLen-length vCx) uis ujs
+       else if null uis && null ujs
+            then fail "vlExpandMatch: nothing to subtract."
+            else expCandMatch vts bind cbvs pbvs bc lvP kept vlC
+                                                            vCx vlX xLen uis ujs
+\end{code}
 \begin{code}
 -- uis, ujs both null:
-expCandMatch vts bind cbvs pbvs gvP kept vlC vCx vlX [] []
- | null vCx   =  vlExpandMatch vts bind cbvs pbvs gvP kept vlC vlX [] []
+expCandMatch vts bind cbvs pbvs bc lvP kept vlC vCx vlX xLen [] []
+ | null vCx   =  vlExpandMatch vts bind cbvs pbvs bc lvP kept vlC vlX xLen [] []
  | not (null vlX) &&  vp == vc
-    = vlExpandMatch vts bind cbvs pbvs gvP (StdVar vc:kept) (tail vlC) (tail vlX) [] []
+    = vlExpandMatch vts bind cbvs pbvs bc lvP (StdVar vc:kept) (tail vlC) (tail vlX) (xLen-1)[] []
  | otherwise
      =  fail $ unlines
           [ "expCandMatch: leftover candidate expansion."
           , "vlC = " ++ show vlC
           , "vCx = " ++ show vCx
           , "vlX = " ++ show vlX
-          , "gvP = " ++ show gvP
+          , "lvP = " ++ show lvP
           , "bind = " ++ show bind ]
   where
     vp = head vlX
     vc = head vCx
 
 -- expansion null:
-expCandMatch vts bind cbvs pbvs gvP kept vlC [] vlX uis ujs
- = vlExpandMatch vts bind cbvs pbvs gvP kept vlC vlX uis ujs
+expCandMatch vts bind cbvs pbvs bc lvP kept vlC [] vlX xLen uis ujs
+ = vlExpandMatch vts bind cbvs pbvs bc lvP kept vlC vlX xLen uis ujs
 
 -- vlX, expansion, uis non-null:
-expCandMatch vts bind cbvs pbvs gvP@(LVbl (Vbl _ vc vw) _ _)
-                                              kept vlC vCx (vP:vlX) (ui:uis) ujs
- = do bind' <- bindVarToVar (dbg "eCaM.dv = " (Vbl ui vc vw))
-                            (dbg "eCaM.rv = " vP)
-                            $ dbg "eCam.bind = " bind
-      expCandMatch vts bind' cbvs pbvs gvP kept vlC (dbg "eCaM.vCx = " vCx) (dbg "eCaM.vlX = " vlX) uis ujs
+expCandMatch vts bind cbvs pbvs bc lvP@(LVbl (Vbl _ vc vw) _ _)
+                                         kept vlC vCx (vP:vlX) xLen (ui:uis) ujs
+ = do bind' <- bindVarToVar (Vbl ui vc vw) vP $ bind
+      expCandMatch vts bind' cbvs pbvs bc lvP kept vlC vCx vlX (xLen-1) uis ujs
 
 -- expansion, ujs non-null, uis null:
-expCandMatch vts bind cbvs pbvs gvP@(LVbl (Vbl _ vc vw) _ _)
-                                              kept vlC (vx:vCx) vlX [] (uj:ujs)
+expCandMatch vts bind cbvs pbvs bc lvP@(LVbl (Vbl _ vc vw) _ _)
+                                          kept vlC (vx:vCx) vlX xLen [] (uj:ujs)
  = do bind' <- bindLVarToVList (LVbl (Vbl uj vc vw) [] []) ([StdVar vx]) bind
-      expCandMatch vts bind' cbvs pbvs gvP kept vlC vCx vlX [] ujs
+      expCandMatch vts bind' cbvs pbvs bc lvP kept vlC vCx vlX xLen [] ujs
 
-expCandMatch vts bind cbvs pbvs gvP kept vlC vCx vlX uis ujs
+expCandMatch vts bind cbvs pbvs bc lvP kept vlC vCx vlX xLen uis ujs
  = error "expCandMatch: should be dead code!"
 \end{code}
 

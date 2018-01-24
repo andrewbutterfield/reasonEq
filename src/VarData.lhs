@@ -746,17 +746,17 @@ setRemove  kvs expS eSiz (n,kvr,uis,ujs)
 Sometimes we expect very specific expansion results.
 
 \begin{code}
-genExpandToList vts (StdVar v) = return [v]
+genExpandToList vts (StdVar v) = return ([v],[],[])
 genExpandToList vts (LstVar lv)
  = case expandKnown vts lv of
-     Just ((KnownVarList _ expL _), _, _) -> return expL
+     Just ((KnownVarList _ expL _), uis, ujs)  ->  return (expL,uis,ujs)
      _ -> fail "vlExpandMatch: unknown lvar, or set-valued."
 \end{code}
 
 \begin{code}
-genExpandToSet vts (StdVar v) = return $ S.singleton v
+genExpandToSet vts (StdVar v) = return (S.singleton v,[],[])
 genExpandToSet vts (LstVar lv)
  = case expandKnown vts lv of
-     Just ((KnownVarSet _ expS _), _, _) -> return expS
+     Just ((KnownVarSet _ expS _), uis, ujs) -> return (expS,uis,ujs)
      _ -> fail "vlExpandMatch: unknown lvar, or list-valued."
 \end{code}

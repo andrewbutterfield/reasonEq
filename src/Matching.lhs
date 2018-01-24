@@ -952,7 +952,7 @@ vlExpandMatch vts bind cbvs pbvs bc lvP kept [] vlX xLen uis ujs
 Handling the general case  (NEEDS REVIEWING):
 \begin{code}
 vlExpandMatch vts bind cbvs pbvs bc lvP kept (vC:vlC) vlX xLen uis ujs
- = do vCx <- genExpandToList vts vC -- fails if unknown lvar, or set-valued
+ = do (vCx,_,_) <- genExpandToList vts vC -- fails if unknown lvar, or set-valued
       if vCx `isPrefixOf` vlX
        then vlExpandMatch vts bind cbvs pbvs bc lvP
                           (vC:kept) vlC (vlX \\ vCx) (xLen-length vCx) uis ujs
@@ -961,6 +961,8 @@ vlExpandMatch vts bind cbvs pbvs bc lvP kept (vC:vlC) vlX xLen uis ujs
             else expCandMatch vts bind cbvs pbvs bc lvP kept vlC
                                                             vCx vlX xLen uis ujs
 \end{code}
+
+
 \begin{code}
 -- uis, ujs both null:
 expCandMatch vts bind cbvs pbvs bc lvP kept vlC vCx vlX xLen [] []

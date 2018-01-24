@@ -41,10 +41,10 @@ We place particular emphasis on UTP-specific matching requirements.
 Here is our initial set of scenarios:
 \begin{description}
   \item [Reserved List-Variables] $O$, $M$, and $S$.
-  \item[($O$,$S$,$M$)-matching]
-    Matching: $\exists ok_m,S_m \bullet \ldots$
-    \\against: $\exists O_n \bullet \ldots$
-    \\ yields: $O_n \mapsto \setof{ok_m} \cup S_m$.
+  \item[($O$,$S$,$M$)-matching]~\\
+    Matching, \emph{e.g.}, $\exists ok_m,S_m \bullet \ldots$
+    against $\exists O_n \bullet \ldots$
+    yields $O_n \mapsto \setof{ok_m} \cup S_m$.
   \item[Sequential Composition]
    $$
     P ; Q

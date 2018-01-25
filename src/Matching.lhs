@@ -895,20 +895,48 @@ vlKnownMatch vts bind cbvs pbvs bc vlC gvP@(LstVar lvP) vlK vlX xLen uis ujs
     uiLen = length uis
     vw = lvarWhen lvP
 \end{code}
-
-At this point we have that \texttt{vlC} either does not match,
-or it contains as prefix a mixture of variables, and known list-variables
-whose expansion precisely matches \texttt{vlX},
-the full expansion of the pattern.
-
-We can now try to match incrementally along \texttt{vlC},
-fully expanding known candidate variables as we go along.
+We now try to match \texttt{lvP} incrementally against a prefix of \texttt{vlC},
+using full expansion of \texttt{lvP} and candidate variables
+as we go along.
+\begin{eqnarray*}
+   expand(\mathtt{lvP})
+   &=&
+   \seqof{vp_1,\dots,vp_m} \setminus \mathtt{uvP} ; \mathtt{ulP}
+\\ \mathtt{vlC}
+   &=&
+   \seqof{gc_1,\dots,gc_k,gc_{k+1},\dots,gc_n}
+\end{eqnarray*}
 If this succeeds, we return a binding between the original \texttt{lvP}
-and the corresponding prefix of the original \texttt{vlC}.
-We are left with the unknown subtracted variables which need to
-be taken into account.
-What we do is use them, in a greedy fashion,when expansion matching fails,
-to generate a binding, and then continue, hoping for the best.
+and the corresponding prefix of the original \texttt{vlC},
+as well as the remaining suffix of \texttt{vlC}.
+\begin{eqnarray*}
+   \mathtt{vlC} :: \mathtt{lvP}
+   &\leadsto&
+   (\mathtt{lvP}\mapsto\seqof{gc_1,\dots,gc_k}
+   ,\seqof{gc_{k+1},\dots,gc_n})
+\end{eqnarray*}
+
+At each increment,
+we are trying to match a prefix of the expansion of \texttt{vlP}
+against all of the expansion of a general variable $gc_i$ in \texttt{vlC}.
+\begin{eqnarray*}
+   expand(gc_i)
+   &=&
+   \seqof{vc_1,\dots,vc_n} \setminus \mathtt{uvC} ; \mathtt{ulC}
+\end{eqnarray*}
+If we succeed, then $gc_i$ is added to the list,
+against which \texttt{lvP} will be bound if all succeeds.
+In addition we return the corresponding ``suffix'' of the
+\texttt{vlP} expansion.
+\begin{eqnarray*}
+   expand(gc_i)
+   ::
+   \seqof{vp_1,\dots,vp_j,vp_{j+1},vp_m}
+     \setminus \mathtt{uvP} ; \mathtt{ulP}
+   &\leadsto&  (\textsl{keep}~ gc_i
+   ,\seqof{vp_{j+1},vp_m}
+     \setminus \mathtt{uvP'} ; \mathtt{ulP'})
+\end{eqnarray*}
 
 \begin{code}
 vlExpandMatch :: MonadPlus mp

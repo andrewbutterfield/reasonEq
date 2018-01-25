@@ -27,6 +27,7 @@ module VarData ( VarMatchRole
                , withinS -- , within, inside
                , removeS -- , remove
                , intsctS -- , intsct
+               , KnownExpansion
                , expandKnown
                , genExpandToList
                , genExpandToSet
@@ -648,15 +649,17 @@ regarding what part of that expansion remains:
      Otherwise, zero or more variables can be removed from the expansion
      of $\lst K$.
 \end{description}
+\begin{code}
+type KnownExpansion
+ = ( LstVarMatchRole -- fully expanded results with knowns subtracted
+   , [Identifier]   -- remaining unknown is components
+   , [Identifier] ) -- remaining unknown js components
+\end{code}
 Here, we treat a list-variable,
 that has variables subtracted from it that are not part of its expansion,
 as being erroneous.
 \begin{code}
-expandKnown :: Monad m
-            => [VarTable] -> ListVar
-            -> m ( LstVarMatchRole
-                 , [Identifier]   -- remaining unknown is components
-                 , [Identifier] ) -- remaining unknown js components
+expandKnown :: Monad m => [VarTable] -> ListVar -> m KnownExpansion
 
 expandKnown vts lv@(LVbl v@(Vbl i vc vw) is js)
  = case lookupLVarTables vts v of

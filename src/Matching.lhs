@@ -838,12 +838,16 @@ vlFreeMatch vts bind cbvs pbvs bc vlC (gvP@(LstVar lvP):vlP)
        | otherwise
            -> do bind' <- bindLVarToVList lvP [gvP] bind
                  vlFreeMatch vts bind' cbvs pbvs bc (tail vlC) vlP
-     Just (KnownVarList vlK vlX xLen, uis, ujs)
-       -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs bc vlC
+     Just kX@(KnownVarList vlK vlX xLen, uis, ujs)
+       -> do (exact,lMax) <- expRange kX -- can fail if lvP 'broken'.
+             -- need to feed exact, lMax to vlKnownMatch
+             (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs bc vlC
                                                         gvP vlK vlX xLen uis ujs
              vlFreeMatch vts bind' cbvs pbvs bc vlC' vlP
      _ -> fail "vlMatch: pattern list-variable is set-valued."
 \end{code}
+
+
 
 Returns true if the list variable is unknown,
 or known to be an empty \emph{list}.
@@ -864,6 +868,35 @@ vlFreeMatchN vts bind cbvs pbvs bc vlC lvP vlP n
       vlFreeMatch vts bind' cbvs pbvs bc restC vlP
  where (firstnC,restC) = splitAt n vlC
 \end{code}
+
+A key metric is the range of possible lengths that an expansion can have,
+given that any (unknown) list-variable in the expansion
+can correspond to zero or more variables.
+\begin{eqnarray*}
+  range(\seqof{v_1,\dots,v_n} \setminus \mathtt{uv} ; \mathtt{ul})
+  &=& \left\{
+        \begin{array}{lr}
+          (n-len(\mathtt{uv})), & \mathtt{ul} = \nil
+         \\
+          ~[0\dots(n-len(\mathtt{uv}))], & \mathtt{ul} \neq \nil
+        \end{array}
+      \right.
+\end{eqnarray*}
+If $n < len(\mathtt{uv})$, then the expansion is invalid,
+and either pattern or candidate being invalid is an automatic match fail.
+\begin{code}
+expRange :: Monad m => KnownExpansion -> m (Bool,Int)
+
+exact = True; inexact = False
+
+expRange ((KnownVarList _ vs n),uv,ul)
+ | uvchop < 0  =  fail "expRange: to many subtracted variables"
+ | null ul     =  return (exact,uvchop)
+ | otherwise   =  return (inexact,uvchop)
+ where uvchop  =  n - length uv
+expRange _ = fail "expRange NYI"
+\end{code}
+
 
 \newpage
 \paragraph{Matching a List-Variable, known to be a list.}
@@ -931,12 +964,20 @@ In addition we return the corresponding ``suffix'' of the
 \begin{eqnarray*}
    expand(gc_i)
    ::
-   \seqof{vp_1,\dots,vp_j,vp_{j+1},vp_m}
-     \setminus \mathtt{uvP} ; \mathtt{ulP}
-   &\leadsto&  (\textsl{keep}~ gc_i
-   ,\seqof{vp_{j+1},vp_m}
-     \setminus \mathtt{uvP'} ; \mathtt{ulP'})
+   \seqof{vp_1,\dots,vp_j,vp_{j+1},vp_m} \setminus \mathtt{uvP} ; \mathtt{ulP}
+   &\leadsto&
+   ( \textsl{keep}~ gc_i
+   , \seqof{vp_{j+1},vp_m} \setminus \mathtt{uvP'} ; \mathtt{ulP'} )
 \end{eqnarray*}
+
+The core algorithm tries to match all of an expanded candidate variable,
+with a prefix of the current state of the expanded pattern list-variable.
+\begin{eqnarray*}
+  \seqof{vc_1,\dots,vc_n} \setminus \mathtt{uvC} ; \mathtt{ulC}
+  &::&
+  \seqof{vp_1,\dots,vp_m} \setminus \mathtt{uvP} ; \mathtt{ulP}
+\end{eqnarray*}
+
 
 \begin{code}
 vlExpandMatch :: MonadPlus mp
@@ -947,23 +988,6 @@ vlExpandMatch :: MonadPlus mp
               -> mp (Binding,VarList)
 \end{code}
 
-At any point in time we have a full expansion of the pattern list-variable,
-along with sets of any unknown subtracted variables or list-variables
-that have not been accounted for:
-\[
-\seqof{x^P_1,\dots,x^P_m}
-\setminus
-\setof{u^P_1,\dots,u^P_n}
-;
-\seqof{\ell^P+1,\dots,\ell^P_q}
-, \qquad n \leq m
-\]
-The largest sequence of candidate expanded variables we can match
-has length $m-n$.
-If $n=m$ then we simply bind the $u^P_j$ to the $x^P_i$,
-and the $\ell^P_k$ to $\seqof{}$, and leave the candidate list untouched.
-Should $n > m$ we just fail---this is dealt with before
-\texttt{vlExpandMatch} is called, so we ignore it.
 
 Dealing with $m=n=0$, and no more candidates:
 \begin{code}

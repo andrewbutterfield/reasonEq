@@ -839,8 +839,7 @@ vlFreeMatch vts bind cbvs pbvs bc vlC (gvP@(LstVar lvP):vlP)
            -> do bind' <- bindLVarToVList lvP [gvP] bind
                  vlFreeMatch vts bind' cbvs pbvs bc (tail vlC) vlP
      Just kX@(KnownVarList vlK vlX xLen, uis, ujs)
-       -> do (exact,lMax) <- expRange kX -- can fail if lvP 'broken'.
-             -- need to feed exact, lMax to vlKnownMatch
+       -> do (exact,lMax) <- expRange (xLen,uis,ujs) -- can fail if lvP 'broken'
              (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs
                              bc vlC gvP vlK vlX uis ujs exact lMax
              vlFreeMatch vts bind' cbvs pbvs bc vlC' vlP
@@ -885,16 +884,15 @@ can correspond to zero or more variables.
 If $n < len(\mathtt{uv})$, then the expansion is invalid,
 and either pattern or candidate being invalid is an automatic match fail.
 \begin{code}
-expRange :: Monad m => KnownExpansion -> m (Bool,Int)
+expRange :: Monad m => (Int,[Identifier],[Identifier]) -> m (Bool,Int)
 
 exact = True; inexact = False
 
-expRange ((KnownVarList _ vs n),uv,ul)
+expRange (n,uv,ul)
  | uvchop < 0  =  fail "expRange: to many subtracted variables"
  | null ul     =  return (exact,uvchop)
  | otherwise   =  return (inexact,uvchop)
  where uvchop  =  n - length uv
-expRange _ = fail "expRange NYI"
 \end{code}
 
 
@@ -983,10 +981,23 @@ In addition we return the corresponding ``suffix'' of the
 -- kept is not complete
 vlExpandMatch vts bind cbvs pbvs bc lvP kept xP exactP lMaxP uvP ulP []
   = fail "vlExpandMatch: not enough candidates."
-vlExpandMatch vts bind cbvs pbvs bc lvP kept xP exactP lMaxP uvP ulP (gC:vlC)
-  = error "vlExpandMatch(non-null) NYI"
 \end{code}
 
+If the candidate expansion length (\texttt{lMaxC}) is exact,
+then the pattern expansion maximum length (\texttt{lMaxP}) must be greater
+in order for a match to be possible.
+\begin{code}
+-- kept is not complete
+vlExpandMatch vts bind cbvs pbvs bc lvP kept xP exactP lMaxP uvP ulP (gC:vlC')
+  = do (xC,uvC,ulC) <- genExpandToList vts gC
+       (exactC,lMaxC) <- expRange (length xC,uvC,ulC)
+       if exactC && lMaxP < lMaxC
+        then fail "vlExpandMatch: candidate too large."
+        else do (xP',lMaxP',uvP',ulP')
+                                   <- vlExpand2Match xC uvC ulC xP lMaxP uvP ulP
+                vlExpandMatch vts bind cbvs pbvs
+                              bc lvP (gC:kept) xP' exactP lMaxP' uvP' ulP' vlC'
+\end{code}
 
 The core algorithm tries to match all of an expanded candidate variable,
 with a prefix of the current state of the expanded pattern list-variable.
@@ -994,8 +1005,14 @@ with a prefix of the current state of the expanded pattern list-variable.
   \seqof{vc_1,\dots,vc_n} \setminus \mathtt{uvC} ; \mathtt{ulC}
   &::&
   \seqof{vp_1,\dots,vp_m} \setminus \mathtt{uvP} ; \mathtt{ulP}
+\\ &\leadsto&
+  ( \mathtt{keep}
+  , \seqof{vp_{j+1},vp_m} \setminus \mathtt{uvP'} ; \mathtt{ulP'} )
 \end{eqnarray*}
-
+\begin{code}
+vlExpand2Match xC uvC ulC xP lMaxP uvP ulP
+ = error "vlExpand2Match NYI"
+\end{code}
 
 
 

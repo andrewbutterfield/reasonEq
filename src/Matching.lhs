@@ -910,18 +910,17 @@ vlKnownMatch vts bind cbvs pbvs
          return (bind',tail vlC)
  | vlK `isPrefixOf` vlC
     = do bind' <- bindLVarToVList lvP vlK bind
-         bind'' <- bindLVarsToNull bind' (map (mkLV bc vw) ujs)
+         bind'' <- bindLVarsToNull bind' (map (lvr bc vw) ujs)
          return (bind'',vlC \\ vlK)
  | gvlX `isPrefixOf` vlC
     = do bind' <- bindLVarToVList lvP gvlX bind
-         bind'' <- bindLVarsToNull bind' (map (mkLV bc vw) ujs)
+         bind'' <- bindLVarsToNull bind' (map (lvr bc vw) ujs)
          return (bind'',vlC \\ vlK)
  | otherwise
-    = vlExpandMatch vts bind cbvs pbvs bc lvP [] vlX exact lMax uis ujs vlC
+    = vlExpandMatch vts bind cbvs pbvs bc vw lvP [] vlX exact lMax uis ujs vlC
  where
     (LstVar lvP) = gvP
     gvlX = map StdVar vlX
-    mkLV vc vw j = LVbl (Vbl j vc vw) [] []
     uiLen = length uis
     vw = lvarWhen lvP
 \end{code}
@@ -950,7 +949,7 @@ as well as the remaining suffix of \texttt{vlC}.
 \begin{code}
 vlExpandMatch :: MonadPlus mp
               => [VarTable] -> Binding -> CBVS -> PBVS
-              -> VarClass -> ListVar
+              -> VarClass -> VarWhen -> ListVar
               -> VarList -> [Variable] -> Bool -> Int
               -> [Identifier] -> [Identifier]
               -> VarList
@@ -979,7 +978,7 @@ In addition we return the corresponding ``suffix'' of the
 \end{eqnarray*}
 \begin{code}
 -- kept is not complete
-vlExpandMatch vts bind cbvs pbvs bc lvP kept xP exactP lMaxP uvP ulP []
+vlExpandMatch vts bind cbvs pbvs bc bw lvP kept xP exactP lMaxP uvP ulP []
   = fail "vlExpandMatch: not enough candidates."
 \end{code}
 
@@ -989,15 +988,15 @@ then the pattern expansion maximum length (\texttt{lMaxP}) must be greater
 in order for a match to be possible.
 \begin{code}
 -- kept is not complete
-vlExpandMatch vts bind cbvs pbvs bc lvP kept xP exactP lMaxP uvP ulP (gC:vlC')
+vlExpandMatch vts bind cbvs pbvs bc bw lvP kept xP exactP lMaxP uvP ulP (gC:vlC')
   = do (xC,uvC,ulC) <- genExpandToList vts gC
        (exactC,lMaxC) <- expRange (length xC,uvC,ulC)
        if exactC && lMaxP < lMaxC
         then fail "vlExpandMatch: candidate too large."
         else do (bind',xP',lMaxP',uvP',ulP')
-                        <- vlExpand2Match bind lMaxC uvC ulC lMaxP uvP ulP xC xP
+                  <- vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP xC xP
                 vlExpandMatch vts bind' cbvs pbvs
-                              bc lvP (gC:kept) xP' exactP lMaxP' uvP' ulP' vlC'
+                            bc bw lvP (gC:kept) xP' exactP lMaxP' uvP' ulP' vlC'
 \end{code}
 
 The core algorithm tries to match all of an expanded candidate variable,
@@ -1012,7 +1011,7 @@ with a prefix of the current state of the expanded pattern list-variable.
 \end{eqnarray*}
 When both expansions are empty, we are done:
 \begin{code}
-vlExpand2Match bind lMaxC uvC ulC lMaxP uvP ulP [] []
+vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP [] []
  = return (bind,[],lMaxP,uvP,ulP)
 \end{code}
 
@@ -1027,11 +1026,63 @@ and we return an empty pattern as well.
 If \texttt{lMaxP} is not zero,
 then we return the current state of the pattern as-is.
 \begin{code}
-vlExpand2Match bind lMaxC uvC ulC lMaxP uvP ulP xC xP
- = error "vlExpand2Match NYFI"
+vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP [] xP
+  | lMaxP == 0  =  zeroOutExpanse bc bw bind uvP ulP xP
+  | otherwise   =  return (bind,xP,lMaxP,uvP,ulP)
 \end{code}
 
+When the pattern expansion is empty (and \texttt{ulP} is null),
+but the candidate isn't,
+then we need to bind the pattern subtracted variables
+so as to cover the required number (\texttt{lMaxC})
+of remaining candidate expansion variables.
+\begin{code}
+vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP xC []
+  | null ulP = zeroOutExpanse bc bw bind uvP ulP xC
+  | otherwise  = error "vlExpand2Match: Unexpected!"
+\end{code}
 
+When both expansions are non-null:
+\begin{code}
+vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP (vC:xC') (vP:xP')
+\end{code}
+
+we first check \texttt{lMax} values
+---
+if zero, we treat as if the expansion was null.
+\begin{code}
+-- vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP (vC:xC') (vP:xP')
+--  | lMaxC == 0 = ...
+--  | lMaxP == 0 = ...
+\end{code}
+
+Otherwise, we compare the first variable in each.
+
+If the same, we remove both, decrement maxes, and continue
+\begin{code}
+-- vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP (vC:xC') (vP:xP')
+  | vC == vP  =  vlExpand2Match bc bw bind
+                                (lMaxC-1) uvC ulC (lMaxP-1) uvP ulP xC' xP'
+\end{code}
+
+If not, then the action depends on \dots
+\begin{code}
+  | otherwise = error "vlExpand2Match NYFI"
+\end{code}
+
+Zeroing-out is the process of accounting for leftover
+expansion variables by binding remaining subtracted variables
+one-by-one, and then using subtracted list-vars. to account for the rest.
+We take a greedy approach where the first list-var hoovers up
+all the remaining expanios variables, with the rest bound to null.
+\begin{code}
+zeroOutExpanse bc bw bind _ _ []   =  return (bind,[],0,[],[])
+zeroOutExpanse bc bw bind [] [] _  =  error "zeroOutExpanse: Unexpected!"
+zeroOutExpanse bc bw bind [] (ul:uls) xvs
+ = do bind' <- bindLVarToVList (lvr bc bw ul) (map StdVar xvs) bind
+      bind'' <- bindLVarsToNull bind' (map (lvr bc bw) uls)
+      return (bind,[],0,[],[])
+\end{code}
 
 % \begin{code}
 % -- uis, ujs both null:
@@ -1651,4 +1702,16 @@ areSubFieldsOf :: [(Identifier,[Type])] -> [(Identifier,[Type])] -> Bool
 ((i1,ts1):fs1) `areSubFieldsOf` ((i2,ts2):fs2)
  | i1 == i2             =  ts1 `areSubTypesOf` ts2 && fs1 `areSubFieldsOf` fs2
 _ `areSubFieldsOf` _    =  False
+\end{code}
+
+
+\newpage
+\subsection{Building Variables from Identifiers}
+
+\begin{code}
+vr :: VarClass -> VarWhen -> Identifier -> Variable
+vr vc vw i = Vbl i vc vw
+
+lvr :: VarClass -> VarWhen -> Identifier -> ListVar
+lvr vc vw i = LVbl (vr vc vw i) [] []
 \end{code}

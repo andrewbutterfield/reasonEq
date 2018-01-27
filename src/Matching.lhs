@@ -983,6 +983,7 @@ vlExpandMatch vts bind cbvs pbvs bc lvP kept xP exactP lMaxP uvP ulP []
   = fail "vlExpandMatch: not enough candidates."
 \end{code}
 
+\newpage
 If the candidate expansion length (\texttt{lMaxC}) is exact,
 then the pattern expansion maximum length (\texttt{lMaxP}) must be greater
 in order for a match to be possible.
@@ -993,9 +994,9 @@ vlExpandMatch vts bind cbvs pbvs bc lvP kept xP exactP lMaxP uvP ulP (gC:vlC')
        (exactC,lMaxC) <- expRange (length xC,uvC,ulC)
        if exactC && lMaxP < lMaxC
         then fail "vlExpandMatch: candidate too large."
-        else do (xP',lMaxP',uvP',ulP')
-                                   <- vlExpand2Match xC uvC ulC xP lMaxP uvP ulP
-                vlExpandMatch vts bind cbvs pbvs
+        else do (bind',xP',lMaxP',uvP',ulP')
+                        <- vlExpand2Match bind lMaxC uvC ulC lMaxP uvP ulP xC xP
+                vlExpandMatch vts bind' cbvs pbvs
                               bc lvP (gC:kept) xP' exactP lMaxP' uvP' ulP' vlC'
 \end{code}
 
@@ -1009,11 +1010,26 @@ with a prefix of the current state of the expanded pattern list-variable.
   ( \mathtt{keep}
   , \seqof{vp_{j+1},vp_m} \setminus \mathtt{uvP'} ; \mathtt{ulP'} )
 \end{eqnarray*}
+When both expansions are empty, we are done:
 \begin{code}
-vlExpand2Match xC uvC ulC xP lMaxP uvP ulP
- = error "vlExpand2Match NYI"
+vlExpand2Match bind lMaxC uvC ulC lMaxP uvP ulP [] []
+ = return (bind,[],lMaxP,uvP,ulP)
 \end{code}
 
+When the candidate expansion is empty,
+but the pattern isn't,
+we check \texttt{lMaxP}.
+If this is zero,
+then we use \texttt{ulP}
+(which will be non-null)
+to bind the remainder of the pattern expansion,
+and we return an empty pattern as well.
+If \texttt{lMaxP} is not zero,
+then we return the current state of the pattern as-is.
+\begin{code}
+vlExpand2Match bind lMaxC uvC ulC lMaxP uvP ulP xC xP
+ = error "vlExpand2Match NYFI"
+\end{code}
 
 
 

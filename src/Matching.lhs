@@ -1051,19 +1051,45 @@ vlExpand2Match bc bw bind lMaxC uvC ulC 0 uvP ulP xC xP
 
 When both expansions are non-null:
 \begin{code}
-vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP (vC:xC') (vP:xP')
+vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP xC@(vC:xC') xP@(vP:xP')
 \end{code}
-we compare the first variable in each;
-if the same, we remove both, decrement maxes, and continue
+we compare the first variable in each.
+If the same, we remove both, decrement maxes, and continue.
 \begin{code}
 -- vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP (vC:xC') (vP:xP')
   | vC == vP  =  vlExpand2Match bc bw bind
                                      (lMaxC-1) uvC ulC (lMaxP-1) uvP ulP xC' xP'
 \end{code}
-if not, then the action depends on \dots
+
+\newpage
+If not, then what we need to do is to find a subsequence
+of \texttt{xC} of length \texttt{lMaxC},
+that is contained in \texttt{xP}.
+Incrementally, we have a choice of removing the first element
+from either or both expansions.
+What we acually do is try all three possibilities,
+without generating any bindings.
 \begin{code}
-  | otherwise = error "vlExpand2Match NYFI"
+-- vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP (vC:xC') (vP:xP')
+  | otherwise =
+  -- drop vC
+     if null uvC then fail "vlExpand2Match(drop vC): no subtracted candidates."
+     else
+     vlExpand2Match bc bw bind (lMaxC-1) (tail uvC) ulC lMaxP uvP ulP  xC' xP
+     `mplus`
+  -- drop vP
+     if null uvP then fail "vlExpand2Match(drop vC): no subtracted patterns."
+     else
+     vlExpand2Match bc bw bind lMaxC uvC ulC (lMaxP-1) (tail uvP) ulP  xC  xP'
+     `mplus`
+  -- drop both
+     if null uvP || null uvC
+     then fail "vlExpand2Match(drop vC): no subtracted vars."
+     else
+     vlExpand2Match bc bw bind
+                    (lMaxC-1) (tail uvC) ulC (lMaxP-1) (tail uvP) ulP  xC' xP'
 \end{code}
+
 
 \newpage
 Zeroing-out is the process of accounting for leftover

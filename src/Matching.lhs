@@ -890,8 +890,8 @@ exact = True; inexact = False
 
 expRange (n,uv,ul)
  | uvchop < 0  =  fail "expRange: to many subtracted variables"
- | null ul     =  return (exact,uvchop)
- | otherwise   =  return (inexact,uvchop)
+ | null ul     =  return (exact,uvchop)   -- [uvchop,..,uvchop]
+ | otherwise   =  return (inexact,uvchop) -- [0,..,uvchop]
  where uvchop  =  n - length uv
 \end{code}
 
@@ -1006,82 +1006,89 @@ with a prefix of the current state of the expanded pattern list-variable.
   &::&
   \seqof{vp_1,\dots,vp_m} \setminus \mathtt{uvP} ; \mathtt{ulP}
 \\ &\leadsto&
-  ( \mathtt{keep}
-  , \seqof{vp_{j+1},vp_m} \setminus \mathtt{uvP'} ; \mathtt{ulP'} )
+  ( \beta'
+  , \seqof{vp_{j+1},vp_m} \setminus \mathtt{uvP'} ; \mathtt{ulP'} ),
+  \quad \textrm{ if } \textsf{keep}
 \end{eqnarray*}
+
 When both expansions are empty, we are done:
+\begin{eqnarray*}
+  \seqof{vc_1,\dots,vc_n} \setminus \seqof{ic_1,\dots,ic_n} ; \mathtt{ulC}
+  &::&
+  \seqof{vp_1,\dots,vp_m} \setminus \seqof{ip_1,\dots,ip_m}  ; \mathtt{ulP}
+\\ &\leadsto&
+  ( \{ ip_j \mapsto vp_j, \mathtt{ulP}_k \mapsto \nil \}
+  , \nil \setminus \nil ; \nil)
+\end{eqnarray*}
 \begin{code}
-vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP [] []
- = return (bind,[],lMaxP,uvP,ulP)
+vlExpand2Match bc bw bind 0 uvC ulC 0 uvP ulP xC xP
+  = zeroOutExpanse bc bw bind uvP ulP xP
 \end{code}
 
 When the candidate expansion is empty,
 but the pattern isn't,
-we check \texttt{lMaxP}.
-If this is zero,
-then we use \texttt{ulP}
-(which will be non-null)
-to bind the remainder of the pattern expansion,
-and we return an empty pattern as well.
-If \texttt{lMaxP} is not zero,
-then we return the current state of the pattern as-is.
+we return the current state of the pattern as-is.
+\begin{eqnarray*}
+  \seqof{vc_1,\dots,vc_n} \setminus \seqof{ic_1,\dots,ic_n} ; \mathtt{ulC}
+  &::&
+  \seqof{vp_1,\dots,vp_m} \setminus \mathtt{uvP} ; \mathtt{ulP}
+\\ &\leadsto&
+  ( \{\}
+  , \seqof{vp_{j+1},vp_m} \setminus \mathtt{uvP'} ; \mathtt{ulP'} )
+\end{eqnarray*}
 \begin{code}
-vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP [] xP
-  | lMaxP == 0  =  zeroOutExpanse bc bw bind uvP ulP xP
-  | otherwise   =  return (bind,xP,lMaxP,uvP,ulP)
+vlExpand2Match bc bw bind 0 uvC ulC lMaxP uvP ulP xC xP
+  = return (bind,xP,lMaxP,uvP,ulP)
 \end{code}
 
 When the pattern expansion is empty (and \texttt{ulP} is null),
 but the candidate isn't,
-then we need to bind the pattern subtracted variables
-so as to cover the required number (\texttt{lMaxC})
-of remaining candidate expansion variables.
+then we fail, as we are trying to match the entire candidate here.
 \begin{code}
-vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP xC []
-  | null ulP = zeroOutExpanse bc bw bind uvP ulP xC
-  | otherwise  = error "vlExpand2Match: Unexpected!"
+vlExpand2Match bc bw bind lMaxC uvC ulC 0 uvP ulP xC xP
+  = fail "vlExpand2Match: candidate too large."
 \end{code}
 
 When both expansions are non-null:
 \begin{code}
 vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP (vC:xC') (vP:xP')
 \end{code}
-
-we first check \texttt{lMax} values
----
-if zero, we treat as if the expansion was null.
-\begin{code}
--- vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP (vC:xC') (vP:xP')
---  | lMaxC == 0 = ...
---  | lMaxP == 0 = ...
-\end{code}
-
-Otherwise, we compare the first variable in each.
-
-If the same, we remove both, decrement maxes, and continue
+we compare the first variable in each;
+if the same, we remove both, decrement maxes, and continue
 \begin{code}
 -- vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP (vC:xC') (vP:xP')
   | vC == vP  =  vlExpand2Match bc bw bind
-                                (lMaxC-1) uvC ulC (lMaxP-1) uvP ulP xC' xP'
+                                     (lMaxC-1) uvC ulC (lMaxP-1) uvP ulP xC' xP'
 \end{code}
-
-If not, then the action depends on \dots
+if not, then the action depends on \dots
 \begin{code}
   | otherwise = error "vlExpand2Match NYFI"
 \end{code}
 
+\newpage
 Zeroing-out is the process of accounting for leftover
 expansion variables by binding remaining subtracted variables
 one-by-one, and then using subtracted list-vars. to account for the rest.
 We take a greedy approach where the first list-var hoovers up
-all the remaining expanios variables, with the rest bound to null.
+all the remaining expansion variables, with the rest bound to null.
 \begin{code}
+zeroOutExpanse :: Monad m
+               => VarClass -> VarWhen -> Binding
+               -> [Identifier] -- subtracted unknown variable-ids.
+               -> [Identifier] -- subtracted unknown lvar-ids.
+               -> [Variable]   -- known variable expansion
+               -> m ( Binding
+                    , [Variable]
+                    , Int
+                    , [Identifier]
+                    , [Identifier]
+                    )
 zeroOutExpanse bc bw bind _ _ []   =  return (bind,[],0,[],[])
 zeroOutExpanse bc bw bind [] [] _  =  error "zeroOutExpanse: Unexpected!"
 zeroOutExpanse bc bw bind [] (ul:uls) xvs
  = do bind' <- bindLVarToVList (lvr bc bw ul) (map StdVar xvs) bind
       bind'' <- bindLVarsToNull bind' (map (lvr bc bw) uls)
-      return (bind,[],0,[],[])
+      return (bind'',[],0,[],[])
 \end{code}
 
 % \begin{code}

@@ -1,119 +1,49 @@
-vlMatch [vtL_Design] emptyBinding S.empty S.empty
-        (vwrap [ok] ++ lwrap [lS]) (lwrap [lO])
-=
-*** Exception: user error (vlKnownMatch(mashup): NYI
------------
-vlC  =  [GV (VR (Id "ok",VO,WB)),GL (LV (VR (Id "S",VO,WB),[],[]))]
-::
-gvP  =  GL (LV (VR (Id "O",VO,WB),[],[]))
----
-vlK  =  [GL (LV (VR (Id "M",VO,WB),[],[])),GL (LV (VR (Id "S",VO,WB),[],[]))]
-vlX  =  [VR (Id "ok",VO,WB),VR (Id "x",VO,WB),VR (Id "y",VO,WB),VR (Id "z",VO,WB)]
-xLen =  4
-uis  =  []
-ujs  =  []
-)
- Pulls ok off vlC, matches head vlX:
-    so keep ok, and tail vlX
- Pulls S off vlC, expands to tail vlX, is prefix of vlX:
-    so keep S, and drop xyz off vlX.
- vlX is empty, so return ok,S   with vlC empty
+Matching case studies
+
+x,y,z :: u,S\u      ~>   u |-> x,          S\u  |-> y,z
+x,y,z :: S\u,u      ~>   u |-> z,          S\u  |-> x,y
+y,z,x :: S\u,u      ~>   u |-> z,          S\u  |-> x,y
+x,y,z :: u,v,S\uv   ~>   u |-> x, v |-> y, S\uv |-> z
+x,y,z :: S\uv,u,v   ~>   u |-> y, v |-> z, S\uv |-> x
+x,y,z :: u,S\uv,v   ~>   u |-> x, v |-> z, S\uv |-> y
+z,y,x :: u,S\uv,v   ~>   u |-> z, v |-> x, S\uv |-> y
+
+x,y,z :: u,S\u    =>  x::u, giving u |-> x and ...
+  y,z :: S\u      =>  expand S\u and ...
+  y,z :: x,y,z\u  =>  expand gc1 = y , save z.C and ...
+      y ::2 x,y,z\u  =>  P-sub, giving u |-> x and ...
+      y ::2 y,z      =>  succeeds, returning z.P, keeping y
+    z :: z        => succeeds, keeping z,y, S\u |-> y,z
+
+x,y,z :: S\u,u    =>  expand S\u saving u.P and ...
+x,y,z :: x,y,z\u  =>  expand gc1=x, save y,z.C and ...
+      x ::2 x,y,z\u  => succeeds, returning y,z\u.P, keeping x
+  y,z :: y,z\u    =>  expand gc2=y, save z.C and ...
+      y ::2 y,z\u   => succeeds, returning z\u.P, keeping y,x
+    z :: z\u      =>  done with S\u,  S\u -> x,y, restore u.P and ...
+    z :: u        =>  succeeds giving u |-> z
+
+y,z,x :: S\u,u    =>  expand S\u saving u.P and ...
+y,z,x :: x,y,z\u  =>  expand gc1=y, save z.x.C and ...
+      y ::2 x,y,z\u  =>  P-sub, giving u |-> x and ...
+      y ::2 y,z      =>  succeeds, returning z.P, keeping y
+  z,x ::
 
 
+x,y,z :: u,S\uv,v  =>  x::u giving u |-> x and ...
+  y,z :: S\uv,v    =>  expand S\uv, saving v.P and ...
+  y,z :: x,y,z\uv  =>  expand gc1 = y, save z.C and ...
+      -- this works because u comes first out of \uv here !!!
+      y ::2 x,y,z\uv  =>  P-sub, giving u |-> x and ...
+      y ::2 y,z\v     =>  succeeds, returning z\v.P, keeping y
+    z :: z\v       =>  done with S\uv, S\uv |-> y, restore v.P and ...
+    z :: v         =>  succeedds giving v |-> z
 
-vlMatch [vtL_Design] emptyBinding S.empty S.empty
-        (vwrap [x,y,z]) (vwrap [vu] ++ lwrap [lSu])
-=
-*** Exception: user error (vlKnownMatch(mashup): NYI
------------
-vlC  =  [GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]
-::
-gvP  =  GL (LV (VR (Id "S",VO,WB),[Id "u"],[]))
----
-vlK  =  [GV (VR (Id "x",VO,WB)),GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]
-vlX  =  [VR (Id "x",VO,WB),VR (Id "y",VO,WB),VR (Id "z",VO,WB)]
-xLen =  3
-uis  =  [Id "u"]
-ujs  =  []
-)
+z,y,x :: u,S\uv,v  =>  z::u giving u |-> z and ...
 
- Pulls y off vlC
- Does not match head vlX, but uis is non-empty, so record u -> x, tailing vlX
- Still with y, does match head vlX:
-   so keep y, tail vlX
- Pull z off vlC, matches head vlX:
-    so keep z, tail vlX
- vlX empty so return y,z   with  vlC empty
-
-vlMatch [vtL_Design] emptyBinding S.empty S.empty
-        (vwrap [y,z,x]) (lwrap [lSu] ++ vwrap [vu])
-=
-*** Exception: user error (vlKnownMatch(mashup): NYI
------------
-vlC  =  [GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB)),GV (VR (Id "x",VO,WB))]
-::
-gvP  =  GL (LV (VR (Id "S",VO,WB),[Id "u"],[]))
----
-vlK  =  [GV (VR (Id "x",VO,WB)),GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]
-vlX  =  [VR (Id "x",VO,WB),VR (Id "y",VO,WB),VR (Id "z",VO,WB)]
-xLen =  3
-uis  =  [Id "u"]
-ujs  =  []
-)
-
- Pulls y off vlC
- Does not match head vlX, but uis is non-empty, so record u -> x, tailing vlX
- Still with y, does match head vlX:
-   so keep y, tail vlX
- Pull z off vlC, matches head vlX:
-    so keep z, tail vlX
- vlX empty so return y,z   with  vlC = [x]
-
-vlMatch [vtL_Design] emptyBinding S.empty S.empty
-        (vwrap [x,y,z]) (vwrap [vu,vw] ++ lwrap [lSuw])
-=
-*** Exception: user error (vlKnownMatch(mashup): NYI
------------
-vlC  =  [GV (VR (Id "z",VO,WB))]
-::
-gvP  =  GL (LV (VR (Id "S",VO,WB),[Id "u",Id "w"],[]))
----
-vlK  =  [GV (VR (Id "x",VO,WB)),GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]
-vlX  =  [VR (Id "x",VO,WB),VR (Id "y",VO,WB),VR (Id "z",VO,WB)]
-xLen =  3
-uis  =  [Id "u",Id "w"]
-ujs  =  []
-)
-
-Pulls z off vlC
-Does not match head vlX, but uis is non-empty,
-   so record u -> x, tailing vlX, uis
-Still with z
-Does not match head vlX, but uis is non-empty,
-   so record w -> y, tailing vlX, uis
-Still with z
-Matches head vlX:
-  so keep z, tail vlX
-vlX empty, so return z  with vlC empty
-
-Summary
-  REPEAT
-    pull head off vlC, if unknown list variable then FAIL, expand if known listvar
-    LOOP
-      is head/expansion a prefix of vlX?
-       Yes: keep head(vlC), drop prefix from vlX, tail vlC, set expansion to null
-       No: are uis and ujs both null? If so, FAIL
-           if uis not null
-           then
-              BIND head uis to head expansion, tail expansion, uis
-           else -- uis null, ujs not null
-              BIND head ujs to head expansion, tail expansion, uis
-              -- not the smartest, should really try 1,2,3 bits of expansion
-    EXIT if null expansion or uis and ujs are null
-    if not null expansion then FAIL
-  UNTIL vlX or vlC are empty
-  if vlX empty then return gvP -> list of kept vlC variables, rest of vlC
-  if not, FAIL (vlC is empty)
-
+  y,x :: S\uv,v    =>  expand S\uv, saving v.P and ...
+  y,x :: x,y,z\uv  =>  expand gc1 = y, save x.C and ...
+      -- this works because u comes first out of \uv here !!!
+      y ::2 x,y,z\uv  =>  P-sub, giving u |-> x and ... CRASH
 
 --

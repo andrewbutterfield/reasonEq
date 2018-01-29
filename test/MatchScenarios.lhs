@@ -218,6 +218,7 @@ test_none_reserved
 lSu  = lS `less` ([u],[])
 lSuw = lS `less` ([u,w],[])
 lSuvw = lS `less` ([u,v,w],[])
+lOu = lO `less` ([u],[])
 
 test_reserved_as_lists
  = testGroup "O,M,S reserved as [ok,x,y,z]"
@@ -321,6 +322,12 @@ test_reserved_as_lists
                   (vwrap [x,y,z]) (vwrap [vu,vw] ++ lwrap [lSuw]))
            @?= [ bindVV gu gx $ bindVV gw gy
                  $ bindLl (LstVar lSuw) [gz] emptyBinding
+               ]
+         )
+     , testCase "L_Design |- [ok,S\\u] :: [O\\u] -- succeeds"
+         ( nub (vlMatch [vtL_Design] emptyBinding S.empty S.empty
+                  (vwrap [ok]++lwrap [lSu]) (lwrap [lOu]))
+           @?= [ bindLl (LstVar lOu) (vwrap [ok]++lwrap [lSu]) emptyBinding
                ]
          )
    ]

@@ -1,9 +1,3 @@
-vlMatch [vtL_Design] emptyBinding S.empty S.empty (vwrap [x,y,z]) (vwrap [vu] ++ lwrap [lSu])
-=
-*** Exception: user error (bindVarToVar: already bound differently.
-d = (Id "u",VO)
-r = BI (Id "y")
-bind:
-fromList [((Id "u",VO),BI (Id "x"))]
-)
+vlMatch [vtL_Design] emptyBinding S.empty S.empty (vwrap [y,z,x]) (lwrap [lSu] ++ vwrap [vu])
+
 --

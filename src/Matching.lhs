@@ -970,16 +970,26 @@ In addition we return the corresponding ``suffix'' of the
 \texttt{vlP} expansion.
 \begin{eqnarray*}
    expand(gc_i)
-   ::
+   ::_2
    \seqof{vp_1,\dots,vp_j,vp_{j+1},vp_m} \setminus \mathtt{uvP} ; \mathtt{ulP}
    &\leadsto&
    ( \textsl{keep}~ gc_i
    , \seqof{vp_{j+1},vp_m} \setminus \mathtt{uvP'} ; \mathtt{ulP'} )
 \end{eqnarray*}
 \begin{code}
--- kept is not complete
 vlExpandMatch vts bind cbvs pbvs bc bw lvP kept xP exactP lMaxP uvP ulP []
-  = fail "vlExpandMatch: not enough candidates."
+ | null xP || lMaxP == 0  =  do bind' <- bindLVarToVList lvP (reverse kept) bind
+                                return (bind',[])
+ | otherwise
+  = fail $ unlines
+       [ "vlExpandMatch: not enough candidates."
+       , "kept   = " ++ show kept
+       , "xP     = " ++ show xP
+       , "exactP = " ++ show exactP
+       , "lMaxP  = " ++ show lMaxP
+       , "uvP    = " ++ show uvP
+       , "ulP    = " ++ show ulP
+       ]
 \end{code}
 
 \newpage
@@ -992,7 +1002,11 @@ vlExpandMatch vts bind cbvs pbvs bc bw lvP kept xP exactP lMaxP uvP ulP (gC:vlC'
   = do (xC,uvC,ulC) <- genExpandToList vts gC
        (exactC,lMaxC) <- expRange (length xC,uvC,ulC)
        if exactC && lMaxP < lMaxC
-        then fail "vlExpandMatch: candidate too large."
+        then fail $ unlines
+              [ "vlExpandMatch: candidate too large."
+              , "(xC,uvC,ulC) = " ++ show (xC,uvC,ulC)
+              , "(xP,uvP,ulP) = " ++ show (xP,uvP,ulP)
+              ]
         else do (bind',xP',lMaxP',uvP',ulP')
                   <- vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP xC xP
                 vlExpandMatch vts bind' cbvs pbvs
@@ -1003,7 +1017,7 @@ The core algorithm tries to match all of an expanded candidate variable,
 with a prefix of the current state of the expanded pattern list-variable.
 \begin{eqnarray*}
   \seqof{vc_1,\dots,vc_n} \setminus \mathtt{uvC} ; \mathtt{ulC}
-  &::&
+  &::_2&
   \seqof{vp_1,\dots,vp_m} \setminus \mathtt{uvP} ; \mathtt{ulP}
 \\ &\leadsto&
   ( \beta'
@@ -1014,7 +1028,7 @@ with a prefix of the current state of the expanded pattern list-variable.
 When both expansions are empty, we are done:
 \begin{eqnarray*}
   \seqof{vc_1,\dots,vc_n} \setminus \seqof{ic_1,\dots,ic_n} ; \mathtt{ulC}
-  &::&
+  &::_2&
   \seqof{vp_1,\dots,vp_m} \setminus \seqof{ip_1,\dots,ip_m}  ; \mathtt{ulP}
 \\ &\leadsto&
   ( \{ ip_j \mapsto vp_j, \mathtt{ulP}_k \mapsto \nil \}
@@ -1022,7 +1036,8 @@ When both expansions are empty, we are done:
 \end{eqnarray*}
 \begin{code}
 vlExpand2Match bc bw bind 0 uvC ulC 0 uvP ulP xC xP
-  = zeroOutExpanse bc bw bind uvP ulP xP
+  = return (bind,xP,0,uvP,ulP)
+--  = zeroOutExpanse bc bw bind uvP ulP xP
 \end{code}
 
 When the candidate expansion is empty,
@@ -1030,7 +1045,7 @@ but the pattern isn't,
 we return the current state of the pattern as-is.
 \begin{eqnarray*}
   \seqof{vc_1,\dots,vc_n} \setminus \seqof{ic_1,\dots,ic_n} ; \mathtt{ulC}
-  &::&
+  &::_2&
   \seqof{vp_1,\dots,vp_m} \setminus \mathtt{uvP} ; \mathtt{ulP}
 \\ &\leadsto&
   ( \{\}
@@ -1065,29 +1080,37 @@ If the same, we remove both, decrement maxes, and continue.
 If not, then what we need to do is to find a subsequence
 of \texttt{xC} of length \texttt{lMaxC},
 that is contained in \texttt{xP}.
-Incrementally, we have a choice of removing the first element
-from either or both expansions.
-What we acually do is try all three possibilities,
-without generating any bindings.
+
+We try an incremental greedy approach as follows:
+We can only remove a side's expansion variable
+if there is a subtracted variable/list-var (identifier)
+on that side to offset it.
+If neither side has subtractions, then the match fails.
 \begin{code}
--- vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP (vC:xC') (vP:xP')
-  | otherwise =
-  -- drop vC
-     if null uvC then fail "vlExpand2Match(drop vC): no subtracted candidates."
-     else
-     vlExpand2Match bc bw bind (lMaxC-1) (tail uvC) ulC lMaxP uvP ulP  xC' xP
-     `mplus`
-  -- drop vP
-     if null uvP then fail "vlExpand2Match(drop vC): no subtracted patterns."
-     else
-     vlExpand2Match bc bw bind lMaxC uvC ulC (lMaxP-1) (tail uvP) ulP  xC  xP'
-     `mplus`
-  -- drop both
-     if null uvP || null uvC
-     then fail "vlExpand2Match(drop vC): no subtracted vars."
-     else
-     vlExpand2Match bc bw bind
-                    (lMaxC-1) (tail uvC) ulC (lMaxP-1) (tail uvP) ulP  xC' xP'
+-- vC /= vP
+vlExpand2Match bc bw bind lMaxC [] [] lMaxP [] [] xC xP
+  = fail "vlExpand2Match: expansions differ."
+\end{code}
+We use up subtracted variables before touching any list-vars.
+On the pattern side we bind any subtracted variable identifier used in this way
+to the removed expansion variable.
+
+If we have the choice of both candidate and pattern to progress in this
+way, then we favour the pattern.
+We do this because so far only pattern examples have shown up.
+\begin{code}
+-- vC /= vP
+vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP (uv:uvP) ulP xC (vP:xP')
+  = do bind' <- bindVarToVar (Vbl uv bc bw) vP bind
+       vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP xC xP'
+
+vlExpand2Match bc bw bind lMaxC (uv:uvC) ulC lMaxP uvP ulP (vC:xC') xP
+  -- no bindings !
+  =    vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP xC' xP
+
+-- vlExpand2Match bc bw bind lMaxC (tail uvC) ulC lMaxP uvP ulP  xC' xP
+-- vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP (tail uvP) ulP  xC  xP'
+-- vlExpand2Match bc bw bind lMaxC (tail uvC) ulC lMaxP (tail uvP) ulP  xC' xP'
 \end{code}
 
 
@@ -1111,6 +1134,9 @@ zeroOutExpanse :: Monad m
                     )
 zeroOutExpanse bc bw bind _ _ []   =  return (bind,[],0,[],[])
 zeroOutExpanse bc bw bind [] [] _  =  error "zeroOutExpanse: Unexpected!"
+zeroOutExpanse bc bw bind (uv:uvs) uls (xv:xvs)
+ = do bind' <- bindVarToVar (Vbl uv bc bw) xv bind
+      zeroOutExpanse bc bw bind' uvs uls xvs
 zeroOutExpanse bc bw bind [] (ul:uls) xvs
  = do bind' <- bindLVarToVList (lvr bc bw ul) (map StdVar xvs) bind
       bind'' <- bindLVarsToNull bind' (map (lvr bc bw) uls)

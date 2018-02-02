@@ -311,17 +311,44 @@ test_reserved_as_lists
            @?= [ bindVV gu gx $ bindLl (LstVar lSu) [gy,gz] emptyBinding
                ]
          )
+     , testCase "L_Design |- [x,y,z] :: [S\\u, u] -- SHOULD SUCCEED (TRICKY!)"
+         ( vlMatch [vtL_Design] emptyBinding S.empty S.empty
+             (vwrap [x,y,z]) (lwrap [lSu] ++ vwrap [vu])
+           @?= [ bindVV gu gz $ bindLl (LstVar lSu) [gx,gy] emptyBinding
+               ]
+         )
      , testCase "L_Design |- [y,z,x] :: [S\\u, u] -- SHOULD SUCCEED (TRICKY!)"
          ( vlMatch [vtL_Design] emptyBinding S.empty S.empty
              (vwrap [y,z,x]) (lwrap [lSu] ++ vwrap [vu])
            @?= [ bindVV gu gx $ bindLl (LstVar lSu) [gy,gz] emptyBinding
                ]
          )
-     , testCase "L_Design |- [x,y,z] :: [u,w,S\\u,w] -- succeeds"
+     , testCase "L_Design |- [x,y,z] :: [u,w,S\\uw] -- succeeds"
          ( nub (vlMatch [vtL_Design] emptyBinding S.empty S.empty
                   (vwrap [x,y,z]) (vwrap [vu,vw] ++ lwrap [lSuw]))
            @?= [ bindVV gu gx $ bindVV gw gy
                  $ bindLl (LstVar lSuw) [gz] emptyBinding
+               ]
+         )
+     , testCase "L_Design |- [x,y,z] :: [u,S\\uw,w] -- succeeds"
+         ( nub (vlMatch [vtL_Design] emptyBinding S.empty S.empty
+                  (vwrap [x,y,z]) (vwrap [vu] ++ lwrap [lSuw] ++ vwrap [vw]))
+           @?= [ bindVV gu gx $ bindVV gw gz
+                 $ bindLl (LstVar lSuw) [gy] emptyBinding
+               ]
+         )
+     , testCase "L_Design |- [z,y,x] :: [u,S\\uw,w] -- succeeds"
+         ( nub (vlMatch [vtL_Design] emptyBinding S.empty S.empty
+                  (vwrap [z,y,x]) (vwrap [vu] ++ lwrap [lSuw] ++ vwrap [vw]))
+           @?= [ bindVV gu gz $ bindVV gw gx
+                 $ bindLl (LstVar lSuw) [gy] emptyBinding
+               ]
+         )
+     , testCase "L_Design |- [y,x,z] :: [u,S\\uw,w] -- succeeds"
+         ( nub (vlMatch [vtL_Design] emptyBinding S.empty S.empty
+                  (vwrap [y,x,z]) (vwrap [vu] ++ lwrap [lSuw] ++ vwrap [vw]))
+           @?= [ bindVV gu gy $ bindVV gw gz
+                 $ bindLl (LstVar lSuw) [gx] emptyBinding
                ]
          )
      , testCase "L_Design |- [ok,S\\u] :: [O\\u] -- succeeds"

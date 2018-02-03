@@ -964,7 +964,7 @@ against all of the expansion of a general variable $gc_i$ in \texttt{vlC}.
    &=&
    \seqof{vc_1,\dots,vc_n} \setminus \mathtt{uvC} ; \mathtt{ulC}
 \end{eqnarray*}
-If we succeed, then $gc_i$ is added to the list,
+If we succeed, then $gc_i$ is added to the list \texttt{kept},
 against which \texttt{lvP} will be bound if all succeeds.
 In addition we return the corresponding ``suffix'' of the
 \texttt{vlP} expansion.
@@ -978,8 +978,9 @@ In addition we return the corresponding ``suffix'' of the
 \end{eqnarray*}
 \begin{code}
 vlExpandMatch vts bind cbvs pbvs bc bw lvP kept xP exactP lMaxP uvP ulP []
- | null xP || lMaxP == 0  =  do bind' <- bindLVarToVList lvP (reverse kept) bind
-                                return (bind',[])
+ | null (dbg "vlEM[].xP=" xP) || (dbg "vlEM[].lMaxP=" lMaxP) == 0
+    = do bind' <- bindLVarToVList (dbg "vlEM[].lvP=" lvP) (reverse (dbg "vlEM[].kept=" kept)) $ dbg "vlEM[].bind:\n" bind
+         return (bind',[])
  | otherwise
   = fail $ unlines
        [ "vlExpandMatch: not enough candidates."
@@ -999,13 +1000,15 @@ in order for a match to be possible.
 \begin{code}
 -- kept is not complete
 vlExpandMatch vts bind cbvs pbvs bc bw lvP kept xP exactP lMaxP uvP ulP (gC:vlC')
-  = do (xC,uvC,ulC) <- genExpandToList vts gC
-       (exactC,lMaxC) <- expRange (length xC,uvC,ulC)
-       if exactC && lMaxP < lMaxC
+ -- we need to check for empty xP, lMaxP here as well !!!!!!!
+  = do (xC,uvC,ulC) <- genExpandToList vts $ dbg "vlEM:.gC=" gC
+       (exactC,lMaxC) <- expRange (length (dbg "vlEM:.xC=" xC),(dbg "vlEM:.uvC=" uvC),ulC)
+       if (dbg "vlEM:.exactC=" exactC) && (dbg "vlEM:.lMaxP=" lMaxP) < (dbg "vlEM:.lMaxC=" lMaxC)
         then fail $ unlines
               [ "vlExpandMatch: candidate too large."
               , "(xC,uvC,ulC) = " ++ show (xC,uvC,ulC)
               , "(xP,uvP,ulP) = " ++ show (xP,uvP,ulP)
+              , "bind:", show bind
               ]
         else do (bind',xP',lMaxP',uvP',ulP')
                   <- vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP xC xP

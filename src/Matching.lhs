@@ -883,6 +883,8 @@ can correspond to zero or more variables.
 \end{eqnarray*}
 If $n < len(\mathtt{uv})$, then the expansion is invalid,
 and either pattern or candidate being invalid is an automatic match fail.
+If $n = len(\mathtt{uv})$, then the expansion is `empty',
+because the only variable-list it can match is an empty one.
 \begin{code}
 expRange :: Monad m => (Int,[Identifier],[Identifier]) -> m (Bool,Int)
 
@@ -925,6 +927,8 @@ vlKnownMatch vts bind cbvs pbvs
     vw = lvarWhen lvP
 \end{code}
 
+\newpage
+\paragraph{Matching the list-expansion of a List-Variable.}
 We now try to match (all of) \texttt{lvP} incrementally
 against a prefix of \texttt{vlC},
 using the full expansion, \texttt{vlX} and candidate variables
@@ -946,6 +950,204 @@ as well as the remaining suffix of \texttt{vlC}.
    (\mathtt{lvP}\mapsto\seqof{gc_1,\dots,gc_k}
    ,\seqof{gc_{k+1},\dots,gc_n})
 \end{eqnarray*}
+
+We now present a formal description of the algorithm,
+by introducing a context that includes bindings, among other things.
+We are trying to perform the following partial-match ($\mvl$) inference:
+\begin{eqnarray*}
+  \dots,\beta
+  \vdash
+  \seqof{gc_1,\dots,gc_k,gc_{k+1},\dots,gc_n} \mvl \mathtt{vlP}
+  \leadsto
+  (\beta'\override\maplet{\mathtt{vlP}}{\seqof{gc_1,\dots,gc_k}},\seqof{gc_{k+1},\dots,gc_n})
+\end{eqnarray*}
+Here $\dots$ denotes further context to be elucidated,
+while $\beta'$ indicates that there may be other bindings,
+in particular associated with subtracted variables in \texttt{vlP}.
+We use $\Gamma$ below to denote the complete context,
+and $\gamma,x,y$ to denote context components $x$ and $y$
+collected together with $\gamma$, the rest of the context.
+
+We can break the algorithm down into a number of steps:
+\begin{enumerate}
+%%%%
+\item
+We first start by expanding \texttt{vlP} and using the expansion as the basis
+for mapping.
+This is what done by \texttt{vlKnownMatch} above
+when it calls \texttt{vlExpandMatch} (a.k.a. $\mvlx$) below.
+We use the context (component $\kappa$)
+to track the candidate variables so matched.
+\[
+\inferrule
+ { \mathtt{vlC} = pfx(\mathtt{vlC}) \cat sfx(\mathtt{vlC})
+   \\ \kappa_0 = \nil
+   \\\\
+   \gamma,\kappa_0
+     \vdash
+     \mathtt{vlC} \mvlx expand(\mathtt{vlP})
+     \leadsto
+     ( \beta'\override\maplet{\mathtt{vlP}}{pfx(\mathtt{vlC})}
+     , sfx(\mathtt{vlC}))
+ }
+ { \Gamma
+   \vdash
+   \mathtt{vlC} \mvl \mathtt{vlP}
+   \leadsto
+   ( \beta'\override\maplet{\mathtt{vlP}}{pfx(\mathtt{vlC})}
+   , sfx(\mathtt{vlC}))
+ }
+\]
+%%
+\item
+The plan with $\mvlx$ is to map successive `prefixes' of the \texttt{vlP} expansion
+against the expansion of variables, one-by-one in \texttt{vlC}, until
+we reduce $expand(\mathtt{vlP})$ to `empty'.
+The simplest case is when \texttt{vlP} is empty:
+\[
+\inferrule
+ { empty(expand(\mathtt{vlP}))
+   \\
+   \beta' = blo(\beta,expand(\mathtt{vlP}))
+ }
+ { \gamma,\beta,\kappa
+    \vdash
+    \mathtt{vlC} \mvlx expand(\mathtt{vlP})
+    \leadsto
+    ( \beta'\override\maplet{\mathtt{vlP}}{\kappa}
+    , \mathtt{vlC} )
+ }
+\]
+An open question here is what we do with any remaining subtracted
+variables in the pattern. They may need to be bound appropriately.
+This is the purpose of the $blo$ (bind-leftovers) function.
+%%
+\item
+If \texttt{vlP} is not empty,
+then we match a prefix of it against all of the expansion of the first
+variable in \texttt{vlC}.
+If that succeeds then we add the variable to $\kappa$, and recurse.
+\[
+\inferrule
+ { \lnot empty(expand(\mathtt{vlP}))
+   \\
+   \gamma,\beta,\kappa
+      \vdash
+      expand(\mathtt{vC}) \mvlxx expand(\mathtt{vlP})
+      \leadsto ( \beta',expand(\mathtt{vlP'}) )
+   \\
+   \gamma,\beta',\kappa\cat\seqof{\mathtt{vC}}
+      \vdash
+      \mathtt{vlC'} \mvlx expand(\mathtt{vlP'})
+      \leadsto
+      ( \beta'' , \mathtt{vlC''} )
+ }
+ { \gamma,\beta,\kappa
+    \vdash
+    \mathtt{vC:vlC'} \mvlx expand(\mathtt{vlP})
+    \leadsto
+    ( \beta'', \mathtt{vlC''} )
+ }
+\]
+%%
+\item
+  We are now using $\mvlxx$ to compare a candidate expansion with a pattern expansion,
+  trying to match all of the candidate with a prefix of the expansion.
+  \[
+   \Gamma
+      \vdash
+      expand(\mathtt{vC}) \mvlxx expand(\mathtt{vlP})
+      \leadsto ( \beta',expand(\mathtt{vlP'}) )
+  \]
+  If both are empty, we are done, with just some leftover bindings to do:
+\[
+\inferrule
+ { empty(expand(\mathtt{vC}))
+   \\
+   empty(expand(\mathtt{vlP}))
+   \\
+     \beta' = blo(\beta,expand(\mathtt{vlP}))
+ }
+ { \gamma,\beta,\kappa
+    \vdash
+    \mathtt{vC} \mvlxx expand(\mathtt{vlP})
+    \leadsto
+    ( \beta'\override\maplet{\mathtt{vlP}}{\kappa}
+    , expand(\mathtt{vlP}) )
+ }
+\]
+If the pattern is empty, but the candidate is not, then we fail.
+If the candidate is empty, but the pattern is not,
+then we return, but do not do any added binding.
+\[
+\inferrule
+ { empty(expand(\mathtt{vC}))
+   \\
+   \lnot empty(expand(\mathtt{vlP}))
+ }
+ { \gamma,\beta,\kappa
+    \vdash
+    \mathtt{vC} \mvlxx expand(\mathtt{vlP})
+    \leadsto
+    ( \beta\override\maplet{\mathtt{vlP}}{\kappa}
+    , expand(\mathtt{vlP}) )
+ }
+\]
+%%
+\newpage
+\item
+If both expansions are non-empty, then we compare the first two variables
+in their expansions.
+\[
+ \Gamma
+ \vdash
+ (x^c_1,\dots,x^c_n \setminus \mathtt{uvC};\mathtt{ulC})
+ \mvlxx
+ (x^p_1,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
+ \leadsto
+ (\beta, (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+\]
+If they are the same, remove both and recurse:
+\[
+\inferrule
+ {
+ \Gamma
+ \vdash
+ (x^c_2,\dots,x^c_n \setminus \mathtt{uvC};\mathtt{ulC})
+ \mvlxx
+ (x^p_2,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
+ \leadsto
+ (\beta, (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ }
+ {
+ \Gamma
+ \vdash
+ (v,x^c_2,\dots,x^c_n \setminus \mathtt{uvC};\mathtt{ulC})
+ \mvlxx
+ (v,x^p_2,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
+ \leadsto
+ (\beta, (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ }
+\]
+%%
+\item
+If they differ,then we need to consider the size-ranges
+of both sides to consider what action to take.
+This is complicated by the fact that size-ranges can be
+exact ($[n\dots n]$) or inexact ($[0\dots n]$).
+The pattern size range must never be smaller than that for the candidate,
+for a match to succeed.
+In either case, a variable can only be removed from either side
+by offsetting against a subtracted unknown variable from the
+corresponding side, which is therefore itself also removed.
+Any such removal on the pattern side must bind that subtracted variable
+to the removed expansion variable, noting that the subtracted variable
+may have already been bound in a wider matching context.
+
+%%%%
+\end{enumerate}
+
+\newpage
 \begin{code}
 vlExpandMatch :: MonadPlus mp
               => [VarTable] -> Binding -> CBVS -> PBVS

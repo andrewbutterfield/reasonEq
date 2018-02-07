@@ -15,10 +15,13 @@
 \def\nil{\seqof{}}
 \def\Set#1{\mathcal P{#1}}
 \def\setof#1{\{{#1}\}}
+\def\cat{\frown}
 
 % function types
 \def\fun{\rightarrow}
 \def\dom{\mathrm{dom}}
+\def\maplet#1#2{{#1}\mapsto{#2}}
+\def\override{\oplus}
 
 
 % terms
@@ -41,3 +44,8 @@
 \def\defs{\mathrel{~\widehat{=\!\!\!\!=}}~}
 \def\less#1{{}\!\setminus\!{}_{#1}}
 \def\Skip{\mathit{I\!I}}
+
+%% Matching
+\def\mvl{\mathop{\;\tilde{::}\;}}
+\def\mvlx{\mathop{\;::_x\;}}
+\def\mvlxx{\mathop{\;{}_x\!\!::_x\;}}

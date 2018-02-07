@@ -1135,15 +1135,86 @@ If they differ,then we need to consider the size-ranges
 of both sides to consider what action to take.
 This is complicated by the fact that size-ranges can be
 exact ($[n\dots n]$) or inexact ($[0\dots n]$).
+If both sides are exact then the match fails.
 The pattern size range must never be smaller than that for the candidate,
 for a match to succeed.
 In either case, a variable can only be removed from either side
 by offsetting against a subtracted unknown variable from the
 corresponding side, which is therefore itself also removed.
+This action of removing a leading expansion variable,
+and an offsetting subtracted variable is called `shrinking'.`
 Any such removal on the pattern side must bind that subtracted variable
 to the removed expansion variable, noting that the subtracted variable
 may have already been bound in a wider matching context.
+\par
+In effect we determine conditions for which it is valid
+to remove either candidate or pattern variable.
+If both can be removed, then we allow a non-deterministic choice
+between which one we do.
 
+%%
+\item
+We can always shrink an inexact non-empty candidate expansion:
+\[
+\inferrule
+ {
+  v_u \in \mathtt{uvC}
+  \\
+ \Gamma
+ \vdash
+ (x^c_2,\dots,x^c_n \setminus (\mathtt{uvC}-v_u);\mathtt{ulC})
+ \mvlxx
+ (x^p_1,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
+ \leadsto
+ (\beta', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ }
+ {
+ \Gamma
+ \vdash
+ (x^c_1,x^c_2,\dots,x^c_n \setminus \mathtt{uvC};\mathtt{ulC})
+ \mvlxx
+ (x^p_1,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
+ \leadsto
+ (\beta', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ }
+\]
+Reminder: we can never shrink the candidate if it is exact.
+%%
+\item
+We can always shrink an inexact non-empty pattern expansion.
+\[
+\inferrule
+ {
+  v_u \in \mathtt{uvP}
+  \\
+  ( v_u \notin \beta \lor \beta(v_u) = x^p_1 )
+  \\\\
+ \gamma,\beta\override\maplet{v_u}{x^p_1}
+ \vdash
+ \\
+ (x^c_1,\dots,x^c_n \setminus \mathtt{uvC};\mathtt{ulC})
+ \mvlxx
+ (x^p_2,\dots,x^p_k,x^p_{k+1},x^p_m \setminus (\mathtt{uvP}-v_u);\mathtt{ulP})
+ \leadsto
+ (\beta', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ }
+ {
+ \gamma,\beta
+ \vdash
+ (x^c_1,\dots,x^c_n \setminus \mathtt{uvC};\mathtt{ulC})
+ \mvlxx
+ (x^p_1,x^p_2,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
+ \leadsto
+ (\beta', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ }
+\]
+Reminder: we can never shrink the pattern if it is exact.
+%%
+\item
+\textbf{We need a case when uvC is nil, but ulC isn't.}
+%%
+\item
+\textbf{We need a case when uvP is nil, but ulP isn't.}
 %%%%
 \end{enumerate}
 

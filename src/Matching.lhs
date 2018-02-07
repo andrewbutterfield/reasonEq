@@ -982,8 +982,9 @@ to track the candidate variables so matched.
 \inferrule
  { \mathtt{vlC} = pfx(\mathtt{vlC}) \cat sfx(\mathtt{vlC})
    \\ \kappa_0 = \nil
+   \\ \ell_0 = \emptyset
    \\\\
-   \gamma,\kappa_0
+   \gamma,\kappa_0,\ell_0
      \vdash
      \mathtt{vlC} \mvlx expand(\mathtt{vlP})
      \leadsto
@@ -1008,9 +1009,9 @@ The simplest case is when \texttt{vlP} is empty:
 \inferrule
  { empty(expand(\mathtt{vlP}))
    \\
-   \beta' = blo(\beta,expand(\mathtt{vlP}))
+   \beta' = blo(\beta,\ell,expand(\mathtt{vlP}))
  }
- { \gamma,\beta,\kappa
+ { \gamma,\beta,\kappa,\ell
     \vdash
     \mathtt{vlC} \mvlx expand(\mathtt{vlP})
     \leadsto
@@ -1066,9 +1067,9 @@ If that succeeds then we add the variable to $\kappa$, and recurse.
    \\
    empty(expand(\mathtt{vlP}))
    \\
-     \beta' = blo(\beta,expand(\mathtt{vlP}))
+     \beta' = blo(\beta,\ell,expand(\mathtt{vlP}))
  }
- { \gamma,\beta,\kappa
+ { \gamma,\beta,\kappa,\ell
     \vdash
     \mathtt{vC} \mvlxx expand(\mathtt{vlP})
     \leadsto
@@ -1148,13 +1149,13 @@ to the removed expansion variable, noting that the subtracted variable
 may have already been bound in a wider matching context.
 \par
 In effect we determine conditions for which it is valid
-to remove either candidate or pattern variable.
+to remove either a candidate or pattern variable.
 If both can be removed, then we allow a non-deterministic choice
 between which one we do.
-
 %%
 \item
-We can always shrink an inexact non-empty candidate expansion:
+We can always shrink an inexact non-empty candidate expansion
+when \texttt{uvC} is non-null:
 \[
 \inferrule
  {
@@ -1178,10 +1179,10 @@ We can always shrink an inexact non-empty candidate expansion:
  (\beta', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
  }
 \]
-Reminder: we can never shrink the candidate if it is exact.
 %%
 \item
-We can always shrink an inexact non-empty pattern expansion.
+We can always shrink an inexact non-empty pattern expansion
+when \texttt{uvP} is non-null:
 \[
 \inferrule
  {
@@ -1208,13 +1209,73 @@ We can always shrink an inexact non-empty pattern expansion.
  (\beta', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
  }
 \]
+%%
+\item
+When \texttt{uvC} is nil, but \texttt{ulC} is not,
+we can simply remove the leading candidate expansion variable,
+but leave \texttt{ulC} untouched.
+We do not care which members of \texttt{ulC} cover which members
+of the candidate expansion list.
+\[
+\inferrule
+ {
+ \mathtt{ulC} \neq \nil
+ \\
+ \Gamma
+ \vdash
+ (x^c_2,\dots,x^c_n \setminus \nil;\mathtt{ulC})
+ \mvlxx
+ (x^p_1,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
+ \leadsto
+ (\beta', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ }
+ {
+ \Gamma
+ \vdash
+ (x^c_1,x^c_2,\dots,x^c_n \setminus \nil;\mathtt{ulC})
+ \mvlxx
+ (x^p_1,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
+ \leadsto
+ (\beta', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ }
+\]
+Reminder: we can never shrink the candidate if it is exact.
+%%
+\item
+When \texttt{uvP} is nil, but \texttt{ulP} is not,
+and the pattern size is greater than that of the candidate,
+then we can remove the leading pattern expansion variable.
+However we must record its removal, so that at the end,
+we can decide how to map the members of \texttt{ulP}
+to all pattern variables removed in this way.
+The record of all such variables is held in the $\ell$
+components of the context.
+\[
+\inferrule
+ {
+  \mathtt{ulP} \neq \nil
+  \\\\
+ \gamma,\ell\cup\setof{x^p_1}
+ \vdash
+ \\
+ (x^c_1,\dots,x^c_n \setminus \mathtt{uvC};\mathtt{ulC})
+ \mvlxx
+ (x^p_2,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \nil;\mathtt{ulP})
+ \leadsto
+ (\beta', (x^p_{k+1},x^p_m \setminus \nil;\mathtt{ulP'}))
+ }
+ {
+ \gamma,\ell
+ \vdash
+ (x^c_1,\dots,x^c_n \setminus \mathtt{uvC};\mathtt{ulC})
+ \mvlxx
+ (x^p_1,x^p_2,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \nil;\mathtt{ulP})
+ \leadsto
+ (\beta', (x^p_{k+1},x^p_m \setminus \nil;\mathtt{ulP'}))
+ }
+\]
+
 Reminder: we can never shrink the pattern if it is exact.
-%%
-\item
-\textbf{We need a case when uvC is nil, but ulC isn't.}
-%%
-\item
-\textbf{We need a case when uvP is nil, but ulP isn't.}
 %%%%
 \end{enumerate}
 

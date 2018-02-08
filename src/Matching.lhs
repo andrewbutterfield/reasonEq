@@ -968,21 +968,40 @@ We use $\Gamma$ below to denote the complete context,
 and $\gamma,x,y$ to denote context components $x$ and $y$
 collected together with $\gamma$, the rest of the context.
 
-We can break the algorithm down into a number of steps:
-\begin{enumerate}
-%%%%
-\item
+We can break the algorithm down into a number of levels
+of matching rules:
+
+\begin{tabular}{|c|l|}
+\hline
+ Symbol & Description
+\\\hline
+ $\mvl$ & all of pattern list-variable against prefix of candidate list
+\\\hline
+ $\mvlx$ & all of pattern expansion against prefix of candidate list
+\\\hline
+ $\mvlxx$ & prefix of pattern expansion against all of candidate expansion
+\\\hline
+\end{tabular}
+
+\adobesucks
+
+\newpage
+
+\paragraph{Rules for $\mvl$ ---}~
+
 We first start by expanding \texttt{vlP} and using the expansion as the basis
 for mapping.
 This is what done by \texttt{vlKnownMatch} above
 when it calls \texttt{vlExpandMatch} (a.k.a. $\mvlx$) below.
 We use the context (component $\kappa$)
 to track the candidate variables so matched.
+We also have a component ($\ell$) that records pattern expansion variables
+that will correspond to subtracted pattern list-variables.
 \[
 \inferrule
  { \mathtt{vlC} = pfx(\mathtt{vlC}) \cat sfx(\mathtt{vlC})
    \\ \kappa_0 = \nil
-   \\ \ell_0 = \emptyset
+   \\ \ell_0 = \nil
    \\\\
    \gamma,\kappa_0,\ell_0
      \vdash
@@ -1000,6 +1019,11 @@ to track the candidate variables so matched.
  }
 \]
 %%
+
+\paragraph{Rules for $\mvlx$ ---}~
+
+\begin{enumerate}
+%%%%
 \item
 The plan with $\mvlx$ is to map successive `prefixes' of the \texttt{vlP} expansion
 against the expansion of variables, one-by-one in \texttt{vlC}, until
@@ -1032,12 +1056,12 @@ If that succeeds then we add the variable to $\kappa$, and recurse.
 \inferrule
  { \lnot empty(expand(\mathtt{vlP}))
    \\
-   \gamma,\beta,\kappa
+   \gamma,\beta,\kappa,\ell
       \vdash
       expand(\mathtt{vC}) \mvlxx expand(\mathtt{vlP})
-      \leadsto ( \beta',expand(\mathtt{vlP'}) )
+      \leadsto ( \beta',\ell',expand(\mathtt{vlP'}) )
    \\
-   \gamma,\beta',\kappa\cat\seqof{\mathtt{vC}}
+   \gamma,\beta',\kappa\cat\seqof{\mathtt{vC}},\ell'
       \vdash
       \mathtt{vlC'} \mvlx expand(\mathtt{vlP'})
       \leadsto
@@ -1052,62 +1076,72 @@ If that succeeds then we add the variable to $\kappa$, and recurse.
 \]
 %%
 \item
+ Need a case for when \texttt{vlC} is empty and \texttt{vlP} is inexact.
+\[
+\inferrule
+ { inexact(\mathtt{vlP})) \\ ?
+ }
+ { \gamma,\beta,\kappa
+    \vdash
+    \nil \mvlx expand(\mathtt{vlP})
+    \leadsto
+    ( \beta'', \mathtt{vlC''} )
+ }
+\]
+Ther concrete example is $y :: S \setminus ;l $
+$$
+\beta,\seqof{y},\seqof{x} \vdash \nil \mvlx z\setminus ; l
+$$
+%%%%
+\end{enumerate}
+
+\paragraph{Rules for $\mvlxx$ ---}~
+
+\begin{enumerate}
+%%%%
+\item
   We are now using $\mvlxx$ to compare a candidate expansion with a pattern expansion,
   trying to match all of the candidate with a prefix of the expansion.
   \[
    \Gamma
       \vdash
       expand(\mathtt{vC}) \mvlxx expand(\mathtt{vlP})
-      \leadsto ( \beta',expand(\mathtt{vlP'}) )
+      \leadsto ( \beta',\ell',expand(\mathtt{vlP'}) )
   \]
-  If both are empty, we are done, with just some leftover bindings to do:
+  If both are empty, we are done:
 \[
 \inferrule
  { empty(expand(\mathtt{vC}))
    \\
    empty(expand(\mathtt{vlP}))
-   \\
-     \beta' = blo(\beta,\ell,expand(\mathtt{vlP}))
  }
  { \gamma,\beta,\kappa,\ell
     \vdash
     \mathtt{vC} \mvlxx expand(\mathtt{vlP})
     \leadsto
-    ( \beta'\override\maplet{\mathtt{vlP}}{\kappa}
-    , expand(\mathtt{vlP}) )
+    ( \beta',\ell, expand(\mathtt{vlP}) )
  }
 \]
 If the pattern is empty, but the candidate is not, then we fail.
 If the candidate is empty, but the pattern is not,
-then we return, but do not do any added binding.
+then we return:
 \[
 \inferrule
  { empty(expand(\mathtt{vC}))
    \\
    \lnot empty(expand(\mathtt{vlP}))
  }
- { \gamma,\beta,\kappa
+ { \gamma,\beta,\kappa,\ell
     \vdash
     \mathtt{vC} \mvlxx expand(\mathtt{vlP})
     \leadsto
-    ( \beta\override\maplet{\mathtt{vlP}}{\kappa}
-    , expand(\mathtt{vlP}) )
+    ( \beta, \ell, expand(\mathtt{vlP}) )
  }
 \]
 %%
-\newpage
 \item
 If both expansions are non-empty, then we compare the first two variables
 in their expansions.
-\[
- \Gamma
- \vdash
- (x^c_1,\dots,x^c_n \setminus \mathtt{uvC};\mathtt{ulC})
- \mvlxx
- (x^p_1,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
- \leadsto
- (\beta, (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
-\]
 If they are the same, remove both and recurse:
 \[
 \inferrule
@@ -1118,7 +1152,7 @@ If they are the same, remove both and recurse:
  \mvlxx
  (x^p_2,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
  \leadsto
- (\beta, (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ (\beta', \ell', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
  }
  {
  \Gamma
@@ -1127,7 +1161,7 @@ If they are the same, remove both and recurse:
  \mvlxx
  (v,x^p_2,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
  \leadsto
- (\beta, (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ (\beta', \ell', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
  }
 \]
 %%
@@ -1167,7 +1201,7 @@ when \texttt{uvC} is non-null:
  \mvlxx
  (x^p_1,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
  \leadsto
- (\beta', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ (\beta', \ell',(x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
  }
  {
  \Gamma
@@ -1176,7 +1210,7 @@ when \texttt{uvC} is non-null:
  \mvlxx
  (x^p_1,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
  \leadsto
- (\beta', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ (\beta', \ell', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
  }
 \]
 %%
@@ -1192,12 +1226,12 @@ when \texttt{uvP} is non-null:
   \\\\
  \gamma,\beta\override\maplet{v_u}{x^p_1}
  \vdash
- \\
  (x^c_1,\dots,x^c_n \setminus \mathtt{uvC};\mathtt{ulC})
  \mvlxx
  (x^p_2,\dots,x^p_k,x^p_{k+1},x^p_m \setminus (\mathtt{uvP}-v_u);\mathtt{ulP})
+ \\\\
  \leadsto
- (\beta', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ (\beta',\ell', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
  }
  {
  \gamma,\beta
@@ -1206,7 +1240,7 @@ when \texttt{uvP} is non-null:
  \mvlxx
  (x^p_1,x^p_2,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
  \leadsto
- (\beta', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ (\beta', \ell',(x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
  }
 \]
 %%
@@ -1227,7 +1261,7 @@ of the candidate expansion list.
  \mvlxx
  (x^p_1,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
  \leadsto
- (\beta', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ (\beta', \ell', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
  }
  {
  \Gamma
@@ -1236,7 +1270,7 @@ of the candidate expansion list.
  \mvlxx
  (x^p_1,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
  \leadsto
- (\beta', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ (\beta', \ell', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
  }
 \]
 Reminder: we can never shrink the candidate if it is exact.
@@ -1255,14 +1289,14 @@ components of the context.
  {
   \mathtt{ulP} \neq \nil
   \\\\
- \gamma,\ell\cup\setof{x^p_1}
+ \gamma,\ell\cat\seqof{x^p_1}
  \vdash
- \\
  (x^c_1,\dots,x^c_n \setminus \mathtt{uvC};\mathtt{ulC})
  \mvlxx
  (x^p_2,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \nil;\mathtt{ulP})
+ \\\\
  \leadsto
- (\beta', (x^p_{k+1},x^p_m \setminus \nil;\mathtt{ulP'}))
+ (\beta', \ell',(x^p_{k+1},x^p_m \setminus \nil;\mathtt{ulP'}))
  }
  {
  \gamma,\ell
@@ -1271,7 +1305,7 @@ components of the context.
  \mvlxx
  (x^p_1,x^p_2,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \nil;\mathtt{ulP})
  \leadsto
- (\beta', (x^p_{k+1},x^p_m \setminus \nil;\mathtt{ulP'}))
+ (\beta', \ell',(x^p_{k+1},x^p_m \setminus \nil;\mathtt{ulP'}))
  }
 \]
 

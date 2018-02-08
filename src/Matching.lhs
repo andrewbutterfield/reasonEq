@@ -868,9 +868,47 @@ vlFreeMatchN vts bind cbvs pbvs bc vlC lvP vlP n
  where (firstnC,restC) = splitAt n vlC
 \end{code}
 
-A key metric is the range of possible lengths that an expansion can have,
-given that any (unknown) list-variable in the expansion
-can correspond to zero or more variables.
+\newpage
+
+\paragraph{Classifying Expansions}
+Consider an expansion
+$( \seqof{x_1,\dots,x_m}
+   \setminus
+   \mathtt{v_1,\dots,v_n}
+   ;
+   \mathtt{l_1,\dots,l_k})
+$.
+
+If $n > m$, we consider it ill-formed.
+If $n = m$, then it denotes an empty list,
+and the $l_i$, if any, denote empty lists of variables
+This leads to a first classification:
+
+\begin{tabular}{|l|c|}
+\hline
+  empty & $ m = n $
+\\\hline
+ non-empty & $ m > n $
+\\\hline
+\end{tabular}
+
+If $k = 0$, then it denotes a list of length $m-n$,
+that is interleaved within the $\seqof{x_1,\dots,x_m}$ list.
+If $k = 0$ and $n = 0$,
+then it denotes precisely the list $\seqof{x_1,\dots,x_m}$.
+This leads to a second classification (orthogonal to the first):
+
+\begin{tabular}{|l|c|}
+\hline
+  inexact & $k > 0$
+\\\hline
+  exact &  $k = 0, n > 0$
+\\\hline
+  rigid & $k=0, n=0$
+\\\hline
+\end{tabular}
+
+A key metric is the range of possible lengths that an expansion can have:
 \begin{eqnarray*}
   range(\seqof{v_1,\dots,v_n} \setminus \mathtt{uv} ; \mathtt{ul})
   &=& \left\{
@@ -881,10 +919,6 @@ can correspond to zero or more variables.
         \end{array}
       \right.
 \end{eqnarray*}
-If $n < len(\mathtt{uv})$, then the expansion is invalid,
-and either pattern or candidate being invalid is an automatic match fail.
-If $n = len(\mathtt{uv})$, then the expansion is `empty',
-because the only variable-list it can match is an empty one.
 \begin{code}
 expRange :: Monad m => (Int,[Identifier],[Identifier]) -> m (Bool,Int)
 

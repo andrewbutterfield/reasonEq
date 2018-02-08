@@ -1079,19 +1079,25 @@ If that succeeds then we add the variable to $\kappa$, and recurse.
  Need a case for when \texttt{vlC} is empty and \texttt{vlP} is inexact.
 \[
 \inferrule
- { inexact(\mathtt{vlP})) \\ ?
+ { inexact(\mathtt{vlP}))
+   \\
+   \beta' = blo(\beta,\ell,expand(\mathtt{vlP}))
  }
  { \gamma,\beta,\kappa
     \vdash
     \nil \mvlx expand(\mathtt{vlP})
     \leadsto
-    ( \beta'', \mathtt{vlC''} )
+    ( \beta'\override\maplet{\mathtt{vlP}}{\kappa}, \nil )
  }
 \]
-Ther concrete example is $y :: S \setminus ;l $
-$$
-\beta,\seqof{y},\seqof{x} \vdash \nil \mvlx z\setminus ; l
-$$
+The $blo$ function satisfies the following specification:
+\begin{eqnarray*}
+   dom(\beta') &=& ls
+\\ elems(\cat rng(\beta')) &=& elems (\ell \cat xs)
+\\ \beta' & \approx & \maplet{ls}{\ell \cat xs}
+\end{eqnarray*}
+given that $blo(\beta,\ell,xs\setminus;ls)  = \beta \override \beta'$.
+
 %%%%
 \end{enumerate}
 

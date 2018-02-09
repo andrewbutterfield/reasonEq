@@ -1,0 +1,230 @@
+%
+
+\def\knownMatchR{
+  \inferrule
+   { \mathtt{vlC} = pfx(\mathtt{vlC}) \cat sfx(\mathtt{vlC})
+     \\ \kappa_0 = \nil
+     \\ \ell_0 = \nil
+     \\\\
+     \beta,\kappa_0,\ell_0
+       \vdash
+       \mathtt{vlC}
+       \mvlx
+       expand(\mathtt{vlP})
+       \leadsto
+       ( \beta', pfx(\mathtt{vlC}), sfx(\mathtt{vlC}) )
+   }
+   { \Gamma
+     \vdash
+     \mathtt{vlC}
+     \mvl
+     \mathtt{vlP}
+     \leadsto
+     ( \beta'\override\maplet{\mathtt{vlP}}{pfx(\mathtt{vlC})}
+     , sfx(\mathtt{vlC}))
+   }
+}
+
+\def\expandMatchEmptyR{
+  \inferrule
+   { empty(\mathtt{xP})
+     \\
+     \beta' = blo(\beta,\ell,\mathtt{xP})
+   }
+   { \beta,\kappa,\ell
+      \vdash
+      \mathtt{vlC} \mvlx \mathtt{xP}
+      \leadsto
+      ( \beta', \kappa, \mathtt{vlC} )
+   }
+}
+
+\def\expandMatchInExactR{
+  \inferrule
+   { inexact(\mathtt{xP}))
+     \\
+     \beta' = blo(\beta,\ell,\mathtt{xP})
+   }
+   { \gamma,\beta,\kappa
+      \vdash
+      \nil \mvlx \mathtt{xP}
+      \leadsto
+      ( \beta', \kappa, \nil )
+   }
+}
+
+\def\expandMatchNonEmptyR{
+  \inferrule
+   { \lnot empty(\mathtt{xP})
+     \\
+     \gamma,\beta,\kappa,\ell
+        \vdash
+        expand(\mathtt{vC}) \mvlxx \mathtt{xP}
+        \leadsto ( \beta',\ell',\mathtt{xP'} )
+     \\
+     \gamma,\beta',\kappa\cat\seqof{\mathtt{vC}},\ell'
+        \vdash
+        \mathtt{vlC'} \mvlx \mathtt{xP'}
+        \leadsto
+        ( \beta'' , \kappa', \mathtt{vlC''} )
+   }
+   { \gamma,\beta,\kappa
+      \vdash
+      \mathtt{vC:vlC'} \mvlx \mathtt{xP}
+      \leadsto
+      ( \beta'', \kappa', \mathtt{vlC''} )
+   }
+}
+
+\def\expTwoMatchAllEmptyR{
+  \inferrule
+   { empty(\mathtt{xC})
+     \\
+     empty(\mathtt{xP})
+   }
+   { \beta,\kappa,\ell
+      \vdash
+      \mathtt{vC} \mvlxx \mathtt{xP}
+      \leadsto
+      ( \beta',\ell, \mathtt{xP} )
+   }
+}
+
+\def\expTwoMatchCandEmptyR{
+  \inferrule
+   { empty(\mathtt{xC})
+     \\
+     \lnot empty(\mathtt{xP})
+   }
+   { \gamma,\beta,\kappa,\ell
+      \vdash
+      \mathtt{vC} \mvlxx \mathtt{xP}
+      \leadsto
+      ( \beta, \ell, \mathtt{xP} )
+   }
+}
+
+\def\expTwoMatchSameR{
+  \inferrule
+   {
+   \Gamma
+   \vdash
+   (xs_C \setminus \mathtt{uvC};\mathtt{ulC})
+   \mvlxx
+   (xs_P \setminus \mathtt{uvP};\mathtt{ulP})
+   \leadsto
+   (\beta', \ell', \mathtt{xP'})
+   }
+   {
+   \Gamma
+   \vdash
+   (v:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
+   \mvlxx
+   (v:xs_P \setminus \mathtt{uvP};\mathtt{ulP})
+   \leadsto
+   (\beta', \ell', \mathtt{xP'})
+   }
+}
+
+\def\expTwoMatchClipCandR{
+  \inferrule
+   {
+    v_u \in \mathtt{uvC}
+    \\
+    x_C \neq x_P
+    \\\\
+   \Gamma
+   \vdash
+   (xs_C \setminus (\mathtt{uvC}-v_u);\mathtt{ulC})
+   \mvlxx
+   (x_P:xs_P \setminus \mathtt{uvP};\mathtt{ulP})
+   \leadsto
+   (\beta', \ell', \mathtt{xP'})
+   }
+   {
+   \Gamma
+   \vdash
+   (x_C:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
+   \mvlxx
+   (x_P:xs_P \setminus \mathtt{uvP};\mathtt{ulP})
+   \leadsto
+   (\beta', \ell', \mathtt{xP'})
+   }
+}
+
+\def\expTwoMatchClipPatnR{
+  \inferrule
+   {
+    v_u \in \mathtt{uvP}
+    \\
+    \\
+    x_C \neq x_P
+    ( v_u \notin \beta \lor \beta(v_u) = x_P )
+    \\\\
+   \gamma,\beta\override\maplet{v_u}{x_P}
+   \vdash
+   (x_C:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
+   \mvlxx
+   (xs_P \setminus (\mathtt{uvP}-v_u);\mathtt{ulP})
+    \leadsto
+   (\beta',\ell', \mathtt{xP'})
+   }
+   {
+   \gamma,\beta
+   \vdash
+   (x_C:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
+   \mvlxx
+   (x_P:xs_P \setminus \mathtt{uvP};\mathtt{ulP})
+   \leadsto
+   (\beta', \ell', \mathtt{xP'})
+   }
+}
+
+
+\def\expTwoMatchSqueezeCR{
+  \inferrule
+   {
+   \mathtt{ulC} \neq \nil
+   \\
+   \Gamma
+   \vdash
+   (xs_C \setminus \nil;\mathtt{ulC})
+   \mvlxx
+   \mathtt{xP}
+   \leadsto
+   (\beta', \ell', \mathtt{xP'})
+   }
+   {
+   \Gamma
+   \vdash
+   (x_C:xs_C \setminus \nil;\mathtt{ulC})
+   \mvlxx
+   \mathtt{xP}
+   \leadsto
+   (\beta', \ell', \mathtt{xP'})
+   }
+}
+
+\def\expTwoMatchSqueezePR{
+  \inferrule
+   {
+    \mathtt{ulP} \neq \nil
+    \\
+   \gamma,\ell\cat\seqof{x_P}
+   \vdash
+   \mathtt{xC}
+   \mvlxx
+   (xs_P\setminus \nil;\mathtt{ulP})
+   \leadsto
+   (\beta', \ell',\mathtt{xP'})
+   }
+   {
+   \gamma,\ell
+   \vdash
+   \mathtt{xC}
+   \mvlxx
+   (x_P:xs_P \setminus \nil;\mathtt{ulP})
+   \leadsto
+   (\beta', \ell',\mathtt{xP'})
+   }
+}

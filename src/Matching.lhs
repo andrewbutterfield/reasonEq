@@ -1036,28 +1036,7 @@ to track the candidate variables matches so far,
 and $\ell$  records pattern expansion variables
 that will correspond to subtracted pattern list-variables.
 \[
-\inferrule
- { \mathtt{vlC} = pfx(\mathtt{vlC}) \cat sfx(\mathtt{vlC})
-   \\ \kappa_0 = \nil
-   \\ \ell_0 = \nil
-   \\\\
-   \beta,\kappa_0,\ell_0
-     \vdash
-     \mathtt{vlC}
-     \mvlx
-     expand(\mathtt{vlP})
-     \leadsto
-     ( \beta', pfx(\mathtt{vlC}), sfx(\mathtt{vlC}) )
- }
- { \Gamma
-   \vdash
-   \mathtt{vlC}
-   \mvl
-   \mathtt{vlP}
-   \leadsto
-   ( \beta'\override\maplet{\mathtt{vlP}}{pfx(\mathtt{vlC})}
-   , sfx(\mathtt{vlC}))
- }
+\knownMatchR
 \]
 %%
 
@@ -1071,17 +1050,7 @@ against the expansion of variables, one-by-one in \texttt{vlC}, until
 we reduce $\mathtt{xP}$ to `empty'.
 The simplest case is when \texttt{vlP} is empty:
 \[
-\inferrule
- { empty(\mathtt{xP})
-   \\
-   \beta' = blo(\beta,\ell,\mathtt{xP})
- }
- { \beta,\kappa,\ell
-    \vdash
-    \mathtt{vlC} \mvlx \mathtt{xP}
-    \leadsto
-    ( \beta', \kappa, \mathtt{vlC} )
- }
+\expandMatchEmptyR
 \]
 An open question here is what we do with any remaining subtracted
 variables in the pattern. They may need to be bound appropriately.
@@ -1098,17 +1067,7 @@ given that $blo(\beta,\ell,xs\setminus;ls)  = \beta \override \beta'$.
  When \texttt{vlC} is empty and \texttt{vlP} is inexact,
  we terminate, binding leftovers.
 \[
-\inferrule
- { inexact(\mathtt{xP}))
-   \\
-   \beta' = blo(\beta,\ell,\mathtt{xP})
- }
- { \gamma,\beta,\kappa
-    \vdash
-    \nil \mvlx \mathtt{xP}
-    \leadsto
-    ( \beta', \kappa, \nil )
- }
+\expandMatchInExactR
 \]
 \item
 If \texttt{xP} is not empty,
@@ -1116,26 +1075,7 @@ then we match a prefix of it against all of the expansion of the first
 variable in \texttt{vlC}.
 If that succeeds then we add the variable to $\kappa$, and recurse.
 \[
-\inferrule
- { \lnot empty(\mathtt{xP})
-   \\
-   \gamma,\beta,\kappa,\ell
-      \vdash
-      expand(\mathtt{vC}) \mvlxx \mathtt{xP}
-      \leadsto ( \beta',\ell',\mathtt{xP'} )
-   \\
-   \gamma,\beta',\kappa\cat\seqof{\mathtt{vC}},\ell'
-      \vdash
-      \mathtt{vlC'} \mvlx \mathtt{xP'}
-      \leadsto
-      ( \beta'' , \kappa', \mathtt{vlC''} )
- }
- { \gamma,\beta,\kappa
-    \vdash
-    \mathtt{vC:vlC'} \mvlx \mathtt{xP}
-    \leadsto
-    ( \beta'', \kappa', \mathtt{vlC''} )
- }
+\expandMatchNonEmptyR
 \]
 %%
 %%%%
@@ -1158,33 +1098,13 @@ If that succeeds then we add the variable to $\kappa$, and recurse.
   \]
   If both are empty, we are done:
 \[
-\inferrule
- { empty(\mathtt{xC})
-   \\
-   empty(\mathtt{xP})
- }
- { \beta,\kappa,\ell
-    \vdash
-    \mathtt{vC} \mvlxx \mathtt{xP}
-    \leadsto
-    ( \beta',\ell, \mathtt{xP} )
- }
+\expTwoMatchAllEmptyR
 \]
 If the pattern is empty, but the candidate is not, then we fail.
 If the candidate is empty, but the pattern is not,
 then we return:
 \[
-\inferrule
- { empty(\mathtt{xC})
-   \\
-   \lnot empty(\mathtt{xP})
- }
- { \gamma,\beta,\kappa,\ell
-    \vdash
-    \mathtt{vC} \mvlxx \mathtt{xP}
-    \leadsto
-    ( \beta, \ell, \mathtt{xP} )
- }
+\expTwoMatchCandEmptyR
 \]
 %%
 \item
@@ -1192,25 +1112,7 @@ If both expansions are non-empty, then we compare the first two variables
 in their expansions.
 If they are the same, remove both and recurse:
 \[
-\inferrule
- {
- \Gamma
- \vdash
- (xs_C \setminus \mathtt{uvC};\mathtt{ulC})
- \mvlxx
- (xs_P \setminus \mathtt{uvP};\mathtt{ulP})
- \leadsto
- (\beta', \ell', \mathtt{xP'})
- }
- {
- \Gamma
- \vdash
- (v:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
- \mvlxx
- (v:xs_P \setminus \mathtt{uvP};\mathtt{ulP})
- \leadsto
- (\beta', \ell', \mathtt{xP'})
- }
+\expTwoMatchSameR
 \]
 %%
 \item
@@ -1237,60 +1139,14 @@ between which one we do.
 We can always shrink an non-rigid non-empty candidate expansion
 when \texttt{uvC} is non-null:
 \[
-\inferrule
- {
-  v_u \in \mathtt{uvC}
-  \\
-  x_C \neq x_P
-  \\\\
- \Gamma
- \vdash
- (xs_C \setminus (\mathtt{uvC}-v_u);\mathtt{ulC})
- \mvlxx
- (x_P:xs_P \setminus \mathtt{uvP};\mathtt{ulP})
- \leadsto
- (\beta', \ell', \mathtt{xP'})
- }
- {
- \Gamma
- \vdash
- (x_C:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
- \mvlxx
- (x_P:xs_P \setminus \mathtt{uvP};\mathtt{ulP})
- \leadsto
- (\beta', \ell', \mathtt{xP'})
- }
+\expTwoMatchClipCandR
 \]
 %%
 \item
 We can always shrink an non-rigid non-empty pattern expansion
 when \texttt{uvP} is non-null:
 \[
-\inferrule
- {
-  v_u \in \mathtt{uvP}
-  \\
-  \\
-  x_C \neq x_P
-  ( v_u \notin \beta \lor \beta(v_u) = x_P )
-  \\\\
- \gamma,\beta\override\maplet{v_u}{x_P}
- \vdash
- (x_C:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
- \mvlxx
- (xs_P \setminus (\mathtt{uvP}-v_u);\mathtt{ulP})
-  \leadsto
- (\beta',\ell', \mathtt{xP'})
- }
- {
- \gamma,\beta
- \vdash
- (x_C:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
- \mvlxx
- (x_P:xs_P \setminus \mathtt{uvP};\mathtt{ulP})
- \leadsto
- (\beta', \ell', \mathtt{xP'})
- }
+\expTwoMatchClipPatnR
 \]
 %%
 \item
@@ -1300,27 +1156,7 @@ but leave \texttt{ulC} untouched.
 We do not care which members of \texttt{ulC} cover which members
 of the candidate expansion list.
 \[
-\inferrule
- {
- \mathtt{ulC} \neq \nil
- \\
- \Gamma
- \vdash
- (xs_C \setminus \nil;\mathtt{ulC})
- \mvlxx
- \mathtt{xP}
- \leadsto
- (\beta', \ell', \mathtt{xP'})
- }
- {
- \Gamma
- \vdash
- (x_C:xs_C \setminus \nil;\mathtt{ulC})
- \mvlxx
- \mathtt{xP}
- \leadsto
- (\beta', \ell', \mathtt{xP'})
- }
+\expTwoMatchSqueezeCR
 \]
 Reminder: we can never shrink the candidate if it is rigid.
 %%
@@ -1334,27 +1170,7 @@ to all pattern variables removed in this way.
 The record of all such variables is held in the $\ell$
 components of the context.
 \[
-\inferrule
- {
-  \mathtt{ulP} \neq \nil
-  \\
- \gamma,\ell\cat\seqof{x_P}
- \vdash
- \mathtt{xC}
- \mvlxx
- (xs_P\setminus \nil;\mathtt{ulP})
- \leadsto
- (\beta', \ell',\mathtt{xP'})
- }
- {
- \gamma,\ell
- \vdash
- \mathtt{xC}
- \mvlxx
- (x_P:xs_P \setminus \nil;\mathtt{ulP})
- \leadsto
- (\beta', \ell',\mathtt{xP'})
- }
+\expTwoMatchSqueezePR
 \]
 
 Reminder: we can never shrink the pattern if it is rigid.

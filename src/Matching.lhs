@@ -839,9 +839,12 @@ vlFreeMatch vts bind cbvs pbvs bc vlC (gvP@(LstVar lvP):vlP)
            -> do bind' <- bindLVarToVList lvP [gvP] bind
                  vlFreeMatch vts bind' cbvs pbvs bc (tail vlC) vlP
      Just kX@(KnownVarList vlK vlX xLen, uis, ujs)
-       -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs
-                             bc vlC gvP vlK vlX uis ujs
-             vlFreeMatch vts bind' cbvs pbvs bc vlC' vlP
+       | length uis > length vlX
+          -> fail "vlMatch: invalid known epxansion"
+       | otherwise
+          -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs
+                                     bc vlC gvP vlK vlX uis ujs
+                vlFreeMatch vts bind' cbvs pbvs bc vlC' vlP
      _ -> fail "vlMatch: pattern list-variable is set-valued."
 \end{code}
 
@@ -885,13 +888,19 @@ vlKnownMatch vts bind cbvs pbvs
  | gvlX `isPrefixOf` vlC
     = do bind' <- bindLVarToVList lvP gvlX bind
          bind'' <- bindLVarsToNull bind' (map (lvr bc vw) ujs)
-         return (bind'',vlC \\ vlK)
+         return (bind'',vlC \\ gvlX)
  | otherwise -- now for the hard stuff !!
-    = vlExpandMatch vts bind cbvs pbvs bc vw lvP [] vlX uis ujs vlC
+    = do (bind',vlC1,vlC2)
+           <- vlExpandMatch
+                (vts,bc,vw)   -- static context
+                (bind,[],[])  -- dynamic context
+                (vlX,uis,ujs,length vlX-length uis) -- pattern expansion
+                vlC
+         bind'' <- bindLVarToVList lvP vlC1 bind'
+         return (bind'',vlC2)
  where
     (LstVar lvP) = gvP
     gvlX = map StdVar vlX
-    uiLen = length uis
     vw = lvarWhen lvP
 \end{code}
 
@@ -948,31 +957,8 @@ A key metric is the range of possible lengths that an expansion can have:
         \end{array}
       \right.
 \end{eqnarray*}
-A compact representation of this is to return $n-len(\mathtt{uv})$
-and two booleans that record which subtracted lists are null
-\begin{code}
-expRange :: Monad m => (Int,[Identifier],[Identifier])
-         -> m ( Int -- expansion minus subtracted vars
-              , Bool -- no subtracted variables
-              , Bool -- no subtracted list-vars
-              )
-
-expRange (n,uv,ul)
- | uvchop < 0  =  fail "expRange: too many subtracted variables"
- | otherwise   =  return (uvchop,null uv,null ul)
- where uvchop  =  n - length uv
-\end{code}
-Our classifications:
-\begin{code}
-rEmpty   (n,_,_) = n == 0
-rInexact (_,_,bl) = not bl
-rExact   (_,bv,bl) = bl && not bv
-rRigid   (_,bv,bl) = bl && bv
-\end{code}
 
 
-
-\newpage
 \paragraph{Matching the list-expansion of a List-Variable.}
 We now try to match (all of) \texttt{lvP} incrementally
 against a prefix of \texttt{vlC},
@@ -1028,7 +1014,7 @@ of matching rules:
 \\\hline
 \end{tabular}
 
-\adobesucks
+%\adobesucks
 
 \newpage
 
@@ -1100,7 +1086,30 @@ The simplest case is when \texttt{vlP} is empty:
 An open question here is what we do with any remaining subtracted
 variables in the pattern. They may need to be bound appropriately.
 This is the purpose of the $blo$ (bind-leftovers) function.
+The $blo$ function satisfies the following specification:
+\begin{eqnarray*}
+   dom(\beta') &=& ls
+\\ elems(\cat rng(\beta')) &=& elems (\ell \cat xs)
+\\ \beta' & \approx & \maplet{ls}{\ell \cat xs}
+\end{eqnarray*}
+given that $blo(\beta,\ell,xs\setminus;ls)  = \beta \override \beta'$.
 %%
+\item
+ When \texttt{vlC} is empty and \texttt{vlP} is inexact,
+ we terminate, binding leftovers.
+\[
+\inferrule
+ { inexact(\mathtt{xP}))
+   \\
+   \beta' = blo(\beta,\ell,\mathtt{xP})
+ }
+ { \gamma,\beta,\kappa
+    \vdash
+    \nil \mvlx \mathtt{xP}
+    \leadsto
+    ( \beta', \kappa, \nil )
+ }
+\]
 \item
 If \texttt{xP} is not empty,
 then we match a prefix of it against all of the expansion of the first
@@ -1112,7 +1121,7 @@ If that succeeds then we add the variable to $\kappa$, and recurse.
    \\
    \gamma,\beta,\kappa,\ell
       \vdash
-      \mathtt{xC} \mvlxx \mathtt{xP}
+      expand(\mathtt{vC}) \mvlxx \mathtt{xP}
       \leadsto ( \beta',\ell',\mathtt{xP'} )
    \\
    \gamma,\beta',\kappa\cat\seqof{\mathtt{vC}},\ell'
@@ -1129,29 +1138,6 @@ If that succeeds then we add the variable to $\kappa$, and recurse.
  }
 \]
 %%
-\item
- Need a case for when \texttt{vlC} is empty and \texttt{vlP} is inexact.
-\[
-\inferrule
- { inexact(\mathtt{xP}))
-   \\
-   \beta' = blo(\beta,\ell,\mathtt{xP})
- }
- { \gamma,\beta,\kappa
-    \vdash
-    \nil \mvlx \mathtt{xP}
-    \leadsto
-    ( \beta', \kappa, \nil )
- }
-\]
-The $blo$ function satisfies the following specification:
-\begin{eqnarray*}
-   dom(\beta') &=& ls
-\\ elems(\cat rng(\beta')) &=& elems (\ell \cat xs)
-\\ \beta' & \approx & \maplet{ls}{\ell \cat xs}
-\end{eqnarray*}
-given that $blo(\beta,\ell,xs\setminus;ls)  = \beta \override \beta'$.
-
 %%%%
 \end{enumerate}
 
@@ -1176,8 +1162,6 @@ given that $blo(\beta,\ell,xs\setminus;ls)  = \beta \override \beta'$.
  { empty(\mathtt{xC})
    \\
    empty(\mathtt{xP})
-   \\
-   \beta' = blo(\beta,\ell,\mathtt{xP})
  }
  { \beta,\kappa,\ell
     \vdash
@@ -1379,13 +1363,22 @@ Reminder: we can never shrink the pattern if it is rigid.
 
 \newpage
 \begin{code}
+type Expansion
+ = ( [Variable]    --  xs, full expansion less known subtractions
+   , [Identifier]  --  uv, subtracted variable identifiers
+   , [Identifier]  --  ul, subtracted list-variable identifiers
+   , Int           --  size = length xs - length uv
+   )
+
 vlExpandMatch :: MonadPlus mp
-              => [VarTable] -> Binding -> CBVS -> PBVS
-              -> VarClass -> VarWhen -> ListVar
-              -> VarList
-              -> [Variable] -> [Identifier] -> [Identifier]
-              -> VarList
-              -> mp (Binding,VarList)
+              => ( [VarTable], VarClass, VarWhen ) -- static context
+              -> ( Binding, VarList, [Variable] )  -- dynamic context
+              -> Expansion  -- pattern list-variable expansion
+              -> VarList -- candidate variable list.
+              -> mp ( Binding  -- resulting binding
+                    , VarList  -- matched candidate prefix
+                    , VarList  -- remaining candidate suffix
+                    )
 
 vlExpandMatch = error "vlExpandMatch: NYI"
 \end{code}
@@ -1419,44 +1412,6 @@ zeroOutExpanse bc bw bind [] (ul:uls) xvs
       bind'' <- bindLVarsToNull bind' (map (lvr bc bw) uls)
       return (bind'',[],0,[],[])
 \end{code}
-
-% \begin{code}
-% -- uis, ujs both null:
-% expCandMatch vts bind cbvs pbvs bc lvP kept vlC vCx vlX xLen [] []
-%  | null vCx   =  vlExpandMatch vts bind cbvs pbvs bc lvP kept vlC vlX xLen [] []
-%  | not (null vlX) &&  vp == vc
-%     = vlExpandMatch vts bind cbvs pbvs bc lvP (StdVar vc:kept) (tail vlC) (tail vlX) (xLen-1)[] []
-%  | otherwise
-%      =  fail $ unlines
-%           [ "expCandMatch: leftover candidate expansion."
-%           , "vlC = " ++ show vlC
-%           , "vCx = " ++ show vCx
-%           , "vlX = " ++ show vlX
-%           , "lvP = " ++ show lvP
-%           , "bind = " ++ show bind ]
-%   where
-%     vp = head vlX
-%     vc = head vCx
-%
-% -- expansion null:
-% expCandMatch vts bind cbvs pbvs bc lvP kept vlC [] vlX xLen uis ujs
-%  = vlExpandMatch vts bind cbvs pbvs bc lvP kept vlC vlX xLen uis ujs
-%
-% -- vlX, expansion, uis non-null:
-% expCandMatch vts bind cbvs pbvs bc lvP@(LVbl (Vbl _ vc vw) _ _)
-%                                          kept vlC vCx (vP:vlX) xLen (ui:uis) ujs
-%  = do bind' <- bindVarToVar (Vbl ui vc vw) vP $ bind
-%       expCandMatch vts bind' cbvs pbvs bc lvP kept vlC vCx vlX (xLen-1) uis ujs
-%
-% -- expansion, ujs non-null, uis null:
-% expCandMatch vts bind cbvs pbvs bc lvP@(LVbl (Vbl _ vc vw) _ _)
-%                                           kept vlC (vx:vCx) vlX xLen [] (uj:ujs)
-%  = do bind' <- bindLVarToVList (LVbl (Vbl uj vc vw) [] []) ([StdVar vx]) bind
-%       expCandMatch vts bind' cbvs pbvs bc lvP kept vlC vCx vlX xLen [] ujs
-%
-% expCandMatch vts bind cbvs pbvs bc lvP kept vlC vCx vlX xLen uis ujs
-%  = error "expCandMatch: should be dead code!"
-% \end{code}
 
 \newpage
 \subsection{Variable-Set Matching}

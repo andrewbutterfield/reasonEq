@@ -839,13 +839,11 @@ vlFreeMatch vts bind cbvs pbvs bc vlC (gvP@(LstVar lvP):vlP)
            -> do bind' <- bindLVarToVList lvP [gvP] bind
                  vlFreeMatch vts bind' cbvs pbvs bc (tail vlC) vlP
      Just kX@(KnownVarList vlK vlX xLen, uis, ujs)
-       -> do (exact,lMax) <- expRange (xLen,uis,ujs) -- can fail if lvP 'broken'
-             (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs
-                             bc vlC gvP vlK vlX uis ujs exact lMax
+       -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs
+                             bc vlC gvP vlK vlX uis ujs
              vlFreeMatch vts bind' cbvs pbvs bc vlC' vlP
      _ -> fail "vlMatch: pattern list-variable is set-valued."
 \end{code}
-
 
 
 Returns true if the list variable is unknown,
@@ -869,15 +867,46 @@ vlFreeMatchN vts bind cbvs pbvs bc vlC lvP vlP n
 \end{code}
 
 \newpage
+\paragraph{Matching a List-Variable, known to be a list.}
+First we handle simple cases, where either the list-variable,
+its definition, or its expansion as variables,
+are a prefix of the candidate list.
+\begin{code}
+-- not null vlC
+vlKnownMatch vts bind cbvs pbvs
+                bc vlC gvP vlK vlX uis ujs
+ | gvP == head vlC -- covers lvP known to be Abstract
+    = do bind' <- bindLVarToVList lvP [gvP] bind
+         return (bind',tail vlC)
+ | vlK `isPrefixOf` vlC
+    = do bind' <- bindLVarToVList lvP vlK bind
+         bind'' <- bindLVarsToNull bind' (map (lvr bc vw) ujs)
+         return (bind'',vlC \\ vlK)
+ | gvlX `isPrefixOf` vlC
+    = do bind' <- bindLVarToVList lvP gvlX bind
+         bind'' <- bindLVarsToNull bind' (map (lvr bc vw) ujs)
+         return (bind'',vlC \\ vlK)
+ | otherwise -- now for the hard stuff !!
+    = vlExpandMatch vts bind cbvs pbvs bc vw lvP [] vlX uis ujs vlC
+ where
+    (LstVar lvP) = gvP
+    gvlX = map StdVar vlX
+    uiLen = length uis
+    vw = lvarWhen lvP
+\end{code}
+
+\newpage
+\subsubsection{Known List-Var Expansion Matching}
 
 \paragraph{Classifying Expansions}
 Consider an expansion
-$( \seqof{x_1,\dots,x_m}
+$( x_1,\dots,x_m
    \setminus
-   \mathtt{v_1,\dots,v_n}
+   v_1,\dots,v_n
    ;
-   \mathtt{l_1,\dots,l_k})
-$.
+   l_1,\dots,l_k )
+$
+where the $x_i$ and $v_j$ are disjoint.
 
 If $n > m$, we consider it ill-formed.
 If $n = m$, then it denotes an empty list,
@@ -913,53 +942,35 @@ A key metric is the range of possible lengths that an expansion can have:
   range(\seqof{v_1,\dots,v_n} \setminus \mathtt{uv} ; \mathtt{ul})
   &=& \left\{
         \begin{array}{lr}
-          (n-len(\mathtt{uv})), & \mathtt{ul} = \nil
+          ~(n-len(\mathtt{uv})), & \mathtt{ul} = \nil
          \\
           ~[0\dots(n-len(\mathtt{uv}))], & \mathtt{ul} \neq \nil
         \end{array}
       \right.
 \end{eqnarray*}
+A compact representation of this is to return $n-len(\mathtt{uv})$
+and two booleans that record which subtracted lists are null
 \begin{code}
-expRange :: Monad m => (Int,[Identifier],[Identifier]) -> m (Bool,Int)
-
-exact = True; inexact = False
+expRange :: Monad m => (Int,[Identifier],[Identifier])
+         -> m ( Int -- expansion minus subtracted vars
+              , Bool -- no subtracted variables
+              , Bool -- no subtracted list-vars
+              )
 
 expRange (n,uv,ul)
- | uvchop < 0  =  fail "expRange: to many subtracted variables"
- | null ul     =  return (exact,uvchop)   -- [uvchop,..,uvchop]
- | otherwise   =  return (inexact,uvchop) -- [0,..,uvchop]
+ | uvchop < 0  =  fail "expRange: too many subtracted variables"
+ | otherwise   =  return (uvchop,null uv,null ul)
  where uvchop  =  n - length uv
 \end{code}
-
-
-\newpage
-\paragraph{Matching a List-Variable, known to be a list.}
-First we handle simple cases, where either the list-variable,
-its definition, or its expansion as variables,
-are a prefix of the candidate list.
+Our classifications:
 \begin{code}
--- not null vlC
-vlKnownMatch vts bind cbvs pbvs
-                bc vlC gvP vlK vlX uis ujs exact lMax
- | gvP == head vlC -- covers lvP known to be Abstract
-    = do bind' <- bindLVarToVList lvP [gvP] bind
-         return (bind',tail vlC)
- | vlK `isPrefixOf` vlC
-    = do bind' <- bindLVarToVList lvP vlK bind
-         bind'' <- bindLVarsToNull bind' (map (lvr bc vw) ujs)
-         return (bind'',vlC \\ vlK)
- | gvlX `isPrefixOf` vlC
-    = do bind' <- bindLVarToVList lvP gvlX bind
-         bind'' <- bindLVarsToNull bind' (map (lvr bc vw) ujs)
-         return (bind'',vlC \\ vlK)
- | otherwise
-    = vlExpandMatch vts bind cbvs pbvs bc vw lvP [] vlX exact lMax uis ujs vlC
- where
-    (LstVar lvP) = gvP
-    gvlX = map StdVar vlX
-    uiLen = length uis
-    vw = lvarWhen lvP
+rEmpty   (n,_,_) = n == 0
+rInexact (_,_,bl) = not bl
+rExact   (_,bv,bl) = bl && not bv
+rRigid   (_,bv,bl) = bl && bv
 \end{code}
+
+
 
 \newpage
 \paragraph{Matching the list-expansion of a List-Variable.}
@@ -1023,13 +1034,20 @@ of matching rules:
 
 \paragraph{Rules for $\mvl$ ---}~
 
-We first start by expanding \texttt{vlP} and using the expansion as the basis
+We first start by expanding \texttt{vlP}  as \texttt{xP}
+(or \texttt{(xsP,uvP,ulP)}) and using the expansion as the basis
 for mapping.
 This is what done by \texttt{vlKnownMatch} above
 when it calls \texttt{vlExpandMatch} (a.k.a. $\mvlx$) below.
-We use the context (component $\kappa$)
-to track the candidate variables so matched.
-We also have a component ($\ell$) that records pattern expansion variables
+We have a dynamic context $\Gamma=(\beta,\kappa,\ell)$
+that evolves as matching progresses,
+as well as a static context used for known list-var.
+expansion ($expand$), that is not shown below.
+The binding passed in, modified and returned
+by matching is denoted by $\beta$.
+We use $\kappa$
+to track the candidate variables matches so far,
+and $\ell$  records pattern expansion variables
 that will correspond to subtracted pattern list-variables.
 \[
 \inferrule
@@ -1037,16 +1055,19 @@ that will correspond to subtracted pattern list-variables.
    \\ \kappa_0 = \nil
    \\ \ell_0 = \nil
    \\\\
-   \gamma,\kappa_0,\ell_0
+   \beta,\kappa_0,\ell_0
      \vdash
-     \mathtt{vlC} \mvlx expand(\mathtt{vlP})
+     \mathtt{vlC}
+     \mvlx
+     expand(\mathtt{vlP})
      \leadsto
-     ( \beta'\override\maplet{\mathtt{vlP}}{pfx(\mathtt{vlC})}
-     , sfx(\mathtt{vlC}))
+     ( \beta', pfx(\mathtt{vlC}), sfx(\mathtt{vlC}) )
  }
  { \Gamma
    \vdash
-   \mathtt{vlC} \mvl \mathtt{vlP}
+   \mathtt{vlC}
+   \mvl
+   \mathtt{vlP}
    \leadsto
    ( \beta'\override\maplet{\mathtt{vlP}}{pfx(\mathtt{vlC})}
    , sfx(\mathtt{vlC}))
@@ -1061,20 +1082,19 @@ that will correspond to subtracted pattern list-variables.
 \item
 The plan with $\mvlx$ is to map successive `prefixes' of the \texttt{vlP} expansion
 against the expansion of variables, one-by-one in \texttt{vlC}, until
-we reduce $expand(\mathtt{vlP})$ to `empty'.
+we reduce $\mathtt{xP}$ to `empty'.
 The simplest case is when \texttt{vlP} is empty:
 \[
 \inferrule
- { empty(expand(\mathtt{vlP}))
+ { empty(\mathtt{xP})
    \\
-   \beta' = blo(\beta,\ell,expand(\mathtt{vlP}))
+   \beta' = blo(\beta,\ell,\mathtt{xP})
  }
- { \gamma,\beta,\kappa,\ell
+ { \beta,\kappa,\ell
     \vdash
-    \mathtt{vlC} \mvlx expand(\mathtt{vlP})
+    \mathtt{vlC} \mvlx \mathtt{xP}
     \leadsto
-    ( \beta'\override\maplet{\mathtt{vlP}}{\kappa}
-    , \mathtt{vlC} )
+    ( \beta', \kappa, \mathtt{vlC} )
  }
 \]
 An open question here is what we do with any remaining subtracted
@@ -1082,30 +1102,30 @@ variables in the pattern. They may need to be bound appropriately.
 This is the purpose of the $blo$ (bind-leftovers) function.
 %%
 \item
-If \texttt{vlP} is not empty,
+If \texttt{xP} is not empty,
 then we match a prefix of it against all of the expansion of the first
 variable in \texttt{vlC}.
 If that succeeds then we add the variable to $\kappa$, and recurse.
 \[
 \inferrule
- { \lnot empty(expand(\mathtt{vlP}))
+ { \lnot empty(\mathtt{xP})
    \\
    \gamma,\beta,\kappa,\ell
       \vdash
-      expand(\mathtt{vC}) \mvlxx expand(\mathtt{vlP})
-      \leadsto ( \beta',\ell',expand(\mathtt{vlP'}) )
+      \mathtt{xC} \mvlxx \mathtt{xP}
+      \leadsto ( \beta',\ell',\mathtt{xP'} )
    \\
    \gamma,\beta',\kappa\cat\seqof{\mathtt{vC}},\ell'
       \vdash
-      \mathtt{vlC'} \mvlx expand(\mathtt{vlP'})
+      \mathtt{vlC'} \mvlx \mathtt{xP'}
       \leadsto
-      ( \beta'' , \mathtt{vlC''} )
+      ( \beta'' , \kappa', \mathtt{vlC''} )
  }
  { \gamma,\beta,\kappa
     \vdash
-    \mathtt{vC:vlC'} \mvlx expand(\mathtt{vlP})
+    \mathtt{vC:vlC'} \mvlx \mathtt{xP}
     \leadsto
-    ( \beta'', \mathtt{vlC''} )
+    ( \beta'', \kappa', \mathtt{vlC''} )
  }
 \]
 %%
@@ -1113,15 +1133,15 @@ If that succeeds then we add the variable to $\kappa$, and recurse.
  Need a case for when \texttt{vlC} is empty and \texttt{vlP} is inexact.
 \[
 \inferrule
- { inexact(\mathtt{vlP}))
+ { inexact(\mathtt{xP}))
    \\
-   \beta' = blo(\beta,\ell,expand(\mathtt{vlP}))
+   \beta' = blo(\beta,\ell,\mathtt{xP})
  }
  { \gamma,\beta,\kappa
     \vdash
-    \nil \mvlx expand(\mathtt{vlP})
+    \nil \mvlx \mathtt{xP}
     \leadsto
-    ( \beta'\override\maplet{\mathtt{vlP}}{\kappa}, \nil )
+    ( \beta', \kappa, \nil )
  }
 \]
 The $blo$ function satisfies the following specification:
@@ -1135,6 +1155,8 @@ given that $blo(\beta,\ell,xs\setminus;ls)  = \beta \override \beta'$.
 %%%%
 \end{enumerate}
 
+
+
 \paragraph{Rules for $\mvlxx$ ---}~
 
 \begin{enumerate}
@@ -1145,21 +1167,23 @@ given that $blo(\beta,\ell,xs\setminus;ls)  = \beta \override \beta'$.
   \[
    \Gamma
       \vdash
-      expand(\mathtt{vC}) \mvlxx expand(\mathtt{vlP})
-      \leadsto ( \beta',\ell',expand(\mathtt{vlP'}) )
+      \mathtt{xC} \mvlxx \mathtt{xP}
+      \leadsto ( \beta',\ell',\mathtt{xP'} )
   \]
   If both are empty, we are done:
 \[
 \inferrule
- { empty(expand(\mathtt{vC}))
+ { empty(\mathtt{xC})
    \\
-   empty(expand(\mathtt{vlP}))
+   empty(\mathtt{xP})
+   \\
+   \beta' = blo(\beta,\ell,\mathtt{xP})
  }
- { \gamma,\beta,\kappa,\ell
+ { \beta,\kappa,\ell
     \vdash
-    \mathtt{vC} \mvlxx expand(\mathtt{vlP})
+    \mathtt{vC} \mvlxx \mathtt{xP}
     \leadsto
-    ( \beta',\ell, expand(\mathtt{vlP}) )
+    ( \beta',\ell, \mathtt{xP} )
  }
 \]
 If the pattern is empty, but the candidate is not, then we fail.
@@ -1167,15 +1191,15 @@ If the candidate is empty, but the pattern is not,
 then we return:
 \[
 \inferrule
- { empty(expand(\mathtt{vC}))
+ { empty(\mathtt{xC})
    \\
-   \lnot empty(expand(\mathtt{vlP}))
+   \lnot empty(\mathtt{xP})
  }
  { \gamma,\beta,\kappa,\ell
     \vdash
-    \mathtt{vC} \mvlxx expand(\mathtt{vlP})
+    \mathtt{vC} \mvlxx \mathtt{xP}
     \leadsto
-    ( \beta, \ell, expand(\mathtt{vlP}) )
+    ( \beta, \ell, \mathtt{xP} )
  }
 \]
 %%
@@ -1188,29 +1212,27 @@ If they are the same, remove both and recurse:
  {
  \Gamma
  \vdash
- (x^c_2,\dots,x^c_n \setminus \mathtt{uvC};\mathtt{ulC})
+ (xs_C \setminus \mathtt{uvC};\mathtt{ulC})
  \mvlxx
- (x^p_2,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
+ (xs_P \setminus \mathtt{uvP};\mathtt{ulP})
  \leadsto
- (\beta', \ell', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ (\beta', \ell', \mathtt{xP'})
  }
  {
  \Gamma
  \vdash
- (v,x^c_2,\dots,x^c_n \setminus \mathtt{uvC};\mathtt{ulC})
+ (v:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
  \mvlxx
- (v,x^p_2,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
+ (v:xs_P \setminus \mathtt{uvP};\mathtt{ulP})
  \leadsto
- (\beta', \ell', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ (\beta', \ell', \mathtt{xP'})
  }
 \]
 %%
 \item
 If they differ,then we need to consider the size-ranges
 of both sides to consider what action to take.
-This is complicated by the fact that size-ranges can be
-exact ($[n\dots n]$) or inexact ($[0\dots n]$).
-If both sides are exact then the match fails.
+If both sides are rigid then the match fails.
 The pattern size range must never be smaller than that for the candidate,
 for a match to succeed.
 In either case, a variable can only be removed from either side
@@ -1228,64 +1250,67 @@ If both can be removed, then we allow a non-deterministic choice
 between which one we do.
 %%
 \item
-We can always shrink an inexact non-empty candidate expansion
+We can always shrink an non-rigid non-empty candidate expansion
 when \texttt{uvC} is non-null:
 \[
 \inferrule
  {
   v_u \in \mathtt{uvC}
   \\
+  x_C \neq x_P
+  \\\\
  \Gamma
  \vdash
- (x^c_2,\dots,x^c_n \setminus (\mathtt{uvC}-v_u);\mathtt{ulC})
+ (xs_C \setminus (\mathtt{uvC}-v_u);\mathtt{ulC})
  \mvlxx
- (x^p_1,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
+ (x_P:xs_P \setminus \mathtt{uvP};\mathtt{ulP})
  \leadsto
- (\beta', \ell',(x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ (\beta', \ell', \mathtt{xP'})
  }
  {
  \Gamma
  \vdash
- (x^c_1,x^c_2,\dots,x^c_n \setminus \mathtt{uvC};\mathtt{ulC})
+ (x_C:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
  \mvlxx
- (x^p_1,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
+ (x_P:xs_P \setminus \mathtt{uvP};\mathtt{ulP})
  \leadsto
- (\beta', \ell', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ (\beta', \ell', \mathtt{xP'})
  }
 \]
 %%
 \item
-We can always shrink an inexact non-empty pattern expansion
+We can always shrink an non-rigid non-empty pattern expansion
 when \texttt{uvP} is non-null:
 \[
 \inferrule
  {
   v_u \in \mathtt{uvP}
   \\
-  ( v_u \notin \beta \lor \beta(v_u) = x^p_1 )
+  \\
+  x_C \neq x_P
+  ( v_u \notin \beta \lor \beta(v_u) = x_P )
   \\\\
- \gamma,\beta\override\maplet{v_u}{x^p_1}
+ \gamma,\beta\override\maplet{v_u}{x_P}
  \vdash
- (x^c_1,\dots,x^c_n \setminus \mathtt{uvC};\mathtt{ulC})
+ (x_C:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
  \mvlxx
- (x^p_2,\dots,x^p_k,x^p_{k+1},x^p_m \setminus (\mathtt{uvP}-v_u);\mathtt{ulP})
- \\\\
- \leadsto
- (\beta',\ell', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ (xs_P \setminus (\mathtt{uvP}-v_u);\mathtt{ulP})
+  \leadsto
+ (\beta',\ell', \mathtt{xP'})
  }
  {
  \gamma,\beta
  \vdash
- (x^c_1,\dots,x^c_n \setminus \mathtt{uvC};\mathtt{ulC})
+ (x_C:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
  \mvlxx
- (x^p_1,x^p_2,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
+ (x_P:xs_P \setminus \mathtt{uvP};\mathtt{ulP})
  \leadsto
- (\beta', \ell',(x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ (\beta', \ell', \mathtt{xP'})
  }
 \]
 %%
 \item
-When \texttt{uvC} is nil, but \texttt{ulC} is not,
+When \texttt{xC} is inexact, and \texttt{vlC} is nil
 we can simply remove the leading candidate expansion variable,
 but leave \texttt{ulC} untouched.
 We do not care which members of \texttt{ulC} cover which members
@@ -1297,26 +1322,26 @@ of the candidate expansion list.
  \\
  \Gamma
  \vdash
- (x^c_2,\dots,x^c_n \setminus \nil;\mathtt{ulC})
+ (xs_C \setminus \nil;\mathtt{ulC})
  \mvlxx
- (x^p_1,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
+ \mathtt{xP}
  \leadsto
- (\beta', \ell', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ (\beta', \ell', \mathtt{xP'})
  }
  {
  \Gamma
  \vdash
- (x^c_1,x^c_2,\dots,x^c_n \setminus \nil;\mathtt{ulC})
+ (x_C:xs_C \setminus \nil;\mathtt{ulC})
  \mvlxx
- (x^p_1,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \mathtt{uvP};\mathtt{ulP})
+ \mathtt{xP}
  \leadsto
- (\beta', \ell', (x^p_{k+1},x^p_m \setminus \mathtt{uvP'};\mathtt{ulP'}))
+ (\beta', \ell', \mathtt{xP'})
  }
 \]
-Reminder: we can never shrink the candidate if it is exact.
+Reminder: we can never shrink the candidate if it is rigid.
 %%
 \item
-When \texttt{uvP} is nil, but \texttt{ulP} is not,
+When \texttt{xP} is inexact, and \texttt{ulP} is nil,
 and the pattern size is greater than that of the candidate,
 then we can remove the leading pattern expansion variable.
 However we must record its removal, so that at the end,
@@ -1328,28 +1353,27 @@ components of the context.
 \inferrule
  {
   \mathtt{ulP} \neq \nil
-  \\\\
- \gamma,\ell\cat\seqof{x^p_1}
+  \\
+ \gamma,\ell\cat\seqof{x_P}
  \vdash
- (x^c_1,\dots,x^c_n \setminus \mathtt{uvC};\mathtt{ulC})
+ \mathtt{xC}
  \mvlxx
- (x^p_2,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \nil;\mathtt{ulP})
- \\\\
+ (xs_P\setminus \nil;\mathtt{ulP})
  \leadsto
- (\beta', \ell',(x^p_{k+1},x^p_m \setminus \nil;\mathtt{ulP'}))
+ (\beta', \ell',\mathtt{xP'})
  }
  {
  \gamma,\ell
  \vdash
- (x^c_1,\dots,x^c_n \setminus \mathtt{uvC};\mathtt{ulC})
+ \mathtt{xC}
  \mvlxx
- (x^p_1,x^p_2,\dots,x^p_k,x^p_{k+1},x^p_m \setminus \nil;\mathtt{ulP})
+ (x_P:xs_P \setminus \nil;\mathtt{ulP})
  \leadsto
- (\beta', \ell',(x^p_{k+1},x^p_m \setminus \nil;\mathtt{ulP'}))
+ (\beta', \ell',\mathtt{xP'})
  }
 \]
 
-Reminder: we can never shrink the pattern if it is exact.
+Reminder: we can never shrink the pattern if it is rigid.
 %%%%
 \end{enumerate}
 
@@ -1358,170 +1382,12 @@ Reminder: we can never shrink the pattern if it is exact.
 vlExpandMatch :: MonadPlus mp
               => [VarTable] -> Binding -> CBVS -> PBVS
               -> VarClass -> VarWhen -> ListVar
-              -> VarList -> [Variable] -> Bool -> Int
-              -> [Identifier] -> [Identifier]
+              -> VarList
+              -> [Variable] -> [Identifier] -> [Identifier]
               -> VarList
               -> mp (Binding,VarList)
-\end{code}
 
-At each increment,
-we are trying to match a prefix of the expansion of \texttt{vlP}
-against all of the expansion of a general variable $gc_i$ in \texttt{vlC}.
-\begin{eqnarray*}
-   expand(gc_i)
-   &=&
-   \seqof{vc_1,\dots,vc_n} \setminus \mathtt{uvC} ; \mathtt{ulC}
-\end{eqnarray*}
-If we succeed, then $gc_i$ is added to the list \texttt{kept},
-against which \texttt{lvP} will be bound if all succeeds.
-In addition we return the corresponding ``suffix'' of the
-\texttt{vlP} expansion.
-\begin{eqnarray*}
-   expand(gc_i)
-   ::_2
-   \seqof{vp_1,\dots,vp_j,vp_{j+1},vp_m} \setminus \mathtt{uvP} ; \mathtt{ulP}
-   &\leadsto&
-   ( \textsl{keep}~ gc_i
-   , \seqof{vp_{j+1},vp_m} \setminus \mathtt{uvP'} ; \mathtt{ulP'} )
-\end{eqnarray*}
-\begin{code}
-vlExpandMatch vts bind cbvs pbvs bc bw lvP kept xP exactP lMaxP uvP ulP []
- | null (dbg "vlEM[].xP=" xP) || (dbg "vlEM[].lMaxP=" lMaxP) == 0
-    = do bind' <- bindLVarToVList (dbg "vlEM[].lvP=" lvP) (reverse (dbg "vlEM[].kept=" kept)) $ dbg "vlEM[].bind:\n" bind
-         return (bind',[])
- | otherwise
-  = fail $ unlines
-       [ "vlExpandMatch: not enough candidates."
-       , "kept   = " ++ show kept
-       , "xP     = " ++ show xP
-       , "exactP = " ++ show exactP
-       , "lMaxP  = " ++ show lMaxP
-       , "uvP    = " ++ show uvP
-       , "ulP    = " ++ show ulP
-       ]
-\end{code}
-
-\newpage
-If the candidate expansion length (\texttt{lMaxC}) is exact,
-then the pattern expansion maximum length (\texttt{lMaxP}) must be greater
-in order for a match to be possible.
-\begin{code}
--- kept is not complete
-vlExpandMatch vts bind cbvs pbvs bc bw lvP kept xP exactP lMaxP uvP ulP (gC:vlC')
- -- we need to check for empty xP, lMaxP here as well !!!!!!!
-  = do (xC,uvC,ulC) <- genExpandToList vts $ dbg "vlEM:.gC=" gC
-       (exactC,lMaxC) <- expRange (length (dbg "vlEM:.xC=" xC),(dbg "vlEM:.uvC=" uvC),ulC)
-       if (dbg "vlEM:.exactC=" exactC) && (dbg "vlEM:.lMaxP=" lMaxP) < (dbg "vlEM:.lMaxC=" lMaxC)
-        then fail $ unlines
-              [ "vlExpandMatch: candidate too large."
-              , "(xC,uvC,ulC) = " ++ show (xC,uvC,ulC)
-              , "(xP,uvP,ulP) = " ++ show (xP,uvP,ulP)
-              , "bind:", show bind
-              ]
-        else do (bind',xP',lMaxP',uvP',ulP')
-                  <- vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP xC xP
-                vlExpandMatch vts bind' cbvs pbvs
-                            bc bw lvP (gC:kept) xP' exactP lMaxP' uvP' ulP' vlC'
-\end{code}
-
-The core algorithm tries to match all of an expanded candidate variable,
-with a prefix of the current state of the expanded pattern list-variable.
-\begin{eqnarray*}
-  \seqof{vc_1,\dots,vc_n} \setminus \mathtt{uvC} ; \mathtt{ulC}
-  &::_2&
-  \seqof{vp_1,\dots,vp_m} \setminus \mathtt{uvP} ; \mathtt{ulP}
-\\ &\leadsto&
-  ( \beta'
-  , \seqof{vp_{j+1},vp_m} \setminus \mathtt{uvP'} ; \mathtt{ulP'} ),
-  \quad \textrm{ if } \textsf{keep}
-\end{eqnarray*}
-
-When both expansions are empty, we are done:
-\begin{eqnarray*}
-  \seqof{vc_1,\dots,vc_n} \setminus \seqof{ic_1,\dots,ic_n} ; \mathtt{ulC}
-  &::_2&
-  \seqof{vp_1,\dots,vp_m} \setminus \seqof{ip_1,\dots,ip_m}  ; \mathtt{ulP}
-\\ &\leadsto&
-  ( \{ ip_j \mapsto vp_j, \mathtt{ulP}_k \mapsto \nil \}
-  , \nil \setminus \nil ; \nil)
-\end{eqnarray*}
-\begin{code}
-vlExpand2Match bc bw bind 0 uvC ulC 0 uvP ulP xC xP
-  = return (bind,xP,0,uvP,ulP)
---  = zeroOutExpanse bc bw bind uvP ulP xP
-\end{code}
-
-When the candidate expansion is empty,
-but the pattern isn't,
-we return the current state of the pattern as-is.
-\begin{eqnarray*}
-  \seqof{vc_1,\dots,vc_n} \setminus \seqof{ic_1,\dots,ic_n} ; \mathtt{ulC}
-  &::_2&
-  \seqof{vp_1,\dots,vp_m} \setminus \mathtt{uvP} ; \mathtt{ulP}
-\\ &\leadsto&
-  ( \{\}
-  , \seqof{vp_{j+1},vp_m} \setminus \mathtt{uvP'} ; \mathtt{ulP'} )
-\end{eqnarray*}
-\begin{code}
-vlExpand2Match bc bw bind 0 uvC ulC lMaxP uvP ulP xC xP
-  = return (bind,xP,lMaxP,uvP,ulP)
-\end{code}
-
-When the pattern expansion is empty (and \texttt{ulP} is null),
-but the candidate isn't,
-then we fail, as we are trying to match the entire candidate here.
-\begin{code}
-vlExpand2Match bc bw bind lMaxC uvC ulC 0 uvP ulP xC xP
-  = fail "vlExpand2Match: candidate too large."
-\end{code}
-
-When both expansions are non-null:
-\begin{code}
-vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP xC@(vC:xC') xP@(vP:xP')
-\end{code}
-we compare the first variable in each.
-If the same, we remove both, decrement maxes, and continue.
-\begin{code}
--- vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP (vC:xC') (vP:xP')
-  | vC == vP  =  vlExpand2Match bc bw bind
-                                     (lMaxC-1) uvC ulC (lMaxP-1) uvP ulP xC' xP'
-\end{code}
-
-\newpage
-If not, then what we need to do is to find a subsequence
-of \texttt{xC} of length \texttt{lMaxC},
-that is contained in \texttt{xP}.
-
-We try an incremental greedy approach as follows:
-We can only remove a side's expansion variable
-if there is a subtracted variable/list-var (identifier)
-on that side to offset it.
-If neither side has subtractions, then the match fails.
-\begin{code}
--- vC /= vP
-vlExpand2Match bc bw bind lMaxC [] [] lMaxP [] [] xC xP
-  = fail "vlExpand2Match: expansions differ."
-\end{code}
-We use up subtracted variables before touching any list-vars.
-On the pattern side we bind any subtracted variable identifier used in this way
-to the removed expansion variable.
-
-If we have the choice of both candidate and pattern to progress in this
-way, then we favour the pattern.
-We do this because so far only pattern examples have shown up.
-\begin{code}
--- vC /= vP
-vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP (uv:uvP) ulP xC (vP:xP')
-  = do bind' <- bindVarToVar (Vbl uv bc bw) vP bind
-       vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP xC xP'
-
-vlExpand2Match bc bw bind lMaxC (uv:uvC) ulC lMaxP uvP ulP (vC:xC') xP
-  -- no bindings !
-  =    vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP uvP ulP xC' xP
-
--- vlExpand2Match bc bw bind lMaxC (tail uvC) ulC lMaxP uvP ulP  xC' xP
--- vlExpand2Match bc bw bind lMaxC uvC ulC lMaxP (tail uvP) ulP  xC  xP'
--- vlExpand2Match bc bw bind lMaxC (tail uvC) ulC lMaxP (tail uvP) ulP  xC' xP'
+vlExpandMatch = error "vlExpandMatch: NYI"
 \end{code}
 
 

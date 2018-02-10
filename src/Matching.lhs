@@ -1056,12 +1056,7 @@ An open question here is what we do with any remaining subtracted
 variables in the pattern. They may need to be bound appropriately.
 This is the purpose of the $blo$ (bind-leftovers) function.
 The $blo$ function satisfies the following specification:
-\begin{eqnarray*}
-   dom(\beta') &=& ls
-\\ elems(\cat rng(\beta')) &=& elems (\ell \cat xs)
-\\ \beta' & \approx & \maplet{ls}{\ell \cat xs}
-\end{eqnarray*}
-given that $blo(\beta,\ell,xs\setminus;ls)  = \beta \override \beta'$.
+\bloDef
 %%
 \item
  When \texttt{vlC} is empty and \texttt{vlP} is inexact,
@@ -1178,6 +1173,8 @@ Reminder: we can never shrink the pattern if it is rigid.
 \end{enumerate}
 
 \newpage
+
+First, expansions and predicates over them.
 \begin{code}
 type Expansion
  = ( [Variable]    --  xs, full expansion less known subtractions
@@ -1186,6 +1183,21 @@ type Expansion
    , Int           --  size = length xs - length uv
    )
 
+emptyE (_,_,_,s) = s == 0
+inexactE (_,_,[],_) = False
+inexactE _ = True
+exactE (_,(_:_),[],_) = True
+exactE _ = False
+rigidE (_,[],[],_) = True
+rigidE _ = False
+\end{code}
+
+\bloDef
+\begin{code}
+-- blo to be defined here
+\end{code}
+
+\begin{code}
 vlExpandMatch :: MonadPlus mp
               => ( [VarTable], VarClass, VarWhen ) -- static context
               -> ( Binding, VarList, [Variable] )  -- dynamic context
@@ -1195,9 +1207,25 @@ vlExpandMatch :: MonadPlus mp
                     , VarList  -- matched candidate prefix
                     , VarList  -- remaining candidate suffix
                     )
+\end{code}
 
+
+\[
+\expandMatchEmptyR
+\]
+\[
+\expandMatchInExactR
+\]
+\[
+\expandMatchNonEmptyR
+\]
+
+\begin{code}
 vlExpandMatch = error "vlExpandMatch: NYI"
 \end{code}
+
+
+
 
 
 \newpage

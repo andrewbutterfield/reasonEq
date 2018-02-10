@@ -45,7 +45,7 @@
      \\
      \beta' = blo(\beta,\ell,\mathtt{xP})
    }
-   { \gamma,\beta,\kappa
+   { \beta,\kappa,\ell
       \vdash
       \nil \mvlx \mathtt{xP}
       \leadsto
@@ -56,24 +56,38 @@
 \def\expandMatchNonEmptyR{
   \inferrule
    { \lnot empty(\mathtt{xP})
-     \\
-     \gamma,\beta,\kappa,\ell
+     \\\\
+     \beta,\kappa,\ell
         \vdash
-        expand(\mathtt{vC}) \mvlxx \mathtt{xP}
+        expand(\mathtt{vC})
+        \mvlxx
+        \mathtt{xP}
         \leadsto ( \beta',\ell',\mathtt{xP'} )
-     \\
-     \gamma,\beta',\kappa\cat\seqof{\mathtt{vC}},\ell'
+     \\\\
+     \beta',\kappa\cat\seqof{\mathtt{vC}},\ell'
         \vdash
-        \mathtt{vlC'} \mvlx \mathtt{xP'}
+        \mathtt{vlC'}
+        \mvlx
+        \mathtt{xP'}
         \leadsto
         ( \beta'' , \kappa', \mathtt{vlC''} )
    }
-   { \gamma,\beta,\kappa
+   { \beta,\kappa,\ell
       \vdash
       \mathtt{vC:vlC'} \mvlx \mathtt{xP}
       \leadsto
       ( \beta'', \kappa', \mathtt{vlC''} )
    }
+}
+
+
+\def\bloDef{
+  \begin{eqnarray*}
+     \beta \override \beta' &=& blo(\beta,\ell,xs\setminus us;ls)
+  \\ dom(\beta') &=& us \cup ls
+  \\ elems(\cat rng(\beta')) &=& elems (\ell \cat xs)
+  \\ \beta' & \approx & \maplet{us \cup ls}{\ell \cat xs}
+  \end{eqnarray*}
 }
 
 \def\expTwoMatchAllEmptyR{
@@ -96,7 +110,7 @@
      \\
      \lnot empty(\mathtt{xP})
    }
-   { \gamma,\beta,\kappa,\ell
+   { \beta,\kappa,\ell
       \vdash
       \mathtt{vC} \mvlxx \mathtt{xP}
       \leadsto
@@ -161,7 +175,7 @@
     x_C \neq x_P
     ( v_u \notin \beta \lor \beta(v_u) = x_P )
     \\\\
-   \gamma,\beta\override\maplet{v_u}{x_P}
+   \beta\override\maplet{v_u}{x_P},\kappa,\ell
    \vdash
    (x_C:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
    \mvlxx
@@ -170,7 +184,7 @@
    (\beta',\ell', \mathtt{xP'})
    }
    {
-   \gamma,\beta
+   \beta,\kappa,\ell
    \vdash
    (x_C:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
    \mvlxx
@@ -210,7 +224,7 @@
    {
     \mathtt{ulP} \neq \nil
     \\
-   \gamma,\ell\cat\seqof{x_P}
+   \beta,\kappa,\ell\cat\seqof{x_P}
    \vdash
    \mathtt{xC}
    \mvlxx
@@ -219,7 +233,7 @@
    (\beta', \ell',\mathtt{xP'})
    }
    {
-   \gamma,\ell
+   \beta,\kappa,\ell
    \vdash
    \mathtt{xC}
    \mvlxx

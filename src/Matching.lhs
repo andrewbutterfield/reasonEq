@@ -1192,11 +1192,60 @@ rigidE (_,[],[],_) = True
 rigidE _ = False
 \end{code}
 
+\newpage
 \bloDef
+We need part of the static context here.
 \begin{code}
 -- blo to be defined here
+bindLeftOvers :: MonadPlus mp
+              => ( [VarTable], VarClass, VarWhen ) -- static context
+              -> Binding
+              -> [Variable]   -- expansion variables ( ell ++ xs)
+              -> [Identifier] -- subtracted variables
+              -> [Identifier] -- subtracted list-variables
+              -> mp Binding
+bindLeftOvers (_,bc,bw) bind xs us ls
+  = do (bind',xs') <- bloVars bind xs us
+       bloLVars bind' xs' ls
+  where
+
+    bloVars bind xs []  =  return (bind,xs)
+    bloVars bind []  _  =  fail "bindLeftOvers: too few expansion vars."
+    bloVars bind xs (ui:us)
+      = case lookupBind bind uv of
+          Nothing
+            ->  do bind' <- bindVarToVar uv (head xs) bind
+                   bloVars bind' (tail xs) us
+          Just (BindVar v)
+            ->  do xs' <- getitem v xs
+                   bloVars bind xs' us
+          _ ->  fail "bindLeftOvers: subtract bound to term"
+      where
+        uv = Vbl ui bc bw
+
+    bloLVars bind [] [] = return bind
+    bloLVars bind xs [ui]
+      = bindLVarToVList (LVbl (Vbl ui bc bw) [] []) (map StdVar xs) bind
+    bloLVars bind xs (ui:ul)
+      = case lookupLstBind bind lv of
+         Nothing
+           -> do bind' <- bindLVarToVList  lv [] bind
+                 bloLVars bind' xs ul
+         Just (BindList vs)
+           ->  do xs' <- getvars xs vs
+                  bloLVars bind xs' ul
+         _ -> fail "bindLeftOvers: subtract not bound to list"
+      where
+        lv = LVbl (Vbl ui bc bw) [] []
+
+    getvars xs [] = return xs
+    getvars xs (StdVar v:rest)
+     = do xs' <- getitem v xs
+          getvars xs rest
+    getvars _ _ = fail "bindLeftOvers: subtract bound contains list-vars"
 \end{code}
 
+\newpage
 \begin{code}
 vlExpandMatch :: MonadPlus mp
               => ( [VarTable], VarClass, VarWhen ) -- static context

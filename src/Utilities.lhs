@@ -24,7 +24,7 @@ utilities
 \end{code}
 
 \newpage
-\subsubsection{Maybr and related}
+\subsubsection{Maybe and related}
 
 A version of \texttt{fromJust}
 that gives a more helpful error message.
@@ -58,6 +58,16 @@ xs     `pulledFrom` []  =  (False,[])
 unlines' [] = ""
 unlines' [s] = s
 unlines' (s:ss) = s ++ '\n':unlines' ss
+\end{code}
+
+\subsubsection{Get item from list, or fail trying}
+\begin{code}
+getitem :: (Eq a, Monad m) => a -> [a] -> m [a]
+getitem _ [] = fail "getitem: item not present"
+getitem a (x:xs)
+ | a == x     =  return xs
+ | otherwise  =  do xs' <- getitem a xs
+                    return (x:xs')
 \end{code}
 
 \subsubsection{Set disjointness}

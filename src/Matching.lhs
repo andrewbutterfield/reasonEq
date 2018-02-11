@@ -894,8 +894,8 @@ vlKnownMatch vts bind cbvs pbvs
            <- vlExpandMatch
                 (vts,bc,vw)   -- static context
                 (bind,[],[])  -- dynamic context
-                (vlX,uis,ujs,length vlX-length uis) -- pattern expansion
                 vlC
+                (vlX,uis,ujs,length vlX-length uis) -- pattern expansion
          bind'' <- bindLVarToVList lvP vlC1 bind'
          return (bind'',vlC2)
  where
@@ -1250,8 +1250,8 @@ bindLeftOvers (_,bc,bw) bind xs us ls
 vlExpandMatch :: MonadPlus mp
               => ( [VarTable], VarClass, VarWhen ) -- static context
               -> ( Binding, VarList, [Variable] )  -- dynamic context
-              -> Expansion  -- pattern list-variable expansion
               -> VarList -- candidate variable list.
+              -> Expansion  -- pattern list-variable expansion
               -> mp ( Binding  -- resulting binding
                     , VarList  -- matched candidate prefix
                     , VarList  -- remaining candidate suffix
@@ -1270,40 +1270,28 @@ vlExpandMatch :: MonadPlus mp
 \]
 
 \begin{code}
-vlExpandMatch = error "vlExpandMatch: NYI"
+vlExpandMatch sctxt@(vts,bc,bw) dctxt@(bind,kappa,ell) vlC xP@(xs,uv,ul,_)
+  | emptyE xP || (inexactE xP && null vlC)
+     = do bind' <-  bindLeftOvers sctxt bind (ell++xs) uv ul
+          return (bind',kappa,vlC)
+  | not $ null vlC
+     =  let (vC:vlC') = vlC in
+        do xC <- expand vC
+           (bind',ell',xP') <- vlExpand2Match sctxt dctxt xC xP
+           vlExpandMatch sctxt (bind,vC:kappa,ell') vlC' xP'
+  | otherwise = fail "vlExpandMatch: null candidate for exact, non-empty pattern."
+
+  where
+    expand (StdVar v)  = return ([v],[],[],1)
+    expand (LstVar lv)
+      = case expandKnown vts lv of
+          Just (KnownVarList vlK vlX _,uis, ujs)
+            -> return (vlX,uis,ujs,length vlX - length uis)
+          _ ->  fail "vlExpandMatch: candidate is unknown list-var."
 \end{code}
 
-
-
-
-
-\newpage
-Zeroing-out is the process of accounting for leftover
-expansion variables by binding remaining subtracted variables
-one-by-one, and then using subtracted list-vars. to account for the rest.
-We take a greedy approach where the first list-var hoovers up
-all the remaining expansion variables, with the rest bound to null.
 \begin{code}
-zeroOutExpanse :: Monad m
-               => VarClass -> VarWhen -> Binding
-               -> [Identifier] -- subtracted unknown variable-ids.
-               -> [Identifier] -- subtracted unknown lvar-ids.
-               -> [Variable]   -- known variable expansion
-               -> m ( Binding
-                    , [Variable]
-                    , Int
-                    , [Identifier]
-                    , [Identifier]
-                    )
-zeroOutExpanse bc bw bind _ _ []   =  return (bind,[],0,[],[])
-zeroOutExpanse bc bw bind [] [] _  =  error "zeroOutExpanse: Unexpected!"
-zeroOutExpanse bc bw bind (uv:uvs) uls (xv:xvs)
- = do bind' <- bindVarToVar (Vbl uv bc bw) xv bind
-      zeroOutExpanse bc bw bind' uvs uls xvs
-zeroOutExpanse bc bw bind [] (ul:uls) xvs
- = do bind' <- bindLVarToVList (lvr bc bw ul) (map StdVar xvs) bind
-      bind'' <- bindLVarsToNull bind' (map (lvr bc bw) uls)
-      return (bind'',[],0,[],[])
+vlExpand2Match sctxt dctxt xC xP = error "vlExpand2Match: NYI"
 \end{code}
 
 \newpage

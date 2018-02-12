@@ -1145,7 +1145,7 @@ when \texttt{uvP} is non-null:
 \]
 %%
 \item
-When \texttt{xC} is inexact, and \texttt{vlC} is nil
+When \texttt{xC} is inexact, and \texttt{uvC} is nil
 we can simply remove the leading candidate expansion variable,
 but leave \texttt{ulC} untouched.
 We do not care which members of \texttt{ulC} cover which members
@@ -1156,7 +1156,7 @@ of the candidate expansion list.
 Reminder: we can never shrink the candidate if it is rigid.
 %%
 \item
-When \texttt{xP} is inexact, and \texttt{ulP} is nil,
+When \texttt{xP} is inexact, and \texttt{uvP} is nil,
 and the pattern size is greater than that of the candidate,
 then we can remove the leading pattern expansion variable.
 However we must record its removal, so that at the end,
@@ -1272,8 +1272,8 @@ vlExpandMatch :: MonadPlus mp
 \begin{code}
 vlExpandMatch sctxt@(vts,bc,bw) dctxt@(bind,kappa,ell) vlC xP@(xs,uv,ul,_)
   | emptyE xP || (inexactE xP && null vlC)
-     = do bind' <-  bindLeftOvers sctxt bind (ell++xs) uv ul
-          return (bind',kappa,vlC)
+     = do bind' <-  bindLeftOvers sctxt bind (reverse ell++xs) uv ul
+          return (bind',reverse kappa,vlC)
   | not $ null vlC
      =  let (vC:vlC') = vlC in
         do xC <- expand vC
@@ -1290,8 +1290,71 @@ vlExpandMatch sctxt@(vts,bc,bw) dctxt@(bind,kappa,ell) vlC xP@(xs,uv,ul,_)
           _ ->  fail "vlExpandMatch: candidate is unknown list-var."
 \end{code}
 
+\newpage
 \begin{code}
-vlExpand2Match sctxt dctxt xC xP = error "vlExpand2Match: NYI"
+vlExpand2Match :: MonadPlus mp
+               => ( [VarTable], VarClass, VarWhen ) -- static context
+               -> ( Binding, VarList, [Variable] )  -- dynamic context
+              -> Expansion  -- candidate variable expansion
+              -> Expansion  -- pattern list-variable expansion
+              -> mp ( Binding  -- resulting binding
+                    , [Variable]  -- subtracted parts of candidate expansion
+                    , Expansion   -- remaining pattern expansion
+                    )
+\end{code}
+
+\[
+\expTwoMatchAllEmptyR
+\qquad
+\expTwoMatchCandEmptyR
+\]
+
+\begin{code}
+vlExpand2Match _ dctxt@(bind,_,ell) xC xP
+ | emptyE xC  =  return (bind,ell,xP)
+\end{code}
+
+\[
+\expTwoMatchSameR
+\]
+\begin{code}
+vlExpand2Match sctxt dctxt  xC@(vC:xsC,uvC,ulC,szC) xP@(vP:xsP,uvP,ulP,szP)
+  | vC == vP  =  vlExpand2Match sctxt dctxt (xsC,uvC,ulC,szC-1)
+                                            (xsP,uvP,ulP,szP-1)
+\end{code}
+
+\[
+\expTwoMatchSqueezeCR
+\]
+\begin{code}
+-- vlExpand2Match sctxt dctxt  xC@(vC:xsC,uvC,ulC,szC) xP@(vP:xsP,uvP,ulP,szP)
+-- vC /= vP
+  | null uvC && not (null ulC)
+      = vlExpand2Match sctxt dctxt (xsC,uvC,ulC,szC-1) xP
+\end{code}
+
+\[
+\expTwoMatchSqueezePR
+\]
+\begin{code}
+-- vlExpand2Match sctxt dctxt  xC@(vC:xsC,uvC,ulC,szC) xP@(vP:xsP,uvP,ulP,szP)
+-- vC /= vP
+  | null uvP && not (null ulP)
+      = vlExpand2Match sctxt (beta,kappa,vP:ell) xC (xsP,uvP,ulP,szP-1)
+      where (beta,kappa,ell) = dctxt
+\end{code}
+
+
+\[
+\expTwoMatchClipCandR
+\]
+
+\[
+\expTwoMatchClipPatnR
+\]
+
+\begin{code}
+vlExpand2Match sctxt dctxt xC xP = error "vlExpand2Match: NYFI"
 \end{code}
 
 \newpage

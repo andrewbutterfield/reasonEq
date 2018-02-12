@@ -121,6 +121,8 @@
 \def\expTwoMatchSameR{
   \inferrule
    {
+   v_C = v_P
+   \\
    \Gamma
    \vdash
    (xs_C \setminus \mathtt{uvC};\mathtt{ulC})
@@ -132,9 +134,9 @@
    {
    \Gamma
    \vdash
-   (v:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
+   (v_C:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
    \mvlxx
-   (v:xs_P \setminus \mathtt{uvP};\mathtt{ulP})
+   (v_P:xs_P \setminus \mathtt{uvP};\mathtt{ulP})
    \leadsto
    (\beta', \ell', \mathtt{xP'})
    }
@@ -145,22 +147,22 @@
    {
     v_u \in \mathtt{uvC}
     \\
-    x_C \neq x_P
+    v_C \neq v_P
     \\\\
    \Gamma
    \vdash
    (xs_C \setminus (\mathtt{uvC}-v_u);\mathtt{ulC})
    \mvlxx
-   (x_P:xs_P \setminus \mathtt{uvP};\mathtt{ulP})
+   (v_P:xs_P \setminus \mathtt{uvP};\mathtt{ulP})
    \leadsto
    (\beta', \ell', \mathtt{xP'})
    }
    {
    \Gamma
    \vdash
-   (x_C:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
+   (v_C:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
    \mvlxx
-   (x_P:xs_P \setminus \mathtt{uvP};\mathtt{ulP})
+   (v_P:xs_P \setminus \mathtt{uvP};\mathtt{ulP})
    \leadsto
    (\beta', \ell', \mathtt{xP'})
    }
@@ -171,13 +173,13 @@
    {
     v_u \in \mathtt{uvP}
     \\
+    v_C \neq v_P
     \\
-    x_C \neq x_P
-    ( v_u \notin \beta \lor \beta(v_u) = x_P )
+    ( v_u \notin \beta \lor \beta(v_u) = v_P )
     \\\\
    \beta\override\maplet{v_u}{x_P},\kappa,\ell
    \vdash
-   (x_C:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
+   (v_C:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
    \mvlxx
    (xs_P \setminus (\mathtt{uvP}-v_u);\mathtt{ulP})
     \leadsto
@@ -186,9 +188,9 @@
    {
    \beta,\kappa,\ell
    \vdash
-   (x_C:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
+   (v_C:xs_C \setminus \mathtt{uvC};\mathtt{ulC})
    \mvlxx
-   (x_P:xs_P \setminus \mathtt{uvP};\mathtt{ulP})
+   (v_P:xs_P \setminus \mathtt{uvP};\mathtt{ulP})
    \leadsto
    (\beta', \ell', \mathtt{xP'})
    }
@@ -211,7 +213,7 @@
    {
    \Gamma
    \vdash
-   (x_C:xs_C \setminus \nil;\mathtt{ulC})
+   (v_C:xs_C \setminus \nil;\mathtt{ulC})
    \mvlxx
    \mathtt{xP}
    \leadsto
@@ -224,7 +226,9 @@
    {
     \mathtt{ulP} \neq \nil
     \\
-   \beta,\kappa,\ell\cat\seqof{x_P}
+    size(\mathtt{xP}) > size(\mathtt{xC})
+    \\
+   \beta,\kappa,\ell\cat\seqof{v_P}
    \vdash
    \mathtt{xC}
    \mvlxx
@@ -237,7 +241,7 @@
    \vdash
    \mathtt{xC}
    \mvlxx
-   (x_P:xs_P \setminus \nil;\mathtt{ulP})
+   (v_P:xs_P \setminus \nil;\mathtt{ulP})
    \leadsto
    (\beta', \ell',\mathtt{xP'})
    }

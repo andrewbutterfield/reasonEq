@@ -1318,43 +1318,46 @@ vlExpand2Match _ dctxt@(bind,_,ell) xC xP
 \expTwoMatchSameR
 \]
 \begin{code}
-vlExpand2Match sctxt dctxt  xC@(vC:xsC,uvC,ulC,szC) xP@(vP:xsP,uvP,ulP,szP)
+vlExpand2Match sctxt dctxt xC@(vC:xsC,uvC,ulC,szC) xP@(vP:xsP,uvP,ulP,szP)
   | vC == vP  =  vlExpand2Match sctxt dctxt (xsC,uvC,ulC,szC-1)
                                             (xsP,uvP,ulP,szP-1)
+  | otherwise
+      =  vlShrinkCandMatch sctxt dctxt xC xP
+         `mplus`
+         vlShrinkPatnMatch sctxt dctxt xC xP
 \end{code}
 
 \[
 \expTwoMatchSqueezeCR
 \]
+\[
+\expTwoMatchClipCandR
+\]
+
 \begin{code}
--- vlExpand2Match sctxt dctxt  xC@(vC:xsC,uvC,ulC,szC) xP@(vP:xsP,uvP,ulP,szP)
--- vC /= vP
-  | null uvC && not (null ulC)
-      = vlExpand2Match sctxt dctxt (xsC,uvC,ulC,szC-1) xP
+vlShrinkCandMatch sctxt dctxt xC@(vC:xsC,uvC,ulC,szC) xP
+  | null uvC && null ulC
+    = fail "vlShrinkCandMatch: cannot shrink rigid candidate expansion"
+  | null uvC -- && not (null ulC)
+     = vlExpand2Match sctxt dctxt (xsC,uvC,ulC,szC-1) xP
+  | otherwise -- not (null uvC)
+    = error "vlShrinkCandMatch: NYFI"
 \end{code}
 
 \[
 \expTwoMatchSqueezePR
 \]
-\begin{code}
--- vlExpand2Match sctxt dctxt  xC@(vC:xsC,uvC,ulC,szC) xP@(vP:xsP,uvP,ulP,szP)
--- vC /= vP
-  | null uvP && not (null ulP)
-      = vlExpand2Match sctxt (beta,kappa,vP:ell) xC (xsP,uvP,ulP,szP-1)
-      where (beta,kappa,ell) = dctxt
-\end{code}
-
-
-\[
-\expTwoMatchClipCandR
-\]
-
 \[
 \expTwoMatchClipPatnR
 \]
-
 \begin{code}
-vlExpand2Match sctxt dctxt xC xP = error "vlExpand2Match: NYFI"
+vlShrinkPatnMatch sctxt (bind,gamma,ell) xC xP@(vP:xsP,uvP,ulP,szP)
+  | null uvP && null ulP
+    = fail "vlShrinkPatnMatch: cannot shrink rigid pattern expansion"
+  | null uvP && szP > szC -- && not null (ulP)
+    = vlExpand2Match sctxt (bind,gamma,vP:ell) xC (xsP,uvP,ulP,szP-1)
+  | otherwise
+     = error "vlShrinkPatnMatch: NYFI"
 \end{code}
 
 \newpage

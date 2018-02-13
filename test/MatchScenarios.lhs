@@ -354,7 +354,8 @@ test_reserved_as_lists
      , testCase "L_Design |- [ok,S\\u] :: [O\\u] -- succeeds"
          ( nub (vlMatch [vtL_Design] emptyBinding S.empty S.empty
                   (vwrap [ok]++lwrap [lSu]) (lwrap [lOu]))
-           @?= [ bindLl (LstVar lOu) (vwrap [ok]++lwrap [lSu]) emptyBinding
+           @?= [ bindLl (LstVar lOu) (vwrap [ok]++lwrap [lSu])
+                 $ bindVV gu gz emptyBinding
                ]
          )
      , testCase "L_Design |- [e] :: [e,S\\uvw] -- succeeds"

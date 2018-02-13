@@ -171,11 +171,13 @@
 \def\expTwoMatchClipPatnR{
   \inferrule
    {
-    v_u \in \mathtt{uvP}
-    \\
     v_C \neq v_P
     \\
-    ( v_u \notin \beta \lor \beta(v_u) = v_P )
+    v_u \in \mathtt{uvP}
+    \\
+    ( v_u \notin \beta
+      \cond{\exists v \in \mathtt{uvP} \bullet \beta(v)=v_P}
+      \beta(v_u) = v_P )
     \\\\
    \beta\override\maplet{v_u}{x_P},\kappa,\ell
    \vdash

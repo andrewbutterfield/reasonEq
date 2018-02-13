@@ -41,6 +41,9 @@ import LexBase
 import Variables
 import AST
 import VarData
+
+import Debug.Trace
+dbg msg x = trace (msg ++ show x) x
 \end{code}
 
 \subsection{Introduction}
@@ -325,13 +328,18 @@ bindVarToVar (Vbl vi vc (During m)) x@(Vbl xi xc (During n))
 A dynamic variable can only bind to a dynamic variable of the same
 temporality in the appropriate class.
 \begin{code}
-bindVarToVar (Vbl  vi vc vw) (Vbl xi xc xw)
+bindVarToVar dv@(Vbl  vi vc vw) rv@(Vbl xi xc xw)
              (BD (vbind,sbind,lbind))
  | vw /= xw   =  fail "bindVarToVar: different temporalities"
  | validVarClassBinding vc xc
    =  do vbind' <- insertDR "bindVarToVar(dynamic)" (==) (vi,vc) (BI xi) vbind
          return $ BD (vbind',sbind,lbind)
- | otherwise  =  fail "bindVarToVar: incompatible variables"
+ | otherwise
+    =  fail $ unlines
+          [ "bindVarToVar: incompatible variables"
+          , "dv = " ++ show dv
+          , "rv = " ++ show rv
+          ]
 \end{code}
 
 \newpage

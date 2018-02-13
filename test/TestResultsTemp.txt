@@ -1,29 +1,12 @@
-*MatchScenarios> vlMatch [vtL_Design] emptyBinding S.empty S.empty (vwrap [y,z,x]) (lwrap [lSu] ++ vwrap [vu])
-vlEM:.gC=GV (VR (Id "y",VO,WB))
-vlEM:.xC=[VR (Id "y",VO,WB)]
-vlEM:.uvC=[]
-vlEM:.exactC=True
-vlEM:.lMaxP=2
-vlEM:.lMaxC=1
-vlEM:.gC=GV (VR (Id "z",VO,WB))
-vlEM:.xC=[VR (Id "z",VO,WB)]
-vlEM:.uvC=[]
-vlEM:.exactC=True
-vlEM:.lMaxP=1
-vlEM:.lMaxC=1
-vlEM:.gC=GV (VR (Id "x",VO,WB))
-vlEM:.xC=[VR (Id "x",VO,WB)]
-vlEM:.uvC=[]
-vlEM:.exactC=True
-vlEM:.lMaxP=0
--- !!!! we should exit at this point
-vlEM:.lMaxC=1
-*** Exception: user error (vlExpandMatch: candidate too large.
-(xC,uvC,ulC) = ([VR (Id "x",VO,WB)],[],[])
-(xP,uvP,ulP) = ([],[],[])
-bind:
-BD (fromList [],fromList [],fromList [])
+vlMatch [vtL_Design] emptyBinding S.empty S.empty [ge] (ge:lwrap [lSuvw])
+
+vlFM.lvP = LV (VR (Id "S",VO,WB),[Id "u",Id "v",Id "w"],[])
+vlFM.vlC = []
+*** Exception: user error (bindVarToVar: incompatible variables
+dv = VR (Id "u",VE,WB)
+rv = VR (Id "x",VO,WB)
 )
 
+I think that bc, bw are being set incorrectly, somewhere
 
 --

@@ -784,32 +784,22 @@ vlFreeMatch vts bind cbvs pbvs bc vlC []
   = fail "vlMatch: too many candidate variables."
 \end{code}
 
-If there are leftover pattern variables,
-we succeed if they are all ``unknown'' list-variables,
-as they can be bound to the empty variable-list.
-For our purposes here a list-variable is unkown if it not known,
-or is known to be defined as a empty variable-list%
-\footnote{
-This can happen, particularly in UTP theories with only model observations
-and no script variables, such as the CSP theory.
-}.
-Otherwise we fail:
-\begin{code}
-vlFreeMatch vts bind cbvs pbvs bc [] (StdVar vP:_)
-  = fail "vlMatch: too many std. pattern variables."
-vlFreeMatch vts bind cbvs pbvs bc [] (LstVar lvP:vlP)
-  | canMatchNullList vts lvP  =  do bind' <- bindLVarToVList lvP [] bind
-                                    vlFreeMatch vts bind' cbvs pbvs bc [] vlP
-  | otherwise  =  fail "vlMatch: known list pattern can't match null."
-\end{code}
-
 Standard pattern variable matches are easy.
 The head of the candidate list must be a pattern variable.
 It must also match according to the rules for variable matching.
 \begin{code}
+vlFreeMatch vts bind cbvs pbvs bc [] (StdVar vP:_)
+  = fail "vlMatch: too many std. pattern variables."
+-- vlFreeMatch vts bind cbvs pbvs bc [] (LstVar lvP:vlP)
+--   | canMatchNullList vts (dbg "vlFM.lvP = " lvP)
+--        =  do bind' <- bindLVarToVList lvP [] bind
+--              vlFreeMatch vts bind' cbvs pbvs bc [] vlP
+--   | otherwise  =  fail "vlMatch: known list pattern can't match null."
+
 vlFreeMatch vts bind cbvs pbvs bc ((StdVar vC):vlC) ((StdVar vP):vlP)
   = do bind' <- vMatch vts bind cbvs pbvs vC vP
        vlFreeMatch vts bind' cbvs pbvs bc vlC vlP
+
 vlFreeMatch vts bind cbvs pbvs bc vlC ((StdVar _):_)
   = fail "vlMatch: std pattern cannot match list candidate."
 \end{code}
@@ -824,9 +814,8 @@ match the next $n$ candidate variables, for $n$ in the range $0\dots N$,
 for some fixed $N$.
 For now, we take $N=2$.
 \begin{code}
--- not null vlC
 vlFreeMatch vts bind cbvs pbvs bc vlC (gvP@(LstVar lvP):vlP)
-  = case expandKnown vts lvP of
+  = case expandKnown vts (dbg "vlFM.lvP = " lvP) of
      Nothing
        -> vlFreeMatchN vts bind cbvs pbvs bc vlC lvP vlP 0
           `mplus`
@@ -834,6 +823,7 @@ vlFreeMatch vts bind cbvs pbvs bc vlC (gvP@(LstVar lvP):vlP)
           `mplus`
           vlFreeMatchN vts bind cbvs pbvs bc vlC lvP vlP 2
      Just (AbstractList, uis, ujs)
+       | null vlC -> fail "vlMatch: not enough candidates."
        | gvP /= head vlC  ->  fail "vlMatch: abstract lvar. only matches self."
        | otherwise
            -> do bind' <- bindLVarToVList lvP [gvP] bind
@@ -843,8 +833,8 @@ vlFreeMatch vts bind cbvs pbvs bc vlC (gvP@(LstVar lvP):vlP)
           -> fail "vlMatch: invalid known epxansion"
        | otherwise
           -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs
-                                     bc vlC gvP vlK vlX uis ujs
-                vlFreeMatch vts bind' cbvs pbvs bc vlC' vlP
+                                     bc (dbg "vlFM.vlC = " vlC) gvP vlK vlX uis ujs
+                vlFreeMatch vts bind' cbvs pbvs bc (dbg "vlFM.vlC' = " vlC') vlP
      _ -> fail "vlMatch: pattern list-variable is set-valued."
 \end{code}
 
@@ -866,7 +856,8 @@ that matches a list-variable against the first \texttt{n} candidates.
 vlFreeMatchN vts bind cbvs pbvs bc vlC lvP vlP n
  = do bind' <- bindLVarToVList lvP firstnC bind
       vlFreeMatch vts bind' cbvs pbvs bc restC vlP
- where (firstnC,restC) = splitAt n vlC
+ where
+    (firstnC,restC)  =  splitAt n vlC
 \end{code}
 
 \newpage
@@ -878,14 +869,14 @@ are a prefix of the candidate list.
 -- not null vlC
 vlKnownMatch vts bind cbvs pbvs
                 bc vlC gvP vlK vlX uis ujs
- | gvP == head vlC -- covers lvP known to be Abstract
+ | not (null vlC) && gvP == head vlC -- covers lvP known to be Abstract
     = do bind' <- bindLVarToVList lvP [gvP] bind
          return (bind',tail vlC)
- | vlK `isPrefixOf` vlC
+ | vlK `isPrefixOf` vlC && null uis
     = do bind' <- bindLVarToVList lvP vlK bind
          bind'' <- bindLVarsToNull bind' (map (lvr bc vw) ujs)
          return (bind'',vlC \\ vlK)
- | gvlX `isPrefixOf` vlC
+ | gvlX `isPrefixOf` vlC && null uis
     = do bind' <- bindLVarToVList lvP gvlX bind
          bind'' <- bindLVarsToNull bind' (map (lvr bc vw) ujs)
          return (bind'',vlC \\ gvlX)
@@ -1341,9 +1332,10 @@ vlShrinkCandMatch sctxt dctxt xC@(vC:xsC,uvC,ulC,szC) xP
   | null uvC -- && not (null ulC)
      = vlExpand2Match sctxt dctxt (xsC,uvC,ulC,szC-1) xP
   | otherwise -- not (null uvC)
-    = error "vlShrinkCandMatch: NYFI"
+     = vlExpand2Match sctxt dctxt (xsC,tail uvC,ulC,szC) xP
 \end{code}
 
+\newpage
 \[
 \expTwoMatchSqueezePR
 \]
@@ -1351,13 +1343,32 @@ vlShrinkCandMatch sctxt dctxt xC@(vC:xsC,uvC,ulC,szC) xP
 \expTwoMatchClipPatnR
 \]
 \begin{code}
-vlShrinkPatnMatch sctxt (bind,gamma,ell) xC xP@(vP:xsP,uvP,ulP,szP)
+vlShrinkPatnMatch sctxt@(_,bc,bw) (bind,gamma,ell)
+                  xC@(_,_,_,szC) xP@(vP:xsP,uvP,ulP,szP)
   | null uvP && null ulP
     = fail "vlShrinkPatnMatch: cannot shrink rigid pattern expansion"
   | null uvP && szP > szC -- && not null (ulP)
     = vlExpand2Match sctxt (bind,gamma,vP:ell) xC (xsP,uvP,ulP,szP-1)
-  | otherwise
-     = error "vlShrinkPatnMatch: NYFI"
+  | not (null uvP)
+     = do vu <- select bind vP Nothing uvP
+          bind' <- bindVarToVar vu vP bind
+          vlExpand2Match sctxt (bind',gamma,vP:ell) xC (xsP,uvP,ulP,szP)
+  | otherwise = fail "vlShrinkPatnMatch: match fail."
+  where
+
+    select bind vP Nothing []  = fail "vlShrinkPatnMatch: no suitable vu found."
+    select bind vP (Just vu) []  = return vu
+    select bind vP mvu (ui:uvP)
+     = let vu = Vbl ui bc bw in
+         case lookupBind bind vu of
+           Nothing -> select bind vP (upd mvu vu) uvP
+           Just (BindVar x)
+             | x == vP    ->  return vu
+             | otherwise  ->  select bind vP mvu uvP
+           _ -> fail "vlShrinkPatnMatch: subtracted var bound to term."
+
+    upd Nothing x = Just x
+    upd mx      _ = mx
 \end{code}
 
 \newpage

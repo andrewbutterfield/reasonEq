@@ -814,8 +814,9 @@ match the next $n$ candidate variables, for $n$ in the range $0\dots N$,
 for some fixed $N$.
 For now, we take $N=2$.
 \begin{code}
-vlFreeMatch vts bind cbvs pbvs bc vlC (gvP@(LstVar lvP):vlP)
-  = case expandKnown vts (dbg "vlFM.lvP = " lvP) of
+vlFreeMatch vts bind cbvs pbvs _ vlC (gvP@(LstVar lvP):vlP)
+  = let bc = lvarClass lvP in
+    case expandKnown vts (dbg "vlFM.lvP = " lvP) of
      Nothing
        -> vlFreeMatchN vts bind cbvs pbvs bc vlC lvP vlP 0
           `mplus`
@@ -833,7 +834,7 @@ vlFreeMatch vts bind cbvs pbvs bc vlC (gvP@(LstVar lvP):vlP)
           -> fail "vlMatch: invalid known epxansion"
        | otherwise
           -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs
-                                     bc (dbg "vlFM.vlC = " vlC) gvP vlK vlX uis ujs
+                                     (dbg "vlFM.bc = " bc) (dbg "vlFM.vlC = " vlC) gvP vlK vlX uis ujs
                 vlFreeMatch vts bind' cbvs pbvs bc (dbg "vlFM.vlC' = " vlC') vlP
      _ -> fail "vlMatch: pattern list-variable is set-valued."
 \end{code}

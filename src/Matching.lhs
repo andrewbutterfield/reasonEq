@@ -664,13 +664,8 @@ if any of the candidate or pattern list-variables are recorded as
 vlMatch vts bind cbvs pbvs vlC [] = fail "vlMatch: null pattern."
 vlMatch vts bind cbvs pbvs [] vlP = fail "vlMatch: null candidate."
 vlMatch vts bind cbvs pbvs vlC vlP
- | bcP /= bcC  =  fail "vlMatch: different binder classes."
- | otherwise
-    = do (vlC',vlP') <- applyBindingsToLists bind vlC vlP
-         vlFreeMatch vts bind cbvs pbvs bcP vlC' vlP'
- where
-   bcP = whatGVar $ head vlP
-   bcC = whatGVar $ head vlC
+  = do (vlC',vlP') <- applyBindingsToLists bind vlC vlP
+       vlFreeMatch vts bind cbvs pbvs vlC' vlP'
 \end{code}
 
 \subsubsection{Applying Bindings to Lists}
@@ -769,18 +764,18 @@ against some prefix of the candidate list.
 vlFreeMatch :: MonadPlus mp
               => [VarTable] -> Binding
               -> CBVS -> PBVS
-              -> VarClass -> VarList -> VarList
+              -> VarList -> VarList
               -> mp Binding
 \end{code}
 
 If both lists are empty, we are done:
 \begin{code}
-vlFreeMatch vts bind cbvs pbvs bc [] [] = return bind
+vlFreeMatch vts bind cbvs pbvs [] [] = return bind
 \end{code}
 
 If there are leftover candidate variables, we fail
 \begin{code}
-vlFreeMatch vts bind cbvs pbvs bc vlC []
+vlFreeMatch vts bind cbvs pbvs vlC []
   = fail "vlMatch: too many candidate variables."
 \end{code}
 
@@ -788,19 +783,14 @@ Standard pattern variable matches are easy.
 The head of the candidate list must be a pattern variable.
 It must also match according to the rules for variable matching.
 \begin{code}
-vlFreeMatch vts bind cbvs pbvs bc [] (StdVar vP:_)
+vlFreeMatch vts bind cbvs pbvs [] (StdVar vP:_)
   = fail "vlMatch: too many std. pattern variables."
--- vlFreeMatch vts bind cbvs pbvs bc [] (LstVar lvP:vlP)
---   | canMatchNullList vts (dbg "vlFM.lvP = " lvP)
---        =  do bind' <- bindLVarToVList lvP [] bind
---              vlFreeMatch vts bind' cbvs pbvs bc [] vlP
---   | otherwise  =  fail "vlMatch: known list pattern can't match null."
 
-vlFreeMatch vts bind cbvs pbvs bc ((StdVar vC):vlC) ((StdVar vP):vlP)
+vlFreeMatch vts bind cbvs pbvs ((StdVar vC):vlC) ((StdVar vP):vlP)
   = do bind' <- vMatch vts bind cbvs pbvs vC vP
-       vlFreeMatch vts bind' cbvs pbvs bc vlC vlP
+       vlFreeMatch vts bind' cbvs pbvs vlC vlP
 
-vlFreeMatch vts bind cbvs pbvs bc vlC ((StdVar _):_)
+vlFreeMatch vts bind cbvs pbvs vlC ((StdVar _):_)
   = fail "vlMatch: std pattern cannot match list candidate."
 \end{code}
 
@@ -814,9 +804,9 @@ match the next $n$ candidate variables, for $n$ in the range $0\dots N$,
 for some fixed $N$.
 For now, we take $N=2$.
 \begin{code}
-vlFreeMatch vts bind cbvs pbvs _ vlC (gvP@(LstVar lvP):vlP)
+vlFreeMatch vts bind cbvs pbvs vlC (gvP@(LstVar lvP):vlP)
   = let bc = lvarClass lvP in
-    case expandKnown vts (dbg "vlFM.lvP = " lvP) of
+    case expandKnown vts lvP of
      Nothing
        -> vlFreeMatchN vts bind cbvs pbvs bc vlC lvP vlP 0
           `mplus`
@@ -828,14 +818,14 @@ vlFreeMatch vts bind cbvs pbvs _ vlC (gvP@(LstVar lvP):vlP)
        | gvP /= head vlC  ->  fail "vlMatch: abstract lvar. only matches self."
        | otherwise
            -> do bind' <- bindLVarToVList lvP [gvP] bind
-                 vlFreeMatch vts bind' cbvs pbvs bc (tail vlC) vlP
+                 vlFreeMatch vts bind' cbvs pbvs (tail vlC) vlP
      Just kX@(KnownVarList vlK vlX xLen, uis, ujs)
        | length uis > length vlX
           -> fail "vlMatch: invalid known epxansion"
        | otherwise
           -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs
-                                     (dbg "vlFM.bc = " bc) (dbg "vlFM.vlC = " vlC) gvP vlK vlX uis ujs
-                vlFreeMatch vts bind' cbvs pbvs bc (dbg "vlFM.vlC' = " vlC') vlP
+                                     bc vlC gvP vlK vlX uis ujs
+                vlFreeMatch vts bind' cbvs pbvs vlC' vlP
      _ -> fail "vlMatch: pattern list-variable is set-valued."
 \end{code}
 
@@ -856,7 +846,7 @@ that matches a list-variable against the first \texttt{n} candidates.
 \begin{code}
 vlFreeMatchN vts bind cbvs pbvs bc vlC lvP vlP n
  = do bind' <- bindLVarToVList lvP firstnC bind
-      vlFreeMatch vts bind' cbvs pbvs bc restC vlP
+      vlFreeMatch vts bind' cbvs pbvs restC vlP
  where
     (firstnC,restC)  =  splitAt n vlC
 \end{code}
@@ -1423,7 +1413,6 @@ applyBindingsToSets' bind vlP' vsC (gP@(StdVar vP):vlP)
 
 First pattern variable is a list-variable:
 \begin{code}
--- !!! currently ignoring 'less' part of lvP !!!!
 applyBindingsToSets' bind vlP' vsC (gP@(LstVar lvP):vlP)
  = case lookupLstBind bind lvP of
     Nothing -> applyBindingsToSets' bind (gP:vlP') vsC vlP

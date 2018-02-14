@@ -1,12 +1,2 @@
-vlMatch [vtL_Design] emptyBinding S.empty S.empty [ge] (ge:lwrap [lSuvw])
-
-vlFM.lvP = LV (VR (Id "S",VO,WB),[Id "u",Id "v",Id "w"],[])
-vlFM.vlC = []
-*** Exception: user error (bindVarToVar: incompatible variables
-dv = VR (Id "u",VE,WB)
-rv = VR (Id "x",VO,WB)
-)
-
-I think that bc, bw are being set incorrectly, somewhere
 
 --

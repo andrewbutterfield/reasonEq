@@ -210,15 +210,22 @@ test_none_reserved
             (lwrap [lO])
          @?=
          ( bindLVarToVList lO (vwrap [x,y']) emptyBinding :: [Binding] ) )
-     , testCase "|-  e,x :: O  -- fails ."
+     , testCase "|-  e,x :: O  -- succeeds ."
        ( vlMatch [] emptyBinding S.empty S.empty (vwrap [e,x]) (lwrap [lO])
-         @?= Nothing )
+         @?=
+         ( bindLVarToVList lO (vwrap [e,x]) emptyBinding :: [Binding] ) )
      ]
 
 lSu  = lS `less` ([u],[])
 lSuw = lS `less` ([u,w],[])
 lSuvw = lS `less` ([u,v,w],[])
 lOu = lO `less` ([u],[])
+
+u = jId "u"  ;  vu = PreVar u  ;  gu = StdVar vu
+vv = PreVar v  ; gv = StdVar vv
+w = jId "w"  ;  vw = PreVar w  ;  gw = StdVar vw
+
+
 
 test_reserved_as_lists
  = testGroup "O,M,S reserved as [ok,x,y,z]"
@@ -361,7 +368,7 @@ test_reserved_as_lists
      , testCase "L_Design |- [e] :: [e,S\\uvw] -- succeeds"
          ( nub (vlMatch [vtL_Design] emptyBinding S.empty S.empty
                     [ge] (ge:lwrap [lSuvw]))
-           @?= [ bindVV gu gx $ bindVV gv gy $ bindVV gw gz
+           @?= [ bindVV ge ge $ bindVV gu gx $ bindVV gv gy $ bindVV gw gz
                  $ bindLl (LstVar lSuvw) [] emptyBinding
                ]
          )
@@ -409,11 +416,6 @@ test_reserved_as_sets
 \end{code}
 \newpage
 \begin{code}
-u = jId "u"  ;  vu = PreVar u  ;  gu = StdVar vu
-ov = PreVar v ; gov = StdVar ov  -- vv used elsewhere for Textual 'v'
-w = jId "w"  ;  vw = PreVar w  ;  gw = StdVar vw
-
-
 test_less_reserved
  = testGroup "S reserved as {x,y,z}, less x,y,z or more" -- []
      [ testCase "S_Design |- {x,y,z} :: {u,S\\u} -- succeeds 3 ways"
@@ -464,28 +466,28 @@ test_less_reserved
      , testCase "S_Design |- {x,y,z} :: {u,v,w,S\\u,v,w} -- succeeds 6 WAYS"
         ( nub (vsMatch [vtS_Design] emptyBinding S.empty S.empty
             (vswrap [x,y,z])
-            (vswrap [vu,ov,vw] `S.union` lswrap [lS `less` ([u,v,w],[])]) )
-          @?= [ bindVV gu gx $ bindVV gov gy $ bindVV gw gz
+            (vswrap [vu,vv,vw] `S.union` lswrap [lS `less` ([u,v,w],[])]) )
+          @?= [ bindVV gu gx $ bindVV gv gy $ bindVV gw gz
                     $ bindLs (LstVar lSuvw) [] emptyBinding
-              , bindVV gu gx $ bindVV gov gz $ bindVV gw gy
+              , bindVV gu gx $ bindVV gv gz $ bindVV gw gy
                     $ bindLs (LstVar lSuvw) [] emptyBinding
-              , bindVV gu gy $ bindVV gov gx $ bindVV gw gz
+              , bindVV gu gy $ bindVV gv gx $ bindVV gw gz
                     $ bindLs (LstVar lSuvw) [] emptyBinding
-              , bindVV gu gy $ bindVV gov gz $ bindVV gw gx
+              , bindVV gu gy $ bindVV gv gz $ bindVV gw gx
                     $ bindLs (LstVar lSuvw) [] emptyBinding
-              , bindVV gu gz $ bindVV gov gx $ bindVV gw gy
+              , bindVV gu gz $ bindVV gv gx $ bindVV gw gy
                     $ bindLs (LstVar lSuvw) [] emptyBinding
-              , bindVV gu gz $ bindVV gov gy $ bindVV gw gx
+              , bindVV gu gz $ bindVV gv gy $ bindVV gw gx
                     $ bindLs (LstVar lSuvw) [] emptyBinding
               ]
         )
      , testCase "S_Design |- {x,y,z} :: {u,v,w,S\\u,v,w} -- SHOULD BE 6 WAYS"
         ( nub (vsMatch [vtS_Design] emptyBinding S.empty S.empty
             (vswrap [x,y,z])
-            (vswrap [vu,ov,vw] `S.union` lswrap [lS `less` ([u,v,w],[])]) )
-          @?= [ bindVV gu gx $ bindVV gov gy $ bindVV gw gz
+            (vswrap [vu,vv,vw] `S.union` lswrap [lS `less` ([u,v,w],[])]) )
+          @?= [ bindVV gu gx $ bindVV gv gy $ bindVV gw gz
                 $ bindLs (LstVar lSuvw) [] emptyBinding
-              , bindVV gu gz $ bindVV gov gy $ bindVV gw gx
+              , bindVV gu gz $ bindVV gv gy $ bindVV gw gx
                     $ bindLs (LstVar lSuvw) [] emptyBinding
               ]
         )
@@ -683,8 +685,8 @@ v `assigned` e
 Test values:
 \begin{code}
 v = jId "v"
-vv = ScriptVar v
-gv = StdVar vv
+vtv = ScriptVar v
+gtv = StdVar vtv
 sy = ScriptVar wy
 gsy = StdVar sy
 ee = fromJust $ eVar int e
@@ -704,12 +706,12 @@ test_simple_assignment
     [ testCase "Design |- y := 42  :: v := e, should succeed"
        ( tMatch [vtS_Design] emptyBinding S.empty S.empty
            (wy .:= e42) (v .:= ee)
-           @?= (Just $ bindVV gv gsy $ bindVT ge e42 $ emptyBinding)
+           @?= (Just $ bindVV gtv gsy $ bindVT ge e42 $ emptyBinding)
        )
     , testCase "Design |- << y := 42 >> :: << v := e >>, should succeed"
        ( tMatch [vtS_Design] emptyBinding S.empty S.empty
            (wy `assigned` e42) (v `assigned` ee)
-           @?= ( Just $ bindVV gv gsy $ bindVT ge e42
+           @?= ( Just $ bindVV gtv gsy $ bindVT ge e42
                $ bindVV gok gok $ bindVV gok' gok'
                $ bindLL (LstVar (lS  `less` ([v],[])))
                         (LstVar (lS  `less` ([wy],[])))

@@ -1430,8 +1430,40 @@ Here we are doing variable-set matching where all of the
 pattern variables are free, \textit{i.e.}, not already in the binding.
 We do not attempt a complete solution,
 as in fact there can be many possible bindings.
+
+In each \texttt{VarSet} we have four types of entities:
+\begin{description}
+  \item[Unknown Variables] can match any variable;
+  \item[Known Variables] can only match themselves;
+  \item[Unknown List-Variables] can match any set,
+   empty or otherwise, of general variables;
+  \item[Known List-Variables] can only match themselves
+    or a  set of variables consistent with their possible expansions,
+    as moderated by their subtractions.
+\end{description}
+The matching strategy is to start with the known pattern variables,
+and ensure all are present in the candidate.
+If so, remove them from both and continue, otherwise fail.
+\newpage
 \begin{code}
 vsFreeMatch :: MonadPlus mp
+              => [VarTable] -> Binding
+              -> CBVS -> PBVS
+              -> VarSet -> VarSet
+              -> mp Binding
+vsFreeMatch vts bind cbvs pbvs vsC vsP
+  = let
+      (uvsC,kvsC,ulsC,klsC) = vsClassify vts vsC
+      (uvsP,kvsP,ulsP,klsP) = vsClassify vts vsP
+    in error "vsFreeMatch: NYI"
+\end{code}
+
+\begin{code}
+vsClassify vts vs  =  (S.empty,S.empty,S.empty,S.empty)
+\end{code}
+
+\begin{code}
+vsFreeMatch' :: MonadPlus mp
               => [VarTable] -> Binding
               -> CBVS -> PBVS
               -> VarSet -> VarSet
@@ -1440,7 +1472,7 @@ vsFreeMatch :: MonadPlus mp
 
 If one or both sets are empty then we can easily resolve matters,
 \begin{code}
-vsFreeMatch vts bind cbvs pbvs vsC vsP
+vsFreeMatch' vts bind cbvs pbvs vsC vsP
  | S.null vsP
     = if S.null vsC then return bind
       else fail $ unlines

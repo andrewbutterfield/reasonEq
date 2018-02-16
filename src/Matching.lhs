@@ -1444,7 +1444,6 @@ In each \texttt{VarSet} we have four types of entities:
 The matching strategy is to start with the known pattern variables,
 and ensure all are present in the candidate.
 If so, remove them from both and continue, otherwise fail.
-\newpage
 \begin{code}
 vsFreeMatch :: MonadPlus mp
               => [VarTable] -> Binding
@@ -1455,11 +1454,37 @@ vsFreeMatch vts bind cbvs pbvs vsC vsP
   = let
       (uvsC,kvsC,ulsC,klsC) = vsClassify vts vsC
       (uvsP,kvsP,ulsP,klsP) = vsClassify vts vsP
-    in error "vsFreeMatch: NYI"
+    in if kvsP `S.isSubsetOf` kvsC
+       then vsFreeMatch2 vts bind cbvs pbvs
+               (uvsC,kvsC S.\\ kvsP,ulsC,klsC)
+               (uvsP,ulsP,klsP)
+       else fail "vsFreeMatch: known vars missing."
 \end{code}
 
 \begin{code}
-vsClassify vts vs  =  (S.empty,S.empty,S.empty,S.empty)
+vsClassify vts vs
+  =  clsfy [] [] [] [] $ S.toList vs
+  where
+      clsfy uvs kvs uls kls []
+        = (S.fromList uvs, S.fromList kvs, S.fromList uls, S.fromList kls)
+      clsfy uvs kvs uls kls (StdVar v:gvs)
+        = case lookupVarTables vts v of
+            UnknownVar  ->  clsfy (v:uvs) kvs uls kls gvs
+            _           ->  clsfy uvs (v:kvs) uls kls gvs
+      clsfy uvs kvs uls kls (LstVar lv@(LVbl v _ _):gvs)
+        = case lookupLVarTables vts v of
+            UnknownListVar  ->  clsfy uvs kvs (lv:uls) kls gvs
+            _               ->  clsfy uvs kvs uls (lv:kls) gvs
+\end{code}
+
+\newpage
+All known pattern variables have been accounted for.
+Now we need to process the known list-variables, if any.
+\begin{code}
+vsFreeMatch2 vts bind cbvs pbvs
+  (uvsC,kvsC,ulsC,klsC)
+  (uvsP,ulsP,klsP)
+  = error "vsFreeMatch2: NYI"
 \end{code}
 
 \begin{code}

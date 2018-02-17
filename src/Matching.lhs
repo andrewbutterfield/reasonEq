@@ -1444,6 +1444,8 @@ In each \texttt{VarSet} we have four types of entities:
 The matching strategy is to start with the known pattern variables,
 and ensure all are present in the candidate.
 If so, remove them from both and continue, otherwise fail.
+We also deal with known pattern list-variables that can match themselves
+on the fly.
 \begin{code}
 vsFreeMatch :: MonadPlus mp
               => [VarTable] -> Binding
@@ -1454,13 +1456,16 @@ vsFreeMatch vts bind cbvs pbvs vsC vsP
   = let
       (uvsC,kvsC,ulsC,klsC) = vsClassify vts vsC
       (uvsP,kvsP,ulsP,klsP) = vsClassify vts vsP
+      klsC' = klsC S.\\ klsP
+      klsP' = klsP S.\\ klsC
     in if kvsP `S.isSubsetOf` kvsC
        then vsFreeMatch2 vts bind cbvs pbvs
-               (uvsC,kvsC S.\\ kvsP,ulsC,klsC)
-               (uvsP,ulsP,klsP)
+               (uvsC,kvsC S.\\ kvsP,ulsC,klsC')
+               (uvsP,ulsP,klsP')
        else fail "vsFreeMatch: known vars missing."
 \end{code}
 
+A quick std/list-variable classifier:
 \begin{code}
 vsClassify vts vs
   =  clsfy [] [] [] [] $ S.toList vs
@@ -1478,15 +1483,32 @@ vsClassify vts vs
 \end{code}
 
 \newpage
-All known pattern variables have been accounted for.
-Now we need to process the known list-variables, if any.
+All known pattern variables have been accounted for,
+as well as any pattern list-variables with a direct match.
+Now we need to process the remaining known list-variables, if any,
+in terms of their expansions.
 \begin{code}
+-- klsC and klsP are disjoint
 vsFreeMatch2 vts bind cbvs pbvs
-  (uvsC,kvsC,ulsC,klsC)
+  vsC@(uvsC,kvsC,ulsC,klsC)
   (uvsP,ulsP,klsP)
-  = error "vsFreeMatch2: NYI"
+  = do (bind',uvsC',kvsC',ulsC',klsC')
+         <- vsFreeExpandMatch vts bind vsC klsP
+       vsFreeMatch3 vts bind' (uvsC',kvsC',ulsC',klsC') (uvsP,ulsP)
+
+\end{code}
+\begin{code}
+vsFreeExpandMatch vts bind vsC klsP
+ = error "vsFreeExpandMatch: NYI"
 \end{code}
 
+\begin{code}
+vsFreeMatch3 vts bind (uvsC,kvsC,ulsC,klsC) (uvsP,ulsP)
+ = error "vsFreeMatch3 NYI"
+\end{code}
+
+\newpage
+\textbf{SOON TO BE DEPRECATED}
 \begin{code}
 vsFreeMatch' :: MonadPlus mp
               => [VarTable] -> Binding

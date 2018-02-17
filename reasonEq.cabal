@@ -21,6 +21,7 @@ library
                      , AST
                      , VarData
                      , Binding
+                     , Instantiate
                      , Matching
                      , Syntax
                      , Builder

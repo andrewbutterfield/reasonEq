@@ -9,22 +9,11 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Instantiate
 ( instantiate
 ) where
--- import Data.Maybe (fromJust)
--- import Data.List (nub)
--- import Data.Map(Map)
--- import qualified Data.Map as M
 import Data.Set(Set)
 import qualified Data.Set as S
 
--- import Test.HUnit
--- import Test.Framework as TF (defaultMain, testGroup, Test)
--- import Test.Framework.Providers.HUnit (testCase)
-
--- import Utilities
--- import LexBase
 import Variables
 import AST
--- import VarData
 import Binding
 
 import Debug.Trace
@@ -35,27 +24,30 @@ dbg msg x = trace (msg ++ show x) x
 
 We take a pattern term and a binding
 and produce a re-constructed candidate term.
-
+An important feature of this instantiation process is that
+any pattern variable that is not bound remains the same
+---we do not require bindings to explicity state that a pattern variable
+mapped to itself in the relevant candidate.
 \begin{code}
 instantiate :: Monad m => Binding -> Term -> m Term
 
 instantiate binding val@(Val _ _) = return val
 
-instantiate binding vt@(Var tk v) -- var tk v
+instantiate binding vt@(Var tk v)
   = case lookupBind binding v of
-      Nothing             ->  return vt
+      Nothing             ->  return vt -- maps to self !
       Just (BindVar v')   ->  var tk v'
       Just (BindTerm t')  ->  return t'
 
 instantiate binding (Cons tk n ts)
   = fmap (Cons tk n) $ sequence $ map (instantiate binding) ts
 
-instantiate binding (Bind tk n vs tm) -- bind tk n vs tm
+instantiate binding (Bind tk n vs tm)
   = do vs' <- instVarSet binding vs
        tm' <- instantiate binding tm
        bind tk n vs' tm'
 
-instantiate binding (Lam tk n vl tm) -- lam tk n vl tm
+instantiate binding (Lam tk n vl tm)
   = do vl' <- instVarList binding vl
        tm' <- instantiate binding tm
        lam tk n vl' tm'
@@ -69,6 +61,7 @@ instantiate binding (Iter tk na ni lvs)
   = error "instantiate NYFI -- Iter"
 \end{code}
 
+\newpage
 \begin{code}
 instSub :: Monad m => Binding -> Substn -> m Substn
 instSub binding (Substn ts lvs)
@@ -105,7 +98,7 @@ instSGVar binding (StdVar v)
   =  fmap (S.singleton . StdVar) $ instVar binding v
 instSGVar binding gv@(LstVar lv)
   = case lookupLstBind binding lv of
-      Nothing              ->  return $ S.singleton gv
+      Nothing              ->  return $ S.singleton gv  -- maps to self !
       Just (BindList vl')  ->  return $ S.fromList vl'
       Just ( BindSet vs')  ->  return vs'
       _ -> fail "instSGVar: bound to terms."
@@ -117,16 +110,17 @@ instLGVar binding (StdVar v)
   =  fmap ((\x -> [x]) . StdVar) $ instVar binding v
 instLGVar binding gv@(LstVar lv)
   = case lookupLstBind binding lv of
-      Nothing              ->  return [gv]
+      Nothing              ->  return [gv]  -- maps to self !
       Just (BindList vl')  ->  return vl'
       _ -> fail "instLGVar: bound to sets or terms."
 \end{code}
 
+\newpage
 \begin{code}
 instLVar :: Monad m => Binding -> ListVar -> m ListVar
 instLVar binding lv
   = case lookupLstBind binding lv of
-      Nothing                       ->  return lv
+      Nothing                       ->  return lv  -- maps to self !
       Just (BindList [LstVar lv'])  ->  return lv'
       Just (BindSet vs')            -> getTheLVar vs'
       _ -> fail "instLVar: not bound to singleton list."
@@ -143,7 +137,7 @@ instLVar binding lv
 instVar :: Monad m => Binding -> Variable -> m Variable
 instVar binding v
   = case lookupBind binding v of
-      Nothing             ->  return v
+      Nothing             ->  return v  -- maps to self !
       Just (BindVar v')   ->  return v'
       _  ->  fail "instVar: bound to term."
 \end{code}

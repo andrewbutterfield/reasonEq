@@ -1461,7 +1461,7 @@ vsFreeMatch vts bind cbvs pbvs vsC vsP
     in if kvsP `S.isSubsetOf` kvsC
        then vsFreeMatch2 vts bind cbvs pbvs
                (uvsC,kvsC S.\\ kvsP,ulsC,klsC')
-               (uvsP,ulsP,klsP')
+               (uvsP,ulsP) $ S.toList klsP'
        else fail "vsFreeMatch: known vars missing."
 \end{code}
 
@@ -1485,28 +1485,35 @@ vsClassify vts vs
 \newpage
 All known pattern variables have been accounted for,
 as well as any pattern list-variables with a direct match.
-Now we need to process the remaining known list-variables, if any,
+Now we need to process the remaining known list-variables patterns, if any,
 in terms of their expansions.
+Here we have two phases:
+the first tries to match known list-variables against their immediate
+expansions;
+the second tries to match them against full expansions.
+
+Unlike the list version above,
+where the ordering dictated what should be compared with what,
+here we are free to choose any order.
+
+A first temporary way to do this is to limit the
+non-determinisitic choices by constructing two lists
+to hand over to \texttt{vlFreeMatch}
 \begin{code}
--- klsC and klsP are disjoint
+-- klsC and kllP are disjoint
 vsFreeMatch2 vts bind cbvs pbvs
   vsC@(uvsC,kvsC,ulsC,klsC)
-  (uvsP,ulsP,klsP)
-  = do (bind',uvsC',kvsC',ulsC',klsC')
-         <- vsFreeExpandMatch vts bind vsC klsP
-       vsFreeMatch3 vts bind' (uvsC',kvsC',ulsC',klsC') (uvsP,ulsP)
-
+  (uvsP,ulsP) kllP
+  = vlFreeMatch vts bind cbvs pbvs
+      (   map LstVar (S.toList klsC)
+       ++ map StdVar (S.toList kvsC)
+       ++ map StdVar (S.toList uvsC)
+       ++ map LstVar (S.toList ulsC) )
+      (   map LstVar kllP
+       ++ map StdVar (S.toList uvsP)
+       ++ map LstVar (S.toList ulsP) )
 \end{code}
-\begin{code}
-vsFreeExpandMatch vts bind vsC klsP
- = error "vsFreeExpandMatch: NYI"
-\end{code}
-
-\begin{code}
-vsFreeMatch3 vts bind (uvsC,kvsC,ulsC,klsC) (uvsP,ulsP)
- = error "vsFreeMatch3 NYI"
-\end{code}
-
+This is not terribly successfull !
 \newpage
 \textbf{SOON TO BE DEPRECATED}
 \begin{code}

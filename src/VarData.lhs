@@ -118,13 +118,13 @@ of the same class,
 or can also be ``known'',
 as a name for a specific list or set of variables,
 themselves also ``known''.
-A known list-variables can only match itself,
+A known list-variable can only match itself,
 or any expansion of what is known about its associated variable-list.
 We also allow list variables to be abstract,
 in that they can be instantiated later on to specific known variables.
 An abstract list-variable can only match itself.
 
-A concrete list-variable ultimately resolves dowwn
+A concrete list-variable ultimately resolves down
 to a set or list of known variables.
 The contents and size of that collection are important,
 so we store this information explicilty here,
@@ -203,7 +203,7 @@ id2glvar vc vw j  =  LstVar $ LVbl (Vbl j vc vw) [] []
 We define simple lookup tables,
 into which we can insert entries for known variables and list-variables.
 We use a newtype so we can control access.
-We note that the subtracted-identifoer lists in list-variables
+We note that the subtracted-identifier lists in list-variables
 are irrelevant here, so use a variable as the map domain
 element in each case.
 
@@ -211,7 +211,7 @@ We have a key invariant regarding variable temporality (\texttt{VarWhen}).
 A dynamic variable or list-variable can only be mapped to variables and list-variables
 of the same temporality.
 Variables or list-variables that are \texttt{Static} can map to anything.
-This means that for synamic variables,
+This means that for dynamic variables,
 we use domain and range types that do not mention temporality.
 \begin{code}
 newtype VarTable

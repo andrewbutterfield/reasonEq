@@ -1461,7 +1461,7 @@ vsFreeMatch vts bind cbvs pbvs vsC vsP
     in if kvsP `S.isSubsetOf` kvsC
        then vsFreeMatch2 vts bind cbvs pbvs
                (uvsC,kvsC S.\\ kvsP,ulsC,klsC')
-               (uvsP,ulsP) $ S.toList klsP'
+               (uvsP,ulsP) klsP'
        else fail "vsFreeMatch: known vars missing."
 \end{code}
 
@@ -1496,24 +1496,15 @@ Unlike the list version above,
 where the ordering dictated what should be compared with what,
 here we are free to choose any order.
 
-A first temporary way to do this is to limit the
-non-determinisitic choices by constructing two lists
-to hand over to \texttt{vlFreeMatch}
+We work with
 \begin{code}
--- klsC and kllP are disjoint
+-- klsC and klsP are disjoint
 vsFreeMatch2 vts bind cbvs pbvs
   vsC@(uvsC,kvsC,ulsC,klsC)
-  (uvsP,ulsP) kllP
-  = vlFreeMatch vts bind cbvs pbvs
-      (   map LstVar (S.toList klsC)
-       ++ map StdVar (S.toList kvsC)
-       ++ map StdVar (S.toList uvsC)
-       ++ map LstVar (S.toList ulsC) )
-      (   map LstVar kllP
-       ++ map StdVar (S.toList uvsP)
-       ++ map LstVar (S.toList ulsP) )
+  (uvsP,ulsP) klsP
+  = error "vsFreeMatch2: NYI"
 \end{code}
-This is not terribly successfull !
+
 \newpage
 \textbf{SOON TO BE DEPRECATED}
 \begin{code}

@@ -1467,6 +1467,8 @@ vsFreeMatch vts bind cbvs pbvs vsC vsP
 
 A quick std/list-variable classifier:
 \begin{code}
+vsClassify :: [VarTable] -> VarSet
+           -> (Set Variable, Set Variable, Set ListVar, Set ListVar)
 vsClassify vts vs
   =  clsfy [] [] [] [] $ S.toList vs
   where
@@ -1496,12 +1498,19 @@ Unlike the list version above,
 where the ordering dictated what should be compared with what,
 here we are free to choose any order.
 
-We work with
+
+\begin{code}
+vsFreeMatch2 :: MonadPlus mp
+              => [VarTable] -> Binding
+              -> CBVS -> PBVS
+              -> (Set Variable, Set Variable, Set ListVar, Set ListVar)
+              -> (Set Variable, Set ListVar)
+              -> Set ListVar
+              -> mp Binding
+\end{code}
 \begin{code}
 -- klsC and klsP are disjoint
-vsFreeMatch2 vts bind cbvs pbvs
-  vsC@(uvsC,kvsC,ulsC,klsC)
-  (uvsP,ulsP) klsP
+vsFreeMatch2 vts bind cbvs pbvs vsC@(uvsC,kvsC,ulsC,klsC) (uvsP,ulsP) klsP
   = error "vsFreeMatch2: NYI"
 \end{code}
 

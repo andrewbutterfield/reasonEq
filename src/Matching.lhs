@@ -1461,24 +1461,24 @@ vsFreeMatch vts bind cbvs pbvs vsC vsP
     in if kvsP `S.isSubsetOf` kvsC
        then vsFreeMatch2 vts bind cbvs pbvs
                (uvsC,kvsC S.\\ kvsP,ulsC,klsC')
-               (uvsP,ulsP) klsP'
+               (uvsP,ulsP) (S.toList klsP')
        else fail "vsFreeMatch: known vars missing."
 \end{code}
 
 A quick std/list-variable classifier:
 \begin{code}
 vsClassify :: [VarTable] -> VarSet
-           -> (Set Variable, Set Variable, Set ListVar, Set ListVar)
+           -> (VarSet, VarSet, VarSet, VarSet)
 vsClassify vts vs
   =  clsfy [] [] [] [] $ S.toList vs
   where
       clsfy uvs kvs uls kls []
         = (S.fromList uvs, S.fromList kvs, S.fromList uls, S.fromList kls)
-      clsfy uvs kvs uls kls (StdVar v:gvs)
+      clsfy uvs kvs uls kls (s@(StdVar v):gvs)
         = case lookupVarTables vts v of
-            UnknownVar  ->  clsfy (v:uvs) kvs uls kls gvs
-            _           ->  clsfy uvs (v:kvs) uls kls gvs
-      clsfy uvs kvs uls kls (LstVar lv@(LVbl v _ _):gvs)
+            UnknownVar  ->  clsfy (s:uvs) kvs uls kls gvs
+            _           ->  clsfy uvs (s:kvs) uls kls gvs
+      clsfy uvs kvs uls kls (lv@(LstVar (LVbl v _ _)):gvs)
         = case lookupLVarTables vts v of
             UnknownListVar  ->  clsfy uvs kvs (lv:uls) kls gvs
             _               ->  clsfy uvs kvs uls (lv:kls) gvs
@@ -1497,21 +1497,66 @@ the second tries to match them against full expansions.
 Unlike the list version above,
 where the ordering dictated what should be compared with what,
 here we are free to choose any order.
+We simply choose to process the remaining pattern list-variables
+in order.
 
 
 \begin{code}
 vsFreeMatch2 :: MonadPlus mp
               => [VarTable] -> Binding
               -> CBVS -> PBVS
-              -> (Set Variable, Set Variable, Set ListVar, Set ListVar)
-              -> (Set Variable, Set ListVar)
-              -> Set ListVar
+              -> (VarSet, VarSet, VarSet, VarSet)
+              -> (VarSet, VarSet)
+              -> VarList
               -> mp Binding
 \end{code}
+
+Simplest case---no more known pattern list-variables:
 \begin{code}
--- klsC and klsP are disjoint
-vsFreeMatch2 vts bind cbvs pbvs vsC@(uvsC,kvsC,ulsC,klsC) (uvsP,ulsP) klsP
-  = error "vsFreeMatch2: NYI"
+vsFreeMatch2 vts bind cbvs pbvs vsC (uvsP,ulsP) []
+  = vsFreeMatch3 vts bind cbvs pbvs vsC (uvsP,ulsP)
+\end{code}
+
+
+\begin{code}
+-- klsC and kllP are disjoint
+vsFreeMatch2 vts bind cbvs pbvs vsC (uvsP,ulsP) (klP:kllP)
+  = do (bind',vsC') <- vsExpandMatch vts bind cbvs pbvs vsC klP
+       vsFreeMatch2 vts bind' cbvs pbvs vsC' (uvsP,ulsP) kllP
+\end{code}
+
+We have a known pattern list-variable that does not appear
+as a candidate. So now we need to try to match its expansion(s)
+against those of the candidates.
+\begin{code}
+vsExpandMatch :: MonadPlus mp
+              => [VarTable] -> Binding
+              -> CBVS -> PBVS
+              -> (VarSet, VarSet, VarSet, VarSet)
+              -> GenVar
+              -> mp (Binding, (VarSet, VarSet, VarSet, VarSet))
+\end{code}
+
+First we see if the first-level expansion (\texttt{vsK} below)
+is contained within the known candidates (\texttt{kvsC},\texttt{klsC}).
+If so, we bind to them, and remove them from the sets of candidates.
+\begin{code}
+vsExpandMatch vts bind cbvs pbvs vsC@(uvsC,kvsC,ulsC,klsC) klP@(LstVar klvP)
+ = case expandKnown vts klvP of
+    Just kX@(KnownVarSet vsK vsX xSize, uis, ujs)
+      -> if (dbg "vsK=" vsK) `S.isSubsetOf` (dbg "ksC=" ksC)
+         then do bind' <- bindLVarToVSet klvP (ksC `S.intersection` vsK) bind
+                 return (bind',(uvsC,kvsC S.\\ vsK,ulsC,klsC S.\\ vsK))
+         else error "vsExpandMatch: NYFI"
+    _ -> fail "vsExpandMatch: known pattern list-variable is not set-valued."
+ where ksC = kvsC `S.union` klsC
+\end{code}
+
+All that now remains is to match unknown patterns
+against the leftover candidates
+\begin{code}
+vsFreeMatch3 vts bind cbvs pbvs vsC@(uvsC,kvsC,ulsC,klsC) (uvsP,ulsP)
+  = error "vsFreeMatch3: NYI"
 \end{code}
 
 \newpage

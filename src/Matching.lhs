@@ -1376,7 +1376,8 @@ vsMatch :: MonadPlus mp => [VarTable] -> Binding -> CBVS -> PBVS
 -- vsC `subset` cbvs && vsP `subset` pbvc
 vsMatch vts bind cbvs pbvc vsC vsP
   = do (vsC',vsP') <- applyBindingsToSets bind vsC vsP
-       vsFreeMatch vts bind cbvs pbvc vsC' vsP'
+       -- use deprecated one for now...
+       vsFreeMatch' vts bind cbvs pbvc vsC' vsP'
 \end{code}
 
 \subsubsection{Applying Bindings to Sets}
@@ -1446,6 +1447,24 @@ and ensure all are present in the candidate.
 If so, remove them from both and continue, otherwise fail.
 We also deal with known pattern list-variables that can match themselves
 on the fly.
+
+\textbf{RE-THINK}
+\textit{
+If we require that known-container-variables induce a partition
+of known-std-variables then we can induce a mapping from
+know-std-variables to a sequence of known-container-variables.
+Given $O = \{M,S\}; M = \{ok\}; S = \{x,y,z\}$
+then we have mappings:
+\begin{eqnarray*}
+   ok &\mapsto& \seqof{M,O}
+\\ x &\mapsto& \seqof{S,O}
+\\ y &\mapsto& \seqof{S,O}
+\\ z &\mapsto& \seqof{S,O}
+\end{eqnarray*}
+Perhaps we use this mapping to work from the candidate variables
+to possible known pattern variables?
+Can this mapping be built incrementally over a list of \texttt{VarTable}s?
+}
 \begin{code}
 vsFreeMatch :: MonadPlus mp
               => [VarTable] -> Binding
@@ -1553,10 +1572,14 @@ vsExpandMatch vts bind cbvs pbvs vsC@(uvsC,kvsC,ulsC,klsC) klP@(LstVar klvP)
 \end{code}
 
 All that now remains is to match unknown patterns
-against the leftover candidates
+against the leftover candidates.
+For now, we simply turn this into a list-matching problem.
 \begin{code}
 vsFreeMatch3 vts bind cbvs pbvs vsC@(uvsC,kvsC,ulsC,klsC) (uvsP,ulsP)
-  = error "vsFreeMatch3: NYI"
+  = vlFreeMatch vts bind cbvs pbvs vlC vlP
+  where
+    vlC = S.toList (S.unions [uvsC,kvsC,ulsC,klsC])
+    vlP = S.toList (uvsP `S.union` ulsP)
 \end{code}
 
 \newpage

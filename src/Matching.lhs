@@ -1503,6 +1503,297 @@ vsClassify vts vs
             _               ->  clsfy uvs kvs uls (lv:kls) gvs
 \end{code}
 
+
+
+
+
+
+
+
+
+\newpage
+\subsubsection{Known List-Var Expansion Matching (Sets)}
+
+\textbf{REWORK EXPANSION MATCHING FROM LISTS TO SETS}
+
+\paragraph{Classifying Expansions}
+Consider an expansion
+$( x_1,\dots,x_m
+   \setminus
+   v_1,\dots,v_n
+   ;
+   l_1,\dots,l_k )
+$
+where the $x_i$ and $v_j$ are disjoint.
+
+If $n > m$, we consider it ill-formed.
+If $n = m$, then it denotes an empty list,
+and the $l_i$, if any, denote empty lists of variables
+This leads to a first classification:
+
+\begin{tabular}{|l|c|}
+\hline
+  empty & $ m = n $
+\\\hline
+ non-empty & $ m > n $
+\\\hline
+\end{tabular}
+
+If $k = 0$, then it denotes a list of length $m-n$,
+that is interleaved within the $\seqof{x_1,\dots,x_m}$ list.
+If $k = 0$ and $n = 0$,
+then it denotes precisely the list $\seqof{x_1,\dots,x_m}$.
+This leads to a second classification (orthogonal to the first):
+
+\begin{tabular}{|l|c|}
+\hline
+  inexact & $k > 0$
+\\\hline
+  exact &  $k = 0, n > 0$
+\\\hline
+  rigid & $k=0, n=0$
+\\\hline
+\end{tabular}
+
+A key metric is the range of possible lengths that an expansion can have:
+\begin{eqnarray*}
+  range(\seqof{v_1,\dots,v_n} \setminus \mathtt{uv} ; \mathtt{ul})
+  &=& \left\{
+        \begin{array}{lr}
+          ~(n-len(\mathtt{uv})), & \mathtt{ul} = \nil
+         \\
+          ~[0\dots(n-len(\mathtt{uv}))], & \mathtt{ul} \neq \nil
+        \end{array}
+      \right.
+\end{eqnarray*}
+
+
+\paragraph{Matching the list-expansion of a List-Variable.}
+We now try to match (all of) \texttt{lvP} incrementally
+against a prefix of \texttt{vlC},
+using the full expansion, \texttt{vlX} and candidate variables
+as we go along.
+\begin{eqnarray*}
+   expand(\mathtt{lvP})
+   &=&
+   \seqof{vp_1,\dots,vp_m} \setminus \mathtt{uvP} ; \mathtt{ulP}
+\\ \mathtt{vlC}
+   &=&
+   \seqof{gc_1,\dots,gc_k,gc_{k+1},\dots,gc_n}
+\end{eqnarray*}
+If this succeeds, we return a binding between the original \texttt{lvP}
+and the corresponding prefix of the original \texttt{vlC},
+as well as the remaining suffix of \texttt{vlC}.
+\begin{eqnarray*}
+   \mathtt{vlC} :: \mathtt{lvP}
+   &\leadsto&
+   (\mathtt{lvP}\mapsto\seqof{gc_1,\dots,gc_k}
+   ,\seqof{gc_{k+1},\dots,gc_n})
+\end{eqnarray*}
+
+We now present a formal description of the algorithm,
+by introducing a context that includes bindings, among other things.
+We are trying to perform the following partial-match ($\mvl$) inference:
+\begin{eqnarray*}
+  \dots,\beta
+  \vdash
+  \seqof{gc_1,\dots,gc_k,gc_{k+1},\dots,gc_n} \mvl \mathtt{vlP}
+  \leadsto
+  (\beta'\override\maplet{\mathtt{vlP}}{\seqof{gc_1,\dots,gc_k}},\seqof{gc_{k+1},\dots,gc_n})
+\end{eqnarray*}
+Here $\dots$ denotes further context to be elucidated,
+while $\beta'$ indicates that there may be other bindings,
+in particular associated with subtracted variables in \texttt{vlP}.
+We use $\Gamma$ below to denote the complete context,
+and $\gamma,x,y$ to denote context components $x$ and $y$
+collected together with $\gamma$, the rest of the context.
+
+We can break the algorithm down into a number of levels
+of matching rules:
+
+\begin{tabular}{|c|l|}
+\hline
+ Symbol & Description
+\\\hline
+ $\mvl$ & all of pattern list-variable against prefix of candidate list
+\\\hline
+ $\mvlx$ & all of pattern expansion against prefix of candidate list
+\\\hline
+ $\mvlxx$ & prefix of pattern expansion against all of candidate expansion
+\\\hline
+\end{tabular}
+
+%\adobesucks
+
+\newpage
+
+\paragraph{Rules for $\mvl$ ---}~
+
+We first start by expanding \texttt{vlP}  as \texttt{xP}
+(or \texttt{(xsP,uvP,ulP)}) and using the expansion as the basis
+for mapping.
+This is what done by \texttt{vlKnownMatch} above
+when it calls \texttt{vlExpandMatch} (a.k.a. $\mvlx$) below.
+We have a dynamic context $\Gamma=(\beta,\kappa,\ell)$
+that evolves as matching progresses,
+as well as a static context used for known list-var.
+expansion ($expand$), that is not shown below.
+The binding passed in, modified and returned
+by matching is denoted by $\beta$.
+We use $\kappa$
+to track the candidate variables matches so far,
+and $\ell$  records pattern expansion variables
+that will correspond to subtracted pattern list-variables.
+\[
+\knownMatchR
+\]
+%%
+
+\paragraph{Rules for $\mvlx$ ---}~
+
+\begin{enumerate}
+%%%%
+\item
+The plan with $\mvlx$ is to map successive `prefixes' of the \texttt{vlP} expansion
+against the expansion of variables, one-by-one in \texttt{vlC}, until
+we reduce $\mathtt{xP}$ to `empty'.
+The simplest case is when \texttt{vlP} is empty:
+\[
+\expandMatchEmptyR
+\]
+An open question here is what we do with any remaining subtracted
+variables in the pattern. They may need to be bound appropriately.
+This is the purpose of the $blo$ (bind-leftovers) function.
+The $blo$ function satisfies the following specification:
+\bloDef
+%%
+\item
+ When \texttt{vlC} is empty and \texttt{vlP} is inexact,
+ we terminate, binding leftovers.
+\[
+\expandMatchInExactR
+\]
+\item
+If \texttt{xP} is not empty,
+then we match a prefix of it against all of the expansion of the first
+variable in \texttt{vlC}.
+If that succeeds then we add the variable to $\kappa$, and recurse.
+\[
+\expandMatchNonEmptyR
+\]
+%%
+%%%%
+\end{enumerate}
+
+
+
+\paragraph{Rules for $\mvlxx$ ---}~
+
+\begin{enumerate}
+%%%%
+\item
+  We are now using $\mvlxx$ to compare a candidate expansion with a pattern expansion,
+  trying to match all of the candidate with a prefix of the expansion.
+  \[
+   \Gamma
+      \vdash
+      \mathtt{xC} \mvlxx \mathtt{xP}
+      \leadsto ( \beta',\ell',\mathtt{xP'} )
+  \]
+  If both are empty, we are done:
+\[
+\expTwoMatchAllEmptyR
+\]
+If the pattern is empty, but the candidate is not, then we fail.
+If the candidate is empty, but the pattern is not,
+then we return:
+\[
+\expTwoMatchCandEmptyR
+\]
+%%
+\item
+If both expansions are non-empty, then we compare the first two variables
+in their expansions.
+If they are the same, remove both and recurse:
+\[
+\expTwoMatchSameR
+\]
+%%
+\item
+If they differ,then we need to consider the size-ranges
+of both sides to consider what action to take.
+If both sides are rigid then the match fails.
+The pattern size range must never be smaller than that for the candidate,
+for a match to succeed.
+In either case, a variable can only be removed from either side
+by offsetting against a subtracted unknown variable from the
+corresponding side, which is therefore itself also removed.
+This action of removing a leading expansion variable,
+and an offsetting subtracted variable is called `shrinking'.`
+Any such removal on the pattern side must bind that subtracted variable
+to the removed expansion variable, noting that the subtracted variable
+may have already been bound in a wider matching context.
+\par
+In effect we determine conditions for which it is valid
+to remove either a candidate or pattern variable.
+If both can be removed, then we allow a non-deterministic choice
+between which one we do.
+%%
+\item
+We can always shrink an non-rigid non-empty candidate expansion
+when \texttt{uvC} is non-null:
+\[
+\expTwoMatchClipCandR
+\]
+%%
+\item
+We can always shrink an non-rigid non-empty pattern expansion
+when \texttt{uvP} is non-null:
+\[
+\expTwoMatchClipPatnR
+\]
+%%
+\item
+When \texttt{xC} is inexact, and \texttt{uvC} is nil
+we can simply remove the leading candidate expansion variable,
+but leave \texttt{ulC} untouched.
+We do not care which members of \texttt{ulC} cover which members
+of the candidate expansion list.
+\[
+\expTwoMatchSqueezeCR
+\]
+Reminder: we can never shrink the candidate if it is rigid.
+%%
+\item
+When \texttt{xP} is inexact, and \texttt{uvP} is nil,
+and the pattern size is greater than that of the candidate,
+then we can remove the leading pattern expansion variable.
+However we must record its removal, so that at the end,
+we can decide how to map the members of \texttt{ulP}
+to all pattern variables removed in this way.
+The record of all such variables is held in the $\ell$
+components of the context.
+\[
+\expTwoMatchSqueezePR
+\]
+
+Reminder: we can never shrink the pattern if it is rigid.
+%%%%
+\end{enumerate}
+
+\textbf{END OF LIST-TO-SET REWORK}
+
+
+
+
+
+
+
+
+
+
+
+
 \newpage
 All known pattern variables have been accounted for,
 as well as any pattern list-variables with a direct match.

@@ -15,5 +15,24 @@ Because:
   not({x,y,z} `withinS` {y,z}})
 
 
-              
+vsFM.lvsP'=fromList [GL (LV (VR (Id "S",VO,WB),[Id "u"],[]))]
+vsFM.svsC'=fromList [GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]
+vsKM.vsC=fromList [GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]
+vsKM.gvP=GL (LV (VR (Id "S",VO,WB),[Id "u"],[]))
+vsKM.vsK=fromList [GV (VR (Id "x",VO,WB)),GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]
+*** Exception: user error (vsMatch: some pattern var-set is not in candidate.
+vsKx = fromList [GV (VR (Id "x",VO,WB)),GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]
+vsCx = fromList [GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]
+bind = BD (fromList [((Id "u",VO),BI (Id "x"))],fromList [],fromList [])
+vsFM.bind'=BD (fromList [((Id "u",VO),BI (Id "x"))],fromList [],fromList [])
+
+
+vsKM .... {y,z} {x,y,z} S\u
+
+gvCs = {y,z} I {S\u} = {}
+
+
+vsFreeMatch {||} {x,y,z} {u,S\u}
+...
+vsKnownMatch {| u -> x |} {x,y,z} {S\u}
 --

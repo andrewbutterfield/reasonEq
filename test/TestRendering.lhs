@@ -13,7 +13,8 @@ module TestRendering (
  , trValue, trTerm
  , trVarMatchRole, trLstVarMatchRole, trVarTable
  , trBinding
- , seeV, seeLV, seeGV, seeType, seeVal, seeTerm, seeBind, seeVarTable
+ , seeV, seeLV, seeGV, seeVL, seeVS
+ , seeType, seeVal, seeTerm, seeBind, seeVarTable
  , seeTerms, seeBinds
 ) where
 
@@ -150,6 +151,9 @@ trAbs i tk n vl t
  = "("++trId n ++ ' ':trVL vl ++ spaced _bullet ++ trTerm i t ++ ")"
 
 trVL = seplist "," trGVar
+
+trVList vl  =  _langle ++ trVL vl ++ _rangle
+trVSet vs   =  "{" ++ trVL (S.toList vs) ++ "}"
 \end{code}
 
 \newpage
@@ -165,9 +169,9 @@ trVarMatchRole UnknownVar      =  " ?"
 \begin{code}
 trLstVarMatchRole :: LstVarMatchRole -> String
 trLstVarMatchRole (KnownVarList vl _ _)
-  =  spaced _triangleq ++ _langle ++ trVL vl ++ _rangle
+  =  spaced _triangleq ++ trVList vl
 trLstVarMatchRole (KnownVarSet  vs _ _)
-  =  spaced _triangleq ++ "{" ++ trVL (S.toList vs) ++ "}"
+  =  spaced _triangleq ++ trVSet vs
 trLstVarMatchRole UnknownListVar     =  " ?"
 \end{code}
 
@@ -231,6 +235,8 @@ Seeing them in all their glory:
 seeV = putStrLn . trVar
 seeLV = putStrLn . trLVar
 seeGV = putStrLn . trGVar
+seeVL = putStrLn . trVList
+seeVS = putStrLn . trVSet
 seeType = putStrLn . trType
 seeVal = putStrLn . trValue
 seeTerm t = putStrLn $ trTerm 0 t

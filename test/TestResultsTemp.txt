@@ -1,2 +1,19 @@
+vsMatch [vtS_Design] emptyBinding S.empty S.empty (vswrap [x,y,z]) (vswrap [vu] `S.union` lswrap [lS `less` ([u],[])])
 
+> seeVarTable vtS_Design
+{ ok : 𝔹, ok' : 𝔹, x : ℤ, x' : ℤ, y : ℤ, y' : ℤ, z : ℤ, z' : ℤ }
+{  }
+{ M ≜ {ok}, O ≜ {M̅,S̅}, S ≜ {x,y,z} }
+
+> vsMatch [vtS_Design] emptyBinding S.empty S.empty (vswrap [x,y,z]) (vswrap [vu] `S.union` lswrap [lS `less` ([u],[])])
+*** Exception: user error (vsMatch: some pattern var-set is not in candidate.)
+vsKx = fromList [GV (VR (Id "x",VO,WB)),GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]
+vsCx = fromList [GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]
+
+Because:
+  not(vsKx `withinS` vsCx)
+  not({x,y,z} `withinS` {y,z}})
+
+
+              
 --

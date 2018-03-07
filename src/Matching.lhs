@@ -1618,7 +1618,7 @@ Then we will attempt the list-variable matching.
 \begin{code}
  | otherwise
     = do (bind',svsC',lvsP') <- vsFreeStdMatch vts bind cbvs pbvs vsC vsP
-         vsFreeLstMatch vts bind' cbvs pbvs svsC' lvsP'
+         vsFreeLstMatch vts (dbg "vsFM.bind'=" bind') cbvs pbvs (dbg "vsFM.svsC'=" svsC') (dbg "vsFM.lvsP'=" lvsP')
 \end{code}
 
 Once more, we need to check for list-variables that are known,
@@ -1840,19 +1840,21 @@ vsKnownMatch :: MonadPlus mp
 -- not null vsC
 vsKnownMatch vts bind cbvs pbvs vsC vsK gvP@(LstVar lvP) -- ListVar !
  | not $ S.null gvCs
-    = do bind' <- bindLVarToVSet lvP gvCs bind
+    = do bind' <- bindLVarToVSet lvP gvCs (dbg "vsKM.bind=" bind)
          return (bind',vsC `removeS` gvCs)
- | vsK `withinS` vsC
+ | (dbg "vsKM.vsK=" vsK) `withinS` vsC
     = do bind' <- bindLVarToVSet lvP (vsC `intsctS` vsK) bind
          return (bind',vsC `removeS` vsK)
  | otherwise -- quick matches don't work, need to go to full expansions
+    -- NEED TO CONSIDER SUBTRACTED PATTERN VARIABLES HERE.
+    -- IF ALREADY BOUND, REMOVE CORR. RANGE FROM CANDIDATES.
     = do vsKx <- expandKnownSets vts vsK
          vsCx <- expandKnownSets vts vsC
-         (vsC1,vsC2) <- vsKnownXMatch vts vsC vsCx vsKx
+         (vsC1,vsC2) <- vsKnownXMatch vts bind vsC vsCx vsKx
          bind' <- bindLVarToVSet lvP vsC1 bind
          return (bind',vsC2)
  where
-   gvCs = vsC `intsctS` S.singleton gvP
+   gvCs = (dbg "vsKM.vsC=" vsC) `intsctS` S.singleton (dbg "vsKM.gvP=" gvP)
    gvC  = S.elemAt 0 gvCs
 \end{code}
 
@@ -1882,7 +1884,7 @@ expandKnownSets vts vs
 Matching fully-expanded pattern variable-set against
 partially-expanded candidate variable-set.
 \begin{code}
-vsKnownXMatch vts vsC vsCx vsKx
+vsKnownXMatch vts bind vsC vsCx vsKx
   | vsKx `withinS` vsCx
      = do vsCm <- getCorrCandidates vts [] vsKx $ S.toList vsC
           return (vsCm, vsC `removeS` vsCm)
@@ -1891,6 +1893,7 @@ vsKnownXMatch vts vsC vsCx vsKx
           [ "vsMatch: some pattern var-set is not in candidate."
           , "vsKx = " ++ show vsKx
           , "vsCx = " ++ show vsCx
+          , "bind = " ++ show bind
           ]
 \end{code}
 

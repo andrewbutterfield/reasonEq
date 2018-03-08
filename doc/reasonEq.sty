@@ -46,9 +46,16 @@
 \def\Skip{\mathit{I\!I}}
 
 %% Matching
-\def\mvl{\mathop{\;\tilde{::}\;}}
-\def\mvlx{\mathop{\;::_x\;}}
-\def\mvlxx{\mathop{\;{}_x\!\!::_x\;}}
+\def\mvX{{\scriptscriptstyle\times}}
+\def\mvlsym{:\!{\scriptscriptstyle l}\!:}
+\def\mvl{\mathop{\;\tilde{\mvlsym}\;}}
+\def\mvlx{\mathop{\;\mvlsym_\mvX\;}}
+\def\mvlxx{\mathop{\;{}_\mvX\!\!\mvlsym_\mvX\;}}
+
+\def\mvssym{:\!{\scriptscriptstyle s}\!:}
+\def\mvs{\mathop{\;\tilde{\mvssym}\;}}
+\def\mvsx{\mathop{\;\mvssym_\mvX\;}}
+\def\mvsxx{\mathop{\;{}_\mvX\!\!\mvssym_\mvX\;}}
 
 % because it does...
 \def\adobesucks{

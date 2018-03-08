@@ -1,6 +1,6 @@
 %
 
-\def\knownMatchR{
+\def\knownLMatchR{
   \inferrule
    { \mathtt{vlC} = pfx(\mathtt{vlC}) \cat sfx(\mathtt{vlC})
      \\ \kappa_0 = \nil
@@ -25,7 +25,7 @@
    }
 }
 
-\def\expandMatchEmptyR{
+\def\expandLMatchEmptyR{
   \inferrule
    { empty(\mathtt{xP})
      \\
@@ -39,7 +39,7 @@
    }
 }
 
-\def\expandMatchInExactR{
+\def\expandLMatchInExactR{
   \inferrule
    { inexact(\mathtt{xP}))
      \\
@@ -53,7 +53,7 @@
    }
 }
 
-\def\expandMatchNonEmptyR{
+\def\expandLMatchNonEmptyR{
   \inferrule
    { \lnot empty(\mathtt{xP})
      \\\\
@@ -81,7 +81,7 @@
 }
 
 
-\def\bloDef{
+\def\bloLDef{
   \begin{eqnarray*}
      \beta \override \beta' &=& blo(\beta,\ell,xs\setminus us;ls)
   \\ dom(\beta') &=& us \cup ls
@@ -90,7 +90,7 @@
   \end{eqnarray*}
 }
 
-\def\expTwoMatchAllEmptyR{
+\def\expTwoLMatchAllEmptyR{
   \inferrule
    { empty(\mathtt{xC})
      \\
@@ -104,7 +104,7 @@
    }
 }
 
-\def\expTwoMatchCandEmptyR{
+\def\expTwoLMatchCandEmptyR{
   \inferrule
    { empty(\mathtt{xC})
      \\
@@ -118,7 +118,7 @@
    }
 }
 
-\def\expTwoMatchSameR{
+\def\expTwoLMatchSameR{
   \inferrule
    {
    v_C = v_P
@@ -142,7 +142,7 @@
    }
 }
 
-\def\expTwoMatchClipCandR{
+\def\expTwoLMatchClipCandR{
   \inferrule
    {
     v_u \in \mathtt{uvC}
@@ -168,7 +168,7 @@
    }
 }
 
-\def\expTwoMatchClipPatnR{
+\def\expTwoLMatchClipPatnR{
   \inferrule
    {
     v_C \neq v_P
@@ -199,7 +199,7 @@
 }
 
 
-\def\expTwoMatchSqueezeCR{
+\def\expTwoLMatchSqueezeCR{
   \inferrule
    {
    \mathtt{ulC} \neq \nil
@@ -223,7 +223,7 @@
    }
 }
 
-\def\expTwoMatchSqueezePR{
+\def\expTwoLMatchSqueezePR{
   \inferrule
    {
     \mathtt{ulP} \neq \nil
@@ -244,6 +244,264 @@
    \mathtt{xC}
    \mvlxx
    (v_P:xs_P \setminus \nil;\mathtt{ulP})
+   \leadsto
+   (\beta', \ell',\mathtt{xP'})
+   }
+}
+
+
+%% Set version
+
+%
+
+\def\knownSMatchR{
+  \inferrule
+   { \mathtt{vlC} = \mathtt{vlC}_1 \uplus \mathtt{vlC}_2
+     \\ \kappa_0 = \emptyset
+     \\ \ell_0 = \emptyset
+     \\\\
+     \beta,\kappa_0,\ell_0
+       \vdash
+       \mathtt{vlC}
+       \mvsx
+       expand(\mathtt{vlP})
+       \leadsto
+       ( \beta', \mathtt{vlC}_1, \mathtt{vlC}_2 )
+   }
+   { \Gamma
+     \vdash
+     \mathtt{vlC}
+     \mvs
+     \mathtt{vlP}
+     \leadsto
+     ( (~\beta'\override\maplet{\mathtt{vlP}}{\mathtt{vlC}_1}~)
+     , \mathtt{vlC}_2)
+   }
+}
+
+\def\expandSMatchEmptyR{
+  \inferrule
+   { empty(\mathtt{xP})
+     \\
+     \beta' = blo(\beta,\ell,\mathtt{xP})
+   }
+   { \beta,\kappa,\ell
+      \vdash
+      \mathtt{vlC} \mvsx \mathtt{xP}
+      \leadsto
+      ( \beta', \kappa, \mathtt{vlC} )
+   }
+}
+
+\def\expandSMatchInExactR{
+  \inferrule
+   { inexact(\mathtt{xP}))
+     \\
+     \beta' = blo(\beta,\ell,\mathtt{xP})
+   }
+   { \beta,\kappa,\ell
+      \vdash
+      \emptyset \mvsx \mathtt{xP}
+      \leadsto
+      ( \beta', \kappa, \emptyset )
+   }
+}
+
+\def\expandSMatchNonEmptyR{
+  \inferrule
+   { \lnot empty(\mathtt{xP})
+     \\\\
+     \beta,\kappa,\ell
+        \vdash
+        expand(\mathtt{vC})
+        \mvsxx
+        \mathtt{xP}
+        \leadsto ( \beta',\ell',\mathtt{xP'} )
+     \\\\
+     \beta',\kappa\cup\setof{\mathtt{vC}},\ell'
+        \vdash
+        \mathtt{vlC'}
+        \mvsx
+        \mathtt{xP'}
+        \leadsto
+        ( \beta'' , \kappa', \mathtt{vlC''} )
+   }
+   { \beta,\kappa,\ell
+      \vdash
+      \mathtt{\setof{vC} \uplus vlC'} \mvsx \mathtt{xP}
+      \leadsto
+      ( \beta'', \kappa', \mathtt{vlC''} )
+   }
+}
+
+
+\def\bloSDef{
+  \begin{eqnarray*}
+     \beta \uplus \beta' &=& blo(\beta,\ell,xs\setminus us;ls)
+  \\ dom(\beta') &=& us \cup ls
+  \\ \bigcup rng(\beta') &=& \setof\ell \cup xs
+  \\ \beta' & \approx & \maplet{us \cup ls}{\setof\ell \cup xs}
+  \end{eqnarray*}
+}
+
+\def\expTwoSMatchAllEmptyR{
+  \inferrule
+   { empty(\mathtt{xC})
+     \\
+     empty(\mathtt{xP})
+   }
+   { \beta,\kappa,\ell
+      \vdash
+      \mathtt{vC} \mvsxx \mathtt{xP}
+      \leadsto
+      ( \beta',\ell, \mathtt{xP} )
+   }
+}
+
+\def\expTwoSMatchCandEmptyR{
+  \inferrule
+   { empty(\mathtt{xC})
+     \\
+     \lnot empty(\mathtt{xP})
+   }
+   { \beta,\kappa,\ell
+      \vdash
+      \mathtt{vC} \mvsxx \mathtt{xP}
+      \leadsto
+      ( \beta, \ell, \mathtt{xP} )
+   }
+}
+
+\def\expTwoSMatchSameR{
+  \inferrule
+   {
+   xs \neq \emptyset
+   \\
+   \Gamma
+   \vdash
+   (xs_C \setminus \mathtt{uvC};\mathtt{ulC})
+   \mvsxx
+   (xs_P \setminus \mathtt{uvP};\mathtt{ulP})
+   \leadsto
+   (\beta', \ell', \mathtt{xP'})
+   }
+   {
+   \Gamma
+   \vdash
+   (xs \uplus xs_C \setminus \mathtt{uvC};\mathtt{ulC})
+   \mvsxx
+   (xs \uplus xs_P \setminus \mathtt{uvP};\mathtt{ulP})
+   \leadsto
+   (\beta', \ell', \mathtt{xP'})
+   }
+}
+
+\def\expTwoSMatchClipCandR{
+  \inferrule
+   {
+    v_u \in \mathtt{uvC}
+    \\
+    xs_P \cap \setof{v_C}\uplus xs_C = \emptyset
+    \\\\
+   \Gamma
+   \vdash
+   (xs_C \setminus (\mathtt{uvC}-v_u);\mathtt{ulC})
+   \mvsxx
+   (xs_P \setminus \mathtt{uvP};\mathtt{ulP})
+   \leadsto
+   (\beta', \ell', \mathtt{xP'})
+   }
+   {
+   \Gamma
+   \vdash
+   (\setof{v_C} \uplus xs_C \setminus \mathtt{uvC};\mathtt{ulC})
+   \mvsxx
+   (xs_P \setminus \mathtt{uvP};\mathtt{ulP})
+   \leadsto
+   (\beta', \ell', \mathtt{xP'})
+   }
+}
+
+\def\expTwoSMatchClipPatnR{
+  \inferrule
+   {
+    v_u \in \mathtt{uvP}
+    \\
+    \setof{v_P}\uplus xs_P \cap  xs_C = \emptyset
+    \\
+    ( v_u \notin \beta
+      \cond{\exists v \in \mathtt{uvP} \bullet \beta(v)=v_P}
+      \beta(v_u) = v_P )
+    \\\\
+   \beta\override\maplet{v_u}{x_P},\kappa,\ell
+   \vdash
+   (xs_C \setminus \mathtt{uvC};\mathtt{ulC})
+   \mvsxx
+   (xs_P \setminus (\mathtt{uvP}-v_u);\mathtt{ulP})
+    \leadsto
+   (\beta',\ell', \mathtt{xP'})
+   }
+   {
+   \beta,\kappa,\ell
+   \vdash
+   (xs_C \setminus \mathtt{uvC};\mathtt{ulC})
+   \mvsxx
+   (\setof{v_P}\uplus xs_P \setminus \mathtt{uvP};\mathtt{ulP})
+   \leadsto
+   (\beta', \ell', \mathtt{xP'})
+   }
+}
+
+
+\def\expTwoSMatchSqueezeCR{
+  \inferrule
+   {
+   \mathtt{ulC} \neq \nil
+   \\
+    xs_P \cap \setof{v_C}\uplus xs_C = \emptyset
+   \\
+   \Gamma
+   \vdash
+   (xs_C \setminus \nil;\mathtt{ulC})
+   \mvsxx
+   \mathtt{xP}
+   \leadsto
+   (\beta', \ell', \mathtt{xP'})
+   }
+   {
+   \Gamma
+   \vdash
+   (\setof{v_C}\uplus xs_C \setminus \nil;\mathtt{ulC})
+   \mvsxx
+   \mathtt{xP}
+   \leadsto
+   (\beta', \ell', \mathtt{xP'})
+   }
+}
+
+\def\expTwoSMatchSqueezePR{
+  \inferrule
+   {
+    \mathtt{ulP} \neq \emptyset
+    \\
+    size(\mathtt{xP}) > size(\mathtt{xC})
+    \\
+    \setof{v_P}\uplus xs_P \cap  xs_C = \emptyset
+    \\\\
+   \beta,\kappa,\ell\cup\setof{v_P}
+   \vdash
+   \mathtt{xC}
+   \mvsxx
+   (xs_P\setminus \nil;\mathtt{ulP})
+   \leadsto
+   (\beta', \ell',\mathtt{xP'})
+   }
+   {
+   \beta,\kappa,\ell
+   \vdash
+   \mathtt{xC}
+   \mvsxx
+   (\setof{v_P}\uplus xs_P \setminus \nil;\mathtt{ulP})
    \leadsto
    (\beta', \ell',\mathtt{xP'})
    }

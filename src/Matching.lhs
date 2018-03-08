@@ -887,7 +887,7 @@ vlKnownMatch vts bind cbvs pbvs
 \end{code}
 
 \newpage
-\subsubsection{Known List-Var Expansion Matching}
+\subsubsection{Known List-Var Expansion Matching (List)}
 
 \paragraph{Classifying Expansions}
 Consider an expansion
@@ -1018,7 +1018,7 @@ to track the candidate variables matches so far,
 and $\ell$  records pattern expansion variables
 that will correspond to subtracted pattern list-variables.
 \[
-\knownMatchR
+\knownLMatchR
 \]
 %%
 
@@ -1032,19 +1032,19 @@ against the expansion of variables, one-by-one in \texttt{vlC}, until
 we reduce $\mathtt{xP}$ to `empty'.
 The simplest case is when \texttt{vlP} is empty:
 \[
-\expandMatchEmptyR
+\expandLMatchEmptyR
 \]
 An open question here is what we do with any remaining subtracted
 variables in the pattern. They may need to be bound appropriately.
 This is the purpose of the $blo$ (bind-leftovers) function.
 The $blo$ function satisfies the following specification:
-\bloDef
+\bloLDef
 %%
 \item
  When \texttt{vlC} is empty and \texttt{vlP} is inexact,
  we terminate, binding leftovers.
 \[
-\expandMatchInExactR
+\expandLMatchInExactR
 \]
 \item
 If \texttt{xP} is not empty,
@@ -1052,7 +1052,7 @@ then we match a prefix of it against all of the expansion of the first
 variable in \texttt{vlC}.
 If that succeeds then we add the variable to $\kappa$, and recurse.
 \[
-\expandMatchNonEmptyR
+\expandLMatchNonEmptyR
 \]
 %%
 %%%%
@@ -1075,13 +1075,13 @@ If that succeeds then we add the variable to $\kappa$, and recurse.
   \]
   If both are empty, we are done:
 \[
-\expTwoMatchAllEmptyR
+\expTwoLMatchAllEmptyR
 \]
 If the pattern is empty, but the candidate is not, then we fail.
 If the candidate is empty, but the pattern is not,
 then we return:
 \[
-\expTwoMatchCandEmptyR
+\expTwoLMatchCandEmptyR
 \]
 %%
 \item
@@ -1089,7 +1089,7 @@ If both expansions are non-empty, then we compare the first two variables
 in their expansions.
 If they are the same, remove both and recurse:
 \[
-\expTwoMatchSameR
+\expTwoLMatchSameR
 \]
 %%
 \item
@@ -1116,14 +1116,14 @@ between which one we do.
 We can always shrink an non-rigid non-empty candidate expansion
 when \texttt{uvC} is non-null:
 \[
-\expTwoMatchClipCandR
+\expTwoLMatchClipCandR
 \]
 %%
 \item
 We can always shrink an non-rigid non-empty pattern expansion
 when \texttt{uvP} is non-null:
 \[
-\expTwoMatchClipPatnR
+\expTwoLMatchClipPatnR
 \]
 %%
 \item
@@ -1133,7 +1133,7 @@ but leave \texttt{ulC} untouched.
 We do not care which members of \texttt{ulC} cover which members
 of the candidate expansion list.
 \[
-\expTwoMatchSqueezeCR
+\expTwoLMatchSqueezeCR
 \]
 Reminder: we can never shrink the candidate if it is rigid.
 %%
@@ -1147,7 +1147,7 @@ to all pattern variables removed in this way.
 The record of all such variables is held in the $\ell$
 components of the context.
 \[
-\expTwoMatchSqueezePR
+\expTwoLMatchSqueezePR
 \]
 
 Reminder: we can never shrink the pattern if it is rigid.
@@ -1175,7 +1175,7 @@ rigidE _ = False
 \end{code}
 
 \newpage
-\bloDef
+\bloLDef
 We need part of the static context here.
 \begin{code}
 -- blo to be defined here
@@ -1242,13 +1242,13 @@ vlExpandMatch :: MonadPlus mp
 
 
 \[
-\expandMatchEmptyR
+\expandLMatchEmptyR
 \]
 \[
-\expandMatchInExactR
+\expandLMatchInExactR
 \]
 \[
-\expandMatchNonEmptyR
+\expandLMatchNonEmptyR
 \]
 
 \begin{code}
@@ -1286,9 +1286,9 @@ vlExpand2Match :: MonadPlus mp
 \end{code}
 
 \[
-\expTwoMatchAllEmptyR
+\expTwoLMatchAllEmptyR
 \qquad
-\expTwoMatchCandEmptyR
+\expTwoLMatchCandEmptyR
 \]
 
 \begin{code}
@@ -1297,7 +1297,7 @@ vlExpand2Match _ dctxt@(bind,_,ell) xC xP
 \end{code}
 
 \[
-\expTwoMatchSameR
+\expTwoLMatchSameR
 \]
 \begin{code}
 vlExpand2Match sctxt dctxt xC@(vC:xsC,uvC,ulC,szC) xP@(vP:xsP,uvP,ulP,szP)
@@ -1310,10 +1310,10 @@ vlExpand2Match sctxt dctxt xC@(vC:xsC,uvC,ulC,szC) xP@(vP:xsP,uvP,ulP,szP)
 \end{code}
 
 \[
-\expTwoMatchSqueezeCR
+\expTwoLMatchSqueezeCR
 \]
 \[
-\expTwoMatchClipCandR
+\expTwoLMatchClipCandR
 \]
 
 \begin{code}
@@ -1328,10 +1328,10 @@ vlShrinkCandMatch sctxt dctxt xC@(vC:xsC,uvC,ulC,szC) xP
 
 \newpage
 \[
-\expTwoMatchSqueezePR
+\expTwoLMatchSqueezePR
 \]
 \[
-\expTwoMatchClipPatnR
+\expTwoLMatchClipPatnR
 \]
 \begin{code}
 vlShrinkPatnMatch sctxt@(_,bc,bw) (bind,gamma,ell)
@@ -1514,50 +1514,13 @@ vsClassify vts vs
 \newpage
 \subsubsection{Known List-Var Expansion Matching (Sets)}
 
-\textbf{REWORK EXPANSION MATCHING FROM LISTS TO SETS}
+Our expansion clasification devloped above for lists
+applies equally well to sets, with cardinality replacing length.
 
-\paragraph{Classifying Expansions}
-Consider an expansion
-$( x_1,\dots,x_m
-   \setminus
-   v_1,\dots,v_n
-   ;
-   l_1,\dots,l_k )
-$
-where the $x_i$ and $v_j$ are disjoint.
-
-If $n > m$, we consider it ill-formed.
-If $n = m$, then it denotes an empty list,
-and the $l_i$, if any, denote empty lists of variables
-This leads to a first classification:
-
-\begin{tabular}{|l|c|}
-\hline
-  empty & $ m = n $
-\\\hline
- non-empty & $ m > n $
-\\\hline
-\end{tabular}
-
-If $k = 0$, then it denotes a list of length $m-n$,
-that is interleaved within the $\seqof{x_1,\dots,x_m}$ list.
-If $k = 0$ and $n = 0$,
-then it denotes precisely the list $\seqof{x_1,\dots,x_m}$.
-This leads to a second classification (orthogonal to the first):
-
-\begin{tabular}{|l|c|}
-\hline
-  inexact & $k > 0$
-\\\hline
-  exact &  $k = 0, n > 0$
-\\\hline
-  rigid & $k=0, n=0$
-\\\hline
-\end{tabular}
 
 A key metric is the range of possible lengths that an expansion can have:
 \begin{eqnarray*}
-  range(\seqof{v_1,\dots,v_n} \setminus \mathtt{uv} ; \mathtt{ul})
+  range(\setof{v_1,\dots,v_n} \setminus \mathtt{uv} ; \mathtt{ul})
   &=& \left\{
         \begin{array}{lr}
           ~(n-len(\mathtt{uv})), & \mathtt{ul} = \nil
@@ -1568,38 +1531,38 @@ A key metric is the range of possible lengths that an expansion can have:
 \end{eqnarray*}
 
 
-\paragraph{Matching the list-expansion of a List-Variable.}
+\paragraph{Matching the set-expansion of a List-Variable.}
 We now try to match (all of) \texttt{lvP} incrementally
-against a prefix of \texttt{vlC},
-using the full expansion, \texttt{vlX} and candidate variables
+against a prefix of \texttt{vsC},
+using the full expansion, \texttt{vsX} and candidate variables
 as we go along.
 \begin{eqnarray*}
    expand(\mathtt{lvP})
    &=&
-   \seqof{vp_1,\dots,vp_m} \setminus \mathtt{uvP} ; \mathtt{ulP}
-\\ \mathtt{vlC}
+   \setof{vp_1,\dots,vp_m} \setminus \mathtt{uvP} ; \mathtt{ulP}
+\\ \mathtt{vsC}
    &=&
-   \seqof{gc_1,\dots,gc_k,gc_{k+1},\dots,gc_n}
+   \setof{gc_1,\dots,gc_k,gc_{k+1},\dots,gc_n}
 \end{eqnarray*}
 If this succeeds, we return a binding between the original \texttt{lvP}
 and the corresponding prefix of the original \texttt{vlC},
 as well as the remaining suffix of \texttt{vlC}.
 \begin{eqnarray*}
-   \mathtt{vlC} :: \mathtt{lvP}
+   \mathtt{vsC} :: \mathtt{lvP}
    &\leadsto&
-   (\mathtt{lvP}\mapsto\seqof{gc_1,\dots,gc_k}
-   ,\seqof{gc_{k+1},\dots,gc_n})
+   (\mathtt{lvP}\mapsto\setof{gc_1,\dots,gc_k}
+   ,\setof{gc_{k+1},\dots,gc_n})
 \end{eqnarray*}
 
 We now present a formal description of the algorithm,
 by introducing a context that includes bindings, among other things.
-We are trying to perform the following partial-match ($\mvl$) inference:
+We are trying to perform the following partial-match ($\mvs$) inference:
 \begin{eqnarray*}
   \dots,\beta
   \vdash
-  \seqof{gc_1,\dots,gc_k,gc_{k+1},\dots,gc_n} \mvl \mathtt{vlP}
+  \setof{gc_1,\dots,gc_k,gc_{k+1},\dots,gc_n} \mvs \mathtt{vlP}
   \leadsto
-  (\beta'\override\maplet{\mathtt{vlP}}{\seqof{gc_1,\dots,gc_k}},\seqof{gc_{k+1},\dots,gc_n})
+  (\beta'\override\maplet{\mathtt{vlP}}{\setof{gc_1,\dots,gc_k}},\setof{gc_{k+1},\dots,gc_n})
 \end{eqnarray*}
 Here $\dots$ denotes further context to be elucidated,
 while $\beta'$ indicates that there may be other bindings,
@@ -1615,25 +1578,31 @@ of matching rules:
 \hline
  Symbol & Description
 \\\hline
- $\mvl$ & all of pattern list-variable against prefix of candidate list
+ $\mvs$ & all of pattern list-variable against subset of candidate set
 \\\hline
- $\mvlx$ & all of pattern expansion against prefix of candidate list
+ $\mvsx$ & all of pattern expansion against subset of candidate set
 \\\hline
- $\mvlxx$ & prefix of pattern expansion against all of candidate expansion
+ $\mvsxx$ & subset of pattern expansion against all of candidate expansion
 \\\hline
 \end{tabular}
+
+The list-based matching is easier because the list-ordering
+put a very strong constraint on what needs to match what.
+With set-based matching, we have a more general search problem,
+as we can pick and choose which bits match.
+
+In the sequel we use $S = T \uplus V$
+as a shorthand for $ S = T \cup V \quad\land\quad T \cap V = \emptyset$.
 
 %\adobesucks
 
 \newpage
 
-\paragraph{Rules for $\mvl$ ---}~
+\paragraph{Rules for $\mvs$ ---}~
 
 We first start by expanding \texttt{vlP}  as \texttt{xP}
 (or \texttt{(xsP,uvP,ulP)}) and using the expansion as the basis
 for mapping.
-This is what done by \texttt{vlKnownMatch} above
-when it calls \texttt{vlExpandMatch} (a.k.a. $\mvlx$) below.
 We have a dynamic context $\Gamma=(\beta,\kappa,\ell)$
 that evolves as matching progresses,
 as well as a static context used for known list-var.
@@ -1645,41 +1614,41 @@ to track the candidate variables matches so far,
 and $\ell$  records pattern expansion variables
 that will correspond to subtracted pattern list-variables.
 \[
-\knownMatchR
+\knownSMatchR
 \]
 %%
 
-\paragraph{Rules for $\mvlx$ ---}~
+\paragraph{Rules for $\mvsx$ ---}~
 
 \begin{enumerate}
 %%%%
 \item
-The plan with $\mvlx$ is to map successive `prefixes' of the \texttt{vlP} expansion
+The plan with $\mvsx$ is to map successive `subsets' of the \texttt{vlP} expansion
 against the expansion of variables, one-by-one in \texttt{vlC}, until
 we reduce $\mathtt{xP}$ to `empty'.
 The simplest case is when \texttt{vlP} is empty:
 \[
-\expandMatchEmptyR
+\expandSMatchEmptyR
 \]
 An open question here is what we do with any remaining subtracted
 variables in the pattern. They may need to be bound appropriately.
 This is the purpose of the $blo$ (bind-leftovers) function.
-The $blo$ function satisfies the following specification:
-\bloDef
+The $blo$ function for sets satisfies the following specification:
+\bloSDef
 %%
 \item
  When \texttt{vlC} is empty and \texttt{vlP} is inexact,
  we terminate, binding leftovers.
 \[
-\expandMatchInExactR
+\expandSMatchInExactR
 \]
 \item
 If \texttt{xP} is not empty,
-then we match a prefix of it against all of the expansion of the first
+then we match a subset of it against all of the expansion of some chosen
 variable in \texttt{vlC}.
 If that succeeds then we add the variable to $\kappa$, and recurse.
 \[
-\expandMatchNonEmptyR
+\expandSMatchNonEmptyR
 \]
 %%
 %%%%
@@ -1687,40 +1656,41 @@ If that succeeds then we add the variable to $\kappa$, and recurse.
 
 
 
-\paragraph{Rules for $\mvlxx$ ---}~
+\paragraph{Rules for $\mvsxx$ ---}~
 
 \begin{enumerate}
 %%%%
 \item
-  We are now using $\mvlxx$ to compare a candidate expansion with a pattern expansion,
-  trying to match all of the candidate with a prefix of the expansion.
+  We are now using $\mvsxx$ to compare a
+  candidate expansion with a pattern expansion,
+  trying to match all of the candidate with a subset of the expansion.
   \[
    \Gamma
       \vdash
-      \mathtt{xC} \mvlxx \mathtt{xP}
+      \mathtt{xC} \mvsxx \mathtt{xP}
       \leadsto ( \beta',\ell',\mathtt{xP'} )
   \]
   If both are empty, we are done:
 \[
-\expTwoMatchAllEmptyR
+\expTwoSMatchAllEmptyR
 \]
 If the pattern is empty, but the candidate is not, then we fail.
 If the candidate is empty, but the pattern is not,
 then we return:
 \[
-\expTwoMatchCandEmptyR
+\expTwoSMatchCandEmptyR
 \]
 %%
 \item
-If both expansions are non-empty, then we compare the first two variables
-in their expansions.
-If they are the same, remove both and recurse:
+If both expansions are non-empty,
+then we can look for those variables in both, remove them and recurse:
 \[
-\expTwoMatchSameR
+\expTwoSMatchSameR
 \]
 %%
 \item
-If they differ,then we need to consider the size-ranges
+If the two expansions have no variables in common,
+then we need to consider the size-ranges
 of both sides to consider what action to take.
 If both sides are rigid then the match fails.
 The pattern size range must never be smaller than that for the candidate,
@@ -1728,7 +1698,7 @@ for a match to succeed.
 In either case, a variable can only be removed from either side
 by offsetting against a subtracted unknown variable from the
 corresponding side, which is therefore itself also removed.
-This action of removing a leading expansion variable,
+This action of removing a chosen expansion variable,
 and an offsetting subtracted variable is called `shrinking'.`
 Any such removal on the pattern side must bind that subtracted variable
 to the removed expansion variable, noting that the subtracted variable
@@ -1743,46 +1713,43 @@ between which one we do.
 We can always shrink an non-rigid non-empty candidate expansion
 when \texttt{uvC} is non-null:
 \[
-\expTwoMatchClipCandR
+\expTwoSMatchClipCandR
 \]
 %%
 \item
 We can always shrink an non-rigid non-empty pattern expansion
 when \texttt{uvP} is non-null:
 \[
-\expTwoMatchClipPatnR
+\expTwoSMatchClipPatnR
 \]
 %%
 \item
 When \texttt{xC} is inexact, and \texttt{uvC} is nil
-we can simply remove the leading candidate expansion variable,
+we can simply remove an arbitrary candidate expansion variable,
 but leave \texttt{ulC} untouched.
 We do not care which members of \texttt{ulC} cover which members
 of the candidate expansion list.
 \[
-\expTwoMatchSqueezeCR
+\expTwoSMatchSqueezeCR
 \]
 Reminder: we can never shrink the candidate if it is rigid.
 %%
 \item
 When \texttt{xP} is inexact, and \texttt{uvP} is nil,
 and the pattern size is greater than that of the candidate,
-then we can remove the leading pattern expansion variable.
+then we can remove an arbitrary pattern expansion variable.
 However we must record its removal, so that at the end,
 we can decide how to map the members of \texttt{ulP}
 to all pattern variables removed in this way.
 The record of all such variables is held in the $\ell$
 components of the context.
 \[
-\expTwoMatchSqueezePR
+\expTwoSMatchSqueezePR
 \]
 
 Reminder: we can never shrink the pattern if it is rigid.
 %%%%
 \end{enumerate}
-
-\textbf{END OF LIST-TO-SET REWORK}
-
 
 
 

@@ -83,8 +83,16 @@ s1 `disjoint` s2 = S.null (s1 `S.intersection` s2)
 s1 `overlaps` s2 = not (s1 `disjoint` s2)
 \end{code}
 
+\subsubsection{Choosing element from a set}
 
-
+\begin{code}
+choose s
+ | S.null s  =  error "choose: empty set."
+ | otherwise  = (x,s')
+ where
+   x = S.elemAt 0 s
+   s' = S.delete x s
+\end{code}
 
 \newpage
 \subsection{Control-Flow Functions}

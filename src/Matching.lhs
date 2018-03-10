@@ -1156,9 +1156,9 @@ Reminder: we can never shrink the pattern if it is rigid.
 
 \newpage
 
-First, expansions and predicates over them.
+First, expansion lists and predicates over them.
 \begin{code}
-type Expansion
+type LExpansion
  = ( [Variable]    --  xs, full expansion less known subtractions
    , [Identifier]  --  uv, subtracted variable identifiers
    , [Identifier]  --  ul, subtracted list-variable identifiers
@@ -1233,7 +1233,7 @@ vlExpandMatch :: MonadPlus mp
               => ( [VarTable], VarClass, VarWhen ) -- static context
               -> ( Binding, VarList, [Variable] )  -- dynamic context
               -> VarList -- candidate variable list.
-              -> Expansion  -- pattern list-variable expansion
+              -> LExpansion  -- pattern list-variable expansion
               -> mp ( Binding  -- resulting binding
                     , VarList  -- matched candidate prefix
                     , VarList  -- remaining candidate suffix
@@ -1277,11 +1277,11 @@ vlExpandMatch sctxt@(vts,bc,bw) dctxt@(bind,kappa,ell) vlC xP@(xs,uv,ul,_)
 vlExpand2Match :: MonadPlus mp
                => ( [VarTable], VarClass, VarWhen ) -- static context
                -> ( Binding, VarList, [Variable] )  -- dynamic context
-              -> Expansion  -- candidate variable expansion
-              -> Expansion  -- pattern list-variable expansion
+              -> LExpansion  -- candidate variable expansion
+              -> LExpansion  -- pattern list-variable expansion
               -> mp ( Binding  -- resulting binding
                     , [Variable]  -- subtracted parts of candidate expansion
-                    , Expansion   -- remaining pattern expansion
+                    , LExpansion   -- remaining pattern expansion
                     )
 \end{code}
 
@@ -1505,6 +1505,8 @@ vsClassify vts vs
 
 
 
+% \newpage
+% \input{src/Binding.lhs}
 
 
 
@@ -1529,6 +1531,16 @@ A key metric is the range of possible lengths that an expansion can have:
         \end{array}
       \right.
 \end{eqnarray*}
+
+First, expansion sets.
+\begin{code}
+type SExpansion
+ = ( Set Variable  --  xs, full expansion less known subtractions
+   , [Identifier]  --  uv, subtracted variable identifiers
+   , [Identifier]  --  ul, subtracted list-variable identifiers
+   , Int           --  size = length xs - length uv
+   )
+\end{code}
 
 
 \paragraph{Matching the set-expansion of a List-Variable.}
@@ -1756,6 +1768,146 @@ Reminder: we can never shrink the pattern if it is rigid.
 
 
 
+\newpage
+\begin{code}
+vsExpandMatch :: MonadPlus mp
+              => ( [VarTable], VarClass, VarWhen ) -- static context
+              -> ( Binding, VarSet, Set Variable )  -- dynamic context
+              -> VarSet -- candidate variable list.
+              -> SExpansion  -- pattern list-variable expansion
+              -> mp ( Binding  -- resulting binding
+                    , VarSet  -- matched candidate prefix
+                    , VarSet  -- remaining candidate suffix
+                    )
+\end{code}
+
+
+\[
+\expandSMatchEmptyR
+\]
+\[
+\expandSMatchInExactR
+\]
+\[
+\expandSMatchNonEmptyR
+\]
+
+\begin{code}
+vsExpandMatch sctxt@(vts,bc,bw) dctxt@(bind,kappa,ell) vsC xP@(xs,uv,ul,_)
+  | emptyE xP || (inexactE xP && null vsC)
+     = do bind' <-  bindLeftOvers sctxt bind ellxs uv ul
+          return (bind',kappa,vsC)
+  | not $ null vsC
+     =  let (vC,vsC') = choose vsC in
+        do xC <- expand vC
+           (bind',ell',xP') <- vsExpand2Match sctxt dctxt xC xP
+           vsExpandMatch sctxt (bind,S.insert vC kappa,ell') vsC' xP'
+  | otherwise = fail "vlExpandMatch: null candidate for exact, non-empty pattern."
+
+  where
+    ellxs = S.toList (ell `S.union` xs)
+    expand (StdVar v)  = return (S.singleton v,[],[],1)
+    expand (LstVar lv)
+      = case expandKnown vts lv of
+          Just (KnownVarSet vlK vlX _,uis, ujs)
+            -> return (vlX,uis,ujs,length vlX - length uis)
+          _ ->  fail "vlExpandMatch: candidate is unknown list-var."
+\end{code}
+
+\newpage
+\begin{code}
+vsExpand2Match :: MonadPlus mp
+               => ( [VarTable], VarClass, VarWhen ) -- static context
+               -> ( Binding, VarSet, Set Variable )  -- dynamic context
+              -> SExpansion  -- candidate variable expansion
+              -> SExpansion  -- pattern list-variable expansion
+              -> mp ( Binding  -- resulting binding
+                    , Set Variable  -- subtracted parts of candidate expansion
+                    , SExpansion   -- remaining pattern expansion
+                    )
+\end{code}
+
+\[
+\expTwoSMatchAllEmptyR
+\qquad
+\expTwoSMatchCandEmptyR
+\]
+
+\begin{code}
+vsExpand2Match _ dctxt@(bind,_,ell) xC xP
+ | emptyE xC  =  return (bind,ell,xP)
+\end{code}
+
+\[
+\expTwoSMatchSameR
+\]
+\begin{code}
+vsExpand2Match sctxt dctxt xC@(vC:xsC,uvC,ulC,szC) xP@(vP:xsP,uvP,ulP,szP)
+  | vC == vP  =  vsExpand2Match sctxt dctxt (xsC,uvC,ulC,szC-1)
+                                            (xsP,uvP,ulP,szP-1)
+  | otherwise
+      =  vsShrinkCandMatch sctxt dctxt xC xP
+         `mplus`
+         vsShrinkPatnMatch sctxt dctxt xC xP
+\end{code}
+
+\[
+\expTwoSMatchSqueezeCR
+\]
+\[
+\expTwoSMatchClipCandR
+\]
+
+\begin{code}
+vsShrinkCandMatch sctxt dctxt xC@(vC:xsC,uvC,ulC,szC) xP
+  | null uvC && null ulC
+    = fail "vsShrinkCandMatch: cannot shrink rigid candidate expansion"
+  | null uvC -- && not (null ulC)
+     = vsExpand2Match sctxt dctxt (xsC,uvC,ulC,szC-1) xP
+  | otherwise -- not (null uvC)
+     = vsExpand2Match sctxt dctxt (xsC,tail uvC,ulC,szC) xP
+\end{code}
+
+\newpage
+\[
+\expTwoSMatchSqueezePR
+\]
+\[
+\expTwoSMatchClipPatnR
+\]
+\begin{code}
+vsShrinkPatnMatch sctxt@(_,bc,bw) (bind,gamma,ell)
+                  xC@(_,_,_,szC) xP@(vP:xsP,uvP,ulP,szP)
+  | null uvP && null ulP
+    = fail "vsShrinkPatnMatch: cannot shrink rigid pattern expansion"
+  | null uvP && szP > szC -- && not null (ulP)
+    = vsExpand2Match sctxt (bind,gamma,vP:ell) xC (xsP,uvP,ulP,szP-1)
+  | not (null uvP)
+     = do vu <- select bind vP Nothing uvP
+          bind' <- bindVarToVar vu vP bind
+          vsExpand2Match sctxt (bind',gamma,vP:ell) xC (xsP,uvP,ulP,szP)
+  | otherwise = fail "vsShrinkPatnMatch: match fail."
+  where
+
+    select bind vP Nothing []  = fail "vlShrinkPatnMatch: no suitable vu found."
+    select bind vP (Just vu) []  = return vu
+    select bind vP mvu (ui:uvP)
+     = let vu = Vbl ui bc bw in
+         case lookupBind bind vu of
+           Nothing -> select bind vP (upd mvu vu) uvP
+           Just (BindVar x)
+             | x == vP    ->  return vu
+             | otherwise  ->  select bind vP mvu uvP
+           _ -> fail "vsShrinkPatnMatch: subtracted var bound to term."
+
+    upd Nothing x = Just x
+    upd mx      _ = mx
+\end{code}
+
+
+
+
+
 
 
 
@@ -1806,7 +1958,7 @@ We have a known pattern list-variable that does not appear
 as a candidate. So now we need to try to match its expansion(s)
 against those of the candidates.
 \begin{code}
-vsExpandMatch :: MonadPlus mp
+vsExpandMatch' :: MonadPlus mp
               => [VarTable] -> Binding
               -> CBVS -> PBVS
               -> (VarSet, VarSet, VarSet, VarSet)
@@ -1818,14 +1970,14 @@ First we see if the first-level expansion (\texttt{vsK} below)
 is contained within the known candidates (\texttt{kvsC},\texttt{klsC}).
 If so, we bind to them, and remove them from the sets of candidates.
 \begin{code}
-vsExpandMatch vts bind cbvs pbvs vsC@(uvsC,kvsC,ulsC,klsC) klP@(LstVar klvP)
+vsExpandMatch' vts bind cbvs pbvs vsC@(uvsC,kvsC,ulsC,klsC) klP@(LstVar klvP)
  = case expandKnown vts klvP of
     Just kX@(KnownVarSet vsK vsX xSize, uis, ujs)
       -> if (dbg "vsK=" vsK) `S.isSubsetOf` (dbg "ksC=" ksC)
          then do bind' <- bindLVarToVSet klvP (ksC `S.intersection` vsK) bind
                  return (bind',(uvsC,kvsC S.\\ vsK,ulsC,klsC S.\\ vsK))
-         else error "vsExpandMatch: NYFI"
-    _ -> fail "vsExpandMatch: known pattern list-variable is not set-valued."
+         else error "vsExpandMatch': NYFI"
+    _ -> fail "vsExpandMatch': known pattern list-variable is not set-valued."
  where ksC = kvsC `S.union` klsC
 \end{code}
 

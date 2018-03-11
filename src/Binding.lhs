@@ -11,7 +11,7 @@ module Binding
 , LstVarBind, pattern BindList, pattern BindSet, pattern BindTerms
 , Binding
 , emptyBinding
-, bindVarToVar
+, bindVarToVar, bindVarsToVars
 , bindVarToTerm
 , bindLVarToVList
 , bindLVarToVSet
@@ -21,7 +21,7 @@ module Binding
 , bindGVarToTList
 , lookupBind
 , lookupLstBind
-, bindLVarsToNull
+, bindLVarsToNull, bindLVarsToEmpty
 , dumpBinding
 , int_tst_Binding
 ) where
@@ -340,6 +340,15 @@ bindVarToVar dv@(Vbl  vi vc vw) rv@(Vbl xi xc xw)
           , "dv = " ++ show dv
           , "rv = " ++ show rv
           ]
+\end{code}
+
+Can be useful to bind a list of (pattern/candidate) variables pairs:
+\begin{code}
+bindVarsToVars :: Monad m => [(Variable, Variable)] -> Binding -> m Binding
+bindVarsToVars [] bind = return bind
+bindVarsToVars ((dv,rv):rest) bind
+  = do bind' <- bindVarToVar dv rv bind
+       bindVarsToVars rest bind'
 \end{code}
 
 \newpage
@@ -928,12 +937,20 @@ ttsSubstn tsub lsub  =  getJust "subTempSync substn failed." $ substn tsub lsub
 \newpage
 \subsection{Derived Binding Functions}
 
-Binding a list of list-variables to null:
+Binding a list of list-variables to the null list:
 \begin{code}
 bindLVarsToNull bind [] = return bind
 bindLVarsToNull bind (lv:lvs)
  = do bind' <- bindLVarToVList lv [] bind
       bindLVarsToNull bind' lvs
+\end{code}
+
+Binding a list of list-variables to the empty set:
+\begin{code}
+bindLVarsToEmpty bind [] = return bind
+bindLVarsToEmpty bind (lv:lvs)
+ = do bind' <- bindLVarToVSet lv S.empty bind
+      bindLVarsToEmpty bind' lvs
 \end{code}
 
 

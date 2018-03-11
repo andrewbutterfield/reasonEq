@@ -1,38 +1,55 @@
-vsMatch [vtS_Design] emptyBinding S.empty S.empty (vswrap [x,y,z]) (vswrap [vu] `S.union` lswrap [lS `less` ([u],[])])
+vsMatch [] emptyBinding b0 b0 (S.fromList [cs1,cl1,cs2,cl2,cs3,cl3,cs4,cl4]) (S.fromList [ps1,pl1,ps2,pl2,ps3,pl3,ps4,pl4])
 
-> seeVarTable vtS_Design
-{ ok : 𝔹, ok' : 𝔹, x : ℤ, x' : ℤ, y : ℤ, y' : ℤ, z : ℤ, z' : ℤ }
-{  }
-{ M ≜ {ok}, O ≜ {M̅,S̅}, S ≜ {x,y,z} }
-
-> vsMatch [vtS_Design] emptyBinding S.empty S.empty (vswrap [x,y,z]) (vswrap [vu] `S.union` lswrap [lS `less` ([u],[])])
-*** Exception: user error (vsMatch: some pattern var-set is not in candidate.)
-vsKx = fromList [GV (VR (Id "x",VO,WB)),GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]
-vsCx = fromList [GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]
-
-Because:
-  not(vsKx `withinS` vsCx)
-  not({x,y,z} `withinS` {y,z}})
+{ (pl1$.𝓞) ↦ ⟨⟩, (pl2$.𝓞) ↦ ⟨⟩, (pl3$.𝓞) ↦ ⟨c̅l̅1̅,c̅l̅2̅⟩, (pl4$.𝓞) ↦ ⟨c̅l̅3̅,c̅l̅4̅⟩ }
 
 
-vsFM.lvsP'=fromList [GL (LV (VR (Id "S",VO,WB),[Id "u"],[]))]
-vsFM.svsC'=fromList [GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]
-vsKM.vsC=fromList [GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]
-vsKM.gvP=GL (LV (VR (Id "S",VO,WB),[Id "u"],[]))
-vsKM.vsK=fromList [GV (VR (Id "x",VO,WB)),GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]
-*** Exception: user error (vsMatch: some pattern var-set is not in candidate.
-vsKx = fromList [GV (VR (Id "x",VO,WB)),GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]
-vsCx = fromList [GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]
-bind = BD (fromList [((Id "u",VO),BI (Id "x"))],fromList [],fromList [])
-vsFM.bind'=BD (fromList [((Id "u",VO),BI (Id "x"))],fromList [],fromList [])
+nub of list outcome
+{ (pl1$.𝓞) ↦ ⟨⟩, (pl2$.𝓞) ↦ ⟨⟩, (pl3$.𝓞) ↦ ⟨c̅l̅1̅,c̅l̅2̅⟩, (pl4$.𝓞) ↦ ⟨c̅l̅3̅,c̅l̅4̅⟩ }
+{ (pl1$.𝓞) ↦ ⟨⟩, (pl2$.𝓞) ↦ ⟨c̅l̅1̅⟩, (pl3$.𝓞) ↦ ⟨c̅l̅2̅⟩, (pl4$.𝓞) ↦ ⟨c̅l̅3̅,c̅l̅4̅⟩ }
+{ (pl1$.𝓞) ↦ ⟨⟩, (pl2$.𝓞) ↦ ⟨c̅l̅1̅⟩, (pl3$.𝓞) ↦ ⟨c̅l̅2̅,c̅l̅3̅⟩, (pl4$.𝓞) ↦ ⟨c̅l̅4̅⟩ }
+{ (pl1$.𝓞) ↦ ⟨⟩, (pl2$.𝓞) ↦ ⟨c̅l̅1̅,c̅l̅2̅⟩, (pl3$.𝓞) ↦ ⟨⟩, (pl4$.𝓞) ↦ ⟨c̅l̅3̅,c̅l̅4̅⟩ }
+{ (pl1$.𝓞) ↦ ⟨⟩, (pl2$.𝓞) ↦ ⟨c̅l̅1̅,c̅l̅2̅⟩, (pl3$.𝓞) ↦ ⟨c̅l̅3̅⟩, (pl4$.𝓞) ↦ ⟨c̅l̅4̅⟩ }
+{ (pl1$.𝓞) ↦ ⟨⟩, (pl2$.𝓞) ↦ ⟨c̅l̅1̅,c̅l̅2̅⟩, (pl3$.𝓞) ↦ ⟨c̅l̅3̅,c̅l̅4̅⟩, (pl4$.𝓞) ↦ ⟨⟩ }
+{ (pl1$.𝓞) ↦ ⟨c̅l̅1̅⟩, (pl2$.𝓞) ↦ ⟨⟩, (pl3$.𝓞) ↦ ⟨c̅l̅2̅⟩, (pl4$.𝓞) ↦ ⟨c̅l̅3̅,c̅l̅4̅⟩ }
+{ (pl1$.𝓞) ↦ ⟨c̅l̅1̅⟩, (pl2$.𝓞) ↦ ⟨⟩, (pl3$.𝓞) ↦ ⟨c̅l̅2̅,c̅l̅3̅⟩, (pl4$.𝓞) ↦ ⟨c̅l̅4̅⟩ }
+{ (pl1$.𝓞) ↦ ⟨c̅l̅1̅⟩, (pl2$.𝓞) ↦ ⟨c̅l̅2̅⟩, (pl3$.𝓞) ↦ ⟨⟩, (pl4$.𝓞) ↦ ⟨c̅l̅3̅,c̅l̅4̅⟩ }
 
+{ (pl1$.𝓞) ↦ ⟨c̅l̅1̅⟩, (pl2$.𝓞) ↦ ⟨c̅l̅2̅⟩, (pl3$.𝓞) ↦ ⟨c̅l̅3̅⟩, (pl4$.𝓞) ↦ ⟨c̅l̅4̅⟩ }
 
-vsKM .... {y,z} {x,y,z} S\u
+{ (pl1$.𝓞) ↦ ⟨c̅l̅1̅⟩, (pl2$.𝓞) ↦ ⟨c̅l̅2̅⟩, (pl3$.𝓞) ↦ ⟨c̅l̅3̅,c̅l̅4̅⟩, (pl4$.𝓞) ↦ ⟨⟩ }
+{ (pl1$.𝓞) ↦ ⟨c̅l̅1̅⟩, (pl2$.𝓞) ↦ ⟨c̅l̅2̅,c̅l̅3̅⟩, (pl3$.𝓞) ↦ ⟨⟩, (pl4$.𝓞) ↦ ⟨c̅l̅4̅⟩ }
+{ (pl1$.𝓞) ↦ ⟨c̅l̅1̅⟩, (pl2$.𝓞) ↦ ⟨c̅l̅2̅,c̅l̅3̅⟩, (pl3$.𝓞) ↦ ⟨c̅l̅4̅⟩, (pl4$.𝓞) ↦ ⟨⟩ }
+{ (pl1$.𝓞) ↦ ⟨c̅l̅1̅,c̅l̅2̅⟩, (pl2$.𝓞) ↦ ⟨⟩, (pl3$.𝓞) ↦ ⟨⟩, (pl4$.𝓞) ↦ ⟨c̅l̅3̅,c̅l̅4̅⟩ }
+{ (pl1$.𝓞) ↦ ⟨c̅l̅1̅,c̅l̅2̅⟩, (pl2$.𝓞) ↦ ⟨⟩, (pl3$.𝓞) ↦ ⟨c̅l̅3̅⟩, (pl4$.𝓞) ↦ ⟨c̅l̅4̅⟩ }
+{ (pl1$.𝓞) ↦ ⟨c̅l̅1̅,c̅l̅2̅⟩, (pl2$.𝓞) ↦ ⟨⟩, (pl3$.𝓞) ↦ ⟨c̅l̅3̅,c̅l̅4̅⟩, (pl4$.𝓞) ↦ ⟨⟩ }
+{ (pl1$.𝓞) ↦ ⟨c̅l̅1̅,c̅l̅2̅⟩, (pl2$.𝓞) ↦ ⟨c̅l̅3̅⟩, (pl3$.𝓞) ↦ ⟨⟩, (pl4$.𝓞) ↦ ⟨c̅l̅4̅⟩ }
+{ (pl1$.𝓞) ↦ ⟨c̅l̅1̅,c̅l̅2̅⟩, (pl2$.𝓞) ↦ ⟨c̅l̅3̅⟩, (pl3$.𝓞) ↦ ⟨c̅l̅4̅⟩, (pl4$.𝓞) ↦ ⟨⟩ }
+{ (pl1$.𝓞) ↦ ⟨c̅l̅1̅,c̅l̅2̅⟩, (pl2$.𝓞) ↦ ⟨c̅l̅3̅,c̅l̅4̅⟩, (pl3$.𝓞) ↦ ⟨⟩, (pl4$.𝓞) ↦ ⟨⟩ }
 
-gvCs = {y,z} I {S\u} = {}
+expected:
 
+BD (fromList [((Id "ps1",VO),BI (Id "cs1"))
+             ,((Id "ps2",VO),BI (Id "cs2"))
+             ,((Id "ps3",VO),BI (Id "cs3"))
+             ,((Id "ps4",VO),BI (Id "cs4"))]
+    ,fromList []
+    ,fromList [
+       ((Id "pl1",VO,[],[]),BS (fromList [GL (LV (VR (Id "cl1",VO,WB),[],[]))]))
+      ,((Id "pl2",VO,[],[]),BS (fromList [GL (LV (VR (Id "cl2",VO,WB),[],[]))]))
+      ,((Id "pl3",VO,[],[]),BS (fromList [GL (LV (VR (Id "cl3",VO,WB),[],[]))]))
+      ,((Id "pl4",VO,[],[]),BS (fromList [GL (LV (VR (Id "cl4",VO,WB),[],[]))]))])
 
-vsFreeMatch {||} {x,y,z} {u,S\u}
-...
-vsKnownMatch {| u -> x |} {x,y,z} {S\u}
+ but got:
+
+BD (fromList [((Id "ps1",VO),BI (Id "cs1"))
+             ,((Id "ps2",VO),BI (Id "cs2"))
+             ,((Id "ps3",VO),BI (Id "cs3"))
+             ,((Id "ps4",VO),BI (Id "cs4"))]
+   ,fromList []
+   ,fromList [
+       ((Id "pl1",VO,[],[]),BL [GL (LV (VR (Id "cl1",VO,WB),[],[]))])
+      ,((Id "pl2",VO,[],[]),BL [GL (LV (VR (Id "cl2",VO,WB),[],[]))])
+      ,((Id "pl3",VO,[],[]),BL [GL (LV (VR (Id "cl3",VO,WB),[],[]))])
+      ,((Id "pl4",VO,[],[]),BL [GL (LV (VR (Id "cl4",VO,WB),[],[]))])])
+
 --

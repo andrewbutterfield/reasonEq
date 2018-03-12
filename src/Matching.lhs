@@ -1463,10 +1463,17 @@ vsFreeMatch :: MonadPlus mp
               -> mp Binding
 vsFreeMatch vts bind cbvs pbvs vsC vsP
   = let (uvsP,kvsP,ulsP,klsP) = vsClassify vts $ dbg "FM.vsP=" vsP in
-    if kvsP `S.isSubsetOf` (dbg "FM.vsC=" vsC)
-    then vsKnownMatch vts bind cbvs pbvs
-               (dbg "FM.KM.vsC=" ((vsC S.\\ kvsP) S.\\ klsP))
-               (dbg "FM.uvsP=" uvsP,dbg "FM.ulsP=" ulsP) $ dbg "FM.KM.kslP=" (S.toList (klsP S.\\ vsC))
+    if (dbg "FM.kvsP=" kvsP) `S.isSubsetOf` (dbg "FM.vsC=" vsC)
+    then do bind' <- bindVarsToSelves (stdVarsOf $ S.toList kvsP) bind
+            let vsC' = vsC S.\\ kvsP
+            let klsEasy = klsP `S.intersection` vsC'
+            bind'' <- bindLVarsToSSelves (listVarsOf $ S.toList klsEasy) bind'
+            let klsP' = klsP S.\\ vsC'
+            let vsC'' = vsC' S.\\ (dbg "FM.klsEasy=" klsEasy)
+            vsKnownMatch vts bind'' cbvs pbvs
+               (dbg "FM.vsC''=" vsC'')
+               (dbg "FM.uvsP=" uvsP,dbg "FM.ulsP=" ulsP)
+               $ dbg "FM.kslP'=" (S.toList klsP')
     else fail "vsFreeMatch: known vars missing."
 \end{code}
 

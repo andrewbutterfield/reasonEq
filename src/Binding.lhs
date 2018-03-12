@@ -11,10 +11,10 @@ module Binding
 , LstVarBind, pattern BindList, pattern BindSet, pattern BindTerms
 , Binding
 , emptyBinding
-, bindVarToVar, bindVarsToVars
+, bindVarToVar, bindVarsToVars, bindVarToSelf, bindVarsToSelves
 , bindVarToTerm
 , bindLVarToVList
-, bindLVarToVSet
+, bindLVarToVSet, bindLVarToSSelf, bindLVarsToSSelves
 , bindLVarToTList
 , bindGVarToGVar
 , bindGVarToVList
@@ -349,6 +349,19 @@ bindVarsToVars [] bind = return bind
 bindVarsToVars ((dv,rv):rest) bind
   = do bind' <- bindVarToVar dv rv bind
        bindVarsToVars rest bind'
+\end{code}
+
+Also useful is binding a (list of) pattern variable(s)
+to itself (themselves):
+\begin{code}
+bindVarToSelf :: Monad m => Variable -> Binding -> m Binding
+bindVarToSelf v bind = bindVarToVar v v bind
+
+bindVarsToSelves :: Monad m => [Variable] -> Binding -> m Binding
+bindVarsToSelves [] bind = return bind
+bindVarsToSelves (v:vs) bind
+  = do bind' <- bindVarToSelf v bind
+       bindVarsToSelves vs bind'
 \end{code}
 
 \newpage
@@ -701,6 +714,18 @@ bindLVarToVSet _ _ _ = fail "bindLVarToVSet: invalid lvar. -> vset binding."
 We need to coerce dynamics temporality to \texttt{Before}.
 \begin{code}
 bvs = BS . S.map bgv
+\end{code}
+
+We also need some identity bindings:
+\begin{code}
+bindLVarToSSelf :: Monad m => ListVar -> Binding -> m Binding
+bindLVarToSSelf lv bind = bindLVarToVSet lv (S.singleton $ LstVar lv) bind
+
+bindLVarsToSSelves :: Monad m => [ListVar] -> Binding -> m Binding
+bindLVarsToSSelves [] bind = return bind
+bindLVarsToSSelves (lv:lvs) bind
+  = do bind' <- bindLVarToSSelf lv bind
+       bindLVarsToSSelves lvs bind'
 \end{code}
 
 \newpage

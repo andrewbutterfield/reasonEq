@@ -234,11 +234,11 @@ test_reserved_as_lists
             (vwrap [x,y,z])
             (lwrap [lS])
          @?= ( bindLVarToVList lS (vwrap [x,y,z]) emptyBinding :: [Binding] ))
-     , testCase "L_Design |-  {x,y,z} :: {S}  -- succeeds."
+     , testCase "L_Design |-  {x,y,z} :: {S}  -- fails."
        ( vsMatch [vtL_Design] emptyBinding S.empty S.empty
             (vswrap [x,y,z])
             (lswrap [lS])
-         @?= ( bindLVarToVSet lS (vswrap [x,y,z]) emptyBinding :: [Binding] ) )
+         @?= Nothing )
      , testCase "x,y,z,S @ L_Design  |-  x,y,z :: S  -- matches."
        ( vlMatch [vtL_Design] emptyBinding
             (S.fromList $ vwrap [x,y,z])

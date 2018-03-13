@@ -1408,8 +1408,8 @@ applyBindingsToSets' bind vlP' vsC (gP@(LstVar lvP):vlP)
  = case lookupLstBind bind lvP of
     Nothing -> applyBindingsToSets' bind (gP:vlP') vsC vlP
     Just (BindSet vsB)
-     -> if vsB `S.isSubsetOf` vsC
-        then applyBindingsToSets' bind vlP' ((S.\\) vsC vsB) vlP
+     -> if vsB `withinS` vsC
+        then applyBindingsToSets' bind vlP' (vsC `intsctS` vsB) vlP
         else fail "vsMatch: pattern list-var's binding not in candidate set."
     _ -> fail "vsMatch: list-variable bound to variable-list.c"
 \end{code}
@@ -1463,17 +1463,17 @@ vsFreeMatch :: MonadPlus mp
               -> mp Binding
 vsFreeMatch vts bind cbvs pbvs vsC vsP
   = let (uvsP,kvsP,ulsP,klsP) = vsClassify vts $ dbg "FM.vsP=" vsP in
-    if (dbg "FM.kvsP=" kvsP) `S.isSubsetOf` (dbg "FM.vsC=" vsC)
+    if (dbg "FM.kvsP=" kvsP) `withinS` (dbg "FM.vsC=" vsC)
     then do bind' <- bindVarsToSelves (stdVarsOf $ S.toList kvsP) bind
-            let vsC' = vsC S.\\ kvsP
-            let klsEasy = klsP `S.intersection` vsC'
-            bind'' <- bindLVarsToSSelves (listVarsOf $ S.toList klsEasy) bind'
-            let klsP' = klsP S.\\ vsC'
-            let vsC'' = vsC' S.\\ (dbg "FM.klsEasy=" klsEasy)
+            let vsC' = vsC `removeS` kvsP
+            let klsEasy = klsP `intsctSl` vsC'
+            bind'' <- bindLVarsToSSelves (listVarsOf klsEasy) bind'
+            let klsP' = klsP `removeSl` vsC'
+            let vsC'' = S.fromList ((S.toList vsC') `removeL` (dbg "FM.klsEasy=" klsEasy))
             vsKnownMatch vts bind'' cbvs pbvs
                (dbg "FM.vsC''=" vsC'')
                (dbg "FM.uvsP=" uvsP,dbg "FM.ulsP=" ulsP)
-               $ dbg "FM.kslP'=" (S.toList klsP')
+               $ dbg "FM.kslP'=" klsP'
     else fail "vsFreeMatch: known vars missing."
 \end{code}
 
@@ -1537,9 +1537,9 @@ vsKnownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
 -- lvP is known
   = case dbg "KM.expKnwn=" $ expandKnown vts $ dbg "KM.lvP=" lvP of
       Just (AbstractSet, uis, ujs)
-        | kvP `S.member` vsC
+        | kvP `insideS` vsC
           -> do bind' <- bindLVarToVSet lvP (S.singleton kvP) bind
-                vsKnownMatch vts bind' cbvs pbvs (S.delete kvP vsC)
+                vsKnownMatch vts bind' cbvs pbvs (delS kvP vsC)
                                                  (uvsP,ulsP) kslP
         | otherwise -> fail "vsMatch: abstract lvar only matches self"
       Just kX@(KnownVarSet vsK vsX xSize, uis, ujs)

@@ -1,5 +1,9 @@
-vsMatch [vtS_Design] emptyBinding S.empty S.empty (vswrap [x,y,z]) (lswrap [lS])
+vsMatch [vtS_Design] emptyBinding S.empty S.empty (lswrap [lOn]) (lswrap [lOm])
 
-      
+vtS_Design
+{ ok : 𝔹, ok' : 𝔹, x : ℤ, x' : ℤ, y : ℤ, y' : ℤ, z : ℤ, z' : ℤ }
+{  }
+{ M ≜ {ok}, O ≜ {M̅,S̅}, S ≜ {x,y,z} }
 
---
+
+---

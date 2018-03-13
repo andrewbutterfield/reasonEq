@@ -23,10 +23,12 @@ module VarData ( VarMatchRole
                , addAbstractVarList, addAbstractVarSet
                , lookupVarTable, lookupVarTables
                , lookupLVarTable, lookupLVarTables
-               , dEq     -- , dvEq, dlEq, dgEq
-               , withinS -- , within, inside
-               , removeS -- , remove
-               , intsctS -- , intsct
+               , dEq, dvEq, dlEq, dgEq
+               , insideS                    -- member modulo During
+               , withinS                    -- subset modulo During
+               , delS, delSl, delL          -- delete modulo During
+               , removeS, removeSl, removeL -- remove modulo During
+               , intsctS, intsctSl          -- intersection modulo During
                , KnownExpansion
                , expandKnown
                , genExpandToList
@@ -37,7 +39,7 @@ import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Set (Set)
 import qualified Data.Set as S
-import Data.List (nub, deleteFirstsBy, intersectBy, (\\))
+import Data.List (nub, deleteBy, deleteFirstsBy, intersectBy, (\\))
 
 import Utilities
 import LexBase
@@ -591,28 +593,42 @@ _            `dgEq` _             =  False
 We need to various relations and operators
 to work with the above ``subscript-blind'' comparisons.
 
-\subsubsection{Subset Relation ``modulo \texttt{During}''}
+\subsubsection{Membership/Subset Relation ``modulo \texttt{During}''}
 
 \begin{code}
-withinS :: VarSet -> VarSet -> Bool
-vs1 `withinS` vs2 = (S.toList vs1) `withinL` (S.toList vs2)
-
-withinL :: VarList -> VarList -> Bool
-vl1 `withinL` vl2 -- for all v in vl1, v in vl2 (mod. During-subscripts)
- = all (insideL vl2) vl1
+insideS :: GenVar -> VarSet -> Bool
+insideS gv vs = insideL (S.toList vs) gv
 
 insideL :: VarList -> GenVar -> Bool
 insideL []       gv0  =  False
 insideL (gv:gvs) gv0
  | gv `dgEq` gv0     =  True
  | otherwise         =  insideL gvs gv0
+
+withinS :: VarSet -> VarSet -> Bool
+vs1 `withinS` vs2 = (S.toList vs1) `withinL` (S.toList vs2)
+
+withinL :: VarList -> VarList -> Bool
+vl1 `withinL` vl2 -- for all v in vl1, v in vl2 (mod. During-subscripts)
+ = all (insideL vl2) vl1
 \end{code}
 
-\subsubsection{Difference Operation ``modulo \texttt{During}''}
+\subsubsection{Delete/Difference Operation ``modulo \texttt{During}''}
 
 \begin{code}
+delS :: GenVar -> VarSet -> VarSet
+delS gv vs = S.fromList $ delSl gv vs
+
+delSl :: GenVar -> VarSet -> VarList
+delSl gv vs = delL gv $ S.toList vs
+
+delL gv lv = deleteBy dgEq gv lv
+
 removeS  :: VarSet -> VarSet -> VarSet
-vs1 `removeS` vs2 = S.fromList (S.toList vs1 `removeL` S.toList vs2)
+vs1 `removeS` vs2 = S.fromList (vs1 `removeSl` vs2)
+
+removeSl  :: VarSet -> VarSet -> VarList
+vs1 `removeSl` vs2 = S.toList vs1 `removeL` S.toList vs2
 
 removeL :: VarList -> VarList -> VarList
 vl1 `removeL` vl2 = deleteFirstsBy dgEq vl1 vl2
@@ -624,7 +640,10 @@ Note that order is important here.
 All the intersection values will come from the first argument.
 \begin{code}
 intsctS  :: VarSet -> VarSet -> VarSet
-vs1 `intsctS` vs2 = S.fromList (S.toList vs1 `intsctL` S.toList vs2)
+vs1 `intsctS` vs2 = S.fromList (vs1 `intsctSl` vs2)
+
+intsctSl  :: VarSet -> VarSet -> VarList
+vs1 `intsctSl` vs2 = S.toList vs1 `intsctL` S.toList vs2
 
 intsctL :: VarList -> VarList -> VarList
 vl1 `intsctL` vl2 = intersectBy dgEq vl1 vl2

@@ -1464,12 +1464,15 @@ vsFreeMatch :: MonadPlus mp
 vsFreeMatch vts bind cbvs pbvs vsC vsP
   = let (uvsP,kvsP,ulsP,klsP) = vsClassify vts $ dbg "FM.vsP=" vsP in
     if (dbg "FM.kvsP=" kvsP) `withinS` (dbg "FM.vsC=" vsC)
-    then do bind' <- bindVarsToSelves (stdVarsOf $ S.toList kvsP) bind
+    then do let kvlC = stdVarsOf (vsC `intsctSl` kvsP)
+            let kvlP = stdVarsOf $ S.toList kvsP
+            bind' <- bindVarsToVars (zip kvlP kvlC) bind
             let vsC' = vsC `removeS` kvsP
-            let klsEasy = klsP `intsctSl` vsC'
-            bind'' <- bindLVarsToSSelves (listVarsOf klsEasy) bind'
+            let klCommonP = klsP `intsctSl` vsC'
+            let klCommonC = vsC' `intsctSl` klsP
+            bind'' <- bindLVarSTuples (zip (listVarsOf klCommonP) $ listVarsOf klCommonC) bind'
             let klsP' = klsP `removeSl` vsC'
-            let vsC'' = S.fromList ((S.toList vsC') `removeL` (dbg "FM.klsEasy=" klsEasy))
+            let vsC'' = S.fromList ((S.toList vsC') `removeL` (dbg "FM.klCommonP=" klCommonP))
             vsKnownMatch vts bind'' cbvs pbvs
                (dbg "FM.vsC''=" vsC'')
                (dbg "FM.uvsP=" uvsP,dbg "FM.ulsP=" ulsP)
@@ -1891,7 +1894,7 @@ vsExpand2Match _ dctxt@(bind,_,ell) xC xP
 \]
 \begin{code}
 vsExpand2Match sctxt dctxt xC@(xsC,uvC,ulC,szC) xP@(xsP,uvP,ulP,szP)
-  | vC == vP  =  vsExpand2Match sctxt dctxt (xsC',uvC,ulC,szC-1)
+  | vC `dvEq` vP  =  vsExpand2Match sctxt dctxt (xsC',uvC,ulC,szC-1)
                                             (xsP',uvP,ulP,szP-1)
   | otherwise
       =  vsShrinkCandMatch sctxt dctxt xC xP
@@ -1932,7 +1935,11 @@ vsShrinkCandMatch sctxt dctxt xC@(xsC,uvC,ulC,szC) xP
 vsShrinkPatnMatch sctxt@(_,bc,bw) (bind,gamma,ell)
                   xC@(_,_,_,szC) xP@(xsP,uvP,ulP,szP)
   | null uvP && null ulP
-    = fail "vsShrinkPatnMatch: cannot shrink rigid pattern expansion"
+    = fail $ unlines
+        [ "vsShrinkPatnMatch: cannot shrink rigid pattern expansion"
+        , "xC = " ++ show xC
+        , "xP = " ++ show xP
+        , "bind:", show bind ]
   | null uvP && szP > szC -- && not null (ulP)
     = vsExpand2Match sctxt (bind,gamma,S.insert vP ell) xC (xsP',uvP,ulP,szP-1)
   | not (null uvP)
@@ -1950,6 +1957,7 @@ vsShrinkPatnMatch sctxt@(_,bc,bw) (bind,gamma,ell)
          case lookupBind bind vu of
            Nothing -> select bind vP (upd mvu vu) uvP
            Just (BindVar x)
+             -- x `dEq` vP ???
              | x == vP    ->  return vu
              | otherwise  ->  select bind vP mvu uvP
            _ -> fail "vsShrinkPatnMatch: subtracted var bound to term."

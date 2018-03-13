@@ -14,7 +14,8 @@ module Binding
 , bindVarToVar, bindVarsToVars, bindVarToSelf, bindVarsToSelves
 , bindVarToTerm
 , bindLVarToVList
-, bindLVarToVSet, bindLVarToSSelf, bindLVarsToSSelves
+, bindLVarToVSet
+, bindLVarToSSelf, bindLVarsToSSelves, bindLVarSTuples
 , bindLVarToTList
 , bindGVarToGVar
 , bindGVarToVList
@@ -363,6 +364,7 @@ bindVarsToSelves (v:vs) bind
   = do bind' <- bindVarToSelf v bind
        bindVarsToSelves vs bind'
 \end{code}
+
 
 \newpage
 
@@ -726,6 +728,19 @@ bindLVarsToSSelves [] bind = return bind
 bindLVarsToSSelves (lv:lvs) bind
   = do bind' <- bindLVarToSSelf lv bind
        bindLVarsToSSelves lvs bind'
+\end{code}
+
+And binding pairs:
+\begin{code}
+bindLVarSTuple :: Monad m => (ListVar,ListVar) -> Binding -> m Binding
+bindLVarSTuple (plv,clv) bind
+                           = bindLVarToVSet plv (S.singleton $ LstVar clv) bind
+
+bindLVarSTuples :: Monad m => [(ListVar,ListVar)] -> Binding -> m Binding
+bindLVarSTuples [] bind = return bind
+bindLVarSTuples (lv2:lv2s) bind
+  = do bind' <- bindLVarSTuple lv2 bind
+       bindLVarSTuples lv2s bind'
 \end{code}
 
 \newpage

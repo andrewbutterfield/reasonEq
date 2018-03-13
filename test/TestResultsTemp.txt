@@ -1,35 +1,107 @@
-vsMatch [vtS_Design] emptyBinding S.empty S.empty (lswrap [lMn,lSn]) (lswrap [lOm])
-{M̅_n,S̅_n} :: {O̅_m}
-
-
-bindLVarToVSet lOm (lswrap [lMn,lSn]) emptyBinding
-{  }
-{ m ↦ n }
-{ (O$.𝓞) ↦ {M̅,S̅} }
-
-
 vtS_Design
 { ok : 𝔹, ok' : 𝔹, x : ℤ, x' : ℤ, y : ℤ, y' : ℤ, z : ℤ, z' : ℤ }
 {  }
 { M ≜ {ok}, O ≜ {M̅,S̅}, S ≜ {x,y,z} }
 
+bindVV gvp gvp $ bindVV gvq gvq $ bindLS gO gO $ bindLS gO' gO' $ bindLS gOm gOm $ emptyBinding
+{ (P.𝓟) ↦ P., (Q.𝓟) ↦ Q. }
+{ m ↦ m }
+{ (O$.𝓞) ↦ {O̅} }
 
-M.vsP=fromList [GL (LV (VR (Id "O",VO,WD "m"),[],[]))]
-M.vsP'=fromList [GL (LV (VR (Id "O",VO,WD "m"),[],[]))]
-FM.vsP=fromList [GL (LV (VR (Id "O",VO,WD "m"),[],[]))]
+tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAqm eOpAqm
+(∃ O̅_m • (P.[,O̅_m/O̅']∧Q.[,O̅_m/O̅])) :: (∃ O̅_m • (P.[,O̅_m/O̅']∧Q.[,O̅_m/O̅]))
+
+M.vsP=fromList [GL (LV (VR (Id "O",VO,WA),[],[]))]
+M.vsP'=fromList [GL (LV (VR (Id "O",VO,WA),[],[]))]
+FM.vsP=fromList [GL (LV (VR (Id "O",VO,WA),[],[]))]
 FM.kvsP=fromList []
-M.vsC=fromList [GL (LV (VR (Id "M",VO,WD "n"),[],[])),GL (LV (VR (Id "S",VO,WD "n"),[],[]))]
-M.vsC'=fromList [GL (LV (VR (Id "M",VO,WD "n"),[],[])),GL (LV (VR (Id "S",VO,WD "n"),[],[]))]
-FM.kslP'=[GL (LV (VR (Id "O",VO,WD "m"),[],[]))]
-KM.lvP=LV (VR (Id "O",VO,WD "m"),[],[])
-KM.expKnwn=Just (KS (fromList [GL (LV (VR (Id "M",VO,WD "m"),[],[])),GL (LV (VR (Id "S",VO,WD "m"),[],[]))]) (fromList [VR (Id "ok",VO,WD "m"),VR (Id "x",VO,WD "m"),VR (Id "y",VO,WD "m"),VR (Id "z",VO,WD "m")]) 4,[],[])
-EM.xP=(fromList [VR (Id "ok",VO,WD "m"),VR (Id "x",VO,WD "m"),VR (Id "y",VO,WD "m"),VR (Id "z",VO,WD "m")],[],[],4)
+M.vsC=fromList [GL (LV (VR (Id "O",VO,WA),[],[]))]
+M.vsC'=fromList [GL (LV (VR (Id "O",VO,WA),[],[]))]
+FM.kslP'=[]
+FM.uvsP=fromList []
+UM.uvsP=fromList []
+FM.klCommonP=[GL (LV (VR (Id "O",VO,WA),[],[]))]
+FM.vsC''=fromList []
+KMa.vsC=fromList []
+UM.vsC=fromList []
+FM.ulsP=fromList []
+UM.ulsP=fromList []
+
+M.vsP=fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]
+M.vsC=fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]
+M.vsP'=fromList []
+FM.vsP=fromList []
+FM.kvsP=fromList []
+M.vsC'=fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]
+FM.kslP'=[]
+FM.uvsP=fromList []
+UM.uvsP=fromList []
 FM.klCommonP=[]
-FM.vsC''=fromList [GL (LV (VR (Id "M",VO,WD "n"),[],[])),GL (LV (VR (Id "S",VO,WD "n"),[],[]))]
-KMb.vsC=fromList [GL (LV (VR (Id "M",VO,WD "n"),[],[])),GL (LV (VR (Id "S",VO,WD "n"),[],[]))]
-EM.vsC=fromList [GL (LV (VR (Id "M",VO,WD "n"),[],[])),GL (LV (VR (Id "S",VO,WD "n"),[],[]))]
-EM.vC=GL (LV (VR (Id "M",VO,WD "n"),[],[]))
-EM.xC=(fromList [VR (Id "ok",VO,WD "n")],[],[],1)
-*** Exception: user error (vsShrinkPatnMatch: cannot shrink rigid pattern expansion)
+FM.vsC''=fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]
+KMa.vsC=fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]
+UM.vsC=fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]
+FM.ulsP=fromList []
+UM.ulsP=fromList []
+*** Exception: user error (vsUnknownMatch: not enough general pattern variables
+vsC  = fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]
+uvsP = fromList []
+ulsP = fromList []
+bind:
+      BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))
+                   ,((Id "Q",VP),BV (VR (Id "Q",VP,WS)))]
+         ,fromList [("m","m")]
+         ,fromList [((Id "O",VO,[],[])
+                    ,BS (fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]))])
+)
+
+tMatch [vtS_Design] emptyBinding S.empty S.empty (endO2mid "m" p) (endO2mid "m" p)
+P.[,O̅_m/O̅'] :: P.[,O̅_m/O̅']
+
+{ (P.𝓟) ↦ P. }
+{ m ↦ m }
+{ (O$.𝓞) ↦ {O̅} }
+
+M.vsP=fromList [GL (LV (VR (Id "O",VO,WA),[],[]))]
+M.vsP'=fromList [GL (LV (VR (Id "O",VO,WA),[],[]))]
+FM.vsP=fromList [GL (LV (VR (Id "O",VO,WA),[],[]))]
+FM.kvsP=fromList []
+M.vsC=fromList [GL (LV (VR (Id "O",VO,WA),[],[]))]
+M.vsC'=fromList [GL (LV (VR (Id "O",VO,WA),[],[]))]
+FM.kslP'=[]
+FM.uvsP=fromList []
+UM.uvsP=fromList []
+FM.klCommonP=[GL (LV (VR (Id "O",VO,WA),[],[]))]
+FM.vsC''=fromList []
+KMa.vsC=fromList []
+UM.vsC=fromList []
+FM.ulsP=fromList []
+UM.ulsP=fromList []
+BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [("m","m")],fromList [((Id "O",VO,[],[]),BS (fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]))])
+
+tMatch [vtS_Design] emptyBinding S.empty S.empty (begO2mid "m" p) (begO2mid "m" p)
+P.[,O̅_m/O̅] :: P.[,O̅_m/O̅]
+
+{ (P.𝓟) ↦ P. }
+{ m ↦ m }
+{ (O$.𝓞) ↦ {O̅} }
+
+
+M.vsP=fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]
+M.vsP'=fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]
+FM.vsP=fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]
+FM.kvsP=fromList []
+M.vsC=fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]
+M.vsC'=fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]
+FM.kslP'=[]
+FM.uvsP=fromList []
+UM.uvsP=fromList []
+FM.klCommonP=[GL (LV (VR (Id "O",VO,WB),[],[]))]
+FM.vsC''=fromList []
+KMa.vsC=fromList []
+UM.vsC=fromList []
+FM.ulsP=fromList []
+UM.ulsP=fromList []
+BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [("m","m")],fromList [((Id "O",VO,[],[]),BS (fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]))])
+
 
 ---

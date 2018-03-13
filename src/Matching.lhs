@@ -1982,7 +1982,12 @@ vsUnknownMatch :: MonadPlus mp
                -> mp Binding
 vsUnknownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
  | S.size (dbg "UM.ulsP=" ulsP) == 0 && (uvsPs < stdCs || S.size lstC > 0)
-   = fail "vsUnknownMatch: not enough general pattern variables"
+   = fail $ unlines
+       [ "vsUnknownMatch: not enough general pattern variables"
+       , "vsC  = " ++ show vsC
+       , "uvsP = " ++ show uvsP
+       , "ulsP = " ++ show ulsP
+       , "bind:", show bind ]
  | uvsPs > stdCs
    = fail "vsUnknownMatch: not enough standard candidate variables"
  | otherwise

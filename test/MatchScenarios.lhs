@@ -567,6 +567,20 @@ test_composition
         @?= [ bindVV gvp gvp $ bindVV gvq gvq $
               bindLS gO gO $ bindLS gO' gO' $ bindLS gOm gOm $
               emptyBinding] )
+
+    , testCase "P[Om/O'] matches itself"
+       (tMatch [vtS_Design] emptyBinding S.empty S.empty
+                                            (endO2mid "m" p) (endO2mid "m" p)
+        @?= [ bindVV gvp gvp $ bindVV gvq gvq $
+              bindLS gO gO $ bindLS gO' gO' $ bindLS gOm gOn $
+              emptyBinding] )
+    , testCase "P[Om/O] matches itself"
+       (tMatch [vtS_Design] emptyBinding S.empty S.empty
+                                            (begO2mid "m" p) (begO2mid "m" p)
+        @?= [ bindVV gvp gvp $ bindVV gvq gvq $
+              bindLS gO gO $ bindLS gO' gO' $ bindLS gOm gOn $
+              emptyBinding] )
+
     , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when n replaces m"
        (tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAqn eOpAqm
         @?= [ bindVV gvp gvp $ bindVV gvq gvq $

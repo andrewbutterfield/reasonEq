@@ -231,8 +231,12 @@ tMatch' vts bind cbvs pbvs (Bind tkC nC vsC tC) (Bind tkP nP vsP tP)
   | tkP == tkC && nC == nP
     =  do let cbvs' = vsC `addBoundVarSet` cbvs
           let pbvs' = vsP `addBoundVarSet` pbvs
-          bindT  <-  tMatch vts bind cbvs' pbvs' tC tP
-          vsMatch vts bindT cbvs' pbvs' vsC vsP
+          bindT  <-  tMatch vts bind (dbg "tM'.cbvs'=" cbvs') (dbg "tM'.pbvs'=" pbvs') tC tP
+          vsMatch vts (dbg "tM'.bindT=" bindT)
+                      (dbg "tM'.cbvs'=" cbvs')
+                      (dbg "tM'.pbvs'=" pbvs')
+                      (dbg "tM'.vsC=" vsC)
+                      (dbg "tM'.vsP=" vsP)
 \end{code}
 
 \subsubsection{Lambda Term-Pattern (\texttt{Lam})}
@@ -1366,8 +1370,8 @@ vsMatch :: MonadPlus mp => [VarTable] -> Binding -> CBVS -> PBVS
         -> VarSet -> VarSet -> mp Binding
 -- vsC `subset` cbvs && vsP `subset` pbvc
 vsMatch vts bind cbvs pbvc vsC vsP
-  = do (vsC',vsP') <- applyBindingsToSets bind (dbg "M.vsC=" vsC) (dbg "M.vsP=" vsP)
-       vsFreeMatch vts bind cbvs pbvc (dbg "M.vsC'=" vsC') (dbg "M.vsP'=" vsP')
+  = do (vsC',vsP') <- applyBindingsToSets bind vsC vsP
+       vsFreeMatch vts bind cbvs pbvc vsC' vsP'
 \end{code}
 
 \subsubsection{Applying Bindings to Sets}
@@ -1462,21 +1466,19 @@ vsFreeMatch :: MonadPlus mp
               -> VarSet -> VarSet
               -> mp Binding
 vsFreeMatch vts bind cbvs pbvs vsC vsP
-  = let (uvsP,kvsP,ulsP,klsP) = vsClassify vts $ dbg "FM.vsP=" vsP in
-    if (dbg "FM.kvsP=" kvsP) `withinS` (dbg "FM.vsC=" vsC)
+  = let (uvsP,kvsP,ulsP,klsP) = vsClassify vts vsP in
+    if kvsP `withinS` vsC
     then do let kvlC = stdVarsOf (vsC `intsctSl` kvsP)
             let kvlP = stdVarsOf $ S.toList kvsP
             bind' <- bindVarsToVars (zip kvlP kvlC) bind
             let vsC' = vsC `removeS` kvsP
             let klCommonP = klsP `intsctSl` vsC'
             let klCommonC = vsC' `intsctSl` klsP
-            bind'' <- bindLVarSTuples (zip (listVarsOf klCommonP) $ listVarsOf klCommonC) bind'
+            bind'' <- bindLVarSTuples
+                       (zip (listVarsOf klCommonP) $ listVarsOf klCommonC) bind'
             let klsP' = klsP `removeSl` vsC'
-            let vsC'' = S.fromList ((S.toList vsC') `removeL` (dbg "FM.klCommonP=" klCommonP))
-            vsKnownMatch vts bind'' cbvs pbvs
-               (dbg "FM.vsC''=" vsC'')
-               (dbg "FM.uvsP=" uvsP,dbg "FM.ulsP=" ulsP)
-               $ dbg "FM.kslP'=" klsP'
+            let vsC'' = S.fromList ((S.toList vsC') `removeL` klCommonP)
+            vsKnownMatch vts bind'' cbvs pbvs vsC'' (uvsP,ulsP) klsP'
     else fail "vsFreeMatch: known vars missing."
 \end{code}
 
@@ -1529,7 +1531,7 @@ vsKnownMatch :: MonadPlus mp
 Simplest case---no more known pattern list-variables
 \begin{code}
 vsKnownMatch vts bind cbvs pbvs vsC (uvsP,ulsP) []
-  = vsUnknownMatch vts bind cbvs pbvs (dbg "KMa.vsC=" vsC) (uvsP,ulsP)
+  = vsUnknownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
 \end{code}
 
 
@@ -1538,7 +1540,7 @@ vsKnownMatch vts bind cbvs pbvs vsC (uvsP,ulsP) []
 vsKnownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
                                 (kvP@(LstVar lvP@(LVbl vP _ _)):kslP)
 -- lvP is known
-  = case dbg "KM.expKnwn=" $ expandKnown vts $ dbg "KM.lvP=" lvP of
+  = case expandKnown vts lvP of
       Just (AbstractSet, uis, ujs)
         | kvP `insideS` vsC
           -> do bind' <- bindLVarToVSet lvP (S.singleton kvP) bind
@@ -1553,10 +1555,10 @@ vsKnownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
                   <- vsExpandMatch
                       (vts, lvarClass lvP, varWhen vP)  -- static context
                       (bind, S.empty, S.empty)          -- dynamic context
-                      (dbg "KMb.vsC=" vsC)
+                      vsC
                       (vsX,uis,ujs,S.size vsX-length uis) -- pattern expansion
-                bind'' <- bindLVarToVSet lvP (dbg "KM.vsC1=" vsC1) $ dbg "KM.bind'=" bind'
-                vsKnownMatch vts (dbg "KM.bind''=" bind'') cbvs pbvs (dbg "KM.vsC2=" vsC2) (uvsP,ulsP) kslP
+                bind'' <- bindLVarToVSet lvP vsC1 bind'
+                vsKnownMatch vts bind'' cbvs pbvs vsC2 (uvsP,ulsP) kslP
       _ -> fail "vsMatch: pattern-list variable is not set-valued."
 {-
     = do
@@ -1845,14 +1847,14 @@ vsExpandMatch :: MonadPlus mp
 
 \begin{code}
 vsExpandMatch sctxt@(vts,bc,bw) dctxt@(bind,kappa,ell) vsC xP@(xs,uv,ul,_)
-  | emptyE (dbg "EM.xP=" xP) || (inexactE xP && null vsC)
+  | emptyE xP || (inexactE xP && null vsC)
      = do bind' <-  bindLeftOvers sctxt bind ellxs uv ul
           return (bind',kappa,vsC)
-  | not $ null $ dbg "EM.vsC=" vsC
+  | not $ null vsC
      =  let (vC,vsC') = choose vsC in
-        do xC <- expand $ dbg "EM.vC=" vC
-           (bind',ell',xP') <- vsExpand2Match sctxt dctxt (dbg "EM.xC=" xC) xP
-           vsExpandMatch sctxt (dbg "EM.bind'=" bind',S.insert vC kappa,ell') vsC' xP'
+        do xC <- expand vC
+           (bind',ell',xP') <- vsExpand2Match sctxt dctxt xC xP
+           vsExpandMatch sctxt (bind',S.insert vC kappa,ell') vsC' xP'
   | otherwise = fail "vlExpandMatch: null candidate for exact, non-empty pattern."
 
   where
@@ -1981,7 +1983,7 @@ vsUnknownMatch :: MonadPlus mp
                -> (VarSet, VarSet)
                -> mp Binding
 vsUnknownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
- | S.size (dbg "UM.ulsP=" ulsP) == 0 && (uvsPs < stdCs || S.size lstC > 0)
+ | S.size ulsP == 0 && (uvsPs < stdCs || S.size lstC > 0)
    = fail $ unlines
        [ "vsUnknownMatch: not enough general pattern variables"
        , "vsC  = " ++ show vsC
@@ -1997,8 +1999,8 @@ vsUnknownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
         vsUnkLVarMatch vts bind' cbvs pbvs
            (stdC2 ++ S.toList lstC) (listVarsOf $ S.toList ulsP)
  where
-   uvsPs = S.size $ dbg "UM.uvsP=" uvsP
-   (uvsC,kvsC,ulsC,klsC) = vsClassify vts (dbg "UM.vsC=" vsC)
+   uvsPs = S.size uvsP
+   (uvsC,kvsC,ulsC,klsC) = vsClassify vts vsC
    stdC = uvsC `S.union` kvsC
    stdCs = S.size stdC
    lstC = ulsC `S.union` klsC
@@ -2049,7 +2051,7 @@ If so, we bind to them, and remove them from the sets of candidates.
 vsExpandMatch' vts bind cbvs pbvs vsC@(uvsC,kvsC,ulsC,klsC) klP@(LstVar klvP)
  = case expandKnown vts klvP of
     Just kX@(KnownVarSet vsK vsX xSize, uis, ujs)
-      -> if (dbg "vsK=" vsK) `S.isSubsetOf` (dbg "ksC=" ksC)
+      -> if vsK `S.isSubsetOf` ksC
          then do bind' <- bindLVarToVSet klvP (ksC `S.intersection` vsK) bind
                  return (bind',(uvsC,kvsC S.\\ vsK,ulsC,klsC S.\\ vsK))
          else error "vsExpandMatch': NYFI"
@@ -2093,7 +2095,7 @@ Then we will attempt the list-variable matching.
 \begin{code}
  | otherwise
     = do (bind',svsC',lvsP') <- vsFreeStdMatch vts bind cbvs pbvs vsC vsP
-         vsFreeLstMatch vts (dbg "vsFM.bind'=" bind') cbvs pbvs (dbg "vsFM.svsC'=" svsC') (dbg "vsFM.lvsP'=" lvsP')
+         vsFreeLstMatch vts bind' cbvs pbvs svsC' lvsP'
 \end{code}
 
 Once more, we need to check for list-variables that are known,
@@ -2315,9 +2317,9 @@ vsKnownMatch' :: MonadPlus mp
 -- not null vsC
 vsKnownMatch' vts bind cbvs pbvs vsC vsK gvP@(LstVar lvP) -- ListVar !
  | not $ S.null gvCs
-    = do bind' <- bindLVarToVSet lvP gvCs (dbg "vsKM.bind=" bind)
+    = do bind' <- bindLVarToVSet lvP gvCs bind
          return (bind',vsC `removeS` gvCs)
- | (dbg "vsKM.vsK=" vsK) `withinS` vsC
+ | vsK `withinS` vsC
     = do bind' <- bindLVarToVSet lvP (vsC `intsctS` vsK) bind
          return (bind',vsC `removeS` vsK)
  | otherwise -- quick matches don't work, need to go to full expansions
@@ -2329,7 +2331,7 @@ vsKnownMatch' vts bind cbvs pbvs vsC vsK gvP@(LstVar lvP) -- ListVar !
          bind' <- bindLVarToVSet lvP vsC1 bind
          return (bind',vsC2)
  where
-   gvCs = (dbg "vsKM.vsC=" vsC) `intsctS` S.singleton (dbg "vsKM.gvP=" gvP)
+   gvCs = vsC `intsctS` S.singleton gvP
    gvC  = S.elemAt 0 gvCs
 \end{code}
 

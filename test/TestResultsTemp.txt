@@ -7,18 +7,25 @@ vtS_Design
 
 tM'.pbvs'=fromList [GL (LV (VR (Id "O",VO,WD "m"),[],[]))]
 
-*** Exception: user error (vsUnknownMatch: not enough general pattern variables
+M.vsP=fromList [GL (LV (VR (Id "O",VO,WA),[],[]))]
+M.vsP'=fromList [GL (LV (VR (Id "O",VO,WA),[],[]))]
+M.vsC=fromList [GL (LV (VR (Id "O",VO,WA),[],[]))]
+M.vcC'=fromList [GL (LV (VR (Id "O",VO,WA),[],[]))]
+FM.vsC''=fromList []
+KMa.vsC=fromList []
 
+M.vsP=fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]
+M.vsC=fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]
+M.vsP'=fromList []
+M.vcC'=fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]
+FM.vsC''=fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]
+KMa.vsC=fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]
+*** Exception: user error (vsUnknownMatch: not enough general pattern variables
 vsC  = fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]
 uvsP = fromList []
 ulsP = fromList []
 bind:
-BD (fromList
-      [((Id "P",VP),BV (VR (Id "P",VP,WS)))
-      ,((Id "Q",VP),BV (VR (Id "Q",VP,WS)))]
-   ,fromList [("m","m")]
-   ,fromList
-      [((Id "O",VO,[],[]),BS (fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]))])
+BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS))),((Id "Q",VP),BV (VR (Id "Q",VP,WS)))],fromList [("m","m")],fromList [((Id "O",VO,[],[]),BS (fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]))])
 )
 
 ---

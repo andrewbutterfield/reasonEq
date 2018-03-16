@@ -231,12 +231,8 @@ tMatch' vts bind cbvs pbvs (Bind tkC nC vsC tC) (Bind tkP nP vsP tP)
   | tkP == tkC && nC == nP
     =  do let cbvs' = vsC `addBoundVarSet` cbvs
           let pbvs' = vsP `addBoundVarSet` pbvs
-          bindT  <-  tMatch vts bind (dbg "tM'.cbvs'=" cbvs') (dbg "tM'.pbvs'=" pbvs') tC tP
-          vsMatch vts (dbg "tM'.bindT=" bindT)
-                      (dbg "tM'.cbvs'=" cbvs')
-                      (dbg "tM'.pbvs'=" pbvs')
-                      (dbg "tM'.vsC=" vsC)
-                      (dbg "tM'.vsP=" vsP)
+          bindT  <-  tMatch vts bind cbvs' pbvs' tC tP
+          vsMatch vts bindT cbvs' pbvs' vsC vsP
 \end{code}
 
 \subsubsection{Lambda Term-Pattern (\texttt{Lam})}
@@ -1390,10 +1386,10 @@ applyBindingsToSets'
 
 Pattern list (set) empty, return the leftovers
 \begin{code}
-applyBindingsToSets' bind vlP' vsC [] = return (vsC,S.fromList vlP')
+applyBindingsToSets' bind vlP vsC [] = return (vsC,S.fromList vlP)
 \end{code}
 
-First pattern variable is standard:
+When the first pattern variable is standard:
 \begin{code}
 applyBindingsToSets' bind vlP' vsC (gP@(StdVar vP):vlP)
  = case lookupBind bind vP of
@@ -1401,19 +1397,19 @@ applyBindingsToSets' bind vlP' vsC (gP@(StdVar vP):vlP)
     Just (BindTerm _) -> fail "vsMatch: pattern var already bound to term."
     Just (BindVar vB)
      -> let gB = StdVar vB in
-        if gB `S.member` vsC
+        if gB `insideS` vsC
         then applyBindingsToSets' bind vlP' (S.delete gB vsC) vlP
         else fail "vsMatch: std-pattern var's binding not in candidate set."
 \end{code}
 
-First pattern variable is a list-variable:
+When the first pattern variable is a list-variable:
 \begin{code}
 applyBindingsToSets' bind vlP' vsC (gP@(LstVar lvP):vlP)
  = case lookupLstBind bind lvP of
     Nothing -> applyBindingsToSets' bind (gP:vlP') vsC vlP
     Just (BindSet vsB)
      -> if vsB `withinS` vsC
-        then applyBindingsToSets' bind vlP' (vsC `intsctS` vsB) vlP
+        then applyBindingsToSets' bind vlP' (vsC `removeS` vsB) vlP
         else fail "vsMatch: pattern list-var's binding not in candidate set."
     _ -> fail "vsMatch: list-variable bound to variable-list.c"
 \end{code}
@@ -1974,8 +1970,11 @@ All that now remains is to match unknown patterns
 against the leftover candidates.
 We have the following constraints of the sizes of the pattern
 and candidate sets:
-\[
-\]
+\begin{eqnarray*}
+  vsC &=& stdC \uplus lstC
+\\ \#uvsP &\leq& \#stdC
+\\ \#ulsP = 0 &\implies& \#uvsP = \#stdC \land lstC = \emptyset
+\end{eqnarray*}
 \begin{code}
 vsUnknownMatch :: MonadPlus mp
                => [VarTable] -> Binding -> CBVS -> PBVS
@@ -1993,6 +1992,7 @@ vsUnknownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
  | uvsPs > stdCs
    = fail "vsUnknownMatch: not enough standard candidate variables"
  | otherwise
+   -- could add non-determinism here.
    = do let (stdC1,stdC2) = splitAt uvsPs $ S.toList stdC
         bind' <- bindVarsToVars (zip (stdVarsOf $ S.toList uvsP)
                                      (stdVarsOf stdC1)) bind

@@ -15,10 +15,16 @@
 
 \def\reasonEq{\textit{\textsf{reasonEq}}}
 
-\author{Andrew Butterfield}
+\author{
+Andrew Butterfield
+\\
+{\small \copyright\ 2017--18}
+}
 \title{
-  \reasonEq: Computer-Aided Equational Reasoning%
-  \thanks{\copyright Andrew Butterfeld 2017--18}
+  \reasonEq: Computer-Aided Equational Reasoning
+}
+\date{
+\today
 }
 
 \input{doc/defTables}
@@ -28,43 +34,39 @@
 \maketitle
 \tableofcontents
 
+\chapter{\reasonEq\ Application}
+
+\input{app/Main.lhs}
+
 \chapter{\reasonEq\ Libraries}
 
-% \newpage
-% \input{src/LexBase.lhs}
-% \newpage
-% \input{src/Variables.lhs}
-% \newpage
-% \input{src/AST.lhs}
-% \newpage
-% \input{src/VarData.lhs}
-% \newpage
-% \input{src/Binding.lhs}
-% \newpage
-% \input{src/Instantiate.lhs}
+\input{src/LexBase.lhs}
+\newpage
+\input{src/Variables.lhs}
+\newpage
+\input{src/AST.lhs}
+\newpage
+\input{src/VarData.lhs}
+\newpage
+\input{src/Binding.lhs}
+\newpage
+\input{src/Instantiate.lhs}
 \newpage
 \input{src/Matching.lhs}
-% \newpage
-% \input{src/Syntax.lhs}
-% \newpage
-% \input{src/Builder.lhs}
+\newpage
+\input{src/Syntax.lhs}
+\newpage
+\input{src/Builder.lhs}
 
 \chapter{\reasonEq\ Tests}
 
-% \newpage
-% \input{test/TestRendering.lhs}
-% \newpage
-% \input{test/MatchScenarios.lhs}
-
-\chapter{\reasonEq\ Application}
-
-% \newpage
-% \input{app/Main.lhs}
+\input{test/TestRendering.lhs}
+\newpage
+\input{test/MatchScenarios.lhs}
 
 \chapter{General Libraries}
 
-% \newpage
-% \input{src/Utilities.lhs}
+\input{src/Utilities.lhs}
 
 \bibliographystyle{alpha}
 \bibliography{MAIN}
@@ -73,6 +75,6 @@
 
 \chapter{Principles}
 
-% \input{doc/Matching-Features}
+\input{doc/Matching-Features}
 
 \end{document}

@@ -4,6 +4,7 @@ import Test.Framework as TF (defaultMain, Test)
 import LexBase
 import Variables
 import AST
+import SideCond
 import Binding
 import Syntax
 import Builder
@@ -19,6 +20,7 @@ tests
  =  int_tst_LexBase
  ++ int_tst_Variables
  ++ int_tst_AST
+ ++ int_tst_SideCond
  ++ int_tst_Binding
  ++ int_tst_Syntax
  ++ int_tst_Builder

@@ -33,10 +33,10 @@ library
                      , time
                      -- we need to support internal tests for some modules
                      , HUnit
-                     , QuickCheck
+                     -- , QuickCheck
                      , test-framework
                      , test-framework-hunit
-                     , test-framework-quickcheck2
+                     -- , test-framework-quickcheck2
   default-language:    Haskell2010
 
 executable req
@@ -57,10 +57,10 @@ test-suite reasonEq-test
                      , containers
                      , reasonEq
                      , HUnit
-                     , QuickCheck
+                     -- , QuickCheck
                      , test-framework
                      , test-framework-hunit
-                     , test-framework-quickcheck2
+                     -- , test-framework-quickcheck2
   other-modules:       VarDataTest
                      , MkTestBind
                      , TestRendering

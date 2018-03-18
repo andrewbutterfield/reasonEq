@@ -42,7 +42,7 @@ import LexBase
 import Test.HUnit
 import Test.Framework as TF (defaultMain, testGroup, Test)
 import Test.Framework.Providers.HUnit (testCase)
-import Test.Framework.Providers.QuickCheck2 (testProperty)
+--import Test.Framework.Providers.QuickCheck2 (testProperty)
 \end{code}
 
 \subsection{Syntax Introduction}

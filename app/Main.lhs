@@ -62,6 +62,7 @@ repl args = runInputT defaultSettings
 banner :: InputT IO ()
 banner = outputStrLn $ unlines
  [ "Welcome to the "++name++" "++version++" REPL"
+ , "Type '?' for help."
  ]
 
 loop :: REqState -> InputT IO ()
@@ -69,11 +70,14 @@ loop reqs = do
    minput <- getInputLine ("REq"++summariseREqS reqs++"- ")
    case minput of
        Nothing -> outputStrLn "Input Stop"
-       Just "quit" -> outputStrLn "Goodbye!"
+       Just "quit" -> quit reqs
        Just input -> docommand reqs (words input) >>= loop
+
+-- may ask for user confirmation, amd save? stuff..
+quit reqs = outputStrLn "Goodbye!"
 \end{code}
 
-REPL Commands:
+REPL command repository types and lookup:
 \begin{code}
 type Command = [String] -> REqState -> InputT IO REqState
 type CommDescr = ( String     -- command name
@@ -86,7 +90,10 @@ clookup _ []  =  Nothing
 clookup s (cd@(n,_,_,_):rest)
  | s == n     =  Just cd
  | otherwise  =  clookup s rest
+\end{code}
 
+Command dispatch:
+\begin{code}
 docommand reqs [] = return reqs
 docommand reqs ("?":what)
  = help reqs what
@@ -94,7 +101,10 @@ docommand reqs (cmd:args)
  = case clookup cmd commands of
      Nothing -> outputStrLn ("unknown cmd: '"++cmd++"'") >> return reqs
      Just (_,_,_,c)  ->  c args reqs
+\end{code}
 
+Command Help
+\begin{code}
 help reqs []
   = do outputStrLn "Commands:"
        outputStrLn "?     -- this help message"
@@ -108,10 +118,17 @@ help reqs (what:_)
   = case clookup what commands of
      Nothing -> outputStrLn ("unknown cmd: '"++what++"'") >> return reqs
      Just (_,_,lh,_) -> outputStrLn lh >> return reqs
+\end{code}
 
+\newpage
+The command repository:
+\begin{code}
+commands :: Commands
+commands = [cmdX]
 
-commands :: [CommDescr]
-commands = [("X","'x'","the msyterious 'X' !",xcomm)]
-
-xcomm _ reqs = outputStrLn "X! Whoo! X!" >> return (reqs+1)
+cmdX = ( "X"
+       , "'x'"
+       , "the msyterious 'X' !"
+       ,xcomm )
+     where xcomm _ reqs = outputStrLn "X! Whoo! X!" >> return (reqs+1)
 \end{code}

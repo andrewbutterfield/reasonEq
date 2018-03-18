@@ -99,7 +99,7 @@ docommand reqs ("?":what)
  = help reqs what
 docommand reqs (cmd:args)
  = case clookup cmd commands of
-     Nothing -> outputStrLn ("unknown cmd: '"++cmd++"'") >> return reqs
+     Nothing -> outputStrLn ("unknown cmd: '"++cmd++"', '?' for help.") >> return reqs
      Just (_,_,_,c)  ->  c args reqs
 \end{code}
 

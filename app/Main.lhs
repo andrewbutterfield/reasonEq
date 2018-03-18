@@ -38,6 +38,8 @@ type REqState = Int
 
 initState :: [String] -> IO REqState
 initState args = return (42+1000000*length args)
+
+summariseREqS reqs = '.':show reqs
 \end{code}
 
 
@@ -64,20 +66,52 @@ banner = outputStrLn $ unlines
 
 loop :: REqState -> InputT IO ()
 loop reqs = do
-   minput <- getInputLine ("reasonEq["++show reqs++"]- ")
+   minput <- getInputLine ("REq"++summariseREqS reqs++"- ")
    case minput of
-       Nothing -> outputStrLn "Input Failure"
+       Nothing -> outputStrLn "Input Stop"
        Just "quit" -> outputStrLn "Goodbye!"
-       Just input -> docommand reqs input >>= loop
+       Just input -> docommand reqs (words input) >>= loop
 \end{code}
 
 REPL Commands:
 \begin{code}
-type Command = [String] -> InputT IO REqState
-type Commands = Map String (Command, String, String)
+type Command = [String] -> REqState -> InputT IO REqState
+type CommDescr = ( String     -- command name
+                 , String     -- short help for this command
+                 , String     -- long help for this command
+                 , Command )  -- command function
+type Commands = [CommDescr]
 
-docommand reqs "?"
- = outputStrLn "help not yet done" >> return reqs
-docommand reqs cmd
- = outputStrLn (cmd ++ " not yet done") >> return reqs
+clookup _ []  =  Nothing
+clookup s (cd@(n,_,_,_):rest)
+ | s == n     =  Just cd
+ | otherwise  =  clookup s rest
+
+docommand reqs [] = return reqs
+docommand reqs ("?":what)
+ = help reqs what
+docommand reqs (cmd:args)
+ = case clookup cmd commands of
+     Nothing -> outputStrLn ("unknown cmd: '"++cmd++"'") >> return reqs
+     Just (_,_,_,c)  ->  c args reqs
+
+help reqs []
+  = do outputStrLn "Commands:"
+       outputStrLn "?     -- this help message"
+       outputStrLn "? cmd -- help for 'cmd'"
+       outputStrLn "quit  -- exit program."
+       outputStrLn $ unlines $ map shorthelp commands
+       return reqs
+  where shorthelp (cmd,sh,_,_) = cmd ++ "  -- " ++ sh
+
+help reqs (what:_)
+  = case clookup what commands of
+     Nothing -> outputStrLn ("unknown cmd: '"++what++"'") >> return reqs
+     Just (_,_,lh,_) -> outputStrLn lh >> return reqs
+
+
+commands :: [CommDescr]
+commands = [("X","'x'","the msyterious 'X' !",xcomm)]
+
+xcomm _ reqs = outputStrLn "X! Whoo! X!" >> return (reqs+1)
 \end{code}

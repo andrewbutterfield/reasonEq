@@ -12,8 +12,11 @@ import System.Console.Haskeline
 import Control.Monad.IO.Class
 import Data.Map (Map)
 import qualified Data.Map as M
-
 import Data.List
+
+import NiceSymbols hiding (help)
+import AST
+import VarData
 \end{code}
 
 \begin{code}
@@ -33,15 +36,36 @@ main
 
 \newpage
 \subsubsection{System State}
+
+Currently in prototyping mode,
+so this is one large record.
+Later we will nest things.
+In order to support nested records properly,
+for every record field \texttt{f :: Rec -> T},
+we define \texttt{f\_\_ :: (T -> T) -> Rec -> Rec}
+and derive \texttt{f\_ :: T -> Rec -> Rec}.
 \begin{code}
-type REqState = Int
-
-initState :: [String] -> IO REqState
-initState args = return (42+1000000*length args)
-
-summariseREqS reqs = '.':show reqs
+data REqState
+ = ReqState {
+      known :: [VarTable]
+    , laws :: [Term]
+    , goal :: Term
+    }
+known__ f r = r{known = f $ known r} ; known_  = known__ . const
+laws__  f r = r{laws  = f $ laws r}  ; laws_   = laws__  . const
+goal__  f r = r{goal  = f $ goal r}  ; goal_   = goal__  . const
 \end{code}
 
+\begin{code}
+initState :: [String] -> IO REqState
+initState args = return $
+  ReqState
+    []                           -- known :: [VarTable]
+    []                           -- laws :: [Term]
+    (Val P $ Txt $ concat args)  -- goal :: Term
+
+summariseREqS reqs = show $ goal reqs
+\end{code}
 
 \newpage
 \subsubsection{GUI Top-Level}
@@ -67,11 +91,11 @@ banner = outputStrLn $ unlines
 
 loop :: REqState -> InputT IO ()
 loop reqs = do
-   minput <- getInputLine ("REq"++summariseREqS reqs++"- ")
+   minput <- getInputLine (summariseREqS reqs++' ':_equiv++" ")
    case minput of
-       Nothing -> outputStrLn "Input Stop"
-       Just "quit" -> quit reqs
-       Just input -> docommand reqs (words input) >>= loop
+       Nothing      ->  quit reqs
+       Just "quit"  ->  quit reqs
+       Just input   ->  docommand reqs (words input) >>= loop
 
 -- may ask for user confirmation, amd save? stuff..
 quit reqs = outputStrLn "Goodbye!"
@@ -107,9 +131,9 @@ Command Help
 \begin{code}
 help reqs []
   = do outputStrLn "Commands:"
-       outputStrLn "?     -- this help message"
-       outputStrLn "? cmd -- help for 'cmd'"
-       outputStrLn "quit  -- exit program."
+       outputStrLn "'?'     -- this help message"
+       outputStrLn "'? cmd' -- help for 'cmd'"
+       outputStrLn "Control-D or 'quit'  -- exit program."
        outputStrLn $ unlines $ map shorthelp commands
        return reqs
   where shorthelp (cmd,sh,_,_) = cmd ++ "  -- " ++ sh
@@ -126,9 +150,14 @@ The command repository:
 commands :: Commands
 commands = [cmdX]
 
-cmdX = ( "X"
-       , "'x'"
-       , "the msyterious 'X' !"
-       ,xcomm )
-     where xcomm _ reqs = outputStrLn "X! Whoo! X!" >> return (reqs+1)
+cmdX
+  = ( "X"
+    , "'x'"
+    , "the mysterious 'X' !"
+    , xcomm )
+  where
+     xcomm _ reqs = do outputStrLn "X! Whoo! X!"
+                       return (goal__ addX reqs)
+     addX (Val P (Txt s)) = Val P $ Txt ('X':s)
+     addX t = t
 \end{code}

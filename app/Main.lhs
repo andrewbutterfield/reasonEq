@@ -58,8 +58,8 @@ and derive \texttt{f\_ :: T -> Rec -> Rec}.
 data REqState
  = ReqState {
       known :: [VarTable]
-    , laws :: [(Term,SideCond)]
-    , goal :: (Term,SideCond)
+    , laws :: [(String,Term,SideCond)]
+    , goal :: Maybe (String,Term,SideCond)
     }
 known__ f r = r{known = f $ known r} ; known_  = known__ . const
 laws__  f r = r{laws  = f $ laws r}  ; laws_   = laws__  . const
@@ -68,17 +68,24 @@ goal__  f r = r{goal  = f $ goal r}  ; goal_   = goal__  . const
 
 \begin{code}
 initState :: [String] -> IO REqState
-initState args
-  = return $
-      ReqState
-      []                                  -- known :: [VarTable]
-      []                                  -- laws :: [(Term,SideCond)]
-      (Val P $ Txt $ concat args, scTrue) -- goal :: (Term,SideCond)
+initState []       =  return $ ReqState [] [] Nothing
+initState ["dev"]  =  return $ ReqState [propKnown] propLaws Nothing
 
 summariseREqS :: REqState -> String
 summariseREqS reqs
- = let (t,sc) = goal reqs
-   in  intcalNN "," [trTerm 0 t,trSideCond sc]
+ = intcalNN ":" [ show $ length $ known reqs
+                , show $ length $ laws reqs
+                , case goal reqs of
+                   Nothing -> ""
+                   _ -> "!"
+                ]
+\end{code}
+
+Showing laws:
+\begin{code}
+showLaws lws = unlines $ map showLaw $ lws
+ where
+   showLaw (n,t,sc) = n ++ " " ++ trTerm 0 t ++ " ["++trSideCond sc++"]"
 \end{code}
 
 \newpage
@@ -158,11 +165,12 @@ help reqs (what:_)
      Just (_,_,lh,_) -> outputStrLn lh >> return reqs
 \end{code}
 
+
 \newpage
 The command repository:
 \begin{code}
 commands :: Commands
-commands = [cmdX]
+commands = [cmdShow,cmdX]
 
 cmdX
   = ( "X"
@@ -171,7 +179,24 @@ cmdX
     , xcomm )
   where
      xcomm _ reqs = do outputStrLn "X! Whoo! X!"
-                       return (goal__ addX reqs)
-     addX (Val P (Txt s),sc) = (Val P $ Txt ('X':s),sc)
-     addX t = t
+                       return (goal_ addX reqs)
+     addX = Just ("X",Val P $ Txt "X",scTrue)
+
+cmdShow
+  = ( "sh"
+    , "show parts of the prover state"
+    , unlines
+        [ "sh knwn - show known variables"
+        , "sh laws - show current laws"
+        , "sh goal - show current goal"]
+    , showState)
+
+showState ["knwn"] reqs = doshow reqs "Can't show known variables yet."
+showState ["laws"] reqs = doshow reqs $ showLaws $ laws reqs
+showState ["goal"] reqs = doshow reqs "Can't show current goal yet."
+showState _        reqs = doshow reqs "unknown 'show' option."
+
+doshow reqs str
+ = do outputStrLn str
+      return reqs
 \end{code}

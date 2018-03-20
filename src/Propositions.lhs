@@ -10,11 +10,11 @@ module Propositions (
   bool
 , true, trueP
 , false, falseP
-, equiv, mkEquiv, mkEquivs
+, equiv, mkEquiv, mkEquivs, (===)
 , lnot, mkNot
-, lor, mkOr, mkOrs
-, land, mkAnd, mkAnds
-, implies, mkImplies
+, lor, mkOr, mkOrs, (\/)
+, land, mkAnd, mkAnds, (/\)
+, implies, mkImplies, (==>)
 , propKnown
 , propLaws
 ) where
@@ -50,16 +50,16 @@ We need to build some infrastructure here.
 This consists of the predicate variables $P$, $Q$ and $R$,
 the $\Bool$ type,
 the constants \textit{true} and \textit{false},
-and the infix symbols $\equiv$, $lnot$, $\lor$, $\land$ and $\implies$.
+and the infix symbols $\equiv$, $\lnot$, $\lor$, $\land$ and $\implies$.
 The propositional constants, along with the equivelance and implication operators
 are also exported as they have significance for proof strategies.
 
 \subsection{Predicate Variables}
 
 \begin{code}
-p = Vbl (fromJust $ ident "P") PredV Static
-q = Vbl (fromJust $ ident "Q") PredV Static
-r = Vbl (fromJust $ ident "R") PredV Static
+p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
+q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
+r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
 \end{code}
 
 \subsubsection{Propositional Type}
@@ -92,6 +92,7 @@ propKnown
 \begin{code}
 equiv = fromJust $ ident _equiv ; mkEquivs ps = PCons equiv ps
 mkEquiv p q = mkEquivs [p,q]
+infix 1 === ; (===) = mkEquiv
 
 lnot = fromJust $ ident _lnot ; mkNot p = PCons lnot [p]
 
@@ -100,37 +101,174 @@ mkOrs []   =  falseP
 mkOrs [p]  =  p
 mkOrs ps   =  PCons lor ps
 mkOr p q   =  mkOrs [p,q]
+infix 2 \/ ; (\/) = mkOr
 
 land = fromJust $ ident _land
 mkAnds []   =  trueP
 mkAnds [p]  =  p
 mkAnds ps   =  PCons land ps
 mkAnd p q = mkAnds [p,q]
+infix 3 /\ ; (/\) = mkAnd
 
 implies = fromJust $ ident _implies ; mkImplies p q = PCons implies [p,q]
+infixr 4 ==> ; (==>) = mkImplies
 \end{code}
 
 \subsection{Propositional Axioms}
+
 $$
   \begin{array}{ll}
      \AXeqvAssoc & \AXeqvAssocN
-  \\ \AXeqvSymm & \AXeqvSymmN
-  \\ \AXeqvId & \AXeqvIdN
-  \\ \AXfalseDef &\AXfalseDefN
-  \\ \AXnotEqvDistr & \AXnotEqvDistrN
-  \\ \AXorSymm & \AXorSymmN
-  \\ \AXorAssoc & \AXorAssocN
-  \\ \AXorIdem & \AXorIdemN
-  \\ \AXorEqvDistr & \AXorEqvDistrN
-  \\ \AXexclMdl & \AXexclMdlN
-  \\ \AXgoldRule & \AXgoldRuleN
-  \\ \AXimplDef & \AXimplDefN
   \end{array}
 $$
+\begin{code}
+axEqvAssoc
+ = ( "Ax-"++_equiv++"-assoc"
+   , ((p === q) === r) === (p === (q === r))
+   , scTrue )
+\end{code}
+
+$$
+  \begin{array}{ll}
+     \AXeqvSymm & \AXeqvSymmN
+  \end{array}
+$$
+\begin{code}
+axEqvSymm
+ = ( "Ax-"++_equiv++"-symm"
+   , (p === q) === (q === p)
+   , scTrue )
+\end{code}
+
+$$
+  \begin{array}{ll}
+     \AXeqvId & \AXeqvIdN
+  \end{array}
+$$
+\begin{code}
+axEqvId
+ = ( "Ax-"++_equiv++"-id"
+   , (trueP === q) === q
+   , scTrue )
+\end{code}
+
+$$
+  \begin{array}{ll}
+     \AXfalseDef &\AXfalseDefN
+  \end{array}
+$$
+\begin{code}
+axFalseDef
+ = ( "Ax-false-def"
+   , falseP === mkNot trueP
+   , scTrue )
+\end{code}
+
+$$
+  \begin{array}{ll}
+     \AXnotEqvDistr & \AXnotEqvDistrN
+  \end{array}
+$$
+\begin{code}
+axNotEqvDistr
+ = ( "Ax-"++_lnot++"-"++_equiv++"-distr"
+   , mkNot(p === q) ===  (mkNot p === q)
+   , scTrue )
+\end{code}
+
+
+$$
+  \begin{array}{ll}
+     \AXorSymm & \AXorSymmN
+  \end{array}
+$$
+\begin{code}
+axOrSymm
+ = ( "Ax-"++_lor++"-symm"
+   , p \/ q === q \/ p
+   , scTrue )
+\end{code}
+
+$$
+  \begin{array}{ll}
+     \AXorAssoc & \AXorAssocN
+  \end{array}
+$$
+\begin{code}
+axOrAssoc
+ = ( "Ax-"++_lor++"-assoc"
+   , (p \/ q) \/ r === p \/ (q \/ r)
+   , scTrue )
+\end{code}
+
+\newpage
+$$
+  \begin{array}{ll}
+     \AXorIdem & \AXorIdemN
+  \end{array}
+$$
+\begin{code}
+axOrIdem
+ = ( "Ax-"++_lor++"-idem"
+   , p \/ p === p
+   , scTrue )
+\end{code}
+
+$$
+  \begin{array}{ll}
+     \AXorEqvDistr & \AXorEqvDistrN
+  \end{array}
+$$
+\begin{code}
+axOrEqvDistr
+ = ( "Ax-"++_lor++"-"++_equiv++"-distr"
+   , (p \/ (q === r)) === (p \/ q === p \/ r)
+   , scTrue )
+\end{code}
+
+$$
+  \begin{array}{ll}
+     \AXexclMdl & \AXexclMdlN
+  \end{array}
+$$
+\begin{code}
+axExclMidl
+ = ( "Ax-excl-middle"
+   , p \/ mkNot p
+   , scTrue )
+\end{code}
+
+$$
+  \begin{array}{ll}
+     \AXgoldRule & \AXgoldRuleN
+  \end{array}
+$$
+\begin{code}
+axGoldRule
+ = ( "Ax-golden-rule"
+   , (p /\ q) === ((p === q) === p \/ q)
+   , scTrue )
+\end{code}
+
+$$
+  \begin{array}{ll}
+     \AXimplDef & \AXimplDefN
+  \end{array}
+$$
+\begin{code}
+axImplDef
+ = ( "Ax-"++_implies++"-def"
+   , p ==> q === (p \/ q === q)
+   , scTrue )
+\end{code}
 
 \begin{code}
 
-propLaws :: [(Term,SideCond)]
-propLaws = []
+propLaws :: [(String,Term,SideCond)]
+propLaws
+ = [ axEqvAssoc, axEqvSymm, axEqvId
+   , axFalseDef, axNotEqvDistr
+   , axOrSymm, axOrAssoc, axOrIdem, axOrEqvDistr, axExclMidl
+   , axGoldRule, axImplDef ]
 
 \end{code}

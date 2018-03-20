@@ -21,6 +21,7 @@ library
                      , AST
                      , SideCond
                      , VarData
+                     , Propositions
                      , Binding
                      , Instantiate
                      , Matching
@@ -29,9 +30,11 @@ library
                      -- in proto
                      , Acyclic
                      , TRYOUT
+                     , TestRendering
   build-depends:       base >= 4.7 && < 5
                      , containers
                      , time
+                     , nicesymbols
                      -- we need to support internal tests for some modules
                      , HUnit
                      -- , QuickCheck
@@ -58,6 +61,7 @@ test-suite reasonEq-test
   build-depends:       base
                      , containers
                      , reasonEq
+                     , nicesymbols
                      , HUnit
                      -- , QuickCheck
                      , test-framework
@@ -65,7 +69,6 @@ test-suite reasonEq-test
                      -- , test-framework-quickcheck2
   other-modules:       VarDataTest
                      , MkTestBind
-                     , TestRendering
                      , BindingTest
                      , MatchingTest
                      , MatchScenarios

@@ -1,0 +1,648 @@
+%
+% This document provides a single place for definitions
+% that will appear in multiple locations,
+% and so ensures they are kept consistent.
+%
+% This does not generate any typeset output.
+%
+\def\LNAME#1{\mbox{\textsc{#1}}}
+
+\def\DEFOEESUBST{
+  \begin{eqnarray*}
+     k[\vec x:=\vec e] &\defs& k
+  \\ x[\vec x:=\vec e]
+     &\defs& \left\{
+               \begin{array}{ll}
+                 e_i, & i \mbox{ exists, s.t.: }x=x_i \\
+                 x, & x \notin \vec x
+               \end{array}
+             \right.
+  \\ (f~e)[\vec x:=\vec e] &\defs& f~(e[\vec x:=\vec e])
+  \\ E[\vec x:=\vec e] &\defs&
+     \left\{
+     \begin{array}{ll}
+       E[\vec e/\vec x], & E \mbox{ not $\Lambda$-bound higher up} \\
+       E, & E \mbox{ is $\Lambda$-bound higher up}
+     \end{array}
+   \right.
+  \\ (\lambda \vec y, \lstvec q @ e)[\vec x:=\vec e]
+     &\defs& \lambda \vec y,\lstvec q @ (e[\vec x:=\vec e]\hide\vec y)
+  \\ (\Lambda \vec E @ e)[\vec x:=\vec e] &\defs& \Lambda \vec E @ (e[\vec x:=\vec e])
+  \\ (\Lambda \vec P @ e)[\vec x:=\vec e] &\defs& \Lambda \vec P @ (e[\vec x:=\vec e])
+  \\ (e[\vec f/\vec y])[\vec x:=\vec e] &\defs& e([\vec f/\vec y][\vec e/\vec x])
+  \\ (e[\vec e/\vec E])[\vec x:=\vec e] &\defs& \mbox{need to do inner subst first}
+  \\ (e[\vec p/\vec P])[\vec x:=\vec e] &\defs& \mbox{need to do inner subst first}
+  \\ (e = e)[\vec x:=\vec e] &\defs& e[\vec x:=\vec e] = e[\vec x:=\vec e]
+  \\ (\theta x | P @ Q)[\vec x:=\vec e] &\defs& \theta x | P[\vec x:=\vec e]\hide x @ Q[\vec x:=\vec e]\hide x
+  \end{eqnarray*}
+}
+
+\def\DEFOEPSUBST#1{
+\begin{array}{rcl@{$\quad$}l}
+   True[\vec x:=\vec e] &\defs&  True
+\\ False[\vec x:=\vec e] &\defs& False
+\\  e[\vec x:=\vec e] &\defs& \mbox{see Figure \ref{#1}}
+\\  (e:t)[\vec x:=\vec e] &\defs& (e[\vec x:=\vec e]:t)
+\\  (\mathcal D~e)[\vec x:=\vec e] &\defs& \mathcal D~(e[\vec x:=\vec e])
+\\ (\lnot p)[\vec x:=\vec e] &\defs& \lnot (p[\vec x:=\vec e])
+\\ (p~ \maltese q)[\vec x:=\vec e] &\defs& p[\vec x:=\vec e]~ \maltese q[\vec x:=\vec e]
+\\ P[\vec x:=\vec e] &\defs&
+   \left\{
+     \begin{array}{ll}
+       P[\vec e/\vec x], & P \mbox{ not $\Lambda$-bound higher up} \\
+       P, & P \mbox{ is $\Lambda$-bound higher up}
+     \end{array}
+   \right.
+\\ (\yen \vec y,\lstvec q | p @ q)[\vec x:=\vec e]
+   &\defs& \yen \vec y,\lstvec q | (p[\vec x:=\vec e]\hide \vec y) @ (q[\vec x:=\vec e]\hide \vec y))
+\\ (\yen \vec P @ p)[\vec x:=\vec e] &\defs& \yen \vec P @ (p[\vec x:=\vec e])
+\\ (\yen \vec E @ p)[\vec x:=\vec e] &\defs& \yen \vec E @ (p[\vec x:=\vec e])
+\\ {}[ p ][\vec x:=\vec e] &\defs& {}[p]
+\\ (\Lambda \vec y,\lstvec q @ p)[\vec x:=\vec e]
+   &\defs& \Lambda \vec y,\lstvec q @ (p[\vec x:=\vec e]\hide \vec y)
+\\ (\Lambda \vec P @ p)[\vec x:=\vec e] &\defs& \Lambda \vec P @ (p[\vec x:=\vec e])
+\\ (p~\lstvec q)[\vec x:=\vec e] &\defs& (p[\vec x:=\vec e] ~\lstvec q[\vec x:=\vec e] )
+\\ (p~\vec f)[\vec x:=\vec e] &\defs& (p[\vec x:=\vec e]~\vec f[\vec x:=\vec e])
+\\ (p[\vec f/\vec y])[\vec x:=\vec e] &\defs& p([\vec f/\vec y][\vec e/\vec x])
+\\ (p[\vec e/\vec E])[\vec x:=\vec e] &\defs& \mbox{need to do inner subst first}
+\\ (p[\vec p/\vec P])[\vec x:=\vec e] &\defs& \mbox{need to do inner subst first}
+\\ (p~S)[\vec x:=\vec e] &\defs& p[\vec x:=\vec e]~S[\vec x:=\vec e]
+\\ (p \in S)[\vec x:=\vec e] &\defs& p[\vec x:=\vec e] \in S[\vec x:=\vec e]
+\\
+\\ S[\vec x:=\vec e] &\defs& S[\vec e/\vec x]
+\\ \{ \vec p \}[\vec x:=\vec e] &\defs& \{ \vec p[\vec x:=\vec e] \}
+\\ \{ \vec P | r @ p \}[\vec x:=\vec e]
+    &\defs& \{ \vec P | r[\vec x:=\vec e] @ p[\vec x:=\vec e] \}
+\\ (ps_1 \bigcup ps_2)[\vec x:=\vec e] &\defs& ps_1[\vec x:=\vec e] \bigcup ps_2[\vec x:=\vec e]
+\end{array}
+}
+
+\def\DEFEEESUBST{
+  \begin{eqnarray*}
+     k[\vec E:=\vec e] &\defs& k
+  \\ x[\vec E:=\vec e] &\defs& x
+    \\ (f~e)[\vec E:=\vec e] &\defs& f~(e[\vec E:=\vec e])
+  \\ E[\vec E:=\vec e]
+     &\defs& \left\{
+               \begin{array}{ll}
+                 e_i, & i \mbox{ exists, s.t.: }E=E_i \\
+                 E, & E \notin \vec E
+               \end{array}
+             \right.
+  \\ (\lambda \vec x, \lstvec q @ e)[\vec E:=\vec e]
+     &\defs& \lambda \vec x,\lstvec q @ (e[\vec E:=\vec e])
+  \\ (\Lambda \vec F @ e)[\vec E:=\vec e]
+     &\defs& \Lambda \vec F @ (e[\vec E:=\vec e]\hide \vec F)
+  \\ (\Lambda \vec P @ e)[\vec E:=\vec e] &\defs& \Lambda \vec P @ (e[\vec E:=\vec e])
+  \\ (e[\vec e/\vec x])[\vec E:=\vec e] &\defs& \mbox{need to do inner subst first}
+  \\ (e[\vec f\vec F])[\vec E:=\vec e] &\defs& e([\vec f/\vec F][\vec e/\vec E])
+  \\ (e[\vec p/\vec P])[\vec E:=\vec e] &\defs& \mbox{need to do inner subst first}
+  \\ (e = e)[\vec E:=\vec e] &\defs& e[\vec E:=\vec e] = e[\vec E:=\vec e]
+  \\ (\theta x | P @ Q)[\vec E:=\vec e]
+     &\defs& \theta x | P[\vec E:=\vec e] @ Q[\vec E:=\vec e]
+  \end{eqnarray*}
+}
+
+\def\DEFPPESUBST{
+  \begin{eqnarray*}
+     k[\vec P:=\vec p] &\defs& k
+  \\ x[\vec P:=\vec p] &\defs& x
+    \\ (f~e)[\vec P:=\vec p] &\defs& f~(e[\vec P:=\vec p])
+  \\ E[\vec P:=\vec p] &\defs&
+  \left\{
+     \begin{array}{ll}
+       E[\vec p/\vec P], & E \mbox{ not $\Lambda$-bound higher up} \\
+       E, & E \mbox{ is $\Lambda$-bound higher up}
+     \end{array}
+   \right.
+    \\ (\lambda \vec x, \lstvec q @ e)[\vec P:=\vec p]
+     &\defs& \lambda \vec x,\lstvec q @ (e[\vec P:=\vec p])
+  \\ (\Lambda \vec F @ e)[\vec P:=\vec p]
+     &\defs& \Lambda \vec F @ (e[\vec P:=\vec p]\hide \vec F)
+  \\ (\Lambda \vec P @ e)[\vec P:=\vec p] &\defs& \Lambda \vec P @ (e[\vec P:=\vec p])
+  \\ (e[\vec e/\vec x])[\vec P:=\vec p] &\defs& \mbox{need to do inner subst first}
+  \\ (e[\vec e/\vec E])[\vec P:=\vec p] &\defs& \mbox{need to do inner subst first}
+  \\ (e[\lstvec q/\vec Q])[\vec P:=\vec p] &\defs& e([\lstvec q/\vec Q][\vec p/\vec P])
+  \\ (e = e)[\vec P:=\vec p] &\defs& e[\vec P:=\vec p] = e[\vec P:=\vec p]
+  \\ (\theta x | P @ Q)[\vec P:=\vec p]
+     &\defs& \theta x | P[\vec P:=\vec p] @ Q[\vec P:=\vec p]
+  \end{eqnarray*}
+}
+
+
+\def\DEFEEPSUBST#1{
+\begin{array}{rcl@{$\quad$}l}
+   True[\vec E:=\vec e] &\defs&  True
+\\ False[\vec E:=\vec e] &\defs& False
+\\  e[\vec E:=\vec e] &\defs& \mbox{see Figure \ref{#1}}
+\\  (e:t)[\vec E:=\vec e] &\defs& (e[\vec E:=\vec e]:t)
+\\  (\mathcal D~e)[\vec E:=\vec e] &\defs& \mathcal D~(e[\vec E:=\vec e])
+\\ (\lnot p)[\vec E:=\vec e] &\defs& \lnot (p[\vec E:=\vec e])
+\\ (p~ \maltese q)[\vec E:=\vec e] &\defs& p[\vec E:=\vec e]~ \maltese q[\vec E:=\vec e]
+\\ P[\vec E:=\vec e] &\defs&
+   \left\{
+     \begin{array}{ll}
+       P[\vec e/\vec x], & P \mbox{ not $\Lambda$-bound higher up} \\
+       P, & P \mbox{ is $\Lambda$-bound higher up}
+     \end{array}
+   \right.
+\\ (\yen \vec y,\lstvec q | p @ q)[\vec E:=\vec e]
+   &\defs& \yen \vec y,\lstvec q | (p[\vec E:=\vec e]) @ (q[\vec E:=\vec e]))
+\\ (\yen \vec P @ p)[\vec E:=\vec e] &\defs& \yen \vec P @ (p[\vec E:=\vec e])
+\\ (\yen \vec F @ p)[\vec E:=\vec e] &\defs& \yen \vec F @ (p[\vec E:=\vec e]\hide\vec F)
+\\ {}[~p~][\vec E:=\vec e] &\defs& {}[~p[\vec E:=\vec e]~]
+\\ (\Lambda \vec y,\lstvec q @ p)[\vec E:=\vec e]
+   &\defs& \Lambda \vec y,\lstvec q @ (p[\vec E:=\vec e])
+\\ (\Lambda \vec P @ p)[\vec E:=\vec e] &\defs& \Lambda \vec P @ (p[\vec E:=\vec e])
+\\ (p~\lstvec q)[\vec E:=\vec e] &\defs& (p[\vec E:=\vec e] ~\lstvec q[\vec E:=\vec e] )
+\\ (p~\vec f)[\vec E:=\vec e] &\defs& (p[\vec E:=\vec e]~\vec f[\vec E:=\vec e])
+\\ (p[\vec f/\vec y])[\vec E:=\vec e] &\defs& \mbox{need to do inner subst first}
+\\ (p[\vec e/\vec E])[\vec E:=\vec e] &\defs& p([\vec e/\vec E][\vec e/\vec E]
+\\ (p[\vec p/\vec P])[\vec E:=\vec e] &\defs& \mbox{need to do inner subst first}
+\\ (p~S)[\vec E:=\vec e] &\defs& p[\vec E:=\vec e]~S[\vec E:=\vec e]
+\\ (p \in S)[\vec E:=\vec e] &\defs& p[\vec E:=\vec e] \in S[\vec E:=\vec e]
+\\
+\\ S[\vec E:=\vec e] &\defs& S[\vec e/\vec E]
+\\ \{ \vec p \}[\vec E:=\vec e] &\defs& \{ \vec p[\vec E:=\vec e] \}
+\\ \{ \vec P | r @ p \}[\vec E:=\vec e]
+    &\defs& \{ \vec P | r[\vec E:=\vec e] @ p[\vec E:=\vec e] \}
+\\ (ps_1 \bigcup ps_2)[\vec E:=\vec e] &\defs& ps_1[\vec E:=\vec e] \bigcup ps_2[\vec E:=\vec e]
+\end{array}
+}
+
+\def\DEFPPPSUBST#1{
+\begin{array}{rcl@{$\quad$}l}
+   True[\vec P:=\vec p] &\defs&  True
+\\ False[\vec P:=\vec p] &\defs& False
+\\  e[\vec P:=\vec p] &\defs& \mbox{see Figure \ref{#1}}
+\\  (e:t)[\vec P:=\vec p] &\defs& (e[\vec P:=\vec p]:t)
+\\  (\mathcal D~e)[\vec P:=\vec p] &\defs& \mathcal D~(e[\vec P:=\vec p])
+\\ (\lnot p)[\vec P:=\vec p] &\defs& \lnot (p[\vec P:=\vec p])
+\\ (p~ \maltese q)[\vec P:=\vec p] &\defs& p[\vec P:=\vec p]~ \maltese q[\vec P:=\vec p]
+\\ P[\vec P:=\vec p] &\defs&
+   \left\{
+               \begin{array}{ll}
+                 p_i, & P \mbox{ not bound higher} \\
+                      & \mbox{and exists $i$ s.t.: }P=P_i \\
+                 P, & \mbox{otherwise}
+               \end{array}
+             \right.
+\\ (\yen \vec y,\lstvec q | p @ q)[\vec P:=\vec p]
+   &\defs& \yen \vec y,\lstvec q | (p[\vec P:=\vec p]) @ (q[\vec P:=\vec p]))
+\\ (\yen \vec Q @ p)[\vec P:=\vec p] &\defs& \yen \vec Q @ (p[\vec P:=\vec p]\hide\vec Q)
+\\ (\yen \vec F @ p)[\vec P:=\vec p] &\defs& \yen \vec F @ (p[\vec P:=\vec p])
+\\ {}[~p~][\vec P:=\vec p] &\defs& {}[~p[\vec P:=\vec p]~]
+\\ (\Lambda \vec y,\lstvec q @ p)[\vec P:=\vec p]
+   &\defs& \Lambda \vec y,\lstvec q @ (p[\vec P:=\vec p])
+\\ (\Lambda \vec Q @ p)[\vec P:=\vec p] &\defs& \Lambda \vec P @ (p[\vec P:=\vec p]\hide \vec Q)
+\\ (p~\lstvec q)[\vec P:=\vec p] &\defs& (p[\vec P:=\vec p] ~\lstvec q[\vec P:=\vec p] )
+\\ (p~\vec f)[\vec P:=\vec p] &\defs& (p[\vec P:=\vec p]~\vec f[\vec P:=\vec p])
+\\ (p[\vec f/\vec y])[\vec P:=\vec p] &\defs& \mbox{need to do inner subst first}
+\\ (p[\vec e/\vec E])[\vec P:=\vec p] &\defs& \mbox{need to do inner subst first}
+\\ (p[\lstvec q/\vec Q])[\vec P:=\vec p] &\defs& (p([\lstvec q/\vec Q][\vec p/\vec P])
+\\ (p~S)[\vec P:=\vec p] &\defs& p[\vec P:=\vec p]~S[\vec P:=\vec p]
+\\ (p \in S)[\vec P:=\vec p] &\defs& p[\vec P:=\vec p] \in S[\vec P:=\vec p]
+\\
+\\ S[\vec P:=\vec p] &\defs& S[\vec p/\vec P]
+\\ \{ \vec p \}[\vec P:=\vec p] &\defs& \{ \vec p[\vec P:=\vec p] \}
+\\ \{ \vec Q | r @ p \}[\vec P:=\vec p]
+    &\defs& \{ \vec P
+             | r[\vec P:=\vec p]\hide\vec Q
+             @ p[\vec P:=\vec p] \hide\vec Q
+            \}
+\\ (ps_1 \bigcup ps_2)[\vec P:=\vec p] &\defs& ps_1[\vec P:=\vec p] \bigcup ps_2[\vec P:=\vec p]
+\end{array}
+}
+
+\def\AXeqvAssocL{(P\equiv Q)\equiv R}
+\def\AXeqvAssocR{P\equiv (Q\equiv R)}
+\def\AXeqvAssoc{(\AXeqvAssocL) \equiv (\AXeqvAssocR)}
+\def\AXeqvAssocN{\LNAME{Ax-$\equiv$-assoc}}
+
+\def\AXeqvSymm{P\equiv Q\equiv Q \equiv P}
+\def\AXeqvSymmN{\LNAME{Ax-$\equiv$-symm}}
+
+\def\AXeqvId{\textit{true} \equiv Q\equiv Q}
+\def\AXeqvIdN{\LNAME{Ax-$\equiv$-id}}
+
+\def\AXfalseDef{\textit{false} \equiv \neg \mbox{\textit{true}}}
+\def\AXfalseDefN{\LNAME{Ax-$false$-def}}
+
+\def\AXnotEqvDistr{\neg(P\equiv Q) \equiv \neg P \equiv Q}
+\def\AXnotEqvDistrN{\LNAME{Ax-$\neg$-$\equiv$-distr}}
+
+\def\AXorSymm{P\vee Q \equiv  Q \vee P}
+\def\AXorSymmN{\LNAME{Ax-$\vee$-symm}}
+
+\def\AXorAssoc{(P\vee Q) \vee R \equiv  P \vee (Q \vee R)}
+\def\AXorAssocN{\LNAME{Ax-$\vee$-assoc}}
+
+\def\AXorIdem{P\vee P \equiv P}
+\def\AXorIdemN{\LNAME{Ax-$\vee$-idem}}
+
+\def\AXorEqvDistr{P \vee (Q\equiv R) \equiv P\vee Q \equiv P \vee R}
+\def\AXorEqvDistrN{\LNAME{Ax-$\vee$-$\equiv$-distr}}
+
+\def\AXexclMdl{P \vee \neg P}
+\def\AXexclMdlN{\LNAME{Ax-Excl-Mdl}}
+
+\def\AXgoldRule{P\wedge Q \equiv  P \equiv Q \equiv P \vee Q}
+\def\AXgoldRuleN{\LNAME{Ax-Golden-Rule}}
+
+\def\AXimplDef{P\Rightarrow Q \equiv P\vee  Q \equiv Q}
+\def\AXimplDefN{\LNAME{Ax-$\implies$-def}}
+
+\def\AXPROP{
+  \begin{array}{ll}
+     \AXeqvAssoc & \AXeqvAssocN
+  \\ \AXeqvSymm & \AXeqvSymmN
+  \\ \AXeqvId & \AXeqvIdN
+  \\ \AXfalseDef &\AXfalseDefN
+  \\ \AXnotEqvDistr & \AXnotEqvDistrN
+  \\ \AXorSymm & \AXorSymmN
+  \\ \AXorAssoc & \AXorAssocN
+  \\ \AXorIdem & \AXorIdemN
+  \\ \AXorEqvDistr & \AXorEqvDistrN
+  \\ \AXexclMdl & \AXexclMdlN
+  \\ \AXgoldRule & \AXgoldRuleN
+  \\ \AXimplDef & \AXimplDefN
+  \end{array}
+}
+
+\def\AXorAllOScopeL{p \lor (\forall \lst x,\lst y @ q)}
+\def\AXorAllOScopeR{\forall \lst x @ p \lor (\forall \lst y @ q)}
+\def\AXorAllOScopeS{\lst x \notin p}
+\def\AXorAllOScopeN{\LNAME{Ax-$\lor$-$\forall x$-scope}}
+\def\AXorAllOScope{\AXorAllOScopeL \equiv \AXorAllOScopeR, \quad \AXorAllOScopeS}
+
+\def\AXorAllEScopeL{p \lor (\forall \lst E, \lst F @ q)}
+\def\AXorAllEScopeR{\forall \lst E @ p \lor (\forall \lst F @ q)}
+\def\AXorAllEScopeS{\lst E \notin p}
+\def\AXorAllEScopeN{\LNAME{Ax-$\lor$-$\forall E$-scope}}
+\def\AXorAllEScope{\AXorAllEScopeL \equiv \AXorAllEScopeR, \quad \AXorAllEScopeS}
+
+\def\AXorAllPScopeL{p \lor (\forall \lst P,  \lst Q @ q)}
+\def\AXorAllPScopeR{\forall \lst P @ p \lor (\forall \lst Q @ q)}
+\def\AXorAllPScopeS{ \lst P \notin p}
+\def\AXorAllPScopeN{\LNAME{Ax-$\lor$-$\forall P$-scope}}
+\def\AXorAllPScope{\AXorAllPScopeL \equiv \AXorAllPScopeR, \quad \AXorAllPScopeS}
+
+\def\AXallODistrL{(\forall \lst x @ p \land q)}
+\def\AXallODistrR{(\forall \lst x @ p) \land (\forall \lst x @ q)}
+\def\AXallODistrN{\LNAME{Ax-$\forall x$-distr}}
+\def\AXallODistr{\AXallODistrL \equiv \AXallODistrR}
+
+\def\AXallEDistrL{(\forall \lst E @ p \land q)}
+\def\AXallEDistrR{(\forall \lst E @ p) \land (\forall \lst E @ q)}
+\def\AXallEDistrN{\LNAME{Ax-$\forall E$-distr}}
+\def\AXallEDistr{\AXallEDistrL \equiv \AXallEDistrR}
+
+\def\AXallPDistrL{(\forall \lst P @ p \land q)}
+\def\AXallPDistrR{(\forall \lst P @ p) \land (\forall \lst P @ q)}
+\def\AXallPDistrN{\LNAME{Ax-$\forall P$-distr}}
+\def\AXallPDistr{\AXallPDistrL \equiv \AXallPDistrR}
+
+\def\AXallOInstL{\forall x, \lst x @ p}
+\def\AXallOInstR{\forall \lst x  @ p[e/x]}
+\def\AXallOInstN{\LNAME{Ax-$\forall x$-inst}}
+\def\AXallOInst{(\AXallOInstL) \implies (\AXallOInstR)}
+
+\def\AXallEInstL{\forall E , \lst E @ p}
+\def\AXallEInstR{\forall \lst E @ p[e/E]}
+\def\AXallEInstN{\LNAME{Ax-$\forall E$-inst}}
+\def\AXallEInst{(\AXallEInstL) \implies (\AXallEInstR)}
+
+\def\AXallPInstL{\forall P, \lst P @ q}
+\def\AXallPInstR{\forall \lst P @ q[r/P]}
+\def\AXallPInstN{\LNAME{Ax-$\forall P$-inst}}
+\def\AXallPInst{(\AXallPInstL) \implies (\AXallPInstR)}
+
+\def\AXallORngL{\forall \lst x | r @ p}
+\def\AXallORngR{\forall \lst x @ r \implies p}
+\def\AXallORngN{\LNAME{Ax-$\forall x$-range}}
+\def\AXallORng{(\AXallORngL) \equiv (\AXallORngR)}
+
+\def\AXanyODefL{\exists \lst x @ p}
+\def\AXanyODefR{\lnot (\forall \lst x @ \lnot p)}
+\def\AXanyODefN{\LNAME{Ax-$\exists x$-def}}
+\def\AXanyODef{(\AXanyODefL) \equiv \AXanyODefR}
+
+\def\AXanyEDefL{\exists \lst E @ p}
+\def\AXanyEDefR{\lnot (\forall \lst E @ \lnot p)}
+\def\AXanyEDefN{\LNAME{Ax-$\exists E$-def}}
+\def\AXanyEDef{(\AXanyEDefL) \equiv \AXanyEDefR}
+
+\def\AXanyPDefL{\exists \lst P @ p}
+\def\AXanyPDefR{\lnot (\forall \lst P @ \lnot p)}
+\def\AXanyPDefN{\LNAME{Ax-$\exists P$-def}}
+\def\AXanyPDef{(\AXanyPDefL) \equiv \AXanyPDefR}
+
+\def\AXanyORngL{\exists \lst x | r @ p}
+\def\AXanyORngR{\exists \lst x @ r \land p}
+\def\AXanyORngN{\LNAME{Ax-$\exists x$-range}}
+\def\AXanyORng{(\AXanyORngL) \equiv (\AXanyORngR)}
+
+\def\AXoneODefL{\exists! \lst x @ p}
+\def\AXoneODefR{(\exists \lst x @ p)
+                 \land
+                 \exists \lst y @ p[\lst y/ \lst x] \implies \lst y = \lst x}
+\def\AXoneODefN{\LNAME{Ax-$\exists! x$-def}}
+\def\AXoneODef{(\AXoneODefL) \equiv (\AXoneODefR)}
+
+\def\AXoneORngL{\exists! \lst x | r @ p}
+\def\AXoneORngR{\exists! \lst x @ r \land p}
+\def\AXoneORngN{\LNAME{Ax-$\exists! x$-range}}
+\def\AXoneORng{(\AXoneORngL) \equiv (\AXoneORngR)}
+
+\def\AXunivClosureL{[p]}
+\def\AXunivClosureR{\forall \lst x @ p}
+\def\AXunivClosureS{\lst x \supseteq p}
+\def\AXunivClosureN{\LNAME{Ax-$[]$-def}}
+\def\AXunivClosure{\AXunivClosureL \equiv (\AXunivClosureR), \quad \AXunivClosureS}
+
+\def\AXoneODefL{\exists! \lst x @ p}
+\def\AXoneODefR{(\exists \lst x @ p)
+                 \land
+                 \exists \lst y @ p[\lst y/ \lst x] \implies \lst y = \lst x}
+\def\AXoneODefN{\LNAME{Ax-$\exists! x$-def}}
+\def\AXoneODef{(\AXoneODefL) \equiv (\AXoneODefR)}
+
+\def\AXeqReflL{e}
+\def\AXeqReflR{e}
+\def\AXeqReflN{\LNAME{Ax-$=$-refl}}
+\def\AXeqRefl{\AXeqReflL = \AXeqReflR}
+
+\def\AXtheDefL{e=\theta x @ p}
+\def\AXtheDefR{p[e/x] \land (\forall y @ p[y/x] \implies y=e)}
+\def\AXtheDefS{x \notin e}
+\def\AXtheDefN{\LNAME{Ax-$\theta$-Def}}
+\def\AXtheDef{(\AXtheDefL) \equiv \AXtheDefR, \quad \AXtheDefS}
+
+\def\AXtheRngL{\theta x | r @ p}
+\def\AXtheRngR{\theta x @ r \land p}
+\def\AXtheRngN{\LNAME{Ax-$\theta$-range}}
+\def\AXtheRng{(\AXtheRngL) = (\AXtheRngR)}
+
+\def\AXObetaRedL{(\lambda x, \lst x @ e)f}
+\def\AXObetaRedR{(\lambda , \lst x @ e)[f/x]}
+\def\AXObetaRedN{\LNAME{Ax-$\beta$-OReduce}}
+\def\AXObetaRed{\AXObetaRedL = \AXObetaRedR}
+
+\def\AXEbetaRedL{(\Lambda E, \lst E @ q)e}
+\def\AXEbetaRedR{(\Lambda , \lst E @ q)[e/E]}
+\def\AXEbetaRedN{\LNAME{Ax-$\beta$-EReduce}}
+\def\AXEbetaRed{\AXEbetaRedL \equiv \AXEbetaRedR}
+
+\def\AXPbetaRedL{(\Lambda P, \lst P @ q)r}
+\def\AXPbetaRedR{(\Lambda , \lst P @ q)[r/P]}
+\def\AXPbetaRedN{\LNAME{Ax-$\beta$-PReduce}}
+\def\AXPbetaRed{\AXPbetaRedL \equiv \AXPbetaRedR}
+
+\def\AXLeibnizL{\bigwedge_{i=1}^n x_i = e_i}
+\def\AXLeibnizR{p \equiv p[\vec e/\vec x]}
+\def\AXLeibnizS{x_i \mbox{ distinct}}
+\def\AXLeibnizN{\LNAME{Ax-Leibniz}}
+\def\AXLeibniz{(\AXLeibnizL) \implies (\AXLeibnizR), \quad \AXLeibnizS}
+
+\def\AXLLeibnizL{\lst x = \lst e}
+\def\AXLLeibnizR{p \equiv p[\lstvec e/\lstvec x]}
+\def\AXLLeibnizN{\LNAME{Ax-LLeibniz}}
+\def\AXLLeibniz{(\AXLLeibnizL) \implies (\AXLLeibnizR)}
+
+\def\AXOSubstL{p[\vec e/\vec x]}
+\def\AXOSubstR{p[\vec x:=\vec e]}
+\def\AXOSubstN{\LNAME{Ax-OSubst}}
+\def\AXOSubst{\AXOSubstL \equiv \AXOSubstR}
+
+\def\AXESubstL{p[\vec e/\vec E]}
+\def\AXESubstR{p[\vec E:=\vec e]}
+\def\AXESubstN{\LNAME{Ax-ESubst}}
+\def\AXESubst{\AXESubstL \equiv \AXESubstR}
+
+\def\AXPSubstL{p[\vec q/ \vec P]}
+\def\AXPSubstR{p[ \vec P:=\vec q]}
+\def\AXPSubstN{\LNAME{Ax-PSubst}}
+\def\AXPSubst{\AXPSubstL \equiv \AXPSubstR}
+
+\def\AXTrueOSubL{true[\lst e/ \lst x]}
+\def\AXTrueOSubR{true}
+\def\AXTrueOSubN{\LNAME{Ax-$true$-OSubst}}
+\def\AXTrueOSub{\AXTrueOSubL \equiv \AXTrueOSubR}
+
+\def\AXTrueESubL{true[\lst e/ \lst E]}
+\def\AXTrueESubR{true}
+\def\AXTrueESubN{\LNAME{Ax-$true$-ESubst}}
+\def\AXTrueESub{\AXTrueESubL \equiv \AXTrueESubR}
+
+\def\AXTruePSubL{true[\lst q/ \lst P]}
+\def\AXTruePSubR{true}
+\def\AXTruePSubN{\LNAME{Ax-$true$-PSubst}}
+\def\AXTruePSub{\AXTruePSubL \equiv \AXTruePSubR}
+
+\def\AXFalseOSubL{false[\lst e/ \lst x]}
+\def\AXFalseOSubR{false}
+\def\AXFalseOSubN{\LNAME{Ax-$false$-OSubst}}
+\def\AXFalseOSub{\AXFalseOSubL \equiv \AXFalseOSubR}
+
+\def\AXFalseESubL{false[\lst e/ \lst E]}
+\def\AXFalseESubR{false}
+\def\AXFalseESubN{\LNAME{Ax-$false$-ESubst}}
+\def\AXFalseESub{\AXFalseESubL \equiv \AXFalseESubR}
+
+\def\AXFalsePSubL{false[\lst q/ \lst P]}
+\def\AXFalsePSubR{false}
+\def\AXFalsePSubN{\LNAME{Ax-$false$-PSubst}}
+\def\AXFalsePSub{\AXFalsePSubL \equiv \AXFalsePSubR}
+
+\def\AXNONPROP{
+  \begin{array}{ll}
+     \AXorAllOScopeL & \AXorAllOScopeN
+  \\ {}\equiv (\AXorAllOScopeR), \quad \AXorAllOScopeS
+  \\ \AXorAllEScopeL & \AXorAllEScopeN
+  \\ {}\equiv (\AXorAllEScopeR), \quad \AXorAllEScopeS
+  \\ \AXorAllPScopeL & \AXorAllPScopeN
+  \\ {}\equiv (\AXorAllPScopeR), \quad \AXorAllPScopeS
+  \\
+  \\ \AXallODistr & \AXallODistrN
+  \\ \AXallEDistr & \AXallEDistrN
+  \\ \AXallPDistr & \AXallPDistrN
+  \\
+  \\ \AXallOInst & \AXallOInstN
+  \\ \AXallEInst & \AXallEInstN
+  \\ \AXallPInst & \AXallPInstN
+  %\\ \AXallORng  & \AXallORngN
+  \\
+  \\ \AXanyODef & \AXanyODefN
+  \\ \AXanyEDef & \AXanyEDefN
+  \\ \AXanyPDef & \AXanyPDefN
+  %\\ \AXanyORng & \AXanyORngN
+  \\ \AXoneODefL & \AXoneODefN
+  \\ {}\equiv \AXoneODefR
+  \\ \AXunivClosure & \AXunivClosureN
+   %\\ \AXoneORng & \AXoneORngN
+  \\
+  \\\AXeqRefl & \AXeqReflN
+  %
+  \\ (\AXtheDefL) & \AXtheDefN
+  \\ {} \equiv \AXtheDefR,~\AXtheDefS
+  %\\ \AXtheRng & \AXtheRngN
+  %
+  \\
+  \\ \AXObetaRed & \AXObetaRedN
+  \\ \AXEbetaRed & \AXEbetaRedN
+  \\ \AXPbetaRed & \AXPbetaRedN
+  %
+  \\
+  \\ \AXLeibniz, & \AXLeibnizN
+  \\ \AXLeibnizS
+  \\
+  \\ \AXOSubst & \AXOSubstN
+  \\ \AXESubst & \AXESubstN
+  \\ \AXPSubst & \AXPSubstN
+  \\ \AXTrueOSub & \AXTrueOSubN
+  \\ \AXTrueESub & \AXTrueESubN
+  \\ \AXTruePSub & \AXTruePSubN
+  \\ \AXFalseOSub & \AXFalseOSubN
+  \\ \AXFalseESub & \AXFalseESubN
+  \\ \AXFalsePSub & \AXFalsePSubN
+  \end{array}
+}
+
+
+\def\INFERENCES{
+  \begin{array}{ll}
+     \INFER{P}{P[Q:=R]}
+   & \mbox{(Substitution)}
+  \\
+  \\ \INFER{P\equiv Q}{R[S:=P] \equiv R[S:=Q]}
+   & \mbox{(Leibniz)}
+  \\
+  \\ \INFER{P, P \equiv Q}{Q}
+   & \mbox{(Equanimity)}
+  \end{array}
+}
+
+
+\def\DERIVED{
+\begin{array}{ll}
+   \INFER{P\equiv Q , Q \equiv R}{P \equiv R}
+ & \mbox{(Transitivity)}
+%
+\\ \Gamma \vdash p
+   \quad\mbox{iff}\quad
+   \Gamma \vdash p \equiv True
+ & \mbox{(Truth-is-True)}
+%
+\\\hline\vspace{-9pt}
+\\ \vdash (\forall\vec x,\lstvec q @ True) \equiv True
+& \mbox{(Always-True)}
+\\ \vdash (\forall \lst E @ True) \equiv True
+\\ \vdash (\forall \lst P @ True) \equiv True
+%
+\\\hline\vspace{-9pt}
+\\ \Gamma \vdash p
+   \quad\mbox{iff}\quad
+    \Gamma \vdash \forall\vec x,\lstvec q @ p
+ & \mbox{($\forall$ Intro/Elim)}
+\\ \Gamma \vdash p
+   \quad\mbox{iff}\quad
+    \Gamma \vdash \forall \lst E @ p
+\\ \Gamma \vdash p
+   \quad\mbox{iff}\quad
+    \Gamma \vdash \forall \lst P @ p
+%
+\\\hline\vspace{-9pt}
+\\ p \vdash \forall\vec x,\lstvec q @ p
+ & \mbox{(Generalization)}
+\\ p \vdash \forall \lst E @ p
+ & p \vdash \forall \lst P @ p
+%
+\\\hline\vspace{-9pt}
+\\ p \vdash p[\vec x:=\vec e]
+ & \mbox{(Corr. Generalization)}
+\\ p \vdash p[\lst E:=\vec e]
+ & p \vdash p[ \lst P:=\lstvec q]
+%
+\\\hline\vspace{-9pt}
+\\ \vdash p \implies (\forall\vec x,\vec y,\lstvec q @ r)
+ & \mbox{(Universal Consequent 1)}
+\\ \quad \equiv
+          (\forall\vec x @ p \implies \forall\vec y,\lstvec q @ r),
+          \quad \vec x \notin p
+\\ \vdash p \implies (\forall \lst E,\lst E @ r)
+\\ \quad \equiv
+          (\forall \lst E @ p \implies \forall \lst E @ r),
+          \quad \lst E \notin p
+\\ \vdash p \implies (\forall \lst P, \lst Q @ r)
+\\ \quad \equiv
+          (\forall \lst P @ p \implies \forall \lst Q @ r),
+          \quad  \lst P \notin p
+%
+\\\hline\vspace{-9pt}
+\\ \vdash p \equiv \forall\vec x @ p,
+   \quad \vec x \notin p
+ & \mbox{(Corr. Univ. Conseq. 1)}
+\\ \vdash p \equiv \forall \lst E @ p,
+   \quad \lst E \notin p
+ & \vdash p \equiv \forall \lst P @ p,
+   \quad  \lst P \notin p
+%
+\\\hline\vspace{-9pt}
+\\ \Gamma \vdash p \implies q
+   \quad\mbox{iff}\quad
+   \Gamma \vdash p \implies \forall\vec x @ q,
+   \quad \vec x\notin p
+ & \mbox{(Universal Consequent 2)}
+\\ \Gamma \vdash p \implies q
+   \quad\mbox{iff}\quad
+   \Gamma \vdash p \implies \forall \lst E @ q,
+   \quad \lst E\notin p
+\\ \Gamma \vdash p \implies q
+   \quad\mbox{iff}\quad
+   \Gamma \vdash p \implies \forall \lst P @ q,
+   \quad  \lst P\notin p
+%
+\\\hline\vspace{-9pt}
+\\ \Gamma \vdash q \implies p
+   \quad\mbox{iff}\quad
+   \Gamma \vdash (\exists \vec x  @ q) \implies p,
+   \quad \vec x\notin p
+ & \mbox{(Corr. Univ.l Conseq. 2)}
+\\ \Gamma \vdash q \implies p
+   \quad\mbox{iff}\quad
+   \Gamma \vdash (\exists \lst E  @ q) \implies p,
+   \quad \lst E\notin p
+\\ \Gamma \vdash q \implies p
+   \quad\mbox{iff}\quad
+   \Gamma \vdash (\exists  \lst P  @ q) \implies p,
+   \quad  \lst P\notin p
+%
+\\\hline\vspace{-9pt}
+\\ \vdash (\forall\vec x @ p) \equiv (\forall\vec z @ p[\vec x:=\vec z]),
+   \quad \vec z \mbox{ fresh}
+ & \mbox{($\alpha$-Renaming)}
+\\ \vdash (\forall \lst E @ p) \equiv (\forall \lst F @ p[\lst E:=\lst F]),
+   \quad \lst F \mbox{ fresh}
+\\ \vdash (\forall \lst P @ p) \equiv (\forall \lst Q @ p[ \lst P:= \lst Q]),
+   \quad  \lst Q \mbox{ fresh}
+  \end{array}
+}
+
+\def\DEDUCTION{
+  \begin{array}{ll}
+     \Gamma, p \vdash q
+     \quad\mbox{then}\quad
+     \Gamma \vdash p \implies q,
+     \quad p \mbox{ closed}
+   & \mbox{(Deduction Theorem)}
+  \\ \Gamma \vdash p \implies q
+     \quad\mbox{then}\quad
+     \Gamma, p \vdash q
+   & \mbox{(Deduc. Converse)}
+  \\ \Gamma, p[\vec x:=\vec k] \vdash q[\vec x:=\vec k]
+     \quad\mbox{then}\quad
+     \Gamma \vdash p \implies q,
+   & \mbox{(Flexible Deduction)}
+  \\\quad \vec x = \fv~p, \vec k \mbox{ constants.}
+  \end{array}
+}

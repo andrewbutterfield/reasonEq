@@ -70,6 +70,11 @@ getitem a (x:xs)
                     return (x:xs')
 \end{code}
 
+\subsubsection{Intercalation, dropping nulls}
+\begin{code}
+intcalNN sep = intercalate sep . filter (not . null)
+\end{code}
+
 \subsubsection{Set disjointness}
 
 \begin{code}

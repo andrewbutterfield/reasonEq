@@ -12,11 +12,20 @@ import System.Console.Haskeline
 import Control.Monad.IO.Class
 import Data.Map (Map)
 import qualified Data.Map as M
+import Data.Set (Set)
+import qualified Data.Set as S
 import Data.List
+import Data.Maybe
 
 import NiceSymbols hiding (help)
+
+import Utilities
+import LexBase
+import Variables
 import AST
 import VarData
+import SideCond
+import TestRendering
 \end{code}
 
 \begin{code}
@@ -48,8 +57,8 @@ and derive \texttt{f\_ :: T -> Rec -> Rec}.
 data REqState
  = ReqState {
       known :: [VarTable]
-    , laws :: [Term]
-    , goal :: Term
+    , laws :: [(Term,SideCond)]
+    , goal :: (Term,SideCond)
     }
 known__ f r = r{known = f $ known r} ; known_  = known__ . const
 laws__  f r = r{laws  = f $ laws r}  ; laws_   = laws__  . const
@@ -58,13 +67,17 @@ goal__  f r = r{goal  = f $ goal r}  ; goal_   = goal__  . const
 
 \begin{code}
 initState :: [String] -> IO REqState
-initState args = return $
-  ReqState
-    []                           -- known :: [VarTable]
-    []                           -- laws :: [Term]
-    (Val P $ Txt $ concat args)  -- goal :: Term
+initState args
+  = return $
+      ReqState
+      []                                  -- known :: [VarTable]
+      []                                  -- laws :: [(Term,SideCond)]
+      (Val P $ Txt $ concat args, scTrue) -- goal :: (Term,SideCond)
 
-summariseREqS reqs = show $ goal reqs
+summariseREqS :: REqState -> String
+summariseREqS reqs
+ = let (t,sc) = goal reqs
+   in  intcalNN "," [trTerm 0 t,trSideCond sc]
 \end{code}
 
 \newpage
@@ -158,6 +171,6 @@ cmdX
   where
      xcomm _ reqs = do outputStrLn "X! Whoo! X!"
                        return (goal__ addX reqs)
-     addX (Val P (Txt s)) = Val P $ Txt ('X':s)
+     addX (Val P (Txt s),sc) = (Val P $ Txt ('X':s),sc)
      addX t = t
 \end{code}

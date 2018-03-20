@@ -25,6 +25,7 @@ import Variables
 import AST
 import VarData
 import SideCond
+import Propositions
 import TestRendering
 \end{code}
 

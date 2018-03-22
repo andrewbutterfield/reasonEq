@@ -17,6 +17,7 @@ module Propositions (
 , implies, mkImplies, (==>)
 , propKnown
 , propLaws
+, propConjs
 ) where
 
 import Data.Maybe
@@ -263,12 +264,22 @@ axImplDef
 \end{code}
 
 \begin{code}
-
 propLaws :: [(String,Term,SideCond)]
 propLaws
  = [ axEqvAssoc, axEqvSymm, axEqvId
    , axFalseDef, axNotEqvDistr
    , axOrSymm, axOrAssoc, axOrIdem, axOrEqvDistr, axExclMidl
    , axGoldRule, axImplDef ]
+\end{code}
 
+\newpage
+\subsection{Propositional Conjectures}
+
+We also supply a starter pack of conjectures to be proven:
+$$\begin{array}{ll}
+  P = Q & \LNAME{whatever}
+\end{array}$$
+\begin{code}
+propConjs :: [(String,Term,SideCond)]
+propConjs = []
 \end{code}

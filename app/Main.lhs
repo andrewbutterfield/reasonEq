@@ -59,22 +59,25 @@ data REqState
  = ReqState {
       known :: [VarTable]
     , laws :: [(String,Term,SideCond)]
+    , conj :: [(String,Term,SideCond)]
     , goal :: Maybe (String,Term,SideCond)
     }
 known__ f r = r{known = f $ known r} ; known_  = known__ . const
 laws__  f r = r{laws  = f $ laws r}  ; laws_   = laws__  . const
+conj__  f r = r{conj  = f $ conj r}  ; conj_   = conj__  . const
 goal__  f r = r{goal  = f $ goal r}  ; goal_   = goal__  . const
 \end{code}
 
 \begin{code}
 initState :: [String] -> IO REqState
-initState []       =  return $ ReqState [] [] Nothing
-initState ["dev"]  =  return $ ReqState [propKnown] propLaws Nothing
+initState []       =  return $ ReqState [] [] [] Nothing
+initState ["dev"]  =  return $ ReqState [propKnown] propLaws propConjs Nothing
 
 summariseREqS :: REqState -> String
 summariseREqS reqs
  = intcalNN ":" [ show $ length $ known reqs
                 , show $ length $ laws reqs
+                , show $ length $ conj reqs
                 , case goal reqs of
                    Nothing -> ""
                    _ -> "!"
@@ -181,31 +184,31 @@ help reqs (what:_)
 The command repository:
 \begin{code}
 commands :: Commands
-commands = [cmdShow,cmdX]
+commands = [cmdShow]
 
-cmdX
-  = ( "X"
-    , "'x'"
-    , "the mysterious 'X' !"
-    , xcomm )
-  where
-     xcomm _ reqs = do outputStrLn "X! Whoo! X!"
-                       return (goal_ addX reqs)
-     addX = Just ("X",Val P $ Txt "X",scTrue)
 
+cmdShow :: CommDescr
 cmdShow
   = ( "sh"
     , "show parts of the prover state"
     , unlines
-        [ "sh knwn - show known variables"
-        , "sh laws - show current laws"
-        , "sh goal - show current goal"]
-    , showState)
+        [ "sh "++shKnown++" - show known variables"
+        , "sh "++shLaws++" - show current laws"
+        , "sh "++shConj++" - show current conjectures"
+        , "sh "++shGoal++" - show current goal"]
+    , showState )
 
-showState ["knwn"] reqs = doshow reqs $ showKnown $ known reqs
-showState ["laws"] reqs = doshow reqs $ showLaws $ laws reqs
-showState ["goal"] reqs = doshow reqs $ showGoal $ goal reqs
-showState _        reqs = doshow reqs "unknown 'show' option."
+shKnown = "k"
+shLaws  = "l"
+shConj = "c"
+shGoal = "g"
+
+showState [cmd] reqs
+ | cmd == shKnown  =  doshow reqs $ showKnown $ known reqs
+ | cmd == shLaws   =  doshow reqs $ showLaws  $ laws  reqs
+ | cmd == shConj   =  doshow reqs $ showLaws  $ conj  reqs
+ | cmd == shGoal   =  doshow reqs $ showGoal  $ goal  reqs
+showState _ reqs   =  doshow reqs "unknown 'show' option."
 
 doshow reqs str
  = do outputStrLn str

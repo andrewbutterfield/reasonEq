@@ -81,11 +81,22 @@ summariseREqS reqs
                 ]
 \end{code}
 
+Showing known variables:
+\begin{code}
+showKnown vts = unlines $ map trVarTable $ vts
+\end{code}
+
 Showing laws:
 \begin{code}
 showLaws lws = unlines $ map showLaw $ lws
- where
-   showLaw (n,t,sc) = n ++ " " ++ trTerm 0 t ++ " ["++trSideCond sc++"]"
+
+showLaw (n,t,sc) = n ++ " " ++ trTerm 0 t ++ " ["++trSideCond sc++"]"
+\end{code}
+
+Showing Goal:
+\begin{code}
+showGoal Nothing = "none."
+showGoal (Just goal) = showLaw goal
 \end{code}
 
 \newpage
@@ -191,9 +202,9 @@ cmdShow
         , "sh goal - show current goal"]
     , showState)
 
-showState ["knwn"] reqs = doshow reqs "Can't show known variables yet."
+showState ["knwn"] reqs = doshow reqs $ showKnown $ known reqs
 showState ["laws"] reqs = doshow reqs $ showLaws $ laws reqs
-showState ["goal"] reqs = doshow reqs "Can't show current goal yet."
+showState ["goal"] reqs = doshow reqs $ showGoal $ goal reqs
 showState _        reqs = doshow reqs "unknown 'show' option."
 
 doshow reqs str

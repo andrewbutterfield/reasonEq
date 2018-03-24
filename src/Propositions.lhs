@@ -124,7 +124,7 @@ $$
 $$
 \begin{code}
 axEqvAssoc
- = ( "Ax-"++_equiv++"-assoc"
+ = ( _equiv++" assoc"
    , ((p === q) === r) === (p === (q === r))
    , scTrue )
 \end{code}
@@ -136,7 +136,7 @@ $$
 $$
 \begin{code}
 axEqvSymm
- = ( "Ax-"++_equiv++"-symm"
+ = ( _equiv++"-symm"
    , (p === q) === (q === p)
    , scTrue )
 \end{code}
@@ -148,7 +148,7 @@ $$
 $$
 \begin{code}
 axEqvId
- = ( "Ax-"++_equiv++"-id"
+ = ( _equiv++"-id"
    , (trueP === q) === q
    , scTrue )
 \end{code}
@@ -160,7 +160,7 @@ $$
 $$
 \begin{code}
 axFalseDef
- = ( "Ax-false-def"
+ = ( "false-def"
    , falseP === mkNot trueP
    , scTrue )
 \end{code}
@@ -172,7 +172,7 @@ $$
 $$
 \begin{code}
 axNotEqvDistr
- = ( "Ax-"++_lnot++"-"++_equiv++"-distr"
+ = ( _lnot++"-"++_equiv++"-distr"
    , mkNot(p === q) ===  (mkNot p === q)
    , scTrue )
 \end{code}
@@ -185,7 +185,7 @@ $$
 $$
 \begin{code}
 axOrSymm
- = ( "Ax-"++_lor++"-symm"
+ = ( _lor++"-symm"
    , p \/ q === q \/ p
    , scTrue )
 \end{code}
@@ -197,7 +197,7 @@ $$
 $$
 \begin{code}
 axOrAssoc
- = ( "Ax-"++_lor++"-assoc"
+ = ( _lor++"-assoc"
    , (p \/ q) \/ r === p \/ (q \/ r)
    , scTrue )
 \end{code}
@@ -210,7 +210,7 @@ $$
 $$
 \begin{code}
 axOrIdem
- = ( "Ax-"++_lor++"-idem"
+ = ( _lor++"-idem"
    , p \/ p === p
    , scTrue )
 \end{code}
@@ -222,7 +222,7 @@ $$
 $$
 \begin{code}
 axOrEqvDistr
- = ( "Ax-"++_lor++"-"++_equiv++"-distr"
+ = ( _lor++"_"++_equiv++"_distr"
    , (p \/ (q === r)) === (p \/ q === p \/ r)
    , scTrue )
 \end{code}
@@ -234,7 +234,7 @@ $$
 $$
 \begin{code}
 axExclMidl
- = ( "Ax-excl-middle"
+ = ( "excl-middle"
    , p \/ mkNot p
    , scTrue )
 \end{code}
@@ -246,7 +246,7 @@ $$
 $$
 \begin{code}
 axGoldRule
- = ( "Ax-golden-rule"
+ = ( "golden-rule"
    , (p /\ q) === ((p === q) === p \/ q)
    , scTrue )
 \end{code}
@@ -258,7 +258,7 @@ $$
 $$
 \begin{code}
 axImplDef
- = ( "Ax-"++_implies++"-def"
+ = ( _implies++"_def"
    , p ==> q === (p \/ q === q)
    , scTrue )
 \end{code}

@@ -34,7 +34,6 @@ name = "reasonEq"
 version = "0.5.0.0++"
 \end{code}
 
-\subsubsection{Top Level Code}
 \begin{code}
 main :: IO ()
 main
@@ -45,7 +44,7 @@ main
 \end{code}
 
 \newpage
-\subsubsection{System State}
+\subsection{System State}
 
 Currently in prototyping mode,
 so this is one large record.
@@ -84,6 +83,7 @@ summariseREqS reqs
                 ]
 \end{code}
 
+\subsubsection{The Show Command}
 Showing known variables:
 \begin{code}
 showKnown vts = unlines $ map trVarTable $ vts
@@ -91,19 +91,33 @@ showKnown vts = unlines $ map trVarTable $ vts
 
 Showing laws:
 \begin{code}
-showLaws lws = unlines $ map showLaw $ lws
+showLaws lws = unlines $ map (showLaw (nameWidth lws)) $ lws
 
-showLaw (n,t,sc) = n ++ " " ++ trTerm 0 t ++ " ["++trSideCond sc++"]"
+nameWidth lws = maximum $ map (length . getName) lws
+getName (n,_,_) = n
+
+showLaw w (n,t,sc)
+  = ldq ++ n ++ rdq ++ pad w n ++ "  " ++ trTerm 0 t ++ "  "++trSideCond sc
+
+pad w n
+  | ext > 0    =  replicate ext ' '
+  | otherwise  =  ""
+  where ext = w - length n
 \end{code}
 
 Showing Goal:
 \begin{code}
 showGoal Nothing = "none."
-showGoal (Just goal) = showLaw goal
+showGoal (Just goal) = showLaw 0 goal
 \end{code}
 
+\subsubsection{Set Command}
+
+Set Goal:
+
+
 \newpage
-\subsubsection{GUI Top-Level}
+\subsection{GUI Top-Level}
 \begin{code}
 gui :: [String] -> IO ()
 gui args = putStrLn $ unlines
@@ -113,7 +127,7 @@ gui args = putStrLn $ unlines
 \end{code}
 
 \newpage
-\subsubsection{REPL Top-Level}
+\subsection{REPL Top-Level}
 \begin{code}
 repl :: [String] -> IO ()
 repl args = runInputT defaultSettings
@@ -158,7 +172,8 @@ docommand reqs ("?":what)
  = help reqs what
 docommand reqs (cmd:args)
  = case clookup cmd commands of
-     Nothing -> outputStrLn ("unknown cmd: '"++cmd++"', '?' for help.") >> return reqs
+     Nothing -> outputStrLn ("unknown cmd: '"++cmd++"', '?' for help.")
+                 >> return reqs
      Just (_,_,_,c)  ->  c args reqs
 \end{code}
 
@@ -181,12 +196,14 @@ help reqs (what:_)
 
 
 \newpage
-The command repository:
+\subsection{Command Repository}
 \begin{code}
 commands :: Commands
-commands = [cmdShow]
+commands = [cmdShow,cmdSet]
+\end{code}
 
-
+\subsubsection{Show Command }
+\begin{code}
 cmdShow :: CommDescr
 cmdShow
   = ( "sh"
@@ -213,4 +230,28 @@ showState _ reqs   =  doshow reqs "unknown 'show' option."
 doshow reqs str
  = do outputStrLn str
       return reqs
+\end{code}
+
+\subsubsection{Set Command}
+\begin{code}
+cmdSet
+  = ( "set"
+    , "set parts of prover state"
+    , unlines
+       [ "set goal name - set goal to named conjecture"]
+    , setState )
+
+setState [what,name] reqs
+ | what == "goal"  =  setgoal reqs name
+setState _ reqs = doshow reqs "unknown 'set' option"
+
+setgoal reqs name
+  = case llookup name $ conj reqs of
+      Nothing -> doshow reqs ("conjecture '"++name++"' not found.")
+      Just cnj -> return $ goal_ (Just cnj) reqs
+
+llookup name [] = Nothing
+llookup name (lw@(n,_,_):rest)
+  | name == n  =  Just lw
+  | otherwise  =  llookup name rest
 \end{code}

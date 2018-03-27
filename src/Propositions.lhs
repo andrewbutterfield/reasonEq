@@ -266,20 +266,36 @@ axImplDef
 \begin{code}
 propLaws :: [(String,Term,SideCond)]
 propLaws
- = [ axEqvAssoc, axEqvSymm, axEqvId
-   , axFalseDef, axNotEqvDistr
-   , axOrSymm, axOrAssoc, axOrIdem, axOrEqvDistr, axExclMidl
-   , axGoldRule, axImplDef ]
+  = [ axEqvAssoc, axEqvSymm, axEqvId
+    , axFalseDef, axNotEqvDistr
+    , axOrSymm, axOrAssoc, axOrIdem, axOrEqvDistr, axExclMidl
+    , axGoldRule, axImplDef ]
 \end{code}
 
 \newpage
 \subsection{Propositional Conjectures}
 
-We also supply a starter pack of conjectures to be proven:
-$$\begin{array}{ll}
-  P = Q & \LNAME{whatever}
-\end{array}$$
+We also supply a starter pack of conjectures to be proven.
+$$
+\CONJPROP
+$$
+
+
+$$
+  \begin{array}{ll}
+     \CJorZero & \CJorZeroN
+  \end{array}
+$$
+\begin{code}
+cjOrZero
+ = ( _lor++"_zero"
+   , p \/ trueP === trueP
+   , scTrue )
+\end{code}
+
+
 \begin{code}
 propConjs :: [(String,Term,SideCond)]
-propConjs = []
+propConjs
+  = [ cjOrZero ]
 \end{code}

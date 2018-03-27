@@ -6,6 +6,11 @@
 % This does not generate any typeset output.
 %
 \def\LNAME#1{\mbox{\textsc{#1}}}
+\def\QNAME#1{\LNAME{``{#1}''}}
+
+
+
+%%%%  ==== Substitutions ========================================================
 
 \def\DEFOEESUBST{
   \begin{eqnarray*}
@@ -214,43 +219,50 @@
 \end{array}
 }
 
+
+
+
+%%%%  ==== Propositions ========================================================
+
+%% ---- Propositional Axioms ---------------------------------------------------
+
 \def\AXeqvAssocL{(P\equiv Q)\equiv R}
 \def\AXeqvAssocR{P\equiv (Q\equiv R)}
 \def\AXeqvAssoc{(\AXeqvAssocL) \equiv (\AXeqvAssocR)}
-\def\AXeqvAssocN{\LNAME{Ax-$\equiv$-assoc}}
+\def\AXeqvAssocN{\QNAME{$\equiv$-assoc}}
 
 \def\AXeqvSymm{P\equiv Q\equiv Q \equiv P}
-\def\AXeqvSymmN{\LNAME{Ax-$\equiv$-symm}}
+\def\AXeqvSymmN{\QNAME{$\equiv$-symm}}
 
 \def\AXeqvId{\textit{true} \equiv Q\equiv Q}
-\def\AXeqvIdN{\LNAME{Ax-$\equiv$-id}}
+\def\AXeqvIdN{\QNAME{$\equiv$-id}}
 
 \def\AXfalseDef{\textit{false} \equiv \neg \mbox{\textit{true}}}
-\def\AXfalseDefN{\LNAME{Ax-$false$-def}}
+\def\AXfalseDefN{\QNAME{$false$-def}}
 
 \def\AXnotEqvDistr{\neg(P\equiv Q) \equiv \neg P \equiv Q}
-\def\AXnotEqvDistrN{\LNAME{Ax-$\neg$-$\equiv$-distr}}
+\def\AXnotEqvDistrN{\QNAME{$\neg$-$\equiv$-distr}}
 
 \def\AXorSymm{P\vee Q \equiv  Q \vee P}
-\def\AXorSymmN{\LNAME{Ax-$\vee$-symm}}
+\def\AXorSymmN{\QNAME{$\vee$-symm}}
 
 \def\AXorAssoc{(P\vee Q) \vee R \equiv  P \vee (Q \vee R)}
-\def\AXorAssocN{\LNAME{Ax-$\vee$-assoc}}
+\def\AXorAssocN{\QNAME{$\vee$-assoc}}
 
 \def\AXorIdem{P\vee P \equiv P}
-\def\AXorIdemN{\LNAME{Ax-$\vee$-idem}}
+\def\AXorIdemN{\QNAME{$\vee$-idem}}
 
 \def\AXorEqvDistr{P \vee (Q\equiv R) \equiv P\vee Q \equiv P \vee R}
-\def\AXorEqvDistrN{\LNAME{Ax-$\vee$-$\equiv$-distr}}
+\def\AXorEqvDistrN{\QNAME{$\vee$-$\equiv$-distr}}
 
 \def\AXexclMdl{P \vee \neg P}
-\def\AXexclMdlN{\LNAME{Ax-Excl-Mdl}}
+\def\AXexclMdlN{\QNAME{Excl-Mdl}}
 
 \def\AXgoldRule{P\wedge Q \equiv  P \equiv Q \equiv P \vee Q}
-\def\AXgoldRuleN{\LNAME{Ax-Golden-Rule}}
+\def\AXgoldRuleN{\QNAME{Golden-Rule}}
 
 \def\AXimplDef{P\Rightarrow Q \equiv P\vee  Q \equiv Q}
-\def\AXimplDefN{\LNAME{Ax-$\implies$-def}}
+\def\AXimplDefN{\QNAME{$\implies$-def}}
 
 \def\AXPROP{
   \begin{array}{ll}
@@ -269,189 +281,303 @@
   \end{array}
 }
 
+
+
+%% ---- Propositional Conjectures ----------------------------------------------
+
+
+% -- Disjunction------------------------
+
+\def\CJorZero{P \lor \textit{true} \equiv \textit{true}}
+\def\CJorZeroN{\QNAME{$\lor$-zero}}
+
+% \def\lawOrZero{\NmCmtLaw{$\lor$-zero}{$\GSN{3.29}$}{p \lor \TRUE \equiv \TRUE}}
+% \def\lawOrUnit{\NmCmtLaw{$\lor$-unit}{$\GSN{3.30}$}{p\lor \FALSE \equiv p}}
+% \def\lawOrDistr{\NmCmtLaw{$\lor$-$\lor$-distr}{$\GSN{3.31}$}{p \lor (q\lor r) \equiv (p\lor q) \lor (p \lor r)}}
+% \def\lawOrEqvSplit{\NmCmtLaw{$\lor$-$\equiv$-split}{$\GSN{3.32}$}{p\lor q \equiv p \lor \lnot q \equiv p}}
+%
+% % Conjunction
+% \def\lawGldRule{\NmCmtLaw{golden-rule}{$\GSN{3.35}$}{p \land q \equiv p \equiv q \equiv p \lor q}}
+% \def\lawAndComm{\NmCmtLaw{$\land$-comm}{$\GSN{3.36}$}{p\land q \equiv q \land p}}
+% \def\lawAndAssoc{\NmCmtLaw{$\land$-assoc}{$\GSN{3.37}$}{(p\land q) \land r \equiv p \land (q \land r)}}
+% \def\lawAndIdem{\NmCmtLaw{$\land$-idem}{$\GSN{3.38}$}{p\land p \equiv p}}
+% \def\lawAndUnit{\NmCmtLaw{$\land$-unit}{$\GSN{3.39}$}{p\land \TRUE \equiv p}}
+% \def\lawAndZero{\NmCmtLaw{$\land$-zero}{$\GSN{3.40}$}{p \land \FALSE \equiv \FALSE}}
+% \def\lawAndDistr{\NmCmtLaw{$\land$-$\land$-distr}{$\GSN{3.41}$}{p \land (q\land r) \equiv (p\land q) \land (p \land r)}}
+% \def\lawContradict{\NmCmtLaw{contradiction}{$\GSN{3.42}$}{p \land \lnot p \equiv \FALSE}}
+%
+% % Disj Conj
+% \def\lawAndOrAbs{\NmCmtLaw{$\land$-$\lor$-absorb}{$\GSN{3.43}$}{p\land (p\lor q) \equiv p}}
+% \def\lawOrAndAbs{\NmCmtLaw{$\lor$-$\land$-absorb}{$\GSN{3.43}$}{p \lor (p \land q) \equiv p}}
+% \def\lawAndOrNAbs{\NmCmtLaw{$\land$-$\lor$-absorb}{$\GSN{3.44}$}{p \land (\lnot p\lor q) \equiv p \land q}}
+% \def\lawOrAndNAbs{\NmCmtLaw{$\lor$-$\land$-absorb}{$\GSN{3.43}$}{p \lor (\lnot p \land q) \equiv p \lor q}}
+% \def\lawOrAndDistr{\NmCmtLaw{$\lor$-$\land$-distr}{$\GSN{3.45}$}{p \lor (q\land r) \equiv (p\lor q) \land (p \lor r)}}
+% \def\lawAndOrDistr{\NmCmtLaw{$\land$-$\lor$-distr}{$\GSN{3.46}$}{p \land (q\lor r) \equiv (p\land q) \lor (p \land r)}}
+% \def\lawdeMorganNand{\NmCmtLaw{deMorgan}{$\GSN{3.47}$}{\lnot (p\land q) \equiv \lnot p \lor \lnot q}}
+% \def\lawdeMorganNor{\NmCmtLaw{deMorgan}{$\GSN{3.47}$}{\lnot (p\lor q) \equiv \lnot p \land \lnot q}}
+% \def\lawRepl{\NmCmtLaw{replacment}{$\GSN{3.51}$}{(p\equiv q) \land (r \equiv p) \equiv (p\equiv q) \land (r\land q)}}
+% \def\lawEqvDef{\NmCmtLaw{$\equiv$-def}{$\GSN{3.52}$}{p \equiv q \equiv (p\land q) \lor (\lnot p \land \lnot q)}}
+% \def\lawExor{\NmCmtLaw{exclusive-or}{$\GSN{3.53}$}{p\not \equiv q \equiv (\lnot p \land q) \lor (p\land \lnot q)}}
+%
+% % Negation, inequivalence and FALSE
+% \def\lawFalseDef{\NmCmtLaw{\m\FALSE-def}{$\GSN{3.8}$}{\FALSE \equiv \lnot \TRUE}}
+% \def\lawNotEqvDistr{\NmCmtLaw{$\lnot$-$\equiv$-distr}{$\GSN{3.9}$}{\lnot(p\equiv q) \equiv \lnot p \equiv q}}
+% \def\lawNEqvDef{\NmCmtLaw{$\not\equiv$-def}{$\GSN{3.10}$}{(p\not\equiv q) \equiv \lnot(p\equiv q)}}
+% \def\lawNotEqvSwap{\NmCmtLaw{$\lnot$-$\equiv$-swap}{$\GSN{3.11}$}{\lnot p\equiv q \equiv p \equiv \lnot q}}
+% \def\lawNotInvol{\NmCmtLaw{$\lnot$-invol}{$\GSN{3.12}$}{\lnot \lnot p \equiv p}}
+% \def\lawNotFalse{\NmCmtLaw{$\FALSE$-neg}{$\GSN{3.13}$}{\lnot \FALSE \equiv \TRUE}}
+% \def\lawNEqvAlt{\NmCmtLaw{$\lnot$-$\equiv$-swap}{$\GSN{3.14}$}{(p\not \equiv q) \equiv \lnot p \equiv q}}
+% \def\lawNEqvAAlt{\NmCmtLaw{$\not\equiv$-def}{$\GSN{3.15}$}{\lnot p \equiv p \equiv \FALSE}}
+% \def\lawNEqvComm{\NmCmtLaw{$\not\equiv$-comm}{$\GSN{3.16}$}{(p\not \equiv q) \equiv (q\not\equiv p)}}
+% \def\lawNEqvAssoc{\NmCmtLaw{$\not\equiv$-assoc}{$\GSN{3.17}$}{((p\not\equiv q)\not\equiv r) \equiv (p\not\equiv (q\not\equiv r))}}
+% \def\lawNEqvMutual{\NmCmtLaw{$\not\equiv$-mutual}{$\GSN{3.18}$}{((p\not \equiv q)\equiv r) \equiv (p\not\equiv (q\equiv r))}}
+% \def\lawNotEqvIntchg{\NmCmtLaw{$\not\equiv$-intchg}{$\GSN{3.19}$}{p\not \equiv q \equiv r\ \equiv\ p\equiv q\not \equiv r}}
+%
+% % Implication
+% \def\lawImpJoin{\NmCmtLaw{$\implies$-join}{$\GSN{3.57}$}{p \implies q \equiv p\lor q \equiv q}}
+% \def\lawPmiDef{\NmCmtLaw{$\impliedby$-def}{$\GSN{3.58}$}{p \impliedby q \equiv q \implies p}}
+% \def\lawImpDef{\NmCmtLaw{$\implies$-def}{$\GSN{3.59}$}{p\implies q \equiv \lnot p\lor q}}
+% \def\lawImpMeet{\NmCmtLaw{$\implies$-meet}{$\GSN{3.60}$}{p\implies q \equiv p\land q\equiv p}}
+% \def\lawContraPos{\NmCmtLaw{contrapositive}{$\GSN{3.61}$}{p\implies q \equiv \lnot q\implies \lnot p}}
+% \def\lawImpEqvDistr{\NmCmtLaw{$\implies$-$\equiv$-distr}{$\GSN{3.63}$}{p \implies (q\equiv r) \equiv p\implies q \equiv p \implies r}}
+% \def\lawShunting{\NmCmtLaw{shunting}{$\GSN{3.65}$}{p \land q\implies r \equiv p\implies (q \implies r)}}
+% \def\lawAndImp{\NmCmtLaw{GS3.66}{$\GSN{3.66}$}{p \land (p\implies q) \equiv p\land q}}
+% \def\lawAndPmi{\NmCmtLaw{GS3.67}{$\GSN{3.67}$}{p \land (q\implies p) \equiv p}}
+% \def\lawOrImp{\NmCmtLaw{GS3.68}{$\GSN{3.68}$}{p \lor (p\implies q) \equiv \TRUE}}
+% \def\lawOrPmi{\NmCmtLaw{GS3.69}{$\GSN{3.69}$}{p \lor (q\implies p) \equiv q\implies p}}
+% \def\lawOrImpAnd{\NmCmtLaw{GS3.70}{$\GSN{3.70}$}{p \lor q\implies p\land q \equiv p \equiv q}}
+% \def\lawImpRefl{\NmCmtLaw{$\implies$-refl}{$\GSN{3.71}$}{p\implies p \equiv \TRUE}}
+% \def\lawImpRZero{\NmCmtLaw{$\implies$-r-zero}{$\GSN{3.72}$}{p \implies \TRUE \equiv \TRUE}}
+% \def\lawImpLUnit{\NmCmtLaw{$\implies$-l-unit}{$\GSN{3.73}$}{\TRUE \implies p \equiv p}}
+% \def\lawNotDef{\NmCmtLaw{$\lnot$-def}{$\GSN{3.74}$}{p\implies \FALSE \equiv \lnot p}}
+% \def\lawFalseImp{\NmCmtLaw{GS3.75}{$\GSN{3.75}$}{\FALSE \implies p \equiv \TRUE}}
+% \def\lawImpTrans{\NmCmtLaw{$\implies$-trans}{$\GSN{3.82}$}{(p\implies q)\land (q \implies r) \implies (p\implies r)}}
+% \def\lawEqvImpTrans{\NmCmtLaw{$\equiv$-$\implies$-trans}{$\GSN{3.82}$}{(p\equiv q)\land (q \implies r) \implies (p\implies r)}}
+% \def\lawImpEqvTrans{\NmCmtLaw{$\implies$-$\equiv$-trans}{$\GSN{3.82}$}{(p\implies q)\land (q \equiv r) \implies (p\implies r)}}
+%
+% \def\lawAnteStrngthn{
+%   P \land Q \implies P
+% }
+% \def\lawCnsqWkn{
+%   P \implies P \lor Q
+% }
+% \def\lawAnteOrDistr{
+%   P \lor Q \implies R \quad\equiv\quad   (P \implies R)  \land (Q \implies R)
+% }
+% \def\lawAnteAndDistr{
+%   P \land Q \implies R \quad\equiv\quad   (P \implies R)  \lor (Q \implies R)
+% }
+% \def\lawCnsqAndDistr{
+%   P \implies Q \land R \quad\equiv\quad (P \implies Q) \land (P \implies R)
+% }
+% \def\lawCnsqOrDistr{
+%   P \implies Q \lor R \quad\equiv\quad (P \implies Q) \lor (P \implies R)
+% }
+%
+% %Equivalence and TRUE
+% \def\lawEqvAssoc{\NmCmtLaw{$\equiv$-assoc}{$\GSN{3.1}$}{((p\equiv q)\equiv r) \equiv (p\equiv (q\equiv r))}}
+% \def\lawEqvComm{\NmCmtLaw{$\equiv$-comm}{$\GSN{3.2}$}{p\equiv q \equiv q \equiv p}}
+% \def\lawEqvUnit{\NmCmtLaw{$\equiv$-unit}{$\GSN{3.3}$}{\TRUE \equiv q \equiv q}}
+% \def\lawTrue{\NmCmtLaw{true}{$\GSN{3.4}$}{\TRUE}}
+% \def\lawEqvRefl{\NmCmtLaw{$\equiv$-refl}{$\GSN{3.5}$}{p\equiv p}}
+
+
+\def\CONJPROP{
+  \begin{array}{ll}
+     \CJorZero & \CJorZeroN
+  \end{array}
+}
+
+
+
+
+%%%%  ==== Predicates ==========================================================
+
+%% ---- Predicate Axioms -------------------------------------------------------
+
 \def\AXorAllOScopeL{p \lor (\forall \lst x,\lst y @ q)}
 \def\AXorAllOScopeR{\forall \lst x @ p \lor (\forall \lst y @ q)}
 \def\AXorAllOScopeS{\lst x \notin p}
-\def\AXorAllOScopeN{\LNAME{Ax-$\lor$-$\forall x$-scope}}
+\def\AXorAllOScopeN{\QNAME{$\lor$-$\forall x$-scope}}
 \def\AXorAllOScope{\AXorAllOScopeL \equiv \AXorAllOScopeR, \quad \AXorAllOScopeS}
 
 \def\AXorAllEScopeL{p \lor (\forall \lst E, \lst F @ q)}
 \def\AXorAllEScopeR{\forall \lst E @ p \lor (\forall \lst F @ q)}
 \def\AXorAllEScopeS{\lst E \notin p}
-\def\AXorAllEScopeN{\LNAME{Ax-$\lor$-$\forall E$-scope}}
+\def\AXorAllEScopeN{\QNAME{$\lor$-$\forall E$-scope}}
 \def\AXorAllEScope{\AXorAllEScopeL \equiv \AXorAllEScopeR, \quad \AXorAllEScopeS}
 
 \def\AXorAllPScopeL{p \lor (\forall \lst P,  \lst Q @ q)}
 \def\AXorAllPScopeR{\forall \lst P @ p \lor (\forall \lst Q @ q)}
 \def\AXorAllPScopeS{ \lst P \notin p}
-\def\AXorAllPScopeN{\LNAME{Ax-$\lor$-$\forall P$-scope}}
+\def\AXorAllPScopeN{\QNAME{$\lor$-$\forall P$-scope}}
 \def\AXorAllPScope{\AXorAllPScopeL \equiv \AXorAllPScopeR, \quad \AXorAllPScopeS}
 
 \def\AXallODistrL{(\forall \lst x @ p \land q)}
 \def\AXallODistrR{(\forall \lst x @ p) \land (\forall \lst x @ q)}
-\def\AXallODistrN{\LNAME{Ax-$\forall x$-distr}}
+\def\AXallODistrN{\QNAME{$\forall x$-distr}}
 \def\AXallODistr{\AXallODistrL \equiv \AXallODistrR}
 
 \def\AXallEDistrL{(\forall \lst E @ p \land q)}
 \def\AXallEDistrR{(\forall \lst E @ p) \land (\forall \lst E @ q)}
-\def\AXallEDistrN{\LNAME{Ax-$\forall E$-distr}}
+\def\AXallEDistrN{\QNAME{$\forall E$-distr}}
 \def\AXallEDistr{\AXallEDistrL \equiv \AXallEDistrR}
 
 \def\AXallPDistrL{(\forall \lst P @ p \land q)}
 \def\AXallPDistrR{(\forall \lst P @ p) \land (\forall \lst P @ q)}
-\def\AXallPDistrN{\LNAME{Ax-$\forall P$-distr}}
+\def\AXallPDistrN{\QNAME{$\forall P$-distr}}
 \def\AXallPDistr{\AXallPDistrL \equiv \AXallPDistrR}
 
 \def\AXallOInstL{\forall x, \lst x @ p}
 \def\AXallOInstR{\forall \lst x  @ p[e/x]}
-\def\AXallOInstN{\LNAME{Ax-$\forall x$-inst}}
+\def\AXallOInstN{\QNAME{$\forall x$-inst}}
 \def\AXallOInst{(\AXallOInstL) \implies (\AXallOInstR)}
 
 \def\AXallEInstL{\forall E , \lst E @ p}
 \def\AXallEInstR{\forall \lst E @ p[e/E]}
-\def\AXallEInstN{\LNAME{Ax-$\forall E$-inst}}
+\def\AXallEInstN{\QNAME{$\forall E$-inst}}
 \def\AXallEInst{(\AXallEInstL) \implies (\AXallEInstR)}
 
 \def\AXallPInstL{\forall P, \lst P @ q}
 \def\AXallPInstR{\forall \lst P @ q[r/P]}
-\def\AXallPInstN{\LNAME{Ax-$\forall P$-inst}}
+\def\AXallPInstN{\QNAME{$\forall P$-inst}}
 \def\AXallPInst{(\AXallPInstL) \implies (\AXallPInstR)}
 
 \def\AXallORngL{\forall \lst x | r @ p}
 \def\AXallORngR{\forall \lst x @ r \implies p}
-\def\AXallORngN{\LNAME{Ax-$\forall x$-range}}
+\def\AXallORngN{\QNAME{$\forall x$-range}}
 \def\AXallORng{(\AXallORngL) \equiv (\AXallORngR)}
 
 \def\AXanyODefL{\exists \lst x @ p}
 \def\AXanyODefR{\lnot (\forall \lst x @ \lnot p)}
-\def\AXanyODefN{\LNAME{Ax-$\exists x$-def}}
+\def\AXanyODefN{\QNAME{$\exists x$-def}}
 \def\AXanyODef{(\AXanyODefL) \equiv \AXanyODefR}
 
 \def\AXanyEDefL{\exists \lst E @ p}
 \def\AXanyEDefR{\lnot (\forall \lst E @ \lnot p)}
-\def\AXanyEDefN{\LNAME{Ax-$\exists E$-def}}
+\def\AXanyEDefN{\QNAME{$\exists E$-def}}
 \def\AXanyEDef{(\AXanyEDefL) \equiv \AXanyEDefR}
 
 \def\AXanyPDefL{\exists \lst P @ p}
 \def\AXanyPDefR{\lnot (\forall \lst P @ \lnot p)}
-\def\AXanyPDefN{\LNAME{Ax-$\exists P$-def}}
+\def\AXanyPDefN{\QNAME{$\exists P$-def}}
 \def\AXanyPDef{(\AXanyPDefL) \equiv \AXanyPDefR}
 
 \def\AXanyORngL{\exists \lst x | r @ p}
 \def\AXanyORngR{\exists \lst x @ r \land p}
-\def\AXanyORngN{\LNAME{Ax-$\exists x$-range}}
+\def\AXanyORngN{\QNAME{$\exists x$-range}}
 \def\AXanyORng{(\AXanyORngL) \equiv (\AXanyORngR)}
 
 \def\AXoneODefL{\exists! \lst x @ p}
 \def\AXoneODefR{(\exists \lst x @ p)
                  \land
                  \exists \lst y @ p[\lst y/ \lst x] \implies \lst y = \lst x}
-\def\AXoneODefN{\LNAME{Ax-$\exists! x$-def}}
+\def\AXoneODefN{\QNAME{$\exists! x$-def}}
 \def\AXoneODef{(\AXoneODefL) \equiv (\AXoneODefR)}
 
 \def\AXoneORngL{\exists! \lst x | r @ p}
 \def\AXoneORngR{\exists! \lst x @ r \land p}
-\def\AXoneORngN{\LNAME{Ax-$\exists! x$-range}}
+\def\AXoneORngN{\QNAME{$\exists! x$-range}}
 \def\AXoneORng{(\AXoneORngL) \equiv (\AXoneORngR)}
 
 \def\AXunivClosureL{[p]}
 \def\AXunivClosureR{\forall \lst x @ p}
 \def\AXunivClosureS{\lst x \supseteq p}
-\def\AXunivClosureN{\LNAME{Ax-$[]$-def}}
+\def\AXunivClosureN{\QNAME{$[]$-def}}
 \def\AXunivClosure{\AXunivClosureL \equiv (\AXunivClosureR), \quad \AXunivClosureS}
 
 \def\AXoneODefL{\exists! \lst x @ p}
 \def\AXoneODefR{(\exists \lst x @ p)
                  \land
                  \exists \lst y @ p[\lst y/ \lst x] \implies \lst y = \lst x}
-\def\AXoneODefN{\LNAME{Ax-$\exists! x$-def}}
+\def\AXoneODefN{\QNAME{$\exists! x$-def}}
 \def\AXoneODef{(\AXoneODefL) \equiv (\AXoneODefR)}
 
 \def\AXeqReflL{e}
 \def\AXeqReflR{e}
-\def\AXeqReflN{\LNAME{Ax-$=$-refl}}
+\def\AXeqReflN{\QNAME{$=$-refl}}
 \def\AXeqRefl{\AXeqReflL = \AXeqReflR}
 
 \def\AXtheDefL{e=\theta x @ p}
 \def\AXtheDefR{p[e/x] \land (\forall y @ p[y/x] \implies y=e)}
 \def\AXtheDefS{x \notin e}
-\def\AXtheDefN{\LNAME{Ax-$\theta$-Def}}
+\def\AXtheDefN{\QNAME{$\theta$-Def}}
 \def\AXtheDef{(\AXtheDefL) \equiv \AXtheDefR, \quad \AXtheDefS}
 
 \def\AXtheRngL{\theta x | r @ p}
 \def\AXtheRngR{\theta x @ r \land p}
-\def\AXtheRngN{\LNAME{Ax-$\theta$-range}}
+\def\AXtheRngN{\QNAME{$\theta$-range}}
 \def\AXtheRng{(\AXtheRngL) = (\AXtheRngR)}
 
 \def\AXObetaRedL{(\lambda x, \lst x @ e)f}
 \def\AXObetaRedR{(\lambda , \lst x @ e)[f/x]}
-\def\AXObetaRedN{\LNAME{Ax-$\beta$-OReduce}}
+\def\AXObetaRedN{\QNAME{$\beta$-OReduce}}
 \def\AXObetaRed{\AXObetaRedL = \AXObetaRedR}
 
 \def\AXEbetaRedL{(\Lambda E, \lst E @ q)e}
 \def\AXEbetaRedR{(\Lambda , \lst E @ q)[e/E]}
-\def\AXEbetaRedN{\LNAME{Ax-$\beta$-EReduce}}
+\def\AXEbetaRedN{\QNAME{$\beta$-EReduce}}
 \def\AXEbetaRed{\AXEbetaRedL \equiv \AXEbetaRedR}
 
 \def\AXPbetaRedL{(\Lambda P, \lst P @ q)r}
 \def\AXPbetaRedR{(\Lambda , \lst P @ q)[r/P]}
-\def\AXPbetaRedN{\LNAME{Ax-$\beta$-PReduce}}
+\def\AXPbetaRedN{\QNAME{$\beta$-PReduce}}
 \def\AXPbetaRed{\AXPbetaRedL \equiv \AXPbetaRedR}
 
 \def\AXLeibnizL{\bigwedge_{i=1}^n x_i = e_i}
 \def\AXLeibnizR{p \equiv p[\vec e/\vec x]}
 \def\AXLeibnizS{x_i \mbox{ distinct}}
-\def\AXLeibnizN{\LNAME{Ax-Leibniz}}
+\def\AXLeibnizN{\QNAME{Leibniz}}
 \def\AXLeibniz{(\AXLeibnizL) \implies (\AXLeibnizR), \quad \AXLeibnizS}
 
 \def\AXLLeibnizL{\lst x = \lst e}
 \def\AXLLeibnizR{p \equiv p[\lstvec e/\lstvec x]}
-\def\AXLLeibnizN{\LNAME{Ax-LLeibniz}}
+\def\AXLLeibnizN{\QNAME{LLeibniz}}
 \def\AXLLeibniz{(\AXLLeibnizL) \implies (\AXLLeibnizR)}
 
 \def\AXOSubstL{p[\vec e/\vec x]}
 \def\AXOSubstR{p[\vec x:=\vec e]}
-\def\AXOSubstN{\LNAME{Ax-OSubst}}
+\def\AXOSubstN{\QNAME{OSubst}}
 \def\AXOSubst{\AXOSubstL \equiv \AXOSubstR}
 
 \def\AXESubstL{p[\vec e/\vec E]}
 \def\AXESubstR{p[\vec E:=\vec e]}
-\def\AXESubstN{\LNAME{Ax-ESubst}}
+\def\AXESubstN{\QNAME{ESubst}}
 \def\AXESubst{\AXESubstL \equiv \AXESubstR}
 
 \def\AXPSubstL{p[\vec q/ \vec P]}
 \def\AXPSubstR{p[ \vec P:=\vec q]}
-\def\AXPSubstN{\LNAME{Ax-PSubst}}
+\def\AXPSubstN{\QNAME{PSubst}}
 \def\AXPSubst{\AXPSubstL \equiv \AXPSubstR}
 
 \def\AXTrueOSubL{true[\lst e/ \lst x]}
 \def\AXTrueOSubR{true}
-\def\AXTrueOSubN{\LNAME{Ax-$true$-OSubst}}
+\def\AXTrueOSubN{\QNAME{$true$-OSubst}}
 \def\AXTrueOSub{\AXTrueOSubL \equiv \AXTrueOSubR}
 
 \def\AXTrueESubL{true[\lst e/ \lst E]}
 \def\AXTrueESubR{true}
-\def\AXTrueESubN{\LNAME{Ax-$true$-ESubst}}
+\def\AXTrueESubN{\QNAME{$true$-ESubst}}
 \def\AXTrueESub{\AXTrueESubL \equiv \AXTrueESubR}
 
 \def\AXTruePSubL{true[\lst q/ \lst P]}
 \def\AXTruePSubR{true}
-\def\AXTruePSubN{\LNAME{Ax-$true$-PSubst}}
+\def\AXTruePSubN{\QNAME{$true$-PSubst}}
 \def\AXTruePSub{\AXTruePSubL \equiv \AXTruePSubR}
 
 \def\AXFalseOSubL{false[\lst e/ \lst x]}
 \def\AXFalseOSubR{false}
-\def\AXFalseOSubN{\LNAME{Ax-$false$-OSubst}}
+\def\AXFalseOSubN{\QNAME{$false$-OSubst}}
 \def\AXFalseOSub{\AXFalseOSubL \equiv \AXFalseOSubR}
 
 \def\AXFalseESubL{false[\lst e/ \lst E]}
 \def\AXFalseESubR{false}
-\def\AXFalseESubN{\LNAME{Ax-$false$-ESubst}}
+\def\AXFalseESubN{\QNAME{$false$-ESubst}}
 \def\AXFalseESub{\AXFalseESubL \equiv \AXFalseESubR}
 
 \def\AXFalsePSubL{false[\lst q/ \lst P]}
 \def\AXFalsePSubR{false}
-\def\AXFalsePSubN{\LNAME{Ax-$false$-PSubst}}
+\def\AXFalsePSubN{\QNAME{$false$-PSubst}}
 \def\AXFalsePSub{\AXFalsePSubL \equiv \AXFalsePSubR}
 
 \def\AXNONPROP{
@@ -509,6 +635,11 @@
 }
 
 
+
+
+%%%%  ==== Inference Rules =====================================================
+
+
 \def\INFERENCES{
   \begin{array}{ll}
      \INFER{P}{P[Q:=R]}
@@ -522,6 +653,10 @@
   \end{array}
 }
 
+
+
+
+%%%%  ==== Strategies ==========================================================
 
 \def\DERIVED{
 \begin{array}{ll}

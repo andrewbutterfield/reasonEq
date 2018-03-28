@@ -25,6 +25,7 @@ import Variables
 import AST
 import VarData
 import SideCond
+import Proof
 import Propositions
 import TestRendering
 \end{code}
@@ -39,8 +40,10 @@ main :: IO ()
 main
   = do args <- getArgs
        if "-g" `elem` args
-       then gui (args \\ ["-g"])
-       else repl args
+       then do putStrLn "starting GUI..."
+               gui (args \\ ["-g"])
+       else do putStrLn "starting REPL..."
+               repl args
 \end{code}
 
 \newpage
@@ -57,9 +60,9 @@ and derive \texttt{f\_ :: T -> Rec -> Rec}.
 data REqState
  = ReqState {
       known :: [VarTable]
-    , laws :: [(String,Term,SideCond)]
-    , conj :: [(String,Term,SideCond)]
-    , goal :: Maybe (String,Term,SideCond)
+    , laws :: [(String,Assertion)]
+    , conj :: [(String,Assertion)]
+    , goal :: Maybe (String,Assertion)
     }
 known__ f r = r{known = f $ known r} ; known_  = known__ . const
 laws__  f r = r{laws  = f $ laws r}  ; laws_   = laws__  . const
@@ -69,8 +72,12 @@ goal__  f r = r{goal  = f $ goal r}  ; goal_   = goal__  . const
 
 \begin{code}
 initState :: [String] -> IO REqState
-initState []       =  return $ ReqState [] [] [] Nothing
-initState ["dev"]  =  return $ ReqState [propKnown] propLaws propConjs Nothing
+initState []
+  = do putStrLn "Running in normal user mode."
+       return $ ReqState [] [] [] Nothing
+initState ["dev"]
+  = do putStrLn "Running in development mode."
+       return $ ReqState [propKnown] propLaws propConjs Nothing
 
 summariseREqS :: REqState -> String
 summariseREqS reqs
@@ -94,9 +101,9 @@ Showing laws:
 showLaws lws = unlines $ map (showLaw (nameWidth lws)) $ lws
 
 nameWidth lws = maximum $ map (length . getName) lws
-getName (n,_,_) = n
+getName (n,_) = n
 
-showLaw w (n,t,sc)
+showLaw w (n,(t,sc))
   = ldq ++ n ++ rdq ++ pad w n ++ "  " ++ trTerm 0 t ++ "  "++trSideCond sc
 
 pad w n
@@ -246,12 +253,13 @@ setState [what,name] reqs
 setState _ reqs = doshow reqs "unknown 'set' option"
 
 setgoal reqs name
-  = case llookup name $ conj reqs of
+  = case alookup name $ conj reqs of
       Nothing -> doshow reqs ("conjecture '"++name++"' not found.")
       Just cnj -> return $ goal_ (Just cnj) reqs
 
-llookup name [] = Nothing
-llookup name (lw@(n,_,_):rest)
-  | name == n  =  Just lw
-  | otherwise  =  llookup name rest
+-- association list lookup
+alookup name [] = Nothing
+alookup name (thing@(n,_):rest)
+  | name == n  =  Just thing
+  | otherwise  =  alookup name rest
 \end{code}

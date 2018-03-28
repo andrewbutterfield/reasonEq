@@ -27,6 +27,7 @@ library
                      , Matching
                      , Syntax
                      , Builder
+                     , Proof
                      -- in proto
                      , Acyclic
                      , TRYOUT

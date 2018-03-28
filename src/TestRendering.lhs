@@ -56,19 +56,19 @@ trVCf :: VarClass -> String -> String
 trVCf ObsV s = s
 trVCf _ s = bold s
 
-trVW :: VarWhen -> String
-trVW Static      =  "."
-trVW Before      =  ""
-trVW (During m)  =  '_':m
-trVW After       =  "'"
-trVW Textual     =  "\""
+trVW :: VarWhen -> String -> String
+trVW Static s      =  s
+trVW Before s      =  '`':s
+trVW (During m) s  =  s++'_':m
+trVW After s       =  s++"'"
+trVW Textual s     =  s++"\""
 
 trVar :: Variable -> String
-trVar (Vbl i vc vw) = trVCf vc (trId i) ++ trVW vw
+trVar (Vbl i vc vw) = trVW vw $ trVCf vc $ trId i
 
 trLVar :: ListVar -> String
 trLVar (LVbl (Vbl i vc vw) is js)
- = trVCf vc (trLId i) ++ trVW vw ++ trLess is js
+ = trVW vw (trVCf vc $ trLId i) ++ trLess is js
 
 trLId i = concat $ map dia_line $ trId i
 trLess [] []  =  ""
@@ -114,8 +114,8 @@ trTerm :: Int -> Term -> String -- 1st arg is indent-level
 trTerm i (Val tk k)           =  trValue k
 trTerm i (Var tk v)           =  trVar v
 trTerm i (Cons tk s [t1,t2])
- | isSymbId s                 = trInfix i t1 s t2
-trTerm i (Cons tk n ts)       =  trId n ++ trApply i n ("( ",", "," )") ts
+ | isSymbId s                 =  trInfix i t1 s t2
+trTerm i (Cons tk n ts)       =  trId n ++ trApply i n ("(",", ",")") ts
 trTerm i (Bind tk n vs t)     =  trAbs i tk n (S.toList vs) t
 trTerm i (Lam tk n vl t)      =  trAbs i tk n vl            t
 trTerm i (Sub tk t sub)       =  trTerm i t ++ trSub i sub

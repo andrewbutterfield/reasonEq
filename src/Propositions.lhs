@@ -30,6 +30,7 @@ import Variables
 import AST
 import SideCond
 import VarData
+import Proof
 
 -- import Test.HUnit
 -- import Test.Framework as TF (defaultMain, testGroup, Test)
@@ -43,6 +44,19 @@ Here we present a hard-coded implementation of
 propositional equational reasoning, as inspired by Gries \& Schneider\cite{gries.93},
 Tourlakis \cite{journals/logcom/Tourlakis01}
 and described in \cite{DBLP:conf/utp/Butterfield12}.
+However, we also make some key changes to the choice
+of axioms.
+In particular, we choose to have \textit{true}, and reflexivity
+of $\equiv$ as axioms, and relegate $\CJeqvIdN$ to mere theorem-hood.
+The reason for this is that the fundamental proof mechanism in both
+Gries\&Schneider and Tourlakis is to reduce a conjecture to one of the axioms,
+of which there are very many.
+This is an expensive check to do after every proof step,
+requiring matching against all the axioms.
+Here, we require a proof to transform a conjecture to \textit{true},
+which is more work%
+\footnote{but not much!}%
+, but is a much simpler, faster check.
 $$
 \AXPROP
 $$
@@ -119,14 +133,39 @@ infixr 4 ==> ; (==>) = mkImplies
 
 $$
   \begin{array}{ll}
+     \AXtrue & \AXtrueN
+  \end{array}
+$$
+\begin{code}
+axTrue
+ = ( "true"
+   , ( trueP
+   , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{ll}
+     \AXeqvRefl & \AXeqvReflN
+  \end{array}
+$$
+\begin{code}
+axEqvRefl
+ = ( _equiv++"_refl"
+   , ( p === p
+   , scTrue ) )
+\end{code}
+
+
+$$
+  \begin{array}{ll}
      \AXeqvAssoc & \AXeqvAssocN
   \end{array}
 $$
 \begin{code}
 axEqvAssoc
- = ( _equiv++" assoc"
-   , ((p === q) === r) === (p === (q === r))
-   , scTrue )
+ = ( _equiv++"_assoc"
+   , ( ((p === q) === r) === (p === (q === r))
+   , scTrue ) )
 \end{code}
 
 $$
@@ -136,21 +175,9 @@ $$
 $$
 \begin{code}
 axEqvSymm
- = ( _equiv++"-symm"
-   , (p === q) === (q === p)
-   , scTrue )
-\end{code}
-
-$$
-  \begin{array}{ll}
-     \AXeqvId & \AXeqvIdN
-  \end{array}
-$$
-\begin{code}
-axEqvId
- = ( _equiv++"-id"
-   , (trueP === q) === q
-   , scTrue )
+ = ( _equiv++"_symm"
+   , ( (p === q) === (q === p)
+   , scTrue ) )
 \end{code}
 
 $$
@@ -161,8 +188,8 @@ $$
 \begin{code}
 axFalseDef
  = ( "false-def"
-   , falseP === mkNot trueP
-   , scTrue )
+   , ( falseP === mkNot trueP
+   , scTrue ) )
 \end{code}
 
 $$
@@ -172,9 +199,9 @@ $$
 $$
 \begin{code}
 axNotEqvDistr
- = ( _lnot++"-"++_equiv++"-distr"
-   , mkNot(p === q) ===  (mkNot p === q)
-   , scTrue )
+ = ( _lnot++"_"++_equiv++"_distr"
+   , ( mkNot(p === q) ===  (mkNot p === q)
+   , scTrue ) )
 \end{code}
 
 
@@ -185,9 +212,9 @@ $$
 $$
 \begin{code}
 axOrSymm
- = ( _lor++"-symm"
-   , p \/ q === q \/ p
-   , scTrue )
+ = ( _lor++"_symm"
+   , ( p \/ q === q \/ p
+   , scTrue ) )
 \end{code}
 
 $$
@@ -197,9 +224,9 @@ $$
 $$
 \begin{code}
 axOrAssoc
- = ( _lor++"-assoc"
-   , (p \/ q) \/ r === p \/ (q \/ r)
-   , scTrue )
+ = ( _lor++"_assoc"
+   , ( (p \/ q) \/ r === p \/ (q \/ r)
+   , scTrue ) )
 \end{code}
 
 \newpage
@@ -210,9 +237,9 @@ $$
 $$
 \begin{code}
 axOrIdem
- = ( _lor++"-idem"
-   , p \/ p === p
-   , scTrue )
+ = ( _lor++"_idem"
+   , ( p \/ p === p
+   , scTrue ) )
 \end{code}
 
 $$
@@ -223,8 +250,8 @@ $$
 \begin{code}
 axOrEqvDistr
  = ( _lor++"_"++_equiv++"_distr"
-   , (p \/ (q === r)) === (p \/ q === p \/ r)
-   , scTrue )
+   , ( (p \/ (q === r)) === (p \/ q === p \/ r)
+   , scTrue ) )
 \end{code}
 
 $$
@@ -235,8 +262,8 @@ $$
 \begin{code}
 axExclMidl
  = ( "excl-middle"
-   , p \/ mkNot p
-   , scTrue )
+   , ( p \/ mkNot p
+   , scTrue ) )
 \end{code}
 
 $$
@@ -247,8 +274,8 @@ $$
 \begin{code}
 axGoldRule
  = ( "golden-rule"
-   , (p /\ q) === ((p === q) === p \/ q)
-   , scTrue )
+   , ( (p /\ q) === ((p === q) === p \/ q)
+   , scTrue ) )
 \end{code}
 
 $$
@@ -259,14 +286,14 @@ $$
 \begin{code}
 axImplDef
  = ( _implies++"_def"
-   , p ==> q === (p \/ q === q)
-   , scTrue )
+   , ( p ==> q === (p \/ q === q)
+   , scTrue ) )
 \end{code}
 
 \begin{code}
-propLaws :: [(String,Term,SideCond)]
+propLaws :: [(String,Assertion)]
 propLaws
-  = [ axEqvAssoc, axEqvSymm, axEqvId
+  = [ axTrue, axEqvRefl, axEqvAssoc, axEqvSymm
     , axFalseDef, axNotEqvDistr
     , axOrSymm, axOrAssoc, axOrIdem, axOrEqvDistr, axExclMidl
     , axGoldRule, axImplDef ]
@@ -280,6 +307,19 @@ $$
 \CONJPROP
 $$
 
+$$
+  \begin{array}{ll}
+     \CJeqvId & \CJeqvIdN
+  \end{array}
+$$
+\begin{code}
+cjEqvId
+ = ( _equiv++"_id"
+   , ( (trueP === q) === q
+   , scTrue ) )
+\end{code}
+
+
 
 $$
   \begin{array}{ll}
@@ -289,13 +329,13 @@ $$
 \begin{code}
 cjOrZero
  = ( _lor++"_zero"
-   , p \/ trueP === trueP
-   , scTrue )
+   , ( p \/ trueP === trueP
+   , scTrue ) )
 \end{code}
 
 
 \begin{code}
-propConjs :: [(String,Term,SideCond)]
+propConjs :: [(String,Assertion)]
 propConjs
-  = [ cjOrZero ]
+  = [ cjEqvId, cjOrZero ]
 \end{code}

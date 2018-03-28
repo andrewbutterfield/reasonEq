@@ -226,6 +226,16 @@
 
 %% ---- Propositional Axioms ---------------------------------------------------
 
+\def\AXtrue{true}
+\def\AXtrueN{\QNAME{$true$}}
+
+\def\AXeqvRefl{P \equiv P}
+\def\AXeqvReflN{\QNAME{$\equiv$-refl}}
+
+\def\CJeqvId{\textit{true} \equiv Q\equiv Q}
+\def\CJeqvIdN{\QNAME{$\equiv$-id}}
+
+
 \def\AXeqvAssocL{(P\equiv Q)\equiv R}
 \def\AXeqvAssocR{P\equiv (Q\equiv R)}
 \def\AXeqvAssoc{(\AXeqvAssocL) \equiv (\AXeqvAssocR)}
@@ -233,9 +243,6 @@
 
 \def\AXeqvSymm{P\equiv Q\equiv Q \equiv P}
 \def\AXeqvSymmN{\QNAME{$\equiv$-symm}}
-
-\def\AXeqvId{\textit{true} \equiv Q\equiv Q}
-\def\AXeqvIdN{\QNAME{$\equiv$-id}}
 
 \def\AXfalseDef{\textit{false} \equiv \neg \mbox{\textit{true}}}
 \def\AXfalseDefN{\QNAME{$false$-def}}
@@ -266,9 +273,10 @@
 
 \def\AXPROP{
   \begin{array}{ll}
-     \AXeqvAssoc & \AXeqvAssocN
+     \AXtrue & \AXtrueN
+  \\ \AXeqvRefl & \AXeqvReflN
+  \\ \AXeqvAssoc & \AXeqvAssocN
   \\ \AXeqvSymm & \AXeqvSymmN
-  \\ \AXeqvId & \AXeqvIdN
   \\ \AXfalseDef &\AXfalseDefN
   \\ \AXnotEqvDistr & \AXnotEqvDistrN
   \\ \AXorSymm & \AXorSymmN
@@ -282,11 +290,14 @@
 }
 
 
-
 %% ---- Propositional Conjectures ----------------------------------------------
 
+% -- Equivalence -----------------------
 
-% -- Disjunction------------------------
+\def\CJeqvId{\textit{true} \equiv Q\equiv Q}
+\def\CJeqvIdN{\QNAME{$\equiv$-id}}
+
+% -- Disjunction -----------------------
 
 \def\CJorZero{P \lor \textit{true} \equiv \textit{true}}
 \def\CJorZeroN{\QNAME{$\lor$-zero}}
@@ -384,7 +395,8 @@
 
 \def\CONJPROP{
   \begin{array}{ll}
-     \CJorZero & \CJorZeroN
+       \CJeqvId & \CJeqvIdN
+    \\ \CJorZero & \CJorZeroN
   \end{array}
 }
 

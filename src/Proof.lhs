@@ -11,12 +11,15 @@ module Proof
  , Justification
  , CalcStep
  , Calculation
- , LiveProof
+ , LiveProof, displayProof
+ , startProof
+ , displayMatches
+ , matchLaws
  ) where
 
 -- import Data.Set (Set)
 -- import qualified Data.Set as S
--- import Data.Maybe
+import Data.Maybe
 --
 -- import Utilities
 -- import LexBase
@@ -24,13 +27,13 @@ module Proof
 import AST
 import SideCond
 import TermZipper
--- import VarData
--- import Binding
--- import Matching
+import VarData
+import Binding
+import Matching
 -- import Builder
 --
--- import NiceSymbols
--- import TestRendering
+import NiceSymbols
+import TestRendering
 --
 -- import Test.HUnit hiding (Assertion)
 -- import Test.Framework as TF (defaultMain, testGroup, Test)
@@ -86,9 +89,66 @@ type Calculation
   = ( Term -- end (or current) term
     , [ CalcStep ] )  -- calculation steps, most recent first
 
+type Match
+ = ( String -- assertion name
+   , Assertion -- matched assertion
+   , Binding -- resulting binding
+   )
+
+type Matches
+  = [ ( Int -- match number
+      , Match ) ]  -- corresponding match ) ]
+
 type LiveProof
-  = ( TermZip  -- current term, focussed
+  = ( String -- conjecture name
+    , TermZip  -- current term, focussed
     , [Int] -- current zipper descent arguments
+    , SideCond -- side conditions
+    , Matches -- current matches
     , [CalcStep]  -- calculation steps so far.
     )
+
+-- temporary
+displayProof :: LiveProof -> String
+displayProof ( nm, tz, dpath, sc, _, steps )
+ = unlines
+     ( ("Proof for '"++nm++"'")
+     : (trTerm 0 (getTZ tz) ++ "@" ++ show dpath++"   "++trSideCond sc)
+     : map shStep steps ++ ["---"])
+
+shStep :: CalcStep -> String
+shStep ( (lnm, dpath), t )
+ = unlines [ " = '"++lnm++"@" ++ show dpath ++ "'"
+           , "  " ++ trTerm 0 t
+           ]
+
+displayMatches :: Matches -> String
+displayMatches []  =  "no Matches."
+displayMatches matches = unlines $ map shMatch matches
+
+shMatch (i, (n, (t,sc), bind))
+ = unlines [ show i ++ " : "++trTerm 0 t++"  "++trSideCond sc
+             ++ " " ++ ldq ++ n ++ rdq
+           , trBinding bind]
+\end{code}
+
+We need to setup a proof from a conjecture:
+\begin{code}
+startProof :: String -> Assertion -> LiveProof
+startProof nm (t,sc) = (nm, mkTZ t, [], sc, [], [])
+\end{code}
+
+\newpage
+\subsection{Assertion Matching}
+
+Now, the code to match laws
+\begin{code}
+matchLaws :: Term -> [VarTable] -> [(String,Assertion)] -> Matches
+matchLaws t vts laws
+  = zip [1..] (catMaybes $ map (domatch vts t) laws)
+
+domatch vts tC (n,asn@(tP,sc))
+ = case match vts tC tP of
+     Nothing -> Nothing
+     Just bind -> Just (n,asn,bind)
 \end{code}

@@ -100,6 +100,16 @@ choose s
 \end{code}
 
 \newpage
+\subsection{Smart Readers}
+
+\subsubsection{Read Integer}
+\begin{code}
+readInt :: String -> Int
+readInt str
+ | all isDigit str  =   read str
+ | otherwise        =   -1
+\end{code}
+\newpage
 \subsection{Control-Flow Functions}
 
 \subsubsection{Repeat Until Equal}

@@ -121,14 +121,14 @@ pad w n
 
 Showing Goal:
 \begin{code}
-showGoal Nothing = "no Gooal."
+showGoal Nothing = "no Goal."
 showGoal (Just goal) = showLaw 0 goal
 \end{code}
 
 Showing Proof:
 \begin{code}
 showProof Nothing = "no Proof."
-showProof (Just proof) = "Can't show Proofs yet."
+showProof (Just proof) = displayProof proof
 \end{code}
 
 \subsubsection{Set Command}
@@ -219,7 +219,7 @@ help reqs (what:_)
 \subsection{Command Repository}
 \begin{code}
 commands :: Commands
-commands = [cmdShow,cmdSet]
+commands = [cmdShow,cmdSet,cmdProve]
 \end{code}
 
 \subsubsection{Show Command }
@@ -286,6 +286,84 @@ alookup name (thing@(n,_):rest)
 cmdProve
   = ( "prove"
     , "do a proof"
-    , [ "prove - prove current goal"]
-    , "tbd" )
+    , unlines
+       [ "prove - prove current goal"
+       , "if no live proof present, then start one,"
+       , "otherwise, jump to existing live proof."
+       ]
+    , doProof )
+
+doProof _ reqs
+  = case proof reqs of
+      Nothing
+       ->  do outputStrLn "No current proof, will try to start one."
+              case goal reqs of
+                Nothing -> doshow reqs "No goal to prove, please add one."
+                Just (nm,cnj)
+                 -> do outputStrLn ("Starting Proof of '"++nm++"'")
+                       proofREPL reqs (startProof nm cnj)
+      Just proof
+       ->  do outputStrLn "Back to current proof."
+              proofREPL reqs proof
+\end{code}
+
+\newpage
+\subsection{Proof REPL}
+
+This repl runs a proof.
+\begin{code}
+proofREPL reqs proof
+ = do outputStrLn $ displayProof proof
+      minput <- getInputLine "proof: "
+      case minput of
+        Nothing -> back reqs proof
+        Just "e" -> back reqs proof
+        Just "?" -> proofHelp reqs proof
+        Just pcmd -> proofCommand reqs proof (words pcmd)
+
+back reqs proof
+ = doshow (proof_ (Just proof) reqs) "Back to main REPL, Proof still current."
+
+proofHelp reqs proof
+  = do outputStrLn $ unlines
+         [ "m - match laws"
+         , "d n - down n"
+         , "u - up"
+         , "e - exit to top REPL, keeping proof"
+         , "a - abandon proof"
+         ]
+       proofREPL reqs proof
+
+proofCommand reqs proof ["m"] = matchLawCommand reqs proof
+proofCommand reqs proof ["d",nstr] = goDown reqs proof $ readInt nstr
+proofCommand reqs proof ["u"] = goUp reqs proof
+proofCommand reqs proof ["a"] = abandonProof reqs proof
+proofCommand reqs proof pcmds
+  = do outputStrLn ("proofCommand '"++unwords pcmds++"' unknown")
+       proofREPL reqs proof
+
+matchLawCommand reqs proof@(nm, tz, dpath, sc, _, steps )
+  = do outputStrLn "Matching.."
+       let matches = matchLaws (getTZ tz) (known reqs) (laws reqs)
+       outputStrLn $ displayMatches matches
+       proofREPL reqs (nm, tz, dpath, sc, matches, steps)
+
+goDown reqs proof@(nm, tz, dpath, sc, _, steps ) i
+  = let (ok,tz') = downTZ i tz in
+    if ok
+    then proofREPL reqs (nm, tz', dpath++[i], sc, [], steps)
+    else proofREPL reqs proof
+
+goUp reqs proof@(nm, tz, dpath, sc, _, steps )
+  = let (ok,tz') = upTZ tz in
+    if ok
+    then proofREPL reqs (nm, tz', init dpath, sc, [], steps)
+    else proofREPL reqs proof
+
+abandonProof reqs proof
+ = do yesno <- getInputLine "Abandon ! Are you sure (Y/n) ? "
+      case yesno of
+        Just "Y" -> doshow (proof_ Nothing reqs)
+                      "Back to main REPL, Proof abandoned."
+        _ -> proofREPL reqs proof
 \end{code}

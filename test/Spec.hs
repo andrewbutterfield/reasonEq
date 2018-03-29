@@ -8,7 +8,7 @@ import SideCond
 import Binding
 import Syntax
 import Builder
-import Proof
+import TermZipper
 import VarDataTest
 import BindingTest
 import MatchingTest
@@ -25,7 +25,7 @@ tests
  ++ int_tst_Binding
  ++ int_tst_Syntax
  ++ int_tst_Builder
- ++ int_tst_Proof
+ ++ int_tst_TermZip
  ++ tst_VarData
  ++ tst_Binding
  ++ tst_Matching

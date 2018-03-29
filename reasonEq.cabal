@@ -27,6 +27,7 @@ library
                      , Matching
                      , Syntax
                      , Builder
+                     , TermZipper
                      , Proof
                      -- in proto
                      , Acyclic

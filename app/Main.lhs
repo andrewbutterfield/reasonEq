@@ -25,6 +25,7 @@ import Variables
 import AST
 import VarData
 import SideCond
+import TermZipper
 import Proof
 import Propositions
 import TestRendering
@@ -63,21 +64,24 @@ data REqState
     , laws :: [(String,Assertion)]
     , conj :: [(String,Assertion)]
     , goal :: Maybe (String,Assertion)
+    , proof :: Maybe LiveProof
     }
 known__ f r = r{known = f $ known r} ; known_  = known__ . const
 laws__  f r = r{laws  = f $ laws r}  ; laws_   = laws__  . const
 conj__  f r = r{conj  = f $ conj r}  ; conj_   = conj__  . const
 goal__  f r = r{goal  = f $ goal r}  ; goal_   = goal__  . const
+proof__ f r = r{proof = f $ proof r} ; proof_  = proof__ . const
 \end{code}
 
 \begin{code}
 initState :: [String] -> IO REqState
 initState []
   = do putStrLn "Running in normal user mode."
-       return $ ReqState [] [] [] Nothing
+       return $ ReqState [] [] [] Nothing Nothing
 initState ["dev"]
   = do putStrLn "Running in development mode."
-       return $ ReqState [propKnown] propLaws propConjs Nothing
+       let reqs = ReqState [propKnown] propLaws propConjs Nothing Nothing
+       return reqs
 
 summariseREqS :: REqState -> String
 summariseREqS reqs
@@ -85,6 +89,9 @@ summariseREqS reqs
                 , show $ length $ laws reqs
                 , show $ length $ conj reqs
                 , case goal reqs of
+                   Nothing -> ""
+                   _ -> "!"
+                , case proof reqs of
                    Nothing -> ""
                    _ -> "!"
                 ]
@@ -114,8 +121,14 @@ pad w n
 
 Showing Goal:
 \begin{code}
-showGoal Nothing = "none."
+showGoal Nothing = "no Gooal."
 showGoal (Just goal) = showLaw 0 goal
+\end{code}
+
+Showing Proof:
+\begin{code}
+showProof Nothing = "no Proof."
+showProof (Just proof) = "Can't show Proofs yet."
 \end{code}
 
 \subsubsection{Set Command}
@@ -219,19 +232,23 @@ cmdShow
         [ "sh "++shKnown++" - show known variables"
         , "sh "++shLaws++" - show current laws"
         , "sh "++shConj++" - show current conjectures"
-        , "sh "++shGoal++" - show current goal"]
+        , "sh "++shGoal++" - show current goal"
+        , "sh "++shProof++" - show current proof"
+        ]
     , showState )
 
 shKnown = "k"
 shLaws  = "l"
 shConj = "c"
 shGoal = "g"
+shProof = "p"
 
 showState [cmd] reqs
  | cmd == shKnown  =  doshow reqs $ showKnown $ known reqs
  | cmd == shLaws   =  doshow reqs $ showLaws  $ laws  reqs
  | cmd == shConj   =  doshow reqs $ showLaws  $ conj  reqs
  | cmd == shGoal   =  doshow reqs $ showGoal  $ goal  reqs
+ | cmd == shProof  =  doshow reqs $ showProof $ proof reqs
 showState _ reqs   =  doshow reqs "unknown 'show' option."
 
 doshow reqs str
@@ -262,4 +279,13 @@ alookup name [] = Nothing
 alookup name (thing@(n,_):rest)
   | name == n  =  Just thing
   | otherwise  =  alookup name rest
+\end{code}
+
+\subsubsection{Prove Command}
+\begin{code}
+cmdProve
+  = ( "prove"
+    , "do a proof"
+    , [ "prove - prove current goal"]
+    , "tbd" )
 \end{code}

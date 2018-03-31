@@ -602,12 +602,10 @@ vMatch vts bind cbvs pvbs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
 Variable classes are compatible, but is the pattern ``known''?
 \begin{code}
   -- vC /= vP
-  vMatch' UnknownVar vC vP               =  bindVarToVar vP vC bind
-  vMatch' (KnownVar typ) vC vP
-    | whenCompVar vC vP                  =  bindVarToVar vP vC bind
+  vMatch' UnknownVar vC vP  =  bindVarToVar vP vC bind
   vMatch' (KnownConst (Var _ v)) vC vP
-    | vC == v                            =  bindVarToVar vP vC bind
-  vMatch' _ _ _  =  fail "vMatch: knowledge mismatch."
+    | vC == v               =  bindVarToVar vP vC bind
+  vMatch' _ _ _             =  fail "vMatch: knowledge mismatch."
 \end{code}
 
 \subsubsection{Bound Pattern Variable}

@@ -55,6 +55,7 @@ An assertion is simply a predicate term coupled with side-conditions.
 type Assertion = (Term, SideCond)
 \end{code}
 
+\newpage
 \subsection{Logic}
 
 To make the matching work effectively,
@@ -64,9 +65,10 @@ $$ \equiv \qquad \implies \qquad \land $$
 \begin{code}
 data TheLogic
   = TheLogic
-     { theEqv :: Identifier
-     , theImp :: Identifier
-     , theAnd :: Identifier
+     { theTrue :: Term
+     , theEqv  :: Identifier
+     , theImp  :: Identifier
+     , theAnd  :: Identifier
      }
 \end{code}
 We also want to provide a way to ``condition'' predicates
@@ -132,6 +134,7 @@ type Match
  = ( String -- assertion name
    , Assertion -- matched assertion
    , Binding -- resulting binding
+   , Term  -- replacement
    )
 
 type Matches
@@ -165,10 +168,11 @@ displayMatches :: Matches -> String
 displayMatches []  =  "no Matches."
 displayMatches matches = unlines $ map shMatch matches
 
-shMatch (i, (n, (t,sc), bind))
+shMatch (i, (n, (t,sc), bind, trplc))
  = unlines [ show i ++ " : "++trTerm 0 t++"  "++trSideCond sc
              ++ " " ++ ldq ++ n ++ rdq
-           , trBinding bind]
+           , trBinding bind
+           , _maplet ++ trTerm 0 trplc ]
 \end{code}
 
 We need to setup a proof from a conjecture:
@@ -182,12 +186,12 @@ startProof nm (t,sc) = (nm, mkTZ t, [], sc, [], [])
 
 Now, the code to match laws
 \begin{code}
-matchLaws :: Term -> [VarTable] -> [(String,Assertion)] -> Matches
-matchLaws t vts laws
-  = zip [1..] (catMaybes $ map (domatch vts t) laws)
+matchLaws :: TheLogic -> [VarTable] -> Term -> [(String,Assertion)] -> Matches
+matchLaws logic vts t laws
+  = zip [1..] (catMaybes $ map (domatch logic vts t) laws)
 
-domatch vts tC (n,asn@(tP,sc))
+domatch logic vts tC (n,asn@(tP,sc))
  = case match vts tC tP of
      Nothing -> Nothing
-     Just bind -> Just (n,asn,bind)
+     Just bind -> Just (n,asn,bind,theTrue logic)
 \end{code}

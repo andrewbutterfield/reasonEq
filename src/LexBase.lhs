@@ -57,8 +57,12 @@ be strings that satisfy a fairly standard convention
 for program variables, namely starting with an alpha character,
 followed by zero or more alphas, and digits,
 or a mix of ``symbols'', which do not include alphas.
-In addtion, we don't allow whitespace, quotes, underscores, dollars, primes or dots in
-either form of identifier.
+In addition,
+we don't allow most whitespace, quotes, underscores, dollars, primes or dots
+in either form of identifier.
+We do allow symbols to end with a space character%
+---%
+this is necessary for some long symbols.
 \begin{code}
 newtype Identifier = Id String deriving (Eq, Ord, Show, Read)
 pattern Identifier nm <- Id nm
@@ -68,8 +72,11 @@ isValidSymbol c  =  not(isSpace c || isAlpha c || c `elem` "_$'.`\"")
 isIdContChar c = isAlpha c || isDigit c
 
 validIdent :: String -> Bool
-validIdent str@(c:cs)  =  not (isDigit c) && all isValidSymbol str
-                          ||   isAlpha c  && all isIdContChar cs
+validIdent str@(c:cs)
+  =  not (isDigit c) && all isValidSymbol (init str)
+                     && ( c' == ' ' || isValidSymbol c' )
+     ||   isAlpha c  && all isIdContChar cs
+  where c' = last str
 validIdent _           =  False -- no empty/null identifiers !
 
 ident :: Monad m => String -> m Identifier

@@ -105,9 +105,10 @@ summariseREqS reqs
 Showing logic:
 \begin{code}
 showLogic logic
-  = unlines [ "Equivalence: " ++ trId (theEqv logic)
-            , "Implication: " ++ trId (theImp logic)
-            , "Conjunction: " ++ trId (theAnd logic) ]
+  = unlines [ "Truth: "   ++ trTerm 0 (theTrue logic)
+            , "Equivalence: " ++ trId (theEqv  logic)
+            , "Implication: " ++ trId (theImp  logic)
+            , "Conjunction: " ++ trId (theAnd  logic) ]
 \end{code}
 
 
@@ -360,7 +361,7 @@ proofCommand reqs proof pcmds
 
 matchLawCommand reqs proof@(nm, tz, dpath, sc, _, steps )
   = do outputStrLn "Matching.."
-       let matches = matchLaws (getTZ tz) (known reqs) (laws reqs)
+       let matches = matchLaws (logic reqs) (known reqs)  (getTZ tz) (laws reqs)
        outputStrLn $ displayMatches matches
        proofREPL reqs (nm, tz, dpath, sc, matches, steps)
 

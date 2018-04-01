@@ -122,7 +122,7 @@ infixr 4 ==> ; (==>) = mkImplies
 
 \subsubsection{The Propositional Logic}
 \begin{code}
-thePropositionalLogic = TheLogic equiv implies land
+thePropositionalLogic = TheLogic trueP equiv implies land
 flattenEquiv = flattenTheEquiv thePropositionalLogic
 \end{code}
 

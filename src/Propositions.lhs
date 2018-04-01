@@ -15,6 +15,7 @@ module Propositions (
 , lor, mkOr, mkOrs, (\/)
 , land, mkAnd, mkAnds, (/\)
 , implies, mkImplies, (==>)
+, thePropositionalLogic
 , propKnown
 , propLaws
 , propConjs
@@ -54,7 +55,7 @@ of which there are very many.
 This is an expensive check to do after every proof step,
 requiring matching against all the axioms.
 Here, we require a proof to transform a conjecture to \textit{true},
-which is more work%
+which is more proof work%
 \footnote{but not much!}%
 , but is a much simpler, faster check.
 $$
@@ -92,16 +93,6 @@ false = Vbl (fromJust $ ident "false") PredV Static
 falseP = fromJust $ pVar false
 \end{code}
 
-\subsection{Known Variables}
-
-These are precisely the two propositional constants.
-\begin{code}
-propKnown :: VarTable
-propKnown
- = fromJust $ addKnownVar true  bool $
-   fromJust $ addKnownVar false bool newVarTable
-\end{code}
-
 \subsection{Propositional Operators}
 
 \begin{code}
@@ -129,19 +120,36 @@ implies = fromJust $ ident _implies ; mkImplies p q = PCons implies [p,q]
 infixr 4 ==> ; (==>) = mkImplies
 \end{code}
 
+\subsubsection{The Propositional Logic}
+\begin{code}
+thePropositionalLogic = TheLogic equiv implies land
+flattenEquiv = flattenTheEquiv thePropositionalLogic
+\end{code}
+
+
 \subsection{Propositional Axioms}
 
+\subsubsection{Known Variables}
+
+These are precisely the two propositional constants,
+with \textit{true} known as boolean,
+and \textit{false} known as it's negation.
 $$
   \begin{array}{ll}
-     \AXtrue & \AXtrueN
+     \AXtrue     & \AXtrueN
+  \\ \AXfalseDef & \AXfalseDefN
   \end{array}
 $$
+
 \begin{code}
-axTrue
- = ( "true"
-   , ( trueP
-   , scTrue ) )
+propKnown :: VarTable
+propKnown   =  fromJust $ addKnownConst false (mkNot trueP) $
+               fromJust $ addKnownVar true  bool newVarTable
+axTrue      =  ( "true",      ( trueP,                  scTrue ) )
+axFalseDef  =  ( "false-def", ( falseP === mkNot trueP, scTrue ) )
 \end{code}
+
+We present the rest of the axioms
 
 $$
   \begin{array}{ll}
@@ -176,19 +184,7 @@ $$
 \begin{code}
 axEqvSymm
  = ( _equiv++"_symm"
-   , ( (p === q) === (q === p)
-   , scTrue ) )
-\end{code}
-
-$$
-  \begin{array}{ll}
-     \AXfalseDef &\AXfalseDefN
-  \end{array}
-$$
-\begin{code}
-axFalseDef
- = ( "false-def"
-   , ( falseP === mkNot trueP
+   , ( flattenEquiv ( (p === q) === (q === p) )
    , scTrue ) )
 \end{code}
 
@@ -229,7 +225,6 @@ axOrAssoc
    , scTrue ) )
 \end{code}
 
-\newpage
 $$
   \begin{array}{ll}
      \AXorIdem & \AXorIdemN
@@ -250,7 +245,7 @@ $$
 \begin{code}
 axOrEqvDistr
  = ( _lor++"_"++_equiv++"_distr"
-   , ( (p \/ (q === r)) === (p \/ q === p \/ r)
+   , ( flattenEquiv ( (p \/ (q === r)) === (p \/ q === p \/ r) )
    , scTrue ) )
 \end{code}
 
@@ -274,7 +269,7 @@ $$
 \begin{code}
 axGoldRule
  = ( "golden-rule"
-   , ( (p /\ q) === ((p === q) === p \/ q)
+   , ( flattenEquiv ( (p /\ q) === ((p === q) === p \/ q) )
    , scTrue ) )
 \end{code}
 
@@ -286,7 +281,7 @@ $$
 \begin{code}
 axImplDef
  = ( _implies++"_def"
-   , ( p ==> q === (p \/ q === q)
+   , ( flattenEquiv ( p ==> q === (p \/ q === q) )
    , scTrue ) )
 \end{code}
 

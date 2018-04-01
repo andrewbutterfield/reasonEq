@@ -60,12 +60,14 @@ and derive \texttt{f\_ :: T -> Rec -> Rec}.
 \begin{code}
 data REqState
  = ReqState {
-      known :: [VarTable]
+      logic :: TheLogic
+    , known :: [VarTable]
     , laws :: [(String,Assertion)]
     , conj :: [(String,Assertion)]
     , goal :: Maybe (String,Assertion)
     , proof :: Maybe LiveProof
     }
+logic__ f r = r{logic = f $ logic r} ; logic_  = logic__ . const
 known__ f r = r{known = f $ known r} ; known_  = known__ . const
 laws__  f r = r{laws  = f $ laws r}  ; laws_   = laws__  . const
 conj__  f r = r{conj  = f $ conj r}  ; conj_   = conj__  . const
@@ -77,10 +79,11 @@ proof__ f r = r{proof = f $ proof r} ; proof_  = proof__ . const
 initState :: [String] -> IO REqState
 initState []
   = do putStrLn "Running in normal user mode."
-       return $ ReqState [] [] [] Nothing Nothing
+       return $ ReqState thePropositionalLogic [] [] [] Nothing Nothing
 initState ["dev"]
   = do putStrLn "Running in development mode."
-       let reqs = ReqState [propKnown] propLaws propConjs Nothing Nothing
+       let reqs = ReqState thePropositionalLogic [propKnown]
+                           propLaws propConjs Nothing Nothing
        return reqs
 
 summariseREqS :: REqState -> String
@@ -98,6 +101,16 @@ summariseREqS reqs
 \end{code}
 
 \subsubsection{The Show Command}
+
+Showing logic:
+\begin{code}
+showLogic logic
+  = unlines [ "Equivalence: " ++ trId (theEqv logic)
+            , "Implication: " ++ trId (theImp logic)
+            , "Conjunction: " ++ trId (theAnd logic) ]
+\end{code}
+
+
 Showing known variables:
 \begin{code}
 showKnown vts = unlines $ map trVarTable $ vts
@@ -229,7 +242,8 @@ cmdShow
   = ( "sh"
     , "show parts of the prover state"
     , unlines
-        [ "sh "++shKnown++" - show known variables"
+        [ "sh "++shLogic++" - show current logic"
+        , "sh "++shKnown++" - show known variables"
         , "sh "++shLaws++" - show current laws"
         , "sh "++shConj++" - show current conjectures"
         , "sh "++shGoal++" - show current goal"
@@ -237,6 +251,7 @@ cmdShow
         ]
     , showState )
 
+shLogic = "="
 shKnown = "k"
 shLaws  = "l"
 shConj = "c"
@@ -244,6 +259,7 @@ shGoal = "g"
 shProof = "p"
 
 showState [cmd] reqs
+ | cmd == shLogic  =  doshow reqs $ showLogic $ logic reqs
  | cmd == shKnown  =  doshow reqs $ showKnown $ known reqs
  | cmd == shLaws   =  doshow reqs $ showLaws  $ laws  reqs
  | cmd == shConj   =  doshow reqs $ showLaws  $ conj  reqs

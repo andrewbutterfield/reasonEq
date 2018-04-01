@@ -8,6 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Proof
  ( Assertion
+ , TheLogic(..), flattenTheEquiv
  , Justification
  , CalcStep
  , Calculation
@@ -22,7 +23,7 @@ module Proof
 import Data.Maybe
 --
 -- import Utilities
--- import LexBase
+import LexBase
 -- import Variables
 import AST
 import SideCond
@@ -53,6 +54,44 @@ An assertion is simply a predicate term coupled with side-conditions.
 \begin{code}
 type Assertion = (Term, SideCond)
 \end{code}
+
+\subsection{Logic}
+
+To make the matching work effectively,
+we have to identify which constructs play the roles
+of logical equivalence, implication and conjunctions.
+$$ \equiv \qquad \implies \qquad \land $$
+\begin{code}
+data TheLogic
+  = TheLogic
+     { theEqv :: Identifier
+     , theImp :: Identifier
+     , theAnd :: Identifier
+     }
+\end{code}
+We also want to provide a way to ``condition'' predicates
+to facilitate matching  and proof flexibility.
+In particular, we want to ``associatively flatten'' nested
+equivalences.
+\begin{code}
+flattenTheEquiv :: TheLogic -> Term -> Term
+flattenTheEquiv theLogic t
+  = fTE (theEqv theLogic) t
+  where
+
+    fTE eqv (Cons tk i ts)
+      | i == eqv  = mkEqv tk eqv [] $ map (fTE eqv) ts
+    fTE _ t = t
+
+    mkEqv tk eqv st [] = Cons tk eqv $ reverse st
+    mkEqv tk eqv st (t@(Cons tk' i' ts'):ts)
+      | i' == eqv  =  mkEqv tk eqv (ts' `mrg` st) ts
+    mkEqv tk eqv st (t:ts) = mkEqv tk eqv (t:st) ts
+
+    []     `mrg` st  =  st
+    (t:ts) `mrg` st  =  ts `mrg` (t:st)
+\end{code}
+
 
 \subsection{Proof Calculations}
 

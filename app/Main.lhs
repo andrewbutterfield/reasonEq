@@ -28,6 +28,7 @@ import SideCond
 import TermZipper
 import Proof
 import Propositions
+import Instantiate
 import TestRendering
 \end{code}
 
@@ -343,27 +344,23 @@ back reqs proof
 
 proofHelp reqs proof
   = do outputStrLn $ unlines
-         [ "m - match laws"
-         , "d n - down n"
+         [ "d n - down n"
          , "u - up"
+         , "m - match laws"
+         , "a n - apply match n"
          , "e - exit to top REPL, keeping proof"
-         , "a - abandon proof"
+         , "X - abandon proof"
          ]
        proofREPL reqs proof
 
-proofCommand reqs proof ["m"] = matchLawCommand reqs proof
 proofCommand reqs proof ["d",nstr] = goDown reqs proof $ readInt nstr
 proofCommand reqs proof ["u"] = goUp reqs proof
-proofCommand reqs proof ["a"] = abandonProof reqs proof
+proofCommand reqs proof ["m"] = matchLawCommand reqs proof
+proofCommand reqs proof ["a",nstr] = applyMatch reqs proof $ readInt nstr
+proofCommand reqs proof ["X"] = abandonProof reqs proof
 proofCommand reqs proof pcmds
   = do outputStrLn ("proofCommand '"++unwords pcmds++"' unknown")
        proofREPL reqs proof
-
-matchLawCommand reqs proof@(nm, tz, dpath, sc, _, steps )
-  = do outputStrLn "Matching.."
-       let matches = matchLaws (logic reqs) (known reqs)  (getTZ tz) (laws reqs)
-       outputStrLn $ displayMatches matches
-       proofREPL reqs (nm, tz, dpath, sc, matches, steps)
 
 goDown reqs proof@(nm, tz, dpath, sc, _, steps ) i
   = let (ok,tz') = downTZ i tz in
@@ -376,6 +373,23 @@ goUp reqs proof@(nm, tz, dpath, sc, _, steps )
     if ok
     then proofREPL reqs (nm, tz', init dpath, sc, [], steps)
     else proofREPL reqs proof
+
+matchLawCommand reqs proof@(nm, tz, dpath, sc, _, steps )
+  = do outputStrLn "Matching.."
+       let matches = matchLaws (logic reqs) (known reqs)  (getTZ tz) (laws reqs)
+       outputStrLn $ displayMatches matches
+       proofREPL reqs (nm, tz, dpath, sc, matches, steps)
+
+applyMatch reqs proof@(nm, tz, dpath, sc, matches, steps ) i
+  = case alookup i matches of
+     Nothing -> do outputStrLn ("No match numbered "++ show i)
+                   proofREPL reqs proof
+     Just (_,(nm,asn,bind,repl))
+      -> case instantiate bind repl of
+          Nothing -> do outputStrLn "Apply failed !"
+                        proofREPL reqs proof
+          Just brepl
+            -> proofREPL reqs (nm, (setTZ brepl tz), dpath, sc, matches, steps)
 
 abandonProof reqs proof
  = do yesno <- getInputLine "Abandon ! Are you sure (Y/n) ? "

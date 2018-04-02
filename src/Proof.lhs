@@ -169,10 +169,10 @@ displayMatches []  =  "no Matches."
 displayMatches matches = unlines $ map shMatch matches
 
 shMatch (i, (n, (t,sc), bind, trplc))
- = unlines [ show i ++ " : "++trTerm 0 t++"  "++trSideCond sc
-             ++ " " ++ ldq ++ n ++ rdq
-           , trBinding bind
-           , _maplet ++ trTerm 0 trplc ]
+ = unlines [ show i ++ " : "++ ldq ++ n ++ rdq
+             ++ " " ++ trTerm 0 t ++ "  " ++ trSideCond sc
+             ++ " " ++ _maplet ++ " " ++ trTerm 0 trplc
+           , trBinding bind ]
 \end{code}
 
 We need to setup a proof from a conjecture:
@@ -201,18 +201,11 @@ domatch logic vts tC (n,asn@(tP@(Cons tk i ts@(_:_:_)),sc))
   | i == theEqv logic  =  concat $ map (eqvMatch vts tC) $ listsplit ts
   where
       -- tC :: equiv(tsP), with replacement equiv(tsR).
-    eqvMatch vts tC ([tP],[])
-      = justMatch (theTrue logic) vts tC (n,(tP,sc))
-    eqvMatch vts tC ([tP],[tR])
-      = justMatch tR vts tC (n,(tP,sc))
-    eqvMatch vts tC ([tP],tsR)
-      = justMatch (Cons tk i tsR) vts tC (n,(tP,sc))
-    eqvMatch vts tC (tsP,[])
-      = justMatch (theTrue logic) vts tC (n,((Cons tk i tsP),sc))
-    eqvMatch vts tC (tsP,[tR])
-      = justMatch tR vts tC (n,((Cons tk i tsP),sc))
     eqvMatch vts tC (tsP,tsR)
-      = justMatch (Cons tk i tsR) vts tC (n,((Cons tk i tsP),sc))
+      = justMatch (eqv tsR) vts tC (n,(eqv tsP,sc))
+    eqv []   =  theTrue logic
+    eqv [t]  =  t
+    eqv ts   =  Cons tk i ts
 \end{code}
 
 Otherwise we just match against the whole law.

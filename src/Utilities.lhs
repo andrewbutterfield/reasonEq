@@ -75,6 +75,16 @@ getitem a (x:xs)
 intcalNN sep = intercalate sep . filter (not . null)
 \end{code}
 
+\subsubsection{Splitting Lists}
+\begin{code}
+listsplit ts = listsplit' [] [] ts
+listsplit' splits before [] = splits
+listsplit' splits before (t:after)
+ = listsplit' ((reverse before',after):splits) before' after
+ where before' = t:before
+\end{code}
+
+
 \subsubsection{Set disjointness}
 
 \begin{code}

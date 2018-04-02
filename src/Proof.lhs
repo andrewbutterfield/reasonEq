@@ -22,7 +22,7 @@ module Proof
 -- import qualified Data.Set as S
 import Data.Maybe
 --
--- import Utilities
+import Utilities
 import LexBase
 -- import Variables
 import AST
@@ -60,8 +60,8 @@ type Assertion = (Term, SideCond)
 
 To make the matching work effectively,
 we have to identify which constructs play the roles
-of logical equivalence, implication and conjunctions.
-$$ \equiv \qquad \implies \qquad \land $$
+of truth, logical equivalence, implication and conjunctions.
+$$ \textit{true} \qquad \equiv \qquad \implies \qquad \land $$
 \begin{code}
 data TheLogic
   = TheLogic
@@ -184,14 +184,34 @@ startProof nm (t,sc) = (nm, mkTZ t, [], sc, [], [])
 \newpage
 \subsection{Assertion Matching}
 
-Now, the code to match laws
+Now, the code to match laws.
+Bascially we run down the list of laws,
+returning any matches we find.
 \begin{code}
 matchLaws :: TheLogic -> [VarTable] -> Term -> [(String,Assertion)] -> Matches
 matchLaws logic vts t laws
-  = zip [1..] (catMaybes $ map (domatch logic vts t) laws)
+  = zip [1..] (concat $ map (domatch logic vts t) laws)
+\end{code}
 
-domatch logic vts tC (n,asn@(tP,sc))
+For each law,
+we check its top-level to see if it is an instance of \texttt{theEqv},
+in which case we try matches against all possible variations.
+\begin{code}
+domatch logic vts tC (n,asn@(tP@(Cons tk i ts@(_:_:_)),sc))
+  | i == theEqv logic  =  concat $ map (eqvMatch vts tC) $ listsplit ts
+  where
+    eqvMatch vts tC (tsP,tsR)
+      -- tC :: equiv(tsP), with replacement equiv(tsR).
+      = justMatch (Cons tk i tsR) vts tC (n,((Cons tk i tsP),sc))
+\end{code}
+
+Otherwise we just match against the whole law.
+\begin{code}
+domatch logic vts tC law
+ = justMatch (theTrue logic) vts tC law
+
+justMatch repl vts tC (n,asn@(tP,_))
  = case match vts tC tP of
-     Nothing -> Nothing
-     Just bind -> Just (n,asn,bind,theTrue logic)
+     Nothing -> []
+     Just bind -> [(n,asn,bind,repl)]
 \end{code}

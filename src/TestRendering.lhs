@@ -200,10 +200,10 @@ trLstVarMatchRole UnknownListVar     =  " ?"
 \begin{code}
 trVarTable :: VarTable -> String
 trVarTable vt
- = unlines [ trAssoc trVTVV $ vtList vt
-           , trAssoc trVTLV $ stList vt
-           , trAssoc trVTLV $ dtList vt
-           ]
+ = unlines' [ trAssoc trVTVV $ vtList vt
+            , trAssoc trVTLV $ stList vt
+            , trAssoc trVTLV $ dtList vt
+            ]
 
 trVTVV (v,vmr)   =  trVar v ++ trVarMatchRole    vmr
 
@@ -228,7 +228,7 @@ trBinding :: Binding -> String
 trBinding = trBinding' . dumpBinding
 
 trBinding' (vb,sb,lb)
- = unlines [ trAssoc trVB vb, trAssoc trSB sb, trAssoc trLB lb ]
+ = unlines' [ trAssoc trVB vb, trAssoc trSB sb, trAssoc trLB lb ]
 
 trAssoc tr pairs = "{ " ++ seplist ", " tr pairs ++ " }"
 

@@ -200,8 +200,18 @@ in which case we try matches against all possible variations.
 domatch logic vts tC (n,asn@(tP@(Cons tk i ts@(_:_:_)),sc))
   | i == theEqv logic  =  concat $ map (eqvMatch vts tC) $ listsplit ts
   where
-    eqvMatch vts tC (tsP,tsR)
       -- tC :: equiv(tsP), with replacement equiv(tsR).
+    eqvMatch vts tC ([tP],[])
+      = justMatch (theTrue logic) vts tC (n,(tP,sc))
+    eqvMatch vts tC ([tP],[tR])
+      = justMatch tR vts tC (n,(tP,sc))
+    eqvMatch vts tC ([tP],tsR)
+      = justMatch (Cons tk i tsR) vts tC (n,(tP,sc))
+    eqvMatch vts tC (tsP,[])
+      = justMatch (theTrue logic) vts tC (n,((Cons tk i tsP),sc))
+    eqvMatch vts tC (tsP,[tR])
+      = justMatch tR vts tC (n,((Cons tk i tsP),sc))
+    eqvMatch vts tC (tsP,tsR)
       = justMatch (Cons tk i tsR) vts tC (n,((Cons tk i tsP),sc))
 \end{code}
 

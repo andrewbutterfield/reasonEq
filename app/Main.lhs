@@ -67,6 +67,7 @@ data REqState
     , conj :: [(String,Assertion)]
     , goal :: Maybe (String,Assertion)
     , proof :: Maybe LiveProof
+    , proofs :: [Proof]
     }
 logic__ f r = r{logic = f $ logic r} ; logic_  = logic__ . const
 known__ f r = r{known = f $ known r} ; known_  = known__ . const
@@ -74,17 +75,18 @@ laws__  f r = r{laws  = f $ laws r}  ; laws_   = laws__  . const
 conj__  f r = r{conj  = f $ conj r}  ; conj_   = conj__  . const
 goal__  f r = r{goal  = f $ goal r}  ; goal_   = goal__  . const
 proof__ f r = r{proof = f $ proof r} ; proof_  = proof__ . const
+proofs__ f r = r{proofs = f $ proofs r} ; proofs_  = proofs__ . const
 \end{code}
 
 \begin{code}
 initState :: [String] -> IO REqState
 initState []
   = do putStrLn "Running in normal user mode."
-       return $ ReqState thePropositionalLogic [] [] [] Nothing Nothing
+       return $ ReqState thePropositionalLogic [] [] [] Nothing Nothing []
 initState ["dev"]
   = do putStrLn "Running in development mode."
        let reqs = ReqState thePropositionalLogic [propKnown]
-                           propLaws propConjs Nothing Nothing
+                           propLaws propConjs Nothing Nothing []
        return reqs
 
 summariseREqS :: REqState -> String
@@ -142,13 +144,14 @@ showGoal (Just goal) = showLaw 0 goal
 
 Showing Proof:
 \begin{code}
-showProof Nothing = "no Proof."
-showProof (Just proof) = displayProof proof
+showLivePrf Nothing = "no Proof."
+showLivePrf (Just proof) = dispLiveProof proof
 \end{code}
 
-\subsubsection{Set Command}
-
-Set Goal:
+Showing Proofs:
+\begin{code}
+showProofs = unlines' . map ( ('\n':) . displayProof )
+\end{code}
 
 
 \newpage
@@ -249,7 +252,8 @@ cmdShow
         , "sh "++shLaws++" - show current laws"
         , "sh "++shConj++" - show current conjectures"
         , "sh "++shGoal++" - show current goal"
-        , "sh "++shProof++" - show current proof"
+        , "sh "++shLivePrf++" - show current proof"
+        , "sh "++shProofs++" - show completed proofs"
         ]
     , showState )
 
@@ -258,7 +262,8 @@ shKnown = "k"
 shLaws  = "l"
 shConj = "c"
 shGoal = "g"
-shProof = "p"
+shLivePrf = "p"
+shProofs = "P"
 
 showState [cmd] reqs
  | cmd == shLogic  =  doshow reqs $ showLogic $ logic reqs
@@ -266,7 +271,8 @@ showState [cmd] reqs
  | cmd == shLaws   =  doshow reqs $ showLaws  $ laws  reqs
  | cmd == shConj   =  doshow reqs $ showLaws  $ conj  reqs
  | cmd == shGoal   =  doshow reqs $ showGoal  $ goal  reqs
- | cmd == shProof  =  doshow reqs $ showProof $ proof reqs
+ | cmd == shLivePrf  =  doshow reqs $ showLivePrf $ proof reqs
+ | cmd == shProofs =  doshow reqs $ showProofs $ proofs reqs
 showState _ reqs   =  doshow reqs "unknown 'show' option."
 
 doshow reqs str
@@ -331,13 +337,20 @@ doProof _ reqs
 This repl runs a proof.
 \begin{code}
 proofREPL reqs proof
- = do outputStrLn $ displayProof proof
-      minput <- getInputLine "proof: "
-      case minput of
-        Nothing -> back reqs proof
-        Just "e" -> back reqs proof
-        Just "?" -> proofHelp reqs proof
-        Just pcmd -> proofCommand reqs proof (words pcmd)
+ = do outputStrLn $ dispLiveProof proof
+      if proofComplete (logic reqs) proof
+       then
+         do outputStrLn "Proof Complete"
+            let prf = finaliseProof proof
+            outputStrLn $ displayProof prf
+            return (proofs__ (prf:) reqs)
+       else
+         do minput <- getInputLine "proof: "
+            case minput of
+              Nothing -> back reqs proof
+              Just "e" -> back reqs proof
+              Just "?" -> proofHelp reqs proof
+              Just pcmd -> proofCommand reqs proof (words pcmd)
 
 back reqs proof
  = doshow (proof_ (Just proof) reqs) "Back to main REPL, Proof still current."
@@ -362,34 +375,36 @@ proofCommand reqs proof pcmds
   = do outputStrLn ("proofCommand '"++unwords pcmds++"' unknown")
        proofREPL reqs proof
 
-goDown reqs proof@(nm, tz, dpath, sc, _, steps ) i
+goDown reqs proof@(nm, asn, tz, dpath, sc, _, steps ) i
   = let (ok,tz') = downTZ i tz in
     if ok
-    then proofREPL reqs (nm, tz', dpath++[i], sc, [], steps)
+    then proofREPL reqs (nm, asn, tz', dpath++[i], sc, [], steps)
     else proofREPL reqs proof
 
-goUp reqs proof@(nm, tz, dpath, sc, _, steps )
+goUp reqs proof@(nm, asn, tz, dpath, sc, _, steps )
   = let (ok,tz') = upTZ tz in
     if ok
-    then proofREPL reqs (nm, tz', init dpath, sc, [], steps)
+    then proofREPL reqs (nm, asn, tz', init dpath, sc, [], steps)
     else proofREPL reqs proof
 
-matchLawCommand reqs proof@(nm, tz, dpath, sc, _, steps )
+matchLawCommand reqs proof@(nm, asn, tz, dpath, sc, _, steps )
   = do outputStrLn "Matching.."
        let matches = matchLaws (logic reqs) (known reqs)  (getTZ tz) (laws reqs)
        outputStrLn $ displayMatches matches
-       proofREPL reqs (nm, tz, dpath, sc, matches, steps)
+       proofREPL reqs (nm, asn, tz, dpath, sc, matches, steps)
 
-applyMatch reqs proof@(nm, tz, dpath, sc, matches, steps ) i
+applyMatch reqs proof@(nm, asn, tz, dpath, sc, matches, steps ) i
   = case alookup i matches of
      Nothing -> do outputStrLn ("No match numbered "++ show i)
                    proofREPL reqs proof
-     Just (_,(nm,asn,bind,repl))
+     Just (_,(lnm,lasn,bind,repl))
       -> case instantiate bind repl of
           Nothing -> do outputStrLn "Apply failed !"
                         proofREPL reqs proof
           Just brepl
-            -> proofREPL reqs (nm, (setTZ brepl tz), dpath, sc, matches, steps)
+            -> do outputStrLn ("Applied law '"++lnm++"' at "++show dpath)
+                  proofREPL reqs (nm, asn, (setTZ brepl tz), dpath, sc, []
+                                 , ((lnm,dpath), exitTZ tz):steps)
 
 abandonProof reqs proof
  = do yesno <- getInputLine "Abandon ! Are you sure (Y/n) ? "

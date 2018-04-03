@@ -12,10 +12,12 @@ module Proof
  , Justification
  , CalcStep
  , Calculation
- , LiveProof, displayProof
+ , LiveProof, dispLiveProof
+ , Proof, displayProof
  , startProof
  , displayMatches
  , matchLaws
+ , proofComplete, finaliseProof
  ) where
 
 -- import Data.Set (Set)
@@ -128,7 +130,7 @@ type CalcStep
 
 type Calculation
   = ( Term -- end (or current) term
-    , [ CalcStep ] )  -- calculation steps, most recent first
+    , [ CalcStep ] )  -- calculation steps, in proof order
 
 type Match
  = ( String -- assertion name
@@ -143,26 +145,33 @@ type Matches
 
 type LiveProof
   = ( String -- conjecture name
+    , Assertion -- assertion being proven
     , TermZip  -- current term, focussed
     , [Int] -- current zipper descent arguments
     , SideCond -- side conditions
     , Matches -- current matches
-    , [CalcStep]  -- calculation steps so far.
+    , [CalcStep]  -- calculation steps so far, most recent first
+    )
+
+type Proof
+  = ( String -- assertion name
+    , Assertion
+    , Calculation -- Simple calculational proofs for now
     )
 
 -- temporary
-displayProof :: LiveProof -> String
-displayProof ( nm, tz, dpath, sc, _, steps )
- = unlines
+dispLiveProof :: LiveProof -> String
+dispLiveProof ( nm, _, tz, dpath, sc, _, steps )
+ = unlines'
      ( ("Proof for '"++nm++"'")
      : (trTerm 0 (getTZ tz) ++ "@" ++ show dpath++"   "++trSideCond sc)
-     : map shStep steps ++ ["---"])
+     : map shLiveStep steps ++ ["---"])
 
-shStep :: CalcStep -> String
-shStep ( (lnm, dpath), t )
- = unlines [ " = '"++lnm++"@" ++ show dpath ++ "'"
-           , "  " ++ trTerm 0 t
-           ]
+shLiveStep :: CalcStep -> String
+shLiveStep ( (lnm, dpath), t )
+ = unlines' [ " = '"++lnm++"@" ++ show dpath ++ "'"
+            , trTerm 0 t
+            ]
 
 displayMatches :: Matches -> String
 displayMatches []  =  "no Matches."
@@ -173,13 +182,40 @@ shMatch (i, (n, (t,sc), bind, trplc))
              ++ " " ++ trTerm 0 t ++ "  " ++ trSideCond sc
              ++ " " ++ _maplet ++ " " ++ trTerm 0 trplc
            , trBinding bind ]
+
+displayProof :: Proof -> String
+displayProof (pnm,(trm,sc),(trm',steps))
+ = unlines' ( (pnm ++ " : " ++ trTerm 0 trm ++ " " ++ trSideCond sc)
+              : "---"
+              : ( map shStep steps )
+              ++ [trTerm 0 trm'] )
+
+shStep :: CalcStep -> String
+shStep ( (lnm, dpath), t )
+ = unlines' [ trTerm 0 t
+            , " = '"++lnm++"@" ++ show dpath ++ "'"
+            ]
 \end{code}
 
 We need to setup a proof from a conjecture:
 \begin{code}
 startProof :: String -> Assertion -> LiveProof
-startProof nm (t,sc) = (nm, mkTZ t, [], sc, [], [])
+startProof nm asn@(t,sc) = (nm, asn, mkTZ t, [], sc, [], [])
 \end{code}
+
+We need to determine when a live proof is complete:
+\begin{code}
+proofComplete :: TheLogic -> LiveProof -> Bool
+proofComplete logic (_, _, tz, _, _, _, _)  =  exitTZ tz == theTrue logic
+\end{code}
+
+We need to convert a complete live  proof to a proof:
+\begin{code}
+finaliseProof :: LiveProof -> Proof
+finaliseProof( nm, asn, tz, _, _, _, steps)
+  = (nm, asn, (exitTZ tz, reverse steps))
+\end{code}
+
 
 \newpage
 \subsection{Assertion Matching}

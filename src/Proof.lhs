@@ -209,7 +209,7 @@ proofComplete :: TheLogic -> LiveProof -> Bool
 proofComplete logic (_, _, tz, _, _, _, _)  =  exitTZ tz == theTrue logic
 \end{code}
 
-We need to convert a complete live  proof to a proof:
+We need to convert a complete live proof to a proof:
 \begin{code}
 finaliseProof :: LiveProof -> Proof
 finaliseProof( nm, asn, tz, _, _, _, steps)

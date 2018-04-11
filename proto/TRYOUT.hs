@@ -61,7 +61,21 @@ showTree'' substr (Bush' One i right : wayup)
 showTree'' substr (Bush' Two i left : wayup)
   = showTree'' (treeShow (showTree left) (show i) substr ) wayup
 
-highlight s = bold ("@@@:"++s++":@@@")
+eSGR n = "\ESC["++show n++"m"
+
+resetSGR = eSGR 0
+boldSGR  = eSGR 1
+undlSGR  = eSGR 4
+ovlSGR   = eSGR 9
+
+fontSGR i = eSGR (i+10)
+
+colorSGR i = eSGR (i+30)
+bcolorSGR i = eSGR (i+40)
+
+[black,red,green,yellow,blue,magenta,cyan,white] = [0..7]
+
+highlight s = undlSGR ++ s++ resetSGR
 
 putTree' = putStrLn . showTree'
 

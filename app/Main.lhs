@@ -68,6 +68,7 @@ data REqState
     , goal :: Maybe (String,Assertion)
     , proof :: Maybe LiveProof
     , proofs :: [Proof]
+    , focus :: TermZip
     }
 logic__ f r = r{logic = f $ logic r} ; logic_  = logic__ . const
 known__ f r = r{known = f $ known r} ; known_  = known__ . const
@@ -76,18 +77,35 @@ conj__  f r = r{conj  = f $ conj r}  ; conj_   = conj__  . const
 goal__  f r = r{goal  = f $ goal r}  ; goal_   = goal__  . const
 proof__ f r = r{proof = f $ proof r} ; proof_  = proof__ . const
 proofs__ f r = r{proofs = f $ proofs r} ; proofs_  = proofs__ . const
+focus__ f r = r{focus = f $ focus r} ; focus_  = focus__ . const
 \end{code}
 
 \begin{code}
 initState :: [String] -> IO REqState
 initState []
   = do putStrLn "Running in normal user mode."
-       return $ ReqState thePropositionalLogic [] [] [] Nothing Nothing []
+       return
+         $ ReqState thePropositionalLogic [] [] [] Nothing Nothing [] focusTest
 initState ["dev"]
   = do putStrLn "Running in development mode."
        let reqs = ReqState thePropositionalLogic [propKnown]
-                           propLaws propConjs Nothing Nothing []
+                           propLaws propConjs Nothing Nothing [] focusTest
        return reqs
+
+focusTest
+  = mkTZ
+     $ Cons P (i "F")
+            [ Cons P (i _equiv)   [p "P",p "Q"]
+            , Cons P (i _implies) [p "P",p "Q"]
+            , Cons P (i _lor)     [p "P",p "Q"]
+            , Cons P (i _land)    [p "P",p "Q"]
+            , Cons P (i _lnot)    [p "P"]
+            ]
+
+  where
+    i n = fromJust $ ident n
+    p n = fromJust $ pVar (Vbl (fromJust $ident n) PredV Static)
+
 
 summariseREqS :: REqState -> String
 summariseREqS reqs
@@ -254,6 +272,7 @@ cmdShow
         , "sh "++shGoal++" - show current goal"
         , "sh "++shLivePrf++" - show current proof"
         , "sh "++shProofs++" - show completed proofs"
+        , "sh "++shFocus++" - show current test focus state"
         ]
     , showState )
 
@@ -264,6 +283,7 @@ shConj = "c"
 shGoal = "g"
 shLivePrf = "p"
 shProofs = "P"
+shFocus = "f"
 
 showState [cmd] reqs
  | cmd == shLogic  =  doshow reqs $ showLogic $ logic reqs
@@ -273,6 +293,7 @@ showState [cmd] reqs
  | cmd == shGoal   =  doshow reqs $ showGoal  $ goal  reqs
  | cmd == shLivePrf  =  doshow reqs $ showLivePrf $ proof reqs
  | cmd == shProofs =  doshow reqs $ showProofs $ proofs reqs
+ | cmd == shFocus  =  doshow reqs $ trTermZip $ focus reqs
 showState _ reqs   =  doshow reqs "unknown 'show' option."
 
 doshow reqs str

@@ -163,29 +163,21 @@ type Proof
 dispLiveProof :: LiveProof -> String
 dispLiveProof ( nm, _, tz, dpath, sc, _, steps )
  = unlines'
-     ( ("Proof for '"++nm++"'")
-     : (dispTermZip tz ++ "@" ++ show dpath++"   "++trSideCond sc)
-     : "..."
-     : map shLiveStep steps ++ ["---"])
+     ( ("Proof for '"++nm++"'  "++trSideCond sc)
+       : map shLiveStep (reverse steps)
+         ++
+         [ trTermZip tz ++ "@" ++ show dpath++"   "
+         , "---" ] )
 \end{code}
 
-The scheme for rendering terms is as follows.
-\begin{eqnarray*}
-   S_p(K~t_1~\dots~t_n) &\defs& AK_p(t_1,\dots,t_n)
-\\ AK_p(t_1,\dots,t_n)  &\defs&
-                    asmK_p(\dots S_{pdepK(1)}(t_1)\dots S_{pdefK(n)}(t_n)\dots)
-\\ pdepK(i) &\defs& \textsf{rendering context of $i$th term of $K$}
-\end{eqnarray*}
-The functions $AK_p$ and $pdepK$ can be used here to get precedences right
-when highlighting the focus.
 \begin{code}
 dispTermZip :: TermZip -> String
 dispTermZip tz = blue $ trTerm 0 (getTZ tz)
 
 shLiveStep :: CalcStep -> String
 shLiveStep ( (lnm, dpath), t )
- = unlines' [ " = '"++lnm++"@" ++ show dpath ++ "'"
-            , trTerm 0 t
+ = unlines' [ trTerm 0 t
+            , " = '"++lnm++"@" ++ show dpath ++ "'"
             ]
 
 displayMatches :: Matches -> String

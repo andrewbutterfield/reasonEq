@@ -10,7 +10,13 @@ module TestRendering (
    trId
  , trVar, trLVar, trGVar
  , trType
- , trValue, trTerm, trSideCond
+ , trValue
+ , trTerm
+ -- , asmAtomic, asmInfix, asmCons
+ -- if we export the above then trTermZip can live in TermZipper
+ -- and keep that abstraction closed
+ , trTermZip
+ , trSideCond
  , trVarMatchRole, trLstVarMatchRole, trVarTable
  , trBinding
  , seeV, seeLV, seeGV, seeVL, seeVS
@@ -22,6 +28,7 @@ import Data.Maybe(fromJust)
 import Data.Map as M (fromList,assocs)
 import qualified Data.Set as S
 import Data.List (nub, sort, (\\), intercalate)
+import Data.Char
 
 import NiceSymbols
 
@@ -33,6 +40,7 @@ import SideCond
 import VarData
 import Binding
 import Matching
+import TermZipper
 \end{code}
 
 \subsection{Test Rendering Intro.}
@@ -114,29 +122,29 @@ trValue (Txt s)          =  show s
 
 
 Based on some prototyping (\texttt{inproto/TRYOUT.hs},  April 2018),
-we re-factor a show-function $S$ for terms of the form
-$S(K~t_1~\dots~t_n) \defs asmK(\dots S(t1)\dots S(tn)\dots)$
+we re-factor a rendering-function $R$ for terms of the form
+$R(K~t_1~\dots~t_n) \defs RK(\dots R(t_1)\dots R(t_n)\dots)$
 into
 \begin{eqnarray*}
-   S(K~t_1~\dots~t_n) &\defs& AK(t_1,\dots,t_n)
-\\ AK(t_1,\dots,t_n)   &\defs& asmK(\dots S(t1)\dots S(tn)\dots)
+   R(K~t_1~\dots~t_n) &\defs& asmK(R(t_1),\dots,R(t_n))
+\\ asmK(r_1,\dots,r_n)   &\defs& RK(\dots r_1\dots r_n\dots)
 \end{eqnarray*}
 This makes it very easy to then render term zippers,
 with a facility to highlight the focus.
 With precedence values, the picture is a little more complicated:
 \begin{eqnarray*}
-   S_p(K~t_1~\dots~t_n) &\defs& AK_p(t_1,\dots,t_n)
-\\ AK_p(t_1,\dots,t_n)   &\defs& asmK_p(\dots S_{p_1}(t_1)\dots S_{p_n}(t_n)\dots)
+   R_p(K~t_1~\dots~t_n) &\defs& asmK_p(R_{p_1}(t_1),\dots,R_{p_n}(t_n))
+\\ asmK_p(r_1,\dots,r_n)   &\defs& RK_p(\dots r_1\dots r_n\dots)
 \end{eqnarray*}
 Here the recursive $p_i$ for $t_i$ depends on $i$,
 and not the precedence of the top level operator, if any,
 in $t_i$.
-This dependency needs to be explcitly recorded in order for
+This dependency needs to be explicitly recorded in order for
 zipper rendering to handle precedence rules properly.
 \begin{eqnarray*}
-   S_p(K~t_1~\dots~t_n) &\defs& AK_p(t_1,\dots,t_n)
-\\ AK_p(t_1,\dots,t_n)  &\defs&
-                    asmK_p(\dots S_{pdepK(1)}(t_1)\dots S_{pdefK(n)}(t_n)\dots)
+   R_p(K~t_1~\dots~t_n) &\defs& asmK_p(R_{pdepK(1)}(t_1),\dots,R_{pdepK(n)}(t_n))
+\\ asmK_p(t_1,\dots,t_n)  &\defs&
+                    RK_p(\dots r_1 \dots r_n\dots)
 \\ pdepK(i) &\defs& \textsf{rendering context of $i$th term of $K$}
 \end{eqnarray*}
 The simplest case is when $K$ is a binary operator of precedence $p_K$,
@@ -191,11 +199,12 @@ trTerm :: Int -> Term -> String -- 1st arg is precedence (not yet used)
 trTerm p (Val tk k)           =  trValue k
 trTerm p (Var tk v)           =  trVar v
 
-trTerm p (Cons tk s ts@(_:_:_))
- | isSymbId s                 =  trInfix p s ts
 trTerm p (Cons tk n [t])
- | isAtomic t                 =  trId n ++ trTerm 0 t
-trTerm p (Cons tk n ts)       =  trId n ++ trApply p n ("(",", ",")") ts
+ | isAtomic t                 =  asmAtomic n $ trTerm 0 t
+trTerm p (Cons tk s ts@(_:_:_))
+ | isSymbId s                 =  asmInfix p prcs s $ map (trTerm ps) ts
+ where prcs@(ps,assoc) = prc s
+trTerm p (Cons tk n ts)       =  asmCons n $ map (trTerm 0) ts
 
 trTerm p (Bind tk n vs t)     =  trAbs p tk n (S.toList vs) t
 trTerm p (Lam tk n vl t)      =  trAbs p tk n vl            t
@@ -208,6 +217,24 @@ trTerm p (Iter tk na ni lvs)
                        ++ ")"
             ++ "}"
 trTerm p (Type t)             =  trType t
+\end{code}
+
+$asmK$ for \texttt{trTerm}
+\begin{code}
+--asmCons has three flavours
+-- trTerm p (Cons tk n ts)
+asmAtomic :: Identifier -> String -> String
+asmAtomic n r = trId n ++ r
+asmInfix :: Int -> InfixKind -> Identifier -> [String] -> String
+asmInfix p (ps,assoc) s rs
+  = trBracketIf (ps < p || ps == p && not assoc) $ intercalate (trId s) $ rs
+asmCons :: Identifier -> [String] -> String
+asmCons n rs = trId n ++ asmContainer ("(",", ",")") rs
+\end{code}
+
+Generic $asmK$ helpers.
+\begin{code}
+asmContainer (lbr,sep,rbr) rs = lbr ++ intercalate sep rs ++ rbr
 \end{code}
 
 \begin{code}
@@ -224,11 +251,6 @@ trSub p (Substn tsub lvsub)
 
 These will eventually do some sort of multi-line pretty-printing.
 \begin{code}
-trInfix p s ts
- = let (ps,isAssoc) = prc s in
-     trBracketIf (ps < p || ps == p && not isAssoc)
-                 $ intercalate (trId s) $ map (trTerm ps) ts
-
 trBracketIf True  s  =  "("++s++")"
 trBracketIf False s  =  s
 
@@ -243,6 +265,28 @@ trVL = seplist "," trGVar
 
 trVList vl  =  _langle ++ trVL vl ++ _rangle
 trVSet vs   =  "{" ++ trVL (S.toList vs) ++ "}"
+\end{code}
+
+\subsection{Term Zipper}
+
+\begin{code}
+trTermZip (t,wayup) = trTZip (markfocus $ trTerm 0 t) wayup
+trTZip r [] = r
+trTZip r (t':wayup)  = trTZip (asmType' r t') wayup
+
+asmType' r (Cons' tk n [] []) -- Cons tk n [r^-1]
+  | isAtomicR r  =  asmAtomic n r
+asmType' r (Cons' tk s before after)
+  | isSymbId s && length before + length after > 0
+     = asmInfix p prcs s
+                (map (trTerm ps) (reverse after)  ++ r : map (trTerm ps) after)
+  where
+    prcs@(ps,assoc) = prc s
+    p = 0 -- NEED TO GET THIS FROM Cons' own parent
+
+isAtomicR r = validIdent r || all isDigit r -- will do for now...
+
+markfocus = magenta
 \end{code}
 
 \subsection{Side Conditions}

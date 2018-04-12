@@ -7,7 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module TermZipper
- ( TermZip(..) -- internals needed for focus-hilite pretty-printing (?)
+ ( TermZip
+ , Term'(..), TermSubL -- internals needed for focus-hilite pretty-printing (?)
  -- perhaps the relevant p.p. bits can be imported here so we do it locally?
  -- reccommended abstraction:
  , mkTZ, downTZ, upTZ, exitTZ

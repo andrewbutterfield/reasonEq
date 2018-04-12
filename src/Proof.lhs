@@ -180,7 +180,7 @@ The functions $AK_p$ and $pdepK$ can be used here to get precedences right
 when highlighting the focus.
 \begin{code}
 dispTermZip :: TermZip -> String
-dispTermZip tz = trTerm 0 (getTZ tz)
+dispTermZip tz = blue $ trTerm 0 (getTZ tz)
 
 shLiveStep :: CalcStep -> String
 shLiveStep ( (lnm, dpath), t )

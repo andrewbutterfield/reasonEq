@@ -54,7 +54,7 @@ trVC PredV  =  _mathcal "P"
 
 trVCf :: VarClass -> String -> String
 trVCf ObsV s = s
-trVCf _ s = bold s
+trVCf _ s = s -- bold s - currently can't nest these effects.
 
 trVW :: VarWhen -> String -> String
 trVW Static s      =  s
@@ -154,11 +154,26 @@ $$
 \qquad  \land    \;\mapsto  5
 \qquad  \lnot    \;\mapsto  6
 $$
+We might also want to fine tune rendering modes,
+especially in live proofs:
+
+\begin{tabular}{|c|c|c|}
+\hline
+   render-mode & $\equiv$[P,$\equiv$[Q,R]] & $\equiv$[P,Q,R]
+\\\hline
+   assoc       & $P \equiv Q \equiv R$     & $P \equiv Q \equiv R$
+\\\hline
+   non-assoc  & $P \equiv (Q \equiv R)$    & $P \equiv Q \equiv R$
+\\\hline
+   forced-l  & $P \equiv (Q \equiv R)$    & $(P \equiv Q) \equiv R$
+\\ forced-r  & $P \equiv (Q \equiv R)$    & $P \equiv (Q \equiv R)$
+\\\hline
+\end{tabular}
+~
+
 \begin{code}
-type InfixKind
- = ( Int     -- precedence
-   , Bool )  -- true if *syntactically* associative
--- IDEA: syntactic associativity can be used/ignored as required.
+type InfixKind = ( Int     -- precedence
+                 , Bool )  -- true if *syntactically* associative
 prc :: Identifier -> InfixKind
 prc (Identifier n)
   | n == "="       =  (1,False)
@@ -175,14 +190,17 @@ prc (Identifier n)
 trTerm :: Int -> Term -> String -- 1st arg is precedence (not yet used)
 trTerm p (Val tk k)           =  trValue k
 trTerm p (Var tk v)           =  trVar v
+
 trTerm p (Cons tk s ts@(_:_:_))
  | isSymbId s                 =  trInfix p s ts
 trTerm p (Cons tk n [t])
  | isAtomic t                 =  trId n ++ trTerm 0 t
 trTerm p (Cons tk n ts)       =  trId n ++ trApply p n ("(",", ",")") ts
+
 trTerm p (Bind tk n vs t)     =  trAbs p tk n (S.toList vs) t
 trTerm p (Lam tk n vl t)      =  trAbs p tk n vl            t
 trTerm p (Sub tk t sub)       =  trTerm p t ++ trSub p sub
+
 trTerm p (Iter tk na ni lvs)
  =  trId na ++ "{"
             ++ trId ni ++ "("
@@ -190,7 +208,9 @@ trTerm p (Iter tk na ni lvs)
                        ++ ")"
             ++ "}"
 trTerm p (Type t)             =  trType t
+\end{code}
 
+\begin{code}
 trSub p (Substn tsub lvsub)
  = "[" ++
        trTL p "," rts ++ ',':trVL (map LstVar rlvs) ++

@@ -178,13 +178,13 @@ banner = outputStrLn $ unlines
 
 loop :: REqState -> InputT IO ()
 loop reqs = do
-   minput <- getInputLine (summariseREqS reqs++' ':_equiv++" ")
+   minput <- getInputLine ("rEq."++_equiv++" ")
    case minput of
        Nothing      ->  quit reqs
        Just "quit"  ->  quit reqs
        Just input   ->  docommand reqs (words input) >>= loop
 
--- may ask for user confirmation, amd save? stuff..
+-- may ask for user confirmation, and save? stuff..
 quit reqs = outputStrLn "Goodbye!"
 \end{code}
 

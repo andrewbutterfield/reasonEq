@@ -34,7 +34,7 @@ import TestRendering
 
 \begin{code}
 name = "reasonEq"
-version = "0.5.0.0++"
+version = "0.5.1.0"
 \end{code}
 
 \begin{code}

@@ -98,6 +98,7 @@ seplist sep tr = intercalate sep . map tr
 \newpage
 \subsection{Terms}
 
+Kinds and Values:
 \begin{code}
 trTK :: TermKind -> String
 trTK _ = "" -- ignore for now
@@ -109,27 +110,90 @@ trValue (Boolean False)  =  "ff"
 trValue (Boolean True)   =  "tt"
 trValue (Integer i)      =  show i
 trValue (Txt s)          =  show s
+\end{code}
 
-trTerm :: Int -> Term -> String -- 1st arg is indent-level
-trTerm i (Val tk k)           =  trValue k
-trTerm i (Var tk v)           =  trVar v
-trTerm i (Cons tk s [t1,t2])
- | isSymbId s                 =  trInfix i t1 s t2
-trTerm i (Cons tk n ts)       =  trId n ++ trApply i n ("(",", ",")") ts
-trTerm i (Bind tk n vs t)     =  trAbs i tk n (S.toList vs) t
-trTerm i (Lam tk n vl t)      =  trAbs i tk n vl            t
-trTerm i (Sub tk t sub)       =  trTerm i t ++ trSub i sub
-trTerm i (Iter tk na ni lvs)
+
+Based on some prototyping (\texttt{inproto/TRYOUT.hs},  April 2018),
+we re-factor a show-function $S$ for terms of the form
+$S(K~t_1~\dots~t_n) \defs asmK(\dots S(t1)\dots S(tn)\dots)$
+into
+\begin{eqnarray*}
+   S(K~t_1~\dots~t_n) &\defs& AK(t_1,\dots,t_n)
+\\ AK(t_1,\dots,t_n)   &\defs& asmK(\dots S(t1)\dots S(tn)\dots)
+\end{eqnarray*}
+This makes it very easy to then render term zippers,
+with a facility to highlight the focus.
+With precedence values, the picture is a little more complicated:
+\begin{eqnarray*}
+   S_p(K~t_1~\dots~t_n) &\defs& AK_p(t_1,\dots,t_n)
+\\ AK_p(t_1,\dots,t_n)   &\defs& asmK_p(\dots S_{p_1}(t_1)\dots S_{p_n}(t_n)\dots)
+\end{eqnarray*}
+Here the recursive $p_i$ for $t_i$ depends on $i$,
+and not the precedence of the top level operator, if any,
+in $t_i$.
+This dependency needs to be explcitly recorded in order for
+zipper rendering to handle precedence rules properly.
+\begin{eqnarray*}
+   S_p(K~t_1~\dots~t_n) &\defs& AK_p(t_1,\dots,t_n)
+\\ AK_p(t_1,\dots,t_n)  &\defs&
+                    asmK_p(\dots S_{pdepK(1)}(t_1)\dots S_{pdefK(n)}(t_n)\dots)
+\\ pdepK(i) &\defs& \textsf{rendering context of $i$th term of $K$}
+\end{eqnarray*}
+The simplest case is when $K$ is a binary operator of precedence $p_K$,
+in which case $pdepK(i) = p_K$, for all $i$.
+
+\textbf{Before we proceed, we need a table/function that returns
+the precedence level of a \texttt{Cons} identifier.
+For now, let's hard-code one.
+Suggested Precedence Table:}
+$$
+        =        \;\mapsto  1
+\qquad  \equiv   \;\mapsto  2
+\qquad  \implies \;\mapsto  3
+\qquad  \lor     \;\mapsto  4
+\qquad  \land    \;\mapsto  5
+\qquad  \lnot    \;\mapsto  6
+$$
+\begin{code}
+type InfixKind
+ = ( Int     -- precedence
+   , Bool )  -- true if *syntactically* associative
+-- IDEA: syntactic associativity can be used/ignored as required.
+prc :: Identifier -> InfixKind
+prc (Identifier n)
+  | n == "="       =  (1,False)
+  | n == _equiv    =  (2,False)
+  | n == _implies  =  (3,False)
+  | n == _lor      =  (4,True)
+  | n == _land     =  (5,True)
+  | n == _lnot     =  (6,False)
+  | otherwise      =  (0,False) -- force parenthesising if not at top-level
+\end{code}
+
+\newpage
+\begin{code}
+trTerm :: Int -> Term -> String -- 1st arg is precedence (not yet used)
+trTerm p (Val tk k)           =  trValue k
+trTerm p (Var tk v)           =  trVar v
+trTerm p (Cons tk s ts@(_:_:_))
+ | isSymbId s                 =  trInfix p s ts
+trTerm p (Cons tk n [t])
+ | isAtomic t                 =  trId n ++ trTerm 0 t
+trTerm p (Cons tk n ts)       =  trId n ++ trApply p n ("(",", ",")") ts
+trTerm p (Bind tk n vs t)     =  trAbs p tk n (S.toList vs) t
+trTerm p (Lam tk n vl t)      =  trAbs p tk n vl            t
+trTerm p (Sub tk t sub)       =  trTerm p t ++ trSub p sub
+trTerm p (Iter tk na ni lvs)
  =  trId na ++ "{"
             ++ trId ni ++ "("
                        ++ seplist "," trLVar lvs
                        ++ ")"
             ++ "}"
-trTerm i (Type t)             =  trType t
+trTerm p (Type t)             =  trType t
 
-trSub i (Substn tsub lvsub)
+trSub p (Substn tsub lvsub)
  = "[" ++
-       trTL i "," rts ++ ',':trVL (map LstVar rlvs) ++
+       trTL p "," rts ++ ',':trVL (map LstVar rlvs) ++
    "/" ++
        trVL (map StdVar tvs ++ map LstVar tlvs) ++
    "]"
@@ -140,15 +204,20 @@ trSub i (Substn tsub lvsub)
 
 These will eventually do some sort of multi-line pretty-printing.
 \begin{code}
-trInfix i t1 s t2
- = "(" ++ trTerm i t1 ++ trId s ++ trTerm i t2 ++ ")"
+trInfix p s ts
+ = let (ps,isAssoc) = prc s in
+     trBracketIf (ps < p || ps == p && not isAssoc)
+                 $ intercalate (trId s) $ map (trTerm ps) ts
 
-trApply i n (lbr,sep,rbr) ts  =  lbr ++ trTL i sep ts ++ rbr
+trBracketIf True  s  =  "("++s++")"
+trBracketIf False s  =  s
 
-trTL i sep ts = seplist sep (trTerm i) ts
+trApply p n (lbr,sep,rbr) ts  =  lbr ++ trTL p sep ts ++ rbr
 
-trAbs i tk n vl t
- = "("++trId n ++ ' ':trVL vl ++ spaced _bullet ++ trTerm i t ++ ")"
+trTL p sep ts = seplist sep (trTerm p) ts
+
+trAbs p tk n vl t
+ = "("++trId n ++ ' ':trVL vl ++ spaced _bullet ++ trTerm p t ++ ")"
 
 trVL = seplist "," trGVar
 

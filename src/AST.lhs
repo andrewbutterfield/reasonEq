@@ -29,7 +29,7 @@ module AST ( TermSub, LVarSub
            , pattern PVal, pattern PVar, pattern PCons
            , pattern PBind, pattern PLam, pattern PSub, pattern PIter
            , pattern E2, pattern P2
-           , termkind, isVar, isExpr, isPred
+           , termkind, isVar, isExpr, isPred, isAtomic
            , freeVars
            , int_tst_AST
            ) where
@@ -446,10 +446,13 @@ termkind (Lam tk n vs tm)     =  tk
 termkind (Sub tk tm s)        =  tk
 termkind (Iter tk na ni lvs)  =  tk
 
-isVar, isExpr, isPred :: Term -> Bool
+isVar, isExpr, isPred, isAtomic :: Term -> Bool
 isVar (Var _ _) = True ; isVar _ = False
 isExpr t = termkind t /= P
 isPred t = termkind t == P
+isAtomic (K _ _)  =  True
+isAtomic (V _ _)  =  True
+isAtomic _        =  False
 \end{code}
 
 In \cite{UTP-book} we find the notion of texts, in chapters 6 and 10.

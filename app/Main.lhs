@@ -484,11 +484,15 @@ lawInstantiateProof reqs proof@(nm, asn, tz, dpath, sc, matches, steps)
 instantiateLaw reqs proof@(pnm, asn, tz, dpath, psc, matches, steps)
                     law@(lnm,(lawt,lsc))
  = do outputStrLn "QUICK AND DIRTY!"
-      proofREPL reqs ( pnm, asn
-                     , setTZ lawt tz
-                     , dpath, psc -- plus instantiated lsc !!!
-                     , matches
-                     , (("AS-IS!("++lnm++")",dpath), exitTZ tz):steps)
+      case mrgSideCond psc lsc of -- lsc needs instantiation !
+        Nothing -> do outputStrLn "side-condition merge failed"
+                      proofREPL reqs proof
+        Just nsc ->
+          proofREPL reqs ( pnm, asn
+                         , setTZ lawt tz -- lawt need instantiation !
+                         , dpath, nsc -- plus instantiated lsc !!!
+                         , matches
+                         , (("AS-IS!("++lnm++")",dpath), exitTZ tz):steps)
 \end{code}
 
 Abandoning a proof, losing all work so far.

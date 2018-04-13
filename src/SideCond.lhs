@@ -1,4 +1,4 @@
-\section{Abstract Syntax}
+\section{Side Conditions}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2017
 
@@ -12,6 +12,7 @@ module SideCond ( VarSideCond, pattern Exact, pattern Approx
            , addPreSC, addExactSC, addDisjSC, addCoverSC, checkNewSC
            , VarSCMap, SideCond, scTrue
            , pattern SC, pattern Fresh, pattern VarSCs, sidecond
+           , mrgSideCond
            , int_tst_SideCond
            ) where
 import Data.Char
@@ -33,7 +34,7 @@ import Test.Framework.Providers.HUnit (testCase)
 \end{code}
 
 
-\subsection{Side-Conditions}
+\subsection{Introduction}
 
 A side-condition is a property used in laws,
 typically putting a constraint on the free variables of some term.
@@ -61,7 +62,7 @@ under consideration.
 In addition we may also have a requirement
 that certain variables are new, or fresh.
 This applies to the whole term being matched,
-and not just those terms signified by expression and prediate variables.
+and not just those terms signified by expression and predicate variables.
 Let $N$ denote this set.
 
 Here we use $D$, $X$, $C$, $N$, to represent themselves
@@ -109,7 +110,7 @@ then we will have checked that all relevant variables in $C$ satisfy $pre$,
 and hence it becomes superfluous.
 
 \newpage
-\subsubsection{Variable side-conditions}
+\subsection{Variable side-conditions}
 So, a side-condition associated with a term variable is either exact (\texttt{X}),
 or approximate (\texttt{A}):
 \begin{code}
@@ -406,7 +407,24 @@ varSCTests = testGroup "Adding Variable Side-Conditions"
                 ]
 \end{code}
 
-\subsubsection{Full Side Conditions}
+\subsubsection{Merging Variable Conditions}
+
+\begin{code}
+mrgVarSideCond :: Monad m => VarSideCond -> VarSideCond -> m VarSideCond
+mrgVarSideCond (X vs) vsc = addExactSC vs vsc
+mrgVarSideCond (A pre mD mC) vsc
+ = do vsc1 <- mrgD mD vsc
+      vsc2 <- mrgC mC vsc1
+      if pre then addPreSC vsc2 else return vsc2
+ where
+   mrgD Nothing vsc   =  return vsc
+   mrgD (Just d) vsc  =  addDisjSC d vsc
+   mrgC Nothing vsc   =  return vsc
+   mrgC (Just c) vsc  =  addCoverSC c vsc
+\end{code}
+
+
+\subsection{Full Side Conditions}
 
 Checking $N$ against a variable-side condition, looking at $X$ and $C$.
 \begin{code}
@@ -499,6 +517,34 @@ sidecondTests = testGroup "SideCond.sidecond"
                ]
 \end{code}
 
+\subsubsection{Merging Side-Conditions}
+
+\begin{code}
+mrgSideCond :: Monad m => SideCond -> SideCond -> m SideCond
+mrgSideCond (SC n1 vmap1) (SC n2 vmap2)
+ = do let vassoc1 = M.assocs vmap1
+      let vassoc2 = M.assocs vmap2
+      vassoc <- mrgSCAssoc vassoc1 vassoc2
+      sidecond (n1 `S.union` n2) $ M.fromList vassoc
+\end{code}
+
+We merge variable by variable:
+\begin{code}
+mrgSCAssoc [] vassoc2 = return vassoc2
+mrgSCAssoc vassoc1 [] = return vassoc1
+mrgSCAssoc vassoc1@(va1@(v1,vsc1):rest1)
+           vassoc2@(va2@(v2,vsc2):rest2)
+  | va1 < va2
+    = do varest <- mrgSCAssoc rest1  vassoc2
+         return (va1:varest)
+  | va1 > va2
+    = do varest <- mrgSCAssoc vassoc1  rest2
+         return (va2:varest)
+  | otherwise -- va1 == va2
+    = do vsc' <- mrgVarSideCond vsc1 vsc2
+         varest <- mrgSCAssoc rest1 rest2
+         return ((v1,vsc'):varest)
+\end{code}
 \newpage
 
 \subsection{Exported Test Group}

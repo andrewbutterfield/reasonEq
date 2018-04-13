@@ -149,24 +149,27 @@ showKnown vts = unlines $ map trVarTable $ vts
 
 Showing laws:
 \begin{code}
-showLaws lws = unlines $ map (showLaw (nameWidth lws)) $ lws
+showLaws lws = unlines $ map (showLaw (nameWidth lws)) $ zip [1..] lws
 
 nameWidth lws = maximum $ map (length . getName) lws
-getName (n,_) = n
+getName (nm,_) = nm
 
-showLaw w (n,(t,sc))
-  = ldq ++ n ++ rdq ++ pad w n ++ "  " ++ trTerm 0 t ++ "  "++trSideCond sc
+showLaw w (i,(nm,(t,sc)))
+  =    pad 4 istr ++ istr ++ ". "
+    ++ ldq ++ nm ++ rdq ++ pad w nm
+    ++ "  " ++ trTerm 0 t ++ "  "++trSideCond sc
+  where istr = show i
 
-pad w n
+pad w str
   | ext > 0    =  replicate ext ' '
   | otherwise  =  ""
-  where ext = w - length n
+  where ext = w - length str
 \end{code}
 
 Showing Goal:
 \begin{code}
 showGoal Nothing = "no Goal."
-showGoal (Just goal) = showLaw 0 goal
+showGoal (Just goal) = showLaw 0 (0,goal)
 \end{code}
 
 Showing Proof:
@@ -323,10 +326,21 @@ setState [what,name] reqs
  | what == "goal"  =  setgoal reqs name
 setState _ reqs = doshow reqs "unknown 'set' option"
 
-setgoal reqs name
-  = case alookup name $ conj reqs of
-      Nothing -> doshow reqs ("conjecture '"++name++"' not found.")
-      Just cnj -> return $ goal_ (Just cnj) reqs
+setgoal reqs arg
+  | all isDigit arg
+    = case nlookup (read arg) $ conj reqs of
+        Nothing -> doshow reqs ("conjecture no."++arg++" not found.")
+        Just cnj -> return $ goal_ (Just cnj) reqs
+  | otherwise
+    = case alookup arg $ conj reqs of
+        Nothing -> doshow reqs ("conjecture '"++name++"' not found.")
+        Just cnj -> return $ goal_ (Just cnj) reqs
+
+-- list lookup by number [1..]
+nlookup i things
+ | i < 1 || null things  =  Nothing
+nlookup 1 (thing:rest)   =  Just thing
+nlookup i (thing:rest)   =  nlookup (i-1) rest
 
 -- association list lookup
 alookup name [] = Nothing
@@ -391,6 +405,7 @@ proofHelp reqs proof
          , "u - up"
          , "m - match laws"
          , "a n - apply match n"
+         , "i - instantiate a true focus with an axiom"
          , "e - exit to top REPL, keeping proof"
          , "X - abandon proof"
          ]
@@ -400,11 +415,15 @@ proofCommand reqs proof ["d",nstr] = goDown reqs proof $ readInt nstr
 proofCommand reqs proof ["u"] = goUp reqs proof
 proofCommand reqs proof ["m"] = matchLawCommand reqs proof
 proofCommand reqs proof ["a",nstr] = applyMatch reqs proof $ readInt nstr
+proofCommand reqs proof ["i"] = lawInstantiateProof reqs proof
 proofCommand reqs proof ["X"] = abandonProof reqs proof
 proofCommand reqs proof pcmds
   = do outputStrLn ("proofCommand '"++unwords pcmds++"' unknown")
        proofREPL reqs proof
+\end{code}
 
+Focus movement commands
+\begin{code}
 goDown reqs proof@(nm, asn, tz, dpath, sc, _, steps ) i
   = let (ok,tz') = downTZ i tz in
     if ok
@@ -416,7 +435,11 @@ goUp reqs proof@(nm, asn, tz, dpath, sc, _, steps )
     if ok
     then proofREPL reqs (nm, asn, tz', init dpath, sc, [], steps)
     else proofREPL reqs proof
+\end{code}
 
+\newpage
+Law Matching
+\begin{code}
 matchLawCommand reqs proof@(nm, asn, tz, dpath, sc, _, steps )
   = do outputStrLn "Matching.."
        let matches = matchLaws (logic reqs) (known reqs)  (getTZ tz) (laws reqs)
@@ -435,7 +458,41 @@ applyMatch reqs proof@(nm, asn, tz, dpath, sc, matches, steps ) i
             -> do outputStrLn ("Applied law '"++lnm++"' at "++show dpath)
                   proofREPL reqs (nm, asn, (setTZ brepl tz), dpath, sc, []
                                  , ((lnm,dpath), exitTZ tz):steps)
+\end{code}
 
+Replacing \textit{true} by a law, with unknown variables
+suitably instantiated.
+\begin{code}
+lawInstantiateProof reqs proof@(nm, asn, tz, dpath, sc, matches, steps)
+  | currt /= true
+    = do outputStrLn ("Can only instantiate an law over "++trTerm 0 true)
+         proofREPL reqs proof
+  | otherwise
+    = do outputStrLn $ showLaws $ laws reqs
+         minput <- getInputLine "Pick a law : "
+         case minput of
+           Just str@(_:_) | all isDigit str
+             -> case nlookup (read str) $ laws reqs of
+                 Just law@(nm,asn)
+                   -> do outputStrLn ("Law Chosen: "++nm)
+                         instantiateLaw reqs proof law
+                 _ -> proofREPL reqs proof
+           _ -> proofREPL reqs proof
+  where
+    currt = getTZ tz; true = theTrue $ logic reqs
+
+instantiateLaw reqs proof@(pnm, asn, tz, dpath, psc, matches, steps)
+                    law@(lnm,(lawt,lsc))
+ = do outputStrLn "QUICK AND DIRTY!"
+      proofREPL reqs ( pnm, asn
+                     , setTZ lawt tz
+                     , dpath, psc -- plus instantiated lsc !!!
+                     , matches
+                     , (("AS-IS!("++lnm++")",dpath), exitTZ tz):steps)
+\end{code}
+
+Abandoning a proof, losing all work so far.
+\begin{code}
 abandonProof reqs proof
  = do yesno <- getInputLine "Abandon ! Are you sure (Y/n) ? "
       case yesno of
@@ -444,6 +501,7 @@ abandonProof reqs proof
         _ -> proofREPL reqs proof
 \end{code}
 
+\newpage
 \subsubsection{Focus test Command}
 \begin{code}
 cmdFocus

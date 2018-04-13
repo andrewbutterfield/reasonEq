@@ -94,17 +94,26 @@ initState ["dev"]
 
 focusTest
   = mkTZ
-     $ Cons P (i "F")
-            [ Cons P (i _equiv)   [p "P",p "Q"]
-            , Cons P (i _implies) [p "P",p "Q"]
-            , Cons P (i _lor)     [p "P",p "Q"]
-            , Cons P (i _land)    [p "P",p "Q"]
-            , Cons P (i _lnot)    [p "P"]
-            ]
-
+     $ f  [ pP === pQ
+          , pP ==> pQ
+          , g [pR \/ pQ]
+          , pP /\ h [pR, pQ]
+          , lnot pR
+          , lnot ( ( pP \/ ( pQ === pR ) ) /\ ( pQ ==> pP ) )
+          , ( ( pP ==> ( pQ \/ pR ) ) === ( pQ /\ lnot pP ) )
+          ]
   where
     i n = fromJust $ ident n
+    f ts = Cons P (i "F") ts
+    g ts = Cons P (i "G") ts
+    h ts = Cons P (i "H") ts
     p n = fromJust $ pVar (Vbl (fromJust $ident n) PredV Static)
+    pP = p "P" ; pQ = p "Q" ; pR = p "R"
+    t1 === t2  =  Cons P (i _equiv) [t1,t2]
+    t1 ==> t2  =  Cons P (i _implies) [t1,t2]
+    t1 \/ t2  =  Cons P (i _lor) [t1,t2]
+    t1 /\ t2  =  Cons P (i _land) [t1,t2]
+    lnot t = Cons P (i _lnot) [t]
 
 
 summariseREqS :: REqState -> String

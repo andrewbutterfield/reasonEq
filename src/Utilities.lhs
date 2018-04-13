@@ -84,6 +84,16 @@ listsplit' splits before (t:after)
  where before' = t:before
 \end{code}
 
+\subsubsection{Trimming Strings}
+
+\begin{code}
+trim = ltrim . reverse . ltrim . reverse
+
+ltrim "" = ""
+ltrim str@(c:cs)
+ | isSpace c  =  ltrim cs
+ | otherwise  =  str
+\end{code}
 
 \subsubsection{Set disjointness}
 

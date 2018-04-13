@@ -16,6 +16,7 @@ import Data.Set (Set)
 import qualified Data.Set as S
 import Data.List
 import Data.Maybe
+import Data.Char
 
 import NiceSymbols hiding (help)
 
@@ -70,14 +71,14 @@ data REqState
     , proofs :: [Proof]
     , focus :: TermZip
     }
-logic__ f r = r{logic = f $ logic r} ; logic_  = logic__ . const
-known__ f r = r{known = f $ known r} ; known_  = known__ . const
-laws__  f r = r{laws  = f $ laws r}  ; laws_   = laws__  . const
-conj__  f r = r{conj  = f $ conj r}  ; conj_   = conj__  . const
-goal__  f r = r{goal  = f $ goal r}  ; goal_   = goal__  . const
-proof__ f r = r{proof = f $ proof r} ; proof_  = proof__ . const
+logic__  f r = r{logic  = f $ logic r}  ; logic_   = logic__  . const
+known__  f r = r{known  = f $ known r}  ; known_   = known__  . const
+laws__   f r = r{laws   = f $ laws r}   ; laws_    = laws__   . const
+conj__   f r = r{conj   = f $ conj r}   ; conj_    = conj__   . const
+goal__   f r = r{goal   = f $ goal r}   ; goal_    = goal__   . const
+proof__  f r = r{proof  = f $ proof r}  ; proof_   = proof__  . const
 proofs__ f r = r{proofs = f $ proofs r} ; proofs_  = proofs__ . const
-focus__ f r = r{focus = f $ focus r} ; focus_  = focus__ . const
+focus__  f r = r{focus  = f $ focus r}  ; focus_   = focus__  . const
 \end{code}
 
 \begin{code}
@@ -93,15 +94,14 @@ initState ["dev"]
        return reqs
 
 focusTest
-  = mkTZ
-     $ f  [ pP === pQ
-          , pP ==> pQ
-          , g [pR \/ pQ]
-          , pP /\ h [pR, pQ]
-          , lnot pR
-          , lnot ( ( pP \/ ( pQ === pR ) ) /\ ( pQ ==> pP ) )
-          , ( ( pP ==> ( pQ \/ pR ) ) === ( pQ /\ lnot pP ) )
-          ]
+  = mkTZ $ f  [ pP === pQ
+              , pP ==> pQ
+              , Cons P (i _lor) [pR,pQ,pP]
+              , pP /\ h [pR, pQ]
+              , lnot pR
+              , lnot ( ( pP \/ ( pQ === pR ) ) /\ ( pQ ==> pP ) )
+              , ( ( pP ==> ( pQ \/ pR ) ) === ( pQ /\ lnot pP ) )
+              ]
   where
     i n = fromJust $ ident n
     f ts = Cons P (i "F") ts
@@ -264,7 +264,7 @@ help reqs (what:_)
 \subsection{Command Repository}
 \begin{code}
 commands :: Commands
-commands = [cmdShow,cmdSet,cmdProve]
+commands = [cmdShow,cmdSet,cmdProve,cmdFocus]
 \end{code}
 
 \subsubsection{Show Command }
@@ -362,7 +362,7 @@ doProof _ reqs
 \end{code}
 
 \newpage
-\subsection{Proof REPL}
+\subsubsection{Proof REPL}
 
 This repl runs a proof.
 \begin{code}
@@ -442,4 +442,36 @@ abandonProof reqs proof
         Just "Y" -> doshow (proof_ Nothing reqs)
                       "Back to main REPL, Proof abandoned."
         _ -> proofREPL reqs proof
+\end{code}
+
+\subsubsection{Focus test Command}
+\begin{code}
+cmdFocus
+  = ( "f"
+    , "focus test"
+    , unlines
+       [ "Focus Test"
+       , "use keys to go up and down"
+       ]
+    , doFocusTest )
+
+doFocusTest _ reqs
+  = do fcs' <- focusREPL $ (False, focus reqs)
+       return $ focus_ fcs' reqs
+
+focusREPL fs@(chgd,fcs)
+ = do outputStrLn (trTermZip fcs ++ "  changed="++show chgd)
+      minput <- getInputLine "u, d n, x :- "
+      case minput of
+        Nothing -> return fcs
+        Just "x" -> return fcs
+        Just "u" -> focusREPL (upTZ fcs)
+        Just ('d':rest) -> focusREPL (downTZ (s2int rest) fcs)
+        _ -> focusREPL fs
+
+
+s2int str
+ | all isDigit str'   =  read str'
+ | otherwise          =  0
+ where str' = trim str
 \end{code}

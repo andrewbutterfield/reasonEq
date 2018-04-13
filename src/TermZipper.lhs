@@ -12,6 +12,7 @@ module TermZipper
  -- perhaps the relevant p.p. bits can be imported here so we do it locally?
  -- reccommended abstraction:
  , mkTZ, downTZ, upTZ, exitTZ
+ , followTZ, pathTZ
  , getTZ, setTZ, setfTZ
  , int_tst_TermZip
  ) where
@@ -120,6 +121,26 @@ peel n xs = ent [] n xs
     | n < 2  =  fail ""
     | otherwise  =  ent (x:bef) (n-1) xs
 \end{code}
+
+\subsubsection{Zip Descent by Path}
+
+Follow a list of numbers down.
+No change if any number fails to produce a descent step.
+\begin{code}
+followTZ :: [Int] -> TermZip -> ( Bool -- true if descent occurred.
+                                , TermZip )
+followTZ path tz0
+  = follow tz0 False path -- boolean set true once a down step is done
+  where
+    follow tz stepped [] = if stepped then (True,tz) else (False,tz0)
+    follow tz stepped (n:ns)
+      = let (ok,tz') = downTZ n tz in
+        if ok then follow tz' True ns else (False,tz0)
+
+pathTZ :: [Int] -> Term -> TermZip
+pathTZ path = snd . followTZ path . mkTZ
+\end{code}
+
 
 \newpage
 \subsection{Zip Ascent}~

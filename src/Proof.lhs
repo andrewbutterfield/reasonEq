@@ -199,7 +199,7 @@ displayProof (pnm,(trm,sc),(trm',steps))
 
 shStep :: CalcStep -> String
 shStep ( (lnm, dpath), t )
- = unlines' [ trTerm 0 t
+ = unlines' [ trTermZip $ pathTZ dpath t
             , " = '"++lnm++"@" ++ show dpath ++ "'"
             ]
 \end{code}

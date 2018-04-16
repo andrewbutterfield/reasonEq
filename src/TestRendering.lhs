@@ -56,10 +56,11 @@ rendering of datatypes to ease debugging.
 trId :: Identifier -> String
 trId (Identifier s)  =  s
 
-trVC :: VarClass -> String
-trVC ObsV   =  _mathcal "O"
-trVC ExprV  =  _mathcal "E"
-trVC PredV  =  _mathcal "P"
+-- can't handle nesting of bold, underline and colours right now...
+trVC :: VarClass -> String -> String
+trVC ObsV   =  id
+trVC ExprV  =  id -- underline? bold?
+trVC PredV  =  id -- underline? bold
 
 trVCf :: VarClass -> String -> String
 trVCf ObsV s = s
@@ -347,10 +348,10 @@ trLstVarMatchRole UnknownListVar     =  " ?"
 \begin{code}
 trVarTable :: VarTable -> String
 trVarTable vt
- = unlines' [ trAssoc trVTVV $ vtList vt
-            , trAssoc trVTLV $ stList vt
-            , trAssoc trVTLV $ dtList vt
-            ]
+ = unlines' (    map trVTVV (vtList vt)
+              ++ map trVTLV (stList vt)
+              ++ map trVTLV (dtList vt)
+            )
 
 trVTVV (v,vmr)   =  trVar v ++ trVarMatchRole    vmr
 
@@ -375,18 +376,19 @@ trBinding :: Binding -> String
 trBinding = trBinding' . dumpBinding
 
 trBinding' (vb,sb,lb)
- = unlines' [ trAssoc trVB vb, trAssoc trSB sb, trAssoc trLB lb ]
+ = "{ " ++ seplist "," id (map trVB vb ++ map trSB sb ++ map trLB lb)
+        ++ " }"
 
 trAssoc tr pairs = "{ " ++ seplist ", " tr pairs ++ " }"
 
 trVB ((i,vc),vb)
- = "(" ++ trId i ++ "." ++ trVC vc ++ ")" ++ spaced _maplet ++ trVarBind vb
+ = trVC vc (trId i) ++ spaced _maplet ++ trVarBind vb
 
 trSB (s,t) = s ++ spaced _maplet ++ t
 
 trLB ((i,vc,is,js),lvb)
-  = "("  ++ trId i ++
-    "$."  ++ trVC vc ++
+  = trVC vc (trId i) ++
+    "$" ++
     (if nowt then "" else "\\") ++
     (if noIs then "" else seplist "," trId is) ++
     (if noJs then "" else ";" ++ seplist "," trId js) ++

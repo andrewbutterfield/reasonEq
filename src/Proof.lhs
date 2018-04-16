@@ -122,6 +122,7 @@ We will prototype something simple for now.
 \begin{code}
 type Justification
   = ( String   -- law name
+    , Binding  -- binding from law variables to goal components
     , [Int] )  -- zipper descent arguments
 
 type CalcStep
@@ -166,7 +167,7 @@ dispLiveProof ( nm, _, tz, dpath, sc, _, steps )
      ( ("Proof for '"++nm++"'  "++trSideCond sc)
        : map shLiveStep (reverse steps)
          ++
-         [ trTermZip tz ++ "@" ++ show dpath++"   "
+         [ " " ++ trTermZip tz ++ " @" ++ show dpath++"   "
          , "---" ] )
 \end{code}
 
@@ -175,9 +176,9 @@ dispTermZip :: TermZip -> String
 dispTermZip tz = blue $ trTerm 0 (getTZ tz)
 
 shLiveStep :: CalcStep -> String
-shLiveStep ( (lnm, dpath), t )
+shLiveStep ( (lnm, bind, dpath), t )
  = unlines' [ trTerm 0 t
-            , " = '"++lnm++"@" ++ show dpath ++ "'"
+            , "   = '"++lnm++"@" ++ show dpath ++ "'"
             ]
 
 displayMatches :: Matches -> String
@@ -198,9 +199,10 @@ displayProof (pnm,(trm,sc),(trm',steps))
               ++ [trTerm 0 trm'] )
 
 shStep :: CalcStep -> String
-shStep ( (lnm, dpath), t )
+shStep ( (lnm, bind, dpath), t )
  = unlines' [ trTermZip $ pathTZ dpath t
-            , " = '"++lnm++"@" ++ show dpath ++ "'"
+            , " = '"++lnm++" @" ++ show dpath ++ "'"
+            , trBinding bind
             ]
 \end{code}
 

@@ -467,7 +467,7 @@ applyMatch reqs proof@(nm, asn, tz, dpath, sc, matches, steps ) i
           Just brepl
             -> do outputStrLn ("Applied law '"++lnm++"' at "++show dpath)
                   proofREPL reqs (nm, asn, (setTZ brepl tz), dpath, sc, []
-                                 , ((lnm,dpath), exitTZ tz):steps)
+                                 , (("apply "++lnm,bind,dpath), exitTZ tz):steps)
 \end{code}
 
 Replacing \textit{true} by a law, with unknown variables
@@ -494,17 +494,18 @@ lawInstantiateProof reqs proof@(nm, asn, tz, dpath, sc, matches, steps)
 instantiateLaw reqs proof@(pnm, asn, tz, dpath, psc, matches, steps)
                     law@(lnm,(lawt,lsc))
  = do lbind <- generateLawInstanceBind (known reqs) (exitTZ tz) psc law
+      ilsc <- instantiateSC lbind lsc
       outputStrLn $ trBinding lbind
-      case mrgSideCond psc lsc of -- lsc needs instantiation !
+      case mrgSideCond psc ilsc of
         Nothing -> do outputStrLn "side-condition merge failed"
                       proofREPL reqs proof
         Just nsc ->
           do  ilawt <- instantiate lbind lawt
               proofREPL reqs ( pnm, asn
                              , setTZ ilawt tz
-                             , dpath, nsc -- plus instantiated lsc !!!
+                             , dpath, nsc
                              , matches
-                             , ((lnm,dpath), exitTZ tz):steps)
+                             , (("instantiate "++lnm,lbind,dpath), exitTZ tz):steps)
 \end{code}
 
 \newpage

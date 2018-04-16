@@ -8,12 +8,14 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Instantiate
 ( instantiate
+, instantiateSC
 ) where
 import Data.Set(Set)
 import qualified Data.Set as S
 
 import Variables
 import AST
+import SideCond
 import Binding
 
 import Debug.Trace
@@ -140,4 +142,13 @@ instVar binding v
       Nothing             ->  return v  -- maps to self !
       Just (BindVar v')   ->  return v'
       _  ->  fail "instVar: bound to term."
+\end{code}
+
+\newpage
+\subsection{Side-Condition Instantiation}
+
+Doing it again, with side-conditions:
+\begin{code}
+instantiateSC ::Monad m => Binding -> SideCond -> m SideCond
+instantiateSC _ sc = return sc
 \end{code}

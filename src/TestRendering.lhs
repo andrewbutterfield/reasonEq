@@ -9,6 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module TestRendering (
    trId
  , trVar, trLVar, trGVar
+ , trVSet, trVList, trVariableSet
  , trType
  , trValue
  , trTerm
@@ -265,6 +266,9 @@ trVL = seplist "," trGVar
 
 trVList vl  =  _langle ++ trVL vl ++ _rangle
 trVSet vs   =  "{" ++ trVL (S.toList vs) ++ "}"
+
+trVariableSet vs = "{" ++ trVariableL (S.toList vs) ++ "}"
+trVariableL = seplist "," trVar
 \end{code}
 
 \subsection{Term Zipper}

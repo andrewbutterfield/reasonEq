@@ -30,7 +30,8 @@ module AST ( TermSub, LVarSub
            , pattern PBind, pattern PLam, pattern PSub, pattern PIter
            , pattern E2, pattern P2
            , termkind, isVar, isExpr, isPred, isAtomic
-           , freeVars
+           , theVar
+           , freeVars, subTerms
            , int_tst_AST
            ) where
 import Data.Char
@@ -455,6 +456,13 @@ isAtomic (V _ _)  =  True
 isAtomic _        =  False
 \end{code}
 
+Pulling out variables:
+\begin{code}
+theVar :: Term -> Variable
+-- pre-theVar t  =  isVar t
+theVar (V _ v)  =  v
+\end{code}
+
 In \cite{UTP-book} we find the notion of texts, in chapters 6 and 10.
 We can represent these using this proposed term concept,
 as values of type \verb"Txt", or as terms with modified names.
@@ -580,6 +588,19 @@ freeVars (S _ t (SN tsub lvsub))
            (S.map LstVar $ S.fromList rlvl)
 -- freeVars (I _ _ _ lvs) = S.empty
 freeVars _ = S.empty
+\end{code}
+
+\newpage
+\subsection{Sub-Terms}
+
+\begin{code}
+subTerms :: Term -> [Term]
+subTerms t@(C _ _ ts) = t : nub (concat $ map subTerms ts)
+subTerms t@(B _ _ _ t') = t : subTerms t'
+subTerms t@(L _ _ _ t') = t : subTerms t'
+subTerms t@(S _ t' (SN tsub _))
+  = t : nub (concat $ map subTerms (t':map snd (S.toList tsub)))
+subTerms t = [t]
 \end{code}
 
 

@@ -23,6 +23,7 @@ module VarData ( VarMatchRole
                , addAbstractVarList, addAbstractVarSet
                , lookupVarTable, lookupVarTables
                , lookupLVarTable, lookupLVarTables
+               , isUnknownGVar
                , dEq, dvEq, dlEq, dgEq
                , insideS                    -- member modulo During
                , withinS                    -- subset modulo During
@@ -563,6 +564,13 @@ lookupLVarTables (vt:vts) lv
  = case lookupLVarTable vt lv of
      UL    ->  lookupLVarTables vts lv
      lvmr  ->  lvmr
+\end{code}
+
+We also want to determine if a general variable is not known:
+\begin{code}
+isUnknownGVar :: [VarTable] -> GenVar -> Bool
+isUnknownGVar vts (StdVar v)             =  lookupVarTables  vts v == UV
+isUnknownGVar vts (LstVar (LVbl v _ _))  =  lookupLVarTables vts v == UL
 \end{code}
 
 \newpage

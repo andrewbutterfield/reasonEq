@@ -26,6 +26,7 @@ import Variables
 import AST
 import VarData
 import SideCond
+import Binding
 import TermZipper
 import Proof
 import Propositions
@@ -83,11 +84,11 @@ focus__  f r = r{focus  = f $ focus r}  ; focus_   = focus__  . const
 
 \begin{code}
 initState :: [String] -> IO REqState
-initState []
+initState ["user"]
   = do putStrLn "Running in normal user mode."
        return
          $ ReqState thePropositionalLogic [] [] [] Nothing Nothing [] focusTest
-initState ["dev"]
+initState []
   = do putStrLn "Running in development mode."
        let reqs = ReqState thePropositionalLogic [propKnown]
                            propLaws propConjs Nothing Nothing [] focusTest
@@ -147,17 +148,14 @@ Showing known variables:
 showKnown vts = unlines $ map trVarTable $ vts
 \end{code}
 
-Showing laws:
+
+A common idiom si to show a list of items as a numbered list
+to make selecting them easier:
 \begin{code}
-showLaws lws = unlines $ map (showLaw (nameWidth lws)) $ zip [1..] lws
-
-nameWidth lws = maximum $ map (length . getName) lws
-getName (nm,_) = nm
-
-showLaw w (i,(nm,(t,sc)))
-  =    pad 4 istr ++ istr ++ ". "
-    ++ ldq ++ nm ++ rdq ++ pad w nm
-    ++ "  " ++ trTerm 0 t ++ "  "++trSideCond sc
+numberList showItem list
+  =  unlines $ map (numberItem showItem) $  zip [1..] list
+numberItem showItem (i,item)
+  =  pad 4 istr ++ istr ++ ". " ++ showItem item
   where istr = show i
 
 pad w str
@@ -166,10 +164,22 @@ pad w str
   where ext = w - length str
 \end{code}
 
+
+Showing laws:
+\begin{code}
+showLaws lws  =  numberList (showLaw $ nameWidth lws) lws
+
+nameWidth lws = maximum $ map (length . getName) lws
+getName (nm,_) = nm
+showLaw w (nm,(t,sc))
+  =    ldq ++ nm ++ rdq ++ pad w nm
+    ++ "  " ++ trTerm 0 t ++ "  "++trSideCond sc
+\end{code}
+
 Showing Goal:
 \begin{code}
 showGoal Nothing = "no Goal."
-showGoal (Just goal) = showLaw 0 (0,goal)
+showGoal (Just goal) = showLaw 0 goal
 \end{code}
 
 Showing Proof:
@@ -483,18 +493,52 @@ lawInstantiateProof reqs proof@(nm, asn, tz, dpath, sc, matches, steps)
 
 instantiateLaw reqs proof@(pnm, asn, tz, dpath, psc, matches, steps)
                     law@(lnm,(lawt,lsc))
- = do outputStrLn "QUICK AND DIRTY!"
+ = do lbind <- generateLawInstanceBind (known reqs) (exitTZ tz) psc law
+      outputStrLn $ trBinding lbind
       case mrgSideCond psc lsc of -- lsc needs instantiation !
         Nothing -> do outputStrLn "side-condition merge failed"
                       proofREPL reqs proof
         Just nsc ->
-          proofREPL reqs ( pnm, asn
-                         , setTZ lawt tz -- lawt need instantiation !
-                         , dpath, nsc -- plus instantiated lsc !!!
-                         , matches
-                         , (("AS-IS!("++lnm++")",dpath), exitTZ tz):steps)
+          do  ilawt <- instantiate lbind lawt
+              proofREPL reqs ( pnm, asn
+                             , setTZ ilawt tz
+                             , dpath, nsc -- plus instantiated lsc !!!
+                             , matches
+                             , ((lnm,dpath), exitTZ tz):steps)
 \end{code}
 
+\newpage
+
+Dialogue to get law instantiation binding.
+We want a binding for every unknown variable in the law.
+We display all such unknowns, and then ask for instantiations.
+\begin{code}
+generateLawInstanceBind vts gterm gsc law@(lnm,(lawt,lsc))
+ = do let lFreeVars = stdVarSetOf $ S.filter (isUnknownGVar vts)
+                                  $ freeVars lawt
+      outputStrLn ("Free unknown law variables: "++trVariableSet lFreeVars)
+      let subGTerms = reverse $ subTerms gterm
+      -- let subGVars = map theVar $ filter isVar subGTerms
+      requestInstBindings emptyBinding subGTerms $ S.toList lFreeVars
+\end{code}
+
+\begin{code}
+requestInstBindings bind gterms []  =  return bind
+requestInstBindings bind gterms vs@(v:vrest)
+ = do outputStrLn "Goal sub-terms:"
+      outputStrLn $ numberList (trTerm 0) gterms
+      minput <- getInputLine ("Binding for "++trVar v++" ?")
+      case minput of
+       Just str@(_:_) | all isDigit str
+         -> case nlookup (read str) $ gterms of
+             Just gterm
+               -> do bind' <- bindVarToTerm v gterm bind
+                     requestInstBindings bind' gterms vrest
+             _ -> requestInstBindings bind gterms vs
+       _ -> requestInstBindings bind gterms vs
+\end{code}
+
+\newpage
 Abandoning a proof, losing all work so far.
 \begin{code}
 abandonProof reqs proof

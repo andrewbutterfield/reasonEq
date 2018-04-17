@@ -494,18 +494,23 @@ lawInstantiateProof reqs proof@(nm, asn, tz, dpath, sc, matches, steps)
 instantiateLaw reqs proof@(pnm, asn, tz, dpath, psc, matches, steps)
                     law@(lnm,(lawt,lsc))
  = do lbind <- generateLawInstanceBind (known reqs) (exitTZ tz) psc law
-      ilsc <- instantiateSC lbind lsc
-      outputStrLn $ trBinding lbind
-      case mrgSideCond psc ilsc of
-        Nothing -> do outputStrLn "side-condition merge failed"
+      case instantiateSC lbind lsc of 
+        Nothing -> do outputStrLn "instantiated law side-cond is false"
                       proofREPL reqs proof
-        Just nsc ->
-          do  ilawt <- instantiate lbind lawt
-              proofREPL reqs ( pnm, asn
-                             , setTZ ilawt tz
-                             , dpath, nsc
-                             , matches
-                             , (("instantiate "++lnm,lbind,dpath), exitTZ tz):steps)
+        Just ilsc
+          -> do outputStrLn $ trBinding lbind
+                case mrgSideCond psc ilsc of
+                  Nothing -> do outputStrLn "side-condition merge failed"
+                                proofREPL reqs proof
+                  Just nsc ->
+                    do  ilawt <- instantiate lbind lawt
+                        proofREPL reqs ( pnm, asn
+                                       , setTZ ilawt tz
+                                       , dpath, nsc
+                                       , matches
+                                       , (("instantiate "++lnm,lbind,dpath)
+                                          , exitTZ tz)
+                                          :steps)
 \end{code}
 
 \newpage

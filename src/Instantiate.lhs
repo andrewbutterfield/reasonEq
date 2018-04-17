@@ -12,6 +12,8 @@ module Instantiate
 ) where
 import Data.Set(Set)
 import qualified Data.Set as S
+import Data.Map(Map)
+import qualified Data.Map as M
 
 import Variables
 import AST
@@ -147,8 +149,57 @@ instVar binding v
 \newpage
 \subsection{Side-Condition Instantiation}
 
-Doing it again, with side-conditions:
+Doing it again, with side-conditions.
+We need to cope with the fact that two distinct variables
+in the law side-condition could be matched agaisnt the same variable
+in the goal.
+This can result in the the side-condition reducing to \textit{false}.
 \begin{code}
-instantiateSC ::Monad m => Binding -> SideCond -> m SideCond
-instantiateSC _ sc = return sc
+instantiateSC :: Monad m => Binding -> SideCond -> m SideCond
+instantiateSC bind (SC vs vscmap)
+  = do ivs <- instVarSet bind vs
+       ivscmap <- instVSCM bind vscmap
+       return $ SC ivs ivscmap
+\end{code}
+
+First we map each association pair,
+then sort by key (variable),
+and then fuse.
+\begin{code}
+instVSCM :: Monad m => Binding -> VarSCMap -> m VarSCMap
+instVSCM bind vscmap
+  = let
+      ivscraw :: Monad m => [m (Variable,VarSideCond)]
+      ivscraw = map (instVSCMaplet bind) (M.toList vscmap)
+    in
+      return vscmap
+\end{code}
+
+\begin{code}
+instVSCMaplet :: Monad m => Binding -> (Variable,VarSideCond)
+              -> m (Variable,VarSideCond)
+instVSCMaplet bind (v,vsc)
+  = do iv <- instVar bind v
+       ivsc <- instVSC bind vsc
+       return (iv,ivsc)
+\end{code}
+
+\begin{code}
+instVSC :: Monad m => Binding -> VarSideCond -> m VarSideCond
+instVSC bind (Exact vs)  =  fmap Exact $ instVarSet bind vs
+instVSC bind (Approx pre mD mC)
+  = do imD <- instMVS bind mD
+       imC <- instMVS bind mC
+       ivsc1 <- case imD of
+                  Nothing  ->  return vscTrue
+                  Just d   ->  addDisjSC d vscTrue
+       ivsc2 <- case imC of
+                  Nothing  ->  return ivsc1
+                  Just c   ->  addCoverSC c ivsc1
+       if pre
+         then addPreSC ivsc2
+         else return ivsc2
+
+instMVS bind (Nothing)  = return Nothing
+instMVS bind (Just vs)  = fmap Just $ instVarSet bind vs
 \end{code}

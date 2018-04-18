@@ -33,6 +33,7 @@ import TermZipper
 import VarData
 import Binding
 import Matching
+import Instantiate
 -- import Builder
 --
 import NiceSymbols
@@ -182,14 +183,17 @@ shLiveStep ( (lnm, bind, dpath), t )
             ]
 
 displayMatches :: Matches -> String
-displayMatches []  =  "no Matches."
-displayMatches matches = unlines $ map shMatch matches
+displayMatches []       =  "no Matches."
+displayMatches matches  =  unlines $ map shMatch matches
 
-shMatch (i, (n, (t,sc), bind, trplc))
+shMatch (i, (n, (lt,lsc), bind, rt))
  = unlines [ show i ++ " : "++ ldq ++ n ++ rdq
-             ++ " " ++ trTerm 0 t ++ "  " ++ trSideCond sc
-             ++ " " ++ _maplet ++ " " ++ trTerm 0 trplc
-           , trBinding bind ]
+             ++ " gives     "
+             ++ (bold . blue)
+                   ( trTerm 0 (fromJust $ instantiate bind rt)
+                     ++ "  "
+                     ++ trSideCond (fromJust $ instantiateSC bind lsc) )
+           ]
 
 displayProof :: Proof -> String
 displayProof (pnm,(trm,sc),(trm',steps))

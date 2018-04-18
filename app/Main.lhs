@@ -451,10 +451,11 @@ goUp reqs proof@(nm, asn, tz, dpath, sc, _, steps )
 Law Matching
 \begin{code}
 matchLawCommand reqs proof@(nm, asn, tz, dpath, sc, _, steps )
-  = do outputStrLn "Matching.."
-       let matches = matchLaws (logic reqs) (known reqs)  (getTZ tz) (laws reqs)
+  = do outputStrLn ("Matching "++trTerm 0 goalt)
+       let matches = matchLaws (logic reqs) (known reqs) goalt (laws reqs)
        outputStrLn $ displayMatches matches
        proofREPL reqs (nm, asn, tz, dpath, sc, matches, steps)
+  where goalt = getTZ tz
 
 applyMatch reqs proof@(nm, asn, tz, dpath, sc, matches, steps ) i
   = case alookup i matches of
@@ -494,7 +495,7 @@ lawInstantiateProof reqs proof@(nm, asn, tz, dpath, sc, matches, steps)
 instantiateLaw reqs proof@(pnm, asn, tz, dpath, psc, matches, steps)
                     law@(lnm,(lawt,lsc))
  = do lbind <- generateLawInstanceBind (known reqs) (exitTZ tz) psc law
-      case instantiateSC lbind lsc of 
+      case instantiateSC lbind lsc of
         Nothing -> do outputStrLn "instantiated law side-cond is false"
                       proofREPL reqs proof
         Just ilsc

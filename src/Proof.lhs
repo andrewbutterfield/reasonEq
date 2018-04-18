@@ -51,6 +51,87 @@ We define types for the key concepts behind a proof,
 such as the notion of assertions, proof strategies,
 and proof calculations.
 
+\newpage
+\subsection{Proof Structure}
+
+Consider a pre-existing set of laws $\mathcal L$ (axioms plus proven theorems),
+and consider that we have a conjecture $C$ that we want to prove.
+The most general proof framework we plan to support is the following:
+\begin{description}
+  \item[Deduction]
+    In general we partition $C$ into three components:
+    \begin{description}
+      \item[Hypotheses]
+        A set $\mathcal H = \setof{H_1,\dots,H_n}$, for $n \geq 0$.
+      \item[Consequents]
+        A pair of sub-conjectures $C_{left}$ and $C_{right}$.
+    \end{description}
+    We require these to be chosen such that:
+    $$ C \quad =  \bigwedge_{i \in 1\dots n} H_i \implies (C_{left} \equiv C_{right})$$
+    Our proof is the based upon the sequent:
+    $$  \mathcal L,H_1,\dots,H_n \vdash (C_{left} \equiv C_{right})$$
+    where we use the laws in both $\mathcal L$ and $\mathcal H$ to transform either or both
+    of $C_{left}$ and $C_{right}$ until they are the same.
+  \item[Calculation]
+    We define two kinds of calculation steps:
+    \begin{description}
+      \item[standard]
+        We use one laws in $\mathcal L$ and $\mathcal H$ to transform either sub-conjecture:
+        \begin{eqnarray*}
+           \mathcal L,\mathcal H &\vdash&  C_x
+        \\ &=& \textrm{effect of some assertion $A$
+                                      in $\mathcal L\cup \mathcal H$
+                                      on $C_x$}
+        \\ \mathcal L,\mathcal H &\vdash& C'_x
+        \end{eqnarray*}
+      \item[deductive]
+        We select a hypothesis from in front of the turnstile,
+        as use the remaining laws and hypotheses to transform it.
+        We add the transformed version into the hypotheses,
+        retaining its orignial form as well.
+        \begin{eqnarray*}
+           \mathcal L,\mathcal H &\vdash& C_x
+        \\ &\downarrow& \textrm{select $H_i$}
+        \\ \mathcal L,\mathcal H\setminus\setof{H_i}
+           &\vdash& H_i
+        \\ &=& \textrm{effect of some assertion $A$
+                                      in $\mathcal L\cup \mathcal H\setminus\setof{H_i}$
+                                      on $H_i$}
+        \\ \mathcal L,\mathcal H\setminus\setof{H_i}
+           &\vdash& H'_i
+        \\ &\downarrow& \textrm{restore calculational sequent}
+        \\ \mathcal L,\mathcal H\cup\setof{H'_i} &\vdash& C_x
+        \end{eqnarray*}
+        We may do a number of calculational steps on $H_i$ before
+        restoring the original sequent.
+    \end{description}
+\end{description}
+
+There are a number of strategies we can apply, depending on the structure
+of $C$.
+If we ignore $\mathcal L$, we get following possible sequent generation
+possibilities:
+\begin{eqnarray*}
+   reduce(C)
+   &\try&
+   \emptyset \vdash (C \equiv \true)
+\\ reduce(C_1 \equiv C_2)
+   &\try&
+   \emptyset \vdash (C_1 \equiv C_2)
+\\ reduce(H \implies (C_1 \equiv C_2))
+   &\try&
+   \splitand(H) \vdash (C_1 \equiv C_2)
+\\ reduce(H \implies C)
+   &\try&
+   \splitand(H) \vdash (C \equiv \true)
+\\ \splitand(H_1 \land \dots \land H_n)
+   &\defs&
+   \setof{H_1 \land \dots \land H_n}
+\end{eqnarray*}
+
+Note that any given $C$ may have more than one possible strategy.
+
+\newpage
 \subsection{Assertions}
 
 An assertion is simply a predicate term coupled with side-conditions.
@@ -64,7 +145,7 @@ type Assertion = (Term, SideCond)
 To make the matching work effectively,
 we have to identify which constructs play the roles
 of truth, logical equivalence, implication and conjunctions.
-$$ \textit{true} \qquad \equiv \qquad \implies \qquad \land $$
+$$ \true \qquad \equiv \qquad \implies \qquad \land $$
 \begin{code}
 data TheLogic
   = TheLogic
@@ -102,10 +183,10 @@ flattenTheEquiv theLogic t
 
 We start with the simplest proof process of all,
 namely a straight calculation from a starting assertion
-to a specified final assertion, usually being the axiom \textit{true}.
+to a specified final assertion, usually being the axiom \true.
 We need to have an AST zipper to allow sub-terms to be singled out
 for match and replace,
-and some way of recording what happenned,
+and some way of recording what happened,
 so that proofs (complete or partial) can be saved,
 restored, and reviewed.
 

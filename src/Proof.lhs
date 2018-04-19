@@ -259,12 +259,51 @@ $N$ is \texttt{Name}, $SC$ is \texttt{SideCond}, and $t$ is \texttt{Term}.
 
 Simplifiying:
 \begin{eqnarray*}
-   & & T^* \times (N\times (N \times (t \times SC))^* \times VD)
-         \times SC \times t \times t
-\\ &=& T^* \times N\times VD \times SC
-           \times (N \times SC \times t)^*
-           \times t^2
+  S(t) &=&  T^* \times (N\times (N \times (t \times SC))^* \times VD)
+                \times SC \times t \times t
+\\     &=&  T^* \times N\times VD \times SC
+                \times (N \times SC \times t)^*
+                \times t^2
+\\     &=&  A_1 \times (A_2 \times t)^* \times t^2
 \end{eqnarray*}
+where
+\begin{eqnarray*}
+  A_1  &=& T^* \times N \times VS \times SC
+\\ A_2 &=& N \times SC
+\end{eqnarray*}
+
+Differentiating:
+\begin{eqnarray*}
+   dS(t) \over dt
+   &=&  d(A_1 \times (A_2 \times t)^* \times t^2) \over dt
+\\ &=&  A_1 \times \left(~
+                      (A_2 \times t)^* \times {d(t^2) \over dt}
+                      +
+                      t^2 \times { d((A_2 \times t)^*) \over dt}
+                  ~\right)
+\\ &=&  A_1 \times \left(~
+                      (A_2 \times t)^* \times 2 \times t
+                      +
+                      t^2 \times { d(A_2 \times t)^* \over d(A_2 \times t)}
+                          \times { d(A_2 \times t) \over dt}
+                  ~\right)
+\\ &=&  A_1 \times \left(~
+                      (A_2 \times t)^* \times 2 \times t
+                      +
+                      t^2 \times ((A_2 \times t)^*)^2
+                          \times A_2
+                  ~\right)
+\\
+\\ S'(t) &=&  A_1 \times (A_2 \times t)^* \times 2 \times t
+\\ & &  +
+\\ &=&  A_1 \times (A_2 \times t)^* \times A_2 \times (A_2 \times t)^*
+            \times t^2
+\end{eqnarray*}
+
+Given that $S$ is not recursive, then the zipper for $S$
+will have a term-zipper as its ``focus'', and a single instance
+of $S'$ to allow the one possible upward ``step''.
+This should be easy to code up.
 
 \subsection{Proof Calculations}
 

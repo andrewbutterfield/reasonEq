@@ -268,7 +268,7 @@ Simplifiying:
 \end{eqnarray*}
 where
 \begin{eqnarray*}
-  A_1  &=& T^* \times N \times VS \times SC
+  A_1  &=& T^* \times N \times VD \times SC
 \\ A_2 &=& N \times SC
 \end{eqnarray*}
 

@@ -247,7 +247,24 @@ data Sequent
 We will need a zipper for sequents (and theories) as we can focus in on any term
 in \texttt{hyp}, \texttt{cleft} or \texttt{cright}.
 
+The sequent type can be summarised algebraically as
+$$
+S(t)
+=
+T^* \times (N\times (N \times (t \times SC))^* \times VD)
+    \times SC \times t \times t
+$$
+where $T$ is \texttt{Theory}, $VD$ is \texttt{VarData},
+$N$ is \texttt{Name}, $SC$ is \texttt{SideCond}, and $t$ is \texttt{Term}.
 
+Simplifiying:
+\begin{eqnarray*}
+   & & T^* \times (N\times (N \times (t \times SC))^* \times VD)
+         \times SC \times t \times t
+\\ &=& T^* \times N\times VD \times SC
+           \times (N \times SC \times t)^*
+           \times t^2
+\end{eqnarray*}
 
 \subsection{Proof Calculations}
 

@@ -76,7 +76,7 @@ The most general proof framework we plan to support is the following:
     We define two kinds of calculation steps:
     \begin{description}
       \item[standard]
-        We use one laws in $\mathcal L$ and $\mathcal H$ to transform either sub-conjecture:
+        We use a law from $\mathcal L$ and $\mathcal H$ to transform either sub-conjecture:
         \begin{eqnarray*}
            \mathcal L,\mathcal H &\vdash&  C_x
         \\ &=& \textrm{effect of some assertion $A$
@@ -86,9 +86,9 @@ The most general proof framework we plan to support is the following:
         \end{eqnarray*}
       \item[deductive]
         We select a hypothesis from in front of the turnstile,
-        as use the remaining laws and hypotheses to transform it.
+        and use the laws and the rest of the hypotheses to transform it.
         We add the transformed version into the hypotheses,
-        retaining its orignial form as well.
+        retaining its original form as well.
         \begin{eqnarray*}
            \mathcal L,\mathcal H &\vdash& C_x
         \\ &\downarrow& \textrm{select $H_i$}
@@ -100,33 +100,37 @@ The most general proof framework we plan to support is the following:
         \\ \mathcal L,\mathcal H\setminus\setof{H_i}
            &\vdash& H'_i
         \\ &\downarrow& \textrm{restore calculational sequent}
-        \\ \mathcal L,\mathcal H\cup\setof{H'_i} &\vdash& C_x
+        \\ \mathcal L,\mathcal H\cup\setof{H_{n+1}} &\vdash& C_x \qquad H_{n+1} = H'_i
         \end{eqnarray*}
         We may do a number of calculational steps on $H_i$ before
-        restoring the original sequent.
+        restoring the original standard sequent.
     \end{description}
 \end{description}
 
 There are a number of strategies we can apply, depending on the structure
 of $C$.
-If we ignore $\mathcal L$, we get following possible sequent generation
-possibilities:
 \begin{eqnarray*}
    reduce(C)
-   &\try&
-   \emptyset \vdash (C \equiv \true)
-\\ reduce(C_1 \equiv C_2)
-   &\try&
-   \emptyset \vdash (C_1 \equiv C_2)
-\\ reduce(H \implies (C_1 \equiv C_2))
-   &\try&
-   \splitand(H) \vdash (C_1 \equiv C_2)
-\\ reduce(H \implies C)
-   &\try&
-   \splitand(H) \vdash (C \equiv \true)
+   &\defs&
+   \mathcal L \vdash (C \equiv \true)
+\\ redboth(C_1 \equiv C_2)
+   &\defs&
+   \mathcal L \vdash (C_1 \equiv C_2)
+\\ assume(H \implies C)
+   &\defs&
+   \mathcal L,\splitand(H) \vdash (C \equiv \true)
+\\ asmboth(H \implies (C_1 \equiv C_2))
+   &\defs&
+   \mathcal L,\splitand(H) \vdash (C_1 \equiv C_2)
+\\ trade(H_1 \implies \dots H_m \implies C)
+   &\defs&
+   \bigcup_{j \in 1\dots m}\splitand(H_j) \vdash (C \equiv \true)
+\\ trdboth(H_1 \implies \dots H_m \implies (C_1 \equiv C_2))
+   &\defs&
+   \bigcup_{j \in 1\dots m}\splitand(H_j) \vdash (C_1 \equiv C_2)
 \\ \splitand(H_1 \land \dots \land H_n)
    &\defs&
-   \setof{H_1 \land \dots \land H_n}
+   \setof{H_1,\dots,H_n}
 \end{eqnarray*}
 
 Note that any given $C$ may have more than one possible strategy.

@@ -7,8 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Proof
- ( Assertion
- , TheLogic(..), flattenTheEquiv
+ ( TheLogic(..), flattenTheEquiv
+ , Assertion, Law, Theory(..), Sequent(..)
  , Justification
  , CalcStep
  , Calculation
@@ -62,21 +62,24 @@ The most general proof framework we plan to support is the following:
     In general we partition $C$ into three components:
     \begin{description}
       \item[Hypotheses]
-        A set $\mathcal H = \setof{H_1,\dots,H_n}$, for $n \geq 0$.
+        A set $\mathcal H = \setof{H_1,\dots,H_n}$, for $n \geq 0$,
+        were all unknown variables in the $H_i$
+        are temporarily marked as ``known'' (as themselves),
+        for the duration of the proof.
       \item[Consequents]
         A pair of sub-conjectures $C_{left}$ and $C_{right}$.
     \end{description}
     We require these to be chosen such that:
     $$ C \quad =  \bigwedge_{i \in 1\dots n} H_i \implies (C_{left} \equiv C_{right})$$
     Our proof is the based upon the sequent:
-    $$  \mathcal L,H_1,\dots,H_n \vdash (C_{left} \equiv C_{right})$$
+    $$ \mathcal L,H_1,\dots,H_n \vdash C_{left} \equiv C_{right}$$
     where we use the laws in both $\mathcal L$ and $\mathcal H$ to transform either or both
     of $C_{left}$ and $C_{right}$ until they are the same.
   \item[Calculation]
     We define two kinds of calculation steps:
     \begin{description}
       \item[standard]
-        We use a law from $\mathcal L$ and $\mathcal H$ to transform either sub-conjecture:
+        We use a law from $\mathcal L$ or $\mathcal H$ to transform either sub-conjecture:
         \begin{eqnarray*}
            \mathcal L,\mathcal H &\vdash&  C_x
         \\ &=& \textrm{effect of some assertion $A$
@@ -112,38 +115,46 @@ of $C$.
 \begin{eqnarray*}
    reduce(C)
    &\defs&
-   \mathcal L \vdash (C \equiv \true)
+   \mathcal L \vdash C \equiv \true
 \\ redboth(C_1 \equiv C_2)
    &\defs&
-   \mathcal L \vdash (C_1 \equiv C_2)
+   \mathcal L \vdash C_1 \equiv C_2
 \\ assume(H \implies C)
    &\defs&
    \mathcal L,\splitand(H) \vdash (C \equiv \true)
 \\ asmboth(H \implies (C_1 \equiv C_2))
    &\defs&
-   \mathcal L,\splitand(H) \vdash (C_1 \equiv C_2)
+   \mathcal L,\splitand(H) \vdash C_1 \equiv C_2
 \\ trade(H_1 \implies \dots H_m \implies C)
    &\defs&
-   \bigcup_{j \in 1\dots m}\splitand(H_j) \vdash (C \equiv \true)
+   \mathcal L,\bigcup_{j \in 1\dots m}\splitand(H_j) \vdash C \equiv \true
 \\ trdboth(H_1 \implies \dots H_m \implies (C_1 \equiv C_2))
    &\defs&
-   \bigcup_{j \in 1\dots m}\splitand(H_j) \vdash (C_1 \equiv C_2)
+   \mathcal L,\bigcup_{j \in 1\dots m}\splitand(H_j) \vdash C_1 \equiv C_2
 \\ \splitand(H_1 \land \dots \land H_n)
    &\defs&
    \setof{H_1,\dots,H_n}
 \end{eqnarray*}
-
 Note that any given $C$ may have more than one possible strategy.
+In addition, we can envisage a step that transforms the shape of
+the deduction.
+We may have a conjecture with no top-level implication, but which,
+after some standard calculation in a sequent with empty $\mathcal H$,
+does end up in such a form.
+it would be nice to have the possibility of generating a new sequent form
+and carrying on from there.
 
-\newpage
-\subsection{Assertions}
+The requirement that the $H_i$ have all their ``unknown'' variables
+converted to ``known'' for the proof
+means that the tables describing known variables need to be
+linked to specific collections of laws.
 
-An assertion is simply a predicate term coupled with side-conditions.
-\begin{code}
-type Assertion = (Term, SideCond)
-\end{code}
 
-\newpage
+
+Another topic to be addressed (soon) is the actual structure of $\mathcal L$
+(no, it's not a set!) and how the information regarding known variables
+is integrated into the proof structure just described.
+
 \subsection{Logic}
 
 To make the matching work effectively,
@@ -162,7 +173,7 @@ data TheLogic
 We also want to provide a way to ``condition'' predicates
 to facilitate matching  and proof flexibility.
 In particular, we want to ``associatively flatten'' nested
-equivalences.
+equivalences. (\textbf{And Conjunction!})
 \begin{code}
 flattenTheEquiv :: TheLogic -> Term -> Term
 flattenTheEquiv theLogic t
@@ -181,6 +192,61 @@ flattenTheEquiv theLogic t
     []     `mrg` st  =  st
     (t:ts) `mrg` st  =  ts `mrg` (t:st)
 \end{code}
+
+
+\newpage
+\subsection{Theories}
+
+An assertion is simply a predicate term coupled with side-conditions.
+\begin{code}
+type Assertion = (Term, SideCond)
+\end{code}
+
+Laws always have names, so a law is a named-assertion:
+\begin{code}
+type Law = (String,Assertion)
+\end{code}
+
+A theory is a collection of laws linked
+to information about which variables in those laws are deemed as ``known''.
+\begin{code}
+data Theory
+  = Theory {
+      thName :: String -- always nice to have one
+    , laws   :: [Law]
+    , knownV :: VarTable
+    }
+  deriving (Eq,Show,Read)
+\end{code}
+
+\subsection{Sequents}
+
+A sequent is a collection containing
+(i) $\mathcal L$ and $\mathcal H$ as a list of theories
+(ii) a conjecture side-condition,
+and (iii) and a pair of left and right conjecture-terms.
+$$  \mathcal L,\mathcal H
+    \vdash C_{left} \equiv C_{right}
+    \qquad (s.c.)
+$$
+We will single out the hypothesis theory for special treatment.
+\begin{code}
+data Sequent
+  = Sequent {
+     theories :: [Theory]
+   , hyp :: Theory -- the hypotheses -- we can "go" here
+   , sc :: SideCond -- of the conjecture being proven.
+   , cleft :: Term -- never 'true' to begin with.
+   , cright :: Term -- often 'true' from the start.
+   }
+  deriving (Eq, Show, Read)
+\end{code}
+
+\subsubsection{Sequent Zipper}
+
+We will need a zipper for sequents (and theories) as we can focus in on any term
+in \texttt{hyp}, \texttt{cleft} or \texttt{cright}.
+
 
 
 \subsection{Proof Calculations}

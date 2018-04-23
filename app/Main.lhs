@@ -65,7 +65,7 @@ data REqState
  = ReqState {
       logic :: TheLogic
     , known :: [VarTable]
-    , laws :: [(String,Assertion)]
+    , rslaws :: [(String,Assertion)]
     , conj :: [(String,Assertion)]
     , goal :: Maybe (String,Assertion)
     , proof :: Maybe LiveProof
@@ -74,7 +74,7 @@ data REqState
     }
 logic__  f r = r{logic  = f $ logic r}  ; logic_   = logic__  . const
 known__  f r = r{known  = f $ known r}  ; known_   = known__  . const
-laws__   f r = r{laws   = f $ laws r}   ; laws_    = laws__   . const
+laws__   f r = r{rslaws   = f $ rslaws r}   ; laws_    = laws__   . const
 conj__   f r = r{conj   = f $ conj r}   ; conj_    = conj__   . const
 goal__   f r = r{goal   = f $ goal r}   ; goal_    = goal__   . const
 proof__  f r = r{proof  = f $ proof r}  ; proof_   = proof__  . const
@@ -120,7 +120,7 @@ focusTest
 summariseREqS :: REqState -> String
 summariseREqS reqs
  = intcalNN ":" [ show $ length $ known reqs
-                , show $ length $ laws reqs
+                , show $ length $ rslaws reqs
                 , show $ length $ conj reqs
                 , case goal reqs of
                    Nothing -> ""
@@ -310,7 +310,7 @@ shFocus = "f"
 showState [cmd] reqs
  | cmd == shLogic  =  doshow reqs $ showLogic $ logic reqs
  | cmd == shKnown  =  doshow reqs $ showKnown $ known reqs
- | cmd == shLaws   =  doshow reqs $ showLaws  $ laws  reqs
+ | cmd == shLaws   =  doshow reqs $ showLaws  $ rslaws  reqs
  | cmd == shConj   =  doshow reqs $ showLaws  $ conj  reqs
  | cmd == shGoal   =  doshow reqs $ showGoal  $ goal  reqs
  | cmd == shLivePrf  =  doshow reqs $ showLivePrf $ proof reqs
@@ -452,7 +452,7 @@ Law Matching
 \begin{code}
 matchLawCommand reqs proof@(nm, asn, tz, dpath, sc, _, steps )
   = do outputStrLn ("Matching "++trTerm 0 goalt)
-       let matches = matchLaws (logic reqs) (known reqs) goalt (laws reqs)
+       let matches = matchLaws (logic reqs) (known reqs) goalt (rslaws reqs)
        outputStrLn $ displayMatches matches
        proofREPL reqs (nm, asn, tz, dpath, sc, matches, steps)
   where goalt = getTZ tz
@@ -479,11 +479,11 @@ lawInstantiateProof reqs proof@(nm, asn, tz, dpath, sc, matches, steps)
     = do outputStrLn ("Can only instantiate an law over "++trTerm 0 true)
          proofREPL reqs proof
   | otherwise
-    = do outputStrLn $ showLaws $ laws reqs
+    = do outputStrLn $ showLaws $ rslaws reqs
          minput <- getInputLine "Pick a law : "
          case minput of
            Just str@(_:_) | all isDigit str
-             -> case nlookup (read str) $ laws reqs of
+             -> case nlookup (read str) $ rslaws reqs of
                  Just law@(nm,asn)
                    -> do outputStrLn ("Law Chosen: "++nm)
                          instantiateLaw reqs proof law

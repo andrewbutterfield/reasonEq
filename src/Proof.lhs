@@ -301,14 +301,12 @@ Differentiating:
 \end{eqnarray*}
 
 We start with the top-level common part:
-$$S'(t) = T^* \times N \times VD \times SC \times (\dots + \dots)$$
+$$S'(t) = T^* \times SC \times (\dots + \dots)$$
 \begin{code}
 data Sequent'
   = Sequent' {
       theories0 :: [Theory] -- context theories
-    , hname     :: String -- hypothesis name
-    , hknown    :: VarTable --  hypothesis known variables
-    , hSideCond :: SideCond -- hyp. side-conditions (usually just true)
+    , sc0       :: SideCond -- sequent side-condition
     , laws'     :: Laws'
     }
   deriving (Show,Read)
@@ -322,12 +320,14 @@ Now, the two variations:
 \begin{code}
 data Laws'
   = CLaws' { -- currently focussed on conjecture component
-      hlaws  :: [Assertion] -- hypothesis laws
+      hyp0  :: Theory -- hypothesis theory
     , whichC :: LeftRight -- which term is in the focus
     , otherC :: Term  -- the term not in the focus
     }
   | HLaws' { -- currently focussed on hypothesis component
-      hbefore :: [Assertion] -- hyp. laws before focus (reversed)
+      hname :: String -- hyp. theory name
+    , hknown :: VarTable
+    , hbefore :: [Assertion] -- hyp. laws before focus (reversed)
     , fhName  :: String -- focus hypothesis name
     , fhSC    :: SideCond -- focus hypothesis sc (usually true)
     , hafter  :: [Assertion] -- hyp. laws after focus
@@ -339,12 +339,29 @@ data Laws'
 data LeftRight = Lft | Rght deriving (Eq,Show,Read)
 \end{code}
 
-
 Given that $S$ is not recursive, then the zipper for $S$
 will have a term-zipper as its ``focus'', and a single instance
 of $S'$ to allow the one possible upward ``step''.
 \begin{code}
 type SeqZip = (TermZip, Sequent')
+\end{code}
+
+To create a sequent-zipper,
+we have to state which term component we are focussing on.
+For the left- and right- conjectures, this is easy:
+\begin{code}
+leftConjFocus :: Sequent -> SeqZip
+leftConjFocus sequent
+  = ( mkTZ $ cleft sequent
+    , Sequent' (theories sequent)
+               (sc sequent) $
+               CLaws' (hyp sequent) Lft (cright sequent) )
+
+rightConjFocus sequent
+  = ( mkTZ $ cright sequent
+    , Sequent' (theories sequent)
+               (sc sequent) $
+               CLaws' (hyp sequent) Rght (cleft sequent) )
 \end{code}
 
 \subsection{Proof Calculations}

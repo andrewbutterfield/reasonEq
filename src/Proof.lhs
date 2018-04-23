@@ -233,7 +233,7 @@ We will single out the hypothesis theory for special treatment.
 \begin{code}
 data Sequent
   = Sequent {
-     theories :: [Theory]
+     theories :: [Theory] -- theory context
    , hyp :: Theory -- the hypotheses -- we can "go" here
    , sc :: SideCond -- of the conjecture being proven.
    , cleft :: Term -- never 'true' to begin with.
@@ -300,10 +300,52 @@ Differentiating:
             \times t^2
 \end{eqnarray*}
 
+We start with the top-level common part:
+$$S'(t) = T^* \times N \times VD \times SC \times (\dots + \dots)$$
+\begin{code}
+data Sequent'
+  = Sequent' {
+      theories0 :: [Theory] -- context theories
+    , hname     :: String -- hypothesis name
+    , hknown    :: VarTable --  hypothesis known variables
+    , hSideCond :: SideCond -- hyp. side-conditions (usually just true)
+    , laws'     :: Laws'
+    }
+  deriving (Show,Read)
+\end{code}
+
+Now, the two variations:
+\begin{eqnarray*}
+  && (A_2 \times t)^* \times 2 \times t
+\\&& (A_2 \times t)^* \times A_2 \times (A_2 \times t)^* \times t^2
+\end{eqnarray*}
+\begin{code}
+data Laws'
+  = CLaws' { -- currently focussed on conjecture component
+      hlaws  :: [Assertion] -- hypothesis laws
+    , whichC :: LeftRight -- which term is in the focus
+    , otherC :: Term  -- the term not in the focus
+    }
+  | HLaws' { -- currently focussed on hypothesis component
+      hbefore :: [Assertion] -- hyp. laws before focus (reversed)
+    , fhName  :: String -- focus hypothesis name
+    , fhSC    :: SideCond -- focus hypothesis sc (usually true)
+    , hafter  :: [Assertion] -- hyp. laws after focus
+    , cleft0  :: Term -- left conjecture
+    , cright0 :: Term -- right conjecture
+    }
+  deriving (Show,Read)
+
+data LeftRight = Lft | Rght deriving (Eq,Show,Read)
+\end{code}
+
+
 Given that $S$ is not recursive, then the zipper for $S$
 will have a term-zipper as its ``focus'', and a single instance
 of $S'$ to allow the one possible upward ``step''.
-This should be easy to code up.
+\begin{code}
+type SeqZip = (TermZip, Sequent')
+\end{code}
 
 \subsection{Proof Calculations}
 

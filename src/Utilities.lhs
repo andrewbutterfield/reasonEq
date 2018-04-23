@@ -84,6 +84,24 @@ listsplit' splits before (t:after)
  where before' = t:before
 \end{code}
 
+\subsubsection{`Peeling' a list}
+
+We use a number $i$ to extract the $i$th element of a list
+peeling off all the elements before it into a reversed list.
+We return a triple, of the before-list (reversed), the chosen element,
+and the after list.
+This fails if the index does not correspond to a list position.
+\begin{code}
+peel :: Monad m => Int -> [a] -> m ([a],a,[a])
+peel n xs = ent [] n xs
+ where
+   ent _ _ [] = fail ""
+   ent bef 1 (x:xs) = return (bef,x,xs)
+   ent bef n (x:xs)
+    | n < 2  =  fail ""
+    | otherwise  =  ent (x:bef) (n-1) xs
+\end{code}
+
 \subsubsection{Trimming Strings}
 
 \begin{code}

@@ -21,6 +21,7 @@ import Data.Set (Set)
 import qualified Data.Set as S
 import Data.Maybe
 
+import Utilities
 import LexBase
 import Variables
 import AST
@@ -111,15 +112,6 @@ sdescend tk t n (Substn tsub lvsub)
       Nothing  ->  Nothing
       Just (before,(v,t'),after)
         -> Just (t',Substn' tk t lvsub before v after)
-
-peel :: Monad m => Int -> [a] -> m ([a],a,[a])
-peel n xs = ent [] n xs
- where
-   ent _ _ [] = fail ""
-   ent bef 1 (x:xs) = return (bef,x,xs)
-   ent bef n (x:xs)
-    | n < 2  =  fail ""
-    | otherwise  =  ent (x:bef) (n-1) xs
 \end{code}
 
 \subsubsection{Zip Descent by Path}

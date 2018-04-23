@@ -242,33 +242,41 @@ data Sequent
   deriving (Eq, Show, Read)
 \end{code}
 
-\subsubsection{Sequent Zipper}
+\subsection{Sequent Zipper}
 
 We will need a zipper for sequents (and theories) as we can focus in on any term
 in \texttt{hyp}, \texttt{cleft} or \texttt{cright}.
 
 The sequent type can be summarised algebraically as
-$$
-S(t)
-=
-T^* \times (N\times (N \times (t \times SC))^* \times VD)
-    \times SC \times t \times t
-$$
-where $T$ is \texttt{Theory}, $VD$ is \texttt{VarData},
-$N$ is \texttt{Name}, $SC$ is \texttt{SideCond}, and $t$ is \texttt{Term}.
-
-Simplifiying:
 \begin{eqnarray*}
-  S(t) &=&  T^* \times (N\times (N \times (t \times SC))^* \times VD)
-                \times SC \times t \times t
-\\     &=&  T^* \times N\times VD \times SC
-                \times (N \times SC \times t)^*
-                \times t^2
-\\     &=&  A_1 \times (A_2 \times t)^* \times t^2
+   S &=& T^* \times T \times SC \times t \times t
+\\ T &=& N \times L^* \times VD
+\\ L &=& N \times (t \times SC)
+\end{eqnarray*}
+where $T$ is \texttt{Theory},
+$VD$ is \texttt{VarData},
+$L$ is \texttt{Law},
+$N$ is \texttt{Name},
+$SC$ is \texttt{SideCond},
+and $t$ is \texttt{Term}.
+
+Re-arranging:
+\begin{eqnarray*}
+  && T^* \times T \times SC \times t \times t
+\\&=&\textrm{Gathering terms independent of $t$ (we don't want to `enter' ` $T^*$)}
+\\&& T^* \times SC \times T \times t^2
+\\&=&\textrm{Expanding $T$}
+\\&& T^* \times SC \times (N \times L^* \times VD) \times t^2
+\\&=&\textrm{Expanding $L$}
+\\&& T^* \times SC \times (N \times (N \times (t \times SC))^* \times VD) \times t^2
+\\&=&\textrm{Flattening, re-arranging}
+\\&& T^* \times SC \times N \times VD \times (N \times SC \times t)^* \times t^2
+\\&=&\textrm{Flattening, re-arranging}
+\\&& A_1 \times (A_2 \times t)^* \times t^2
 \end{eqnarray*}
 where
 \begin{eqnarray*}
-  A_1  &=& T^* \times N \times VD \times SC
+   A_1  &=& T^* \times SC \times N \times VD
 \\ A_2 &=& N \times SC
 \end{eqnarray*}
 
@@ -282,26 +290,57 @@ Differentiating:
                       t^2 \times { d((A_2 \times t)^*) \over dt}
                   ~\right)
 \\ &=&  A_1 \times \left(~
-                      (A_2 \times t)^* \times 2 \times t
+                      (A_2 \times t)^* \times \mathbf{2} \times t
                       +
                       t^2 \times { d(A_2 \times t)^* \over d(A_2 \times t)}
                           \times { d(A_2 \times t) \over dt}
                   ~\right)
 \\ &=&  A_1 \times \left(~
-                      (A_2 \times t)^* \times 2 \times t
+                      (A_2 \times t)^* \times \mathbf{2} \times t
                       +
                       t^2 \times ((A_2 \times t)^*)^2
                           \times A_2
                   ~\right)
 \\
-\\ S'(t) &=&  A_1 \times (A_2 \times t)^* \times 2 \times t
+\\ S'(t) &=&  A_1 \times (A_2 \times t)^* \times \mathbf{2} \times t
 \\ & &  +
 \\ &=&  A_1 \times (A_2 \times t)^* \times A_2 \times (A_2 \times t)^*
             \times t^2
 \end{eqnarray*}
 
+We now refactor this by expanding the $A_i$ and merging
+\begin{eqnarray*}
+  && A_1 \times (A_2 \times t)^* \times \mathbf{2} \times t
+     \quad+\quad
+     A_1 \times (A_2 \times t)^* \times A_2 \times (A_2 \times t)^* \times t^2
+\\&=&\textrm{Expand $A_2$}
+\\&& A_1 \times (N \times SC \times t)^* \times \mathbf{2} \times t
+   \quad+\quad
+   A_1 \times (N \times SC \times t)^* \times N \times SC \times (N \times SC \times t)^* \times t^2
+\\&=&\textrm{Fold instances of  $L$}
+\\&& A_1 \times L^* \times \mathbf{2} \times t
+   \quad+\quad
+   A_1 \times L^* \times N \times SC \times L^* \times t^2
+\\&=&\textrm{Expand $A_1$}
+\\&& T^* \times SC \times N \times VD \times L^* \times \mathbf{2} \times t
+   \quad+\quad
+   T^* \times SC \times N \times VD \times L^* \times N \times SC \times L^* \times t^2
+\\&=&\textrm{Fold instance of  $T$}
+\\&& T^* \times SC \times T \times \mathbf{2} \times t
+   \quad+\quad
+   T^* \times SC \times N \times VD \times L^* \times N \times SC \times L^* \times t^2
+\\&=&\textrm{Common factor}
+\\&& T^* \times SC \times
+   \left(\quad
+          T \times \mathbf{2} \times t
+          \quad+\quad
+          N \times VD \times L^* \times N \times SC \times L^* \times t^2
+   \quad\right)
+\end{eqnarray*}
+
+\newpage
 We start with the top-level common part:
-$$S'(t) = T^* \times SC \times (\dots + \dots)$$
+$$S'(t) = T^* \times SC \times ( {\cdots + \cdots} )$$
 \begin{code}
 data Sequent'
   = Sequent' {
@@ -312,10 +351,10 @@ data Sequent'
   deriving (Show,Read)
 \end{code}
 
-Now, the two variations:
+Now, the two variations
 \begin{eqnarray*}
-  && (A_2 \times t)^* \times 2 \times t
-\\&& (A_2 \times t)^* \times A_2 \times (A_2 \times t)^* \times t^2
+  && T \times \mathbf{2} \times t
+\\&& N \times VD \times L^* \times N \times SC \times L^* \times t^2
 \end{eqnarray*}
 \begin{code}
 data Laws'
@@ -327,10 +366,10 @@ data Laws'
   | HLaws' { -- currently focussed on hypothesis component
       hname :: String -- hyp. theory name
     , hknown :: VarTable
-    , hbefore :: [Assertion] -- hyp. laws before focus (reversed)
+    , hbefore :: [Law] -- hyp. laws before focus (reversed)
     , fhName  :: String -- focus hypothesis name
     , fhSC    :: SideCond -- focus hypothesis sc (usually true)
-    , hafter  :: [Assertion] -- hyp. laws after focus
+    , hafter  :: [Law] -- hyp. laws after focus
     , cleft0  :: Term -- left conjecture
     , cright0 :: Term -- right conjecture
     }
@@ -362,6 +401,22 @@ rightConjFocus sequent
     , Sequent' (theories sequent)
                (sc sequent) $
                CLaws' (hyp sequent) Rght (cleft sequent) )
+\end{code}
+
+\newpage
+For a hypothesis conjecture, making the sequent-zipper
+is a little more tricky:
+\begin{code}
+hypConjFocus :: Monad m => Int -> Sequent -> m SeqZip
+hypConjFocus i sequent
+  = do let (Theory htnm hlaws hknown) = hyp sequent
+       (before,(hnm,(ht,hsc)),after) <- peel i hlaws
+       return ( mkTZ ht
+              , Sequent' (theories sequent)
+                         (sc sequent) $
+                         HLaws' htnm hknown
+                                before hnm hsc after
+                                (cleft sequent) (cright sequent) )
 \end{code}
 
 \subsection{Proof Calculations}

@@ -9,6 +9,10 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Proof
  ( TheLogic(..), flattenTheEquiv
  , Assertion, Law, Theory(..), Sequent(..)
+ , SeqZip
+ , leftConjFocus, rightConjFocus, hypConjFocus, exitSeqZipper
+ , upSZ, downSZ, seqGoLeft, seqGoRight, seqGoHyp
+ , proofByReduce
  , Justification
  , CalcStep
  , Calculation
@@ -111,7 +115,7 @@ The most general proof framework we plan to support is the following:
 \end{description}
 
 There are a number of strategies we can apply, depending on the structure
-of $C$.
+of $C$, of which the following three are most basic
 \begin{eqnarray*}
    reduce(C)
    &\defs&
@@ -122,20 +126,14 @@ of $C$.
 \\ assume(H \implies C)
    &\defs&
    \mathcal L,\splitand(H) \vdash (C \equiv \true)
-\\ asmboth(H \implies (C_1 \equiv C_2))
-   &\defs&
-   \mathcal L,\splitand(H) \vdash C_1 \equiv C_2
-\\ trade(H_1 \implies \dots H_m \implies C)
-   &\defs&
-   \mathcal L,\bigcup_{j \in 1\dots m}\splitand(H_j) \vdash C \equiv \true
-\\ trdboth(H_1 \implies \dots H_m \implies (C_1 \equiv C_2))
-   &\defs&
-   \mathcal L,\bigcup_{j \in 1\dots m}\splitand(H_j) \vdash C_1 \equiv C_2
+\end{eqnarray*}
+where
+\begin{eqnarray*}
 \\ \splitand(H_1 \land \dots \land H_n)
    &\defs&
    \setof{H_1,\dots,H_n}
 \end{eqnarray*}
-Note that any given $C$ may have more than one possible strategy.
+
 In addition, we can envisage a step that transforms the shape of
 the deduction.
 We may have a conjecture with no top-level implication, but which,
@@ -148,12 +146,6 @@ The requirement that the $H_i$ have all their ``unknown'' variables
 converted to ``known'' for the proof
 means that the tables describing known variables need to be
 linked to specific collections of laws.
-
-
-
-Another topic to be addressed (soon) is the actual structure of $\mathcal L$
-(no, it's not a set!) and how the information regarding known variables
-is integrated into the proof structure just described.
 
 \subsection{Logic}
 
@@ -242,10 +234,65 @@ data Sequent
   deriving (Eq, Show, Read)
 \end{code}
 
+\subsubsection{Sequent Strategies}
+
+We provide the following strategies:
+\begin{eqnarray*}
+   reduce(C)
+   &\defs&
+   \mathcal L \vdash C \equiv \true
+\end{eqnarray*}
+\begin{code}
+proofByReduce :: TheLogic -> [Theory] -> (String,Assertion) -> Sequent
+proofByReduce logic thys (nm,(t,sc))
+  = Sequent thys hthry sc t $ theTrue logic
+  where hthry = Theory ("H."++nm) [] $ makeUnknownKnown thys t
+\end{code}
+\begin{eqnarray*}
+   redboth(C_1 \equiv C_2)
+   &\defs&
+   \mathcal L \vdash C_1 \equiv C_2
+\end{eqnarray*}
+\begin{eqnarray*}
+   assume(H \implies C)
+   &\defs&
+   \mathcal L,\splitand(H) \vdash (C \equiv \true)
+\end{eqnarray*}
+\begin{eqnarray*}
+   asmboth(H \implies (C_1 \equiv C_2))
+   &\defs&
+   \mathcal L,\splitand(H) \vdash C_1 \equiv C_2
+\end{eqnarray*}
+\begin{eqnarray*}
+   trade(H_1 \implies \dots H_m \implies C)
+   &\defs&
+   \mathcal L,\bigcup_{j \in 1\dots m}\splitand(H_j) \vdash C \equiv \true
+\end{eqnarray*}
+\begin{eqnarray*}
+   trdboth(H_1 \implies \dots H_m \implies (C_1 \equiv C_2))
+   &\defs&
+   \mathcal L,\bigcup_{j \in 1\dots m}\splitand(H_j) \vdash C_1 \equiv C_2
+\end{eqnarray*}
+\begin{eqnarray*}
+   \splitand(H_1 \land \dots \land H_n)
+   &\defs&
+   \setof{H_1,\dots,H_n}
+\end{eqnarray*}
+
+\subsection{Making Unknown Variables Known}
+
+A key function is one that makes all unknown variables in a term become known.
+\begin{code}
+makeUnknownKnown :: [Theory] -> Term -> VarTable
+makeUnknownKnown thys t = newVarTable -- for now.....
+\end{code}
+
 \subsection{Sequent Zipper}
 
 We will need a zipper for sequents (and theories) as we can focus in on any term
 in \texttt{hyp}, \texttt{cleft} or \texttt{cright}.
+
+\subsubsection{Sequent Zipper Algebra}
 
 The sequent type can be summarised algebraically as
 \begin{eqnarray*}
@@ -339,6 +386,8 @@ We now refactor this by expanding the $A_i$ and merging
 \end{eqnarray*}
 
 \newpage
+\subsubsection{Sequent Zipper Types}
+
 We start with the top-level common part:
 $$S'(t) = T^* \times SC \times ( {\cdots + \cdots} )$$
 \begin{code}
@@ -385,6 +434,9 @@ of $S'$ to allow the one possible upward ``step''.
 type SeqZip = (TermZip, Sequent')
 \end{code}
 
+\subsubsection{Sequent Zipper Construction}
+
+
 To create a sequent-zipper,
 we have to state which term component we are focussing on.
 For the left- and right- conjectures, this is easy:
@@ -417,6 +469,56 @@ hypConjFocus i sequent
                          HLaws' htnm hknown
                                 before hnm hsc after
                                 (cleft sequent) (cright sequent) )
+\end{code}
+
+\subsubsection{Sequent Zipper Destructor}
+
+Exiting a zipper:
+\begin{code}
+exitSeqZipper :: SeqZip -> Sequent
+exitSeqZipper (tz,sequent') = exitSQ (exitTZ tz) sequent'
+
+exitSQ :: Term -> Sequent' -> Sequent
+exitSQ t sequent'
+  = let (hypT,cl,cr) = exitLaws t $ laws' sequent'
+    in Sequent (theories0 sequent') hypT (sc0 sequent') cl cr
+
+exitLaws :: Term -> Laws' -> (Theory, Term, Term)
+exitLaws currT (CLaws' h0 Lft  othrC)  =  (h0, currT, othrC)
+exitLaws currT (CLaws' h0 Rght othrC)  =  (h0, othrC, currT)
+exitLaws currT  (HLaws' hnm hkn hbef fnm fsc haft cl cr)
+  =  (Theory hnm (reverse hbef ++ (fnm,(currT,fsc)) : haft) hkn, cl, cr)
+\end{code}
+
+\subsubsection{Sequent Zipper Moves}
+
+The usual up/down actions just invoke the corresponding \texttt{TermZip} action.
+\begin{code}
+upSZ :: SeqZip -> (Bool,SeqZip)
+upSZ (tz,seq')  =  let (moved,tz') = upTZ tz in (moved,(tz',seq'))
+
+downSZ :: Int -> SeqZip -> (Bool,SeqZip)
+downSZ i (tz,seq')  =  let (moved,tz') = downTZ i tz in (moved,(tz',seq'))
+\end{code}
+
+However we also have a switch action that jumps between the three top-level
+focii.
+\begin{code}
+seqGoLeft :: SeqZip -> (Bool, SeqZip)
+seqGoLeft sz@(_,Sequent' _ _ (CLaws' _ Lft _))  =  (False,sz) -- already Left
+seqGoLeft sz = (True,leftConjFocus $ exitSeqZipper sz)
+
+seqGoRight :: SeqZip -> (Bool, SeqZip)
+seqGoRight sz@(_,Sequent' _ _ (CLaws' _ Rght _))  =  (False,sz) -- already Right
+seqGoRight sz = (True,rightConjFocus $ exitSeqZipper sz)
+
+seqGoHyp :: Int -> SeqZip -> (Bool, SeqZip)
+seqGoHyp i sz@(_,Sequent' _ _ (HLaws' _ _ bef _ _ _ _ _))
+                           | i+1 == length bef  =  (False,sz) -- already at ith.
+seqGoHyp i sz
+  =  case hypConjFocus i $ exitSeqZipper sz of
+       Nothing   ->  (False,sz) -- bad index
+       Just sz'  ->  (True,sz')
 \end{code}
 
 \subsection{Proof Calculations}

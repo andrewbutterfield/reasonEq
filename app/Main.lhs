@@ -377,23 +377,23 @@ proofCommand reqs proof pcmds
 
 Focus movement commands
 \begin{code}
-goDown reqs proof@(nm, asn, (tz,seq'), dpath, sc, _, steps ) i
+goDown reqs proof@(nm, asn, sc, (tz,seq'), dpath, _, steps ) i
   = let (ok,tz') = downTZ i tz in
     if ok
-    then proofREPL reqs (nm, asn, (tz',seq'), dpath++[i], sc, [], steps)
+    then proofREPL reqs (nm, asn, sc, (tz',seq'), dpath++[i], [], steps)
     else proofREPL reqs proof
 
-goUp reqs proof@(nm, asn, (tz,seq'), dpath, sc, _, steps )
+goUp reqs proof@(nm, asn, sc, (tz,seq'), dpath, _, steps )
   = let (ok,tz') = upTZ tz in
     if ok
-    then proofREPL reqs (nm, asn, (tz',seq'), init dpath, sc, [], steps)
+    then proofREPL reqs (nm, asn, sc, (tz',seq'), init dpath, [], steps)
     else proofREPL reqs proof
 \end{code}
 
 \newpage
 Law Matching
 \begin{code}
-matchLawCommand reqs proof@(nm, asn, sz@(tz,_), dpath, sc, _, steps )
+matchLawCommand reqs proof@(nm, asn, sc, sz@(tz,_), dpath, _, steps )
   = do outputStrLn ("Matching "++trTerm 0 goalt)
        -- NEED MATCH CONTEXTS !!!!
        let matches = matchLaws (logic reqs)
@@ -401,10 +401,10 @@ matchLawCommand reqs proof@(nm, asn, sz@(tz,_), dpath, sc, _, steps )
                                goalt
                                (concat $ map laws $ theories reqs) -- hack !
        outputStrLn $ displayMatches matches
-       proofREPL reqs (nm, asn, sz, dpath, sc, matches, steps)
+       proofREPL reqs (nm, asn, sc, sz, dpath, matches, steps)
   where goalt = getTZ tz
 
-applyMatch reqs proof@(nm, asn, (tz,seq'), dpath, sc, matches, steps ) i
+applyMatch reqs proof@(nm, asn, sc, (tz,seq'), dpath, matches, steps ) i
   = case alookup i matches of
      Nothing -> do outputStrLn ("No match numbered "++ show i)
                    proofREPL reqs proof
@@ -414,16 +414,16 @@ applyMatch reqs proof@(nm, asn, (tz,seq'), dpath, sc, matches, steps ) i
                         proofREPL reqs proof
           Just brepl
             -> do outputStrLn ("Applied law '"++lnm++"' at "++show dpath)
-                  proofREPL reqs (nm, asn
+                  proofREPL reqs (nm, asn, sc
                                  , ((setTZ brepl tz),seq')
-                                 , dpath, sc, []
+                                 , dpath, []
                                  , (("apply "++lnm,bind,dpath), exitTZ tz):steps)
 \end{code}
 
 Replacing \textit{true} by a law, with unknown variables
 suitably instantiated.
 \begin{code}
-lawInstantiateProof reqs proof@(nm, asn, sz@(tz,_), dpath, sc, matches, steps)
+lawInstantiateProof reqs proof@(nm, asn, sc, sz@(tz,_), dpath, matches, steps)
   | currt /= true
     = do outputStrLn ("Can only instantiate an law over "++trTerm 0 true)
          proofREPL reqs proof
@@ -443,7 +443,7 @@ lawInstantiateProof reqs proof@(nm, asn, sz@(tz,_), dpath, sc, matches, steps)
     thrys = theories reqs
     rslaws = if null thrys then [] else laws (head thrys)
 
-instantiateLaw reqs proof@(pnm, asn, (tz,seq'), dpath, psc, matches, steps)
+instantiateLaw reqs proof@(pnm, asn, psc, (tz,seq'), dpath, matches, steps)
                     law@(lnm,(lawt,lsc))
  = do lbind <- generateLawInstanceBind (map knownV $ theories reqs)
                                        (exitTZ tz) psc law
@@ -457,13 +457,13 @@ instantiateLaw reqs proof@(pnm, asn, (tz,seq'), dpath, psc, matches, steps)
                                 proofREPL reqs proof
                   Just nsc ->
                     do  ilawt <- instantiate lbind lawt
-                        proofREPL reqs ( pnm, asn
+                        proofREPL reqs ( pnm, asn, nsc
                                        , (setTZ ilawt tz,seq')
-                                       , dpath, nsc
+                                       , dpath
                                        , matches
-                                       , (("instantiate "++lnm,lbind,dpath)
-                                          , exitTZ tz)
-                                          :steps)
+                                       , ( ("instantiate "++lnm,lbind,dpath)
+                                           , exitTZ tz )
+                                         : steps )
 \end{code}
 
 \newpage

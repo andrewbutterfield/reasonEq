@@ -551,9 +551,9 @@ We start with live proofs:
 type LiveProof
   = ( String -- conjecture name
     , Assertion -- assertion being proven
+    , SideCond -- side condition
     , SeqZip  -- current term, focussed
     , [Int] -- current zipper descent arguments (cleft,cright,hyp=1,2,3)
-    , SideCond -- side conditions
     , Matches -- current matches
     , [CalcStep]  -- calculation steps so far, most recent first
     )
@@ -587,16 +587,36 @@ type Justification
 
 -- temporary
 dispLiveProof :: LiveProof -> String
-dispLiveProof ( nm, _, tz, dpath, sc, _, steps )
+dispLiveProof ( nm, _, sc, tz, dpath, _, steps )
  = unlines'
      ( ("Proof for '"++nm++"'  "++trSideCond sc)
-       : map shLiveStep (reverse steps)
-         ++
-         [ " " ++ dispSeqZip tz ++ " @" ++ show dpath++"   "
-         , "---" ] )
+       : [ "---", " " ++ dispSeqZip tz -- ++ " @" ++ show dpath++"   "
+         , "---", "","" ]
+         ++ map shLiveStep (reverse steps)
+         ++ [ "--", "" ]
+      )
 
 dispSeqZip :: SeqZip -> String
-dispSeqZip sz = "display of sequent-zipper NYI"
+dispSeqZip (tz,Sequent' _ sc conj')  =  unlines $ dispConjParts tz sc conj'
+
+dispConjParts tz sc (CLaws' hthry Lft rightC)
+  =  dispHypotheses hthry
+     ++ ["----------------"]
+     ++ [ "R-target = "++trTerm 0 rightC++"  "++trSideCond sc]
+     ++ [ "..."]
+     ++ [trTermZip tz]
+
+dispConjParts tz sc (CLaws' hthry Rght leftC)
+  =  dispHypotheses hthry
+     ++ ["----------------"]
+     ++ [ "L-target = "++trTerm 0 leftC++"  "++trSideCond sc]
+     ++ [ "..."]
+     ++ [trTermZip tz]
+
+dispConjParts tz sc _
+ = [trTermZip tz ++ "  "++trSideCond sc++" (Hypotheses not shown)"]
+
+dispHypotheses hthry = ["hypos not yet shown"]
 
 dispTermZip :: TermZip -> String
 dispTermZip tz = blue $ trTerm 0 (getTZ tz)
@@ -643,7 +663,8 @@ displayProof (pnm,(trm,sc),(trm',steps))
 
 shStep :: CalcStep -> String
 shStep ( (lnm, bind, dpath), t )
- = unlines' [ trTermZip $ pathTZ dpath t
+ = unlines' [ trTermZip $ pathTZ (tail dpath) t -- ignore sequent no at start
+                                                -- for now
             , " = '"++lnm++" @" ++ show dpath ++ "'"
             , trBinding bind
             ]
@@ -653,14 +674,14 @@ We need to setup a proof from a conjecture:
 \begin{code}
 startProof :: TheLogic -> [Theory] -> String -> Assertion -> LiveProof
 startProof logic thys nm asn@(t,sc)
-  = (nm, asn, sz, atCleft, sc, [], [])
+  = (nm, asn, sc, sz, atCleft, [], [])
   where sz = leftConjFocus $ proofByReduce logic thys (nm,asn)
 \end{code}
 
 We need to determine when a live proof is complete:
 \begin{code}
 proofComplete :: TheLogic -> LiveProof -> Bool
-proofComplete logic (_, _, sz, _, _, _, _)
+proofComplete logic (_, _, _, sz, _, _, _)
   =  let sequent = exitSeqZipper sz
      in cleft sequent == cright sequent -- should be alpha-equivalent
 \end{code}
@@ -668,7 +689,7 @@ proofComplete logic (_, _, sz, _, _, _, _)
 We need to convert a complete live proof to a proof:
 \begin{code}
 finaliseProof :: LiveProof -> Proof
-finaliseProof( nm, asn, (tz,_), _, _, _, steps)
+finaliseProof( nm, asn, _, (tz,_), _, _, steps)
   = (nm, asn, (exitTZ tz, reverse steps))
 \end{code}
 

@@ -225,8 +225,8 @@ We will single out the hypothesis theory for special treatment.
 \begin{code}
 data Sequent
   = Sequent {
-     theories :: [Theory] -- theory context
-   , hyp :: Theory -- the hypotheses -- we can "go" here
+     ante :: [Theory] -- antecedent theory context
+   , hyp :: Theory -- the goal hypotheses -- we can "go" here
    , sc :: SideCond -- of the conjecture being proven.
    , cleft :: Term -- never 'true' to begin with.
    , cright :: Term -- often 'true' from the start.
@@ -289,7 +289,7 @@ makeUnknownKnown thys t = newVarTable -- for now.....
 
 \subsection{Sequent Zipper}
 
-We will need a zipper for sequents (and theories) as we can focus in on any term
+We will need a zipper for sequents (and ante) as we can focus in on any term
 in \texttt{hyp}, \texttt{cleft} or \texttt{cright}.
 
 \subsubsection{Sequent Zipper Algebra}
@@ -393,7 +393,7 @@ $$S'(t) = T^* \times SC \times ( {\cdots + \cdots} )$$
 \begin{code}
 data Sequent'
   = Sequent' {
-      theories0 :: [Theory] -- context theories
+      ante0 :: [Theory] -- context theories
     , sc0       :: SideCond -- sequent side-condition
     , laws'     :: Laws'
     }
@@ -444,13 +444,13 @@ For the left- and right- conjectures, this is easy:
 leftConjFocus :: Sequent -> SeqZip
 leftConjFocus sequent
   = ( mkTZ $ cleft sequent
-    , Sequent' (theories sequent)
+    , Sequent' (ante sequent)
                (sc sequent) $
                CLaws' (hyp sequent) Lft (cright sequent) )
 
 rightConjFocus sequent
   = ( mkTZ $ cright sequent
-    , Sequent' (theories sequent)
+    , Sequent' (ante sequent)
                (sc sequent) $
                CLaws' (hyp sequent) Rght (cleft sequent) )
 \end{code}
@@ -464,7 +464,7 @@ hypConjFocus i sequent
   = do let (Theory htnm hlaws hknown) = hyp sequent
        (before,(hnm,(ht,hsc)),after) <- peel i hlaws
        return ( mkTZ ht
-              , Sequent' (theories sequent)
+              , Sequent' (ante sequent)
                          (sc sequent) $
                          HLaws' htnm hknown
                                 before hnm hsc after
@@ -481,7 +481,7 @@ exitSeqZipper (tz,sequent') = exitSQ (exitTZ tz) sequent'
 exitSQ :: Term -> Sequent' -> Sequent
 exitSQ t sequent'
   = let (hypT,cl,cr) = exitLaws t $ laws' sequent'
-    in Sequent (theories0 sequent') hypT (sc0 sequent') cl cr
+    in Sequent (ante0 sequent') hypT (sc0 sequent') cl cr
 
 exitLaws :: Term -> Laws' -> (Theory, Term, Term)
 exitLaws currT (CLaws' h0 Lft  othrC)  =  (h0, currT, othrC)
@@ -540,22 +540,27 @@ The actions involed in a proof calculation step are as follows:
   \item Record step (which subterm, which law).
 \end{itemize}
 
-We want a zipper for the first three,
-and a calculation-step record for the fourth.
-We will prototype something simple for now.
+We need to distinguish between a `live' proof,
+which involves a zipper,
+and a proof `record',
+that records all the steps of the proof
+in enough detail to allow the proof to be replayed.
+
+We start with live proofs:
 \begin{code}
-type Justification
-  = ( String   -- law name
-    , Binding  -- binding from law variables to goal components
-    , [Int] )  -- zipper descent arguments
+type LiveProof
+  = ( String -- conjecture name
+    , Assertion -- assertion being proven
+    , SeqZip  -- current term, focussed
+    , [Int] -- current zipper descent arguments (cleft,cright,hyp=1,2,3)
+    , SideCond -- side conditions
+    , Matches -- current matches
+    , [CalcStep]  -- calculation steps so far, most recent first
+    )
 
-type CalcStep
-  = ( Justification -- step justification
-    , Term )  -- previous term
-
-type Calculation
-  = ( Term -- end (or current) term
-    , [ CalcStep ] )  -- calculation steps, in proof order
+atCleft   =  [1]
+atCright  =  [2]
+atHyp i   =  [3,i]
 
 type Match
  = ( String -- assertion name
@@ -568,21 +573,17 @@ type Matches
   = [ ( Int -- match number
       , Match ) ]  -- corresponding match ) ]
 
-type LiveProof
-  = ( String -- conjecture name
-    , Assertion -- assertion being proven
-    , TermZip  -- current term, focussed
-    , [Int] -- current zipper descent arguments
-    , SideCond -- side conditions
-    , Matches -- current matches
-    , [CalcStep]  -- calculation steps so far, most recent first
-    )
+type CalcStep
+  = ( Justification -- step justification
+    , Term )  -- previous term
 
-type Proof
-  = ( String -- assertion name
-    , Assertion
-    , Calculation -- Simple calculational proofs for now
-    )
+type Justification
+  = ( String   -- law name
+    , Binding  -- binding from law variables to goal components
+    , [Int] )  -- zipper descent arguments
+\end{code}
+
+\begin{code}
 
 -- temporary
 dispLiveProof :: LiveProof -> String
@@ -591,11 +592,12 @@ dispLiveProof ( nm, _, tz, dpath, sc, _, steps )
      ( ("Proof for '"++nm++"'  "++trSideCond sc)
        : map shLiveStep (reverse steps)
          ++
-         [ " " ++ trTermZip tz ++ " @" ++ show dpath++"   "
+         [ " " ++ dispSeqZip tz ++ " @" ++ show dpath++"   "
          , "---" ] )
-\end{code}
 
-\begin{code}
+dispSeqZip :: SeqZip -> String
+dispSeqZip sz = "display of sequent-zipper NYI"
+
 dispTermZip :: TermZip -> String
 dispTermZip tz = blue $ trTerm 0 (getTZ tz)
 
@@ -617,6 +619,20 @@ shMatch (i, (n, (lt,lsc), bind, rt))
                      ++ "  "
                      ++ trSideCond (fromJust $ instantiateSC bind lsc) )
            ]
+\end{code}
+
+We then continue with a proof (record):
+\begin{code}
+type Proof
+  = ( String -- assertion name
+    , Assertion
+    , Calculation -- Simple calculational proofs for now
+    )
+
+type Calculation
+  = ( Term -- end (or current) term
+    , [ CalcStep ] )  -- calculation steps, in proof order
+
 
 displayProof :: Proof -> String
 displayProof (pnm,(trm,sc),(trm',steps))
@@ -635,20 +651,24 @@ shStep ( (lnm, bind, dpath), t )
 
 We need to setup a proof from a conjecture:
 \begin{code}
-startProof :: String -> Assertion -> LiveProof
-startProof nm asn@(t,sc) = (nm, asn, mkTZ t, [], sc, [], [])
+startProof :: TheLogic -> [Theory] -> String -> Assertion -> LiveProof
+startProof logic thys nm asn@(t,sc)
+  = (nm, asn, sz, atCleft, sc, [], [])
+  where sz = leftConjFocus $ proofByReduce logic thys (nm,asn)
 \end{code}
 
 We need to determine when a live proof is complete:
 \begin{code}
 proofComplete :: TheLogic -> LiveProof -> Bool
-proofComplete logic (_, _, tz, _, _, _, _)  =  exitTZ tz == theTrue logic
+proofComplete logic (_, _, sz, _, _, _, _)
+  =  let sequent = exitSeqZipper sz
+     in cleft sequent == cright sequent -- should be alpha-equivalent
 \end{code}
 
 We need to convert a complete live proof to a proof:
 \begin{code}
 finaliseProof :: LiveProof -> Proof
-finaliseProof( nm, asn, tz, _, _, _, steps)
+finaliseProof( nm, asn, (tz,_), _, _, _, steps)
   = (nm, asn, (exitTZ tz, reverse steps))
 \end{code}
 
@@ -656,6 +676,9 @@ finaliseProof( nm, asn, tz, _, _, _, steps)
 \newpage
 \subsection{Assertion Matching}
 
+\textbf{We need MATCH CONTEXTS because each match of a goal against
+a law in a given theory can only see the laws and known variables
+of that theory, plus those upon which it depends.}
 Now, the code to match laws.
 Bascially we run down the list of laws,
 returning any matches we find.

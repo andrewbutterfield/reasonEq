@@ -18,6 +18,7 @@ module Propositions (
 , thePropositionalLogic
 , propKnown
 , propLaws
+, theoryPropositions
 , propConjs
 ) where
 
@@ -333,4 +334,11 @@ cjOrZero
 propConjs :: [(String,Assertion)]
 propConjs
   = [ cjEqvId, cjOrZero ]
+\end{code}
+
+\subsection{The Propositional Theory}
+
+\begin{code}
+theoryPropositions :: Theory
+theoryPropositions  =  Theory "PropLogic" propLaws propKnown
 \end{code}

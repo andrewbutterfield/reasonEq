@@ -64,22 +64,16 @@ and derive \texttt{f\_ :: T -> Rec -> Rec}.
 data REqState
  = ReqState {
       logic :: TheLogic
-    , known :: [VarTable]
-    , rslaws :: [(String,Assertion)]
+    , theories :: [Theory]
     , conj :: [(String,Assertion)]
-    , goal :: Maybe (String,Assertion)
     , proof :: Maybe LiveProof
     , proofs :: [Proof]
-    , focus :: TermZip
     }
 logic__  f r = r{logic  = f $ logic r}  ; logic_   = logic__  . const
-known__  f r = r{known  = f $ known r}  ; known_   = known__  . const
-laws__   f r = r{rslaws   = f $ rslaws r}   ; laws_    = laws__   . const
+theories__ f r = r{theories = f $ theories r}; theories_ = theories__  . const
 conj__   f r = r{conj   = f $ conj r}   ; conj_    = conj__   . const
-goal__   f r = r{goal   = f $ goal r}   ; goal_    = goal__   . const
 proof__  f r = r{proof  = f $ proof r}  ; proof_   = proof__  . const
 proofs__ f r = r{proofs = f $ proofs r} ; proofs_  = proofs__ . const
-focus__  f r = r{focus  = f $ focus r}  ; focus_   = focus__  . const
 \end{code}
 
 \begin{code}
@@ -87,44 +81,18 @@ initState :: [String] -> IO REqState
 initState ["user"]
   = do putStrLn "Running in normal user mode."
        return
-         $ ReqState thePropositionalLogic [] [] [] Nothing Nothing [] focusTest
+         $ ReqState thePropositionalLogic [] [] Nothing []
 initState []
   = do putStrLn "Running in development mode."
-       let reqs = ReqState thePropositionalLogic [propKnown]
-                           propLaws propConjs Nothing Nothing [] focusTest
+       let reqs = ReqState thePropositionalLogic
+                           [theoryPropositions]
+                           propConjs Nothing []
        return reqs
-
-focusTest
-  = mkTZ $ f  [ pP === pQ
-              , pP ==> pQ
-              , Cons P (i _lor) [pR,pQ,pP]
-              , pP /\ h [pR, pQ]
-              , lnot pR
-              , lnot ( ( pP \/ ( pQ === pR ) ) /\ ( pQ ==> pP ) )
-              , ( ( pP ==> ( pQ \/ pR ) ) === ( pQ /\ lnot pP ) )
-              ]
-  where
-    i n = fromJust $ ident n
-    f ts = Cons P (i "F") ts
-    g ts = Cons P (i "G") ts
-    h ts = Cons P (i "H") ts
-    p n = fromJust $ pVar (Vbl (fromJust $ident n) PredV Static)
-    pP = p "P" ; pQ = p "Q" ; pR = p "R"
-    t1 === t2  =  Cons P (i _equiv) [t1,t2]
-    t1 ==> t2  =  Cons P (i _implies) [t1,t2]
-    t1 \/ t2  =  Cons P (i _lor) [t1,t2]
-    t1 /\ t2  =  Cons P (i _land) [t1,t2]
-    lnot t = Cons P (i _lnot) [t]
-
 
 summariseREqS :: REqState -> String
 summariseREqS reqs
- = intcalNN ":" [ show $ length $ known reqs
-                , show $ length $ rslaws reqs
+ = intcalNN ":" [ show $ length $ theories reqs
                 , show $ length $ conj reqs
-                , case goal reqs of
-                   Nothing -> ""
-                   _ -> "!"
                 , case proof reqs of
                    Nothing -> ""
                    _ -> "!"
@@ -143,10 +111,6 @@ showLogic logic
 \end{code}
 
 
-Showing known variables:
-\begin{code}
-showKnown vts = unlines $ map trVarTable $ vts
-\end{code}
 
 
 A common idiom si to show a list of items as a numbered list
@@ -164,9 +128,15 @@ pad w str
   where ext = w - length str
 \end{code}
 
-
-Showing laws:
+Showing theories:
 \begin{code}
+showTheories [] = "No theories present."
+showTheories (thry:_)
+  = unlines
+      [ "Theory (top) '"++thName thry++"'"
+      , trVarTable (knownV thry)
+      , showLaws (laws thry) ]
+
 showLaws lws  =  numberList (showLaw $ nameWidth lws) lws
 
 nameWidth lws = maximum $ map (length . getName) lws
@@ -174,12 +144,6 @@ getName (nm,_) = nm
 showLaw w (nm,(t,sc))
   =    ldq ++ nm ++ rdq ++ pad w nm
     ++ "  " ++ trTerm 0 t ++ "  "++trSideCond sc
-\end{code}
-
-Showing Goal:
-\begin{code}
-showGoal Nothing = "no Goal."
-showGoal (Just goal) = showLaw 0 goal
 \end{code}
 
 Showing Proof:
@@ -277,7 +241,7 @@ help reqs (what:_)
 \subsection{Command Repository}
 \begin{code}
 commands :: Commands
-commands = [cmdShow,cmdSet,cmdProve,cmdFocus]
+commands = [cmdShow,cmdSet,cmdProve]
 \end{code}
 
 \subsubsection{Show Command }
@@ -288,34 +252,25 @@ cmdShow
     , "show parts of the prover state"
     , unlines
         [ "sh "++shLogic++" - show current logic"
-        , "sh "++shKnown++" - show known variables"
-        , "sh "++shLaws++" - show current laws"
+        , "sh "++shTheories++" - show theories"
         , "sh "++shConj++" - show current conjectures"
-        , "sh "++shGoal++" - show current goal"
         , "sh "++shLivePrf++" - show current proof"
         , "sh "++shProofs++" - show completed proofs"
-        , "sh "++shFocus++" - show current test focus state"
         ]
     , showState )
 
 shLogic = "="
-shKnown = "k"
-shLaws  = "l"
+shTheories = "t"
 shConj = "c"
-shGoal = "g"
 shLivePrf = "p"
 shProofs = "P"
-shFocus = "f"
 
 showState [cmd] reqs
  | cmd == shLogic  =  doshow reqs $ showLogic $ logic reqs
- | cmd == shKnown  =  doshow reqs $ showKnown $ known reqs
- | cmd == shLaws   =  doshow reqs $ showLaws  $ rslaws  reqs
+ | cmd == shTheories  =  doshow reqs $ showTheories $ theories reqs
  | cmd == shConj   =  doshow reqs $ showLaws  $ conj  reqs
- | cmd == shGoal   =  doshow reqs $ showGoal  $ goal  reqs
  | cmd == shLivePrf  =  doshow reqs $ showLivePrf $ proof reqs
  | cmd == shProofs =  doshow reqs $ showProofs $ proofs reqs
- | cmd == shFocus  =  doshow reqs $ trTermZip $ focus reqs
 showState _ reqs   =  doshow reqs "unknown 'show' option."
 
 doshow reqs str
@@ -329,22 +284,10 @@ cmdSet
   = ( "set"
     , "set parts of prover state"
     , unlines
-       [ "set goal name - set goal to named conjecture"]
+       [ "set not used right now"]
     , setState )
 
-setState [what,name] reqs
- | what == "goal"  =  setgoal reqs name
 setState _ reqs = doshow reqs "unknown 'set' option"
-
-setgoal reqs arg
-  | all isDigit arg
-    = case nlookup (read arg) $ conj reqs of
-        Nothing -> doshow reqs ("conjecture no."++arg++" not found.")
-        Just cnj -> return $ goal_ (Just cnj) reqs
-  | otherwise
-    = case alookup arg $ conj reqs of
-        Nothing -> doshow reqs ("conjecture '"++name++"' not found.")
-        Just cnj -> return $ goal_ (Just cnj) reqs
 
 -- list lookup by number [1..]
 nlookup i things
@@ -365,21 +308,21 @@ cmdProve
   = ( "prove"
     , "do a proof"
     , unlines
-       [ "prove - prove current goal"
-       , "if no live proof present, then start one,"
-       , "otherwise, jump to existing live proof."
+       [ "prove [i] [l|r|h]"
+       , "i is conjecture number"
+       , "l,r,h - which top-level focus:  h |- l "++_equiv++" = c"
+       , "no args required if proof already live."
        ]
     , doProof )
 
-doProof _ reqs
+doProof args reqs
   = case proof reqs of
       Nothing
        ->  do outputStrLn "No current proof, will try to start one."
-              case goal reqs of
-                Nothing -> doshow reqs "No goal to prove, please add one."
-                Just (nm,cnj)
-                 -> do outputStrLn ("Starting Proof of '"++nm++"'")
-                       proofREPL reqs (startProof nm cnj)
+              -- for now, just the first conjecture
+              let (nm,asn) = head $ conj reqs
+              proofREPL reqs
+                        (startProof (logic reqs) (theories reqs) nm asn)
       Just proof
        ->  do outputStrLn "Back to current proof."
               proofREPL reqs proof
@@ -434,25 +377,26 @@ proofCommand reqs proof pcmds
 
 Focus movement commands
 \begin{code}
-goDown reqs proof@(nm, asn, tz, dpath, sc, _, steps ) i
+goDown reqs proof@(nm, asn, (tz,seq'), dpath, sc, _, steps ) i
   = let (ok,tz') = downTZ i tz in
     if ok
-    then proofREPL reqs (nm, asn, tz', dpath++[i], sc, [], steps)
+    then proofREPL reqs (nm, asn, (tz',seq'), dpath++[i], sc, [], steps)
     else proofREPL reqs proof
 
-goUp reqs proof@(nm, asn, tz, dpath, sc, _, steps )
+goUp reqs proof@(nm, asn, (tz,seq'), dpath, sc, _, steps )
   = let (ok,tz') = upTZ tz in
     if ok
-    then proofREPL reqs (nm, asn, tz', init dpath, sc, [], steps)
+    then proofREPL reqs (nm, asn, (tz',seq'), init dpath, sc, [], steps)
     else proofREPL reqs proof
 \end{code}
 
 \newpage
 Law Matching
 \begin{code}
-matchLawCommand reqs proof@(nm, asn, tz, dpath, sc, _, steps )
+matchLawCommand reqs proof@(nm, asn, (tz,_), dpath, sc, _, steps )
   = do outputStrLn ("Matching "++trTerm 0 goalt)
-       let matches = matchLaws (logic reqs) (known reqs) goalt (rslaws reqs)
+       -- NEED MATCH CONTEXTS !!!!
+       let matches = matchLaws (logic reqs) (theories reqs) goalt (rslaws reqs)
        outputStrLn $ displayMatches matches
        proofREPL reqs (nm, asn, tz, dpath, sc, matches, steps)
   where goalt = getTZ tz
@@ -494,7 +438,7 @@ lawInstantiateProof reqs proof@(nm, asn, tz, dpath, sc, matches, steps)
 
 instantiateLaw reqs proof@(pnm, asn, tz, dpath, psc, matches, steps)
                     law@(lnm,(lawt,lsc))
- = do lbind <- generateLawInstanceBind (known reqs) (exitTZ tz) psc law
+ = do lbind <- generateLawInstanceBind (theories reqs) (exitTZ tz) psc law
       case instantiateSC lbind lsc of
         Nothing -> do outputStrLn "instantiated law side-cond is false"
                       proofREPL reqs proof
@@ -554,37 +498,4 @@ abandonProof reqs proof
         Just "Y" -> doshow (proof_ Nothing reqs)
                       "Back to main REPL, Proof abandoned."
         _ -> proofREPL reqs proof
-\end{code}
-
-\newpage
-\subsubsection{Focus test Command}
-\begin{code}
-cmdFocus
-  = ( "f"
-    , "focus test"
-    , unlines
-       [ "Focus Test"
-       , "use keys to go up and down"
-       ]
-    , doFocusTest )
-
-doFocusTest _ reqs
-  = do fcs' <- focusREPL $ (False, focus reqs)
-       return $ focus_ fcs' reqs
-
-focusREPL fs@(chgd,fcs)
- = do outputStrLn (trTermZip fcs ++ "  changed="++show chgd)
-      minput <- getInputLine "u, d n, x :- "
-      case minput of
-        Nothing -> return fcs
-        Just "x" -> return fcs
-        Just "u" -> focusREPL (upTZ fcs)
-        Just ('d':rest) -> focusREPL (downTZ (s2int rest) fcs)
-        _ -> focusREPL fs
-
-
-s2int str
- | all isDigit str'   =  read str'
- | otherwise          =  0
- where str' = trim str
 \end{code}

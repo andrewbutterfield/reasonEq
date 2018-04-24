@@ -393,15 +393,18 @@ goUp reqs proof@(nm, asn, (tz,seq'), dpath, sc, _, steps )
 \newpage
 Law Matching
 \begin{code}
-matchLawCommand reqs proof@(nm, asn, (tz,_), dpath, sc, _, steps )
+matchLawCommand reqs proof@(nm, asn, sz@(tz,_), dpath, sc, _, steps )
   = do outputStrLn ("Matching "++trTerm 0 goalt)
        -- NEED MATCH CONTEXTS !!!!
-       let matches = matchLaws (logic reqs) (theories reqs) goalt (rslaws reqs)
+       let matches = matchLaws (logic reqs)
+                               (map knownV $ theories reqs) -- hack !
+                               goalt
+                               (concat $ map laws $ theories reqs) -- hack !
        outputStrLn $ displayMatches matches
-       proofREPL reqs (nm, asn, tz, dpath, sc, matches, steps)
+       proofREPL reqs (nm, asn, sz, dpath, sc, matches, steps)
   where goalt = getTZ tz
 
-applyMatch reqs proof@(nm, asn, tz, dpath, sc, matches, steps ) i
+applyMatch reqs proof@(nm, asn, (tz,seq'), dpath, sc, matches, steps ) i
   = case alookup i matches of
      Nothing -> do outputStrLn ("No match numbered "++ show i)
                    proofREPL reqs proof
@@ -411,23 +414,25 @@ applyMatch reqs proof@(nm, asn, tz, dpath, sc, matches, steps ) i
                         proofREPL reqs proof
           Just brepl
             -> do outputStrLn ("Applied law '"++lnm++"' at "++show dpath)
-                  proofREPL reqs (nm, asn, (setTZ brepl tz), dpath, sc, []
+                  proofREPL reqs (nm, asn
+                                 , ((setTZ brepl tz),seq')
+                                 , dpath, sc, []
                                  , (("apply "++lnm,bind,dpath), exitTZ tz):steps)
 \end{code}
 
 Replacing \textit{true} by a law, with unknown variables
 suitably instantiated.
 \begin{code}
-lawInstantiateProof reqs proof@(nm, asn, tz, dpath, sc, matches, steps)
+lawInstantiateProof reqs proof@(nm, asn, sz@(tz,_), dpath, sc, matches, steps)
   | currt /= true
     = do outputStrLn ("Can only instantiate an law over "++trTerm 0 true)
          proofREPL reqs proof
   | otherwise
-    = do outputStrLn $ showLaws $ rslaws reqs
+    = do outputStrLn $ showLaws rslaws
          minput <- getInputLine "Pick a law : "
          case minput of
            Just str@(_:_) | all isDigit str
-             -> case nlookup (read str) $ rslaws reqs of
+             -> case nlookup (read str) rslaws of
                  Just law@(nm,asn)
                    -> do outputStrLn ("Law Chosen: "++nm)
                          instantiateLaw reqs proof law
@@ -435,10 +440,13 @@ lawInstantiateProof reqs proof@(nm, asn, tz, dpath, sc, matches, steps)
            _ -> proofREPL reqs proof
   where
     currt = getTZ tz; true = theTrue $ logic reqs
+    thrys = theories reqs
+    rslaws = if null thrys then [] else laws (head thrys)
 
-instantiateLaw reqs proof@(pnm, asn, tz, dpath, psc, matches, steps)
+instantiateLaw reqs proof@(pnm, asn, (tz,seq'), dpath, psc, matches, steps)
                     law@(lnm,(lawt,lsc))
- = do lbind <- generateLawInstanceBind (theories reqs) (exitTZ tz) psc law
+ = do lbind <- generateLawInstanceBind (map knownV $ theories reqs)
+                                       (exitTZ tz) psc law
       case instantiateSC lbind lsc of
         Nothing -> do outputStrLn "instantiated law side-cond is false"
                       proofREPL reqs proof
@@ -450,7 +458,7 @@ instantiateLaw reqs proof@(pnm, asn, tz, dpath, psc, matches, steps)
                   Just nsc ->
                     do  ilawt <- instantiate lbind lawt
                         proofREPL reqs ( pnm, asn
-                                       , setTZ ilawt tz
+                                       , (setTZ ilawt tz,seq')
                                        , dpath, nsc
                                        , matches
                                        , (("instantiate "++lnm,lbind,dpath)

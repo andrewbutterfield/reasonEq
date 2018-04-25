@@ -101,62 +101,6 @@ summariseREqS reqs
 
 \subsubsection{The Show Command}
 
-Showing logic:
-\begin{code}
-showLogic logic
-  = unlines [ "Truth: "   ++ trTerm 0 (theTrue logic)
-            , "Equivalence: " ++ trId (theEqv  logic)
-            , "Implication: " ++ trId (theImp  logic)
-            , "Conjunction: " ++ trId (theAnd  logic) ]
-\end{code}
-
-
-
-
-A common idiom si to show a list of items as a numbered list
-to make selecting them easier:
-\begin{code}
-numberList showItem list
-  =  unlines $ map (numberItem showItem) $  zip [1..] list
-numberItem showItem (i,item)
-  =  pad 4 istr ++ istr ++ ". " ++ showItem item
-  where istr = show i
-
-pad w str
-  | ext > 0    =  replicate ext ' '
-  | otherwise  =  ""
-  where ext = w - length str
-\end{code}
-
-Showing theories:
-\begin{code}
-showTheories [] = "No theories present."
-showTheories (thry:_)
-  = unlines
-      [ "Theory (top) '"++thName thry++"'"
-      , trVarTable (knownV thry)
-      , showLaws (laws thry) ]
-
-showLaws lws  =  numberList (showLaw $ nameWidth lws) lws
-
-nameWidth lws = maximum $ map (length . getName) lws
-getName (nm,_) = nm
-showLaw w (nm,(t,sc))
-  =    ldq ++ nm ++ rdq ++ pad w nm
-    ++ "  " ++ trTerm 0 t ++ "  "++trSideCond sc
-\end{code}
-
-Showing Proof:
-\begin{code}
-showLivePrf Nothing = "no Proof."
-showLivePrf (Just proof) = dispLiveProof proof
-\end{code}
-
-Showing Proofs:
-\begin{code}
-showProofs = unlines' . map ( ('\n':) . displayProof )
-\end{code}
-
 
 \newpage
 \subsection{GUI Top-Level}
@@ -334,7 +278,8 @@ doProof args reqs
 This repl runs a proof.
 \begin{code}
 proofREPL reqs proof
- = do outputStrLn $ dispLiveProof proof
+ = do outputStrLn ("\ESC[2J\ESC[1;1H") -- clear screen, move to top-left
+      outputStrLn $ dispLiveProof proof
       if proofComplete (logic reqs) proof
        then
          do outputStrLn "Proof Complete"

@@ -22,6 +22,8 @@ module Proof
  , displayMatches
  , matchLaws
  , proofComplete, finaliseProof
+ , showLogic, showTheories, showLaws, showLivePrf, showProofs
+ , numberList
  ) where
 
 -- import Data.Set (Set)
@@ -210,6 +212,9 @@ data Theory
     }
   deriving (Eq,Show,Read)
 \end{code}
+
+
+
 
 \subsection{Sequents}
 
@@ -587,36 +592,38 @@ type Justification
 
 -- temporary
 dispLiveProof :: LiveProof -> String
-dispLiveProof ( nm, _, sc, tz, dpath, _, steps )
+dispLiveProof ( nm, _, sc, tz, dpath, mtchs, steps )
  = unlines'
-     ( ("Proof for '"++nm++"'  "++trSideCond sc)
-       : [ "---", " " ++ dispSeqZip tz -- ++ " @" ++ show dpath++"   "
-         , "---", "","" ]
-         ++ map shLiveStep (reverse steps)
-         ++ [ "--", "" ]
-      )
+     ( ( ("Proof for '"++red nm++"'  "++trSideCond sc)
+       : " ..."
+       : map shLiveStep (reverse steps)
+       )
+       ++
+       ( displayMatches mtchs
+         : [ underline "           "
+           , dispSeqZip tz
+           , "" ]
+       ) )
 
 dispSeqZip :: SeqZip -> String
-dispSeqZip (tz,Sequent' _ sc conj')  =  unlines $ dispConjParts tz sc conj'
+dispSeqZip (tz,Sequent' _ sc conj')  =  unlines' $ dispConjParts tz sc conj'
 
 dispConjParts tz sc (CLaws' hthry Lft rightC)
-  =  dispHypotheses hthry
-     ++ ["----------------"]
-     ++ [ "R-target = "++trTerm 0 rightC++"  "++trSideCond sc]
-     ++ [ "..."]
+  =     [ "R-target = "++trTerm 0 rightC++"  "++trSideCond sc]
+     ++ (dispHypotheses hthry)
+        : [ _vdash ]
      ++ [trTermZip tz]
 
 dispConjParts tz sc (CLaws' hthry Rght leftC)
-  =  dispHypotheses hthry
-     ++ ["----------------"]
-     ++ [ "L-target = "++trTerm 0 leftC++"  "++trSideCond sc]
-     ++ [ "..."]
+  =     [ "L-target = "++trTerm 0 leftC++"  "++trSideCond sc]
+     ++ (dispHypotheses hthry)
+        : [ _vdash ]
      ++ [trTermZip tz]
 
 dispConjParts tz sc _
  = [trTermZip tz ++ "  "++trSideCond sc++" (Hypotheses not shown)"]
 
-dispHypotheses hthry = ["hypos not yet shown"]
+dispHypotheses hthry  =  showLaws $ laws $ hthry
 
 dispTermZip :: TermZip -> String
 dispTermZip tz = blue $ trTerm 0 (getTZ tz)
@@ -628,17 +635,16 @@ shLiveStep ( (lnm, bind, dpath), t )
             ]
 
 displayMatches :: Matches -> String
-displayMatches []       =  "no Matches."
-displayMatches matches  =  unlines $ map shMatch matches
+displayMatches []  =  ""
+displayMatches matches  =  unlines' ( ("Matches:") : map shMatch matches)
 
 shMatch (i, (n, (lt,lsc), bind, rt))
- = unlines [ show i ++ " : "++ ldq ++ n ++ rdq
-             ++ " gives     "
-             ++ (bold . blue)
-                   ( trTerm 0 (fromJust $ instantiate bind rt)
-                     ++ "  "
-                     ++ trSideCond (fromJust $ instantiateSC bind lsc) )
-           ]
+ = ( show i ++ " : "++ ldq ++ green n ++ rdq
+     ++ " gives     "
+     ++ (bold . blue)
+           ( trTerm 0 (fromJust $ instantiate bind rt)
+             ++ "  "
+             ++ trSideCond (fromJust $ instantiateSC bind lsc) ) )
 \end{code}
 
 We then continue with a proof (record):
@@ -733,4 +739,63 @@ justMatch repl vts tC (n,asn@(tP,_))
  = case match vts tC tP of
      Nothing -> []
      Just bind -> [(n,asn,bind,repl)]
+\end{code}
+
+\newpage
+\subsection{Showing stuff}
+
+\textbf{This should all be done via proper generic rendering code}
+
+Showing logic:
+\begin{code}
+showLogic logic
+  = unlines' [ "Truth: "   ++ trTerm 0 (theTrue logic)
+             , "Equivalence: " ++ trId (theEqv  logic)
+             , "Implication: " ++ trId (theImp  logic)
+             , "Conjunction: " ++ trId (theAnd  logic) ]
+\end{code}
+
+
+A common idiom is to show a list of items as a numbered list
+to make selecting them easier:
+\begin{code}
+numberList showItem list
+  =  unlines $ map (numberItem showItem) $  zip [1..] list
+numberItem showItem (i,item)
+  =  pad 4 istr ++ istr ++ ". " ++ showItem item
+  where istr = show i
+
+pad w str
+  | ext > 0    =  replicate ext ' '
+  | otherwise  =  ""
+  where ext = w - length str
+\end{code}
+
+Showing theories:
+\begin{code}
+showTheories [] = "No theories present."
+showTheories (thry:_)
+  = unlines'
+      [ "Theory (top) '"++thName thry++"'"
+      , trVarTable (knownV thry)
+      , showLaws (laws thry) ]
+
+showLaws lws  =  numberList (showLaw $ nameWidth lws) lws
+
+nameWidth lws = maximum $ map (length . getName) lws
+getName (nm,_) = nm
+showLaw w (nm,(t,sc))
+  =    ldq ++ nm ++ rdq ++ pad w nm
+    ++ "  " ++ trTerm 0 t ++ "  "++trSideCond sc
+\end{code}
+
+Showing Proof:
+\begin{code}
+showLivePrf Nothing = "no Proof."
+showLivePrf (Just proof) = dispLiveProof proof
+\end{code}
+
+Showing Proofs:
+\begin{code}
+showProofs = unlines' . map ( ('\n':) . displayProof )
 \end{code}

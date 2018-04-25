@@ -263,8 +263,8 @@ doProof args reqs
   = case proof reqs of
       Nothing
        ->  do outputStrLn "No current proof, will try to start one."
-              -- for now, just the first conjecture
-              let (nm,asn) = head $ conj reqs
+              -- for now, just the third conjecture
+              let (nm,asn) = conj reqs !! 2
               proofREPL reqs
                         (startProof (logic reqs) (theories reqs) nm asn)
       Just proof

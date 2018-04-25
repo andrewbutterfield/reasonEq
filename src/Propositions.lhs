@@ -312,7 +312,7 @@ $$
 cjEqvId
  = ( _equiv++"_id"
    , ( (trueP === q) === q
-   , scTrue ) )
+     , scTrue ) )
 \end{code}
 
 
@@ -326,14 +326,25 @@ $$
 cjOrZero
  = ( _lor++"_zero"
    , ( p \/ trueP === trueP
-   , scTrue ) )
+     , scTrue ) )
 \end{code}
 
+$$
+  \begin{array}{ll}
+     \CJweakenImp & \CJweakenImpN
+  \end{array}
+$$
+\begin{code}
+cjWeakImp
+ = ( "weaken_"++_implies
+   , ( p /\ q ==> p
+     , scTrue ) )
+\end{code}
 
 \begin{code}
 propConjs :: [(String,Assertion)]
 propConjs
-  = [ cjEqvId, cjOrZero ]
+  = [ cjEqvId, cjOrZero, cjWeakImp ]
 \end{code}
 
 \subsection{The Propositional Theory}

@@ -166,27 +166,40 @@ data TheLogic
 \end{code}
 We also want to provide a way to ``condition'' predicates
 to facilitate matching  and proof flexibility.
+In particular, we expect the following laws to hold:
+\begin{eqnarray*}
+   P \equiv (Q \equiv R) &=& (P \equiv (Q \equiv R))
+\\ &=& P \equiv Q \equiv R
+\\ P \land (Q \land R) &=& (P \land (Q \land R))
+\\ &=& P \land Q \land R
+\\ P \implies (Q \implies R) &=& P \land Q \implies R
+\end{eqnarray*}
 In particular, we want to ``associatively flatten'' nested
-equivalences. (\textbf{And Conjunction!})
+equivalences, conjunctions and conjunctive hypotheses.
 \begin{code}
+assocFlatten :: Identifier -> Term -> [Term]
+assocFlatten i (Cons tk j ts)
+      | i == j  = concat $ map (assocFlatten i) ts
+assocFlatten _ t = [t]
+
 flattenTheEquiv :: TheLogic -> Term -> Term
 flattenTheEquiv theLogic t
-  = fTE (theEqv theLogic) t
-  where
+  = Cons (termkind t) eqv $ assocFlatten eqv t
+  where eqv = theEqv theLogic
 
-    fTE eqv (Cons tk i ts)
-      | i == eqv  = mkEqv tk eqv [] $ map (fTE eqv) ts
-    fTE _ t = t
-
-    mkEqv tk eqv st [] = Cons tk eqv $ reverse st
-    mkEqv tk eqv st (t@(Cons tk' i' ts'):ts)
-      | i' == eqv  =  mkEqv tk eqv (ts' `mrg` st) ts
-    mkEqv tk eqv st (t:ts) = mkEqv tk eqv (t:st) ts
-
-    []     `mrg` st  =  st
-    (t:ts) `mrg` st  =  ts `mrg` (t:st)
+flattenTheAnd :: TheLogic -> Term -> Term
+flattenTheAnd theLogic t
+  = Cons (termkind t) and $ assocFlatten and t
+  where and = theAnd theLogic
 \end{code}
 
+For implication, we need a slighty different approach,
+as it is only right-associative,
+and we have the trading rule involving conjunction.
+\begin{code}
+flattenTheImp :: TheLogic -> Term -> Term
+flattenTheImp theLogic t = t -- for now
+\end{code}
 
 \newpage
 \subsection{Theories}

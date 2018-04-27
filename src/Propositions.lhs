@@ -101,24 +101,25 @@ equiv = fromJust $ ident _equiv ; mkEquivs ps = PCons equiv ps
 mkEquiv p q = mkEquivs [p,q]
 infix 1 === ; (===) = mkEquiv
 
-lnot = fromJust $ ident _lnot ; mkNot p = PCons lnot [p]
+implies = fromJust $ ident _implies ; mkImplies p q = PCons implies [p,q]
+infixr 2 ==> ; (==>) = mkImplies
+
 
 lor = fromJust $ ident _lor
 mkOrs []   =  falseP
 mkOrs [p]  =  p
 mkOrs ps   =  PCons lor ps
 mkOr p q   =  mkOrs [p,q]
-infix 2 \/ ; (\/) = mkOr
+infix 3 \/ ; (\/) = mkOr
 
 land = fromJust $ ident _land
 mkAnds []   =  trueP
 mkAnds [p]  =  p
 mkAnds ps   =  PCons land ps
 mkAnd p q = mkAnds [p,q]
-infix 3 /\ ; (/\) = mkAnd
+infix 4 /\ ; (/\) = mkAnd
 
-implies = fromJust $ ident _implies ; mkImplies p q = PCons implies [p,q]
-infixr 4 ==> ; (==>) = mkImplies
+lnot = fromJust $ ident _lnot ; mkNot p = PCons lnot [p]
 \end{code}
 
 \subsubsection{The Propositional Logic}

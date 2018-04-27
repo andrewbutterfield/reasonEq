@@ -9,10 +9,10 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Proof
  ( TheLogic(..), flattenTheEquiv
  , Assertion, Law, Theory(..), Sequent(..)
+ , availableStrategies
  , SeqZip
  , leftConjFocus, rightConjFocus, hypConjFocus, exitSeqZipper
  , upSZ, downSZ, seqGoLeft, seqGoRight, seqGoHyp
- , proofByReduce
  , Justification
  , CalcStep
  , Calculation
@@ -193,13 +193,14 @@ flattenTheAnd theLogic t
   where and = theAnd theLogic
 \end{code}
 
+\newpage
 For implication, we need a slighty different approach,
 as it is only right-associative,
 and we have the trading rule involving conjunction.
 \begin{code}
 flattenTheImp :: TheLogic -> Term -> Term
 flattenTheImp theLogic t
-  | null fas   =  tc
+  | null fas   =  t
   | otherwise  =  Cons tk imp [Cons tk and fas,tc]
   where
     imp = theImp theLogic
@@ -212,6 +213,7 @@ collectAnte imp (Cons tk i [ta,tc])
   | i == imp  = let (tas,tc') = collectAnte imp tc in (ta:tas,tc')
 collectAnte imp t = ([],t)
 \end{code}
+
 
 \newpage
 \subsection{Theories}
@@ -266,48 +268,104 @@ data Sequent
 
 \subsubsection{Sequent Strategies}
 
-We provide the following strategies:
+Given any conjecture we want to determine which strategies apply
+and provide a choice of sequents.
+We first flatten the implication (if any),
+\begin{code}
+availableStrategies :: TheLogic -> [Theory] -> (String,Assertion) -> [Sequent]
+availableStrategies theLogic thys (nm,(tconj,sc))
+  = catMaybes
+     [ reduce  theLogic thys cflat
+     , redboth theLogic thys cflat
+     , assume  theLogic thys cflat ]
+  where cflat = (nm,(flattenTheImp theLogic tconj,sc))
+\end{code}
+and then use the following functions to produce a sequent, if possible.
+
 \begin{eqnarray*}
    reduce(C)
    &\defs&
    \mathcal L \vdash C \equiv \true
 \end{eqnarray*}
 \begin{code}
-proofByReduce :: TheLogic -> [Theory] -> (String,Assertion) -> Sequent
-proofByReduce logic thys (nm,(t,sc))
-  = Sequent thys hthry sc t $ theTrue logic
+reduce :: Monad m => TheLogic -> [Theory] -> (String,Assertion) -> m Sequent
+reduce logic thys (nm,(t,sc))
+  = return $ Sequent thys hthry sc t $ theTrue logic
   where hthry = Theory ("H."++nm) [] $ makeUnknownKnown thys t
 \end{code}
+
 \begin{eqnarray*}
    redboth(C_1 \equiv C_2)
    &\defs&
    \mathcal L \vdash C_1 \equiv C_2
 \end{eqnarray*}
+\begin{code}
+redboth :: Monad m => TheLogic -> [Theory] -> (String,Assertion) -> m Sequent
+redboth logic thys (nm,(t@(Cons tk i [tl,tr]),sc))
+  | i == theEqv logic
+      = return $ Sequent thys hthry sc tl tr
+  where hthry = Theory ("H."++nm) [] $ makeUnknownKnown thys t
+redboth logic thys (nm,(t,sc)) = fail "redboth not applicable"
+\end{code}
+
 \begin{eqnarray*}
    assume(H \implies C)
    &\defs&
    \mathcal L,\splitand(H) \vdash (C \equiv \true)
 \end{eqnarray*}
+\begin{code}
+assume :: Monad m => TheLogic -> [Theory] -> (String,Assertion) -> m Sequent
+assume logic thys (nm,(t@(Cons tk i [ta,tc]),sc))
+  | i == theImp logic
+    = return $ Sequent thys hthry sc tc $ theTrue logic
+  where hthry = Theory ("H."++nm) [("H."++nm++".1",(ta,scTrue))]
+                     $ makeUnknownKnown thys t
+assume _ _ _ = fail "assume not applicable"
+\end{code}
+
 \begin{eqnarray*}
    asmboth(H \implies (C_1 \equiv C_2))
    &\defs&
    \mathcal L,\splitand(H) \vdash C_1 \equiv C_2
 \end{eqnarray*}
+\begin{code}
+asmboth :: Monad m => TheLogic -> [Theory] -> (String,Assertion) -> m Sequent
+asmboth logic thys (nm,(t,sc)) = fail "asmboth not applicable"
+\end{code}
+
 \begin{eqnarray*}
    trade(H_1 \implies \dots H_m \implies C)
    &\defs&
    \mathcal L,\bigcup_{j \in 1\dots m}\splitand(H_j) \vdash C \equiv \true
 \end{eqnarray*}
+\begin{code}
+-- actually, this is done under the hood
+trade :: Monad m => TheLogic -> [Theory] -> (String,Assertion) -> m Sequent
+trade logic thys (nm,(t,sc)) = fail "trade not applicable"
+\end{code}
+
 \begin{eqnarray*}
    trdboth(H_1 \implies \dots H_m \implies (C_1 \equiv C_2))
    &\defs&
    \mathcal L,\bigcup_{j \in 1\dots m}\splitand(H_j) \vdash C_1 \equiv C_2
 \end{eqnarray*}
+\begin{code}
+-- actually, this is done under the hood
+trdboth :: Monad m => TheLogic -> [Theory] -> (String,Assertion) -> m Sequent
+trdboth logic thys (nm,(t,sc)) = fail "trdboth not applicable"
+\end{code}
+
 \begin{eqnarray*}
    \splitand(H_1 \land \dots \land H_n)
    &\defs&
    \setof{H_1,\dots,H_n}
 \end{eqnarray*}
+\begin{code}
+splitAnd :: TheLogic -> Term -> [Term]
+splitAnd logic (Cons _ i ts)
+  | i == theAnd logic  =  ts
+splitAnd _ t           =  [t]
+\end{code}
 
 \subsection{Making Unknown Variables Known}
 
@@ -706,7 +764,7 @@ We need to setup a proof from a conjecture:
 startProof :: TheLogic -> [Theory] -> String -> Assertion -> LiveProof
 startProof logic thys nm asn@(t,sc)
   = (nm, asn, sc, sz, atCleft, [], [])
-  where sz = leftConjFocus $ proofByReduce logic thys (nm,asn)
+  where sz = leftConjFocus $ fromJust $ reduce logic thys (nm,asn)
 \end{code}
 
 We need to determine when a live proof is complete:

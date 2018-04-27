@@ -252,10 +252,9 @@ cmdProve
   = ( "prove"
     , "do a proof"
     , unlines
-       [ "prove [i] [l|r|h]"
-       , "i is conjecture number"
-       , "l,r,h - which top-level focus:  h |- l "++_equiv++" = c"
-       , "no args required if proof already live."
+       [ "prove i"
+       , "i : conjecture number"
+       , "no arg required if proof already live."
        ]
     , doProof )
 
@@ -263,13 +262,18 @@ doProof args reqs
   = case proof reqs of
       Nothing
        ->  do outputStrLn "No current proof, will try to start one."
-              -- for now, just the third conjecture
-              let (nm,asn) = conj reqs !! 2
-              proofREPL reqs
-                        (startProof (logic reqs) (theories reqs) nm asn)
+              case nlookup (getProofArgs args) (conj reqs) of
+                Nothing  ->  do outputStrLn "invalid conjecture number"
+                                return reqs
+                Just (nm,asn)
+                 -> proofREPL reqs
+                         (startProof (logic reqs) (theories reqs) nm asn)
       Just proof
        ->  do outputStrLn "Back to current proof."
               proofREPL reqs proof
+  where
+    getProofArgs [] = 0
+    getProofArgs (a:_) = readInt a
 \end{code}
 
 \newpage
@@ -279,13 +283,17 @@ This repl runs a proof.
 \begin{code}
 proofREPL reqs proof
  = do outputStrLn ("\ESC[2J\ESC[1;1H") -- clear screen, move to top-left
-      outputStrLn $ dispLiveProof proof
+      proofREPL' reqs proof
+
+
+proofREPL' reqs proof
+ = do outputStrLn $ dispLiveProof proof
       if proofComplete (logic reqs) proof
        then
          do outputStrLn "Proof Complete"
             let prf = finaliseProof proof
             outputStrLn $ displayProof prf
-            return (proofs__ (prf:) reqs)
+            return (proof_ Nothing $ proofs__ (prf:) reqs)
        else
          do minput <- getInputLine "proof: "
             case minput of
@@ -307,7 +315,7 @@ proofHelp reqs proof
          , "e - exit to top REPL, keeping proof"
          , "X - abandon proof"
          ]
-       proofREPL reqs proof
+       proofREPL' reqs proof
 
 proofCommand reqs proof ["d",nstr] = goDown reqs proof $ readInt nstr
 proofCommand reqs proof ["u"] = goUp reqs proof

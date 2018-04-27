@@ -198,7 +198,19 @@ as it is only right-associative,
 and we have the trading rule involving conjunction.
 \begin{code}
 flattenTheImp :: TheLogic -> Term -> Term
-flattenTheImp theLogic t = t -- for now
+flattenTheImp theLogic t
+  | null fas   =  tc
+  | otherwise  =  Cons tk imp [Cons tk and fas,tc]
+  where
+    imp = theImp theLogic
+    (tas,tc) = collectAnte imp t
+    and = theAnd theLogic
+    fas = concat $ map (assocFlatten and) tas
+    tk = termkind t
+
+collectAnte imp (Cons tk i [ta,tc])
+  | i == imp  = let (tas,tc') = collectAnte imp tc in (ta:tas,tc')
+collectAnte imp t = ([],t)
 \end{code}
 
 \newpage

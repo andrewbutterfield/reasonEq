@@ -18,7 +18,7 @@ module Proof
  , Calculation
  , LiveProof, dispLiveProof
  , Proof, displayProof
- , startProof
+ , startProof, launchProof
  , displayMatches
  , matchLaws
  , proofComplete, finaliseProof
@@ -765,6 +765,10 @@ startProof :: TheLogic -> [Theory] -> String -> Assertion -> LiveProof
 startProof logic thys nm asn@(t,sc)
   = (nm, asn, sc, sz, atCleft, [], [])
   where sz = leftConjFocus $ fromJust $ reduce logic thys (nm,asn)
+
+launchProof :: String -> Assertion -> Sequent -> LiveProof
+launchProof nm asn@(t,sc) seq
+  = (nm, asn, sc, leftConjFocus seq, atCleft, [], [])
 \end{code}
 
 We need to determine when a live proof is complete:

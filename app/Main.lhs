@@ -265,15 +265,39 @@ doProof args reqs
               case nlookup (getProofArgs args) (conj reqs) of
                 Nothing  ->  do outputStrLn "invalid conjecture number"
                                 return reqs
-                Just (nm,asn)
-                 -> proofREPL reqs
-                         (startProof (logic reqs) (theories reqs) nm asn)
+                Just nconj@(nm,asn)
+                 -> do let strats
+                            = availableStrategies (logic reqs)
+                                                  (theories reqs)
+                                                  nconj
+                       outputStrLn $ numberList presentSeq $ strats
+                       mchoice <- getInputLine "Select sequent:- "
+                       case mchoice of
+                         Nothing -> doshow reqs "Invalid strategy no"
+                         Just choice -> do
+                          let six = readInt choice
+                          case nlookup six strats of
+                           Nothing   -> doshow reqs "Invalid strategy no"
+                           Just seq  ->  proofREPL reqs (launchProof nm asn seq)
       Just proof
        ->  do outputStrLn "Back to current proof."
               proofREPL reqs proof
   where
     getProofArgs [] = 0
     getProofArgs (a:_) = readInt a
+\end{code}
+
+Presenting a sequent for choosing:
+\begin{code}
+presentSeq seq
+  = presentHyp (hyp seq)
+    ++ " " ++ _vdash ++ " " ++
+    trTerm 0 (cleft seq)
+    ++ " = " ++
+    trTerm 0 (cright seq)
+
+presentHyp hthy
+  = intercalate "," $ map (trTerm 0 . fst . snd) $ laws hthy
 \end{code}
 
 \newpage

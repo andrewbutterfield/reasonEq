@@ -845,18 +845,16 @@ buildMatchContext (thy:thys)
 First, given list of match-contexts, systematically work through them.
 \begin{code}
 matchInContexts :: TheLogic -> [MatchContext] -> Term -> Matches
-matchInContexts logic [] t = []
-matchInContexts logic ((lws,vts):mcs') t
-  = matchLaws logic vts t lws ++ matchInContexts logic mcs' t
+matchInContexts logic mcs t
+  = zip [1..] $ concat $ map (matchLaws logic t) mcs
 \end{code}
 
 Now, the code to match laws, given a context.
 Bascially we run down the list of laws,
 returning any matches we find.
 \begin{code}
-matchLaws :: TheLogic -> [VarTable] -> Term -> [(String,Assertion)] -> Matches
-matchLaws logic vts t laws
-  = zip [1..] (concat $ map (domatch logic vts t) laws)
+matchLaws :: TheLogic -> Term -> MatchContext -> [Match]
+matchLaws logic t (lws,vts) = concat $ map (domatch logic vts t) lws
 \end{code}
 
 For each law,

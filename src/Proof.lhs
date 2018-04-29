@@ -20,7 +20,7 @@ module Proof
  , Proof, displayProof
  , startProof, launchProof
  , displayMatches
- , matchLaws
+ , buildMatchContext, matchInContexts
  , proofComplete, finaliseProof
  , showLogic, showTheories, showLaws, showLivePrf, showProofs
  , numberList
@@ -318,9 +318,16 @@ assume :: Monad m => TheLogic -> [Theory] -> (String,Assertion) -> m Sequent
 assume logic thys (nm,(t@(Cons tk i [ta,tc]),sc))
   | i == theImp logic
     = return $ Sequent thys hthry sc tc $ theTrue logic
-  where hthry = Theory ("H."++nm) [("H."++nm++".1",(ta,scTrue))]
-                     $ makeUnknownKnown thys t
+  where
+    hlaws = map mkHLaw $ zip [1..] $ splitAnte logic ta
+    mkHLaw (i,t) = ("H."++nm++"."++show i,(t,scTrue))
+    hthry = Theory ("H."++nm) hlaws $ makeUnknownKnown thys t
 assume _ _ _ = fail "assume not applicable"
+
+splitAnte :: TheLogic -> Term -> [Term]
+splitAnte theLogic (Cons tk i ts)
+ | i == theAnd theLogic  =  ts
+splitAnte _        t     =  [t]
 \end{code}
 
 \begin{eqnarray*}
@@ -640,6 +647,7 @@ type LiveProof
   = ( String -- conjecture name
     , Assertion -- assertion being proven
     , SideCond -- side condition
+    , [MatchContext] -- current matching contexts
     , SeqZip  -- current term, focussed
     , [Int] -- current zipper descent arguments (cleft,cright,hyp=1,2,3)
     , Matches -- current matches
@@ -675,7 +683,7 @@ type Justification
 
 -- temporary
 dispLiveProof :: LiveProof -> String
-dispLiveProof ( nm, _, sc, tz, dpath, mtchs, steps )
+dispLiveProof ( nm, _, sc, _, tz, dpath, mtchs, steps )
  = unlines'
      ( ( ("Proof for '"++red nm++"'  "++trSideCond sc)
        : " ..."
@@ -763,18 +771,26 @@ We need to setup a proof from a conjecture:
 \begin{code}
 startProof :: TheLogic -> [Theory] -> String -> Assertion -> LiveProof
 startProof logic thys nm asn@(t,sc)
-  = (nm, asn, sc, sz, atCleft, [], [])
-  where sz = leftConjFocus $ fromJust $ reduce logic thys (nm,asn)
+  = (nm, asn, sc, mcs, sz, atCleft, [], [])
+  where
+    sz = leftConjFocus $ fromJust $ reduce logic thys (nm,asn)
+    mcs = buildMatchContext thys
 
-launchProof :: String -> Assertion -> Sequent -> LiveProof
-launchProof nm asn@(t,sc) seq
-  = (nm, asn, sc, leftConjFocus seq, atCleft, [], [])
+launchProof :: [Theory] -> String -> Assertion -> Sequent -> LiveProof
+launchProof thys nm asn@(t,sc) seq
+  = (nm, asn, sc, mcs, sz, atCleft, [], [])
+  where
+    sz = leftConjFocus seq
+    hthy = hyp seq
+    mcs = if null $ laws hthy
+           then buildMatchContext thys
+           else buildMatchContext (hthy:thys)
 \end{code}
 
 We need to determine when a live proof is complete:
 \begin{code}
 proofComplete :: TheLogic -> LiveProof -> Bool
-proofComplete logic (_, _, _, sz, _, _, _)
+proofComplete logic (_, _, _, _, sz, _, _, _)
   =  let sequent = exitSeqZipper sz
      in cleft sequent == cright sequent -- should be alpha-equivalent
 \end{code}
@@ -782,18 +798,59 @@ proofComplete logic (_, _, _, sz, _, _, _)
 We need to convert a complete live proof to a proof:
 \begin{code}
 finaliseProof :: LiveProof -> Proof
-finaliseProof( nm, asn, _, (tz,_), _, _, steps)
+finaliseProof (nm, asn, _, _, (tz,_), _, _, steps)
   = (nm, asn, (exitTZ tz, reverse steps))
 \end{code}
 
+\newpage
+\subsection{Matching Contexts}
+
+Consider a collection of theories in an ordered list,
+where each theory appears in that list before any of those on which
+it depends.
+Matching a conjecture component against all of these laws
+means working through the theories, from first to last.
+When working with a given theory, we want to match against
+all the laws in that theory, using every variable-data table
+in that theory and its dependencies.
+In particular, if a pattern variable occurs in more than one var-table,
+then we want the data from the first such table.
+
+So given that we are matching in the context of a list of dependency-ordered
+theories, we want to use a corresponding list of match contexts,
+one for each theory.
+A match context for a theory contains all the laws of that theory,
+along with a dependency-ordered list of the var-tables,
+including that of the theory itself,
+as well as those from all subsequent theories.
+\begin{code}
+type MatchContext
+  = ( [Law]        -- all laws of this theory
+    , [VarTable] ) -- all known variables here, and in dependencies
+\end{code}
+
+Given a list of theories, we generate a list of match-contexts:
+\begin{code}
+buildMatchContext :: [Theory] -> [MatchContext]
+buildMatchContext [] = []
+buildMatchContext [thy] = [ (laws thy, [knownV thy]) ]
+buildMatchContext (thy:thys)
+  = let mcs'@((_,vts'):_) = buildMatchContext thys
+    in (laws thy, knownV thy : vts') : mcs'
+\end{code}
 
 \newpage
 \subsection{Assertion Matching}
 
-\textbf{We need MATCH CONTEXTS because each match of a goal against
-a law in a given theory can only see the laws and known variables
-of that theory, plus those upon which it depends.}
-Now, the code to match laws.
+First, given list of match-contexts, systematically work through them.
+\begin{code}
+matchInContexts :: TheLogic -> [MatchContext] -> Term -> Matches
+matchInContexts logic [] t = []
+matchInContexts logic ((lws,vts):mcs') t
+  = matchLaws logic vts t lws ++ matchInContexts logic mcs' t
+\end{code}
+
+Now, the code to match laws, given a context.
 Bascially we run down the list of laws,
 returning any matches we find.
 \begin{code}

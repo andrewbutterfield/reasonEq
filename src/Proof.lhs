@@ -26,13 +26,13 @@ module Proof
  , numberList
  ) where
 
--- import Data.Set (Set)
--- import qualified Data.Set as S
+import Data.Set (Set)
+import qualified Data.Set as S
 import Data.Maybe
 --
 import Utilities
 import LexBase
--- import Variables
+import Variables
 import AST
 import SideCond
 import TermZipper
@@ -379,9 +379,39 @@ splitAnd _ t           =  [t]
 A key function is one that makes all unknown variables in a term become known.
 \begin{code}
 makeUnknownKnown :: [Theory] -> Term -> VarTable
-makeUnknownKnown thys t = newVarTable -- for now.....
+makeUnknownKnown thys t
+  = let
+     fvars = S.toList $ freeVars t
+     vts = map knownV thys
+    in scanFreeForUnknown vts newVarTable fvars
+
+scanFreeForUnknown :: [VarTable] -> VarTable -> VarList -> VarTable
+scanFreeForUnknown _ vt [] = vt
+scanFreeForUnknown vts vt (StdVar v:rest)
+  = scanFreeForUnknown vts (checkVarStatus vts vt v) rest
+scanFreeForUnknown vts vt (LstVar lv:rest)
+  = scanFreeForUnknown vts (checkLVarStatus vts vt lv) rest
+
+checkVarStatus :: [VarTable] -> VarTable -> Variable -> VarTable
+checkVarStatus vts vt v
+  = case lookupVarTables vts v of
+      UnknownVar
+       -> case addKnownVar v ArbType vt of
+            Nothing   ->  vt -- best we can do --- shouldn't happen?
+            Just vt'  ->  vt'
+      _               ->  vt
+
+checkLVarStatus :: [VarTable] -> VarTable -> ListVar -> VarTable
+checkLVarStatus vts vt (LVbl v _ _)
+  = case lookupLVarTables vts v of
+      UnknownListVar
+       -> case addAbstractVarList v vt of
+            Nothing   ->  vt -- best we can do --- shouldn't happen?
+            Just vt'  ->  vt'
+      _               ->  vt
 \end{code}
 
+\newpage
 \subsection{Sequent Zipper}
 
 We will need a zipper for sequents (and ante) as we can focus in on any term

@@ -272,7 +272,8 @@ Given any conjecture we want to determine which strategies apply
 and provide a choice of sequents.
 We first flatten the implication (if any),
 \begin{code}
-availableStrategies :: TheLogic -> [Theory] -> (String,Assertion) -> [Sequent]
+availableStrategies :: TheLogic -> [Theory] -> (String,Assertion)
+                    -> [(String,Sequent)]
 availableStrategies theLogic thys (nm,(tconj,sc))
   = catMaybes
      [ reduce  theLogic thys cflat
@@ -288,9 +289,10 @@ and then use the following functions to produce a sequent, if possible.
    \mathcal L \vdash C \equiv \true
 \end{eqnarray*}
 \begin{code}
-reduce :: Monad m => TheLogic -> [Theory] -> (String,Assertion) -> m Sequent
+reduce :: Monad m => TheLogic -> [Theory] -> (String,Assertion)
+       -> m (String, Sequent)
 reduce logic thys (nm,(t,sc))
-  = return $ Sequent thys hthry sc t $ theTrue logic
+  = return ( "reduce", Sequent thys hthry sc t $ theTrue logic )
   where hthry = Theory ("H."++nm) [] $ makeUnknownKnown thys t
 \end{code}
 
@@ -300,10 +302,11 @@ reduce logic thys (nm,(t,sc))
    \mathcal L \vdash C_1 \equiv C_2
 \end{eqnarray*}
 \begin{code}
-redboth :: Monad m => TheLogic -> [Theory] -> (String,Assertion) -> m Sequent
+redboth :: Monad m => TheLogic -> [Theory] -> (String,Assertion)
+        -> m (String, Sequent)
 redboth logic thys (nm,(t@(Cons tk i [tl,tr]),sc))
   | i == theEqv logic
-      = return $ Sequent thys hthry sc tl tr
+      = return ( "redboth", Sequent thys hthry sc tl tr )
   where hthry = Theory ("H."++nm) [] $ makeUnknownKnown thys t
 redboth logic thys (nm,(t,sc)) = fail "redboth not applicable"
 \end{code}
@@ -314,10 +317,11 @@ redboth logic thys (nm,(t,sc)) = fail "redboth not applicable"
    \mathcal L,\splitand(H) \vdash (C \equiv \true)
 \end{eqnarray*}
 \begin{code}
-assume :: Monad m => TheLogic -> [Theory] -> (String,Assertion) -> m Sequent
+assume :: Monad m => TheLogic -> [Theory] -> (String,Assertion)
+       -> m (String, Sequent)
 assume logic thys (nm,(t@(Cons tk i [ta,tc]),sc))
   | i == theImp logic
-    = return $ Sequent thys hthry sc tc $ theTrue logic
+    = return ( "assume", Sequent thys hthry sc tc $ theTrue logic )
   where
     hlaws = map mkHLaw $ zip [1..] $ splitAnte logic ta
     mkHLaw (i,t) = ("H."++nm++"."++show i,(t,scTrue))
@@ -336,7 +340,8 @@ splitAnte _        t     =  [t]
    \mathcal L,\splitand(H) \vdash C_1 \equiv C_2
 \end{eqnarray*}
 \begin{code}
-asmboth :: Monad m => TheLogic -> [Theory] -> (String,Assertion) -> m Sequent
+asmboth :: Monad m => TheLogic -> [Theory] -> (String,Assertion)
+        -> m (String, Sequent)
 asmboth logic thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{code}
 
@@ -347,7 +352,8 @@ asmboth logic thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{eqnarray*}
 \begin{code}
 -- actually, this is done under the hood
-trade :: Monad m => TheLogic -> [Theory] -> (String,Assertion) -> m Sequent
+trade :: Monad m => TheLogic -> [Theory] -> (String,Assertion)
+      -> m (String, Sequent)
 trade logic thys (nm,(t,sc)) = fail "trade not applicable"
 \end{code}
 
@@ -358,7 +364,8 @@ trade logic thys (nm,(t,sc)) = fail "trade not applicable"
 \end{eqnarray*}
 \begin{code}
 -- actually, this is done under the hood
-trdboth :: Monad m => TheLogic -> [Theory] -> (String,Assertion) -> m Sequent
+trdboth :: Monad m => TheLogic -> [Theory] -> (String,Assertion)
+        -> m (String, Sequent)
 trdboth logic thys (nm,(t,sc)) = fail "trdboth not applicable"
 \end{code}
 
@@ -677,6 +684,7 @@ type LiveProof
   = ( String -- conjecture name
     , Assertion -- assertion being proven
     , SideCond -- side condition
+    , String -- strategy
     , [MatchContext] -- current matching contexts
     , SeqZip  -- current term, focussed
     , [Int] -- current zipper descent arguments (cleft,cright,hyp=1,2,3)
@@ -713,9 +721,10 @@ type Justification
 
 -- temporary
 dispLiveProof :: LiveProof -> String
-dispLiveProof ( nm, _, sc, _, tz, dpath, mtchs, steps )
+dispLiveProof ( nm, _, sc, strat, _, tz, dpath, mtchs, steps )
  = unlines'
      ( ( ("Proof for '"++red nm++"'  "++trSideCond sc)
+       : ("by "++strat)
        : " ..."
        : map shLiveStep (reverse steps)
        )
@@ -730,7 +739,7 @@ dispSeqZip :: SeqZip -> String
 dispSeqZip (tz,Sequent' _ sc conj')  =  unlines' $ dispConjParts tz sc conj'
 
 dispConjParts tz sc (CLaws' hthry Lft rightC)
-  =     [ "R-target = "++trTerm 0 rightC++"  "++trSideCond sc]
+  =     [ "R-target = "++trTerm 0 rightC++"  "++trSideCond sc, "" ]
      ++ (dispHypotheses hthry)
         : [ _vdash ]
      ++ [trTermZip tz]
@@ -744,7 +753,8 @@ dispConjParts tz sc (CLaws' hthry Rght leftC)
 dispConjParts tz sc _
  = [trTermZip tz ++ "  "++trSideCond sc++" (Hypotheses not shown)"]
 
-dispHypotheses hthry  =  showLaws $ laws $ hthry
+dispHypotheses hthry  =  numberList' showHyp $ laws $ hthry
+showHyp (_,(t,_)) = trTerm 0 t
 
 dispTermZip :: TermZip -> String
 dispTermZip tz = blue $ trTerm 0 (getTZ tz)
@@ -773,6 +783,7 @@ We then continue with a proof (record):
 type Proof
   = ( String -- assertion name
     , Assertion
+    , String -- Strategy
     , Calculation -- Simple calculational proofs for now
     )
 
@@ -782,8 +793,9 @@ type Calculation
 
 
 displayProof :: Proof -> String
-displayProof (pnm,(trm,sc),(trm',steps))
+displayProof (pnm,(trm,sc),strat,(trm',steps))
  = unlines' ( (pnm ++ " : " ++ trTerm 0 trm ++ " " ++ trSideCond sc)
+              : ("by '"++strat++"'")
               : "---"
               : ( map shStep steps )
               ++ [trTerm 0 trm'] )
@@ -801,14 +813,15 @@ We need to setup a proof from a conjecture:
 \begin{code}
 startProof :: TheLogic -> [Theory] -> String -> Assertion -> LiveProof
 startProof logic thys nm asn@(t,sc)
-  = (nm, asn, sc, mcs, sz, atCleft, [], [])
+  = (nm, asn, sc, strat, mcs, sz, atCleft, [], [])
   where
-    sz = leftConjFocus $ fromJust $ reduce logic thys (nm,asn)
+    (strat,seq) = fromJust $ reduce logic thys (nm,asn)
+    sz = leftConjFocus seq
     mcs = buildMatchContext thys
 
-launchProof :: [Theory] -> String -> Assertion -> Sequent -> LiveProof
-launchProof thys nm asn@(t,sc) seq
-  = (nm, asn, sc, mcs, sz, atCleft, [], [])
+launchProof :: [Theory] -> String -> Assertion -> (String,Sequent) -> LiveProof
+launchProof thys nm asn@(t,sc) (str,seq)
+  = (nm, asn, sc, str, mcs, sz, atCleft, [], [])
   where
     sz = leftConjFocus seq
     hthy = hyp seq
@@ -820,7 +833,7 @@ launchProof thys nm asn@(t,sc) seq
 We need to determine when a live proof is complete:
 \begin{code}
 proofComplete :: TheLogic -> LiveProof -> Bool
-proofComplete logic (_, _, _, _, sz, _, _, _)
+proofComplete logic (_, _, _, _, _, sz, _, _, _)
   =  let sequent = exitSeqZipper sz
      in cleft sequent == cright sequent -- should be alpha-equivalent
 \end{code}
@@ -828,8 +841,8 @@ proofComplete logic (_, _, _, _, sz, _, _, _)
 We need to convert a complete live proof to a proof:
 \begin{code}
 finaliseProof :: LiveProof -> Proof
-finaliseProof (nm, asn, _, _, (tz,_), _, _, steps)
-  = (nm, asn, (exitTZ tz, reverse steps))
+finaliseProof (nm, asn, _, strat, _, (tz,_), _, _, steps)
+  = (nm, asn, strat, (exitTZ tz, reverse steps))
 \end{code}
 
 \newpage
@@ -932,7 +945,7 @@ A common idiom is to show a list of items as a numbered list
 to make selecting them easier:
 \begin{code}
 numberList showItem list
-  =  unlines $ map (numberItem showItem) $  zip [1..] list
+  =  unlines' $ map (numberItem showItem) $  zip [1..] list
 numberItem showItem (i,item)
   =  pad 4 istr ++ istr ++ ". " ++ showItem item
   where istr = show i
@@ -941,6 +954,19 @@ pad w str
   | ext > 0    =  replicate ext ' '
   | otherwise  =  ""
   where ext = w - length str
+\end{code}
+
+Sometimes, we want the number afterwards:
+\begin{code}
+numberList' showItem list
+  = let
+     lstrings = map showItem' list
+     showItem' item = (istr,length istr) where istr = showItem item
+     maxw = maximum $ map snd lstrings
+    in unlines' $ map (numberItem' (maxw+2)) $ zip [1..] lstrings
+numberItem' maxw (i,(str,strlen))
+  = str ++ replicate (maxw-strlen) ' ' ++ pad 2 istr ++ istr
+  where istr = show i
 \end{code}
 
 Showing theories:

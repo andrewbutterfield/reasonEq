@@ -87,6 +87,7 @@ initState []
        let reqs = ReqState thePropositionalLogic
                            [theoryPropositions]
                            propConjs Nothing []
+       -- need to restore saved persistent state on startup
        return reqs
 
 summariseREqS :: REqState -> String
@@ -134,6 +135,7 @@ loop reqs = do
 
 -- may ask for user confirmation, and save? stuff..
 quit reqs = outputStrLn "Goodbye!"
+-- need to save persistent state on exit
 \end{code}
 
 REPL command repository types and lookup:
@@ -321,6 +323,7 @@ proofREPL' reqs proof
             let prf = finaliseProof proof
             outputStrLn $ displayProof prf
             return (proof_ Nothing $ proofs__ (prf:) reqs)
+            -- Need to remove from conjectures and add to Laws
        else
          do minput <- getInputLine "proof: "
             case minput of

@@ -288,12 +288,13 @@ axImplDef
 \end{code}
 
 \begin{code}
-propLaws :: [(String,Assertion)]
+propLaws :: [Law]
 propLaws
-  = [ axTrue, axEqvRefl, axEqvAssoc, axEqvSymm
-    , axFalseDef, axNotEqvDistr
-    , axOrSymm, axOrAssoc, axOrIdem, axOrEqvDistr, axExclMidl
-    , axGoldRule, axImplDef ]
+  = map labelAsAxiom
+      [ axTrue, axEqvRefl, axEqvAssoc, axEqvSymm
+      , axFalseDef, axNotEqvDistr
+      , axOrSymm, axOrAssoc, axOrIdem, axOrEqvDistr, axExclMidl
+      , axGoldRule, axImplDef ]
 \end{code}
 
 \newpage
@@ -343,9 +344,9 @@ cjWeakImp
 \end{code}
 
 \begin{code}
-propConjs :: [(String,Assertion)]
+propConjs :: [Law]
 propConjs
-  = [ cjEqvId, cjOrZero, cjWeakImp ]
+  = map labelAsConj [ cjEqvId, cjOrZero, cjWeakImp ]
 \end{code}
 
 \subsection{The Propositional Theory}

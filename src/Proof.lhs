@@ -8,7 +8,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Proof
  ( TheLogic(..), flattenTheEquiv
- , Assertion, Law, Theory(..), Sequent(..)
+ , Assertion, Provenance, Law, Theory(..), Sequent(..)
+ , labelAsAxiom, labelAsConj
  , availableStrategies
  , SeqZip
  , leftConjFocus, rightConjFocus, hypConjFocus, exitSeqZipper
@@ -223,9 +224,20 @@ An assertion is simply a predicate term coupled with side-conditions.
 type Assertion = (Term, SideCond)
 \end{code}
 
-Laws always have names, so a law is a named-assertion:
+Laws always have names, so a law is a named-assertion.
+However, we also want to specify the provenance of each law.
 \begin{code}
-type Law = (String,Assertion)
+data Provenance
+  = Axiom       -- asserted as True
+  | Hypothesis  -- local hypothesis (i.e., sequent antecedent)
+  | Proven      -- demonstrated by proof
+  | Conjecture  -- totally untrustworthy
+  deriving (Eq,Ord,Show,Read)
+type Law = (String,Assertion,Provenance)
+
+labelAsAxiom, labelAsConj :: (String,Assertion) -> Law
+labelAsAxiom (nm,asn) = (nm,asn,Axiom)
+labelAsConj  (nm,asn) = (nm,asn,Conjecture)
 \end{code}
 
 A theory is a collection of laws linked
@@ -272,14 +284,14 @@ Given any conjecture we want to determine which strategies apply
 and provide a choice of sequents.
 We first flatten the implication (if any),
 \begin{code}
-availableStrategies :: TheLogic -> [Theory] -> (String,Assertion)
+availableStrategies :: TheLogic -> [Theory] -> Law
                     -> [(String,Sequent)]
-availableStrategies theLogic thys (nm,(tconj,sc))
+availableStrategies theLogic thys (nm,(tconj,sc),prov)
   = catMaybes
      [ reduce  theLogic thys cflat
      , redboth theLogic thys cflat
      , assume  theLogic thys cflat ]
-  where cflat = (nm,(flattenTheImp theLogic tconj,sc))
+  where cflat = (nm,(flattenTheImp theLogic tconj,sc),prov)
 \end{code}
 and then use the following functions to produce a sequent, if possible.
 
@@ -324,7 +336,7 @@ assume logic thys (nm,(t@(Cons tk i [ta,tc]),sc))
     = return ( "assume", Sequent thys hthry sc tc $ theTrue logic )
   where
     hlaws = map mkHLaw $ zip [1..] $ splitAnte logic ta
-    mkHLaw (i,t) = ("H."++nm++"."++show i,(t,scTrue))
+    mkHLaw (i,t) = ("H."++nm++"."++show i,(t,scTrue),Hypothesis)
     hthry = Theory ("H."++nm) hlaws $ makeUnknownKnown thys t
 assume _ _ _ = fail "assume not applicable"
 
@@ -430,13 +442,14 @@ The sequent type can be summarised algebraically as
 \begin{eqnarray*}
    S &=& T^* \times T \times SC \times t \times t
 \\ T &=& N \times L^* \times VD
-\\ L &=& N \times (t \times SC)
+\\ L &=& N \times (t \times SC) \times P
 \end{eqnarray*}
 where $T$ is \texttt{Theory},
 $VD$ is \texttt{VarData},
 $L$ is \texttt{Law},
 $N$ is \texttt{Name},
 $SC$ is \texttt{SideCond},
+$P$ is \texttt{Provenance},
 and $t$ is \texttt{Term}.
 
 Re-arranging:
@@ -447,16 +460,16 @@ Re-arranging:
 \\&=&\textrm{Expanding $T$}
 \\&& T^* \times SC \times (N \times L^* \times VD) \times t^2
 \\&=&\textrm{Expanding $L$}
-\\&& T^* \times SC \times (N \times (N \times (t \times SC))^* \times VD) \times t^2
+\\&& T^* \times SC \times (N \times (N \times (t \times SC)\times P)^* \times VD) \times t^2
 \\&=&\textrm{Flattening, re-arranging}
-\\&& T^* \times SC \times N \times VD \times (N \times SC \times t)^* \times t^2
+\\&& T^* \times SC \times N \times VD \times (N \times SC \times P \times t)^* \times t^2
 \\&=&\textrm{Flattening, re-arranging}
 \\&& A_1 \times (A_2 \times t)^* \times t^2
 \end{eqnarray*}
 where
 \begin{eqnarray*}
    A_1  &=& T^* \times SC \times N \times VD
-\\ A_2 &=& N \times SC
+\\ A_2 &=& N \times SC \times P
 \end{eqnarray*}
 
 Differentiating:
@@ -493,27 +506,30 @@ We now refactor this by expanding the $A_i$ and merging
      \quad+\quad
      A_1 \times (A_2 \times t)^* \times A_2 \times (A_2 \times t)^* \times t^2
 \\&=&\textrm{Expand $A_2$}
-\\&& A_1 \times (N \times SC \times t)^* \times \mathbf{2} \times t
+\\&& A_1 \times (N \times SC \times P \times t)^* \times \mathbf{2} \times t
    \quad+\quad
-   A_1 \times (N \times SC \times t)^* \times N \times SC \times (N \times SC \times t)^* \times t^2
+   A_1 \times (N \times SC \times P \times t)^*
+       \times N \times SC \times P
+       \times (N \times SC \times P \times t)^*
+       \times t^2
 \\&=&\textrm{Fold instances of  $L$}
 \\&& A_1 \times L^* \times \mathbf{2} \times t
    \quad+\quad
-   A_1 \times L^* \times N \times SC \times L^* \times t^2
+   A_1 \times L^* \times N \times SC \times P \times L^* \times t^2
 \\&=&\textrm{Expand $A_1$}
 \\&& T^* \times SC \times N \times VD \times L^* \times \mathbf{2} \times t
    \quad+\quad
-   T^* \times SC \times N \times VD \times L^* \times N \times SC \times L^* \times t^2
+   T^* \times SC \times N \times VD \times L^* \times N \times SC \times P \times L^* \times t^2
 \\&=&\textrm{Fold instance of  $T$}
 \\&& T^* \times SC \times T \times \mathbf{2} \times t
    \quad+\quad
-   T^* \times SC \times N \times VD \times L^* \times N \times SC \times L^* \times t^2
+   T^* \times SC \times N \times VD \times L^* \times N \times SC \times P \times L^* \times t^2
 \\&=&\textrm{Common factor}
 \\&& T^* \times SC \times
    \left(\quad
           T \times \mathbf{2} \times t
           \quad+\quad
-          N \times VD \times L^* \times N \times SC \times L^* \times t^2
+          N \times VD \times L^* \times N \times SC \times P \times L^* \times t^2
    \quad\right)
 \end{eqnarray*}
 
@@ -535,7 +551,7 @@ data Sequent'
 Now, the two variations
 \begin{eqnarray*}
   && T \times \mathbf{2} \times t
-\\&& N \times VD \times L^* \times N \times SC \times L^* \times t^2
+\\&& N \times VD \times L^* \times N \times SC \times P \times L^* \times t^2
 \end{eqnarray*}
 \begin{code}
 data Laws'
@@ -550,6 +566,7 @@ data Laws'
     , hbefore :: [Law] -- hyp. laws before focus (reversed)
     , fhName  :: String -- focus hypothesis name
     , fhSC    :: SideCond -- focus hypothesis sc (usually true)
+    , fhProv  :: Provenance -- focus hypothesis provenance (?)
     , hafter  :: [Law] -- hyp. laws after focus
     , cleft0  :: Term -- left conjecture
     , cright0 :: Term -- right conjecture
@@ -594,12 +611,12 @@ is a little more tricky:
 hypConjFocus :: Monad m => Int -> Sequent -> m SeqZip
 hypConjFocus i sequent
   = do let (Theory htnm hlaws hknown) = hyp sequent
-       (before,(hnm,(ht,hsc)),after) <- peel i hlaws
+       (before,(hnm,(ht,hsc),hprov),after) <- peel i hlaws
        return ( mkTZ ht
               , Sequent' (ante sequent)
                          (sc sequent) $
                          HLaws' htnm hknown
-                                before hnm hsc after
+                                before hnm hsc hprov after
                                 (cleft sequent) (cright sequent) )
 \end{code}
 
@@ -618,8 +635,8 @@ exitSQ t sequent'
 exitLaws :: Term -> Laws' -> (Theory, Term, Term)
 exitLaws currT (CLaws' h0 Lft  othrC)  =  (h0, currT, othrC)
 exitLaws currT (CLaws' h0 Rght othrC)  =  (h0, othrC, currT)
-exitLaws currT  (HLaws' hnm hkn hbef fnm fsc haft cl cr)
-  =  (Theory hnm (reverse hbef ++ (fnm,(currT,fsc)) : haft) hkn, cl, cr)
+exitLaws currT  (HLaws' hnm hkn hbef fnm fsc fprov haft cl cr)
+  =  (Theory hnm (reverse hbef ++ (fnm,(currT,fsc),fprov) : haft) hkn, cl, cr)
 \end{code}
 
 \subsubsection{Sequent Zipper Moves}
@@ -645,7 +662,7 @@ seqGoRight sz@(_,Sequent' _ _ (CLaws' _ Rght _))  =  (False,sz) -- already Right
 seqGoRight sz = (True,rightConjFocus $ exitSeqZipper sz)
 
 seqGoHyp :: Int -> SeqZip -> (Bool, SeqZip)
-seqGoHyp i sz@(_,Sequent' _ _ (HLaws' _ _ bef _ _ _ _ _))
+seqGoHyp i sz@(_,Sequent' _ _ (HLaws' _ _ bef _ _ _ _ _ _))
                            | i+1 == length bef  =  (False,sz) -- already at ith.
 seqGoHyp i sz
   =  case hypConjFocus i $ exitSeqZipper sz of
@@ -754,7 +771,7 @@ dispConjParts tz sc _
  = [trTermZip tz ++ "  "++trSideCond sc++" (Hypotheses not shown)"]
 
 dispHypotheses hthry  =  numberList' showHyp $ laws $ hthry
-showHyp (_,(t,_)) = trTerm 0 t
+showHyp (_,(t,_),_) = trTerm 0 t
 
 dispTermZip :: TermZip -> String
 dispTermZip tz = blue $ trTerm 0 (getTZ tz)
@@ -904,12 +921,12 @@ For each law,
 we check its top-level to see if it is an instance of \texttt{theEqv},
 in which case we try matches against all possible variations.
 \begin{code}
-domatch logic vts tC (n,asn@(tP@(Cons tk i ts@(_:_:_)),sc))
+domatch logic vts tC (n,asn@(tP@(Cons tk i ts@(_:_:_)),sc),prov)
   | i == theEqv logic  =  concat $ map (eqvMatch vts tC) $ listsplit ts
   where
       -- tC :: equiv(tsP), with replacement equiv(tsR).
     eqvMatch vts tC (tsP,tsR)
-      = justMatch (eqv tsR) vts tC (n,(eqv tsP,sc))
+      = justMatch (eqv tsR) vts tC (n,(eqv tsP,sc),prov)
     eqv []   =  theTrue logic
     eqv [t]  =  t
     eqv ts   =  Cons tk i ts
@@ -920,7 +937,7 @@ Otherwise we just match against the whole law.
 domatch logic vts tC law
  = justMatch (theTrue logic) vts tC law
 
-justMatch repl vts tC (n,asn@(tP,_))
+justMatch repl vts tC (n,asn@(tP,_),_)
  = case match vts tC tP of
      Nothing -> []
      Just bind -> [(n,asn,bind,repl)]
@@ -981,8 +998,8 @@ showTheories (thry:_)
 showLaws lws  =  numberList (showLaw $ nameWidth lws) lws
 
 nameWidth lws = maximum $ map (length . getName) lws
-getName (nm,_) = nm
-showLaw w (nm,(t,sc))
+getName (nm,_,_) = nm
+showLaw w (nm,(t,sc),prov)
   =    ldq ++ nm ++ rdq ++ pad w nm
     ++ "  " ++ trTerm 0 t ++ "  "++trSideCond sc
 \end{code}

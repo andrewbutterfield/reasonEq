@@ -65,7 +65,7 @@ data REqState
  = ReqState {
       logic :: TheLogic
     , theories :: [Theory]
-    , conj :: [(String,Assertion)]
+    , conj :: [Law]
     , proof :: Maybe LiveProof
     , proofs :: [Proof]
     }
@@ -267,7 +267,7 @@ doProof args reqs
               case nlookup (getProofArgs args) (conj reqs) of
                 Nothing  ->  do outputStrLn "invalid conjecture number"
                                 return reqs
-                Just nconj@(nm,asn)
+                Just nconj@(nm,asn,_)
                  -> do let strats
                             = availableStrategies (logic reqs)
                                                   thys
@@ -302,7 +302,8 @@ presentSeq (str,seq)
     trTerm 0 (cright seq)
 
 presentHyp hthy
-  = intercalate "," $ map (trTerm 0 . fst . snd) $ laws hthy
+  = intercalate "," $ map (trTerm 0 . fst . snd3) $ laws hthy
+  where snd3(_,x,_) = x
 \end{code}
 
 \newpage
@@ -417,7 +418,7 @@ lawInstantiateProof reqs proof@( nm, asn, sc, strat
          case minput of
            Just str@(_:_) | all isDigit str
              -> case nlookup (read str) rslaws of
-                 Just law@(nm,asn)
+                 Just law@(nm,asn,prov)
                    -> do outputStrLn ("Law Chosen: "++nm)
                          instantiateLaw reqs proof law
                  _ -> proofREPL reqs proof
@@ -429,7 +430,7 @@ lawInstantiateProof reqs proof@( nm, asn, sc, strat
 
 instantiateLaw reqs proof@( pnm, asn, psc, strat
                           , mcs, (tz,seq'), dpath, matches, steps)
-                    law@(lnm,(lawt,lsc))
+                    law@(lnm,(lawt,lsc),_)
  = do lbind <- generateLawInstanceBind (map knownV $ theories reqs)
                                        (exitTZ tz) psc law
       case instantiateSC lbind lsc of
@@ -457,7 +458,7 @@ Dialogue to get law instantiation binding.
 We want a binding for every unknown variable in the law.
 We display all such unknowns, and then ask for instantiations.
 \begin{code}
-generateLawInstanceBind vts gterm gsc law@(lnm,(lawt,lsc))
+generateLawInstanceBind vts gterm gsc law@(lnm,(lawt,lsc,_))
  = do let lFreeVars = stdVarSetOf $ S.filter (isUnknownGVar vts)
                                   $ freeVars lawt
       outputStrLn ("Free unknown law variables: "++trVariableSet lFreeVars)

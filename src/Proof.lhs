@@ -291,7 +291,7 @@ availableStrategies theLogic thys (nm,(tconj,sc),prov)
      [ reduce  theLogic thys cflat
      , redboth theLogic thys cflat
      , assume  theLogic thys cflat ]
-  where cflat = (nm,(flattenTheImp theLogic tconj,sc),prov)
+  where cflat = (nm,(flattenTheImp theLogic tconj,sc))
 \end{code}
 and then use the following functions to produce a sequent, if possible.
 

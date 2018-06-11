@@ -458,7 +458,7 @@ Dialogue to get law instantiation binding.
 We want a binding for every unknown variable in the law.
 We display all such unknowns, and then ask for instantiations.
 \begin{code}
-generateLawInstanceBind vts gterm gsc law@(lnm,(lawt,lsc,_))
+generateLawInstanceBind vts gterm gsc law@(lnm,(lawt,lsc),lprov)
  = do let lFreeVars = stdVarSetOf $ S.filter (isUnknownGVar vts)
                                   $ freeVars lawt
       outputStrLn ("Free unknown law variables: "++trVariableSet lFreeVars)

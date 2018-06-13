@@ -344,9 +344,9 @@ cjWeakImp
 \end{code}
 
 \begin{code}
-propConjs :: [Law]
+propConjs :: [NmdAssertion]
 propConjs
-  = map labelAsConj [ cjEqvId, cjOrZero, cjWeakImp ]
+  = [ cjEqvId, cjOrZero, cjWeakImp ]
 \end{code}
 
 \subsection{The Propositional Theory}

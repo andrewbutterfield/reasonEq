@@ -8,8 +8,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Proof
  ( TheLogic(..), flattenTheEquiv
- , Assertion, Provenance, Law, Theory(..), Sequent(..)
- , labelAsAxiom, labelAsConj
+ , Assertion, NmdAssertion, Provenance, Law
+ , labelAsAxiom, labelAsProven
+ , Theory(..), Sequent(..)
  , availableStrategies
  , SeqZip
  , leftConjFocus, rightConjFocus, hypConjFocus, exitSeqZipper
@@ -23,7 +24,7 @@ module Proof
  , displayMatches
  , buildMatchContext, matchInContexts
  , proofComplete, finaliseProof
- , showLogic, showTheories, showLaws, showLivePrf, showProofs
+ , showLogic, showTheories, showNmdAssns, showLaws, showLivePrf, showProofs
  , numberList
  ) where
 
@@ -224,20 +225,23 @@ An assertion is simply a predicate term coupled with side-conditions.
 type Assertion = (Term, SideCond)
 \end{code}
 
-Laws always have names, so a law is a named-assertion.
+Conjectures, hypotheses and laws always have names,
+so we introduce the idea of a named-assertion:
+\begin{code}
+type NmdAssertion = (String,Assertion)
+\end{code}
 However, we also want to specify the provenance of each law.
 \begin{code}
 data Provenance
   = Axiom       -- asserted as True
-  | Hypothesis  -- local hypothesis (i.e., sequent antecedent)
   | Proven      -- demonstrated by proof
-  | Conjecture  -- totally untrustworthy
   deriving (Eq,Ord,Show,Read)
-type Law = (String,Assertion,Provenance)
 
-labelAsAxiom, labelAsConj :: (String,Assertion) -> Law
-labelAsAxiom (nm,asn) = (nm,asn,Axiom)
-labelAsConj  (nm,asn) = (nm,asn,Conjecture)
+type Law = (NmdAssertion,Provenance)
+
+labelAsAxiom, labelAsProven :: NmdAssertion -> Law
+labelAsAxiom  nasn  =  (nasn, Axiom)
+labelAsProven nasn  =  (nasn, Proven)
 \end{code}
 
 A theory is a collection of laws linked
@@ -280,13 +284,14 @@ data Sequent
 
 \subsubsection{Sequent Strategies}
 
-Given any conjecture we want to determine which strategies apply
+Given any conjecture (named assertion)
+we want to determine which strategies apply
 and provide a choice of sequents.
 We first flatten the implication (if any),
 \begin{code}
-availableStrategies :: TheLogic -> [Theory] -> Law
+availableStrategies :: TheLogic -> [Theory] -> NmdAssertion
                     -> [(String,Sequent)]
-availableStrategies theLogic thys (nm,(tconj,sc),prov)
+availableStrategies theLogic thys (nm,(tconj,sc))
   = catMaybes
      [ reduce  theLogic thys cflat
      , redboth theLogic thys cflat
@@ -301,7 +306,7 @@ and then use the following functions to produce a sequent, if possible.
    \mathcal L \vdash C \equiv \true
 \end{eqnarray*}
 \begin{code}
-reduce :: Monad m => TheLogic -> [Theory] -> (String,Assertion)
+reduce :: Monad m => TheLogic -> [Theory] -> NmdAssertion
        -> m (String, Sequent)
 reduce logic thys (nm,(t,sc))
   = return ( "reduce", Sequent thys hthry sc t $ theTrue logic )
@@ -314,7 +319,7 @@ reduce logic thys (nm,(t,sc))
    \mathcal L \vdash C_1 \equiv C_2
 \end{eqnarray*}
 \begin{code}
-redboth :: Monad m => TheLogic -> [Theory] -> (String,Assertion)
+redboth :: Monad m => TheLogic -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
 redboth logic thys (nm,(t@(Cons tk i [tl,tr]),sc))
   | i == theEqv logic
@@ -329,14 +334,14 @@ redboth logic thys (nm,(t,sc)) = fail "redboth not applicable"
    \mathcal L,\splitand(H) \vdash (C \equiv \true)
 \end{eqnarray*}
 \begin{code}
-assume :: Monad m => TheLogic -> [Theory] -> (String,Assertion)
+assume :: Monad m => TheLogic -> [Theory] -> NmdAssertion
        -> m (String, Sequent)
 assume logic thys (nm,(t@(Cons tk i [ta,tc]),sc))
   | i == theImp logic
     = return ( "assume", Sequent thys hthry sc tc $ theTrue logic )
   where
     hlaws = map mkHLaw $ zip [1..] $ splitAnte logic ta
-    mkHLaw (i,t) = ("H."++nm++"."++show i,(t,scTrue),Hypothesis)
+    mkHLaw (i,trm) = labelAsAxiom ("H."++nm++"."++show i,(trm,scTrue))
     hthry = Theory ("H."++nm) hlaws $ makeUnknownKnown thys t
 assume _ _ _ = fail "assume not applicable"
 
@@ -352,7 +357,7 @@ splitAnte _        t     =  [t]
    \mathcal L,\splitand(H) \vdash C_1 \equiv C_2
 \end{eqnarray*}
 \begin{code}
-asmboth :: Monad m => TheLogic -> [Theory] -> (String,Assertion)
+asmboth :: Monad m => TheLogic -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
 asmboth logic thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{code}
@@ -364,7 +369,7 @@ asmboth logic thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{eqnarray*}
 \begin{code}
 -- actually, this is done under the hood
-trade :: Monad m => TheLogic -> [Theory] -> (String,Assertion)
+trade :: Monad m => TheLogic -> [Theory] -> NmdAssertion
       -> m (String, Sequent)
 trade logic thys (nm,(t,sc)) = fail "trade not applicable"
 \end{code}
@@ -376,7 +381,7 @@ trade logic thys (nm,(t,sc)) = fail "trade not applicable"
 \end{eqnarray*}
 \begin{code}
 -- actually, this is done under the hood
-trdboth :: Monad m => TheLogic -> [Theory] -> (String,Assertion)
+trdboth :: Monad m => TheLogic -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
 trdboth logic thys (nm,(t,sc)) = fail "trdboth not applicable"
 \end{code}
@@ -611,7 +616,7 @@ is a little more tricky:
 hypConjFocus :: Monad m => Int -> Sequent -> m SeqZip
 hypConjFocus i sequent
   = do let (Theory htnm hlaws hknown) = hyp sequent
-       (before,(hnm,(ht,hsc),hprov),after) <- peel i hlaws
+       (before,((hnm,(ht,hsc)),hprov),after) <- peel i hlaws
        return ( mkTZ ht
               , Sequent' (ante sequent)
                          (sc sequent) $
@@ -636,7 +641,7 @@ exitLaws :: Term -> Laws' -> (Theory, Term, Term)
 exitLaws currT (CLaws' h0 Lft  othrC)  =  (h0, currT, othrC)
 exitLaws currT (CLaws' h0 Rght othrC)  =  (h0, othrC, currT)
 exitLaws currT  (HLaws' hnm hkn hbef fnm fsc fprov haft cl cr)
-  =  (Theory hnm (reverse hbef ++ (fnm,(currT,fsc),fprov) : haft) hkn, cl, cr)
+  =  (Theory hnm (reverse hbef ++ ((fnm,(currT,fsc)),fprov) : haft) hkn, cl, cr)
 \end{code}
 
 \subsubsection{Sequent Zipper Moves}
@@ -771,7 +776,7 @@ dispConjParts tz sc _
  = [trTermZip tz ++ "  "++trSideCond sc++" (Hypotheses not shown)"]
 
 dispHypotheses hthry  =  numberList' showHyp $ laws $ hthry
-showHyp (_,(t,_),_) = trTerm 0 t
+showHyp ((_,(trm,_)),_) = trTerm 0 trm
 
 dispTermZip :: TermZip -> String
 dispTermZip tz = blue $ trTerm 0 (getTZ tz)
@@ -921,12 +926,12 @@ For each law,
 we check its top-level to see if it is an instance of \texttt{theEqv},
 in which case we try matches against all possible variations.
 \begin{code}
-domatch logic vts tC (n,asn@(tP@(Cons tk i ts@(_:_:_)),sc),prov)
+domatch logic vts tC ((n,asn@(tP@(Cons tk i ts@(_:_:_)),sc)),prov)
   | i == theEqv logic  =  concat $ map (eqvMatch vts tC) $ listsplit ts
   where
       -- tC :: equiv(tsP), with replacement equiv(tsR).
     eqvMatch vts tC (tsP,tsR)
-      = justMatch (eqv tsR) vts tC (n,(eqv tsP,sc),prov)
+      = justMatch (eqv tsR) vts tC ((n,(eqv tsP,sc)),prov)
     eqv []   =  theTrue logic
     eqv [t]  =  t
     eqv ts   =  Cons tk i ts
@@ -937,7 +942,7 @@ Otherwise we just match against the whole law.
 domatch logic vts tC law
  = justMatch (theTrue logic) vts tC law
 
-justMatch repl vts tC (n,asn@(tP,_),_)
+justMatch repl vts tC ((n,asn@(tP,_)),_)
  = case match vts tC tP of
      Nothing -> []
      Just bind -> [(n,asn,bind,repl)]
@@ -995,13 +1000,20 @@ showTheories (thry:_)
       , trVarTable (knownV thry)
       , showLaws (laws thry) ]
 
-showLaws lws  =  numberList (showLaw $ nameWidth lws) lws
+showNmdAssns nasns  =  numberList (showNmdAssn $ nameWidth nasns)  nasns
+nameWidth lws = maximum $ map (length . fst) lws
 
-nameWidth lws = maximum $ map (length . getName) lws
-getName (nm,_,_) = nm
-showLaw w (nm,(t,sc),prov)
+showNmdAssn w (nm,(trm,sc))
   =    ldq ++ nm ++ rdq ++ pad w nm
-    ++ "  " ++ trTerm 0 t ++ "  "++trSideCond sc
+       ++ "  " ++ trTerm 0 trm ++ "  "++trSideCond sc
+
+showLaws lws  =  numberList (showLaw $ nameWidth $ map fst lws) lws
+
+showLaw w ((nm,(trm,sc)),prov)
+  =    ldq ++ nm ++ rdq ++ showProv prov ++ pad w nm
+    ++ "  " ++ trTerm 0 trm ++ "  "++trSideCond sc
+showProv Axiom   =  _subStr "A"
+showProv Proven  =  _subStr "P"
 \end{code}
 
 Showing Proof:

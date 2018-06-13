@@ -57,23 +57,26 @@ Currently in prototyping mode,
 so this is one large record.
 Later we will nest things.
 In order to support nested records properly,
-for every record field \texttt{f :: Rec -> T},
-we define \texttt{f\_\_ :: (T -> T) -> Rec -> Rec}
-and derive \texttt{f\_ :: T -> Rec -> Rec}.
+for every record field \texttt{fld :: rec -> t},
+we define \texttt{fld\_\_ :: (t -> t) -> rec -> rec}
+and derive \texttt{fld\_ :: t -> rec -> rec}.
+\begin{verbatim}
+fld__ f r = r{fld = f $ fld r} ;  fld_ = fld__ . const
+\end{verbatim}
 \begin{code}
 data REqState
  = ReqState {
       logic :: TheLogic
     , theories :: [Theory]
-    , conj :: [Law]
+    , conj :: [NmdAssertion]
     , proof :: Maybe LiveProof
     , proofs :: [Proof]
     }
-logic__  f r = r{logic  = f $ logic r}  ; logic_   = logic__  . const
+logic__    f r = r{logic    = f $ logic r}   ; logic_    = logic__     . const
 theories__ f r = r{theories = f $ theories r}; theories_ = theories__  . const
-conj__   f r = r{conj   = f $ conj r}   ; conj_    = conj__   . const
-proof__  f r = r{proof  = f $ proof r}  ; proof_   = proof__  . const
-proofs__ f r = r{proofs = f $ proofs r} ; proofs_  = proofs__ . const
+conj__     f r = r{conj     = f $ conj r}    ; conj_     = conj__      . const
+proof__    f r = r{proof    = f $ proof r}   ; proof_    = proof__     . const
+proofs__   f r = r{proofs   = f $ proofs r}  ; proofs_   = proofs__    . const
 \end{code}
 
 \begin{code}
@@ -214,7 +217,7 @@ shProofs = "P"
 showState [cmd] reqs
  | cmd == shLogic  =  doshow reqs $ showLogic $ logic reqs
  | cmd == shTheories  =  doshow reqs $ showTheories $ theories reqs
- | cmd == shConj   =  doshow reqs $ showLaws  $ conj  reqs
+ | cmd == shConj   =  doshow reqs $ showNmdAssns  $ conj  reqs
  | cmd == shLivePrf  =  doshow reqs $ showLivePrf $ proof reqs
  | cmd == shProofs =  doshow reqs $ showProofs $ proofs reqs
 showState _ reqs   =  doshow reqs "unknown 'show' option."
@@ -267,7 +270,7 @@ doProof args reqs
               case nlookup (getProofArgs args) (conj reqs) of
                 Nothing  ->  do outputStrLn "invalid conjecture number"
                                 return reqs
-                Just nconj@(nm,asn,_)
+                Just nconj@(nm,asn)
                  -> do let strats
                             = availableStrategies (logic reqs)
                                                   thys
@@ -302,8 +305,7 @@ presentSeq (str,seq)
     trTerm 0 (cright seq)
 
 presentHyp hthy
-  = intercalate "," $ map (trTerm 0 . fst . snd3) $ laws hthy
-  where snd3(_,x,_) = x
+  = intercalate "," $ map (trTerm 0 . fst . snd . fst) $ laws hthy
 \end{code}
 
 \newpage
@@ -418,7 +420,7 @@ lawInstantiateProof reqs proof@( nm, asn, sc, strat
          case minput of
            Just str@(_:_) | all isDigit str
              -> case nlookup (read str) rslaws of
-                 Just law@(nm,asn,prov)
+                 Just law@((nm,asn),prov)
                    -> do outputStrLn ("Law Chosen: "++nm)
                          instantiateLaw reqs proof law
                  _ -> proofREPL reqs proof
@@ -430,7 +432,7 @@ lawInstantiateProof reqs proof@( nm, asn, sc, strat
 
 instantiateLaw reqs proof@( pnm, asn, psc, strat
                           , mcs, (tz,seq'), dpath, matches, steps)
-                    law@(lnm,(lawt,lsc),_)
+                    law@((lnm,(lawt,lsc)),_)
  = do lbind <- generateLawInstanceBind (map knownV $ theories reqs)
                                        (exitTZ tz) psc law
       case instantiateSC lbind lsc of
@@ -458,7 +460,7 @@ Dialogue to get law instantiation binding.
 We want a binding for every unknown variable in the law.
 We display all such unknowns, and then ask for instantiations.
 \begin{code}
-generateLawInstanceBind vts gterm gsc law@(lnm,(lawt,lsc),lprov)
+generateLawInstanceBind vts gterm gsc law@((lnm,(lawt,lsc)),lprov)
  = do let lFreeVars = stdVarSetOf $ S.filter (isUnknownGVar vts)
                                   $ freeVars lawt
       outputStrLn ("Free unknown law variables: "++trVariableSet lFreeVars)

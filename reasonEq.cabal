@@ -29,6 +29,7 @@ library
                      , Builder
                      , TermZipper
                      , Proof
+                     , REPL
                      -- in proto
                      , Acyclic
                      , TRYOUT

@@ -1,11 +1,11 @@
-\section{Main Program}
+\section{Generic REPL Code}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2017--18
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module Main where
+module REPL where
 
 import System.Environment
 import System.Console.Haskeline
@@ -18,97 +18,9 @@ import Data.List
 import Data.Maybe
 import Data.Char
 
-import NiceSymbols hiding (help)
-
-import Utilities
-import LexBase
-import Variables
-import AST
-import VarData
-import SideCond
-import Binding
-import TermZipper
-import Proof
-import Propositions
-import Instantiate
-import TestRendering
+-- import Utilities
 \end{code}
 
-\begin{code}
-name = "reasonEq"
-version = "0.5.1.0"
-\end{code}
-
-\begin{code}
-main :: IO ()
-main
-  = do args <- getArgs
-       if "-g" `elem` args
-       then do putStrLn "starting GUI..."
-               gui (args \\ ["-g"])
-       else do putStrLn "starting REPL..."
-               repl args
-\end{code}
-
-\newpage
-\subsection{System State}
-
-Currently in prototyping mode,
-so this is one large record.
-Later we will nest things.
-In order to support nested records properly,
-for every record field \texttt{fld :: rec -> t},
-we define \texttt{fld\_\_ :: (t -> t) -> rec -> rec}
-and derive \texttt{fld\_ :: t -> rec -> rec}.
-\begin{verbatim}
-fld__ f r = r{fld = f $ fld r} ;  fld_ = fld__ . const
-\end{verbatim}
-\begin{code}
-data REqState
- = ReqState {
-      logic :: TheLogic
-    , theories :: [Theory]
-    , conj :: [NmdAssertion]
-    , proof :: Maybe LiveProof
-    , proofs :: [Proof]
-    }
-logic__    f r = r{logic    = f $ logic r}   ; logic_    = logic__     . const
-theories__ f r = r{theories = f $ theories r}; theories_ = theories__  . const
-conj__     f r = r{conj     = f $ conj r}    ; conj_     = conj__      . const
-proof__    f r = r{proof    = f $ proof r}   ; proof_    = proof__     . const
-proofs__   f r = r{proofs   = f $ proofs r}  ; proofs_   = proofs__    . const
-\end{code}
-
-At present, we assume development mode by default,
-which currently initialises state based on the contents of
-the hard-coded ``Propositional'' theory.
-The normal ``user'' mode is not of much use right now.
-\begin{code}
-initState :: [String] -> IO REqState
-
-initState ("user":_)
--- need to restore saved persistent state on startup
-  = do putStrLn "Running in normal user mode."
-       return
-         $ ReqState thePropositionalLogic [] [] Nothing []
-
-initState _
-  = do putStrLn "Running in development mode."
-       let reqs = ReqState thePropositionalLogic
-                           [theoryPropositions]
-                           propConjs Nothing []
-       return reqs
-\end{code}
-
-\newpage
-\subsection{GUI Top-Level}
-\begin{code}
-gui :: [String] -> IO ()
-gui args = putStrLn $ unlines
-         [ "Welcome to "++name++" "++version
-         , "GUI N.Y.I.!"
-         , "Goodbye" ]
-\end{code}
 
 \newpage
 \subsection{REPL Top-Level}

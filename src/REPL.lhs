@@ -8,7 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module REPL (
     REPLParser, REPLArguments, idParse, wordParse, charTypeParse
   , REPLCmd, REPLCmdDescr, REPLExit, REPLCommands
-  , REPLConfig
+  , REPLConfig(..)
   , runREPL
   )
 where
@@ -105,23 +105,27 @@ that does not change during its lifetime:
 data REPLConfig state
   = REPLC {
       replPrompt :: state -> String
-    , replInterrupt :: [String]
+    , replEOFReplacement :: [String]
     , replParser :: REPLParser
     , replQuitCmds :: [String]
     , replQuit :: REPLExit state
     , replHelpCmds :: [String]
     , replCommands :: REPLCommands state
+    , replEndCondition :: state -> Bool
+    , replEndTidy :: REPLCmd state
     }
 
 defConfig
   = REPLC
       (const "repl: ")
-      ["interrupted !"]
+      ["ignoring EOF"]
       charTypeParse
       ["quit","x"]
       defQuit
       ["help","?"]
       tstCmds
+      defEndCond
+      defEndTidy
 
 defQuit _ s
   = do putStrLn "\nGoodbye!\n"
@@ -139,13 +143,16 @@ tstCmd args s
   = do putStrLn (show $ map (map toUpper) args)
        putStrLn "Test complete"
        return s
+
+defEndCond _ = False
+defEndTidy _ s = return s
 \end{code}
 
 \begin{code}
 runREPL :: String
         -- -> (state -> String) -> parser -> cds -> exit
         -> REPLConfig state
-        -> state -> IO ()
+        -> state -> IO state
 runREPL wlcm config s0
   = runInputT defaultSettings (welcome wlcm >> loopREPL config s0)
 
@@ -155,10 +162,12 @@ welcome wlcm = outputStrLn wlcm
 
 Loop simply gets users input and dispatches on it
 \begin{code}
-loopREPL :: REPLConfig state -> state -> InputT IO ()
+loopREPL :: REPLConfig state -> state -> InputT IO state
 loopREPL config s
-  = do inp <- inputREPL config s
-       dispatchREPL config s inp
+  = if replEndCondition config s
+     then liftIO $ replEndTidy config [] s
+     else do inp <- inputREPL config s
+             dispatchREPL config s inp
 \end{code}
 
 Input generates a prompt that may or may not depend on the state,
@@ -168,7 +177,7 @@ inputREPL :: REPLConfig state -> state -> InputT IO [String]
 inputREPL config s
   = do minput <- getInputLine (replPrompt config s)
        case minput of
-         Nothing     ->  return $ replInterrupt config
+         Nothing     ->  return $ replEOFReplacement config
          Just input  ->  return $ replParser config input
 \end{code}
 
@@ -178,13 +187,14 @@ Then it sees if the help command has been given,
 and enacts that.
 Otherwise it executes the designated command.
 \begin{code}
-dispatchREPL :: REPLConfig state -> state -> [String] -> InputT IO ()
+dispatchREPL :: REPLConfig state -> state -> [String] -> InputT IO state
 dispatchREPL config s []
   = loopREPL config s
 dispatchREPL config s (cmd:args)
   | cmd `elem` replQuitCmds config
     = do (go,s') <- liftIO $ replQuit config args s
-         if go then return () else loopREPL config s'
+         if go then return s'
+               else loopREPL config s'
   | cmd `elem` replHelpCmds config
     = do helpREPL config s args
          loopREPL config s
@@ -228,51 +238,3 @@ longHELP cmd ((nm,_,lhelp,_):cmds)
   | cmd == nm  = outputStrLn ( "\n" ++ cmd ++ " -- " ++ lhelp ++ "\n")
   | otherwise  =  longHELP cmd cmds
 \end{code}
-%
-% \begin{code}
-% exitREPL pp cds exit s = return ()
-% helpREPL pp cds exit s
-%   = do help cds
-%        loopREPL pp cds exit s
-%   where help = outputStrLn "help nyi"
-% doCMD pp cds exit s cd inp
-%   = do outputStrLn "doCMD NYI"
-%        loopREPL pp cds exit s
-% \end{code}
-%
-%
-% \subsubsection{Command Repository}
-% \begin{code}
-% reqREPLcommands :: Commands s
-% reqREPLcommands = []
-% \end{code}
-%
-% \subsubsection{Command Dispatch}
-% \begin{code}
-% docommand :: s -> [String] -> InputT IO s
-% docommand reqs [] = return reqs
-% docommand reqs ("?":what)
-%  = help reqs what
-% docommand reqs (cmd:args)
-%  = case clookup cmd reqREPLcommands of
-%      Nothing -> outputStrLn ("unknown cmd: '"++cmd++"', '?' for help.")
-%                  >> return reqs
-%      Just (_,_,_,c)  ->  c args reqs
-% \end{code}
-%
-% \subsubsection{Command Help}
-% \begin{code}
-% help reqs []
-%   = do outputStrLn "Commands:"
-%        outputStrLn "'?'     -- this help message"
-%        outputStrLn "'? cmd' -- help for 'cmd'"
-%        outputStrLn "Control-D or 'quit'  -- exit program."
-%        outputStrLn $ unlines $ map shorthelp reqREPLcommands
-%        return reqs
-%   where shorthelp (cmd,sh,_,_) = cmd ++ "  -- " ++ sh
-%
-% help reqs (what:_)
-%   = case clookup what reqREPLcommands of
-%      Nothing -> outputStrLn ("unknown cmd: '"++what++"'") >> return reqs
-%      Just (_,_,lh,_) -> outputStrLn lh >> return reqs
-% \end{code}

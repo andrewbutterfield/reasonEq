@@ -7,18 +7,15 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 module REPL (
     REPLParser, REPLArguments, idParse, wordParse, charTypeParse
+  , REPLCmd, REPLCmdDescr, REPLExit, REPLCommands
+  , REPLConfig
+  , runREPL
   )
 where
 
--- import System.Environment
 import System.Console.Haskeline
 import Control.Monad.IO.Class
--- import Data.Map (Map)
--- import qualified Data.Map as M
--- import Data.Set (Set)
--- import qualified Data.Set as S
--- import Data.List
--- import Data.Maybe
+import Data.List
 import Data.Char
 \end{code}
 
@@ -43,6 +40,7 @@ We consider a REPL as always having two special-purpose commands,
 one to exit the REPL, another to provide help,
 while the rest are viewed as I/O actions that also modify state.
 
+\newpage
 A parser converts strings to lists of strings.
 The key point here is that the first string, if present,
 determines what command will be run,
@@ -53,8 +51,11 @@ type REPLParser = String -> [String]
 type REPLArguments = [String]
 
 idParse, wordParse, charTypeParse :: REPLParser
+
 idParse s = [s] -- return user string completely unaltered
+
 wordParse = words -- break into max-length runs without whitespace
+
 charTypeParse -- group letter,digits, and other non-print
  = concat . map (segment []) . words
  where
@@ -75,25 +76,22 @@ charTypeParse -- group letter,digits, and other non-print
     | otherwise  =  True
 \end{code}
 
+\newpage
 \begin{code}
-type REPLCmd state = REPLArguments -> state -> InputT IO state
+type REPLCmd state = REPLArguments -> state -> IO state
 type REPLCmdDescr state
   = ( String     -- command name
     , String     -- short help for this command
     , String     -- long help for this command
     , REPLCmd state)  -- command function
-type REPLExit state = REPLArguments -> state -> InputT IO (Bool,state)
-type REPLCommands state
-  = ( [String], REPLExit state -- all quit commands, quit command
-    , [String] -- all help commands
-    , [REPLCmdDescr state]
-    )
+type REPLExit state = REPLArguments -> state -> IO (Bool,state)
+type REPLCommands state = [REPLCmdDescr state]
 \end{code}
 
 
 \subsubsection{Command Respository Lookup}
 \begin{code}
-cmdLookup :: String -> [REPLCmdDescr state] -> Maybe (REPLCmdDescr state)
+cmdLookup :: String -> REPLCommands state -> Maybe (REPLCmdDescr state)
 cmdLookup s []= Nothing
 cmdLookup s (cd@(n,_,_,_):rest)
  | s == n     =  Just cd
@@ -109,6 +107,10 @@ data REPLConfig state
       replPrompt :: state -> String
     , replInterrupt :: [String]
     , replParser :: REPLParser
+    , replQuitCmds :: [String]
+    , replQuit :: REPLExit state
+    , replHelpCmds :: [String]
+    , replCommands :: REPLCommands state
     }
 
 defConfig
@@ -116,6 +118,27 @@ defConfig
       (const "repl: ")
       ["interrupted !"]
       charTypeParse
+      ["quit","x"]
+      defQuit
+      ["help","?"]
+      tstCmds
+
+defQuit _ s
+  = do putStrLn "\nGoodbye!\n"
+       return (True,s)
+
+tstCmds
+  = [ ("test"
+      , "simple test"
+      , "raises all arguments to uppercase"
+      , tstCmd
+      )
+    ]
+
+tstCmd args s
+  = do putStrLn (show $ map (map toUpper) args)
+       putStrLn "Test complete"
+       return s
 \end{code}
 
 \begin{code}
@@ -135,8 +158,7 @@ Loop simply gets users input and dispatches on it
 loopREPL :: REPLConfig state -> state -> InputT IO ()
 loopREPL config s
   = do inp <- inputREPL config s
-       outputStrLn $ show inp
-       -- dispatchREPL pp cds exit s inp
+       dispatchREPL config s inp
 \end{code}
 
 Input generates a prompt that may or may not depend on the state,
@@ -149,19 +171,63 @@ inputREPL config s
          Nothing     ->  return $ replInterrupt config
          Just input  ->  return $ replParser config input
 \end{code}
-%
-% Dispatch checks input to see if it requires exiting,
-% in which case it invokes the exit protocol (which might not exit!)
-% Otherwise it executed the designated command.
-% \begin{code}
-% data Cmd cd inp = QUIT | HELP | CMD cd inp
-% dispatchREPL :: (state -> (String,parse,nullhandler)) -> cds -> exit -> state -> inp -> InputT IO ()
-% dispatchREPL pp cds exit s inp
-%   = case lookupREPL cds inp of
-%       QUIT -> exitREPL pp cds exit s
-%       HELP -> helpREPL pp cds exit s
-%       CMD cd inp' -> doCMD pp cds exit s cd inp'
-% \end{code}
+
+Dispatch first checks input to see if it requires exiting,
+in which case it invokes the exit protocol (which might not exit!).
+Then it sees if the help command has been given,
+and enacts that.
+Otherwise it executes the designated command.
+\begin{code}
+dispatchREPL :: REPLConfig state -> state -> [String] -> InputT IO ()
+dispatchREPL config s []
+  = loopREPL config s
+dispatchREPL config s (cmd:args)
+  | cmd `elem` replQuitCmds config
+    = do (go,s') <- liftIO $ replQuit config args s
+         if go then return () else loopREPL config s'
+  | cmd `elem` replHelpCmds config
+    = do helpREPL config s args
+         loopREPL config s
+  | otherwise
+    = case cmdLookup cmd (replCommands config) of
+        Nothing
+          -> do outputStrLn ("No such command '"++cmd++"'")
+                loopREPL config s
+        Just (_,_,_,cmdFn)
+          -> do s' <- liftIO $ cmdFn args s
+                loopREPL config s'
+\end{code}
+
+Help with no arguments shows the short help for all commands.
+Help with an argument that corresponds to a command shows the
+long help for that command.
+\begin{code}
+helpREPL :: REPLConfig state -> state -> [String] -> InputT IO ()
+helpREPL config s []
+  = do outputStrLn ""
+       outputStrLn ((intercalate "," $ replQuitCmds config)++" -- exit")
+       outputStrLn ((intercalate "," $ replHelpCmds config)++" -- this help text")
+       outputStrLn ((intercalate "," $ replHelpCmds config)++" <cmd> -- help for <cmd>")
+       shortHELP $ replCommands config
+       outputStrLn ""
+helpREPL config s (cmd:_) = longHELP cmd (replCommands config)
+\end{code}
+
+\begin{code}
+shortHELP :: REPLCommands state -> InputT IO ()
+shortHELP [] = return ()
+shortHELP ((nm,shelp,_,_):cmds)
+  = do outputStrLn ( nm ++ " -- " ++ shelp )
+       shortHELP cmds
+\end{code}
+
+\begin{code}
+longHELP :: String -> REPLCommands state -> InputT IO ()
+longHELP cmd [] = outputStrLn ("No such command: '"++cmd++"'")
+longHELP cmd ((nm,_,lhelp,_):cmds)
+  | cmd == nm  = outputStrLn ( "\n" ++ cmd ++ " -- " ++ lhelp ++ "\n")
+  | otherwise  =  longHELP cmd cmds
+\end{code}
 %
 % \begin{code}
 % exitREPL pp cds exit s = return ()

@@ -1024,5 +1024,6 @@ showLivePrf (Just proof) = dispLiveProof proof
 
 Showing Proofs:
 \begin{code}
-showProofs = unlines' . map ( ('\n':) . displayProof )
+showProofs []      =  "No Proofs yet."
+showProofs proofs  =  unlines' $ map ( ('\n':) . displayProof ) proofs
 \end{code}

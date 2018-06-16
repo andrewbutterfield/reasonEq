@@ -104,7 +104,8 @@ that does not change during its lifetime:
 \begin{code}
 data REPLConfig state
   = REPLC {
-      replPrompt :: state -> String
+      replPrompt :: Bool -> state -> String
+            -- justHelped :: Bool, true if help messages have just been printed
     , replEOFReplacement :: [String]
     , replParser :: REPLParser
     , replQuitCmds :: [String]
@@ -117,7 +118,7 @@ data REPLConfig state
 
 defConfig
   = REPLC
-      (const "repl: ")
+      (const $ const "repl: ")
       ["ignoring EOF"]
       charTypeParse
       ["quit","x"]
@@ -150,11 +151,10 @@ defEndTidy _ s = return s
 
 \begin{code}
 runREPL :: String
-        -- -> (state -> String) -> parser -> cds -> exit
         -> REPLConfig state
         -> state -> IO state
 runREPL wlcm config s0
-  = runInputT defaultSettings (welcome wlcm >> loopREPL config s0)
+  = runInputT defaultSettings (welcome wlcm >> loopREPL config True s0)
 
 welcome :: String -> InputT IO ()
 welcome wlcm = outputStrLn wlcm
@@ -162,20 +162,20 @@ welcome wlcm = outputStrLn wlcm
 
 Loop simply gets users input and dispatches on it
 \begin{code}
-loopREPL :: REPLConfig state -> state -> InputT IO state
-loopREPL config s
+loopREPL :: REPLConfig state -> Bool -> state -> InputT IO state
+loopREPL config justHelped s
   = if replEndCondition config s
      then liftIO $ replEndTidy config [] s
-     else do inp <- inputREPL config s
-             dispatchREPL config s inp
+     else do inp <- inputREPL config justHelped s
+             dispatchREPL config justHelped s inp
 \end{code}
 
 Input generates a prompt that may or may not depend on the state,
 and then checks and transforms
 \begin{code}
-inputREPL :: REPLConfig state -> state -> InputT IO [String]
-inputREPL config s
-  = do minput <- getInputLine (replPrompt config s)
+inputREPL :: REPLConfig state -> Bool -> state -> InputT IO [String]
+inputREPL config justHelped s
+  = do minput <- getInputLine (replPrompt config justHelped s)
        case minput of
          Nothing     ->  return $ replEOFReplacement config
          Just input  ->  return $ replParser config input
@@ -187,25 +187,25 @@ Then it sees if the help command has been given,
 and enacts that.
 Otherwise it executes the designated command.
 \begin{code}
-dispatchREPL :: REPLConfig state -> state -> [String] -> InputT IO state
-dispatchREPL config s []
-  = loopREPL config s
-dispatchREPL config s (cmd:args)
+dispatchREPL :: REPLConfig state -> Bool -> state -> [String] -> InputT IO state
+dispatchREPL config justHelped s []
+  = loopREPL config justHelped s
+dispatchREPL config justHelped s (cmd:args)
   | cmd `elem` replQuitCmds config
     = do (go,s') <- liftIO $ replQuit config args s
          if go then return s'
-               else loopREPL config s'
+               else loopREPL config False s'
   | cmd `elem` replHelpCmds config
     = do helpREPL config s args
-         loopREPL config s
+         loopREPL config True s
   | otherwise
     = case cmdLookup cmd (replCommands config) of
         Nothing
           -> do outputStrLn ("No such command '"++cmd++"'")
-                loopREPL config s
+                loopREPL config justHelped s
         Just (_,_,_,cmdFn)
           -> do s' <- liftIO $ cmdFn args s
-                loopREPL config s'
+                loopREPL config False s'
 \end{code}
 
 Help with no arguments shows the short help for all commands.
@@ -220,7 +220,10 @@ helpREPL config s []
        outputStrLn ((intercalate "," $ replHelpCmds config)++" <cmd> -- help for <cmd>")
        shortHELP $ replCommands config
        outputStrLn ""
-helpREPL config s (cmd:_) = longHELP cmd (replCommands config)
+helpREPL config s (cmd:_)
+ | cmd `elem` replQuitCmds config = outputStrLn (cmd ++ " -- exits program")
+ | cmd `elem` replHelpCmds config = outputStrLn (cmd ++ " -- provides help")
+ | otherwise  =  longHELP cmd (replCommands config)
 \end{code}
 
 \begin{code}
@@ -233,7 +236,7 @@ shortHELP ((nm,shelp,_,_):cmds)
 
 \begin{code}
 longHELP :: String -> REPLCommands state -> InputT IO ()
-longHELP cmd [] = outputStrLn ("No such command: '"++cmd++"'")
+longHELP cmd []  = outputStrLn ("No such command: '"++cmd++"'")
 longHELP cmd ((nm,_,lhelp,_):cmds)
   | cmd == nm  = outputStrLn ( "\n" ++ cmd ++ " -- " ++ lhelp ++ "\n")
   | otherwise  =  longHELP cmd cmds

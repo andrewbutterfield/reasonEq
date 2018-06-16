@@ -10,6 +10,7 @@ module Main where
 import System.Environment
 import System.Console.Haskeline
 import Control.Monad.IO.Class
+import System.IO
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Set (Set)
@@ -125,7 +126,7 @@ banner = outputStrLn $ unlines
 
 loop :: REqState -> InputT IO ()
 loop reqs = do
-   minput <- getInputLine ("rEq."++_equiv++" ")
+   minput <- getInputLine (_equiv++"> ")
    case minput of
        Nothing      ->  quit reqs
        Just "quit"  ->  quit reqs
@@ -316,17 +317,18 @@ We start by defining the proof REPL state:
 \begin{code}
 type ProofState
   = ( REqState   -- reasonEq state
-    , LiveProof  -- current proof state
-    , Bool )     -- true if last command was not 'help'
+    , LiveProof )  -- current proof state
 \end{code}
 From this we can define most of the REPL configuration.
 \begin{code}
-proofREPLprompt (_,proof,nohelp)
-  | nohelp    = unlines' [ "\ESC[2J\ESC[1;1H" -- clear screen, move to top-left
-                         , dispLiveProof proof
-                         , "proof: "]
-  | otherwise = unlines' [ dispLiveProof proof
-                         , "proof: "]
+proofREPLprompt justHelped (_,proof)
+  | justHelped  =  unlines' [ dispLiveProof proof
+                            , "proof: "]
+  | otherwise   =  unlines' [ clear -- clear screen, move to top-left
+                            , dispLiveProof proof
+                            , "proof: "]
+
+clear = "\ESC[2J\ESC[1;1H"
 
 proofEOFReplacement = []
 
@@ -334,24 +336,25 @@ proofREPLParser = charTypeParse
 
 proofREPLQuitCmds = ["q"]
 
-proofREPLQuit args (reqs,proof,_)
-  = do putStrLn "Proof Incomplete"
-       putStr "Abandon ? [Y] : " ; inp <- getLine
+proofREPLQuit args (reqs,proof)
+  = do putStr "Proof Incomplete, Abandon ? [Y] : "
+       hFlush stdout
+       inp <- getLine
        if inp == "Y"
-        then return (True,( proof_ Nothing      reqs, proof, True))
-        else return (True,( proof_ (Just proof) reqs, proof, True))
+        then return (True,( proof_ Nothing      reqs, proof))
+        else return (True,( proof_ (Just proof) reqs, proof))
 
 proofREPLHelpCmds = ["?"]
 
-proofREPLEndCondition (reqs,proof,_)
+proofREPLEndCondition (reqs,proof)
   =  proofComplete (logic reqs) proof
 
-proofREPLEndTidy _ (reqs,proof,_)
+proofREPLEndTidy _ (reqs,proof)
   = do putStrLn "Proof Complete"
        let prf = finaliseProof proof
        putStrLn $ displayProof prf
-       return ( proof_ Nothing $ proofs__ (prf:) reqs, proof, True)
-       -- Need to remove from conjectures and add to Laws
+       return ( proof_ Nothing $ proofs__ (prf:) reqs, proof)
+  -- Need to remove from conjectures and add to Laws
 \end{code}
 
 \begin{code}
@@ -363,7 +366,12 @@ proofREPLConfig
       proofREPLQuitCmds
       proofREPLQuit
       proofREPLHelpCmds
-      []
+      [ goDownDescr
+      , goUpDescr
+      , matchLawDescr
+      , applyMatchDescr
+      , lawInstantiateDescr
+      ]
       proofREPLEndCondition
       proofREPLEndTidy
 \end{code}
@@ -371,110 +379,81 @@ proofREPLConfig
 This repl runs a proof.
 \begin{code}
 proofREPL reqs proof
- = do (reqs',_,_) <- runREPL
-                       "Prover starting..."
+ = do (reqs',_) <- runREPL
+                       (clear++"Prover starting...")
                        proofREPLConfig
-                       (reqs,proof,True)
-      return reqs
+                       (reqs,proof)
+      return reqs'
 
--- proofREPL reqs proof
---  = do putStrLn ("\ESC[2J\ESC[1;1H") -- clear screen, move to top-left
---       proofREPL' reqs proof
-
-
-proofREPL' reqs proof
- = do putStrLn $ dispLiveProof proof
-      if proofComplete (logic reqs) proof
-       then do putStrLn "Proof Complete"
-               let prf = finaliseProof proof
-               putStrLn $ displayProof prf
-               return ( proof_ Nothing $ proofs__ (prf:) reqs)
-       else
-         do putStr "proof: " ; input <- getLine
-            case input of
-              "e" -> back reqs proof
-              "?" -> proofHelp reqs proof
-              pcmd -> proofCommand reqs proof (words pcmd)
-
-back reqs proof
- = doshow' (proof_ (Just proof) reqs) "Back to main REPL, Proof still current."
-
-proofHelp reqs proof
-  = do putStrLn $ unlines
-         [ "d n - down n"
-         , "u - up"
-         , "m - match laws"
-         , "a n - apply match n"
-         , "i - instantiate a true focus with an axiom"
-         , "e - exit to top REPL, keeping proof"
-         , "q - abandon proof"
-         ]
-       proofREPL' reqs proof
-
-proofCommand reqs proof [('d':nstr)] = goDown reqs proof $ readInt nstr
-proofCommand reqs proof ["d",nstr]   = goDown reqs proof $ readInt nstr
-proofCommand reqs proof ["u"] = goUp reqs proof
-proofCommand reqs proof ["m"] = matchLawCommand reqs proof
-proofCommand reqs proof [('a':nstr)] = applyMatch reqs proof $ readInt nstr
-proofCommand reqs proof ["a",nstr]   = applyMatch reqs proof $ readInt nstr
-proofCommand reqs proof ["i"] = lawInstantiateProof reqs proof
-proofCommand reqs proof ["q"] = abandonProof reqs proof
-proofCommand reqs proof pcmds
-  = do putStrLn ("proofCommand '"++unwords pcmds++"' unknown")
-       proofREPL reqs proof
+args2int args = if null args then 0 else readInt $ head args
 \end{code}
 
 Focus movement commands
 \begin{code}
-goDown reqs proof@(nm, asn, sc, strat, mcs, (tz,seq'), dpath, _, steps ) i
-  = let (ok,tz') = downTZ i tz in
-    if ok
-    then proofREPL reqs ( nm, asn, sc, strat
-                        , mcs, (tz',seq'), dpath++[i], [], steps)
-    else proofREPL reqs proof
+goDownDescr = ( "d", "d n - down n", "d n - down n", goDown )
 
-goUp reqs proof@(nm, asn, sc, strat, mcs, (tz,seq'), dpath, _, steps )
+goDown :: REPLCmd (REqState, LiveProof)
+goDown args (reqs, proof@(nm, asn, sc, strat, mcs, (tz,seq'), dpath, _, steps ))
+  = let i = args2int args
+        (ok,tz') = downTZ i tz
+    in if ok
+        then return (reqs, ( nm, asn, sc, strat
+                           , mcs, (tz',seq'), dpath++[i], [], steps))
+        else return (reqs, proof)
+
+goUpDescr = ( "u", "u - up", "u - up", goUp )
+
+goUp _ (reqs, proof@(nm, asn, sc, strat, mcs, (tz,seq'), dpath, _, steps ))
   = let (ok,tz') = upTZ tz in
     if ok
-    then proofREPL reqs ( nm, asn, sc, strat
-                        , mcs, (tz',seq'), init dpath, [], steps)
-    else proofREPL reqs proof
+    then return (reqs, ( nm, asn, sc, strat
+                        , mcs, (tz',seq'), init dpath, [], steps))
+    else return (reqs, proof)
 \end{code}
 
 \newpage
 Law Matching
 \begin{code}
-matchLawCommand reqs proof@(nm, asn, sc, strat, mcs, sz@(tz,_), dpath, _, steps)
+matchLawDescr = ( "m", "match laws", "match laws", matchLawCommand )
+
+matchLawCommand _ (reqs, proof@(nm, asn, sc, strat, mcs, sz@(tz,_), dpath, _, steps))
   = do putStrLn ("Matching "++trTerm 0 goalt)
        let matches = matchInContexts (logic reqs) mcs goalt
-       putStrLn $ displayMatches matches
-       proofREPL reqs (nm, asn, sc, strat, mcs, sz, dpath, matches, steps)
+       return (reqs, (nm, asn, sc, strat, mcs, sz, dpath, matches, steps))
   where goalt = getTZ tz
 
-applyMatch reqs proof@(nm, asn, sc, strat, mcs, (tz,seq'), dpath, matches, steps) i
-  = case alookup i matches of
+applyMatchDescr = ( "a", "apply match"
+                  , "apply match, identified by number", applyMatch)
+
+applyMatch args (reqs, proof@(nm, asn, sc, strat, mcs, (tz,seq'), dpath, matches, steps))
+  = let i = args2int args in
+    case alookup i matches of
      Nothing -> do putStrLn ("No match numbered "++ show i)
-                   proofREPL reqs proof
+                   return (reqs, proof)
      Just (_,(lnm,lasn,bind,repl))
       -> case instantiate bind repl of
           Nothing -> do putStrLn "Apply failed !"
-                        proofREPL reqs proof
+                        return (reqs, proof)
           Just brepl
             -> do putStrLn ("Applied law '"++lnm++"' at "++show dpath)
-                  proofREPL reqs (nm, asn, sc, strat
+                  return (reqs, (nm, asn, sc, strat
                                  , mcs, ((setTZ brepl tz),seq')
                                  , dpath, []
-                                 , (("match "++lnm,bind,dpath), exitTZ tz):steps)
+                                 , (("match "++lnm,bind,dpath), exitTZ tz):steps))
 \end{code}
 
 Replacing \textit{true} by a law, with unknown variables
 suitably instantiated.
 \begin{code}
-lawInstantiateProof reqs proof@( nm, asn, sc, strat
-                               , mcs, sz@(tz,_), dpath, matches, steps)
+
+lawInstantiateDescr = ( "i", "instantiate"
+                      , "instantiate a true focus with an axiom"
+                      , lawInstantiateProof )
+lawInstantiateProof _ (reqs, proof@( nm, asn, sc, strat
+                                   , mcs, sz@(tz,_), dpath, matches, steps))
   | currt /= true
     = do putStrLn ("Can only instantiate an law over "++trTerm 0 true)
-         proofREPL reqs proof
+         return (reqs, proof)
   | otherwise
     = do putStrLn $ showLaws rslaws
          putStr "Pick a law : " ; input <- getLine
@@ -484,8 +463,8 @@ lawInstantiateProof reqs proof@( nm, asn, sc, strat
                  Just law@((nm,asn),prov)
                    -> do putStrLn ("Law Chosen: "++nm)
                          instantiateLaw reqs proof law
-                 _ -> proofREPL reqs proof
-           _ -> proofREPL reqs proof
+                 _ -> return (reqs, proof)
+           _ -> return (reqs, proof)
   where
     currt = getTZ tz; true = theTrue $ logic reqs
     thrys = theories reqs
@@ -498,21 +477,22 @@ instantiateLaw reqs proof@( pnm, asn, psc, strat
                                        (exitTZ tz) psc law
       case instantiateSC lbind lsc of
         Nothing -> do putStrLn "instantiated law side-cond is false"
-                      proofREPL reqs proof
+                      return (reqs, proof)
         Just ilsc
           -> do putStrLn $ trBinding lbind
                 case mrgSideCond psc ilsc of
                   Nothing -> do putStrLn "side-condition merge failed"
-                                proofREPL reqs proof
+                                return (reqs, proof)
                   Just nsc ->
                     do  ilawt <- instantiate lbind lawt
-                        proofREPL reqs ( pnm, asn, nsc, strat
+                        return ( reqs
+                               , ( pnm, asn, nsc, strat
                                        , mcs, (setTZ ilawt tz,seq')
                                        , dpath
                                        , matches
                                        , ( ("instantiate "++lnm,lbind,dpath)
                                            , exitTZ tz )
-                                         : steps )
+                                         : steps ) )
 \end{code}
 
 \newpage
@@ -544,15 +524,4 @@ requestInstBindings bind gterms vs@(v:vrest)
                      requestInstBindings bind' gterms vrest
              _ -> requestInstBindings bind gterms vs
        _ -> requestInstBindings bind gterms vs
-\end{code}
-
-\newpage
-Abandoning a proof, losing all work so far.
-\begin{code}
-abandonProof reqs proof
- = do putStr "Abandon ! Are you sure (Y/n) ? " ; yesno <- getLine
-      case yesno of
-        "Y" -> doshow' (proof_ Nothing reqs)
-                      "Back to main REPL, Proof abandoned."
-        _ -> proofREPL reqs proof
 \end{code}

@@ -8,8 +8,6 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Main where
 
 import System.Environment
-import System.Console.Haskeline
-import Control.Monad.IO.Class
 import System.IO
 import Data.Map (Map)
 import qualified Data.Map as M
@@ -114,99 +112,84 @@ gui args = putStrLn $ unlines
 
 \newpage
 \subsection{REPL Top-Level}
+
+We define our reasonEq REPL types first:
+\begin{code}
+type REqCmd       =  REPLCmd      REqState
+type REqCmdDescr  =  REPLCmdDescr REqState
+type REqExit      =  REPLExit     REqState
+type REqCommands  =  REPLCommands REqState
+type REqConfig    =  REPLConfig   REqState
+\end{code}
+
+Now we work down through the configuration components.
+\begin{code}
+reqPrompt :: Bool -> REqState -> String
+reqPrompt _ _ = _equiv++" : "
+
+reqEOFreplacmement = [nquit]
+
+reqParser = charTypeParse
+
+reqQuitCmds = [nquit] ; nquit = "quit"
+
+reqQuit :: REqExit
+-- may ask for user confirmation, and save? stuff..
+reqQuit _ reqs = putStrLn "\nGoodbye!\n" >> return (True, reqs)
+-- need to save persistent state on exit
+
+reqHelpCmds = ["?","help"]
+
+reqCommands :: REqCommands
+reqCommands = [ cmdShow, cmdProve ]
+
+-- we don't use these features in the top-level REPL
+reqEndCondition _ = False
+reqEndTidy _ reqs = return reqs
+\end{code}
+
+The configuration:
+\begin{code}
+reqConfig
+  = REPLC
+      reqPrompt
+      reqEOFreplacmement
+      reqParser
+      reqQuitCmds
+      reqQuit
+      reqHelpCmds
+      reqCommands
+      reqEndCondition
+      reqEndTidy
+\end{code}
+
 \begin{code}
 repl :: [String] -> IO ()
-repl args = runInputT defaultSettings
-                                 (banner >> (liftIO $ initState args) >>= loop)
-banner :: InputT IO ()
-banner = outputStrLn $ unlines
+repl args
+  = do reqs0 <- initState args
+       runREPL reqWelcome reqConfig reqs0
+       return ()
+
+reqWelcome = unlines
  [ "Welcome to the "++name++" "++version++" REPL"
  , "Type '?' for help."
  ]
-
-loop :: REqState -> InputT IO ()
-loop reqs = do
-   minput <- getInputLine (_equiv++"> ")
-   case minput of
-       Nothing      ->  quit reqs
-       Just "quit"  ->  quit reqs
-       Just input   ->  docommand reqs (words input) >>= loop
-
--- may ask for user confirmation, and save? stuff..
-quit reqs = outputStrLn "Goodbye!"
--- need to save persistent state on exit
 \end{code}
-
-\subsubsection{REPL Command Repository types}
-\begin{code}
-type Command = [String] -> REqState -> InputT IO REqState
-type CommDescr = ( String     -- command name
-                 , String     -- short help for this command
-                 , String     -- long help for this command
-                 , Command )  -- command function
-type Commands = [CommDescr]
-\end{code}
-
-\subsubsection{Command Respository Lookup}
-\begin{code}
-clookup :: String -> Commands -> Maybe CommDescr
-clookup _ []  =  Nothing
-clookup s (cd@(n,_,_,_):rest)
- | s == n     =  Just cd
- | otherwise  =  clookup s rest
-\end{code}
-
-\subsubsection{Command Repository}
-\begin{code}
-reqREPLcommands :: Commands
-reqREPLcommands = [cmdShow,cmdSet,cmdProve]
-\end{code}
-
-\subsubsection{Command Dispatch}
-\begin{code}
-docommand :: REqState -> [String] -> InputT IO REqState
-docommand reqs [] = return reqs
-docommand reqs ("?":what)
- = help reqs what
-docommand reqs (cmd:args)
- = case clookup cmd reqREPLcommands of
-     Nothing -> outputStrLn ("unknown cmd: '"++cmd++"', '?' for help.")
-                 >> return reqs
-     Just (_,_,_,c)  ->  c args reqs
-\end{code}
-
-\subsubsection{Command Help}
-\begin{code}
-help reqs []
-  = do outputStrLn "Commands:"
-       outputStrLn "'?'     -- this help message"
-       outputStrLn "'? cmd' -- help for 'cmd'"
-       outputStrLn "Control-D or 'quit'  -- exit program."
-       outputStrLn $ unlines $ map shorthelp reqREPLcommands
-       return reqs
-  where shorthelp (cmd,sh,_,_) = cmd ++ "  -- " ++ sh
-
-help reqs (what:_)
-  = case clookup what reqREPLcommands of
-     Nothing -> outputStrLn ("unknown cmd: '"++what++"'") >> return reqs
-     Just (_,_,lh,_) -> outputStrLn lh >> return reqs
-\end{code}
-
 
 
 \newpage
 \subsection{Show Command }
 \begin{code}
-cmdShow :: CommDescr
+cmdShow :: REqCmdDescr
 cmdShow
   = ( "sh"
     , "show parts of the prover state"
     , unlines
-        [ "sh "++shLogic++" - show current logic"
-        , "sh "++shTheories++" - show theories"
-        , "sh "++shConj++" - show current conjectures"
-        , "sh "++shLivePrf++" - show current proof"
-        , "sh "++shProofs++" - show completed proofs"
+        [ "sh "++shLogic++" -- show current logic"
+        , "sh "++shTheories++" -- show theories"
+        , "sh "++shConj++" -- show current conjectures"
+        , "sh "++shLivePrf++" -- show current proof"
+        , "sh "++shProofs++" -- show completed proofs"
         ]
     , showState )
 
@@ -217,46 +200,21 @@ shLivePrf = "p"
 shProofs = "P"
 
 showState [cmd] reqs
- | cmd == shLogic  =  doshow reqs $ showLogic $ logic reqs
+ | cmd == shLogic     =  doshow reqs $ showLogic $ logic reqs
  | cmd == shTheories  =  doshow reqs $ showTheories $ theories reqs
- | cmd == shConj   =  doshow reqs $ showNmdAssns  $ conj  reqs
- | cmd == shLivePrf  =  doshow reqs $ showLivePrf $ proof reqs
- | cmd == shProofs =  doshow reqs $ showProofs $ proofs reqs
-showState _ reqs   =  doshow reqs "unknown 'show' option."
+ | cmd == shConj      =  doshow reqs $ showNmdAssns  $ conj  reqs
+ | cmd == shLivePrf   =  doshow reqs $ showLivePrf $ proof reqs
+ | cmd == shProofs    =  doshow reqs $ showProofs $ proofs reqs
+showState _ reqs      =  doshow reqs "unknown 'show' option."
 
-doshow reqs str   =  outputStrLn str >> return reqs
 
-doshow' reqs str  =  putStrLn str    >> return reqs
-\end{code}
-
-\newpage
-\subsection{Set Command}
-\begin{code}
-cmdSet
-  = ( "set"
-    , "set parts of prover state"
-    , unlines
-       [ "set not used right now"]
-    , setState )
-
-setState _ reqs = doshow reqs "unknown 'set' option"
-
--- list lookup by number [1..]
-nlookup i things
- | i < 1 || null things  =  Nothing
-nlookup 1 (thing:rest)   =  Just thing
-nlookup i (thing:rest)   =  nlookup (i-1) rest
-
--- association list lookup
-alookup name [] = Nothing
-alookup name (thing@(n,_):rest)
-  | name == n  =  Just thing
-  | otherwise  =  alookup name rest
+doshow reqs str  =  putStrLn str >> return reqs
 \end{code}
 
 \newpage
 \subsection{Prove Command}
 \begin{code}
+cmdProve :: REqCmdDescr
 cmdProve
   = ( "prove"
     , "do a proof"
@@ -265,7 +223,7 @@ cmdProve
        , "i : conjecture number"
        , "no arg required if proof already live."
        ]
-    , \args reqs -> liftIO $ doProof args reqs)
+    , doProof )
 
 
 doProof args reqs
@@ -284,7 +242,7 @@ doProof args reqs
                        putStr "Select sequent:- " ; choice <- getLine
                        let six = readInt choice
                        case nlookup six strats of
-                         Nothing   -> doshow' reqs "Invalid strategy no"
+                         Nothing   -> doshow reqs "Invalid strategy no"
                          Just seq
                            -> proofREPL reqs (launchProof thys nm asn seq)
       Just proof
@@ -328,8 +286,6 @@ proofREPLprompt justHelped (_,proof)
                             , dispLiveProof proof
                             , "proof: "]
 
-clear = "\ESC[2J\ESC[1;1H"
-
 proofEOFReplacement = []
 
 proofREPLParser = charTypeParse
@@ -366,12 +322,13 @@ proofREPLConfig
       proofREPLQuitCmds
       proofREPLQuit
       proofREPLHelpCmds
-      [ goDownDescr
-      , goUpDescr
-      , matchLawDescr
-      , applyMatchDescr
-      , lawInstantiateDescr
-      ]
+      ( map clearLong
+            [ goDownDescr
+            , goUpDescr
+            , matchLawDescr
+            , applyMatchDescr
+            , lawInstantiateDescr
+            ])
       proofREPLEndCondition
       proofREPLEndTidy
 \end{code}
@@ -390,7 +347,7 @@ args2int args = if null args then 0 else readInt $ head args
 
 Focus movement commands
 \begin{code}
-goDownDescr = ( "d", "d n - down n", "d n - down n", goDown )
+goDownDescr = ( "d", "down", "d n  -- down n", goDown )
 
 goDown :: REPLCmd (REqState, LiveProof)
 goDown args (reqs, proof@(nm, asn, sc, strat, mcs, (tz,seq'), dpath, _, steps ))
@@ -401,7 +358,7 @@ goDown args (reqs, proof@(nm, asn, sc, strat, mcs, (tz,seq'), dpath, _, steps ))
                            , mcs, (tz',seq'), dpath++[i], [], steps))
         else return (reqs, proof)
 
-goUpDescr = ( "u", "u - up", "u - up", goUp )
+goUpDescr = ( "u", "up", "u  -- up", goUp )
 
 goUp _ (reqs, proof@(nm, asn, sc, strat, mcs, (tz,seq'), dpath, _, steps ))
   = let (ok,tz') = upTZ tz in
@@ -414,7 +371,7 @@ goUp _ (reqs, proof@(nm, asn, sc, strat, mcs, (tz,seq'), dpath, _, steps ))
 \newpage
 Law Matching
 \begin{code}
-matchLawDescr = ( "m", "match laws", "match laws", matchLawCommand )
+matchLawDescr = ( "m", "match laws", "m  -- match laws", matchLawCommand )
 
 matchLawCommand _ (reqs, proof@(nm, asn, sc, strat, mcs, sz@(tz,_), dpath, _, steps))
   = do putStrLn ("Matching "++trTerm 0 goalt)
@@ -423,7 +380,7 @@ matchLawCommand _ (reqs, proof@(nm, asn, sc, strat, mcs, sz@(tz,_), dpath, _, st
   where goalt = getTZ tz
 
 applyMatchDescr = ( "a", "apply match"
-                  , "apply match, identified by number", applyMatch)
+                  , "a i  -- apply match number i", applyMatch)
 
 applyMatch args (reqs, proof@(nm, asn, sc, strat, mcs, (tz,seq'), dpath, matches, steps))
   = let i = args2int args in
@@ -447,7 +404,7 @@ suitably instantiated.
 \begin{code}
 
 lawInstantiateDescr = ( "i", "instantiate"
-                      , "instantiate a true focus with an axiom"
+                      , "i  -- instantiate a true focus with an law"
                       , lawInstantiateProof )
 lawInstantiateProof _ (reqs, proof@( nm, asn, sc, strat
                                    , mcs, sz@(tz,_), dpath, matches, steps))
@@ -524,4 +481,28 @@ requestInstBindings bind gterms vs@(v:vrest)
                      requestInstBindings bind' gterms vrest
              _ -> requestInstBindings bind gterms vs
        _ -> requestInstBindings bind gterms vs
+\end{code}
+
+
+Different list lookup approaches:
+\begin{code}
+-- list lookup by number [1..]
+nlookup i things
+ | i < 1 || null things  =  Nothing
+nlookup 1 (thing:rest)   =  Just thing
+nlookup i (thing:rest)   =  nlookup (i-1) rest
+
+-- association list lookup
+alookup name [] = Nothing
+alookup name (thing@(n,_):rest)
+  | name == n  =  Just thing
+  | otherwise  =  alookup name rest
+\end{code}
+
+Screen clearing:
+\begin{code}
+clear = "\ESC[2J\ESC[1;1H"
+clearIt str = clear ++ str
+clearLong :: REPLCmdDescr s -> REPLCmdDescr s
+clearLong (nm,short,long,func) = (nm,short,clearIt long,func)
 \end{code}

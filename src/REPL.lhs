@@ -76,7 +76,6 @@ charTypeParse -- group letter,digits, and other non-print
     | otherwise  =  True
 \end{code}
 
-\newpage
 \begin{code}
 type REPLCmd state = REPLArguments -> state -> IO state
 type REPLCmdDescr state
@@ -87,17 +86,6 @@ type REPLCmdDescr state
 type REPLExit state = REPLArguments -> state -> IO (Bool,state)
 type REPLCommands state = [REPLCmdDescr state]
 \end{code}
-
-
-\subsubsection{Command Respository Lookup}
-\begin{code}
-cmdLookup :: String -> REPLCommands state -> Maybe (REPLCmdDescr state)
-cmdLookup s []= Nothing
-cmdLookup s (cd@(n,_,_,_):rest)
- | s == n     =  Just cd
- | otherwise  =  cmdLookup s rest
-\end{code}
-
 
 We have a configuration that defines the REPL behaviour
 that does not change during its lifetime:
@@ -115,7 +103,11 @@ data REPLConfig state
     , replEndCondition :: state -> Bool
     , replEndTidy :: REPLCmd state
     }
+\end{code}
 
+\newpage
+A default REPL configuration for test purposes
+\begin{code}
 defConfig
   = REPLC
       (const $ const "repl: ")
@@ -148,6 +140,17 @@ tstCmd args s
 defEndCond _ = False
 defEndTidy _ s = return s
 \end{code}
+
+\newpage
+\subsubsection{Command Respository Lookup}
+\begin{code}
+cmdLookup :: String -> REPLCommands state -> Maybe (REPLCmdDescr state)
+cmdLookup s []= Nothing
+cmdLookup s (cd@(n,_,_,_):rest)
+ | s == n     =  Just cd
+ | otherwise  =  cmdLookup s rest
+\end{code}
+
 
 \begin{code}
 runREPL :: String
@@ -238,6 +241,6 @@ shortHELP ((nm,shelp,_,_):cmds)
 longHELP :: String -> REPLCommands state -> InputT IO ()
 longHELP cmd []  = outputStrLn ("No such command: '"++cmd++"'")
 longHELP cmd ((nm,_,lhelp,_):cmds)
-  | cmd == nm  = outputStrLn ( "\n" ++ cmd ++ " -- " ++ lhelp ++ "\n")
+  | cmd == nm  = outputStrLn ("\n"++lhelp++"\n")
   | otherwise  =  longHELP cmd cmds
 \end{code}

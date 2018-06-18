@@ -18,7 +18,11 @@ module Proof
  , Justification
  , CalcStep
  , Calculation
- , LiveProof(..), dispLiveProof
+ , LiveProof(..)
+ , conjName__, conjName_, conjecture__, conjecture_, conjSC__, conjSC_
+ , strategy__, strategy_, mtchCtxts__, mtchCtxts_, focus__, focus_
+ , fPath__, fPath_, matches__, matches_, stepsSoFar__, stepsSoFar_
+ , dispLiveProof
  , Proof, displayProof
  , startProof, launchProof
  , displayMatches
@@ -718,6 +722,27 @@ data LiveProof
     }
   deriving (Eq, Show, Read)
 
+-- field modification boilerplate
+conjName__ f lp = lp{ conjName = f $ conjName lp}
+conjName_ = conjName__ . const
+conjecture__ f lp = lp{ conjecture = f $ conjecture lp}
+conjecture_ = conjecture__ . const
+conjSC__ f lp = lp{ conjSC = f $ conjSC lp}
+conjSC_ = conjSC__ . const
+strategy__ f lp = lp{ strategy = f $ strategy lp}
+strategy_ = strategy__ . const
+mtchCtxts__ f lp = lp{ mtchCtxts = f $ mtchCtxts lp}
+mtchCtxts_ = mtchCtxts__ . const
+focus__ f lp = lp{ focus = f $ focus lp}
+focus_ = focus__ . const
+fPath__ f lp = lp{ fPath = f $ fPath lp}
+fPath_ = fPath__ . const
+matches__ f lp = lp{ matches = f $ matches lp}
+matches_ = matches__ . const
+stepsSoFar__ f lp = lp{ stepsSoFar = f $ stepsSoFar lp}
+stepsSoFar_ = stepsSoFar__ . const
+
+
 atCleft   =  [1]
 atCright  =  [2]
 atHyp i   =  [3,i]
@@ -747,19 +772,21 @@ type Justification
 
 -- temporary
 dispLiveProof :: LiveProof -> String
-dispLiveProof (LP  nm _ sc strat _ tz dpath mtchs steps )
+dispLiveProof liveProof
  = unlines'
-     ( ( ("Proof for '"++red nm++"'  "++trSideCond sc)
-       : ("by "++strat)
+     ( ( ("Proof for '"++red (conjName liveProof)
+          ++"'  "++trSideCond (conjSC liveProof))
+       : ("by "++(strategy liveProof))
        : " ..."
-       : map shLiveStep (reverse steps)
+       : map shLiveStep (reverse (stepsSoFar liveProof))
        )
        ++
-       ( displayMatches mtchs
+       ( displayMatches (matches liveProof)
          : [ underline "           "
-           , dispSeqZip tz
+           , dispSeqZip (focus liveProof)
            , "" ]
        ) )
+
 
 dispSeqZip :: SeqZip -> String
 dispSeqZip (tz,Sequent' _ sc conj')  =  unlines' $ dispConjParts tz sc conj'
@@ -839,15 +866,33 @@ We need to setup a proof from a conjecture:
 \begin{code}
 startProof :: TheLogic -> [Theory] -> String -> Assertion -> LiveProof
 startProof logic thys nm asn@(t,sc)
-  = LP nm asn sc strat mcs sz atCleft [] []
+  =  LP { conjName = nm
+        , conjecture = asn
+        , conjSC = sc
+        , strategy = strat
+        , mtchCtxts =  mcs
+        , focus =  sz
+        , fPath = atCleft
+        , matches = []
+        , stepsSoFar = []
+        }
   where
     (strat,seq) = fromJust $ reduce logic thys (nm,asn)
     sz = leftConjFocus seq
     mcs = buildMatchContext thys
 
 launchProof :: [Theory] -> String -> Assertion -> (String,Sequent) -> LiveProof
-launchProof thys nm asn@(t,sc) (str,seq)
-  = LP nm asn sc str mcs sz atCleft [] []
+launchProof thys nm asn@(t,sc) (strat,seq)
+  = LP { conjName = nm
+        , conjecture = asn
+        , conjSC = sc
+        , strategy = strat
+        , mtchCtxts =  mcs
+        , focus =  sz
+        , fPath = atCleft
+        , matches = []
+        , stepsSoFar = []
+        }
   where
     sz = leftConjFocus seq
     hthy = hyp seq
@@ -859,16 +904,20 @@ launchProof thys nm asn@(t,sc) (str,seq)
 We need to determine when a live proof is complete:
 \begin{code}
 proofComplete :: TheLogic -> LiveProof -> Bool
-proofComplete logic (LP _ _ _ _ _ sz _ _ _)
-  =  let sequent = exitSeqZipper sz
+proofComplete logic liveProof
+  =  let sequent = exitSeqZipper $ focus liveProof
      in cleft sequent == cright sequent -- should be alpha-equivalent
 \end{code}
 
 We need to convert a complete live proof to a proof:
 \begin{code}
 finaliseProof :: LiveProof -> Proof
-finaliseProof (LP nm asn _ strat _ (tz,_) _ _ steps)
-  = (nm, asn, strat, (exitTZ tz, reverse steps))
+finaliseProof liveProof
+  = ( conjName liveProof
+    , conjecture liveProof
+    , strategy liveProof
+    , ( exitTZ $ fst $ focus liveProof
+      , reverse $ stepsSoFar liveProof ) )
 \end{code}
 
 \newpage

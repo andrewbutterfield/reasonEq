@@ -349,24 +349,30 @@ Focus movement commands
 \begin{code}
 goDownDescr = ( "d", "down", "d n  -- down n", goDown )
 
+
 goDown :: REPLCmd (REqState, LiveProof)
-goDown args (reqs,
-             proof@(LP nm asn sc strat mcs (tz,seq') dpath _ steps ))
+goDown args (reqs,liveProof )
   = let i = args2int args
+        (tz,seq') = focus liveProof
         (ok,tz') = downTZ i tz
     in if ok
-        then return (reqs, (LP nm asn sc strat mcs
-                               (tz',seq') (dpath++[i]) [] steps))
-        else return (reqs, proof)
+        then return ( reqs
+                    , focus_ (tz',seq')
+                    $ fPath__ (++[i])
+                    $ matches_ [] liveProof )
+        else return (reqs, liveProof)
 
 goUpDescr = ( "u", "up", "u  -- up", goUp )
 
-goUp _ (reqs, proof@(LP nm asn sc strat mcs (tz,seq') dpath _ steps ))
-  = let (ok,tz') = upTZ tz in
-    if ok
-    then return (reqs, (LP nm asn sc strat mcs
-                           (tz',seq') (init dpath) [] steps))
-    else return (reqs, proof)
+goUp _ (reqs, liveProof ) -- @(LP nm asn sc strat mcs (tz,seq') dpath _ steps ))
+  = let (tz,seq') = focus liveProof
+        (ok,tz') = upTZ tz
+    in if ok
+        then return ( reqs
+                    , focus_ (tz',seq')
+                    $ fPath__ init
+                    $ matches_ [] liveProof )
+        else return (reqs, liveProof)
 \end{code}
 
 \newpage
@@ -374,32 +380,37 @@ Law Matching
 \begin{code}
 matchLawDescr = ( "m", "match laws", "m  -- match laws", matchLawCommand )
 
-matchLawCommand _ (reqs, proof@(LP nm asn sc strat mcs sz@(tz,_) dpath _ steps))
-  = do putStrLn ("Matching "++trTerm 0 goalt)
-       let matches = matchInContexts (logic reqs) mcs goalt
-       return (reqs, (LP nm asn sc strat mcs sz dpath matches steps))
-  where goalt = getTZ tz
+matchLawCommand _ (reqs, liveProof)
+  = let (tz,_) = focus liveProof
+        goalt = getTZ tz
+    in do putStrLn ("Matching "++trTerm 0 goalt)
+          let newMatches = matchInContexts (logic reqs)
+                                           (mtchCtxts liveProof) goalt
+          return (reqs, matches_ newMatches liveProof)
 
 applyMatchDescr = ( "a", "apply match"
                   , "a i  -- apply match number i", applyMatch)
 
-applyMatch args (reqs,
-                 proof@(LP nm asn sc strat mcs (tz,seq') dpath matches steps))
-  = let i = args2int args in
-    case alookup i matches of
+applyMatch args (reqs, liveProof)
+  = let i = args2int args
+        (tz,seq') = focus liveProof
+        dpath = fPath liveProof
+    in
+    case alookup i (matches liveProof) of
      Nothing -> do putStrLn ("No match numbered "++ show i)
-                   return (reqs, proof)
+                   return (reqs, liveProof)
      Just (_,(lnm,lasn,bind,repl))
       -> case instantiate bind repl of
           Nothing -> do putStrLn "Apply failed !"
-                        return (reqs, proof)
+                        return (reqs, liveProof)
           Just brepl
             -> do putStrLn ("Applied law '"++lnm++"' at "++show dpath)
-                  return ( reqs,
-                           (LP nm asn sc strat
-                               mcs ((setTZ brepl tz),seq')
-                               dpath []
-                               ((("match "++lnm,bind,dpath), exitTZ tz):steps)) )
+                  return ( reqs
+                         , focus_ ((setTZ brepl tz),seq')
+                         $ matches_ []
+                         $ stepsSoFar__
+                               ((("match "++lnm,bind,dpath), exitTZ tz):)
+                               liveProof )
 \end{code}
 
 Replacing \textit{true} by a law, with unknown variables
@@ -409,11 +420,10 @@ suitably instantiated.
 lawInstantiateDescr = ( "i", "instantiate"
                       , "i  -- instantiate a true focus with an law"
                       , lawInstantiateProof )
-lawInstantiateProof _ (reqs, proof@(LP nm asn sc strat
-                                       mcs sz@(tz,_) dpath matches steps))
+lawInstantiateProof _ (reqs, liveProof )
   | currt /= true
     = do putStrLn ("Can only instantiate an law over "++trTerm 0 true)
-         return (reqs, proof)
+         return (reqs, liveProof)
   | otherwise
     = do putStrLn $ showLaws rslaws
          putStr "Pick a law : " ; input <- getLine
@@ -422,37 +432,38 @@ lawInstantiateProof _ (reqs, proof@(LP nm asn sc strat
              -> case nlookup (read str) rslaws of
                  Just law@((nm,asn),prov)
                    -> do putStrLn ("Law Chosen: "++nm)
-                         instantiateLaw reqs proof law
-                 _ -> return (reqs, proof)
-           _ -> return (reqs, proof)
+                         instantiateLaw reqs liveProof law
+                 _ -> return (reqs, liveProof)
+           _ -> return (reqs, liveProof)
   where
-    currt = getTZ tz; true = theTrue $ logic reqs
+    currt = getTZ $ fst $ focus liveProof
+    true = theTrue $ logic reqs
     thrys = theories reqs
     rslaws = if null thrys then [] else laws (head thrys)
 
-instantiateLaw reqs proof@(LP pnm asn psc strat
-                              mcs (tz,seq') dpath matches steps)
-                    law@((lnm,(lawt,lsc)),_)
- = do lbind <- generateLawInstanceBind (map knownV $ theories reqs)
+instantiateLaw reqs liveProof law@((lnm,(lawt,lsc)),_)
+ = let (tz,seq') = focus liveProof
+       psc = conjSC liveProof
+       dpath = fPath liveProof
+   in
+   do lbind <- generateLawInstanceBind (map knownV $ theories reqs)
                                        (exitTZ tz) psc law
       case instantiateSC lbind lsc of
         Nothing -> do putStrLn "instantiated law side-cond is false"
-                      return (reqs, proof)
+                      return (reqs, liveProof)
         Just ilsc
           -> do putStrLn $ trBinding lbind
                 case mrgSideCond psc ilsc of
                   Nothing -> do putStrLn "side-condition merge failed"
-                                return (reqs, proof)
+                                return (reqs, liveProof)
                   Just nsc ->
                     do  ilawt <- instantiate lbind lawt
                         return ( reqs
-                               , (LP pnm asn nsc strat
-                                     mcs (setTZ ilawt tz,seq')
-                                     dpath
-                                     matches
-                                     ( ( ("instantiate "++lnm,lbind,dpath)
-                                       , exitTZ tz )
-                                       : steps ) ) )
+                               , focus_ (setTZ ilawt tz,seq')
+                               $ stepsSoFar__
+                                  ( ( ("instantiate "++lnm,lbind,dpath)
+                                    , exitTZ tz ) : )
+                                  liveProof )
 \end{code}
 
 \newpage

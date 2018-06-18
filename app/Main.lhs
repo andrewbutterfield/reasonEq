@@ -350,21 +350,22 @@ Focus movement commands
 goDownDescr = ( "d", "down", "d n  -- down n", goDown )
 
 goDown :: REPLCmd (REqState, LiveProof)
-goDown args (reqs, proof@(nm, asn, sc, strat, mcs, (tz,seq'), dpath, _, steps ))
+goDown args (reqs,
+             proof@(LP nm asn sc strat mcs (tz,seq') dpath _ steps ))
   = let i = args2int args
         (ok,tz') = downTZ i tz
     in if ok
-        then return (reqs, ( nm, asn, sc, strat
-                           , mcs, (tz',seq'), dpath++[i], [], steps))
+        then return (reqs, (LP nm asn sc strat mcs
+                               (tz',seq') (dpath++[i]) [] steps))
         else return (reqs, proof)
 
 goUpDescr = ( "u", "up", "u  -- up", goUp )
 
-goUp _ (reqs, proof@(nm, asn, sc, strat, mcs, (tz,seq'), dpath, _, steps ))
+goUp _ (reqs, proof@(LP nm asn sc strat mcs (tz,seq') dpath _ steps ))
   = let (ok,tz') = upTZ tz in
     if ok
-    then return (reqs, ( nm, asn, sc, strat
-                        , mcs, (tz',seq'), init dpath, [], steps))
+    then return (reqs, (LP nm asn sc strat mcs
+                           (tz',seq') (init dpath) [] steps))
     else return (reqs, proof)
 \end{code}
 
@@ -373,16 +374,17 @@ Law Matching
 \begin{code}
 matchLawDescr = ( "m", "match laws", "m  -- match laws", matchLawCommand )
 
-matchLawCommand _ (reqs, proof@(nm, asn, sc, strat, mcs, sz@(tz,_), dpath, _, steps))
+matchLawCommand _ (reqs, proof@(LP nm asn sc strat mcs sz@(tz,_) dpath _ steps))
   = do putStrLn ("Matching "++trTerm 0 goalt)
        let matches = matchInContexts (logic reqs) mcs goalt
-       return (reqs, (nm, asn, sc, strat, mcs, sz, dpath, matches, steps))
+       return (reqs, (LP nm asn sc strat mcs sz dpath matches steps))
   where goalt = getTZ tz
 
 applyMatchDescr = ( "a", "apply match"
                   , "a i  -- apply match number i", applyMatch)
 
-applyMatch args (reqs, proof@(nm, asn, sc, strat, mcs, (tz,seq'), dpath, matches, steps))
+applyMatch args (reqs,
+                 proof@(LP nm asn sc strat mcs (tz,seq') dpath matches steps))
   = let i = args2int args in
     case alookup i matches of
      Nothing -> do putStrLn ("No match numbered "++ show i)
@@ -393,10 +395,11 @@ applyMatch args (reqs, proof@(nm, asn, sc, strat, mcs, (tz,seq'), dpath, matches
                         return (reqs, proof)
           Just brepl
             -> do putStrLn ("Applied law '"++lnm++"' at "++show dpath)
-                  return (reqs, (nm, asn, sc, strat
-                                 , mcs, ((setTZ brepl tz),seq')
-                                 , dpath, []
-                                 , (("match "++lnm,bind,dpath), exitTZ tz):steps))
+                  return ( reqs,
+                           (LP nm asn sc strat
+                               mcs ((setTZ brepl tz),seq')
+                               dpath []
+                               ((("match "++lnm,bind,dpath), exitTZ tz):steps)) )
 \end{code}
 
 Replacing \textit{true} by a law, with unknown variables
@@ -406,8 +409,8 @@ suitably instantiated.
 lawInstantiateDescr = ( "i", "instantiate"
                       , "i  -- instantiate a true focus with an law"
                       , lawInstantiateProof )
-lawInstantiateProof _ (reqs, proof@( nm, asn, sc, strat
-                                   , mcs, sz@(tz,_), dpath, matches, steps))
+lawInstantiateProof _ (reqs, proof@(LP nm asn sc strat
+                                       mcs sz@(tz,_) dpath matches steps))
   | currt /= true
     = do putStrLn ("Can only instantiate an law over "++trTerm 0 true)
          return (reqs, proof)
@@ -427,8 +430,8 @@ lawInstantiateProof _ (reqs, proof@( nm, asn, sc, strat
     thrys = theories reqs
     rslaws = if null thrys then [] else laws (head thrys)
 
-instantiateLaw reqs proof@( pnm, asn, psc, strat
-                          , mcs, (tz,seq'), dpath, matches, steps)
+instantiateLaw reqs proof@(LP pnm asn psc strat
+                              mcs (tz,seq') dpath matches steps)
                     law@((lnm,(lawt,lsc)),_)
  = do lbind <- generateLawInstanceBind (map knownV $ theories reqs)
                                        (exitTZ tz) psc law
@@ -443,13 +446,13 @@ instantiateLaw reqs proof@( pnm, asn, psc, strat
                   Just nsc ->
                     do  ilawt <- instantiate lbind lawt
                         return ( reqs
-                               , ( pnm, asn, nsc, strat
-                                       , mcs, (setTZ ilawt tz,seq')
-                                       , dpath
-                                       , matches
-                                       , ( ("instantiate "++lnm,lbind,dpath)
-                                           , exitTZ tz )
-                                         : steps ) )
+                               , (LP pnm asn nsc strat
+                                     mcs (setTZ ilawt tz,seq')
+                                     dpath
+                                     matches
+                                     ( ( ("instantiate "++lnm,lbind,dpath)
+                                       , exitTZ tz )
+                                       : steps ) ) )
 \end{code}
 
 \newpage

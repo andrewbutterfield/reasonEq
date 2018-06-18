@@ -18,7 +18,7 @@ module Proof
  , Justification
  , CalcStep
  , Calculation
- , LiveProof, dispLiveProof
+ , LiveProof(..), dispLiveProof
  , Proof, displayProof
  , startProof, launchProof
  , displayMatches
@@ -282,6 +282,7 @@ data Sequent
   deriving (Eq, Show, Read)
 \end{code}
 
+\newpage
 \subsubsection{Sequent Strategies}
 
 Given any conjecture (named assertion)
@@ -398,7 +399,8 @@ splitAnd logic (Cons _ i ts)
 splitAnd _ t           =  [t]
 \end{code}
 
-\subsection{Making Unknown Variables Known}
+\newpage
+\subsubsection{Making Unknown Variables Known}
 
 A key function is one that makes all unknown variables in a term become known.
 \begin{code}
@@ -550,7 +552,7 @@ data Sequent'
     , sc0       :: SideCond -- sequent side-condition
     , laws'     :: Laws'
     }
-  deriving (Show,Read)
+  deriving (Eq,Show,Read)
 \end{code}
 
 Now, the two variations
@@ -576,7 +578,7 @@ data Laws'
     , cleft0  :: Term -- left conjecture
     , cright0 :: Term -- right conjecture
     }
-  deriving (Show,Read)
+  deriving (Eq,Show,Read)
 
 data LeftRight = Lft | Rght deriving (Eq,Show,Read)
 \end{code}
@@ -702,17 +704,19 @@ in enough detail to allow the proof to be replayed.
 
 We start with live proofs:
 \begin{code}
-type LiveProof
-  = ( String -- conjecture name
-    , Assertion -- assertion being proven
-    , SideCond -- side condition
-    , String -- strategy
-    , [MatchContext] -- current matching contexts
-    , SeqZip  -- current term, focussed
-    , [Int] -- current zipper descent arguments (cleft,cright,hyp=1,2,3)
-    , Matches -- current matches
-    , [CalcStep]  -- calculation steps so far, most recent first
-    )
+data LiveProof
+  = LP {
+      conjName :: String -- conjecture name
+    , conjecture :: Assertion -- assertion being proven
+    , conjSC :: SideCond -- side condition
+    , strategy :: String -- strategy
+    , mtchCtxts :: [MatchContext] -- current matching contexts
+    , focus :: SeqZip  -- current term, focussed
+    , fPath :: [Int] -- current zipper descent arguments (cleft,cright,hyp=1,2,3)
+    , matches :: Matches -- current matches
+    , stepsSoFar :: [CalcStep]  -- calculation steps so far, most recent first
+    }
+  deriving (Eq, Show, Read)
 
 atCleft   =  [1]
 atCright  =  [2]
@@ -743,7 +747,7 @@ type Justification
 
 -- temporary
 dispLiveProof :: LiveProof -> String
-dispLiveProof ( nm, _, sc, strat, _, tz, dpath, mtchs, steps )
+dispLiveProof (LP  nm _ sc strat _ tz dpath mtchs steps )
  = unlines'
      ( ( ("Proof for '"++red nm++"'  "++trSideCond sc)
        : ("by "++strat)
@@ -835,7 +839,7 @@ We need to setup a proof from a conjecture:
 \begin{code}
 startProof :: TheLogic -> [Theory] -> String -> Assertion -> LiveProof
 startProof logic thys nm asn@(t,sc)
-  = (nm, asn, sc, strat, mcs, sz, atCleft, [], [])
+  = LP nm asn sc strat mcs sz atCleft [] []
   where
     (strat,seq) = fromJust $ reduce logic thys (nm,asn)
     sz = leftConjFocus seq
@@ -843,7 +847,7 @@ startProof logic thys nm asn@(t,sc)
 
 launchProof :: [Theory] -> String -> Assertion -> (String,Sequent) -> LiveProof
 launchProof thys nm asn@(t,sc) (str,seq)
-  = (nm, asn, sc, str, mcs, sz, atCleft, [], [])
+  = LP nm asn sc str mcs sz atCleft [] []
   where
     sz = leftConjFocus seq
     hthy = hyp seq
@@ -855,7 +859,7 @@ launchProof thys nm asn@(t,sc) (str,seq)
 We need to determine when a live proof is complete:
 \begin{code}
 proofComplete :: TheLogic -> LiveProof -> Bool
-proofComplete logic (_, _, _, _, _, sz, _, _, _)
+proofComplete logic (LP _ _ _ _ _ sz _ _ _)
   =  let sequent = exitSeqZipper sz
      in cleft sequent == cright sequent -- should be alpha-equivalent
 \end{code}
@@ -863,7 +867,7 @@ proofComplete logic (_, _, _, _, _, sz, _, _, _)
 We need to convert a complete live proof to a proof:
 \begin{code}
 finaliseProof :: LiveProof -> Proof
-finaliseProof (nm, asn, _, strat, _, (tz,_), _, _, steps)
+finaliseProof (LP nm asn _ strat _ (tz,_) _ _ steps)
   = (nm, asn, strat, (exitTZ tz, reverse steps))
 \end{code}
 

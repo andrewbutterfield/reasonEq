@@ -71,7 +71,7 @@ data Term'
   | Substn' TermKind Term LVarSub TermSubL  -- subst-pairs before, reversed
                                   Variable -- focus target variable
                                   TermSubL  -- subst-pairs after focus
-  deriving (Show,Read)
+  deriving (Eq,Show,Read)
 
 
 type TermZip = (Term,[Term'])

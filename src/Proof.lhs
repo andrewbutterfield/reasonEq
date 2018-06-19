@@ -14,9 +14,11 @@ module Proof
  , availableStrategies
  , SeqZip
  , leftConjFocus, rightConjFocus, hypConjFocus, exitSeqZipper
- , upSZ, downSZ, seqGoLeft, seqGoRight, switchLeftRight, seqGoHyp
+ , upSZ, downSZ
+ , seqGoLeft, seqGoRight, switchLeftRight
+ , seqGoHyp, seqLeaveHyp
  , HowUsed(..)
- , Justification(..)
+ , Justification(..), isSequentSwitch, justSwitched
  , CalcStep
  , Calculation
  , LiveProof(..)
@@ -565,6 +567,10 @@ Now, the two variations
   && T \times \mathbf{2} \times t
 \\&& N \times VD \times L^* \times N \times SC \times P \times L^* \times t^2
 \end{eqnarray*}
+However, there is one wrinkle we need to allow for.
+When we focus on a hypothesis, we must record it's initial value,
+so that it can be restored to its position,
+with the modified version added on at the end as a new hypothesis.
 \begin{code}
 data Laws'
   = CLaws' { -- currently focussed on conjecture component
@@ -573,15 +579,16 @@ data Laws'
     , otherC :: Term  -- the term not in the focus
     }
   | HLaws' { -- currently focussed on hypothesis component
-      hname :: String -- hyp. theory name
-    , hknown :: VarTable
-    , hbefore :: [Law] -- hyp. laws before focus (reversed)
-    , fhName  :: String -- focus hypothesis name
-    , fhSC    :: SideCond -- focus hypothesis sc (usually true)
-    , fhProv  :: Provenance -- focus hypothesis provenance (?)
-    , hafter  :: [Law] -- hyp. laws after focus
-    , cleft0  :: Term -- left conjecture
-    , cright0 :: Term -- right conjecture
+      hname     :: String -- hyp. theory name
+    , hknown    :: VarTable
+    , hbefore   :: [Law] -- hyp. laws before focus (reversed)
+    , fhName    :: String -- focus hypothesis name
+    , fhSC      :: SideCond -- focus hypothesis sc (usually true)
+    , fhProv    :: Provenance -- focus hypothesis provenance (?)
+    , hOriginal :: Term -- the original form of the focus hypothesis
+    , hafter    :: [Law] -- hyp. laws after focus
+    , cleft0    :: Term -- left conjecture
+    , cright0   :: Term -- right conjecture
     }
   deriving (Eq,Show,Read)
 
@@ -628,7 +635,7 @@ hypConjFocus i sequent
               , Sequent' (ante sequent)
                          (sc sequent) $
                          HLaws' htnm hknown
-                                before hnm hsc hprov after
+                                before hnm hsc hprov ht after
                                 (cleft sequent) (cright sequent) )
 \end{code}
 
@@ -647,8 +654,14 @@ exitSQ t sequent'
 exitLaws :: Term -> Laws' -> (Theory, Term, Term)
 exitLaws currT (CLaws' h0 Lft  othrC)  =  (h0, currT, othrC)
 exitLaws currT (CLaws' h0 Rght othrC)  =  (h0, othrC, currT)
-exitLaws currT  (HLaws' hnm hkn hbef fnm fsc fprov haft cl cr)
-  =  (Theory hnm (reverse hbef ++ ((fnm,(currT,fsc)),fprov) : haft) hkn, cl, cr)
+exitLaws currT  (HLaws' hnm hkn hbef fnm fsc fprov horig haft cl cr)
+  =  ( Theory hnm
+              ( reverse hbef
+                ++ [((fnm,(horig,fsc)),fprov)]
+                ++ haft
+                ++ [((fnm,(currT,fsc)),fprov)] )
+              hkn
+     , cl, cr)
 \end{code}
 
 \subsubsection{Sequent Zipper Moves}
@@ -664,6 +677,7 @@ downSZ i (tz,seq')  =  let (moved,tz') = downTZ i tz in (moved,(tz',seq'))
 
 However we also have switch actions that jump between the three top-level
 focii.
+Switching between $C_{left}$ and $C_{right}$ is easy:
 \begin{code}
 seqGoLeft :: SeqZip -> (Bool, SeqZip)
 seqGoLeft sz@(_,Sequent' _ _ (CLaws' _ Lft _))  =  (False,sz) -- already Left
@@ -675,19 +689,32 @@ seqGoRight sz = (True,rightConjFocus $ exitSeqZipper sz)
 
 switchLeftRight :: SeqZip -> (Bool, Justification, SeqZip)
 switchLeftRight sz@(_,Sequent' _ _ (CLaws' _ Lft _)) -- already Left
-  =  (True,SwRight,rightConjFocus $ exitSeqZipper sz)
+  =  (True, SwRight, rightConjFocus $ exitSeqZipper sz)
 switchLeftRight sz@(_,Sequent' _ _ (CLaws' _ Rght _)) -- already Right
-  = (True,SwLeft,leftConjFocus $ exitSeqZipper sz)
-switchLeftRight sz = (False,error "switchLeftRight: no switch", sz)
-
+  =  (True, SwLeft,  leftConjFocus $ exitSeqZipper sz)
+switchLeftRight sz -- must be in hypothesis
+  =  (False, error "switchLeftRight: in hypothesis!", sz)
+\end{code}
+Entering a $H_i$  from $C_{left}$ or $C_{right}$ is easy.
+But once in, we need a special command to exit.
+\begin{code}
 seqGoHyp :: Int -> SeqZip -> (Bool, SeqZip)
-seqGoHyp i sz@(_,Sequent' _ _ (HLaws' _ _ bef _ _ _ _ _ _))
-                           | i+1 == length bef  =  (False,sz) -- already at ith.
+seqGoHyp i sz@(_,Sequent' _ _ (HLaws' _ _ _ _ _ _ _ _ _ _))
+  =  (False,sz)  -- can't change hypothesis while in one.
 seqGoHyp i sz
   =  case hypConjFocus i $ exitSeqZipper sz of
        Nothing   ->  (False,sz) -- bad index
        Just sz'  ->  (True,sz')
 \end{code}
+When we leave, the revised hypothesis must be added in as a new one.
+\begin{code}
+seqLeaveHyp :: SeqZip -> (Bool, SeqZip)
+seqLeaveHyp sz@(_,Sequent' _ _ (HLaws' _ _ _ _ _ _ _ _ _ _))
+  =  (True,leftConjFocus $ exitSeqZipper sz)
+seqLeaveHyp sz -- not in hypothesis
+  =  (False,sz)
+\end{code}
+
 
 \subsection{Proof Calculations}
 
@@ -775,6 +802,16 @@ data Justification
       Binding  -- binding from law variables to goal components
       [Int]    -- zipper descent arguments
   deriving (Eq,Show,Read)
+
+isSequentSwitch :: Justification -> Bool
+isSequentSwitch SwLeft     =  True
+isSequentSwitch SwRight    =  True
+isSequentSwitch (SwHyp _)  =  True
+isSequentSwitch _          =  False
+
+justSwitched :: [CalcStep] -> Bool
+justSwitched []         =  True -- starting a proof is considered a 'switch'
+justSwitched ((j,_):_)  =  isSequentSwitch j
 
 data HowUsed
   = ByMatch          -- replace focus with binding(match)

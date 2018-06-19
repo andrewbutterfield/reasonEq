@@ -329,6 +329,8 @@ proofREPLConfig
             , applyMatchDescr
             , lawInstantiateDescr
             , switchConsequentDescr
+            , switchHypothesisDescr
+            , leaveHypothesisDescr
             ])
       proofREPLEndCondition
       proofREPLEndTidy
@@ -379,7 +381,9 @@ goUp _ (reqs, liveProof )
 Switching consequent focus:
 \begin{code}
 switchConsequentDescr
-  = ( "s", "switch", "s  -- switch between C_left/C_right"
+  = ( "s", "switch",
+      unlines' [ "s  -- switch between C_left/C_right"
+               , "   -- or go to C_left if in hypothesis" ]
     , switchConsequent )
 
 switchConsequent _ (reqs, liveProof)
@@ -392,6 +396,49 @@ switchConsequent _ (reqs, liveProof)
                           $ stepsSoFar__
                              ((sw',exitTZ $ fst sz):) liveProof )
               else return ( reqs, liveProof )
+\end{code}
+
+Switching focus to a hypothesis:
+\begin{code}
+switchHypothesisDescr
+  = ( "h", "to hypothesis"
+    , "h i  -- focus on hypothesis i, use 'l' to exit."
+    , switchHypothesis )
+
+switchHypothesis args (reqs, liveProof)
+  = let
+      i = args2int args
+      sz = focus liveProof
+      (ok,sz') = seqGoHyp i sz
+      sw' = SwHyp i
+    in if ok then return ( reqs
+                         , focus_ sz'
+                         $ matches_ []
+                         $ stepsSoFar__
+                            ((sw', exitTZ $ fst sz):) liveProof )
+             else return (reqs, liveProof)
+\end{code}
+
+Retruning focus from a hypothesis:
+\begin{code}
+leaveHypothesisDescr
+  = ( "l", "leave hypothesis"
+    , "l  --  leave hpyothesis, go to C_left."
+    , leaveHypothesis )
+
+leaveHypothesis _ (reqs, liveProof)
+  = let
+      sz = focus liveProof
+      (ok,sz') = seqLeaveHyp sz
+      justInH = justSwitched $ stepsSoFar liveProof
+      (tz',seq') = sz'
+    in if not ok || justInH
+        then return ( reqs, liveProof )
+        else return ( reqs
+                         , focus_ sz'
+                         $ matches_ []
+                         $ stepsSoFar__
+                            ((SwLeft, exitTZ $ fst sz):) liveProof )
 \end{code}
 
 \newpage

@@ -365,7 +365,7 @@ goDown args (reqs,liveProof )
 
 goUpDescr = ( "u", "up", "u  -- up", goUp )
 
-goUp _ (reqs, liveProof ) -- @(LP nm asn sc strat mcs (tz,seq') dpath _ steps ))
+goUp _ (reqs, liveProof )
   = let (tz,seq') = focus liveProof
         (ok,tz') = upTZ tz
     in if ok
@@ -385,8 +385,12 @@ switchConsequentDescr
 switchConsequent _ (reqs, liveProof)
   =  let
       sz = focus liveProof
-      (ok,sz') = switchLeftRight sz
-     in if ok then return ( reqs, focus_ sz' liveProof )
+      (ok,sw',sz') = switchLeftRight sz
+     in if ok then return ( reqs
+                          , focus_ sz'
+                          $ matches_ []
+                          $ stepsSoFar__
+                             ((sw',exitTZ $ fst sz):) liveProof )
               else return ( reqs, liveProof )
 \end{code}
 
@@ -424,7 +428,7 @@ applyMatch args (reqs, liveProof)
                          , focus_ ((setTZ brepl tz),seq')
                          $ matches_ []
                          $ stepsSoFar__
-                               ((("match "++lnm,bind,dpath), exitTZ tz):)
+                               (((UseLaw ByMatch lnm bind dpath), exitTZ tz):)
                                liveProof )
 \end{code}
 
@@ -475,7 +479,7 @@ instantiateLaw reqs liveProof law@((lnm,(lawt,lsc)),_)
                         return ( reqs
                                , focus_ (setTZ ilawt tz,seq')
                                $ stepsSoFar__
-                                  ( ( ("instantiate "++lnm,lbind,dpath)
+                                  ( ( (UseLaw ByInstantiation lnm lbind dpath)
                                     , exitTZ tz ) : )
                                   liveProof )
 \end{code}

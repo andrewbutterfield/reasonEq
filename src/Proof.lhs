@@ -15,7 +15,8 @@ module Proof
  , SeqZip
  , leftConjFocus, rightConjFocus, hypConjFocus, exitSeqZipper
  , upSZ, downSZ, seqGoLeft, seqGoRight, switchLeftRight, seqGoHyp
- , Justification
+ , HowUsed(..)
+ , Justification(..)
  , CalcStep
  , Calculation
  , LiveProof(..)
@@ -672,12 +673,12 @@ seqGoRight :: SeqZip -> (Bool, SeqZip)
 seqGoRight sz@(_,Sequent' _ _ (CLaws' _ Rght _))  =  (False,sz) -- already Right
 seqGoRight sz = (True,rightConjFocus $ exitSeqZipper sz)
 
-switchLeftRight :: SeqZip -> (Bool, SeqZip)
+switchLeftRight :: SeqZip -> (Bool, Justification, SeqZip)
 switchLeftRight sz@(_,Sequent' _ _ (CLaws' _ Lft _)) -- already Left
-  =  (True,rightConjFocus $ exitSeqZipper sz)
+  =  (True,SwRight,rightConjFocus $ exitSeqZipper sz)
 switchLeftRight sz@(_,Sequent' _ _ (CLaws' _ Rght _)) -- already Right
-  = (True,leftConjFocus $ exitSeqZipper sz)
-switchLeftRight sz = (False,sz)
+  = (True,SwLeft,leftConjFocus $ exitSeqZipper sz)
+switchLeftRight sz = (False,error "switchLeftRight: no switch", sz)
 
 seqGoHyp :: Int -> SeqZip -> (Bool, SeqZip)
 seqGoHyp i sz@(_,Sequent' _ _ (HLaws' _ _ bef _ _ _ _ _ _))
@@ -722,8 +723,8 @@ data LiveProof
     , conjSC :: SideCond -- side condition
     , strategy :: String -- strategy
     , mtchCtxts :: [MatchContext] -- current matching contexts
-    , focus :: SeqZip  -- current term, focussed
-    , fPath :: [Int] -- current zipper descent arguments (cleft,cright,hyp=1,2,3)
+    , focus :: SeqZip  -- current sub-term of interest
+    , fPath :: [Int] -- current term zipper descent arguments
     , matches :: Matches -- current matches
     , stepsSoFar :: [CalcStep]  -- calculation steps so far, most recent first
     }
@@ -749,11 +750,6 @@ matches_ = matches__ . const
 stepsSoFar__ f lp = lp{ stepsSoFar = f $ stepsSoFar lp}
 stepsSoFar_ = stepsSoFar__ . const
 
-
-atCleft   =  [1]
-atCright  =  [2]
-atHyp i   =  [3,i]
-
 type Match
  = ( String -- assertion name
    , Assertion -- matched assertion
@@ -766,13 +762,24 @@ type Matches
       , Match ) ]  -- corresponding match ) ]
 
 type CalcStep
-  = ( Justification -- step justification
-    , Term )  -- previous term
+  = ( Justification  -- step justification
+    , Term )         -- previous term
 
-type Justification
-  = ( String   -- law name
-    , Binding  -- binding from law variables to goal components
-    , [Int] )  -- zipper descent arguments
+data Justification
+  = SwLeft     -- switch to left consequent
+  | SwRight    -- switch to right consequent
+  | SwHyp Int  -- switch to hypothesis i
+  | UseLaw
+      HowUsed  -- how law was used in proof step
+      String   -- law name
+      Binding  -- binding from law variables to goal components
+      [Int]    -- zipper descent arguments
+  deriving (Eq,Show,Read)
+
+data HowUsed
+  = ByMatch          -- replace focus with binding(match)
+  | ByInstantiation  -- replace focus=true with binding(law)
+  deriving (Eq,Show,Read)
 \end{code}
 
 \begin{code}
@@ -820,10 +827,22 @@ dispTermZip :: TermZip -> String
 dispTermZip tz = blue $ trTerm 0 (getTZ tz)
 
 shLiveStep :: CalcStep -> String
-shLiveStep ( (lnm, bind, dpath), t )
- = unlines' [ trTerm 0 t
-            , "   = '"++lnm++"@" ++ show dpath ++ "'"
-            ]
+shLiveStep ( just, trm )
+  = unlines' [ trTerm 0 trm, showJustification just]
+
+showJustification :: Justification -> String
+showJustification SwLeft
+  =  "   [switch left]"
+showJustification SwRight
+  =  "   [switch right]"
+showJustification (SwHyp i)
+  =  "   [switch hypothesis "++show i++"]"
+showJustification (UseLaw how lnm bind dpath)
+  =  "   = '"++showHow how++" "++lnm++"@" ++ show dpath ++ "'"
+
+showHow :: HowUsed -> String
+showHow ByMatch = "match"
+showHow ByInstantiation = "instantiate"
 
 displayMatches :: Matches -> String
 displayMatches []  =  ""
@@ -861,12 +880,15 @@ displayProof (pnm,(trm,sc),strat,(trm',steps))
               ++ [trTerm 0 trm'] )
 
 shStep :: CalcStep -> String
-shStep ( (lnm, bind, dpath), t )
- = unlines' [ trTermZip $ pathTZ (tail dpath) t -- ignore sequent no at start
-                                                -- for now
-            , " = '"++lnm++" @" ++ show dpath ++ "'"
-            , trBinding bind
-            ]
+shStep ( SwLeft,  t )  =  unlines' [trTerm 0 t, " [switch left]"]
+shStep ( SwRight, t )  =  unlines' [trTerm 0 t, " [switch right]"]
+shStep ( SwHyp i, t )
+  =  unlines' [trTerm 0 t, " [switch hypothesis "++show i++"]"]
+shStep ( (UseLaw how lnm bind dpath), trm )
+   = unlines' [ trTermZip $ pathTZ dpath trm
+              , " = '" ++ showHow how++" "++lnm++" @" ++ show dpath ++ "'"
+              , trBinding bind
+              ]
 \end{code}
 
 We need to setup a proof from a conjecture:
@@ -879,7 +901,7 @@ startProof logic thys nm asn@(t,sc)
         , strategy = strat
         , mtchCtxts =  mcs
         , focus =  sz
-        , fPath = atCleft
+        , fPath = []
         , matches = []
         , stepsSoFar = []
         }
@@ -896,7 +918,7 @@ launchProof thys nm asn@(t,sc) (strat,seq)
         , strategy = strat
         , mtchCtxts =  mcs
         , focus =  sz
-        , fPath = atCleft
+        , fPath = []
         , matches = []
         , stepsSoFar = []
         }

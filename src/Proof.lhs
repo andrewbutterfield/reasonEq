@@ -14,7 +14,7 @@ module Proof
  , availableStrategies
  , SeqZip
  , leftConjFocus, rightConjFocus, hypConjFocus, exitSeqZipper
- , upSZ, downSZ, seqGoLeft, seqGoRight, seqGoHyp
+ , upSZ, downSZ, seqGoLeft, seqGoRight, switchLeftRight, seqGoHyp
  , Justification
  , CalcStep
  , Calculation
@@ -661,7 +661,7 @@ downSZ :: Int -> SeqZip -> (Bool,SeqZip)
 downSZ i (tz,seq')  =  let (moved,tz') = downTZ i tz in (moved,(tz',seq'))
 \end{code}
 
-However we also have a switch action that jumps between the three top-level
+However we also have switch actions that jump between the three top-level
 focii.
 \begin{code}
 seqGoLeft :: SeqZip -> (Bool, SeqZip)
@@ -671,6 +671,13 @@ seqGoLeft sz = (True,leftConjFocus $ exitSeqZipper sz)
 seqGoRight :: SeqZip -> (Bool, SeqZip)
 seqGoRight sz@(_,Sequent' _ _ (CLaws' _ Rght _))  =  (False,sz) -- already Right
 seqGoRight sz = (True,rightConjFocus $ exitSeqZipper sz)
+
+switchLeftRight :: SeqZip -> (Bool, SeqZip)
+switchLeftRight sz@(_,Sequent' _ _ (CLaws' _ Lft _)) -- already Left
+  =  (True,rightConjFocus $ exitSeqZipper sz)
+switchLeftRight sz@(_,Sequent' _ _ (CLaws' _ Rght _)) -- already Right
+  = (True,leftConjFocus $ exitSeqZipper sz)
+switchLeftRight sz = (False,sz)
 
 seqGoHyp :: Int -> SeqZip -> (Bool, SeqZip)
 seqGoHyp i sz@(_,Sequent' _ _ (HLaws' _ _ bef _ _ _ _ _ _))

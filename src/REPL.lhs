@@ -9,6 +9,7 @@ module REPL (
     REPLParser, REPLArguments, idParse, wordParse, charTypeParse
   , REPLCmd, REPLCmdDescr, REPLExit, REPLCommands
   , REPLConfig(..)
+  , clearLong
   , runREPL
   )
 where
@@ -17,6 +18,8 @@ import System.Console.Haskeline
 import Control.Monad.IO.Class
 import Data.List
 import Data.Char
+
+import Utilities
 \end{code}
 
 \subsection{REPL Introduction}
@@ -243,4 +246,11 @@ longHELP cmd []  = outputStrLn ("No such command: '"++cmd++"'")
 longHELP cmd ((nm,_,lhelp,_):cmds)
   | cmd == nm  = outputStrLn ("\n"++lhelp++"\n")
   | otherwise  =  longHELP cmd cmds
+\end{code}
+
+
+Screen clearing for help strings:
+\begin{code}
+clearLong :: REPLCmdDescr s -> REPLCmdDescr s
+clearLong (nm,short,long,func) = (nm,short,clearIt long,func)
 \end{code}

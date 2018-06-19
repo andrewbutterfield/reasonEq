@@ -328,6 +328,7 @@ proofREPLConfig
             , matchLawDescr
             , applyMatchDescr
             , lawInstantiateDescr
+            , switchConsequentDescr
             ])
       proofREPLEndCondition
       proofREPLEndTidy
@@ -375,6 +376,20 @@ goUp _ (reqs, liveProof ) -- @(LP nm asn sc strat mcs (tz,seq') dpath _ steps ))
         else return (reqs, liveProof)
 \end{code}
 
+Switching consequent focus:
+\begin{code}
+switchConsequentDescr
+  = ( "s", "switch", "s  -- switch between C_left/C_right"
+    , switchConsequent )
+
+switchConsequent _ (reqs, liveProof)
+  =  let
+      sz = focus liveProof
+      (ok,sz') = switchLeftRight sz
+     in if ok then return ( reqs, focus_ sz' liveProof )
+              else return ( reqs, liveProof )
+\end{code}
+
 \newpage
 Law Matching
 \begin{code}
@@ -416,7 +431,6 @@ applyMatch args (reqs, liveProof)
 Replacing \textit{true} by a law, with unknown variables
 suitably instantiated.
 \begin{code}
-
 lawInstantiateDescr = ( "i", "instantiate"
                       , "i  -- instantiate a true focus with an law"
                       , lawInstantiateProof )
@@ -466,7 +480,6 @@ instantiateLaw reqs liveProof law@((lnm,(lawt,lsc)),_)
                                   liveProof )
 \end{code}
 
-\newpage
 
 Dialogue to get law instantiation binding.
 We want a binding for every unknown variable in the law.
@@ -495,28 +508,4 @@ requestInstBindings bind gterms vs@(v:vrest)
                      requestInstBindings bind' gterms vrest
              _ -> requestInstBindings bind gterms vs
        _ -> requestInstBindings bind gterms vs
-\end{code}
-
-
-Different list lookup approaches:
-\begin{code}
--- list lookup by number [1..]
-nlookup i things
- | i < 1 || null things  =  Nothing
-nlookup 1 (thing:rest)   =  Just thing
-nlookup i (thing:rest)   =  nlookup (i-1) rest
-
--- association list lookup
-alookup name [] = Nothing
-alookup name (thing@(n,_):rest)
-  | name == n  =  Just thing
-  | otherwise  =  alookup name rest
-\end{code}
-
-Screen clearing:
-\begin{code}
-clear = "\ESC[2J\ESC[1;1H"
-clearIt str = clear ++ str
-clearLong :: REPLCmdDescr s -> REPLCmdDescr s
-clearLong (nm,short,long,func) = (nm,short,clearIt long,func)
 \end{code}

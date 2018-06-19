@@ -70,6 +70,28 @@ getitem a (x:xs)
                     return (x:xs')
 \end{code}
 
+\subsubsection{List lookup by number}
+\begin{code}
+nlookup i things
+ | i < 1 || null things  =  Nothing
+nlookup 1 (thing:rest)   =  Just thing
+nlookup i (thing:rest)   =  nlookup (i-1) rest
+\end{code}
+
+\subsubsection{Association-list lookup}
+\begin{code}
+alookup name [] = Nothing
+alookup name (thing@(n,_):rest)
+  | name == n  =  Just thing
+  | otherwise  =  alookup name rest
+\end{code}
+
+Screen clearing:
+\begin{code}
+clear = "\ESC[2J\ESC[1;1H"
+clearIt str = clear ++ str
+\end{code}
+
 \subsubsection{Intercalation, dropping nulls}
 \begin{code}
 intcalNN sep = intercalate sep . filter (not . null)

@@ -162,12 +162,13 @@ linked to specific collections of laws.
 
 To make the matching work effectively,
 we have to identify which constructs play the roles
-of truth, logical equivalence, implication and conjunctions.
+of truth (and falsity!), logical equivalence, implication and conjunctions.
 $$ \true \qquad \equiv \qquad \implies \qquad \land $$
 \begin{code}
 data TheLogic
   = TheLogic
      { theTrue :: Term
+     , theFalse :: Term
      , theEqv  :: Identifier
      , theImp  :: Identifier
      , theAnd  :: Identifier
@@ -971,8 +972,12 @@ We need to determine when a live proof is complete:
 \begin{code}
 proofComplete :: TheLogic -> LiveProof -> Bool
 proofComplete logic liveProof
-  =  let sequent = exitSeqZipper $ focus liveProof
+  =  let
+       sequent = exitSeqZipper $ focus liveProof
+       hypTerms = map (fst . snd . fst) $ laws $ hyp sequent
      in cleft sequent == cright sequent -- should be alpha-equivalent
+        ||
+        any (== theFalse logic) hypTerms
 \end{code}
 
 We need to convert a complete live proof to a proof:

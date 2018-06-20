@@ -124,7 +124,7 @@ lnot = fromJust $ ident _lnot ; mkNot p = PCons lnot [p]
 
 \subsubsection{The Propositional Logic}
 \begin{code}
-thePropositionalLogic = TheLogic trueP equiv implies land
+thePropositionalLogic = TheLogic trueP falseP equiv implies land
 flattenEquiv = flattenTheEquiv thePropositionalLogic
 \end{code}
 

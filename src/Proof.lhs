@@ -12,11 +12,12 @@ module Proof
  , labelAsAxiom, labelAsProven
  , Theory(..), Sequent(..)
  , availableStrategies
- , SeqZip
+ , Sequent'(..), SeqZip
  , leftConjFocus, rightConjFocus, hypConjFocus, exitSeqZipper
  , upSZ, downSZ
  , seqGoLeft, seqGoRight, switchLeftRight
  , seqGoHyp, seqLeaveHyp
+ , getHypotheses
  , HowUsed(..)
  , Justification(..), isSequentSwitch, justSwitched
  , CalcStep
@@ -372,27 +373,27 @@ asmboth logic thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{code}
 
 \begin{eqnarray*}
-   trade(H_1 \implies \dots H_m \implies C)
+   shunt(H_1 \implies \dots H_m \implies C)
    &\defs&
    \mathcal L,\bigcup_{j \in 1\dots m}\splitand(H_j) \vdash C \equiv \true
 \end{eqnarray*}
 \begin{code}
 -- actually, this is done under the hood
-trade :: Monad m => TheLogic -> [Theory] -> NmdAssertion
+shunt :: Monad m => TheLogic -> [Theory] -> NmdAssertion
       -> m (String, Sequent)
-trade logic thys (nm,(t,sc)) = fail "trade not applicable"
+shunt logic thys (nm,(t,sc)) = fail "shunt not applicable"
 \end{code}
 
 \begin{eqnarray*}
-   trdboth(H_1 \implies \dots H_m \implies (C_1 \equiv C_2))
+   shntboth(H_1 \implies \dots H_m \implies (C_1 \equiv C_2))
    &\defs&
    \mathcal L,\bigcup_{j \in 1\dots m}\splitand(H_j) \vdash C_1 \equiv C_2
 \end{eqnarray*}
 \begin{code}
 -- actually, this is done under the hood
-trdboth :: Monad m => TheLogic -> [Theory] -> NmdAssertion
+shntboth :: Monad m => TheLogic -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
-trdboth logic thys (nm,(t,sc)) = fail "trdboth not applicable"
+shntboth logic thys (nm,(t,sc)) = fail "shntboth not applicable"
 \end{code}
 
 \begin{eqnarray*}
@@ -716,7 +717,15 @@ seqLeaveHyp sz -- not in hypothesis
   =  (False,sz)
 \end{code}
 
+Pulling out the hypothesis theory from the sequent zipper:
+\begin{code}
+getHypotheses :: Sequent' -> Theory
+getHypotheses seq' = getHypotheses' $ laws' seq'
+getHypotheses' (CLaws' hyp _ _)  =  hyp
+getHypotheses' (HLaws' hn hk hbef _ _ _ _ haft _ _)
+  =  Theory hn (reverse hbef ++ haft) hk
 
+\end{code}
 \subsection{Proof Calculations}
 
 We start with the simplest proof process of all,
@@ -728,7 +737,7 @@ and some way of recording what happened,
 so that proofs (complete or partial) can be saved,
 restored, and reviewed.
 
-The actions involed in a proof calculation step are as follows:
+The actions involved in a proof calculation step are as follows:
 \begin{itemize}
   \item Select sub-term.
   \item Match against laws.
@@ -797,6 +806,7 @@ data Justification
   = SwLeft     -- switch to left consequent
   | SwRight    -- switch to right consequent
   | SwHyp Int  -- switch to hypothesis i
+  | CloneH Int -- clone hypothesis i
   | UseLaw
       HowUsed  -- how law was used in proof step
       String   -- law name
@@ -855,8 +865,13 @@ dispConjParts tz sc (CLaws' hthry Rght leftC)
         : [ _vdash ]
      ++ [trTermZip tz]
 
-dispConjParts tz sc _
- = [trTermZip tz ++ "  "++trSideCond sc++" (Hypotheses not shown)"]
+dispConjParts tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
+  =     [ "Hypothesis: "++trTerm 0 horig++"  "++trSideCond sc]
+     ++ (dispHypotheses $ getHypotheses' seq')
+        : [ _vdash ]
+     ++ [trTermZip tz]
+  where
+     hthry = Theory hn (reverse hbef ++ haft) hk
 
 dispHypotheses hthry  =  numberList' showHyp $ laws $ hthry
 showHyp ((_,(trm,_)),_) = trTerm 0 trm
@@ -875,6 +890,8 @@ showJustification SwRight
   =  "   [switch right]"
 showJustification (SwHyp i)
   =  "   [switch hypothesis "++show i++"]"
+showJustification (CloneH i)
+  =  "   [clone hypothesis "++show i++"]"
 showJustification (UseLaw how lnm bind dpath)
   =  "   = '"++showHow how++" "++lnm++"@" ++ show dpath ++ "'"
 
@@ -929,6 +946,7 @@ shStep ( (UseLaw how lnm bind dpath), trm )
               ]
 \end{code}
 
+\newpage
 We need to setup a proof from a conjecture:
 \begin{code}
 startProof :: TheLogic -> [Theory] -> String -> Assertion -> LiveProof
@@ -947,7 +965,9 @@ startProof logic thys nm asn@(t,sc)
     (strat,seq) = fromJust $ reduce logic thys (nm,asn)
     sz = leftConjFocus seq
     mcs = buildMatchContext thys
+\end{code}
 
+\begin{code}
 launchProof :: [Theory] -> String -> Assertion -> (String,Sequent) -> LiveProof
 launchProof thys nm asn@(t,sc) (strat,seq)
   = LP { conjName = nm
@@ -967,7 +987,6 @@ launchProof thys nm asn@(t,sc) (strat,seq)
            then buildMatchContext thys
            else buildMatchContext (hthy:thys)
 \end{code}
-
 We need to determine when a live proof is complete:
 \begin{code}
 proofComplete :: TheLogic -> LiveProof -> Bool

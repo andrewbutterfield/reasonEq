@@ -344,9 +344,18 @@ cjWeakImp
 \end{code}
 
 \begin{code}
+cjHTest
+ = ( "h-test"
+   , ( p /\ (q /\ r) ==> (r /\ p) /\ (mkEquivs [q,q,q]) )
+     , scTrue ) )
+\end{code}
+
+\begin{code}
 propConjs :: [NmdAssertion]
 propConjs
-  = [ cjEqvId, cjOrZero, cjWeakImp ]
+  = [ cjEqvId, cjOrZero, cjWeakImp
+    , cjHTest
+    ]
 \end{code}
 
 \subsection{The Propositional Theory}

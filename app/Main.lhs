@@ -331,6 +331,7 @@ proofREPLConfig
             , switchConsequentDescr
             , switchHypothesisDescr
             , leaveHypothesisDescr
+            , cloneHypothesisDescr
             ])
       proofREPLEndCondition
       proofREPLEndTidy
@@ -410,32 +411,37 @@ switchHypothesis args (reqs, liveProof)
       i = args2int args
       sz = focus liveProof
       (ok,sz') = seqGoHyp i sz
-      sw' = SwHyp i
+      (_,seq') = sz'
+      hthry' = getHypotheses seq'
+      mcs = buildMatchContext (hthry':ante0 seq')
     in if ok then return ( reqs
-                         , focus_ sz'
+                         , mtchCtxts_ mcs
+                         $ focus_ sz'
                          $ matches_ []
                          $ stepsSoFar__
-                            ((sw', exitTZ $ fst sz):) liveProof )
+                            ((SwHyp i, exitTZ $ fst sz):) liveProof )
              else return (reqs, liveProof)
 \end{code}
 
-Retruning focus from a hypothesis:
+Returning focus from a hypothesis:
 \begin{code}
 leaveHypothesisDescr
   = ( "l", "leave hypothesis"
-    , "l  --  leave hpyothesis, go to C_left."
+    , "l  --  leave hypothesis, go to C_left."
     , leaveHypothesis )
 
 leaveHypothesis _ (reqs, liveProof)
   = let
       sz = focus liveProof
       (ok,sz') = seqLeaveHyp sz
-      justInH = justSwitched $ stepsSoFar liveProof
-      (tz',seq') = sz'
-    in if not ok || justInH
+      (_,seq') = sz'
+      hthry' = getHypotheses seq'
+      mcs = buildMatchContext (hthry':ante0 seq')
+    in if not ok
         then return ( reqs, liveProof )
         else return ( reqs
-                         , focus_ sz'
+                         , mtchCtxts_ mcs
+                         $ focus_ sz'
                          $ matches_ []
                          $ stepsSoFar__
                             ((SwLeft, exitTZ $ fst sz):) liveProof )
@@ -479,6 +485,8 @@ applyMatch args (reqs, liveProof)
                                liveProof )
 \end{code}
 
+\newpage
+Law Instantiation.
 Replacing \textit{true} by a law, with unknown variables
 suitably instantiated.
 \begin{code}
@@ -559,4 +567,32 @@ requestInstBindings bind gterms vs@(v:vrest)
                      requestInstBindings bind' gterms vrest
              _ -> requestInstBindings bind gterms vs
        _ -> requestInstBindings bind gterms vs
+\end{code}
+
+\newpage
+Hypothesis Cloning, is based on the following law:
+\[H \implies C \equiv H \implies H \land C\]
+\begin{code}
+cloneHypothesisDescr
+  = ( "c", "clone hyp", "c i  -- clone hypothesis i"
+    , cloneHypothesis )
+
+cloneHypothesis args (reqs, liveProof)
+  = let
+      i = args2int args
+      (tz,seq') = focus liveProof
+      hypos = laws $ getHypotheses seq'
+      currt = exitTZ tz
+      land = theAnd $ logic reqs
+    in case nlookup i hypos of
+        Nothing -> return (reqs, liveProof)
+        Just ((_,(hypt,_)),_)
+          -> return
+              ( reqs
+              , focus_ (setTZ (PCons land [hypt,currt]) tz,seq')
+              $ matches_ []
+              $ stepsSoFar__
+                 ( ( CloneH i
+                   , exitTZ tz ) : )
+                 liveProof )
 \end{code}

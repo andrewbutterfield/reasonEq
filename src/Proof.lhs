@@ -244,14 +244,16 @@ However, we also want to specify the provenance of each law.
 \begin{code}
 data Provenance
   = Axiom       -- asserted as True
-  | Proven      -- demonstrated by proof
-  deriving (Eq,Ord,Show,Read)
+  | Proven Proof     -- demonstrated by proof
+  deriving (Eq,Show,Read)
 
 type Law = (NmdAssertion,Provenance)
 
-labelAsAxiom, labelAsProven :: NmdAssertion -> Law
+labelAsAxiom :: NmdAssertion -> Law
 labelAsAxiom  nasn  =  (nasn, Axiom)
-labelAsProven nasn  =  (nasn, Proven)
+
+labelAsProven :: NmdAssertion -> Proof -> Law
+labelAsProven nasn prf =  (nasn, Proven prf)
 \end{code}
 
 A theory is a collection of laws linked
@@ -1162,8 +1164,8 @@ showLaws lws  =  numberList (showLaw $ nameWidth $ map fst lws) lws
 showLaw w ((nm,(trm,sc)),prov)
   =    ldq ++ nm ++ rdq ++ showProv prov ++ pad w nm
     ++ "  " ++ trTerm 0 trm ++ "  "++trSideCond sc
-showProv Axiom   =  _subStr "A"
-showProv Proven  =  _subStr "P"
+showProv Axiom       =  _subStr "A"
+showProv (Proven _)  =  _subStr "P"
 \end{code}
 
 Showing Proof:

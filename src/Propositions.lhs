@@ -19,7 +19,6 @@ module Propositions (
 , propKnown
 , propLaws
 , theoryPropositions
-, propConjs
 ) where
 
 import Data.Maybe
@@ -362,5 +361,9 @@ propConjs
 
 \begin{code}
 theoryPropositions :: Theory
-theoryPropositions  =  Theory "PropLogic" propLaws propKnown
+theoryPropositions
+  =  Theory { thName  =  "PropLogic"
+            , knownVars  =  propKnown
+            , laws  =  propLaws
+            , conjectures = propConjs }
 \end{code}

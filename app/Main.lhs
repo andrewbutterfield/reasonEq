@@ -20,6 +20,7 @@ import Data.Char
 import NiceSymbols hiding (help)
 
 import Utilities
+import RDAG
 import LexBase
 import Variables
 import AST
@@ -96,7 +97,8 @@ initState _
   = do putStrLn "Running in development mode."
        let reqs = ReqState thePropositionalLogic
                            [theoryPropositions]
-                           propConjs Nothing []
+                           (conjectures theoryPropositions)
+                           Nothing []
        return reqs
 \end{code}
 
@@ -202,7 +204,7 @@ shProofs = "P"
 showState [cmd] reqs
  | cmd == shLogic     =  doshow reqs $ showLogic $ logic reqs
  | cmd == shTheories  =  doshow reqs $ showTheories $ theories reqs
- | cmd == shConj      =  doshow reqs $ showNmdAssns  $ conj  reqs
+ | cmd == shConj      =  doshow reqs $ showNmdAssns  $ conj reqs
  | cmd == shLivePrf   =  doshow reqs $ showLivePrf $ proof reqs
  | cmd == shProofs    =  doshow reqs $ showProofs $ proofs reqs
 showState _ reqs      =  doshow reqs "unknown 'show' option."
@@ -519,7 +521,7 @@ instantiateLaw reqs liveProof law@((lnm,(lawt,lsc)),_)
        psc = conjSC liveProof
        dpath = fPath liveProof
    in
-   do lbind <- generateLawInstanceBind (map knownV $ theories reqs)
+   do lbind <- generateLawInstanceBind (map knownVars $ theories reqs)
                                        (exitTZ tz) psc law
       case instantiateSC lbind lsc of
         Nothing -> do putStrLn "instantiated law side-cond is false"

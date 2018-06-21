@@ -262,8 +262,9 @@ to information about which variables in those laws are deemed as ``known''.
 data Theory
   = Theory {
       thName :: String -- always nice to have one
+    , knownVars :: VarTable
     , laws   :: [Law]
-    , knownV :: VarTable
+    , conjectures :: [NmdAssertion]
     }
   deriving (Eq,Show,Read)
 \end{code}
@@ -323,7 +324,10 @@ reduce :: Monad m => TheLogic -> [Theory] -> NmdAssertion
        -> m (String, Sequent)
 reduce logic thys (nm,(t,sc))
   = return ( "reduce", Sequent thys hthry sc t $ theTrue logic )
-  where hthry = Theory ("H."++nm) [] $ makeUnknownKnown thys t
+  where hthry = Theory { thName = "H."++nm
+                       , laws = []
+                       , knownVars = makeUnknownKnown thys t
+                       , conjectures = [] }
 \end{code}
 
 \begin{eqnarray*}
@@ -337,7 +341,10 @@ redboth :: Monad m => TheLogic -> [Theory] -> NmdAssertion
 redboth logic thys (nm,(t@(Cons tk i [tl,tr]),sc))
   | i == theEqv logic
       = return ( "redboth", Sequent thys hthry sc tl tr )
-  where hthry = Theory ("H."++nm) [] $ makeUnknownKnown thys t
+  where hthry = Theory { thName = "H."++nm
+                       , laws = []
+                       , knownVars = makeUnknownKnown thys t
+                       , conjectures = [] }
 redboth logic thys (nm,(t,sc)) = fail "redboth not applicable"
 \end{code}
 
@@ -355,7 +362,10 @@ assume logic thys (nm,(t@(Cons tk i [ta,tc]),sc))
   where
     hlaws = map mkHLaw $ zip [1..] $ splitAnte logic ta
     mkHLaw (i,trm) = labelAsAxiom ("H."++nm++"."++show i,(trm,scTrue))
-    hthry = Theory ("H."++nm) hlaws $ makeUnknownKnown thys t
+    hthry = Theory { thName = "H."++nm
+                   , laws = hlaws
+                   , knownVars = makeUnknownKnown thys t
+                   , conjectures = [] }
 assume _ _ _ = fail "assume not applicable"
 
 splitAnte :: TheLogic -> Term -> [Term]
@@ -420,7 +430,7 @@ makeUnknownKnown :: [Theory] -> Term -> VarTable
 makeUnknownKnown thys t
   = let
      fvars = S.toList $ freeVars t
-     vts = map knownV thys
+     vts = map knownVars thys
     in scanFreeForUnknown vts newVarTable fvars
 
 scanFreeForUnknown :: [VarTable] -> VarTable -> VarList -> VarTable
@@ -634,12 +644,13 @@ is a little more tricky:
 \begin{code}
 hypConjFocus :: Monad m => Int -> Sequent -> m SeqZip
 hypConjFocus i sequent
-  = do let (Theory htnm hlaws hknown) = hyp sequent
-       (before,((hnm,(ht,hsc)),hprov),after) <- peel i hlaws
+--  = do let (Theory htnm hlaws hknown) = hyp sequent
+  = do let hthry = hyp sequent
+       (before,((hnm,(ht,hsc)),hprov),after) <- peel i $ laws hthry
        return ( mkTZ ht
               , Sequent' (ante sequent)
                          (sc sequent) $
-                         HLaws' htnm hknown
+                         HLaws' (thName hthry) (knownVars hthry)
                                 before hnm hsc hprov ht after
                                 (cleft sequent) (cright sequent) )
 \end{code}
@@ -660,12 +671,13 @@ exitLaws :: Term -> Laws' -> (Theory, Term, Term)
 exitLaws currT (CLaws' h0 Lft  othrC)  =  (h0, currT, othrC)
 exitLaws currT (CLaws' h0 Rght othrC)  =  (h0, othrC, currT)
 exitLaws currT  (HLaws' hnm hkn hbef fnm fsc fprov horig haft cl cr)
-  =  ( Theory hnm
-              ( reverse hbef
-                ++ [((fnm,(horig,fsc)),fprov)]
-                ++ haft
-                ++ [((fnm,(currT,fsc)),fprov)] )
-              hkn
+  =  ( Theory { thName = hnm
+              , laws = ( reverse hbef
+                         ++ [((fnm,(horig,fsc)),fprov)]
+                         ++ haft
+                         ++ [((fnm,(currT,fsc)),fprov)] )
+              , knownVars = hkn
+              , conjectures = [] } -- hypotheses theories have none!
      , cl, cr)
 \end{code}
 
@@ -726,7 +738,10 @@ getHypotheses :: Sequent' -> Theory
 getHypotheses seq' = getHypotheses' $ laws' seq'
 getHypotheses' (CLaws' hyp _ _)  =  hyp
 getHypotheses' (HLaws' hn hk hbef _ _ _ _ haft _ _)
-  =  Theory hn (reverse hbef ++ haft) hk
+  =  Theory { thName = hn
+            , laws =  (reverse hbef ++ haft)
+            , knownVars = hk
+            , conjectures = [] }
 
 \end{code}
 \subsection{Proof Calculations}
@@ -872,7 +887,10 @@ dispConjParts tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
         : [ _vdash ]
      ++ [trTermZip tz]
   where
-     hthry = Theory hn (reverse hbef ++ haft) hk
+     hthry = Theory { thName = hn
+                    , laws = (reverse hbef ++ haft)
+                    , knownVars = hk
+                    , conjectures = [] }
 
 dispHypotheses hthry  =  numberList' showHyp $ laws $ hthry
 showHyp ((_,(trm,_)),_) = trTerm 0 trm
@@ -1046,10 +1064,10 @@ Given a list of theories, we generate a list of match-contexts:
 \begin{code}
 buildMatchContext :: [Theory] -> [MatchContext]
 buildMatchContext [] = []
-buildMatchContext [thy] = [ (laws thy, [knownV thy]) ]
+buildMatchContext [thy] = [ (laws thy, [knownVars thy]) ]
 buildMatchContext (thy:thys)
   = let mcs'@((_,vts'):_) = buildMatchContext thys
-    in (laws thy, knownV thy : vts') : mcs'
+    in (laws thy, knownVars thy : vts') : mcs'
 \end{code}
 
 \newpage
@@ -1149,7 +1167,7 @@ showTheories [] = "No theories present."
 showTheories (thry:_)
   = unlines'
       [ "Theory (top) '"++thName thry++"'"
-      , trVarTable (knownV thry)
+      , trVarTable (knownVars thry)
       , showLaws (laws thry) ]
 
 showNmdAssns nasns  =  numberList (showNmdAssn $ nameWidth nasns)  nasns

@@ -468,10 +468,10 @@ applyMatch args (reqs, liveProof)
         (tz,seq') = focus liveProof
         dpath = fPath liveProof
     in
-    case alookup i (matches liveProof) of
+    case nlookup i $ matches liveProof of
      Nothing -> do putStrLn ("No match numbered "++ show i)
                    return (reqs, liveProof)
-     Just (_,(lnm,lasn,bind,repl))
+     Just (MT lnm lasn bind repl)
       -> case instantiate bind repl of
           Nothing -> do putStrLn "Apply failed !"
                         return (reqs, liveProof)

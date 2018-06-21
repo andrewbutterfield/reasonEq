@@ -19,6 +19,7 @@ module Proof
  , seqGoHyp, seqLeaveHyp
  , getHypotheses
  , HowUsed(..)
+ , Match(..)
  , Justification(..), isSequentSwitch, justSwitched
  , CalcStep
  , Calculation
@@ -164,7 +165,7 @@ linked to specific collections of laws.
 To make the matching work effectively,
 we have to identify which constructs play the roles
 of truth (and falsity!), logical equivalence, implication and conjunctions.
-$$ \true \qquad \equiv \qquad \implies \qquad \land $$
+$$ \true \qquad \false \qquad \equiv \qquad \implies \qquad \land $$
 \begin{code}
 data TheLogic
   = TheLogic
@@ -787,16 +788,14 @@ matches_ = matches__ . const
 stepsSoFar__ f lp = lp{ stepsSoFar = f $ stepsSoFar lp}
 stepsSoFar_ = stepsSoFar__ . const
 
-type Match
- = ( String -- assertion name
-   , Assertion -- matched assertion
-   , Binding -- resulting binding
-   , Term  -- replacement
-   )
+data Match
+ = MT { mName ::  String     -- assertion name
+      , mAsn  ::  Assertion  -- matched assertion
+      , mBind ::  Binding    -- resulting binding
+      , mRepl ::  Term       -- replacement term
+      } deriving (Eq,Show,Read)
 
-type Matches
-  = [ ( Int -- match number
-      , Match ) ]  -- corresponding match ) ]
+type Matches = [Match]
 
 type CalcStep
   = ( Justification  -- step justification
@@ -901,15 +900,19 @@ showHow ByInstantiation = "instantiate"
 
 displayMatches :: Matches -> String
 displayMatches []  =  ""
-displayMatches matches  =  unlines' ( ("Matches:") : map shMatch matches)
+displayMatches matches
+  =  unlines' ( ("Matches:") : map shMatch (zip [1..] matches))
 
-shMatch (i, (n, (lt,lsc), bind, rt))
- = ( show i ++ " : "++ ldq ++ green n ++ rdq
+shMatch (i, mtch)
+ = ( show i ++ " : "++ ldq ++ green (mName mtch) ++ rdq
      ++ " gives     "
      ++ (bold . blue)
-           ( trTerm 0 (fromJust $ instantiate bind rt)
+           ( trTerm 0 (fromJust $ instantiate bind $ mRepl mtch)
              ++ "  "
-             ++ trSideCond (fromJust $ instantiateSC bind lsc) ) )
+             ++ trSideCond (fromJust $ instantiateSC bind $ lsc) ) )
+ where
+    bind = mBind mtch
+    (lt,lsc) = mAsn mtch
 \end{code}
 
 We then continue with a proof (record):
@@ -1054,14 +1057,14 @@ First, given list of match-contexts, systematically work through them.
 \begin{code}
 matchInContexts :: TheLogic -> [MatchContext] -> Term -> Matches
 matchInContexts logic mcs t
-  = zip [1..] $ concat $ map (matchLaws logic t) mcs
+  = concat $ map (matchLaws logic t) mcs
 \end{code}
 
 Now, the code to match laws, given a context.
 Bascially we run down the list of laws,
 returning any matches we find.
 \begin{code}
-matchLaws :: TheLogic -> Term -> MatchContext -> [Match]
+matchLaws :: TheLogic -> Term -> MatchContext -> Matches
 matchLaws logic t (lws,vts) = concat $ map (domatch logic vts t) lws
 \end{code}
 
@@ -1069,6 +1072,7 @@ For each law,
 we check its top-level to see if it is an instance of \texttt{theEqv},
 in which case we try matches against all possible variations.
 \begin{code}
+domatch :: TheLogic -> [VarTable] -> Term -> Law -> Matches
 domatch logic vts tC ((n,asn@(tP@(Cons tk i ts@(_:_:_)),sc)),prov)
   | i == theEqv logic  =  concat $ map (eqvMatch vts tC) $ listsplit ts
   where
@@ -1079,16 +1083,19 @@ domatch logic vts tC ((n,asn@(tP@(Cons tk i ts@(_:_:_)),sc)),prov)
     eqv [t]  =  t
     eqv ts   =  Cons tk i ts
 \end{code}
-
 Otherwise we just match against the whole law.
 \begin{code}
 domatch logic vts tC law
  = justMatch (theTrue logic) vts tC law
+\end{code}
 
+Do a simple match:
+\begin{code}
+justMatch :: Term -> [VarTable] -> Term -> Law -> Matches
 justMatch repl vts tC ((n,asn@(tP,_)),_)
  = case match vts tC tP of
      Nothing -> []
-     Just bind -> [(n,asn,bind,repl)]
+     Just bind -> [MT n asn bind repl]
 \end{code}
 
 \newpage

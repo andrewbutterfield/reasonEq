@@ -346,7 +346,7 @@ cjWeakImp
 \begin{code}
 cjHTest
  = ( "h-test"
-   , ( p /\ (q /\ r) ==> (r /\ p) /\ (mkEquivs [q,q,q]) )
+   , ( p /\ (q /\ r) ==> (r /\ p) /\ (mkEquivs [q,q,q])
      , scTrue ) )
 \end{code}
 

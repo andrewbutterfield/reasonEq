@@ -80,10 +80,10 @@ nlookup i (thing:rest)   =  nlookup (i-1) rest
 
 \subsubsection{Association-list lookup}
 \begin{code}
-alookup name [] = Nothing
-alookup name (thing@(n,_):rest)
-  | name == n  =  Just thing
-  | otherwise  =  alookup name rest
+alookup k [] = Nothing
+alookup k (thing@(n,_):rest)
+  | k == n  =  Just thing
+  | otherwise  =  alookup k rest
 \end{code}
 
 Screen clearing:

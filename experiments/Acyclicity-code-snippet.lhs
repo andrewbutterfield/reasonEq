@@ -25,11 +25,12 @@ Another, based on MMA's thesis%
   M\'iche\'al Mac An Airchinnigh, Conceptual Modelling
 , University of Dublin, 1990.
 }
-uses a annihilator, an operator that removes all tuples $(u,v)$
-from a relation, where $v$ does not itself appear in the lhs of a relation tuple.
-Repeated application of the annihilator will reduce any relation down to just its cycles, or the empty relation, if there are no cycles.
+uses a annihilator, an operator that removes all tuples $(u,v)$ from a relation,
+where $v$ does not itself appear in the lhs of a relation tuple.
+Repeated application of the annihilator will reduce any relation
+down to just its cycles, or the empty relation, if there are no cycles.
 
-Another technique is ensure acyclicity from the outset,
+Another technique is to ensure acyclicity from the outset,
 by checking a new maplet against the map to see if it will introduce a cycle.
 Given a map $\mu$, and a set of variables $V$,
 its \emph{relational image} w.r.t. $V$, denoted by $\mu(V)$ is
@@ -39,10 +40,13 @@ $\mu^*(V) = V \cup \mu(V) \cup \mu(\mu(V)) \cup \dots$.
 When inserting a mapping from $u$ to $V$ into $\mu$,
 we simply compute $\mu^*(V)$ and check that $u$ does not occur in it.
 
-Tests in \texttt{proto/Acyclic.hs} show that the annihilator approach to
-after-insertion acyclicity checking
-is two-and-a-half times faster, approximately, than the transitive closure approach.
-However, the insert-time check based on image closure is almost an
+Tests in \texttt{proto/Acyclic.hs} show that
+the annihilator approach to after-insertion acyclicity checking
+is two-and-a-half times faster,
+approximately,
+than the transitive closure approach.
+However,
+the insert-time check based on image closure is almost an
 order of magnitude faster than either acyclic check.
 So here we decide to use the insert-time check
 to ensure that we are not about to create such cycles.

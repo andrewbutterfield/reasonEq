@@ -63,7 +63,7 @@ relation.
    rDAG_{I} &\defs& \ldots
 \\ root &:& I \fun rDAG_{I}
 \\ add &:& I \fun \finset_1 I \fun rDAG_{I} \fun rDAG_{I}
-\\ pre\_add~i~S~r &\defs& i \notin r \land \forall j \in S @ j \in r
+\\ pre\_add~i~S~r &\defs& i \notin r \land \forall j \in S \bullet j \in r
 \\ \_ \in \_ &:&   I \times rDAG_{I} \fun \Bool
 \end{eqnarray*}
 In addition we want to search for a object by identifier,
@@ -228,7 +228,7 @@ and maintain  order.
    stack &:& rDAG_I \fun I^+
 \end{eqnarray*}
 In effect we do a topological sort of the rDAG elements whose top
-is the note of concern.
+is the node of concern.
 We shall consider a generalisation
 that returns each element tagged with its height.
 \begin{eqnarray*}
@@ -372,7 +372,19 @@ type RDAGRes i = Either (RDAGError i) (RDAG i)
 
 
 The general purpose builder function is \texttt{rdUpdate} that add nodes
-and links as required, by calling \texttt{rdAdd} and \texttt{rdExtend}.
+and links as required, by calling \texttt{rdAdd} and \texttt{dolinks}.
+\begin{code}
+rdUpdate :: (Eq i,Show i) => i -> [i] -> RDAG i -> RDAGRes i
+rdUpdate i deps rdag
+ = case rdAdd i rdag of
+    Left _  ->  dolinks i rdag deps
+    Right rdag'  ->  dolinks i rdag' deps
+ where
+  dolinks i rdag [] = return rdag
+  dolinks i rdag (dep:deps)
+   = do rdag' <- rdLink i dep rdag
+        dolinks i rdag' deps
+\end{code}
 
 
 Now, the main builder functions.
@@ -418,7 +430,7 @@ rdAdd i r = Left $ RDAGErr "Not a DTop!" i
 \newpage
 Once an element is in, we may wish to modify it
 to point to other elements already present
-and not a parent of oneself:
+but not a parent of oneself:
 \begin{eqnarray*}
    link &:& I \fun I \fun RDAG_{I} \fun RDAG_{I}
 \\ pre\_link~p~c~r &\defs& p \neq c \land p \in r \land p \neq root(r) \land c \in r \land c \notin ancs(p)
@@ -469,18 +481,6 @@ rdLink pid chid r
          mh = (pmaxima $ map rdHeight msub)+1
 \end{code}
 
-\begin{code}
-rdUpdate :: (Eq i,Show i) => i -> [i] -> RDAG i -> RDAGRes i
-rdUpdate i deps rdag
- = case rdAdd i rdag of
-    Left _  ->  dolinks i rdag deps
-    Right rdag'  ->  dolinks i rdag' deps
- where
-  dolinks i rdag [] = return rdag
-  dolinks i rdag (dep:deps)
-   = do rdag' <- rdLink i dep rdag
-        dolinks i rdag' deps
-\end{code}
 
 It is also useful to output an RDAG as a list of tuples
 indicating the immediate first level dependencies

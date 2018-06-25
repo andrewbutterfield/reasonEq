@@ -258,12 +258,17 @@ labelAsProven nasn prf =  (nasn, Proven prf)
 
 A theory is a collection of laws linked
 to information about which variables in those laws are deemed as ``known''.
+In addition we also keep a list of conjectures,
+that will become laws if they ever have a proof.
+We also allow a theory to depend on other theories,
+so long as there are no dependency cycles.
 \begin{code}
 data Theory
   = Theory {
-      thName :: String -- always nice to have one
-    , knownVars :: VarTable
-    , laws   :: [Law]
+      thName      :: String
+    , thDeps      :: [Theory]
+    , knownVars   :: VarTable
+    , laws        :: [Law]
     , conjectures :: [NmdAssertion]
     }
   deriving (Eq,Show,Read)
@@ -325,6 +330,7 @@ reduce :: Monad m => TheLogic -> [Theory] -> NmdAssertion
 reduce logic thys (nm,(t,sc))
   = return ( "reduce", Sequent thys hthry sc t $ theTrue logic )
   where hthry = Theory { thName = "H."++nm
+                       , thDeps = []
                        , laws = []
                        , knownVars = makeUnknownKnown thys t
                        , conjectures = [] }
@@ -342,6 +348,7 @@ redboth logic thys (nm,(t@(Cons tk i [tl,tr]),sc))
   | i == theEqv logic
       = return ( "redboth", Sequent thys hthry sc tl tr )
   where hthry = Theory { thName = "H."++nm
+                       , thDeps = []
                        , laws = []
                        , knownVars = makeUnknownKnown thys t
                        , conjectures = [] }
@@ -363,6 +370,7 @@ assume logic thys (nm,(t@(Cons tk i [ta,tc]),sc))
     hlaws = map mkHLaw $ zip [1..] $ splitAnte logic ta
     mkHLaw (i,trm) = labelAsAxiom ("H."++nm++"."++show i,(trm,scTrue))
     hthry = Theory { thName = "H."++nm
+                   , thDeps = []
                    , laws = hlaws
                    , knownVars = makeUnknownKnown thys t
                    , conjectures = [] }
@@ -672,6 +680,7 @@ exitLaws currT (CLaws' h0 Lft  othrC)  =  (h0, currT, othrC)
 exitLaws currT (CLaws' h0 Rght othrC)  =  (h0, othrC, currT)
 exitLaws currT  (HLaws' hnm hkn hbef fnm fsc fprov horig haft cl cr)
   =  ( Theory { thName = hnm
+              , thDeps = []
               , laws = ( reverse hbef
                          ++ [((fnm,(horig,fsc)),fprov)]
                          ++ haft
@@ -739,6 +748,7 @@ getHypotheses seq' = getHypotheses' $ laws' seq'
 getHypotheses' (CLaws' hyp _ _)  =  hyp
 getHypotheses' (HLaws' hn hk hbef _ _ _ _ haft _ _)
   =  Theory { thName = hn
+            , thDeps = []
             , laws =  (reverse hbef ++ haft)
             , knownVars = hk
             , conjectures = [] }
@@ -888,6 +898,7 @@ dispConjParts tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
      ++ [trTermZip tz]
   where
      hthry = Theory { thName = hn
+                    , thDeps = []
                     , laws = (reverse hbef ++ haft)
                     , knownVars = hk
                     , conjectures = [] }

@@ -40,6 +40,7 @@ module Proof
 import Data.Set (Set)
 import qualified Data.Set as S
 import Data.Maybe
+import Data.List
 --
 import Utilities
 import LexBase
@@ -266,7 +267,7 @@ so long as there are no dependency cycles.
 data Theory
   = Theory {
       thName      :: String
-    , thDeps      :: [Theory]
+    , thDeps      :: [String] -- by name !
     , knownVars   :: VarTable
     , laws        :: [Law]
     , conjectures :: [NmdAssertion]
@@ -652,7 +653,6 @@ is a little more tricky:
 \begin{code}
 hypConjFocus :: Monad m => Int -> Sequent -> m SeqZip
 hypConjFocus i sequent
---  = do let (Theory htnm hlaws hknown) = hyp sequent
   = do let hthry = hyp sequent
        (before,((hnm,(ht,hsc)),hprov),after) <- peel i $ laws hthry
        return ( mkTZ ht
@@ -1178,6 +1178,7 @@ showTheories [] = "No theories present."
 showTheories (thry:_)
   = unlines'
       [ "Theory (top) '"++thName thry++"'"
+      , "depends on: "++intercalate "," (thDeps thry)
       , trVarTable (knownVars thry)
       , showLaws (laws thry) ]
 

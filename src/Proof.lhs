@@ -10,7 +10,9 @@ module Proof
  ( TheLogic(..), flattenTheEquiv
  , Assertion, NmdAssertion, Provenance, Law
  , labelAsAxiom, labelAsProven
- , Theory(..), Theories, addTheory, getTheoryDeps
+ , Theory(..)
+ , proofs__, proofs_
+ , Theories, addTheory, getTheoryDeps
  , Sequent(..)
  , availableStrategies
  , Sequent'(..), SeqZip
@@ -274,8 +276,11 @@ data Theory
     , knownVars   :: VarTable
     , laws        :: [Law]
     , conjectures :: [NmdAssertion]
+    , proofs      :: [Proof]
     }
   deriving (Eq,Show,Read)
+
+proofs__ f r = r{proofs = f $ proofs r} ; proofs_ = proofs__ . const
 \end{code}
 
 We keep a collection of theories as a map,
@@ -381,7 +386,8 @@ reduce logic thys (nm,(t,sc))
                        , thDeps = []
                        , laws = []
                        , knownVars = makeUnknownKnown thys t
-                       , conjectures = [] }
+                       , conjectures = []
+                       , proofs = [] }
 \end{code}
 
 \begin{eqnarray*}
@@ -399,7 +405,8 @@ redboth logic thys (nm,(t@(Cons tk i [tl,tr]),sc))
                        , thDeps = []
                        , laws = []
                        , knownVars = makeUnknownKnown thys t
-                       , conjectures = [] }
+                       , conjectures = []
+                       , proofs = [] }
 redboth logic thys (nm,(t,sc)) = fail "redboth not applicable"
 \end{code}
 
@@ -421,7 +428,8 @@ assume logic thys (nm,(t@(Cons tk i [ta,tc]),sc))
                    , thDeps = []
                    , laws = hlaws
                    , knownVars = makeUnknownKnown thys t
-                   , conjectures = [] }
+                   , conjectures = []
+                   , proofs = [] }
 assume _ _ _ = fail "assume not applicable"
 
 splitAnte :: TheLogic -> Term -> [Term]
@@ -733,7 +741,8 @@ exitLaws currT  (HLaws' hnm hkn hbef fnm fsc fprov horig haft cl cr)
                          ++ haft
                          ++ [((fnm,(currT,fsc)),fprov)] )
               , knownVars = hkn
-              , conjectures = [] } -- hypotheses theories have none!
+              , conjectures = []
+              , proofs = [] }
      , cl, cr)
 \end{code}
 
@@ -798,7 +807,8 @@ getHypotheses' (HLaws' hn hk hbef _ _ _ _ haft _ _)
             , thDeps = []
             , laws =  (reverse hbef ++ haft)
             , knownVars = hk
-            , conjectures = [] }
+            , conjectures = []
+            , proofs = [] }
 
 \end{code}
 \subsection{Proof Calculations}
@@ -948,7 +958,8 @@ dispConjParts tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
                     , thDeps = []
                     , laws = (reverse hbef ++ haft)
                     , knownVars = hk
-                    , conjectures = [] }
+                    , conjectures = []
+                    , proofs = [] }
 
 dispHypotheses hthry  =  numberList' showHyp $ laws $ hthry
 showHyp ((_,(trm,_)),_) = trTerm 0 trm

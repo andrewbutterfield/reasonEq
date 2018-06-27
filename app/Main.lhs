@@ -69,17 +69,30 @@ data REqState
  = ReqState {
       logic :: TheLogic
     , theories :: Theories
-    , conj :: [NmdAssertion]
-    , proof :: Maybe LiveProof
-    , proofs :: [Proof]
+    , currTheory :: String
+    , liveProofs :: [LiveProof]
     }
-logic__    f r = r{logic    = f $ logic r}   ; logic_    = logic__     . const
-theories__ f r = r{theories = f $ theories r}; theories_ = theories__  . const
-conj__     f r = r{conj     = f $ conj r}    ; conj_     = conj__      . const
-proof__    f r = r{proof    = f $ proof r}   ; proof_    = proof__     . const
-proofs__   f r = r{proofs   = f $ proofs r}  ; proofs_   = proofs__    . const
+
+logic__    f r = r{logic    = f $ logic r}    ; logic_    = logic__     . const
+theories__ f r = r{theories = f $ theories r} ; theories_ = theories__  . const
+
+currTheory__ f r = r{currTheory = f $ currTheory r}
+currTheory_      = currTheory__  . const
+liveProofs__ f r = r{liveProofs = f $ liveProofs r}
+liveProofs_      = liveProofs__  . const
 \end{code}
 
+We build some accessors that assume that the current theory is setup properly.
+\begin{code}
+getCurrConj reqs
+  =  conjectures $ fromJust $ M.lookup (currTheory reqs) (theories reqs)
+getCurrLiveProof reqs
+  =  case liveProofs reqs of
+       []      ->  Nothing
+       (lp:_)  ->  Just lp
+getCurrProofs reqs
+  =  proofs $ fromJust $ M.lookup (currTheory reqs) (theories reqs)
+\end{code}
 
 At present, we assume development mode by default,
 which currently initialises state based on the contents of
@@ -91,16 +104,14 @@ initState :: [String] -> IO REqState
 initState ("user":_)
 -- need to restore saved persistent state on startup
   = do putStrLn "Running in normal user mode."
-       return
-         $ ReqState thePropositionalLogic M.empty [] Nothing []
+       return $ ReqState thePropositionalLogic M.empty "" []
 
 initState _
   = do putStrLn "Running in development mode."
-       let reqs = ReqState thePropositionalLogic
-                           propositionsAsTheories
-                           (conjectures theoryPropositions)
-                           Nothing []
-       return reqs
+       return $ ReqState thePropositionalLogic
+                         propositionsAsTheories
+                         (thName theoryPropositions)
+                         []
 
 propositionsAsTheories = fromJust $ addTheory theoryPropositions M.empty
 \end{code}
@@ -207,9 +218,9 @@ shProofs = "P"
 showState [cmd] reqs
  | cmd == shLogic     =  doshow reqs $ showLogic $ logic reqs
  | cmd == shTheories  =  doshow reqs $ showTheories $ theories reqs
- | cmd == shConj      =  doshow reqs $ showNmdAssns  $ conj reqs
- | cmd == shLivePrf   =  doshow reqs $ showLivePrf $ proof reqs
- | cmd == shProofs    =  doshow reqs $ showProofs $ proofs reqs
+ | cmd == shConj      =  doshow reqs $ showNmdAssns  $ getCurrConj reqs
+ | cmd == shLivePrf   =  doshow reqs $ showLivePrf $ getCurrLiveProof reqs
+ | cmd == shProofs    =  doshow reqs $ showProofs $ getCurrProofs reqs
 showState _ reqs      =  doshow reqs "unknown 'show' option."
 
 
@@ -232,10 +243,10 @@ cmdProve
 
 
 doProof args reqs
-  = case proof reqs of
-      Nothing
+  = case liveProofs reqs of
+      []
        ->  do putStrLn "No current proof, will try to start one."
-              case nlookup (getProofArgs args) (conj reqs) of
+              case nlookup (getProofArgs args) (getCurrConj reqs) of
                 Nothing  ->  do putStrLn "invalid conjecture number"
                                 return reqs
                 Just nconj@(nm,asn)
@@ -250,9 +261,9 @@ doProof args reqs
                          Nothing   -> doshow reqs "Invalid strategy no"
                          Just seq
                            -> proofREPL reqs (launchProof thylist nm asn seq)
-      Just proof
+      (prf:_)
        ->  do putStrLn "Back to current proof."
-              proofREPL reqs proof
+              proofREPL reqs prf
   where
     getProofArgs [] = 0
     getProofArgs (a:_) = readInt a
@@ -304,8 +315,8 @@ proofREPLQuit args (reqs,proof)
        hFlush stdout
        inp <- getLine
        if inp == "Y"
-        then return (True,( proof_ Nothing      reqs, proof))
-        else return (True,( proof_ (Just proof) reqs, proof))
+        then return (True,( liveProofs_ []      reqs, proof))
+        else return (True,( liveProofs_ [proof] reqs, proof))
 
 proofREPLHelpCmds = ["?"]
 
@@ -316,8 +327,12 @@ proofREPLEndTidy _ (reqs,proof)
   = do putStrLn "Proof Complete"
        let prf = finaliseProof proof
        putStrLn $ displayProof prf
-       return ( proof_ Nothing $ proofs__ (prf:) reqs, proof)
+       let cThry = fromJust $ M.lookup (currTheory reqs) (theories reqs)
+       let cThry' = proofs__ (prf:) cThry
+       return ( liveProofs_ [] $ theories__ (thUpd cThry') reqs, proof)
   -- Need to remove from conjectures and add to Laws
+  where
+      thUpd thry' thrys = M.insert (thName thry') thry' thrys
 \end{code}
 
 \begin{code}

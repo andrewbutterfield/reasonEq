@@ -366,5 +366,6 @@ theoryPropositions
             , thDeps = []
             , knownVars  =  propKnown
             , laws  =  propLaws
-            , conjectures = propConjs }
+            , conjectures = propConjs
+            , proofs = [] }
 \end{code}

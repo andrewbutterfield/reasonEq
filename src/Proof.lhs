@@ -10,7 +10,8 @@ module Proof
  ( TheLogic(..), flattenTheEquiv
  , Assertion, NmdAssertion, Provenance, Law
  , labelAsAxiom, labelAsProven
- , Theory(..), Sequent(..)
+ , Theory(..), Theories, addTheory, getTheoryDeps
+ , Sequent(..)
  , availableStrategies
  , Sequent'(..), SeqZip
  , leftConjFocus, rightConjFocus, hypConjFocus, exitSeqZipper
@@ -39,6 +40,8 @@ module Proof
 
 import Data.Set (Set)
 import qualified Data.Set as S
+import Data.Map (Map)
+import qualified Data.Map as M
 import Data.Maybe
 import Data.List
 --
@@ -275,7 +278,48 @@ data Theory
   deriving (Eq,Show,Read)
 \end{code}
 
+We keep a collection of theories as a map,
+indexed by their names:
+\begin{code}
+type Theories = Map String Theory
 
+addTheory :: Monad m => Theory -> Theories -> m Theories
+addTheory thry theories
+ | nm `M.member` theories  =  fail ("Theory '"++nm++"' already present")
+ | otherwise  =  do allDepsIn $ thDeps thry
+                    return $ M.insert nm thry theories
+ where
+   nm = thName thry
+   allDepsIn [] = return ()
+   allDepsIn (thd:thds)
+     | thd `M.member` theories  =  allDepsIn thds
+     | otherwise  =  fail ("Dep. '"++thd++"' of theory '"++nm++"' not present")
+\end{code}
+
+We also need to generate a list of theories from the mapping,
+given a starting point:
+\begin{code}
+getTheoryDeps :: Monad m => String -> Theories -> m [Theory]
+getTheoryDeps nm theories
+  = case M.lookup nm theories of
+      Nothing  ->  fail "Top Theory not found"
+      Just top
+        ->  do deps <- getDeps theories (thDeps top)
+               return (top:deps)
+
+getDeps :: Monad m => Theories -> [String] -> m [Theory]
+getDeps _ []  =  return []
+getDeps theories (dnm:drest)
+ = case M.lookup dnm theories of
+     Nothing  ->  fail ("Dep '"++dnm++"' not found")
+     Just thry
+      -> let deps = thDeps thry
+         in if null deps
+             then do thrys <- getDeps theories drest
+                     return (thry:thrys)
+             else do thrys <- getDeps theories $ nub (deps ++ drest)
+                     return (thry:thrys)
+\end{code}
 
 
 \subsection{Sequents}
@@ -309,14 +353,17 @@ we want to determine which strategies apply
 and provide a choice of sequents.
 We first flatten the implication (if any),
 \begin{code}
-availableStrategies :: TheLogic -> [Theory] -> NmdAssertion
+availableStrategies :: TheLogic -> Theories -> NmdAssertion
                     -> [(String,Sequent)]
-availableStrategies theLogic thys (nm,(tconj,sc))
+availableStrategies theLogic theories (nm,(tconj,sc))
   = catMaybes
      [ reduce  theLogic thys cflat
      , redboth theLogic thys cflat
      , assume  theLogic thys cflat ]
-  where cflat = (nm,(flattenTheImp theLogic tconj,sc))
+  where
+    -- these need to be ordered by dependencies !!!!!
+    thys = map snd $ M.assocs theories
+    cflat = (nm,(flattenTheImp theLogic tconj,sc))
 \end{code}
 and then use the following functions to produce a sequent, if possible.
 
@@ -1174,13 +1221,21 @@ numberItem' maxw (i,(str,strlen))
 
 Showing theories:
 \begin{code}
-showTheories [] = "No theories present."
-showTheories (thry:_)
-  = unlines'
-      [ "Theory (top) '"++thName thry++"'"
-      , "depends on: "++intercalate "," (thDeps thry)
-      , trVarTable (knownVars thry)
+showTheories thrys = showTheories' $ M.assocs thrys
+showTheories' [] = "No theories present."
+showTheories' thrys = unlines' $ map (showTheory . snd) thrys
+
+showTheory thry
+  = unlines (
+      ( "Theory '"++thName thry++"'" )
+      : if null deps
+        then []
+        else [ "depends on: "++intercalate "," (thDeps thry)]
+      ++
+      [ trVarTable (knownVars thry)
       , showLaws (laws thry) ]
+    )
+  where deps = thDeps thry
 
 showNmdAssns nasns  =  numberList (showNmdAssn $ nameWidth nasns)  nasns
 nameWidth lws = maximum $ map (length . fst) lws

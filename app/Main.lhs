@@ -68,7 +68,7 @@ fld__ f r = r{fld = f $ fld r} ;  fld_ = fld__ . const
 data REqState
  = ReqState {
       logic :: TheLogic
-    , theories :: [Theory]
+    , theories :: Theories
     , conj :: [NmdAssertion]
     , proof :: Maybe LiveProof
     , proofs :: [Proof]
@@ -79,6 +79,7 @@ conj__     f r = r{conj     = f $ conj r}    ; conj_     = conj__      . const
 proof__    f r = r{proof    = f $ proof r}   ; proof_    = proof__     . const
 proofs__   f r = r{proofs   = f $ proofs r}  ; proofs_   = proofs__    . const
 \end{code}
+
 
 At present, we assume development mode by default,
 which currently initialises state based on the contents of
@@ -91,15 +92,17 @@ initState ("user":_)
 -- need to restore saved persistent state on startup
   = do putStrLn "Running in normal user mode."
        return
-         $ ReqState thePropositionalLogic [] [] Nothing []
+         $ ReqState thePropositionalLogic M.empty [] Nothing []
 
 initState _
   = do putStrLn "Running in development mode."
        let reqs = ReqState thePropositionalLogic
-                           [theoryPropositions]
+                           propositionsAsTheories
                            (conjectures theoryPropositions)
                            Nothing []
        return reqs
+
+propositionsAsTheories = fromJust $ addTheory theoryPropositions M.empty
 \end{code}
 
 \newpage
@@ -246,7 +249,7 @@ doProof args reqs
                        case nlookup six strats of
                          Nothing   -> doshow reqs "Invalid strategy no"
                          Just seq
-                           -> proofREPL reqs (launchProof thys nm asn seq)
+                           -> proofREPL reqs (launchProof thylist nm asn seq)
       Just proof
        ->  do putStrLn "Back to current proof."
               proofREPL reqs proof
@@ -254,6 +257,8 @@ doProof args reqs
     getProofArgs [] = 0
     getProofArgs (a:_) = readInt a
     thys = theories reqs
+    -- hack! need to have notion of a 'current' theory.
+    thylist = fromJust $ getTheoryDeps "PropLogic" thys
 \end{code}
 
 Presenting a sequent for choosing:
@@ -513,7 +518,8 @@ lawInstantiateProof _ (reqs, liveProof )
   where
     currt = getTZ $ fst $ focus liveProof
     true = theTrue $ logic reqs
-    thrys = theories reqs
+    -- hack ! Need notion of 'current' theory
+    thrys = fromJust $ getTheoryDeps "PropLogic" $ theories reqs
     rslaws = if null thrys then [] else laws (head thrys)
 
 instantiateLaw reqs liveProof law@((lnm,(lawt,lsc)),_)
@@ -521,7 +527,7 @@ instantiateLaw reqs liveProof law@((lnm,(lawt,lsc)),_)
        psc = conjSC liveProof
        dpath = fPath liveProof
    in
-   do lbind <- generateLawInstanceBind (map knownVars $ theories reqs)
+   do lbind <- generateLawInstanceBind (map knownVars thrys)
                                        (exitTZ tz) psc law
       case instantiateSC lbind lsc of
         Nothing -> do putStrLn "instantiated law side-cond is false"
@@ -539,6 +545,10 @@ instantiateLaw reqs liveProof law@((lnm,(lawt,lsc)),_)
                                   ( ( (UseLaw ByInstantiation lnm lbind dpath)
                                     , exitTZ tz ) : )
                                   liveProof )
+ where
+    -- hack ! Need notion of 'current' theory
+    thrys = fromJust $ getTheoryDeps "PropLogic" $ theories reqs
+
 \end{code}
 
 

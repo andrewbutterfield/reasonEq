@@ -105,6 +105,19 @@ findDeps' n sped ns lvls ((m,ms):rest)
   | otherwise    =  findDeps' n    sped          ns                lvls rest
 
 
+{-
+
+Node lookup
+-}
+
+lkpSDAG :: (Eq a, Monad m) => a -> SDAG a -> m [a]
+lkpSDAG _ [] = fail "not found"
+lkpSDAG n (lvl:lvls) = lkpSDAG' n lvls lvl
+
+lkpSDAG' n lvls [] = lkpSDAG n lvls
+lkpSDAG' n lvls ((m,ms):rest)
+ | n == m  =  return ms
+ | otherwise  =  lkpSDAG' n lvls rest
 
 lvlDom :: SDAGLevel a -> [a]
 lvlDom lvl = map fst lvl

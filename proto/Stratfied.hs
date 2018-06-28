@@ -20,21 +20,7 @@ import qualified Data.Map as M
 
  Introduction
 
- We have an DAG, represented as a set-valued map
- with an insert as described above.
-
--}
-
-type DAG a = Map a (Set a)
-
-insDAG :: (Ord a, Monad m) => a -> (Set a) -> DAG a -> m (DAG a)
-insDAG n ns dag
- | n `M.member` dag  =  fail "domain node already present"
- | ns `S.isSubsetOf` M.keysSet dag  =  return $ M.insert n ns dag
- | otherwise  =  fail "some range nodes not present"
-
-
-{- Better idea: stratified lists
+ Key idea: stratified lists
       3     [ [ (3,[1,2]) ]
      / \    ,
      1 2      [ (1,[0]), (2,[0]) ]
@@ -87,6 +73,38 @@ insSDAGbottom n (lvl:lvls) =  lvl : insSDAGbottom n lvls
 insSDAGLvl n ns 0 sdag        =  [(n,ns)]:sdag
 insSDAGLvl n ns 1 (lvl:lvls)  =  ((n,ns):lvl) : lvls
 insSDAGLvl n ns i (lvl:lvls)  =  lvl : insSDAGLvl n ns (i-1) lvls
+
+{-
+ Extracting a node and all its dependencies, ordered by layer.
+-}
+
+extractDeps :: Eq a => a -> SDAG a -> [a]
+extractDeps n sdag
+  = case findNode n sdag of
+      (False, _,  _    )  ->  []
+      (True,  ns, sdag')  -> findDeps n [] ns sdag'
+
+findNode :: Eq a => a -> SDAG a ->  ( Bool, [a], SDAG a )
+findNode n []          =  ( False, [], [] )
+findNode n (lvl:lvls)  =  findNode' n lvls lvl
+
+findNode' n lvls []    =  findNode n lvls
+findNode' n lvls ((m,ms):rest)
+ | n == m              =  ( True, ms, lvls )
+ | otherwise           =  findNode' n lvls rest
+
+findDeps :: Eq a => a -> [a] -> [a] -> SDAG a -> [a]
+findDeps n sped []  _  =  n : reverse sped
+findDeps n sped ns  []  =  []
+findDeps n sped ns (lvl:lvls) = findDeps' n sped ns lvls lvl
+
+findDeps' n sped [] _ _ = n : reverse sped
+findDeps' n sped ns lvls [] = findDeps n sped ns lvls
+findDeps' n sped ns lvls ((m,ms):rest)
+  | m `elem` ns  =  findDeps' n (m:sped) (nub (ms ++ (ns \\ [m]))) lvls rest
+  | otherwise    =  findDeps' n    sped          ns                lvls rest
+
+
 
 lvlDom :: SDAGLevel a -> [a]
 lvlDom lvl = map fst lvl

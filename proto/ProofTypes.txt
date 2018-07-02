@@ -20,6 +20,10 @@ Theory :- Law,NmdAssertion,Proof
 Theories :- Theory
  -> module Theories
 
+-- above: still in Proof
+-- below: factored out.
+
+
 Sequent :- Theory
 Laws' :- LeftRight, Law, Provenance
 Sequent' :- Theory, Laws'

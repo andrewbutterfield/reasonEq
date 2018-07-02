@@ -29,6 +29,7 @@ import SideCond
 import Binding
 import TermZipper
 import Proof
+import LiveProofs
 import Propositions
 import Instantiate
 import TestRendering

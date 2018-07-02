@@ -135,6 +135,13 @@ ltrim str@(c:cs)
  | otherwise  =  str
 \end{code}
 
+\subsubsection{Subsets}
+
+\begin{code}
+issubset :: Eq a => [a] -> [a] -> Bool
+xs `issubset` ys  =  null (xs \\ ys)
+\end{code}
+
 \subsubsection{Set disjointness}
 
 \begin{code}

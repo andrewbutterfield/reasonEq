@@ -5,13 +5,20 @@ Copyright  Andrew Buttefield (c) 2018
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module StratifiedDAG where
+module StratifiedDAG (
+  SDAGEntry, SDAGLevel, SDAG
+, insSDAG
+, lkpSDAG
+, getSDAGdeps
+)
+where
 
 import Data.List
 import Data.Set (Set)
 import qualified Data.Set as S
 import Data.Map (Map)
 import qualified Data.Map as M
+import Utilities
 \end{code}
 
 \subsection{Introduction}
@@ -24,12 +31,14 @@ and $n_1,..,n_k$ are already present in its domain.
 Note this means that we can only enter
 $n \mapsto \emptyset$ into an empty DAG.
 
+\subsection{Types}
+
+
 Given $n \in \dom\delta$, we want to generate a list of all nodes
 reachable from $n$, such that domain
 elements occur before their range elements.
 
 Key idea: represent as stratified lists.
-
 \begin{verbatim}
       3     [  [ (3,[1,2]) ]
      / \    ,
@@ -37,12 +46,30 @@ Key idea: represent as stratified lists.
      \ /    ,
       0        [ (0,[]) ]  ]
 \end{verbatim}
-
 \begin{code}
 type SDAGEntry a  =  (a,[a])
 type SDAGLevel a  =  [SDAGEntry a]
 type SDAG a       =  [SDAGLevel a]
+\end{code}
 
+\subsection{SDAG Lookup}
+
+\begin{code}
+lkpSDAG :: (Eq a, Monad m) => a -> SDAG a -> m [a]
+lkpSDAG _ [] = fail "not found"
+lkpSDAG n (lvl:lvls) = lkpSDAG' n lvls lvl
+
+lkpSDAG' n lvls [] = lkpSDAG n lvls
+lkpSDAG' n lvls ((m,ms):rest)
+ | n == m  =  return ms
+ | otherwise  =  lkpSDAG' n lvls rest
+\end{code}
+
+\subsection{SDAG Insertion}
+
+\subsubsection{Insertion pre-condition}
+
+\begin{code}
 type SDAGStats a
   = ( Bool  -- true if domain element already present
     , [a]   -- range elements not present
@@ -68,7 +95,11 @@ validate' n currLvl ((m,ms):rest) res@(nPresent, ns, highRange)
 
 mrg :: SDAGStats a -> (SDAGStats a -> SDAGStats a) -> SDAGStats a
 mrg res@(nPresent,_,_) f  =  if nPresent then res else f res
+\end{code}
 
+\subsubsection{Insertion}
+
+\begin{code}
 insSDAG :: (Eq a, Monad m) => a -> [a] -> SDAG a -> m (SDAG a)
 insSDAG n ns sdag
   = case validateSDAGins n ns sdag of
@@ -86,10 +117,13 @@ insSDAGLvl n ns 1 (lvl:lvls)  =  ((n,ns):lvl) : lvls
 insSDAGLvl n ns i (lvl:lvls)  =  lvl : insSDAGLvl n ns (i-1) lvls
 \end{code}
 
+\newpage
+\subsection{Dependency extraction}
+
 Extracting a node and all its dependencies, ordered by layer.
 \begin{code}
-extractDeps :: Eq a => a -> SDAG a -> [a]
-extractDeps n sdag
+getSDAGdeps :: Eq a => a -> SDAG a -> [a]
+getSDAGdeps n sdag
   = case findNode n sdag of
       (False, _,  _    )  ->  []
       (True,  ns, sdag')  -> findDeps n [] ns sdag'
@@ -115,25 +149,14 @@ findDeps' n sped ns lvls ((m,ms):rest)
   | otherwise    =  findDeps' n    sped          ns                lvls rest
 \end{code}
 
-Node lookup
+\subsection{Misc. stuff}
+
 \begin{code}
-lkpSDAG :: (Eq a, Monad m) => a -> SDAG a -> m [a]
-lkpSDAG _ [] = fail "not found"
-lkpSDAG n (lvl:lvls) = lkpSDAG' n lvls lvl
-
-lkpSDAG' n lvls [] = lkpSDAG n lvls
-lkpSDAG' n lvls ((m,ms):rest)
- | n == m  =  return ms
- | otherwise  =  lkpSDAG' n lvls rest
-
 lvlDom :: SDAGLevel a -> [a]
 lvlDom lvl = map fst lvl
 
 lvlRng :: SDAGLevel a -> [a]
 lvlRng lvl = concat $ map snd lvl
-
-issubset :: Eq a => [a] -> [a] -> Bool
-xs `issubset` ys  =  null (xs \\ ys)
 
 inLvlDom :: Eq a => a -> SDAGLevel a -> Bool
 n `inLvlDom` level = n `elem` lvlDom level
@@ -151,9 +174,10 @@ inSDAGDom :: Eq a => a -> SDAG a -> Bool
 n `inSDAGDom` sdag = n `elem`  sdagDOM sdag
 \end{code}
 
-Test examples.
-\begin{code}
+\newpage
+\subsection{Test examples}
 
+\begin{code}
 -- well-formed
 sdag0 = []
 sdag1 = [ [ (1,[]) ] ]

@@ -20,7 +20,7 @@ import Data.Char
 import NiceSymbols hiding (help)
 
 import Utilities
-import RDAG
+import StratifiedDAG
 import LexBase
 import Variables
 import AST

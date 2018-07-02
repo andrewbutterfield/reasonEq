@@ -29,7 +29,7 @@ library
                      , Builder
                      , TermZipper
                      , Proof
-                     , RDAG
+                     , StratifiedDAG
                      , REPL
                      -- in proto
                      , Acyclic

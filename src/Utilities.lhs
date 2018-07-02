@@ -135,6 +135,37 @@ ltrim str@(c:cs)
  | otherwise  =  str
 \end{code}
 
+\subsubsection{Number List Display}
+
+A common idiom is to show a list of items as a numbered list
+to make selecting them easier:
+\begin{code}
+numberList showItem list
+  =  unlines' $ map (numberItem showItem) $  zip [1..] list
+numberItem showItem (i,item)
+  =  pad 4 istr ++ istr ++ ". " ++ showItem item
+  where istr = show i
+
+pad w str
+  | ext > 0    =  replicate ext ' '
+  | otherwise  =  ""
+  where ext = w - length str
+\end{code}
+
+Sometimes, we want the number afterwards:
+\begin{code}
+numberList' showItem list
+  = let
+     lstrings = map showItem' list
+     showItem' item = (istr,length istr) where istr = showItem item
+     maxw = maximum $ map snd lstrings
+    in unlines' $ map (numberItem' (maxw+2)) $ zip [1..] lstrings
+numberItem' maxw (i,(str,strlen))
+  = str ++ replicate (maxw-strlen) ' ' ++ pad 2 istr ++ istr
+  where istr = show i
+\end{code}
+
+
 \subsubsection{Subsets}
 
 \begin{code}

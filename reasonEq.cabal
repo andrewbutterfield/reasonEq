@@ -29,6 +29,7 @@ library
                      , Builder
                      , TermZipper
                      , Proof
+                     , Sequents
                      , LiveProofs
                      , StratifiedDAG
                      , REPL

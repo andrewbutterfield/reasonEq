@@ -38,6 +38,7 @@ import Binding
 import Matching
 import Instantiate
 import Proof
+import Sequents
 -- import Builder
 --
 import NiceSymbols

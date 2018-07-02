@@ -146,7 +146,7 @@ findDeps' n sped [] _ _ = n : reverse sped
 findDeps' n sped ns lvls [] = findDeps n sped ns lvls
 findDeps' n sped ns lvls ((m,ms):rest)
   | m `elem` ns  =  findDeps' n (m:sped) (nub (ms ++ (ns \\ [m]))) lvls rest
-  | otherwise    =  findDeps' n    sped          ns                lvls rest
+  | otherwise    =  findDeps' n    sped               ns           lvls rest
 \end{code}
 
 \subsection{Misc. stuff}

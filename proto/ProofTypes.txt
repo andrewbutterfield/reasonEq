@@ -1,0 +1,165 @@
+-- ====== Interdependices ======
+
+Asterisk at end of type indicates an unavoidable forward reference
+
+TheLogic :- external
+Assertion :- external
+NmdAssertion :- Assertion
+Provenance :- external
+Law :- NmdAssertion,Provenance
+
+HowUsed :-
+Justification :- HowUsed
+CalcStep :- Justification
+Calculation :- CalcStep
+Proof :- Assertion, Calculation
+
+Theory :- Law,NmdAssertion,Proof
+Theories :- Theory
+
+Sequent :- Theory
+Laws' :- LeftRight, Law, Provenance
+Sequent' :- Theory, Laws'
+LeftRight :-
+SeqZip :- Sequent'
+
+MatchContext :- Law
+Match :- Assertion
+Matches :- Match
+LiveProof :- Assertion, MatchContext, SeqZip, Matches, CalcStep
+
+
+
+
+
+-- ====== Full Definitions ======
+
+
+
+data TheLogic
+  = TheLogic
+     { theTrue :: Term
+     , theFalse :: Term
+     , theEqv  :: Identifier
+     , theImp  :: Identifier
+     , theAnd  :: Identifier
+     }
+
+type Assertion = (Term, SideCond)
+type NmdAssertion = (String,Assertion)
+data Provenance
+  = Axiom       -- asserted as True
+  | Proven String     -- demonstrated by (named) proof
+  deriving (Eq,Show,Read)
+type Law = (NmdAssertion,Provenance)
+
+data Theory
+  = Theory {
+      thName      :: String
+    , thDeps      :: [String] -- by name !
+    , knownVars   :: VarTable
+    , laws        :: [Law]
+    , conjectures :: [NmdAssertion]
+    , proofs      :: [Proof]
+    }
+  deriving (Eq,Show,Read)
+
+type Theories = Map String Theory
+
+data Sequent
+  = Sequent {
+     ante :: [Theory] -- antecedent theory context
+   , hyp :: Theory -- the goal hypotheses -- we can "go" here
+   , sc :: SideCond -- of the conjecture being proven.
+   , cleft :: Term -- never 'true' to begin with.
+   , cright :: Term -- often 'true' from the start.
+   }
+
+data Sequent'
+  = Sequent' {
+      ante0 :: [Theory] -- context theories
+    , sc0       :: SideCond -- sequent side-condition
+    , laws'     :: Laws'
+    }
+  deriving (Eq,Show,Read)
+data Laws'
+  = CLaws' { -- currently focussed on conjecture component
+      hyp0  :: Theory -- hypothesis theory
+    , whichC :: LeftRight -- which term is in the focus
+    , otherC :: Term  -- the term not in the focus
+    }
+  | HLaws' { -- currently focussed on hypothesis component
+      hname     :: String -- hyp. theory name
+    , hknown    :: VarTable
+    , hbefore   :: [Law] -- hyp. laws before focus (reversed)
+    , fhName    :: String -- focus hypothesis name
+    , fhSC      :: SideCond -- focus hypothesis sc (usually true)
+    , fhProv    :: Provenance -- focus hypothesis provenance (?)
+    , hOriginal :: Term -- the original form of the focus hypothesis
+    , hafter    :: [Law] -- hyp. laws after focus
+    , cleft0    :: Term -- left conjecture
+    , cright0   :: Term -- right conjecture
+    }
+  deriving (Eq,Show,Read)
+data LeftRight = Lft | Rght deriving (Eq,Show,Read)
+type SeqZip = (TermZip, Sequent')\end{code}
+
+data LiveProof
+  = LP {
+      conjName :: String -- conjecture name
+    , conjecture :: Assertion -- assertion being proven
+    , conjSC :: SideCond -- side condition
+    , strategy :: String -- strategy
+    , mtchCtxts :: [MatchContext] -- current matching contexts
+    , focus :: SeqZip  -- current sub-term of interest
+    , fPath :: [Int] -- current term zipper descent arguments
+    , matches :: Matches -- current matches
+    , stepsSoFar :: [CalcStep]  -- calculation steps so far, most recent first
+    }
+  deriving (Eq, Show, Read)
+
+data Match
+ = MT { mName ::  String     -- assertion name
+      , mAsn  ::  Assertion  -- matched assertion
+      , mBind ::  Binding    -- resulting binding
+      , mRepl ::  Term       -- replacement term
+      } deriving (Eq,Show,Read)
+
+type Matches = [Match]
+
+type CalcStep
+  = ( Justification  -- step justification
+    , Term )         -- previous term
+
+data Justification
+  = SwLeft     -- switch to left consequent
+  | SwRight    -- switch to right consequent
+  | SwHyp Int  -- switch to hypothesis i
+  | CloneH Int -- clone hypothesis i
+  | UseLaw
+      HowUsed  -- how law was used in proof step
+      String   -- law name
+      Binding  -- binding from law variables to goal components
+      [Int]    -- zipper descent arguments
+  deriving (Eq,Show,Read)
+
+data HowUsed
+  = ByMatch          -- replace focus with binding(match)
+  | ByInstantiation  -- replace focus=true with binding(law)
+  deriving (Eq,Show,Read)
+
+
+type Proof
+  = ( String -- assertion name
+    , Assertion
+    , String -- Strategy
+    , Calculation -- Simple calculational proofs for now
+    )
+
+type Calculation
+  = ( Term -- end (or current) term
+    , [ CalcStep ] )  -- calculation steps, in proof order
+
+type MatchContext
+  = ( [Law]        -- all laws of this theory
+    , [VarTable] ) -- all known variables here, and in dependencies

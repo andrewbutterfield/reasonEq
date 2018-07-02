@@ -250,7 +250,7 @@ However, we also want to specify the provenance of each law.
 \begin{code}
 data Provenance
   = Axiom       -- asserted as True
-  | Proven Proof     -- demonstrated by proof
+  | Proven String     -- demonstrated by (named) proof
   deriving (Eq,Show,Read)
 
 type Law = (NmdAssertion,Provenance)
@@ -259,7 +259,7 @@ labelAsAxiom :: NmdAssertion -> Law
 labelAsAxiom  nasn  =  (nasn, Axiom)
 
 labelAsProven :: NmdAssertion -> Proof -> Law
-labelAsProven nasn prf =  (nasn, Proven prf)
+labelAsProven nasn (prfnm,_,_,_) =  (nasn, Proven prfnm)
 \end{code}
 
 A theory is a collection of laws linked

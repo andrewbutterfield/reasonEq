@@ -20,16 +20,9 @@ module LiveProofs
  , showLivePrf
  ) where
 
-import Data.Set (Set)
-import qualified Data.Set as S
-import Data.Map (Map)
-import qualified Data.Map as M
 import Data.Maybe
-import Data.List
---
+
 import Utilities
-import LexBase
-import Variables
 import AST
 import SideCond
 import TermZipper
@@ -42,192 +35,11 @@ import Proofs
 import Theories
 import Sequents
 
--- import Builder
---
 import NiceSymbols
 import TestRendering
---
--- import Test.HUnit hiding (Assertion)
--- import Test.Framework as TF (defaultMain, testGroup, Test)
--- import Test.Framework.Providers.HUnit (testCase)
 
 import Debug.Trace
 dbg msg x = trace (msg++show x) x
-\end{code}
-
-We define types for the key concepts behind a live/ongoing proof.
-
-\subsection{Proof Calculations}
-
-We start with the simplest proof process of all,
-namely a straight calculation from a starting assertion
-to a specified final assertion, usually being the axiom \true.
-We need to have an AST zipper to allow sub-terms to be singled out
-for match and replace,
-and some way of recording what happened,
-so that proofs (complete or partial) can be saved,
-restored, and reviewed.
-
-The actions involved in a proof calculation step are as follows:
-\begin{itemize}
-  \item Select sub-term.
-  \item Match against laws.
-  \item Select preferred match and apply its replacement.
-  \item Record step (which subterm, which law).
-\end{itemize}
-
-We need to distinguish between a `live' proof,
-which involves a zipper,
-and a proof `record',
-that records all the steps of the proof
-in enough detail to allow the proof to be replayed.
-
-We start with live proofs:
-\begin{code}
-data LiveProof
-  = LP {
-      conjName :: String -- conjecture name
-    , conjecture :: Assertion -- assertion being proven
-    , conjSC :: SideCond -- side condition
-    , strategy :: String -- strategy
-    , mtchCtxts :: [MatchContext] -- current matching contexts
-    , focus :: SeqZip  -- current sub-term of interest
-    , fPath :: [Int] -- current term zipper descent arguments
-    , matches :: Matches -- current matches
-    , stepsSoFar :: [CalcStep]  -- calculation steps so far, most recent first
-    }
-  deriving (Eq, Show, Read)
-
--- field modification boilerplate
-conjName__ f lp = lp{ conjName = f $ conjName lp}
-conjName_ = conjName__ . const
-conjecture__ f lp = lp{ conjecture = f $ conjecture lp}
-conjecture_ = conjecture__ . const
-conjSC__ f lp = lp{ conjSC = f $ conjSC lp}
-conjSC_ = conjSC__ . const
-strategy__ f lp = lp{ strategy = f $ strategy lp}
-strategy_ = strategy__ . const
-mtchCtxts__ f lp = lp{ mtchCtxts = f $ mtchCtxts lp}
-mtchCtxts_ = mtchCtxts__ . const
-focus__ f lp = lp{ focus = f $ focus lp}
-focus_ = focus__ . const
-fPath__ f lp = lp{ fPath = f $ fPath lp}
-fPath_ = fPath__ . const
-matches__ f lp = lp{ matches = f $ matches lp}
-matches_ = matches__ . const
-stepsSoFar__ f lp = lp{ stepsSoFar = f $ stepsSoFar lp}
-stepsSoFar_ = stepsSoFar__ . const
-
-data Match
- = MT { mName ::  String     -- assertion name
-      , mAsn  ::  Assertion  -- matched assertion
-      , mBind ::  Binding    -- resulting binding
-      , mRepl ::  Term       -- replacement term
-      } deriving (Eq,Show,Read)
-
-type Matches = [Match]
-
--- temporary
-dispLiveProof :: LiveProof -> String
-dispLiveProof liveProof
- = unlines'
-     ( ( ("Proof for '"++red (conjName liveProof)
-          ++"'  "++trSideCond (conjSC liveProof))
-       : ("by "++(strategy liveProof))
-       : " ..."
-       : map shLiveStep (reverse (stepsSoFar liveProof))
-       )
-       ++
-       ( displayMatches (matches liveProof)
-         : [ underline "           "
-           , dispSeqZip (focus liveProof)
-           , "" ]
-       ) )
-
-shLiveStep :: CalcStep -> String
-shLiveStep ( just, trm )
-  = unlines' [ trTerm 0 trm, showJustification just]
-
-displayMatches :: Matches -> String
-displayMatches []  =  ""
-displayMatches matches
-  =  unlines' ( ("Matches:") : map shMatch (zip [1..] matches))
-
-shMatch (i, mtch)
- = ( show i ++ " : "++ ldq ++ green (mName mtch) ++ rdq
-     ++ " gives     "
-     ++ (bold . blue)
-           ( trTerm 0 (fromJust $ instantiate bind $ mRepl mtch)
-             ++ "  "
-             ++ trSideCond (fromJust $ instantiateSC bind $ lsc) ) )
- where
-    bind = mBind mtch
-    (lt,lsc) = mAsn mtch
-\end{code}
-
-
-\newpage
-We need to setup a proof from a conjecture:
-\begin{code}
-startProof :: TheLogic -> [Theory] -> String -> Assertion -> LiveProof
-startProof logic thys nm asn@(t,sc)
-  =  LP { conjName = nm
-        , conjecture = asn
-        , conjSC = sc
-        , strategy = strat
-        , mtchCtxts =  mcs
-        , focus =  sz
-        , fPath = []
-        , matches = []
-        , stepsSoFar = []
-        }
-  where
-    (strat,seq) = fromJust $ reduce logic thys (nm,asn)
-    sz = leftConjFocus seq
-    mcs = buildMatchContext thys
-\end{code}
-
-\begin{code}
-launchProof :: [Theory] -> String -> Assertion -> (String,Sequent) -> LiveProof
-launchProof thys nm asn@(t,sc) (strat,seq)
-  = LP { conjName = nm
-        , conjecture = asn
-        , conjSC = sc
-        , strategy = strat
-        , mtchCtxts =  mcs
-        , focus =  sz
-        , fPath = []
-        , matches = []
-        , stepsSoFar = []
-        }
-  where
-    sz = leftConjFocus seq
-    hthy = hyp seq
-    mcs = if null $ laws hthy
-           then buildMatchContext thys
-           else buildMatchContext (hthy:thys)
-\end{code}
-We need to determine when a live proof is complete:
-\begin{code}
-proofComplete :: TheLogic -> LiveProof -> Bool
-proofComplete logic liveProof
-  =  let
-       sequent = exitSeqZipper $ focus liveProof
-       hypTerms = map (fst . snd . fst) $ laws $ hyp sequent
-     in cleft sequent == cright sequent -- should be alpha-equivalent
-        ||
-        any (== theFalse logic) hypTerms
-\end{code}
-
-We need to convert a complete live proof to a proof:
-\begin{code}
-finaliseProof :: LiveProof -> Proof
-finaliseProof liveProof
-  = ( conjName liveProof
-    , conjecture liveProof
-    , strategy liveProof
-    , ( exitTZ $ fst $ focus liveProof
-      , reverse $ stepsSoFar liveProof ) )
 \end{code}
 
 \newpage
@@ -267,7 +79,141 @@ buildMatchContext (thy:thys)
     in (laws thy, knownVars thy : vts') : mcs'
 \end{code}
 
+\subsection{Matches}
+
+\begin{code}
+data Match
+ = MT { mName ::  String     -- assertion name
+      , mAsn  ::  Assertion  -- matched assertion
+      , mBind ::  Binding    -- resulting binding
+      , mRepl ::  Term       -- replacement term
+      } deriving (Eq,Show,Read)
+
+type Matches = [Match]
+\end{code}
+
 \newpage
+\subsection{Live Proofs}
+
+\begin{code}
+data LiveProof
+  = LP {
+      conjName :: String -- conjecture name
+    , conjecture :: Assertion -- assertion being proven
+    , conjSC :: SideCond -- side condition
+    , strategy :: String -- strategy
+    , mtchCtxts :: [MatchContext] -- current matching contexts
+    , focus :: SeqZip  -- current sub-term of interest
+    , fPath :: [Int] -- current term zipper descent arguments
+    , matches :: Matches -- current matches
+    , stepsSoFar :: [CalcStep]  -- calculation steps so far, most recent first
+    }
+  deriving (Eq, Show, Read)
+\end{code}
+
+
+Field modification boilerplate
+(a kind of poor man's lenses):
+\begin{code}
+conjName__ f lp = lp{ conjName = f $ conjName lp}
+conjName_ = conjName__ . const
+conjecture__ f lp = lp{ conjecture = f $ conjecture lp}
+conjecture_ = conjecture__ . const
+conjSC__ f lp = lp{ conjSC = f $ conjSC lp}
+conjSC_ = conjSC__ . const
+strategy__ f lp = lp{ strategy = f $ strategy lp}
+strategy_ = strategy__ . const
+mtchCtxts__ f lp = lp{ mtchCtxts = f $ mtchCtxts lp}
+mtchCtxts_ = mtchCtxts__ . const
+focus__ f lp = lp{ focus = f $ focus lp}
+focus_ = focus__ . const
+fPath__ f lp = lp{ fPath = f $ fPath lp}
+fPath_ = fPath__ . const
+matches__ f lp = lp{ matches = f $ matches lp}
+matches_ = matches__ . const
+stepsSoFar__ f lp = lp{ stepsSoFar = f $ stepsSoFar lp}
+stepsSoFar_ = stepsSoFar__ . const
+\end{code}
+
+
+\newpage
+\subsection{Proof Starting and Stopping}
+
+\subsubsection{Starting a Proof with default strategy}
+
+
+We need to setup a proof from a conjecture:
+\begin{code}
+startProof :: TheLogic -> [Theory] -> String -> Assertion -> LiveProof
+startProof logic thys nm asn@(t,sc)
+  =  LP { conjName = nm
+        , conjecture = asn
+        , conjSC = sc
+        , strategy = strat
+        , mtchCtxts =  mcs
+        , focus =  sz
+        , fPath = []
+        , matches = []
+        , stepsSoFar = []
+        }
+  where
+    (strat,seq) = fromJust $ reduce logic thys (nm,asn)
+    sz = leftConjFocus seq
+    mcs = buildMatchContext thys
+\end{code}
+
+\subsubsection{Starting a Proof with given strategy}
+
+\begin{code}
+launchProof :: [Theory] -> String -> Assertion -> (String,Sequent) -> LiveProof
+launchProof thys nm asn@(t,sc) (strat,seq)
+  = LP { conjName = nm
+        , conjecture = asn
+        , conjSC = sc
+        , strategy = strat
+        , mtchCtxts =  mcs
+        , focus =  sz
+        , fPath = []
+        , matches = []
+        , stepsSoFar = []
+        }
+  where
+    sz = leftConjFocus seq
+    hthy = hyp seq
+    mcs = if null $ laws hthy
+           then buildMatchContext thys
+           else buildMatchContext (hthy:thys)
+\end{code}
+
+\subsubsection{Testing for Proof Completion}
+
+
+We need to determine when a live proof is complete:
+\begin{code}
+proofComplete :: TheLogic -> LiveProof -> Bool
+proofComplete logic liveProof
+  =  let
+       sequent = exitSeqZipper $ focus liveProof
+       hypTerms = map (fst . snd . fst) $ laws $ hyp sequent
+     in cleft sequent == cright sequent -- should be alpha-equivalent
+        ||
+        any (== theFalse logic) hypTerms
+\end{code}
+
+\subsubsection{Finalising a complete Proof}
+
+We need to convert a complete live proof to a proof:
+\begin{code}
+finaliseProof :: LiveProof -> Proof
+finaliseProof liveProof
+  = ( conjName liveProof
+    , conjecture liveProof
+    , strategy liveProof
+    , ( exitTZ $ fst $ focus liveProof
+      , reverse $ stepsSoFar liveProof ) )
+\end{code}
+
+
 \subsection{Assertion Matching}
 
 First, given list of match-contexts, systematically work through them.
@@ -315,8 +261,9 @@ justMatch repl vts tC ((n,asn@(tP,_)),_)
      Just bind -> [MT n asn bind repl]
 \end{code}
 
+
 \newpage
-\subsection{Showing stuff}
+\subsection{Showing Live Proofs}
 
 \textbf{This should all be done via proper generic rendering code}
 
@@ -325,4 +272,43 @@ Showing Proof:
 \begin{code}
 showLivePrf Nothing = "no Proof."
 showLivePrf (Just proof) = dispLiveProof proof
+\end{code}
+
+\begin{code}
+-- temporary
+dispLiveProof :: LiveProof -> String
+dispLiveProof liveProof
+ = unlines'
+     ( ( ("Proof for '"++red (conjName liveProof)
+          ++"'  "++trSideCond (conjSC liveProof))
+       : ("by "++(strategy liveProof))
+       : " ..."
+       : map shLiveStep (reverse (stepsSoFar liveProof))
+       )
+       ++
+       ( displayMatches (matches liveProof)
+         : [ underline "           "
+           , dispSeqZip (focus liveProof)
+           , "" ]
+       ) )
+
+shLiveStep :: CalcStep -> String
+shLiveStep ( just, trm )
+  = unlines' [ trTerm 0 trm, showJustification just]
+
+displayMatches :: Matches -> String
+displayMatches []  =  ""
+displayMatches matches
+  =  unlines' ( ("Matches:") : map shMatch (zip [1..] matches))
+
+shMatch (i, mtch)
+ = ( show i ++ " : "++ ldq ++ green (mName mtch) ++ rdq
+     ++ " gives     "
+     ++ (bold . blue)
+           ( trTerm 0 (fromJust $ instantiate bind $ mRepl mtch)
+             ++ "  "
+             ++ trSideCond (fromJust $ instantiateSC bind $ lsc) ) )
+ where
+    bind = mBind mtch
+    (lt,lsc) = mAsn mtch
 \end{code}

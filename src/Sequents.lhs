@@ -557,7 +557,9 @@ getHypotheses' (HLaws' hn hk hbef _ _ _ _ haft _ _)
 \end{code}
 
 \newpage
-\subsection{Displaying Sequents}
+\subsection{Showing Sequents}
+
+\textbf{This should all be done via proper generic rendering code}
 
 \begin{code}
 -- temporary

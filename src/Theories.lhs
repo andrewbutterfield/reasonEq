@@ -103,12 +103,11 @@ getDeps theories (dnm:drest)
 
 
 \newpage
-\subsection{Showing stuff}
+\subsection{Showing Theories}
 
 \textbf{This should all be done via proper generic rendering code}
 
 
-Showing theories:
 \begin{code}
 showTheories thrys = showTheories' $ M.assocs thrys
 showTheories' [] = "No theories present."

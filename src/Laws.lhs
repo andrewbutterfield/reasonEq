@@ -13,31 +13,12 @@ module Laws
  , showLogic, showNmdAssns, showLaws
  ) where
 
-import Data.Set (Set)
-import qualified Data.Set as S
-import Data.Map (Map)
-import qualified Data.Map as M
-import Data.Maybe
-import Data.List
---
 import Utilities
 import LexBase
-import Variables
 import AST
 import SideCond
-import TermZipper
-import VarData
-import Binding
-import Matching
-import Instantiate
--- import Builder
---
 import NiceSymbols
 import TestRendering
---
--- import Test.HUnit hiding (Assertion)
--- import Test.Framework as TF (defaultMain, testGroup, Test)
--- import Test.Framework.Providers.HUnit (testCase)
 
 import Debug.Trace
 dbg msg x = trace (msg++show x) x
@@ -45,7 +26,7 @@ dbg msg x = trace (msg++show x) x
 
 We define types for assertions and laws.
 
-\subsection{Logic}
+\subsection{Logic Signature}
 
 To make the matching work effectively,
 we have to identify which constructs play the roles
@@ -61,6 +42,9 @@ data TheLogic
      , theAnd  :: Identifier
      }
 \end{code}
+
+\subsubsection{Predicate Conditioning}
+
 We also want to provide a way to ``condition'' predicates
 to facilitate matching  and proof flexibility.
 In particular, we expect the following laws to hold:
@@ -90,7 +74,6 @@ flattenTheAnd theLogic t
   where and = theAnd theLogic
 \end{code}
 
-\newpage
 For implication, we need a slighty different approach,
 as it is only right-associative,
 and we have the trading rule involving conjunction.
@@ -111,7 +94,6 @@ collectAnte imp (Cons tk i [ta,tc])
 collectAnte imp t = ([],t)
 \end{code}
 
-
 \newpage
 \subsection{Laws}
 
@@ -131,16 +113,17 @@ data Provenance
   = Axiom       -- asserted as True
   | Proven String     -- demonstrated by (named) proof
   deriving (Eq,Show,Read)
+\end{code}
 
+A law is a named assertion along with its provenance.
+\begin{code}
 type Law = (NmdAssertion,Provenance)
 
 labelAsAxiom :: NmdAssertion -> Law
 labelAsAxiom  nasn  =  (nasn, Axiom)
 \end{code}
 
-
-\newpage
-\subsection{Showing stuff}
+\subsection{Showing Laws}
 
 \textbf{This should all be done via proper generic rendering code}
 
@@ -169,5 +152,5 @@ showLaw w ((nm,(trm,sc)),prov)
   =    ldq ++ nm ++ rdq ++ showProv prov ++ pad w nm
     ++ "  " ++ trTerm 0 trm ++ "  "++trSideCond sc
 showProv Axiom       =  _subStr "A"
-showProv (Proven _)  =  _subStr "P"
+showProv (Proven pname)  =  _subStr "P"
 \end{code}

@@ -17,42 +17,20 @@ module Proofs
  , labelAsProven
  ) where
 
-import Data.Set (Set)
-import qualified Data.Set as S
-import Data.Map (Map)
-import qualified Data.Map as M
-import Data.Maybe
-import Data.List
---
 import Utilities
-import LexBase
-import Variables
 import AST
-import SideCond
 import TermZipper
-import VarData
 import Binding
-import Matching
-import Instantiate
 import Laws
--- import Builder
---
-import NiceSymbols
 import TestRendering
---
--- import Test.HUnit hiding (Assertion)
--- import Test.Framework as TF (defaultMain, testGroup, Test)
--- import Test.Framework.Providers.HUnit (testCase)
 
 import Debug.Trace
 dbg msg x = trace (msg++show x) x
 \end{code}
 
-We define types for the key concepts behind a proof,
-such as the notion of proof strategies,
-and proof calculations.
+We consider a proof as being a transcript of the steps taken
+to get from an initial goal to a final succesful outcome.
 
-\newpage
 \subsection{Proof Structure}
 
 Consider a pre-existing set of laws $\mathcal L$ (axioms plus proven theorems),
@@ -76,6 +54,7 @@ The most general proof framework we plan to support is the following:
     $$ \mathcal L,H_1,\dots,H_n \vdash C_{left} \equiv C_{right}$$
     where we use the laws in both $\mathcal L$ and $\mathcal H$ to transform either or both
     of $C_{left}$ and $C_{right}$ until they are the same.
+  \newpage
   \item[Calculation]
     We define two kinds of calculation steps:
     \begin{description}
@@ -144,11 +123,15 @@ converted to ``known'' for the proof
 means that the tables describing known variables need to be
 linked to specific collections of laws.
 
+\newpage
 \subsection{Proof Calculations}
 
-We start with the simplest proof process of all,
-namely a straight calculation from a starting assertion
-to a specified final assertion, usually being the axiom \true.
+We will represent proofs as
+a straight calculation from the starting assertion
+associated with the initial strategy
+to the corresponind final assertion.
+We also record any movements between hypotheses and consequents
+during the proof.
 We need to have an AST zipper to allow sub-terms to be singled out
 for match and replace,
 and some way of recording what happened,
@@ -157,35 +140,57 @@ restored, and reviewed.
 
 The actions involved in a proof calculation step are as follows:
 \begin{itemize}
-  \item Select sub-term.
+  \item Select sub-term
+  (which could be in either consequent, or any hypothesis).
   \item Match against laws.
   \item Select preferred match and apply its replacement.
   \item Record step (which subterm, which law).
 \end{itemize}
 
-We need to distinguish between a `live' proof,
-which involves a zipper,
-and a proof `record',
+Here we define a proof `record',
 that records all the steps of the proof
 in enough detail to allow the proof to be replayed.
+The replay will require the same theory context as was used to
+generate the proof.
 
+There are two ways laws can be used to replace
+a goal (sub-)term:
+\begin{description}
+  \item[matching]
+    the sub-term is matched against part (or all) of the law,
+    and is replaced by the other part (or $\true$).
+  \item[instantiation]
+     the sub-term is $\true$,
+     and is replaced by the entire law
+\end{description}
+In both cases the match binding is used to build the replacement term.
+First, a type that states how a law was used in a step:
 \begin{code}
-type CalcStep
-  = ( Justification  -- step justification
-    , Term )         -- previous term
+data HowUsed
+  = ByMatch          -- replace focus with binding(match)
+  | ByInstantiation  -- replace focus=true with binding(law)
+  deriving (Eq,Show,Read)
+\end{code}
 
+The justification of a step records either
+(i) which laws was used, where and how,
+or (ii) that the step was a big switch
+between consequents and hypotheses.
+\begin{code}
 data Justification
-  = SwLeft     -- switch to left consequent
-  | SwRight    -- switch to right consequent
-  | SwHyp Int  -- switch to hypothesis i
-  | CloneH Int -- clone hypothesis i
-  | UseLaw
+  = UseLaw
       HowUsed  -- how law was used in proof step
       String   -- law name
       Binding  -- binding from law variables to goal components
       [Int]    -- zipper descent arguments
+  | SwLeft     -- switch to left consequent
+  | SwRight    -- switch to right consequent
+  | SwHyp Int  -- switch to hypothesis i
+  | CloneH Int -- clone hypothesis i
   deriving (Eq,Show,Read)
-
+\end{code}
+Often it is worth knowing if a switch has occurred.
+\begin{code}
 isSequentSwitch :: Justification -> Bool
 isSequentSwitch SwLeft     =  True
 isSequentSwitch SwRight    =  True
@@ -195,16 +200,45 @@ isSequentSwitch _          =  False
 justSwitched :: [CalcStep] -> Bool
 justSwitched []         =  True -- starting a proof is considered a 'switch'
 justSwitched ((j,_):_)  =  isSequentSwitch j
-
-data HowUsed
-  = ByMatch          -- replace focus with binding(match)
-  | ByInstantiation  -- replace focus=true with binding(law)
-  deriving (Eq,Show,Read)
 \end{code}
 
+A calculation step records a justification,
+plus the term that was present before the step occurred.
 \begin{code}
--- temporary
+type CalcStep
+  = ( Justification  -- step justification
+    , Term )         -- previous term
+\end{code}
 
+A calculation is the current term, plus all previous steps.
+\begin{code}
+type Calculation
+  = ( Term -- end (or current) term
+    , [ CalcStep ] )  -- calculation steps, in proof order
+\end{code}
+
+A proof has a name
+(same as that of the orginating conjecture),
+the assertion, a string denoting a known strategy,
+and the relevant calculation.
+\begin{code}
+type Proof
+  = ( String -- assertion name
+    , Assertion
+    , String -- Strategy
+    , Calculation -- Simple calculational proofs for now
+    )
+
+labelAsProven :: NmdAssertion -> Proof -> Law
+labelAsProven nasn (prfnm,_,_,_) =  (nasn, Proven prfnm)
+\end{code}
+
+\newpage
+\subsection{Showing Proofs}
+
+\textbf{This should all be done via proper generic rendering code}
+
+\begin{code}
 showJustification :: Justification -> String
 showJustification SwLeft
   =  "   [switch left]"
@@ -222,23 +256,7 @@ showHow ByMatch = "match"
 showHow ByInstantiation = "instantiate"
 \end{code}
 
-We then continue with a proof (record):
 \begin{code}
-type Proof
-  = ( String -- assertion name
-    , Assertion
-    , String -- Strategy
-    , Calculation -- Simple calculational proofs for now
-    )
-
-labelAsProven :: NmdAssertion -> Proof -> Law
-labelAsProven nasn (prfnm,_,_,_) =  (nasn, Proven prfnm)
-
-type Calculation
-  = ( Term -- end (or current) term
-    , [ CalcStep ] )  -- calculation steps, in proof order
-
-
 displayProof :: Proof -> String
 displayProof (pnm,(trm,sc),strat,(trm',steps))
  = unlines' ( (pnm ++ " : " ++ trTerm 0 trm ++ " " ++ trSideCond sc)
@@ -258,12 +276,6 @@ shStep ( (UseLaw how lnm bind dpath), trm )
               , trBinding bind
               ]
 \end{code}
-
-\newpage
-\subsection{Showing stuff}
-
-\textbf{This should all be done via proper generic rendering code}
-
 
 
 Showing Proofs:

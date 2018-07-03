@@ -10,16 +10,13 @@ module Proof
  ( TheLogic(..), flattenTheEquiv, flattenTheImp, flattenTheAnd
  , Assertion, NmdAssertion, Provenance, Law
  , labelAsAxiom, labelAsProven
- , Theory(..)
- , proofs__, proofs_
- , Theories, addTheory, getTheoryDeps
  , HowUsed(..)
  , Justification(..), showJustification
  , isSequentSwitch, justSwitched
  , CalcStep
  , Calculation
  , Proof, displayProof
- , showLogic, showTheories, showNmdAssns, showLaws, showProofs
+ , showLogic, showNmdAssns, showLaws, showProofs
  , numberList
  ) where
 
@@ -217,7 +214,7 @@ collectAnte imp t = ([],t)
 
 
 \newpage
-\subsection{Theories}
+\subsection{Laws}
 
 An assertion is simply a predicate term coupled with side-conditions.
 \begin{code}
@@ -243,70 +240,6 @@ labelAsAxiom  nasn  =  (nasn, Axiom)
 
 labelAsProven :: NmdAssertion -> Proof -> Law
 labelAsProven nasn (prfnm,_,_,_) =  (nasn, Proven prfnm)
-\end{code}
-
-A theory is a collection of laws linked
-to information about which variables in those laws are deemed as ``known''.
-In addition we also keep a list of conjectures,
-that will become laws if they ever have a proof.
-We also allow a theory to depend on other theories,
-so long as there are no dependency cycles.
-\begin{code}
-data Theory
-  = Theory {
-      thName      :: String
-    , thDeps      :: [String] -- by name !
-    , knownVars   :: VarTable
-    , laws        :: [Law]
-    , conjectures :: [NmdAssertion]
-    , proofs      :: [Proof]
-    }
-  deriving (Eq,Show,Read)
-
-proofs__ f r = r{proofs = f $ proofs r} ; proofs_ = proofs__ . const
-\end{code}
-
-We keep a collection of theories as a map,
-indexed by their names:
-\begin{code}
-type Theories = Map String Theory
-
-addTheory :: Monad m => Theory -> Theories -> m Theories
-addTheory thry theories
- | nm `M.member` theories  =  fail ("Theory '"++nm++"' already present")
- | otherwise  =  do allDepsIn $ thDeps thry
-                    return $ M.insert nm thry theories
- where
-   nm = thName thry
-   allDepsIn [] = return ()
-   allDepsIn (thd:thds)
-     | thd `M.member` theories  =  allDepsIn thds
-     | otherwise  =  fail ("Dep. '"++thd++"' of theory '"++nm++"' not present")
-\end{code}
-
-We also need to generate a list of theories from the mapping,
-given a starting point:
-\begin{code}
-getTheoryDeps :: Monad m => String -> Theories -> m [Theory]
-getTheoryDeps nm theories
-  = case M.lookup nm theories of
-      Nothing  ->  fail "Top Theory not found"
-      Just top
-        ->  do deps <- getDeps theories (thDeps top)
-               return (top:deps)
-
-getDeps :: Monad m => Theories -> [String] -> m [Theory]
-getDeps _ []  =  return []
-getDeps theories (dnm:drest)
- = case M.lookup dnm theories of
-     Nothing  ->  fail ("Dep '"++dnm++"' not found")
-     Just thry
-      -> let deps = thDeps thry
-         in if null deps
-             then do thrys <- getDeps theories drest
-                     return (thry:thrys)
-             else do thrys <- getDeps theories $ nub (deps ++ drest)
-                     return (thry:thrys)
 \end{code}
 
 
@@ -437,24 +370,8 @@ showLogic logic
 \end{code}
 
 
-Showing theories:
+Showing laws:
 \begin{code}
-showTheories thrys = showTheories' $ M.assocs thrys
-showTheories' [] = "No theories present."
-showTheories' thrys = unlines' $ map (showTheory . snd) thrys
-
-showTheory thry
-  = unlines (
-      ( "Theory '"++thName thry++"'" )
-      : if null deps
-        then []
-        else [ "depends on: "++intercalate "," (thDeps thry)]
-      ++
-      [ trVarTable (knownVars thry)
-      , showLaws (laws thry) ]
-    )
-  where deps = thDeps thry
-
 showNmdAssns nasns  =  numberList (showNmdAssn $ nameWidth nasns)  nasns
 nameWidth lws = maximum $ map (length . fst) lws
 

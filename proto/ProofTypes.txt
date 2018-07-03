@@ -16,12 +16,14 @@ Calculation :- CalcStep
 Proof :- Assertion, Calculation
  -> module Proofs
 
-Theory :- Law,NmdAssertion,Proof
-Theories :- Theory
- -> module Theories
 
 -- above: still in Proof
 -- below: factored out.
+
+
+Theory :- Law,NmdAssertion,Proof
+Theories :- Theory
+ -> module Theories
 
 
 Sequent :- Theory

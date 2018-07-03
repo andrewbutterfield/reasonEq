@@ -40,6 +40,7 @@ import Binding
 import Matching
 import Instantiate
 import Proof
+import Theories
 -- import Builder
 --
 import NiceSymbols

@@ -29,6 +29,7 @@ import SideCond
 import Binding
 import TermZipper
 import Proof
+import Theories
 import Sequents
 import LiveProofs
 import Propositions

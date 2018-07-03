@@ -38,7 +38,9 @@ import Binding
 import Matching
 import Instantiate
 import Proof
+import Theories
 import Sequents
+
 -- import Builder
 --
 import NiceSymbols

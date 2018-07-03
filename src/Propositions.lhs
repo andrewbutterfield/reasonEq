@@ -32,6 +32,7 @@ import AST
 import SideCond
 import VarData
 import Proof
+import Theories
 
 -- import Test.HUnit
 -- import Test.Framework as TF (defaultMain, testGroup, Test)

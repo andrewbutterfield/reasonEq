@@ -27,127 +27,28 @@ import qualified Data.Set as S
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Maybe
-import Data.List
---
+
 import Utilities
-import LexBase
 import Variables
 import AST
 import SideCond
 import TermZipper
 import VarData
-import Binding
-import Matching
-import Instantiate
 import Laws
 import Proofs
 import Theories
--- import Builder
---
+
 import NiceSymbols
 import TestRendering
---
--- import Test.HUnit hiding (Assertion)
--- import Test.Framework as TF (defaultMain, testGroup, Test)
--- import Test.Framework.Providers.HUnit (testCase)
 
 import Debug.Trace
 dbg msg x = trace (msg++show x) x
 \end{code}
 
-We define types, inclusing zippers,for sequents.
+We define types, including zippers,for sequents.
 
-Consider a pre-existing set of laws $\mathcal L$ (axioms plus proven theorems),
-and consider that we have a conjecture $C$ that we want to prove.
-The most general proof framework we plan to support is the following:
-\begin{description}
-  \item[Deduction]
-    In general we partition $C$ into three components:
-    \begin{description}
-      \item[Hypotheses]
-        A set $\mathcal H = \setof{H_1,\dots,H_n}$, for $n \geq 0$,
-        were all unknown variables in the $H_i$
-        are temporarily marked as ``known'' (as themselves),
-        for the duration of the proof.
-      \item[Consequents]
-        A pair of sub-conjectures $C_{left}$ and $C_{right}$.
-    \end{description}
-    We require these to be chosen such that:
-    $$ C \quad =  \bigwedge_{i \in 1\dots n} H_i \implies (C_{left} \equiv C_{right})$$
-    Our proof is the based upon the sequent:
-    $$ \mathcal L,H_1,\dots,H_n \vdash C_{left} \equiv C_{right}$$
-    where we use the laws in both $\mathcal L$ and $\mathcal H$ to transform either or both
-    of $C_{left}$ and $C_{right}$ until they are the same.
-  \item[Calculation]
-    We define two kinds of calculation steps:
-    \begin{description}
-      \item[standard]
-        We use a law from $\mathcal L$ or $\mathcal H$ to transform either sub-conjecture:
-        \begin{eqnarray*}
-           \mathcal L,\mathcal H &\vdash&  C_x
-        \\ &=& \textrm{effect of some assertion $A$
-                                      in $\mathcal L\cup \mathcal H$
-                                      on $C_x$}
-        \\ \mathcal L,\mathcal H &\vdash& C'_x
-        \end{eqnarray*}
-      \item[deductive]
-        We select a hypothesis from in front of the turnstile,
-        and use the laws and the rest of the hypotheses to transform it.
-        We add the transformed version into the hypotheses,
-        retaining its original form as well.
-        \begin{eqnarray*}
-           \mathcal L,\mathcal H &\vdash& C_x
-        \\ &\downarrow& \textrm{select $H_i$}
-        \\ \mathcal L,\mathcal H\setminus\setof{H_i}
-           &\vdash& H_i
-        \\ &=& \textrm{effect of some assertion $A$
-                                      in $\mathcal L\cup \mathcal H\setminus\setof{H_i}$
-                                      on $H_i$}
-        \\ \mathcal L,\mathcal H\setminus\setof{H_i}
-           &\vdash& H'_i
-        \\ &\downarrow& \textrm{restore calculational sequent}
-        \\ \mathcal L,\mathcal H\cup\setof{H_{n+1}} &\vdash& C_x \qquad H_{n+1} = H'_i
-        \end{eqnarray*}
-        We may do a number of calculational steps on $H_i$ before
-        restoring the original standard sequent.
-    \end{description}
-\end{description}
-
-There are a number of strategies we can apply, depending on the structure
-of $C$, of which the following three are most basic
-\begin{eqnarray*}
-   reduce(C)
-   &\defs&
-   \mathcal L \vdash C \equiv \true
-\\ redboth(C_1 \equiv C_2)
-   &\defs&
-   \mathcal L \vdash C_1 \equiv C_2
-\\ assume(H \implies C)
-   &\defs&
-   \mathcal L,\splitand(H) \vdash (C \equiv \true)
-\end{eqnarray*}
-where
-\begin{eqnarray*}
-\\ \splitand(H_1 \land \dots \land H_n)
-   &\defs&
-   \setof{H_1,\dots,H_n}
-\end{eqnarray*}
-
-In addition, we can envisage a step that transforms the shape of
-the deduction.
-We may have a conjecture with no top-level implication, but which,
-after some standard calculation in a sequent with empty $\mathcal H$,
-does end up in such a form.
-it would be nice to have the possibility of generating a new sequent form
-and carrying on from there.
-
-The requirement that the $H_i$ have all their ``unknown'' variables
-converted to ``known'' for the proof
-means that the tables describing known variables need to be
-linked to specific collections of laws.
-
-
-\subsection{Sequents}
+\newpage
+\subsection{Sequent Type}
 
 A sequent is a collection containing
 (i) $\mathcal L$ and $\mathcal H$ as a list of theories
@@ -170,8 +71,7 @@ data Sequent
   deriving (Eq, Show, Read)
 \end{code}
 
-\newpage
-\subsubsection{Sequent Strategies}
+\subsection{Sequent Strategies}
 
 Given any conjecture (named assertion)
 we want to determine which strategies apply
@@ -192,6 +92,8 @@ availableStrategies theLogic theories (nm,(tconj,sc))
 \end{code}
 and then use the following functions to produce a sequent, if possible.
 
+\subsubsection{Strategy \textit{reduce}}
+
 \begin{eqnarray*}
    reduce(C)
    &\defs&
@@ -209,6 +111,9 @@ reduce logic thys (nm,(t,sc))
                        , conjectures = []
                        , proofs = [] }
 \end{code}
+
+\newpage
+\subsubsection{Strategy \textit{redboth}}
 
 \begin{eqnarray*}
    redboth(C_1 \equiv C_2)
@@ -229,6 +134,9 @@ redboth logic thys (nm,(t@(Cons tk i [tl,tr]),sc))
                        , proofs = [] }
 redboth logic thys (nm,(t,sc)) = fail "redboth not applicable"
 \end{code}
+
+\subsubsection{Strategy \textit{assume}}
+
 
 \begin{eqnarray*}
    assume(H \implies C)
@@ -258,6 +166,10 @@ splitAnte theLogic (Cons tk i ts)
 splitAnte _        t     =  [t]
 \end{code}
 
+\newpage
+\subsubsection{Strategy \textit{asmboth}}
+
+
 \begin{eqnarray*}
    asmboth(H \implies (C_1 \equiv C_2))
    &\defs&
@@ -268,6 +180,8 @@ asmboth :: Monad m => TheLogic -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
 asmboth logic thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{code}
+
+\subsubsection{Strategy \textit{shunt}}
 
 \begin{eqnarray*}
    shunt(H_1 \implies \dots H_m \implies C)
@@ -281,6 +195,9 @@ shunt :: Monad m => TheLogic -> [Theory] -> NmdAssertion
 shunt logic thys (nm,(t,sc)) = fail "shunt not applicable"
 \end{code}
 
+\subsubsection{Strategy \textit{shntboth}}
+
+
 \begin{eqnarray*}
    shntboth(H_1 \implies \dots H_m \implies (C_1 \equiv C_2))
    &\defs&
@@ -292,6 +209,8 @@ shntboth :: Monad m => TheLogic -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
 shntboth logic thys (nm,(t,sc)) = fail "shntboth not applicable"
 \end{code}
+
+\subsubsection{Splitting Conjoined Hypotheses}
 
 \begin{eqnarray*}
    \splitand(H_1 \land \dots \land H_n)
@@ -305,8 +224,9 @@ splitAnd logic (Cons _ i ts)
 splitAnd _ t           =  [t]
 \end{code}
 
+
 \newpage
-\subsubsection{Making Unknown Variables Known}
+\subsection{Making Unknown Variables Known}
 
 A key function is one that makes all unknown variables in a term become known.
 \begin{code}
@@ -343,10 +263,11 @@ checkLVarStatus vts vt (LVbl v _ _)
       _               ->  vt
 \end{code}
 
+
 \newpage
 \subsection{Sequent Zipper}
 
-We will need a zipper for sequents (and ante) as we can focus in on any term
+We will need a zipper for sequents as we can focus in on any term
 in \texttt{hyp}, \texttt{cleft} or \texttt{cright}.
 
 \subsubsection{Sequent Zipper Algebra}
@@ -446,6 +367,7 @@ We now refactor this by expanding the $A_i$ and merging
    \quad\right)
 \end{eqnarray*}
 
+
 \newpage
 \subsubsection{Sequent Zipper Types}
 
@@ -501,6 +423,7 @@ of $S'$ to allow the one possible upward ``step''.
 type SeqZip = (TermZip, Sequent')
 \end{code}
 
+\newpage
 \subsubsection{Sequent Zipper Construction}
 
 
@@ -522,7 +445,7 @@ rightConjFocus sequent
                CLaws' (hyp sequent) Rght (cleft sequent) )
 \end{code}
 
-\newpage
+
 For a hypothesis conjecture, making the sequent-zipper
 is a little more tricky:
 \begin{code}
@@ -566,6 +489,7 @@ exitLaws currT  (HLaws' hnm hkn hbef fnm fsc fprov horig haft cl cr)
      , cl, cr)
 \end{code}
 
+\newpage
 \subsubsection{Sequent Zipper Moves}
 
 The usual up/down actions just invoke the corresponding \texttt{TermZip} action.
@@ -631,6 +555,9 @@ getHypotheses' (HLaws' hn hk hbef _ _ _ _ haft _ _)
             , proofs = [] }
 
 \end{code}
+
+\newpage
+\subsection{Displaying Sequents}
 
 \begin{code}
 -- temporary

@@ -15,33 +15,16 @@ module Theories
  , showTheories
  ) where
 
-import Data.Set (Set)
-import qualified Data.Set as S
 import Data.Map (Map)
 import qualified Data.Map as M
-import Data.Maybe
 import Data.List
---
+
 import Utilities
-import LexBase
-import Variables
-import AST
-import SideCond
-import TermZipper
 import VarData
-import Binding
-import Matching
-import Instantiate
 import Laws
 import Proofs
--- import Builder
---
-import NiceSymbols
+
 import TestRendering
---
--- import Test.HUnit hiding (Assertion)
--- import Test.Framework as TF (defaultMain, testGroup, Test)
--- import Test.Framework.Providers.HUnit (testCase)
 
 import Debug.Trace
 dbg msg x = trace (msg++show x) x

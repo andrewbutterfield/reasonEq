@@ -32,7 +32,8 @@ import VarData
 import Binding
 import Matching
 import Instantiate
-import Proof
+import Laws
+import Proofs
 -- import Builder
 --
 import NiceSymbols

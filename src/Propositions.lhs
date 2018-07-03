@@ -31,7 +31,8 @@ import Variables
 import AST
 import SideCond
 import VarData
-import Proof
+import Laws
+import Proofs
 import Theories
 
 -- import Test.HUnit

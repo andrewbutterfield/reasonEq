@@ -28,7 +28,8 @@ library
                      , Syntax
                      , Builder
                      , TermZipper
-                     , Proof
+                     , Laws
+                     , Proofs
                      , Sequents
                      , Theories
                      , LiveProofs

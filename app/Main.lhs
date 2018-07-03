@@ -28,7 +28,8 @@ import VarData
 import SideCond
 import Binding
 import TermZipper
-import Proof
+import Laws
+import Proofs
 import Theories
 import Sequents
 import LiveProofs

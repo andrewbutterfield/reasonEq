@@ -2,6 +2,9 @@
 
 Asterisk at end of type indicates an unavoidable forward reference
 
+
+
+
 TheLogic :- external
 Assertion :- external
 NmdAssertion :- Assertion
@@ -15,10 +18,6 @@ CalcStep :- Justification
 Calculation :- CalcStep
 Proof :- Assertion, Calculation
  -> module Proofs
-
-
--- above: still in Proof
--- below: factored out.
 
 
 Theory :- Law,NmdAssertion,Proof

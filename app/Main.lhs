@@ -89,13 +89,13 @@ liveProofs_      = liveProofs__  . const
 We build some accessors that assume that the current theory is setup properly.
 \begin{code}
 getCurrConj reqs
-  =  conjectures $ fromJust $ M.lookup (currTheory reqs) (theories reqs)
+  =  conjs $ fromJust $ M.lookup (currTheory reqs) (tmap $ theories reqs)
 getCurrLiveProof reqs
   =  case liveProofs reqs of
        []      ->  Nothing
        (lp:_)  ->  Just lp
 getCurrProofs reqs
-  =  proofs $ fromJust $ M.lookup (currTheory reqs) (theories reqs)
+  =  proofs $ fromJust $ M.lookup (currTheory reqs) (tmap $ theories reqs)
 \end{code}
 
 At present, we assume development mode by default,
@@ -108,7 +108,7 @@ initState :: [String] -> IO REqState
 initState ("user":_)
 -- need to restore saved persistent state on startup
   = do putStrLn "Running in normal user mode."
-       return $ ReqState thePropositionalLogic M.empty "" []
+       return $ ReqState thePropositionalLogic noTheories "" []
 
 initState _
   = do putStrLn "Running in development mode."
@@ -117,7 +117,7 @@ initState _
                          (thName theoryPropositions)
                          []
 
-propositionsAsTheories = fromJust $ addTheory theoryPropositions M.empty
+propositionsAsTheories = fromJust $ addTheory theoryPropositions noTheories
 \end{code}
 
 \newpage
@@ -331,12 +331,14 @@ proofREPLEndTidy _ (reqs,proof)
   = do putStrLn "Proof Complete"
        let prf = finaliseProof proof
        putStrLn $ displayProof prf
-       let cThry = fromJust $ M.lookup (currTheory reqs) (theories reqs)
+       let cThry = fromJust $ M.lookup (currTheory reqs) (tmap $ theories reqs)
        let cThry' = proofs__ (prf:) cThry
        return ( liveProofs_ [] $ theories__ (thUpd cThry') reqs, proof)
   -- Need to remove from conjectures and add to Laws
   where
-      thUpd thry' thrys = M.insert (thName thry') thry' thrys
+    -- Theories needs to provide principled functions to do this
+      thUpd thry' (Theories tmp sdg)
+        = Theories (M.insert (thName thry') thry' tmp) sdg
 \end{code}
 
 \begin{code}
@@ -546,7 +548,7 @@ instantiateLaw reqs liveProof law@((lnm,(lawt,lsc)),_)
        psc = conjSC liveProof
        dpath = fPath liveProof
    in
-   do lbind <- generateLawInstanceBind (map knownVars thrys)
+   do lbind <- generateLawInstanceBind (map known thrys)
                                        (exitTZ tz) psc law
       case instantiateSC lbind lsc of
         Nothing -> do putStrLn "instantiated law side-cond is false"

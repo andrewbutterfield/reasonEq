@@ -365,9 +365,10 @@ propConjs
 theoryPropositions :: Theory
 theoryPropositions
   =  Theory { thName  =  "PropLogic"
-            , thDeps = []
-            , knownVars  =  propKnown
-            , laws  =  propLaws
-            , conjectures = propConjs
-            , proofs = [] }
+            , thDeps  =  []
+            , known   =  propKnown
+            , laws    =  propLaws
+            , proofs  =  []
+            , conjs   =  propConjs
+            }
 \end{code}

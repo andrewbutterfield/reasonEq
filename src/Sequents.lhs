@@ -87,7 +87,8 @@ availableStrategies theLogic theories (nm,(tconj,sc))
      , assume  theLogic thys cflat ]
   where
     -- these need to be ordered by dependencies !!!!!
-    thys = map snd $ M.assocs theories
+    topnm = fst $ head $ head $ sdag theories
+    thys = fromJust $ getTheoryDeps topnm theories
     cflat = (nm,(flattenTheImp theLogic tconj,sc))
 \end{code}
 and then use the following functions to produce a sequent, if possible.
@@ -107,8 +108,8 @@ reduce logic thys (nm,(t,sc))
   where hthry = Theory { thName = "H."++nm
                        , thDeps = []
                        , laws = []
-                       , knownVars = makeUnknownKnown thys t
-                       , conjectures = []
+                       , known = makeUnknownKnown thys t
+                       , conjs = []
                        , proofs = [] }
 \end{code}
 
@@ -129,8 +130,8 @@ redboth logic thys (nm,(t@(Cons tk i [tl,tr]),sc))
   where hthry = Theory { thName = "H."++nm
                        , thDeps = []
                        , laws = []
-                       , knownVars = makeUnknownKnown thys t
-                       , conjectures = []
+                       , known = makeUnknownKnown thys t
+                       , conjs = []
                        , proofs = [] }
 redboth logic thys (nm,(t,sc)) = fail "redboth not applicable"
 \end{code}
@@ -155,8 +156,8 @@ assume logic thys (nm,(t@(Cons tk i [ta,tc]),sc))
     hthry = Theory { thName = "H."++nm
                    , thDeps = []
                    , laws = hlaws
-                   , knownVars = makeUnknownKnown thys t
-                   , conjectures = []
+                   , known = makeUnknownKnown thys t
+                   , conjs = []
                    , proofs = [] }
 assume _ _ _ = fail "assume not applicable"
 
@@ -234,7 +235,7 @@ makeUnknownKnown :: [Theory] -> Term -> VarTable
 makeUnknownKnown thys t
   = let
      fvars = S.toList $ freeVars t
-     vts = map knownVars thys
+     vts = map known thys
     in scanFreeForUnknown vts newVarTable fvars
 
 scanFreeForUnknown :: [VarTable] -> VarTable -> VarList -> VarTable
@@ -456,7 +457,7 @@ hypConjFocus i sequent
        return ( mkTZ ht
               , Sequent' (ante sequent)
                          (sc sequent) $
-                         HLaws' (thName hthry) (knownVars hthry)
+                         HLaws' (thName hthry) (known hthry)
                                 before hnm hsc hprov ht after
                                 (cleft sequent) (cright sequent) )
 \end{code}
@@ -483,8 +484,8 @@ exitLaws currT  (HLaws' hnm hkn hbef fnm fsc fprov horig haft cl cr)
                          ++ [((fnm,(horig,fsc)),fprov)]
                          ++ haft
                          ++ [((fnm,(currT,fsc)),fprov)] )
-              , knownVars = hkn
-              , conjectures = []
+              , known = hkn
+              , conjs = []
               , proofs = [] }
      , cl, cr)
 \end{code}
@@ -550,8 +551,8 @@ getHypotheses' (HLaws' hn hk hbef _ _ _ _ haft _ _)
   =  Theory { thName = hn
             , thDeps = []
             , laws =  (reverse hbef ++ haft)
-            , knownVars = hk
-            , conjectures = []
+            , known = hk
+            , conjs = []
             , proofs = [] }
 
 \end{code}
@@ -587,8 +588,8 @@ dispConjParts tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
      hthry = Theory { thName = hn
                     , thDeps = []
                     , laws = (reverse hbef ++ haft)
-                    , knownVars = hk
-                    , conjectures = []
+                    , known = hk
+                    , conjs = []
                     , proofs = [] }
 
 dispHypotheses hthry  =  numberList' showHyp $ laws $ hthry

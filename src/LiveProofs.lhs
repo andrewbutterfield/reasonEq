@@ -73,10 +73,10 @@ Given a list of theories, we generate a list of match-contexts:
 \begin{code}
 buildMatchContext :: [Theory] -> [MatchContext]
 buildMatchContext [] = []
-buildMatchContext [thy] = [ (laws thy, [knownVars thy]) ]
+buildMatchContext [thy] = [ (laws thy, [known thy]) ]
 buildMatchContext (thy:thys)
   = let mcs'@((_,vts'):_) = buildMatchContext thys
-    in (laws thy, knownVars thy : vts') : mcs'
+    in (laws thy, known thy : vts') : mcs'
 \end{code}
 
 \subsection{Matches}

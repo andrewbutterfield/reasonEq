@@ -281,5 +281,8 @@ shStep ( (UseLaw how lnm bind dpath), trm )
 Showing Proofs:
 \begin{code}
 showProofs []      =  "No Proofs yet."
-showProofs proofs  =  unlines' $ map ( ('\n':) . displayProof ) proofs
+showProofs proofs
+  =  unlines (
+       "\nCompleted Proofs:"
+       : map ( ("\n============\n"++) . displayProof ) proofs )
 \end{code}

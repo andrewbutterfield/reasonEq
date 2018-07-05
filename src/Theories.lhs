@@ -18,6 +18,7 @@ module Theories
  , noTheories
  , addTheory
  , getTheoryDeps
+ , getTheoryConjectures, getTheoryProofs
  , showTheories
  ) where
 
@@ -137,6 +138,27 @@ getTheoryDeps nm theories
           Just t  -> return t
 \end{code}
 
+\subsection{Various Lookups}
+
+\subsubsection{Get Conjectures of current theory}
+
+\begin{code}
+getTheoryConjectures :: Monad m => String -> Theories -> m [NmdAssertion]
+getTheoryConjectures thNm thrys
+  = do case M.lookup thNm (tmap thrys) of
+         Nothing    ->  fail ("Conjectures: theory '"++thNm++", not found")
+         Just thry  ->  return $ conjs thry
+\end{code}
+
+\subsubsection{Get Proofs for current theory}
+
+\begin{code}
+getTheoryProofs :: Monad m => String -> Theories -> m [Proof]
+getTheoryProofs thNm thrys
+  = do case M.lookup thNm (tmap thrys) of
+         Nothing    ->  fail ("Proofs: theory '"++thNm++", not found")
+         Just thry  ->  return $ proofs thry
+\end{code}
 
 \newpage
 \subsection{Showing Theories}

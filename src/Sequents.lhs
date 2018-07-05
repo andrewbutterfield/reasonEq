@@ -18,7 +18,7 @@ module Sequents
  , CalcStep
  , Calculation
  , Proof, displayProof
- , showLogic, showTheories, showNmdAssns, showLaws, showProofs
+ , showLogic, showTheories, showNmdAssns, showLaws
  , numberList
  ) where
 

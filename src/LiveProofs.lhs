@@ -17,7 +17,7 @@ module LiveProofs
  , displayMatches
  , buildMatchContext, matchInContexts
  , proofComplete, finaliseProof
- , showLivePrf
+ , showLiveProofs
  ) where
 
 import Data.Maybe
@@ -270,15 +270,18 @@ justMatch repl vts tC ((n,asn@(tP,_)),_)
 
 Showing Proof:
 \begin{code}
-showLivePrf Nothing = "no Proof."
-showLivePrf (Just proof) = dispLiveProof proof
+showLiveProofs []       =  "No ongoing (live) proofs."
+showLiveProofs lproofs
+  =  unlines' (
+      "Current live (incomplete) proofs:"
+      :  map ( ("\n==========\n"++) . dispLiveProof) lproofs )
 \end{code}
 
 \begin{code}
 -- temporary
 dispLiveProof :: LiveProof -> String
 dispLiveProof liveProof
- = unlines'
+ = unlines
      ( ( ("Proof for '"++red (conjName liveProof)
           ++"'  "++trSideCond (conjSC liveProof))
        : ("by "++(strategy liveProof))

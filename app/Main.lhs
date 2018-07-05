@@ -86,18 +86,6 @@ liveProofs__ f r = r{liveProofs = f $ liveProofs r}
 liveProofs_      = liveProofs__  . const
 \end{code}
 
-We build some accessors that assume that the current theory is setup properly.
-\begin{code}
-getCurrConj reqs
-  =  conjs $ fromJust $ M.lookup (currTheory reqs) (tmap $ theories reqs)
-getCurrLiveProof reqs
-  =  case liveProofs reqs of
-       []      ->  Nothing
-       (lp:_)  ->  Just lp
-getCurrProofs reqs
-  =  proofs $ fromJust $ M.lookup (currTheory reqs) (tmap $ theories reqs)
-\end{code}
-
 At present, we assume development mode by default,
 which currently initialises state based on the contents of
 the hard-coded ``Propositional'' theory.
@@ -219,14 +207,19 @@ shConj = "c"
 shLivePrf = "p"
 shProofs = "P"
 
+-- these are not robust enough - need to check if component is present.
 showState [cmd] reqs
- | cmd == shLogic     =  doshow reqs $ showLogic $ logic reqs
- | cmd == shTheories  =  doshow reqs $ showTheories $ theories reqs
- | cmd == shConj      =  doshow reqs $ showNmdAssns  $ getCurrConj reqs
- | cmd == shLivePrf   =  doshow reqs $ showLivePrf $ getCurrLiveProof reqs
- | cmd == shProofs    =  doshow reqs $ showProofs $ getCurrProofs reqs
+ | cmd == shLogic     =  doshow reqs $ showLogic      $ logic reqs
+ | cmd == shTheories  =  doshow reqs $ showTheories   $ theories reqs
+ | cmd == shConj      =  doshow reqs $ showNmdAssns   $ getCurrConj reqs
+ | cmd == shLivePrf   =  doshow reqs $ showLiveProofs $ liveProofs reqs
+ | cmd == shProofs    =  doshow reqs $ showProofs     $ getCurrProofs reqs
+ where
+   getCurrConj reqs
+     = fromJust $ getTheoryConjectures (currTheory reqs) (theories reqs)
+   getCurrProofs reqs
+     = fromJust $ getTheoryProofs (currTheory reqs) (theories reqs)
 showState _ reqs      =  doshow reqs "unknown 'show' option."
-
 
 doshow reqs str  =  putStrLn str >> return reqs
 \end{code}
@@ -244,7 +237,6 @@ cmdProve
        , "no arg required if proof already live."
        ]
     , doProof )
-
 
 doProof args reqs
   = case liveProofs reqs of
@@ -265,15 +257,19 @@ doProof args reqs
                          Nothing   -> doshow reqs "Invalid strategy no"
                          Just seq
                            -> proofREPL reqs (launchProof thylist nm asn seq)
-      (prf:_)
-       ->  do putStrLn "Back to current proof."
+      [prf]
+       ->  do putStrLn "Back to (only) current proof."
+              proofREPL reqs prf
+      (prf:_) -- need to offer choice here
+       ->  do putStrLn "Back to the (first of the ) current proofs."
               proofREPL reqs prf
   where
     getProofArgs [] = 0
     getProofArgs (a:_) = readInt a
+    getCurrConj reqs = fromJust $ getTheoryConjectures currTh thys
+    currTh = currTheory reqs
     thys = theories reqs
-    -- hack! need to have notion of a 'current' theory.
-    thylist = fromJust $ getTheoryDeps "PropLogic" thys
+    thylist = fromJust $ getTheoryDeps currTh thys
 \end{code}
 
 Presenting a sequent for choosing:

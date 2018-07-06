@@ -249,6 +249,7 @@ doProof args reqs
                  -> do let strats
                             = availableStrategies (logic reqs)
                                                   thys
+                                                  currTh
                                                   nconj
                        putStrLn $ numberList presentSeq $ strats
                        putStr "Select sequent:- " ; choice <- getLine
@@ -327,14 +328,10 @@ proofREPLEndTidy _ (reqs,proof)
   = do putStrLn "Proof Complete"
        let prf = finaliseProof proof
        putStrLn $ displayProof prf
-       let cThry = fromJust $ M.lookup (currTheory reqs) (tmap $ theories reqs)
-       let cThry' = proofs__ (prf:) cThry
-       return ( liveProofs_ [] $ theories__ (thUpd cThry') reqs, proof)
+       return ( liveProofs_ []
+                $ theories__ (addTheoryProof (currTheory reqs) prf)  reqs
+              , proof )
   -- Need to remove from conjectures and add to Laws
-  where
-    -- Theories needs to provide principled functions to do this
-      thUpd thry' (Theories tmp sdg)
-        = Theories (M.insert (thName thry') thry' tmp) sdg
 \end{code}
 
 \begin{code}

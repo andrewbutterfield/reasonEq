@@ -78,17 +78,15 @@ we want to determine which strategies apply
 and provide a choice of sequents.
 We first flatten the implication (if any),
 \begin{code}
-availableStrategies :: TheLogic -> Theories -> NmdAssertion
+availableStrategies :: TheLogic -> Theories -> String -> NmdAssertion
                     -> [(String,Sequent)]
-availableStrategies theLogic theories (nm,(tconj,sc))
+availableStrategies theLogic theories thnm (nm,(tconj,sc))
   = catMaybes
      [ reduce  theLogic thys cflat
      , redboth theLogic thys cflat
      , assume  theLogic thys cflat ]
   where
-    -- these need to be ordered by dependencies !!!!!
-    topnm = fst $ head $ head $ sdag theories
-    thys = fromJust $ getTheoryDeps topnm theories
+    thys = fromJust $ getTheoryDeps thnm theories
     cflat = (nm,(flattenTheImp theLogic tconj,sc))
 \end{code}
 and then use the following functions to produce a sequent, if possible.

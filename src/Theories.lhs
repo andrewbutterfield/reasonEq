@@ -14,11 +14,13 @@ module Theories
  , laws__, laws_
  , proofs__, proofs_
  , conjs__, conjs_
- , Theories(..) -- to be closed when top-level knows what theory it is in
+ , Theories
  , noTheories
  , addTheory
  , getTheoryDeps
  , getTheoryConjectures, getTheoryProofs
+ , updateTheory
+ , addTheoryProof
  , showTheories
  ) where
 
@@ -158,6 +160,28 @@ getTheoryProofs thNm thrys
   = do case M.lookup thNm (tmap thrys) of
          Nothing    ->  fail ("Proofs: theory '"++thNm++", not found")
          Just thry  ->  return $ proofs thry
+\end{code}
+
+\subsection{Various Updates}
+
+\subsubsection{Generic Theory Update}
+
+\begin{code}
+updateTheory :: String -> (Theory -> Theory) -> Theories -> Theories
+updateTheory thnm thryF theories@(Theories tmap sdag)
+  = case M.lookup thnm tmap of
+      Nothing    ->  theories -- silent 'fail'
+      Just thry  ->  Theories (M.insert thnm (thryF thry) tmap) sdag
+\end{code}
+
+\subsubsection{Add Proof to Theory}
+
+\begin{code}
+addTheoryProof :: String -> Proof -> Theories -> Theories
+addTheoryProof thname prf = updateTheory thname (proofs__ (prf:))
+  -- = case M.lookup thname tmap of
+  --     Nothing    ->  theories -- silent 'fail'
+  --     Just thry  ->  Theories (M.insert thname (proofs__ (prf:) thry) tmap) sdag
 \end{code}
 
 \newpage

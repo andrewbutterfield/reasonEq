@@ -101,11 +101,37 @@ initState ("user":_)
 initState _
   = do putStrLn "Running in development mode."
        return $ ReqState thePropositionalLogic
-                         propositionsAsTheories
-                         (thName theoryPropositions)
+                         testTheories
+                         testName
                          []
 
-propositionsAsTheories = fromJust $ addTheory theoryPropositions noTheories
+testTheories
+  =  fromJust $ addTheory testTheory $
+     fromJust $ addTheory theoryPropositions noTheories
+
+a = fromJust $ pVar $ Vbl (fromJust $ ident "A") PredV Static
+b = fromJust $ pVar $ Vbl (fromJust $ ident "B") PredV Static
+c = fromJust $ pVar $ Vbl (fromJust $ ident "C") PredV Static
+
+cjHTest
+ = ( "h-test"
+   , ( a /\ (b /\ c) ==> (c /\ a) /\ (mkEquivs [b,b,b])
+     , scTrue ) )
+
+testName = "Test42"
+
+testTheory
+  = Theory { thName  =  testName
+           , thDeps  =  [ thName theoryPropositions ]
+           , known   =  newVarTable
+           , laws    =  []
+           , proofs  =  []
+           , conjs   =  [ cjHTest ]
+           }
+\end{code}
+
+\begin{code}
+
 \end{code}
 
 \newpage

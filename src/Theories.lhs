@@ -18,7 +18,7 @@ module Theories
  , noTheories
  , addTheory
  , getTheoryDeps
- , getTheoryConjectures, getTheoryProofs
+ , listTheories, getTheoryConjectures, getTheoryProofs
  , updateTheory
  , addTheoryProof
  , showTheories
@@ -124,7 +124,6 @@ addTheory thry theories
 
 \subsection{Getting all Theory Dependencies}
 
-
 We also need to generate a list of theories from the mapping,
 given a starting point:
 \begin{code}
@@ -141,6 +140,13 @@ getTheoryDeps nm theories
 \end{code}
 
 \subsection{Various Lookups}
+
+\subsubsection{List all theories}
+
+\begin{code}
+listTheories :: Theories -> [String]
+listTheories thrys = M.keys $ tmap thrys
+\end{code}
 
 \subsubsection{Get Conjectures of current theory}
 

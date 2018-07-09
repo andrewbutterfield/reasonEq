@@ -118,7 +118,7 @@ cjHTest
    , ( a /\ (b /\ c) ==> (c /\ a) /\ (mkEquivs [b,b,b])
      , scTrue ) )
 
-testName = "Test42"
+testName = "TestFortyTwo"
 
 testTheory
   = Theory { thName  =  testName
@@ -175,7 +175,7 @@ reqQuit _ reqs = putStrLn "\nGoodbye!\n" >> return (True, reqs)
 reqHelpCmds = ["?","help"]
 
 reqCommands :: REqCommands
-reqCommands = [ cmdShow, cmdProve ]
+reqCommands = [ cmdShow, cmdSet, cmdProve ]
 
 -- we don't use these features in the top-level REPL
 reqEndCondition _ = False
@@ -221,6 +221,7 @@ cmdShow
     , unlines
         [ "sh "++shLogic++" -- show current logic"
         , "sh "++shTheories++" -- show theories"
+        , "sh "++shCurrThry++" -- show 'current' theory"
         , "sh "++shConj++" -- show current conjectures"
         , "sh "++shLivePrf++" -- show current proof"
         , "sh "++shProofs++" -- show completed proofs"
@@ -229,6 +230,7 @@ cmdShow
 
 shLogic = "="
 shTheories = "t"
+shCurrThry = "T"
 shConj = "c"
 shLivePrf = "p"
 shProofs = "P"
@@ -237,6 +239,7 @@ shProofs = "P"
 showState [cmd] reqs
  | cmd == shLogic     =  doshow reqs $ showLogic      $ logic reqs
  | cmd == shTheories  =  doshow reqs $ showTheories   $ theories reqs
+ | cmd == shCurrThry  =  doshow reqs $ ("Current Theory: "++) $ currTheory reqs
  | cmd == shConj      =  doshow reqs $ showNmdAssns   $ getCurrConj reqs
  | cmd == shLivePrf   =  doshow reqs $ showLiveProofs $ liveProofs reqs
  | cmd == shProofs    =  doshow reqs $ showProofs     $ getCurrProofs reqs
@@ -248,6 +251,33 @@ showState [cmd] reqs
 showState _ reqs      =  doshow reqs "unknown 'show' option."
 
 doshow reqs str  =  putStrLn str >> return reqs
+\end{code}
+
+\newpage
+\subsection{Set Command}
+\begin{code}
+cmdSet :: REqCmdDescr
+cmdSet
+  = ( "set"
+    , "set parts of the prover state"
+    , unlines
+        [ "set "++setCurrThry++" 'name' -- set current theory to 'name'"]
+    , setState )
+
+setCurrThry = shCurrThry
+
+setState (cmd:rest) reqs
+ | cmd == setCurrThry  =  setCurrentTheory rest reqs
+setState _ reqs      =  doshow reqs "unknown 'set' option."
+\end{code}
+
+\subsubsection{Set Current Theory}
+\begin{code}
+setCurrentTheory [thnm] reqs
+  = if thnm `elem` (listTheories $ theories reqs)
+    then doshow (currTheory_ thnm reqs)
+                ("Theory '"++thnm++"' now current.")
+    else doshow reqs ("No theory named '"++thnm++"'")
 \end{code}
 
 \newpage

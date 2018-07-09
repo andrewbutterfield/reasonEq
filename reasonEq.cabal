@@ -34,6 +34,7 @@ library
                      , Theories
                      , LiveProofs
                      , StratifiedDAG
+                     , REqState
                      , REPL
                      -- in proto
                      , Acyclic

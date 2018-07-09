@@ -33,6 +33,7 @@ import Proofs
 import Theories
 import Sequents
 import LiveProofs
+import REqState
 import Propositions
 import Instantiate
 import TestRendering
@@ -56,35 +57,7 @@ main
 \end{code}
 
 \newpage
-\subsection{System State}
-
-Currently in prototyping mode,
-so this is one large record.
-Later we will nest things.
-In order to support nested records properly,
-for every record field \texttt{fld :: rec -> t},
-we define \texttt{fld\_\_ :: (t -> t) -> rec -> rec}
-and derive \texttt{fld\_ :: t -> rec -> rec}.
-\begin{verbatim}
-fld__ f r = r{fld = f $ fld r} ;  fld_ = fld__ . const
-\end{verbatim}
-\begin{code}
-data REqState
- = ReqState {
-      logic :: TheLogic
-    , theories :: Theories
-    , currTheory :: String
-    , liveProofs :: [LiveProof]
-    }
-
-logic__    f r = r{logic    = f $ logic r}    ; logic_    = logic__     . const
-theories__ f r = r{theories = f $ theories r} ; theories_ = theories__  . const
-
-currTheory__ f r = r{currTheory = f $ currTheory r}
-currTheory_      = currTheory__  . const
-liveProofs__ f r = r{liveProofs = f $ liveProofs r}
-liveProofs_      = liveProofs__  . const
-\end{code}
+\subsection{Initialising State}
 
 At present, we assume development mode by default,
 which currently initialises state based on the contents of

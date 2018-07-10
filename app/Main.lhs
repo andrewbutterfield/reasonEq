@@ -34,6 +34,7 @@ import Binding
 -- import Sequents
 -- import LiveProofs
 import REqState
+import AbstractUI
 import Propositions
 import Instantiate
 import TestRendering
@@ -101,10 +102,6 @@ testTheory
            , proofs  =  []
            , conjs   =  [ cjHTest ]
            }
-\end{code}
-
-\begin{code}
-
 \end{code}
 
 \newpage
@@ -210,17 +207,14 @@ shProofs = "P"
 
 -- these are not robust enough - need to check if component is present.
 showState [cmd] reqs
- | cmd == shLogic     =  doshow reqs $ showLogic      $ logic reqs
- | cmd == shTheories  =  doshow reqs $ showTheories   $ theories reqs
- | cmd == shCurrThry  =  doshow reqs $ ("Current Theory: "++) $ currTheory reqs
- | cmd == shConj      =  doshow reqs $ showNmdAssns   $ getCurrConj reqs
- | cmd == shLivePrf   =  doshow reqs $ showLiveProofs $ liveProofs reqs
- | cmd == shProofs    =  doshow reqs $ showProofs     $ getCurrProofs reqs
+ | cmd == shLogic     =  doshow reqs $ observeLogic reqs
+ | cmd == shTheories  =  doshow reqs $ observeTheories reqs
+ | cmd == shCurrThry  =  doshow reqs $ ("Current Theory: "++underline currThNm)
+ | cmd == shConj      =  doshow reqs $ observeCurrConj reqs
+ | cmd == shLivePrf   =  doshow reqs $ observeLiveProofs reqs
+ | cmd == shProofs    =  doshow reqs $ observeCompleteProofs reqs
  where
-   getCurrConj reqs
-     = fromJust $ getTheoryConjectures (currTheory reqs) (theories reqs)
-   getCurrProofs reqs
-     = fromJust $ getTheoryProofs (currTheory reqs) (theories reqs)
+   currThNm = observeCurrTheory reqs
 showState _ reqs      =  doshow reqs "unknown 'show' option."
 
 doshow reqs str  =  putStrLn str >> return reqs

@@ -35,6 +35,7 @@ library
                      , LiveProofs
                      , StratifiedDAG
                      , REqState
+                     , AbstractUI
                      , REPL
                      -- in proto
                      , Acyclic

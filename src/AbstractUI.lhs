@@ -12,9 +12,13 @@ module AbstractUI
 , setCurrentTheory
 , moveFocusDown, moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
+, cloneHypothesis
 )
 where
 
+import Utilities
+import LexBase
+import AST
 import REqState
 \end{code}
 
@@ -203,4 +207,21 @@ moveFocusFromHypothesis liveProof
                     $ matches_ []
                     $ stepsSoFar__ ((SwLeft, exitTZ $ fst sz):) liveProof )
         else fail "Not in hypotheses"
+\end{code}
+
+\subsubsection{Clone Hypotheses}
+
+\begin{code}
+cloneHypothesis :: Monad m => Int -> Identifier -> LiveProof -> m LiveProof
+cloneHypothesis i land liveProof
+  = let
+      (tz,seq') = focus liveProof
+      hypos = laws $ getHypotheses seq'
+      currt = exitTZ tz
+    in case nlookup i hypos of
+        Nothing -> fail ("No such hypothesis: "++show i)
+        Just ((_,(hypt,_)),_)
+          -> return ( focus_ (setTZ (PCons land [hypt,currt]) tz,seq')
+                    $ matches_ []
+                    $ stepsSoFar__ ( ( CloneH i, exitTZ tz ) : ) liveProof )
 \end{code}

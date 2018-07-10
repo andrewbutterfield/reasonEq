@@ -569,24 +569,8 @@ Hypothesis Cloning, is based on the following law:
 \begin{code}
 cloneHypothesisDescr
   = ( "c", "clone hyp", "c i  -- clone hypothesis i"
-    , cloneHypothesis )
+    , cloneHypotheses )
 
-cloneHypothesis args (reqs, liveProof)
-  = let
-      i = args2int args
-      (tz,seq') = focus liveProof
-      hypos = laws $ getHypotheses seq'
-      currt = exitTZ tz
-      land = theAnd $ logic reqs
-    in case nlookup i hypos of
-        Nothing -> return (reqs, liveProof)
-        Just ((_,(hypt,_)),_)
-          -> return
-              ( reqs
-              , focus_ (setTZ (PCons land [hypt,currt]) tz,seq')
-              $ matches_ []
-              $ stepsSoFar__
-                 ( ( CloneH i
-                   , exitTZ tz ) : )
-                 liveProof )
+cloneHypotheses args liveState@(reqs, _)
+  = tryFocus (cloneHypothesis (args2int args) (theAnd $ logic reqs)) liveState
 \end{code}

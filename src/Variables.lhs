@@ -282,7 +282,7 @@ pattern PreExprs   i    =  LV (VR (i,VE,WB),    [],[])
 pattern PrePreds   i    =  LV (VR (i,VP,WB),    [],[])
 \end{code}
 
-Useful predicates/functiond:
+Useful predicates/functions:
 \begin{code}
 isPreListVar :: ListVar -> Bool
 isPreListVar (PreVars _)  = True

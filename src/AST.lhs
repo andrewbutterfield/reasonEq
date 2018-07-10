@@ -235,9 +235,9 @@ data Value
  | VT Txt
  deriving (Eq, Ord, Show, Read)
 
-pattern Boolean b = VB b
-pattern Integer i = VI i
-pattern Txt    t = VT t
+pattern Boolean b  =  VB b
+pattern Integer i  =  VI i
+pattern Txt     t  =  VT t
 \end{code}
 
 
@@ -333,7 +333,8 @@ We  need to have a correlation between some terms
 and the variables they use.
 In particular the \texttt{TermKind} of a \texttt{V} \texttt{Term}
 will have to correspond to the \texttt{VarClass} value of the variable.
-Also in binding  constructs all the general variables being bound will have to agree on\texttt{VarClass}.
+Also, in binding constructs,
+all the general variables being bound will have to agree on \texttt{VarClass}.
 
 Kind-neutral patterns:
 \begin{code}

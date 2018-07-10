@@ -394,26 +394,16 @@ goDownDescr = ( "d", "down", "d n  -- down n", goDown )
 goDown :: REPLCmd (REqState, LiveProof)
 goDown args (reqs,liveProof )
   = let i = args2int args
-        (tz,seq') = focus liveProof
-        (ok,tz') = downTZ i tz
-    in if ok
-        then return ( reqs
-                    , focus_ (tz',seq')
-                    $ fPath__ (++[i])
-                    $ matches_ [] liveProof )
-        else return (reqs, liveProof)
+    in case moveFocusDown i liveProof of
+         Nothing          ->  return (reqs, liveProof )
+         Just liveProof'  ->  return (reqs, liveProof')
 
 goUpDescr = ( "u", "up", "u  -- up", goUp )
 
 goUp _ (reqs, liveProof )
-  = let (tz,seq') = focus liveProof
-        (ok,tz') = upTZ tz
-    in if ok
-        then return ( reqs
-                    , focus_ (tz',seq')
-                    $ fPath__ init
-                    $ matches_ [] liveProof )
-        else return (reqs, liveProof)
+  = case moveFocusUp liveProof of
+       Nothing          ->  return (reqs, liveProof )
+       Just liveProof'  ->  return (reqs, liveProof')
 \end{code}
 
 Switching consequent focus:

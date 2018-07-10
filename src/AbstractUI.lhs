@@ -10,6 +10,7 @@ module AbstractUI
 , observeLogic, observeTheories, observeCurrTheory, observeCurrConj
 , observeLiveProofs, observeCompleteProofs
 , setCurrentTheory
+, moveFocusDown, moveFocusUp
 )
 where
 
@@ -29,8 +30,11 @@ For now this is a long-term goal.
 We can break this abstract user-interface down into two main parts:
 the first provides ways to observe the proof-state,
 whilst the second supports modifications to that state.
+Each of those parts will be further subdivided:
+top-level (\texttt{REqState}),
+and then lower level (.e.g., \texttt{LiveProofs}).
 
-\subsection{Observing Proof-State}
+\subsection{Observing Proof-State (\texttt{REqState})}
 
 The first issue to address here is in what form such observations
 should be returned over an abstract interface,
@@ -100,7 +104,8 @@ observeCompleteProofs reqs
   where currThNm = currTheory reqs
 \end{code}
 
-\subsection{Modifying Proof-State}
+\subsection{Modifying Proof-State (\texttt{REqState})}
+
 
 \subsubsection{Setting Current Theory}
 
@@ -110,4 +115,37 @@ setCurrentTheory thnm reqs
   = if thnm `elem` (listTheories $ theories reqs)
     then return (currTheory_ thnm reqs)
     else fail ("No theory named '"++thnm++"'")
+\end{code}
+
+\subsection{Modifying Proof-State (\texttt{LiveProofs})}
+
+
+\subsubsection{Moving Focus Down}
+
+\begin{code}
+moveFocusDown :: Monad m => Int -> LiveProof -> m LiveProof
+moveFocusDown i liveProof
+  = let (tz,seq') = focus liveProof
+        (ok,tz') = downTZ i tz
+    in if ok
+        then return ( focus_ (tz',seq')
+                    $ fPath__ (++[i])
+                    $ matches_ [] liveProof )
+        else fail ("No sub-term "++show i)
+
+\end{code}
+
+\subsubsection{Moving Focus Up}
+
+\begin{code}
+moveFocusUp :: Monad m => LiveProof -> m LiveProof
+moveFocusUp liveProof
+  = let (tz,seq') = focus liveProof
+        (ok,tz') = upTZ tz
+    in if ok
+        then return ( focus_ (tz',seq')
+        $ fPath__ init
+        $ matches_ [] liveProof  )
+        else fail "At top"
+
 \end{code}

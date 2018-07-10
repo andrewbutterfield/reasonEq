@@ -165,6 +165,14 @@ numberItem' maxw (i,(str,strlen))
   where istr = show i
 \end{code}
 
+\subsubsection{Argument String Handling}
+
+\begin{code}
+args2int args = if null args then 0 else readInt $ head args
+
+args2str args = if null args then "" else head args
+\end{code}
+
 
 \subsubsection{Subsets}
 
@@ -204,6 +212,7 @@ choose s
 \begin{code}
 readInt :: String -> Int
 readInt str
+ | null str         =   -1
  | all isDigit str  =   read str
  | otherwise        =   -1
 \end{code}

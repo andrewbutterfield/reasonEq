@@ -9,6 +9,7 @@ module AbstractUI
 ( REqState
 , observeLogic, observeTheories, observeCurrTheory, observeCurrConj
 , observeLiveProofs, observeCompleteProofs
+, setCurrentTheory
 )
 where
 
@@ -100,3 +101,13 @@ observeCompleteProofs reqs
 \end{code}
 
 \subsection{Modifying Proof-State}
+
+\subsubsection{Setting Current Theory}
+
+\begin{code}
+setCurrentTheory :: Monad m => String -> REqState -> m REqState
+setCurrentTheory thnm reqs
+  = if thnm `elem` (listTheories $ theories reqs)
+    then return (currTheory_ thnm reqs)
+    else fail ("No theory named '"++thnm++"'")
+\end{code}

@@ -234,17 +234,12 @@ cmdSet
 setCurrThry = shCurrThry
 
 setState (cmd:rest) reqs
- | cmd == setCurrThry  =  setCurrentTheory rest reqs
+ | cmd == setCurrThry
+    =  case setCurrentTheory thnm reqs of
+         Nothing     ->  doshow reqs  ("No such theory: '"    ++ thnm ++ "'")
+         Just reqs'  ->  doshow reqs' ("Current Theory now '" ++ thnm ++ "'")
+ where thnm = args2str rest
 setState _ reqs      =  doshow reqs "unknown 'set' option."
-\end{code}
-
-\subsubsection{Set Current Theory}
-\begin{code}
-setCurrentTheory [thnm] reqs
-  = if thnm `elem` (listTheories $ theories reqs)
-    then doshow (currTheory_ thnm reqs)
-                ("Theory '"++thnm++"' now current.")
-    else doshow reqs ("No theory named '"++thnm++"'")
 \end{code}
 
 \newpage
@@ -252,10 +247,10 @@ setCurrentTheory [thnm] reqs
 \begin{code}
 cmdProve :: REqCmdDescr
 cmdProve
-  = ( "prove"
+  = ( "P"
     , "do a proof"
     , unlines
-       [ "prove i"
+       [ "P i"
        , "i : conjecture number"
        , "no arg required if proof already live."
        ]
@@ -389,8 +384,6 @@ proofREPL reqs proof
                        proofREPLConfig
                        (reqs,proof)
       return reqs'
-
-args2int args = if null args then 0 else readInt $ head args
 \end{code}
 
 Focus movement commands

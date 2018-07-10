@@ -209,12 +209,10 @@ shProofs = "P"
 showState [cmd] reqs
  | cmd == shLogic     =  doshow reqs $ observeLogic reqs
  | cmd == shTheories  =  doshow reqs $ observeTheories reqs
- | cmd == shCurrThry  =  doshow reqs $ ("Current Theory: "++underline currThNm)
+ | cmd == shCurrThry  =  doshow reqs $ observeCurrTheory reqs
  | cmd == shConj      =  doshow reqs $ observeCurrConj reqs
  | cmd == shLivePrf   =  doshow reqs $ observeLiveProofs reqs
  | cmd == shProofs    =  doshow reqs $ observeCompleteProofs reqs
- where
-   currThNm = observeCurrTheory reqs
 showState _ reqs      =  doshow reqs "unknown 'show' option."
 
 doshow reqs str  =  putStrLn str >> return reqs
@@ -390,20 +388,12 @@ Focus movement commands
 \begin{code}
 goDownDescr = ( "d", "down", "d n  -- down n", goDown )
 
-
 goDown :: REPLCmd (REqState, LiveProof)
-goDown args (reqs,liveProof )
-  = let i = args2int args
-    in case moveFocusDown i liveProof of
-         Nothing          ->  return (reqs, liveProof )
-         Just liveProof'  ->  return (reqs, liveProof')
+goDown args = tryFocus (moveFocusDown $ args2int args)
 
 goUpDescr = ( "u", "up", "u  -- up", goUp )
 
-goUp _ (reqs, liveProof )
-  = case moveFocusUp liveProof of
-       Nothing          ->  return (reqs, liveProof )
-       Just liveProof'  ->  return (reqs, liveProof')
+goUp _ = tryFocus moveFocusUp
 \end{code}
 
 Switching consequent focus:
@@ -414,16 +404,7 @@ switchConsequentDescr
                , "   -- or go to C_left if in hypothesis" ]
     , switchConsequent )
 
-switchConsequent _ (reqs, liveProof)
-  =  let
-      sz = focus liveProof
-      (ok,sw',sz') = switchLeftRight sz
-     in if ok then return ( reqs
-                          , focus_ sz'
-                          $ matches_ []
-                          $ stepsSoFar__
-                             ((sw',exitTZ $ fst sz):) liveProof )
-              else return ( reqs, liveProof )
+switchConsequent _ = tryFocus moveConsequentFocus
 \end{code}
 
 Switching focus to a hypothesis:
@@ -433,21 +414,7 @@ switchHypothesisDescr
     , "h i  -- focus on hypothesis i, use 'l' to exit."
     , switchHypothesis )
 
-switchHypothesis args (reqs, liveProof)
-  = let
-      i = args2int args
-      sz = focus liveProof
-      (ok,sz') = seqGoHyp i sz
-      (_,seq') = sz'
-      hthry' = getHypotheses seq'
-      mcs = buildMatchContext (hthry':ante0 seq')
-    in if ok then return ( reqs
-                         , mtchCtxts_ mcs
-                         $ focus_ sz'
-                         $ matches_ []
-                         $ stepsSoFar__
-                            ((SwHyp i, exitTZ $ fst sz):) liveProof )
-             else return (reqs, liveProof)
+switchHypothesis args = tryFocus (moveFocusToHypothesis $ args2int args)
 \end{code}
 
 Returning focus from a hypothesis:
@@ -457,21 +424,16 @@ leaveHypothesisDescr
     , "l  --  leave hypothesis, go to C_left."
     , leaveHypothesis )
 
-leaveHypothesis _ (reqs, liveProof)
-  = let
-      sz = focus liveProof
-      (ok,sz') = seqLeaveHyp sz
-      (_,seq') = sz'
-      hthry' = getHypotheses seq'
-      mcs = buildMatchContext (hthry':ante0 seq')
-    in if not ok
-        then return ( reqs, liveProof )
-        else return ( reqs
-                         , mtchCtxts_ mcs
-                         $ focus_ sz'
-                         $ matches_ []
-                         $ stepsSoFar__
-                            ((SwLeft, exitTZ $ fst sz):) liveProof )
+leaveHypothesis _ = tryFocus moveFocusFromHypothesis
+\end{code}
+
+We have a common pattern: try to focus,
+and return accordingly:
+\begin{code}
+tryFocus focus (reqs, liveProof)
+  = case focus liveProof of
+       Nothing          ->  return (reqs, liveProof )
+       Just liveProof'  ->  return (reqs, liveProof')
 \end{code}
 
 \newpage

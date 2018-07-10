@@ -21,7 +21,7 @@ module Theories
  , listTheories, getTheoryConjectures, getTheoryProofs
  , updateTheory
  , addTheoryProof
- , showTheories
+ , showTheories, showTheory
  ) where
 
 import Data.Map (Map)
@@ -199,14 +199,26 @@ addTheoryProof thname prf = updateTheory thname (proofs__ (prf:))
 \begin{code}
 showTheories thrys = showTheories' $ M.assocs $ tmap thrys
 showTheories' [] = "No theories present."
-showTheories' thrys = unlines' $ map (showTheory . snd) thrys
+showTheories' thrys = unlines' $ map (showTheoryShort . snd) thrys
 
-showTheory thry
-  = unlines (
+showTheoryShort thry
+  = thName thry
+    ++ if null deps
+        then ""
+        else "("++intercalate " " (thDeps thry)++")"
+  where deps = thDeps thry
+
+showTheory thnm thrys
+  = case M.lookup thnm $ tmap thrys of
+      Nothing -> ("No such theory: "++thnm)
+      Just thry -> showTheoryLong thry
+
+showTheoryLong thry
+  = unlines' (
       ( "Theory '"++thName thry++"'" )
-      : if null deps
+      : ( if null deps
         then []
-        else [ "depends on: "++intercalate "," (thDeps thry)]
+        else [ "depends on: "++intercalate "," deps] )
       ++
       [ trVarTable (known thry)
       , showLaws (laws thry) ]

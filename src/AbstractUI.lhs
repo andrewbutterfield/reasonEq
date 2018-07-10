@@ -10,7 +10,8 @@ module AbstractUI
 , observeLogic, observeTheories, observeCurrTheory, observeCurrConj
 , observeLiveProofs, observeCompleteProofs
 , setCurrentTheory
-, moveFocusDown, moveFocusUp
+, moveFocusDown, moveFocusUp, moveConsequentFocus
+, moveFocusToHypothesis, moveFocusFromHypothesis
 )
 where
 
@@ -71,7 +72,7 @@ observeTheories reqs = showTheories $ theories reqs
 
 \begin{code}
 observeCurrTheory :: REqState -> String
-observeCurrTheory reqs = currTheory reqs
+observeCurrTheory reqs = showTheory (currTheory reqs) $ theories reqs
 \end{code}
 
 \subsubsection{Observing Current Conjectures}
@@ -144,8 +145,62 @@ moveFocusUp liveProof
         (ok,tz') = upTZ tz
     in if ok
         then return ( focus_ (tz',seq')
-        $ fPath__ init
-        $ matches_ [] liveProof  )
+                    $ fPath__ init
+                    $ matches_ [] liveProof  )
         else fail "At top"
 
+\end{code}
+
+\subsubsection{Switching Consequent Focus}
+
+\begin{code}
+moveConsequentFocus :: Monad m => LiveProof -> m LiveProof
+moveConsequentFocus liveProof
+  = let
+      sz = focus liveProof
+      (ok,sw',sz') = switchLeftRight sz
+    in if ok
+        then return ( focus_ sz'
+                    $ matches_ []
+                    $ stepsSoFar__ ((sw',exitTZ $ fst sz):) liveProof )
+        else fail "Not in consequent"
+\end{code}
+
+
+\subsubsection{Focus into Hypotheses}
+
+\begin{code}
+moveFocusToHypothesis :: Monad m => Int -> LiveProof -> m LiveProof
+moveFocusToHypothesis i liveProof
+  = let
+      sz = focus liveProof
+      (ok,sz') = seqGoHyp i sz
+      (_,seq') = sz'
+      hthry' = getHypotheses seq'
+      mcs = buildMatchContext (hthry':ante0 seq')
+    in if ok
+        then return ( mtchCtxts_ mcs
+                    $ focus_ sz'
+                    $ matches_ []
+                    $ stepsSoFar__ ((SwHyp i, exitTZ $ fst sz):) liveProof )
+        else fail ("No hypothesis "++show i)
+\end{code}
+
+\subsubsection{Return Focus from Hypotheses}
+
+\begin{code}
+moveFocusFromHypothesis :: Monad m => LiveProof -> m LiveProof
+moveFocusFromHypothesis liveProof
+  = let
+      sz = focus liveProof
+      (ok,sz') = seqLeaveHyp sz
+      (_,seq') = sz'
+      hthry' = getHypotheses seq'
+      mcs = buildMatchContext (hthry':ante0 seq')
+    in if ok
+        then return ( mtchCtxts_ mcs
+                    $ focus_ sz'
+                    $ matches_ []
+                    $ stepsSoFar__ ((SwLeft, exitTZ $ fst sz):) liveProof )
+        else fail "Not in hypotheses"
 \end{code}

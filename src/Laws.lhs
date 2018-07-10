@@ -130,10 +130,11 @@ labelAsAxiom  nasn  =  (nasn, Axiom)
 Showing logic:
 \begin{code}
 showLogic logic
-  = unlines' [ "Truth: "   ++ trTerm 0 (theTrue logic)
-             , "Equivalence: " ++ trId (theEqv  logic)
-             , "Implication: " ++ trId (theImp  logic)
-             , "Conjunction: " ++ trId (theAnd  logic) ]
+  = unlines' [ "Truth:       " ++ trTerm 0 (theTrue  logic)
+             , "Falsity:     " ++ trTerm 0 (theFalse logic)
+             , "Equivalence:   " ++ trId   (theEqv   logic)
+             , "Implication:   " ++ trId   (theImp   logic)
+             , "Conjunction:   " ++ trId   (theAnd   logic) ]
 \end{code}
 
 

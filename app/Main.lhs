@@ -27,12 +27,12 @@ import AST
 import VarData
 import SideCond
 import Binding
-import TermZipper
-import Laws
-import Proofs
-import Theories
-import Sequents
-import LiveProofs
+-- import TermZipper
+-- import Laws
+-- import Proofs
+-- import Theories
+-- import Sequents
+-- import LiveProofs
 import REqState
 import Propositions
 import Instantiate

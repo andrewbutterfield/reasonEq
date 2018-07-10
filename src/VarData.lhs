@@ -65,7 +65,7 @@ can belong to one of three categories as regards matching:
     or it could denote something somewhat higher-order,
     such as a function or predicate.
     If the value is denoted by a term then any free variables
-    present must aslo be known.
+    present must also be known.
   \item[Known Variable]~\\
     \begin{enumerate}
       \item

@@ -8,11 +8,20 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module REqState ( REqState(..)
                 , logic__, logic_, theories__, theories_
                 , currTheory__, currTheory_, liveProofs__, liveProofs_
+                , module TermZipper
+                , module Laws
+                , module Proofs
+                , module Theories
+                , module Sequents
+                , module LiveProofs
                 )
 where
 
+import TermZipper
 import Laws
+import Proofs
 import Theories
+import Sequents
 import LiveProofs
 \end{code}
 

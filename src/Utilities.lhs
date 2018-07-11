@@ -72,17 +72,19 @@ getitem a (x:xs)
 
 \subsubsection{List lookup by number}
 \begin{code}
+nlookup :: Monad m => Int -> [a] -> m a
 nlookup i things
- | i < 1 || null things  =  Nothing
-nlookup 1 (thing:rest)   =  Just thing
+ | i < 1 || null things  =  fail "nlookup: not found"
+nlookup 1 (thing:rest)   =  return thing
 nlookup i (thing:rest)   =  nlookup (i-1) rest
 \end{code}
 
 \subsubsection{Association-list lookup}
 \begin{code}
-alookup k [] = Nothing
+alookup :: (Eq k, Monad m) => k -> [(k,d)] -> m (k,d)
+alookup k []   =  fail "alookup: not found"
 alookup k (thing@(n,_):rest)
-  | k == n  =  Just thing
+  | k == n     =  return thing
   | otherwise  =  alookup k rest
 \end{code}
 

@@ -12,6 +12,7 @@ module AbstractUI
 , setCurrentTheory
 , moveFocusDown, moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
+, matchFocus, applyMatchToFocus
 , cloneHypothesis
 )
 where
@@ -19,6 +20,7 @@ where
 import Utilities
 import LexBase
 import AST
+import Instantiate
 import REqState
 \end{code}
 
@@ -207,6 +209,50 @@ moveFocusFromHypothesis liveProof
                     $ matches_ []
                     $ stepsSoFar__ ((SwLeft, exitTZ $ fst sz):) liveProof )
         else fail "Not in hypotheses"
+\end{code}
+
+\subsubsection{Match Laws against Focus}
+
+\begin{code}
+matchFocus :: TheLogic -> LiveProof -> LiveProof
+matchFocus theLogic liveProof
+  = let (tz,_)      =  focus liveProof
+        goalt       =  getTZ tz
+        newMatches  =  matchInContexts theLogic (mtchCtxts liveProof) goalt
+    in matches_ newMatches liveProof
+\end{code}
+
+\subsubsection{Apply Match to Focus}
+
+\begin{code}
+applyMatchToFocus :: Monad m => Int -> LiveProof -> m LiveProof
+applyMatchToFocus i liveProof
+  = let (tz,seq') = focus liveProof
+        dpath = fPath liveProof
+    in do mtch  <- nlookup i $ matches liveProof
+          let bnd = mBind mtch
+          brepl <- instantiate bnd (mRepl mtch)
+          return ( focus_ ((setTZ brepl tz),seq')
+                 $ matches_ []
+                 $ stepsSoFar__
+                    (((UseLaw ByMatch (mName mtch) bnd dpath), exitTZ tz):)
+                    liveProof )
+
+     -- Nothing -> do putStrLn ("No match numbered "++ show i)
+     --               return (reqs, liveProof)
+     -- Just (MT lnm lasn bind repl)
+     --  -> case instantiate bind repl of
+     --      Nothing -> do putStrLn "Apply failed !"
+     --                    return (reqs, liveProof)
+     --      Just brepl
+     --        -> do putStrLn ("Applied law '"++lnm++"' at "++show dpath)
+     --              return ( reqs
+     --                     , focus_ ((setTZ brepl tz),seq')
+     --                     $ matches_ []
+     --                     $ stepsSoFar__
+     --                           (((UseLaw ByMatch lnm bind dpath), exitTZ tz):)
+     --                           liveProof )
+     --
 \end{code}
 
 \subsubsection{Clone Hypotheses}

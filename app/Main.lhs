@@ -304,7 +304,7 @@ presentHyp hthy
 \end{code}
 
 \newpage
-\subsubsection{Proof REPL}
+\subsection{Proof REPL}
 
 We start by defining the proof REPL state:
 \begin{code}
@@ -384,16 +384,27 @@ proofREPL reqs proof
       return reqs'
 \end{code}
 
+We have a common pattern: try to update the live proof.
+Accept if it suceeds, otherwise no change
+\begin{code}
+tryDelta :: Monad m => (b -> Maybe b) -> (a,b) -> m (a,b)
+tryDelta focus (reqs, liveProof)
+  = case focus liveProof of
+       Nothing          ->  return (reqs, liveProof )
+       Just liveProof'  ->  return (reqs, liveProof')
+\end{code}
+
 Focus movement commands
 \begin{code}
 goDownDescr = ( "d", "down", "d n  -- down n", goDown )
 
 goDown :: REPLCmd (REqState, LiveProof)
-goDown args = tryFocus (moveFocusDown $ args2int args)
+goDown args = tryDelta (moveFocusDown $ args2int args)
 
 goUpDescr = ( "u", "up", "u  -- up", goUp )
 
-goUp _ = tryFocus moveFocusUp
+goUp :: REPLCmd (REqState, LiveProof)
+goUp _ = tryDelta moveFocusUp
 \end{code}
 
 Switching consequent focus:
@@ -404,7 +415,8 @@ switchConsequentDescr
                , "   -- or go to C_left if in hypothesis" ]
     , switchConsequent )
 
-switchConsequent _ = tryFocus moveConsequentFocus
+switchConsequent :: REPLCmd (REqState, LiveProof)
+switchConsequent _ = tryDelta moveConsequentFocus
 \end{code}
 
 Switching focus to a hypothesis:
@@ -414,7 +426,8 @@ switchHypothesisDescr
     , "h i  -- focus on hypothesis i, use 'l' to exit."
     , switchHypothesis )
 
-switchHypothesis args = tryFocus (moveFocusToHypothesis $ args2int args)
+switchHypothesis :: REPLCmd (REqState, LiveProof)
+switchHypothesis args = tryDelta (moveFocusToHypothesis $ args2int args)
 \end{code}
 
 Returning focus from a hypothesis:
@@ -424,54 +437,28 @@ leaveHypothesisDescr
     , "l  --  leave hypothesis, go to C_left."
     , leaveHypothesis )
 
-leaveHypothesis _ = tryFocus moveFocusFromHypothesis
+leaveHypothesis :: REPLCmd (REqState, LiveProof)
+leaveHypothesis _ = tryDelta moveFocusFromHypothesis
 \end{code}
 
-We have a common pattern: try to focus,
-and return accordingly:
-\begin{code}
-tryFocus focus (reqs, liveProof)
-  = case focus liveProof of
-       Nothing          ->  return (reqs, liveProof )
-       Just liveProof'  ->  return (reqs, liveProof')
-\end{code}
 
 \newpage
 Law Matching
 \begin{code}
 matchLawDescr = ( "m", "match laws", "m  -- match laws", matchLawCommand )
 
+matchLawCommand :: REPLCmd (REqState, LiveProof)
 matchLawCommand _ (reqs, liveProof)
-  = let (tz,_) = focus liveProof
-        goalt = getTZ tz
-    in do putStrLn ("Matching "++trTerm 0 goalt)
-          let newMatches = matchInContexts (logic reqs)
-                                           (mtchCtxts liveProof) goalt
-          return (reqs, matches_ newMatches liveProof)
+  =  return (reqs, matchFocus (logic reqs) liveProof)
+\end{code}
 
+Applying a match.
+\begin{code}
 applyMatchDescr = ( "a", "apply match"
                   , "a i  -- apply match number i", applyMatch)
 
-applyMatch args (reqs, liveProof)
-  = let i = args2int args
-        (tz,seq') = focus liveProof
-        dpath = fPath liveProof
-    in
-    case nlookup i $ matches liveProof of
-     Nothing -> do putStrLn ("No match numbered "++ show i)
-                   return (reqs, liveProof)
-     Just (MT lnm lasn bind repl)
-      -> case instantiate bind repl of
-          Nothing -> do putStrLn "Apply failed !"
-                        return (reqs, liveProof)
-          Just brepl
-            -> do putStrLn ("Applied law '"++lnm++"' at "++show dpath)
-                  return ( reqs
-                         , focus_ ((setTZ brepl tz),seq')
-                         $ matches_ []
-                         $ stepsSoFar__
-                               (((UseLaw ByMatch lnm bind dpath), exitTZ tz):)
-                               liveProof )
+applyMatch :: REPLCmd (REqState, LiveProof)
+applyMatch args  =  tryDelta (applyMatchToFocus (args2int args))
 \end{code}
 
 \newpage
@@ -482,27 +469,27 @@ suitably instantiated.
 lawInstantiateDescr = ( "i", "instantiate"
                       , "i  -- instantiate a true focus with an law"
                       , lawInstantiateProof )
+
+lawInstantiateProof :: REPLCmd (REqState, LiveProof)
 lawInstantiateProof _ (reqs, liveProof )
   | currt /= true
-    = do putStrLn ("Can only instantiate an law over "++trTerm 0 true)
-         return (reqs, liveProof)
+    = return (reqs, liveProof)
   | otherwise
     = do putStrLn $ showLaws rslaws
          putStr "Pick a law : " ; input <- getLine
          case input of
            str@(_:_) | all isDigit str
              -> case nlookup (read str) rslaws of
-                 Just law@((nm,asn),prov)
-                   -> do putStrLn ("Law Chosen: "++nm)
+                 Just law@((nm,(lawt,_)),prov)
+                   -> do putStrLn ("Law Chosen: "++nm++"  "++trTerm 0 lawt)
                          instantiateLaw reqs liveProof law
                  _ -> return (reqs, liveProof)
            _ -> return (reqs, liveProof)
   where
     currt = getTZ $ fst $ focus liveProof
     true = theTrue $ logic reqs
-    -- hack ! Need notion of 'current' theory
-    thrys = fromJust $ getTheoryDeps "PropLogic" $ theories reqs
-    rslaws = if null thrys then [] else laws (head thrys)
+    thrys = fromJust $ getTheoryDeps (currTheory reqs) $ theories reqs
+    rslaws = concat $ map laws thrys
 
 instantiateLaw reqs liveProof law@((lnm,(lawt,lsc)),_)
  = let (tz,seq') = focus liveProof
@@ -512,13 +499,11 @@ instantiateLaw reqs liveProof law@((lnm,(lawt,lsc)),_)
    do lbind <- generateLawInstanceBind (map known thrys)
                                        (exitTZ tz) psc law
       case instantiateSC lbind lsc of
-        Nothing -> do putStrLn "instantiated law side-cond is false"
-                      return (reqs, liveProof)
+        Nothing -> return (reqs, liveProof)
         Just ilsc
           -> do putStrLn $ trBinding lbind
                 case mrgSideCond psc ilsc of
-                  Nothing -> do putStrLn "side-condition merge failed"
-                                return (reqs, liveProof)
+                  Nothing -> return (reqs, liveProof)
                   Just nsc ->
                     do  ilawt <- instantiate lbind lawt
                         return ( reqs
@@ -528,12 +513,9 @@ instantiateLaw reqs liveProof law@((lnm,(lawt,lsc)),_)
                                     , exitTZ tz ) : )
                                   liveProof )
  where
-    -- hack ! Need notion of 'current' theory
-    thrys = fromJust $ getTheoryDeps "PropLogic" $ theories reqs
-
+    thrys = fromJust $ getTheoryDeps (currTheory reqs) $ theories reqs
 \end{code}
-
-
+\newpage
 Dialogue to get law instantiation binding.
 We want a binding for every unknown variable in the law.
 We display all such unknowns, and then ask for instantiations.
@@ -544,15 +526,15 @@ generateLawInstanceBind vts gterm gsc law@((lnm,(lawt,lsc)),lprov)
       putStrLn ("Free unknown law variables: "++trVariableSet lFreeVars)
       let subGTerms = reverse $ subTerms gterm
       -- let subGVars = map theVar $ filter isVar subGTerms
+      putStrLn "Goal sub-terms:"
+      putStrLn $ numberList (trTerm 0) subGTerms           
       requestInstBindings emptyBinding subGTerms $ S.toList lFreeVars
 \end{code}
 
 \begin{code}
 requestInstBindings bind gterms []  =  return bind
 requestInstBindings bind gterms vs@(v:vrest)
- = do putStrLn "Goal sub-terms:"
-      putStrLn $ numberList (trTerm 0) gterms
-      putStr ("Binding for "++trVar v++" ? ") ; input <- getLine
+ = do putStr ("Binding for "++trVar v++" ? ") ; input <- getLine
       case input of
        str@(_:_) | all isDigit str
          -> case nlookup (read str) $ gterms of
@@ -563,7 +545,6 @@ requestInstBindings bind gterms vs@(v:vrest)
        _ -> requestInstBindings bind gterms vs
 \end{code}
 
-\newpage
 Hypothesis Cloning, is based on the following law:
 \[H \implies C \equiv H \implies H \land C\]
 \begin{code}
@@ -571,6 +552,7 @@ cloneHypothesisDescr
   = ( "c", "clone hyp", "c i  -- clone hypothesis i"
     , cloneHypotheses )
 
+cloneHypotheses :: REPLCmd (REqState, LiveProof)
 cloneHypotheses args liveState@(reqs, _)
-  = tryFocus (cloneHypothesis (args2int args) (theAnd $ logic reqs)) liveState
+  = tryDelta (cloneHypothesis (args2int args) (theAnd $ logic reqs)) liveState
 \end{code}

@@ -13,13 +13,22 @@ module AbstractUI
 , moveFocusDown, moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, applyMatchToFocus
+, lawInstantiate1, lawInstantiate2, lawInstantiate3
 , cloneHypothesis
 )
 where
 
+import Data.Set (Set)
+import qualified Data.Set as S
+
 import Utilities
 import LexBase
+import Variables
+import SideCond
+import TermZipper
 import AST
+import Binding
+import VarData
 import Instantiate
 import REqState
 \end{code}
@@ -192,6 +201,7 @@ moveFocusToHypothesis i liveProof
         else fail ("No hypothesis "++show i)
 \end{code}
 
+\newpage
 \subsubsection{Return Focus from Hypotheses}
 
 \begin{code}
@@ -237,24 +247,76 @@ applyMatchToFocus i liveProof
                  $ stepsSoFar__
                     (((UseLaw ByMatch (mName mtch) bnd dpath), exitTZ tz):)
                     liveProof )
-
-     -- Nothing -> do putStrLn ("No match numbered "++ show i)
-     --               return (reqs, liveProof)
-     -- Just (MT lnm lasn bind repl)
-     --  -> case instantiate bind repl of
-     --      Nothing -> do putStrLn "Apply failed !"
-     --                    return (reqs, liveProof)
-     --      Just brepl
-     --        -> do putStrLn ("Applied law '"++lnm++"' at "++show dpath)
-     --              return ( reqs
-     --                     , focus_ ((setTZ brepl tz),seq')
-     --                     $ matches_ []
-     --                     $ stepsSoFar__
-     --                           (((UseLaw ByMatch lnm bind dpath), exitTZ tz):)
-     --                           liveProof )
-     --
 \end{code}
 
+\newpage
+\subsubsection{Law Instantiation}
+
+Replacing \textit{true} by a law, with unknown variables
+suitably instantiated.
+
+This is not a single abstract UI call,
+but rather a series of calls, with all but the last
+returning various items that need to be used by the concrete UI
+to collect arguments for the next call.
+
+We start by checking that the focus is \true,
+and that we can find some laws.
+\begin{code}
+lawInstantiate1 :: TheLogic -> LiveProof -> [Law]
+lawInstantiate1 theLogic liveProof
+  = let currt = getTZ $ fst $ focus liveProof
+        true = theTrue theLogic
+        rslaws = concat $ map fst $ mtchCtxts liveProof
+    in if currt /= true then [] else rslaws
+\end{code}
+
+We should now get back those laws as well as the selected number.
+We now get the law, and return it along with,
+all the unknown free variables in the law,
+and all the sub-terms of the complete proof goal.
+\textbf{For now this is just the current top-level focus, i.e
+one of the two consequents, or a hypothesis. For completeness
+it should include both consequents, and  all the huypotheses.}
+\begin{code}
+lawInstantiate2 :: Monad m
+                => [Law] -> Int -> LiveProof -> m (Law,[Variable],[Term])
+lawInstantiate2 rslaws i liveProof
+  = do law@((lnm,(lawt,lsc)),lprov) <- nlookup i rslaws
+       let (tz,seq') = focus liveProof
+       let psc = conjSC liveProof
+       let dpath = fPath liveProof
+       let vts = concat $ map snd $ mtchCtxts liveProof
+       let lFreeV = stdVarSetOf $ S.filter (isUnknownGVar vts) $ freeVars lawt
+       let goalTerms = reverse $ subTerms (exitTZ tz)
+       return (law,S.toList lFreeV,goalTerms)
+\end{code}
+
+We now get back a pairing of each law unknown free-variable
+with one of the goal sub-terms, as well as the chosen law.
+This gives us enough to complete the instantiation.
+\begin{code}
+lawInstantiate3 :: Monad m
+                => Law -> [(Variable,Term)] -> LiveProof -> m LiveProof
+lawInstantiate3 law@((lnm,(lawt,lsc)),lprov) varTerms liveProof
+  = do lbind <- mkBinding emptyBinding varTerms
+       ilsc <- instantiateSC lbind lsc
+       nsc <- mrgSideCond (conjSC liveProof) ilsc
+       ilawt <- instantiate lbind lawt
+       let (tz,seq') = focus liveProof
+       let dpath = fPath liveProof
+       return ( focus_ (setTZ ilawt tz,seq')
+                $ stepsSoFar__
+                  ( ( (UseLaw ByInstantiation lnm lbind dpath), exitTZ tz ) : )
+                  liveProof )
+
+mkBinding bind [] = return bind
+mkBinding bind ((v,t):rest)
+  = do bind' <- bindVarToTerm v t bind
+       mkBinding bind' rest
+\end{code}
+
+\newpage
 \subsubsection{Clone Hypotheses}
 
 \begin{code}

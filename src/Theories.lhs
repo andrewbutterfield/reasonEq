@@ -17,7 +17,7 @@ module Theories
  , Theories
  , noTheories
  , addTheory
- , getTheoryDeps
+ , getTheoryDeps, getTheoryDeps'
  , listTheories, getTheoryConjectures, getTheoryProofs
  , updateTheory
  , addTheoryProof
@@ -137,6 +137,14 @@ getTheoryDeps nm theories
       = case M.lookup nm mapt of
           Nothing ->  fail ("Dep. '"++nm++"' not found.")
           Just t  -> return t
+\end{code}
+Sometimes we don't want to distinguish failure  and having no laws:
+\begin{code}
+getTheoryDeps' :: String -> Theories -> [Theory]
+getTheoryDeps' nm theories
+  = case getTheoryDeps nm theories of
+      Nothing     ->  []
+      Just thrys  ->  thrys
 \end{code}
 
 \subsection{Various Lookups}

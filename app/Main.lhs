@@ -496,22 +496,24 @@ instantiateLaw reqs liveProof law@((lnm,(lawt,lsc)),_)
        psc = conjSC liveProof
        dpath = fPath liveProof
    in
-   do lbind <- generateLawInstanceBind (map known thrys)
-                                       (exitTZ tz) psc law
-      case instantiateSC lbind lsc of
-        Nothing -> return (reqs, liveProof)
-        Just ilsc
-          -> do putStrLn $ trBinding lbind
-                case mrgSideCond psc ilsc of
-                  Nothing -> return (reqs, liveProof)
-                  Just nsc ->
-                    do  ilawt <- instantiate lbind lawt
-                        return ( reqs
-                               , focus_ (setTZ ilawt tz,seq')
-                               $ stepsSoFar__
-                                  ( ( (UseLaw ByInstantiation lnm lbind dpath)
-                                    , exitTZ tz ) : )
-                                  liveProof )
+   do (cancel,lbind) <- generateLawInstanceBind (map known thrys)
+                                                (exitTZ tz) psc law
+      if cancel then return (reqs, liveProof )
+      else
+        case instantiateSC lbind lsc of
+          Nothing -> return (reqs, liveProof)
+          Just ilsc
+            -> do putStrLn $ trBinding lbind
+                  case mrgSideCond psc ilsc of
+                    Nothing -> return (reqs, liveProof)
+                    Just nsc ->
+                      do  ilawt <- instantiate lbind lawt
+                          return ( reqs
+                                 , focus_ (setTZ ilawt tz,seq')
+                                 $ stepsSoFar__
+                                    ( ( (UseLaw ByInstantiation lnm lbind dpath)
+                                      , exitTZ tz ) : )
+                                    liveProof )
  where
     thrys = fromJust $ getTheoryDeps (currTheory reqs) $ theories reqs
 \end{code}
@@ -527,17 +529,20 @@ generateLawInstanceBind vts gterm gsc law@((lnm,(lawt,lsc)),lprov)
       let subGTerms = reverse $ subTerms gterm
       -- let subGVars = map theVar $ filter isVar subGTerms
       putStrLn "Goal sub-terms:"
-      putStrLn $ numberList (trTerm 0) subGTerms           
+      putStrLn $ numberList (trTerm 0) subGTerms
       requestInstBindings emptyBinding subGTerms $ S.toList lFreeVars
 \end{code}
 
+The boolean is true if the user cancelled the instantiation.
 \begin{code}
-requestInstBindings bind gterms []  =  return bind
+requestInstBindings bind gterms []  =  return (False, bind)
 requestInstBindings bind gterms vs@(v:vrest)
- = do putStr ("Binding for "++trVar v++" ? ") ; input <- getLine
+ = do putStr ("Binding for "++trVar v++" ? (0 to cancel)") ; input <- getLine
       case input of
        str@(_:_) | all isDigit str
-         -> case nlookup (read str) $ gterms of
+         -> let i = read str in
+            if i == 0 then return (True,bind)
+            else case nlookup (read str) $ gterms of
              Just gterm
                -> do bind' <- bindVarToTerm v gterm bind
                      requestInstBindings bind' gterms vrest

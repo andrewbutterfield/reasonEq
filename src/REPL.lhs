@@ -9,8 +9,11 @@ module REPL (
     REPLParser, REPLArguments, idParse, wordParse, charTypeParse
   , REPLCmd, REPLCmdDescr, REPLExit, REPLCommands
   , REPLConfig(..)
-  , clearLong
   , runREPL
+  , clearLong
+  , putListOneLine
+  , pickByNumber
+  , selectPairings, pickPairing
   )
 where
 
@@ -248,9 +251,83 @@ longHELP cmd ((nm,_,lhelp,_):cmds)
   | otherwise  =  longHELP cmd cmds
 \end{code}
 
+\newpage
+\subsection{REPL Utilities}
+
+\subsubsection{Screen Clearing}
 
 Screen clearing for help strings:
 \begin{code}
 clearLong :: REPLCmdDescr s -> REPLCmdDescr s
 clearLong (nm,short,long,func) = (nm,short,clearIt long,func)
+\end{code}
+
+\subsubsection{Dislaying List as One-liner}
+
+\begin{code}
+putListOneLine showx [] = putStrLn ""
+putListOneLine showx [x] = putStrLn (showx x)
+putListOneLine showx (x:xs)
+  = putStr (showx x ++ " ") >> putListOneLine showx xs
+\end{code}
+
+\subsubsection{List Picking by Number}
+
+\begin{code}
+pickByNumber :: String -> (t -> String) -> t -> IO Int
+pickByNumber prompt showx x
+  = do putStrLn $ showx x
+       putStr prompt ; input <- getLine
+       return $ readInt $ trim input
+
+\end{code}
+
+\subsubsection{Pair Picking by Number}
+
+Basic picker, assuming context already displayed.
+\begin{code}
+selectPairings :: (a -> String)  -- prompt generator
+               -> [(a,b)]        -- accumulated pairs so far
+               -> [b]            -- things being picked to go with ...
+               -> [a]            -- ... these things
+               -> IO ( Bool      -- true if user cancels
+                     , [(a,b)] ) -- result pairing
+selectPairings prompt pairs _ []  = return (False,pairs)
+selectPairings prompt pairs bs as@(a:as')
+  = do putStr (prompt a ++ " (0 to cancel) ? ") ; input <- getLine
+       case input of
+         str@(_:_) | all isDigit str
+           -> let i = read str in
+              if i == 0 then return (True,pairs)
+              else case nlookup (read str) $ bs of
+               Just b
+                 -> selectPairings prompt ((a,b):pairs) bs as'
+               _ -> selectPairings prompt pairs bs as
+         _ -> selectPairings prompt pairs bs as
+\end{code}
+
+\newpage
+Full picker, that generates context display.
+This is when the context is helpful information for the user when picking.
+\begin{code}
+pickPairing :: String                  -- describe context
+            -> (c -> String)           -- display context
+            -> String -> (a -> String)
+            -> String -> (b -> String)
+            -> (a -> String)
+            -> c                       -- context
+            -> [a] -> [b]
+            -> IO (Bool,[(a,b)])
+pickPairing
+  whatCtxt showCtxt
+  whatA showA
+  whatB showB
+  prompt
+  ctxt as bs
+  = do putStrLn (whatCtxt++showCtxt ctxt)
+       putStr whatA
+       putListOneLine showA as
+       putStrLn whatB
+       putStrLn $ numberList showB bs
+       selectPairings prompt [] bs as
 \end{code}

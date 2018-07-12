@@ -277,7 +277,8 @@ all the unknown free variables in the law,
 and all the sub-terms of the complete proof goal.
 \textbf{For now this is just the current top-level focus, i.e
 one of the two consequents, or a hypothesis. For completeness
-it should include both consequents, and  all the huypotheses.}
+it should include both consequents, and  all the hypotheses
+(This is a job for \texttt{Sequents}).}
 \begin{code}
 lawInstantiate2 :: Monad m
                 => [Law] -> Int -> LiveProof -> m (Law,[Variable],[Term])

@@ -10,7 +10,7 @@ module Laws
  ( TheLogic(..), flattenTheEquiv, flattenTheImp, flattenTheAnd
  , Assertion, NmdAssertion, Provenance(..), Law
  , labelAsAxiom
- , showLogic, showNmdAssns, showLaws
+ , showLogic, showNmdAssns, showLaw, showLaws
  ) where
 
 import Utilities

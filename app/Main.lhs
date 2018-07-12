@@ -472,82 +472,21 @@ lawInstantiateDescr = ( "i", "instantiate"
 
 lawInstantiateProof :: REPLCmd (REqState, LiveProof)
 lawInstantiateProof _ (reqs, liveProof )
-  | currt /= true
-    = return (reqs, liveProof)
-  | otherwise
-    = do putStrLn $ showLaws rslaws
-         putStr "Pick a law : " ; input <- getLine
-         case input of
-           str@(_:_) | all isDigit str
-             -> case nlookup (read str) rslaws of
-                 Just law@((nm,(lawt,_)),prov)
-                   -> do putStrLn ("Law Chosen: "++nm++"  "++trTerm 0 lawt)
-                         instantiateLaw reqs liveProof law
-                 _ -> return (reqs, liveProof)
-           _ -> return (reqs, liveProof)
-  where
-    currt = getTZ $ fst $ focus liveProof
-    true = theTrue $ logic reqs
-    thrys = fromJust $ getTheoryDeps (currTheory reqs) $ theories reqs
-    rslaws = concat $ map laws thrys
+  = do let rslaws = lawInstantiate1 (logic reqs) liveProof
 
-instantiateLaw reqs liveProof law@((lnm,(lawt,lsc)),_)
- = let (tz,seq') = focus liveProof
-       psc = conjSC liveProof
-       dpath = fPath liveProof
-   in
-   do (cancel,lbind) <- generateLawInstanceBind (map known thrys)
-                                                (exitTZ tz) psc law
-      if cancel then return (reqs, liveProof )
-      else
-        case instantiateSC lbind lsc of
-          Nothing -> return (reqs, liveProof)
-          Just ilsc
-            -> do putStrLn $ trBinding lbind
-                  case mrgSideCond psc ilsc of
-                    Nothing -> return (reqs, liveProof)
-                    Just nsc ->
-                      do  ilawt <- instantiate lbind lawt
-                          return ( reqs
-                                 , focus_ (setTZ ilawt tz,seq')
-                                 $ stepsSoFar__
-                                    ( ( (UseLaw ByInstantiation lnm lbind dpath)
-                                      , exitTZ tz ) : )
-                                    liveProof )
- where
-    thrys = fromJust $ getTheoryDeps (currTheory reqs) $ theories reqs
-\end{code}
-\newpage
-Dialogue to get law instantiation binding.
-We want a binding for every unknown variable in the law.
-We display all such unknowns, and then ask for instantiations.
-\begin{code}
-generateLawInstanceBind vts gterm gsc law@((lnm,(lawt,lsc)),lprov)
- = do let lFreeVars = stdVarSetOf $ S.filter (isUnknownGVar vts)
-                                  $ freeVars lawt
-      putStrLn ("Free unknown law variables: "++trVariableSet lFreeVars)
-      let subGTerms = reverse $ subTerms gterm
-      -- let subGVars = map theVar $ filter isVar subGTerms
-      putStrLn "Goal sub-terms:"
-      putStrLn $ numberList (trTerm 0) subGTerms
-      requestInstBindings emptyBinding subGTerms $ S.toList lFreeVars
-\end{code}
+       lawno <- pickByNumber "Pick a law : " showLaws rslaws
 
-The boolean is true if the user cancelled the instantiation.
-\begin{code}
-requestInstBindings bind gterms []  =  return (False, bind)
-requestInstBindings bind gterms vs@(v:vrest)
- = do putStr ("Binding for "++trVar v++" ? (0 to cancel)") ; input <- getLine
-      case input of
-       str@(_:_) | all isDigit str
-         -> let i = read str in
-            if i == 0 then return (True,bind)
-            else case nlookup (read str) $ gterms of
-             Just gterm
-               -> do bind' <- bindVarToTerm v gterm bind
-                     requestInstBindings bind' gterms vrest
-             _ -> requestInstBindings bind gterms vs
-       _ -> requestInstBindings bind gterms vs
+       (lawt,vs,ts) <- lawInstantiate2 rslaws lawno liveProof
+       (cancel,vs2ts) <- pickPairing
+                 "Chosen law : " (showLaw 0)
+                 "Free unknown law variables: " trVar
+                 "Goal sub-terms:" (trTerm 0)
+                 (\ v-> "Binding for "++trVar v)
+                 lawt vs ts
+       if cancel then return (reqs,liveProof)
+       else do
+        liveProof' <- lawInstantiate3 lawt vs2ts liveProof
+        return (reqs, liveProof' )
 \end{code}
 
 Hypothesis Cloning, is based on the following law:

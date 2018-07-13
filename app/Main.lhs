@@ -273,8 +273,8 @@ doProof args reqs
                        let six = readInt choice
                        case nlookup six strats of
                          Nothing   -> doshow reqs "Invalid strategy no"
-                         Just seq
-                           -> proofREPL reqs (launchProof thylist nm asn seq)
+                         Just seqnt
+                           -> proofREPL reqs (launchProof thylist nm asn seqnt)
       [prf]
        ->  do putStrLn "Back to (only) current proof."
               proofREPL reqs prf

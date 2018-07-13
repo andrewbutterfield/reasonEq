@@ -220,8 +220,7 @@ updateTheory thnm thryF theories@(Theories tmap sdag)
 
 \begin{code}
 replaceTheory :: Theory -> Theories -> Theories
-replaceTheory thry theories@(Theories tmap sdag)
-  = updateTheory (thName thry) (const thry) theories
+replaceTheory thry theories  =  updateTheory (thName thry) (const thry) theories
 \end{code}
 
 \subsubsection{Add Proof to Theory}

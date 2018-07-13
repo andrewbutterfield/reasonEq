@@ -105,10 +105,12 @@ reduce logic thys (nm,(t,sc))
   = return ( "reduce", Sequent thys hthry sc t $ theTrue logic )
   where hthry = Theory { thName = "H."++nm
                        , thDeps = []
-                       , laws = []
                        , known = makeUnknownKnown thys t
+                       , laws = []
+                       , proofs = []
+                       , pausedProofs = []
                        , conjs = []
-                       , proofs = [] }
+                       }
 \end{code}
 
 \newpage
@@ -129,8 +131,10 @@ redboth logic thys (nm,(t@(Cons tk i [tl,tr]),sc))
                        , thDeps = []
                        , laws = []
                        , known = makeUnknownKnown thys t
+                       , proofs = []
+                       , pausedProofs = []
                        , conjs = []
-                       , proofs = [] }
+                       }
 redboth logic thys (nm,(t,sc)) = fail "redboth not applicable"
 \end{code}
 
@@ -155,8 +159,10 @@ assume logic thys (nm,(t@(Cons tk i [ta,tc]),sc))
                    , thDeps = []
                    , laws = hlaws
                    , known = makeUnknownKnown thys t
+                   , proofs = []
+                   , pausedProofs = []
                    , conjs = []
-                   , proofs = [] }
+                   }
 assume _ _ _ = fail "assume not applicable"
 
 splitAnte :: TheLogic -> Term -> [Term]
@@ -484,7 +490,9 @@ exitLaws currT  (HLaws' hnm hkn hbef fnm fsc fprov horig haft cl cr)
                          ++ [((fnm,(currT,fsc)),fprov)] )
               , known = hkn
               , conjs = []
-              , proofs = [] }
+              , proofs = []
+              , pausedProofs = []
+              }
      , cl, cr)
 \end{code}
 
@@ -551,7 +559,8 @@ getHypotheses' (HLaws' hn hk hbef _ _ _ _ haft _ _)
             , laws =  (reverse hbef ++ haft)
             , known = hk
             , conjs = []
-            , proofs = [] }
+            , proofs = []
+            , pausedProofs = [] }
 
 \end{code}
 
@@ -588,7 +597,9 @@ dispConjParts tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
                     , laws = (reverse hbef ++ haft)
                     , known = hk
                     , conjs = []
-                    , proofs = [] }
+                    , proofs = []
+                    , pausedProofs = []
+                    }
 
 dispHypotheses hthry  =  numberList' showHyp $ laws $ hthry
 showHyp ((_,(trm,_)),_) = trTerm 0 trm

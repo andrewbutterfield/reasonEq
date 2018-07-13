@@ -10,6 +10,7 @@ module AbstractUI
 , observeLogic, observeTheories, observeCurrTheory, observeCurrConj
 , observeLiveProofs, observeCompleteProofs
 , setCurrentTheory
+, enterProof
 , moveFocusDown, moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, applyMatchToFocus
@@ -87,7 +88,10 @@ observeTheories reqs = showTheories $ theories reqs
 
 \begin{code}
 observeCurrTheory :: REqState -> String
-observeCurrTheory reqs = showTheory (currTheory reqs) $ theories reqs
+observeCurrTheory reqs
+ = case currTheory reqs of
+     Nothing    ->  "No current theory."
+     Just thry  ->  showTheoryLong thry
 \end{code}
 
 \subsubsection{Observing Current Conjectures}
@@ -95,10 +99,9 @@ observeCurrTheory reqs = showTheory (currTheory reqs) $ theories reqs
 \begin{code}
 observeCurrConj :: REqState -> String
 observeCurrConj reqs
-  = case getTheoryConjectures currThNm (theories reqs) of
-      Nothing ->  ("Invalid current theory: '"++currThNm++"'")
-      Just conjs -> showNmdAssns conjs
-  where currThNm = currTheory reqs
+  = case currTheory reqs of
+      Nothing    ->  "No current theory."
+      Just thry  ->  showNmdAssns $ conjs thry
 \end{code}
 
 \subsubsection{Observing Live Proofs}
@@ -114,10 +117,9 @@ observeLiveProofs reqs = showLiveProofs $ liveProofs reqs
 \begin{code}
 observeCompleteProofs :: REqState -> String
 observeCompleteProofs reqs
-  = case getTheoryProofs currThNm (theories reqs) of
-      Nothing ->  ("Invalid current theory: '"++currThNm++"'")
-      Just proofs -> showProofs proofs
-  where currThNm = currTheory reqs
+  = case currTheory reqs of
+      Nothing    ->  "No current theory."
+      Just thry  ->  showProofs $ proofs thry
 \end{code}
 
 \subsection{Modifying Proof-State (\texttt{REqState})}
@@ -128,9 +130,66 @@ observeCompleteProofs reqs
 \begin{code}
 setCurrentTheory :: Monad m => String -> REqState -> m REqState
 setCurrentTheory thnm reqs
-  = if thnm `elem` (listTheories $ theories reqs)
-    then return (currTheory_ thnm reqs)
-    else fail ("No theory named '"++thnm++"'")
+  = case getTheory thnm $ theories reqs of
+      Nothing  ->  fail ("No theory named '"++thnm++"'.")
+      Just thry'
+       ->  case currTheory reqs of
+             Nothing  ->  return ( currTheory_ (Just thry') reqs)
+             Just thry0
+               ->  return ( currTheory_ (Just thry')
+                          $ theories__ (replaceTheory thry0) reqs)
+\end{code}
+
+\subsubsection{Starting or Resuming a Proof}
+
+\begin{code}
+enterProof :: Monad m => REqState -> m REqState
+enterProof reqs = return reqs
+
+-- doProof args reqs
+--   = case liveProofs reqs of
+--       []
+--        ->  do putStrLn "No current proof, will try to start one."
+--               case nlookup (getProofArgs args) (getCurrConj reqs) of
+--                 Nothing  ->  do putStrLn "invalid conjecture number"
+--                                 return reqs
+--                 Just nconj@(nm,asn)
+--                  -> do let strats
+--                             = availableStrategies (logic reqs)
+--                                                   thys
+--                                                   currTh
+--                                                   nconj
+--                        putStrLn $ numberList presentSeq $ strats
+--                        putStr "Select sequent:- " ; choice <- getLine
+--                        let six = readInt choice
+--                        case nlookup six strats of
+--                          Nothing   -> doshow reqs "Invalid strategy no"
+--                          Just seq
+--                            -> proofREPL reqs (launchProof thylist nm asn seq)
+--       [prf]
+--        ->  do putStrLn "Back to (only) current proof."
+--               proofREPL reqs prf
+--       (prf:_) -- need to offer choice here
+--        ->  do putStrLn "Back to the (first of the ) current proofs."
+--               proofREPL reqs prf
+--   where
+--     getProofArgs [] = 0
+--     getProofArgs (a:_) = readInt a
+--     getCurrConj reqs = fromJust $ getTheoryConjectures currTh thys
+--     currTh = currTheory reqs
+--     thys = theories reqs
+--     thylist = fromJust $ getTheoryDeps currTh thys
+--
+-- presentSeq (str,seq)
+--   = "'" ++ str ++ "':  "
+--     ++ presentHyp (hyp seq)
+--     ++ " " ++ _vdash ++ " " ++
+--     trTerm 0 (cleft seq)
+--     ++ " = " ++
+--     trTerm 0 (cright seq)
+--
+-- presentHyp hthy
+--   = intercalate "," $ map (trTerm 0 . fst . snd . fst) $ laws hthy
 \end{code}
 
 \subsection{Modifying Proof-State (\texttt{LiveProofs})}

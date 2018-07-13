@@ -34,15 +34,15 @@ data REqState
  = ReqState {
       logic :: TheLogic
     , theories :: Theories
-    , currTheory :: String
+    , currTheory :: Maybe Theory
     , liveProofs :: [LiveProof]
     }
 
-logic__    f r = r{logic    = f $ logic r}    ; logic_    = logic__     . const
-theories__ f r = r{theories = f $ theories r} ; theories_ = theories__  . const
+logic__    f r = r{logic    = f $ logic r}    ; logic_    = logic__    . const
+theories__ f r = r{theories = f $ theories r} ; theories_ = theories__ . const
 
 currTheory__ f r = r{currTheory = f $ currTheory r}
-currTheory_      = currTheory__  . const
+currTheory_      = currTheory__ . const
 liveProofs__ f r = r{liveProofs = f $ liveProofs r}
-liveProofs_      = liveProofs__  . const
+liveProofs_      = liveProofs__ . const
 \end{code}

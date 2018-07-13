@@ -13,15 +13,17 @@ module Theories
  , known__, known_
  , laws__, laws_
  , proofs__, proofs_
+ , pausedProofs__, pausedProofs_
  , conjs__, conjs_
+ , nullTheory
  , Theories
  , noTheories
- , addTheory
+ , addTheory, getTheory
  , getTheoryDeps, getTheoryDeps'
  , listTheories, getTheoryConjectures, getTheoryProofs
- , updateTheory
+ , updateTheory, replaceTheory
  , addTheoryProof
- , showTheories, showTheory
+ , showTheories, showNamedTheory, showTheoryLong, showTheoryShort
  ) where
 
 import Data.Map (Map)
@@ -57,12 +59,13 @@ so long as there are no dependency cycles.
 \begin{code}
 data Theory
   = Theory {
-      thName      :: String
-    , thDeps      :: [String]
-    , known   :: VarTable
-    , laws        :: [Law]
-    , proofs      :: [Proof]
-    , conjs :: [NmdAssertion]
+      thName       :: String
+    , thDeps       :: [String]
+    , known        :: VarTable
+    , laws         :: [Law]
+    , proofs       :: [Proof]
+    , pausedProofs :: [Proof]
+    , conjs        :: [NmdAssertion]
     }
   deriving (Eq,Show,Read)
 
@@ -72,7 +75,24 @@ thDeps__ f r = r{thDeps = f $ thDeps r} ; thDeps_ = thDeps__ . const
 known__ f r = r{known = f $ known r} ; known_ = known__ . const
 laws__ f r = r{laws = f $ laws r} ; laws_ = laws__ . const
 proofs__ f r = r{proofs = f $ proofs r} ; proofs_ = proofs__ . const
+pausedProofs__ f r = r{pausedProofs = f $ pausedProofs r}
+pausedProofs_ = pausedProofs__ . const
 conjs__ f r = r{conjs = f $ conjs r} ; conjs_ = conjs__ . const
+\end{code}
+
+It can be useful to have a null theory%
+\footnote{hypothesis?}%
+:
+\begin{code}
+nullTheory
+  = Theory { thName       = "0"
+           , thDeps       = []
+           , known        = newVarTable
+           , laws         = []
+           , proofs       = []
+           , pausedProofs = []
+           , conjs        = []
+           }
 \end{code}
 
 We keep a collection of theories as
@@ -120,6 +140,16 @@ addTheory thry theories
        sdag' <- insSDAG nm (thDeps thry) $ sdag theories
        let tmap' = M.insert nm thry $ tmap theories
        return Theories{ tmap = tmap', sdag = sdag' }
+\end{code}
+
+\subsection{Retrieving a Theory}
+
+\begin{code}
+getTheory :: Monad m => String -> Theories -> m Theory
+getTheory thnm thrys
+ = case M.lookup thnm $ tmap thrys of
+     Nothing    ->  fail ("Theory '"++thnm++"' not found.")
+     Just thry  ->  return thry
 \end{code}
 
 \subsection{Getting all Theory Dependencies}
@@ -178,7 +208,7 @@ getTheoryProofs thNm thrys
 
 \subsection{Various Updates}
 
-\subsubsection{Generic Theory Update}
+\subsubsection{Generic Theory Updats}
 
 \begin{code}
 updateTheory :: String -> (Theory -> Theory) -> Theories -> Theories
@@ -186,6 +216,12 @@ updateTheory thnm thryF theories@(Theories tmap sdag)
   = case M.lookup thnm tmap of
       Nothing    ->  theories -- silent 'fail'
       Just thry  ->  Theories (M.insert thnm (thryF thry) tmap) sdag
+\end{code}
+
+\begin{code}
+replaceTheory :: Theory -> Theories -> Theories
+replaceTheory thry theories@(Theories tmap sdag)
+  = updateTheory (thName thry) (const thry) theories
 \end{code}
 
 \subsubsection{Add Proof to Theory}
@@ -216,7 +252,7 @@ showTheoryShort thry
         else "("++intercalate " " (thDeps thry)++")"
   where deps = thDeps thry
 
-showTheory thnm thrys
+showNamedTheory thnm thrys
   = case M.lookup thnm $ tmap thrys of
       Nothing -> ("No such theory: "++thnm)
       Just thry -> showTheoryLong thry

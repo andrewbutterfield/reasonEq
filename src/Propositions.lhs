@@ -362,6 +362,7 @@ theoryPropositions
             , known   =  propKnown
             , laws    =  propLaws
             , proofs  =  []
+            , pausedProofs = []
             , conjs   =  propConjs
             }
 \end{code}

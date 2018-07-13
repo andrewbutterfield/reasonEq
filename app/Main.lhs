@@ -70,13 +70,13 @@ initState :: [String] -> IO REqState
 initState ("user":_)
 -- need to restore saved persistent state on startup
   = do putStrLn "Running in normal user mode."
-       return $ ReqState thePropositionalLogic noTheories "" []
+       return $ ReqState thePropositionalLogic noTheories Nothing []
 
 initState _
   = do putStrLn "Running in development mode."
        return $ ReqState thePropositionalLogic
                          testTheories
-                         testName
+                         (Just testTheory)
                          []
 
 testTheories
@@ -100,6 +100,7 @@ testTheory
            , known   =  newVarTable
            , laws    =  []
            , proofs  =  []
+           , pausedProofs = []
            , conjs   =  [ cjHTest ]
            }
 \end{code}
@@ -284,7 +285,7 @@ doProof args reqs
     getProofArgs [] = 0
     getProofArgs (a:_) = readInt a
     getCurrConj reqs = fromJust $ getTheoryConjectures currTh thys
-    currTh = currTheory reqs
+    currTh = thName $ fromJust $ currTheory reqs
     thys = theories reqs
     thylist = fromJust $ getTheoryDeps currTh thys
 \end{code}
@@ -331,7 +332,7 @@ proofREPLQuit args (reqs,proof)
   = do putStr "Proof Incomplete, Abandon ? [Y] : "
        hFlush stdout
        inp <- getLine
-       if inp == "Y"
+       if trim inp == "Y"
         then return (True,( liveProofs_ []      reqs, proof))
         else return (True,( liveProofs_ [proof] reqs, proof))
 
@@ -345,8 +346,9 @@ proofREPLEndTidy _ (reqs,proof)
        let prf = finaliseProof proof
        putStrLn $ displayProof prf
        return ( liveProofs_ []
-                $ theories__ (addTheoryProof (currTheory reqs) prf)  reqs
+                $ theories__ (addTheoryProof currTh prf)  reqs
               , proof )
+  where currTh = thName $ fromJust $ currTheory reqs
   -- Need to remove from conjectures and add to Laws
 \end{code}
 

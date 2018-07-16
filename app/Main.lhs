@@ -194,7 +194,7 @@ cmdShow
         , "sh "++shTheories++" -- show theories"
         , "sh "++shCurrThry++" -- show 'current' theory"
         , "sh "++shConj++" -- show current conjectures"
-        , "sh "++shLivePrf++" -- show current proof"
+        , "sh "++shLivePrf++" -- show current (live) proof"
         , "sh "++shProofs++" -- show completed proofs"
         ]
     , showState )
@@ -279,7 +279,7 @@ doProof args reqs
        ->  do putStrLn "Back to (only) current proof."
               proofREPL reqs prf
       (prf:_) -- need to offer choice here
-       ->  do putStrLn "Back to the (first of the ) current proofs."
+       ->  do putStrLn "Back to the (first of the) current proofs."
               proofREPL reqs prf
   where
     getProofArgs [] = 0
@@ -315,11 +315,11 @@ type ProofState
 \end{code}
 From this we can define most of the REPL configuration.
 \begin{code}
-proofREPLprompt justHelped (_,proof)
-  | justHelped  =  unlines' [ dispLiveProof proof
+proofREPLprompt justHelped (_,liveProof)
+  | justHelped  =  unlines' [ dispLiveProof liveProof
                             , "proof: "]
   | otherwise   =  unlines' [ clear -- clear screen, move to top-left
-                            , dispLiveProof proof
+                            , dispLiveProof liveProof
                             , "proof: "]
 
 proofEOFReplacement = []
@@ -328,26 +328,26 @@ proofREPLParser = charTypeParse
 
 proofREPLQuitCmds = ["q"]
 
-proofREPLQuit args (reqs,proof)
+proofREPLQuit args (reqs,liveProof)
   = do putStr "Proof Incomplete, Abandon ? [Y] : "
        hFlush stdout
        inp <- getLine
        if trim inp == "Y"
-        then return (True,( liveProofs_ []      reqs, proof))
-        else return (True,( liveProofs_ [proof] reqs, proof))
+        then return (True,( liveProofs_ []      reqs, liveProof))
+        else return (True,( liveProofs_ [liveProof] reqs, liveProof))
 
 proofREPLHelpCmds = ["?"]
 
-proofREPLEndCondition (reqs,proof)
-  =  proofComplete (logic reqs) proof
+proofREPLEndCondition (reqs,liveProof)
+  =  proofComplete (logic reqs) liveProof
 
-proofREPLEndTidy _ (reqs,proof)
+proofREPLEndTidy _ (reqs,liveProof)
   = do putStrLn "Proof Complete"
-       let prf = finaliseProof proof
+       let prf = finaliseProof liveProof
        putStrLn $ displayProof prf
        return ( liveProofs_ []
-                $ theories__ (addTheoryProof currTh prf)  reqs
-              , proof )
+                $ theories__ (addTheoryProof currTh prf) reqs
+              , liveProof )
   where currTh = thName $ fromJust $ currTheory reqs
   -- Need to remove from conjectures and add to Laws
 \end{code}
@@ -378,20 +378,22 @@ proofREPLConfig
 
 This repl runs a proof.
 \begin{code}
-proofREPL reqs proof
+proofREPL reqs liveProof
  = do (reqs',_) <- runREPL
                        (clear++"Prover starting...")
                        proofREPLConfig
-                       (reqs,proof)
+                       (reqs,liveProof)
       return reqs'
 \end{code}
 
-We have a common pattern: try to update the live proof.
+We have a common pattern:
+try to update a second component of a two-part state,
+in a monadic context.
 Accept if it suceeds, otherwise no change
 \begin{code}
 tryDelta :: Monad m => (b -> Maybe b) -> (a,b) -> m (a,b)
-tryDelta focus (reqs, liveProof)
-  = case focus liveProof of
+tryDelta delta (reqs, liveProof)
+  = case delta liveProof of
        Nothing          ->  return (reqs, liveProof )
        Just liveProof'  ->  return (reqs, liveProof')
 \end{code}
@@ -473,22 +475,24 @@ lawInstantiateDescr = ( "i", "instantiate"
                       , lawInstantiateProof )
 
 lawInstantiateProof :: REPLCmd (REqState, LiveProof)
-lawInstantiateProof _ (reqs, liveProof )
+lawInstantiateProof _ ps@(reqs, liveProof )
   = do let rslaws = lawInstantiate1 (logic reqs) liveProof
 
        lawno <- pickByNumber "Pick a law : " showLaws rslaws
 
-       (lawt,vs,ts) <- lawInstantiate2 rslaws lawno liveProof
-       (cancel,vs2ts) <- pickPairing
-                 "Chosen law : " (showLaw 0)
-                 "Free unknown law variables: " trVar
-                 "Goal sub-terms:" (trTerm 0)
-                 (\ v-> "Binding for "++trVar v)
-                 lawt vs ts
-       if cancel then return (reqs,liveProof)
-       else do
-        liveProof' <- lawInstantiate3 lawt vs2ts liveProof
-        return (reqs, liveProof' )
+       case lawInstantiate2 rslaws lawno liveProof of
+         Nothing -> return ps
+         Just (lawt,vs,ts)
+           -> do (cancel,vs2ts) <- pickPairing
+                   "Chosen law : " (showLaw 0)
+                   "Free unknown law variables: " trVar
+                   "Goal sub-terms:" (trTerm 0)
+                   (\ v-> "Binding for "++trVar v)
+                   lawt vs ts
+                 if cancel then return (reqs,liveProof)
+                 else do
+                  liveProof' <- lawInstantiate3 lawt vs2ts liveProof
+                  return (reqs, liveProof' )
 \end{code}
 
 Hypothesis Cloning, is based on the following law:

@@ -18,6 +18,7 @@ module REPL (
 where
 
 import System.Console.Haskeline
+import System.IO
 import Control.Monad.IO.Class
 import Data.List
 import Data.Char
@@ -294,7 +295,8 @@ selectPairings :: (a -> String)  -- prompt generator
                      , [(a,b)] ) -- result pairing
 selectPairings prompt pairs _ []  = return (False,pairs)
 selectPairings prompt pairs bs as@(a:as')
-  = do putStr (prompt a ++ " (0 to cancel) ? ") ; input <- getLine
+  = do putStr (prompt a ++ " (0 to cancel) ? ")
+       hFlush stdout; input <- getLine
        case input of
          str@(_:_) | all isDigit str
            -> let i = read str in

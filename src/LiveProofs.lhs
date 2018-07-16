@@ -9,7 +9,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module LiveProofs
  ( Match(..)
  , LiveProof(..)
- , conjName__, conjName_, conjecture__, conjecture_, conjSC__, conjSC_
+ , conjThName__, conjThName_, conjName__, conjName_
+ , conjecture__, conjecture_, conjSC__, conjSC_
  , strategy__, strategy_, mtchCtxts__, mtchCtxts_, focus__, focus_
  , fPath__, fPath_, matches__, matches_, stepsSoFar__, stepsSoFar_
  , dispLiveProof
@@ -98,7 +99,8 @@ type Matches = [Match]
 \begin{code}
 data LiveProof
   = LP {
-      conjName :: String -- conjecture name
+      conjThName :: String -- conjecture theory name
+    , conjName :: String -- conjecture name
     , conjecture :: Assertion -- assertion being proven
     , conjSC :: SideCond -- side condition
     , strategy :: String -- strategy
@@ -115,6 +117,8 @@ data LiveProof
 Field modification boilerplate
 (a kind of poor man's lenses):
 \begin{code}
+conjThName__ f lp = lp{ conjThName = f $ conjThName lp}
+conjThName_ = conjThName__ . const
 conjName__ f lp = lp{ conjName = f $ conjName lp}
 conjName_ = conjName__ . const
 conjecture__ f lp = lp{ conjecture = f $ conjecture lp}
@@ -144,9 +148,10 @@ stepsSoFar_ = stepsSoFar__ . const
 
 We need to setup a proof from a conjecture:
 \begin{code}
-startProof :: TheLogic -> [Theory] -> String -> Assertion -> LiveProof
-startProof logic thys nm asn@(t,sc)
-  =  LP { conjName = nm
+startProof :: TheLogic -> [Theory] -> String -> String -> Assertion -> LiveProof
+startProof logic thys thnm cjnm asn@(t,sc)
+  =  LP { conjThName = thnm
+        , conjName = cjnm
         , conjecture = asn
         , conjSC = sc
         , strategy = strat
@@ -157,7 +162,7 @@ startProof logic thys nm asn@(t,sc)
         , stepsSoFar = []
         }
   where
-    (strat,seq) = fromJust $ reduce logic thys (nm,asn)
+    (strat,seq) = fromJust $ reduce logic thys (cjnm,asn)
     sz = leftConjFocus seq
     mcs = buildMatchContext thys
 \end{code}
@@ -165,18 +170,20 @@ startProof logic thys nm asn@(t,sc)
 \subsubsection{Starting a Proof with given strategy}
 
 \begin{code}
-launchProof :: [Theory] -> String -> Assertion -> (String,Sequent) -> LiveProof
-launchProof thys nm asn@(t,sc) (strat,seq)
-  = LP { conjName = nm
-        , conjecture = asn
-        , conjSC = sc
-        , strategy = strat
-        , mtchCtxts =  mcs
-        , focus =  sz
-        , fPath = []
-        , matches = []
-        , stepsSoFar = []
-        }
+launchProof :: [Theory] -> String -> String -> Assertion -> (String,Sequent)
+            -> LiveProof
+launchProof thys thnm cjnm asn@(t,sc) (strat,seq)
+  = LP { conjThName = thnm
+       , conjName = cjnm
+       , conjecture = asn
+       , conjSC = sc
+       , strategy = strat
+       , mtchCtxts =  mcs
+       , focus =  sz
+       , fPath = []
+       , matches = []
+       , stepsSoFar = []
+       }
   where
     sz = leftConjFocus seq
     hthy = hyp seq
@@ -270,14 +277,21 @@ justMatch repl vts tC ((n,asn@(tP,_)),_)
 
 Showing Proof:
 \begin{code}
-showLiveProofs []       =  "No ongoing (live) proofs."
+showLiveProofs []  =  "No ongoing (live) proofs."
 showLiveProofs lproofs
-  =  unlines' (
-      "Current live (incomplete) proofs:"
-      :  map ( ("\n==========\n"++) . dispLiveProof) lproofs )
+  =  unlines' [ "Current live (incomplete) proofs:"
+              , numberList showLiveProof lproofs ]
+
+showLiveProof :: LiveProof -> String
+showLiveProof liveProof
+  =  conjThName liveProof
+     ++ "." ++ conjName liveProof
+     ++ " [" ++ strategy liveProof ++ "]"
+     ++ " @ " ++ dispSeqTermZip (focus liveProof)
 \end{code}
 
 \begin{code}
+-- displays whole proof in proof REPL
 -- temporary
 dispLiveProof :: LiveProof -> String
 dispLiveProof liveProof

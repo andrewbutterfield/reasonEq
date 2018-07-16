@@ -280,9 +280,12 @@ shStep ( (UseLaw how lnm bind dpath), trm )
 
 Showing Proofs:
 \begin{code}
+showProof (pnm,(trm,sc),strat,(trm',steps))
+ = " " ++ pnm ++ "  (" ++ strat ++ ", size:" ++ show (length steps) ++ ")"
+
 showProofs []      =  "No Proofs yet."
 showProofs proofs
   =  unlines (
        "\nCompleted Proofs:"
-       : map ( ("\n============\n"++) . displayProof ) proofs )
+       : map showProof proofs )
 \end{code}

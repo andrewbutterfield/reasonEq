@@ -146,7 +146,7 @@ reqQuit _ reqs = putStrLn "\nGoodbye!\n" >> return (True, reqs)
 reqHelpCmds = ["?","help"]
 
 reqCommands :: REqCommands
-reqCommands = [ cmdShow, cmdSet, cmdProve ]
+reqCommands = [ cmdShow, cmdSet, cmdNewProof, cmdRet2Proof ]
 
 -- we don't use these features in the top-level REPL
 reqEndCondition _ = False
@@ -242,52 +242,67 @@ setState _ reqs      =  doshow reqs "unknown 'set' option."
 \end{code}
 
 \newpage
-\subsection{Prove Command}
-\begin{code}
-cmdProve :: REqCmdDescr
-cmdProve
-  = ( "P"
-    , "do a proof"
-    , unlines
-       [ "P i"
-       , "i : conjecture number"
-       , "no arg required if proof already live."
-       ]
-    , doProof )
+\subsection{Proving Commands}
 
-doProof args reqs
-  = case liveProofs reqs of
-      []
-       ->  do putStrLn "No current proof, will try to start one."
-              case nlookup (getProofArgs args) (getCurrConj reqs) of
-                Nothing  ->  do putStrLn "invalid conjecture number"
-                                return reqs
-                Just nconj@(nm,asn)
-                 -> do let strats
-                            = availableStrategies (logic reqs)
-                                                  thys
-                                                  currTh
-                                                  nconj
-                       putStrLn $ numberList presentSeq $ strats
-                       putStr "Select sequent:- " ; choice <- getLine
-                       let six = readInt choice
-                       case nlookup six strats of
-                         Nothing   -> doshow reqs "Invalid strategy no"
-                         Just seqnt
-                           -> proofREPL reqs (launchProof thylist nm asn seqnt)
-      [prf]
-       ->  do putStrLn "Back to (only) current proof."
-              proofREPL reqs prf
-      (prf:_) -- need to offer choice here
-       ->  do putStrLn "Back to the (first of the) current proofs."
-              proofREPL reqs prf
+\begin{code}
+cmdNewProof :: REqCmdDescr
+cmdNewProof
+  = ( "N"
+    , "new proof"
+    , unlines
+       [ "N i"
+       , "i : conjecture number"
+       ]
+    , doNewProof )
+
+doNewProof args reqs
+  = case nlookup (args2int args) (getCurrConj reqs) of
+      Nothing  ->  do putStrLn "invalid conjecture number"
+                      return reqs
+      Just nconj@(nm,asn)
+       -> do let strats
+                  = availableStrategies (logic reqs)
+                                        thys
+                                        currTh
+                                        nconj
+             putStrLn $ numberList presentSeq $ strats
+             putStr "Select sequent:- " ; choice <- getLine
+             let six = readInt choice
+             case nlookup six strats of
+               Nothing   -> doshow reqs "Invalid strategy no"
+               Just seqnt
+                 -> proofREPL reqs (launchProof thylist currTh nm asn seqnt)
   where
-    getProofArgs [] = 0
-    getProofArgs (a:_) = readInt a
-    getCurrConj reqs = fromJust $ getTheoryConjectures currTh thys
     currTh = currTheory reqs
+    getCurrConj reqs = fromJust $ getTheoryConjectures currTh thys
     thys = theories reqs
     thylist = fromJust $ getTheoryDeps currTh thys
+\end{code}
+
+\begin{code}
+cmdRet2Proof :: REqCmdDescr
+cmdRet2Proof
+  = ( "r"
+    , "return to live proof"
+    , unlines
+       [ "r i"
+       , "i : optional live proof number"
+       ]
+    , doBack2Proof )
+
+doBack2Proof args reqs
+  = case liveProofs reqs of
+      [] ->  do putStrLn "No current live proofs."
+                return reqs
+      [prf]
+       ->  do putStrLn "Back to only live proof."
+              proofREPL reqs prf
+      prfs -- need to offer choice here
+       -> do let i = args2int args
+             if 1 <= i && i <= length prfs
+              then proofREPL reqs (prfs!!(i-1))
+              else do putStrLn "No such live proof."
+                      return reqs
 \end{code}
 
 Presenting a sequent for choosing:
@@ -303,6 +318,7 @@ presentSeq (str,seq)
 presentHyp hthy
   = intercalate "," $ map (trTerm 0 . fst . snd . fst) $ laws hthy
 \end{code}
+
 
 \newpage
 \subsection{Proof REPL}

@@ -9,7 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Sequents
  ( Sequent(..)
  , availableStrategies, reduce, redboth, assume
- , Sequent'(..), SeqZip, dispSeqZip
+ , Sequent'(..), SeqZip, dispSeqZip, dispSeqTermZip
  , leftConjFocus, rightConjFocus, hypConjFocus, exitSeqZipper
  , upSZ, downSZ
  , seqGoLeft, seqGoRight, switchLeftRight
@@ -603,6 +603,9 @@ dispConjParts tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
 
 dispHypotheses hthry  =  numberList' showHyp $ laws $ hthry
 showHyp ((_,(trm,_)),_) = trTerm 0 trm
+
+dispSeqTermZip :: SeqZip -> String
+dispSeqTermZip (tz,_) = trTermZip tz
 
 dispTermZip :: TermZip -> String
 dispTermZip tz = blue $ trTerm 0 (getTZ tz)

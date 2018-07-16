@@ -34,7 +34,7 @@ data REqState
  = ReqState {
       logic :: TheLogic
     , theories :: Theories
-    , currTheory :: Maybe Theory
+    , currTheory :: String
     , liveProofs :: [LiveProof]
     }
 

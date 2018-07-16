@@ -70,13 +70,13 @@ initState :: [String] -> IO REqState
 initState ("user":_)
 -- need to restore saved persistent state on startup
   = do putStrLn "Running in normal user mode."
-       return $ ReqState thePropositionalLogic noTheories Nothing []
+       return $ ReqState thePropositionalLogic noTheories "" []
 
 initState _
   = do putStrLn "Running in development mode."
        return $ ReqState thePropositionalLogic
                          testTheories
-                         (Just testTheory)
+                         (thName testTheory)
                          []
 
 testTheories
@@ -285,7 +285,7 @@ doProof args reqs
     getProofArgs [] = 0
     getProofArgs (a:_) = readInt a
     getCurrConj reqs = fromJust $ getTheoryConjectures currTh thys
-    currTh = thName $ fromJust $ currTheory reqs
+    currTh = currTheory reqs
     thys = theories reqs
     thylist = fromJust $ getTheoryDeps currTh thys
 \end{code}
@@ -348,7 +348,7 @@ proofREPLEndTidy _ (reqs,liveProof)
        return ( liveProofs_ []
                 $ theories__ (addTheoryProof currTh prf) reqs
               , liveProof )
-  where currTh = thName $ fromJust $ currTheory reqs
+  where currTh = currTheory reqs
   -- Need to remove from conjectures and add to Laws
 \end{code}
 

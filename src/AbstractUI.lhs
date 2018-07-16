@@ -89,7 +89,7 @@ observeTheories reqs = showTheories $ theories reqs
 \begin{code}
 observeCurrTheory :: REqState -> String
 observeCurrTheory reqs
- = case currTheory reqs of
+ = case getTheory (currTheory reqs) (theories reqs) of
      Nothing    ->  "No current theory."
      Just thry  ->  showTheoryLong thry
 \end{code}
@@ -99,7 +99,7 @@ observeCurrTheory reqs
 \begin{code}
 observeCurrConj :: REqState -> String
 observeCurrConj reqs
-  = case currTheory reqs of
+  = case getTheory (currTheory reqs) (theories reqs) of
       Nothing    ->  "No current theory."
       Just thry  ->  showNmdAssns $ conjs thry
 \end{code}
@@ -117,7 +117,7 @@ observeLiveProofs reqs = showLiveProofs $ liveProofs reqs
 \begin{code}
 observeCompleteProofs :: REqState -> String
 observeCompleteProofs reqs
-  = case currTheory reqs of
+  = case getTheory (currTheory reqs) (theories reqs) of
       Nothing    ->  "No current theory."
       Just thry  ->  showProofs $ proofs thry
 \end{code}
@@ -132,12 +132,7 @@ setCurrentTheory :: Monad m => String -> REqState -> m REqState
 setCurrentTheory thnm reqs
   = case getTheory thnm $ theories reqs of
       Nothing  ->  fail ("No theory named '"++thnm++"'.")
-      Just thry'
-       ->  case currTheory reqs of
-             Nothing  ->  return ( currTheory_ (Just thry') reqs)
-             Just thry0
-               ->  return ( currTheory_ (Just thry')
-                          $ theories__ (replaceTheory thry0) reqs)
+      Just _   ->  return ( currTheory_ thnm reqs)
 \end{code}
 
 \subsubsection{Starting or Resuming a Proof}

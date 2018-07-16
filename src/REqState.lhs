@@ -17,6 +17,9 @@ module REqState ( REqState(..)
                 )
 where
 
+import Data.Map (Map)
+import qualified Data.Map as M
+
 import TermZipper
 import Laws
 import Proofs
@@ -32,10 +35,10 @@ Here we simply aggregate the semantic equational-reasoning prover state.
 \begin{code}
 data REqState
  = ReqState {
-      logic :: TheLogic
-    , theories :: Theories
-    , currTheory :: String
-    , liveProofs :: [LiveProof]
+      logic       ::  TheLogic
+    , theories    ::  Theories
+    , currTheory  ::  String
+    , liveProofs  ::  LiveProofs
     }
 
 logic__    f r = r{logic    = f $ logic r}    ; logic_    = logic__    . const

@@ -27,12 +27,6 @@ import AST
 import VarData
 import SideCond
 import Binding
--- import TermZipper
--- import Laws
--- import Proofs
--- import Theories
--- import Sequents
--- import LiveProofs
 import REqState
 import AbstractUI
 import Propositions
@@ -70,14 +64,14 @@ initState :: [String] -> IO REqState
 initState ("user":_)
 -- need to restore saved persistent state on startup
   = do putStrLn "Running in normal user mode."
-       return $ ReqState thePropositionalLogic noTheories "" []
+       return $ ReqState thePropositionalLogic noTheories "" M.empty
 
 initState _
   = do putStrLn "Running in development mode."
        return $ ReqState thePropositionalLogic
                          testTheories
                          (thName testTheory)
-                         []
+                         M.empty
 
 testTheories
   =  fromJust $ addTheory testTheory $
@@ -291,18 +285,16 @@ cmdRet2Proof
     , doBack2Proof )
 
 doBack2Proof args reqs
-  = case liveProofs reqs of
-      [] ->  do putStrLn "No current live proofs."
-                return reqs
-      [prf]
-       ->  do putStrLn "Back to only live proof."
-              proofREPL reqs prf
-      prfs -- need to offer choice here
-       -> do let i = args2int args
-             if 1 <= i && i <= length prfs
-              then proofREPL reqs (prfs!!(i-1))
-              else do putStrLn "No such live proof."
+  = case M.elems $ liveProofs reqs of
+      []        -> do putStrLn "No current live proofs."
                       return reqs
+      [prf]     -> do putStrLn "Back to only live proof."
+                      proofREPL reqs prf
+      prfs      -> do let i = args2int args
+                      if 1 <= i && i <= length prfs
+                       then proofREPL reqs $ prfs!!(i-1)
+                       else do putStrLn "No such live proof."
+                               return reqs
 \end{code}
 
 Presenting a sequent for choosing:
@@ -349,8 +341,11 @@ proofREPLQuit args (reqs,liveProof)
        hFlush stdout
        inp <- getLine
        if trim inp == "Y"
-        then return (True,( liveProofs_ []      reqs, liveProof))
-        else return (True,( liveProofs_ [liveProof] reqs, liveProof))
+        then return (True,( liveProofs__ del reqs, liveProof))
+        else return (True,( liveProofs__ upd reqs, liveProof))
+  where lpKey = (conjThName liveProof,conjName liveProof)
+        del = M.delete lpKey
+        upd = M.insert lpKey liveProof
 
 proofREPLHelpCmds = ["?"]
 
@@ -361,10 +356,12 @@ proofREPLEndTidy _ (reqs,liveProof)
   = do putStrLn "Proof Complete"
        let prf = finaliseProof liveProof
        putStrLn $ displayProof prf
-       return ( liveProofs_ []
+       return ( liveProofs__ del
                 $ theories__ (addTheoryProof currTh prf) reqs
               , liveProof )
-  where currTh = currTheory reqs
+  where lpKey = (conjThName liveProof,conjName liveProof)
+        del = M.delete lpKey
+        currTh = currTheory reqs
   -- Need to remove from conjectures and add to Laws
 \end{code}
 

@@ -13,6 +13,7 @@ module LiveProofs
  , conjecture__, conjecture_, conjSC__, conjSC_
  , strategy__, strategy_, mtchCtxts__, mtchCtxts_, focus__, focus_
  , fPath__, fPath_, matches__, matches_, stepsSoFar__, stepsSoFar_
+ , LiveProofs
  , dispLiveProof
  , startProof, launchProof
  , displayMatches
@@ -22,6 +23,8 @@ module LiveProofs
  ) where
 
 import Data.Maybe
+import Data.Map (Map)
+import qualified Data.Map as M
 
 import Utilities
 import AST
@@ -139,6 +142,11 @@ stepsSoFar__ f lp = lp{ stepsSoFar = f $ stepsSoFar lp}
 stepsSoFar_ = stepsSoFar__ . const
 \end{code}
 
+We maintain a collection of \texttt{LiveProof}s
+as a map from theory and conjecture names to the corresponding live proof:
+\begin{code}
+type LiveProofs = Map (String,String) LiveProof
+\end{code}
 
 \newpage
 \subsection{Proof Starting and Stopping}
@@ -277,10 +285,11 @@ justMatch repl vts tC ((n,asn@(tP,_)),_)
 
 Showing Proof:
 \begin{code}
-showLiveProofs []  =  "No ongoing (live) proofs."
+showLiveProofs :: LiveProofs -> String
 showLiveProofs lproofs
-  =  unlines' [ "Current live (incomplete) proofs:"
-              , numberList showLiveProof lproofs ]
+ | M.null lproofs  =  "No ongoing (live) proofs."
+ | otherwise       =  unlines' [ "Current live (incomplete) proofs:"
+                               , numberList showLiveProof $ M.elems lproofs ]
 
 showLiveProof :: LiveProof -> String
 showLiveProof liveProof

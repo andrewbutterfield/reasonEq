@@ -22,7 +22,7 @@ module Theories
  , getTheoryDeps, getTheoryDeps'
  , listTheories, getTheoryConjectures, getTheoryProofs
  , updateTheory, replaceTheory
- , addTheoryProof
+ , addTheoryProof, upgradeConj2Law
  , showTheories, showNamedTheory, showTheoryLong, showTheoryShort
  ) where
 
@@ -231,6 +231,24 @@ addTheoryProof thname prf = updateTheory thname (proofs__ (prf:))
   -- = case M.lookup thname tmap of
   --     Nothing    ->  theories -- silent 'fail'
   --     Just thry  ->  Theories (M.insert thname (proofs__ (prf:) thry) tmap) sdag
+\end{code}
+
+\begin{code}
+upgradeConj2Law  :: String -> String -> Theories -> Theories
+upgradeConj2Law thnm cjnm thrys@(Theories tmap sdag)
+  = case M.lookup thnm tmap of
+      Nothing  ->  thrys
+      Just thry
+       -> case upgrade cjnm thry [ ]$ conjs thry of
+            Nothing -> thrys
+            Just thry' -> Theories (M.insert thnm thry' tmap) sdag
+
+upgrade _ _ _ [] = Nothing
+upgrade cjnm thry sjc (cj@(nm,asn):cjs)
+ | cjnm /= nm  =  upgrade cjnm thry (cj:sjc) cjs
+ | otherwise   =  Just ( conjs_ (reverse sjc ++ cjs)
+                       $ laws__ (++[prf]) thry )
+ where prf = labelAsProof cj cjnm
 \end{code}
 
 \newpage

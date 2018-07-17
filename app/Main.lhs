@@ -354,15 +354,17 @@ proofREPLEndCondition (reqs,liveProof)
 
 proofREPLEndTidy _ (reqs,liveProof)
   = do putStrLn "Proof Complete"
-       let prf = finaliseProof liveProof
        putStrLn $ displayProof prf
        return ( liveProofs__ del
-                $ theories__ (addTheoryProof currTh prf) reqs
+                $ theories__ (upgrade . addProof) reqs
               , liveProof )
-  where lpKey = (conjThName liveProof,conjName liveProof)
-        del = M.delete lpKey
-        currTh = currTheory reqs
-  -- Need to remove from conjectures and add to Laws
+  where prf = finaliseProof liveProof
+        thnm = conjThName liveProof
+        cjnm = conjName liveProof
+        del = M.delete (thnm,cjnm)
+        currTh = currTheory reqs -- should equal thnm !!!
+        addProof = addTheoryProof currTh prf
+        upgrade = upgradeConj2Law thnm cjnm
 \end{code}
 
 \begin{code}

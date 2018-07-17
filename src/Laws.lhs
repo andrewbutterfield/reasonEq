@@ -9,7 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Laws
  ( TheLogic(..), flattenTheEquiv, flattenTheImp, flattenTheAnd
  , Assertion, NmdAssertion, Provenance(..), Law
- , labelAsAxiom
+ , labelAsAxiom, labelAsProof
  , showLogic, showNmdAssns, showLaw, showLaws
  ) where
 
@@ -121,6 +121,9 @@ type Law = (NmdAssertion,Provenance)
 
 labelAsAxiom :: NmdAssertion -> Law
 labelAsAxiom  nasn  =  (nasn, Axiom)
+
+labelAsProof :: NmdAssertion -> String -> Law
+labelAsProof nasn cnm =  (nasn, Proven cnm)
 \end{code}
 
 \subsection{Showing Laws}
@@ -150,8 +153,8 @@ showNmdAssn w (nm,(trm,sc))
 showLaws lws  =  numberList (showLaw $ nameWidth $ map fst lws) lws
 
 showLaw w ((nm,(trm,sc)),prov)
-  =    ldq ++ nm ++ rdq ++ showProv prov ++ pad w nm
+  =    ldq ++ nm ++ rdq ++ pad w nm ++ " " ++ showProv prov
     ++ "  " ++ trTerm 0 trm ++ "  "++trSideCond sc
-showProv Axiom       =  _subStr "A"
-showProv (Proven pname)  =  _subStr "P"
+showProv Axiom       =  "A"
+showProv (Proven pname)  =  "P"
 \end{code}

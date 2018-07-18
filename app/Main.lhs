@@ -325,30 +325,17 @@ proofREPLQuit args (reqs,liveProof)
        hFlush stdout
        inp <- getLine
        if trim inp == "Y"
-        then return (True,( liveProofs__ del reqs, liveProof))
-        else return (True,( liveProofs__ upd reqs, liveProof))
-  where lpKey = (conjThName liveProof,conjName liveProof)
-        del = M.delete lpKey
-        upd = M.insert lpKey liveProof
+        then return (True,(abandonProof reqs liveProof, liveProof))
+        else return (True,(saveProof reqs liveProof, liveProof))
 
 proofREPLHelpCmds = ["?"]
 
 proofREPLEndCondition (reqs,liveProof)
-  =  proofComplete (logic reqs) liveProof
+  =  proofIsComplete (logic reqs) liveProof
 
 proofREPLEndTidy _ (reqs,liveProof)
   = do putStrLn "Proof Complete"
-       putStrLn $ displayProof prf
-       return ( liveProofs__ del
-                $ theories__ (upgrade . addProof) reqs
-              , liveProof )
-  where prf = finaliseProof liveProof
-        thnm = conjThName liveProof
-        cjnm = conjName liveProof
-        del = M.delete (thnm,cjnm)
-        currTh = currTheory reqs -- should equal thnm !!!
-        addProof = addTheoryProof currTh prf
-        upgrade = upgradeConj2Law thnm cjnm
+       return ( completeProof reqs liveProof, liveProof)
 \end{code}
 
 \begin{code}

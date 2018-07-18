@@ -18,7 +18,7 @@ module LiveProofs
  , startProof, launchProof
  , displayMatches
  , buildMatchContext, matchInContexts
- , proofComplete, finaliseProof
+ , proofIsComplete, finaliseProof
  , showLiveProofs
  ) where
 
@@ -205,8 +205,8 @@ launchProof thys thnm cjnm asn@(t,sc) (strat,seq)
 
 We need to determine when a live proof is complete:
 \begin{code}
-proofComplete :: TheLogic -> LiveProof -> Bool
-proofComplete logic liveProof
+proofIsComplete :: TheLogic -> LiveProof -> Bool
+proofIsComplete logic liveProof
   =  let
        sequent = exitSeqZipper $ focus liveProof
        hypTerms = map (fst . snd . fst) $ laws $ hyp sequent

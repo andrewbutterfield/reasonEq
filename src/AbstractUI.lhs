@@ -11,6 +11,7 @@ module AbstractUI
 , observeLiveProofs, observeCompleteProofs
 , setCurrentTheory
 , newProof1, newProof2, resumeProof
+, abandonProof, saveProof, completeProof
 , moveFocusDown, moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, applyMatchToFocus
@@ -187,6 +188,39 @@ resumeProof i reqs
       prfs   ->  if 1 <= i && i <= length prfs
                  then return $ prfs!!(i-1)
                  else fail "No such live proof."
+\end{code}
+
+\subsubsection{Abandoning a Proof}
+
+\begin{code}
+abandonProof :: REqState -> LiveProof -> REqState
+abandonProof reqs liveProof
+  = liveProofs__ del reqs
+  where del = M.delete (conjThName liveProof,conjName liveProof)
+\end{code}
+
+\subsubsection{Saving a Proof}
+
+\begin{code}
+saveProof :: REqState -> LiveProof -> REqState
+saveProof reqs liveProof
+  = liveProofs__ upd reqs
+  where upd = M.insert (conjThName liveProof,conjName liveProof) liveProof
+\end{code}
+
+\subsubsection{Completing a Proof}
+
+\begin{code}
+completeProof :: REqState -> LiveProof -> REqState
+completeProof reqs liveProof
+  = ( liveProofs__ del $ theories__ (upgrade . addProof) reqs )
+  where prf = finaliseProof liveProof
+        thnm = conjThName liveProof
+        cjnm = conjName liveProof
+        del = M.delete (thnm,cjnm)
+        currTh = currTheory reqs -- should equal thnm !!!
+        addProof = addTheoryProof currTh prf
+        upgrade = upgradeConj2Law thnm cjnm
 \end{code}
 
 \subsection{Modifying Proof-State (\texttt{LiveProofs})}

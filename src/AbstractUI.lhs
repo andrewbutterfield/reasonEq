@@ -10,7 +10,7 @@ module AbstractUI
 , observeLogic, observeTheories, observeCurrTheory, observeCurrConj
 , observeLiveProofs, observeCompleteProofs
 , setCurrentTheory
-, enterProof
+, newProof1, newProof2, resumeProof
 , moveFocusDown, moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, applyMatchToFocus
@@ -21,6 +21,9 @@ where
 
 import Data.Set (Set)
 import qualified Data.Set as S
+import Data.Map (Map)
+import qualified Data.Map as M
+import Data.Maybe
 
 import Utilities
 import LexBase
@@ -135,60 +138,58 @@ setCurrentTheory thnm reqs
       Just _   ->  return ( currTheory_ thnm reqs)
 \end{code}
 
-\subsubsection{Starting or Resuming a Proof}
+\subsubsection{Starting a Proof}
+
+This is not a single abstract UI call,
+but rather a series of calls, with all but the last
+returning various items that need to be used by the concrete UI
+to collect arguments for the next call.
 
 \begin{code}
-enterProof :: Monad m => REqState -> m REqState
-enterProof reqs = return reqs
+newProof1 :: Monad m => Int -> REqState
+          -> m ( NmdAssertion
+               , [(String,Sequent)] ) -- named strategy list
+newProof1 i reqs
+  = case nlookup i (getCurrConj reqs) of
+      Nothing  ->  fail "invalid conjecture number"
+      Just nconj@(nm,asn)
+       -> return
+           ( nconj
+           , availableStrategies (logic reqs) thys currTh nconj )
+  where
+    currTh = currTheory reqs
+    getCurrConj reqs = fromJust $ getTheoryConjectures currTh thys
+    thys = theories reqs
+    thylist = fromJust $ getTheoryDeps currTh thys
 
--- doProof args reqs
---   = case liveProofs reqs of
---       []
---        ->  do putStrLn "No current proof, will try to start one."
---               case nlookup (getProofArgs args) (getCurrConj reqs) of
---                 Nothing  ->  do putStrLn "invalid conjecture number"
---                                 return reqs
---                 Just nconj@(nm,asn)
---                  -> do let strats
---                             = availableStrategies (logic reqs)
---                                                   thys
---                                                   currTh
---                                                   nconj
---                        putStrLn $ numberList presentSeq $ strats
---                        putStr "Select sequent:- " ; choice <- getLine
---                        let six = readInt choice
---                        case nlookup six strats of
---                          Nothing   -> doshow reqs "Invalid strategy no"
---                          Just seq
---                            -> proofREPL reqs (launchProof thylist nm asn seq)
---       [prf]
---        ->  do putStrLn "Back to (only) current proof."
---               proofREPL reqs prf
---       (prf:_) -- need to offer choice here
---        ->  do putStrLn "Back to the (first of the ) current proofs."
---               proofREPL reqs prf
---   where
---     getProofArgs [] = 0
---     getProofArgs (a:_) = readInt a
---     getCurrConj reqs = fromJust $ getTheoryConjectures currTh thys
---     currTh = currTheory reqs
---     thys = theories reqs
---     thylist = fromJust $ getTheoryDeps currTh thys
---
--- presentSeq (str,seq)
---   = "'" ++ str ++ "':  "
---     ++ presentHyp (hyp seq)
---     ++ " " ++ _vdash ++ " " ++
---     trTerm 0 (cleft seq)
---     ++ " = " ++
---     trTerm 0 (cright seq)
---
--- presentHyp hthy
---   = intercalate "," $ map (trTerm 0 . fst . snd . fst) $ laws hthy
+newProof2 :: Monad m => NmdAssertion -> [(String,Sequent)] -> Int -> REqState
+          -> m LiveProof
+newProof2 (nm,asn) strats six reqs
+  = case nlookup six strats of
+               Nothing   -> fail "Invalid strategy no"
+               Just seqnt
+                 -> return $ launchProof thylist currTh nm asn seqnt
+  where
+    currTh = currTheory reqs
+    getCurrConj reqs = fromJust $ getTheoryConjectures currTh thys
+    thys = theories reqs
+    thylist = fromJust $ getTheoryDeps currTh thys
+\end{code}
+
+\subsubsection{Resuming a Proof}
+
+\begin{code}
+resumeProof :: Monad m => Int -> REqState -> m LiveProof
+resumeProof i reqs
+  = case M.elems $ liveProofs reqs of
+      []     ->  fail "No current live proofs."
+      [prf]  ->  return prf
+      prfs   ->  if 1 <= i && i <= length prfs
+                 then return $ prfs!!(i-1)
+                 else fail "No such live proof."
 \end{code}
 
 \subsection{Modifying Proof-State (\texttt{LiveProofs})}
-
 
 \subsubsection{Moving Focus Down}
 

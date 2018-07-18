@@ -250,27 +250,16 @@ cmdNewProof
     , doNewProof )
 
 doNewProof args reqs
-  = case nlookup (args2int args) (getCurrConj reqs) of
-      Nothing  ->  do putStrLn "invalid conjecture number"
-                      return reqs
-      Just nconj@(nm,asn)
-       -> do let strats
-                  = availableStrategies (logic reqs)
-                                        thys
-                                        currTh
-                                        nconj
-             putStrLn $ numberList presentSeq $ strats
-             putStr "Select sequent:- " ; choice <- getLine
-             let six = readInt choice
-             case nlookup six strats of
-               Nothing   -> doshow reqs "Invalid strategy no"
-               Just seqnt
-                 -> proofREPL reqs (launchProof thylist currTh nm asn seqnt)
-  where
-    currTh = currTheory reqs
-    getCurrConj reqs = fromJust $ getTheoryConjectures currTh thys
-    thys = theories reqs
-    thylist = fromJust $ getTheoryDeps currTh thys
+  = case newProof1 (args2int args) reqs of
+     Nothing -> do putStrLn "invalid conjecture number"
+                   return reqs
+     Just (nconj,strats)
+      -> do putStrLn $ numberList presentSeq $ strats
+            putStr "Select sequent:- " ; choice <- getLine
+            case newProof2 nconj strats (readInt choice) reqs of
+             Nothing -> doshow reqs "Invalid strategy no"
+             Just liveProof
+              -> proofREPL reqs liveProof
 \end{code}
 
 \begin{code}
@@ -281,20 +270,15 @@ cmdRet2Proof
     , unlines
        [ "r i"
        , "i : optional live proof number"
+       , "    - if more than one."
        ]
     , doBack2Proof )
 
 doBack2Proof args reqs
-  = case M.elems $ liveProofs reqs of
-      []        -> do putStrLn "No current live proofs."
-                      return reqs
-      [prf]     -> do putStrLn "Back to only live proof."
-                      proofREPL reqs prf
-      prfs      -> do let i = args2int args
-                      if 1 <= i && i <= length prfs
-                       then proofREPL reqs $ prfs!!(i-1)
-                       else do putStrLn "No such live proof."
-                               return reqs
+  = case resumeProof (args2int args) reqs of
+      Nothing -> do putStrLn "Can't find requested live proof"
+                    return reqs
+      Just liveProof -> proofREPL reqs liveProof
 \end{code}
 
 Presenting a sequent for choosing:

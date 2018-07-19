@@ -64,11 +64,11 @@ initState :: [String] -> IO REqState
 initState ("user":_)
 -- need to restore saved persistent state on startup
   = do putStrLn "Running in normal user mode."
-       return $ ReqState thePropositionalLogic noTheories "" M.empty
+       return $ REqState thePropositionalLogic noTheories "" M.empty
 
 initState _
   = do putStrLn "Running in development mode."
-       return $ ReqState thePropositionalLogic
+       return $ REqState thePropositionalLogic
                          testTheories
                          (thName testTheory)
                          M.empty

@@ -10,6 +10,7 @@ module Laws
  ( TheLogic(..), flattenTheEquiv, flattenTheImp, flattenTheAnd
  , Assertion, NmdAssertion, Provenance(..), Law
  , labelAsAxiom, labelAsProof
+ , writeTheLogic, readTheLogic
  , showLogic, showNmdAssns, showLaw, showLaws
  ) where
 
@@ -124,6 +125,41 @@ labelAsAxiom  nasn  =  (nasn, Axiom)
 
 labelAsProof :: NmdAssertion -> String -> Law
 labelAsProof nasn cnm =  (nasn, Proven cnm)
+\end{code}
+
+\subsection{Writing and Reading}
+
+\begin{code}
+thelogic = "THELOGIC"
+logicHDR = "BEGIN "++thelogic ; logicTRL ="END "++thelogic
+
+trueKEY = "TRUE = "
+falseKEY = "FALSE = "
+eqvKEY = "EQV = "
+impKEY = "IMP = "
+andKEY = "AND = "
+
+writeTheLogic :: TheLogic -> [String]
+writeTheLogic theLogic
+  = [ logicHDR
+    , trueKEY ++ show (theTrue theLogic)
+    , falseKEY ++ show (theFalse theLogic)
+    , eqvKEY ++ show (theEqv theLogic)
+    , impKEY ++ show (theImp theLogic)
+    , andKEY ++ show (theAnd theLogic)
+    , logicTRL ]
+
+readTheLogic :: Monad m => [String] -> m (TheLogic,[String])
+readTheLogic [] = fail "readTheLogic: no text."
+readTheLogic txts
+  = do rest1 <- readThis logicHDR txts
+       (true,rest2) <- readKey trueKEY (read :: String -> Term) rest1
+       (false,rest3) <- readKey falseKEY (read :: String -> Term) rest2
+       (eqv,rest4) <- readKey eqvKEY (read :: String -> Identifier) rest3
+       (imp,rest5) <- readKey impKEY (read :: String -> Identifier) rest4
+       (and,rest6) <- readKey andKEY (read :: String -> Identifier) rest5
+       rest7 <- readThis logicTRL rest6
+       return (TheLogic true false imp eqv and, rest7)
 \end{code}
 
 \subsection{Showing Laws}

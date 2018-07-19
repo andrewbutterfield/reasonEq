@@ -8,6 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module REqState ( REqState(..)
                 , logic__, logic_, theories__, theories_
                 , currTheory__, currTheory_, liveProofs__, liveProofs_
+                , writeREqState, readREqState
                 , module TermZipper
                 , module Laws
                 , module Proofs
@@ -28,13 +29,13 @@ import Sequents
 import LiveProofs
 \end{code}
 
-\subsection{System State}
+\subsection{Prover State Type}
 
 Here we simply aggregate the semantic equational-reasoning prover state.
 
 \begin{code}
 data REqState
- = ReqState {
+ = REqState {
       logic       ::  TheLogic
     , theories    ::  Theories
     , currTheory  ::  String
@@ -48,4 +49,36 @@ currTheory__ f r = r{currTheory = f $ currTheory r}
 currTheory_      = currTheory__ . const
 liveProofs__ f r = r{liveProofs = f $ liveProofs r}
 liveProofs_      = liveProofs__ . const
+\end{code}
+
+
+\subsection{Writing and Reading State}
+
+\begin{code}
+reqstate = "REQSTATE"
+reqstateHDR = "BEGIN "++reqstate ; reqstateTLR ="END "++reqstate
+\end{code}
+
+\subsubsection{Write State}
+
+This is top-level, so expects to consume whole string.
+\begin{code}
+writeREqState :: REqState -> [String]
+writeREqState reqs
+  = [ reqstateHDR ] ++
+    writeTheLogic (logic reqs) ++
+    [ "writeREqState: NYFI"
+    , reqstateTLR ]
+\end{code}
+
+\subsubsection{Read State}
+
+\begin{code}
+readREqState :: Monad m => [String] -> m REqState
+readREqState [] = fail "readREqState: no text."
+readREqState (hdr:rest1)
+ | hdr /= reqstateHDR = fail "readREqState: bad header."
+ | otherwise =
+    do (thelogic,rest2) <- readTheLogic rest1
+       fail "readREqState: NYFI"
 \end{code}

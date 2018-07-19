@@ -442,7 +442,30 @@ disp2c i (st:sts) = "\n" ++ ind i ++ ", " ++  disp2 (i+2) st ++ disp2c i sts
 \end{code}
 
 
+\newpage
+\subsection{Reading And Writing}
 
+Should probably go in a ReadWrite module.
+
+\begin{code}
+readThis :: Monad m => String -> [String] -> m [String]
+readThis this [] = fail "readThis: no text."
+readThis this (txt:txts)
+ | txt == this  =  return txts
+ | otherwise
+     = fail ("readThis: expected '" ++ this ++
+             "', but got '"++ txt ++ "'.")
+
+readKey :: Monad m => String -> (String -> a) -> [String] -> m (a,[String])
+readKey key _ [] = fail ("readKey '"++key++"': no text.")
+readKey key rd (txt:txts)
+ | pre == key  =  return (rd post,txts)
+ | otherwise
+     = fail ("readKey: expected '" ++ key ++
+             "', but got '"++ txt ++ "'.")
+ where
+   (pre,post) = splitAt (length key) txt
+\end{code}
 \newpage
 \subsection{Possible Failure Monad}
 

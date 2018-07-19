@@ -17,6 +17,7 @@ module Theories
  , conjs__, conjs_
  , nullTheory
  , Theories
+ , writeTheories, readTheories
  , noTheories
  , addTheory, getTheory
  , getTheoryDeps, getTheoryDeps'
@@ -114,6 +115,32 @@ data Theories
 -- composable updaters
 tmap__ f r = r{tmap = f $ tmap r} ; tmap_ = tmap__ . const
 sdag__ f r = r{sdag = f $ sdag r} ; sdag_ = sdag__ . const
+\end{code}
+
+\subsection{Writing and Reading Theories}
+
+\begin{code}
+theories = "THEORIES"
+thryHDR = "BEGIN "++theories ; thryTRL ="END "++theories
+
+tmapKEY = "TMAP = "
+sdagKEY = "SDAG = "
+
+writeTheories :: Theories -> [String]
+writeTheories theories
+  = [ thryHDR
+    , tmapKEY ++ show (tmap theories)
+    , sdagKEY ++ show (sdag theories)
+    , thryTRL ]
+
+readTheories :: Monad m => [String] -> m (Theories,[String])
+readTheories [] = fail "readTheories: no text."
+-- readTheories txts
+--   = do rest1       <- readThis thryHDR txts
+--        (tmp,rest2) <- readKey  tmapKEY read rest1
+--        (sdg,rest3) <- readKey  sdag_KEY read rest2
+--        rest4       <- readThis thryTRL rest3
+--        return (Theories tmp sdg, rest4)
 \end{code}
 
 \subsection{No Theories}

@@ -16,7 +16,7 @@ module AST ( TermSub, LVarSub
            , Value, pattern Boolean, pattern Integer, pattern Txt
            , TermKind(..)
            , isPredKind, isExprKind, ekType
-           , Term
+           , Term, readTerm
            , pattern Val, pattern Var, pattern Cons
            , pattern Bind, pattern Lam
            , pattern Sub, pattern Iter, pattern Type
@@ -327,6 +327,9 @@ data Term
      [ListVar]   -- list-variables, same length as component arity
  | ET Type                              -- Embedded TypeVar
  deriving (Eq, Ord, Show, Read)
+
+readTerm :: String -> Term
+readTerm = read
 \end{code}
 
 We  need to have a correlation between some terms

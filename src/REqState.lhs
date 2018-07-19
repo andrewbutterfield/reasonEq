@@ -67,6 +67,7 @@ writeREqState :: REqState -> [String]
 writeREqState reqs
   = [ reqstateHDR ] ++
     writeTheLogic (logic reqs) ++
+    writeTheories (theories reqs) ++
     [ "writeREqState: NYFI"
     , reqstateTLR ]
 \end{code}

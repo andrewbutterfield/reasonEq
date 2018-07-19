@@ -142,23 +142,23 @@ andKEY = "AND = "
 writeTheLogic :: TheLogic -> [String]
 writeTheLogic theLogic
   = [ logicHDR
-    , trueKEY ++ show (theTrue theLogic)
+    , trueKEY  ++ show (theTrue theLogic)
     , falseKEY ++ show (theFalse theLogic)
-    , eqvKEY ++ show (theEqv theLogic)
-    , impKEY ++ show (theImp theLogic)
-    , andKEY ++ show (theAnd theLogic)
+    , eqvKEY   ++ show (theEqv theLogic)
+    , impKEY   ++ show (theImp theLogic)
+    , andKEY   ++ show (theAnd theLogic)
     , logicTRL ]
 
 readTheLogic :: Monad m => [String] -> m (TheLogic,[String])
 readTheLogic [] = fail "readTheLogic: no text."
 readTheLogic txts
-  = do rest1 <- readThis logicHDR txts
-       (true,rest2) <- readKey trueKEY (read :: String -> Term) rest1
-       (false,rest3) <- readKey falseKEY (read :: String -> Term) rest2
-       (eqv,rest4) <- readKey eqvKEY (read :: String -> Identifier) rest3
-       (imp,rest5) <- readKey impKEY (read :: String -> Identifier) rest4
-       (and,rest6) <- readKey andKEY (read :: String -> Identifier) rest5
-       rest7 <- readThis logicTRL rest6
+  = do rest1         <- readThis logicHDR txts
+       (true,rest2)  <- readKey  trueKEY readTerm rest1
+       (false,rest3) <- readKey  falseKEY readTerm rest2
+       (eqv,rest4)   <- readKey  eqvKEY readId rest3
+       (imp,rest5)   <- readKey  impKEY readId rest4
+       (and,rest6)   <- readKey  andKEY readId rest5
+       rest7         <- readThis logicTRL rest6
        return (TheLogic true false imp eqv and, rest7)
 \end{code}
 

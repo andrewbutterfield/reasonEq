@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module LexBase
- ( Identifier
+ ( Identifier, readId
  , pattern Identifier, ident
  , validIdent, isNameId, isSymbId
  , idName
@@ -65,6 +65,10 @@ We do allow symbols to end with a space character%
 this is necessary for some long symbols.
 \begin{code}
 newtype Identifier = Id String deriving (Eq, Ord, Show, Read)
+
+readId :: String -> Identifier
+readId = read
+
 pattern Identifier nm <- Id nm
 
 isValidSymbol c  =  not(isSpace c || isAlpha c || c `elem` "_$'.`\"")

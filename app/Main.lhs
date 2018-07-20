@@ -140,7 +140,7 @@ reqQuit _ reqs = putStrLn "\nGoodbye!\n" >> return (True, reqs)
 reqHelpCmds = ["?","help"]
 
 reqCommands :: REqCommands
-reqCommands = [ cmdShow, cmdSet, cmdNewProof, cmdRet2Proof ]
+reqCommands = [ cmdShow, cmdSet, cmdNewProof, cmdRet2Proof, cmdSave, cmdLoad ]
 
 -- we don't use these features in the top-level REPL
 reqEndCondition _ = False
@@ -212,6 +212,49 @@ showState _ reqs      =  doshow reqs "unknown 'show' option."
 
 doshow reqs str  =  putStrLn str >> return reqs
 \end{code}
+
+\newpage
+\subsection{State Save and Restore}
+
+\begin{code}
+cmdSave, cmdLoad :: REqCmdDescr
+cmdSave
+  = ( "save"
+    , "save prover state to file"
+    , unlines
+        [ "save 'name' -- save prover state to 'name'"]
+    , saveState )
+cmdLoad
+  = ( "load"
+    , "load prover state from file"
+    , unlines
+        [ "load 'name' -- load prover state from 'name'"]
+    , loadState )
+
+
+saveState [arg] reqs
+  = do writeFile ("proto/"++arg) $ unlines $ writeREqState reqs
+       putStrLn ("REQ-STATE written to 'proto/"++arg++"'.")
+       return reqs
+saveState _ reqs  =  doshow reqs "unknown 'save' option."
+
+
+loadState [arg] reqs
+  = do txt <- readFile ("proto/"++arg)
+       reqs' <- readREqState $ lines txt
+       putStrLn ("REQ-STATE read from 'proto/"++arg++"'.")
+       return reqs'
+loadState _ reqs  =  doshow reqs "unknown 'load' option."
+
+
+--  | cmd == setCurrThry
+--     =  case setCurrentTheory thnm reqs of
+--          Nothing     ->  doshow reqs  ("No such theory: '"    ++ thnm ++ "'")
+--          Just reqs'  ->  doshow reqs' ("Current Theory now '" ++ thnm ++ "'")
+--  where thnm = args2str rest
+-- setState _ reqs      =  doshow reqs "unknown 'set' option."
+\end{code}
+
 
 \newpage
 \subsection{Set Command}

@@ -63,7 +63,6 @@ currThKEY = "CURRTHEORY = "
 
 \subsubsection{Write State}
 
-This is top-level, so expects to consume whole string.
 \begin{code}
 writeREqState :: REqState -> [String]
 writeREqState reqs

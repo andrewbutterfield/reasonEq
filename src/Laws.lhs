@@ -44,6 +44,47 @@ data TheLogic
      }
 \end{code}
 
+\subsection{Writing and Reading}
+
+\begin{code}
+thelogic = "THELOGIC"
+logicHDR = "BEGIN "++thelogic ; logicTRL ="END "++thelogic
+
+trueKEY = "TRUE = "
+falseKEY = "FALSE = "
+eqvKEY = "EQV = "
+impKEY = "IMP = "
+andKEY = "AND = "
+
+writeTheLogic :: TheLogic -> [String]
+writeTheLogic theLogic
+  = [ logicHDR
+    , trueKEY  ++ show (theTrue theLogic)
+    , falseKEY ++ show (theFalse theLogic)
+    , eqvKEY   ++ show (theEqv theLogic)
+    , impKEY   ++ show (theImp theLogic)
+    , andKEY   ++ show (theAnd theLogic)
+    , logicTRL ]
+
+readTheLogic :: Monad m => [String] -> m (TheLogic,[String])
+readTheLogic [] = fail "readTheLogic: no text."
+readTheLogic txts
+  = do rest1         <- readThis logicHDR txts
+       (true,rest2)  <- readKey  trueKEY readTerm rest1
+       (false,rest3) <- readKey  falseKEY readTerm rest2
+       (eqv,rest4)   <- readKey  eqvKEY readId rest3
+       (imp,rest5)   <- readKey  impKEY readId rest4
+       (and,rest6)   <- readKey  andKEY readId rest5
+       rest7         <- readThis logicTRL rest6
+       return ( TheLogic{
+                  theTrue = true
+                , theFalse = false
+                , theEqv = eqv
+                , theImp = imp
+                , theAnd = and }
+              , rest7 )
+\end{code}
+
 \subsubsection{Predicate Conditioning}
 
 We also want to provide a way to ``condition'' predicates
@@ -125,41 +166,6 @@ labelAsAxiom  nasn  =  (nasn, Axiom)
 
 labelAsProof :: NmdAssertion -> String -> Law
 labelAsProof nasn cnm =  (nasn, Proven cnm)
-\end{code}
-
-\subsection{Writing and Reading}
-
-\begin{code}
-thelogic = "THELOGIC"
-logicHDR = "BEGIN "++thelogic ; logicTRL ="END "++thelogic
-
-trueKEY = "TRUE = "
-falseKEY = "FALSE = "
-eqvKEY = "EQV = "
-impKEY = "IMP = "
-andKEY = "AND = "
-
-writeTheLogic :: TheLogic -> [String]
-writeTheLogic theLogic
-  = [ logicHDR
-    , trueKEY  ++ show (theTrue theLogic)
-    , falseKEY ++ show (theFalse theLogic)
-    , eqvKEY   ++ show (theEqv theLogic)
-    , impKEY   ++ show (theImp theLogic)
-    , andKEY   ++ show (theAnd theLogic)
-    , logicTRL ]
-
-readTheLogic :: Monad m => [String] -> m (TheLogic,[String])
-readTheLogic [] = fail "readTheLogic: no text."
-readTheLogic txts
-  = do rest1         <- readThis logicHDR txts
-       (true,rest2)  <- readKey  trueKEY readTerm rest1
-       (false,rest3) <- readKey  falseKEY readTerm rest2
-       (eqv,rest4)   <- readKey  eqvKEY readId rest3
-       (imp,rest5)   <- readKey  impKEY readId rest4
-       (and,rest6)   <- readKey  andKEY readId rest5
-       rest7         <- readThis logicTRL rest6
-       return (TheLogic true false imp eqv and, rest7)
 \end{code}
 
 \subsection{Showing Laws}

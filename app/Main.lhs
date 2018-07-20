@@ -37,7 +37,7 @@ import REPL
 
 \begin{code}
 name = "reasonEq"
-version = "0.5.2.0"
+version = "0.6.0.0"
 \end{code}
 
 \begin{code}

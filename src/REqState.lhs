@@ -70,9 +70,9 @@ writeREqState reqs
   = [ reqstateHDR ] ++
     writeTheLogic (logic reqs) ++
     writeTheories (theories reqs) ++
-    [currThKEY ++ (currTheory reqs)]  ++
-    [ "writeREqState: NYFI"
-    , reqstateTLR ]
+    [currThKEY ++ (currTheory reqs)] ++
+    writeLiveProofs (liveProofs reqs) ++
+    [ reqstateTLR ]
 \end{code}
 
 \subsubsection{Read State}
@@ -85,5 +85,7 @@ readREqState txts
        (thelogic,rest2) <- readTheLogic rest1
        (thrys,rest3) <- readTheories rest2
        (cThNm,rest4) <- readKey currThKEY id rest3
-       fail "readREqState: NYFI"
+       (lPrfs,rest5) <- readLiveProofs rest4
+       readThis reqstateTLR rest5 -- ignore any junk after trailer.
+       return $ REqState thelogic thrys cThNm lPrfs
 \end{code}

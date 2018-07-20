@@ -107,8 +107,9 @@ directly, or transitively.
 In the implementation, the SDAG is built over theory names,
 with a seperate mapping linking those names to the corresponding theories.
 \begin{code}
+type TheoryMap = Map String Theory
 data Theories
-  = Theories { tmap :: Map String Theory
+  = Theories { tmap :: TheoryMap
              , sdag :: SDAG String }
   deriving (Show,Read)
 
@@ -135,12 +136,15 @@ writeTheories theories
 
 readTheories :: Monad m => [String] -> m (Theories,[String])
 readTheories [] = fail "readTheories: no text."
--- readTheories txts
---   = do rest1       <- readThis thryHDR txts
---        (tmp,rest2) <- readKey  tmapKEY read rest1
---        (sdg,rest3) <- readKey  sdag_KEY read rest2
---        rest4       <- readThis thryTRL rest3
---        return (Theories tmp sdg, rest4)
+readTheories txts
+  = do rest1       <- readThis thryHDR txts
+       (tmp,rest2) <- readKey  tmapKEY read rest1
+       (sdg,rest3) <- readKey  sdagKEY read rest2
+       rest4       <- readThis thryTRL rest3
+       return (Theories tmp sdg, rest4)
+
+readTheoryMap :: Monad m => [String] -> m (TheoryMap,[String])
+readTheoryMap = readKey tmapKEY read
 \end{code}
 
 \subsection{No Theories}

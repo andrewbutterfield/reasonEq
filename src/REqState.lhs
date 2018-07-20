@@ -21,6 +21,7 @@ where
 import Data.Map (Map)
 import qualified Data.Map as M
 
+import Utilities
 import TermZipper
 import Laws
 import Proofs
@@ -57,6 +58,7 @@ liveProofs_      = liveProofs__ . const
 \begin{code}
 reqstate = "REQSTATE"
 reqstateHDR = "BEGIN "++reqstate ; reqstateTLR ="END "++reqstate
+currThKEY = "CURRTHEORY = "
 \end{code}
 
 \subsubsection{Write State}
@@ -68,6 +70,7 @@ writeREqState reqs
   = [ reqstateHDR ] ++
     writeTheLogic (logic reqs) ++
     writeTheories (theories reqs) ++
+    [currThKEY ++ (currTheory reqs)]  ++
     [ "writeREqState: NYFI"
     , reqstateTLR ]
 \end{code}
@@ -77,9 +80,10 @@ writeREqState reqs
 \begin{code}
 readREqState :: Monad m => [String] -> m REqState
 readREqState [] = fail "readREqState: no text."
-readREqState (hdr:rest1)
- | hdr /= reqstateHDR = fail "readREqState: bad header."
- | otherwise =
-    do (thelogic,rest2) <- readTheLogic rest1
+readREqState txts
+  = do rest1 <- readThis reqstateHDR txts
+       (thelogic,rest2) <- readTheLogic rest1
+       (thrys,rest3) <- readTheories rest2
+       (cThNm,rest4) <- readKey currThKEY id rest3
        fail "readREqState: NYFI"
 \end{code}

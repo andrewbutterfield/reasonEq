@@ -7,6 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 module WriteRead
  ( readThis, readKey
+ , writePerLine, readPerLine
  , writeMap, readMap
  )
 where
@@ -56,27 +57,61 @@ readKey key rd (txt:txts)
    (pre,post) = splitAt (length key) txt
 \end{code}
 
+\newpage{Lists}
+
+\begin{code}
+list = "LIST"
+listHDR ttl  =  "BEGIN " ++ list ++ " " ++ ttl
+listTRL ttl  =  "END " ++ list ++ " " ++ ttl
+
+writePerLine :: String -> (a -> String) -> [a] -> [String]
+writePerLine ttl write xs  =  listHDR ttl : map write xs ++ [ listTRL ttl]
+
+readPerLine :: Monad m => String -> (String -> a) -> [String]
+            -> m ([a],[String])
+readPerLine ttl read [] = fail "readPerLine: no text."
+readPerLine ttl read (txt:txts)
+  | txt /= listHDR ttl  = fail ("readPerLine: not a list - "++txt)
+  | otherwise = readPerLine' (listTRL ttl) read [] (txts)
+
+readPerLine' _ _ _ [] = fail "readPerLine: premature text end."
+readPerLine' trailer read tsil (txt:txts)
+ | txt == trailer  =  return (reverse tsil, txts)
+ | otherwise = readPerLine' trailer read (read txt:tsil) txts
+\end{code}
 
 \newpage
 \subsection{Maps}
 
 \begin{code}
 mapping = "MAP"
-mapHDR = "BEGIN "++mapping ; mapTRL ="END "++mapping
+mapHDR ttl  =  "BEGIN " ++ mapping ++ " " ++ ttl
+mapTRL ttl  =  "END " ++ mapping ++ " " ++ ttl
 
 writeMap :: Show k => String -> (d -> [String]) -> Map k d -> [String]
 writeMap title write m
-  =  [ mapHDR ++ " " ++ title ] ++
+  =  [ mapHDR title ] ++
      wmap (M.assocs m) ++
-     [ mapTRL ++ " " ++ title ]
+     [ mapTRL title ]
   where
     wmap [] = []
     wmap ((k,d):rest) = show k : write d ++ wmap rest
 \end{code}
 
 \begin{code}
-readMap :: Monad m => String -> (String -> m k) -> ([String] -> m (d,[String]))
-        -> [String] -> m (Map k d,[String])
+readMap :: (Ord k, Monad m)
+        => String -> (String -> m k) -> ([String] -> m (d,[String])) -> [String]
+        -> m (Map k d,[String])
+readMap title rdKey rdDat [] = fail "readMap: no text."
 readMap title rdKey rdDat txts
-  = fail "readMap NYI"
+  = do rest <- readThis (mapHDR title) txts
+       readMap' (mapTRL title) rdKey rdDat [] rest
+
+readMap' _ _ _ _ [] = fail "readMap: missing entry or trailer."
+readMap' trailer rdKey rdDat alist (txt:txts)
+ | txt == trailer  =  return (M.fromList alist,txts)
+ | otherwise =
+     do key <- rdKey txt
+        (dat,rest) <- rdDat txts
+        readMap' trailer rdKey rdDat ((key,dat):alist) rest
 \end{code}

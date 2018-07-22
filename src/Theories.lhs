@@ -15,6 +15,7 @@ module Theories
  , proofs__, proofs_
  , pausedProofs__, pausedProofs_
  , conjs__, conjs_
+ , writeTheory, readTheory
  , nullTheory
  , Theories
  , writeTheories, readTheories
@@ -82,6 +83,52 @@ pausedProofs_ = pausedProofs__ . const
 conjs__ f r = r{conjs = f $ conjs r} ; conjs_ = conjs__ . const
 \end{code}
 
+\begin{code}
+thry = "THEORY"
+thryHDR thnm = "BEGIN " ++ thry ++ " " ++ thnm
+thryTRL thnm = "END "   ++ thry ++ " " ++ thnm
+
+depsKEY = "DEPS = "
+knwnKEY = "KNOWN = "
+lawsKEY = "LAWS"
+prfsKEY = "PROOFS"
+lprfKEY = "LIVE-PROOFS"
+conjKEY = "CONJECTURES"
+
+writeTheory :: Theory -> [String]
+writeTheory thry
+  = [ thryHDR nm
+    , depsKEY ++ show (thDeps thry)
+    , knwnKEY ++ show (known thry) ] ++
+    writePerLine lawsKEY show (laws thry) ++
+    writePerLine prfsKEY show (proofs thry) ++
+    writePerLine lprfKEY show (pausedProofs thry) ++
+    writePerLine conjKEY show (conjs thry) ++
+    [ thryTRL nm ]
+  where nm = thName thry
+
+readTheory :: Monad m => [String] -> m (Theory,[String])
+readTheory [] = fail "readTheory: no text."
+readTheory txts
+  = do (nm,  rest1) <- readKey (thryHDR "") read txts
+       (deps,rest2) <- readKey depsKEY read     rest1
+       (knwn,rest3) <- readKey knwnKEY read     rest2
+       (lws, rest4) <- readPerLine lawsKEY read rest3
+       (prfs,rest5) <- readPerLine prfsKEY read rest4
+       (lprf,rest6) <- readPerLine lprfKEY read rest5
+       (conj,rest7) <- readPerLine conjKEY read rest6
+       rest8        <- readThis (thryTRL nm)    rest7
+       return ( Theory { thName       = dbg "RT.nm=" nm
+                       , thDeps       = dbg "RT.deps=" deps
+                       , known        = dbg "RT.knwn=" knwn
+                       , laws         = dbg "RT.lws=" lws
+                       , proofs       = dbg "RT.prfs=" prfs
+                       , pausedProofs = dbg "RT.lprf=" lprf
+                       , conjs        = dbg "RT.conj=" conj
+                       }
+              , rest8 )
+\end{code}
+
 It can be useful to have a null theory%
 \footnote{hypothesis?}%
 :
@@ -132,7 +179,7 @@ sdagKEY = "SDAG = "
 writeTheories :: Theories -> [String]
 writeTheories theories
   = [ thrysHDR ] ++
-    writeMap thrys lshow (tmap theories) ++
+    writeMap thrys writeTheory (tmap theories) ++
     [ sdagKEY ++ show (sdag theories)
     , thrysTRL ]
   where lshow x = [show x]
@@ -141,12 +188,13 @@ readTheories :: Monad m => [String] -> m (Theories,[String])
 readTheories [] = fail "readTheories: no text."
 readTheories txts
   = do rest1       <- readThis thrysHDR      txts
-       (tmp,rest2) <- readMap thrys rdKey rdDat rest1
+       (tmp,rest2) <- readMap thrys rdKey readTheory rest1
        (sdg,rest3) <- readKey  sdagKEY read rest2
        rest4       <- readThis thrysTRL     rest3
-       return (Theories tmp sdg, rest4)
-  where rdKey str = return str
-        rdDat str = error "rDat NYI" 
+       return (Theories (dbg "RTS.tmp=" tmp) (dbg "RTS.sdg=" sdg), rest4)
+  where rdKey str = return $ read str -- read is important here to handle ""
+        rdDat [] = fail "readTheories: missing theory"
+        rdDat (txt:txts) = return (read txt, txts)
 
 readTheoryMap :: Monad m => [String] -> m (TheoryMap,[String])
 readTheoryMap = readKey tmapKEY read

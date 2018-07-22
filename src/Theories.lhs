@@ -38,6 +38,7 @@ import Laws
 import Proofs
 
 import TestRendering
+import WriteRead
 
 import Debug.Trace
 dbg msg x = trace (msg++show x) x
@@ -118,30 +119,34 @@ tmap__ f r = r{tmap = f $ tmap r} ; tmap_ = tmap__ . const
 sdag__ f r = r{sdag = f $ sdag r} ; sdag_ = sdag__ . const
 \end{code}
 
+\newpage
 \subsection{Writing and Reading Theories}
 
 \begin{code}
-theories = "THEORIES"
-thryHDR = "BEGIN "++theories ; thryTRL ="END "++theories
+thrys = "THEORIES"
+thrysHDR = "BEGIN "++thrys ; thrysTRL ="END "++thrys
 
 tmapKEY = "TMAP = "
 sdagKEY = "SDAG = "
 
 writeTheories :: Theories -> [String]
 writeTheories theories
-  = [ thryHDR
-    , tmapKEY ++ show (tmap theories)
-    , sdagKEY ++ show (sdag theories)
-    , thryTRL ]
+  = [ thrysHDR ] ++
+    writeMap thrys lshow (tmap theories) ++
+    [ sdagKEY ++ show (sdag theories)
+    , thrysTRL ]
+  where lshow x = [show x]
 
 readTheories :: Monad m => [String] -> m (Theories,[String])
 readTheories [] = fail "readTheories: no text."
 readTheories txts
-  = do rest1       <- readThis thryHDR txts
-       (tmp,rest2) <- readKey  tmapKEY read rest1
+  = do rest1       <- readThis thrysHDR      txts
+       (tmp,rest2) <- readMap thrys rdKey rdDat rest1
        (sdg,rest3) <- readKey  sdagKEY read rest2
-       rest4       <- readThis thryTRL rest3
+       rest4       <- readThis thrysTRL     rest3
        return (Theories tmp sdg, rest4)
+  where rdKey str = return str
+        rdDat str = error "rDat NYI" 
 
 readTheoryMap :: Monad m => [String] -> m (TheoryMap,[String])
 readTheoryMap = readKey tmapKEY read

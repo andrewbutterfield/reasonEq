@@ -15,6 +15,7 @@ module Laws
  ) where
 
 import Utilities
+import WriteRead
 import LexBase
 import AST
 import SideCond

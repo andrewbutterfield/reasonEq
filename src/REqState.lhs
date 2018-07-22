@@ -22,6 +22,7 @@ import Data.Map (Map)
 import qualified Data.Map as M
 
 import Utilities
+import WriteRead
 import TermZipper
 import Laws
 import Proofs

@@ -28,6 +28,7 @@ import Data.Map (Map)
 import qualified Data.Map as M
 
 import Utilities
+import WriteRead
 import AST
 import SideCond
 import TermZipper

@@ -110,7 +110,7 @@ writeTheory thry
 readTheory :: Monad m => [String] -> m (Theory,[String])
 readTheory [] = fail "readTheory: no text."
 readTheory txts
-  = do (nm,  rest1) <- readKey (thryHDR "") read txts
+  = do (nm,  rest1) <- readKey (thryHDR "") id txts
        (deps,rest2) <- readKey depsKEY read     rest1
        (knwn,rest3) <- readKey knwnKEY read     rest2
        (lws, rest4) <- readPerLine lawsKEY read rest3
@@ -118,13 +118,13 @@ readTheory txts
        (lprf,rest6) <- readPerLine lprfKEY read rest5
        (conj,rest7) <- readPerLine conjKEY read rest6
        rest8        <- readThis (thryTRL nm)    rest7
-       return ( Theory { thName       = dbg "RT.nm=" nm
-                       , thDeps       = dbg "RT.deps=" deps
-                       , known        = dbg "RT.knwn=" knwn
-                       , laws         = dbg "RT.lws=" lws
-                       , proofs       = dbg "RT.prfs=" prfs
-                       , pausedProofs = dbg "RT.lprf=" lprf
-                       , conjs        = dbg "RT.conj=" conj
+       return ( Theory { thName       = nm
+                       , thDeps       = deps
+                       , known        = knwn
+                       , laws         = lws
+                       , proofs       = prfs
+                       , pausedProofs = lprf
+                       , conjs        = conj
                        }
               , rest8 )
 \end{code}
@@ -191,7 +191,7 @@ readTheories txts
        (tmp,rest2) <- readMap thrys rdKey readTheory rest1
        (sdg,rest3) <- readKey  sdagKEY read rest2
        rest4       <- readThis thrysTRL     rest3
-       return (Theories (dbg "RTS.tmp=" tmp) (dbg "RTS.sdg=" sdg), rest4)
+       return (Theories tmp sdg, rest4)
   where rdKey str = return $ read str -- read is important here to handle ""
         rdDat [] = fail "readTheories: missing theory"
         rdDat (txt:txts) = return (read txt, txts)

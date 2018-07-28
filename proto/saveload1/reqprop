@@ -29,8 +29,6 @@ BEGIN LIST LAWS
 END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS
-BEGIN LIST LIVE-PROOFS
-END LIST LIVE-PROOFS
 BEGIN LIST CONJECTURES
 ("\8801_id",(C P (Id "\8801") [C P (Id "\8801") [V P (VR (Id "true",VP,WS)),V P (VR (Id "Q",VP,WS))],V P (VR (Id "Q",VP,WS))],SC (fromList []) (fromList [])))
 ("\8744_zero",(C P (Id "\8801") [C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "true",VP,WS))],V P (VR (Id "true",VP,WS))],SC (fromList []) (fromList [])))
@@ -45,8 +43,6 @@ BEGIN LIST LAWS
 END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS
-BEGIN LIST LIVE-PROOFS
-END LIST LIVE-PROOFS
 BEGIN LIST CONJECTURES
 ("h-test",(C P (Id "\10233 ") [C P (Id "\8743") [V P (VR (Id "A",VP,WS)),C P (Id "\8743") [V P (VR (Id "B",VP,WS)),V P (VR (Id "C",VP,WS))]],C P (Id "\8743") [C P (Id "\8743") [V P (VR (Id "C",VP,WS)),V P (VR (Id "A",VP,WS))],C P (Id "\8801") [V P (VR (Id "B",VP,WS)),V P (VR (Id "B",VP,WS)),V P (VR (Id "B",VP,WS))]]],SC (fromList []) (fromList [])))
 END LIST CONJECTURES

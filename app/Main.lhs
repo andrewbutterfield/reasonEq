@@ -94,7 +94,6 @@ testTheory
            , known   =  newVarTable
            , laws    =  []
            , proofs  =  []
-           , pausedProofs = []
            , conjs   =  [ cjHTest ]
            }
 \end{code}

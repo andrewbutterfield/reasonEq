@@ -108,7 +108,6 @@ reduce logic thys (nm,(t,sc))
                        , known = makeUnknownKnown thys t
                        , laws = []
                        , proofs = []
-                       , pausedProofs = []
                        , conjs = []
                        }
 \end{code}
@@ -132,7 +131,6 @@ redboth logic thys (nm,(t@(Cons tk i [tl,tr]),sc))
                        , laws = []
                        , known = makeUnknownKnown thys t
                        , proofs = []
-                       , pausedProofs = []
                        , conjs = []
                        }
 redboth logic thys (nm,(t,sc)) = fail "redboth not applicable"
@@ -160,7 +158,6 @@ assume logic thys (nm,(t@(Cons tk i [ta,tc]),sc))
                    , laws = hlaws
                    , known = makeUnknownKnown thys t
                    , proofs = []
-                   , pausedProofs = []
                    , conjs = []
                    }
 assume _ _ _ = fail "assume not applicable"
@@ -491,7 +488,6 @@ exitLaws currT  (HLaws' hnm hkn hbef fnm fsc fprov horig haft cl cr)
               , known = hkn
               , conjs = []
               , proofs = []
-              , pausedProofs = []
               }
      , cl, cr)
 \end{code}
@@ -559,8 +555,7 @@ getHypotheses' (HLaws' hn hk hbef _ _ _ _ haft _ _)
             , laws =  (reverse hbef ++ haft)
             , known = hk
             , conjs = []
-            , proofs = []
-            , pausedProofs = [] }
+            , proofs = [] }
 
 \end{code}
 
@@ -598,7 +593,6 @@ dispConjParts tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
                     , known = hk
                     , conjs = []
                     , proofs = []
-                    , pausedProofs = []
                     }
 
 dispHypotheses hthry  =  numberList' showHyp $ laws $ hthry

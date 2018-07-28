@@ -13,7 +13,6 @@ module Theories
  , known__, known_
  , laws__, laws_
  , proofs__, proofs_
- , pausedProofs__, pausedProofs_
  , conjs__, conjs_
  , writeTheory, readTheory
  , nullTheory
@@ -67,7 +66,6 @@ data Theory
     , known        :: VarTable
     , laws         :: [Law]
     , proofs       :: [Proof]
-    , pausedProofs :: [Proof]
     , conjs        :: [NmdAssertion]
     }
   deriving (Eq,Show,Read)
@@ -78,8 +76,6 @@ thDeps__ f r = r{thDeps = f $ thDeps r} ; thDeps_ = thDeps__ . const
 known__ f r = r{known = f $ known r} ; known_ = known__ . const
 laws__ f r = r{laws = f $ laws r} ; laws_ = laws__ . const
 proofs__ f r = r{proofs = f $ proofs r} ; proofs_ = proofs__ . const
-pausedProofs__ f r = r{pausedProofs = f $ pausedProofs r}
-pausedProofs_ = pausedProofs__ . const
 conjs__ f r = r{conjs = f $ conjs r} ; conjs_ = conjs__ . const
 \end{code}
 
@@ -92,7 +88,6 @@ depsKEY = "DEPS = "
 knwnKEY = "KNOWN = "
 lawsKEY = "LAWS"
 prfsKEY = "PROOFS"
-lprfKEY = "LIVE-PROOFS"
 conjKEY = "CONJECTURES"
 
 writeTheory :: Theory -> [String]
@@ -102,7 +97,6 @@ writeTheory thry
     , knwnKEY ++ show (known thry) ] ++
     writePerLine lawsKEY show (laws thry) ++
     writePerLine prfsKEY show (proofs thry) ++
-    writePerLine lprfKEY show (pausedProofs thry) ++
     writePerLine conjKEY show (conjs thry) ++
     [ thryTRL nm ]
   where nm = thName thry
@@ -115,18 +109,16 @@ readTheory txts
        (knwn,rest3) <- readKey knwnKEY read     rest2
        (lws, rest4) <- readPerLine lawsKEY read rest3
        (prfs,rest5) <- readPerLine prfsKEY read rest4
-       (lprf,rest6) <- readPerLine lprfKEY read rest5
-       (conj,rest7) <- readPerLine conjKEY read rest6
-       rest8        <- readThis (thryTRL nm)    rest7
+       (conj,rest6) <- readPerLine conjKEY read rest5
+       rest7        <- readThis (thryTRL nm)    rest6
        return ( Theory { thName       = nm
                        , thDeps       = deps
                        , known        = knwn
                        , laws         = lws
                        , proofs       = prfs
-                       , pausedProofs = lprf
                        , conjs        = conj
                        }
-              , rest8 )
+              , rest7 )
 \end{code}
 
 It can be useful to have a null theory%
@@ -139,7 +131,6 @@ nullTheory
            , known        = newVarTable
            , laws         = []
            , proofs       = []
-           , pausedProofs = []
            , conjs        = []
            }
 \end{code}

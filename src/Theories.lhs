@@ -79,6 +79,22 @@ proofs__ f r = r{proofs = f $ proofs r} ; proofs_ = proofs__ . const
 conjs__ f r = r{conjs = f $ conjs r} ; conjs_ = conjs__ . const
 \end{code}
 
+It can be useful to have a null theory%
+\footnote{hypothesis?}%
+:
+\begin{code}
+nullTheory
+  = Theory { thName       = "0"
+           , thDeps       = []
+           , known        = newVarTable
+           , laws         = []
+           , proofs       = []
+           , conjs        = []
+           }
+\end{code}
+\newpage
+\subsection{Writing and Reading a Theory}
+
 \begin{code}
 thry = "THEORY"
 thryHDR thnm = "BEGIN " ++ thry ++ " " ++ thnm
@@ -121,19 +137,9 @@ readTheory txts
               , rest7 )
 \end{code}
 
-It can be useful to have a null theory%
-\footnote{hypothesis?}%
-:
-\begin{code}
-nullTheory
-  = Theory { thName       = "0"
-           , thDeps       = []
-           , known        = newVarTable
-           , laws         = []
-           , proofs       = []
-           , conjs        = []
-           }
-\end{code}
+
+\newpage
+\subsection{Theory Collections}
 
 We keep a collection of theories as
 a directed acyclic graph (DAG) of same,
@@ -157,8 +163,7 @@ tmap__ f r = r{tmap = f $ tmap r} ; tmap_ = tmap__ . const
 sdag__ f r = r{sdag = f $ sdag r} ; sdag_ = sdag__ . const
 \end{code}
 
-\newpage
-\subsection{Writing and Reading Theories}
+\subsection{Writing and Reading Theory Collections}
 
 \begin{code}
 thrys = "THEORIES"
@@ -252,6 +257,7 @@ getTheoryDeps' nm theories
       Just thrys  ->  thrys
 \end{code}
 
+\newpage
 \subsection{Various Lookups}
 
 \subsubsection{List all theories}
@@ -283,7 +289,7 @@ getTheoryProofs thNm thrys
 
 \subsection{Various Updates}
 
-\subsubsection{Generic Theory Updats}
+\subsubsection{Generic Theory Updates}
 
 \begin{code}
 updateTheory :: String -> (Theory -> Theory) -> Theories -> Theories
@@ -303,10 +309,10 @@ replaceTheory thry theories  =  updateTheory (thName thry) (const thry) theories
 \begin{code}
 addTheoryProof :: String -> Proof -> Theories -> Theories
 addTheoryProof thname prf = updateTheory thname (proofs__ (prf:))
-  -- = case M.lookup thname tmap of
-  --     Nothing    ->  theories -- silent 'fail'
-  --     Just thry  ->  Theories (M.insert thname (proofs__ (prf:) thry) tmap) sdag
 \end{code}
+
+\newpage
+\subsubsection{Upgrade (proven) Conjecture to Law}
 
 \begin{code}
 upgradeConj2Law  :: String -> String -> Theories -> Theories
@@ -326,7 +332,6 @@ upgrade cjnm thry sjc (cj@(nm,asn):cjs)
  where prf = labelAsProof cj cjnm
 \end{code}
 
-\newpage
 \subsection{Showing Theories}
 
 \textbf{This should all be done via proper generic rendering code}

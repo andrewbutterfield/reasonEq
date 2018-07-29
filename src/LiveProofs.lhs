@@ -141,14 +141,40 @@ stepsSoFar__ f lp = lp{ stepsSoFar = f $ stepsSoFar lp}
 stepsSoFar_ = stepsSoFar__ . const
 \end{code}
 
-\subsubsection{Live Proof Write and Read}
+\subsubsection{Live-Proof Write and Read}
+
+There are two components we don't explicitly save:
+\texttt{mtchCtxts},
+and
+\texttt{matches}.
+The first will be re-constructed at read-time,
+while the second is simply restored as empty.
 
 \begin{code}
 liveproof = "LIVE-PROOF"
 lprfHDR = "BEGIN "++liveproof ; lprfTRL ="END "++liveproof
+lpthKEY thnm = "TH-NAME: " ++ thnm
+lpcjKEY cjnm = "CJ-NAME: " ++ cjnm
+
+conjKEY = "CONJ = "
+cjscKEY = "SIDE = "
+strtKey st = "STRAT " ++ st
+focusKEY = "FOCUS = "
+fpathKEY = "FPATH: "
+stepsKEY = "STEPS"
 
 writeLiveProof :: LiveProof -> [String]
-writeLiveProof lp = [show lp]
+writeLiveProof lp
+  = [ lprfHDR
+    , lpthKEY (conjThName lp)
+    , lpcjKEY (conjName lp)
+    , conjKEY ++ show (conjecture lp)
+    , cjscKEY ++ show (conjSC lp)
+    , strtKey (strategy lp)
+    , focusKEY ++ show (focus lp)
+    , fpathKEY ++ show (fPath lp) ] ++
+    writePerLine stepsKEY show (stepsSoFar lp) ++
+    [ lprfTRL ]
 
 readLiveProof :: Monad m => [String] -> m (LiveProof,[String])
 readLiveProof (txt:txts) = return (read txt,txts)

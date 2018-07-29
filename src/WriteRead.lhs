@@ -6,7 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 module WriteRead
- ( readThis, readKey
+ ( readThis, readKey, rdKey
  , writePerLine, readPerLine
  , writeMap, readMap
  )
@@ -55,6 +55,9 @@ readKey key rd (txt:txts)
              "', but got '"++ txt ++ "'.")
  where
    (pre,post) = splitAt (length key) txt
+
+rdKey :: (Read k, Monad m) => String -> m k
+rdKey str = return $ read str
 \end{code}
 
 \newpage{Lists}

@@ -286,7 +286,7 @@ cmdNewProof
   = ( "N"
     , "new proof"
     , unlines
-       [ "N i"
+       [ "N i - start new proof for a conjecture."
        , "i : conjecture number"
        ]
     , doNewProof )
@@ -310,7 +310,7 @@ cmdRet2Proof
   = ( "r"
     , "return to live proof"
     , unlines
-       [ "r i"
+       [ "r i - return to a live proof."
        , "i : optional live proof number"
        , "    - if more than one."
        ]

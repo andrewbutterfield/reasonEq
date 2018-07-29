@@ -178,7 +178,6 @@ writeTheories theories
     writeMap thrys writeTheory (tmap theories) ++
     [ sdagKEY ++ show (sdag theories)
     , thrysTRL ]
-  where lshow x = [show x]
 
 readTheories :: Monad m => [String] -> m (Theories,[String])
 readTheories [] = fail "readTheories: no text."
@@ -188,9 +187,6 @@ readTheories txts
        (sdg,rest3) <- readKey  sdagKEY read rest2
        rest4       <- readThis thrysTRL     rest3
        return (Theories tmp sdg, rest4)
-  where rdKey str = return $ read str -- read is important here to handle ""
-        rdDat [] = fail "readTheories: missing theory"
-        rdDat (txt:txts) = return (read txt, txts)
 
 readTheoryMap :: Monad m => [String] -> m (TheoryMap,[String])
 readTheoryMap = readKey tmapKEY read

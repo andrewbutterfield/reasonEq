@@ -80,7 +80,7 @@ Given a list of theories, we generate a list of match-contexts:
 buildMatchContext :: [Theory] -> [MatchContext]
 buildMatchContext [] = []
 buildMatchContext [thy] = [ (laws thy, [known thy]) ]
-buildMatchContext (thy:thys)
+buildMatchContext (thy:thys) -- thys not null
   = let mcs'@((_,vts'):_) = buildMatchContext thys
     in (laws thy, known thy : vts') : mcs'
 \end{code}
@@ -101,6 +101,8 @@ type Matches = [Match]
 \newpage
 \subsection{Live Proofs}
 
+\subsubsection{Live Proof Type}
+
 \begin{code}
 data LiveProof
   = LP {
@@ -116,12 +118,7 @@ data LiveProof
     , stepsSoFar :: [CalcStep]  -- calculation steps so far, most recent first
     }
   deriving (Eq, Show, Read)
-\end{code}
 
-
-Field modification boilerplate
-(a kind of poor man's lenses):
-\begin{code}
 conjThName__ f lp = lp{ conjThName = f $ conjThName lp}
 conjThName_ = conjThName__ . const
 conjName__ f lp = lp{ conjName = f $ conjName lp}
@@ -144,6 +141,23 @@ stepsSoFar__ f lp = lp{ stepsSoFar = f $ stepsSoFar lp}
 stepsSoFar_ = stepsSoFar__ . const
 \end{code}
 
+\subsubsection{Live Proof Write and Read}
+
+\begin{code}
+liveproof = "LIVE-PROOF"
+lprfHDR = "BEGIN "++liveproof ; lprfTRL ="END "++liveproof
+
+writeLiveProof :: LiveProof -> [String]
+writeLiveProof lp = [show lp]
+
+readLiveProof :: Monad m => [String] -> m (LiveProof,[String])
+readLiveProof (txt:txts) = return (read txt,txts)
+readLiveProof [] = fail "readLiveProof: no text."
+\end{code}
+
+
+\subsubsection{Live Proof Collection}
+
 We maintain a collection of \texttt{LiveProof}s
 as a map from theory and conjecture names to the corresponding live proof:
 \begin{code}
@@ -161,20 +175,16 @@ lprfsKEY = "LIVEPROOFS = "
 
 writeLiveProofs :: LiveProofs -> [String]
 writeLiveProofs liveProofs
-  = [ lprfsHDR
-    , lprfsKEY ++ show liveProofs
-    , lprfsTRL ]
+  = [ lprfsHDR ] ++
+    writeMap liveproofs writeLiveProof liveProofs ++
+    [ lprfsTRL ]
 
 readLiveProofs :: Monad m => [String] -> m (LiveProofs,[String])
-readLiveProofs [] = fail "readLiveProofs: no text."
 readLiveProofs txts
   = do rest1         <- readThis lprfsHDR txts
-       (lprfs,rest2) <- readLPMap rest1
+       (lprfs,rest2) <- readMap liveproofs rdKey readLiveProof rest1
        rest3         <- readThis lprfsTRL rest2
        return (lprfs,rest3)
-
-readLPMap :: Monad m => [String] -> m (LiveProofs,[String])
-readLPMap = readKey lprfsKEY read
 \end{code}
 
 

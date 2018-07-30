@@ -20,6 +20,7 @@ where
 
 import Data.Map (Map)
 import qualified Data.Map as M
+import Data.Maybe (fromJust)
 
 import Utilities
 import WriteRead
@@ -85,7 +86,8 @@ readREqState txts
        (thelogic,rest2) <- readTheLogic rest1
        (thrys,rest3) <- readTheories rest2
        (cThNm,rest4) <- readKey currThKEY id rest3
-       (lPrfs,rest5) <- readLiveProofs rest4
+       let thylist = fromJust $ getTheoryDeps cThNm thrys
+       (lPrfs,rest5) <- readLiveProofs thylist rest4
        readThis reqstateTLR rest5 -- ignore any junk after trailer.
        return $ REqState thelogic thrys cThNm lPrfs
 \end{code}

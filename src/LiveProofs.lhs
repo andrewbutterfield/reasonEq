@@ -99,9 +99,7 @@ type Matches = [Match]
 \end{code}
 
 \newpage
-\subsection{Live Proofs}
-
-\subsubsection{Live Proof Type}
+\subsection{Live Proof Type}
 
 \begin{code}
 data LiveProof
@@ -141,7 +139,8 @@ stepsSoFar__ f lp = lp{ stepsSoFar = f $ stepsSoFar lp}
 stepsSoFar_ = stepsSoFar__ . const
 \end{code}
 
-\subsubsection{Live-Proof Write and Read}
+\newpage
+\subsection{Live-Proof Write and Read}
 
 There are two components we don't explicitly save:
 \texttt{mtchCtxts},
@@ -171,18 +170,41 @@ writeLiveProof lp
     , conjKEY ++ show (conjecture lp)
     , cjscKEY ++ show (conjSC lp)
     , strtKey (strategy lp)
+    -- match contexts not saved
     , focusKEY ++ show (focus lp)
     , fpathKEY ++ show (fPath lp) ] ++
+    -- matches not saved
     writePerLine stepsKEY show (stepsSoFar lp) ++
     [ lprfTRL ]
 
-readLiveProof :: Monad m => [String] -> m (LiveProof,[String])
-readLiveProof (txt:txts) = return (read txt,txts)
-readLiveProof [] = fail "readLiveProof: no text."
+readLiveProof :: Monad m => [Theory] -> [String] -> m (LiveProof,[String])
+readLiveProof thylist txts
+  = do rest1          <- readThis lprfHDR          txts
+       (thnm, rest2)  <- readKey (lpthKEY "") id   rest1
+       (cjnm, rest3)  <- readKey (lpcjKEY "") id   rest2
+       (conj, rest4)  <- readKey conjKEY read      rest3
+       (sc,   rest5)  <- readKey cjscKEY read      rest4
+       (strt, rest6)  <- readKey (strtKey "") id   rest5
+       let mctxts = buildMatchContext thylist
+       (fcs,  rest7)  <- readKey focusKEY read     rest6
+       (fpth, rest8)  <- readKey fpathKEY read     rest7
+       (steps, rest9) <- readPerLine stepsKEY read rest8
+       rest10         <- readThis lprfTRL          rest9
+       return ( LP { conjThName = thnm
+                   , conjName = cjnm
+                   , conjecture = conj
+                   , conjSC = sc
+                   , strategy = strt
+                   , mtchCtxts = mctxts
+                   , focus = fcs
+                   , fPath = fpth
+                   , matches = []
+                   , stepsSoFar = steps }
+              , rest10 )
 \end{code}
 
 
-\subsubsection{Live Proof Collection}
+\subsection{Live Proof Collection}
 
 We maintain a collection of \texttt{LiveProof}s
 as a map from theory and conjecture names to the corresponding live proof:
@@ -205,10 +227,10 @@ writeLiveProofs liveProofs
     writeMap liveproofs writeLiveProof liveProofs ++
     [ lprfsTRL ]
 
-readLiveProofs :: Monad m => [String] -> m (LiveProofs,[String])
-readLiveProofs txts
+readLiveProofs :: Monad m => [Theory] -> [String] -> m (LiveProofs,[String])
+readLiveProofs thylist txts
   = do rest1         <- readThis lprfsHDR txts
-       (lprfs,rest2) <- readMap liveproofs rdKey readLiveProof rest1
+       (lprfs,rest2) <- readMap liveproofs rdKey (readLiveProof thylist) rest1
        rest3         <- readThis lprfsTRL rest2
        return (lprfs,rest3)
 \end{code}

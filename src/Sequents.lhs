@@ -9,7 +9,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Sequents
  ( Sequent(..)
  , availableStrategies, reduce, redboth, assume
- , Sequent'(..), SeqZip, dispSeqZip, dispSeqTermZip
+ , Sequent'(..)
+ , SeqZip, writeSeqZip, readSeqZip
+ , dispSeqZip, dispSeqTermZip
  , leftConjFocus, rightConjFocus, hypConjFocus, exitSeqZipper
  , upSZ, downSZ
  , seqGoLeft, seqGoRight, switchLeftRight
@@ -29,6 +31,7 @@ import qualified Data.Map as M
 import Data.Maybe
 
 import Utilities
+import WriteRead
 import Variables
 import AST
 import SideCond
@@ -355,17 +358,20 @@ We now refactor this by expanding the $A_i$ and merging
 \\&=&\textrm{Expand $A_1$}
 \\&& T^* \times SC \times N \times VD \times L^* \times \mathbf{2} \times t
    \quad+\quad
-   T^* \times SC \times N \times VD \times L^* \times N \times SC \times P \times L^* \times t^2
+   T^* \times SC \times N \times VD  \times L^* \times N
+       \times SC \times P \times L^* \times t^2
 \\&=&\textrm{Fold instance of  $T$}
 \\&& T^* \times SC \times T \times \mathbf{2} \times t
    \quad+\quad
-   T^* \times SC \times N \times VD \times L^* \times N \times SC \times P \times L^* \times t^2
+   T^* \times SC \times N \times VD  \times L^* \times N
+       \times SC \times P \times L^* \times t^2
 \\&=&\textrm{Common factor}
 \\&& T^* \times SC \times
    \left(\quad
           T \times \mathbf{2} \times t
           \quad+\quad
-          N \times VD \times L^* \times N \times SC \times P \times L^* \times t^2
+          N \times VD \times L^* \times N
+            \times SC \times P   \times L^* \times t^2
    \quad\right)
 \end{eqnarray*}
 
@@ -383,6 +389,36 @@ data Sequent'
     , laws'     :: Laws'
     }
   deriving (Eq,Show,Read)
+\end{code}
+
+Writing and Reading Sequent derivatives.
+\begin{code}
+sequent' = "SEQUENT'"
+seq'HDR = "BEGIN "++sequent' ; seq'TRL = "END "++sequent'
+sc0KEY = "SIDECOND = "
+laws'KEY = "LAWS' = "
+
+writeSequent' :: Sequent' -> [String]
+writeSequent' seq'
+  = [ seq'HDR
+    -- we don't save theories here
+    , sc0KEY ++ show (sc0 seq')
+    , laws'KEY ++ show (laws' seq')
+    , seq'TRL ]
+
+readSequent' :: Monad m => [Theory] -> [String] -> m (Sequent',[String])
+readSequent' thylist txts
+  = do rest1 <- readThis seq'HDR txts
+       -- theories are supplied, reconstructed in REqState read.
+       (sc,rest2) <- readKey sc0KEY read rest1
+       (lw',rest3) <- readKey laws'KEY read rest2
+       rest4 <- readThis seq'TRL rest3
+       return ( Sequent' {
+                  ante0 = thylist
+                , sc0 = sc
+                , laws' = lw'
+                }
+              , rest4 )
 \end{code}
 
 Now, the two variations
@@ -418,11 +454,33 @@ data Laws'
 data LeftRight = Lft | Rght deriving (Eq,Show,Read)
 \end{code}
 
+
 Given that $S$ is not recursive, then the zipper for $S$
 will have a term-zipper as its ``focus'', and a single instance
 of $S'$ to allow the one possible upward ``step''.
 \begin{code}
 type SeqZip = (TermZip, Sequent')
+
+seqzip = "SEQZIP"
+szHDR = "BEGIN "++seqzip ; szTRL = "END " ++ seqzip
+
+tzKEY = "TERMZIP = "
+seq'KEY = "SEQUENT' = "
+
+writeSeqZip :: SeqZip -> [String]
+writeSeqZip (tz,seq')
+  = [ szHDR
+    , tzKEY ++ show tz ] ++
+    writeSequent' seq' ++
+    [ szTRL ]
+
+readSeqZip :: Monad m => [Theory] -> [String] -> m (SeqZip,[String])
+readSeqZip thylist txts
+  = do rest1 <- readThis szHDR txts
+       (tz,rest2) <- readKey tzKEY read rest1
+       (seq',rest3) <- readSequent' thylist rest2
+       rest4 <- readThis szTRL rest3
+       return ((tz,seq'),rest4)
 \end{code}
 
 \newpage

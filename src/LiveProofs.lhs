@@ -169,10 +169,10 @@ writeLiveProof lp
     , lpcjKEY (conjName lp)
     , conjKEY ++ show (conjecture lp)
     , cjscKEY ++ show (conjSC lp)
-    , strtKey (strategy lp)
+    , strtKey (strategy lp) ] ++
     -- match contexts not saved
-    , focusKEY ++ show (focus lp)
-    , fpathKEY ++ show (fPath lp) ] ++
+    writeSeqZip (focus lp) ++
+    [ fpathKEY ++ show (fPath lp) ] ++
     -- matches not saved
     writePerLine stepsKEY show (stepsSoFar lp) ++
     [ lprfTRL ]
@@ -186,7 +186,7 @@ readLiveProof thylist txts
        (sc,   rest5)  <- readKey cjscKEY read      rest4
        (strt, rest6)  <- readKey (strtKey "") id   rest5
        let mctxts = buildMatchContext thylist
-       (fcs,  rest7)  <- readKey focusKEY read     rest6
+       (fcs,  rest7)  <- readSeqZip thylist        rest6
        (fpth, rest8)  <- readKey fpathKEY read     rest7
        (steps, rest9) <- readPerLine stepsKEY read rest8
        rest10         <- readThis lprfTRL          rest9

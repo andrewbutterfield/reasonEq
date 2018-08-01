@@ -34,20 +34,22 @@ import LiveProofs
 
 \subsection{Prover State Type}
 
-Here we simply aggregate the semantic equational-reasoning prover state.
+Here we simply aggregate the semantic equational-reasoning prover state
 
 \begin{code}
 data REqState
  = REqState {
-      logic       ::  TheLogic
+      projectDir  ::  FilePath -- where the rest below lives
+    , logic       ::  TheLogic
     , theories    ::  Theories
     , currTheory  ::  String
     , liveProofs  ::  LiveProofs
     }
 
+projectDir__ f r = r{projectDir = f $ projectDir r}
+projectDir_      = projectDir__ . const
 logic__    f r = r{logic    = f $ logic r}    ; logic_    = logic__    . const
 theories__ f r = r{theories = f $ theories r} ; theories_ = theories__ . const
-
 currTheory__ f r = r{currTheory = f $ currTheory r}
 currTheory_      = currTheory__ . const
 liveProofs__ f r = r{liveProofs = f $ liveProofs r}
@@ -89,5 +91,9 @@ readREqState txts
        let thylist = fromJust $ getTheoryDeps cThNm thrys
        (lPrfs,rest5) <- readLiveProofs thylist rest4
        readThis reqstateTLR rest5 -- ignore any junk after trailer.
-       return $ REqState thelogic thrys cThNm lPrfs
+       return $ REqState { projectDir = ""
+                         , logic = thelogic
+                         , theories = thrys
+                         , currTheory = cThNm
+                         , liveProofs = lPrfs }
 \end{code}

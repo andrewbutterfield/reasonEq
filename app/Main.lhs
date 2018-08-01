@@ -36,11 +36,12 @@ import Propositions
 import Instantiate
 import TestRendering
 import REPL
+import Dev
 \end{code}
 
 \begin{code}
 name = "reasonEq"
-version = "0.6.1.0"
+version = "0.6.2.0"
 \end{code}
 
 \newpage
@@ -105,8 +106,11 @@ defFlags = CMDFlags { config  = Nothing
 parseArgs args = parse defFlags args where
   parse flags [] = flags
   parse flags (f:p:ss)
-   | f == configFlag   =  parse flags{ config  = Just p } ss
-   | f == projectFlag  =  parse flags{ project = Just p } ss
+   | f == configFlag   =  parse flags{ config  = checkfp p } ss
+   | f == projectFlag  =  parse flags{ project = checkfp p } ss
+   where checkfp fp
+           | isValid fp  =  Just fp
+           | otherwise   =  Nothing
   parse flags (f:ss)
    | f == guiFlag      =  parse flags{ usegui  = True }   ss
    | f == userFlag     =  parse flags{ user    = True }   ss
@@ -117,65 +121,53 @@ parseArgs args = parse defFlags args where
 \begin{code}
 main :: IO ()
 main
-  = do persistentTest
-       args <- getArgs
-       if "-g" `elem` args
+  = do args <- getArgs
+       let flags = parseArgs args
+       if usegui flags
        then do putStrLn "starting GUI..."
-               gui (args \\ ["-g"])
+               gui flags
        else do putStrLn "starting REPL..."
-               repl args
+               repl flags
 \end{code}
+
+
 
 \newpage
 \subsection{Initialising State}
 
-At present, we assume development mode by default,
-which currently initialises state based on the contents of
-the hard-coded ``Propositional'' theory.
-The normal ``user'' mode is not of much use right now.
+At present, we assume development mode by default.
+
+The normal ``user'' mode is still not of much use,
+but there will soon be a way to use test it.
 \begin{code}
-initState :: [String] -> IO REqState
+initState :: CMDFlags -> IO REqState
 
-initState args
-  = if "-u" `elem` args
-    then do putStrLn "Running in normal user mode."
-            return $ REqState thePropositionalLogic noTheories "" M.empty
+initState flags
+  = if user flags
+    then case project flags of
+           Nothing -> do putStrLn "Running user mode, default initial state."
+                         return reqstate0
+           Just fp -> do putStrLn "Running user mode, loading project state."
+                         readState fp
     else do putStrLn "Running in development mode."
-            return $ REqState thePropositionalLogic
-                              testTheories
-                              (thName testTheory)
-                              M.empty
+            case project flags of
+              Nothing -> return $ devInitState
+              -- we don't load from fp in dev. mode
+              -- a 'load' as first command will do that
+              Just fp -> return $ devInitState{ projectDir = fp }
 
-testTheories
-  =  fromJust $ addTheory testTheory $
-     fromJust $ addTheory theoryPropositions noTheories
-
-a = fromJust $ pVar $ Vbl (fromJust $ ident "A") PredV Static
-b = fromJust $ pVar $ Vbl (fromJust $ ident "B") PredV Static
-c = fromJust $ pVar $ Vbl (fromJust $ ident "C") PredV Static
-
-cjHTest
- = ( "h-test"
-   , ( a /\ (b /\ c) ==> (c /\ a) /\ (mkEquivs [b,b,b])
-     , scTrue ) )
-
-testName = "TestFortyTwo"
-
-testTheory
-  = Theory { thName  =  testName
-           , thDeps  =  [ thName theoryPropositions ]
-           , known   =  newVarTable
-           , laws    =  []
-           , proofs  =  []
-           , conjs   =  [ cjHTest ]
-           }
+reqstate0 = REqState { projectDir = ""
+                     , logic = thePropositionalLogic
+                     , theories = noTheories
+                     , currTheory = ""
+                     , liveProofs = M.empty }
 \end{code}
 
 \newpage
 \subsection{GUI Top-Level}
 \begin{code}
-gui :: [String] -> IO ()
-gui args = putStrLn $ unlines
+gui :: CMDFlags -> IO ()
+gui flags = putStrLn $ unlines
          [ "Welcome to "++name++" "++version
          , "GUI N.Y.I.!"
          , "Goodbye" ]
@@ -235,9 +227,9 @@ reqConfig
 \end{code}
 
 \begin{code}
-repl :: [String] -> IO ()
-repl args
-  = do reqs0 <- initState args
+repl :: CMDFlags -> IO ()
+repl flags
+  = do reqs0 <- initState flags
        runREPL reqWelcome reqConfig reqs0
        return ()
 
@@ -256,7 +248,8 @@ cmdShow
   = ( "sh"
     , "show parts of the prover state"
     , unlines
-        [ "sh "++shLogic++" -- show current logic"
+        [ "sh "++shProject++" -- show current project"
+        , "sh "++shLogic++" -- show current logic"
         , "sh "++shTheories++" -- show theories"
         , "sh "++shCurrThry++" -- show 'current' theory"
         , "sh "++shConj++" -- show current conjectures"
@@ -265,6 +258,7 @@ cmdShow
         ]
     , showState )
 
+shProject = "f"
 shLogic = "="
 shTheories = "t"
 shCurrThry = "T"
@@ -274,6 +268,7 @@ shProofs = "P"
 
 -- these are not robust enough - need to check if component is present.
 showState [cmd] reqs
+ | cmd == shProject   =  doshow reqs $ projectDir reqs
  | cmd == shLogic     =  doshow reqs $ observeLogic reqs
  | cmd == shTheories  =  doshow reqs $ observeTheories reqs
  | cmd == shCurrThry  =  doshow reqs $ observeCurrTheory reqs
@@ -290,39 +285,33 @@ doshow reqs str  =  putStrLn str >> return reqs
 
 
 \begin{code}
-devProjectDir = "devproj"
-projectRoot   = "project"
-projectExt    = "req"
-devFP = devProjectDir ++ pathSeparator : projectRoot <.> projectExt
-
 cmdSave, cmdLoad :: REqCmdDescr
 cmdSave
   = ( "save"
     , "save prover state to file"
     , unlines
-        [ "save -- save prover state to "++devFP]
+        [ "save -- save prover state to current project" ]
     , saveState )
 cmdLoad
   = ( "load"
     , "load prover state from file"
     , unlines
-        [ "load -- load prover state from "++devFP]
+        [ "load -- load prover state from current project" ]
     , loadState )
 
 saveState [] reqs
-  = do writeFile devFP $ unlines $ writeREqState reqs
-       putStrLn ("REQ-STATE written to '"++devFP++"'.")
+  = do writeState reqs
+       putStrLn ("REQ-STATE written to '"++projectDir reqs++"'.")
        return reqs
 saveState _ reqs  =  doshow reqs "unknown 'save' option."
 
 loadState [] reqs
-  = do txt <- readFile devFP
-       reqs' <- readREqState $ lines txt
-       putStrLn ("REQ-STATE read from '"++devFP++"'.")
+  = do let dirfp = projectDir reqs
+       reqs' <- readState dirfp
+       putStrLn ("REQ-STATE read from '"++dirfp++"'.")
        return reqs'
 loadState _ reqs  =  doshow reqs "unknown 'load' option."
 \end{code}
-
 
 \newpage
 \subsection{Set Command}

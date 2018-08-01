@@ -1,0 +1,76 @@
+BEGIN REQSTATE
+BEGIN THELOGIC
+TRUE = V P (VR (Id "true",VP,WS))
+FALSE = V P (VR (Id "false",VP,WS))
+EQV = Id "\8801"
+IMP = Id "\10233 "
+AND = Id "\8743"
+END THELOGIC
+BEGIN THEORIES
+BEGIN MAP THEORIES
+"PropLogic"
+BEGIN THEORY PropLogic
+DEPS = []
+KNOWN = VD (fromList [(VR (Id "false",VP,WS),KC (C P (Id "\172") [V P (VR (Id "true",VP,WS))])),(VR (Id "true",VP,WS),KV (TG (Id "\120121")))],fromList [],fromList [])
+BEGIN LIST LAWS
+(("true",(V P (VR (Id "true",VP,WS)),SC (fromList []) (fromList []))),Axiom)
+(("\8801_refl",(C P (Id "\8801") [V P (VR (Id "P",VP,WS)),V P (VR (Id "P",VP,WS))],SC (fromList []) (fromList []))),Axiom)
+(("\8801_assoc",(C P (Id "\8801") [C P (Id "\8801") [C P (Id "\8801") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],V P (VR (Id "R",VP,WS))],C P (Id "\8801") [V P (VR (Id "P",VP,WS)),C P (Id "\8801") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "R",VP,WS))]]],SC (fromList []) (fromList []))),Axiom)
+(("\8801_symm",(C P (Id "\8801") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS)),V P (VR (Id "Q",VP,WS)),V P (VR (Id "P",VP,WS))],SC (fromList []) (fromList []))),Axiom)
+(("false-def",(C P (Id "\8801") [V P (VR (Id "false",VP,WS)),C P (Id "\172") [V P (VR (Id "true",VP,WS))]],SC (fromList []) (fromList []))),Axiom)
+(("\172_\8801_distr",(C P (Id "\8801") [C P (Id "\172") [C P (Id "\8801") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))]],C P (Id "\8801") [C P (Id "\172") [V P (VR (Id "P",VP,WS))],V P (VR (Id "Q",VP,WS))]],SC (fromList []) (fromList []))),Axiom)
+(("\8744_symm",(C P (Id "\8801") [C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],C P (Id "\8744") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "P",VP,WS))]],SC (fromList []) (fromList []))),Axiom)
+(("\8744_assoc",(C P (Id "\8801") [C P (Id "\8744") [C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],V P (VR (Id "R",VP,WS))],C P (Id "\8744") [V P (VR (Id "P",VP,WS)),C P (Id "\8744") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "R",VP,WS))]]],SC (fromList []) (fromList []))),Axiom)
+(("\8744_idem",(C P (Id "\8801") [C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "P",VP,WS))],V P (VR (Id "P",VP,WS))],SC (fromList []) (fromList []))),Axiom)
+(("\8744_\8801_distr",(C P (Id "\8801") [C P (Id "\8744") [V P (VR (Id "P",VP,WS)),C P (Id "\8801") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "R",VP,WS))]],C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "R",VP,WS))]],SC (fromList []) (fromList []))),Axiom)
+(("excl-middle",(C P (Id "\8744") [V P (VR (Id "P",VP,WS)),C P (Id "\172") [V P (VR (Id "P",VP,WS))]],SC (fromList []) (fromList []))),Axiom)
+(("golden-rule",(C P (Id "\8801") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS)),C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))]],SC (fromList []) (fromList []))),Axiom)
+(("\10233 _def",(C P (Id "\8801") [C P (Id "\10233 ") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],V P (VR (Id "Q",VP,WS))],SC (fromList []) (fromList []))),Axiom)
+END LIST LAWS
+BEGIN LIST PROOFS
+END LIST PROOFS
+BEGIN LIST CONJECTURES
+("\8801_id",(C P (Id "\8801") [C P (Id "\8801") [V P (VR (Id "true",VP,WS)),V P (VR (Id "Q",VP,WS))],V P (VR (Id "Q",VP,WS))],SC (fromList []) (fromList [])))
+("\8744_zero",(C P (Id "\8801") [C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "true",VP,WS))],V P (VR (Id "true",VP,WS))],SC (fromList []) (fromList [])))
+("weaken_\10233 ",(C P (Id "\10233 ") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],V P (VR (Id "P",VP,WS))],SC (fromList []) (fromList [])))
+END LIST CONJECTURES
+END THEORY PropLogic
+"TestFortyTwo"
+BEGIN THEORY TestFortyTwo
+DEPS = ["PropLogic"]
+KNOWN = VD (fromList [],fromList [],fromList [])
+BEGIN LIST LAWS
+END LIST LAWS
+BEGIN LIST PROOFS
+END LIST PROOFS
+BEGIN LIST CONJECTURES
+("h-test",(C P (Id "\10233 ") [C P (Id "\8743") [V P (VR (Id "A",VP,WS)),C P (Id "\8743") [V P (VR (Id "B",VP,WS)),V P (VR (Id "C",VP,WS))]],C P (Id "\8743") [C P (Id "\8743") [V P (VR (Id "C",VP,WS)),V P (VR (Id "A",VP,WS))],C P (Id "\8801") [V P (VR (Id "B",VP,WS)),V P (VR (Id "B",VP,WS)),V P (VR (Id "B",VP,WS))]]],SC (fromList []) (fromList [])))
+END LIST CONJECTURES
+END THEORY TestFortyTwo
+END MAP THEORIES
+SDAG = [[("TestFortyTwo",["PropLogic"])],[("PropLogic",[])]]
+END THEORIES
+CURRTHEORY = PropLogic
+BEGIN LIVE-PROOFS
+BEGIN MAP LIVE-PROOFS
+("PropLogic","\8801_id")
+BEGIN LIVE-PROOF
+TH-NAME: PropLogic
+CJ-NAME: ≡_id
+CONJ = (C P (Id "\8801") [C P (Id "\8801") [V P (VR (Id "true",VP,WS)),V P (VR (Id "Q",VP,WS))],V P (VR (Id "Q",VP,WS))],SC (fromList []) (fromList []))
+SIDE = SC (fromList []) (fromList [])
+STRAT reduce
+BEGIN SEQZIP
+TERMZIP = (C P (Id "\8801") [C P (Id "\8801") [V P (VR (Id "true",VP,WS)),V P (VR (Id "Q",VP,WS))],V P (VR (Id "Q",VP,WS))],[])
+BEGIN SEQUENT'
+SIDECOND = SC (fromList []) (fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.\8801_id", thDeps = [], known = VD (fromList [(VR (Id "Q",VP,WS),KV T)],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = V P (VR (Id "true",VP,WS))}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+END LIST STEPS
+END LIVE-PROOF
+END MAP LIVE-PROOFS
+END LIVE-PROOFS
+END REQSTATE

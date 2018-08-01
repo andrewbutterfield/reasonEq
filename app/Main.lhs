@@ -9,6 +9,7 @@ module Main where
 
 import System.Environment
 import System.IO
+import System.FilePath
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Set (Set)
@@ -21,6 +22,8 @@ import NiceSymbols hiding (help)
 
 import Utilities
 import StratifiedDAG
+import Persistence
+
 import LexBase
 import Variables
 import AST
@@ -114,7 +117,8 @@ parseArgs args = parse defFlags args where
 \begin{code}
 main :: IO ()
 main
-  = do args <- getArgs
+  = do persistentTest
+       args <- getArgs
        if "-g" `elem` args
        then do putStrLn "starting GUI..."
                gui (args \\ ["-g"])
@@ -284,43 +288,39 @@ doshow reqs str  =  putStrLn str >> return reqs
 \newpage
 \subsection{State Save and Restore}
 
+
 \begin{code}
+devProjectDir = "devproj"
+projectRoot   = "project"
+projectExt    = "req"
+devFP = devProjectDir ++ pathSeparator : projectRoot <.> projectExt
+
 cmdSave, cmdLoad :: REqCmdDescr
 cmdSave
   = ( "save"
     , "save prover state to file"
     , unlines
-        [ "save 'name' -- save prover state to 'name'"]
+        [ "save -- save prover state to "++devFP]
     , saveState )
 cmdLoad
   = ( "load"
     , "load prover state from file"
     , unlines
-        [ "load 'name' -- load prover state from 'name'"]
+        [ "load -- load prover state from "++devFP]
     , loadState )
 
-
-saveState [arg] reqs
-  = do writeFile ("proto/"++arg) $ unlines $ writeREqState reqs
-       putStrLn ("REQ-STATE written to 'proto/"++arg++"'.")
+saveState [] reqs
+  = do writeFile devFP $ unlines $ writeREqState reqs
+       putStrLn ("REQ-STATE written to '"++devFP++"'.")
        return reqs
 saveState _ reqs  =  doshow reqs "unknown 'save' option."
 
-
-loadState [arg] reqs
-  = do txt <- readFile ("proto/"++arg)
+loadState [] reqs
+  = do txt <- readFile devFP
        reqs' <- readREqState $ lines txt
-       putStrLn ("REQ-STATE read from 'proto/"++arg++"'.")
+       putStrLn ("REQ-STATE read from '"++devFP++"'.")
        return reqs'
 loadState _ reqs  =  doshow reqs "unknown 'load' option."
-
-
---  | cmd == setCurrThry
---     =  case setCurrentTheory thnm reqs of
---          Nothing     ->  doshow reqs  ("No such theory: '"    ++ thnm ++ "'")
---          Just reqs'  ->  doshow reqs' ("Current Theory now '" ++ thnm ++ "'")
---  where thnm = args2str rest
--- setState _ reqs      =  doshow reqs "unknown 'set' option."
 \end{code}
 
 

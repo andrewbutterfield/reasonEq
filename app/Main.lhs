@@ -40,6 +40,77 @@ name = "reasonEq"
 version = "0.6.1.0"
 \end{code}
 
+\newpage
+\subsection{\texttt{main}}
+
+The program takes command-line arguments
+that tailor its behaviour.
+For now, we consider the following behavioural aspects:
+\begin{description}
+  \item [UI]
+    we propose to support both a text-based REPL
+    and a graphical user-interface. The REPL is the default,
+    while the GUI can be invoked with the \texttt{-g} argument (anywhere).
+  \item [FS]
+    we allow the specification of where in the filesystem the prover data files
+    are kept.
+    We support a project-based approach, where a project is simply
+    a folder (``workspace'') containing all relevant files.
+    We can specify the path to same using the \texttt{-p} command-line option.
+    We also have the notion of a single seperate folder with global data
+    that gives the locations of all known project folders,
+    plus any other global configuration data.
+    This can be specified with the \texttt{-c} flag.
+    We also provide a mechanism for locating these if no specific command-line
+    arguments are supplied.
+    We will also support getting such filepath and config information
+    from a \texttt{.req} folder if present at the current working directory
+    from which the program was invoked.
+    In particular we use a design that allows the program itself
+    to setup global configuration data, in an OS-dependent manner.
+  \item [Dev]
+    we also allow two modes when running: ``User'' and ``Dev''.
+    In User mode all prover state is loaded from data files,
+    as specified by FS above.
+    In Dev mode, some prover state may be pre-installed.
+    Dev mode is the default at present,
+    while User mode is invoked by the first argument being \texttt{-u}.
+\end{description}
+
+So we can summarise flags as follows:
+\begin{code}
+configFlag  = "-c"    -- <path>   path to prover configuration files
+guiFlag     = "-g"    --          use GUI instead of REPL
+projectFlag = "-p"    -- <path>   path to prover data files
+userFlag    = "-u"    --          run in 'User' mode
+cwdConfig   = ".req"  -- local config folder
+\end{code}
+
+We shall define a record to record flag data,
+and a corresponding parser:
+\begin{code}
+data CMDFlags = CMDFlags { config  :: Maybe FilePath
+                         , usegui  :: Bool
+                         , project :: Maybe FilePath
+                         , user    :: Bool}
+
+defFlags = CMDFlags { config  = Nothing
+                    , usegui  = False
+                    , project = Nothing
+                    , user    = False }
+
+parseArgs args = parse defFlags args where
+  parse flags [] = flags
+  parse flags (f:p:ss)
+   | f == configFlag   =  parse flags{ config  = Just p } ss
+   | f == projectFlag  =  parse flags{ project = Just p } ss
+  parse flags (f:ss)
+   | f == guiFlag      =  parse flags{ usegui  = True }   ss
+   | f == userFlag     =  parse flags{ user    = True }   ss
+   -- ignore anything else
+   | otherwise         =  parse flags                     ss
+\end{code}
+
 \begin{code}
 main :: IO ()
 main
@@ -61,17 +132,15 @@ The normal ``user'' mode is not of much use right now.
 \begin{code}
 initState :: [String] -> IO REqState
 
-initState ("user":_)
--- need to restore saved persistent state on startup
-  = do putStrLn "Running in normal user mode."
-       return $ REqState thePropositionalLogic noTheories "" M.empty
-
-initState _
-  = do putStrLn "Running in development mode."
-       return $ REqState thePropositionalLogic
-                         testTheories
-                         (thName testTheory)
-                         M.empty
+initState args
+  = if "-u" `elem` args
+    then do putStrLn "Running in normal user mode."
+            return $ REqState thePropositionalLogic noTheories "" M.empty
+    else do putStrLn "Running in development mode."
+            return $ REqState thePropositionalLogic
+                              testTheories
+                              (thName testTheory)
+                              M.empty
 
 testTheories
   =  fromJust $ addTheory testTheory $

@@ -23,7 +23,8 @@ import REqState
 projectRoot   = "project"
 projectExt    = "req"
 projectFile   =  projectRoot <.> projectExt
-pfile reqs = projectDir reqs ++ pathSeparator : projectFile
+projectPath projDir = projDir ++ pathSeparator : projectFile
+pfile reqs = projectPath $ projectDir reqs
 \end{code}
 
 \subsection{Writing \reasonEq\ State}
@@ -39,8 +40,8 @@ writeState reqs
 
 \begin{code}
 readState :: FilePath -> IO REqState
-readState fp
-  = do txt <- readFile fp
+readState projfp
+  = do txt  <- readFile $ projectPath projfp
        reqs <- readREqState $ lines txt
        return reqs{projectDir = projectDir reqs}
 \end{code}

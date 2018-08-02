@@ -15,9 +15,10 @@ module Propositions (
 , lor, mkOr, mkOrs, (\/)
 , land, mkAnd, mkAnds, (/\)
 , implies, mkImplies, (==>)
-, thePropositionalAxioms
+, propSignature
 , propKnown
 , propAxioms
+, propAxiomName
 , propAxiomTheory
 ) where
 
@@ -124,10 +125,10 @@ infix 4 /\ ; (/\) = mkAnd
 lnot = fromJust $ ident _lnot ; mkNot p = PCons lnot [p]
 \end{code}
 
-\subsubsection{The Propositional Logic}
+\subsubsection{The Propositional Signature}
 \begin{code}
-thePropositionalAxioms = TheLogic trueP falseP equiv implies land
-flattenEquiv = flattenTheEquiv thePropositionalAxioms
+propSignature = LogicSig trueP falseP equiv implies land
+flattenEquiv = flattenTheEquiv propSignature
 \end{code}
 
 
@@ -327,9 +328,11 @@ propAxioms
 \subsection{The Propositional Theory}
 
 \begin{code}
+propAxiomName :: String
+propAxiomName = "PropAxioms"
 propAxiomTheory :: Theory
 propAxiomTheory
-  =  Theory { thName  =  "PropAxioms"
+  =  Theory { thName  =  propAxiomName
             , thDeps  =  []
             , known   =  propKnown
             , laws    =  propAxioms

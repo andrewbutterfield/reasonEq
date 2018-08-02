@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Laws
- ( TheLogic(..), flattenTheEquiv, flattenTheImp, flattenTheAnd
+ ( LogicSig(..), flattenTheEquiv, flattenTheImp, flattenTheAnd
  , Assertion, NmdAssertion, Provenance(..), Law
  , labelAsAxiom, labelAsProof
  , writeTheLogic, readTheLogic
@@ -35,8 +35,8 @@ we have to identify which constructs play the roles
 of truth (and falsity!), logical equivalence, implication and conjunctions.
 $$ \true \qquad \false \qquad \equiv \qquad \implies \qquad \land $$
 \begin{code}
-data TheLogic
-  = TheLogic
+data LogicSig
+  = LogicSig
      { theTrue :: Term
      , theFalse :: Term
      , theEqv  :: Identifier
@@ -48,8 +48,8 @@ data TheLogic
 \subsection{Writing and Reading}
 
 \begin{code}
-thelogic = "THELOGIC"
-logicHDR = "BEGIN "++thelogic ; logicTRL ="END "++thelogic
+signature = "SIGNATURE"
+logicHDR = "BEGIN "++signature ; logicTRL ="END "++signature
 
 trueKEY = "TRUE = "
 falseKEY = "FALSE = "
@@ -57,17 +57,17 @@ eqvKEY = "EQV = "
 impKEY = "IMP = "
 andKEY = "AND = "
 
-writeTheLogic :: TheLogic -> [String]
-writeTheLogic theLogic
+writeTheLogic :: LogicSig -> [String]
+writeTheLogic theSig
   = [ logicHDR
-    , trueKEY  ++ show (theTrue theLogic)
-    , falseKEY ++ show (theFalse theLogic)
-    , eqvKEY   ++ show (theEqv theLogic)
-    , impKEY   ++ show (theImp theLogic)
-    , andKEY   ++ show (theAnd theLogic)
+    , trueKEY  ++ show (theTrue theSig)
+    , falseKEY ++ show (theFalse theSig)
+    , eqvKEY   ++ show (theEqv theSig)
+    , impKEY   ++ show (theImp theSig)
+    , andKEY   ++ show (theAnd theSig)
     , logicTRL ]
 
-readTheLogic :: Monad m => [String] -> m (TheLogic,[String])
+readTheLogic :: Monad m => [String] -> m (LogicSig,[String])
 readTheLogic [] = fail "readTheLogic: no text."
 readTheLogic txts
   = do rest1         <- readThis logicHDR txts
@@ -77,7 +77,7 @@ readTheLogic txts
        (imp,rest5)   <- readKey  impKEY readId rest4
        (and,rest6)   <- readKey  andKEY readId rest5
        rest7         <- readThis logicTRL rest6
-       return ( TheLogic{
+       return ( LogicSig{
                   theTrue = true
                 , theFalse = false
                 , theEqv = eqv
@@ -106,29 +106,29 @@ assocFlatten i (Cons tk j ts)
       | i == j  = concat $ map (assocFlatten i) ts
 assocFlatten _ t = [t]
 
-flattenTheEquiv :: TheLogic -> Term -> Term
-flattenTheEquiv theLogic t
+flattenTheEquiv :: LogicSig -> Term -> Term
+flattenTheEquiv theSig t
   = Cons (termkind t) eqv $ assocFlatten eqv t
-  where eqv = theEqv theLogic
+  where eqv = theEqv theSig
 
-flattenTheAnd :: TheLogic -> Term -> Term
-flattenTheAnd theLogic t
+flattenTheAnd :: LogicSig -> Term -> Term
+flattenTheAnd theSig t
   = Cons (termkind t) and $ assocFlatten and t
-  where and = theAnd theLogic
+  where and = theAnd theSig
 \end{code}
 
 For implication, we need a slighty different approach,
 as it is only right-associative,
 and we have the trading rule involving conjunction.
 \begin{code}
-flattenTheImp :: TheLogic -> Term -> Term
-flattenTheImp theLogic t
+flattenTheImp :: LogicSig -> Term -> Term
+flattenTheImp theSig t
   | null fas   =  t
   | otherwise  =  Cons tk imp [Cons tk and fas,tc]
   where
-    imp = theImp theLogic
+    imp = theImp theSig
     (tas,tc) = collectAnte imp t
-    and = theAnd theLogic
+    and = theAnd theSig
     fas = concat $ map (assocFlatten and) tas
     tk = termkind t
 
@@ -173,14 +173,14 @@ labelAsProof nasn cnm =  (nasn, Proven cnm)
 
 \textbf{This should all be done via proper generic rendering code}
 
-Showing logic:
+Showing signature:
 \begin{code}
-showLogic logic
-  = unlines' [ "Truth:       " ++ trTerm 0 (theTrue  logic)
-             , "Falsity:     " ++ trTerm 0 (theFalse logic)
-             , "Equivalence:   " ++ trId   (theEqv   logic)
-             , "Implication:   " ++ trId   (theImp   logic)
-             , "Conjunction:   " ++ trId   (theAnd   logic) ]
+showLogic logicsig
+  = unlines' [ "Truth:       " ++ trTerm 0 (theTrue  logicsig)
+             , "Falsity:     " ++ trTerm 0 (theFalse logicsig)
+             , "Equivalence:   " ++ trId   (theEqv   logicsig)
+             , "Implication:   " ++ trId   (theImp   logicsig)
+             , "Conjunction:   " ++ trId   (theAnd   logicsig) ]
 \end{code}
 
 

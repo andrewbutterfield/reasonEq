@@ -40,7 +40,7 @@ Here we simply aggregate the semantic equational-reasoning prover state
 data REqState
  = REqState {
       projectDir  ::  FilePath -- where the rest below lives
-    , logic       ::  TheLogic
+    , logicsig       ::  LogicSig
     , theories    ::  Theories
     , currTheory  ::  String
     , liveProofs  ::  LiveProofs
@@ -48,7 +48,7 @@ data REqState
 
 projectDir__ f r = r{projectDir = f $ projectDir r}
 projectDir_      = projectDir__ . const
-logic__    f r = r{logic    = f $ logic r}    ; logic_    = logic__    . const
+logic__    f r = r{logicsig    = f $ logicsig r}    ; logic_    = logic__    . const
 theories__ f r = r{theories = f $ theories r} ; theories_ = theories__ . const
 currTheory__ f r = r{currTheory = f $ currTheory r}
 currTheory_      = currTheory__ . const
@@ -71,7 +71,7 @@ currThKEY = "CURRTHEORY = "
 writeREqState :: REqState -> [String]
 writeREqState reqs
   = [ reqstateHDR ] ++
-    writeTheLogic (logic reqs) ++
+    writeTheLogic (logicsig reqs) ++
     writeTheories (theories reqs) ++
     [currThKEY ++ (currTheory reqs)] ++
     writeLiveProofs (liveProofs reqs) ++
@@ -92,7 +92,7 @@ readREqState txts
        (lPrfs,rest5) <- readLiveProofs thylist rest4
        readThis reqstateTLR rest5 -- ignore any junk after trailer.
        return $ REqState { projectDir = ""
-                         , logic = thelogic
+                         , logicsig = thelogic
                          , theories = thrys
                          , currTheory = cThNm
                          , liveProofs = lPrfs }

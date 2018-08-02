@@ -157,7 +157,7 @@ initState flags
               Just fp -> return $ devInitState{ projectDir = fp }
 
 reqstate0 = REqState { projectDir = ""
-                     , logic = thePropositionalAxioms
+                     , logicsig = propSignature
                      , theories = noTheories
                      , currTheory = ""
                      , liveProofs = M.empty }
@@ -249,7 +249,7 @@ cmdShow
     , "show parts of the prover state"
     , unlines
         [ "sh "++shProject++" -- show current project"
-        , "sh "++shLogic++" -- show current logic"
+        , "sh "++shSig++" -- show logic signature"
         , "sh "++shTheories++" -- show theories"
         , "sh "++shCurrThry++" -- show 'current' theory"
         , "sh "++shConj++" -- show current conjectures"
@@ -259,7 +259,7 @@ cmdShow
     , showState )
 
 shProject = "f"
-shLogic = "="
+shSig = "s"
 shTheories = "t"
 shCurrThry = "T"
 shConj = "c"
@@ -269,7 +269,7 @@ shProofs = "P"
 -- these are not robust enough - need to check if component is present.
 showState [cmd] reqs
  | cmd == shProject   =  doshow reqs $ projectDir reqs
- | cmd == shLogic     =  doshow reqs $ observeLogic reqs
+ | cmd == shSig       =  doshow reqs $ observeSig reqs
  | cmd == shTheories  =  doshow reqs $ observeTheories reqs
  | cmd == shCurrThry  =  doshow reqs $ observeCurrTheory reqs
  | cmd == shConj      =  doshow reqs $ observeCurrConj reqs
@@ -431,7 +431,7 @@ proofREPLQuit args (reqs,liveProof)
 proofREPLHelpCmds = ["?"]
 
 proofREPLEndCondition (reqs,liveProof)
-  =  proofIsComplete (logic reqs) liveProof
+  =  proofIsComplete (logicsig reqs) liveProof
 
 proofREPLEndTidy _ (reqs,liveProof)
   = do putStrLn "Proof Complete"
@@ -539,7 +539,7 @@ matchLawDescr = ( "m", "match laws", "m  -- match laws", matchLawCommand )
 
 matchLawCommand :: REPLCmd (REqState, LiveProof)
 matchLawCommand _ (reqs, liveProof)
-  =  return (reqs, matchFocus (logic reqs) liveProof)
+  =  return (reqs, matchFocus (logicsig reqs) liveProof)
 \end{code}
 
 Applying a match.
@@ -562,7 +562,7 @@ lawInstantiateDescr = ( "i", "instantiate"
 
 lawInstantiateProof :: REPLCmd (REqState, LiveProof)
 lawInstantiateProof _ ps@(reqs, liveProof )
-  = do let rslaws = lawInstantiate1 (logic reqs) liveProof
+  = do let rslaws = lawInstantiate1 (logicsig reqs) liveProof
 
        lawno <- pickByNumber "Pick a law : " showLaws rslaws
 
@@ -590,5 +590,5 @@ cloneHypothesisDescr
 
 cloneHypotheses :: REPLCmd (REqState, LiveProof)
 cloneHypotheses args liveState@(reqs, _)
-  = tryDelta (cloneHypothesis (args2int args) (theAnd $ logic reqs)) liveState
+  = tryDelta (cloneHypothesis (args2int args) (theAnd $ logicsig reqs)) liveState
 \end{code}

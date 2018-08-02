@@ -34,9 +34,9 @@ plus any other test theories we choose to insert.
 \begin{code}
 devInitState
  = REqState { projectDir = devProjectDir
-            , logic = thePropositionalAxioms
+            , logicsig = propSignature
             , theories = testTheories
-            , currTheory = (thName propAxiomTheory)
+            , currTheory = propAxiomName
             , liveProofs = M.empty }
 
 testTheories

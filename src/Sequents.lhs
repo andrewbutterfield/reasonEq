@@ -81,16 +81,16 @@ we want to determine which strategies apply
 and provide a choice of sequents.
 We first flatten the implication (if any),
 \begin{code}
-availableStrategies :: TheLogic -> Theories -> String -> NmdAssertion
+availableStrategies :: LogicSig -> Theories -> String -> NmdAssertion
                     -> [(String,Sequent)]
-availableStrategies theLogic theories thnm (nm,(tconj,sc))
+availableStrategies theSig theories thnm (nm,(tconj,sc))
   = catMaybes
-     [ reduce  theLogic thys cflat
-     , redboth theLogic thys cflat
-     , assume  theLogic thys cflat ]
+     [ reduce  theSig thys cflat
+     , redboth theSig thys cflat
+     , assume  theSig thys cflat ]
   where
     thys = fromJust $ getTheoryDeps thnm theories
-    cflat = (nm,(flattenTheImp theLogic tconj,sc))
+    cflat = (nm,(flattenTheImp theSig tconj,sc))
 \end{code}
 and then use the following functions to produce a sequent, if possible.
 
@@ -102,7 +102,7 @@ and then use the following functions to produce a sequent, if possible.
    \mathcal L \vdash C \equiv \true
 \end{eqnarray*}
 \begin{code}
-reduce :: Monad m => TheLogic -> [Theory] -> NmdAssertion
+reduce :: Monad m => LogicSig -> [Theory] -> NmdAssertion
        -> m (String, Sequent)
 reduce logic thys (nm,(t,sc))
   = return ( "reduce", Sequent thys hthry sc t $ theTrue logic )
@@ -124,7 +124,7 @@ reduce logic thys (nm,(t,sc))
    \mathcal L \vdash C_1 \equiv C_2
 \end{eqnarray*}
 \begin{code}
-redboth :: Monad m => TheLogic -> [Theory] -> NmdAssertion
+redboth :: Monad m => LogicSig -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
 redboth logic thys (nm,(t@(Cons tk i [tl,tr]),sc))
   | i == theEqv logic
@@ -148,7 +148,7 @@ redboth logic thys (nm,(t,sc)) = fail "redboth not applicable"
    \mathcal L,\splitand(H) \vdash (C \equiv \true)
 \end{eqnarray*}
 \begin{code}
-assume :: Monad m => TheLogic -> [Theory] -> NmdAssertion
+assume :: Monad m => LogicSig -> [Theory] -> NmdAssertion
        -> m (String, Sequent)
 assume logic thys (nm,(t@(Cons tk i [ta,tc]),sc))
   | i == theImp logic
@@ -165,9 +165,9 @@ assume logic thys (nm,(t@(Cons tk i [ta,tc]),sc))
                    }
 assume _ _ _ = fail "assume not applicable"
 
-splitAnte :: TheLogic -> Term -> [Term]
-splitAnte theLogic (Cons tk i ts)
- | i == theAnd theLogic  =  ts
+splitAnte :: LogicSig -> Term -> [Term]
+splitAnte theSig (Cons tk i ts)
+ | i == theAnd theSig  =  ts
 splitAnte _        t     =  [t]
 \end{code}
 
@@ -181,7 +181,7 @@ splitAnte _        t     =  [t]
    \mathcal L,\splitand(H) \vdash C_1 \equiv C_2
 \end{eqnarray*}
 \begin{code}
-asmboth :: Monad m => TheLogic -> [Theory] -> NmdAssertion
+asmboth :: Monad m => LogicSig -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
 asmboth logic thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{code}
@@ -195,7 +195,7 @@ asmboth logic thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{eqnarray*}
 \begin{code}
 -- actually, this is done under the hood
-shunt :: Monad m => TheLogic -> [Theory] -> NmdAssertion
+shunt :: Monad m => LogicSig -> [Theory] -> NmdAssertion
       -> m (String, Sequent)
 shunt logic thys (nm,(t,sc)) = fail "shunt not applicable"
 \end{code}
@@ -210,7 +210,7 @@ shunt logic thys (nm,(t,sc)) = fail "shunt not applicable"
 \end{eqnarray*}
 \begin{code}
 -- actually, this is done under the hood
-shntboth :: Monad m => TheLogic -> [Theory] -> NmdAssertion
+shntboth :: Monad m => LogicSig -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
 shntboth logic thys (nm,(t,sc)) = fail "shntboth not applicable"
 \end{code}
@@ -223,7 +223,7 @@ shntboth logic thys (nm,(t,sc)) = fail "shntboth not applicable"
    \setof{H_1,\dots,H_n}
 \end{eqnarray*}
 \begin{code}
-splitAnd :: TheLogic -> Term -> [Term]
+splitAnd :: LogicSig -> Term -> [Term]
 splitAnd logic (Cons _ i ts)
   | i == theAnd logic  =  ts
 splitAnd _ t           =  [t]

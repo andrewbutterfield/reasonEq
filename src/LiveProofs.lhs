@@ -244,8 +244,8 @@ readLiveProofs thylist txts
 
 We need to setup a proof from a conjecture:
 \begin{code}
-startProof :: TheLogic -> [Theory] -> String -> String -> Assertion -> LiveProof
-startProof logic thys thnm cjnm asn@(t,sc)
+startProof :: LogicSig -> [Theory] -> String -> String -> Assertion -> LiveProof
+startProof logicsig thys thnm cjnm asn@(t,sc)
   =  LP { conjThName = thnm
         , conjName = cjnm
         , conjecture = asn
@@ -258,7 +258,7 @@ startProof logic thys thnm cjnm asn@(t,sc)
         , stepsSoFar = []
         }
   where
-    (strat,seq) = fromJust $ reduce logic thys (cjnm,asn)
+    (strat,seq) = fromJust $ reduce logicsig thys (cjnm,asn)
     sz = leftConjFocus seq
     mcs = buildMatchContext thys
 \end{code}
@@ -293,14 +293,14 @@ launchProof thys thnm cjnm asn@(t,sc) (strat,seq)
 
 We need to determine when a live proof is complete:
 \begin{code}
-proofIsComplete :: TheLogic -> LiveProof -> Bool
-proofIsComplete logic liveProof
+proofIsComplete :: LogicSig -> LiveProof -> Bool
+proofIsComplete logicsig liveProof
   =  let
        sequent = exitSeqZipper $ focus liveProof
        hypTerms = map (fst . snd . fst) $ laws $ hyp sequent
      in cleft sequent == cright sequent -- should be alpha-equivalent
         ||
-        any (== theFalse logic) hypTerms
+        any (== theFalse logicsig) hypTerms
 \end{code}
 
 \subsubsection{Finalising a complete Proof}
@@ -321,38 +321,38 @@ finaliseProof liveProof
 
 First, given list of match-contexts, systematically work through them.
 \begin{code}
-matchInContexts :: TheLogic -> [MatchContext] -> Term -> Matches
-matchInContexts logic mcs t
-  = concat $ map (matchLaws logic t) mcs
+matchInContexts :: LogicSig -> [MatchContext] -> Term -> Matches
+matchInContexts logicsig mcs t
+  = concat $ map (matchLaws logicsig t) mcs
 \end{code}
 
 Now, the code to match laws, given a context.
 Bascially we run down the list of laws,
 returning any matches we find.
 \begin{code}
-matchLaws :: TheLogic -> Term -> MatchContext -> Matches
-matchLaws logic t (lws,vts) = concat $ map (domatch logic vts t) lws
+matchLaws :: LogicSig -> Term -> MatchContext -> Matches
+matchLaws logicsig t (lws,vts) = concat $ map (domatch logicsig vts t) lws
 \end{code}
 
 For each law,
 we check its top-level to see if it is an instance of \texttt{theEqv},
 in which case we try matches against all possible variations.
 \begin{code}
-domatch :: TheLogic -> [VarTable] -> Term -> Law -> Matches
-domatch logic vts tC ((n,asn@(tP@(Cons tk i ts@(_:_:_)),sc)),prov)
-  | i == theEqv logic  =  concat $ map (eqvMatch vts tC) $ listsplit ts
+domatch :: LogicSig -> [VarTable] -> Term -> Law -> Matches
+domatch logicsig vts tC ((n,asn@(tP@(Cons tk i ts@(_:_:_)),sc)),prov)
+  | i == theEqv logicsig  =  concat $ map (eqvMatch vts tC) $ listsplit ts
   where
       -- tC :: equiv(tsP), with replacement equiv(tsR).
     eqvMatch vts tC (tsP,tsR)
       = justMatch (eqv tsR) vts tC ((n,(eqv tsP,sc)),prov)
-    eqv []   =  theTrue logic
+    eqv []   =  theTrue logicsig
     eqv [t]  =  t
     eqv ts   =  Cons tk i ts
 \end{code}
 Otherwise we just match against the whole law.
 \begin{code}
-domatch logic vts tC law
- = justMatch (theTrue logic) vts tC law
+domatch logicsig vts tC law
+ = justMatch (theTrue logicsig) vts tC law
 \end{code}
 
 Do a simple match:

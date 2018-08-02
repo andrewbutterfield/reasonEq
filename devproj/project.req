@@ -1,15 +1,15 @@
 BEGIN REQSTATE
-BEGIN THELOGIC
+BEGIN SIGNATURE
 TRUE = V P (VR (Id "true",VP,WS))
 FALSE = V P (VR (Id "false",VP,WS))
 EQV = Id "\8801"
 IMP = Id "\10233 "
 AND = Id "\8743"
-END THELOGIC
+END SIGNATURE
 BEGIN THEORIES
 BEGIN MAP THEORIES
-"PropLogic"
-BEGIN THEORY PropLogic
+"PropAxioms"
+BEGIN THEORY PropAxioms
 DEPS = []
 KNOWN = VD (fromList [(VR (Id "false",VP,WS),KC (C P (Id "\172") [V P (VR (Id "true",VP,WS))])),(VR (Id "true",VP,WS),KV (TG (Id "\120121")))],fromList [],fromList [])
 BEGIN LIST LAWS
@@ -30,14 +30,11 @@ END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS
 BEGIN LIST CONJECTURES
-("\8801_id",(C P (Id "\8801") [C P (Id "\8801") [V P (VR (Id "true",VP,WS)),V P (VR (Id "Q",VP,WS))],V P (VR (Id "Q",VP,WS))],SC (fromList []) (fromList [])))
-("\8744_zero",(C P (Id "\8801") [C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "true",VP,WS))],V P (VR (Id "true",VP,WS))],SC (fromList []) (fromList [])))
-("weaken_\10233 ",(C P (Id "\10233 ") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],V P (VR (Id "P",VP,WS))],SC (fromList []) (fromList [])))
 END LIST CONJECTURES
-END THEORY PropLogic
+END THEORY PropAxioms
 "TestFortyTwo"
 BEGIN THEORY TestFortyTwo
-DEPS = ["PropLogic"]
+DEPS = ["PropAxioms"]
 KNOWN = VD (fromList [],fromList [],fromList [])
 BEGIN LIST LAWS
 END LIST LAWS
@@ -48,9 +45,9 @@ BEGIN LIST CONJECTURES
 END LIST CONJECTURES
 END THEORY TestFortyTwo
 END MAP THEORIES
-SDAG = [[("TestFortyTwo",["PropLogic"])],[("PropLogic",[])]]
+SDAG = [[("TestFortyTwo",["PropAxioms"])],[("PropAxioms",[])]]
 END THEORIES
-CURRTHEORY = TestFortyTwo
+CURRTHEORY = PropAxioms
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
 END MAP LIVE-PROOFS

@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 module AbstractUI
 ( REqState
-, observeLogic, observeTheories, observeCurrTheory, observeCurrConj
+, observeSig, observeTheories, observeCurrTheory, observeCurrConj
 , observeLiveProofs, observeCompleteProofs
 , setCurrentTheory
 , newProof1, newProof2, resumeProof
@@ -77,8 +77,8 @@ a number of return formats.
 \subsubsection{Observing Current Logic}
 
 \begin{code}
-observeLogic :: REqState -> String
-observeLogic reqs = showLogic $ logic reqs
+observeSig :: REqState -> String
+observeSig reqs = showLogic $ logicsig reqs
 \end{code}
 
 \subsubsection{Observing Theories}
@@ -156,7 +156,7 @@ newProof1 i reqs
       Just nconj@(nm,asn)
        -> return
            ( nconj
-           , availableStrategies (logic reqs) thys currTh nconj )
+           , availableStrategies (logicsig reqs) thys currTh nconj )
   where
     currTh = currTheory reqs
     getCurrConj reqs = fromJust $ getTheoryConjectures currTh thys
@@ -313,11 +313,11 @@ moveFocusFromHypothesis liveProof
 \subsubsection{Match Laws against Focus}
 
 \begin{code}
-matchFocus :: TheLogic -> LiveProof -> LiveProof
-matchFocus theLogic liveProof
+matchFocus :: LogicSig -> LiveProof -> LiveProof
+matchFocus theSig liveProof
   = let (tz,_)      =  focus liveProof
         goalt       =  getTZ tz
-        newMatches  =  matchInContexts theLogic (mtchCtxts liveProof) goalt
+        newMatches  =  matchInContexts theSig (mtchCtxts liveProof) goalt
     in matches_ newMatches liveProof
 \end{code}
 
@@ -352,10 +352,10 @@ to collect arguments for the next call.
 We start by checking that the focus is \true,
 and that we can find some laws.
 \begin{code}
-lawInstantiate1 :: TheLogic -> LiveProof -> [Law]
-lawInstantiate1 theLogic liveProof
+lawInstantiate1 :: LogicSig -> LiveProof -> [Law]
+lawInstantiate1 theSig liveProof
   = let currt = getTZ $ fst $ focus liveProof
-        true = theTrue theLogic
+        true = theTrue theSig
         rslaws = concat $ map fst $ mtchCtxts liveProof
     in if currt /= true then [] else rslaws
 \end{code}

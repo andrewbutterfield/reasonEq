@@ -6,7 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module Propositions (
+module PropEquiv (
   bool
 , true, trueP
 , false, falseP
@@ -17,8 +17,8 @@ module Propositions (
 , implies, mkImplies, (==>)
 , thePropositionalLogic
 , propKnown
-, propLaws
-, theoryPropositions
+, propAxioms
+, propAxiomTheory
 ) where
 
 import Data.Maybe
@@ -34,13 +34,10 @@ import VarData
 import Laws
 import Proofs
 import Theories
-
--- import Test.HUnit
--- import Test.Framework as TF (defaultMain, testGroup, Test)
--- import Test.Framework.Providers.HUnit (testCase)
 \end{code}
 
 
+\newpage
 \subsection{Introduction}
 
 Here we present a hard-coded implementation of
@@ -60,6 +57,10 @@ Here, we require a proof to transform a conjecture to \textit{true},
 which is more proof work%
 \footnote{but not much!}%
 , but is a much simpler, faster check.
+We also omit axioms that define
+inequivalence ($\not\equiv$) and consequence ($\impliedby$)
+These will be introduced later via the definitional mechanism
+(\texttt{VarData}).
 $$
 \AXPROP
 $$
@@ -95,6 +96,7 @@ false = Vbl (fromJust $ ident "false") PredV Static
 falseP = fromJust $ pVar false
 \end{code}
 
+\newpage
 \subsection{Propositional Operators}
 
 \begin{code}
@@ -104,7 +106,6 @@ infix 1 === ; (===) = mkEquiv
 
 implies = fromJust $ ident _implies ; mkImplies p q = PCons implies [p,q]
 infixr 2 ==> ; (==>) = mkImplies
-
 
 lor = fromJust $ ident _lor
 mkOrs []   =  falseP
@@ -152,13 +153,16 @@ axTrue      =  ( "true",      ( trueP,                  scTrue ) )
 axFalseDef  =  ( "false-def", ( falseP === mkNot trueP, scTrue ) )
 \end{code}
 
-We present the rest of the axioms
+\newpage
+\subsubsection{Axioms}
 
 $$
   \begin{array}{ll}
      \AXeqvRefl & \AXeqvReflN
   \end{array}
 $$
+
+\vspace{-8pt}
 \begin{code}
 axEqvRefl
  = ( _equiv++"_refl"
@@ -172,6 +176,8 @@ $$
      \AXeqvAssoc & \AXeqvAssocN
   \end{array}
 $$
+
+\vspace{-8pt}
 \begin{code}
 axEqvAssoc
  = ( _equiv++"_assoc"
@@ -184,6 +190,8 @@ $$
      \AXeqvSymm & \AXeqvSymmN
   \end{array}
 $$
+
+\vspace{-8pt}
 \begin{code}
 axEqvSymm
  = ( _equiv++"_symm"
@@ -196,6 +204,8 @@ $$
      \AXnotEqvDistr & \AXnotEqvDistrN
   \end{array}
 $$
+
+\vspace{-8pt}
 \begin{code}
 axNotEqvDistr
  = ( _lnot++"_"++_equiv++"_distr"
@@ -209,6 +219,8 @@ $$
      \AXorSymm & \AXorSymmN
   \end{array}
 $$
+
+\vspace{-8pt}
 \begin{code}
 axOrSymm
  = ( _lor++"_symm"
@@ -221,6 +233,8 @@ $$
      \AXorAssoc & \AXorAssocN
   \end{array}
 $$
+
+\vspace{-8pt}
 \begin{code}
 axOrAssoc
  = ( _lor++"_assoc"
@@ -233,6 +247,8 @@ $$
      \AXorIdem & \AXorIdemN
   \end{array}
 $$
+
+\vspace{-8pt}
 \begin{code}
 axOrIdem
  = ( _lor++"_idem"
@@ -245,6 +261,8 @@ $$
      \AXorEqvDistr & \AXorEqvDistrN
   \end{array}
 $$
+
+\vspace{-8pt}
 \begin{code}
 axOrEqvDistr
  = ( _lor++"_"++_equiv++"_distr"
@@ -257,6 +275,8 @@ $$
      \AXexclMdl & \AXexclMdlN
   \end{array}
 $$
+
+\vspace{-8pt}
 \begin{code}
 axExclMidl
  = ( "excl-middle"
@@ -269,6 +289,8 @@ $$
      \AXgoldRule & \AXgoldRuleN
   \end{array}
 $$
+
+\vspace{-8pt}
 \begin{code}
 axGoldRule
  = ( "golden-rule"
@@ -281,6 +303,8 @@ $$
      \AXimplDef & \AXimplDefN
   \end{array}
 $$
+
+\vspace{-8pt}
 \begin{code}
 axImplDef
  = ( _implies++"_def"
@@ -288,9 +312,10 @@ axImplDef
    , scTrue ) )
 \end{code}
 
+We now collect all of the above as our axiom set:
 \begin{code}
-propLaws :: [Law]
-propLaws
+propAxioms :: [Law]
+propAxioms
   = map labelAsAxiom
       [ axTrue, axEqvRefl, axEqvAssoc, axEqvSymm
       , axFalseDef, axNotEqvDistr
@@ -302,6 +327,7 @@ propLaws
 \subsection{Propositional Conjectures}
 
 We also supply a starter pack of conjectures to be proven.
+These are basically all the propositional theorems found in \cite{gries.93}.
 $$
 \CONJPROP
 $$
@@ -355,12 +381,12 @@ propConjs
 \subsection{The Propositional Theory}
 
 \begin{code}
-theoryPropositions :: Theory
-theoryPropositions
+propAxiomTheory :: Theory
+propAxiomTheory
   =  Theory { thName  =  "PropLogic"
             , thDeps  =  []
             , known   =  propKnown
-            , laws    =  propLaws
+            , laws    =  propAxioms
             , proofs  =  []
             , conjs   =  propConjs
             }

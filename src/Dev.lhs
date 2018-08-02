@@ -34,14 +34,14 @@ plus any other test theories we choose to insert.
 \begin{code}
 devInitState
  = REqState { projectDir = devProjectDir
-            , logic = thePropositionalLogic
+            , logic = thePropositionalAxioms
             , theories = testTheories
-            , currTheory = (thName theoryPropositions)
+            , currTheory = (thName propAxiomTheory)
             , liveProofs = M.empty }
 
 testTheories
   =  fromJust $ addTheory testTheory $
-     fromJust $ addTheory theoryPropositions noTheories
+     fromJust $ addTheory propAxiomTheory noTheories
 
 a = fromJust $ pVar $ Vbl (fromJust $ ident "A") PredV Static
 b = fromJust $ pVar $ Vbl (fromJust $ ident "B") PredV Static
@@ -56,7 +56,7 @@ testName = "TestFortyTwo"
 
 testTheory
   = Theory { thName  =  testName
-           , thDeps  =  [ thName theoryPropositions ]
+           , thDeps  =  [ thName propAxiomTheory ]
            , known   =  newVarTable
            , laws    =  []
            , proofs  =  []

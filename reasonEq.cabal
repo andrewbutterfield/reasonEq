@@ -14,14 +14,13 @@ extra-source-files:  README.md
 cabal-version:       >=1.10
 
 library
-  hs-source-dirs:      src, proto
+  hs-source-dirs:      src, proto, builtin
   exposed-modules:     Utilities
                      , LexBase
                      , Variables
                      , AST
                      , SideCond
                      , VarData
-                     , Propositions
                      , Binding
                      , Instantiate
                      , Matching
@@ -39,6 +38,8 @@ library
                      , AbstractUI
                      , REPL
                      , Dev
+                     -- in builtin
+                     , Propositions
                      -- in proto
                      , Acyclic
                      , TRYOUT

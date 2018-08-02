@@ -157,7 +157,7 @@ initState flags
               Just fp -> return $ devInitState{ projectDir = fp }
 
 reqstate0 = REqState { projectDir = ""
-                     , logic = thePropositionalLogic
+                     , logic = thePropositionalAxioms
                      , theories = noTheories
                      , currTheory = ""
                      , liveProofs = M.empty }

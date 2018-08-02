@@ -40,6 +40,8 @@ library
                      , Dev
                      -- in builtin
                      , Propositions
+                     , PropEquiv
+                     , PropNot
                      -- in proto
                      , Acyclic
                      , TRYOUT

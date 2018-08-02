@@ -16,6 +16,8 @@ import VarData
 import SideCond
 import REqState
 import Propositions
+import PropEquiv
+import PropNot
 \end{code}
 
 We assume the the project directory is defined as an immediate
@@ -35,31 +37,12 @@ plus any other test theories we choose to insert.
 devInitState
  = REqState { projectDir = devProjectDir
             , logicsig = propSignature
-            , theories = testTheories
-            , currTheory = propAxiomName
+            , theories = devTheories
+            , currTheory = propEquivName
             , liveProofs = M.empty }
 
-testTheories
-  =  fromJust $ addTheory testTheory $
+devTheories
+  =  fromJust $ addTheory propNotTheory $
+     fromJust $ addTheory propEquivTheory $
      fromJust $ addTheory propAxiomTheory noTheories
-
-a = fromJust $ pVar $ Vbl (fromJust $ ident "A") PredV Static
-b = fromJust $ pVar $ Vbl (fromJust $ ident "B") PredV Static
-c = fromJust $ pVar $ Vbl (fromJust $ ident "C") PredV Static
-
-cjHTest
- = ( "h-test"
-   , ( a /\ (b /\ c) ==> (c /\ a) /\ (mkEquivs [b,b,b])
-     , scTrue ) )
-
-testName = "TestFortyTwo"
-
-testTheory
-  = Theory { thName  =  testName
-           , thDeps  =  [ thName propAxiomTheory ]
-           , known   =  newVarTable
-           , laws    =  []
-           , proofs  =  []
-           , conjs   =  [ cjHTest ]
-           }
 \end{code}

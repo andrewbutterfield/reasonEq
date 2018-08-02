@@ -226,15 +226,14 @@
 
 %% ---- Propositional Axioms ---------------------------------------------------
 
-\def\AXtrue{true}
-\def\AXtrueN{\QNAME{$true$}}
+\def\AXtrue{\true}
+\def\AXtrueN{\QNAME{$\true$}}
 
 \def\AXeqvRefl{P \equiv P}
 \def\AXeqvReflN{\QNAME{$\equiv$-refl}}
 
-\def\CJeqvId{\textit{true} \equiv Q\equiv Q}
+\def\CJeqvId{\true \equiv Q\equiv Q}
 \def\CJeqvIdN{\QNAME{$\equiv$-id}}
-
 
 \def\AXeqvAssocL{(P\equiv Q)\equiv R}
 \def\AXeqvAssocR{P\equiv (Q\equiv R)}
@@ -244,8 +243,8 @@
 \def\AXeqvSymm{P\equiv Q\equiv Q \equiv P}
 \def\AXeqvSymmN{\QNAME{$\equiv$-symm}}
 
-\def\AXfalseDef{\textit{false} \equiv \neg \mbox{\textit{true}}}
-\def\AXfalseDefN{\QNAME{$false$-def}}
+\def\AXfalseDef{\false \equiv \neg \true}
+\def\AXfalseDefN{\QNAME{$\false$-def}}
 
 \def\AXnotEqvDistr{\neg(P\equiv Q) \equiv \neg P \equiv Q}
 \def\AXnotEqvDistrN{\QNAME{$\neg$-$\equiv$-distr}}
@@ -297,6 +296,47 @@
 \def\CJeqvId{\textit{true} \equiv Q\equiv Q}
 \def\CJeqvIdN{\QNAME{$\equiv$-id}}
 
+\def\CONJPROPEQUIV{
+  \begin{array}{ll}
+       \CJeqvId & \CJeqvIdN
+  \end{array}
+}
+
+% % Negation, inequivalence and FALSE
+
+\def\CJswapNot{\lnot p\equiv q \equiv p \equiv \lnot q}
+\def\CJswapNotN{\QNAME{$\lnot$-$\equiv$-swap}}
+
+\def\CJnotInvol{\lnot \lnot p \equiv p}
+\def\CJnotInvolN{\QNAME{$\lnot$-invol}}
+
+\def\CJnotFalse{\lnot \false \equiv \true}
+\def\CJnotFalseN{\QNAME{$\false$-neg}}
+
+\def\CJnotDef{\lnot p \equiv p \equiv \false}
+\def\CJnotDefN{\QNAME{$\lnot$-def}}
+
+\def\CONJPROPNOT{
+  \begin{array}{ll}
+       \CJswapNot  & \CJswapNotN
+    \\ \CJnotInvol & \CJnotInvolN
+    \\ \CJnotFalse & \CJnotFalseN
+    \\ \CJnotDef   & \CJnotDefN
+  \end{array}
+}
+
+% \def\lawFalseDef{\NmCmtLaw{\m\FALSE-def}{$\GSN{3.8}$}{\FALSE \equiv \lnot \TRUE}}
+% \def\lawNotEqvDistr{\NmCmtLaw{$\lnot$-$\equiv$-distr}{$\GSN{3.9}$}{\lnot(p\equiv q) \equiv \lnot p \equiv q}}
+% \def\lawNEqvDef{\NmCmtLaw{$\not\equiv$-def}{$\GSN{3.10}$}{(p\not\equiv q) \equiv \lnot(p\equiv q)}}
+% \def\lawNotEqvSwap{\NmCmtLaw{$\lnot$-$\equiv$-swap}{$\GSN{3.11}$}{\lnot p\equiv q \equiv p \equiv \lnot q}}
+% \def\lawNotFalse{\NmCmtLaw{$\FALSE$-neg}{$\GSN{3.13}$}{\lnot \FALSE \equiv \TRUE}}
+% \def\lawNEqvAlt{\NmCmtLaw{$\lnot$-$\equiv$-swap}{$\GSN{3.14}$}{(p\not \equiv q) \equiv \lnot p \equiv q}}
+% \def\lawNEqvAAlt{\NmCmtLaw{$\not\equiv$-def}{$\GSN{3.15}$}{\lnot p \equiv p \equiv \FALSE}}
+% \def\lawNEqvComm{\NmCmtLaw{$\not\equiv$-comm}{$\GSN{3.16}$}{(p\not \equiv q) \equiv (q\not\equiv p)}}
+% \def\lawNEqvAssoc{\NmCmtLaw{$\not\equiv$-assoc}{$\GSN{3.17}$}{((p\not\equiv q)\not\equiv r) \equiv (p\not\equiv (q\not\equiv r))}}
+% \def\lawNEqvMutual{\NmCmtLaw{$\not\equiv$-mutual}{$\GSN{3.18}$}{((p\not \equiv q)\equiv r) \equiv (p\not\equiv (q\equiv r))}}
+% \def\lawNotEqvIntchg{\NmCmtLaw{$\not\equiv$-intchg}{$\GSN{3.19}$}{p\not \equiv q \equiv r\ \equiv\ p\equiv q\not \equiv r}}
+
 % -- Disjunction -----------------------
 
 \def\CJorZero{P \lor \textit{true} \equiv \textit{true}}
@@ -330,19 +370,6 @@
 % \def\lawEqvDef{\NmCmtLaw{$\equiv$-def}{$\GSN{3.52}$}{p \equiv q \equiv (p\land q) \lor (\lnot p \land \lnot q)}}
 % \def\lawExor{\NmCmtLaw{exclusive-or}{$\GSN{3.53}$}{p\not \equiv q \equiv (\lnot p \land q) \lor (p\land \lnot q)}}
 %
-% % Negation, inequivalence and FALSE
-% \def\lawFalseDef{\NmCmtLaw{\m\FALSE-def}{$\GSN{3.8}$}{\FALSE \equiv \lnot \TRUE}}
-% \def\lawNotEqvDistr{\NmCmtLaw{$\lnot$-$\equiv$-distr}{$\GSN{3.9}$}{\lnot(p\equiv q) \equiv \lnot p \equiv q}}
-% \def\lawNEqvDef{\NmCmtLaw{$\not\equiv$-def}{$\GSN{3.10}$}{(p\not\equiv q) \equiv \lnot(p\equiv q)}}
-% \def\lawNotEqvSwap{\NmCmtLaw{$\lnot$-$\equiv$-swap}{$\GSN{3.11}$}{\lnot p\equiv q \equiv p \equiv \lnot q}}
-% \def\lawNotInvol{\NmCmtLaw{$\lnot$-invol}{$\GSN{3.12}$}{\lnot \lnot p \equiv p}}
-% \def\lawNotFalse{\NmCmtLaw{$\FALSE$-neg}{$\GSN{3.13}$}{\lnot \FALSE \equiv \TRUE}}
-% \def\lawNEqvAlt{\NmCmtLaw{$\lnot$-$\equiv$-swap}{$\GSN{3.14}$}{(p\not \equiv q) \equiv \lnot p \equiv q}}
-% \def\lawNEqvAAlt{\NmCmtLaw{$\not\equiv$-def}{$\GSN{3.15}$}{\lnot p \equiv p \equiv \FALSE}}
-% \def\lawNEqvComm{\NmCmtLaw{$\not\equiv$-comm}{$\GSN{3.16}$}{(p\not \equiv q) \equiv (q\not\equiv p)}}
-% \def\lawNEqvAssoc{\NmCmtLaw{$\not\equiv$-assoc}{$\GSN{3.17}$}{((p\not\equiv q)\not\equiv r) \equiv (p\not\equiv (q\not\equiv r))}}
-% \def\lawNEqvMutual{\NmCmtLaw{$\not\equiv$-mutual}{$\GSN{3.18}$}{((p\not \equiv q)\equiv r) \equiv (p\not\equiv (q\equiv r))}}
-% \def\lawNotEqvIntchg{\NmCmtLaw{$\not\equiv$-intchg}{$\GSN{3.19}$}{p\not \equiv q \equiv r\ \equiv\ p\equiv q\not \equiv r}}
 %
 % % Implication
 

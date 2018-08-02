@@ -32,22 +32,35 @@ END LIST PROOFS
 BEGIN LIST CONJECTURES
 END LIST CONJECTURES
 END THEORY PropAxioms
-"TestFortyTwo"
-BEGIN THEORY TestFortyTwo
+"PropEquiv"
+BEGIN THEORY PropEquiv
 DEPS = ["PropAxioms"]
+KNOWN = VD (fromList [],fromList [],fromList [])
+BEGIN LIST LAWS
+(("\8801_id",(C P (Id "\8801") [C P (Id "\8801") [V P (VR (Id "true",VP,WS)),V P (VR (Id "Q",VP,WS))],V P (VR (Id "Q",VP,WS))],SC (fromList []) (fromList []))),Proven "\8801_id")
+END LIST LAWS
+BEGIN LIST PROOFS
+("\8801_id",(C P (Id "\8801") [C P (Id "\8801") [V P (VR (Id "true",VP,WS)),V P (VR (Id "Q",VP,WS))],V P (VR (Id "Q",VP,WS))],SC (fromList []) (fromList [])),"reduce",(V P (VR (Id "true",VP,WS)),[(UseLaw ByMatch "\8801_assoc" (BD (fromList [((Id "P",VP),BV (VR (Id "true",VP,WS))),((Id "Q",VP),BV (VR (Id "Q",VP,WS))),((Id "R",VP),BV (VR (Id "Q",VP,WS)))],fromList [],fromList [])) [],C P (Id "\8801") [C P (Id "\8801") [V P (VR (Id "true",VP,WS)),V P (VR (Id "Q",VP,WS))],V P (VR (Id "Q",VP,WS))]),(UseLaw ByMatch "\8801_refl" (BD (fromList [((Id "P",VP),BV (VR (Id "Q",VP,WS)))],fromList [],fromList [])) [2],C P (Id "\8801") [V P (VR (Id "true",VP,WS)),C P (Id "\8801") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "Q",VP,WS))]]),(UseLaw ByMatch "\8801_refl" (BD (fromList [((Id "P",VP),BV (VR (Id "true",VP,WS)))],fromList [],fromList [])) [],C P (Id "\8801") [V P (VR (Id "true",VP,WS)),V P (VR (Id "true",VP,WS))])]))
+END LIST PROOFS
+BEGIN LIST CONJECTURES
+END LIST CONJECTURES
+END THEORY PropEquiv
+"PropNot"
+BEGIN THEORY PropNot
+DEPS = ["PropEquiv","PropAxioms"]
 KNOWN = VD (fromList [],fromList [],fromList [])
 BEGIN LIST LAWS
 END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS
 BEGIN LIST CONJECTURES
-("h-test",(C P (Id "\10233 ") [C P (Id "\8743") [V P (VR (Id "A",VP,WS)),C P (Id "\8743") [V P (VR (Id "B",VP,WS)),V P (VR (Id "C",VP,WS))]],C P (Id "\8743") [C P (Id "\8743") [V P (VR (Id "C",VP,WS)),V P (VR (Id "A",VP,WS))],C P (Id "\8801") [V P (VR (Id "B",VP,WS)),V P (VR (Id "B",VP,WS)),V P (VR (Id "B",VP,WS))]]],SC (fromList []) (fromList [])))
+("\172_\8801_swap",(C P (Id "\8801") [C P (Id "\8801") [C P (Id "\172") [V P (VR (Id "P",VP,WS))],V P (VR (Id "Q",VP,WS))],C P (Id "\8801") [V P (VR (Id "P",VP,WS)),C P (Id "\172") [V P (VR (Id "Q",VP,WS))]]],SC (fromList []) (fromList [])))
 END LIST CONJECTURES
-END THEORY TestFortyTwo
+END THEORY PropNot
 END MAP THEORIES
-SDAG = [[("TestFortyTwo",["PropAxioms"])],[("PropAxioms",[])]]
+SDAG = [[("PropNot",["PropEquiv","PropAxioms"])],[("PropEquiv",["PropAxioms"])],[("PropAxioms",[])]]
 END THEORIES
-CURRTHEORY = PropAxioms
+CURRTHEORY = PropEquiv
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
 END MAP LIVE-PROOFS

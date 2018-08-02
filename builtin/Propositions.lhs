@@ -1,4 +1,4 @@
-\section{Propositional Calculus}
+\section{Propositional Axioms}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2018
 
@@ -210,7 +210,7 @@ $$
 \begin{code}
 axNotEqvDistr
  = ( _lnot++"_"++_equiv++"_distr"
-   , ( mkNot(p === q) ===  (mkNot p === q)
+   , ( mkNot(p === q) ===  ((mkNot p) === q)
    , scTrue ) )
 \end{code}
 

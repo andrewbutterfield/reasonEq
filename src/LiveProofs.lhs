@@ -336,34 +336,123 @@ matchLaws logicsig t (lws,vts) = concat $ map (domatch logicsig vts t) lws
 
 For each law,
 we check its top-level to see if it is an instance of \texttt{theEqv},
-in which case we try matches against all possible variations.
+in which case we try matches against all possible variations,
+as well as the whole thing.
 \begin{code}
 domatch :: LogicSig -> [VarTable] -> Term -> Law -> Matches
-domatch logicsig vts tC ((n,asn@(tP@(Cons tk i ts@(_:_:_)),sc)),prov)
-  | i == theEqv logicsig  =  concat $ map (eqvMatch vts tC) $ listsplit ts
-  where
-      -- tC :: equiv(tsP), with replacement equiv(tsR).
-    eqvMatch vts tC (tsP,tsR)
-      = justMatch (eqv tsR) vts tC ((n,(eqv tsP,sc)),prov)
-    eqv []   =  theTrue logicsig
-    eqv [t]  =  t
-    eqv ts   =  Cons tk i ts
+domatch logicsig vts tC law@((n,asn@(tP@(Cons tk i ts@(_:_:_)),sc)),prov)
+  | i == theEqv logicsig     =  simpleMatch (theTrue logicsig) vts tC law
+                             ++ doEqvMatch logicsig vts tC n sc prov ts
 \end{code}
 Otherwise we just match against the whole law.
 \begin{code}
-domatch logicsig vts tC law
- = justMatch (theTrue logicsig) vts tC law
+domatch logicsig vts tC law  =  simpleMatch (theTrue logicsig) vts tC law
 \end{code}
 
 Do a simple match:
 \begin{code}
-justMatch :: Term -> [VarTable] -> Term -> Law -> Matches
-justMatch repl vts tC ((n,asn@(tP,_)),_)
+simpleMatch :: Term -> [VarTable] -> Term -> Law -> Matches
+simpleMatch repl vts tC ((n,asn@(tP,_)),_)
  = case match vts tC tP of
-     Nothing -> []
-     Just bind -> [MT n asn bind repl]
+     Nothing    ->  []
+     Just bind  ->  [MT n asn bind repl]
 \end{code}
 
+\newpage
+Do an equivalence match, where we want to match against all possibilities,
+exploiting the associative nature of $\equiv$,
+as described in \cite[p29]{gries.93}.
+First we give shorthand notation for n-ary uses of $\equiv$
+and interesting subsets.
+\begin{eqnarray*}
+   \mathop\equiv_i(P_1^n) &=& P_1 \equiv P_2 \equiv \dots \equiv P_n,
+   \qquad i = 1 \dots n \land n > 1
+\\ \mathop\equiv_i(P_1^n)\setminus \setof j
+   &=&
+   P_1 \equiv \dots \equiv P_{j-1}  \equiv P_{j+1} \equiv \dots \equiv P_n
+\\ \mathop\equiv_i(P_1^n) |_{\setof{a,\dots,z}}
+   &=&
+   P_a \equiv \dots \equiv P_z,
+   \quad \setof{a,\dots,z} \subseteq \setof{1\dots n}
+\end{eqnarray*}
+$$
+\begin{array}{|l|c|c|c|c|}
+\hline
+   \textrm{Case}
+ & \textrm{Cand.($C$)} & \textrm{Patn.} & \textrm{Match.} & \textrm{Repl.}
+\\\hline
+   A.
+ & \textrm{any } C
+ & P \equiv P
+ & C :: (P \equiv P) \textrm{ (only!)}
+ & \true
+\\\hline
+   B.
+ & \textrm{any } C
+ & \mathop\equiv_i(P_1^n)
+ & C :: P_j
+ & \mathop\equiv_i(P_i^n)\setminus j
+\\\hline
+   C.
+ & \mathop\equiv_j(C_1^m), m \leq n
+ & \mathop\equiv_i(P_i^n)
+ & C_j :: P_i, i \in J, \#J = m, J \subseteq \setof{1\dots n}
+ & \mathop\equiv_i(P_i^n)\setminus J
+\\\hline
+\end{array}
+$$
+Case A prevents spurious matches of \QNAME{$\equiv$-refl}
+where we match $C::P$ with replacment $P$ to obtain result $C$.
+We can also deal with matching candidate uses of $\equiv$
+with an arity greater than that of the pattern (Case D., not shown),
+by matching groups of candidates against pattern components,
+but for now we do not support this.
+We fully support Cases A and B and give some support to Case C.
+
+First, Case A, which is automatically done above,
+so we need not do anything here.
+\begin{code}
+doEqvMatch _ _ _ _ _ _ [p1,p2] | p1 == p2  =  []
+\end{code}
+Then invoke Cases C and B, in that order.
+\begin{code}
+doEqvMatch logicsig vts tC n sc prov ts
+  = doEqvMatchC logicsig vts tC n sc prov ts
+    ++
+    doEqvMatchB logicsig vts tC n sc prov [] [] ts
+\end{code}
+Next, Case B.
+\begin{code}
+doEqvMatchB logicsig vts tC n sc prov mtchs _ [] = mtchs
+doEqvMatchB logicsig vts tC n sc prov mtchs sPt (tP:tPs)
+  = let mtchs' = simpleMatch (eqv (reverse sPt ++ tPs)) vts tC ((n,(tP,sc)),prov)
+    in doEqvMatchB logicsig vts tC n sc prov (mtchs'++mtchs) (tP:sPt) tPs
+  where
+    eqv []   =  theTrue logicsig
+    eqv [t]  =  t
+    eqv ts   =  Cons P (theEqv logicsig) ts
+\end{code}
+
+Case C only applies if the \emph{candidate} is an equivalence.
+We also assume that $J = \setof{1\dots m}$,
+and we maintain candidate sub-term order.
+\begin{code}
+doEqvMatchC logicsig vts tC@(Cons tk i tsC) n sc prov tsP
+ | i == theEqv logicsig = doEqvMatchC' logicsig vts n sc prov tsC tsP
+doEqvMatchC _ _ _ _ _ _ _ = []
+
+doEqvMatchC' logicsig vts n sc prov tsC tsP
+  | cLen <= pLen
+     = simpleMatch (eqv tsP'') vts (eqv tsC) ((n,(eqv tsP',sc)),prov)
+  | otherwise = []
+  where
+    cLen = length tsC
+    pLen = length tsP
+    (tsP',tsP'') = splitAt cLen tsP
+    eqv []   =  theTrue logicsig
+    eqv [t]  =  t
+    eqv ts   =  Cons P (theEqv logicsig) ts
+\end{code}
 
 \newpage
 \subsection{Showing Live Proofs}

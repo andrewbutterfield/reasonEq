@@ -68,14 +68,16 @@ currThKEY = "CURRTHEORY = "
 \subsubsection{Write State}
 
 \begin{code}
-writeREqState :: REqState -> [String]
+writeREqState :: REqState -> ([String],NamedTheoryTexts)
 writeREqState reqs
-  = [ reqstateHDR ] ++
-    writeTheLogic (logicsig reqs) ++
-    writeTheories (theories reqs) ++
-    [currThKEY ++ (currTheory reqs)] ++
-    writeLiveProofs (liveProofs reqs) ++
-    [ reqstateTLR ]
+  = ( [ reqstateHDR ] ++
+      writeTheLogic (logicsig reqs) ++
+      thrysTxt ++
+      [currThKEY ++ (currTheory reqs)] ++
+      writeLiveProofs (liveProofs reqs) ++
+      [ reqstateTLR ]
+    , nmdTxts )
+  where (thrysTxt,nmdTxts) = writeTheories (theories reqs)
 \end{code}
 
 \subsubsection{Read State}

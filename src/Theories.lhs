@@ -17,7 +17,7 @@ module Theories
  , writeTheory, readTheory
  , nullTheory
  , Theories
- , writeTheories, readTheories
+ , NamedTheoryTexts, writeTheories, readTheories
  , noTheories
  , addTheory, getTheory
  , getTheoryDeps, getTheoryDeps'
@@ -172,12 +172,23 @@ thrysHDR = "BEGIN "++thrys ; thrysTRL ="END "++thrys
 tmapKEY = "TMAP = "
 sdagKEY = "SDAG = "
 
-writeTheories :: Theories -> [String]
+type NamedTheoryText  =  ( String      -- Theory Name
+                         , [String] )  -- Theory text
+type NamedTheoryTexts = [ NamedTheoryText ]
+
+writeTheories :: Theories
+              -> ( [String]           -- Theories text
+                 , [ ( String         -- Theory Name
+                     , [String] ) ] ) -- Theory text
 writeTheories theories
-  = [ thrysHDR ] ++
-    writeMap thrys writeTheory (tmap theories) ++
-    [ sdagKEY ++ show (sdag theories)
-    , thrysTRL ]
+  = ( [ thrysHDR
+      , tmapKEY ++ show (M.keys tmp)
+      , sdagKEY ++ show (sdag theories)
+      , thrysTRL ]
+    , map writeNamedTheory (M.assocs tmp) )
+  where tmp = tmap theories
+
+writeNamedTheory (nm,thry) = (nm, writeTheory thry)
 
 readTheories :: Monad m => [String] -> m (Theories,[String])
 readTheories [] = fail "readTheories: no text."

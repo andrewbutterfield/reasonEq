@@ -25,7 +25,7 @@ projectExt    = "req"
 projectFile   =  projectRoot <.> projectExt
 projectPath projDir = projDir ++ pathSeparator : projectFile
 pfile reqs = projectPath $ projectDir reqs
-tfile reqs nm = projectDir reqs ++ pathSeparator : nm <.> projectExt
+tfile pjdir nm = pjdir ++ pathSeparator : nm <.> projectExt
 \end{code}
 
 \subsection{Writing \reasonEq\ State}
@@ -39,7 +39,7 @@ writeState reqs
        sequence_ $ map (writeNamedTheory reqs) nTsTxts
 
 writeNamedTheory reqs (nm,thTxt)
-  = do let fp = tfile reqs nm
+  = do let fp = tfile (projectDir reqs) nm
        writeFile fp $ unlines thTxt
 \end{code}
 
@@ -49,8 +49,16 @@ writeNamedTheory reqs (nm,thTxt)
 readState :: FilePath -> IO REqState
 readState projfp
   = do txt  <- readFile $ projectPath projfp
-       reqs <- readREqState $ lines txt
-       return reqs{projectDir = projectDir reqs}
+       ((sig,thnms),rest1) <- readREqState1 $ lines txt
+       nmdThrys <- sequence $ map (readNamedTheory projfp) thnms
+       reqs <- readREqState2 sig nmdThrys rest1
+       return reqs{projectDir = projfp}
+
+readNamedTheory projfp nm
+  = do let fp = tfile projfp nm
+       txt <- readFile fp
+       (thry,rest) <- readTheory $ lines txt
+       return (nm,thry)
 \end{code}
 
 Mucking about:

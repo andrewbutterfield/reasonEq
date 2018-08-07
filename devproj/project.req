@@ -7,10 +7,10 @@ IMP = Id "\10233 "
 AND = Id "\8743"
 END SIGNATURE
 BEGIN THEORIES
-TMAP = ["PropAxioms","PropEquiv","PropNot"]
+THNAMES = ["PropAxioms","PropEquiv","PropNot"]
 SDAG = [[("PropNot",["PropEquiv","PropAxioms"])],[("PropEquiv",["PropAxioms"])],[("PropAxioms",[])]]
 END THEORIES
-CURRTHEORY = PropEquiv
+CURRTHEORY = PropAxioms
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
 END MAP LIVE-PROOFS

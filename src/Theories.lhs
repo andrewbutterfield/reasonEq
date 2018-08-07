@@ -16,8 +16,8 @@ module Theories
  , conjs__, conjs_
  , writeTheory, readTheory
  , nullTheory
- , Theories
- , NamedTheoryTexts, writeTheories, readTheories
+ , TheoryMap, Theories
+ , NamedTheoryTexts, writeTheories, readTheories1, readTheories2
  , noTheories
  , addTheory, getTheory
  , getTheoryDeps, getTheoryDeps'
@@ -169,7 +169,7 @@ sdag__ f r = r{sdag = f $ sdag r} ; sdag_ = sdag__ . const
 thrys = "THEORIES"
 thrysHDR = "BEGIN "++thrys ; thrysTRL ="END "++thrys
 
-tmapKEY = "TMAP = "
+thnmsKEY = "THNAMES = "
 sdagKEY = "SDAG = "
 
 type NamedTheoryText  =  ( String      -- Theory Name
@@ -182,25 +182,30 @@ writeTheories :: Theories
                      , [String] ) ] ) -- Theory text
 writeTheories theories
   = ( [ thrysHDR
-      , tmapKEY ++ show (M.keys tmp)
-      , sdagKEY ++ show (sdag theories)
+      , thnmsKEY ++ show (M.keys tmp)
+      , sdagKEY  ++ show (sdag theories)
       , thrysTRL ]
     , map writeNamedTheory (M.assocs tmp) )
   where tmp = tmap theories
 
 writeNamedTheory (nm,thry) = (nm, writeTheory thry)
 
-readTheories :: Monad m => [String] -> m (Theories,[String])
-readTheories [] = fail "readTheories: no text."
-readTheories txts
-  = do rest1       <- readThis thrysHDR      txts
-       (tmp,rest2) <- readMap thrys rdKey readTheory rest1
-       (sdg,rest3) <- readKey  sdagKEY read rest2
-       rest4       <- readThis thrysTRL     rest3
-       return (Theories tmp sdg, rest4)
-
-readTheoryMap :: Monad m => [String] -> m (TheoryMap,[String])
-readTheoryMap = readKey tmapKEY read
+-- we split theory reading into two phases.
+-- First get the list of theories.
+readTheories1 :: Monad m => [String] -> m ([String],[String])
+readTheories1 [] = fail "readTheories1: no text."
+readTheories1 txts
+  = do rest1         <- readThis thrysHDR      txts
+       (thnms,rest2) <- readKey thnmsKEY read rest1
+       return (thnms, rest2)
+-- Second get rest
+readTheories2 :: Monad m => [(String,Theory)] -> [String]
+              -> m (Theories,[String])
+readTheories2 _ [] = fail "readTheories2: no text."
+readTheories2 tmp txts
+  = do (sdg,rest1)  <- readKey  sdagKEY read  txts
+       rest2        <- readThis thrysTRL     rest1
+       return (Theories (M.fromList tmp) sdg, rest2)
 \end{code}
 
 \subsection{No Theories}

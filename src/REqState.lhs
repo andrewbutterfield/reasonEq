@@ -8,7 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module REqState ( REqState(..)
                 , logic__, logic_, theories__, theories_
                 , currTheory__, currTheory_, liveProofs__, liveProofs_
-                , writeREqState, readREqState
+                , writeREqState, readREqState1, readREqState2
                 , module TermZipper
                 , module Laws
                 , module Proofs
@@ -71,7 +71,7 @@ currThKEY = "CURRTHEORY = "
 writeREqState :: REqState -> ([String],NamedTheoryTexts)
 writeREqState reqs
   = ( [ reqstateHDR ] ++
-      writeTheLogic (logicsig reqs) ++
+      writeSignature (logicsig reqs) ++
       thrysTxt ++
       [currThKEY ++ (currTheory reqs)] ++
       writeLiveProofs (liveProofs reqs) ++
@@ -82,19 +82,42 @@ writeREqState reqs
 
 \subsubsection{Read State}
 
+We have to split this into two phases:
 \begin{code}
-readREqState :: Monad m => [String] -> m REqState
-readREqState [] = fail "readREqState: no text."
-readREqState txts
+-- readREqState :: Monad m => [String] -> m REqState
+-- readREqState [] = fail "readREqState: no text."
+-- readREqState txts
+--   = do rest1 <- readThis reqstateHDR txts
+--        (thelogic,rest2) <- readSignature rest1
+--        (thrys,rest3) <- readTheories rest2
+--        (cThNm,rest4) <- readKey currThKEY id rest3
+--        let thylist = fromJust $ getTheoryDeps cThNm thrys
+--        (lPrfs,rest5) <- readLiveProofs thylist rest4
+--        readThis reqstateTLR rest5 -- ignore any junk after trailer.
+--        return $ REqState { projectDir = ""
+--                          , logicsig = thelogic
+--                          , theories = thrys
+--                          , currTheory = cThNm
+--                          , liveProofs = lPrfs }
+
+readREqState1 :: Monad m => [String] -> m ((LogicSig,[String]),[String])
+readREqState1 [] = fail "readREqState1ß: no text."
+readREqState1 txts
   = do rest1 <- readThis reqstateHDR txts
-       (thelogic,rest2) <- readTheLogic rest1
-       (thrys,rest3) <- readTheories rest2
-       (cThNm,rest4) <- readKey currThKEY id rest3
+       (theSig,rest2) <- readSignature rest1
+       (thryNms,rest3) <- readTheories1 rest2
+       return ((theSig,thryNms),rest3)
+
+readREqState2 :: Monad m => LogicSig -> [(String,Theory)] -> [String] -> m REqState
+readREqState2 _ _ [] = fail "readREqState2: no text."
+readREqState2 theSig thMap txts
+  = do (thrys,rest1) <- readTheories2 thMap txts
+       (cThNm,rest2) <- readKey currThKEY id rest1
        let thylist = fromJust $ getTheoryDeps cThNm thrys
-       (lPrfs,rest5) <- readLiveProofs thylist rest4
-       readThis reqstateTLR rest5 -- ignore any junk after trailer.
+       (lPrfs,rest3) <- readLiveProofs thylist rest2
+       readThis reqstateTLR rest3 -- ignore any junk after trailer.
        return $ REqState { projectDir = ""
-                         , logicsig = thelogic
+                         , logicsig = theSig
                          , theories = thrys
                          , currTheory = cThNm
                          , liveProofs = lPrfs }

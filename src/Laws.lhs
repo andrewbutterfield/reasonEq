@@ -10,7 +10,7 @@ module Laws
  ( LogicSig(..), flattenTheEquiv, flattenTheImp, flattenTheAnd
  , Assertion, NmdAssertion, Provenance(..), Law
  , labelAsAxiom, labelAsProof
- , writeTheLogic, readTheLogic
+ , writeSignature, readSignature
  , showLogic, showNmdAssns, showLaw, showLaws
  ) where
 
@@ -57,8 +57,8 @@ eqvKEY = "EQV = "
 impKEY = "IMP = "
 andKEY = "AND = "
 
-writeTheLogic :: LogicSig -> [String]
-writeTheLogic theSig
+writeSignature :: LogicSig -> [String]
+writeSignature theSig
   = [ logicHDR
     , trueKEY  ++ show (theTrue theSig)
     , falseKEY ++ show (theFalse theSig)
@@ -67,9 +67,9 @@ writeTheLogic theSig
     , andKEY   ++ show (theAnd theSig)
     , logicTRL ]
 
-readTheLogic :: Monad m => [String] -> m (LogicSig,[String])
-readTheLogic [] = fail "readTheLogic: no text."
-readTheLogic txts
+readSignature :: Monad m => [String] -> m (LogicSig,[String])
+readSignature [] = fail "readSignature: no text."
+readSignature txts
   = do rest1         <- readThis logicHDR txts
        (true,rest2)  <- readKey  trueKEY readTerm rest1
        (false,rest3) <- readKey  falseKEY readTerm rest2

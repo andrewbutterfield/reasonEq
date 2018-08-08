@@ -1,4 +1,4 @@
-\section{Propositional Theorems (Negation)}
+\section{Propositional Theorems (Disjunction)}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2018
 
@@ -6,9 +6,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module PropNot (
-  propNotName
-, propNotTheory
+module PropDisj (
+  propDisjName
+, propDisjTheory
 ) where
 
 import Data.Maybe
@@ -27,103 +27,105 @@ import Theories
 
 import Propositions
 import PropEquiv
+import PropNot
 \end{code}
 
-\subsection{Negation Conjectures}
+\subsection{Disjunction Conjectures}
 
 We supply conjectures here for each theorem in \cite{gries.93}
-in the \textsc{Negation, Inequivalence and FALSE} section,
-except those about inequivalence.
+in the \textsc{Disjunction} section.
 
 $$
-\CONJPROPNOT
+\CONJPROPDISJ
 $$
 
 \begin{code}
 p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
+r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
+flattenEquiv = flattenTheEquiv propSignature
 \end{code}
 
 
 $$
   \begin{array}{ll}
-       \CJswapNot  & \CJswapNotN
+       \CJorZero  & \CJorZeroN
   \end{array}
 $$
 
 \vspace{-8pt}
 \begin{code}
-cjSwapNot
- = ( _lnot++"_"++_equiv++"_swap"
-   , ( (mkNot p === q) === (p === mkNot q)
+cjOrZero
+ = ( _lor++"_zero"
+   , ( (p \/ trueP) === trueP
      , scTrue ) )
 \end{code}
 
 $$
   \begin{array}{ll}
-       \CJnotInvol & \CJnotInvolN
+       \CJorUnit & \CJorUnitN
   \end{array}
 $$
 
 \vspace{-8pt}
 \begin{code}
-cjNotInvol
- = ( _lnot++"_invol"
-   , ( mkNot (mkNot p) === p
-     , scTrue ) )
-\end{code}
-
-\newpage
-$$
-  \begin{array}{ll}
-       \CJnotFalse & \CJnotFalseN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-cjNotFalse
- = ( "false_neg"
-   , ( mkNot falseP === trueP
+cjOrUnit
+ = ( _lor++"_unit"
+   , ( (p \/ falseP) === p
      , scTrue ) )
 \end{code}
 
 $$
   \begin{array}{ll}
-       \CJnotDef   & \CJnotDefN
+       \CJorDistr & \CJorDistrN
   \end{array}
 $$
 
 \vspace{-8pt}
 \begin{code}
-cjNotDef
- = ( _lnot++"_def"
-   , ( mkNot p === (p === falseP)
+cjOrOrDistr
+ = ( _lor++"-"++_lor++"_distr"
+   , ( p \/ (q \/ r) === (p \/ q) \/ (p \/ r)
+     , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{ll}
+       \CJorEqvSplit & \CJorEqvSplitN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+cjOrEqvSplit
+ = ( _lor++"-"++_equiv++"_split"
+   , ( flattenEquiv ( (p \/ q === p \/ mkNot q) === p )
      , scTrue ) )
 \end{code}
 
 
 
 
+
 \begin{code}
-propNotConjs :: [NmdAssertion]
-propNotConjs
-  = [ cjSwapNot, cjNotInvol, cjNotFalse, cjNotDef
+propDisjConjs :: [NmdAssertion]
+propDisjConjs
+  = [ cjOrZero, cjOrUnit, cjOrOrDistr, cjOrEqvSplit
     ]
 \end{code}
 
-\subsection{The Negation Theory}
+\subsection{The Disjunction Theory}
 
 \begin{code}
-propNotName :: String
-propNotName = "PropNot"
-propNotTheory :: Theory
-propNotTheory
-  =  Theory { thName  =  propNotName
-            , thDeps  =  [propEquivName,propAxiomName]
+propDisjName :: String
+propDisjName = "PropDisj"
+propDisjTheory :: Theory
+propDisjTheory
+  =  Theory { thName  =  propDisjName
+            , thDeps  =  [ propNotName, propEquivName, propAxiomName ]
             , known   =  newVarTable
             , laws    =  []
             , proofs  =  []
-            , conjs   =  propNotConjs
+            , conjs   =  propDisjConjs
             }
 \end{code}

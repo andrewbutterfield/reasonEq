@@ -18,6 +18,7 @@ module AbstractUI
 , matchFocus, applyMatchToFocus
 , lawInstantiate1, lawInstantiate2, lawInstantiate3
 , cloneHypothesis
+, devBIRemind, devListAllBuiltins
 )
 where
 
@@ -434,4 +435,24 @@ cloneHypothesis i land liveProof
           -> return ( focus_ (setTZ (PCons land [hypt,currt]) tz,seq')
                     $ matches_ []
                     $ stepsSoFar__ ( ( CloneH i, exitTZ tz ) : ) liveProof )
+\end{code}
+
+\newpage
+\subsection{Development Features}
+
+\begin{code}
+devListAllBuiltins :: String
+devListAllBuiltins
+  = merge [ "PropAxioms"
+          , "PropEquiv"
+          , "PropNot"
+          , "PropDisj"
+          ]
+  where
+    merge = intercalate " ; "
+    -- merge = unlines'
+
+devBIRemind :: String
+devBIRemind
+  = "Remember to update AbstractUI.devListAllBuiltins with new builtins."
 \end{code}

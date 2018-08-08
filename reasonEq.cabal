@@ -42,6 +42,7 @@ library
                      , Propositions
                      , PropEquiv
                      , PropNot
+                     , PropDisj
                      -- in proto
                      , Acyclic
                      , TRYOUT

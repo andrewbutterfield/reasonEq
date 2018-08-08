@@ -204,7 +204,10 @@ reqQuit _ reqs = putStrLn "\nGoodbye!\n" >> return (True, reqs)
 reqHelpCmds = ["?","help"]
 
 reqCommands :: REqCommands
-reqCommands = [ cmdShow, cmdSet, cmdNewProof, cmdRet2Proof, cmdSave, cmdLoad ]
+reqCommands = [ cmdShow, cmdSet
+              , cmdNewProof, cmdRet2Proof
+              , cmdSave, cmdLoad
+              , cmdBuiltin ]
 
 -- we don't use these features in the top-level REPL
 reqEndCondition _ = False
@@ -337,6 +340,7 @@ setState (cmd:rest) reqs
  where thnm = args2str rest
 setState _ reqs      =  doshow reqs "unknown 'set' option."
 \end{code}
+
 
 \newpage
 \subsection{Proving Commands}
@@ -594,4 +598,31 @@ cloneHypothesisDescr
 cloneHypotheses :: REPLCmd (REqState, LiveProof)
 cloneHypotheses args liveState@(reqs, _)
   = tryDelta (cloneHypothesis (args2int args) (theAnd $ logicsig reqs)) liveState
+\end{code}
+
+\newpage
+\subsection{Development Commands}
+
+\subsubsection{Builtin Theory Handling}
+
+\begin{code}
+cmdBuiltin :: REqCmdDescr
+cmdBuiltin
+  = ( "b"
+    , "builtin theory handling"
+    , unlines
+        [ "b "++binExists++" -- list all existing builtin theories"
+        , "b "++binInstalled++" -- list all installed builtin theories"
+        ]
+    , buildIn )
+
+binExists = "e"
+binInstalled = "i"
+
+buildIn (cmd:rest) reqs
+ | cmd == binExists
+    =  doshow reqs (devListAllBuiltins ++ '\n':devBIRemind)
+ | cmd == binInstalled
+   = doshow reqs $ observeTheories reqs
+buildIn _ reqs      =  doshow reqs "unknown 'b' option."
 \end{code}

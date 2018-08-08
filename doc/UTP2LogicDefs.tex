@@ -304,16 +304,16 @@
 
 % % Negation, inequivalence and FALSE
 
-\def\CJswapNot{\lnot p\equiv q \equiv p \equiv \lnot q}
+\def\CJswapNot{\lnot P\equiv Q \equiv P \equiv \lnot Q}
 \def\CJswapNotN{\QNAME{$\lnot$-$\equiv$-swap}}
 
-\def\CJnotInvol{\lnot \lnot p \equiv p}
+\def\CJnotInvol{\lnot \lnot P \equiv P}
 \def\CJnotInvolN{\QNAME{$\lnot$-invol}}
 
 \def\CJnotFalse{\lnot \false \equiv \true}
 \def\CJnotFalseN{\QNAME{$\false$-neg}}
 
-\def\CJnotDef{\lnot p \equiv p \equiv \false}
+\def\CJnotDef{\lnot P \equiv P \equiv \false}
 \def\CJnotDefN{\QNAME{$\lnot$-def}}
 
 \def\CONJPROPNOT{
@@ -342,6 +342,23 @@
 \def\CJorZero{P \lor \textit{true} \equiv \textit{true}}
 \def\CJorZeroN{\QNAME{$\lor$-zero}}
 
+\def\CJorUnit{P \lor \textit{false} \equiv P}
+\def\CJorUnitN{\QNAME{$\lor$-unit}}
+
+\def\CJorDistr{P \lor (Q\lor R) \equiv (P\lor Q) \lor (P \lor R)}
+\def\CJorDistrN{\QNAME{$\lor$-$\lor$-distr}}
+
+\def\CJorEqvSplit{P\lor Q \equiv P \lor \lnot Q \equiv P}
+\def\CJorEqvSplitN{\QNAME{$\lor$-$\equiv$-split}}
+
+\def\CONJPROPDISJ{
+  \begin{array}{ll}
+       \CJorZero  & \CJorZeroN
+    \\ \CJorUnit & \CJorUnitN
+    \\ \CJorDistr & \CJorDistrN
+    \\ \CJorEqvSplit & \CJorEqvSplitN
+  \end{array}
+}
 % \def\lawOrZero{\NmCmtLaw{$\lor$-zero}{$\GSN{3.29}$}{p \lor \TRUE \equiv \TRUE}}
 % \def\lawOrUnit{\NmCmtLaw{$\lor$-unit}{$\GSN{3.30}$}{p\lor \FALSE \equiv p}}
 % \def\lawOrDistr{\NmCmtLaw{$\lor$-$\lor$-distr}{$\GSN{3.31}$}{p \lor (q\lor r) \equiv (p\lor q) \lor (p \lor r)}}

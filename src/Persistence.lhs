@@ -8,6 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Persistence
   ( writeState
   , readState
+  , writeNamedTheory
   , persistentTest)
 where
 

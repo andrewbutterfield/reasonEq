@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 module AbstractUI
 ( REqState
-, observeSig, observeTheories, observeLaws
+, observeSig, observeTheories, observeTheoryNames, observeLaws
 , observeCurrTheory, observeCurrConj
 , observeLiveProofs, observeCompleteProofs
 , setCurrentTheory
@@ -18,7 +18,7 @@ module AbstractUI
 , matchFocus, applyMatchToFocus
 , lawInstantiate1, lawInstantiate2, lawInstantiate3
 , cloneHypothesis
-, devBIRemind, devListAllBuiltins
+, devBIRemind, devListAllBuiltins, devInstallBuiltin
 )
 where
 
@@ -39,6 +39,12 @@ import Binding
 import VarData
 import Instantiate
 import REqState
+import Persistence
+
+import Propositions
+import PropEquiv
+import PropNot
+import PropDisj
 \end{code}
 
 \subsection{Introduction}
@@ -89,6 +95,10 @@ observeSig reqs = showLogic $ logicsig reqs
 \begin{code}
 observeTheories :: REqState -> String
 observeTheories reqs = showTheories $ theories reqs
+
+observeTheoryNames :: REqState -> String
+observeTheoryNames
+  = intercalate " ; " . map thName . getAllTheories . theories
 \end{code}
 
 \subsubsection{Observing Laws (and Conjectures)}
@@ -440,19 +450,42 @@ cloneHypothesis i land liveProof
 \newpage
 \subsection{Development Features}
 
+Listing builtin theories:
 \begin{code}
+devKnownBuiltins  = [ propAxiomTheory
+                    , propEquivTheory
+                    , propNotTheory
+                    , propDisjTheory
+                    ]
+
+biLkp _ []  = Nothing
+biLkp nm (th:ths)
+ | nm == thName th  =  Just th
+ | otherwise        =  biLkp nm ths
+
 devListAllBuiltins :: String
 devListAllBuiltins
-  = merge [ "PropAxioms"
-          , "PropEquiv"
-          , "PropNot"
-          , "PropDisj"
-          ]
+  = summarise $ map thName devKnownBuiltins
   where
-    merge = intercalate " ; "
-    -- merge = unlines'
+       summarise = intercalate " ; "
+    -- summarise = unlines'
 
 devBIRemind :: String
 devBIRemind
-  = "Remember to update AbstractUI.devListAllBuiltins with new builtins."
+  = "Remember to update AbstractUI.devKnownBuiltins with new builtins."
+\end{code}
+
+Installing builtin theories:
+\begin{code}
+devInstallBuiltin :: REqState -> String -> IO (Maybe String,REqState)
+devInstallBuiltin reqs nm
+  = case biLkp nm devKnownBuiltins of
+      Nothing
+        -> return ( Just ("devInstallBuiltin: no builtin theory '"++nm++"'")
+                  , reqs)
+      Just thry
+        -> do let txt = writeTheory thry
+              writeNamedTheory reqs (nm,txt)
+              putStrLn ("Builtin-Theory written to project")
+              return ( Just "devInstallBuiltin: NYFI", reqs)
 \end{code}

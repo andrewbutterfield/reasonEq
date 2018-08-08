@@ -612,17 +612,27 @@ cmdBuiltin
     , "builtin theory handling"
     , unlines
         [ "b "++binExists++" -- list all existing builtin theories"
-        , "b "++binInstalled++" -- list all installed builtin theories"
+        , "b "++binInstalled++" -- list all installed theories"
+        , "b "++binInstall++" <name> -- install builtin theory <name>"
         ]
     , buildIn )
 
 binExists = "e"
 binInstalled = "i"
+binInstall = "I"
 
-buildIn (cmd:rest) reqs
+buildIn (cmd:_) reqs
  | cmd == binExists
     =  doshow reqs (devListAllBuiltins ++ '\n':devBIRemind)
  | cmd == binInstalled
-   = doshow reqs $ observeTheories reqs
-buildIn _ reqs      =  doshow reqs "unknown 'b' option."
+   = doshow reqs $ observeTheoryNames reqs
+
+buildIn (cmd:nm:_) reqs
+ | cmd == binInstall
+   = do (outcome,reqs') <- devInstallBuiltin reqs nm
+        case outcome of
+          Just msg -> doshow reqs msg
+          Nothing -> return reqs'
+
+buildIn _ reqs = doshow reqs "unrecognised 'b' otion"
 \end{code}

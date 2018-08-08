@@ -348,10 +348,13 @@ trLstVarMatchRole UnknownListVar     =  " ?"
 \begin{code}
 trVarTable :: VarTable -> String
 trVarTable vt
- = unlines' (    map trVTVV (vtList vt)
-              ++ map trVTLV (stList vt)
-              ++ map trVTLV (dtList vt)
-            )
+ = case lns of
+     []  ->  "No known variables."
+     _   ->  unlines' lns
+ where lns = (    map trVTVV (vtList vt)
+               ++ map trVTLV (stList vt)
+               ++ map trVTLV (dtList vt)
+              )
 
 trVTVV (v,vmr)   =  trVar v ++ trVarMatchRole    vmr
 

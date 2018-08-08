@@ -84,22 +84,6 @@ writeREqState reqs
 
 We have to split this into two phases:
 \begin{code}
--- readREqState :: Monad m => [String] -> m REqState
--- readREqState [] = fail "readREqState: no text."
--- readREqState txts
---   = do rest1 <- readThis reqstateHDR txts
---        (thelogic,rest2) <- readSignature rest1
---        (thrys,rest3) <- readTheories rest2
---        (cThNm,rest4) <- readKey currThKEY id rest3
---        let thylist = fromJust $ getTheoryDeps cThNm thrys
---        (lPrfs,rest5) <- readLiveProofs thylist rest4
---        readThis reqstateTLR rest5 -- ignore any junk after trailer.
---        return $ REqState { projectDir = ""
---                          , logicsig = thelogic
---                          , theories = thrys
---                          , currTheory = cThNm
---                          , liveProofs = lPrfs }
-
 readREqState1 :: Monad m => [String] -> m ((LogicSig,[String]),[String])
 readREqState1 [] = fail "readREqState1ß: no text."
 readREqState1 txts

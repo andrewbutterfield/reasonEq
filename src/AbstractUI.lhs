@@ -7,7 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 module AbstractUI
 ( REqState
-, observeSig, observeTheories, observeCurrTheory, observeCurrConj
+, observeSig, observeTheories, observeLaws
+, observeCurrTheory, observeCurrConj
 , observeLiveProofs, observeCompleteProofs
 , setCurrentTheory
 , newProof1, newProof2, resumeProof
@@ -25,6 +26,7 @@ import qualified Data.Set as S
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Maybe
+import Data.List
 
 import Utilities
 import LexBase
@@ -86,6 +88,16 @@ observeSig reqs = showLogic $ logicsig reqs
 \begin{code}
 observeTheories :: REqState -> String
 observeTheories reqs = showTheories $ theories reqs
+\end{code}
+
+\subsubsection{Observing Laws (and Conjectures)}
+
+\begin{code}
+observeLaws :: REqState -> String
+observeLaws reqs
+  = let thrys = getAllTheories $ theories reqs
+    in hdr ++ (intercalate hdr $ map showTheoryLaws thrys)
+  where hdr = "\n---\n"
 \end{code}
 
 \subsubsection{Observing Current Theory}

@@ -10,6 +10,7 @@ module StratifiedDAG (
 , insSDAG
 , lkpSDAG
 , getSDAGdeps
+, topDownSDAG, bottomUpSDAG
 )
 where
 
@@ -147,6 +148,15 @@ findDeps' n sped ns lvls [] = findDeps n sped ns lvls
 findDeps' n sped ns lvls ((m,ms):rest)
   | m `elem` ns  =  findDeps' n (m:sped) (nub (ms ++ (ns \\ [m]))) lvls rest
   | otherwise    =  findDeps' n    sped               ns           lvls rest
+\end{code}
+
+Listing all nodes in dependency order (top-down, and bottom-up)
+\begin{code}
+topDownSDAG :: SDAG a -> [a]  -- type SDAG a = [[(a,[a])]]
+topDownSDAG = concat . map (map fst)
+
+bottomUpSDAG :: SDAG a -> [a]
+bottomUpSDAG = reverse . topDownSDAG
 \end{code}
 
 \subsection{Misc. stuff}

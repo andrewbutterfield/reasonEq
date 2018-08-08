@@ -20,16 +20,18 @@ module Theories
  , NamedTheoryTexts, writeTheories, readTheories1, readTheories2
  , noTheories
  , addTheory, getTheory
- , getTheoryDeps, getTheoryDeps'
+ , getTheoryDeps, getTheoryDeps', getAllTheories
  , listTheories, getTheoryConjectures, getTheoryProofs
  , updateTheory, replaceTheory
  , addTheoryProof, upgradeConj2Law
- , showTheories, showNamedTheory, showTheoryLong, showTheoryShort
+ , showTheories, showNamedTheory
+ , showTheoryLong, showTheoryShort, showTheoryLaws
  ) where
 
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.List
+import Data.Maybe (catMaybes)
 
 import Utilities
 import StratifiedDAG
@@ -269,6 +271,15 @@ getTheoryDeps' nm theories
       Just thrys  ->  thrys
 \end{code}
 
+Sometimes we just want all the theories in dependency order:
+\begin{code}
+getAllTheories :: Theories -> [Theory]
+getAllTheories theories
+ = let thryNms = topDownSDAG $ sdag theories
+   in catMaybes $ map (lookin $ tmap theories) thryNms
+ where lookin tmp nm = M.lookup nm tmp
+\end{code}
+
 \newpage
 \subsection{Various Lookups}
 
@@ -358,8 +369,16 @@ showTheoryShort thry
   = thName thry
     ++ if null deps
         then ""
-        else "("++intercalate " " (thDeps thry)++")"
+        else "( "++intercalate " ; " (thDeps thry)++" )"
   where deps = thDeps thry
+
+showTheoryLaws thry
+  = unlines' (
+      [ "Theory '"++thName thry++"'"
+      , trVarTable (known thry)
+      , showLaws (laws thry)
+      , showNmdAssns (conjs thry)
+      ] )
 
 showNamedTheory thnm thrys
   = case M.lookup thnm $ tmap thrys of

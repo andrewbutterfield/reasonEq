@@ -138,7 +138,7 @@ main
 At present, we assume development mode by default.
 
 The normal ``user'' mode is still not of much use,
-but there will soon be a way to use test it.
+but there will soon be a way to test it.
 \begin{code}
 initState :: CMDFlags -> IO REqState
 
@@ -251,6 +251,7 @@ cmdShow
         [ "sh "++shProject++" -- show current project"
         , "sh "++shSig++" -- show logic signature"
         , "sh "++shTheories++" -- show theories"
+        , "sh "++shLaws++" -- show laws"
         , "sh "++shCurrThry++" -- show 'current' theory"
         , "sh "++shConj++" -- show current conjectures"
         , "sh "++shLivePrf++" -- show current (live) proof"
@@ -261,6 +262,7 @@ cmdShow
 shProject = "f"
 shSig = "s"
 shTheories = "t"
+shLaws = "L"
 shCurrThry = "T"
 shConj = "c"
 shLivePrf = "p"
@@ -271,6 +273,7 @@ showState [cmd] reqs
  | cmd == shProject   =  doshow reqs $ projectDir reqs
  | cmd == shSig       =  doshow reqs $ observeSig reqs
  | cmd == shTheories  =  doshow reqs $ observeTheories reqs
+ | cmd == shLaws      =  doshow reqs $ observeLaws reqs
  | cmd == shCurrThry  =  doshow reqs $ observeCurrTheory reqs
  | cmd == shConj      =  doshow reqs $ observeCurrConj reqs
  | cmd == shLivePrf   =  doshow reqs $ observeLiveProofs reqs

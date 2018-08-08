@@ -484,8 +484,8 @@ devInstallBuiltin reqs nm
         -> return ( Just ("devInstallBuiltin: no builtin theory '"++nm++"'")
                   , reqs)
       Just thry
-        -> do let txt = writeTheory thry
-              writeNamedTheory reqs (nm,txt)
-              putStrLn ("Builtin-Theory written to project")
-              return ( Just "devInstallBuiltin: NYFI", reqs)
+        -> case addTheory thry $ theories reqs of
+             Left msg -> do putStrLn ("devIB Left = "++msg)
+                            return (Just msg,reqs)
+             Right thrys' -> return (Nothing,reqs{theories=thrys'})
 \end{code}

@@ -2,11 +2,12 @@ BEGIN THEORY PropDisj
 DEPS = ["PropNot","PropEquiv","PropAxioms"]
 KNOWN = VD (fromList [],fromList [],fromList [])
 BEGIN LIST LAWS
+(("\8744_zero",(C P (Id "\8801") [C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "true",VP,WS))],V P (VR (Id "true",VP,WS))],SC (fromList []) (fromList []))),Proven "\8744_zero")
 END LIST LAWS
 BEGIN LIST PROOFS
+("\8744_zero",(C P (Id "\8801") [C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "true",VP,WS))],V P (VR (Id "true",VP,WS))],SC (fromList []) (fromList [])),"reduce",(V P (VR (Id "true",VP,WS)),[(UseLaw ByInstantiation "\8801_refl" (BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [])) [1,2],C P (Id "\8801") [C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "true",VP,WS))],V P (VR (Id "true",VP,WS))]),(UseLaw ByMatch "\8744_\8801_distr" (BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS))),((Id "Q",VP),BV (VR (Id "P",VP,WS))),((Id "R",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [])) [1],C P (Id "\8801") [C P (Id "\8744") [V P (VR (Id "P",VP,WS)),C P (Id "\8801") [V P (VR (Id "P",VP,WS)),V P (VR (Id "P",VP,WS))]],V P (VR (Id "true",VP,WS))]),(UseLaw ByMatch "\8801_refl" (BD (fromList [((Id "P",VP),BT (C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "P",VP,WS))]))],fromList [],fromList [])) [1],C P (Id "\8801") [C P (Id "\8801") [C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "P",VP,WS))],C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "P",VP,WS))]],V P (VR (Id "true",VP,WS))]),(UseLaw ByMatch "\8801_refl" (BD (fromList [((Id "P",VP),BV (VR (Id "true",VP,WS)))],fromList [],fromList [])) [],C P (Id "\8801") [V P (VR (Id "true",VP,WS)),V P (VR (Id "true",VP,WS))])]))
 END LIST PROOFS
 BEGIN LIST CONJECTURES
-("\8744_zero",(C P (Id "\8801") [C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "true",VP,WS))],V P (VR (Id "true",VP,WS))],SC (fromList []) (fromList [])))
 ("\8744_unit",(C P (Id "\8801") [C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "false",VP,WS))],V P (VR (Id "P",VP,WS))],SC (fromList []) (fromList [])))
 ("\8744-\8744_distr",(C P (Id "\8801") [C P (Id "\8744") [V P (VR (Id "P",VP,WS)),C P (Id "\8744") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "R",VP,WS))]],C P (Id "\8744") [C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "R",VP,WS))]]],SC (fromList []) (fromList [])))
 ("\8744-\8801_split",(C P (Id "\8801") [C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],C P (Id "\8744") [V P (VR (Id "P",VP,WS)),C P (Id "\172") [V P (VR (Id "Q",VP,WS))]],V P (VR (Id "P",VP,WS))],SC (fromList []) (fromList [])))

@@ -485,7 +485,6 @@ devInstallBuiltin reqs nm
                   , reqs)
       Just thry
         -> case addTheory thry $ theories reqs of
-             Left msg -> do putStrLn ("devIB Left = "++msg)
-                            return (Just msg,reqs)
-             Right thrys' -> return (Nothing,reqs{theories=thrys'})
+             But msgs -> return (Just $ unlines' msgs,reqs)
+             Yes thrys' -> return (Nothing,reqs{theories=thrys'})
 \end{code}

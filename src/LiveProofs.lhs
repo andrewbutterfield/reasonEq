@@ -139,6 +139,14 @@ stepsSoFar__ f lp = lp{ stepsSoFar = f $ stepsSoFar lp}
 stepsSoFar_ = stepsSoFar__ . const
 \end{code}
 
+\subsection{Live Proof Collection}
+
+We maintain a collection of \texttt{LiveProof}s
+as a map from theory and conjecture names to the corresponding live proof:
+\begin{code}
+type LiveProofs = Map (String,String) LiveProof
+\end{code}
+
 \newpage
 \subsection{Live-Proof Write and Read}
 
@@ -204,13 +212,6 @@ readLiveProof thylist txts
 \end{code}
 
 
-\subsection{Live Proof Collection}
-
-We maintain a collection of \texttt{LiveProof}s
-as a map from theory and conjecture names to the corresponding live proof:
-\begin{code}
-type LiveProofs = Map (String,String) LiveProof
-\end{code}
 
 \newpage
 \subsection{Writing and Reading Live Proofs}

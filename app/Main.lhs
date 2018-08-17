@@ -455,10 +455,12 @@ proofREPLConfig
       proofREPLQuit
       proofREPLHelpCmds
       ( map clearLong
-            [ goDownDescr
+            [ listLawDescr
+            , goDownDescr
             , goUpDescr
             , matchLawDescr
             , applyMatchDescr
+            , goBackDescr
             , lawInstantiateDescr
             , switchConsequentDescr
             , switchHypothesisDescr
@@ -490,6 +492,18 @@ tryDelta delta (reqs, liveProof)
        Nothing          ->  return (reqs, liveProof )
        Just liveProof'  ->  return (reqs, liveProof')
 \end{code}
+
+Listing laws
+\begin{code}
+listLawDescr = ( "ll", "list laws", "ll -- list all available laws", listLaws)
+
+listLaws :: REPLCmd (REqState, LiveProof)
+listLaws _ state@( reqs, _)
+  = do putStrLn $ observeLaws reqs
+       putStr "<return> to continue..." ; hFlush stdout ; getLine
+       return state
+\end{code}
+
 
 Focus movement commands
 \begin{code}
@@ -552,10 +566,22 @@ matchLawCommand _ (reqs, liveProof)
 Applying a match.
 \begin{code}
 applyMatchDescr = ( "a", "apply match"
-                  , "a i  -- apply match number i", applyMatch)
+                  , "a i  -- apply match number i", applyMatch )
 
 applyMatch :: REPLCmd (REqState, LiveProof)
 applyMatch args  =  tryDelta (applyMatchToFocus (args2int args))
+\end{code}
+
+Undoing the previous step (if any)
+\begin{code}
+goBackDescr = ( "b", "go back (undo)"
+              , unlines' [ "b   --- undo last proof step"
+                         , "b i --- undo the last 'i' proof steps"
+                         , "    --- cannot undo sequent changes yet"]
+              , goBack )
+
+goBack :: REPLCmd (REqState, LiveProof)
+goBack args  =  tryDelta (undoProofStep (args2int args))
 \end{code}
 
 \newpage

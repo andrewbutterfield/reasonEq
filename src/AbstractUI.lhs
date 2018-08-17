@@ -16,6 +16,7 @@ module AbstractUI
 , moveFocusDown, moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, applyMatchToFocus
+, undoProofStep
 , lawInstantiate1, lawInstantiate2, lawInstantiate3
 , cloneHypothesis
 , devBIRemind, devListAllBuiltins, devInstallBuiltin
@@ -359,6 +360,11 @@ applyMatchToFocus i liveProof
                  $ stepsSoFar__
                     (((UseLaw ByMatch (mName mtch) bnd dpath), exitTZ tz):)
                     liveProof )
+\end{code}
+
+\begin{code}
+undoProofStep  :: Monad m => Int -> LiveProof -> m LiveProof
+undoProofStep i liveProof = return liveProof
 \end{code}
 
 \newpage

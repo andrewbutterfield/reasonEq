@@ -278,7 +278,7 @@ putListOneLine showx (x:xs)
 pickByNumber :: String -> (t -> String) -> t -> IO Int
 pickByNumber prompt showx x
   = do putStrLn $ showx x
-       putStr prompt ; input <- getLine
+       putStr prompt ; hFlush stdout ; input <- getLine
        return $ readInt $ trim input
 
 \end{code}

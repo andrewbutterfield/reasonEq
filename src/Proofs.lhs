@@ -8,7 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Proofs
  ( HowUsed(..)
- , Justification(..), showJustification
+ , SeqFocus(..), Justification(..), showJustification
  , isSequentSwitch, justSwitched
  , CalcStep
  , Calculation
@@ -176,8 +176,10 @@ The justification of a step records either
 (i) which laws was used, where and how,
 or (ii) that the step was a big switch
 between consequents and hypotheses.
-\textbf{Can't go back with this, because we don't record where we were,
-before we did a switch!}
+We need to be able to identify where we are and where we are going:
+\begin{code}
+data SeqFocus = CLeft | CRight | Hyp Int deriving (Eq,Show,Read)
+\end{code}
 \begin{code}
 data Justification
   = UseLaw
@@ -185,19 +187,15 @@ data Justification
       String   -- law name
       Binding  -- binding from law variables to goal components
       [Int]    -- zipper descent arguments
-  | SwLeft     -- switch to left consequent -- FROM WHERE?
-  | SwRight    -- switch to right consequent -- FROM WHERE?
-  | SwHyp Int  -- switch to hypothesis i -- FROM WHERE
+  | Switch SeqFocus SeqFocus -- switch from to
   | CloneH Int -- clone hypothesis i
   deriving (Eq,Show,Read)
 \end{code}
 Often it is worth knowing if a switch has occurred.
 \begin{code}
 isSequentSwitch :: Justification -> Bool
-isSequentSwitch SwLeft     =  True
-isSequentSwitch SwRight    =  True
-isSequentSwitch (SwHyp _)  =  True
-isSequentSwitch _          =  False
+isSequentSwitch (Switch _ _)  =  True
+isSequentSwitch _             =  False
 
 justSwitched :: [CalcStep] -> Bool
 justSwitched []         =  True -- starting a proof is considered a 'switch'
@@ -242,20 +240,21 @@ labelAsProven nasn (prfnm,_,_,_) =  (nasn, Proven prfnm)
 
 \begin{code}
 showJustification :: Justification -> String
-showJustification SwLeft
-  =  "   [switch left]"
-showJustification SwRight
-  =  "   [switch right]"
-showJustification (SwHyp i)
-  =  "   [switch hypothesis "++show i++"]"
-showJustification (CloneH i)
-  =  "   [clone hypothesis "++show i++"]"
 showJustification (UseLaw how lnm bind dpath)
   =  "   = '"++showHow how++" "++lnm++"@" ++ show dpath ++ "'"
+showJustification (Switch from to)
+  =  "   [switch "++showSeqFocus from++" > "++showSeqFocus to++"]"
+showJustification (CloneH i)
+  =  "   [clone hypothesis "++show i++"]"
 
 showHow :: HowUsed -> String
 showHow ByMatch = "match"
 showHow ByInstantiation = "instantiate"
+
+showSeqFocus :: SeqFocus -> String
+showSeqFocus CLeft = "left"
+showSeqFocus CRight = "right"
+showSeqFocus (Hyp i) = "hyp. "++show i
 \end{code}
 
 \begin{code}
@@ -268,15 +267,12 @@ displayProof (pnm,(trm,sc),strat,(trm',steps))
               ++ [trTerm 0 trm'] )
 
 shStep :: CalcStep -> String
-shStep ( SwLeft,  t )  =  unlines' [trTerm 0 t, " [switch left]"]
-shStep ( SwRight, t )  =  unlines' [trTerm 0 t, " [switch right]"]
-shStep ( SwHyp i, t )
-  =  unlines' [trTerm 0 t, " [switch hypothesis "++show i++"]"]
 shStep ( (UseLaw how lnm bind dpath), trm )
    = unlines' [ trTermZip $ pathTZ dpath trm
               , " = '" ++ showHow how++" "++lnm++" @" ++ show dpath ++ "'"
               , trBinding bind
               ]
+shStep ( just,  t )  =  unlines' [trTerm 0 t, showJustification just]
 \end{code}
 
 

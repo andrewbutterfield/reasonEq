@@ -13,6 +13,7 @@ module Sequents
  , assume
  , Sequent'(..)
  , SeqZip, writeSeqZip, readSeqZip
+ , sequentFocus
  , dispSeqZip, dispSeqTermZip
  , leftConjFocus, rightConjFocus, hypConjFocus, exitSeqZipper
  , upSZ, downSZ
@@ -492,6 +493,7 @@ data LeftRight = Lft | Rght deriving (Eq,Show,Read)
 \end{code}
 
 
+
 Given that $S$ is not recursive, then the zipper for $S$
 will have a term-zipper as its ``focus'', and a single instance
 of $S'$ to allow the one possible upward ``step''.
@@ -518,6 +520,17 @@ readSeqZip thylist txts
        (seq',rest3) <- readSequent' thylist rest2
        rest4 <- readThis szTRL rest3
        return ((tz,seq'),rest4)
+\end{code}
+
+It is useful to be able to determine where we are currently
+focussed at sequent level:
+\begin{code}
+sequentFocus :: SeqZip -> SeqFocus
+sequentFocus (_,seq')
+ = case laws' seq' of
+     (CLaws' _ which _) | which == Lft   ->  CLeft
+                        | which == Rght  ->  CRight
+     (HLaws' _ _ before _ _ _ _ _ _ _)   ->  Hyp (length before + 1)
 \end{code}
 
 \newpage
@@ -603,40 +616,42 @@ However we also have switch actions that jump between the three top-level
 focii.
 Switching between $C_{left}$ and $C_{right}$ is easy:
 \begin{code}
+-- DEPRECATED, NOT USED !!!
 seqGoLeft :: SeqZip -> (Bool, SeqZip)
 seqGoLeft sz@(_,Sequent' _ _ (CLaws' _ Lft _))  =  (False,sz) -- already Left
 seqGoLeft sz = (True,leftConjFocus $ exitSeqZipper sz)
 
+-- DEPRECATED, NOT USED!!!
 seqGoRight :: SeqZip -> (Bool, SeqZip)
 seqGoRight sz@(_,Sequent' _ _ (CLaws' _ Rght _))  =  (False,sz) -- already Right
 seqGoRight sz = (True,rightConjFocus $ exitSeqZipper sz)
 
 switchLeftRight :: SeqZip -> (Bool, Justification, SeqZip)
 switchLeftRight sz@(_,Sequent' _ _ (CLaws' _ Lft _)) -- already Left
-  =  (True, SwRight, rightConjFocus $ exitSeqZipper sz)
+  =  (True, Switch CLeft CRight, rightConjFocus $ exitSeqZipper sz)
 switchLeftRight sz@(_,Sequent' _ _ (CLaws' _ Rght _)) -- already Right
-  =  (True, SwLeft,  leftConjFocus $ exitSeqZipper sz)
+  =  (True, Switch CRight CLeft,  leftConjFocus $ exitSeqZipper sz)
 switchLeftRight sz -- must be in hypothesis
   =  (False, error "switchLeftRight: in hypothesis!", sz)
 \end{code}
 Entering a $H_i$  from $C_{left}$ or $C_{right}$ is easy.
 But once in, we need a special command to exit.
 \begin{code}
-seqGoHyp :: Int -> SeqZip -> (Bool, SeqZip)
+seqGoHyp :: Int -> SeqZip -> (Bool, Justification, SeqZip)
 seqGoHyp i sz@(_,Sequent' _ _ (HLaws' _ _ _ _ _ _ _ _ _ _))
-  =  (False,sz)  -- can't change hypothesis while in one.
+  =  (False, undefined, sz)  -- can't change hypothesis while in one.
 seqGoHyp i sz
   =  case hypConjFocus i $ exitSeqZipper sz of
-       Nothing   ->  (False,sz) -- bad index
-       Just sz'  ->  (True,sz')
+       Nothing   ->  (False,error ("seqGoHyp: bad index "++show i),sz)
+       Just sz'  ->  (True,Switch (sequentFocus sz) (Hyp i), sz')
 \end{code}
 When we leave, the revised hypothesis must be added in as a new one.
 \begin{code}
-seqLeaveHyp :: SeqZip -> (Bool, SeqZip)
+seqLeaveHyp :: SeqZip -> (Bool, Justification, SeqZip)
 seqLeaveHyp sz@(_,Sequent' _ _ (HLaws' _ _ _ _ _ _ _ _ _ _))
-  =  (True,leftConjFocus $ exitSeqZipper sz)
+  =  (True,Switch (sequentFocus sz ) CLeft, leftConjFocus $ exitSeqZipper sz)
 seqLeaveHyp sz -- not in hypothesis
-  =  (False,sz)
+  =  (False,error "seqLeaveHyp: not in hyp.",sz)
 \end{code}
 
 Pulling out the hypothesis theory from the sequent zipper:

@@ -302,7 +302,7 @@ moveFocusToHypothesis :: Monad m => Int -> LiveProof -> m LiveProof
 moveFocusToHypothesis i liveProof
   = let
       sz = focus liveProof
-      (ok,sz') = seqGoHyp i sz
+      (ok,sw',sz') = seqGoHyp i sz
       (_,seq') = sz'
       hthry' = getHypotheses seq'
       mcs = buildMatchContext (hthry':ante0 seq')
@@ -310,7 +310,7 @@ moveFocusToHypothesis i liveProof
         then return ( mtchCtxts_ mcs
                     $ focus_ sz'
                     $ matches_ []
-                    $ stepsSoFar__ ((SwHyp i, exitTZ $ fst sz):) liveProof )
+                    $ stepsSoFar__ ((sw', exitTZ $ fst sz):) liveProof )
         else fail ("No hypothesis "++show i)
 \end{code}
 
@@ -322,7 +322,7 @@ moveFocusFromHypothesis :: Monad m => LiveProof -> m LiveProof
 moveFocusFromHypothesis liveProof
   = let
       sz = focus liveProof
-      (ok,sz') = seqLeaveHyp sz
+      (ok,sw',sz') = seqLeaveHyp sz
       (_,seq') = sz'
       hthry' = getHypotheses seq'
       mcs = buildMatchContext (hthry':ante0 seq')
@@ -330,7 +330,7 @@ moveFocusFromHypothesis liveProof
         then return ( mtchCtxts_ mcs
                     $ focus_ sz'
                     $ matches_ []
-                    $ stepsSoFar__ ((SwLeft, exitTZ $ fst sz):) liveProof )
+                    $ stepsSoFar__ ((sw', exitTZ $ fst sz):) liveProof )
         else fail "Not in hypotheses"
 \end{code}
 

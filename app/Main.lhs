@@ -581,7 +581,7 @@ goBackDescr = ( "b", "go back (undo)"
               , goBack )
 
 goBack :: REPLCmd (REqState, LiveProof)
-goBack args  =  tryDelta (undoProofStep (args2int args))
+goBack args  =  tryDelta (stepBack (args2int args))
 \end{code}
 
 \newpage

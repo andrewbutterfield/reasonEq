@@ -20,6 +20,7 @@ module LiveProofs
  , displayMatches
  , buildMatchContext, matchInContexts
  , proofIsComplete, finaliseProof
+ , undoCalcStep
  , showLiveProofs
  ) where
 
@@ -468,6 +469,26 @@ doEqvMatchC' logicsig vts n sc prov tsC tsP
     eqv []   =  theTrue logicsig
     eqv [t]  =  t
     eqv ts   =  Cons P (theEqv logicsig) ts
+\end{code}
+
+\subsubsection{Undoing a Proof Step}
+
+\begin{code}
+undoCalcStep :: LiveProof -> LiveProof
+undoCalcStep liveProof
+  = case stepsSoFar liveProof of
+      []                       ->  liveProof
+      ((just,term):prevSteps)  ->  undoCalcStep' term prevSteps just
+  where
+    undoCalcStep' term prevS (UseLaw _ _ _ _)
+      = matches_ []
+        $ fPath_ []
+        $ stepsSoFar_ prevS
+        $ focus__ (setTerm term) liveProof
+    undoCalcStep' term prevS (Switch from to) = liveProof
+    undoCalcStep' term prevS (CloneH i) = liveProof
+
+    setTerm t (tz,seq') = (mkTZ t,seq')
 \end{code}
 
 \newpage

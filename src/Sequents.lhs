@@ -17,7 +17,7 @@ module Sequents
  , dispSeqZip, dispSeqTermZip
  , leftConjFocus, rightConjFocus, hypConjFocus, exitSeqZipper
  , upSZ, downSZ
- , seqGoLeft, seqGoRight, switchLeftRight
+ , switchLeftRight
  , seqGoHyp, seqLeaveHyp
  , getHypotheses
  , CalcStep
@@ -616,16 +616,6 @@ However we also have switch actions that jump between the three top-level
 focii.
 Switching between $C_{left}$ and $C_{right}$ is easy:
 \begin{code}
--- DEPRECATED, NOT USED !!!
-seqGoLeft :: SeqZip -> (Bool, SeqZip)
-seqGoLeft sz@(_,Sequent' _ _ (CLaws' _ Lft _))  =  (False,sz) -- already Left
-seqGoLeft sz = (True,leftConjFocus $ exitSeqZipper sz)
-
--- DEPRECATED, NOT USED!!!
-seqGoRight :: SeqZip -> (Bool, SeqZip)
-seqGoRight sz@(_,Sequent' _ _ (CLaws' _ Rght _))  =  (False,sz) -- already Right
-seqGoRight sz = (True,rightConjFocus $ exitSeqZipper sz)
-
 switchLeftRight :: SeqZip -> (Bool, Justification, SeqZip)
 switchLeftRight sz@(_,Sequent' _ _ (CLaws' _ Lft _)) -- already Left
   =  (True, Switch CLeft CRight, rightConjFocus $ exitSeqZipper sz)
@@ -634,6 +624,7 @@ switchLeftRight sz@(_,Sequent' _ _ (CLaws' _ Rght _)) -- already Right
 switchLeftRight sz -- must be in hypothesis
   =  (False, error "switchLeftRight: in hypothesis!", sz)
 \end{code}
+
 Entering a $H_i$  from $C_{left}$ or $C_{right}$ is easy.
 But once in, we need a special command to exit.
 \begin{code}
@@ -645,6 +636,7 @@ seqGoHyp i sz
        Nothing   ->  (False,error ("seqGoHyp: bad index "++show i),sz)
        Just sz'  ->  (True,Switch (sequentFocus sz) (Hyp i), sz')
 \end{code}
+
 When we leave, the revised hypothesis must be added in as a new one.
 \begin{code}
 seqLeaveHyp :: SeqZip -> (Bool, Justification, SeqZip)

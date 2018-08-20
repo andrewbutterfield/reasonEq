@@ -88,24 +88,24 @@ alookup k (thing@(n,_):rest)
   | otherwise  =  alookup k rest
 \end{code}
 
-Screen clearing:
-\begin{code}
-clear = "\ESC[2J\ESC[1;1H"
-clearIt str = clear ++ str
-\end{code}
-
 \subsubsection{Intercalation, dropping nulls}
 \begin{code}
 intcalNN sep = intercalate sep . filter (not . null)
 \end{code}
 
 \subsubsection{Splitting Lists}
+
 \begin{code}
 listsplit ts = listsplit' [] [] ts
 listsplit' splits before [] = splits
 listsplit' splits before (t:after)
  = listsplit' ((reverse before',after):splits) before' after
  where before' = t:before
+\end{code}
+
+\begin{code}
+splitLast [x] = ([],x)
+splitLast (x:xs) = (x:xs',y) where (xs',y) = splitLast xs
 \end{code}
 
 \subsubsection{`Peeling' a list}
@@ -291,6 +291,14 @@ rrun nekot = Run $ reverse nekot
 spaced s = ' ':s ++ " "
 \end{code}
 
+Screen clearing:
+\begin{code}
+clear = "\ESC[2J\ESC[1;1H"
+clearIt str = clear ++ str
+\end{code}
+
+
+
 \newpage
 \subsubsection{Parsing Tokens}
 
@@ -440,6 +448,8 @@ disp2 i (STpair (st:sts)) = "( "++ disp2 (i+2) st ++ disp2c i sts ++ " )"
 disp2c i [] = ""
 disp2c i (st:sts) = "\n" ++ ind i ++ ", " ++  disp2 (i+2) st ++ disp2c i sts
 \end{code}
+
+
 
 \newpage
 \subsection{Possible Failure Monad}

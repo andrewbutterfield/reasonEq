@@ -8,7 +8,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Sequents
  ( Sequent(..)
- , availableStrategies, reduce, redboth, assume
+ , availableStrategies
+ , reduce, redboth, redtail, redinit
+ , assume
  , Sequent'(..)
  , SeqZip, writeSeqZip, readSeqZip
  , dispSeqZip, dispSeqTermZip
@@ -87,12 +89,25 @@ availableStrategies theSig theories thnm (nm,(tconj,sc))
   = catMaybes
      [ reduce  theSig thys cflat
      , redboth theSig thys cflat
+     , redtail theSig thys cflat
+     , redinit theSig thys cflat
      , assume  theSig thys cflat ]
   where
     thys = fromJust $ getTheoryDeps thnm theories
     cflat = (nm,(flattenTheImp theSig tconj,sc))
 \end{code}
 and then use the following functions to produce a sequent, if possible.
+
+\subsubsection{No Hypotheses}
+\begin{code}
+noHyps nm = Theory { thName = "H."++nm
+                   , thDeps = []
+                   , known = newVarTable
+                   , laws = []
+                   , proofs = []
+                   , conjs = []
+                   }
+\end{code}
 
 \subsubsection{Strategy \textit{reduce}}
 
@@ -104,16 +119,11 @@ and then use the following functions to produce a sequent, if possible.
 \begin{code}
 reduce :: Monad m => LogicSig -> [Theory] -> NmdAssertion
        -> m (String, Sequent)
-reduce logic thys (nm,(t,sc))
-  = return ( "reduce", Sequent thys hthry sc t $ theTrue logic )
-  where hthry = Theory { thName = "H."++nm
-                       , thDeps = []
-                       , known = makeUnknownKnown thys t
-                       , laws = []
-                       , proofs = []
-                       , conjs = []
-                       }
+reduce logicsig thys (nm,(t,sc))
+  = return ( "reduce", Sequent thys (noHyps nm) sc t $ theTrue logicsig )
 \end{code}
+
+
 
 \newpage
 \subsubsection{Strategy \textit{redboth}}
@@ -126,21 +136,48 @@ reduce logic thys (nm,(t,sc))
 \begin{code}
 redboth :: Monad m => LogicSig -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
-redboth logic thys (nm,(t@(Cons tk i [tl,tr]),sc))
-  | i == theEqv logic
-      = return ( "redboth", Sequent thys hthry sc tl tr )
-  where hthry = Theory { thName = "H."++nm
-                       , thDeps = []
-                       , laws = []
-                       , known = makeUnknownKnown thys t
-                       , proofs = []
-                       , conjs = []
-                       }
-redboth logic thys (nm,(t,sc)) = fail "redboth not applicable"
+redboth logicsig thys (nm,(t@(Cons tk i [tl,tr]),sc))
+  | i == theEqv logicsig
+      = return ( "redboth", Sequent thys (noHyps nm) sc tl tr )
+redboth logicsig thys (nm,(t,sc)) = fail "redboth not applicable"
 \end{code}
 
-\subsubsection{Strategy \textit{assume}}
+\subsubsection{Strategy \textit{redtail}}
 
+\begin{eqnarray*}
+   redtail(C_1 \equiv C_2 \equiv \dots \equiv C_n)
+   &\defs&
+   \mathcal L \vdash (C_2 \equiv \dots \equiv C_n) \equiv C_1
+\end{eqnarray*}
+\begin{code}
+redtail :: Monad m => LogicSig -> [Theory] -> NmdAssertion
+        -> m (String, Sequent)
+redtail logicsig thys (nm,(t@(Cons tk i (c1:cs@(_:_))),sc))
+  | i == theEqv logicsig
+      = return ( "redtail", Sequent thys (noHyps nm) sc (Cons tk i cs) c1 )
+redtail logicsig thys (nm,(t,sc)) = fail "redtail not applicable"
+\end{code}
+
+\subsubsection{Strategy \textit{redinit}}
+
+\begin{eqnarray*}
+   redinit(C_1 \equiv \dots \equiv C_{n-1} \equiv C_n)
+   &\defs&
+   \mathcal L \vdash (C_1 \equiv \dots \equiv C_{n-1}) \equiv C_n
+\end{eqnarray*}
+We prefer to put the smaller simpler part on the right.
+\begin{code}
+redinit :: Monad m => LogicSig -> [Theory] -> NmdAssertion
+        -> m (String, Sequent)
+redinit logicsig thys (nm,(t@(Cons tk i cs@(_:_:_)),sc))
+  | i == theEqv logicsig
+      = return ( "redboth", Sequent thys (noHyps nm) sc (Cons tk i cs') cn )
+  where (cs',cn) = splitLast cs
+redinit logicsig thys (nm,(t,sc)) = fail "redinit not applicable"
+\end{code}
+
+\newpage
+\subsubsection{Strategy \textit{assume}}
 
 \begin{eqnarray*}
    assume(H \implies C)
@@ -150,11 +187,11 @@ redboth logic thys (nm,(t,sc)) = fail "redboth not applicable"
 \begin{code}
 assume :: Monad m => LogicSig -> [Theory] -> NmdAssertion
        -> m (String, Sequent)
-assume logic thys (nm,(t@(Cons tk i [ta,tc]),sc))
-  | i == theImp logic
-    = return ( "assume", Sequent thys hthry sc tc $ theTrue logic )
+assume logicsig thys (nm,(t@(Cons tk i [ta,tc]),sc))
+  | i == theImp logicsig
+    = return ( "assume", Sequent thys hthry sc tc $ theTrue logicsig )
   where
-    hlaws = map mkHLaw $ zip [1..] $ splitAnte logic ta
+    hlaws = map mkHLaw $ zip [1..] $ splitAnte logicsig ta
     mkHLaw (i,trm) = labelAsAxiom ("H."++nm++"."++show i,(trm,scTrue))
     hthry = Theory { thName = "H."++nm
                    , thDeps = []
@@ -183,7 +220,7 @@ splitAnte _        t     =  [t]
 \begin{code}
 asmboth :: Monad m => LogicSig -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
-asmboth logic thys (nm,(t,sc)) = fail "asmboth not applicable"
+asmboth logicsig thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{code}
 
 \subsubsection{Strategy \textit{shunt}}
@@ -197,7 +234,7 @@ asmboth logic thys (nm,(t,sc)) = fail "asmboth not applicable"
 -- actually, this is done under the hood
 shunt :: Monad m => LogicSig -> [Theory] -> NmdAssertion
       -> m (String, Sequent)
-shunt logic thys (nm,(t,sc)) = fail "shunt not applicable"
+shunt logicsig thys (nm,(t,sc)) = fail "shunt not applicable"
 \end{code}
 
 \subsubsection{Strategy \textit{shntboth}}
@@ -212,7 +249,7 @@ shunt logic thys (nm,(t,sc)) = fail "shunt not applicable"
 -- actually, this is done under the hood
 shntboth :: Monad m => LogicSig -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
-shntboth logic thys (nm,(t,sc)) = fail "shntboth not applicable"
+shntboth logicsig thys (nm,(t,sc)) = fail "shntboth not applicable"
 \end{code}
 
 \subsubsection{Splitting Conjoined Hypotheses}
@@ -224,8 +261,8 @@ shntboth logic thys (nm,(t,sc)) = fail "shntboth not applicable"
 \end{eqnarray*}
 \begin{code}
 splitAnd :: LogicSig -> Term -> [Term]
-splitAnd logic (Cons _ i ts)
-  | i == theAnd logic  =  ts
+splitAnd logicsig (Cons _ i ts)
+  | i == theAnd logicsig  =  ts
 splitAnd _ t           =  [t]
 \end{code}
 

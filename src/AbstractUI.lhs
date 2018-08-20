@@ -362,6 +362,13 @@ applyMatchToFocus i liveProof
                     liveProof )
 \end{code}
 
+\subsubsection{Undoing a proof step.}
+
+\textbf{This is not quite as simple as just backing up a \texttt{CalcStep}.
+If the most recent step was a change of sequent focus (hyp,cleft,cright),
+then we need to get back to the previous such focus.
+However, right now, the \texttt{Justification} datatype only records
+the end state of a switch, without any note of the previous such state.}
 \begin{code}
 undoProofStep  :: Monad m => Int -> LiveProof -> m LiveProof
 undoProofStep i liveProof = return liveProof

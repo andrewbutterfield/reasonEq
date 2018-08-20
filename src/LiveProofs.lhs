@@ -400,18 +400,28 @@ $$
  & C_j :: P_i, i \in J, \#J = m, J \subseteq \setof{1\dots n}
  & \mathop\equiv_i(P_i^n)\setminus J
 \\\hline
+   D.
+ & \mathop\equiv_j(C_1^m), m > n
+ & \mathop\equiv_i(P_i^n)
+ & C_j :: P_i, j \in K, \#K = n, K \subseteq \setof{1\dots m}
+ & (\mathop\equiv_i(P_i^n)|_K) \equiv (\mathop\equiv_j(C_j^n)\setminus K)
+\\\hline
 \end{array}
 $$
 Case A prevents spurious matches of \QNAME{$\equiv$-refl}
 where we match $C::P$ with replacment $P$ to obtain result $C$.
-We can also deal with matching candidate uses of $\equiv$
-with an arity greater than that of the pattern (Case D., not shown),
-by matching groups of candidates against pattern components,
-but for now we do not support this.
+We might consider matching candidate uses of $\equiv$
+with an arity greater than that of the pattern (Case D.),
+by matching a subset of candidates against pattern components.
+However Case D breaks the matching abstraction by requiring the replacement
+predicate to be embedded in with specific remaining parts of the candidate.
+The best approach is to have a way to focus into the relevant subset
+of the candidate (i.e., $\mathop\equiv_j(C_1^m)|_K$),
+and then try to match against the pattern.
 We fully support Cases A and B and give some support to Case C.
 
-First, Case A, which is automatically done above,
-so we need not do anything here.
+First, Case A, which is automatically done above by \texttt{simpleMatch},
+so we need not return any matches here.
 \begin{code}
 doEqvMatch _ _ _ _ _ _ [p1,p2] | p1 == p2  =  []
 \end{code}
@@ -422,6 +432,7 @@ doEqvMatch logicsig vts tC n sc prov ts
     ++
     doEqvMatchB logicsig vts tC n sc prov [] [] ts
 \end{code}
+
 Next, Case B.
 \begin{code}
 doEqvMatchB logicsig vts tC n sc prov mtchs _ [] = mtchs
@@ -434,12 +445,16 @@ doEqvMatchB logicsig vts tC n sc prov mtchs sPt (tP:tPs)
     eqv ts   =  Cons P (theEqv logicsig) ts
 \end{code}
 
+\newpage
 Case C only applies if the \emph{candidate} is an equivalence.
-We also assume that $J = \setof{1\dots m}$,
-and we maintain candidate sub-term order.
+We will just try $J$ being either
+the first $m$ pattern components ($\setof{1\dots m}$),
+or the last $m$ (\setof{n+1-m\dots n}).
 \begin{code}
 doEqvMatchC logicsig vts tC@(Cons tk i tsC) n sc prov tsP
  | i == theEqv logicsig = doEqvMatchC' logicsig vts n sc prov tsC tsP
+                          ++
+                          doEqvMatchC' logicsig vts n sc prov tsC (reverse tsP)
 doEqvMatchC _ _ _ _ _ _ _ = []
 
 doEqvMatchC' logicsig vts n sc prov tsC tsP

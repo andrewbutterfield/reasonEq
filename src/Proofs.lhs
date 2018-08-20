@@ -176,6 +176,8 @@ The justification of a step records either
 (i) which laws was used, where and how,
 or (ii) that the step was a big switch
 between consequents and hypotheses.
+\textbf{Can't go back with this, because we don't record where we were,
+before we did a switch!}
 \begin{code}
 data Justification
   = UseLaw
@@ -183,9 +185,9 @@ data Justification
       String   -- law name
       Binding  -- binding from law variables to goal components
       [Int]    -- zipper descent arguments
-  | SwLeft     -- switch to left consequent
-  | SwRight    -- switch to right consequent
-  | SwHyp Int  -- switch to hypothesis i
+  | SwLeft     -- switch to left consequent -- FROM WHERE?
+  | SwRight    -- switch to right consequent -- FROM WHERE?
+  | SwHyp Int  -- switch to hypothesis i -- FROM WHERE
   | CloneH Int -- clone hypothesis i
   deriving (Eq,Show,Read)
 \end{code}

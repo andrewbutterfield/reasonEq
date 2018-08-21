@@ -129,6 +129,13 @@ reduce logicsig thys (nm,(t,sc))
 \newpage
 \subsubsection{Strategy \textit{redboth}}
 
+We will need to convert $\seqof{P_1,\dots,\P_n}$, for $n\geq 1$
+to $P_1 \equiv \dots \equiv P_n$.
+\begin{code}
+bEqv n [p]  =  p
+bEqv n ps = Cons P n ps
+\end{code}
+
 \begin{eqnarray*}
    redboth(C_1 \equiv C_2)
    &\defs&
@@ -155,7 +162,7 @@ redtail :: Monad m => LogicSig -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
 redtail logicsig thys (nm,(t@(Cons tk i (c1:cs@(_:_))),sc))
   | i == theEqv logicsig
-      = return ( "redtail", Sequent thys (noHyps nm) sc (Cons tk i cs) c1 )
+      = return ( "redtail", Sequent thys (noHyps nm) sc (bEqv i cs) c1 )
 redtail logicsig thys (nm,(t,sc)) = fail "redtail not applicable"
 \end{code}
 
@@ -172,7 +179,7 @@ redinit :: Monad m => LogicSig -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
 redinit logicsig thys (nm,(t@(Cons tk i cs@(_:_:_)),sc))
   | i == theEqv logicsig
-      = return ( "redboth", Sequent thys (noHyps nm) sc (Cons tk i cs') cn )
+      = return ( "redinit", Sequent thys (noHyps nm) sc (bEqv i cs') cn )
   where (cs',cn) = splitLast cs
 redinit logicsig thys (nm,(t,sc)) = fail "redinit not applicable"
 \end{code}

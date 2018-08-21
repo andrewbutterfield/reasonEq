@@ -43,7 +43,6 @@ $$
 p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
 r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
-flattenEquiv = flattenTheEquiv propSignature
 \end{code}
 
 

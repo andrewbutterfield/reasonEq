@@ -16,6 +16,7 @@ module Propositions (
 , land, mkAnd, mkAnds, (/\)
 , implies, mkImplies, (==>)
 , propSignature
+, flattenEquiv
 , propKnown
 , propAxioms
 , propAxiomName

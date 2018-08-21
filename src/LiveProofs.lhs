@@ -480,13 +480,12 @@ undoCalcStep liveProof
       []                       ->  liveProof
       ((just,term):prevSteps)  ->  undoCalcStep' term prevSteps just
   where
-    undoCalcStep' term prevS (UseLaw _ _ _ _)
+    undoCalcStep' term prevS (Switch from to) = liveProof
+    undoCalcStep' term prevS _ -- (UseLaw _ _ _ _) or (CloneH i)
       = matches_ []
         $ fPath_ []
         $ stepsSoFar_ prevS
         $ focus__ (setTerm term) liveProof
-    undoCalcStep' term prevS (Switch from to) = liveProof
-    undoCalcStep' term prevS (CloneH i) = liveProof
 
     setTerm t (tz,seq') = (mkTZ t,seq')
 \end{code}

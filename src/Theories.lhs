@@ -377,7 +377,7 @@ showTheoryLaws thry
       [ "Theory '"++thName thry++"'"
       , trVarTable (known thry)
       , showLaws (laws thry)
-      , showNmdAssns (conjs thry)
+      , showConjs (conjs thry)
       ] )
 
 showNamedTheory thnm thrys

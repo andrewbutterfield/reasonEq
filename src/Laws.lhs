@@ -11,7 +11,7 @@ module Laws
  , Assertion, NmdAssertion, Provenance(..), Law
  , labelAsAxiom, labelAsProof
  , writeSignature, readSignature
- , showLogic, showNmdAssns, showLaw, showLaws
+ , showLogic, showNmdAssns, showLaw, showLaws, showConj, showConjs
  ) where
 
 import Utilities
@@ -187,17 +187,27 @@ showLogic logicsig
 Showing laws:
 \begin{code}
 showNmdAssns nasns  =  numberList (showNmdAssn $ nameWidth nasns)  nasns
-nameWidth lws = maximum $ map (length . fst) lws
+nameWidth nasns = maximum $ map (length . fst) nasns
 
 showNmdAssn w (nm,(trm,sc))
   =    ldq ++ nm ++ rdq ++ pad w nm
        ++ "  " ++ trTerm 0 trm ++ "  "++trSideCond sc
 
-showLaws lws  =  numberList (showLaw $ nameWidth $ map fst lws) lws
+showLaws []   =  "Laws: None."
+showLaws lws  =  "Laws:\n"
+                 ++ numberList (showLaw $ nameWidth $ map fst lws) lws
 
 showLaw w ((nm,(trm,sc)),prov)
-  =    ldq ++ nm ++ rdq ++ pad w nm ++ " " ++ showProv prov
-    ++ "  " ++ trTerm 0 trm ++ "  "++trSideCond sc
-showProv Axiom       =  "A"
-showProv (Proven pname)  =  "P"
+  =  showProv prov ++ "  " ++ showNmdAssn w (nm,(trm,sc))
+showProv Axiom       =  "\x22a4"
+showProv (Proven pname)  =  "\x220e"
+
+showConjs []   =  "Conjectures: None."
+showConjs cjs  =  "Conjectures:\n"
+                 ++ numberList (showConj $ nameWidth $ cjs) cjs
+
+showConj w (nm,(trm,sc))
+  =  "\x2753" ++ "  " ++ showNmdAssn w (nm,(trm,sc))
+  -- =  "\x2047" ++ "  " ++ showNmdAssn w (nm,(trm,sc))
+
 \end{code}

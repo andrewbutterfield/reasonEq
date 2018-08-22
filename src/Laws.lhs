@@ -199,15 +199,15 @@ showLaws lws  =  "Laws:\n"
 
 showLaw w ((nm,(trm,sc)),prov)
   =  showProv prov ++ "  " ++ showNmdAssn w (nm,(trm,sc))
-showProv Axiom       =  "\x22a4"
-showProv (Proven pname)  =  "\x220e"
+showProv Axiom       =  _top
+showProv (Proven pname)  =  _qed
 
 showConjs []   =  "Conjectures: None."
 showConjs cjs  =  "Conjectures:\n"
                  ++ numberList (showConj $ nameWidth $ cjs) cjs
 
 showConj w (nm,(trm,sc))
-  =  "\x2753" ++ "  " ++ showNmdAssn w (nm,(trm,sc))
+  =  _redQ ++ "  " ++ showNmdAssn w (nm,(trm,sc))
   -- =  "\x2047" ++ "  " ++ showNmdAssn w (nm,(trm,sc))
 
 \end{code}

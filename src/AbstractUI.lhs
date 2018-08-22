@@ -47,6 +47,7 @@ import Propositions
 import PropEquiv
 import PropNot
 import PropDisj
+import PropConj
 \end{code}
 
 \subsection{Introduction}
@@ -466,6 +467,7 @@ devKnownBuiltins  = [ propAxiomTheory
                     , propEquivTheory
                     , propNotTheory
                     , propDisjTheory
+                    , propConjTheory
                     ]
 
 biLkp _ []  = Nothing

@@ -364,7 +364,21 @@
 % \def\lawOrDistr{\NmCmtLaw{$\lor$-$\lor$-distr}{$\GSN{3.31}$}{p \lor (q\lor r) \equiv (p\lor q) \lor (p \lor r)}}
 % \def\lawOrEqvSplit{\NmCmtLaw{$\lor$-$\equiv$-split}{$\GSN{3.32}$}{p\lor q \equiv p \lor \lnot q \equiv p}}
 %
-% % Conjunction
+
+
+% -- Conjunction -------------------------
+
+% \def\lawAndComm{\NmCmtLaw{$\land$-comm}{$\GSN{3.36}$}{p\land q \equiv q \land p}}
+
+\def\CJandSymm{P\land Q \equiv Q \land P}
+\def\CJandSymmN{\QNAME{$\land$-symm}}
+
+\def\CONJPROPCONJ{
+  \begin{array}{ll}
+       \CJandSymm & \CJandSymmN
+  \end{array}
+}
+
 % \def\lawGldRule{\NmCmtLaw{golden-rule}{$\GSN{3.35}$}{p \land q \equiv p \equiv q \equiv p \lor q}}
 % \def\lawAndComm{\NmCmtLaw{$\land$-comm}{$\GSN{3.36}$}{p\land q \equiv q \land p}}
 % \def\lawAndAssoc{\NmCmtLaw{$\land$-assoc}{$\GSN{3.37}$}{(p\land q) \land r \equiv p \land (q \land r)}}

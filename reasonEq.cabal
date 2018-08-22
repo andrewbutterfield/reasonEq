@@ -43,6 +43,7 @@ library
                      , PropEquiv
                      , PropNot
                      , PropDisj
+                     , PropConj
                      -- in proto
                      , Acyclic
                      , TRYOUT

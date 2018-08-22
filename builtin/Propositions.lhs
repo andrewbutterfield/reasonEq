@@ -296,7 +296,7 @@ $$
 \begin{code}
 axGoldRule
  = ( "golden-rule"
-   , ( flattenEquiv ( (p /\ q) === ((p === q) === p \/ q) )
+   , ( (p /\ q) === ((p === q) === p \/ q)
    , scTrue ) )
 \end{code}
 

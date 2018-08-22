@@ -478,14 +478,23 @@ undoCalcStep :: LiveProof -> LiveProof
 undoCalcStep liveProof
   = case stepsSoFar liveProof of
       []                       ->  liveProof
-      ((just,term):prevSteps)  ->  undoCalcStep' term prevSteps just
+      ((just,term):prevSteps)
+        ->  matches_ []
+            $ fPath_ []
+            $ stepsSoFar_ prevSteps
+            $ focus__ (setTerm term)
+            $ undoCalcStep' just
   where
-    undoCalcStep' term prevS (Switch from to) = liveProof
-    undoCalcStep' term prevS _ -- (UseLaw _ _ _ _) or (CloneH i)
-      = matches_ []
-        $ fPath_ []
-        $ stepsSoFar_ prevS
-        $ focus__ (setTerm term) liveProof
+
+    undoCalcStep' (Switch CLeft _)
+       =  focus__ ( leftConjFocus  . exitSeqZipper ) liveProof
+    undoCalcStep' (Switch CRight _)
+       =  focus__ ( rightConjFocus . exitSeqZipper ) liveProof
+    undoCalcStep' (Switch (Hyp i) _)
+       =  focus__ ( fromJust . -- this should always succeed !
+                    hypConjFocus i . exitSeqZipper) liveProof
+
+    undoCalcStep' _  = liveProof
 
     setTerm t (tz,seq') = (mkTZ t,seq')
 \end{code}

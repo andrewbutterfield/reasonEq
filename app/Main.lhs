@@ -476,6 +476,7 @@ proofREPLConfig
             , goUpDescr
             , matchLawDescr
             , applyMatchDescr
+            , groupEquivDescr
             , goBackDescr
             , lawInstantiateDescr
             , switchConsequentDescr
@@ -586,6 +587,25 @@ applyMatchDescr = ( "a", "apply match"
 
 applyMatch :: REPLCmd (REqState, LiveProof)
 applyMatch args  =  tryDelta (applyMatchToFocus (args2int args))
+\end{code}
+
+Re-grouping flattened equivalences:
+\begin{code}
+groupEquivDescr = ( "ge", "group equivalences"
+                  , unlines' [ "ge l -- associate to the left"
+                             , "ge r -- associate to the right"
+                             , "ge l <n> -- gather first <n>"
+                             , "ge r <n> -- gather last <n>"
+                             , "ge s <n> -- split at <n>"
+                             ]
+                  , groupEquiv )
+
+groupEquiv :: REPLCmd (REqState, LiveProof)
+groupEquiv _ state  =  do putStrLn  ("Grouping Equivalences NYI")
+                          putStr "Hit any key to continue"
+                          hFlush stdout
+                          getLine
+                          return state
 \end{code}
 
 Undoing the previous step (if any)

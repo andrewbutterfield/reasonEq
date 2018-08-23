@@ -304,14 +304,22 @@ cmdLoad
     , "load prover state from file"
     , unlines
         [ "load -- load prover state from current project"
-        , "load <thry> -- load theory <thry> from current project"]
+        , "load <thry> -- load EXISTING theory <thry> from current project"]
     , loadState )
 
 saveState [] reqs
   = do writeState reqs
        putStrLn ("REQ-STATE written to '"++projectDir reqs++"'.")
        return reqs
-saveState [nm] reqs  =  doshow reqs "'save <thry>' NYI."
+saveState [nm] reqs
+  = case getTheory nm $ theories reqs of
+      Nothing
+       -> do putStrLn ("No such theory: '"++nm++"'")
+             return reqs
+      Just thry
+       -> do writeNamedTheory reqs (nm,writeTheory thry)
+             putStrLn ("Theory '"++nm++"' written to '"++projectDir reqs++"'.")
+             return reqs
 saveState _ reqs  =  doshow reqs "unknown 'save' option."
 
 loadState [] reqs
@@ -319,7 +327,11 @@ loadState [] reqs
        reqs' <- readState dirfp
        putStrLn ("REQ-STATE read from '"++dirfp++"'.")
        return reqs'
-loadState [nm] reqs  =  doshow reqs "'load <thry>' NYI."
+loadState [nm] reqs
+  = do let dirfp = projectDir reqs
+       (nm,thry) <- readNamedTheory dirfp nm
+       putStrLn ("Theory '"++nm++"'read from  '"++projectDir reqs++"'.")
+       return $ theories__ (replaceTheory thry) reqs
 loadState _ reqs  =  doshow reqs "unknown 'load' option."
 \end{code}
 

@@ -9,6 +9,7 @@ module Persistence
   ( writeState
   , readState
   , writeNamedTheory
+  , readNamedTheory
   , persistentTest)
 where
 

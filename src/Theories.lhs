@@ -314,17 +314,22 @@ getTheoryProofs thNm thrys
 
 \subsubsection{Generic Theory Updates}
 
+We insist, for now at least,
+that the dependencies do not change.
 \begin{code}
 updateTheory :: String -> (Theory -> Theory) -> Theories -> Theories
 updateTheory thnm thryF theories@(Theories tmap sdag)
   = case M.lookup thnm tmap of
       Nothing    ->  theories -- silent 'fail'
-      Just thry  ->  Theories (M.insert thnm (thryF thry) tmap) sdag
+      Just thry  ->  let thry' = thryF thry
+                     in if thDeps thry' == thDeps thry
+                        then Theories (M.insert thnm (thryF thry) tmap) sdag
+                        else theories -- another silent 'fail'
 \end{code}
 
 \begin{code}
 replaceTheory :: Theory -> Theories -> Theories
-replaceTheory thry theories  =  updateTheory (thName thry) (const thry) theories
+replaceTheory thry theories = updateTheory (thName thry) (const thry) theories
 \end{code}
 
 \subsubsection{Add Proof to Theory}

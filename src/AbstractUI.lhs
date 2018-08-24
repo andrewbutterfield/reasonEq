@@ -16,6 +16,7 @@ module AbstractUI
 , moveFocusDown, moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, applyMatchToFocus
+, GroupSpec(..), groupEquivalence
 , stepBack
 , lawInstantiate1, lawInstantiate2, lawInstantiate3
 , cloneHypothesis
@@ -43,7 +44,9 @@ import Sequents
 import REqState
 import Persistence
 
-import Propositions
+import TestRendering
+
+import PropAxioms
 import PropEquiv
 import PropNot
 import PropDisj
@@ -362,6 +365,23 @@ applyMatchToFocus i liveProof
                  $ stepsSoFar__
                     (((UseLaw ByMatch (mName mtch) bnd dpath), exitTZ tz):)
                     liveProof )
+\end{code}
+
+\subsubsection{Grouping Flat Equivalences}
+
+\begin{code}
+data GroupSpec
+  = Assoc LeftRight
+  | Gather LeftRight Int
+  | Split Int
+  deriving (Eq,Show,Read)
+
+groupEquivalence :: Monad m => Identifier -> GroupSpec -> LiveProof
+                 -> m LiveProof
+groupEquivalence eqv gs liveProof
+  = let (tz,seq') = focus liveProof
+        t = getTZ tz
+    in fail ("ge "++show gs++ " on "++trTerm 0 t++" NYI.")
 \end{code}
 
 \subsubsection{Stepping back a proof step.}

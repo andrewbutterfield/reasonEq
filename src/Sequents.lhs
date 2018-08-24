@@ -12,6 +12,7 @@ module Sequents
  , reduce, redboth, redtail, redinit
  , assume
  , Sequent'(..)
+ , LeftRight(..)
  , SeqZip, writeSeqZip, readSeqZip
  , sequentFocus
  , dispSeqZip, dispSeqTermZip

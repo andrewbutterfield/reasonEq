@@ -39,7 +39,7 @@ library
                      , REPL
                      , Dev
                      -- in builtin
-                     , Propositions
+                     , PropAxioms
                      , PropEquiv
                      , PropNot
                      , PropDisj

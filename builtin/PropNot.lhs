@@ -25,7 +25,7 @@ import Laws
 import Proofs
 import Theories
 
-import Propositions
+import PropAxioms
 import PropEquiv
 \end{code}
 
@@ -98,7 +98,7 @@ $$
 \begin{code}
 cjNotDef
  = ( _lnot++"_def"
-   , ( mkNot p === (p === falseP) 
+   , ( mkNot p === (p === falseP)
      , scTrue ) )
 \end{code}
 

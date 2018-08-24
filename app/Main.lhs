@@ -32,7 +32,7 @@ import SideCond
 import Binding
 import REqState
 import AbstractUI
-import Propositions
+import PropAxioms
 import Instantiate
 import TestRendering
 import REPL
@@ -600,12 +600,18 @@ groupEquivDescr = ( "ge", "group equivalences"
                              ]
                   , groupEquiv )
 
+args2gs ["l"]                       =  return $ Assoc Lft
+args2gs ["r"]                       =  return $ Assoc Rght
+args2gs ("l":as) | args2int as > 0  =  return $ Gather Lft  $ args2int as
+args2gs ("r":as) | args2int as > 0  =  return $ Gather Rght $ args2int as
+args2gs ("s":as) | args2int as > 0  =  return $ Split       $ args2int as
+args2gs _                           =  fail "ge: invalid arguments."
+
 groupEquiv :: REPLCmd (REqState, LiveProof)
-groupEquiv _ state  =  do putStrLn  ("Grouping Equivalences NYI")
-                          putStr "Hit any key to continue"
-                          hFlush stdout
-                          getLine
-                          return state
+groupEquiv args state@(reqs, _)
+  = case args2gs args of
+      Just gs -> tryDelta (groupEquivalence (theEqv $ logicsig reqs) gs) state
+      Nothing -> putStrLn "bad arguments!" >> entertogo >> return state
 \end{code}
 
 Undoing the previous step (if any)

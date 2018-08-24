@@ -15,7 +15,7 @@ import AST
 import VarData
 import SideCond
 import REqState
-import Propositions
+import PropAxioms
 import PropEquiv
 import PropNot
 \end{code}

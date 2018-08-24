@@ -12,6 +12,7 @@ import Data.List
 import Data.Char
 import Data.Set(Set)
 import qualified Data.Set as S
+import System.IO
 \end{code}
 
 Here we provide odds and ends not found elswhere.
@@ -291,10 +292,17 @@ rrun nekot = Run $ reverse nekot
 spaced s = ' ':s ++ " "
 \end{code}
 
+\subsubsection{Useful IO bits and pieces}
+
 Screen clearing:
 \begin{code}
 clear = "\ESC[2J\ESC[1;1H"
 clearIt str = clear ++ str
+\end{code}
+
+Pausing (before \textrm{clearIt}, usually)
+\begin{code}
+entertogo = do {putStr "hit <enter> to continue"; hFlush stdout; getLine}
 \end{code}
 
 

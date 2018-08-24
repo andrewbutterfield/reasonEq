@@ -25,7 +25,7 @@ import Laws
 import Proofs
 import Theories
 
-import Propositions
+import PropAxioms
 import PropEquiv
 import PropNot
 \end{code}

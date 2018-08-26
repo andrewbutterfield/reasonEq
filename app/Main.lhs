@@ -610,7 +610,7 @@ args2gs _                           =  fail "ge: invalid arguments."
 groupEquiv :: REPLCmd (REqState, LiveProof)
 groupEquiv args state@(reqs, _)
   = case args2gs args of
-      Just gs -> tryDelta (groupEquivalence (theEqv $ logicsig reqs) gs) state
+      Just gs -> tryDelta (groupAssociative (theEqv $ logicsig reqs) gs) state
       Nothing -> putStrLn "bad arguments!" >> entertogo >> return state
 \end{code}
 

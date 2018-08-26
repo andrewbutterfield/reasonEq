@@ -12,7 +12,6 @@ module Sequents
  , reduce, redboth, redtail, redinit
  , assume
  , Sequent'(..)
- , LeftRight(..)
  , SeqZip, writeSeqZip, readSeqZip
  , sequentFocus
  , dispSeqZip, dispSeqTermZip
@@ -496,8 +495,6 @@ data Laws'
     , cright0   :: Term -- right conjecture
     }
   deriving (Eq,Show,Read)
-
-data LeftRight = Lft | Rght deriving (Eq,Show,Read)
 \end{code}
 
 

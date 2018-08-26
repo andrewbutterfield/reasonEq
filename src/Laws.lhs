@@ -7,7 +7,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Laws
- ( LogicSig(..), flattenTheEquiv, flattenTheImp, flattenTheAnd
+ ( LogicSig(..)
+ , flattenTheEquiv, flattenTheImp, flattenTheAnd
+ , LeftRight(..), GroupSpec(..), groupAssoc
  , Assertion, NmdAssertion, Provenance(..), Law
  , labelAsAxiom, labelAsProof
  , writeSignature, readSignature
@@ -86,7 +88,7 @@ readSignature txts
               , rest7 )
 \end{code}
 
-\subsubsection{Predicate Conditioning}
+\subsection{Predicate Conditioning}
 
 We also want to provide a way to ``condition'' predicates
 to facilitate matching  and proof flexibility.
@@ -117,6 +119,8 @@ flattenTheAnd theSig t
   where and = theAnd theSig
 \end{code}
 
+\newpage
+
 For implication, we need a slighty different approach,
 as it is only right-associative,
 and we have the trading rule involving conjunction.
@@ -136,6 +140,55 @@ collectAnte imp (Cons tk i [ta,tc])
   | i == imp  = let (tas,tc') = collectAnte imp tc in (ta:tas,tc')
 collectAnte imp t = ([],t)
 \end{code}
+
+\subsection{Associative Grouping}
+
+We also want to specify and perform a number
+of different ways to group, or ``un-flatten'',
+an equivalence (or indeed any associative operator).
+First, some types:
+\begin{code}
+data LeftRight = Lft | Rght deriving (Eq,Show,Read)
+
+data GroupSpec
+  = Assoc LeftRight
+  | Gather LeftRight Int
+  | Split Int
+  deriving (Eq,Show,Read)
+\end{code}
+
+Then code to do it:
+\begin{code}
+groupAssoc :: Monad m => Identifier -> GroupSpec -> Term -> m Term
+groupAssoc assocI gs (Cons tk opI ts)
+ | opI == assocI && length ts > 2  =  groupAssoc' tk opI gs ts
+groupAssoc assocI _ _
+  =  fail ("groupAssoc: not a '"++trId assocI++"', len > 2")
+
+groupAssoc' tk opI (Assoc Lft)      =  gAssocLeft tk opI
+groupAssoc' tk opI (Assoc Rght)     =  gAssocRight tk opI
+groupAssoc' tk opI (Gather Lft i)   =  gGatherLeft tk opI i
+groupAssoc' tk opI (Gather Rght i)  =  gGatherRight tk opI i
+groupAssoc' tk opI (Split i)        =  gSplit tk opI i
+\end{code}
+
+Left Associative:
+\begin{code}
+gAssocLeft tk opI []       =  fail "gAssocLeft: no sub-terms"
+gAssocLeft tk opI [t]      =  return t
+gAssocLeft tk opI (t1:t2:ts)  =  gAssocLeft tk opI (Cons tk opI [t1,t2]:ts)
+
+gAssocRight tk opI []      =  fail "gAssocRight: no sub-terms"
+gAssocRight tk opI [t]     =  return t
+gAssocRight tk opI (t1:ts@(_:_))
+  = do ts' <- gAssocRight tk opI ts
+       return $ Cons tk opI [t1,ts']
+
+gGatherLeft tk opI i ts   =  fail "gGatherLeft NYI"
+gGatherRight tk opI i ts  =  fail "gGatherRight NYI"
+gSplit tk opI i ts        =  fail "gSplit NYI"
+\end{code}
+
 
 \newpage
 \subsection{Laws}

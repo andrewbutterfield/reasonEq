@@ -16,7 +16,7 @@ module AbstractUI
 , moveFocusDown, moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, applyMatchToFocus
-, GroupSpec(..), groupEquivalence
+, groupAssociative
 , stepBack
 , lawInstantiate1, lawInstantiate2, lawInstantiate3
 , cloneHypothesis
@@ -367,21 +367,20 @@ applyMatchToFocus i liveProof
                     liveProof )
 \end{code}
 
-\subsubsection{Grouping Flat Equivalences}
+\subsubsection{Grouping Flat Associative oPerators}
 
 \begin{code}
-data GroupSpec
-  = Assoc LeftRight
-  | Gather LeftRight Int
-  | Split Int
-  deriving (Eq,Show,Read)
-
-groupEquivalence :: Monad m => Identifier -> GroupSpec -> LiveProof
+groupAssociative :: Monad m => Identifier -> GroupSpec -> LiveProof
                  -> m LiveProof
-groupEquivalence eqv gs liveProof
+groupAssociative eqv gs liveProof
   = let (tz,seq') = focus liveProof
         t = getTZ tz
-    in fail ("ge "++show gs++ " on "++trTerm 0 t++" NYI.")
+    in case groupAssoc eqv gs t of
+        But msgs -> fail $ unlines' msgs
+        Yes t' -> return ( focus_ ((setTZ t' tz),seq')
+                         $ matches_ []
+                         -- need a step here !!!
+                         $ liveProof )
 \end{code}
 
 \subsubsection{Stepping back a proof step.}

@@ -41,7 +41,7 @@ import Dev
 
 \begin{code}
 name = "reasonEq"
-version = "0.6.2.0"
+version = "0.6.9.0"
 \end{code}
 
 \newpage

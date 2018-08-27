@@ -61,13 +61,99 @@ cjandSym
      , scTrue ) )
 \end{code}
 
+\newpage
+$$
+  \begin{array}{ll}
+     \CJandAssoc & \CJandAssocN
+  \end{array}
+$$
 
+\vspace{-8pt}
+\begin{code}
+cjandAssoc
+ = ( _land++"_assoc"
+   , ( (p /\ q) /\ r === p /\ (q /\ r)
+     , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{ll}
+     \CJandIdem & \CJandIdemN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+cjandIdem
+ = ( _land++"_idem"
+   , ( p /\ p === p
+     , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{ll}
+     \CJandUnit & \CJandUnitN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+cjandUnit
+ = ( _land++"_unit"
+   , ( p /\ trueP === p
+     , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{ll}
+     \CJandZero & \CJandZeroN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+cjandZero
+ = ( _land++"_zero"
+   , ( p /\ falseP === falseP
+     , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{ll}
+     \CJandDistr & \CJandDistrN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+cjandDistr
+ = ( _land++"_"++_land++"_distr"
+   ,  ( p /\ (q /\ r)  === (p /\ q) /\ (p /\ r)
+     , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{ll}
+     \CJcontradict & \CJcontradictN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+cjContradict
+ = ( _land++"_symm"
+   , ( p /\ mkNot p === falseP
+     , scTrue ) )
+\end{code}
 
 
 \begin{code}
 propConjConjs :: [NmdAssertion]
 propConjConjs
-  = [ cjandSym
+  = [ cjandSym, cjandAssoc, cjandIdem
+    , cjandUnit, cjandZero
+    , cjandDistr
+    , cjContradict
     ]
 \end{code}
 

@@ -373,9 +373,33 @@
 \def\CJandSymm{P\land Q \equiv Q \land P}
 \def\CJandSymmN{\QNAME{$\land$-symm}}
 
+\def\CJandAssoc{(P\land Q) \land R \equiv P \land (Q \land R)}
+\def\CJandAssocN{\QNAME{$\land$-assoc}}
+
+\def\CJandIdem{P\land P \equiv P}
+\def\CJandIdemN{\QNAME{$\land$-idem}}
+
+\def\CJandUnit{P\land \textit{true} \equiv P}
+\def\CJandUnitN{\QNAME{$\land$-unit}}
+
+\def\CJandZero{P \land \textit{false} \equiv \textit{false}}
+\def\CJandZeroN{\QNAME{$\land$-zero}}
+
+\def\CJandDistr{P \land (Q\land R) \equiv (P\land Q) \land (P \land R)}
+\def\CJandDistrN{\QNAME{$\land$-$\land$-distr}}
+
+\def\CJcontradict{P \land \lnot P \equiv \textit{false}}
+\def\CJcontradictN{\QNAME{contradiction}}
+
 \def\CONJPROPCONJ{
   \begin{array}{ll}
-       \CJandSymm & \CJandSymmN
+     \CJandSymm & \CJandSymmN
+  \\ \CJandAssoc & \CJandAssocN
+  \\ \CJandIdem & \CJandIdemN
+  \\ \CJandUnit & \CJandUnitN
+  \\ \CJandZero & \CJandZeroN
+  \\ \CJandDistr & \CJandDistrN
+  \\ \CJcontradict & \CJcontradictN
   \end{array}
 }
 

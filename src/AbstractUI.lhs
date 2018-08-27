@@ -16,7 +16,7 @@ module AbstractUI
 , moveFocusDown, moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, applyMatchToFocus
-, groupAssociative
+, flattenAssociative, groupAssociative
 , stepBack
 , lawInstantiate1, lawInstantiate2, lawInstantiate3
 , cloneHypothesis
@@ -367,19 +367,34 @@ applyMatchToFocus i liveProof
                     liveProof )
 \end{code}
 
-\subsubsection{Grouping Flat Associative oPerators}
+
+\subsubsection{Flattening and Grouping Associative Operators}
+
+\begin{code}
+flattenAssociative :: Monad m => Identifier -> LiveProof -> m LiveProof
+flattenAssociative opI liveProof
+  = let (tz,seq') = focus liveProof
+        t = getTZ tz
+    in case flattenAssoc opI t of
+        But msgs -> fail $ unlines' msgs
+        Yes t' -> return ( focus_ ((setTZ t' tz),seq')
+                         $ matches_ []
+                         $ stepsSoFar__ (((Flatten opI,exitTZ tz)):)
+                         $ liveProof )
+\end{code}
+
 
 \begin{code}
 groupAssociative :: Monad m => Identifier -> GroupSpec -> LiveProof
                  -> m LiveProof
-groupAssociative eqv gs liveProof
+groupAssociative opI gs liveProof
   = let (tz,seq') = focus liveProof
         t = getTZ tz
-    in case groupAssoc eqv gs t of
+    in case groupAssoc opI gs t of
         But msgs -> fail $ unlines' msgs
         Yes t' -> return ( focus_ ((setTZ t' tz),seq')
                          $ matches_ []
-                         $ stepsSoFar__ (((Associate eqv gs,exitTZ tz)):)
+                         $ stepsSoFar__ (((Associate opI gs,exitTZ tz)):)
                          $ liveProof )
 \end{code}
 

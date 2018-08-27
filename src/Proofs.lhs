@@ -178,18 +178,19 @@ sufficient both to document the step for the reader,
 and to be able to mechanically reply that step, or reverse it.
 \begin{code}
 data Justification
-  = UseLaw
-      HowUsed     -- how law was used in proof step
-      String      -- law name
-      Binding     -- binding from law variables to goal components
-      [Int]       -- zipper descent arguments
-  | Switch      -- switched focus at sequent level
-      SeqFocus    -- focus before switch -- needed to reverse this.
-      SeqFocus    -- focus after switch
-  | CloneH Int  --  Cloned hypothesis i
-  | Associate   -- grouped part of a flat use of an associative operator
-      Identifier  -- operator
-      GroupSpec   -- grouping details.
+  = UseLaw             -- used a law
+      HowUsed              -- how law was used in proof step
+      String               -- law name
+      Binding              -- binding from law variables to goal components
+      [Int]                -- zipper descent arguments
+  | Switch             -- switched focus at sequent level
+      SeqFocus             -- focus before switch -- needed to reverse this.
+      SeqFocus             -- focus after switch
+  | CloneH Int         --  Cloned hypothesis i
+  | Flatten Identifier -- flattened use of associative operator
+  | Associate          -- grouped use of an associative operator
+      Identifier           -- operator
+      GroupSpec            -- grouping details.
   deriving (Eq,Show,Read)
 \end{code}
 
@@ -253,6 +254,8 @@ showJustification (Switch from to)
   =  "   [switch "++showSeqFocus from++" > "++showSeqFocus to++"]"
 showJustification (CloneH i)
   =  "   [clone hypothesis "++show i++"]"
+showJustification (Flatten i)
+  =  "   [flatten "++trId i++"]"
 showJustification (Associate i gs)
   =  "   ["++showGroupSpec gs++" over "++trId i++"]"
 

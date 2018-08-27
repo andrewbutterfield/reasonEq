@@ -9,6 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Laws
  ( LogicSig(..)
  , flattenTheEquiv, flattenTheImp, flattenTheAnd
+ , flattenAssoc
  , LeftRight(..), GroupSpec(..), groupAssoc
  , Assertion, NmdAssertion, Provenance(..), Law
  , labelAsAxiom, labelAsProof
@@ -143,6 +144,15 @@ collectAnte imp t = ([],t)
 \end{code}
 
 \subsection{Associative Grouping}
+
+\begin{code}
+flattenAssoc :: Monad m => Identifier -> Term -> m Term
+flattenAssoc assocI t@(Cons tk opI ts)
+ | opI == assocI && length ts > 1  =  return $ Cons tk opI $ assocFlatten opI t
+flattenAssoc assocI _
+  =  fail ("flattenAssoc: not a '"++trId assocI++"', len > 1")
+
+\end{code}
 
 We also want to specify and perform a number
 of different ways to group, or ``un-flatten'',

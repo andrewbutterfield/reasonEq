@@ -131,7 +131,6 @@ main
 \end{code}
 
 
-
 \newpage
 \subsection{Initialising State}
 
@@ -476,6 +475,7 @@ proofREPLConfig
             , goUpDescr
             , matchLawDescr
             , applyMatchDescr
+            , flatEquivDescr
             , groupEquivDescr
             , goBackDescr
             , lawInstantiateDescr
@@ -588,6 +588,18 @@ applyMatchDescr = ( "a", "apply match"
 applyMatch :: REPLCmd (REqState, LiveProof)
 applyMatch args  =  tryDelta (applyMatchToFocus (args2int args))
 \end{code}
+
+Flattening grouped equivalences:
+\begin{code}
+flatEquivDescr = ( "fe", "flatten equivalences"
+                 , "flatten= equivalences"
+                 , flatEquiv )
+
+flatEquiv :: REPLCmd (REqState, LiveProof)
+flatEquiv _ state@(reqs, _)
+  = tryDelta (flattenAssociative $ theEqv $ logicsig reqs) state
+\end{code}
+
 
 Re-grouping flattened equivalences:
 \begin{code}

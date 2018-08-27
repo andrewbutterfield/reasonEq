@@ -379,7 +379,7 @@ groupAssociative eqv gs liveProof
         But msgs -> fail $ unlines' msgs
         Yes t' -> return ( focus_ ((setTZ t' tz),seq')
                          $ matches_ []
-                         -- need a step here !!!
+                         $ stepsSoFar__ (((Associate eqv gs,exitTZ tz)):)
                          $ liveProof )
 \end{code}
 

@@ -14,6 +14,7 @@ module Laws
  , labelAsAxiom, labelAsProof
  , writeSignature, readSignature
  , showLogic, showNmdAssns, showLaw, showLaws, showConj, showConjs
+ , showLeftRight, showGroupSpec
  ) where
 
 import Utilities
@@ -161,34 +162,90 @@ Then code to do it:
 \begin{code}
 groupAssoc :: Monad m => Identifier -> GroupSpec -> Term -> m Term
 groupAssoc assocI gs (Cons tk opI ts)
- | opI == assocI && length ts > 2  =  groupAssoc' tk opI gs ts
+ | opI == assocI && length ts > 2  =  groupAssoc' (mkOp tk opI) gs ts
 groupAssoc assocI _ _
   =  fail ("groupAssoc: not a '"++trId assocI++"', len > 2")
 
-groupAssoc' tk opI (Assoc Lft)      =  gAssocLeft tk opI
-groupAssoc' tk opI (Assoc Rght)     =  gAssocRight tk opI
-groupAssoc' tk opI (Gather Lft i)   =  gGatherLeft tk opI i
-groupAssoc' tk opI (Gather Rght i)  =  gGatherRight tk opI i
-groupAssoc' tk opI (Split i)        =  gSplit tk opI i
+mkOp tk opI []   =  error "mkOp: no sub-terms"
+mkOp tk opI [t]  =  t
+mkOp tk opI ts   =  Cons tk opI ts
+
+groupAssoc' mOp (Assoc Lft)      =  gAssocLeft mOp
+groupAssoc' mOp (Assoc Rght)     =  gAssocRight mOp
+groupAssoc' mOp (Gather Lft i)   =  gGatherLeft mOp i
+groupAssoc' mOp (Gather Rght i)  =  gGatherRight mOp i
+groupAssoc' mOp (Split i)        =  gSplit mOp i
 \end{code}
 
 Left Associative:
+\begin{equation*}
+ T_1 \oplus T_2 \oplus T_3 \oplus \dots \oplus T_{n-1} \oplus T_n
+ \quad\leadsto\quad
+  (\dots((T_1 \oplus T_2) \oplus T_3) \oplus \dots \oplus T_{n-1}) \oplus T_n
+\end{equation*}
 \begin{code}
-gAssocLeft tk opI []       =  fail "gAssocLeft: no sub-terms"
-gAssocLeft tk opI [t]      =  return t
-gAssocLeft tk opI (t1:t2:ts)  =  gAssocLeft tk opI (Cons tk opI [t1,t2]:ts)
-
-gAssocRight tk opI []      =  fail "gAssocRight: no sub-terms"
-gAssocRight tk opI [t]     =  return t
-gAssocRight tk opI (t1:ts@(_:_))
-  = do ts' <- gAssocRight tk opI ts
-       return $ Cons tk opI [t1,ts']
-
-gGatherLeft tk opI i ts   =  fail "gGatherLeft NYI"
-gGatherRight tk opI i ts  =  fail "gGatherRight NYI"
-gSplit tk opI i ts        =  fail "gSplit NYI"
+gAssocLeft mOp []          =  fail "gAssocLeft: no sub-terms"
+gAssocLeft mOp [t]         =  return t
+gAssocLeft mOp (t1:t2:ts)  =  gAssocLeft mOp (mOp [t1,t2]:ts)
 \end{code}
 
+Right Associative:
+\[
+ T_1 \oplus T_2 \oplus \dots \oplus T_{n-2} \oplus T_{n-1} \oplus T_n
+ \quad\leadsto\quad
+ T_1 \oplus (T_2 \oplus \dots \oplus (T_{n-2} \oplus (T_{n-1} \oplus T_n))\dots)
+\]
+\begin{code}
+gAssocRight mOp []             =  fail "gAssocRight: no sub-terms"
+gAssocRight mOp [t]            =  return t
+gAssocRight mOp (t1:ts@(_:_))  =  do ts' <- gAssocRight mOp ts
+                                     return $ mOp [t1,ts']
+\end{code}
+
+Gather $i$ Left:
+\[
+ T_1 \oplus \dots \oplus T_{i} \oplus T_{i+1} \oplus \dots T_n
+ \quad\leadsto\quad
+ (T_1 \oplus \dots \oplus T_{i}) \oplus T_{i+1} \oplus \dots T_n
+\]
+\begin{code}
+gGatherLeft mOp i []           =  fail "gGatherLeft: no sub-terms"
+gGatherLeft mOp i ts
+  | i < 2                      =  fail "gGatherLeft: size too small"
+  | null before || null after  =  fail "gGatherLeft: size too large"
+  | otherwise                  =  return $ mOp (mOp before:after)
+  where (before,after) = splitAt i ts
+\end{code}
+
+Gather $i$ Right:
+\[
+ T_1 \oplus \dots \oplus T_{n-i} \oplus T_{n-i+1} \oplus \dots T_n
+ \quad\leadsto\quad
+ T_1 \oplus \dots \oplus T_{n-i} \oplus (T_{n-i+1} \oplus \dots T_n)
+\]
+\begin{code}
+gGatherRight mOp i []          =  fail "gGatherRight: no sub-terms"
+gGatherRight mOp i ts
+  | i < 2                      =  fail "gGatherRight: size too small"
+  | null before || null after  =  fail "gGatherRight: size too large"
+  | otherwise                  =  return $ mOp (before++[mOp after])
+  where (before,after) = splitAt (length ts-i) ts
+\end{code}
+
+Split $i$:
+\[
+ T_1 \oplus \dots \oplus T_{i} \oplus T_{i+1} \oplus \dots T_n
+ \quad\leadsto\quad
+ (T_1 \oplus \dots \oplus T_{i}) \oplus (T_{i+1} \oplus \dots T_n)
+\]
+\begin{code}
+gSplit mOp i []  =  fail "gSplit: no sub-terms"
+gSplit mOp i ts
+  | i < 1                      =  fail "gSplit: size too small"
+  | null before || null after  =  fail "gGatherLeft: size too large"
+  | otherwise                  =  return $ mOp [mOp before,  mOp after]
+  where (before,after) = splitAt i ts
+\end{code}
 
 \newpage
 \subsection{Laws}
@@ -262,5 +319,18 @@ showConjs cjs  =  "Conjectures:\n"
 showConj w (nm,(trm,sc))
   =  _redQ ++ "  " ++ showNmdAssn w (nm,(trm,sc))
   -- =  "\x2047" ++ "  " ++ showNmdAssn w (nm,(trm,sc))
+\end{code}
 
+Showing associative grouping specifications:
+\begin{code}
+showLeftRight :: LeftRight -> String
+showLeftRight Lft = "left"
+showLeftRight Rght = "right"
+
+showGroupSpec :: GroupSpec -> String
+showGroupSpec (Assoc lr)
+ = "associate "++showLeftRight lr
+showGroupSpec (Gather lr i)
+ = "gather "++show i++ " on " ++showLeftRight lr
+showGroupSpec (Split i) = "split into first " ++ show i ++ " and rest"
 \end{code}

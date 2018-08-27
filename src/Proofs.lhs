@@ -18,6 +18,7 @@ module Proofs
  ) where
 
 import Utilities
+import LexBase
 import AST
 import TermZipper
 import Binding
@@ -172,25 +173,31 @@ data HowUsed
   deriving (Eq,Show,Read)
 \end{code}
 
-The justification of a step records either
-(i) which laws was used, where and how,
-or (ii) that the step was a big switch
-between consequents and hypotheses.
-We need to be able to identify where we are and where we are going:
-\begin{code}
-data SeqFocus = CLeft | CRight | Hyp Int deriving (Eq,Show,Read)
-\end{code}
+The justification of a step records details of that step,
+sufficient both to document the step for the reader,
+and to be able to mechanically reply that step, or reverse it.
 \begin{code}
 data Justification
   = UseLaw
-      HowUsed  -- how law was used in proof step
-      String   -- law name
-      Binding  -- binding from law variables to goal components
-      [Int]    -- zipper descent arguments
-  | Switch SeqFocus SeqFocus -- switch from to
-  | CloneH Int -- clone hypothesis i
+      HowUsed     -- how law was used in proof step
+      String      -- law name
+      Binding     -- binding from law variables to goal components
+      [Int]       -- zipper descent arguments
+  | Switch      -- switched focus at sequent level
+      SeqFocus    -- focus before switch -- needed to reverse this.
+      SeqFocus    -- focus after switch
+  | CloneH Int  --  Cloned hypothesis i
+  | Associate   -- grouped part of a flat use of an associative operator
+      Identifier  -- operator
+      GroupSpec   -- grouping details.
   deriving (Eq,Show,Read)
 \end{code}
+
+We make use of the following auxilliary types:
+\begin{code}
+data SeqFocus = CLeft | CRight | Hyp Int deriving (Eq,Show,Read)
+\end{code}
+
 Often it is worth knowing if a switch has occurred.
 \begin{code}
 isSequentSwitch :: Justification -> Bool
@@ -246,6 +253,8 @@ showJustification (Switch from to)
   =  "   [switch "++showSeqFocus from++" > "++showSeqFocus to++"]"
 showJustification (CloneH i)
   =  "   [clone hypothesis "++show i++"]"
+showJustification (Associate i gs)
+  =  "   ["++showGroupSpec gs++" over "++trId i++"]"
 
 showHow :: HowUsed -> String
 showHow ByMatch = "match"

@@ -40,12 +40,15 @@ $$
 \CONJPROPCONJ
 $$
 
+The absorption rules are in a seperate theory.
+
 \begin{code}
 p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
 r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
 \end{code}
 
+\newpage
 
 $$
   \begin{array}{ll}
@@ -61,7 +64,6 @@ cjandSym
      , scTrue ) )
 \end{code}
 
-\newpage
 $$
   \begin{array}{ll}
      \CJandAssoc & \CJandAssocN
@@ -146,7 +148,8 @@ cjContradict
      , scTrue ) )
 \end{code}
 
-
+\newpage
+Pulling it all together:
 \begin{code}
 propConjConjs :: [NmdAssertion]
 propConjConjs

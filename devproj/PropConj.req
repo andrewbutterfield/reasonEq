@@ -2,10 +2,11 @@ BEGIN THEORY PropConj
 DEPS = ["PropDisj","PropNot","PropEquiv","PropAxioms"]
 KNOWN = VD (fromList [],fromList [],fromList [])
 BEGIN LIST LAWS
+(("\8743_symm",(C P (Id "\8801") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],C P (Id "\8743") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "P",VP,WS))]],SC (fromList []) (fromList []))),Proven "\8743_symm")
 END LIST LAWS
 BEGIN LIST PROOFS
+("\8743_symm",(C P (Id "\8801") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],C P (Id "\8743") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "P",VP,WS))]],SC (fromList []) (fromList [])),"redboth",(C P (Id "\8743") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "P",VP,WS))],[(UseLaw ByMatch "golden-rule" (BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS))),((Id "Q",VP),BV (VR (Id "Q",VP,WS)))],fromList [],fromList [])) [],C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))]),(UseLaw ByMatch "\8801_symm" (BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS))),((Id "Q",VP),BV (VR (Id "Q",VP,WS)))],fromList [],fromList [])) [1],C P (Id "\8801") [C P (Id "\8801") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))]]),(UseLaw ByMatch "\8744_symm" (BD (fromList [((Id "P",VP),BV (VR (Id "Q",VP,WS))),((Id "Q",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [])) [2],C P (Id "\8801") [C P (Id "\8801") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "P",VP,WS))],C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))]]),(UseLaw ByMatch "golden-rule" (BD (fromList [((Id "P",VP),BV (VR (Id "Q",VP,WS))),((Id "Q",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [])) [],C P (Id "\8801") [C P (Id "\8801") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "P",VP,WS))],C P (Id "\8744") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "P",VP,WS))]])]))
 END LIST PROOFS
 BEGIN LIST CONJECTURES
-("\8743_symm",(C P (Id "\8801") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],C P (Id "\8743") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "P",VP,WS))]],SC (fromList []) (fromList [])))
 END LIST CONJECTURES
 END THEORY PropConj

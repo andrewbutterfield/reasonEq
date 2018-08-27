@@ -7,31 +7,12 @@ IMP = Id "\10233 "
 AND = Id "\8743"
 END SIGNATURE
 BEGIN THEORIES
-THNAMES = ["PropAxioms","PropEquiv","PropNot"]
-SDAG = [[("PropNot",["PropEquiv","PropAxioms"])],[("PropEquiv",["PropAxioms"])],[("PropAxioms",[])]]
+THNAMES = ["PropAxioms","PropConj","PropDisj","PropEquiv","PropNot"]
+SDAG = [[("PropConj",["PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropDisj",["PropNot","PropEquiv","PropAxioms"])],[("PropNot",["PropEquiv","PropAxioms"])],[("PropEquiv",["PropAxioms"])],[("PropAxioms",[])]]
 END THEORIES
-CURRTHEORY = PropEquiv
+CURRTHEORY = PropConj
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("PropEquiv","\8801_id")
-BEGIN LIVE-PROOF
-TH-NAME: PropEquiv
-CJ-NAME: ≡_id
-CONJ = (C P (Id "\8801") [C P (Id "\8801") [V P (VR (Id "true",VP,WS)),V P (VR (Id "Q",VP,WS))],V P (VR (Id "Q",VP,WS))],SC (fromList []) (fromList []))
-SIDE = SC (fromList []) (fromList [])
-STRAT reduce
-BEGIN SEQZIP
-TERMZIP = (C P (Id "\8801") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "Q",VP,WS)),V P (VR (Id "Q",VP,WS)),V P (VR (Id "Q",VP,WS))],[Cons' P (Id "\8801") [] [V P (VR (Id "Q",VP,WS))],Cons' P (Id "\8801") [] [V P (VR (Id "Q",VP,WS))]])
-BEGIN SEQUENT'
-SIDECOND = SC (fromList []) (fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.\8801_id", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = V P (VR (Id "true",VP,WS))}
-END SEQUENT'
-END SEQZIP
-FPATH: [1,1]
-BEGIN LIST STEPS
-(UseLaw ByInstantiation "\8801_symm" (BD (fromList [((Id "P",VP),BV (VR (Id "Q",VP,WS))),((Id "Q",VP),BV (VR (Id "Q",VP,WS)))],fromList [],fromList [])) [1,1],C P (Id "\8801") [C P (Id "\8801") [V P (VR (Id "true",VP,WS)),V P (VR (Id "Q",VP,WS))],V P (VR (Id "Q",VP,WS))])
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

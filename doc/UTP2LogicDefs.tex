@@ -415,13 +415,13 @@
 
 \def\CJAndOrAbsN{\QNAME{$\land$-$\lor$-absorb}}
 \def\CJOrAndAbsN{\QNAME{$\lor$-$\land$-absorb}}
-\def\CJAndOrNAbsN{\QNAME{$\land$-$\lor$-absorb}}
-\def\CJOrAndNAbsN{\QNAME{$\lor$-$\land$-absorb}}
+\def\CJAndOrNAbsN{\QNAME{$\land$-$\lnot$-$\lor$-absorb}}
+\def\CJOrAndNAbsN{\QNAME{$\lor$-$\lnot$-$\land$-absorb}}
 \def\CJOrAndDistrN{\QNAME{$\lor$-$\land$-distr}}
 \def\CJAndOrDistrN{\QNAME{$\land$-$\lor$-distr}}
 \def\CJdeMorganNandN{\QNAME{deMorgan-$\land$}}
 \def\CJdeMorganNorN{\QNAME{deMorgan-$\lor$}}
-\def\CJReplN{\QNAME{$\equiv$-replace}}
+\def\CJEqvReplN{\QNAME{$\equiv$-replace}}
 \def\CJEqvDefN{\QNAME{$\equiv$-def}}
 
 \def\CJAndOrAbs{P\land (P\lor Q) \equiv P}
@@ -432,7 +432,7 @@
 \def\CJAndOrDistr{P \land (Q\lor R) \equiv (P\land Q) \lor (P \land R)}
 \def\CJdeMorganNand{\lnot (P\land Q) \equiv \lnot P \lor \lnot Q}
 \def\CJdeMorganNor{\lnot (P\lor Q) \equiv \lnot P \land \lnot Q}
-\def\CJRepl{(P\equiv Q) \land (R \equiv P) \equiv (P\equiv Q) \land (R\land Q)}
+\def\CJEqvRepl{(P\equiv Q) \land (R \equiv P) \equiv (P\equiv Q) \land (R\equiv Q)}
 \def\CJEqvDef{P \equiv Q \equiv (P\land Q) \lor (\lnot P \land \lnot Q)}
 
 \def\CONJPROPMIXONE{
@@ -453,8 +453,8 @@
  &   \CJdeMorganNandN
 \\   \CJdeMorganNor
  &   \CJdeMorganNorN
-\\   \CJRepl
- &   \CJReplN
+\\   \CJEqvRepl
+ &   \CJEqvReplN
 \\   \CJEqvDef
  &   \CJEqvDefN
   \end{array}

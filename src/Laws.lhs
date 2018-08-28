@@ -11,7 +11,8 @@ module Laws
  , flattenTheEquiv, flattenTheImp, flattenTheAnd
  , flattenAssoc
  , LeftRight(..), GroupSpec(..), groupAssoc
- , Assertion, NmdAssertion, Provenance(..), Law
+ , Assertion, NmdAssertion, (-.-)
+ , Provenance(..), Law
  , labelAsAxiom, labelAsProof
  , writeSignature, readSignature
  , showLogic, showNmdAssns, showLaw, showLaws, showConj, showConjs
@@ -270,6 +271,12 @@ so we introduce the idea of a named-assertion:
 \begin{code}
 type NmdAssertion = (String,Assertion)
 \end{code}
+
+A useful utility to generate compound assertion names is:
+\begin{code}
+n1 -.- n2  =  n1 ++ "_" ++ n2
+\end{code}
+
 However, we also want to specify the provenance of each law.
 \begin{code}
 data Provenance

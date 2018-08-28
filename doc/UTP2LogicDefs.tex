@@ -412,6 +412,55 @@
 % \def\lawAndDistr{\NmCmtLaw{$\land$-$\land$-distr}{$\GSN{3.41}$}{p \land (q\land r) \equiv (p\land q) \land (p \land r)}}
 % \def\lawContradict{\NmCmtLaw{contradiction}{$\GSN{3.42}$}{p \land \lnot p \equiv \FALSE}}
 %
+
+\def\CJAndOrAbsN{\QNAME{$\land$-$\lor$-absorb}}
+\def\CJOrAndAbsN{\QNAME{$\lor$-$\land$-absorb}}
+\def\CJAndOrNAbsN{\QNAME{$\land$-$\lor$-absorb}}
+\def\CJOrAndNAbsN{\QNAME{$\lor$-$\land$-absorb}}
+\def\CJOrAndDistrN{\QNAME{$\lor$-$\land$-distr}}
+\def\CJAndOrDistrN{\QNAME{$\land$-$\lor$-distr}}
+\def\CJdeMorganNandN{\QNAME{deMorgan-$\land$}}
+\def\CJdeMorganNorN{\QNAME{deMorgan-$\lor$}}
+\def\CJReplN{\QNAME{$\equiv$-replace}}
+\def\CJEqvDefN{\QNAME{$\equiv$-def}}
+
+\def\CJAndOrAbs{P\land (P\lor Q) \equiv P}
+\def\CJOrAndAbs{P \lor (P \land Q) \equiv P}
+\def\CJAndOrNAbs{P \land (\lnot P\lor Q) \equiv P \land Q}
+\def\CJOrAndNAbs{P \lor (\lnot P \land Q) \equiv P \lor Q}
+\def\CJOrAndDistr{P \lor (Q\land R) \equiv (P\lor Q) \land (P \lor R)}
+\def\CJAndOrDistr{P \land (Q\lor R) \equiv (P\land Q) \lor (P \land R)}
+\def\CJdeMorganNand{\lnot (P\land Q) \equiv \lnot P \lor \lnot Q}
+\def\CJdeMorganNor{\lnot (P\lor Q) \equiv \lnot P \land \lnot Q}
+\def\CJRepl{(P\equiv Q) \land (R \equiv P) \equiv (P\equiv Q) \land (R\land Q)}
+\def\CJEqvDef{P \equiv Q \equiv (P\land Q) \lor (\lnot P \land \lnot Q)}
+
+\def\CONJPROPMIXONE{
+  \begin{array}{ll}
+     \CJAndOrAbs
+ &   \CJAndOrAbsN
+\\   \CJOrAndAbs
+ &   \CJOrAndAbsN
+\\   \CJAndOrNAbs
+ &   \CJAndOrNAbsN
+\\   \CJOrAndNAbs
+ &   \CJOrAndNAbsN
+\\   \CJOrAndDistr
+ &   \CJOrAndDistrN
+\\   \CJAndOrDistr
+ &   \CJAndOrDistrN
+\\   \CJdeMorganNand
+ &   \CJdeMorganNandN
+\\   \CJdeMorganNor
+ &   \CJdeMorganNorN
+\\   \CJRepl
+ &   \CJReplN
+\\   \CJEqvDef
+ &   \CJEqvDefN
+  \end{array}
+}
+
+
 % % Disj Conj
 % \def\lawAndOrAbs{\NmCmtLaw{$\land$-$\lor$-absorb}{$\GSN{3.43}$}{p\land (p\lor q) \equiv p}}
 % \def\lawOrAndAbs{\NmCmtLaw{$\lor$-$\land$-absorb}{$\GSN{3.43}$}{p \lor (p \land q) \equiv p}}

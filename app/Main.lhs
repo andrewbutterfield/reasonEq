@@ -32,7 +32,7 @@ import SideCond
 import Binding
 import REqState
 import AbstractUI
-import PropAxioms
+import PropAxioms(propSignature)
 import Instantiate
 import TestRendering
 import REPL

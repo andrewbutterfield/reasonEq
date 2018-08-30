@@ -181,7 +181,7 @@ purposes.
 \paragraph{Term Variables}
 Term variables denote terms, either arbitrary or pre-determined in some way.
 If a term contains only observable variables of the same temporality,
-then it can be deoted by a term variable of that temporality.
+then it can be denoted by a term variable of that temporality.
 Term variables are sub-classified by those that denote expressions (Expr)
 and those that denote predicates (Pred).
 There are no term variables that can denote both expressions and predicates.

@@ -14,7 +14,7 @@ where
 -- import Data.Map as M (fromList,assocs)
 -- import qualified Data.Set as S
 -- import Data.List (nub, sort, (\\), intercalate)
--- import Data.Char
+import Data.Char
 
 import NiceSymbols
 
@@ -34,6 +34,145 @@ in prefix-style only.
 For now we have simple literals,
 composites done as prefix-functions applied to (-delimited lists of sub-terms,
 and binders in standard mixfix style.
+
+\subsection{Lexical Basics}
+
+We have the following token classes:
+\begin{description}
+  \item [Numbers]~
+    Just integers for now
+  \item [Identifiers]~
+    Identifiers as per \texttt{LexBase},
+    with added decoration for variable classification
+    and unicode macro expansion.
+    We only expect the ``dangling space'' permitted in identifiers
+    to arise as the result of macro expansion.
+    \textbf{Keywords} form a subset of these.
+  \item [Delimiters]~
+    Small tokens used for general punctuation,
+    further classified into: matched (Open/Close) bracketing; and separators.
+  \item [Symbols]~
+    Tokens assembled from everything else.
+\end{description}
+
+\begin{code}
+data TToken
+  =  TNum String
+  |  TId  String
+  |  TOpen  String
+  |  TClose  String
+  |  TSep String
+  |  TSym String
+  |  Terr String
+  deriving (Eq,Show)
+\end{code}
+
+We shall use decoration to indicate variable temporality.
+We use underscore for ``During'',
+and a designated decoration character ($\delta$)
+to indicate ``Before'' or ``After''.
+
+\begin{tabular}{|l|c|l|}
+\hline
+  Temp. & Math. & String
+\\\hline
+  Static & $v$ & \texttt{v}
+\\\hline
+  Before & $v$ & $\delta$\texttt{v}
+\\\hline
+  During & $v_m$ & \texttt{v\_m}
+\\\hline
+  After & $v'$ & \texttt{v}$\delta$
+\\\hline
+\end{tabular}
+
+We want a character that is on both Apple, Windows and ``unix'' keyboards.
+\begin{code}
+decorChar = '?' -- not really used for anything else!
+\end{code}
+
+We shall predefine delimiters as constant for now.
+Later on these will be parameters to the whole parsing process.
+\begin{code}
+openings  =  "([{"
+closings  =  "}])"
+separators = ","  -- really don't want too many of these (definitely not ';' !)
+\end{code}
+
+Anything else is a symbol (for now.)
+\begin{code}
+issymbol c
+  | isSpace c  =  False
+  | isDigit c  =  False
+  | isAlpha c  =  False
+  | c `elem` decorChar : openings ++ closings ++ separators  = False
+  | otherwise  = True
+\end{code}
+
+Now we define the lexer:
+\begin{code}
+tlex :: String -> [TToken]
+tlex "" = []
+tlex str@(c:cs)
+  | isSpace c  =  tlex cs
+  | isDigit c  =  tlexNum [c] cs
+  | c == '-'  =  tlexMinus cs
+  | isAlpha c      =  tlexId False [c] cs
+  | c == decorChar =  tlexId True  [c] cs
+  | c `elem` openings  =  TOpen [c] : tlex cs
+  | c `elem` closings  =  TClose [c] : tlex cs
+  | c `elem` separators  =  TSep [c] : tlex cs
+  | otherwise  =  tlexSym [c] cs
+\end{code}
+
+Just digits
+\begin{code}
+tlexNum mun ""  = [ TNum $ reverse mun ]
+tlexNum mun str@(c:cs)
+  | isDigit c  =  tlexNum (c:mun) cs
+  | otherwise  =  TNum (reverse mun) : tlex str
+
+tlexMinus "" = [ TSym "-" ]
+tlexMinus str@(c:cs)
+  | isDigit c  =  tlexNum [c,'-'] cs
+  | issymbol c  =  tlexSym [c,'-'] cs
+  | otherwise  =  TSym "-" : tlex str
+\end{code}
+
+\newpage
+A \texttt{decorChar} will end an identifier,
+if none exists at the start.
+Otherwise it is an error.
+Also a subscript appearing when a \texttt{decorChar}is laready present
+is an error.
+\begin{code}
+tlexId _ di ""  = [ TId $ reverse di ]
+tlexId hasDC di str@(c:cs)
+  | isAlpha c  =  tlexId hasDC (c:di) cs
+  | isDigit c  =  tlexId hasDC (c:di) cs
+  | c == '_'
+      = if hasDC then (derr c di) : tlex cs
+                 else tlexDuring (c:di) [] cs
+  | c == decorChar
+      = if hasDC then (derr c di) : tlex cs
+                 else TId (reverse (c:di)) : tlex cs
+  | otherwise  = TId (reverse di) : tlex str
+  where derr c di = Terr ("Overdecorated: " ++ reverse (c:di))
+
+tlexDuring di ""  ""  =  [ Terr ("Missing subscript: " ++ reverse di) ]
+tlexDuring di bus ""  =  [ TId (reverse di ++ reverse bus) ]
+tlexDuring di bus str@(c:cs)
+  | isAlpha c  =  tlexDuring di (c:bus) cs
+  | otherwise =  TId (reverse di ++ reverse bus) : tlex str
+\end{code}
+
+\begin{code}
+tlexSym mys ""  = [ TSym $ reverse mys ]
+tlexSym mys str@(c:cs)
+  | issymbol c  =  tlexSym (c:mys) cs
+  | otherwise  =  TSym (reverse mys) : tlex str
+\end{code}
+
 
 \subsection{Random test/prototype bits}
 

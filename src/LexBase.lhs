@@ -29,10 +29,11 @@ import Test.Framework.Providers.HUnit (testCase)
 --import Test.Framework.Providers.QuickCheck2 (testProperty)
 \end{code}
 
+\newpage
 \subsection{Lexical Base Introduction}
 
 Here we define very basic lexical elements on which both the concrete
-and abstracts will be built.
+and abstract syntaxes will be built.
 The key design issues here are to be able to easily support common UTP
 idioms, while making it easy for the user to define their own notation.
 For now we recognise the following kinds of tokens:
@@ -41,7 +42,7 @@ For now we recognise the following kinds of tokens:
     longest sequence of characters satisfying \texttt{isSpace}.
   \item[Numeric]
     longest sequence of characters satisfying \texttt{isDigit}.
-  \item[Numeric]
+  \item[Symbol]
     longest sequence of characters satisfying \texttt{isSymbol}.
   \item[Identifier]
     longest sequence of characters satisfying the requirements of

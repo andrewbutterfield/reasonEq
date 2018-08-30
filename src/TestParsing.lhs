@@ -10,7 +10,7 @@ module TestParsing
 
 where
 
--- import Data.Maybe(fromJust)
+import Data.Maybe(fromJust)
 -- import Data.Map as M (fromList,assocs)
 -- import qualified Data.Set as S
 -- import Data.List (nub, sort, (\\), intercalate)
@@ -140,7 +140,7 @@ tlexMinus str@(c:cs)
 \end{code}
 
 \newpage
-A \texttt{decorChar} will end an identifier,
+A \texttt{decorChar}  will end an identifier,
 if none exists at the start.
 Otherwise it is an error.
 Also a subscript appearing when a \texttt{decorChar}is laready present
@@ -173,6 +173,93 @@ tlexSym mys str@(c:cs)
   | otherwise  =  TSym (reverse mys) : tlex str
 \end{code}
 
+\subsection{Simple Term Parser}
+
+The abstract syntax:
+\begin{eqnarray*}
+   b &\in& Bool
+\\ n &\in& Num
+\\ i &\in& Ident
+\\ v &\in& Var = Ident \times \dots
+\\ t &\in& Term ::= b
+               \mid n
+               \mid v
+               \mid i~(t_1,\dots,t_n)
+               \mid \mathcal Q ~i ~\lst v \bullet t
+\end{eqnarray*}
+
+The concrete syntax (non-terminals in <..>):
+\begin{verbatim}
+ <t> ::= <b> | n | v | i ( t , ... , t ) | <q> i <v$> , ... ,<v$> @ <t>
+ <b> ::= true | false
+ <q> ::= QS | QL
+ <v$> ::=  v | v $
+ -- keywords: true false QS QL
+\end{verbatim}
+\begin{code}
+keyTrue = "true"
+keyFalse = "false"
+keySetBind = "QS"
+keyListBind = "QL"
+\end{code}
+
+\begin{code}
+true = Vbl (fromJust $ ident "true") PredV Static
+trueP = fromJust $ pVar true
+false = Vbl (fromJust $ ident "false") PredV Static
+falseP = fromJust $ pVar false
+\end{code}
+
+
+Top level term parsers.
+\begin{code}
+sTermParse :: Monad m => TermKind -> [TToken] -> m (Term, [TToken])
+sTermParse tk [] =  fail "sTermParse: nothing to parse"
+
+sTermParse tk (TNum str:tts)
+  = return ( Val tk $ Integer $ read str, tts)
+sTermParse tk (TId str:tts)
+  | str == keyTrue   = return ( mkTrue tk,  tts)
+  | str == keyFalse  = return ( mkFalse tk, tts)
+  | str == keySetBind = fail "sTermParse: var-set binders NYI"
+  | str == keyListBind = fail "sTermParse: var-list binders NYI"
+  | otherwise = sIdParse tk (repmacro str) tts
+sTermParse tk (tt:tts)  = fail ("sTermParse: unexpected token: "++show tt)
+
+mkTrue P   =  trueP
+mkTrue (E _)
+  =  Val (E $ GivenType (fromJust $ ident $ _mathbb "B")) $ Boolean True
+mkFalse P  =  falseP
+mkFalse (E _)
+  =  Val (E $ GivenType (fromJust $ ident $ _mathbb "B")) $ Boolean False
+
+repmacro "" = ""
+repmacro (c:cs)
+ | c == '_'  = findmacro "_" cs
+ | otherwise  =  c : repmacro cs
+
+findmacro orcam ""
+ = case findSym macro of
+    Nothing   ->  macro
+    Just rep  ->  rep
+ where macro = reverse orcam
+
+-- simple for now - we assume macro runs to end of string.
+findmacro orcam (c:cs) = findmacro (c:orcam) cs
+\end{code}
+
+Seen an identifier, check for an opening parenthesis:
+\begin{code}
+sIdParse tk id1 tts = fail ("sIdParse NYI, given: "++id1)
+\end{code}
+
+Handy specialisations:
+\begin{code}
+sExprParse :: Monad m => String -> m (Term, [TToken])
+sExprParse = sTermParse (E ArbType) . tlex
+sPredParse :: Monad m => String -> m (Term, [TToken])
+sPredParse = sTermParse P . tlex
+\end{code}
 
 \subsection{Random test/prototype bits}
 

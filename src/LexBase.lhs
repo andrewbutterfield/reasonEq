@@ -59,8 +59,10 @@ for program variables, namely starting with an alpha character,
 followed by zero or more alphas, and digits,
 or a mix of ``symbols'', which do not include alphas.
 In addition,
-we don't allow most whitespace, quotes, underscores, dollars, primes or dots
+we don't allow most whitespace, quotes, or dots
 in either form of identifier.
+We do permit variable identifiers to have some decoration
+characters: \verb@'_$?'@, and may start with \verb"_?"."
 We do allow symbols to end with a space character%
 ---%
 this is necessary for some long symbols.
@@ -74,13 +76,17 @@ pattern Identifier nm <- Id nm
 
 isValidSymbol c  =  not(isSpace c || isAlpha c || c `elem` "_$'.`\"")
 
-isIdContChar c = isAlpha c || isDigit c
+decorChar = "'_$?"
+
+isIdStartChar c = c `elem` "_?" || isAlpha c
+isIdContChar c = isAlpha c || isDigit c || c `elem` decorChar
 
 validIdent :: String -> Bool
 validIdent str@(c:cs)
-  =  not (isDigit c) && all isValidSymbol (init str)
+  =  isIdStartChar c  && all isIdContChar cs
+     ||
+     not (isDigit c) && all isValidSymbol (init str)
                      && ( c' == ' ' || isValidSymbol c' )
-     ||   isAlpha c  && all isIdContChar cs
   where c' = last str
 validIdent _           =  False -- no empty/null identifiers !
 
@@ -106,17 +112,17 @@ identTests
     , testCase "ident \"Z\""  ( ident "Z"   @?=  Just (Id "Z") )
     , testCase "ident \"++\"" ( ident "++"   @?=  Just (Id "++") )
     , testCase "ident \"\172\"" ( ident "\172"   @?=  Just (Id "\172") )
-    , testCase "ident \"_\""  ( ident "_"   @?=  Nothing )
+    , testCase "ident \"_\""  ( ident "_"   @?=  Just (Id "_") )
     , testCase "ident \"'\""  ( ident "'"   @?=  Nothing )
     , testCase "ident \"5\""  ( ident "5"   @?=  Nothing )
-    , testCase "ident \"a?\"" ( ident "a?"  @?=  Nothing )
+    , testCase "ident \"a?\"" ( ident "a?"  @?=  Just (Id "a?") )
     , testCase "ident \"Z@\"" ( ident "Z@"  @?=  Nothing )
-    , testCase "ident \"_a\"" ( ident "_a"  @?=  Nothing )
+    , testCase "ident \"_a\"" ( ident "_a"  @?=  Just (Id "_a") )
     , testCase "ident \"'a\"" ( ident "'a"  @?=  Nothing )
     , testCase "ident \"5a\"" ( ident "5a"  @?=  Nothing )
     , testCase "ident \"Mp\"" ( ident "Mp"  @?=  Just (Id "Mp") )
     , testCase "ident \"N5\"" ( ident "N5"  @?=  Just (Id "N5") )
-    , testCase "ident \"R_\"" ( ident "R_"  @?=  Nothing )
+    , testCase "ident \"R_\"" ( ident "R_"  @?=  Just (Id "R_") )
     ]
 \end{code}
 

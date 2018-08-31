@@ -40,36 +40,45 @@ and binders in standard mixfix style.
 We have the following token classes:
 \begin{description}
   \item [Numbers]~
-    Just integers for now
+    Just integers for now,
+    with a minus-sign to start if negative,
+    with no whitespece between it and the one or more (decimal) digits.
   \item [Identifiers]~
     Identifiers as per \texttt{LexBase},
     with added decoration for variable classification
     and unicode macro expansion.
+    \textbf{Keywords} form a subset of these.
+    We expect identifiers to have one of the following concrete forms:
+    \textsf{ident},
+    \texttt{?}\textsf{ident},
+    \textsf{ident}\texttt{?},
+    \textsf{indent}\texttt\_\textsf{alphas},
+    \texttt{\_}\textsf{macro}.
     We only expect the ``dangling space'' permitted in identifiers
     to arise as the result of macro expansion.
-    \textbf{Keywords} form a subset of these.
   \item [Delimiters]~
     Small tokens used for general punctuation,
     further classified into: matched (Open/Close) bracketing; and separators.
   \item [Symbols]~
-    Tokens assembled from everything else.
+    Tokens assembled from everything else,
+    provided they satisfy \texttt{LexBase.validIdent}.
 \end{description}
 
 \begin{code}
 data TToken
-  =  TNum String
-  |  TId  String
+  =  TNum   Integer
+  |  TId    Identifier VarWhen
   |  TOpen  String
-  |  TClose  String
-  |  TSep String
-  |  TSym String
-  |  Terr String
+  |  TClose String
+  |  TSep   String
+  |  TSym   Identifier
+  |  TErr   String
   deriving (Eq,Show)
 \end{code}
 
 We shall use decoration to indicate variable temporality.
 We use underscore for ``During'',
-and a designated decoration character ($\delta$)
+and a designated character (`\texttt{?}')
 to indicate ``Before'' or ``After''.
 
 \begin{tabular}{|l|c|l|}
@@ -78,17 +87,19 @@ to indicate ``Before'' or ``After''.
 \\\hline
   Static & $v$ & \texttt{v}
 \\\hline
-  Before & $v$ & $\delta$\texttt{v}
+  Before & $v$ & \texttt{?v}
 \\\hline
   During & $v_m$ & \texttt{v\_m}
 \\\hline
-  After & $v'$ & \texttt{v}$\delta$
+  After & $v'$ & \texttt{v?}
 \\\hline
 \end{tabular}
 
-We want a character that is on both Apple, Windows and ``unix'' keyboards.
+We chose the character `?' because
+it is on both Apple, Windows and ``unix'' keyboards,
+and is not really used for anything else in a math context.
 \begin{code}
-decorChar = '?' -- not really used for anything else!
+whenChar = '?'
 \end{code}
 
 We shall predefine delimiters as constant for now.
@@ -105,8 +116,39 @@ issymbol c
   | isSpace c  =  False
   | isDigit c  =  False
   | isAlpha c  =  False
-  | c `elem` decorChar : openings ++ closings ++ separators  = False
-  | otherwise  = True
+  | c `elem` whenChar : openings ++ closings ++ separators
+               =  False
+  | otherwise  =  True
+\end{code}
+
+Making symbols and identifiers:
+\begin{code}
+mkSym str
+  = case ident str of
+      But msgs  ->  TErr $ unlines' msgs
+      Yes i     ->  TSym i
+
+mkId str
+  = case ident str of
+      But msgs  ->  TErr $ unlines' msgs
+      Yes i     ->  let (i',vw') = extractTemporality i str
+                    in TId i' vw'
+
+extractTemporality i cs -- non-empty
+ | c1 == whenChar       =  ( fromJust $ ident $ tail cs, Before)
+ | last cs == whenChar  =  ( fromJust $ ident $ init cs, After )
+ | have root && have subscr && all isAlpha subscr
+                        =  ( fromJust $ ident root,      During subscr )
+ | otherwise = ( i, Static )
+ where
+    c1 = head cs
+    (root,rest) = break (== '_') cs
+    have [] = False ; have _ = True
+    subscr = ttail rest
+    ttail [] = [] ; ttail (_:cs) = cs
+
+-- tail recursion often requires reversal at end of accumulated lists
+mkMys  =  mkSym . reverse   ;   mkDi   =  mkId . reverse
 \end{code}
 
 Now we define the lexer:
@@ -114,63 +156,83 @@ Now we define the lexer:
 tlex :: String -> [TToken]
 tlex "" = []
 tlex str@(c:cs)
-  | isSpace c  =  tlex cs
-  | isDigit c  =  tlexNum [c] cs
-  | c == '-'  =  tlexMinus cs
-  | isAlpha c      =  tlexId False [c] cs
-  | c == decorChar =  tlexId True  [c] cs
-  | c `elem` openings  =  TOpen [c] : tlex cs
-  | c `elem` closings  =  TClose [c] : tlex cs
-  | c `elem` separators  =  TSep [c] : tlex cs
-  | otherwise  =  tlexSym [c] cs
-\end{code}
-
-Just digits
-\begin{code}
-tlexNum mun ""  = [ TNum $ reverse mun ]
-tlexNum mun str@(c:cs)
-  | isDigit c  =  tlexNum (c:mun) cs
-  | otherwise  =  TNum (reverse mun) : tlex str
-
-tlexMinus "" = [ TSym "-" ]
-tlexMinus str@(c:cs)
-  | isDigit c  =  tlexNum [c,'-'] cs
-  | issymbol c  =  tlexSym [c,'-'] cs
-  | otherwise  =  TSym "-" : tlex str
+  | isSpace c            =  tlex cs
+  | isDigit c            =  tlexNum [c] cs
+  | c == '-'             =  tlexMinus cs
+  | isAlpha c            =  tlexId False [c] cs
+  | c == whenChar        =  tlexId True  [c] cs
+  | c `elem` openings    =  TOpen [c]  : tlex cs
+  | c `elem` closings    =  TClose [c] : tlex cs
+  | c `elem` separators  =  TSep [c]   : tlex cs
+  | c == '_'             =  tlexMacro [c] cs
+  | otherwise            =  tlexSym [c] cs
 \end{code}
 
 \newpage
-A \texttt{decorChar}  will end an identifier,
+Just digits
+\begin{code}
+tlexNum mun ""  = [ mkNum mun ]
+tlexNum mun str@(c:cs)
+  | isDigit c  =  tlexNum (c:mun) cs
+  | otherwise  =  mkNum mun : tlex str
+
+mkNum mun = TNum $ read $ reverse mun
+
+tlexMinus "" = [ mkSym "-" ]
+tlexMinus str@(c:cs)
+  | isDigit c  =  tlexNum [c,'-'] cs
+  | issymbol c  =  tlexSym [c,'-'] cs
+  | otherwise  =  mkSym "-" : tlex str
+\end{code}
+
+A \texttt{whenChar}  will end an identifier,
 if none exists at the start.
 Otherwise it is an error.
-Also a subscript appearing when a \texttt{decorChar}is laready present
+Also a subscript appearing when a \texttt{whenChar}is laready present
 is an error.
 \begin{code}
-tlexId _ di ""  = [ TId $ reverse di ]
+tlexId _ di ""  = [ mkDi di ]
 tlexId hasDC di str@(c:cs)
   | isAlpha c  =  tlexId hasDC (c:di) cs
   | isDigit c  =  tlexId hasDC (c:di) cs
   | c == '_'
       = if hasDC then (derr c di) : tlex cs
                  else tlexDuring (c:di) [] cs
-  | c == decorChar
+  | c == whenChar
       = if hasDC then (derr c di) : tlex cs
-                 else TId (reverse (c:di)) : tlex cs
-  | otherwise  = TId (reverse di) : tlex str
-  where derr c di = Terr ("Overdecorated: " ++ reverse (c:di))
+                 else  mkDi (c:di) : tlex cs
+  | otherwise  =  mkDi di : tlex str
+  where
+    derr c di = TErr ("Overdecorated: " ++ reverse (c:di))
 
-tlexDuring di ""  ""  =  [ Terr ("Missing subscript: " ++ reverse di) ]
-tlexDuring di bus ""  =  [ TId (reverse di ++ reverse bus) ]
+tlexDuring di ""  ""  =  [ TErr ("Missing subscript: " ++ reverse di) ]
+tlexDuring di bus ""  =  [ mkId (reverse di ++ reverse bus) ]
 tlexDuring di bus str@(c:cs)
   | isAlpha c  =  tlexDuring di (c:bus) cs
-  | otherwise =  TId (reverse di ++ reverse bus) : tlex str
+  | otherwise  =  mkId (reverse di ++ reverse bus) : tlex str
 \end{code}
 
 \begin{code}
-tlexSym mys ""  = [ TSym $ reverse mys ]
+tlexMacro orcam "" = [ mkCam orcam ]
+tlexMacro orcam str@(c:cs)
+ | isAlpha c  =  tlexMacro (c:orcam) cs
+ | otherwise  =  mkCam orcam : tlex str
+
+mkCam = mkMac . reverse
+mkMac macro
+  = case findSym macro of
+      Nothing  ->  TErr ("Invalid macro: "++macro)
+      Just str
+       -> case ident str of
+            But msgs -> TErr ("Macro expansion bad: "++unlines' msgs)
+            Yes i -> TSym i
+\end{code}
+
+\begin{code}
+tlexSym mys ""  = [ mkMys mys ]
 tlexSym mys str@(c:cs)
   | issymbol c  =  tlexSym (c:mys) cs
-  | otherwise  =  TSym (reverse mys) : tlex str
+  | otherwise  =  mkMys mys : tlex str
 \end{code}
 
 \subsection{Simple Term Parser}
@@ -216,14 +278,16 @@ Top level term parsers.
 sTermParse :: Monad m => TermKind -> [TToken] -> m (Term, [TToken])
 sTermParse tk [] =  fail "sTermParse: nothing to parse"
 
-sTermParse tk (TNum str:tts)
-  = return ( Val tk $ Integer $ read str, tts)
-sTermParse tk (TId str:tts)
-  | str == keyTrue   = return ( mkTrue tk,  tts)
-  | str == keyFalse  = return ( mkFalse tk, tts)
-  | str == keySetBind = fail "sTermParse: var-set binders NYI"
-  | str == keyListBind = fail "sTermParse: var-list binders NYI"
-  | otherwise = sIdParse tk (repmacro str) tts
+sTermParse tk (TNum n:tts)
+  = return ( Val tk $ Integer n, tts)
+sTermParse tk (TId i vw:tts)
+  | n == keyTrue      =  return ( mkTrue tk,  tts)
+  | n == keyFalse     =  return ( mkFalse tk, tts)
+  | n == keySetBind   =  fail "sTermParse: var-set binders NYI"
+  | n == keyListBind  =  fail "sTermParse: var-list binders NYI"
+  | otherwise         =  sIdParse tk i vw tts
+  where n = idName i
+sTermParse tk (TSym i:tts) = sIdParse tk i Static tts
 sTermParse tk (tt:tts)  = fail ("sTermParse: unexpected token: "++show tt)
 
 mkTrue P   =  trueP
@@ -232,25 +296,19 @@ mkTrue (E _)
 mkFalse P  =  falseP
 mkFalse (E _)
   =  Val (E $ GivenType (fromJust $ ident $ _mathbb "B")) $ Boolean False
-
-repmacro "" = ""
-repmacro (c:cs)
- | c == '_'  = findmacro "_" cs
- | otherwise  =  c : repmacro cs
-
-findmacro orcam ""
- = case findSym macro of
-    Nothing   ->  macro
-    Just rep  ->  rep
- where macro = reverse orcam
-
--- simple for now - we assume macro runs to end of string.
-findmacro orcam (c:cs) = findmacro (c:orcam) cs
 \end{code}
+
 
 Seen an identifier, check for an opening parenthesis:
 \begin{code}
-sIdParse tk id1 tts = fail ("sIdParse NYI, given: "++id1)
+sIdParse tk id1 vw [] = return (mkVar tk id1 vw, [])
+sIdParse tk id1 vw tts = fail ("sIdParse NYFI, given: "++trId id1)
+\end{code}
+
+Making a variable term:
+\begin{code}
+mkVar P id1 vw   =  fromJust $ var P $ Vbl id1 PredV vw
+mkVar tk id1 vw  =  fromJust $ var tk $ Vbl id1 ObsV vw
 \end{code}
 
 Handy specialisations:

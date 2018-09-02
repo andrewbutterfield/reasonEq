@@ -201,8 +201,8 @@ trTerm :: Int -> Term -> String -- 1st arg is precedence (not yet used)
 trTerm p (Val tk k)           =  trValue k
 trTerm p (Var tk v)           =  trVar v
 
-trTerm p (Cons tk n [t])
- | isAtomic t                 =  asmAtomic n $ trTerm 0 t
+-- trTerm p (Cons tk n [t])
+--  | isAtomic t                 =  asmAtomic n $ trTerm 0 t
 trTerm p (Cons tk s ts@(_:_:_))
  | isSymbId s                 =  asmInfix p prcs s $ map (trTerm ps) ts
  where prcs@(ps,assoc) = prc s
@@ -226,12 +226,12 @@ $asmK$ for \texttt{trTerm}
 --asmCons has three flavours
 -- trTerm p (Cons tk n ts)
 asmAtomic :: Identifier -> String -> String
-asmAtomic n r = trId n ++ r
+asmAtomic n r = trId n ++ ' ':r
 asmInfix :: Int -> InfixKind -> Identifier -> [String] -> String
 asmInfix p (ps,assoc) s rs
   = trBracketIf (ps < p || ps == p && not assoc) $ intercalate (trId s) $ rs
 asmCons :: Identifier -> [String] -> String
-asmCons n rs = trId n ++ asmContainer ("(",", ",")") rs
+asmCons n rs = trId n ++ asmContainer ( "(", ",", ")" ) rs
 \end{code}
 
 Generic $asmK$ helpers.

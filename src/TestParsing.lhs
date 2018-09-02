@@ -6,7 +6,10 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module TestParsing
+module TestParsing (
+  sExprParse
+, sPredParse  
+)
 
 where
 
@@ -250,12 +253,12 @@ The abstract syntax:
                \mid \mathcal Q ~i ~\lst v \bullet t
 \end{eqnarray*}
 
-The concrete syntax (non-terminals in <..>):
+The concrete syntax (non-terminals in \verb@<..>@):
 \begin{verbatim}
- <t> ::= <b> | n | v | i ( t , ... , t ) | <q> i <v$> , ... ,<v$> @ <t>
  <b> ::= true | false
  <q> ::= QS | QL
  <v$> ::=  v | v $
+ <t> ::= <b> | n | v | i ( t , ... , t ) | <q> i <v$> , ... ,<v$> @ <t>
  -- keywords: true false QS QL
 \end{verbatim}
 \begin{code}
@@ -273,7 +276,8 @@ falseP = fromJust $ pVar false
 \end{code}
 
 
-Top level term parsers.
+\subsubsection{Top level term parser}
+
 \begin{code}
 sTermParse :: Monad m => TermKind -> [TToken] -> m (Term, [TToken])
 sTermParse tk [] =  fail "sTermParse: nothing to parse"
@@ -301,14 +305,35 @@ mkFalse (E _)
 
 Seen an identifier, check for an opening parenthesis:
 \begin{code}
-sIdParse tk id1 vw [] = return (mkVar tk id1 vw, [])
-sIdParse tk id1 vw tts = fail ("sIdParse NYFI, given: "++trId id1)
+sIdParse tk id1 vw (TOpen "(" : tts)  =  sAppParse tk id1 [] tts
+sIdParse tk id1 vw tts                =  return (mkVar tk id1 vw, tts)
 \end{code}
 
 Making a variable term:
 \begin{code}
 mkVar P id1 vw   =  fromJust $ var P $ Vbl id1 PredV vw
 mkVar tk id1 vw  =  fromJust $ var tk $ Vbl id1 ObsV vw
+\end{code}
+
+Seen identifier and opening parenthesis.
+Look for sub-term, or closing parenthesis.
+\begin{code}
+sAppParse tk id1 smretbus (TClose ")" : tts)
+  = return ( Cons tk id1 $ reverse smretbus, tts)
+sAppParse tk id1 smretbus tts
+  = do (tsub',tts') <- sTermParse tk tts
+       sAppParse' tk id1 (tsub':smretbus) tts'
+\end{code}
+
+Seen (sub-) term.
+Looking for comma or closing parenthesis
+\begin{code}
+sAppParse' tk id1 smretbus (TSep "," : tts)
+  =  sAppParse tk id1 smretbus tts
+sAppParse' tk id1 smretbus (TClose ")" : tts)
+  =  return ( Cons tk id1 $ reverse smretbus, tts)
+sAppParse' tk id1 smretbus tts
+  =  fail ("sAppParse': expected ',' or ')'")
 \end{code}
 
 Handy specialisations:
@@ -327,4 +352,8 @@ showMacro macro
  = case findSym macro of
      Nothing -> putStrLn "<nothing found>"
      Just sym -> putStrLn ("found: "++sym)
+\end{code}
+
+\begin{code}
+tparse = putStrLn . trTerm 0 . fst . fromJust .sPredParse
 \end{code}

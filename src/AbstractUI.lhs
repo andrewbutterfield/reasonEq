@@ -169,6 +169,14 @@ setCurrentTheory thnm reqs
       Just _   ->  return ( currTheory_ thnm reqs)
 \end{code}
 
+\subsubsection{Adding a new conjecture}
+
+\begin{code}
+newConjecture :: Monad m => NmdAssertion -> REqState -> m REqState
+newConjecture nasn@(nm,asn) reqs
+  = fail "newConjecture NYI"
+\end{code}
+
 \subsubsection{Starting a Proof}
 
 This is not a single abstract UI call,
@@ -183,7 +191,7 @@ newProof1 :: Monad m => Int -> REqState
 newProof1 i reqs
   = case nlookup i (getCurrConj reqs) of
       Nothing  ->  fail "invalid conjecture number"
-      Just nconj@(nm,asn)
+      Just nconj -- @(nm,asn)
        -> return
            ( nconj
            , availableStrategies (logicsig reqs) thys currTh nconj )

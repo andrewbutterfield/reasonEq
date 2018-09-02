@@ -7,8 +7,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module TestParsing (
-  sExprParse
-, sPredParse  
+  mkLawName
+, sExprParse
+, sPredParse
 )
 
 where
@@ -16,7 +17,7 @@ where
 import Data.Maybe(fromJust)
 -- import Data.Map as M (fromList,assocs)
 -- import qualified Data.Set as S
--- import Data.List (nub, sort, (\\), intercalate)
+import Data.List (nub, sort, (\\), intercalate)
 import Data.Char
 
 import NiceSymbols
@@ -236,6 +237,18 @@ tlexSym mys ""  = [ mkMys mys ]
 tlexSym mys str@(c:cs)
   | issymbol c  =  tlexSym (c:mys) cs
   | otherwise  =  mkMys mys : tlex str
+\end{code}
+
+\subsection{Law Name Parser}
+
+\begin{code}
+mkLawName :: [String] -> String
+mkLawName ss
+  = intercalate "-" $ map showTTok $ concat $ map tlex ss
+  where
+    showTTok (TNum n) = show n
+    showTTok (TId i _) = idName i
+    showTTok ttok  = _redQ
 \end{code}
 
 \subsection{Simple Term Parser}

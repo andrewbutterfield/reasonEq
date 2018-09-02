@@ -35,6 +35,7 @@ import AbstractUI
 import PropAxioms(propSignature)
 import Instantiate
 import TestRendering
+import TestParsing
 import REPL
 import Dev
 \end{code}
@@ -203,7 +204,7 @@ reqQuit _ reqs = putStrLn "\nGoodbye!\n" >> return (True, reqs)
 reqHelpCmds = ["?","help"]
 
 reqCommands :: REqCommands
-reqCommands = [ cmdShow, cmdSet
+reqCommands = [ cmdShow, cmdSet, cmdNew
               , cmdNewProof, cmdRet2Proof
               , cmdSave, cmdLoad
               , cmdBuiltin ]
@@ -354,6 +355,31 @@ setState (cmd:rest) reqs
          Just reqs'  ->  doshow reqs' ("Current Theory now '" ++ thnm ++ "'")
  where thnm = args2str rest
 setState _ reqs      =  doshow reqs "unknown 'set' option."
+\end{code}
+
+\subsection{New Command}
+\begin{code}
+cmdNew :: REqCmdDescr
+cmdNew
+  = ( "new"
+    , "generate new theory items"
+    , unlines
+        [ "new "++newConj++" 'np1' .. 'npk' -- new conjecture 'np1-..-npk'"]
+    , newThing )
+
+newConj = shConj
+
+newThing (cmd:rest) reqs
+ | cmd == newConj
+    = do let cjnm = mkLawName rest
+         putStr ("New conj, '"++cjnm++"', enter term :- ")
+         hFlush stdout
+         trtxt <- getLine
+         case sPredParse trtxt of
+           But msgs  -> doshow reqs ("Bad Term, "++unlines' msgs)
+           Yes t  ->  doshow reqs "newThing(Conj.) NYFI"
+
+newThing _ reqs      =  doshow reqs "unknown 'new' option."
 \end{code}
 
 

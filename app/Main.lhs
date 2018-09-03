@@ -192,7 +192,7 @@ reqPrompt _ _ = _equiv++" : "
 
 reqEOFreplacmement = [nquit]
 
-reqParser = charTypeParse
+reqParser = wordParse
 
 reqQuitCmds = [nquit] ; nquit = "quit"
 
@@ -364,22 +364,27 @@ cmdNew
   = ( "new"
     , "generate new theory items"
     , unlines
-        [ "new "++newConj++" 'np1' .. 'npk' -- new conjecture 'np1-..-npk'"]
+        [ "new "++shConj++" 'np1' .. 'npk' -- new conjecture 'np1-..-npk'"]
     , newThing )
 
-newConj = shConj
-
 newThing (cmd:rest) reqs
- | cmd == newConj
-    = do let cjnm = mkLawName rest
-         putStr ("New conj, '"++cjnm++"', enter term :- ")
-         hFlush stdout
-         trtxt <- getLine
-         case sPredParse trtxt of
-           But msgs  -> doshow reqs ("Bad Term, "++unlines' msgs)
-           Yes t  ->  doshow reqs "newThing(Conj.) NYFI"
-
+ | cmd == shConj = newConj rest reqs
 newThing _ reqs      =  doshow reqs "unknown 'new' option."
+\end{code}
+
+New Conjecture:
+\begin{code}
+newConj args reqs
+  = do let cjnm = mkLawName args
+       putStr ("New conj, '"++cjnm++"', enter term :- ")
+       hFlush stdout; trtxt <- getLine
+       case sPredParse trtxt of
+         But msgs  -> doshow reqs ("Bad Term, "++unlines' msgs)
+         Yes (term,_) ->
+          case newConjecture (currTheory reqs) (cjnm,(term,scTrue)) reqs of
+            But msgs  -> doshow reqs (unlines' msgs)
+            Yes reqs' -> do putStrLn ("Conjecture '"++cjnm++"' installed")
+                            return reqs'
 \end{code}
 
 

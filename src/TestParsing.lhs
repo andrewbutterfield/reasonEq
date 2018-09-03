@@ -244,11 +244,12 @@ tlexSym mys str@(c:cs)
 \begin{code}
 mkLawName :: [String] -> String
 mkLawName ss
-  = intercalate "-" $ map showTTok $ concat $ map tlex ss
+  = intercalate "_" $ map showTTok $ concat $ map tlex ss
   where
-    showTTok (TNum n) = show n
+    showTTok (TNum n)  = show n
     showTTok (TId i _) = idName i
-    showTTok ttok  = _redQ
+    showTTok (TSym i)  = idName i
+    showTTok ttok      = _redQ
 \end{code}
 
 \subsection{Simple Term Parser}

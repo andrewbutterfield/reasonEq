@@ -11,6 +11,7 @@ module AbstractUI
 , observeCurrTheory, observeCurrConj
 , observeLiveProofs, observeCompleteProofs
 , setCurrentTheory
+, newConjecture
 , newProof1, newProof2, resumeProof
 , abandonProof, saveProof, completeProof
 , moveFocusDown, moveFocusUp, moveConsequentFocus
@@ -171,10 +172,15 @@ setCurrentTheory thnm reqs
 
 \subsubsection{Adding a new conjecture}
 
+Easy, so long as we check for name clashes.
 \begin{code}
-newConjecture :: Monad m => NmdAssertion -> REqState -> m REqState
-newConjecture nasn@(nm,asn) reqs
-  = fail "newConjecture NYI"
+newConjecture :: Monad m => String -> NmdAssertion -> REqState
+              -> m REqState
+newConjecture thnm nasn reqs
+  = case getTheory thnm $ theories reqs of
+      Nothing -> fail ("No theory named '"++thnm++"'.")
+      Just thry -> do thry' <- newTheoryConj nasn thry
+                      return $ theories__ (replaceTheory thry') $ reqs
 \end{code}
 
 \subsubsection{Starting a Proof}

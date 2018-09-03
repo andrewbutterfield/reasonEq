@@ -54,8 +54,8 @@ determines what command will be run,
 with the remaining strings passed as arguments to that command
 We define some simple obvious parsers as well.
 \begin{code}
-type REPLParser = String -> [String]
 type REPLArguments = [String]
+type REPLParser = String -> REPLArguments
 
 idParse, wordParse, charTypeParse :: REPLParser
 

@@ -23,6 +23,7 @@ module Theories
  , getTheoryDeps, getTheoryDeps', getAllTheories
  , listTheories, getTheoryConjectures, getTheoryProofs
  , updateTheory, replaceTheory
+ , newTheoryConj
  , addTheoryProof, upgradeConj2Law
  , showTheories, showNamedTheory
  , showTheoryLong, showTheoryShort, showTheoryLaws
@@ -332,6 +333,15 @@ replaceTheory :: Theory -> Theories -> Theories
 replaceTheory thry theories = updateTheory (thName thry) (const thry) theories
 \end{code}
 
+We have some updates that are monadic
+\begin{code}
+newTheoryConj :: Monad m => NmdAssertion -> Theory -> m Theory
+newTheoryConj nasn@(nm,_) thry
+  | nm `elem` map (fst . fst) (laws thry) = fail "name in use in laws!"
+  | nm `elem` map fst  (conjs thry) = fail "name in use in conjectures!"
+  | otherwise = return $ conjs__ (nasn:) thry
+\end{code}
+
 \subsubsection{Add Proof to Theory}
 
 \begin{code}
@@ -398,7 +408,8 @@ showTheoryLong thry
         else [ "depends on: "++intercalate "," deps] )
       ++
       [ trVarTable (known thry)
-      , showLaws (laws thry) ]
+      , showLaws (laws thry)
+      , showConjs (conjs thry) ]
     )
   where deps = thDeps thry
 \end{code}

@@ -79,7 +79,7 @@ mmdKey = "MMD = "
 writeREqSettings :: REqSettings -> [String]
 writeREqSettings rqset
   = [ reqsetHDR
-    , "MMD: " ++ show (maxMatchDisplay rqset)
+    , mmdKey ++ show (maxMatchDisplay rqset)
     , reqsetTRL ]
 
 readREqSettings :: Monad m => [String] -> m (REqSettings, [String])

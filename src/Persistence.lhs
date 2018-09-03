@@ -6,8 +6,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 module Persistence
-  ( writeState
-  , readState
+  ( writeAllState
+  , readAllState
   , writeNamedTheory
   , readNamedTheory
   , persistentTest)
@@ -32,36 +32,60 @@ tfile pjdir nm = pjdir ++ pathSeparator : nm <.> projectExt
 
 \subsection{Writing \reasonEq\ State}
 
+
 \begin{code}
-writeState :: REqState -> IO ()
-writeState reqs
+writeAllState :: REqState -> IO ()
+writeAllState reqs
   = do let (tsTxt,nTsTxts) = writeREqState reqs
        let fp = pfile reqs
        writeFile fp $ unlines tsTxt
        sequence_ $ map (writeNamedTheory reqs) nTsTxts
+\end{code}
 
+\begin{code}
+readAllState :: FilePath -> IO REqState
+readAllState projfp
+  = do txt  <- readFile $ projectPath projfp
+       ((sets,sig,thnms),rest1) <- readREqState1 $ lines txt
+       nmdThrys <- sequence $ map (readNamedTheory projfp) thnms
+       reqs <- readREqState2 sets sig nmdThrys rest1
+       return reqs{projectDir = projfp}
+\end{code}
+
+\begin{code}
+writeState :: REqState -> IO ()
+writeState reqs
+  = do let (tsTxt,_) = writeREqState reqs
+       let fp = pfile reqs
+       writeFile fp $ unlines tsTxt
+\end{code}
+
+\begin{code}
+readState :: FilePath -> REqState -> IO REqState
+readState projfp reqs
+  = do txt  <- readFile $ projectPath projfp
+       ((sets,sig,thnms),rest1) <- readREqState1 $ lines txt
+       nmdThrys <- sequence $ map (readNamedTheory projfp) thnms
+       reqs <- readREqState2 sets sig nmdThrys rest1
+       return reqs{projectDir = projfp}
+\end{code}
+
+
+\begin{code}
 writeNamedTheory reqs (nm,thTxt)
   = do let fp = tfile (projectDir reqs) nm
        writeFile fp $ unlines thTxt
 \end{code}
 
-\subsection{Reading \reasonEq\ State}
-
 \begin{code}
-readState :: FilePath -> IO REqState
-readState projfp
-  = do txt  <- readFile $ projectPath projfp
-       ((sig,thnms),rest1) <- readREqState1 $ lines txt
-       nmdThrys <- sequence $ map (readNamedTheory projfp) thnms
-       reqs <- readREqState2 sig nmdThrys rest1
-       return reqs{projectDir = projfp}
-
 readNamedTheory projfp nm
   = do let fp = tfile projfp nm
        txt <- readFile fp
        (thry,rest) <- readTheory $ lines txt
        return (nm,thry)
 \end{code}
+
+
 
 Mucking about:
 \begin{code}

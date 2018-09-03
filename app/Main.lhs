@@ -148,7 +148,7 @@ initState flags
            Nothing -> do putStrLn "Running user mode, default initial state."
                          return reqstate0
            Just fp -> do putStrLn "Running user mode, loading project state."
-                         readState fp
+                         readAllState fp
     else do putStrLn "Running in development mode."
             case project flags of
               Nothing -> return $ devInitState
@@ -157,10 +157,14 @@ initState flags
               Just fp -> return $ devInitState{ projectDir = fp }
 
 reqstate0 = REqState { projectDir = ""
+                     , settings = reqset0
                      , logicsig = propSignature
                      , theories = noTheories
                      , currTheory = ""
                      , liveProofs = M.empty }
+
+reqset0 = REqSet { maxMatchDisplay = 20
+                 }
 \end{code}
 
 \newpage
@@ -297,6 +301,7 @@ cmdSave
     , "save prover state to file"
     , unlines
         [ "save -- save all prover state to current project"
+        , "save project - save non-theory prover state"
         , "save <thry> -- save theory <thry> to current project"]
     , saveState )
 cmdLoad
@@ -304,11 +309,12 @@ cmdLoad
     , "load prover state from file"
     , unlines
         [ "load -- load prover state from current project"
+        , "load project - restore non-theory prover state"
         , "load <thry> -- load EXISTING theory <thry> from current project"]
     , loadState )
 
 saveState [] reqs
-  = do writeState reqs
+  = do writeAllState reqs
        putStrLn ("REQ-STATE written to '"++projectDir reqs++"'.")
        return reqs
 saveState [nm] reqs
@@ -324,7 +330,7 @@ saveState _ reqs  =  doshow reqs "unknown 'save' option."
 
 loadState [] reqs
   = do let dirfp = projectDir reqs
-       reqs' <- readState dirfp
+       reqs' <- readAllState dirfp
        putStrLn ("REQ-STATE read from '"++dirfp++"'.")
        return reqs'
 loadState [nm] reqs

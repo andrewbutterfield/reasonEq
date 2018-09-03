@@ -36,6 +36,7 @@ plus any other test theories we choose to insert.
 \begin{code}
 devInitState
  = REqState { projectDir = devProjectDir
+            , settings = REqSet 20
             , logicsig = propSignature
             , theories = devTheories
             , currTheory = propEquivName

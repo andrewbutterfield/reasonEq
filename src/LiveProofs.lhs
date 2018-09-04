@@ -7,7 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module LiveProofs
- ( Match(..)
+ ( MatchContext
+ , Match(..), Matches
  , LiveProof(..)
  , conjThName__, conjThName_, conjName__, conjName_
  , conjecture__, conjecture_, conjSC__, conjSC_
@@ -357,7 +358,8 @@ simpleMatch :: Term -> [VarTable] -> Term -> Law -> Matches
 simpleMatch repl vts tC ((n,asn@(tP,_)),_)
  = case match vts tC tP of
      Nothing    ->  []
-     Just bind  ->  [MT n asn bind repl]
+     Just bind  ->  [MT n asn bind $ inst bind repl]
+ where inst bind = fromJust . instantiate bind
 \end{code}
 
 \newpage
@@ -553,7 +555,7 @@ shMatch (i, mtch)
  = ( show i ++ " : "++ ldq ++ green (mName mtch) ++ rdq
      ++ " gives     "
      ++ (bold . blue)
-           ( trTerm 0 (fromJust $ instantiate bind $ mRepl mtch)
+           ( trTerm 0 (mRepl mtch)
              ++ "  "
              ++ trSideCond (fromJust $ instantiateSC bind $ lsc) ) )
  where

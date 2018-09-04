@@ -44,6 +44,7 @@ import Instantiate
 import Sequents
 import REqState
 import Persistence
+import Ranking
 
 import TestRendering
 
@@ -53,6 +54,9 @@ import PropNot
 import PropDisj
 import PropConj
 import PropMixOne
+
+import Debug.Trace
+dbg msg x = trace (msg++show x) x
 \end{code}
 
 \subsection{Introduction}
@@ -361,8 +365,10 @@ matchFocus :: LogicSig -> LiveProof -> LiveProof
 matchFocus theSig liveProof
   = let (tz,_)      =  focus liveProof
         goalt       =  getTZ tz
-        newMatches  =  matchInContexts theSig (mtchCtxts liveProof) goalt
-    in matches_ newMatches liveProof
+        ctxts       =  mtchCtxts liveProof
+        newMatches  =  matchInContexts theSig ctxts goalt
+        rankedM     =  rankAndSort sizeRank ctxts newMatches
+    in matches_ rankedM liveProof
 \end{code}
 
 \subsubsection{Apply Match to Focus}
@@ -373,12 +379,11 @@ applyMatchToFocus i liveProof
   = let (tz,seq') = focus liveProof
         dpath = fPath liveProof
     in do mtch  <- nlookup i $ matches liveProof
-          let bnd = mBind mtch
-          brepl <- instantiate bnd (mRepl mtch)
-          return ( focus_ ((setTZ brepl tz),seq')
+          return ( focus_ ((setTZ (mRepl mtch) tz),seq')
                  $ matches_ []
                  $ stepsSoFar__
-                    (((UseLaw ByMatch (mName mtch) bnd dpath), exitTZ tz):)
+                    (( UseLaw ByMatch (mName mtch) (mBind mtch) dpath
+                     , exitTZ tz):)
                     liveProof )
 \end{code}
 

@@ -36,6 +36,7 @@ library
                      , Persistence
                      , REqState
                      , AbstractUI
+                     , Ranking
                      , REPL
                      , Dev
                      -- in builtin

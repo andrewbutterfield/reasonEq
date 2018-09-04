@@ -16,6 +16,24 @@ END THEORIES
 CURRTHEORY = PropMixOne
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("PropMixOne","\8743_\8744_distr")
+BEGIN LIVE-PROOF
+TH-NAME: PropMixOne
+CJ-NAME: ∧_∨_distr
+CONJ = (C P (Id "\8801") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),C P (Id "\8744") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "R",VP,WS))]],C P (Id "\8744") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "R",VP,WS))]]],SC (fromList []) (fromList []))
+SIDE = SC (fromList []) (fromList [])
+STRAT reduce
+BEGIN SEQZIP
+TERMZIP = (C P (Id "\8801") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),C P (Id "\8744") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "R",VP,WS))]],C P (Id "\8744") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "R",VP,WS))]]],[])
+BEGIN SEQUENT'
+SIDECOND = SC (fromList []) (fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.\8743_\8744_distr", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = V P (VR (Id "true",VP,WS))}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

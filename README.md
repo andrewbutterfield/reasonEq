@@ -29,7 +29,7 @@ For new users, we recommend the following procedure:
 
 1. Select a parent directory to contain your first proof workspace folder.
 2. Run the application from within that parent directory using `req`.
-3. The program will start, and will create two directories, one that stores user data about your workspaces, and the second one, in your chosen parent directory, being a workspace folder called `MyReasonEq'. All your work will be saved in this folder.
+3. The program will start, and will create two directories, one that stores user data about your workspaces, and the second one, in your chosen parent directory, being a workspace folder called `MyReasonEq`. All your work will be saved in this folder.
 4. It will then start its command-line interface.
 
 ### Second and subsequent times
@@ -59,4 +59,4 @@ At present there is no auto-load of the workspace.
 
 This is, of course, the whole point of `reasonEq`.
 
-Instructions to follow, but for now, start by giving the command `? and see where it takes you.
+Instructions to follow, but for now, start by giving the command `?`and see where it takes you.

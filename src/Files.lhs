@@ -41,6 +41,7 @@ getWorkspaces appname
               getAllWorkspaces userAppPath
 \end{code}
 
+Useful names, markers and separators:
 \begin{code}
 wsRoot = "workspaces.wsp"
 defProjName = "MyReasonEq"
@@ -48,6 +49,7 @@ currentMarker = '*'
 pathSep = '|'
 \end{code}
 
+First time we run \reasonEq, we need to setup user data.
 \begin{code}
 createUserAppDir dirpath
   = do putStrLn ("Creating app. dir.: "++dirpath)
@@ -60,14 +62,17 @@ createUserAppDir dirpath
             [ currentMarker:defProjName ++ pathSep:deffp ]
 \end{code}
 
+Get all known workspaces from user data.
 \begin{code}
 getAllWorkspaces dirpath
  = do projTxt <- readFile (dirpath </> wsRoot)
       return (dirpath, lines projTxt)
 \end{code}
 
+\newpage
 \subsection{Current Workspace}
 
+The project/workspace master file:
 \begin{code}
 projectFile = "project.req"
 \end{code}
@@ -97,6 +102,7 @@ currentWorkspace defReqState wsSpecs
                return (currNm,currFP)
 \end{code}
 
+Look for the workspace marked as current:
 \begin{code}
 findCurrent [] = error "No current workspace!"
 findCurrent (ln:lns)

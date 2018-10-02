@@ -186,19 +186,21 @@ initState flags
               -- a 'load' as first command will do that
               Just fp -> return $ devInitState{ projectDir = fp }
     else case project flags of
-           Nothing -> do putStrLn "Running user mode, default initial state."
-                         (appFP,projects) <- getWorkspaces name
-                         putStrLn ("appFP = "++appFP)
-                         putStrLn ("projects:\n"++unlines projects)
-                         (pname,projfp) <- currentWorkspace
-                                             ( unlines $ fst
-                                               $ writeREqState reqstate0 )
-                                             projects
-                         putStrLn ("Project Name: "++pname)
-                         putStrLn ("Project Path: "++projfp)
-                         return reqstate0{ projectDir = projfp }
-           Just fp -> do putStrLn "Running user mode, loading project state."
-                         readAllState fp
+       Nothing
+          -> do  putStrLn "Running user mode, default initial state."
+                 (appFP,projects) <- getWorkspaces name
+                 putStrLn ("appFP = "++appFP)
+                 putStrLn ("projects:\n"++unlines projects)
+                 (pname,projfp) 
+                    <- currentWorkspace
+                         ( unlines $ fst $ writeREqState reqstate0 )
+                                     projects
+                 putStrLn ("Project Name: "++pname)
+                 putStrLn ("Project Path: "++projfp)
+                 return reqstate0{ projectDir = projfp }
+       Just fp
+           -> do putStrLn "Running user mode, loading project state."
+                 readAllState fp
 
 reqstate0 = REqState { projectDir = ""
                      , settings = reqset0
@@ -216,7 +218,7 @@ reqset0 = REqSet { maxMatchDisplay = 20
 \begin{code}
 gui :: CMDFlags -> IO ()
 gui flags = putStrLn $ unlines
-         [ "Welcome to "++name++" "++version
+         [ "Welcome to "++name_version
          , "GUI N.Y.I.!"
          , "Goodbye" ]
 \end{code}

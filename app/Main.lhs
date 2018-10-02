@@ -23,6 +23,7 @@ import NiceSymbols hiding (help)
 import Utilities
 import StratifiedDAG
 import Persistence
+import Files
 
 import LexBase
 import Variables
@@ -186,7 +187,16 @@ initState flags
               Just fp -> return $ devInitState{ projectDir = fp }
     else case project flags of
            Nothing -> do putStrLn "Running user mode, default initial state."
-                         return reqstate0
+                         (appFP,projects) <- getWorkspaces name
+                         putStrLn ("appFP = "++appFP)
+                         putStrLn ("projects:\n"++unlines projects)
+                         (pname,projfp) <- currentWorkspace
+                                             ( unlines $ fst
+                                               $ writeREqState reqstate0 )
+                                             projects
+                         putStrLn ("Project Name: "++pname)
+                         putStrLn ("Project Path: "++projfp)
+                         return reqstate0{ projectDir = projfp }
            Just fp -> do putStrLn "Running user mode, loading project state."
                          readAllState fp
 

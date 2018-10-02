@@ -232,7 +232,8 @@ then we just add to the map component without any further checks.
 addTheory :: Monad m => Theory -> Theories -> m Theories
 addTheory thry theories
   = do let nm = thName thry
-       sdag' <- insSDAG nm (thDeps thry) $ sdag theories
+       sdag' <- insSDAG "theory" "theory dependencies"
+                        nm (thDeps thry) $ sdag theories
        let tmap' = M.insert nm thry $ tmap theories
        return Theories{ tmap = tmap', sdag = sdag' }
 \end{code}

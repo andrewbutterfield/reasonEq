@@ -43,6 +43,7 @@ import Dev
 \begin{code}
 name = "reasonEq"
 version = "0.6.9.0"
+name_version = name++" "++version
 \end{code}
 
 \newpage
@@ -84,37 +85,60 @@ For now, we consider the following behavioural aspects:
 
 So we can summarise flags as follows:
 \begin{code}
-configFlag  = "-c"    -- <path>   path to prover configuration files
-guiFlag     = "-g"    --          use GUI instead of REPL
-projectFlag = "-p"    -- <path>   path to prover data files
-userFlag    = "-u"    --          run in 'User' mode
-cwdConfig   = ".req"  -- local config folder
+helpFlag        = "-h"
+helpLongFlag    = "--help"
+versionFlag     = "-v"
+versionLongFlag = "--version"
+
+guiFlag      = "-g"    --          use GUI
+replFlag     = "-r"    --          use REPL (default)
+projectFlag  = "-p"    -- <path>   path to prover data files
+userFlag     = "-u"    --          run in 'User' mode
+devFlag      = "-d"    --          run in 'Dev' mode
+cwdConfig    = ".req"  -- local config file (contains flags)
+
+helpinfo
+ = putStrLn $ unlines
+     [ "Usage:\n"
+     , "req [command-line-options]\n"
+--     , option guiFlag "start-up GUI"
+     , option replFlag "start-up REPL"
+     , option (projectFlag++"<dir>") "workspace directory"
+     , option userFlag "start-up in User mode (default)"
+     , option devFlag "start-up in Dev mode"
+     , ""
+     , "\t-h, --help \t output this help and exit"
+     , "\t-v, --version \t output program version and exit"
+--     , ""
+--     , "options can also be included in file '.req'"
+     ]
+ where
+   option flag explanation = '\t':flag ++ '\t':explanation
 \end{code}
 
 We shall define a record to record flag data,
 and a corresponding parser:
 \begin{code}
-data CMDFlags = CMDFlags { config  :: Maybe FilePath
-                         , usegui  :: Bool
+data CMDFlags = CMDFlags { usegui  :: Bool
                          , project :: Maybe FilePath
-                         , user    :: Bool}
+                         , dev    :: Bool}
 
-defFlags = CMDFlags { config  = Nothing
-                    , usegui  = False
+defFlags = CMDFlags { usegui  = False
                     , project = Nothing
-                    , user    = False }
+                    , dev    = False }
 
 parseArgs args = parse defFlags args where
   parse flags [] = flags
   parse flags (f:p:ss)
-   | f == configFlag   =  parse flags{ config  = checkfp p } ss
    | f == projectFlag  =  parse flags{ project = checkfp p } ss
    where checkfp fp
            | isValid fp  =  Just fp
            | otherwise   =  Nothing
   parse flags (f:ss)
-   | f == guiFlag      =  parse flags{ usegui  = True }   ss
-   | f == userFlag     =  parse flags{ user    = True }   ss
+   | f == guiFlag      =  parse flags{ usegui = True  }   ss
+   | f == replFlag     =  parse flags{ usegui = False }   ss
+   | f == userFlag     =  parse flags{ dev    = False }   ss
+   | f == devFlag      =  parse flags{ dev    = True  }   ss
    -- ignore anything else
    | otherwise         =  parse flags                     ss
 \end{code}
@@ -123,7 +147,17 @@ parseArgs args = parse defFlags args where
 main :: IO ()
 main
   = do args <- getArgs
-       let flags = parseArgs args
+       info args runargs
+
+info args runargs
+ | args == [helpFlag]         =  helpinfo
+ | args == [helpLongFlag]     =  helpinfo
+ | args == [versionFlag]      =  putStrLn name_version
+ | args == [versionLongFlag]  =  putStrLn name_version
+ | otherwise                  =  runargs args
+
+runargs args
+  = do let flags = parseArgs args
        if usegui flags
        then do putStrLn "starting GUI..."
                gui flags
@@ -143,18 +177,18 @@ but there will soon be a way to test it.
 initState :: CMDFlags -> IO REqState
 
 initState flags
-  = if user flags
-    then case project flags of
-           Nothing -> do putStrLn "Running user mode, default initial state."
-                         return reqstate0
-           Just fp -> do putStrLn "Running user mode, loading project state."
-                         readAllState fp
-    else do putStrLn "Running in development mode."
+  = if dev flags
+    then do putStrLn "Running in development mode."
             case project flags of
               Nothing -> return $ devInitState
               -- we don't load from fp in dev. mode
               -- a 'load' as first command will do that
               Just fp -> return $ devInitState{ projectDir = fp }
+    else case project flags of
+           Nothing -> do putStrLn "Running user mode, default initial state."
+                         return reqstate0
+           Just fp -> do putStrLn "Running user mode, loading project state."
+                         readAllState fp
 
 reqstate0 = REqState { projectDir = ""
                      , settings = reqset0

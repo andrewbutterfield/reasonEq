@@ -101,11 +101,13 @@ mrg res@(nPresent,_,_) f  =  if nPresent then res else f res
 \subsubsection{Insertion}
 
 \begin{code}
-insSDAG :: (Eq a, Monad m) => a -> [a] -> SDAG a -> m (SDAG a)
-insSDAG n ns sdag
+insSDAG :: (Eq a, Monad m)
+        => String -> String -> a -> [a] -> SDAG a
+        -> m (SDAG a)
+insSDAG domain range n ns sdag
   = case validateSDAGins n ns sdag of
-      (True,_,_)   ->  fail "domain node already present"
-      (_,(_:_),_)  ->  fail "some range nodes not present"
+      (True,_,_)   ->  fail (domain++" already present")
+      (_,(_:_),_)  ->  fail ("some "++range++" not present")
       (_,_,-1)     ->  return $ insSDAGbottom n sdag
       (_,_,i)      ->  return $ insSDAGLvl n ns i sdag
 

@@ -6,6 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 module REqState ( REqSettings(..), REqState(..)
+                , modified__, modified_, changed
                 , logic__, logic_, theories__, theories_
                 , currTheory__, currTheory_, liveProofs__, liveProofs_
                 , writeREqState, readREqState1, readREqState2
@@ -39,7 +40,9 @@ Here we simply aggregate the semantic equational-reasoning prover state
 \begin{code}
 data REqState
  = REqState {
-      projectDir  ::  FilePath -- where the rest below lives
+      projectDir  ::  FilePath -- current workspace directory
+    , modified    ::  Bool -- True if anything modified but not saved
+    -- all below are saved
     , settings    ::  REqSettings
     , logicsig    ::  LogicSig
     , theories    ::  Theories
@@ -49,6 +52,9 @@ data REqState
 
 projectDir__ f r = r{projectDir = f $ projectDir r}
 projectDir_      = projectDir__ . const
+modified__ f r = r{modified = f $ modified r}
+modified_      = modified__ . const
+changed = modified_ True
 settings__ f r = r{settings = f $ settings r}
 settings_      = settings__ . const
 logic__  f r = r{logicsig = f $ logicsig r}
@@ -140,6 +146,7 @@ readREqState2 theSet theSig thMap txts
        (lPrfs,rest3) <- readLiveProofs thylist rest2
        readThis reqstateTLR rest3 -- ignore any junk after trailer.
        return $ REqState { projectDir = ""
+                         , modified = False
                          , settings = theSet
                          , logicsig = theSig
                          , theories = thrys

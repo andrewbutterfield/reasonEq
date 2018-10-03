@@ -65,23 +65,16 @@ For now, we consider the following behavioural aspects:
     a folder (``workspace'') containing all relevant files.
     We can specify the path to same using the \texttt{-p} command-line option.
     We also have the notion of a single seperate folder with global data
-    that gives the locations of all known project folders,
-    plus any other global configuration data.
-    This can be specified with the \texttt{-c} flag.
-    We also provide a mechanism for locating these if no specific command-line
-    arguments are supplied.
-    We will also support getting such filepath and config information
-    from a \texttt{.req} folder if present at the current working directory
-    from which the program was invoked.
+    that gives the locations of all known project folders.
+    For now this lives in a OS-dependent user-specific location.
     In particular we use a design that allows the program itself
     to setup global configuration data, in an OS-dependent manner.
   \item [Dev]
-    we also allow two modes when running: ``User'' and ``Dev''.
-    In User mode all prover state is loaded from data files,
+    we also allow two modes when running: ``User'' \texttt{-u}
+    and ``Dev'' \texttt{-d}.
+    In User mode, the default, all prover state is loaded from data files,
     as specified by FS above.
     In Dev mode, some prover state may be pre-installed.
-    Dev mode is the default at present,
-    while User mode is invoked by the first argument being \texttt{-u}.
 \end{description}
 
 So we can summarise flags as follows:
@@ -170,10 +163,8 @@ runargs args
 \newpage
 \subsection{Initialising State}
 
-At present, we assume development mode by default.
+We assume user mode by default.
 
-The normal ``user'' mode is still not of much use,
-but there will soon be a way to test it.
 \begin{code}
 initState :: CMDFlags -> IO REqState
 
@@ -191,18 +182,20 @@ initState flags
                  (appFP,projects) <- getWorkspaces name
                  putStrLn ("appFP = "++appFP)
                  putStrLn ("projects:\n"++unlines projects)
-                 (pname,projfp) 
+                 (pname,projfp)
                     <- currentWorkspace
                          ( unlines $ fst $ writeREqState reqstate0 )
                                      projects
                  putStrLn ("Project Name: "++pname)
                  putStrLn ("Project Path: "++projfp)
-                 return reqstate0{ projectDir = projfp }
+                 putStrLn "Loading..."
+                 readAllState projfp
        Just fp
            -> do putStrLn "Running user mode, loading project state."
                  readAllState fp
 
 reqstate0 = REqState { projectDir = ""
+                     , modified = False
                      , settings = reqset0
                      , logicsig = propSignature
                      , theories = noTheories
@@ -238,7 +231,8 @@ type REqConfig    =  REPLConfig   REqState
 Now we work down through the configuration components.
 \begin{code}
 reqPrompt :: Bool -> REqState -> String
-reqPrompt _ _ = _equiv++" : "
+reqPrompt _ reqs = chgd ++ "REq "++_equiv++" "
+ where chgd = if modified reqs then "*" else ""
 
 reqEOFreplacmement = [nquit]
 
@@ -248,8 +242,15 @@ reqQuitCmds = [nquit] ; nquit = "quit"
 
 reqQuit :: REqExit
 -- may ask for user confirmation, and save? stuff..
-reqQuit _ reqs = putStrLn "\nGoodbye!\n" >> return (True, reqs)
--- need to save persistent state on exit
+reqQuit _ reqs
+ | modified reqs  =  saveAndGo reqs
+ | otherwise      =  byeBye
+ where
+   saveAndGo reqs
+    = do putStrLn ("Changes made, saving ....")
+         writeAllState reqs
+         byeBye
+   byeBye = putStrLn "\nGoodbye!\n" >> return (True, reqs)
 
 reqHelpCmds = ["?","help"]
 
@@ -362,7 +363,7 @@ cmdLoad
 saveState [] reqs
   = do writeAllState reqs
        putStrLn ("REQ-STATE written to '"++projectDir reqs++"'.")
-       return reqs
+       return reqs{ modified = False }
 saveState [nm] reqs
   = case getTheory nm $ theories reqs of
       Nothing
@@ -383,7 +384,7 @@ loadState [nm] reqs
   = do let dirfp = projectDir reqs
        (nm,thry) <- readNamedTheory dirfp nm
        putStrLn ("Theory '"++nm++"'read from  '"++projectDir reqs++"'.")
-       return $ theories__ (replaceTheory thry) reqs
+       return $ changed $ theories__ (replaceTheory thry) reqs
 loadState _ reqs  =  doshow reqs "unknown 'load' option."
 \end{code}
 
@@ -460,7 +461,7 @@ doNewProof args reqs
                    return reqs
      Just (nconj,strats)
       -> do putStrLn $ numberList presentSeq $ strats
-            putStr "Select sequent:- " ; choice <- getLine
+            putStr "Select sequent by number: " ; choice <- getLine
             case newProof2 nconj strats (readInt choice) reqs of
              Nothing -> doshow reqs "Invalid strategy no"
              Just liveProof

@@ -171,7 +171,7 @@ setCurrentTheory :: Monad m => String -> REqState -> m REqState
 setCurrentTheory thnm reqs
   = case getTheory thnm $ theories reqs of
       Nothing  ->  fail ("No theory named '"++thnm++"'.")
-      Just _   ->  return ( currTheory_ thnm reqs)
+      Just _   ->  return ( changed $ currTheory_ thnm reqs)
 \end{code}
 
 \subsubsection{Adding a new conjecture}
@@ -184,7 +184,8 @@ newConjecture thnm nasn reqs
   = case getTheory thnm $ theories reqs of
       Nothing -> fail ("No theory named '"++thnm++"'.")
       Just thry -> do thry' <- newTheoryConj nasn thry
-                      return $ theories__ (replaceTheory thry') $ reqs
+                      return $ changed
+                             $ theories__ (replaceTheory thry') $ reqs
 \end{code}
 
 \subsubsection{Starting a Proof}
@@ -243,7 +244,7 @@ resumeProof i reqs
 \begin{code}
 abandonProof :: REqState -> LiveProof -> REqState
 abandonProof reqs liveProof
-  = liveProofs__ del reqs
+  = changed $ liveProofs__ del reqs
   where del = M.delete (conjThName liveProof,conjName liveProof)
 \end{code}
 
@@ -252,7 +253,7 @@ abandonProof reqs liveProof
 \begin{code}
 saveProof :: REqState -> LiveProof -> REqState
 saveProof reqs liveProof
-  = liveProofs__ upd reqs
+  = changed $ liveProofs__ upd reqs
   where upd = M.insert (conjThName liveProof,conjName liveProof) liveProof
 \end{code}
 
@@ -261,7 +262,7 @@ saveProof reqs liveProof
 \begin{code}
 completeProof :: REqState -> LiveProof -> REqState
 completeProof reqs liveProof
-  = ( liveProofs__ del $ theories__ (upgrade . addProof) reqs )
+  = ( changed $ liveProofs__ del $ theories__ (upgrade . addProof) reqs )
   where prf = finaliseProof liveProof
         thnm = conjThName liveProof
         cjnm = conjName liveProof
@@ -553,5 +554,5 @@ devInstallBuiltin reqs nm
       Just thry
         -> case addTheory thry $ theories reqs of
              But msgs -> return (Just $ unlines' msgs,reqs)
-             Yes thrys' -> return (Nothing,reqs{theories=thrys'})
+             Yes thrys' -> return (Nothing,changed reqs{theories=thrys'})
 \end{code}

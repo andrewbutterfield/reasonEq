@@ -16,25 +16,6 @@ END THEORIES
 CURRTHEORY = PropMixOne
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("PropMixOne","\8743_\8744_distr")
-BEGIN LIVE-PROOF
-TH-NAME: PropMixOne
-CJ-NAME: ∧_∨_distr
-CONJ = (C P (Id "\8801") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),C P (Id "\8744") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "R",VP,WS))]],C P (Id "\8744") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "R",VP,WS))]]],SC (fromList []) (fromList []))
-SIDE = SC (fromList []) (fromList [])
-STRAT redboth
-BEGIN SEQZIP
-TERMZIP = (C P (Id "\8744") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "R",VP,WS))],[Cons' P (Id "\8744") [V P (VR (Id "P",VP,WS))] [],Cons' P (Id "\8801") [C P (Id "\8801") [V P (VR (Id "P",VP,WS)),C P (Id "\8744") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "R",VP,WS))]]] []])
-BEGIN SEQUENT'
-SIDECOND = SC (fromList []) (fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.\8743_\8744_distr", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = C P (Id "\8744") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "R",VP,WS))]]}
-END SEQUENT'
-END SEQZIP
-FPATH: [2,2]
-BEGIN LIST STEPS
-(UseLaw ByMatch "golden-rule" (BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS))),((Id "Q",VP),BT (C P (Id "\8744") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "R",VP,WS))]))],fromList [],fromList [])) [],C P (Id "\8743") [V P (VR (Id "P",VP,WS)),C P (Id "\8744") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "R",VP,WS))]])
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

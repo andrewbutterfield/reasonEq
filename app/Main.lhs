@@ -461,7 +461,9 @@ doNewProof args reqs
                    return reqs
      Just (nconj,strats)
       -> do putStrLn $ numberList presentSeq $ strats
-            putStr "Select sequent by number: " ; choice <- getLine
+            putStr "Select sequent by number: "
+            hFlush stdout
+            choice <- getLine
             case newProof2 nconj strats (readInt choice) reqs of
              Nothing -> doshow reqs "Invalid strategy no"
              Just liveProof

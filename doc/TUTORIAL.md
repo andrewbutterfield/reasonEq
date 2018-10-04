@@ -155,7 +155,7 @@ current theory, using `sh c` :
    1. “≡_id”  (true≡Q)≡Q  
 ```
 
-There is only one in this case.
+There is only one in this case. 
 
 ## Proving “≡_id”
 
@@ -173,27 +173,44 @@ Select sequent by number:
 Each option corresponds to a different strategy that is applicable
 to the conjecture.
 Proof strategies will be described in detail elsewhere,
-and for now we will simply select the `reduce` strategy by typing `1`. This strategy is simply to try to reduce the whole conjecture down to `true`.
+and for now we will simply select the `reduce` strategy by typing `1`. 
+This strategy is simply to try to reduce the whole conjecture down to `true`.
+In effect we are going to prove this by reducing the lefthand-side
+`(true≡Q)≡Q` to the righthand-side `true`.
 
 Entering `1` causes the screen to clear (on OS X/Unix at least)
 and displays something like this:
 
-***
-<font style="font-family:courier;">
-Prover starting...  
-Proof for '≡_id'    
-by reduce 
- ...  
+<img src="images/starting-equiv-id-proof.png" alt="Proof Start" width=33%>
 
-           
-R-target = true  
+We see that we are proving conjecture `≡_id` using the `reduce` strategy. 
+We are told that our target (righthand-side) is `true`.
+We see our lefthand-side displayed, in color,
+and finally we see that we have a new command line prompt `proof:`.
 
+You are now in the Prover command line interface.
+This has a different set of commands to the top-level one,
+but still has the same help mechanism:
 
-⊢  
-<font color=purple>(true≡Q)≡Q</font>  
+```
+proof: ?
 
-proof: 
-</font>  
-***
+q -- exit
+? -- this help text
+? <cmd> -- help for <cmd>
+ll -- list laws
+d -- down
+u -- up
+m -- match laws
+a -- apply match
+fe -- flatten equivalences
+ge -- group equivalences
+b -- go back (undo)
+i -- instantiate
+s -- switch
+h -- to hypothesis
+l -- leave hypothesis
+c -- clone hyp
+```
 
-![proof start](images/starting-equiv-id-proof.png)
+***To Be Continued....***

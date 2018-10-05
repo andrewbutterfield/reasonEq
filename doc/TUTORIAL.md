@@ -213,4 +213,107 @@ l -- leave hypothesis
 c -- clone hyp
 ```
 
-***To Be Continued....***
+### Proof Step 1
+
+We start by invoking the `Matcher` that tries to match the current
+goal, here `(true≡Q)≡Q`, against known laws.
+This is done by typing `m` to produce:
+
+```
+Matches:
+1 : “≡_assoc” gives     true≡(Q≡Q)  
+2 : “≡_symm” gives     Q≡(true≡Q)  
+3 : “≡_symm” gives     Q≡(true≡Q)  
+4 : “≡_symm” gives     ((true≡Q)≡Q)≡Q≡Q  
+5 : “≡_symm” gives     P≡((true≡Q)≡Q)≡P  
+6 : “≡_symm” gives     P≡((true≡Q)≡Q)≡P  
+7 : “≡_symm” gives     Q≡Q≡((true≡Q)≡Q)  
+8 : “∨_idem” gives     ((true≡Q)≡Q)∨((true≡Q)≡Q)  
+9 : “⟹ _def” gives     P⟹ ((true≡Q)≡Q)≡P∨((true≡Q)≡Q)
+```
+The matcher tries to match the goal against entire laws, in which case it would report a match that "gives true". It also takes laws
+of the form `P≡Q` and try to match the goal against just `P` and just `Q`. If it succeeds in matching against `P`, then it "gives Q" back (and vice-versa.)
+
+In our case, we see that it matched, amongst other things,
+ against the lefthand-side
+of the `≡_assoc` law and is giving back the righthand-side. 
+This is what we want so we request that match 1 be applied,
+using command `a 1` (or `a1`).
+
+This results in:
+
+<img src="images/2-equiv-id-one-a1.png" alt="Proof Start" width=40%>
+
+We see that the goal has changed,and also that we have the start of a proof transcript showing the the original goal was transformed by a match with the `≡_assoc` law at the top-level.
+
+### Proof Step 2
+
+We now want to focus attention on the `Q≡Q` sub-part of the goal. It is the second argument to thew top-level `≡` operator, so we want to move the focus down to that 2nd argument.
+We do this using the command `d 2`:
+
+<img src="images/3-equiv-id-down-2.png" alt="Proof Start" width=38%>
+
+No we see the sginificance of the purple colour - it signifies that we are focussed in on a part of the overall goal.
+We not want to see what this matches against,
+so we issue the match command `m` once more:
+
+```
+Matches:
+1 : “≡_refl” gives     true  
+2 : “≡_symm” gives     Q≡Q  
+3 : “≡_symm” gives     Q≡Q  
+4 : “≡_symm” gives     (Q≡Q)≡Q≡Q  
+5 : “≡_symm” gives     P≡(Q≡Q)≡P  
+6 : “≡_symm” gives     P≡(Q≡Q)≡P  
+7 : “≡_symm” gives     Q≡Q≡(Q≡Q)  
+8 : “∨_idem” gives     (Q≡Q)∨(Q≡Q)  
+9 : “⟹ _def” gives     P⟹ (Q≡Q)≡P∨(Q≡Q) 
+```
+
+Here the first match is against all of the law `≡_refl`,
+so we use `a 1` to apply it:
+
+<img src="images/5-equiv-id-two-a1.png" alt="Proof Start" width=38%>
+
+Note that we are still focussed at the same place. Here we matched the law `≡_refl` at the second component of the top-level goal (`@[2]`).
+
+### Proof Step 3
+
+To complete, we want to return to the top-level,
+so we issue the up-command `u` :
+
+<img src="images/6-equiv-id-up.png" alt="Proof Start" width=38%>
+
+Now we match (`m`) and see the same matches as the previous step,
+so we apply the first (`a1`).
+
+```
+proof: a1
+Proof Complete
+*REq ≡ 
+
+```
+
+The proof is complete, so this reported, and we exit the proof command-line and return top the top-level command line.
+If we now ask to see the laws usinf `sh L`, then almost everything
+is unchanged, except at the top where we see:
+
+```
+*REq ≡ sh L
+
+---
+Theory 'PropEquiv'
+Known Variables: None
+Laws:
+   1. ∎  “≡_id”  (true≡Q)≡Q  
+Conjectures: None.
+---
+
+```
+
+We see the the `PropEquiv` theory has no conectures anymore,
+but a new law (“≡_id”) instead. This law differs from the axioms in `PropAxioms` in that it is marked with `∎` instead of `⊤` to show that it is a theorem with a proof, rather than an axiom.
+
+## Next Steps.
+
+Try installing theory `PropNot` and proving its four conjectures.

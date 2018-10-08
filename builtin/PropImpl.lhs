@@ -58,10 +58,9 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjImpDef2
- = propdef ( _implies++"_def2"
+ = propdef ( _implies -.- "def2"
            , (p ==> q) === (mkNot p \/ q) )
 \end{code}
-
 
 $$\begin{array}{ll}
   \CJImpMeet & \CJImpMeetN
@@ -70,7 +69,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjImpMeet
- = propdef ( _implies++"_meet"
+ = propdef ( _implies -.- "meet"
            , (p ==> q) === (p /\ q === p) )
 \end{code}
 
@@ -94,7 +93,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjImpEqvDistr
- = propdef ( _implies++"_"++_equiv++"_distr"
+ = propdef ( _implies -.- _equiv -.- "distr"
            , (p ==> (q === r)) === ((p ==> q) === (p ==> r)) )
 \end{code}
 
@@ -118,19 +117,237 @@ $$\begin{array}{ll}
 \begin{code}
 cjAndImp
  = propdef ( "GS3.66"
-           , (p /\ (p ==> q)) === (p /\ q) )
+           , p /\ (p ==> q) === p /\ q  )
 \end{code}
 
 
 $$\begin{array}{ll}
-  law & name
+  \CJAndPmi & \CJAndPmiN
 \end{array}$$
 
 \vspace{-8pt}
 \begin{code}
-cjXXX
- = propdef ( "XXX"
-           , p /\ q \/ r /\ s )
+cjAndPmi
+ = propdef ( "GS3.67"
+           , p /\ (q ==> p) === p  )
+\end{code}
+
+
+$$\begin{array}{ll}
+  \CJOrImp & \CJOrImpN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjOrImp
+ = propdef ( "GS3.68"
+           , p \/ (p ==> q) === trueP )
+\end{code}
+
+
+
+$$\begin{array}{ll}
+  \CJOrPmi & \CJOrPmiN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjOrPmi
+ = propdef ( "GS3.69"
+           , p \/ (q ==> p) === q ==> p )
+\end{code}
+
+
+$$\begin{array}{ll}
+  \CJOrImpAnd & \CJOrImpAndN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjOrImpAnd
+ = propdef ( "GS3.70"
+           , p \/ q ==> p /\ q === (p === q) )
+\end{code}
+
+
+$$\begin{array}{ll}
+  \CJImpRefl & \CJImpReflN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjImpRefl
+ = propdef ( _implies -.- "refl"
+           , p ==> p === trueP )
+\end{code}
+
+
+
+$$\begin{array}{ll}
+  \CJImpRZero & \CJImpRZeroN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjImpRZero
+ = propdef ( _implies -.- "r_zero"
+           , p ==> trueP === trueP )
+\end{code}
+
+
+$$\begin{array}{ll}
+  \CJImpLUnit & \CJImpLUnitN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjImpLUnit
+ = propdef ( _implies -.- "l_unit"
+           , trueP ==> p === p )
+\end{code}
+
+\newpage
+$$\begin{array}{ll}
+  \CJNotDefTwo & \CJNotDefTwoN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjNotDef2
+ = propdef ( _lnot -.- "def2"
+           , p ==> falseP === mkNot p )
+\end{code}
+
+
+$$\begin{array}{ll}
+  \CJFalseImp & \CJFalseImpN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjFalseImp
+ = propdef ( "GS3.75"
+           , falseP ==> p === trueP )
+\end{code}
+
+
+$$\begin{array}{ll}
+  \CJImpTrans & \CJImpTransN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjImpTrans
+ = propdef ( _implies -.- "trans"
+           , (p==>q)/\(q==>r) ==> (p==>r) )
+\end{code}
+
+
+$$\begin{array}{ll}
+  \CJEqvImpTrans & \CJEqvImpTransN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjEqvImpTrans
+ = propdef ( _equiv -.- _implies -.- "trans"
+           , (p===q)/\(q==>r) ==> (p==>r) )
+\end{code}
+
+
+$$\begin{array}{ll}
+  \CJImpEqvTrans & \CJImpEqvTransN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjImpEqvTrans
+ = propdef ( _implies -.- _equiv -.- "trans"
+           , (p==>q)/\(q===r) ==> (p==>r) )
+\end{code}
+
+
+$$\begin{array}{ll}
+  \CJAnteStrngthn & \CJAnteStrngthnN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjAnteStr
+ = propdef ( "strengthen" -.- "ante"
+           , p /\ q ==> p )
+\end{code}
+
+
+$$\begin{array}{ll}
+  \CJCnsqWkn & \CJCnsqWknN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjCnsqWkn
+ = propdef ( "weaken" -.- "cnsq"
+           , p ==> p \/ q  )
+\end{code}
+
+
+$$\begin{array}{ll}
+  \CJAnteOrDistr & \CJAnteOrDistrN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjAnteOrDistr
+ = propdef ( "ante" -.- _lor -.- "distr"
+           , p \/ q ==> r === (p==>r) /\ (q==>r) )
+\end{code}
+
+
+$$\begin{array}{ll}
+  \CJAnteAndDistr & \CJAnteAndDistrN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjAnteAndDistr
+ = propdef ( "ante" -.- _land -.- "distr"
+           , p /\ q ==> r === (p==>r) \/ (q==>r) )
+\end{code}
+
+\newpage
+$$\begin{array}{ll}
+  \CJCnsqAndDistr & \CJCnsqAndDistrN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjCnsqAndDistr
+ = propdef ( "cnsq" -.- _land -.- "distr"
+           , p ==> q /\ r === (p==>q) /\ (p==>r) )
+\end{code}
+
+
+$$\begin{array}{ll}
+  \CJCnsqOrDistr & \CJCnsqOrDistrN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjCnsqOrDistr
+ = propdef ( "cnsq" -.- _land -.- "distr"
+           , p ==> q \/ r === (p==>q) \/ (p==>r) )
+\end{code}
+
+
+$$\begin{array}{ll}
+  \CJAnteAsImpl & \CJAnteAsImplN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjAnteAsImp
+ = propdef ( "ante" -.- "as" -.- _implies
+           , (p==>q)==>r === (mkNot p ==> r) /\ (q ==> r) )
 \end{code}
 
 
@@ -140,36 +357,14 @@ Pulling them all together:
 propImplConjs :: [NmdAssertion]
 propImplConjs
   = [ cjImpDef2, cjImpMeet, cjContra, cjImpEqvDistr, cjShunting
-    , cjAndImp
+    , cjAndImp, cjAndPmi, cjOrImp, cjOrPmi, cjOrImpAnd
+    , cjImpRefl, cjImpRZero, cjImpLUnit, cjNotDef2, cjFalseImp
+    , cjImpTrans, cjEqvImpTrans, cjImpEqvTrans
+    , cjAnteStr, cjCnsqWkn
+    , cjAnteOrDistr, cjAnteAndDistr, cjCnsqOrDistr, cjCnsqAndDistr
+    , cjAnteAsImp
     ]
 \end{code}
-
-
-\newpage
-to be done \dots
-$$
-\begin{array}{ll}
-     \CJAndPmi & \CJAndPmiN
-  \\ \CJOrImp & \CJOrImpN
-  \\ \CJOrPmi & \CJOrPmiN
-  \\ \CJOrImpAnd & \CJOrImpAndN
-  \\ \CJImpRefl & \CJImpReflN
-  \\ \CJImpRZero & \CJImpRZeroN
-  \\ \CJImpLUnit & \CJImpLUnitN
-  \\ \CJNotDefTwo & \CJNotDefTwoN
-  \\ \CJFalseImp & \CJFalseImpN
-  \\ \CJImpTrans & \CJImpTransN
-  \\ \CJEqvImpTrans & \CJEqvImpTransN
-  \\ \CJImpEqvTrans & \CJImpEqvTransN
-  \\ \CJAnteStrngthn & \CJAnteStrngthnN
-  \\ \CJCnsqWkn & \CJCnsqWknN
-  \\ \CJAnteOrDistr & \CJAnteOrDistrN
-  \\ \CJAnteAndDistr & \CJAnteAndDistrN
-  \\ \CJCnsqAndDistr & \CJCnsqAndDistrN
-  \\ \CJCnsqOrDistr & \CJCnsqOrDistrN
-  \\ \CJAnteAsImpl & \CJAnteAsImplN
-\end{array}
-$$
 
 \subsection{The Implication Theory}
 

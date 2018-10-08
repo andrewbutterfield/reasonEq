@@ -58,9 +58,90 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjImpDef2
- = ( _implies++"_def2"
-   , ( (p ==> q) === (mkNot p \/ q)
-     , scTrue ) )
+ = propdef ( _implies++"_def2"
+           , (p ==> q) === (mkNot p \/ q) )
+\end{code}
+
+
+$$\begin{array}{ll}
+  \CJImpMeet & \CJImpMeetN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjImpMeet
+ = propdef ( _implies++"_meet"
+           , (p ==> q) === (p /\ q === p) )
+\end{code}
+
+
+$$\begin{array}{ll}
+  \CJContraPos & \CJContraPosN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjContra
+ = propdef ( "contrapostive"
+           , (p ==> q) === (mkNot q ==> mkNot p) )
+\end{code}
+
+
+$$\begin{array}{ll}
+  \CJImpEqvDistr & \CJImpEqvDistrN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjImpEqvDistr
+ = propdef ( _implies++"_"++_equiv++"_distr"
+           , (p ==> (q === r)) === ((p ==> q) === (p ==> r)) )
+\end{code}
+
+$$\begin{array}{ll}
+  \CJShunting & \CJShuntingN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjShunting
+ = propdef ( "shunting"
+           , (p /\ q ==> r) === (p ==> (q ==> r)) )
+\end{code}
+
+
+$$\begin{array}{ll}
+  \CJAndImp & \CJAndImpN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjAndImp
+ = propdef ( "GS3.66"
+           , (p /\ (p ==> q)) === (p /\ q) )
+\end{code}
+
+
+$$\begin{array}{ll}
+  law & name
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjXXX
+ = propdef ( "XXX"
+           , p /\ q \/ r /\ s )
+\end{code}
+
+
+
+Pulling them all together:
+\begin{code}
+propImplConjs :: [NmdAssertion]
+propImplConjs
+  = [ cjImpDef2, cjImpMeet, cjContra, cjImpEqvDistr, cjShunting
+    , cjAndImp
+    ]
 \end{code}
 
 
@@ -68,12 +149,7 @@ cjImpDef2
 to be done \dots
 $$
 \begin{array}{ll}
-     \CJImpMeet & \CJImpMeetN
-  \\ \CJContraPos & \CJContraPosN
-  \\ \CJImpEqvDistr & \CJImpEqvDistrN
-  \\ \CJShunting & \CJShuntingN
-  \\ \CJAndImp & \CJAndImpN
-  \\ \CJAndPmi & \CJAndPmiN
+     \CJAndPmi & \CJAndPmiN
   \\ \CJOrImp & \CJOrImpN
   \\ \CJOrPmi & \CJOrPmiN
   \\ \CJOrImpAnd & \CJOrImpAndN
@@ -97,13 +173,7 @@ $$
 
 \subsection{The Implication Theory}
 
-
 \begin{code}
-propImplConjs :: [NmdAssertion]
-propImplConjs
-  = [ cjImpDef2
-    ]
-
 propImplName :: String
 propImplName = "PropImpl"
 propImplTheory :: Theory

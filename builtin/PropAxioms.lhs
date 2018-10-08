@@ -16,6 +16,7 @@ module PropAxioms (
 , land, mkAnd, mkAnds, (/\)
 , implies, mkImplies, (==>)
 , propSignature
+, propdef
 , flattenEquiv
 , propKnown
 , propAxioms
@@ -130,6 +131,12 @@ lnot = fromJust $ ident _lnot ; mkNot p = PCons lnot [p]
 \begin{code}
 propSignature = LogicSig trueP falseP equiv implies land
 flattenEquiv = flattenTheEquiv propSignature
+\end{code}
+
+All propositional laws are characterised by not having
+any side-conditions:
+\begin{code}
+propdef ( name, prop ) = ( name, ( prop, scTrue ) )
 \end{code}
 
 

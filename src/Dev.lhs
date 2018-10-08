@@ -39,7 +39,8 @@ plus any other test theories we choose to insert.
 
 \begin{code}
 devInitState
- = REqState { projectDir = devProjectDir
+ = REqState { inDevMode = True
+            , projectDir = devProjectDir
             , modified = False
             , settings = REqSet 20
             , logicsig = propSignature

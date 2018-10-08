@@ -194,7 +194,8 @@ initState flags
            -> do putStrLn "Running user mode, loading project state."
                  readAllState fp
 
-reqstate0 = REqState { projectDir = ""
+reqstate0 = REqState { inDevMode = False
+                     , projectDir = ""
                      , modified = False
                      , settings = reqset0
                      , logicsig = propSignature
@@ -231,8 +232,10 @@ type REqConfig    =  REPLConfig   REqState
 Now we work down through the configuration components.
 \begin{code}
 reqPrompt :: Bool -> REqState -> String
-reqPrompt _ reqs = chgd ++ "REq "++_equiv++" "
- where chgd = if modified reqs then "*" else ""
+reqPrompt _ reqs = devMk ++ chgd ++ "REq "++_equiv++" "
+ where
+   chgd = if modified reqs then "*" else ""
+   devMk = if inDevMode reqs then "!" else ""
 
 reqEOFreplacmement = [nquit]
 
@@ -241,10 +244,10 @@ reqParser = wordParse
 reqQuitCmds = [nquit] ; nquit = "quit"
 
 reqQuit :: REqExit
--- may ask for user confirmation, and save? stuff..
 reqQuit _ reqs
- | modified reqs  =  saveAndGo reqs
- | otherwise      =  byeBye
+ | inDevMode reqs  =  byeBye
+ | modified  reqs  =  saveAndGo reqs
+ | otherwise       =  byeBye
  where
    saveAndGo reqs
     = do putStrLn ("Changes made, saving ....")
@@ -379,7 +382,7 @@ loadState [] reqs
   = do let dirfp = projectDir reqs
        reqs' <- readAllState dirfp
        putStrLn ("REQ-STATE read from '"++dirfp++"'.")
-       return reqs'
+       return reqs'{ inDevMode = inDevMode reqs}
 loadState [nm] reqs
   = do let dirfp = projectDir reqs
        (nm,thry) <- readNamedTheory dirfp nm

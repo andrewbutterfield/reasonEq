@@ -40,7 +40,8 @@ Here we simply aggregate the semantic equational-reasoning prover state
 \begin{code}
 data REqState
  = REqState {
-      projectDir  ::  FilePath -- current workspace directory
+      inDevMode :: Bool -- true if in development mode
+    , projectDir  ::  FilePath -- current workspace directory
     , modified    ::  Bool -- True if anything modified but not saved
     -- all below are saved
     , settings    ::  REqSettings
@@ -145,7 +146,8 @@ readREqState2 theSet theSig thMap txts
        let thylist = fromJust $ getTheoryDeps cThNm thrys
        (lPrfs,rest3) <- readLiveProofs thylist rest2
        readThis reqstateTLR rest3 -- ignore any junk after trailer.
-       return $ REqState { projectDir = ""
+       return $ REqState { inDevMode = False
+                         , projectDir = ""
                          , modified = False
                          , settings = theSet
                          , logicsig = theSig

@@ -1,0 +1,11 @@
+BEGIN THEORY PropImpl
+DEPS = ["PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"]
+KNOWN = VD (fromList [],fromList [],fromList [])
+BEGIN LIST LAWS
+END LIST LAWS
+BEGIN LIST PROOFS
+END LIST PROOFS
+BEGIN LIST CONJECTURES
+("\10233 _def2",(C P (Id "\8801") [C P (Id "\10233 ") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],C P (Id "\8744") [C P (Id "\172") [V P (VR (Id "P",VP,WS))],V P (VR (Id "Q",VP,WS))]],SC (fromList []) (fromList [])))
+END LIST CONJECTURES
+END THEORY PropImpl

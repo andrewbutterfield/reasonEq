@@ -30,13 +30,13 @@ import PropEquiv
 import PropNot
 \end{code}
 
-\subsection{Disjunction Conjectures}
+\subsection{Implication Conjectures}
 
 We supply conjectures here for each theorem in \cite{gries.93}
-in the \textsc{Disjunction} section.
+in the \textsc{Implication} section.
 
 $$
-\CONJPROPDISJ
+\CONJPROPIMPL
 $$
 
 \begin{code}

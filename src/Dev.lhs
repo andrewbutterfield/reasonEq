@@ -18,6 +18,10 @@ import REqState
 import PropAxioms
 import PropEquiv
 import PropNot
+import PropDisj
+import PropConj
+import PropMixOne
+import PropImpl
 \end{code}
 
 We assume the the project directory is defined as an immediate
@@ -40,11 +44,15 @@ devInitState
             , settings = REqSet 20
             , logicsig = propSignature
             , theories = devTheories
-            , currTheory = propEquivName
+            , currTheory = propImplName
             , liveProofs = M.empty }
 
 devTheories
-  =  fromJust $ addTheory propNotTheory $
+  =  fromJust $ addTheory propImplTheory $
+     fromJust $ addTheory propMixOneTheory $
+     fromJust $ addTheory propConjTheory $
+     fromJust $ addTheory propDisjTheory $
+     fromJust $ addTheory propNotTheory $
      fromJust $ addTheory propEquivTheory $
      fromJust $ addTheory propAxiomTheory noTheories
 \end{code}

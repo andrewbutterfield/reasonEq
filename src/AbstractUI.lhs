@@ -54,6 +54,7 @@ import PropNot
 import PropDisj
 import PropConj
 import PropMixOne
+import PropImpl
 
 import Debug.Trace
 dbg msg x = trace (msg++show x) x
@@ -524,6 +525,7 @@ devKnownBuiltins  = [ propAxiomTheory
                     , propDisjTheory
                     , propConjTheory
                     , propMixOneTheory
+                    , propImplTheory
                     ]
 
 biLkp _ []  = Nothing

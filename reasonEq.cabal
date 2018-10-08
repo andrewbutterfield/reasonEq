@@ -47,6 +47,7 @@ library
                      , PropDisj
                      , PropConj
                      , PropMixOne
+                     , PropImpl
                      -- in proto
                      , Acyclic
                      , TRYOUT

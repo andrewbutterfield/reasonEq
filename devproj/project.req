@@ -13,7 +13,7 @@ BEGIN THEORIES
 THNAMES = ["PropAxioms","PropConj","PropDisj","PropEquiv","PropMixOne","PropNot"]
 SDAG = [[("PropMixOne",["PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropConj",["PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropDisj",["PropNot","PropEquiv","PropAxioms"])],[("PropNot",["PropEquiv","PropAxioms"])],[("PropEquiv",["PropAxioms"])],[("PropAxioms",[])]]
 END THEORIES
-CURRTHEORY = PropMixOne
+CURRTHEORY = PropImpl
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
 END MAP LIVE-PROOFS

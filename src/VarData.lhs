@@ -7,9 +7,11 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module VarData ( VarMatchRole
-               , pattern KnownConst, pattern KnownVar, pattern UnknownVar
-               , isKnownConst, isKnownVar, isUnknownVar
-               , vmrConst, vmrType
+               , pattern KnownConst, pattern KnownVar
+               , pattern GenericVar, pattern InstanceVar, pattern UnknownVar
+               , isKnownConst, isKnownVar, isGenericVar, isInstanceVar
+               , isUnknownVar
+               , vmrConst, vmrType, vmrInst
                , LstVarMatchRole
                , pattern KnownVarList, pattern KnownVarSet
                , pattern AbstractList, pattern AbstractSet
@@ -17,8 +19,8 @@ module VarData ( VarMatchRole
                , VarTable
                , vtList, stList, dtList
                , newVarTable
-               , addKnownConst
-               , addKnownVar
+               , addKnownConst, addKnownVar
+               , addGenericVar, addInstanceVar
                , addKnownVarList , addKnownVarSet
                , addAbstractVarList, addAbstractVarSet
                , lookupVarTable, lookupVarTables
@@ -51,11 +53,12 @@ import Debug.Trace
 dbg msg x = trace (msg++show x) x
 \end{code}
 
+\newpage
 \subsection{Variable Matching Categories}
 
 Variables,
 whether of static, or any dynamic flavour,
-can belong to one of three categories as regards matching:
+can belong to one of the following categories as regards matching:
 \begin{description}
   \item[Known Constant]
     The variable is static,
@@ -67,50 +70,68 @@ can belong to one of three categories as regards matching:
     If the value is denoted by a term then any free variables
     present must also be known.
   \item[Known Variable]~\\
-    \begin{enumerate}
-      \item
-        The variable is an static or dynamic (before/after) observation
+    Either (i) the variable is an static or dynamic (before/after) observation
         and can take many possible values from a defined type.
         it has a predefined interpretation in some intended semantic model,
-        and can only match itself.
-     \item
-        The variable denotes expressions or predicates of a particular type.
-    \end{enumerate}
+        and can only match itself;
+     \\or (ii) the variable denotes expressions or predicates of a particular type.
+  \item[Generic Variable]~\\
+    This is a variable used to define some generic properties,
+    via appropriate axioms.
+    It will match only itself,
+    or instance variables that have been defined as one of its instances
+    (see next entry).
+  \item[Instance Variable]~\\
+    A variable declared to be an instance of a generic variable.
+    It only matches itself.
   \item[Unknown]
     Nothing specific is known about the variable.
     It can match anything of the appropriate ``flavour''.
 \end{description}
 We refer, simply,
-to variables in the first two categories above as ``known'',
-while those in the third category are simply ``unknown''.
+to variables in the all but the last categories above, as ``known'',
+while those in the last category are simply ``unknown''.
 \begin{code}
 data VarMatchRole -- Variable Matching Role
-  =  KC Term  -- Known Constant ! any free vars in term must also be known
-  |  KV Type  -- Known Variable
-  |  UV       -- Unknown Variable
+  =  KC Term     -- Known Constant ! any free vars in term must also be known
+  |  KV Type     -- Known Variable
+  |  KG          -- Generic Variable
+  |  KI Variable -- Instance Variable ! variable must be known as generic
+  |  UV          -- Unknown Variable
   deriving (Eq, Ord, Show, Read)
 
 pattern KnownConst trm = KC trm
 pattern KnownVar typ   = KV typ
+pattern GenericVar     = KG
+pattern InstanceVar v  = KI v
 pattern UnknownVar     = UV
+\end{code}
 
-isKnownConst, isKnownVar, isUnknownVar :: VarMatchRole -> Bool
-isKnownConst (KC _) = True
-isKnownConst _ = False
-isKnownVar (KV _) = True
-isKnownVar _= False
-isUnknownVar UV = True
-isUnknownVar _ = False
+\newpage
+Useful predicates and destructors:
+\begin{code}
+isKnownConst (KC _)  = True
+isKnownConst _       = False
+isKnownVar (KV _)    = True
+isKnownVar _         = False
+isGenericVar KG      = True
+isGenericVar _       = False
+isInstanceVar (KI _) = True
+isInstanceVar _      = False
+isUnknownVar UV      = True
+isUnknownVar _       = False
 
 vmrConst :: VarMatchRole -> Term
-vmrConst (KC trm)  =  trm
-vmrConst (KV _)    =  error "vmrCont: var. match role is KnownVar"
-vmrConst UV        =  error "vmrCont: var. match role is UnknownVar"
+vmrConst (KC trm) =  trm
+vmrConst _        =  error "vmrConst: not known constant"
 
 vmrType :: VarMatchRole -> Type
-vmrType (KV typ)  =  typ
-vmrType (KC _)    =  error "vmrType: var. match role is KnownConst"
-vmrType UV        =  error "vmrType: var. match role is UnknownVar"
+vmrType (KV typ) =  typ
+vmrType _        =  error "vmrType: not known variable"
+
+vmrInst :: VarMatchRole -> Variable
+vmrInst (KI v)  =  v
+vmrInst _       =  error "vmrInst: not generic instance"
 \end{code}
 
 \newpage
@@ -255,7 +276,7 @@ and will be added if required.
 \subsection{Inserting Variable Entries}
 
 
-\subsubsection{Inserting Known Constant}
+\subsubsection{Inserting Known Constants}
 
 \begin{code}
 addKnownConst :: Monad m => Variable -> Term -> VarTable -> m VarTable
@@ -287,7 +308,7 @@ addKnownConst _ _ _ = fail "addKnownConst: not for Dynamic Variables."
 \end{code}
 
 
-\subsubsection{Inserting Known Variable}
+\subsubsection{Inserting Known Variables}
 
 \begin{code}
 addKnownVar :: Monad m => Variable -> Type -> VarTable -> m VarTable
@@ -298,7 +319,7 @@ range over values of a given type.
 We also note that just because a textual, before or after variable
 is added,
 this does not mean that we automatically induce its temporal counterparts.
-So adding $x:T$ (before) does mean that we have also added $x':T$.
+So adding $x:T$ (before) does not mean that we have also added $x':T$.
 This is in contrast to the treatment of list-variables,
 where such induction always occurs.
 \begin{code}
@@ -308,6 +329,46 @@ addKnownVar (ObsVar _ (During _)) _ _
 -- we allow updating here as it does not effect table integrity.
 addKnownVar var typ (VD (vtable,stable,dtable))
   =  return $ VD ( M.insert var (KV typ) vtable,stable,dtable )
+\end{code}
+
+\newpage
+\subsubsection{Inserting Generic Variables}
+
+\begin{code}
+addGenericVar :: Monad m => Variable -> VarTable -> m VarTable
+\end{code}
+
+For now we do not place any restrictions,
+except that the variable cannot already be present in the table
+but might limit these to static term variables in the future.
+\begin{code}
+addGenericVar var vt@(VD (vtable,stable,dtable))
+  = case M.lookup var vtable of
+      Just _ -> fail "addGenericVar: variable already present"
+      Nothing -> return $ VD (M.insert var KG vtable, stable, dtable )
+\end{code}
+
+\subsubsection{Inserting Instance Variables}
+
+\begin{code}
+addInstanceVar :: Monad m => Variable -> Variable -> VarTable -> m VarTable
+\end{code}
+
+We require that the variable we are inserting is not already present,
+and that the variable we are linking to is present as generic.
+For now we expect both variables to have the same class and temporality.
+\begin{code}
+addInstanceVar ivar gvar vt@(VD (vtable,stable,dtable))
+ | whatVar ivar /= whatVar gvar = fail "addInstanceVar: class mismatch."
+ | timeVar ivar /= timeVar gvar = fail "addInstanceVar: temporality mismatch."
+ | otherwise
+     = case M.lookup ivar vtable of
+         Just _ -> fail "addInstanceVar: variable already present"
+         Nothing
+          -> case M.lookup gvar vtable of
+               Just KG
+                -> return $ VD (M.insert ivar (KI gvar) vtable, stable, dtable )
+               _ -> fail "addInstanceVar: no such generic variable"
 \end{code}
 
 \newpage

@@ -150,6 +150,62 @@ tst_addKnownVar
      ]
 
 -- -----------------------------------------------------------------------------
+tst_addGenericVar :: TF.Test
+
+
+tst_addGenericVar
+ = testGroup "addGenericVar"
+     [ testCase "v into empty table"
+       ( vtList (fromJust (addGenericVar v newVarTable))
+         @?= [(v,GenericVar)] )
+     , testCase "v' into empty table"
+       ( vtList (fromJust (addGenericVar v' newVarTable))
+         @?= [(v',GenericVar)] )
+     , testCase "e into empty table"
+       ( vtList (fromJust (addGenericVar e newVarTable))
+         @?= [(e,GenericVar)] )
+     , testCase "p into empty table"
+       ( vtList (fromJust (addGenericVar p newVarTable))
+         @?= [(p,GenericVar)] )
+     , testCase "v into table with e"
+       ( vtList ( fromJust $ addGenericVar v
+                $ fromJust (addGenericVar e newVarTable))
+         @?= [(e,GenericVar),(v,GenericVar)] )
+     , testCase "v into table with v (should fail)"
+       ( addGenericVar v (fromJust (addGenericVar v newVarTable))
+         @?= Nothing )
+     , testCase "v into table with v' (should fail)"
+       ( addGenericVar v (fromJust (addGenericVar v' newVarTable))
+         @?= Nothing )
+     ]
+
+-- -----------------------------------------------------------------------------
+tst_addInstanceVar :: TF.Test
+
+gvTable = fromJust $ addGenericVar v newVarTable
+
+tst_addInstanceVar
+ = testGroup "addInstanceVar"
+     [ testCase "v as v into empty table (fails)"
+       ( addInstanceVar v v newVarTable @?= Nothing )
+     , testCase "v as v into table with v (fails)"
+       ( addInstanceVar v v gvTable @?= Nothing )
+     , testCase "v as v' into table with v (fails)"
+       ( addInstanceVar v v' gvTable @?= Nothing )
+     , testCase "v' as v into table with v (fails)"
+       ( addInstanceVar v' v gvTable @?= Nothing )
+     , testCase "e as v into table with v (fails)"
+       ( addInstanceVar e v gvTable @?= Nothing )
+     , testCase "e as v' into table with v (fails)"
+       ( addInstanceVar e v' gvTable @?= Nothing )
+     , testCase "u as v into empty table (fails)"
+       ( addInstanceVar e v' newVarTable @?= Nothing )
+     , testCase "u as v into table with v"
+       ( vtList (fromJust (addInstanceVar u v gvTable))
+         @?= [(u,InstanceVar v),(v,GenericVar)] )
+     ]
+
+-- -----------------------------------------------------------------------------
 tst_lookupVarTable :: TF.Test
 
 kvepTable
@@ -277,6 +333,8 @@ tst_VarData
   = [ testGroup "\nVarData"
       [ tst_addKnownConst
       , tst_addKnownVar
+      , tst_addGenericVar
+      , tst_addInstanceVar
       , tst_lookupVarTable
       , tst_addKnownListVar
       , tst_lookupLVarTable

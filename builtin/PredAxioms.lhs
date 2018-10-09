@@ -32,7 +32,7 @@ import PropDisj
 import PropConj
 import PropMixOne
 import PropImpl
-import PropAxioms
+import Equality
 \end{code}
 
 
@@ -77,14 +77,29 @@ exists = Vbl (fromJust $ ident _exists) PredV Static
 
 $$
   \begin{array}{ll}
-     \AXeqvRefl & \AXeqvReflN
+     \AXAllTrue & \AXAllTrueN
   \end{array}
 $$
 
 \vspace{-8pt}
 \begin{code}
 axEqvRefl
- = ( _equiv++"_refl"
+ = ( _forall -.- "true"
+   , ( p === p
+   , scTrue ) )
+\end{code}
+
+%% TEMPLATE
+$$
+  \begin{array}{ll}
+     law & name
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+axXXX
+ = ( "law" -.- "name"
    , ( p === p
    , scTrue ) )
 \end{code}
@@ -104,11 +119,12 @@ predAxioms
 
 \begin{code}
 predAxiomName :: String
-predAxiomName = "PropAxioms"
+predAxiomName = "PredAxioms"
 predAxiomTheory :: Theory
 predAxiomTheory
   =  Theory { thName  =  predAxiomName
-            , thDeps  =  [ propImplName
+            , thDeps  =  [ equalityName
+                         , propImplName
                          , propMixOneName
                          , propConjName
                          , propDisjName

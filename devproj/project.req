@@ -10,8 +10,8 @@ IMP = Id "\10233 "
 AND = Id "\8743"
 END SIGNATURE
 BEGIN THEORIES
-THNAMES = ["PropAxioms","PropConj","PropDisj","PropEquiv","PropImpl","PropMixOne","PropNot"]
-SDAG = [[("PropImpl",["PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropMixOne",["PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropConj",["PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropDisj",["PropNot","PropEquiv","PropAxioms"])],[("PropNot",["PropEquiv","PropAxioms"])],[("PropEquiv",["PropAxioms"])],[("PropAxioms",[])]]
+THNAMES = ["Equality","PropAxioms","PropConj","PropDisj","PropEquiv","PropImpl","PropMixOne","PropNot"]
+SDAG = [[("PropImpl",["PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropMixOne",["PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropConj",["PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropDisj",["PropNot","PropEquiv","PropAxioms"])],[("PropNot",["PropEquiv","PropAxioms"])],[("PropEquiv",["PropAxioms"])],[("Equality",[]),("PropAxioms",[])]]
 END THEORIES
 CURRTHEORY = PropImpl
 BEGIN LIVE-PROOFS

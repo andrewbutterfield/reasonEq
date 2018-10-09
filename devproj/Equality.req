@@ -1,0 +1,13 @@
+BEGIN THEORY Equality
+DEPS = []
+KNOWN = VD (fromList [],fromList [],fromList [])
+BEGIN LIST LAWS
+(("=_refl",(C P (Id "=") [V (E T) (VR (Id "e",VE,WS)),V (E T) (VR (Id "e",VE,WS))],SC (fromList []) (fromList []))),Axiom)
+(("=_symm",(C P (Id "\8801") [C P (Id "=") [V (E T) (VR (Id "e",VE,WS)),V (E T) (VR (Id "f",VE,WS))],C P (Id "=") [V (E T) (VR (Id "f",VE,WS)),V (E T) (VR (Id "e",VE,WS))]],SC (fromList []) (fromList []))),Axiom)
+(("=_trans",(C P (Id "\10233 ") [C P (Id "\8743") [C P (Id "=") [V (E T) (VR (Id "e",VE,WS)),V (E T) (VR (Id "f",VE,WS))],C P (Id "=") [V (E T) (VR (Id "f",VE,WS)),V (E T) (VR (Id "g",VE,WS))]],C P (Id "=") [V (E T) (VR (Id "e",VE,WS)),V (E T) (VR (Id "g",VE,WS))]],SC (fromList []) (fromList []))),Axiom)
+END LIST LAWS
+BEGIN LIST PROOFS
+END LIST PROOFS
+BEGIN LIST CONJECTURES
+END LIST CONJECTURES
+END THEORY Equality

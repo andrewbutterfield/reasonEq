@@ -22,6 +22,8 @@ import PropDisj
 import PropConj
 import PropMixOne
 import PropImpl
+import Equality
+import PredAxioms
 \end{code}
 
 We assume the the project directory is defined as an immediate
@@ -49,7 +51,9 @@ devInitState
             , liveProofs = M.empty }
 
 devTheories
-  =  fromJust $ addTheory propImplTheory $
+  =  fromJust $ addTheory predAxiomTheory $
+     fromJust $ addTheory equalityTheory $
+     fromJust $ addTheory propImplTheory $
      fromJust $ addTheory propMixOneTheory $
      fromJust $ addTheory propConjTheory $
      fromJust $ addTheory propDisjTheory $

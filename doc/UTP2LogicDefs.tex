@@ -615,7 +615,24 @@
   \end{array}
 }
 
+%%%% ==== Equality =============================================================
 
+\def\AXequalReflN{\QNAME{$=$-refl}}
+\def\AXequalRefl{e = e}
+
+\def\AXequalSymmN{\QNAME{$=$-symm}}
+\def\AXequalSymm{(e = f) \equiv (f = e)}
+
+\def\AXequalTransN{\QNAME{$=$-trans}}
+\def\AXequalTrans{(e = f) \land (f = g) \implies (e = g)}
+
+\def\AXEQUALITY {
+  \begin{array}{ll}
+       \AXequalRefl & \AXequalReflN
+    \\ \AXequalSymm & \AXequalSymmN
+    \\ \AXequalTrans & \AXequalTransN
+  \end{array}
+}
 
 
 %%%%  ==== Predicates ==========================================================
@@ -863,25 +880,29 @@
 
 %% ---- Predicate Axioms - ( Gries & Schneider style ) -------------------------
 
+\def\AXAllTrueN{\QNAME{$\forall$-$\textit{true}$}}
+\def\AXAllTrue{\forall \lst x \bullet \textit{true} = \textit{true}}
+
 \def\AXPREDGS{
 \begin{array}{ll}
-   \AXorAllOScopeL & \AXorAllOScopeN
-\\ {}\equiv (\AXorAllOScopeR), \quad \AXorAllOScopeS
-\\ \AXallODistr & \AXallODistrN
-\\ \AXallOInst & \AXallOInstN
-\\ \AXanyODef & \AXanyODefN
-\\ \AXoneODefL & \AXoneODefN
-\\ {}\equiv \AXoneODefR
-\\ \AXunivClosure & \AXunivClosureN
-\\ \AXeqRefl & \AXeqReflN
-\\ (\AXtheDefL) & \AXtheDefN
-\\ {} \equiv \AXtheDefR,~\AXtheDefS
-\\ \AXObetaRed & \AXObetaRedN
-\\ \AXLeibniz, & \AXLeibnizN
-\\ \AXLeibnizS
-\\ \AXOSubst & \AXOSubstN
-\\ \AXTrueOSub & \AXTrueOSubN
-\\ \AXFalseOSub & \AXFalseOSubN
+   \AXAllTrue & \AXAllTrueN
+% \\ \AXorAllOScopeL & \AXorAllOScopeN
+% \\ {}\equiv (\AXorAllOScopeR), \quad \AXorAllOScopeS
+% \\ \AXallODistr & \AXallODistrN
+% \\ \AXallOInst & \AXallOInstN
+% \\ \AXanyODef & \AXanyODefN
+% \\ \AXoneODefL & \AXoneODefN
+% \\ {}\equiv \AXoneODefR
+% \\ \AXunivClosure & \AXunivClosureN
+% \\ \AXeqRefl & \AXeqReflN
+% \\ (\AXtheDefL) & \AXtheDefN
+% \\ {} \equiv \AXtheDefR,~\AXtheDefS
+% \\ \AXObetaRed & \AXObetaRedN
+% \\ \AXLeibniz, & \AXLeibnizN
+% \\ \AXLeibnizS
+% \\ \AXOSubst & \AXOSubstN
+% \\ \AXTrueOSub & \AXTrueOSubN
+% \\ \AXFalseOSub & \AXFalseOSubN
 \end{array}
 }
 

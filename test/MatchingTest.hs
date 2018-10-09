@@ -55,7 +55,7 @@ tst_tsMatch =
       ]
 
 -- -----------------------------------------------------------------------------
-tst_vMatch, tst_vMatchVm :: TF.Test
+tst_tvMatch, tst_vMatchVm, tst_vMatchGI :: TF.Test
 
 x = PreVar $ fromJust $ ident "x"
 xk = E ArbType
@@ -92,7 +92,7 @@ vt = fromJust $ addKnownConst v42 k42
    $ newVarTable
 
 
-tst_vMatch =
+tst_tvMatch =
   testGroup "tvMatch (direct)"
       [ testCase "V y :: x, both bound (Ok)"
         ( (tvMatch [] emptyBinding by bx ey xk x :: [Binding] )
@@ -119,7 +119,54 @@ tst_vMatch =
       , testCase "true :: ok, known (Ok)"
         ( (tvMatch [vt] emptyBinding b0 b0 true okk ok :: [Binding] )
           @?= bindVarToTerm ok true emptyBinding )
+      , testCase "true :: g1, known (Ok)"
+        ( (tvMatch [vt] emptyBinding b0 b0 true okk ok :: [Binding] )
+          @?= bindVarToTerm ok true emptyBinding )
       ]
+
+g1 = Vbl (fromJust $ ident "g1") ObsV Static
+i11 = Vbl (fromJust $ ident "i11") ObsV Static
+i12 = Vbl (fromJust $ ident "i12") ObsV Static
+g2 = Vbl (fromJust $ ident "g2") ObsV Static
+i2 = Vbl (fromJust $ ident "i2") ObsV Static
+g3 = Vbl (fromJust $ ident "g3") ObsV Static
+i3 = Vbl (fromJust $ ident "i3") ObsV Static
+
+gvt = fromJust $ addInstanceVar i12 g1
+    $ fromJust $ addInstanceVar i2 g2
+    $ fromJust $ addGenericVar g2
+    $ fromJust $ addInstanceVar i11 g1
+    $ fromJust $ addGenericVar g1
+    $ newVarTable
+
+tst_vMatchGI =
+  testGroup "vMatch (generic,instances), also some tvMatch"
+    [ testCase "g1 :: g1"
+      ( (vMatch [gvt] emptyBinding b0 b0 g1 g1 :: [Binding])
+        @?= bindVarToVar g1 g1 emptyBinding )
+    , testCase "g1 :: g2 (FAIL)"
+      ( vMatch [gvt] emptyBinding b0 b0 g1 g2 @?= [] )
+    , testCase "i11 :: i11"
+      ( (vMatch [gvt] emptyBinding b0 b0 i11 i11 :: [Binding])
+        @?= bindVarToVar i11 i11 emptyBinding )
+    , testCase "i11 :: g1"
+      ( (vMatch [gvt] emptyBinding b0 b0 i11 g1 :: [Binding])
+        @?= bindVarToVar g1 i11 emptyBinding )
+    , testCase "i12 :: g1"
+      ( (vMatch [gvt] emptyBinding b0 b0 i12 g1 :: [Binding])
+        @?= bindVarToVar g1 i12 emptyBinding )
+    , testCase "i11 :: g2 (FAIL)"
+      ( vMatch [gvt] emptyBinding b0 b0 i11 g2 @?= [] )
+    , testCase "i3 :: i3"
+      ( (vMatch [gvt] emptyBinding b0 b0 i3 i3 :: [Binding])
+        @?= bindVarToVar i3 i3 emptyBinding )
+    , testCase "i3 :: g2"
+      ( vMatch [gvt] emptyBinding b0 b0 i3 g2 @?= [] )
+    , testCase "42 :: g1 (FAIL)"
+        ( tvMatch [gvt] emptyBinding b0 b0 k42 v42k g1 @?= [] )
+    , testCase "42 :: i11 (FAIL)"
+        ( tvMatch [gvt] emptyBinding b0 b0 k42 v42k i11 @?= [] )
+    ]
 
 -- -----------------------------------------------------------------------------
 tst_vlMatch :: TF.Test
@@ -347,7 +394,8 @@ tst_Matching
       [ tst_match
       , tst_tsMatch
       , tst_vMatchVm
-      , tst_vMatch
+      , tst_tvMatch
+      , tst_vMatchGI
       , tst_vlMatch
       , tst_vsMatch
       , tst_sMatch

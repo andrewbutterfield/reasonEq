@@ -554,6 +554,11 @@ Known variable & \texttt{KnownVar} & Itself only
 \\\hline
 Known constant & \texttt{KnownConst} & Itself or the constant
 \\\hline
+Generic variable & \texttt{GenericVar}
+ & Itself or any \texttt{InstanceVar} that references this.
+\\\hline
+Instance variable & \texttt{InstanceVar} & Itself only
+\\\hline
 \end{tabular}
 
 Finally, rules based on the static or dynamic nature of known variables,
@@ -577,8 +582,8 @@ whenCompKind After      After       =  True
 whenCompKind _          _           =  False
 \end{code}
 
+\newpage
 Now, onto variable matching:
-
 \begin{code}
 vMatch :: Monad m
        => [VarTable] -> Binding -> CBVS -> PBVS
@@ -591,21 +596,26 @@ observation or expression variables,
 while other variable classes may only match their own class.
 \begin{code}
 vMatch vts bind cbvs pvbs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
- | StdVar vP `S.member` pvbs    =  bvMatch vts bind cbvs vC vP
- | vC == vP                     =  bindVarToVar vP vC bind
- | vwC == vwP                   =  vMatch' (lookupVarTables vts vP) vC vP
- | vwC == ExprV && vwP == ObsV  =  vMatch' (lookupVarTables vts vP) vC vP
- | otherwise                    =  fail "vMatch: class mismatch"
+ | pbound      =  bvMatch vts bind cbvs vC vP
+ | vC == vP    =  bindVarToVar vP vC bind -- covers KnownVar, InstanceVar
+ | vwC == vwP  =  vMatch' vts bind vmr vC vP
+ | vwC == ExprV && vwP == ObsV  =  vMatch' vts bind vmr vC vP
+ | otherwise   =  fail "vMatch: class mismatch"
  where
+    pbound = StdVar vP `S.member` pvbs
+    vmr = lookupVarTables vts vP
 \end{code}
-
 Variable classes are compatible, but is the pattern ``known''?
 \begin{code}
-  -- vC /= vP
-  vMatch' UnknownVar vC vP  =  bindVarToVar vP vC bind
-  vMatch' (KnownConst (Var _ v)) vC vP
-    | vC == v               =  bindVarToVar vP vC bind
-  vMatch' _ _ _             =  fail "vMatch: knowledge mismatch."
+-- vC /= vP
+vMatch' _ bind UnknownVar vC vP   =  bindVarToVar vP vC bind
+vMatch' _ bind (KnownConst (Var _ v)) vC vP
+  | vC == v                       =  bindVarToVar vP vC bind
+vMatch' vts bind GenericVar vC vP
+  = case lookupVarTables vts vC of
+      (InstanceVar v) | v == vP  ->  bindVarToVar vP vC bind
+      _                          ->  fail "vMatch: wrong generic."
+vMatch' _ _ _ _ _                 =  fail "vMatch: knowledge mismatch."
 \end{code}
 
 \subsubsection{Bound Pattern Variable}

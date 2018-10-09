@@ -76,7 +76,7 @@ and the infix symbols $\equiv$, $\lnot$, $\lor$, $\land$ and $\implies$.
 The propositional constants, along with the equivelance and implication operators
 are also exported as they have significance for proof strategies.
 
-\subsection{Predicate Variables}
+\subsection{Propositional Variables}
 
 \begin{code}
 p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static

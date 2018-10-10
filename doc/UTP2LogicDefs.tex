@@ -881,11 +881,24 @@
 %% ---- Predicate Axioms - ( Gries & Schneider style ) -------------------------
 
 \def\AXAllTrueN{\QNAME{$\forall$-$\textit{true}$}}
-\def\AXAllTrue{\forall \lst x \bullet \textit{true} = \textit{true}}
+\def\AXAllTrue{
+  (\forall \lst x \bullet \textit{true})
+  \equiv
+   \textit{true}
+}
+
+\def\AXAllOnePointN{\QNAME{$\forall$-one-point}}
+\def\AXAllOnePoint{
+  (\forall x,\lst x \bullet x = e \implies P)
+   \equiv
+  (\forall \lst x \bullet P[e/x])
+}
+\def\AXAllOnePointSC{x \notin e}
 
 \def\AXPREDGS{
-\begin{array}{ll}
-   \AXAllTrue & \AXAllTrueN
+\begin{array}{lll}
+   \AXAllTrue & & \AXAllTrueN
+\\ \AXAllOnePoint & \AXAllOnePointSC & \AXAllOnePointN
 % \\ \AXorAllOScopeL & \AXorAllOScopeN
 % \\ {}\equiv (\AXorAllOScopeR), \quad \AXorAllOScopeS
 % \\ \AXallODistr & \AXallODistrN

@@ -13,6 +13,7 @@ module SideCond ( VarSideCond, pattern Exact, pattern Approx
            , VarSCMap, SideCond, scTrue
            , pattern SC, pattern Fresh, pattern VarSCs, sidecond
            , mrgSideCond
+           , notin, is, covers, fresh, pre
            , int_tst_SideCond
            ) where
 import Data.Char
@@ -53,6 +54,13 @@ The relationship can have the form:
 \\ x,\lst v \supseteq \fv(T) && \mbox{covering}
 \\ pre      \supseteq \fv(T) && \mbox{pre-condition}
 \end{eqnarray*}
+
+We shall first look at how we internally represent side-conditions.
+Later we will describe user-friendly ways to build them.
+
+\subsection{Representing Sideconditions}
+
+
 Let $D$, $X$ and $C$ denote sets of variables
 that are meant to be be disjoint, exact, and covering respectively.
 Let $pre$ denote the assertion that the term has only pre-variables.
@@ -110,7 +118,7 @@ then we will have checked that all relevant variables in $C$ satisfy $pre$,
 and hence it becomes superfluous.
 
 \newpage
-\subsection{Variable side-conditions}
+\subsubsection{Variable side-conditions}
 So, a side-condition associated with a term variable is either exact (\texttt{X}),
 or approximate (\texttt{A}):
 \begin{code}
@@ -424,7 +432,7 @@ mrgVarSideCond (A pre mD mC) vsc
 \end{code}
 
 
-\subsection{Full Side Conditions}
+\subsubsection{Full Side Conditions}
 
 Checking $N$ against a variable-side condition, looking at $X$ and $C$.
 \begin{code}
@@ -545,8 +553,68 @@ mrgSCAssoc vassoc1@(va1@(v1,vsc1):rest1)
          varest <- mrgSCAssoc rest1 rest2
          return ((v1,vsc'):varest)
 \end{code}
-\newpage
 
+\newpage
+\subsection{Building side-conditions.}
+
+We want to provide constructors that match how we typically
+specify side-condtions, as a conjunction of the following forms:
+
+\begin{eqnarray*}
+   x,\lst v   \notin  \fv(T) && \mbox{disjoint}
+\\ x,\lst v      =    \fv(T) && \mbox{exact}
+\\ x,\lst v \supseteq \fv(T) && \mbox{covering}
+\\ x,\lst v \mbox{ fresh}    && \mbox{freshness}
+\\ pre      \supseteq \fv(T) && \mbox{pre-condition}
+\end{eqnarray*}
+
+All the code below relies on the fact that
+\texttt{addDisjSC}, \texttt{addExactSC}, \texttt{addCoverSC},
+and \texttt{addPreSC} always succeed
+when their last argument is \texttt{vscTrue}.
+
+$\lst v \notin \fv(T)$
+\begin{code}
+notin :: VarList -> Variable -> SideCond
+vl `notin` tV  =  let vsc = fromJust $ addDisjSC (S.fromList vl) vscTrue
+                  in SC (S.empty) $ M.fromList [(tV,vsc)]
+\end{code}
+
+$\lst v = \fv(T)$
+\begin{code}
+is :: VarList -> Variable -> SideCond
+vl `is` tV  = let vsc = fromJust $ addExactSC (S.fromList vl) vscTrue
+              in SC (S.empty) $ M.fromList [(tV,vsc)]
+\end{code}
+
+$\lst v \supseteq \fv(T)$
+\begin{code}
+covers :: VarList -> Variable -> SideCond
+vl `covers` tV  = let vsc = fromJust $ addCoverSC (S.fromList vl) vscTrue
+                  in SC (S.empty) $ M.fromList [(tV,vsc)]
+\end{code}
+
+fresh $\lst v$
+\begin{code}
+fresh :: VarList -> SideCond
+fresh vl  =  SC (S.fromList vl) M.empty
+\end{code}
+
+$pre \supseteq \fv(T)$
+\begin{code}
+pre :: Variable -> SideCond
+pre tV  = let  vsc = fromJust $ addPreSC vscTrue
+          in SC S.empty $ M.fromList [(tV,vsc)]
+\end{code}
+
+This code may fail, however:
+\begin{code}
+cand :: Monad m => [SideCond] -> m SideCond
+cand []        =  return scTrue
+cand (sc:scs)  =  do { sc' <- cand scs ; mrgSideCond sc sc' }
+\end{code}
+
+\newpage
 \subsection{Exported Test Group}
 \begin{code}
 int_tst_SideCond :: [TF.Test]

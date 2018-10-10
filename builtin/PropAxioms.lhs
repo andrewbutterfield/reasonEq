@@ -133,14 +133,15 @@ propSignature = LogicSig trueP falseP equiv implies land
 flattenEquiv = flattenTheEquiv propSignature
 \end{code}
 
-All propositional laws are characterised by not having
+
+
+\subsection{Propositional Axioms}
+
+All \emph{propositional} laws are characterised by not having
 any side-conditions:
 \begin{code}
 propdef ( name, prop ) = ( name, ( prop, scTrue ) )
 \end{code}
-
-
-\subsection{Propositional Axioms}
 
 \subsubsection{Known Variables}
 

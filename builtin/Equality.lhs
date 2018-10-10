@@ -24,8 +24,6 @@ import Theories
 import PropAxioms
 \end{code}
 
-
-\newpage
 \subsection{Introduction}
 
 Here we present a hard-coded implementation
@@ -38,7 +36,7 @@ We need to build some infrastructure here.
 This consists of the expression variables $e$, $f$ and $g$,
 and the constant $=$.
 
-\subsection{Predicate Variables}
+\subsection{Equality Variables}
 
 \begin{code}
 e = fromJust $ eVar ArbType $ Vbl (fromJust $ ident "e") ExprV Static
@@ -46,7 +44,7 @@ f = fromJust $ eVar ArbType $ Vbl (fromJust $ ident "f") ExprV Static
 g = fromJust $ eVar ArbType $ Vbl (fromJust $ ident "g") ExprV Static
 \end{code}
 
-\subsection{Predicate Constants}
+\subsection{Equality Constants}
 
 \begin{code}
 equals = fromJust $ ident "="
@@ -54,9 +52,8 @@ isEqualTo e1 e2 = Cons P equals [e1,e2]
 \end{code}
 
 
-\subsection{Predicate Axioms}
-
-\subsubsection{Axioms}
+\newpage
+\subsection{Equality Axioms}
 
 $$\begin{array}{ll}
    \AXequalRefl & \AXequalReflN
@@ -94,6 +91,7 @@ axEqualTrans
    , scTrue ) )
 \end{code}
 
+We collect these together:
 \begin{code}
 equalityAxioms :: [Law]
 equalityAxioms

@@ -212,12 +212,18 @@ trTerm p (Bind tk n vs t)     =  trAbs p tk n (S.toList vs) t
 trTerm p (Lam tk n vl t)      =  trAbs p tk n vl            t
 trTerm p (Sub tk t sub)       =  trTerm p t ++ trSub p sub
 
-trTerm p (Iter tk na ni lvs)
- =  trId na ++ "{"
-            ++ trId ni ++ "("
-                       ++ seplist "," trLVar lvs
-                       ++ ")"
-            ++ "}"
+trTerm p (Iter tk na ni lvs@(_:_:_))
+ | isSymbId ni =  silentId na ++ "(" ++ seplist (trId ni) trLVar lvs ++ ")"
+ | otherwise =    trId na ++ "{"
+                          ++ trId ni ++ "("
+                                     ++ seplist "," trLVar lvs
+                                     ++ ")"
+                          ++ "}"
+ where silentId na@(Identifier i)
+  -- logical-and is the 'default' for na, so we keep it 'silent'
+        | i == _land  =  ""
+        | otherwise   =  trId na
+
 trTerm p (Type t)             =  trType t
 \end{code}
 
@@ -242,13 +248,17 @@ asmContainer (lbr,sep,rbr) rs = lbr ++ intercalate sep rs ++ rbr
 \begin{code}
 trSub p (Substn tsub lvsub)
  = "[" ++
-       trTL p "," rts ++ ',':trVL (map LstVar rlvs) ++
+       (trTL p "," rts  `mrg` trVL (map LstVar rlvs)) ++
    "/" ++
        trVL (map StdVar tvs ++ map LstVar tlvs) ++
    "]"
  where
   (tvs,rts) = unzip $ S.toList tsub
   (tlvs,rlvs)  =  unzip $ S.toList lvsub
+  mrg ""  ""   =  ""
+  mrg cs  ""   =  cs
+  mrg ""  cs   =  cs
+  mrg cs1 cs2  =  cs1 ++ ',':cs2
 \end{code}
 
 These will eventually do some sort of multi-line pretty-printing.

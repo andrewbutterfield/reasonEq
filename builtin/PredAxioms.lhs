@@ -68,6 +68,7 @@ p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
 r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
 ve = Vbl (fromJust $ ident "e") ExprV Static
+lves = LVbl ve [] []
 e = fromJust $ eVar ArbType ve
 \end{code}
 
@@ -118,10 +119,10 @@ $$\begin{array}{lll}
 \begin{code}
 axAllOne -- need to use an Iter here....
  = preddef (_forall -.- "one" -.- "point")
-           ( (forall [x,xs] ((tx `isEqualTo` e) /\ p) )
+           ( (forall [xs,ys] ((lvxs `areEqualTo` lves) ==> p) )
              ===
-             (forall [xs] (Sub P p (fromJust $ substn [(vx,e)] [])) ) )
-           ([x] `notin` ve)
+             (forall [xs] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) ) )
+           ([xs] `notin` ve)
 \end{code}
 
 %% TEMPLATE

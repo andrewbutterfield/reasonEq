@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Equality (
-  equals, isEqualTo
+  equals, isEqualTo, areEqualTo
 , equalityAxioms, equalityName, equalityTheory
 ) where
 
@@ -34,14 +34,20 @@ $$
 
 We need to build some infrastructure here.
 This consists of the expression variables $e$, $f$ and $g$,
-and the constant $=$.
+the constant $=$,
+and expression list-variables $\lst e,\lst f$.
 
 \subsection{Equality Variables}
 
 \begin{code}
-e = fromJust $ eVar ArbType $ Vbl (fromJust $ ident "e") ExprV Static
-f = fromJust $ eVar ArbType $ Vbl (fromJust $ ident "f") ExprV Static
-g = fromJust $ eVar ArbType $ Vbl (fromJust $ ident "g") ExprV Static
+ve = Vbl (fromJust $ ident "e") ExprV Static
+e = fromJust $ eVar ArbType ve
+es = LVbl ve [] []
+vf = Vbl (fromJust $ ident "f") ExprV Static
+f = fromJust $ eVar ArbType vf
+fs = LVbl vf [] []
+vg = Vbl (fromJust $ ident "g") ExprV Static
+g = fromJust $ eVar ArbType vg
 \end{code}
 
 \subsection{Equality Constants}
@@ -49,6 +55,7 @@ g = fromJust $ eVar ArbType $ Vbl (fromJust $ ident "g") ExprV Static
 \begin{code}
 equals = fromJust $ ident "="
 isEqualTo e1 e2 = Cons P equals [e1,e2]
+areEqualTo es1 es2 = Iter P land equals [es1,es2]
 \end{code}
 
 
@@ -90,6 +97,13 @@ axEqualTrans
    , ( ( e `isEqualTo` f) /\ ( f `isEqualTo` g) ==> (e `isEqualTo` g)
    , scTrue ) )
 \end{code}
+
+$$\begin{array}{ll}
+     \AXequalsSplit & \AXequalsSplitN
+\end{array}$$
+This axiom is encoded by the fact that \texttt{Iter}
+specifies both relational and joining predicates,
+which \texttt{areEqualTo} defines as $=$ and $\land$ respectively.
 
 We collect these together:
 \begin{code}

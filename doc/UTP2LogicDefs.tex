@@ -626,11 +626,19 @@
 \def\AXequalTransN{\QNAME{$=$-trans}}
 \def\AXequalTrans{(e = f) \land (f = g) \implies (e = g)}
 
+\def\AXequalsSplitN{\QNAME{$=$-split}}
+\def\AXequalsSplit{
+( \lst e,\lst f = \lst g,\lst h )
+\equiv
+( \lst e= \lst g \land \lst f = \lst h )
+}
+
 \def\AXEQUALITY {
   \begin{array}{ll}
-       \AXequalRefl & \AXequalReflN
-    \\ \AXequalSymm & \AXequalSymmN
-    \\ \AXequalTrans & \AXequalTransN
+       \AXequalRefl   & \AXequalReflN
+    \\ \AXequalSymm   & \AXequalSymmN
+    \\ \AXequalTrans  & \AXequalTransN
+    \\ \AXequalsSplit & \AXequalsSplitN
   \end{array}
 }
 

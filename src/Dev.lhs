@@ -47,7 +47,7 @@ devInitState
             , settings = REqSet 20
             , logicsig = propSignature
             , theories = devTheories
-            , currTheory = propImplName
+            , currTheory = predAxiomName
             , liveProofs = M.empty }
 
 devTheories

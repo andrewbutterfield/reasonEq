@@ -9,7 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module TestRendering (
    trId
  , trVar, trLVar, trGVar
- , trVSet, trVList, trVariableSet
+ , trVSet, trOVSet, trVList, trVariableSet
  , trType
  , trValue
  , trTerm
@@ -266,7 +266,8 @@ trAbs p tk n vl t
 trVL = seplist "," trGVar
 
 trVList vl  =  _langle ++ trVL vl ++ _rangle
-trVSet vs   =  "{" ++ trVL (S.toList vs) ++ "}"
+trVSet vs   =  "{" ++ trOVSet vs ++ "}"
+trOVSet vs  =  trVL (S.toList vs)
 
 trVariableSet vs = "{" ++ trVariableL (S.toList vs) ++ "}"
 trVariableL = seplist "," trVar
@@ -312,18 +313,18 @@ trSideCond (SC vs vscmap)
 
 trFresh vs
  | S.null vs  =  ""
- | otherwise = "fresh"++ trVSet vs
+ | otherwise  =  "fresh"++ trVSet vs
 
 trVarSCMap vscmap = map trVarSideCond $ M.assocs vscmap
-trVarSideCond (v,(Exact vs)) = trVSet vs ++ "=" ++ trVar v
+trVarSideCond (v,(Exact vs)) = trOVSet vs ++ "=" ++ trVar v
 trVarSideCond (v,(Approx pre mD mC))
  = intcalNN ";" [trPre pre,trD mD,trC mC]
  where
-   trPre True = "pre("++trVar v++")" ; trPre False = ""
+   trPre True = "pre:"++trVar v ; trPre False = ""
    trD Nothing = ""
-   trD (Just vs) = trVSet vs ++ _lnot ++ _in ++ trVar v
+   trD (Just vs) = trOVSet vs ++ _lnot ++ _in ++ trVar v
    trC Nothing = ""
-   trC (Just vs) = trVar v ++ _subseteq ++ trVSet vs
+   trC (Just vs) = trOVSet vs ++ _supseteq ++ trVar v
 \end{code}
 
 \newpage

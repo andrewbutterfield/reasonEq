@@ -113,10 +113,10 @@ axAllTrue = preddef (_forall -.- "true")
 \end{code}
 
 $$\begin{array}{lll}
-   \AXAllOnePoint & \AXAllOnePointSC & \AXAllOnePointN
+   \AXAllOnePoint & \AXAllOnePointS & \AXAllOnePointN
 \end{array}$$\par\vspace{-8pt}
 \begin{code}
-axAllOne
+axAllOne -- need to use an Iter here....
  = preddef (_forall -.- "one" -.- "point")
            ( (forall [x,xs] ((tx `isEqualTo` e) /\ p) )
              ===

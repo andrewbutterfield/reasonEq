@@ -642,7 +642,7 @@
 \def\AXorAllOScopeL{p \lor (\forall \lst x,\lst y \bullet q)}
 \def\AXorAllOScopeR{\forall \lst x \bullet p \lor (\forall \lst y \bullet q)}
 \def\AXorAllOScopeS{\lst x \notin p}
-\def\AXorAllOScopeN{\QNAME{$\lor$-$\forall x$-scope}}
+\def\AXorAllOScopeN{\QNAME{$\lor$-$\forall$-scope}}
 \def\AXorAllOScope{\AXorAllOScopeL \equiv \AXorAllOScopeR, \quad \AXorAllOScopeS}
 
 \def\AXorAllEScopeL{p \lor (\forall \lst E, \lst F \bullet q)}
@@ -659,7 +659,7 @@
 
 \def\AXallODistrL{(\forall \lst x \bullet p \land q)}
 \def\AXallODistrR{(\forall \lst x \bullet p) \land (\forall \lst x \bullet q)}
-\def\AXallODistrN{\QNAME{$\forall x$-distr}}
+\def\AXallODistrN{\QNAME{$\forall$-$\land$-distr}}
 \def\AXallODistr{\AXallODistrL \equiv \AXallODistrR}
 
 \def\AXallEDistrL{(\forall \lst E \bullet p \land q)}
@@ -674,7 +674,7 @@
 
 \def\AXallOInstL{\forall x, \lst x \bullet p}
 \def\AXallOInstR{\forall \lst x  \bullet p[e/x]}
-\def\AXallOInstN{\QNAME{$\forall x$-inst}}
+\def\AXallOInstN{\QNAME{$\forall$-inst}}
 \def\AXallOInst{(\AXallOInstL) \implies (\AXallOInstR)}
 
 \def\AXallEInstL{\forall E , \lst E \bullet p}
@@ -689,12 +689,12 @@
 
 \def\AXallORngL{\forall \lst x | r \bullet p}
 \def\AXallORngR{\forall \lst x \bullet r \implies p}
-\def\AXallORngN{\QNAME{$\forall x$-range}}
+\def\AXallORngN{\QNAME{$\forall$-range}}
 \def\AXallORng{(\AXallORngL) \equiv (\AXallORngR)}
 
 \def\AXanyODefL{\exists \lst x \bullet p}
 \def\AXanyODefR{\lnot (\forall \lst x \bullet \lnot p)}
-\def\AXanyODefN{\QNAME{$\exists x$-def}}
+\def\AXanyODefN{\QNAME{$\exists$-def}}
 \def\AXanyODef{(\AXanyODefL) \equiv \AXanyODefR}
 
 \def\AXanyEDefL{\exists \lst E \bullet p}
@@ -709,19 +709,19 @@
 
 \def\AXanyORngL{\exists \lst x | r \bullet p}
 \def\AXanyORngR{\exists \lst x \bullet r \land p}
-\def\AXanyORngN{\QNAME{$\exists x$-range}}
+\def\AXanyORngN{\QNAME{$\exists$-range}}
 \def\AXanyORng{(\AXanyORngL) \equiv (\AXanyORngR)}
 
 \def\AXoneODefL{\exists! \lst x \bullet p}
 \def\AXoneODefR{(\exists \lst x \bullet p)
                  \land
                  \exists \lst y \bullet p[\lst y/ \lst x] \implies \lst y = \lst x}
-\def\AXoneODefN{\QNAME{$\exists! x$-def}}
+\def\AXoneODefN{\QNAME{$\exists!$-def}}
 \def\AXoneODef{(\AXoneODefL) \equiv (\AXoneODefR)}
 
 \def\AXoneORngL{\exists! \lst x | r \bullet p}
 \def\AXoneORngR{\exists! \lst x \bullet r \land p}
-\def\AXoneORngN{\QNAME{$\exists! x$-range}}
+\def\AXoneORngN{\QNAME{$\exists!$-range}}
 \def\AXoneORng{(\AXoneORngL) \equiv (\AXoneORngR)}
 
 \def\AXunivClosureL{[p]}
@@ -734,7 +734,7 @@
 \def\AXoneODefR{(\exists \lst x \bullet p)
                  \land
                  \exists \lst y \bullet p[\lst y/ \lst x] \implies \lst y = \lst x}
-\def\AXoneODefN{\QNAME{$\exists! x$-def}}
+\def\AXoneODefN{\QNAME{$\exists!$-def}}
 \def\AXoneODef{(\AXoneODefL) \equiv (\AXoneODefR)}
 
 \def\AXeqReflL{e}
@@ -889,19 +889,35 @@
 
 \def\AXAllOnePointN{\QNAME{$\forall$-one-point}}
 \def\AXAllOnePoint{
-  (\forall x,\lst x \bullet x = e \implies P)
+  (\forall \lst x,\lst y \bullet \lst x = \lst e \implies P)
    \equiv
-  (\forall \lst x \bullet P[e/x])
+  (\forall \lst y \bullet P[\lst e/\lst x])
 }
-\def\AXAllOnePointSC{x \notin e}
+\def\AXAllOnePointS{\lst x \notin \lst e}
+
+\def\AXAllOInstL{\forall \lst x, \lst y \bullet p}
+\def\AXAllOInstR{\forall \lst y  \bullet p[\lst e/\lst x]}
+\def\AXAllOInstN{\QNAME{$\forall$-inst}}
+\def\AXAllOInst{(\AXAllOInstL) \implies (\AXAllOInstR)}
+
+\def\AXAllDummyRenN{\QNAME{$\forall$-$\alpha$-rename}}
+\def\AXAllDummyRen{
+  (\forall \lst x \bullet P)
+  \equiv
+  (\forall \lst y \bullet P[\lst y/\lst x])
+}
+\def\AXAllDummyRenS{\lst y \notin P}
+
 
 \def\AXPREDGS{
 \begin{array}{lll}
-   \AXAllTrue & & \AXAllTrueN
-\\ \AXAllOnePoint & \AXAllOnePointSC & \AXAllOnePointN
-% \\ \AXorAllOScopeL & \AXorAllOScopeN
-% \\ {}\equiv (\AXorAllOScopeR), \quad \AXorAllOScopeS
-% \\ \AXallODistr & \AXallODistrN
+   \AXAllTrue     &                 & \AXAllTrueN
+\\ \AXAllOnePoint & \AXAllOnePointS & \AXAllOnePointN
+\\ \AXallODistr   &                 & \AXallODistrN
+\\ \AXorAllOScopeL \equiv \AXorAllOScopeR
+                  & \AXorAllOScopeS & \AXorAllOScopeN
+\\ \AXAllOInst    &                 & \AXAllOInstN
+\\ \AXAllDummyRen & \AXAllDummyRenS & \AXAllDummyRenN
 % \\ \AXallOInst & \AXallOInstN
 % \\ \AXanyODef & \AXanyODefN
 % \\ \AXoneODefL & \AXoneODefN
@@ -916,6 +932,7 @@
 % \\ \AXOSubst & \AXOSubstN
 % \\ \AXTrueOSub & \AXTrueOSubN
 % \\ \AXFalseOSub & \AXFalseOSubN
+\\ \AXanyODef & & \AXanyODefN
 \end{array}
 }
 

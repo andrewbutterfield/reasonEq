@@ -322,7 +322,7 @@ trVarSideCond (v,(Approx pre mD mC))
  where
    trPre True = "pre:"++trVar v ; trPre False = ""
    trD Nothing = ""
-   trD (Just vs) = trOVSet vs ++ _lnot ++ _in ++ trVar v
+   trD (Just vs) = trOVSet vs ++ _notin ++ trVar v
    trC Nothing = ""
    trC (Just vs) = trOVSet vs ++ _supseteq ++ trVar v
 \end{code}

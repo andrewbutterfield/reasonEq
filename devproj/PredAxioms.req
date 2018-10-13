@@ -4,6 +4,7 @@ KNOWN = VD (fromList [],fromList [],fromList [])
 BEGIN LIST LAWS
 (("\8704_true",(C P (Id "\8801") [B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "true",VP,WS))),V P (VR (Id "true",VP,WS))],SC (fromList []) (fromList []))),Axiom)
 (("\8704_one_point",(C P (Id "\8801") [B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "\10233 ") [I P (Id "\8743") (Id "=") [LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[])],V P (VR (Id "P",VP,WS))]),B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])))],SC (fromList []) (fromList [(VR (Id "e",VE,WS),A False (Just (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])) Nothing)]))),Axiom)
+(("\8704_\8743_distr",(C P (Id "\8801") [B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))]),C P (Id "\8743") [B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS))),B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "Q",VP,WS)))]],SC (fromList []) (fromList []))),Axiom)
 END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS

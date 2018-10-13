@@ -64,7 +64,8 @@ and a useful collection of generic binder variables: $x,y,\lst x,\lst y$.
 \subsubsection{Predicate and Expression Variables}
 
 \begin{code}
-p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
+vP = Vbl (fromJust $ ident "P") PredV Static
+p = fromJust $ pVar vP
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
 r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
 ve = Vbl (fromJust $ ident "e") ExprV Static
@@ -117,32 +118,88 @@ $$\begin{array}{lll}
    \AXAllOnePoint & \AXAllOnePointS & \AXAllOnePointN
 \end{array}$$\par\vspace{-8pt}
 \begin{code}
-axAllOne -- need to use an Iter here....
- = preddef (_forall -.- "one" -.- "point")
-           ( (forall [xs,ys] ((lvxs `areEqualTo` lves) ==> p) )
-             ===
-             (forall [xs] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) ) )
-           ([xs] `notin` ve)
+axAllOne = preddef (_forall -.- "one" -.- "point")
+  ( (forall [xs,ys] ((lvxs `areEqualTo` lves) ==> p) )
+    ===
+    (forall [xs] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) ) )
+  ([xs] `notin` ve)
 \end{code}
+
+$$
+  \begin{array}{lll}
+  \\ \AXallODistr   & & \AXallODistrN
+  \end{array}
+$$\par\vspace{-4pt}
+\begin{code}
+axAllAndDistr = preddef (_forall -.- _land -.- "distr")
+  ( (forall [xs] (p /\ q)) === (forall [xs] p) /\ (forall [xs] q) )
+  scTrue
+\end{code}
+
 
 %% TEMPLATE
 $$
   \begin{array}{lll}
-     law & sc & name
+     \AXorAllOScopeL \equiv \AXorAllOScopeR
+                   & \AXorAllOScopeS & \AXorAllOScopeN
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-axXXX = preddef ("law" -.- "name") p scTrue
+axOrAllScope = preddef (_lor -.- _forall -.- "scope")
+  p
+  ([xs] `notin` vP)
 \end{code}
 
 
+$$
+  \begin{array}{lll}
+    \AXAllOInst    &   & \AXAllOInstN
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+axAllInst = preddef (_forall -.- "inst") p scTrue
+\end{code}
+
+
+$$
+  \begin{array}{lll}
+     \AXAllDummyRen & \AXAllDummyRenS & \AXAllDummyRenN
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+axAllDumRen = preddef (_forall -.- "dummy" -.- "rename")
+  p
+  ([ys] `notin` vP)
+\end{code}
+
+$$
+  \begin{array}{lll}
+     \AXanyODef & & \AXanyODefN
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+axAnyDef = preddef (_exists -.- "def") p scTrue
+\end{code}
+
+
+% %% TEMPLATE
+% $$
+%   \begin{array}{lll}
+%      law & sc & name
+%   \end{array}
+% $$\par\vspace{-8pt}
+% \begin{code}
+% axXXX = preddef ("law" -.- "name") p scTrue
+% \end{code}
 
 We now collect all of the above as our axiom set:
 \begin{code}
 predAxioms :: [Law]
 predAxioms
   = map labelAsAxiom
-      [ axAllTrue, axAllOne ]
+      [ axAllTrue, axAllOne, axAllAndDistr
+      , axOrAllScope, axAllInst, axAllDumRen
+      , axAnyDef ]
 \end{code}
 
 

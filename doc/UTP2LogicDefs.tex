@@ -647,9 +647,9 @@
 
 %% ---- Predicate Axioms - ( Tourlakis style ) ---------------------------------
 
-\def\AXorAllOScopeL{p \lor (\forall \lst x,\lst y \bullet q)}
-\def\AXorAllOScopeR{\forall \lst x \bullet p \lor (\forall \lst y \bullet q)}
-\def\AXorAllOScopeS{\lst x \notin p}
+\def\AXorAllOScopeL{P \lor (\forall \lst x,\lst y \bullet Q)}
+\def\AXorAllOScopeR{\forall \lst x \bullet P \lor (\forall \lst y \bullet Q)}
+\def\AXorAllOScopeS{\lst x \notin P}
 \def\AXorAllOScopeN{\QNAME{$\lor$-$\forall$-scope}}
 \def\AXorAllOScope{\AXorAllOScopeL \equiv \AXorAllOScopeR, \quad \AXorAllOScopeS}
 
@@ -665,8 +665,8 @@
 \def\AXorAllPScopeN{\QNAME{$\lor$-$\forall P$-scope}}
 \def\AXorAllPScope{\AXorAllPScopeL \equiv \AXorAllPScopeR, \quad \AXorAllPScopeS}
 
-\def\AXallODistrL{(\forall \lst x \bullet p \land q)}
-\def\AXallODistrR{(\forall \lst x \bullet p) \land (\forall \lst x \bullet q)}
+\def\AXallODistrL{(\forall \lst x \bullet P \land Q)}
+\def\AXallODistrR{(\forall \lst x \bullet P) \land (\forall \lst x \bullet Q)}
 \def\AXallODistrN{\QNAME{$\forall$-$\land$-distr}}
 \def\AXallODistr{\AXallODistrL \equiv \AXallODistrR}
 
@@ -700,8 +700,8 @@
 \def\AXallORngN{\QNAME{$\forall$-range}}
 \def\AXallORng{(\AXallORngL) \equiv (\AXallORngR)}
 
-\def\AXanyODefL{\exists \lst x \bullet p}
-\def\AXanyODefR{\lnot (\forall \lst x \bullet \lnot p)}
+\def\AXanyODefL{\exists \lst x \bullet P}
+\def\AXanyODefR{\lnot (\forall \lst x \bullet \lnot P)}
 \def\AXanyODefN{\QNAME{$\exists$-def}}
 \def\AXanyODef{(\AXanyODefL) \equiv \AXanyODefR}
 
@@ -903,8 +903,8 @@
 }
 \def\AXAllOnePointS{\lst x \notin \lst e}
 
-\def\AXAllOInstL{\forall \lst x, \lst y \bullet p}
-\def\AXAllOInstR{\forall \lst y  \bullet p[\lst e/\lst x]}
+\def\AXAllOInstL{\forall \lst x, \lst y \bullet P}
+\def\AXAllOInstR{\forall \lst y  \bullet P[\lst e/\lst x]}
 \def\AXAllOInstN{\QNAME{$\forall$-inst}}
 \def\AXAllOInst{(\AXAllOInstL) \implies (\AXAllOInstR)}
 
@@ -922,8 +922,7 @@
    \AXAllTrue     &                 & \AXAllTrueN
 \\ \AXAllOnePoint & \AXAllOnePointS & \AXAllOnePointN
 \\ \AXallODistr   &                 & \AXallODistrN
-\\ \AXorAllOScopeL \equiv \AXorAllOScopeR
-                  & \AXorAllOScopeS & \AXorAllOScopeN
+\\ \AXorAllOScope & \AXorAllOScopeS & \AXorAllOScopeN
 \\ \AXAllOInst    &                 & \AXAllOInstN
 \\ \AXAllDummyRen & \AXAllDummyRenS & \AXAllDummyRenN
 % \\ \AXallOInst & \AXallOInstN

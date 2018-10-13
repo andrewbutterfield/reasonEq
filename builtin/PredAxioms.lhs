@@ -136,8 +136,6 @@ axAllAndDistr = preddef (_forall -.- _land -.- "distr")
   scTrue
 \end{code}
 
-
-%% TEMPLATE
 $$
   \begin{array}{lll}
      \AXorAllOScopeL \equiv \AXorAllOScopeR
@@ -146,7 +144,8 @@ $$
 $$\par\vspace{-8pt}
 \begin{code}
 axOrAllScope = preddef (_lor -.- _forall -.- "scope")
-  p
+  ( p \/ (forall [xs,ys] q)
+    === forall [xs] ( p \/ forall [ys] q) )
   ([xs] `notin` vP)
 \end{code}
 
@@ -157,7 +156,11 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-axAllInst = preddef (_forall -.- "inst") p scTrue
+axAllInst = preddef (_forall -.- "inst")
+  ( (forall [xs,ys] p)
+    ==>
+    (forall [ys] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) ) )
+  scTrue
 \end{code}
 
 
@@ -167,8 +170,10 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-axAllDumRen = preddef (_forall -.- "dummy" -.- "rename")
-  p
+axAllDumRen = preddef (_forall -.- _alpha -.- "rename")
+  ( (forall [xs] p)
+    ===
+    (forall [ys] (Sub P p (fromJust $ substn [] [(lvxs,lvys)])) ) )
   ([ys] `notin` vP)
 \end{code}
 
@@ -178,7 +183,11 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-axAnyDef = preddef (_exists -.- "def") p scTrue
+axAnyDef = preddef (_exists -.- "def")
+  ( (exists [xs] p)
+    ===
+    (mkNot $ forall [xs] $ mkNot p) )
+  scTrue
 \end{code}
 
 

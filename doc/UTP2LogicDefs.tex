@@ -732,8 +732,8 @@
 \def\AXoneORngN{\QNAME{$\exists!$-range}}
 \def\AXoneORng{(\AXoneORngL) \equiv (\AXoneORngR)}
 
-\def\AXunivClosureL{[p]}
-\def\AXunivClosureR{\forall \lst x \bullet p}
+\def\AXunivClosureL{[P]}
+\def\AXunivClosureR{\forall \lst x \bullet P}
 \def\AXunivClosureS{\lst x \supseteq p}
 \def\AXunivClosureN{\QNAME{$[]$-def}}
 \def\AXunivClosure{\AXunivClosureL \equiv (\AXunivClosureR), \quad \AXunivClosureS}
@@ -916,6 +916,12 @@
 }
 \def\AXAllDummyRenS{\lst y \notin P}
 
+\def\AXUnivClosureL{[P]}
+\def\AXUnivClosureR{\forall \lst x \bullet P}
+\def\AXUnivClosureS{\lst x \supseteq p}
+\def\AXUnivClosureN{\QNAME{$[]$-def}}
+\def\AXUnivClosure{\AXUnivClosureL \equiv (\AXUnivClosureR)}
+
 
 \def\AXPREDGS{
 \begin{array}{lll}
@@ -925,21 +931,8 @@
 \\ \AXorAllOScope & \AXorAllOScopeS & \AXorAllOScopeN
 \\ \AXAllOInst    &                 & \AXAllOInstN
 \\ \AXAllDummyRen & \AXAllDummyRenS & \AXAllDummyRenN
-% \\ \AXallOInst & \AXallOInstN
-% \\ \AXanyODef & \AXanyODefN
-% \\ \AXoneODefL & \AXoneODefN
-% \\ {}\equiv \AXoneODefR
-% \\ \AXunivClosure & \AXunivClosureN
-% \\ \AXeqRefl & \AXeqReflN
-% \\ (\AXtheDefL) & \AXtheDefN
-% \\ {} \equiv \AXtheDefR,~\AXtheDefS
-% \\ \AXObetaRed & \AXObetaRedN
-% \\ \AXLeibniz, & \AXLeibnizN
-% \\ \AXLeibnizS
-% \\ \AXOSubst & \AXOSubstN
-% \\ \AXTrueOSub & \AXTrueOSubN
-% \\ \AXFalseOSub & \AXFalseOSubN
-\\ \AXanyODef & & \AXanyODefN
+\\ \AXanyODef     &                 & \AXanyODefN
+\\ \AXunivClosure & \AXUnivClosureS & \AXunivClosureN
 \end{array}
 }
 

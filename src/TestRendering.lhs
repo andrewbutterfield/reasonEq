@@ -203,6 +203,8 @@ trTerm p (Var tk v)           =  trVar v
 
 -- trTerm p (Cons tk n [t])
 --  | isAtomic t                 =  asmAtomic n $ trTerm 0 t
+trTerm p (Cons tk s [prd])
+ | idName s == "[]"           =  "["++trTerm 0 prd++"]"
 trTerm p (Cons tk s ts@(_:_:_))
  | isSymbId s                 =  asmInfix p prcs s $ map (trTerm ps) ts
  where prcs@(ps,assoc) = prc s

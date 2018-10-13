@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module PredAxioms (
-  forall, exists
+  forall, exists, univ
 , predAxioms, predAxiomName, predAxiomTheory
 ) where
 
@@ -58,7 +58,7 @@ $$
 We need to build some infrastructure here.
 This consists of the predicate variables $P$, $Q$ and $R$,
 expression variable $e$,
-the constants $\forall$ and $\exists$,
+the constants $\forall$, $\exists$, $[]$,
 and a useful collection of generic binder variables: $x,y,\lst x,\lst y$.
 
 \subsubsection{Predicate and Expression Variables}
@@ -77,11 +77,11 @@ e = fromJust $ eVar ArbType ve
 
 \begin{code}
 forallId = fromJust $ ident _forall
-forallV = Vbl forallId PredV Static
 forall vl p = fromJust $ pBind forallId (S.fromList vl) p
 existsId = fromJust $ ident _exists
-existsV = Vbl existsId PredV Static
 exists vl p = fromJust $ pBind existsId (S.fromList vl) p
+univId = fromJust $ ident "[]"
+univ p = Cons P univId [p]
 \end{code}
 
 \subsubsection{Generic Variables}
@@ -177,6 +177,10 @@ axAllDumRen = preddef (_forall -.- _alpha -.- "rename")
   ([ys] `notin` vP)
 \end{code}
 
+\newpage
+Now, defining existential quantification
+and universal closure.
+
 $$
   \begin{array}{lll}
      \AXanyODef & & \AXanyODefN
@@ -191,6 +195,17 @@ axAnyDef = preddef (_exists -.- "def")
 \end{code}
 
 
+$$
+  \begin{array}{lll}
+     \AXunivClosure & \AXunivClosureS & \AXunivClosureN
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+axUnivDef = preddef ("[]" -.- "def")
+  ( (univ p) === (forall [xs] p) )
+  ( [xs] `covers` vP)
+\end{code}
+
 % %% TEMPLATE
 % $$
 %   \begin{array}{lll}
@@ -198,7 +213,9 @@ axAnyDef = preddef (_exists -.- "def")
 %   \end{array}
 % $$\par\vspace{-8pt}
 % \begin{code}
-% axXXX = preddef ("law" -.- "name") p scTrue
+% axXXX = preddef ("law" -.- "name")
+%   p
+%   scTrue
 % \end{code}
 
 We now collect all of the above as our axiom set:
@@ -208,7 +225,7 @@ predAxioms
   = map labelAsAxiom
       [ axAllTrue, axAllOne, axAllAndDistr
       , axOrAllScope, axAllInst, axAllDumRen
-      , axAnyDef ]
+      , axAnyDef, axUnivDef ]
 \end{code}
 
 

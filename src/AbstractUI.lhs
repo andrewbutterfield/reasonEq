@@ -433,6 +433,11 @@ stepBack i liveProof
 \newpage
 \subsubsection{Law Instantiation}
 
+\textbf{Note: }\textit{In fact, given that any predicate $P$
+can be replaced by $P\land\true$, we can in fact do the instantiation
+on any such $P$, replacing it by $P\land L_I$,
+where $L_I$ is a law instantiatied
+using the context of $P$.}
 Replacing \textit{true} by a law, with unknown variables
 suitably instantiated.
 
@@ -456,10 +461,6 @@ We should now get back those laws as well as the selected number.
 We now get the law, and return it along with,
 all the unknown free variables in the law,
 and all the sub-terms of the complete proof goal.
-\textbf{For now this is just the current top-level focus, i.e
-one of the two consequents, or a hypothesis. For completeness
-it should include both consequents, and  all the hypotheses
-(This is a job for \texttt{Sequents}).}
 \begin{code}
 lawInstantiate2 :: Monad m
                 => [Law] -> Int -> LiveProof -> m (Law,[Variable],[Term])
@@ -501,6 +502,8 @@ mkBinding bind ((v,t):rest)
 \newpage
 \subsubsection{Clone Hypotheses}
 
+This should only be done in an assumption strategy
+that reduces all of the consequent.
 \begin{code}
 cloneHypothesis :: Monad m => Int -> Identifier -> LiveProof -> m LiveProof
 cloneHypothesis i land liveProof
@@ -511,7 +514,7 @@ cloneHypothesis i land liveProof
     in case nlookup i hypos of
         Nothing -> fail ("No such hypothesis: "++show i)
         Just ((_,(hypt,_)),_)
-          -> return ( focus_ (setTZ (PCons land [hypt,currt]) tz,seq')
+          -> return ( focus_ (mkTZ $ PCons land [hypt,currt],seq')
                     $ matches_ []
                     $ stepsSoFar__ ( ( CloneH i, exitTZ tz ) : ) liveProof )
 \end{code}

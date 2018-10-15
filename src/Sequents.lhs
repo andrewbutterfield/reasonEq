@@ -82,16 +82,16 @@ data Sequent
 Given any conjecture (named assertion)
 we want to determine which strategies apply
 and provide a choice of sequents.
-We first flatten the implication (if any),
+We flatten the implication when considering assumption-based sequents
 \begin{code}
 availableStrategies :: LogicSig -> Theories -> String -> NmdAssertion
                     -> [(String,Sequent)]
-availableStrategies theSig theories thnm (nm,(tconj,sc))
+availableStrategies theSig theories thnm cnj@(nm,(tconj,sc))
   = catMaybes
-     [ reduce  theSig thys cflat
-     , redboth theSig thys cflat
-     , redtail theSig thys cflat
-     , redinit theSig thys cflat
+     [ reduce  theSig thys cnj
+     , redboth theSig thys cnj
+     , redtail theSig thys cnj
+     , redinit theSig thys cnj
      , assume  theSig thys cflat ]
   where
     thys = fromJust $ getTheoryDeps thnm theories

@@ -126,10 +126,14 @@ trValue (Txt s)          =  show s
 Based on some prototyping (\texttt{inproto/TRYOUT.hs},  April 2018),
 we re-factor a rendering-function $R$ for terms of the form
 $R(K~t_1~\dots~t_n) \defs RK(\dots R(t_1)\dots R(t_n)\dots)$
-into
+so that we seperate out the rendering of the subterms ($t_i$):
 \begin{eqnarray*}
    R(K~t_1~\dots~t_n) &\defs& asmK(R(t_1),\dots,R(t_n))
-\\ asmK(r_1,\dots,r_n)   &\defs& RK(\dots r_1\dots r_n\dots)
+\end{eqnarray*}
+from the assembly of their renderings to produce the rendering
+for their parent term:
+\begin{eqnarray*}
+   asmK(r_1,\dots,r_n)   &\defs& RK(\dots r_1\dots r_n\dots)
 \end{eqnarray*}
 This makes it very easy to then render term zippers,
 with a facility to highlight the focus.
@@ -152,6 +156,7 @@ zipper rendering to handle precedence rules properly.
 The simplest case is when $K$ is a binary operator of precedence $p_K$,
 in which case $pdepK(i) = p_K$, for all $i$.
 
+\newpage
 \textbf{Before we proceed, we need a table/function that returns
 the precedence level of a \texttt{Cons} identifier.
 For now, let's hard-code one.
@@ -180,7 +185,8 @@ especially in live proofs:
 \\\hline
 \end{tabular}
 ~
-
+Based on experience with live-proof we can now say that
+we use ``non-assoc'' render mode for all associative operators.
 \begin{code}
 type InfixKind = ( Int     -- precedence
                  , Bool )  -- true if *syntactically* associative
@@ -189,20 +195,20 @@ prc (Identifier n)
   | n == "="       =  (1,False)
   | n == _equiv    =  (2,False)
   | n == _implies  =  (3,False)
-  | n == _lor      =  (4,True)
-  | n == _land     =  (5,True)
+  | n == _lor      =  (4,False) -- force parenthesis for nested 'or'
+  | n == _land     =  (5,False) -- force parenthesis for nested 'and'
   | n == _lnot     =  (6,False)
   | otherwise      =  (0,False) -- force parenthesising if not at top-level
 \end{code}
 
 \newpage
 \begin{code}
-trTerm :: Int -> Term -> String -- 1st arg is precedence (not yet used)
+trTerm :: Int -> Term -> String -- 1st arg is precedence
 trTerm p (Val tk k)           =  trValue k
 trTerm p (Var tk v)           =  trVar v
 
--- trTerm p (Cons tk n [t])
---  | isAtomic t                 =  asmAtomic n $ trTerm 0 t
+trTerm p (Cons tk n [t])
+ | isAtomic t                 =  asmAtomic n $ trTerm 0 t
 trTerm p (Cons tk s [prd])
  | idName s == "[]"           =  "["++trTerm 0 prd++"]"
 trTerm p (Cons tk s ts@(_:_:_))
@@ -234,7 +240,9 @@ $asmK$ for \texttt{trTerm}
 --asmCons has three flavours
 -- trTerm p (Cons tk n ts)
 asmAtomic :: Identifier -> String -> String
-asmAtomic n r = trId n ++ ' ':r
+asmAtomic n r
+ | isSymbId n  =  trId n ++ r
+ | otherwise   =  trId n ++ ' ':r
 asmInfix :: Int -> InfixKind -> Identifier -> [String] -> String
 asmInfix p (ps,assoc) s rs
   = trBracketIf (ps < p || ps == p && not assoc) $ intercalate (trId s) $ rs

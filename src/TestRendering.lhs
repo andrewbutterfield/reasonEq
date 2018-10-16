@@ -13,9 +13,6 @@ module TestRendering (
  , trType
  , trValue
  , trTerm
- -- , asmAtomic, asmInfix, asmCons
- -- if we export the above then trTermZip can live in TermZipper
- -- and keep that abstraction closed
  , trTermZip
  , trSideCond
  , trVarMatchRole, trLstVarMatchRole, trVarTable
@@ -123,40 +120,6 @@ trValue (Txt s)          =  show s
 \end{code}
 
 
-Based on some prototyping (\texttt{inproto/TRYOUT.hs},  April 2018),
-we re-factor a rendering-function $R$ for terms of the form
-$R(K~t_1~\dots~t_n) \defs RK(\dots R(t_1)\dots R(t_n)\dots)$
-so that we seperate out the rendering of the subterms ($t_i$):
-\begin{eqnarray*}
-   R(K~t_1~\dots~t_n) &\defs& asmK(R(t_1),\dots,R(t_n))
-\end{eqnarray*}
-from the assembly of their renderings to produce the rendering
-for their parent term:
-\begin{eqnarray*}
-   asmK(r_1,\dots,r_n)   &\defs& RK(\dots r_1\dots r_n\dots)
-\end{eqnarray*}
-This makes it very easy to then render term zippers,
-with a facility to highlight the focus.
-With precedence values, the picture is a little more complicated:
-\begin{eqnarray*}
-   R_p(K~t_1~\dots~t_n) &\defs& asmK_p(R_{p_1}(t_1),\dots,R_{p_n}(t_n))
-\\ asmK_p(r_1,\dots,r_n)   &\defs& RK_p(\dots r_1\dots r_n\dots)
-\end{eqnarray*}
-Here the recursive $p_i$ for $t_i$ depends on $i$,
-and not the precedence of the top level operator, if any,
-in $t_i$.
-This dependency needs to be explicitly recorded in order for
-zipper rendering to handle precedence rules properly.
-\begin{eqnarray*}
-   R_p(K~t_1~\dots~t_n) &\defs& asmK_p(R_{pdepK(1)}(t_1),\dots,R_{pdepK(n)}(t_n))
-\\ asmK_p(t_1,\dots,t_n)  &\defs&
-                    RK_p(\dots r_1 \dots r_n\dots)
-\\ pdepK(i) &\defs& \textsf{rendering context of $i$th term of $K$}
-\end{eqnarray*}
-The simplest case is when $K$ is a binary operator of precedence $p_K$,
-in which case $pdepK(i) = p_K$, for all $i$.
-
-\newpage
 \textbf{Before we proceed, we need a table/function that returns
 the precedence level of a \texttt{Cons} identifier.
 For now, let's hard-code one.
@@ -201,64 +164,112 @@ prc (Identifier n)
   | otherwise      =  (0,False) -- force parenthesising if not at top-level
 \end{code}
 
-\newpage
+Rather than rendering zippers on the fly,
+we mark the focus and un-zip,
+and ensure that the term renderer checks for a marked term.
+\begin{code}
+markfocus :: Term -> Term
+markfocus t = Cons P focusMark [t]
+
+focusMark = fromJust $ ident "__focus__"
+
+highlightFocus = magenta
+\end{code}
+
+We use a precedence arument when rendering terms.
 \begin{code}
 trTerm :: Int -> Term -> String -- 1st arg is precedence
+\end{code}
+
+First, atomic terms
+\begin{code}
 trTerm p (Val tk k)           =  trValue k
 trTerm p (Var tk v)           =  trVar v
+trTerm p (Type t)             =  trType t
+\end{code}
 
-trTerm p (Cons tk n [t])
- | isAtomic t                 =  asmAtomic n $ trTerm 0 t
-trTerm p (Cons tk s [prd])
- | idName s == "[]"           =  "["++trTerm 0 prd++"]"
-trTerm p (Cons tk s ts@(_:_:_))
- | isSymbId s                 =  asmInfix p prcs s $ map (trTerm ps) ts
- where prcs@(ps,assoc) = prc s
-trTerm p (Cons tk n ts)       =  asmCons n $ map (trTerm 0) ts
+A \texttt{Cons}-node with one subterm
+may need special handling:
+a marked focus term needs highlighting;
+it might be universal closure ($[\_]$);
+or an application of name $nm$ (symbol $\lhd$)
+to an atomic argument $a$ that has no parentheses: $nm~a$ ($\lhd a$).
+\begin{code}
+trTerm ctxtp (Cons tk s [t])
+ | s == focusMark    =  highlightFocus $ trTerm ctxtp t
+ | idName s == "[]"  =  "["++trTerm 0 t++"]"
+ | isAtomic t        =  trAtomic s $ trTerm 0 t
+ where
+   trAtomic s r
+    | isSymbId s  =  trId s ++ r
+    | otherwise   =  trId s ++ ' ':r
+\end{code}
 
+Rendering an infix operator with two or more arguments.
+We ensure that sub-terms are rendered with the infix operator precedence
+as their context precedence.
+\begin{code}
+trTerm ctxtp (Cons tk opn ts@(_:_:_))
+ | isSymbId opn  =  trBracketIf (opp < ctxtp || opp == ctxtp && not assoc)
+                         $ intercalate (trId opn) $ map (trTerm opp) ts
+ where prcs@(opp,assoc) = prc opn
+\end{code}
+
+In all other cases we simply use classical function application notation
+$f(e_1,e_2,\dots,e_n)$.
+\begin{code}
+trTerm _ (Cons tk n ts)
+  =  trId n ++ trContainer ( "(", ",", ")" ) ts
+\end{code}
+
+Binders and substitution are straightforward (for now).
+\begin{code}
 trTerm p (Bind tk n vs t)     =  trAbs p tk n (S.toList vs) t
 trTerm p (Lam tk n vl t)      =  trAbs p tk n vl            t
 trTerm p (Sub tk t sub)       =  trTerm p t ++ trSub p sub
+\end{code}
 
-trTerm p (Iter tk na ni lvs@(_:_:_))
- | isSymbId ni =  silentId na ++ "(" ++ seplist (trId ni) trLVar lvs ++ ")"
- | otherwise =    trId na ++ "{"
-                          ++ trId ni ++ "("
-                                     ++ seplist "," trLVar lvs
-                                     ++ ")"
-                          ++ "}"
+For an iterated construct with listings-variable list of length $n$,
+we have three cases:
+
+\begin{tabular}{|c|c|c|c|}
+  \hline
+  na & ni & $n>1$ & rendering
+\\\hline
+  $\land$ & $\oplus$ & yes & $(v_1\oplus v_2\oplus\dots\oplus v_n)$
+\\\hline
+  $\bigotimes$ & $\oplus$ & yes
+  & $\bigotimes(v_1\oplus v_2\oplus\dots\oplus v_n)$
+\\\hline
+  $nm$, $\bigotimes$ & $\oplus$ &
+  & $nm\{(v_1\oplus v_2\oplus\dots\oplus v_n)\}$
+\\\hline
+\end{tabular}
+~
+
+\begin{code}
+trTerm _ (Iter tk na ni lvs@(_:_:_))
+ | isSymbId ni  = silentId na ++ "(" ++ seplist (trId ni) trLVar lvs ++ ")"
  where silentId na@(Identifier i)
   -- logical-and is the 'default' for na, so we keep it 'silent'
         | i == _land  =  ""
         | otherwise   =  trId na
 
-trTerm p (Type t)             =  trType t
+trTerm _ (Iter tk na ni lvs)
+  =  trId na ++ "{" ++ trId ni ++ "(" ++ seplist "," trLVar lvs ++ ")}"
 \end{code}
 
-$asmK$ for \texttt{trTerm}
-\begin{code}
---asmCons has three flavours
--- trTerm p (Cons tk n ts)
-asmAtomic :: Identifier -> String -> String
-asmAtomic n r
- | isSymbId n  =  trId n ++ r
- | otherwise   =  trId n ++ ' ':r
-asmInfix :: Int -> InfixKind -> Identifier -> [String] -> String
-asmInfix p (ps,assoc) s rs
-  = trBracketIf (ps < p || ps == p && not assoc) $ intercalate (trId s) $ rs
-asmCons :: Identifier -> [String] -> String
-asmCons n rs = trId n ++ asmContainer ( "(", ",", ")" ) rs
-\end{code}
 
-Generic $asmK$ helpers.
+General way to render a named, bracketed and separated ``container''.
 \begin{code}
-asmContainer (lbr,sep,rbr) rs = lbr ++ intercalate sep rs ++ rbr
+trContainer (lbr,sep,rbr) ts
+  = lbr ++ intercalate sep (map (trTerm 0) ts) ++ rbr
 \end{code}
 
 \begin{code}
-trSub p (Substn tsub lvsub)
+trSub ctxtp (Substn tsub lvsub)
  = "[" ++
-       (trTL p "," rts  `mrg` trVL (map LstVar rlvs)) ++
+       (trTL ctxtp "," rts  `mrg` trVL (map LstVar rlvs)) ++
    "/" ++
        trVL (map StdVar tvs ++ map LstVar tlvs) ++
    "]"
@@ -295,38 +306,9 @@ trVariableL = seplist "," trVar
 
 \subsection{Term Zipper}
 
-General Code
+We mark the focus, exit the zipper, and render as normal.
 \begin{code}
-trTermZip (t,wayup) = trTZip (markfocus $ trTerm 0 t) wayup
-trTZip focusR [] = focusR
-trTZip focusR (t':wayup)  = trTZip (asmType' (ctxtPrec t') focusR t') wayup
-
-markfocus = magenta -- should be configurable
-
---ctxtPrec []  =  0
-ctxtPrec (Cons' _ n _ _) = fst $ prc n
-ctxtPrec _   =  7  -- for now
-\end{code}
-
-\subsubsection{Zipper ``Assembly Code''}
-
-\begin{code}
-isAtomicR r = validIdent r || all isDigit r -- will do for now...
-
-asmType' ctxtp focusR (Cons' tk n [] []) -- Cons tk n [r^-1]
-  | isAtomicR focusR  =  asmAtomic n focusR
-
-asmType' ctxtp focusR (Cons' tk s before after)
-  | isSymbId s && length before + length after > 0
-     = asmInfix 0 (ctxtp,False) s
-                ( map (trTerm ps) (reverse before)
-                  ++ trBracketIf (ctxtp >= ps) focusR : map (trTerm ps) after )
-  where prcs@(ps,assoc) = prc s
-
-asmType' ctxtp focusR (Cons' tk n before after)
- = asmCons n ( map (trTerm ps) (reverse before)
-               ++ focusR : map (trTerm ps) after )
-  where prcs@(ps,assoc) = prc n
+trTermZip (t,wayup) = trTerm 0 $ exitTZ (markfocus t,wayup)
 \end{code}
 
 \subsection{Side Conditions}

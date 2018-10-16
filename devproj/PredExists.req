@@ -1,0 +1,16 @@
+BEGIN THEORY PredExists
+DEPS = ["PredAxioms","Equality","PropImpl","PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"]
+KNOWN = VD (fromList [],fromList [],fromList [])
+BEGIN LIST LAWS
+END LIST LAWS
+BEGIN LIST PROOFS
+END LIST PROOFS
+BEGIN LIST CONJECTURES
+("\8707_false",(C P (Id "\8801") [B P (Id "\8707") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "false",VP,WS))),V P (VR (Id "false",VP,WS))],SC (fromList []) (fromList [])))
+("\8707_one_point",(C P (Id "\8801") [B P (Id "\8707") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "\8743") [I P (Id "\8743") (Id "=") [LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[])],V P (VR (Id "P",VP,WS))]),B P (Id "\8707") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])))],SC (fromList []) (fromList [(VR (Id "e",VE,WS),A False (Just (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])) Nothing)])))
+("\8707_\8744_distr",(C P (Id "\8801") [B P (Id "\8707") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))]),C P (Id "\8744") [B P (Id "\8707") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS))),B P (Id "\8707") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "Q",VP,WS)))]],SC (fromList []) (fromList [])))
+("\8743_\8707_scope",(C P (Id "\8801") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),B P (Id "\8707") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (V P (VR (Id "Q",VP,WS)))],B P (Id "\8707") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (C P (Id "\8743") [V P (VR (Id "P",VP,WS)),B P (Id "\8707") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (V P (VR (Id "Q",VP,WS)))])],SC (fromList []) (fromList [(VR (Id "P",VP,WS),A False (Just (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])) Nothing)])))
+("\8707_inst",(C P (Id "\10233 ") [B P (Id "\8707") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))]))),B P (Id "\8707") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))],SC (fromList []) (fromList [])))
+("\8707_\945_rename",(C P (Id "\8801") [B P (Id "\8707") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS))),B P (Id "\8707") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "y",VO,WS),[],[]))])))],SC (fromList []) (fromList [(VR (Id "P",VP,WS),A False (Just (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))])) Nothing)])))
+END LIST CONJECTURES
+END THEORY PredExists

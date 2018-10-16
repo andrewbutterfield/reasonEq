@@ -1,4 +1,4 @@
-\section{Predicate Axioms}
+\section{Existential Theorems}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2018
 
@@ -6,10 +6,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module PredAxioms (
-  forall, exists, univ
-, preddef
-, predAxioms, predAxiomName, predAxiomTheory
+module PredExists (
+  predExistsConjs, predExistsName, predExistsTheory
 ) where
 
 import Data.Maybe
@@ -35,6 +33,7 @@ import PropConj
 import PropMixOne
 import PropImpl
 import Equality
+import PredAxioms
 \end{code}
 
 
@@ -51,7 +50,7 @@ as the Tourlakis form has useful laws such as the one-point rules
 derived from his axioms by meta-proofs
 \emph{that use non-equational reasoning}.
 $$
-\AXPREDGS
+\CONJEXISTS
 $$
 
 \subsection{Predicate Infrastructure}
@@ -74,17 +73,6 @@ lves = LVbl ve [] []
 e = fromJust $ eVar ArbType ve
 \end{code}
 
-\subsubsection{Predicate Constants}
-
-\begin{code}
-forallId = fromJust $ ident _forall
-forall vl p = fromJust $ pBind forallId (S.fromList vl) p
-existsId = fromJust $ ident _exists
-exists vl p = fromJust $ pBind existsId (S.fromList vl) p
-univId = fromJust $ ident "[]"
-univ p = Cons P univId [p]
-\end{code}
-
 \subsubsection{Generic Variables}
 
 \begin{code}
@@ -97,114 +85,79 @@ lvys = LVbl vy [] [] ; ys = LstVar lvys
 
 
 \newpage
-\subsection{Predicate Axioms}
-
-General predicates laws often have side-conditions:
-\begin{code}
-preddef name prop sc = ( name, ( prop, sc ) )
-\end{code}
+\subsection{Existential Conjectures}
 
 $$
   \begin{array}{lll}
-     \AXAllTrue & \AXAllTrueN &
+     \CJAnyFalse & & \CJAnyFalseN
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-axAllTrue = preddef (_forall -.- "true")
-                    (forall [xs] trueP  ===  trueP)
+cjAnyTrue = preddef (_exists -.- "false")
+                    (exists [xs] falseP  ===  falseP)
                     scTrue
 \end{code}
 
 $$\begin{array}{lll}
-   \AXAllOnePoint & \AXAllOnePointS & \AXAllOnePointN
+   \CJAnyOnePoint  & \CJAnyOnePointS  & \CJAnyOnePointN
 \end{array}$$\par\vspace{-8pt}
 \begin{code}
-axAllOne = preddef (_forall -.- "one" -.- "point")
-  ( (forall [xs,ys] ((lvxs `areEqualTo` lves) ==> p) )
+cjAnyOne = preddef (_exists -.- "one" -.- "point")
+  ( (exists [xs,ys] ((lvxs `areEqualTo` lves) /\ p) )
     ===
-    (forall [xs] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) ) )
+    (exists [xs] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) ) )
   ([xs] `notin` ve)
 \end{code}
 
 $$
   \begin{array}{lll}
-  \\ \AXallODistr   & & \AXallODistrN
+  \\ \CJanyODistr & & \CJanyODistrN
   \end{array}
 $$\par\vspace{-4pt}
 \begin{code}
-axAllAndDistr = preddef (_forall -.- _land -.- "distr")
-  ( (forall [xs] (p /\ q)) === (forall [xs] p) /\ (forall [xs] q) )
+cjAnyOrDistr = preddef (_exists -.- _lor -.- "distr")
+  ( (exists [xs] (p \/ q)) === (exists [xs] p) \/ (exists [xs] q) )
   scTrue
 \end{code}
 
 $$
   \begin{array}{lll}
-     \AXorAllOScopeL \equiv \AXorAllOScopeR
-                   & \AXorAllOScopeS & \AXorAllOScopeN
+     \CJandAnyOScope & \CJandAnyOScopeS & \CJandAnyOScopeN
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-axOrAllScope = preddef (_lor -.- _forall -.- "scope")
-  ( p \/ (forall [xs,ys] q)
-    === forall [xs] ( p \/ forall [ys] q) )
+axAndAllScope = preddef (_land -.- _exists -.- "scope")
+  ( p /\ (exists [xs,ys] q)
+    === exists [xs] ( p /\ exists [ys] q) )
   ([xs] `notin` vP)
 \end{code}
 
 
 $$
   \begin{array}{lll}
-    \AXAllOInst    &   & \AXAllOInstN
+    \CJAnyOInst & & \CJAnyOInst
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-axAllInst = preddef (_forall -.- "inst")
-  ( (forall [xs,ys] p)
+cjAnyInst = preddef (_exists -.- "inst")
+  ( (exists [ys] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) )
     ==>
-    (forall [ys] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) ) )
+    (exists [xs,ys] p) )
   scTrue
 \end{code}
 
 
 $$
   \begin{array}{lll}
-     \AXAllDummyRen & \AXAllDummyRenS & \AXAllDummyRenN
+     \CJAnyDummyRen  & \CJAnyDummyRenS  & \CJAnyDummyRenN
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-axAllDumRen = preddef (_forall -.- _alpha -.- "rename")
-  ( (forall [xs] p)
-    ===
-    (forall [ys] (Sub P p (fromJust $ substn [] [(lvxs,lvys)])) ) )
-  ([ys] `notin` vP)
-\end{code}
-
-\newpage
-Now, defining existential quantification
-and universal closure.
-
-$$
-  \begin{array}{lll}
-     \AXanyODef & & \AXanyODefN
-  \end{array}
-$$\par\vspace{-8pt}
-\begin{code}
-axAnyDef = preddef (_exists -.- "def")
+cjAnyDumRen = preddef (_exists -.- _alpha -.- "rename")
   ( (exists [xs] p)
     ===
-    (mkNot $ forall [xs] $ mkNot p) )
-  scTrue
-\end{code}
-
-
-$$
-  \begin{array}{lll}
-     \AXunivClosure & \AXunivClosureS & \AXunivClosureN
-  \end{array}
-$$\par\vspace{-8pt}
-\begin{code}
-axUnivDef = preddef ("[]" -.- "def")
-  ( (univ p) === (forall [xs] p) )
-  ( [xs] `covers` vP)
+    (exists [ys] (Sub P p (fromJust $ substn [] [(lvxs,lvys)])) ) )
+  ([ys] `notin` vP)
 \end{code}
 
 % %% TEMPLATE
@@ -221,34 +174,34 @@ axUnivDef = preddef ("[]" -.- "def")
 
 We now collect all of the above as our axiom set:
 \begin{code}
-predAxioms :: [Law]
-predAxioms
-  = map labelAsAxiom
-      [ axAllTrue, axAllOne, axAllAndDistr
-      , axOrAllScope, axAllInst, axAllDumRen
-      , axAnyDef, axUnivDef ]
+predExistsConjs :: [NmdAssertion]
+predExistsConjs
+  = [ cjAnyTrue, cjAnyOne, cjAnyOrDistr
+    , axAndAllScope, cjAnyInst, cjAnyDumRen ]
 \end{code}
 
 
 \subsection{The Predicate Theory}
 
 \begin{code}
-predAxiomName :: String
-predAxiomName = "PredAxioms"
-predAxiomTheory :: Theory
-predAxiomTheory
-  =  Theory { thName  =  predAxiomName
-            , thDeps  =  [ equalityName
+predExistsName :: String
+predExistsName = "PredExists"
+predExistsTheory :: Theory
+predExistsTheory
+  =  Theory { thName  =  predExistsName
+            , thDeps  =  [ predAxiomName
+                         , equalityName
                          , propImplName
                          , propMixOneName
                          , propConjName
                          , propDisjName
                          , propNotName
                          , propEquivName
-                         , propAxiomName ]
+                         , propAxiomName
+                         ]
             , known   =  newVarTable
-            , laws    =  predAxioms
+            , laws    =  []
             , proofs  =  []
-            , conjs   =  []
+            , conjs   =  predExistsConjs
             }
 \end{code}

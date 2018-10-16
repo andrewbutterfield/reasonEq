@@ -50,6 +50,7 @@ library
                      , PropImpl
                      , Equality
                      , PredAxioms
+                     , PredExists
                      -- in proto
                      , Acyclic
                      , TRYOUT

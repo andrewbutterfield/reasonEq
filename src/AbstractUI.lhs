@@ -57,6 +57,7 @@ import PropMixOne
 import PropImpl
 import Equality
 import PredAxioms
+import PredExists
 
 import Debug.Trace
 dbg msg x = trace (msg++show x) x
@@ -533,6 +534,7 @@ devKnownBuiltins  = [ propAxiomTheory
                     , propImplTheory
                     , equalityTheory
                     , predAxiomTheory
+                    , predExistsTheory
                     ]
 
 biLkp _ []  = Nothing

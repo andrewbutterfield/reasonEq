@@ -936,6 +936,65 @@
 \end{array}
 }
 
+
+
+
+%%% Existential Conjectures =========
+
+
+
+
+\def\CJAnyFalseN{\QNAME{$\exists$-$\textit{false}$}}
+\def\CJAnyFalse{
+  (\exists \lst x \bullet \textit{false})
+  \equiv
+   \textit{false}
+}
+
+\def\CJAnyOnePointN{\QNAME{$\exists$-one-point}}
+\def\CJAnyOnePoint{
+  (\exists \lst x,\lst y \bullet \lst x = \lst e \land P)
+   \equiv
+  (\exists \lst y \bullet P[\lst e/\lst x])
+}
+\def\CJAnyOnePointS{\lst x \notin \lst e}
+
+\def\CJandAnyOScopeL{P \land (\exists \lst x,\lst y \bullet Q)}
+\def\CJandAnyOScopeR{\exists \lst x \bullet P \land (\forall \lst y \bullet Q)}
+\def\CJandAnyOScopeS{\lst x \notin P}
+\def\CJandAnyOScopeN{\QNAME{$\land$-$\exists$-scope}}
+\def\CJandAnyOScope{\CJandAnyOScopeL \equiv \CJandAnyOScopeR}
+
+\def\CJanyODistrL{(\exists \lst x \bullet P \lor Q)}
+\def\CJanyODistrR{(\exists \lst x \bullet P) \lor (\forall \lst x \bullet Q)}
+\def\CJanyODistrN{\QNAME{$\exists$-$\lor$-distr}}
+\def\CJanyODistr{\CJanyODistrL \equiv \CJanyODistrR}
+
+
+\def\CJAnyOInstL{\exists \lst y  \bullet P[\lst e/\lst x]}
+\def\CJAnyOInstR{\exists \lst x, \lst y \bullet P}
+\def\CJAnyOInstN{\QNAME{$\exists$-inst}}
+\def\CJAnyOInst{(\CJAnyOInstL) \implies (\CJAnyOInstR)}
+
+\def\CJAnyDummyRenN{\QNAME{$\exists$-$\alpha$-rename}}
+\def\CJAnyDummyRen{
+  (\exists \lst x \bullet P)
+  \equiv
+  (\exists \lst y \bullet P[\lst y/\lst x])
+}
+\def\CJAnyDummyRenS{\lst y \notin P}
+
+\def\CONJEXISTS{
+\begin{array}{lll}
+   \CJAnyFalse     &                  & \CJAnyFalseN
+\\ \CJAnyOnePoint  & \CJAnyOnePointS  & \CJAnyOnePointN
+\\ \CJanyODistr    &                  & \CJanyODistrN
+\\ \CJandAnyOScope & \CJandAnyOScopeS & \CJandAnyOScopeN
+\\ \CJAnyOInst     &                  & \CJAnyOInstN
+\\ \CJAnyDummyRen  & \CJAnyDummyRenS  & \CJAnyDummyRenN
+\end{array}
+}
+
 %%%%  ==== Inference Rules =====================================================
 
 

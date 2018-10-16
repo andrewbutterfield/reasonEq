@@ -298,31 +298,35 @@ trVariableL = seplist "," trVar
 General Code
 \begin{code}
 trTermZip (t,wayup) = trTZip (markfocus $ trTerm 0 t) wayup
-trTZip r [] = r
-trTZip r (t':wayup)  = trTZip (asmType' (ctxtPrec wayup) r t') wayup
+trTZip focusR [] = focusR
+trTZip focusR (t':wayup)  = trTZip (asmType' (ctxtPrec t') focusR t') wayup
 
-markfocus = magenta
+markfocus = magenta -- should be configurable
 
-ctxtPrec []  =  0
-ctxtPrec (Cons' _ n _ _ : _) = fst $ prc n
-ctxtPrec _   =  0  -- for now
+--ctxtPrec []  =  0
+ctxtPrec (Cons' _ n _ _) = fst $ prc n
+ctxtPrec _   =  7  -- for now
 \end{code}
 
 \subsubsection{Zipper ``Assembly Code''}
 
 \begin{code}
-asmType' p r (Cons' tk n [] []) -- Cons tk n [r^-1]
-  | isAtomicR r  =  asmAtomic n r
-asmType' p r (Cons' tk s before after)
-  | isSymbId s && length before + length after > 0
-     = asmInfix p prcs s
-                (map (trTerm ps) (reverse before)  ++ r : map (trTerm ps) after)
-  where prcs@(ps,assoc) = prc s
-asmType' p r (Cons' tk n before after)
- = asmCons n (map (trTerm ps) (reverse before)  ++ r : map (trTerm ps) after)
-  where prcs@(ps,assoc) = prc n
-
 isAtomicR r = validIdent r || all isDigit r -- will do for now...
+
+asmType' ctxtp focusR (Cons' tk n [] []) -- Cons tk n [r^-1]
+  | isAtomicR focusR  =  asmAtomic n focusR
+
+asmType' ctxtp focusR (Cons' tk s before after)
+  | isSymbId s && length before + length after > 0
+     = asmInfix 0 (ctxtp,False) s
+                ( map (trTerm ps) (reverse before)
+                  ++ trBracketIf (ctxtp >= ps) focusR : map (trTerm ps) after )
+  where prcs@(ps,assoc) = prc s
+
+asmType' ctxtp focusR (Cons' tk n before after)
+ = asmCons n ( map (trTerm ps) (reverse before)
+               ++ focusR : map (trTerm ps) after )
+  where prcs@(ps,assoc) = prc n
 \end{code}
 
 \subsection{Side Conditions}

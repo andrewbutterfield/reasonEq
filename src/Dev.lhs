@@ -22,6 +22,7 @@ import PropDisj
 import PropConj
 import PropMixOne
 import PropImpl
+import PropSubst
 import Equality
 import PredAxioms
 import PredExists
@@ -55,6 +56,7 @@ devTheories
   =  fromJust $ addTheory predExistsTheory $
      fromJust $ addTheory predAxiomTheory $
      fromJust $ addTheory equalityTheory $
+     fromJust $ addTheory propSubstTheory $
      fromJust $ addTheory propImplTheory $
      fromJust $ addTheory propMixOneTheory $
      fromJust $ addTheory propConjTheory $

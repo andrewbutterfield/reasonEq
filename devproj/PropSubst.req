@@ -1,0 +1,10 @@
+BEGIN THEORY PropSubst
+DEPS = []
+KNOWN = VD (fromList [(VR (Id "false",VP,WS),KC (C P (Id "\172") [V P (VR (Id "true",VP,WS))])),(VR (Id "true",VP,WS),KV (TG (Id "\120121")))],fromList [],fromList [])
+BEGIN LIST LAWS
+END LIST LAWS
+BEGIN LIST PROOFS
+END LIST PROOFS
+BEGIN LIST CONJECTURES
+END LIST CONJECTURES
+END THEORY PropSubst

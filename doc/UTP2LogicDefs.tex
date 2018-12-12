@@ -615,6 +615,55 @@
   \end{array}
 }
 
+%%%% ==== Propositional Substitution ===========================================
+
+\def\AXtrueSubst{\textit{true}[\lst e/\lst x] \equiv \textit{true}}
+\def\AXtrueSubstN{\QNAME{\textit{true}-subst}}
+
+\def\AXnotSubst{(\lnot P)[\lst e/\lst x] \equiv \lnot(P[\lst e/\lst x])}
+\def\AXnotSubstN{\QNAME{$\lnot$-subst}}
+
+\def\AXeqvSubst{ (P \equiv Q)[\lst e/\lst x]
+                \equiv
+                (P[\lst e/\lst x] \equiv Q[\lst e/\lst x]) }
+\def\AXeqvSubstN{\QNAME{$\equiv$-subst}}
+
+\def\AXorSubst{ (P \lor Q)[\lst e/\lst x]
+                \equiv
+                P[\lst e/\lst x] \lor Q[\lst e/\lst x] }
+\def\AXorSubstN{\QNAME{$\lor$-subst}}
+
+\def\AXPROPSUBST{
+  \begin{array}{ll}
+     \AXtrueSubst & \AXtrueSubstN
+  \\ \AXnotSubst & \AXnotSubstN
+  \\ \AXeqvSubst & \AXeqvSubstN
+  \\ \AXorSubst & \AXorSubstN
+  \end{array}
+}
+
+\def\CJfalseSubst{\textit{false}[\lst e/\lst x] \equiv \textit{false}}
+\def\CJfalseSubstN{\QNAME{\textit{false}-subst}}
+
+\def\CJandSubst{ (P \land Q)[\lst e/\lst x]
+                \equiv
+                P[\lst e/\lst x] \land Q[\lst e/\lst x] }
+\def\CJandSubstN{\QNAME{$\land$-subst}}
+
+\def\CJimpSubst{ (P \implies Q)[\lst e/\lst x]
+                \equiv
+                P[\lst e/\lst x] \implies Q[\lst e/\lst x] }
+\def\CJimpSubstN{\QNAME{$\implies$-subst}}
+
+\def\CJPROPSUBST{
+  \begin{array}{ll}
+     \CJfalseSubst & \CJfalseSubstN
+  \\ \CJandSubst & \CJandSubstN
+  \\ \CJimpSubst & \CJimpSubstN
+  \end{array}
+}
+
+
 %%%% ==== Equality =============================================================
 
 \def\AXequalReflN{\QNAME{$=$-refl}}

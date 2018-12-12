@@ -48,6 +48,7 @@ library
                      , PropConj
                      , PropMixOne
                      , PropImpl
+                     , PropSubst
                      , Equality
                      , PredAxioms
                      , PredExists

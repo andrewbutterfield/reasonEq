@@ -55,6 +55,7 @@ import PropDisj
 import PropConj
 import PropMixOne
 import PropImpl
+import PropSubst
 import Equality
 import PredAxioms
 import PredExists
@@ -532,6 +533,7 @@ devKnownBuiltins  = [ propAxiomTheory
                     , propConjTheory
                     , propMixOneTheory
                     , propImplTheory
+                    , propSubstTheory
                     , equalityTheory
                     , predAxiomTheory
                     , predExistsTheory

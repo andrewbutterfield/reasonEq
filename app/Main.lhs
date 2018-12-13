@@ -662,11 +662,20 @@ leaveHypothesis _ = tryDelta moveFocusFromHypothesis
 \newpage
 Law Matching
 \begin{code}
-matchLawDescr = ( "m", "match laws", "m  -- match laws", matchLawCommand )
+matchLawDescr = ( "m"
+                , "match laws"
+                , unlines
+                   [ "m       -- match all laws"
+                   , "m lawnm -- match law 'lawnm'" ]
+                , matchLawCommand )
 
 matchLawCommand :: REPLCmd (REqState, LiveProof)
-matchLawCommand _ (reqs, liveProof)
+matchLawCommand [] (reqs, liveProof)
   =  return (reqs, matchFocus (logicsig reqs) liveProof)
+matchLawCommand [lawnm] state@(reqs, liveProof)
+  =  do putStrLn ("NYI: match law '"++lawnm++"'\n<return> to continue")
+        getLine
+        return (reqs, matchFocusAgainst lawnm (logicsig reqs) liveProof)
 \end{code}
 
 Applying a match.

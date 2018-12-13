@@ -16,7 +16,7 @@ module AbstractUI
 , abandonProof, saveProof, completeProof
 , moveFocusDown, moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
-, matchFocus, applyMatchToFocus
+, matchFocus, matchFocusAgainst, applyMatchToFocus
 , flattenAssociative, groupAssociative
 , stepBack
 , lawInstantiate1, lawInstantiate2, lawInstantiate3
@@ -366,6 +366,7 @@ moveFocusFromHypothesis liveProof
 
 \subsubsection{Match Laws against Focus}
 
+First, matching all laws.
 \begin{code}
 matchFocus :: LogicSig -> LiveProof -> LiveProof
 matchFocus theSig liveProof
@@ -375,6 +376,18 @@ matchFocus theSig liveProof
         newMatches  =  matchInContexts theSig ctxts goalt
         rankedM     =  rankAndSort sizeRank ctxts newMatches
     in matches_ rankedM liveProof
+\end{code}
+
+Second, matching a specific law.
+\begin{code}
+matchFocusAgainst :: String -> LogicSig -> LiveProof -> LiveProof
+matchFocusAgainst lawnm theSig liveProof
+  = let (tz,_)      =  focus liveProof
+        goalt       =  getTZ tz
+        ctxts       =  mtchCtxts liveProof
+        -- newMatches  =  matchInContexts theSig ctxts goalt
+        -- rankedM     =  rankAndSort sizeRank ctxts newMatches
+    in trace "matchFocusAgainst NYI" liveProof
 \end{code}
 
 \subsubsection{Apply Match to Focus}

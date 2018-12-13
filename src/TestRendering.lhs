@@ -176,7 +176,7 @@ focusMark = fromJust $ ident "__focus__"
 highlightFocus = magenta
 \end{code}
 
-We use a precedence arument when rendering terms.
+We use a precedence argument when rendering terms.
 \begin{code}
 trTerm :: Int -> Term -> String -- 1st arg is precedence
 \end{code}
@@ -226,7 +226,9 @@ Binders and substitution are straightforward (for now).
 \begin{code}
 trTerm p (Bind tk n vs t)     =  trAbs p tk n (S.toList vs) t
 trTerm p (Lam tk n vl t)      =  trAbs p tk n vl            t
-trTerm p (Sub tk t sub)       =  trTerm p t ++ trSub p sub
+trTerm p (Sub tk t sub)
+  | isAtomic t  =       trTerm p t      ++ trSub p sub
+  | otherwise   =  "("++trTerm 0 t++")" ++ trSub p sub
 \end{code}
 
 For an iterated construct with listings-variable list of length $n$,

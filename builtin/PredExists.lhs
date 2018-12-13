@@ -26,6 +26,7 @@ import Proofs
 import Theories
 
 import PropAxioms
+import PropSubst
 import PropEquiv
 import PropNot
 import PropDisj
@@ -191,6 +192,7 @@ predExistsTheory
   =  Theory { thName  =  predExistsName
             , thDeps  =  [ predAxiomName
                          , equalityName
+                         , propSubstName
                          , propImplName
                          , propMixOneName
                          , propConjName

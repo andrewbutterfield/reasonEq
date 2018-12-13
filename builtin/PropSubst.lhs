@@ -26,6 +26,11 @@ import Proofs
 import Theories
 
 import PropAxioms
+import PropEquiv
+import PropNot
+import PropDisj
+import PropConj
+import PropImpl
 \end{code}
 
 
@@ -83,11 +88,29 @@ $$
   \end{array}
 $$
 
+\vspace{-8pt}
+\begin{code}
+axNotSubst
+ = ( _lnot -.- "subst"
+   , ( sub (mkNot p)  === mkNot (sub p)
+   , scTrue ) )
+\end{code}
+
+
 $$
   \begin{array}{ll}
      \AXeqvSubst & \AXeqvSubstN
   \end{array}
 $$
+
+\vspace{-8pt}
+\begin{code}
+axEqvSubst
+ = ( _equiv -.- "subst"
+   , ( sub (p === q)  === (sub p === sub q)
+   , scTrue ) )
+\end{code}
+
 
 $$
   \begin{array}{ll}
@@ -95,13 +118,21 @@ $$
   \end{array}
 $$
 
+\vspace{-8pt}
+\begin{code}
+axOrSubst
+ = ( _lor -.- "subst"
+   , ( sub (p \/ q)  === (sub p \/ sub q)
+   , scTrue ) )
+\end{code}
+
+
 
 We now collect all of the above as our axiom set:
 \begin{code}
 propSubstAxioms :: [Law]
 propSubstAxioms
-  = map labelAsAxiom
-      [ axTrueSubst ]
+  = map labelAsAxiom [ axTrueSubst, axNotSubst, axEqvSubst, axOrSubst ]
 \end{code}
 
 
@@ -113,11 +144,28 @@ $$
   \end{array}
 $$
 
+\vspace{-8pt}
+\begin{code}
+cjFalseSubst
+ = ( "false" -.- "subst"
+   , ( sub falseP  === falseP
+   , scTrue ) )
+\end{code}
+
 $$
   \begin{array}{ll}
      \CJandSubst & \CJandSubstN
   \end{array}
 $$
+
+\vspace{-8pt}
+\begin{code}
+cjAndSubst
+ = ( _land -.- "subst"
+   , ( sub (p /\ q)  === (sub p /\ sub q)
+   , scTrue ) )
+\end{code}
+
 
 $$
   \begin{array}{ll}
@@ -127,17 +175,16 @@ $$
 
 \vspace{-8pt}
 \begin{code}
-cjOrUnit
- = ( _lor++"_unit"
-   , ( (p \/ falseP) === p
-     , scTrue ) )
+cjImplSubst
+ = ( _implies -.- "subst"
+   , ( sub (p ==> q)  === (sub p ==> sub q)
+   , scTrue ) )
 \end{code}
+
 
 \begin{code}
 propSubstConjs :: [NmdAssertion]
-propSubstConjs
-  = [
-    ]
+propSubstConjs  =  [ cjFalseSubst, cjAndSubst, cjImplSubst ]
 \end{code}
 
 
@@ -149,7 +196,13 @@ propSubstName = "PropSubst"
 propSubstTheory :: Theory
 propSubstTheory
   =  Theory { thName  =  propSubstName
-            , thDeps  =  [propAxiomName]
+            , thDeps  =  [ propImplName
+                         , propConjName
+                         , propDisjName
+                         , propNotName
+                         , propEquivName
+                         , propAxiomName
+                         ]
             , known   =  newVarTable
             , laws    =  propSubstAxioms
             , proofs  =  []

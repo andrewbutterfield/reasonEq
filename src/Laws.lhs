@@ -12,7 +12,7 @@ module Laws
  , flattenAssoc
  , LeftRight(..), GroupSpec(..), groupAssoc
  , Assertion, NmdAssertion, (-.-)
- , Provenance(..), Law
+ , Provenance(..), Law, lawName
  , labelAsAxiom, labelAsProof
  , writeSignature, readSignature
  , showLogic, showNmdAssns, showLaw, showLaws, showConj, showConjs
@@ -288,6 +288,9 @@ data Provenance
 A law is a named assertion along with its provenance.
 \begin{code}
 type Law = (NmdAssertion,Provenance)
+
+lawName :: Law -> String
+lawName ((lnm,_),_) = lnm
 
 labelAsAxiom :: NmdAssertion -> Law
 labelAsAxiom  nasn  =  (nasn, Axiom)

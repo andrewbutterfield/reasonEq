@@ -380,14 +380,15 @@ matchFocus theSig liveProof
 
 Second, matching a specific law.
 \begin{code}
-matchFocusAgainst :: String -> LogicSig -> LiveProof -> LiveProof
+matchFocusAgainst :: Monad m => String -> LogicSig -> LiveProof -> m LiveProof
 matchFocusAgainst lawnm theSig liveProof
   = let (tz,_)      =  focus liveProof
         goalt       =  getTZ tz
         ctxts       =  mtchCtxts liveProof
-        -- newMatches  =  matchInContexts theSig ctxts goalt
-        -- rankedM     =  rankAndSort sizeRank ctxts newMatches
-    in trace "matchFocusAgainst NYI" liveProof
+    in case matchLawByName theSig goalt lawnm ctxts of
+          Yes []    -> fail ("No matches for '"++lawnm++"'")
+          Yes mtchs -> return $ matches_ mtchs liveProof
+          But msgs  -> fail $ unlines msgs
 \end{code}
 
 \subsubsection{Apply Match to Focus}

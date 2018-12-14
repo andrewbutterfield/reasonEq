@@ -19,7 +19,7 @@ module LiveProofs
  , dispLiveProof
  , startProof, launchProof
  , displayMatches
- , buildMatchContext, matchInContexts
+ , buildMatchContext, matchInContexts,matchLawByName
  , proofIsComplete, finaliseProof
  , undoCalcStep
  , showLiveProofs
@@ -320,7 +320,7 @@ finaliseProof liveProof
 \end{code}
 
 
-\subsection{Assertion Matching}
+\subsection{Matching in Context}
 
 First, given list of match-contexts, systematically work through them.
 \begin{code}
@@ -336,6 +336,19 @@ returning any matches we find.
 matchLaws :: LogicSig -> Term -> MatchContext -> Matches
 matchLaws logicsig t (lws,vts) = concat $ map (domatch logicsig vts t) lws
 \end{code}
+
+Sometimes we are interested in a specific (named) law.
+\begin{code}
+matchLawByName :: Monad m => LogicSig -> Term -> String -> [MatchContext]
+               -> m Matches
+matchLawByName logicsig t lnm [] = fail ("Law '"++lnm++"' not found")
+matchLawByName logicsig t lnm ((lws,vts):mcs)
+ = case filter (\law -> lawName law == lnm) lws of
+     []       ->  matchLawByName logicsig t lnm mcs
+     (law:_)  ->  return $ domatch logicsig vts t law
+\end{code}
+
+\subsection{Assertion Matching}
 
 For each law,
 we check its top-level to see if it is an instance of \texttt{theEqv},

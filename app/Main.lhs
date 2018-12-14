@@ -672,10 +672,15 @@ matchLawDescr = ( "m"
 matchLawCommand :: REPLCmd (REqState, LiveProof)
 matchLawCommand [] (reqs, liveProof)
   =  return (reqs, matchFocus (logicsig reqs) liveProof)
-matchLawCommand [lawnm] state@(reqs, liveProof)
-  =  do putStrLn ("NYI: match law '"++lawnm++"'\n<return> to continue")
-        getLine
-        return (reqs, matchFocusAgainst lawnm (logicsig reqs) liveProof)
+matchLawCommand args state@(reqs, liveProof)
+  =  case matchFocusAgainst lawnm (logicsig reqs) liveProof of
+      Yes liveProof'  ->  return (reqs, liveProof')
+      But msgs
+       -> do putStrLn $ unlines' msgs
+             putStrLn "<return> to continue"
+             getLine
+             return (reqs, matches_ [] liveProof)
+  where lawnm = filter (not . isSpace) $ unwords args
 \end{code}
 
 Applying a match.

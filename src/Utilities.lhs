@@ -13,6 +13,7 @@ import Data.Char
 import Data.Set(Set)
 import qualified Data.Set as S
 import System.IO
+import Control.Monad
 \end{code}
 
 Here we provide odds and ends not found elswhere.

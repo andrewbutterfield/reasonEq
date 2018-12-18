@@ -1,13 +1,29 @@
-1:13:2:! ≡ sh P
+proof: m ∀_inst
+tM'.tC=C P (Id "\172") [V P (VR (Id "P",VP,WS))]
+tM'.tkP=P
+tvM.vPmr=UV
+tvM.tC=C P (Id "\172") [V P (VR (Id "P",VP,WS))]
+tvM.vP=VR (Id "P",VP,WS)
+tvM.bind:
+BD (fromList [],fromList [],fromList [])
+tM'.tC=C P (Id "\172") [V P (VR (Id "P",VP,WS))]
+tM'.tkP=P
+tvM.vPmr=UV
+tvM.tC=C P (Id "\172") [V P (VR (Id "P",VP,WS))]
+tvM.vP=VR (Id "P",VP,WS)
+tvM.bind:
+BD ( fromList
+      [ ( (Id "P",VP) ,
+             BT (C P (Id "\172") [V P (VR (Id "P",VP,WS))]) ) ]
+   , fromList []
+   , fromList
+      [ ( (Id "x",VO,[],[]) ,
+             BS (fromList [ GL (LV (VR (Id "x",VO,WS),[],[]))
+                          , GL (LV (VR (Id "y",VO,WS),[],[]))]
+                ))
+      , ((Id "y",VO,[],[]) ,
+            BS (fromList []))])
+No matches for '∀_inst'
 
-≡_id : ((true≡Q)≡Q)
----
-((true≡Q)≡Q)
- = '≡_assoc@[]'
-(true≡(Q≡Q))
- = '≡_refl@[2]'
-(true≡true)
- = '≡_refl@[]'
-true
-
----
+x-bar is matching x-bar,y-bar
+y-bar is matching []

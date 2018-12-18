@@ -186,7 +186,7 @@ $$
 $$
 \begin{code}
 tMatch' vts bind cbvs pbvs tC (Var tkP vP)
-  | tkP == termkind tC  =  tvMatch vts bind cbvs pbvs tC tkP vP
+  | dbg "tM'.tkP=" tkP == termkind (dbg "tM'.tC=" tC)  =  tvMatch vts bind cbvs pbvs tC tkP vP
 \end{code}
 
 
@@ -412,7 +412,7 @@ and act accordingly.
 tvMatch vts bind cbvs pvbs tC tkP vP@(Vbl _ _ vt)
  | vt == Textual              =  fail "tvMatch: var-variable cannot match term."
  | StdVar vP `S.member` pvbs  =  fail "tvMatch: bound pattern cannot match term."
- | vPmr /= UnknownVar         =  tkvMatch vts bind tC vPmr tkP vP
+ | dbg "tvM.vPmr=" vPmr /= UnknownVar         =  tkvMatch vts bind tC vPmr tkP vP
 \end{code}
 \subsubsection{Arbitrary Pattern Variable}
 $$
@@ -427,7 +427,7 @@ $$
 $$
 \begin{code}
 --tvMatch vts bind cbvs pvbs tC tkP vP@(Vbl _ vw _)
- | otherwise                  =  bindVarToTerm vP tC bind
+ | otherwise                  =  bindVarToTerm (dbg "tvM.vP=" vP) (dbg "tvM.tC=" tC) $ dbg "tvM.bind:\n" bind
  where
    vPmr = lookupVarTables vts vP
 \end{code}

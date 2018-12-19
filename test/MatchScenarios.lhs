@@ -45,6 +45,13 @@ Here is our initial set of scenarios:
     Matching, \emph{e.g.}, $\exists ok_m,S_m \bullet \ldots$
     against $\exists O_n \bullet \ldots$
     yields $O_n \mapsto \setof{ok_m} \cup S_m$.
+  \item[Universal Instantiation]
+   $$
+     (\forall \lst x,\lst y \bullet P)
+     \implies
+     (\forall \lst y \bullet P[\lst e/\lst x])
+     , \quad \lst x \notin P
+   $$
   \item[Sequential Composition]
    $$
     P ; Q
@@ -449,6 +456,45 @@ tstSetReserved  = defaultMain [test_reserved_as_sets]
 tstLessReserved = defaultMain [test_less_reserved]
 tstReserved     = defaultMain [test_reserved_listvars]
 \end{code}
+
+\newpage
+\subsection{Universal Instantiation}
+
+We have a generalised form of the usual instantation axiom
+for the universal quantifier:
+$$
+ (\forall \lst x,\lst y \bullet P)
+ \implies
+ (\forall \lst y \bullet P[\lst e/\lst x])
+ , \quad \lst x \notin P
+$$
+
+We need $\lst x$ and $\lst y$
+\begin{code}
+xs = LVbl x [] [] ; ys = LVbl y [] []
+gxs = LstVar xs ; gys = LstVar ys
+xsys = S.fromList [gxs,gys]
+\end{code}
+
+%\newpage
+\subsubsection{Sequential Composition Tests}
+
+\begin{code}
+test_instantiation
+  = testGroup "Instantiation"
+    [ testCase "{x$,y$} :: {x$,y$} - succeeds 3 ways"
+       (vsMatch [] emptyBinding S.empty S.empty xsys xsys
+        @?= [ bindLs gxs [gxs,gys] $ bindLs gys [] $ emptyBinding
+            , bindLs gxs [] $ bindLs gys [gxs,gys] $ emptyBinding
+            , bindLs gxs [gxs] $ bindLs gys [gys]  $ emptyBinding
+            ]  )
+    ]
+
+
+tstInst = defaultMain [test_instantiation]
+\end{code}
+
+
 \newpage
 \subsection{Sequential Composition}
 
@@ -756,6 +802,7 @@ test_match_scenarios :: [TF.Test]
 test_match_scenarios
   = [ testGroup "\nMatching Scenarios"
        [ test_reserved_listvars
+       , test_instantiation
        , test_sequential_composition
        , test_assignment
        ]

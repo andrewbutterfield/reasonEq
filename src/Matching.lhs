@@ -186,7 +186,7 @@ $$
 $$
 \begin{code}
 tMatch' vts bind cbvs pbvs tC (Var tkP vP)
-  | dbg "tM'.tkP=" tkP == termkind (dbg "tM'.tC=" tC)  =  tvMatch vts bind cbvs pbvs tC tkP vP
+  | tkP == termkind tC  =  tvMatch vts bind cbvs pbvs tC tkP vP
 \end{code}
 
 
@@ -412,7 +412,7 @@ and act accordingly.
 tvMatch vts bind cbvs pvbs tC tkP vP@(Vbl _ _ vt)
  | vt == Textual              =  fail "tvMatch: var-variable cannot match term."
  | StdVar vP `S.member` pvbs  =  fail "tvMatch: bound pattern cannot match term."
- | dbg "tvM.vPmr=" vPmr /= UnknownVar         =  tkvMatch vts bind tC vPmr tkP vP
+ | vPmr /= UnknownVar         =  tkvMatch vts bind tC vPmr tkP vP
 \end{code}
 \subsubsection{Arbitrary Pattern Variable}
 $$
@@ -427,7 +427,7 @@ $$
 $$
 \begin{code}
 --tvMatch vts bind cbvs pvbs tC tkP vP@(Vbl _ vw _)
- | otherwise                  =  bindVarToTerm (dbg "tvM.vP=" vP) (dbg "tvM.tC=" tC) $ dbg "tvM.bind:\n" bind
+ | otherwise                  =  bindVarToTerm vP tC bind
  where
    vPmr = lookupVarTables vts vP
 \end{code}
@@ -1374,7 +1374,9 @@ vsMatch :: MonadPlus mp => [VarTable] -> Binding -> CBVS -> PBVS
         -> VarSet -> VarSet -> mp Binding
 -- vsC `subset` cbvs && vsP `subset` pbvc
 vsMatch vts bind cbvs pbvc vsC vsP
-  = do (vsC',vsP') <- applyBindingsToSets bind vsC vsP
+  = -- vlMatch vts bind cbvs pbvc (S.toList vsC) (S.toList vsP)
+    -- `mplus`
+    do (vsC',vsP') <- applyBindingsToSets bind vsC vsP
        vsFreeMatch vts bind cbvs pbvc vsC' vsP'
 \end{code}
 
@@ -1450,7 +1452,7 @@ on the fly.
 \textit{
 If we require that known-container-variables induce a partition
 of known-std-variables then we can induce a mapping from
-know-std-variables to a sequence of known-container-variables.
+known-std-variables to a sequence of known-container-variables.
 Given $O = \{M,S\}; M = \{ok\}; S = \{x,y,z\}$
 then we have mappings:
 \begin{eqnarray*}
@@ -1462,6 +1464,15 @@ then we have mappings:
 Perhaps we use this mapping to work from the candidate variables
 to possible known pattern variables?
 Can this mapping be built incrementally over a list of \texttt{VarTable}s?
+}
+
+\textbf{RE-RE-THINK}
+\textit{
+Currently we tend to get bindings where just one of several pattern list-variables
+is bound to all the candidates,
+with the rest bound to the empty set.
+We also want to have outcomes where the candidates are shared more evenly
+around the patterns.
 }
 \begin{code}
 vsFreeMatch :: MonadPlus mp
@@ -1486,6 +1497,7 @@ vsFreeMatch vts bind cbvs pbvs vsC vsP
     else fail "vsFreeMatch: known vars missing."
 \end{code}
 
+\newpage
 A quick std/list-variable classifier:
 \begin{code}
 vsClassify :: [VarTable] -> VarSet
@@ -2004,8 +2016,11 @@ vsUnknownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
    = do let (stdC1,stdC2) = splitAt uvsPs $ S.toList stdC
         bind' <- bindVarsToVars (zip (stdVarsOf $ S.toList uvsP)
                                      (stdVarsOf stdC1)) bind
-        vsUnkLVarMatch vts bind' cbvs pbvs
-           (stdC2 ++ S.toList lstC) (listVarsOf $ S.toList ulsP)
+        let vlC = (stdC2 ++ S.toList lstC)
+        let ullP = (listVarsOf $ S.toList ulsP)
+        ( vsUnkLVarMatch vts bind' cbvs pbvs vlC ullP
+          `mplus`
+          vsUnkLVarBindZip bind' vlC ullP )
  where
    uvsPs = S.size uvsP
    (uvsC,kvsC,ulsC,klsC) = vsClassify vts vsC
@@ -2014,22 +2029,43 @@ vsUnknownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
    lstC = ulsC `S.union` klsC
 \end{code}
 
+\newpage
 We have some unknown pattern list-variables to match
 against remaining general candidate variables.
 For now we simply pick one pattern to bind to all the candidates,
 while the other bind to null sets.
+\textbf{Really want some non-determinism here!}
 \begin{code}
+vsUnkLVarMatch :: MonadPlus m
+               => [VarTable] -> Binding -> CBVS -> PBVS
+               -> [GenVar] -> [ListVar]
+               -> m Binding
 vsUnkLVarMatch vts bind cbvs pbvs vlC [] = return bind
-vsUnkLVarMatch vts bind cbvs pbvs vlC [lvP]
-  = bindLVarToVSet lvP (S.fromList vlC) bind
-vsUnkLVarMatch vts bind cbvs pbvs vlC (lvP:ullP)
-  = (do bind' <- bindLVarToVSet lvP (S.fromList vlC) bind
-        bindLVarsToEmpty bind' ullP
+-- vsUnkLVarMatch vts bind cbvs pbvs vlC [lvP]
+--  = bindLVarToVSet lvP (S.fromList vlC) bind
+vsUnkLVarMatch vts bind cbvs pbvs vlC ullP@(lvP:ullP')
+  = ( do bind' <- bindLVarToVSet lvP (S.fromList vlC) bind
+         bindLVarsToEmpty bind' ullP'
     )
     `mplus`
     (do bind' <- bindLVarToVSet lvP S.empty bind
-        vsUnkLVarMatch vts bind' cbvs pbvs vlC ullP
+        vsUnkLVarMatch vts bind' cbvs pbvs vlC ullP'
     )
+\end{code}
+
+We want to zip bindings, ensuring that last pattern list-variable
+matches all remaining candidates.
+\begin{code}
+vsUnkLVarBindZip :: Monad m
+                 => Binding -> [GenVar] -> [ListVar]
+                 -> m Binding
+vsUnkLVarBindZip bind [] [] = return bind
+vsUnkLVarBindZip bind _ [] = fail "no pattern lvars to match remaining cands."
+vsUnkLVarBindZip bind vlC [lvP]  = bindLVarToVSet lvP (S.fromList vlC) bind
+vsUnkLVarBindZip bind [] ullP  = bindLVarsToEmpty bind ullP
+vsUnkLVarBindZip bind (vC:vlC) (lvP:ullP)
+  = do bind' <- bindLVarToVSet lvP (S.fromList [vC]) bind
+       vsUnkLVarBindZip bind' vlC ullP
 \end{code}
 
 \newpage

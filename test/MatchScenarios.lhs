@@ -389,9 +389,9 @@ test_reserved_as_sets
             (lwrap [lS])
          @?= Nothing )
      , testCase "S_Design |-  {x,y,z} :: {S}  -- matches at least once."
-       ( vsMatch [vtS_Design] emptyBinding S.empty S.empty
-            (vswrap [x,y,z])
-            (lswrap [lS])
+       ( nub (vsMatch [vtS_Design] emptyBinding S.empty S.empty
+                       (vswrap [x,y,z])
+                       (lswrap [lS]))
          @?= ( bindLVarToVSet lS (vswrap [x,y,z]) emptyBinding :: [Binding] ))
      , testCase "S_Design |-  {Om} :: {Om}  -- matches ."
        ( nub( vsMatch [vtS_Design] emptyBinding S.empty S.empty
@@ -426,9 +426,9 @@ test_reserved_as_sets
 test_less_reserved
  = testGroup "S reserved as {x,y,z}, less x,y,z or more" -- []
      [ testCase "S_Design |- {x,y,z} :: {u,S\\u} -- SHOULD BE 3 WAYS"
-        ( vsMatch [vtS_Design] emptyBinding S.empty S.empty
-            (vswrap [x,y,z])
-            (vswrap [vu] `S.union` lswrap [lS `less` ([u],[])])
+        ( nub ( vsMatch [vtS_Design] emptyBinding S.empty S.empty
+                   (vswrap [x,y,z])
+                   (vswrap [vu] `S.union` lswrap [lS `less` ([u],[])]) )
           @?= [ bindVV gu gz $ bindLs (LstVar lSu) [gx,gy] emptyBinding
               ]
         )
@@ -483,11 +483,12 @@ xsys = S.fromList [gxs,gys]
 test_instantiation
   = testGroup "Instantiation"
     [ testCase "{x$,y$} :: {x$,y$} - succeeds 3 ways"
-       (vsMatch [] emptyBinding S.empty S.empty xsys xsys
-        @?= [ bindLs gxs [gxs,gys] $ bindLs gys [] $ emptyBinding
-            , bindLs gxs [] $ bindLs gys [gxs,gys] $ emptyBinding
-            , bindLs gxs [gxs] $ bindLs gys [gys]  $ emptyBinding
-            ]  )
+       ( nub ( vsMatch [] emptyBinding S.empty S.empty xsys xsys )
+         @?= [ bindLs gxs [gxs,gys] $ bindLs gys [] $ emptyBinding
+             , bindLs gxs [] $ bindLs gys [gxs,gys] $ emptyBinding
+             , bindLs gxs [gxs] $ bindLs gys [gys]  $ emptyBinding
+             ] 
+       )
     ]
 
 
@@ -582,13 +583,13 @@ sub_okxyz
 test_substitution
  = testGroup "Substitutions"
     [ testCase "[okm,Sm/ok,S] :: [Om/O] - succeeds"
-       (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_ok_S sub_O
+       ( nub (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_ok_S sub_O)
         @?= [ bindLs gO [gok,gS] $ bindLs gOm [gokm,gSm] $ emptyBinding ] )
     , testCase "[okm,xm,ym,zm/ok,x,y,z] :: [Om/O] - succeeds"
-       (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_okxyz sub_O
+       (nub (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_okxyz sub_O)
         @?= [ bindLs gO [gok,gx,gy,gz] $ bindLs gOm [gokm,gxm,gym,gzm] $ emptyBinding ] )
     , testCase "[okm,xm,ym,zm/ok,x,y,z] :: [okm,Sm/ok,S] - succeeds"
-       (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_okxyz sub_ok_S
+       (nub (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_okxyz sub_ok_S)
         @?= [ bindVV gok gok $ bindVV gokm gokm $
               bindLs gS [gx,gy,gz] $ bindLs gSm [gxm,gym,gzm] $
               emptyBinding ] )
@@ -609,37 +610,37 @@ seeSMB = seeBind smBinding
 test_composition
  = testGroup "Composition"
     [ testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches itself"
-       (tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAqm eOpAqm
+       (nub( tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAqm eOpAqm )
         @?= [ bindVV gvp gvp $ bindVV gvq gvq $
               bindLS gO gO $ bindLS gO' gO' $ bindLS gOm gOm $
               emptyBinding] )
 
     , testCase "P[Om/O'] matches itself"
-       (tMatch [vtS_Design] emptyBinding S.empty S.empty
-                                            (endO2mid "m" p) (endO2mid "m" p)
+       (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty
+                                            (endO2mid "m" p) (endO2mid "m" p) )
         @?= [ bindVV gvp gvp $ bindLS gOm gOm $ emptyBinding ] )
     , testCase "Q[Om/O] matches itself"
-       (tMatch [vtS_Design] emptyBinding S.empty S.empty
-                                            (begO2mid "m" q) (begO2mid "m" q)
+       (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty
+                                            (begO2mid "m" q) (begO2mid "m" q) )
         @?= [ bindVV gvq gvq $ bindLS gOm gOm $ emptyBinding ] )
 
     , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when n replaces m"
-       (tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAqn eOpAqm
+       (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAqn eOpAqm )
         @?= [ bindVV gvp gvp $ bindVV gvq gvq $
               bindLS gO gO $ bindLS gO' gO' $ bindLS gOm gOn $
               emptyBinding] )
     , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when M,S replaces O"
-       (tMatch [vtS_Design] emptyBinding S.empty S.empty eMSpAqm eOpAqm
+       (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty eMSpAqm eOpAqm )
         @?= [ bindVV gvp gvp $ bindVV gvq gvq $
               bindLs gO [gM,gS] $ bindLs gO' [gM',gS'] $ bindLs gOm [gMm,gSm] $
               emptyBinding] )
     , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when M,S;n replaces O;m"
-       (tMatch [vtS_Design] emptyBinding S.empty S.empty eMSpAqn eOpAqm
+       (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty eMSpAqn eOpAqm )
         @?= [ bindVV gvp gvp $ bindVV gvq gvq $
               bindLs gO [gM,gS] $ bindLs gO' [gM',gS'] $ bindLs gOm [gMn,gSn] $
               emptyBinding] )
     , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when ok,S replaces O"
-       (tMatch [vtS_Design] emptyBinding S.empty S.empty eoSpAqm eOpAqm
+       (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty eoSpAqm eOpAqm )
         @?= [ bindVV gvp gvp $ bindVV gvq gvq $
               bindLs gO [gok,gS] $ bindLs gO' [gok',gS'] $ bindLs gOm [gokm,gSm] $
               emptyBinding] )

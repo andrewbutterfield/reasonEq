@@ -272,20 +272,20 @@ bind1toAll
 tst_vsMatch =
   testGroup "vsMatch"
     [ testCase "{} :: {} (OK)"
-      ( vsMatch [] emptyBinding b0 b0 S.empty S.empty @?= [emptyBinding]  )
+      ( nub (vsMatch [] emptyBinding b0 b0 S.empty S.empty) @?= [emptyBinding]  )
     , testCase "{} :: {ps1} (FAIL)"
       ( vsMatch [] emptyBinding b0 b0 S.empty (S.fromList [ps1]) @?= []  )
     , testCase "{cs1} :: {} (FAIL)"
       ( vsMatch [] emptyBinding b0 b0 (S.fromList [cs1]) S.empty @?= []  )
     , testCase "{cs1} :: {ps1} (OK)"
-      ( (vsMatch [] emptyBinding b0 b0 (S.fromList [cs1]) (S.fromList [ps1])
+      ( nub (vsMatch [] emptyBinding b0 b0 (S.fromList [cs1]) (S.fromList [ps1])
           ::[Binding])
         @?= bindGVarToVList ps1 [cs1] emptyBinding  )
     , testCase "{cs2} :: {ps1} where ps1 |-> cs1 (FAIL)"
       ( vsMatch [] bindPSi2CSi b0 b0 (S.fromList [cs2]) (S.fromList [ps1]) @?= [] )
     , testCase "{cs2,cs1} :: {ps1,ps2} where ps_i |-> cs_i (OK)"
-      ( vsMatch [] bindPSi2CSi b0 b0
-          (S.fromList [cs2,cs1]) (S.fromList [ps1,ps2])
+      ( nub (vsMatch [] bindPSi2CSi b0 b0
+          (S.fromList [cs2,cs1]) (S.fromList [ps1,ps2]))
         @?= [bindPSi2CSi] )
     , testCase "{cs_i,cl_i} :: {ps_i,pl_i}, no pre-bind  (OK)"
       ( (nub ( vsMatch [] emptyBinding b0 b0

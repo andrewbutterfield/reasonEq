@@ -1,29 +1,19 @@
-proof: m ∀_inst
-tM'.tC=C P (Id "\172") [V P (VR (Id "P",VP,WS))]
-tM'.tkP=P
-tvM.vPmr=UV
-tvM.tC=C P (Id "\172") [V P (VR (Id "P",VP,WS))]
-tvM.vP=VR (Id "P",VP,WS)
-tvM.bind:
-BD (fromList [],fromList [],fromList [])
-tM'.tC=C P (Id "\172") [V P (VR (Id "P",VP,WS))]
-tM'.tkP=P
-tvM.vPmr=UV
-tvM.tC=C P (Id "\172") [V P (VR (Id "P",VP,WS))]
-tvM.vP=VR (Id "P",VP,WS)
-tvM.bind:
-BD ( fromList
-      [ ( (Id "P",VP) ,
-             BT (C P (Id "\172") [V P (VR (Id "P",VP,WS))]) ) ]
-   , fromList []
-   , fromList
-      [ ( (Id "x",VO,[],[]) ,
-             BS (fromList [ GL (LV (VR (Id "x",VO,WS),[],[]))
-                          , GL (LV (VR (Id "y",VO,WS),[],[]))]
-                ))
-      , ((Id "y",VO,[],[]) ,
-            BS (fromList []))])
-No matches for '∀_inst'
+expected:
 
-x-bar is matching x-bar,y-bar
-y-bar is matching []
+[ BD ( fromList [((Id "e",VE),BT (K (E T) (VI 42))),((Id "x",VO),BI (Id "a"))]
+     , fromList []
+     , fromList [ ((Id "l1",VO,[],[]),BS (fromList [GL (LV (VR (Id "la",VO,WB),[],[]))]))
+                , ((Id "l2",VO,[],[]),BS (fromList [GL (LV (VR (Id "lb",VO,WB),[],[]))]))
+                ])
+]
+
+but got:
+
+[ BD ( fromList [((Id "e",VE),BT (K (E T) (VI 42))) , ((Id "x",VO),BI (Id "a"))]
+     , fromList []
+     , fromList [ ((Id "l1",VO,[],[]),BS (fromList [GL (LV (VR (Id "la",VO,WB),[],[]))]))
+                , ((Id "l2",VO,[],[]),BS (fromList [GL (LV (VR (Id "lb",VO,WB),[],[]))]))
+                ])
+, BD ( fromList [((Id "e",VE),BT (K (E T) (VI 42))) , ((Id "x",VO),BI (Id "a"))]
+     , fromList []
+     , fromList [((Id "l1",VO,[],[]),BS (fromList [])) , ((Id "l2",VO,[],[]),BS (fromList []))])]

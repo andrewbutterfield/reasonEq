@@ -14,7 +14,7 @@ module Binding
 , bindVarToVar, bindVarsToVars, bindVarToSelf, bindVarsToSelves
 , bindVarToTerm
 , bindLVarToVList
-, bindLVarToVSet
+, bindLVarToVSet, overrideLVarToVSet
 , bindLVarToSSelf, bindLVarsToSSelves, bindLVarSTuples
 , bindLVarToTList
 , bindGVarToGVar
@@ -294,6 +294,7 @@ insertDR nAPI rEqv d r binding
             , "bind:\n" ++ show binding
             ]
 \end{code}
+
 
 \subsubsection{Binding Variable to Variable}
 
@@ -692,7 +693,6 @@ bindLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind))
     (valid, vsw) = vsCompatible vc Static vs
 
 bindLVarToVSet lv@(LVbl (Vbl i vc vw) is ij) vs (BD (vbind,sbind,lbind))
-
  | valid
    = case (vw,vsw) of
       (During m,During n) ->
@@ -711,6 +711,34 @@ bindLVarToVSet lv@(LVbl (Vbl i vc vw) is ij) vs (BD (vbind,sbind,lbind))
    (valid, vsw) = vsCompatible vc vw vs
 
 bindLVarToVSet _ _ _ = fail "bindLVarToVSet: invalid lvar. -> vset binding."
+\end{code}
+
+\begin{code}
+overrideLVarToVSet :: Monad m => ListVar -> VarSet -> Binding -> m Binding
+overrideLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind))
+ | valid
+    =  return $ BD (vbind,sbind, M.insert (i,vc,is,ij) (bvs vs) lbind)
+ | otherwise = fail "overrideLVarToVSet: static cannot bind to any textual."
+ where
+    (valid, vsw) = vsCompatible vc Static vs
+
+overrideLVarToVSet lv@(LVbl (Vbl i vc vw) is ij) vs (BD (vbind,sbind,lbind))
+ | valid
+   = case (vw,vsw) of
+      (During m,During n) ->
+            return $ BD ( vbind
+                        , M.insert m n sbind
+                        , M.insert (i,vc,is,ij) (bvs vs) lbind )
+      _ | vw == vsw       ->
+            return $ BD ( vbind, sbind
+                        , M.insert (i,vc,is,ij) (bvs vs) lbind )
+        | otherwise       ->
+            fail "overrideLVarToVSet: different temporality."
+ | otherwise = fail "overrideLVarToVSet: incompatible dynamic temporality."
+ where
+   (valid, vsw) = vsCompatible vc vw vs
+
+overrideLVarToVSet _ _ _ = fail "overrideLVarToVSet: invalid lvar. -> vset binding."
 \end{code}
 
 We need to coerce dynamics temporality to \texttt{Before}.

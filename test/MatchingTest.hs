@@ -311,6 +311,11 @@ tst_vsMatch =
                (S.fromList [cs1,cl1,cs2,cl2,cs3,cl3,cs4,cl4])
                (S.fromList [ps1,pl1,ps2,pl2,ps3,pl3,ps4,pl4]) )
         @?= [bindAllS] )
+    , testCase "{cl_i} :: {pl_i}, no pre-bind  (OK)"
+      ( nub ( vsMatch [] emptyBinding b0 b0
+               (S.fromList [cl1,cl2,cl3,cl4])
+               (S.fromList [pl1,pl2,pl3,pl4]) )
+        @?= [] )
     ]
 
 -- -----------------------------------------------------------------------------
@@ -363,9 +368,9 @@ tst_sMatch
        ( sMatch [] emptyBinding b0 b0
            (fromJust $ substn [] [(lb,la)])
            (fromJust $ substn [] [(l2,l1)])
-       @?= (Just ( bindLS (LstVar l1) (LstVar la)
+       @?= [ ( bindLS (LstVar l1) (LstVar la)
                  $ bindLS (LstVar l2) (LstVar lb)
-                 $ emptyBinding  ))
+                 $ emptyBinding  ) ]
        )
    , testCase "[la/lb] :: [e/x]  - fails"
        ( sMatch [] emptyBinding b0 b0

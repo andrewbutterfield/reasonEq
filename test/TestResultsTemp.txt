@@ -1,19 +1,33 @@
+{cl_i} :: {pl_i}, no pre-bind
+
 expected:
 
-[ BD ( fromList [((Id "e",VE),BT (K (E T) (VI 42))),((Id "x",VO),BI (Id "a"))]
-     , fromList []
-     , fromList [ ((Id "l1",VO,[],[]),BS (fromList [GL (LV (VR (Id "la",VO,WB),[],[]))]))
-                , ((Id "l2",VO,[],[]),BS (fromList [GL (LV (VR (Id "lb",VO,WB),[],[]))]))
-                ])
-]
+[]
 
 but got:
 
-[ BD ( fromList [((Id "e",VE),BT (K (E T) (VI 42))) , ((Id "x",VO),BI (Id "a"))]
-     , fromList []
-     , fromList [ ((Id "l1",VO,[],[]),BS (fromList [GL (LV (VR (Id "la",VO,WB),[],[]))]))
-                , ((Id "l2",VO,[],[]),BS (fromList [GL (LV (VR (Id "lb",VO,WB),[],[]))]))
-                ])
-, BD ( fromList [((Id "e",VE),BT (K (E T) (VI 42))) , ((Id "x",VO),BI (Id "a"))]
-     , fromList []
-     , fromList [((Id "l1",VO,[],[]),BS (fromList [])) , ((Id "l2",VO,[],[]),BS (fromList []))])]
+
+[((Id "pl1",VO,[],[]),BS (fromList [GL (LV (VR (Id "cl1",VO,WB),[],[])),GL (LV (VR (Id "cl2",VO,WB),[],[])),GL (LV (VR (Id "cl3",VO,WB),[],[])),GL (LV (VR (Id "cl4",VO,WB),[],[]))]))
+,((Id "pl2",VO,[],[]),BS (fromList []))
+,((Id "pl3",VO,[],[]),BS (fromList []))
+,((Id "pl4",VO,[],[]),BS (fromList []))])
+
+[((Id "pl1",VO,[],[]),BS (fromList []))
+,((Id "pl2",VO,[],[]),BS (fromList [GL (LV (VR (Id "cl1",VO,WB),[],[])),GL (LV (VR (Id "cl2",VO,WB),[],[])),GL (LV (VR (Id "cl3",VO,WB),[],[])),GL (LV (VR (Id "cl4",VO,WB),[],[]))]))
+,((Id "pl3",VO,[],[]),BS (fromList []))
+,((Id "pl4",VO,[],[]),BS (fromList []))])
+
+[((Id "pl1",VO,[],[]),BS (fromList []))
+,((Id "pl2",VO,[],[]),BS (fromList []))
+,((Id "pl3",VO,[],[]),BS (fromList [GL (LV (VR (Id "cl1",VO,WB),[],[])),GL (LV (VR (Id "cl2",VO,WB),[],[])),GL (LV (VR (Id "cl3",VO,WB),[],[])),GL (LV (VR (Id "cl4",VO,WB),[],[]))]))
+,((Id "pl4",VO,[],[]),BS (fromList []))])
+
+[((Id "pl1",VO,[],[]),BS (fromList []))
+,((Id "pl2",VO,[],[]),BS (fromList []))
+,((Id "pl3",VO,[],[]),BS (fromList []))
+,((Id "pl4",VO,[],[]),BS (fromList [GL (LV (VR (Id "cl1",VO,WB),[],[])),GL (LV (VR (Id "cl2",VO,WB),[],[])),GL (LV (VR (Id "cl3",VO,WB),[],[])),GL (LV (VR (Id "cl4",VO,WB),[],[]))]))])
+
+[((Id "pl1",VO,[],[]),BS (fromList [GL (LV (VR (Id "cl1",VO,WB),[],[]))]))
+,((Id "pl2",VO,[],[]),BS (fromList [GL (LV (VR (Id "cl2",VO,WB),[],[]))]))
+,((Id "pl3",VO,[],[]),BS (fromList [GL (LV (VR (Id "cl3",VO,WB),[],[]))]))
+,((Id "pl4",VO,[],[]),BS (fromList [GL (LV (VR (Id "cl4",VO,WB),[],[]))]))])]

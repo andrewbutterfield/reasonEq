@@ -1990,11 +1990,26 @@ All that now remains is to match unknown patterns
 against the leftover candidates.
 We have the following constraints of the sizes of the pattern
 and candidate sets:
-\begin{eqnarray*}
-  vsC &=& stdC \uplus lstC
-\\ \#uvsP &\leq& \#stdC
-\\ \#ulsP = 0 &\implies& \#uvsP = \#stdC \land lstC = \emptyset
-\end{eqnarray*}
+\begin{itemize}
+  \item
+    Candidates can be split into standard and list variables.
+    \[ vsC = stdC \uplus lstC \]
+  \item
+    More candidate standard variables than pattern standard variables.
+    \[ \#uvsP \leq \#stdC \]
+  \item
+    If there are no pattern list variables, then
+    \[ \#ulsP = 0 \implies \dots \]
+    \begin{itemize}
+      \item
+        we have the same number of candidate and pattern standard variables,
+        \[ \#uvsP \leq \#stdC \]
+      \item
+        and no candidate list variables.
+        \[ lstC = \emptyset \]
+    \end{itemize}
+\end{itemize}
+
 \begin{code}
 vsUnknownMatch :: MonadPlus mp
                => [VarTable] -> Binding -> CBVS -> PBVS
@@ -2018,9 +2033,9 @@ vsUnknownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
                                      (stdVarsOf stdC1)) bind
         let vlC = (stdC2 ++ S.toList lstC)
         let ullP = (listVarsOf $ S.toList ulsP)
-        ( vsUnkLVarMatch vts bind' cbvs pbvs vlC ullP
+        ( vsUnkLVarOneForAll vts bind' cbvs pbvs vlC ullP
           `mplus`
-          vsUnkLVarBindZip bind' vlC ullP )
+          vsUnkLVarOneEach bind' vlC ullP )
  where
    uvsPs = S.size uvsP
    (uvsC,kvsC,ulsC,klsC) = vsClassify vts vsC
@@ -2032,40 +2047,52 @@ vsUnknownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
 \newpage
 We have some unknown pattern list-variables to match
 against remaining general candidate variables.
-For now we simply pick one pattern to bind to all the candidates,
-while the other bind to null sets.
-\textbf{Really want some non-determinism here!}
+One approach is to bind a chosen pattern list-variable
+to all the candidates, with the remaining patterns bound to
+the empty list.
+Here we return the bindings for all possible choices.
 \begin{code}
-vsUnkLVarMatch :: MonadPlus m
+vsUnkLVarOneForAll :: MonadPlus mp
                => [VarTable] -> Binding -> CBVS -> PBVS
                -> [GenVar] -> [ListVar]
-               -> m Binding
-vsUnkLVarMatch vts bind cbvs pbvs vlC [] = return bind
--- vsUnkLVarMatch vts bind cbvs pbvs vlC [lvP]
---  = bindLVarToVSet lvP (S.fromList vlC) bind
-vsUnkLVarMatch vts bind cbvs pbvs vlC ullP@(lvP:ullP')
-  = ( do bind' <- bindLVarToVSet lvP (S.fromList vlC) bind
-         bindLVarsToEmpty bind' ullP'
-    )
-    `mplus`
-    (do bind' <- bindLVarToVSet lvP S.empty bind
-        vsUnkLVarMatch vts bind' cbvs pbvs vlC ullP'
-    )
+               -> mp Binding
+vsUnkLVarOneForAll vts bind cbvs pbvs vlC [] = return bind
+vsUnkLVarOneForAll vts bind cbvs pbvs vlC ullP
+  = do emptybs <- bindLVarsToEmpty bind ullP
+       updateToAll emptybs (S.fromList vlC) ullP
+
+updateToAll :: MonadPlus mp
+            => Binding -> Set GenVar -> [ListVar] -> mp Binding
+-- [ListVar] is not null
+updateToAll bind vsC [lvP] = overrideLVarToVSet lvP vsC bind
+updateToAll bind vsC (lvP:ullP)
+  = ( overrideLVarToVSet lvP vsC bind
+      `mplus`
+      updateToAll bind vsC ullP )
 \end{code}
 
-We want to zip bindings, ensuring that last pattern list-variable
-matches all remaining candidates.
+Here we bind one pattern to one candidate
+(currently in list order),
+with the following exceptions:
+\begin{itemize}
+  \item
+    If the candidate list is too short,
+    then the ``unmatched'' patterns are bound to the empty list.
+  \item
+    If the candidate-list is too long,
+    then the last pattern is bound to all the remaining candidates.
+\end{itemize}
 \begin{code}
-vsUnkLVarBindZip :: Monad m
+vsUnkLVarOneEach :: Monad m
                  => Binding -> [GenVar] -> [ListVar]
                  -> m Binding
-vsUnkLVarBindZip bind [] [] = return bind
-vsUnkLVarBindZip bind _ [] = fail "no pattern lvars to match remaining cands."
-vsUnkLVarBindZip bind vlC [lvP]  = bindLVarToVSet lvP (S.fromList vlC) bind
-vsUnkLVarBindZip bind [] ullP  = bindLVarsToEmpty bind ullP
-vsUnkLVarBindZip bind (vC:vlC) (lvP:ullP)
+vsUnkLVarOneEach bind [] [] = return bind
+vsUnkLVarOneEach bind _ [] = fail "no pattern lvars to match remaining cands."
+vsUnkLVarOneEach bind vlC [lvP]  = bindLVarToVSet lvP (S.fromList vlC) bind
+vsUnkLVarOneEach bind [] ullP  = bindLVarsToEmpty bind ullP
+vsUnkLVarOneEach bind (vC:vlC) (lvP:ullP)
   = do bind' <- bindLVarToVSet lvP (S.fromList [vC]) bind
-       vsUnkLVarBindZip bind' vlC ullP
+       vsUnkLVarOneEach bind' vlC ullP
 \end{code}
 
 \newpage

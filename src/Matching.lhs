@@ -2033,9 +2033,9 @@ vsUnknownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
                                      (stdVarsOf stdC1)) bind
         let vlC = (stdC2 ++ S.toList lstC)
         let ullP = (listVarsOf $ S.toList ulsP)
-        ( vsUnkLVarOneForAll vts bind' cbvs pbvs vlC ullP
+        ( vsUnkLVarOneEach bind' vlC ullP
           `mplus`
-          vsUnkLVarOneEach bind' vlC ullP )
+          vsUnkLVarOneForAll vts bind' cbvs pbvs vlC ullP )
  where
    uvsPs = S.size uvsP
    (uvsC,kvsC,ulsC,klsC) = vsClassify vts vsC
@@ -2101,7 +2101,7 @@ vsUnkLVarOneEach bind (vC:vlC) (lvP:ullP)
 Here $G$ denotes either one standard variable,
 or a collection of general variables,
 while $g$ denotes one general variable.
-Similarly, $r$ denotes on one substutition replacement (list-variable or term)
+Similarly, $r$ denotes one substitution replacement (list-variable or term)
 while $R$ is a collection of same.
 
 $$
@@ -2131,8 +2131,8 @@ We then use the new bindings to identify the corresponding terms,
 and check that they match.
 \begin{code}
 sMatch vts bind cbvs pbvs (Substn tsC lvsC) (Substn tsP lvsP)
- = do bind'  <- vsMatch      vts  bind  cbvs pbvs vsC vsP
-      (bind'',tsC') <- tsMatchCheck vts  bind' cbvs pbvs tsC $ S.toList tsP
+ = do bind'  <- vsMatch  vts  (d 1 bind)  cbvs pbvs (d 2 vsC) (d 3 vsP)
+      (bind'',tsC') <- tsMatchCheck vts  (d 4 bind') cbvs pbvs tsC $ S.toList tsP
       if all (isVar . snd) tsC'
       then lvsMatchCheck vts bind'' cbvs pbvs (tsC' +++ lvsC) $ S.toList lvsP
       else fail $ unlines
@@ -2147,6 +2147,7 @@ sMatch vts bind cbvs pbvs (Substn tsC lvsC) (Substn tsP lvsP)
   ts +++ lvs = (S.map liftVV ts `S.union` S.map liftLL lvs)
   liftVV (v,(Var _ u))  =  (StdVar v, StdVar u )
   liftLL (lv,lu      )  =  (LstVar lv,LstVar lu)
+  d n x = dbg ("\nD"++show n++":\n") x
 \end{code}
 
 \newpage

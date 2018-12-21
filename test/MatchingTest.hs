@@ -315,8 +315,36 @@ tst_vsMatch =
       ( nub ( vsMatch [] emptyBinding b0 b0
                (S.fromList [cl1,cl2,cl3,cl4])
                (S.fromList [pl1,pl2,pl3,pl4]) )
-        @?= [] )
+        @?= [ bindL1toAll
+            , bindL2toAll
+            , bindL3toAll
+            , bindL4toAll
+            , bind1to1
+            ] )
     ]
+
+bindL1toAll
+ = bindLs pl1 [cl1,cl2,cl3,cl4]
+ $ bindLN pl2 $ bindLN pl3 $ bindLN pl4 emptyBinding
+
+bindL2toAll
+ = bindLs pl2 [cl1,cl2,cl3,cl4]
+ $ bindLN pl1 $ bindLN pl3 $ bindLN pl4 emptyBinding
+
+bindL3toAll
+ = bindLs pl3 [cl1,cl2,cl3,cl4]
+ $ bindLN pl2 $ bindLN pl1 $ bindLN pl4 emptyBinding
+
+bindL4toAll
+ = bindLs pl4 [cl1,cl2,cl3,cl4]
+ $ bindLN pl2 $ bindLN pl3 $ bindLN pl1 emptyBinding
+
+bind1to1
+ = bindLs pl1 [cl1]
+ $ bindLs pl2 [cl2]
+ $ bindLs pl3 [cl3]
+ $ bindLs pl4 [cl4]
+   emptyBinding
 
 -- -----------------------------------------------------------------------------
 tst_sMatch :: TF.Test
@@ -365,9 +393,9 @@ tst_sMatch
         ])
      )
    , testCase "[la/lb] :: [l1/l2]  - succeeds"
-       ( sMatch [] emptyBinding b0 b0
-           (fromJust $ substn [] [(lb,la)])
-           (fromJust $ substn [] [(l2,l1)])
+       ( nub ( sMatch [] emptyBinding b0 b0
+                  (fromJust $ substn [] [(lb,la)])
+                  (fromJust $ substn [] [(l2,l1)]) )
        @?= [ ( bindLS (LstVar l1) (LstVar la)
                  $ bindLS (LstVar l2) (LstVar lb)
                  $ emptyBinding  ) ]

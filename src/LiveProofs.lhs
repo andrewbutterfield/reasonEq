@@ -369,10 +369,12 @@ Do a simple match:
 \begin{code}
 simpleMatch :: Term -> [VarTable] -> Term -> Law -> Matches
 simpleMatch repl vts tC ((n,asn@(tP,_)),_)
- = case match vts tC tP of
-     Nothing    ->  []
-     Just bind  ->  [MT n asn bind $ inst bind repl]
- where inst bind = fromJust . instantiate bind
+ = map mkmatch $ match vts tC tP
+--     Nothing    ->  []
+--     Just bind  ->  []
+ where
+   mkmatch bind = MT n asn bind $ inst bind repl
+   inst bind = fromJust . instantiate bind
 \end{code}
 
 \newpage

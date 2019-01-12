@@ -122,7 +122,7 @@ $$\begin{array}{lll}
 axAllOne = preddef (_forall -.- "one" -.- "point")
   ( (forall [xs,ys] ((lvxs `areEqualTo` lves) ==> p) )
     ===
-    (forall [xs] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) ) )
+    (forall [ys] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) ) )
   ([xs] `notin` ve)
 \end{code}
 

@@ -106,7 +106,7 @@ $$\begin{array}{lll}
 cjAnyOne = preddef (_exists -.- "one" -.- "point")
   ( (exists [xs,ys] ((lvxs `areEqualTo` lves) /\ p) )
     ===
-    (exists [xs] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) ) )
+    (exists [ys] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) ) )
   ([xs] `notin` ve)
 \end{code}
 

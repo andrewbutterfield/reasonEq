@@ -232,7 +232,7 @@ type REqConfig    =  REPLConfig   REqState
 Now we work down through the configuration components.
 \begin{code}
 reqPrompt :: Bool -> REqState -> String
-reqPrompt _ reqs = devMk ++ chgd ++ "REq "++_equiv++" "
+reqPrompt _ reqs = devMk ++ chgd ++ "REq."++currTheory reqs++"> "
  where
    chgd = if modified reqs then "*" else ""
    devMk = if inDevMode reqs then "!" else ""

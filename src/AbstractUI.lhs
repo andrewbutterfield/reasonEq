@@ -469,7 +469,7 @@ lawInstantiate1 :: LogicSig -> LiveProof -> [Law]
 lawInstantiate1 theSig liveProof
   = let currt = getTZ $ fst $ focus liveProof
         true = theTrue theSig
-        rslaws = concat $ map fst $ mtchCtxts liveProof
+        rslaws = concat $ map snd3 $ mtchCtxts liveProof
     in if currt /= true then [] else rslaws
 \end{code}
 
@@ -485,7 +485,7 @@ lawInstantiate2 rslaws i liveProof
        let (tz,seq') = focus liveProof
        let psc = conjSC liveProof
        let dpath = fPath liveProof
-       let vts = concat $ map snd $ mtchCtxts liveProof
+       let vts = concat $ map thd3 $ mtchCtxts liveProof
        let lFreeV = stdVarSetOf $ S.filter (isUnknownGVar vts) $ freeVars lawt
        let goalTerms = reverse $ subTerms (exitTZ tz)
        return (law,S.toList lFreeV,goalTerms)

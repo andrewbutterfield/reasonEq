@@ -73,7 +73,8 @@ including that of the theory itself,
 as well as those from all subsequent theories.
 \begin{code}
 type MatchContext
-  = ( [Law]        -- all laws of this theory
+  = ( String       -- Theory Name
+    , [Law]        -- all laws of this theory
     , [VarTable] ) -- all known variables here, and in dependencies
 \end{code}
 
@@ -81,10 +82,10 @@ Given a list of theories, we generate a list of match-contexts:
 \begin{code}
 buildMatchContext :: [Theory] -> [MatchContext]
 buildMatchContext [] = []
-buildMatchContext [thy] = [ (laws thy, [known thy]) ]
+buildMatchContext [thy] = [ (thName thy, laws thy, [known thy]) ]
 buildMatchContext (thy:thys) -- thys not null
-  = let mcs'@((_,vts'):_) = buildMatchContext thys
-    in (laws thy, known thy : vts') : mcs'
+  = let mcs'@((_,_,vts'):_) = buildMatchContext thys
+    in (thName thy, laws thy, known thy : vts') : mcs'
 \end{code}
 
 \subsection{Matches}
@@ -334,7 +335,7 @@ Bascially we run down the list of laws,
 returning any matches we find.
 \begin{code}
 matchLaws :: LogicSig -> Term -> MatchContext -> Matches
-matchLaws logicsig t (lws,vts) = concat $ map (domatch logicsig vts t) lws
+matchLaws logicsig t (_,lws,vts) = concat $ map (domatch logicsig vts t) lws
 \end{code}
 
 Sometimes we are interested in a specific (named) law.
@@ -342,7 +343,7 @@ Sometimes we are interested in a specific (named) law.
 matchLawByName :: Monad m => LogicSig -> Term -> String -> [MatchContext]
                -> m Matches
 matchLawByName logicsig t lnm [] = fail ("Law '"++lnm++"' not found")
-matchLawByName logicsig t lnm ((lws,vts):mcs)
+matchLawByName logicsig t lnm ((thnm,lws,vts):mcs)
  = case filter (\law -> lawName law == lnm) lws of
      []       ->  matchLawByName logicsig t lnm mcs
      (law:_)  ->  return $ domatch logicsig vts t law

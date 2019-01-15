@@ -17,6 +17,7 @@ module AbstractUI
 , moveFocusDown, moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, matchFocusAgainst, applyMatchToFocus
+, observeLawsInScope
 , flattenAssociative, groupAssociative
 , stepBack
 , lawInstantiate1, lawInstantiate2, lawInstantiate3
@@ -405,6 +406,16 @@ applyMatchToFocus i liveProof
                     (( UseLaw ByMatch (mName mtch) (mBind mtch) dpath
                      , exitTZ tz):)
                     liveProof )
+\end{code}
+
+\subsubsection{Observing Laws in Scope}
+
+\begin{code}
+observeLawsInScope :: LiveProof -> String
+observeLawsInScope liveProof
+  = let mctxts = mtchCtxts liveProof
+    in hdr ++ (intercalate hdr $ map showContextLaws mctxts)
+  where hdr = "\n---\n"
 \end{code}
 
 

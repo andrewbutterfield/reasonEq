@@ -153,7 +153,7 @@ so that we can easily sequence theories so that any theory in
 the list occurs before all those theories on which it depends,
 directly, or transitively.
 In the implementation, the SDAG is built over theory names,
-with a seperate mapping linking those names to the corresponding theories.
+with a separate mapping linking those names to the corresponding theories.
 \begin{code}
 type TheoryMap = Map String Theory
 data Theories

@@ -23,6 +23,7 @@ module LiveProofs
  , proofIsComplete, finaliseProof
  , undoCalcStep
  , showLiveProofs
+ , showContextLaws
  ) where
 
 import Data.Maybe
@@ -577,4 +578,13 @@ shMatch (i, mtch)
  where
     bind = mBind mtch
     (lt,lsc) = mAsn mtch
+\end{code}
+
+We can display laws from a context (again, this should be done elsewhere).
+\begin{code}
+showContextLaws (nm,lws,_)
+  = unlines' (
+      [ "Theory '"++nm++"'"
+      , showLaws lws
+      ] )
 \end{code}

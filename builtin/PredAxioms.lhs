@@ -28,6 +28,7 @@ import Proofs
 import Theories
 
 import PropAxioms
+import PropSubst
 import PropEquiv
 import PropNot
 import PropDisj
@@ -239,6 +240,7 @@ predAxiomTheory :: Theory
 predAxiomTheory
   =  Theory { thName  =  predAxiomName
             , thDeps  =  [ equalityName
+                         , propSubstName
                          , propImplName
                          , propMixOneName
                          , propConjName

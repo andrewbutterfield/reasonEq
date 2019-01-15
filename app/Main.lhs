@@ -559,7 +559,7 @@ proofREPLConfig
       proofREPLQuit
       proofREPLHelpCmds
       ( map clearLong
-            [ listLawDescr
+            [ listScopeLawsDescr
             , goDownDescr
             , goUpDescr
             , matchLawDescr
@@ -599,13 +599,14 @@ tryDelta delta (reqs, liveProof)
        Just liveProof'  ->  return (reqs, liveProof')
 \end{code}
 
-Listing laws
+Listing laws in scope for the current live proof.
 \begin{code}
-listLawDescr = ( "ll", "list laws", "ll -- list all available laws", listLaws)
+listScopeLawsDescr = ( "ll", "list laws"
+                     , "ll -- list all laws in scope", listScopeLaws)
 
-listLaws :: REPLCmd (REqState, LiveProof)
-listLaws _ state@( reqs, _)
-  = do putStrLn $ observeLaws reqs
+listScopeLaws :: REPLCmd (REqState, LiveProof)
+listScopeLaws _ state@( _, liveProof)
+  = do putStrLn $ observeLawsInScope liveProof
        putStr "<return> to continue..." ; hFlush stdout ; getLine
        return state
 \end{code}

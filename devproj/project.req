@@ -11,29 +11,11 @@ AND = Id "\8743"
 END SIGNATURE
 BEGIN THEORIES
 THNAMES = ["Equality","PredAxioms","PredExists","PropAxioms","PropConj","PropDisj","PropEquiv","PropImpl","PropMixOne","PropNot","PropSubst"]
-SDAG = [[("PredExists",["PredAxioms","Equality","PropImpl","PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PredAxioms",["Equality","PropImpl","PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropImpl",["PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropMixOne",["PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropConj",["PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropDisj",["PropNot","PropEquiv","PropAxioms"])],[("PropNot",["PropEquiv","PropAxioms"])],[("PropSubst",["PropAxioms"]),("PropEquiv",["PropAxioms"])],[("Equality",[]),("PropAxioms",[])]]
+SDAG = [[("PredExists",["PredAxioms","Equality","PropSubst","PropImpl","PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PredAxioms",["Equality","PropSubst","PropImpl","PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropImpl",["PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropMixOne",["PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropConj",["PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropDisj",["PropNot","PropEquiv","PropAxioms"])],[("PropNot",["PropEquiv","PropAxioms"])],[("PropSubst",["PropAxioms"]),("PropEquiv",["PropAxioms"])],[("Equality",[]),("PropAxioms",[])]]
 END THEORIES
 CURRTHEORY = PredExists
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("PredExists","\8707_inst")
-BEGIN LIVE-PROOF
-TH-NAME: PredExists
-CJ-NAME: ∃_inst
-CONJ = (C P (Id "\10233 ") [B P (Id "\8707") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))]))),B P (Id "\8707") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))],SC (fromList []) (fromList []))
-SIDE = SC (fromList []) (fromList [])
-STRAT reduce
-BEGIN SEQZIP
-TERMZIP = (C P (Id "\10233 ") [B P (Id "\8707") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))]))),B P (Id "\8707") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))],[])
-BEGIN SEQUENT'
-SIDECOND = SC (fromList []) (fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.\8707_inst", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = V P (VR (Id "true",VP,WS))}
-END SEQUENT'
-END SEQZIP
-FPATH: []
-BEGIN LIST STEPS
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

@@ -122,7 +122,7 @@ equalityName = "Equality"
 equalityTheory :: Theory
 equalityTheory
   =  Theory { thName  =  equalityName
-            , thDeps  =  [ ]
+            , thDeps  =  [propAxiomName]
             , known   =  newVarTable
             , laws    =  equalityAxioms
             , proofs  =  []

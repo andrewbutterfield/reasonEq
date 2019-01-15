@@ -1,5 +1,5 @@
 BEGIN THEORY Equality
-DEPS = []
+DEPS = ["PropAxioms"]
 KNOWN = VD (fromList [],fromList [],fromList [])
 BEGIN LIST LAWS
 (("=_refl",(C P (Id "=") [V (E T) (VR (Id "e",VE,WS)),V (E T) (VR (Id "e",VE,WS))],SC (fromList []) (fromList []))),Axiom)

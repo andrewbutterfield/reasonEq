@@ -677,22 +677,27 @@ dispSeqZip :: SeqZip -> String
 dispSeqZip (tz,Sequent' _ sc conj')  =  unlines' $ dispConjParts tz sc conj'
 
 dispConjParts tz sc (CLaws' hthry Lft rightC)
-  =     [ "R-target = "++trTerm 0 rightC++"  "++trSideCond sc, "" ]
-     ++ (dispHypotheses hthry)
-        : [ _vdash ]
-     ++ [trTermZip tz]
+  =  (dispHypotheses hthry)
+     : [ _vdash ]
+     ++ [trTermZip tz++"    "++trSideCond sc]
+     ++ [ ""
+        , "R-target = "++trTerm 0 rightC ]
+
 
 dispConjParts tz sc (CLaws' hthry Rght leftC)
-  =     [ "L-target = "++trTerm 0 leftC++"  "++trSideCond sc]
-     ++ (dispHypotheses hthry)
-        : [ _vdash ]
-     ++ [trTermZip tz]
+  =  (dispHypotheses hthry)
+     : [ _vdash ]
+     ++ [trTermZip tz++"    "++trSideCond sc]
+     ++ [ ""
+        , "L-target = "++trTerm 0 leftC ]
+
 
 dispConjParts tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
-  =     [ "Hypothesis: "++trTerm 0 horig++"  "++trSideCond sc]
-     ++ (dispHypotheses $ getHypotheses' seq')
-        : [ _vdash ]
-     ++ [trTermZip tz]
+  =  (dispHypotheses $ getHypotheses' seq')
+     : [ _vdash ]
+     ++ [trTermZip tz++"   "++trSideCond sc]
+     ++ [ ""
+        , "Hypothesis: "++trTerm 0 horig++"  "++trSideCond sc]
   where
      hthry = Theory { thName = hn
                     , thDeps = []

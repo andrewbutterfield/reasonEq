@@ -2,12 +2,15 @@
 
 ## Hotfixes
 
-*none at present*
+* one-point side-cond has to be  x-bar notin *e-bar*
+* match fails with ∀\_one\_point in proof of ∃\_one\_point
 
 ## Quantifier Laws in proofs
 
-1. need to show goal side-condition on each line
-2. need to handle side-conditions
-3. need to classify matches (whole, lhs, rhs, etc...)
-4. law renaming
-5. Generating proof graph as dot/graphviz file.
+* need to handle side-conditions
+* need to classify matches (whole, lhs, rhs, etc...)
+
+## Theory Managmement
+
+* law renaming
+* Generating proof graph as dot/graphviz file.

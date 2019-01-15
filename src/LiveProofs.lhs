@@ -546,18 +546,19 @@ showLiveProof liveProof
 dispLiveProof :: LiveProof -> String
 dispLiveProof liveProof
  = unlines
-     ( ( ("Proof for '"++red (conjName liveProof)
-          ++"'  "++trSideCond (conjSC liveProof))
+     ( ( ("Proof for "++red (conjName liveProof))
+       : ("\t" ++ green(trTerm 0 trm ++ "  "++trSideCond sc))
        : ("by "++(strategy liveProof))
-       : " ..."
        : map shLiveStep (reverse (stepsSoFar liveProof))
        )
        ++
-       ( displayMatches (matches liveProof)
+       ( " ..."
+         : displayMatches (matches liveProof)
          : [ underline "           "
            , dispSeqZip (focus liveProof)
            , "" ]
        ) )
+ where (trm,sc) = conjecture liveProof
 
 shLiveStep :: CalcStep -> String
 shLiveStep ( just, trm )

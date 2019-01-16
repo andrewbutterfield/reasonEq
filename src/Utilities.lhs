@@ -482,6 +482,7 @@ ind i = replicate i ' '
 \newpage
 Heuristic 2:  designated text values at start of \texttt{STapp}
 mean it is inlined as per Heuristic Zero.
+Also, used of \texttt{fromList} are rendered as sets.
 \begin{code}
 display2 :: ShowTree -> String
 display2 st = disp2 0 st
@@ -489,17 +490,27 @@ display2 st = disp2 0 st
 inlineKeys = map STtext
   ["BV","BT","E","K","VB","VI","VT","V","GL","GV","LV","VR","Id","WD","BI"]
 
+inlineSets = map STtext ["fromList","BS"]
+
 disp2 _ (STtext s) = s
 disp2 i app@(STapp (st:sts)) -- length always >=2, see stapp above,
- | st `elem` inlineKeys  = display0 app
+ | st `elem` inlineSets  =  disp2set i sts
+ | st `elem` inlineKeys  =  display0 app
  | otherwise = disp2 i st ++  '\n' : (unlines' $ map ((ind i ++) . disp2 i) sts)
 disp2 i (STlist []) = "[]"
 disp2 i (STlist (st:sts)) = "[ "++ disp2 (i+2) st ++ disp2c i sts ++ " ]"
 disp2 i (STpair []) = "()"
+disp2 i tuple@(STpair (STapp (st:_):_))
+ | st `elem` inlineKeys   =  display0 tuple
 disp2 i (STpair (st:sts)) = "( "++ disp2 (i+2) st ++ disp2c i sts ++ " )"
 
 disp2c i [] = ""
 disp2c i (st:sts) = "\n" ++ ind i ++ ", " ++  disp2 (i+2) st ++ disp2c i sts
+
+disp2set i [] = "{}"
+--disp2set i [STlist []] = "{}"
+disp2set i [STlist sts] = disp2set i sts
+disp2set i (st:sts) = "{ "++ disp2 (i+2) st ++ disp2c i sts ++ " }"
 \end{code}
 
 \newpage

@@ -49,11 +49,24 @@ of term ($T$),
 and a set of other (general) variables ($x,\lst{v}$)
 The relationship can have the form:
 \begin{eqnarray*}
-   x,\lst v   \notin  \fv(T) && \mbox{disjoint}
+   x,\lst v   \notin  \fv(T)
+   && \mbox{disjoint, short for }\{x,\lst v\} \cap \fv(T) = \emptyset
 \\ x,\lst v      =    \fv(T) && \mbox{exact}
 \\ x,\lst v \supseteq \fv(T) && \mbox{covering}
 \\ pre      \supseteq \fv(T) && \mbox{pre-condition}
 \end{eqnarray*}
+In most cases the term $T$ will be very general,
+and will be represented by a variable.
+In some cases, we will use a list-variable to denoted a list of terms,
+usually expressions, and we will expect there to be only one general variable
+which will itself be a list variable:
+\begin{eqnarray*}
+   \lst v   \notin  \fv(\lst e) && \mbox{disjoint, short for }
+   v_1\notin \fv(e_1) \land \dots \land v_n\notin \fv(e_n)
+\\ \lst v      =    \fv(\lst e) && \mbox{exact, short for }
+   \{v_1\}= \fv(e_1) \land \dots \land \{v_n\} =  \fv(e_n)
+\end{eqnarray*}
+Covering does not make sense in this case.
 
 We shall first look at how we internally represent side-conditions.
 Later we will describe user-friendly ways to build them.
@@ -432,24 +445,20 @@ mrgVarSideCond (A pre mD mC) vsc
 \end{code}
 
 
-\subsubsection{Full Side Conditions}
-
-Checking $N$ against a variable-side condition, looking at $X$ and $C$.
-\begin{code}
-checkNewSC :: VarSet -> VarSideCond -> Bool
-checkNewSC n (Exact x)   =  n `disjoint` x
-checkNewSC n (Covers c)  =  n `disjoint` c
-checkNewSC _ _           =  True
-\end{code}
+\subsection{Full Side Conditions}
 
 A side-condition for a law lumps together $N$
 with a mapping from term variables to variable side-conditions.
 \begin{code}
-type VarSCMap = Map Variable VarSideCond
+type VarSCMap = Map GenVar VarSideCond
 data SideCond
  = SC VarSet VarSCMap
  deriving (Eq,Ord,Show,Read)
 \end{code}
+If the general variable is a list-variable,
+then the \texttt{VarSideCond} must be either exact,
+or disjoint with only one element in that set.
+
 If both entities are empty, then we have the trivial side-condition,
 which is always true:
 \begin{code}
@@ -459,10 +468,10 @@ scTrue = SC S.empty M.empty
 
 Test values:
 \begin{code}
-v_e  = PreExpr  $ i_e
-v_f  = PreExpr  $ i_f
-v_e' = PostExpr $ i_e
-v_f' = PostExpr $ i_f
+v_e  = StdVar $ PreExpr  $ i_e
+v_f  = StdVar $ PreExpr  $ i_f
+v_e' = StdVar $ PostExpr $ i_e
+v_f' = StdVar $ PostExpr $ i_f
 
 m_e_pre = M.fromList [(v_e,sc_pre)]
 m_e_exact_a = M.fromList [(v_e,sc_exact_a)]
@@ -482,6 +491,15 @@ sidecond n vmap
  | all (checkNewSC n) $ M.elems vmap  =  return $ SC n vmap
  | otherwise  =  fail "fresh set conflicts with variable side-condition"
 \end{code}
+
+Checking $N$ against a variable-side condition, looking at $X$ and $C$.
+\begin{code}
+checkNewSC :: VarSet -> VarSideCond -> Bool
+checkNewSC n (Exact x)   =  n `disjoint` x
+checkNewSC n (Covers c)  =  n `disjoint` c
+checkNewSC _ _           =  True
+\end{code}
+
 
 Tests:
 \begin{code}
@@ -575,21 +593,21 @@ when their last argument is \texttt{vscTrue}.
 
 $\lst v \notin \fv(T)$
 \begin{code}
-notin :: VarList -> Variable -> SideCond
+notin :: VarList -> GenVar -> SideCond
 vl `notin` tV  =  let vsc = fromJust $ addDisjSC (S.fromList vl) vscTrue
                   in SC (S.empty) $ M.fromList [(tV,vsc)]
 \end{code}
 
 $\lst v = \fv(T)$
 \begin{code}
-is :: VarList -> Variable -> SideCond
+is :: VarList -> GenVar -> SideCond
 vl `is` tV  = let vsc = fromJust $ addExactSC (S.fromList vl) vscTrue
               in SC (S.empty) $ M.fromList [(tV,vsc)]
 \end{code}
 
 $\lst v \supseteq \fv(T)$
 \begin{code}
-covers :: VarList -> Variable -> SideCond
+covers :: VarList -> GenVar -> SideCond
 vl `covers` tV  = let vsc = fromJust $ addCoverSC (S.fromList vl) vscTrue
                   in SC (S.empty) $ M.fromList [(tV,vsc)]
 \end{code}
@@ -602,7 +620,7 @@ fresh vl  =  SC (S.fromList vl) M.empty
 
 $pre \supseteq \fv(T)$
 \begin{code}
-pre :: Variable -> SideCond
+pre :: GenVar -> SideCond
 pre tV  = let  vsc = fromJust $ addPreSC vscTrue
           in SC S.empty $ M.fromList [(tV,vsc)]
 \end{code}

@@ -66,11 +66,13 @@ and a useful collection of generic binder variables: $x,y,\lst x,\lst y$.
 
 \begin{code}
 vP = Vbl (fromJust $ ident "P") PredV Static
+gvP = StdVar vP
 p = fromJust $ pVar vP
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
 r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
 ve = Vbl (fromJust $ ident "e") ExprV Static
 lves = LVbl ve [] []
+gves = LstVar lves
 e = fromJust $ eVar ArbType ve
 \end{code}
 
@@ -107,7 +109,7 @@ cjAnyOne = preddef (_exists -.- "one" -.- "point")
   ( (exists [xs,ys] ((lvxs `areEqualTo` lves) /\ p) )
     ===
     (exists [ys] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) ) )
-  ([xs] `notin` ve)
+  ([xs] `notin` gves)
 \end{code}
 
 $$
@@ -130,7 +132,7 @@ $$\par\vspace{-8pt}
 axAndAllScope = preddef (_land -.- _exists -.- "scope")
   ( p /\ (exists [xs,ys] q)
     === exists [xs] ( p /\ exists [ys] q) )
-  ([xs] `notin` vP)
+  ([xs] `notin` gvP)
 \end{code}
 
 
@@ -158,7 +160,7 @@ cjAnyDumRen = preddef (_exists -.- _alpha -.- "rename")
   ( (exists [xs] p)
     ===
     (exists [ys] (Sub P p (fromJust $ substn [] [(lvxs,lvys)])) ) )
-  ([ys] `notin` vP)
+  ([ys] `notin` gvP)
 \end{code}
 
 % %% TEMPLATE

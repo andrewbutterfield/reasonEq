@@ -67,11 +67,13 @@ and a useful collection of generic binder variables: $x,y,\lst x,\lst y$.
 
 \begin{code}
 vP = Vbl (fromJust $ ident "P") PredV Static
+gvP = StdVar vP
 p = fromJust $ pVar vP
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
 r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
 ve = Vbl (fromJust $ ident "e") ExprV Static
 lves = LVbl ve [] []
+gves = LstVar lves
 e = fromJust $ eVar ArbType ve
 \end{code}
 
@@ -124,7 +126,7 @@ axAllOne = preddef (_forall -.- "one" -.- "point")
   ( (forall [xs,ys] ((lvxs `areEqualTo` lves) ==> p) )
     ===
     (forall [ys] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) ) )
-  ([xs] `notin` ve)
+  ([xs] `notin` gves)
 \end{code}
 
 $$
@@ -148,7 +150,7 @@ $$\par\vspace{-8pt}
 axOrAllScope = preddef (_lor -.- _forall -.- "scope")
   ( p \/ (forall [xs,ys] q)
     === forall [xs] ( p \/ forall [ys] q) )
-  ([xs] `notin` vP)
+  ([xs] `notin` gvP)
 \end{code}
 
 
@@ -176,7 +178,7 @@ axAllDumRen = preddef (_forall -.- _alpha -.- "rename")
   ( (forall [xs] p)
     ===
     (forall [ys] (Sub P p (fromJust $ substn [] [(lvxs,lvys)])) ) )
-  ([ys] `notin` vP)
+  ([ys] `notin` gvP)
 \end{code}
 
 \newpage
@@ -205,7 +207,7 @@ $$\par\vspace{-8pt}
 \begin{code}
 axUnivDef = preddef ("[]" -.- "def")
   ( (univ p) === (forall [xs] p) )
-  ( [xs] `covers` vP)
+  ( [xs] `covers` gvP)
 \end{code}
 
 % %% TEMPLATE

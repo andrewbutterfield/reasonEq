@@ -324,15 +324,15 @@ trFresh vs
  | otherwise  =  "fresh"++ trVSet vs
 
 trVarSCMap vscmap = map trVarSideCond $ M.assocs vscmap
-trVarSideCond (v,(Exact vs)) = trOVSet vs ++ "=" ++ trVar v
-trVarSideCond (v,(Approx pre mD mC))
+trVarSideCond (gv,(Exact vs)) = trOVSet vs ++ "=" ++ trGVar gv
+trVarSideCond (gv,(Approx pre mD mC))
  = intcalNN ";" [trPre pre,trD mD,trC mC]
  where
-   trPre True = "pre:"++trVar v ; trPre False = ""
+   trPre True = "pre:"++trGVar gv ; trPre False = ""
    trD Nothing = ""
-   trD (Just vs) = trOVSet vs ++ _notin ++ trVar v
+   trD (Just vs) = trOVSet vs ++ _notin ++ trGVar gv
    trC Nothing = ""
-   trC (Just vs) = trOVSet vs ++ _supseteq ++ trVar v
+   trC (Just vs) = trOVSet vs ++ _supseteq ++ trGVar gv
 \end{code}
 
 \newpage

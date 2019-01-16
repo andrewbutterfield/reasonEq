@@ -120,6 +120,15 @@ instLGVar binding gv@(LstVar lv)
 \end{code}
 
 \newpage
+
+\begin{code}
+instGVar :: Monad m => Binding -> GenVar -> m GenVar
+instGVar binding (StdVar v)  = do iv <- instVar binding v
+                                  return $ StdVar iv
+instGVar binding (LstVar lv) = do ilv <- instLVar binding lv
+                                  return $ LstVar ilv
+\end{code}
+
 \begin{code}
 instLVar :: Monad m => Binding -> ListVar -> m ListVar
 instLVar binding lv
@@ -169,17 +178,17 @@ and then fuse.
 instVSCM :: Monad m => Binding -> VarSCMap -> m VarSCMap
 instVSCM bind vscmap
   = let
-      ivscraw :: Monad m => [m (Variable,VarSideCond)]
+      ivscraw :: Monad m => [m (GenVar,VarSideCond)]
       ivscraw = map (instVSCMaplet bind) (M.toList vscmap)
     in
       return vscmap
 \end{code}
 
 \begin{code}
-instVSCMaplet :: Monad m => Binding -> (Variable,VarSideCond)
-              -> m (Variable,VarSideCond)
-instVSCMaplet bind (v,vsc)
-  = do iv <- instVar bind v
+instVSCMaplet :: Monad m => Binding -> (GenVar,VarSideCond)
+              -> m (GenVar,VarSideCond)
+instVSCMaplet bind (gv,vsc)
+  = do iv <- instGVar bind gv
        ivsc <- instVSC bind vsc
        return (iv,ivsc)
 \end{code}

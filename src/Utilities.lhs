@@ -14,6 +14,9 @@ import Data.Set(Set)
 import qualified Data.Set as S
 import System.IO
 import Control.Monad
+
+import Debug.Trace
+dbg msg x = trace (msg++show x) x
 \end{code}
 
 Here we provide odds and ends not found elswhere.
@@ -241,6 +244,40 @@ untilEq f x
 \end{code}
 
 \newpage
+\subsection{Possible Failure Monad}
+
+\subsubsection{Datatype: Yes, But \dots}
+
+\begin{code}
+data YesBut t
+ = Yes t
+ | But [String]
+ deriving (Eq,Show)
+\end{code}
+
+\subsubsection{Instances: Functor, Applicative, Monad}
+
+\begin{code}
+instance Functor YesBut where
+  fmap f (Yes x)    =  Yes $ f x
+  fmap f (But msgs)  =  But msgs
+
+instance Applicative YesBut where
+  pure x = Yes x
+
+  Yes f <*> Yes x          =  Yes $ f x
+  Yes f <*> But msgs       =  But msgs
+  But msgs1 <*> But msgs2  =  But (msgs1++msgs2)
+
+instance Monad YesBut where
+  Yes x   >>= f   =  f x
+  But msgs >>= f   =  But msgs
+
+  fail msg        =  But [msg]
+\end{code}
+
+
+\newpage
 \subsection{Pretty-printing Derived Show}
 
 A utility that parses the output of \texttt{derived} instances of \texttt{show}
@@ -465,37 +502,82 @@ disp2c i [] = ""
 disp2c i (st:sts) = "\n" ++ ind i ++ ", " ++  disp2 (i+2) st ++ disp2c i sts
 \end{code}
 
+\subsection{Utility ``Main''}
 
+We can run utility as a standalone application
+that takes a file containing failing tests
+and pretty-prints them to make debugging easier.
 
-\newpage
-\subsection{Possible Failure Monad}
-
-\subsubsection{Datatype: Yes, But \dots}
-
+Form of a test fail:
+\begin{verbatim}
+  <test description>: [Failed]
+expected: <Haskell Show Output>
+ but got: <Hasekll Show Output>
+\end{verbatim}
 \begin{code}
-data YesBut t
- = Yes t
- | But [String]
- deriving (Eq,Show)
+failedPostFix  = ": [Failed]" ; fpfLen = length failedPostFix
+expectedPrefix = "expected: " ; epfLen = length expectedPrefix
+butgotPrefix   = " but got: " ; bpfLen = length butgotPrefix
 \end{code}
 
-\subsubsection{Instances: Functor, Applicative, Monad}
+A simple check for a failure line:
+\begin{code}
+isFailed ln   =  deliafPreFix `isPrefixOf` reverse ln
+deliafPreFix  =  reverse failedPostFix
+\end{code}
+A check for a specified prefix (of known length), returning the remainder:
+\begin{code}
+checkPrefix pfx len ln
+  = let (before, after) = splitAt len ln
+    in if pfx == before
+        then return after
+        else fail ("Not prefixed with '"++pfx++"'")
+\end{code}
+
+This should be run from the repo top-level and looks
+for \texttt{test/TestResultsTemp.raw}.
+The result ends up in \texttt{TestResultsTemp.log},
+at the top-level.
+
+To compile do:
+\begin{verbatim}
+stack ghc -- -main-is Utilities Utilities.lhs -o fpp
+\end{verbatim}
+or, if GHC version has \texttt{Applicative} as part of Prelude:
+\begin{verbatim}
+ghc -main-is Utilities Utilities.lhs -o fpp
+\end{verbatim}
 
 \begin{code}
-instance Functor YesBut where
-  fmap f (Yes x)    =  Yes $ f x
-  fmap f (But msgs)  =  But msgs
+main
+ = do txt <- readFile "test/TestResultsTemp.raw"
+      let lns = lines txt
+      -- putStrLn $ unlines lns
+      let lnspp = ppFails lns
+      writeFile "TestResultsTemp.log" $ unlines lnspp
+\end{code}
 
-instance Applicative YesBut where
-  pure x = Yes x
+We scan lines, skipping until we find one that has the ``Failed'' postfix.
+We output that and then process the next two lines,
+checking that they start with the ``expected'' and ``but got'' prefixes.
+In each case we remove the prefix and output on a line by itself.
+We then pretty-print the rest of the line.
 
-  Yes f <*> Yes x          =  Yes $ f x
-  Yes f <*> But msgs       =  But msgs
-  But msgs1 <*> But msgs2  =  But (msgs1++msgs2)
+\begin{code}
+ppFails []  =  []
+ppFails (ln:lns)
+ | isFailed ln  =  "" : ln : ppFail1 lns
+ | otherwise    =  ppFails lns
 
-instance Monad YesBut where
-  Yes x   >>= f   =  f x
-  But msgs >>= f   =  But msgs
+ppFail1 []  =  []
+ppFail1 (ln:lns)
+  = case checkPrefix expectedPrefix epfLen ln of
+      Nothing ->  ppFail2 lns
+      Just expterm -> expectedPrefix : (pp expterm) : ppFail2 lns
 
-  fail msg        =  But [msg]
+ppFail2 []  =  []
+ppFail2 (ln:lns)
+  = case checkPrefix butgotPrefix bpfLen ln of
+      Nothing ->  ppFails lns
+      Just gotterm -> butgotPrefix : (pp gotterm) : ppFails lns
 \end{code}

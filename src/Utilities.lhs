@@ -487,7 +487,7 @@ display2 :: ShowTree -> String
 display2 st = disp2 0 st
 
 inlineKeys = map STtext
-  ["BV","BT","E","K","VB","VI","VT","V","GL","GV","LV","VR","Id","WD"]
+  ["BV","BT","E","K","VB","VI","VT","V","GL","GV","LV","VR","Id","WD","BI"]
 
 disp2 _ (STtext s) = s
 disp2 i app@(STapp (st:sts)) -- length always >=2, see stapp above,
@@ -502,6 +502,7 @@ disp2c i [] = ""
 disp2c i (st:sts) = "\n" ++ ind i ++ ", " ++  disp2 (i+2) st ++ disp2c i sts
 \end{code}
 
+\newpage
 \subsection{Utility ``Main''}
 
 We can run utility as a standalone application
@@ -557,6 +558,7 @@ main
       writeFile "TestResultsTemp.log" $ unlines lnspp
 \end{code}
 
+\newpage
 We scan lines, skipping until we find one that has the ``Failed'' postfix.
 We output that and then process the next two lines,
 checking that they start with the ``expected'' and ``but got'' prefixes.

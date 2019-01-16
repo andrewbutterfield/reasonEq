@@ -16,7 +16,7 @@ module AbstractUI
 , abandonProof, saveProof, completeProof
 , moveFocusDown, moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
-, matchFocus, matchFocusAgainst, applyMatchToFocus
+, matchFocus, matchFocusAgainst, applyMatchToFocus, tryFocusAgainst
 , observeLawsInScope
 , flattenAssociative, groupAssociative
 , stepBack
@@ -390,6 +390,16 @@ matchFocusAgainst lawnm theSig liveProof
           Yes []    -> fail ("No matches for '"++lawnm++"'")
           Yes mtchs -> return $ matches_ mtchs liveProof
           But msgs  -> fail $ unlines msgs
+\end{code}
+
+Third, a deep dive to apply \texttt{match} so we can get back errors
+\begin{code}
+tryFocusAgainst :: String -> LogicSig -> LiveProof -> YesBut Binding
+tryFocusAgainst lawnm theSig liveProof
+  = let (tz,_)      =  focus liveProof
+        goalt       =  getTZ tz
+        ctxts       =  mtchCtxts liveProof
+    in tryLawByName theSig goalt lawnm ctxts
 \end{code}
 
 \subsubsection{Apply Match to Focus}

@@ -563,6 +563,7 @@ proofREPLConfig
             , goDownDescr
             , goUpDescr
             , matchLawDescr
+            , tryMatchDescr
             , applyMatchDescr
             , flatEquivDescr
             , groupEquivDescr
@@ -610,6 +611,8 @@ listScopeLaws _ state@( _, liveProof)
        putStr "<return> to continue..." ; hFlush stdout ; getLine
        return state
 \end{code}
+
+
 
 
 Focus movement commands
@@ -683,6 +686,24 @@ matchLawCommand args state@(reqs, liveProof)
              return (reqs, matches_ [] liveProof)
   where lawnm = filter (not . isSpace) $ unwords args
 \end{code}
+
+Try matching focus against a specific law, to see what outcome arises
+\begin{code}
+tryMatchDescr = ( "tm", "try match"
+                , "tm nm -- try match focus against law 'nm'"
+                , tryMatch)
+
+tryMatch :: REPLCmd (REqState, LiveProof)
+tryMatch [] state = return state
+tryMatch args state@( reqs, liveProof)
+  = do case tryFocusAgainst lawnm (logicsig reqs) liveProof of
+         Yes bind -> putStrLn ("Binding:\n" ++ show bind)
+         But msgs -> putStrLn $ unlines' ("Failed:":msgs)
+       putStr "<return> to continue..." ; hFlush stdout ; getLine
+       return state
+  where lawnm = filter (not . isSpace) $ unwords args
+\end{code}
+
 
 Applying a match.
 \begin{code}

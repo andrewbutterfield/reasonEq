@@ -19,7 +19,7 @@ module LiveProofs
  , dispLiveProof
  , startProof, launchProof
  , displayMatches
- , buildMatchContext, matchInContexts,matchLawByName
+ , buildMatchContext, matchInContexts,matchLawByName, tryLawByName
  , proofIsComplete, finaliseProof
  , undoCalcStep
  , showLiveProofs
@@ -343,11 +343,30 @@ Sometimes we are interested in a specific (named) law.
 \begin{code}
 matchLawByName :: Monad m => LogicSig -> Term -> String -> [MatchContext]
                -> m Matches
-matchLawByName logicsig t lnm [] = fail ("Law '"++lnm++"' not found")
-matchLawByName logicsig t lnm ((thnm,lws,vts):mcs)
+matchLawByName logicsig t lnm mcs
+ = do (law,vts) <- findLaw lnm mcs
+      return $ domatch logicsig vts t $ dbg "mLBN.law:\n" law
+\end{code}
+
+Sometimes we want to what happens when we single out a law,
+including observing any match failure messages.
+\begin{code}
+tryLawByName :: LogicSig -> Term -> String -> [MatchContext]
+               -> YesBut Binding
+tryLawByName logicsig tC lnm mcs
+  = do (((_,(tP,_)),_),vts) <- findLaw lnm mcs
+       match vts tC tP
+       -- fail "tryLawByName NYfI"
+\end{code}
+
+Looking up a law by name:
+\begin{code}
+findLaw :: Monad m => String -> [MatchContext] -> m (Law,[VarTable])
+findLaw lnm [] = fail ("Law '"++lnm++"' not found")
+findLaw lnm ((thnm,lws,vts):mcs)
  = case filter (\law -> lawName law == lnm) lws of
-     []       ->  matchLawByName logicsig t lnm mcs
-     (law:_)  ->  return $ domatch logicsig vts t law
+     []       ->  findLaw lnm mcs
+     (law:_)  ->  return (law,vts)
 \end{code}
 
 \subsection{Assertion Matching}
@@ -372,8 +391,6 @@ Do a simple match:
 simpleMatch :: Term -> [VarTable] -> Term -> Law -> Matches
 simpleMatch repl vts tC ((n,asn@(tP,_)),_)
  = map mkmatch $ match vts tC tP
---     Nothing    ->  []
---     Just bind  ->  []
  where
    mkmatch bind = MT n asn bind $ inst bind repl
    inst bind = fromJust . instantiate bind

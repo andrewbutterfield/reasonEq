@@ -1421,7 +1421,12 @@ applyBindingsToSets' bind vlP' vsC (gP@(LstVar lvP):vlP)
      -> if vsB `withinS` vsC
         then applyBindingsToSets' bind vlP' (vsC `removeS` vsB) vlP
         else fail "vsMatch: pattern list-var's binding not in candidate set."
-    _ -> fail "vsMatch: list-variable bound to variable-list.c"
+    Just (BindList vlB)
+     -> let vsB = S.fromList vlB in
+        if vsB `withinS` vsC
+        then applyBindingsToSets' bind vlP' (vsC `removeS` vsB) vlP
+        else fail "vsMatch: pattern list-var's binding not in candidate set."
+    _ -> fail "vsMatch: list-variable bound to term-list."
 \end{code}
 
 \newpage

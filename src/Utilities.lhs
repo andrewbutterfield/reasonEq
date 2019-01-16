@@ -33,6 +33,7 @@ import Data.Char
 import Data.Set(Set)
 import qualified Data.Set as S
 import System.IO
+import Control.Applicative
 import Control.Monad
 
 --import Debug.Trace -- disabel when not used, as this module is 'open'
@@ -275,7 +276,7 @@ data YesBut t
  deriving (Eq,Show)
 \end{code}
 
-\subsubsection{Instances: Functor, Applicative, Monad}
+\subsubsection{Instances: Functor, Applicative, Monad, MonadPlus}
 
 \begin{code}
 instance Functor YesBut where
@@ -284,7 +285,6 @@ instance Functor YesBut where
 
 instance Applicative YesBut where
   pure x = Yes x
-
   Yes f <*> Yes x          =  Yes $ f x
   Yes f <*> But msgs       =  But msgs
   But msgs1 <*> But msgs2  =  But (msgs1++msgs2)
@@ -292,8 +292,19 @@ instance Applicative YesBut where
 instance Monad YesBut where
   Yes x   >>= f   =  f x
   But msgs >>= f   =  But msgs
-
   fail msg        =  But [msg]
+
+instance Alternative YesBut where
+  empty = But []
+  But msgs1 <|> But msgs2  =  But (msgs1 ++ msgs2)
+  But _     <|> yes2       =  yes2
+  yes1      <|> _          =  yes1
+
+instance MonadPlus YesBut where
+  mzero = But []
+  But msgs1 `mplus` But msgs2  =  But (msgs1 ++ msgs2)
+  But _     `mplus` yes2       =  yes2
+  yes1      `mplus` _          =  yes1
 \end{code}
 
 

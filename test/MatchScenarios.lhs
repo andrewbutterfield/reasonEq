@@ -381,6 +381,7 @@ test_reserved_as_lists
          )
    ]
 
+
 test_reserved_as_sets
  = testGroup "O,M,S reserved as {ok,x,y,z}"
      [ testCase "S_Design |-  x,y,z :: S  -- fails."
@@ -479,15 +480,18 @@ xsys = S.fromList [gxs,gys]
 %\newpage
 \subsubsection{Sequential Composition Tests}
 
+
 \begin{code}
+set = S.fromList
+
 test_instantiation
   = testGroup "Instantiation"
     [ testCase "{x$,y$} :: {x$,y$} - succeeds 3 ways"
-       ( nub ( vsMatch [] emptyBinding S.empty S.empty xsys xsys )
-         @?= [ bindLs gxs [gxs,gys] $ bindLs gys [] $ emptyBinding
-             , bindLs gxs [] $ bindLs gys [gxs,gys] $ emptyBinding
-             , bindLs gxs [gxs] $ bindLs gys [gys]  $ emptyBinding
-             ] 
+       ( set ( vsMatch [] emptyBinding S.empty S.empty xsys xsys )
+         @?= set [ bindLs gxs [gxs] $ bindLs gys [gys]  $ emptyBinding
+                 , bindLs gxs [gxs,gys] $ bindLs gys [] $ emptyBinding
+                 , bindLs gxs [] $ bindLs gys [gxs,gys] $ emptyBinding
+                 ]
        )
     ]
 

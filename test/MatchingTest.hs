@@ -264,10 +264,23 @@ bindSpl2S
  = bindVV ps1 cs1 $ bindVV ps2 cs2 $ bindVV ps3 cs3 $ bindVV ps4 cs4
  $ bindLN pl1     $ bindLS pl2 cl2 $ bindLN pl3     $ bindLN pl4     emptyBinding
 
+bindVOneToOne
+ = bindVV ps1 cs1 $ bindVV ps2 cs2 $ bindVV ps3 cs3 $ bindVV ps4 cs4 emptyBinding
+
 bind1toAll
- = bindVV ps1 cs1 $ bindVV ps2 cs2 $ bindVV ps3 cs3 $ bindVV ps4 cs4
- $ bindLs pl1 [cl1,cl2,cl3,cl4]
- $ bindLN pl2     $ bindLN pl3     $ bindLN pl4       emptyBinding
+ = bindLs pl1 [cl1,cl2,cl3,cl4]
+ $ bindLN pl2     $ bindLN pl3     $ bindLN pl4       bindVOneToOne
+bind2toAll
+ = bindLs pl2 [cl1,cl2,cl3,cl4]
+ $ bindLN pl1     $ bindLN pl3     $ bindLN pl4       bindVOneToOne
+bind3toAll
+ = bindLs pl3 [cl1,cl2,cl3,cl4]
+ $ bindLN pl1     $ bindLN pl2     $ bindLN pl4       bindVOneToOne
+bind4toAll
+ = bindLs pl4 [cl1,cl2,cl3,cl4]
+ $ bindLN pl1     $ bindLN pl2     $ bindLN pl3       bindVOneToOne
+
+set = S.fromList
 
 tst_vsMatch =
   testGroup "vsMatch"
@@ -288,12 +301,11 @@ tst_vsMatch =
           (S.fromList [cs2,cs1]) (S.fromList [ps1,ps2]))
         @?= [bindPSi2CSi] )
     , testCase "{cs_i,cl_i} :: {ps_i,pl_i}, no pre-bind  (OK)"
-      ( (nub ( vsMatch [] emptyBinding b0 b0
+      ( (set ( vsMatch [] emptyBinding b0 b0
                (S.fromList [cs1,cl1,cs2,cl2,cs3,cl3,cs4,cl4])
-               (S.fromList [ps1,pl1,ps2,pl2,ps3,pl3,ps4,pl4]) )) !! 0
+               (S.fromList [ps1,pl1,ps2,pl2,ps3,pl3,ps4,pl4]) ))
         -- 19 bindings possible, but only 4 generated
-        -- 1st one returned is our bind1toAll
-        @?= bind1toAll )
+         @?= set [bindAllS,bind1toAll,bind2toAll,bind3toAll,bind4toAll] )
     , testCase "{cs_1,cs_2,cl_2,cs_3,cs_4} :: {ps_i,pl_i}, no pre-bind  (OK)"
       ( (nub ( vsMatch [] emptyBinding b0 b0
                (S.fromList [cs1,    cs2,cl2,cs3,    cs4])
@@ -312,15 +324,15 @@ tst_vsMatch =
                (S.fromList [ps1,pl1,ps2,pl2,ps3,pl3,ps4,pl4]) )
         @?= [bindAllS] )
     , testCase "{cl_i} :: {pl_i}, no pre-bind  (OK)"
-      ( nub ( vsMatch [] emptyBinding b0 b0
+      ( set ( vsMatch [] emptyBinding b0 b0
                (S.fromList [cl1,cl2,cl3,cl4])
                (S.fromList [pl1,pl2,pl3,pl4]) )
-        @?= [ bindL1toAll
-            , bindL2toAll
-            , bindL3toAll
-            , bindL4toAll
-            , bind1to1
-            ] )
+        @?= set [ bind1to1
+                , bindL1toAll
+                , bindL2toAll
+                , bindL3toAll
+                , bindL4toAll
+                ] )
     ]
 
 bindL1toAll

@@ -5,7 +5,27 @@ Copyright  Andrew Buttefield (c) 2017
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module Utilities
+module Utilities (
+  utilities
+, fst3, snd3, thd3
+, unlines'
+, issubset
+, clearIt, clear
+, readInt
+, trim
+, nlookup
+, numberList, numberList'
+, YesBut(..)
+, hasdup
+, disjoint, overlaps
+, peel
+, getJust
+, pulledFrom, getitem, choose
+, spaced, intcalNN
+, pad
+, splitLast
+, args2str, args2int, entertogo
+)
 where
 
 import Data.List
@@ -15,8 +35,8 @@ import qualified Data.Set as S
 import System.IO
 import Control.Monad
 
-import Debug.Trace
-dbg msg x = trace (msg++show x) x
+--import Debug.Trace -- disabel when not used, as this module is 'open'
+--dbg msg x = trace (msg++show x) x
 \end{code}
 
 Here we provide odds and ends not found elswhere.

@@ -4,7 +4,9 @@
 
 ## Quantifier Laws in proofs
 
-* need to handle side-conditions
+* need to simplify side-conditions (drastically)
+* need to re-instate side-condition tests
+* need to handle side-conditions (just `Disjoint` for now)
 * need to classify matches (whole, lhs, rhs, etc...)
 
 ## Theory Management

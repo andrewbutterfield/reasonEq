@@ -160,55 +160,19 @@ instVar binding v
 
 Doing it again, with side-conditions.
 We need to cope with the fact that two distinct variables
-in the law side-condition could be matched agaisnt the same variable
+in the law side-condition could be matched against the same variable
 in the goal.
 This can result in the the side-condition reducing to \textit{false}.
 \begin{code}
 instantiateSC :: Monad m => Binding -> SideCond -> m SideCond
-instantiateSC bind (SC vs vscmap)
-  = do ivs <- instVarSet bind vs
-       ivscmap <- instVSCM bind vscmap
-       return $ SC ivs ivscmap
-\end{code}
-
-First we map each association pair,
-then sort by key (variable),
-and then fuse.
-\begin{code}
-instVSCM :: Monad m => Binding -> VarSCMap -> m VarSCMap
-instVSCM bind vscmap
-  = let
-      ivscraw :: Monad m => [m (GenVar,VarSideCond)]
-      ivscraw = map (instVSCMaplet bind) (M.toList vscmap)
-    in
-      return vscmap
+instantiateSC bind ascs
+  = do ascss' <- sequence $ map (instantiateASC bind) ascs
+       let ascs' = concat ascss'
+       -- we rely on mrgSideCond merging second list into first
+       mrgSideCond scTrue ascs'
 \end{code}
 
 \begin{code}
-instVSCMaplet :: Monad m => Binding -> (GenVar,VarSideCond)
-              -> m (GenVar,VarSideCond)
-instVSCMaplet bind (gv,vsc)
-  = do iv <- instGVar bind gv
-       ivsc <- instVSC bind vsc
-       return (iv,ivsc)
-\end{code}
-
-\begin{code}
-instVSC :: Monad m => Binding -> VarSideCond -> m VarSideCond
-instVSC bind (Exact vs)  =  fmap Exact $ instVarSet bind vs
-instVSC bind (Approx pre mD mC)
-  = do imD <- instMVS bind mD
-       imC <- instMVS bind mC
-       ivsc1 <- case imD of
-                  Nothing  ->  return vscTrue
-                  Just d   ->  addDisjSC d vscTrue
-       ivsc2 <- case imC of
-                  Nothing  ->  return ivsc1
-                  Just c   ->  addCoverSC c ivsc1
-       if pre
-         then addPreSC ivsc2
-         else return ivsc2
-
-instMVS bind (Nothing)  = return Nothing
-instMVS bind (Just vs)  = fmap Just $ instVarSet bind vs
+instantiateASC :: Monad m => Binding -> AtmSideCond -> m [AtmSideCond]
+instantiateASC bind ascs = fail "instantiateASC NYI"
 \end{code}

@@ -316,23 +316,14 @@ trTermZip (t,wayup) = trTerm 0 $ exitTZ (markfocus t,wayup)
 \subsection{Side Conditions}
 
 \begin{code}
-trSideCond (SC vs vscmap)
- = intcalNN ";" (trFresh vs : trVarSCMap vscmap)
+trSideCond ascs
+ = intcalNN ";" (map trAtmSideCond ascs)
 
-trFresh vs
- | S.null vs  =  ""
- | otherwise  =  "fresh"++ trVSet vs
-
-trVarSCMap vscmap = map trVarSideCond $ M.assocs vscmap
-trVarSideCond (gv,(Exact vs)) = trOVSet vs ++ "=" ++ trGVar gv
-trVarSideCond (gv,(Approx pre mD mC))
- = intcalNN ";" [trPre pre,trD mD,trC mC]
- where
-   trPre True = "pre:"++trGVar gv ; trPre False = ""
-   trD Nothing = ""
-   trD (Just vs) = trOVSet vs ++ _notin ++ trGVar gv
-   trC Nothing = ""
-   trC (Just vs) = trOVSet vs ++ _supseteq ++ trGVar gv
+trAtmSideCond (Fresh       vs) = "fresh"++ trVSet vs
+trAtmSideCond (IsPre    gv)    = "pre:"++trGVar gv
+trAtmSideCond (Disjoint gv vs) = trOVSet vs ++  _notin   ++ trGVar gv
+trAtmSideCond (Exact    gv vs) = trOVSet vs ++    "="    ++ trGVar gv
+trAtmSideCond (Covers   gv vs) = trOVSet vs ++ _supseteq ++ trGVar gv
 \end{code}
 
 \newpage

@@ -188,6 +188,7 @@ groupAssoc' mOp (Gather Rght i)  =  gGatherRight mOp i
 groupAssoc' mOp (Split i)        =  gSplit mOp i
 \end{code}
 
+\newpage
 Left Associative:
 \begin{equation*}
  T_1 \oplus T_2 \oplus T_3 \oplus \dots \oplus T_{n-1} \oplus T_n
@@ -280,8 +281,8 @@ n1 -.- n2  =  n1 ++ "_" ++ n2
 However, we also want to specify the provenance of each law.
 \begin{code}
 data Provenance
-  = Axiom       -- asserted as True
-  | Proven String     -- demonstrated by (named) proof
+  = Axiom          --  asserted as True
+  | Proven String  --  demonstrated by (named) proof
   deriving (Eq,Show,Read)
 \end{code}
 

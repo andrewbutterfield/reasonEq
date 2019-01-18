@@ -369,6 +369,7 @@ findLaw lnm ((thnm,lws,vts):mcs)
      (law:_)  ->  return (law,vts)
 \end{code}
 
+\newpage
 \subsection{Assertion Matching}
 
 For each law,

@@ -42,8 +42,9 @@ The most general proof framework we plan to support is the following:
     In general we partition $C$ into three components:
     \begin{description}
       \item[Hypotheses]
-        A set $\mathcal H = \setof{H_1,\dots,H_n}$, for $n \geq 0$,
-        were all unknown variables in the $H_i$
+        A set $\mathcal H = \setof{H_1,\dots,H_n}$ of hypotheses,
+        for $n \geq 0$,
+        in which all unknown variables in the $H_i$
         are temporarily marked as ``known'' (as themselves),
         for the duration of the proof.
       \item[Consequents]
@@ -65,7 +66,7 @@ The most general proof framework we plan to support is the following:
            \mathcal L,\mathcal H &\vdash&  C_x
         \\ &=& \textrm{effect of some assertion $A$
                                       in $\mathcal L\cup \mathcal H$
-                                      on $C_x$}
+                                      on (a sub-term of) $C_x$}
         \\ \mathcal L,\mathcal H &\vdash& C'_x
         \end{eqnarray*}
       \item[deductive]
@@ -165,6 +166,48 @@ a goal (sub-)term:
      and is replaced by the entire law
 \end{description}
 In both cases the match binding is used to build the replacement term.
+
+Given a sub-term and a law-term
+there may a number of different ways in which we can match
+the sub-term against the law-term.
+This depends on the top-level structure of the law-term,
+which also determines how the match binding is used
+to produce the replacement term.
+
+The following table describes some examples of
+how equivalences and implications
+can admit matches against sub-parts.
+$$\begin{array}{|c|c|c|c|c|c|}
+\hline
+ \mbox{match-type} & \mbox{law struct.} & \mbox{pattern}
+ & \mbox{repl.}
+ & \mbox{step rel.}
+\\\hline
+  \mbox{Full} & \mbox{any} & \mbox{all}
+ & \true & \equiv
+\\\hline
+ \equiv\mbox{LHS} & P \equiv Q & P
+ & Q\beta & \equiv
+\\\hline
+ \equiv\mbox{RHS} & P \equiv Q & Q
+ & P\beta & \equiv
+\\\hline
+ \implies\mbox{ANTE} & P \implies Q & P
+ & (P \land Q)\beta & \equiv
+\\\hline
+ \implies\mbox{ANTE} & P \implies Q & P
+ & Q\beta & \implies
+\\\hline
+ \implies\mbox{CNSQ} & P \implies Q & Q
+ & (Q \lor P)\beta & \equiv
+\\\hline
+ \implies\mbox{CNSQ} & P \implies Q & Q
+ & P\beta & \impliedby
+\\\hline
+\end{array}$$
+We assume that $\beta$ is the binding returned by the match.
+
+
 First, a type that states how a law was used in a step:
 \begin{code}
 data HowUsed

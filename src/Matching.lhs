@@ -8,6 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Matching
 ( match
+  -- below exported for testing
 , tMatch, tsMatch
 , tvMatch, tkvMatch
 , vMatch, bvMatch
@@ -160,8 +161,9 @@ Term-matching is defined inductively over the pattern type.
 We start with the simple value and structural composite matches,
 and then proceed to look at variable, binder and substitution patterns.
 
+\newpage
 \subsubsection{Value Term-Pattern (\texttt{Val})}
-Values only match themselves.
+Values only match themselves, and add no new bindings.
 $$
 \inferrule
    {{\kk k}_C = {\kk k}_P}
@@ -262,31 +264,9 @@ tMatch' vts bind cbvs pbvs (Lam tkC nC vlC tC) (Lam tkP nP vlP tP)
 \end{code}
 
 
-\subsubsection{Substitution Term-Pattern (\texttt{Sub})}
-
-$$
-\inferrule
-   {n_C = n_P
-    \and
-    \beta \vdash t_C :: t_P \leadsto \beta'_t
-    \and
-    \beta \vdash \sigma_C :: \sigma_P \leadsto \beta'_\sigma
-   }
-   { \beta \vdash t_C\sigma_C :: t_P\sigma_P
-     \leadsto
-     \beta \uplus \beta'_t \uplus \beta'_\sigma
-   }
-   \quad
-   \texttt{tMatch Subst}
-$$
-\begin{code}
-tMatch' vts bind cbvs pbvs (Sub tkC tC subC) (Sub tkP tP subP)
-  | tkP == tkC
-    =  do bindT  <-  tMatch vts bind cbvs pbvs tC tP
-          sMatch vts bindT cbvs pbvs subC subP
-\end{code}
 
 
+\newpage
 \subsubsection{Iterated Term-Pattern (\texttt{Iter})}
 
 $$
@@ -368,10 +348,35 @@ tMatch' _ _ _ _ tC tP
     ]
 \end{code}
 
+\newpage
+\subsubsection{Substitution Term-Pattern (\texttt{Sub})}
+
+$$
+\inferrule
+   {n_C = n_P
+    \and
+    \beta \vdash t_C :: t_P \leadsto \beta'_t
+    \and
+    \beta \vdash \sigma_C :: \sigma_P \leadsto \beta'_\sigma
+   }
+   { \beta \vdash t_C\sigma_C :: t_P\sigma_P
+     \leadsto
+     \beta \uplus \beta'_t \uplus \beta'_\sigma
+   }
+   \quad
+   \texttt{tMatch Subst}
+$$
+\begin{code}
+tMatch' vts bind cbvs pbvs (Sub tkC tC subC) (Sub tkP tP subP)
+  | tkP == tkC
+    =  do bindT  <-  tMatch vts bind cbvs pbvs tC tP
+          sMatch vts bindT cbvs pbvs subC subP
+\end{code}
+
 \subsection{Term-List Matching}
 
-For now a simple zip-like walk along both lists
-(no precomputing length to abort early).
+A simple zip-like walk along both lists
+(precomputing length to abort early).
 \begin{code}
 tsMatch :: MonadPlus mp
         => [VarTable] -> Binding -> CBVS -> PBVS
@@ -387,7 +392,6 @@ tsMatch _ _ _ _ _ _  =  error "tsMatch: unexpected mismatch case."
 \end{code}
 
 
-\newpage
 \subsection{Term-Variable Matching}
 
 We assume here that candidate term and pattern variable
@@ -1471,14 +1475,6 @@ to possible known pattern variables?
 Can this mapping be built incrementally over a list of \texttt{VarTable}s?
 }
 
-\textbf{RE-RE-THINK}
-\textit{
-Currently we tend to get bindings where just one of several pattern list-variables
-is bound to all the candidates,
-with the rest bound to the empty set.
-We also want to have outcomes where the candidates are shared more evenly
-around the patterns.
-}
 \begin{code}
 vsFreeMatch :: MonadPlus mp
               => [VarTable] -> Binding

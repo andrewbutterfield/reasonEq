@@ -95,6 +95,7 @@ buildMatchContext (thy:thys) -- thys not null
 data Match
  = MT { mName ::  String     -- assertion name
       , mAsn  ::  Assertion  -- matched assertion
+      , mClass :: MatchClass -- match class
       , mBind ::  Binding    -- resulting binding
       , mRepl ::  Term       -- replacement term
       } deriving (Eq,Show,Read)
@@ -379,21 +380,26 @@ as well as the whole thing.
 \begin{code}
 domatch :: LogicSig -> [VarTable] -> Term -> Law -> Matches
 domatch logicsig vts tC law@((n,asn@(tP@(Cons tk i ts@(_:_:_)),sc)),prov)
-  | i == theEqv logicsig     =  simpleMatch (theTrue logicsig) vts tC law
+  | i == theEqv logicsig     =  simpleMatch MatchAll (theTrue logicsig) vts tC law
                              ++ doEqvMatch logicsig vts tC n sc prov ts
 \end{code}
 Otherwise we just match against the whole law.
 \begin{code}
-domatch logicsig vts tC law  =  simpleMatch (theTrue logicsig) vts tC law
+domatch logicsig vts tC law  =  simpleMatch MatchAll (theTrue logicsig) vts tC law
 \end{code}
 
-Do a simple match:
+Do a simple match.
+\\\textbf{Note:
+This function needs to get the context in which it is called,
+so that it can note that it was invoked as part of a partial match.
+Also, if its pattern is just a single, uknown predicate variable,
+then it needs to record that fact as well}
 \begin{code}
-simpleMatch :: Term -> [VarTable] -> Term -> Law -> Matches
-simpleMatch repl vts tC ((n,asn@(tP,_)),_)
+simpleMatch :: MatchClass -> Term -> [VarTable] -> Term -> Law -> Matches
+simpleMatch mc repl vts tC ((n,asn@(tP,_)),_)
  = map mkmatch $ match vts tC tP
  where
-   mkmatch bind = MT n asn bind $ inst bind repl
+   mkmatch bind = MT n asn mc bind $ inst bind repl
    inst bind = fromJust . instantiate bind
 \end{code}
 
@@ -404,58 +410,44 @@ as described in \cite[p29]{gries.93}.
 First we give shorthand notation for n-ary uses of $\equiv$
 and interesting subsets.
 \begin{eqnarray*}
-   \mathop\equiv_i(P_1^n) &=& P_1 \equiv P_2 \equiv \dots \equiv P_n,
+   \mathop\equiv_i(p_1^n) &=& p_1 \equiv p_2 \equiv \dots \equiv p_n,
    \qquad i = 1 \dots n \land n > 1
-\\ \mathop\equiv_i(P_1^n)\setminus \setof j
+\\ \mathop\equiv_i(p_1^n)\setminus \setof j
    &=&
-   P_1 \equiv \dots \equiv P_{j-1}  \equiv P_{j+1} \equiv \dots \equiv P_n
-\\ \mathop\equiv_i(P_1^n) |_{\setof{a,\dots,z}}
+   p_1 \equiv \dots \equiv p_{j-1}  \equiv p_{j+1} \equiv \dots \equiv p_n
+\\ \mathop\equiv_i(p_1^n) |_{\setof{a,\dots,z}}
    &=&
-   P_a \equiv \dots \equiv P_z,
+   p_a \equiv \dots \equiv p_z,
    \quad \setof{a,\dots,z} \subseteq \setof{1\dots n}
 \end{eqnarray*}
 $$
 \begin{array}{|l|c|c|c|c|}
 \hline
    \textrm{Case}
- & \textrm{Cand.($C$)} & \textrm{Patn.} & \textrm{Match.} & \textrm{Repl.}
+ & \textrm{Cand.($c$)} & \textrm{Patn.} & \textrm{Match.} & \textrm{Repl.}
 \\\hline
    A.
- & \textrm{any } C
+ & \textrm{any } c
  & P \equiv P
- & C :: (P \equiv P) \textrm{ (only!)}
+ & c :: (P \equiv P) \textrm{ (only!)}
  & \true
 \\\hline
    B.
- & \textrm{any } C
- & \mathop\equiv_i(P_1^n)
- & C :: P_j
- & \mathop\equiv_i(P_i^n)\setminus j
+ & \textrm{any } c
+ & \mathop\equiv_i(p_1^n)
+ & c :: p_j
+ & \mathop\equiv_i(p_i^n)\setminus j
 \\\hline
-   C.
- & \mathop\equiv_j(C_1^m), m \leq n
- & \mathop\equiv_i(P_i^n)
- & C_j :: P_i, i \in J, \#J = m, J \subseteq \setof{1\dots n}
- & \mathop\equiv_i(P_i^n)\setminus J
-\\\hline
-   D.
- & \mathop\equiv_j(C_1^m), m > n
- & \mathop\equiv_i(P_i^n)
- & C_j :: P_i, j \in K, \#K = n, K \subseteq \setof{1\dots m}
- & (\mathop\equiv_i(P_i^n)|_K) \equiv (\mathop\equiv_j(C_j^n)\setminus K)
+   c.
+ & \mathop\equiv_j(c_1^m), m \leq n
+ & \mathop\equiv_i(p_1^n)
+ & c_j :: p_i, i \in J, \#J = m, J \subseteq \setof{1\dots n}
+ & \mathop\equiv_i(p_1^n)\setminus J
 \\\hline
 \end{array}
 $$
 Case A prevents spurious matches of \QNAME{$\equiv$-refl}
-where we match $C::P$ with replacment $P$ to obtain result $C$.
-We might consider matching candidate uses of $\equiv$
-with an arity greater than that of the pattern (Case D.),
-by matching a subset of candidates against pattern components.
-However Case D breaks the matching abstraction by requiring the replacement
-predicate to be embedded in with specific remaining parts of the candidate.
-The best approach is to have a way to focus into the relevant subset
-of the candidate (i.e., $\mathop\equiv_j(C_1^m)|_K$),
-and then try to match against the pattern.
+where we match $c::P$ with replacment $P$ to obtain result $c$.
 We fully support Cases A and B and give some support to Case C.
 
 First, Case A, which is automatically done above by \texttt{simpleMatch},
@@ -475,7 +467,8 @@ Next, Case B.
 \begin{code}
 doEqvMatchB logicsig vts tC n sc prov mtchs _ [] = mtchs
 doEqvMatchB logicsig vts tC n sc prov mtchs sPt (tP:tPs)
-  = let mtchs' = simpleMatch (eqv (reverse sPt ++ tPs)) vts tC ((n,(tP,sc)),prov)
+  = let mtchs' = simpleMatch (MatchEqv [length sPt + 1])
+                    (eqv (reverse sPt ++ tPs)) vts tC ((n,(tP,sc)),prov)
     in doEqvMatchB logicsig vts tC n sc prov (mtchs'++mtchs) (tP:sPt) tPs
   where
     eqv []   =  theTrue logicsig
@@ -485,23 +478,26 @@ doEqvMatchB logicsig vts tC n sc prov mtchs sPt (tP:tPs)
 
 \newpage
 Case C only applies if the \emph{candidate} is an equivalence.
-We will just try $J$ being either
+We will assume $m < n$ and just try $J$ being either
 the first $m$ pattern components ($\setof{1\dots m}$),
 or the last $m$ (\setof{n+1-m\dots n}).
 \begin{code}
 doEqvMatchC logicsig vts tC@(Cons tk i tsC) n sc prov tsP
- | i == theEqv logicsig = doEqvMatchC' logicsig vts n sc prov tsC tsP
-                          ++
-                          doEqvMatchC' logicsig vts n sc prov tsC (reverse tsP)
-doEqvMatchC _ _ _ _ _ _ _ = []
-
-doEqvMatchC' logicsig vts n sc prov tsC tsP
-  | cLen <= pLen
-     = simpleMatch (eqv tsP'') vts (eqv tsC) ((n,(eqv tsP',sc)),prov)
-  | otherwise = []
-  where
+ | i == theEqv logicsig
+   && cLen < pLen  = doEqvMatchC' cLen [1..cLen]
+                       logicsig vts n sc prov tsC tsP
+                     ++
+                     doEqvMatchC' cLen [pLen+1-cLen .. pLen]
+                       logicsig vts n sc prov (reverse tsC) (reverse tsP)
+ where
     cLen = length tsC
     pLen = length tsP
+doEqvMatchC _ _ _ _ _ _ _ = []
+
+-- we assume cLen < pLen here
+doEqvMatchC' cLen is logicsig vts n sc prov tsC tsP
+  = simpleMatch (MatchEqv is) (eqv tsP'') vts (eqv tsC) ((n,(eqv tsP',sc)),prov)
+  where
     (tsP',tsP'') = splitAt cLen tsP
     eqv []   =  theTrue logicsig
     eqv [t]  =  t

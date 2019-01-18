@@ -7,7 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Proofs
- ( HowUsed(..)
+ ( MatchClass, pattern MatchAll, pattern MatchEqv, pattern MatchEqvVar
+ , HowUsed(..)
  , SeqFocus(..), Justification(..), showJustification
  , isSequentSwitch, justSwitched
  , CalcStep
@@ -34,40 +35,49 @@ to get from an initial goal to a final succesful outcome.
 
 \subsection{Proof Structure}
 
+\emph{On notation: } we shall use lower-case letters $p,q,r,h,c,a$ to denote predicate
+terms of arbitrary form,
+and upper-case letters $P,Q,R$
+to denote terms that are a single predicate (meta-)variable.
+
 Consider a pre-existing set of laws $\mathcal L$ (axioms plus proven theorems),
-and consider that we have a conjecture $C$ that we want to prove.
+and consider that we have a conjecture $c$ that we want to prove.
 The most general proof framework we plan to support is the following:
 \begin{description}
   \item[Deduction]
-    In general we partition $C$ into three components:
+    In general we partition $c$ into three components:
     \begin{description}
       \item[Hypotheses]
-        A set $\mathcal H = \setof{H_1,\dots,H_n}$ of hypotheses,
+        A set $\mathcal H = \setof{h_1,\dots,h_n}$ of hypotheses,
         for $n \geq 0$,
-        in which all unknown variables in the $H_i$
+        in which all unknown variables in the $h_i$
         are temporarily marked as ``known'' (as themselves),
         for the duration of the proof.
       \item[Consequents]
-        A pair of sub-conjectures $C_{left}$ and $C_{right}$.
+        A pair of sub-conjectures $c_{left}$ and $c_{right}$.
     \end{description}
     We require these to be chosen such that:
-    $$ C \quad =  \bigwedge_{i \in 1\dots n} H_i \implies (C_{left} \equiv C_{right})$$
+    $$ c \quad
+        =  \bigwedge_{i \in 1\dots n} h_i
+              \implies (c_{left} \equiv c_{right})$$
     Our proof is the based upon the sequent:
-    $$ \mathcal L,H_1,\dots,H_n \vdash C_{left} \equiv C_{right}$$
-    where we use the laws in both $\mathcal L$ and $\mathcal H$ to transform either or both
-    of $C_{left}$ and $C_{right}$ until they are the same.
+    $$ \mathcal L,h_1,\dots,h_n \vdash c_{left} \equiv c_{right}$$
+    where we use the laws in both $\mathcal L$ and $\mathcal H$
+    to transform either or both
+    of $c_{left}$ and $c_{right}$ until they are the same.
   \newpage
   \item[Calculation]
     We define two kinds of calculation steps:
     \begin{description}
       \item[standard]
-        We use a law from $\mathcal L$ or $\mathcal H$ to transform either sub-conjecture:
+        We use a law from $\mathcal L$ or $\mathcal H$
+        to transform either sub-conjecture:
         \begin{eqnarray*}
-           \mathcal L,\mathcal H &\vdash&  C_x
+           \mathcal L,\mathcal H &\vdash&  c_x
         \\ &=& \textrm{effect of some assertion $A$
                                       in $\mathcal L\cup \mathcal H$
-                                      on (a sub-term of) $C_x$}
-        \\ \mathcal L,\mathcal H &\vdash& C'_x
+                                      on (a sub-term of) $c_x$}
+        \\ \mathcal L,\mathcal H &\vdash& c'_x
         \end{eqnarray*}
       \item[deductive]
         We select a hypothesis from in front of the turnstile,
@@ -75,41 +85,41 @@ The most general proof framework we plan to support is the following:
         We add the transformed version into the hypotheses,
         retaining its original form as well.
         \begin{eqnarray*}
-           \mathcal L,\mathcal H &\vdash& C_x
-        \\ &\downarrow& \textrm{select $H_i$}
-        \\ \mathcal L,\mathcal H\setminus\setof{H_i}
-           &\vdash& H_i
-        \\ &=& \textrm{effect of some assertion $A$
+           \mathcal L,\mathcal H &\vdash& c_x
+        \\ &\downarrow& \textrm{select $h_i$}
+        \\ \mathcal L,\mathcal H\setminus\setof{h_i}
+           &\vdash& h_i
+        \\ &=& \textrm{effect of some assertion $a$
                                       in $\mathcal L\cup \mathcal H\setminus\setof{H_i}$
-                                      on $H_i$}
-        \\ \mathcal L,\mathcal H\setminus\setof{H_i}
-           &\vdash& H'_i
+                                      on $h_i$}
+        \\ \mathcal L,\mathcal H\setminus\setof{h_i}
+           &\vdash& h'_i
         \\ &\downarrow& \textrm{restore calculational sequent}
-        \\ \mathcal L,\mathcal H\cup\setof{H_{n+1}} &\vdash& C_x \qquad H_{n+1} = H'_i
+        \\ \mathcal L,\mathcal H\cup\setof{h_{n+1}} &\vdash& c_x \qquad h_{n+1} = h'_i
         \end{eqnarray*}
-        We may do a number of calculational steps on $H_i$ before
+        We may do a number of calculational steps on $h_i$ before
         restoring the original standard sequent.
     \end{description}
 \end{description}
 
 There are a number of strategies we can apply, depending on the structure
-of $C$, of which the following three are most basic
+of $c$, of which the following three are most basic
 \begin{eqnarray*}
-   reduce(C)
+   reduce(c)
    &\defs&
-   \mathcal L \vdash C \equiv \true
-\\ redboth(C_1 \equiv C_2)
+   \mathcal L \vdash c \equiv \true
+\\ redboth(c_1 \equiv c_2)
    &\defs&
-   \mathcal L \vdash C_1 \equiv C_2
-\\ assume(H \implies C)
+   \mathcal L \vdash c_1 \equiv c_2
+\\ assume(h \implies c)
    &\defs&
-   \mathcal L,\splitand(H) \vdash (C \equiv \true)
+   \mathcal L,\splitand(h) \vdash (c \equiv \true)
 \end{eqnarray*}
 where
 \begin{eqnarray*}
-\\ \splitand(H_1 \land \dots \land H_n)
+\\ \splitand(h_1 \land \dots \land h_n)
    &\defs&
-   \setof{H_1,\dots,H_n}
+   \setof{h_1,\dots,h_n}
 \end{eqnarray*}
 
 In addition, we can envisage a step that transforms the shape of
@@ -167,6 +177,8 @@ a goal (sub-)term:
 \end{description}
 In both cases the match binding is used to build the replacement term.
 
+\subsubsection{Partial Matching}
+
 Given a sub-term and a law-term
 there may a number of different ways in which we can match
 the sub-term against the law-term.
@@ -186,33 +198,82 @@ $$\begin{array}{|c|c|c|c|c|c|}
   \mbox{Full} & \mbox{any} & \mbox{all}
  & \true & \equiv
 \\\hline
- \equiv\mbox{LHS} & P \equiv Q & P
- & Q\beta & \equiv
+ \equiv\mbox{LHS} & p \equiv q & p
+ & q\beta & \equiv
 \\\hline
- \equiv\mbox{RHS} & P \equiv Q & Q
- & P\beta & \equiv
+ \equiv\mbox{RHS} & p \equiv q & q
+ & p\beta & \equiv
 \\\hline
- \implies\mbox{ANTE} & P \implies Q & P
- & (P \land Q)\beta & \equiv
+ \implies\mbox{ANTE} & p \implies q & p
+ & (p \land q)\beta & \equiv
 \\\hline
- \implies\mbox{ANTE} & P \implies Q & P
- & Q\beta & \implies
+ \implies\mbox{ANTE} & p \implies q & p
+ & q\beta & \implies
 \\\hline
- \implies\mbox{CNSQ} & P \implies Q & Q
- & (Q \lor P)\beta & \equiv
+ \implies\mbox{CNSQ} & p \implies q & q
+ & (q \lor p)\beta & \equiv
 \\\hline
- \implies\mbox{CNSQ} & P \implies Q & Q
- & P\beta & \impliedby
+ \implies\mbox{CNSQ} & p \implies q & q
+ & p\beta & \impliedby
 \\\hline
 \end{array}$$
 We assume that $\beta$ is the binding returned by the match.
 
+We can generalise the $p\equiv q$ law structure example above
+to the more general $p_1 \equiv p_2 \equiv \dots \equiv p_n$,
+where we might match against $p_1 \equiv \dots \equiv p_k$ (say),
+with $(p_{k+1} \equiv \dots \equiv p_n)\beta$ as the replacement.
+Similar generalisations apply to laws of the form
+$p_1 \implies \dots \implies p_n \implies q$.
 
-First, a type that states how a law was used in a step:
+Finally, with laws of the form $Complicated \equiv P$,
+will always succeed, \emph{for any candidate}, in a $\equiv$RHS match,
+with $Complicated\beta$ as a replacement.
+These ``expanding'' matches can be useful from time to time,
+but usually they are considered to be annoying.
+These need to clearly identified.
+
+\newpage
+We shall define the following match partiality classes,
+assuming that $n \geq 2$, $N = 1\dots n$ and $M \subset N$.
+$$
+\begin{array}{|c|c|c|c|}
+  \hline
+  \mbox{partial match class} & \mbox{law struct} & \mbox{patn.} & \mbox{repl.}
+\\\hline
+  \mbox{All} & p & p & \true
+\\\hline
+  \mbox{Eqv}(M)
+  & \equiv_{i \in N} p_i
+  & \equiv_{j \in M} p_j
+  & \equiv_{k \in N\setminus M} p_k\beta
+\\\hline
+  \mbox{EqvVar}(k), k \in N
+  & \equiv_{i \in 1\dots n} p_i, p_k = P
+  & P
+  & \equiv_{j \in N\setminus\{k\}} p_j\beta
+\\\hline
+\end{array}
+$$
+So we have a match partiality class datatype:
+\begin{code}
+data MatchClass
+  = MA       -- match all of law, with replacement 'true'
+  | ME [Int] -- match subpart of 'equiv' chain
+  -- MEV should be last,
+  | MEV Int  -- match PredVar at given position
+  deriving (Eq,Ord,Show,Read)
+
+pattern MatchAll      = MA
+pattern MatchEqv is   = ME is
+pattern MatchEqvVar i = MEV i
+\end{code}
+
+Now, a type that states how a law was used in a step:
 \begin{code}
 data HowUsed
-  = ByMatch          -- replace focus with binding(match)
-  | ByInstantiation  -- replace focus=true with binding(law)
+  = ByMatch MatchClass  -- replace focus with binding(match)
+  | ByInstantiation     -- replace focus=true with binding(law)
   deriving (Eq,Show,Read)
 \end{code}
 
@@ -303,8 +364,13 @@ showJustification (Associate i gs)
   =  "   ["++showGroupSpec gs++" over "++trId i++"]"
 
 showHow :: HowUsed -> String
-showHow ByMatch = "match"
+showHow (ByMatch mc) = showMatchClass mc
 showHow ByInstantiation = "instantiate"
+
+showMatchClass :: MatchClass -> String
+showMatchClass MatchAll         =  "match-all"
+showMatchClass (MatchEqv is)    =  "match-equiv"++show is
+showMatchClass (MatchEqvVar i)  =  "match-eqv-pvar("++show i++")"
 
 showSeqFocus :: SeqFocus -> String
 showSeqFocus CLeft = "left"

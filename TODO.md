@@ -4,13 +4,10 @@
 
 ## Next Task(s)
 
-* classify matches (whole, lhs, rhs, etc...)
-* use match classification when producing proof justifications.
+* instantiate side-conditions in matches 
+* handle side-conditions (just `Disjoint` for now)
 
 ## Quantifier Laws in proofs
-
-* re-instate side-condition tests
-* handle side-conditions (just `Disjoint` for now)
 
 ## Theory Management
 

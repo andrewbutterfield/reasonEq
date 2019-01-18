@@ -413,7 +413,10 @@ applyMatchToFocus i liveProof
           return ( focus_ ((setTZ (mRepl mtch) tz),seq')
                  $ matches_ []
                  $ stepsSoFar__
-                    (( UseLaw ByMatch (mName mtch) (mBind mtch) dpath
+                    (( UseLaw (ByMatch $ mClass mtch)
+                              (mName mtch)
+                              (mBind mtch)
+                              dpath
                      , exitTZ tz):)
                     liveProof )
 \end{code}

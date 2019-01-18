@@ -2,12 +2,15 @@
 
 ## Hotfixes
 
+## Next Task(s)
+
+* classify matches (whole, lhs, rhs, etc...)
+* use match classification when producing proof justifications.
+
 ## Quantifier Laws in proofs
 
-* need to simplify side-conditions (drastically)
-* need to re-instate side-condition tests
-* need to handle side-conditions (just `Disjoint` for now)
-* need to classify matches (whole, lhs, rhs, etc...)
+* re-instate side-condition tests
+* handle side-conditions (just `Disjoint` for now)
 
 ## Theory Management
 

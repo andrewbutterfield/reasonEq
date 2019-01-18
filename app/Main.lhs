@@ -497,9 +497,9 @@ Presenting a sequent for choosing:
 presentSeq (str,seq)
   = "'" ++ str ++ "':  "
     ++ presentHyp (hyp seq)
-    ++ " " ++ _vdash ++ " " ++
+    ++ "   " ++ _vdash ++ "   " ++
     trTerm 0 (cleft seq)
-    ++ " = " ++
+    ++ "   =   " ++
     trTerm 0 (cright seq)
 
 presentHyp hthy

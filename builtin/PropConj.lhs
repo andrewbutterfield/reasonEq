@@ -143,7 +143,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjContradict
- = ( _land++"_symm"
+ = ( "contradiction"
    , ( p /\ mkNot p === falseP
      , scTrue ) )
 \end{code}

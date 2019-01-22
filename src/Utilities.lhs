@@ -25,6 +25,7 @@ module Utilities (
 , pad
 , splitLast
 , args2str, args2int, entertogo
+, main
 )
 where
 
@@ -36,7 +37,7 @@ import System.IO
 import Control.Applicative
 import Control.Monad
 
---import Debug.Trace -- disabel when not used, as this module is 'open'
+--import Debug.Trace -- disable when not used, as this module is 'open'
 --dbg msg x = trace (msg++show x) x
 \end{code}
 

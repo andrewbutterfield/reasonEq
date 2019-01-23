@@ -15,6 +15,7 @@ module Utilities (
 , trim
 , nlookup
 , numberList, numberList'
+, putPP, putShow, pp
 , YesBut(..)
 , hasdup
 , disjoint, overlaps
@@ -25,7 +26,6 @@ module Utilities (
 , pad
 , splitLast
 , args2str, args2int, entertogo
-, main
 )
 where
 
@@ -285,14 +285,15 @@ instance Functor YesBut where
   fmap f (But msgs)  =  But msgs
 
 instance Applicative YesBut where
-  pure x = Yes x
+  pure x                   =  Yes x
   Yes f <*> Yes x          =  Yes $ f x
   Yes f <*> But msgs       =  But msgs
   But msgs1 <*> But msgs2  =  But (msgs1++msgs2)
 
 instance Monad YesBut where
+  return x        =  Yes x
   Yes x   >>= f   =  f x
-  But msgs >>= f   =  But msgs
+  But msgs >>= f  =  But msgs
   fail msg        =  But [msg]
 
 instance Alternative YesBut where
@@ -543,86 +544,4 @@ disp2set i [] = "{}"
 --disp2set i [STlist []] = "{}"
 disp2set i [STlist sts] = disp2set i sts
 disp2set i (st:sts) = "{ "++ disp2 (i+2) st ++ disp2c i sts ++ " }"
-\end{code}
-
-\newpage
-\subsection{Utility ``Main''}
-
-We can run utility as a standalone application
-that takes a file containing failing tests
-and pretty-prints them to make debugging easier.
-
-Form of a test fail:
-\begin{verbatim}
-  <test description>: [Failed]
-expected: <Haskell Show Output>
- but got: <Hasekll Show Output>
-\end{verbatim}
-\begin{code}
-failedPostFix  = ": [Failed]" ; fpfLen = length failedPostFix
-expectedPrefix = "expected: " ; epfLen = length expectedPrefix
-butgotPrefix   = " but got: " ; bpfLen = length butgotPrefix
-\end{code}
-
-A simple check for a failure line:
-\begin{code}
-isFailed ln   =  deliafPreFix `isPrefixOf` reverse ln
-deliafPreFix  =  reverse failedPostFix
-\end{code}
-A check for a specified prefix (of known length), returning the remainder:
-\begin{code}
-checkPrefix pfx len ln
-  = let (before, after) = splitAt len ln
-    in if pfx == before
-        then return after
-        else fail ("Not prefixed with '"++pfx++"'")
-\end{code}
-
-This should be run from the repo top-level and looks
-for \texttt{test/TestResultsTemp.raw}.
-The result ends up in \texttt{TestResultsTemp.log},
-at the top-level.
-
-To compile do:
-\begin{verbatim}
-stack ghc -- -main-is Utilities Utilities.lhs -o fpp
-\end{verbatim}
-or, if GHC version has \texttt{Applicative} as part of Prelude:
-\begin{verbatim}
-ghc -main-is Utilities Utilities.lhs -o fpp
-\end{verbatim}
-
-\begin{code}
-main
- = do txt <- readFile "test/TestResultsTemp.raw"
-      let lns = lines txt
-      -- putStrLn $ unlines lns
-      let lnspp = ppFails lns
-      writeFile "TestResultsTemp.log" $ unlines lnspp
-\end{code}
-
-\newpage
-We scan lines, skipping until we find one that has the ``Failed'' postfix.
-We output that and then process the next two lines,
-checking that they start with the ``expected'' and ``but got'' prefixes.
-In each case we remove the prefix and output on a line by itself.
-We then pretty-print the rest of the line.
-
-\begin{code}
-ppFails []  =  []
-ppFails (ln:lns)
- | isFailed ln  =  "" : ln : ppFail1 lns
- | otherwise    =  ppFails lns
-
-ppFail1 []  =  []
-ppFail1 (ln:lns)
-  = case checkPrefix expectedPrefix epfLen ln of
-      Nothing ->  ppFail2 lns
-      Just expterm -> expectedPrefix : (pp expterm) : ppFail2 lns
-
-ppFail2 []  =  []
-ppFail2 (ln:lns)
-  = case checkPrefix butgotPrefix bpfLen ln of
-      Nothing ->  ppFails lns
-      Just gotterm -> butgotPrefix : (pp gotterm) : ppFails lns
 \end{code}

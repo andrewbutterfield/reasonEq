@@ -16,25 +16,6 @@ END THEORIES
 CURRTHEORY = PropSubst
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("PropSubst","false_subst")
-BEGIN LIVE-PROOF
-TH-NAME: PropSubst
-CJ-NAME: false_subst
-CONJ = (C P (Id "\8801") [S P (V P (VR (Id "false",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])),V P (VR (Id "false",VP,WS))],[])
-SIDE = []
-STRAT redinit
-BEGIN SEQZIP
-TERMZIP = (S P (C P (Id "\172") [V P (VR (Id "true",VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])),[])
-BEGIN SEQUENT'
-SIDECOND = []
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.false_subst", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = V P (VR (Id "false",VP,WS))}
-END SEQUENT'
-END SEQZIP
-FPATH: []
-BEGIN LIST STEPS
-(UseLaw (ByMatch (ME [1])) "false-def" (BD (fromList [((Id "false",VP),BV (VR (Id "false",VP,WS)))],fromList [],fromList [])) [1],S P (V P (VR (Id "false",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])))
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

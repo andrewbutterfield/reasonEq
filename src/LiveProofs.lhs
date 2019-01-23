@@ -49,6 +49,7 @@ import TestRendering
 
 import Debug.Trace
 dbg msg x = trace (msg++show x) x
+pdbg nm x = dbg ('@':nm++":\n") x
 \end{code}
 
 \newpage
@@ -346,7 +347,7 @@ matchLawByName :: Monad m => LogicSig -> Term -> String -> [MatchContext]
                -> m Matches
 matchLawByName logicsig t lnm mcs
  = do (law,vts) <- findLaw lnm mcs
-      return $ domatch logicsig vts t $ dbg "mLBN.law:\n" law
+      return $ domatch logicsig vts t law
 \end{code}
 
 Sometimes we want to what happens when we single out a law,
@@ -438,7 +439,7 @@ $$
  & c :: p_j
  & \mathop\equiv_i(p_i^n)\setminus j
 \\\hline
-   c.
+   C.
  & \mathop\equiv_j(c_1^m), m \leq n
  & \mathop\equiv_i(p_1^n)
  & c_j :: p_i, i \in J, \#J = m, J \subseteq \setof{1\dots n}

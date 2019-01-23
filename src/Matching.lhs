@@ -32,6 +32,7 @@ import Binding
 
 import Debug.Trace
 dbg msg x = trace (msg ++ show x) x
+pdbg nm x = dbg ('@':nm++":\n") x
 \end{code}
 
 \subsection{Matching Principles}
@@ -132,7 +133,7 @@ $$
 $$
 \begin{code}
 match :: MonadPlus mp => [VarTable] -> Candidate -> Pattern -> mp Binding
-match vts c p  =  tMatch vts emptyBinding noBVS noBVS c p
+match vts cand patn  =  tMatch vts emptyBinding noBVS noBVS cand patn
 \end{code}
 
 \subsection{Term Matching}
@@ -338,15 +339,6 @@ tMatch' vts bind cbvs pbvs tC@(Cons tkC naC tsC) (Iter tkP naP niP lvsP)
             ibind bind' rest
 \end{code}
 
-Any other case results in failure:
-\begin{code}
-tMatch' _ _ _ _ tC tP
- = fail $ unlines
-    [ "tMatch: structural mismatch."
-    , "tC = " ++ show tC
-    , "tP = " ++ show tP
-    ]
-\end{code}
 
 \newpage
 \subsubsection{Substitution Term-Pattern (\texttt{Sub})}
@@ -371,6 +363,16 @@ tMatch' vts bind cbvs pbvs (Sub tkC tC subC) (Sub tkP tP subP)
   | tkP == tkC
     =  do bindT  <-  tMatch vts bind cbvs pbvs tC tP
           sMatch vts bindT cbvs pbvs subC subP
+\end{code}
+
+Any other case results in failure:
+\begin{code}
+tMatch' _ _ _ _ tC tP
+ = fail $ unlines
+    [ "tMatch: structural mismatch."
+    , "tC = " ++ show tC
+    , "tP = " ++ show tP
+    ]
 \end{code}
 
 \subsection{Term-List Matching}

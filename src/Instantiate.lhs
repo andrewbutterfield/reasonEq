@@ -32,6 +32,7 @@ An important feature of this instantiation process is that
 any pattern variable that is not bound remains the same
 ---we do not require bindings to explicity state that a pattern variable
 mapped to itself in the relevant candidate.
+A consequence of this is that instantiation shouldn't ever fail.
 \begin{code}
 instantiate :: Monad m => Binding -> Term -> m Term
 
@@ -62,7 +63,7 @@ instantiate binding (Sub tk tm s)
        return $ Sub tk tm' s'
 
 instantiate binding (Iter tk na ni lvs)
-  = error "instantiate NYFI -- Iter"
+  = fail "instantiate NYFI -- Iter"
 \end{code}
 
 \newpage

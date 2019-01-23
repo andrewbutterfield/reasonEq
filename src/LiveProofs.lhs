@@ -381,27 +381,32 @@ as well as the whole thing.
 \begin{code}
 domatch :: LogicSig -> [VarTable] -> Term -> Law -> Matches
 domatch logicsig vts tC law@((n,asn@(tP@(Cons tk i ts@(_:_:_)),sc)),prov)
-  | i == theEqv logicsig     =  simpleMatch MatchAll (theTrue logicsig) vts tC law
+  | i == theEqv logicsig  =  simpleMatch MatchAll (theTrue logicsig) vts tC (pdbg "dom.law" law)
                              ++ doEqvMatch logicsig vts tC n sc prov ts
 \end{code}
 Otherwise we just match against the whole law.
 \begin{code}
-domatch logicsig vts tC law  =  simpleMatch MatchAll (theTrue logicsig) vts tC law
+domatch logicsig vts tC law
+  =  simpleMatch MatchAll (theTrue logicsig) vts tC law
 \end{code}
 
 Do a simple match.
-\\\textbf{Note:
-This function needs to get the context in which it is called,
-so that it can note that it was invoked as part of a partial match.
-Also, if its pattern is just a single, uknown predicate variable,
-then it needs to record that fact as well}
 \begin{code}
 simpleMatch :: MatchClass -> Term -> [VarTable] -> Term -> Law -> Matches
 simpleMatch mc repl vts tC ((n,asn@(tP,_)),_)
- = map mkmatch $ match vts tC tP
- where
-   mkmatch bind = MT n asn mc bind $ inst bind repl
-   inst bind = fromJust . instantiate bind
+  = concat $ map mkmatch $ match vts tC tP
+  where
+    mkmatch bind
+      = case instantiate bind repl of
+          Nothing     ->  []
+          Just irepl  ->  [MT n asn (chkPatn mc tP) bind irepl]
+
+    chkPatn mc (Var _ v)
+      | lookupVarTables vts v == UnknownVar  =  trivialise mc
+    chkPatn mc _                             =  mc
+
+trivialise (MatchEqv [i])  =  MatchEqvVar i
+trivialise mc              =  mc
 \end{code}
 
 \newpage
@@ -585,15 +590,23 @@ displayMatches matches
   =  unlines' ( ("Matches:") : map shMatch (zip [1..] matches))
 
 shMatch (i, mtch)
- = ( show i ++ " : "++ ldq ++ green (mName mtch) ++ rdq
-     ++ " gives     "
-     ++ (bold . blue)
-           ( trTerm 0 (mRepl mtch)
-             ++ "  "
-             ++ trSideCond (fromJust $ instantiateSC bind $ lsc) ) )
+ = show i ++ " : "++ ldq ++ green (mName mtch) ++ rdq
+   ++ "  gives  "
+   ++ (bold $ blue $ trTerm 0 (mRepl mtch))
+   ++ "  "++ shSideCond bind lsc
+   ++ " " ++ shMClass (mClass mtch)
  where
     bind = mBind mtch
-    (lt,lsc) = mAsn mtch
+    (_,lsc) = mAsn mtch
+
+shSideCond bind lsc
+  = case instantiateSC bind lsc of
+      Nothing    ->  trSideCond lsc ++ (red " (law-sc!)")
+      Just ilsc  ->  trSideCond ilsc
+
+shMClass MatchAll         =  green "*"
+shMClass (MatchEqv is)    =  green (_equiv++show is)
+shMClass (MatchEqvVar i)  =  red "trivial!"
 \end{code}
 
 We can display laws from a context (again, this should be done elsewhere).

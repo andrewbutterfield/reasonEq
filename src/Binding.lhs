@@ -45,6 +45,7 @@ import VarData
 
 import Debug.Trace
 dbg msg x = trace (msg ++ show x) x
+pdbg nm x = dbg ('@':nm++":\n") x
 \end{code}
 
 \subsection{Introduction}
@@ -604,7 +605,7 @@ The exception is if the list-variable is static,
 in which case we need to ensure that there are no textual variables present.
 \begin{code}
 validStaticGVarClass vc gvar
-  = gvarWhen gvar /= Textual && validVarClassBinding vc (gvarClass gvar)
+  = gvarWhen (pdbg "GVAR" gvar) /= Textual && validVarClassBinding (pdbg "VC" vc) (gvarClass gvar)
 
 vlCompatible :: VarClass -> VarWhen -> VarList -> (Bool, VarWhen)
 vlCompatible vc Static vl  =  (all (validStaticGVarClass vc) vl,Static)
@@ -685,7 +686,7 @@ vsCompatible vc vw vs      =  vlComp vc vw S.empty (S.toList vs)
 bindLVarToVSet :: Monad m => ListVar -> VarSet -> Binding -> m Binding
 
 bindLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind))
- | valid
+ | pdbg "VALID-STATIC" valid
     =  do lbind' <- insertDR "bindLVarToVSet(static)" (==) (i,vc,is,ij) (BS vs) lbind
           return $ BD (vbind,sbind,lbind')
  | otherwise = fail "bindLVarToVSet: static cannot bind to any textual."
@@ -693,7 +694,7 @@ bindLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind))
     (valid, vsw) = vsCompatible vc Static vs
 
 bindLVarToVSet lv@(LVbl (Vbl i vc vw) is ij) vs (BD (vbind,sbind,lbind))
- | valid
+ | pdbg "VALID-OTHER" valid
    = case (vw,vsw) of
       (During m,During n) ->
             do lbind' <- insertDR "bindLVarToVSet(dynamic)" (==)

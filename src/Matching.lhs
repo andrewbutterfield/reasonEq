@@ -2134,10 +2134,10 @@ We then use the new bindings to identify the corresponding terms,
 and check that they match.
 \begin{code}
 sMatch vts bind cbvs pbvs (Substn tsC lvsC) (Substn tsP lvsP)
- = do bind'  <- vsMatch  vts  (d 1 bind)  cbvs pbvs (d 2 vsC) (d 3 vsP)
-      (bind'',tsC') <- tsMatchCheck vts  (d 4 bind') cbvs pbvs tsC $ S.toList tsP
-      if all (isVar . snd) tsC'
-      then lvsMatchCheck vts bind'' cbvs pbvs (tsC' +++ lvsC) $ S.toList lvsP
+ = do bind'  <- vsMatch  vts  (pdbg "vsM.bind" bind)  cbvs pbvs (pdbg "vsM.vsC" vsC) (pdbg "vsM.vsP" vsP)
+      (bind'',tsC') <- tsMatchCheck vts  (pdbg "vsM.bind'" bind') cbvs pbvs (pdbg "vsM.tsC" tsC) $ S.toList $ pdbg "vsM.tsP" tsP
+      if all (isVar . snd) $ pdbg "vsM.tsC'" tsC'
+      then lvsMatchCheck vts (pdbg "vsM.bind''" bind'') cbvs pbvs (tsC' +++ (pdbg "vsM.lvsC" lvsC)) $ S.toList $ pdbg "vsM.lvsP" lvsP
       else fail $ unlines
              [ "sMatch: some leftover std-replacement is not a Var."
              , "tsP  = " ++ show tsP
@@ -2150,7 +2150,6 @@ sMatch vts bind cbvs pbvs (Substn tsC lvsC) (Substn tsP lvsP)
   ts +++ lvs = (S.map liftVV ts `S.union` S.map liftLL lvs)
   liftVV (v,(Var _ u))  =  (StdVar v, StdVar u )
   liftLL (lv,lu      )  =  (LstVar lv,LstVar lu)
-  d n x = dbg ("\nD"++show n++":\n") x
 \end{code}
 
 \newpage
@@ -2230,11 +2229,11 @@ lvlvMatchCheck vts bind cbvs pbvs gvsC rlvP tlvP
  = case lookupLstBind bind tlvP of
      Nothing            ->  fail "lvlvMatchCheck: Nothing SHOULD NOT OCCUR!"
      Just (BindList bvlC) ->
-      let gvlB = S.toList $ S.filter ((inlist bvlC).fst) gvsC
+      let gvlB = S.toList $ S.filter ((inlist $ pdbg "BVLC" bvlC).fst) gvsC
       in bindLVarToVList rlvP (map snd gvlB) bind
      Just (BindSet bvsC) ->
-      let gvsB = S.filter ((inset bvsC).fst) gvsC
-      in bindLVarToVSet rlvP (S.map snd gvsB) bind
+      let gvsB = S.filter ((inset $ pdbg "BVSC" bvsC).fst) gvsC
+      in bindLVarToVSet (pdbg "RLVP" rlvP) (S.map snd $ pdbg "GVSB" gvsB) $ pdbg "BIND" bind
  where
    inlist vl gv  =  gv   `elem`   vl
    inset  vs gv  =  gv `S.member` vs

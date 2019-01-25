@@ -6,8 +6,10 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 module Ranking
-  ( RankFunction, rankAndSort
-  , sizeRank )
+  ( Rank, RankFunction
+  , sizeRank, nonTrivialSizeRank
+  , rankAndSort
+  )
 where
 
 import Data.List (sortOn)
@@ -15,19 +17,24 @@ import qualified Data.Set as S
 
 import AST
 import Laws
+import Proofs
 import LiveProofs
 
 import Debug.Trace
 dbg msg x = trace (msg++show x) x
 \end{code}
 
+\subsection{Ranking Types}
+
 Ranking matches to show those most likely to be useful.
 \begin{code}
-type RankFunction = [MatchContext] -> Match -> Int
-
-rankAndSort :: RankFunction -> [MatchContext] -> Matches -> Matches
-rankAndSort rf ctxts ms  = map snd $ sortOn fst $ zip (map (rf ctxts) ms) ms
+type Rank = Int -- the lower, the better
+type RankFunction = [MatchContext] -> Match -> Rank
 \end{code}
+
+\subsection{Ranking Functions}
+
+\subsubsection{Size Ranking}
 
 Simple ranking by replacement term size:
 \begin{code}
@@ -45,4 +52,25 @@ termSize (Iter _ _ _ vl) = 3 + length vl
 termSize (Type _) = 2
 
 subsSize (Substn ts lvs) = 3 * S.size ts + 2 * S.size lvs
+\end{code}
+
+\subsubsection{}
+Ranking by term size,
+but where being trivial has a very high penalty
+\begin{code}
+nonTrivialSizeRank :: RankFunction
+nonTrivialSizeRank mctxts m
+ = sizeRank mctxts m + trivialPenalty (mClass m)
+
+trivialPenalty :: MatchClass -> Int
+trivialPenalty (MatchEqvVar _)  =  1000000
+trivialPenalty _                =  0
+\end{code}
+
+\subsection{Ranking Match Lists}
+
+Simple sorting according to rank:
+\begin{code}
+rankAndSort :: RankFunction -> [MatchContext] -> Matches -> Matches
+rankAndSort rf ctxts ms  = map snd $ sortOn fst $ zip (map (rf ctxts) ms) ms
 \end{code}

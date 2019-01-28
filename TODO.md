@@ -2,6 +2,8 @@
 
 ## Hotfixes
 
+Need to use `bindLVarToTlist` in `lvlvMatchCheck` instead of both `bindLVarToVList` and `bindLVarToVSet`. Both target and replacement list-variables should be bound to lists of the same length, to maintain targhet/replacement correspondance.
+
 ## Next Task(s)
 
 * instantiate side-conditions in matches 

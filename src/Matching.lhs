@@ -2134,10 +2134,10 @@ We then use the new bindings to identify the corresponding terms,
 and check that they match.
 \begin{code}
 sMatch vts bind cbvs pbvs (Substn tsC lvsC) (Substn tsP lvsP)
- = do bind'  <- vsMatch  vts  (pdbg "vsM.bind" bind)  cbvs pbvs (pdbg "vsM.vsC" vsC) (pdbg "vsM.vsP" vsP)
-      (bind'',tsC') <- tsMatchCheck vts  (pdbg "vsM.bind'" bind') cbvs pbvs (pdbg "vsM.tsC" tsC) $ S.toList $ pdbg "vsM.tsP" tsP
-      if all (isVar . snd) $ pdbg "vsM.tsC'" tsC'
-      then lvsMatchCheck vts (pdbg "vsM.bind''" bind'') cbvs pbvs (tsC' +++ (pdbg "vsM.lvsC" lvsC)) $ S.toList $ pdbg "vsM.lvsP" lvsP
+ = do bind'  <- vsMatch  vts bind cbvs pbvs vsC vsP
+      (bind'',tsC') <- tsMatchCheck vts bind' cbvs pbvs tsC $ S.toList tsP
+      if all (isVar . snd) tsC'
+      then lvsMatchCheck vts bind'' cbvs pbvs (tsC' +++ lvsC) $ S.toList lvsP
       else fail $ unlines
              [ "sMatch: some leftover std-replacement is not a Var."
              , "tsP  = " ++ show tsP

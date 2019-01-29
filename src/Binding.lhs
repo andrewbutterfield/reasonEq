@@ -8,6 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Binding
 ( VarBind, pattern BindVar, pattern BindTerm
+, Repl, pattern ReplTerm, pattern ReplLVar
 , LstVarBind, pattern BindList, pattern BindSet, pattern BindTerms
 , Binding
 , emptyBinding
@@ -16,7 +17,7 @@ module Binding
 , bindLVarToVList
 , bindLVarToVSet, overrideLVarToVSet
 , bindLVarToSSelf, bindLVarsToSSelves, bindLVarSTuples
-, bindLVarToTList
+, bindLVarToRList
 , bindGVarToGVar
 , bindGVarToVList
 , bindGVarToTList
@@ -55,7 +56,8 @@ mapping pattern variables to corresponding candidate variables or terms.
 From the outside a binding has two mappings:
 \begin{itemize}
   \item \texttt{Variable} to \texttt{Variable} or \texttt{Term}.
-  \item \texttt{ListVar} to \texttt{VarList} or \texttt{VarSet} or \texttt{[Term]}.
+  \item \texttt{ListVar} to \texttt{VarList} or \texttt{VarSet}
+    or \texttt{[Term} or \texttt{ListVar]}.
 \end{itemize}
 However,
 we have a number of constraints regarding compatibilty
@@ -203,7 +205,8 @@ we find that, in effect, we need to maintain three mappings:
     Mapping of subscripts to subscripts.
   \item[List-Variable to \dots]
     Mapping of list-variable identifiers, class and identifier-lists,
-    to lists of general variables, or terms.
+    to lists and sets of general variables,
+    or lists of a mix terms and list-variables (for substitution matches).
 \end{description}
 
 
@@ -235,24 +238,36 @@ type SubBinding = M.Map Subscript Subscript
 
 \subsubsection{
   Binding \texttt{ListVar} to
-  \texttt{VarList} or \texttt{VarSet} or \texttt{[Term]}
+  \texttt{VarList} or \texttt{VarSet} or \texttt{[Term} or \texttt{]}
 }
+We need a mixture (``replacements'') of terms and list-variables,
+when dealing with substitution matches.
+\begin{code}
+data Repl
+ = RT Term
+ | RL ListVar
+ deriving (Eq,Ord,Show,Read)
+
+pattern ReplTerm   t  =  RT  t
+pattern ReplLVar  lv  =  RL lv
+\end{code}
 
 We bind a list-variable to either a list or set of variables,
-or a list of terms.
+or a list containing a mixture of terms and list-variables,
+when dealing with substitution matches.
 We use the variable identifier and the list of `subtracted` identifiers
 as the map key.
-
 \begin{code}
 data LstVarBind
  = BL  VarList
  | BS  VarSet
- | BX  [Term]
+ | BX  [Repl]
  deriving (Eq, Ord, Show, Read)
 
 type ListVarBinding
               = M.Map (Identifier,VarClass,[Identifier],[Identifier]) LstVarBind
 \end{code}
+
 We return just the variable list or set, or term-list from a lookup:
 \begin{code}
 pattern BindList  vl  =  BL vl
@@ -773,30 +788,31 @@ bindLVarSTuples (lv2:lv2s) bind
 \end{code}
 
 \newpage
-\subsubsection{Binding List-Variables to Term-lists}
+\subsubsection{Binding List-Variables to Replacement-lists}
 
 An observation or expression list-variable can bind to expressions
-while a predicate list-variable can only bind to a predicates.
+while a predicate list-variable can only bind to a predicates,
+or list-variables of the same type
 \begin{code}
-bindLVarToTList :: Monad m => ListVar -> [Term] -> Binding -> m Binding
+bindLVarToRList :: Monad m => ListVar -> [Repl] -> Binding -> m Binding
 \end{code}
 
 
 A \texttt{Textual} pattern variable cannot bind to a term
 \begin{code}
-bindLVarToTList (LVbl (Vbl _ _ Textual) _ _) _ binds
- = fail "bindLVarToTList: textual list-vars. not allowed."
+bindLVarToRList (LVbl (Vbl _ _ Textual) _ _) _ binds
+ = fail "bindLVarToRList: textual list-vars. not allowed."
 \end{code}
 
 Static patterns bind to anything in the appropriate class,
 as per Fig.\ref{fig:utp-perm-class-bind}.
 \begin{code}
-bindLVarToTList (LVbl (Vbl vi vc Static) is ij) cts (BD (vbind,sbind,lbind))
+bindLVarToRList (LVbl (Vbl vi vc Static) is ij) cts (BD (vbind,sbind,lbind))
  | all (validVarTermBinding vc) (map termkind cts)
-    = do lbind' <- insertDR "bindLVarToTList(static)" (==)
+    = do lbind' <- insertDR "bindLVarToRList(static)" (==)
                             (vi,vc,is,ij) (BX cts) lbind
          return $ BD (vbind,sbind,lbind')
- | otherwise  =  fail "bindLVarToTList: incompatible variable and terms."
+ | otherwise  =  fail "bindLVarToRList: incompatible variable and terms."
 \end{code}
 
 All remaining pattern cases are non-\texttt{Textual} dynamic variables.
@@ -806,26 +822,26 @@ predicate terms, all of whose dynamic variables have the same temporality.
 Dynamic observable and expression list-variables can only bind to
 expression terms, all of whose dynamic variables have the same temporality.
 \begin{code}
-bindLVarToTList (LVbl (Vbl vi vc vt) is ij) cts (BD (vbind,sbind,lbind))
+bindLVarToRList (LVbl (Vbl vi vc vt) is ij) cts (BD (vbind,sbind,lbind))
  | vc == PredV && any isExpr cts
-           =  fail "bindLVarToTList: pred. l-var. cannot bind to expression."
+           =  fail "bindLVarToRList: pred. l-var. cannot bind to expression."
  | vc /= PredV && any isPred cts
-           =  fail "bindLVarToTList: non-pred. l-var. cannot bind to predicate."
- | wsize  > 1  =  fail "bindLVarToTList: p.-var. mixed term temporality."
+           =  fail "bindLVarToRList: non-pred. l-var. cannot bind to predicate."
+ | wsize  > 1  =  fail "bindLVarToRList: p.-var. mixed term temporality."
  | wsize == 0  -- term has no variables
-   = do lbind' <- insertDR "bindLVarToTList(pv1)" (==) (vi,vc,is,ij) (bterms cts) lbind
+   = do lbind' <- insertDR "bindLVarToRList(pv1)" (==) (vi,vc,is,ij) (bterms cts) lbind
         return $ BD (vbind,sbind,lbind')
  | otherwise
    = case (vt,thectw) of
       (During m, During n) ->
-          do lbind' <- insertDR "bindLVarToTList(plv2)" (==)
+          do lbind' <- insertDR "bindLVarToRList(plv2)" (==)
                                 (vi,vc,is,ij) (bterms cts) lbind
-             sbind' <- insertDR "bindLVarToTList(plv3)" (==) m n sbind
+             sbind' <- insertDR "bindLVarToRList(plv3)" (==) m n sbind
              return $ BD (vbind,sbind',lbind')
       _ | vt /= thectw     ->
-            fail "bindLVarToTList: p.-var different temporality"
+            fail "bindLVarToRList: p.-var different temporality"
         | otherwise ->
-            do lbind' <- insertDR "bindLVarToTList(plv4)" (==)
+            do lbind' <- insertDR "bindLVarToRList(plv4)" (==)
                                   (vi,vc,is,ij) (bterms cts) lbind
                return $ BD (vbind,sbind,lbind')
  where
@@ -836,9 +852,9 @@ bindLVarToTList (LVbl (Vbl vi vc vt) is ij) cts (BD (vbind,sbind,lbind))
 
 Catch-all
 \begin{code}
-bindLVarToTList plv cts _
+bindLVarToRList plv cts _
  = error $ unlines
-     [ "bindLVarToTList: fell off end"
+     [ "bindLVarToRList: fell off end"
      , "plv = " ++ show plv
      , "cts = " ++ show cts ]
 \end{code}
@@ -880,7 +896,7 @@ while a standard-variable can only bind to the standard variable inside
 a singleton list.
 \begin{code}
 bindGVarToTList :: Monad m => GenVar -> [Term] -> Binding -> m Binding
-bindGVarToTList (LstVar lv) ts binds = bindLVarToTList lv ts binds
+bindGVarToTList (LstVar lv) ts binds = bindLVarToRList lv ts binds
 bindGVarToTList (StdVar pv) [t] binds = bindVarToTerm pv t binds
 bindGVarToTList _ _ _ = fail "bindGVarToVList: invalid gvar. -> vlist binding."
 \end{code}

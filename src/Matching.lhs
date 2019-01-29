@@ -2228,6 +2228,8 @@ lvlvMatchCheck :: MonadPlus mp
 lvlvMatchCheck vts bind cbvs pbvs gvsC rlvP tlvP
  = case lookupLstBind bind tlvP of
      Nothing            ->  fail "lvlvMatchCheck: Nothing SHOULD NOT OCCUR!"
+     -- in general we will need to bind list-vars for replacements
+     -- to lists that mix terms and list-vars
      Just (BindList bvlC) ->
       let gvlB = S.toList $ S.filter ((inlist $ pdbg "BVLC" bvlC).fst) gvsC
       in bindLVarToVList rlvP (map snd gvlB) bind

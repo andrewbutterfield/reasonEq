@@ -27,7 +27,7 @@ module Binding
 , dumpBinding
 , int_tst_Binding
 ) where
-import Data.Maybe (fromJust)
+import Data.Maybe (fromJust,catMaybes)
 import Data.List (nub)
 import Data.Map(Map)
 import qualified Data.Map as M
@@ -250,7 +250,13 @@ data Repl
 
 pattern ReplTerm   t  =  RT  t
 pattern ReplLVar  lv  =  RL lv
+
+isReplTerm (ReplTerm _) = True; isReplTerm _ = False
+getReplTerm (ReplTerm t)  = return t; getReplTerm _ = fail "getReplTerm LVar"
+
+getReplTerms = catMaybes . map getReplTerm
 \end{code}
+
 
 We bind a list-variable to either a list or set of variables,
 or a list containing a mixture of terms and list-variables,
@@ -797,7 +803,6 @@ or list-variables of the same type
 bindLVarToRList :: Monad m => ListVar -> [Repl] -> Binding -> m Binding
 \end{code}
 
-
 A \texttt{Textual} pattern variable cannot bind to a term
 \begin{code}
 bindLVarToRList (LVbl (Vbl _ _ Textual) _ _) _ binds
@@ -808,7 +813,7 @@ Static patterns bind to anything in the appropriate class,
 as per Fig.\ref{fig:utp-perm-class-bind}.
 \begin{code}
 bindLVarToRList (LVbl (Vbl vi vc Static) is ij) cts (BD (vbind,sbind,lbind))
- | all (validVarTermBinding vc) (map termkind cts)
+ | all (validVarTermBinding vc) (map termkind $ getReplTerms cts)
     = do lbind' <- insertDR "bindLVarToRList(static)" (==)
                             (vi,vc,is,ij) (BX cts) lbind
          return $ BD (vbind,sbind,lbind')
@@ -823,29 +828,30 @@ Dynamic observable and expression list-variables can only bind to
 expression terms, all of whose dynamic variables have the same temporality.
 \begin{code}
 bindLVarToRList (LVbl (Vbl vi vc vt) is ij) cts (BD (vbind,sbind,lbind))
- | vc == PredV && any isExpr cts
+ | vc == PredV && any isExpr cterms
            =  fail "bindLVarToRList: pred. l-var. cannot bind to expression."
- | vc /= PredV && any isPred cts
+ | vc /= PredV && any isPred cterms
            =  fail "bindLVarToRList: non-pred. l-var. cannot bind to predicate."
  | wsize  > 1  =  fail "bindLVarToRList: p.-var. mixed term temporality."
  | wsize == 0  -- term has no variables
-   = do lbind' <- insertDR "bindLVarToRList(pv1)" (==) (vi,vc,is,ij) (bterms cts) lbind
+   = do lbind' <- insertDR "bindLVarToRList(pv1)" (==) (vi,vc,is,ij) (bterms cterms) lbind
         return $ BD (vbind,sbind,lbind')
  | otherwise
    = case (vt,thectw) of
       (During m, During n) ->
           do lbind' <- insertDR "bindLVarToRList(plv2)" (==)
-                                (vi,vc,is,ij) (bterms cts) lbind
+                                (vi,vc,is,ij) (bterms cterms) lbind
              sbind' <- insertDR "bindLVarToRList(plv3)" (==) m n sbind
              return $ BD (vbind,sbind',lbind')
       _ | vt /= thectw     ->
             fail "bindLVarToRList: p.-var different temporality"
         | otherwise ->
             do lbind' <- insertDR "bindLVarToRList(plv4)" (==)
-                                  (vi,vc,is,ij) (bterms cts) lbind
+                                  (vi,vc,is,ij) (bterms cterms) lbind
                return $ BD (vbind,sbind,lbind')
  where
-   ctws = temporalitiesOf cts
+   cterms = getReplTerms cts
+   ctws = temporalitiesOf cterms
    wsize = S.size ctws
    thectw = S.elemAt 0 ctws
 \end{code}

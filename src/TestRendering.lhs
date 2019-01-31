@@ -284,12 +284,20 @@ trSub ctxtp (Substn tsub lvsub)
   mrg cs1 cs2  =  cs1 ++ ',':cs2
 \end{code}
 
+Replacements:
+\begin{code}
+trRepl p (ReplTerm t)   =  trTerm p t
+trRepl p (ReplLVar lv)  =  trLVar lv
+\end{code}
+
 These will eventually do some sort of multi-line pretty-printing.
 \begin{code}
 trBracketIf True  s  =  "("++s++")"
 trBracketIf False s  =  s
 
 trApply p n (lbr,sep,rbr) ts  =  lbr ++ trTL p sep ts ++ rbr
+
+trRL p sep rs = seplist sep (trRepl p) rs
 
 trTL p sep ts = seplist sep (trTerm p) ts
 
@@ -372,7 +380,7 @@ trVarBind vb = _ll ++ show vb ++ _gg
 
 trLstVarBind (BindList vl)  =  _langle ++ trVL vl ++ _rangle
 trLstVarBind (BindSet vs)  =  "{" ++ trVL (S.toList vs) ++ "}"
-trLstVarBind (BindTerms ts)  =  _langle ++ trTL 0 ", " ts ++ _rangle
+trLstVarBind (BindRepls rs)  =  _langle ++ trRL 0 ", " rs ++ _rangle
 \end{code}
 
 \begin{code}

@@ -9,7 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Binding
 ( VarBind, pattern BindVar, pattern BindTerm
 , Repl, pattern ReplTerm, pattern ReplLVar
-, LstVarBind, pattern BindList, pattern BindSet, pattern BindTerms
+, LstVarBind, pattern BindList, pattern BindSet, pattern BindRepls
 , Binding
 , emptyBinding
 , bindVarToVar, bindVarsToVars, bindVarToSelf, bindVarsToSelves
@@ -20,7 +20,7 @@ module Binding
 , bindLVarToRList
 , bindGVarToGVar
 , bindGVarToVList
-, bindGVarToTList
+, bindGVarToRList
 , lookupBind
 , lookupLstBind
 , bindLVarsToNull, bindLVarsToEmpty
@@ -267,7 +267,7 @@ as the map key.
 data LstVarBind
  = BL  VarList
  | BS  VarSet
- | BX  [Repl]
+ | BR  [Repl]
  deriving (Eq, Ord, Show, Read)
 
 type ListVarBinding
@@ -278,7 +278,7 @@ We return just the variable list or set, or term-list from a lookup:
 \begin{code}
 pattern BindList  vl  =  BL vl
 pattern BindSet   vs  =  BS vs
-pattern BindTerms ts  =  BX ts
+pattern BindRepls ts  =  BR ts
 \end{code}
 
 We put these together:
@@ -486,7 +486,7 @@ bindVarToTerm v@(Vbl vi ExprV vt) ct (BD (vbind,sbind,lbind))
  | otherwise -- term has one temporality
    = case (vt,thectw) of
       (During m, During n) ->
-          do vbind' <- insertDR "bindVarToTerm(ev2)" (==) (vi,ExprV) (bterm ct) vbind
+          do vbind' <- insertDR "bindVarToTerm(ev2)" (==) (vi,ExprV) (dnTerm ct) vbind
              sbind' <- insertDR "bindVarToTerm(ev3)" (==) m n sbind
              return $ BD (vbind',sbind',lbind)
       _ | vt /= thectw     ->
@@ -498,7 +498,7 @@ bindVarToTerm v@(Vbl vi ExprV vt) ct (BD (vbind,sbind,lbind))
                , "thectw = " ++ show thectw
                ]
         | otherwise ->
-            do vbind' <- insertDR "bindVarToTerm" (==) (vi,ExprV) (bterm ct) vbind
+            do vbind' <- insertDR "bindVarToTerm" (==) (vi,ExprV) (dnTerm ct) vbind
                return $ BD (vbind',sbind,lbind)
  where
    ctws = temporalityOf ct
@@ -512,18 +512,18 @@ bindVarToTerm v@(Vbl vi PredV vt) ct (BD (vbind,sbind,lbind))
  | isExpr ct  =  fail "bindVarToTerm: p.-var. cannot bind expression."
  | wsize  > 1  =  fail "bindVarToTerm: p.-var. mixed term temporality."
  | wsize == 0  -- term has no variables
-   = do vbind' <- insertDR "bindVarToTerm(pv1)" (==) (vi,PredV) (bterm ct) vbind
+   = do vbind' <- insertDR "bindVarToTerm(pv1)" (==) (vi,PredV) (dnTerm ct) vbind
         return $ BD (vbind',sbind,lbind)
  | otherwise
    = case (vt,thectw) of
       (During m, During n) ->
-          do vbind' <- insertDR "bindVarToTerm(pv2)" (==) (vi,PredV) (bterm ct) vbind
+          do vbind' <- insertDR "bindVarToTerm(pv2)" (==) (vi,PredV) (dnTerm ct) vbind
              sbind' <- insertDR "bindVarToTerm(pv3)" (==) m n sbind
              return $ BD (vbind',sbind',lbind)
       _ | vt /= thectw     ->
             fail "bindVarToTerm: p.-var different temporality"
         | otherwise ->
-            do vbind' <- insertDR "bindVarToTerm" (==) (vi,PredV) (bterm ct) vbind
+            do vbind' <- insertDR "bindVarToTerm" (==) (vi,PredV) (dnTerm ct) vbind
                return $ BD (vbind',sbind,lbind)
  where
    ctws = temporalityOf ct
@@ -579,41 +579,47 @@ vsTmpr vws ts ((Vbl _ _ vw):vs)  =  vsTmpr (S.insert vw vws) ts vs
 \end{code}
 
 \newpage
+Dynamic normalisation (d.n.):
 When we store a dynamic term,
 we ``normalise'' it by setting its temporality to \texttt{Before}.
-\begin{code}
-bterm :: Term -> VarBind
-bterm t = BT $ bterm' t
-bterm' v@(Var tk (Vbl vi vc vw))
-  | vw == Static || vw == Textual || vw == Before  =  v
-  | otherwise            =  btvar  tk $ Vbl vi vc Before
-bterm' (Cons tk n ts)    =  Cons   tk n $ map bterm' ts
-bterm' (Bind tk n vs t)  =  btbind tk n (S.map bgv vs) $ bterm' t
-bterm' (Lam tk n vl t)   =  btlam  tk n (  map bgv vl) $ bterm' t
-bterm' (Sub tk t sub)    =  Sub    tk (bterm' t) $ bsub sub
-bterm' (Iter tk a p lvs) =  Iter tk a p (map blv lvs)
-bterm' t                 =  t
 
-bv v@(Vbl vi vc vw)
+\begin{code}
+dnTerm :: Term -> VarBind
+dnTerm t = BT $ dnTerm' t
+
+dnTerm' :: Term -> Term
+dnTerm' v@(Var tk (Vbl vi vc vw))
+  | vw == Static || vw == Textual || vw == Before  =  v
+  | otherwise            =  dnTVar  tk $ Vbl vi vc Before
+dnTerm' (Cons tk n ts)    =  Cons   tk n $ map dnTerm' ts
+dnTerm' (Bind tk n vs t)  =  dnBind tk n (S.map dnGVar vs) $ dnTerm' t
+dnTerm' (Lam tk n vl t)   =  dnLam  tk n (  map dnGVar vl) $ dnTerm' t
+dnTerm' (Sub tk t sub)    =  Sub    tk (dnTerm' t) $ dnSub sub
+dnTerm' (Iter tk a p lvs) =  Iter tk a p (map dnLVar lvs)
+dnTerm' t                 =  t
+
+dnVar v@(Vbl vi vc vw)
   | vw == Static || vw == Textual || vw == Before  =  v
   | otherwise                                      =  Vbl vi vc Before
 
-blv (LVbl v is ij)  =  LVbl (bv v) is ij
-bgv (StdVar v)   =  StdVar $ bv  v
-bgv (LstVar lv)  =  LstVar $ blv lv
+dnLVar lv@(LVbl (Vbl vi vc vw) is ij)
+  | vw==Static || vw==Textual || vw==Before  =  lv
+  | otherwise                                =  LVbl (Vbl vi vc Before) is ij
 
-bsub (Substn tsub lvsub)
- = btsubst (btsub $ S.toList tsub) (blvsub $ S.toList lvsub)
+dnGVar (StdVar v)   =  StdVar $ dnVar  v
+dnGVar (LstVar lv)  =  LstVar $ dnLVar lv
 
-btsub tsub = map bvt tsub ; bvt (v,t) = (bv v,bterm' t)
-blvsub lvsub = map blvlv lvsub ; blvlv (lv1,lv2) = (blv lv1,blv lv2 )
+dnSub (Substn tsub lvsub)
+ = dnSubst (dnTSub $ S.toList tsub) (dnLVSub $ S.toList lvsub)
 
-btvar  tk       =  getJust "bterm var failed"  . var  tk
-btbind tk n vl  =  getJust "bterm bind failed" . bind tk n vl
-btlam  tk n vs  =  getJust "bterm lam failed"  . lam  tk n vs
-btsubst tsub lvsub = getJust "" $ substn tsub lvsub
+dnTSub tsub = map dnVT tsub ; dnVT (v,t) = (dnVar v,dnTerm' t)
+dnLVSub lvsub = map dnLVLV lvsub ; dnLVLV (lv1,lv2) = (dnLVar lv1,dnLVar lv2 )
+
+dnTVar  tk       =  getJust "dnTerm var failed"  . var  tk
+dnBind tk n vl  =  getJust "dnTerm bind failed" . bind tk n vl
+dnLam  tk n vs  =  getJust "dnTerm lam failed"  . lam  tk n vs
+dnSubst tsub lvsub = getJust "" $ substn tsub lvsub
 \end{code}
-
 
 
 \newpage
@@ -691,7 +697,7 @@ bindLVarToVList _ _ _ = fail "bindLVarToVList: invalid lvar. -> vlist binding."
 
 We need to coerce dynamics temporality to \texttt{Before}.
 \begin{code}
-bvl = BL . map bgv
+bvl = BL . map dnGVar
 \end{code}
 
 \newpage
@@ -765,7 +771,7 @@ overrideLVarToVSet _ _ _ = fail "overrideLVarToVSet: invalid lvar. -> vset bindi
 
 We need to coerce dynamics temporality to \texttt{Before}.
 \begin{code}
-bvs = BS . S.map bgv
+bvs = BS . S.map dnGVar
 \end{code}
 
 We also need some identity bindings:
@@ -812,10 +818,10 @@ bindLVarToRList (LVbl (Vbl _ _ Textual) _ _) _ binds
 Static patterns bind to anything in the appropriate class,
 as per Fig.\ref{fig:utp-perm-class-bind}.
 \begin{code}
-bindLVarToRList (LVbl (Vbl vi vc Static) is ij) cts (BD (vbind,sbind,lbind))
- | all (validVarTermBinding vc) (map termkind $ getReplTerms cts)
+bindLVarToRList (LVbl (Vbl vi vc Static) is ij) cndRs (BD (vbind,sbind,lbind))
+ | all (validVarTermBinding vc) (map termkind $ getReplTerms cndRs)
     = do lbind' <- insertDR "bindLVarToRList(static)" (==)
-                            (vi,vc,is,ij) (BX cts) lbind
+                            (vi,vc,is,ij) (BR cndRs) lbind
          return $ BD (vbind,sbind,lbind')
  | otherwise  =  fail "bindLVarToRList: incompatible variable and terms."
 \end{code}
@@ -827,30 +833,31 @@ predicate terms, all of whose dynamic variables have the same temporality.
 Dynamic observable and expression list-variables can only bind to
 expression terms, all of whose dynamic variables have the same temporality.
 \begin{code}
-bindLVarToRList (LVbl (Vbl vi vc vt) is ij) cts (BD (vbind,sbind,lbind))
+bindLVarToRList (LVbl (Vbl vi vc vt) is ij) cndRs (BD (vbind,sbind,lbind))
  | vc == PredV && any isExpr cterms
            =  fail "bindLVarToRList: pred. l-var. cannot bind to expression."
  | vc /= PredV && any isPred cterms
            =  fail "bindLVarToRList: non-pred. l-var. cannot bind to predicate."
  | wsize  > 1  =  fail "bindLVarToRList: p.-var. mixed term temporality."
  | wsize == 0  -- term has no variables
-   = do lbind' <- insertDR "bindLVarToRList(pv1)" (==) (vi,vc,is,ij) (bterms cterms) lbind
+   = do lbind' <- insertDR "bindLVarToRList(pv1)" (==)
+                           (vi,vc,is,ij) (dnRepls cndRs) lbind
         return $ BD (vbind,sbind,lbind')
  | otherwise
    = case (vt,thectw) of
       (During m, During n) ->
           do lbind' <- insertDR "bindLVarToRList(plv2)" (==)
-                                (vi,vc,is,ij) (bterms cterms) lbind
+                                (vi,vc,is,ij) (dnRepls cndRs) lbind
              sbind' <- insertDR "bindLVarToRList(plv3)" (==) m n sbind
              return $ BD (vbind,sbind',lbind')
       _ | vt /= thectw     ->
             fail "bindLVarToRList: p.-var different temporality"
         | otherwise ->
             do lbind' <- insertDR "bindLVarToRList(plv4)" (==)
-                                  (vi,vc,is,ij) (bterms cterms) lbind
+                                  (vi,vc,is,ij) (dnRepls cndRs) lbind
                return $ BD (vbind,sbind,lbind')
  where
-   cterms = getReplTerms cts
+   cterms = getReplTerms cndRs
    ctws = temporalitiesOf cterms
    wsize = S.size ctws
    thectw = S.elemAt 0 ctws
@@ -858,17 +865,20 @@ bindLVarToRList (LVbl (Vbl vi vc vt) is ij) cts (BD (vbind,sbind,lbind))
 
 Catch-all
 \begin{code}
-bindLVarToRList plv cts _
+bindLVarToRList plv cndRs _
  = error $ unlines
      [ "bindLVarToRList: fell off end"
      , "plv = " ++ show plv
-     , "cts = " ++ show cts ]
+     , "cndRs = " ++ show cndRs ]
 \end{code}
 
-We need to normalise lists of terms:
+We need to normalise dynamics in lists of replacements:
 \begin{code}
-bterms :: [Term] -> LstVarBind
-bterms ts = BX $ map bterm' ts
+dnRepls :: [Repl] -> LstVarBind
+dnRepls rs = BR $ map dnRepl' rs
+
+dnRepl' (ReplTerm t) = ReplTerm $ dnTerm' t
+dnRepl' (ReplLVar lv) = ReplLVar $ dnLVar lv
 \end{code}
 \newpage
 
@@ -895,16 +905,16 @@ bindGVarToVList (StdVar pv) [StdVar cv] binds = bindVarToVar pv cv binds
 bindGVarToVList _ _ _ = fail "bindGVarToVList: invalid gvar. -> vlist binding."
 \end{code}
 
-\subsubsection{Binding General-Variables to Term-Lists}
+\subsubsection{Binding General-Variables to Replacement-Lists}
 
 An list-variable can bind to a list of any length,
 while a standard-variable can only bind to the standard variable inside
 a singleton list.
 \begin{code}
-bindGVarToTList :: Monad m => GenVar -> [Term] -> Binding -> m Binding
-bindGVarToTList (LstVar lv) ts binds = bindLVarToRList lv ts binds
-bindGVarToTList (StdVar pv) [t] binds = bindVarToTerm pv t binds
-bindGVarToTList _ _ _ = fail "bindGVarToVList: invalid gvar. -> vlist binding."
+bindGVarToRList :: Monad m => GenVar -> [Repl] -> Binding -> m Binding
+bindGVarToRList (LstVar lv) rs binds = bindLVarToRList lv rs binds
+bindGVarToRList (StdVar pv) [ReplTerm t] binds = bindVarToTerm pv t binds
+bindGVarToRList _ _ _ = fail "bindGVarToVList: invalid gvar. -> replist binding."
 \end{code}
 
 \newpage
@@ -972,7 +982,7 @@ lookupLstBind (BD (_,sbind,lbind)) lv@(LVbl (Vbl i vc (During m)) is ij)
          Nothing       ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
          Just (BL vl)  ->  return $ BindList  $ map   (gvarTempSync dn) vl
          Just (BS vs)  ->  return $ BindSet   $ S.map (gvarTempSync dn) vs
-         Just (BX ts)  ->  return $ BindTerms $ map   (termTempSync dn) ts
+         Just (BR rs)  ->  return $ BindRepls $ map   (replTempSync dn) rs
 
 
 lookupLstBind (BD (_,_,lbind)) lv@(LVbl (Vbl i vc vw) is ij)
@@ -980,7 +990,7 @@ lookupLstBind (BD (_,_,lbind)) lv@(LVbl (Vbl i vc vw) is ij)
      Nothing         ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
      Just (BL vl)  ->  return $ BindList  $ map   (gvarTempSync vw) vl
      Just (BS vs)  ->  return $ BindSet   $ S.map (gvarTempSync vw) vs
-     Just (BX ts)  ->  return $ BindTerms $ map   (termTempSync vw) ts
+     Just (BR rs)  ->  return $ BindRepls $ map   (replTempSync vw) rs
 \end{code}
 
 We need to ensure that that the returned variable,
@@ -1023,6 +1033,11 @@ ttsVar  tk           =  getJust "termTempSync var failed."   . var tk
 ttsBind tk i vs      =  getJust "termTempSync bind failed."  . bind tk i vs
 ttsLam  tk i vl      =  getJust "termTempSync lam failed."   . lam tk i vl
 ttsSubstn tsub lsub  =  getJust "subTempSync substn failed." $ substn tsub lsub
+\end{code}
+
+\begin{code}
+replTempSync vw (ReplTerm t)   =  ReplTerm $ termTempSync vw t
+replTempSync vw (ReplLVar lv)  =  ReplLVar $ lvarTempSync vw lv
 \end{code}
 
 \newpage

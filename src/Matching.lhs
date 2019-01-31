@@ -2153,7 +2153,6 @@ sMatch vts bind cbvs pbvs (Substn tsC lvsC) (Substn tsP lvsP)
   liftLL (lv,lu      )  =  (LstVar lv,LstVar lu)
 \end{code}
 
-\newpage
 All the variable/term matches.
 $$ \beta \uplus \{\beta_{t_i}\} \vdash R_{C_j} :: r_{P_i} \leadsto \beta_{r_i} $$
 where $R$ is a single term $t$, and $r$ is a standard variable $v$,
@@ -2174,6 +2173,7 @@ tsMatchCheck vts bind cbvs pbvs tsC ((vP,tP):tsP)
       tsMatchCheck vts bind' cbvs pbvs tsC' tsP
 \end{code}
 
+\newpage
 Given a $(v_P,t_P)$, search for a $(v_C,t_C)$ where $\beta(v_P)=v_C$,
 and attempt to match $t_C$ against $t_P$.
 \begin{code}
@@ -2227,16 +2227,16 @@ lvlvMatchCheck :: MonadPlus mp
                -> mp Binding
 
 lvlvMatchCheck vts bind cbvs pbvs gvsC rlvP tlvP
- = case lookupLstBind bind tlvP of
+ = case lookupLstBind (pdbg "lvlvMatchCheck.bind" bind) tlvP of
      Nothing            ->  fail "lvlvMatchCheck: Nothing SHOULD NOT OCCUR!"
      -- in general we will need to bind list-vars for replacements
      -- to lists that mix terms and list-vars
      Just (BindList bvlC) ->
-      let gvlB = S.toList $ S.filter ((inlist $ pdbg "BVLC" bvlC).fst) gvsC
-      in bindLVarToVList rlvP (map snd gvlB) bind
+      let gvlB = S.toList $ S.filter ((inlist bvlC).fst) gvsC
+      in bindLVarToVList rlvP (map snd gvlB) (pdbg "lvlvMatchCheck.bind BindList" bind)
      Just (BindSet bvsC) ->
-      let gvsB = S.filter ((inset $ pdbg "BVSC" bvsC).fst) gvsC
-      in bindLVarToVSet (pdbg "RLVP" rlvP) (S.map snd $ pdbg "GVSB" gvsB) $ pdbg "BIND" bind
+      let gvsB = S.filter ((inset (pdbg "lvlvMatchCheck.bvsc" bvsC)).fst) gvsC
+      in bindLVarToVSet (pdbg "lvlvMatchCheck.rlvP" rlvP) (S.map snd (pdbg "lvlvMatchCheck.gvsB" gvsB)) bind
  where
    inlist vl gv  =  gv   `elem`   vl
    inset  vs gv  =  gv `S.member` vs

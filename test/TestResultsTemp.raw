@@ -1,25 +1,16 @@
-@vsM.vsP:
+@lvlvMatchCheck.bind:
+BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [((Id "x",VO,[],[]),BS (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]))])
+@lvlvMatchCheck.rlvP:
+LV (VR (Id "e",VE,WS),[],[])
+@lvlvMatchCheck.bvsc:
 fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]
-@vsM.bind:
-BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [])
-@vsM.vsC:
+@lvlvMatchCheck.gvsB:
+fromList [(GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[])))]
+@lvlvMatchCheck.bind:
+BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [((Id "x",VO,[],[]),BS (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]))])
+@lvlvMatchCheck.rlvP:
+LV (VR (Id "e",VE,WS),[],[])
+@lvlvMatchCheck.bvsc:
 fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]
-@vsM.tsP:
-fromList []
-@vsM.tsC:
-fromList []
-@vsM.tsC':
-fromList []
-@vsM.lvsP:
-fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))]
-@vsM.bind':
-BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [((Id "x",VO,[],[]),BS (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]))])
-@vsM.bind'':
-BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [((Id "x",VO,[],[]),BS (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]))])
-vsM.lvsCfromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "y",VO,WS),[],[]))]
-@vsM.tsC':
-fromList []
-@vsM.bind':
-BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [((Id "x",VO,[],[]),BS (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]))])
-@vsM.bind'':
-BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [((Id "x",VO,[],[]),BS (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]))])
+@lvlvMatchCheck.gvsB:
+fromList [(GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[])))]

@@ -1,0 +1,8 @@
+@lvlvMatchCheck.bind: P->P, x->x$
+@lvlvMatchCheck.rlvP: e$          -- Expr Static
+@lvlvMatchCheck.bvsc: { x$ }      -- Obs Static
+@lvlvMatchCheck.gvsB: { (x$,y$) } -- both Obs Static
+@lvlvMatchCheck.bind: P->P, x->x$
+@lvlvMatchCheck.rlvP: e$
+@lvlvMatchCheck.bvsc: { x$ }
+@lvlvMatchCheck.gvsB: { (x$,y$) }

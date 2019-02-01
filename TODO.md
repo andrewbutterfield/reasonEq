@@ -2,12 +2,11 @@
 
 ## Hotfixes
 
-Need to use `bindLVarToTlist` in `lvlvMatchCheck` instead of both `bindLVarToVList` and `bindLVarToVSet`. Both target and replacement list-variables should be bound to lists of the same length, to maintain target/replacement correspondance.
-
-How do we convert a list-var to a term?
+Need to redefine bindings for substitution matches - see below.
 
 ## Next Task(s)
 
+* Substitution matchings involving listvar/listvar pairs should produce a binding from such a pair  to a pair of sets, one of term/var pairs, the other of listvar/listvar pairs.
 * instantiate side-conditions in matches
 * handle side-conditions (just `Disjoint` for now)
 

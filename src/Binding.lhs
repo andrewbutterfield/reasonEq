@@ -8,8 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Binding
 ( VarBind, pattern BindVar, pattern BindTerm
-, Repl, pattern ReplTerm, pattern ReplLVar
-, LstVarBind, pattern BindList, pattern BindSet, pattern BindRepls
+, LstVarBind, ListVarKey, pattern BindList, pattern BindSet
 , Binding
 , emptyBinding
 , bindVarToVar, bindVarsToVars, bindVarToSelf, bindVarsToSelves
@@ -196,7 +195,7 @@ identifier-identifier bindings along with subscript-subscript bindings,
 for dynamic variables,
 and identifier to variable bindings for static variables.
 Given that similar rules apply to list variables,
-we find that, in effect, we need to maintain three mappings:
+we find that, in effect, we need to maintain at least three mappings:
 \begin{description}
   \item[Variable to \dots]
     Mapping of variable identifier and class,
@@ -205,8 +204,24 @@ we find that, in effect, we need to maintain three mappings:
     Mapping of subscripts to subscripts.
   \item[List-Variable to \dots]
     Mapping of list-variable identifiers, class and identifier-lists,
-    to lists and sets of general variables,
-    or lists of a mix terms and list-variables (for substitution matches).
+    to lists and sets of general variables.
+\end{description}
+
+For substitution matching we are dealing with a set of target/replacement pairs.
+These come in two kinds,
+the first being a ``traditional'' variable/term pair,
+which as a pattern should match one such pair in the candidate.
+The other form is that of a pair of two list-variables,
+one as target, the other as replacement.
+The target-list-variables needs to match a list of targets of either kind,
+while the replacement list-variable needs to match a \textbf{corresponding} list
+of replacement terms and list-variables.
+In effect, a list-variable target/replacement pattern
+needs to match a substitution!
+
+\begin{description}
+  \item[Substition List-Variable pair to \dots]
+    A substitution.
 \end{description}
 
 
@@ -238,56 +253,48 @@ type SubBinding = M.Map Subscript Subscript
 
 \subsubsection{
   Binding \texttt{ListVar} to
-  \texttt{VarList} or \texttt{VarSet} or \texttt{[Term} or \texttt{]}
+  \texttt{VarList} or \texttt{VarSet}
 }
-We need a mixture (``replacements'') of terms and list-variables,
-when dealing with substitution matches.
-\begin{code}
-data Repl
- = RT Term
- | RL ListVar
- deriving (Eq,Ord,Show,Read)
 
-pattern ReplTerm   t  =  RT  t
-pattern ReplLVar  lv  =  RL lv
-
-isReplTerm (ReplTerm _) = True; isReplTerm _ = False
-getReplTerm (ReplTerm t)  = return t; getReplTerm _ = fail "getReplTerm LVar"
-
-getReplTerms = catMaybes . map getReplTerm
-\end{code}
-
-
-We bind a list-variable to either a list or set of variables,
-or a list containing a mixture of terms and list-variables,
-when dealing with substitution matches.
-We use the variable identifier and the list of `subtracted` identifiers
+We bind a list-variable to either a list or set of variables.
+We use the variable identifier, class, and the list of `subtracted` identifiers
 as the map key.
 \begin{code}
 data LstVarBind
  = BL  VarList
  | BS  VarSet
- | BR  [Repl]
  deriving (Eq, Ord, Show, Read)
 
+type ListVarKey = (Identifier,VarClass,[Identifier],[Identifier])
+
 type ListVarBinding
-              = M.Map (Identifier,VarClass,[Identifier],[Identifier]) LstVarBind
+              = M.Map ListVarKey LstVarBind
 \end{code}
 
 We return just the variable list or set, or term-list from a lookup:
 \begin{code}
 pattern BindList  vl  =  BL vl
 pattern BindSet   vs  =  BS vs
-pattern BindRepls ts  =  BR ts
 \end{code}
+
+\subsubsection{
+  Binding \texttt{(ListVar,ListVar)} to
+  \texttt{Substn}
+}
+
+We index with a pair of list-variables (as temporality-free keys)
+\begin{code}
+type SubstBinding = M.Map (ListVarKey,ListVarKey) (TermSub,LVarSub)
+\end{code}
+
 
 We put these together:
 \begin{code}
-newtype Binding = BD (VarBinding, SubBinding, ListVarBinding)
+newtype Binding = BD (VarBinding, SubBinding, ListVarBinding, SubstBinding)
  deriving (Eq, Ord, Show, Read)
 
 emptyBinding :: Binding
-emptyBinding = BD (M.empty, M.empty, M.empty)
+emptyBinding = BD (M.empty, M.empty, M.empty, M.empty)
 \end{code}
 
 \newpage

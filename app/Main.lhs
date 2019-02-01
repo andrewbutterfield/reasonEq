@@ -350,9 +350,10 @@ cmdSave
   = ( "save"
     , "save prover state to file"
     , unlines
-        [ "save -- save all prover state to current project"
-        , "save project - save non-theory prover state"
-        , "save <thry> -- save theory <thry> to current project"]
+        [ "save          -- save all prover state to current project"
+        , "save .        -- save current theory to current project"
+        , "save project  -- save non-theory prover state"
+        , "save <thry>   -- save theory <thry> to current project"]
     , saveState )
 cmdLoad
   = ( "load"
@@ -368,14 +369,16 @@ saveState [] reqs
        putStrLn ("REQ-STATE written to '"++projectDir reqs++"'.")
        return reqs{ modified = False }
 saveState [nm] reqs
-  = case getTheory nm $ theories reqs of
+  = let nm' = if nm == "." then (currTheory reqs) else nm
+    in
+    case getTheory nm' $ theories reqs of
       Nothing
-       -> do putStrLn ("No such theory: '"++nm++"'")
+       -> do putStrLn ("No such theory: '"++nm'++"'")
              return reqs
       Just thry
-       -> do writeNamedTheory reqs (nm,writeTheory thry)
-             putStrLn ("Theory '"++nm++"' written to '"++projectDir reqs++"'.")
-             return reqs
+       -> do writeNamedTheory reqs (nm',writeTheory thry)
+             putStrLn ("Theory '"++nm'++"' written to '"++projectDir reqs++"'.")
+             return reqs 
 saveState _ reqs  =  doshow reqs "unknown 'save' option."
 
 loadState [] reqs

@@ -335,8 +335,7 @@ tMatch' vts bind cbvs pbvs tC@(Cons tkC naC tsC) (Iter tkP naP niP lvsP)
     unNiP _              =  []
     ibind bind [] = return bind
     ibind bind ((lvP,tsC):rest)
-      =  do bind' <- bindLVarToRList lvP (map ReplTerm tsC) bind
-            --- some Repl-lists will be term-only !?
+      =  do bind' <- bindLVarToTList lvP tsC bind
             ibind bind' rest
 \end{code}
 

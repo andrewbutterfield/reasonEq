@@ -6,7 +6,7 @@ Need to redefine bindings for substitution matches - see below.
 
 ## Next Task(s)
 
-* Substitution matchings involving listvar/listvar pairs should produce a binding from such a pair  to a pair of sets, one of term/var pairs, the other of listvar/listvar pairs.
+* make proof loading more tolerant of read/show mismatches - allow a step to be marked as TBR (to-be-redone).
 * instantiate side-conditions in matches
 * handle side-conditions (just `Disjoint` for now)
 

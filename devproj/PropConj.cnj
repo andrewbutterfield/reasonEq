@@ -1,0 +1,7 @@
+("\8743_symm",(C P (Id "\8801") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],C P (Id "\8743") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "P",VP,WS))]],[]))
+("\8743_assoc",(C P (Id "\8801") [C P (Id "\8743") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],V P (VR (Id "R",VP,WS))],C P (Id "\8743") [V P (VR (Id "P",VP,WS)),C P (Id "\8743") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "R",VP,WS))]]],[]))
+("\8743_idem",(C P (Id "\8801") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "P",VP,WS))],V P (VR (Id "P",VP,WS))],[]))
+("\8743_unit",(C P (Id "\8801") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "true",VP,WS))],V P (VR (Id "P",VP,WS))],[]))
+("\8743_zero",(C P (Id "\8801") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "false",VP,WS))],V P (VR (Id "false",VP,WS))],[]))
+("\8743_\8743_distr",(C P (Id "\8801") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),C P (Id "\8743") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "R",VP,WS))]],C P (Id "\8743") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "R",VP,WS))]]],[]))
+("contradiction",(C P (Id "\8801") [C P (Id "\8743") [V P (VR (Id "P",VP,WS)),C P (Id "\172") [V P (VR (Id "P",VP,WS))]],V P (VR (Id "false",VP,WS))],[]))

@@ -1,0 +1,4 @@
+("\172_\8801_swap",(C P (Id "\8801") [C P (Id "\8801") [C P (Id "\172") [V P (VR (Id "P",VP,WS))],V P (VR (Id "Q",VP,WS))],C P (Id "\8801") [V P (VR (Id "P",VP,WS)),C P (Id "\172") [V P (VR (Id "Q",VP,WS))]]],[]))
+("\172_invol",(C P (Id "\8801") [C P (Id "\172") [C P (Id "\172") [V P (VR (Id "P",VP,WS))]],V P (VR (Id "P",VP,WS))],[]))
+("false_neg",(C P (Id "\8801") [C P (Id "\172") [V P (VR (Id "false",VP,WS))],V P (VR (Id "true",VP,WS))],[]))
+("\172_def",(C P (Id "\8801") [C P (Id "\172") [V P (VR (Id "P",VP,WS))],C P (Id "\8801") [V P (VR (Id "P",VP,WS)),V P (VR (Id "false",VP,WS))]],[]))

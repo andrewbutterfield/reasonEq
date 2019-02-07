@@ -10,7 +10,7 @@ module Persistence
   , readAllState
   , writeNamedTheory
   , readNamedTheory
-  , persistentTest)
+  )
 where
 
 import System.Directory
@@ -21,13 +21,20 @@ import REqState
 
 \subsection{File Paths}
 
+In the project directory we have a top-level file called \texttt{project.req}
+that holds overall data regarding the project.
 \begin{code}
 projectRoot   = "project"
 projectExt    = "req"
 projectFile   =  projectRoot <.> projectExt
 projectPath projDir = projDir ++ pathSeparator : projectFile
 pfile reqs = projectPath $ projectDir reqs
-tfile pjdir nm = pjdir ++ pathSeparator : nm <.> projectExt
+\end{code}
+We also have files called \texttt{<thryName>.thr}
+for every theory called $\langle thryName\rangle$.
+\begin{code}
+theoryExt      =  "thr"
+tfile pjdir nm = pjdir ++ pathSeparator : nm <.> theoryExt
 \end{code}
 
 \subsection{Writing \reasonEq\ State}
@@ -52,24 +59,6 @@ readAllState projfp
        return reqs{projectDir = projfp}
 \end{code}
 
-\begin{code}
-writeState :: REqState -> IO ()
-writeState reqs
-  = do let (tsTxt,_) = writeREqState reqs
-       let fp = pfile reqs
-       writeFile fp $ unlines tsTxt
-\end{code}
-
-\begin{code}
-readState :: FilePath -> REqState -> IO REqState
-readState projfp reqs
-  = do txt  <- readFile $ projectPath projfp
-       ((sets,sig,thnms),rest1) <- readREqState1 $ lines txt
-       nmdThrys <- sequence $ map (readNamedTheory projfp) thnms
-       reqs <- readREqState2 sets sig nmdThrys rest1
-       return reqs{projectDir = projfp}
-\end{code}
-
 
 \begin{code}
 writeNamedTheory reqs (nm,thTxt)
@@ -87,30 +76,22 @@ readNamedTheory projfp nm
 
 
 
-Mucking about:
-\begin{code}
-projectsList = "projects.txt"
-currProject = "current.txt"
+\subsection*{Orphaned Code: delete?}
 
-persistentTest :: IO ()
-persistentTest
-  = do fp <- getAppUserDataDirectory "req"
-       putStrLn ("User Dir = "++fp)
-       createDirectoryIfMissing True fp
-       fps <- listDirectory fp
-       putStrLn "Dir contents:"
-       sequence_ $ map putStrLn fps
-       plist <-
-         if not (projectsList `elem` fps)
-          then return []
-          else do txt <- readFile projectsList
-                  return $ lines txt
-       putStrLn "Project Dirs:"
-       sequence_ $ map putStrLn plist
-       currp <-
-         if not (currProject `elem` fps)
-          then return Nothing
-          else do txt <- readFile currProject
-                  return $ Just txt
-       putStrLn ("Current Project = " ++ show currp)
+\begin{code}
+writeState :: REqState -> IO ()
+writeState reqs
+  = do let (tsTxt,_) = writeREqState reqs
+       let fp = pfile reqs
+       writeFile fp $ unlines tsTxt
+\end{code}
+
+\begin{code}
+readState :: FilePath -> REqState -> IO REqState
+readState projfp reqs
+  = do txt  <- readFile $ projectPath projfp
+       ((sets,sig,thnms),rest1) <- readREqState1 $ lines txt
+       nmdThrys <- sequence $ map (readNamedTheory projfp) thnms
+       reqs <- readREqState2 sets sig nmdThrys rest1
+       return reqs{projectDir = projfp}
 \end{code}

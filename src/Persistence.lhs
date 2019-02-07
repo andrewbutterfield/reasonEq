@@ -8,14 +8,17 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Persistence
   ( writeAllState
   , readAllState
-  , writeNamedTheory
+  , writeNamedTheoryTxt
   , readNamedTheory
+  , writeConjectures
+  , readFiledConjectures
   )
 where
 
 import System.Directory
 import System.FilePath
 
+import Utilities
 import REqState
 \end{code}
 
@@ -36,9 +39,13 @@ for every theory called $\langle thryName\rangle$.
 theoryExt      =  "thr"
 tfile pjdir nm = pjdir ++ pathSeparator : nm <.> theoryExt
 \end{code}
+For conjecture files, we use the extension \texttt{.cnj}.
+\begin{code}
+conjectureExt = "cnj"
+cjfile pjdir nm = pjdir ++ pathSeparator : nm <.> conjectureExt
+\end{code}
 
-\subsection{Writing \reasonEq\ State}
-
+\subsection{Persistent \reasonEq\ State}
 
 \begin{code}
 writeAllState :: REqState -> IO ()
@@ -46,7 +53,7 @@ writeAllState reqs
   = do let (tsTxt,nTsTxts) = writeREqState reqs
        let fp = pfile reqs
        writeFile fp $ unlines tsTxt
-       sequence_ $ map (writeNamedTheory reqs) nTsTxts
+       sequence_ $ map (writeNamedTheoryTxt reqs) nTsTxts
 \end{code}
 
 \begin{code}
@@ -60,8 +67,10 @@ readAllState projfp
 \end{code}
 
 
+\subsection{Persistent Theory}
+
 \begin{code}
-writeNamedTheory reqs (nm,thTxt)
+writeNamedTheoryTxt reqs (nm,thTxt)
   = do let fp = tfile (projectDir reqs) nm
        writeFile fp $ unlines thTxt
 \end{code}
@@ -74,24 +83,23 @@ readNamedTheory projfp nm
        return (nm,thry)
 \end{code}
 
-
-
-\subsection*{Orphaned Code: delete?}
+\subsection{Persistent Conjecture}
 
 \begin{code}
-writeState :: REqState -> IO ()
-writeState reqs
-  = do let (tsTxt,_) = writeREqState reqs
-       let fp = pfile reqs
-       writeFile fp $ unlines tsTxt
+writeConjectures reqs nm conjs
+  = do let fp = cjfile (projectDir reqs) nm
+       writeFile fp $ unlines $ map show conjs
 \end{code}
 
 \begin{code}
-readState :: FilePath -> REqState -> IO REqState
-readState projfp reqs
-  = do txt  <- readFile $ projectPath projfp
-       ((sets,sig,thnms),rest1) <- readREqState1 $ lines txt
-       nmdThrys <- sequence $ map (readNamedTheory projfp) thnms
-       reqs <- readREqState2 sets sig nmdThrys rest1
-       return reqs{projectDir = projfp}
+readFiledConjectures :: FilePath -> String -> IO [NmdAssertion]
+readFiledConjectures projfp nm
+  = do let fp = cjfile projfp nm
+       txt <- readFile fp
+       return $ readShown $ lines txt
+
+readShown [] = []
+readShown (ln:lns)
+ | null (trim ln) = readShown lns
+ | otherwise      = (read ln) : readShown lns
 \end{code}

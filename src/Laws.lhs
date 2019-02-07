@@ -12,7 +12,8 @@ module Laws
  , flattenAssoc
  , LeftRight(..), GroupSpec(..), groupAssoc
  , Assertion, NmdAssertion, (-.-)
- , Provenance(..), Law, lawName
+ , Provenance(..)
+ , Law, lawName, lawNamedAssn
  , labelAsAxiom, labelAsProof
  , writeSignature, readSignature
  , showLogic, showNmdAssns, showLaw, showLaws, showConj, showConjs
@@ -292,6 +293,9 @@ type Law = (NmdAssertion,Provenance)
 
 lawName :: Law -> String
 lawName ((lnm,_),_) = lnm
+
+lawNamedAssn :: Law -> NmdAssertion
+lawNamedAssn = fst
 
 labelAsAxiom :: NmdAssertion -> Law
 labelAsAxiom  nasn  =  (nasn, Axiom)

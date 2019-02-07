@@ -15,6 +15,7 @@ module TestRendering (
  , trTerm
  , trTermZip
  , trSideCond
+ , trAsn, trNmdAsn
  , trVarMatchRole, trLstVarMatchRole, trVarTable
  , trBinding
  , seeV, seeLV, seeGV, seeVL, seeVS
@@ -324,6 +325,15 @@ trAtmSideCond (IsPre    gv)    = "pre:"++trGVar gv
 trAtmSideCond (Disjoint gv vs) = trOVSet vs ++  _notin   ++ trGVar gv
 trAtmSideCond (Exact    gv vs) = trOVSet vs ++    "="    ++ trGVar gv
 trAtmSideCond (Covers   gv vs) = trOVSet vs ++ _supseteq ++ trGVar gv
+\end{code}
+
+\subsection{Assertions}
+
+\begin{code}
+trAsn (trm,[]) = trTerm 0 trm
+trAsn (trm,sc) = trTerm 0 trm ++ ", " ++ trSideCond sc
+
+trNmdAsn (nm,asn) = nm ++ ": " ++ trAsn asn
 \end{code}
 
 \newpage

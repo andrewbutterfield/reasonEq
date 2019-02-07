@@ -261,6 +261,7 @@ reqCommands :: REqCommands
 reqCommands = [ cmdShow, cmdSet, cmdNew
               , cmdNewProof, cmdRet2Proof
               , cmdSave, cmdLoad
+              , cmdSaveConj, cmdLoadConj
               , cmdBuiltin ]
 
 -- we don't use these features in the top-level REPL
@@ -376,9 +377,9 @@ saveState [nm] reqs
        -> do putStrLn ("No such theory: '"++nm'++"'")
              return reqs
       Just thry
-       -> do writeNamedTheory reqs (nm',writeTheory thry)
+       -> do writeNamedTheoryTxt reqs (nm',writeTheory thry)
              putStrLn ("Theory '"++nm'++"' written to '"++projectDir reqs++"'.")
-             return reqs 
+             return reqs
 saveState _ reqs  =  doshow reqs "unknown 'save' option."
 
 loadState [] reqs
@@ -393,6 +394,51 @@ loadState [nm] reqs
        return $ changed $ theories__ (replaceTheory thry) reqs
 loadState _ reqs  =  doshow reqs "unknown 'load' option."
 \end{code}
+
+\newpage
+\subsection{Conjecture Management}
+
+\begin{code}
+cmdSaveConj :: REqCmdDescr
+cmdSaveConj
+  = ( "svc"
+    , "save conjectures"
+    , unlines
+        [ "svc -- save all laws in current theory as conjectures"
+        ]
+    , saveConjectures )
+
+saveConjectures _ reqs
+  = case getTheory (currTheory reqs) $ theories reqs of
+      Nothing
+       -> do putStrLn ("Can't find current theory!!!\BEL")
+             return reqs
+      Just thry
+       -> do let lawConjs = map lawNamedAssn (laws thry)
+             let allConjs = lawConjs ++ conjs thry
+             putStrLn $ unlines' $ map show allConjs
+             writeConjectures reqs (thName thry) allConjs
+             return reqs
+\end{code}
+
+\begin{code}
+cmdLoadConj :: REqCmdDescr
+cmdLoadConj
+  = ( "ldc"
+    , "load conjectures"
+    , unlines
+        [ "ldc <nm> -- display conjectures in <nm>.cnj "
+        , "         -- proper loading to be implemented later, as needed."
+        ]
+    , displayConjectures )
+
+displayConjectures [nm] reqs
+  = do savedConjs <- readFiledConjectures (projectDir reqs) nm
+       putStrLn $ unlines' $ map (trNmdAsn) savedConjs
+       return reqs
+displayConjectures _ reqs  =  doshow reqs "unknown 'ldc' option."
+\end{code}
+
 
 \newpage
 \subsection{Set Command}

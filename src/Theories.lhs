@@ -140,7 +140,6 @@ readTheory txts
               , rest7 )
 \end{code}
 
-
 \newpage
 \subsection{Theory Collections}
 
@@ -188,10 +187,10 @@ writeTheories theories
       , thnmsKEY ++ show (M.keys tmp)
       , sdagKEY  ++ show (sdag theories)
       , thrysTRL ]
-    , map writeNamedTheory (M.assocs tmp) )
-  where tmp = tmap theories
-
-writeNamedTheory (nm,thry) = (nm, writeTheory thry)
+    , map genThryText (M.assocs tmp) )
+  where
+    tmp = tmap theories
+    genThryText (nm,thry) = (nm, writeTheory thry)
 
 -- we split theory reading into two phases.
 -- First get the list of theories.

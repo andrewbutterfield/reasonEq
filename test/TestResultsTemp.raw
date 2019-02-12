@@ -1,16 +1,27 @@
+
+@dom.law:
+(("\172_subst",(C P (Id "\8801") [S P (C P (Id "\172") [V P (VR (Id "P",VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])),C P (Id "\172") [S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))]))]],[])),Axiom)
+
 @lvlvMatchCheck.bind:
-BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [((Id "x",VO,[],[]),BS (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]))])
+BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [((Id "x",VO,[],[]),BS (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]))],fromList [])
+
 @lvlvMatchCheck.rlvP:
 LV (VR (Id "e",VE,WS),[],[])
+
 @lvlvMatchCheck.bvsc:
 fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]
+
 @lvlvMatchCheck.gvsB:
 fromList [(GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[])))]
+
 @lvlvMatchCheck.bind:
-BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [((Id "x",VO,[],[]),BS (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]))])
+BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [((Id "x",VO,[],[]),BS (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]))],fromList [])
+
 @lvlvMatchCheck.rlvP:
 LV (VR (Id "e",VE,WS),[],[])
+
 @lvlvMatchCheck.bvsc:
 fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]
+
 @lvlvMatchCheck.gvsB:
 fromList [(GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[])))]

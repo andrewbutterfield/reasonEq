@@ -7,8 +7,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 module Ranking
   ( Rank, RankFunction
-  , sizeRank, nonTrivialSizeRank
   , rankAndSort
+  , sizeRank
+  , isNonTrivial, nonTrivialSizeRank
   )
 where
 
@@ -30,6 +31,14 @@ Ranking matches to show those most likely to be useful.
 \begin{code}
 type Rank = Int -- the lower, the better
 type RankFunction = [MatchContext] -> Match -> Rank
+\end{code}
+
+\subsection{Ranking Match Lists}
+
+Simple sorting according to rank:
+\begin{code}
+rankAndSort :: RankFunction -> [MatchContext] -> Matches -> Matches
+rankAndSort rf ctxts ms  = map snd $ sortOn fst $ zip (map (rf ctxts) ms) ms
 \end{code}
 
 \subsection{Ranking Functions}
@@ -58,19 +67,19 @@ subsSize (Substn ts lvs) = 3 * S.size ts + 2 * S.size lvs
 Ranking by term size,
 but where being trivial has a very high penalty
 \begin{code}
+isNonTrivial :: Match -> Bool
+isNonTrivial m
+  =  nontrivial $ mClass m
+  where
+     nontrivial (MatchEqvVar _)  =  False
+     nontrivial _                =  True
+
 nonTrivialSizeRank :: RankFunction
 nonTrivialSizeRank mctxts m
- = sizeRank mctxts m + trivialPenalty (mClass m)
+ = sizeRank mctxts m + trivialPenalty m
 
-trivialPenalty :: MatchClass -> Int
-trivialPenalty (MatchEqvVar _)  =  1000000
-trivialPenalty _                =  0
-\end{code}
-
-\subsection{Ranking Match Lists}
-
-Simple sorting according to rank:
-\begin{code}
-rankAndSort :: RankFunction -> [MatchContext] -> Matches -> Matches
-rankAndSort rf ctxts ms  = map snd $ sortOn fst $ zip (map (rf ctxts) ms) ms
+trivialPenalty :: Match -> Int
+trivialPenalty m
+  | isNonTrivial m  =  0
+  | otherwise       =  1000000
 \end{code}

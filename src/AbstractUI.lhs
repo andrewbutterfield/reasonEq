@@ -375,7 +375,8 @@ matchFocus theSig liveProof
         goalt       =  getTZ tz
         ctxts       =  mtchCtxts liveProof
         newMatches  =  matchInContexts theSig ctxts goalt
-        rankedM     =  rankAndSort nonTrivialSizeRank ctxts newMatches
+        rankedM     =  rankAndSort sizeRank ctxts
+                       $ filter isNonTrivial newMatches
     in matches_ rankedM liveProof
 \end{code}
 

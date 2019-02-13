@@ -2132,6 +2132,15 @@ must be satisfied:
 \\ n = 0 &\implies& p = m \land q = 0
 \\ q > 0 &\implies& n > 0
 \end{eqnarray*}
+We can code this up as follows%
+\footnote{Optional exercise!}%
+:
+\begin{code}
+isFeasibleSubstMatch(m,n,p,q)
+ | p < m      =  False
+ | n > 0      =  True
+ | otherwise  =  p == m && q == 0
+\end{code}
 
 If the match succeeds, then the resulting binding needs to:
 \begin{itemize}

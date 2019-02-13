@@ -2101,6 +2101,60 @@ vsUnkLVarOneEach bind (vC:vlC) (lvP:ullP)
 \newpage
 \subsection{Substitution Matching}
 
+\textbf{UNDERGOING A COMPLETE RE-THINK}
+
+We will write a substitution of the form
+$$
+  [ e_1,\dots,e_m,\lst y_1,\dots,\lst y_n
+  / x_1,\dots,x_m,\lst z_1,\dots,\lst z_n
+  ]
+$$
+in explicit substitution pair form as two sets of such tuples:
+$$
+ \{ e_1/x_1 , \dots e_m/x_m \}
+ \quad
+ \{ \lst y_1/\lst z_1 , \dots \lst y_n/\lst z_n \}
+$$
+Note that the $x_i$ and $\lst z_j$ need to be unique.
+We consider the above as our substitution pattern.
+
+Let us denote a candidate pattern by:
+$$
+ \{ f_1/u_1 , \dots f_p/u_p \}
+ \quad
+ \{ \lst v_1/\lst w_1 , \dots \lst w_q/\lst w_q \}
+$$
+For a match to be possible at all, the following constraints
+must be satisfied:
+\begin{eqnarray*}
+   && p \geq m
+\\ p > m &\implies& n > 0
+\\ n = 0 &\implies& p = m \land q = 0
+\\ q > 0 &\implies& n > 0
+\end{eqnarray*}
+
+If the match succeeds, then the resulting binding needs to:
+\begin{itemize}
+  \item
+    bind $e_i$ to $f_j$ and $x_i$ to $v_j$,
+    for all $i \in 1\dots m$, and $m$ values of $j$ drawn from $1\dots n$;
+  \item
+    for $k \in 1\dots n$,
+    bind $\lst y_k/\lst z_k$ to some disjoint subset of
+    the candidate substitution leftover after the above bindings.
+    \begin{itemize}
+      \item
+         This means binding $\lst y_k$
+         to some set of $f_j$ terms and set of $\lst v_j$ list-variables,
+      \item
+        and $\lst z_k$ to the corresponding set of $x_j$ variables
+        and $\lst w_j$ list-variables.
+      \item
+        The sets need to be in some canonical order.
+    \end{itemize}
+
+\end{itemize}
+
 Here $G$ denotes either one standard variable,
 or a collection of general variables,
 while $g$ denotes one general variable.

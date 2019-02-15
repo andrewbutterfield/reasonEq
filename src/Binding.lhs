@@ -22,6 +22,7 @@ module Binding
 , bindGVarToVList
 , lookupBind
 , lookupLstBind
+, lookupSubstBind
 , bindLVarsToNull, bindLVarsToEmpty
 , dumpBinding
 , int_tst_Binding
@@ -832,7 +833,7 @@ as per Fig.\ref{fig:utp-perm-class-bind}.
 \begin{code}
 bindLVarToTList (LVbl (Vbl vi vc Static) is ij) cndTs (BD (vbind,sbind,lbind,llbind))
  | all (validVarTermBinding vc) (map termkind cndTs)
-    = do lbind' <- insertDR "bindLVarPairToSubst(static)" (==)
+    = do lbind' <- insertDR "bindLVarToTList(static)" (==)
                             (vi,vc,is,ij) (BX cndTs) lbind
          return $ BD (vbind,sbind,lbind',llbind)
  | otherwise  =  fail "bindLVarToTList: incompatible variable and terms."
@@ -847,25 +848,25 @@ expression terms, all of whose dynamic variables have the same temporality.
 \begin{code}
 bindLVarToTList (LVbl (Vbl vi vc vt) is ij) cndTs (BD (vbind,sbind,lbind,llbind))
  | vc == PredV && any isExpr cndTs
-           =  fail "bindLVarPairToSubst: pred. l-var. cannot bind to expression."
+           =  fail "bindLVarToTList: pred. l-var. cannot bind to expression."
  | vc /= PredV && any isPred cndTs
-           =  fail "bindLVarPairToSubst: non-pred. l-var. cannot bind to predicate."
- | wsize  > 1  =  fail "bindLVarPairToSubst: p.-var. mixed term temporality."
+           =  fail "bindLVarToTList: non-pred. l-var. cannot bind to predicate."
+ | wsize  > 1  =  fail "bindLVarToTList: p.-var. mixed term temporality."
  | wsize == 0  -- term has no variables
-   = do lbind' <- insertDR "bindLVarPairToSubst(pv1)" (==)
+   = do lbind' <- insertDR "bindLVarToTList(pv1)" (==)
                            (vi,vc,is,ij) (BX cndTs) lbind
         return $ BD (vbind,sbind,lbind',llbind)
  | otherwise
    = case (vt,thectw) of
       (During m, During n) ->
-          do lbind' <- insertDR "bindLVarPairToSubst(plv2)" (==)
+          do lbind' <- insertDR "bindLVarToTList(plv2)" (==)
                                 (vi,vc,is,ij) (BX cndTs) lbind
-             sbind' <- insertDR "bindLVarPairToSubst(plv3)" (==) m n sbind
+             sbind' <- insertDR "bindLVarToTList(plv3)" (==) m n sbind
              return $ BD (vbind,sbind',lbind',llbind)
       _ | vt /= thectw     ->
-            fail "bindLVarPairToSubst: p.-var different temporality"
+            fail "bindLVarToTList: p.-var different temporality"
         | otherwise ->
-            do lbind' <- insertDR "bindLVarPairToSubst(plv4)" (==)
+            do lbind' <- insertDR "bindLVarToTList(plv4)" (==)
                                   (vi,vc,is,ij) (BX cndTs) lbind
                return $ BD (vbind,sbind,lbind',llbind)
  where
@@ -878,7 +879,7 @@ Catch-all
 \begin{code}
 bindLVarToTList plv cndTs _
  = error $ unlines
-     [ "bindLVarPairToSubst: fell off end"
+     [ "bindLVarToTList: fell off end"
      , "plv = " ++ show plv
      , "cndTs = " ++ show cndTs ]
 \end{code}
@@ -886,6 +887,11 @@ bindLVarToTList plv cndTs _
 \newpage
 \subsubsection{Binding List-Variable pairs to Substitutions}
 
+Here we are binding a target/replacement pair of list variables
+to (a part of) a candidate substitution.
+We also need to bind the target list-variable to the corresponding candidate
+variable-set.
+This latter binding we do first, because it may fail.
 \begin{code}
 bindLVarPairToSubst :: Monad m
                     => ListVar -> ListVar -> TermSub -> LVarSub -> Binding
@@ -1032,6 +1038,13 @@ ttsVar  tk           =  getJust "termTempSync var failed."   . var tk
 ttsBind tk i vs      =  getJust "termTempSync bind failed."  . bind tk i vs
 ttsLam  tk i vl      =  getJust "termTempSync lam failed."   . lam tk i vl
 ttsSubstn tsub lsub  =  getJust "subTempSync substn failed." $ substn tsub lsub
+\end{code}
+
+More complicated is substitution lookup:
+\begin{code}
+lookupSubstBind :: Monad m => Binding -> ListVar -> ListVar
+                -> m (TermSub,LVarSub)
+lookupSubstBind _ _ _ = fail "lookupSubstBind NYI"
 \end{code}
 
 \newpage

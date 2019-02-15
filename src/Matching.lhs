@@ -647,6 +647,50 @@ bvMatch vts bind cbvs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
  | otherwise  =  fail "bvMatch: candidate not a bound variable."
 \end{code}
 
+\newpage
+\subsection{Collection Matching}
+\label{ssec:coll-matching}
+
+There are a number of ``collections'' we have to match,
+including variable lists and sets, and substitutions.
+There collections always have two sub-parts:
+one sub-part consists of ``single/standard/ordinary'' elements,
+while the other sub-parts have ``set/list/collection'' elements that stand for collections
+(possibly empty) of both kinds of elements.
+
+As patterns,
+each single element must match exactly one candidate single element,
+while each collection element can match a collection
+of both single and collection candidate elements.
+
+We will write a pattern collection in the form
+$$
+  ( (a_1, \dots, a_m), (\lst b_1, \dots, \lst b_n) )
+$$
+where $a_i$ are single pattern elements,
+and $\lst b_j$ are collection pattern elements.
+
+Let us denote a candidate collection as:
+$$
+ ( (c_1, \dots, c_p ), ( \lst d_1, \dots, \lst d_q ) )
+$$
+For a match to be possible at all, the following constraints
+must be satisfied:
+\begin{eqnarray*}
+   && p \geq m
+\\ p > m &\implies& n > 0
+\\ n = 0 &\implies& p = m \land q = 0
+\\ q > 0 &\implies& n > 0
+\end{eqnarray*}
+We can code this up as follows%
+\footnote{Optional exercise!}%
+:
+\begin{code}
+isFeasibleCollMatch(m,n,p,q)
+ | p < m      =  False
+ | n > 0      =  True
+ | otherwise  =  p == m && q == 0
+\end{code}
 
 \newpage
 \subsection{Variable-List Matching}
@@ -2124,22 +2168,16 @@ $$
  \quad
  \{ \lst v_1/\lst w_1 , \dots \lst w_q/\lst w_q \}
 $$
-For a match to be possible at all, the following constraints
-must be satisfied:
-\begin{eqnarray*}
-   && p \geq m
-\\ p > m &\implies& n > 0
-\\ n = 0 &\implies& p = m \land q = 0
-\\ q > 0 &\implies& n > 0
-\end{eqnarray*}
-We can code this up as follows%
-\footnote{Optional exercise!}%
-:
+This an instance of a ``collection'' match (\textsection\ref{ssec:coll-matching})
+so the feasibility constraints given there apply:
 \begin{code}
-isFeasibleSubstMatch(m,n,p,q)
- | p < m      =  False
- | n > 0      =  True
- | otherwise  =  p == m && q == 0
+isFeasibleSubstnMatch :: Substn -> Substn -> Bool
+isFeasibleSubstnMatch (Substn tsC lvsC) (Substn tsP lvsP)
+  = let m = S.size tsP
+        n = S.size lvsP
+        p = S.size tsC
+        q = S.size lvsC
+    in isFeasibleCollMatch(m,n,p,q)
 \end{code}
 
 If the match succeeds, then the resulting binding needs to:
@@ -2189,24 +2227,28 @@ sMatch :: MonadPlus mp
        => [VarTable] -> Binding -> CBVS -> PBVS
        -> Substn -> Substn
        -> mp Binding
+sMatch vts bind cbvs pbvs subC subP
+  | isFeasibleSubstnMatch subC subP  =  sMatch' vts bind cbvs pbvs subC subP
+  | otherwise                        =  fail "infeasible substition match"
 \end{code}
 
+\newpage
 We match substitutions by first ignoring the replacement terms,
 and doing a variable-set match on the variables.
 We then use the new bindings to identify the corresponding terms,
 and check that they match.
 \begin{code}
-sMatch vts bind cbvs pbvs (Substn tsC lvsC) (Substn tsP lvsP)
+sMatch' vts bind cbvs pbvs subC@(Substn tsC lvsC) subP@(Substn tsP lvsP)
  = do bind'  <- vsMatch  vts bind cbvs pbvs vsC vsP
       (bind'',tsC') <- tsMatchCheck vts bind' cbvs pbvs tsC $ S.toList tsP
-      if all (isVar . snd) tsC'
-      then lvsMatchCheck vts bind'' cbvs pbvs (tsC' +++ lvsC) $ S.toList lvsP
-      else fail $ unlines
-             [ "sMatch: some leftover std-replacement is not a Var."
-             , "tsP  = " ++ show tsP
-             , "tsC  = " ++ show tsC
-             , "tsC' = " ++ show tsC'
-             ]
+      -- if all (isVar . snd) tsC' then -- NOT A PROBLEM ANY MORE !
+      lvsMatchCheck vts bind'' cbvs pbvs (tsC' +++ lvsC) $ S.toList lvsP
+      -- else fail $ unlines
+      --        [ "sMatch: some leftover std-replacement is not a Var."
+      --        , "tsP  = " ++ show tsP
+      --        , "tsC  = " ++ show tsC
+      --        , "tsC' = " ++ show tsC'
+      --        ]
  where
   vsC = S.map (StdVar . fst) tsC `S.union` S.map (LstVar . fst) lvsC
   vsP = S.map (StdVar . fst) tsP `S.union` S.map (LstVar . fst) lvsP
@@ -2235,7 +2277,6 @@ tsMatchCheck vts bind cbvs pbvs tsC ((vP,tP):tsP)
       tsMatchCheck vts bind' cbvs pbvs tsC' tsP
 \end{code}
 
-\newpage
 Given a $(v_P,t_P)$, search for a $(v_C,t_C)$ where $\beta(v_P)=v_C$,
 and attempt to match $t_C$ against $t_P$.
 \begin{code}
@@ -2289,16 +2330,16 @@ lvlvMatchCheck :: MonadPlus mp
                -> mp Binding
 
 lvlvMatchCheck vts bind cbvs pbvs gvsC rlvP tlvP
- = case lookupLstBind (pdbg "lvlvMatchCheck.bind" bind) tlvP of
+ = case lookupLstBind bind tlvP of
      Nothing            ->  fail "lvlvMatchCheck: Nothing SHOULD NOT OCCUR!"
      -- in general we will need to bind list-vars for replacements
-     -- to lists that mix terms and list-vars
+     -- to substitution fragments
      Just (BindList bvlC) ->
       let gvlB = S.toList $ S.filter ((inlist bvlC).fst) gvsC
-      in bindLVarToVList rlvP (map snd gvlB) (pdbg "lvlvMatchCheck.bind BindList" bind)
+      in bindLVarToVList rlvP (map snd gvlB) bind
      Just (BindSet bvsC) ->
-      let gvsB = S.filter ((inset (pdbg "lvlvMatchCheck.bvsc" bvsC)).fst) gvsC
-      in bindLVarToVSet (pdbg "lvlvMatchCheck.rlvP" rlvP) (S.map snd (pdbg "lvlvMatchCheck.gvsB" gvsB)) bind
+      let gvsB = S.filter ((inset bvsC).fst) gvsC
+      in bindLVarToVSet rlvP (S.map snd gvsB) bind
  where
    inlist vl gv  =  gv   `elem`   vl
    inset  vs gv  =  gv `S.member` vs

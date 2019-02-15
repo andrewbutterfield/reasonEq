@@ -2,7 +2,10 @@
 
 ## Hotfixes
 
-Need to redefine bindings for substitution matches - see below.
+* Get `Binding.lookupSubstBind` working
+* Get `Binding.bindLVarPairToSubst` working
+* Get `Matching.lvlvMatchCheck` to use `bindLVarPairToSubst`.
+* Add tests for matching `[y$/x$]` against `[e$/x$]`.
 
 ## Next Task(s)
 

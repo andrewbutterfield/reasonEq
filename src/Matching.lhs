@@ -756,7 +756,7 @@ applyBindingsToLists' bind vlC' vlP' vlC []
 First pattern variable is standard:
 \begin{code}
 applyBindingsToLists' bind vlC' vlP' vlC (gP@(StdVar vP):vlP)
- = case lookupBind bind vP of
+ = case lookupVarBind bind vP of
     Nothing           -> applyBindingsToLists' bind vlC' (gP:vlP') vlC vlP
     Just (BindTerm _) -> fail "vlMatch: pattern var already bound to term"
     Just (BindVar vB) -> findStdCandidate bind vlC' vlP' vlC vB vlP
@@ -1243,7 +1243,7 @@ bindLeftOvers (_,bc,bw) bind xs us ls
     bloVars bind xs []  =  return (bind,xs)
     bloVars bind []  _  =  fail "bindLeftOvers: too few expansion vars."
     bloVars bind xs (ui:us)
-      = case lookupBind bind uv of
+      = case lookupVarBind bind uv of
           Nothing
             ->  do bind' <- bindVarToVar uv (head xs) bind
                    bloVars bind' (tail xs) us
@@ -1400,7 +1400,7 @@ vlShrinkPatnMatch sctxt@(_,bc,bw) (bind,gamma,ell)
     select bind vP (Just vu) []  = return vu
     select bind vP mvu (ui:uvP)
      = let vu = Vbl ui bc bw in
-         case lookupBind bind vu of
+         case lookupVarBind bind vu of
            Nothing -> select bind vP (upd mvu vu) uvP
            Just (BindVar x)
              | x == vP    ->  return vu
@@ -1452,7 +1452,7 @@ applyBindingsToSets' bind vlP vsC [] = return (vsC,S.fromList vlP)
 When the first pattern variable is standard:
 \begin{code}
 applyBindingsToSets' bind vlP' vsC (gP@(StdVar vP):vlP)
- = case lookupBind bind vP of
+ = case lookupVarBind bind vP of
     Nothing -> applyBindingsToSets' bind (gP:vlP') vsC vlP
     Just (BindTerm _) -> fail "vsMatch: pattern var already bound to term."
     Just (BindVar vB)
@@ -2019,7 +2019,7 @@ vsShrinkPatnMatch sctxt@(_,bc,bw) (bind,gamma,ell)
     select bind vP (Just vu) []  = return vu
     select bind vP mvu (ui:uvP)
      = let vu = Vbl ui bc bw in
-         case lookupBind bind vu of
+         case lookupVarBind bind vu of
            Nothing -> select bind vP (upd mvu vu) uvP
            Just (BindVar x)
              -- x `dEq` vP ???
@@ -2286,7 +2286,7 @@ vtMatchCheck :: MonadPlus mp
              -> mp (Binding,TermSub)
 
 vtMatchCheck vts bind cbvs pbvs tsC tP vP
- = case lookupBind bind vP of
+ = case lookupVarBind bind vP of
      Nothing            ->  fail "vtMatchCheck: Nothing SHOULD NOT OCCUR!"
      Just (BindTerm _)  ->  fail "vtMatchCheck: BindTerm SHOULD NOT OCCUR!"
      Just (BindVar vB)
@@ -2334,6 +2334,7 @@ lvlvMatchCheck vts bind cbvs pbvs gvsC rlvP tlvP
      Nothing            ->  fail "lvlvMatchCheck: Nothing SHOULD NOT OCCUR!"
      -- in general we will need to bind list-vars for replacements
      -- to substitution fragments
+     -- need to use: bindLVarPairToSubst tgtLV rplLV tsub lvarsub bind
      Just (BindList bvlC) ->
       let gvlB = S.toList $ S.filter ((inlist bvlC).fst) gvsC
       in bindLVarToVList rlvP (map snd gvlB) bind

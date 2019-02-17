@@ -20,7 +20,7 @@ module Binding
 , bindLVarPairToSubst
 , bindGVarToGVar
 , bindGVarToVList
-, lookupBind
+, lookupVarBind
 , lookupLstBind
 , lookupSubstBind
 , bindLVarsToNull, bindLVarsToEmpty
@@ -898,9 +898,27 @@ bindLVarPairToSubst :: Monad m
                     -> m Binding
 
 bindLVarPairToSubst tgtLV rplLV tsub lvarsub bind
- = fail "bindLVarPairToSubst: NYI"
+ = do bind' <- bindLVarToVSet tgtLV rplVS bind
+      bindLVarPairToSubst' tgtLV rplLV tsub lvarsub bind'
+ where
+   rplVS = S.map (StdVar . fst) tsub `S.union` S.map (LstVar . fst) lvarsub
 \end{code}
 
+Given the target list-variable has succesfully been bound,
+we can move onto the main event:
+\begin{code}
+bindLVarPairToSubst' tgtLV@(LVbl (Vbl ti tvc Static) tis tij)
+                     rplLV@(LVbl (Vbl ri rvc Static) ris rij)
+                     tsub lvarsub (BD (vbind,sbind,lbind,llbind))
+ = do llbind' <- insertDR "bindLVarPairToSubst(static)" (==)
+                          ((ti,tvc,tis,tij),(ri,rvc,ris,rij)) (tsub,lvarsub)
+                          llbind
+      return $ BD (vbind,sbind,lbind,llbind')
+
+bindLVarPairToSubst' _ _ _ _ _ = fail "bindLVarPairToSubst: NYfI."
+\end{code}
+
+\newpage
 \subsubsection{Binding General-Variables to General-Variables}
 
 An list-variable can bind to a singleton list of any general variable,
@@ -930,76 +948,11 @@ bindGVarToVList _ _ _ = fail "bindGVarToVList: invalid gvar. -> vlist binding."
 Binding lookup is very straightforward,
 with the minor wrinkle that we need to ensure we lookup
 the subscript binding if the lookup variable has \texttt{During} temporality.
-\begin{code}
-lookupBind :: Monad m => Binding -> Variable -> m VarBind
-lookupBind (BD (vbind,_,_,_)) v@(Vbl vi vc Static)
-  = case M.lookup (vi,vc) vbind of
-      Nothing  ->  fail ("lookupBind: Variable "++show v++" not found.")
-      Just (BI xi) -> error $ unlines
-                       [ "lookupBind: Static bound to (BI xi)"
-                       , "v = " ++ show v
-                       , "xi = " ++ show xi
-                       , "vbind:\n" ++ show vbind
-                       ]
-      Just vb  ->  return vb
 
-lookupBind (BD (vbind,sbind,_,_)) v@(Vbl vi vc (During m))
-  = case M.lookup m sbind of
-     Nothing -> fail ("lookupBind: Subscript ''"++m++"'' not found.")
-     Just n ->
-       case M.lookup (vi,vc) vbind of
-         Nothing  ->  fail ("lookupBind: Variable "++show v++" not found.")
-         Just (BI xi)  ->  return $ BindVar  $ Vbl xi vc (During n)
-         Just (BT xt)  ->  return $ BindTerm $ termTempSync (During n) xt
-         Just b -> error $ unlines
-                 [ "lookupBind: During was bound to BV"
-                 , "v = " ++ show v
-                 , "b = " ++ show b
-                 , "vbind:\n" ++ show vbind
-                 ]
+\subsubsection{\texttt{During} subscript management}
 
-lookupBind (BD (vbind,_,_,_)) v@(Vbl vi vc vw)
-  = case M.lookup (vi,vc) vbind of
-     Nothing  ->  fail ("lookupBind: Variable "++show v++" not found.")
-     Just (BI xi)  ->  return $ BindVar  $ Vbl xi vc vw
-     Just (BT xt)  ->  return $ BindTerm $ termTempSync vw xt
-     Just b -> error $ unlines
-             [ "lookupBind: Dynamic was bound to BV"
-             , "v = " ++ show v
-             , "b = " ++ show b
-             , "vbind:\n" ++ show vbind
-             ]
-\end{code}
-
-List variable lookup is very similar:
-\begin{code}
-lookupLstBind :: Monad m => Binding -> ListVar -> m LstVarBind
-
-lookupLstBind (BD (_,_,lbind,llbind)) lv@(LVbl (Vbl i vc Static) is ij)
-  = case M.lookup (i,vc,is,ij) lbind of
-     Nothing   ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
-     Just bvl  ->  return bvl
-
-lookupLstBind (BD (_,sbind,lbind,llbind)) lv@(LVbl (Vbl i vc (During m)) is ij)
-  = case M.lookup m sbind of
-     Nothing -> fail ("lookupBind: Subscript ''"++m++"'' not found.")
-     Just n ->
-       let dn = During n in
-       case M.lookup (i,vc,is,ij) lbind of
-         Nothing       ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
-         Just (BL vl)  ->  return $ BindList  $ map   (gvarTempSync dn) vl
-         Just (BS vs)  ->  return $ BindSet   $ S.map (gvarTempSync dn) vs
-
-
-lookupLstBind (BD (_,_,lbind,llbind)) lv@(LVbl (Vbl i vc vw) is ij)
-  = case M.lookup (i,vc,is,ij) lbind of
-     Nothing         ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
-     Just (BL vl)  ->  return $ BindList  $ map   (gvarTempSync vw) vl
-     Just (BS vs)  ->  return $ BindSet   $ S.map (gvarTempSync vw) vs
-\end{code}
-
-We need to ensure that that the returned variable,
-which, if dynamic, is stored in the binding as \texttt{During},
+We need to ensure, for dynamic variables,
+that that the returned variable, stored in the binding as \texttt{During},
 matches the temporality of the variable being looked up.
 If the lookup variable is \texttt{Static} or \texttt{Textual}, then we leave the result alone.
 \begin{code}
@@ -1040,11 +993,93 @@ ttsLam  tk i vl      =  getJust "termTempSync lam failed."   . lam tk i vl
 ttsSubstn tsub lsub  =  getJust "subTempSync substn failed." $ substn tsub lsub
 \end{code}
 
+\newpage
+\subsubsection{Lookup (Standard) Variables}
+
+\begin{code}
+lookupVarBind :: Monad m => Binding -> Variable -> m VarBind
+lookupVarBind (BD (vbind,_,_,_)) v@(Vbl vi vc Static)
+  = case M.lookup (vi,vc) vbind of
+      Nothing  ->  fail ("lookupVarBind: Variable "++show v++" not found.")
+      Just (BI xi) -> error $ unlines
+                       [ "lookupVarBind: Static bound to (BI xi)"
+                       , "v = " ++ show v
+                       , "xi = " ++ show xi
+                       , "vbind:\n" ++ show vbind
+                       ]
+      Just vb  ->  return vb
+
+lookupVarBind (BD (vbind,sbind,_,_)) v@(Vbl vi vc (During m))
+  = case M.lookup m sbind of
+     Nothing -> fail ("lookupVarBind: Subscript ''"++m++"'' not found.")
+     Just n ->
+       case M.lookup (vi,vc) vbind of
+         Nothing  ->  fail ("lookupVarBind: Variable "++show v++" not found.")
+         Just (BI xi)  ->  return $ BindVar  $ Vbl xi vc (During n)
+         Just (BT xt)  ->  return $ BindTerm $ termTempSync (During n) xt
+         Just b -> error $ unlines
+                 [ "lookupVarBind: During was bound to BV"
+                 , "v = " ++ show v
+                 , "b = " ++ show b
+                 , "vbind:\n" ++ show vbind
+                 ]
+
+lookupVarBind (BD (vbind,_,_,_)) v@(Vbl vi vc vw)
+  = case M.lookup (vi,vc) vbind of
+     Nothing  ->  fail ("lookupVarBind: Variable "++show v++" not found.")
+     Just (BI xi)  ->  return $ BindVar  $ Vbl xi vc vw
+     Just (BT xt)  ->  return $ BindTerm $ termTempSync vw xt
+     Just b -> error $ unlines
+             [ "lookupVarBind: Dynamic was bound to BV"
+             , "v = " ++ show v
+             , "b = " ++ show b
+             , "vbind:\n" ++ show vbind
+             ]
+\end{code}
+
+\newpage
+\subsubsection{Lookup List-Variables}
+
+List variable lookup is very similar:
+\begin{code}
+lookupLstBind :: Monad m => Binding -> ListVar -> m LstVarBind
+
+lookupLstBind (BD (_,_,lbind,_)) lv@(LVbl (Vbl i vc Static) is ij)
+  = case M.lookup (i,vc,is,ij) lbind of
+     Nothing   ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
+     Just bvl  ->  return bvl
+
+lookupLstBind (BD (_,sbind,lbind,_)) lv@(LVbl (Vbl i vc (During m)) is ij)
+  = case M.lookup m sbind of
+     Nothing -> fail ("lookupVarBind: Subscript ''"++m++"'' not found.")
+     Just n ->
+       let dn = During n in
+       case M.lookup (i,vc,is,ij) lbind of
+         Nothing       ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
+         Just (BL vl)  ->  return $ BindList  $ map   (gvarTempSync dn) vl
+         Just (BS vs)  ->  return $ BindSet   $ S.map (gvarTempSync dn) vs
+
+
+lookupLstBind (BD (_,_,lbind,_)) lv@(LVbl (Vbl i vc vw) is ij)
+  = case M.lookup (i,vc,is,ij) lbind of
+     Nothing         ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
+     Just (BL vl)  ->  return $ BindList  $ map   (gvarTempSync vw) vl
+     Just (BS vs)  ->  return $ BindSet   $ S.map (gvarTempSync vw) vs
+\end{code}
+
+\subsubsection{Lookup Substitution List-Variable pairs}
 More complicated is substitution lookup:
 \begin{code}
 lookupSubstBind :: Monad m => Binding -> ListVar -> ListVar
                 -> m (TermSub,LVarSub)
-lookupSubstBind _ _ _ = fail "lookupSubstBind NYI"
+lookupSubstBind (BD (_,_,_,llbind)) tlv@(LVbl (Vbl ti tvc Static) tis tij)
+                                    rlv@(LVbl (Vbl ri rvc Static) ris rij)
+  = case M.lookup ((ti,tvc,tis,tij),(ri,rvc,ris,rij)) llbind of
+     Nothing   ->  fail ( "lookupSubstBind: ListVar-pair ("
+                           ++show tlv++","++show rlv++") not found.")
+     Just subpair  ->  return subpair
+
+lookupSubstBind _ _ _ = fail "lookupSubstBind NYfI"
 \end{code}
 
 \newpage

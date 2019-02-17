@@ -39,7 +39,7 @@ instantiate :: Monad m => Binding -> Term -> m Term
 instantiate binding val@(Val _ _) = return val
 
 instantiate binding vt@(Var tk v)
-  = case lookupBind binding v of
+  = case lookupVarBind binding v of
       Nothing             ->  return vt -- maps to self !
       Just (BindVar v')   ->  var tk v'
       Just (BindTerm t')  ->  return t'
@@ -150,7 +150,7 @@ instLVar binding lv
 \begin{code}
 instVar :: Monad m => Binding -> Variable -> m Variable
 instVar binding v
-  = case lookupBind binding v of
+  = case lookupVarBind binding v of
       Nothing             ->  return v  -- maps to self !
       Just (BindVar v')   ->  return v'
       _  ->  fail "instVar: bound to term."

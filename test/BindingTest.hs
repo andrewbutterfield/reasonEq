@@ -25,8 +25,8 @@ bindLook2 lkp bind pv1 cx pv2
 
 -- -----------------------------------------------------------------------------
 tst_bind_lkp_VarToVar :: TF.Test
-vvBindLook = bindLook lookupBind bindVarToVar
-vvBindLook2 = bindLook2 lookupBind bindVarToVar
+vvBindLook = bindLook lookupVarBind bindVarToVar
+vvBindLook2 = bindLook2 lookupVarBind bindVarToVar
 
 osv = ObsVar  (fromJust $ ident "osv") Static
 osu = ObsVar (fromJust $ ident "osu") Static
@@ -45,7 +45,7 @@ v = fromJust $ ident "v"
 ob_v = ObsVar v Before; oa_v = ObsVar v After; odm_v = ObsVar v $ During "m"
 
 tst_bind_lkp_VarToVar
-  = testGroup "lookupBind after bindVarToVar"
+  = testGroup "lookupVarBind after bindVarToVar"
       [ -- variable class tests
         testCase "osv -> osu (Ok)"
         ( vvBindLook  osv osu @?= BindVar osu )
@@ -75,7 +75,7 @@ tst_bind_lkp_VarToVar
       , testCase "ob_v -> ob_u, lkp(oa_v)=oa_u (Ok)"
         ( vvBindLook2  ob_v ob_u oa_v @?= BindVar oa_u)
       , testCase "ob_v -> ob_u, lkp(odm_v) (Not Ok)"
-        ( lookupBind (fromJust $ bindVarToVar ob_v ob_u emptyBinding) odm_v
+        ( lookupVarBind (fromJust $ bindVarToVar ob_v ob_u emptyBinding) odm_v
            @?= Nothing )
       , testCase "odm_v -> odm_v_u, lkp(ob_v)=ob_u (Ok)"
         ( vvBindLook2  odm_v odm_u ob_v @?= BindVar ob_u)
@@ -83,13 +83,13 @@ tst_bind_lkp_VarToVar
 
 -- -----------------------------------------------------------------------------
 tst_bind_lkp_VarToTerm :: TF.Test
-vtBindLook = bindLook lookupBind bindVarToTerm
+vtBindLook = bindLook lookupVarBind bindVarToTerm
 
 ce42 = EVal ArbType $ Integer 42
 pTrue = PVal $ Boolean True
 
 tst_bind_lkp_VarToTerm
-  = testGroup "lookupBind after bindVarToTerm"
+  = testGroup "lookupVarBind after bindVarToTerm"
       [ testCase "osv -> 42 (Ok)"
         ( ( let (BindTerm ce42') = vtBindLook osv ce42 in ce42' ) @?= ce42 )
       , testCase "osv -> True (Not Ok)"
@@ -125,7 +125,7 @@ lebv = PreExprs $ fromJust $ ident "lebv"
 lpbv = PrePreds $ fromJust $ ident "lpbv"
 
 tst_bind_lkp_LVarToVList
- = testGroup "lookupBind after bindLVarToVList"
+ = testGroup "lookupVarBind after bindLVarToVList"
   [ testCase "lobv -> [gobu] (Ok)" (llBindLook lobv [gobu] @?= BindList [gobu])
   , testCase "lobv -> [gebv] (Ok)" (llBindLook lobv [gebv] @?= BindList [gebv])
   , testCase "lebv -> [gebv] (Ok)" (llBindLook lebv [gebv] @?= BindList [gebv])
@@ -149,7 +149,7 @@ lsBindLook = bindLook lookupLstBind bindLVarToVSet
 sngl = S.singleton
 
 tst_bind_lkp_LVarToVSet
- = testGroup "lookupBind after bindLVarToVSet"
+ = testGroup "lookupVarBind after bindLVarToVSet"
   [ testCase "lobv -> {gobu} (Ok)" (lsBindLook lobv (sngl gobu) @?= BindSet (sngl gobu))
   , testCase "lobv -> {gebv} (Ok)" (lsBindLook lobv (sngl gebv) @?= BindSet (sngl gebv))
   , testCase "lebv -> {gebv} (Ok)" (lsBindLook lebv (sngl gebv) @?= BindSet (sngl gebv))

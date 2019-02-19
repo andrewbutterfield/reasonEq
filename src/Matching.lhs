@@ -692,6 +692,17 @@ isFeasibleCollMatch(m,n,p,q)
  | otherwise  =  p == m && q == 0
 \end{code}
 
+\textbf{Note: }\textsl{
+We really should have a series of matching combinators,
+because the same matching issues keep arising.
+We have to match list-based and set-based collections
+as well as those where the elements are pairs,
+as found in substitutions.
+We should also have combinators for partial matches that arise
+when doing initial matching of the single collection parts,
+where some candidates may be leftover, to be bound by collection variables.
+}
+
 \newpage
 \subsection{Variable-List Matching}
 
@@ -896,6 +907,12 @@ vlFreeMatchN vts bind cbvs pbvs bc vlC lvP vlP n
  where
     (firstnC,restC)  =  splitAt n vlC
 \end{code}
+\textbf{Note: }\textsl{
+The code here matches all of the candidate-list if its length is not greater
+that parameter $n$.
+So candidate list of length 1 will succeed for $n\geq 1$,
+thus explaining why we sometimes get the same match several times.
+}
 
 \newpage
 \paragraph{Matching a List-Variable, known to be a list.}
@@ -2050,12 +2067,15 @@ and candidate sets:
     \begin{itemize}
       \item
         we have the same number of candidate and pattern standard variables,
-        \[ \#uvsP \leq \#stdC \]
+        \[ \#uvsP = \#stdC \]
       \item
         and no candidate list variables.
         \[ lstC = \emptyset \]
     \end{itemize}
 \end{itemize}
+\textbf{Note: }\textsl{
+ This is the match-feasibility criterion again !!!!
+}
 
 \begin{code}
 vsUnknownMatch :: MonadPlus mp

@@ -902,16 +902,18 @@ We have a simple, ``slightly greedy'' algorithm
 that matches a list-variable against the first \texttt{n} candidates.
 \begin{code}
 vlFreeMatchN vts bind cbvs pbvs bc vlC lvP vlP n
- = do bind' <- bindLVarToVList lvP firstnC bind
-      vlFreeMatch vts bind' cbvs pbvs restC vlP
+  | precise  =  do bind' <- bindLVarToVList lvP firstnC bind
+                   vlFreeMatch vts bind' cbvs pbvs restC vlP
+  | otherwise  =  fail "vlFreeMatchN: vlC too short."
  where
     (firstnC,restC)  =  splitAt n vlC
+    precise = length firstnC == n
 \end{code}
 \textbf{Note: }\textsl{
-The code here matches all of the candidate-list if its length is not greater
+The code here used to match all of the candidate-list if its length was not greater
 that parameter $n$.
-So candidate list of length 1 will succeed for $n\geq 1$,
-thus explaining why we sometimes get the same match several times.
+So candidate list of length 1 would succeed for $n\geq 1$,
+thus explaining why we used to get the same match several times.
 }
 
 \newpage
@@ -1374,6 +1376,9 @@ vlExpand2Match sctxt dctxt xC@(vC:xsC,uvC,ulC,szC) xP@(vP:xsP,uvP,ulP,szP)
          `mplus`
          vlShrinkPatnMatch sctxt dctxt xC xP
 \end{code}
+\textbf{Note: }\textsl{
+Could this code cause ``doubled-up'' matches?
+}
 
 \[
 \expTwoLMatchSqueezeCR
@@ -1986,6 +1991,9 @@ vsExpand2Match sctxt dctxt xC@(xsC,uvC,ulC,szC) xP@(xsP,uvP,ulP,szP)
     (vC,xsC') = choose xsC
     (vP,xsP') = choose xsP
 \end{code}
+\textbf{Note: }\textsl{
+Could this code produce ``doubled-up'' matches?
+}
 
 \[
 \expTwoSMatchSqueezeCR
@@ -2110,6 +2118,9 @@ vsUnknownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
    stdCs = S.size stdC
    lstC = ulsC `S.union` klsC
 \end{code}
+\textbf{Note: }\textsl{
+More potential for ``doubling-up'' matches?
+}
 
 \newpage
 We have some unknown pattern list-variables to match
@@ -2161,6 +2172,9 @@ vsUnkLVarOneEach bind (vC:vlC) (lvP:ullP)
   = do bind' <- bindLVarToVSet lvP (S.fromList [vC]) bind
        vsUnkLVarOneEach bind' vlC ullP
 \end{code}
+\textbf{Note: }\textsl{
+ Under what conditions do the above two matches overlap?
+}
 
 \newpage
 \subsection{Substitution Matching}

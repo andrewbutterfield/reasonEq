@@ -33,6 +33,7 @@ library
                      , Theories
                      , LiveProofs
                      , StratifiedDAG
+                     , Control
                      , Persistence
                      , Files
                      , REqState

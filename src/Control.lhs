@@ -17,24 +17,58 @@ often of a monadic flavour.
 
 \subsection{Matching Controls}
 
-Matching many patterns against many candidates
+\subsubsection{Matching types}
+\begin{description}
+  \item [\texttt{mp} :] instance of MonadPlus
+  \item [\texttt{b} :]  binding type
+  \item [\texttt{c} :] candidate type
+  \item [\texttt{p} :] pattern type
+\end{description}
+We can then describe a standard (basic) match as:
 \begin{code}
 type BasicM mp b c p = c -> p -> b -> mp b
+\end{code}
 
+\subsubsection{Matching pairs}
+
+\begin{code}
+matchPair :: MonadPlus mp
+          => BasicM mp b c1 p1
+          -> BasicM mp b c2 p2
+          -> BasicM mp b (c1,c2) (p1,p2)
+matchPair m1 m2 (c1,c2) (p1,p2) b
+ = m1 c1 p1 b >>= m2 c2 p2
+\end{code}
+
+\subsubsection{Matching lists}
+
+When we match lists sometimes we need to return
+not just bindings,
+but also some stuff about lists.
+\begin{description}
+  \item [\texttt{b'} :] binding plus extra stuff
+\end{description}
+\begin{code}
 type Combine c b b' = [c] -> [c] -> b -> b'
+\end{code}
 
+Matching many candidates against one pattern.
+\begin{code}
 manyToOne :: MonadPlus mp
-           => BasicM mp b c p
-           -> Combine c b b'
-           -> [c] -> p -> b
-           -> mp b'
+          => BasicM mp b c p
+          -> Combine c b b'
+          -> [c] -> p -> b
+          -> mp b'
 manyToOne bf cf cs p b = manyToOne' bf cf [] p b cs
 
 manyToOne' bf cf sc p b0 []      =  fail "no candidates"
 manyToOne' bf cf sc p b0 (c:cs)  =  (do b <- bf c p b0 ; return $ cf sc cs b)
                                     `mplus`
                                     manyToOne' bf cf (c:sc) p b0 cs
+\end{code}
 
+Matching many candidates against many patterns.
+\begin{code}
 manyToMany :: MonadPlus mp
            => BasicM mp b c p
            -> Combine c b b'

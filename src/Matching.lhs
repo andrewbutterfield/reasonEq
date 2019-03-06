@@ -24,6 +24,7 @@ import Control.Monad
 import Data.List
 
 import Utilities
+import Control
 import LexBase
 import Variables
 import AST
@@ -603,7 +604,7 @@ while other variable classes may only match their own class.
 \begin{code}
 vMatch vts bind cbvs pvbs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
  | pbound      =  bvMatch vts bind cbvs vC vP
- | vC == vP    =  bindVarToVar vP vC bind -- covers KnownVar, InstanceVar
+ | (dbg "vMatch.vC=" vC) == (dbg "vMatch.vP=" vP)    =  bindVarToVar vP vC bind -- covers KnownVar, InstanceVar
  | vwC == vwP  =  vMatch' vts bind vmr vC vP
  | vwC == ExprV && vwP == ObsV  =  vMatch' vts bind vmr vC vP
  | otherwise   =  fail "vMatch: class mismatch"
@@ -2262,33 +2263,53 @@ sMatch :: MonadPlus mp
        -> Substn -> Substn
        -> mp Binding
 sMatch vts bind cbvs pbvs subC subP
-  | isFeasibleSubstnMatch subC subP  =  sMatch' vts bind cbvs pbvs subC subP
+  | isFeasibleSubstnMatch subC subP  =  sMatch' vts bind cbvs pbvs (dbg "sMatch.subC=" subC) $ dbg "sMatch.subP=" subP
   | otherwise                        =  fail "infeasible substition match"
 \end{code}
 
 \newpage
-We match substitutions by first ignoring the replacement terms,
-and doing a variable-set match on the variables.
-We then use the new bindings to identify the corresponding terms,
-and check that they match.
+We match substitutions by first trying every way
+to match pattern (variable,term) pairs
+against their candidate counterparts.
+For each outcome, we then try to match the list-variables pairs
+against what remains.
 \begin{code}
 sMatch' vts bind cbvs pbvs subC@(Substn tsC lvsC) subP@(Substn tsP lvsP)
- = do bind'  <- vsMatch  vts bind cbvs pbvs vsC vsP
-      (bind'',tsC') <- tsMatchCheck vts bind' cbvs pbvs tsC $ S.toList tsP
-      -- if all (isVar . snd) tsC' then -- NOT A PROBLEM ANY MORE !
-      lvsMatchCheck vts bind'' cbvs pbvs (tsC' +++ lvsC) $ S.toList lvsP
+ = do (bind',tsC')  <- vtsMatch vts bind cbvs pbvs tsC tsP
+      lvsMatch vts (dbg "sMatch'.bind'=" bind') cbvs pbvs (dbg "sMatch'.tsC'=" tsC') (S.toList lvsC) (S.toList lvsP)
       -- else fail $ unlines
       --        [ "sMatch: some leftover std-replacement is not a Var."
       --        , "tsP  = " ++ show tsP
       --        , "tsC  = " ++ show tsC
       --        , "tsC' = " ++ show tsC'
       --        ]
+ -- where
+ --  vsC = S.map (StdVar . fst) tsC `S.union` S.map (LstVar . fst) lvsC
+ --  vsP = S.map (StdVar . fst) tsP `S.union` S.map (LstVar . fst) lvsP
+ --  ts +++ lvs = (S.map liftVV ts `S.union` S.map liftLL lvs)
+ --  liftVV (v,(Var _ u))  =  (StdVar v, StdVar u )
+ --  liftLL (lv,lu      )  =  (LstVar lv,LstVar lu)
+\end{code}
+
+Matching
+$\{ f_1/u_1 , \dots f_p/u_p \}$
+against
+$\{ e_1/x_1 , \dots e_m/x_m \}$
+in every way possible,
+returning leftover $\{f_i/u_i\}$s.
+\begin{code}
+vtsMatch :: MonadPlus mp
+         => [VarTable] -> Binding -> CBVS -> PBVS
+         -> TermSub -> TermSub
+         -> mp (Binding,[(Variable,Term)])
+vtsMatch vts bind cbvs pbvs tsC tsP
+ = manyToMany (matchPair matchVar matchTerm) defCombine
+              (dbg "vtsMatch.tsC=" $ S.toList tsC) (dbg "vtsMatch.tsP=" $ S.toList tsP) bind
  where
-  vsC = S.map (StdVar . fst) tsC `S.union` S.map (LstVar . fst) lvsC
-  vsP = S.map (StdVar . fst) tsP `S.union` S.map (LstVar . fst) lvsP
-  ts +++ lvs = (S.map liftVV ts `S.union` S.map liftLL lvs)
-  liftVV (v,(Var _ u))  =  (StdVar v, StdVar u )
-  liftLL (lv,lu      )  =  (LstVar lv,LstVar lu)
+   matchVar  ::  MonadPlus mp => BasicM mp Binding Variable Variable
+   matchVar vC vP bind = vMatch vts bind cbvs pbvs vC vP
+   matchTerm ::  MonadPlus mp => BasicM mp Binding Candidate Pattern
+   matchTerm tC tP bind =  tMatch vts bind cbvs pbvs tC tP
 \end{code}
 
 All the variable/term matches.
@@ -2333,25 +2354,29 @@ vtMatchCheck vts bind cbvs pbvs tsC tP vP
 \end{code}
 
 \newpage
-All the list-var/list-var matches, along with leftover standard vars.
-$$ \beta \uplus \{\beta_{t_i}\} \vdash R_{C_j} :: r_{P_i} \leadsto \beta_{r_i} $$
-where $R$ is a list or set of general variables term $gs$,
-and $r$ is a list-variable $lv$,
-so giving
-$$ \beta \uplus \{\beta_{t_i}\} \vdash gs_{C_j} :: lv_{P_i} \leadsto \beta_{r_i}. $$
-For every $(tlv_P,rlv_P)$ we search for all $(tlv_C,rlv_C)$
-where $tlv_C \in \beta(tlv_P)$,
-and attempt to bind $rlv_P$ to all the corresponding $rlv_C$.
+% All the list-var/list-var matches, along with leftover standard vars.
+% $$ \beta \uplus \{\beta_{t_i}\} \vdash R_{C_j} :: r_{P_i} \leadsto \beta_{r_i} $$
+% where $R$ is a list or set of general variables term $gs$,
+% and $r$ is a list-variable $lv$,
+% so giving
+% $$ \beta \uplus \{\beta_{t_i}\} \vdash gs_{C_j} :: lv_{P_i} \leadsto \beta_{r_i}. $$
+% For every $(tlv_P,rlv_P)$ we search for all $(tlv_C,rlv_C)$
+% where $tlv_C \in \beta(tlv_P)$,
+% and attempt to bind $rlv_P$ to all the corresponding $rlv_C$.
 \begin{code}
-lvsMatchCheck :: MonadPlus mp
+lvsMatch :: MonadPlus mp
        => [VarTable] -> Binding -> CBVS -> PBVS
-       -> Set (GenVar,GenVar) -> [(ListVar,ListVar)]
+       -> [(Variable,Term)] -> [(ListVar,ListVar)] -> [(ListVar,ListVar)]
        -> mp Binding
 
-lvsMatchCheck vts bind cbvs pbvs gvsC []  =  return bind
-lvsMatchCheck vts bind cbvs pbvs gvsC ((tlvP,rlvP):lvsP)
- = do bind' <- lvlvMatchCheck vts bind cbvs pbvs gvsC rlvP tlvP
-      lvsMatchCheck vts bind' cbvs pbvs gvsC lvsP
+lvsMatch vts bind cbvs pbvs [] [] [] = return bind
+lvsMatch vts bind cbvs pbvs tsC' lvsC lvsP
+  = fail "lvsMatch NYI"
+
+-- lvsMatch vts bind cbvs pbvs gvsC []  =  return bind
+-- lvsMatch vts bind cbvs pbvs gvsC ((tlvP,rlvP):lvsP)
+--  = do bind' <- lvlvMatchCheck vts bind cbvs pbvs gvsC rlvP tlvP
+--       lvsMatch vts bind' cbvs pbvs gvsC lvsP
 \end{code}
 
 Given a $(tlv_P,rlv_P)$, search for all $(tlv_C,rlv_C)$

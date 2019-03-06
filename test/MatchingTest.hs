@@ -368,6 +368,7 @@ f =  ExprVar (fromJust $ ident "f") Static
 ee = fromJust $ eVar ArbType e
 ef = fromJust $ eVar ArbType f
 e_for v = fromJust $ substn [(v,fromJust $ eVar ArbType $ e)] []
+f_for v = fromJust $ substn [(v,fromJust $ eVar ArbType $ f)] []
 bindVT (StdVar pv)  ct   =  fromJust . bindVarToTerm pv ct
 a = PreVar $ fromJust $ ident "a"
 b = PreVar $ fromJust $ ident "b"
@@ -385,11 +386,18 @@ tst_sMatch
      )
    , testCase "[42/y] :: [58/x] - fails"
        ( sMatch [] emptyBinding b0 b0 (k42_for y) (k58_for x) @?= Nothing )
-   , testCase "[42/y] :: [e/x] - succeeds"
-     ( sMatch [] emptyBinding b0 b0 (k42_for y) (e_for x)
+   , testCase "[42/a] :: [e/x] - succeeds"
+     ( sMatch [] emptyBinding b0 b0 (k42_for a) (e_for x)
        @?=
-       (Just ( bindVV (StdVar x) (StdVar y)
+       (Just ( bindVV (StdVar x) (StdVar a)
              $ bindVT (StdVar e) k42
+             $ emptyBinding ))
+     )
+   , testCase "[58/b] :: [f/y] - succeeds"
+     ( sMatch [] emptyBinding b0 b0 (k58_for b) (f_for y)
+       @?=
+       (Just ( bindVV (StdVar y) (StdVar b)
+             $ bindVT (StdVar f) k58
              $ emptyBinding ))
      )
    , testCase "[42,58/a,b] :: [e,f/x,y] - succeeds (One way only for now)"
@@ -402,6 +410,11 @@ tst_sMatch
           $ bindVV (StdVar y) (StdVar b)
           $ bindVT (StdVar f) k58
           $ emptyBinding )
+        , ( bindVV (StdVar x) (StdVar b)
+           $ bindVT (StdVar e) k58
+           $ bindVV (StdVar y) (StdVar a)
+           $ bindVT (StdVar f) k42
+           $ emptyBinding )
         ])
      )
    , testCase "[la/lb] :: [l1/l2]  - succeeds"

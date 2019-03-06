@@ -305,8 +305,11 @@ emptyBinding = BD (M.empty, M.empty, M.empty, M.empty)
 \subsection{Binding Insertion}
 
 If a variable is already present,
-then the new binding must be the same,
+then the new binding must be `equivalent',
 otherwise we fail.
+Even though equivalent, we still update the binding.
+This is to allow specialisation of a pre-existing binding
+where this is useful.
 
 We have a generic insertion function as follows:
 \begin{code}
@@ -318,7 +321,7 @@ insertDR nAPI rEqv d r binding
  = case M.lookup d binding of
      Nothing         ->  return $ M.insert d r binding
      Just r0
-      | r `rEqv` r0  ->  return binding
+      | r `rEqv` r0  ->  return $ M.insert d r binding
       | otherwise    ->
          fail $ unlines
             [ (nAPI++": already bound differently.")
@@ -664,6 +667,18 @@ vlComp vc vw vws (gv:gvs)
    vws' = S.insert gvw vws
 \end{code}
 
+When we are inserting a variable-list,
+we may find that a variable-set is present.
+If they have the same elements,
+then we update the set to be the list in the binding.
+We require an equivalence for this:
+\begin{code}
+vSetListEqv :: LstVarBind -> LstVarBind -> Bool
+vSetListEqv (BL vl) (BS vs)  =  S.fromList vl == vs
+vSetListEqv (BS vs) (BL vl)  =  S.fromList vl == vs
+vSetListEqv lvb1    lvb2     =  lvb1 == lvb2
+\end{code}
+
 \newpage
 \begin{code}
 bindLVarToVList :: Monad m => ListVar -> VarList -> Binding -> m Binding
@@ -673,7 +688,8 @@ A Static list-variable binds to any list without \texttt{Textual} variables.
 \begin{code}
 bindLVarToVList lv@(LVbl (Vbl i vc Static) is ij) vl (BD (vbind,sbind,lbind,llbind))
  | valid
-    =  do lbind' <- insertDR "bindLVarToVList(static)" (==) (i,vc,is,ij) (BL vl) lbind
+    =  do lbind' <- insertDR "bindLVarToVList(static)" vSetListEqv
+                              (i,vc,is,ij) (BL vl) lbind
           return $ BD (vbind,sbind,lbind',llbind)
  | otherwise = fail "bindLVarToVList: static cannot bind to any textual."
  where
@@ -1058,6 +1074,7 @@ lookupLstBind (BD (_,sbind,lbind,_)) lv@(LVbl (Vbl i vc (During m)) is ij)
          Nothing       ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
          Just (BL vl)  ->  return $ BindList  $ map   (gvarTempSync dn) vl
          Just (BS vs)  ->  return $ BindSet   $ S.map (gvarTempSync dn) vs
+         Just (BX tl)  ->  return $ BindTerms $ map   (termTempSync dn) tl
 
 
 lookupLstBind (BD (_,_,lbind,_)) lv@(LVbl (Vbl i vc vw) is ij)
@@ -1065,6 +1082,7 @@ lookupLstBind (BD (_,_,lbind,_)) lv@(LVbl (Vbl i vc vw) is ij)
      Nothing         ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
      Just (BL vl)  ->  return $ BindList  $ map   (gvarTempSync vw) vl
      Just (BS vs)  ->  return $ BindSet   $ S.map (gvarTempSync vw) vs
+     Just (BX tl)  ->  return $ BindTerms $ map   (termTempSync vw) tl
 \end{code}
 
 \subsubsection{Lookup Substitution List-Variable pairs}

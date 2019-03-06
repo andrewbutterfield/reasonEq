@@ -33,25 +33,34 @@ type BasicM mp b c p = c -> p -> b -> mp b
 
 \begin{code}
 matchPair :: MonadPlus mp
-          => BasicM mp b c1 p1
-          -> BasicM mp b c2 p2
+          => BasicM mp b c1 p1 -> BasicM mp b c2 p2
           -> BasicM mp b (c1,c2) (p1,p2)
-matchPair m1 m2 (c1,c2) (p1,p2) b
- = m1 c1 p1 b >>= m2 c2 p2
+
+matchPair m1 m2 (c1,c2) (p1,p2) b  =   m1 c1 p1 b >>= m2 c2 p2
 \end{code}
 
 \subsubsection{Matching lists}
 
 When we match lists sometimes we need to return
 not just bindings,
-but also some stuff about lists.
+but also something built from leftover list fragments
+(usually before/after).
 \begin{description}
   \item [\texttt{b'} :] binding plus extra stuff
 \end{description}
 \begin{code}
 type Combine c b b' = [c] -> [c] -> b -> b'
 \end{code}
+In most cases we have the first list being those candidates before the match
+(in reverse order, due to tail-recursion),
+while the second is those after that match.
+We typically want the binding with a single (ordered) list of the leftovers.
+\begin{code}
+defCombine :: Combine c b (b,[c])
+defCombine sc cs b  = (b, reverse sc ++ cs)
+\end{code}
 
+\newpage
 Matching many candidates against one pattern.
 \begin{code}
 manyToOne :: MonadPlus mp
@@ -78,7 +87,4 @@ manyToMany bf cf cs ps b
  = foldr mplus (fail ".") $ map f ps
  where
    f p = manyToOne bf cf cs p b
-
-defCombine :: Combine c b (b,[c])
-defCombine sc cs b  = (b, reverse sc ++ cs)
 \end{code}

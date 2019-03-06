@@ -20,20 +20,26 @@ manyToOne :: MonadPlus mp
            -> Combine c b b'
            -> [c] -> p -> b
            -> mp b'
+manyToOne bf cf [] p b = fail "."
 manyToOne bf cf cs p b = manyToOne' bf cf [] p b cs
 
-manyToOne' bf cf sc p b0 []      =  fail "no candidates"
+manyToOne' bf cf sc p b0 []      =  return $ cf sc [] b0
+manyToOne' bf cf sc p b0 [c]     =  (do b <- bf c p b0 ; return $ cf sc [] b)
+                                    -- `mplus`
+                                    -- (return $ cf sc [c] b0)
 manyToOne' bf cf sc p b0 (c:cs)  =  (do b <- bf c p b0 ; return $ cf sc cs b)
                                     `mplus`
                                     manyToOne' bf cf (c:sc) p b0 cs
-                                    
+
 manyToMany :: MonadPlus mp
            => BasicF mp b c p
            -> Combine c b b'
            -> [c] -> [p] -> b
            -> mp b'
+manyToMany bf cf cs [] b  =  return $ cf [] cs b
 manyToMany bf cf cs ps b
  = foldr mplus (fail ".") $ map f ps
+ -- = foldr mplus (return $ cf [] cs b) $ map f ps
  where
    f p = manyToOne bf cf cs p b
 

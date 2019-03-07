@@ -2303,7 +2303,7 @@ vtsMatch :: MonadPlus mp
          -> TermSub -> TermSub
          -> mp (Binding,[(Variable,Term)])
 vtsMatch vts bind cbvs pbvs tsC tsP
- = manyToMany (matchPair matchVar matchTerm) defCombine
+ = manyToMultiple (matchPair matchVar matchTerm) defCombine id
               (dbg "vtsMatch.tsC=" $ S.toList tsC) (dbg "vtsMatch.tsP=" $ S.toList tsP) bind
  where
    matchVar  ::  MonadPlus mp => BasicM mp Binding Variable Variable

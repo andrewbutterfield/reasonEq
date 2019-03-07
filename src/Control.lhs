@@ -5,7 +5,15 @@ Copyright  Andrew Buttefield (c) 2019
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module Control where
+module Control (  BasicM
+                , matchPair
+                , Combine, defCombine
+                , manyToOne
+                , manyToMany
+                , Extract, defExtract
+                , manyToMultiple
+)
+where
 
 import Data.Map(Map)
 import qualified Data.Map as M
@@ -68,23 +76,54 @@ manyToOne :: MonadPlus mp
           -> Combine c b b'
           -> [c] -> p -> b
           -> mp b'
+manyToOne bf cf [] p b = fail "manyToOne: no candidates"
 manyToOne bf cf cs p b = manyToOne' bf cf [] p b cs
 
-manyToOne' bf cf sc p b0 []      =  fail "no candidates"
+manyToOne' bf cf sc p b0 []      =  return $ cf sc [] b0
+manyToOne' bf cf sc p b0 [c]     =  (do b <- bf c p b0 ; return $ cf sc [] b)
 manyToOne' bf cf sc p b0 (c:cs)  =  (do b <- bf c p b0 ; return $ cf sc cs b)
                                     `mplus`
                                     manyToOne' bf cf (c:sc) p b0 cs
 \end{code}
 
-Matching many candidates against many patterns.
+Matching many candidates against many patterns,
+looking for one-to-one matches.
 \begin{code}
 manyToMany :: MonadPlus mp
            => BasicM mp b c p
            -> Combine c b b'
            -> [c] -> [p] -> b
            -> mp b'
+manyToMany bf cf cs [] b  =  return $ cf [] cs b
 manyToMany bf cf cs ps b
- = foldr mplus (fail ".") $ map f ps
+ = foldr mplus (fail "manyToMany:end-of-list") $ map f ps
  where
    f p = manyToOne bf cf cs p b
+\end{code}
+
+
+Sometimes we need to extract what has been combined:
+\begin{code}
+type Extract c b b' = b' -> (b,[c])
+\end{code}
+The counterpart to \texttt{defCombine} is in fact the identity function
+\begin{code}
+defExtract :: Extract c b (b,[c])
+defExtract = id
+\end{code}
+
+Matching candidates against many patterns,
+looking for many-to-many matches from every pattern to a candidate.
+\begin{code}
+manyToMultiple :: MonadPlus mp
+               => BasicM mp b c p
+               -> Combine c b b'
+               -> Extract c b b'
+               -> [c] -> [p] -> b
+               -> mp b'
+manyToMultiple bf cf xt cs [] b  =  return $ cf [] cs b
+manyToMultiple bf cf xt cs (p:ps) b
+ = do bc <- manyToOne bf cf cs p b
+      let (b',cs') = xt bc
+      manyToMultiple bf cf xt cs' ps b'
 \end{code}

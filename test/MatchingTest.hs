@@ -400,7 +400,7 @@ tst_sMatch
              $ bindVT (StdVar f) k58
              $ emptyBinding ))
      )
-   , testCase "[42,58/a,b] :: [e,f/x,y] - succeeds (One way only for now)"
+   , testCase "[42,58/a,b] :: [e,f/x,y] - succeeds 2 ways"
      ( nub ( sMatch [] emptyBinding b0 b0
               (fromJust $ substn [(a,k42),(b,k58)] [])
               (fromJust $ substn [ (x,ee), (y,ef)] []) )

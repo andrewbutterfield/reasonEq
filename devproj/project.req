@@ -16,28 +16,6 @@ END THEORIES
 CURRTHEORY = PredExists
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("PredExists","\8707_\945_rename")
-BEGIN LIVE-PROOF
-TH-NAME: PredExists
-CJ-NAME: ∃_α_rename
-CONJ = (C P (Id "\8801") [B P (Id "\8707") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS))),B P (Id "\8707") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "y",VO,WS),[],[]))])))],[SD (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))])])
-SIDE = [SD (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))])]
-STRAT reduce
-BEGIN SEQZIP
-TERMZIP = (C P (Id "\172") [S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "y",VO,WS),[],[]))]))],[Bind' P (Id "\8704") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]),Cons' P (Id "\8801") [B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (C P (Id "\172") [V P (VR (Id "P",VP,WS))])] []])
-BEGIN SEQUENT'
-SIDECOND = [SD (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))])]
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.\8707_\945_rename", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = V P (VR (Id "true",VP,WS))}
-END SEQUENT'
-END SEQZIP
-FPATH: [2,1]
-BEGIN LIST STEPS
-(UseLaw (ByMatch (ME [1])) "\172_invol" (BD (fromList [((Id "P",VP),BT (B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (C P (Id "\172") [V P (VR (Id "P",VP,WS))])))],fromList [],fromList [],fromList [])) [1],C P (Id "\8801") [C P (Id "\172") [C P (Id "\172") [B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (C P (Id "\172") [V P (VR (Id "P",VP,WS))])]],B P (Id "\8704") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "\172") [S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "y",VO,WS),[],[]))]))])])
-(UseLaw (ByMatch (ME [2])) "\172_\8801_swap" (BD (fromList [((Id "P",VP),BT (C P (Id "\172") [B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (C P (Id "\172") [V P (VR (Id "P",VP,WS))])])),((Id "Q",VP),BT (B P (Id "\8704") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "\172") [S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "y",VO,WS),[],[]))]))])))],fromList [],fromList [],fromList [])) [],C P (Id "\8801") [C P (Id "\172") [B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (C P (Id "\172") [V P (VR (Id "P",VP,WS))])],C P (Id "\172") [B P (Id "\8704") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "\172") [S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "y",VO,WS),[],[]))]))])]])
-(UseLaw (ByMatch (ME [1])) "\8707_def" (BD (fromList [((Id "P",VP),BT (S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "y",VO,WS),[],[]))]))))],fromList [],fromList [((Id "x",VO,[],[]),BS (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]))],fromList [])) [2],C P (Id "\8801") [C P (Id "\172") [B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (C P (Id "\172") [V P (VR (Id "P",VP,WS))])],B P (Id "\8707") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "y",VO,WS),[],[]))])))])
-(UseLaw (ByMatch (ME [1])) "\8707_def" (BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [((Id "x",VO,[],[]),BS (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]))],fromList [])) [1],C P (Id "\8801") [B P (Id "\8707") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS))),B P (Id "\8707") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "y",VO,WS),[],[]))])))])
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

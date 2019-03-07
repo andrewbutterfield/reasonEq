@@ -580,11 +580,24 @@ vlTmpr vws ts (StdVar (Vbl _ _ vw):lv)          = vlTmpr (S.insert vw vws) ts lv
 vlTmpr vws ts (LstVar (LVbl (Vbl _ _ vw) _ _):lv)
                                                 = vlTmpr (S.insert vw vws) ts lv
 
-subTmpr vws ts (Substn tsub lvsub)  =  lvsubTmpr vws ts tsub $ S.toList lvsub
+subTmpr vws ts (Substn tsub lvsub)  =  subTmpr' vws ts tsub lvsub
+subTmpr' vws ts tsub lvsub          =  lvsubTmpr vws ts tsub $ S.toList lvsub
+
+substTemporalityOf tsub lvsub = subTmpr' S.empty [] tsub lvsub
 
 lvsubTmpr vws ts tsub []  =  tsubTmpr vws ts $ S.toList tsub
 lvsubTmpr vws ts tsub ((LVbl (Vbl _ _ vw1) _ _,LVbl (Vbl _ _ vw2) _ _):lvsub)
  = lvsubTmpr (S.fromList [vw1,vw2] `S.union` vws) ts tsub lvsub
+
+subTgtTmpr tsub lvsub
+ = S.map (timeVar . fst) tsub
+   `S.union`
+   S.map (timeLVar . fst) lvsub
+
+subReplTmpr tsub lvsub
+ = temporalitiesOf (map snd $ S.toList tsub)
+   `S.union`
+   S.map (timeLVar . snd) lvsub
 
 tsubTmpr vws ts tsub = let (vs,ts') = unzip tsub in vsTmpr vws (ts'++ts) vs
 
@@ -906,22 +919,26 @@ bindLVarToTList plv cndTs _
 Here we are binding a target/replacement pair of list variables
 to (a part of) a candidate substitution.
 We also need to bind the target list-variable to the corresponding candidate
-variable-set (\textbf{Why?}).
+variable-set,
+in order to ensure that we are consistent with bindings from the term
+being subsituted, and beyond.
 This latter binding we do first, because it may fail.
+If it succeeds, then we know that the targets are all compatible dynamically.
 \begin{code}
 bindLVarPairToSubst :: Monad m
                     => ListVar -> ListVar -> TermSub -> LVarSub -> Binding
                     -> m Binding
 
 bindLVarPairToSubst tgtLV rplLV tsub lvarsub bind
- = do bind' <- bindLVarToVSet tgtLV rplVS bind -- why?
+ = do bind' <- bindLVarToVSet tgtLV rplVS bind
       bindLVarPairToSubst' tgtLV rplLV tsub lvarsub bind'
  where
    rplVS = S.map (StdVar . fst) tsub `S.union` S.map (LstVar . fst) lvarsub
 \end{code}
 
 Given the target list-variable has succesfully been bound,
-we can move onto the main event:
+we can move onto the main event.
+First, the static case:
 \begin{code}
 bindLVarPairToSubst' tgtLV@(LVbl (Vbl ti tvc Static) tis tij)
                      rplLV@(LVbl (Vbl ri rvc Static) ris rij)
@@ -931,6 +948,41 @@ bindLVarPairToSubst' tgtLV@(LVbl (Vbl ti tvc Static) tis tij)
                           llbind
       return $ BD (vbind,sbind,lbind,llbind')
 
+\end{code}
+
+Now for dynamic variables:
+\begin{code}
+bindLVarPairToSubst' tgtLV@(LVbl (Vbl ti tvc tvt) tis tij)
+                     rplLV@(LVbl (Vbl ri rvc rvt) ris rij)
+                     tsub lvarsub (BD (vbind,sbind,lbind,llbind))
+  | twsize  > 1  =  fail "bindLVarPairToSubst: mixed target temporality."
+  | rwsize  > 1  =  fail "bindLVarPairToSubst: mixed replacement temporality."
+  | otherwise    =  fail "bindLVarPairToSubst(dynamic) NYI"
+-- bindLVarToTList (LVbl (Vbl vi vc vt) is ij) cndTs (BD (vbind,sbind,lbind,llbind))
+--  | otherwise
+--    = case (vt,thectw) of
+--       (During m, During n) ->
+--           do lbind' <- insertDR "bindLVarToTList(plv2)" (==)
+--                                 (vi,vc,is,ij) (BX cndTs) lbind
+--              sbind' <- insertDR "bindLVarToTList(plv3)" (==) m n sbind
+--              return $ BD (vbind,sbind',lbind',llbind)
+--       _ | vt /= thectw     ->
+--             fail "bindLVarToTList: p.-var different temporality"
+--         | otherwise ->
+--             do lbind' <- insertDR "bindLVarToTList(plv4)" (==)
+--                                   (vi,vc,is,ij) (BX cndTs) lbind
+--                return $ BD (vbind,sbind,lbind',llbind)
+  where
+    crws = subReplTmpr tsub lvarsub -- substTemporalityOf tsub lvarsub
+    rwsize = S.size crws
+    thecrw = S.elemAt 0 crws
+    ctws = subTgtTmpr tsub lvarsub -- substTemporalityOf tsub lvarsub
+    twsize = S.size ctws
+    thectw = S.elemAt 0 ctws
+\end{code}
+
+Anything else fails for now\dots
+\begin{code}
 bindLVarPairToSubst' _ _ _ _ _ = fail "bindLVarPairToSubst: NYfI."
 \end{code}
 

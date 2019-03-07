@@ -17,7 +17,7 @@ module Variables
  , pattern Vbl
  , varClass, varWhen
  , pattern ObsVar, pattern ExprVar, pattern PredVar
- , pattern PreVar, pattern MidVar, pattern PostVar
+ , pattern StaticVar, pattern PreVar, pattern MidVar, pattern PostVar
  , pattern ScriptVar
  , pattern PreCond, pattern PostCond
  , pattern PreExpr, pattern PostExpr
@@ -27,7 +27,7 @@ module Variables
  , pattern LVbl
  , lvarClass, lvarWhen
  , pattern ObsLVar, pattern VarLVar, pattern ExprLVar, pattern PredLVar
- , pattern PreVars, pattern PostVars, pattern MidVars
+ , pattern StaticVars, pattern PreVars, pattern PostVars, pattern MidVars
  , pattern ScriptVars
  , pattern PreExprs, pattern PrePreds
  , isPreListVar, isObsLVar, isExprLVar, isPredLVar
@@ -216,6 +216,7 @@ pattern PredVar i vw = VR (i, VP, vw)
 
 We also have some pre-wrapped patterns for common cases:
 \begin{code}
+pattern StaticVar i    = VR (i, VO, WS)
 pattern PreVar    i    = VR (i, VO, WB)
 pattern PostVar   i    = VR (i, VO, WA)
 pattern MidVar    i n  = VR (i, VO, (WD n))
@@ -274,6 +275,7 @@ pattern PredLVar k i is js = LV (VR (i,VP,k), is,js)
 
 Pre-wrapped patterns:
 \begin{code}
+pattern StaticVars i    =  LV (VR (i,VO,WS),    [],[])
 pattern PreVars    i    =  LV (VR (i,VO,WB),    [],[])
 pattern PostVars   i    =  LV (VR (i,VO,WA),    [],[])
 pattern MidVars    i n  =  LV (VR (i,VO,(WD n)),[],[])

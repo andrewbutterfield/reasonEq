@@ -249,6 +249,10 @@ tst_vsMatch :: TF.Test
 bindLs (LstVar plv) cgvs  =  fromJust . bindLVarToVSet plv (S.fromList cgvs)
 bindLS (LstVar plv) cgv   =  fromJust . bindLVarToVSet plv (S.singleton cgv)
 bindLN (LstVar plv)       =  fromJust . bindLVarToVSet plv S.empty
+bindLLSub (LstVar tplv,LstVar rplv) ctermsub clvarsub
+ = fromJust . b'' (LstVar tplv,LstVar rplv) ctermsub clvarsub
+b'' (LstVar tplv,LstVar rplv) ctermsub clvarsub
+ = bindLVarPairToSubst tplv rplv (S.fromList ctermsub) (S.fromList clvarsub)
 
 bindPS12CS12
  = bindVV ps1 cs1 $ bindVV ps2 cs2 emptyBinding
@@ -378,6 +382,11 @@ l2 = PreVars $ fromJust $ ident "l2"
 la = PreVars $ fromJust $ ident "la"
 lb = PreVars $ fromJust $ ident "lb"
 
+l1s = StaticVars $ fromJust $ ident "l1"
+l2s = StaticVars $ fromJust $ ident "l2"
+las = StaticVars $ fromJust $ ident "la"
+lbs = StaticVars $ fromJust $ ident "lb"
+
 tst_sMatch
  = testGroup "\nsMatch"
    [ testCase "[42/y] :: [42/x] - succeeds"
@@ -417,13 +426,17 @@ tst_sMatch
            $ emptyBinding )
         ])
      )
+   , testCase "[las/lbs] :: [l1s/l2s]  - STATIC succeeds"
+       ( nub ( sMatch [] emptyBinding b0 b0
+                  (fromJust $ substn [] [(lbs,las)])
+                  (fromJust $ substn [] [(l2s,l1s)]) )
+       @?= [ ( bindLLSub (LstVar l2s,LstVar l1s) [] [(lbs,las)] emptyBinding) ]
+       )
    , testCase "[la/lb] :: [l1/l2]  - succeeds"
        ( nub ( sMatch [] emptyBinding b0 b0
                   (fromJust $ substn [] [(lb,la)])
                   (fromJust $ substn [] [(l2,l1)]) )
-       @?= [ ( bindLS (LstVar l1) (LstVar la)
-                 $ bindLS (LstVar l2) (LstVar lb)
-                 $ emptyBinding  ) ]
+       @?= [ ( bindLLSub (LstVar l2,LstVar l1) [] [(lb,la)] emptyBinding) ]
        )
    , testCase "[la/lb] :: [e/x]  - fails"
        ( sMatch [] emptyBinding b0 b0

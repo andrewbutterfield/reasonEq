@@ -604,7 +604,7 @@ while other variable classes may only match their own class.
 \begin{code}
 vMatch vts bind cbvs pvbs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
  | pbound      =  bvMatch vts bind cbvs vC vP
- | (dbg "vMatch.vC=" vC) == (dbg "vMatch.vP=" vP)    =  bindVarToVar vP vC bind -- covers KnownVar, InstanceVar
+ | vC == vP    =  bindVarToVar vP vC bind -- covers KnownVar, InstanceVar
  | vwC == vwP  =  vMatch' vts bind vmr vC vP
  | vwC == ExprV && vwP == ObsV  =  vMatch' vts bind vmr vC vP
  | otherwise   =  fail "vMatch: class mismatch"
@@ -2263,7 +2263,7 @@ sMatch :: MonadPlus mp
        -> Substn -> Substn
        -> mp Binding
 sMatch vts bind cbvs pbvs subC subP
-  | isFeasibleSubstnMatch subC subP  =  sMatch' vts bind cbvs pbvs (dbg "sMatch.subC=" subC) $ dbg "sMatch.subP=" subP
+  | isFeasibleSubstnMatch subC subP  =  sMatch' vts bind cbvs pbvs subC subP
   | otherwise                        =  fail "infeasible substition match"
 \end{code}
 
@@ -2276,7 +2276,7 @@ against what remains.
 \begin{code}
 sMatch' vts bind cbvs pbvs subC@(Substn tsC lvsC) subP@(Substn tsP lvsP)
  = do (bind',tsC')  <- vtsMatch vts bind cbvs pbvs tsC tsP
-      lvsMatch vts (dbg "sMatch'.bind'=" bind') cbvs pbvs (dbg "sMatch'.tsC'=" tsC') (S.toList lvsC) (S.toList lvsP)
+      lvsMatch vts bind' cbvs pbvs tsC' (S.toList lvsC) (S.toList lvsP)
       -- else fail $ unlines
       --        [ "sMatch: some leftover std-replacement is not a Var."
       --        , "tsP  = " ++ show tsP
@@ -2304,7 +2304,7 @@ vtsMatch :: MonadPlus mp
          -> mp (Binding,[(Variable,Term)])
 vtsMatch vts bind cbvs pbvs tsC tsP
  = manyToMultiple (matchPair matchVar matchTerm) defCombine id
-              (dbg "vtsMatch.tsC=" $ S.toList tsC) (dbg "vtsMatch.tsP=" $ S.toList tsP) bind
+              (S.toList tsC) (S.toList tsP) bind
  where
    matchVar  ::  MonadPlus mp => BasicM mp Binding Variable Variable
    matchVar vC vP bind = vMatch vts bind cbvs pbvs vC vP
@@ -2312,45 +2312,45 @@ vtsMatch vts bind cbvs pbvs tsC tsP
    matchTerm tC tP bind =  tMatch vts bind cbvs pbvs tC tP
 \end{code}
 
-All the variable/term matches.
-$$ \beta \uplus \{\beta_{t_i}\} \vdash R_{C_j} :: r_{P_i} \leadsto \beta_{r_i} $$
-where $R$ is a single term $t$, and $r$ is a standard variable $v$,
-so giving
-$$ \beta \uplus \{\beta_{t_i}\} \vdash t_{C_j} :: v_{P_i} \leadsto \beta_{r_i}. $$
-For every $(v_P,t_P)$ we search for a $(v_C,t_C)$ where $\beta(v_P)=v_C$,
-and then we attempt to match $t_C$ against $t_P$.
-We need to return all pairs in the \texttt{TermSub} not found in this process.
+% All the variable/term matches.
+% $$ \beta \uplus \{\beta_{t_i}\} \vdash R_{C_j} :: r_{P_i} \leadsto \beta_{r_i} $$
+% where $R$ is a single term $t$, and $r$ is a standard variable $v$,
+% so giving
+% $$ \beta \uplus \{\beta_{t_i}\} \vdash t_{C_j} :: v_{P_i} \leadsto \beta_{r_i}. $$
+% For every $(v_P,t_P)$ we search for a $(v_C,t_C)$ where $\beta(v_P)=v_C$,
+% and then we attempt to match $t_C$ against $t_P$.
+% We need to return all pairs in the \texttt{TermSub} not found in this process.
 \begin{code}
-tsMatchCheck :: MonadPlus mp
-             => [VarTable] -> Binding -> CBVS -> PBVS
-             -> TermSub -> [(Variable,Term)]
-             -> mp (Binding, TermSub)
-
-tsMatchCheck vts bind cbvs pbvs tsC []  =  return (bind,tsC)
-tsMatchCheck vts bind cbvs pbvs tsC ((vP,tP):tsP)
- = do (bind',tsC') <- vtMatchCheck vts bind cbvs pbvs tsC tP vP
-      tsMatchCheck vts bind' cbvs pbvs tsC' tsP
+-- tsMatchCheck :: MonadPlus mp
+--              => [VarTable] -> Binding -> CBVS -> PBVS
+--              -> TermSub -> [(Variable,Term)]
+--              -> mp (Binding, TermSub)
+--
+-- tsMatchCheck vts bind cbvs pbvs tsC []  =  return (bind,tsC)
+-- tsMatchCheck vts bind cbvs pbvs tsC ((vP,tP):tsP)
+--  = do (bind',tsC') <- vtMatchCheck vts bind cbvs pbvs tsC tP vP
+--       tsMatchCheck vts bind' cbvs pbvs tsC' tsP
 \end{code}
 
 Given a $(v_P,t_P)$, search for a $(v_C,t_C)$ where $\beta(v_P)=v_C$,
 and attempt to match $t_C$ against $t_P$.
 \begin{code}
-vtMatchCheck :: MonadPlus mp
-             => [VarTable] -> Binding -> CBVS -> PBVS
-             -> TermSub -> Term -> Variable
-             -> mp (Binding,TermSub)
-
-vtMatchCheck vts bind cbvs pbvs tsC tP vP
- = case lookupVarBind bind vP of
-     Nothing            ->  fail "vtMatchCheck: Nothing SHOULD NOT OCCUR!"
-     Just (BindTerm _)  ->  fail "vtMatchCheck: BindTerm SHOULD NOT OCCUR!"
-     Just (BindVar vB)
-       -> let tsB = S.filter ((==vB).fst) tsC
-          in if S.size tsB /= 1
-              then fail "vtMatchCheck: #tsB /= 1 SHOULD NOT OCCUR!"
-              else let tB = snd $ S.elemAt 0 tsB
-                   in do bind' <- tMatch vts bind cbvs pbvs tB tP
-                         return (bind', tsC S.\\ tsB)
+-- vtMatchCheck :: MonadPlus mp
+--              => [VarTable] -> Binding -> CBVS -> PBVS
+--              -> TermSub -> Term -> Variable
+--              -> mp (Binding,TermSub)
+--
+-- vtMatchCheck vts bind cbvs pbvs tsC tP vP
+--  = case lookupVarBind bind vP of
+--      Nothing            ->  fail "vtMatchCheck: Nothing SHOULD NOT OCCUR!"
+--      Just (BindTerm _)  ->  fail "vtMatchCheck: BindTerm SHOULD NOT OCCUR!"
+--      Just (BindVar vB)
+--        -> let tsB = S.filter ((==vB).fst) tsC
+--           in if S.size tsB /= 1
+--               then fail "vtMatchCheck: #tsB /= 1 SHOULD NOT OCCUR!"
+--               else let tB = snd $ S.elemAt 0 tsB
+--                    in do bind' <- tMatch vts bind cbvs pbvs tB tP
+--                          return (bind', tsC S.\\ tsB)
 \end{code}
 
 \newpage
@@ -2363,6 +2363,21 @@ vtMatchCheck vts bind cbvs pbvs tsC tP vP
 % For every $(tlv_P,rlv_P)$ we search for all $(tlv_C,rlv_C)$
 % where $tlv_C \in \beta(tlv_P)$,
 % and attempt to bind $rlv_P$ to all the corresponding $rlv_C$.
+
+We are now matching candidate
+$$
+ \{ f_1/u_1 , \dots f_p/u_p \}
+ \quad
+ \{ \lst v_1/\lst w_1 , \dots \lst w_q/\lst w_q \}
+$$
+against (list-variable only) pattern:
+$$
+ \{  \}
+ \quad
+ \{ \lst y_1/\lst z_1 , \dots \lst y_n/\lst z_n \}
+$$
+For now we produce specific cases,
+and leave a general solution for later.
 \begin{code}
 lvsMatch :: MonadPlus mp
        => [VarTable] -> Binding -> CBVS -> PBVS
@@ -2370,8 +2385,14 @@ lvsMatch :: MonadPlus mp
        -> mp Binding
 
 lvsMatch vts bind cbvs pbvs [] [] [] = return bind
-lvsMatch vts bind cbvs pbvs tsC' lvsC lvsP
-  = fail "lvsMatch NYI"
+lvsMatch vts bind cbvs pbvs _  _  [] = fail "lvsMatch: no patn. for candidates."
+
+-- just one pattern element must bind to all
+lvsMatch vts bind cbvs pbvs tsC lvsC [(tlvP,rlvP)]
+  = bindLVarPairToSubst tlvP rlvP (S.fromList tsC) (S.fromList lvsC) bind
+
+lvsMatch vts bind cbvs pbvs tsC lvsC lvsP
+  = fail "lvsMatch NYfI"
 
 -- lvsMatch vts bind cbvs pbvs gvsC []  =  return bind
 -- lvsMatch vts bind cbvs pbvs gvsC ((tlvP,rlvP):lvsP)
@@ -2379,30 +2400,30 @@ lvsMatch vts bind cbvs pbvs tsC' lvsC lvsP
 --       lvsMatch vts bind' cbvs pbvs gvsC lvsP
 \end{code}
 
-Given a $(tlv_P,rlv_P)$, search for all $(tlv_C,rlv_C)$
-where $tlv_C \in \beta(tlv_P)$,
-and then we attempt to bind $rlv_P$ to all the corresponding $rlv_C$.
+% Given a $(tlv_P,rlv_P)$, search for all $(tlv_C,rlv_C)$
+% where $tlv_C \in \beta(tlv_P)$,
+% and then we attempt to bind $rlv_P$ to all the corresponding $rlv_C$.
 \begin{code}
-lvlvMatchCheck :: MonadPlus mp
-               => [VarTable] -> Binding -> CBVS -> PBVS
-               -> Set (GenVar,GenVar) -> ListVar -> ListVar
-               -> mp Binding
-
-lvlvMatchCheck vts bind cbvs pbvs gvsC rlvP tlvP
- = case lookupLstBind bind tlvP of
-     Nothing            ->  fail "lvlvMatchCheck: Nothing SHOULD NOT OCCUR!"
-     -- in general we will need to bind list-vars for replacements
-     -- to substitution fragments
-     -- need to use: bindLVarPairToSubst tgtLV rplLV tsub lvarsub bind
-     Just (BindList bvlC) ->
-      let gvlB = S.toList $ S.filter ((inlist bvlC).fst) gvsC
-      in bindLVarToVList rlvP (map snd gvlB) bind
-     Just (BindSet bvsC) ->
-      let gvsB = S.filter ((inset bvsC).fst) gvsC
-      in bindLVarToVSet rlvP (S.map snd gvsB) bind
- where
-   inlist vl gv  =  gv   `elem`   vl
-   inset  vs gv  =  gv `S.member` vs
+-- lvlvMatchCheck :: MonadPlus mp
+--                => [VarTable] -> Binding -> CBVS -> PBVS
+--                -> Set (GenVar,GenVar) -> ListVar -> ListVar
+--                -> mp Binding
+--
+-- lvlvMatchCheck vts bind cbvs pbvs gvsC rlvP tlvP
+--  = case lookupLstBind bind tlvP of
+--      Nothing            ->  fail "lvlvMatchCheck: Nothing SHOULD NOT OCCUR!"
+--      -- in general we will need to bind list-vars for replacements
+--      -- to substitution fragments
+--      -- need to use: bindLVarPairToSubst tgtLV rplLV tsub lvarsub bind
+--      Just (BindList bvlC) ->
+--       let gvlB = S.toList $ S.filter ((inlist bvlC).fst) gvsC
+--       in bindLVarToVList rlvP (map snd gvlB) bind
+--      Just (BindSet bvsC) ->
+--       let gvsB = S.filter ((inset bvsC).fst) gvsC
+--       in bindLVarToVSet rlvP (S.map snd gvsB) bind
+--  where
+--    inlist vl gv  =  gv   `elem`   vl
+--    inset  vs gv  =  gv `S.member` vs
 \end{code}
 
 

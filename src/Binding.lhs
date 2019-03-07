@@ -906,7 +906,7 @@ bindLVarToTList plv cndTs _
 Here we are binding a target/replacement pair of list variables
 to (a part of) a candidate substitution.
 We also need to bind the target list-variable to the corresponding candidate
-variable-set.
+variable-set (\textbf{Why?}).
 This latter binding we do first, because it may fail.
 \begin{code}
 bindLVarPairToSubst :: Monad m
@@ -914,7 +914,7 @@ bindLVarPairToSubst :: Monad m
                     -> m Binding
 
 bindLVarPairToSubst tgtLV rplLV tsub lvarsub bind
- = do bind' <- bindLVarToVSet tgtLV rplVS bind
+ = do bind' <- bindLVarToVSet tgtLV rplVS bind -- why?
       bindLVarPairToSubst' tgtLV rplLV tsub lvarsub bind'
  where
    rplVS = S.map (StdVar . fst) tsub `S.union` S.map (LstVar . fst) lvarsub

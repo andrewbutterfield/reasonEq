@@ -450,8 +450,9 @@ tst_sMatch
          @?=
          ([ ( bindVV (StdVar x) (StdVar a)
             $ bindVT (StdVar e) k42
-            $ bindLS (LstVar l1) (LstVar la)
             $ bindLS (LstVar l2) (LstVar lb)
+            $ bindLLSub (LstVar l2,LstVar l1) [] [(lb,la)]
+            -- (l2,l1)->({},{(lb,la)}) (LstVar tplv,LstVar rplv) ctermsub clvarsub
             $ emptyBinding )])
        )
    ]

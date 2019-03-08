@@ -1,12 +1,31 @@
-
-⊢
-(∀ x̅,y̅ • (x̅=e̅)⟹ ¬P)≡(∀ y̅ • (¬P)[e̅/x̅])    x̅∉e̅
-
-R-target = true
-
-
-proof: m ∀_one_point
-@dom.law:
-(("\8704_one_point",(C P (Id "\8801") [B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "\10233 ") [I P (Id "\8743") (Id "=") [LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[])],V P (VR (Id "P",VP,WS))]),B P (Id "\8704") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])))],[SD (GL (LV (VR (Id "e",VE,WS),[],[]))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])])),Axiom)
-No matches for '∀_one_point'
-<return> to continue
+      [okm,Sm/ok,S] :: [Om/O] - succeeds: [Failed]
+expected: [BD (fromList [],fromList [("m","m")],fromList [((Id "O",VO,[],[]),BS (fromList [GV (VR (Id "ok",VO,WB)),GL (LV (VR (Id "S",VO,WB),[],[]))]))],fromList [])]
+ but got: [BD (fromList [],fromList [("m","m")],fromList [((Id "O",VO,[],[]),BS (fromList [GV (VR (Id "ok",VO,WB)),GL (LV (VR (Id "S",VO,WB),[],[]))]))],fromList [(((Id "O",VO,[],[]),(Id "O",VO,[],[])),(fromList [(VR (Id "ok",VO,WB),V (E (TG (Id "\120121"))) (VR (Id "ok",VO,WD "m")))],fromList [(LV (VR (Id "S",VO,WB),[],[]),LV (VR (Id "S",VO,WD "m"),[],[]))]))])]
+      [okm,xm,ym,zm/ok,x,y,z] :: [Om/O] - succeeds: [Failed]
+expected: [BD (fromList [],fromList [("m","m")],fromList [((Id "O",VO,[],[]),BS (fromList [GV (VR (Id "ok",VO,WB)),GV (VR (Id "x",VO,WB)),GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]))],fromList [])]
+ but got: [BD (fromList [],fromList [("m","m")],fromList [((Id "O",VO,[],[]),BS (fromList [GV (VR (Id "ok",VO,WB)),GV (VR (Id "x",VO,WB)),GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]))],fromList [(((Id "O",VO,[],[]),(Id "O",VO,[],[])),(fromList [(VR (Id "ok",VO,WB),V (E (TG (Id "\120121"))) (VR (Id "ok",VO,WD "m"))),(VR (Id "x",VO,WB),V (E (TG (Id "\8484"))) (VR (Id "x",VO,WD "m"))),(VR (Id "y",VO,WB),V (E (TG (Id "\8484"))) (VR (Id "y",VO,WD "m"))),(VR (Id "z",VO,WB),V (E (TG (Id "\8484"))) (VR (Id "z",VO,WD "m")))],fromList []))])]
+      [okm,xm,ym,zm/ok,x,y,z] :: [okm,Sm/ok,S] - succeeds: [Failed]
+expected: [BD (fromList [((Id "ok",VO),BI (Id "ok"))],fromList [("m","m")],fromList [((Id "S",VO,[],[]),BS (fromList [GV (VR (Id "x",VO,WB)),GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]))],fromList [])]
+ but got: [BD (fromList [((Id "ok",VO),BI (Id "ok"))],fromList [("m","m")],fromList [((Id "S",VO,[],[]),BS (fromList [GV (VR (Id "x",VO,WB)),GV (VR (Id "y",VO,WB)),GV (VR (Id "z",VO,WB))]))],fromList [(((Id "S",VO,[],[]),(Id "S",VO,[],[])),(fromList [(VR (Id "x",VO,WB),V (E (TG (Id "\8484"))) (VR (Id "x",VO,WD "m"))),(VR (Id "y",VO,WB),V (E (TG (Id "\8484"))) (VR (Id "y",VO,WD "m"))),(VR (Id "z",VO,WB),V (E (TG (Id "\8484"))) (VR (Id "z",VO,WD "m")))],fromList []))])]
+    Composition:
+      E Om @ P[Om/O'] /\ Q[Om/O] matches itself: [Failed]
+expected: [BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS))),((Id "Q",VP),BV (VR (Id "Q",VP,WS)))],fromList [("m","m")],fromList [((Id "O",VO,[],[]),BS (fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]))],fromList [])]
+ but got: []
+      P[Om/O'] matches itself: [Failed]
+expected: [BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [("m","m")],fromList [((Id "O",VO,[],[]),BS (fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]))],fromList [])]
+ but got: [BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [("m","m")],fromList [((Id "O",VO,[],[]),BS (fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]))],fromList [(((Id "O",VO,[],[]),(Id "O",VO,[],[])),(fromList [],fromList [(LV (VR (Id "O",VO,WA),[],[]),LV (VR (Id "O",VO,WD "m"),[],[]))]))])]
+      Q[Om/O] matches itself: [Failed]
+expected: [BD (fromList [((Id "Q",VP),BV (VR (Id "Q",VP,WS)))],fromList [("m","m")],fromList [((Id "O",VO,[],[]),BS (fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]))],fromList [])]
+ but got: [BD (fromList [((Id "Q",VP),BV (VR (Id "Q",VP,WS)))],fromList [("m","m")],fromList [((Id "O",VO,[],[]),BS (fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]))],fromList [(((Id "O",VO,[],[]),(Id "O",VO,[],[])),(fromList [],fromList [(LV (VR (Id "O",VO,WB),[],[]),LV (VR (Id "O",VO,WD "m"),[],[]))]))])]
+      E Om @ P[Om/O'] /\ Q[Om/O] matches when n replaces m: [Failed]
+expected: [BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS))),((Id "Q",VP),BV (VR (Id "Q",VP,WS)))],fromList [("m","n")],fromList [((Id "O",VO,[],[]),BS (fromList [GL (LV (VR (Id "O",VO,WB),[],[]))]))],fromList [])]
+ but got: []
+      E Om @ P[Om/O'] /\ Q[Om/O] matches when M,S replaces O: [Failed]
+expected: [BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS))),((Id "Q",VP),BV (VR (Id "Q",VP,WS)))],fromList [("m","m")],fromList [((Id "O",VO,[],[]),BS (fromList [GL (LV (VR (Id "M",VO,WB),[],[])),GL (LV (VR (Id "S",VO,WB),[],[]))]))],fromList [])]
+ but got: []
+      E Om @ P[Om/O'] /\ Q[Om/O] matches when M,S;n replaces O;m: [Failed]
+expected: [BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS))),((Id "Q",VP),BV (VR (Id "Q",VP,WS)))],fromList [("m","n")],fromList [((Id "O",VO,[],[]),BS (fromList [GL (LV (VR (Id "M",VO,WB),[],[])),GL (LV (VR (Id "S",VO,WB),[],[]))]))],fromList [])]
+ but got: []
+      E Om @ P[Om/O'] /\ Q[Om/O] matches when ok,S replaces O: [Failed]
+expected: [BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS))),((Id "Q",VP),BV (VR (Id "Q",VP,WS)))],fromList [("m","m")],fromList [((Id "O",VO,[],[]),BS (fromList [GV (VR (Id "ok",VO,WB)),GL (LV (VR (Id "S",VO,WB),[],[]))]))],fromList [])]
+ but got: []

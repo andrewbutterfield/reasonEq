@@ -331,6 +331,18 @@ insertDR nAPI rEqv d r binding
             ]
 \end{code}
 
+We also have a function that deals with the subscript bindings
+when they arise.
+\begin{code}
+bindSubscriptToSubscript :: Monad m
+                         => String -> VarWhen -> VarWhen -> SubBinding
+                         -> m SubBinding
+bindSubscriptToSubscript what (During m) (During n) sbind
+  = insertDR what (==) m n sbind
+bindSubscriptToSubscript what vw1 vw2 sbind
+ | vw1 == vw2  =  return sbind
+ | otherwise   =  fail (what ++ ": incompatible temporality")
+\end{code}
 
 \subsubsection{Binding Variable to Variable}
 
@@ -498,22 +510,9 @@ bindVarToTerm v@(Vbl vi ExprV vt) ct (BD (vbind,sbind,lbind,llbind))
    = do vbind' <- insertDR "bindVarToTerm(ev1)" (==) (vi,ExprV) (BT ct) vbind
         return $ BD (vbind',sbind,lbind,llbind)
  | otherwise -- term has one temporality
-   = case (vt,thectw) of
-      (During m, During n) ->
-          do vbind' <- insertDR "bindVarToTerm(ev2)" (==) (vi,ExprV) (dnTerm ct) vbind
-             sbind' <- insertDR "bindVarToTerm(ev3)" (==) m n sbind
-             return $ BD (vbind',sbind',lbind,llbind)
-      _ | vt /= thectw     ->
-            fail $ unlines
-               [ "bindVarToTerm: e.-var different temporality"
-               , "v =      " ++ show v
-               , "ct =     " ++ show ct
-               , "vt =     " ++ show vt
-               , "thectw = " ++ show thectw
-               ]
-        | otherwise ->
-            do vbind' <- insertDR "bindVarToTerm" (==) (vi,ExprV) (dnTerm ct) vbind
-               return $ BD (vbind',sbind,lbind,llbind)
+    = do sbind' <- bindSubscriptToSubscript "bindVarToTerm(ev2)" vt thectw sbind
+         vbind' <- insertDR "bindVarToTerm(ev3)" (==) (vi,ExprV) (dnTerm ct) vbind
+         return $ BD (vbind',sbind',lbind,llbind)
  where
    ctws = temporalityOf ct
    wsize = S.size ctws
@@ -529,16 +528,9 @@ bindVarToTerm v@(Vbl vi PredV vt) ct (BD (vbind,sbind,lbind,llbind))
    = do vbind' <- insertDR "bindVarToTerm(pv1)" (==) (vi,PredV) (dnTerm ct) vbind
         return $ BD (vbind',sbind,lbind,llbind)
  | otherwise
-   = case (vt,thectw) of
-      (During m, During n) ->
-          do vbind' <- insertDR "bindVarToTerm(pv2)" (==) (vi,PredV) (dnTerm ct) vbind
-             sbind' <- insertDR "bindVarToTerm(pv3)" (==) m n sbind
-             return $ BD (vbind',sbind',lbind,llbind)
-      _ | vt /= thectw     ->
-            fail "bindVarToTerm: p.-var different temporality"
-        | otherwise ->
-            do vbind' <- insertDR "bindVarToTerm" (==) (vi,PredV) (dnTerm ct) vbind
-               return $ BD (vbind',sbind,lbind,llbind)
+    = do sbind' <- bindSubscriptToSubscript "bindVarToTerm(pv2)" vt thectw sbind
+         vbind' <- insertDR "bindVarToTerm(pv3)" (==) (vi,PredV) (dnTerm ct) vbind
+         return $ BD (vbind',sbind',lbind,llbind)
  where
    ctws = temporalityOf ct
    wsize = S.size ctws
@@ -715,18 +707,9 @@ all of which have the same class and temporality as itself.
 \begin{code}
 bindLVarToVList lv@(LVbl (Vbl i vc vw) is ij) vl (BD (vbind,sbind,lbind,llbind))
  | valid
-   = case (vw,vlw) of
-      (During m,During n) ->
-            do lbind' <- insertDR "bindLVarToVList(dynamic)" (==)
-                                  (i,vc,is,ij) (bvl vl) lbind
-               sbind' <- insertDR "bindLVarToVList(subscript)" (==) m n sbind
-               return $ BD (vbind,sbind',lbind',llbind)
-      _ | vw == vlw       ->
-            do lbind' <- insertDR "bindLVarToVList(static)" (==)
-                                  (i,vc,is,ij) (bvl vl) lbind
-               return $ BD (vbind,sbind,lbind',llbind)
-        | otherwise       ->
-            fail "bindLVarToVList: different temporality."
+    = do sbind' <- bindSubscriptToSubscript "bindLVarToVList(1)" vw vlw sbind
+         lbind' <- insertDR "bindLVarToVList(2)" (==) (i,vc,is,ij) (bvl vl) lbind
+         return $ BD (vbind,sbind',lbind',llbind)
  | otherwise = fail "bindLVarToVList: incompatible dynamic temporality."
  where
    (valid, vlw) = vlCompatible vc vw vl
@@ -764,18 +747,9 @@ bindLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind,llbin
 
 bindLVarToVSet lv@(LVbl (Vbl i vc vw) is ij) vs (BD (vbind,sbind,lbind,llbind))
  | valid
-   = case (vw,vsw) of
-      (During m,During n) ->
-            do lbind' <- insertDR "bindLVarToVSet(dynamic)" (==)
-                                  (i,vc,is,ij) (bvs vs) lbind
-               sbind' <- insertDR "bindLVarToVSet(subscript)" (==) m n sbind
-               return $ BD (vbind,sbind',lbind',llbind)
-      _ | vw == vsw       ->
-            do lbind' <- insertDR "bindLVarToVSet(static)" (==)
-                                  (i,vc,is,ij) (bvs vs) lbind
-               return $ BD (vbind,sbind,lbind',llbind)
-        | otherwise       ->
-            fail "bindLVarToVSet: different temporality."
+    = do sbind' <- bindSubscriptToSubscript "bindLVarToVSet(1)" vw vsw sbind
+         lbind' <- insertDR "bindLVarToVSet(2)" (==) (i,vc,is,ij) (bvs vs) lbind
+         return $ BD (vbind,sbind',lbind',llbind)
  | otherwise = fail "bindLVarToVSet: incompatible dynamic temporality."
  where
    (valid, vsw) = vsCompatible vc vw vs
@@ -794,16 +768,8 @@ overrideLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind,l
 
 overrideLVarToVSet lv@(LVbl (Vbl i vc vw) is ij) vs (BD (vbind,sbind,lbind,llbind))
  | valid
-   = case (vw,vsw) of
-      (During m,During n) ->
-            return $ BD ( vbind
-                        , M.insert m n sbind
-                        , M.insert (i,vc,is,ij) (bvs vs) lbind, llbind )
-      _ | vw == vsw       ->
-            return $ BD ( vbind, sbind
-                        , M.insert (i,vc,is,ij) (bvs vs) lbind, llbind )
-        | otherwise       ->
-            fail "overrideLVarToVSet: different temporality."
+    = do sbind' <- bindSubscriptToSubscript "bindLVarToVSet(1)" vw vsw sbind
+         return $ BD (vbind,sbind',M.insert (i,vc,is,ij) (bvs vs) lbind,llbind)
  | otherwise = fail "overrideLVarToVSet: incompatible dynamic temporality."
  where
    (valid, vsw) = vsCompatible vc vw vs
@@ -886,18 +852,10 @@ bindLVarToTList (LVbl (Vbl vi vc vt) is ij) cndTs (BD (vbind,sbind,lbind,llbind)
                            (vi,vc,is,ij) (BX cndTs) lbind
         return $ BD (vbind,sbind,lbind',llbind)
  | otherwise
-   = case (vt,thectw) of
-      (During m, During n) ->
-          do lbind' <- insertDR "bindLVarToTList(plv2)" (==)
-                                (vi,vc,is,ij) (BX cndTs) lbind
-             sbind' <- insertDR "bindLVarToTList(plv3)" (==) m n sbind
-             return $ BD (vbind,sbind',lbind',llbind)
-      _ | vt /= thectw     ->
-            fail "bindLVarToTList: p.-var different temporality"
-        | otherwise ->
-            do lbind' <- insertDR "bindLVarToTList(plv4)" (==)
-                                  (vi,vc,is,ij) (BX cndTs) lbind
-               return $ BD (vbind,sbind,lbind',llbind)
+    = do sbind' <- bindSubscriptToSubscript "bindLVarToTList(1)" vt thectw sbind
+         lbind' <- insertDR "bindLVarToTList(2)" (==)
+                            (vi,vc,is,ij) (BX cndTs) lbind
+         return $ BD (vbind,sbind',lbind',llbind)
  where
    ctws = temporalitiesOf cndTs
    wsize = S.size ctws
@@ -957,21 +915,15 @@ bindLVarPairToSubst' tgtLV@(LVbl (Vbl ti tvc tvt) tis tij)
                      tsub lvarsub (BD (vbind,sbind,lbind,llbind))
   | twsize  > 1  =  fail "bindLVarPairToSubst: mixed target temporality."
   | rwsize  > 1  =  fail "bindLVarPairToSubst: mixed replacement temporality."
-  | otherwise    =  fail "bindLVarPairToSubst(dynamic) NYI"
--- bindLVarToTList (LVbl (Vbl vi vc vt) is ij) cndTs (BD (vbind,sbind,lbind,llbind))
---  | otherwise
---    = case (vt,thectw) of
---       (During m, During n) ->
---           do lbind' <- insertDR "bindLVarToTList(plv2)" (==)
---                                 (vi,vc,is,ij) (BX cndTs) lbind
---              sbind' <- insertDR "bindLVarToTList(plv3)" (==) m n sbind
---              return $ BD (vbind,sbind',lbind',llbind)
---       _ | vt /= thectw     ->
---             fail "bindLVarToTList: p.-var different temporality"
---         | otherwise ->
---             do lbind' <- insertDR "bindLVarToTList(plv4)" (==)
---                                   (vi,vc,is,ij) (BX cndTs) lbind
---                return $ BD (vbind,sbind,lbind',llbind)
+  | otherwise
+     = do sbind'  <- bindSubscriptToSubscript "bindLVarPairToSubst(tgt)"
+                                                               tvt thectw sbind
+          sbind'' <- bindSubscriptToSubscript "bindLVarPairToSubst(rpl)"
+                                                               rvt thecrw sbind'
+          llbind' <- insertDR "bindLVarPairToSubst(dynamic)" (==)
+                              ((ti,tvc,tis,tij),(ri,rvc,ris,rij)) (tsub,lvarsub)
+                              llbind
+          return $ BD (vbind,sbind'',lbind,llbind')
   where
     crws = subReplTmpr tsub lvarsub -- substTemporalityOf tsub lvarsub
     rwsize = S.size crws

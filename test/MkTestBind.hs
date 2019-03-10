@@ -1,5 +1,6 @@
 module MkTestBind
  ( bindVV, bindLL, bindLl, bindVT, bindL0, bindLS, bindLs, bindLN, bindLT, bindLt
+ , bindLLSub
  , vDurRen, lvDurRen, gvDurRen
  )
 where
@@ -34,6 +35,12 @@ bindLs (LstVar plv) cgvs  =  fromJust . bindLVarToVSet plv (S.fromList cgvs)
 bindLN (LstVar plv)       =  fromJust . bindLVarToVSet plv S.empty
 bindLT (LstVar plv) ct    =  fromJust . bindLVarToTList plv [ct]
 bindLt (LstVar plv) cts   =  fromJust . bindLVarToTList plv cts
+
+bindLLSub (LstVar tplv,LstVar rplv) ctermsub clvarsub
+ = fromJust . b'' (LstVar tplv,LstVar rplv) ctermsub clvarsub
+b'' (LstVar tplv,LstVar rplv) ctermsub clvarsub
+ = bindLVarPairToSubst tplv rplv (S.fromList ctermsub) (S.fromList clvarsub)
+
 
 vDurRen  :: String -> Variable -> Variable
 lvDurRen :: String -> ListVar  -> ListVar

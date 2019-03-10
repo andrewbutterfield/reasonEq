@@ -132,6 +132,10 @@ Model observations regarding termination.
 \begin{code}
 k = jId "ok"
 ok = PreVar k ; ok' = PostVar k ; okm = MidVar k "m"
+-- as terms
+tok  = fromJust $ eVar bool ok
+tok' = fromJust $ eVar bool ok'
+tokm = fromJust $ eVar bool okm
 \end{code}
 
 Script observations regarding values of program variables.
@@ -588,15 +592,26 @@ test_substitution
  = testGroup "Substitutions"
     [ testCase "[okm,Sm/ok,S] :: [Om/O] - succeeds"
        ( nub (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_ok_S sub_O)
-        @?= [ bindLs gO [gok,gS] $ bindLs gOm [gokm,gSm] $ emptyBinding ] )
+        @?= [ bindLs gO [gok,gS]
+            $ bindLs gOm [gokm,gSm]
+            $ bindLLSub (gO,gO) [(ok,tokm)] [(lS,lSm)]
+            -- need (O,O)->({(ok,okm)},{(S,Sm)}) where okm : B
+            $ emptyBinding ] )
     , testCase "[okm,xm,ym,zm/ok,x,y,z] :: [Om/O] - succeeds"
        (nub (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_okxyz sub_O)
-        @?= [ bindLs gO [gok,gx,gy,gz] $ bindLs gOm [gokm,gxm,gym,gzm] $ emptyBinding ] )
+        @?= [ bindLs gO [gok,gx,gy,gz]
+            $ bindLs gOm [gokm,gxm,gym,gzm]
+            -- need (O,O)->({(ok,okm),(x,xm),(y,ym),(z,zm)},{})
+            -- where okm : B, xm,ym,zm : Z
+            $ emptyBinding ] )
     , testCase "[okm,xm,ym,zm/ok,x,y,z] :: [okm,Sm/ok,S] - succeeds"
        (nub (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_okxyz sub_ok_S)
-        @?= [ bindVV gok gok $ bindVV gokm gokm $
-              bindLs gS [gx,gy,gz] $ bindLs gSm [gxm,gym,gzm] $
-              emptyBinding ] )
+        @?= [ bindVV gok gok
+            $ bindVV gokm gokm
+            $ bindLs gS [gx,gy,gz]
+            $ bindLs gSm [gxm,gym,gzm]
+            -- need (S,S)->({(x,xm),(y,ym),(z,zm)},{}) where  xm,ym,zm : Z
+            $ emptyBinding ] )
     ]
 
 tstSub = defaultMain [test_substitution]
@@ -678,11 +693,9 @@ p `impl` q     =  PCons implies [p,q]
 e1 `equal` e2  =  PCons eq [e1,e2]
 \end{code}
 
-Now, turning $ok$ into a term, subtracting from list-variables,
+Now, subtracting from list-variables,
 and defining assigment
 \begin{code}
-tok = fromJust $ eVar bool ok ; tok' = fromJust $ eVar bool ok'
-
 (LVbl v is ij) `less` (iv,il)
  = LVbl v (nub $ sort (is++iv)) (nub $ sort (is++il))
 

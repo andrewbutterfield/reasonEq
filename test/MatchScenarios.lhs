@@ -635,8 +635,6 @@ test_composition
        (nub( tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAqm eOpAqm )
         @?= [ bindVV gvp gvp $ bindVV gvq gvq
             $ bindLS gO gO $ bindLS gO' gO' $ bindLS gOm gOm
-              -- need (O',Om) -> {} {(O',Om)}
-              -- need (O,Om)  -> {} {(O,Om)}
             $ bindLLSub (gO',gOm) [] [(lO',lOm)]
             $ bindLLSub (gO,gOm) [] [(lO,lOm)]
             $ emptyBinding] )
@@ -644,32 +642,46 @@ test_composition
     , testCase "P[Om/O'] matches itself"
        (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty
                                             (endO2mid "m" p) (endO2mid "m" p) )
-        @?= [ bindVV gvp gvp $ bindLS gOm gOm $ emptyBinding ] )
+        @?= [ bindVV gvp gvp $ bindLS gOm gOm
+            $ bindLLSub (gO',gOm) [] [(lO',lOm)]
+              -- need (O',Om) -> {} {(O',Om)}
+            $ emptyBinding ] )
     , testCase "Q[Om/O] matches itself"
        (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty
                                             (begO2mid "m" q) (begO2mid "m" q) )
-        @?= [ bindVV gvq gvq $ bindLS gOm gOm $ emptyBinding ] )
+        @?= [ bindVV gvq gvq $ bindLS gOm gOm
+            $ bindLLSub (gO,gOm) [] [(lO,lOm)]
+              -- need (O,Om)  -> {} {(O,Om)}
+            $ emptyBinding ] )
 
     , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when n replaces m"
        (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAqn eOpAqm )
-        @?= [ bindVV gvp gvp $ bindVV gvq gvq $
-              bindLS gO gO $ bindLS gO' gO' $ bindLS gOm gOn $
-              emptyBinding] )
+        @?= [ bindVV gvp gvp $ bindVV gvq gvq
+            $ bindLS gO gO $ bindLS gO' gO' $ bindLS gOm gOn
+            $ bindLLSub (gO',gOm) [] [(lO',lOn)]
+            $ bindLLSub (gO,gOm)  [] [(lO,lOn)]
+            $ emptyBinding] )
     , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when M,S replaces O"
        (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty eMSpAqm eOpAqm )
-        @?= [ bindVV gvp gvp $ bindVV gvq gvq $
-              bindLs gO [gM,gS] $ bindLs gO' [gM',gS'] $ bindLs gOm [gMm,gSm] $
-              emptyBinding] )
+        @?= [ bindVV gvp gvp $ bindVV gvq gvq
+            $ bindLs gO [gM,gS] $ bindLs gO' [gM',gS'] $ bindLs gOm [gMm,gSm]
+            $ bindLLSub (gO',gOm) [] [(lM',lMm),(lS',lSm)]
+            $ bindLLSub (gO,gOm)  [] [(lM,lMm),(lS,lSm)]
+            $ emptyBinding] )
     , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when M,S;n replaces O;m"
        (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty eMSpAqn eOpAqm )
-        @?= [ bindVV gvp gvp $ bindVV gvq gvq $
-              bindLs gO [gM,gS] $ bindLs gO' [gM',gS'] $ bindLs gOm [gMn,gSn] $
-              emptyBinding] )
+        @?= [ bindVV gvp gvp $ bindVV gvq gvq
+            $ bindLs gO [gM,gS] $ bindLs gO' [gM',gS'] $ bindLs gOm [gMn,gSn]
+            $ bindLLSub (gO',gOm) [] [(lM',lMn),(lS',lSn)]
+            $ bindLLSub (gO,gOm)  [] [(lM,lMn),(lS,lSn)]
+            $ emptyBinding] )
     , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when ok,S replaces O"
        (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty eoSpAqm eOpAqm )
-        @?= [ bindVV gvp gvp $ bindVV gvq gvq $
-              bindLs gO [gok,gS] $ bindLs gO' [gok',gS'] $ bindLs gOm [gokm,gSm] $
-              emptyBinding] )
+        @?= [ bindVV gvp gvp $ bindVV gvq gvq
+            $ bindLs gO [gok,gS] $ bindLs gO' [gok',gS'] $ bindLs gOm [gokm,gSm]
+            $ bindLLSub (gO',gOm) [(ok',tokm)] [(lS',lSm)]
+            $ bindLLSub (gO,gOm)  [(ok,tokm)] [(lS,lSm)]
+            $ emptyBinding] )
     ]
 
 tstComp = defaultMain [test_composition]

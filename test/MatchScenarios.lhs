@@ -146,6 +146,10 @@ Script observations regarding values of program variables.
 ex = jId "x"  ;  x = PreVar ex  ;  x' = PostVar ex  ;  xm = MidVar ex "m"
 wy = jId "y"  ;  y = PreVar wy  ;  y' = PostVar wy  ;  ym = MidVar wy "m"
 ze = jId "z"  ;  z = PreVar ze  ;  z' = PostVar ze  ;  zm = MidVar ze "m"
+
+[tx,tx',txm] = map (fromJust . eVar int) [x,x',xm]
+[ty,ty',tym] = map (fromJust . eVar int) [y,y',ym]
+[tz,tz',tzm] = map (fromJust . eVar int) [z,z',zm]
 \end{code}
 
 \subsubsection{Observation Classifiers}
@@ -594,15 +598,13 @@ test_substitution
        ( nub (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_ok_S sub_O)
         @?= [ bindLs gO [gok,gS]
             $ bindLs gOm [gokm,gSm]
-            $ bindLLSub (gO,gO) [(ok,tokm)] [(lS,lSm)]
-            -- need (O,O)->({(ok,okm)},{(S,Sm)}) where okm : B
+            $ bindLLSub (gO,gOm) [(ok,tokm)] [(lS,lSm)]
             $ emptyBinding ] )
     , testCase "[okm,xm,ym,zm/ok,x,y,z] :: [Om/O] - succeeds"
        (nub (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_okxyz sub_O)
         @?= [ bindLs gO [gok,gx,gy,gz]
             $ bindLs gOm [gokm,gxm,gym,gzm]
-            -- need (O,O)->({(ok,okm),(x,xm),(y,ym),(z,zm)},{})
-            -- where okm : B, xm,ym,zm : Z
+            $ bindLLSub (gO,gOm) [(ok,tokm),(x,txm),(y,tym),(z,tzm)] []
             $ emptyBinding ] )
     , testCase "[okm,xm,ym,zm/ok,x,y,z] :: [okm,Sm/ok,S] - succeeds"
        (nub (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_okxyz sub_ok_S)
@@ -610,7 +612,8 @@ test_substitution
             $ bindVV gokm gokm
             $ bindLs gS [gx,gy,gz]
             $ bindLs gSm [gxm,gym,gzm]
-            -- need (S,S)->({(x,xm),(y,ym),(z,zm)},{}) where  xm,ym,zm : Z
+            -- need (S,Sm)->({(x,xm),(y,ym),(z,zm)},{}) where  xm,ym,zm : Z
+            $ bindLLSub (gS,gSm) [(x,txm),(y,tym),(z,tzm)] []
             $ emptyBinding ] )
     ]
 
@@ -630,9 +633,13 @@ test_composition
  = testGroup "Composition"
     [ testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches itself"
        (nub( tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAqm eOpAqm )
-        @?= [ bindVV gvp gvp $ bindVV gvq gvq $
-              bindLS gO gO $ bindLS gO' gO' $ bindLS gOm gOm $
-              emptyBinding] )
+        @?= [ bindVV gvp gvp $ bindVV gvq gvq
+            $ bindLS gO gO $ bindLS gO' gO' $ bindLS gOm gOm
+              -- need (O',Om) -> {} {(O',Om)}
+              -- need (O,Om)  -> {} {(O,Om)}
+            $ bindLLSub (gO',gOm) [] [(lO',lOm)]
+            $ bindLLSub (gO,gOm) [] [(lO,lOm)]
+            $ emptyBinding] )
 
     , testCase "P[Om/O'] matches itself"
        (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty
@@ -782,9 +789,6 @@ lS'us = lS' `less` ([],[u]) ; gS'us = LstVar lS'us
 
 e1 = EVal int $ Integer 1
 e2 = EVal int $ Integer 2
-
-tx' = fromJust $ eVar int x'
-ty' = fromJust $ eVar int y'
 
 x'1y'2 = ((evar int x' `equal` e1) `lAnd` (evar int y' `equal` e2))
        `lAnd`

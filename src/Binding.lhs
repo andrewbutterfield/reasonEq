@@ -286,9 +286,14 @@ pattern BindTerms ts  =  BX ts
   \texttt{Substn}
 }
 
-We index with a pair of list-variables (as temporality-free keys)
+We index with a pair of list-variables%
+\footnote{
+Consider matching $\exists O_m \bullet P[O_m/O'] \land Q[O_m/O]$ against itself.
+}%
+,
+\emph{including temporality!}
 \begin{code}
-type SubstBinding = M.Map (ListVarKey,ListVarKey) (TermSub,LVarSub)
+type SubstBinding = M.Map (ListVar,ListVar) (TermSub,LVarSub)
 \end{code}
 
 
@@ -874,14 +879,6 @@ bindLVarToTList plv cndTs _
 \newpage
 \subsubsection{Binding List-Variable pairs to Substitutions}
 
-Here we are binding a target/replacement pair of list variables
-to (a part of) a candidate substitution.
-We also need to bind the target list-variable to the corresponding candidate
-variable-set,
-in order to ensure that we are consistent with bindings from the term
-being subsituted, and beyond.
-This latter binding we do first, because it may fail.
-If it succeeds, then we know that the targets are all compatible dynamically.
 \begin{code}
 bindLVarPairToSubst :: Monad m
                     => ListVar -> ListVar -> TermSub -> LVarSub -> Binding
@@ -902,13 +899,15 @@ bindLVarPairToSubst' tgtLV@(LVbl (Vbl ti tvc Static) tis tij)
                      rplLV@(LVbl (Vbl ri rvc Static) ris rij)
                      tsub lvarsub (BD (vbind,sbind,lbind,llbind))
  = do llbind' <- insertDR "bindLVarPairToSubst(static)" (==)
-                          ((ti,tvc,tis,tij),(ri,rvc,ris,rij)) (tsub,lvarsub)
+                          (tgtLV,rplLV) (tsub,lvarsub)
                           llbind
       return $ BD (vbind,sbind,lbind,llbind')
 
 \end{code}
 
-Now for dynamic variables:
+Now for dynamic variables,
+which require different treatment
+to that used to bind a single list-variable to a variable-list/set.
 \begin{code}
 bindLVarPairToSubst' tgtLV@(LVbl (Vbl ti tvc tvt) tis tij)
                      rplLV@(LVbl (Vbl ri rvc rvt) ris rij)
@@ -917,19 +916,19 @@ bindLVarPairToSubst' tgtLV@(LVbl (Vbl ti tvc tvt) tis tij)
   | rwsize  > 1  =  fail "bindLVarPairToSubst: mixed replacement temporality."
   | otherwise
      = do sbind'  <- bindSubscriptToSubscript "bindLVarPairToSubst(tgt)"
-                                                               tvt thectw sbind
+                                                               (dbg "tvt=" tvt) thectw sbind
           sbind'' <- bindSubscriptToSubscript "bindLVarPairToSubst(rpl)"
-                                                               rvt thecrw sbind'
+                                                               (dbg "rvt=" rvt) thecrw sbind'
           llbind' <- insertDR "bindLVarPairToSubst(dynamic)" (==)
-                              ((ti,tvc,tis,tij),(ri,rvc,ris,rij)) (tsub,lvarsub)
+                              (tgtLV,rplLV) (tsub,lvarsub)
                               llbind
           return $ BD (vbind,sbind'',lbind,llbind')
   where
-    crws = subReplTmpr tsub lvarsub -- substTemporalityOf tsub lvarsub
-    rwsize = S.size crws
+    crws = subReplTmpr (dbg "tsub=" tsub) $ dbg "lvarsub=" lvarsub -- substTemporalityOf tsub lvarsub
+    rwsize = S.size $ dbg "crws=" crws
     thecrw = S.elemAt 0 crws
     ctws = subTgtTmpr tsub lvarsub -- substTemporalityOf tsub lvarsub
-    twsize = S.size ctws
+    twsize = S.size $ dbg "ctws=" ctws
     thectw = S.elemAt 0 ctws
 \end{code}
 
@@ -1096,7 +1095,7 @@ lookupSubstBind :: Monad m => Binding -> ListVar -> ListVar
                 -> m (TermSub,LVarSub)
 lookupSubstBind (BD (_,_,_,llbind)) tlv@(LVbl (Vbl ti tvc Static) tis tij)
                                     rlv@(LVbl (Vbl ri rvc Static) ris rij)
-  = case M.lookup ((ti,tvc,tis,tij),(ri,rvc,ris,rij)) llbind of
+  = case M.lookup (tlv,rlv) llbind of
      Nothing   ->  fail ( "lookupSubstBind: ListVar-pair ("
                            ++show tlv++","++show rlv++") not found.")
      Just subpair  ->  return subpair
@@ -1130,10 +1129,10 @@ bindLVarsToEmpty bind (lv:lvs)
 Sometimes it is useful to dump all the binding results.
 \begin{code}
 dumpBinding :: Binding
-            -> ( [ ( (Identifier,VarClass), VarBind )             ]
-               , [ ( Subscript,             Subscript )           ]
-               , [ ( ListVarKey,            LstVarBind )          ]
-               , [ ( (ListVarKey,ListVarKey), (TermSub,LVarSub) ) ]
+            -> ( [ ( (Identifier,VarClass), VarBind )           ]
+               , [ ( Subscript,             Subscript )         ]
+               , [ ( ListVarKey,            LstVarBind )        ]
+               , [ ( (ListVar,ListVar),     (TermSub,LVarSub) ) ]
                )
 dumpBinding (BD (vbind,sbind,lbind,llbind))
   = ( M.toList vbind

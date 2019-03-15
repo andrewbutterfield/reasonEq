@@ -381,7 +381,7 @@ as well as the whole thing.
 \begin{code}
 domatch :: LogicSig -> [VarTable] -> Term -> Law -> Matches
 domatch logicsig vts tC law@((n,asn@(tP@(Cons tk i ts@(_:_:_)),sc)),prov)
-  | i == theEqv logicsig  =  simpleMatch MatchAll (theTrue logicsig) vts tC (pdbg "dom.law" law)
+  | i == theEqv logicsig  =  simpleMatch MatchAll (theTrue logicsig) vts tC law
                              ++ doEqvMatch logicsig vts tC n sc prov ts
 \end{code}
 Otherwise we just match against the whole law.

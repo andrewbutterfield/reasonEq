@@ -11,7 +11,7 @@ module AbstractUI
 , observeCurrTheory, observeCurrConj
 , observeLiveProofs, observeCompleteProofs
 , setCurrentTheory
-, newConjecture
+, newConjecture, assumeConjecture
 , newProof1, newProof2, resumeProof
 , abandonProof, saveProof, completeProof
 , moveFocusDown, moveFocusUp, moveConsequentFocus
@@ -190,6 +190,18 @@ newConjecture thnm nasn reqs
   = case getTheory thnm $ theories reqs of
       Nothing -> fail ("No theory named '"++thnm++"'.")
       Just thry -> do thry' <- newTheoryConj nasn thry
+                      return $ changed
+                             $ theories__ (replaceTheory thry') $ reqs
+\end{code}
+
+\subsubsection{Assuming Conjectures}
+
+\begin{code}
+assumeConjecture :: Monad m => String -> String -> REqState -> m REqState
+assumeConjecture thnm whichC reqs
+  = case getTheory thnm $ theories reqs of
+      Nothing -> fail ("No theory named '"++thnm++"'.")
+      Just thry -> do thry' <- assumeConj whichC thry
                       return $ changed
                              $ theories__ (replaceTheory thry') $ reqs
 \end{code}

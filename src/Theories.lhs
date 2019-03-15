@@ -23,7 +23,7 @@ module Theories
  , getTheoryDeps, getTheoryDeps', getAllTheories
  , listTheories, getTheoryConjectures, getTheoryProofs
  , updateTheory, replaceTheory
- , newTheoryConj
+ , newTheoryConj, assumeConj
  , addTheoryProof, upgradeConj2Law
  , showTheories, showNamedTheory
  , showTheoryLong, showTheoryShort, showTheoryLaws
@@ -340,6 +340,15 @@ newTheoryConj nasn@(nm,_) thry
   | nm `elem` map (fst . fst) (laws thry) = fail "name in use in laws!"
   | nm `elem` map fst  (conjs thry) = fail "name in use in conjectures!"
   | otherwise = return $ conjs__ (nasn:) thry
+\end{code}
+
+\begin{code}
+assumeConj :: Monad m => String -> Theory -> m Theory
+assumeConj "*" thry
+  = do let cjs = conjs thry
+       if null cjs then fail "assumeConj *: no conjectures"
+       else return $ conjs_ [] $ laws__ (++(map labelAsAssumed cjs)) thry
+assumeConj cjnm thry = fail ("assumeConj '"++cjnm++"' NYI")
 \end{code}
 
 \subsubsection{Add Proof to Theory}

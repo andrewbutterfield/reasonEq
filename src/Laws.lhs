@@ -14,7 +14,7 @@ module Laws
  , Assertion, NmdAssertion, (-.-)
  , Provenance(..)
  , Law, lawName, lawNamedAssn
- , labelAsAxiom, labelAsProof
+ , labelAsAxiom, labelAsProof, labelAsAssumed
  , writeSignature, readSignature
  , showLogic, showNmdAssns, showLaw, showLaws, showConj, showConjs
  , showLeftRight, showGroupSpec
@@ -282,8 +282,9 @@ n1 -.- n2  =  n1 ++ "_" ++ n2
 However, we also want to specify the provenance of each law.
 \begin{code}
 data Provenance
-  = Axiom          --  asserted as True
+  = Axiom          --  considered as `self-evidently` True
   | Proven String  --  demonstrated by (named) proof
+  | Assumed        --  conjecture asserted w/o proof
   deriving (Eq,Show,Read)
 \end{code}
 
@@ -302,6 +303,9 @@ labelAsAxiom  nasn  =  (nasn, Axiom)
 
 labelAsProof :: NmdAssertion -> String -> Law
 labelAsProof nasn cnm =  (nasn, Proven cnm)
+
+labelAsAssumed :: NmdAssertion -> Law
+labelAsAssumed nasn  =  (nasn, Assumed)
 \end{code}
 
 \subsection{Showing Laws}
@@ -334,8 +338,9 @@ showLaws lws  =  "Laws:\n"
 
 showLaw w ((nm,(trm,sc)),prov)
   =  showProv prov ++ "  " ++ showNmdAssn w (nm,(trm,sc))
-showProv Axiom       =  _top
+showProv Axiom           =  _top
 showProv (Proven pname)  =  _qed
+showProv Assumed         =  "!"
 
 showConjs []   =  "Conjectures: None."
 showConjs cjs  =  "Conjectures:\n"

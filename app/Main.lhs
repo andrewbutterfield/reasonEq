@@ -259,7 +259,7 @@ reqHelpCmds = ["?","help"]
 
 reqCommands :: REqCommands
 reqCommands = [ cmdShow, cmdSet, cmdNew
-              , cmdNewProof, cmdRet2Proof
+              , cmdAssume, cmdNewProof, cmdRet2Proof
               , cmdSave, cmdLoad
               , cmdSaveConj, cmdLoadConj
               , cmdBuiltin ]
@@ -448,17 +448,18 @@ cmdSet
   = ( "set"
     , "set parts of the prover state"
     , unlines
-        [ "set "++setCurrThry++" 'name' -- set current theory to 'name'"]
+        [ "set "++setCurrThry++" 'name' -- set current theory to 'name'"
+        ]
     , setState )
 
 setCurrThry = shCurrThry
 
 setState (cmd:rest) reqs
  | cmd == setCurrThry
-    =  case setCurrentTheory thnm reqs of
-         Nothing     ->  doshow reqs  ("No such theory: '"    ++ thnm ++ "'")
-         Just reqs'  ->  doshow reqs' ("Current Theory now '" ++ thnm ++ "'")
- where thnm = args2str rest
+    =  case setCurrentTheory nm reqs of
+         Nothing     ->  doshow reqs  ("No such theory: '"    ++ nm ++ "'")
+         Just reqs'  ->  doshow reqs' ("Current Theory now '" ++ nm ++ "'")
+ where nm = args2str rest
 setState _ reqs      =  doshow reqs "unknown 'set' option."
 \end{code}
 
@@ -496,6 +497,26 @@ newConj args reqs
 \newpage
 \subsection{Proving Commands}
 
+We start with a cheat - simply assuming conjectures as laws:
+\begin{code}
+cmdAssume :: REqCmdDescr
+cmdAssume
+  = ( "Assume"
+    , "assume conjecture is law"
+    , unlines
+       [ "Assume n - assume conjecture 'n'"
+       , "Assume * - assume all current theory conjectures"
+       ]
+    , doAssumption )
+
+doAssumption args reqs
+  =  case assumeConjecture (currTheory reqs) cjnm reqs of
+         Nothing     ->  doshow reqs  ("Failed to assume "    ++ cjnm)
+         Just reqs'  ->  doshow reqs' ("Assumed " ++ cjnm)
+ where cjnm = args2str args
+\end{code}
+
+Then we introduce doing a proper proof:
 \begin{code}
 cmdNewProof :: REqCmdDescr
 cmdNewProof

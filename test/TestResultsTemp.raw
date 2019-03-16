@@ -1,3 +1,25 @@
-*MatchScenarios> bindLVarPairToSubst lO lO (S.fromList [(ok,tokm)]) (S.fromList [(lS,lSm)]) emptyBinding
-*** Exception: user error (bindLVarPairToSubst(rpl): incompatible temporality)
-*MatchScenarios> 
+(∀ x̅,y̅ • (x̅=e̅)⟹ ¬P)≡(∀ y̅ • (¬P)[e̅/x̅])    x̅∉e̅
+
+R-target = true
+
+
+proof: tm ∀_one_point
+Failed:
+bindLVarToVSet(static): already bound differently.
+
+d = (Id "x",VO,[],[])
+
+r = BS (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])
+
+Adding   x$ |-> {x$} (static)
+bind:
+fromList
+  [ ( (Id "e",VE,[],[])
+    , BL [GL (LV (VR (Id "e",VE,WS),[],[]))] )
+  , ( (Id "x",VO,[],[])
+    , BL [GL (LV (VR (Id "x",VO,WS),[],[]))] )
+  , ( (Id "y",VO,[],[])
+    , BS (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) )
+  ]
+
+to { e$ |-> <e$> , x$ |-> <x$>, y$ |-> { y$ } }

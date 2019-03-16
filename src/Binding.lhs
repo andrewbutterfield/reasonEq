@@ -312,28 +312,43 @@ emptyBinding = BD (M.empty, M.empty, M.empty, M.empty)
 If a variable is already present,
 then the new binding must be `equivalent',
 otherwise we fail.
-Even though equivalent, we still update the binding.
+Even though equivalent, we might still update the binding.
 This is to allow specialisation of a pre-existing binding
 where this is useful.
 
-We have a generic insertion function as follows:
+We define a generic insertion function as follows.
+To give good feedback on a failed binding,
+we need a descriptive string, the domain value,
+the existing binding, along with the two conflicting range values,
+resulting in the following monadic checker type:
+\begin{code}
+type UpdateCheck m d r = d -> Map d r -> r -> r -> m r
+\end{code}
+
 \begin{code}
 insertDR :: (Show d, Show r, Ord d, Monad m)
-         => String -> (r -> r -> Bool)
+         => UpdateCheck m d r
          -> d -> r -> Map d r
          -> m (Map d r)
-insertDR nAPI rEqv d r binding
+insertDR rEqv d r binding
  = case M.lookup d binding of
-     Nothing         ->  return $ M.insert d r binding
-     Just r0
-      | r `rEqv` r0  ->  return $ M.insert d r binding
-      | otherwise    ->
-         fail $ unlines
-            [ (nAPI++": already bound differently.")
-            , "d = " ++ show d
-            , "r = " ++ show r
-            , "bind:\n" ++ show binding
-            ]
+     Nothing  ->  return $ M.insert d r binding
+     Just r0  ->  do r' <- rEqv d binding r r0
+                     return $ M.insert d r' binding
+\end{code}
+
+The most common case is when equivalence needs to be equality:
+\begin{code}
+rangeEq :: (Show d, Show r, Ord d, Eq r, Monad m)
+        => String -> UpdateCheck m d r
+rangeEq nAPI d binding r r0
+ | r == r0    =  return r
+ | otherwise  =  fail $ unlines
+                  [ (nAPI++": already bound differently.")
+                  , "d = " ++ show d
+                  , "r = " ++ show r
+                  , "bind:\n" ++ show binding
+                  ]
 \end{code}
 
 We also have a function that deals with the subscript bindings
@@ -343,7 +358,7 @@ bindSubscriptToSubscript :: Monad m
                          => String -> VarWhen -> VarWhen -> SubBinding
                          -> m SubBinding
 bindSubscriptToSubscript what (During m) (During n) sbind
-  = insertDR what (==) m n sbind
+  = insertDR (rangeEq what) m n sbind
 bindSubscriptToSubscript what vw1 vw2 sbind
  | vw1 == vw2  =  return sbind
  | otherwise   =  fail (what ++ ": incompatible temporality")
@@ -363,7 +378,8 @@ bindVarToVar (Vbl vi vc Static) x@(Vbl xi xc xw)
              (BD (vbind,sbind,lbind,llbind))
  | xw == Textual  =  fail "bindVarToVar: Static cannot bind to Textual"
  | validVarClassBinding vc xc
-   =  do vbind' <- insertDR "bindVarToVar(Static)" (==) (vi,vc) (BV x) vbind
+   =  do vbind' <- insertDR (rangeEq "bindVarToVar(Static)")
+                            (vi,vc) (BV x) vbind
          return $ BD (vbind',sbind,lbind,llbind)
  | otherwise      =  fail "bindVarToVar: incompatible Static classes"
 \end{code}
@@ -374,8 +390,9 @@ in the appropriate class.
 bindVarToVar (Vbl vi vc (During m)) x@(Vbl xi xc (During n))
              (BD (vbind,sbind,lbind,llbind))
  | validVarClassBinding vc xc
-   =  do vbind' <- insertDR "bindVarToVar(During)" (==) (vi,vc) (BI xi) vbind
-         sbind' <- insertDR "bindVarToVar(Subscript)" (==) m n sbind
+   =  do vbind' <- insertDR (rangeEq "bindVarToVar(During)")
+                            (vi,vc) (BI xi) vbind
+         sbind' <- insertDR (rangeEq "bindVarToVar(Subscript)") m n sbind
          return $ BD (vbind',sbind',lbind,llbind)
  | otherwise  =  fail "bindVarToVar: incompatible During classes"
 \end{code}
@@ -387,7 +404,8 @@ bindVarToVar dv@(Vbl  vi vc vw) rv@(Vbl xi xc xw)
              (BD (vbind,sbind,lbind,llbind))
  | vw /= xw   =  fail "bindVarToVar: different temporalities"
  | validVarClassBinding vc xc
-   =  do vbind' <- insertDR "bindVarToVar(dynamic)" (==) (vi,vc) (BI xi) vbind
+   =  do vbind' <- insertDR (rangeEq "bindVarToVar(dynamic)")
+                            (vi,vc) (BI xi) vbind
          return $ BD (vbind',sbind,lbind,llbind)
  | otherwise
     =  fail $ unlines
@@ -488,7 +506,7 @@ as per Fig.\ref{fig:utp-perm-class-bind}.
 \begin{code}
 bindVarToTerm v@(Vbl vi vc Static) ct (BD (vbind,sbind,lbind,llbind))
  | validVarTermBinding vc (termkind ct)
-   = do vbind' <- insertDR "bindVarToTerm" (==) (vi,vc) (BT ct) vbind
+   = do vbind' <- insertDR (rangeEq "bindVarToTerm") (vi,vc) (BT ct) vbind
         return $ BD (vbind',sbind,lbind,llbind)
  | otherwise = fail "bindVarToTerm: incompatible variable and term."
 \end{code}
@@ -512,11 +530,11 @@ bindVarToTerm v@(Vbl vi ExprV vt) ct (BD (vbind,sbind,lbind,llbind))
  | isPred ct   =  fail "bindVarToTerm: e.-var. cannot bind predicate."
  | wsize  > 1  =  fail "bindVarToTerm: e.-var. mixed term temporality."
  | wsize == 0  -- term has no variables
-   = do vbind' <- insertDR "bindVarToTerm(ev1)" (==) (vi,ExprV) (BT ct) vbind
+   = do vbind' <- insertDR (rangeEq "bindVarToTerm(ev1)") (vi,ExprV) (BT ct) vbind
         return $ BD (vbind',sbind,lbind,llbind)
  | otherwise -- term has one temporality
     = do sbind' <- bindSubscriptToSubscript "bindVarToTerm(ev2)" vt thectw sbind
-         vbind' <- insertDR "bindVarToTerm(ev3)" (==) (vi,ExprV) (dnTerm ct) vbind
+         vbind' <- insertDR (rangeEq "bindVarToTerm(ev3)") (vi,ExprV) (dnTerm ct) vbind
          return $ BD (vbind',sbind',lbind,llbind)
  where
    ctws = temporalityOf ct
@@ -530,11 +548,11 @@ bindVarToTerm v@(Vbl vi PredV vt) ct (BD (vbind,sbind,lbind,llbind))
  | isExpr ct  =  fail "bindVarToTerm: p.-var. cannot bind expression."
  | wsize  > 1  =  fail "bindVarToTerm: p.-var. mixed term temporality."
  | wsize == 0  -- term has no variables
-   = do vbind' <- insertDR "bindVarToTerm(pv1)" (==) (vi,PredV) (dnTerm ct) vbind
+   = do vbind' <- insertDR (rangeEq "bindVarToTerm(pv1)") (vi,PredV) (dnTerm ct) vbind
         return $ BD (vbind',sbind,lbind,llbind)
  | otherwise
     = do sbind' <- bindSubscriptToSubscript "bindVarToTerm(pv2)" vt thectw sbind
-         vbind' <- insertDR "bindVarToTerm(pv3)" (==) (vi,PredV) (dnTerm ct) vbind
+         vbind' <- insertDR (rangeEq "bindVarToTerm(pv3)") (vi,PredV) (dnTerm ct) vbind
          return $ BD (vbind',sbind',lbind,llbind)
  where
    ctws = temporalityOf ct
@@ -678,15 +696,25 @@ vlComp vc vw vws (gv:gvs)
 \end{code}
 
 When we are inserting a variable-list,
-we may find that a variable-set is present.
+we may find that a variable-set is present
+(or vice versa).
 If they have the same elements,
 then we update the set to be the list in the binding.
 We require an equivalence for this:
 \begin{code}
-vSetListEqv :: LstVarBind -> LstVarBind -> Bool
-vSetListEqv (BL vl) (BS vs)  =  S.fromList vl == vs
-vSetListEqv (BS vs) (BL vl)  =  S.fromList vl == vs
-vSetListEqv lvb1    lvb2     =  lvb1 == lvb2
+rangeListOrSet :: Monad m => String -> UpdateCheck m ListVarKey LstVarBind
+rangeListOrSet nAPI lv binding list@(BL vl) (BS vs)
+ | S.fromList vl == vs  =  return list
+rangeListOrSet nAPI lv binding (BS vs) list@(BL vl)
+ | S.fromList vl == vs  =  return list
+rangeListOrSet nAPI lv binding vc1 vc2
+ | vc1 == vc2  =  return vc1
+ | otherwise  =  fail $ unlines
+                  [ (nAPI++": already bound differently.")
+                  , "lv = " ++ show lv
+                  , "vc1 = " ++ show vc1
+                  , "bind:\n" ++ show binding
+                  ]
 \end{code}
 
 \newpage
@@ -698,8 +726,8 @@ A Static list-variable binds to any list without \texttt{Textual} variables.
 \begin{code}
 bindLVarToVList lv@(LVbl (Vbl i vc Static) is ij) vl (BD (vbind,sbind,lbind,llbind))
  | valid
-    =  do lbind' <- insertDR "bindLVarToVList(static)" vSetListEqv
-                              (i,vc,is,ij) (BL vl) lbind
+    =  do lbind' <- insertDR (rangeListOrSet "bindLVarToVList(static)")
+                             (i,vc,is,ij) (BL vl) lbind
           return $ BD (vbind,sbind,lbind',llbind)
  | otherwise = fail "bindLVarToVList: static cannot bind to any textual."
  where
@@ -713,7 +741,8 @@ all of which have the same class and temporality as itself.
 bindLVarToVList lv@(LVbl (Vbl i vc vw) is ij) vl (BD (vbind,sbind,lbind,llbind))
  | valid
     = do sbind' <- bindSubscriptToSubscript "bindLVarToVList(1)" vw vlw sbind
-         lbind' <- insertDR "bindLVarToVList(2)" (==) (i,vc,is,ij) (bvl vl) lbind
+         lbind' <- insertDR (rangeListOrSet "bindLVarToVList(2)")
+                            (i,vc,is,ij) (bvl vl) lbind
          return $ BD (vbind,sbind',lbind',llbind)
  | otherwise = fail "bindLVarToVList: incompatible dynamic temporality."
  where
@@ -744,7 +773,8 @@ bindLVarToVSet :: Monad m => ListVar -> VarSet -> Binding -> m Binding
 
 bindLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind,llbind))
  | valid
-    =  do lbind' <- insertDR "bindLVarToVSet(static)" (==) (i,vc,is,ij) (BS vs) lbind
+    =  do lbind' <- insertDR (rangeListOrSet "bindLVarToVSet(static)")
+                             (i,vc,is,ij) (BS vs) lbind
           return $ BD (vbind,sbind,lbind',llbind)
  | otherwise = fail "bindLVarToVSet: static cannot bind to any textual."
  where
@@ -753,7 +783,8 @@ bindLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind,llbin
 bindLVarToVSet lv@(LVbl (Vbl i vc vw) is ij) vs (BD (vbind,sbind,lbind,llbind))
  | valid
     = do sbind' <- bindSubscriptToSubscript "bindLVarToVSet(1)" vw vsw sbind
-         lbind' <- insertDR "bindLVarToVSet(2)" (==) (i,vc,is,ij) (bvs vs) lbind
+         lbind' <- insertDR (rangeListOrSet "bindLVarToVSet(2)")
+                            (i,vc,is,ij) (bvs vs) lbind
          return $ BD (vbind,sbind',lbind',llbind)
  | otherwise = fail "bindLVarToVSet: incompatible dynamic temporality."
  where
@@ -833,7 +864,7 @@ as per Fig.\ref{fig:utp-perm-class-bind}.
 \begin{code}
 bindLVarToTList (LVbl (Vbl vi vc Static) is ij) cndTs (BD (vbind,sbind,lbind,llbind))
  | all (validVarTermBinding vc) (map termkind cndTs)
-    = do lbind' <- insertDR "bindLVarToTList(static)" (==)
+    = do lbind' <- insertDR (rangeEq "bindLVarToTList(static)")
                             (vi,vc,is,ij) (BX cndTs) lbind
          return $ BD (vbind,sbind,lbind',llbind)
  | otherwise  =  fail "bindLVarToTList: incompatible variable and terms."
@@ -853,12 +884,12 @@ bindLVarToTList (LVbl (Vbl vi vc vt) is ij) cndTs (BD (vbind,sbind,lbind,llbind)
            =  fail "bindLVarToTList: non-pred. l-var. cannot bind to predicate."
  | wsize  > 1  =  fail "bindLVarToTList: p.-var. mixed term temporality."
  | wsize == 0  -- term has no variables
-   = do lbind' <- insertDR "bindLVarToTList(pv1)" (==)
+   = do lbind' <- insertDR (rangeEq "bindLVarToTList(pv1)")
                            (vi,vc,is,ij) (BX cndTs) lbind
         return $ BD (vbind,sbind,lbind',llbind)
  | otherwise
     = do sbind' <- bindSubscriptToSubscript "bindLVarToTList(1)" vt thectw sbind
-         lbind' <- insertDR "bindLVarToTList(2)" (==)
+         lbind' <- insertDR (rangeEq "bindLVarToTList(2)")
                             (vi,vc,is,ij) (BX cndTs) lbind
          return $ BD (vbind,sbind',lbind',llbind)
  where
@@ -898,7 +929,7 @@ First, the static case:
 bindLVarPairToSubst' tgtLV@(LVbl (Vbl ti tvc Static) tis tij)
                      rplLV@(LVbl (Vbl ri rvc Static) ris rij)
                      tsub lvarsub (BD (vbind,sbind,lbind,llbind))
- = do llbind' <- insertDR "bindLVarPairToSubst(static)" (==)
+ = do llbind' <- insertDR (rangeEq "bindLVarPairToSubst(static)")
                           (tgtLV,rplLV) (tsub,lvarsub)
                           llbind
       return $ BD (vbind,sbind,lbind,llbind')
@@ -919,7 +950,7 @@ bindLVarPairToSubst' tgtLV@(LVbl (Vbl ti tvc tvt) tis tij)
                                                                (dbg "tvt=" tvt) thectw sbind
           sbind'' <- bindSubscriptToSubscript "bindLVarPairToSubst(rpl)"
                                                                (dbg "rvt=" rvt) thecrw sbind'
-          llbind' <- insertDR "bindLVarPairToSubst(dynamic)" (==)
+          llbind' <- insertDR (rangeEq "bindLVarPairToSubst(dynamic)")
                               (tgtLV,rplLV) (tsub,lvarsub)
                               llbind
           return $ BD (vbind,sbind'',lbind,llbind')

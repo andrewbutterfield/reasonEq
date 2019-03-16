@@ -23,3 +23,28 @@ fromList
   ]
 
 to { e$ |-> <e$> , x$ |-> <x$>, y$ |-> { y$ } }
+
+BD (
+  fromList [
+    ( (Id "P",VP)
+    , BT (C P (Id "\172") [V P (VR (Id "P",VP,WS))]) )
+  ]
+, fromList []
+, fromList [
+    ( (Id "e",VE,[],[])
+    , BL [GL (LV (VR (Id "e",VE,WS),[],[]))] )
+  , ( (Id "x",VO,[],[])
+    , BL [GL (LV (VR (Id "x",VO,WS),[],[]))] )
+  , ( (Id "y",VO,[],[])
+    , BS (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) )
+  ]
+, fromList [
+    ( (LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))
+    , ( fromList []
+      , fromList [ ( LV (VR (Id "x",VO,WS),[],[])
+                   , LV (VR (Id "e",VE,WS),[],[]) )
+        ]
+      )
+    )
+  ]
+)

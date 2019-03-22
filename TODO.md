@@ -2,14 +2,13 @@
 
 ## Hotfixes
 
-* Get `Binding.lookupSubstBind` working
-* Get `Binding.bindLVarPairToSubst` working
-* Get `Matching.lvlvMatchCheck` to use `bindLVarPairToSubst`.
-* Add tests for matching `[y$/x$]` against `[e$/x$]`.
-
 ## Next Task(s)
 
-* add facility to load from a conjecture file into a theory, either as conjectures, or laws, or a mix of both (these two features are designed (i) to minimise the proof rework in the event of a proof (or even term) datatype change, and (ii) to allow the easy introduction of (derived?) axioms for theory prototyping.
+* figure out where side-condition checking should be done
+  * what is the last point at which we have both the goal and law side-conditions to hand?
+     * the `Match` type has field `mAsn` - the law assertion, incl. its s.c. 
+     * the goal s.c. is dropped when calling into `LiveProofs` from `AbstractUI` - a term is passed over rather than an assertion.
+* implement side-cond instantiation.
 * make proof loading more tolerant of read/show mismatches - allow a step to be marked as TBR (to-be-redone).
 * instantiate side-conditions in matches
 * handle side-conditions (just `Disjoint` for now)

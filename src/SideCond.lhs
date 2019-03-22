@@ -6,20 +6,21 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module SideCond ( SideCond, AtmSideCond
-                , pattern Disjoint, pattern Exact, pattern Covers
-                , pattern IsPre, pattern Fresh
-           -- , pattern Exact, pattern Approx
-           -- , pattern Disjoint, pattern Covers, pattern DisjCov, pattern PreDisj
-           -- , vscTrue
-           -- , addPreSC, addExactSC, addDisjSC, addCoverSC, checkNewSC
-           --, VarSCMap
-           , scTrue
-           -- , pattern SC, pattern Fresh, pattern VarSCs, sidecond
-           , mrgAtmCond, mrgSideCond
-           , notin, is, covers, fresh, pre
-           , int_tst_SideCond
-           ) where
+module SideCond (
+  SideCond, AtmSideCond
+, pattern Disjoint, pattern Exact, pattern Covers
+, pattern IsPre, pattern Fresh
+-- , pattern Exact, pattern Approx
+-- , pattern Disjoint, pattern Covers, pattern DisjCov, pattern PreDisj
+-- , vscTrue
+-- , addPreSC, addExactSC, addDisjSC, addCoverSC, checkNewSC
+--, VarSCMap
+, scTrue
+-- , pattern SC, pattern Fresh, pattern VarSCs, sidecond
+, mrgAtmCond, mrgSideCond
+, notin, is, covers, fresh, pre
+, int_tst_SideCond
+) where
 import Data.Char
 import Data.List
 import Data.Maybe (fromJust)
@@ -508,7 +509,7 @@ mainly because we have 5 variants giving us 15 combinations,
 allowing for symmetry.
 1 variant (freshness), has no associated general variable,
 so applies universally.
-The others only interact when associuaed with the same general variable.
+The others only interact when associated with the same general variable.
 
 We support only one way to assemble a side-condition from atomic ones.
 This uses 5 functions to do the work, one for each atomic variant.
@@ -656,7 +657,6 @@ $pre \supseteq \fv(T)$
 pre :: GenVar -> SideCond
 pre tV  = [ IsPre tV ]
 \end{code}
-
 
 \newpage
 \subsection{Exported Test Group}

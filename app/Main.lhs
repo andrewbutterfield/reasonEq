@@ -259,9 +259,10 @@ reqHelpCmds = ["?","help"]
 
 reqCommands :: REqCommands
 reqCommands = [ cmdShow, cmdSet, cmdNew
-              , cmdAssume, cmdNewProof, cmdRet2Proof
+              , cmdNewProof, cmdRet2Proof
               , cmdSave, cmdLoad
               , cmdSaveConj, cmdLoadConj
+              , cmdAssume, cmdDemote
               , cmdBuiltin ]
 
 -- we don't use these features in the top-level REPL
@@ -493,11 +494,10 @@ newConj args reqs
                             return reqs'
 \end{code}
 
-
 \newpage
-\subsection{Proving Commands}
+\subsection{Faking It}
 
-We start with a cheat - simply assuming conjectures as laws:
+Simply assuming conjectures as laws:
 \begin{code}
 cmdAssume :: REqCmdDescr
 cmdAssume
@@ -511,10 +511,36 @@ cmdAssume
 
 doAssumption args reqs
   =  case assumeConjecture (currTheory reqs) cjnm reqs of
-         Nothing     ->  doshow reqs  ("Failed to assume "    ++ cjnm)
+         Nothing     ->  doshow reqs  ("Failed to assume " ++ cjnm)
          Just reqs'  ->  doshow reqs' ("Assumed " ++ cjnm)
  where cjnm = args2str args
 \end{code}
+
+
+Reverting proven or assumed laws back to conjectures.
+\begin{code}
+cmdDemote :: REqCmdDescr
+cmdDemote
+  = ( "Demote"
+    , "demote law to conjectures"
+    , unlines
+       [ "Demote n - demote law 'n'"
+       , "Demote [] - demote all current theory proven laws"
+       , "Demote * - demote all current theory assumed laws"
+       ]
+    , doDemotion )
+
+doDemotion args reqs
+  =  case demoteLaw (currTheory reqs) lwnm reqs of
+         Nothing     ->  doshow reqs  ("Failed to demote " ++ lwnm)
+         Just reqs'  ->  doshow reqs' ("Demoted " ++ lwnm)
+ where lwnm = args2str args
+\end{code}
+
+
+\newpage
+\subsection{Proving Commands}
+
 
 Then we introduce doing a proper proof:
 \begin{code}

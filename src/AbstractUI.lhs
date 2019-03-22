@@ -11,7 +11,8 @@ module AbstractUI
 , observeCurrTheory, observeCurrConj
 , observeLiveProofs, observeCompleteProofs
 , setCurrentTheory
-, newConjecture, assumeConjecture
+, newConjecture
+, assumeConjecture, demoteLaw
 , newProof1, newProof2, resumeProof
 , abandonProof, saveProof, completeProof
 , moveFocusDown, moveFocusUp, moveConsequentFocus
@@ -202,6 +203,18 @@ assumeConjecture thnm whichC reqs
   = case getTheory thnm $ theories reqs of
       Nothing -> fail ("No theory named '"++thnm++"'.")
       Just thry -> do thry' <- assumeConj whichC thry
+                      return $ changed
+                             $ theories__ (replaceTheory thry') $ reqs
+\end{code}
+
+\subsubsection{Demoting Laws}
+
+\begin{code}
+demoteLaw :: Monad m => String -> String -> REqState -> m REqState
+demoteLaw thnm whichC reqs
+  = case getTheory thnm $ theories reqs of
+      Nothing -> fail ("No theory named '"++thnm++"'.")
+      Just thry -> do thry' <- lawDemote whichC thry
                       return $ changed
                              $ theories__ (replaceTheory thry') $ reqs
 \end{code}

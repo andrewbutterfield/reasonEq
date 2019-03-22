@@ -23,7 +23,8 @@ module Theories
  , getTheoryDeps, getTheoryDeps', getAllTheories
  , listTheories, getTheoryConjectures, getTheoryProofs
  , updateTheory, replaceTheory
- , newTheoryConj, assumeConj
+ , newTheoryConj
+ , assumeConj, lawDemote
  , addTheoryProof, upgradeConj2Law
  , showTheories, showNamedTheory
  , showTheoryLong, showTheoryShort, showTheoryLaws
@@ -349,6 +350,17 @@ assumeConj "*" thry
        if null cjs then fail "assumeConj *: no conjectures"
        else return $ conjs_ [] $ laws__ (++(map labelAsAssumed cjs)) thry
 assumeConj cjnm thry = fail ("assumeConj '"++cjnm++"' NYI")
+\end{code}
+
+
+\begin{code}
+lawDemote :: Monad m => String -> Theory -> m Theory
+lawDemote lwnm thry = fail ("lawDemote '"++lwnm++"' NYI")
+-- lawDemote "*" thry
+--   = do let lws = laws thry
+--        if null lws then fail "lawDemote *: no laws"
+--        else return $ conjs_ [] $ laws__ (++(map labelAsAssumed cjs)) thry
+-- lawDemote lwnm thry = fail ("lawDemote '"++lwnm++"' NYI")
 \end{code}
 
 \subsubsection{Add Proof to Theory}

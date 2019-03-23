@@ -398,8 +398,9 @@ matchFocus :: LogicSig -> LiveProof -> LiveProof
 matchFocus theSig liveProof
   = let (tz,_)      =  focus liveProof
         goalt       =  getTZ tz
+        scC         =  conjSC liveProof
         ctxts       =  mtchCtxts liveProof
-        newMatches  =  matchInContexts theSig ctxts goalt
+        newMatches  =  matchInContexts theSig ctxts (goalt,scC)
         rankedM     =  rankAndSort sizeRank ctxts
                        $ filter isNonTrivial newMatches
     in matches_ rankedM liveProof
@@ -411,8 +412,9 @@ matchFocusAgainst :: Monad m => String -> LogicSig -> LiveProof -> m LiveProof
 matchFocusAgainst lawnm theSig liveProof
   = let (tz,_)      =  focus liveProof
         goalt       =  getTZ tz
+        scC         =  conjSC liveProof
         ctxts       =  mtchCtxts liveProof
-    in case matchLawByName theSig goalt lawnm ctxts of
+    in case matchLawByName theSig (goalt,scC) lawnm ctxts of
           Yes []    -> fail ("No matches for '"++lawnm++"'")
           Yes mtchs -> return $ matches_ mtchs liveProof
           But msgs  -> fail $ unlines msgs
@@ -424,8 +426,9 @@ tryFocusAgainst :: String -> LogicSig -> LiveProof -> YesBut Binding
 tryFocusAgainst lawnm theSig liveProof
   = let (tz,_)      =  focus liveProof
         goalt       =  getTZ tz
+        scC         =  conjSC liveProof
         ctxts       =  mtchCtxts liveProof
-    in tryLawByName theSig goalt lawnm ctxts
+    in tryLawByName theSig (goalt,scC) lawnm ctxts
 \end{code}
 
 \subsubsection{Apply Match to Focus}

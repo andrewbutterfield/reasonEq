@@ -13,6 +13,7 @@ module Utilities (
 , clearIt, clear
 , readInt
 , trim
+, zip1, zip2, zip2'
 , nlookup
 , numberList, numberList'
 , putPP, putShow, pp
@@ -169,6 +170,19 @@ ltrim "" = ""
 ltrim str@(c:cs)
  | isSpace c  =  ltrim cs
  | otherwise  =  str
+\end{code}
+
+\subsection{Specialised Zips}
+
+\begin{code}
+zip1 :: a -> [b] -> [(a,b)]
+zip1 a = map (\b -> (a,b))
+
+zip2 :: [a] -> b -> [(a,b)]
+zip2 as b = map (\a->(a,b)) as
+
+zip2' :: b -> [a] -> [(a,b)]
+zip2' b = map (\a->(a,b))
 \end{code}
 
 \subsubsection{Number List Display}

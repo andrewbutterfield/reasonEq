@@ -328,37 +328,36 @@ finaliseProof liveProof
 
 First, given list of match-contexts, systematically work through them.
 \begin{code}
-matchInContexts :: LogicSig -> [MatchContext] -> Term -> Matches
-matchInContexts logicsig mcs t
-  = concat $ map (matchLaws logicsig t) mcs
+matchInContexts :: LogicSig -> [MatchContext] -> Assertion -> Matches
+matchInContexts logicsig mcs asn
+  = concat $ map (matchLaws logicsig asn) mcs
 \end{code}
 
 Now, the code to match laws, given a context.
 Bascially we run down the list of laws,
 returning any matches we find.
 \begin{code}
-matchLaws :: LogicSig -> Term -> MatchContext -> Matches
-matchLaws logicsig t (_,lws,vts) = concat $ map (domatch logicsig vts t) lws
+matchLaws :: LogicSig -> Assertion -> MatchContext -> Matches
+matchLaws logicsig asn (_,lws,vts) = concat $ map (domatch logicsig vts asn) lws
 \end{code}
 
 Sometimes we are interested in a specific (named) law.
 \begin{code}
-matchLawByName :: Monad m => LogicSig -> Term -> String -> [MatchContext]
+matchLawByName :: Monad m => LogicSig -> Assertion -> String -> [MatchContext]
                -> m Matches
-matchLawByName logicsig t lnm mcs
+matchLawByName logicsig asn lnm mcs
  = do (law,vts) <- findLaw lnm mcs
-      return $ domatch logicsig vts t law
+      return $ domatch logicsig vts asn law
 \end{code}
 
 Sometimes we want to what happens when we single out a law,
 including observing any match failure messages.
 \begin{code}
-tryLawByName :: LogicSig -> Term -> String -> [MatchContext]
+tryLawByName :: LogicSig -> Assertion -> String -> [MatchContext]
                -> YesBut Binding
-tryLawByName logicsig tC lnm mcs
+tryLawByName logicsig asn@(tC,scC) lnm mcs
   = do (((_,(tP,_)),_),vts) <- findLaw lnm mcs
        match vts tC tP
-       -- fail "tryLawByName NYfI"
 \end{code}
 
 Looking up a law by name:
@@ -379,23 +378,25 @@ we check its top-level to see if it is an instance of \texttt{theEqv},
 in which case we try matches against all possible variations,
 as well as the whole thing.
 \begin{code}
-domatch :: LogicSig -> [VarTable] -> Term -> Law -> Matches
-domatch logicsig vts tC law@((n,asn@(tP@(Cons tk i ts@(_:_:_)),sc)),prov)
-  | i == theEqv logicsig  =  simpleMatch MatchAll (theTrue logicsig) vts tC law
-                             ++ doEqvMatch logicsig vts tC n sc prov ts
+domatch :: LogicSig -> [VarTable] -> Assertion -> Law -> Matches
+domatch logicsig vts asnC law@((nP,asn@(tP@(Cons tk i tsP@(_:_:_)),scP)),prov)
+  | i == theEqv logicsig  =  simpleMatch MatchAll (theTrue logicsig) vts asnC law
+                             ++ doEqvMatch logicsig vts asnC nP prov scP tsP
 \end{code}
 Otherwise we just match against the whole law.
 \begin{code}
-domatch logicsig vts tC law
-  =  simpleMatch MatchAll (theTrue logicsig) vts tC law
+domatch logicsig vts asnC law
+  =  simpleMatch MatchAll (theTrue logicsig) vts asnC law
 \end{code}
 
 Do a simple match.
+Here is where we do side-condition checking.
 \begin{code}
-simpleMatch :: MatchClass -> Term -> [VarTable] -> Term -> Law -> Matches
-simpleMatch mc repl vts tC ((n,asn@(tP,_)),_)
+simpleMatch :: MatchClass -> Term -> [VarTable] -> Assertion -> Law -> Matches
+simpleMatch mc repl vts asnC@(tC,scC) ((n,asn@(tP,scP)),_)
   = concat $ map mkmatch $ match vts tC tP
   where
+    -- need to show that scC ==> bind(scP)
     mkmatch bind
       = case instantiate bind repl of
           Nothing     ->  []
@@ -459,23 +460,23 @@ We fully support Cases A and B and give some support to Case C.
 First, Case A, which is automatically done above by \texttt{simpleMatch},
 so we need not return any matches here.
 \begin{code}
-doEqvMatch _ _ _ _ _ _ [p1,p2] | p1 == p2  =  []
+doEqvMatch _ _ _ _ _ _ [tP1,tP2] | tP1 == tP2  =  []
 \end{code}
 Then invoke Cases C and B, in that order.
 \begin{code}
-doEqvMatch logicsig vts tC n sc prov ts
-  = doEqvMatchC logicsig vts tC n sc prov ts
+doEqvMatch logicsig vts asnC nP prov scP  tsP
+  = doEqvMatchC logicsig vts asnC nP prov scP tsP
     ++
-    doEqvMatchB logicsig vts tC n sc prov [] [] ts
+    doEqvMatchB logicsig vts asnC nP prov scP [] [] tsP
 \end{code}
 
 Next, Case B.
 \begin{code}
-doEqvMatchB logicsig vts tC n sc prov mtchs _ [] = mtchs
-doEqvMatchB logicsig vts tC n sc prov mtchs sPt (tP:tPs)
+doEqvMatchB logicsig vts asnC nP prov scP mtchs _ [] = mtchs
+doEqvMatchB logicsig vts asnC nP prov scP mtchs sPt (tP:tPs)
   = let mtchs' = simpleMatch (MatchEqv [length sPt + 1])
-                    (eqv (reverse sPt ++ tPs)) vts tC ((n,(tP,sc)),prov)
-    in doEqvMatchB logicsig vts tC n sc prov (mtchs'++mtchs) (tP:sPt) tPs
+                    (eqv (reverse sPt ++ tPs)) vts asnC ((nP,(tP,scP)),prov)
+    in doEqvMatchB logicsig vts asnC nP prov scP (mtchs'++mtchs) (tP:sPt) tPs
   where
     eqv []   =  theTrue logicsig
     eqv [t]  =  t
@@ -488,21 +489,22 @@ We will assume $m < n$ and just try $J$ being either
 the first $m$ pattern components ($\setof{1\dots m}$),
 or the last $m$ (\setof{n+1-m\dots n}).
 \begin{code}
-doEqvMatchC logicsig vts tC@(Cons tk i tsC) n sc prov tsP
+doEqvMatchC logicsig vts asnC@(tC@(Cons tk i tsC),scC) nP prov scP tsP
  | i == theEqv logicsig
    && cLen < pLen  = doEqvMatchC' cLen [1..cLen]
-                       logicsig vts n sc prov tsC tsP
+                       logicsig vts scC nP prov scP  tsC tsP
                      ++
                      doEqvMatchC' cLen [pLen+1-cLen .. pLen]
-                       logicsig vts n sc prov (reverse tsC) (reverse tsP)
+                       logicsig vts scC nP prov scP (reverse tsC) (reverse tsP)
  where
     cLen = length tsC
     pLen = length tsP
 doEqvMatchC _ _ _ _ _ _ _ = []
 
 -- we assume cLen < pLen here
-doEqvMatchC' cLen is logicsig vts n sc prov tsC tsP
-  = simpleMatch (MatchEqv is) (eqv tsP'') vts (eqv tsC) ((n,(eqv tsP',sc)),prov)
+doEqvMatchC' cLen is logicsig vts scC nP prov scP tsC tsP
+  = simpleMatch (MatchEqv is) (eqv tsP'') vts (eqv tsC,scC)
+                                              ((nP,(eqv tsP',scP)),prov)
   where
     (tsP',tsP'') = splitAt cLen tsP
     eqv []   =  theTrue logicsig

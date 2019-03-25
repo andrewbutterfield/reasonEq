@@ -175,5 +175,18 @@ instantiateSC bind ascs
 
 \begin{code}
 instantiateASC :: Monad m => Binding -> AtmSideCond -> m [AtmSideCond]
-instantiateASC bind ascs = fail "instantiateASC NYI"
+instantiateASC bind disj@(Disjoint (StdVar v) vs)
+  -- from instantiate (Var ... v)
+  -- = case lookupVarBind binding v of
+  --       Nothing             ->
+  --       Just (BindVar v')   ->
+  --       Just (BindTerm t')  ->
+  -- and case instVarSet bind vs of
+  --   Nothing ->
+  -- Just (vs') ->
+
+  = fail "instantiateASC Disjoint v NYfI"
+instantiateASC bind (Disjoint (LstVar lv) vs)
+  = fail "instantiateASC Disjoint v NYfI"
+instantiateASC bind ascs = fail "instantiateASC NYfI"
 \end{code}

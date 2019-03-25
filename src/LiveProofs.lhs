@@ -396,7 +396,7 @@ simpleMatch :: MatchClass -> Term -> [VarTable] -> Assertion -> Law -> Matches
 simpleMatch mc repl vts asnC@(tC,scC) ((n,asn@(tP,scP)),_)
   = concat $ map mkmatch $ match vts tC tP
   where
-    -- need to show that scC ==> bind(scP)
+    -- need to show that scC ==> bind(scP) before we instantiate repl
     mkmatch bind
       = case instantiate bind repl of
           Nothing     ->  []

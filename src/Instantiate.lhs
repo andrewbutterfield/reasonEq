@@ -20,6 +20,7 @@ import Variables
 import AST
 import SideCond
 import Binding
+import FreeVars
 
 import Debug.Trace
 dbg msg x = trace (msg ++ show x) x
@@ -201,17 +202,11 @@ instantiateDisjoint vs (BindVar v)
  | StdVar v `S.member` vs  =  fail "Var not disjoint"
  | otherwise             =  return [] -- True
 instantiateDisjoint vs (BindTerm t)
- | free `disjoint` vs = return $ map (mkD vs) $ S.toList lingering
+ | free `disjoint` vs = return $ map (mkD ovs) $ S.toList freeT
  | otherwise  =  fail "Term not disjoint"
  where
-   (free,lingering)  = termFree t
+   free  = termFree t
+   freeT = S.empty  -- non-Obs in free ??
+   ovs = S.empty    --  Obs in vs ??
    mkD vs gv = Disjoint gv vs
-\end{code}
-
-PUT IN A NEW MODULE:
-\begin{code}
-termFree :: Term -> (VarSet,VarSet)
-termFree t = (free        -- what goes here?
-             ,lingering)  -- and here?
- where (free,lingering) = (S.empty,S.empty)
 \end{code}

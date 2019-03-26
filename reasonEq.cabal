@@ -19,6 +19,7 @@ library
                      , LexBase
                      , Variables
                      , AST
+                     , FreeVars
                      , SideCond
                      , VarData
                      , Binding

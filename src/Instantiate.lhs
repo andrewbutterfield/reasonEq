@@ -15,6 +15,7 @@ import qualified Data.Set as S
 import Data.Map(Map)
 import qualified Data.Map as M
 
+import Utilities
 import Variables
 import AST
 import SideCond
@@ -176,17 +177,41 @@ instantiateSC bind ascs
 \begin{code}
 instantiateASC :: Monad m => Binding -> AtmSideCond -> m [AtmSideCond]
 instantiateASC bind disj@(Disjoint (StdVar v) vs)
-  -- from instantiate (Var ... v)
-  -- = case lookupVarBind binding v of
-  --       Nothing             ->
-  --       Just (BindVar v')   ->
-  --       Just (BindTerm t')  ->
-  -- and case instVarSet bind vs of
-  --   Nothing ->
-  -- Just (vs') ->
-
-  = fail "instantiateASC Disjoint v NYfI"
-instantiateASC bind (Disjoint (LstVar lv) vs)
-  = fail "instantiateASC Disjoint v NYfI"
+  = case instVarSet bind vs of
+      But msgs -> fail $ unlines $ msgs
+      Yes (vs') -> instantiateDisjoint vs' $ instantiateVar bind v
 instantiateASC bind ascs = fail "instantiateASC NYfI"
+\end{code}
+
+Instantiate a variable either according to the binding,
+or by itself if not bound:
+\begin{code}
+instantiateVar :: Binding -> Variable -> VarBind
+instantiateVar bind v
+  = case lookupVarBind bind v of
+        Nothing  ->  BindVar v
+        Just bv  ->  bv
+\end{code}
+
+Dealing with each condition, now that everything is instantiated.
+First, disjointness:
+\begin{code}
+instantiateDisjoint :: Monad m => VarSet -> VarBind -> m [AtmSideCond]
+instantiateDisjoint vs (BindVar v)
+ | StdVar v `S.member` vs  =  fail "Var not disjoint"
+ | otherwise             =  return [] -- True
+instantiateDisjoint vs (BindTerm t)
+ | free `disjoint` vs = return $ map (mkD vs) $ S.toList lingering
+ | otherwise  =  fail "Term not disjoint"
+ where
+   (free,lingering)  = termFree t
+   mkD vs gv = Disjoint gv vs
+\end{code}
+
+PUT IN A NEW MODULE:
+\begin{code}
+termFree :: Term -> (VarSet,VarSet)
+termFree t = (free        -- what goes here?
+             ,lingering)  -- and here?
+ where (free,lingering) = (S.empty,S.empty)
 \end{code}

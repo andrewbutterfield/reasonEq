@@ -27,15 +27,19 @@ Return the free variables of a term
 ---
 pure and simple!
 
+\subsubsection{Term Free Variables}
+
 \begin{eqnarray*}
-   fv(\kk k)  &\defs&  \emptyset
-\\ fv(\vv v)  &\defs&  \{\vv v\}
-\\ fv(\cc n {ts}) &\defs& \bigcup_{t \in ts} fv(ts)
-\\ fv(\bb n {v^+} t) &\defs& fv(t)\setminus{v^+}
-\\ fv(\ll n {v^+} t) &\defs& fv(t)\setminus{v^+}
-\\ fv(\ss t {v^n} {t^n}) &\defs& (fv(t)\setminus{v^m})\cup \bigcup_{s \in t^m}fv(s)
-\\ \textbf{where} && v^m = v^n \cap fv(t), t^m \textrm{ corr. to } v^m
-\\ fv(\ii \bigoplus n {lvs}) &\defs& lvs
+   \fv(\kk k)  &\defs&  \emptyset
+\\ \fv(\vv v)  &\defs&  \{\vv v\}
+\\ \fv(\cc n {ts}) &\defs& \bigcup_{t \in ts} \fv(ts)
+\\ \fv(\bb n {v^+} t) &\defs& \fv(t)\setminus{v^+}
+\\ \fv(\ll n {v^+} t) &\defs& \fv(t)\setminus{v^+}
+\\ \fv(\ss t {v^n} {t^n})
+   &\defs&
+   (\fv(t)\setminus{v^m})\cup \bigcup_{s \in t^m}\fv(s)
+\\ \textbf{where} && v^m = v^n \cap \fv(t), t^m \textrm{ corr. to } v^m
+\\ \fv(\ii \bigoplus n {lvs}) &\defs& lvs
 \end{eqnarray*}
 
 \begin{code}
@@ -52,11 +56,32 @@ termFree (Iter tk na ni lvs)  =  S.fromList $ map LstVar lvs
 termFree _ = S.empty
 \end{code}
 
+\newpage
+\subsubsection{Substitution Free Variables}
+
+Substitution is complicated, so here's a reminder:
+\begin{eqnarray*}
+   \fv(\ss t {v^n} {t^n})
+   &\defs&
+   (\fv(t)\setminus{v^m})\cup \bigcup_{s \in t^m}\fv(s)
+\\ \textbf{where} && v^m = v^n \cap \fv(t), t^m \textrm{ corr. to } v^m
+\end{eqnarray*}
 \begin{code}
 substFree tfv (Substn ts lvs) = (tgtvs,rplvs)
  where
-   tl = S.toList ts
-   lvl = S.toList lvs
-   tgtvs = S.map (StdVar . fst) ts `S.union` S.map (LstVar . fst) lvs
-   rplvs = S.empty `S.union` S.empty
+   ts' = S.filter (applicable StdVar tfv) ts
+   lvs' = S.filter (applicable LstVar tfv) lvs
+   tgtvs = S.map (StdVar . fst) ts'
+           `S.union`
+           S.map (LstVar . fst) lvs'
+   rplvs = S.unions (S.map (termFree . snd) ts')
+           `S.union`
+           S.map (LstVar .snd) lvs'
+\end{code}
+
+A target/replacement pair is ``applicable'' if the target variable
+is in the free variables of the term being substituted.
+\begin{code}
+applicable :: (tgt -> GenVar) -> VarSet -> (tgt,rpl) -> Bool
+applicable wrap tfv (t,_) = wrap t `S.member` tfv
 \end{code}

@@ -234,13 +234,14 @@ xs `issubset` ys  =  null (xs \\ ys)
 \subsubsection{Set disjointness}
 
 \begin{code}
-disjoint, overlaps :: Ord a => Set a -> Set a -> Bool
+disjoint :: Ord a => Set a -> Set a -> Bool
 s1 `disjoint` s2 = S.null (s1 `S.intersection` s2)
 \end{code}
 
 \subsubsection{Set overlap}
 
 \begin{code}
+overlaps :: Ord a => Set a -> Set a -> Bool
 s1 `overlaps` s2 = not (s1 `disjoint` s2)
 \end{code}
 

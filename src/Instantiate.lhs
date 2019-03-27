@@ -202,11 +202,10 @@ instantiateDisjoint vs (BindVar v)
  | StdVar v `S.member` vs  =  fail "Var not disjoint"
  | otherwise             =  return [] -- True
 instantiateDisjoint vs (BindTerm t)
- | free `disjoint` vs = return $ map (mkD ovs) $ S.toList freeT
+ | free `disjoint` vs = return $ map (mkD vs) $ S.toList freeTV
  | otherwise  =  fail "Term not disjoint"
  where
    free  = termFree t
-   freeT = S.empty  -- non-Obs in free ??
-   ovs = S.empty    --  Obs in vs ??
+   freeTV = S.filter (not . isObsGVar) free
    mkD vs gv = Disjoint gv vs
 \end{code}

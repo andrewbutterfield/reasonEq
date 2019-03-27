@@ -16,6 +16,24 @@ END THEORIES
 CURRTHEORY = PredExists
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("PredExists","\8707_\945_rename")
+BEGIN LIVE-PROOF
+TH-NAME: PredExists
+CJ-NAME: ∃_α_rename
+CONJ = (C P (Id "\8801") [B P (Id "\8707") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS))),B P (Id "\8707") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "y",VO,WS),[],[]))])))],[SD (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))])])
+SIDE = [SD (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))])]
+STRAT reduce
+BEGIN SEQZIP
+TERMZIP = (B P (Id "\8707") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS))),[Cons' P (Id "\8801") [] [B P (Id "\8707") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "y",VO,WS),[],[]))])))]])
+BEGIN SEQUENT'
+SIDECOND = [SD (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))])]
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.\8707_\945_rename", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = V P (VR (Id "true",VP,WS))}
+END SEQUENT'
+END SEQZIP
+FPATH: [1]
+BEGIN LIST STEPS
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

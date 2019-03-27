@@ -334,6 +334,8 @@ replaceTheory :: Theory -> Theories -> Theories
 replaceTheory thry theories = updateTheory (thName thry) (const thry) theories
 \end{code}
 
+\subsubsection{Monadic Theory Updates}
+
 We have some updates that are monadic
 \begin{code}
 newTheoryConj :: Monad m => NmdAssertion -> Theory -> m Theory
@@ -355,12 +357,11 @@ assumeConj cjnm thry = fail ("assumeConj '"++cjnm++"' NYI")
 
 \begin{code}
 lawDemote :: Monad m => String -> Theory -> m Theory
+lawDemote "*" thry
+  = do let lws = laws thry
+       if null lws then fail "lawDemote *: no laws"
+       else return $ laws_ [] $ conjs__ (++(map fst lws)) thry
 lawDemote lwnm thry = fail ("lawDemote '"++lwnm++"' NYI")
--- lawDemote "*" thry
---   = do let lws = laws thry
---        if null lws then fail "lawDemote *: no laws"
---        else return $ conjs_ [] $ laws__ (++(map labelAsAssumed cjs)) thry
--- lawDemote lwnm thry = fail ("lawDemote '"++lwnm++"' NYI")
 \end{code}
 
 \subsubsection{Add Proof to Theory}

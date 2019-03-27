@@ -18,6 +18,7 @@ module SideCond (
 , scTrue
 -- , pattern SC, pattern Fresh, pattern VarSCs, sidecond
 , mrgAtmCond, mrgSideCond
+, scDischarged
 , notin, is, covers, fresh, pre
 , int_tst_SideCond
 ) where
@@ -102,6 +103,15 @@ pattern Fresh       vs = FR vs
 We also need to say that some variables are fresh.
 This is not a relation involving a specified term,
 but instead the entire term to which this side-condition is attached.
+
+Sometimes we want the \texttt{GenVar} component
+\begin{code}
+ascGVar :: AtmSideCond -> Maybe GenVar
+ascGVar (Disjoint gv _)  =  Just gv
+ascGVar (Exact gv _)     =  Just gv
+ascGVar (Covers gv _)    =  Just gv
+ascGVar _                =  Nothing
+\end{code}
 
 
 
@@ -608,6 +618,80 @@ Easy cases first --- merging same
 --  | gv1 == gv2  = return (True, Covers gv2 (vs1 `S.intersection` vs2))
 \end{code}
 
+\newpage
+\subsection{Side-condition Implication}
+
+We want to determine if one side-condition implies another.
+We have something of the form:
+\begin{eqnarray*}
+ a_1 \land \dots \land a_m &\implies& c_1 \land \dots \land c_n
+\end{eqnarray*}
+where $a_i$ are the antecedent (match candidate) atomic side-conditions,
+and $c_j$
+are those of the consequent (match pattern mapped by match binding)
+atomic side-conditions.
+This corresponds to showing the validity of:
+\begin{eqnarray*}
+ \lnot a_1 \lor \dots \lor \lnot a_m &\lor& c_1 \land \dots \land c_n
+\end{eqnarray*}
+There are some obvious optimisations:
+\begin{enumerate}
+  \item Having $n=0$ means the consequent is true, so we are valid.
+  \item Having $m=0$ means the antecedent is true,
+         so requiring $n=0$ for validity to hold.
+  \item Having $a_i=c_j$ means that we can remove $c_j$
+  \item Having $a_i \implies c_j$ means that we can remove $c_j$.
+  \item Having $a_i \implies \lnot c_j$ means that we cannot be valid.
+  \item If there is no $a_i$ that implies a given $c_j$,
+        then we cannot be valid.
+\end{enumerate}
+\begin{code}
+scDischarged :: SideCond -> SideCond -> Bool
+scDischarged anteSC []      =  True                               -- 1 above
+scDischarged []     cnsqSC  =  False                              -- 2 above
+scDischarged anteSC cnsqSC  =  scDisch3 anteSC (cnsqSC \\ anteSC) -- 3 above
+
+scDisch3     anteSC []      =  True                               -- 1,3 above
+scDisch3     []     cnsqSC  =  False                              -- 2 above
+scDisch3     anteSC (cnsqASC:cnsqASCs)                            -- 4-6 above
+  = ascDisch456 cnsqASC anteSC
+    &&
+    scDisch3 anteSC cnsqASCs
+
+ascDisch456 _ []            =  False                              -- 6 above
+ascDisch456 cnsqASC (anteASC:anteASCs)
+  = case ascImplies cnsqASC anteASC of
+      Just b                -> b                                  -- 4,5 above
+      Nothing               -> ascDisch456 cnsqASC anteASCs       -- 6 above
+\end{code}
+
+Given an $a_i$ and $c_j$, there are three possibilities of interest:
+$a_i \implies c_j$, $a_i \implies \lnot c_j$, or neither of these two holds.
+The first two possibilites allow \texttt{ascDisch456} to return a conclusion.
+The third means we need to keep search the $a_i$s.
+
+We note that a \texttt{IsPre} atomic side-condition
+can only imply itself,
+so will have been swept up earlier by 3 above.
+Any two of the kinds of atomic side-condition can only interact
+as per 4 or 5 above, if they have the same general variable.
+\begin{code}
+ascImplies :: AtmSideCond -> AtmSideCond -> Maybe Bool
+ascImplies cnsqASC anteASC
+ | ascGVar cnsqASC == ascGVar anteASC  =  cnsqASC `ascimp` anteASC
+ascImplies _       _                   =  Nothing
+\end{code}
+
+The variations:
+\begin{eqnarray*}
+    \true:        &              impl.             & \false:
+\\ S \subseteq T  & v \notin T \implies v \notin S & S \cap T = \emptyset
+\end{eqnarray*}
+
+\begin{code}
+ascimp :: AtmSideCond -> AtmSideCond -> Maybe Bool
+ascimp _ _ = Nothing -- for now
+\end{code}
 
 \newpage
 \subsection{Building side-conditions.}

@@ -394,13 +394,16 @@ Here is where we do side-condition checking.
 \begin{code}
 simpleMatch :: MatchClass -> Term -> [VarTable] -> Assertion -> Law -> Matches
 simpleMatch mc repl vts asnC@(tC,scC) ((n,asn@(tP,scP)),_)
-  = concat $ map mkmatch $ match vts tC tP
+  = concat $ map (mkmatch scC scP) $ match vts tC tP
   where
-    -- need to show that scC ==> bind(scP) before we instantiate repl
-    mkmatch bind
-      = case instantiate bind repl of
-          Nothing     ->  []
-          Just irepl  ->  [MT n asn (chkPatn mc tP) bind irepl]
+    mkmatch scC scP bind
+      =  do scP' <- instantiateSC bind scP
+            if scDischarged (dbg "scC=" scC) (dbg "scP'=" scP')  -- does scC ==> scP'
+            then
+              case instantiate bind repl of
+                Nothing     ->  []
+                Just irepl  ->  [MT n asn (chkPatn mc tP) bind irepl]
+            else []
 
     chkPatn mc (Var _ v)
       | lookupVarTables vts v == UnknownVar  =  trivialise mc

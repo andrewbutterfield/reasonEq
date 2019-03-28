@@ -668,12 +668,12 @@ ascDisch456 cnsqASC (anteASC:anteASCs)
 Given an $a_i$ and $c_j$, there are three possibilities of interest:
 $a_i \implies c_j$, $a_i \implies \lnot c_j$, or neither of these two holds.
 The first two possibilites allow \texttt{ascDisch456} to return a conclusion.
-The third means we need to keep search the $a_i$s.
+The third means we need to keep searching the $a_i$s.
 
-We note that a \texttt{IsPre} atomic side-condition
+We note that an \texttt{IsPre} atomic side-condition
 can only imply itself,
 so will have been swept up earlier by 3 above.
-Any two of the kinds of atomic side-condition can only interact
+Any two of the remaining kinds of atomic side-condition can only interact
 as per 4 or 5 above, if they have the same general variable.
 \begin{code}
 ascImplies :: AtmSideCond -> AtmSideCond -> Maybe Bool
@@ -682,14 +682,60 @@ ascImplies cnsqASC anteASC
 ascImplies _       _                   =  Nothing
 \end{code}
 
-The variations:
-\begin{eqnarray*}
-    \true:        &              impl.             & \false:
-\\ S \subseteq T  & v \notin T \implies v \notin S & S \cap T = \emptyset
-\end{eqnarray*}
+\newpage
+\subsubsection{SC Implication by cases}
 
+Given (candidate) atomic side-condition $c$,
+and (pattern) atomic side-condition $p$,
+we want to know if we can assert
+$$ c \implies p \qquad\textrm{or}\qquad c \implies \lnot p$$
+or lack enough information to decide these.
 \begin{code}
 ascimp :: AtmSideCond -> AtmSideCond -> Maybe Bool
+\end{code}
+
+We assume here that $U$ is the ``universe'' of all variables
+(i.e. all the variables free in the conjecture being proven).
+Its occurence below means that deciding the implication
+is not feasible without global knowledge
+of the whole proof goal.
+Note also that $v$ is a variable set in general.
+
+\paragraph{Disjoint implies Disjoint}
+\begin{eqnarray*}
+   v \notin C \implies  v \notin P &\textrm{if}& C \supseteq P
+\\ v \notin C \implies  v \in P &\textrm{if}& C \cup P = U
+\end{eqnarray*}
+\begin{code}
+(Disjoint _ vsC) `ascimp` (Disjoint _ vsP)
+  |  vsP `S.isSubsetOf` vsC  =  Just True
+\end{code}
+
+\paragraph{Disjoint implies Exact}
+\begin{eqnarray*}
+   v \notin C \implies  v = P    && \textrm{insufficient info.}
+\\ v \notin C \implies  v \neq P &\textrm{if}& C \cap P \neq \emptyset
+\end{eqnarray*}
+\begin{code}
+(Disjoint _ vsC) `ascimp` (Disjoint _ vsP)
+  |  vsP `S.isSubsetOf` vsC  =  Just True
+\end{code}
+
+
+
+
+\begin{code}
+-- Disjoint _ vs
+-- Exact    _ vs
+-- Covers   _ vs
+-- Fresh      vs
+\end{code}
+
+
+
+
+Anything else results in no strong conclusion:
+\begin{code}
 ascimp _ _ = Nothing -- for now
 \end{code}
 

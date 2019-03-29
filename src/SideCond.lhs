@@ -87,16 +87,16 @@ This arises when we have side-conditions between lists of variables
 and expressions that occur in substitutions.
 \begin{code}
 data AtmSideCond
- = SD GenVar VarSet -- Side-condition Disjoint
- | SE GenVar VarSet -- Side-condition Equals
- | SS GenVar VarSet -- Side-condition Superset (covers)
- | SP GenVar        -- Side-condition Pre
+ = SD GenVar VarSet -- Disjoint
+ | SE GenVar VarSet -- Equals
+ | SS GenVar VarSet -- Superset (covers)
+ | SP GenVar        -- Pre
  | FR VarSet        -- FResh variables
  deriving (Eq,Ord,Show,Read)
 
-pattern Disjoint gv vs = SD gv vs
-pattern Exact    gv vs = SE gv vs
-pattern Covers   gv vs = SS gv vs
+pattern Disjoint gv vs = SD gv vs  --  vs `intersect`  gv = {}
+pattern Exact    gv vs = SE gv vs  --  vs      =       gv
+pattern Covers   gv vs = SS gv vs  --  vs `supersetof` gv
 pattern IsPre    gv    = SP gv
 pattern Fresh       vs = FR vs
 \end{code}
@@ -700,11 +700,17 @@ Its occurence below means that deciding the implication
 is not feasible without global knowledge
 of the whole proof goal.
 Note also that $v$ is a variable set in general.
+We use $A \disj B$ as short for $A \cap B = \emptyset$,
+and where a predicate is expected, use $A \cap B$
+to denote $A \cap B \neq \emptyset$.
+
+
+%% Disjoint => ...
 
 \paragraph{Disjoint implies Disjoint}
 \begin{eqnarray*}
-   v \notin C \implies  v \notin P &\textrm{if}& C \supseteq P
-\\ v \notin C \implies  v \in P &\textrm{if}& C \cup P = U
+   C \disj v \implies  P \disj v &\textrm{if}& C \supseteq P
+\\ C \disj v \implies  P \cap v  && \textrm{insufficient info.}
 \end{eqnarray*}
 \begin{code}
 (Disjoint _ vsC) `ascimp` (Disjoint _ vsP)
@@ -713,12 +719,81 @@ Note also that $v$ is a variable set in general.
 
 \paragraph{Disjoint implies Exact}
 \begin{eqnarray*}
-   v \notin C \implies  v = P    && \textrm{insufficient info.}
-\\ v \notin C \implies  v \neq P &\textrm{if}& C \cap P \neq \emptyset
+   C \disj v \implies  P = v    && \textrm{insufficient info.}
+\\ C \disj v \implies  P \neq v &\textrm{if}& C \cap P
 \end{eqnarray*}
 \begin{code}
-(Disjoint _ vsC) `ascimp` (Disjoint _ vsP)
-  |  vsP `S.isSubsetOf` vsC  =  Just True
+(Disjoint _ vsC) `ascimp` (Exact _ vsP)
+  |  vsP `overlaps` vsC  =  Just False
+\end{code}
+
+\paragraph{Disjoint implies Covers}
+\begin{eqnarray*}
+   C \disj v \implies  P \supseteq v     && \textrm{insufficient info.}
+\\ C \disj v \implies  P \not\supseteq v && \textrm{insufficient info.}
+\end{eqnarray*}
+
+
+%% Exact => ...
+
+\paragraph{Exact implies Disjoint}
+\begin{eqnarray*}
+   C = v \implies  P \disj v   &\textrm{if}& C \disj P
+\\ C = v \implies  P \cap v    &\textrm{if}& C \cap P
+\end{eqnarray*}
+\begin{code}
+(Exact _ vsC) `ascimp` (Disjoint _ vsP) =  Just (vsC `disjoint` vsP)
+\end{code}
+
+\paragraph{Exact implies Exact}
+\begin{eqnarray*}
+   C = v \implies  P = v     &\textrm{if}& C = P
+\\ C = v \implies  P \neq v  &\textrm{if}& C \neq P
+\end{eqnarray*}
+\begin{code}
+(Exact _ vsC) `ascimp` (Exact _ vsP) =  Just (vsC == vsP)
+\end{code}
+
+\paragraph{Exact implies Covers}
+\begin{eqnarray*}
+   C = v \implies  P \supseteq v      &\textrm{if}& C \subseteq P
+\\ C = v \implies  P \not\supseteq v  &\textrm{if}& C \not\subseteq P
+\end{eqnarray*}
+\begin{code}
+(Exact _ vsC) `ascimp` (Covers _ vsP) =  Just (vsC `S.isSubsetOf` vsP)
+\end{code}
+
+
+%% Covers => ...
+
+\paragraph{Covers implies Disjoint}
+\begin{eqnarray*}
+   C \supseteq v \implies  P \disj v   &\textrm{if}& C \disj P
+\\ C \supseteq v \implies  P \cap v    && \textrm{insufficient info.}
+\end{eqnarray*}
+\begin{code}
+(Covers _ vsC) `ascimp` (Disjoint _ vsP)
+  |  vsP `disjoint` vsC  =  Just True
+\end{code}
+
+\paragraph{Covers implies Exact}
+\begin{eqnarray*}
+   C \supseteq v \implies  P = v    && \textrm{insufficient info.}
+\\ C \supseteq v \implies  P \neq v &\textrm{if}& C \not\supseteq P
+\end{eqnarray*}
+\begin{code}
+(Covers _ vsC) `ascimp` (Exact _ vsP)
+  |  not(vsP `S.isSubsetOf` vsC)  =  Just False
+\end{code}
+
+\paragraph{Covers implies Cover}
+\begin{eqnarray*}
+   C \supseteq v \implies  P \supseteq v     & \textrm{if}& C \subseteq P
+\\ C \supseteq v \implies  P \not\supseteq v && \textrm{insufficient info.}
+\end{eqnarray*}
+\begin{code}
+(Covers _ vsC) `ascimp` (Covers _ vsP)
+  |  vsC `S.isSubsetOf` vsP  =  Just True
 \end{code}
 
 

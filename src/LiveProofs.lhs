@@ -356,8 +356,20 @@ including observing any match failure messages.
 tryLawByName :: LogicSig -> Assertion -> String -> [MatchContext]
                -> YesBut Binding
 tryLawByName logicsig asn@(tC,scC) lnm mcs
-  = do (((_,(tP,_)),_),vts) <- findLaw lnm mcs
-       match vts tC tP
+  = do (((_,(tP,scP)),_),vts) <- findLaw lnm mcs
+       bind <- match vts tC tP
+       scP' <- instantiateSC bind scP
+       if scDischarged scC scP'
+         then Yes bind
+         else But [ "tryLawByName failed"
+                  , "tC="++trTerm 0 tC
+                  , "scC="++trSideCond scC
+                  , "tP="++trTerm 0 tP
+                  , "scP="++trSideCond scP
+                  , "scP'="++trSideCond scP'
+                  , "bind:\n"
+                  , trBinding bind
+                  ]
 \end{code}
 
 Looking up a law by name:
@@ -398,7 +410,8 @@ simpleMatch mc repl vts asnC@(tC,scC) ((n,asn@(tP,scP)),_)
   where
     mkmatch scC scP bind
       =  do scP' <- instantiateSC bind scP
-            if scDischarged (dbg "scC=" scC) (dbg "scP'=" scP')  -- does scC ==> scP'
+            -- does scC ==> scP' ?
+            if scDischarged scC scP'
             then
               case instantiate bind repl of
                 Nothing     ->  []

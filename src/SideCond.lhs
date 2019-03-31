@@ -10,6 +10,7 @@ module SideCond (
   SideCond, AtmSideCond
 , pattern Disjoint, pattern Exact, pattern Covers
 , pattern IsPre, pattern Fresh
+, ascGVar, ascVSet
 -- , pattern Exact, pattern Approx
 -- , pattern Disjoint, pattern Covers, pattern DisjCov, pattern PreDisj
 -- , vscTrue
@@ -104,13 +105,23 @@ We also need to say that some variables are fresh.
 This is not a relation involving a specified term,
 but instead the entire term to which this side-condition is attached.
 
-Sometimes we want the \texttt{GenVar} component
+Sometimes we want the \texttt{GenVar} component,
 \begin{code}
 ascGVar :: AtmSideCond -> Maybe GenVar
 ascGVar (Disjoint gv _)  =  Just gv
-ascGVar (Exact gv _)     =  Just gv
-ascGVar (Covers gv _)    =  Just gv
-ascGVar _                =  Nothing
+ascGVar (Exact    gv _)  =  Just gv
+ascGVar (Covers   gv _)  =  Just gv
+ascGVar (IsPre    gv)    =  Just gv
+ascGVar _                =  Nothing -- Fresh
+\end{code}
+or the \texttt{VarSet} part:
+\begin{code}
+ascVSet :: AtmSideCond -> Maybe VarSet
+ascVSet (Disjoint _ vs)  =  Just vs
+ascVSet (Exact    _ vs)  =  Just vs
+ascVSet (Covers   _ vs)  =  Just vs
+ascVSet (Fresh      vs)  =  Just vs
+ascVSet _                =  Nothing -- IsPre
 \end{code}
 
 

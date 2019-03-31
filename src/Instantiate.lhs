@@ -10,6 +10,7 @@ module Instantiate
 ( instantiate
 , instantiateSC
 ) where
+import Data.Maybe
 import Data.Set(Set)
 import qualified Data.Set as S
 import Data.Map(Map)
@@ -177,35 +178,99 @@ instantiateSC bind ascs
 
 \begin{code}
 instantiateASC :: Monad m => Binding -> AtmSideCond -> m [AtmSideCond]
-instantiateASC bind disj@(Disjoint (StdVar v) vs)
-  = case instVarSet bind vs of
-      But msgs -> fail $ unlines $ msgs
-      Yes (vs') -> instantiateDisjoint vs' $ instantiateVar bind v
-instantiateASC bind ascs = fail "instantiateASC NYfI"
 \end{code}
 
-Instantiate a variable either according to the binding,
+\paragraph{Is a Pre-condition}~
+
+\begin{code}
+instantiateASC _ (IsPre gv) = fail "instantiateASC IsPre NYI"
+\end{code}
+
+\paragraph{Has Variable-Set}~
+
+\begin{code}
+instantiateASC bind asc
+  = case instVarSet bind $ fromJust $ ascVSet asc of
+      But msgs -> fail $ unlines $ msgs
+      Yes (vs') -> instantiateASCvs bind vs' asc
+\end{code}
+
+\paragraph{Is Fresh}~
+
+\begin{code}
+instantiateASCvs bind vs' (Fresh _) = fail "instantiateASC Fresh NYI"
+\end{code}
+
+\paragraph{Has General Variable}~
+
+\begin{code}
+instantiateASCvs bind vs' asc
+  = case ascGVar asc of
+      Just (StdVar v)  -> instantiateASCvsv  bind vs' v  asc
+      Just (LstVar lv) -> instantiateASCvslv bind vs' lv asc
+\end{code}
+
+\paragraph{Has Standard Variable}~
+
+\begin{code}
+instantiateASCvsv bind vs' v (Disjoint _ _)
+  = instantiateDisjoint vs' $ instantiateVar bind v
+instantiateASCvsv bind vs' v (Exact _ _)
+  = fail "instantiateASC Exact NYI"
+instantiateASCvsv bind vs' v (Covers _ _)
+  = fail "instantiateASC Covers NYI"
+\end{code}
+
+\paragraph{Has List-Variable}~
+
+\begin{code}
+instantiateASCvslv bind vs' lv (Disjoint _ _)
+  = instantiateDisjoint vs' $ instantiateLstVar bind lv
+instantiateASCvslv bind vs' lv (Exact _ _)
+  = fail "instantiateASCvslv Exact NYI"
+instantiateASCvslv bind vs' lv (Covers _ _)
+  = fail "instantiateASCvslv Covers NYI"
+\end{code}
+Next,
+Dealing with each condition, now that everything is instantiated.
+
+\subsubsection{Disjointedness}
+
+\begin{code}
+instantiateDisjoint :: Monad m => VarSet -> VarSet -> m [AtmSideCond]
+instantiateDisjoint dvs fvs
+ | fvs `disjoint` dvs = return $ map (mkD dvs) $ S.toList freeTV
+ | otherwise  =  fail "free-vars not disjoint"
+ where
+   freeTV = S.filter (not . isObsGVar) fvs
+   mkD vs gv = Disjoint gv vs
+\end{code}
+
+\subsubsection{Exactness}
+
+\subsubsection{Covering}
+
+\subsubsection{Pre-Condition}
+
+\subsubsection{Freshness}
+
+\subsubsection{Side-condition Variable Instantiation}
+
+Instantiate a (std./list)-variable either according to the binding,
 or by itself if not bound:
 \begin{code}
-instantiateVar :: Binding -> Variable -> VarBind
+instantiateVar :: Binding -> Variable -> VarSet
 instantiateVar bind v
   = case lookupVarBind bind v of
-        Nothing  ->  BindVar v
-        Just bv  ->  bv
-\end{code}
+        Nothing            ->  S.singleton $ StdVar v
+        Just (BindVar v)   ->  S.singleton $ StdVar v
+        Just (BindTerm t)  ->  termFree t
 
-Dealing with each condition, now that everything is instantiated.
-First, disjointness:
-\begin{code}
-instantiateDisjoint :: Monad m => VarSet -> VarBind -> m [AtmSideCond]
-instantiateDisjoint vs (BindVar v)
- | StdVar v `S.member` vs  =  fail "Var not disjoint"
- | otherwise             =  return [] -- True
-instantiateDisjoint vs (BindTerm t)
- | free `disjoint` vs = return $ map (mkD vs) $ S.toList freeTV
- | otherwise  =  fail "Term not disjoint"
- where
-   free  = termFree t
-   freeTV = S.filter (not . isObsGVar) free
-   mkD vs gv = Disjoint gv vs
+instantiateLstVar :: Binding -> ListVar -> VarSet
+instantiateLstVar bind lv
+  = case lookupLstBind bind lv of
+      Nothing              ->  S.singleton $ LstVar lv
+      Just (BindList  vl)  ->  S.fromList vl
+      Just (BindSet   vs)  ->  vs
+      Just (BindTerms ts)  ->  S.unions $ map termFree ts
 \end{code}

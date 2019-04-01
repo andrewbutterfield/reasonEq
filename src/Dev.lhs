@@ -26,6 +26,7 @@ import PropSubst
 import Equality
 import PredAxioms
 import PredExists
+import PredUniv
 \end{code}
 
 We assume the the project directory is defined as an immediate
@@ -53,7 +54,8 @@ devInitState
             , liveProofs = M.empty }
 
 devTheories
-  =  fromJust $ addTheory predExistsTheory $
+  =  fromJust $ addTheory predUnivTheory $
+     fromJust $ addTheory predExistsTheory $
      fromJust $ addTheory predAxiomTheory $
      fromJust $ addTheory equalityTheory $
      fromJust $ addTheory propSubstTheory $

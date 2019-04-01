@@ -9,6 +9,5 @@ bindBD (fromList [((Id "P",VP),BT (C P (Id "\172") [V P (VR (Id "P",VP,WS))]))],
 [SD (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))])]
 @scC:
 [SD (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))])]
-Binding:
+@Binding:
 BD (fromList [((Id "P",VP),BT (C P (Id "\172") [V P (VR (Id "P",VP,WS))]))],fromList [],fromList [((Id "x",VO,[],[]),BS (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])),((Id "y",VO,[],[]),BS (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]))],fromList [((LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "y",VO,WS),[],[])),(fromList [],fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))]))])
-<return> to continue...

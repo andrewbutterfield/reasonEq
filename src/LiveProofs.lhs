@@ -357,9 +357,9 @@ tryLawByName :: LogicSig -> Assertion -> String -> [MatchContext]
                -> YesBut Binding
 tryLawByName logicsig asn@(tC,scC) lnm mcs
   = do (((_,(tP,scP)),_),vts) <- findLaw lnm mcs
-       bind <- match vts tC tP
-       scP' <- instantiateSC bind scP
-       if scDischarged scC scP'
+       bind <- match vts (pdbg "tC" tC) $ pdbg "tP" tP
+       scP' <- instantiateSC (dbg "bind" bind) $ pdbg "scP" scP
+       if scDischarged (pdbg "scC" scC) $ pdbg "scP'" scP'
          then Yes bind
          else But [ "tryLawByName failed"
                   , "tC="++trTerm 0 tC

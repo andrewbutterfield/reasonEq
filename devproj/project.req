@@ -24,13 +24,13 @@ CONJ = (C P (Id "\8801") [B P (Id "\8707") (fromList [GL (LV (VR (Id "x",VO,WS),
 SIDE = [SD (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))])]
 STRAT reduce
 BEGIN SEQZIP
-TERMZIP = (S P (C P (Id "\172") [V P (VR (Id "P",VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])),[Bind' P (Id "\8704") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]),Cons' P (Id "\8801") [B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (C P (Id "\172") [V P (VR (Id "P",VP,WS))])] []])
+TERMZIP = (C P (Id "\8801") [B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (C P (Id "\172") [V P (VR (Id "P",VP,WS))]),B P (Id "\8704") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (S P (C P (Id "\172") [V P (VR (Id "P",VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])))],[])
 BEGIN SEQUENT'
 SIDECOND = [SD (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))])]
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.\8707_\945_rename", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = V P (VR (Id "true",VP,WS))}
 END SEQUENT'
 END SEQZIP
-FPATH: [2,1]
+FPATH: []
 BEGIN LIST STEPS
 (UseLaw (ByMatch (ME [2])) "\172_subst" (BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [((Id "x",VO,[],[]),BS (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]))],fromList [((LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[])),(fromList [],fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "y",VO,WS),[],[]))]))])) [2,1],C P (Id "\8801") [B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (C P (Id "\172") [V P (VR (Id "P",VP,WS))]),B P (Id "\8704") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "\172") [S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "y",VO,WS),[],[]))]))])])
 (UseLaw (ByMatch (ME [1])) "\172_invol" (BD (fromList [((Id "P",VP),BT (B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (C P (Id "\172") [V P (VR (Id "P",VP,WS))])))],fromList [],fromList [],fromList [])) [1],C P (Id "\8801") [C P (Id "\172") [C P (Id "\172") [B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (C P (Id "\172") [V P (VR (Id "P",VP,WS))])]],B P (Id "\8704") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "\172") [S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "y",VO,WS),[],[]))]))])])

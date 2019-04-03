@@ -73,21 +73,13 @@ vP = Vbl (fromJust $ ident "P") PredV Static
 gvP = StdVar vP
 p = fromJust $ pVar vP
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
--- r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
--- ve = Vbl (fromJust $ ident "e") ExprV Static
--- lves = LVbl ve [] []
--- gves = LstVar lves
--- e = fromJust $ eVar ArbType ve
 \end{code}
 
 \subsubsection{Generic Variables}
 
 \begin{code}
 vx = Vbl (fromJust $ ident "x") ObsV Static ; x = StdVar vx
---tx = fromJust $ eVar ArbType vx
 lvxs = LVbl vx [] [] ; xs = LstVar lvxs
--- vy = Vbl (fromJust $ ident "y") ObsV Static ; y = StdVar vy
--- lvys = LVbl vy [] [] ; ys = LstVar lvys
 \end{code}
 
 \newpage
@@ -109,13 +101,38 @@ axUnivDef = preddef ("[]" -.- "def")
                     ([xs] `covers` gvP)
 \end{code}
 
+$$
+  \begin{array}{lll}
+     \AXPEqDef  & \AXPEqDefS  & \AXPEqDefN
+  \end{array}
+$$\par\vspace{-8pt}
+This definition assumes that \texttt{p} and \texttt{q}
+are predicates, or, if expressions, are boolean-valued.
+\begin{code}
+aPEqDef = preddef ("=" -.- "def")
+                  ((p `isEqualTo` q) === univ (p === q))
+                  scTrue
+\end{code}
 
-\newpage
+\textbf{How do we enforce this?
+What is the interaction like with \texttt{Equality} laws
+such as \QNAME{$=$-refl}, or \QNAME{$=$-trans}?}
+
 \subsection{Universal Conjectures}
 
+$$
+  \begin{array}{lll}
+     \CJUnivIdem & \CJUnivIdemS & \CJUnivIdemN
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+cjUnivIdem = preddef ("[]" -.- "idem")
+                (univ (univ p) === univ p)
+                scTrue
+\end{code}
+
 % \begin{array}{lll}
-%    \CJUnivIdem & \CJUnivIdemS & \CJUnivIdemN
-% \\ \CJandUnivDistr & \CJandUnivDistrS & \CJandUnivDistrN
+%    \CJandUnivDistr & \CJandUnivDistrS & \CJandUnivDistrN
 % \\ \CJtrueUniv & \CJtrueUnivS & \CJtrueUnivN
 % \\ \CJfalseUniv & \CJfalseUnivS & \CJfalseUnivN
 % \\ \CJallUnivClosed & \CJallUnivClosedS & \CJallUnivClosedN
@@ -130,25 +147,25 @@ axUnivDef = preddef ("[]" -.- "def")
 %   \end{array}
 % $$\par\vspace{-8pt}
 % \begin{code}
-% axXXX = preddef ("law" -.- "name")
-%   p
-%   scTrue
+% cjXXX = preddef ("law" -.- "name")
+%                 p
+%                 scTrue
 % \end{code}
 
-We now collect all of the above as our axiom set:
+We now collect our axiom set:
 \begin{code}
 predUnivAxioms :: [Law]
 predUnivAxioms
   = map labelAsAxiom
-      [ axUnivDef ]
+      [ axUnivDef, aPEqDef ]
 \end{code}
 
 
-We now collect all of the above as our conjecture set:
+We now collect our conjecture set:
 \begin{code}
 predUnivConjs :: [NmdAssertion]
 predUnivConjs
-  = [ ]
+  = [ cjUnivIdem ]
 \end{code}
 
 

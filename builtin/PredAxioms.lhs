@@ -181,34 +181,7 @@ axAllDumRen = preddef (_forall -.- _alpha -.- "rename")
   ([ys] `notin` gvP)
 \end{code}
 
-\newpage
-Now, defining existential quantification
-and universal closure.
 
-$$
-  \begin{array}{lll}
-     \AXanyODef & & \AXanyODefN
-  \end{array}
-$$\par\vspace{-8pt}
-\begin{code}
-axAnyDef = preddef (_exists -.- "def")
-  ( (exists [xs] p)
-    ===
-    (mkNot $ forall [xs] $ mkNot p) )
-  scTrue
-\end{code}
-
-
-$$
-  \begin{array}{lll}
-     \AXunivClosure & \AXunivClosureS & \AXunivClosureN
-  \end{array}
-$$\par\vspace{-8pt}
-\begin{code}
-axUnivDef = preddef ("[]" -.- "def")
-  ( (univ p) === (forall [xs] p) )
-  ( [xs] `covers` gvP)
-\end{code}
 
 % %% TEMPLATE
 % $$
@@ -228,8 +201,7 @@ predAxioms :: [Law]
 predAxioms
   = map labelAsAxiom
       [ axAllTrue, axAllOne, axAllAndDistr
-      , axOrAllScope, axAllInst, axAllDumRen
-      , axAnyDef, axUnivDef ]
+      , axOrAllScope, axAllInst, axAllDumRen ]
 \end{code}
 
 

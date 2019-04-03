@@ -51,6 +51,10 @@ as the Tourlakis form has useful laws such as the one-point rules
 derived from his axioms by meta-proofs
 \emph{that use non-equational reasoning}.
 $$
+\AXEXISTS
+$$
+
+$$
 \CONJEXISTS
 $$
 
@@ -86,8 +90,22 @@ vy = Vbl (fromJust $ ident "y") ObsV Static ; y = StdVar vy
 lvys = LVbl vy [] [] ; ys = LstVar lvys
 \end{code}
 
-
 \newpage
+\subsection{Existential Axioms}
+
+$$
+  \begin{array}{lll}
+     \AXanyODef & & \AXanyODefN
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+axAnyDef = preddef (_exists -.- "def")
+  ( (exists [xs] p)
+    ===
+    (mkNot $ forall [xs] $ mkNot p) )
+  scTrue
+\end{code}
+
 \subsection{Existential Conjectures}
 
 $$
@@ -175,7 +193,15 @@ cjAnyDumRen = preddef (_exists -.- _alpha -.- "rename")
 %   scTrue
 % \end{code}
 
-We now collect all of the above as our axiom set:
+We now collect our axiom:
+\begin{code}
+predExistsAxioms :: [Law]
+predExistsAxioms
+  = map labelAsAxiom
+      [ axAnyDef ]
+\end{code}
+
+We now collect all of the rest above as conjectures:
 \begin{code}
 predExistsConjs :: [NmdAssertion]
 predExistsConjs
@@ -204,7 +230,7 @@ predExistsTheory
                          , propAxiomName
                          ]
             , known   =  newVarTable
-            , laws    =  []
+            , laws    =  predExistsAxioms
             , proofs  =  []
             , conjs   =  predExistsConjs
             }

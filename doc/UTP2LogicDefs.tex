@@ -965,12 +965,6 @@
 }
 \def\AXAllDummyRenS{\lst y \notin P}
 
-\def\AXUnivClosureL{[P]}
-\def\AXUnivClosureR{\forall \lst x \bullet P}
-\def\AXUnivClosureS{\lst x \supseteq p}
-\def\AXUnivClosureN{\QNAME{$[]$-def}}
-\def\AXUnivClosure{\AXUnivClosureL \equiv (\AXUnivClosureR)}
-
 
 \def\AXPREDGS{
 \begin{array}{lll}
@@ -980,8 +974,6 @@
 \\ \AXorAllOScope & \AXorAllOScopeS & \AXorAllOScopeN
 \\ \AXAllOInst    &                 & \AXAllOInstN
 \\ \AXAllDummyRen & \AXAllDummyRenS & \AXAllDummyRenN
-\\ \AXanyODef     &                 & \AXanyODefN
-\\ \AXunivClosure & \AXUnivClosureS & \AXunivClosureN
 \end{array}
 }
 
@@ -990,6 +982,12 @@
 
 %%% Existential Conjectures =========
 
+
+\def\AXEXISTS{
+\begin{array}{lll}
+   \AXanyODef & & \AXanyODefN
+\end{array}
+}
 
 
 
@@ -1049,6 +1047,13 @@
 \def\AXUnivDefN{\QNAME{univ-def}}
 \def\AXUnivDef{[P] \equiv \forall \lst x \bullet P}
 \def\AXUnivDefS{\lst x \supseteq P}
+
+% \def\AXUnivClosureL{[P]}
+% \def\AXUnivClosureR{\forall \lst x \bullet P}
+% \def\AXUnivClosureS{\lst x \supseteq p}
+% \def\AXUnivClosureN{\QNAME{$[]$-def}}
+% \def\AXUnivClosure{\AXUnivClosureL \equiv (\AXUnivClosureR)}
+
 
 \def\AXPEqDefN{\QNAME{$=$-def}}
 \def\AXPEqDef{P=Q \equiv [P\equiv Q]}

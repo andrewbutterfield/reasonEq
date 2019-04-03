@@ -127,17 +127,65 @@ $$
 $$\par\vspace{-8pt}
 \begin{code}
 cjUnivIdem = preddef ("[]" -.- "idem")
-                (univ (univ p) === univ p)
+                     (univ (univ p) === univ p)
+                     scTrue
+\end{code}
+
+
+$$
+  \begin{array}{lll}
+     \CJandUnivDistr & \CJandUnivDistrS & \CJandUnivDistrN
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+cjAndUnivDistr = preddef (_land -.- "[]" -.- "name")
+                (univ p /\ univ q === univ (p /\ q))
                 scTrue
 \end{code}
 
-% \begin{array}{lll}
-%    \CJandUnivDistr & \CJandUnivDistrS & \CJandUnivDistrN
-% \\ \CJtrueUniv & \CJtrueUnivS & \CJtrueUnivN
-% \\ \CJfalseUniv & \CJfalseUnivS & \CJfalseUnivN
-% \\ \CJallUnivClosed & \CJallUnivClosedS & \CJallUnivClosedN
-% \\ \CJanyUnivClosed & \CJanyUnivClosedS & \CJanyUnivClosedN
-% \end{array}
+$$
+  \begin{array}{lll}
+     \CJtrueUniv & \CJtrueUnivS & \CJtrueUnivN
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+cjUnivTrue = preddef ("univ" -.- "true")
+                     (univ trueP === trueP)
+                     scTrue
+\end{code}
+
+$$
+  \begin{array}{lll}
+     \CJfalseUniv & \CJfalseUnivS & \CJfalseUnivN
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+cjUnivFalse = preddef ("univ" -.- "False")
+                      (univ falseP === falseP)
+                      scTrue
+\end{code}
+
+$$
+  \begin{array}{lll}
+     \CJallUnivClosed & \CJallUnivClosedS & \CJallUnivClosedN
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+cjUnivAllClosed = preddef ("univ" -.- _forall -.- "closed")
+                          ((forall [xs] $ univ p) === univ p)
+                          scTrue
+\end{code}
+
+$$
+  \begin{array}{lll}
+     \CJanyUnivClosed & \CJanyUnivClosedS & \CJanyUnivClosedN
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+cjUnivAnyClosed = preddef ("univ" -.- _exists -.- "closed")
+                          ((exists [xs] $ univ p) === univ p)
+                          scTrue
+\end{code}
 
 
 % %% TEMPLATE
@@ -165,7 +213,9 @@ We now collect our conjecture set:
 \begin{code}
 predUnivConjs :: [NmdAssertion]
 predUnivConjs
-  = [ cjUnivIdem ]
+  = [ cjUnivIdem, cjAndUnivDistr
+    , cjUnivTrue, cjUnivFalse
+    , cjUnivAllClosed, cjUnivAnyClosed ]
 \end{code}
 
 

@@ -21,7 +21,7 @@ module AST ( TermSub, LVarSub
            , pattern Bind, pattern Lam
            , pattern Sub, pattern Iter, pattern Type
            , var,  eVar,  pVar
-           , bind, eBind, pBind
+           , bind, eBind, pBind, uBind
            , lam,  eLam,  pLam
            , binderClass
            , pattern EVal, pattern EVar, pattern ECons
@@ -372,6 +372,8 @@ bind tk n vs tm
 
 eBind typ n vs tm  =  bind (E typ) n vs tm
 pBind     n vs tm  =  bind P       n vs tm
+-- just for universal closure: [p]
+uBind     n    tm  =  return $ B P n S.empty tm
 \end{code}
 
 All variables in a lambda variable-list must have the same class.

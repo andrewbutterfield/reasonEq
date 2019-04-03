@@ -1044,6 +1044,59 @@
 \end{array}
 }
 
+%%%% ==== Universal Closure, axioms and conjectures ============================
+
+\def\AXUnivDefN{\QNAME{univ-def}}
+\def\AXUnivDef{[P] \equiv \forall \lst x \bullet P}
+\def\AXUnivDefS{\lst x \supseteq P}
+
+\def\AXPEqDefN{\QNAME{$=$-def}}
+\def\AXPEqDef{P=Q \equiv [P\equiv Q]}
+\def\AXPEqDefS{}
+
+
+\def\AXUNIVCLOSE{
+\begin{array}{lll}
+   \AXUnivDef & \AXUnivDefS & \AXUnivDefN
+\\ \AXPEqDef  & \AXPEqDefS  & \AXPEqDefN
+\end{array}
+}
+
+\def\CJUnivIdemN{\QNAME{univ-idem}}
+\def\CJUnivIdem{[[P]] \equiv [P]}
+\def\CJUnivIdemS{}
+
+\def\CJandUnivDistrN{\QNAME{$\land$-[]-distr}}
+\def\CJandUnivDistr{[P]\land[Q] \equiv [P\land Q]}
+\def\CJandUnivDistrS{}
+
+\def\CJtrueUnivN{\QNAME{univ-$\textit{true}$}}
+\def\CJtrueUniv{[\textit{true}] \equiv \textit{true} }
+\def\CJtrueUnivS{}
+
+\def\CJfalseUnivN{\QNAME{univ-$\textit{false}$}}
+\def\CJfalseUniv{[\textit{false}] \equiv \textit{false} }
+\def\CJfalseUnivS{}
+
+\def\CJallUnivClosedN{\QNAME{univ-$\forall$-closed}}
+\def\CJallUnivClosed{\forall \lst x \bullet [P] \equiv [P]}
+\def\CJallUnivClosedS{}
+
+\def\CJanyUnivClosedN{\QNAME{univ-$\exists$-closed}}
+\def\CJanyUnivClosed{\exists \lst x \bullet [P] \equiv [P]}
+\def\CJanyUnivClosedS{}
+
+\def\CJUNIVCLOSE{
+\begin{array}{lll}
+   \CJUnivIdem & \CJUnivIdemS & \CJUnivIdemN
+\\ \CJandUnivDistr & \CJandUnivDistrS & \CJandUnivDistrN
+\\ \CJtrueUniv & \CJtrueUnivS & \CJtrueUnivN
+\\ \CJfalseUniv & \CJfalseUnivS & \CJfalseUnivN
+\\ \CJallUnivClosed & \CJallUnivClosedS & \CJallUnivClosedN
+\\ \CJanyUnivClosed & \CJanyUnivClosedS & \CJanyUnivClosedN
+\end{array}
+}
+
 %%%%  ==== Inference Rules =====================================================
 
 

@@ -145,7 +145,9 @@ upTZ (t,(parent:wayup)) =  (True, (ascend t parent, wayup))
 
 ascend :: Term -> Term' -> Term -- should always succeed
 ascend t (Cons' tk i before after)  =  Cons tk i $ wrap before t after
-ascend t (Bind' tk i vs)            =  fromJust $ bind tk i vs t
+ascend t (Bind' tk i vs)
+  | S.null vs                       =  fromJust $ uBind i t -- was a closure
+  | otherwise                       =  fromJust $ bind tk i vs t
 ascend t (Lam' tk i vl)             =  fromJust $ lam tk i vl t
 ascend t (Sub' tk sub)              =  Sub tk t sub
 ascend t (Substn' tk tt lvarsub before v after)  =  Sub tk tt sub

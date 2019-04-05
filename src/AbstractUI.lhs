@@ -421,7 +421,8 @@ matchFocusAgainst lawnm theSig liveProof
           But msgs  -> fail $ unlines msgs
 \end{code}
 
-Third, a deep dive to apply \texttt{match} so we can get back errors
+Third, a deep dive to apply \texttt{match} so we can get back errors.
+\textbf{We should also allow a partial law match to be specified}
 \begin{code}
 tryFocusAgainst :: String -> LogicSig -> LiveProof -> YesBut Binding
 tryFocusAgainst lawnm theSig liveProof

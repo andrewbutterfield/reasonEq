@@ -632,6 +632,16 @@ Easy cases first --- merging same
 \newpage
 \subsection{Side-condition Implication}
 
+\textbf{
+NOTE: this is not right at present.
+We need to handle the presence of pattern variables in the replaceent term
+that where not in a (partially) match pattern.
+The variables wil not having any binding.
+We want to instantiate those in a way that maximises the chance of
+discharging any side condition.
+}
+
+
 We want to determine if one side-condition implies another.
 We have something of the form:
 \begin{eqnarray*}

@@ -221,7 +221,7 @@ In effect, a list-variable target/replacement pattern
 needs to match a substitution!
 
 \begin{description}
-  \item[Substition List-Variable pair to \dots]
+  \item[Substitution List-Variable pair to \dots]
     A substitution.
 \end{description}
 

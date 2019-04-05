@@ -43,7 +43,7 @@ import Dev
 
 \begin{code}
 name = "reasonEq"
-version = "0.7.3.0"
+version = "0.7.4.0"
 name_version = name++" "++version
 \end{code}
 

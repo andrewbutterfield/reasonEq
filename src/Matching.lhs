@@ -280,18 +280,31 @@ $$
    \quad
    \texttt{tMatch Binding}
 $$
+or?
+$$
+\inferrule
+   {n_C = n_P
+    \and
+    \beta;(B_C\cup\fv(t_C),B_P\cup\fv(t_P)) \vdash t_C :: t_P \leadsto \beta'
+   }
+   { \beta;(B_C,B_P) \vdash \xx{n_C}{t_C} :: \xx{n_P}{t_P}
+     \leadsto
+     \beta \uplus \beta'
+   }
+   \quad
+   \texttt{tMatch Binding}
+$$
+
 \begin{code}
 tMatch' vts bind cbvs pbvs (Cls nC tC) (Cls nP tP)
-  | nC == nP  =  tMatch vts bind cbvs pbvs tC tP
+  | nC == nP  =  tMatch vts bind cbvs' pbvs' tC tP
+  where
+    cbvs' = cbvs `S.union` freeVars tC
+    pbvs' = pbvs `S.union` freeVars tP
   -- should cbvs be freeVars tC? similarly for tP?
 \end{code}
 
 
-
-
-
-
-\newpage
 \subsubsection{Iterated Term-Pattern (\texttt{Iter})}
 
 $$
@@ -421,7 +434,7 @@ tsMatch _ _ _ _ _ _  =  error "tsMatch: unexpected mismatch case."
 \subsection{Term-Variable Matching}
 
 We assume here that candidate term and pattern variable
-had the same \texttt{TermKind}.
+have the same \texttt{TermKind}.
 \begin{code}
 tvMatch :: Monad m
        => [VarTable] -> Binding -> CBVS -> PBVS
@@ -429,7 +442,7 @@ tvMatch :: Monad m
 \end{code}
 
 First, if the candidate is a variable
-we go to do variable-on-variable matching:
+we do variable-on-variable matching:
 \begin{code}
 tvMatch vts bind cbvs pbvs (Var tkC vC) tkP vP
   = vMatch vts bind cbvs pbvs vC vP
@@ -468,7 +481,7 @@ $$
 \begin{code}
 tkvMatch :: Monad m => [VarTable] -> Binding
        ->  Candidate -> VarMatchRole -> TermKind -> Variable -> m Binding
--- know vP is not in pbvs, in vts, and it maps to whatP
+-- know vP is not in pbvs, but is in vts, known as whatP
 \end{code}
 $$
 \inferrule
@@ -503,7 +516,7 @@ $$
    \texttt{tvMatch Known-Var-Var}
 $$
 \begin{code}
--- know vP is not in pbvs, in vts, and it maps to whatP
+-- know vP is not in pbvs, but is in vts, known as whatP
 tkvMatch vts bind tC@(Var _ vC) whatP tkP vP
  | vC == vP                                    =  bindVarToVar vP vP bind
  | isKnownConst whatP && tC == vmrConst whatP  =  bindVarToVar vP vC bind
@@ -541,7 +554,7 @@ $$
    \texttt{tvMatch Known-Var-TType}
 $$
 \begin{code}
--- know vP is not in pbvs, in vts, and it maps to whatP
+-- know vP is not in pbvs, but is in vts, known as whatP
 tkvMatch vts bind tC whatP tkP vP
  | isKnownConst whatP && tC == vmrConst whatP     =  bindVarToTerm vP tC bind
  | isExprKind tkP && isKnownVar whatP

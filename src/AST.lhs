@@ -456,6 +456,7 @@ termkind (Var tk v)           =  tk
 termkind (Cons tk n ts)       =  tk
 termkind (Bind tk n vl tm)    =  tk
 termkind (Lam tk n vs tm)     =  tk
+termkind (Cls i tk)           =  P
 termkind (Sub tk tm s)        =  tk
 termkind (Iter tk na ni lvs)  =  tk
 

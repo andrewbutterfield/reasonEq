@@ -60,6 +60,10 @@ instantiate binding (Lam tk n vl tm)
        tm' <- instantiate binding tm
        lam tk n vl' tm'
 
+instantiate binding (Cls n tm)
+  = do tm' <- instantiate binding tm
+       return $ Cls n tm'
+
 instantiate binding (Sub tk tm s)
   = do tm' <- instantiate binding tm
        s' <- instSub binding s

@@ -48,6 +48,7 @@ termFree (Var tk v)           =  S.singleton $ StdVar v
 termFree (Cons tk n ts)       =  S.unions $ map termFree ts
 termFree (Bind tk n vs tm)    =  termFree tm S.\\ vs
 termFree (Lam tk n vl tm)     =  termFree tm S.\\ S.fromList vl
+termFree (Cls _ _)            =  S.empty
 termFree (Sub tk tm s)        =  (tfv S.\\ tgtvs) `S.union` rplvs
    where
      tfv            =  termFree tm

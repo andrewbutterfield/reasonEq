@@ -51,11 +51,13 @@ Algebraically:
 \\   &~|~& Cons_k~i~t^*
       ~|~  Bind_k~i~vs~t
       ~|~  Lam_k~i~vl~t
+      ~|~  Cls~i~t
       ~|~  Sub_k~t~s
 \\ s &::=& Substn~(v,t)^*~(v,v)^*
 \\ t' &::=& Cons'_k~i~t^*~t^*
        ~|~  Bind'_k~i~vs
        ~|~  Lam'_k~i~vl
+       ~|~  Cls'~i
        ~|~  Sub'_k~s
        ~|~  Substn'_k~t~(v,v)^*~(v,t)^*~v~(v,t)^*
 \end{eqnarray*}
@@ -67,6 +69,7 @@ data Term'
                                 [Term] -- terms after focus
   | Bind'   TermKind Identifier VarSet
   | Lam'    TermKind Identifier VarList
+  | Cls'             Identifier
   | Sub'    TermKind Substn
   | Substn' TermKind Term LVarSub TermSubL  -- subst-pairs before, reversed
                                   Variable -- focus target variable
@@ -101,11 +104,12 @@ descend n (Cons tk i ts)
   = case peel n ts of
       Nothing  ->  Nothing
       Just (before,nth,after)  ->  Just (nth,Cons' tk i before after)
-descend 1 (Bind tk i vs t) = Just (t,Bind' tk i vs)
-descend 1 (Lam tk i vl t) = Just (t,Lam' tk i vl)
-descend 1 (Sub tk t sub) = Just (t,Sub' tk sub)
-descend n (Sub tk t sub) = sdescend tk t (n-1) sub
-descend _ _ = Nothing
+descend 1 (Bind tk i vs t)  =  Just (t,Bind' tk i vs)
+descend 1 (Lam tk i vl t)   =  Just (t,Lam' tk i vl)
+descend 1 (Cls i t)         =  Just (t,Cls' i)
+descend 1 (Sub tk t sub)    =  Just (t,Sub' tk sub)
+descend n (Sub tk t sub)    =  sdescend tk t (n-1) sub
+descend _ _                 =  Nothing
 
 sdescend tk t n (Substn tsub lvsub)
   = case peel n (S.toList tsub) of
@@ -149,6 +153,7 @@ ascend t (Bind' tk i vs)
   | S.null vs                       =  fromJust $ uBind i t -- was a closure
   | otherwise                       =  fromJust $ bind tk i vs t
 ascend t (Lam' tk i vl)             =  fromJust $ lam tk i vl t
+ascend t (Cls' i)                   =  Cls i t
 ascend t (Sub' tk sub)              =  Sub tk t sub
 ascend t (Substn' tk tt lvarsub before v after)  =  Sub tk tt sub
   where sub = fromJust (substn (wrap before (v,t) after) (S.toList lvarsub))

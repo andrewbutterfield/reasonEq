@@ -18,7 +18,7 @@ module AST ( TermSub, LVarSub
            , isPredKind, isExprKind, ekType
            , Term, readTerm
            , pattern Val, pattern Var, pattern Cons
-           , pattern Bind, pattern Lam
+           , pattern Bind, pattern Lam, pattern Cls
            , pattern Sub, pattern Iter, pattern Type
            , var,  eVar,  pVar
            , bind, eBind, pBind, uBind
@@ -180,6 +180,8 @@ We consider a term as having the following forms:
     $\B n {v^+} t$ or $\bb n {v^+} t$.
   \item [L] A binding construct that introduces lists of local variables:
     $\L n {v^+} t$ or $\ll n {v^+} t$.
+  \item [X] A closure construct that hides all free variables:
+    $\X n t$ or $\xx n t$.
   \item [S] A term with an explicit substitution of terms for variables:
     $\S t v t$, $\ss t {v^n} {t^n}$ or $t\sigma$.
   \item [I] An iteration of a term over a sequence of list-variables:
@@ -187,7 +189,7 @@ We consider a term as having the following forms:
   \item [T] An embedding of Types: $\T \tau$ or $\tt\tau$.
 \end{description}
 
-\begin{eqnarray}
+\begin{eqnarray*}
    k &\in& Value
 \\ n &\in& Name
 \\ \tau &\in& Type
@@ -198,6 +200,7 @@ We consider a term as having the following forms:
                 ~|~ \B n {v^+} T
                 ~|~ \L n {v^+} T
                 ~|~ \S t V T
+                ~|~ \X n t
                 ~|~ \I \oplus n {lv^+}
                 ~|~ \T \tau
 \\ &=& \kk k
@@ -206,9 +209,10 @@ We consider a term as having the following forms:
      ~|~ \bb n {v^+} t
      ~|~ \ll n {v^+} t
      ~|~ \ss t {v^n} {t^n}
+     ~|~ \xx n t
      ~|~ \ii \bigoplus n {lvs}
      ~|~ \tt \tau
-\end{eqnarray}
+\end{eqnarray*}
 We need to distinguish between predicate terms and expression terms.
 The key difference is that predicates are all of ``type'' $Env \fun \Bool$,
 whereas expressions can have different types.
@@ -320,6 +324,7 @@ data Term
  | C TermKind Identifier [Term]        -- Constructor
  | B TermKind Identifier VarSet Term   -- Binder (unordered)
  | L TermKind Identifier VarList Term  -- Binder (ordered)
+ | X Identifier Term                   -- Closure (always a predicate)
  | S TermKind Term Substn              -- Substitution
  | I TermKind                          -- Iterator
      Identifier  -- top grouping constructor
@@ -341,13 +346,14 @@ all the general variables being bound will have to agree on \texttt{VarClass}.
 
 Kind-neutral patterns:
 \begin{code}
-pattern Val tk k           =  K tk k
-pattern Var tk v          <-  V tk v
-pattern Cons tk n ts       =  C tk n ts
-pattern Bind tk n vs tm   <-  B tk n vs tm
-pattern Lam tk n vl tm    <-  L tk n vl tm
-pattern Sub tk tm s        =  S tk tm s
-pattern Iter tk na ni lvs  =  I tk na ni lvs
+pattern Val  tk k          =   K tk k
+pattern Var  tk v          <-  V tk v
+pattern Cons tk n ts       =   C tk n ts
+pattern Bind tk n vs tm    <-  B tk n vs tm
+pattern Lam  tk n vl tm    <-  L tk n vl tm
+pattern Cls     n tm       =   X n tm
+pattern Sub  tk tm s       =   S tk tm s
+pattern Iter tk na ni lvs  =   I tk na ni lvs
 \end{code}
 
 Smart constructors for variables and binders.
@@ -573,16 +579,18 @@ termConstructTests  =  testGroup "Term Smart Constructors"
 \\ fv(\cc n {ts}) &=& \bigcup fv(ts)
 \\ fv(\bb n {v^+} t) &=& fv(t) \setminus v^+
 \\ fv(\ll n {v^+} t) &=& fv(t) \setminus v^+
+\\ fv(\xx n t) &=& \emptyset
 \\ fv(\ss t {v^n} {t^n}) &=& fv(t) \setminus v^n \cup \bigcup fv(t^n)
 \\ fv(\ii \bigoplus n {lvs}) &=& \emptyset
 \\ fv(\tt \tau) &=& \emptyset
 \end{eqnarray*}
 \begin{code}
 freeVars :: Term -> VarSet
-freeVars (V _ v) = S.singleton $ StdVar v
-freeVars (C _ _ ts) = S.unions $ map freeVars ts
-freeVars (B _ _ vs t) = freeVars t `S.difference` vs
-freeVars (L _ _ vl t) = freeVars t `S.difference` (S.fromList vl)
+freeVars (V _ v)       =  S.singleton $ StdVar v
+freeVars (C _ _ ts)    =  S.unions $ map freeVars ts
+freeVars (B _ _ vs t)  =  freeVars t `S.difference` vs
+freeVars (L _ _ vl t)  =  freeVars t `S.difference` (S.fromList vl)
+freeVars (X _ _)       =  S.empty
 freeVars (S _ t (SN tsub lvsub))
   = (freeVars t `S.difference` tvs) `S.union` rvs
   where
@@ -592,7 +600,7 @@ freeVars (S _ t (SN tsub lvsub))
      rvs = S.unions (map freeVars rtl)
            `S.union`
            (S.map LstVar $ S.fromList rlvl)
--- freeVars (I _ _ _ lvs) = S.empty
+freeVars (I _ _ _ lvs)  =  S.fromList $ map LstVar lvs
 freeVars _ = S.empty
 \end{code}
 
@@ -601,12 +609,14 @@ freeVars _ = S.empty
 
 \begin{code}
 subTerms :: Term -> [Term]
-subTerms t@(C _ _ ts) = t : nub (concat $ map subTerms ts)
-subTerms t@(B _ _ _ t') = t : subTerms t'
-subTerms t@(L _ _ _ t') = t : subTerms t'
+subTerms t@(C _ _ ts)    =  t : nub (concat $ map subTerms ts)
+subTerms t@(B _ _ _ t')  =  t : subTerms t'
+subTerms t@(L _ _ _ t')  =  t : subTerms t'
+subTerms t@(X _ t')      =  t : subTerms t'
 subTerms t@(S _ t' (SN tsub _))
   = t : nub (concat $ map subTerms (t':map snd (S.toList tsub)))
-subTerms t = [t]
+subTerms t               =  [t]
+-- t = head $ subTerms t !!
 \end{code}
 
 

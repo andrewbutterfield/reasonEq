@@ -265,6 +265,29 @@ tMatch' vts bind cbvs pbvs (Lam tkC nC vlC tC) (Lam tkP nP vlP tP)
           vlMatch vts bindT cbvs' pbvs' vlC vlP
 \end{code}
 
+\subsubsection{Closure Term-Pattern (\texttt{Cls})}
+
+$$
+\inferrule
+   {n_C = n_P
+    \and
+    \beta \vdash t_C :: t_P \leadsto \beta'
+   }
+   { \beta \vdash \xx{n_C}{t_C} :: \xx{n_P}{t_P}
+     \leadsto
+     \beta \uplus \beta'
+   }
+   \quad
+   \texttt{tMatch Binding}
+$$
+\begin{code}
+tMatch' vts bind cbvs pbvs (Cls nC tC) (Cls nP tP)
+  | nC == nP  =  tMatch vts bind cbvs pbvs tC tP
+  -- should cbvs be freeVars tC? similarly for tP?
+\end{code}
+
+
+
 
 
 

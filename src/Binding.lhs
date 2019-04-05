@@ -576,10 +576,12 @@ temporalityOf t = termTmpr S.empty [] t
 
 -- for now we process all variables in the same way,
 -- regardless of whether their occurrence is free, binding or bound.
+-- this may make the binding too conservative
 termTmpr vws ts (Var _ (Vbl _ _ vw))  =  termsTmpr (S.insert vw vws) ts
 termTmpr vws ts (Cons _ _ ts')        =  termsTmpr vws (ts'++ts)
 termTmpr vws ts (Bind _ _ vs t)       =  vlTmpr    vws (t:ts) $ S.toList vs
 termTmpr vws ts (Lam _ _ vl t)        =  vlTmpr    vws (t:ts) vl
+termTmpr vsw ts (Cls _ t)             =  vsw -- not termsTmpr vsw ts t
 termTmpr vws ts (Sub _ t sub)         =  subTmpr   vws (t:ts) sub
 termTmpr vws ts (Iter tk a p lvs)     =  vlTmpr    vws ts $ map LstVar lvs
 termTmpr vws ts _                     =  termsTmpr vws ts
@@ -636,6 +638,7 @@ dnTerm' v@(Var tk (Vbl vi vc vw))
 dnTerm' (Cons tk n ts)    =  Cons   tk n $ map dnTerm' ts
 dnTerm' (Bind tk n vs t)  =  dnBind tk n (S.map dnGVar vs) $ dnTerm' t
 dnTerm' (Lam tk n vl t)   =  dnLam  tk n (  map dnGVar vl) $ dnTerm' t
+-- dnTerm' (Cls n t)      No!
 dnTerm' (Sub tk t sub)    =  Sub    tk (dnTerm' t) $ dnSub sub
 dnTerm' (Iter tk a p lvs) =  Iter tk a p (map dnLVar lvs)
 dnTerm' t                 =  t
@@ -1026,6 +1029,7 @@ termTempSync vw (Bind tk i vs t)
  =  ttsBind tk i (S.map (gvarTempSync vw) vs) $ termTempSync vw t
 termTempSync vw (Lam tk i vl t)
  =  ttsLam  tk i (map (gvarTempSync vw) vl) $ termTempSync vw t
+termTempSync vw (Cls i t) = Cls i $ termTempSync vw t
 termTempSync vw (Sub tk t s)       =  Sub tk (termTempSync vw t) $ subTempSync vw s
 termTempSync vw (Iter tk a p lvs)  =  Iter tk a p $ map (lvarTempSync vw) lvs
 termTempSync vw t               =  t

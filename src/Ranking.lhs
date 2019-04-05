@@ -56,6 +56,7 @@ termSize (Var _ _)       = 1
 termSize (Cons _ _ ts)   = 1 + sum (map termSize ts)
 termSize (Bind _ _ vs t) = 1 + S.size vs + termSize t
 termSize (Lam _ _ vl t)  = 1 + length vl + termSize t
+termSize (Cls _ t)       = 1 + termSize t
 termSize (Sub _ t subs)  = 1 + termSize t + subsSize subs
 termSize (Iter _ _ _ vl) = 3 + length vl
 termSize (Type _) = 2

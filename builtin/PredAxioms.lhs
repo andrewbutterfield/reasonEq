@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module PredAxioms (
-  forall, exists, univ
+  forall, exists
 , preddef
 , predAxioms, predAxiomName, predAxiomTheory
 ) where
@@ -84,8 +84,6 @@ forallId = fromJust $ ident _forall
 forall vl p = fromJust $ pBind forallId (S.fromList vl) p
 existsId = fromJust $ ident _exists
 exists vl p = fromJust $ pBind existsId (S.fromList vl) p
-univId = fromJust $ ident "[]"
-univ p = fromJust $ uBind univId p
 \end{code}
 
 \subsubsection{Generic Variables}

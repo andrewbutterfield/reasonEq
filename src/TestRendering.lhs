@@ -223,21 +223,20 @@ trTerm _ (Cons tk n ts)
   =  trId n ++ trContainer ( "(", ",", ")" ) ts
 \end{code}
 
-Binders and substitution are straightforward (for now),
-except that we recognise a particular form of quantifier
-that brackets the term, with no explicit bound variables
-(e.g. $[P]$):
+Binders and substitution are straightforward:
 \begin{code}
-trTerm p (Bind tk n vs t)
-  | length nm == 2 && S.null vs  =  [lbr]++trTerm 0 t++[rbr]
-  | otherwise                    =  trAbs p tk n (S.toList vs) t
-  where
-    nm = idName n
-    [lbr,rbr] = nm
-trTerm p (Lam tk n vl t)      =  trAbs p tk n vl            t
+trTerm p (Bind tk n vs t)  =  trAbs p tk n (S.toList vs) t
+trTerm p (Lam tk n vl t)   =  trAbs p tk n vl            t
 trTerm p (Sub tk t sub)
   | isAtomic t  =       trTerm p t      ++ trSub p sub
   | otherwise   =  "("++trTerm 0 t++")" ++ trSub p sub
+\end{code}
+
+A closure expects the identifier to be of the form leftbracket`_rightbracket
+\begin{code}
+trTerm p (Cls n t)
+  =  lbr ++ trTerm 0 t ++ rbr
+  where (lbr,rbr) = splitClosureId n
 \end{code}
 
 For an iterated construct with listings-variable list of length $n$,

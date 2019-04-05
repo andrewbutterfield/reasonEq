@@ -8,9 +8,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module LexBase
  ( Identifier, readId
- , pattern Identifier, ident
+ , pattern Identifier, ident, brktIdent
  , validIdent, isNameId, isSymbId
- , idName
+ , idName, splitClosureId
  , Token
  , pattern ArbTok, pattern IdTok
  , int_tst_LexBase
@@ -22,6 +22,8 @@ import Data.Set(Set)
 import qualified Data.Set as S
 import Data.Map(Map)
 import qualified Data.Map as M
+
+import Utilities
 
 import Test.HUnit
 import Test.Framework as TF (defaultMain, testGroup, Test)
@@ -95,12 +97,23 @@ ident nm
  | validIdent nm  = return $ Id nm
 ident nm = fail ("'"++nm++"' is not an Identifier")
 
+-- a hack for now - should check for validBracket-ness !!!
+brktIdent :: Monad m => String -> String -> m Identifier
+brktIdent lbr rbr = return $ Id (lbr++'_':rbr)
+
 isNameId, isSymbId :: Identifier -> Bool
 isNameId (Id (c:_))  =  isAlpha c
 isSymbId (Id (c:_))  =  isValidSymbol c
 
 idName :: Identifier -> String
 idName (Id nm) = nm
+\end{code}
+
+\begin{code}
+splitClosureId (Id clsnm)
+  = case splitAround '_' clsnm of
+      Nothing         ->  (clsnm,clsnm)
+      Just (lbr,rbr)  ->  (lbr,rbr)
 \end{code}
 
 Identifier Tests:

@@ -20,17 +20,17 @@ BEGIN MAP LIVE-PROOFS
 BEGIN LIVE-PROOF
 TH-NAME: PredUniv
 CJ-NAME: []_idem
-CONJ = (C P (Id "\8801") [B P (Id "[]") (fromList []) (B P (Id "[]") (fromList []) (V P (VR (Id "P",VP,WS)))),B P (Id "[]") (fromList []) (V P (VR (Id "P",VP,WS)))],[])
+CONJ = (C P (Id "\8801") [X (Id "[_]") (X (Id "[_]") (V P (VR (Id "P",VP,WS)))),X (Id "[_]") (V P (VR (Id "P",VP,WS)))],[])
 SIDE = []
 STRAT reduce
 BEGIN SEQZIP
-TERMZIP = (B P (Id "[]") (fromList []) (B P (Id "[]") (fromList []) (V P (VR (Id "P",VP,WS)))),[Cons' P (Id "\8801") [] [B P (Id "[]") (fromList []) (V P (VR (Id "P",VP,WS)))]])
+TERMZIP = (C P (Id "\8801") [X (Id "[_]") (X (Id "[_]") (V P (VR (Id "P",VP,WS)))),X (Id "[_]") (V P (VR (Id "P",VP,WS)))],[])
 BEGIN SEQUENT'
 SIDECOND = []
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.[]_idem", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = V P (VR (Id "true",VP,WS))}
 END SEQUENT'
 END SEQZIP
-FPATH: [1]
+FPATH: []
 BEGIN LIST STEPS
 END LIST STEPS
 END LIVE-PROOF

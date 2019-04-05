@@ -7,7 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module PredUniv (
-  predUnivConjs, predUnivName, predUnivTheory
+  univ
+, predUnivConjs, predUnivName, predUnivTheory
 ) where
 
 import Data.Maybe
@@ -61,10 +62,9 @@ $$
 \subsection{Predicate Infrastructure}
 
 We need to build some infrastructure here.
-This consists of the predicate variables $P$, $Q$ and $R$,
-expression variable $e$,
-the constants $\forall$, $\exists$, $[]$,
-and a useful collection of generic binder variables: $x,y,\lst x,\lst y$.
+This consists of the predicate variables $P$ and $Q$,
+the constant  $[_]$,
+and a generic binder variable: $\lst x$.
 
 \subsubsection{Predicate and Expression Variables}
 
@@ -73,6 +73,13 @@ vP = Vbl (fromJust $ ident "P") PredV Static
 gvP = StdVar vP
 p = fromJust $ pVar vP
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
+\end{code}
+
+\subsubsection{Predicate Constants}
+
+\begin{code}
+univId = fromJust $ brktIdent "[" "]"
+univ p = Cls univId p
 \end{code}
 
 \subsubsection{Generic Variables}

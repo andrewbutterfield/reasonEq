@@ -25,7 +25,7 @@ module Utilities (
 , pulledFrom, getitem, choose
 , spaced, intcalNN
 , pad
-, splitLast
+, splitLast, splitAround
 , args2str, args2int, entertogo
 )
 where
@@ -141,6 +141,21 @@ listsplit' splits before (t:after)
 \begin{code}
 splitLast [x] = ([],x)
 splitLast (x:xs) = (x:xs',y) where (xs',y) = splitLast xs
+\end{code}
+
+\begin{code}
+splitAround :: (Eq a,Monad m) => a -> [a] -> m ([a],[a])
+splitAround s xs
+  = splitA s [] xs
+  where
+    splitA s _ []  =  fail "splitAround: element not found"
+    splitA s [] (x:xs)
+      | s == x     =  fail "splitAround: empty left sequence"
+    splitA s sx [x]
+      | s == x     =  fail "splitAround: empty right sequence"
+    splitA s sx (x:xs)
+      | s == x     =  return (reverse sx,xs)
+      | otherwise  =  splitA s (x:sx) xs
 \end{code}
 
 \subsubsection{`Peeling' a list}

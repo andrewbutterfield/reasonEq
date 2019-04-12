@@ -86,6 +86,25 @@ which will itself be a list variable:
 \end{eqnarray*}
 This arises when we have side-conditions between lists of variables
 and expressions that occur in substitutions.
+
+To handle certain cases, particularly to do with predicate closure operators,
+we need to introduce the notion of existential side-conditions.
+For example, universal closure needs to be defined as
+$$
+  [P] \defs \forall \lst x \bullet P, \quad \lst x\supseteq P
+$$
+However we have theorems that have no side-condition, such as
+$$
+ [[P]] \equiv [P]
+$$
+
+We cannot match either side against the definition as we cannot discharge the condition.
+The trick is to have a special \emph{existential} side-condition that can be instantiated during
+a proof and discarded once done
+$$
+  [P] \defs \forall \lst x \bullet P, \quad \exists\lst x\supseteq P
+$$
+
 \begin{code}
 data AtmSideCond
  = SD GenVar VarSet -- Disjoint

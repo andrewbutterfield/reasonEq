@@ -8,17 +8,11 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module SideCond (
   SideCond, AtmSideCond
-, pattern Disjoint, pattern Exact, pattern Covers
+, pattern Disjoint, pattern Exact
+, pattern Covers, pattern ExCover
 , pattern IsPre, pattern Fresh
 , ascGVar, ascVSet
--- , pattern Exact, pattern Approx
--- , pattern Disjoint, pattern Covers, pattern DisjCov, pattern PreDisj
--- , vscTrue
--- , addPreSC, addExactSC, addDisjSC, addCoverSC, checkNewSC
---, VarSCMap
-, scTrue
--- , pattern SC, pattern Fresh, pattern VarSCs, sidecond
-, mrgAtmCond, mrgSideCond
+, scTrue, mrgSideCond
 , scDischarged
 , notin, is, covers, fresh, pre
 , int_tst_SideCond
@@ -89,36 +83,54 @@ and expressions that occur in substitutions.
 
 To handle certain cases, particularly to do with predicate closure operators,
 we need to introduce the notion of existential side-conditions.
-For example, universal closure needs to be defined as
+For example, universal closure is typically defined as
 $$
   [P] \defs \forall \lst x \bullet P, \quad \lst x\supseteq P
 $$
-However we have theorems that have no side-condition, such as
+However we have theorems about universal closure
+that have no such side-condition, such as
 $$
  [[P]] \equiv [P]
 $$
-
-We cannot match either side against the definition as we cannot discharge the condition.
-The trick is to have a special \emph{existential} side-condition that can be instantiated during
-a proof and discarded once done
+or
+$$
+  [P \land Q] \equiv [P] \land [Q]
+$$
+We cannot match any instance of universal closure above
+against the definition as we cannot discharge the side-condition.
+The trick is to have a special \emph{existential} side-condition,
+that can be instantiated during a proof,
+and discarded once the proof is complete.
 $$
   [P] \defs \forall \lst x \bullet P, \quad \exists\lst x\supseteq P
 $$
+The basic rule is that a match against the LHS here,
+where $P$ is bound to some predicate term $T$ (say)
+will introduce a proof-local goal side-condition that $\lst x = \fv(T)$.
+However, a match against the rhs,
+where $\lst x$ is bound to variable collection $V$ (say),
+will require the goal to have a side condition that implies
+the non-existential condition $V \supseteq \fv(T)$.
 
+\subsection{Atomic Side-Conditions}
+
+We now introduce our notion of an atomic-side condition.
 \begin{code}
 data AtmSideCond
- = SD GenVar VarSet -- Disjoint
- | SE GenVar VarSet -- Equals
- | SS GenVar VarSet -- Superset (covers)
- | SP GenVar        -- Pre
- | FR VarSet        -- FResh variables
+ = SD  GenVar VarSet -- Disjoint
+ | SE  GenVar VarSet -- Equals
+ | SS  GenVar VarSet -- Superset (covers)
+ | ESS GenVar VarSet -- Exists Superset (covers)
+ | SP  GenVar        -- Pre
+ | FR         VarSet -- FResh variables
  deriving (Eq,Ord,Show,Read)
 
-pattern Disjoint gv vs = SD gv vs  --  vs `intersect`  gv = {}
-pattern Exact    gv vs = SE gv vs  --  vs      =       gv
-pattern Covers   gv vs = SS gv vs  --  vs `supersetof` gv
-pattern IsPre    gv    = SP gv
-pattern Fresh       vs = FR vs
+pattern Disjoint gv vs = SD  gv vs  --  vs `intersect`  gv = {}
+pattern Exact    gv vs = SE  gv vs  --  vs      =       gv
+pattern Covers   gv vs = SS  gv vs  --  vs `supersetof` gv
+pattern ExCover  gv vs = SS  gv vs  --  exists vs `supersetof` gv
+pattern IsPre    gv    = SP  gv
+pattern Fresh       vs = FR  vs
 \end{code}
 We also need to say that some variables are fresh.
 This is not a relation involving a specified term,
@@ -130,6 +142,7 @@ ascGVar :: AtmSideCond -> Maybe GenVar
 ascGVar (Disjoint gv _)  =  Just gv
 ascGVar (Exact    gv _)  =  Just gv
 ascGVar (Covers   gv _)  =  Just gv
+ascGVar (ExCover  gv _)  =  Just gv
 ascGVar (IsPre    gv)    =  Just gv
 ascGVar _                =  Nothing -- Fresh
 \end{code}
@@ -139,50 +152,17 @@ ascVSet :: AtmSideCond -> Maybe VarSet
 ascVSet (Disjoint _ vs)  =  Just vs
 ascVSet (Exact    _ vs)  =  Just vs
 ascVSet (Covers   _ vs)  =  Just vs
+ascVSet (ExCover  _ vs)  =  Just vs
 ascVSet (Fresh      vs)  =  Just vs
 ascVSet _                =  Nothing -- IsPre
 \end{code}
 
 
-
-% \newpage
-% \subsubsection{Variable side-conditions}
-% So, a side-condition associated with a term variable is either exact (\texttt{X}),
-% or approximate (\texttt{A}):
-% \begin{code}
-% data VarSideCond
-%  = X VarSet
-%  | A Bool -- true if term must be a pre-condition
-%      (Maybe VarSet) -- D
-%      (Maybe VarSet) -- C
-%  deriving (Eq,Ord,Show,Read)
-%
-% pattern Exact vs = X vs
-% pattern Approx pre mD mC <- A pre mD mC
-% pattern Disjoint d <- A _ (Just d) _
-% pattern Covers c <- A _ _ (Just c)
-% pattern DisjCov d c <- A _ (Just d) (Just c)
-% pattern PreDisj pre d <- A pre (Just d) _
-% \end{code}
-%
-% Typically a variable side-condition will be built
-% from fragments that specify one of $pre$, $D$, $X$ or $C$,
-% starting with a condition where all parts are ``null'',
-% signalling a trivially true side-condition.
-% \begin{code}
-% vscTrue :: VarSideCond
-% vscTrue = A False Nothing Nothing
-% \end{code}
-
 We will want to merge a set with a maybe-set below:
 \begin{code}
-mrgSet  :: Ord a
-          => (Set a -> Set a -> Set a) -> Set a -> Maybe (Set a)
-          -> Set a
-mrgSet op s Nothing    =  s
-mrgSet op s (Just s')  =  s `op` s'
-
-jmrgSet op s ms = Just $ mrgSet op s ms
+mrgm :: (a -> a -> a) -> a -> Maybe (a) -> a
+mrgm op s Nothing    =  s
+mrgm op s (Just s')  =  s `op` s'
 \end{code}
 
 Variable Side-Condition test values:
@@ -210,258 +190,10 @@ sab  = S.fromList [gv_a,gv_b]
 saa' = S.fromList [gv_a,gv_a']
 sab' = S.fromList [gv_a,gv_b']
 sbb' = S.fromList [gv_b,gv_b']
-
--- sc_pre          =  A True Nothing Nothing
--- sc_exact_a      =  Exact sa
--- sc_exact_b      =  Exact sb
--- sc_exact_ab     =  Exact sab
--- sc_exact_ab'    =  Exact sab'
--- sc_cover_a      =  A False Nothing $ Just sa
--- sc_cover_ab     =  A False Nothing $ Just sab
--- sc_cover_ab'    =  A False Nothing $ Just sab'
--- sc_disjoint_a   =  A False (Just sa) Nothing
--- sc_disjoint_b   =  A False (Just sb) Nothing
--- sc_disjoint_ab  =  A False (Just sab) Nothing
--- sc_D_a_C_b      =  A False (Just sa) (Just sb)
--- sc_D_a_C_bb'    =  A False (Just sa) (Just sbb')
 \end{code}
-
-% \newpage
-% \paragraph{Adding $pre$:} check against any pre-existing $X$ or $C$
-% \begin{code}
-% addPreSC :: Monad m => VarSideCond -> m VarSideCond
-%
-% addPreSC vsc@(Exact x)
-%  | isPreVarSet x   =  return vsc
-%  | otherwise       =  fail "SideCond.addPreSC: exact set is not a precondition"
-%
-% addPreSC vsc@(Covers vs)
-%  | isPreVarSet vs   =  return vsc
-%  | otherwise        =  fail "SideCond.addPreSC: covering set is not a precondition"
-%
-% addPreSC (Approx _ mD mC) = return $ A True mD mC
-% \end{code}
-
-Tests:
-\begin{code}
--- test_add_pre_to_true = testCase "Add pre to trivial SC"
---  ( addPreSC vscTrue  @?=  Just sc_pre )
---
--- test_add_pre_to_exact_ok = testCase "Add pre to exact SC (OK)"
---  ( addPreSC sc_exact_ab  @?=  Just sc_exact_ab )
---
--- test_add_pre_to_exact_fail = testCase "Add pre to exact SC (Fail)"
---  ( addPreSC sc_exact_ab'  @?=  Nothing )
---
--- test_add_pre_to_cover_ok = testCase "Add pre to cover SC (OK)"
---  ( addPreSC sc_cover_ab  @?=  Just sc_cover_ab )
---
--- test_add_pre_to_cover_fail = testCase "Add pre to cover SC (Fail)"
---  ( addPreSC sc_cover_ab'  @?=  Nothing )
---
--- test_add_pre_to_disjoint = testCase "Add pre to disjoint"
---  ( addPreSC sc_disjoint_ab  @?=  Just (A True (Just sab) Nothing) )
---
--- addPreTests = testGroup "SideCond.addPreSC"
---                [ test_add_pre_to_true
---                , test_add_pre_to_exact_ok
---                , test_add_pre_to_exact_fail
---                , test_add_pre_to_cover_ok
---                , test_add_pre_to_cover_fail
---                , test_add_pre_to_disjoint
---                ]
-\end{code}
-
-% \newpage
-% \paragraph{Adding $D$:} check against any pre-existing $X$ or $C$
-% \begin{code}
-% addDisjSC :: Monad m => VarSet -> VarSideCond -> m VarSideCond
-%
-% addDisjSC d vsc@(Exact x)
-%  | d `disjoint` x  =  return vsc
-%  | otherwise       =  fail "SideCond.addDisjSC: exact and disjoint sets overlap"
-%
-% addDisjSC d (Approx pre mD mC@(Just c))
-%  | c `disjoint` d  =  return $ A pre (jmrgSet S.union d mD) mC
-%  | otherwise       =  fail "SideCond.addDisjSC: covering and disjoint sets overlap"
-%
-% addDisjSC d (Approx pre mD mC)
-%   = return $ A pre (jmrgSet S.union d mD) mC
-% \end{code}
-%
-% Tests:
-% \begin{code}
-% test_add_disj_to_true = testCase "Add disjoint to trivial SC"
-%  ( addDisjSC sab vscTrue  @?=  Just sc_disjoint_ab)
-%
-% test_add_disj_to_exact_ok = testCase "Add disjoint to exact (Ok)"
-%  ( addDisjSC sb sc_exact_a  @?=  Just sc_exact_a )
-%
-% test_add_disj_to_exact_fail = testCase "Add disjoint to exact (Fail)"
-%  ( addDisjSC sb sc_exact_ab  @?=  Nothing )
-%
-% test_add_disj_to_cover_ok = testCase "Add disjoint to cover (Ok)"
-%  ( addDisjSC sb sc_cover_a  @?=  Just (A False (Just sb) (Just sa)) )
-%
-% test_add_disj_to_cover_fail = testCase "Add disjoint to cover (Fail)"
-%  ( addDisjSC sb sc_cover_ab  @?=  Nothing )
-%
-% test_add_disj_to_disj = testCase "Add disjoint to disjoint"
-%  ( addDisjSC sa sc_disjoint_b  @?=  Just sc_disjoint_ab )
-%
-% test_add_disj_to_mixed = testCase "Add disjoint to disjoint and cover"
-%  ( addDisjSC sa' sc_D_a_C_b  @?=  Just (A False (Just saa') (Just sb)) )
-%
-% addDisjTests = testGroup "SideCond.addDisjSC"
-%                [ test_add_disj_to_true
-%                , test_add_disj_to_exact_ok
-%                , test_add_disj_to_exact_fail
-%                , test_add_disj_to_cover_ok
-%                , test_add_disj_to_cover_fail
-%                , test_add_disj_to_disj
-%                , test_add_disj_to_mixed
-%                ]
-% \end{code}
-
-% \newpage
-% \paragraph{Adding $X$:} check against any pre-existing $pre$, $D$, $X$ or $C$
-% \begin{code}
-% addExactSC :: Monad m => VarSet -> VarSideCond -> m VarSideCond
-%
-% addExactSC x vsc@(Exact x0)
-%  | x == x0    =  return vsc
-%  | otherwise  =  fail "SideCond.addExactSC: differing exact sets"
-%
-% addExactSC x (Approx pre _ _)
-%  | pre && not (isPreVarSet x) = fail "SideCond.addExactSC: exact set not pre-condition"
-%
-% addExactSC x (Disjoint d)
-%  | x `overlaps` d = fail "SideCond.addExactSC: exact and disjoint sets overlap"
-%
-% addExactSC x (Covers c)
-%  | not(x `S.isSubsetOf` c) = fail "SideCond.addExactSC: exact not inside covering set"
-%
-% addExactSC x _ = return $ Exact x
-% \end{code}
-%
-% Tests:
-% \begin{code}
-% test_add_exact_to_true = testCase "Add exact to trivial SC"
-%  ( addExactSC sab vscTrue  @?=  Just sc_exact_ab)
-%
-% test_add_exact_to_exact_ok = testCase "Add exact to exact (Ok)"
-%  ( addExactSC sa sc_exact_a  @?=  Just sc_exact_a )
-%
-% test_add_exact_to_exact_fail = testCase "Add exact to exact (Fail)"
-%  ( addExactSC sb sc_exact_ab  @?=  Nothing )
-%
-% test_add_exact_to_cover_ok = testCase "Add exact to cover (Ok)"
-%  ( addExactSC sa sc_cover_ab  @?=  Just sc_exact_a )
-%
-% test_add_exact_to_cover_fail = testCase "Add exact to cover (Fail)"
-%  ( addExactSC sb sc_cover_a  @?=  Nothing )
-%
-% test_add_exact_to_disj = testCase "Add exact to disjoint"
-%  ( addExactSC sa sc_disjoint_b  @?=  Just sc_exact_a )
-%
-% test_add_exact_to_mixed = testCase "Add exact to disjoint and cover"
-%  ( addExactSC sb sc_D_a_C_b  @?=  Just sc_exact_b )
-%
-% addExactTests = testGroup "SideCond.addExactSC"
-%                [ test_add_exact_to_true
-%                , test_add_exact_to_exact_ok
-%                , test_add_exact_to_exact_fail
-%                , test_add_exact_to_cover_ok
-%                , test_add_exact_to_cover_fail
-%                , test_add_exact_to_disj
-%                , test_add_exact_to_mixed
-%                ]
-% \end{code}
-
-% \newpage
-% \paragraph{Adding $C$:} check against any pre-existing $pre$, $D$, or $X$
-% \begin{code}
-% addCoverSC :: Monad m => VarSet -> VarSideCond -> m VarSideCond
-%
-% addCoverSC c vsc@(Exact x)
-%  | x `S.isSubsetOf` c  =  return vsc
-%  | otherwise           =  fail "SideCond.addCoverSC: exact set not inside covering set"
-%
-% addCoverSC c (Approx pre _ _)
-%  | pre && not (isPreVarSet c) = fail "SideCond.addCoverSC: cover set not pre-condition"
-%
-% addCoverSC c (Disjoint d)
-%  | c `overlaps` d = fail "SideCond.addCoverSC: cover and disjoint sets overlap"
-%
-% addCoverSC c (Approx pre mD mC)
-%  | S.null c'  =  return $ Exact S.empty
-%  | otherwise  =  return $ A pre mD $ Just c'
-%  where c' = mrgSet S.intersection c mC
-% \end{code}
-%
-% Tests:
-% \begin{code}
-% test_add_cover_to_true = testCase "Add cover to trivial SC"
-%  ( addCoverSC sab vscTrue  @?=  Just sc_cover_ab)
-%
-% test_add_cover_to_exact_ok = testCase "Add cover to exact (Ok)"
-%  ( addCoverSC sab sc_exact_a  @?=  Just sc_exact_a )
-%
-% test_add_cover_to_exact_fail = testCase "Add cover to exact (Fail)"
-%  ( addCoverSC sb sc_exact_ab  @?=  Nothing )
-%
-% test_add_cover_to_cover_c = testCase "Add cover to cover (still cover)"
-%  ( addCoverSC sa sc_cover_ab  @?=  Just sc_cover_a )
-%
-% test_add_cover_to_cover_x = testCase "Add cover to cover (exact)"
-%  ( addCoverSC sb sc_cover_a  @?=  Just (Exact s0) )
-%
-% test_add_cover_to_disj = testCase "Add cover to disjoint"
-%  ( addCoverSC sb sc_disjoint_a  @?=  Just sc_D_a_C_b )
-%
-% test_add_cover_to_mixed = testCase "Add cover to disjoint and cover"
-%  ( addCoverSC sb sc_D_a_C_bb'  @?=  Just sc_D_a_C_b )
-%
-% addCoverTests = testGroup "SideCond.addCoverSC"
-%                [ test_add_cover_to_true
-%                , test_add_cover_to_exact_ok
-%                , test_add_cover_to_exact_fail
-%                , test_add_cover_to_cover_c
-%                , test_add_cover_to_cover_x
-%                , test_add_cover_to_disj
-%                , test_add_cover_to_mixed
-%                ]
-% \end{code}
-
-% \subsubsection{Variable condition-add tests}
-% \begin{code}
-% varSCTests = testGroup "Adding Variable Side-Conditions"
-%                 [ addPreTests
-%                 , addDisjTests
-%                 , addExactTests
-%                 , addCoverTests
-%                 ]
-% \end{code}
-
-% \subsubsection{Merging Variable Conditions}
-%
-% \begin{code}
-% mrgVarSideCond :: Monad m => VarSideCond -> VarSideCond -> m VarSideCond
-% mrgVarSideCond (X vs) vsc = addExactSC vs vsc
-% mrgVarSideCond (A pre mD mC) vsc
-%  = do vsc1 <- mrgD mD vsc
-%       vsc2 <- mrgC mC vsc1
-%       if pre then addPreSC vsc2 else return vsc2
-%  where
-%    mrgD Nothing vsc   =  return vsc
-%    mrgD (Just d) vsc  =  addDisjSC d vsc
-%    mrgC Nothing vsc   =  return vsc
-%    mrgC (Just c) vsc  =  addCoverSC c vsc
-% \end{code}
 
 
 \subsection{Full Side Conditions}
-
 
 If the atomic condition list is empty,
 then we have the trivial side-condition, which is always true:
@@ -477,75 +209,11 @@ v_f  = StdVar $ PreExpr  $ i_f
 v_e' = StdVar $ PostExpr $ i_e
 v_f' = StdVar $ PostExpr $ i_f
 \end{code}
-
-Pattern synonyms and builder
-\begin{code}
--- pattern SideCond n vmap <- SC n vmap
--- pattern Fresh n <- SC n _
--- pattern VarSCs vmap <- SC _ vmap
-
--- sidecond :: Monad m => VarSet -> VarSCMap -> m SideCond
--- sidecond n vmap
---  | all (checkNewSC n) $ M.elems vmap  =  return $ SC n vmap
---  | otherwise  =  fail "fresh set conflicts with variable side-condition"
-\end{code}
-
-% Checking $N$ against a variable-side condition, looking at $X$ and $C$.
-% \begin{code}
-% checkNewSC :: VarSet -> VarSideCond -> Bool
-% checkNewSC n (Exact x)   =  n `disjoint` x
-% checkNewSC n (Covers c)  =  n `disjoint` c
-% checkNewSC _ _           =  True
-% \end{code}
-
-
-Tests:
-\begin{code}
--- test_sidecond_empty = testCase "Trivial side-condition"
---  ( sidecond S.empty M.empty @?=  Just scTrue)
---
--- test_sidecond_freshonly = testCase "Only Freshness"
---  ( sidecond sab M.empty @?=  Just (SC sab M.empty) )
---
--- test_sidecond_one_pre = testCase "One Precondition"
---  ( sidecond S.empty m_e_pre @?=  Just (SC S.empty m_e_pre) )
---
--- test_sidecond_fresh_exact_ok = testCase "Freshness and Exact (Ok)"
---  ( sidecond sb m_e_exact_a @?=  Just (SC sb m_e_exact_a) )
---
--- test_sidecond_fresh_exact_fail = testCase "Freshness and Exact (Fail)"
---  ( sidecond sa m_e_exact_a @?=  Nothing )
---
--- test_sidecond_fresh_cover_ok = testCase "Freshness and Cover (Ok)"
---  ( sidecond sb m_e_cover_a @?=  Just (SC sb m_e_cover_a) )
---
--- test_sidecond_fresh_cover_fail = testCase "Freshness and Cover (Fail)"
---  ( sidecond sa m_e_cover_a @?=  Nothing )
---
--- test_sidecond_fresh_exact_cover_fail = testCase "Freshness, Exact and Cover (Fail)"
---  ( sidecond sa m_e_X_b_f_C_ab @?=  Nothing )
---
--- test_sidecond_fresh_disjoint = testCase "Freshness and Disjoint"
---  ( sidecond saa' m_e_disjoint_ab @?=  Just (SC saa' m_e_disjoint_ab) )
---
-sidecondTests = testGroup "SideCond.sidecond" []
---                [ test_sidecond_empty
---                , test_sidecond_freshonly
---                , test_sidecond_one_pre
---                , test_sidecond_fresh_exact_ok
---                , test_sidecond_fresh_exact_fail
---                , test_sidecond_fresh_cover_ok
---                , test_sidecond_fresh_cover_fail
---                , test_sidecond_fresh_exact_cover_fail
---                , test_sidecond_fresh_disjoint
---                ]
-\end{code}
-
 \newpage
 \subsection{Merging Side-Conditions}
 
 Merging side-conditions is tricky,
-mainly because we have 5 variants giving us 15 combinations,
+mainly because we have 6 variants giving us 21 combinations,
 allowing for symmetry.
 1 variant (freshness), has no associated general variable,
 so applies universally.

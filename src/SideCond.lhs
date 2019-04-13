@@ -14,7 +14,7 @@ module SideCond (
 , ascGVar, ascVSet
 , scTrue, mrgSideCond
 , scDischarged
-, notin, is, covers, fresh, pre
+, notin, is, covers, exCover, fresh, pre
 , int_tst_SideCond
 ) where
 import Data.Char
@@ -128,7 +128,7 @@ data AtmSideCond
 pattern Disjoint gv vs = SD  gv vs  --  vs `intersect`  gv = {}
 pattern Exact    gv vs = SE  gv vs  --  vs      =       gv
 pattern Covers   gv vs = SS  gv vs  --  vs `supersetof` gv
-pattern ExCover  gv vs = SS  gv vs  --  exists vs `supersetof` gv
+pattern ExCover  gv vs = ESS gv vs  --  exists vs `supersetof` gv
 pattern IsPre    gv    = SP  gv
 pattern Fresh       vs = FR  vs
 \end{code}
@@ -233,15 +233,17 @@ mrgAtmCond (Exact    gv vs) ascs
 mrgAtmCond (Covers   gv vs) ascs
   =  splice (mrgCovers gv vs) $ brkspn (cites gv) ascs
 
-cites _  (Fresh _)         =  False
-cites gv (IsPre gv')       =  gv == gv'
+cites _  (Fresh        _)  =  False
+cites gv (IsPre    gv')    =  gv == gv'
 cites gv (Disjoint gv' _)  =  gv == gv'
-cites gv (Exact gv' _)     =  gv == gv'
-cites gv (Covers gv' _)    =  gv == gv'
+cites gv (Exact    gv' _)  =  gv == gv'
+cites gv (Covers   gv' _)  =  gv == gv'
+cites gv (ExCover  gv' _)  =  gv == gv'
 
+brkspn :: (a -> Bool) -> [a] -> ([a], [a], [a])
 brkspn p xs = let
                 (before,rest) = break p xs
-                (found,after) = span  p xs
+                (found,after) = span  p rest
               in (before,found,after)
 
 splice mrg (before,found,after)
@@ -525,21 +527,7 @@ ascimp _ _ = Nothing -- for now
 \newpage
 \subsection{Building side-conditions.}
 
-We want to provide constructors that match how we typically
-specify side-condtions, as a conjunction of the following forms:
-
-\begin{eqnarray*}
-   x,\lst v   \notin  \fv(T) && \mbox{disjoint}
-\\ x,\lst v      =    \fv(T) && \mbox{exact}
-\\ x,\lst v \supseteq \fv(T) && \mbox{covering}
-\\ x,\lst v \mbox{ fresh}    && \mbox{freshness}
-\\ pre      \supseteq \fv(T) && \mbox{pre-condition}
-\end{eqnarray*}
-
-All the code below relies on the fact that
-\texttt{addDisjSC}, \texttt{addExactSC}, \texttt{addCoverSC},
-and \texttt{addPreSC} always succeed
-when their last argument is \texttt{vscTrue}.
+Simple side-condition builders.
 
 $\lst v \notin \fv(T)$
 \begin{code}
@@ -557,6 +545,12 @@ $\lst v \supseteq \fv(T)$
 \begin{code}
 covers :: VarList -> GenVar -> SideCond
 vl `covers` tV  =  [ Covers tV (S.fromList vl) ]
+\end{code}
+
+$\exists\lst v \supseteq \fv(T)$
+\begin{code}
+exCover :: VarList -> GenVar -> SideCond
+vl `exCover` tV  =  [ ExCover tV (S.fromList vl) ]
 \end{code}
 
 fresh $\lst v$

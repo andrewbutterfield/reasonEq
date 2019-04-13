@@ -2,7 +2,7 @@ BEGIN THEORY PredUniv
 DEPS = ["PredAxioms","Equality","PropSubst","PropImpl","PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"]
 KNOWN = VD (fromList [],fromList [],fromList [])
 BEGIN LIST LAWS
-(("[]_def",(C P (Id "\8801") [X (Id "[_]") (V P (VR (Id "P",VP,WS))),B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))],[SS (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])])),Axiom)
+(("[]_def",(C P (Id "\8801") [X (Id "[_]") (V P (VR (Id "P",VP,WS))),B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))],[ESS (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])])),Axiom)
 (("=_def",(C P (Id "\8801") [C P (Id "=") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],X (Id "[_]") (C P (Id "\8801") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))])],[])),Axiom)
 END LIST LAWS
 BEGIN LIST PROOFS

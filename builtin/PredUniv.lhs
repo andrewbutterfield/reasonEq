@@ -104,8 +104,8 @@ $$
 $$\par\vspace{-8pt}
 \begin{code}
 axUnivDef = preddef ("[]" -.- "def")
-                    (univ p === forall [xs] p)
-                    ([xs] `covers` gvP)
+                    (univ p  === forall [xs] p)
+                    ([xs] `exCover` gvP)
 \end{code}
 
 $$

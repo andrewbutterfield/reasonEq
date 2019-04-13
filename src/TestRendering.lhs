@@ -332,6 +332,8 @@ trAtmSideCond (IsPre    gv)    = "pre:"++trGVar gv
 trAtmSideCond (Disjoint gv vs) = trOVSet vs ++  _notin   ++ trGVar gv
 trAtmSideCond (Exact    gv vs) = trOVSet vs ++    "="    ++ trGVar gv
 trAtmSideCond (Covers   gv vs) = trOVSet vs ++ _supseteq ++ trGVar gv
+trAtmSideCond (ExCover  gv vs)
+                    = _exists ++ trOVSet vs ++ _supseteq ++ trGVar gv
 \end{code}
 
 \subsection{Assertions}

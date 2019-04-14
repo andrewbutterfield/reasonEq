@@ -424,13 +424,13 @@ matchFocusAgainst lawnm theSig liveProof
 Third, a deep dive to apply \texttt{match} so we can get back errors.
 \textbf{We should also allow a partial law match to be specified}
 \begin{code}
-tryFocusAgainst :: String -> LogicSig -> LiveProof -> YesBut Binding
-tryFocusAgainst lawnm theSig liveProof
+tryFocusAgainst :: String -> [Int] -> LogicSig -> LiveProof -> YesBut Binding
+tryFocusAgainst lawnm parts theSig liveProof
   = let (tz,_)      =  focus liveProof
         goalt       =  getTZ tz
         scC         =  conjSC liveProof
         ctxts       =  mtchCtxts liveProof
-    in tryLawByName theSig (goalt,scC) lawnm ctxts
+    in tryLawByName theSig (goalt,scC) lawnm parts ctxts
 \end{code}
 
 \subsubsection{Apply Match to Focus}

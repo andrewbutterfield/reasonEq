@@ -27,6 +27,7 @@ module LiveProofs
  ) where
 
 import Data.Maybe
+import Data.List
 import Data.Map (Map)
 import qualified Data.Map as M
 
@@ -353,23 +354,51 @@ matchLawByName logicsig asn lnm mcs
 Sometimes we want to what happens when we single out a law,
 including observing any match failure messages.
 \begin{code}
-tryLawByName :: LogicSig -> Assertion -> String -> [MatchContext]
+tryLawByName :: LogicSig -> Assertion -> String -> [Int] -> [MatchContext]
                -> YesBut Binding
-tryLawByName logicsig asn@(tC,scC) lnm mcs
+tryLawByName logicsig asn@(tC,scC) lnm parts mcs
   = do (((_,(tP,scP)),_),vts) <- findLaw lnm mcs
-       bind <- match vts (pdbg "tC" tC) $ pdbg "tP" tP
+       partsP <- findParts parts $ pdbg "tP" tP
+       bind <- match vts (pdbg "tC" tC) $ pdbg "partsP" partsP
        scP' <- instantiateSC (dbg "bind" bind) $ pdbg "scP" scP
        if scDischarged (pdbg "scC" scC) $ pdbg "scP'" scP'
          then Yes bind
          else But [ "tryLawByName failed"
+                  , "lnm[parts]="++lnm++show parts
                   , "tC="++trTerm 0 tC
                   , "scC="++trSideCond scC
                   , "tP="++trTerm 0 tP
+                  , "partsP="++trTerm 0 partsP
                   , "scP="++trSideCond scP
                   , "scP'="++trSideCond scP'
                   , "bind:\n"
                   , trBinding bind
                   ]
+\end{code}
+
+Finding `parts' of a top-level constructor:
+\begin{code}
+findParts :: Monad m => [Int] -> Term -> m Term
+findParts [] t = return t
+findParts parts (Cons tk n ts)
+  = do ts' <- getParts (filter (>0) parts) ts
+       case ts' of
+         [t']  ->  return t'
+         _     ->  return $ Cons tk n ts'
+findParts parts t
+          = fail ("findParts: "++trTerm 0 t++" "++show parts++" makes no sense")
+
+-- assume all ints positive
+getParts :: Monad m => [Int] -> [a] -> m [a]
+getParts [] xs = fail "getParts: no parts specified"
+getParts (p:_) [] = fail ("getParts: no parts from "++show p++" onwards")
+getParts [p] xs
+ | p <= length xs  = return [xs!!(p-1)]
+ | otherwise = fail ("getParts: no such part number "++show p)
+getParts (p:ps) xs
+ | p <= length xs  = do xps <- getParts ps xs
+                        return ((xs!!(p-1)) : xps)
+ | otherwise = fail ("getParts: no such part number "++show p)
 \end{code}
 
 Looking up a law by name:

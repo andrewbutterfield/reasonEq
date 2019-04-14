@@ -785,19 +785,30 @@ matchLawCommand args state@(reqs, liveProof)
 
 Try matching focus against a specific law, to see what outcome arises
 \begin{code}
-tryMatchDescr = ( "tm", "try match"
-                , "tm nm -- try match focus against law 'nm'"
+tryMatchDescr = ( "tm"
+                , "try match focus"
+                , unlines
+                   [ "tm             -- try match focus..."
+                   , "tm nm          -- ... against law 'nm'"
+                   , "tm n1 .. nk nm -- ... against parts n1..nk of law"
+                   , "               --     n1..nk :  numbers of parts"
+                   , "-- the n1..nk need not be in increasing order"
+                   , "-- parts returned in same order as n1..nk"
+                   ]
                 , tryMatch)
 
 tryMatch :: REPLCmd (REqState, LiveProof)
 tryMatch [] state = return state
 tryMatch args state@( reqs, liveProof)
-  = do case tryFocusAgainst lawnm (logicsig reqs) liveProof of
+  = do case tryFocusAgainst lawnm parts (logicsig reqs) liveProof of
          Yes bind -> putStrLn ("Binding:\n" ++ show bind)
          But msgs -> putStrLn $ unlines' ("Failed:":msgs)
        putStr "<return> to continue..." ; hFlush stdout ; getLine
        return state
-  where lawnm = filter (not . isSpace) $ unwords args
+  where
+    (nums,rest) = span (all isDigit) args
+    parts = map read nums
+    lawnm = filter (not . isSpace) $ unwords rest
 \end{code}
 
 

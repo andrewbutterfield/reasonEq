@@ -16,6 +16,24 @@ END THEORIES
 CURRTHEORY = PredExists
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("PredExists","\8707_false")
+BEGIN LIVE-PROOF
+TH-NAME: PredExists
+CJ-NAME: ∃_false
+CONJ = (C P (Id "\8801") [B P (Id "\8707") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "false",VP,WS))),V P (VR (Id "false",VP,WS))],[])
+SIDE = []
+STRAT reduce
+BEGIN SEQZIP
+TERMZIP = (B P (Id "\8707") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "false",VP,WS))),[Cons' P (Id "\8801") [] [V P (VR (Id "false",VP,WS))]])
+BEGIN SEQUENT'
+SIDECOND = []
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.\8707_false", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = V P (VR (Id "true",VP,WS))}
+END SEQUENT'
+END SEQZIP
+FPATH: [1]
+BEGIN LIST STEPS
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

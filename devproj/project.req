@@ -13,27 +13,9 @@ BEGIN THEORIES
 THNAMES = ["Equality","PredAxioms","PredExists","PredUniv","PropAxioms","PropConj","PropDisj","PropEquiv","PropImpl","PropMixOne","PropNot","PropSubst"]
 SDAG = [[("PredUniv",["PredAxioms","Equality","PropSubst","PropImpl","PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"]),("PredExists",["PredAxioms","Equality","PropSubst","PropImpl","PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PredAxioms",["Equality","PropSubst","PropImpl","PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropSubst",["PropImpl","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropImpl",["PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropMixOne",["PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropConj",["PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropDisj",["PropNot","PropEquiv","PropAxioms"])],[("PropNot",["PropEquiv","PropAxioms"])],[("Equality",["PropAxioms"]),("PropEquiv",["PropAxioms"])],[("PropAxioms",[])]]
 END THEORIES
-CURRTHEORY = PredUniv
+CURRTHEORY = PredExists
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("PredUniv","[]_idem")
-BEGIN LIVE-PROOF
-TH-NAME: PredUniv
-CJ-NAME: []_idem
-CONJ = (C P (Id "\8801") [X (Id "[_]") (X (Id "[_]") (V P (VR (Id "P",VP,WS)))),X (Id "[_]") (V P (VR (Id "P",VP,WS)))],[])
-SIDE = []
-STRAT reduce
-BEGIN SEQZIP
-TERMZIP = (C P (Id "\8801") [X (Id "[_]") (X (Id "[_]") (V P (VR (Id "P",VP,WS)))),X (Id "[_]") (V P (VR (Id "P",VP,WS)))],[])
-BEGIN SEQUENT'
-SIDECOND = []
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.[]_idem", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = V P (VR (Id "true",VP,WS))}
-END SEQUENT'
-END SEQZIP
-FPATH: []
-BEGIN LIST STEPS
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

@@ -321,10 +321,11 @@ Easy cases first --- merging same
 \newpage
 \subsection{Discharging Side-conditions}
 
+An assertion $a$ is a term/side-condition pair $(t,sc)$.
 Consider that case of matching a candidate term and side-condition
-$t_C,sc_C$
+$a_C =(t_C,sc_C)$
 against a pattern term and side-conditions
-$t_P,sc_P$.
+$a_P =(t_P,sc_P)$.
 Once we have a binding $\beta$,
 we can apply it to the pattern side-condition
 to translate it into candidate ``space'':
@@ -332,7 +333,7 @@ $$
 sc_{P'} = \beta(sc_P).
 $$
 In order to discharge the pattern side-condition,
-we must prove that the candidate side-Conditions
+we must prove that the candidate side-conditions
 are sufficient to infer the translated version
 of the candidate side-condition:
 $$
@@ -351,9 +352,20 @@ incomplete and needs to be augmented in this larger context.
 For example, a pattern freshness side-condition for $v$
 requires ensuring that the binding for $v$
 maps to something that is not free in $t_G$.
-
-The other example is the need for existential side-conditions
+Another example is the need for existential side-conditions
 already discussed above.
+
+So the overall matching process is,
+given $t_C$ and $t_P$ chosen from $t_G$ and $t_L$:
+\begin{enumerate}
+  \item match $t_C$ against $t_P$ to obtain binding $\beta_1$;
+  \item complete bindings in the overall contexts
+    determined by $a_G$ and $a_L$ to get $\beta_2$;
+  \item compute $sc_{P'}=\beta_2(sc_P)$;
+  \item check validity of $sc_C \implies sc_{P'}$;
+  \item return $\beta_2$ as final result.
+\end{enumerate}
+
 
 \textbf{
 NOTE: this is not right at present.

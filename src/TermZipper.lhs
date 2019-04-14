@@ -36,6 +36,9 @@ import Test.Framework.Providers.HUnit (testCase)
 -- dbg msg x = trace (msg++show x) x
 \end{code}
 
+\newpage
+\subsection{Introduction}
+
 We define types for the key concepts behind a proof,
 such as the notion of assertions, proof strategies,
 and proof calculations.

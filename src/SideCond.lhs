@@ -319,7 +319,41 @@ Easy cases first --- merging same
 \end{code}
 
 \newpage
-\subsection{Side-condition Implication}
+\subsection{Discharging Side-conditions}
+
+Consider that case of matching a candidate term and side-condition
+$t_C,sc_C$
+against a pattern term and side-conditions
+$t_P,sc_P$.
+Once we have a binding $\beta$,
+we can apply it to the pattern side-condition
+to translate it into candidate ``space'':
+$$
+sc_{P'} = \beta(sc_P).
+$$
+In order to discharge the pattern side-condition,
+we must prove that the candidate side-Conditions
+are sufficient to infer the translated version
+of the candidate side-condition:
+$$
+sc_C \implies sc_{P'}.
+$$
+In general, the candidate term $t_C$ will be a sub-part
+(the ``focus'')
+of a larger goal term $t_G$,
+and the pattern $t_P$ may be part of a complete law $t_L$
+(e.g., one side of an equivalence).
+This can mean that sometimes we need to take this larger
+context in mind.
+This can mean that the binding returned by matching is
+incomplete and needs to be augmented in this larger context.
+
+For example, a pattern freshness side-condition for $v$
+requires ensuring that the binding for $v$
+maps to something that is not free in $t_G$.
+
+The other example is the need for existential side-conditions
+already discussed above.
 
 \textbf{
 NOTE: this is not right at present.

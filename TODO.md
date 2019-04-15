@@ -4,9 +4,7 @@
 
 ## Next Task(s)
 
-* arrange for `LiveProofs.tryLawByName` to do partial matches
-	* we add a list of numbers to the command, and it matches against those terms in an equivalence
-	* e.g. given law 'mylaw' *P≡Q≡R≡S≡T*, then `tm mylaw 1 3 5` will match against *P≡R≡T*, with *Q≡S* as replacement.
+* Note: it looks like there is no need for a "freshness" side-condition. The usual use for this is in an "α_rename" law, but asserting *y̅∉P* seems to be enough, after some careful checking.
 * add in side-condition inference
   * we need to consider when a partial equivalence match does not bind all pattern variables, and in particular those in side-conditions
   * e.g. matching against *[P]* in law *[P] ≡ ∀ x̅ • P*,  where the side-conditions is that *x̅* cover *P*.

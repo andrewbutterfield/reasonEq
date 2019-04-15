@@ -327,7 +327,6 @@ trTermZip (t,wayup) = trTerm 0 $ exitTZ (markfocus t,wayup)
 trSideCond ascs
  = intcalNN ";" (map trAtmSideCond ascs)
 
-trAtmSideCond (Fresh       vs) = "fresh"++ trVSet vs
 trAtmSideCond (IsPre    gv)    = "pre:"++trGVar gv
 trAtmSideCond (Disjoint gv vs) = trOVSet vs ++  _notin   ++ trGVar gv
 trAtmSideCond (Exact    gv vs) = trOVSet vs ++    "="    ++ trGVar gv

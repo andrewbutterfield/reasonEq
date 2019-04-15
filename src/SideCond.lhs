@@ -10,11 +10,11 @@ module SideCond (
   SideCond, AtmSideCond
 , pattern Disjoint, pattern Exact
 , pattern Covers, pattern ExCover
-, pattern IsPre, pattern Fresh
+, pattern IsPre
 , ascGVar, ascVSet
 , scTrue, mrgSideCond
 , scDischarged
-, notin, is, covers, exCover, fresh, pre
+, notin, is, covers, exCover, pre
 , int_tst_SideCond
 ) where
 import Data.Char
@@ -122,7 +122,6 @@ data AtmSideCond
  | SS  GenVar VarSet -- Superset (covers)
  | ESS GenVar VarSet -- Exists Superset (covers)
  | SP  GenVar        -- Pre
- | FR         VarSet -- FResh variables
  deriving (Eq,Ord,Show,Read)
 
 pattern Disjoint gv vs = SD  gv vs  --  vs `intersect`  gv = {}
@@ -130,11 +129,7 @@ pattern Exact    gv vs = SE  gv vs  --  vs      =       gv
 pattern Covers   gv vs = SS  gv vs  --  vs `supersetof` gv
 pattern ExCover  gv vs = ESS gv vs  --  exists vs `supersetof` gv
 pattern IsPre    gv    = SP  gv
-pattern Fresh       vs = FR  vs
 \end{code}
-We also need to say that some variables are fresh.
-This is not a relation involving a specified term,
-but instead the entire term to which this side-condition is attached.
 
 Sometimes we want the \texttt{GenVar} component,
 \begin{code}
@@ -144,7 +139,6 @@ ascGVar (Exact    gv _)  =  Just gv
 ascGVar (Covers   gv _)  =  Just gv
 ascGVar (ExCover  gv _)  =  Just gv
 ascGVar (IsPre    gv)    =  Just gv
-ascGVar _                =  Nothing -- Fresh
 \end{code}
 or the \texttt{VarSet} part:
 \begin{code}
@@ -153,7 +147,6 @@ ascVSet (Disjoint _ vs)  =  Just vs
 ascVSet (Exact    _ vs)  =  Just vs
 ascVSet (Covers   _ vs)  =  Just vs
 ascVSet (ExCover  _ vs)  =  Just vs
-ascVSet (Fresh      vs)  =  Just vs
 ascVSet _                =  Nothing -- IsPre
 \end{code}
 
@@ -223,7 +216,6 @@ We support only one way to assemble a side-condition from atomic ones.
 This uses 5 functions to do the work, one for each atomic variant.
 \begin{code}
 mrgAtmCond :: Monad m => AtmSideCond -> SideCond -> m SideCond
-mrgAtmCond (Fresh       vs) ascs  =  mrgFresh vs ascs
 mrgAtmCond (IsPre    gv)    ascs
   =  splice (mrgIsPre gv) $ brkspn (cites gv) ascs
 mrgAtmCond (Disjoint gv vs) ascs
@@ -233,7 +225,6 @@ mrgAtmCond (Exact    gv vs) ascs
 mrgAtmCond (Covers   gv vs) ascs
   =  splice (mrgCovers gv vs) $ brkspn (cites gv) ascs
 
-cites _  (Fresh        _)  =  False
 cites gv (IsPre    gv')    =  gv == gv'
 cites gv (Disjoint gv' _)  =  gv == gv'
 cites gv (Exact    gv' _)  =  gv == gv'
@@ -597,12 +588,6 @@ $\exists\lst v \supseteq \fv(T)$
 \begin{code}
 exCover :: VarList -> GenVar -> SideCond
 vl `exCover` tV  =  [ ExCover tV (S.fromList vl) ]
-\end{code}
-
-fresh $\lst v$
-\begin{code}
-fresh :: VarList -> SideCond
-fresh vl  =  [ Fresh (S.fromList vl) ]
 \end{code}
 
 $pre \supseteq \fv(T)$

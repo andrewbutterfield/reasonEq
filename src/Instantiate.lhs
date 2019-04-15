@@ -199,12 +199,6 @@ instantiateASC bind asc
       Yes (vs') -> instantiateASCvs bind vs' asc
 \end{code}
 
-\paragraph{Is Fresh}~
-
-\begin{code}
-instantiateASCvs bind vs' (Fresh _) = fail "instantiateASC Fresh NYI"
-\end{code}
-
 \paragraph{Has General Variable}~
 
 \begin{code}
@@ -255,8 +249,6 @@ instantiateDisjoint dvs fvs
 \subsubsection{Covering}
 
 \subsubsection{Pre-Condition}
-
-\subsubsection{Freshness}
 
 \subsubsection{Side-condition Variable Instantiation}
 

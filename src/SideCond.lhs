@@ -312,116 +312,51 @@ Easy cases first --- merging same
 \newpage
 \subsection{Discharging Side-conditions}
 
-An assertion $a$ is a term/side-condition pair $(t,sc)$.
-Consider that case of matching a candidate term and side-condition
-$a_C =(t_C,sc_C)$
-against a pattern term and side-conditions
-$a_P =(t_P,sc_P)$.
-Once we have a binding $\beta$,
-we can apply it to the pattern side-condition
-to translate it into candidate ``space'':
-$$
-sc_{P'} = \beta(sc_P).
-$$
-In order to discharge the pattern side-condition,
-we must prove that the candidate side-conditions
-are sufficient to infer the translated version
-of the candidate side-condition:
-$$
-sc_C \implies sc_{P'}.
-$$
-In general, the candidate term $t_C$ will be a sub-part
-(the ``focus'')
-of a larger goal term $t_G$,
-and the pattern $t_P$ may be part of a complete law $t_L$
-(e.g., one side of an equivalence).
-This can mean that sometimes we need to take this larger
-context in mind.
-This can mean that the binding returned by matching is
-incomplete and needs to be augmented in this larger context.
-
-For example, a pattern freshness side-condition for $v$
-requires ensuring that the binding for $v$
-maps to something that is not free in $t_G$.
-Another example is the need for existential side-conditions
-already discussed above.
-
-So the overall matching process is,
-given $t_C$ and $t_P$ chosen from $t_G$ and $t_L$:
-\begin{enumerate}
-  \item match $t_C$ against $t_P$ to obtain binding $\beta_1$;
-  \item complete bindings in the overall contexts
-    determined by $a_G$ and $a_L$ to get $\beta_2$;
-  \item compute $sc_{P'}=\beta_2(sc_P)$;
-  \item check validity of $sc_C \implies sc_{P'}$;
-  \item return $\beta_2$ as final result.
-\end{enumerate}
-
-
-\textbf{
-NOTE: this is not right at present.
-We need to handle the presence of pattern variables in the replaceent term
-that where not in a (partially) match pattern.
-The variables wil not having any binding.
-We want to instantiate those in a way that maximises the chance of
-discharging any side condition.
-}
-
-
-We want to determine if one side-condition implies another.
+Here we simply check validity of $sc'_C \implies sc'_P$,
+where $sc'_C$ is the candidate side-condition,
+and $sc'_P$ is the pattern side-condition translated into candidate ``space''
+after a succesful match.
 We have something of the form:
-\begin{eqnarray*}
- a_1 \land \dots \land a_m &\implies& c_1 \land \dots \land c_n
-\end{eqnarray*}
-where $a_i$ are the antecedent (match candidate) atomic side-conditions,
-and $c_j$
-are those of the consequent (match pattern mapped by match binding)
-atomic side-conditions.
-This corresponds to showing the validity of:
-\begin{eqnarray*}
- \lnot a_1 \lor \dots \lor \lnot a_m &\lor& c_1 \land \dots \land c_n
-\end{eqnarray*}
+$$
+ \left( \bigwedge_{i \in 1 \dots m} C_i \right)
+ \implies
+ \left( \bigwedge_{j \in 1 \dots n} P_j \right)
+$$
+
 There are some obvious optimisations:
 \begin{enumerate}
   \item Having $n=0$ means the consequent is true, so we are valid.
   \item Having $m=0$ means the antecedent is true,
          so requiring $n=0$ for validity to hold.
-  \item Having $a_i=c_j$ means that we can remove $c_j$
-  \item Having $a_i \implies c_j$ means that we can remove $c_j$.
-  \item Having $a_i \implies \lnot c_j$ means that we cannot be valid.
-  \item If there is no $a_i$ that implies a given $c_j$,
-        then we cannot be valid.
 \end{enumerate}
+In general we can break this down into conjunctions and disjunctions
+of simple implications of the form $C_i \implies P_j$
+using the following laws:
+\begin{eqnarray*}
+   A \land B \implies C &\equiv& (A \implies C) \lor (B \implies C)
+\\ A \implies B \land C &\equiv& (A \implies B) \land (A \implies C)
+\end{eqnarray*}
+Depending on which side we break down first we end up with either:
+$$
+\bigvee_{i \in 1 \dots m}
+  \left( \bigwedge_{j \in 1 \dots n}
+    \left( C_i \implies P_j \right) \right)
+$$
+or
+$$
+\bigwedge_{j \in 1 \dots n}
+  \left( \bigvee_{i \in 1 \dots m}
+    \left( C_i \implies P_j \right) \right)
+$$
+
 \begin{code}
 scDischarged :: SideCond -> SideCond -> Bool
-scDischarged anteSC []      =  True                               -- 1 above
-scDischarged []     cnsqSC  =  False                              -- 2 above
-scDischarged anteSC cnsqSC  =  scDisch3 anteSC (cnsqSC \\ anteSC) -- 3 above
-
-scDisch3     anteSC []      =  True                               -- 1,3 above
-scDisch3     []     cnsqSC  =  False                              -- 2 above
-scDisch3     anteSC (cnsqASC:cnsqASCs)                            -- 4-6 above
-  = ascDisch456 cnsqASC anteSC
-    &&
-    scDisch3 anteSC cnsqASCs
-
-ascDisch456 _ []            =  False                              -- 6 above
-ascDisch456 cnsqASC (anteASC:anteASCs)
-  = case ascImplies cnsqASC anteASC of
-      Just b                -> b                                  -- 4,5 above
-      Nothing               -> ascDisch456 cnsqASC anteASCs       -- 6 above
+scDischarged anteSC []      =  True
+scDischarged []     cnsqSC  =  False
+scDischarged anteSC cnsqSC  =  False
 \end{code}
 
-Given an $a_i$ and $c_j$, there are three possibilities of interest:
-$a_i \implies c_j$, $a_i \implies \lnot c_j$, or neither of these two holds.
-The first two possibilites allow \texttt{ascDisch456} to return a conclusion.
-The third means we need to keep searching the $a_i$s.
 
-We note that an \texttt{IsPre} atomic side-condition
-can only imply itself,
-so will have been swept up earlier by 3 above.
-Any two of the remaining kinds of atomic side-condition can only interact
-as per 4 or 5 above, if they have the same general variable.
 \begin{code}
 ascImplies :: AtmSideCond -> AtmSideCond -> Maybe Bool
 ascImplies cnsqASC anteASC

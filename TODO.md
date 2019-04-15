@@ -4,7 +4,10 @@
 
 ## Next Task(s)
 
-* Note: it looks like there is no need for a "freshness" side-condition. The usual use for this is in an "α_rename" law, but asserting *y̅∉P* seems to be enough, after some careful checking.
+* This has the following implications for live proofs:
+  * We need access to the full goal assertion, not just the focus.
+  * We need to include the candidate side-condition in every proof step, as it may be modified during the proof.
+* modify `Justification` to include previous `Assertion`, not just prevous `Term`.
 * add in side-condition inference
   * we need to consider when a partial equivalence match does not bind all pattern variables, and in particular those in side-conditions
   * e.g. matching against *[P]* in law *[P] ≡ ∀ x̅ • P*,  where the side-conditions is that *x̅* cover *P*.

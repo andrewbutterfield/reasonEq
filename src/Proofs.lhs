@@ -141,7 +141,7 @@ linked to specific collections of laws.
 We will represent proofs as
 a straight calculation from the starting assertion
 associated with the initial strategy
-to the corresponind final assertion.
+to the corresponing final assertion.
 We also record any movements between hypotheses and consequents
 during the proof.
 We need to have an AST zipper to allow sub-terms to be singled out
@@ -149,6 +149,52 @@ for match and replace,
 and some way of recording what happened,
 so that proofs (complete or partial) can be saved,
 restored, and reviewed.
+
+An assertion $a$ is a term/side-condition pair $(t,sc)$.
+Consider that case of matching a candidate term and side-condition
+$a_C =(t_C,sc_C)$
+against a pattern term and side-conditions
+$a_P =(t_P,sc_P)$.
+Once we have a binding $\beta$,
+we can apply it to the pattern side-condition
+to translate it into candidate ``space'':
+$$
+sc_{P'} = \beta(sc_P).
+$$
+In order to discharge the pattern side-condition,
+we must prove that the candidate side-conditions
+are sufficient to infer the translated version
+of the candidate side-condition:
+$$
+sc_C \implies sc_{P'}.
+$$
+In general, the candidate term $t_C$ will be a sub-part
+(the ``focus'')
+of a larger goal term $t_G$,
+and the pattern $t_P$ may be part of a complete law $t_L$
+(e.g., one side of an equivalence).
+This can mean that sometimes we need to take this larger
+context in mind.
+This can also mean that the binding returned by matching is
+incomplete and needs to be augmented in this larger context.
+
+So the overall matching process is,
+given $t_C$ and $t_P$ chosen from $t_G$ and $t_L$:
+\begin{enumerate}
+  \item match $t_C$ against $t_P$ to obtain binding $\beta_1$;
+  \item complete bindings in the overall contexts
+    determined by $a_G$ and $a_L$ to get $\beta_2$;
+    \\ Note that, given existential conditions,
+     this may require $sc_C$ to be extended to $sc'_C$.
+  \item compute $sc'_P=\beta_2(sc_P)$;
+  \item check validity of $sc'_C \implies sc'_P$;
+  \item return $\beta_2$ as final result.
+\end{enumerate}
+This has the following implications for live proofs:
+we need access to $a_G$ and $a_L$;
+and we also need to record $sc'_C$ in every proof-step.
+
+
 
 The actions involved in a proof calculation step are as follows:
 \begin{itemize}
@@ -316,6 +362,7 @@ justSwitched ((j,_):_)  =  isSequentSwitch j
 
 A calculation step records a justification,
 plus the term that was present before the step occurred.
+\textbf{Need to add in side-condition here, replacing Term by Assertion!}
 \begin{code}
 type CalcStep
   = ( Justification  -- step justification

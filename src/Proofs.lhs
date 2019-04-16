@@ -362,11 +362,10 @@ justSwitched ((j,_):_)  =  isSequentSwitch j
 
 A calculation step records a justification,
 plus the term that was present before the step occurred.
-\textbf{Need to add in side-condition here, replacing Term by Assertion!}
 \begin{code}
 type CalcStep
   = ( Justification  -- step justification
-    , Term )         -- previous term
+    , Assertion )         -- previous term
 \end{code}
 
 A calculation is the current term, plus all previous steps.
@@ -427,20 +426,24 @@ showSeqFocus (Hyp i) = "hyp. "++show i
 
 \begin{code}
 displayProof :: Proof -> String
-displayProof (pnm,(trm,sc),strat,(trm',steps))
- = unlines' ( (pnm ++ " : " ++ trTerm 0 trm ++ " " ++ trSideCond sc)
+displayProof (pnm,asn,strat,(trm',steps))
+ = unlines' ( (pnm ++ " : " ++ trAsn asn)
               : ("by '"++strat++"'")
               : "---"
               : ( map shStep steps )
               ++ [trTerm 0 trm'] )
 
 shStep :: CalcStep -> String
-shStep ( (UseLaw how lnm bind dpath), trm )
-   = unlines' [ trTermZip $ pathTZ dpath trm
+shStep ( (UseLaw how lnm bind dpath), asn@(trm,sc) )
+   = unlines' [ trTermZip (pathTZ dpath trm) ++ trSC sc
               , " = '" ++ showHow how++" "++lnm++" @" ++ show dpath ++ "'"
               , trBinding bind
               ]
-shStep ( just,  t )  =  unlines' [trTerm 0 t, showJustification just]
+   where
+     trSC [] = ""
+     trSC sc = " ,  "++trSideCond sc
+shStep ( just, asn )  =  unlines' [ trAsn asn
+                                  , showJustification just ]
 \end{code}
 
 

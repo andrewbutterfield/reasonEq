@@ -347,7 +347,8 @@ moveConsequentFocus liveProof
     in if ok
         then return ( focus_ sz'
                     $ matches_ []
-                    $ stepsSoFar__ ((sw',exitTZ $ fst sz):) liveProof )
+                    $ stepsSoFar__ ((sw',(exitTZ $ fst sz,conjSC liveProof)):)
+                      liveProof )
         else fail "Not in consequent"
 \end{code}
 
@@ -367,7 +368,8 @@ moveFocusToHypothesis i liveProof
         then return ( mtchCtxts_ mcs
                     $ focus_ sz'
                     $ matches_ []
-                    $ stepsSoFar__ ((sw', exitTZ $ fst sz):) liveProof )
+                    $ stepsSoFar__ ((sw', (exitTZ $ fst sz,conjSC liveProof)):)
+                      liveProof )
         else fail ("No hypothesis "++show i)
 \end{code}
 
@@ -387,7 +389,8 @@ moveFocusFromHypothesis liveProof
         then return ( mtchCtxts_ mcs
                     $ focus_ sz'
                     $ matches_ []
-                    $ stepsSoFar__ ((sw', exitTZ $ fst sz):) liveProof )
+                    $ stepsSoFar__ ((sw', (exitTZ $ fst sz,conjSC liveProof)):)
+                      liveProof )
         else fail "Not in hypotheses"
 \end{code}
 
@@ -448,7 +451,7 @@ applyMatchToFocus i liveProof
                               (mName mtch)
                               (mBind mtch)
                               dpath
-                     , exitTZ tz):)
+                     , (exitTZ tz,conjSC liveProof)):)
                     liveProof )
 \end{code}
 
@@ -474,7 +477,8 @@ flattenAssociative opI liveProof
         But msgs -> fail $ unlines' msgs
         Yes t' -> return ( focus_ ((setTZ t' tz),seq')
                          $ matches_ []
-                         $ stepsSoFar__ (((Flatten opI,exitTZ tz)):)
+                         $ stepsSoFar__
+                                 (((Flatten opI,(exitTZ tz,conjSC liveProof))):)
                          $ liveProof )
 \end{code}
 
@@ -489,7 +493,8 @@ groupAssociative opI gs liveProof
         But msgs -> fail $ unlines' msgs
         Yes t' -> return ( focus_ ((setTZ t' tz),seq')
                          $ matches_ []
-                         $ stepsSoFar__ (((Associate opI gs,exitTZ tz)):)
+                         $ stepsSoFar__
+                            (((Associate opI gs,(exitTZ tz,conjSC liveProof))):)
                          $ liveProof )
 \end{code}
 
@@ -561,7 +566,8 @@ lawInstantiate3 law@((lnm,(lawt,lsc)),lprov) varTerms liveProof
        let dpath = fPath liveProof
        return ( focus_ (setTZ ilawt tz,seq')
                 $ stepsSoFar__
-                  ( ( (UseLaw ByInstantiation lnm lbind dpath), exitTZ tz ) : )
+                  ( ( (UseLaw ByInstantiation lnm lbind dpath)
+                    , (exitTZ tz,conjSC liveProof) ) : )
                   liveProof )
 
 mkBinding bind [] = return bind
@@ -587,7 +593,8 @@ cloneHypothesis i land liveProof
         Just ((_,(hypt,_)),_)
           -> return ( focus_ (mkTZ $ PCons land [hypt,currt],seq')
                     $ matches_ []
-                    $ stepsSoFar__ ( ( CloneH i, exitTZ tz ) : ) liveProof )
+                    $ stepsSoFar__ ((CloneH i, (exitTZ tz,conjSC liveProof)):)
+                      liveProof )
 \end{code}
 
 \newpage

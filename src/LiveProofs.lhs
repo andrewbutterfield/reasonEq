@@ -564,7 +564,7 @@ undoCalcStep :: LiveProof -> LiveProof
 undoCalcStep liveProof
   = case stepsSoFar liveProof of
       []                       ->  liveProof
-      ((just,term):prevSteps)
+      ((just,(term,_)):prevSteps)
         ->  matches_ []
             $ fPath_ []
             $ stepsSoFar_ prevSteps
@@ -628,8 +628,9 @@ dispLiveProof liveProof
  where (trm,sc) = conjecture liveProof
 
 shLiveStep :: CalcStep -> String
-shLiveStep ( just, trm )
-  = unlines' [ trTerm 0 trm, showJustification just]
+shLiveStep ( just, asn )
+  = unlines' [ trAsn asn 
+             , showJustification just]
 
 displayMatches :: Matches -> String
 displayMatches []  =  ""

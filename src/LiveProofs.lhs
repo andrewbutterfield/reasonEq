@@ -380,10 +380,10 @@ First, try the structural match.
                    , trTerm 0 tC ++ " :: " ++ trTerm 0 partsP
                    , ""
                    , "lnm[parts]="++lnm++show parts
-                   , "tC="++trTerm 0 tC
-                   , "scC="++trSideCond scC
                    , "tP="++trTerm 0 tP
                    , "partsP="++trTerm 0 partsP
+                   , "tC="++trTerm 0 tC
+                   , "scC="++trSideCond scC
                    , ""
                    ]++msgs)
 \end{code}
@@ -412,13 +412,19 @@ Next, instantiate the pattern side-condition using the bindings.
                    ]++msgs)
 \end{code}
 
+\newpage
 Finally, try to discharge the instantiated side-condition:
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     trySCDischarge bind tP partsP scP scP'
       = do  if scDischarged scC scP'
               then Yes bind
-              else But [ "tryLawByName failed"
+              else But [ "try s.c. discharge failed"
+                       , ""
+                       , trSideCond scC
+                         ++ " " ++ _implies ++ " " ++
+                         trSideCond scP'
+                       , ""
                        , "lnm[parts]="++lnm++show parts
                        , "tC="++trTerm 0 tC
                        , "scC="++trSideCond scC

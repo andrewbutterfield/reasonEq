@@ -351,29 +351,76 @@ matchLawByName logicsig asn lnm mcs
       return $ domatch logicsig vts asn law
 \end{code}
 
+\newpage
+\subsubsection{Trying a Match}
+
 Sometimes we want to what happens when we single out a law,
 including observing any match failure messages.
+Here we painstakingly check every monadic call from \texttt{match} onwards,
+and report the outcome.
 \begin{code}
 tryLawByName :: LogicSig -> Assertion -> String -> [Int] -> [MatchContext]
                -> YesBut Binding
 tryLawByName logicsig asn@(tC,scC) lnm parts mcs
   = do (((_,(tP,scP)),_),vts) <- findLaw lnm mcs
        partsP <- findParts parts $ pdbg "tP" tP
-       bind <- match vts (pdbg "tC" tC) $ pdbg "partsP" partsP
-       scP' <- instantiateSC (dbg "bind" bind) $ pdbg "scP" scP
-       if scDischarged (pdbg "scC" scC) $ pdbg "scP'" scP'
-         then Yes bind
-         else But [ "tryLawByName failed"
-                  , "lnm[parts]="++lnm++show parts
-                  , "tC="++trTerm 0 tC
-                  , "scC="++trSideCond scC
-                  , "tP="++trTerm 0 tP
-                  , "partsP="++trTerm 0 partsP
-                  , "scP="++trSideCond scP
-                  , "scP'="++trSideCond scP'
-                  , "bind:\n"
-                  , trBinding bind
-                  ]
+       tryMatch vts tP partsP scP
+  where
+\end{code}
+
+First, try the structural match.
+\begin{code}
+-- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
+    tryMatch vts tP partsP scP
+      = case match vts (pdbg "tC" tC) $ pdbg "partsP" partsP of
+          Yes bind  ->  tryInstantiateSC bind tP partsP scP
+          But msgs
+           -> But  [ "tryMatch failed"
+                   , ""
+                   , trTerm 0 tC ++ " :: " ++ trTerm 0 partsP
+                   , ""
+                   , "lnm[parts]="++lnm++show parts
+                   , "tC="++trTerm 0 tC
+                   , "scC="++trSideCond scC
+                   , "tP="++trTerm 0 tP
+                   , "partsP="++trTerm 0 partsP
+                   , ""
+                   ]
+\end{code}
+
+Missing, the phase where we deal with unbound/unmatched variables
+from the rest of the pattern-law.
+
+Next, instantiate the pattern side-condition using the bindings.
+\begin{code}
+-- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
+    tryInstantiateSC bind tP partsP scP
+      = do  scP' <- instantiateSC (dbg "bind" bind) $ pdbg "scP" scP
+            trySCDischarge bind tP partsP scP scP'
+\end{code}
+
+Finally, try to discharge the instantiated side-condition:
+\begin{code}
+-- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
+    trySCDischarge bind tP partsP scP scP'
+      = do  if scDischarged (pdbg "scC" scC) $ pdbg "scP'" scP'
+              then Yes bind
+              else But [ "tryLawByName failed"
+                       , "lnm[parts]="++lnm++show parts
+                       , "tC="++trTerm 0 tC
+                       , "scC="++trSideCond scC
+                       , "tP="++trTerm 0 tP
+                       , "partsP="++trTerm 0 partsP
+                       , "scP="++trSideCond scP
+                       , "scP'="++trSideCond scP'
+                       , "bind:\n"
+                       , trBinding bind
+                       ]
+\end{code}
+
+Done.
+\begin{code}
+-- end tryLawByName
 \end{code}
 
 Finding `parts' of a top-level constructor:
@@ -629,7 +676,7 @@ dispLiveProof liveProof
 
 shLiveStep :: CalcStep -> String
 shLiveStep ( just, asn )
-  = unlines' [ trAsn asn 
+  = unlines' [ trAsn asn
              , showJustification just]
 
 displayMatches :: Matches -> String

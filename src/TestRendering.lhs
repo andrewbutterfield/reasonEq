@@ -398,7 +398,7 @@ trBinding :: Binding -> String
 trBinding = trBinding' . dumpBinding
 
 trBinding' (vb,sb,lb,llb)
- = "{ " ++ seplist "," id (map trVB vb ++ map trSB sb ++ map trLB lb)
+ = "{ " ++ seplist ", " id (map trVB vb ++ map trSB sb ++ map trLB lb)
         ++ " }"
 
 trAssoc tr pairs = "{ " ++ seplist ", " tr pairs ++ " }"
@@ -414,8 +414,6 @@ trLB ((i,vc,is,js),lvb)
     (if nowt then "" else "\\") ++
     (if noIs then "" else seplist "," trId is) ++
     (if noJs then "" else ";" ++ seplist "," trId js) ++
-    ")"
-    ++
     spaced _maplet ++ trLstVarBind lvb
   where
     noIs = null is

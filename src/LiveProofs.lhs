@@ -363,7 +363,7 @@ tryLawByName :: LogicSig -> Assertion -> String -> [Int] -> [MatchContext]
                -> YesBut Binding
 tryLawByName logicsig asn@(tC,scC) lnm parts mcs
   = do (((_,(tP,scP)),_),vts) <- findLaw lnm mcs
-       partsP <- findParts parts $ pdbg "tP" tP
+       partsP <- findParts parts tP
        tryMatch vts tP partsP scP
   where
 \end{code}
@@ -372,10 +372,10 @@ First, try the structural match.
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryMatch vts tP partsP scP
-      = case match vts (pdbg "tC" tC) $ pdbg "partsP" partsP of
+      = case match vts tC partsP of
           Yes bind  ->  tryInstantiateSC bind tP partsP scP
           But msgs
-           -> But  [ "tryMatch failed"
+           -> But ([ "try match failed"
                    , ""
                    , trTerm 0 tC ++ " :: " ++ trTerm 0 partsP
                    , ""
@@ -385,7 +385,7 @@ First, try the structural match.
                    , "tP="++trTerm 0 tP
                    , "partsP="++trTerm 0 partsP
                    , ""
-                   ]
+                   ]++msgs)
 \end{code}
 
 Missing, the phase where we deal with unbound/unmatched variables
@@ -395,15 +395,28 @@ Next, instantiate the pattern side-condition using the bindings.
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryInstantiateSC bind tP partsP scP
-      = do  scP' <- instantiateSC (dbg "bind" bind) $ pdbg "scP" scP
-            trySCDischarge bind tP partsP scP scP'
+      = case instantiateSC bind scP of
+          Yes scP'  ->  trySCDischarge bind tP partsP scP scP'
+          But msgs
+           -> But ([ "try s.c. instantiation failed"
+                   , ""
+                   , trBinding bind ++ "("++trSideCond scP++")"
+                   , ""
+                   , "lnm[parts]="++lnm++show parts
+                   , "tC="++trTerm 0 tC
+                   , "scC="++trSideCond scC
+                   , "tP="++trTerm 0 tP
+                   , "partsP="++trTerm 0 partsP
+                   , "scP="++trSideCond scP
+                   , ""
+                   ]++msgs)
 \end{code}
 
 Finally, try to discharge the instantiated side-condition:
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     trySCDischarge bind tP partsP scP scP'
-      = do  if scDischarged (pdbg "scC" scC) $ pdbg "scP'" scP'
+      = do  if scDischarged scC scP'
               then Yes bind
               else But [ "tryLawByName failed"
                        , "lnm[parts]="++lnm++show parts

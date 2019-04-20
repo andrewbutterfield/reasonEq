@@ -316,19 +316,26 @@ Here we simply check validity of $sc'_C \implies sc'_P$,
 where $sc'_C$ is the candidate side-condition,
 and $sc'_P$ is the pattern side-condition translated into candidate ``space''
 after a succesful match.
+\begin{code}
+scDischarged :: SideCond -> SideCond -> Bool
+\end{code}
 We have something of the form:
 $$
  \left( \bigwedge_{i \in 1 \dots m} C_i \right)
  \implies
  \left( \bigwedge_{j \in 1 \dots n} P_j \right)
 $$
-
-There are some obvious optimisations:
+There is one obvious optimisation:
 \begin{enumerate}
   \item Having $n=0$ means the consequent is true, so we are valid.
   \item Having $m=0$ means the antecedent is true,
-         so requiring $n=0$ for validity to hold.
+         but we still meed to check consequents because they could true
+         in and of themselves.
 \end{enumerate}
+\begin{code}
+scDischarged _ []  =  True
+scDischarged [] _  =  False -- for now
+\end{code}
 In general we can break this down into conjunctions and disjunctions
 of simple implications of the form $C_i \implies P_j$
 using the following laws:
@@ -348,12 +355,16 @@ $$
   \left( \bigvee_{i \in 1 \dots m}
     \left( C_i \implies P_j \right) \right)
 $$
+\textbf{NOT SURE ABOUT THE ABOVE!!! NEED TO CHECK}
+We are going to go with the $\bigvee_i(\bigwedge_j (\dots))$ version:
+\begin{code}
+scDischarged (anteASC:anteSC) cnsqSC
+ | scConjDischarged anteASC True cnsqSC  =  True
+ | otherwise                             =  scDischarged anteSC cnsqSC
+\end{code}
 
 \begin{code}
-scDischarged :: SideCond -> SideCond -> Bool
-scDischarged anteSC []      =  True
-scDischarged []     cnsqSC  =  False
-scDischarged anteSC cnsqSC  =  False
+scConjDischarged _ _ _ = False
 \end{code}
 
 

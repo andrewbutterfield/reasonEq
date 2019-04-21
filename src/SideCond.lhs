@@ -355,8 +355,6 @@ $$
   \left( \bigvee_{i \in 1 \dots m}
     \left( C_i \implies P_j \right) \right)
 $$
-\textbf{NOT SURE ABOUT THE ABOVE!!! NEED TO CHECK}
-We are going to go with the $\bigvee_i(\bigwedge_j (\dots))$ version:
 \begin{code}
 scDischarged (anteASC:anteSC) cnsqSC
  | scConjDischarged anteASC True cnsqSC  =  True
@@ -378,133 +376,95 @@ ascImplies _       _                   =  Nothing
 \newpage
 \subsubsection{SC Implication by cases}
 
-Given (candidate) atomic side-condition $c$,
-and (pattern) atomic side-condition $p$,
-we want to know if we can assert
-$$ c \implies p \qquad\textrm{or}\qquad c \implies \lnot p$$
-or lack enough information to decide these.
+We use $P$ to denote the common general variable,
+and the $X$ and $Y$ denote respectively the candidate and pattern variable-sets.
+We note also that the identity side-condition $X=P$ can only occur
+on the candidate side.
+For now we do not handle pre-condition side-conditions (\texttt{IsPre}).
+\begin{eqnarray*}
+   X \supseteq P \implies Y \supseteq P
+   &\leadsto&
+   \true ~\cond{~X \supseteq Y~}~ ?
+\\ X \supseteq P \implies Y \disj P
+   &\leadsto&
+   \false ~\cond{~Y \supseteq X~}~ ?
+\\ X \disj P \implies Y \supseteq P
+   &\leadsto&
+   \false ~\cond{~X \supseteq Y~}~ ?
+\\ X \disj P \implies Y \disj P
+   &\leadsto&
+   \true  ~\cond{~X \supseteq Y~}~ ?
+\\ X = P \implies Y \supseteq P
+   &\equiv&
+   Y \supseteq X
+\\ X = P \implies Y \disj P
+   &\equiv&
+   Y \disj X
+\end{eqnarray*}
 \begin{code}
 ascimp :: AtmSideCond -> AtmSideCond -> Maybe Bool
 \end{code}
 
-We assume here that $U$ is the ``universe'' of all variables
-(i.e. all the variables free in the conjecture being proven).
-Its occurence below means that deciding the implication
-is not feasible without global knowledge
-of the whole proof goal.
-Note also that $v$ is a variable set in general.
-We use $A \disj B$ as short for $A \cap B = \emptyset$,
-and where a predicate is expected, use $A \cap B$
-to denote $A \cap B \neq \emptyset$.
 
-
-%% Disjoint => ...
-
-\paragraph{Disjoint implies Disjoint}
 \begin{eqnarray*}
-   C \disj v \implies  P \disj v &\textrm{if}& C \supseteq P
-\\ C \disj v \implies  P \cap v  && \textrm{insufficient info.}
+   X \supseteq P \implies Y \supseteq P
+   &\leadsto&
+   \true ~\cond{~Y \subseteq X~}~ ?
 \end{eqnarray*}
 \begin{code}
-(Disjoint _ vsC) `ascimp` (Disjoint _ vsP)
-  |  vsP `S.isSubsetOf` vsC  =  Just True
+(Covers _ vsX) `ascimp` (Covers _ vsY) | vsY `S.isSubsetOf` vsX = Just True
 \end{code}
 
-\paragraph{Disjoint implies Exact}
 \begin{eqnarray*}
-   C \disj v \implies  P = v    && \textrm{insufficient info.}
-\\ C \disj v \implies  P \neq v &\textrm{if}& C \cap P
+   X \supseteq P \implies Y \disj P
+   &\leadsto&
+   \false ~\cond{~X \subseteq Y~}~ ?
 \end{eqnarray*}
 \begin{code}
-(Disjoint _ vsC) `ascimp` (Exact _ vsP)
-  |  vsP `overlaps` vsC  =  Just False
+(Covers _ vsX) `ascimp` (Disjoint _ vsY) | vsX `S.isSubsetOf` vsY = Just False
 \end{code}
 
-\paragraph{Disjoint implies Covers}
 \begin{eqnarray*}
-   C \disj v \implies  P \supseteq v     && \textrm{insufficient info.}
-\\ C \disj v \implies  P \not\supseteq v && \textrm{insufficient info.}
-\end{eqnarray*}
-
-
-%% Exact => ...
-
-\paragraph{Exact implies Disjoint}
-\begin{eqnarray*}
-   C = v \implies  P \disj v   &\textrm{if}& C \disj P
-\\ C = v \implies  P \cap v    &\textrm{if}& C \cap P
+   X \disj P \implies Y \supseteq P
+   &\leadsto&
+   \false ~\cond{~Y \subseteq X~}~ ?
 \end{eqnarray*}
 \begin{code}
-(Exact _ vsC) `ascimp` (Disjoint _ vsP) =  Just (vsC `disjoint` vsP)
-\end{code}
-
-\paragraph{Exact implies Exact}
-\begin{eqnarray*}
-   C = v \implies  P = v     &\textrm{if}& C = P
-\\ C = v \implies  P \neq v  &\textrm{if}& C \neq P
-\end{eqnarray*}
-\begin{code}
-(Exact _ vsC) `ascimp` (Exact _ vsP) =  Just (vsC == vsP)
-\end{code}
-
-\paragraph{Exact implies Covers}
-\begin{eqnarray*}
-   C = v \implies  P \supseteq v      &\textrm{if}& C \subseteq P
-\\ C = v \implies  P \not\supseteq v  &\textrm{if}& C \not\subseteq P
-\end{eqnarray*}
-\begin{code}
-(Exact _ vsC) `ascimp` (Covers _ vsP) =  Just (vsC `S.isSubsetOf` vsP)
+(Disjoint _ vsX) `ascimp` (Covers _ vsY) | vsY `S.isSubsetOf` vsX = Just False
 \end{code}
 
 
-%% Covers => ...
-
-\paragraph{Covers implies Disjoint}
 \begin{eqnarray*}
-   C \supseteq v \implies  P \disj v   &\textrm{if}& C \disj P
-\\ C \supseteq v \implies  P \cap v    && \textrm{insufficient info.}
+   X \disj P \implies Y \disj P
+   &\leadsto&
+   \true  ~\cond{~Y \subseteq X~}~ ?
 \end{eqnarray*}
 \begin{code}
-(Covers _ vsC) `ascimp` (Disjoint _ vsP)
-  |  vsP `disjoint` vsC  =  Just True
+(Disjoint _ vsX) `ascimp` (Disjoint _ vsY) | vsY `S.isSubsetOf` vsX = Just True
 \end{code}
 
-\paragraph{Covers implies Exact}
 \begin{eqnarray*}
-   C \supseteq v \implies  P = v    && \textrm{insufficient info.}
-\\ C \supseteq v \implies  P \neq v &\textrm{if}& C \not\supseteq P
+   X = P \implies Y \supseteq P
+   &\equiv&
+   X \subseteq Y
 \end{eqnarray*}
 \begin{code}
-(Covers _ vsC) `ascimp` (Exact _ vsP)
-  |  not(vsP `S.isSubsetOf` vsC)  =  Just False
+(Exact _ vsX) `ascimp` (Covers _ vsY) =  Just (vsX `S.isSubsetOf` vsY)
 \end{code}
 
-\paragraph{Covers implies Cover}
 \begin{eqnarray*}
-   C \supseteq v \implies  P \supseteq v     & \textrm{if}& C \subseteq P
-\\ C \supseteq v \implies  P \not\supseteq v && \textrm{insufficient info.}
+   X = P \implies Y \disj P
+   &\equiv&
+   Y \disj X
 \end{eqnarray*}
 \begin{code}
-(Covers _ vsC) `ascimp` (Covers _ vsP)
-  |  vsC `S.isSubsetOf` vsP  =  Just True
+(Exact _ vsX) `ascimp` (Disjoint _ vsY) =  Just (vsX `disjoint` vsY)
 \end{code}
-
-
-
-
-\begin{code}
--- Disjoint _ vs
--- Exact    _ vs
--- Covers   _ vs
--- Fresh      vs
-\end{code}
-
-
 
 
 Anything else results in no strong conclusion:
 \begin{code}
-ascimp _ _ = Nothing -- for now
+_ `ascimp`_  =  Nothing
 \end{code}
 
 \newpage

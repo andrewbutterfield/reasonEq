@@ -325,44 +325,38 @@ $$
  \implies
  \left( \bigwedge_{j \in 1 \dots n} P_j \right)
 $$
-There is one obvious optimisation:
-\begin{enumerate}
-  \item Having $n=0$ means the consequent is true, so we are valid.
-  \item Having $m=0$ means the antecedent is true,
-         but we still meed to check consequents because they could true
-         in and of themselves.
-\end{enumerate}
-\begin{code}
-scDischarged _ []  =  True
-scDischarged [] _  =  False -- for now
-\end{code}
-In general we can break this down into conjunctions and disjunctions
-of simple implications of the form $C_i \implies P_j$
-using the following laws:
-\begin{eqnarray*}
-   A \land B \implies C &\equiv& (A \implies C) \lor (B \implies C)
-\\ A \implies B \land C &\equiv& (A \implies B) \land (A \implies C)
-\end{eqnarray*}
-Depending on which side we break down first we end up with either:
+We want to partition both the $C_i$ and the $P_j$
+based on the general variables they contain,
+and handle each seperately.
+Assume we have such a partition, for general variable $P$,
+giving us:
 $$
-\bigvee_{i \in 1 \dots m}
-  \left( \bigwedge_{j \in 1 \dots n}
-    \left( C_i \implies P_j \right) \right)
+ \left( \bigwedge_{k \in 1 \dots p} X_k \mathcal{R}_k P \right)
+ \implies
+ \left( \bigwedge_{\ell \in 1 \dots q} Y_\ell  \mathcal{R}_\ell P \right)
+ ,
+ \qquad
+ \mathcal{R}_k\in \setof{\supseteq,\disj,=},
+ \mathcal{R}_\ell \in \setof{\supseteq,\disj}
 $$
-or
-$$
-\bigwedge_{j \in 1 \dots n}
-  \left( \bigvee_{i \in 1 \dots m}
-    \left( C_i \implies P_j \right) \right)
-$$
-\begin{code}
-scDischarged (anteASC:anteSC) cnsqSC
- | scConjDischarged anteASC True cnsqSC  =  True
- | otherwise                             =  scDischarged anteSC cnsqSC
-\end{code}
+We can simplify $\bigwedge_{k \in 1 \dots p} X_k \mathcal{R}_k P$
+and $\bigwedge_{\ell \in 1 \dots q} Y_\ell  \mathcal{R}_\ell P$ independently
+to obtain, in each case, something of the form
+of either $E = P$, or  $F \supseteq P \land G \disj P$,
+for appropriate variable-sets $E$, $F$, and $G$.
 
 \begin{code}
-scConjDischarged _ _ _ = False
+scDischarged anteSC cnsqSC
+  = scDischarged' $ collateSC anteSC cnsqSC
+
+collateSC anteSC cnsqAC
+ = mergeSC (groupBy sameGV anteSC) (groupBy sameGV cnsqAC)
+
+sameGV asc1 asc2 = ascGVar asc1 == ascGVar asc2
+
+mergeSC anteSCg cnsqSCg = zip anteSCg cnsqSCg -- for now
+
+scDischarged' scGroups = False -- for now
 \end{code}
 
 

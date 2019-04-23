@@ -26,6 +26,7 @@ module Utilities (
 , spaced, intcalNN
 , pad
 , splitLast, splitAround
+, brkspn, brkspnBy, splice
 , args2str, args2int, entertogo
 )
 where
@@ -156,6 +157,30 @@ splitAround s xs
     splitA s sx (x:xs)
       | s == x     =  return (reverse sx,xs)
       | otherwise  =  splitA s (x:sx) xs
+\end{code}
+
+Not sure what the above are all about!
+
+The following are good for processing lists ordered in a custom way:
+\begin{code}
+brkspn :: (a -> Bool) -> [a] -> ([a], [a], [a])
+brkspn p xs = let
+                (before,rest) = break p xs
+                (found,after) = span  p rest
+              in (before,found,after)
+
+brkspnBy :: (a -> Ordering) -> [a] -> ([a], [a], [a])
+brkspnBy cmp xs = let
+                gt x           =  cmp x == GT
+                eq x           =  cmp x == EQ
+                (before,rest)  =  span gt xs
+                (found,after)  =  span eq rest
+              in (before,found,after)
+
+splice :: Monad m => ([a] -> m [a]) -> ([a],[a],[a]) -> m [a]
+splice mrg (before,found,after)
+  = do found' <- mrg found
+       return (before++found'++after)
 \end{code}
 
 \subsubsection{`Peeling' a list}

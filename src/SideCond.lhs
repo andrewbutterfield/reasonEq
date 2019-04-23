@@ -7,12 +7,13 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module SideCond (
-  SideCond, AtmSideCond
+  AtmSideCond
 , pattern Disjoint, pattern Exact
 , pattern Covers, pattern ExCover
 , pattern IsPre
 , ascGVar, ascVSet
-, scTrue, mrgSideCond
+, SideCond, scTrue
+, mrgAtmCond, mrgSideCond, mkSideCond
 , scDischarged
 , notin, is, covers, exCover, pre
 , int_tst_SideCond
@@ -191,7 +192,6 @@ sbb' = S.fromList [gv_b,gv_b']
 \end{code}
 
 
-\newpage
 \subsection{Full Side Conditions}
 
 A ``full'' side-condition is basically a list of ASCs,
@@ -215,6 +215,7 @@ v_e' = StdVar $ PostExpr $ i_e
 v_f' = StdVar $ PostExpr $ i_f
 \end{code}
 
+\newpage
 \subsection{Merging Side-Conditions}
 
 The list of ASCs
@@ -254,6 +255,8 @@ compareGV asc1 asc2  =  ascGVar asc1 `compare` ascGVar asc2
 sameGV asc1 asc2     =  asc1 `compareGV` asc2 == EQ
 \end{code}
 
+\subsubsection{Merging one ASC with relevant others}
+
 Now, merging an ASC in with other ASCs referring to the same general variable:
 \begin{code}
 mrgAtmAtms :: Monad m => AtmSideCond -> [AtmSideCond] -> m [AtmSideCond]
@@ -270,6 +273,9 @@ patterns:
 [ExCover]   [ExCover,IsPre]
 [IsPre]
 \end{verbatim}
+
+\subsubsection{ASC Merge Laws}
+
 We have the following interactions,
 where $D$, $C$, and $X$ are the variable-sets found
 in \texttt{Disjoint}, \texttt{Covers} and \texttt{Exact} respectively.
@@ -292,48 +298,42 @@ or the predicate $D \disj P$ ($P$ being the general variable in question).
 \\ C \land pre &=&  C \land pre
 \end{eqnarray*}
 
+
+\subsubsection{Merging \texttt{Disjoint} in}
+
+\begin{code}
+mrgAtmAtms (Disjoint gv d0) [Disjoint _ d1,Covers _ c]
+ | c `S.isSubsetOf` d'  =  fail "Disjoint covers superset"
+ | otherwise            =  return [Disjoint gv d',Covers gv (c S.\\ d')]
+ where d' = d0 `S.union` d1
+mrgAtmAtms (Disjoint gv d0) [Disjoint _ d1]
+                  =  return [Disjoint gv (d0 `S.union` d1)]
+mrgAtmAtms (Disjoint gv d) [Covers _ c]
+ | c `S.isSubsetOf` d  =  fail "Disjoint covers superset"
+ | otherwise           =  return [Disjoint gv d,Covers gv (c S.\\ d)]
+\end{code}
+
+\subsubsection{Merging \texttt{Covers} in}
+
+\begin{code}
+mrgAtmAtms (Covers gv c0) [Disjoint _ d,Covers _ c1]
+ | c' `S.isSubsetOf` d  =  fail "Superset covered by disjoint"
+ | otherwise            =  return [Disjoint gv d,Covers gv (c' S.\\ d)]
+ where c' = c0 `S.union` c1
+mrgAtmAtms (Covers gv c) [Disjoint _ d]
+ | c `S.isSubsetOf` d  =  fail "Superset covered by disjoint"
+ | otherwise           =  return [Disjoint gv d,Covers gv (c S.\\ d)]
+mrgAtmAtms (Covers gv c0) [Covers _ c1]
+               =  return [Covers gv (c0 `S.union` c1)]
+\end{code}
+
 \textbf{For now, we only consider \texttt{Disjoint} and \texttt{Covers}.}
-
-
+Every other case:
 \begin{code}
 mrgAtmAtms asc ascs = fail "mrgAtmAtms: NYFI"
 \end{code}
 
-
-\begin{code}
-mrgDisjoint gv vs [] = return [ Disjoint gv vs ]
-mrgDisjoint gv vs1 (Disjoint _ vs2 : ascs)
-  = do let vs' = vs1 `S.union` vs2
-       mrgDisjoint gv vs' ascs
-mrgDisjoint gv vs (_: ascs) = fail "mrgDisjoint NYfI"
-\end{code}
-
-Exactness will get done, when needed
-\begin{code}
-mrgExact    gv vs found  =  fail "mrgExact NYI"
-\end{code}
-
-Covering will get done, when needed
-\begin{code}
-mrgCovers   gv vs found  =  fail "mrgCovers NYI"
-\end{code}
-
-\begin{code}
-\end{code}
-Easy cases first --- merging same
-\begin{code}
--- mrgAtmAtm (Fresh vs1) (Fresh vs2) = return (True,Fresh (vs1 `S.union` vs2))
--- mrgAtmAtm (IsPre gv1) a@(IsPre gv2)
---  | gv1 == gv2  = return (True, a)
--- mrgAtmAtm (Disjoint gv1 vs1) (Disjoint gv2 vs2)
---  | gv1 == gv2  = return (True, Disjoint gv2 (vs1 `S.union` vs2))
--- mrgAtmAtm (Exact gv1 vs1) a@(Exact gv2 vs2)
---  | gv1 == gv2 = if vs1 == vs2
---                 then return (True, a )
---                 else fail "inconsistent exact side-cond."
--- mrgAtmAtm (Covers gv1 vs1) (Covers gv2 vs2)
---  | gv1 == gv2  = return (True, Covers gv2 (vs1 `S.intersection` vs2))
-\end{code}
+\subsubsection{Merging Full Side-conditions}
 
 Merging two side-conditions is then straightforward,
 simply merge each ASC from the one into the other,
@@ -346,6 +346,15 @@ mrgSideCond ascs1 (asc:ascs2)
           mrgSideCond ascs1' ascs2
 \end{code}
 
+\subsection{From ASC-list to Side-Condition}
+
+\begin{code}
+mkSideCond :: Monad m => [AtmSideCond] -> m SideCond
+mkSideCond [] = return []
+mkSideCond (asc:ascs)
+ = do sc <- mkSideCond ascs
+      mrgAtmCond asc sc
+\end{code}
 
 \newpage
 \subsection{Discharging Side-conditions}

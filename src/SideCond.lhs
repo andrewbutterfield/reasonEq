@@ -270,44 +270,36 @@ patterns:
 [ExCover]   [ExCover,IsPre]
 [IsPre]
 \end{verbatim}
-\begin{code}
-mrgAtmAtms asc ascs = return (asc:ascs) -- for now
-\end{code}
-
-Merging two side-conditions is then straightforward,
-simply merge each ASC from the one into the other,
-one at a time.
-\begin{code}
-mrgSideCond :: Monad m => SideCond -> SideCond -> m SideCond
-mrgSideCond ascs1 [] = return ascs1
-mrgSideCond ascs1 (asc:ascs2)
-     = do ascs1' <- mrgAtmCond asc ascs1
-          mrgSideCond ascs1' ascs2
-\end{code}
-
-The tricky part is merging atomic side-conditions into a sequence
-of them.
-
-Freshness will get done, when needed
-\begin{code}
-mrgFresh       vs ascs            =  fail "mrgFresh NYI"
-\end{code}
-
-Here, \texttt{found} is all atomic side conditions
-that refer to \texttt{gv}.
-
-
-Is a (pre-)Condition will get done, when needed
-\begin{code}
-mrgIsPre    gv    found  =  fail "mrgIsPre NYI"
-\end{code}
-
+We have the following interactions,
+where $D$, $C$, and $X$ are the variable-sets found
+in \texttt{Disjoint}, \texttt{Covers} and \texttt{Exact} respectively.
+We also overload the notation to denote the corresponding condition.
+So, depending on context,
+$D$ can denote a variable-set
+or the predicate $D \disj P$ ($P$ being the general variable in question).
 \begin{eqnarray*}
    D_1 \land D_2 &=&  D_1 \cup D_2
-\\ D_1 \land C_2 &=&  D_1 \land C_2 \setminus D_1
-\\ D_1 \land X_2 &=&  D_1 \land X_2 \cond{~D_1 \cap X_2 = \emptyset~} \bot
-\\ D_1 \land pre &=&  D_1 \land pre
+\\ C_1 \land C_2 &=&  C_1 \cup C_2
+\\ X_1 \land X_2 &=&  X_1 ~\cond{X_1=X_2}~ \bot
+\\ pre_1 \land pre_2 &=& pre_1
+\\ D \land C
+   &=&  \bot
+        ~\cond{D \supseteq C}~
+        D \land (C \setminus D)
+\\ D \land X &=&  X ~\cond{D \disj X}~ \bot
+\\ D \land pre &=&  D \land pre
+\\ C \land X &=&  X ~\cond{C \supseteq X}~ \bot
+\\ C \land pre &=&  C \land pre
 \end{eqnarray*}
+
+\textbf{For now, we only consider \texttt{Disjoint} and \texttt{Covers}.}
+
+
+\begin{code}
+mrgAtmAtms asc ascs = fail "mrgAtmAtms: NYFI"
+\end{code}
+
+
 \begin{code}
 mrgDisjoint gv vs [] = return [ Disjoint gv vs ]
 mrgDisjoint gv vs1 (Disjoint _ vs2 : ascs)
@@ -342,6 +334,18 @@ Easy cases first --- merging same
 -- mrgAtmAtm (Covers gv1 vs1) (Covers gv2 vs2)
 --  | gv1 == gv2  = return (True, Covers gv2 (vs1 `S.intersection` vs2))
 \end{code}
+
+Merging two side-conditions is then straightforward,
+simply merge each ASC from the one into the other,
+one at a time.
+\begin{code}
+mrgSideCond :: Monad m => SideCond -> SideCond -> m SideCond
+mrgSideCond ascs1 [] = return ascs1
+mrgSideCond ascs1 (asc:ascs2)
+     = do ascs1' <- mrgAtmCond asc ascs1
+          mrgSideCond ascs1' ascs2
+\end{code}
+
 
 \newpage
 \subsection{Discharging Side-conditions}

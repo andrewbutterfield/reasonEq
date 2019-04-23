@@ -413,109 +413,51 @@ scDischarged' (grpC@(gvC,ascsC):restC) grpsP@(grpP@(gvP,ascsP):restP)
   | otherwise  =  grpDischarged ascsC ascsP && scDischarged' restC restP
 \end{code}
 
-\begin{code}
-grpDischarged ascsC ascsP = False  -- for now.
-\end{code}
-
-\begin{code}
-ascImplies :: AtmSideCond -> AtmSideCond -> Maybe Bool
-ascImplies cnsqASC anteASC
- | ascGVar cnsqASC == ascGVar anteASC  =  cnsqASC `ascimp` anteASC
-ascImplies _       _                   =  Nothing
-\end{code}
-
-\newpage
-\subsubsection{SC Implication by cases}
-
-We use $P$ to denote the common general variable,
-and the $X$ and $Y$ denote respectively the candidate and pattern variable-sets.
-We note also that the identity side-condition $X=P$ can only occur
-on the candidate side.
-For now we do not handle pre-condition side-conditions (\texttt{IsPre}).
+We can discharge pattern side conditions under the following
+circumstances:
 \begin{eqnarray*}
-   X \supseteq P \implies Y \supseteq P
-   &\leadsto&
-   \true ~\cond{~X \supseteq Y~}~ ?
-\\ X \supseteq P \implies Y \disj P
-   &\leadsto&
-   \false ~\cond{~Y \supseteq X~}~ ?
-\\ X \disj P \implies Y \supseteq P
-   &\leadsto&
-   \false ~\cond{~X \supseteq Y~}~ ?
-\\ X \disj P \implies Y \disj P
-   &\leadsto&
-   \true  ~\cond{~X \supseteq Y~}~ ?
-\\ X = P \implies Y \supseteq P
-   &\equiv&
-   Y \supseteq X
-\\ X = P \implies Y \disj P
-   &\equiv&
-   Y \disj X
+   D_C \disj P \implies D_P \disj P
+   & \textbf{when} &
+   D_P \subseteq D_C
+\\ C_C \supseteq P \implies C_P \supseteq P
+   & \textbf{when} &
+   C_C \subseteq C_P
+\\ C_C \supseteq P \implies D_P \disj P
+   & \textbf{when} &
+   C_C \disj D_P
 \end{eqnarray*}
+Note that knowing $D_C \disj P$
+can never force us to conclude that $C_P \supseteq P$ must be true.
+
 \begin{code}
-ascimp :: AtmSideCond -> AtmSideCond -> Maybe Bool
+dC `d_imp_d` dP  =  dP `S.isSubsetOf` dC
+cC `c_imp_c` cP  =  cC `S.isSubsetOf` cP
+cC `c_imp_d` dP  =  cC `disjoint` dP
 \end{code}
 
+\textbf{As above, we only consider \texttt{Disjoint} and \texttt{Covers}
+for now.}
 
-\begin{eqnarray*}
-   X \supseteq P \implies Y \supseteq P
-   &\leadsto&
-   \true ~\cond{~Y \subseteq X~}~ ?
-\end{eqnarray*}
 \begin{code}
-(Covers _ vsX) `ascimp` (Covers _ vsY) | vsY `S.isSubsetOf` vsX = Just True
+grpDischarged [Disjoint _ dC,Covers _ cC] [Disjoint _ dP,Covers _ cP]
+  = (cC `c_imp_c` cP) && (dC `d_imp_d` dP || cC `c_imp_d` dP)
+grpDischarged [Disjoint _ dC,Covers _ cC] [Disjoint _ dP]
+  = (dC `d_imp_d` dP || cC `c_imp_d` dP)
+grpDischarged [_,Covers _ cC] [Covers _ cP]
+  = (cC `c_imp_c` cP)
+grpDischarged [Covers _ cC] [Disjoint _ dP,Covers _ cP]
+  = (cC `c_imp_d` dP && cC `c_imp_c` cP)
+grpDischarged [Disjoint _ dC] [Disjoint _ dP]
+  = (dC `d_imp_d` dP)
+grpDischarged [Covers _ cC] [Disjoint _ dP]
+  = (cC `c_imp_d` dP)
+grpDischarged [Covers _ cC] [Covers _ cP]
+  = (cC `c_imp_c` cP)
 \end{code}
 
-\begin{eqnarray*}
-   X \supseteq P \implies Y \disj P
-   &\leadsto&
-   \false ~\cond{~X \subseteq Y~}~ ?
-\end{eqnarray*}
+Anything else we treat as false.
 \begin{code}
-(Covers _ vsX) `ascimp` (Disjoint _ vsY) | vsX `S.isSubsetOf` vsY = Just False
-\end{code}
-
-\begin{eqnarray*}
-   X \disj P \implies Y \supseteq P
-   &\leadsto&
-   \false ~\cond{~Y \subseteq X~}~ ?
-\end{eqnarray*}
-\begin{code}
-(Disjoint _ vsX) `ascimp` (Covers _ vsY) | vsY `S.isSubsetOf` vsX = Just False
-\end{code}
-
-
-\begin{eqnarray*}
-   X \disj P \implies Y \disj P
-   &\leadsto&
-   \true  ~\cond{~Y \subseteq X~}~ ?
-\end{eqnarray*}
-\begin{code}
-(Disjoint _ vsX) `ascimp` (Disjoint _ vsY) | vsY `S.isSubsetOf` vsX = Just True
-\end{code}
-
-\begin{eqnarray*}
-   X = P \implies Y \supseteq P
-   &\equiv&
-   X \subseteq Y
-\end{eqnarray*}
-\begin{code}
-(Exact _ vsX) `ascimp` (Covers _ vsY) =  Just (vsX `S.isSubsetOf` vsY)
-\end{code}
-
-\begin{eqnarray*}
-   X = P \implies Y \disj P
-   &\equiv&
-   Y \disj X
-\end{eqnarray*}
-\begin{code}
-(Exact _ vsX) `ascimp` (Disjoint _ vsY) =  Just (vsX `disjoint` vsY)
-\end{code}
-
-
-Anything else results in no strong conclusion:
-\begin{code}
-_ `ascimp`_  =  Nothing
+grpDischarged _ _ = False
 \end{code}
 
 \newpage

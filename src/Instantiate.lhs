@@ -177,7 +177,7 @@ instantiateSC bind ascs
   = do ascss' <- sequence $ map (instantiateASC bind) ascs
        let ascs' = concat ascss'
        -- we rely on mrgSideCond merging second list into first
-       mrgSideCond scTrue ascs'
+       mkSideCond ascs'
 \end{code}
 
 \begin{code}
@@ -204,8 +204,8 @@ instantiateASC bind asc
 \begin{code}
 instantiateASCvs bind vs' asc
   = case ascGVar asc of
-      Just (StdVar v)  -> instantiateASCvsv  bind vs' v  asc
-      Just (LstVar lv) -> instantiateASCvslv bind vs' lv asc
+      StdVar v  -> instantiateASCvsv  bind vs' v  asc
+      LstVar lv -> instantiateASCvslv bind vs' lv asc
 \end{code}
 
 \paragraph{Has Standard Variable}~
@@ -244,11 +244,11 @@ instantiateDisjoint dvs fvs
    mkD vs gv = Disjoint gv vs
 \end{code}
 
-\subsubsection{Exactness}
-
 \subsubsection{Covering}
 
 \subsubsection{Pre-Condition}
+
+\subsubsection{Exactness}
 
 \subsubsection{Side-condition Variable Instantiation}
 

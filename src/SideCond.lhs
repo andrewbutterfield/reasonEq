@@ -139,12 +139,12 @@ pattern Exact    gv vs = SE  gv vs  --  vs      =       gv
 
 Sometimes we want the \texttt{GenVar} component,
 \begin{code}
-ascGVar :: AtmSideCond -> Maybe GenVar
-ascGVar (Disjoint gv _)  =  Just gv
-ascGVar (Covers   gv _)  =  Just gv
-ascGVar (IsPre    gv)    =  Just gv
-ascGVar (ExCover  gv _)  =  Just gv
-ascGVar (Exact    gv _)  =  Just gv
+ascGVar :: AtmSideCond -> GenVar
+ascGVar (Disjoint gv _)  =  gv
+ascGVar (Covers   gv _)  =  gv
+ascGVar (IsPre    gv)    =  gv
+ascGVar (ExCover  gv _)  =  gv
+ascGVar (Exact    gv _)  =  gv
 \end{code}
 or the \texttt{VarSet} part:
 \begin{code}
@@ -372,38 +372,50 @@ $$
  \implies
  \left( \bigwedge_{j \in 1 \dots n} P_j \right)
 $$
-We want to partition both the $C_i$ and the $P_j$
-based on the general variables they contain,
-and handle each seperately.
-Assume we have such a partition, for general variable $P$,
-giving us:
-$$
- \left( \bigwedge_{k \in 1 \dots p} X_k \mathcal{R}_k P \right)
- \implies
- \left( \bigwedge_{\ell \in 1 \dots q} Y_\ell  \mathcal{R}_\ell P \right)
- ,
- \qquad
- \mathcal{R}_k\in \setof{\supseteq,\disj,=},
- \mathcal{R}_\ell \in \setof{\supseteq,\disj}
-$$
-We can simplify $\bigwedge_{k \in 1 \dots p} X_k \mathcal{R}_k P$
-and $\bigwedge_{\ell \in 1 \dots q} Y_\ell  \mathcal{R}_\ell P$ independently
-to obtain, in each case, something of the form
-of either $E = P$, or  $F \supseteq P \land G \disj P$,
-for appropriate variable-sets $E$, $F$, and $G$.
+In our representation both the $C_i$ and $P_j$
+are ordered by general variable.
+So we can work through both lists,
+using all the $C_i$ for a given g.v.,
+to attempt to discharge all the $P_j$ for that same g.v.
+Success is when all such $P_j$ groups have been shown to be $\true$.
+Failure occurs if any $P_j$ group results in $\false$,
+or results in some ASCs remaining.
 
+We start with simple end-cases:
+\begin{code}
+scDischarged _ []  =  True   -- C => true   is  true
+scDischarged [] _  =  False  -- true => P   is  P,  i.e., not discharged
+\end{code}
 \begin{code}
 scDischarged anteSC cnsqSC
-  = scDischarged' $ collateSC anteSC cnsqSC
-
-collateSC anteSC cnsqAC
- = mergeSC (groupBy sameGV anteSC) (groupBy sameGV cnsqAC)
-
-mergeSC anteSCg cnsqSCg = zip anteSCg cnsqSCg -- for now
-
-scDischarged' scGroups = False -- for now
+  = scDischarged' (groupByGV anteSC) (groupByGV cnsqSC)
 \end{code}
 
+We have a modified version of \texttt{Data.List.groupBy}
+\begin{code}
+groupByGV :: [AtmSideCond] -> [(GenVar,[AtmSideCond])]
+groupByGV []          =  []
+groupByGV (asc:ascs)  =  (gv,asc:ours) : groupByGV others
+                      where
+                        gv               =  ascGVar asc
+                        gv `usedIn` asc  =  gv == ascGVar asc
+                        (ours,others)    =  span (usedIn gv) ascs
+\end{code}
+
+Now onto processing those groups:
+\begin{code}
+scDischarged' :: [(GenVar,[AtmSideCond])] -> [(GenVar,[AtmSideCond])] -> Bool
+scDischarged' _ []  =  True   -- see scDischarged above
+scDischarged' [] _  =  False  -- see scDischarged above
+scDischarged' (grpC@(gvC,ascsC):restC) grpsP@(grpP@(gvP,ascsP):restP)
+  | gvC > gvP  =  False -- nothing available to discharge grpP
+  | gvC < gvP  =  scDischarged' restC grpsP -- grpC not needed
+  | otherwise  =  grpDischarged ascsC ascsP && scDischarged' restC restP
+\end{code}
+
+\begin{code}
+grpDischarged ascsC ascsP = False  -- for now.
+\end{code}
 
 \begin{code}
 ascImplies :: AtmSideCond -> AtmSideCond -> Maybe Bool

@@ -16,6 +16,7 @@ module SideCond (
 , mrgAtmCond, mrgSideCond, mkSideCond
 , scDischarged
 , notin, is, covers, exCover, pre
+, citingASCs
 , int_tst_SideCond
 ) where
 import Data.Char
@@ -493,6 +494,23 @@ $pre \supseteq \fv(T)$
 \begin{code}
 pre :: GenVar -> SideCond
 pre tV  = [ IsPre tV ]
+\end{code}
+
+
+\newpage
+\subsection{Side-condition Queries}
+
+First, given a variable-set,
+return all ASCs that mention any variable in that set:
+\begin{code}
+citingASCs :: VarSet -> SideCond -> [AtmSideCond]
+citingASCs vs sc = filter (cited vs) sc
+
+cited :: VarSet -> AtmSideCond -> Bool
+vs `cited` asc
+  = case ascVSet asc of
+      Nothing   ->  False
+      Just vs'  ->  vs == vs'
 \end{code}
 
 \newpage

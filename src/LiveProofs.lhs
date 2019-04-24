@@ -28,6 +28,8 @@ module LiveProofs
 
 import Data.Maybe
 import Data.List
+import Data.Set (Set)
+import qualified Data.Set as S
 import Data.Map (Map)
 import qualified Data.Map as M
 
@@ -404,8 +406,8 @@ keeping the pattern side-conditions in mind.
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryCompleteBinding vts tP partsP scP bind
-      = case completeBind vts tC tP bind of
-          Yes bind'  ->  tryInstantiateSC bind' tP partsP scP
+      = case completeBind vts tC scC tP scP bind of
+          Yes (bind',scC',scP')  ->  tryInstantiateSC bind' scC' tP partsP scP'
           But msgs
            -> But ([ "try complete binding failed"
                    , ""
@@ -418,20 +420,56 @@ keeping the pattern side-conditions in mind.
                    , "scC="++trSideCond scC
                    , ""
                    ]++msgs)
+\end{code}
+
+\newpage
+Here we need to:
+\begin{enumerate}
+  \item
+    Determine variables mentioned in the law that have not been matched ($umv$),
+    because they occur outside the matched part.
+  \item
+    Remove any that are ``known'' (perhaps bind to self?)
+  \item
+    Identify the law ASCs ($uma$) that refer to the remaining
+    unmatched variables.
+  \item
+    If an ASC has the from $\exists\lst x \supseteq P$,
+    then:
+    \begin{enumerate}
+      \item Change the pattern ASC to $\lst x \supseteq P$
+      \item Add $\lst x = P$ to the candidate side-conditions
+       (as a witness)
+      \item Possibly bind $\lst x$ to itself?
+    \end{enumerate}
+  \item
+    Not sure what to do about other ASCs just now.
+\end{enumerate}
+\textbf{
+  In fact all pattern \texttt{ExCover} should be converted to \texttt{Covers},
+  but only once the above steps have been done.
+}
+
+\begin{code}
+-- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     -- this needs to live somewhere else
     -- it may require user input to complete,
     -- so it, and tryLawByName, may need to be split into two parts.
-    completeBind vts tC tP bind
-      = let pvars = mentionedVars tP
-            bvars = mappedVars bind
-        in return bind
+    completeBind vts tC scC tP scP bind
+      | S.null unMappedVars  =  return (bind,scC,scP)
+      | otherwise  = fail ( "completeBind: not yet handling unmapped: "
+                           ++ trVSet unMappedVars
+                           ++ " , " ++ trSideCond scP
+                           ++ " , " ++ trSideCond unMappedASCs)
+      where
+        unMappedVars = mentionedVars tP S.\\ mappedVars bind
+        unMappedASCs = citingASCs unMappedVars scP
 \end{code}
-
 
 Next, instantiate the pattern side-condition using the bindings.
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
-    tryInstantiateSC bind tP partsP scP
+    tryInstantiateSC bind scC tP partsP scP
       = case instantiateSC bind scP of
           Yes scP'  ->  trySCDischarge bind tP partsP scP scP'
           But msgs

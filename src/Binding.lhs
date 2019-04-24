@@ -24,6 +24,7 @@ module Binding
 , lookupLstBind
 , lookupSubstBind
 , bindLVarsToNull, bindLVarsToEmpty
+, mappedVars
 , dumpBinding
 , int_tst_Binding
 ) where
@@ -1157,6 +1158,33 @@ bindLVarsToEmpty bind (lv:lvs)
       bindLVarsToEmpty bind' lvs
 \end{code}
 
+\newpage
+\subsection{Mapped Variables}
+
+We want to return all the variables that have been bound.
+\begin{code}
+mappedVars :: Binding -> VarSet
+mappedVars (BD (vbind,sbind,lbind,llbind))
+  = let domV  = M.keysSet vbind
+        domS  = M.keysSet sbind
+        whens = Static:Before:After:Textual:(map During $ S.toList domS)
+        domL  = M.keysSet lbind
+        domLL = M.keysSet llbind
+    in (S.map StdVar $ S.unions $ S.map (allVWhen whens) domV)
+       `S.union`
+       (S.map LstVar $ S.unions $ S.map (allLVWhen whens) domL)
+       `S.union`
+       (S.map LstVar $ S.unions $ S.map allLL domLL)
+
+allVWhen :: [VarWhen] -> (Identifier,VarClass) -> Set Variable
+allVWhen whens (i,vc)  =  S.fromList $ map (Vbl i vc) whens
+allLVWhen :: [VarWhen] -> ListVarKey -> Set ListVar
+allLVWhen whens (i,vc,is,ij)
+  = S.fromList $ map (lvbl is ij . Vbl i vc) whens
+  where lvbl is ij v = LVbl v is ij
+allLL :: (ListVar,ListVar) -> Set ListVar
+allLL (lv1,lv2) = S.fromList [lv1,lv2]
+\end{code}
 
 \newpage
 \subsection{Binding Dump}

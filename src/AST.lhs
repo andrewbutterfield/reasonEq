@@ -31,7 +31,7 @@ module AST ( TermSub, LVarSub
            , pattern E2, pattern P2
            , termkind, isVar, isExpr, isPred, isAtomic
            , theVar
-           , freeVars, subTerms
+           , freeVars, subTerms, mentionedVars
            , int_tst_AST
            ) where
 import Data.Char
@@ -603,6 +603,27 @@ freeVars (S _ t (SN tsub lvsub))
            (S.map LstVar $ S.fromList rlvl)
 freeVars (I _ _ _ lvs)  =  S.fromList $ map LstVar lvs
 freeVars _ = S.empty
+\end{code}
+
+Sometimes we just want \emph{all} the variables mentioned in a term:
+\begin{code}
+mentionedVars :: Term -> VarSet
+mentionedVars (V _ v)       =  S.singleton $ StdVar v
+mentionedVars (C _ _ ts)    =  S.unions $ map mentionedVars ts
+mentionedVars (B _ _ vs t)  =  mentionedVars t `S.union` vs
+mentionedVars (L _ _ vl t)  =  mentionedVars t `S.union` (S.fromList vl)
+mentionedVars (X _ _)       =  S.empty
+mentionedVars (S _ t (SN tsub lvsub))
+  = (mentionedVars t `S.union` tvs) `S.union` rvs
+  where
+     (tsvl,rtl) = unzip $ S.toList tsub
+     (tlvl,rlvl) = unzip $ S.toList lvsub
+     tvs = S.fromList (map StdVar tsvl ++ map LstVar tlvl)
+     rvs = S.unions (map mentionedVars rtl)
+           `S.union`
+           (S.map LstVar $ S.fromList rlvl)
+mentionedVars (I _ _ _ lvs)  =  S.fromList $ map LstVar lvs
+mentionedVars _ = S.empty
 \end{code}
 
 \newpage

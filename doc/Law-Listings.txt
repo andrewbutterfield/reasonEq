@@ -1,0 +1,157 @@
+---
+Theory 'PredUniv'
+Known Variables: None
+Laws:
+   1. ⊤  “[]_def”  [P]≡(∀ x̅ • P)  ∃x̅⊇P
+   2. ⊤  “=_def”   (P=Q)≡[P≡Q]
+Conjectures:
+   1. ❓  “[]_idem”        [[P]]≡[P]
+   2. ❓  “∧_[]_name”      [P]∧[Q]≡[P∧Q]
+   3. ❓  “univ_true”      [true]≡true
+   4. ❓  “univ_False”     [false]≡false
+   5. ❓  “univ_∀_closed”  (∀ x̅ • [P])≡[P]
+   6. ❓  “univ_∃_closed”  (∃ x̅ • [P])≡[P]
+---
+Theory 'PredExists'
+Known Variables: None
+Laws:
+   1. ⊤  “∃_def”        (∃ x̅ • P)≡¬((∀ x̅ • ¬P))
+   2. ∎  “∃_false”      (∃ x̅ • false)≡false
+   3. ∎  “∃_one_point”  (∃ x̅,y̅ • (x̅=e̅)∧P)≡(∃ y̅ • P[e̅/x̅])  x̅∉e̅
+   4. ∎  “∃_∨_distr”    (∃ x̅ • P∨Q)≡(∃ x̅ • P)∨(∃ x̅ • Q)
+   5. ∎  “∧_∃_scope”    P∧(∃ x̅,y̅ • Q)≡(∃ x̅ • P∧(∃ y̅ • Q))  x̅∉P
+   6. ∎  “∃_inst”       (∃ y̅ • P[e̅/x̅])⟹ (∃ x̅,y̅ • P)
+   7. ∎  “∃_α_rename”   (∃ x̅ • P)≡(∃ y̅ • P[y̅/x̅])  y̅∉P
+Conjectures: None.
+---
+Theory 'PredAxioms'
+Known Variables: None
+Laws:
+   1. ⊤  “∀_true”       (∀ x̅ • true)≡true
+   2. ⊤  “∀_one_point”  (∀ x̅,y̅ • (x̅=e̅)⟹ P)≡(∀ y̅ • P[e̅/x̅])  x̅∉e̅
+   3. ⊤  “∀_∧_distr”    (∀ x̅ • P∧Q)≡(∀ x̅ • P)∧(∀ x̅ • Q)
+   4. ⊤  “∨_∀_scope”    P∨(∀ x̅,y̅ • Q)≡(∀ x̅ • P∨(∀ y̅ • Q))  x̅∉P
+   5. ⊤  “∀_inst”       (∀ x̅,y̅ • P)⟹ (∀ y̅ • P[e̅/x̅])
+   6. ⊤  “∀_α_rename”   (∀ x̅ • P)≡(∀ y̅ • P[y̅/x̅])  y̅∉P
+Conjectures: None.
+---
+Theory 'PropSubst'
+Known Variables: None
+Laws:
+   1. ⊤  “true_subst”   true[e̅/x̅]≡true
+   2. ⊤  “¬_subst”      (¬P)[e̅/x̅]≡¬(P[e̅/x̅])
+   3. ⊤  “≡_subst”      (P≡Q)[e̅/x̅]≡(P[e̅/x̅]≡Q[e̅/x̅])
+   4. ⊤  “∨_subst”      (P∨Q)[e̅/x̅]≡P[e̅/x̅]∨Q[e̅/x̅]
+   5. !  “false_subst”  false[e̅/x̅]≡false
+   6. !  “∧_subst”      (P∧Q)[e̅/x̅]≡P[e̅/x̅]∧Q[e̅/x̅]
+   7. !  “⟹ _subst”     (P⟹ Q)[e̅/x̅]≡P[e̅/x̅]⟹ Q[e̅/x̅]
+Conjectures: None.
+---
+Theory 'PropImpl'
+Known Variables: None
+Laws:
+   1. !  “⟹ _def2”          P⟹ Q≡¬P∨Q
+   2. !  “⟹ _meet”          P⟹ Q≡(P∧Q≡P)
+   3. !  “contrapostive”    P⟹ Q≡¬Q⟹ ¬P
+   4. !  “⟹ _≡_distr”       P⟹ (Q≡R)≡(P⟹ Q≡P⟹ R)
+   5. !  “shunting”         P∧Q⟹ R≡P⟹ (Q⟹ R)
+   6. !  “GS3.66”           P∧(P⟹ Q)≡P∧Q
+   7. !  “GS3.67”           P∧(Q⟹ P)≡P
+   8. !  “GS3.68”           P∨(P⟹ Q)≡true
+   9. !  “GS3.69”           P∨(Q⟹ P)≡Q⟹ P
+  10. !  “GS3.70”           P∨Q⟹ P∧Q≡(P≡Q)
+  11. !  “⟹ _refl”          P⟹ P≡true
+  12. !  “⟹ _r_zero”        P⟹ true≡true
+  13. !  “⟹ _l_unit”        true⟹ P≡P
+  14. !  “¬_def2”           P⟹ false≡¬P
+  15. !  “GS3.75”           false⟹ P≡true
+  16. !  “⟹ _trans”         (P⟹ Q)∧(Q⟹ R)⟹ (P⟹ R)
+  17. !  “≡_⟹ _trans”       (P≡Q)∧(Q⟹ R)⟹ (P⟹ R)
+  18. !  “⟹ _≡_trans”       (P⟹ Q)∧(Q≡R)⟹ (P⟹ R)
+  19. !  “strengthen_ante”  P∧Q⟹ P
+  20. !  “weaken_cnsq”      P⟹ P∨Q
+  21. !  “ante_∨_distr”     P∨Q⟹ R≡(P⟹ R)∧(Q⟹ R)
+  22. !  “ante_∧_distr”     P∧Q⟹ R≡(P⟹ R)∨(Q⟹ R)
+  23. !  “cnsq_∧_distr”     P⟹ Q∨R≡(P⟹ Q)∨(P⟹ R)
+  24. !  “cnsq_∧_distr”     P⟹ Q∧R≡(P⟹ Q)∧(P⟹ R)
+  25. !  “ante_as_⟹ ”       (P⟹ Q)⟹ R≡(¬P⟹ R)∧(Q⟹ R)
+Conjectures: None.
+---
+Theory 'PropMixOne'
+Known Variables: None
+Laws:
+   1. !  “∧_∨_absorb”    P∧(P∨Q)≡P
+   2. !  “∨_∧_absorb”    P∨P∧Q≡P
+   3. !  “∧_¬_∨_absorb”  P∧(¬P∨Q)≡P∧Q
+   4. !  “∧_¬_∨_absorb”  P∨¬P∧Q≡P∨Q
+   5. !  “∨_∧_distr”     P∨Q∧R≡(P∨Q)∧(P∨R)
+   6. !  “∧_∨_distr”     P∧(Q∨R)≡P∧Q∨P∧R
+   7. !  “deMorgan_∧”    ¬(P∧Q)≡¬P∨¬Q
+   8. !  “deMorgan_∨”    ¬(P∨Q)≡¬P∧¬Q
+   9. !  “≡_replace”     (P≡Q)∧(R≡P)≡(P≡Q)∧(R≡Q)
+  10. !  “≡_def”         P≡Q≡P∧Q∨¬P∧¬Q
+Conjectures: None.
+---
+Theory 'PropConj'
+Known Variables: None
+Laws:
+   1. !  “∧_symm”         P∧Q≡Q∧P
+   2. !  “∧_assoc”        (P∧Q)∧R≡P∧(Q∧R)
+   3. !  “∧_idem”         P∧P≡P
+   4. !  “∧_unit”         P∧true≡P
+   5. !  “∧_zero”         P∧false≡false
+   6. !  “∧_∧_distr”      P∧(Q∧R)≡(P∧Q)∧(P∧R)
+   7. !  “contradiction”  P∧¬P≡false
+Conjectures: None.
+---
+Theory 'PropDisj'
+Known Variables: None
+Laws:
+   1. !  “∨_zero”     P∨true≡true
+   2. !  “∨_unit”     P∨false≡P
+   3. !  “∨-∨_distr”  P∨(Q∨R)≡(P∨Q)∨(P∨R)
+   4. !  “∨-≡_split”  P∨Q≡P∨¬Q≡P
+Conjectures: None.
+---
+Theory 'PropNot'
+Known Variables: None
+Laws:
+   1. !  “¬_≡_swap”   (¬P≡Q)≡(P≡¬Q)
+   2. !  “¬_invol”    ¬(¬P)≡P
+   3. !  “false_neg”  ¬false≡true
+   4. !  “¬_def”      ¬P≡(P≡false)
+Conjectures: None.
+---
+Theory 'Equality'
+Known Variables: None
+Laws:
+   1. ⊤  “=_refl”   e=e
+   2. ⊤  “=_symm”   (e=f)≡(f=e)
+   3. ⊤  “=_trans”  (e=f)∧(f=g)⟹ (e=g)
+Conjectures: None.
+---
+Theory 'PropEquiv'
+Known Variables: None
+Laws:
+   1. !  “≡_id”  (true≡Q)≡Q
+Conjectures: None.
+---
+Theory 'PropAxioms'
+Known Variables:
+false ≜ ¬true
+true : 𝔹
+Laws:
+   1. ⊤  “true”         true
+   2. ⊤  “≡_refl”       P≡P
+   3. ⊤  “≡_assoc”      ((P≡Q)≡R)≡(P≡(Q≡R))
+   4. ⊤  “≡_symm”       P≡Q≡Q≡P
+   5. ⊤  “false-def”    false≡¬true
+   6. ⊤  “¬_≡_distr”    ¬(P≡Q)≡(¬P≡Q)
+   7. ⊤  “∨_symm”       P∨Q≡Q∨P
+   8. ⊤  “∨_assoc”      (P∨Q)∨R≡P∨(Q∨R)
+   9. ⊤  “∨_idem”       P∨P≡P
+  10. ⊤  “∨_≡_distr”    P∨(Q≡R)≡P∨Q≡P∨R
+  11. ⊤  “excl-middle”  P∨¬P
+  12. ⊤  “golden-rule”  P∧Q≡((P≡Q)≡P∨Q)
+  13. ⊤  “⟹ _def”       P⟹ Q≡P∨Q≡Q
+Conjectures: None.

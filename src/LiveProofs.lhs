@@ -358,6 +358,13 @@ Sometimes we want to what happens when we single out a law,
 including observing any match failure messages.
 Here we painstakingly check every monadic call from \texttt{match} onwards,
 and report the outcome.
+These calls are:
+\texttt{
+  Matching.match
+; ?.completeBind
+; Instantiate.instantiateASC
+; SideCond.scDischarged
+}
 \begin{code}
 tryLawByName :: LogicSig -> Assertion -> String -> [Int] -> [MatchContext]
                -> YesBut Binding
@@ -373,7 +380,7 @@ First, try the structural match.
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryMatch vts tP partsP scP
       = case match vts tC partsP of
-          Yes bind  ->  tryInstantiateSC bind tP partsP scP
+          Yes bind  ->  tryCompleteBinding vts tP partsP scP bind
           But msgs
            -> But ([ "try match failed"
                    , ""
@@ -388,8 +395,38 @@ First, try the structural match.
                    ]++msgs)
 \end{code}
 
-Missing, the phase where we deal with unbound/unmatched variables
-from the rest of the pattern-law.
+At this point we have matched the candidate against part of the law,
+with the rest of the law to be the ``replacement''.
+However, the replacement may contain variables not present in the
+matched part.
+We need to find appropriate bindings for these,
+keeping the pattern side-conditions in mind.
+\begin{code}
+-- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
+    tryCompleteBinding vts tP partsP scP bind
+      = case completeBind vts tC tP bind of
+          Yes bind'  ->  tryInstantiateSC bind' tP partsP scP
+          But msgs
+           -> But ([ "try complete binding failed"
+                   , ""
+                   , trTerm 0 tC ++ " :: " ++ trTerm 0 partsP
+                   , ""
+                   , "lnm[parts]="++lnm++show parts
+                   , "tP="++trTerm 0 tP
+                   , "partsP="++trTerm 0 partsP
+                   , "tC="++trTerm 0 tC
+                   , "scC="++trSideCond scC
+                   , ""
+                   ]++msgs)
+    -- this needs to live somewhere else
+    -- it may require user input to complete,
+    -- so it, and tryLawByName, may need to be split into two parts.
+    completeBind vts tC tP bind
+      = let pvars = mentionedVars tP
+            bvars = mappedVars bind
+        in return bind
+\end{code}
+
 
 Next, instantiate the pattern side-condition using the bindings.
 \begin{code}

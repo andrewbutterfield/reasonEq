@@ -175,9 +175,7 @@ This can result in the the side-condition reducing to \textit{false}.
 instantiateSC :: Monad m => Binding -> SideCond -> m SideCond
 instantiateSC bind ascs
   = do ascss' <- sequence $ map (instantiateASC bind) ascs
-       let ascs' = concat ascss'
-       -- we rely on mrgSideCond merging second list into first
-       mkSideCond ascs'
+       mkSideCond $ concat ascss'
 \end{code}
 
 \begin{code}
@@ -213,10 +211,14 @@ instantiateASCvs bind vs' asc
 \begin{code}
 instantiateASCvsv bind vs' v (Disjoint _ _)
   = instantiateDisjoint vs' $ instantiateVar bind v
+instantiateASCvsv bind vs' v (Covers _ _)
+  = instantiateCovers vs' $ instantiateVar bind v
+instantiateASCvsv bind vs' v (IsPre _)
+  = fail "instantiateASC IsPre NYI"
+instantiateASCvsv bind vs' v (ExCover _ _)
+  = fail "instantiateASC ExCover should not occur!"
 instantiateASCvsv bind vs' v (Exact _ _)
   = fail "instantiateASC Exact NYI"
-instantiateASCvsv bind vs' v (Covers _ _)
-  = fail "instantiateASC Covers NYI"
 \end{code}
 
 \paragraph{Has List-Variable}~
@@ -245,6 +247,16 @@ instantiateDisjoint dvs fvs
 \end{code}
 
 \subsubsection{Covering}
+
+\begin{code}
+instantiateCovers :: Monad m => VarSet -> VarSet -> m [AtmSideCond]
+instantiateCovers cvs fvs
+ | fvs `S.isSubsetOf` cvs = return $ map (mkC cvs) $ S.toList freeTV
+ | otherwise  =  fail "free-vars not covered"
+ where
+   freeTV = S.filter (not . isObsGVar) fvs
+   mkC vs gv = Covers gv vs
+\end{code}
 
 \subsubsection{Pre-Condition}
 

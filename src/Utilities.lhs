@@ -343,6 +343,7 @@ instance Applicative YesBut where
   pure x                   =  Yes x
   Yes f <*> Yes x          =  Yes $ f x
   Yes f <*> But msgs       =  But msgs
+  But msgs <*> Yes x       =  But msgs
   But msgs1 <*> But msgs2  =  But (msgs1++msgs2)
 
 instance Monad YesBut where

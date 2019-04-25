@@ -31,6 +31,7 @@ import AST
 import VarData
 import Binding
 
+
 import Debug.Trace
 dbg msg x = trace (msg ++ show x) x
 pdbg nm x = dbg ('@':nm++":\n") x
@@ -271,7 +272,7 @@ $$
 \inferrule
    {n_C = n_P
     \and
-    \beta \vdash t_C :: t_P \leadsto \beta'
+    \beta;(\fv(t_C),\fv(t_P)) \vdash t_C :: t_P \leadsto \beta'
    }
    { \beta \vdash \xx{n_C}{t_C} :: \xx{n_P}{t_P}
      \leadsto
@@ -280,28 +281,13 @@ $$
    \quad
    \texttt{tMatch Binding}
 $$
-or?
-$$
-\inferrule
-   {n_C = n_P
-    \and
-    \beta;(B_C\cup\fv(t_C),B_P\cup\fv(t_P)) \vdash t_C :: t_P \leadsto \beta'
-   }
-   { \beta;(B_C,B_P) \vdash \xx{n_C}{t_C} :: \xx{n_P}{t_P}
-     \leadsto
-     \beta \uplus \beta'
-   }
-   \quad
-   \texttt{tMatch Binding}
-$$
-
+Note that here we only close w.r.t. free \emph{observational} variables.
 \begin{code}
 tMatch' vts bind cbvs pbvs (Cls nC tC) (Cls nP tP)
   | nC == nP  =  tMatch vts bind cbvs' pbvs' tC tP
   where
-    cbvs' = cbvs `S.union` freeVars tC
-    pbvs' = pbvs `S.union` freeVars tP
-  -- should cbvs be freeVars tC? similarly for tP?
+    cbvs' = S.filter isObsGVar (freeVars tC)
+    pbvs' = S.filter isObsGVar (freeVars tP)
 \end{code}
 
 
@@ -436,6 +422,7 @@ tsMatch _ _ _ _ _ _  =  error "tsMatch: unexpected mismatch case."
 We assume here that candidate term and pattern variable
 have the same \texttt{TermKind}.
 \begin{code}
+
 tvMatch :: Monad m
        => [VarTable] -> Binding -> CBVS -> PBVS
        -> Candidate -> TermKind -> Variable -> m Binding
@@ -454,7 +441,12 @@ and act accordingly.
 \begin{code}
 tvMatch vts bind cbvs pvbs tC tkP vP@(Vbl _ _ vt)
  | vt == Textual              =  fail "tvMatch: var-variable cannot match term."
- | StdVar vP `S.member` pvbs  =  fail "tvMatch: bound pattern cannot match term."
+ | StdVar vP `S.member` pvbs
+     =  fail $ unlines
+          [ "tvMatch: bound pattern cannot match term."
+          , "pvbs = " ++ show pvbs
+          , "vP   = " ++ show vP
+          ]
  | vPmr /= UnknownVar         =  tkvMatch vts bind tC vPmr tkP vP
 \end{code}
 \subsubsection{Arbitrary Pattern Variable}

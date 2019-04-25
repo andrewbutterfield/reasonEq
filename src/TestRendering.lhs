@@ -114,8 +114,8 @@ trTK _ = "" -- ignore for now
 -- trTK (E t) = trType t
 
 trValue :: Value -> String
-trValue (Boolean False)  =  "ff"
-trValue (Boolean True)   =  "tt"
+trValue (Boolean False)  =  "false"
+trValue (Boolean True)   =  "true"
 trValue (Integer i)      =  show i
 trValue (Txt s)          =  show s
 \end{code}

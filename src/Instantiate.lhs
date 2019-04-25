@@ -22,6 +22,7 @@ import AST
 import SideCond
 import Binding
 import FreeVars
+import TestRendering
 
 import Debug.Trace
 dbg msg x = trace (msg ++ show x) x
@@ -252,7 +253,11 @@ instantiateDisjoint dvs fvs
 instantiateCovers :: Monad m => VarSet -> VarSet -> m [AtmSideCond]
 instantiateCovers cvs fvs
  | fvs `S.isSubsetOf` cvs = return $ map (mkC cvs) $ S.toList freeTV
- | otherwise  =  fail "free-vars not covered"
+ | otherwise  =  fail $ unlines
+                   [ "free-vars not covered"
+                   , "cvs = " ++ trVSet cvs
+                   , "fvs = " ++ trVSet fvs
+                   ]
  where
    freeTV = S.filter (not . isObsGVar) fvs
    mkC vs gv = Covers gv vs

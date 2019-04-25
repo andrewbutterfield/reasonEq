@@ -350,7 +350,7 @@ instance Monad YesBut where
   return x        =  Yes x
   Yes x   >>= f   =  f x
   But msgs >>= f  =  But msgs
-  fail msg        =  But [msg]
+  fail msg        =  But $ lines msg
 
 instance Alternative YesBut where
   empty = But []

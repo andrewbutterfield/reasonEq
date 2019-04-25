@@ -10,8 +10,8 @@ END LIST PROOFS
 BEGIN LIST CONJECTURES
 ("[]_idem",(C P (Id "\8801") [X (Id "[_]") (X (Id "[_]") (V P (VR (Id "P",VP,WS)))),X (Id "[_]") (V P (VR (Id "P",VP,WS)))],[]))
 ("\8743_[]_name",(C P (Id "\8801") [C P (Id "\8743") [X (Id "[_]") (V P (VR (Id "P",VP,WS))),X (Id "[_]") (V P (VR (Id "Q",VP,WS)))],X (Id "[_]") (C P (Id "\8743") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))])],[]))
-("univ_true",(C P (Id "\8801") [X (Id "[_]") (V P (VR (Id "true",VP,WS))),V P (VR (Id "true",VP,WS))],[]))
-("univ_False",(C P (Id "\8801") [X (Id "[_]") (V P (VR (Id "false",VP,WS))),V P (VR (Id "false",VP,WS))],[]))
+("univ_true",(C P (Id "\8801") [X (Id "[_]") (K P (VB True)),K P (VB True)],[]))
+("univ_False",(C P (Id "\8801") [X (Id "[_]") (K P (VB False)),K P (VB False)],[]))
 ("univ_\8704_closed",(C P (Id "\8801") [B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (X (Id "[_]") (V P (VR (Id "P",VP,WS)))),X (Id "[_]") (V P (VR (Id "P",VP,WS)))],[]))
 ("univ_\8707_closed",(C P (Id "\8801") [B P (Id "\8707") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (X (Id "[_]") (V P (VR (Id "P",VP,WS)))),X (Id "[_]") (V P (VR (Id "P",VP,WS)))],[]))
 END LIST CONJECTURES

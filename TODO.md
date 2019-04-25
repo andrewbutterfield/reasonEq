@@ -2,6 +2,9 @@
 
 ## Hotfixes
 
+* We cannot use `Var (Vbl "true" ...)`  for the true predicate, otherwise *fv(true) = {true}*
+  * 	use `Val P (Boolean True)` instead.
+
 ## Next Task(s)
 
 * **Confusion Alert!** The use of "binding" for the outcome of matching gets confused with the notion of "binding" and "bound" associated with various quantifiers. Perhaps we should reconsider re-naming `Binding.Binding`, etc to `?.Mapping` ?

@@ -8,8 +8,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module PropAxioms (
   bool
-, true, trueP
-, false, falseP
+, trueP
+, falseP
 , equiv, mkEquiv, mkEquivs, (===)
 , lnot, mkNot
 , lor, mkOr, mkOrs, (\/)
@@ -93,10 +93,8 @@ bool = GivenType $ fromJust $ ident $ _mathbb "B"
 \subsection{Propositional Constants}
 
 \begin{code}
-true = Vbl (fromJust $ ident "true") PredV Static
-trueP = fromJust $ pVar true
-false = Vbl (fromJust $ ident "false") PredV Static
-falseP = fromJust $ pVar false
+trueP  = Val P $ Boolean True
+falseP = Val P $ Boolean False
 \end{code}
 
 \newpage
@@ -157,8 +155,7 @@ $$
 
 \begin{code}
 propKnown :: VarTable
-propKnown   =  fromJust $ addKnownConst false (mkNot trueP) $
-               fromJust $ addKnownVar true  bool newVarTable
+propKnown   =  newVarTable
 axTrue      =  ( "true",      ( trueP,                  scTrue ) )
 axFalseDef  =  ( "false-def", ( falseP === mkNot trueP, scTrue ) )
 \end{code}

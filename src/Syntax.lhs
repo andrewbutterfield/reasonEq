@@ -434,7 +434,7 @@ pattern Closed = CLS
     Example (2):
     $f~a_1~a_2~ \dots ~a_k, \quad k \leq A+1$, where $A$ is the arity of $f$.
     \\Form: a basic component ($E$) and a constraint $\mbox{length} \leq A+1$.
-    \\Syntax: $\textvisiblespace$ (whitespace).
+    \\Syntax: \textvisiblespace (whitespace).
 \end{description}
 \newpage
 This leads to the following concrete syntax specifier:

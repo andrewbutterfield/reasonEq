@@ -425,9 +425,9 @@ matchFocusAgainst lawnm theSig liveProof
 \end{code}
 
 Third, a deep dive to apply \texttt{match} so we can get back errors.
-\textbf{We should also allow a partial law match to be specified}
 \begin{code}
-tryFocusAgainst :: String -> [Int] -> LogicSig -> LiveProof -> YesBut Binding
+tryFocusAgainst :: String -> [Int] -> LogicSig -> LiveProof
+                -> YesBut (Binding,SideCond)
 tryFocusAgainst lawnm parts theSig liveProof
   = let (tz,_)      =  focus liveProof
         goalt       =  getTZ tz

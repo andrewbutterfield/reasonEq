@@ -801,14 +801,19 @@ tryMatch :: REPLCmd (REqState, LiveProof)
 tryMatch [] state = return state
 tryMatch args state@( reqs, liveProof)
   = do case tryFocusAgainst lawnm parts (logicsig reqs) liveProof of
-         Yes bind -> putStrLn ("Binding:\n" ++ show bind)
-         But msgs -> putStrLn $ unlines' ("Failed:":msgs)
+         Yes (bind,scC')
+           -> putStrLn $ unlines
+                [ banner
+                , "Binding:\n" ++ trBinding bind
+                , "Local candidate s.c. = " ++ trSideCond scC' ]
+         But msgs -> putStrLn $ unlines' ( (banner ++ " failed!") : msgs )
        putStr "<return> to continue..." ; hFlush stdout ; getLine
        return state
   where
     (nums,rest) = span (all isDigit) args
     parts = map read nums
     lawnm = filter (not . isSpace) $ unwords rest
+    banner = "Match against `"++lawnm++"'"++show parts
 \end{code}
 
 

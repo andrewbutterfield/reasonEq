@@ -97,11 +97,12 @@ buildMatchContext (thy:thys) -- thys not null
 
 \begin{code}
 data Match
- = MT { mName ::  String     -- assertion name
-      , mAsn  ::  Assertion  -- matched assertion
-      , mClass :: MatchClass -- match class
-      , mBind ::  Binding    -- resulting binding
-      , mRepl ::  Term       -- replacement term
+ = MT { mName  ::  String     -- assertion name
+      , mAsn   ::  Assertion  -- matched assertion
+      , mClass ::  MatchClass -- match class
+      , mBind  ::  Binding    -- resulting binding
+      , mSC    ::  SideCond   -- goal side-condition local update
+      , mRepl  ::  Term       -- replacement term
       } deriving (Eq,Show,Read)
 
 type Matches = [Match]
@@ -326,50 +327,22 @@ finaliseProof liveProof
       , reverse $ stepsSoFar liveProof ) )
 \end{code}
 
-
-\subsection{Matching in Context}
-
-First, given list of match-contexts, systematically work through them.
-\begin{code}
-matchInContexts :: LogicSig -> [MatchContext] -> Assertion -> Matches
-matchInContexts logicsig mcs asn
-  = concat $ map (matchLaws logicsig asn) mcs
-\end{code}
-
-Now, the code to match laws, given a context.
-Bascially we run down the list of laws,
-returning any matches we find.
-\begin{code}
-matchLaws :: LogicSig -> Assertion -> MatchContext -> Matches
-matchLaws logicsig asn (_,lws,vts) = concat $ map (domatch logicsig vts asn) lws
-\end{code}
-
-Sometimes we are interested in a specific (named) law.
-\begin{code}
-matchLawByName :: Monad m => LogicSig -> Assertion -> String -> [MatchContext]
-               -> m Matches
-matchLawByName logicsig asn lnm mcs
- = do (law,vts) <- findLaw lnm mcs
-      return $ domatch logicsig vts asn law
-\end{code}
-
 \newpage
-\subsubsection{Trying a Match}
+\subsection{Trying a Match}
 
-Sometimes we want to what happens when we single out a law,
+Sometimes we want to see what happens when we single out a law,
 including observing any match failure messages.
 Here we painstakingly check every monadic call from \texttt{match} onwards,
 and report the outcome.
 These calls are:
-\texttt{
-  Matching.match
-; ?.completeBind
-; Instantiate.instantiateASC
-; SideCond.scDischarged
-}
+  \texttt{match}%
+, \texttt{completeBind}%
+, \texttt{instantiateASC}%
+, and \texttt{scDischarged}.
 \begin{code}
 tryLawByName :: LogicSig -> Assertion -> String -> [Int] -> [MatchContext]
-               -> YesBut Binding
+               -> YesBut ( Binding    -- mapping from pattern to candidate
+                         , SideCond ) -- updated candidate side-condition
 tryLawByName logicsig asn@(tC,scC) lnm parts mcs
   = do (((_,(tP,scP)),_),vts) <- findLaw lnm mcs
        partsP <- findParts parts tP
@@ -423,6 +396,99 @@ keeping the pattern side-conditions in mind.
 \end{code}
 
 \newpage
+Next, instantiate the pattern side-condition using the bindings.
+\begin{code}
+-- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
+    tryInstantiateSC bind scC' tP partsP scP
+      = case instantiateSC bind scP of
+          Yes scP'  ->  trySCDischarge bind tP partsP scC' scP'
+          But msgs
+           -> But ([ "try s.c. instantiation failed"
+                   , ""
+                   , trBinding bind ++ "("++trSideCond scP++")"
+                   , ""
+                   , "lnm[parts]="++lnm++show parts
+                   , "tC="++trTerm 0 tC
+                   , "scC="++trSideCond scC
+                   , "tP="++trTerm 0 tP
+                   , "partsP="++trTerm 0 partsP
+                   , "scP="++trSideCond scP
+                   , ""
+                   ]++msgs)
+\end{code}
+
+Finally, try to discharge the instantiated side-condition:
+\begin{code}
+-- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
+    trySCDischarge bind tP partsP scC' scP'
+      = do  if scDischarged scC' scP'
+              then Yes (bind,scC')
+              else But [ "try s.c. discharge failed"
+                       , ""
+                       , trSideCond scC
+                         ++ " " ++ _implies ++ " " ++
+                         trSideCond scP'
+                       , ""
+                       , "lnm[parts]="++lnm++show parts
+                       , "tC="++trTerm 0 tC
+                       , "scC="++trSideCond scC
+                       , "tP="++trTerm 0 tP
+                       , "partsP="++trTerm 0 partsP
+                       , "scP'="++trSideCond scP'
+                       , "bind:\n"
+                       , trBinding bind
+                       ]
+\end{code}
+
+Done.
+\begin{code}
+-- end tryLawByName
+\end{code}
+
+\newpage
+\subsubsection{Finding parts of laws}
+
+Looking up a law by name:
+\begin{code}
+findLaw :: Monad m => String -> [MatchContext] -> m (Law,[VarTable])
+findLaw lnm [] = fail ("Law '"++lnm++"' not found")
+findLaw lnm ((thnm,lws,vts):mcs)
+ = case filter (\law -> lawName law == lnm) lws of
+     []       ->  findLaw lnm mcs
+     (law:_)  ->  return (law,vts)
+\end{code}
+
+Finding `parts' of a top-level constructor:
+\begin{code}
+findParts :: Monad m => [Int] -> Term -> m Term
+findParts [] t = return t
+findParts parts (Cons tk n ts)
+  = do ts' <- getParts (filter (>0) parts) ts
+       case ts' of
+         [t']  ->  return t'
+         _     ->  return $ Cons tk n ts'
+findParts parts t
+          = fail ("findParts: "++trTerm 0 t++" "++show parts++" makes no sense")
+\end{code}
+
+Assume all \texttt{Int}s are positive
+\begin{code}
+getParts :: Monad m => [Int] -> [a] -> m [a]
+getParts [] xs = fail "getParts: no parts specified"
+getParts (p:_) [] = fail ("getParts: no parts from "++show p++" onwards")
+getParts [p] xs
+ | p <= length xs  = return [xs!!(p-1)]
+ | otherwise = fail ("getParts: no such part number "++show p)
+getParts (p:ps) xs
+ | p <= length xs  = do xps <- getParts ps xs
+                        return ((xs!!(p-1)) : xps)
+ | otherwise = fail ("getParts: no such part number "++show p)
+\end{code}
+
+
+\newpage
+\subsection{Completing a Binding}
+
 We have $t_C, sc_C, t_P, sc_P, t_{part}$ and $\beta = (t_C :: t_{part})$,
 as well as the ``known'' variables $\kappa$.
 Here we need to:
@@ -454,122 +520,61 @@ Here we need to:
 }
 
 \begin{code}
--- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
-    -- this needs to live somewhere else
-    -- it may require user input to complete,
-    -- so it, and tryLawByName, may need to be split into two parts.
-    completeBind :: Monad m
-                 => [VarTable] -> Term -> SideCond -> Term -> SideCond
-                 -> Binding -> m (Binding,SideCond,SideCond)
-    completeBind vts tC scC tP scP bind
-      | S.null unMappedUnkVars  =  return (bind,scC,scP)
-      | otherwise  = completeASCs vts tC scC tP bind mappedASCs unMappedASCs
-      where
-        unMappedVars = mentionedVars tP S.\\ mappedVars bind
-        unMappedUnkVars = S.filter (isUnknownGVar vts) unMappedVars
-        unMappedASCs = citingASCs unMappedUnkVars scP
-        mappedASCs = scP \\ unMappedASCs
+completeBind :: Monad m
+             => [VarTable] -> Term -> SideCond -> Term -> SideCond
+             -> Binding -> m (Binding,SideCond,SideCond)
+completeBind vts tC scC tP scP bind
+  | S.null unMappedUnkVars  =  return (bind,scC,scP)
+  | otherwise  = completeASCs vts tC scC tP bind mappedASCs unMappedASCs
+  where
+    unMappedVars = mentionedVars tP S.\\ mappedVars bind
+    unMappedUnkVars = S.filter (isUnknownGVar vts) unMappedVars
+    unMappedASCs = citingASCs unMappedUnkVars scP
+    mappedASCs = scP \\ unMappedASCs
 
-    completeASCs :: Monad m
-                 => [VarTable] -> Term -> SideCond -> Term -> Binding
-                 -> SideCond -> SideCond -> m (Binding,SideCond,SideCond)
-    completeASCs vts tC scC tP bind mascP [] = return (bind,scC,mascP)
-    completeASCs vts tC scC tP bind mascP (ExCover gv vs:unMappedASCs)
-      = do scC' <- mrgAtmCond (Exact gv vs) scC
-           mascP' <- mrgAtmCond (Covers gv vs) mascP
-           completeASCs vts tC scC' tP bind mascP' unMappedASCs
-    completeASCs vts tC scC tP bind mascP (umSC:unMappedASCs)
-      = fail ("completeBind: not yet handling unmapped: " ++ trSideCond [umSC] )
-\end{code}
-
-Next, instantiate the pattern side-condition using the bindings.
-\begin{code}
--- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
-    tryInstantiateSC bind scC tP partsP scP
-      = case instantiateSC bind scP of
-          Yes scP'  ->  trySCDischarge bind tP partsP scP scP'
-          But msgs
-           -> But ([ "try s.c. instantiation failed"
-                   , ""
-                   , trBinding bind ++ "("++trSideCond scP++")"
-                   , ""
-                   , "lnm[parts]="++lnm++show parts
-                   , "tC="++trTerm 0 tC
-                   , "scC="++trSideCond scC
-                   , "tP="++trTerm 0 tP
-                   , "partsP="++trTerm 0 partsP
-                   , "scP="++trSideCond scP
-                   , ""
-                   ]++msgs)
+completeASCs :: Monad m
+             => [VarTable] -> Term -> SideCond -> Term -> Binding
+             -> SideCond -> SideCond -> m (Binding,SideCond,SideCond)
+completeASCs vts tC scC tP bind mascP [] = return (bind,scC,mascP)
+completeASCs vts tC scC tP bind mascP (ExCover gv vs:unMappedASCs)
+  = do scC' <- mrgAtmCond (Exact gv vs) scC
+       mascP' <- mrgAtmCond (Covers gv vs) mascP
+       completeASCs vts tC scC' tP bind mascP' unMappedASCs
+completeASCs vts tC scC tP bind mascP (umSC:unMappedASCs)
+  = fail ("completeBind: not yet handling unmapped: " ++ trSideCond [umSC] )
 \end{code}
 
 \newpage
-Finally, try to discharge the instantiated side-condition:
+\subsection{Matching in Context}
+
+First, given list of match-contexts, systematically work through them.
 \begin{code}
--- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
-    trySCDischarge bind tP partsP scP scP'
-      = do  if scDischarged scC scP'
-              then Yes bind
-              else But [ "try s.c. discharge failed"
-                       , ""
-                       , trSideCond scC
-                         ++ " " ++ _implies ++ " " ++
-                         trSideCond scP'
-                       , ""
-                       , "lnm[parts]="++lnm++show parts
-                       , "tC="++trTerm 0 tC
-                       , "scC="++trSideCond scC
-                       , "tP="++trTerm 0 tP
-                       , "partsP="++trTerm 0 partsP
-                       , "scP="++trSideCond scP
-                       , "scP'="++trSideCond scP'
-                       , "bind:\n"
-                       , trBinding bind
-                       ]
+matchInContexts :: LogicSig -> [MatchContext] -> Assertion -> Matches
+matchInContexts logicsig mcs asn
+  = concat $ map (matchLaws logicsig asn) mcs
 \end{code}
 
-Done.
+Now, the code to match laws, given a context.
+Bascially we run down the list of laws,
+returning any matches we find.
 \begin{code}
--- end tryLawByName
+matchLaws :: LogicSig -> Assertion -> MatchContext -> Matches
+matchLaws logicsig asn (_,lws,vts) = concat $ map (domatch logicsig vts asn) lws
 \end{code}
 
-Finding `parts' of a top-level constructor:
+Sometimes we are interested in a specific (named) law.
 \begin{code}
-findParts :: Monad m => [Int] -> Term -> m Term
-findParts [] t = return t
-findParts parts (Cons tk n ts)
-  = do ts' <- getParts (filter (>0) parts) ts
-       case ts' of
-         [t']  ->  return t'
-         _     ->  return $ Cons tk n ts'
-findParts parts t
-          = fail ("findParts: "++trTerm 0 t++" "++show parts++" makes no sense")
-
--- assume all ints positive
-getParts :: Monad m => [Int] -> [a] -> m [a]
-getParts [] xs = fail "getParts: no parts specified"
-getParts (p:_) [] = fail ("getParts: no parts from "++show p++" onwards")
-getParts [p] xs
- | p <= length xs  = return [xs!!(p-1)]
- | otherwise = fail ("getParts: no such part number "++show p)
-getParts (p:ps) xs
- | p <= length xs  = do xps <- getParts ps xs
-                        return ((xs!!(p-1)) : xps)
- | otherwise = fail ("getParts: no such part number "++show p)
+matchLawByName :: Monad m => LogicSig -> Assertion -> String -> [MatchContext]
+               -> m Matches
+matchLawByName logicsig asn lnm mcs
+ = do (law,vts) <- findLaw lnm mcs
+      return $ domatch logicsig vts asn law
 \end{code}
 
-Looking up a law by name:
-\begin{code}
-findLaw :: Monad m => String -> [MatchContext] -> m (Law,[VarTable])
-findLaw lnm [] = fail ("Law '"++lnm++"' not found")
-findLaw lnm ((thnm,lws,vts):mcs)
- = case filter (\law -> lawName law == lnm) lws of
-     []       ->  findLaw lnm mcs
-     (law:_)  ->  return (law,vts)
-\end{code}
 
 \newpage
 \subsection{Assertion Matching}
+
 
 For each law,
 we check its top-level to see if it is an instance of \texttt{theEqv},
@@ -587,8 +592,18 @@ domatch logicsig vts asnC law
   =  simpleMatch MatchAll (theTrue logicsig) vts asnC law
 \end{code}
 
-Do a simple match.
-Here is where we do side-condition checking.
+The general shape of law matching:
+\begin{verbatim}
+matchLawPart logicsig vts asn@(tC,scC) law@((_,(tP,scP)),_) partsP
+  = do bind <- match vts tC partsP
+       (bind',scC',scP') <- completeBind vts tC scC tP scP bind
+       scP'' <- instantiateSC bind' scP' of
+       if scDischarged scC' scP''
+        then return (bind',scC')
+        else fail "s.c. discharge failed"
+\end{verbatim}
+Do a simple match, 
+including side-condition checking.
 \begin{code}
 simpleMatch :: MatchClass -> Term -> [VarTable] -> Assertion -> Law -> Matches
 simpleMatch mc repl vts asnC@(tC,scC) ((n,asn@(tP,scP)),_)
@@ -601,7 +616,7 @@ simpleMatch mc repl vts asnC@(tC,scC) ((n,asn@(tP,scP)),_)
             then
               case instantiate bind repl of
                 Nothing     ->  []
-                Just irepl  ->  [MT n asn (chkPatn mc tP) bind irepl]
+                Just irepl  ->  [MT n asn (chkPatn mc tP) bind scC irepl]
             else []
 
     chkPatn mc (Var _ v)

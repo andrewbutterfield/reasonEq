@@ -324,6 +324,7 @@ trTermZip (t,wayup) = trTerm 0 $ exitTZ (markfocus t,wayup)
 \subsection{Side Conditions}
 
 \begin{code}
+trSideCond [] = "_"
 trSideCond ascs
  = intcalNN ";" (map trAtmSideCond ascs)
 

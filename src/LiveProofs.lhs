@@ -101,7 +101,8 @@ data Match
       , mAsn   ::  Assertion  -- matched assertion
       , mClass ::  MatchClass -- match class
       , mBind  ::  Binding    -- resulting binding
-      , mSC    ::  SideCond   -- goal side-condition local update
+      , mLocSC ::  SideCond   -- goal side-condition local update
+      , mLawSC ::  SideCond   -- law side-condition mapped to goal
       , mRepl  ::  Term       -- replacement term
       } deriving (Eq,Show,Read)
 
@@ -489,7 +490,8 @@ getParts (p:ps) xs
 \newpage
 \subsection{Completing a Binding}
 
-We have $t_C, sc_C, t_P, sc_P, t_{part}$ and $\beta = (t_C :: t_{part})$,
+We have $t_C, sc_C, t_P, sc_P, t_{part}$
+and $\beta$ from matching $t_C :: t_{part}$,
 as well as the ``known'' variables $\kappa$.
 Here we need to:
 \begin{enumerate}
@@ -508,7 +510,7 @@ Here we need to:
     For any $asc = \exists\lst x \supseteq P$ in $sc_{umP}$ :
     \begin{enumerate}
       \item $asc := \lst x \supseteq P$
-      \item $sc_C := sc_C \land \lst x = P $ (as a witness)
+      \item $sc_C := sc_C \land \lst x = \beta(P) $ (as a witness)
       \item Possibly bind $\lst x$ to itself?
     \end{enumerate}
   \item
@@ -537,7 +539,8 @@ completeASCs :: Monad m
              -> SideCond -> SideCond -> m (Binding,SideCond,SideCond)
 completeASCs vts tC scC tP bind mascP [] = return (bind,scC,mascP)
 completeASCs vts tC scC tP bind mascP (ExCover gv vs:unMappedASCs)
-  = do scC' <- mrgAtmCond (Exact gv vs) scC
+  -- ERROR: need to eval bind(gv) first.
+  = do scC' <- mrgAtmCond (Exact gv vs) scC -- we need bind(gv) here
        mascP' <- mrgAtmCond (Covers gv vs) mascP
        completeASCs vts tC scC' tP bind mascP' unMappedASCs
 completeASCs vts tC scC tP bind mascP (umSC:unMappedASCs)
@@ -588,25 +591,23 @@ simpleMatch :: MatchClass
             -> Term       -- sub-part of law being matched
             -> Matches
 simpleMatch mc repl vts law@((n,asn@(tP,scP)),_) asnC@(tC,scC) partsP
-  = runmatch -- vts tC tP
+  =  do bind <- match vts tC partsP
+        (bind',scC',scP') <- completeBind vts tC scC tP scP bind
+        scP'' <- instantiateSC bind' scP'
+        if scDischarged scC' scP''
+         then
+          case instantiate bind' repl of
+            Nothing     ->  []
+            Just irepl  ->  [MT n asn (chkPatn mc tP) bind' scC' scP'' irepl]
+        else []
   where
-    runmatch -- scC scP bind
-      =  do bind <- match vts tC partsP
-            (bind',scC',scP') <- completeBind vts tC scC tP scP bind
-            scP'' <- instantiateSC bind' scP'
-            if scDischarged scC' scP''
-             then
-              case instantiate bind repl of
-                Nothing     ->  []
-                Just irepl  ->  [MT n asn (chkPatn mc tP) bind scC' irepl]
-            else []
 
     chkPatn mc (Var _ v)
       | lookupVarTables vts v == UnknownVar  =  trivialise mc
     chkPatn mc _                             =  mc
 
-trivialise (MatchEqv [i])  =  MatchEqvVar i
-trivialise mc              =  mc
+    trivialise (MatchEqv [i])  =  MatchEqvVar i
+    trivialise mc              =  mc
 \end{code}
 
 For each law,
@@ -744,9 +745,10 @@ undoCalcStep :: LiveProof -> LiveProof
 undoCalcStep liveProof
   = case stepsSoFar liveProof of
       []                       ->  liveProof
-      ((just,(term,_)):prevSteps)
+      ((just,(term,sc)):prevSteps)
         ->  matches_ []
             $ fPath_ []
+            $ conjSC_ sc
             $ stepsSoFar_ prevSteps
             $ focus__ (setTerm term)
             $ undoCalcStep' just
@@ -821,13 +823,18 @@ shMatch (i, mtch)
  = show i ++ " : "++ ldq ++ green (mName mtch) ++ rdq
    ++ "  gives  "
    ++ (bold $ blue $ trTerm 0 (mRepl mtch))
-   ++ "  "++ shSideCond bind lsc
+   ++ "  " ++ shSCImplication (mLocSC mtch) (mLawSC mtch)
    ++ " " ++ shMClass (mClass mtch)
  where
     bind = mBind mtch
     (_,lsc) = mAsn mtch
 
-shSideCond bind lsc
+shSCImplication scC scPm
+  =     trSideCond scC
+     ++ " " ++ _implies ++ " "
+     ++ trSideCond scPm
+
+shMappedCond bind lsc
   = case instantiateSC bind lsc of
       Nothing    ->  trSideCond lsc ++ (red " (law-sc!)")
       Just ilsc  ->  trSideCond ilsc

@@ -2,6 +2,9 @@
 
 ## Hotfixes
 
+Need to fix construction of `Exact gv vs` in `LiveProofs.completeASCs`.
+
+
 ## Next Task(s)
 
 * **Confusion Alert!** The use of "binding" for the outcome of matching gets confused with the notion of "binding" and "bound" associated with various quantifiers. Perhaps we should reconsider re-naming `Binding.Binding`, etc to `?.Mapping` ? or `MMapping` ? or `MMap` ?

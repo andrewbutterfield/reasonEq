@@ -446,6 +446,7 @@ applyMatchToFocus i liveProof
     in do mtch  <- nlookup i $ matches liveProof
           return ( focus_ ((setTZ (mRepl mtch) tz),seq')
                  $ matches_ []
+                 $ conjSC_ (mLocSC mtch)
                  $ stepsSoFar__
                     (( UseLaw (ByMatch $ mClass mtch)
                               (mName mtch)

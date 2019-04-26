@@ -576,47 +576,29 @@ matchLawByName logicsig asn lnm mcs
 \subsection{Assertion Matching}
 
 
-For each law,
-we check its top-level to see if it is an instance of \texttt{theEqv},
-in which case we try matches against all possible variations,
-as well as the whole thing.
-\begin{code}
-domatch :: LogicSig -> [VarTable] -> Assertion -> Law -> Matches
-domatch logicsig vts asnC law@((nP,asn@(tP@(Cons tk i tsP@(_:_:_)),scP)),prov)
-  | i == theEqv logicsig  =  simpleMatch MatchAll (theTrue logicsig) vts asnC law
-                             ++ doEqvMatch logicsig vts asnC nP prov scP tsP
-\end{code}
-Otherwise we just match against the whole law.
-\begin{code}
-domatch logicsig vts asnC law
-  =  simpleMatch MatchAll (theTrue logicsig) vts asnC law
-\end{code}
 
-The general shape of law matching:
-\begin{verbatim}
-matchLawPart logicsig vts asn@(tC,scC) law@((_,(tP,scP)),_) partsP
-  = do bind <- match vts tC partsP
-       (bind',scC',scP') <- completeBind vts tC scC tP scP bind
-       scP'' <- instantiateSC bind' scP' of
-       if scDischarged scC' scP''
-        then return (bind',scC')
-        else fail "s.c. discharge failed"
-\end{verbatim}
-Do a simple match, 
+Do a simple match,
 including side-condition checking.
 \begin{code}
-simpleMatch :: MatchClass -> Term -> [VarTable] -> Assertion -> Law -> Matches
-simpleMatch mc repl vts asnC@(tC,scC) ((n,asn@(tP,scP)),_)
-  = concat $ map (mkmatch scC scP) $ match vts tC tP
+simpleMatch :: MatchClass
+            -> Term       -- sub-part of law not being matched
+            -> [VarTable] -- known variables in scope at this law
+            -> Law        -- law of interest
+            -> Assertion  -- candidate assertion
+            -> Term       -- sub-part of law being matched
+            -> Matches
+simpleMatch mc repl vts law@((n,asn@(tP,scP)),_) asnC@(tC,scC) partsP
+  = runmatch -- vts tC tP
   where
-    mkmatch scC scP bind
-      =  do scP' <- instantiateSC bind scP
-            -- does scC ==> scP' ?
-            if scDischarged scC scP'
-            then
+    runmatch -- scC scP bind
+      =  do bind <- match vts tC partsP
+            (bind',scC',scP') <- completeBind vts tC scC tP scP bind
+            scP'' <- instantiateSC bind' scP'
+            if scDischarged scC' scP''
+             then
               case instantiate bind repl of
                 Nothing     ->  []
-                Just irepl  ->  [MT n asn (chkPatn mc tP) bind scC irepl]
+                Just irepl  ->  [MT n asn (chkPatn mc tP) bind scC' irepl]
             else []
 
     chkPatn mc (Var _ v)
@@ -625,6 +607,23 @@ simpleMatch mc repl vts asnC@(tC,scC) ((n,asn@(tP,scP)),_)
 
 trivialise (MatchEqv [i])  =  MatchEqvVar i
 trivialise mc              =  mc
+\end{code}
+
+For each law,
+we check its top-level to see if it is an instance of \texttt{theEqv},
+in which case we try matches against all possible variations,
+as well as the whole thing.
+\begin{code}
+domatch :: LogicSig -> [VarTable] -> Assertion -> Law -> Matches
+domatch logicsig vts asnC law@((_,(tP@(Cons _ i tsP@(_:_:_)),_)),_)
+  | i == theEqv logicsig
+                    =    simpleMatch MatchAll (theTrue logicsig) vts law asnC tP
+                      ++ doEqvMatch logicsig vts law asnC tsP
+\end{code}
+Otherwise we just match against the whole law.
+\begin{code}
+domatch logicsig vts asnC law@((_,(tP,_)),_)
+  =  simpleMatch MatchAll (theTrue logicsig) vts law asnC tP
 \end{code}
 
 \newpage
@@ -677,23 +676,27 @@ We fully support Cases A and B and give some support to Case C.
 First, Case A, which is automatically done above by \texttt{simpleMatch},
 so we need not return any matches here.
 \begin{code}
-doEqvMatch _ _ _ _ _ _ [tP1,tP2] | tP1 == tP2  =  []
+doEqvMatch :: LogicSig -> [VarTable] -> Law -> Assertion
+           -> [Term]    -- top-level equivalence components in law
+           -> Matches
+-- rule out matches against one-side of the reflexivity axiom
+doEqvMatch _ _ _ _ [tP1,tP2] | tP1 == tP2  =  []
 \end{code}
 Then invoke Cases C and B, in that order.
 \begin{code}
-doEqvMatch logicsig vts asnC nP prov scP  tsP
-  = doEqvMatchC logicsig vts asnC nP prov scP tsP
+doEqvMatch logicsig vts law asnC tsP
+  = doEqvMatchC logicsig vts law asnC tsP
     ++
-    doEqvMatchB logicsig vts asnC nP prov scP [] [] tsP
+    doEqvMatchB logicsig vts law asnC [] [] tsP
 \end{code}
 
 Next, Case B.
 \begin{code}
-doEqvMatchB logicsig vts asnC nP prov scP mtchs _ [] = mtchs
-doEqvMatchB logicsig vts asnC nP prov scP mtchs sPt (tP:tPs)
+doEqvMatchB logicsig vts law asnC mtchs _ [] = mtchs
+doEqvMatchB logicsig vts law@((_,(_,scP)),_) asnC mtchs sPt (tP:tPs)
   = let mtchs' = simpleMatch (MatchEqv [length sPt + 1])
-                    (eqv (reverse sPt ++ tPs)) vts asnC ((nP,(tP,scP)),prov)
-    in doEqvMatchB logicsig vts asnC nP prov scP (mtchs'++mtchs) (tP:sPt) tPs
+                    (eqv (reverse sPt ++ tPs)) vts law asnC tP
+    in doEqvMatchB logicsig vts law asnC (mtchs'++mtchs) (tP:sPt) tPs
   where
     eqv []   =  theTrue logicsig
     eqv [t]  =  t
@@ -706,22 +709,27 @@ We will assume $m < n$ and just try $J$ being either
 the first $m$ pattern components ($\setof{1\dots m}$),
 or the last $m$ (\setof{n+1-m\dots n}).
 \begin{code}
-doEqvMatchC logicsig vts asnC@(tC@(Cons tk i tsC),scC) nP prov scP tsP
+-- doEqvMatchC logicsig vts law asnC tsP
+doEqvMatchC :: LogicSig -> [VarTable] -> Law -> Assertion ->[Term]
+            -> Matches
+doEqvMatchC logicsig vts law@((_,(_,scP)),_) asnC@(tC@(Cons tk i tsC),scC) tsP
  | i == theEqv logicsig
    && cLen < pLen  = doEqvMatchC' cLen [1..cLen]
-                       logicsig vts scC nP prov scP  tsC tsP
+                       logicsig vts law scC tsC tsP
                      ++
                      doEqvMatchC' cLen [pLen+1-cLen .. pLen]
-                       logicsig vts scC nP prov scP (reverse tsC) (reverse tsP)
+                       logicsig vts law scC (reverse tsC) (reverse tsP)
  where
     cLen = length tsC
     pLen = length tsP
-doEqvMatchC _ _ _ _ _ _ _ = []
+doEqvMatchC _ _ _ _ _ = []
 
 -- we assume cLen < pLen here
-doEqvMatchC' cLen is logicsig vts scC nP prov scP tsC tsP
-  = simpleMatch (MatchEqv is) (eqv tsP'') vts (eqv tsC,scC)
-                                              ((nP,(eqv tsP',scP)),prov)
+doEqvMatchC' :: Int -> [Int] -> LogicSig -> [VarTable] -> Law
+             -> SideCond -> [Term] -> [Term]
+             -> Matches
+doEqvMatchC' cLen is logicsig vts law@((_,(_,scP)),_) scC tsC tsP
+  = simpleMatch (MatchEqv is) (eqv tsP'') vts law (eqv tsC,scC) (eqv tsP')
   where
     (tsP',tsP'') = splitAt cLen tsP
     eqv []   =  theTrue logicsig

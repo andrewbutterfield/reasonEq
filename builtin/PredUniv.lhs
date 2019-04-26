@@ -36,6 +36,7 @@ import PropMixOne
 import PropImpl
 import Equality
 import PredAxioms
+import PredExists
 \end{code}
 
 
@@ -234,7 +235,8 @@ predUnivName = "PredUniv"
 predUnivTheory :: Theory
 predUnivTheory
   =  Theory { thName  =  predUnivName
-            , thDeps  =  [ predAxiomName
+            , thDeps  =  [ predExistsName
+                         , predAxiomName
                          , equalityName
                          , propSubstName
                          , propImplName

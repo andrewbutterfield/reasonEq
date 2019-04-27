@@ -510,7 +510,7 @@ Here we need to:
     For any $asc = \exists\lst x \supseteq P$ in $sc_{umP}$ :
     \begin{enumerate}
       \item $asc := \lst x \supseteq P$
-      \item $sc_C := sc_C \land \lst x = \beta(P) $ (as a witness)
+      \item $sc_C := sc_C \land \lst x \subseteq \beta(P) $
       \item Possibly bind $\lst x$ to itself?
     \end{enumerate}
   \item
@@ -539,8 +539,8 @@ completeASCs :: Monad m
              -> SideCond -> SideCond -> m (Binding,SideCond,SideCond)
 completeASCs vts tC scC tP bind mascP [] = return (bind,scC,mascP)
 completeASCs vts tC scC tP bind mascP (ExCover gv vs:unMappedASCs)
-  -- ERROR: need to eval bind(gv) first.
-  = do scC' <- mrgAtmCond (Exact gv vs) scC -- we need bind(gv) here
+  = do scE <- instantiateASC bind (Covers gv vs)
+       scC' <- mrgSideCond scC $ pdbg "scE" scE
        mascP' <- mrgAtmCond (Covers gv vs) mascP
        completeASCs vts tC scC' tP bind mascP' unMappedASCs
 completeASCs vts tC scC tP bind mascP (umSC:unMappedASCs)

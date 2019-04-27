@@ -8,6 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Instantiate
 ( instantiate
+, instantiateASC
 , instantiateSC
 ) where
 import Data.Maybe
@@ -168,10 +169,6 @@ instVar binding v
 \subsection{Side-Condition Instantiation}
 
 Doing it again, with side-conditions.
-We need to cope with the fact that two distinct variables
-in the law side-condition could be matched against the same variable
-in the goal.
-This can result in the the side-condition reducing to \textit{false}.
 \begin{code}
 instantiateSC :: Monad m => Binding -> SideCond -> m SideCond
 instantiateSC bind ascs

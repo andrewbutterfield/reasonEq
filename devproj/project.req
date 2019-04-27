@@ -16,24 +16,6 @@ END THEORIES
 CURRTHEORY = PredUniv
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("PredUniv","univ_true")
-BEGIN LIVE-PROOF
-TH-NAME: PredUniv
-CJ-NAME: univ_true
-CONJ = (C P (Id "\8801") [X (Id "[_]") (K P (VB True)),K P (VB True)],[])
-SIDE = []
-STRAT reduce
-BEGIN SEQZIP
-TERMZIP = (X (Id "[_]") (K P (VB True)),[Cons' P (Id "\8801") [] [K P (VB True)]])
-BEGIN SEQUENT'
-SIDECOND = []
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.univ_true", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
-END SEQUENT'
-END SEQZIP
-FPATH: [1]
-BEGIN LIST STEPS
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

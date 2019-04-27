@@ -82,6 +82,29 @@ which will itself be a list variable:
 This arises when we have side-conditions between lists of variables
 and expressions that occur in substitutions.
 
+We note that disjointness and being a (pre-)condition
+distribute through conjunction without restrictions,
+so we have, for example, that:
+\begin{eqnarray*}
+   x,y \notin S,T
+   &\equiv&
+   x \notin S \land x \notin T \land y \notin S \land y \notin T
+\\ pre \supseteq S,T
+   &\equiv&
+   pre \supseteq S \land pre \supseteq T
+\end{eqnarray*}
+However, covering only distributes (like $pre$) w.r.t. conjunction
+as far as terms are concerned.
+The variable-list must be retained as a unit.
+\begin{eqnarray*}
+   x \supseteq S,T
+   &\equiv&
+   x \supseteq S \land x \supseteq T
+\\ x,y \supseteq T
+   &\not\equiv&
+   x \supseteq T \land y \supseteq T
+\end{eqnarray*}
+
 To handle certain cases, particularly to do with predicate closure operators,
 we need to introduce the notion of existential side-conditions.
 For example, universal closure is typically defined as

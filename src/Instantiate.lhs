@@ -244,10 +244,14 @@ while the former may be able to corroborate or falsify the ASC.
 \begin{code}
 instantiateDisjoint :: Monad m => VarSet -> VarSet -> m [AtmSideCond]
 instantiateDisjoint dvs fvs
- | fvs `disjoint` dvs = return $ map (mkD dvs) $ S.toList freeTV
- | otherwise  =  fail "free-vars not disjoint"
+ | freeObs `disjoint` dvs = return $ map (mkD dvs) $ S.toList freeTVar
+ | otherwise  =  fail $ unlines
+                   [ "Obs. free-vars not disjoint"
+                   , "dvs = " ++ trVSet dvs
+                   , "fvs = " ++ trVSet fvs
+                   ]
  where
-   freeTV = S.filter (not . isObsGVar) fvs
+   (freeObs,freeTVar) = S.partition isObsGVar fvs
    mkD vs gv = Disjoint gv vs
 \end{code}
 
@@ -256,14 +260,14 @@ instantiateDisjoint dvs fvs
 \begin{code}
 instantiateCovers :: Monad m => VarSet -> VarSet -> m [AtmSideCond]
 instantiateCovers cvs fvs
- | fvs `S.isSubsetOf` cvs = return $ map (mkC cvs) $ S.toList freeTV
+ | freeObs `S.isSubsetOf` cvs = return $ map (mkC cvs) $ S.toList freeTVar
  | otherwise  =  fail $ unlines
-                   [ "free-vars not covered"
+                   [ "Obs. free-vars not covered"
                    , "cvs = " ++ trVSet cvs
                    , "fvs = " ++ trVSet fvs
                    ]
  where
-   freeTV = S.filter (not . isObsGVar) fvs
+   (freeObs,freeTVar) = S.partition isObsGVar fvs
    mkC vs gv = Covers gv vs
 \end{code}
 

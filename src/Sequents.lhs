@@ -673,8 +673,8 @@ getHypotheses' (HLaws' hn hk hbef _ _ _ _ haft _ _)
 
 \begin{code}
 -- temporary
-dispSeqZip :: SeqZip -> String
-dispSeqZip (tz,Sequent' _ sc conj')  =  unlines' $ dispConjParts tz sc conj'
+dispSeqZip :: SideCond -> SeqZip -> String
+dispSeqZip sc (tz,Sequent' _ _ conj')  =  unlines' $ dispConjParts tz sc conj'
 
 dispConjParts tz sc (CLaws' hthry Lft rightC)
   =  (dispHypotheses hthry)

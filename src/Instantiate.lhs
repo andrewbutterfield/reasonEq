@@ -183,7 +183,7 @@ instantiateASC :: Monad m => Binding -> AtmSideCond -> m [AtmSideCond]
 \paragraph{Is a Pre-condition}~
 
 \begin{code}
-instantiateASC _ (IsPre gv) = fail "instantiateASC IsPre NYI"
+instantiateASC bind asc@(IsPre _)  =  instantiateASCvs bind S.empty asc
 \end{code}
 
 \paragraph{Has Variable-Set}~
@@ -233,6 +233,13 @@ Next,
 Dealing with each condition, now that everything is instantiated.
 
 \subsubsection{Disjointedness}
+
+\textbf{Wrong: trying to discharge the side-condition!}
+\textit{
+Instead, split observables out from expr/pred variables.
+The latter become part of the new ASC,
+while the former may be able to corroborate or falsify the ASC.
+}
 
 \begin{code}
 instantiateDisjoint :: Monad m => VarSet -> VarSet -> m [AtmSideCond]

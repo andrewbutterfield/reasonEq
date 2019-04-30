@@ -231,16 +231,35 @@ instantiateASCvslv bind vs' lv (Exact _ _)
 \end{code}
 Next,
 Dealing with each condition, now that everything is instantiated.
+Assume below that
+$\setof{x,y}$ are distinct identifiers for observation variables
+and $\setof{S,T}$ are distinct identifiers for term-valued variables.
 
 \subsubsection{Disjointedness}
 
 \textbf{Wrong: trying to discharge the side-condition!}
 \textit{
-Instead, split observables out from expr/pred variables.
-The latter become part of the new ASC,
-while the former may be able to corroborate or falsify the ASC.
+See examples below
 }
 
+\begin{eqnarray*}
+  S \disj T_1 \cup T2 &=& S \disj T_1 \land S \disj T_2
+\\ S_1 \cup S_2 \disj T &=& S_1 \disj T \land S_2 \disj T
+\end{eqnarray*}
+
+\begin{eqnarray*}
+   \setof{x,S} \disj \setof{y,T} &?&
+\\ \setof{x,S} \disj \setof{x,T} &&  \false
+\\ \setof{x,S} \disj \setof{y,S} &\text{if}&  S=\emptyset
+\\ \setof{x,S} \disj \setof{y,T}
+   &\text{if}&
+   S \disj \setof{y,T} ; T \disj \setof{x,S}
+\\&=& y \notin S \land x \notin T \land S \disj T
+\\ \setof{\lst x,S} \disj \setof{\lst x,T}
+   &\text{if}&
+   \lst x = \emptyset \land S \disj T
+\\ \setof{x,\lst S} \disj \setof{y,\lst S} &\text{if}&  \lst S = \emptyset
+\end{eqnarray*}
 \begin{code}
 instantiateDisjoint :: Monad m => VarSet -> VarSet -> m [AtmSideCond]
 instantiateDisjoint dvs fvs
@@ -255,8 +274,27 @@ instantiateDisjoint dvs fvs
    mkD vs gv = Disjoint gv vs
 \end{code}
 
+\newpage
 \subsubsection{Covering}
 
+\begin{eqnarray*}
+   S \supseteq T_1 \cup T2 &=& S \supseteq T_1 \land S \supseteq T_2
+\\ S_1 \cup S_2 \supseteq T &\neq& S_1 \supseteq T \land S_2 \supseteq T
+\end{eqnarray*}
+
+
+\begin{eqnarray*}
+   \setof{x,S} \supseteq \setof{y,T} &?&
+\\ \setof{x,S} \supseteq \setof{x,T} &\text{if}&  \setof{x,S} \supseteq T
+\\ \setof{x,S} \supseteq \setof{y,S} &\text{if}&  y \in S
+\\ \setof{x,S} \supseteq \setof{y,T}
+   &\text{if}&
+   y \in S \and \setof{x,S} \supseteq T
+\\ \setof{\lst x,S} \supseteq \setof{\lst x,T}
+   &\text{if}&
+   \setof{\lst x,S} \supseteq T
+\\ \setof{x,\lst S} \supseteq \setof{y,\lst S} &\text{if}& y \in \lst S
+\end{eqnarray*}
 \begin{code}
 instantiateCovers :: Monad m => VarSet -> VarSet -> m [AtmSideCond]
 instantiateCovers cvs fvs
@@ -270,6 +308,14 @@ instantiateCovers cvs fvs
    (freeObs,freeTVar) = S.partition isObsGVar fvs
    mkC vs gv = Covers gv vs
 \end{code}
+
+
+\subsubsection{Pre-Condition}
+
+Not yet covered
+
+\subsubsection{Exactness}
+
 
 \begin{code}
 instantiateExact :: Monad m => VarSet -> VarSet -> m [AtmSideCond]
@@ -285,9 +331,6 @@ instantiateExact cvs fvs
    mkX vs gv = Exact gv vs
 \end{code}
 
-\subsubsection{Pre-Condition}
-
-\subsubsection{Exactness}
 
 \subsubsection{Side-condition Variable Instantiation}
 

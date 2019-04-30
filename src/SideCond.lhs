@@ -135,7 +135,7 @@ However, a match against the rhs,
 where $\lst x$ is bound to variable collection $V$ (say),
 will require the goal to have a side condition that implies
 the non-existential condition $V \supseteq T$.
-This means we add a new form of atomoic side-condition
+This means we add a new form of atomic side-condition
 that is only used in proofs
 \begin{eqnarray*}
    x,\lst v      =    T && \mbox{exact}

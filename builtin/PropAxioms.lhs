@@ -68,6 +68,9 @@ $$
 \AXPROP
 $$
 
+\subsection{Propositional Infrastructure}
+
+
 We need to build some infrastructure here.
 This consists of the predicate variables $P$, $Q$ and $R$,
 the $\Bool$ type,
@@ -76,7 +79,7 @@ and the infix symbols $\equiv$, $\lnot$, $\lor$, $\land$ and $\implies$.
 The propositional constants, along with the equivelance and implication operators
 are also exported as they have significance for proof strategies.
 
-\subsection{Propositional Variables}
+\subsubsection{Propositional Variables}
 
 \begin{code}
 p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
@@ -90,7 +93,7 @@ r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
 bool = GivenType $ fromJust $ ident $ _mathbb "B"
 \end{code}
 
-\subsection{Propositional Constants}
+\subsubsection{Propositional Constants}
 
 \begin{code}
 trueP  = Val P $ Boolean True

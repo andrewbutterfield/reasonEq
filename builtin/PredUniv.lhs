@@ -146,7 +146,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-cjAndUnivDistr = preddef (_land -.- "[]" -.- "name")
+cjAndUnivDistr = preddef (_land -.- "[]" -.- "distr")
                 (univ p /\ univ q === univ (p /\ q))
                 scTrue
 \end{code}

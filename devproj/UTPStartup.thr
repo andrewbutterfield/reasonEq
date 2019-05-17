@@ -1,0 +1,12 @@
+BEGIN THEORY UTPStartup
+DEPS = ["PredUniv","PredExists","PredAxioms","Equality","PropSubst","PropImpl","PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"]
+KNOWN = VD (fromList [],fromList [],fromList [])
+BEGIN LIST LAWS
+(("UTP_ax_001",(C P (Id "\8744") [V P (VR (Id "P",VP,WS)),C P (Id "\8744") [V P (VR (Id "Q",VP,WS)),C P (Id "\172") [V P (VR (Id "Q",VP,WS))]]],[])),Axiom)
+END LIST LAWS
+BEGIN LIST PROOFS
+END LIST PROOFS
+BEGIN LIST CONJECTURES
+("UTP_cj_001",(C P (Id "\8744") [C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],C P (Id "\172") [V P (VR (Id "Q",VP,WS))]],[SD (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])]))
+END LIST CONJECTURES
+END THEORY UTPStartup

@@ -804,7 +804,7 @@ dispLiveProof liveProof
        ( " ..."
          : displayMatches (matches liveProof)
          : [ underline "           "
-           , dispSeqZip (conjSC liveProof) (focus liveProof)
+           , dispSeqZip (fPath liveProof) (conjSC liveProof) (focus liveProof)
            , "" ]
        ) )
  where (trm,sc) = conjecture liveProof

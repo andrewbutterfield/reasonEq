@@ -62,6 +62,7 @@ import Equality
 import PredAxioms
 import PredExists
 import PredUniv
+import UTPStartup
 
 import Debug.Trace
 dbg msg x = trace (msg++show x) x
@@ -615,6 +616,7 @@ devKnownBuiltins  = [ propAxiomTheory
                     , predAxiomTheory
                     , predExistsTheory
                     , predUnivTheory
+                    , utpStartupTheory
                     ]
 
 biLkp _ []  = Nothing

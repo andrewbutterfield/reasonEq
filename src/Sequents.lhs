@@ -673,31 +673,29 @@ getHypotheses' (HLaws' hn hk hbef _ _ _ _ haft _ _)
 
 \begin{code}
 -- temporary
-dispSeqZip :: SideCond -> SeqZip -> String
-dispSeqZip sc (tz,Sequent' _ _ conj')  =  unlines' $ dispConjParts tz sc conj'
+dispSeqZip :: [Int] -> SideCond -> SeqZip -> String
+dispSeqZip fp sc (tz,Sequent' _ _ conj')
+                                     =  unlines' $ dispConjParts fp tz sc conj'
 
-dispConjParts tz sc (CLaws' hthry Lft rightC)
+dispConjParts fp tz sc (CLaws' hthry Lft rightC)
   =  (dispHypotheses hthry)
      : [ _vdash ]
-     ++ [trTermZip tz++"    "++trSideCond sc]
-     ++ [ ""
-        , "R-target = "++trTerm 0 rightC ]
+     ++ dispGoal tz sc
+     ++ dispContext fp "Target (RHS): " (red $ trTerm 0 rightC)
 
 
-dispConjParts tz sc (CLaws' hthry Rght leftC)
+dispConjParts fp tz sc (CLaws' hthry Rght leftC)
   =  (dispHypotheses hthry)
      : [ _vdash ]
-     ++ [trTermZip tz++"    "++trSideCond sc]
-     ++ [ ""
-        , "L-target = "++trTerm 0 leftC ]
+     ++ dispGoal tz sc
+     ++ dispContext fp "Target (LHS): " (red $ trTerm 0 leftC)
 
 
-dispConjParts tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
+dispConjParts fp tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
   =  (dispHypotheses $ getHypotheses' seq')
      : [ _vdash ]
-     ++ [trTermZip tz++"   "++trSideCond sc]
-     ++ [ ""
-        , "Hypothesis: "++trTerm 0 horig++"  "++trSideCond sc]
+     ++ dispGoal tz sc
+     ++ dispContext fp "Hypothesis: " (trTerm 0 horig++"  "++trSideCond sc)
   where
      hthry = Theory { thName = hn
                     , thDeps = []
@@ -707,8 +705,15 @@ dispConjParts tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
                     , proofs = []
                     }
 
+
 dispHypotheses hthry  =  numberList' showHyp $ laws $ hthry
 showHyp ((_,(trm,_)),_) = trTerm 0 trm
+
+dispGoal tz sc
+  = [ trTermZip tz++"    "++trSideCond sc, "" ]
+
+dispContext fp what formula
+  = [ "Focus = " ++ show fp ++ "  "  ++ what ++ formula ]
 
 dispSeqTermZip :: SeqZip -> String
 dispSeqTermZip (tz,_) = trTermZip tz

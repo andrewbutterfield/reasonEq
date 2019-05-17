@@ -52,7 +52,7 @@ rendering of datatypes to ease debugging.
 
 \begin{code}
 trId :: Identifier -> String
-trId (Identifier s)  =  s
+trId (Identifier s)  =  widthHack 2 s
 
 -- can't handle nesting of bold, underline and colours right now...
 trVC :: VarClass -> String -> String
@@ -232,7 +232,7 @@ trTerm p (Sub tk t sub)
   | otherwise   =  "("++trTerm 0 t++")" ++ trSub p sub
 \end{code}
 
-A closure expects the identifier to be of the form leftbracket`_rightbracket
+A closure expects the identifier to be of the form leftbracket\_rightbracket
 \begin{code}
 trTerm p (Cls n t)
   =  lbr ++ trTerm 0 t ++ rbr
@@ -329,11 +329,11 @@ trSideCond ascs
  = intcalNN ";" (map trAtmSideCond ascs)
 
 trAtmSideCond (IsPre    gv)    = "pre:"++trGVar gv
-trAtmSideCond (Disjoint gv vs) = trOVSet vs ++  _notin   ++ trGVar gv
-trAtmSideCond (Exact    gv vs) = trOVSet vs ++    "="    ++ trGVar gv
-trAtmSideCond (Covers   gv vs) = trOVSet vs ++ _supseteq ++ trGVar gv
+trAtmSideCond (Disjoint gv vs) = trOVSet vs ++ spaced _notin    ++ trGVar gv
+trAtmSideCond (Exact    gv vs) = trOVSet vs ++ spaced  "="      ++ trGVar gv
+trAtmSideCond (Covers   gv vs) = trOVSet vs ++ spaced _supseteq ++ trGVar gv
 trAtmSideCond (ExCover  gv vs)
-                    = _exists ++ trOVSet vs ++ _supseteq ++ trGVar gv
+                    = _exists ++ trOVSet vs ++ spaced _supseteq ++ trGVar gv
 \end{code}
 
 \subsection{Assertions}
@@ -342,7 +342,7 @@ trAtmSideCond (ExCover  gv vs)
 trAsn (trm,[]) = trTerm 0 trm
 trAsn (trm,sc) = trTerm 0 trm ++ ", " ++ trSideCond sc
 
-trNmdAsn (nm,asn) = nm ++ ": " ++ trAsn asn
+trNmdAsn (nm,asn) = widthHack 2 nm ++ ": " ++ trAsn asn
 \end{code}
 
 \newpage

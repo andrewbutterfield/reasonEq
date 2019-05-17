@@ -795,7 +795,7 @@ showLiveProof liveProof
 dispLiveProof :: LiveProof -> String
 dispLiveProof liveProof
  = unlines
-     ( ( ("Proof for "++red (conjName liveProof))
+     ( ( ("Proof for "++red (widthHack 2 $ conjName liveProof))
        : ("\t" ++ green(trTerm 0 trm ++ "  "++trSideCond sc))
        : ("by "++(strategy liveProof))
        : map shLiveStep (reverse (stepsSoFar liveProof))

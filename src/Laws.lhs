@@ -14,7 +14,7 @@ module Laws
  , Assertion, NmdAssertion, (-.-)
  , Provenance(..)
  , Law, lawName, lawNamedAssn, lawProvenance
- , isAxiom, isProven, isAssumed 
+ , isAxiom, isProven, isAssumed
  , labelAsAxiom, labelAsProof, labelAsAssumed
  , writeSignature, readSignature
  , showLogic, showNmdAssns, showLaw, showLaws, showConj, showConjs
@@ -337,11 +337,12 @@ showLogic logicsig
 Showing laws:
 \begin{code}
 showNmdAssns nasns  =  numberList (showNmdAssn $ nameWidth nasns)  nasns
-nameWidth nasns = maximum $ map (length . fst) nasns
+nameWidth nasns = maximum $ map (length . widthHack 2 . fst) nasns
 
 showNmdAssn w (nm,(trm,sc))
-  =    ldq ++ nm ++ rdq ++ pad w nm
+  =    ldq ++ nmh ++ rdq ++ pad w nmh
        ++ "  " ++ trTerm 0 trm ++ "  "++trSideCond sc
+  where nmh = widthHack 2 nm
 
 showLaws []   =  "Laws: None."
 showLaws lws  =  "Laws:\n"

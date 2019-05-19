@@ -6,7 +6,8 @@ We need to decouple Cons names from external appearance.
 If a theory file developed and saved on OS/unix
 is opened by a Windows version, then the UTF-8 names will be present.
 If done the other way around we see ASCII_art names.
-Nice symboles needs to export an ASCII to pretty-name dictionary.
+NiceSymbols needs to export an ASCII to pretty-name dictionary.
+
 ### Instantiating Side-Conditions
 
 `instantiateASC` is just wrong - it's acting more like discharge should.

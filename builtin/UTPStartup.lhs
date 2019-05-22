@@ -51,51 +51,99 @@ support of top of the propostional and predicate foundation already done.
 
 \subsection{Predicate Infrastructure}
 
-We need to build some infrastructure here.
+Most variables have an ``ubnderlying'' definition
+that is then ``wrapped'' in different ways depending on where it is used.
 
-\subsubsection{Predicate and Expression Variables}
-
+$$P \quad Q \quad R$$
 \begin{code}
-vP = Vbl (fromJust $ ident "P") PredV Static
-gvP = StdVar vP
-p = fromJust $ pVar vP
+-- underying variable
+vp = Vbl (fromJust $ ident "P") PredV Static
+p = fromJust $ pVar vp
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
-\end{code}
-
-\subsubsection{Predicate Constants}
-
-
-\subsubsection{Generic Variables}
-
-\begin{code}
-vx = Vbl (fromJust $ ident "x") ObsV Static ; x = StdVar vx
-lvxs = LVbl vx [] [] ; xs = LstVar lvxs
-\end{code}
-
-\begin{code}
 r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
+-- for use in side-conditions
+gvP = StdVar vp
 \end{code}
 
-\subsubsection{Propositional Type}
 
+$$ b \qquad c $$
 \begin{code}
-bool = GivenType $ fromJust $ ident $ _mathbb "B"
+b = fromJust $ eVar bool $ Vbl (fromJust $ ident "b") ExprV Before
+c = fromJust $ eVar bool $ Vbl (fromJust $ ident "c") ExprV Before
 \end{code}
 
-\subsubsection{Propositional Constants}
 
+$$ v \qquad \lst v $$
 \begin{code}
-trueP  = Val P $ Boolean True
-falseP = Val P $ Boolean False
+(v,vs) = (StdVar vv, LstVar lvvs)
+  where
+   vv   = Vbl (fromJust $ ident "v") ObsV Static
+   lvvs = LVbl vv [] []
 \end{code}
 
+$$ x \quad y \quad z \qquad x' \quad y' \quad z'$$
+
+Underlying variables:
 \begin{code}
-ve = Vbl (fromJust $ ident "e") ExprV Static
+vx  = Vbl (fromJust $ ident "x") ObsV Before
+vy  = Vbl (fromJust $ ident "y") ObsV Before
+vz  = Vbl (fromJust $ ident "z") ObsV Before
+vx' = Vbl (fromJust $ ident "x") ObsV After
+vy' = Vbl (fromJust $ ident "y") ObsV After
+vz' = Vbl (fromJust $ ident "z") ObsV After
+\end{code}
+
+For use in expressions  and substitution first list
+\\(e.g. $x+y$ might be \texttt{plus [x,y]}):
+\begin{code}
+[x,y,z,x',y',z'] = map (fromJust . eVar int) [vx,vy,vz,vx',vy',vz']
+\end{code}
+
+For use in quantifier variable list/sets and substitution second lists
+\\(e.g. $\forall x,x' \bullet P$ would be \texttt{forall [qx,qx'] p}):
+\begin{code}
+[qx,qy,qz,qx',qy',qz'] = map StdVar [vx,vy,vz,vx',vy',vz']
+\end{code}
+
+$$ x_m \qquad y_m \qquad z_m$$
+For use in quantifier variable list/sets and substitutions:
+\begin{code}
+xm = StdVar $ Vbl (fromJust $ ident "x") ObsV (During "m")
+\end{code}
+
+$$\Nat \qquad \Int$$
+\begin{code}
+nat  = GivenType $ fromJust $ ident $ _mathbb "N"
+int  = GivenType $ fromJust $ ident $ _mathbb "Z"
+\end{code}
+
+$$ e \quad \lst e  \qquad f \quad \lst f$$
+\begin{code}
+-- Underlying variables:
+ve = Vbl (fromJust $ ident "e") ExprV Before
+vf = Vbl (fromJust $ ident "f") ExprV Before
+-- for use in expressions
+e = fromJust $ eVar int ve
+f = fromJust $ eVar int vf
+-- for use in quantifiers, substitutions (first list)
+qe = StdVar ve
+qf = StdVar vf
+-- list versions, for use in substitutions (second list)
 lves = LVbl ve [] []
-
-sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
+lvfs = LVbl vf [] []
+-- for use in quantifiers, side-conditions
+qes = LstVar lves
+qfs = LstVar lvfs
 \end{code}
 
+$$ P[e/x] \qquad P[\lst e/\lst x]$$
+\begin{code}
+-- note that [ a / v]  becomes (v,a) !
+sub p = Sub P p $ fromJust $ substn [(vx,e)] []
+lvxs = LVbl vx [] []
+qxs = LstVar lvxs
+lsub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
+\end{code}
 
 
 \newpage
@@ -125,7 +173,7 @@ $$\par\vspace{-8pt}
 \begin{code}
 cjUTP0001 = preddef ("UTP" -.- "cj" -.- "001")
                      ((p \/ q) \/ mkNot q)
-                     ([xs] `notin` gvP)
+                     ([qxs] `notin` gvP)
 \end{code}
 
 

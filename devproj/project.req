@@ -5,38 +5,17 @@ END REQSET
 BEGIN SIGNATURE
 TRUE = K P (VB True)
 FALSE = K P (VB False)
-EQV = Id "\8801"
-IMP = Id "\10233 "
-AND = Id "\8743"
+EQV = Id "equiv"
+IMP = Id "implies"
+AND = Id "land"
 END SIGNATURE
 BEGIN THEORIES
-THNAMES = ["Equality","PredAxioms","PredExists","PredUniv","PropAxioms","PropConj","PropDisj","PropEquiv","PropImpl","PropMixOne","PropNot","PropSubst","UTPStartup"]
-SDAG = [[("UTPStartup",["PredUniv","PredExists","PredAxioms","Equality","PropSubst","PropImpl","PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PredUniv",["PredExists","PredAxioms","Equality","PropSubst","PropImpl","PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PredExists",["PredAxioms","Equality","PropSubst","PropImpl","PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PredAxioms",["Equality","PropSubst","PropImpl","PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropSubst",["PropImpl","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropImpl",["PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropMixOne",["PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropConj",["PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropDisj",["PropNot","PropEquiv","PropAxioms"])],[("PropNot",["PropEquiv","PropAxioms"])],[("Equality",["PropAxioms"]),("PropEquiv",["PropAxioms"])],[("PropAxioms",[])]]
+THNAMES = ["Equality","PredAxioms","PredExists","PredUniv","PropAxioms","PropConj","PropDisj","PropEquiv","PropImpl","PropMixOne","PropNot","PropSubst"]
+SDAG = [[("PredUniv",["PredExists","PredAxioms","Equality","PropSubst","PropImpl","PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PredExists",["PredAxioms","Equality","PropSubst","PropImpl","PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PredAxioms",["Equality","PropSubst","PropImpl","PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropSubst",["PropImpl","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropImpl",["PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropMixOne",["PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropConj",["PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropDisj",["PropNot","PropEquiv","PropAxioms"])],[("PropNot",["PropEquiv","PropAxioms"])],[("Equality",["PropAxioms"]),("PropEquiv",["PropAxioms"])],[("PropAxioms",[])]]
 END THEORIES
-CURRTHEORY = PredUniv
+CURRTHEORY = PredAxioms
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("PredUniv","[]_idem")
-BEGIN LIVE-PROOF
-TH-NAME: PredUniv
-CJ-NAME: []_idem
-CONJ = (C P (Id "\8801") [X (Id "[_]") (X (Id "[_]") (V P (VR (Id "P",VP,WS)))),X (Id "[_]") (V P (VR (Id "P",VP,WS)))],[])
-SIDE = [SS (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])]
-STRAT reduce
-BEGIN SEQZIP
-TERMZIP = (B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))),[Cons' P (Id "\8801") [] [B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))]])
-BEGIN SEQUENT'
-SIDECOND = []
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.[]_idem", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
-END SEQUENT'
-END SEQZIP
-FPATH: [1]
-BEGIN LIST STEPS
-(UseLaw (ByMatch (ME [1])) "[]_def" (BD (fromList [((Id "P",VP),BT (B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))))],fromList [],fromList [],fromList [])) [1],(C P (Id "\8801") [X (Id "[_]") (B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))),B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))],[SS (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])]))
-(UseLaw (ByMatch (ME [1])) "[]_def" (BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [],fromList [])) [1,1],(C P (Id "\8801") [X (Id "[_]") (X (Id "[_]") (V P (VR (Id "P",VP,WS)))),B P (Id "\8704") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))],[SS (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])]))
-(UseLaw (ByMatch (ME [1])) "[]_def" (BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [],fromList [])) [2],(C P (Id "\8801") [X (Id "[_]") (X (Id "[_]") (V P (VR (Id "P",VP,WS)))),X (Id "[_]") (V P (VR (Id "P",VP,WS)))],[]))
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

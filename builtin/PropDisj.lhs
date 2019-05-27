@@ -55,7 +55,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjOrZero
- = ( _lor++"_zero"
+ = ( "lor"-.-"zero"
    , ( (p \/ trueP) === trueP
      , scTrue ) )
 \end{code}
@@ -69,7 +69,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjOrUnit
- = ( _lor++"_unit"
+ = ( "lor"-.-"unit"
    , ( (p \/ falseP) === p
      , scTrue ) )
 \end{code}
@@ -83,7 +83,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjOrOrDistr
- = ( _lor++"-"++_lor++"_distr"
+ = ( "lor"-.-"lor"-.-"distr"
    , ( p \/ (q \/ r) === (p \/ q) \/ (p \/ r)
      , scTrue ) )
 \end{code}
@@ -97,7 +97,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjOrEqvSplit
- = ( _lor++"-"++_equiv++"_split"
+ = ( "lor"-.-"equiv"-.-"split"
    , ( flattenEquiv ( (p \/ q === p \/ mkNot q) === p )
      , scTrue ) )
 \end{code}

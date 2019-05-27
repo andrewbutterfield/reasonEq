@@ -58,7 +58,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjImpDef2
- = propdef ( _implies -.- "def2"
+ = propdef ( "implies" -.- "def2"
            , (p ==> q) === (mkNot p \/ q) )
 \end{code}
 
@@ -69,7 +69,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjImpMeet
- = propdef ( _implies -.- "meet"
+ = propdef ( "implies" -.- "meet"
            , (p ==> q) === (p /\ q === p) )
 \end{code}
 
@@ -93,7 +93,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjImpEqvDistr
- = propdef ( _implies -.- _equiv -.- "distr"
+ = propdef ( "implies" -.- "equiv" -.- "distr"
            , (p ==> (q === r)) === ((p ==> q) === (p ==> r)) )
 \end{code}
 
@@ -177,7 +177,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjImpRefl
- = propdef ( _implies -.- "refl"
+ = propdef ( "implies" -.- "refl"
            , p ==> p === trueP )
 \end{code}
 
@@ -190,7 +190,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjImpRZero
- = propdef ( _implies -.- "r_zero"
+ = propdef ( "implies" -.- "r-zero"
            , p ==> trueP === trueP )
 \end{code}
 
@@ -202,7 +202,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjImpLUnit
- = propdef ( _implies -.- "l_unit"
+ = propdef ( "implies" -.- "l-unit"
            , trueP ==> p === p )
 \end{code}
 
@@ -214,7 +214,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjNotDef2
- = propdef ( _lnot -.- "def2"
+ = propdef ( "lnot" -.- "def2"
            , p ==> falseP === mkNot p )
 \end{code}
 
@@ -238,7 +238,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjImpTrans
- = propdef ( _implies -.- "trans"
+ = propdef ( "implies" -.- "trans"
            , (p==>q)/\(q==>r) ==> (p==>r) )
 \end{code}
 
@@ -250,7 +250,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjEqvImpTrans
- = propdef ( _equiv -.- _implies -.- "trans"
+ = propdef ( "equiv" -.- "implies" -.- "trans"
            , (p===q)/\(q==>r) ==> (p==>r) )
 \end{code}
 
@@ -262,7 +262,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjImpEqvTrans
- = propdef ( _implies -.- _equiv -.- "trans"
+ = propdef ( "implies" -.- "equiv" -.- "trans"
            , (p==>q)/\(q===r) ==> (p==>r) )
 \end{code}
 
@@ -298,7 +298,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjAnteOrDistr
- = propdef ( "ante" -.- _lor -.- "distr"
+ = propdef ( "ante" -.- "lor" -.- "distr"
            , p \/ q ==> r === (p==>r) /\ (q==>r) )
 \end{code}
 
@@ -310,7 +310,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjAnteAndDistr
- = propdef ( "ante" -.- _land -.- "distr"
+ = propdef ( "ante" -.- "land" -.- "distr"
            , p /\ q ==> r === (p==>r) \/ (q==>r) )
 \end{code}
 
@@ -322,7 +322,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjCnsqAndDistr
- = propdef ( "cnsq" -.- _land -.- "distr"
+ = propdef ( "cnsq" -.- "land" -.- "distr"
            , p ==> q /\ r === (p==>q) /\ (p==>r) )
 \end{code}
 
@@ -334,7 +334,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjCnsqOrDistr
- = propdef ( "cnsq" -.- _land -.- "distr"
+ = propdef ( "cnsq" -.- "land" -.- "distr"
            , p ==> q \/ r === (p==>q) \/ (p==>r) )
 \end{code}
 
@@ -346,7 +346,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjAnteAsImp
- = propdef ( "ante" -.- "as" -.- _implies
+ = propdef ( "ante" -.- "as" -.- "implies"
            , (p==>q)==>r === (mkNot p ==> r) /\ (q ==> r) )
 \end{code}
 

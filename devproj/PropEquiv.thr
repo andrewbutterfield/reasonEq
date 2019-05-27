@@ -2,10 +2,10 @@ BEGIN THEORY PropEquiv
 DEPS = ["PropAxioms"]
 KNOWN = VD (fromList [],fromList [],fromList [])
 BEGIN LIST LAWS
-(("\8801_id",(C P (Id "\8801") [C P (Id "\8801") [K P (VB True),V P (VR (Id "Q",VP,WS))],V P (VR (Id "Q",VP,WS))],[])),Assumed)
 END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS
 BEGIN LIST CONJECTURES
+("equiv_id",(C P (Id "equiv") [C P (Id "equiv") [K P (VB True),V P (VR (Id "Q",VP,WS))],V P (VR (Id "Q",VP,WS))],[]))
 END LIST CONJECTURES
 END THEORY PropEquiv

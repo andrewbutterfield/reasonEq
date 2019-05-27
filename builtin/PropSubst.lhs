@@ -91,7 +91,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 axNotSubst
- = ( _lnot -.- "subst"
+ = ( "lnot" -.- "subst"
    , ( sub (mkNot p)  === mkNot (sub p)
    , scTrue ) )
 \end{code}
@@ -106,7 +106,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 axEqvSubst
- = ( _equiv -.- "subst"
+ = ( "equiv" -.- "subst"
    , ( sub (p === q)  === (sub p === sub q)
    , scTrue ) )
 \end{code}
@@ -121,7 +121,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 axOrSubst
- = ( _lor -.- "subst"
+ = ( "lor" -.- "subst"
    , ( sub (p \/ q)  === (sub p \/ sub q)
    , scTrue ) )
 \end{code}
@@ -161,7 +161,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjAndSubst
- = ( _land -.- "subst"
+ = ( "land" -.- "subst"
    , ( sub (p /\ q)  === (sub p /\ sub q)
    , scTrue ) )
 \end{code}
@@ -176,7 +176,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjImplSubst
- = ( _implies -.- "subst"
+ = ( "implies" -.- "subst"
    , ( sub (p ==> q)  === (sub p ==> sub q)
    , scTrue ) )
 \end{code}

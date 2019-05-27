@@ -59,7 +59,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjandSym
- = ( _land++"_symm"
+ = ( "land"-.-"symm"
    , ( (p /\ q) === (q /\ p)
      , scTrue ) )
 \end{code}
@@ -73,7 +73,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjandAssoc
- = ( _land++"_assoc"
+ = ( "land"-.-"assoc"
    , ( (p /\ q) /\ r === p /\ (q /\ r)
      , scTrue ) )
 \end{code}
@@ -87,7 +87,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjandIdem
- = ( _land++"_idem"
+ = ( "land"-.-"idem"
    , ( p /\ p === p
      , scTrue ) )
 \end{code}
@@ -101,7 +101,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjandUnit
- = ( _land++"_unit"
+ = ( "land"-.-"unit"
    , ( p /\ trueP === p
      , scTrue ) )
 \end{code}
@@ -115,7 +115,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjandZero
- = ( _land++"_zero"
+ = ( "land"-.-"zero"
    , ( p /\ falseP === falseP
      , scTrue ) )
 \end{code}
@@ -129,7 +129,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjandDistr
- = ( _land++"_"++_land++"_distr"
+ = ( "land"-.-"land"-.-"distr"
    ,  ( p /\ (q /\ r)  === (p /\ q) /\ (p /\ r)
      , scTrue ) )
 \end{code}

@@ -99,7 +99,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-axAnyDef = preddef (_exists -.- "def")
+axAnyDef = preddef ("exists" -.- "def")
   ( (exists [xs] p)
     ===
     (mkNot $ forall [xs] $ mkNot p) )
@@ -114,7 +114,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-cjAnyTrue = preddef (_exists -.- "false")
+cjAnyTrue = preddef ("exists" -.- "false")
                     (exists [xs] falseP  ===  falseP)
                     scTrue
 \end{code}
@@ -123,7 +123,7 @@ $$\begin{array}{lll}
    \CJAnyOnePoint  & \CJAnyOnePointS  & \CJAnyOnePointN
 \end{array}$$\par\vspace{-8pt}
 \begin{code}
-cjAnyOne = preddef (_exists -.- "one" -.- "point")
+cjAnyOne = preddef ("exists" -.- "one" -.- "point")
   ( (exists [xs,ys] ((lvxs `areEqualTo` lves) /\ p) )
     ===
     (exists [ys] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) ) )
@@ -136,7 +136,7 @@ $$
   \end{array}
 $$\par\vspace{-4pt}
 \begin{code}
-cjAnyOrDistr = preddef (_exists -.- _lor -.- "distr")
+cjAnyOrDistr = preddef ("exists" -.- "lor" -.- "distr")
   ( (exists [xs] (p \/ q)) === (exists [xs] p) \/ (exists [xs] q) )
   scTrue
 \end{code}
@@ -147,7 +147,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-axAndAllScope = preddef (_land -.- _exists -.- "scope")
+axAndAllScope = preddef ("land" -.- "exists" -.- "scope")
   ( p /\ (exists [xs,ys] q)
     === exists [xs] ( p /\ exists [ys] q) )
   ([xs] `notin` gvP)
@@ -160,7 +160,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-cjAnyInst = preddef (_exists -.- "inst")
+cjAnyInst = preddef ("exists" -.- "inst")
   ( (exists [ys] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) )
     ==>
     (exists [xs,ys] p) )
@@ -174,7 +174,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-cjAnyDumRen = preddef (_exists -.- _alpha -.- "rename")
+cjAnyDumRen = preddef ("exists" -.- "alpha" -.- "rename")
   ( (exists [xs] p)
     ===
     (exists [ys] (Sub P p (fromJust $ substn [] [(lvxs,lvys)])) ) )

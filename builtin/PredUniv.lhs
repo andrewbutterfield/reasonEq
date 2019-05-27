@@ -146,7 +146,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-cjAndUnivDistr = preddef (_land -.- "[]" -.- "distr")
+cjAndUnivDistr = preddef ("land" -.- "[]" -.- "distr")
                 (univ p /\ univ q === univ (p /\ q))
                 scTrue
 \end{code}
@@ -179,7 +179,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-cjUnivAllClosed = preddef ("univ" -.- _forall -.- "closed")
+cjUnivAllClosed = preddef ("univ" -.- "forall" -.- "closed")
                           ((forall [xs] $ univ p) === univ p)
                           scTrue
 \end{code}
@@ -190,7 +190,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-cjUnivAnyClosed = preddef ("univ" -.- _exists -.- "closed")
+cjUnivAnyClosed = preddef ("univ" -.- "exists" -.- "closed")
                           ((exists [xs] $ univ p) === univ p)
                           scTrue
 \end{code}

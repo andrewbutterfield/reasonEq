@@ -43,7 +43,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjEqvId
- = ( _equiv++"_id"
+ = ( "equiv"-.-"id"
    , ( (trueP === q) === q
      , scTrue ) )
 

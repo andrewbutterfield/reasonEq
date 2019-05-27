@@ -104,28 +104,28 @@ falseP = Val P $ Boolean False
 \subsection{Propositional Operators}
 
 \begin{code}
-equiv = fromJust $ ident _equiv ; mkEquivs ps = PCons equiv ps
+equiv = fromJust $ ident "equiv" ; mkEquivs ps = PCons equiv ps
 mkEquiv p q = mkEquivs [p,q]
 infix 1 === ; (===) = mkEquiv
 
-implies = fromJust $ ident _implies ; mkImplies p q = PCons implies [p,q]
+implies = fromJust $ ident "implies" ; mkImplies p q = PCons implies [p,q]
 infixr 2 ==> ; (==>) = mkImplies
 
-lor = fromJust $ ident _lor
+lor = fromJust $ ident "lor"
 mkOrs []   =  falseP
 mkOrs [p]  =  p
 mkOrs ps   =  PCons lor ps
 mkOr p q   =  mkOrs [p,q]
 infix 3 \/ ; (\/) = mkOr
 
-land = fromJust $ ident _land
+land = fromJust $ ident "land"
 mkAnds []   =  trueP
 mkAnds [p]  =  p
 mkAnds ps   =  PCons land ps
 mkAnd p q = mkAnds [p,q]
 infix 4 /\ ; (/\) = mkAnd
 
-lnot = fromJust $ ident _lnot ; mkNot p = PCons lnot [p]
+lnot = fromJust $ ident "lnot" ; mkNot p = PCons lnot [p]
 \end{code}
 
 \subsubsection{The Propositional Signature}
@@ -175,7 +175,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 axEqvRefl
- = ( _equiv++"_refl"
+ = ( "equiv" -.- "refl"
    , ( p === p
    , scTrue ) )
 \end{code}
@@ -190,7 +190,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 axEqvAssoc
- = ( _equiv++"_assoc"
+ = ( "equiv" -.- "assoc"
    , ( ((p === q) === r) === (p === (q === r))
    , scTrue ) )
 \end{code}
@@ -204,7 +204,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 axEqvSymm
- = ( _equiv++"_symm"
+ = ( "equiv" -.- "symm"
    , ( flattenEquiv ( (p === q) === (q === p) )
    , scTrue ) )
 \end{code}
@@ -218,7 +218,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 axNotEqvDistr
- = ( _lnot++"_"++_equiv++"_distr"
+ = ( "lnot" -.- "equiv" -.- "distr"
    , ( mkNot(p === q) ===  ((mkNot p) === q)
    , scTrue ) )
 \end{code}
@@ -233,7 +233,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 axOrSymm
- = ( _lor++"_symm"
+ = ( "lor" -.- "symm"
    , ( p \/ q === q \/ p
    , scTrue ) )
 \end{code}
@@ -247,7 +247,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 axOrAssoc
- = ( _lor++"_assoc"
+ = ( "lor" -.- "assoc"
    , ( (p \/ q) \/ r === p \/ (q \/ r)
    , scTrue ) )
 \end{code}
@@ -261,7 +261,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 axOrIdem
- = ( _lor++"_idem"
+ = ( "lor" -.- "idem"
    , ( p \/ p === p
    , scTrue ) )
 \end{code}
@@ -275,7 +275,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 axOrEqvDistr
- = ( _lor++"_"++_equiv++"_distr"
+ = ( "lor" -.- "equiv" -.- "distr"
    , ( flattenEquiv ( (p \/ (q === r)) === (p \/ q === p \/ r) )
    , scTrue ) )
 \end{code}
@@ -317,7 +317,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 axImplDef
- = ( _implies++"_def"
+ = ( "implies" -.- "def"
    , ( flattenEquiv ( p ==> q === (p \/ q === q) )
    , scTrue ) )
 \end{code}

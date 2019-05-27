@@ -52,7 +52,7 @@ rendering of datatypes to ease debugging.
 
 \begin{code}
 trId :: Identifier -> String
-trId (Identifier s)  =  widthHack 2 s
+trId (Identifier s)  =  widthHack 2 $ nicesym s
 
 -- can't handle nesting of bold, underline and colours right now...
 trVC :: VarClass -> String -> String
@@ -153,16 +153,16 @@ Based on experience with live-proof we can now say that
 we use ``non-assoc'' render mode for all associative operators.
 \begin{code}
 type InfixKind = ( Int     -- precedence
-                 , Bool )  -- true if *syntactically* associative
-prc :: Identifier -> InfixKind
-prc (Identifier n)
-  | n == "="       =  (1,False)
-  | n == _equiv    =  (2,False)
-  | n == _implies  =  (3,False)
-  | n == _lor      =  (4,False) -- force parenthesis for nested 'or'
-  | n == _land     =  (5,False) -- force parenthesis for nested 'and'
-  | n == _lnot     =  (6,False)
-  | otherwise      =  (0,False) -- force parenthesising if not at top-level
+                 , Bool )  -- true if considered a 'symbol'
+prc :: String -> InfixKind
+prc n
+  | n == "="        =  (1,True)
+  | n == "equiv"    =  (2,True)
+  | n == "implies"  =  (3,True)
+  | n == "lor"      =  (4,True) -- force parenthesis for nested 'or'
+  | n == "land"     =  (5,True) -- force parenthesis for nested 'and'
+  | n == "lnot"     =  (6,True)
+  | otherwise       =  (0,False) -- force parenthesising if not at top-level
 \end{code}
 
 Rather than rendering zippers on the fly,
@@ -210,10 +210,11 @@ Rendering an infix operator with two or more arguments.
 We ensure that sub-terms are rendered with the infix operator precedence
 as their context precedence.
 \begin{code}
-trTerm ctxtp (Cons tk opn ts@(_:_:_))
- | isSymbId opn  =  trBracketIf (opp < ctxtp || opp == ctxtp && not assoc)
-                         $ intercalate (trId opn) $ map (trTerm opp) ts
- where prcs@(opp,assoc) = prc opn
+trTerm ctxtp (Cons tk opn@(Identifier nm) ts@(_:_:_))
+ | isOp  =  trBracketIf (opp <= ctxtp)
+                        $ intercalate (trId opn) $ map (trTerm opp) ts
+ where
+   prcs@(opp,isOp) = prc nm
 \end{code}
 
 In all other cases we simply use classical function application notation

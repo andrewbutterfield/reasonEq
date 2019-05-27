@@ -80,9 +80,9 @@ e = fromJust $ eVar ArbType ve
 \subsubsection{Predicate Constants}
 
 \begin{code}
-forallId = fromJust $ ident _forall
+forallId = fromJust $ ident "forall"
 forall vl p = fromJust $ pBind forallId (S.fromList vl) p
-existsId = fromJust $ ident _exists
+existsId = fromJust $ ident "exists"
 exists vl p = fromJust $ pBind existsId (S.fromList vl) p
 \end{code}
 
@@ -111,7 +111,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-axAllTrue = preddef (_forall -.- "true")
+axAllTrue = preddef ("forall" -.- "true")
                     (forall [xs] trueP  ===  trueP)
                     scTrue
 \end{code}
@@ -120,7 +120,7 @@ $$\begin{array}{lll}
    \AXAllOnePoint & \AXAllOnePointS & \AXAllOnePointN
 \end{array}$$\par\vspace{-8pt}
 \begin{code}
-axAllOne = preddef (_forall -.- "one" -.- "point")
+axAllOne = preddef ("forall" -.- "one" -.- "point")
   ( (forall [xs,ys] ((lvxs `areEqualTo` lves) ==> p) )
     ===
     (forall [ys] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) ) )
@@ -133,7 +133,7 @@ $$
   \end{array}
 $$\par\vspace{-4pt}
 \begin{code}
-axAllAndDistr = preddef (_forall -.- _land -.- "distr")
+axAllAndDistr = preddef ("forall" -.- "land" -.- "distr")
   ( (forall [xs] (p /\ q)) === (forall [xs] p) /\ (forall [xs] q) )
   scTrue
 \end{code}
@@ -145,7 +145,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-axOrAllScope = preddef (_lor -.- _forall -.- "scope")
+axOrAllScope = preddef ("lor" -.- "forall" -.- "scope")
   ( p \/ (forall [xs,ys] q)
     === forall [xs] ( p \/ forall [ys] q) )
   ([xs] `notin` gvP)
@@ -158,7 +158,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-axAllInst = preddef (_forall -.- "inst")
+axAllInst = preddef ("forall" -.- "inst")
   ( (forall [xs,ys] p)
     ==>
     (forall [ys] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) ) )
@@ -172,7 +172,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-axAllDumRen = preddef (_forall -.- _alpha -.- "rename")
+axAllDumRen = preddef ("forall" -.- "alpha" -.- "rename")
   ( (forall [xs] p)
     ===
     (forall [ys] (Sub P p (fromJust $ substn [] [(lvxs,lvys)])) ) )

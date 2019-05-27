@@ -54,7 +54,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjSwapNot
- = ( _lnot++"_"++_equiv++"_swap"
+ = ( "lnot"-.-"equiv"-.-"swap"
    , (  (mkNot p === q) === (p === mkNot q)
      , scTrue ) )
 \end{code}
@@ -68,7 +68,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjNotInvol
- = ( _lnot++"_invol"
+ = ( "lnot"-.-"invol"
    , ( mkNot (mkNot p) === p
      , scTrue ) )
 \end{code}
@@ -97,7 +97,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjNotDef
- = ( _lnot++"_def"
+ = ( "lnot"-.-"def"
    , ( mkNot p === (p === falseP)
      , scTrue ) )
 \end{code}

@@ -66,10 +66,12 @@ gvP = StdVar vp
 \end{code}
 
 
-$$ b \qquad c $$
+$$ b \quad b' \qquad c  \quad c' $$
 \begin{code}
-b = fromJust $ eVar bool $ Vbl (fromJust $ ident "b") ExprV Before
-c = fromJust $ eVar bool $ Vbl (fromJust $ ident "c") ExprV Before
+b  = fromJust $ pVar $ Vbl (fromJust $ ident "b") PredV Before
+b' = fromJust $ pVar $ Vbl (fromJust $ ident "b") PredV After
+c  = fromJust $ pVar $ Vbl (fromJust $ ident "c") PredV Before
+c' = fromJust $ pVar $ Vbl (fromJust $ ident "c") PredV After
 \end{code}
 
 

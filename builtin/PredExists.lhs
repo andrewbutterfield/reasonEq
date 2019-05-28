@@ -35,6 +35,7 @@ import PropMixOne
 import PropImpl
 import Equality
 import PredAxioms
+import TestRendering
 \end{code}
 
 

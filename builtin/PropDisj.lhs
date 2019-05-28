@@ -28,6 +28,7 @@ import Theories
 import PropAxioms
 import PropEquiv
 import PropNot
+import TestRendering
 \end{code}
 
 \subsection{Implication Conjectures}

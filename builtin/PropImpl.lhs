@@ -31,6 +31,7 @@ import PropNot
 import PropDisj
 import PropConj
 import PropMixOne
+import TestRendering
 \end{code}
 
 \newpage

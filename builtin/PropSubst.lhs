@@ -31,6 +31,7 @@ import PropNot
 import PropDisj
 import PropConj
 import PropImpl
+import TestRendering
 \end{code}
 
 

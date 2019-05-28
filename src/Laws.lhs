@@ -11,7 +11,7 @@ module Laws
  , flattenTheEquiv, flattenTheImp, flattenTheAnd
  , flattenAssoc
  , LeftRight(..), GroupSpec(..), groupAssoc
- , Assertion, NmdAssertion, (-.-)
+ , Assertion, NmdAssertion
  , Provenance(..)
  , Law, lawName, lawNamedAssn, lawProvenance
  , isAxiom, isProven, isAssumed
@@ -275,11 +275,6 @@ so we introduce the idea of a named-assertion:
 type NmdAssertion = (String,Assertion)
 \end{code}
 
-A useful utility to generate compound assertion names is:
-\begin{code}
-n1 -.- n2  =  n1 ++ "_" ++ n2
-\end{code}
-
 However, we also want to specify the provenance of each law.
 \begin{code}
 data Provenance
@@ -337,12 +332,12 @@ showLogic logicsig
 Showing laws:
 \begin{code}
 showNmdAssns nasns  =  numberList (showNmdAssn $ nameWidth nasns)  nasns
-nameWidth nasns = maximum $ map (length . widthHack 2 . fst) nasns
+nameWidth nasns = maximum $ map (length . nicelawname . fst) nasns
 
 showNmdAssn w (nm,(trm,sc))
   =    ldq ++ nmh ++ rdq ++ pad w nmh
        ++ "  " ++ trTerm 0 trm ++ "  "++trSideCond sc
-  where nmh = widthHack 2 nm
+  where nmh = nicelawname nm
 
 showLaws []   =  "Laws: None."
 showLaws lws  =  "Laws:\n"
@@ -360,7 +355,6 @@ showConjs cjs  =  "Conjectures:\n"
 
 showConj w (nm,(trm,sc))
   =  _redQ ++ "  " ++ showNmdAssn w (nm,(trm,sc))
-  -- =  "\x2047" ++ "  " ++ showNmdAssn w (nm,(trm,sc))
 \end{code}
 
 Showing associative grouping specifications:

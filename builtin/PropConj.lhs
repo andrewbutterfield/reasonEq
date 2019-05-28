@@ -29,6 +29,7 @@ import PropAxioms
 import PropEquiv
 import PropNot
 import PropDisj
+import TestRendering
 \end{code}
 
 \subsection{Conjunction Conjectures}

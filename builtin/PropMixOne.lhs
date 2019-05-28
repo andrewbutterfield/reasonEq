@@ -30,6 +30,7 @@ import PropEquiv
 import PropNot
 import PropDisj
 import PropConj
+import TestRendering
 \end{code}
 
 \subsection{MixOne Conjectures}

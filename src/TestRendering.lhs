@@ -16,6 +16,7 @@ module TestRendering (
  , trTermZip
  , trSideCond
  , trAsn, trNmdAsn
+ , (-.-), nicelawname
  , trVarMatchRole, trLstVarMatchRole, trVarTable
  , trBinding
  , seeV, seeLV, seeGV, seeVL, seeVS
@@ -27,6 +28,7 @@ import Data.Maybe(fromJust)
 import Data.Map as M (fromList,assocs)
 import qualified Data.Set as S
 import Data.List (nub, sort, (\\), intercalate)
+import Data.List.Split (splitOn)
 import Data.Char
 
 import NiceSymbols
@@ -114,8 +116,8 @@ trTK _ = "" -- ignore for now
 -- trTK (E t) = trType t
 
 trValue :: Value -> String
-trValue (Boolean False)  =  "false"
-trValue (Boolean True)   =  "true"
+trValue (Boolean False)  =  nicesym "false"
+trValue (Boolean True)   =  nicesym "true"
 trValue (Integer i)      =  show i
 trValue (Txt s)          =  show s
 \end{code}
@@ -343,7 +345,11 @@ trAtmSideCond (ExCover  gv vs)
 trAsn (trm,[]) = trTerm 0 trm
 trAsn (trm,sc) = trTerm 0 trm ++ ", " ++ trSideCond sc
 
-trNmdAsn (nm,asn) = widthHack 2 nm ++ ": " ++ trAsn asn
+trNmdAsn (lawnm,asn) =  nicelawname lawnm ++ ": " ++ trAsn asn
+
+nicelawname  =  widthHack 2 . foldl1 (-.-) . map nicesym . splitOn nicesplit
+nicesplit = "_"
+n1 -.- n2  =  n1 ++ nicesplit ++ n2
 \end{code}
 
 \newpage

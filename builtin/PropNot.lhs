@@ -27,6 +27,7 @@ import Theories
 
 import PropAxioms
 import PropEquiv
+import TestRendering
 \end{code}
 
 \subsection{Negation Conjectures}

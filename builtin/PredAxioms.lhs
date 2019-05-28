@@ -36,6 +36,7 @@ import PropConj
 import PropMixOne
 import PropImpl
 import Equality
+import TestRendering
 \end{code}
 
 

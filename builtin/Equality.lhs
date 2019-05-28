@@ -22,6 +22,7 @@ import Laws
 import Proofs
 import Theories
 import PropAxioms
+import TestRendering
 \end{code}
 
 \subsection{Introduction}

@@ -68,6 +68,7 @@ library
                      , time
                      , directory
                      , filepath
+                     , split
                      , nicesymbols
                      -- we need to support internal tests for some modules
                      , HUnit

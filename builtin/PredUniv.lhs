@@ -37,6 +37,7 @@ import PropImpl
 import Equality
 import PredAxioms
 import PredExists
+import TestRendering
 \end{code}
 
 

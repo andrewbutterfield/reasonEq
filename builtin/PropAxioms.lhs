@@ -37,6 +37,7 @@ import VarData
 import Laws
 import Proofs
 import Theories
+import TestRendering
 \end{code}
 
 
@@ -159,8 +160,8 @@ $$
 \begin{code}
 propKnown :: VarTable
 propKnown   =  newVarTable
-axTrue      =  ( "true",      ( trueP,                  scTrue ) )
-axFalseDef  =  ( "false-def", ( falseP === mkNot trueP, scTrue ) )
+axTrue      =  ( "true",          ( trueP,                  scTrue ) )
+axFalseDef  =  ( "false"-.-"def", ( falseP === mkNot trueP, scTrue ) )
 \end{code}
 
 \newpage

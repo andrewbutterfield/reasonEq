@@ -27,6 +27,7 @@ import Theories
 
 import PropAxioms
 import PropXxx
+import TestRendering
 \end{code}
 
 \subsection{Xxx Conjectures}

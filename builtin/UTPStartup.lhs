@@ -38,6 +38,7 @@ import Equality
 import PredAxioms
 import PredExists
 import PredUniv
+import TestRendering
 \end{code}
 
 

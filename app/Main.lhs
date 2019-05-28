@@ -328,7 +328,8 @@ shLivePrf = "p"
 shProofs = "P"
 
 -- these are not robust enough - need to check if component is present.
-showState [cmd] reqs
+showState (cmd:args) reqs
+ | cmd == shProofs    =  doshow reqs $ observeCompleteProofs args reqs
  | cmd == shProject   =  doshow reqs $ projectDir reqs
  | cmd == shSig       =  doshow reqs $ observeSig reqs
  | cmd == shTheories  =  doshow reqs $ observeTheories reqs
@@ -336,7 +337,6 @@ showState [cmd] reqs
  | cmd == shCurrThry  =  doshow reqs $ observeCurrTheory reqs
  | cmd == shConj      =  doshow reqs $ observeCurrConj reqs
  | cmd == shLivePrf   =  doshow reqs $ observeLiveProofs reqs
- | cmd == shProofs    =  doshow reqs $ observeCompleteProofs reqs
 showState _ reqs      =  doshow reqs "unknown 'show' option."
 
 doshow reqs str  =  putStrLn str >> return reqs

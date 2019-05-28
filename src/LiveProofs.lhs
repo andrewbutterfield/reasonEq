@@ -820,7 +820,7 @@ displayMatches matches
   =  unlines' ( ("Matches:") : map shMatch (zip [1..] matches))
 
 shMatch (i, mtch)
- = show i ++ " : "++ ldq ++ green (mName mtch) ++ rdq
+ = show i ++ " : "++ ldq ++ green (nicelawname $ mName mtch) ++ rdq
    ++ "  gives  "
    ++ (bold $ blue $ trTerm 0 (mRepl mtch))
    ++ "  " ++ shSCImplication (mLocSC mtch) (mLawSC mtch)

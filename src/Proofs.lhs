@@ -399,7 +399,7 @@ labelAsProven nasn (prfnm,_,_,_) =  (nasn, Proven prfnm)
 \begin{code}
 showJustification :: Justification -> String
 showJustification (UseLaw how lnm bind dpath)
-  =  "   = '"++showHow how++" "++lnm++"@" ++ show dpath ++ "'"
+  =  "   = '"++showHow how++" "++nicelawname lnm++"@" ++ show dpath ++ "'"
 showJustification (Switch from to)
   =  "   [switch "++showSeqFocus from++" > "++showSeqFocus to++"]"
 showJustification (CloneH i)
@@ -452,9 +452,18 @@ Showing Proofs:
 showProof (pnm,(trm,sc),strat,(trm',steps))
  = " " ++ pnm ++ "  (" ++ strat ++ ", size:" ++ show (length steps) ++ ")"
 
-showProofs []      =  "No Proofs yet."
-showProofs proofs
+showProofs _ []      =  "No Proofs yet."
+showProofs [nm] proofs = listProofs nm proofs
+showProofs _ proofs
   =  unlines (
-       "\nCompleted Proofs:"
+       "\nCompleted Proofs (true names):"
        : map showProof proofs )
+
+listProofs _ [] = "No such proof"
+listProofs nm (prf@(pnm,_,_,_):rest)
+  | nm == pnm  =  displayProof prf
+  | otherwise  =   listProofs nm rest
+
+listProof (pnm,(trm,sc),strat,(trm',steps))
+ = "listProof NYI"
 \end{code}

@@ -2,11 +2,19 @@ BEGIN THEORY UTPStartup
 DEPS = ["PredUniv","PredExists","PredAxioms","Equality","PropSubst","PropImpl","PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"]
 KNOWN = VD (fromList [],fromList [],fromList [])
 BEGIN LIST LAWS
-(("UTP_ax_001",(C P (Id "\8744") [V P (VR (Id "P",VP,WS)),C P (Id "\8744") [V P (VR (Id "Q",VP,WS)),C P (Id "\172") [V P (VR (Id "Q",VP,WS))]]],[])),Axiom)
+(("UTP_ax_001",(C P (Id "equiv") [C P (Id "cond") [V P (VR (Id "P",VP,WS)),V P (VR (Id "b",VP,WB)),V P (VR (Id "Q",VP,WS))],C P (Id "lor") [C P (Id "land") [V P (VR (Id "P",VP,WS)),V P (VR (Id "b",VP,WB))],C P (Id "land") [V P (VR (Id "Q",VP,WS)),C P (Id "lnot") [V P (VR (Id "b",VP,WB))]]]],[])),Axiom)
 END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS
 BEGIN LIST CONJECTURES
-("UTP_cj_001",(C P (Id "\8744") [C P (Id "\8744") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],C P (Id "\172") [V P (VR (Id "Q",VP,WS))]],[SD (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])]))
+("UTP_cj_alt_def",(C P (Id "equiv") [C P (Id "cond") [V P (VR (Id "P",VP,WS)),V P (VR (Id "b",VP,WB)),V P (VR (Id "Q",VP,WS))],C P (Id "land") [C P (Id "implies") [V P (VR (Id "b",VP,WB)),V P (VR (Id "P",VP,WS))],C P (Id "implies") [C P (Id "lnot") [V P (VR (Id "b",VP,WB))],V P (VR (Id "Q",VP,WS))]]],[]))
+("UTP_cj_L1",(C P (Id "equiv") [C P (Id "cond") [V P (VR (Id "P",VP,WS)),V P (VR (Id "b",VP,WB)),V P (VR (Id "P",VP,WS))],V P (VR (Id "P",VP,WS))],[]))
+("UTP_cj_L2",(C P (Id "equiv") [C P (Id "cond") [V P (VR (Id "P",VP,WS)),V P (VR (Id "b",VP,WB)),V P (VR (Id "Q",VP,WS))],C P (Id "cond") [V P (VR (Id "Q",VP,WS)),C P (Id "lnot") [V P (VR (Id "b",VP,WB))],V P (VR (Id "P",VP,WS))]],[]))
+("UTP_cj_L3",(C P (Id "equiv") [C P (Id "cond") [C P (Id "cond") [V P (VR (Id "P",VP,WS)),V P (VR (Id "b",VP,WB)),V P (VR (Id "Q",VP,WS))],V P (VR (Id "c",VP,WB)),V P (VR (Id "R",VP,WS))],C P (Id "cond") [V P (VR (Id "P",VP,WS)),C P (Id "land") [V P (VR (Id "b",VP,WB)),V P (VR (Id "c",VP,WB))],C P (Id "cond") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "c",VP,WB)),V P (VR (Id "R",VP,WS))]]],[]))
+("UTP_cj_L4",(C P (Id "equiv") [C P (Id "cond") [V P (VR (Id "P",VP,WS)),V P (VR (Id "b",VP,WB)),C P (Id "cond") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "c",VP,WB)),V P (VR (Id "R",VP,WS))]],C P (Id "cond") [C P (Id "cond") [V P (VR (Id "P",VP,WS)),V P (VR (Id "b",VP,WB)),V P (VR (Id "Q",VP,WS))],V P (VR (Id "c",VP,WB)),C P (Id "cond") [V P (VR (Id "P",VP,WS)),V P (VR (Id "b",VP,WB)),V P (VR (Id "R",VP,WS))]]],[]))
+("UTP_cj_L5a",(C P (Id "equiv") [C P (Id "cond") [V P (VR (Id "P",VP,WS)),K P (VB True),V P (VR (Id "Q",VP,WS))],V P (VR (Id "P",VP,WS))],[]))
+("UTP_cj_L5b",(C P (Id "equiv") [C P (Id "cond") [V P (VR (Id "P",VP,WS)),K P (VB False),V P (VR (Id "Q",VP,WS))],V P (VR (Id "Q",VP,WS))],[]))
+("UTP_cj_L6",(C P (Id "equiv") [C P (Id "cond") [V P (VR (Id "P",VP,WS)),V P (VR (Id "b",VP,WB)),C P (Id "cond") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "b",VP,WB)),V P (VR (Id "R",VP,WS))]],C P (Id "cond") [V P (VR (Id "P",VP,WS)),V P (VR (Id "b",VP,WB)),V P (VR (Id "R",VP,WS))]],[]))
+("UTP_cj_L7",(C P (Id "equiv") [C P (Id "cond") [V P (VR (Id "P",VP,WS)),V P (VR (Id "b",VP,WB)),C P (Id "cond") [V P (VR (Id "P",VP,WS)),V P (VR (Id "c",VP,WB)),V P (VR (Id "Q",VP,WS))]],C P (Id "cond") [V P (VR (Id "P",VP,WS)),C P (Id "lor") [V P (VR (Id "b",VP,WB)),V P (VR (Id "c",VP,WB))],V P (VR (Id "Q",VP,WS))]],[]))
 END LIST CONJECTURES
 END THEORY UTPStartup

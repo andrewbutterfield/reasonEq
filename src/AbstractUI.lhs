@@ -163,11 +163,11 @@ observeLiveProofs reqs = showLiveProofs $ liveProofs reqs
 \subsubsection{Observing Completed Proofs}
 
 \begin{code}
-observeCompleteProofs :: REqState -> String
-observeCompleteProofs reqs
+observeCompleteProofs :: [String] -> REqState -> String
+observeCompleteProofs args reqs
   = case getTheory (currTheory reqs) (theories reqs) of
       Nothing    ->  "No current theory."
-      Just thry  ->  showProofs $ proofs thry
+      Just thry  ->  showProofs args $ proofs thry
 \end{code}
 
 \subsection{Modifying Proof-State (\texttt{REqState})}

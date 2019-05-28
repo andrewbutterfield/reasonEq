@@ -332,7 +332,7 @@ showLogic logicsig
 Showing laws:
 \begin{code}
 showNmdAssns nasns  =  numberList (showNmdAssn $ nameWidth nasns)  nasns
-nameWidth nasns = maximum $ map (length . nicelawname . fst) nasns
+nameWidth nasns = maximum $ map (nicelength . nicelawname . fst) nasns
 
 showNmdAssn w (nm,(trm,sc))
   =    ldq ++ nmh ++ rdq ++ pad w nmh

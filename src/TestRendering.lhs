@@ -158,12 +158,14 @@ type InfixKind = ( Int     -- precedence
                  , Bool )  -- true if considered a 'symbol'
 prc :: String -> InfixKind
 prc n
-  | n == "="        =  (1,True)
-  | n == "equiv"    =  (2,True)
-  | n == "implies"  =  (3,True)
-  | n == "lor"      =  (4,True) -- force parenthesis for nested 'or'
-  | n == "land"     =  (5,True) -- force parenthesis for nested 'and'
-  | n == "lnot"     =  (6,True)
+  | n == ";"        =  (1,True)
+  | n == ":="       =  (2,True)
+  | n == "equiv"    =  (3,True)
+  | n == "implies"  =  (4,True)
+  | n == "lor"      =  (5,True) -- force parenthesis for nested 'or'
+  | n == "land"     =  (6,True) -- force parenthesis for nested 'and'
+  | n == "lnot"     =  (7,True)
+  | n == "="        =  (8,True)
   | otherwise       =  (0,False) -- force parenthesising if not at top-level
 \end{code}
 

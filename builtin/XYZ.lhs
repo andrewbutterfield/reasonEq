@@ -38,6 +38,7 @@ import Equality
 import PredAxioms
 import PredExists
 import PredUniv
+import UTPStartup
 import TestRendering
 \end{code}
 
@@ -46,8 +47,10 @@ import TestRendering
 \subsection{Introduction}
 
 
-This builtin theory is being used to prototype the building of UTP
-support of top of the propostional and predicate foundation already done.
+This builtin theory defines the alphabet,
+sequential composition, and assignments
+for a UTP theory of partial correctness
+for a programming language with three variables: $x$, $y$, and $z$.
 
 
 \subsection{Predicate Infrastructure}
@@ -55,34 +58,14 @@ support of top of the propostional and predicate foundation already done.
 Most variables have an ``underlying'' definition
 that is then ``wrapped'' in different ways depending on where it is used.
 
-$$P \quad Q \quad R$$
+$$P \qquad Q$$
 \begin{code}
--- underying variable
+-- underlying variable
 vp = Vbl (fromJust $ ident "P") PredV Static
 p = fromJust $ pVar vp
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
-r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
--- for use in side-conditions
-gvP = StdVar vp
 \end{code}
 
-
-$$ b \quad b' \qquad c  \quad c' $$
-\begin{code}
-b  = fromJust $ pVar $ Vbl (fromJust $ ident "b") PredV Before
-b' = fromJust $ pVar $ Vbl (fromJust $ ident "b") PredV After
-c  = fromJust $ pVar $ Vbl (fromJust $ ident "c") PredV Before
-c' = fromJust $ pVar $ Vbl (fromJust $ ident "c") PredV After
-\end{code}
-
-
-$$ v \qquad \lst v $$
-\begin{code}
-(v,vs) = (StdVar vv, LstVar lvvs)
-  where
-   vv   = Vbl (fromJust $ ident "v") ObsV Static
-   lvvs = LVbl vv [] []
-\end{code}
 
 $$ x \quad y \quad z \qquad x' \quad y' \quad z'$$
 
@@ -96,22 +79,26 @@ vy' = Vbl (fromJust $ ident "y") ObsV After
 vz' = Vbl (fromJust $ ident "z") ObsV After
 \end{code}
 
-For use in expressions  and substitution first list
-\\(e.g. $x+y$ might be \texttt{plus [x,y]}):
-\begin{code}
-[x,y,z,x',y',z'] = map (fromJust . eVar int) [vx,vy,vz,vx',vy',vz']
-\end{code}
 
-For use in quantifier variable list/sets and substitution second lists
-\\(e.g. $\forall x,x' \bullet P$ would be \texttt{forall [qx,qx'] p}):
-\begin{code}
-[qx,qy,qz,qx',qy',qz'] = map StdVar [vx,vy,vz,vx',vy',vz']
-\end{code}
+% For use in quantifier variable list/sets and substitution second lists
+% \\(e.g. $\forall x,x' \bullet P$ would be \texttt{forall [qx,qx'] p}):
+% \begin{code}
+% [qx,qy,qz,qx',qy',qz'] = map StdVar [vx,vy,vz,vx',vy',vz']
+% \end{code}
 
 $$ x_m \qquad y_m \qquad z_m$$
 For use in quantifier variable list/sets and substitutions:
 \begin{code}
-xm = StdVar $ Vbl (fromJust $ ident "x") ObsV (During "m")
+vxm = Vbl (fromJust $ ident "x") ObsV (During "m")
+vym = Vbl (fromJust $ ident "y") ObsV (During "m")
+vzm = Vbl (fromJust $ ident "z") ObsV (During "m")
+\end{code}
+
+For use in expressions and substitution first list replacements
+\\(e.g. $x+y$ might be \texttt{plus [x,y]}):
+\begin{code}
+[x,y,z,x',y',z',xm,ym,zm]
+  = map (fromJust . eVar int) [vx,vy,vz,vx',vy',vz',vxm,vym,vzm]
 \end{code}
 
 $$\Nat \qquad \Int$$
@@ -131,6 +118,7 @@ f = fromJust $ eVar int vf
 -- for use in quantifiers, substitutions (first list)
 qe = StdVar ve
 qf = StdVar vf
+qxm = StdVar vxm ; qym = StdVar vym ; qzm = StdVar vzm
 -- list versions, for use in substitutions (second list)
 lves = LVbl ve [] []
 lvfs = LVbl vf [] []
@@ -142,100 +130,132 @@ qfs = LstVar lvfs
 $$ P[e/x] \qquad P[\lst e/\lst x]$$
 \begin{code}
 -- note that [ a / v]  becomes (v,a) !
-sub p = Sub P p $ fromJust $ substn [(vx,e)] []
+sub_x_by_e p = Sub P p $ fromJust $ substn [(vx,e)] []
+sub_xs_by_es p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
 lvxs = LVbl vx [] []
 qxs = LstVar lvxs
-lsub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
 \end{code}
-
 
 \newpage
-\subsection{UTP-Startup Axioms}
+\subsection{XYZ alphabet}
 
-\subsubsection{Axiom 1}
+The alphabet for this theory is $\setof{x,y,z,x',y',z'}$.
+
+\begin{code}
+xyzKnown  =   fromJust $ addKnownVar vx  int
+            $ fromJust $ addKnownVar vy  int
+            $ fromJust $ addKnownVar vz  int
+            $ fromJust $ addKnownVar vx' int
+            $ fromJust $ addKnownVar vy' int
+            $ fromJust $ addKnownVar vz' int
+            $ newVarTable
+\end{code}
+
+\newpage
+\subsection{XYZ Axioms}
+
+\subsubsection{Sequential Composition}
 $$
   \begin{array}{lll}
-     P \cond b Q \defs P \land b \lor Q \land \not b &
-     & \QNAME{UTP-ax-001}
+     P ; Q
+     \defs
+     \exists x_m,y_m,z_m \bullet
+       P[x_m,y_m,z_m/x',y',z']
+       \land
+       Q[x_m,y_m,z_m/x,y,z]
+     &
+     & \QNAME{XYZ-;-Def}
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-mkCond p b q = PCons(fromJust $ ident "cond")[p, b, q]
+mkSeq p q = PCons (fromJust $ ident ";")[p, q]
+before r = Sub P r $ fromJust $ substn [(vx',xm),(vy',ym),(vz',zm)] []
+after r  = Sub P r $ fromJust $ substn [(vx,xm), (vy,ym), (vz,zm)] []
 
-axUTP001 = preddef ("UTP" -.- "ax" -.- "001")
-                    (mkCond p b q === (p /\ b) \/ (q /\ mkNot b))
+axXYZSeqDef = preddef ("XYZ" -.- ";" -.- "def")
+                   ( mkSeq p q
+                     ===
+                     exists [qxm,qym,qzm]
+                      (before p /\ after q)  )
+                    scTrue
+\end{code}
+
+$$
+  \begin{array}{lll}
+     P ; Q
+     \defs
+     \exists O_m \bullet
+       P[O_m/O']
+       \land
+       Q[O_m/O]
+     &
+     & \QNAME{XYZ-;-Def}
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+o   = fromJust $ ident "O"
+lO  = PreVars o
+lO' = PostVars o
+lOm = MidVars o "m"
+
+beforeO r = Sub P r $ fromJust $ substn [] [(lO',lOm)]
+afterO r  = Sub P r $ fromJust $ substn [] [(lO,lOm)]
+
+axSeqDef = preddef (";" -.- "def")
+                   ( mkSeq p q
+                     ===
+                     exists [LstVar lOm]
+                      (beforeO p /\ afterO q)  )
+                    scTrue
+\end{code}
+
+\subsubsection{Assignment}
+
+$$
+  \begin{array}{lll}
+     x := e \defs x' = e \land y' = y \land z' = z && \QNAME{X-$:=$-def}
+  \\ y := e \defs x' = x \land y' = e \land z' = z && \QNAME{Y-$:=$-def}
+  \\ z := e \defs x' = x \land y' = y \land z' = e && \QNAME{Z-$:=$-def}
+  \\
+  \end{array}
+$$\par%\vspace{-8pt}
+\begin{code}
+mkAsg x e = PCons (fromJust $ ident ":=")[x, e]
+
+axXAsgDef = preddef ("X" -.- ":=" -.- "def")
+                   ( mkAsg x e
+                     ===
+                     x' `isEqualTo` e /\
+                     ( y' `isEqualTo` y /\ z' `isEqualTo` z)  )
+                    scTrue
+axYAsgDef = preddef ("Y" -.- ":=" -.- "def")
+                   ( mkAsg y e
+                     ===
+                     x' `isEqualTo` x /\
+                     ( y' `isEqualTo` e /\ z' `isEqualTo` z)  )
+                    scTrue
+axZAsgDef = preddef ("Z" -.- ":=" -.- "def")
+                   ( mkAsg z e
+                     ===
+                     x' `isEqualTo` x /\
+                     ( y' `isEqualTo` y /\ z' `isEqualTo` e)  )
                     scTrue
 \end{code}
 
 
-\subsection{UTP-Startup Conjectures}
-
-%\subsubsection{Conjecture 1}
-$$
-  \begin{array}{lll}
-     P \cond b Q \equiv (b \implies P) \land (\lnot b \implies Q)
-     && \QNAME{UTP-cj-001}
-  \end{array}
-$$\par\vspace{-8pt}
+We now collect our axiom set:
 \begin{code}
-cjUTPdef = preddef ("UTP" -.- "cj" -.- "alt" -.- "def")
-                     (mkCond p b q === (b ==> p) /\ (mkNot b ==> q))
-                     scTrue
-\end{code}
-
-\begin{code}
-cjUTPL1 = preddef ("UTP" -.- "cj" -.- "L1")
-                     (mkCond p b p === p)
-                     scTrue
-\end{code}
-
-\begin{code}
-cjUTPL2 = preddef ("UTP" -.- "cj" -.- "L2")
-                     (mkCond p b q === mkCond q (mkNot b) p)
-                     scTrue
-\end{code}
-
-\begin{code}
-cjUTPL3 = preddef ("UTP" -.- "cj" -.- "L3")
-                  ( mkCond (mkCond p b q) c r
-                    ===
-                    mkCond p (b /\ c) (mkCond q c r) )
-                  scTrue
-\end{code}
-
-\begin{code}
-cjUTPL4 = preddef ("UTP" -.- "cj" -.- "L4")
-                  ( mkCond p b (mkCond q c r)
-                    ===
-                    mkCond (mkCond p b q) c (mkCond p b r) )
-                  scTrue
-\end{code}
-
-\begin{code}
-cjUTPL5a = preddef ("UTP" -.- "cj" -.- "L5a")
-                     (mkCond p trueP q === p)
-                     scTrue
-\end{code}
-
-\begin{code}
-cjUTPL5b = preddef ("UTP" -.- "cj" -.- "L5b")
-                      (mkCond p falseP q === q)
-                      scTrue
-\end{code}
-
-\begin{code}
-cjUTPL6 = preddef ("UTP" -.- "cj" -.- "L6")
-                     (mkCond p b (mkCond q b r) === mkCond p b r)
-                     scTrue
-\end{code}
-
-\begin{code}
-cjUTPL7 = preddef ("UTP" -.- "cj" -.- "L7")
-                    (mkCond p b (mkCond p c q) === mkCond p (b \/ c) q)
-                    scTrue
+xyzAxioms :: [Law]
+xyzAxioms
+  = map labelAsAxiom
+      [ axXYZSeqDef, axSeqDef
+      , axXAsgDef, axYAsgDef, axZAsgDef
+      ]
 \end{code}
 
 
+
+\subsection{XYZ Conjectures}
 
 
 % %% TEMPLATE
@@ -250,28 +270,11 @@ cjUTPL7 = preddef ("UTP" -.- "cj" -.- "L7")
 %                 scTrue
 % \end{code}
 
-We now collect our axiom set:
-\begin{code}
-xyzAxioms :: [Law]
-xyzAxioms
-  = map labelAsAxiom
-      [ axUTP001 ]
-\end{code}
-
-
 We now collect our conjecture set:
 \begin{code}
 xyzConjs :: [NmdAssertion]
 xyzConjs
-  = [ cjUTPdef,
-      cjUTPL1,
-      cjUTPL2,
-      cjUTPL3,
-      cjUTPL4,
-      cjUTPL5a,
-      cjUTPL5b,
-      cjUTPL6,
-      cjUTPL7 ]
+  = [  ]
 \end{code}
 
 
@@ -283,7 +286,8 @@ xyzName = "XYZ"
 xyzTheory :: Theory
 xyzTheory
   =  Theory { thName  =  xyzName
-            , thDeps  =  [ predUnivName
+            , thDeps  =  [ utpStartupName
+                         , predUnivName
                          , predExistsName
                          , predAxiomName
                          , equalityName
@@ -296,9 +300,9 @@ xyzTheory
                          , propEquivName
                          , propAxiomName
                          ]
-            , known   =  newVarTable
+            , known   =  xyzKnown
             , laws    =  xyzAxioms
-            , proofs  =  []
+            , proofs  =  [] --
             , conjs   =  xyzConjs
             }
 \end{code}

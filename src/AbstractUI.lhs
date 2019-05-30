@@ -23,6 +23,7 @@ module AbstractUI
 , stepBack
 , lawInstantiate1, lawInstantiate2, lawInstantiate3
 , cloneHypothesis
+, stepEquivalenceTheorem
 , devBIRemind, devListAllBuiltins, devInstallBuiltin
 )
 where
@@ -599,6 +600,18 @@ cloneHypothesis i land liveProof
                     $ matches_ []
                     $ stepsSoFar__ ((CloneH i, (exitTZ tz,conjSC liveProof)):)
                       liveProof )
+\end{code}
+
+\newpage{Equivalence Theorem from Live-Proof}
+
+-- stepEquivalenceTheorem args
+\begin{code}
+stepEquivalenceTheorem :: Monad m => String -> (REqState, LiveProof)
+                       -> m (REqState, LiveProof)
+stepEquivalenceTheorem nm state@(reqs, liveProof)
+  = let
+      (thrynm,law) = makeEquivalence nm liveProof
+    in return state
 \end{code}
 
 \newpage

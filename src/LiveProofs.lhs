@@ -22,6 +22,7 @@ module LiveProofs
  , buildMatchContext, matchInContexts,matchLawByName, tryLawByName
  , proofIsComplete, finaliseProof
  , undoCalcStep
+ , makeEquivalence
  , showLiveProofs
  , showContextLaws
  ) where
@@ -35,6 +36,7 @@ import qualified Data.Map as M
 
 import Utilities
 import WriteRead
+import LexBase
 import AST
 import SideCond
 import TermZipper
@@ -765,6 +767,28 @@ undoCalcStep liveProof
     undoCalcStep' _  = liveProof
 
     setTerm t (tz,seq') = (mkTZ t,seq')
+\end{code}
+
+
+\newpage
+\subsection{Making a Theorem}
+
+\begin{code}
+makeEquivalence :: String -> LiveProof
+                -> ( String -- name of theory to contain new law
+                   , Law )  -- the new law
+makeEquivalence nm liveProof
+  = (  conjThName liveProof
+    , ( ( nm, ( step0 === step', sc) ), Proven nm )
+    )
+  where
+     -- hack - should refer to logicSig
+     equiv = fromJust $ ident "equiv"
+     mkEquivs ps = PCons equiv ps
+     p === q = mkEquivs [p,q]
+     step0 = fst $ conjecture liveProof
+     step' = step0
+     sc = conjSC liveProof
 \end{code}
 
 \newpage

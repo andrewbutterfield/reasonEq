@@ -669,6 +669,7 @@ proofREPLConfig
             , switchHypothesisDescr
             , leaveHypothesisDescr
             , cloneHypothesisDescr
+            , equivaleStepsDescr
             ])
       proofREPLEndCondition
       proofREPLEndTidy
@@ -915,6 +916,24 @@ cloneHypothesisDescr
 cloneHypotheses :: REPLCmd (REqState, LiveProof)
 cloneHypotheses args liveState@(reqs, _)
   = tryDelta (cloneHypothesis (args2int args) (theAnd $ logicsig reqs)) liveState
+\end{code}
+
+At any point in a proof, one at least one step has been taken,
+we can create a new theorem simply by equivaling the first and last predicates
+in the proof. We can then continue with the proof we have got.
+In fact, we can create a theorem that equivales any two predicates
+within the proof.
+\begin{code}
+equivaleStepsDescr
+  = ( "=", "equivale theorem", "= nm  -- step0 == curr-step 'nm'"
+    , equivaleSteps )
+
+equivaleSteps :: REPLCmd (REqState, LiveProof)
+equivaleSteps [nm] liveState@(reqs, _)
+  = stepEquivalenceTheorem nm liveState
+equivaleSteps _ liveState
+ = do putStrLn ("equivale theorem - one name required")
+      return liveState
 \end{code}
 
 \newpage

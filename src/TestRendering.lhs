@@ -159,7 +159,8 @@ type InfixKind = ( Int     -- precedence
 prc :: String -> InfixKind
 prc n
   | n == ";"        =  (1,True)
-  | n == ":="       =  (2,True)
+  | n == ":="       =  (1,True)
+  | n == "vdash"    =  (2,True)
   | n == "equiv"    =  (3,True)
   | n == "implies"  =  (4,True)
   | n == "lor"      =  (5,True) -- force parenthesis for nested 'or'

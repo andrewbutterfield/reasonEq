@@ -141,8 +141,15 @@ qxs = LstVar lvxs
 
 The alphabet for this theory is $\setof{x,y,z,x',y',z'}$.
 
+We also have a known predicate variable $\Skip$,
+defined to be $x'=x \land y'=y \land z'=z$.
+
 \begin{code}
-xyzKnown  =   fromJust $ addKnownVar vx  int
+skip = Vbl (fromJust $ ident "II") PredV Static
+skipDef = x' `isEqualTo` x /\ ( y' `isEqualTo` y /\ z' `isEqualTo` z)
+
+xyzKnown  =   fromJust $ addKnownConst skip skipDef
+            $ fromJust $ addKnownVar vx  int
             $ fromJust $ addKnownVar vy  int
             $ fromJust $ addKnownVar vz  int
             $ fromJust $ addKnownVar vx' int

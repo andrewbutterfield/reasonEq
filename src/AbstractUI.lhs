@@ -611,7 +611,12 @@ stepEquivalenceTheorem :: Monad m => String -> (REqState, LiveProof)
 stepEquivalenceTheorem nm state@(reqs, liveProof)
   = let
       (thrynm,law) = makeEquivalence nm liveProof
-    in return state
+    in case getTheory thrynm (theories reqs) of
+        Nothing ->  return state
+        Just thry
+          ->  let thry' = laws__ (law:) thry in
+               return ( theories__ (updateTheory thrynm (const thry')) reqs
+                      , liveProof )
 \end{code}
 
 \newpage

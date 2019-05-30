@@ -16,24 +16,6 @@ END THEORIES
 CURRTHEORY = PropImpl
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("PropImpl","implies_equiv_distr")
-BEGIN LIVE-PROOF
-TH-NAME: PropImpl
-CJ-NAME: implies_equiv_distr
-CONJ = (C P (Id "equiv") [C P (Id "implies") [V P (VR (Id "P",VP,WS)),C P (Id "equiv") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "R",VP,WS))]],C P (Id "equiv") [C P (Id "implies") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],C P (Id "implies") [V P (VR (Id "P",VP,WS)),V P (VR (Id "R",VP,WS))]]],[])
-SIDE = []
-STRAT reduce
-BEGIN SEQZIP
-TERMZIP = (C P (Id "equiv") [C P (Id "implies") [V P (VR (Id "P",VP,WS)),C P (Id "equiv") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "R",VP,WS))]],C P (Id "equiv") [C P (Id "implies") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],C P (Id "implies") [V P (VR (Id "P",VP,WS)),V P (VR (Id "R",VP,WS))]]],[])
-BEGIN SEQUENT'
-SIDECOND = []
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.implies_equiv_distr", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
-END SEQUENT'
-END SEQZIP
-FPATH: []
-BEGIN LIST STEPS
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

@@ -787,7 +787,7 @@ makeEquivalence nm liveProof
      mkEquivs ps = PCons equiv ps
      p === q = mkEquivs [p,q]
      step0 = fst $ conjecture liveProof
-     step' = step0
+     step' = exitTZ $ fst $ focus liveProof
      sc = conjSC liveProof
 \end{code}
 

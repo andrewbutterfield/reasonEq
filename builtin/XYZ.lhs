@@ -1,4 +1,4 @@
-\section{UTP Start-up}
+\section{XYZ Theory}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2019
 
@@ -6,9 +6,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module UTPStartup (
+module XYZ (
   univ
-, utpStartupConjs, utpStartupName, utpStartupTheory
+, xyzConjs, xyzName, xyzTheory
 ) where
 
 import Data.Maybe
@@ -252,8 +252,8 @@ cjUTPL7 = preddef ("UTP" -.- "cj" -.- "L7")
 
 We now collect our axiom set:
 \begin{code}
-utpStartupAxioms :: [Law]
-utpStartupAxioms
+xyzAxioms :: [Law]
+xyzAxioms
   = map labelAsAxiom
       [ axUTP001 ]
 \end{code}
@@ -261,8 +261,8 @@ utpStartupAxioms
 
 We now collect our conjecture set:
 \begin{code}
-utpStartupConjs :: [NmdAssertion]
-utpStartupConjs
+xyzConjs :: [NmdAssertion]
+xyzConjs
   = [ cjUTPdef,
       cjUTPL1,
       cjUTPL2,
@@ -278,11 +278,11 @@ utpStartupConjs
 \subsection{The Predicate Theory}
 
 \begin{code}
-utpStartupName :: String
-utpStartupName = "UTPStartup"
-utpStartupTheory :: Theory
-utpStartupTheory
-  =  Theory { thName  =  utpStartupName
+xyzName :: String
+xyzName = "XYZ"
+xyzTheory :: Theory
+xyzTheory
+  =  Theory { thName  =  xyzName
             , thDeps  =  [ predUnivName
                          , predExistsName
                          , predAxiomName
@@ -297,8 +297,8 @@ utpStartupTheory
                          , propAxiomName
                          ]
             , known   =  newVarTable
-            , laws    =  utpStartupAxioms
+            , laws    =  xyzAxioms
             , proofs  =  []
-            , conjs   =  utpStartupConjs
+            , conjs   =  xyzConjs
             }
 \end{code}

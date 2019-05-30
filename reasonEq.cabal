@@ -56,6 +56,7 @@ library
                      , PredExists
                      , PredUniv
                      , UTPStartup
+                     , XYZ
                      -- in proto
                      , Acyclic
                      , TRYOUT

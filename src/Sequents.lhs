@@ -10,6 +10,7 @@ module Sequents
  ( Sequent(..)
  , availableStrategies
  , reduce, redboth, redtail, redinit
+ , reduceAll, reduceBoth, reduceToLeftmost, reduceToRightmost
  , assume
  , Sequent'(..)
  , SeqZip, writeSeqZip, readSeqZip
@@ -121,20 +122,14 @@ noHyps nm = Theory { thName = "H."++nm
 reduce :: Monad m => LogicSig -> [Theory] -> NmdAssertion
        -> m (String, Sequent)
 reduce logicsig thys (nm,(t,sc))
-  = return ( "reduce", Sequent thys (noHyps nm) sc t $ theTrue logicsig )
+  = return ( reduceAll, Sequent thys (noHyps nm) sc t $ theTrue logicsig )
+reduceAll = "reduce"
 \end{code}
 
 
 
 \newpage
 \subsubsection{Strategy \textit{redboth}}
-
-We will need to convert $\seqof{P_1,\dots,\P_n}$, for $n\geq 1$
-to $P_1 \equiv \dots \equiv P_n$.
-\begin{code}
-bEqv n [p]  =  p
-bEqv n ps = Cons P n ps
-\end{code}
 
 \begin{eqnarray*}
    redboth(C_1 \equiv C_2)
@@ -146,11 +141,21 @@ redboth :: Monad m => LogicSig -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
 redboth logicsig thys (nm,(t@(Cons tk i [tl,tr]),sc))
   | i == theEqv logicsig
-      = return ( "redboth", Sequent thys (noHyps nm) sc tl tr )
+      = return ( reduceBoth, Sequent thys (noHyps nm) sc tl tr )
 redboth logicsig thys (nm,(t,sc)) = fail "redboth not applicable"
+reduceBoth = "redboth"
 \end{code}
 
 \subsubsection{Strategy \textit{redtail}}
+
+We will need to convert $\seqof{P_1,\dots,P_n}$, for $n\geq 1$
+to $P_1 \equiv \dots \equiv P_n$,
+in this, and the next strategy.
+\begin{code}
+bEqv n [p]  =  p
+bEqv n ps = Cons P n ps
+\end{code}
+
 
 \begin{eqnarray*}
    redtail(C_1 \equiv C_2 \equiv \dots \equiv C_n)
@@ -162,8 +167,9 @@ redtail :: Monad m => LogicSig -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
 redtail logicsig thys (nm,(t@(Cons tk i (c1:cs@(_:_))),sc))
   | i == theEqv logicsig
-      = return ( "redtail", Sequent thys (noHyps nm) sc (bEqv i cs) c1 )
+      = return ( reduceToLeftmost, Sequent thys (noHyps nm) sc (bEqv i cs) c1 )
 redtail logicsig thys (nm,(t,sc)) = fail "redtail not applicable"
+reduceToLeftmost = "redtail"
 \end{code}
 
 \subsubsection{Strategy \textit{redinit}}
@@ -179,9 +185,10 @@ redinit :: Monad m => LogicSig -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
 redinit logicsig thys (nm,(t@(Cons tk i cs@(_:_:_)),sc))
   | i == theEqv logicsig
-      = return ( "redinit", Sequent thys (noHyps nm) sc (bEqv i cs') cn )
+      = return ( reduceToRightmost, Sequent thys (noHyps nm) sc (bEqv i cs') cn )
   where (cs',cn) = splitLast cs
 redinit logicsig thys (nm,(t,sc)) = fail "redinit not applicable"
+reduceToRightmost = "redinit"
 \end{code}
 
 \newpage

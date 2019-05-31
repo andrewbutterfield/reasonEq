@@ -11,8 +11,8 @@ module Proofs
  , HowUsed(..)
  , SeqFocus(..), Justification(..), showJustification
  , isSequentSwitch, justSwitched
- , CalcStep
- , Calculation
+ , CalcStep, isStraightStep
+ , Calculation, isStraightCalc
  , Proof, displayProof
  , showProofs
  , labelAsProven
@@ -349,6 +349,16 @@ We make use of the following auxilliary types:
 data SeqFocus = CLeft | CRight | Hyp Int deriving (Eq,Show,Read)
 \end{code}
 
+A simple or straight calculation is one that has no messing with
+the part of the sequent being manipulated.
+A ``straight'' step is not a switch or clone:
+\begin{code}
+isStraightJ :: Justification -> Bool
+isStraightJ (Switch _ _)  =  False
+isStraightJ (CloneH _)    =  False
+isStraightJ _             =  True
+\end{code}
+
 Often it is worth knowing if a switch has occurred.
 \begin{code}
 isSequentSwitch :: Justification -> Bool
@@ -366,6 +376,9 @@ plus the term that was present before the step occurred.
 type CalcStep
   = ( Justification  -- step justification
     , Assertion )         -- previous term
+
+isStraightStep :: CalcStep -> Bool
+isStraightStep ( j, _ ) = isStraightJ j
 \end{code}
 
 A calculation is the current term, plus all previous steps.
@@ -373,6 +386,9 @@ A calculation is the current term, plus all previous steps.
 type Calculation
   = ( Term -- end (or current) term
     , [ CalcStep ] )  -- calculation steps, in proof order
+
+isStraightCalc :: Calculation -> Bool
+isStraightCalc ( _, calc ) = all isStraightStep calc
 \end{code}
 
 A proof has a name

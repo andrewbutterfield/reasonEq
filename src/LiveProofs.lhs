@@ -773,13 +773,20 @@ undoCalcStep liveProof
 \newpage
 \subsection{Making a Theorem}
 
+Given an incomplete ``reduce all to true'' proof attempt of $P_0$
+that has done a straight calculation as far as $P_n$,
+produce a complete ``reduce left to right'' proof
+of $P_0 \equiv P_n$.
+
 \begin{code}
 makeEquivalence :: String -> LiveProof
                 -> ( String -- name of theory to contain new law
-                   , Law )  -- the new law
+                   , Law    -- the new law
+                   , Proof ) -- the relevant proof
 makeEquivalence nm liveProof
   = (  conjThName liveProof
-    , ( ( nm, ( step0 === step', sc) ), Proven nm )
+    , ( ( nm, asn ), Proven nm )
+    , ( nm, asn, strategy liveProof, calc )
     )
   where
      -- hack - should refer to logicSig
@@ -789,6 +796,8 @@ makeEquivalence nm liveProof
      step0 = fst $ conjecture liveProof
      step' = exitTZ $ fst $ focus liveProof
      sc = conjSC liveProof
+     asn = ( step0 === step', sc)
+     calc = ( step' , reverse $ stepsSoFar liveProof )
 \end{code}
 
 \newpage

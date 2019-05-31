@@ -607,16 +607,26 @@ cloneHypothesis i land liveProof
 -- stepEquivalenceTheorem args
 \begin{code}
 stepEquivalenceTheorem :: Monad m => String -> (REqState, LiveProof)
-                       -> m (REqState, LiveProof)
+                       -> m (Maybe String,(REqState, LiveProof))
 stepEquivalenceTheorem nm state@(reqs, liveProof)
+ | strat /= reduceAll
+     =  return ( Just ("Not allowed from "++strat++" strategy")
+               , state )
+ | not (all isStraightStep $ stepsSoFar liveProof)
+     =  return ( Just "Calculation cannot switch or clone"
+               , state )
+ | otherwise
   = let
-      (thrynm,law) = makeEquivalence nm liveProof
+      (thrynm,law,proof) = makeEquivalence nm liveProof
     in case getTheory thrynm (theories reqs) of
-        Nothing ->  return state
+        Nothing ->  return ( Just ("Can't find theory "++thrynm)
+                           ,  state )
         Just thry
-          ->  let thry' = laws__ (law:) thry in
-               return ( theories__ (updateTheory thrynm (const thry')) reqs
-                      , liveProof )
+          ->  let thry' = laws__ (law:) $ proofs__ (proof:) thry in
+               return ( Nothing
+                      , ( theories__ (updateTheory thrynm (const thry')) reqs
+                        , liveProof ) )
+ where strat = strategy liveProof
 \end{code}
 
 \newpage

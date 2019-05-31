@@ -315,6 +315,7 @@ cmdShow
         , "sh "++shConj++" -- show current conjectures"
         , "sh "++shLivePrf++" -- show current (live) proof"
         , "sh "++shProofs++" -- show completed proofs"
+        , "sh "++shProofs++" <nm> -- show proof transcript for <nm>"
         ]
     , showState )
 
@@ -569,6 +570,7 @@ doNewProof args reqs
               -> proofREPL reqs liveProof
 \end{code}
 
+
 \begin{code}
 cmdRet2Proof :: REqCmdDescr
 cmdRet2Proof
@@ -705,11 +707,15 @@ listScopeLawsDescr = ( "ll", "list laws"
 listScopeLaws :: REPLCmd (REqState, LiveProof)
 listScopeLaws _ state@( _, liveProof)
   = do putStrLn $ observeLawsInScope liveProof
-       putStr "<return> to continue..." ; hFlush stdout ; getLine
+       userPause
        return state
 \end{code}
 
 
+Sometimes a user-mediated pause is useful:
+\begin{code}
+userPause = putStr "<return> to continue..." >> hFlush stdout >> getLine
+\end{code}
 
 
 Focus movement commands
@@ -808,7 +814,7 @@ tryMatch args state@( reqs, liveProof)
                 , "Binding:\n" ++ trBinding bind
                 , "Local candidate s.c. = " ++ trSideCond scC' ]
          But msgs -> putStrLn $ unlines' ( (banner ++ " failed!") : msgs )
-       putStr "<return> to continue..." ; hFlush stdout ; getLine
+       userPause
        return state
   where
     (nums,rest) = span (all isDigit) args
@@ -929,11 +935,20 @@ equivaleStepsDescr
     , equivaleSteps )
 
 equivaleSteps :: REPLCmd (REqState, LiveProof)
-equivaleSteps [nm] liveState@(reqs, _)
-  = stepEquivalenceTheorem nm liveState
-equivaleSteps _ liveState
- = do putStrLn ("equivale theorem - one name required")
+equivaleSteps [] liveState
+ = do putStrLn ("equivale theorem - name required")
+      userPause
       return liveState
+equivaleSteps args liveState@(reqs, _)
+  = do (outcome,liveState') <- stepEquivalenceTheorem lawnm liveState
+       case outcome of
+         Just msg  ->  do putStrLn msg
+                          userPause
+                          return liveState
+         Nothing  ->   do putStrLn ("Equivalence law '"++lawnm++"' created.")
+                          userPause
+                          return liveState'
+  where lawnm = filter (not . isSpace) $ unwords args
 \end{code}
 
 \newpage

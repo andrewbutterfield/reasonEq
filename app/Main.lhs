@@ -232,7 +232,9 @@ type REqConfig    =  REPLConfig   REqState
 Now we work down through the configuration components.
 \begin{code}
 reqPrompt :: Bool -> REqState -> String
-reqPrompt _ reqs = devMk ++ chgd ++ "REq."++currTheory reqs++"> "
+reqPrompt _ reqs = devMk ++ chgd
+                         ++ takeBaseName (projectDir reqs)++ "."
+                         ++ currTheory reqs++"> "
  where
    chgd = if modified reqs then "*" else ""
    devMk = if inDevMode reqs then "!" else ""
@@ -307,7 +309,7 @@ cmdShow
   = ( "sh"
     , "show parts of the prover state"
     , unlines
-        [ "sh "++shProject++" -- show current project"
+        [ "sh "++shWork++" -- show current workspace"
         , "sh "++shSig++" -- show logic signature"
         , "sh "++shTheories++" -- show theories"
         , "sh "++shLaws++" -- show laws"
@@ -319,7 +321,7 @@ cmdShow
         ]
     , showState )
 
-shProject = "f"
+shWork = "w"
 shSig = "s"
 shTheories = "t"
 shLaws = "L"
@@ -331,7 +333,7 @@ shProofs = "P"
 -- these are not robust enough - need to check if component is present.
 showState (cmd:args) reqs
  | cmd == shProofs    =  doshow reqs $ observeCompleteProofs args reqs
- | cmd == shProject   =  doshow reqs $ projectDir reqs
+ | cmd == shWork      =  doshow reqs $ projectDir reqs
  | cmd == shSig       =  doshow reqs $ observeSig reqs
  | cmd == shTheories  =  doshow reqs $ observeTheories reqs
  | cmd == shLaws      =  doshow reqs $ observeLaws reqs

@@ -29,9 +29,9 @@ import PredExists
 import PredUniv
 \end{code}
 
-We assume the the project directory is defined as an immediate
-subdirectory of the current directory from which the program
-was launched.
+We assume the the development project directory is defined as an immediate
+subdirectory called \texttt{devproj}
+of the current directory from which the program was launched.
 
 \begin{code}
 devProjectDir = "devproj"

@@ -70,6 +70,9 @@ liveProofs_      = liveProofs__ . const
 
 \subsubsection{Settings}
 
+For now,
+the only setting is one for the maximum number of matches displayed.
+
 \begin{code}
 data REqSettings
   = REqSet {

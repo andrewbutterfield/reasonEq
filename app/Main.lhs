@@ -10,6 +10,8 @@ module Main where
 import System.Environment
 import System.IO
 import System.FilePath
+import System.Directory
+import System.Exit
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Set (Set)
@@ -84,12 +86,12 @@ helpLongFlag    = "--help"
 versionFlag     = "-v"
 versionLongFlag = "--version"
 
-guiFlag      = "-g"    --          use GUI
-replFlag     = "-r"    --          use REPL (default)
-projectFlag  = "-p"    -- <path>   path to prover data files
-userFlag     = "-u"    --          run in 'User' mode
-devFlag      = "-d"    --          run in 'Dev' mode
-cwdConfig    = ".req"  -- local config file (contains flags)
+guiFlag        = "-g"    --          use GUI
+replFlag       = "-r"    --          use REPL (default)
+workspaceFlag  = "-w"    -- <path>   path to prover workspace
+userFlag       = "-u"    --          run in 'User' mode
+devFlag        = "-d"    --          run in 'Dev' mode
+cwdConfig      = ".req"  -- local config file (contains flags)
 
 helpinfo
  = putStrLn $ unlines
@@ -97,7 +99,7 @@ helpinfo
      , "req [command-line-options]\n"
 --     , option guiFlag "start-up GUI"
      , option replFlag "start-up REPL"
-     , option (projectFlag++"<dir>") "workspace directory"
+     , option (workspaceFlag++" <dir>") "workspace directory"
      , option userFlag "start-up in User mode (default)"
      , option devFlag "start-up in Dev mode"
      , ""
@@ -121,10 +123,11 @@ defFlags = CMDFlags { usegui  = False
                     , project = Nothing
                     , dev    = False }
 
+parseArgs :: [[Char]] -> CMDFlags
 parseArgs args = parse defFlags args where
   parse flags [] = flags
   parse flags (f:p:ss)
-   | f == projectFlag  =  parse flags{ project = checkfp p } ss
+   | f == workspaceFlag  =  parse flags{ project = checkfp p } ss
    where checkfp fp
            | isValid fp  =  Just fp
            | otherwise   =  Nothing
@@ -152,11 +155,19 @@ info args runargs
 
 runargs args
   = do let flags = parseArgs args
-       if usegui flags
-       then do putStrLn "starting GUI..."
-               gui flags
-       else do putStrLn "starting REPL..."
-               repl flags
+       (fp,bad) <- badDirectory (project flags)
+       if bad
+       then die ("invalid workspace: "++fp)
+       else
+         if usegui flags
+         then do putStrLn "starting GUI..."
+                 gui flags
+         else do putStrLn "starting REPL..."
+                 repl flags
+  where
+    badDirectory (Just fp)  =  do ok <- doesDirectoryExist fp
+                                  return (fp, not ok)
+    badDirectory _          =  return ("", False)
 \end{code}
 
 

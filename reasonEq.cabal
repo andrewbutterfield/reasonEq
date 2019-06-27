@@ -87,6 +87,7 @@ executable req
   build-depends:       base
                      , containers
                      , filepath
+                     , directory
                      , reasonEq
                      , nicesymbols
   default-language:    Haskell2010

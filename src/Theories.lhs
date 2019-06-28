@@ -358,10 +358,15 @@ assumeConj cjnm thry = fail ("assumeConj '"++cjnm++"' NYI")
 \begin{code}
 lawDemote :: Monad m => String -> Theory -> m Theory
 lawDemote "*" thry
-  = if null assl then fail "lawDemote *: no laws"
+  = if null assl then fail "lawDemote *: no assumed laws"
        else return $ laws_ othrl $ conjs__ (++(map fst assl)) thry
   where
     (assl,othrl) = partition isAssumed $ laws thry
+lawDemote "[]" thry
+  = if null assl then fail "lawDemote []: no proven laws"
+       else return $ laws_ othrl $ conjs__ (++(map fst assl)) thry
+  where
+    (assl,othrl) = partition isProven $ laws thry
 lawDemote lwnm thry = fail ("lawDemote '"++lwnm++"' NYI")
 \end{code}
 

@@ -2210,6 +2210,14 @@ vsUnkLVarOneEach bind (vC:vlC) (lvP:ullP)
 
 \textbf{UNDERGOING A COMPLETE RE-THINK}
 
+Right now we have a substitution matching bug,
+found in the \texttt{XYZ} theory.
+Pattern variable $\lst e$ (or $\overline e$)
+is not bound to anything, and in particular not bound to $O_m$
+(or $\overline O\_m$).
+
+\includegraphics[scale=0.4]{doc/images/substitution-match-bug-June-28-2019}
+
 We will write a substitution of the form
 $$
   [ e_1,\dots,e_m,\lst y_1,\dots,\lst y_n

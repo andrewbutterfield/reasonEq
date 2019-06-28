@@ -44,9 +44,9 @@ import Dev
 \end{code}
 
 \begin{code}
-name = "reasonEq"
+progName = "reasonEq"
 version = "0.7.5.0"
-name_version = name++" "++version
+name_version = progName++" "++version
 \end{code}
 
 \newpage
@@ -190,7 +190,7 @@ initState flags
     else case project flags of
        Nothing
           -> do  putStrLn "Running user mode, default initial state."
-                 (appFP,projects) <- getWorkspaces name
+                 (appFP,projects) <- getWorkspaces progName
                  putStrLn ("appFP = "++appFP)
                  putStrLn ("projects:\n"++unlines projects)
                  (pname,projfp)
@@ -306,7 +306,7 @@ repl flags
        return ()
 
 reqWelcome = unlines
- [ "Welcome to the "++name++" "++version++" REPL"
+ [ "Welcome to the "++progName++" "++version++" REPL"
  , "Type '?' for help."
  ]
 \end{code}
@@ -317,21 +317,22 @@ reqWelcome = unlines
 \begin{code}
 cmdShow :: REqCmdDescr
 cmdShow
-  = ( "sh"
+  = ( shName
     , "show parts of the prover state"
     , unlines
-        [ "sh "++shWork++" -- show current workspace"
-        , "sh "++shSig++" -- show logic signature"
-        , "sh "++shTheories++" -- show theories"
-        , "sh "++shLaws++" -- show laws"
-        , "sh "++shCurrThry++" -- show 'current' theory"
-        , "sh "++shConj++" -- show current conjectures"
-        , "sh "++shLivePrf++" -- show current (live) proof"
-        , "sh "++shProofs++" -- show completed proofs"
-        , "sh "++shProofs++" <nm> -- show proof transcript for <nm>"
+        [ shName++" "++shWork++" -- show workspace info"
+        , shName++" "++shSig++" -- show logic signature"
+        , shName++" "++shTheories++" -- show theories"
+        , shName++" "++shLaws++" -- show laws"
+        , shName++" "++shCurrThry++" -- show 'current' theory"
+        , shName++" "++shConj++" -- show current conjectures"
+        , shName++" "++shLivePrf++" -- show current (live) proof"
+        , shName++" "++shProofs++" -- show completed proofs"
+        , shName++" "++shProofs++" <nm> -- show proof transcript for <nm>"
         ]
     , showState )
 
+shName = "sh"
 shWork = "w"
 shSig = "s"
 shTheories = "t"
@@ -344,7 +345,7 @@ shProofs = "P"
 -- these are not robust enough - need to check if component is present.
 showState (cmd:args) reqs
  | cmd == shProofs    =  doshow reqs $ observeCompleteProofs args reqs
- | cmd == shWork      =  doshow reqs $ projectDir reqs
+ | cmd == shWork      =  showWorkspaces args reqs
  | cmd == shSig       =  doshow reqs $ observeSig reqs
  | cmd == shTheories  =  doshow reqs $ observeTheories reqs
  | cmd == shLaws      =  doshow reqs $ observeLaws reqs
@@ -353,7 +354,16 @@ showState (cmd:args) reqs
  | cmd == shLivePrf   =  doshow reqs $ observeLiveProofs reqs
 showState _ reqs      =  doshow reqs "unknown 'show' option."
 
+doshow :: REqState -> String -> IO REqState
 doshow reqs str  =  putStrLn str >> return reqs
+
+
+showWorkspaces :: [String] -> REqState -> IO REqState
+showWorkspaces args reqs
+  = do (appFP,projects) <- getWorkspaces progName
+       putStrLn ("Application Data:\n\t"++appFP)
+       putStrLn ("Project Folders:\n"++unlines (map ('\t':) projects))
+       return reqs
 \end{code}
 
 \newpage

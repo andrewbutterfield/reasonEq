@@ -1,6 +1,6 @@
 \section{XYZ Theory}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2019
+Copyright  Andrew Buttefield, Danny Thomas (c) 2019
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -64,6 +64,13 @@ $$P \qquad Q$$
 vp = Vbl (fromJust $ ident "P") PredV Static
 p = fromJust $ pVar vp
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
+r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
+
+b  = fromJust $ pVar $ Vbl (fromJust $ ident "b") PredV Before
+b' = fromJust $ pVar $ Vbl (fromJust $ ident "b") PredV After
+c  = fromJust $ pVar $ Vbl (fromJust $ ident "c") PredV Before
+c' = fromJust $ pVar $ Vbl (fromJust $ ident "c") PredV After
+
 \end{code}
 
 
@@ -78,6 +85,9 @@ vx' = Vbl (fromJust $ ident "x") ObsV After
 vy' = Vbl (fromJust $ ident "y") ObsV After
 vz' = Vbl (fromJust $ ident "z") ObsV After
 \end{code}
+
+
+%zero = Vbl (fromJust $ ident "zero") ObsV Static
 
 
 % For use in quantifier variable list/sets and substitution second lists
@@ -112,9 +122,11 @@ $$ e \quad \lst e  \qquad f \quad \lst f$$
 -- Underlying variables:
 ve = Vbl (fromJust $ ident "e") ExprV Before
 vf = Vbl (fromJust $ ident "f") ExprV Before
+vg = Vbl (fromJust $ ident "g") ExprV Before
 -- for use in expressions
 e = fromJust $ eVar int ve
 f = fromJust $ eVar int vf
+g = fromJust $ eVar int vg
 -- for use in quantifiers, substitutions (first list)
 qe = StdVar ve
 qf = StdVar vf
@@ -148,6 +160,7 @@ defined to be $x'=x \land y'=y \land z'=z$.
 skip = Vbl (fromJust $ ident "II") PredV Static
 skipDef = x' `isEqualTo` x /\ ( y' `isEqualTo` y /\ z' `isEqualTo` z)
 
+
 xyzKnown  =   fromJust $ addKnownConst skip skipDef
             $ fromJust $ addKnownVar vx  int
             $ fromJust $ addKnownVar vy  int
@@ -157,6 +170,8 @@ xyzKnown  =   fromJust $ addKnownConst skip skipDef
             $ fromJust $ addKnownVar vz' int
             $ newVarTable
 \end{code}
+
+%$ fromJust $ addKnownVar zero nat
 
 \newpage
 \subsection{XYZ Axioms}
@@ -176,6 +191,17 @@ $$
 $$\par\vspace{-8pt}
 \begin{code}
 mkSeq p q = PCons (fromJust $ ident ";")[p, q]
+
+mkIn p q = PCons (fromJust $ ident "in")[p, q]
+
+mkNat p = PCons (fromJust $ ident "Nat")[p]
+
+mkSuc p = PCons (fromJust $ ident "S")[p]
+
+mkZero = PCons (fromJust $ ident "Zer")[]
+
+mkPlus p q = PCons (fromJust $ ident "+")[p, q]
+
 before r = Sub P r $ fromJust $ substn [(vx',xm),(vy',ym),(vz',zm)] []
 after r  = Sub P r $ fromJust $ substn [(vx,xm), (vy,ym), (vz,zm)] []
 
@@ -229,6 +255,9 @@ $$\par%\vspace{-8pt}
 \begin{code}
 mkAsg x e = PCons (fromJust $ ident ":=")[x, e]
 
+mkCond p b q = PCons(fromJust $ ident "cond")[p, b, q]
+
+
 axXAsgDef = preddef ("X" -.- ":=" -.- "def")
                    ( mkAsg x e
                      ===
@@ -247,7 +276,67 @@ axZAsgDef = preddef ("Z" -.- ":=" -.- "def")
                      x' `isEqualTo` x /\
                      ( y' `isEqualTo` y /\ z' `isEqualTo` e)  )
                     scTrue
+
+axSeqCompL1 = preddef ("SeqComp" -.- "L1")
+                   ( mkSeq (mkSeq p q) r === mkSeq p (mkSeq q r))
+                   scTrue
+
+axSeqCompL2 = preddef ("SeqComp" -.- "L2")
+                  ( mkSeq (mkCond p b q) r === mkCond (mkSeq p r) b (mkSeq q r))
+                   scTrue
+
+
+axPeano01 = preddef ("Peano" -.- "01")
+                  (mkNat mkZero)
+                  scTrue
+
+axPeano02 = preddef ("Peano" -.- "02")
+                  (p `isEqualTo` p)
+                  scTrue
+
+axPeano03 = preddef ("Peano" -.- "03")
+                  (q `isEqualTo` p === p `isEqualTo` q)
+                  scTrue
+
+axPeano04 = preddef ("Peano" -.- "04")
+                  (p `isEqualTo` q /\ q `isEqualTo` r ==> p `isEqualTo` r)
+                  scTrue
+
+axPeano05 = preddef ("Peano" -.- "05")
+                  (mkNat p /\ (p `isEqualTo` q) ==> mkNat q)
+                  scTrue
+
+axPeano06 = preddef ("Peano" -.- "06")
+                  (mkNat p ==> mkNat (mkSuc p))
+                  scTrue
+
+axPeano07 = preddef ("Peano" -.- "07")
+                  ((p `isEqualTo` q) === (mkSuc p `isEqualTo` mkSuc q))
+                  scTrue
+
+axPeano08 = preddef ("Peano" -.- "08")
+                  ((mkZero === mkSuc p) === falseP)
+                  scTrue
+
+axPeano09 = preddef ("Peano" -.- "09")
+                  (mkIn mkZero p /\ (mkIn q p ==> mkIn (mkSuc q) p) ==> p )
+                  scTrue
+
+axPeanoAdd01 = preddef ("Peano" -.- "Addition" -.- "1")
+                  (mkPlus p mkZero === p)
+                  scTrue
+
+axPeanoAdd02 = preddef ("Peano" -.- "Addition" -.- "2")
+                  (mkPlus p (mkSuc q) === mkSuc (mkPlus p q))
+                  scTrue
+
+axPeanoAdd03 = preddef ("Peano" -.- "Addition" -.- "3")
+                  (mkPlus p q === mkPlus q p)
+                  scTrue
+
+
 \end{code}
+
 
 
 We now collect our axiom set:
@@ -256,13 +345,57 @@ xyzAxioms :: [Law]
 xyzAxioms
   = map labelAsAxiom
       [ axXYZSeqDef, axSeqDef
-      , axXAsgDef, axYAsgDef, axZAsgDef
+      , axXAsgDef, axYAsgDef, axZAsgDef,
+      axSeqCompL1, axSeqCompL2,
+      axPeano01, axPeano02, axPeano03, axPeano04, axPeano05,
+      axPeano06, axPeano07, axPeano08, axPeano09, axPeanoAdd01,
+      axPeanoAdd02, axPeanoAdd03
       ]
 \end{code}
 
 
 
 \subsection{XYZ Conjectures}
+
+\begin{code}
+cjNonDeterL5 = preddef ("NonDeter" -.- "cj" -.- "L5")
+                    (mkCond p b (q \/ r) === (mkCond p b q) \/ (mkCond p b r))
+                    scTrue
+\end{code}
+
+\begin{code}
+
+cjNonDeterL6 = preddef ("NonDeter" -.- "cj" -.- "L6")
+                    (mkSeq (p \/ q) r === (mkSeq p r) \/ (mkSeq q r))
+                    scTrue
+
+\end{code}
+
+
+
+\begin{code}
+
+cjNonDeterL7 = preddef ("NonDeter" -.- "cj" -.- "L7")
+                    (mkSeq p (q \/ r) === (mkSeq p q) \/ (mkSeq p r))
+                    scTrue
+
+\end{code}
+
+\begin{code}
+
+cjNonDeterL8 = preddef ("NonDeter" -.- "cj" -.- "L8")
+                    (p \/ mkCond q b r === mkCond (p \/ q) b (p \/ r))
+                    scTrue
+
+\end{code}
+
+\begin{code}
+
+cjPeanoAdd03 = preddef ("Peano" -.- "Addition" -.- "3")
+                  (mkPlus p (mkSuc mkZero) === mkSuc p)
+                  scTrue
+
+\end{code}
 
 
 % %% TEMPLATE
@@ -281,8 +414,13 @@ We now collect our conjecture set:
 \begin{code}
 xyzConjs :: [NmdAssertion]
 xyzConjs
-  = [  ]
+  = [ cjNonDeterL5, cjNonDeterL6, cjNonDeterL7, cjNonDeterL8,
+      cjPeanoAdd03 ]
 \end{code}
+
+
+
+
 
 
 \subsection{The Predicate Theory}

@@ -1,6 +1,6 @@
 \section{UTP Start-up}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2019
+Copyright  Andrew Buttefield, Danny Thomas (c) 2019
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -162,6 +162,9 @@ $$\par\vspace{-8pt}
 \begin{code}
 mkCond p b q = PCons(fromJust $ ident "cond")[p, b, q]
 
+mkSeq p q = PCons (fromJust $ ident ";")[p, q]
+
+
 axUTP001 = preddef ("UTP" -.- "ax" -.- "001")
                     (mkCond p b q === (p /\ b) \/ (q /\ mkNot b))
                     scTrue
@@ -180,6 +183,12 @@ $$\par\vspace{-8pt}
 \begin{code}
 cjUTPdef = preddef ("UTP" -.- "cj" -.- "alt" -.- "def")
                      (mkCond p b q === (b ==> p) /\ (mkNot b ==> q))
+                     scTrue
+\end{code}
+
+\begin{code}
+cjUTPdef2 = preddef ("UTP" -.- "cj" -.- "alt" -.- "def2")
+                     (mkCond p b q === ((mkNot b \/ p) === (b \/ q)))
                      scTrue
 \end{code}
 
@@ -238,6 +247,10 @@ cjUTPL7 = preddef ("UTP" -.- "cj" -.- "L7")
 
 
 
+
+
+
+
 % %% TEMPLATE
 % $$
 %   \begin{array}{lll}
@@ -264,6 +277,7 @@ We now collect our conjecture set:
 utpStartupConjs :: [NmdAssertion]
 utpStartupConjs
   = [ cjUTPdef,
+      cjUTPdef2,
       cjUTPL1,
       cjUTPL2,
       cjUTPL3,

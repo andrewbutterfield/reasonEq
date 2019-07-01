@@ -361,8 +361,14 @@ bindSubscriptToSubscript :: Monad m
 bindSubscriptToSubscript what (During m) (During n) sbind
   = insertDR (rangeEq what) m n sbind
 bindSubscriptToSubscript what vw1 vw2 sbind
- | vw1 == vw2  =  return sbind
- | otherwise   =  fail (what ++ ": incompatible temporality")
+ | vw1 == Static && vw2 /= Textual  =  return sbind
+ | vw1 == vw2                       =  return sbind
+ | otherwise  =  fail $ unlines'
+                  [ what
+                  , "incompatible temporality"
+                  , "vw1 = "++show vw1
+                  , "vw2 = "++show vw2
+                  ]
 \end{code}
 
 \subsubsection{Binding Variable to Variable}
@@ -951,9 +957,9 @@ bindLVarPairToSubst' tgtLV@(LVbl (Vbl ti tvc tvt) tis tij)
   | rwsize  > 1  =  fail "bindLVarPairToSubst: mixed replacement temporality."
   | otherwise
      = do sbind'  <- bindSubscriptToSubscript "bindLVarPairToSubst(tgt)"
-                                                               (dbg "tvt=" tvt) thectw sbind
+                                                  (dbg (show ti++".tvt=") tvt) thectw sbind
           sbind'' <- bindSubscriptToSubscript "bindLVarPairToSubst(rpl)"
-                                                               (dbg "rvt=" rvt) thecrw sbind'
+                                                  (dbg (show ri++".rvt=") rvt) thecrw sbind'
           llbind' <- insertDR (rangeEq "bindLVarPairToSubst(dynamic)")
                               (tgtLV,rplLV) (tsub,lvarsub)
                               llbind

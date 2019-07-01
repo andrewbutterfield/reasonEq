@@ -591,6 +591,15 @@ sub_okxyz
     [ (ok,evar bool okm)
     , (x,evar int xm), (y,evar int ym), (z,evar int zm)
     ] []
+sub_es_xs
+ = fromJust $ substn [] [(xs,es)]
+
+vx = Vbl (fromJust $ ident "x") ObsV Static
+lvxs = LVbl vx [] []
+gvxs = LstVar lvxs
+ve = Vbl (fromJust $ ident "e") ExprV Static
+lves = LVbl ve [] []
+gves = LstVar lves
 
 test_substitution
  = testGroup "Substitutions"
@@ -614,6 +623,11 @@ test_substitution
             $ bindLs gSm [gxm,gym,gzm]
             -- need (S,Sm)->({(x,xm),(y,ym),(z,zm)},{}) where  xm,ym,zm : Z
             $ bindLLSub (gS,gSm) [(x,txm),(y,tym),(z,tzm)] []
+            $ emptyBinding ] )
+    , testCase "[Om/O] :: [e$/x$] - succeeds"
+       ( nub (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_O sub_es_xs)
+        @?= [ bindLs gvxs [gO]
+            $ bindLs gves [gOm]
             $ emptyBinding ] )
     ]
 

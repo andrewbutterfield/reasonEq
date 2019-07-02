@@ -66,8 +66,11 @@ between pattern variables  and their corresponding candidate bindings,
 based on variable class and temporality.
 
 Basically observation variables can be bound to both observation
-and expression variables,
-while expression and predicate variables can only be bound to
+and expression variables, as can expression variables%
+\footnote{This was originally not allowed, but is required when matching
+list-variables as replacements in substitutions, e.g. $[O_m/O] :: [\lst e/\lst x]$.}
+%
+while predicate variables can only be bound to
 variables of the same class
 (Fig. \ref{fig:utp-perm-class-bind}).
 \begin{figure}
@@ -93,6 +96,7 @@ variables of the same class
 validVarClassBinding :: VarClass -> VarClass -> Bool
 validVarClassBinding ObsV  ObsV   =  True
 validVarClassBinding ObsV  ExprV  =  True
+validVarClassBinding ExprV ObsV   =  True
 validVarClassBinding ExprV ExprV  =  True
 validVarClassBinding PredV PredV  =  True
 validVarClassBinding _     _      =  False
@@ -100,7 +104,6 @@ validVarClassBinding _     _      =  False
 A similar predicate for binding to terms:
 \begin{code}
 validVarTermBinding :: VarClass -> TermKind -> Bool
-validVarTermBinding ObsV  (E _)  =  True
 validVarTermBinding ObsV  (E _)  =  True
 validVarTermBinding ExprV (E _)  =  True
 validVarTermBinding PredV P      =  True
@@ -786,7 +789,12 @@ bindLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind,llbin
     =  do lbind' <- insertDR (rangeListOrSet "bindLVarToVSet(static)")
                              (i,vc,is,ij) (BS vs) lbind
           return $ BD (vbind,sbind,lbind',llbind)
- | otherwise = fail "bindLVarToVSet: static cannot bind to any textual."
+ | otherwise = fail $ unlines'
+                [ "bindLVarToVSet: static cannot bind to any textual."
+                -- having a Textual in vs is not the only reason for failure!!!
+                , "lv = "++show lv
+                , "vs = "++show vs
+                ]
  where
     (valid, vsw) = vsCompatible vc Static vs
 

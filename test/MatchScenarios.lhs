@@ -592,7 +592,7 @@ sub_okxyz
     , (x,evar int xm), (y,evar int ym), (z,evar int zm)
     ] []
 sub_es_xs
- = fromJust $ substn [] [(xs,es)]
+ = fromJust $ substn [] [(lvxs,lves)]
 
 vx = Vbl (fromJust $ ident "x") ObsV Static
 lvxs = LVbl vx [] []

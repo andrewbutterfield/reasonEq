@@ -2,6 +2,54 @@
 
 ## Hotfixes
 
+### Substitiution matching bug.
+
+From MatchScenarios we now have the following test outcome, and "expected" is wrong (missing `e -> Om`)
+
+```
+      [Om/O] :: [e$/x$] - succeeds: [Failed]
+
+expected:   { e -> Om, x -> O,  (x,e) -> (O,Om) }
+[BD (fromList []
+    ,fromList []
+    ,fromList [ ( (Id "e",VE,[],[])
+                , BS (fromList [GL (LV (VR (Id "O",VO,WD "m"),[],[]))])
+                )
+              , ( (Id "x",VO,[],[])
+                , BS (fromList [GL (LV (VR (Id "O",VO,WB),[],[]))])
+                )
+              ]
+    ,fromList [ ( (LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))
+                , (fromList []
+                  ,fromList [(LV (VR (Id "O",VO,WB),[],[]),LV (VR (Id "O",VO,WD "m"),[],[]))])
+                )
+              ]
+    )
+]
+
+ but got:  { x -> O,  (x,e) -> (O,Om)}
+
+[BD (fromList []
+    ,fromList []
+    ,fromList [ ( (Id "x",VO,[],[])
+                , BS (fromList [GL (LV (VR (Id "O",VO,WB),[],[]))])
+                )
+              ]
+    ,fromList [ ( (LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))
+                , (fromList []
+                  ,fromList [(LV (VR (Id "O",VO,WB),[],[]),LV (VR (Id "O",VO,WD "m"),[],[]))]
+                  )
+                )
+              ]
+    )
+]
+
+```
+
+Should we actually produce `{ x -> O,  e -> 0m, (x,e) -> (O,Om) }` ?
+
+### Filenames
+
 We need to decouple Cons names from external appearance.
 If a theory file developed and saved on OS/unix
 is opened by a Windows version, then the UTF-8 names will be present.

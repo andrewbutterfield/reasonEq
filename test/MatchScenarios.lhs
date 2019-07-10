@@ -628,6 +628,7 @@ test_substitution
        ( nub (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_O sub_es_xs)
         @?= [ bindLs gvxs [gO]
             $ bindLs gves [gOm]
+            $ bindLLSub (gvxs,gves) [] [(lO,lOm)]
             $ emptyBinding ] )
     ]
 

@@ -49,8 +49,8 @@ tst_bind_lkp_VarToVar
       [ -- variable class tests
         testCase "osv -> osu (Ok)"
         ( vvBindLook  osv osu @?= BindVar osu )
-      , testCase "esv -> osu (Not Ok)"
-        ( bindVarToVar esv osu emptyBinding @?= Nothing)
+      , testCase "esv -> osu (Ok)"
+        ( vvBindLook esv osu @?= BindVar osu)
       , testCase "psv -> osu (Not Ok)"
         ( bindVarToVar psv osu emptyBinding @?= Nothing)
         -- variable temporality tests
@@ -130,10 +130,9 @@ tst_bind_lkp_LVarToVList
   , testCase "lobv -> [gebv] (Ok)" (llBindLook lobv [gebv] @?= BindList [gebv])
   , testCase "lebv -> [gebv] (Ok)" (llBindLook lebv [gebv] @?= BindList [gebv])
   , testCase "lpbv -> [gpbv] (Ok)" (llBindLook lpbv [gpbv] @?= BindList [gpbv])
+  , testCase "lebv -> [gobu] (Ok)" (llBindLook lebv [gobu] @?= BindList [gobu])
   , testCase "lobv -> [gpsv] (Nok)"
     ( bindLVarToVList lobv [gpsv] emptyBinding @?= Nothing )
-  , testCase "lebv -> [gobu] (Nok)"
-    ( bindLVarToVList lebv [gobu] emptyBinding @?= Nothing )
   , testCase "lebv -> [gpbv] (Nok)"
     ( bindLVarToVList lebv [gpbv] emptyBinding @?= Nothing )
   , testCase "lpbv -> [gosu] (Nok)"
@@ -154,10 +153,9 @@ tst_bind_lkp_LVarToVSet
   , testCase "lobv -> {gebv} (Ok)" (lsBindLook lobv (sngl gebv) @?= BindSet (sngl gebv))
   , testCase "lebv -> {gebv} (Ok)" (lsBindLook lebv (sngl gebv) @?= BindSet (sngl gebv))
   , testCase "lpbv -> {gpbv} (Ok)" (lsBindLook lpbv (sngl gpbv) @?= BindSet (sngl gpbv))
+  , testCase "lebv -> {gobu} (Ok)" (lsBindLook lebv (sngl gobu) @?= BindSet (sngl gobu))
   , testCase "lobv -> {gpsv} (Nok)"
     ( bindLVarToVSet lobv (sngl gpsv) emptyBinding @?= Nothing )
-  , testCase "lebv -> {gobu} (Nok)"
-    ( bindLVarToVSet lebv (sngl gobu) emptyBinding @?= Nothing )
   , testCase "lebv -> {gpbv} (Nok)"
     ( bindLVarToVSet lebv (sngl gpbv) emptyBinding @?= Nothing )
   , testCase "lpbv -> {gobu} (Nok)"

@@ -46,7 +46,12 @@ expected:   { e -> Om, x -> O,  (x,e) -> (O,Om) }
 
 ```
 
+#### Key Question
+
 Should we actually produce `{ x -> O,  e -> 0m, (x,e) -> (O,Om) }` ?
+
+*YES!* This is similar to what we do with `x -> u` inducing `x' -> u'`,
+or `x_m -> u_n` inducing `m -> n`. It is **necessary** to ensure mapping consistency.
 
 ### Filenames
 

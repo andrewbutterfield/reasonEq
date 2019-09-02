@@ -4,7 +4,7 @@
 
 ### Substitiution matching bug.
 
-From MatchScenarios we now have the following test outcome, and "expected" is wrong (missing `e -> Om`)
+From MatchScenarios we now have the following test outcome, and "but got" is wrong (missing `e -> Om`)
 
 ```
       [Om/O] :: [e$/x$] - succeeds: [Failed]

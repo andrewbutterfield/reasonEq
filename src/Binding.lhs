@@ -17,6 +17,7 @@ module Binding
 , bindLVarToVSet, overrideLVarToVSet
 , bindLVarToSSelf, bindLVarsToSSelves, bindLVarSTuples
 , bindLVarToTList
+, bindVarPairToSubst
 , bindLVarPairToSubst
 , bindGVarToGVar
 , bindGVarToVList
@@ -862,7 +863,7 @@ bindLVarSTuples (lv2:lv2s) bind
 \end{code}
 
 \newpage
-\subsubsection{Binding List-Variables pairs to Term-lists}
+\subsubsection{Binding List-Variables to Term-lists}
 
 An observation or expression list-variable can bind to expressions
 while a predicate list-variable can only bind to a predicates,
@@ -925,7 +926,20 @@ bindLVarToTList plv cndTs _
      , "cndTs = " ++ show cndTs ]
 \end{code}
 
+
 \newpage
+
+\subsubsection{Binding Variable-Pairs to Substitutions}
+
+\begin{code}
+bindVarPairToSubst :: Monad m
+                    => Variable -> Variable -> Variable -> Term -> Binding
+                    -> m Binding
+
+bindVarPairToSubst tgtV rplV matchedV matchedE bind
+ = error "bindVarPairToSubst NYI"
+\end{code}
+
 \subsubsection{Binding List-Variable pairs to Substitutions}
 
 \begin{code}

@@ -22,7 +22,7 @@ Form of a test fail:
 \begin{verbatim}
   <test description>: [Failed]
 expected: <Haskell Show Output>
- but got: <Hasekll Show Output>
+ but got: <Haskell Show Output>
 \end{verbatim}
 Show lines marked by hand:
 \begin{verbatim}
@@ -73,8 +73,8 @@ ppNext (ln:lns) = pp ln : ppFails lns
 \subsection{Show Pretty Main}
 
 This should be run from the repo top-level and looks
-for \texttt{test/TestResultsTemp.raw}.
-The result ends up in \texttt{TestResultsTemp.log},
+for \texttt{tests.log}.
+The result ends up in \texttt{pretty.log},
 at the top-level.
 
 To compile do, in the \texttt{/src} directory:
@@ -83,10 +83,13 @@ ghc -o showpp ShowPP.lhs
 \end{verbatim}
 
 \begin{code}
+testlog = "tests.log"
+pretty = "pretty.log"
 main
- = do txt <- readFile "test/TestResultsTemp.raw"
+ = do putStrLn (testlog ++ " --prettify--> " ++ pretty)
+      txt <- readFile testlog
       let lns = lines txt
       -- putStrLn $ unlines lns
       let lnspp = ppFails lns
-      writeFile "TestResultsTemp.log" $ unlines lnspp
+      writeFile pretty $ unlines lnspp
 \end{code}

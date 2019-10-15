@@ -401,7 +401,12 @@ trVarBind vb = _ll ++ show vb ++ _gg
 
 trLstVarBind (BindList vl)  =  _langle ++ trVL vl ++ _rangle
 trLstVarBind (BindSet vs)  =  "{" ++ trVL (S.toList vs) ++ "}"
-trLstVarBind (BindTerms ts)  =  _langle ++ trTL 0 ", " ts ++ _rangle
+trLstVarBind (BindTLVs ts [])
+  =  _langle ++ trTL 0 ", " ts ++  _rangle
+trLstVarBind (BindTLVs [] lvs)
+  =  _langle ++ seplist "," trLVar lvs ++ _rangle
+trLstVarBind (BindTLVs ts lvs)
+  =  _langle ++ trTL 0 ", " ts ++ "; " ++ seplist ", " trLVar lvs ++ _rangle
 \end{code}
 
 \begin{code}

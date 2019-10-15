@@ -76,15 +76,18 @@ This should be run from the repo top-level and looks
 for \texttt{tests.log}.
 The result ends up in \texttt{pretty.log},
 at the top-level.
-
-To compile do, in the \texttt{/src} directory:
-\begin{verbatim}
-ghc -o showpp ShowPP.lhs
-\end{verbatim}
-
 \begin{code}
 testlog = "tests.log"
 pretty = "pretty.log"
+\end{code}
+
+To compile do, enter the \texttt{/src} directory
+and do:
+\begin{verbatim}
+ghc -o showpp ShowPP.lhs
+\end{verbatim}
+Then move \texttt{showpp} to somewhere on your \verb"$PATH".
+\begin{code}
 main
  = do putStrLn (testlog ++ " --prettify--> " ++ pretty)
       txt <- readFile testlog

@@ -2254,8 +2254,8 @@ isFeasibleSubstnMatch (Substn tsC lvsC) (Substn tsP lvsP)
 If the match succeeds, then the resulting binding needs to:
 \begin{itemize}
   \item
-    bind $e_i$ to $f_j$ and $x_i$ to $v_j$,
-    for all $i \in 1\dots m$, and $m$ values of $j$ drawn from $1\dots n$;
+    bind $e_i$ to $f_j$ and $x_i$ to $u_j$,
+    for all $i \in 1\dots m$, and $m$ values of $j$ drawn from $1\dots p$;
   \item
     for $k \in 1\dots n$,
     bind $\lst y_k/\lst z_k$ to some disjoint subset of
@@ -2265,7 +2265,7 @@ If the match succeeds, then the resulting binding needs to:
          This means binding $\lst y_k$
          to some set of $f_j$ terms and set of $\lst v_j$ list-variables,
       \item
-        and $\lst z_k$ to the corresponding set of $x_j$ variables
+        and $\lst z_k$ to the corresponding set of $u_j$ variables
         and $\lst w_j$ list-variables.
       \item
         The sets need to be in some canonical order.

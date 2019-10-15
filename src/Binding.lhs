@@ -8,7 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Binding
 ( VarBind, pattern BindVar, pattern BindTerm
-, LstVarBind, ListVarKey, pattern BindList, pattern BindSet, pattern BindTerms
+, LstVarBind, ListVarKey, pattern BindList, pattern BindSet, pattern BindTLVs
 , Binding
 , emptyBinding
 , bindVarToVar, bindVarsToVars, bindVarToSelf, bindVarsToSelves
@@ -263,14 +263,15 @@ type SubBinding = M.Map Subscript Subscript
 }
 
 We bind a list-variable to either a list or set of variables,
-or a list of terms.
+or to two lists, one of terms, the other of list-variables.
+This latter is used when matching substitutions.
 We use the variable identifier, class, and the list of `subtracted` identifiers
 as the map key.
 \begin{code}
 data LstVarBind
  = BL  VarList
  | BS  VarSet
- | BX  [Term]
+ | BX  [Term] [ListVar]
  deriving (Eq, Ord, Show, Read)
 
 type ListVarKey = (Identifier,VarClass,[Identifier],[Identifier])
@@ -279,11 +280,11 @@ type ListVarBinding
               = M.Map ListVarKey LstVarBind
 \end{code}
 
-We return just the variable list or set, or term-list from a lookup:
+We return the variable list or set, or term+lvar-list from a lookup:
 \begin{code}
-pattern BindList  vl  =  BL vl
-pattern BindSet   vs  =  BS vs
-pattern BindTerms ts  =  BX ts
+pattern BindList  vl      =  BL vl
+pattern BindSet   vs      =  BS vs
+pattern BindTLVs ts lvs  =  BX ts lvs
 \end{code}
 
 \subsubsection{
@@ -884,7 +885,7 @@ as per Fig.\ref{fig:utp-perm-class-bind}.
 bindLVarToTList (LVbl (Vbl vi vc Static) is ij) cndTs (BD (vbind,sbind,lbind,llbind))
  | all (validVarTermBinding vc) (map termkind cndTs)
     = do lbind' <- insertDR (rangeEq "bindLVarToTList(static)")
-                            (vi,vc,is,ij) (BX cndTs) lbind
+                            (vi,vc,is,ij) (BX cndTs []) lbind
          return $ BD (vbind,sbind,lbind',llbind)
  | otherwise  =  fail "bindLVarToTList: incompatible variable and terms."
 \end{code}
@@ -904,12 +905,12 @@ bindLVarToTList (LVbl (Vbl vi vc vt) is ij) cndTs (BD (vbind,sbind,lbind,llbind)
  | wsize  > 1  =  fail "bindLVarToTList: p.-var. mixed term temporality."
  | wsize == 0  -- term has no variables
    = do lbind' <- insertDR (rangeEq "bindLVarToTList(pv1)")
-                           (vi,vc,is,ij) (BX cndTs) lbind
+                           (vi,vc,is,ij) (BX cndTs []) lbind
         return $ BD (vbind,sbind,lbind',llbind)
  | otherwise
     = do sbind' <- bindSubscriptToSubscript "bindLVarToTList(1)" vt thectw sbind
          lbind' <- insertDR (rangeEq "bindLVarToTList(2)")
-                            (vi,vc,is,ij) (BX cndTs) lbind
+                            (vi,vc,is,ij) (BX cndTs []) lbind
          return $ BD (vbind,sbind',lbind',llbind)
  where
    ctws = temporalitiesOf cndTs
@@ -1141,7 +1142,9 @@ lookupLstBind (BD (_,sbind,lbind,_)) lv@(LVbl (Vbl i vc (During m)) is ij)
          Nothing       ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
          Just (BL vl)  ->  return $ BindList  $ map   (gvarTempSync dn) vl
          Just (BS vs)  ->  return $ BindSet   $ S.map (gvarTempSync dn) vs
-         Just (BX tl)  ->  return $ BindTerms $ map   (termTempSync dn) tl
+         Just (BX tl lvl)
+           ->  return $ BindTLVs (map (termTempSync dn) tl)
+                                  (map (lvarTempSync dn) lvl)
 
 
 lookupLstBind (BD (_,_,lbind,_)) lv@(LVbl (Vbl i vc vw) is ij)
@@ -1149,7 +1152,9 @@ lookupLstBind (BD (_,_,lbind,_)) lv@(LVbl (Vbl i vc vw) is ij)
      Nothing         ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
      Just (BL vl)  ->  return $ BindList  $ map   (gvarTempSync vw) vl
      Just (BS vs)  ->  return $ BindSet   $ S.map (gvarTempSync vw) vs
-     Just (BX tl)  ->  return $ BindTerms $ map   (termTempSync vw) tl
+     Just (BX tl lvl)
+       ->  return $ BindTLVs (map  (termTempSync vw) tl)
+                              (map (lvarTempSync vw) lvl)
 \end{code}
 
 \subsubsection{Lookup Substitution List-Variable pairs}

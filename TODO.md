@@ -9,7 +9,9 @@ From MatchScenarios we now have the following test outcome, and "but got" is wro
 ```
       [Om/O] :: [e$/x$] - succeeds: [Failed]
 
-expected:   { e -> Om, x -> O,  (x,e) -> (O,Om) }
+expected:   { e$ -> Om, x$ -> O }  
+   -- we no longer want: (x$,e$) -> (O,Om) - it's redundant if e$ can match list of terms and list-vars
+   -- we have modified BX to be BX [Term] [ListVar] to support this.
 [BD (fromList []
     ,fromList []
     ,fromList [ ( (Id "e",VE,[],[])
@@ -27,7 +29,7 @@ expected:   { e -> Om, x -> O,  (x,e) -> (O,Om) }
     )
 ]
 
- but got:  { x -> O,  (x,e) -> (O,Om)}
+ but got:  { x$ -> O,  (x$,e$) -> (O,Om)}
 
 [BD (fromList []
     ,fromList []
@@ -50,8 +52,12 @@ expected:   { e -> Om, x -> O,  (x,e) -> (O,Om) }
 
 Should we actually produce `{ x -> O,  e -> 0m, (x,e) -> (O,Om) }` ?
 
-*YES!* This is similar to what we do with `x -> u` inducing `x' -> u'`,
-or `x_m -> u_n` inducing `m -> n`. It is **necessary** to ensure mapping consistency.
+*NO*.  We do not need `(x,e) -> (O,Om)`.
+We need the ability to match list-variables against a list of terms and a list of list-variables.
+We have just modified the `BX` binding to have an additional `[ListVar]` component.
+Next step is to remove the substitution part from `Binding` and use the `BX` binding instead.
+
+
 
 ### Filenames
 

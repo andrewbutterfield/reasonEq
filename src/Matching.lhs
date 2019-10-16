@@ -2208,16 +2208,6 @@ vsUnkLVarOneEach bind (vC:vlC) (lvP:ullP)
 \newpage
 \subsection{Substitution Matching}
 
-\textbf{UNDERGOING A COMPLETE RE-THINK}
-
-Right now we have a substitution matching bug,
-found in the \texttt{XYZ} theory.
-Pattern variable $\lst e$ (or $\overline e$)
-is not bound to anything, and in particular not bound to $O_m$
-(or $\overline O\_m$).
-
-\includegraphics[scale=0.4]{doc/images/substitution-match-bug-June-28-2019}
-
 We will write a substitution of the form
 $$
   [ e_1,\dots,e_m,\lst y_1,\dots,\lst y_n
@@ -2425,15 +2415,17 @@ lvsMatch vts bind cbvs pbvs _  _  [] = fail "lvsMatch: no patn. for candidates."
 
 -- just one pattern element must bind to all
 lvsMatch vts bind cbvs pbvs tsC lvsC [(tlvP,rlvP)]
-  = bindLVarPairToSubst tlvP rlvP (S.fromList tsC) (S.fromList lvsC) bind
+  = do bind1 <- bindLVarToVList tlvP cTgts bind
+       bindLVarSubstRepl rlvP cTerms cRplL bind1
+  where
+    cVars = map fst tsC
+    cTgtL = map fst lvsC
+    cTgts = (map StdVar cVars ++ map LstVar cTgtL)
+    cTerms = map snd tsC
+    cRplL = map snd lvsC
 
 lvsMatch vts bind cbvs pbvs tsC lvsC lvsP
   = fail "lvsMatch NYfI"
-
--- lvsMatch vts bind cbvs pbvs gvsC []  =  return bind
--- lvsMatch vts bind cbvs pbvs gvsC ((tlvP,rlvP):lvsP)
---  = do bind' <- lvlvMatchCheck vts bind cbvs pbvs gvsC rlvP tlvP
---       lvsMatch vts bind' cbvs pbvs gvsC lvsP
 \end{code}
 
 % Given a $(tlv_P,rlv_P)$, search for all $(tlv_C,rlv_C)$
@@ -2450,7 +2442,7 @@ lvsMatch vts bind cbvs pbvs tsC lvsC lvsP
 --      Nothing            ->  fail "lvlvMatchCheck: Nothing SHOULD NOT OCCUR!"
 --      -- in general we will need to bind list-vars for replacements
 --      -- to substitution fragments
---      -- need to use: bindLVarPairToSubst tgtLV rplLV tsub lvarsub bind
+--      -- need to use: bindLVarPairSubst tgtLV rplLV tsub lvarsub bind
 --      Just (BindList bvlC) ->
 --       let gvlB = S.toList $ S.filter ((inlist bvlC).fst) gvsC
 --       in bindLVarToVList rlvP (map snd gvlB) bind

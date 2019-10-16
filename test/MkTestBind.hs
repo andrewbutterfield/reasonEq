@@ -39,7 +39,7 @@ bindLt (LstVar plv) cts   =  fromJust . bindLVarToTList plv cts
 bindLLSub (LstVar tplv,LstVar rplv) ctermsub clvarsub
  = fromJust . b'' (LstVar tplv,LstVar rplv) ctermsub clvarsub
 b'' (LstVar tplv,LstVar rplv) ctermsub clvarsub
- = bindLVarPairToSubst tplv rplv (S.fromList ctermsub) (S.fromList clvarsub)
+ = bindLVarPairSubst tplv rplv (S.fromList ctermsub) (S.fromList clvarsub)
 
 
 vDurRen  :: String -> Variable -> Variable

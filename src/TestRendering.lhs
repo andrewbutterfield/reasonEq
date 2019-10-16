@@ -413,7 +413,7 @@ trLstVarBind (BindTLVs ts lvs)
 trBinding :: Binding -> String
 trBinding = trBinding' . dumpBinding
 
-trBinding' (vb,sb,lb,llb)
+trBinding' (vb,sb,lb)
  = "{ " ++ seplist ", " id (map trVB vb ++ map trSB sb ++ map trLB lb)
         ++ " }"
 

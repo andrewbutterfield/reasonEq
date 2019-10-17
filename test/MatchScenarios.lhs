@@ -604,12 +604,12 @@ gves = LstVar lves
 test_substitution
  = testGroup "Substitutions"
     [ testCase "bindLLSub works properly" (True @?= False)
-    -- , testCase "[okm,Sm/ok,S] :: [Om/O] - succeeds"
-    --    ( nub (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_ok_S sub_O)
-    --     @?= [ bindLs gO [gok,gS]
-    --         $ bindLs gOm [gokm,gSm]
-    --         $ bindLLSub (gO,gOm) [(ok,tokm)] [(lS,lSm)]
-    --         $ emptyBinding ] )
+    , testCase "[okm,Sm/ok,S] :: [Om/O] - succeeds"
+       ( nub (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_ok_S sub_O)
+        @?= [ -- bindLs gO [gok,gS]
+            -- $ bindLs gOm [gokm,gSm]
+            bindLLSub (gO,gOm) [(ok,tokm)] [(lS,lSm)]
+            $ emptyBinding ] )
     -- , testCase "[okm,xm,ym,zm/ok,x,y,z] :: [Om/O] - succeeds"
     --    (nub (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_okxyz sub_O)
     --     @?= [ bindLs gO [gok,gx,gy,gz]

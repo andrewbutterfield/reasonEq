@@ -1,1 +1,8 @@
-Hello
+*MatchScenarios> bindLl gO [StdVar ok,LstVar lS] emptyBinding
+BD (fromList [],fromList [],fromList [((Id "O",VO,[],[]),BL [GV (VR (Id "ok",VO,WB)),GL (LV (VR (Id "S",VO,WB),[],[]))])])
+*MatchScenarios> let b1 = bindLSR gOm [tokm] [lS] emptyBinding
+*MatchScenarios> bindLl gO [StdVar ok,LstVar lS] b1
+BD *** Exception: Maybe.fromJust: Nothing
+*MatchScenarios> bindLl gO [StdVar ok,LstVar lS] emptyBinding
+BD (fromList [],fromList [],fromList [((Id "O",VO,[],[]),BL [GV (VR (Id "ok",VO,WB)),GL (LV (VR (Id "S",VO,WB),[],[]))])])
+*MatchScenarios>

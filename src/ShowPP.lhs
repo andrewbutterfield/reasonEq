@@ -7,7 +7,11 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 module Main where
 
+import System.Environment
+import System.IO
 import Data.List
+import Data.Char
+
 import Utilities
 \end{code}
 
@@ -45,6 +49,19 @@ isFailed ln   =  deliafPreFix `isPrefixOf` reverse ln
 deliafPreFix  =  reverse failPost
 \end{code}
 
+A check for a GHCi prompt line:
+\begin{code}
+isGHCiPrompt ln
+ = checkAst ln
+ where
+    checkAst ('*':cs) = skipModName cs
+    checkAst _ = False
+    skipModName ('>':_) = True
+    skipModName (c:cs)
+      | isAlpha c || isDigit c || c == '_'  = skipModName cs
+    skipModName _ = False
+\end{code}
+
 
 \newpage
 \subsection{Prettifying Show Lines}
@@ -58,6 +75,9 @@ We then pretty-print the rest of the line.
 \begin{code}
 ppFails []  =  []
 ppFails (ln:lns)
+-- | isGHCiPrompt ln            =  ln : ppNext lns
+-- really need a GHCi 'mode'
+-- what we have here is a stack test 'mode'
  | isFailed ln                =  "" : ln : ppFails lns
  | take cmtLen ln == cmtPre   =  ln : ppFails lns
  | take byhLen ln == handPre  =  ln : ppNext lns
@@ -73,26 +93,34 @@ ppNext (ln:lns) = pp ln : ppFails lns
 \subsection{Show Pretty Main}
 
 This should be run from the repo top-level and looks
-for \texttt{tests.log}.
-The result ends up in \texttt{pretty.log},
-at the top-level.
-\begin{code}
-testlog = "tests.log"
-pretty = "pretty.log"
-\end{code}
+for input from \texttt{stdin}
+and produces output to \texttt{stdout}.
 
-To compile do, enter the \texttt{/src} directory
+To compile enter the \texttt{/src} directory
 and do:
 \begin{verbatim}
 ghc -o showpp ShowPP.lhs
 \end{verbatim}
 Then move \texttt{showpp} to somewhere on your \verb"$PATH".
 \begin{code}
-main
- = do putStrLn (testlog ++ " --prettify--> " ++ pretty)
-      txt <- readFile testlog
+doShowPP
+ = do txt <- hGetContents stdin
       let lns = lines txt
-      -- putStrLn $ unlines lns
       let lnspp = ppFails lns
-      writeFile pretty $ unlines lnspp
+      hPutStr stdout $ unlines lnspp
+\end{code}
+
+\begin{code}
+main
+  = do args <- getArgs
+       processArgs args
+
+processArgs [] = doShowPP
+processArgs _
+  =  putStrLn $ unlines
+	    [ "Usage: "
+			, "    showpp < rawfile > ppfile"
+			, "    rawprog | showp > ppfile"
+			, " showp reads stdin, writes stdout"
+			]
 \end{code}

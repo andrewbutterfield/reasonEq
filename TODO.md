@@ -28,11 +28,9 @@ BD     { O$m |-> ( <okm> ; <Sm> )} -- correct
 Nothing
 ```
 
-PROBLEM?:  Mapping O to [G,..] induces mappings
-of O' to [G',..] and Om to [Gm,..]
+Mapping O to [G,..] induces mappings of O' to [G',..] and Om to [Gm,..], but this is not the problem.
 
-OK for Variables, but perhaps not for List-Variables?
-
+It's that we have a `O -> [vok,lvS]` as well as `O -> ([tok],[lvS])`
 
 ### Filenames
 

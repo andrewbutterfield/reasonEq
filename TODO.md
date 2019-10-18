@@ -4,59 +4,34 @@
 
 ### Substitiution matching bug.
 
-From MatchScenarios we now have the following test outcome, and "but got" is wrong (missing `e -> Om`)
+Current state (`test.log`, 18 Oct 2019)
 
 ```
-      [Om/O] :: [e$/x$] - succeeds: [Failed]
-
-expected:   { e$ -> Om, x$ -> O }  
-   -- we no longer want: (x$,e$) -> (O,Om) - it's redundant if e$ can match list of terms and list-vars
-   -- we have modified BX to be BX [Term] [ListVar] to support this.
-[BD (fromList []
-    ,fromList []
-    ,fromList [ ( (Id "e",VE,[],[])
-                , BS (fromList [GL (LV (VR (Id "O",VO,WD "m"),[],[]))])
-                )
-              , ( (Id "x",VO,[],[])
-                , BS (fromList [GL (LV (VR (Id "O",VO,WB),[],[]))])
-                )
-              ]
-    ,fromList [ ( (LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))
-                , (fromList []
-                  ,fromList [(LV (VR (Id "O",VO,WB),[],[]),LV (VR (Id "O",VO,WD "m"),[],[]))])
-                )
-              ]
-    )
-]
-
- but got:  { x$ -> O,  (x$,e$) -> (O,Om)}
-
-[BD (fromList []
-    ,fromList []
-    ,fromList [ ( (Id "x",VO,[],[])
-                , BS (fromList [GL (LV (VR (Id "O",VO,WB),[],[]))])
-                )
-              ]
-    ,fromList [ ( (LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))
-                , (fromList []
-                  ,fromList [(LV (VR (Id "O",VO,WB),[],[]),LV (VR (Id "O",VO,WD "m"),[],[]))]
-                  )
-                )
-              ]
-    )
-]
-
+@*MatchScenarios> bindLl gO [gok,gS] emptyBinding
+BD      { O$ |-> <ok,S$> } -- correct
+( {}
+, {}
+, { ( (Id "O", VO, [], [])
+    , BL
+      [ GV (VR (Id "ok", VO, WB))
+      , GL (LV (VR (Id "S", VO, WB), [], [])) ] ) } )
+@*MatchScenarios> bindLSR gOm [tokm] [lSm] emptyBinding
+BD     { O$m |-> ( <okm> ; <Sm> )} -- correct
+( {}
+, { ( "m"
+    , "m" ) }
+, { ( (Id "O", VO, [], [])
+    , BX
+      [ V (E (TG (Id "\120121"))) (VR (Id "ok", VO, WD "m")) ]
+      [ LV (VR (Id "S", VO, WD "m"), [], []) ] ) } )
+@*MatchScenarios> bindLl gO [gok,gS] it
+Nothing
 ```
 
-#### Key Question
+PROBLEM?:  Mapping O to [G,..] induces mappings
+of O' to [G',..] and Om to [Gm,..]
 
-Should we actually produce `{ x -> O,  e -> 0m, (x,e) -> (O,Om) }` ?
-
-*NO*.  We do not need `(x,e) -> (O,Om)`.
-We need the ability to match list-variables against a list of terms and a list of list-variables.
-We have just modified the `BX` binding to have an additional `[ListVar]` component.
-Next step is to remove the substitution part from `Binding` and use the `BX` binding instead.
-
+OK for Variables, but perhaps not for List-Variables?
 
 
 ### Filenames

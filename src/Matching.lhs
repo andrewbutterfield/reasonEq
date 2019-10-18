@@ -2210,25 +2210,37 @@ vsUnkLVarOneEach bind (vC:vlC) (lvP:ullP)
 
 We will write a substitution of the form
 $$
-  [ e_1,\dots,e_m,\lst y_1,\dots,\lst y_n
-  / x_1,\dots,x_m,\lst z_1,\dots,\lst z_n
+  [ e_1,\dots,e_m,\lst e_1,\dots,\lst e_n
+  / v_1,\dots,v_m,\lst v_1,\dots,\lst v_n
   ]
 $$
 in explicit substitution pair form as two sets of such tuples:
 $$
- \{ e_1/x_1 , \dots e_m/x_m \}
+ \{ e_1/v_1 , \dots e_m/v_m \}
  \quad
- \{ \lst y_1/\lst z_1 , \dots \lst y_n/\lst z_n \}
+ \{ \lst e_1/\lst v_1 , \dots \lst e_n/\lst v_n \}
 $$
-Note that the $x_i$ and $\lst z_j$ need to be unique.
-We consider the above as our substitution pattern.
+Note that the $v_i$ and $\lst v_j$ need to be unique.
 
-Let us denote a candidate pattern by:
-$$
- \{ f_1/u_1 , \dots f_p/u_p \}
- \quad
- \{ \lst v_1/\lst w_1 , \dots \lst w_q/\lst w_q \}
-$$
+We will then distinguish pattern ($P$) from candidate ($C$)
+by using $e_{Pi}$ and $e_{Ci}$.
+
+So the substitution pattern match problem is:
+
+\hrule
+
+\begin{eqnarray*}
+     \{ e_{C1}/v_{C1} , \dots e_{Cp}/v_{Cp} \}
+     &\quad&
+     \{ \lst e_{C1}/\lst v_{C1} , \dots \lst e_{Cq}/\lst v_{Cq} \}
+\\ & :: &
+\\   \{ e_{P1}/v_{P1} , \dots e_{Pm}/v_{Pm} \}
+     &\quad&
+     \{ \lst e_{P1}/\lst v_{P1} , \dots \lst e_{Pn}/\lst v_{Pn} \}
+\end{eqnarray*}
+
+\hrule
+
 This an instance of a ``collection'' match (\textsection\ref{ssec:coll-matching})
 so the feasibility constraints given there apply:
 \begin{code}
@@ -2240,35 +2252,22 @@ isFeasibleSubstnMatch (Substn tsC lvsC) (Substn tsP lvsP)
         q = S.size lvsC
     in isFeasibleCollMatch(m,n,p,q)
 \end{code}
-
-If the match succeeds, then the resulting binding needs to:
+If the match succeeds, then the resulting binding needs to contain:
 \begin{itemize}
+  \item  $e_{Pi} \mapsto e_{Cj}, v_{Pi} \mapsto v_{Cj}$,
+    \\for all $i \in 1\dots m$, and $m$ values of $j$ drawn from $1\dots p$;
   \item
-    bind $e_i$ to $f_j$ and $x_i$ to $u_j$,
-    for all $i \in 1\dots m$, and $m$ values of $j$ drawn from $1\dots p$;
-  \item
-    for $k \in 1\dots n$,
-    bind $\lst y_k/\lst z_k$ to some disjoint subset of
-    the candidate substitution leftover after the above bindings.
-    \begin{itemize}
-      \item
-         This means binding $\lst y_k$
-         to some set of $f_j$ terms and set of $\lst v_j$ list-variables,
-      \item
-        and $\lst z_k$ to the corresponding set of $u_j$ variables
-        and $\lst w_j$ list-variables.
-      \item
-        The sets need to be in some canonical order.
-    \end{itemize}
-
+     $ \lst e_{Pk}  \mapsto
+          \seqof{\dots,e_{C\ell},\dots;\dots \lst e_{C\ell}\dots}$
+    \\ $ \lst v_{Pk} \mapsto
+            \seqof{\dots,v_{C\ell},\dots;\dots \lst v_{C\ell}\dots}$
+    \\for $k \in 1\dots n$, and values of $\ell$ disjoint from the $j$ above.
 \end{itemize}
-
 Here $G$ denotes either one standard variable,
 or a collection of general variables,
 while $g$ denotes one general variable.
 Similarly, $r$ denotes one substitution replacement (list-variable or term)
 while $R$ is a collection of same.
-
 $$
 \inferrule
    { \beta \vdash G_{C_j} :: g_{P_i} \leadsto \beta_{t_i}
@@ -2282,7 +2281,6 @@ $$
    \quad
    \texttt{sMatch}
 $$
-
 \begin{code}
 sMatch :: MonadPlus mp
        => [VarTable] -> Binding -> CBVS -> PBVS
@@ -2293,7 +2291,6 @@ sMatch vts bind cbvs pbvs subC subP
   | otherwise                        =  fail "infeasible substition match"
 \end{code}
 
-\newpage
 We match substitutions by first trying every way
 to match pattern (variable,term) pairs
 against their candidate counterparts.
@@ -2303,26 +2300,20 @@ against what remains.
 sMatch' vts bind cbvs pbvs subC@(Substn tsC lvsC) subP@(Substn tsP lvsP)
  = do (bind',tsC')  <- vtsMatch vts bind cbvs pbvs tsC tsP
       lvsMatch vts bind' cbvs pbvs tsC' (S.toList lvsC) (S.toList lvsP)
-      -- else fail $ unlines
-      --        [ "sMatch: some leftover std-replacement is not a Var."
-      --        , "tsP  = " ++ show tsP
-      --        , "tsC  = " ++ show tsC
-      --        , "tsC' = " ++ show tsC'
-      --        ]
- -- where
- --  vsC = S.map (StdVar . fst) tsC `S.union` S.map (LstVar . fst) lvsC
- --  vsP = S.map (StdVar . fst) tsP `S.union` S.map (LstVar . fst) lvsP
- --  ts +++ lvs = (S.map liftVV ts `S.union` S.map liftLL lvs)
- --  liftVV (v,(Var _ u))  =  (StdVar v, StdVar u )
- --  liftLL (lv,lu      )  =  (LstVar lv,LstVar lu)
 \end{code}
 
+\subsubsection{Substitution Term/Variable matching}
+
 Matching
-$\{ f_1/u_1 , \dots f_p/u_p \}$
+$\{ e_{C1}/v_{C1} , \dots e_{Cp}/v_{Cp} \}$
 against
-$\{ e_1/x_1 , \dots e_m/x_m \}$
+$\{ e_{P1}/v_{P1} , \dots e_{Pm}/v_{Pm} \}$
 in every way possible,
-returning leftover $\{f_i/u_i\}$s.
+returning leftover $\{e_{Ci}/v_{Ci}\}$s.
+
+We expect bindings of the form
+ $e_{Pi} \mapsto e_{Cj}, v_{Pi} \mapsto v_{Cj}$,
+for all $i \in 1\dots m$, and $m$ values of $j$ drawn from $1\dots p$;
 \begin{code}
 vtsMatch :: MonadPlus mp
          => [VarTable] -> Binding -> CBVS -> PBVS
@@ -2338,70 +2329,30 @@ vtsMatch vts bind cbvs pbvs tsC tsP
    matchTerm tC tP bind =  tMatch vts bind cbvs pbvs tC tP
 \end{code}
 
-% All the variable/term matches.
-% $$ \beta \uplus \{\beta_{t_i}\} \vdash R_{C_j} :: r_{P_i} \leadsto \beta_{r_i} $$
-% where $R$ is a single term $t$, and $r$ is a standard variable $v$,
-% so giving
-% $$ \beta \uplus \{\beta_{t_i}\} \vdash t_{C_j} :: v_{P_i} \leadsto \beta_{r_i}. $$
-% For every $(v_P,t_P)$ we search for a $(v_C,t_C)$ where $\beta(v_P)=v_C$,
-% and then we attempt to match $t_C$ against $t_P$.
-% We need to return all pairs in the \texttt{TermSub} not found in this process.
-\begin{code}
--- tsMatchCheck :: MonadPlus mp
---              => [VarTable] -> Binding -> CBVS -> PBVS
---              -> TermSub -> [(Variable,Term)]
---              -> mp (Binding, TermSub)
---
--- tsMatchCheck vts bind cbvs pbvs tsC []  =  return (bind,tsC)
--- tsMatchCheck vts bind cbvs pbvs tsC ((vP,tP):tsP)
---  = do (bind',tsC') <- vtMatchCheck vts bind cbvs pbvs tsC tP vP
---       tsMatchCheck vts bind' cbvs pbvs tsC' tsP
-\end{code}
 
-Given a $(v_P,t_P)$, search for a $(v_C,t_C)$ where $\beta(v_P)=v_C$,
-and attempt to match $t_C$ against $t_P$.
-\begin{code}
--- vtMatchCheck :: MonadPlus mp
---              => [VarTable] -> Binding -> CBVS -> PBVS
---              -> TermSub -> Term -> Variable
---              -> mp (Binding,TermSub)
---
--- vtMatchCheck vts bind cbvs pbvs tsC tP vP
---  = case lookupVarBind bind vP of
---      Nothing            ->  fail "vtMatchCheck: Nothing SHOULD NOT OCCUR!"
---      Just (BindTerm _)  ->  fail "vtMatchCheck: BindTerm SHOULD NOT OCCUR!"
---      Just (BindVar vB)
---        -> let tsB = S.filter ((==vB).fst) tsC
---           in if S.size tsB /= 1
---               then fail "vtMatchCheck: #tsB /= 1 SHOULD NOT OCCUR!"
---               else let tB = snd $ S.elemAt 0 tsB
---                    in do bind' <- tMatch vts bind cbvs pbvs tB tP
---                          return (bind', tsC S.\\ tsB)
-\end{code}
+\subsubsection{Substitution ListVar Matching}
 
-\newpage
-% All the list-var/list-var matches, along with leftover standard vars.
-% $$ \beta \uplus \{\beta_{t_i}\} \vdash R_{C_j} :: r_{P_i} \leadsto \beta_{r_i} $$
-% where $R$ is a list or set of general variables term $gs$,
-% and $r$ is a list-variable $lv$,
-% so giving
-% $$ \beta \uplus \{\beta_{t_i}\} \vdash gs_{C_j} :: lv_{P_i} \leadsto \beta_{r_i}. $$
-% For every $(tlv_P,rlv_P)$ we search for all $(tlv_C,rlv_C)$
-% where $tlv_C \in \beta(tlv_P)$,
-% and attempt to bind $rlv_P$ to all the corresponding $rlv_C$.
+We are now matching
+\begin{eqnarray*}
+     \{ e_{C1}/v_{C1} , \dots e_{Cr}/v_{Cr} \}
+     &\quad&
+     \{ \lst e_{C1}/\lst v_{C1} , \dots \lst e_{Cq}/\lst v_{Cq} \}
+\\ & :: &
+\\   \{  \}
+     &\quad&
+     \{ \lst e_{P1}/\lst v_{P1} , \dots \lst e_{Pn}/\lst v_{Pn} \}
+\end{eqnarray*}
+where $r$ is the number of term/var candidates
+not matched by term/var patterns ($r = p-m$).
 
-We are now matching candidate
-$$
- \{ f_1/u_1 , \dots f_p/u_p \}
- \quad
- \{ \lst v_1/\lst w_1 , \dots \lst w_q/\lst w_q \}
-$$
-against (list-variable only) pattern:
-$$
- \{  \}
- \quad
- \{ \lst y_1/\lst z_1 , \dots \lst y_n/\lst z_n \}
-$$
+We expect bindings of the form
+$ \lst e_{Pk}  \mapsto
+          \seqof{\dots,e_{C\ell},\dots;\dots \lst e_{C\ell}\dots}$
+and
+$ \lst v_{Pk} \mapsto
+            \seqof{\dots,v_{C\ell},\dots;\dots \lst v_{C\ell}\dots}$
+for $k \in 1\dots n$.
+
 For now we produce specific cases,
 and leave a general solution for later.
 \begin{code}
@@ -2412,48 +2363,40 @@ lvsMatch :: MonadPlus mp
 
 lvsMatch vts bind cbvs pbvs [] [] [] = return bind
 lvsMatch vts bind cbvs pbvs _  _  [] = fail "lvsMatch: no patn. for candidates."
+\end{code}
 
--- just one pattern element must bind to all
-lvsMatch vts bind cbvs pbvs tsC lvsC [(tlvP,rlvP)]
-  = do bind1 <- bindLVarToVList tlvP cTgts bind
-       bindLVarSubstRepl rlvP cTerms cRplL bind1
+One pattern element only is easy
+\begin{eqnarray*}
+     \{ e_{C1}/v_{C1} , \dots e_{Cr}/v_{Cr} \}
+     &\quad&
+     \{ \lst e_{C1}/\lst v_{C1} , \dots \lst e_{Cq}/\lst v_{Cq} \}
+\\ & :: &
+\\   \{  \}
+     &\quad&
+     \{ \lst e_{P}/\lst v_{P}  \}
+\end{eqnarray*}
+We expect
+$ \lst e_{P}  \mapsto
+          \seqof{e_{C1},\dots;\dots \lst e_{Cr}}$
+and
+$ \lst v_{P} \mapsto
+            \seqof{v_{C1},\dots;\dots \lst v_{Cr}}$.
+\begin{code}
+lvsMatch vts bind cbvs pbvs tsC lvsC [(vsP,esP)]
+  = bindLVarToVList (pdbg "vsP" vsP) cTgts bind >>= bindLVarSubstRepl (pdbg "esP" esP) cTerms cRplL
   where
     cVars = map fst tsC
     cTgtL = map fst lvsC
     cTgts = (map StdVar cVars ++ map LstVar cTgtL)
     cTerms = map snd tsC
     cRplL = map snd lvsC
+\end{code}
 
+Right now my head hurts.
+\begin{code}
 lvsMatch vts bind cbvs pbvs tsC lvsC lvsP
   = fail "lvsMatch NYfI"
 \end{code}
-
-% Given a $(tlv_P,rlv_P)$, search for all $(tlv_C,rlv_C)$
-% where $tlv_C \in \beta(tlv_P)$,
-% and then we attempt to bind $rlv_P$ to all the corresponding $rlv_C$.
-\begin{code}
--- lvlvMatchCheck :: MonadPlus mp
---                => [VarTable] -> Binding -> CBVS -> PBVS
---                -> Set (GenVar,GenVar) -> ListVar -> ListVar
---                -> mp Binding
---
--- lvlvMatchCheck vts bind cbvs pbvs gvsC rlvP tlvP
---  = case lookupLstBind bind tlvP of
---      Nothing            ->  fail "lvlvMatchCheck: Nothing SHOULD NOT OCCUR!"
---      -- in general we will need to bind list-vars for replacements
---      -- to substitution fragments
---      -- need to use: bindLVarPairSubst tgtLV rplLV tsub lvarsub bind
---      Just (BindList bvlC) ->
---       let gvlB = S.toList $ S.filter ((inlist bvlC).fst) gvsC
---       in bindLVarToVList rlvP (map snd gvlB) bind
---      Just (BindSet bvsC) ->
---       let gvsB = S.filter ((inset bvsC).fst) gvsC
---       in bindLVarToVSet rlvP (S.map snd gvsB) bind
---  where
---    inlist vl gv  =  gv   `elem`   vl
---    inset  vs gv  =  gv `S.member` vs
-\end{code}
-
 
 \newpage
 \subsection{Sub-Typing}

@@ -36,7 +36,9 @@ bindLN (LstVar plv)       =  fromJust . bindLVarToVSet plv S.empty
 bindLT (LstVar plv) ct    =  fromJust . bindLVarToTList plv [ct]
 bindLt (LstVar plv) cts   =  fromJust . bindLVarToTList plv cts
 
+bindLSR :: GenVar -> [Term] -> [ListVar] -> Binding -> Binding
 bindLSR (LstVar plv) ctsub crpl = fromJust . bindLVarSubstRepl plv ctsub crpl
+
 
 bindLLSub (LstVar tplv,LstVar rplv) ctermsub clvarsub
  = bindLl (LstVar tplv) cTgts . bindLSR (LstVar rplv) cTerms cRplL

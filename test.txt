@@ -1,8 +1,10 @@
-@*MatchScenarios> bindLl gO [StdVar ok,LstVar lS] emptyBinding
+@*MatchScenarios> bindLl gO [gok,gS] emptyBinding
 BD (fromList [],fromList [],fromList [((Id "O",VO,[],[]),BL [GV (VR (Id "ok",VO,WB)),GL (LV (VR (Id "S",VO,WB),[],[]))])])
-@*MatchScenarios> let b1 = bindLSR gOm [tokm] [lS] emptyBinding
-BD (fromList [],fromList [("m","m")],fromList [((Id "O",VO,[],[]),BX [V (E (TG (Id "\120121"))) (VR (Id "ok",VO,WD "m"))] [LV (VR (Id "S",VO,WB),[],[])])])
-@*MatchScenarios> bindLl gO [StdVar ok,LstVar lS] b1
+@*MatchScenarios> bindLSR gOm [tokm] [lSm] emptyBinding
+BD (fromList [],fromList [("m","m")],fromList [((Id "O",VO,[],[]),BX [V (E (TG (Id "\120121"))) (VR (Id "ok",VO,WD "m"))] [LV (VR (Id "S",VO,WD "m"),[],[])])])
+@*MatchScenarios> bindLl gO [gok,gS] it
 Nothing
-@*MatchScenarios> bindLl gO [StdVar ok,LstVar lS] emptyBinding
+@*MatchScenarios> bindLl gO [gok,gS] emptyBinding
 BD (fromList [],fromList [],fromList [((Id "O",VO,[],[]),BL [GV (VR (Id "ok",VO,WB)),GL (LV (VR (Id "S",VO,WB),[],[]))])])
+@*MatchScenarios> bindLSR gOm [tokm] [lSm] it
+Nothing

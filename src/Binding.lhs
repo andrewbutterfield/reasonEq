@@ -745,6 +745,7 @@ rangeListOrSet nAPI lv binding vc1 vc2
                   [ (nAPI++": already bound differently.")
                   , "lv = " ++ show lv
                   , "vc1 = " ++ show vc1
+                  , "vc2 = " ++ show vc2
                   , "bind:\n" ++ show binding
                   ]
 \end{code}
@@ -762,9 +763,9 @@ are equivalent to corresponding elements of \texttt{vl}.
 \begin{code}
 substReplEqv :: [Term] -> [ListVar] -> VarList -> Bool
 substReplEqv [] [] []   =  True
-substReplEqv (t:ts) lvs (StdVar v : vl)
+substReplEqv ((pdbg "sRE.t" t):ts) lvs (StdVar (pdbg "sRE.v" v) : vl)
   | termVarEqv t v      =  substReplEqv ts lvs vl
-substReplEqv [] lvs vl  =  map LstVar lvs == vl
+substReplEqv [] lvs vl  =  map LstVar (pdbg "sRE.lvs" lvs) == (pdbg "sRE.vl" vl)
 substReplEqv _  _  _    =  False
 
 termVarEqv (Var _ u) v =  u == v

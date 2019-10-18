@@ -1,13 +1,6 @@
-@*MatchScenarios> b1 where b1 = bindLSR gOm [tokm] [lSm] emptyBinding
-BD (fromList [],fromList [("m","m")],fromList [((Id "O",VO,[],[]),BX [V (E (TG (Id "\120121"))) (VR (Id "ok",VO,WD "m"))] [LV (VR (Id "S",VO,WD "m"),[],[])])])
-@*MatchScenarios> bindLl gO [gok,gS] emptyBinding
-BD (fromList [],fromList [],fromList [((Id "O",VO,[],[]),BL [GV (VR (Id "ok",VO,WB)),GL (LV (VR (Id "S",VO,WB),[],[]))])])
-@*MatchScenarios> bindLVarToVList lO [gok,gS] emptyBinding :: YesBut Binding
-Yes (BD (fromList [],fromList [],fromList [((Id "O",VO,[],[]),BL [GV (VR (Id "ok",VO,WB)),GL (LV (VR (Id "S",VO,WB),[],[]))])]))
 @*MatchScenarios> bindLVarToVList lO [gok,gS] b1 :: YesBut Binding
-But ["bindLVarToVList(2): already bound differently.","lv = (Id \"O\",VO,[],[])","vc1 = BL [GV (VR (Id \"ok\",VO,WB)),GL (LV (VR (Id \"S\",VO,WB),[],[]))]","bind:","fromList [((Id \"O\",VO,[],[]),BX [V (E (TG (Id \"\\120121\"))) (VR (Id \"ok\",VO,WD \"m\"))] [LV (VR (Id \"S\",VO,WD \"m\"),[],[])])]"]
+But ["bindLVarToVList(2): already bound differently.","lv = (Id \"O\",VO,[],[])","vc1 = BL [GV (VR (Id \"ok\",VO,WB)),GL (LV (VR (Id \"S\",VO,WB),[],[]))]","vc2 = BX [V (E (TG (Id \"\\120121\"))) (VR (Id \"ok\",VO,WD \"m\"))] [LV (VR (Id \"S\",VO,WD \"m\"),[],[])]","bind:","fromList [((Id \"O\",VO,[],[]),BX [V (E (TG (Id \"\\120121\"))) (VR (Id \"ok\",VO,WD \"m\"))] [LV (VR (Id \"S\",VO,WD \"m\"),[],[])])]"]
 @rLOS.vl:
 [GV (VR (Id "ok",VO,WB)),GL (LV (VR (Id "S",VO,WB),[],[]))]
 @rLOS1.ts=:
 [V (E (TG (Id "\120121"))) (VR (Id "ok",VO,WD "m"))]
-*MatchScenarios>

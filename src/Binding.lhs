@@ -281,8 +281,8 @@ type ListVarBinding
 
 We return the variable list or set, or term+lvar-list from a lookup:
 \begin{code}
-pattern BindList  vl      =  BL vl
-pattern BindSet   vs      =  BS vs
+pattern BindList vl      =  BL vl
+pattern BindSet  vs      =  BS vs
 pattern BindTLVs ts lvs  =  BX ts lvs
 \end{code}
 
@@ -709,18 +709,36 @@ vlComp vc vw vws (gv:gvs)
    vws' = S.insert gvw vws
 \end{code}
 
-When we are inserting a variable-list,
-we may find that a variable-set is present
+When we are inserting a variable-set (\texttt{BS}),
+we may find that a variable-list (\texttt{BL}) is present
 (or vice versa).
-If they have the same elements,
-then we update the set to be the list in the binding.
+Similarly,
+when inserting a substitution replacement (\texttt{BX})
+we may also find a variable-list
+(or vice versa).
+If they have ``equivalent'' elements,
+then we update the set to be the list,
+or the list to be substitution replacement, in the binding.
 We require an equivalence for this:
 \begin{code}
 rangeListOrSet :: Monad m => String -> UpdateCheck m ListVarKey LstVarBind
+\end{code}
+Variable Sets and Lists:
+\begin{code}
 rangeListOrSet nAPI lv binding list@(BL vl) (BS vs)
  | S.fromList vl == vs  =  return list
 rangeListOrSet nAPI lv binding (BS vs) list@(BL vl)
  | S.fromList vl == vs  =  return list
+\end{code}
+Substitution Replacements and Variable Lists:
+\begin{code}
+rangeListOrSet nAPI lv binding (BL vl) srepl@(BX ts lvs)
+ | substReplEqv (pdbg "rLOS1.ts=" ts) (pdbg "rLOS.lvs=" lvs) (pdbg "rLOS.vl" vl)  =  return srepl
+rangeListOrSet nAPI lv binding srepl@(BX ts lvs) (BL vl)
+ | substReplEqv (pdbg "rLOS2.ts=" ts) (pdbg "rLOS.lvs=" lvs) (pdbg "rLOS.vl" vl)  =  return srepl
+\end{code}
+If none of the above, then we expect full equality.
+\begin{code}
 rangeListOrSet nAPI lv binding vc1 vc2
  | vc1 == vc2  =  return vc1
  | otherwise  =  fail $ unlines
@@ -732,6 +750,28 @@ rangeListOrSet nAPI lv binding vc1 vc2
 \end{code}
 
 \newpage
+
+A variable list \texttt{vl}
+is equivalent to a substitution replacement
+with terms \texttt{ts}
+and list-variables \texttt{lvs}
+if the combined length of the two substitution lists
+equals that of the variable list,
+and elements of \texttt{ts} followed by \texttt{lvs}
+are equivalent to corresponding elements of \texttt{vl}.
+\begin{code}
+substReplEqv :: [Term] -> [ListVar] -> VarList -> Bool
+substReplEqv [] [] []   =  True
+substReplEqv (t:ts) lvs (StdVar v : vl)
+  | termVarEqv t v      =  substReplEqv ts lvs vl
+substReplEqv [] lvs vl  =  map LstVar lvs == vl
+substReplEqv _  _  _    =  False
+
+termVarEqv (Var _ u) v =  u == v
+\end{code}
+
+\newpage
+
 \begin{code}
 bindLVarToVList :: Monad m => ListVar -> VarList -> Binding -> m Binding
 \end{code}

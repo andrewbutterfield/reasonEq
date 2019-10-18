@@ -1,23 +1,13 @@
-@*MatchScenarios> bindLl gO [StdVar ok,LstVar lS] emptyBinding
-BD  -- O |-> < ok, S >
-( {}
-, {}
-, { ( (Id "O", VO, [], [])
-    , BL
-      [ GV (VR (Id "ok", VO, WB))
-      , GL (LV (VR (Id "S", VO, WB), [], [])) ] ) } )
-@*MatchScenarios> let b1 = bindLSR gOm [tokm] [lS] emptyBinding
-BD -- Om |->  < okm > ; < S >
+@*MatchScenarios> b1 where b1 = bindLSR gOm [tokm] [lSm] emptyBinding
+BD
 ( {}
 , { ( "m"
     , "m" ) }
 , { ( (Id "O", VO, [], [])
     , BX
       [ V (E (TG (Id "\120121"))) (VR (Id "ok", VO, WD "m")) ]
-      [ LV (VR (Id "S", VO, WB), [], []) ] ) } )
-@*MatchScenarios> bindLl gO [StdVar ok,LstVar lS] b1
-Nothing
-@*MatchScenarios> bindLl gO [StdVar ok,LstVar lS] emptyBinding
+      [ LV (VR (Id "S", VO, WD "m"), [], []) ] ) } )
+@*MatchScenarios> bindLl gO [gok,gS] emptyBinding
 BD
 ( {}
 , {}
@@ -25,3 +15,42 @@ BD
     , BL
       [ GV (VR (Id "ok", VO, WB))
       , GL (LV (VR (Id "S", VO, WB), [], [])) ] ) } )
+@*MatchScenarios> bindLVarToVList lO [gok,gS] emptyBinding :: YesBut Binding
+Yes
+( BD
+  ( {}
+  , {}
+  , { ( (Id "O", VO, [], [])
+      , BL
+        [ GV (VR (Id "ok", VO, WB))
+        , GL (LV (VR (Id "S", VO, WB), [], [])) ] ) } ) )
+@*MatchScenarios> bindLVarToVList lO [gok,gS] b1 :: YesBut Binding
+But
+[ "bindLVarToVList
+  ( 2 )
+  :
+  already
+  bound
+  differently."
+, "lv
+  =
+  (Id \"O\", VO, [], [])
+  "
+, "vc1
+  =
+  BL
+  [ GV (VR (Id \"ok\", VO, WB))
+  , GL (LV (VR (Id \"S\", VO, WB), [], [])) ]
+  "
+, "bind:"
+, "fromList
+  [ ( (Id \"O\", VO, [], [])
+    , BX
+      [ V (E (TG (Id \"\\120121\"))) (VR (Id \"ok\", VO, WD \"m\")) ]
+      [ LV (VR (Id \"S\", VO, WD \"m\"), [], []) ] ) ]
+  " ]
+@rLOS.vl:
+[ GV (VR (Id "ok", VO, WB))
+, GL (LV (VR (Id "S", VO, WB), [], [])) ]
+@rLOS1.ts=:
+[ V (E (TG (Id "\120121"))) (VR (Id "ok", VO, WD "m")) ]

@@ -58,7 +58,7 @@ From the outside a binding has two mappings:
 \begin{itemize}
   \item \texttt{Variable} to \texttt{Variable} or \texttt{Term}.
   \item \texttt{ListVar} to \texttt{VarList} or \texttt{VarSet}
-    or \texttt{[Term} or \texttt{ListVar]}.
+    or \texttt{[Term]} and maybe \texttt{[ListVar]}.
 \end{itemize}
 However,
 we have a number of constraints regarding compatibilty
@@ -81,7 +81,7 @@ variables of the same class
     \\ $\downarrow$ &&&
     \\ \underline{candidate} &&&
     \\\hline
-       \texttt{ObsV} & Yes & No &  No
+       \texttt{ObsV} & Yes & Yes &  No
     \\\hline
        \texttt{ExprV} & Yes & Yes & No
     \\\hline
@@ -146,7 +146,6 @@ then binding respects temporality
 ($a \mapsto b, a' \mapsto b', a_m \mapsto b_n, \texttt{a} \mapsto \texttt{b}$).
 Also any one of those bindings induces all the others.
 
-The following scenario (Fig. \ref{fig:utp-dynamic-inducing})
 \begin{figure}
   \begin{center}
     \begin{tabular}{|l|c|c|c|c|c|c|c|c|l|}
@@ -174,6 +173,8 @@ The following scenario (Fig. \ref{fig:utp-dynamic-inducing})
   \label{fig:utp-dynamic-inducing}
   \end{center}
 \end{figure}
+
+The following scenario (see also Fig. \ref{fig:utp-dynamic-inducing})
 illustrates how dynamic variable binding should work,
 given an initial empty binding:
 \begin{enumerate}
@@ -191,6 +192,50 @@ given an initial empty binding:
    results in one new piece of binding information
    that says that subscript $b$ binds to $n$.
 \end{enumerate}
+
+
+We expect the behaviour shown in Fig. \ref{fig:dynamic-coherence}.
+\begin{figure}
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+   new entry: & $s \mapsto x$
+              & $v \mapsto x$, $v' \mapsto x'$, $\texttt{v} \mapsto \texttt{x}$
+              & $v_m \mapsto x_n$
+\\\hline
+  inserted as: & $i_s \mapsto x$
+             & $i_v \mapsto x_{\_}$
+             & $i_v \mapsto x_n$
+\\\hline
+  \underline{prior bind} & \multicolumn{3}{|c|}{\underline{actual binding outcome}}
+\\\hline
+  none & $i_s\mapsto x$ & $i_v \mapsto x_{\_}$ & $i_v \mapsto x_n$
+\\\hline
+  $i_s \mapsto x$ & $i_s\mapsto x$ &  &
+\\\hline
+  $i_s \mapsto y, y\neq x$ & FAIL &  &
+\\\hline
+  $i_v \mapsto x_{\_}$ && $i_v \mapsto x_{\_}$ & $i_v \mapsto x_n$
+\\\hline
+  $i_v \mapsto x_n$ && $i_v \mapsto x_n$ & $i_v \mapsto x_n$
+\\\hline
+  $i_v \mapsto x_a, a\neq n$ && $i_v \mapsto x_a$ & FAIL
+\\\hline
+  $i_v \mapsto y_a, y\neq x$ && FAIL & FAIL
+\\\hline
+\end{tabular}
+  \caption{
+    Managing Dynamic binding coherence, where
+    $s$ is \texttt{Static}, $\texttt{v}$ and $\texttt{x}$ are \texttt{Textual},
+    and $v$ and $x$ with or without decoration, are any other \texttt{Dynamic},
+    and $i_s$ and $i_v$ are the respective identifiers  underlying $s$ and the $v$s
+  }
+  \label{fig:dynamic-coherence}
+\end{center}
+\end{figure}
+
+
+
 The key issue here is how each single binding inserted,
 of a given temporality,
 also induces bindings for the same variable identifiers,
@@ -223,11 +268,8 @@ while the replacement list-variable needs to match a \textbf{corresponding} list
 of replacement terms and list-variables.
 In effect, a list-variable target/replacement pattern
 needs to match a substitution!
-
-\begin{description}
-  \item[Substitution List-Variable pair to \dots]
-    A substitution.
-\end{description}
+However, all we need to do is allow a mapping from a list-variable
+to a list of terms to also include a list of list-variables.
 
 
 \newpage
@@ -286,22 +328,6 @@ pattern BindSet  vs      =  BS vs
 pattern BindTLVs ts lvs  =  BX ts lvs
 \end{code}
 
-\subsubsection{
-  Binding \texttt{(ListVar,ListVar)} to
-  \texttt{Substn}
-}
-
-We index with a pair of list-variables%
-\footnote{
-Consider matching $\exists O_m \bullet P[O_m/O'] \land Q[O_m/O]$ against itself.
-}%
-,
-\emph{including temporality!}
-\begin{code}
-type SubstBinding = M.Map (ListVar,ListVar) (TermSub,LVarSub)
-\end{code}
-
-
 We put these together:
 \begin{code}
 newtype Binding = BD (VarBinding, SubBinding, ListVarBinding)
@@ -351,7 +377,8 @@ rangeEq nAPI d binding r r0
  | otherwise  =  fail $ unlines
                   [ (nAPI++": already bound differently.")
                   , "d = " ++ show d
-                  , "r = " ++ show r
+                  , "old r = " ++ show r0
+                  , "new r = " ++ show r
                   , "bind:\n" ++ show binding
                   ]
 \end{code}
@@ -375,6 +402,7 @@ bindSubscriptToSubscript what vw1 vw2 sbind
                   ]
 \end{code}
 
+\newpage
 \subsubsection{Binding Variable to Variable}
 
 \begin{code}
@@ -411,7 +439,7 @@ bindVarToVar (Vbl vi vc (During m)) x@(Vbl xi xc (During n))
 A dynamic variable can only bind to a dynamic variable of the same
 temporality in the appropriate class.
 \begin{code}
-bindVarToVar dv@(Vbl  vi vc vw) rv@(Vbl xi xc xw)
+bindVarToVar dv@(Vbl vi vc vw) rv@(Vbl xi xc xw)
              (BD (vbind,sbind,lbind))
  | vw /= xw   =  fail "bindVarToVar: different temporalities"
  | validVarClassBinding vc xc
@@ -448,48 +476,6 @@ bindVarsToSelves (v:vs) bind
        bindVarsToSelves vs bind'
 \end{code}
 
-
-\newpage
-
-We expect the behaviour shown in Fig. \ref{fig:dynamic-coherence}.
-\begin{figure}
-\begin{center}
-\begin{tabular}{|c|c|c|c|}
-\hline
-   new entry: & $s \mapsto x$
-              & $v \mapsto x$, $v' \mapsto x'$, $\texttt{v} \mapsto \texttt{x}$
-              & $v_m \mapsto x_n$
-\\\hline
-  inserted as: & $i_s \mapsto x$
-             & $i_v \mapsto x_{\_}$
-             & $i_v \mapsto x_n$
-\\\hline
-  \underline{prior bind} & \multicolumn{3}{|c|}{\underline{actual binding outcome}}
-\\\hline
-  none & $i_s\mapsto x$ & $i_v \mapsto x_{\_}$ & $i_v \mapsto x_n$
-\\\hline
-  $i_s \mapsto x$ & $i_s\mapsto x$ &  &
-\\\hline
-  $i_s \mapsto y, y\neq x$ & FAIL &  &
-\\\hline
-  $i_v \mapsto x_{\_}$ && $i_v \mapsto x_{\_}$ & $i_v \mapsto x_n$
-\\\hline
-  $i_v \mapsto x_n$ && $i_v \mapsto x_n$ & $i_v \mapsto x_n$
-\\\hline
-  $i_v \mapsto x_a, a\neq n$ && $i_v \mapsto x_a$ & FAIL
-\\\hline
-  $i_v \mapsto y_a, y\neq x$ && FAIL & FAIL
-\\\hline
-\end{tabular}
-  \caption{
-    Managing Dynamic binding coherence, where
-    $s$ is \texttt{Static}, $\texttt{v}$ and $\texttt{x}$ are \texttt{Textual},
-    and $v$ and $x$ with or without decoration, are any other \texttt{Dynamic},
-    and $i_s$ and $i_v$ are the respective identifiers  underlying $s$ and the $v$s
-  }
-  \label{fig:dynamic-coherence}
-\end{center}
-\end{figure}
 
 \newpage
 \subsubsection{Binding Variable to Term}
@@ -552,6 +538,8 @@ bindVarToTerm v@(Vbl vi ExprV vt) ct (BD (vbind,sbind,lbind))
    wsize = S.size ctws
    thectw = S.elemAt 0 ctws
 \end{code}
+
+\newpage
 Dynamic predicate variables can only bind to
 predicate terms, all of whose dynamic variables have the same temporality.
 \begin{code}
@@ -580,6 +568,7 @@ bindVarToTerm pv ct _
      , "ct = " ++ show ct ]
 \end{code}
 
+\newpage
 Determining the temporality of a term:
 \begin{code}
 temporalityOf :: Term -> Set VarWhen
@@ -763,8 +752,8 @@ are equivalent to corresponding elements of \texttt{vl}.
 \begin{code}
 substReplEqv :: [Term] -> [ListVar] -> VarList -> Bool
 substReplEqv [] [] []   =  True
-substReplEqv ((pdbg "sRE.t" t):ts) lvs (StdVar (pdbg "sRE.v" v) : vl)
-  | termVarEqv t v      =  substReplEqv ts lvs vl
+substReplEqv (t:ts) lvs (StdVar v : vl)
+  | termVarEqv (pdbg "sRE.t" t) (pdbg "sRE.v" v)      =  substReplEqv ts lvs vl
 substReplEqv [] lvs vl  =  map LstVar (pdbg "sRE.lvs" lvs) == (pdbg "sRE.vl" vl)
 substReplEqv _  _  _    =  False
 
@@ -926,9 +915,10 @@ as per Fig.\ref{fig:utp-perm-class-bind}.
 bindLVarToTList (LVbl (Vbl vi vc Static) is ij) cndTs (BD (vbind,sbind,lbind))
  | all (validVarTermBinding vc) (map termkind cndTs)
     = do lbind' <- insertDR (rangeEq "bindLVarToTList(static)")
-                            (vi,vc,is,ij) (BX cndTs []) lbind
+                            (vi,vc,is,ij) (BX cndTs' []) lbind
          return $ BD (vbind,sbind,lbind')
  | otherwise  =  fail "bindLVarToTList: incompatible variable and terms."
+ where cndTs' = map dnTerm' cndTs
 \end{code}
 
 All remaining pattern cases are non-\texttt{Textual} dynamic variables.
@@ -946,17 +936,18 @@ bindLVarToTList (LVbl (Vbl vi vc vt) is ij) cndTs (BD (vbind,sbind,lbind))
  | wsize  > 1  =  fail "bindLVarToTList: p.-var. mixed term temporality."
  | wsize == 0  -- term has no variables
    = do lbind' <- insertDR (rangeEq "bindLVarToTList(pv1)")
-                           (vi,vc,is,ij) (BX cndTs []) lbind
+                           (vi,vc,is,ij) (BX cndTs' []) lbind
         return $ BD (vbind,sbind,lbind')
  | otherwise
     = do sbind' <- bindSubscriptToSubscript "bindLVarToTList(1)" vt thectw sbind
          lbind' <- insertDR (rangeEq "bindLVarToTList(2)")
-                            (vi,vc,is,ij) (BX cndTs []) lbind
+                            (vi,vc,is,ij) (BX cndTs' []) lbind
          return $ BD (vbind,sbind',lbind')
  where
    ctws = temporalitiesOf cndTs
    wsize = S.size ctws
    thectw = S.elemAt 0 ctws
+   cndTs' = map dnTerm' cndTs
 \end{code}
 
 Catch-all
@@ -1011,17 +1002,19 @@ bindLVarSubstRepl (LVbl (Vbl vi vc vt) is ij) cndTs cndVL (BD (vbind,sbind,lbind
  | wsize  > 1  =  fail "bindLVarSubstRepl: p.-var. mixed term temporality."
  | wsize == 0  -- term has no variables
    = do lbind' <- insertDR (rangeEq "bindLVarSubstRepl(pv1)")
-                           (vi,vc,is,ij) (BX cndTs cndVL) lbind
+                           (vi,vc,is,ij) (BX cndTs' cndVL) lbind
         return $ BD (vbind,sbind,lbind')
  | otherwise
     = do sbind' <- bindSubscriptToSubscript "bindLVarSubstRepl(1)" vt thectw sbind
          lbind' <- insertDR (rangeEq "bindLVarSubstRepl(2)")
-                            (vi,vc,is,ij) (BX cndTs cndVL) lbind
+                            (vi,vc,is,ij) (BX cndTs' cndVL') lbind
          return $ BD (vbind,sbind',lbind')
  where
    ctws = temporalitiesOf cndTs
    wsize = S.size ctws
    thectw = S.elemAt 0 ctws
+   cndTs' = map dnTerm' cndTs
+   cndVL' = map dnLVar cndVL
 \end{code}
 
 Catch-all

@@ -608,27 +608,23 @@ test_substitution
         @?= [ bindLl gO [gok,gS]
             $ bindLSR gOm [tokm] [lSm]
             $ emptyBinding ] )
-    -- , testCase "[okm,xm,ym,zm/ok,x,y,z] :: [Om/O] - succeeds"
-    --    (nub (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_okxyz sub_O)
-    --     @?= [ bindLs gO [gok,gx,gy,gz]
-    --         $ bindLs gOm [gokm,gxm,gym,gzm]
-    --         $ bindLLSub (gO,gOm) [(ok,tokm),(x,txm),(y,tym),(z,tzm)] []
-    --         $ emptyBinding ] )
-    -- , testCase "[okm,xm,ym,zm/ok,x,y,z] :: [okm,Sm/ok,S] - succeeds"
-    --    (nub (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_okxyz sub_ok_S)
-    --     @?= [ bindVV gok gok
-    --         $ bindVV gokm gokm
-    --         $ bindLs gS [gx,gy,gz]
-    --         $ bindLs gSm [gxm,gym,gzm]
-    --         -- need (S,Sm)->({(x,xm),(y,ym),(z,zm)},{}) where  xm,ym,zm : Z
-    --         $ bindLLSub (gS,gSm) [(x,txm),(y,tym),(z,tzm)] []
-    --         $ emptyBinding ] )
-    -- , testCase "[Om/O] :: [e$/x$] - succeeds"
-    --    ( nub (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_O sub_es_xs)
-    --     @?= [ bindLs gvxs [gO]
-    --         $ bindLs gves [gOm]
-    --         $ bindLLSub (gvxs,gves) [] [(lO,lOm)]
-    --         $ emptyBinding ] )
+    , testCase "[okm,xm,ym,zm/ok,x,y,z] :: [Om/O] - succeeds"
+       (nub (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_okxyz sub_O)
+        @?= [ bindLl gO [gok,gx,gy,gz]
+            $ bindLSR gOm [tokm,txm,tym,tzm] []
+            $ emptyBinding ] )
+    , testCase "[okm,xm,ym,zm/ok,x,y,z] :: [okm,Sm/ok,S] - succeeds"
+       (nub (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_okxyz sub_ok_S)
+        @?= [ bindVV gok gok
+            $ bindLl gS [gx,gy,gz]
+            $ bindVV gokm gokm
+            $ bindLSR gSm [txm,tym,tzm] []
+            $ emptyBinding ] )
+    , testCase "[Om/O] :: [e$/x$] - succeeds"
+       ( nub (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_O sub_es_xs)
+        @?= [ bindLl gvxs [gO]
+            $ bindLSR gves [] [lOm]
+            $ emptyBinding ] )
      ]
 
 tstSub = defaultMain [test_substitution]
@@ -645,15 +641,12 @@ seeSMB = seeBind smBinding
 
 test_composition
  = testGroup "Composition"
-    [ -- testCase "bindLLSub works properly" (True @?= False)
-    -- , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches itself"
-    --    (nub( tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAqm eOpAqm )
-    --     @?= [ bindVV gvp gvp $ bindVV gvq gvq
-    --         $ bindLS gO gO $ bindLS gO' gO' $ bindLS gOm gOm
-    --         $ bindLLSub (gO',gOm) [] [(lO',lOm)]
-    --         $ bindLLSub (gO,gOm) [] [(lO,lOm)]
-    --         $ emptyBinding] )
-    --
+    [ testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches itself"
+       (nub( tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAqm eOpAqm )
+        @?= [ bindVV gvp gvp $ bindVV gvq gvq $ bindLL gOm gOm
+            $ bindLL gO gO $ bindLL gO' gO'
+            $ bindLSR gOm [] [lOm]
+            $ emptyBinding] )
     -- , testCase "P[Om/O'] matches itself"
     --    (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty
     --                                         (endO2mid "m" p) (endO2mid "m" p) )
@@ -690,13 +683,13 @@ test_composition
     --         $ bindLLSub (gO',gOm) [] [(lM',lMn),(lS',lSn)]
     --         $ bindLLSub (gO,gOm)  [] [(lM,lMn),(lS,lSn)]
     --         $ emptyBinding] )
-    -- , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when ok,S replaces O"
-    --    (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty eoSpAqm eOpAqm )
-    --     @?= [ bindVV gvp gvp $ bindVV gvq gvq
-    --         $ bindLs gO [gok,gS] $ bindLs gO' [gok',gS'] $ bindLs gOm [gokm,gSm]
-    --         $ bindLLSub (gO',gOm) [(ok',tokm)] [(lS',lSm)]
-    --         $ bindLLSub (gO,gOm)  [(ok,tokm)] [(lS,lSm)]
-    --         $ emptyBinding] )
+    ,  testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when ok,S replaces O"
+       (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty eoSpAqm eOpAqm )
+        @?= [ bindVV gvp gvp $ bindVV gvq gvq
+            $ bindLL gOm gOm
+            $ bindLl gO [gok,gS] $ bindLl gO' [gok',gS']
+            $ bindLSR gOm [tokm] [lSm]
+            $ emptyBinding] )
     ]
 
 tstComp = defaultMain [test_composition]

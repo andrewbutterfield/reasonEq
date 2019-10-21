@@ -726,6 +726,13 @@ rangeEqvLSSub nAPI lv binding (BL vl) srepl@(BX ts lvs)
 rangeEqvLSSub nAPI lv binding srepl@(BX ts lvs) (BL vl)
  | substReplEqv (pdbg "rLOS2.ts=" ts) (pdbg "rLOS.lvs=" lvs) (pdbg "rLOS.vl" vl)  =  return srepl
 \end{code}
+Substitution Replacements and Variable Sets:
+\begin{code}
+rangeEqvLSSub nAPI lv binding (BS vs) srepl@(BX ts lvs)
+ | substReplEqv (pdbg "rLOS1.ts=" ts) (pdbg "rLOS.lvs=" lvs) (pdbg "rLOS.vs" $ S.toList vs)  =  return srepl
+rangeEqvLSSub nAPI lv binding srepl@(BX ts lvs) (BS vs)
+ | substReplEqv (pdbg "rLOS2.ts=" ts) (pdbg "rLOS.lvs=" lvs) (pdbg "rLOS.vs" $ S.toList vs)  =  return srepl
+\end{code}
 If none of the above, then we expect full equality.
 \begin{code}
 rangeEqvLSSub nAPI lv binding vc1 vc2
@@ -1002,7 +1009,7 @@ bindLVarSubstRepl (LVbl (Vbl vi vc vt) is ij) cndTs cndVL (BD (vbind,sbind,lbind
  | wsize  > 1  =  fail "bindLVarSubstRepl: p.-var. mixed term temporality."
  | wsize == 0  -- term has no variables
    = do lbind' <- insertDR (rangeEqvLSSub "bindLVarSubstRepl(pv1)")
-                           (vi,vc,is,ij) (BX cndTs' cndVL) lbind
+                           (vi,vc,is,ij) (BX cndTs' cndVL') lbind
         return $ BD (vbind,sbind,lbind')
  | otherwise
     = do sbind' <- bindSubscriptToSubscript "bindLVarSubstRepl(1)" vt thectw sbind

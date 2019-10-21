@@ -1,51 +1,38 @@
-
-*MatchScenarios> bindLl gO [gok,gS] $ bindLSR gOm [tokm] [lSm] $ emptyBinding
-
-BD @rLOS1.ts=:
-[V (E (TG (Id "\120121"))) (VR (Id "ok",VO,WB))]
-
-@rLOS.vl:
-[GV (VR (Id "ok",VO,WB)),GL (LV (VR (Id "S",VO,WB),[],[]))]
-
-@sRE.t:
-V (E (TG (Id "\120121"))) (VR (Id "ok",VO,WB))
-
-@sRE.v:
-VR (Id "ok",VO,WB)
-
-@rLOS.lvs=:
-[LV (VR (Id "S",VO,WB),[],[])]
-
-@sRE.vl:
-[GL (LV (VR (Id "S",VO,WB),[],[]))]
-
-@sRE.lvs:
-[LV (VR (Id "S",VO,WB),[],[])]
-
-@bindLSR binding
-(fromList [],fromList [("m","m")],fromList [((Id "O",VO,[],[]),BX [V (E (TG (Id "\120121"))) (VR (Id "ok",VO,WB))] [LV (VR (Id "S",VO,WB),[],[])])])
-
-*MatchScenarios> sMatch [vtS_Design] emptyBinding S.empty S.empty sub_ok_S sub_O
-
+*MatchScenarios> tMatch [vtS_Design] emptyBinding S.empty S.empty eoSpAqm eOpAqm
 @vsP:
-LV (VR (Id "O",VO,WB),[],[])
-
+LV (VR (Id "O",VO,WA),[],[])
 @esP:
 LV (VR (Id "O",VO,WD "m"),[],[])
-
-*** Exception: user error (bindLVarSubstRepl(2): already bound differently.
-
-@d =
-(Id "O",VO,[],[])
-
-@old r =
-BL [GV (VR (Id "ok",VO,WB)),GL (LV (VR (Id "S",VO,WB),[],[]))]
-
-@new r =
-BX [V (E (TG (Id "\120121"))) (VR (Id "ok",VO,WB))] [LV (VR (Id "S",VO,WB),[],[])]
-
-@bind:
-fromList [((Id "O",VO,[],[]),BL [GV (VR (Id "ok",VO,WB)),GL (LV (VR (Id "S",VO,WB),[],[]))])]
-)
-
-*MatchScenarios>
+@rLOS2.ts=:
+[V (E (TG (Id "\120121"))) (VR (Id "ok",VO,WB))]
+@rLOS.vl:
+[GV (VR (Id "ok",VO,WB)),GL (LV (VR (Id "S",VO,WB),[],[]))]
+@sRE.t:
+V (E (TG (Id "\120121"))) (VR (Id "ok",VO,WB))
+@sRE.v:
+VR (Id "ok",VO,WB)
+@rLOS.lvs=:
+[LV (VR (Id "S",VO,WB),[],[])]
+@sRE.vl:
+[GL (LV (VR (Id "S",VO,WB),[],[]))]
+@sRE.lvs:
+[LV (VR (Id "S",VO,WB),[],[])]
+@vsP:
+LV (VR (Id "O",VO,WB),[],[])
+@rLOS1.ts=:
+[V (E (TG (Id "\120121"))) (VR (Id "ok",VO,WB))]
+@rLOS.vl:
+[GV (VR (Id "ok",VO,WB)),GL (LV (VR (Id "S",VO,WB),[],[]))]
+@sRE.t:
+V (E (TG (Id "\120121"))) (VR (Id "ok",VO,WB))
+@sRE.v:
+VR (Id "ok",VO,WB)
+@rLOS.lvs=:
+[LV (VR (Id "S",VO,WB),[],[])]
+@sRE.vl:
+[GL (LV (VR (Id "S",VO,WB),[],[]))]
+@sRE.lvs:
+[LV (VR (Id "S",VO,WB),[],[])]
+@esP:
+LV (VR (Id "O",VO,WD "m"),[],[])
+*** Exception: user error (vsMatch: list-variable bound to term-list.)

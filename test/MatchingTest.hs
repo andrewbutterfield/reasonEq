@@ -415,35 +415,36 @@ tst_sMatch
            $ emptyBinding )
         ])
      )
-   -- , testCase "[las/lbs] :: [l1s/l2s]  - STATIC succeeds"
-   --     ( nub ( sMatch [] emptyBinding b0 b0
-   --                (fromJust $ substn [] [(lbs,las)])
-   --                (fromJust $ substn [] [(l2s,l1s)]) )
-   --     @?= [ ( bindLLSub (LstVar l2s,LstVar l1s) [] [(lbs,las)] emptyBinding) ]
-   --     )
-   -- , testCase "[la/lb] :: [l1/l2]  - succeeds"
-   --     ( nub ( sMatch [] emptyBinding b0 b0
-   --                (fromJust $ substn [] [(lb,la)])
-   --                (fromJust $ substn [] [(l2,l1)]) )
-   --     @?= [ ( bindLLSub (LstVar l2,LstVar l1) [] [(lb,la)] emptyBinding) ]
-   --     )
+   , testCase "[las/lbs] :: [l1s/l2s]  - STATIC succeeds"
+       ( nub ( sMatch [] emptyBinding b0 b0
+                  (fromJust $ substn [] [(lbs,las)])
+                  (fromJust $ substn [] [(l2s,l1s)]) )
+       @?= [ ( bindLL (LstVar l2s) (LstVar lbs)
+             $ bindLSR (LstVar l1s) [] [las] $ emptyBinding) ]
+       )
+   , testCase "[la/lb] :: [l1/l2]  - succeeds"
+       ( nub ( sMatch [] emptyBinding b0 b0
+                  (fromJust $ substn [] [(lb,la)])
+                  (fromJust $ substn [] [(l2,l1)]) )
+       @?= [ ( bindLL (LstVar l2) (LstVar lb)
+             $ bindLSR (LstVar l1) [] [la] $ emptyBinding) ]
+       )
    , testCase "[la/lb] :: [e/x]  - fails"
        ( sMatch [] emptyBinding b0 b0
            (fromJust $ substn []       [(lb,la)])
            (fromJust $ substn [(x,ee)] []       )
          @?=  Nothing )
-   -- , testCase "[42,la/a,lb] :: [e,l1/x,l2]  - succeeds"
-   --     ( nub ( sMatch [] emptyBinding b0 b0
-   --               (fromJust $ substn [(a,k42)] [(lb,la)])
-   --               (fromJust $ substn [(x,ee)] [(l2,l1)]) )
-   --       @?=
-   --       ([ ( bindVV (StdVar x) (StdVar a)
-   --          $ bindVT (StdVar e) k42
-   --          $ bindLS (LstVar l2) (LstVar lb)
-   --          $ bindLLSub (LstVar l2,LstVar l1) [] [(lb,la)]
-   --          -- (l2,l1)->({},{(lb,la)}) (LstVar tplv,LstVar rplv) ctermsub clvarsub
-   --          $ emptyBinding )])
-   --     )
+   , testCase "[42,la/a,lb] :: [e,l1/x,l2]  - succeeds"
+       ( nub ( sMatch [] emptyBinding b0 b0
+                 (fromJust $ substn [(a,k42)] [(lb,la)])
+                 (fromJust $ substn [(x,ee)] [(l2,l1)]) )
+         @?=
+         ([ ( bindVV (StdVar x) (StdVar a)
+            $ bindLL (LstVar l2) (LstVar lb)
+            $ bindVT (StdVar e) k42
+            $ bindLSR (LstVar l1) [] [la]
+            $ emptyBinding )])
+       )
    ]
 
 

@@ -710,25 +710,25 @@ then we update the set to be the list,
 or the list to be substitution replacement, in the binding.
 We require an equivalence for this:
 \begin{code}
-rangeListOrSet :: Monad m => String -> UpdateCheck m ListVarKey LstVarBind
+rangeEqvLSSub :: Monad m => String -> UpdateCheck m ListVarKey LstVarBind
 \end{code}
 Variable Sets and Lists:
 \begin{code}
-rangeListOrSet nAPI lv binding list@(BL vl) (BS vs)
+rangeEqvLSSub nAPI lv binding list@(BL vl) (BS vs)
  | S.fromList vl == vs  =  return list
-rangeListOrSet nAPI lv binding (BS vs) list@(BL vl)
+rangeEqvLSSub nAPI lv binding (BS vs) list@(BL vl)
  | S.fromList vl == vs  =  return list
 \end{code}
 Substitution Replacements and Variable Lists:
 \begin{code}
-rangeListOrSet nAPI lv binding (BL vl) srepl@(BX ts lvs)
+rangeEqvLSSub nAPI lv binding (BL vl) srepl@(BX ts lvs)
  | substReplEqv (pdbg "rLOS1.ts=" ts) (pdbg "rLOS.lvs=" lvs) (pdbg "rLOS.vl" vl)  =  return srepl
-rangeListOrSet nAPI lv binding srepl@(BX ts lvs) (BL vl)
+rangeEqvLSSub nAPI lv binding srepl@(BX ts lvs) (BL vl)
  | substReplEqv (pdbg "rLOS2.ts=" ts) (pdbg "rLOS.lvs=" lvs) (pdbg "rLOS.vl" vl)  =  return srepl
 \end{code}
 If none of the above, then we expect full equality.
 \begin{code}
-rangeListOrSet nAPI lv binding vc1 vc2
+rangeEqvLSSub nAPI lv binding vc1 vc2
  | vc1 == vc2  =  return vc1
  | otherwise  =  fail $ unlines
                   [ (nAPI++": already bound differently.")
@@ -770,7 +770,7 @@ A Static list-variable binds to any list without \texttt{Textual} variables.
 \begin{code}
 bindLVarToVList lv@(LVbl (Vbl i vc Static) is ij) vl (BD (vbind,sbind,lbind))
  | valid
-    =  do lbind' <- insertDR (rangeListOrSet "bindLVarToVList(static)")
+    =  do lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(static)")
                              (i,vc,is,ij) (BL vl) lbind
           return $ BD (vbind,sbind,lbind')
  | otherwise = fail "bindLVarToVList: static cannot bind to any textual."
@@ -785,7 +785,7 @@ all of which have the same class and temporality as itself.
 bindLVarToVList lv@(LVbl (Vbl i vc vw) is ij) vl (BD (vbind,sbind,lbind))
  | valid
     = do sbind' <- bindSubscriptToSubscript "bindLVarToVList(1)" vw vlw sbind
-         lbind' <- insertDR (rangeListOrSet "bindLVarToVList(2)")
+         lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(2)")
                             (i,vc,is,ij) (bvl vl) lbind
          return $ BD (vbind,sbind',lbind')
  | otherwise = fail "bindLVarToVList: incompatible dynamic temporality."
@@ -817,7 +817,7 @@ bindLVarToVSet :: Monad m => ListVar -> VarSet -> Binding -> m Binding
 
 bindLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind))
  | valid
-    =  do lbind' <- insertDR (rangeListOrSet "bindLVarToVSet(static)")
+    =  do lbind' <- insertDR (rangeEqvLSSub "bindLVarToVSet(static)")
                              (i,vc,is,ij) (BS vs) lbind
           return $ BD (vbind,sbind,lbind')
  | otherwise = fail $ unlines'
@@ -832,7 +832,7 @@ bindLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind))
 bindLVarToVSet lv@(LVbl (Vbl i vc vw) is ij) vs (BD (vbind,sbind,lbind))
  | valid
     = do sbind' <- bindSubscriptToSubscript "bindLVarToVSet(1)" vw vsw sbind
-         lbind' <- insertDR (rangeListOrSet "bindLVarToVSet(2)")
+         lbind' <- insertDR (rangeEqvLSSub "bindLVarToVSet(2)")
                             (i,vc,is,ij) (bvs vs) lbind
          return $ BD (vbind,sbind',lbind')
  | otherwise = fail "bindLVarToVSet: incompatible dynamic temporality."
@@ -914,7 +914,7 @@ as per Fig.\ref{fig:utp-perm-class-bind}.
 \begin{code}
 bindLVarToTList (LVbl (Vbl vi vc Static) is ij) cndTs (BD (vbind,sbind,lbind))
  | all (validVarTermBinding vc) (map termkind cndTs)
-    = do lbind' <- insertDR (rangeEq "bindLVarToTList(static)")
+    = do lbind' <- insertDR (rangeEqvLSSub "bindLVarToTList(static)")
                             (vi,vc,is,ij) (BX cndTs' []) lbind
          return $ BD (vbind,sbind,lbind')
  | otherwise  =  fail "bindLVarToTList: incompatible variable and terms."
@@ -935,12 +935,12 @@ bindLVarToTList (LVbl (Vbl vi vc vt) is ij) cndTs (BD (vbind,sbind,lbind))
            =  fail "bindLVarToTList: non-pred. l-var. cannot bind to predicate."
  | wsize  > 1  =  fail "bindLVarToTList: p.-var. mixed term temporality."
  | wsize == 0  -- term has no variables
-   = do lbind' <- insertDR (rangeEq "bindLVarToTList(pv1)")
+   = do lbind' <- insertDR (rangeEqvLSSub "bindLVarToTList(pv1)")
                            (vi,vc,is,ij) (BX cndTs' []) lbind
         return $ BD (vbind,sbind,lbind')
  | otherwise
     = do sbind' <- bindSubscriptToSubscript "bindLVarToTList(1)" vt thectw sbind
-         lbind' <- insertDR (rangeEq "bindLVarToTList(2)")
+         lbind' <- insertDR (rangeEqvLSSub "bindLVarToTList(2)")
                             (vi,vc,is,ij) (BX cndTs' []) lbind
          return $ BD (vbind,sbind',lbind')
  where
@@ -981,7 +981,7 @@ as per Fig.\ref{fig:utp-perm-class-bind}.
 \begin{code}
 bindLVarSubstRepl (LVbl (Vbl vi vc Static) is ij) cndTs cndVL (BD (vbind,sbind,lbind))
  | all (validVarTermBinding vc) (map termkind cndTs)
-    = do lbind' <- insertDR (rangeEq "bindLVarSubstRepl(static)")
+    = do lbind' <- insertDR (rangeEqvLSSub "bindLVarSubstRepl(static)")
                             (vi,vc,is,ij) (BX cndTs cndVL) lbind
          return $ BD (vbind,sbind,lbind')
  | otherwise  =  fail "bindLVarSubstRepl: incompatible variable and terms."
@@ -1001,12 +1001,12 @@ bindLVarSubstRepl (LVbl (Vbl vi vc vt) is ij) cndTs cndVL (BD (vbind,sbind,lbind
            =  fail "bindLVarSubstRepl: non-pred. l-var. cannot bind to predicate."
  | wsize  > 1  =  fail "bindLVarSubstRepl: p.-var. mixed term temporality."
  | wsize == 0  -- term has no variables
-   = do lbind' <- insertDR (rangeEq "bindLVarSubstRepl(pv1)")
+   = do lbind' <- insertDR (rangeEqvLSSub "bindLVarSubstRepl(pv1)")
                            (vi,vc,is,ij) (BX cndTs' cndVL) lbind
         return $ BD (vbind,sbind,lbind')
  | otherwise
     = do sbind' <- bindSubscriptToSubscript "bindLVarSubstRepl(1)" vt thectw sbind
-         lbind' <- insertDR (rangeEq "bindLVarSubstRepl(2)")
+         lbind' <- insertDR (rangeEqvLSSub "bindLVarSubstRepl(2)")
                             (vi,vc,is,ij) (BX cndTs' cndVL') lbind
          return $ BD (vbind,sbind',lbind')
  where
@@ -1026,82 +1026,6 @@ bindLVarSubstRepl plv cndTs cndVL _
      , "cndTs = " ++ show cndTs
      , "cndVL = " ++ show cndVL ]
 \end{code}
-
-% \newpage
-% \subsubsection{Binding Substitution-Pairs}
-%
-% We simply bind each pattern variable in the pair
-% to the corresponding candidate parts.
-%
-% For variable/term substitution this is easy:
-% \begin{code}
-% bindVarTermSubst :: Monad m
-%                     => Variable -> Variable -> Variable -> Term -> Binding
-%                     -> m Binding
-%
-% bindVarTermSubst tgtV rplV matchedV matchedE bind
-%  = do bind1 <- bindVarToVar tgtV matchedV bind
-%       bindVarToTerm rplV matchedE bind1
-% \end{code}
-%
-% For list-variable substitutions, it's trickier.
-% \begin{code}
-% bindLVarPairSubst :: Monad m
-%                     => ListVar -> ListVar -> TermSub -> LVarSub -> Binding
-%                     -> m Binding
-%
-% bindLVarPairSubst tgtLV rplLV tsub lvarsub bind
-%  = do bind' <- bindLVarToVSet tgtLV rplVS bind
-%       bindLVarPairSubst' tgtLV rplLV tsub lvarsub bind'
-%  where
-%    rplVS = S.map (StdVar . fst) tsub `S.union` S.map (LstVar . fst) lvarsub
-% \end{code}
-%
-% Given the target list-variable has succesfully been bound,
-% we can move onto the main event.
-% First, the static case:
-% \begin{code}
-% bindLVarPairSubst' tgtLV@(LVbl (Vbl ti tvc Static) tis tij)
-%                      rplLV@(LVbl (Vbl ri rvc Static) ris rij)
-%                      tsub lvarsub (BD (vbind,sbind,lbind))
-%  = do llbind' <- insertDR (rangeEq "bindLVarPairSubst(static)")
-%                           (tgtLV,rplLV) (tsub,lvarsub)
-%                           llbind
-%       return $ BD (vbind,sbind,lbind)
-%
-% \end{code}
-%
-% Now for dynamic variables,
-% which require different treatment
-% to that used to bind a single list-variable to a variable-list/set.
-% \begin{code}
-% bindLVarPairSubst' tgtLV@(LVbl (Vbl ti tvc tvt) tis tij)
-%                      rplLV@(LVbl (Vbl ri rvc rvt) ris rij)
-%                      tsub lvarsub (BD (vbind,sbind,lbind))
-%   | twsize  > 1  =  fail "bindLVarPairSubst: mixed target temporality."
-%   | rwsize  > 1  =  fail "bindLVarPairSubst: mixed replacement temporality."
-%   | otherwise
-%      = do sbind'  <- bindSubscriptToSubscript "bindLVarPairSubst(tgt)"
-%                                                   (dbg (show ti++".tvt=") tvt) thectw sbind
-%           sbind'' <- bindSubscriptToSubscript "bindLVarPairSubst(rpl)"
-%                                                   (dbg (show ri++".rvt=") rvt) thecrw sbind'
-%           llbind' <- insertDR (rangeEq "bindLVarPairSubst(dynamic)")
-%                               (tgtLV,rplLV) (tsub,lvarsub)
-%                               llbind
-%           return $ BD (vbind,sbind'',lbind)
-%   where
-%     crws = subReplTmpr (dbg "tsub=" tsub) $ dbg "lvarsub=" lvarsub -- substTemporalityOf tsub lvarsub
-%     rwsize = S.size $ dbg "crws=" crws
-%     thecrw = S.elemAt 0 crws
-%     ctws = subTgtTmpr tsub lvarsub -- substTemporalityOf tsub lvarsub
-%     twsize = S.size $ dbg "ctws=" ctws
-%     thectw = S.elemAt 0 ctws
-% \end{code}
-%
-% Anything else fails for now\dots
-% \begin{code}
-% bindLVarPairSubst' _ _ _ _ _ = fail "bindLVarPairSubst: NYfI."
-% \end{code}
 
 \newpage
 \subsubsection{Binding General-Variables to General-Variables}

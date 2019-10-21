@@ -603,8 +603,7 @@ gves = LstVar lves
 
 test_substitution
  = testGroup "Substitutions"
-    [ testCase "bindLLSub works properly" (True @?= False)
-    , testCase "[okm,Sm/ok,S] :: [Om/O] - succeeds"
+    [ testCase "[okm,Sm/ok,S] :: [Om/O] - succeeds"
        ( nub (sMatch [vtS_Design] emptyBinding S.empty S.empty sub_ok_S sub_O)
         @?= [ bindLl gO [gok,gS]
             $ bindLSR gOm [tokm] [lSm]
@@ -646,7 +645,7 @@ seeSMB = seeBind smBinding
 
 test_composition
  = testGroup "Composition"
-    [ testCase "bindLLSub works properly" (True @?= False)
+    [ -- testCase "bindLLSub works properly" (True @?= False)
     -- , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches itself"
     --    (nub( tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAqm eOpAqm )
     --     @?= [ bindVV gvp gvp $ bindVV gvq gvq

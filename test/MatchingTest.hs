@@ -20,6 +20,8 @@ import Binding
 import Matching
 
 import TestRendering
+import MkTestBind
+
 -- -----------------------------------------------------------------------------
 tst_match :: TF.Test
 
@@ -177,10 +179,6 @@ mkPS i = StdVar $ PreVar  $ identi "ps" i
 mkPL i = LstVar $ PreVars $ identi "pl" i
 mkCS i = StdVar $ PreVar  $ identi "cs" i
 mkCL i = LstVar $ PreVars $ identi "cl" i
-bindVV (StdVar pv)  (StdVar cv)   =  fromJust . bindVarToVar pv cv
-bindLL (LstVar plv) cgv  =  fromJust . bindLVarToVList plv [cgv]
-bindL0 (LstVar plv)      =  fromJust . bindLVarToVList plv []
-
 
 [ps1,ps2,ps3,ps4] = map mkPS [1..4]  -- std pattern vars
 [pl1,pl2,pl3,pl4] = map mkPL [1..4]  -- lst pattern vars
@@ -245,14 +243,6 @@ tst_vlMatch =
 
 -- -----------------------------------------------------------------------------
 tst_vsMatch :: TF.Test
-
-bindLs (LstVar plv) cgvs  =  fromJust . bindLVarToVSet plv (S.fromList cgvs)
-bindLS (LstVar plv) cgv   =  fromJust . bindLVarToVSet plv (S.singleton cgv)
-bindLN (LstVar plv)       =  fromJust . bindLVarToVSet plv S.empty
--- bindLLSub (LstVar tplv,LstVar rplv) ctermsub clvarsub
---  = fromJust . b'' (LstVar tplv,LstVar rplv) ctermsub clvarsub
--- b'' (LstVar tplv,LstVar rplv) ctermsub clvarsub
---  = bindLVarPairSubst tplv rplv (S.fromList ctermsub) (S.fromList clvarsub)
 
 bindPS12CS12
  = bindVV ps1 cs1 $ bindVV ps2 cs2 emptyBinding
@@ -373,7 +363,6 @@ ee = fromJust $ eVar ArbType e
 ef = fromJust $ eVar ArbType f
 e_for v = fromJust $ substn [(v,fromJust $ eVar ArbType $ e)] []
 f_for v = fromJust $ substn [(v,fromJust $ eVar ArbType $ f)] []
-bindVT (StdVar pv)  ct   =  fromJust . bindVarToTerm pv ct
 a = PreVar $ fromJust $ ident "a"
 b = PreVar $ fromJust $ ident "b"
 
@@ -455,7 +444,6 @@ tst_sMatch
    --          -- (l2,l1)->({},{(lb,la)}) (LstVar tplv,LstVar rplv) ctermsub clvarsub
    --          $ emptyBinding )])
    --     )
-   , testCase "bindLLSub works properly" (True @?= False)
    ]
 
 

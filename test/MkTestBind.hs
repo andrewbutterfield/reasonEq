@@ -1,6 +1,6 @@
 module MkTestBind
  ( bindVV, bindLL, bindLl, bindVT, bindL0, bindLS, bindLs, bindLN, bindLT, bindLt
- , bindLSR, bindLLSub
+ , bindLSR
  , vDurRen, lvDurRen, gvDurRen
  )
 where
@@ -38,18 +38,6 @@ bindLt (LstVar plv) cts   =  fromJust . bindLVarToTList plv cts
 
 bindLSR :: GenVar -> [Term] -> [ListVar] -> Binding -> Binding
 bindLSR (LstVar plv) ctsub crpl = fromJust . bindLVarSubstRepl plv ctsub crpl
-
-
-bindLLSub (LstVar tplv,LstVar rplv) ctermsub clvarsub
- = bindLl (LstVar tplv) cTgts . bindLSR (LstVar rplv) cTerms cRplL
- where
-   cVars = map fst ctermsub
-   cTgtL = map fst clvarsub
-   cTgts = (map StdVar cVars ++ map LstVar cTgtL)
-   cTerms = map snd ctermsub
-   cRplL = map snd clvarsub
-
---    , testCase "bindLLSub works properly" (True @?= False)
 
 
 vDurRen  :: String -> Variable -> Variable

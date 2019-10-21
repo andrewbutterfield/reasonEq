@@ -43,13 +43,14 @@ import REPL
 import Dev
 \end{code}
 
+\newpage
+
 \begin{code}
 progName = "reasonEq"
 version = "0.7.5.0"
 name_version = progName++" "++version
 \end{code}
 
-\newpage
 \subsection{\texttt{main}}
 
 The program takes command-line arguments
@@ -112,6 +113,7 @@ helpinfo
    option flag explanation = '\t':flag ++ '\t':explanation
 \end{code}
 
+\newpage
 We shall define a record to record flag data,
 and a corresponding parser:
 \begin{code}
@@ -219,12 +221,16 @@ reqset0 = REqSet { maxMatchDisplay = 20
 \end{code}
 
 \newpage
+
+
 \subsection{GUI Top-Level}
+
+The GUI has yet to be developed but will probably
+use \texttt{threepenny-gui} along with the Electron browser.
 \begin{code}
 gui :: CMDFlags -> IO ()
 gui flags = putStrLn $ unlines
-         [ "Welcome to "++name_version
-         , "GUI N.Y.I.!"
+         [ "GUI for  " ++ name_version ++ " yet to be done..."
          , "Goodbye" ]
 \end{code}
 
@@ -248,7 +254,7 @@ reqPrompt _ reqs = devMk ++ chgd
                          ++ currTheory reqs++"> "
  where
    chgd = if modified reqs then "*" else ""
-   devMk = if inDevMode reqs then "!" else ""
+   devMk = if inDevMode reqs then "\x1f6e0 " else ""
 
 reqEOFreplacmement = [nquit]
 
@@ -283,21 +289,18 @@ reqEndCondition _ = False
 reqEndTidy _ reqs = return reqs
 \end{code}
 
+\newpage
+
 The configuration:
 \begin{code}
 reqConfig
-  = REPLC
-      reqPrompt
-      reqEOFreplacmement
-      reqParser
-      reqQuitCmds
-      reqQuit
-      reqHelpCmds
-      reqCommands
-      reqEndCondition
-      reqEndTidy
+  = REPLC reqPrompt reqEOFreplacmement reqParser
+          reqQuitCmds reqQuit reqHelpCmds
+          reqCommands
+          reqEndCondition reqEndTidy
 \end{code}
 
+Running the REPL:
 \begin{code}
 repl :: CMDFlags -> IO ()
 repl flags

@@ -722,16 +722,16 @@ rangeEqvLSSub nAPI lv binding (BS vs) list@(BL vl)
 Substitution Replacements and Variable Lists:
 \begin{code}
 rangeEqvLSSub nAPI lv binding (BL vl) srepl@(BX ts lvs)
- | substReplEqv (pdbg "rLOS1.ts=" ts) (pdbg "rLOS.lvs=" lvs) (pdbg "rLOS.vl" vl)  =  return srepl
+ | substReplEqv ts lvs vl  =  return srepl
 rangeEqvLSSub nAPI lv binding srepl@(BX ts lvs) (BL vl)
- | substReplEqv (pdbg "rLOS2.ts=" ts) (pdbg "rLOS.lvs=" lvs) (pdbg "rLOS.vl" vl)  =  return srepl
+ | substReplEqv ts lvs vl  =  return srepl
 \end{code}
 Substitution Replacements and Variable Sets:
 \begin{code}
 rangeEqvLSSub nAPI lv binding (BS vs) srepl@(BX ts lvs)
- | substReplEqv (pdbg "rLOS1.ts=" ts) (pdbg "rLOS.lvs=" lvs) (pdbg "rLOS.vs" $ S.toList vs)  =  return srepl
+ | substReplEqv ts lvs (S.toList vs)  =  return srepl
 rangeEqvLSSub nAPI lv binding srepl@(BX ts lvs) (BS vs)
- | substReplEqv (pdbg "rLOS2.ts=" ts) (pdbg "rLOS.lvs=" lvs) (pdbg "rLOS.vs" $ S.toList vs)  =  return srepl
+ | substReplEqv ts lvs (S.toList vs)  =  return srepl
 \end{code}
 If none of the above, then we expect full equality.
 \begin{code}
@@ -760,8 +760,8 @@ are equivalent to corresponding elements of \texttt{vl}.
 substReplEqv :: [Term] -> [ListVar] -> VarList -> Bool
 substReplEqv [] [] []   =  True
 substReplEqv (t:ts) lvs (StdVar v : vl)
-  | termVarEqv (pdbg "sRE.t" t) (pdbg "sRE.v" v)      =  substReplEqv ts lvs vl
-substReplEqv [] lvs vl  =  map LstVar (pdbg "sRE.lvs" lvs) == (pdbg "sRE.vl" vl)
+  | termVarEqv t v      =  substReplEqv ts lvs vl
+substReplEqv [] lvs vl  =  map LstVar lvs == vl
 substReplEqv _  _  _    =  False
 
 termVarEqv (Var _ u) v =  u == v
@@ -977,7 +977,12 @@ bindLVarSubstRepl :: Monad m => ListVar -> [Term] -> [ListVar] -> Binding
                   -> m Binding
 \end{code}
 
-A \texttt{Textual} pattern variable cannot bind to a term
+If the term-list is empty we simply use the list function:
+\begin{code}
+bindLVarSubstRepl lv [] lvs binds = bindLVarToVList lv (map LstVar lvs) binds
+\end{code}
+
+A \texttt{Textual} pattern variable cannot bind to terms
 \begin{code}
 bindLVarSubstRepl (LVbl (Vbl _ _ Textual) _ _) _ _ binds
  = fail "bindLVarSubstRepl: textual list-vars. not allowed."

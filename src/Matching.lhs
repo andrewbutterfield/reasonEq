@@ -1518,16 +1518,19 @@ When the first pattern variable is a list-variable:
 applyBindingsToSets' bind vlP' vsC (gP@(LstVar lvP):vlP)
  = case lookupLstBind bind lvP of
     Nothing -> applyBindingsToSets' bind (gP:vlP') vsC vlP
-    Just (BindSet vsB)
-     -> if vsB `withinS` vsC
-        then applyBindingsToSets' bind vlP' (vsC `removeS` vsB) vlP
-        else fail "vsMatch: pattern list-var's binding not in candidate set."
-    Just (BindList vlB)
-     -> let vsB = S.fromList vlB in
-        if vsB `withinS` vsC
-        then applyBindingsToSets' bind vlP' (vsC `removeS` vsB) vlP
-        else fail "vsMatch: pattern list-var's binding not in candidate set."
-    _ -> fail "vsMatch: list-variable bound to term-list."
+    Just (BindSet vsB) -> checkBinding vsB
+    Just (BindList vlB) -> checkBinding $ S.fromList vlB
+    Just (BindTLVs ts lvs)
+      | all isVar ts
+         -> checkBinding
+            $ S.fromList (map (StdVar . theVar) ts ++ map LstVar lvs)
+      | otherwise
+          -> fail "vsMatch: list-variable bound to at least one non-Var term"
+  where
+    checkBinding vsB
+       =  if vsB `withinS` vsC
+          then applyBindingsToSets' bind vlP' (vsC `removeS` vsB) vlP
+          else fail "vsMatch: pattern list-var's binding not in candidate set."
 \end{code}
 
 \newpage
@@ -2383,7 +2386,7 @@ $ \lst v_{P} \mapsto
             \seqof{v_{C1},\dots;\dots \lst v_{Cr}}$.
 \begin{code}
 lvsMatch vts bind cbvs pbvs tsC lvsC [(vsP,esP)]
-  = bindLVarToVList (pdbg "vsP" vsP) cTgts bind >>= bindLVarSubstRepl (pdbg "esP" esP) cTerms cRplL
+  = bindLVarToVList vsP cTgts bind >>= bindLVarSubstRepl esP cTerms cRplL
   where
     cVars = map fst tsC
     cTgtL = map fst lvsC

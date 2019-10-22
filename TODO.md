@@ -2,35 +2,6 @@
 
 ## Hotfixes
 
-### Substitiution matching bug.
-
-Current state (`test.log`, 18 Oct 2019)
-
-```
-@*MatchScenarios> bindLl gO [gok,gS] emptyBinding
-BD      { O$ |-> <ok,S$> } -- correct
-( {}
-, {}
-, { ( (Id "O", VO, [], [])
-    , BL
-      [ GV (VR (Id "ok", VO, WB))
-      , GL (LV (VR (Id "S", VO, WB), [], [])) ] ) } )
-@*MatchScenarios> bindLSR gOm [tokm] [lSm] emptyBinding
-BD     { O$m |-> ( <okm> ; <Sm> )} -- correct
-( {}
-, { ( "m"
-    , "m" ) }
-, { ( (Id "O", VO, [], [])
-    , BX
-      [ V (E (TG (Id "\120121"))) (VR (Id "ok", VO, WD "m")) ]
-      [ LV (VR (Id "S", VO, WD "m"), [], []) ] ) } )
-@*MatchScenarios> bindLl gO [gok,gS] it
-Nothing
-```
-
-Mapping O to [G,..] induces mappings of O' to [G',..] and Om to [Gm,..], but this is not the problem.
-
-It's that we have a `O -> [vok,lvS]` as well as `O -> ([tok],[lvS])`
 
 ### Filenames
 

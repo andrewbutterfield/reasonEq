@@ -2,6 +2,7 @@
 
 ## Hotfixes
 
+Need to flip order in which laws are shown - start with PropAxioms, end with top-most theory.
 
 ### Filenames
 

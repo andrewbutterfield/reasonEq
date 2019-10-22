@@ -13,7 +13,7 @@ BEGIN THEORIES
 THNAMES = ["Equality","PredAxioms","PredExists","PredUniv","PropAxioms","PropConj","PropDisj","PropEquiv","PropImpl","PropMixOne","PropNot","PropSubst"]
 SDAG = [[("PredUniv",["PredExists","PredAxioms","Equality","PropSubst","PropImpl","PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PredExists",["PredAxioms","Equality","PropSubst","PropImpl","PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PredAxioms",["Equality","PropSubst","PropImpl","PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropSubst",["PropImpl","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropImpl",["PropMixOne","PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropMixOne",["PropConj","PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropConj",["PropDisj","PropNot","PropEquiv","PropAxioms"])],[("PropDisj",["PropNot","PropEquiv","PropAxioms"])],[("PropNot",["PropEquiv","PropAxioms"])],[("Equality",["PropAxioms"]),("PropEquiv",["PropAxioms"])],[("PropAxioms",[])]]
 END THEORIES
-CURRTHEORY = PredAxioms
+CURRTHEORY = PredUniv
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
 END MAP LIVE-PROOFS

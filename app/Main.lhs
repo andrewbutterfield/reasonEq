@@ -249,9 +249,9 @@ type REqConfig    =  REPLConfig   REqState
 Now we work down through the configuration components.
 \begin{code}
 reqPrompt :: Bool -> REqState -> String
-reqPrompt _ reqs = devMk ++ chgd
-                         ++ takeBaseName (projectDir reqs)++ "."
-                         ++ currTheory reqs++"> "
+reqPrompt _ reqs = devMk ++ takeBaseName (projectDir reqs)++ "."
+                         ++ currTheory reqs
+                         ++ chgd ++ "> "
  where
    chgd = if modified reqs then "*" else ""
    devMk = if inDevMode reqs then "\x1f6e0 " else ""

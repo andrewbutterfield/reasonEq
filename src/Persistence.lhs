@@ -58,12 +58,14 @@ writeAllState reqs
 
 \begin{code}
 readAllState :: FilePath -> IO REqState
-readAllState projfp
-  = do txt  <- readFile $ projectPath projfp
-       ((sets,sig,thnms),rest1) <- readREqState1 $ lines txt
-       nmdThrys <- sequence $ map (readNamedTheory projfp) thnms
-       reqs <- readREqState2 sets sig nmdThrys rest1
-       return reqs{projectDir = projfp}
+readAllState projdirfp
+  = do let projfp = projectPath projdirfp
+       putStrLn ("Reading project details from "++projfp)
+       txt <- readFile projfp
+       ((settings,sig,thnms),rest1) <- readREqState1 $ lines txt
+       nmdThrys <- sequence $ map (readNamedTheory projdirfp) thnms
+       reqs <- readREqState2 settings sig nmdThrys rest1
+       return reqs{projectDir = projdirfp}
 \end{code}
 
 
@@ -78,7 +80,9 @@ writeNamedTheoryTxt reqs (nm,thTxt)
 \begin{code}
 readNamedTheory projfp nm
   = do let fp = tfile projfp nm
+       putStrLn ("Reading theory file for '"++nm++"'")
        txt <- readFile fp
+       putStrLn ("Parsing theory file for '"++nm++"'")
        (thry,rest) <- readTheory $ lines txt
        return (nm,thry)
 \end{code}

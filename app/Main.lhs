@@ -412,8 +412,9 @@ saveState _ reqs  =  doshow reqs "unknown 'save' option."
 
 loadState [] reqs
   = do let dirfp = projectDir reqs
+       putStrLn ("Reading all prover state from "++dirfp++"...")
        reqs' <- readAllState dirfp
-       putStrLn ("REQ-STATE read from '"++dirfp++"'.")
+       putStrLn ("...done.")
        return reqs'{ inDevMode = inDevMode reqs}
 loadState [nm] reqs
   = do let dirfp = projectDir reqs

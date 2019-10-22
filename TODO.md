@@ -2,6 +2,16 @@
 
 ## Hotfixes
 
+### `PredUniv` Proofs
+
+Need to reach stage where proofs work.
+
+Proof of `[]_idem` stalls on `(∀ x̅ • (∀ x̅ • P))`.
+
+Proof of `land_[]_distr` stalls on `(∀ x̅ • P)∧(∀ x̅ • Q)    x̅ ⊇ P;x̅ ⊇ Q`.
+
+And etc....
+
 ### Instantiating Side-Conditions
 
 `instantiateASC` is just wrong - it's acting more like discharge should.

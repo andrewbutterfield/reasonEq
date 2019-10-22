@@ -311,7 +311,7 @@ Conjectures: None.
 
 ```
 
-We see the the `PropEquiv` theory has no conectures anymore,
+We see the the `PropEquiv` theory has no conjectures anymore,
 but a new law (“≡_id”) instead. This law differs from the axioms in `PropAxioms` in that it is marked with `∎` instead of `⊤` to show that it is a theorem with a proof, rather than an axiom.
 
 ## Next Steps.

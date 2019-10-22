@@ -2,16 +2,6 @@
 
 ## Hotfixes
 
-Need to flip order in which laws are shown - start with PropAxioms, end with top-most theory.
-
-### Filenames
-
-We need to decouple Cons names from external appearance.
-If a theory file developed and saved on OS/unix
-is opened by a Windows version, then the UTF-8 names will be present.
-If done the other way around we see ASCII_art names.
-NiceSymbols needs to export an ASCII to pretty-name dictionary.
-
 ### Instantiating Side-Conditions
 
 `instantiateASC` is just wrong - it's acting more like discharge should.
@@ -28,8 +18,6 @@ We need to either have unique q.v.s, or be very careful. Consider matching `[∀
 
 
 ## Next Task(s)
-
-* **Confusion Alert!** The use of "binding" for the outcome of matching gets confused with the notion of "binding" and "bound" associated with various quantifiers. Perhaps we should reconsider re-naming `Binding.Binding`, etc to `?.Mapping` ? or `MMapping` ? or `MMap` ?
 
  
 * LiveProof returns `(bind,local_scC)` - need to get `local_scC` into proof step.

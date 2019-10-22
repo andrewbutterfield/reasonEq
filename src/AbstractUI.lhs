@@ -131,7 +131,7 @@ observeTheoryNames
 observeLaws :: REqState -> String
 observeLaws reqs
   = let thrys = getAllTheories $ theories reqs
-    in hdr ++ (intercalate hdr $ map showTheoryLaws thrys)
+    in hdr ++ (intercalate hdr $ map showTheoryLaws $ reverse thrys)
   where hdr = "\n---\n"
 \end{code}
 
@@ -466,7 +466,7 @@ applyMatchToFocus i liveProof
 observeLawsInScope :: LiveProof -> String
 observeLawsInScope liveProof
   = let mctxts = mtchCtxts liveProof
-    in hdr ++ (intercalate hdr $ map showContextLaws mctxts)
+    in hdr ++ (intercalate hdr $ map showContextLaws $ reverse mctxts)
   where hdr = "\n---\n"
 \end{code}
 

@@ -235,7 +235,7 @@ dig (n:ns) tz =  dig ns $ snd $ downTZ n tz
 
 Now some useful test pieces:
 \begin{code}
-tZ = _mathbb "Z"
+tZ = "Z"
 int = GivenType $ fromJust $ ident tZ
 kint = E int
 ival i = Val kint (Integer i)
@@ -244,7 +244,7 @@ box p = Cons P (fromJust $ ident "BOX") [p]
 x = fromJust $ ident "x"
 vx = fromJust $ var kint $ Vbl x ObsV Static
 tint = Type int
-iter = Iter P (fromJust $ ident _land) (fromJust $ ident "=") []
+iter = Iter P (fromJust $ ident "land") (fromJust $ ident "=") []
 f = fromJust $ ident "F"
 g = fromJust $ ident "G"
 cons0 = Cons P f [i42,vx,tint,iter]

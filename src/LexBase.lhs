@@ -56,7 +56,11 @@ Anything else is `arbitrary`.
 \subsection{Identifiers}
 
 We consider `identifiers' to either
-be strings that satisfy a fairly standard convention
+be \emph{ASCII only}%
+\footnote{
+ We want theory files to be portable. Unicode is not portable.
+}
+strings that satisfy a fairly standard convention
 for program variables, namely starting with an alpha character,
 followed by zero or more alphas, and digits,
 or a mix of ``symbols'', which do not include alphas.
@@ -64,7 +68,7 @@ In addition,
 we don't allow most whitespace, quotes, or dots
 in either form of identifier.
 We do permit variable identifiers to have some decoration
-characters: \verb@'_$?'@, and may start with \verb"_?"."
+characters: \verb@'_$?'@, and may start with \verb@_?".@
 We do allow symbols to end with a space character%
 ---%
 this is necessary for some long symbols.
@@ -76,12 +80,11 @@ readId = read
 
 pattern Identifier nm <- Id nm
 
-isValidSymbol c  =  not(isSpace c || isAlpha c || c `elem` "_$'.`\"")
-
 decorChar = "'_$?"
 
-isIdStartChar c = c `elem` "_?" || isAlpha c
-isIdContChar c = isAlpha c || isDigit c || c `elem` decorChar
+isIdStartChar c  =  isAscii c && (c `elem` "_?" || isAlpha c)
+isIdContChar  c  =  isAscii c && (isAlpha c || isDigit c || c `elem` decorChar)
+isValidSymbol c  =  isAscii c && not(isSpace c||isAlpha c||c `elem` "_$'.`\"")
 
 validIdent :: String -> Bool
 validIdent str@(c:cs)
@@ -120,22 +123,22 @@ Identifier Tests:
 \begin{code}
 identTests
  = testGroup "LexBase.ident"
-    [ testCase "ident \"\""   ( ident ""    @?=  Nothing )
-    , testCase "ident \"a\""  ( ident "a"   @?=  Just (Id "a") )
-    , testCase "ident \"Z\""  ( ident "Z"   @?=  Just (Id "Z") )
-    , testCase "ident \"++\"" ( ident "++"   @?=  Just (Id "++") )
-    , testCase "ident \"\172\"" ( ident "\172"   @?=  Just (Id "\172") )
-    , testCase "ident \"_\""  ( ident "_"   @?=  Just (Id "_") )
-    , testCase "ident \"'\""  ( ident "'"   @?=  Nothing )
-    , testCase "ident \"5\""  ( ident "5"   @?=  Nothing )
-    , testCase "ident \"a?\"" ( ident "a?"  @?=  Just (Id "a?") )
-    , testCase "ident \"Z@\"" ( ident "Z@"  @?=  Nothing )
-    , testCase "ident \"_a\"" ( ident "_a"  @?=  Just (Id "_a") )
-    , testCase "ident \"'a\"" ( ident "'a"  @?=  Nothing )
-    , testCase "ident \"5a\"" ( ident "5a"  @?=  Nothing )
-    , testCase "ident \"Mp\"" ( ident "Mp"  @?=  Just (Id "Mp") )
-    , testCase "ident \"N5\"" ( ident "N5"  @?=  Just (Id "N5") )
-    , testCase "ident \"R_\"" ( ident "R_"  @?=  Just (Id "R_") )
+    [ testCase "ident \"\""     ( ident ""     @?=  Nothing )
+    , testCase "ident \"a\""    ( ident "a"    @?=  Just (Id "a") )
+    , testCase "ident \"Z\""    ( ident "Z"    @?=  Just (Id "Z") )
+    , testCase "ident \"++\""   ( ident "++"   @?=  Just (Id "++") )
+    , testCase "ident \"\172\"" ( ident "\172" @?=  Nothing )
+    , testCase "ident \"_\""    ( ident "_"    @?=  Just (Id "_") )
+    , testCase "ident \"'\""    ( ident "'"    @?=  Nothing )
+    , testCase "ident \"5\""    ( ident "5"    @?=  Nothing )
+    , testCase "ident \"a?\""   ( ident "a?"   @?=  Just (Id "a?") )
+    , testCase "ident \"Z@\""   ( ident "Z@"   @?=  Nothing )
+    , testCase "ident \"_a\""   ( ident "_a"   @?=  Just (Id "_a") )
+    , testCase "ident \"'a\""   ( ident "'a"   @?=  Nothing )
+    , testCase "ident \"5a\""   ( ident "5a"   @?=  Nothing )
+    , testCase "ident \"Mp\""   ( ident "Mp"   @?=  Just (Id "Mp") )
+    , testCase "ident \"N5\""   ( ident "N5"   @?=  Just (Id "N5") )
+    , testCase "ident \"R_\""   ( ident "R_"   @?=  Just (Id "R_") )
     ]
 \end{code}
 

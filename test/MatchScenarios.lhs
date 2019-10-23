@@ -112,8 +112,8 @@ We assume the existence of types
 for boolean ($\Bool$)
 and integer ($\Int$) values.
 \begin{code}
-bool = GivenType $ jId $ _mathbb "B"
-int  = GivenType $ jId $ _mathbb "Z"
+bool = GivenType $ jId "B"
+int  = GivenType $ jId "Z"
 \end{code}
 
 
@@ -524,8 +524,8 @@ We need to define shorthands for
 known predicate operators $;$, $\exists$ and $\land$.
 \begin{code}
 semi = jId ";"
-exists = jId _exists
-land = jId _land
+exists = jId "exists"
+land = jId "land"
 
 p `seqComp` q = PCons semi [p,q]
 eX vs p = fromJust $ pBind exists (S.fromList $ vs) p
@@ -705,7 +705,7 @@ We start with syntax definitions of assignment, equality
 and implication.
 \begin{code}
 asg = jId ":="
-implies = jId _implies
+implies = jId "implies"
 eq = jId "="
 
 v .:= e        =  PCons asg [fromJust $ eVar ArbType $ ScriptVar v, e]

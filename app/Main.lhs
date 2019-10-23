@@ -216,7 +216,7 @@ reqstate0 = REqState { inDevMode = False
                      , currTheory = ""
                      , liveProofs = M.empty }
 
-reqset0 = REqSet { maxMatchDisplay = 20
+reqset0 = REqSet { maxMatchDisplay = 40
                  }
 \end{code}
 

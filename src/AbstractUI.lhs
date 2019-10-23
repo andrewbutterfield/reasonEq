@@ -238,10 +238,12 @@ newProof1 :: Monad m => Int -> REqState
 newProof1 i reqs
   = case nlookup i (getCurrConj reqs) of
       Nothing  ->  fail "invalid conjecture number"
-      Just nconj -- @(nm,asn)
-       -> return
-           ( nconj
-           , availableStrategies (logicsig reqs) thys currTh nconj )
+      Just nconj@(nm,asn)
+        | shadowFree asn
+            -> return
+                ( nconj
+                , availableStrategies (logicsig reqs) thys currTh nconj )
+        | otherwise -> fail "shadowed bound-vars.in conjecture"
   where
     currTh = currTheory reqs
     getCurrConj reqs = fromJust $ getTheoryConjectures currTh thys
@@ -260,6 +262,43 @@ newProof2 (nm,asn) strats six reqs
     getCurrConj reqs = fromJust $ getTheoryConjectures currTh thys
     thys = theories reqs
     thylist = fromJust $ getTheoryDeps currTh thys
+\end{code}
+
+\newpage
+\subsection{Removing Bound Variable ``Shadowing''}
+
+We need to ensure that all bound variables in a conjecture
+are not ``shadowed'' by bound variables nested deeper in,
+as this makes matching and proofs-steps
+much easier to implement.
+For example, in
+\[\forall x \bullet ( \dots (\exists x \bullet P) \dots)\]
+the first $x$ in the $\forall$ is shadowed, in $P$,
+by the second $x$ in the $\exists$.
+This should be replaced by:
+\[\forall x \bullet ( \dots (\exists y \bullet P[y/x]) \dots).\]
+We simply check this is the case,
+rather than making it so.
+This is because we have no general way at present
+of distinguishing susbtitutable and non-substitutable terms.
+\begin{code}
+shadowFree :: Assertion -> Bool
+shadowFree (t,sc) = shadowFree' sc S.empty t
+
+shadowFree' :: SideCond -> VarSet -> Term -> Bool
+shadowFree' sc bvs (Cons _ _ ts)    =  all (shadowFree' sc bvs) ts
+shadowFree' sc bvs (Bind _ _ vs tm) =  shadowFree'' sc bvs vs tm
+shadowFree' sc bvs (Lam  _ _ vl tm) =  shadowFree'' sc bvs (S.fromList vl) tm
+shadowFree' sc bvs (Cls _ tm)       =  shadowFree' sc bvs tm
+shadowFree' sc bvs (Sub _ t s) =  shadowFree' sc bvs t && shadowFreeSub sc bvs s
+shadowFree' _  _   asn              = True
+
+shadowFree'' sc bvs vs tm
+ | bvs `disjoint` vs  =  shadowFree' sc (bvs `S.union` vs) tm
+ | otherwise          =  False
+
+shadowFreeSub sc bvs (Substn es _)
+                             =  all (shadowFree' sc bvs) $ map snd $ S.toList es
 \end{code}
 
 \subsubsection{Resuming a Proof}

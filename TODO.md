@@ -1,16 +1,25 @@
 # To Do
 
+
+
 ## Hotfixes
 
 ### `PredUniv` Proofs
+
+In `univ_False` proof,
+
+we can `tm 2 exists_inst` on focus `(∃ x̅ • true)`
+and get a match, but `m exists_inst` or just `m`
+fail to return a match (is 20 too short?).
+
+'20' matches a settable parameter (`maxMatchDisplay`).
+
+(However setting it to 40 in `Main.lhs` and `Dev.lhs` has no effect!)
 
 Need to reach stage where proofs work.
 
 Proof of `[]_idem` stalls on `(∀ x̅ • (∀ x̅ • P))`.
 
-Proof of `land_[]_distr` stalls on `(∀ x̅ • P)∧(∀ x̅ • Q)    x̅ ⊇ P;x̅ ⊇ Q`.
-
-And etc....
 
 ### Instantiating Side-Conditions
 

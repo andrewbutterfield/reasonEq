@@ -47,7 +47,7 @@ devInitState
  = REqState { inDevMode = True
             , projectDir = devProjectDir
             , modified = False
-            , settings = REqSet 20
+            , settings = REqSet 40
             , logicsig = propSignature
             , theories = devTheories
             , currTheory = predAxiomName

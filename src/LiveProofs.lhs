@@ -272,10 +272,9 @@ startProof logicsig thys thnm cjnm asn@(t,sc)
         , stepsSoFar = []
         }
   where
-    (strat,seq) = fromJust $ reduce logicsig thys (cjnm,asn')
+    (strat,seq) = fromJust $ reduce logicsig thys (cjnm,asn)
     sz = leftConjFocus seq
     mcs = buildMatchContext thys
-    asn' = unShadowBoundVars asn
 \end{code}
 
 \subsubsection{Starting a Proof with given strategy}
@@ -286,7 +285,7 @@ launchProof :: [Theory] -> String -> String -> Assertion -> (String,Sequent)
 launchProof thys thnm cjnm asn@(t,sc) (strat,seq)
   = LP { conjThName = thnm
        , conjName = cjnm
-       , conjecture = asn'
+       , conjecture = asn
        , conjSC = sc
        , strategy = strat
        , mtchCtxts =  mcs
@@ -301,29 +300,6 @@ launchProof thys thnm cjnm asn@(t,sc) (strat,seq)
     mcs = if null $ laws hthy
            then buildMatchContext thys
            else buildMatchContext (hthy:thys)
-    asn' = unShadowBoundVars asn
-\end{code}
-
-\newpage
-We need to ensure that all bound variables in a conjecture
-are not ``shadowed'' by bound variables nested deeper in.
-For example, in
-\[\forall x \bullet ( \dots (\exists x \bullet P) \dots)\]
-the first $x$ in the $\forall$ is shadowed, in $P$,
-by the second $x$ in the $\exists$.
-This should be replaced by:
-\[\forall x \bullet ( \dots (\exists y \bullet P[y/x]) \dots).\]
-
-
-This makes matching and proofs-steps much easier to implement!
-\begin{code}
-unShadowBoundVars :: Assertion -> Assertion
-unShadowBoundVars asn = unShadowBVS S.empty asn
-\end{code}
-
-\begin{code}
-unShadowBVS :: Set Identifier -> Assertion -> Assertion
-unShadowBVS bvs asn = asn -- for now
 \end{code}
 
 \newpage

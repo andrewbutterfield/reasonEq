@@ -272,7 +272,7 @@ with $(p_{k+1} \equiv \dots \equiv p_n)\beta$ as the replacement.
 Similar generalisations apply to laws of the form
 $p_1 \implies \dots \implies p_n \implies q$.
 
-Finally, with laws of the form $Complicated \equiv P$,
+Finally, laws of the form $Complicated \equiv P$,
 will always succeed, \emph{for any candidate}, in a $\equiv$RHS match,
 with $Complicated\beta$ as a replacement.
 These ``expanding'' matches can be useful from time to time,

@@ -26,6 +26,13 @@ Instead we have to assert that `{a,b} U c$` covers `Q U {x} U R`.
 
 We need to either have unique q.v.s, or be very careful. Consider matching `[∀ x$ @ P]`  against `[P]` (part 1 of `[]_def`). How do we distinguish this `x$` from the one in the law?
 
+Need care here - in the conjecture
+ `(∃ x̅,y̅ • ∧(x̅=e̅)∧P)≡(∃ y̅ • P[e̅/x̅])  x̅ ∉ e̅` 
+we need `x̅` and `y̅` to be the same.
+
+What we want to avoid is "shadowing", 
+so that `(∀ x̅ • P ∨ (∀ x̅ • Q)`
+becomes `(∀ x̅ • P ∨ (∀ y̅ • Q[y̅/x̅])`.
 
 ## Next Task(s)
 

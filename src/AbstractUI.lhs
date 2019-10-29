@@ -462,7 +462,7 @@ matchFocusAgainst lawnm theSig liveProof
         scC         =  conjSC liveProof
         ctxts       =  mtchCtxts liveProof
     in case matchLawByName theSig (goalt,scC) lawnm ctxts of
-          Yes []    -> fail ("No matches for '"++lawnm++"'")
+          Yes []    -> fail ("No matches against focus for '"++lawnm++"'")
           Yes mtchs -> return $ matches_ mtchs liveProof
           But msgs  -> fail $ unlines msgs
 \end{code}

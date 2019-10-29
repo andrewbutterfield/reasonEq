@@ -1,0 +1,31 @@
+@mLBN.asn:
+( B
+  P
+  (Id "exists")
+  ( { GL (LV (VR (Id "x", VO, WS), [], [])) } )
+  (K P (VB True))
+, [] )
+@mLBN.law:
+( ( "exists_inst"
+  , ( C
+      P
+      (Id "implies")
+      [ B
+        P
+        (Id "exists")
+        ( { GL (LV (VR (Id "y", VO, WS), [], [])) } )
+        ( S
+          P
+          (V P (VR (Id "P", VP, WS)))
+          ( SN
+            ( {} )
+            ( { (LV (VR (Id "x", VO, WS), [], []), LV (VR (Id "e", VE, WS), [], [])) } ) ) )
+      , B
+        P
+        (Id "exists")
+        ( { GL (LV (VR (Id "x", VO, WS), [], []))
+          , GL (LV (VR (Id "y", VO, WS), [], [])) } )
+        (V P (VR (Id "P", VP, WS))) ]
+    , [] ) )
+, Proven
+  "exists_inst" )

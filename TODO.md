@@ -12,14 +12,10 @@ we can `tm 2 exists_inst` on focus `(∃ x̅ • true)`
 and get a match, but `m exists_inst` or just `m`
 fail to return a match (is 20 too short?).
 
-'20' matches a settable parameter (`maxMatchDisplay`).
+This is not a bug, law `exists_inst` has `implies` as its top-level operator, and not equivalence.
 
-(However setting it to 40 in `Main.lhs` and `Dev.lhs` has no effect!)
-
-Need to reach stage where proofs work.
-
-Proof of `[]_idem` stalls on `(∀ x̅ • (∀ x̅ • P))`.
-
+We are adding in `LiveProofs.doPartialMatch` to cater
+for the 
 
 ### Instantiating Side-Conditions
 

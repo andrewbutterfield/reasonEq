@@ -574,7 +574,7 @@ matchLawByName :: Monad m => LogicSig -> Assertion -> String -> [MatchContext]
                -> m Matches
 matchLawByName logicsig asn lnm mcs
  = do (law,vts) <- findLaw lnm mcs
-      return $ domatch logicsig vts asn law
+      return $ domatch logicsig vts (pdbg "mLBN.asn" asn) (pdbg "mLBN.law" law)
 \end{code}
 
 
@@ -614,15 +614,14 @@ simpleMatch mc repl vts law@((n,asn@(tP,scP)),_) asnC@(tC,scC) partsP
 \end{code}
 
 For each law,
-we check its top-level to see if it is an instance of \texttt{theEqv},
-in which case we try matches against all possible variations,
-as well as the whole thing.
+we match the whole thing,
+and if its top-level is a \texttt{Cons}
+with at least two sub-components, we try all possible partial matches.
 \begin{code}
 domatch :: LogicSig -> [VarTable] -> Assertion -> Law -> Matches
 domatch logicsig vts asnC law@((_,(tP@(Cons _ i tsP@(_:_:_)),_)),_)
-  | i == theEqv logicsig
-                    =    simpleMatch MatchAll (theTrue logicsig) vts law asnC tP
-                      ++ doEqvMatch logicsig vts law asnC tsP
+  =    simpleMatch MatchAll (theTrue logicsig) vts law asnC tP
+    ++ doPartialMatch i logicsig vts law asnC tsP
 \end{code}
 Otherwise we just match against the whole law.
 \begin{code}
@@ -631,7 +630,21 @@ domatch logicsig vts asnC law@((_,(tP,_)),_)
 \end{code}
 
 \newpage
-Do an equivalence match, where we want to match against all possibilities,
+Here we have a top-level \texttt{Cons}
+with at least two sub-terms.
+\begin{code}
+doPartialMatch i logicsig vts law asnC tsP
+  | i == theEqv logicsig  =  doEqvMatch logicsig vts law asnC tsP
+
+doPartialMatch i logicsig vts law asnC tsP@[ltP,rtP]
+  | (pdbg "dDM.i" i) == theImp logicsig  =  fail ("doPartialMatch `"++trId i++"` NYI")
+
+doPartialMatch i logicsig vts law asnC tsP
+  = fail ("doPartialMatch `"++trId i++"`, too many sub-terms")
+\end{code}
+
+\newpage
+Do an n-way equivalence match, where we want to match against all possibilities,
 exploiting the associative nature of $\equiv$,
 as described in \cite[p29]{gries.93}.
 First we give shorthand notation for n-ary uses of $\equiv$

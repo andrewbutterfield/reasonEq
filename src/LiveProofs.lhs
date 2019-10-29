@@ -633,12 +633,25 @@ domatch logicsig vts asnC law@((_,(tP,_)),_)
 Here we have a top-level \texttt{Cons}
 with at least two sub-terms.
 \begin{code}
+doPartialMatch :: Identifier -> LogicSig -> [VarTable]
+               -> Law -> Assertion -> [Term]
+               -> Matches
+\end{code}
+
+First, if we have $\equiv$ we call an $n$-way equivalence matcher:
+\begin{code}
 doPartialMatch i logicsig vts law asnC tsP
   | i == theEqv logicsig  =  doEqvMatch logicsig vts law asnC tsP
+\end{code}
 
+If we have $\implies$, then we can try to match either side:
+\begin{code}
 doPartialMatch i logicsig vts law asnC tsP@[ltP,rtP]
-  | (pdbg "dDM.i" i) == theImp logicsig  =  fail ("doPartialMatch `"++trId i++"` NYI")
+  | i == theImp logicsig  =  fail ("doPartialMatch `"++trId i++"` NYI")
+\end{code}
 
+Anything else won't match (right now we don't support $\impliedby$).
+\begin{code}
 doPartialMatch i logicsig vts law asnC tsP
   = fail ("doPartialMatch `"++trId i++"`, too many sub-terms")
 \end{code}

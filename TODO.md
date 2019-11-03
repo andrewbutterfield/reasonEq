@@ -8,6 +8,16 @@
 
 Need `PredSubst` axioms !!!
 
+### `a n` command in proof REPL
+
+Currently this relies on match mRepl components which are automatically generated. However we need to ask the user
+to instantiate any replacement variable that is not in the
+match binding.
+
+The auto-instantiate should really prefix any such variable in mRepl with '?' to indicate such.
+
+See `LiveProof.completeBind`.
+
 ### Instantiating Side-Conditions
 
 `instantiateASC` is just wrong - it's acting more like discharge should.

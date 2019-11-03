@@ -913,6 +913,11 @@ goBack args  =  tryDelta (stepBack (args2int args))
 Law Instantiation.
 Replacing \textit{true} by a law, with unknown variables
 suitably instantiated.
+\textbf{
+Ideally this should replace the focus $F$ (any focus)
+by itself conjoined with the instantiation of any law $L$
+($P(F)=P(F \land L)$)
+}
 \begin{code}
 lawInstantiateDescr = ( "i", "instantiate"
                       , "i  -- instantiate a true focus with an law"

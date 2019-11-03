@@ -366,9 +366,9 @@ We make use of the following auxilliary types:
 data SeqFocus = CLeft | CRight | Hyp Int deriving (Eq,Show,Read)
 \end{code}
 
-A simple or straight calculation is one that has no messing with
-the part of the sequent being manipulated.
-A ``straight'' step is not a switch or clone:
+A simple or straight calculation is one that does not change
+the part of the sequent being manipulated,
+\textit{i.e.}, is not a switch or clone:
 \begin{code}
 isStraightJ :: Justification -> Bool
 isStraightJ (Switch _ _)  =  False

@@ -4,18 +4,9 @@
 
 ## Hotfixes
 
-### `PredUniv` Proofs
+### `[]_idem` Proof
 
-In `univ_False` proof,
-
-we can `tm 2 exists_inst` on focus `(∃ x̅ • true)`
-and get a match, but `m exists_inst` or just `m`
-fail to return a match (is 20 too short?).
-
-This is not a bug, law `exists_inst` has `implies` as its top-level operator, and not equivalence.
-
-We are adding in `LiveProofs.doPartialMatch` to cater
-for these instantiation axioms, and others using implication.
+Need `PredSubst` axioms !!!
 
 ### Instantiating Side-Conditions
 

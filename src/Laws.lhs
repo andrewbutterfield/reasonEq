@@ -38,21 +38,29 @@ We define types for assertions and laws.
 \subsection{Logic Signature}
 
 To make the matching work effectively,
-we have to identify which constructs play the roles
-of truth (and falsity!), logical equivalence, implication and conjunctions.
-$$ \true \qquad \false \qquad \equiv \qquad \implies \qquad \land $$
+we have to identify which constructs play key logical roles,
+such as logic values $\true$ and $\false$,
+as well as key propositional operators.
+A key principle that needs to be followed here is that any identifier
+that is used to trigger a partial match
+(currently $\equiv$ and $\implies$),
+or is added as part of a replacement
+(currently $\land$ and $\lor$),
+\emph{must} be identified in what we call a \emph{logic signature}.
+$$ \true \qquad \false \qquad \equiv \qquad \implies \qquad \land \qquad \lor$$
 \begin{code}
 data LogicSig
   = LogicSig
-     { theTrue :: Term
+     { theTrue  :: Term
      , theFalse :: Term
-     , theEqv  :: Identifier
-     , theImp  :: Identifier
-     , theAnd  :: Identifier
-     , theOr   :: Identifier
+     , theEqv   :: Identifier
+     , theImp   :: Identifier
+     , theAnd   :: Identifier
+     , theOr    :: Identifier
      }
 \end{code}
 
+\newpage
 \subsection{Writing and Reading}
 
 \begin{code}
@@ -98,6 +106,7 @@ readSignature txts
               , rest8 )
 \end{code}
 
+\newpage
 \subsection{Predicate Conditioning}
 
 We also want to provide a way to ``condition'' predicates
@@ -129,8 +138,6 @@ flattenTheAnd theSig t
   where and = theAnd theSig
 \end{code}
 
-\newpage
-
 For implication, we need a slighty different approach,
 as it is only right-associative,
 and we have the trading rule involving conjunction.
@@ -151,6 +158,7 @@ collectAnte imp (Cons tk i [ta,tc])
 collectAnte imp t = ([],t)
 \end{code}
 
+\newpage
 \subsection{Associative Grouping}
 
 \begin{code}
@@ -195,7 +203,6 @@ groupAssoc' mOp (Gather Rght i)  =  gGatherRight mOp i
 groupAssoc' mOp (Split i)        =  gSplit mOp i
 \end{code}
 
-\newpage
 Left Associative:
 \begin{equation*}
  T_1 \oplus T_2 \oplus T_3 \oplus \dots \oplus T_{n-1} \oplus T_n
@@ -221,6 +228,7 @@ gAssocRight mOp (t1:ts@(_:_))  =  do ts' <- gAssocRight mOp ts
                                      return $ mOp [t1,ts']
 \end{code}
 
+\newpage
 Gather $i$ Left:
 \[
  T_1 \oplus \dots \oplus T_{i} \oplus T_{i+1} \oplus \dots T_n
@@ -319,6 +327,7 @@ labelAsAssumed :: NmdAssertion -> Law
 labelAsAssumed nasn  =  (nasn, Assumed)
 \end{code}
 
+\newpage
 \subsection{Showing Laws}
 
 \textbf{This should all be done via proper generic rendering code}

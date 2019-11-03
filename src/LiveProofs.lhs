@@ -914,6 +914,8 @@ shMappedCond bind lsc
 
 shMClass MatchAll         =  green "*"
 shMClass (MatchEqv is)    =  green (_equiv++show is)
+shMClass MatchAnte        =  green ("*"++_implies)
+shMClass MatchCnsq        =  green (_implies++"*")
 shMClass (MatchEqvVar i)  =  red "trivial!"
 \end{code}
 

@@ -25,39 +25,18 @@ CONJ = (C P (Id "equiv") [X (Id "[_]") (X (Id "[_]") (V P (VR (Id "P",VP,WS)))),
 SIDE = [SS (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])]
 STRAT reduce
 BEGIN SEQZIP
-TERMZIP = (B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))),[Cons' P (Id "equiv") [] [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))]])
+TERMZIP = (S P (B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])),[Cons' P (Id "land") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS))))] [],Cons' P (Id "equiv") [] [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))]])
 BEGIN SEQUENT'
 SIDECOND = []
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.[]_idem", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
 END SEQUENT'
 END SEQZIP
-FPATH: [1]
+FPATH: [1,2]
 BEGIN LIST STEPS
+(UseLaw (ByMatch MIA) "forall_inst" (BD (fromList [((Id "P",VP),BT (B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))))],fromList [],fromList [((Id "x",VO,[],[]),BS (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])),((Id "y",VO,[],[]),BS (fromList []))])) [1],(C P (Id "equiv") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))),B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))],[SS (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])]))
 (UseLaw (ByMatch (ME [1])) "[]_def" (BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [])) [1,1],(C P (Id "equiv") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (X (Id "[_]") (V P (VR (Id "P",VP,WS)))),B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))],[SS (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])]))
 (UseLaw (ByMatch (ME [1])) "[]_def" (BD (fromList [((Id "P",VP),BT (X (Id "[_]") (V P (VR (Id "P",VP,WS)))))],fromList [],fromList [])) [1],(C P (Id "equiv") [X (Id "[_]") (X (Id "[_]") (V P (VR (Id "P",VP,WS)))),B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))],[SS (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])]))
 (UseLaw (ByMatch (ME [1])) "[]_def" (BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [])) [2],(C P (Id "equiv") [X (Id "[_]") (X (Id "[_]") (V P (VR (Id "P",VP,WS)))),X (Id "[_]") (V P (VR (Id "P",VP,WS)))],[]))
-END LIST STEPS
-END LIVE-PROOF
-("PredUniv","univ_False")
-BEGIN LIVE-PROOF
-TH-NAME: PredUniv
-CJ-NAME: univ_False
-CONJ = (C P (Id "equiv") [X (Id "[_]") (K P (VB False)),K P (VB False)],[])
-SIDE = []
-STRAT reduce
-BEGIN SEQZIP
-TERMZIP = (B P (Id "exists") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (K P (VB True)),[])
-BEGIN SEQUENT'
-SIDECOND = []
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.univ_False", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
-END SEQUENT'
-END SEQZIP
-FPATH: []
-BEGIN LIST STEPS
-(UseLaw (ByMatch (ME [2])) "exists_def" (BD (fromList [((Id "P",VP),BT (K P (VB True)))],fromList [],fromList [((Id "x",VO,[],[]),BS (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]))])) [],(C P (Id "lnot") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (C P (Id "lnot") [K P (VB True)])],[]))
-(UseLaw (ByMatch (ME [2])) "lnot_def" (BD (fromList [((Id "P",VP),BT (B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (C P (Id "lnot") [K P (VB True)])))],fromList [],fromList [])) [],(C P (Id "equiv") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (C P (Id "lnot") [K P (VB True)]),K P (VB False)],[]))
-(UseLaw (ByMatch (ME [1])) "false_def" (BD (fromList [],fromList [],fromList [])) [1,1],(C P (Id "equiv") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (K P (VB False)),K P (VB False)],[]))
-(UseLaw (ByMatch (ME [1])) "[]_def" (BD (fromList [((Id "P",VP),BT (K P (VB False)))],fromList [],fromList [])) [1],(C P (Id "equiv") [X (Id "[_]") (K P (VB False)),K P (VB False)],[]))
 END LIST STEPS
 END LIVE-PROOF
 ("PredUniv","univ_forall_closed")

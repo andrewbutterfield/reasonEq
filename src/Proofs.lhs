@@ -328,7 +328,7 @@ data MatchClass
 pattern MatchAll       = MA
 pattern MatchEqv is    = ME is
 pattern MatchAnte      = MIA
-pattern MatchCnsq      = MIC 
+pattern MatchCnsq      = MIC
 pattern MatchEqvVar i  = MEV i
 \end{code}
 
@@ -449,6 +449,8 @@ showHow ByInstantiation = "instantiate"
 showMatchClass :: MatchClass -> String
 showMatchClass MatchAll         =  "match-all"
 showMatchClass (MatchEqv is)    =  "match-equiv"++show is
+showMatchClass MatchAnte        =  "match-ante"
+showMatchClass MatchCnsq        =  "match-cnsq"
 showMatchClass (MatchEqvVar i)  =  "match-eqv-pvar("++show i++")"
 
 showSeqFocus :: SeqFocus -> String

@@ -15,7 +15,7 @@ fail to return a match (is 20 too short?).
 This is not a bug, law `exists_inst` has `implies` as its top-level operator, and not equivalence.
 
 We are adding in `LiveProofs.doPartialMatch` to cater
-for the 
+for these instantiation axioms, and others using implication.
 
 ### Instantiating Side-Conditions
 

@@ -49,6 +49,7 @@ data LogicSig
      , theEqv  :: Identifier
      , theImp  :: Identifier
      , theAnd  :: Identifier
+     , theOr   :: Identifier
      }
 \end{code}
 
@@ -58,11 +59,12 @@ data LogicSig
 signature = "SIGNATURE"
 logicHDR = "BEGIN "++signature ; logicTRL ="END "++signature
 
-trueKEY = "TRUE = "
+trueKEY  = "TRUE = "
 falseKEY = "FALSE = "
-eqvKEY = "EQV = "
-impKEY = "IMP = "
-andKEY = "AND = "
+eqvKEY   = "EQV = "
+impKEY   = "IMP = "
+andKEY   = "AND = "
+orKEY    = "OR = "
 
 writeSignature :: LogicSig -> [String]
 writeSignature theSig
@@ -72,6 +74,7 @@ writeSignature theSig
     , eqvKEY   ++ show (theEqv theSig)
     , impKEY   ++ show (theImp theSig)
     , andKEY   ++ show (theAnd theSig)
+    , orKEY    ++ show (theOr theSig)
     , logicTRL ]
 
 readSignature :: Monad m => [String] -> m (LogicSig,[String])
@@ -83,14 +86,16 @@ readSignature txts
        (eqv,rest4)   <- readKey  eqvKEY readId rest3
        (imp,rest5)   <- readKey  impKEY readId rest4
        (and,rest6)   <- readKey  andKEY readId rest5
-       rest7         <- readThis logicTRL rest6
+       (or,rest7)    <- readKey  orKEY readId rest6
+       rest8         <- readThis logicTRL rest7
        return ( LogicSig{
                   theTrue = true
                 , theFalse = false
                 , theEqv = eqv
                 , theImp = imp
-                , theAnd = and }
-              , rest7 )
+                , theAnd = and
+                , theOr  = or }
+              , rest8 )
 \end{code}
 
 \subsection{Predicate Conditioning}
@@ -325,7 +330,8 @@ showLogic logicsig
              , "Falsity:     " ++ trTerm 0 (theFalse logicsig)
              , "Equivalence:   " ++ trId   (theEqv   logicsig)
              , "Implication:   " ++ trId   (theImp   logicsig)
-             , "Conjunction:   " ++ trId   (theAnd   logicsig) ]
+             , "Conjunction:   " ++ trId   (theAnd   logicsig)
+             , "Disjunction:   " ++ trId   (theOr    logicsig) ]
 \end{code}
 
 

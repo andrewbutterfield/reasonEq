@@ -8,6 +8,7 @@ FALSE = K P (VB False)
 EQV = Id "equiv"
 IMP = Id "implies"
 AND = Id "land"
+OR = Id "lor"
 END SIGNATURE
 BEGIN THEORIES
 THNAMES = ["Equality","PredAxioms","PredExists","PredUniv","PropAxioms","PropConj","PropDisj","PropEquiv","PropImpl","PropMixOne","PropNot","PropSubst"]

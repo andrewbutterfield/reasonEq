@@ -644,10 +644,23 @@ doPartialMatch i logicsig vts law asnC tsP
   | i == theEqv logicsig  =  doEqvMatch logicsig vts law asnC tsP
 \end{code}
 
-If we have $\implies$, then we can try to match either side:
+If we have $\implies$, then we can try to match either side.
+We rely here on the following law of implication:
+\begin{eqnarray*}
+  P \land Q \equiv P & = \quad P \implies Q \quad = & P \lor Q \equiv Q
+\end{eqnarray*}
+This means that if we match candidate $C$ against $P$ in law $P\implies Q$
+with binding $\beta$,
+then we can replace $C$ by $P\beta \land Q\beta$.
+If we match $Q$, we can replace $C$ by $Q\beta \lor P\beta$
 \begin{code}
 doPartialMatch i logicsig vts law asnC tsP@[ltP,rtP]
-  | i == theImp logicsig  =  fail ("doPartialMatch `"++trId i++"` NYI")
+  | i == theImp logicsig
+    =    simpleMatch MatchAnte (Cons P land [ltP,rtP]) vts law asnC ltP
+      ++ simpleMatch MatchCnsq (Cons P lor  [rtP,ltP]) vts law asnC rtP
+  where
+     land = theAnd logicsig
+     lor  = theOr  logicsig
 \end{code}
 
 Anything else won't match (right now we don't support $\impliedby$).

@@ -131,7 +131,7 @@ lnot = fromJust $ ident "lnot" ; mkNot p = PCons lnot [p]
 
 \subsubsection{The Propositional Signature}
 \begin{code}
-propSignature = LogicSig trueP falseP equiv implies land
+propSignature = LogicSig trueP falseP equiv implies land lor
 flattenEquiv = flattenTheEquiv propSignature
 \end{code}
 

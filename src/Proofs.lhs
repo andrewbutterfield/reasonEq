@@ -7,7 +7,10 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Proofs
- ( MatchClass, pattern MatchAll, pattern MatchEqv, pattern MatchEqvVar
+ ( MatchClass
+ , pattern MatchAll, pattern MatchEqv
+ , pattern MatchAnte, pattern MatchCnsq
+ , pattern MatchEqvVar
  , HowUsed(..)
  , SeqFocus(..), Justification(..), showJustification
  , isSequentSwitch, justSwitched
@@ -294,6 +297,16 @@ $$
   & \equiv_{j \in M} p_j
   & \equiv_{k \in N\setminus M} p_k\beta
 \\\hline
+  \mbox{Ante}
+  & a \implies c
+  & a
+  & (a \land c)\beta
+\\\hline
+  \mbox{Cnsq}
+  & a \implies c
+  & c
+  & (c \lor a)\beta
+\\\hline
   \mbox{EqvVar}(k), k \in N
   & \equiv_{i \in 1\dots n} p_i, p_k = P
   & P
@@ -306,13 +319,17 @@ So we have a match partiality class datatype:
 data MatchClass
   = MA       -- match all of law, with replacement 'true'
   | ME [Int] -- match subpart of 'equiv' chain
-  -- MEV should be last,
+  | MIA      -- match implication antecedent A, replacement A /\ C
+  | MIC      -- match implication consequent C, replacement A \/ C
+  -- MEV should be last, so these matches rank low by default
   | MEV Int  -- match PredVar at given position
   deriving (Eq,Ord,Show,Read)
 
-pattern MatchAll      = MA
-pattern MatchEqv is   = ME is
-pattern MatchEqvVar i = MEV i
+pattern MatchAll       = MA
+pattern MatchEqv is    = ME is
+pattern MatchAnte      = MIA
+pattern MatchCnsq      = MIC 
+pattern MatchEqvVar i  = MEV i
 \end{code}
 
 Now, a type that states how a law was used in a step:

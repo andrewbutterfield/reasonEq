@@ -7,7 +7,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Instantiate
-( instantiate
+( findUnboundVars
+, questionableBinding
+, instantiate
 , instantiateASC
 , instantiateSC
 ) where
@@ -18,6 +20,7 @@ import Data.Map(Map)
 import qualified Data.Map as M
 
 import Utilities
+import LexBase
 import Variables
 import AST
 import SideCond
@@ -48,6 +51,40 @@ The first returns a set of unbound pattern variables,
 without altering the pattern term in any way.
 Once bindings are determined from context elsewhere,
 then instantiation runs with bindings for all pattern variables.}
+
+\subsubsection{Finding Unbound Replacement Variables}
+
+\begin{code}
+findUnboundVars :: Binding -> Term -> VarSet
+findUnboundVars bind trm = mentionedVars trm  S.\\  mappedVars bind
+\end{code}
+
+\newpage
+\subsubsection{Mapping Replacement Variables to Questionable ones}
+
+\begin{code}
+questionableBinding :: VarSet -> Binding
+questionableBinding vs
+  = qB emptyBinding $ S.toList vs
+
+qB bind [] = bind
+qB bind ((StdVar v) :vl)  =  qB (qVB bind v)   vl
+qB bind ((LstVar lv):vl)  =  qB (qLVB bind lv) vl
+
+qVB bind v@(Vbl i vc vw)
+  = fromJust $ bindVarToVar v (Vbl (qI i) vc vw) bind
+  where qi = qI i
+
+qLVB bind lv@(LVbl (Vbl i vc vw) is js)
+  = fromJust $ bindLVarToVList lv [LstVar (LVbl (Vbl (qI i) vc vw) is js)] bind
+
+qI (Identifier n) = fromJust $ ident ('?':n)
+\end{code}
+
+\newpage
+\subsubsection{Instantiating Term with a Binding}
+
+We require every free variable in the term to be also in the binding.
 \begin{code}
 instantiate :: Monad m => Binding -> Term -> m Term
 

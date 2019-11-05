@@ -582,6 +582,17 @@ matchLawByName logicsig asn lnm mcs
 \subsection{Assertion Matching}
 
 
+\textbf{
+Instantiation needs to be more nuanced.
+Here we should take pattern variables in the replacement,
+but not in the binding (because they were not in the pattern),
+and map them to their own name with a question mark added.
+We should have a \texttt{matchInstantiate}
+that does \texttt{findUnbound},
+generates the ``?'' bindings for those,
+and then does \texttt{instantiate}.
+}
+
 
 Do a simple match,
 including side-condition checking.

@@ -38,6 +38,16 @@ any pattern variable that is not bound remains the same
 ---we do not require bindings to explicity state that a pattern variable
 mapped to itself in the relevant candidate.
 A consequence of this is that instantiation shouldn't ever fail.
+\textbf{This does not help. We need to known when we find a pattern
+variable that is not in the binding, so it can be instantiated
+appropriately in context.
+Matching always enters explicit bindings for patterns that match ``themselves''.
+Binding lookup always fails if the looked-up variable is not present.
+Instantiation should have two phases.
+The first returns a set of unbound pattern variables,
+without altering the pattern term in any way.
+Once bindings are determined from context elsewhere,
+then instantiation runs with bindings for all pattern variables.}
 \begin{code}
 instantiate :: Monad m => Binding -> Term -> m Term
 

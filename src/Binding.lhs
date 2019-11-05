@@ -22,7 +22,6 @@ module Binding
 , bindGVarToVList
 , lookupVarBind
 , lookupLstBind
-, lookupSubstBind
 , bindLVarsToNull, bindLVarsToEmpty
 , mappedVars
 , dumpBinding
@@ -61,7 +60,7 @@ From the outside a binding has two mappings:
     or \texttt{[Term]} and maybe \texttt{[ListVar]}.
 \end{itemize}
 However,
-we have a number of constraints regarding compatibilty
+we have a number of constraints regarding compatibility
 between pattern variables  and their corresponding candidate bindings,
 based on variable class and temporality.
 
@@ -353,9 +352,17 @@ we need a descriptive string, the domain value,
 the existing binding, along with the two conflicting range values,
 resulting in the following monadic checker type:
 \begin{code}
-type UpdateCheck m d r = d -> Map d r -> r -> r -> m r
+type UpdateCheck m d r  =  d  -- domain element
+                        -> Map d r  -- mapping
+                        -> r        -- new range element
+                        -> r        -- old range element
+                        -> m r      -- resulting range element
 \end{code}
 
+Insertion first loows to see if the domain element is already
+present. If not, the mapping is made.
+If present, then the update function checks if old and new
+are equivalent, and proposes what the new range element should be.
 \begin{code}
 insertDR :: (Show d, Show r, Ord d, Monad m)
          => UpdateCheck m d r
@@ -383,8 +390,9 @@ rangeEq nAPI d binding r r0
                   ]
 \end{code}
 
-We also have a function that deals with the subscript bindings
-when they arise.
+\newpage
+\subsubsection{Binding Subscript to Subscript}
+
 \begin{code}
 bindSubscriptToSubscript :: Monad m
                          => String -> VarWhen -> VarWhen -> SubBinding
@@ -698,6 +706,7 @@ vlComp vc vw vws (gv:gvs)
    vws' = S.insert gvw vws
 \end{code}
 
+\newpage
 When we are inserting a variable-set (\texttt{BS}),
 we may find that a variable-list (\texttt{BL}) is present
 (or vice versa).
@@ -745,8 +754,6 @@ rangeEqvLSSub nAPI lv binding vc1 vc2
                   , "bind:\n" ++ show binding
                   ]
 \end{code}
-
-\newpage
 
 A variable list \texttt{vl}
 is equivalent to a substitution replacement
@@ -874,6 +881,7 @@ We need to coerce dynamics temporality to \texttt{Before}.
 bvs = BS . S.map dnGVar
 \end{code}
 
+\newpage
 We also need some identity bindings:
 \begin{code}
 bindLVarToSSelf :: Monad m => ListVar -> Binding -> m Binding
@@ -900,73 +908,6 @@ bindLVarSTuples (lv2:lv2s) bind
 \end{code}
 
 \newpage
-\subsubsection{Binding List-Variables to Term-lists}
-
-\textbf{Soon to be deprecated}
-An observation or expression list-variable can bind to expressions
-while a predicate list-variable can only bind to a predicates,
-or list-variables of the same type
-\begin{code}
-bindLVarToTList :: Monad m => ListVar -> [Term] -> Binding -> m Binding
-\end{code}
-
-A \texttt{Textual} pattern variable cannot bind to a term
-\begin{code}
-bindLVarToTList (LVbl (Vbl _ _ Textual) _ _) _ binds
- = fail "bindLVarToTList: textual list-vars. not allowed."
-\end{code}
-
-Static patterns bind to anything in the appropriate class,
-as per Fig.\ref{fig:utp-perm-class-bind}.
-\begin{code}
-bindLVarToTList (LVbl (Vbl vi vc Static) is ij) cndTs (BD (vbind,sbind,lbind))
- | all (validVarTermBinding vc) (map termkind cndTs)
-    = do lbind' <- insertDR (rangeEqvLSSub "bindLVarToTList(static)")
-                            (vi,vc,is,ij) (BX cndTs' []) lbind
-         return $ BD (vbind,sbind,lbind')
- | otherwise  =  fail "bindLVarToTList: incompatible variable and terms."
- where cndTs' = map dnTerm' cndTs
-\end{code}
-
-All remaining pattern cases are non-\texttt{Textual} dynamic variables.
-
-Dynamic predicate list-variables can only bind to
-predicate terms, all of whose dynamic variables have the same temporality.
-Dynamic observable and expression list-variables can only bind to
-expression terms, all of whose dynamic variables have the same temporality.
-\begin{code}
-bindLVarToTList (LVbl (Vbl vi vc vt) is ij) cndTs (BD (vbind,sbind,lbind))
- | vc == PredV && any isExpr cndTs
-           =  fail "bindLVarToTList: pred. l-var. cannot bind to expression."
- | vc /= PredV && any isPred cndTs
-           =  fail "bindLVarToTList: non-pred. l-var. cannot bind to predicate."
- | wsize  > 1  =  fail "bindLVarToTList: p.-var. mixed term temporality."
- | wsize == 0  -- term has no variables
-   = do lbind' <- insertDR (rangeEqvLSSub "bindLVarToTList(pv1)")
-                           (vi,vc,is,ij) (BX cndTs' []) lbind
-        return $ BD (vbind,sbind,lbind')
- | otherwise
-    = do sbind' <- bindSubscriptToSubscript "bindLVarToTList(1)" vt thectw sbind
-         lbind' <- insertDR (rangeEqvLSSub "bindLVarToTList(2)")
-                            (vi,vc,is,ij) (BX cndTs' []) lbind
-         return $ BD (vbind,sbind',lbind')
- where
-   ctws = temporalitiesOf cndTs
-   wsize = S.size ctws
-   thectw = S.elemAt 0 ctws
-   cndTs' = map dnTerm' cndTs
-\end{code}
-
-Catch-all
-\begin{code}
-bindLVarToTList plv cndTs _
- = error $ unlines
-     [ "bindLVarToTList: fell off end"
-     , "plv = " ++ show plv
-     , "cndTs = " ++ show cndTs ]
-\end{code}
-
-\newpage
 \subsubsection{Binding List-Variables to Substitution Replacements}
 
 A list variable denoting a replacement(-list) in a substitution
@@ -975,11 +916,6 @@ and list-variables.
 \begin{code}
 bindLVarSubstRepl :: Monad m => ListVar -> [Term] -> [ListVar] -> Binding
                   -> m Binding
-\end{code}
-
-If the term-list is empty we simply use the list function:
-\begin{code}
-bindLVarSubstRepl lv [] lvs binds = bindLVarToVList lv (map LstVar lvs) binds
 \end{code}
 
 A \texttt{Textual} pattern variable cannot bind to terms
@@ -1038,6 +974,13 @@ bindLVarSubstRepl plv cndTs cndVL _
      , "cndTs = " ++ show cndTs
      , "cndVL = " ++ show cndVL ]
 \end{code}
+
+A common use case:
+\begin{code}
+bindLVarToTList :: Monad m => ListVar -> [Term] -> Binding -> m Binding
+bindLVarToTList lv ts = bindLVarSubstRepl lv ts []
+\end{code}
+
 
 \newpage
 \subsubsection{Binding General-Variables to General-Variables}
@@ -1195,38 +1138,6 @@ lookupLstBind (BD (_,_,lbind)) lv@(LVbl (Vbl i vc vw) is ij)
                               (map (lvarTempSync vw) lvl)
 \end{code}
 
-\subsubsection{Lookup Substitution List-Variable pairs}
-More complicated is substitution lookup:
-\begin{code}
-lookupSubstBind :: Monad m => Binding -> ListVar -> ListVar
-                -> m (TermSub,LVarSub)
-lookupSubstBind (BD (_,_,lbind)) tlv@(LVbl (Vbl ti tvc Static) tis tij)
-                                 rlv@(LVbl (Vbl ri rvc Static) ris rij)
-  = do let cTrgt = M.lookup (ti,tvc,tis,tij) lbind
-       let cRepl = M.lookup (ri,rvc,ris,rij) lbind
-       case (cTrgt,cRepl) of
-         (Just (BL vl),Just(BX tl lvl)) -> buildSubst vl tl lvl
-         _ ->  fail ( "lookupSubstBind: not a substitution ("
-                           ++show cTrgt++","++show cRepl++").")
-
-lookupSubstBind _ _ _ = fail "lookupSubstBind NYfI (dynamic not done)"
-\end{code}
-
-We assume that \verb"vl" starts with standard,
-and ends with list variables.
-\begin{code}
-buildSubst :: Monad m => VarList -> [Term] -> [ListVar]
-              -> m (TermSub,LVarSub)
--- #ts = #(filter Std vl)    =  Ntrms
--- #lvl = # (filter Lst vl)  =  Nlvrs
-buildSubst vl ts lvl = fail $ unlines
-                         [ "buildSubs NYI"
-                         , "vl=" ++ show vl
-                         , "ts=" ++ show ts
-                         , "lvl=" ++ show lvl
-                         ]
-\end{code}
-
 \newpage
 \subsection{Derived Binding Functions}
 
@@ -1246,7 +1157,6 @@ bindLVarsToEmpty bind (lv:lvs)
       bindLVarsToEmpty bind' lvs
 \end{code}
 
-\newpage
 \subsection{Mapped Variables}
 
 We want to return all the variables that have been bound.

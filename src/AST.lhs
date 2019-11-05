@@ -12,6 +12,7 @@ module AST ( TermSub, LVarSub
            , Type
            , pattern ArbType,  pattern TypeVar, pattern TypeApp
            , pattern DataType, pattern FunType, pattern GivenType
+           , isSubTypeOf
            , Txt
            , Value, pattern Boolean, pattern Integer, pattern Txt
            , TermKind(..)
@@ -158,6 +159,40 @@ pattern DataType i fs = TA i fs
 pattern FunType tf ta = TF tf ta
 pattern GivenType i = TG i
 \end{code}
+
+\subsubsection{Sub-Typing}
+
+No surprises here.
+\begin{code}
+isSubTypeOf :: Type -> Type -> Bool
+_ `isSubTypeOf` ArbType  =  True
+ArbType `isSubTypeOf` _  =  False
+_ `isSubTypeOf` (TypeVar _)  =  True
+(TypeApp i1 ts1) `isSubTypeOf` (TypeApp i2 ts2)
+ | i1 == i2  =  ts1 `areSubTypesOf` ts2
+(DataType i1 fs1) `isSubTypeOf` (DataType i2 fs2)
+ | i1 == i2  =  fs1 `areSubFieldsOf` fs2
+(FunType tf1 ta1) `isSubTypeOf` (FunType tf2 ta2) -- tf contravariant !
+   = tf2 `isSubTypeOf` tf1 && ta1 `isSubTypeOf` ta2
+(GivenType i1) `isSubTypeOf` (GivenType i2)  = i1 == i2
+_ `isSubTypeOf` _ = False
+\end{code}
+
+\begin{code}
+areSubTypesOf :: [Type] -> [Type] -> Bool
+[]       `areSubTypesOf` []        =  True
+(t1:ts1) `areSubTypesOf` (t2:ts2)  =  t1 `isSubTypeOf` t2 && ts1 `areSubTypesOf` ts2
+_        `areSubTypesOf` _         =  False
+\end{code}
+
+\begin{code}
+areSubFieldsOf :: [(Identifier,[Type])] -> [(Identifier,[Type])] -> Bool
+[] `areSubFieldsOf` []  =  True
+((i1,ts1):fs1) `areSubFieldsOf` ((i2,ts2):fs2)
+ | i1 == i2             =  ts1 `areSubTypesOf` ts2 && fs1 `areSubFieldsOf` fs2
+_ `areSubFieldsOf` _    =  False
+\end{code}
+
 
 \newpage
 \subsection{Terms}

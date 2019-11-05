@@ -417,6 +417,7 @@ tsMatch _ _ _ _ _ _  =  error "tsMatch: unexpected mismatch case."
 \end{code}
 
 
+\newpage
 \subsection{Term-Variable Matching}
 
 We assume here that candidate term and pattern variable
@@ -978,6 +979,7 @@ vlKnownMatch vts bind cbvs pbvs
     (LstVar lvP) = gvP
     gvlX = map StdVar vlX
     vw = lvarWhen lvP
+    lvr vc vw i = LVbl (Vbl i vc vw) [] []
 \end{code}
 
 \newpage
@@ -2388,61 +2390,12 @@ $ \lst v_{P} \mapsto
 lvsMatch vts bind cbvs pbvs tsC lvsC [(vsP,esP)]
   = bindLVarToVList vsP cTgts bind >>= bindLVarSubstRepl esP cTerms cRplL
   where
-    cVars = map fst tsC
-    cTgtL = map fst lvsC
+    cVars = map fst tsC ; cTgtL = map fst lvsC
     cTgts = (map StdVar cVars ++ map LstVar cTgtL)
-    cTerms = map snd tsC
-    cRplL = map snd lvsC
+    cTerms = map snd tsC ; cRplL = map snd lvsC
 \end{code}
-
 Right now my head hurts.
 \begin{code}
 lvsMatch vts bind cbvs pbvs tsC lvsC lvsP
   = fail "lvsMatch NYfI"
-\end{code}
-
-\newpage
-\subsection{Sub-Typing}
-
-No surprises here.
-\begin{code}
-isSubTypeOf :: Type -> Type -> Bool
-_ `isSubTypeOf` ArbType  =  True
-ArbType `isSubTypeOf` _  =  False
-_ `isSubTypeOf` (TypeVar _)  =  True
-(TypeApp i1 ts1) `isSubTypeOf` (TypeApp i2 ts2)
- | i1 == i2  =  ts1 `areSubTypesOf` ts2
-(DataType i1 fs1) `isSubTypeOf` (DataType i2 fs2)
- | i1 == i2  =  fs1 `areSubFieldsOf` fs2
-(FunType tf1 ta1) `isSubTypeOf` (FunType tf2 ta2) -- tf contravariant !
-   = tf2 `isSubTypeOf` tf1 && ta1 `isSubTypeOf` ta2
-(GivenType i1) `isSubTypeOf` (GivenType i2)  = i1 == i2
-_ `isSubTypeOf` _ = False
-\end{code}
-
-\begin{code}
-areSubTypesOf :: [Type] -> [Type] -> Bool
-[]       `areSubTypesOf` []        =  True
-(t1:ts1) `areSubTypesOf` (t2:ts2)  =  t1 `isSubTypeOf` t2 && ts1 `areSubTypesOf` ts2
-_        `areSubTypesOf` _         =  False
-\end{code}
-
-\begin{code}
-areSubFieldsOf :: [(Identifier,[Type])] -> [(Identifier,[Type])] -> Bool
-[] `areSubFieldsOf` []  =  True
-((i1,ts1):fs1) `areSubFieldsOf` ((i2,ts2):fs2)
- | i1 == i2             =  ts1 `areSubTypesOf` ts2 && fs1 `areSubFieldsOf` fs2
-_ `areSubFieldsOf` _    =  False
-\end{code}
-
-
-\newpage
-\subsection{Building Variables from Identifiers}
-
-\begin{code}
-vr :: VarClass -> VarWhen -> Identifier -> Variable
-vr vc vw i = Vbl i vc vw
-
-lvr :: VarClass -> VarWhen -> Identifier -> ListVar
-lvr vc vw i = LVbl (vr vc vw i) [] []
 \end{code}

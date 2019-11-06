@@ -7,11 +7,10 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Instantiate
-( findUnboundVars
-, questionableBinding
-, instantiate
+( instantiate
 , instantiateASC
 , instantiateSC
+, findUnboundVars, questionableBinding, autoInstantiate
 ) where
 import Data.Maybe
 import Data.Set(Set)
@@ -52,34 +51,6 @@ without altering the pattern term in any way.
 Once bindings are determined from context elsewhere,
 then instantiation runs with bindings for all pattern variables.}
 
-\subsubsection{Finding Unbound Replacement Variables}
-
-\begin{code}
-findUnboundVars :: Binding -> Term -> VarSet
-findUnboundVars bind trm = mentionedVars trm  S.\\  mappedVars bind
-\end{code}
-
-\newpage
-\subsubsection{Mapping Replacement Variables to Questionable ones}
-
-\begin{code}
-questionableBinding :: VarSet -> Binding
-questionableBinding vs
-  = qB emptyBinding $ S.toList vs
-
-qB bind [] = bind
-qB bind ((StdVar v) :vl)  =  qB (qVB bind v)   vl
-qB bind ((LstVar lv):vl)  =  qB (qLVB bind lv) vl
-
-qVB bind v@(Vbl i vc vw)
-  = fromJust $ bindVarToVar v (Vbl (qI i) vc vw) bind
-  where qi = qI i
-
-qLVB bind lv@(LVbl (Vbl i vc vw) is js)
-  = fromJust $ bindLVarToVList lv [LstVar (LVbl (Vbl (qI i) vc vw) is js)] bind
-
-qI (Identifier n) = fromJust $ ident ('?':n)
-\end{code}
 
 \newpage
 \subsubsection{Instantiating Term with a Binding}
@@ -211,6 +182,8 @@ instVar binding v
       Just (BindVar v')   ->  return v'
       _  ->  fail "instVar: bound to term."
 \end{code}
+
+
 
 \newpage
 \subsection{Side-Condition Instantiation}
@@ -400,4 +373,41 @@ instantiateLstVar bind lv
       Just (BindTLVs ts lvs)  ->  (S.unions $ map termFree ts)
                                   `S.union`
                                   (S.fromList $ map LstVar lvs)
+\end{code}
+
+\newpage
+\subsubsection{Finding Unbound Replacement Variables}
+
+\begin{code}
+findUnboundVars :: Binding -> Term -> VarSet
+findUnboundVars bind trm = mentionedVars trm  S.\\  mappedVars bind
+\end{code}
+
+\subsubsection{Mapping Replacement Variables to Questionable ones}
+
+\begin{code}
+questionableBinding :: VarSet -> Binding
+questionableBinding vs
+  = qB emptyBinding $ S.toList vs
+
+qB bind [] = bind
+qB bind ((StdVar v) :vl)  =  qB (qVB bind v)   vl
+qB bind ((LstVar lv):vl)  =  qB (qLVB bind lv) vl
+
+qVB bind v@(Vbl i vc vw)
+  = fromJust $ bindVarToVar v (Vbl (qI i) vc vw) bind
+  where qi = qI i
+
+qLVB bind lv@(LVbl (Vbl i vc vw) is js)
+  = fromJust $ bindLVarToVList lv [LstVar (LVbl (Vbl (qI i) vc vw) is js)] bind
+
+qI (Identifier n) = fromJust $ ident ('?':n)
+\end{code}
+
+\subsubsection{Questionable Instantiation}
+
+\begin{code}
+autoInstantiate :: Binding -> Term -> Term
+autoInstantiate bind trm
+ = fromJust $ instantiate (questionableBinding (findUnboundVars bind trm)) trm
 \end{code}

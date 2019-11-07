@@ -577,53 +577,6 @@ matchLawByName logicsig asn lnm mcs
       return $ domatch logicsig vts (pdbg "mLBN.asn" asn) (pdbg "mLBN.law" law)
 \end{code}
 
-
-\newpage
-\subsection{Assertion Matching}
-
-
-\textbf{
-Instantiation needs to be more nuanced.
-Here we should take pattern variables in the replacement,
-but not in the binding (because they were not in the pattern),
-and map them to their own name with a question mark added.
-We should have a \texttt{matchInstantiate}
-that does \texttt{findUnbound},
-generates the ``?'' bindings for those,
-and then does \texttt{instantiate}.
-}
-
-
-Do a simple match,
-including side-condition checking.
-\begin{code}
-simpleMatch :: MatchClass
-            -> Term       -- sub-part of law not being matched
-            -> [VarTable] -- known variables in scope at this law
-            -> Law        -- law of interest
-            -> Assertion  -- candidate assertion
-            -> Term       -- sub-part of law being matched
-            -> Matches
-simpleMatch mc repl vts law@((n,asn@(tP,scP)),_) asnC@(tC,scC) partsP
-  =  do bind <- match vts tC partsP
-        (bind',scC',scP') <- completeBind vts tC scC tP scP bind
-        scP'' <- instantiateSC bind' scP'
-        if scDischarged scC' scP''
-         then
-          case instantiate bind' repl of
-            Nothing     ->  []
-            Just irepl  ->  [MT n asn (chkPatn mc tP) bind' scC' scP'' irepl]
-        else []
-  where
-
-    chkPatn mc (Var _ v)
-      | lookupVarTables vts v == UnknownVar  =  trivialise mc
-    chkPatn mc _                             =  mc
-
-    trivialise (MatchEqv [i])  =  MatchEqvVar i
-    trivialise mc              =  mc
-\end{code}
-
 For each law,
 we match the whole thing,
 and if its top-level is a \texttt{Cons}
@@ -631,16 +584,21 @@ with at least two sub-components, we try all possible partial matches.
 \begin{code}
 domatch :: LogicSig -> [VarTable] -> Assertion -> Law -> Matches
 domatch logicsig vts asnC law@((_,(tP@(Cons _ i tsP@(_:_:_)),_)),_)
-  =    simpleMatch MatchAll (theTrue logicsig) vts law asnC tP
+  =    basicMatch MatchAll vts law (theTrue logicsig) asnC tP
     ++ doPartialMatch i logicsig vts law asnC tsP
 \end{code}
 Otherwise we just match against the whole law.
 \begin{code}
 domatch logicsig vts asnC law@((_,(tP,_)),_)
-  =  simpleMatch MatchAll (theTrue logicsig) vts law asnC tP
+  =  basicMatch MatchAll vts law (theTrue logicsig) asnC tP
 \end{code}
 
+
 \newpage
+\subsection{Assertion Matching}
+
+\subsubsection{Partial Matching}
+
 Here we have a top-level \texttt{Cons}
 with at least two sub-terms.
 \begin{code}
@@ -667,8 +625,8 @@ If we match $Q$, we can replace $C$ by $Q\beta \lor P\beta$
 \begin{code}
 doPartialMatch i logicsig vts law asnC tsP@[ltP,rtP]
   | i == theImp logicsig
-    =    simpleMatch MatchAnte (Cons P land [ltP,rtP]) vts law asnC ltP
-      ++ simpleMatch MatchCnsq (Cons P lor  [rtP,ltP]) vts law asnC rtP
+    =    basicMatch MatchAnte vts law (Cons P land [ltP,rtP]) asnC ltP
+      ++ basicMatch MatchCnsq vts law (Cons P lor  [rtP,ltP]) asnC rtP
   where
      land = theAnd logicsig
      lor  = theOr  logicsig
@@ -681,6 +639,8 @@ doPartialMatch i logicsig vts law asnC tsP
 \end{code}
 
 \newpage
+\subsubsection{Equivalence Partial Matching}
+
 Do an n-way equivalence match, where we want to match against all possibilities,
 exploiting the associative nature of $\equiv$,
 as described in \cite[p29]{gries.93}.
@@ -727,7 +687,7 @@ Case A prevents spurious matches of \QNAME{$\equiv$-refl}
 where we match $c::P$ with replacment $P$ to obtain result $c$.
 We fully support Cases A and B and give some support to Case C.
 
-First, Case A, which is automatically done above by \texttt{simpleMatch},
+First, Case A, which is automatically done above by \texttt{basicMatch},
 so we need not return any matches here.
 \begin{code}
 doEqvMatch :: LogicSig -> [VarTable] -> Law -> Assertion
@@ -748,8 +708,8 @@ Next, Case B.
 \begin{code}
 doEqvMatchB logicsig vts law asnC mtchs _ [] = mtchs
 doEqvMatchB logicsig vts law@((_,(_,scP)),_) asnC mtchs sPt (tP:tPs)
-  = let mtchs' = simpleMatch (MatchEqv [length sPt + 1])
-                    (eqv (reverse sPt ++ tPs)) vts law asnC tP
+  = let mtchs' = basicMatch (MatchEqv [length sPt + 1])
+                     vts law (eqv (reverse sPt ++ tPs)) asnC tP
     in doEqvMatchB logicsig vts law asnC (mtchs'++mtchs) (tP:sPt) tPs
   where
     eqv []   =  theTrue logicsig
@@ -783,13 +743,60 @@ doEqvMatchC' :: Int -> [Int] -> LogicSig -> [VarTable] -> Law
              -> SideCond -> [Term] -> [Term]
              -> Matches
 doEqvMatchC' cLen is logicsig vts law@((_,(_,scP)),_) scC tsC tsP
-  = simpleMatch (MatchEqv is) (eqv tsP'') vts law (eqv tsC,scC) (eqv tsP')
+  = basicMatch (MatchEqv is) vts law (eqv tsP'') (eqv tsC,scC) (eqv tsP')
   where
     (tsP',tsP'') = splitAt cLen tsP
     eqv []   =  theTrue logicsig
     eqv [t]  =  t
     eqv ts   =  Cons P (theEqv logicsig) ts
 \end{code}
+
+
+\newpage
+\subsubsection{Just Match it, dammit!}
+
+\textbf{
+Instantiation needs to be more nuanced.
+Here we should take pattern variables in the replacement,
+but not in the binding (because they were not in the pattern),
+and map them to their own name with a question mark added.
+We should have a \texttt{matchInstantiate}
+that does \texttt{findUnbound},
+generates the ``?'' bindings for those,
+and then does \texttt{instantiate}.
+}
+
+
+Do a basic match,
+including side-condition checking.
+\begin{code}
+basicMatch :: MatchClass
+            -> [VarTable] -- known variables in scope at this law
+            -> Law        -- law of interest
+            -> Term       -- sub-part of law not being matched
+            -> Assertion  -- candidate assertion
+            -> Term       -- sub-part of law being matched
+            -> Matches
+basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
+  =  do bind <- match vts tC partsP
+        (bind',scC',scP') <- completeBind vts tC scC tP scP bind
+        scP'' <- instantiateSC bind' scP'
+        if scDischarged scC' scP''
+         then
+          case instantiate bind' repl of
+            Nothing     ->  []
+            Just irepl  ->  [MT n asn (chkPatn mc tP) bind' scC' scP'' irepl]
+        else []
+  where
+
+    chkPatn mc (Var _ v)
+      | lookupVarTables vts v == UnknownVar  =  trivialise mc
+    chkPatn mc _                             =  mc
+
+    trivialise (MatchEqv [i])  =  MatchEqvVar i
+    trivialise mc              =  mc
+\end{code}
+
 
 \subsubsection{Undoing a Proof Step}
 

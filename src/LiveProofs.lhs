@@ -701,7 +701,7 @@ Then invoke Cases C and B, in that order.
 doEqvMatch logicsig vts law asnC tsP
   = doEqvMatchC logicsig vts law asnC tsP
     ++
-     logicsig vts law asnC [] [] tsP
+    doEqvMatchB logicsig vts law asnC [] [] tsP
 \end{code}
 
 Next, Case B.

@@ -63,9 +63,13 @@ instantiate binding val@(Val _ _) = return val
 
 instantiate binding vt@(Var tk v)
   = case lookupVarBind binding v of
-      Nothing             ->  return vt -- maps to self !
       Just (BindVar v')   ->  var tk v'
       Just (BindTerm t')  ->  return t'
+      Nothing             ->  fail $ unlines
+                                     [ "instantiate: variable not found"
+                                     , "var = " ++ trVar v
+                                     , "bind = " ++ trBinding binding
+                                     ]
 
 instantiate binding (Cons tk n ts)
   = fmap (Cons tk n) $ sequence $ map (instantiate binding) ts

@@ -17,7 +17,9 @@ module AbstractUI
 , abandonProof, saveProof, completeProof
 , moveFocusDown, moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
-, matchFocus, matchFocusAgainst, applyMatchToFocus, tryFocusAgainst
+, matchFocus, matchFocusAgainst
+, applyMatchToFocus, applyMatchToFocus1, applyMatchToFocus2
+, tryFocusAgainst
 , observeLawsInScope
 , flattenAssociative, groupAssociative
 , stepBack
@@ -496,7 +498,57 @@ applyMatchToFocus i liveProof
   = let (tz,seq') = focus liveProof
         dpath = fPath liveProof
     in do mtch  <- nlookup i $ matches liveProof
-          let brepl = autoInstantiate (mBind mtch) (mRepl mtch)
+          let bind = mBind mtch
+          let repl = mRepl mtch
+          let unbound = findUnboundVars bind repl
+          let goalAsn = conjecture liveProof
+          let brepl = autoInstantiate bind (mRepl mtch)
+          return ( focus_ ((setTZ brepl tz),seq')
+                 $ matches_ []
+                 $ conjSC_ (mLocSC mtch)
+                 $ stepsSoFar__
+                    (( UseLaw (ByMatch $ mClass mtch)
+                              (mName mtch)
+                              (mBind mtch)
+                              dpath
+                     , (exitTZ tz,conjSC liveProof)):)
+                    liveProof )
+\end{code}
+
+We have a 2-phase approach here.
+First we find the match, determine what variables
+in the replacement are missing from the binding,
+and return those along with the match
+\begin{code}
+applyMatchToFocus1 :: Monad m
+                   => Int -> LiveProof
+                   -> m ( VarSet
+                        , Match )
+applyMatchToFocus1 i liveProof
+  = do  mtch  <- nlookup i $ matches liveProof
+        let unbound = findUnboundVars (mBind mtch) (mRepl mtch)
+        return (unbound,mtch)
+\end{code}
+
+Now given the match,
+and a binding for the previously unbound replacement variables ,
+we proceed to fully instantiate the replacement term,
+and use it to replace the current focus.
+\begin{code}
+applyMatchToFocus2 :: Monad m
+                   => Match -> Binding
+                   -> LiveProof -> m LiveProof
+applyMatchToFocus2 mtch ubind liveProof
+  = let bind = mBind mtch `mergeBindings` ubind
+        repl = mRepl mtch
+        (tz,seq') = focus liveProof
+        dpath = fPath liveProof
+    in do brepl <- instantiate bind (mRepl mtch)
+          -- let
+          -- let repl = mRepl mtch
+          -- let unbound = findUnboundVars bind repl
+          -- let goalAsn = conjecture liveProof
+          -- let brepl = autoInstantiate bind (mRepl mtch)
           return ( focus_ ((setTZ brepl tz),seq')
                  $ matches_ []
                  $ conjSC_ (mLocSC mtch)

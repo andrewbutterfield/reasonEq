@@ -720,9 +720,9 @@ in a monadic context.
 Accept if it suceeds, otherwise no change
 \begin{code}
 tryDelta :: Monad m => (b -> Maybe b) -> (a,b) -> m (a,b)
-tryDelta delta (reqs, liveProof)
+tryDelta delta pstate@(reqs, liveProof)
   = case delta liveProof of
-       Nothing          ->  return (reqs, liveProof )
+       Nothing          ->  return pstate
        Just liveProof'  ->  return (reqs, liveProof')
 \end{code}
 
@@ -857,7 +857,19 @@ applyMatchDescr = ( "a", "apply match"
                   , "a i  -- apply match number i", applyMatch )
 
 applyMatch :: REPLCmd (REqState, LiveProof)
-applyMatch args  =  tryDelta (applyMatchToFocus (args2int args))
+applyMatch' args  =  tryDelta (applyMatchToFocus (args2int args))
+
+applyMatch args pstate@(reqs, liveProof)
+  = case applyMatchToFocus1 (args2int args) liveProof of
+      Nothing -> return pstate
+      Just (unbound,mtch)
+       -> do putStrLn
+               $ unlines [ "unbound = " ++ trVSet unbound
+                         , "faking it for now with questionableBinding"
+                         ]
+             userPause
+             let ubind = questionableBinding unbound
+             tryDelta (applyMatchToFocus2 mtch ubind) pstate
 \end{code}
 
 Flattening grouped equivalences:

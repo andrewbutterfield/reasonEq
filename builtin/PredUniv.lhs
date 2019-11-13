@@ -46,13 +46,54 @@ import TestRendering
 
 
 Here we present a hard-coded implementation of
-predicate equational reasoning, as inspired by Gries \& Schneider\cite{gries.93},
-Tourlakis \cite{journals/logcom/Tourlakis01}
+predicate equational reasoning,
+as inspired by Gries \& Schneider\cite{gries.93},
+Gries' notes from the 1996 Marktoberdorf Summer School\cite{gries.97},
+Tourlakis \cite{journals/logcom/Tourlakis01},
 and described in \cite{DBLP:conf/utp/Butterfield12}.
 However we adopt here a formulation closer to that of Gries\&Schneider,
 as the Tourlakis form has useful laws such as the one-point rules
 derived from his axioms by meta-proofs
 \emph{that use non-equational reasoning}.
+
+Reference \cite{gries.97} has only recently come to our attention,
+where $[\_]$ is defined,
+ as the same thing as the temporal box operator ($\Box$)
+ of the logic C \cite[Section 5.2, p113; Table 8, p114]{gries.97}.
+
+The inference rules and axioms,
+given that $\Diamond P = \lnot \Box(\lnot P)$,
+  are:
+\begin{eqnarray*}
+   \vdash P ~~\longrightarrow~~ \vdash \Box P
+   && \textbf{Necessitation}
+\\ \Box P    ~~\implies~~   P
+   && \textbf{$\Box$-Instantiation}
+\\ \Box(P\implies Q) ~~\implies~~ (\Box P \implies \Box Q)
+   && \textbf{Monotonicity}
+\\ \Diamond P ~~\implies~~ \Box \Diamond P
+   && \textbf{Necessarily Possible}
+\\ \vdash P ~~\longrightarrow~~ \vdash P^v_Q
+   && \textbf{Textual Substitution}
+\end{eqnarray*}
+where the first four belong to temporal logic S5,
+and the fifth produces logic C.
+Logic C is both sound and complete, while S5 is incomplete.
+
+In our notation we have two meta-theorems (1st and 5th above),
+\begin{eqnarray*}
+   P \text{ a theorem} & \text{then} & [P] \text{ a theorem}
+\\ P \text{ a theorem} & \text{then} & P[Q/v] \text{ a theorem,}
+\end{eqnarray*}
+a definition $\langle P \rangle = \lnot[\lnot P]$,
+and three axioms (2nd through 4th above)
+\begin{eqnarray*}
+   ~[P] &implies& P
+\\ ~[P\implies Q] &\implies& ([P] \implies [Q])
+\\ \langle P \rangle &\implies& [\langle P \rangle].
+\end{eqnarray*}
+
+Here is the current axiomatisation:
 $$
 \AXUNIVCLOSE
 $$
@@ -65,7 +106,7 @@ $$
 
 We need to build some infrastructure here.
 This consists of the predicate variables $P$ and $Q$,
-the constant  $[_]$,
+the constant  $[\_]$,
 and a generic binder variable: $\lst x$.
 
 \subsubsection{Predicate and Expression Variables}

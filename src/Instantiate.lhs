@@ -409,5 +409,8 @@ qI (Identifier n) = fromJust $ ident ('?':n)
 \begin{code}
 autoInstantiate :: Binding -> Term -> Term
 autoInstantiate bind trm
- = fromJust $ instantiate (questionableBinding (findUnboundVars bind trm)) trm
+ = fromJust $ instantiate abind trm
+ where
+   qbind = questionableBinding (findUnboundVars bind trm)
+   abind = mergeBindings bind qbind
 \end{code}

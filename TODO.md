@@ -8,15 +8,16 @@
 
 Need `PredSubst` axioms !!!
 
+STOP PRESS ! Reading [Gries 97] gives a new perspective for `PredUniv` axioms.
+
 ### `a n` command in proof REPL
 
-Currently this relies on match mRepl components which are automatically generated. However we need to ask the user
-to instantiate any replacement variable that is not in the
-match binding.
+Progress none, but the `Match` datatype field mRepl should be the original replacement predicate.
+We should use `autoInstantiate` to generate the display versions on the fly.
+Note that the side-condition may refer to such unknown variables.
 
-The auto-instantiate should really prefix any such variable in mRepl with '?' to indicate such.
-
-See `LiveProof.completeBind`.
+We then ask the user to fill out the unbound replacement variables from a list generated from
+the full goal predicate (not just the focus).
 
 ### Instantiating Side-Conditions
 

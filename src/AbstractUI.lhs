@@ -485,7 +485,7 @@ tryFocusAgainst lawnm parts theSig liveProof
 \textbf{Problem here is that we auto-generate \texttt{mRepl}
 when we display matches, but those don't handle the
 ``new pattern-variable'' issue.
-This is when the replacment term pattern has free variables that
+This is when the replacement term pattern has free variables that
 did not appear in the part of the law that was matched,
 and so have no bindings.
 Here we need to get the user to say how new pattern-variables should be

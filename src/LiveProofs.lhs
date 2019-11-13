@@ -783,9 +783,12 @@ basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
         scP'' <- instantiateSC bind' scP'
         if scDischarged scC' scP''
          then
-          case instantiate bind' repl of
-            Nothing     ->  []
-            Just irepl  ->  [MT n asn (chkPatn mc tP) bind' scC' scP'' irepl]
+           [MT n asn (chkPatn mc tP) bind' scC' scP''
+               (autoInstantiate bind' repl)
+           ]
+          -- case instantiate bind' repl of
+          --   Nothing     ->  []
+          --   Just irepl  ->  [MT n asn (chkPatn mc tP) bind' scC' scP'' irepl]
         else []
   where
 
@@ -797,7 +800,7 @@ basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
     trivialise mc              =  mc
 \end{code}
 
-
+\newpage
 \subsubsection{Undoing a Proof Step}
 
 \begin{code}

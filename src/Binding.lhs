@@ -11,6 +11,7 @@ module Binding
 , LstVarBind, ListVarKey, pattern BindList, pattern BindSet, pattern BindTLVs
 , Binding
 , emptyBinding
+, mergeBindings
 , bindVarToVar, bindVarsToVars, bindVarToSelf, bindVarsToSelves
 , bindVarToTerm
 , bindLVarToVList
@@ -334,6 +335,12 @@ newtype Binding = BD (VarBinding, SubBinding, ListVarBinding)
 
 emptyBinding :: Binding
 emptyBinding = BD (M.empty, M.empty, M.empty)
+\end{code}
+
+Merging a binding (first takes precedence!):
+\begin{code}
+mergeBindings (BD (vb1,sb1,lvb1)) (BD (vb2,sb2,lvb2))
+  = BD(vb1 `M.union` vb2, sb1 `M.union` sb2, lvb1 `M.union` lvb2)
 \end{code}
 
 \newpage

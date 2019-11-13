@@ -19,6 +19,7 @@ import qualified Data.Set as S
 import AST
 import Laws
 import Proofs
+import Instantiate
 import LiveProofs
 
 import Debug.Trace
@@ -45,10 +46,11 @@ rankAndSort rf ctxts ms  = map snd $ sortOn fst $ zip (map (rf ctxts) ms) ms
 
 \subsubsection{Size Ranking}
 
-Simple ranking by replacement term size:
+Simple ranking by replacement term size,
+after the binding is applied:
 \begin{code}
 sizeRank :: RankFunction
-sizeRank _ m = termSize $ mRepl m
+sizeRank _ m = termSize $ autoInstantiate (mBind m) $ mRepl m
 
 termSize :: Term -> Int
 termSize (Val _ _)       = 1

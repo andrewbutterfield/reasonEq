@@ -783,8 +783,8 @@ basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
         scP'' <- instantiateSC bind' scP'
         if scDischarged scC' scP''
          then
-           [MT n asn (chkPatn mc tP) bind' scC' scP''
-               (autoInstantiate bind' repl)
+           [MT n asn (chkPatn mc tP) bind' scC' scP'' repl
+           -- (autoInstantiate bind' repl)
            ]
           -- case instantiate bind' repl of
           --   Nothing     ->  []
@@ -916,11 +916,12 @@ displayMatches matches
 shMatch (i, mtch)
  = show i ++ " : "++ ldq ++ green (nicelawname $ mName mtch) ++ rdq
    ++ "  gives  "
-   ++ (bold $ blue $ trTerm 0 (mRepl mtch))
+   ++ (bold $ blue $ trTerm 0 brepl)
    ++ "  " ++ shSCImplication (mLocSC mtch) (mLawSC mtch)
    ++ " " ++ shMClass (mClass mtch)
  where
     bind = mBind mtch
+    brepl = autoInstantiate bind $ mRepl mtch
     (_,lsc) = mAsn mtch
 
 shSCImplication scC scPm

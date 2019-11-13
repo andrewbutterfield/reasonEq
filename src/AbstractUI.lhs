@@ -496,7 +496,8 @@ applyMatchToFocus i liveProof
   = let (tz,seq') = focus liveProof
         dpath = fPath liveProof
     in do mtch  <- nlookup i $ matches liveProof
-          return ( focus_ ((setTZ (mRepl mtch) tz),seq')
+          let brepl = autoInstantiate (mBind mtch) (mRepl mtch)
+          return ( focus_ ((setTZ brepl tz),seq')
                  $ matches_ []
                  $ conjSC_ (mLocSC mtch)
                  $ stepsSoFar__

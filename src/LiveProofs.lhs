@@ -803,6 +803,10 @@ basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
 \newpage
 \subsubsection{Undoing a Proof Step}
 
+\textbf{
+ We would like to restore focus when backing up a simple step,
+ such as UseLaw.
+}
 \begin{code}
 undoCalcStep :: LiveProof -> LiveProof
 undoCalcStep liveProof
@@ -825,6 +829,7 @@ undoCalcStep liveProof
        =  focus__ ( fromJust . -- this should always succeed !
                     hypConjFocus i . exitSeqZipper) liveProof
 
+    -- THIS IS WRONG as we set stepsSoFar to prevSteps after doing this!
     undoCalcStep' _  = liveProof
 
     setTerm t (tz,seq') = (mkTZ t,seq')

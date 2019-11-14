@@ -66,7 +66,7 @@ CONJ = (C P (Id "equiv") [C P (Id "equiv") [C P (Id "lnot") [V P (VR (Id "P",VP,
 SIDE = []
 STRAT reduce
 BEGIN SEQZIP
-TERMZIP = (C P (Id "equiv") [C P (Id "implies") [V P (VR (Id "?P",VP,WS)),C P (Id "equiv") [C P (Id "lnot") [V P (VR (Id "P",VP,WS))],V P (VR (Id "Q",VP,WS))]],C P (Id "lor") [V P (VR (Id "?P",VP,WS)),C P (Id "equiv") [C P (Id "lnot") [V P (VR (Id "P",VP,WS))],V P (VR (Id "Q",VP,WS))]]],[Cons' P (Id "equiv") [] [C P (Id "equiv") [V P (VR (Id "P",VP,WS)),C P (Id "lnot") [V P (VR (Id "Q",VP,WS))]]]])
+TERMZIP = (C P (Id "equiv") [C P (Id "lnot") [V P (VR (Id "P",VP,WS))],V P (VR (Id "Q",VP,WS))],[Cons' P (Id "equiv") [] [C P (Id "equiv") [V P (VR (Id "P",VP,WS)),C P (Id "lnot") [V P (VR (Id "Q",VP,WS))]]]])
 BEGIN SEQUENT'
 SIDECOND = []
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.lnot_equiv_swap", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
@@ -74,7 +74,6 @@ END SEQUENT'
 END SEQZIP
 FPATH: [1]
 BEGIN LIST STEPS
-(UseLaw (ByMatch (ME [3])) "implies_def" (BD (fromList [((Id "Q",VP),BT (C P (Id "equiv") [C P (Id "lnot") [V P (VR (Id "P",VP,WS))],V P (VR (Id "Q",VP,WS))]))],fromList [],fromList [])) [1],(C P (Id "equiv") [C P (Id "equiv") [C P (Id "lnot") [V P (VR (Id "P",VP,WS))],V P (VR (Id "Q",VP,WS))],C P (Id "equiv") [V P (VR (Id "P",VP,WS)),C P (Id "lnot") [V P (VR (Id "Q",VP,WS))]]],[]))
 END LIST STEPS
 END LIVE-PROOF
 END MAP LIVE-PROOFS

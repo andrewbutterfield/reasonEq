@@ -343,6 +343,10 @@ data HowUsed
 The justification of a step records details of that step,
 sufficient both to document the step for the reader,
 and to be able to mechanically reply that step, or reverse it.
+\textbf{
+  Maybe we should have the focus path ([Int]) in all variants,
+  as we would like to restore the previous focus
+}
 \begin{code}
 data Justification
   = UseLaw             -- used a law

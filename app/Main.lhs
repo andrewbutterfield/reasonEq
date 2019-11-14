@@ -857,16 +857,18 @@ applyMatchDescr = ( "a", "apply match"
                   , "a i  -- apply match number i", applyMatch )
 
 applyMatch :: REPLCmd (REqState, LiveProof)
-applyMatch' args  =  tryDelta (applyMatchToFocus (args2int args))
-
 applyMatch args pstate@(reqs, liveProof)
   = case applyMatchToFocus1 (args2int args) liveProof of
       Nothing -> return pstate
       Just (unbound,mtch)
        -> do putStrLn
                $ unlines [ "unbound = " ++ trVSet unbound
-                         , "faking it for now with questionableBinding"
+                         , "bind = " ++ trBinding (mBind mtch)
+                         , "goal terms:"
                          ]
+             let goalterms = subTerms $ fst $ conjecture liveProof
+             putStrLn $ numberList (trTerm 0) goalterms
+             putStrLn "\nstill using questionable bindings!"
              userPause
              let ubind = questionableBinding unbound
              tryDelta (applyMatchToFocus2 mtch ubind) pstate
@@ -913,8 +915,7 @@ Undoing the previous step (if any)
 \begin{code}
 goBackDescr = ( "b", "go back (undo)"
               , unlines' [ "b   --- undo last proof step"
-                         , "b i --- undo the last 'i' proof steps"
-                         , "    --- cannot undo sequent changes yet"]
+                         , "    --- cannot undo clone changes yet"]
               , goBack )
 
 goBack :: REPLCmd (REqState, LiveProof)

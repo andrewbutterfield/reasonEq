@@ -12,12 +12,9 @@ STOP PRESS ! Reading [Gries 97] gives a new perspective for `PredUniv` axioms.
 
 ### `a n` command in proof REPL
 
-Progress none, but the `Match` datatype field mRepl should be the original replacement predicate.
-We should use `autoInstantiate` to generate the display versions on the fly.
-Note that the side-condition may refer to such unknown variables.
-
-We then ask the user to fill out the unbound replacement variables from a list generated from
-the full goal predicate (not just the focus).
+Need to ask the user to fill out the unbound replacement variables from a list generated from
+the full goal predicate (not just the focus). 
+**Need to add true/false to that list**
 
 ### Instantiating Side-Conditions
 
@@ -28,6 +25,11 @@ This cannot be broken down into a conjuction of conditions relating
 each of `a`, `b`, and `c$` individually to each of `Q`, `{x}`,
 and `R`, also taken individually.
 Instead we have to assert that `{a,b} U c$` covers `Q U {x} U R`.
+
+### Backing out of a proof step
+
+If we use "b" after a proof step that is not reversible (just Clone?), we leave the goal unchanged,
+but shorten the list of steps anyway. See `LiveProofs.undoCalcStep` (line 810 approx)
 
 ### Unique quantified variables
 

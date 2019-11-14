@@ -544,11 +544,6 @@ applyMatchToFocus2 mtch ubind liveProof
         (tz,seq') = focus liveProof
         dpath = fPath liveProof
     in do brepl <- instantiate bind (mRepl mtch)
-          -- let
-          -- let repl = mRepl mtch
-          -- let unbound = findUnboundVars bind repl
-          -- let goalAsn = conjecture liveProof
-          -- let brepl = autoInstantiate bind (mRepl mtch)
           return ( focus_ ((setTZ brepl tz),seq')
                  $ matches_ []
                  $ conjSC_ (mLocSC mtch)

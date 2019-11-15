@@ -32,7 +32,8 @@ module AST ( TermSub, LVarSub
            , pattern E2, pattern P2
            , termkind, isVar, isExpr, isPred, isAtomic
            , theVar
-           , freeVars, subTerms, mentionedVars
+           , freeVars, subTerms
+           , mentionedVars, mentionedVarLists, mentionedVarSets
            , int_tst_AST
            ) where
 import Data.Char
@@ -640,7 +641,29 @@ freeVars (I _ _ _ lvs)  =  S.fromList $ map LstVar lvs
 freeVars _ = S.empty
 \end{code}
 
-Sometimes we just want \emph{all} the variables mentioned in a term:
+
+\newpage
+\subsection{Parts of Terms}
+
+Sometimes we want lists of all term components
+of a given type (terms/variables/list-variables/variable-sets/variable-lists)
+
+\subsubsection{Sub-Terms}
+
+\begin{code}
+subTerms :: Term -> [Term]
+subTerms t@(C _ _ ts)    =  t : nub (concat $ map subTerms ts)
+subTerms t@(B _ _ _ t')  =  t : subTerms t'
+subTerms t@(L _ _ _ t')  =  t : subTerms t'
+subTerms t@(X _ t')      =  t : subTerms t'
+subTerms t@(S _ t' (SN tsub _))
+  = t : nub (concat $ map subTerms (t':map snd (S.toList tsub)))
+subTerms t               =  [t]
+-- t = head $ subTerms t !!
+\end{code}
+
+\subsubsection{(General) Variables}
+
 \begin{code}
 mentionedVars :: Term -> VarSet
 mentionedVars (V _ v)       =  S.singleton $ StdVar v
@@ -662,20 +685,42 @@ mentionedVars _ = S.empty
 \end{code}
 
 \newpage
-\subsection{Sub-Terms}
+\subsubsection{Variable Collections}
 
 \begin{code}
-subTerms :: Term -> [Term]
-subTerms t@(C _ _ ts)    =  t : nub (concat $ map subTerms ts)
-subTerms t@(B _ _ _ t')  =  t : subTerms t'
-subTerms t@(L _ _ _ t')  =  t : subTerms t'
-subTerms t@(X _ t')      =  t : subTerms t'
-subTerms t@(S _ t' (SN tsub _))
-  = t : nub (concat $ map subTerms (t':map snd (S.toList tsub)))
-subTerms t               =  [t]
--- t = head $ subTerms t !!
+mentionedVarLists :: Term -> [VarList]
+mentionedVarLists (C _ _ ts) = concat $ map mentionedVarLists ts
+mentionedVarLists (B _ _ _ t) = mentionedVarLists t
+mentionedVarLists (L _ _ vl t) = vl : mentionedVarLists t
+mentionedVarLists (X _ t) = mentionedVarLists t
+mentionedVarLists (S _ t (SN tsub lvsub))
+  = mentionedVarLists t ++ concat (map mentionedVarLists rtl)
+  where rtl = map snd $ S.toList tsub
+mentionedVarLists (I _ _ _ lvs) = [map LstVar lvs]
+mentionedVarLists _ = []
 \end{code}
 
+Here we include the implicit variable-sets induced by substitution targets.
+\begin{code}
+mentionedVarSets :: Term -> [VarSet]
+mentionedVarSets (C _ _ ts) = concat $ map mentionedVarSets ts
+mentionedVarSets (B _ _ vs t) = vs : mentionedVarSets t
+mentionedVarSets (L _ _ _ t) = mentionedVarSets t
+mentionedVarSets (X _ t) = mentionedVarSets t
+mentionedVarSets (S _ t (SN tsub lvsub))
+  = mentionedVarSets t ++ tvs ++ rvs
+  where
+     (tsvl,rtl) = unzip $ S.toList tsub
+     (tlvl,rlvl) = unzip $ S.toList lvsub
+     tsvs  = S.fromList (map StdVar tsvl)
+     tlvs  = S.fromList (map LstVar tlvl)
+     tvs   = [tsvs,tlvs,tsvs `S.union` tlvs]
+     rtvs  = S.unions (concat (map mentionedVarSets rtl))
+     rlvvs = S.fromList (map LstVar rlvl)
+     rvs   = [rtvs,rlvvs,rtvs `S.union` rlvvs]
+mentionedVarSets (I _ _ _ lvs) = [S.fromList $ map LstVar lvs]
+mentionedVarSets _ = []
+\end{code}
 
 \newpage
 

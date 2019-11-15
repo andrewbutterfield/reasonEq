@@ -859,9 +859,7 @@ applyMatch args pstate@(reqs, liveProof)
                          , "bind = " ++ trBinding (mBind mtch)
                          , "please supply bindings as requested"
                          ]
-             let goalterms = subTerms $ fst $ conjecture liveProof
-             let possibleTerms = true : false : goalterms
-             ubind <- requestBindings possibleTerms unbound
+             ubind <- requestBindings (true,false) (conjecture liveProof) unbound
              tryDelta (applyMatchToFocus2 mtch ubind) pstate
   where
     true   =  theTrue  $ logicsig reqs
@@ -871,20 +869,46 @@ applyMatch args pstate@(reqs, liveProof)
 For every unbound pattern variable in the replacement,
 we ask the user to pick from a list of terms:
 \begin{code}
-requestBindings terms unbound
+requestBindings (t,f) (goalTerm,_) unbound
   = let
-      len = length terms
-      menu = numberList (trTerm 0) terms
+
+      terms = t : f : subTerms goalTerm
+      termLen = length terms
+      termMenu = numberList (trTerm 0) terms
+
+      gvars = S.toList $ mentionedVars goalTerm
+      gvarLen = length gvars
+      gvarMenu = numberList trGVar gvars
+
+      vlists = mentionedVarLists goalTerm
+      vlistLen = length vlists
+      vlistMenu = numberList trVList vlists
+
+      vsets = mentionedVarSets goalTerm
+      vsetLen = length vsets
+      vsetMenu = numberList trVSet vsets
 
       rB ubind [] = return ubind
-      rB ubind gvs@(gv:gvs')
-        = do putStrLn menu
-             putStrLn ("unbound "++trGVar gv)
+
+      rB ubind gvs@(StdVar v : gvs')
+        = do putStrLn termMenu
+             putStrLn ("unbound "++trVar v)
              response <- fmap readInt $ userPrompt "Choose term by number: "
-             if response <= 0 ||  len < response
+             if response <= 0 || termLen < response
                then rB ubind gvs
                else do putStrLn "\nstill using questionable bindings!"
-                       let ubind' = questionableBinding $ S.singleton gv
+                       let ubind' = questionableBinding $ S.singleton (StdVar v)
+                       rB ubind' gvs'
+
+      rB ubind gvs@(LstVar lv : gvs')
+        = do putStrLn gvarMenu
+             putStrLn ("unbound "++trLVar lv)
+             -- user should give set/list indicator followed by list of numbers
+             response <- fmap readInt $ userPrompt "Choose variable by number: "
+             if response <= 0 || gvarLen < response
+               then rB ubind gvs
+               else do putStrLn "\nstill using questionable bindings!"
+                       let ubind' = questionableBinding $ S.singleton (LstVar lv)
                        rB ubind' gvs'
 
     in rB emptyBinding $ S.toList unbound

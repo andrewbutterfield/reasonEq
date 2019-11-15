@@ -19,6 +19,7 @@ module TestRendering (
  , (-.-), nicelawname
  , trVarMatchRole, trLstVarMatchRole, trVarTable
  , trBinding
+ , seplist
  , seeV, seeLV, seeGV, seeVL, seeVS
  , seeType, seeVal, seeTerm, seeBind, seeVarTable
  , seeTerms, seeBinds
@@ -102,6 +103,7 @@ trType (GivenType i)      =  trId i
 
 trTypes = seplist " " trType
 
+seplist :: [a] -> (b -> [a]) -> [b] -> [a]
 seplist sep tr = intercalate sep . map tr
 \end{code}
 

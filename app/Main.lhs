@@ -880,6 +880,12 @@ requestBindings (t,f) (goalTerm,_) unbound
       gvarLen = length gvars
       gvarMenu = numberList trGVar gvars
 
+      gvarPrompt = unlines' [ "<c> <number-list> where "
+                            , "<c> is 's' (set) or 'l' (list)"
+                            , "<number-list> is numbers separated by spaces"
+                            , "enter > "
+                            ]
+
       vlists = mentionedVarLists goalTerm
       vlistLen = length vlists
       vlistMenu = numberList trVList vlists
@@ -891,28 +897,30 @@ requestBindings (t,f) (goalTerm,_) unbound
       rB ubind [] = return ubind
 
       rB ubind gvs@(StdVar v : gvs')
-        = do putStrLn termMenu
+        = do putStrLn ("bindings so far: "++trBinding ubind)
+             putStrLn termMenu
              putStrLn ("unbound "++trVar v)
              response <- fmap readInt $ userPrompt "Choose term by number: "
              if response <= 0 || termLen < response
                then rB ubind gvs
-               else do putStrLn "\nstill using questionable bindings!"
-                       let ubind' = questionableBinding $ S.singleton (StdVar v)
-                       rB ubind' gvs'
+               else case bindVarToTerm v (terms!!(response-1)) ubind of
+                     Nothing      ->  putStrLn "bind var failed" >> return ubind
+                     Just ubind'  ->  rB ubind' gvs'
 
       rB ubind gvs@(LstVar lv : gvs')
-        = do putStrLn gvarMenu
+        = do putStrLn ("bindings so far: "++trBinding ubind)
+             putStrLn ("var-lists: " ++ seplist " " trVList vlists)
+             putStrLn ("var-sets:  " ++ seplist " " trVSet vsets)
+             putStrLn gvarMenu
              putStrLn ("unbound "++trLVar lv)
              -- user should give set/list indicator followed by list of numbers
-             response <- fmap readInt $ userPrompt "Choose variable by number: "
-             if response <= 0 || gvarLen < response
+             responseBits <- fmap words $ userPrompt gvarPrompt
+             if null responseBits
                then rB ubind gvs
-               else do putStrLn "\nstill using questionable bindings!"
-                       let ubind' = questionableBinding $ S.singleton (LstVar lv)
-                       rB ubind' gvs'
+               else do userPrompt "list-var not handled, hit <return> to continue"
+                       rB ubind gvs'
 
     in rB emptyBinding $ S.toList unbound
-
 \end{code}
 
 \newpage

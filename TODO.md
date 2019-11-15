@@ -10,6 +10,8 @@ When instantiating unbound variables we have two cases:
    We allow a default option of binding to `true`.
 2. We have a `LstVar`, which binds to a variable-set.
    We allow a default option of binding to `{}`.
+   
+Defaults are specifed by hitting enter with no selection data.
 
 ## Hotfixes
 

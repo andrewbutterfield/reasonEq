@@ -913,7 +913,6 @@ requestBindings (t,f) (goalTerm,_) unbound
              putStrLn ("var-sets:  " ++ seplist " " trVSet vsets)
              putStrLn gvarMenu
              putStrLn ("unbound "++trLVar lv)
-             -- user should give set/list indicator followed by list of numbers
              responseBits <- fmap words $ userPrompt gvarPrompt
              if null responseBits
                then rB ubind gvs

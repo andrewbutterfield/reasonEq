@@ -27,7 +27,7 @@ module Utilities (
 , pad
 , splitLast, splitAround
 , brkspn, brkspnBy, splice
-, args2str, args2int, entertogo
+, args2str, args2int, userPrompt, userPause
 )
 where
 
@@ -428,6 +428,12 @@ spaced s = ' ':s ++ " "
 
 \subsubsection{Useful IO bits and pieces}
 
+Prompting:
+\begin{code}
+userPrompt :: String -> IO String
+userPrompt str = putStr str >> hFlush stdout >> getLine
+\end{code}
+
 Screen clearing:
 \begin{code}
 clear = "\ESC[2J\ESC[1;1H"
@@ -436,7 +442,7 @@ clearIt str = clear ++ str
 
 Pausing (before \textrm{clearIt}, usually)
 \begin{code}
-entertogo = do {putStr "hit <enter> to continue"; hFlush stdout; getLine}
+userPause = userPrompt "hit <enter> to continue"
 \end{code}
 
 

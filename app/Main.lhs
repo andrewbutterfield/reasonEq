@@ -738,13 +738,6 @@ listScopeLaws _ state@( _, liveProof)
        return state
 \end{code}
 
-
-Sometimes a user-mediated pause is useful:
-\begin{code}
-userPause = putStr "<return> to continue..." >> hFlush stdout >> getLine
-\end{code}
-
-
 Focus movement commands
 \begin{code}
 goDownDescr = ( "d", "down", "d n  -- down n", goDown )
@@ -850,7 +843,7 @@ tryMatch args state@( reqs, liveProof)
     banner = "Match against `"++lawnm++"'"++show parts
 \end{code}
 
-
+\newpage
 Applying a match.
 \begin{code}
 applyMatchDescr = ( "a", "apply match"
@@ -864,16 +857,41 @@ applyMatch args pstate@(reqs, liveProof)
        -> do putStrLn
                $ unlines [ "unbound = " ++ trVSet unbound
                          , "bind = " ++ trBinding (mBind mtch)
-                         , "goal terms:"
+                         , "please supply bindings as requested"
                          ]
              let goalterms = subTerms $ fst $ conjecture liveProof
-             putStrLn $ numberList (trTerm 0) goalterms
-             putStrLn "\nstill using questionable bindings!"
-             userPause
-             let ubind = questionableBinding unbound
+             let possibleTerms = true : false : goalterms
+             ubind <- requestBindings possibleTerms unbound
              tryDelta (applyMatchToFocus2 mtch ubind) pstate
+  where
+    true   =  theTrue  $ logicsig reqs
+    false  =  theFalse $ logicsig reqs
 \end{code}
 
+For every unbound pattern variable in the replacement,
+we ask the user to pick from a list of terms:
+\begin{code}
+requestBindings terms unbound
+  = let
+      len = length terms
+      menu = numberList (trTerm 0) terms
+
+      rB ubind [] = return ubind
+      rB ubind gvs@(gv:gvs')
+        = do putStrLn menu
+             putStrLn ("unbound "++trGVar gv)
+             response <- fmap readInt $ userPrompt "Choose term by number: "
+             if response <= 0 ||  len < response
+               then rB ubind gvs
+               else do putStrLn "\nstill using questionable bindings!"
+                       let ubind' = questionableBinding $ S.singleton gv
+                       rB ubind' gvs'
+
+    in rB emptyBinding $ S.toList unbound
+
+\end{code}
+
+\newpage
 Flattening grouped equivalences:
 \begin{code}
 flatEquivDescr = ( "fe", "flatten equivalences"
@@ -908,7 +926,7 @@ groupEquiv :: REPLCmd (REqState, LiveProof)
 groupEquiv args state@(reqs, _)
   = case args2gs args of
       Just gs -> tryDelta (groupAssociative (theEqv $ logicsig reqs) gs) state
-      Nothing -> putStrLn "bad arguments!" >> entertogo >> return state
+      Nothing -> putStrLn "bad arguments!" >> userPause >> return state
 \end{code}
 
 Undoing the previous step (if any)

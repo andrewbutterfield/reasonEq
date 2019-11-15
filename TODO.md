@@ -1,8 +1,18 @@
 # To Do
 
+## Current Task
 
+### `a n` command in proof REPL
+
+When instantiating unbound variables we have two cases:
+
+1. We have a `StdVar`, which binds to a term. 
+   We allow a default option of binding to `true`.
+2. We have a `LstVar`, which binds to a variable-set.
+   We allow a default option of binding to `{}`.
 
 ## Hotfixes
+
 
 ### `[]_idem` Proof
 
@@ -10,11 +20,6 @@ Need `PredSubst` axioms !!!
 
 STOP PRESS ! Reading [Gries 97] gives a new perspective for `PredUniv` axioms.
 
-### `a n` command in proof REPL
-
-Need to ask the user to fill out the unbound replacement variables from a list generated from
-the full goal predicate (not just the focus). 
-**Need to add true/false to that list**
 
 ### Instantiating Side-Conditions
 

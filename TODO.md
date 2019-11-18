@@ -1,6 +1,27 @@
 # To Do
 
+## Top-Level Plan
+
+We need to refactor all theories:
+
+* XX_def move from PropAxioms or PredAxioms into XX theory with axioms and conjectures.
+* XX_subst move in as axioms/conjectures into XX theory
+* Theory starts with defining axioms with the last axioms being those that define substitutions, if allows
+* Theory conjectures start with substitution conjectures, if any, and then the rest.
+
 ## Current Task
+
+none
+
+
+## Hotfixes
+
+
+### `[]_idem` Proof
+
+Need `PredSubst` axioms !!!
+
+STOP PRESS ! Reading [Gries 97] gives a new perspective for `PredUniv` axioms.
 
 ### `a n` command in proof REPL
 
@@ -12,16 +33,6 @@ When instantiating unbound variables we have two cases:
    We allow a default option of binding to `{}`.
    
 Defaults are specifed by hitting enter with no selection data.
-
-## Hotfixes
-
-
-### `[]_idem` Proof
-
-Need `PredSubst` axioms !!!
-
-STOP PRESS ! Reading [Gries 97] gives a new perspective for `PredUniv` axioms.
-
 
 ### Instantiating Side-Conditions
 

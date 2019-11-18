@@ -16,7 +16,7 @@ import VarData
 import SideCond
 import REqState
 import StdSignature
-import PropEquiv
+import Equivalence
 import PropNot
 import PropDisj
 import PropConj
@@ -52,7 +52,7 @@ devInitState
             , currTheory = predAxiomName
             , liveProofs = M.empty }
 
-devTheories = fromJust $ addTheory stdSigTheory noTheories
+devTheories = noTheories
 
 -- devTheories
 --   =  fromJust $ addTheory predUnivTheory $

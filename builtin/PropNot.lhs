@@ -26,8 +26,27 @@ import Proofs
 import Theories
 
 import StdSignature
-import PropEquiv
+import Equivalence
 import TestRendering
+\end{code}
+
+\subsubsection{Known Variables}
+
+These are precisely the two propositional constants,
+with \textit{true} known as boolean,
+and \textit{false} known as it's negation.
+$$
+  \begin{array}{ll}
+     \AXtrue     & \AXtrueN
+  \\ \AXfalseDef & \AXfalseDefN
+  \end{array}
+$$
+
+\begin{code}
+propKnown :: VarTable
+propKnown   =  newVarTable
+axTrue      =  ( "true",          ( trueP,                  scTrue ) )
+axFalseDef  =  ( "false"-.-"def", ( falseP === mkNot trueP, scTrue ) )
 \end{code}
 
 \subsection{Negation Conjectures}
@@ -121,7 +140,7 @@ propNotName = "PropNot"
 propNotTheory :: Theory
 propNotTheory
   =  Theory { thName  =  propNotName
-            , thDeps  =  [propEquivName,propAxiomName]
+            , thDeps  =  [equivName]
             , known   =  newVarTable
             , laws    =  []
             , proofs  =  []

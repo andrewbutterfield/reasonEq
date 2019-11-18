@@ -18,10 +18,6 @@ module StdSignature (
 , propSignature
 , propdef
 , flattenEquiv
-, propKnown
-, propAxioms
-, propAxiomName
-, stdSigTheory
 ) where
 
 import Data.Maybe
@@ -68,6 +64,19 @@ These will be introduced later via the definitional mechanism
 $$
 \AXPROP
 $$
+In this module we define the logical signature
+we use, and supply some propositional infrastructure.
+We do not define any theory here.
+Instead we use modules to provide well-defined chunks
+of axioms and theorems,
+organised around key propositional operators.
+In general we follow the presentation order of \cite{gries.93}:
+\begin{description}
+  \item [\texttt{Equivalence}]
+    Laws for $\equiv$ and $\true$, in the \texttt{Equiv} theory.
+\end{description}
+
+
 
 \subsection{Propositional Infrastructure}
 
@@ -77,8 +86,9 @@ This consists of the predicate variables $P$, $Q$ and $R$,
 the $\Bool$ type,
 the constants \textit{true} and \textit{false},
 and the infix symbols $\equiv$, $\lnot$, $\lor$, $\land$ and $\implies$.
-The propositional constants, along with the equivelance and implication operators
-are also exported as they have significance for proof strategies.
+The propositional constants, along with key propositional operators
+are also exported in a logical signature,
+as they have significance for proof strategies.
 
 \subsubsection{Propositional Variables}
 
@@ -91,7 +101,7 @@ r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
 \subsubsection{Propositional Type}
 
 \begin{code}
-bool = GivenType $ fromJust $ ident $ _mathbb "B"
+bool = GivenType $ fromJust $ ident $ "B"
 \end{code}
 
 \subsubsection{Propositional Constants}
@@ -137,216 +147,10 @@ flattenEquiv = flattenTheEquiv propSignature
 
 
 
-\subsection{Propositional Axioms}
+\subsection{Propositional Law Shorthand}
 
 All \emph{propositional} laws are characterised by not having
 any side-conditions:
 \begin{code}
 propdef ( name, prop ) = ( name, ( prop, scTrue ) )
-\end{code}
-
-\subsubsection{Known Variables}
-
-These are precisely the two propositional constants,
-with \textit{true} known as boolean,
-and \textit{false} known as it's negation.
-$$
-  \begin{array}{ll}
-     \AXtrue     & \AXtrueN
-  \\ \AXfalseDef & \AXfalseDefN
-  \end{array}
-$$
-
-\begin{code}
-propKnown :: VarTable
-propKnown   =  newVarTable
-axTrue      =  ( "true",          ( trueP,                  scTrue ) )
-axFalseDef  =  ( "false"-.-"def", ( falseP === mkNot trueP, scTrue ) )
-\end{code}
-
-\newpage
-\subsubsection{Axioms}
-
-$$
-  \begin{array}{ll}
-     \AXeqvRefl & \AXeqvReflN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axEqvRefl
- = ( "equiv" -.- "refl"
-   , ( p === p
-   , scTrue ) )
-\end{code}
-
-
-$$
-  \begin{array}{ll}
-     \AXeqvAssoc & \AXeqvAssocN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axEqvAssoc
- = ( "equiv" -.- "assoc"
-   , ( ((p === q) === r) === (p === (q === r))
-   , scTrue ) )
-\end{code}
-
-$$
-  \begin{array}{ll}
-     \AXeqvSymm & \AXeqvSymmN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axEqvSymm
- = ( "equiv" -.- "symm"
-   , ( flattenEquiv ( (p === q) === (q === p) )
-   , scTrue ) )
-\end{code}
-
-$$
-  \begin{array}{ll}
-     \AXnotEqvDistr & \AXnotEqvDistrN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axNotEqvDistr
- = ( "lnot" -.- "equiv" -.- "distr"
-   , ( mkNot(p === q) ===  ((mkNot p) === q)
-   , scTrue ) )
-\end{code}
-
-
-$$
-  \begin{array}{ll}
-     \AXorSymm & \AXorSymmN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axOrSymm
- = ( "lor" -.- "symm"
-   , ( p \/ q === q \/ p
-   , scTrue ) )
-\end{code}
-
-$$
-  \begin{array}{ll}
-     \AXorAssoc & \AXorAssocN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axOrAssoc
- = ( "lor" -.- "assoc"
-   , ( (p \/ q) \/ r === p \/ (q \/ r)
-   , scTrue ) )
-\end{code}
-
-$$
-  \begin{array}{ll}
-     \AXorIdem & \AXorIdemN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axOrIdem
- = ( "lor" -.- "idem"
-   , ( p \/ p === p
-   , scTrue ) )
-\end{code}
-
-$$
-  \begin{array}{ll}
-     \AXorEqvDistr & \AXorEqvDistrN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axOrEqvDistr
- = ( "lor" -.- "equiv" -.- "distr"
-   , ( flattenEquiv ( (p \/ (q === r)) === (p \/ q === p \/ r) )
-   , scTrue ) )
-\end{code}
-
-$$
-  \begin{array}{ll}
-     \AXexclMdl & \AXexclMdlN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axExclMidl
- = ( "excl-middle"
-   , ( p \/ mkNot p
-   , scTrue ) )
-\end{code}
-
-$$
-  \begin{array}{ll}
-     \AXgoldRule & \AXgoldRuleN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axGoldRule
- = ( "golden-rule"
-   , ( (p /\ q) === ((p === q) === p \/ q)
-   , scTrue ) )
-\end{code}
-
-$$
-  \begin{array}{ll}
-     \AXimplDef & \AXimplDefN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axImplDef
- = ( "implies" -.- "def"
-   , ( flattenEquiv ( p ==> q === (p \/ q === q) )
-   , scTrue ) )
-\end{code}
-
-We now collect all of the above as our axiom set:
-\begin{code}
-propAxioms :: [Law]
-propAxioms
-  = map labelAsAxiom
-      [ axTrue, axEqvRefl, axEqvAssoc, axEqvSymm
-      , axFalseDef, axNotEqvDistr
-      , axOrSymm, axOrAssoc, axOrIdem, axOrEqvDistr, axExclMidl
-      , axGoldRule, axImplDef ]
-\end{code}
-
-
-\subsection{The Standard Signature Theory}
-
-\begin{code}
-propAxiomName :: String
-propAxiomName = "StdSig"
-stdSigTheory :: Theory
-stdSigTheory
-  =  Theory { thName  =  propAxiomName
-            , thDeps  =  []
-            , known   =  propKnown
-            , laws    =  propAxioms
-            , proofs  =  []
-            , conjs   =  []
-            }
 \end{code}

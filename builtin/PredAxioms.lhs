@@ -29,7 +29,7 @@ import Theories
 
 import StdSignature
 import PropSubst
-import PropEquiv
+import Equivalence
 import PropNot
 import PropDisj
 import PropConj
@@ -219,8 +219,8 @@ predAxiomTheory
                          , propConjName
                          , propDisjName
                          , propNotName
-                         , propEquivName
-                         , propAxiomName ]
+                         , equivName
+                         ]
             , known   =  newVarTable
             , laws    =  predAxioms
             , proofs  =  []

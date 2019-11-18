@@ -321,7 +321,7 @@ is added,
 this does not mean that we automatically induce its temporal counterparts.
 So adding $x:T$ (before) does not mean that we have also added $x':T$.
 This is in contrast to the treatment of list-variables,
-where such induction always occurs.
+where such treatment always occurs.
 \begin{code}
 addKnownVar (ObsVar _ (During _)) _ _
   =  fail "addKnownVar: not for During Variables."

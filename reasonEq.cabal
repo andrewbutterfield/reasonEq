@@ -44,7 +44,7 @@ library
                      , Dev
                      -- in builtin
                      , StdSignature
-                     , PropEquiv
+                     , Equivalence
                      , PropNot
                      , PropDisj
                      , PropConj

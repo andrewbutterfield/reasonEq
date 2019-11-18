@@ -28,7 +28,7 @@ import Theories
 
 import StdSignature
 import PropSubst
-import PropEquiv
+import Equivalence
 import PropNot
 import PropDisj
 import PropConj
@@ -341,8 +341,7 @@ xyzDTheory
                          , propConjName
                          , propDisjName
                          , propNotName
-                         , propEquivName
-                         , propAxiomName
+                         , equivName
                          ]
             , known   =  xyzDKnown
             , laws    =  xyzDAxioms

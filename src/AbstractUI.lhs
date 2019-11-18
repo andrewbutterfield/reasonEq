@@ -54,7 +54,7 @@ import Ranking
 import TestRendering
 
 import StdSignature
-import PropEquiv
+import Equivalence
 import PropNot
 import PropDisj
 import PropConj
@@ -730,21 +730,20 @@ stepEquivalenceTheorem nm state@(reqs, liveProof)
 
 Listing builtin theories:
 \begin{code}
-devKnownBuiltins  = [ stdSigTheory
-                    , propEquivTheory
-                    , propNotTheory
-                    , propDisjTheory
-                    , propConjTheory
-                    , propMixOneTheory
-                    , propImplTheory
-                    , propSubstTheory
-                    , equalityTheory
-                    , predAxiomTheory
-                    , predExistsTheory
-                    , predUnivTheory
-                    , utpStartupTheory
-                    , xyzTheory
-                    , xyzDTheory
+devKnownBuiltins  = [ equivTheory
+                    -- , propNotTheory
+                    -- , propDisjTheory
+                    -- , propConjTheory
+                    -- , propMixOneTheory
+                    -- , propImplTheory
+                    -- , propSubstTheory
+                    -- , equalityTheory
+                    -- , predAxiomTheory
+                    -- , predExistsTheory
+                    -- , predUnivTheory
+                    -- , utpStartupTheory
+                    -- , xyzTheory
+                    -- , xyzDTheory
                     ]
 
 biLkp _ []  = Nothing

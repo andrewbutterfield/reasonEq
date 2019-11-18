@@ -26,7 +26,7 @@ import Proofs
 import Theories
 
 import StdSignature
-import PropEquiv
+import Equivalence
 import PropNot
 import TestRendering
 \end{code}
@@ -122,7 +122,7 @@ propDisjName = "PropDisj"
 propDisjTheory :: Theory
 propDisjTheory
   =  Theory { thName  =  propDisjName
-            , thDeps  =  [ propNotName, propEquivName, propAxiomName ]
+            , thDeps  =  [ propNotName, equivName ]
             , known   =  newVarTable
             , laws    =  []
             , proofs  =  []

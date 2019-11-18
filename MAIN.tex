@@ -37,17 +37,17 @@ Andrew Butterfield
 \maketitle
 \tableofcontents
 
-\chapter{\reasonEq\ Application}
-
-\input{app/Main.lhs}
+% \chapter{\reasonEq\ Application}
+%
+% \input{app/Main.lhs}
 
 \chapter{\reasonEq\ Libraries}
 
 %\input{src/LexBase.lhs}
 %\newpage
 % \input{src/Variables.lhs}
-\newpage
-\input{src/AST.lhs}
+% \newpage
+% \input{src/AST.lhs}
 % \newpage
 % \input{src/FreeVars.lhs}
 % \newpage
@@ -76,8 +76,8 @@ Andrew Butterfield
 % \input{src/REqState.lhs}
 % \newpage
 % \input{src/Persistence.lhs}
-\newpage
-\input{src/AbstractUI.lhs}
+% \newpage
+% \input{src/AbstractUI.lhs}
 % \newpage
 % \input{src/WriteRead.lhs}
 % \newpage
@@ -99,15 +99,25 @@ Andrew Butterfield
 
 \chapter{\reasonEq\ Built-in Theories}
 
-% \newpage
-% \input{builtin/PredUniv.lhs}
-% \newpage
-% \input{builtin/UTPStartup.lhs}
-% \newpage
-% \input{builtin/XYZ.lhs}
-% \newpage
-% \input{builtin/XYZDesign.lhs}
+\newpage\input{builtin/PropAxioms.lhs}
+\newpage\input{builtin/PredAxioms.lhs}
+\newpage\input{builtin/PropSubst.lhs}
 
+\newpage\input{builtin/PropEquiv.lhs}
+\newpage\input{builtin/PropNot.lhs}
+\newpage\input{builtin/PropDisj.lhs}
+\newpage\input{builtin/PropConj.lhs}
+\newpage\input{builtin/PropMixOne.lhs}
+\newpage\input{builtin/PropImpl.lhs}
+
+\newpage\input{builtin/Equality.lhs}
+
+\newpage\input{builtin/PredExists.lhs}
+\newpage\input{builtin/PredUniv.lhs}
+
+\newpage\input{builtin/UTPStartup.lhs}
+\newpage\input{builtin/XYZ.lhs}
+\newpage\input{builtin/XYZDesign.lhs}
 
 % \chapter{\reasonEq\ Tests}
 %

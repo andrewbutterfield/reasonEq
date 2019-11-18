@@ -43,7 +43,7 @@ library
                      , REPL
                      , Dev
                      -- in builtin
-                     , PropAxioms
+                     , StdSignature
                      , PropEquiv
                      , PropNot
                      , PropDisj

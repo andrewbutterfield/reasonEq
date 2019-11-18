@@ -53,7 +53,7 @@ import Ranking
 
 import TestRendering
 
-import PropAxioms
+import StdSignature
 import PropEquiv
 import PropNot
 import PropDisj
@@ -730,7 +730,7 @@ stepEquivalenceTheorem nm state@(reqs, liveProof)
 
 Listing builtin theories:
 \begin{code}
-devKnownBuiltins  = [ propAxiomTheory
+devKnownBuiltins  = [ stdSigTheory
                     , propEquivTheory
                     , propNotTheory
                     , propDisjTheory

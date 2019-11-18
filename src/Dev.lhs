@@ -15,7 +15,7 @@ import AST
 import VarData
 import SideCond
 import REqState
-import PropAxioms
+import StdSignature
 import PropEquiv
 import PropNot
 import PropDisj
@@ -38,9 +38,8 @@ devProjectDir = "devproj"
 \end{code}
 
 We present the initial state in development mode,
-which currently initialises state based on the contents of
-the hard-coded ``Propositional'' theory,
-plus any other test theories we choose to insert.
+which currently initialises state on having no theories defined,
+only the standard logic signature.
 
 \begin{code}
 devInitState
@@ -53,17 +52,19 @@ devInitState
             , currTheory = predAxiomName
             , liveProofs = M.empty }
 
-devTheories
-  =  fromJust $ addTheory predUnivTheory $
-     fromJust $ addTheory predExistsTheory $
-     fromJust $ addTheory predAxiomTheory $
-     fromJust $ addTheory equalityTheory $
-     fromJust $ addTheory propSubstTheory $
-     fromJust $ addTheory propImplTheory $
-     fromJust $ addTheory propMixOneTheory $
-     fromJust $ addTheory propConjTheory $
-     fromJust $ addTheory propDisjTheory $
-     fromJust $ addTheory propNotTheory $
-     fromJust $ addTheory propEquivTheory $
-     fromJust $ addTheory propAxiomTheory noTheories
+devTheories = fromJust $ addTheory stdSigTheory noTheories
+
+-- devTheories
+--   =  fromJust $ addTheory predUnivTheory $
+--      fromJust $ addTheory predExistsTheory $
+--      fromJust $ addTheory predAxiomTheory $
+--      fromJust $ addTheory equalityTheory $
+--      fromJust $ addTheory propSubstTheory $
+--      fromJust $ addTheory propImplTheory $
+--      fromJust $ addTheory propMixOneTheory $
+--      fromJust $ addTheory propConjTheory $
+--      fromJust $ addTheory propDisjTheory $
+--      fromJust $ addTheory propNotTheory $
+--      fromJust $ addTheory propEquivTheory $
+--      fromJust $ addTheory propAxiomTheory noTheories
 \end{code}

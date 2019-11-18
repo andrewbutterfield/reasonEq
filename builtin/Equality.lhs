@@ -21,7 +21,7 @@ import VarData
 import Laws
 import Proofs
 import Theories
-import PropAxioms
+import StdSignature
 import TestRendering
 \end{code}
 

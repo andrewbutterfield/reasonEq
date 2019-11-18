@@ -26,7 +26,7 @@ import Laws
 import Proofs
 import Theories
 
-import PropAxioms
+import StdSignature
 import PropSubst
 import PropEquiv
 import PropNot

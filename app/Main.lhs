@@ -35,7 +35,7 @@ import SideCond
 import Binding
 import REqState
 import AbstractUI
-import PropAxioms(propSignature)
+import StdSignature(propSignature)
 import Instantiate
 import TestRendering
 import TestParsing

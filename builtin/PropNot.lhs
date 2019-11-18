@@ -25,7 +25,7 @@ import Laws
 import Proofs
 import Theories
 
-import PropAxioms
+import StdSignature
 import PropEquiv
 import TestRendering
 \end{code}

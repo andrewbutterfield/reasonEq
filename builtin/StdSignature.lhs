@@ -1,12 +1,12 @@
-\section{Propositional Axioms}
+\section{Standard Signature}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2018
+Copyright  Andrew Buttefield (c) 2018--2019
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module PropAxioms (
+module StdSignature (
   bool
 , trueP
 , falseP
@@ -21,7 +21,7 @@ module PropAxioms (
 , propKnown
 , propAxioms
 , propAxiomName
-, propAxiomTheory
+, stdSigTheory
 ) where
 
 import Data.Maybe
@@ -335,13 +335,13 @@ propAxioms
 \end{code}
 
 
-\subsection{The Propositional Theory}
+\subsection{The Standard Signature Theory}
 
 \begin{code}
 propAxiomName :: String
-propAxiomName = "PropAxioms"
-propAxiomTheory :: Theory
-propAxiomTheory
+propAxiomName = "StdSig"
+stdSigTheory :: Theory
+stdSigTheory
   =  Theory { thName  =  propAxiomName
             , thDeps  =  []
             , known   =  propKnown

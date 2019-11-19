@@ -39,13 +39,15 @@ Some useful local definitions:
 p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
 r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
+vx = Vbl (fromJust $ ident "x") ObsV Static  ; lvxs = LVbl vx [] []
+ve = Vbl (fromJust $ ident "e") ExprV Static ; lves = LVbl ve [] []
+sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
 \end{code}
 
 \subsubsection{Known Variables}
 
 We have none.
-The values $true$ and $false$ are defined as values,
-not known variables.
+The value $true$ is defined as a value, and not a known variable.
 \begin{code}
 equivKnown :: VarTable
 equivKnown =  newVarTable
@@ -67,6 +69,21 @@ $$
 \begin{code}
 axTrue  =  ( "true", ( trueP, scTrue ) )
 \end{code}
+
+$$
+  \begin{array}{ll}
+     \AXtrueSubst & \AXtrueSubstN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+axTrueSubst
+ = ( "true" -.- "subst"
+   , ( sub trueP  === trueP
+   , scTrue ) )
+\end{code}
+
 
 
 $$
@@ -112,128 +129,33 @@ axEqvSymm
    , scTrue ) )
 \end{code}
 
+
 $$
   \begin{array}{ll}
-     \AXnotEqvDistr & \AXnotEqvDistrN
+     \AXeqvSubst & \AXeqvSubstN
   \end{array}
 $$
 
 \vspace{-8pt}
 \begin{code}
-axNotEqvDistr
- = ( "lnot" -.- "equiv" -.- "distr"
-   , ( mkNot(p === q) ===  ((mkNot p) === q)
+axEqvSubst
+ = ( "equiv" -.- "subst"
+   , ( sub (p === q)  === (sub p === sub q)
    , scTrue ) )
 \end{code}
 
 
-$$
-  \begin{array}{ll}
-     \AXorSymm & \AXorSymmN
-  \end{array}
-$$
 
-\vspace{-8pt}
-\begin{code}
-axOrSymm
- = ( "lor" -.- "symm"
-   , ( p \/ q === q \/ p
-   , scTrue ) )
-\end{code}
 
-$$
-  \begin{array}{ll}
-     \AXorAssoc & \AXorAssocN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axOrAssoc
- = ( "lor" -.- "assoc"
-   , ( (p \/ q) \/ r === p \/ (q \/ r)
-   , scTrue ) )
-\end{code}
-
-$$
-  \begin{array}{ll}
-     \AXorIdem & \AXorIdemN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axOrIdem
- = ( "lor" -.- "idem"
-   , ( p \/ p === p
-   , scTrue ) )
-\end{code}
-
-$$
-  \begin{array}{ll}
-     \AXorEqvDistr & \AXorEqvDistrN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axOrEqvDistr
- = ( "lor" -.- "equiv" -.- "distr"
-   , ( flattenEquiv ( (p \/ (q === r)) === (p \/ q === p \/ r) )
-   , scTrue ) )
-\end{code}
-
-$$
-  \begin{array}{ll}
-     \AXexclMdl & \AXexclMdlN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axExclMidl
- = ( "excl-middle"
-   , ( p \/ mkNot p
-   , scTrue ) )
-\end{code}
-
-$$
-  \begin{array}{ll}
-     \AXgoldRule & \AXgoldRuleN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axGoldRule
- = ( "golden-rule"
-   , ( (p /\ q) === ((p === q) === p \/ q)
-   , scTrue ) )
-\end{code}
-
-$$
-  \begin{array}{ll}
-     \AXimplDef & \AXimplDefN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axImplDef
- = ( "implies" -.- "def"
-   , ( flattenEquiv ( p ==> q === (p \/ q === q) )
-   , scTrue ) )
-\end{code}
 
 We now collect all of the above as our axiom set:
 \begin{code}
 equivAxioms :: [Law]
 equivAxioms
   = map labelAsAxiom
-      [ axTrue, axEqvRefl, axEqvAssoc, axEqvSymm
-      , axNotEqvDistr
-      , axOrSymm, axOrAssoc, axOrIdem, axOrEqvDistr, axExclMidl
-      , axGoldRule, axImplDef ]
+      [ axTrue, axTrueSubst
+      , axEqvRefl, axEqvAssoc, axEqvSymm, axEqvSubst
+      ]
 \end{code}
 
 \subsection{Equivalence Conjectures}

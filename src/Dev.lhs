@@ -17,7 +17,7 @@ import SideCond
 import REqState
 import StdSignature
 import Equivalence
-import PropNot
+import Negation
 import PropDisj
 import PropConj
 import PropMixOne
@@ -39,7 +39,7 @@ devProjectDir = "devproj"
 
 We present the initial state in development mode,
 which currently initialises state on having no theories defined,
-only the standard logic signature.
+but with the standard logic signature defined
 
 \begin{code}
 devInitState
@@ -49,7 +49,7 @@ devInitState
             , settings = REqSet 40
             , logicsig = propSignature
             , theories = devTheories
-            , currTheory = predAxiomName
+            , currTheory = "_"
             , liveProofs = M.empty }
 
 devTheories = noTheories

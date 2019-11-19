@@ -55,7 +55,7 @@ import TestRendering
 
 import StdSignature
 import Equivalence
-import PropNot
+import Negation
 import PropDisj
 import PropConj
 import PropMixOne
@@ -731,7 +731,7 @@ stepEquivalenceTheorem nm state@(reqs, liveProof)
 Listing builtin theories:
 \begin{code}
 devKnownBuiltins  = [ equivTheory
-                    -- , propNotTheory
+                    , negationTheory
                     -- , propDisjTheory
                     -- , propConjTheory
                     -- , propMixOneTheory

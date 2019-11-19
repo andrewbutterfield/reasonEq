@@ -30,7 +30,7 @@ import Theories
 import StdSignature
 import PropSubst
 import Equivalence
-import PropNot
+import Negation
 import PropDisj
 import PropConj
 import PropMixOne
@@ -218,7 +218,7 @@ predAxiomTheory
                          , propMixOneName
                          , propConjName
                          , propDisjName
-                         , propNotName
+                         , negationName
                          , equivName
                          ]
             , known   =  newVarTable

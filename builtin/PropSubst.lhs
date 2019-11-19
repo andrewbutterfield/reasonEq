@@ -27,7 +27,7 @@ import Theories
 
 import StdSignature
 import Equivalence
-import PropNot
+import Negation
 import PropDisj
 import PropConj
 import PropImpl
@@ -69,48 +69,7 @@ sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
 
 \subsection{Propositional Substitution Axioms}
 
-$$
-  \begin{array}{ll}
-     \AXtrueSubst & \AXtrueSubstN
-  \end{array}
-$$
 
-\vspace{-8pt}
-\begin{code}
-axTrueSubst
- = ( "true" -.- "subst"
-   , ( sub trueP  === trueP
-   , scTrue ) )
-\end{code}
-
-$$
-  \begin{array}{ll}
-     \AXnotSubst & \AXnotSubstN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axNotSubst
- = ( "lnot" -.- "subst"
-   , ( sub (mkNot p)  === mkNot (sub p)
-   , scTrue ) )
-\end{code}
-
-
-$$
-  \begin{array}{ll}
-     \AXeqvSubst & \AXeqvSubstN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axEqvSubst
- = ( "equiv" -.- "subst"
-   , ( sub (p === q)  === (sub p === sub q)
-   , scTrue ) )
-\end{code}
 
 
 $$
@@ -133,25 +92,12 @@ We now collect all of the above as our axiom set:
 \begin{code}
 propSubstAxioms :: [Law]
 propSubstAxioms
-  = map labelAsAxiom [ axTrueSubst, axNotSubst, axEqvSubst, axOrSubst ]
+  = map labelAsAxiom [ axOrSubst ]
 \end{code}
 
 
 \subsubsection{Propositional Substitution Conjectures}
 
-$$
-  \begin{array}{ll}
-     \CJfalseSubst & \CJfalseSubstN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-cjFalseSubst
- = ( "false" -.- "subst"
-   , ( sub falseP  === falseP
-   , scTrue ) )
-\end{code}
 
 $$
   \begin{array}{ll}
@@ -185,7 +131,7 @@ cjImplSubst
 
 \begin{code}
 propSubstConjs :: [NmdAssertion]
-propSubstConjs  =  [ cjFalseSubst, cjAndSubst, cjImplSubst ]
+propSubstConjs  =  [ cjAndSubst, cjImplSubst ]
 \end{code}
 
 
@@ -200,7 +146,7 @@ propSubstTheory
             , thDeps  =  [ propImplName
                          , propConjName
                          , propDisjName
-                         , propNotName
+                         , negationName
                          , equivName
                          ]
             , known   =  newVarTable

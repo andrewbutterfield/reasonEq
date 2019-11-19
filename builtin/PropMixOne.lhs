@@ -27,7 +27,7 @@ import Theories
 
 import StdSignature
 import Equivalence
-import PropNot
+import Negation
 import PropDisj
 import PropConj
 import TestRendering
@@ -212,7 +212,7 @@ propMixOneName = "PropMixOne"
 propMixOneTheory :: Theory
 propMixOneTheory
   =  Theory { thName  =  propMixOneName
-            , thDeps  =  [ propConjName, propDisjName, propNotName
+            , thDeps  =  [ propConjName, propDisjName, negationName
                          , equivName ]
             , known   =  newVarTable
             , laws    =  []

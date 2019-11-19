@@ -27,7 +27,7 @@ import Theories
 
 import StdSignature
 import Equivalence
-import PropNot
+import Negation
 import PropDisj
 import TestRendering
 \end{code}
@@ -169,7 +169,7 @@ propConjName = "PropConj"
 propConjTheory :: Theory
 propConjTheory
   =  Theory { thName  =  propConjName
-            , thDeps  =  [ propDisjName, propNotName
+            , thDeps  =  [ propDisjName, negationName
                          , equivName ]
             , known   =  newVarTable
             , laws    =  []

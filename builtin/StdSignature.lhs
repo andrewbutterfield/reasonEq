@@ -73,7 +73,9 @@ organised around key propositional operators.
 In general we follow the presentation order of \cite{gries.93}:
 \begin{description}
   \item [\texttt{Equivalence}]
-    Laws for $\equiv$ and $\true$, in the \texttt{Equiv} theory.
+    Laws for $true$ and $\equiv$, in the \texttt{Equiv} theory.
+  \item [\texttt{Negation}]
+    Laws for $false$ and $\lnot$, in the \texttt{Not} theory.
 \end{description}
 
 

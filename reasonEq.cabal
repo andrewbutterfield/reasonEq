@@ -45,7 +45,7 @@ library
                      -- in builtin
                      , StdSignature
                      , Equivalence
-                     , PropNot
+                     , Negation
                      , PropDisj
                      , PropConj
                      , PropMixOne

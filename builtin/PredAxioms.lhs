@@ -100,7 +100,7 @@ lvys = LVbl vy [] [] ; ys = LstVar lvys
 \newpage
 \subsection{Predicate Axioms}
 
-General predicates laws often have side-conditions:
+General predicate laws often have side-conditions:
 \begin{code}
 preddef name prop sc = ( name, ( prop, sc ) )
 \end{code}

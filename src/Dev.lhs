@@ -63,10 +63,9 @@ devTheories =
      -- fromJust $ addTheory predUnivTheory $
      -- fromJust $ addTheory predExistsTheory $
      -- fromJust $ addTheory predAxiomTheory $
-     -- fromJust $ addTheory equalityTheory $
-     -- fromJust $ addTheory propSubstTheory $
-     -- fromJust $ addTheory implTheory $
-     -- fromJust $ addTheory aoiTheory $
+     fromJust $ addTheory equalityTheory $
+     fromJust $ addTheory implTheory $
+     fromJust $ addTheory aoiTheory $
      fromJust $ addTheory conjTheory $
      fromJust $ addTheory disjTheory $
      fromJust $ addTheory notTheory $
@@ -82,11 +81,10 @@ Listing builtin theories:
 devKnownBuiltins  = [ equivTheory
                     , notTheory
                     , disjTheory
-                    -- , conjTheory
-                    -- , aoiTheory
-                    -- , implTheory
-                    -- , propSubstTheory
-                    -- , equalityTheory
+                    , conjTheory
+                    , aoiTheory
+                    , implTheory
+                    , equalityTheory
                     -- , predAxiomTheory
                     -- , predExistsTheory
                     -- , predUnivTheory

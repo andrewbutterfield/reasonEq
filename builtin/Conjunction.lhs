@@ -220,7 +220,7 @@ conjConjs
 
 \begin{code}
 conjName :: String
-conjName = "Conjunction"
+conjName = "And"
 conjTheory :: Theory
 conjTheory
   =  Theory { thName  =  conjName

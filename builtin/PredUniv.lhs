@@ -81,13 +81,13 @@ Logic C is both sound and complete, while S5 is incomplete.
 
 In our notation we have two meta-theorems (1st and 5th above),
 \begin{eqnarray*}
-   P \text{ a theorem} & \text{then} & [P] \text{ a theorem}
-\\ P \text{ a theorem} & \text{then} & P[Q/v] \text{ a theorem,}
+   P \text{ a theorem} & \text{implies} & [P] \text{ a theorem}
+\\ P \text{ a theorem} & \text{implies} & P[Q/v] \text{ a theorem,}
 \end{eqnarray*}
 a definition $\langle P \rangle = \lnot[\lnot P]$,
 and three axioms (2nd through 4th above)
 \begin{eqnarray*}
-   ~[P] &implies& P
+   ~[P] &\implies& P
 \\ ~[P\implies Q] &\implies& ([P] \implies [Q])
 \\ \langle P \rangle &\implies& [\langle P \rangle].
 \end{eqnarray*}

@@ -18,9 +18,12 @@ module StdSignature (
 , propSignature
 , propdef
 , flattenEquiv
+, forall, exists, univ
+, preddef
 ) where
 
 import Data.Maybe
+import qualified Data.Set as S
 
 import NiceSymbols
 
@@ -149,10 +152,32 @@ flattenEquiv = flattenTheEquiv propSignature
 
 
 
-\subsection{Propositional Law Shorthand}
+\subsubsection{Propositional Law Shorthand}
 
 All \emph{propositional} laws are characterised by not having
 any side-conditions:
 \begin{code}
 propdef ( name, prop ) = ( name, ( prop, scTrue ) )
+\end{code}
+
+
+\subsection{Predicate Infrastructure}
+
+
+\subsubsection{Predicate Constants}
+
+\begin{code}
+forallId = fromJust $ ident "forall"
+forall vl p = fromJust $ pBind forallId (S.fromList vl) p
+
+existsId = fromJust $ ident "exists"
+exists vl p = fromJust $ pBind existsId (S.fromList vl) p
+
+univId = fromJust $ brktIdent "[" "]"
+univ p = Cls univId p
+\end{code}
+
+General predicate laws often have side-conditions:
+\begin{code}
+preddef name prop sc = ( name, ( prop, sc ) )
 \end{code}

@@ -1,4 +1,4 @@
-\section{Predicate Axioms}
+\section{Universal Quantification (For-All)}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2018
 
@@ -6,10 +6,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module PredAxioms (
-  forall, exists
-, preddef
-, predAxioms, predAxiomName, predAxiomTheory
+module ForAll (
+  forallName, forallTheory
 ) where
 
 import Data.Maybe
@@ -60,7 +58,6 @@ $$
 We need to build some infrastructure here.
 This consists of the predicate variables $P$, $Q$ and $R$,
 expression variable $e$,
-the constants $\forall$, $\exists$, $[]$,
 and a useful collection of generic binder variables: $x,y,\lst x,\lst y$.
 
 \subsubsection{Predicate and Expression Variables}
@@ -72,19 +69,13 @@ p = fromJust $ pVar vP
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
 r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
 ve = Vbl (fromJust $ ident "e") ExprV Static
-lves = LVbl ve [] []
-gves = LstVar lves
+lves = LVbl ve [] [] ; gves = LstVar lves
 e = fromJust $ eVar ArbType ve
+vf = Vbl (fromJust $ ident "f") ExprV Static
+lvfs = LVbl vf [] [] ; gvfs = LstVar lvfs
+f = fromJust $ eVar ArbType vf
 \end{code}
 
-\subsubsection{Predicate Constants}
-
-\begin{code}
-forallId = fromJust $ ident "forall"
-forall vl p = fromJust $ pBind forallId (S.fromList vl) p
-existsId = fromJust $ ident "exists"
-exists vl p = fromJust $ pBind existsId (S.fromList vl) p
-\end{code}
 
 \subsubsection{Generic Variables}
 
@@ -94,22 +85,29 @@ tx = fromJust $ eVar ArbType vx
 lvxs = LVbl vx [] [] ; xs = LstVar lvxs
 vy = Vbl (fromJust $ ident "y") ObsV Static ; y = StdVar vy
 lvys = LVbl vy [] [] ; ys = LstVar lvys
+vz = Vbl (fromJust $ ident "z") ObsV Static ; z = StdVar vz
+lvzs = LVbl vz [] [] ; zs = LstVar lvzs
 \end{code}
 
+Substitutions:
+\begin{code}
+mksub p lvlvs = Sub P p $ fromJust $ substn [] lvlvs
+esxs = [(lvxs,lves)]
+ysxs = [(lvxs,lvys)]
+fszs = [(lvzs,lvfs)]
+efsyzs = [(lvys,lves),(lvzs,lvfs)]
+\end{code}
 
 \newpage
 \subsection{Predicate Axioms}
-
-General predicate laws often have side-conditions:
-\begin{code}
-preddef name prop sc = ( name, ( prop, sc ) )
-\end{code}
 
 $$
   \begin{array}{lll}
      \AXAllTrue & \AXAllTrueN &
   \end{array}
-$$\par\vspace{-8pt}
+$$
+
+\vspace{-5pt}
 \begin{code}
 axAllTrue = preddef ("forall" -.- "true")
                     (forall [xs] trueP  ===  trueP)
@@ -118,12 +116,12 @@ axAllTrue = preddef ("forall" -.- "true")
 
 $$\begin{array}{lll}
    \AXAllOnePoint & \AXAllOnePointS & \AXAllOnePointN
-\end{array}$$\par\vspace{-8pt}
+\end{array}$$\par\vspace{-5pt}
 \begin{code}
 axAllOne = preddef ("forall" -.- "one" -.- "point")
   ( (forall [xs,ys] ((lvxs `areEqualTo` lves) ==> p) )
     ===
-    (forall [ys] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) ) )
+    (forall [ys] (mksub p esxs)) )
   ([xs] `notin` gves)
 \end{code}
 
@@ -161,7 +159,7 @@ $$\par\vspace{-8pt}
 axAllInst = preddef ("forall" -.- "inst")
   ( (forall [xs,ys] p)
     ==>
-    (forall [ys] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) ) )
+    (forall [ys] (mksub p esxs)) )
   scTrue
 \end{code}
 
@@ -170,15 +168,31 @@ $$
   \begin{array}{lll}
      \AXAllDummyRen & \AXAllDummyRenS & \AXAllDummyRenN
   \end{array}
-$$\par\vspace{-8pt}
+$$\par
+
+\vspace{-8pt}
 \begin{code}
 axAllDumRen = preddef ("forall" -.- "alpha" -.- "rename")
   ( (forall [xs] p)
     ===
-    (forall [ys] (Sub P p (fromJust $ substn [] [(lvxs,lvys)])) ) )
+    (forall [ys] (mksub p ysxs)) )
   ([ys] `notin` gvP)
 \end{code}
 
+$$
+  \begin{array}{lll}
+     \AXAllSubst & \AXAllSubstS & \AXAllSubstN
+  \end{array}
+$$\par
+
+\vspace{-8pt}
+\begin{code}
+axAllSubst = preddef ("forall" -.- "subst")
+  ( (mksub (forall [xs,ys] p) efsyzs)
+    ===
+    (forall [xs,ys] (mksub p fszs)) )
+  ([xs] `notin` zs) -- assymetric encoding!
+\end{code}
 
 
 % %% TEMPLATE
@@ -186,7 +200,9 @@ axAllDumRen = preddef ("forall" -.- "alpha" -.- "rename")
 %   \begin{array}{lll}
 %      law & sc & name
 %   \end{array}
-% $$\par\vspace{-8pt}
+% $$\par
+%
+%\vspace{-8pt}
 % \begin{code}
 % axXXX = preddef ("law" -.- "name")
 %   p
@@ -195,22 +211,23 @@ axAllDumRen = preddef ("forall" -.- "alpha" -.- "rename")
 
 We now collect all of the above as our axiom set:
 \begin{code}
-predAxioms :: [Law]
-predAxioms
+forallAxioms :: [Law]
+forallAxioms
   = map labelAsAxiom
       [ axAllTrue, axAllOne, axAllAndDistr
-      , axOrAllScope, axAllInst, axAllDumRen ]
+      , axOrAllScope, axAllInst, axAllDumRen
+      , axAllSubst ]
 \end{code}
 
 
 \subsection{The Predicate Theory}
 
 \begin{code}
-predAxiomName :: String
-predAxiomName = "PredAxioms"
-predAxiomTheory :: Theory
-predAxiomTheory
-  =  Theory { thName  =  predAxiomName
+forallName :: String
+forallName = "ForAll"
+forallTheory :: Theory
+forallTheory
+  =  Theory { thName  =  forallName
             , thDeps  =  [ equalityName
                          , implName
                          , aoiName
@@ -220,7 +237,7 @@ predAxiomTheory
                          , equivName
                          ]
             , known   =  newVarTable
-            , laws    =  predAxioms
+            , laws    =  forallAxioms
             , proofs  =  []
             , conjs   =  []
             }

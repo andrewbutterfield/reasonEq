@@ -7,8 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module PredUniv (
-  univ
-, predUnivConjs, predUnivName, predUnivTheory
+  predUnivConjs, predUnivName, predUnivTheory
 ) where
 
 import Data.Maybe
@@ -34,7 +33,7 @@ import Conjunction
 import AndOrInvert
 import Implication
 import Equality
-import PredAxioms
+import ForAll
 import PredExists
 import TestRendering
 \end{code}
@@ -119,10 +118,6 @@ q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
 
 \subsubsection{Predicate Constants}
 
-\begin{code}
-univId = fromJust $ brktIdent "[" "]"
-univ p = Cls univId p
-\end{code}
 
 \subsubsection{Generic Variables}
 
@@ -277,7 +272,7 @@ predUnivTheory :: Theory
 predUnivTheory
   =  Theory { thName  =  predUnivName
             , thDeps  =  [ predExistsName
-                         , predAxiomName
+                         , forallName
                          , equalityName
                          , implName
                          , aoiName

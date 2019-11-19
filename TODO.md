@@ -6,8 +6,12 @@ We need to refactor all theories:
 
 * XX_def move from PropAxioms or PredAxioms into XX theory with axioms and conjectures.
 * XX_subst move in as axioms/conjectures into XX theory
-* Theory starts with defining axioms with the last axioms being those that define substitutions, if allows
+* Theory starts with defining axioms with the last axioms being those that define substitutions, if allowed
 * Theory conjectures start with substitution conjectures, if any, and then the rest.
+
+**NEED SIDECONDITIONS OF THE FORM `x$ disj z$` !!!**
+
+*Can be done as  `[x$] notin z$`  or `[z$] notin x$`.*
 
 ## Current Task
 

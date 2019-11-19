@@ -51,7 +51,7 @@ library
                      , AndOrInvert
                      , Implication
                      , Equality
-                     , PredAxioms
+                     , ForAll
                      , PredExists
                      , PredUniv
                      , UTPStartup

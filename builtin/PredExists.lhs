@@ -33,7 +33,7 @@ import Conjunction
 import AndOrInvert
 import Implication
 import Equality
-import PredAxioms
+import ForAll
 import TestRendering
 \end{code}
 
@@ -218,7 +218,7 @@ predExistsName = "PredExists"
 predExistsTheory :: Theory
 predExistsTheory
   =  Theory { thName  =  predExistsName
-            , thDeps  =  [ predAxiomName
+            , thDeps  =  [ forallName
                          , equalityName
                          , implName
                          , aoiName

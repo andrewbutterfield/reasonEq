@@ -700,19 +700,19 @@
 \def\AXorAllOScopeR{\forall \lst x \bullet P \lor (\forall \lst y \bullet Q)}
 \def\AXorAllOScopeS{\lst x \notin P}
 \def\AXorAllOScopeN{\QNAME{$\lor$-$\forall$-scope}}
-\def\AXorAllOScope{\AXorAllOScopeL \equiv \AXorAllOScopeR, \quad \AXorAllOScopeS}
+\def\AXorAllOScope{\AXorAllOScopeL \equiv \AXorAllOScopeR}
 
 \def\AXorAllEScopeL{p \lor (\forall \lst E, \lst F \bullet q)}
 \def\AXorAllEScopeR{\forall \lst E \bullet p \lor (\forall \lst F \bullet q)}
 \def\AXorAllEScopeS{\lst E \notin p}
 \def\AXorAllEScopeN{\QNAME{$\lor$-$\forall E$-scope}}
-\def\AXorAllEScope{\AXorAllEScopeL \equiv \AXorAllEScopeR, \quad \AXorAllEScopeS}
+\def\AXorAllEScope{\AXorAllEScopeL \equiv \AXorAllEScopeR}
 
 \def\AXorAllPScopeL{p \lor (\forall \lst P,  \lst Q \bullet q)}
 \def\AXorAllPScopeR{\forall \lst P \bullet p \lor (\forall \lst Q \bullet q)}
 \def\AXorAllPScopeS{ \lst P \notin p}
 \def\AXorAllPScopeN{\QNAME{$\lor$-$\forall P$-scope}}
-\def\AXorAllPScope{\AXorAllPScopeL \equiv \AXorAllPScopeR, \quad \AXorAllPScopeS}
+\def\AXorAllPScope{\AXorAllPScopeL \equiv \AXorAllPScopeR}
 
 \def\AXallODistrL{(\forall \lst x \bullet P \land Q)}
 \def\AXallODistrR{(\forall \lst x \bullet P) \land (\forall \lst x \bullet Q)}
@@ -743,6 +743,12 @@
 \def\AXallPInstR{\forall \lst P \bullet q[r/P]}
 \def\AXallPInstN{\QNAME{$\forall P$-inst}}
 \def\AXallPInst{(\AXallPInstL) \implies (\AXallPInstR)}
+
+\def\AXAllSubstL{(\forall \lst x,\lst y \bullet P)[\lst e,\lst f/\lst y,\lst z]}
+\def\AXAllSubstR{\forall \lst x,\lst y \bullet (P[\lst f/\lst z])}
+\def\AXAllSubst{\AXAllSubstL \equiv \AXAllSubstR}
+\def\AXAllSubstS{\lst x \disj \lst z}
+\def\AXAllSubstN{\QNAME{$\forall$-subst}}
 
 \def\AXallORngL{\forall \lst x | r \bullet p}
 \def\AXallORngR{\forall \lst x \bullet r \implies p}
@@ -974,6 +980,7 @@
 \\ \AXorAllOScope & \AXorAllOScopeS & \AXorAllOScopeN
 \\ \AXAllOInst    &                 & \AXAllOInstN
 \\ \AXAllDummyRen & \AXAllDummyRenS & \AXAllDummyRenN
+\\ \AXAllSubst    & \AXAllSubstS    & \AXAllSubstN
 \end{array}
 }
 

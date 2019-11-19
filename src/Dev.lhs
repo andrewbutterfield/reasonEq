@@ -29,7 +29,7 @@ import Conjunction
 import AndOrInvert
 import Implication
 import Equality
-import PredAxioms
+import ForAll
 import PredExists
 import PredUniv
 \end{code}
@@ -62,7 +62,7 @@ devInitState
 devTheories =
      -- fromJust $ addTheory predUnivTheory $
      -- fromJust $ addTheory predExistsTheory $
-     -- fromJust $ addTheory predAxiomTheory $
+     fromJust $ addTheory forallTheory $
      fromJust $ addTheory equalityTheory $
      fromJust $ addTheory implTheory $
      fromJust $ addTheory aoiTheory $
@@ -85,7 +85,7 @@ devKnownBuiltins  = [ equivTheory
                     , aoiTheory
                     , implTheory
                     , equalityTheory
-                    -- , predAxiomTheory
+                    , forallTheory
                     -- , predExistsTheory
                     -- , predUnivTheory
                     -- , utpStartupTheory

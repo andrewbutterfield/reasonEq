@@ -34,7 +34,7 @@ import Conjunction
 import AndOrInvert
 import Implication
 import Equality
-import PredAxioms
+import ForAll
 import PredExists
 import PredUniv
 import UTPStartup
@@ -433,7 +433,7 @@ xyzTheory
             , thDeps  =  [ utpStartupName
                          , predUnivName
                          , predExistsName
-                         , predAxiomName
+                         , forallName
                          , equalityName
                          , implName
                          , aoiName

@@ -6,9 +6,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module PropMixOne (
-  propMixOneName
-, propMixOneTheory
+module AndOrInvert (
+  aoiName
+, aoiTheory
 ) where
 
 import Data.Maybe
@@ -33,22 +33,35 @@ import Conjunction
 import TestRendering
 \end{code}
 
-\subsection{MixOne Conjectures}
+\subsection{Introduction}
 
 We supply conjectures here for each theorem in \cite{gries.93}
 in the second part of the \textsc{Conjunction} section,
 which deals with laws involving a mix of conjunctions and other
 previously defined operators.
 
-$$
-\CONJPROPMIXONE
-$$
 
+Some useful local definitions:
 \begin{code}
 p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
 r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
 \end{code}
+
+\subsubsection{Known Variables}
+
+We have none.
+\begin{code}
+aoiKnown :: VarTable
+aoiKnown =  newVarTable
+\end{code}
+
+\subsection{MixOne Conjectures}
+
+
+$$
+\CONJPROPMIXONE
+$$
 
 
 $$
@@ -191,11 +204,11 @@ cjEqvDef
      , scTrue ) )
 \end{code}
 
-\newpage
+
 Assemble it all:
 \begin{code}
-propMixOneConjs :: [NmdAssertion]
-propMixOneConjs
+aoiConjs :: [NmdAssertion]
+aoiConjs
   = [ cjAndOrAbs, cjOrAndAbs, cjAndOrNAbs, cjOrAndNAbs
     , cjOrAndDistr, cjAndOrDistr
     , cjDeMorganNand, cjDeMorganNor
@@ -204,19 +217,18 @@ propMixOneConjs
     ]
 \end{code}
 
-\subsection{The MixOne Theory}
+\subsection{The And-Or-Invert Theory}
 
 \begin{code}
-propMixOneName :: String
-propMixOneName = "PropMixOne"
-propMixOneTheory :: Theory
-propMixOneTheory
-  =  Theory { thName  =  propMixOneName
-            , thDeps  =  [ conjName, disjName, notName
-                         , equivName ]
-            , known   =  newVarTable
+aoiName :: String
+aoiName = "AndOrInvert"
+aoiTheory :: Theory
+aoiTheory
+  =  Theory { thName  =  aoiName
+            , thDeps  =  [ conjName, disjName, notName, equivName ]
+            , known   =  aoiKnown
             , laws    =  []
             , proofs  =  []
-            , conjs   =  propMixOneConjs
+            , conjs   =  aoiConjs
             }
 \end{code}

@@ -6,9 +6,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module PropConj (
-  propConjName
-, propConjTheory
+module Conjunction (
+  conjName
+, conjTheory
 ) where
 
 import Data.Maybe
@@ -51,14 +51,12 @@ sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
 
 We have none.
 \begin{code}
-conjunctionKnown :: VarTable
-conjunctionKnown =  newVarTable
+conjKnown :: VarTable
+conjKnown =  newVarTable
 \end{code}
 
-
-
-
-\subsection{TO BE SHIPPED OUT}
+\newpage
+\subsection{Conjunction Axioms}
 
 $$
   \begin{array}{ll}
@@ -74,30 +72,12 @@ axGoldRule
    , scTrue ) )
 \end{code}
 
-$$
-  \begin{array}{ll}
-     \AXimplDef & \AXimplDefN
-  \end{array}
-$$
-
-\vspace{-8pt}
 \begin{code}
-axImplDef
- = ( "implies" -.- "def"
-   , ( flattenEquiv ( p ==> q === (p \/ q === q) )
-   , scTrue ) )
+conjAxioms :: [Law]
+conjAxioms  =  map labelAsAxiom [ axGoldRule]
 \end{code}
 
-\begin{code}
-shipAxioms :: [Law]
-shipAxioms
-  = map labelAsAxiom
-      [ axGoldRule
-      , axImplDef ]
-\end{code}
-
-\textbf{END OF STUFF FOR SHIPPING}
-
+\newpage
 \subsection{Conjunction Conjectures}
 
 We supply conjectures here for each theorem in \cite{gries.93}
@@ -109,8 +89,6 @@ $$
 
 The absorption rules are in a seperate theory.
 
-
-\newpage
 
 $$
   \begin{array}{ll}
@@ -196,6 +174,7 @@ cjandDistr
      , scTrue ) )
 \end{code}
 
+\newpage
 $$
   \begin{array}{ll}
      \CJcontradict & \CJcontradictN
@@ -210,31 +189,45 @@ cjContradict
      , scTrue ) )
 \end{code}
 
-\newpage
+$$
+  \begin{array}{ll}
+     \CJandSubst & \CJandSubstN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+cjAndSubst
+ = ( "land" -.- "subst"
+   , ( sub (p /\ q)  === (sub p /\ sub q)
+   , scTrue ) )
+\end{code}
+
+
 Pulling it all together:
 \begin{code}
-propConjConjs :: [NmdAssertion]
-propConjConjs
+conjConjs :: [NmdAssertion]
+conjConjs
   = [ cjandSym, cjandAssoc, cjandIdem
     , cjandUnit, cjandZero
     , cjandDistr
     , cjContradict
+    , cjAndSubst
     ]
 \end{code}
 
 \subsection{The Conjunction Theory}
 
 \begin{code}
-propConjName :: String
-propConjName = "PropConj"
-propConjTheory :: Theory
-propConjTheory
-  =  Theory { thName  =  propConjName
-            , thDeps  =  [ disjName, notName
-                         , equivName ]
-            , known   =  newVarTable
-            , laws    =  []
+conjName :: String
+conjName = "Conjunction"
+conjTheory :: Theory
+conjTheory
+  =  Theory { thName  =  conjName
+            , thDeps  =  [ disjName, notName, equivName ]
+            , known   =  conjKnown
+            , laws    =  conjAxioms
             , proofs  =  []
-            , conjs   =  propConjConjs
+            , conjs   =  conjConjs
             }
 \end{code}

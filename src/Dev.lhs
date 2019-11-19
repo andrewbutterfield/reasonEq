@@ -19,7 +19,7 @@ import StdSignature
 import Equivalence
 import Negation
 import Disjunction
-import PropConj
+import Conjunction
 import PropMixOne
 import PropImpl
 import PropSubst
@@ -60,7 +60,7 @@ devTheories =
      -- fromJust $ addTheory propSubstTheory $
      -- fromJust $ addTheory propImplTheory $
      -- fromJust $ addTheory propMixOneTheory $
-     -- fromJust $ addTheory propConjTheory $
+     fromJust $ addTheory conjTheory $
      fromJust $ addTheory disjTheory $
      fromJust $ addTheory notTheory $
      fromJust $ addTheory equivTheory

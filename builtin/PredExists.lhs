@@ -30,7 +30,7 @@ import PropSubst
 import Equivalence
 import Negation
 import Disjunction
-import PropConj
+import Conjunction
 import PropMixOne
 import PropImpl
 import Equality
@@ -224,7 +224,7 @@ predExistsTheory
                          , propSubstName
                          , propImplName
                          , propMixOneName
-                         , propConjName
+                         , conjName
                          , disjName
                          , notName
                          , equivName

@@ -29,7 +29,7 @@ import StdSignature
 import Equivalence
 import Negation
 import Disjunction
-import PropConj
+import Conjunction
 import PropImpl
 import TestRendering
 \end{code}
@@ -71,39 +71,13 @@ sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
 \subsubsection{Propositional Substitution Conjectures}
 
 
-$$
-  \begin{array}{ll}
-     \CJandSubst & \CJandSubstN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-cjAndSubst
- = ( "land" -.- "subst"
-   , ( sub (p /\ q)  === (sub p /\ sub q)
-   , scTrue ) )
-\end{code}
 
 
-$$
-  \begin{array}{ll}
-     \CJimpSubst & \CJimpSubstN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-cjImplSubst
- = ( "implies" -.- "subst"
-   , ( sub (p ==> q)  === (sub p ==> sub q)
-   , scTrue ) )
-\end{code}
 
 
 \begin{code}
 propSubstConjs :: [NmdAssertion]
-propSubstConjs  =  [ cjAndSubst, cjImplSubst ]
+propSubstConjs  =  [  ]
 \end{code}
 
 
@@ -116,7 +90,7 @@ propSubstTheory :: Theory
 propSubstTheory
   =  Theory { thName  =  propSubstName
             , thDeps  =  [ propImplName
-                         , propConjName
+                         , conjName
                          , disjName
                          , notName
                          , equivName

@@ -16,6 +16,9 @@ none
 
 ## Hotfixes
 
+### Dev UI from AbstractUI to Dev
+
+Move the `devXXX` functions from module  `AbstractUI` to module `Dev`
 
 ### `[]_idem` Proof
 
@@ -62,6 +65,7 @@ so that `(∀ x̅ • P ∨ (∀ x̅ • Q)`
 becomes `(∀ x̅ • P ∨ (∀ y̅ • Q[y̅/x̅])`.
 
 ## Next Task(s)
+
 
  
 * LiveProof returns `(bind,local_scC)` - need to get `local_scC` into proof step.

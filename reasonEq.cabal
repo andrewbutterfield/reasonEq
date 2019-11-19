@@ -47,7 +47,7 @@ library
                      , Equivalence
                      , Negation
                      , Disjunction
-                     , PropConj
+                     , Conjunction
                      , PropMixOne
                      , PropImpl
                      , PropSubst

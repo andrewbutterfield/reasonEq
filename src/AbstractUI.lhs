@@ -57,7 +57,7 @@ import StdSignature
 import Equivalence
 import Negation
 import Disjunction
-import PropConj
+import Conjunction (conjTheory)
 import PropMixOne
 import PropImpl
 import PropSubst
@@ -733,7 +733,7 @@ Listing builtin theories:
 devKnownBuiltins  = [ equivTheory
                     , notTheory
                     , disjTheory
-                    -- , propConjTheory
+                    -- , conjTheory
                     -- , propMixOneTheory
                     -- , propImplTheory
                     -- , propSubstTheory

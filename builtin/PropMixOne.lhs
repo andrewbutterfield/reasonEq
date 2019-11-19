@@ -29,7 +29,7 @@ import StdSignature
 import Equivalence
 import Negation
 import Disjunction
-import PropConj
+import Conjunction
 import TestRendering
 \end{code}
 
@@ -212,7 +212,7 @@ propMixOneName = "PropMixOne"
 propMixOneTheory :: Theory
 propMixOneTheory
   =  Theory { thName  =  propMixOneName
-            , thDeps  =  [ propConjName, disjName, notName
+            , thDeps  =  [ conjName, disjName, notName
                          , equivName ]
             , known   =  newVarTable
             , laws    =  []

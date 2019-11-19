@@ -29,9 +29,56 @@ import StdSignature
 import Equivalence
 import Negation
 import Disjunction
-import PropConj
+import Conjunction
 import PropMixOne
 import TestRendering
+\end{code}
+
+\subsection{Introduction}
+
+Here we provide axioms and conjectures for $\implies$,
+based on \cite{gries.93}.
+
+Some useful local definitions:
+\begin{code}
+p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
+q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
+r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
+s = fromJust $ pVar $ Vbl (fromJust $ ident "S") PredV Static
+vx = Vbl (fromJust $ ident "x") ObsV Static  ; lvxs = LVbl vx [] []
+ve = Vbl (fromJust $ ident "e") ExprV Static ; lves = LVbl ve [] []
+sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
+\end{code}
+
+\subsubsection{Known Variables}
+
+We have none.
+\begin{code}
+implKnown :: VarTable
+implKnown =  newVarTable
+\end{code}
+
+
+
+\subsection{Implication Axioms}
+
+$$
+  \begin{array}{ll}
+     \AXimplDef & \AXimplDefN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+axImplDef
+ = ( "implies" -.- "def"
+   , ( flattenEquiv ( p ==> q === (p \/ q === q) )
+   , scTrue ) )
+\end{code}
+
+\begin{code}
+implAxioms :: [Law]
+implAxioms  =  map labelAsAxiom [ axImplDef ]
 \end{code}
 
 \newpage
@@ -44,13 +91,6 @@ $$
 \CONJPROPIMPL
 $$
 
-\begin{code}
-p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
-q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
-r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
-s = fromJust $ pVar $ Vbl (fromJust $ ident "S") PredV Static
-\end{code}
-
 
 $$\begin{array}{ll}
   \CJImpDefTwo & \CJImpDefTwoN
@@ -62,6 +102,22 @@ cjImpDef2
  = propdef ( "implies" -.- "def2"
            , (p ==> q) === (mkNot p \/ q) )
 \end{code}
+
+
+$$
+  \begin{array}{ll}
+     \CJimpSubst & \CJimpSubstN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+cjImplSubst
+ = ( "implies" -.- "subst"
+   , ( sub (p ==> q)  === (sub p ==> sub q)
+   , scTrue ) )
+\end{code}
+
 
 $$\begin{array}{ll}
   \CJImpMeet & \CJImpMeetN
@@ -357,7 +413,8 @@ Pulling them all together:
 \begin{code}
 propImplConjs :: [NmdAssertion]
 propImplConjs
-  = [ cjImpDef2, cjImpMeet, cjContra, cjImpEqvDistr, cjShunting
+  = [ cjImpDef2, cjImplSubst
+    , cjImpMeet, cjContra, cjImpEqvDistr, cjShunting
     , cjAndImp, cjAndPmi, cjOrImp, cjOrPmi, cjOrImpAnd
     , cjImpRefl, cjImpRZero, cjImpLUnit, cjNotDef2, cjFalseImp
     , cjImpTrans, cjEqvImpTrans, cjImpEqvTrans
@@ -376,7 +433,7 @@ propImplTheory :: Theory
 propImplTheory
   =  Theory { thName  =  propImplName
             , thDeps  =  [ propMixOneName
-                         , propConjName
+                         , conjName
                          , disjName
                          , notName
                          , equivName ]

@@ -32,7 +32,7 @@ import Negation
 import Disjunction
 import Conjunction
 import AndOrInvert
-import PropImpl
+import Implication
 import Equality
 import PredAxioms
 import PredExists
@@ -435,7 +435,7 @@ xyzTheory
                          , predExistsName
                          , predAxiomName
                          , equalityName
-                         , propImplName
+                         , implName
                          , aoiName
                          , conjName
                          , disjName

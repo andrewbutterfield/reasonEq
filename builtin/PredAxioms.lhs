@@ -33,7 +33,7 @@ import Negation
 import Disjunction
 import Conjunction
 import AndOrInvert
-import PropImpl
+import Implication
 import Equality
 import TestRendering
 \end{code}
@@ -212,7 +212,7 @@ predAxiomTheory :: Theory
 predAxiomTheory
   =  Theory { thName  =  predAxiomName
             , thDeps  =  [ equalityName
-                         , propImplName
+                         , implName
                          , aoiName
                          , conjName
                          , disjName

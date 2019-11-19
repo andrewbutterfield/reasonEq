@@ -27,7 +27,7 @@ import Negation
 import Disjunction
 import Conjunction
 import AndOrInvert
-import PropImpl
+import Implication
 import Equality
 import PredAxioms
 import PredExists
@@ -65,7 +65,7 @@ devTheories =
      -- fromJust $ addTheory predAxiomTheory $
      -- fromJust $ addTheory equalityTheory $
      -- fromJust $ addTheory propSubstTheory $
-     -- fromJust $ addTheory propImplTheory $
+     -- fromJust $ addTheory implTheory $
      -- fromJust $ addTheory aoiTheory $
      fromJust $ addTheory conjTheory $
      fromJust $ addTheory disjTheory $
@@ -84,7 +84,7 @@ devKnownBuiltins  = [ equivTheory
                     , disjTheory
                     -- , conjTheory
                     -- , aoiTheory
-                    -- , propImplTheory
+                    -- , implTheory
                     -- , propSubstTheory
                     -- , equalityTheory
                     -- , predAxiomTheory

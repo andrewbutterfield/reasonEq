@@ -6,9 +6,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module PropImpl (
-  propImplName
-, propImplTheory
+module Implication (
+  implName
+, implTheory
 ) where
 
 import Data.Maybe
@@ -59,7 +59,7 @@ implKnown =  newVarTable
 \end{code}
 
 
-
+\newpage
 \subsection{Implication Axioms}
 
 $$
@@ -81,7 +81,6 @@ implAxioms :: [Law]
 implAxioms  =  map labelAsAxiom [ axImplDef ]
 \end{code}
 
-\newpage
 \subsection{Implication Conjectures}
 
 We supply conjectures here for each theorem in \cite{gries.93}
@@ -118,6 +117,7 @@ cjImplSubst
    , scTrue ) )
 \end{code}
 
+\newpage
 
 $$\begin{array}{ll}
   \CJImpMeet & \CJImpMeetN
@@ -226,6 +226,7 @@ cjOrImpAnd
            , p \/ q ==> p /\ q === (p === q) )
 \end{code}
 
+\newpage
 
 $$\begin{array}{ll}
   \CJImpRefl & \CJImpReflN
@@ -263,7 +264,7 @@ cjImpLUnit
            , trueP ==> p === p )
 \end{code}
 
-\newpage
+
 $$\begin{array}{ll}
   \CJNotDefTwo & \CJNotDefTwoN
 \end{array}$$
@@ -323,6 +324,7 @@ cjImpEqvTrans
            , (p==>q)/\(q===r) ==> (p==>r) )
 \end{code}
 
+\newpage
 
 $$\begin{array}{ll}
   \CJAnteStrngthn & \CJAnteStrngthnN
@@ -371,7 +373,7 @@ cjAnteAndDistr
            , p /\ q ==> r === (p==>r) \/ (q==>r) )
 \end{code}
 
-\newpage
+
 $$\begin{array}{ll}
   \CJCnsqAndDistr & \CJCnsqAndDistrN
 \end{array}$$
@@ -411,8 +413,8 @@ cjAnteAsImp
 
 Pulling them all together:
 \begin{code}
-propImplConjs :: [NmdAssertion]
-propImplConjs
+implConjs :: [NmdAssertion]
+implConjs
   = [ cjImpDef2, cjImplSubst
     , cjImpMeet, cjContra, cjImpEqvDistr, cjShunting
     , cjAndImp, cjAndPmi, cjOrImp, cjOrPmi, cjOrImpAnd
@@ -427,19 +429,19 @@ propImplConjs
 \subsection{The Implication Theory}
 
 \begin{code}
-propImplName :: String
-propImplName = "PropImpl"
-propImplTheory :: Theory
-propImplTheory
-  =  Theory { thName  =  propImplName
+implName :: String
+implName = "Implication"
+implTheory :: Theory
+implTheory
+  =  Theory { thName  =  implName
             , thDeps  =  [ aoiName
                          , conjName
                          , disjName
                          , notName
                          , equivName ]
-            , known   =  newVarTable
-            , laws    =  []
+            , known   =  implKnown
+            , laws    =  implAxioms
             , proofs  =  []
-            , conjs   =  propImplConjs
+            , conjs   =  implConjs
             }
 \end{code}

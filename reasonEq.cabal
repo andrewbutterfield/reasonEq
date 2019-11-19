@@ -49,7 +49,7 @@ library
                      , Disjunction
                      , Conjunction
                      , AndOrInvert
-                     , PropImpl
+                     , Implication
                      , Equality
                      , PredAxioms
                      , PredExists

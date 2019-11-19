@@ -48,7 +48,7 @@ library
                      , Negation
                      , Disjunction
                      , Conjunction
-                     , PropMixOne
+                     , AndOrInvert
                      , PropImpl
                      , Equality
                      , PredAxioms

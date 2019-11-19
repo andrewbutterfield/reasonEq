@@ -30,7 +30,7 @@ import Equivalence
 import Negation
 import Disjunction
 import Conjunction
-import PropMixOne
+import AndOrInvert
 import TestRendering
 \end{code}
 
@@ -432,7 +432,7 @@ propImplName = "PropImpl"
 propImplTheory :: Theory
 propImplTheory
   =  Theory { thName  =  propImplName
-            , thDeps  =  [ propMixOneName
+            , thDeps  =  [ aoiName
                          , conjName
                          , disjName
                          , notName

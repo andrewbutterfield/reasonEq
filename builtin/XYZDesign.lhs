@@ -31,7 +31,7 @@ import Equivalence
 import Negation
 import Disjunction
 import Conjunction
-import PropMixOne
+import AndOrInvert
 import PropImpl
 import Equality
 import PredAxioms
@@ -335,7 +335,7 @@ xyzDTheory
                          , predAxiomName
                          , equalityName
                          , propImplName
-                         , propMixOneName
+                         , aoiName
                          , conjName
                          , disjName
                          , notName

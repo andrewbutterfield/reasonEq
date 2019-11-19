@@ -32,7 +32,7 @@ import Equivalence
 import Negation
 import Disjunction
 import Conjunction
-import PropMixOne
+import AndOrInvert
 import PropImpl
 import Equality
 import TestRendering
@@ -213,7 +213,7 @@ predAxiomTheory
   =  Theory { thName  =  predAxiomName
             , thDeps  =  [ equalityName
                          , propImplName
-                         , propMixOneName
+                         , aoiName
                          , conjName
                          , disjName
                          , notName

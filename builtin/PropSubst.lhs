@@ -28,7 +28,7 @@ import Theories
 import StdSignature
 import Equivalence
 import Negation
-import PropDisj
+import Disjunction
 import PropConj
 import PropImpl
 import TestRendering
@@ -65,34 +65,6 @@ ve = Vbl (fromJust $ ident "e") ExprV Static
 lves = LVbl ve [] []
 
 sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
-\end{code}
-
-\subsection{Propositional Substitution Axioms}
-
-
-
-
-$$
-  \begin{array}{ll}
-     \AXorSubst & \AXorSubstN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axOrSubst
- = ( "lor" -.- "subst"
-   , ( sub (p \/ q)  === (sub p \/ sub q)
-   , scTrue ) )
-\end{code}
-
-
-
-We now collect all of the above as our axiom set:
-\begin{code}
-propSubstAxioms :: [Law]
-propSubstAxioms
-  = map labelAsAxiom [ axOrSubst ]
 \end{code}
 
 
@@ -145,12 +117,12 @@ propSubstTheory
   =  Theory { thName  =  propSubstName
             , thDeps  =  [ propImplName
                          , propConjName
-                         , propDisjName
-                         , negationName
+                         , disjName
+                         , notName
                          , equivName
                          ]
             , known   =  newVarTable
-            , laws    =  propSubstAxioms
+            , laws    =  []
             , proofs  =  []
             , conjs   =  propSubstConjs
             }

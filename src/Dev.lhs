@@ -18,7 +18,7 @@ import REqState
 import StdSignature
 import Equivalence
 import Negation
-import PropDisj
+import Disjunction
 import PropConj
 import PropMixOne
 import PropImpl
@@ -38,9 +38,9 @@ devProjectDir = "devproj"
 \end{code}
 
 We present the initial state in development mode,
-which currently initialises state on having no theories defined,
-but with the standard logic signature defined
-
+which currently initialises state as having
+the standard logic signature defined,
+and all builtin theories installed.
 \begin{code}
 devInitState
  = REqState { inDevMode = True
@@ -49,22 +49,20 @@ devInitState
             , settings = REqSet 40
             , logicsig = propSignature
             , theories = devTheories
-            , currTheory = "_"
+            , currTheory = equivName
             , liveProofs = M.empty }
 
-devTheories = noTheories
-
--- devTheories
---   =  fromJust $ addTheory predUnivTheory $
---      fromJust $ addTheory predExistsTheory $
---      fromJust $ addTheory predAxiomTheory $
---      fromJust $ addTheory equalityTheory $
---      fromJust $ addTheory propSubstTheory $
---      fromJust $ addTheory propImplTheory $
---      fromJust $ addTheory propMixOneTheory $
---      fromJust $ addTheory propConjTheory $
---      fromJust $ addTheory propDisjTheory $
---      fromJust $ addTheory propNotTheory $
---      fromJust $ addTheory propEquivTheory $
---      fromJust $ addTheory propAxiomTheory noTheories
+devTheories =
+     -- fromJust $ addTheory predUnivTheory $
+     -- fromJust $ addTheory predExistsTheory $
+     -- fromJust $ addTheory predAxiomTheory $
+     -- fromJust $ addTheory equalityTheory $
+     -- fromJust $ addTheory propSubstTheory $
+     -- fromJust $ addTheory propImplTheory $
+     -- fromJust $ addTheory propMixOneTheory $
+     -- fromJust $ addTheory propConjTheory $
+     fromJust $ addTheory disjTheory $
+     fromJust $ addTheory notTheory $
+     fromJust $ addTheory equivTheory
+                          noTheories
 \end{code}

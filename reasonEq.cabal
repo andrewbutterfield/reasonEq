@@ -46,7 +46,7 @@ library
                      , StdSignature
                      , Equivalence
                      , Negation
-                     , PropDisj
+                     , Disjunction
                      , PropConj
                      , PropMixOne
                      , PropImpl

@@ -28,7 +28,7 @@ import Theories
 import StdSignature
 import Equivalence
 import Negation
-import PropDisj
+import Disjunction
 import PropConj
 import PropMixOne
 import TestRendering
@@ -377,8 +377,8 @@ propImplTheory
   =  Theory { thName  =  propImplName
             , thDeps  =  [ propMixOneName
                          , propConjName
-                         , propDisjName
-                         , negationName
+                         , disjName
+                         , notName
                          , equivName ]
             , known   =  newVarTable
             , laws    =  []

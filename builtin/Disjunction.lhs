@@ -6,9 +6,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module PropDisj (
-  propDisjName
-, propDisjTheory
+module Disjunction (
+  disjName
+, disjTheory
 ) where
 
 import Data.Maybe
@@ -49,17 +49,13 @@ sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
 \subsubsection{Known Variables}
 
 We have none.
-The value $false$ is defined as a value, and not a known variable.
 \begin{code}
-negationKnown :: VarTable
-negationKnown =  newVarTable
+disjunctionKnown :: VarTable
+disjunctionKnown =  newVarTable
 \end{code}
 
-
+\newpage
 \subsection{Disjunction Axioms}
-
-\subsection{TO BE SHIPPED OUT}
-
 
 $$
   \begin{array}{ll}
@@ -133,49 +129,34 @@ axExclMidl
 
 $$
   \begin{array}{ll}
-     \AXgoldRule & \AXgoldRuleN
+     \AXorSubst & \AXorSubstN
   \end{array}
 $$
 
-\vspace{-8pt}
+\vspace{-5pt}
 \begin{code}
-axGoldRule
- = ( "golden-rule"
-   , ( (p /\ q) === ((p === q) === p \/ q)
+axOrSubst
+ = ( "lor" -.- "subst"
+   , ( sub (p \/ q)  === (sub p \/ sub q)
    , scTrue ) )
 \end{code}
 
-$$
-  \begin{array}{ll}
-     \AXimplDef & \AXimplDefN
-  \end{array}
-$$
-
-\vspace{-8pt}
+Gather them all together.
 \begin{code}
-axImplDef
- = ( "implies" -.- "def"
-   , ( flattenEquiv ( p ==> q === (p \/ q === q) )
-   , scTrue ) )
-\end{code}
-
-\begin{code}
-shipAxioms :: [Law]
-shipAxioms
+disjAxioms :: [Law]
+disjAxioms
   = map labelAsAxiom
       [ axOrSymm, axOrAssoc, axOrIdem, axOrEqvDistr, axExclMidl
-      , axGoldRule
-      , axImplDef ]
+      , axOrSubst ]
 \end{code}
 
-\textbf{END OF STUFF FOR SHIPPING}
 \subsection{Disjunction Conjectures}
 
 We supply conjectures here for each theorem in \cite{gries.93}
-in the \textsc{Implication} section.
+in the \textsc{Disjunction} section.
 
 $$
-\CONJPROPIMPL
+\CONJPROPDISJ
 $$
 
 
@@ -240,8 +221,8 @@ cjOrEqvSplit
 
 
 \begin{code}
-propDisjConjs :: [NmdAssertion]
-propDisjConjs
+disjConjs :: [NmdAssertion]
+disjConjs
   = [ cjOrZero, cjOrUnit, cjOrOrDistr, cjOrEqvSplit
     ]
 \end{code}
@@ -249,15 +230,15 @@ propDisjConjs
 \subsection{The Disjunction Theory}
 
 \begin{code}
-propDisjName :: String
-propDisjName = "PropDisj"
-propDisjTheory :: Theory
-propDisjTheory
-  =  Theory { thName  =  propDisjName
-            , thDeps  =  [ negationName, equivName ]
-            , known   =  newVarTable
-            , laws    =  []
+disjName :: String
+disjName = "Or"
+disjTheory :: Theory
+disjTheory
+  =  Theory { thName  =  disjName
+            , thDeps  =  [ notName, equivName ]
+            , known   =  disjunctionKnown
+            , laws    =  disjAxioms
             , proofs  =  []
-            , conjs   =  propDisjConjs
+            , conjs   =  disjConjs
             }
 \end{code}

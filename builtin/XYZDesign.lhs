@@ -30,7 +30,7 @@ import StdSignature
 import PropSubst
 import Equivalence
 import Negation
-import PropDisj
+import Disjunction
 import PropConj
 import PropMixOne
 import PropImpl
@@ -339,8 +339,8 @@ xyzDTheory
                          , propImplName
                          , propMixOneName
                          , propConjName
-                         , propDisjName
-                         , negationName
+                         , disjName
+                         , notName
                          , equivName
                          ]
             , known   =  xyzDKnown

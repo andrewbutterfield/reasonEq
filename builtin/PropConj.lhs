@@ -28,9 +28,75 @@ import Theories
 import StdSignature
 import Equivalence
 import Negation
-import PropDisj
+import Disjunction
 import TestRendering
 \end{code}
+
+\subsection{Introduction}
+
+Here we provide axioms and conjectures for $\land$,
+based on \cite{gries.93}.
+
+Some useful local definitions:
+\begin{code}
+p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
+q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
+r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
+vx = Vbl (fromJust $ ident "x") ObsV Static  ; lvxs = LVbl vx [] []
+ve = Vbl (fromJust $ ident "e") ExprV Static ; lves = LVbl ve [] []
+sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
+\end{code}
+
+\subsubsection{Known Variables}
+
+We have none.
+\begin{code}
+conjunctionKnown :: VarTable
+conjunctionKnown =  newVarTable
+\end{code}
+
+
+
+
+\subsection{TO BE SHIPPED OUT}
+
+$$
+  \begin{array}{ll}
+     \AXgoldRule & \AXgoldRuleN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+axGoldRule
+ = ( "golden-rule"
+   , ( (p /\ q) === ((p === q) === p \/ q)
+   , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{ll}
+     \AXimplDef & \AXimplDefN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+axImplDef
+ = ( "implies" -.- "def"
+   , ( flattenEquiv ( p ==> q === (p \/ q === q) )
+   , scTrue ) )
+\end{code}
+
+\begin{code}
+shipAxioms :: [Law]
+shipAxioms
+  = map labelAsAxiom
+      [ axGoldRule
+      , axImplDef ]
+\end{code}
+
+\textbf{END OF STUFF FOR SHIPPING}
 
 \subsection{Conjunction Conjectures}
 
@@ -43,11 +109,6 @@ $$
 
 The absorption rules are in a seperate theory.
 
-\begin{code}
-p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
-q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
-r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
-\end{code}
 
 \newpage
 
@@ -169,7 +230,7 @@ propConjName = "PropConj"
 propConjTheory :: Theory
 propConjTheory
   =  Theory { thName  =  propConjName
-            , thDeps  =  [ propDisjName, negationName
+            , thDeps  =  [ disjName, notName
                          , equivName ]
             , known   =  newVarTable
             , laws    =  []

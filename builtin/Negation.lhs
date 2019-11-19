@@ -6,9 +6,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module PropNot (
-  propNotName
-, propNotTheory
+module Negation (
+  notName
+, notTheory
 ) where
 
 import Data.Maybe
@@ -30,23 +30,80 @@ import Equivalence
 import TestRendering
 \end{code}
 
+\subsection{Introduction}
+
+Here we provide axioms and conjectures for $\lnot$ and $false$,
+based on \cite{gries.93}.
+
+Some useful local definitions:
+\begin{code}
+p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
+q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
+r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
+vx = Vbl (fromJust $ ident "x") ObsV Static  ; lvxs = LVbl vx [] []
+ve = Vbl (fromJust $ ident "e") ExprV Static ; lves = LVbl ve [] []
+sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
+\end{code}
+
 \subsubsection{Known Variables}
 
-These are precisely the two propositional constants,
-with \textit{true} known as boolean,
-and \textit{false} known as it's negation.
+We have none.
+The value $false$ is defined as a value, and not a known variable.
+\begin{code}
+negationKnown :: VarTable
+negationKnown =  newVarTable
+\end{code}
+
+\newpage
+\subsection{Negation Axioms}
+
 $$
   \begin{array}{ll}
-     \AXtrue     & \AXtrueN
-  \\ \AXfalseDef & \AXfalseDefN
+     \AXfalseDef & \AXfalseDefN
   \end{array}
 $$
 
 \begin{code}
-propKnown :: VarTable
-propKnown   =  newVarTable
-axTrue      =  ( "true",          ( trueP,                  scTrue ) )
 axFalseDef  =  ( "false"-.-"def", ( falseP === mkNot trueP, scTrue ) )
+\end{code}
+
+
+$$
+  \begin{array}{ll}
+     \AXnotEqvDistr & \AXnotEqvDistrN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+axNotEqvDistr
+ = ( "lnot" -.- "equiv" -.- "distr"
+   , ( mkNot(p === q) ===  ((mkNot p) === q)
+   , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{ll}
+     \AXnotSubst & \AXnotSubstN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+axNotSubst
+ = ( "lnot" -.- "subst"
+   , ( sub (mkNot p)  === mkNot (sub p)
+   , scTrue ) )
+\end{code}
+
+
+
+
+
+
+\begin{code}
+negationAxioms :: [Law]
+negationAxioms  = map labelAsAxiom [ axFalseDef, axNotEqvDistr, axNotSubst ]
 \end{code}
 
 \subsection{Negation Conjectures}
@@ -59,9 +116,19 @@ $$
 \CONJPROPNOT
 $$
 
+
+$$
+  \begin{array}{ll}
+     \CJfalseSubst & \CJfalseSubstN
+  \end{array}
+$$
+
+\vspace{-8pt}
 \begin{code}
-p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
-q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
+cjFalseSubst
+ = ( "false" -.- "subst"
+   , ( sub falseP  === falseP
+   , scTrue ) )
 \end{code}
 
 
@@ -126,24 +193,24 @@ cjNotDef
 
 
 \begin{code}
-propNotConjs :: [NmdAssertion]
-propNotConjs
-  = [ cjSwapNot, cjNotInvol, cjNotFalse, cjNotDef
+negationConjs :: [NmdAssertion]
+negationConjs
+  = [ cjFalseSubst, cjSwapNot, cjNotInvol, cjNotFalse, cjNotDef
     ]
 \end{code}
 
 \subsection{The Negation Theory}
 
 \begin{code}
-propNotName :: String
-propNotName = "PropNot"
-propNotTheory :: Theory
-propNotTheory
-  =  Theory { thName  =  propNotName
+notName :: String
+notName = "Not"
+notTheory :: Theory
+notTheory
+  =  Theory { thName  =  notName
             , thDeps  =  [equivName]
             , known   =  newVarTable
-            , laws    =  []
+            , laws    =  negationAxioms
             , proofs  =  []
-            , conjs   =  propNotConjs
+            , conjs   =  negationConjs
             }
 \end{code}

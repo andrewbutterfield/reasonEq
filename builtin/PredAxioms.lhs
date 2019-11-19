@@ -28,7 +28,6 @@ import Proofs
 import Theories
 
 import StdSignature
-import PropSubst
 import Equivalence
 import Negation
 import Disjunction
@@ -213,7 +212,6 @@ predAxiomTheory :: Theory
 predAxiomTheory
   =  Theory { thName  =  predAxiomName
             , thDeps  =  [ equalityName
-                         , propSubstName
                          , propImplName
                          , propMixOneName
                          , conjName

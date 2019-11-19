@@ -26,7 +26,6 @@ import Proofs
 import Theories
 
 import StdSignature
-import PropSubst
 import Equivalence
 import Negation
 import Disjunction
@@ -221,7 +220,6 @@ predExistsTheory
   =  Theory { thName  =  predExistsName
             , thDeps  =  [ predAxiomName
                          , equalityName
-                         , propSubstName
                          , propImplName
                          , propMixOneName
                          , conjName

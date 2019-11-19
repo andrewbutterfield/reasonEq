@@ -28,7 +28,6 @@ import Disjunction
 import Conjunction
 import PropMixOne
 import PropImpl
-import PropSubst
 import Equality
 import PredAxioms
 import PredExists

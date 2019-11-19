@@ -27,7 +27,6 @@ import Proofs
 import Theories
 
 import StdSignature
-import PropSubst
 import Equivalence
 import Negation
 import Disjunction
@@ -280,7 +279,6 @@ predUnivTheory
             , thDeps  =  [ predExistsName
                          , predAxiomName
                          , equalityName
-                         , propSubstName
                          , propImplName
                          , propMixOneName
                          , conjName

@@ -50,7 +50,6 @@ library
                      , Conjunction
                      , PropMixOne
                      , PropImpl
-                     , PropSubst
                      , Equality
                      , PredAxioms
                      , PredExists

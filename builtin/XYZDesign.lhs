@@ -27,7 +27,6 @@ import Proofs
 import Theories
 
 import StdSignature
-import PropSubst
 import Equivalence
 import Negation
 import Disjunction
@@ -335,7 +334,6 @@ xyzDTheory
                          , predExistsName
                          , predAxiomName
                          , equalityName
-                         , propSubstName
                          , propImplName
                          , propMixOneName
                          , conjName

@@ -52,22 +52,6 @@ import Ranking
 
 import TestRendering
 
-import StdSignature
-import Equivalence
-import Negation
-import Disjunction
-import Conjunction (conjTheory)
-import PropMixOne
-import PropImpl
-import PropSubst
-import Equality
-import PredAxioms
-import PredExists
-import PredUniv
-import UTPStartup
-import XYZ
-import XYZDesign
-
 import Debug.Trace
 dbg msg x = trace (msg++show x) x
 \end{code}

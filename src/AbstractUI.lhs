@@ -26,7 +26,6 @@ module AbstractUI
 , lawInstantiate1, lawInstantiate2, lawInstantiate3
 , cloneHypothesis
 , stepEquivalenceTheorem
-, devBIRemind, devListAllBuiltins, devInstallBuiltin
 )
 where
 
@@ -723,56 +722,4 @@ stepEquivalenceTheorem nm state@(reqs, liveProof)
                       , ( theories__ (updateTheory thrynm (const thry')) reqs
                         , liveProof ) )
  where strat = strategy liveProof
-\end{code}
-
-\newpage
-\subsection{Development Features}
-
-Listing builtin theories:
-\begin{code}
-devKnownBuiltins  = [ equivTheory
-                    , notTheory
-                    , disjTheory
-                    -- , conjTheory
-                    -- , propMixOneTheory
-                    -- , propImplTheory
-                    -- , propSubstTheory
-                    -- , equalityTheory
-                    -- , predAxiomTheory
-                    -- , predExistsTheory
-                    -- , predUnivTheory
-                    -- , utpStartupTheory
-                    -- , xyzTheory
-                    -- , xyzDTheory
-                    ]
-
-biLkp _ []  = Nothing
-biLkp nm (th:ths)
- | nm == thName th  =  Just th
- | otherwise        =  biLkp nm ths
-
-devListAllBuiltins :: String
-devListAllBuiltins
-  = summarise $ map thName devKnownBuiltins
-  where
-       summarise = intercalate " ; "
-    -- summarise = unlines'
-
-devBIRemind :: String
-devBIRemind
-  = "Remember to update AbstractUI.devKnownBuiltins with new builtins."
-\end{code}
-
-Installing builtin theories:
-\begin{code}
-devInstallBuiltin :: REqState -> String -> IO (Maybe String,REqState)
-devInstallBuiltin reqs nm
-  = case biLkp nm devKnownBuiltins of
-      Nothing
-        -> return ( Just ("devInstallBuiltin: no builtin theory '"++nm++"'")
-                  , reqs)
-      Just thry
-        -> case addTheory thry $ theories reqs of
-             But msgs -> return (Just $ unlines' msgs,reqs)
-             Yes thrys' -> return (Nothing,changed reqs{theories=thrys'})
 \end{code}

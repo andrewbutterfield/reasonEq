@@ -5,10 +5,16 @@ Copyright  Andrew Buttefield (c) 2017--18
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module Dev (devInitState) where
+module Dev
+( devInitState
+, devBIRemind, devListAllBuiltins, devInstallBuiltin
+)
+where
 
 import qualified Data.Map as M
 import Data.Maybe
+import Data.List
+import Utilities
 import LexBase
 import Variables
 import AST
@@ -28,6 +34,8 @@ import PredAxioms
 import PredExists
 import PredUniv
 \end{code}
+
+\subsection{Introduction}
 
 We assume the the development project directory is defined as an immediate
 subdirectory called \texttt{devproj}
@@ -65,4 +73,56 @@ devTheories =
      fromJust $ addTheory notTheory $
      fromJust $ addTheory equivTheory
                           noTheories
+\end{code}
+
+\newpage
+\subsection{Development Features}
+
+Listing builtin theories:
+\begin{code}
+devKnownBuiltins  = [ equivTheory
+                    , notTheory
+                    , disjTheory
+                    -- , conjTheory
+                    -- , propMixOneTheory
+                    -- , propImplTheory
+                    -- , propSubstTheory
+                    -- , equalityTheory
+                    -- , predAxiomTheory
+                    -- , predExistsTheory
+                    -- , predUnivTheory
+                    -- , utpStartupTheory
+                    -- , xyzTheory
+                    -- , xyzDTheory
+                    ]
+
+biLkp _ []  = Nothing
+biLkp nm (th:ths)
+ | nm == thName th  =  Just th
+ | otherwise        =  biLkp nm ths
+
+devListAllBuiltins :: String
+devListAllBuiltins
+  = summarise $ map thName devKnownBuiltins
+  where
+       summarise = intercalate " ; "
+    -- summarise = unlines'
+
+devBIRemind :: String
+devBIRemind
+  = "Remember to update AbstractUI.devKnownBuiltins with new builtins."
+\end{code}
+
+Installing builtin theories:
+\begin{code}
+devInstallBuiltin :: REqState -> String -> IO (Maybe String,REqState)
+devInstallBuiltin reqs nm
+  = case biLkp nm devKnownBuiltins of
+      Nothing
+        -> return ( Just ("devInstallBuiltin: no builtin theory '"++nm++"'")
+                  , reqs)
+      Just thry
+        -> case addTheory thry $ theories reqs of
+             But msgs -> return (Just $ unlines' msgs,reqs)
+             Yes thrys' -> return (Nothing,changed reqs{theories=thrys'})
 \end{code}

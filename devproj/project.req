@@ -1,6 +1,6 @@
 BEGIN REQSTATE
 BEGIN REQSET
-MMD = 20
+MMD = 40
 END REQSET
 BEGIN SIGNATURE
 TRUE = K P (VB True)
@@ -11,10 +11,10 @@ AND = Id "land"
 OR = Id "lor"
 END SIGNATURE
 BEGIN THEORIES
-THNAMES = []
-SDAG = []
+THNAMES = ["And","AndOrInvert","Equality","Equiv","ForAll","Implies","Not","Or"]
+SDAG = [[("ForAll",["Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Implies",["AndOrInvert","And","Or","Not","Equiv"])],[("AndOrInvert",["And","Or","Not","Equiv"])],[("And",["Or","Not","Equiv"])],[("Or",["Not","Equiv"])],[("Not",["Equiv"])],[("Equality",[]),("Equiv",[])]]
 END THEORIES
-CURRTHEORY = NoTheory
+CURRTHEORY = Implies
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
 END MAP LIVE-PROOFS

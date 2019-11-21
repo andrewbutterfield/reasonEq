@@ -54,6 +54,7 @@ import TestRendering
 
 import Debug.Trace
 dbg msg x = trace (msg++show x) x
+pdbg nm x = dbg ('@':nm++":\n") x
 \end{code}
 
 \subsection{Introduction}
@@ -433,8 +434,8 @@ matchFocus theSig liveProof
         scC         =  conjSC liveProof
         ctxts       =  mtchCtxts liveProof
         newMatches  =  matchInContexts theSig ctxts (goalt,scC)
-        rankedM     =  rankAndSort sizeRank ctxts
-                       $ filter isNonTrivial newMatches
+        rankedM     =  pdbg "rankAndSort" $ rankAndSort sizeRank ctxts
+                       $ pdbg "isNonTrivial" $ filter isNonTrivial $ pdbg "newMatches" newMatches
     in matches_ rankedM liveProof
 \end{code}
 

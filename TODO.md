@@ -1,5 +1,27 @@
 # To Do
 
+## HOTFIX
+
+### Match Crash
+
+Matching *forall xs . true* crashes in proof of *"exists_false"*.
+
+```
+proof: m
+req: Maybe.fromJust: Nothing
+```
+
+It happens when we match against *"forall_inst"*.
+
+```
+proof: m forall_inst
+@mLBN.asn:
+(B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (K P (VB True)),[])
+@mLBN.law:
+(("forall_inst",(C P (Id "implies") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS))),B P (Id "forall") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])))],[])),Axiom)
+req: Maybe.fromJust: Nothing
+```
+
 ## Top-Level Plan
 
 We need to refactor all theories:
@@ -13,6 +35,7 @@ We need to refactor all theories:
 
 *Can be done as  `[x$] notin z$`  or `[z$] notin x$`.*
 
+
 ## Current Task
 
 none
@@ -20,9 +43,6 @@ none
 
 ## Hotfixes
 
-### Dev UI from AbstractUI to Dev
-
-Move the `devXXX` functions from module  `AbstractUI` to module `Dev`
 
 ### `[]_idem` Proof
 

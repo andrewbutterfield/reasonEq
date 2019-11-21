@@ -34,7 +34,7 @@ import AndOrInvert
 import Implication
 import Equality
 import ForAll
-import PredExists
+import Exists
 import TestRendering
 \end{code}
 
@@ -271,7 +271,7 @@ predUnivName = "PredUniv"
 predUnivTheory :: Theory
 predUnivTheory
   =  Theory { thName  =  predUnivName
-            , thDeps  =  [ predExistsName
+            , thDeps  =  [ existsName
                          , forallName
                          , equalityName
                          , implName

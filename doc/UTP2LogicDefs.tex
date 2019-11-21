@@ -1038,6 +1038,12 @@
 }
 \def\CJAnyDummyRenS{\lst y \notin P}
 
+\def\CJAnySubstL{(\exists \lst x,\lst y \bullet P)[\lst e,\lst f/\lst y,\lst z]}
+\def\CJAnySubstR{\exists \lst x,\lst y \bullet (P[\lst f/\lst z])}
+\def\CJAnySubst{\CJAnySubstL \equiv \CJAnySubstR}
+\def\CJAnySubstS{\lst x \disj \lst z}
+\def\CJAnySubstN{\QNAME{$\exists$-subst}}
+
 \def\CONJEXISTS{
 \begin{array}{lll}
    \CJAnyFalse     &                  & \CJAnyFalseN
@@ -1046,6 +1052,7 @@
 \\ \CJandAnyOScope & \CJandAnyOScopeS & \CJandAnyOScopeN
 \\ \CJAnyOInst     &                  & \CJAnyOInstN
 \\ \CJAnyDummyRen  & \CJAnyDummyRenS  & \CJAnyDummyRenN
+\\ \CJAnySubst     & \CJAnySubstS     & \CJAnySubstN
 \end{array}
 }
 

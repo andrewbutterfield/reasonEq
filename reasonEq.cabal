@@ -52,7 +52,7 @@ library
                      , Implication
                      , Equality
                      , ForAll
-                     , PredExists
+                     , Exists
                      , PredUniv
                      , UTPStartup
                      , XYZ

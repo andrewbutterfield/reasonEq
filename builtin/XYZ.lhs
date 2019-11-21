@@ -35,7 +35,7 @@ import AndOrInvert
 import Implication
 import Equality
 import ForAll
-import PredExists
+import Exists
 import PredUniv
 import UTPStartup
 import TestRendering
@@ -432,7 +432,7 @@ xyzTheory
   =  Theory { thName  =  xyzName
             , thDeps  =  [ utpStartupName
                          , predUnivName
-                         , predExistsName
+                         , existsName
                          , forallName
                          , equalityName
                          , implName

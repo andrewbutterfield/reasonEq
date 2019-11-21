@@ -30,7 +30,7 @@ import AndOrInvert
 import Implication
 import Equality
 import ForAll
-import PredExists
+import Exists
 import PredUniv
 \end{code}
 
@@ -61,7 +61,7 @@ devInitState
 
 devTheories =
      -- fromJust $ addTheory predUnivTheory $
-     -- fromJust $ addTheory predExistsTheory $
+     fromJust $ addTheory existsTheory $
      fromJust $ addTheory forallTheory $
      fromJust $ addTheory equalityTheory $
      fromJust $ addTheory implTheory $
@@ -86,7 +86,7 @@ devKnownBuiltins  = [ equivTheory
                     , implTheory
                     , equalityTheory
                     , forallTheory
-                    -- , predExistsTheory
+                    , existsTheory
                     -- , predUnivTheory
                     -- , utpStartupTheory
                     -- , xyzTheory

@@ -1,4 +1,4 @@
-\section{Existential Theorems}
+\section{Existential Quantification (there-Exists)}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2018
 
@@ -6,8 +6,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module PredExists (
-  predExistsConjs, predExistsName, predExistsTheory
+module Exists (
+  existsConjs, existsName, existsTheory
 ) where
 
 import Data.Maybe
@@ -78,6 +78,9 @@ ve = Vbl (fromJust $ ident "e") ExprV Static
 lves = LVbl ve [] []
 gves = LstVar lves
 e = fromJust $ eVar ArbType ve
+vf = Vbl (fromJust $ ident "f") ExprV Static
+lvfs = LVbl vf [] [] ; gvfs = LstVar lvfs
+f = fromJust $ eVar ArbType vf
 \end{code}
 
 \subsubsection{Generic Variables}
@@ -88,8 +91,19 @@ tx = fromJust $ eVar ArbType vx
 lvxs = LVbl vx [] [] ; xs = LstVar lvxs
 vy = Vbl (fromJust $ ident "y") ObsV Static ; y = StdVar vy
 lvys = LVbl vy [] [] ; ys = LstVar lvys
+vz = Vbl (fromJust $ ident "z") ObsV Static ; z = StdVar vz
+lvzs = LVbl vz [] [] ; zs = LstVar lvzs
 \end{code}
 
+\subsubsection{Substitutions}
+
+\begin{code}
+mksub p lvlvs = Sub P p $ fromJust $ substn [] lvlvs
+esxs = [(lvxs,lves)]
+ysxs = [(lvxs,lvys)]
+fszs = [(lvzs,lvfs)]
+efsyzs = [(lvys,lves),(lvzs,lvfs)]
+\end{code}
 \newpage
 \subsection{Existential Axioms}
 
@@ -104,6 +118,14 @@ axAnyDef = preddef ("exists" -.- "def")
     ===
     (mkNot $ forall [xs] $ mkNot p) )
   scTrue
+\end{code}
+
+We now collect our axiom:
+\begin{code}
+predExistsAxioms :: [Law]
+predExistsAxioms
+  = map labelAsAxiom
+      [ axAnyDef ]
 \end{code}
 
 \subsection{Existential Conjectures}
@@ -167,7 +189,7 @@ cjAnyInst = preddef ("exists" -.- "inst")
   scTrue
 \end{code}
 
-
+\newpage
 $$
   \begin{array}{lll}
      \CJAnyDummyRen  & \CJAnyDummyRenS  & \CJAnyDummyRenN
@@ -179,6 +201,21 @@ cjAnyDumRen = preddef ("exists" -.- "alpha" -.- "rename")
     ===
     (exists [ys] (Sub P p (fromJust $ substn [] [(lvxs,lvys)])) ) )
   ([ys] `notin` gvP)
+\end{code}
+
+$$
+  \begin{array}{lll}
+     \CJAnySubst & \CJAnySubstS & \CJAnySubstN
+  \end{array}
+$$\par
+
+\vspace{-8pt}
+\begin{code}
+cjAnySubst = preddef ("exists" -.- "subst")
+  ( (mksub (exists [xs,ys] p) efsyzs)
+    ===
+    (exists [xs,ys] (mksub p fszs)) )
+  ([xs] `notin` zs) -- assymetric encoding!
 \end{code}
 
 % %% TEMPLATE
@@ -193,18 +230,10 @@ cjAnyDumRen = preddef ("exists" -.- "alpha" -.- "rename")
 %   scTrue
 % \end{code}
 
-We now collect our axiom:
-\begin{code}
-predExistsAxioms :: [Law]
-predExistsAxioms
-  = map labelAsAxiom
-      [ axAnyDef ]
-\end{code}
-
 We now collect all of the rest above as conjectures:
 \begin{code}
-predExistsConjs :: [NmdAssertion]
-predExistsConjs
+existsConjs :: [NmdAssertion]
+existsConjs
   = [ cjAnyTrue, cjAnyOne, cjAnyOrDistr
     , axAndAllScope, cjAnyInst, cjAnyDumRen ]
 \end{code}
@@ -213,11 +242,11 @@ predExistsConjs
 \subsection{The Predicate Theory}
 
 \begin{code}
-predExistsName :: String
-predExistsName = "PredExists"
-predExistsTheory :: Theory
-predExistsTheory
-  =  Theory { thName  =  predExistsName
+existsName :: String
+existsName = "Exists"
+existsTheory :: Theory
+existsTheory
+  =  Theory { thName  =  existsName
             , thDeps  =  [ forallName
                          , equalityName
                          , implName
@@ -230,6 +259,6 @@ predExistsTheory
             , known   =  newVarTable
             , laws    =  predExistsAxioms
             , proofs  =  []
-            , conjs   =  predExistsConjs
+            , conjs   =  existsConjs
             }
 \end{code}

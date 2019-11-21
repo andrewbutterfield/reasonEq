@@ -1,0 +1,17 @@
+BEGIN THEORY Exists
+DEPS = ["ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"]
+KNOWN = VD (fromList [],fromList [],fromList [])
+BEGIN LIST LAWS
+(("exists_def",(C P (Id "equiv") [B P (Id "exists") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS))),C P (Id "lnot") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (C P (Id "lnot") [V P (VR (Id "P",VP,WS))])]],[])),Axiom)
+END LIST LAWS
+BEGIN LIST PROOFS
+END LIST PROOFS
+BEGIN LIST CONJECTURES
+("exists_false",(C P (Id "equiv") [B P (Id "exists") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (K P (VB False)),K P (VB False)],[]))
+("exists_one_point",(C P (Id "equiv") [B P (Id "exists") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "land") [I P (Id "land") (Id "=") [LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[])],V P (VR (Id "P",VP,WS))]),B P (Id "exists") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])))],[SD (GL (LV (VR (Id "e",VE,WS),[],[]))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])]))
+("exists_lor_distr",(C P (Id "equiv") [B P (Id "exists") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (C P (Id "lor") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))]),C P (Id "lor") [B P (Id "exists") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS))),B P (Id "exists") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "Q",VP,WS)))]],[]))
+("land_exists_scope",(C P (Id "equiv") [C P (Id "land") [V P (VR (Id "P",VP,WS)),B P (Id "exists") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (V P (VR (Id "Q",VP,WS)))],B P (Id "exists") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (C P (Id "land") [V P (VR (Id "P",VP,WS)),B P (Id "exists") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (V P (VR (Id "Q",VP,WS)))])],[SD (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])]))
+("exists_inst",(C P (Id "implies") [B P (Id "exists") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))]))),B P (Id "exists") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))],[]))
+("exists_alpha_rename",(C P (Id "equiv") [B P (Id "exists") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS))),B P (Id "exists") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "y",VO,WS),[],[]))])))],[SD (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))])]))
+END LIST CONJECTURES
+END THEORY Exists

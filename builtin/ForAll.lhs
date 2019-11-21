@@ -89,7 +89,8 @@ vz = Vbl (fromJust $ ident "z") ObsV Static ; z = StdVar vz
 lvzs = LVbl vz [] [] ; zs = LstVar lvzs
 \end{code}
 
-Substitutions:
+\subsubsection{Substitutions}
+
 \begin{code}
 mksub p lvlvs = Sub P p $ fromJust $ substn [] lvlvs
 esxs = [(lvxs,lves)]

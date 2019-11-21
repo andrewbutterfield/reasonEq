@@ -35,7 +35,7 @@ import AndOrInvert
 import Implication
 import Equality
 import ForAll
-import PredExists
+import Exists
 import PredUniv
 import TestRendering
 \end{code}
@@ -297,7 +297,7 @@ utpStartupTheory :: Theory
 utpStartupTheory
   =  Theory { thName  =  utpStartupName
             , thDeps  =  [ predUnivName
-                         , predExistsName
+                         , existsName
                          , forallName
                          , equalityName
                          , implName

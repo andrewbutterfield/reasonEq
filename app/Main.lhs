@@ -41,6 +41,10 @@ import TestRendering
 import TestParsing
 import REPL
 import Dev
+
+import Debug.Trace
+dbg msg x = trace (msg++show x) x
+pdbg nm x = dbg ('@':nm++":\n") x
 \end{code}
 
 \newpage

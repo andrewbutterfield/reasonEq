@@ -574,7 +574,7 @@ matchLawByName :: Monad m => LogicSig -> Assertion -> String -> [MatchContext]
                -> m Matches
 matchLawByName logicsig asn lnm mcs
  = do (law,vts) <- findLaw lnm mcs
-      return $ domatch logicsig vts (pdbg "mLBN.asn" asn) (pdbg "mLBN.law" law)
+      return $ domatch logicsig vts asn law
 \end{code}
 
 For each law,
@@ -895,8 +895,8 @@ dispLiveProof :: LiveProof -> String
 dispLiveProof liveProof
  = unlines
      ( ( ("Proof for "++red (widthHack 2 $ conjName liveProof))
-       : ("\t" ++ green(trTerm 0 trm ++ "  "++trSideCond sc))
-       : ("by "++(strategy liveProof))
+       : ("\t" ++ green(trTerm 0 trm ++ "  "++ trSideCond sc))
+       : ("by "++strategy liveProof)
        : map shLiveStep (reverse (stepsSoFar liveProof))
        )
        ++
@@ -921,7 +921,7 @@ displayMatches matches
 shMatch (i, mtch)
  = show i ++ " : "++ ldq ++ green (nicelawname $ mName mtch) ++ rdq
    ++ "  gives  "
-   ++ (bold $ blue $ trTerm 0 brepl)
+   ++ (bold $ blue $ trTerm 0 $ pdbg "brepl" $ brepl)
    ++ "  " ++ shSCImplication (mLocSC mtch) (mLawSC mtch)
    ++ " " ++ shMClass (mClass mtch)
  where

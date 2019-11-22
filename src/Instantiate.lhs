@@ -28,7 +28,8 @@ import FreeVars
 import TestRendering
 
 import Debug.Trace
-dbg msg x = trace (msg ++ show x) x
+dbg msg x = trace (msg++show x) x
+pdbg nm x = dbg ('@':nm++":\n") x
 \end{code}
 
 \subsection{Introduction}
@@ -413,8 +414,8 @@ qI (Identifier n) = fromJust $ ident ('?':n)
 \begin{code}
 autoInstantiate :: Binding -> Term -> Term
 autoInstantiate bind trm
- = fromJust $ instantiate abind trm
+ = fromJust $ pdbg "instantiate" $ instantiate (pdbg "abind" abind) $ pdbg "trm" trm
  where
-   qbind = questionableBinding (findUnboundVars bind trm)
-   abind = mergeBindings bind qbind
+   qbind = questionableBinding (pdbg "unbound" $ findUnboundVars bind trm)
+   abind = mergeBindings (pdbg "bind" bind) $ pdbg "qbind" qbind
 \end{code}

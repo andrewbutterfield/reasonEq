@@ -404,6 +404,15 @@ findUnboundVars bind trm = mentionedVars trm  S.\\  mappedVars bind
 
 \subsubsection{Mapping Replacement Variables to Questionable ones}
 
+\textbf{
+Function \texttt{questionableBinding} needs
+details regarding all substitution list-variable pairs
+in order to produce valid bindings.
+In particular, if an unbound substitution list-variable
+is paired with a bound one, then the unknown one must be bound
+to something of the same size as its bound partner, otherwise instantation will
+fail when it calls \texttt{substn}.
+}
 \begin{code}
 questionableBinding :: VarSet -> Binding
 questionableBinding vs

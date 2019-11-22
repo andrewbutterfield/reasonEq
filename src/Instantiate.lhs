@@ -99,17 +99,25 @@ instantiate binding (Iter tk na ni lvs)
 \end{code}
 
 \newpage
+
+We expect the substitution target and replacement list-variables
+to be bound to variable-lists, and not sets.
+These lists should themselves only contain list-variables,
+and for any target/replacement pair these lists will be of the same length.
 \begin{code}
 instSub :: Monad m => Binding -> Substn -> m Substn
 instSub binding (Substn ts lvs)
-  = do ts'  <- instZip (instVar binding)  (instantiate binding) ts
-       lvs' <- instZip (instLVar binding) (instLVar binding)    lvs
-       substn (S.toList ts') (S.toList lvs')
+  = do ts'  <- instZip (instVar binding)  (instantiate binding) (S.toList ts)
+       lvss' <- instZip (instLLVar binding) (instLLVar binding) (S.toList lvs)
+       let (lvts,lvrs) = unzip lvss'
+       let lvs' = zip (concat lvts) (concat lvrs)
+       substn ts' lvs'
 \end{code}
+
 
 \begin{code}
 instZip inst1 inst2 pairs
-  = fmap S.fromList $ sequence $ map (instPair inst1 inst2) $ S.toList pairs
+  = sequence $ map (instPair inst1 inst2) pairs
   where
     instPair inst1 inst2 (thing1,thing2)
       = do thing1' <- inst1 thing1
@@ -127,6 +135,28 @@ instVarSet binding vs
 instVarList :: Monad m => Binding -> VarList -> m VarList
 instVarList binding vl
   = fmap concat $ sequence $ map (instLGVar binding) vl
+\end{code}
+
+\begin{code}
+instLLVar :: Monad m => Binding -> ListVar -> m [ListVar]
+instLLVar binding lv
+  = case lookupLstBind binding lv of
+      Just (BindList vl')  ->  fromGVarToLVar vl'
+      Just (BindSet vs')   ->  fromGVarToLVar $ S.toList vs'
+      Nothing              ->  fail $ unlines
+                                     [ "instLLVar: variable not found"
+                                     , "l-var = " ++ trLVar lv
+                                     , "bind = " ++ trBinding binding
+                                     ]
+      _ -> fail "instLLVar: can't handle terms."
+
+fromGVarToLVar :: Monad m => VarList -> m [ListVar]
+fromGVarToLVar [] = return []
+fromGVarToLVar (StdVar v:vl)
+ = fail ("fromGVarToLVar: Std variable found - " ++ show v)
+fromGVarToLVar (LstVar lv:vl)
+  = do lvs <- fromGVarToLVar vl
+       return (lv:lvs)
 \end{code}
 
 \begin{code}
@@ -154,30 +184,14 @@ instLGVar binding gv@(LstVar lv)
 
 \newpage
 
-\begin{code}
-instGVar :: Monad m => Binding -> GenVar -> m GenVar
-instGVar binding (StdVar v)  = do iv <- instVar binding v
-                                  return $ StdVar iv
-instGVar binding (LstVar lv) = do ilv <- instLVar binding lv
-                                  return $ LstVar ilv
-\end{code}
-
-\begin{code}
-instLVar :: Monad m => Binding -> ListVar -> m ListVar
-instLVar binding lv
-  = case lookupLstBind binding lv of
-      Nothing                       ->  return lv  -- maps to self !
-      Just (BindList [LstVar lv'])  ->  return lv'
-      Just (BindSet vs')            -> getTheLVar vs'
-      _ -> fail "instLVar: not bound to singleton list."
-  where
-    getTheLVar vs
-     | S.size vs == 1
-        = case S.elemAt 0 vs of
-           (LstVar lv)  -> return lv
-           _ -> fail "instLVar: bound to standard variable"
-     | otherwise  =  fail "instLVar: not bound to singleton set."
-\end{code}
+% \begin{code}
+% instGVar :: Monad m => Binding -> GenVar -> m GenVar
+% instGVar binding (StdVar v)  = do iv <- instVar binding v
+%                                   return $ StdVar iv
+% instGVar binding (LstVar lv) = do ilv <- instLVar binding lv
+%                                   return $ LstVar ilv
+% \end{code}
+%
 
 \begin{code}
 instVar :: Monad m => Binding -> Variable -> m Variable

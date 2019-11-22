@@ -1,3 +1,32 @@
+proof: m forall_inst
+@trm:
+C P (Id "land") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS))),B P (Id "forall") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])))]
+@bind:
+BD (fromList [((Id "P",VP),BT (K P (VB True)))],fromList [],fromList [((Id "x",VO,[],[]),BS (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])),((Id "y",VO,[],[]),BS (fromList []))])
+@unbound:
+fromList [GL (LV (VR (Id "e",VE,WS),[],[]))]
+@qbind:
+BD (fromList [],fromList [],fromList [((Id "e",VE,[],[]),BL [GL (LV (VR (Id "?e",VE,WS),[],[]))])])
+@abind:
+BD (fromList [((Id "P",VP),BT (K P (VB True)))],fromList [],fromList [((Id "e",VE,[],[]),BL [GL (LV (VR (Id "?e",VE,WS),[],[]))]),((Id "x",VO,[],[]),BS (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])),((Id "y",VO,[],[]),BS (fromList []))])
+@instantiate:
+Just (C P (Id "land") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (K P (VB True)),S P (K P (VB True)) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "?e",VE,WS),[],[]))]))])
+@brepl:
+C P (Id "land") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (K P (VB True)),S P (K P (VB True)) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "?e",VE,WS),[],[]))]))]
+@trm:
+C P (Id "land") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS))),B P (Id "forall") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])))]
+@bind:
+BD (fromList [((Id "P",VP),BT (K P (VB True)))],fromList [],fromList [((Id "x",VO,[],[]),BS (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])),((Id "y",VO,[],[]),BS (fromList []))])
+@unbound:
+fromList [GL (LV (VR (Id "e",VE,WS),[],[]))]
+@qbind:
+BD (fromList [],fromList [],fromList [((Id "e",VE,[],[]),BL [GL (LV (VR (Id "?e",VE,WS),[],[]))])])
+@abind:
+BD (fromList [((Id "P",VP),BT (K P (VB True)))],fromList [],fromList [((Id "e",VE,[],[]),BL [GL (LV (VR (Id "?e",VE,WS),[],[]))]),((Id "x",VO,[],[]),BS (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])),((Id "y",VO,[],[]),BS (fromList []))])
+@instantiate:
+Just (C P (Id "land") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (K P (VB True)),S P (K P (VB True)) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "?e",VE,WS),[],[]))]))])
+@brepl:
+C P (Id "land") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (K P (VB True)),S P (K P (VB True)) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "?e",VE,WS),[],[]))]))]
 @trm:
 C P (Id "land") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS))),B P (Id "forall") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])))]
 @bind:

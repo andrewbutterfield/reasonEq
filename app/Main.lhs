@@ -832,10 +832,11 @@ tryMatch :: REPLCmd (REqState, LiveProof)
 tryMatch [] state = return state
 tryMatch args state@( reqs, liveProof)
   = do case tryFocusAgainst lawnm parts (logicsig reqs) liveProof of
-         Yes (bind,scC')
+         Yes (bind,tPasC,scC')
            -> putStrLn $ unlines
                 [ banner
                 , "Binding:\n" ++ trBinding bind
+                , "Instantiated Law = " ++ trTerm 0 tPasC
                 , "Local candidate s.c. = " ++ trSideCond scC' ]
          But msgs -> putStrLn $ unlines' ( (banner ++ " failed!") : msgs )
        userPause

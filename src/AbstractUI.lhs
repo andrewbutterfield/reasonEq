@@ -456,7 +456,7 @@ matchFocusAgainst lawnm theSig liveProof
 Third, a deep dive to apply \texttt{match} so we can get back errors.
 \begin{code}
 tryFocusAgainst :: String -> [Int] -> LogicSig -> LiveProof
-                -> YesBut (Binding,SideCond)
+                -> YesBut (Binding,Term,SideCond)
 tryFocusAgainst lawnm parts theSig liveProof
   = let (tz,_)      =  focus liveProof
         goalt       =  getTZ tz
@@ -468,14 +468,6 @@ tryFocusAgainst lawnm parts theSig liveProof
 \newpage
 \subsubsection{Apply Match to Focus}
 
-\textbf{Problem here is that we auto-generate \texttt{mRepl}
-when we display matches, but those don't handle the
-``new pattern-variable'' issue.
-This is when the replacement term pattern has free variables that
-did not appear in the part of the law that was matched,
-and so have no bindings.
-Here we need to get the user to say how new pattern-variables should be
-instantiated, subject to side-conditions.}
 \begin{code}
 applyMatchToFocus :: Monad m => Int -> LiveProof -> m LiveProof
 applyMatchToFocus i liveProof

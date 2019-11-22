@@ -346,6 +346,7 @@ These calls are:
 \begin{code}
 tryLawByName :: LogicSig -> Assertion -> String -> [Int] -> [MatchContext]
                -> YesBut ( Binding    -- mapping from pattern to candidate
+                         , Term       -- autoInstantiated Law
                          , SideCond ) -- updated candidate side-condition
 tryLawByName logicsig asn@(tC,scC) lnm parts mcs
   = do (((_,(tP,scP)),_),vts) <- findLaw lnm mcs
@@ -359,7 +360,8 @@ First, try the structural match.
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryMatch vts tP partsP scP
       = case match vts tC partsP of
-          Yes bind  ->  tryCompleteBinding vts tP partsP scP bind
+          -- Yes bind  ->  tryCompleteBinding vts tP partsP scP bind
+          Yes bind  ->  tryAutoInstantiate vts tP partsP scP bind
           But msgs
            -> But ([ "try match failed"
                    , ""
@@ -372,6 +374,39 @@ First, try the structural match.
                    , "scC="++trSideCond scC
                    , ""
                    ]++msgs)
+\end{code}
+
+At this point we have matched the candidate against part of the law,
+with the rest of the law to be the ``replacement''.
+However, the replacement may contain variables not present in the
+matched part.
+We need to find appropriate bindings for these,
+keeping the pattern side-conditions in mind.
+\begin{code}
+-- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
+    tryAutoInstantiate vts tP partsP scP bind
+      = let
+          unbound = findUnboundVars (pdbg "bind" bind) $ pdbg "tP" tP
+          qbind = questionableBinding $ pdbg "unbound" unbound
+          abind = mergeBindings bind $ pdbg "qbind" qbind
+        in case instantiate (pdbg "abind" abind) tP of
+            Yes tPasC ->  tryInstantiateSC abind scC tPasC partsP scP
+            But msgs
+             -> But ([ "auto-instantiate failed"
+                     , ""
+                     , trTerm 0 tC ++ " :: " ++ trTerm 0 partsP
+                     , ""
+                     , "lnm[parts]="++lnm++show parts
+                     , "tP="++trTerm 0 tP
+                     , "partsP="++trTerm 0 partsP
+                     , "tC="++trTerm 0 tC
+                     , "scC="++trSideCond scC
+                     , ""
+                     , "bind  = " ++ trBinding bind
+                     , "unbound = " ++ trVSet unbound
+                     , "qbind = " ++ trBinding qbind
+                     , "abind = " ++ trBinding abind
+                     ]++msgs)
 \end{code}
 
 At this point we have matched the candidate against part of the law,
@@ -426,7 +461,7 @@ Finally, try to discharge the instantiated side-condition:
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     trySCDischarge bind tP partsP scC' scP'
       = do  if scDischarged scC' scP'
-              then Yes (bind,scC')
+              then Yes (bind,tP,scC')
               else But [ "try s.c. discharge failed"
                        , ""
                        , trSideCond scC
@@ -475,7 +510,7 @@ findParts parts t
           = fail ("findParts: "++trTerm 0 t++" "++show parts++" makes no sense")
 \end{code}
 
-Assume all \texttt{Int}s are positive
+Assume all \texttt{Int}s are positive and non-zero
 \begin{code}
 getParts :: Monad m => [Int] -> [a] -> m [a]
 getParts [] xs = fail "getParts: no parts specified"

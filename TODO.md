@@ -7,7 +7,16 @@
 Matching *forall xs . true* crashes in proof of *"exists_false"*.
 
 Issue is in `autoInstantiate`.
-Not also that there are still `-- maps to self` parts in in `instSGVar`, `instLGVar`, `instLVar`, `instVar`.
+
+Problem identified:
+
+Replacmement  *(forall xs,ys @ P) /\ (forall ys @ P[es/xs])*
+
+Two matches bind *xs,ys* to *xs,{}* - this works fine.
+
+One match binds *xs,ys* to *{},xs* - this fails becuase *es* is bound to *?es* so the substitution becomes [?es/{}].
+
+**We need to guide list-var autoinstantiation by substitutions.**
 
 ## Top-Level Plan
 

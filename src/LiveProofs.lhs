@@ -387,7 +387,8 @@ keeping the pattern side-conditions in mind.
     tryAutoInstantiate vts tP partsP scP bind
       = let
           unbound = findUnboundVars (pdbg "bind" bind) $ pdbg "tP" tP
-          qbind = questionableBinding $ pdbg "unbound" unbound
+          lvps = termLVarPairings tP
+          qbind = questionableBinding bind lvps $ pdbg "unbound" unbound
           abind = mergeBindings bind $ pdbg "qbind" qbind
         in case instantiate (pdbg "abind" abind) tP of
             Yes tPasC ->  tryInstantiateSC abind scC tPasC partsP scP

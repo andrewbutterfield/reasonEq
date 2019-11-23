@@ -10,7 +10,7 @@ module Instantiate
 ( instantiate
 , instantiateASC
 , instantiateSC
-, findUnboundVars, questionableBinding, autoInstantiate
+, findUnboundVars, termLVarPairings, questionableBinding, autoInstantiate
 ) where
 import Data.Maybe
 import Data.Set(Set)
@@ -408,7 +408,7 @@ findUnboundVars bind trm = mentionedVars trm  S.\\  mappedVars bind
 
 \begin{code}
 termLVarPairings :: Term -> [(ListVar,ListVar)]
-termLVarPairings (Cons _ _ ts)    =   nub $ concat $ map termLVarPairings ts
+termLVarPairings (Cons _ _ ts)    =  nub $ concat $ map termLVarPairings ts
 termLVarPairings (Bind _ _ _ tm)  =  termLVarPairings tm
 termLVarPairings (Lam _ _ _ tm)   =  termLVarPairings tm
 termLVarPairings (Cls _ tm)       =  termLVarPairings tm
@@ -432,8 +432,8 @@ to something of the same size as its bound partner, otherwise instantiation will
 fail when it calls \texttt{substn}.
 }
 \begin{code}
-questionableBinding :: VarSet -> Binding
-questionableBinding vs
+questionableBinding :: Binding -> [(ListVar,ListVar)] -> VarSet -> Binding
+questionableBinding bind lvpairs vs
   = qB emptyBinding $ S.toList vs
 
 qB bind [] = bind
@@ -445,6 +445,7 @@ qVB bind v@(Vbl i vc vw)
   where qi = qI i
 
 qLVB bind lv@(LVbl (Vbl i vc vw) is js)
+  -- need to see if in a substitution pair with a bound partner
   = fromJust $ bindLVarToVList lv [LstVar (LVbl (Vbl (qI i) vc vw) is js)] bind
 
 qI (Identifier n) = fromJust $ ident ('?':n)
@@ -455,8 +456,10 @@ qI (Identifier n) = fromJust $ ident ('?':n)
 \begin{code}
 autoInstantiate :: Binding -> Term -> Term
 autoInstantiate bind trm
- = fromJust $ pdbg "instantiate" $ instantiate (pdbg "abind" abind) $ pdbg "trm" trm
+ = fromJust $ instantiate abind trm
  where
-   qbind = questionableBinding (pdbg "unbound" $ findUnboundVars bind trm)
-   abind = mergeBindings (pdbg "bind" bind) $ pdbg "qbind" qbind
+   unbound  =  findUnboundVars bind trm
+   lvpairs  =  termLVarPairings trm
+   qbind    =  questionableBinding bind lvpairs unbound
+   abind    =  mergeBindings bind qbind
 \end{code}

@@ -408,16 +408,38 @@ findUnboundVars bind trm = mentionedVars trm  S.\\  mappedVars bind
 
 \begin{code}
 termLVarPairings :: Term -> [(ListVar,ListVar)]
+termLVarPairings (Sub _ tm s)     =  nub ( termLVarPairings tm
+                                           ++ substLVarPairings s )
 termLVarPairings (Cons _ _ ts)    =  nub $ concat $ map termLVarPairings ts
 termLVarPairings (Bind _ _ _ tm)  =  termLVarPairings tm
 termLVarPairings (Lam _ _ _ tm)   =  termLVarPairings tm
 termLVarPairings (Cls _ tm)       =  termLVarPairings tm
-termLVarPairings (Sub _ tm s)     =  nub ( termLVarPairings tm
-                                           ++ substLVarPairings s )
 termLVarPairings _                =  []
 
 substLVarPairings :: Substn -> [(ListVar,ListVar)]
 substLVarPairings (LVarSub lvs) = S.toList lvs
+\end{code}
+
+Given that we can have substitutions of the form
+$P[\lst y/\lst x][\lst e/\lst y]$
+what we want is an relation saying
+that $\setof{\lst e,\lst x,\lst y}$ are equivalent.
+We can represent such a relation as a set of list-variable
+sets.
+
+The following code is very general and should live elsewhere
+\begin{code}
+addToEquivClass :: Eq a => a -> a -> [[a]] -> [[a]]
+-- invariant, given eqvcs = [eqvc1,eqvc2,...]
+--  z `elem` eqcvi ==> not( z `elem` eqcvj), for any j /= i
+addToEquivClass x y [] =  [[x,y]]
+addToEquivClass x y eqvcs
+  | otherwise  =  error "addToEquivClass nyfi" -- (noXhasY++noYhasX):noXY -- expect noXY == noYX
+  where
+    (hasX,noX) = partition (elem x) eqvcs
+    (hasY,noY) = partition (elem y) eqvcs
+    ([noXhasY],noXY) = partition (elem y) noX
+    ([noYhasX],noYX) = partition (elem x) noY
 \end{code}
 
 \subsubsection{Mapping Replacement Variables to Questionable ones}

@@ -17,6 +17,7 @@ import Data.Set(Set)
 import qualified Data.Set as S
 import Data.Map(Map)
 import qualified Data.Map as M
+import Data.List
 
 import Utilities
 import LexBase
@@ -402,6 +403,23 @@ findUnboundVars :: Binding -> Term -> VarSet
 findUnboundVars bind trm = mentionedVars trm  S.\\  mappedVars bind
 \end{code}
 
+
+\subsubsection{Collect Substitution List-Variable Pairings}
+
+\begin{code}
+termLVarPairings :: Term -> [(ListVar,ListVar)]
+termLVarPairings (Cons _ _ ts)    =   nub $ concat $ map termLVarPairings ts
+termLVarPairings (Bind _ _ _ tm)  =  termLVarPairings tm
+termLVarPairings (Lam _ _ _ tm)   =  termLVarPairings tm
+termLVarPairings (Cls _ tm)       =  termLVarPairings tm
+termLVarPairings (Sub _ tm s)     =  nub ( termLVarPairings tm
+                                           ++ substLVarPairings s )
+termLVarPairings _                =  []
+
+substLVarPairings :: Substn -> [(ListVar,ListVar)]
+substLVarPairings (LVarSub lvs) = S.toList lvs
+\end{code}
+
 \subsubsection{Mapping Replacement Variables to Questionable ones}
 
 \textbf{
@@ -410,7 +428,7 @@ details regarding all substitution list-variable pairs
 in order to produce valid bindings.
 In particular, if an unbound substitution list-variable
 is paired with a bound one, then the unknown one must be bound
-to something of the same size as its bound partner, otherwise instantation will
+to something of the same size as its bound partner, otherwise instantiation will
 fail when it calls \texttt{substn}.
 }
 \begin{code}

@@ -2,6 +2,10 @@
 
 ## HOTFIX
 
+addToEquiv class: extract *hasX*, *hasY*, *noXY*;
+construct *eqvXY = {x,y} union hasX and hasY*;
+return *noXY union {eqvXY}*.
+
 ### Match Crash
 
 Matching *forall xs . true* crashes in proof of *"exists_false"*.

@@ -429,6 +429,7 @@ that $\setof{\lst e,\lst x,\lst y}$ are equivalent.
 We can represent such a relation as a set of list-variable
 sets.
 
+\newpage
 The following code is very general and should live elsewhere
 \begin{code}
 addToEquivClass :: Eq a => (a,a) -> [[a]] -> [[a]]
@@ -459,6 +460,13 @@ findEquivClasses x y hasX hasY noXY (eqvc:eqvcs)
       | otherwise      =  findEquivClasses x y hasX hasY (eqvc:noXY) eqvcs
 \end{code}
 
+Given a list of tuples, construct the equivalence classes:
+\begin{code}
+mkEquivClasses :: Eq a => [(a,a)] -> [[a]]
+mkEquivClasses [] = []
+mkEquivClasses (p:ps) = addToEquivClass p $ mkEquivClasses ps
+\end{code}
+
 Given equivalence classes,
 which one, if any, does a value belong to?
 \begin{code}
@@ -469,12 +477,7 @@ lookupEquivClasses x (eqvc:eqvcs)
  | otherwise             =  lookupEquivClasses x eqvcs
 \end{code}
 
-Given a list of tuples, construct the equivalence classes:
-\begin{code}
-mkEquivClasses :: Eq a => [(a,a)] -> [[a]]
-mkEquivClasses [] = []
-mkEquivClasses (p:ps) = addToEquivClass p $ mkEquivClasses ps
-\end{code}
+\newpage
 
 \subsubsection{Mapping Replacement Variables to Questionable ones}
 
@@ -491,20 +494,29 @@ fail when it calls \texttt{substn}.
 questionableBinding :: Binding -> [[ListVar]] -> VarSet -> Binding
 questionableBinding bind substEqv vs
   = qB emptyBinding $ S.toList vs
+  where
 
-qB bind [] = bind
-qB bind ((StdVar v) :vl)  =  qB (qVB bind v)   vl
-qB bind ((LstVar lv):vl)  =  qB (qLVB bind lv) vl
+    qB bind [] = bind
+    qB bind ((StdVar v) :vl)  =  qB (qVB bind v)   vl
+    qB bind ((LstVar lv):vl)  =  qB (qLVB bind lv) vl
 
-qVB bind v@(Vbl i vc vw)
-  = fromJust $ bindVarToVar v (Vbl (qI i) vc vw) bind
-  where qi = qI i
+    qVB bind v@(Vbl i vc vw)
+      = fromJust $ bindVarToVar v (Vbl (qI i) vc vw) bind
+      where qi = qI i
 
-qLVB bind lv@(LVbl (Vbl i vc vw) is js)
-  -- need to see if in a substitution pair with a bound partner
-  = fromJust $ bindLVarToVList lv [LstVar (LVbl (Vbl (qI i) vc vw) is js)] bind
+    qLVB bind lv@(LVbl (Vbl i vc vw) is js)
+      | null lvEquivs
+          = fromJust
+              $ bindLVarToVList lv [LstVar (LVbl (Vbl (qI i) vc vw) is js)] bind
+      | otherwise = error $ unlines
+                                ["questionableBinding INCOMPLETE"
+                                ,"bind="++trBinding bind
+                                ,"substEqv="++show substEqv
+                                ,"lv="++show lv]
+      where
+        lvEquivs = lookupEquivClasses lv substEqv
 
-qI (Identifier n) = fromJust $ ident ('?':n)
+    qI (Identifier n) = fromJust $ ident ('?':n)
 \end{code}
 
 \subsubsection{Questionable Instantiation}

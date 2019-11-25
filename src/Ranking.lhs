@@ -40,7 +40,7 @@ type RankFunction = [MatchContext] -> Match -> Rank
 Simple sorting according to rank:
 \begin{code}
 rankAndSort :: RankFunction -> [MatchContext] -> Matches -> Matches
-rankAndSort rf ctxts ms  = map snd $ sortOn fst $ pdbg "rankMapping" $ zip (map (rf ctxts) ms) ms
+rankAndSort rf ctxts ms  = map snd $ sortOn fst $ zip (map (rf ctxts) ms) ms
 \end{code}
 
 \subsection{Ranking Functions}

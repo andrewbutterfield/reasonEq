@@ -52,6 +52,10 @@ import Test.HUnit
 import Test.Framework as TF (defaultMain, testGroup, Test)
 import Test.Framework.Providers.HUnit (testCase)
 --import Test.Framework.Providers.QuickCheck2 (testProperty)
+
+import Debug.Trace
+dbg msg x = trace (msg++show x) x
+pdbg nm x = dbg ('@':nm++":\n") x
 \end{code}
 
 \subsection{AST Introduction}
@@ -84,10 +88,10 @@ pattern LVarSub lvs    <-  SN _  lvs
 
 substn :: Monad m => [(Variable,Term)] -> [(ListVar,ListVar)] -> m Substn
 substn ts lvs
- | null ts && null lvs = fail "Empty substitution."
- | dupKeys ts'  =  fail "Term substitution has duplicate variables."
- | dupKeys lvs' =  fail "List-var subst. has duplicate variables."
- | otherwise    = return $ SN (S.fromList ts') (S.fromList lvs')
+ | null ts && null lvs  =  return $ SN S.empty S.empty
+ | dupKeys ts'          =  fail "Term substitution has duplicate variables."
+ | dupKeys lvs'         =  fail "List-var subst. has duplicate variables."
+ | otherwise            =  return $ SN (S.fromList ts') (S.fromList lvs')
  where
   ts'  = sort ts
   lvs' = sort lvs

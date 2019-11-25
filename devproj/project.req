@@ -17,26 +17,6 @@ END THEORIES
 CURRTHEORY = Exists
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("Exists","exists_false")
-BEGIN LIVE-PROOF
-TH-NAME: Exists
-CJ-NAME: exists_false
-CONJ = (C P (Id "equiv") [B P (Id "exists") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (K P (VB False)),K P (VB False)],[])
-SIDE = []
-STRAT reduce
-BEGIN SEQZIP
-TERMZIP = (B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (K P (VB True)),[Cons' P (Id "lnot") [] [],Cons' P (Id "equiv") [] [K P (VB False)]])
-BEGIN SEQUENT'
-SIDECOND = []
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.exists_false", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
-END SEQUENT'
-END SEQZIP
-FPATH: [1,1]
-BEGIN LIST STEPS
-(UseLaw (ByMatch (ME [1])) "false_neg" (BD (fromList [],fromList [],fromList [])) [1,1,1],(C P (Id "equiv") [C P (Id "lnot") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (C P (Id "lnot") [K P (VB False)])],K P (VB False)],[]))
-(UseLaw (ByMatch (ME [1])) "exists_def" (BD (fromList [((Id "P",VP),BT (K P (VB False)))],fromList [],fromList [((Id "x",VO,[],[]),BS (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]))])) [1],(C P (Id "equiv") [B P (Id "exists") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (K P (VB False)),K P (VB False)],[]))
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

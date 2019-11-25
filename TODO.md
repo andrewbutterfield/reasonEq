@@ -1,48 +1,5 @@
 # To Do
 
-## HOTFIX
-
-We need `autoInstantiate` to report failure and handle this gracefully.
-
-
-addToEquiv class: extract *hasX*, *hasY*, *noXY*;
-construct *eqvXY = {x,y} union hasX and hasY*;
-return *noXY union {eqvXY}*.
-
-### Match Crash
-
-Matching *forall xs . true* crashes in proof of *"exists_false"*.
-
-Issue is in `autoInstantiate`.
-
-Problem identified:
-
-Replacmement  *(forall xs,ys @ P) /\ (forall ys @ P[es/xs])*
-
-Two matches bind *xs,ys* to *xs,{}* - this works fine.
-
-One match binds *xs,ys* to *{},xs* - this fails becuase *es* is bound to *?es* so the substitution becomes [?es/{}].
-
-**We need to guide list-var autoinstantiation by substitutions.**
-
-## Top-Level Plan
-
-We need to refactor all theories:
-
-* XX_def move from PropAxioms or PredAxioms into XX theory with axioms and conjectures.
-* XX_subst move in as axioms/conjectures into XX theory
-* Theory starts with defining axioms with the last axioms being those that define substitutions, if allowed
-* Theory conjectures start with substitution conjectures, if any, and then the rest.
-
-**NEED SIDECONDITIONS OF THE FORM `x$ disj z$` !!!**
-
-*Can be done as  `[x$] notin z$`  or `[z$] notin x$`.*
-
-
-## Current Task
-
-none
-
 
 ## Hotfixes
 

@@ -386,12 +386,12 @@ keeping the pattern side-conditions in mind.
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryAutoInstantiate vts tP partsP scP bind
       = let
-          unbound = findUnboundVars (pdbg "bind" bind) $ pdbg "tP" tP
+          unbound = findUnboundVars bind tP
           lvps = termLVarPairings tP
           sEqv = mkEquivClasses lvps
-          qbind = questionableBinding bind sEqv $ pdbg "unbound" unbound
-          abind = mergeBindings bind $ pdbg "qbind" qbind
-        in case instantiate (pdbg "abind" abind) tP of
+          qbind = questionableBinding bind sEqv unbound
+          abind = mergeBindings bind qbind
+        in case instantiate abind tP of
             Yes tPasC ->  tryInstantiateSC abind scC tPasC partsP scP
             But msgs
              -> But ([ "auto-instantiate failed"
@@ -958,7 +958,7 @@ displayMatches matches
 shMatch (i, mtch)
  = show i ++ " : "++ ldq ++ green (nicelawname $ mName mtch) ++ rdq
    ++ "  gives  "
-   ++ (bold $ blue $ trTerm 0 $ pdbg "brepl" $ brepl)
+   ++ (bold $ blue $ trTerm 0 $ brepl)
    ++ "  " ++ shSCImplication (mLocSC mtch) (mLawSC mtch)
    ++ " " ++ shMClass (mClass mtch)
  where

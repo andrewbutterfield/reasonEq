@@ -434,8 +434,8 @@ matchFocus theSig liveProof
         scC         =  conjSC liveProof
         ctxts       =  mtchCtxts liveProof
         newMatches  =  matchInContexts theSig ctxts (goalt,scC)
-        rankedM     =  pdbg "rankAndSort" $ rankAndSort sizeRank ctxts
-                       $ pdbg "isNonTrivial" $ filter isNonTrivial $ pdbg "newMatches" newMatches
+        rankedM     =  rankAndSort sizeRank ctxts
+                         $ filter isNonTrivial newMatches
     in matches_ rankedM liveProof
 \end{code}
 

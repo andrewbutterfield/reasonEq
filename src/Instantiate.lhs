@@ -504,19 +504,22 @@ questionableBinding bind substEqv vs
       = fromJust $ bindVarToVar v (Vbl (qI i) vc vw) bind
       where qi = qI i
 
-    qLVB bind lv@(LVbl (Vbl i vc vw) is js)
+    qLVB bind lv@(LVbl (Vbl i _ _) _ _)
       | null lvEquivs
           = fromJust
-              $ bindLVarToVList lv [LstVar (LVbl (Vbl (qI i) vc vw) is js)] bind
+              $ bindLVarToVList lv [questionableLV lv i] bind
       | otherwise
          = case bindSizes of
              [] -> fromJust
                       $ bindLVarToVList lv
-                          [LstVar (LVbl (Vbl (qI i) vc vw) is js)] bind
+                          [questionableLV lv i] bind
+             [0] -> fromJust $ bindLVarToVList lv [] bind
              [1] -> fromJust
                       $ bindLVarToVList lv
-                          [LstVar (LVbl (Vbl (qI i) vc vw) is js)] bind
-             [n] -> error "qLVB: can't yet handle a size > 1 "
+                          [questionableLV lv i] bind
+             [n] -> fromJust
+                      $ bindLVarToVList lv
+                          (map (questionableLV lv . qIn i) [1..n]) bind
              bs -> error $ unlines
                     ["questionableBinding : equiv class has multiple sizes"
                     ,"bs="++show bs
@@ -525,8 +528,11 @@ questionableBinding bind substEqv vs
       where
         lvEquivs = lookupEquivClasses lv substEqv
         bindSizes = equivBindingsSizes bind lvEquivs
+        questionableLV lv@(LVbl (Vbl _ vc vw) is js) i
+                 = LstVar (LVbl (Vbl (qI i) vc vw) is js)
 
-    qI (Identifier n) = fromJust $ ident ('?':n)
+    qI  (Identifier i)    =  fromJust $ ident ('?':i)
+    qIn (Identifier i) n  =  fromJust $ ident ('?':i++show n)
 \end{code}
 
 Look up cardinalities of bindings of equivalences.

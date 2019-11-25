@@ -2,6 +2,9 @@
 
 ## HOTFIX
 
+We need `autoInstantiate` to report failure and handle this gracefully.
+
+
 addToEquiv class: extract *hasX*, *hasY*, *noXY*;
 construct *eqvXY = {x,y} union hasX and hasY*;
 return *noXY union {eqvXY}*.

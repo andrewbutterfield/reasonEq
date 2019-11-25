@@ -508,16 +508,51 @@ questionableBinding bind substEqv vs
       | null lvEquivs
           = fromJust
               $ bindLVarToVList lv [LstVar (LVbl (Vbl (qI i) vc vw) is js)] bind
-      | otherwise = error $ unlines
-                                ["questionableBinding INCOMPLETE"
-                                ,"bind="++trBinding bind
-                                ,"substEqv="++show substEqv
-                                ,"lv="++show lv]
+      | otherwise
+         = case bindSizes of
+             [] -> fromJust
+                      $ bindLVarToVList lv
+                          [LstVar (LVbl (Vbl (qI i) vc vw) is js)] bind
+             [1] -> fromJust
+                      $ bindLVarToVList lv
+                          [LstVar (LVbl (Vbl (qI i) vc vw) is js)] bind
+             [n] -> error "qLVB: can't yet handle a size > 1 "
+             bs -> error $ unlines
+                    ["questionableBinding : equiv class has multiple sizes"
+                    ,"bs="++show bs
+                    ,"lv="++show lv
+                    ]
       where
         lvEquivs = lookupEquivClasses lv substEqv
+        bindSizes = equivBindingsSizes bind lvEquivs
 
     qI (Identifier n) = fromJust $ ident ('?':n)
 \end{code}
+
+Look up cardinalities of bindings of equivalences.
+\textbf{Issue: what if their cardinality varies?}
+\begin{code}
+equivBindingsSizes :: Binding -> [ListVar] -> [Int]
+equivBindingsSizes bind [] = []
+equivBindingsSizes bind (lv:lvs)
+  = case lookupLstBind bind lv of
+       Nothing  ->  equivBindingsSizes bind lvs
+       Just (BindList vl)  ->  nub (length vl : equivBindingsSizes bind lvs)
+       Just (BindSet vs)   ->  nub (S.size vs : equivBindingsSizes bind lvs)
+       Just (BindTLVs tl vl)
+         | null tl    ->  nub (length vl : equivBindingsSizes bind lvs)
+         | otherwise  ->  error $ unlines
+                           ["equivBindingsSizes: cannot handle BX with terms"
+                           ,"lv="++show lv
+                           ,"BX.tl="++show tl
+                           ,"BX.vl="++show vl
+                           ,"bind="++trBinding bind
+                           ]
+
+
+
+\end{code}
+Another issue, what if some are unbound? Ignore for now.
 
 \subsubsection{Questionable Instantiation}
 

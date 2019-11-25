@@ -10,7 +10,9 @@ module Instantiate
 ( instantiate
 , instantiateASC
 , instantiateSC
-, findUnboundVars, termLVarPairings, questionableBinding, autoInstantiate
+, findUnboundVars, termLVarPairings
+, mkEquivClasses -- should be elsewhere
+, questionableBinding, autoInstantiate
 ) where
 import Data.Maybe
 import Data.Set(Set)
@@ -429,17 +431,39 @@ sets.
 
 The following code is very general and should live elsewhere
 \begin{code}
-addToEquivClass :: Eq a => a -> a -> [[a]] -> [[a]]
+addToEquivClass :: Eq a => (a,a) -> [[a]] -> [[a]]
 -- invariant, given eqvcs = [eqvc1,eqvc2,...]
 --  z `elem` eqcvi ==> not( z `elem` eqcvj), for any j /= i
-addToEquivClass x y [] =  [[x,y]]
-addToEquivClass x y eqvcs
-  | otherwise  =  error "addToEquivClass nyfi" -- (noXhasY++noYhasX):noXY -- expect noXY == noYX
+addToEquivClass (x,y) [] =  [nub[x,y]]
+addToEquivClass (x,y) eqvcs
+  = ([x,y] `union` hasX `union` hasY):noXY
   where
-    (hasX,noX) = partition (elem x) eqvcs
-    (hasY,noY) = partition (elem y) eqvcs
-    ([noXhasY],noXY) = partition (elem y) noX
-    ([noYhasX],noYX) = partition (elem x) noY
+    (hasX,hasY,noXY) = findEquivClasses x y [] [] [] eqvcs
+
+findEquivClasses
+  :: Eq a  =>  a -> a       -- x and y
+           ->  [a] -> [a]   -- accumulators for hasX, hasY
+           ->  [[a]]        -- accumulator for noXY
+           ->  [[a]]        -- equivalence classes under consideration
+           ->  ([a],[a],[[a]])
+findEquivClasses _ _ hasX hasY noXY [] = (hasX,hasY,noXY)
+findEquivClasses x y hasX hasY noXY (eqvc:eqvcs)
+  = checkX hasX hasY noXY
+  where
+    checkX hasX hasY noXY
+      | x `elem` eqvc  =  checkY eqvc hasY noXY True
+      | otherwise      =  checkY hasX hasY noXY False
+    checkY hasX hasY noXY hadX
+      | y `elem` eqvc  =  findEquivClasses x y hasX eqvc noXY eqvcs
+      | hadX           =  findEquivClasses x y hasX hasY noXY eqvcs
+      | otherwise      =  findEquivClasses x y hasX hasY (eqvc:noXY) eqvcs
+\end{code}
+
+Given a list of tuples, construct the equivalence classes:
+\begin{code}
+mkEquivClasses :: Eq a => [(a,a)] -> [[a]]
+mkEquivClasses [] = []
+mkEquivClasses (p:ps) = addToEquivClass p $ mkEquivClasses ps
 \end{code}
 
 \subsubsection{Mapping Replacement Variables to Questionable ones}
@@ -454,8 +478,8 @@ to something of the same size as its bound partner, otherwise instantiation will
 fail when it calls \texttt{substn}.
 }
 \begin{code}
-questionableBinding :: Binding -> [(ListVar,ListVar)] -> VarSet -> Binding
-questionableBinding bind lvpairs vs
+questionableBinding :: Binding -> [[ListVar]] -> VarSet -> Binding
+questionableBinding bind substEqv vs
   = qB emptyBinding $ S.toList vs
 
 qB bind [] = bind
@@ -482,6 +506,7 @@ autoInstantiate bind trm
  where
    unbound  =  findUnboundVars bind trm
    lvpairs  =  termLVarPairings trm
-   qbind    =  questionableBinding bind lvpairs unbound
+   substEquiv = mkEquivClasses lvpairs
+   qbind    =  questionableBinding bind substEquiv unbound
    abind    =  mergeBindings bind qbind
 \end{code}

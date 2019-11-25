@@ -388,7 +388,8 @@ keeping the pattern side-conditions in mind.
       = let
           unbound = findUnboundVars (pdbg "bind" bind) $ pdbg "tP" tP
           lvps = termLVarPairings tP
-          qbind = questionableBinding bind lvps $ pdbg "unbound" unbound
+          sEqv = mkEquivClasses lvps
+          qbind = questionableBinding bind sEqv $ pdbg "unbound" unbound
           abind = mergeBindings bind $ pdbg "qbind" qbind
         in case instantiate (pdbg "abind" abind) tP of
             Yes tPasC ->  tryInstantiateSC abind scC tPasC partsP scP

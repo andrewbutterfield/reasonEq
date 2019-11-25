@@ -459,6 +459,16 @@ findEquivClasses x y hasX hasY noXY (eqvc:eqvcs)
       | otherwise      =  findEquivClasses x y hasX hasY (eqvc:noXY) eqvcs
 \end{code}
 
+Given equivalence classes,
+which one, if any, does a value belong to?
+\begin{code}
+lookupEquivClasses :: Eq a => a -> [[a]] -> [a]
+lookupEquivClasses x []  =  []
+lookupEquivClasses x (eqvc:eqvcs)
+ | x `elem` eqvc         =  eqvc \\ [x]
+ | otherwise             =  lookupEquivClasses x eqvcs
+\end{code}
+
 Given a list of tuples, construct the equivalence classes:
 \begin{code}
 mkEquivClasses :: Eq a => [(a,a)] -> [[a]]

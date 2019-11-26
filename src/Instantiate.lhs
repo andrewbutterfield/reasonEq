@@ -145,7 +145,7 @@ instLLVar :: Monad m => Binding -> ListVar -> m [ListVar]
 instLLVar binding lv
   = case lookupLstBind binding lv of
       Just (BindList vl')  ->  fromGVarToLVar vl'
-      Just (BindSet vs')   ->  fromGVarToLVar $ S.toList vs'
+      Just (BindSet  vs')  ->  fromGVarToLVar $ S.toList vs'
       Just (BindTLVs ts lvs)
         | null ts          ->  return lvs
         | otherwise        ->  fail $ unlines
@@ -176,8 +176,10 @@ instSGVar binding gv@(LstVar lv)
   = case lookupLstBind binding lv of
       Nothing              ->  return $ S.singleton gv  -- maps to self !
       Just (BindList vl')  ->  return $ S.fromList vl'
-      Just ( BindSet vs')  ->  return vs'
-      _ -> fail "instSGVar: bound to terms."
+      Just (BindSet  vs')  ->  return vs'
+      Just (BindTLVs ts lvs)
+        | null ts          ->  return $ S.fromList $ map LstVar lvs
+        | otherwise        ->  fail "instSGVar: bound to terms."
 \end{code}
 
 \begin{code}

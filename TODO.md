@@ -3,9 +3,31 @@
 
 ## Hotfixes
 
-### `[]_idem` Proof
+### `exists_subst` Proof
 
-Need `PredSubst` axioms !!!
+**Need to do more work on `lvsMatch` !
+
+```
+((∀ x̅,y̅ • ¬ P))[e̅,f̅/y̅,z̅]≡(∀ x̅,y̅ • (¬ P)[f̅/z̅])    x̅ ∉ z̅
+
+Focus = []  Target (RHS): true
+
+
+proof: tm forall_subst
+Match against `forall_subst'[] failed!
+try match failed
+
+((∀ x̅,y̅ • ¬ P))[e̅,f̅/y̅,z̅]≡(∀ x̅,y̅ • (¬ P)[f̅/z̅]) :: ((∀ x̅,y̅ • P))[e̅,f̅/y̅,z̅]≡(∀ x̅,y̅ • P[f̅/z̅])
+
+lnm[parts]=forall_subst[]
+tP=((∀ x̅,y̅ • P))[e̅,f̅/y̅,z̅]≡(∀ x̅,y̅ • P[f̅/z̅])
+partsP=((∀ x̅,y̅ • P))[e̅,f̅/y̅,z̅]≡(∀ x̅,y̅ • P[f̅/z̅])
+tC=((∀ x̅,y̅ • ¬ P))[e̅,f̅/y̅,z̅]≡(∀ x̅,y̅ • (¬ P)[f̅/z̅])
+scC=x̅ ∉ z̅
+
+lvsMatch NYfI
+hit <enter> to continue
+```
 
 STOP PRESS ! Reading [Gries 97] gives a new perspective for `PredUniv` axioms.
 

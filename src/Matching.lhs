@@ -2334,7 +2334,7 @@ vtsMatch vts bind cbvs pbvs tsC tsP
    matchTerm tC tP bind =  tMatch vts bind cbvs pbvs tC tP
 \end{code}
 
-
+\newpage
 \subsubsection{Substitution ListVar Matching}
 
 We are now matching
@@ -2393,6 +2393,18 @@ lvsMatch vts bind cbvs pbvs tsC lvsC [(vsP,esP)]
     cVars = map fst tsC ; cTgtL = map fst lvsC
     cTgts = (map StdVar cVars ++ map LstVar cTgtL)
     cTerms = map snd tsC ; cRplL = map snd lvsC
+\end{code}
+Next case, candidate is only list variables:
+\begin{code}
+lvsMatch vts bind cbvs pbvs [] lvsC lvsP -- = fail "lvsMatch [] lvsC lvsP NYI"
+ = do (bind',lvsC') <- manyToMultiple (matchPair matchLVar matchLVar)
+                                          defCombine id lvsC lvsP bind
+      return bind'
+ where
+   matchLVar  ::  MonadPlus mp => BasicM mp Binding ListVar ListVar
+   matchLVar lvC lvP bind = vsMatch vts bind cbvs pbvs
+                                    (S.singleton $ LstVar lvC)
+                                    (S.singleton $ LstVar lvP)
 \end{code}
 Right now my head hurts.
 \begin{code}

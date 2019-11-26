@@ -146,12 +146,18 @@ instLLVar binding lv
   = case lookupLstBind binding lv of
       Just (BindList vl')  ->  fromGVarToLVar vl'
       Just (BindSet vs')   ->  fromGVarToLVar $ S.toList vs'
-      Nothing              ->  fail $ unlines
-                                     [ "instLLVar: variable not found"
+      Just (BindTLVs ts lvs)
+        | null ts          ->  return lvs
+        | otherwise        ->  fail $ unlines
+                                     [ "instLLVar: l-var bound to terms"
                                      , "l-var = " ++ trLVar lv
                                      , "bind = " ++ trBinding binding
                                      ]
-      _ -> fail "instLLVar: can't handle terms."
+      Nothing              ->  fail $ unlines
+                                     [ "instLLVar: l-var not found"
+                                     , "l-var = " ++ trLVar lv
+                                     , "bind = " ++ trBinding binding
+                                     ]
 
 fromGVarToLVar :: Monad m => VarList -> m [ListVar]
 fromGVarToLVar [] = return []

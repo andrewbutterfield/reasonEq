@@ -3,8 +3,6 @@
 
 ## Hotfixes
 
-We crash matching *not(P[es/xs])* while proving `exists_inst`.
-
 ### `[]_idem` Proof
 
 Need `PredSubst` axioms !!!

@@ -31,7 +31,7 @@ import Implication
 import Equality
 import ForAll
 import Exists
-import PredUniv
+import UClose
 \end{code}
 
 \subsection{Introduction}

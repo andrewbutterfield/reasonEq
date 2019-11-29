@@ -6,7 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module PredUniv (
+module UClose (
   predUnivConjs, predUnivName, predUnivTheory
 ) where
 
@@ -267,7 +267,7 @@ predUnivConjs
 
 \begin{code}
 predUnivName :: String
-predUnivName = "PredUniv"
+predUnivName = "UClose"
 predUnivTheory :: Theory
 predUnivTheory
   =  Theory { thName  =  predUnivName

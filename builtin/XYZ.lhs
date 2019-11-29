@@ -36,7 +36,7 @@ import Implication
 import Equality
 import ForAll
 import Exists
-import PredUniv
+import UClose
 import UTPStartup
 import TestRendering
 \end{code}

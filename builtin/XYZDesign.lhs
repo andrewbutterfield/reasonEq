@@ -330,7 +330,7 @@ xyzDTheory :: Theory
 xyzDTheory
   =  Theory { thName  =  xyzDName
             , thDeps  =  [ utpStartupName
-                         , predUnivName
+                         , uCloseName
                          , existsName
                          , forallName
                          , equalityName

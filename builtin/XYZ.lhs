@@ -431,7 +431,7 @@ xyzTheory :: Theory
 xyzTheory
   =  Theory { thName  =  xyzName
             , thDeps  =  [ utpStartupName
-                         , predUnivName
+                         , uCloseName
                          , existsName
                          , forallName
                          , equalityName

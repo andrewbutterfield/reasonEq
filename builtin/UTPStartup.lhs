@@ -296,7 +296,7 @@ utpStartupName = "UTPStartup"
 utpStartupTheory :: Theory
 utpStartupTheory
   =  Theory { thName  =  utpStartupName
-            , thDeps  =  [ predUnivName
+            , thDeps  =  [ uCloseName
                          , existsName
                          , forallName
                          , equalityName

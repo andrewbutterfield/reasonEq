@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module UClose (
-  predUnivConjs, predUnivName, predUnivTheory
+  uCloseConjs, uCloseName, uCloseTheory
 ) where
 
 import Data.Maybe
@@ -91,14 +91,33 @@ and three axioms (2nd through 4th above)
 \\ \langle P \rangle &\implies& [\langle P \rangle].
 \end{eqnarray*}
 
-Here is the current axiomatisation:
+In a similar style, here is the ``temporal'' axiomatisation,
+using the Gries notation:
+
+$$
+\AXUNIVCLOSEASBOX
+$$
+
+These don't seem helpful at all.
+I can't use them to prove \CJUnivIdemN\ or \CJandUnivDistrN,
+for example.
+However, with \AXUnivDefN\ we can prove \AXBoxInstN,
+\AXBoxMonoN, and \AXNecPossN.
+So we make the latter three into conjectures.
+The $\Diamond$ operator is just existential closure,
+a.k.a. satisfiability.
+
+$$
+\AXSATISFIABLE
+$$
+
+So, here is the resulting axiomatisation and set of conjectures:
 $$
 \AXUNIVCLOSE
 $$
 $$
 \CJUNIVCLOSE
 $$
-
 
 \subsection{Predicate Infrastructure}
 
@@ -246,8 +265,8 @@ cjUnivAnyClosed = preddef ("univ" -.- "exists" -.- "closed")
 
 We now collect our axiom set:
 \begin{code}
-predUnivAxioms :: [Law]
-predUnivAxioms
+uCloseAxioms :: [Law]
+uCloseAxioms
   = map labelAsAxiom
       [ axUnivDef, aPEqDef ]
 \end{code}
@@ -255,8 +274,8 @@ predUnivAxioms
 
 We now collect our conjecture set:
 \begin{code}
-predUnivConjs :: [NmdAssertion]
-predUnivConjs
+uCloseConjs :: [NmdAssertion]
+uCloseConjs
   = [ cjUnivIdem, cjAndUnivDistr
     , cjUnivTrue, cjUnivFalse
     , cjUnivAllClosed, cjUnivAnyClosed ]
@@ -266,11 +285,11 @@ predUnivConjs
 \subsection{The Predicate Theory}
 
 \begin{code}
-predUnivName :: String
-predUnivName = "UClose"
-predUnivTheory :: Theory
-predUnivTheory
-  =  Theory { thName  =  predUnivName
+uCloseName :: String
+uCloseName = "UClose"
+uCloseTheory :: Theory
+uCloseTheory
+  =  Theory { thName  =  uCloseName
             , thDeps  =  [ existsName
                          , forallName
                          , equalityName
@@ -282,8 +301,8 @@ predUnivTheory
                          , equivName
                          ]
             , known   =  newVarTable
-            , laws    =  predUnivAxioms
+            , laws    =  uCloseAxioms
             , proofs  =  []
-            , conjs   =  predUnivConjs
+            , conjs   =  uCloseConjs
             }
 \end{code}

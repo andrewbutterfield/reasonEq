@@ -1077,7 +1077,8 @@
 \def\AXUNIVCLOSE{
 \begin{array}{lll}
    \AXUnivDef & \AXUnivDefS & \AXUnivDefN
-\\ \AXPEqDef  & \AXPEqDefS  & \AXPEqDefN
+\\ \AXsatDef & \AXsatDefS & \AXsatDefN
+% \\ \AXPEqDef  & \AXPEqDefS  & \AXPEqDefN
 \end{array}
 }
 
@@ -1113,8 +1114,66 @@
 \\ \CJfalseUniv & \CJfalseUnivS & \CJfalseUnivN
 \\ \CJallUnivClosed & \CJallUnivClosedS & \CJallUnivClosedN
 \\ \CJanyUnivClosed & \CJanyUnivClosedS & \CJanyUnivClosedN
+\\ \CJunivInst & \CJunivInstS & \CJunivInstN
+\\ \CJunivMono & \CJunivMonoS & \CJunivMonoN
+\\ \CJnecPoss & \CJnecPossS & \CJnecPossN
 \end{array}
 }
+
+%%% -- Alternative formulation based on temporal box operator ---
+
+\def\AXBoxInstN{\QNAME{$\Box$-inst}}
+\def\AXBoxInst{\Box P \implies P}
+\def\AXBoxInstS{}
+
+\def\AXBoxMonoN{\QNAME{$\Box$-mono}}
+\def\AXBoxMono{\Box (P \implies Q) \implies (\Box P \implies \Box Q)}
+\def\AXBoxMonoS{}
+
+\def\AXDiamDefN{\QNAME{$\Diamond$-def}}
+\def\AXDiamDef{\Diamond P \equiv \lnot \Box (\lnot P)}
+\def\AXDiamDefS{}
+
+\def\AXNecPossN{\QNAME{necessary-poss}}
+\def\AXNecPoss{\Diamond P \implies \Box\Diamond P}
+\def\AXNecPossS{}
+
+\def\AXUNIVCLOSEASBOX{
+\begin{array}{lll}
+   \AXBoxInst & \AXBoxInstS & \AXBoxInstN
+\\ \AXBoxMono & \AXBoxMonoS & \AXBoxMonoN
+\\ \AXDiamDef & \AXDiamDefS & \AXDiamDefN
+\\ \AXNecPoss & \AXNecPossS & \AXNecPossN
+\end{array}
+}
+
+%%% We make AXBoxXXX into CJunivXXX using [_] notation
+%%% We re-phrase AXDIamDef as AXsatDef using <_> notation
+
+\def\CJunivInstN{\QNAME{$\Box$-inst}}
+\def\CJunivInst{[P] \implies P}
+\def\CJunivInstS{}
+
+\def\CJunivMonoN{\QNAME{$\Box$-mono}}
+\def\CJunivMono{[P \implies Q] \implies ([P] \implies [Q])}
+\def\CJunivMonoS{}
+
+\def\CJnecPossN{\QNAME{necessary-poss}}
+\def\CJnecPoss{\langle P\rangle \implies [\langle P\rangle]}
+\def\CJnecPossS{}
+
+\def\AXsatDefN{\QNAME{sat-def}}
+\def\AXsatDef{\langle P\rangle \equiv \lnot [\lnot P]}
+\def\AXsatDefS{}
+
+\def\AXSATISFIABLE{
+\begin{array}{lll}
+   \AXsatDef & \AXsatDefS & \AXsatDefN
+\end{array}
+}
+
+
+
 
 %%%%  ==== Inference Rules =====================================================
 

@@ -18,7 +18,7 @@ module StdSignature (
 , propSignature
 , propdef
 , flattenEquiv
-, forall, exists, univ
+, forall, exists, univ, sat
 , preddef
 ) where
 
@@ -175,6 +175,9 @@ exists vl p = fromJust $ pBind existsId (S.fromList vl) p
 
 univId = fromJust $ brktIdent "[" "]"
 univ p = Cls univId p
+
+satId = fromJust $ brktIdent "langle" "rangle"
+sat p = Cls satId p
 \end{code}
 
 General predicate laws often have side-conditions:

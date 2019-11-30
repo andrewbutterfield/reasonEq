@@ -166,20 +166,23 @@ axUnivDef = preddef ("[]" -.- "def")
 
 $$
   \begin{array}{lll}
-     \AXPEqDef  & \AXPEqDefS  & \AXPEqDefN
+     \AXsatDef & \AXsatDefS & \AXsatDefN
   \end{array}
 $$\par\vspace{-8pt}
-This definition assumes that \texttt{p} and \texttt{q}
-are predicates, or, if expressions, are boolean-valued.
 \begin{code}
-aPEqDef = preddef ("=" -.- "def")
-                  ((p `isEqualTo` q) === univ (p === q))
+axSatDef = preddef ("sat" -.- "def")
+                  ( sat p === mkNot (univ (mkNot p)) )
                   scTrue
 \end{code}
 
-\textbf{How do we enforce this?
-What is the interaction like with \texttt{Equality} laws
-such as \QNAME{$=$-refl}, or \QNAME{$=$-trans}?}
+We now collect our axiom set:
+\begin{code}
+uCloseAxioms :: [Law]
+uCloseAxioms
+  = map labelAsAxiom
+      [ axUnivDef, axSatDef ]
+\end{code}
+
 
 \subsection{Universal Conjectures}
 
@@ -251,6 +254,39 @@ cjUnivAnyClosed = preddef ("univ" -.- "exists" -.- "closed")
 \end{code}
 
 
+$$
+  \begin{array}{lll}
+     \CJunivInst & \CJunivInstS & \CJunivInstN
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+cjUnivInst = preddef ("univ" -.- "inst")
+                (univ p ==> p)
+                scTrue
+\end{code}
+
+$$
+  \begin{array}{lll}
+     \CJunivMono & \CJunivMonoS & \CJunivMonoN
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+cjUnivMono = preddef ("univ" -.- "mono")
+                ( univ (p ==> q) ==> (univ p ==> univ q))
+                scTrue
+\end{code}
+
+$$
+  \begin{array}{lll}
+     \CJnecPoss & \CJnecPossS & \CJnecPossN
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+cjNecPoss = preddef ("necessary" -.- "poss")
+                ( sat p ==> univ (sat p) )
+                scTrue
+\end{code}
+
 % %% TEMPLATE
 % $$
 %   \begin{array}{lll}
@@ -263,22 +299,14 @@ cjUnivAnyClosed = preddef ("univ" -.- "exists" -.- "closed")
 %                 scTrue
 % \end{code}
 
-We now collect our axiom set:
-\begin{code}
-uCloseAxioms :: [Law]
-uCloseAxioms
-  = map labelAsAxiom
-      [ axUnivDef, aPEqDef ]
-\end{code}
-
-
 We now collect our conjecture set:
 \begin{code}
 uCloseConjs :: [NmdAssertion]
 uCloseConjs
   = [ cjUnivIdem, cjAndUnivDistr
     , cjUnivTrue, cjUnivFalse
-    , cjUnivAllClosed, cjUnivAnyClosed ]
+    , cjUnivAllClosed, cjUnivAnyClosed
+    , cjUnivInst, cjUnivMono, cjNecPoss ]
 \end{code}
 
 

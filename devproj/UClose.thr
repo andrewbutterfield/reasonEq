@@ -1,0 +1,21 @@
+BEGIN THEORY UClose
+DEPS = ["Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"]
+KNOWN = VD (fromList [],fromList [],fromList [])
+BEGIN LIST LAWS
+(("[]_def",(C P (Id "equiv") [X (Id "[_]") (V P (VR (Id "P",VP,WS))),B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))],[ESS (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])])),Axiom)
+(("sat_def",(C P (Id "equiv") [X (Id "langle_rangle") (V P (VR (Id "P",VP,WS))),C P (Id "lnot") [X (Id "[_]") (C P (Id "lnot") [V P (VR (Id "P",VP,WS))])]],[])),Axiom)
+END LIST LAWS
+BEGIN LIST PROOFS
+END LIST PROOFS
+BEGIN LIST CONJECTURES
+("[]_idem",(C P (Id "equiv") [X (Id "[_]") (X (Id "[_]") (V P (VR (Id "P",VP,WS)))),X (Id "[_]") (V P (VR (Id "P",VP,WS)))],[]))
+("land_[]_distr",(C P (Id "equiv") [C P (Id "land") [X (Id "[_]") (V P (VR (Id "P",VP,WS))),X (Id "[_]") (V P (VR (Id "Q",VP,WS)))],X (Id "[_]") (C P (Id "land") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))])],[]))
+("univ_true",(C P (Id "equiv") [X (Id "[_]") (K P (VB True)),K P (VB True)],[]))
+("univ_False",(C P (Id "equiv") [X (Id "[_]") (K P (VB False)),K P (VB False)],[]))
+("univ_forall_closed",(C P (Id "equiv") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (X (Id "[_]") (V P (VR (Id "P",VP,WS)))),X (Id "[_]") (V P (VR (Id "P",VP,WS)))],[]))
+("univ_exists_closed",(C P (Id "equiv") [B P (Id "exists") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (X (Id "[_]") (V P (VR (Id "P",VP,WS)))),X (Id "[_]") (V P (VR (Id "P",VP,WS)))],[]))
+("univ_inst",(C P (Id "implies") [X (Id "[_]") (V P (VR (Id "P",VP,WS))),V P (VR (Id "P",VP,WS))],[]))
+("univ_mono",(C P (Id "implies") [X (Id "[_]") (C P (Id "implies") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))]),C P (Id "implies") [X (Id "[_]") (V P (VR (Id "P",VP,WS))),X (Id "[_]") (V P (VR (Id "Q",VP,WS)))]],[]))
+("necessary_poss",(C P (Id "implies") [X (Id "langle_rangle") (V P (VR (Id "P",VP,WS))),X (Id "[_]") (X (Id "langle_rangle") (V P (VR (Id "P",VP,WS))))],[]))
+END LIST CONJECTURES
+END THEORY UClose

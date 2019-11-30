@@ -60,7 +60,7 @@ devInitState
             , liveProofs = M.empty }
 
 devTheories =
-     -- fromJust $ addTheory predUnivTheory $
+     fromJust $ addTheory uCloseTheory $
      fromJust $ addTheory existsTheory $
      fromJust $ addTheory forallTheory $
      fromJust $ addTheory equalityTheory $
@@ -87,7 +87,7 @@ devKnownBuiltins  = [ equivTheory
                     , equalityTheory
                     , forallTheory
                     , existsTheory
-                    -- , predUnivTheory
+                    , uCloseTheory
                     -- , utpStartupTheory
                     -- , xyzTheory
                     -- , xyzDTheory

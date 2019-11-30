@@ -199,13 +199,11 @@ trTerm p (Type t)             =  trType t
 A \texttt{Cons}-node with one subterm
 may need special handling:
 a marked focus term needs highlighting;
-it might be universal closure ($[\_]$);
 or an application of name $nm$ (symbol $\lhd$)
 to an atomic argument $a$ that has no parentheses: $nm~a$ ($\lhd a$).
 \begin{code}
 trTerm ctxtp (Cons tk s [t])
  | s == focusMark    =  highlightFocus $ trTerm ctxtp t
- | idName s == "[]"  =  "["++trTerm 0 t++"]"
  | isAtomic t        =  trAtomic s $ trTerm 0 t
  where
    trAtomic s r
@@ -243,7 +241,7 @@ trTerm p (Sub tk t sub)
 A closure expects the identifier to be of the form leftbracket\_rightbracket
 \begin{code}
 trTerm p (Cls n t)
-  =  lbr ++ trTerm 0 t ++ rbr
+  =  nicesym lbr ++ trTerm 0 t ++ nicesym rbr
   where (lbr,rbr) = splitClosureId n
 \end{code}
 

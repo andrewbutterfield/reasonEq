@@ -1,14 +1,11 @@
 # To Do
 
 
-## Hotfixes
+## Quantification
 
+We probably need an axiom like 
+  forall xs @ forall xs,ys @ P == forall xs,ys @ P
 
-STOP PRESS ! Reading [Gries 97] gives a new perspective for `PredUniv` axioms.
-
-Looked at this - can't prove *[P/\Q] == [P]/\[Q]* or *[[P]]==[P]*
-
-Will stick with my original formulation for now.
 
 ### `a n` command in proof REPL
 

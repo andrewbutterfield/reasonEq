@@ -168,10 +168,10 @@ propdef ( name, prop ) = ( name, ( prop, scTrue ) )
 
 \begin{code}
 forallId = fromJust $ ident "forall"
-forall vl p = fromJust $ pBind forallId (S.fromList vl) p
+forall vl p = fromJust $ pBnd forallId (S.fromList vl) p
 
 existsId = fromJust $ ident "exists"
-exists vl p = fromJust $ pBind existsId (S.fromList vl) p
+exists vl p = fromJust $ pBnd existsId (S.fromList vl) p
 
 univId = fromJust $ brktIdent "[" "]"
 univ p = Cls univId p

@@ -81,7 +81,7 @@ instantiate binding (Cons tk n ts)
 instantiate binding (Bind tk n vs tm)
   = do vs' <- instVarSet binding vs
        tm' <- instantiate binding tm
-       bind tk n vs' tm'
+       bnd tk n vs' tm'
 
 instantiate binding (Lam tk n vl tm)
   = do vl' <- instVarList binding vl

@@ -14,6 +14,12 @@ However, this violates the "no-shadowing" rule proposed for laws.
  
  Basically having the quantifier forms in the AST means this
  is how q-var issues get handled.
+ 
+Need three builtin facilities:
+
+1. *alpha*-renaming
+2. Substitution into quantifiers
+3. Simplifying nested quantifiers
 
 
 ### `a n` command in proof REPL

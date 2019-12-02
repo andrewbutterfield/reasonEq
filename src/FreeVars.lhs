@@ -8,6 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module FreeVars
 ( termFree
+, alphaRename, quantSubstitute, quantNest
 ) where
 import Data.Set(Set)
 import qualified Data.Set as S
@@ -23,11 +24,12 @@ dbg msg x = trace (msg ++ show x) x
 
 \subsection{Introduction}
 
-Return the free variables of a term
----
-pure and simple!
+We start with computing the free variables of a term,
+and then continue by addressing key functions associated
+with quantifiers.
 
-\subsubsection{Term Free Variables}
+
+\subsection{Term Free Variables}
 
 \begin{eqnarray*}
    \fv(\kk k)  &\defs&  \emptyset
@@ -85,4 +87,94 @@ is in the free variables of the term being substituted.
 \begin{code}
 applicable :: (tgt -> GenVar) -> VarSet -> (tgt,rpl) -> Bool
 applicable wrap tfv (t,_) = wrap t `S.member` tfv
+\end{code}
+
+\subsection{Quantifier Handling}
+
+Given that we have an abstract syntax that singles out quantifiers
+($\mathsf{Q} x,y,\dots \bullet P$),
+we provide transformations that we expect to be able to apply
+all such quantified forms.
+These are divided into those based on variable sets
+($\Gamma \setof{x,y,\dots} \bullet P$)
+and those based on variable lists ($\Lambda \seqof{x,y,\dots} \bullet P$)
+
+We have three transformations of interest:
+\begin{description}
+  \item [$\alpha$-renaming]~\\
+    $
+      \mathsf{Q} V \bullet P
+      =
+      \mathsf{Q} V\alpha \bullet P\alpha
+    $
+    where $\rng~\alpha \cap (V \cup fv(P)) = \emptyset$.
+  \item [Substitution]~\\
+      $
+        (\mathsf{Q} V \bullet P)[Q/U]
+        =
+        \mathsf{Q} V \bullet P[Q'/(U\setminus V)]
+      $
+      where $Q'$ are parts of $Q$ corresponding to $U\setminus V$.
+  \item [Nesting]~\\
+     Only applicable when variable-sets are used in a quantifier:\\
+     $
+       (\Gamma_i V_i \bullet \Gamma_j V_j \bullet P)
+       =
+       (\Gamma_i (V_i\setminus V_j) \bullet \Gamma_j V_j \bullet P)
+     $
+\end{description}
+
+\newpage
+\subsubsection{$\alpha$-Renaming}
+
+$$
+  \mathsf{Q} V \bullet P
+  =
+  \mathsf{Q} V\alpha \bullet P\alpha
+  ,\quad \rng~\alpha \cap (V \cup \fv.P) = \emptyset
+$$
+
+We expect the \texttt{trm} argument to be a binder.
+\begin{code}
+alphaRename :: Monad m => [(Variable,Variable)] -- (tgt.v,rpl.v)
+                       -> [(ListVar,ListVar)]   -- (tgt.lv,rpl.lv)
+                       -> Term -> m Term
+alphaRename tvrvs tlvrlvs (Bind tk n vs tm) = fail "alphaRename Bind NYI"
+alphaRename tvrvs tlvrlvs (Lam  tk n vl tm) = fail "alphaRename Lam NYI"
+alphaRename tvrvs tlvrlvs trm = fail "alphaRename not applicable"
+\end{code}
+
+
+\newpage
+\subsubsection{Substitution}
+
+$$
+  (\mathsf{Q} V \bullet P)[Q/U]
+  =
+  \mathsf{Q} V \bullet P[Q'/(U\setminus V)]
+$$ where $Q'$ are parts of $Q$ corresponding to $U\setminus V$.
+
+Again, we require that \texttt{trm}
+is a binder.
+\begin{code}
+quantSubstitute :: Monad m => Substn -> Term -> m Term
+quantSubstitute sub (Bind tk n vs tm) = fail "quantSubstitute Bind NYI"
+quantSubstitute sub (Lam  tk n vl tm) = fail "quantSubstitute Lam NYI"
+quantSubstitute sub t = fail "quantSubstitute not applicable"
+\end{code}
+
+\newpage
+\subsubsection{Nesting}
+
+$$
+ (\Gamma_i V_i \bullet \Gamma_j V_j \bullet P)
+ =
+ (\Gamma_i (V_i\setminus V_j) \bullet \Gamma_j V_j \bullet P)
+$$
+
+Here, we require that \texttt{trm} is a \texttt{Bind}.
+\begin{code}
+quantNest :: Monad m => Term -> m Term
+quantNest (Bind tk n vs tm) = fail "quantNest Bind NYI"
+quantNest t = fail "quantNest not applicable"
 \end{code}

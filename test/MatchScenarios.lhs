@@ -528,7 +528,7 @@ exists = jId "exists"
 land = jId "land"
 
 p `seqComp` q = PCons semi [p,q]
-eX vs p = fromJust $ pBind exists (S.fromList $ vs) p
+eX vs p = fromJust $ pBnd exists (S.fromList $ vs) p
 p `lAnd` q = PCons land [p,q]
 \end{code}
 

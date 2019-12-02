@@ -22,7 +22,7 @@ module AST ( TermSub, LVarSub
            , pattern Bind, pattern Lam, pattern Cls
            , pattern Sub, pattern Iter, pattern Type
            , var,  eVar,  pVar
-           , bind, eBind, pBind, uBind
+           , bnd , eBnd, pBnd
            , lam,  eLam,  pLam
            , binderClass
            , pattern EVal, pattern EVar, pattern ECons
@@ -411,15 +411,13 @@ pVar   v = var P v
 \newpage
 All variables in a binder variable-set must have the same class.
 \begin{code}
-bind tk n vs tm
+bnd tk n vs tm
  | S.null vs  =  return tm  -- vacuous binder
  | uniformVarSet vs  =  return $ B tk n vs tm
- | otherwise = fail "bind: var.-set has mixed variables."
+ | otherwise = fail "bnd: var.-set has mixed variables."
 
-eBind typ n vs tm  =  bind (E typ) n vs tm
-pBind     n vs tm  =  bind P       n vs tm
--- just for universal closure: [p]
-uBind     n    tm  =  return $ B P n S.empty tm
+eBnd typ n vs tm  =  bnd (E typ) n vs tm
+pBnd     n vs tm  =  bnd P       n vs tm
 \end{code}
 
 All variables in a lambda variable-list must have the same class.
@@ -568,24 +566,24 @@ gv_v =  StdVar v_v
 gv_a' = StdVar v_a'
 gv_b' = StdVar v_b'
 
-bindConstructTests  =  testGroup "AST.bind"
- [ testCase "bind P n {} t42 (Ok)"
-   ( bind P n S.empty t42 @?= Just t42 )
- , testCase "bind P n {a} t42 (Ok)"
-   ( bind P n (S.fromList [gv_a]) t42
+bindConstructTests  =  testGroup "AST.bnd"
+ [ testCase "bnd P n {} t42 (Ok)"
+   ( bnd P n S.empty t42 @?= Just t42 )
+ , testCase "bnd P n {a} t42 (Ok)"
+   ( bnd P n (S.fromList [gv_a]) t42
      @?= Just (B P n (S.fromList [gv_a]) t42) )
- , testCase "bind P n {a$} t42 (Ok)"
-   ( bind P n (S.fromList [LstVar lv_a]) t42
+ , testCase "bnd P n {a$} t42 (Ok)"
+   ( bnd P n (S.fromList [LstVar lv_a]) t42
      @?= Just (B P n (S.fromList [LstVar lv_a]) t42) )
- , testCase "bind P n {a,a$} t42 (Ok)"
-   ( bind P n (S.fromList [gv_a,LstVar lv_a]) t42
+ , testCase "bnd P n {a,a$} t42 (Ok)"
+   ( bnd P n (S.fromList [gv_a,LstVar lv_a]) t42
      @?= Just (B P n (S.fromList [gv_a,LstVar lv_a]) t42) )
- , testCase "bind P n {a,e$} t42 (Fail)"
-   ( bind P n (S.fromList [gv_a,LstVar lv_e]) t42 @?= Nothing )
- , testCase "bind P n {e$,a} t42 (Fail)"
-   ( bind P n (S.fromList [LstVar lv_e,gv_a]) t42 @?= Nothing )
- , testCase "bind P n {a,b,e$} t42 (Fail)"
-   ( bind P n (S.fromList [gv_a,gv_b,LstVar lv_e]) t42 @?= Nothing )
+ , testCase "bnd P n {a,e$} t42 (Fail)"
+   ( bnd P n (S.fromList [gv_a,LstVar lv_e]) t42 @?= Nothing )
+ , testCase "bnd P n {e$,a} t42 (Fail)"
+   ( bnd P n (S.fromList [LstVar lv_e,gv_a]) t42 @?= Nothing )
+ , testCase "bnd P n {a,b,e$} t42 (Fail)"
+   ( bnd P n (S.fromList [gv_a,gv_b,LstVar lv_e]) t42 @?= Nothing )
  ]
 
 lamConstructTests  =  testGroup "AST.lam"

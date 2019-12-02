@@ -676,7 +676,7 @@ dnTSub tsub = map dnVT tsub ; dnVT (v,t) = (dnVar v,dnTerm' t)
 dnLVSub lvsub = map dnLVLV lvsub ; dnLVLV (lv1,lv2) = (dnLVar lv1,dnLVar lv2 )
 
 dnTVar  tk       =  getJust "dnTerm var failed"  . var  tk
-dnBind tk n vl  =  getJust "dnTerm bind failed" . bind tk n vl
+dnBind tk n vl  =  getJust "dnTerm bnd failed" . bnd tk n vl
 dnLam  tk n vs  =  getJust "dnTerm lam failed"  . lam  tk n vs
 dnSubst tsub lvsub = getJust "" $ substn tsub lvsub
 \end{code}
@@ -1060,7 +1060,7 @@ subTempSync vw (Substn tsub lsub)
       lsubSync vw (lt, lr)  =  (lvarTempSync vw lt, lvarTempSync vw lr)
 
 ttsVar  tk           =  getJust "termTempSync var failed."   . var tk
-ttsBind tk i vs      =  getJust "termTempSync bind failed."  . bind tk i vs
+ttsBind tk i vs      =  getJust "termTempSync bind failed."  . bnd tk i vs
 ttsLam  tk i vl      =  getJust "termTempSync lam failed."   . lam tk i vl
 ttsSubstn tsub lsub  =  getJust "subTempSync substn failed." $ substn tsub lsub
 \end{code}

@@ -4,7 +4,16 @@
 ## Quantification
 
 We probably need an axiom like 
+
   forall xs @ forall xs,ys @ P == forall xs,ys @ P
+
+However, this violates the "no-shadowing" rule proposed for laws.
+  
+ *This needs to be hardwired in as part of `FreeVars`,
+ as does the handling of substitution through quantifiers*
+ 
+ Basically having the quantifier forms in the AST means this
+ is how q-var issues get handled.
 
 
 ### `a n` command in proof REPL

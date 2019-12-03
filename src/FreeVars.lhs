@@ -215,7 +215,7 @@ aRenLV lmap lv
       Just lv'  ->  lv'
 \end{code}
 
-
+\newpage
 \paragraph{$\mathbf\alpha$-Renaming Terms}
 Top-level quantifier body and below.
 
@@ -225,13 +225,14 @@ aRenTRM vmap lmap (Var  tk v)     =  fromJust $ var tk (aRenV vmap v)
 aRenTRM vmap lmap (Cons tk n ts)  =  Cons tk n $ map (aRenTRM vmap lmap) ts
 aRenTRM vmap lmap (Iter tk na ni lvs)  =   Iter tk na ni $ map (aRenLV lmap) lvs
 \end{code}
-Internal quantifiers screen out renamings.
+Internal quantifiers screen out renamings%
+\footnote{We wouldn't need this if we guaranteed no quantifier shadowing.}
+.
 \[
    (\mathsf{Q} V \bullet P)\alpha
    =
    (\mathsf{Q} V \bullet P(\alpha\setminus V))
 \]
-We wouldn't need this if we guaranteed no quantifier shadowing.
 \begin{code}
 aRenTRM vmap lmap (Bind tk n vs tm)
  = fromJust $ bnd tk n vs (aRenTRM vmap' lmap' tm)
@@ -246,12 +247,31 @@ aRenTRM vmap lmap (Lam  tk n vl tm)
 \end{code}
 Substitution is tricky \dots
 \[
-  (P\sigma)\alpha
+  (P[\lst e/\lst x])\alpha
   =
-  ?
+  (P(\alpha\setminus\lst x)[\lst e \alpha / \lst x]
 \]
 \begin{code}
--- aRenTRM vmap lmap (Sub tk tm s) = Sub tk tma sa
+aRenTRM vmap lmap (Sub tk tm (Substn ts lvs))
+  = let
+
+      (vl,tl) = unzip $ S.toList ts
+      tl' = map (aRenTRM vmap lmap) tl
+      tsl' = zip vl tl'
+
+      (tvl,rvl) = unzip $ S.toList lvs
+      rvl' = map (aRenLV lmap) rvl
+      lvsl' = zip tvl rvl'
+
+      suba = fromJust $ substn tsl' lvsl'
+
+      subtgtvs  = S.fromList vl
+      vmap' = vmap `M.withoutKeys` subtgtvs
+
+      subtgtlvs = S.fromList tvl
+      lmap' = lmap `M.withoutKeys` subtgtlvs
+
+    in Sub tk (aRenTRM vmap' lmap' tm) suba
 \end{code}
 Everything else is unaffected.
 \begin{code}

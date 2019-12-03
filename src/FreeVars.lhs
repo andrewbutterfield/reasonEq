@@ -14,7 +14,9 @@ import Data.Set(Set)
 import qualified Data.Set as S
 import Data.Map(Map)
 import qualified Data.Map as M
+import Data.List
 
+import Utilities (injMap)
 import Variables
 import AST
 
@@ -91,15 +93,13 @@ applicable wrap tfv (t,_) = wrap t `S.member` tfv
 
 \subsection{Quantifier Handling}
 
-Given that we have an abstract syntax that singles out quantifiers
+We have an abstract syntax that singles out quantifiers
 ($\mathsf{Q} x,y,\dots \bullet P$),
-we provide transformations that we expect to be able to apply
-all such quantified forms.
-These are divided into those based on variable sets
-($\Gamma \setof{x,y,\dots} \bullet P$)
-and those based on variable lists ($\Lambda \seqof{x,y,\dots} \bullet P$)
-
-We have three transformations of interest:
+which occur in two basic forms,
+one ($\Gamma \setof{x,y,\dots} \bullet P$) based on variable sets,
+the other ($\Lambda \seqof{x,y,\dots} \bullet P$) based on variable lists.
+Here we provide transformations that we expect to be able to apply
+all such quantified forms:
 \begin{description}
   \item [$\alpha$-renaming]~\\
     $
@@ -107,7 +107,7 @@ We have three transformations of interest:
       =
       \mathsf{Q} V\alpha \bullet P\alpha
     $
-    where $\rng~\alpha \cap (V \cup fv(P)) = \emptyset$.
+    where $\alpha$ is injective, and $\rng~\alpha \cap (V \cup fv(P)) = \emptyset$.
   \item [Substitution]~\\
       $
         (\mathsf{Q} V \bullet P)[Q/U]
@@ -131,17 +131,62 @@ $$
   \mathsf{Q} V \bullet P
   =
   \mathsf{Q} V\alpha \bullet P\alpha
-  ,\quad \rng~\alpha \cap (V \cup \fv.P) = \emptyset
+  ,\quad
+  \mathrm{inj}(\alpha)  \land \rng~\alpha \cap (V \cup \fv.P) = \emptyset
 $$
 
 We expect the \texttt{trm} argument to be a binder.
+We check the injectivity.
 \begin{code}
-alphaRename :: Monad m => [(Variable,Variable)] -- (tgt.v,rpl.v)
-                       -> [(ListVar,ListVar)]   -- (tgt.lv,rpl.lv)
+alphaRename :: Monad m => ([(Variable,Variable)])  -- (tgt.v,rpl.v)
+                       -> [(ListVar,ListVar)]      -- (tgt.lv,rpl.lv)
                        -> Term -> m Term
-alphaRename tvrvs tlvrlvs (Bind tk n vs tm) = fail "alphaRename Bind NYI"
-alphaRename tvrvs tlvrlvs (Lam  tk n vl tm) = fail "alphaRename Lam NYI"
-alphaRename tvrvs tlvrlvs trm = fail "alphaRename not applicable"
+alphaRename vvs lls (Bind tk n vs tm)
+  =  do vmap <- injMap vvs
+        lmap <- injMap lls
+        checkFresh vvs lls tm
+        bnd tk n (aRenVS vmap lmap vs) (aRenTRM vmap lmap tm)
+alphaRename vvs lls (Lam  tk n vl tm)
+  =  do vmap <- injMap vvs
+        lmap <- injMap lls
+        checkFresh vvs lls tm
+        lam tk n (aRenVL vmap lmap vl) (aRenTRM vmap lmap tm)
+alphaRename vvs lls trm = fail "alphaRename not applicable"
+
+
+checkFresh :: Monad m => ([(Variable,Variable)])  -- (tgt.v,rpl.v)
+                      -> [(ListVar,ListVar)]      -- (tgt.lv,rpl.lv)
+                      -> Term
+                      -> m ()
+checkFresh vvs lls trm
+ = let
+     trmFV = termFree trm
+     alphaRng = (S.fromList $ map (StdVar . snd) vvs)
+                `S.union`
+                (S.fromList $ map (LstVar . snd) lls)
+   in if S.null (trmFV `S.intersection` alphaRng)
+       then return ()
+       else fail "alphaRename: new bound-vars not fresh"
+
+
+aRenVS vmap lmap  =  S.fromList . aRenVL vmap lmap . S.toList
+
+aRenVL vmap lmap vl = map (aRenGV vmap lmap) vl
+
+aRenGV vmap lmap (StdVar  v)  =  StdVar $ aRenV  vmap v
+aRenGV vmap lmap (LstVar lv)  =  LstVar $ aRenLV lmap lv
+
+aRenV vmap v
+  = case M.lookup v vmap of
+      Nothing   ->  v
+      Just v'   ->  v'
+
+aRenLV lmap lv
+  = case M.lookup lv lmap of
+      Nothing   ->  lv
+      Just lv'  ->  lv'
+
+aRenTRM vmap lmap _ = error "aRenTRM NYI"
 \end{code}
 
 

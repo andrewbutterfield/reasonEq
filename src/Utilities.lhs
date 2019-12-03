@@ -23,6 +23,7 @@ module Utilities (
 , peel
 , getJust
 , pulledFrom, getitem, choose
+, injMap
 , spaced, intcalNN
 , pad
 , splitLast, splitAround
@@ -35,6 +36,8 @@ import Data.List
 import Data.Char
 import Data.Set(Set)
 import qualified Data.Set as S
+import Data.Map(Map)
+import qualified Data.Map as M
 import System.IO
 import Control.Applicative
 import Control.Monad
@@ -43,7 +46,7 @@ import Control.Monad
 --dbg msg x = trace (msg++show x) x
 \end{code}
 
-Here we provide odds and ends not found elswhere.
+Here we provide odds and ends not found elsewhere.
 
 \begin{code}
 utilities
@@ -71,7 +74,7 @@ thd3 :: (a,b,c) -> c ; thd3(_,_,z) = z
 \end{code}
 
 \newpage
-\subsection{List and Set Functions}
+\subsection{List Functions}
 
 \subsubsection{Predicate: has duplicates}
 \begin{code}
@@ -263,6 +266,7 @@ args2int args = if null args then 0 else readInt $ head args
 args2str args = if null args then "" else head args
 \end{code}
 
+\subsection{Set Functions}
 
 \subsubsection{Subsets}
 
@@ -296,6 +300,25 @@ choose s
    s' = S.delete x s
 \end{code}
 
+\subsection{Map Functions}
+
+\subsubsection{Building injective Maps}
+
+Here is code for converting \texttt{[(a,b)]} to an injective \texttt{Map a b},
+failing if there are duplicate \texttt{b}s.
+\begin{code}
+injMap :: (Monad m, Ord a, Ord b) => [(a,b)] -> m (Map a b)
+injMap abs
+ | uniqueList (map snd abs)  =  return $ M.fromList abs
+ | otherwise                 =  fail "injMap: range has duplicates"
+
+uniqueList :: Ord b => [b] -> Bool
+uniqueList  =  all isSingle . group . sort
+
+isSingle [_]  =  True
+isSingle _    =  False
+\end{code}
+
 \newpage
 \subsection{Smart Readers}
 
@@ -308,6 +331,8 @@ readInt str
  | otherwise        =   -1
 \end{code}
 \newpage
+
+
 \subsection{Control-Flow Functions}
 
 \subsubsection{Repeat Until Equal}

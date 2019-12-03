@@ -15,6 +15,7 @@ import qualified Data.Set as S
 import Data.Map(Map)
 import qualified Data.Map as M
 import Data.List
+import Data.Maybe
 
 import Utilities (injMap)
 import Variables
@@ -107,7 +108,8 @@ all such quantified forms:
       =
       \mathsf{Q} V\alpha \bullet P\alpha
     $
-    where $\alpha$ is injective, and $\rng~\alpha \cap (V \cup fv(P)) = \emptyset$.
+    where $\alpha$ is injective, $\dom~\alpha \subseteq V$,
+    and $\rng~\alpha \cap (V \cup fv(P)) = \emptyset$.
   \item [Substitution]~\\
       $
         (\mathsf{Q} V \bullet P)[Q/U]
@@ -132,28 +134,50 @@ $$
   =
   \mathsf{Q} V\alpha \bullet P\alpha
   ,\quad
-  \mathrm{inj}(\alpha)  \land \rng~\alpha \cap (V \cup \fv.P) = \emptyset
+  \mathrm{inj}(\alpha)  \land \dom~\alpha \subseteq V \land \rng~\alpha \cap (V \cup \fv.P) = \emptyset
 $$
 
 We expect the \texttt{trm} argument to be a binder.
-We check the injectivity.
+We check the injectivity, and freshness.
 \begin{code}
 alphaRename :: Monad m => ([(Variable,Variable)])  -- (tgt.v,rpl.v)
                        -> [(ListVar,ListVar)]      -- (tgt.lv,rpl.lv)
                        -> Term -> m Term
 alphaRename vvs lls (Bind tk n vs tm)
-  =  do vmap <- injMap vvs
+  =  do checkDomain vvs lls vs
+        vmap <- injMap vvs
         lmap <- injMap lls
         checkFresh vvs lls tm
         bnd tk n (aRenVS vmap lmap vs) (aRenTRM vmap lmap tm)
 alphaRename vvs lls (Lam  tk n vl tm)
-  =  do vmap <- injMap vvs
+  =  do checkDomain vvs lls (S.fromList vl)
+        vmap <- injMap vvs
         lmap <- injMap lls
         checkFresh vvs lls tm
         lam tk n (aRenVL vmap lmap vl) (aRenTRM vmap lmap tm)
 alphaRename vvs lls trm = fail "alphaRename not applicable"
+\end{code}
 
+\paragraph{Domain Checking}~
 
+\begin{code}
+checkDomain :: Monad m => ([(Variable,Variable)])  -- (tgt.v,rpl.v)
+                       -> [(ListVar,ListVar)]      -- (tgt.lv,rpl.lv)
+                       -> VarSet
+                       -> m ()
+checkDomain vvs lls qvs
+ = let
+     alphaDom = (S.fromList $ map (StdVar . fst) vvs)
+                `S.union`
+                (S.fromList $ map (LstVar . fst) lls)
+   in if S.null (alphaDom S.\\ qvs)
+       then return ()
+       else fail "alphaRename: trying to rename free variables."
+\end{code}
+
+\paragraph{Freshness Checking}~
+
+\begin{code}
 checkFresh :: Monad m => ([(Variable,Variable)])  -- (tgt.v,rpl.v)
                       -> [(ListVar,ListVar)]      -- (tgt.lv,rpl.lv)
                       -> Term
@@ -167,8 +191,12 @@ checkFresh vvs lls trm
    in if S.null (trmFV `S.intersection` alphaRng)
        then return ()
        else fail "alphaRename: new bound-vars not fresh"
+\end{code}
 
+\newpage
+\paragraph{$\mathbf\alpha$-Renaming (many) Variables}~
 
+\begin{code}
 aRenVS vmap lmap  =  S.fromList . aRenVL vmap lmap . S.toList
 
 aRenVL vmap lmap vl = map (aRenGV vmap lmap) vl
@@ -185,10 +213,50 @@ aRenLV lmap lv
   = case M.lookup lv lmap of
       Nothing   ->  lv
       Just lv'  ->  lv'
-
-aRenTRM vmap lmap _ = error "aRenTRM NYI"
 \end{code}
 
+
+\paragraph{$\mathbf\alpha$-Renaming Terms}
+Top-level quantifier body and below.
+
+Variables and constructors and iterators are straightforward
+\begin{code}
+aRenTRM vmap lmap (Var  tk v)     =  fromJust $ var tk (aRenV vmap v)
+aRenTRM vmap lmap (Cons tk n ts)  =  Cons tk n $ map (aRenTRM vmap lmap) ts
+aRenTRM vmap lmap (Iter tk na ni lvs)  =   Iter tk na ni $ map (aRenLV lmap) lvs
+\end{code}
+Internal quantifiers screen out renamings.
+\[
+   (\mathsf{Q} V \bullet P)\alpha
+   =
+   (\mathsf{Q} V \bullet P(\alpha\setminus V))
+\]
+We wouldn't need this if we guaranteed no quantifier shadowing.
+\begin{code}
+aRenTRM vmap lmap (Bind tk n vs tm)
+ = fromJust $ bnd tk n vs (aRenTRM vmap' lmap' tm)
+ where vmap' = vmap `M.withoutKeys` (stdVarSetOf vs)
+       lmap' = lmap `M.withoutKeys` (listVarSetOf vs)
+
+aRenTRM vmap lmap (Lam  tk n vl tm)
+ = fromJust $ lam tk n vl (aRenTRM vmap' lmap' tm)
+ where vs = S.fromList vl
+       vmap' = vmap `M.withoutKeys` (stdVarSetOf vs)
+       lmap' = lmap `M.withoutKeys` (listVarSetOf vs)
+\end{code}
+Substitution is tricky \dots
+\[
+  (P\sigma)\alpha
+  =
+  ?
+\]
+\begin{code}
+-- aRenTRM vmap lmap (Sub tk tm s) = Sub tk tma sa
+\end{code}
+Everything else is unaffected.
+\begin{code}
+aRenTRM _ _ trm = trm  -- Val, Cls
+\end{code}
 
 \newpage
 \subsubsection{Substitution}

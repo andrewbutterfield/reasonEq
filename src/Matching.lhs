@@ -28,6 +28,7 @@ import Control
 import LexBase
 import Variables
 import AST
+import FreeVars
 import VarData
 import Binding
 

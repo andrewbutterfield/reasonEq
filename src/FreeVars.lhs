@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module FreeVars
-( termFree
+( freeVars
 , alphaRename, quantSubstitute, quantNest
 ) where
 import Data.Set(Set)
@@ -48,18 +48,18 @@ with quantifiers.
 \end{eqnarray*}
 
 \begin{code}
-termFree :: Term -> VarSet
-termFree (Var tk v)           =  S.singleton $ StdVar v
-termFree (Cons tk n ts)       =  S.unions $ map termFree ts
-termFree (Bind tk n vs tm)    =  termFree tm S.\\ vs
-termFree (Lam tk n vl tm)     =  termFree tm S.\\ S.fromList vl
-termFree (Cls _ _)            =  S.empty
-termFree (Sub tk tm s)        =  (tfv S.\\ tgtvs) `S.union` rplvs
+freeVars :: Term -> VarSet
+freeVars (Var tk v)           =  S.singleton $ StdVar v
+freeVars (Cons tk n ts)       =  S.unions $ map freeVars ts
+freeVars (Bind tk n vs tm)    =  freeVars tm S.\\ vs
+freeVars (Lam tk n vl tm)     =  freeVars tm S.\\ S.fromList vl
+freeVars (Cls _ _)            =  S.empty
+freeVars (Sub tk tm s)        =  (tfv S.\\ tgtvs) `S.union` rplvs
    where
-     tfv            =  termFree tm
+     tfv            =  freeVars tm
      (tgtvs,rplvs)  =  substFree tfv s
-termFree (Iter tk na ni lvs)  =  S.fromList $ map LstVar lvs
-termFree _ = S.empty
+freeVars (Iter tk na ni lvs)  =  S.fromList $ map LstVar lvs
+freeVars _ = S.empty
 \end{code}
 
 \newpage
@@ -80,7 +80,7 @@ substFree tfv (Substn ts lvs) = (tgtvs,rplvs)
    tgtvs = S.map (StdVar . fst) ts'
            `S.union`
            S.map (LstVar . fst) lvs'
-   rplvs = S.unions (S.map (termFree . snd) ts')
+   rplvs = S.unions (S.map (freeVars . snd) ts')
            `S.union`
            S.map (LstVar .snd) lvs'
 \end{code}
@@ -184,7 +184,7 @@ checkFresh :: Monad m => ([(Variable,Variable)])  -- (tgt.v,rpl.v)
                       -> m ()
 checkFresh vvs lls trm
  = let
-     trmFV = termFree trm
+     trmFV = freeVars trm
      alphaRng = (S.fromList $ map (StdVar . snd) vvs)
                 `S.union`
                 (S.fromList $ map (LstVar . snd) lls)

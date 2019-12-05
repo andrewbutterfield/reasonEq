@@ -48,6 +48,7 @@ import Utilities
 import LexBase
 import Variables
 import AST
+import FreeVars
 
 import Debug.Trace
 dbg msg x = trace (msg++show x) x

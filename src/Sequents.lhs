@@ -38,6 +38,7 @@ import Utilities
 import WriteRead
 import Variables
 import AST
+import FreeVars
 import SideCond
 import TermZipper
 import VarData

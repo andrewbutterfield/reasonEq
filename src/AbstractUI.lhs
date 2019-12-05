@@ -42,6 +42,7 @@ import Variables
 import SideCond
 import TermZipper
 import AST
+import FreeVars
 import Binding
 import VarData
 import Instantiate

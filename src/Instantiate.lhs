@@ -392,7 +392,7 @@ instantiateVar bind v
   = case lookupVarBind bind v of
         Nothing            ->  S.singleton $ StdVar v
         Just (BindVar v)   ->  S.singleton $ StdVar v
-        Just (BindTerm t)  ->  termFree t
+        Just (BindTerm t)  ->  freeVars t
 
 instantiateLstVar :: Binding -> ListVar -> VarSet
 instantiateLstVar bind lv
@@ -400,7 +400,7 @@ instantiateLstVar bind lv
       Nothing                 ->  S.singleton $ LstVar lv
       Just (BindList vl)      ->  S.fromList vl
       Just (BindSet  vs)      ->  vs
-      Just (BindTLVs ts lvs)  ->  (S.unions $ map termFree ts)
+      Just (BindTLVs ts lvs)  ->  (S.unions $ map freeVars ts)
                                   `S.union`
                                   (S.fromList $ map LstVar lvs)
 \end{code}

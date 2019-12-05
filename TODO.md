@@ -3,17 +3,6 @@
 
 ## Quantification
 
-We probably need an axiom like 
-
-  forall xs @ forall xs,ys @ P == forall xs,ys @ P
-
-However, this violates the "no-shadowing" rule proposed for laws.
-  
- *This needs to be hardwired in as part of `FreeVars`,
- as does the handling of substitution through quantifiers*
- 
- Basically having the quantifier forms in the AST means this
- is how q-var issues get handled.
  
 Need three builtin facilities:
 
@@ -21,6 +10,12 @@ Need three builtin facilities:
 2. Substitution into quantifiers
 3. Simplifying nested quantifiers
 
+Problem cases
+
+* `(exists x,x' @ x := e)[y,y'/x,x']`  -- how does a builtin *alpha*-renaming know to stop?  
+We should get `exists y,y' @ (x:=e)[y,y'/x,x']` and leave it until the assignment is replaced by its definition.
+
+We cannot reply on explicit substitution laws alone. We need to flag `Cons` as substitutable/non-substitutable.
 
 ### `a n` command in proof REPL
 

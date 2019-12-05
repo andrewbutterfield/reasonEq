@@ -15,6 +15,7 @@ module AST ( TermSub, LVarSub
            , isSubTypeOf
            , Txt
            , Value, pattern Boolean, pattern Integer, pattern Txt
+           , SubAbility(..)
            , TermKind(..)
            , isPredKind, isExprKind, ekType
            , Term, readTerm
@@ -259,6 +260,7 @@ whereas expressions can have different types.
 This means that expression matching requires type information,
 while that for predicates does not.
 
+
 \subsubsection{Values}
 
 For predicates,
@@ -331,6 +333,16 @@ handleTerm (V _ v) = ...
 However, `naked' verbs in predicates are always of type boolean,
 while those in expressions can have arbitrary types.
 
+Every constructor term has to be marked as either ``substitutable''
+or ``non-substitutable'', with this marking being a function
+of the constructor identifier.
+We explicitly embed this marking in the term.
+\begin{code}
+data SubAbility = CS -- Can Substitute
+              | NS -- Not Substitutable
+              deriving (Eq,Show)
+\end{code}
+
 \newpage
 \subsubsection{Term Kinds}
 
@@ -352,6 +364,8 @@ ekType (E typ)  =  typ
 \end{code}
 This is equivalent to \verb"Maybe Type",
 but we want it less verbose.
+
+
 
 \subsubsection{Terms}
 
@@ -377,6 +391,7 @@ readTerm :: String -> Term
 readTerm = read
 \end{code}
 
+\newpage
 We  need to have a correlation between some terms
 and the variables they use.
 In particular the \texttt{TermKind} of a \texttt{V} \texttt{Term}

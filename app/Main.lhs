@@ -51,7 +51,7 @@ pdbg nm x = dbg ('@':nm++":\n") x
 
 \begin{code}
 progName = "reasonEq"
-version = "0.7.5.0"
+version = "0.7.6.0x"
 name_version = progName++" "++version
 \end{code}
 

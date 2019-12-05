@@ -287,64 +287,25 @@ pattern Txt     t  =  VT t
 \end{code}
 
 
-\subsubsection{Expressions and Predicates}
+\subsubsection{Expressions vs. Predicates}
 
 Do we have mutually recursive datatypes or an explicit tag?
+
 With mutually recursive types
 we know which we are handling and just match the appropriate patterns,
 except,
 we need to embed each in the other,
 so there always has to be a case which looks for such an embedding
 and handles it.
-\begin{verbatim}
-handleExpr :: Expr -> ....
-handleExpr (EK ke) = ...
-handleExpr (EV ve) = ...
-...
-handleExpr (EP pr) = handlePred pr
 
-handlePred :: Pred -> ....
-handlePred (PK kp) = ...
-handlePred (PV vp) = ...
-...
-handlePred (PE e) = handleExpr e
-\end{verbatim}
 With one recursive type we need to check the expr/predicate tag,
 but no longer know that we have one kind of term or the other.
-So we still have to check for the two term kinds and handle them both.
-\begin{verbatim}
-handleTerm :: Term -> ....
-handleTerm (K E ke) = ...
-handleTerm (K P kp) = ...
-handleTerm (V E ve) = ...
-handleTerm (V P vp) = ...
-...
-...
-\end{verbatim}
+
 From a coding point of view, given pattern synonyms in particular,
 there is little to differentiate the two approaches.
-One possible advantage of the latter is that if had something
-whose handling did not depend on it being expression or predicate,
-then we might just need one way to handle it.
-A possible candidate here are variables:
-\begin{verbatim}
-handleTerm (V _ v) = ...
-\end{verbatim}
-However, `naked' verbs in predicates are always of type boolean,
-while those in expressions can have arbitrary types.
-
-Every constructor term has to be marked as either ``substitutable''
-or ``non-substitutable'', with this marking being a function
-of the constructor identifier.
-We explicitly embed this marking in the term.
-\begin{code}
-data SubAbility = CS -- Can Substitute
-              | NS -- Not Substitutable
-              deriving (Eq,Show)
-\end{code}
-
-\newpage
-\subsubsection{Term Kinds}
+The one exception is the ``zipper`` used to focus in on sub-predicates
+and sub-expressions.
+This is much simplified by having a unified notion of ``term''.
 
 Given the role played by types,
 it makes sense that what marks the distinction between expressions
@@ -362,15 +323,24 @@ isExprKind (E _) = True; isExprKind _ = False
 ekType :: TermKind -> Type
 ekType (E typ)  =  typ
 \end{code}
-This is equivalent to \verb"Maybe Type",
-but we want it less verbose.
+
+Every constructor term has to be marked as either ``substitutable''
+or ``non-substitutable'', with this marking being a function
+of the constructor identifier.
+We explicitly embed this marking in the term.
+\begin{code}
+data SubAbility = CS -- Can Substitute
+              | NS -- Not Substitutable
+              deriving (Eq, Ord, Show, Read)
+\end{code}
 
 
 
+\newpage
 \subsubsection{Terms}
 
-So we shall go with a single term type (\verb"Term"),
-with an annotation that is equivalent to \verb"Maybe Type".
+We have a single term type (\verb"Term"),
+with an predicate/expression annotation.
 \begin{code}
 data Term
  = K TermKind Value                    -- Value
@@ -391,7 +361,6 @@ readTerm :: String -> Term
 readTerm = read
 \end{code}
 
-\newpage
 We  need to have a correlation between some terms
 and the variables they use.
 In particular the \texttt{TermKind} of a \texttt{V} \texttt{Term}
@@ -495,6 +464,7 @@ Pattern for embedded types:
 pattern Type t             =  ET t
 \end{code}
 
+\newpage
 Patterns for binary constructions:
 \begin{code}
 pattern E2 t n t1 t2  = C (E t) n [t1,t2]

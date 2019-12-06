@@ -15,7 +15,6 @@ module AST ( TermSub, LVarSub
            , isSubTypeOf
            , Txt
            , Value, pattern Boolean, pattern Integer, pattern Txt
-           , SubAbility(..)
            , TermKind(..)
            , isPredKind, isExprKind, ekType
            , Term, readTerm
@@ -32,7 +31,7 @@ module AST ( TermSub, LVarSub
            , pattern PBind, pattern PLam, pattern PSub, pattern PIter
            , pattern E2, pattern P2
            , termkind, isVar, isExpr, isPred, isAtomic
-           , theVar
+           , theVar, varAsTerm
            , subTerms
            , mentionedVars, mentionedVarLists, mentionedVarSets
            , int_tst_AST
@@ -324,17 +323,6 @@ ekType :: TermKind -> Type
 ekType (E typ)  =  typ
 \end{code}
 
-Every constructor term has to be marked as either ``substitutable''
-or ``non-substitutable'', with this marking being a function
-of the constructor identifier.
-We explicitly embed this marking in the term.
-\begin{code}
-data SubAbility = CS -- Can Substitute
-              | NS -- Not Substitutable
-              deriving (Eq, Ord, Show, Read)
-\end{code}
-
-
 
 \newpage
 \subsubsection{Terms}
@@ -497,6 +485,13 @@ Pulling out variables:
 theVar :: Term -> Variable
 -- pre-theVar t  =  isVar t
 theVar (V _ v)  =  v
+\end{code}
+
+Lifting a variable to a term:
+\begin{code}
+varAsTerm :: Variable -> Term
+varAsTerm v@(PredVar _ _)  =  V P     v
+varAsTerm v                =  V (E T) v
 \end{code}
 
 In \cite{UTP-book} we find the notion of texts, in chapters 6 and 10.

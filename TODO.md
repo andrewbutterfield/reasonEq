@@ -4,21 +4,15 @@
 ## Quantification
 
  
-Need three builtin facilities:
+Need one builtin Substitution function, parameterised by `[SubAbilityMap]`. 
+This should live in a `Substitution` module along with the `SubAbility` and related types.
+This subsumes the alpha-renaming currently in `FreeVars` which should emerge as full substitution
+in this new `Substitution` module.
 
-1. *alpha*-renaming
-2. Substitution into quantifiers
-3. Simplifying nested quantifiers
+In `FreeVars` we should have a function to simplify nested quantifiers.
 
-Problem cases
+We need to extend `Theory` to have a `SubAbilityMap` component.
 
-* `(exists x,x' @ x := e)[y,y'/x,x']`  -- how does a builtin *alpha*-renaming know to stop?  
-We should get `exists y,y' @ (x:=e)[y,y'/x,x']` and leave it until the assignment is replaced by its definition.
-
-We cannot reply on explicit substitution laws alone. We need to flag `Cons` as substitutable/non-substitutable.
-This needs to be done by maintaining a table that matches identifiers
-to substitutability.
-It cannot be embedded in the term, because how do we handle term parsing? We don't want explicit substitutability annotations. 
 
 ### `a n` command in proof REPL
 

@@ -8,6 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module FreeVars
 ( freeVars
+, SubAbility(..), SubAbilityMap
 , alphaRename, quantSubstitute, quantNest
 ) where
 import Data.Set(Set)
@@ -18,6 +19,7 @@ import Data.List
 import Data.Maybe
 
 import Utilities (injMap)
+import LexBase
 import Variables
 import AST
 
@@ -92,6 +94,7 @@ applicable :: (tgt -> GenVar) -> VarSet -> (tgt,rpl) -> Bool
 applicable wrap tfv (t,_) = wrap t `S.member` tfv
 \end{code}
 
+\newpage
 \subsection{Quantifier Handling}
 
 We have an abstract syntax that singles out quantifiers
@@ -125,6 +128,41 @@ all such quantified forms:
        (\Gamma_i (V_i\setminus V_j) \bullet \Gamma_j V_j \bullet P)
      $
 \end{description}
+In order to do this, we need to know which constructors are substitutable
+(e.g, propostional operators, and UTP conditional $\_\cond{\_}\_$ are,
+while assignment  $\_:=\_$ is not).
+We explicitly capture this property:
+\begin{code}
+data SubAbility = CS -- Can Substitute
+              | NS -- Not Substitutable
+              deriving (Eq, Ord, Show, Read)
+\end{code}
+We maintain, per-theory,
+a map from  \texttt{Cons} identifiers defined by that theory,
+to their subsitutability.
+In any given proof context we will have a list of such maps,
+on for each theory in scope.
+\begin{code}
+type SubAbilityMap = Map Identifier SubAbility
+\end{code}
+We want to search a list of these maps, checking for substitutability
+\begin{code}
+isSubstitutable :: [SubAbilityMap] -> Identifier -> Bool
+isSubstitutable [] n  =  False -- should never happen in well-defined theories
+isSubstitutable (sam:sams) n
+  = case M.lookup n sam of
+      Nothing  ->  isSubstitutable sams n
+      Just s   ->  s == CS
+\end{code}
+We also want to convert our $\alpha$ ``maps'' into
+substitutions, when we encounter a non-substitutable constructor.
+\begin{code}
+alphaAsSubstn :: (Map Variable Variable)  -- (tgt.v -> rpl.v)
+              -> (Map ListVar ListVar)      -- (tgt.lv -> rpl.lv)
+              -> Substn
+alphaAsSubstn vmap lmap
+  = fromJust $ substn (M.assocs $ M.map varAsTerm vmap) $ M.assocs lmap
+\end{code}
 
 \newpage
 \subsubsection{$\alpha$-Renaming}
@@ -140,22 +178,23 @@ $$
 We expect the \texttt{trm} argument to be a binder.
 We check the injectivity, and freshness.
 \begin{code}
-alphaRename :: Monad m => ([(Variable,Variable)])  -- (tgt.v,rpl.v)
+alphaRename :: Monad m => [SubAbilityMap]
+                       -> ([(Variable,Variable)])  -- (tgt.v,rpl.v)
                        -> [(ListVar,ListVar)]      -- (tgt.lv,rpl.lv)
                        -> Term -> m Term
-alphaRename vvs lls (Bind tk n vs tm)
+alphaRename sams vvs lls (Bind tk n vs tm)
   =  do checkDomain vvs lls vs
         vmap <- injMap vvs
         lmap <- injMap lls
         checkFresh vvs lls tm
-        bnd tk n (aRenVS vmap lmap vs) (aRenTRM vmap lmap tm)
-alphaRename vvs lls (Lam  tk n vl tm)
+        bnd tk n (aRenVS vmap lmap vs) (aRenTRM sams vmap lmap tm)
+alphaRename sams vvs lls (Lam  tk n vl tm)
   =  do checkDomain vvs lls (S.fromList vl)
         vmap <- injMap vvs
         lmap <- injMap lls
         checkFresh vvs lls tm
-        lam tk n (aRenVL vmap lmap vl) (aRenTRM vmap lmap tm)
-alphaRename vvs lls trm = fail "alphaRename not applicable"
+        lam tk n (aRenVL vmap lmap vl) (aRenTRM sams vmap lmap tm)
+alphaRename sams vvs lls trm = fail "alphaRename not applicable"
 \end{code}
 
 \paragraph{Domain Checking}~
@@ -219,11 +258,16 @@ aRenLV lmap lv
 \paragraph{$\mathbf\alpha$-Renaming Terms}
 Top-level quantifier body and below.
 
-Variables and constructors and iterators are straightforward
+Variables and and iterators are straightforward
 \begin{code}
-aRenTRM vmap lmap (Var  tk v)     =  fromJust $ var tk (aRenV vmap v)
-aRenTRM vmap lmap (Cons tk n ts)  =  Cons tk n $ map (aRenTRM vmap lmap) ts
-aRenTRM vmap lmap (Iter tk na ni lvs)  =   Iter tk na ni $ map (aRenLV lmap) lvs
+aRenTRM sams vmap lmap (Var  tk v)     =  fromJust $ var tk (aRenV vmap v)
+aRenTRM sams vmap lmap (Iter tk na ni lvs)  =   Iter tk na ni $ map (aRenLV lmap) lvs
+\end{code}
+We need to check constructors for substitutability
+\begin{code}
+aRenTRM sams vmap lmap tm@(Cons tk n ts)
+  | isSubstitutable sams n  =  Cons tk n $ map (aRenTRM sams vmap lmap) ts
+  | otherwise               =  Sub tk tm $ alphaAsSubstn vmap lmap
 \end{code}
 Internal quantifiers screen out renamings%
 \footnote{We wouldn't need this if we guaranteed no quantifier shadowing.}
@@ -234,13 +278,13 @@ Internal quantifiers screen out renamings%
    (\mathsf{Q} V \bullet P(\alpha\setminus V))
 \]
 \begin{code}
-aRenTRM vmap lmap (Bind tk n vs tm)
- = fromJust $ bnd tk n vs (aRenTRM vmap' lmap' tm)
+aRenTRM sams vmap lmap (Bind tk n vs tm)
+ = fromJust $ bnd tk n vs (aRenTRM sams vmap' lmap' tm)
  where vmap' = vmap `M.withoutKeys` (stdVarSetOf vs)
        lmap' = lmap `M.withoutKeys` (listVarSetOf vs)
 
-aRenTRM vmap lmap (Lam  tk n vl tm)
- = fromJust $ lam tk n vl (aRenTRM vmap' lmap' tm)
+aRenTRM sams vmap lmap (Lam  tk n vl tm)
+ = fromJust $ lam tk n vl (aRenTRM sams vmap' lmap' tm)
  where vs = S.fromList vl
        vmap' = vmap `M.withoutKeys` (stdVarSetOf vs)
        lmap' = lmap `M.withoutKeys` (listVarSetOf vs)
@@ -252,11 +296,11 @@ Substitution is tricky \dots
   (P(\alpha\setminus\lst x)[\lst e \alpha / \lst x]
 \]
 \begin{code}
-aRenTRM vmap lmap (Sub tk tm (Substn ts lvs))
+aRenTRM sams vmap lmap (Sub tk tm (Substn ts lvs))
   = let
 
       (vl,tl) = unzip $ S.toList ts
-      tl' = map (aRenTRM vmap lmap) tl
+      tl' = map (aRenTRM sams vmap lmap) tl
       tsl' = zip vl tl'
 
       (tvl,rvl) = unzip $ S.toList lvs
@@ -271,11 +315,11 @@ aRenTRM vmap lmap (Sub tk tm (Substn ts lvs))
       subtgtlvs = S.fromList tvl
       lmap' = lmap `M.withoutKeys` subtgtlvs
 
-    in Sub tk (aRenTRM vmap' lmap' tm) suba
+    in Sub tk (aRenTRM sams vmap' lmap' tm) suba
 \end{code}
 Everything else is unaffected.
 \begin{code}
-aRenTRM _ _ trm = trm  -- Val, Cls
+aRenTRM _ _ _ trm = trm  -- Val, Cls
 \end{code}
 
 \newpage

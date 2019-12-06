@@ -43,6 +43,7 @@ import SideCond
 import TermZipper
 import AST
 import FreeVars
+import Substitution
 import Binding
 import VarData
 import Instantiate

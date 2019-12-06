@@ -3,6 +3,7 @@
 
 ## Quantification
 
+(in progress)
  
 Need one builtin Substitution function, parameterised by `[SubAbilityMap]`. 
 This should live in a `Substitution` module along with the `SubAbility` and related types.

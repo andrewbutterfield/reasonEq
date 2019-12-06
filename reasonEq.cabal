@@ -1,5 +1,5 @@
 name:                reasonEq
-version:             0.7.5.0
+version:             0.7.6.0
 -- synopsis:
 -- description:
 homepage:            https://github.com/andrewbutterfield/reasonEq#readme
@@ -20,6 +20,7 @@ library
                      , Variables
                      , AST
                      , FreeVars
+                     , Substitution
                      , SideCond
                      , VarData
                      , Binding

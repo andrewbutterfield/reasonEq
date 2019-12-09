@@ -53,10 +53,6 @@ sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
 \subsubsection{Known Variables}
 
 We have none.
-\begin{code}
-implKnown :: VarTable
-implKnown =  newVarTable
-\end{code}
 
 
 \newpage
@@ -439,9 +435,7 @@ implTheory
                          , disjName
                          , notName
                          , equivName ]
-            , known   =  implKnown
             , laws    =  implAxioms
-            , proofs  =  []
             , conjs   =  implConjs
             }
 \end{code}

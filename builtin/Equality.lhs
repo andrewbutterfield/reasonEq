@@ -123,10 +123,6 @@ equalityName = "Equality"
 equalityTheory :: Theory
 equalityTheory
   =  nullTheory { thName  =  equalityName
-            , thDeps  =  []
-            , known   =  newVarTable
             , laws    =  equalityAxioms
-            , proofs  =  []
-            , conjs   =  []
             }
 \end{code}

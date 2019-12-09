@@ -330,7 +330,6 @@ uCloseTheory
                          ]
             , known   =  newVarTable
             , laws    =  uCloseAxioms
-            , proofs  =  []
             , conjs   =  uCloseConjs
             }
 \end{code}

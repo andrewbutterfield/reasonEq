@@ -227,7 +227,6 @@ conjTheory
             , thDeps  =  [ disjName, notName, equivName ]
             , known   =  conjKnown
             , laws    =  conjAxioms
-            , proofs  =  []
             , conjs   =  conjConjs
             }
 \end{code}

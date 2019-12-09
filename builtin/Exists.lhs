@@ -256,9 +256,7 @@ existsTheory
                          , notName
                          , equivName
                          ]
-            , known   =  newVarTable
             , laws    =  predExistsAxioms
-            , proofs  =  []
             , conjs   =  existsConjs
             }
 \end{code}

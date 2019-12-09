@@ -237,9 +237,6 @@ forallTheory
                          , notName
                          , equivName
                          ]
-            , known   =  newVarTable
             , laws    =  forallAxioms
-            , proofs  =  []
-            , conjs   =  []
             }
 \end{code}

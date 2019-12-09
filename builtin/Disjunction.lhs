@@ -49,10 +49,6 @@ sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
 \subsubsection{Known Variables}
 
 We have none.
-\begin{code}
-disjunctionKnown :: VarTable
-disjunctionKnown =  newVarTable
-\end{code}
 
 \newpage
 \subsection{Disjunction Axioms}
@@ -236,9 +232,7 @@ disjTheory :: Theory
 disjTheory
   =  nullTheory { thName  =  disjName
             , thDeps  =  [ notName, equivName ]
-            , known   =  disjunctionKnown
             , laws    =  disjAxioms
-            , proofs  =  []
             , conjs   =  disjConjs
             }
 \end{code}

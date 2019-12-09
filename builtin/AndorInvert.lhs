@@ -227,8 +227,6 @@ aoiTheory
   =  nullTheory { thName  =  aoiName
             , thDeps  =  [ conjName, disjName, notName, equivName ]
             , known   =  aoiKnown
-            , laws    =  []
-            , proofs  =  []
             , conjs   =  aoiConjs
             }
 \end{code}

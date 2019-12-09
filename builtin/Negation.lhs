@@ -208,9 +208,7 @@ notTheory :: Theory
 notTheory
   =  nullTheory { thName  =  notName
             , thDeps  =  [equivName]
-            , known   =  newVarTable
             , laws    =  negationAxioms
-            , proofs  =  []
             , conjs   =  negationConjs
             }
 \end{code}

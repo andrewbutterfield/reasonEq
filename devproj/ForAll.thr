@@ -1,6 +1,7 @@
 BEGIN THEORY ForAll
 DEPS = ["Equality","Implies","AndOrInvert","And","Or","Not","Equiv"]
 KNOWN = VD (fromList [],fromList [],fromList [])
+SUBABLE = fromList []
 BEGIN LIST LAWS
 (("forall_true",(C P (Id "equiv") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (K P (VB True)),K P (VB True)],[])),Axiom)
 (("forall_one_point",(C P (Id "equiv") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "implies") [I P (Id "land") (Id "=") [LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[])],V P (VR (Id "P",VP,WS))]),B P (Id "forall") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])))],[SD (GL (LV (VR (Id "e",VE,WS),[],[]))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])])),Axiom)

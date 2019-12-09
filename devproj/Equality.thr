@@ -1,6 +1,7 @@
 BEGIN THEORY Equality
 DEPS = []
 KNOWN = VD (fromList [],fromList [],fromList [])
+SUBABLE = fromList []
 BEGIN LIST LAWS
 (("=_refl",(C P (Id "=") [V (E T) (VR (Id "e",VE,WS)),V (E T) (VR (Id "e",VE,WS))],[])),Axiom)
 (("=_symm",(C P (Id "equiv") [C P (Id "=") [V (E T) (VR (Id "e",VE,WS)),V (E T) (VR (Id "f",VE,WS))],C P (Id "=") [V (E T) (VR (Id "f",VE,WS)),V (E T) (VR (Id "e",VE,WS))]],[])),Axiom)

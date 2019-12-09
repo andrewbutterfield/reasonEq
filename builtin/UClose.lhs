@@ -317,7 +317,7 @@ uCloseName :: String
 uCloseName = "UClose"
 uCloseTheory :: Theory
 uCloseTheory
-  =  Theory { thName  =  uCloseName
+  =  nullTheory { thName  =  uCloseName
             , thDeps  =  [ existsName
                          , forallName
                          , equalityName

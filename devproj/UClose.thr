@@ -1,6 +1,7 @@
 BEGIN THEORY UClose
 DEPS = ["Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"]
 KNOWN = VD (fromList [],fromList [],fromList [])
+SUBABLE = fromList []
 BEGIN LIST LAWS
 (("[]_def",(C P (Id "equiv") [X (Id "[_]") (V P (VR (Id "P",VP,WS))),B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))],[ESS (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])])),Axiom)
 (("sat_def",(C P (Id "equiv") [X (Id "langle_rangle") (V P (VR (Id "P",VP,WS))),C P (Id "lnot") [X (Id "[_]") (C P (Id "lnot") [V P (VR (Id "P",VP,WS))])]],[])),Axiom)

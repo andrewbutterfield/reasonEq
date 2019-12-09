@@ -228,7 +228,7 @@ forallName :: String
 forallName = "ForAll"
 forallTheory :: Theory
 forallTheory
-  =  Theory { thName  =  forallName
+  =  nullTheory { thName  =  forallName
             , thDeps  =  [ equalityName
                          , implName
                          , aoiName

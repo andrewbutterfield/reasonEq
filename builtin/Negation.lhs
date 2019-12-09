@@ -206,7 +206,7 @@ notName :: String
 notName = "Not"
 notTheory :: Theory
 notTheory
-  =  Theory { thName  =  notName
+  =  nullTheory { thName  =  notName
             , thDeps  =  [equivName]
             , known   =  newVarTable
             , laws    =  negationAxioms

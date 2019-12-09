@@ -4,7 +4,6 @@ KNOWN = VD (fromList [],fromList [],fromList [])
 SUBABLE = fromList [(Id "equiv",CS)]
 BEGIN LIST LAWS
 (("true",(K P (VB True),[])),Axiom)
-(("true_subst",(C P (Id "equiv") [S P (K P (VB True)) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])),K P (VB True)],[])),Axiom)
 (("equiv_refl",(C P (Id "equiv") [V P (VR (Id "P",VP,WS)),V P (VR (Id "P",VP,WS))],[])),Axiom)
 (("equiv_assoc",(C P (Id "equiv") [C P (Id "equiv") [C P (Id "equiv") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))],V P (VR (Id "R",VP,WS))],C P (Id "equiv") [V P (VR (Id "P",VP,WS)),C P (Id "equiv") [V P (VR (Id "Q",VP,WS)),V P (VR (Id "R",VP,WS))]]],[])),Axiom)
 (("equiv_symm",(C P (Id "equiv") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS)),V P (VR (Id "Q",VP,WS)),V P (VR (Id "P",VP,WS))],[])),Axiom)

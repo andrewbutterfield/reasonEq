@@ -433,7 +433,7 @@ implName :: String
 implName = "Implies"
 implTheory :: Theory
 implTheory
-  =  Theory { thName  =  implName
+  =  nullTheory { thName  =  implName
             , thDeps  =  [ aoiName
                          , conjName
                          , disjName

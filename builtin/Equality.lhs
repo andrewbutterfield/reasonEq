@@ -122,7 +122,7 @@ equalityName :: String
 equalityName = "Equality"
 equalityTheory :: Theory
 equalityTheory
-  =  Theory { thName  =  equalityName
+  =  nullTheory { thName  =  equalityName
             , thDeps  =  []
             , known   =  newVarTable
             , laws    =  equalityAxioms

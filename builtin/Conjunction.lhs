@@ -223,7 +223,7 @@ conjName :: String
 conjName = "And"
 conjTheory :: Theory
 conjTheory
-  =  Theory { thName  =  conjName
+  =  nullTheory { thName  =  conjName
             , thDeps  =  [ disjName, notName, equivName ]
             , known   =  conjKnown
             , laws    =  conjAxioms

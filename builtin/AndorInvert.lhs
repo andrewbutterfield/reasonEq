@@ -224,7 +224,7 @@ aoiName :: String
 aoiName = "AndOrInvert"
 aoiTheory :: Theory
 aoiTheory
-  =  Theory { thName  =  aoiName
+  =  nullTheory { thName  =  aoiName
             , thDeps  =  [ conjName, disjName, notName, equivName ]
             , known   =  aoiKnown
             , laws    =  []

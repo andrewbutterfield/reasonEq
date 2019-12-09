@@ -234,7 +234,7 @@ disjName :: String
 disjName = "Or"
 disjTheory :: Theory
 disjTheory
-  =  Theory { thName  =  disjName
+  =  nullTheory { thName  =  disjName
             , thDeps  =  [ notName, equivName ]
             , known   =  disjunctionKnown
             , laws    =  disjAxioms

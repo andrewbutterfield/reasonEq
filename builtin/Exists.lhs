@@ -246,7 +246,7 @@ existsName :: String
 existsName = "Exists"
 existsTheory :: Theory
 existsTheory
-  =  Theory { thName  =  existsName
+  =  nullTheory { thName  =  existsName
             , thDeps  =  [ forallName
                          , equalityName
                          , implName

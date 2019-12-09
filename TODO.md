@@ -5,15 +5,9 @@
 
 (in progress)
  
-Need one builtin Substitution function, parameterised by `[SubAbilityMap]`. 
-This should live in a `Substitution` module along with the `SubAbility` and related types.
-This subsumes the alpha-renaming currently in `FreeVars` which should emerge as full substitution
-in this new `Substitution` module.
+Need to fix all builtin theories to use substitutability (Equivalence done)
 
-In `FreeVars` we should have a function to simplify nested quantifiers.
-
-We need to extend `Theory` to have a `SubAbilityMap` component.
-
+Need to make file loading robust - no runtime failure.
 
 ### `a n` command in proof REPL
 

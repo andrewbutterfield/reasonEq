@@ -7,7 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Substitution
-( SubAbility(..), SubAbilityMap
+( SubAbility(..)
+, SubAbilityMap, SubAbilityMaps
 , substitute
 ) where
 import Data.Set(Set)
@@ -51,13 +52,14 @@ We maintain, per-theory,
 a map from  \texttt{Cons} identifiers defined by that theory,
 to their subsitutability.
 In any given proof context we will have a list of such maps,
-on for each theory in scope.
+one for each theory in scope.
 \begin{code}
 type SubAbilityMap = Map Identifier SubAbility
+type SubAbilityMaps = [SubAbilityMap]
 \end{code}
 We want to search a list of these maps, checking for substitutability
 \begin{code}
-isSubstitutable :: [SubAbilityMap] -> Identifier -> Bool
+isSubstitutable :: SubAbilityMaps -> Identifier -> Bool
 isSubstitutable [] n  =  False -- should never happen in well-defined theories
 isSubstitutable (sam:sams) n
   = case M.lookup n sam of
@@ -169,10 +171,10 @@ lvSubstitute [] rlv  =  rlv
 
 We will have checks and balances for when $\alpha$-substitution is invoked
 from outside.
-The term substitution function will pass these chgecks and so will invoke it
+The term substitution function will pass these checks and so will invoke it
 directly, as a term substitution with a carefully crafted substitution.
 \begin{code}
--- KEEP THIS FOR ALPHA CORRECNTESS CHECKS
+-- KEEP THIS FOR ALPHA CORRECTNESS CHECKS
 -- alphaRename sams vvs lls (Bind tk n vs tm)
 --   =  do checkDomain vvs lls vs
 --         vmap <- injMap vvs

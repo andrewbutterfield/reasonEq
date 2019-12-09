@@ -12,6 +12,7 @@ module Equivalence (
 ) where
 
 import Data.Maybe
+import qualified Data.Map as M
 
 import NiceSymbols
 
@@ -21,6 +22,7 @@ import Variables
 import AST
 import SideCond
 import VarData
+import Substitution
 import Laws
 import Proofs
 import Theories
@@ -53,6 +55,21 @@ equivKnown :: VarTable
 equivKnown =  newVarTable
 \end{code}
 
+\subsubsection{Substitutability}
+
+$$
+  \begin{array}{ll}
+     \AXeqvSubst & \AXeqvSubstN
+  \\ \AXtrueSubst & \AXtrueSubstN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+equivSubAble = M.fromList [(equiv,CS)]
+-- true is a value, and so is automatically NS
+\end{code}
+
 
 \newpage
 \subsubsection{Axioms}
@@ -69,21 +86,6 @@ $$
 \begin{code}
 axTrue  =  ( "true", ( trueP, scTrue ) )
 \end{code}
-
-$$
-  \begin{array}{ll}
-     \AXtrueSubst & \AXtrueSubstN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axTrueSubst
- = ( "true" -.- "subst"
-   , ( sub trueP  === trueP
-   , scTrue ) )
-\end{code}
-
 
 
 $$
@@ -130,31 +132,14 @@ axEqvSymm
 \end{code}
 
 
-$$
-  \begin{array}{ll}
-     \AXeqvSubst & \AXeqvSubstN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axEqvSubst
- = ( "equiv" -.- "subst"
-   , ( sub (p === q)  === (sub p === sub q)
-   , scTrue ) )
-\end{code}
-
-
-
-
 
 We now collect all of the above as our axiom set:
 \begin{code}
 equivAxioms :: [Law]
 equivAxioms
   = map labelAsAxiom
-      [ axTrue, axTrueSubst
-      , axEqvRefl, axEqvAssoc, axEqvSymm, axEqvSubst
+      [ axTrue
+      , axEqvRefl, axEqvAssoc, axEqvSymm
       ]
 \end{code}
 
@@ -189,6 +174,7 @@ equivTheory
   =  Theory { thName  =  equivName
             , thDeps  =  []
             , known   =  equivKnown
+            , subable =  equivSubAble
             , laws    =  equivAxioms
             , proofs  =  []
             , conjs   =  equivConjs

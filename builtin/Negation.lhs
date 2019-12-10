@@ -12,6 +12,7 @@ module Negation (
 ) where
 
 import Data.Maybe
+import qualified Data.Map as M
 
 import NiceSymbols
 
@@ -19,6 +20,7 @@ import Utilities
 import LexBase
 import Variables
 import AST
+import Substitution
 import SideCond
 import VarData
 import Laws
@@ -54,6 +56,20 @@ negationKnown :: VarTable
 negationKnown =  newVarTable
 \end{code}
 
+\subsubsection{Substitutability}
+$$
+  \begin{array}{ll}
+     \AXnotSubst & \AXnotSubstN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+negationSubAble = M.fromList [(lnot,CS)]
+\end{code}
+
+
+
 \newpage
 \subsection{Negation Axioms}
 
@@ -82,28 +98,13 @@ axNotEqvDistr
    , scTrue ) )
 \end{code}
 
-$$
-  \begin{array}{ll}
-     \AXnotSubst & \AXnotSubstN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-axNotSubst
- = ( "lnot" -.- "subst"
-   , ( sub (mkNot p)  === mkNot (sub p)
-   , scTrue ) )
-\end{code}
-
-
 
 
 
 
 \begin{code}
 negationAxioms :: [Law]
-negationAxioms  = map labelAsAxiom [ axFalseDef, axNotEqvDistr, axNotSubst ]
+negationAxioms  = map labelAsAxiom [ axFalseDef, axNotEqvDistr ]
 \end{code}
 
 \subsection{Negation Conjectures}
@@ -208,6 +209,7 @@ notTheory :: Theory
 notTheory
   =  nullTheory { thName  =  notName
             , thDeps  =  [equivName]
+            , subable =  negationSubAble 
             , laws    =  negationAxioms
             , conjs   =  negationConjs
             }

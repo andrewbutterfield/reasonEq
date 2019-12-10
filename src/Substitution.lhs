@@ -117,7 +117,13 @@ The latter two then invoke term substitution to do their work.
 \begin{code}
 substitute :: Monad m => [SubAbilityMap] -> Substn -> Term -> m Term
 substitute _ _ vt@(Val _ _)  = return vt
-substitute sams sub tm = fail "substitute NYfI"
+substitute sams sub ct@(Cons tk i ts)
+  = do sbl <- getSubstitutability sams i
+       if sbl == NS
+        then return $ Sub tk ct sub
+        else do ts' <- sequence $ map (substitute sams sub) ts
+                return $ Cons tk i ts' 
+substitute sams sub tm = fail ("substitute ("++trTerm 0 tm++") NYI")
 \end{code}
 
 \newpage

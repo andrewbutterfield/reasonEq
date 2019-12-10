@@ -12,6 +12,7 @@ module Disjunction (
 ) where
 
 import Data.Maybe
+import qualified Data.Map as M
 
 import NiceSymbols
 
@@ -19,6 +20,7 @@ import Utilities
 import LexBase
 import Variables
 import AST
+import Substitution
 import SideCond
 import VarData
 import Laws
@@ -49,6 +51,19 @@ sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
 \subsubsection{Known Variables}
 
 We have none.
+
+\subsubsection{Substitutability}
+
+$$
+  \begin{array}{ll}
+     \AXorSubst & \AXorSubstN
+  \end{array}
+$$
+
+\vspace{-5pt}
+\begin{code}
+disjSubAble = M.fromList [(lor,CS)]
+\end{code}
 
 \newpage
 \subsection{Disjunction Axioms}
@@ -123,27 +138,13 @@ axExclMidl
    , scTrue ) )
 \end{code}
 
-$$
-  \begin{array}{ll}
-     \AXorSubst & \AXorSubstN
-  \end{array}
-$$
-
-\vspace{-5pt}
-\begin{code}
-axOrSubst
- = ( "lor" -.- "subst"
-   , ( sub (p \/ q)  === (sub p \/ sub q)
-   , scTrue ) )
-\end{code}
 
 Gather them all together.
 \begin{code}
 disjAxioms :: [Law]
 disjAxioms
   = map labelAsAxiom
-      [ axOrSymm, axOrAssoc, axOrIdem, axOrEqvDistr, axExclMidl
-      , axOrSubst ]
+      [ axOrSymm, axOrAssoc, axOrIdem, axOrEqvDistr, axExclMidl ]
 \end{code}
 
 \subsection{Disjunction Conjectures}
@@ -232,6 +233,7 @@ disjTheory :: Theory
 disjTheory
   =  nullTheory { thName  =  disjName
             , thDeps  =  [ notName, equivName ]
+            , subable =  disjSubAble
             , laws    =  disjAxioms
             , conjs   =  disjConjs
             }

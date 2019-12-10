@@ -12,6 +12,7 @@ module Conjunction (
 ) where
 
 import Data.Maybe
+import qualified Data.Map as M
 
 import NiceSymbols
 
@@ -19,6 +20,7 @@ import Utilities
 import LexBase
 import Variables
 import AST
+import Substitution
 import SideCond
 import VarData
 import Laws
@@ -50,10 +52,21 @@ sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
 \subsubsection{Known Variables}
 
 We have none.
+
+\subsubsection{Substitutability}
+
+$$
+  \begin{array}{ll}
+     \CJandSubst & \CJandSubstN
+  \end{array}
+$$
+
+\vspace{-8pt}
 \begin{code}
-conjKnown :: VarTable
-conjKnown =  newVarTable
+conjSubAble = M.fromList [(land,CS)]
 \end{code}
+
+
 
 \newpage
 \subsection{Conjunction Axioms}
@@ -189,20 +202,6 @@ cjContradict
      , scTrue ) )
 \end{code}
 
-$$
-  \begin{array}{ll}
-     \CJandSubst & \CJandSubstN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-cjAndSubst
- = ( "land" -.- "subst"
-   , ( sub (p /\ q)  === (sub p /\ sub q)
-   , scTrue ) )
-\end{code}
-
 
 Pulling it all together:
 \begin{code}
@@ -212,7 +211,6 @@ conjConjs
     , cjandUnit, cjandZero
     , cjandDistr
     , cjContradict
-    , cjAndSubst
     ]
 \end{code}
 
@@ -225,7 +223,7 @@ conjTheory :: Theory
 conjTheory
   =  nullTheory { thName  =  conjName
             , thDeps  =  [ disjName, notName, equivName ]
-            , known   =  conjKnown
+            , subable =  conjSubAble
             , laws    =  conjAxioms
             , conjs   =  conjConjs
             }

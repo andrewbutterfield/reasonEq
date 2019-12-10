@@ -3,7 +3,8 @@
 
 ## Quantification
 
-Need to add 'substitute' command to the proof REPL.
+Need to substitute for variables, noting that x, e, and P will behave
+differently depending on the target class of the substitution.
 
 ## Robustness
 

@@ -19,6 +19,7 @@ module AbstractUI
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, matchFocusAgainst
 , applyMatchToFocus, applyMatchToFocus1, applyMatchToFocus2
+, substituteFocus
 , tryFocusAgainst
 , observeLawsInScope
 , flattenAssociative, groupAssociative
@@ -533,6 +534,18 @@ applyMatchToFocus2 mtch ubind liveProof
                      , (exitTZ tz,conjSC liveProof)):)
                     liveProof )
 \end{code}
+
+
+\subsubsection{Perform Substitution}
+
+\begin{code}
+substituteFocus :: Monad m => Theories -> LiveProof -> m LiveProof
+substituteFocus thrys liveProof
+  = fail ("substituteFocus NYI, subable len:"++show (length subablemaps))
+  where
+    subablemaps = map subable $ getTheoryDeps' (conjThName liveProof) thrys
+\end{code}
+
 
 \subsubsection{Observing Laws in Scope}
 

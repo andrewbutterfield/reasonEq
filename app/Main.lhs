@@ -694,6 +694,7 @@ proofREPLConfig
             , matchLawDescr
             , tryMatchDescr
             , applyMatchDescr
+            , substituteDescr
             , flatEquivDescr
             , groupEquivDescr
             , goBackDescr
@@ -758,8 +759,8 @@ goUp _ = tryDelta moveFocusUp
 Switching consequent focus:
 \begin{code}
 switchConsequentDescr
-  = ( "s", "switch",
-      unlines' [ "s  -- switch between C_left/C_right"
+  = ( "S", "switch",
+      unlines' [ "S  -- switch between C_left/C_right"
                , "   -- or go to C_left if in hypothesis" ]
     , switchConsequent )
 
@@ -926,6 +927,27 @@ requestBindings (t,f) (goalTerm,_) unbound
 
     in rB emptyBinding $ S.toList unbound
 \end{code}
+
+\newpage
+Perform Substitution
+\begin{code}
+substituteDescr = ( "s"
+                , "substitute"
+                , unlines
+                   [ "s       -- perform subsitution" ]
+                , substituteCommand )
+
+substituteCommand :: REPLCmd (REqState, LiveProof)
+substituteCommand _ state@(reqs, liveProof)
+  =  case substituteFocus (theories reqs) liveProof of
+      Yes liveProof'  ->  return (reqs, liveProof')
+      But msgs
+       -> do putStrLn $ unlines' msgs
+             putStrLn "<return> to continue"
+             getLine
+             return (reqs, matches_ [] liveProof)
+\end{code}
+
 
 \newpage
 Flattening grouped equivalences:

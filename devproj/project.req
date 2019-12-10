@@ -14,9 +14,27 @@ BEGIN THEORIES
 THNAMES = ["And","AndOrInvert","Equality","Equiv","Exists","ForAll","Implies","Not","Or","UClose"]
 SDAG = [[("UClose",["Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Exists",["ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("ForAll",["Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Implies",["AndOrInvert","And","Or","Not","Equiv"])],[("AndOrInvert",["And","Or","Not","Equiv"])],[("And",["Or","Not","Equiv"])],[("Or",["Not","Equiv"])],[("Not",["Equiv"])],[("Equality",[]),("Equiv",[])]]
 END THEORIES
-CURRTHEORY = Equiv
+CURRTHEORY = Not
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("Not","false_subst")
+BEGIN LIVE-PROOF
+TH-NAME: Not
+CJ-NAME: false_subst
+CONJ = (C P (Id "equiv") [S P (K P (VB False)) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])),K P (VB False)],[])
+SIDE = []
+STRAT reduce
+BEGIN SEQZIP
+TERMZIP = (S P (K P (VB False)) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])),[Cons' P (Id "equiv") [] [K P (VB False)]])
+BEGIN SEQUENT'
+SIDECOND = []
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.false_subst", thDeps = [], known = VD (fromList [],fromList [],fromList []), subable = fromList [], laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: [1]
+BEGIN LIST STEPS
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

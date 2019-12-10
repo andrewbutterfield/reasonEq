@@ -91,13 +91,48 @@ The latter two then invoke term substitution to do their work.
 
 \subsection{Term Substitution}
 
+\begin{code}
+substitute :: Monad m => [SubAbilityMap] -> Substn -> Term -> m Term
+\end{code}
 \begin{eqnarray*}
    \kk k \ss {} {v^n} {t^n}  &\defs&  \kk k
-\\ \vv v \ss {} {v^n} {t^n}  &\defs&  t^i \cond{v=v^i} v
-\\ (\cc n {ts}) \ss {} {v^n} {t^n}
+\end{eqnarray*}
+\begin{code}
+substitute _ _ vlt@(Val _ _)  = return vlt
+\end{code}
+\begin{eqnarray*}
+   \vv v \ss {} {v^n} {t^n}  &\defs&  t^i \cond{\vv v=v^i} v,
+                                                \mbox{ for one $i \in 1\dots n$}
+\\ \vv P \ss {} {v^n} {t^n}
+                   &\defs&  t^i \cond{\vv P=v^i} \vv P \ss {} {v^n} {t^n},
+                                                                  \mbox{ ditto.}
+\end{eqnarray*}
+\begin{code}
+substitute _ sub@(Substn ts _) vrt@(Var tk v)
+  = return $ subsVar vrt v $ S.toList ts
+  where
+    subsVar vrt v []
+      | varClass v == ObsV  =  vrt
+      | otherwise  =  Sub tk vrt sub
+    subsVar vrt v ((tgtv,rplt):rest)
+      | v == tgtv  =  rplt
+      | otherwise  =  subsVar vrt v rest
+\end{code}
+\begin{eqnarray*}
+   (\cc i {ts}) \ss {} {v^n} {t^n}
    &\defs&
-   (\cc n {ts {\ss {} {v^n} {t^n}}}) \cond{\mathrm{canSub}(n)} (\cc n {ts}) \ss {} {v^n} {t^n}
-\\ (\bb n {v^+} t) \ss {} {v^n} {t^n}
+   (\cc i {ts {\ss {} {v^n} {t^n}}}) \cond{\mathrm{CanSub}(i)} (\cc i {ts}) \ss {} {v^n} {t^n}
+\end{eqnarray*}
+\begin{code}
+substitute sams sub ct@(Cons tk i ts)
+  = do sbl <- getSubstitutability sams i
+       if sbl == NS
+        then return $ Sub tk ct sub
+        else do ts' <- sequence $ map (substitute sams sub) ts
+                return $ Cons tk i ts'
+\end{code}
+\begin{eqnarray*}
+   (\bb n {v^+} t) \ss {} {v^n} {t^n}
    &\defs&
    (\bb n {v^+} {t \ss {} {v^j} {t^j}}), v^j \notin v^+
    \mbox{ plus $\alpha$-renaming to avoid capture}
@@ -112,17 +147,7 @@ The latter two then invoke term substitution to do their work.
    &\defs&
    (\ii \bigoplus n {lvs \ss {} {v^n} {t^n}})
 \end{eqnarray*}
-
-
 \begin{code}
-substitute :: Monad m => [SubAbilityMap] -> Substn -> Term -> m Term
-substitute _ _ vt@(Val _ _)  = return vt
-substitute sams sub ct@(Cons tk i ts)
-  = do sbl <- getSubstitutability sams i
-       if sbl == NS
-        then return $ Sub tk ct sub
-        else do ts' <- sequence $ map (substitute sams sub) ts
-                return $ Cons tk i ts' 
 substitute sams sub tm = fail ("substitute ("++trTerm 0 tm++") NYI")
 \end{code}
 

@@ -17,24 +17,6 @@ END THEORIES
 CURRTHEORY = And
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("And","land_subst")
-BEGIN LIVE-PROOF
-TH-NAME: And
-CJ-NAME: land_subst
-CONJ = (C P (Id "equiv") [S P (C P (Id "land") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])),C P (Id "land") [S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])),S P (V P (VR (Id "Q",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))]))]],[])
-SIDE = []
-STRAT reduce
-BEGIN SEQZIP
-TERMZIP = (S P (C P (Id "land") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])),[Cons' P (Id "equiv") [] [C P (Id "land") [S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])),S P (V P (VR (Id "Q",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))]))]]])
-BEGIN SEQUENT'
-SIDECOND = []
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.land_subst", thDeps = [], known = VD (fromList [],fromList [],fromList []), subable = fromList [], laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
-END SEQUENT'
-END SEQZIP
-FPATH: [1]
-BEGIN LIST STEPS
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

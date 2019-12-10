@@ -12,6 +12,7 @@ module Implication (
 ) where
 
 import Data.Maybe
+import qualified Data.Map as M
 
 import NiceSymbols
 
@@ -19,6 +20,7 @@ import Utilities
 import LexBase
 import Variables
 import AST
+import Substitution
 import SideCond
 import VarData
 import Laws
@@ -54,6 +56,18 @@ sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
 
 We have none.
 
+\subsubsection{Substitutability}
+
+$$
+  \begin{array}{ll}
+     \CJimpSubst & \CJimpSubstN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+implSubAble = M.fromList [(implies,CS)]
+\end{code}
 
 \newpage
 \subsection{Implication Axioms}
@@ -98,20 +112,6 @@ cjImpDef2
            , (p ==> q) === (mkNot p \/ q) )
 \end{code}
 
-
-$$
-  \begin{array}{ll}
-     \CJimpSubst & \CJimpSubstN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-cjImplSubst
- = ( "implies" -.- "subst"
-   , ( sub (p ==> q)  === (sub p ==> sub q)
-   , scTrue ) )
-\end{code}
 
 \newpage
 
@@ -411,7 +411,7 @@ Pulling them all together:
 \begin{code}
 implConjs :: [NmdAssertion]
 implConjs
-  = [ cjImpDef2, cjImplSubst
+  = [ cjImpDef2
     , cjImpMeet, cjContra, cjImpEqvDistr, cjShunting
     , cjAndImp, cjAndPmi, cjOrImp, cjOrPmi, cjOrImpAnd
     , cjImpRefl, cjImpRZero, cjImpLUnit, cjNotDef2, cjFalseImp
@@ -435,6 +435,7 @@ implTheory
                          , disjName
                          , notName
                          , equivName ]
+            , subable =  implSubAble
             , laws    =  implAxioms
             , conjs   =  implConjs
             }

@@ -10,6 +10,7 @@ module TestRendering (
    trId
  , trVar, trLVar, trGVar
  , trVSet, trOVSet, trVList, trVariableSet
+ , trMap
  , trType
  , trValue
  , trTerm
@@ -318,6 +319,10 @@ trOVSet vs  =  trVL (S.toList vs)
 
 trVariableSet vs = "{" ++ trVariableL (S.toList vs) ++ "}"
 trVariableL = seplist "," trVar
+
+trMap     trK trD m     = "{" ++ trMapLets trK trD (M.assocs m) ++ "}"
+trMapLets trK trD kds   = seplist "," (trMapLet trK trD) kds
+trMapLet  trK trD (k,d) = trK k ++ " " ++ _maplet ++ "  "++ trD d
 \end{code}
 
 \subsection{Term Zipper}

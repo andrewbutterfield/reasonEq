@@ -112,8 +112,8 @@ For use in expressions and substitution first list replacements
 
 $$\Nat \qquad \Int$$
 \begin{code}
-nat  = GivenType $ fromJust $ ident $ _mathbb "N"
-int  = GivenType $ fromJust $ ident $ _mathbb "Z"
+nat  = GivenType $ fromJust $ ident "N"
+int  = GivenType $ fromJust $ ident "Z"
 \end{code}
 
 $$ e \quad \lst e  \qquad f \quad \lst f$$
@@ -429,7 +429,7 @@ xyzName :: String
 xyzName = "XYZ"
 xyzTheory :: Theory
 xyzTheory
-  =  Theory { thName  =  xyzName
+  =  nullTheory { thName  =  xyzName
             , thDeps  =  [ utpStartupName
                          , uCloseName
                          , existsName
@@ -444,7 +444,6 @@ xyzTheory
                          ]
             , known   =  xyzKnown
             , laws    =  xyzAxioms
-            , proofs  =  [] --
             , conjs   =  xyzConjs
             }
 \end{code}

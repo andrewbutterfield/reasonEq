@@ -115,8 +115,8 @@ xm = StdVar $ Vbl (fromJust $ ident "x") ObsV (During "m")
 
 $$\Nat \qquad \Int$$
 \begin{code}
-nat  = GivenType $ fromJust $ ident $ _mathbb "N"
-int  = GivenType $ fromJust $ ident $ _mathbb "Z"
+nat  = GivenType $ fromJust $ ident "N"
+int  = GivenType $ fromJust $ ident "Z"
 \end{code}
 
 $$ e \quad \lst e  \qquad f \quad \lst f$$
@@ -295,7 +295,7 @@ utpStartupName :: String
 utpStartupName = "UTPStartup"
 utpStartupTheory :: Theory
 utpStartupTheory
-  =  Theory { thName  =  utpStartupName
+  =  nullTheory { thName  =  utpStartupName
             , thDeps  =  [ uCloseName
                          , existsName
                          , forallName
@@ -309,7 +309,6 @@ utpStartupTheory
                          ]
             , known   =  newVarTable
             , laws    =  utpStartupAxioms
-            , proofs  =  []
             , conjs   =  utpStartupConjs
             }
 \end{code}

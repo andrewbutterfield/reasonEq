@@ -22,7 +22,7 @@ module AST ( TermSub, LVarSub
            , pattern Bind, pattern Lam, pattern Cls
            , pattern Sub, pattern Iter, pattern Type
            , var,  eVar,  pVar
-           , bnd , eBnd, pBnd
+           , bnd, eBnd, pBnd
            , lam,  eLam,  pLam
            , binderClass
            , pattern EVal, pattern EVar, pattern ECons

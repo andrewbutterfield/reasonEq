@@ -3,11 +3,22 @@
 
 ## Quantification
 
-(in progress)
- 
-Need to fix all builtin theories to use substitutability (Equivalence done)
+Need to add 'substitute' command to the proof REPL.
 
+## Robustness
+
+### Robust Load
 Need to make file loading robust - no runtime failure.
+
+* make proof loading more tolerant of read/show mismatches - allow a step to be marked as TBR (to-be-redone).
+
+### Theory Checks
+
+Need a way to check a theory (in context, with all its dependencies)
+
+* all Cons have a substitutatbility indication.
+
+## Ongoing Issues
 
 ### `a n` command in proof REPL
 
@@ -54,7 +65,7 @@ becomes `(∀ x̅ • P ∨ (∀ y̅ • Q[y̅/x̅])`.
 * LiveProof returns `(bind,local_scC)` - need to get `local_scC` into proof step.
 
 
-* make proof loading more tolerant of read/show mismatches - allow a step to be marked as TBR (to-be-redone).
+
 
 ## Quantifier Laws in proofs
 

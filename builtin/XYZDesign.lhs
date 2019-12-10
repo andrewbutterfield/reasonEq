@@ -20,6 +20,7 @@ import Utilities
 import LexBase
 import Variables
 import AST
+import Substitution
 import SideCond
 import VarData
 import Laws
@@ -112,8 +113,8 @@ For use in expressions and substitution first list replacements
 
 $$\Nat \qquad \Int$$
 \begin{code}
-nat  = GivenType $ fromJust $ ident $ _mathbb "N"
-int  = GivenType $ fromJust $ ident $ _mathbb "Z"
+nat  = GivenType $ fromJust $ ident "N"
+int  = GivenType $ fromJust $ ident "Z"
 \end{code}
 
 $$ e \quad \lst e  \qquad f \quad \lst f$$
@@ -328,7 +329,7 @@ xyzDName :: String
 xyzDName = "XYZDesign"
 xyzDTheory :: Theory
 xyzDTheory
-  =  Theory { thName  =  xyzDName
+  =  nullTheory { thName  =  xyzDName
             , thDeps  =  [ utpStartupName
                          , uCloseName
                          , existsName
@@ -343,7 +344,6 @@ xyzDTheory
                          ]
             , known   =  xyzDKnown
             , laws    =  xyzDAxioms
-            , proofs  =  [] --
             , conjs   =  xyzDConjs
             }
 \end{code}

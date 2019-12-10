@@ -23,6 +23,7 @@ import LexBase
 import Variables
 import AST
 import FreeVars
+import TestRendering
 
 import Debug.Trace
 dbg msg x = trace (msg ++ show x) x
@@ -59,12 +60,12 @@ type SubAbilityMaps = [SubAbilityMap]
 \end{code}
 We want to search a list of these maps, checking for substitutability
 \begin{code}
-isSubstitutable :: SubAbilityMaps -> Identifier -> Bool
-isSubstitutable [] n  =  False -- should never happen in well-defined theories
-isSubstitutable (sam:sams) n
+getSubstitutability :: Monad m => SubAbilityMaps -> Identifier -> m SubAbility
+getSubstitutability [] n  =  fail ("No substitutability defined for "++trId n)
+getSubstitutability (sam:sams) n
   = case M.lookup n sam of
-      Nothing  ->  isSubstitutable sams n
-      Just s   ->  s == CS
+      Nothing  ->  getSubstitutability sams n
+      Just s   ->  return s
 \end{code}
 
 
@@ -114,8 +115,9 @@ The latter two then invoke term substitution to do their work.
 
 
 \begin{code}
-substitute :: [SubAbilityMap] -> Substn -> Term -> Term
-substitute sams sub tm = error "substitute NYI"
+substitute :: Monad m => [SubAbilityMap] -> Substn -> Term -> m Term
+substitute _ _ vt@(Val _ _)  = return vt
+substitute sams sub tm = fail "substitute NYfI"
 \end{code}
 
 \newpage
@@ -129,22 +131,21 @@ is defined as follows:
 where $v^j \notin v^m$.
 
 \begin{code}
-substComp :: [SubAbilityMap]
+substComp :: Monad m => [SubAbilityMap]
           -> Substn  -- 1st substitution performed
           -> Substn  -- 2nd substitution performed
-          -> Substn
+          -> m Substn
 substComp sams (Substn ts1 lvs1) sub2@(Substn ts2 lvs2)
-  = fromJust -- will always succeed
-      $ substn (varTermCompose sams sub2 (S.toList ts1) (S.toList ts2))
-               (lvarLVarCompose sams     (S.toList lvs1) (S.toList lvs2))
+  = do ts' <- varTermCompose sams sub2 (S.toList ts1) (S.toList ts2)
+       let lvs' = lvarLVarCompose sams     (S.toList lvs1) (S.toList lvs2)
+       substn ts' lvs'
 
 varTermCompose sams sub2 tl1 tl2
-  = let
-      (vl1,el1) = unzip tl1
-      el1' = map (substitute sams sub2) el1
-      tl1' = zip vl1 el1'
-      tl2' = tl2 `strip1` vl1
-    in tl1' ++ tl2'
+  = do let (vl1,el1) = unzip tl1
+       el1' <- sequence $ map (substitute sams sub2) $ el1
+       let tl1' = zip vl1 el1'
+       let tl2' = tl2 `strip1` vl1
+       return (tl1' ++ tl2')
 
 strip1 :: Eq a => [(a,b)] -> [a] -> [(a,b)]
 strip1 [] _ = []
@@ -259,8 +260,9 @@ aRenTRM sams vmap lmap (Iter tk na ni lvs)  =   Iter tk na ni $ map (aRenLV lmap
 We need to check constructors for substitutability
 \begin{code}
 aRenTRM sams vmap lmap tm@(Cons tk n ts)
-  | isSubstitutable sams n  =  Cons tk n $ map (aRenTRM sams vmap lmap) ts
-  | otherwise               =  Sub tk tm $ alphaAsSubstn vmap lmap
+  = case getSubstitutability sams n of
+      Just CS  ->  Cons tk n $ map (aRenTRM sams vmap lmap) ts
+      _        ->  Sub tk tm $ alphaAsSubstn vmap lmap
 \end{code}
 Internal quantifiers screen out renamings%
 \footnote{We wouldn't need this if we guaranteed no quantifier shadowing.}

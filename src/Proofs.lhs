@@ -354,6 +354,8 @@ data Justification
       String               -- law name
       Binding              -- binding from law variables to goal components
       [Int]                -- zipper descent arguments
+  | Substitute         -- performed a substitution
+      [Int]                -- zipper descent arguments
   | Switch             -- switched focus at sequent level
       SeqFocus             -- focus before switch -- needed to reverse this.
       SeqFocus             -- focus after switch
@@ -437,6 +439,8 @@ labelAsProven nasn (prfnm,_,_,_) =  (nasn, Proven prfnm)
 showJustification :: Justification -> String
 showJustification (UseLaw how lnm bind dpath)
   =  "   = '"++showHow how++" "++nicelawname lnm++"@" ++ show dpath ++ "'"
+showJustification (Substitute dpath)
+  =  "   = 'substitute @" ++ show dpath ++ "'"
 showJustification (Switch from to)
   =  "   [switch "++showSeqFocus from++" > "++showSeqFocus to++"]"
 showJustification (CloneH i)

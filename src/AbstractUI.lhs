@@ -541,9 +541,20 @@ applyMatchToFocus2 mtch ubind liveProof
 \begin{code}
 substituteFocus :: Monad m => Theories -> LiveProof -> m LiveProof
 substituteFocus thrys liveProof
-  = fail ("substituteFocus NYI, subable len:"++show (length subablemaps))
-  where
-    subablemaps = map subable $ getTheoryDeps' (conjThName liveProof) thrys
+  = let (tz,seq') = focus liveProof
+        dpath = fPath liveProof
+        t = getTZ tz
+        sams = map subable $ getTheoryDeps' (conjThName liveProof) thrys
+    in case t of
+         (Sub _ tm s)
+            -> do t' <- substitute sams s tm
+                  return ( focus_ ((setTZ t' tz),seq')
+                         $ matches_ []
+                         $ stepsSoFar__
+                            (( Substitute dpath
+                             , (exitTZ tz,conjSC liveProof)):)
+                            liveProof )
+         _  -> fail "substitute only for explicit substitution focii"
 \end{code}
 
 

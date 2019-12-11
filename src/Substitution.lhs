@@ -128,20 +128,20 @@ substitute sams sub ct@(Cons tk i ts)
 \begin{eqnarray*}
    (\bb n {x^+} t) \ss {} {v^n} {t^n}
    &\defs&
-   (\bb n {x^+} {t \ss {} {v^j} {t^j}}), v^j \notin x^+
-   \mbox{ plus $\alpha$-renaming to avoid capture}
+   (\bb n {x^+\alpha} {t\alpha \ss {} {v^j} {t^j}}), \quad v^j \notin x^+
 \\ (\ll n {x^+} t) \ss {} {v^n} {t^n}
    &\defs&
-   (\ll n {x^+} {t \ss {} {v^j} {t^j}}), v^j \notin x^+
-   \mbox{ plus $\alpha$-renaming to avoid capture}
+   (\ll n {x^+\alpha} {t\alpha \ss {} {v^j} {t^j}}), \quad v^j \notin x^+
 \\ \alpha &\defs&  x^j \mapsto \nu^j, \quad
    x^j \in \fv(t^i) \land \nu \mbox{ fresh.}
 \end{eqnarray*}
 \begin{code}
 substitute sams sub bt@(Bnd tk i vs tm)
-  = fail "substitute Bnd NYI"
-substitute sams sub lt@(Lam tk i vs tm)
-  = fail "substitute Lam NYI"
+  = do alpha <- captureAvoidance sub vs tm
+       fail "substitute Bnd NYfI"
+substitute sams sub lt@(Lam tk i vl tm)
+  = do alpha <- captureAvoidance sub (S.fromList vl) tm
+       fail "substitute Lam NYfI"
 \end{code}
 \begin{eqnarray*}
    (\ss t {v^m} {t^m}) \ss {} {v^n} {t^n}
@@ -177,6 +177,15 @@ listVarSubstitute lvlvl lv
   = case alookup lv lvlvl of
       Nothing   ->  lv
       Just lv'  ->  lv'
+\end{code}
+
+\begin{code}
+captureAvoidance :: Monad m => Substn -> VarSet -> Term -> m Substn
+captureAvoidance sub vs tm
+  = do let tfv = freeVars tm
+       let (tgtvs,rplvs) = substRelFree tfv sub
+       let needsRenaming = rplvs `S.intersection` vs
+       fail "captureAvoidance NYfI"
 \end{code}
 
 \newpage

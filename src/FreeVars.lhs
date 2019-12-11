@@ -8,6 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module FreeVars
 ( freeVars
+, substRelFree
 ) where
 import Data.Set(Set)
 import qualified Data.Set as S
@@ -56,7 +57,7 @@ freeVars (Cls _ _)            =  S.empty
 freeVars (Sub tk tm s)        =  (tfv S.\\ tgtvs) `S.union` rplvs
    where
      tfv            =  freeVars tm
-     (tgtvs,rplvs)  =  substFree tfv s
+     (tgtvs,rplvs)  =  substRelFree tfv s
 freeVars (Iter tk na ni lvs)  =  S.fromList $ map LstVar lvs
 freeVars _ = S.empty
 \end{code}
@@ -71,8 +72,12 @@ Substitution is complicated, so here's a reminder:
    (\fv(t)\setminus{v^m})\cup \bigcup_{s \in t^m}\fv(s)
 \\ \textbf{where} && v^m = v^n \cap \fv(t), t^m \textrm{ corr. to } v^m
 \end{eqnarray*}
+This function returns the free variables in a substitution
+\emph{relative} to a given term to which it is being applied.
+It also returns the free variables from that term that will be substituted for.
 \begin{code}
-substFree tfv (Substn ts lvs) = (tgtvs,rplvs)
+substRelFree :: VarSet -> Substn -> (VarSet,VarSet)
+substRelFree tfv (Substn ts lvs) = (tgtvs,rplvs)
  where
    ts' = S.filter (applicable StdVar tfv) ts
    lvs' = S.filter (applicable LstVar tfv) lvs

@@ -41,7 +41,7 @@ only being replaced by variables only,\dots).
 \subsection{Substitutability}
 
 In order to do this, we need to know which constructors are substitutable
-(e.g, propostional operators, and UTP conditional $\_\cond{\_}\_$ are,
+(e.g, propositional operators, and UTP conditional $\_\cond{\_}\_$ are,
 while assignment  $\_:=\_$ is not).
 We explicitly capture this property:
 \begin{code}

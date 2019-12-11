@@ -18,7 +18,7 @@ import qualified Data.Map as M
 import Data.List
 import Data.Maybe
 
-import Utilities (injMap)
+import Utilities (alookup,injMap)
 import LexBase
 import Variables
 import AST
@@ -95,12 +95,6 @@ The latter two then invoke term substitution to do their work.
 substitute :: Monad m => [SubAbilityMap] -> Substn -> Term -> m Term
 \end{code}
 \begin{eqnarray*}
-   \kk k \ss {} {v^n} {t^n}  &\defs&  \kk k
-\end{eqnarray*}
-\begin{code}
-substitute _ _ vlt@(Val _ _)  = return vlt
-\end{code}
-\begin{eqnarray*}
    \vv v \ss {} {v^n} {t^n}  &\defs&  t^i \cond{\vv v=v^i} v,
                                                 \mbox{ for one $i \in 1\dots n$}
 \\ \vv P \ss {} {v^n} {t^n}
@@ -132,23 +126,57 @@ substitute sams sub ct@(Cons tk i ts)
                 return $ Cons tk i ts'
 \end{code}
 \begin{eqnarray*}
-   (\bb n {v^+} t) \ss {} {v^n} {t^n}
+   (\bb n {x^+} t) \ss {} {v^n} {t^n}
    &\defs&
-   (\bb n {v^+} {t \ss {} {v^j} {t^j}}), v^j \notin v^+
+   (\bb n {x^+} {t \ss {} {v^j} {t^j}}), v^j \notin x^+
    \mbox{ plus $\alpha$-renaming to avoid capture}
-\\ (\ll n {v^+} t) \ss {} {v^n} {t^n}
+\\ (\ll n {x^+} t) \ss {} {v^n} {t^n}
    &\defs&
-   (\ll n {v^+} {t \ss {} {v^j} {t^j}}), v^j \notin v^+
+   (\ll n {x^+} {t \ss {} {v^j} {t^j}}), v^j \notin x^+
    \mbox{ plus $\alpha$-renaming to avoid capture}
-\\ (\ss t {v^m} {t^m}) \ss {} {v^n} {t^n}
+\\ \alpha &\defs&  x^j \mapsto \nu^j, \quad
+   x^j \in \fv(t^i) \land \nu \mbox{ fresh.}
+\end{eqnarray*}
+\begin{code}
+substitute sams sub bt@(Bnd tk i vs tm)
+  = fail "substitute Bnd NYI"
+substitute sams sub lt@(Lam tk i vs tm)
+  = fail "substitute Lam NYI"
+\end{code}
+\begin{eqnarray*}
+   (\ss t {v^m} {t^m}) \ss {} {v^n} {t^n}
    &\defs&
    t (\ss {} {v^m} {t^m};  \ss {} {v^n} {t^n})
-\\ (\ii \bigoplus n {lvs}) \ss {} {v^n} {t^n}
+\end{eqnarray*}
+\begin{code}
+substitute sams sub bt@(Sub tk tm s)
+  = do sub' <- substComp sams s sub
+       substitute sams sub' tm
+\end{code}
+\begin{eqnarray*}
+   (\ii \bigoplus n {lvs}) \ss {} {v^n} {t^n}
    &\defs&
    (\ii \bigoplus n {lvs \ss {} {v^n} {t^n}})
 \end{eqnarray*}
 \begin{code}
-substitute sams sub tm = fail ("substitute ("++trTerm 0 tm++") NYI")
+substitute sams (Substn _ lvlvs) bt@(Iter tk na ni lvs)
+  = return $ Iter tk na ni $ map (listVarSubstitute (S.toList lvlvs)) lvs
+\end{code}
+\begin{eqnarray*}
+   \kk k \ss {} {v^n} {t^n}   &\defs&  \kk k
+\\ \xx n t \ss {} {v^n} {t^n} &\defs& \xx n t
+\end{eqnarray*}
+\begin{code}
+substitute sams sub tm = return tm
+\end{code}
+
+Helper functions
+\begin{code}
+listVarSubstitute :: [(ListVar,ListVar)] -> ListVar -> ListVar
+listVarSubstitute lvlvl lv
+  = case alookup lv lvlvl of
+      Nothing   ->  lv
+      Just lv'  ->  lv'
 \end{code}
 
 \newpage
@@ -207,7 +235,7 @@ The term substitution function will pass these checks and so will invoke it
 directly, as a term substitution with a carefully crafted substitution.
 \begin{code}
 -- KEEP THIS FOR ALPHA CORRECTNESS CHECKS
--- alphaRename sams vvs lls (Bind tk n vs tm)
+-- alphaRename sams vvs lls (Bnd tk n vs tm)
 --   =  do checkDomain vvs lls vs
 --         vmap <- injMap vvs
 --         lmap <- injMap lls
@@ -304,7 +332,7 @@ Internal quantifiers screen out renamings%
    (\mathsf{Q} V \bullet P(\alpha\setminus V))
 \]
 \begin{code}
-aRenTRM sams vmap lmap (Bind tk n vs tm)
+aRenTRM sams vmap lmap (Bnd tk n vs tm)
  = fromJust $ bnd tk n vs (aRenTRM sams vmap' lmap' tm)
  where vmap' = vmap `M.withoutKeys` (stdVarSetOf vs)
        lmap' = lmap `M.withoutKeys` (listVarSetOf vs)

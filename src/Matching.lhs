@@ -215,7 +215,7 @@ tMatch' vts bind cbvs pbvs (Cons tkC nC tsC) (Cons tkP nP tsP)
  | tkC == tkP && nC == nP  =  tsMatch vts bind cbvs pbvs tsC tsP
 \end{code}
 
-\subsubsection{Binding Term-Pattern (\texttt{Bind})}
+\subsubsection{Binding Term-Pattern (\texttt{Bnd})}
 
 $$
 \inferrule
@@ -233,7 +233,7 @@ $$
    \texttt{tMatch Binding}
 $$
 \begin{code}
-tMatch' vts bind cbvs pbvs (Bind tkC nC vsC tC) (Bind tkP nP vsP tP)
+tMatch' vts bind cbvs pbvs (Bnd tkC nC vsC tC) (Bnd tkP nP vsP tP)
   | tkP == tkC && nC == nP
     =  do let cbvs' = vsC `addBoundVarSet` cbvs
           let pbvs' = vsP `addBoundVarSet` pbvs

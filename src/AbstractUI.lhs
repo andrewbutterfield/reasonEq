@@ -276,7 +276,7 @@ shadowFree (t,sc) = shadowFree' sc S.empty t
 
 shadowFree' :: SideCond -> VarSet -> Term -> Bool
 shadowFree' sc bvs (Cons _ _ ts)    =  all (shadowFree' sc bvs) ts
-shadowFree' sc bvs (Bind _ _ vs tm) =  shadowFree'' sc bvs vs tm
+shadowFree' sc bvs (Bnd _ _ vs tm) =  shadowFree'' sc bvs vs tm
 shadowFree' sc bvs (Lam  _ _ vl tm) =  shadowFree'' sc bvs (S.fromList vl) tm
 shadowFree' sc bvs (Cls _ tm)       =  shadowFree' sc bvs tm
 shadowFree' sc bvs (Sub _ t s) =  shadowFree' sc bvs t && shadowFreeSub sc bvs s

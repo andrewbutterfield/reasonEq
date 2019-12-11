@@ -232,7 +232,7 @@ trTerm _ (Cons tk n ts)
 
 Binders and substitution are straightforward:
 \begin{code}
-trTerm p (Bind tk n vs t)  =  trAbs p tk n (S.toList vs) t
+trTerm p (Bnd tk n vs t)  =  trAbs p tk n (S.toList vs) t
 trTerm p (Lam tk n vl t)   =  trAbs p tk n vl            t
 trTerm p (Sub tk t sub)
   | isAtomic t  =       trTerm p t      ++ trSub p sub

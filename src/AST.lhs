@@ -19,7 +19,7 @@ module AST ( TermSub, LVarSub
            , isPredKind, isExprKind, ekType
            , Term, readTerm
            , pattern Val, pattern Var, pattern Cons
-           , pattern Bind, pattern Lam, pattern Cls
+           , pattern Bnd, pattern Lam, pattern Cls
            , pattern Sub, pattern Iter, pattern Type
            , var,  eVar,  pVar
            , bnd, eBnd, pBnd
@@ -302,7 +302,7 @@ but no longer know that we have one kind of term or the other.
 
 From a coding point of view, given pattern synonyms in particular,
 there is little to differentiate the two approaches.
-The one exception is the ``zipper`` used to focus in on sub-predicates
+The one exception is the ``zipper'' used to focus in on sub-predicates
 and sub-expressions.
 This is much simplified by having a unified notion of ``term''.
 
@@ -361,7 +361,7 @@ Kind-neutral patterns:
 pattern Val  tk k          =   K tk k
 pattern Var  tk v          <-  V tk v
 pattern Cons tk n ts       =   C tk n ts
-pattern Bind tk n vs tm    <-  B tk n vs tm
+pattern Bnd  tk n vs tm    <-  B tk n vs tm
 pattern Lam  tk n vl tm    <-  L tk n vl tm
 pattern Cls     n tm       =   X n tm
 pattern Sub  tk tm s       =   S tk tm s
@@ -465,7 +465,7 @@ termkind :: Term -> TermKind
 termkind (Val tk k)           =  tk
 termkind (Var tk v)           =  tk
 termkind (Cons tk n ts)       =  tk
-termkind (Bind tk n vl tm)    =  tk
+termkind (Bnd tk n vl tm)    =  tk
 termkind (Lam tk n vs tm)     =  tk
 termkind (Cls i tk)           =  P
 termkind (Sub tk tm s)        =  tk

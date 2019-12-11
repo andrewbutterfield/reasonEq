@@ -594,7 +594,7 @@ temporalityOf t = termTmpr S.empty [] t
 -- this may make the binding too conservative
 termTmpr vws ts (Var _ (Vbl _ _ vw))  =  termsTmpr (S.insert vw vws) ts
 termTmpr vws ts (Cons _ _ ts')        =  termsTmpr vws (ts'++ts)
-termTmpr vws ts (Bind _ _ vs t)       =  vlTmpr    vws (t:ts) $ S.toList vs
+termTmpr vws ts (Bnd _ _ vs t)       =  vlTmpr    vws (t:ts) $ S.toList vs
 termTmpr vws ts (Lam _ _ vl t)        =  vlTmpr    vws (t:ts) vl
 termTmpr vsw ts (Cls _ t)             =  vsw -- not termsTmpr vsw ts t
 termTmpr vws ts (Sub _ t sub)         =  subTmpr   vws (t:ts) sub
@@ -651,7 +651,7 @@ dnTerm' v@(Var tk (Vbl vi vc vw))
   | vw == Static || vw == Textual || vw == Before  =  v
   | otherwise            =  dnTVar  tk $ Vbl vi vc Before
 dnTerm' (Cons tk n ts)    =  Cons   tk n $ map dnTerm' ts
-dnTerm' (Bind tk n vs t)  =  dnBind tk n (S.map dnGVar vs) $ dnTerm' t
+dnTerm' (Bnd tk n vs t)  =  dnBind tk n (S.map dnGVar vs) $ dnTerm' t
 dnTerm' (Lam tk n vl t)   =  dnLam  tk n (  map dnGVar vl) $ dnTerm' t
 -- dnTerm' (Cls n t)      No!
 dnTerm' (Sub tk t sub)    =  Sub    tk (dnTerm' t) $ dnSub sub
@@ -1043,7 +1043,7 @@ termTempSync vw t@(Var tk v@(Vbl vi vc bw))
  | bw == Static || bw == Textual =  t
  | otherwise                       =  ttsVar tk $ Vbl vi vc vw
 termTempSync vw (Cons tk i ts)     =  Cons tk i $ map (termTempSync vw) ts
-termTempSync vw (Bind tk i vs t)
+termTempSync vw (Bnd tk i vs t)
  =  ttsBind tk i (S.map (gvarTempSync vw) vs) $ termTempSync vw t
 termTempSync vw (Lam tk i vl t)
  =  ttsLam  tk i (map (gvarTempSync vw) vl) $ termTempSync vw t

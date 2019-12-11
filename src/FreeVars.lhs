@@ -50,7 +50,7 @@ and then continue by addressing nested quantifiers.
 freeVars :: Term -> VarSet
 freeVars (Var tk v)           =  S.singleton $ StdVar v
 freeVars (Cons tk n ts)       =  S.unions $ map freeVars ts
-freeVars (Bind tk n vs tm)    =  freeVars tm S.\\ vs
+freeVars (Bnd tk n vs tm)     =  freeVars tm S.\\ vs
 freeVars (Lam tk n vl tm)     =  freeVars tm S.\\ S.fromList vl
 freeVars (Cls _ _)            =  S.empty
 freeVars (Sub tk tm s)        =  (tfv S.\\ tgtvs) `S.union` rplvs

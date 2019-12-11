@@ -14,7 +14,7 @@ module Utilities (
 , readInt
 , trim
 , zip1, zip2, zip2'
-, nlookup
+, nlookup, alookup
 , numberList, numberList'
 , putPP, putShow, pp
 , YesBut(..)
@@ -120,10 +120,10 @@ nlookup i (thing:rest)   =  nlookup (i-1) rest
 
 \subsubsection{Association-list lookup}
 \begin{code}
-alookup :: (Eq k, Monad m) => k -> [(k,d)] -> m (k,d)
+alookup :: (Eq k, Monad m) => k -> [(k,d)] -> m d
 alookup k []   =  fail "alookup: not found"
-alookup k (thing@(n,_):rest)
-  | k == n     =  return thing
+alookup k ((n,v):rest)
+  | k == n     =  return v
   | otherwise  =  alookup k rest
 \end{code}
 

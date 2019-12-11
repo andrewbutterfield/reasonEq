@@ -13,6 +13,11 @@ Need to make file loading robust - no runtime failure.
 
 * make proof loading more tolerant of read/show mismatches - allow a step to be marked as TBR (to-be-redone).
 
+### Testing
+
+`Substitution.lhs` looks like a good candidate for QuickCheck !
+
+Example:  *(P\s1)s2 = P(s1;s2)* (a.k.a. `substitute` and `substComp`).
 ### Theory Checks
 
 Need a way to check a theory (in context, with all its dependencies)

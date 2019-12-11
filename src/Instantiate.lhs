@@ -78,7 +78,7 @@ instantiate binding vt@(Var tk v)
 instantiate binding (Cons tk n ts)
   = fmap (Cons tk n) $ sequence $ map (instantiate binding) ts
 
-instantiate binding (Bind tk n vs tm)
+instantiate binding (Bnd tk n vs tm)
   = do vs' <- instVarSet binding vs
        tm' <- instantiate binding tm
        bnd tk n vs' tm'
@@ -421,7 +421,7 @@ termLVarPairings :: Term -> [(ListVar,ListVar)]
 termLVarPairings (Sub _ tm s)     =  nub ( termLVarPairings tm
                                            ++ substLVarPairings s )
 termLVarPairings (Cons _ _ ts)    =  nub $ concat $ map termLVarPairings ts
-termLVarPairings (Bind _ _ _ tm)  =  termLVarPairings tm
+termLVarPairings (Bnd _ _ _ tm)  =  termLVarPairings tm
 termLVarPairings (Lam _ _ _ tm)   =  termLVarPairings tm
 termLVarPairings (Cls _ tm)       =  termLVarPairings tm
 termLVarPairings _                =  []

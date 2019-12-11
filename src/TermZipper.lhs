@@ -58,7 +58,7 @@ Algebraically:
       ~|~  Sub_k~t~s
 \\ s &::=& Substn~(v,t)^*~(v,v)^*
 \\ t' &::=& Cons'_k~i~t^*~t^*
-       ~|~  Bind'_k~i~vs
+       ~|~  Bnd'_k~i~vs
        ~|~  Lam'_k~i~vl
        ~|~  Cls'~i
        ~|~  Sub'_k~s
@@ -70,7 +70,7 @@ type TermSubL = [(Variable, Term)]
 data Term'
   = Cons'   TermKind Identifier [Term] -- terms before focus, reversed
                                 [Term] -- terms after focus
-  | Bind'   TermKind Identifier VarSet
+  | Bnd'   TermKind Identifier VarSet
   | Lam'    TermKind Identifier VarList
   | Cls'             Identifier
   | Sub'    TermKind Substn
@@ -107,7 +107,7 @@ descend n (Cons tk i ts)
   = case peel n ts of
       Nothing  ->  Nothing
       Just (before,nth,after)  ->  Just (nth,Cons' tk i before after)
-descend 1 (Bind tk i vs t)  =  Just (t,Bind' tk i vs)
+descend 1 (Bnd tk i vs t)  =  Just (t,Bnd' tk i vs)
 descend 1 (Lam tk i vl t)   =  Just (t,Lam' tk i vl)
 descend 1 (Cls i t)         =  Just (t,Cls' i)
 descend 1 (Sub tk t sub)    =  Just (t,Sub' tk sub)
@@ -152,7 +152,7 @@ upTZ (t,(parent:wayup)) =  (True, (ascend t parent, wayup))
 
 ascend :: Term -> Term' -> Term -- should always succeed
 ascend t (Cons' tk i before after)  =  Cons tk i $ wrap before t after
-ascend t (Bind' tk i vs)
+ascend t (Bnd' tk i vs)
   | otherwise                       =  fromJust $ bnd tk i vs t
 ascend t (Lam' tk i vl)             =  fromJust $ lam tk i vl t
 ascend t (Cls' i)                   =  Cls i t

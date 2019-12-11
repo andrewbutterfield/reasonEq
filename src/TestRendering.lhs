@@ -14,6 +14,7 @@ module TestRendering (
  , trType
  , trValue
  , trTerm
+ , trSub
  , trTermZip
  , trSideCond
  , trAsn, trNmdAsn

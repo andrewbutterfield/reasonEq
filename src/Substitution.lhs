@@ -137,11 +137,11 @@ substitute sams sub ct@(Cons tk i ts)
 \end{eqnarray*}
 \begin{code}
 substitute sams sub bt@(Bnd tk i vs tm)
-  = do alpha <- captureAvoidance sub vs tm
-       fail "substitute Bnd NYfI"
+  = do alpha <- captureAvoidance vs tm sub
+       fail ("substitute Bnd NYfI, alpha="++trSub 0 alpha)
 substitute sams sub lt@(Lam tk i vl tm)
-  = do alpha <- captureAvoidance sub (S.fromList vl) tm
-       fail "substitute Lam NYfI"
+  = do alpha <- captureAvoidance (S.fromList vl) tm sub
+       fail ("substitute Lam NYfI, alpha="++trSub 0 alpha)
 \end{code}
 \begin{eqnarray*}
    (\ss t {v^m} {t^m}) \ss {} {v^n} {t^n}
@@ -170,7 +170,48 @@ substitute sams (Substn _ lvlvs) bt@(Iter tk na ni lvs)
 substitute sams sub tm = return tm
 \end{code}
 
-Helper functions
+Helper functions.
+
+
+\begin{code}
+captureAvoidance :: Monad m => VarSet -> Term -> Substn -> m Substn
+captureAvoidance vs tm sub
+  = do let tfv = freeVars tm
+       let (tgtvs,rplvs) = substRelFree tfv sub
+       let needsRenaming = S.toList (tgtvs `S.intersection` vs)
+       let knownVars = tfv `S.union` rplvs
+       mkFresh knownVars [] [] needsRenaming
+
+mkFresh :: Monad m
+        => VarSet
+        -> [(Variable,Term)]
+        -> [(ListVar,ListVar)]
+        -> VarList -> m Substn
+mkFresh _ vts lvlvs [] = substn vts lvlvs
+
+mkFresh knVars vts lvlvs (StdVar v : needsRenm)
+  =  mkFresh knVars ((v,varAsTerm $ freshV knVars 2 v):vts) lvlvs needsRenm
+
+mkFresh knVars vts lvlvs (LstVar lv : needsRenm)
+  =  mkFresh knVars vts          ((lv,freshLV knVars 2 lv):lvlvs) needsRenm
+
+freshV :: VarSet -> Int -> Variable -> Variable
+freshV knVars n v@(Vbl i vc vw)
+  | StdVar nv `S.member` knVars  =  freshV knVars (n+1) v
+  | otherwise             =  nv
+  where nv = Vbl (i `idNumAdd` n) vc vw
+
+freshLV :: VarSet -> Int -> ListVar -> ListVar
+freshLV knVars n lv@(LVbl (Vbl i vc vw) is js)
+  | LstVar nlv `S.member` knVars  =  freshLV knVars (n+1) lv
+  | otherwise             =  nlv
+  where nlv = LVbl (Vbl (i `idNumAdd` n) vc vw) is js
+
+idNumAdd :: Identifier -> Int -> Identifier
+(Identifier i) `idNumAdd` n = fromJust $ ident (i++show n)
+\end{code}
+
+
 \begin{code}
 listVarSubstitute :: [(ListVar,ListVar)] -> ListVar -> ListVar
 listVarSubstitute lvlvl lv
@@ -179,14 +220,6 @@ listVarSubstitute lvlvl lv
       Just lv'  ->  lv'
 \end{code}
 
-\begin{code}
-captureAvoidance :: Monad m => Substn -> VarSet -> Term -> m Substn
-captureAvoidance sub vs tm
-  = do let tfv = freeVars tm
-       let (tgtvs,rplvs) = substRelFree tfv sub
-       let needsRenaming = rplvs `S.intersection` vs
-       fail "captureAvoidance NYfI"
-\end{code}
 
 \newpage
 \subsection{Substitution Composition}

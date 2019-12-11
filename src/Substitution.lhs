@@ -38,6 +38,7 @@ which checks that a substitution/term pair is of the right form for such a task
 (top-level is quantifier, only replacing quantifier variables,
 only being replaced by variables only,\dots).
 
+\newpage
 \subsection{Substitutability}
 
 In order to do this, we need to know which constructors are substitutable
@@ -89,6 +90,7 @@ $\alpha$-renaming (when substituting into a quantifier);
 and substitution composition (when substituting into an explicit substitution).
 The latter two then invoke term substitution to do their work.
 
+\newpage
 \subsection{Term Substitution}
 
 \begin{code}
@@ -138,11 +140,18 @@ substitute sams sub ct@(Cons tk i ts)
 \begin{code}
 substitute sams sub bt@(Bnd tk i vs tm)
   = do alpha <- captureAvoidance vs tm sub
-       fail ("substitute Bnd NYfI, alpha="++trSub 0 alpha)
+       let vs' = S.fromList $ quantsSubst alpha $ S.toList vs
+       asub <- substComp sams alpha sub
+       tm' <- substitute sams asub tm
+       bnd tk i vs' tm'
 substitute sams sub lt@(Lam tk i vl tm)
   = do alpha <- captureAvoidance (S.fromList vl) tm sub
-       fail ("substitute Lam NYfI, alpha="++trSub 0 alpha)
+       let vl' = quantsSubst alpha vl
+       asub <- substComp sams alpha sub
+       tm' <- substitute sams asub tm
+       lam tk i vl' tm'
 \end{code}
+\newpage
 \begin{eqnarray*}
    (\ss t {v^m} {t^m}) \ss {} {v^n} {t^n}
    &\defs&
@@ -211,7 +220,27 @@ idNumAdd :: Identifier -> Int -> Identifier
 (Identifier i) `idNumAdd` n = fromJust $ ident (i++show n)
 \end{code}
 
+\newpage
+This code assumes that \texttt{alpha} was produced by \texttt{captureAvoidance}.
+\begin{code}
+quantsSubst :: Substn -> VarList -> VarList
+quantsSubst (Substn ats alvs) vl
+  = map (quantSubst (S.toList ats) (S.toList alvs)) vl
 
+quantSubst :: [(Variable,Term)] -> [(ListVar,ListVar)] -> GenVar -> GenVar
+quantSubst atl alvl gv@(StdVar v)
+  = case alookup v atl of
+      Nothing          ->  gv
+      Just (Var _ fv)  ->  StdVar fv
+      Just t -> error ("quantSubst: non-variable replacement "++trTerm 0 t)
+
+quantSubst atl alvl gv@(LstVar lv)
+  = case alookup lv alvl of
+      Nothing   ->  gv
+      Just flv  ->  LstVar flv
+\end{code}
+
+Used for \texttt{Iter} substitution.
 \begin{code}
 listVarSubstitute :: [(ListVar,ListVar)] -> ListVar -> ListVar
 listVarSubstitute lvlvl lv

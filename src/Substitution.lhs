@@ -10,6 +10,7 @@ module Substitution
 ( SubAbility(..)
 , SubAbilityMap, SubAbilityMaps
 , substitute
+, alphaRename
 ) where
 import Data.Set(Set)
 import qualified Data.Set as S
@@ -302,30 +303,48 @@ lvSubstitute [] rlv  =  rlv
 
 We will have checks and balances for when $\alpha$-substitution is invoked
 from outside.
-The term substitution function will pass these checks and so will invoke it
-directly, as a term substitution with a carefully crafted substitution.
 \begin{code}
--- KEEP THIS FOR ALPHA CORRECTNESS CHECKS
--- alphaRename sams vvs lls (Bnd tk n vs tm)
---   =  do checkDomain vvs lls vs
---         vmap <- injMap vvs
---         lmap <- injMap lls
---         checkFresh vvs lls tm
---         bnd tk n (aRenVS vmap lmap vs) (aRenTRM sams vmap lmap tm)
--- alphaRename sams vvs lls (Lam  tk n vl tm)
---   =  do checkDomain vvs lls (S.fromList vl)
---         vmap <- injMap vvs
---         lmap <- injMap lls
---         checkFresh vvs lls tm
---         lam tk n (aRenVL vmap lmap vl) (aRenTRM sams vmap lmap tm)
--- alphaRename sams vvs lls trm = fail "alphaRename not applicable"
+alphaRename :: Monad m => SubAbilityMaps
+                       -> [(Variable,Variable)]
+                       -> [(ListVar,ListVar)]
+                       -> Term
+                       -> m Term
+alphaRename sams vvs lls btm@(Bnd tk n vs tm)
+  =  do (vmap,lmap,atm) <- checkAndBuildAlpha sams vvs lls vs tm
+        bnd tk n (aRenVS vmap lmap vs) atm
+alphaRename sams vvs lls ltm@(Lam tk n vl tm)
+  =  do (vmap,lmap,atm) <- checkAndBuildAlpha sams vvs lls (S.fromList vl) tm
+        lam tk n (aRenVL vmap lmap vl) atm
+alphaRename sams vvs lls trm = fail "alphaRename not applicable"
+\end{code}
+
+We have some checks to do, before we apply the $\alpha$-substitution
+to the quantifier body.
+\begin{code}
+checkAndBuildAlpha :: Monad m => SubAbilityMaps
+                              -> [(Variable,Variable)]
+                              -> [(ListVar,ListVar)]
+                              -> VarSet
+                              -> Term
+                              -> m ( Map Variable Variable
+                                   , Map ListVar ListVar
+                                   , Term )
+checkAndBuildAlpha sams vvs lls vs tm
+  =  do checkDomain vvs lls vs
+        vmap <- injMap vvs
+        lmap <- injMap lls
+        checkFresh vvs lls tm
+        let tvs = map liftReplVar vvs
+        sub <- substn tvs lls
+        atm <- substitute sams sub tm
+        return (vmap,lmap,atm)
 \end{code}
 
 \paragraph{Domain Checking}~
 
 \begin{code}
-checkDomain :: Monad m => ([(Variable,Variable)])  -- (tgt.v,rpl.v)
-                       -> [(ListVar,ListVar)]      -- (tgt.lv,rpl.lv)
+checkDomain :: Monad m => [(Variable,Variable)]  -- (tgt.v,rpl.v)
+                       -> [(ListVar,ListVar)]    -- (tgt.lv,rpl.lv)
                        -> VarSet
                        -> m ()
 checkDomain vvs lls qvs
@@ -338,6 +357,7 @@ checkDomain vvs lls qvs
        else fail "alphaRename: trying to rename free variables."
 \end{code}
 
+\newpage
 \paragraph{Freshness Checking}~
 
 \begin{code}
@@ -356,7 +376,14 @@ checkFresh vvs lls trm
        else fail "alphaRename: new bound-vars not fresh"
 \end{code}
 
-\newpage
+\paragraph{Lifting Replacement Variable to Term}~
+
+\begin{code}
+liftReplVar :: (Variable,Variable) -> (Variable,Term)
+liftReplVar (tgtv,rplv) = (tgtv,varAsTerm rplv)
+\end{code}
+
+
 \paragraph{$\mathbf\alpha$-Renaming (many) Variables}~
 
 \begin{code}
@@ -376,73 +403,4 @@ aRenLV lmap lv
   = case M.lookup lv lmap of
       Nothing   ->  lv
       Just lv'  ->  lv'
-\end{code}
-
-\newpage
-\paragraph{$\mathbf\alpha$-Renaming Terms}
-Top-level quantifier body and below.
-
-Variables and and iterators are straightforward
-\begin{code}
-aRenTRM sams vmap lmap (Var  tk v)     =  fromJust $ var tk (aRenV vmap v)
-aRenTRM sams vmap lmap (Iter tk na ni lvs)  =   Iter tk na ni $ map (aRenLV lmap) lvs
-\end{code}
-We need to check constructors for substitutability
-\begin{code}
-aRenTRM sams vmap lmap tm@(Cons tk n ts)
-  = case getSubstitutability sams n of
-      Just CS  ->  Cons tk n $ map (aRenTRM sams vmap lmap) ts
-      _        ->  Sub tk tm $ alphaAsSubstn vmap lmap
-\end{code}
-Internal quantifiers screen out renamings%
-\footnote{We wouldn't need this if we guaranteed no quantifier shadowing.}
-.
-\[
-   (\mathsf{Q} V \bullet P)\alpha
-   =
-   (\mathsf{Q} V \bullet P(\alpha\setminus V))
-\]
-\begin{code}
-aRenTRM sams vmap lmap (Bnd tk n vs tm)
- = fromJust $ bnd tk n vs (aRenTRM sams vmap' lmap' tm)
- where vmap' = vmap `M.withoutKeys` (stdVarSetOf vs)
-       lmap' = lmap `M.withoutKeys` (listVarSetOf vs)
-
-aRenTRM sams vmap lmap (Lam  tk n vl tm)
- = fromJust $ lam tk n vl (aRenTRM sams vmap' lmap' tm)
- where vs = S.fromList vl
-       vmap' = vmap `M.withoutKeys` (stdVarSetOf vs)
-       lmap' = lmap `M.withoutKeys` (listVarSetOf vs)
-\end{code}
-Substitution is tricky \dots
-\[
-  (P[\lst e/\lst x])\alpha
-  =
-  (P(\alpha\setminus\lst x)[\lst e \alpha / \lst x]
-\]
-\begin{code}
-aRenTRM sams vmap lmap (Sub tk tm (Substn ts lvs))
-  = let
-
-      (vl,tl) = unzip $ S.toList ts
-      tl' = map (aRenTRM sams vmap lmap) tl
-      tsl' = zip vl tl'
-
-      (tvl,rvl) = unzip $ S.toList lvs
-      rvl' = map (aRenLV lmap) rvl
-      lvsl' = zip tvl rvl'
-
-      suba = fromJust $ substn tsl' lvsl'
-
-      subtgtvs  = S.fromList vl
-      vmap' = vmap `M.withoutKeys` subtgtvs
-
-      subtgtlvs = S.fromList tvl
-      lmap' = lmap `M.withoutKeys` subtgtlvs
-
-    in Sub tk (aRenTRM sams vmap' lmap' tm) suba
-\end{code}
-Everything else is unaffected.
-\begin{code}
-aRenTRM _ _ _ trm = trm  -- Val, Cls
 \end{code}

@@ -22,7 +22,7 @@ Example:  *(P\s1)s2 = P(s1;s2)* (a.k.a. `substitute` and `substComp`).
 
 Need a way to check a theory (in context, with all its dependencies)
 
-* all Cons have a substitutatbility indication.
+* all Cons have a substitutability indication.
 
 ## Ongoing Issues
 

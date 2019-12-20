@@ -180,21 +180,6 @@ axAllDumRen = preddef ("forall" -.- "alpha" -.- "rename")
   ([ys] `notin` gvP)
 \end{code}
 
-$$
-  \begin{array}{lll}
-     \AXAllSubst & \AXAllSubstS & \AXAllSubstN
-  \end{array}
-$$\par
-
-\vspace{-8pt}
-\begin{code}
-axAllSubst = preddef ("forall" -.- "subst")
-  ( (mksub (forall [xs,ys] p) efsyzs)
-    ===
-    (forall [xs,ys] (mksub p fszs)) )
-  ([xs] `notin` zs) -- assymetric encoding!
-\end{code}
-
 
 % %% TEMPLATE
 % $$
@@ -217,7 +202,7 @@ forallAxioms
   = map labelAsAxiom
       [ axAllTrue, axAllOne, axAllAndDistr
       , axOrAllScope, axAllInst, axAllDumRen
-      , axAllSubst ]
+      ]
 \end{code}
 
 

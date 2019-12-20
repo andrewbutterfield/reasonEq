@@ -203,20 +203,6 @@ cjAnyDumRen = preddef ("exists" -.- "alpha" -.- "rename")
   ([ys] `notin` gvP)
 \end{code}
 
-$$
-  \begin{array}{lll}
-     \CJAnySubst & \CJAnySubstS & \CJAnySubstN
-  \end{array}
-$$\par
-
-\vspace{-8pt}
-\begin{code}
-cjAnySubst = preddef ("exists" -.- "subst")
-  ( (mksub (exists [xs,ys] p) efsyzs)
-    ===
-    (exists [xs,ys] (mksub p fszs)) )
-  ([xs] `notin` zs) -- assymetric encoding!
-\end{code}
 
 % %% TEMPLATE
 % $$

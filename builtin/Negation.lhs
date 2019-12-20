@@ -120,21 +120,6 @@ $$
 
 $$
   \begin{array}{ll}
-     \CJfalseSubst & \CJfalseSubstN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-cjFalseSubst
- = ( "false" -.- "subst"
-   , ( sub falseP  === falseP
-   , scTrue ) )
-\end{code}
-
-
-$$
-  \begin{array}{ll}
        \CJswapNot  & \CJswapNotN
   \end{array}
 $$
@@ -196,8 +181,7 @@ cjNotDef
 \begin{code}
 negationConjs :: [NmdAssertion]
 negationConjs
-  = [ cjFalseSubst, cjSwapNot, cjNotInvol, cjNotFalse, cjNotDef
-    ]
+  = [ cjSwapNot, cjNotInvol, cjNotFalse, cjNotDef ]
 \end{code}
 
 \subsection{The Negation Theory}
@@ -209,7 +193,7 @@ notTheory :: Theory
 notTheory
   =  nullTheory { thName  =  notName
             , thDeps  =  [equivName]
-            , subable =  negationSubAble 
+            , subable =  negationSubAble
             , laws    =  negationAxioms
             , conjs   =  negationConjs
             }

@@ -1,5 +1,23 @@
 # To Do
 
+## Reverse Substitution
+
+While proving `exists_inst` (should that be `exists_gen`?) we encounter
+
+ *(∀ x̅,y̅ • ¬ P)⟹  (∀ y̅ • ¬(P[e̅/x̅]))*
+ 
+Here we need to "reverse" the substitution to transform *¬(P[e̅/x̅])* into *(¬P)[e̅/x̅]*.
+
+When is this sound?  Consider *P = C(P1 sigma, P2 sigma, ...)*
+where *Pi* are predicate/expression **variables**, and *...* can contain other predicates over observation variables.
+
+Let *R = (C(P1,P2,...)) sigma*.
+When will *R = P*, once *sigma* is applied?
+
+The answer seems to be: the same explicit substutition throughout on all occurences of free predicate/expression variables, 
+and no free observational variables in *C(P1,P2,...)* are targetted by *sigma*.
+
+
 
 ## Quantification
 

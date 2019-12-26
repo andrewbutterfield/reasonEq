@@ -25,13 +25,13 @@ CONJ = (C P (Id "implies") [B P (Id "exists") (fromList [GL (LV (VR (Id "y",VO,W
 SIDE = []
 STRAT reduce
 BEGIN SEQZIP
-TERMZIP = (C P (Id "implies") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "lnot") [V P (VR (Id "P",VP,WS))]),B P (Id "forall") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "lnot") [S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))]))])],[])
+TERMZIP = (C P (Id "lnot") [S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))]))],[Bnd' P (Id "forall") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]),Cons' P (Id "implies") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "lnot") [V P (VR (Id "P",VP,WS))])] []])
 BEGIN SEQUENT'
 SIDECOND = []
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.exists_inst", thDeps = [], known = VD (fromList [],fromList [],fromList []), subable = fromList [], laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
 END SEQUENT'
 END SEQZIP
-FPATH: []
+FPATH: [2,1]
 BEGIN LIST STEPS
 (UseLaw (ByMatch (ME [2])) "implies_def2" (BD (fromList [((Id "P",VP),BT (B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "lnot") [V P (VR (Id "P",VP,WS))]))),((Id "Q",VP),BT (B P (Id "forall") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "lnot") [S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))]))])))],fromList [],fromList [])) [],(C P (Id "lor") [C P (Id "lnot") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "lnot") [V P (VR (Id "P",VP,WS))])],B P (Id "forall") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "lnot") [S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))]))])],[]))
 (UseLaw (ByMatch (ME [2])) "lor_symm" (BD (fromList [((Id "P",VP),BT (C P (Id "lnot") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "lnot") [V P (VR (Id "P",VP,WS))])])),((Id "Q",VP),BT (B P (Id "forall") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "lnot") [S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))]))])))],fromList [],fromList [])) [],(C P (Id "lor") [B P (Id "forall") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "lnot") [S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))]))]),C P (Id "lnot") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "lnot") [V P (VR (Id "P",VP,WS))])]],[]))

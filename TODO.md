@@ -14,9 +14,15 @@ where *Pi* are predicate/expression **variables**, and *...* can contain other p
 Let *R = (C(P1,P2,...)) sigma*.
 When will *R = P*, once *sigma* is applied?
 
-The answer seems to be: the same explicit substutition throughout on all occurences of free predicate/expression variables, 
-and no free observational variables in *C(P1,P2,...)* are targetted by *sigma*.
+The answer seems to be:
 
+* the "same" explicit substutition throughout on all occurences of free predicate/expression variables;
+* no free observational variables in *C(P1,P2,...)* are targetted by *sigma*;
+* all occurences of predicate (*P*) or expression (*e*) variables have *sigma*
+  applied.
+
+By "same" we mean "same - modulo quantifiers", i.e., that *sigma*
+outside a quantifer *Q x$ @ P*, is the same as *sigma\x$* within *P*.
 
 
 ## Quantification

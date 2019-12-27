@@ -695,6 +695,7 @@ proofREPLConfig
             , tryMatchDescr
             , applyMatchDescr
             , substituteDescr
+            , revSubstituteDescr
             , flatEquivDescr
             , groupEquivDescr
             , goBackDescr
@@ -934,7 +935,7 @@ Perform Substitution
 substituteDescr = ( "s"
                 , "substitute"
                 , unlines
-                   [ "s       -- perform subsitution" ]
+                   [ "s       -- perform substitution" ]
                 , substituteCommand )
 
 substituteCommand :: REPLCmd (REqState, LiveProof)
@@ -947,6 +948,29 @@ substituteCommand _ state@(reqs, liveProof)
              getLine
              return (reqs, matches_ [] liveProof)
 \end{code}
+
+Reverse Substitution
+\begin{code}
+revSubstituteDescr = ( "rs"
+                , "reverse substitute"
+                , unlines
+                   [ "rs       -- reverse (first) subsitution"
+                   , "rs n     -- reverse nth substitution"
+                   ]
+                , revSubstituteCommand )
+
+revSubstituteCommand :: REPLCmd (REqState, LiveProof)
+revSubstituteCommand args state@(reqs, liveProof)
+  =  case revSubstituteFocus (args2int args) (theories reqs) liveProof of
+      Yes liveProof'  ->  return (reqs, liveProof')
+      But msgs
+       -> do putStrLn $ unlines' msgs
+             putStrLn "<return> to continue"
+             getLine
+             return (reqs, matches_ [] liveProof)
+\end{code}
+
+
 
 
 \newpage

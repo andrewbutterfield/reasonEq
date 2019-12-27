@@ -11,6 +11,7 @@ module Substitution
 , SubAbilityMap, SubAbilityMaps
 , substitute
 , alphaRename
+, revSubstitute
 ) where
 import Data.Set(Set)
 import qualified Data.Set as S
@@ -403,4 +404,19 @@ aRenLV lmap lv
   = case M.lookup lv lmap of
       Nothing   ->  lv
       Just lv'  ->  lv'
+\end{code}
+
+\newpage
+\subsection{Reverse Substitution}
+
+This looks at a term with one or more explicit occurences of the ``same''%
+\footnote{Same, modulo the effects of any internal quantifiers.}
+substitution, and lifts them out
+to be a top-level occurence of that substitution.
+So, something like $C(P\sigma,Q\sigma,R\sigma)$
+becomes $C(P,Q,R)\sigma$.
+This is subject to certain conditions being true.
+\begin{code}
+revSubstitute :: Monad m => [SubAbilityMap] -> Int -> Term -> m Term
+revSubstitute sams n t = fail ("NYI:revSubstitute "++show n++" " ++ trTerm 999 t)
 \end{code}

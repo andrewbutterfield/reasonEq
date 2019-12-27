@@ -19,7 +19,7 @@ module AbstractUI
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, matchFocusAgainst
 , applyMatchToFocus, applyMatchToFocus1, applyMatchToFocus2
-, substituteFocus
+, substituteFocus, revSubstituteFocus
 , tryFocusAgainst
 , observeLawsInScope
 , flattenAssociative, groupAssociative
@@ -555,6 +555,19 @@ substituteFocus thrys liveProof
                              , (exitTZ tz,conjSC liveProof)):)
                             liveProof )
          _  -> fail "substitute only for explicit substitution focii"
+\end{code}
+
+\subsubsection{Reverse Substitution}
+
+\begin{code}
+revSubstituteFocus :: Monad m => Int -> Theories -> LiveProof -> m LiveProof
+revSubstituteFocus n thrys liveProof
+  = let (tz,seq') = focus liveProof
+        dpath = fPath liveProof
+        t = getTZ tz
+        sams = map subable $ getTheoryDeps' (conjThName liveProof) thrys
+    in do t' <- revSubstitute sams n t
+          fail "revSubstituteFocus NYfI"
 \end{code}
 
 

@@ -566,8 +566,9 @@ revSubstituteFocus n thrys liveProof
         dpath = fPath liveProof
         t = getTZ tz
         sams = map subable $ getTheoryDeps' (conjThName liveProof) thrys
-    in do t' <- revSubstitute sams n t
-          fail "revSubstituteFocus NYfI"
+        n' =  if n==0 then 1 else n
+    in do t' <- revSubstitute sams n' t
+          fail ("NYfI:revSubstituteFocus "++show n++" "++trTerm 0 t')
 \end{code}
 
 

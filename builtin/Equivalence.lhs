@@ -193,12 +193,10 @@ equivName :: String
 equivName = "Equiv"
 equivTheory :: Theory
 equivTheory
-  =  Theory { thName  =  equivName
-            , thDeps  =  []
-            , known   =  equivKnown
-            , subable =  equivSubAble
-            , laws    =  equivAxioms
-            , proofs  =  []
-            , conjs   =  equivConjs
-            }
+  =  nullTheory { thName  =  equivName
+                , known   =  equivKnown
+                , subable =  equivSubAble
+                , laws    =  equivAxioms
+                , conjs   =  equivConjs
+                }
 \end{code}

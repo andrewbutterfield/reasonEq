@@ -12,12 +12,14 @@ module Equality (
 ) where
 
 import Data.Maybe
+import qualified Data.Map as M
 
 import LexBase
 import Variables
 import AST
 import SideCond
 import VarData
+import Substitution
 import Laws
 import Proofs
 import Theories
@@ -41,7 +43,7 @@ and expression list-variables $\lst e,\lst f$.
 \subsection{Equality Variables}
 
 \begin{code}
-ve = Vbl (fromJust $ ident "e") ExprV Static
+ve = Vbl (fromJust $ ident "e") ExprV Static; lves = LVbl ve [] []
 e = fromJust $ eVar ArbType ve
 es = LVbl ve [] []
 vf = Vbl (fromJust $ ident "f") ExprV Static
@@ -49,6 +51,7 @@ f = fromJust $ eVar ArbType vf
 fs = LVbl vf [] []
 vg = Vbl (fromJust $ ident "g") ExprV Static
 g = fromJust $ eVar ArbType vg
+vx = Vbl (fromJust $ ident "x") ObsV Static  ; lvxs = LVbl vx [] []
 \end{code}
 
 \subsection{Equality Constants}
@@ -57,10 +60,20 @@ g = fromJust $ eVar ArbType vg
 equals = fromJust $ ident "="
 isEqualTo e1 e2 = Cons P equals [e1,e2]
 areEqualTo es1 es2 = Iter P land equals [es1,es2]
+sub e = Sub (E ArbType) e $ fromJust $ substn [] [(lvxs,lves)]
+\end{code}
+
+\subsection{Equality Substitutability}
+
+$$\begin{array}{ll}
+   \AXequalSubst & \AXequalSubstN
+\end{array}$$
+\vspace{-8pt}
+\begin{code}
+equalSubAble = M.fromList [(equals,CS)]
 \end{code}
 
 
-\newpage
 \subsection{Equality Axioms}
 
 $$\begin{array}{ll}
@@ -114,6 +127,27 @@ equalityAxioms
       [ axEqualRefl, axEqualSymm, axEqualTrans ]
 \end{code}
 
+\subsection{Equality Conjectures}
+
+$$\begin{array}{ll}
+   \AXequalSubst & \AXequalSubstN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjEqualSubst
+ = ( "=" -.- "subst"
+   , ( sub ( e `isEqualTo` f) === ((sub e) `isEqualTo` (sub f))
+   , scTrue ) )
+\end{code}
+
+
+Collecting \dots
+\begin{code}
+equalityConjectures :: [NmdAssertion]
+equalityConjectures
+  = [ cjEqualSubst ]
+\end{code}
 
 \subsection{The Equality Theory}
 
@@ -123,6 +157,8 @@ equalityName = "Equality"
 equalityTheory :: Theory
 equalityTheory
   =  nullTheory { thName  =  equalityName
-            , laws    =  equalityAxioms
-            }
+                , subable =  equalSubAble
+                , laws    =  equalityAxioms
+                , conjs   =  equalityConjectures
+                }
 \end{code}

@@ -82,7 +82,6 @@ $$
   \end{array}
 $$
 
-\vspace{-8pt}
 \begin{code}
 axTrue  =  ( "true", ( trueP, scTrue ) )
 \end{code}
@@ -94,7 +93,6 @@ $$
   \end{array}
 $$
 
-\vspace{-8pt}
 \begin{code}
 axEqvRefl
  = ( "equiv" -.- "refl"
@@ -109,7 +107,6 @@ $$
   \end{array}
 $$
 
-\vspace{-8pt}
 \begin{code}
 axEqvAssoc
  = ( "equiv" -.- "assoc"
@@ -123,7 +120,6 @@ $$
   \end{array}
 $$
 
-\vspace{-8pt}
 \begin{code}
 axEqvSymm
  = ( "equiv" -.- "symm"
@@ -145,23 +141,49 @@ equivAxioms
 
 \subsection{Equivalence Conjectures}
 
-Here there is only one,
-which in \cite{gries.93} is considered an axiom:
+Apart from the substituability conectures,
+there is only one other conjecture
+that, in \cite{gries.93}, is considered an axiom:
 $$
   \begin{array}{ll}
      \CJeqvId & \CJeqvIdN
   \end{array}
 $$
-
-\vspace{-8pt}
 \begin{code}
 cjEqvId
  = ( "equiv"-.-"id"
    , ( (trueP === q) === q
      , scTrue ) )
+\end{code}
 
+$$
+  \begin{array}{ll}
+     \AXtrueSubst & \AXtrueSubstN
+  \end{array}
+$$
+\begin{code}
+cjTrueSubst
+ = ( "true"-.-"subst"
+   , ( sub trueP === trueP
+     , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{ll}
+     \AXeqvSubst & \AXeqvSubstN
+  \end{array}
+$$
+\begin{code}
+cjEqvSubst
+ = ( "equiv"-.-"subst"
+   , ( sub (p === q) === ((sub p) === (sub q))
+     , scTrue ) )
+\end{code}
+
+Collected\dots
+\begin{code}
 equivConjs :: [NmdAssertion]
-equivConjs = [ cjEqvId ]
+equivConjs = [ cjEqvId, cjTrueSubst, cjEqvSubst ]
 \end{code}
 
 \subsection{The Equivalence Theory}

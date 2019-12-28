@@ -8,27 +8,11 @@ While proving `exists_inst` (should that be `exists_gen`?) we encounter
  
 Here we need to "reverse" the substitution to transform *¬(P[e̅/x̅])* into *(¬P)[e̅/x̅]*.
 
-When is this sound?  Consider *P = C(P1 sigma, P2 sigma, ...)*
-where *Pi* are predicate/expression **variables**, and *...* can contain other predicates over observation variables.
+**STOP PRESS** - we don't need this - just use "regular" substitution to prove a general (bidirectional)  substitution law for each substitutable construct we introduce.
 
-Let *R = (C(P1,P2,...)) sigma*.
-When will *R = P*, once *sigma* is applied?
-
-The answer seems to be:
-
-* the "same" explicit substutition throughout on all occurences of free predicate/expression variables;
-* no free observational variables in *C(P1,P2,...)* are targetted by *sigma*;
-* all occurences of predicate (*P*) or expression (*e*) variables have *sigma*
-  applied.
-
-By "same" we mean "same - modulo quantifiers", i.e., that *sigma*
-outside a quantifer *Q x$ @ P*, is the same as *sigma\x$* within *P*.
-
+Adding in substitution conjectures now underway (`Equiv` done, rest to be done).
 
 ## Quantification
-
-Need to substitute for variables, noting that x, e, and P will behave
-differently depending on the target class of the substitution.
 
 ## Robustness
 
@@ -42,11 +26,12 @@ Need to make file loading robust - no runtime failure.
 `Substitution.lhs` looks like a good candidate for QuickCheck !
 
 Example:  *(P\s1)s2 = P(s1;s2)* (a.k.a. `substitute` and `substComp`).
+
 ### Theory Checks
 
 Need a way to check a theory (in context, with all its dependencies)
 
-* all Cons have a substitutability indication.
+* all Cons have a substitutability indication in scope.
 
 ## Ongoing Issues
 

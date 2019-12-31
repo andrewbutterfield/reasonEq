@@ -178,11 +178,11 @@ axAndAllScope = preddef ("land" -.- "exists" -.- "scope")
 
 $$
   \begin{array}{lll}
-    \CJAnyOInst & & \CJAnyOInst
+    \CJAnyOGen & & \CJAnyOGenN
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-cjAnyInst = preddef ("exists" -.- "inst")
+cjAnyInst = preddef ("exists" -.- "gen")
   ( (exists [ys] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) )
     ==>
     (exists [xs,ys] p) )

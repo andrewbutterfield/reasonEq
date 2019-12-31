@@ -1029,10 +1029,10 @@
 \def\CJanyODistr{\CJanyODistrL \equiv \CJanyODistrR}
 
 
-\def\CJAnyOInstL{\exists \lst y  \bullet P[\lst e/\lst x]}
-\def\CJAnyOInstR{\exists \lst x, \lst y \bullet P}
-\def\CJAnyOInstN{\QNAME{$\exists$-inst}}
-\def\CJAnyOInst{(\CJAnyOInstL) \implies (\CJAnyOInstR)}
+\def\CJAnyOGenL{\exists \lst y  \bullet P[\lst e/\lst x]}
+\def\CJAnyOGenR{\exists \lst x, \lst y \bullet P}
+\def\CJAnyOGenN{\QNAME{$\exists$-gen}}
+\def\CJAnyOGen{(\CJAnyOGenL) \implies (\CJAnyOGenR)}
 
 \def\CJAnyDummyRenN{\QNAME{$\exists$-$\alpha$-rename}}
 \def\CJAnyDummyRen{
@@ -1054,7 +1054,7 @@
 \\ \CJAnyOnePoint  & \CJAnyOnePointS  & \CJAnyOnePointN
 \\ \CJanyODistr    &                  & \CJanyODistrN
 \\ \CJandAnyOScope & \CJandAnyOScopeS & \CJandAnyOScopeN
-\\ \CJAnyOInst     &                  & \CJAnyOInstN
+\\ \CJAnyOGen     &                  & \CJAnyOGenN
 \\ \CJAnyDummyRen  & \CJAnyDummyRenS  & \CJAnyDummyRenN
 \end{array}
 }

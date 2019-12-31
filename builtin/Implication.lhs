@@ -406,6 +406,18 @@ cjAnteAsImp
 \end{code}
 
 
+$$\begin{array}{ll}
+  \CJimpSubst & \CJimpSubstN
+\end{array}$$
+
+\vspace{-8pt}
+\begin{code}
+cjImpSubst
+ = propdef ( "implies" -.- "subst"
+           , sub ( p ==> q) === sub p ==> sub q )
+\end{code}
+
+
 
 Pulling them all together:
 \begin{code}
@@ -419,6 +431,7 @@ implConjs
     , cjAnteStr, cjCnsqWkn
     , cjAnteOrDistr, cjAnteAndDistr, cjCnsqOrDistr, cjCnsqAndDistr
     , cjAnteAsImp
+    , cjImpSubst
     ]
 \end{code}
 

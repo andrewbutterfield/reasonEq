@@ -202,6 +202,20 @@ cjContradict
      , scTrue ) )
 \end{code}
 
+$$
+  \begin{array}{ll}
+     \CJandSubst & \CJandSubstN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+cjAndSubst
+ = ( "land"-.-"subst"
+   , ( sub (p /\ q) === sub p /\ sub q
+     , scTrue ) )
+\end{code}
+
 
 Pulling it all together:
 \begin{code}
@@ -211,6 +225,7 @@ conjConjs
     , cjandUnit, cjandZero
     , cjandDistr
     , cjContradict
+    , cjAndSubst
     ]
 \end{code}
 

@@ -213,6 +213,19 @@ cjOrEqvSplit
      , scTrue ) )
 \end{code}
 
+$$
+  \begin{array}{ll}
+       \AXorSubst & \AXorSubstN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+cjOrSubst
+ = ( "lor"-.-"subst"
+   , ( sub (p \/ q) === sub p \/ sub q
+     , scTrue ) )
+\end{code}
 
 
 
@@ -221,6 +234,7 @@ cjOrEqvSplit
 disjConjs :: [NmdAssertion]
 disjConjs
   = [ cjOrZero, cjOrUnit, cjOrOrDistr, cjOrEqvSplit
+    , cjOrSubst
     ]
 \end{code}
 

@@ -59,7 +59,8 @@ negationKnown =  newVarTable
 \subsubsection{Substitutability}
 $$
   \begin{array}{ll}
-     \AXnotSubst & \AXnotSubstN
+     \CJfalseSubst & \CJfalseSubstN
+  \\ \AXnotSubst & \AXnotSubstN
   \end{array}
 $$
 
@@ -175,13 +176,41 @@ cjNotDef
      , scTrue ) )
 \end{code}
 
+$$
+  \begin{array}{ll}
+     \CJfalseSubst & \CJfalseSubstN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+cjFalseSubst
+ = ( "false"-.-"subst"
+   , ( sub falseP === falseP
+     , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{ll}
+     \AXnotSubst & \AXnotSubstN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+cjNotSubst
+ = ( "lnot"-.-"subst"
+   , ( sub (mkNot p) === mkNot (sub p)
+     , scTrue ) )
+\end{code}
 
 
 
 \begin{code}
 negationConjs :: [NmdAssertion]
 negationConjs
-  = [ cjSwapNot, cjNotInvol, cjNotFalse, cjNotDef ]
+  = [ cjSwapNot, cjNotInvol, cjNotFalse, cjNotDef
+    , cjFalseSubst, cjNotSubst ]
 \end{code}
 
 \subsection{The Negation Theory}

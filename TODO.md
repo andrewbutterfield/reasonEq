@@ -1,18 +1,46 @@
 # To Do
 
-## Reverse Substitution
+## Discharging Side-Conditions
 
-While proving `exists_inst` (should that be `exists_gen`?) we encounter
+When? during matching (`m`, or when match is applied (`a N`)?
+Or a bit of both?
 
- *(∀ x̅,y̅ • ¬ P)⟹  (∀ y̅ • ¬(P[e̅/x̅]))*
- 
-Here we need to "reverse" the substitution to transform *¬(P[e̅/x̅])* into *(¬P)[e̅/x̅]*.
+### SC Handling during Matching
 
-**STOP PRESS** - we don't need this - just use "regular" substitution to prove a general (bidirectional)  substitution law for each substitutable construct we introduce.
+We invoke `matchFocus` which itself calls `matchInContexts`
+which invokes `domatch` on every law in scope.
+This calls `basicMatch`  and `doPartialMatch`.
 
-Adding in substitution conjectures now underway (`Equiv` done, rest to be done).
+The key seems to be `basicMatch` which does (among other things:)
 
-## Quantification
+```
+bind <- match vts tC partsP
+(bind',scC',scP') <- completeBind vts tC scC tP scP bind
+scP'' <- instantiateSC bind' scP'
+if scDischarged scC' scP'' then ... -- we return a match!       
+```
+
+### SC Handling during match Application
+
+Old `applyMatchToFocus` (deprecated) did:
+
+```
+let unbound = findUnboundVars bind repl
+let goalAsn = conjecture liveProof
+let brepl = autoInstantiate bind (mRepl mtch)
+```
+
+New `applyMatchToFocus1` does:
+
+```
+let unbound = findUnboundVars (mBind mtch) (mRepl mtch)
+```
+
+while `applyMatchToFocus2` follows up with:
+
+```
+brepl <- instantiate bind (mRepl mtch)
+```
 
 ## Robustness
 

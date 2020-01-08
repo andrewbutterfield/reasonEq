@@ -839,7 +839,7 @@ tryMatch args state@( reqs, liveProof)
                 [ banner
                 , "Binding:\n" ++ trBinding bind
                 , "Instantiated Law = " ++ trTerm 0 tPasC
-                , "Local candidate s.c. = " ++ trSideCond scC' ]
+                , "Instantiated Goal S.C. = " ++ trSideCond scC' ]
          But msgs -> putStrLn $ unlines' ( (banner ++ " failed!") : msgs )
        userPause
        return state

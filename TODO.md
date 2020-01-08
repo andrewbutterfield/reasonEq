@@ -42,6 +42,16 @@ while `applyMatchToFocus2` follows up with:
 brepl <- instantiate bind (mRepl mtch)
 ```
 
+### "Instantiations" and friends
+
+1. `Instantiate.instantiate :: Monad m => Binding -> Term -> m Term`
+2. `Instantiate.instantiateSC :: Monad m => Binding -> SideCond -> m SideCond`
+3. `Instantiate.autoInstantiate :: Binding -> Term -> Term`
+4. `Instantiate.findUnboundVars :: Binding -> Term -> VarSet`
+5. `Instantiate.termLVarPairings :: Term -> [(ListVar,ListVar)]`
+6. `Instantiate.mkEquivClasses :: Eq a => [(a,a)] -> [[a]]`
+7. `Instantiate.questionableBinding :: Binding -> [[ListVar]] -> VarSet -> Binding`
+
 ## Robustness
 
 ### Robust Load

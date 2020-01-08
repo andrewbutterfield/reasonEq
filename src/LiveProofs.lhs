@@ -360,8 +360,8 @@ First, try the structural match.
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryMatch vts tP partsP scP
       = case match vts tC partsP of
-          -- Yes bind  ->  tryCompleteBinding vts tP partsP scP bind
-          Yes bind  ->  tryAutoInstantiate vts tP partsP scP bind
+          Yes bind  ->  tryCompleteBinding vts tP partsP scP bind
+          -- Yes bind  ->  tryAutoInstantiate vts tP partsP scP bind
           But msgs
            -> But ([ "try match failed"
                    , ""

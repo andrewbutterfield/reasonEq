@@ -790,19 +790,11 @@ doEqvMatchC' cLen is logicsig vts law@((_,(_,scP)),_) scC tsC tsP
 
 
 \newpage
-\subsubsection{Just Match it, dammit!}
+\subsection{Basic Matching and Application}
 
-\textbf{
-Instantiation needs to be more nuanced.
-Here we should take pattern variables in the replacement,
-but not in the binding (because they were not in the pattern),
-and map them to their own name with a question mark added.
-We should have a \texttt{matchInstantiate}
-that does \texttt{findUnbound},
-generates the ``?'' bindings for those,
-and then does \texttt{instantiate}.
-}
+\includegraphics[scale=0.2]{doc/images/match-and-apply}
 
+\subsubsection{Basic Matching}
 
 Do a basic match,
 including side-condition checking.
@@ -836,6 +828,11 @@ basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
     trivialise (MatchEqv [i])  =  MatchEqvVar i
     trivialise mc              =  mc
 \end{code}
+
+\subsubsection{Applying a Match}
+
+\textbf{TODO: }
+\textsf{bring match application here}
 
 \newpage
 \subsubsection{Undoing a Proof Step}

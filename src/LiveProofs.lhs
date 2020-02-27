@@ -831,10 +831,61 @@ When we want to apply a given match,
 we don't want to use the auto-complete binding,
 but instead we need to get the user to assist in match-binder
 completion, based on variables and terms that appear in the goal.
+So, in summary, we have two phases:
+a fast match and auto-complete process;
+and replacement building  with user-aided completion
+based on goal fragments.
 
+\newpage
+\subsubsection{Match and Auto-Complete}
 
-\includegraphics[scale=0.2]{doc/images/match-and-apply}
+Given:
+\\ --- Goal with focus $G(C)$ and side-condition $SCG$
+\\ --- Law $L$ of form $P\sim R$ and side-condition $SCL$
 
+Produce:
+\\ --- $P$-match binding $\beta_0$
+\\ --- Auto-complete binding $\beta?$
+\\ --- Law side-condition in Goal space $SCL?$
+\\ --- Side-condition discharge outcome $sc?$
+
+Process:
+\begin{eqnarray*}
+   \beta_0 &=& match(C::P)
+\\ \beta? &=& autocomplete(R,\beta_0)
+\\ SCL? &=& \beta?(SCL)
+\\ sc? &=& discharge(SCG \implies SCL?)
+\end{eqnarray*}
+
+\includegraphics[scale=0.2]{doc/images/match}
+
+\newpage
+\subsubsection{Goal-Oriented Complete and Build}
+
+Given:
+\\ --- Goal with focus $G(C)$ and side-condition $SCG$
+\\ --- Law Replacement $R$ and side-condition $SCL$
+\\ --- $P$-match binding $\beta_0$
+
+Produce:
+\\ --- User-guided complete binding $\beta'$
+\\ --- Law side-condition in Goal space $SCL'$
+\\ --- Side-condition discharge outcome $sc$
+\\ --- Replacement Predicate in Goal space $C'$
+\\ --- Goal with updated focus $G(C')$
+
+Process:
+\begin{eqnarray*}
+   \beta' &=& usercomplete(R,G(C),\beta_0)
+\\ SCL' &=& \beta'(SCL)
+\\ sc &=& discharge(SCG\implies SCL')
+\\ C' &=&\beta'(C)
+\\ G(C') &=& G(C)[C'/C]
+\end{eqnarray*}
+
+\includegraphics[scale=0.2]{doc/images/apply}
+
+\newpage
 \subsubsection{Basic Matching}
 
 Do a basic match,

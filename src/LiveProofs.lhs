@@ -792,6 +792,33 @@ doEqvMatchC' cLen is logicsig vts law@((_,(_,scP)),_) scC tsC tsP
 \newpage
 \subsection{Basic Matching and Application}
 
+An ideal match and apply scenario could be described as follows:
+\begin{itemize}
+  \item
+    We have a goal predicate $G$,
+    and we are focussed on sub-predicate $C$,
+    we we can write as $G(C)$.
+    We also have a side-condition $SCG$.
+  \item
+    We want to apply law $L$ to $C$,
+    where, w.l.o.g., $L$ has the form $P \sim R$,
+    by matching $C$ against $P$ to produce a binding $\beta$.
+  \item
+   The law has a side-condition $SCP$ that needs to be discharged.
+   We need to show that $SCG \implies \beta(SCP)$.
+  \item
+   We then apply $\beta$ to $R$ and use that to replace $C$ in $G$.
+\end{itemize}
+A problem arises when $R$ contains variables not present in $P$.
+This will not occur in the binding $\beta$, and we need to figure out what
+they shoulsd map to. Ideally they should map to replacements that help
+discharge the side-condition.
+
+
+The main use of matching is to quickly compare
+the focus against \emph{all} the laws in scope,
+and display some interesting subset of the succesful matches.
+
 \includegraphics[scale=0.2]{doc/images/match-and-apply}
 
 \subsubsection{Basic Matching}

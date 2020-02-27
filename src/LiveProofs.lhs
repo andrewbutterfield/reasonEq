@@ -802,22 +802,36 @@ An ideal match and apply scenario could be described as follows:
   \item
     We want to apply law $L$ to $C$,
     where, w.l.o.g., $L$ has the form $P \sim R$,
-    by matching $C$ against $P$ to produce a binding $\beta$.
+    by matching $C$ against $P$ to produce a match-binding $\beta$.
   \item
-   The law has a side-condition $SCP$ that needs to be discharged.
-   We need to show that $SCG \implies \beta(SCP)$.
+   The law has a side-condition $SCL$ that needs to be discharged.
+   We need to show that $SCG \implies \beta(SCL)$.
   \item
    We then apply $\beta$ to $R$ and use that to replace $C$ in $G$.
 \end{itemize}
 A problem arises when $R$ contains variables not present in $P$.
-This will not occur in the binding $\beta$, and we need to figure out what
-they shoulsd map to. Ideally they should map to replacements that help
+These will not occur in the binding $\beta$, and we need to figure out what
+they should map to. Ideally they should map to replacements that help
 discharge the side-condition.
+We call this process match-binding \emph{completion}.
 
 
 The main use of matching is to quickly compare
 the focus against \emph{all} the laws in scope,
-and display some interesting subset of the succesful matches.
+and display some interesting subset of the successful matches.
+We want to display as much of each match as possible using
+the variables of the goal and focus, not those of the law.
+So we need a form of \emph{auto-completion} that flags
+those variables from $R$ that are not in $P$.
+In general we cannot expect the law side-condition
+to be fully discharged, but it may have simplified somewhat,
+to terms involving auto-completed variables from $R$.
+
+When we want to apply a given match,
+we don't want to use the auto-complete binding,
+but instead we need to get the user to assist in match-binder
+completion, based on variables and terms that appear in the goal.
+
 
 \includegraphics[scale=0.2]{doc/images/match-and-apply}
 

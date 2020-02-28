@@ -15,6 +15,7 @@ module Utilities (
 , trim
 , zip1, zip2, zip2'
 , nlookup, alookup
+, extract
 , numberList, numberList'
 , putPP, putShow, pp
 , YesBut(..)
@@ -134,6 +135,17 @@ intcalNN sep = intercalate sep . filter (not . null)
 
 \subsubsection{Splitting Lists}
 
+Pulling an item out of a list, satisfying a predicate:
+\begin{code}
+extract :: (a -> Bool) -> [a] -> ([a],[a],[a])
+extract p xs = (before,it,after)
+ where
+   (before,rest) = span (not . p) xs
+   it = take 1 rest
+   after = drop 1 rest
+\end{code}
+
+Unsure what these are about!
 \begin{code}
 listsplit ts = listsplit' [] [] ts
 listsplit' splits before [] = splits
@@ -163,6 +175,8 @@ splitAround s xs
 \end{code}
 
 Not sure what the above are all about!
+
+
 
 The following are good for processing lists ordered in a custom way:
 \begin{code}

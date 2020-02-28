@@ -857,6 +857,9 @@ Process:
 \\ sc? &=& discharge(SCG \implies SCL?)
 \end{eqnarray*}
 
+Summary:
+\\ $match(G(C),SCG,P,R,SCL) \mapsto (\beta_0,\beta?,SCL?,sc?)$
+
 \includegraphics[scale=0.2]{doc/images/match}
 
 \newpage
@@ -882,6 +885,9 @@ Process:
 \\ C' &=&\beta'(C)
 \\ G(C') &=& G(C)[C'/C]
 \end{eqnarray*}
+
+Summary:
+\\ $apply(G(C),SCG,R,SCL,\beta_0) \mapsto (\beta',SCL',sc',C',G(C')) $
 
 \includegraphics[scale=0.2]{doc/images/apply}
 

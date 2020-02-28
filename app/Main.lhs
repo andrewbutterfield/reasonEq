@@ -543,8 +543,8 @@ cmdAssume
 
 doAssumption args reqs
   =  case assumeConjecture (currTheory reqs) cjnm reqs of
-         Nothing     ->  doshow reqs  ("Failed to assume " ++ cjnm)
-         Just reqs'  ->  doshow reqs' ("Assumed " ++ cjnm)
+         But lns     ->  doshow reqs  (unlines' lns)
+         Yes reqs'  ->  doshow reqs' ("Assumed " ++ cjnm)
  where cjnm = args2str args
 \end{code}
 
@@ -564,8 +564,8 @@ cmdDemote
 
 doDemotion args reqs
   =  case demoteLaw (currTheory reqs) lwnm reqs of
-         Nothing     ->  doshow reqs  ("Failed to demote " ++ lwnm)
-         Just reqs'  ->  doshow reqs' ("Demoted " ++ lwnm)
+         But lns     ->  doshow reqs  (unlines' lns)
+         Yes reqs'  ->  doshow reqs' ("Demoted " ++ lwnm)
  where lwnm = args2str args
 \end{code}
 

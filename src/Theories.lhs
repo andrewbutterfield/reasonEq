@@ -14,8 +14,9 @@ module Theories
  , laws__, laws_
  , proofs__, proofs_
  , conjs__, conjs_
- , writeTheory, readTheory
  , nullTheory
+ , modifyNamedLaw
+ , writeTheory, readTheory
  , TheoryMap, Theories
  , NamedTheoryTexts, writeTheories, readTheories1, readTheories2
  , noTheories
@@ -86,6 +87,18 @@ subable__ f r = r{subable = f $ subable r} ; subable_ = subable__ . const
 laws__ f r = r{laws = f $ laws r}          ; laws_ = laws__ . const
 proofs__ f r = r{proofs = f $ proofs r}    ; proofs_ = proofs__ . const
 conjs__ f r = r{conjs = f $ conjs r}       ; conjs_ = conjs__ . const
+\end{code}
+
+Being able to modify a named law is useful
+\begin{code}
+modifyNamedLaw :: Monad m => String -> (Law -> Law) -> [Law] -> m [Law]
+modifyNamedLaw lname lawf lawseq
+  =  mNL [] lawseq
+  where
+    mNL swal []  =  fail ("modifyNamedLaw: law '"++lname++"' not found")
+    mNL swal (law:rest)
+     | lawName law == lname  =  return (reverse swal ++ lawf law : rest)
+     | otherwise             =  mNL (law:swal) rest
 \end{code}
 
 It can be useful to have a null theory%
@@ -357,11 +370,19 @@ newTheoryConj nasn@(nm,_) thry
 
 \begin{code}
 assumeConj :: Monad m => String -> Theory -> m Theory
-assumeConj "*" thry
-  = do let cjs = conjs thry
-       if null cjs then fail "assumeConj *: no conjectures"
-       else return $ conjs_ [] $ laws__ (++(map labelAsAssumed cjs)) thry
-assumeConj cjnm thry = fail ("assumeConj '"++cjnm++"' NYI")
+assumeConj cjnm thry
+ | null cjs     =  fail ("assumeConj '"++cjnm++"': no conjectures")
+ | cjnm == "*"  =  return $ conjs_ []
+                          $ laws__ (++(map labelAsAssumed cjs))
+                          thry
+ | null cnj1    =  fail ("assumeConj '"++cjnm++"': not found")
+ | otherwise    =  return $ conjs_ (before++after)
+                          $ laws__ (labelAsAssumed cnj:)
+                          thry
+ where
+   cjs = conjs thry
+   (before,cnj1,after) = extract ((cjnm ==) . fst) cjs
+   cnj = head cnj1
 \end{code}
 
 

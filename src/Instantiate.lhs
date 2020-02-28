@@ -83,7 +83,9 @@ instantiate binding (Sub tk tm s)
        return $ Sub tk tm' s'
 
 instantiate binding (Iter tk na ni lvs)
-  = fail "instantiate NYFI -- Iter"
+  = do x <- instIterLVS binding lvs
+       -- return $ Iter tk na ni lvs'
+       fail "instantiate NYFI -- Iter"
 \end{code}
 
 \newpage
@@ -198,6 +200,46 @@ instVar binding v
       _  ->  fail "instVar: bound to term."
 \end{code}
 
+\newpage
+
+Instantiate an \texttt{Iter} construct is tricky.
+
+If each list-variable is mapped to a single list-variable,
+then all is well.
+
+Given $\bigwedge(=)\seqof{\lst l,\lst r}$
+
+Assume, w.l.o.g., $\beta
+         = \setof{ \lst l
+                   \mapsto
+                   \seqof{l_1,\dots,l_m,\lst l_1,\dots,\lst l_n}
+                 , \lst r
+                   \mapsto
+                   \seqof{r_1,\dots,r_m,\lst r_1,\dots,\lst r_n}
+                 }$
+
+The instantiation is:
+$$
+ l_1=r_1 \land \dots \land l_m=r_m
+ \land
+ (\bigwedge(=)\seqof{\lst l_1,\lst r_1})
+ \land \dots \land
+ (\bigwedge(=)\seqof{\lst l_n,\lst r_n})
+$$
+
+So we want to return
+$$
+\left(
+  \seqof{(l_1,r_1),\dots,(l_m,r_m)}
+  ,
+  \seqof{(\lst l_1,\lst r_1),\dots,(\lst l_n,\lst r_n)}
+\right)
+$$
+
+\begin{code}
+instIterLVS :: Monad m => Binding -> [ListVar] -> m ([[Variable]],[[ListVar]])
+instIterLVS binding lvs = fail "instIterLVS NYI"
+\end{code}
 
 
 \newpage

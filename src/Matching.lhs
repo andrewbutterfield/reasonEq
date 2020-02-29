@@ -16,6 +16,7 @@ module Matching
 , sMatch
 ) where
 import Data.Maybe (isJust,fromJust)
+import Data.Either (lefts,rights)
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Set (Set)
@@ -1523,12 +1524,17 @@ applyBindingsToSets' bind vlP' vsC (gP@(LstVar lvP):vlP)
     Nothing -> applyBindingsToSets' bind (gP:vlP') vsC vlP
     Just (BindSet vsB) -> checkBinding vsB
     Just (BindList vlB) -> checkBinding $ S.fromList vlB
-    Just (BindTLVs ts lvs)
+    Just (BindTLVs tlvs)
       | all isVar ts
          -> checkBinding
             $ S.fromList (map (StdVar . theVar) ts ++ map LstVar lvs)
       | otherwise
           -> fail "vsMatch: list-variable bound to at least one non-Var term"
+      where
+        ts :: [Term]
+        ts = rights tlvs
+        lvs :: [ListVar]
+        lvs = lefts tlvs
   where
     checkBinding vsB
        =  if vsB `withinS` vsC

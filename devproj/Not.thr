@@ -5,16 +5,14 @@ SUBABLE = fromList [(Id "lnot",CS)]
 BEGIN LIST LAWS
 (("false_def",(C P (Id "equiv") [K P (VB False),C P (Id "lnot") [K P (VB True)]],[])),Axiom)
 (("lnot_equiv_distr",(C P (Id "equiv") [C P (Id "lnot") [C P (Id "equiv") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))]],C P (Id "equiv") [C P (Id "lnot") [V P (VR (Id "P",VP,WS))],V P (VR (Id "Q",VP,WS))]],[])),Axiom)
-(("lnot_subst",(C P (Id "equiv") [S P (C P (Id "lnot") [V P (VR (Id "P",VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])),C P (Id "lnot") [S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))]))]],[])),Proven "lnot_subst")
-(("false_subst",(C P (Id "equiv") [S P (K P (VB False)) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])),K P (VB False)],[])),Proven "false_subst")
 (("lnot_equiv_swap",(C P (Id "equiv") [C P (Id "equiv") [C P (Id "lnot") [V P (VR (Id "P",VP,WS))],V P (VR (Id "Q",VP,WS))],C P (Id "equiv") [V P (VR (Id "P",VP,WS)),C P (Id "lnot") [V P (VR (Id "Q",VP,WS))]]],[])),Assumed)
 (("lnot_invol",(C P (Id "equiv") [C P (Id "lnot") [C P (Id "lnot") [V P (VR (Id "P",VP,WS))]],V P (VR (Id "P",VP,WS))],[])),Assumed)
 (("false_neg",(C P (Id "equiv") [C P (Id "lnot") [K P (VB False)],K P (VB True)],[])),Assumed)
 (("lnot_def",(C P (Id "equiv") [C P (Id "lnot") [V P (VR (Id "P",VP,WS))],C P (Id "equiv") [V P (VR (Id "P",VP,WS)),K P (VB False)]],[])),Assumed)
+(("false_subst",(C P (Id "equiv") [S P (K P (VB False)) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])),K P (VB False)],[])),Assumed)
+(("lnot_subst",(C P (Id "equiv") [S P (C P (Id "lnot") [V P (VR (Id "P",VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])),C P (Id "lnot") [S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))]))]],[])),Assumed)
 END LIST LAWS
 BEGIN LIST PROOFS
-("false_subst",(C P (Id "equiv") [S P (K P (VB False)) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])),K P (VB False)],[]),"redinit",(K P (VB False),[(Substitute [],(S P (K P (VB False)) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])),[]))]))
-("lnot_subst",(C P (Id "equiv") [S P (C P (Id "lnot") [V P (VR (Id "P",VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])),C P (Id "lnot") [S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))]))]],[]),"redinit",(C P (Id "lnot") [S P (V P (VR (Id "P",VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))]))],[(Substitute [],(S P (C P (Id "lnot") [V P (VR (Id "P",VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])),[]))]))
 END LIST PROOFS
 BEGIN LIST CONJECTURES
 END LIST CONJECTURES

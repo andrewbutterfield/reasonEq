@@ -15,6 +15,7 @@ module Instantiate
 , questionableBinding, autoInstantiate
 ) where
 import Data.Maybe
+import Data.Either (lefts,rights)
 import Data.Set(Set)
 import qualified Data.Set as S
 import Data.Map(Map)
@@ -138,13 +139,14 @@ instLLVar binding lv
   = case lookupLstBind binding lv of
       Just (BindList vl')  ->  fromGVarToLVar vl'
       Just (BindSet  vs')  ->  fromGVarToLVar $ S.toList vs'
-      Just (BindTLVs ts lvs)
+      Just (BindTLVs tlvs)
         | null ts          ->  return lvs
         | otherwise        ->  fail $ unlines
                                      [ "instLLVar: l-var bound to terms"
                                      , "l-var = " ++ trLVar lv
                                      , "bind = " ++ trBinding binding
                                      ]
+        where (ts,lvs) = (rights tlvs,lefts tlvs)
       Nothing              ->  fail $ unlines
                                      [ "instLLVar: l-var not found"
                                      , "l-var = " ++ trLVar lv
@@ -172,9 +174,10 @@ instSGVar binding gv@(LstVar lv)
       Nothing              ->  return $ S.singleton gv  -- maps to self !
       Just (BindList vl')  ->  return $ S.fromList vl'
       Just (BindSet  vs')  ->  return vs'
-      Just (BindTLVs ts lvs)
+      Just (BindTLVs tlvs)
         | null ts          ->  return $ S.fromList $ map LstVar lvs
         | otherwise        ->  fail "instSGVar: bound to terms."
+        where (ts,lvs) = (rights tlvs,lefts tlvs)
 \end{code}
 
 \begin{code}
@@ -481,12 +484,14 @@ instantiateVar bind v
 instantiateLstVar :: Binding -> ListVar -> VarSet
 instantiateLstVar bind lv
   = case lookupLstBind bind lv of
-      Nothing                 ->  S.singleton $ LstVar lv
-      Just (BindList vl)      ->  S.fromList vl
-      Just (BindSet  vs)      ->  vs
-      Just (BindTLVs ts lvs)  ->  (S.unions $ map freeVars ts)
-                                  `S.union`
-                                  (S.fromList $ map LstVar lvs)
+      Nothing             ->  S.singleton $ LstVar lv
+      Just (BindList vl)  ->  S.fromList vl
+      Just (BindSet  vs)  ->  vs
+      Just (BindTLVs tlvs)
+       -> let (ts,lvs) = (rights tlvs, lefts tlvs)
+          in  (S.unions $ map freeVars ts)
+              `S.union`
+              (S.fromList $ map LstVar lvs)
 \end{code}
 
 \newpage
@@ -637,18 +642,14 @@ equivBindingsSizes bind (lv:lvs)
        Nothing  ->  equivBindingsSizes bind lvs
        Just (BindList vl)  ->  nub (length vl : equivBindingsSizes bind lvs)
        Just (BindSet vs)   ->  nub (S.size vs : equivBindingsSizes bind lvs)
-       Just (BindTLVs tl vl)
+       Just (BindTLVs tlvl)
          | null tl    ->  nub (length vl : equivBindingsSizes bind lvs)
          | otherwise  ->  error $ unlines
                            ["equivBindingsSizes: cannot handle BX with terms"
-                           ,"lv="++show lv
-                           ,"BX.tl="++show tl
-                           ,"BX.vl="++show vl
+                           ,"tlvl="++show tlvl
                            ,"bind="++trBinding bind
                            ]
-
-
-
+         where (tl,vl) = (rights tlvl, lefts tlvl)
 \end{code}
 Another issue, what if some are unbound? Ignore for now.
 

@@ -304,7 +304,7 @@ type SubBinding = M.Map Subscript Subscript
 }
 
 We bind a list-variable to either a list or set of variables,
-or to two lists, one of terms, the other of list-variables.
+or a list that mixes terms and list-variables.
 This latter is used when matching substitutions.
 We use the variable identifier, class, and the list of `subtracted` identifiers
 as the map key.
@@ -312,8 +312,7 @@ as the map key.
 data LstVarBind
  = BL  VarList
  | BS  VarSet
- | BX  [Term] [ListVar] -- we may need one mixed list here...( for Iter)
- -- | BX [Term+ListVar]
+ | BX  [Either ListVar Term]
  deriving (Eq, Ord, Show, Read)
 
 type ListVarKey = (Identifier,VarClass,[Identifier],[Identifier])
@@ -326,7 +325,7 @@ We return the variable list or set, or term+lvar-list from a lookup:
 \begin{code}
 pattern BindList vl      =  BL vl
 pattern BindSet  vs      =  BS vs
-pattern BindTLVs ts lvs  =  BX ts lvs
+pattern BindTLVs tlvs    =  BX tlvs
 \end{code}
 
 We put these together:
@@ -738,17 +737,17 @@ rangeEqvLSSub nAPI lv binding (BS vs) list@(BL vl)
 \end{code}
 Substitution Replacements and Variable Lists:
 \begin{code}
-rangeEqvLSSub nAPI lv binding (BL vl) srepl@(BX ts lvs)
- | substReplEqv ts lvs vl  =  return srepl
-rangeEqvLSSub nAPI lv binding srepl@(BX ts lvs) (BL vl)
- | substReplEqv ts lvs vl  =  return srepl
+rangeEqvLSSub nAPI lv binding (BL vl) srepl@(BX tlvs)
+ | substReplEqv tlvs vl  =  return srepl
+rangeEqvLSSub nAPI lv binding srepl@(BX tlvs) (BL vl)
+ | substReplEqv tlvs vl  =  return srepl
 \end{code}
 Substitution Replacements and Variable Sets:
 \begin{code}
-rangeEqvLSSub nAPI lv binding (BS vs) srepl@(BX ts lvs)
- | substReplEqv ts lvs (S.toList vs)  =  return srepl
-rangeEqvLSSub nAPI lv binding srepl@(BX ts lvs) (BS vs)
- | substReplEqv ts lvs (S.toList vs)  =  return srepl
+rangeEqvLSSub nAPI lv binding (BS vs) srepl@(BX tlvs)
+ | substReplEqv tlvs (S.toList vs)  =  return srepl
+rangeEqvLSSub nAPI lv binding srepl@(BX tlvs) (BS vs)
+ | substReplEqv tlvs (S.toList vs)  =  return srepl
 \end{code}
 If none of the above, then we expect full equality.
 \begin{code}
@@ -764,20 +763,20 @@ rangeEqvLSSub nAPI lv binding vc1 vc2
 \end{code}
 
 A variable list \texttt{vl}
-is equivalent to a substitution replacement
-with terms \texttt{ts}
+is equivalent to a substitution replacement list
+with a mix of terms \texttt{ts}
 and list-variables \texttt{lvs}
-if the combined length of the two substitution lists
-equals that of the variable list,
-and elements of \texttt{ts} followed by \texttt{lvs}
-are equivalent to corresponding elements of \texttt{vl}.
+if the two lists have the same length
+and standard (list) variables in \texttt{vl}
+correspond to terms (list variables) in \texttt{tlvs}.
 \begin{code}
-substReplEqv :: [Term] -> [ListVar] -> VarList -> Bool
-substReplEqv [] [] []   =  True
-substReplEqv (t:ts) lvs (StdVar v : vl)
-  | termVarEqv t v      =  substReplEqv ts lvs vl
-substReplEqv [] lvs vl  =  map LstVar lvs == vl
-substReplEqv _  _  _    =  False
+substReplEqv :: [Either ListVar Term] -> VarList -> Bool
+substReplEqv [] []  =  True
+substReplEqv (Right t:tlvs)   (StdVar v   : vl)
+  | termVarEqv t v  =  substReplEqv tlvs vl
+substReplEqv (Left lv:tlvs) (LstVar lv' : vl)
+  | lv == lv'       =  substReplEqv tlvs vl
+substReplEqv _  _   =  False
 
 termVarEqv (Var _ u) v =  u == v
 \end{code}
@@ -938,9 +937,10 @@ as per Fig.\ref{fig:utp-perm-class-bind}.
 bindLVarSubstRepl (LVbl (Vbl vi vc Static) is ij) cndTs cndVL (BD (vbind,sbind,lbind))
  | all (validVarTermBinding vc) (map termkind cndTs)
     = do lbind' <- insertDR (rangeEqvLSSub "bindLVarSubstRepl(static)")
-                            (vi,vc,is,ij) (BX cndTs cndVL) lbind
+                            (vi,vc,is,ij) (BX cndTsVL) lbind
          return $ BD (vbind,sbind,lbind')
  | otherwise  =  fail "bindLVarSubstRepl: incompatible variable and terms."
+ where cndTsVL = map Right cndTs ++ map Left cndVL
 \end{code}
 
 All remaining pattern cases are non-\texttt{Textual} dynamic variables.
@@ -958,19 +958,19 @@ bindLVarSubstRepl (LVbl (Vbl vi vc vt) is ij) cndTs cndVL (BD (vbind,sbind,lbind
  | wsize  > 1  =  fail "bindLVarSubstRepl: p.-var. mixed term temporality."
  | wsize == 0  -- term has no variables
    = do lbind' <- insertDR (rangeEqvLSSub "bindLVarSubstRepl(pv1)")
-                           (vi,vc,is,ij) (BX cndTs' cndVL') lbind
+                           (vi,vc,is,ij) (BX (cndTs'++cndVL')) lbind
         return $ BD (vbind,sbind,lbind')
  | otherwise
     = do sbind' <- bindSubscriptToSubscript "bindLVarSubstRepl(1)" vt thectw sbind
          lbind' <- insertDR (rangeEqvLSSub "bindLVarSubstRepl(2)")
-                            (vi,vc,is,ij) (BX cndTs' cndVL') lbind
+                            (vi,vc,is,ij) (BX (cndTs'++cndVL')) lbind
          return $ BD (vbind,sbind',lbind')
  where
    ctws = temporalitiesOf cndTs
    wsize = S.size ctws
    thectw = S.elemAt 0 ctws
-   cndTs' = map dnTerm' cndTs
-   cndVL' = map dnLVar cndVL
+   cndTs' = map (Right . dnTerm') cndTs
+   cndVL' = map (Left . dnLVar) cndVL
 \end{code}
 
 Catch-all
@@ -1064,6 +1064,9 @@ ttsVar  tk           =  getJust "termTempSync var failed."   . var tk
 ttsBind tk i vs      =  getJust "termTempSync bind failed."  . bnd tk i vs
 ttsLam  tk i vl      =  getJust "termTempSync lam failed."   . lam tk i vl
 ttsSubstn tsub lsub  =  getJust "subTempSync substn failed." $ substn tsub lsub
+
+tlTempSync dn (Left lv)   =  Left  $ lvarTempSync dn lv
+tlTempSync dn (Right tm)  =  Right $ termTempSync dn tm
 \end{code}
 
 \newpage
@@ -1131,19 +1134,16 @@ lookupLstBind (BD (_,sbind,lbind)) lv@(LVbl (Vbl i vc (During m)) is ij)
          Nothing       ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
          Just (BL vl)  ->  return $ BindList  $ map   (gvarTempSync dn) vl
          Just (BS vs)  ->  return $ BindSet   $ S.map (gvarTempSync dn) vs
-         Just (BX tl lvl)
-           ->  return $ BindTLVs (map (termTempSync dn) tl)
-                                  (map (lvarTempSync dn) lvl)
-
+         Just (BX tlvl)
+           ->  return $ BindTLVs $ map (tlTempSync dn) tlvl
 
 lookupLstBind (BD (_,_,lbind)) lv@(LVbl (Vbl i vc vw) is ij)
   = case M.lookup (i,vc,is,ij) lbind of
      Nothing         ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
      Just (BL vl)  ->  return $ BindList  $ map   (gvarTempSync vw) vl
      Just (BS vs)  ->  return $ BindSet   $ S.map (gvarTempSync vw) vs
-     Just (BX tl lvl)
-       ->  return $ BindTLVs (map  (termTempSync vw) tl)
-                              (map (lvarTempSync vw) lvl)
+     Just (BX tlvl)
+       ->  return $ BindTLVs $map  (tlTempSync vw) tlvl
 \end{code}
 
 \newpage

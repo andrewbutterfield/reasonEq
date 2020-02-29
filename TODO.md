@@ -2,10 +2,9 @@
 
 ## Instantiating Iter
 
-Instead of `BX [Term] [ListVar]` we want `BX [Term+ListVar]` to support
-the full instantiation of `I tk na ni lvs`.
-
-We can recover the `[Term],[ListVar]` from `[Term+ListVar]`, but not *v.v*.
+We have `BX [ListVar+Term]` now, 
+but `instantiate` uses `instLGVar` which expects only `ListVar`.
+Need to fix this.
 
 ## Discharging Side-Conditions
 

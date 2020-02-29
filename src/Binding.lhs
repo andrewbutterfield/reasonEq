@@ -312,7 +312,8 @@ as the map key.
 data LstVarBind
  = BL  VarList
  | BS  VarSet
- | BX  [Term] [ListVar]
+ | BX  [Term] [ListVar] -- we may need one mixed list here...( for Iter)
+ -- | BX [Term+ListVar]
  deriving (Eq, Ord, Show, Read)
 
 type ListVarKey = (Identifier,VarClass,[Identifier],[Identifier])

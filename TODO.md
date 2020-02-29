@@ -1,5 +1,12 @@
 # To Do
 
+## Instantiating Iter
+
+Instead of `BX [Term] [ListVar]` we want `BX [Term+ListVar]` to support
+the full instantiation of `I tk na ni lvs`.
+
+We can recover the `[Term],[ListVar]` from `[Term+ListVar]`, but not *v.v*.
+
 ## Discharging Side-Conditions
 
 When? during matching (`m`, or when match is applied (`a N`)?
@@ -127,3 +134,4 @@ becomes `(∀ x̅ • P ∨ (∀ y̅ • Q[y̅/x̅])`.
 * law renaming
 
 * Generating proof graph as dot/graphviz file.
+* 

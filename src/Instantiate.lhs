@@ -83,9 +83,14 @@ instantiate binding (Sub tk tm s)
        return $ Sub tk tm' s'
 
 instantiate binding (Iter tk na ni lvs)
-  = do x <- instIterLVS binding lvs
-       -- return $ Iter tk na ni lvs'
-       fail "instantiate NYFI -- Iter"
+  = do gvss <- instIterLVS binding lvs
+       -- all have same non-zero length
+       -- have the same kind of variable (std/list)
+       return $ Cons tk na $ map mkI gvss
+  where
+    mkI :: VarList -> Term
+    mkI gvs@(StdVar _:_) = Cons tk ni $ map var2term $ stdVarsOf gvs
+    mkI gvs@(LstVar _:_) = Iter tk na ni $ listVarsOf gvs
 \end{code}
 
 \newpage
@@ -145,7 +150,9 @@ instLLVar binding lv
                                      , "l-var = " ++ trLVar lv
                                      , "bind = " ++ trBinding binding
                                      ]
+\end{code}
 
+\begin{code}
 fromGVarToLVar :: Monad m => VarList -> m [ListVar]
 fromGVarToLVar [] = return []
 fromGVarToLVar (StdVar v:vl)
@@ -155,6 +162,7 @@ fromGVarToLVar (LstVar lv:vl)
        return (lv:lvs)
 \end{code}
 
+\newpage
 \begin{code}
 instSGVar :: Monad m => Binding -> GenVar -> m VarSet
 instSGVar binding (StdVar v)
@@ -180,8 +188,6 @@ instLGVar binding gv@(LstVar lv)
       _ -> fail "instLGVar: bound to sets or terms."
 \end{code}
 
-\newpage
-
 % \begin{code}
 % instGVar :: Monad m => Binding -> GenVar -> m GenVar
 % instGVar binding (StdVar v)  = do iv <- instVar binding v
@@ -204,41 +210,92 @@ instVar binding v
 
 Instantiate an \texttt{Iter} construct is tricky.
 
-If each list-variable is mapped to a single list-variable,
-then all is well.
+\textbf{For now, we just support bindings to VarList}
 
-Given $\bigwedge(=)\seqof{\lst l,\lst r}$
+Given $\bigoplus(p)\seqof{\lst l^1,\dots,\lst l^a}$, where $a > 1$%
+\footnote{
+Not sure there is a use-case for $a=1$.
+There is definitely no case for $a=0$.
+}.
 
 Assume, w.l.o.g., $\beta
-         = \setof{ \lst l
+         = \setof{ \lst l^1
                    \mapsto
-                   \seqof{l_1,\dots,l_m,\lst l_1,\dots,\lst l_n}
-                 , \lst r
+                   \seqof{g^1_1,\dots,g^1_n}
+                 , \dots
+                 , \lst l^a
                    \mapsto
-                   \seqof{r_1,\dots,r_m,\lst r_1,\dots,\lst r_n}
+                   \seqof{g^a_1,\dots, g^a_n}
                  }$
+
+Note that all lists must be of the same length,
+and at any list position $i$, the general variables $g^1_i, \dots, g^a_i$
+are of the same type (std/list).
+
+\textbf{In future we will also allow all bindings
+to be \texttt{BX} terms of the same size/shape
+}
 
 The instantiation is:
 $$
- l_1=r_1 \land \dots \land l_m=r_m
- \land
- (\bigwedge(=)\seqof{\lst l_1,\lst r_1})
- \land \dots \land
- (\bigwedge(=)\seqof{\lst l_n,\lst r_n})
+ I\seqof{g^1_1,\dots,g^a_1}
+ \oplus
+ \dots
+ \oplus
+ I\seqof{g^1_i,\dots,g^a_i}
+ \oplus
+ \dots
+ \oplus
+ I\seqof{g^1_n,\dots,g^a_n}
 $$
+where
+\begin{eqnarray*}
+   I\seqof{v^1_i,\dots,v^a_i} &=& p(v^1_i,\dots,v^a_i)
+\\ I\seqof{\lst l^1_i,\dots,\lst l^a_i} &=& \bigoplus(p)\seqof{\lst l^1_i,\dots,\lst l^a_i}
+\end{eqnarray*}
+
 
 So we want to return
 $$
-\left(
-  \seqof{(l_1,r_1),\dots,(l_m,r_m)}
-  ,
-  \seqof{(\lst l_1,\lst r_1),\dots,(\lst l_n,\lst r_n)}
-\right)
+\seqof{
+ \seqof{g^1_1,\dots,g^a_1}
+ ,
+ \dots
+ ,
+ \seqof{g^1_i,\dots,g^a_i}
+ ,
+ \dots
+ ,
+ \seqof{g^1_n,\dots,g^a_n}
+}
 $$
 
 \begin{code}
-instIterLVS :: Monad m => Binding -> [ListVar] -> m ([[Variable]],[[ListVar]])
-instIterLVS binding lvs = fail "instIterLVS NYI"
+instIterLVS :: Monad m => Binding -> [ListVar] -> m [VarList]
+instIterLVS binding lvs
+  = do vls <- sequence $ map (instLGVar binding . LstVar) lvs
+       let vls' = transpose vls
+       checkAndGroup arity [] vls'
+       -- fail "instIterLVS NYI"
+  where
+    arity = length lvs
+
+checkAndGroup :: Monad m => Int -> [VarList] -> [[GenVar]]
+              -> m [VarList]
+checkAndGroup a slv [] = return $ reverse slv
+checkAndGroup a slv (gvs:gvss)
+ | length gvs /= a  =  fail $ unlines
+                        [ "instIterLVS: wrong arity, expected "++show a
+                        , "gvs = " ++ trVList gvs
+                        ]
+ | null lvs  =  checkAndGroup a (vs:slv)  gvss
+ | null vs   =  checkAndGroup a (lvs:slv) gvss
+ | otherwise  =  fail $ unlines
+                  [ "instIterLVS: mixed var types"
+                  , "gvs = " ++ trVList gvs
+                  ]
+ where
+   (vs,lvs) = partition isStdV gvs
 \end{code}
 
 

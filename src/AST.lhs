@@ -21,7 +21,7 @@ module AST ( TermSub, LVarSub
            , pattern Val, pattern Var, pattern Cons
            , pattern Bnd, pattern Lam, pattern Cls
            , pattern Sub, pattern Iter, pattern Type
-           , var,  eVar,  pVar
+           , var,  eVar,  pVar, var2term
            , bnd, eBnd, pBnd
            , lam,  eLam,  pLam
            , binderClass
@@ -340,7 +340,7 @@ data Term
  | S TermKind Term Substn              -- Substitution
  | I TermKind                          -- Iterator
      Identifier  -- top grouping constructor
-     Identifier  -- component constructor
+     Identifier  -- component constructor, with arity a
      [ListVar]   -- list-variables, same length as component arity
  | ET Type                              -- Embedded TypeVar
  deriving (Eq, Ord, Show, Read)
@@ -378,6 +378,14 @@ var tk@(E _) v | not $ isPredVar v  =  return $ V tk v
 var _       _   =   fail "var: TermKind/VarClass mismatch"
 eVar t v = var (E t) v
 pVar   v = var P v
+\end{code}
+
+A smarter variable term builder,
+provided we don't mind an arbitrary type:
+\begin{code}
+var2term :: Variable -> Term
+var2term v |       isPredVar v  =  V P     v
+           | not $ isPredVar v  =  V (E T) v
 \end{code}
 
 \newpage

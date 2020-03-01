@@ -1,15 +1,13 @@
 # To Do
 
-## Instantiating Iter
-
-We have `BX [ListVar+Term]` now, 
-but `instantiate` uses `instLGVar` which expects only `ListVar`.
-Need to fix this.
 
 ## Discharging Side-Conditions
 
-When? during matching (`m`, or when match is applied (`a N`)?
-Or a bit of both?
+During matching (`m`) we have questionable variabels
+so we are happy to reduce to leftover sc with same.
+During application(`a N`)
+we expect the sc to be fully discharged.
+
 
 ### SC Handling during Matching
 

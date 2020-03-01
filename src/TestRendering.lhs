@@ -20,6 +20,7 @@ module TestRendering (
  , trAsn, trNmdAsn
  , (-.-), nicelawname
  , trVarMatchRole, trLstVarMatchRole, trVarTable
+ , trLstLVarOrTerm
  , trBinding
  , seplist
  , seeV, seeLV, seeGV, seeVL, seeVS
@@ -407,10 +408,13 @@ trVarBind vb = _ll ++ show vb ++ _gg
 
 trLstVarBind (BindList vl)    =  _langle ++ trVL vl                 ++ _rangle
 trLstVarBind (BindSet vs)     =  "{"     ++ trVL (S.toList vs)      ++ "}"
-trLstVarBind (BindTLVs tlvs)  =  _langle ++ seplist ", " trTLV tlvs ++ _rangle
+trLstVarBind (BindTLVs tlvs)  =  trLstLVarOrTerm tlvs
 
-trTLV (Left lv)  =  trLVar lv
-trTLV (Right t)  =  trTerm 0 t
+trLstLVarOrTerm lvts = _langle ++ seplist ", " trTLV lvts ++ _rangle
+
+trTLV = either trLVar (trTerm 0)
+ -- trTLV (Left lv)  =  trLVar lv
+ -- trTLV (Right t)  =  trTerm 0 t
 \end{code}
 
 \begin{code}

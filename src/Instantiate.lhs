@@ -15,7 +15,7 @@ module Instantiate
 , questionableBinding, autoInstantiate
 ) where
 import Data.Maybe
-import Data.Either (lefts,rights)
+-- import Data.Either (lefts,rights)
 import Data.Set(Set)
 import qualified Data.Set as S
 import Data.Map(Map)
@@ -84,14 +84,14 @@ instantiate binding (Sub tk tm s)
        return $ Sub tk tm' s'
 
 instantiate binding (Iter tk na ni lvs)
-  = do gvss <- instIterLVS binding lvs
+  = do lvtss <- instIterLVS binding lvs
        -- all have same non-zero length
-       -- have the same kind of variable (std/list)
-       return $ Cons tk na $ map mkI gvss
+       -- have the same kind of object (list-var/term)
+       return $ Cons tk na $ map mkI lvtss
   where
-    mkI :: VarList -> Term
-    mkI gvs@(StdVar _:_) = Cons tk ni $ map var2term $ stdVarsOf gvs
-    mkI gvs@(LstVar _:_) = Iter tk na ni $ listVarsOf gvs
+    mkI :: [LVarOrTerm] -> Term
+    mkI lvts@(Right _:_) = Cons tk ni    $ tmsOf lvts
+    mkI lvts@(Left  _:_) = Iter tk na ni $ lvsOf lvts
 \end{code}
 
 \newpage
@@ -146,7 +146,7 @@ instLLVar binding lv
                                      , "l-var = " ++ trLVar lv
                                      , "bind = " ++ trBinding binding
                                      ]
-        where (ts,lvs) = (rights tlvs,lefts tlvs)
+        where (ts,lvs) = (tmsOf tlvs, lvsOf tlvs)
       Nothing              ->  fail $ unlines
                                      [ "instLLVar: l-var not found"
                                      , "l-var = " ++ trLVar lv
@@ -177,7 +177,7 @@ instSGVar binding gv@(LstVar lv)
       Just (BindTLVs tlvs)
         | null ts          ->  return $ S.fromList $ map LstVar lvs
         | otherwise        ->  fail "instSGVar: bound to terms."
-        where (ts,lvs) = (rights tlvs,lefts tlvs)
+        where (ts,lvs) = (tmsOf tlvs, lvsOf tlvs)
 \end{code}
 
 \begin{code}
@@ -189,6 +189,24 @@ instLGVar binding gv@(LstVar lv)
       Nothing              ->  return [gv]  -- maps to self !
       Just (BindList vl')  ->  return vl'
       _ -> fail "instLGVar: bound to sets or terms."
+\end{code}
+
+\begin{code}
+instTLGVar :: Monad m => Binding -> GenVar -> m [LVarOrTerm]
+instTLGVar binding (StdVar v)
+  =  fmap ((\t -> [t]) . injV) $ instVar binding v
+instTLGVar binding gv@(LstVar lv)
+  = case lookupLstBind binding lv of
+      Nothing              ->  return $ [injLV lv]  -- maps to self !
+      Just (BindList vl')  ->  return $ map injGV vl'
+      Just (BindTLVs tlvs) ->  return tlvs
+      _ -> fail "instTLGVar: bound to sets."
+
+injV :: Variable -> LVarOrTerm
+injV = injTM . var2term
+injGV :: GenVar -> LVarOrTerm
+injGV (StdVar v)   =  injV v
+injGV (LstVar lv)  =  injLV lv
 \end{code}
 
 % \begin{code}
@@ -274,31 +292,31 @@ $$
 $$
 
 \begin{code}
-instIterLVS :: Monad m => Binding -> [ListVar] -> m [VarList]
+instIterLVS :: Monad m => Binding -> [ListVar] -> m [[LVarOrTerm]]
 instIterLVS binding lvs
-  = do vls <- sequence $ map (instLGVar binding . LstVar) lvs
-       let vls' = transpose vls
-       checkAndGroup arity [] vls'
+  = do lvtss <- sequence $ map (instTLGVar binding . LstVar) lvs
+       let lvtss' = transpose lvtss
+       checkAndGroup arity [] lvtss'
        -- fail "instIterLVS NYI"
   where
     arity = length lvs
 
-checkAndGroup :: Monad m => Int -> [VarList] -> [[GenVar]]
-              -> m [VarList]
-checkAndGroup a slv [] = return $ reverse slv
-checkAndGroup a slv (gvs:gvss)
- | length gvs /= a  =  fail $ unlines
+checkAndGroup :: Monad m => Int -> [[LVarOrTerm]] -> [[LVarOrTerm]]
+              -> m [[LVarOrTerm]]
+checkAndGroup a sstvl [] = return $ reverse sstvl
+checkAndGroup a sstvl (lvts:lvtss)
+ | length lvts /= a  =  fail $ unlines
                         [ "instIterLVS: wrong arity, expected "++show a
-                        , "gvs = " ++ trVList gvs
+                        , "lvts = " ++ trLstLVarOrTerm lvts
                         ]
- | null lvs  =  checkAndGroup a (vs:slv)  gvss
- | null vs   =  checkAndGroup a (lvs:slv) gvss
+ | null lvs  =  checkAndGroup a (map injTM ts:sstvl)  lvtss
+ | null ts   =  checkAndGroup a (map injLV lvs:sstvl) lvtss
  | otherwise  =  fail $ unlines
                   [ "instIterLVS: mixed var types"
-                  , "gvs = " ++ trVList gvs
+                  , "lvts = " ++ trLstLVarOrTerm lvts
                   ]
  where
-   (vs,lvs) = partition isStdV gvs
+   (lvs,ts) = lvtmSplit lvts
 \end{code}
 
 
@@ -488,7 +506,7 @@ instantiateLstVar bind lv
       Just (BindList vl)  ->  S.fromList vl
       Just (BindSet  vs)  ->  vs
       Just (BindTLVs tlvs)
-       -> let (ts,lvs) = (rights tlvs, lefts tlvs)
+       -> let (ts,lvs) = (tmsOf tlvs, lvsOf tlvs)
           in  (S.unions $ map freeVars ts)
               `S.union`
               (S.fromList $ map LstVar lvs)
@@ -649,7 +667,7 @@ equivBindingsSizes bind (lv:lvs)
                            ,"tlvl="++show tlvl
                            ,"bind="++trBinding bind
                            ]
-         where (tl,vl) = (rights tlvl, lefts tlvl)
+         where (tl,vl) = (tmsOf tlvl, lvsOf tlvl)
 \end{code}
 Another issue, what if some are unbound? Ignore for now.
 

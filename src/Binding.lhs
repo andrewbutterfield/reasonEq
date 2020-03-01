@@ -8,6 +8,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Binding
 ( VarBind, pattern BindVar, pattern BindTerm
+, LVarOrTerm
+, injLV, injTM,lvOf, tmOf
+, lvsOf, tmsOf, lvtmSplit
 , LstVarBind, ListVarKey, pattern BindList, pattern BindSet, pattern BindTLVs
 , Binding
 , emptyBinding
@@ -29,6 +32,7 @@ module Binding
 , int_tst_Binding
 ) where
 import Data.Maybe (fromJust,catMaybes)
+import Data.Either
 import Data.List (nub)
 import Data.Map(Map)
 import qualified Data.Map as M
@@ -300,8 +304,21 @@ type SubBinding = M.Map Subscript Subscript
 
 \subsubsection{
   Binding \texttt{ListVar} to
-  \texttt{VarList} or \texttt{VarSet}
+  \texttt{VarList}, or \texttt{VarSet},
+  or a mixed \texttt{ListVar}/\texttt{Term} list.
 }
+\begin{code}
+type LVarOrTerm = Either ListVar Term
+
+injLV :: ListVar    -> LVarOrTerm ; injLV lv = Left  lv
+injTM :: Term       -> LVarOrTerm ; injTM tm = Right tm
+lvOf  :: LVarOrTerm -> ListVar    ; lvOf = fromLeft  (error "lvOf: not ListVar")
+tmOf  :: LVarOrTerm -> Term       ; tmOf = fromRight (error "tmOf: not Term")
+
+lvsOf     :: [LVarOrTerm] -> [ListVar]          ; lvsOf = lefts
+tmsOf     :: [LVarOrTerm] -> [Term]             ; tmsOf = rights
+lvtmSplit :: [LVarOrTerm] -> ([ListVar],[Term]) ; lvtmSplit = partitionEithers
+\end{code}
 
 We bind a list-variable to either a list or set of variables,
 or a list that mixes terms and list-variables.
@@ -312,7 +329,7 @@ as the map key.
 data LstVarBind
  = BL  VarList
  | BS  VarSet
- | BX  [Either ListVar Term]
+ | BX  [LVarOrTerm]
  deriving (Eq, Ord, Show, Read)
 
 type ListVarKey = (Identifier,VarClass,[Identifier],[Identifier])

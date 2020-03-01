@@ -229,9 +229,6 @@ instVar binding v
 
 \newpage
 
-Instantiate an \texttt{Iter} construct is tricky.
-
-\textbf{For now, we just support bindings to VarList}
 
 Given $\bigoplus(p)\seqof{\lst l^1,\dots,\lst l^a}$, where $a > 1$%
 \footnote{
@@ -253,10 +250,6 @@ Note that all lists must be of the same length,
 and at any list position $i$, the general variables $g^1_i, \dots, g^a_i$
 are of the same type (std/list).
 
-\textbf{In future we will also allow all bindings
-to be \texttt{BX} terms of the same size/shape
-}
-
 The instantiation is:
 $$
  I\seqof{g^1_1,\dots,g^a_1}
@@ -276,7 +269,7 @@ where
 \end{eqnarray*}
 
 
-So we want to return
+So, here, we want to return
 $$
 \seqof{
  \seqof{g^1_1,\dots,g^a_1}

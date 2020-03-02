@@ -224,17 +224,11 @@ v_f' = StdVar $ PostExpr $ i_f
 The list of ASCs
 is kept ordered by the \texttt{GenVar} component,
 If there is more than one ASC with the same general variable,
-then they do not contain \texttt{Exact}, and are ordered as follows:
+then they are ordered as follows:
 \texttt{Disjoint},
 \texttt{Covers},
-\texttt{ExCover},
 and \texttt{IsPre}.
-We can only have at most one of each, and only one of either \texttt{Covers}
-and \texttt{ExCover}.
-If we have an instance of \texttt{Exact}, then all the others
-are redundant.
-When it comes to discharging side-conditions we shall see that \texttt{Exact}
-only occurs on the candidate side, and that \texttt{ExCover} is not used.
+We can only have at most one of each.
 
 The function \texttt{mrgAtmCond} below is the ``approved'' way
 to generate side-conditions,
@@ -269,19 +263,17 @@ mrgAtmAtms asc [] = return [asc] -- it's the first.
 Given one or more pre-existing ASCs for this g.v., we note the following possible
 patterns:
 \begin{verbatim}
-[Exact]
-[Disjoint]  [Disjoint,Covers]  [Disjoint,ExCovers]  [Disjoint,IsPre]
-[Disjoint,Covers,IsPre]        [Disjoint,ExCovers,IsPre]
+[Disjoint]  [Disjoint,Covers]  [Disjoint,IsPre]
+[Disjoint,Covers,IsPre]
 [Covers]    [Covers,IsPre]
-[ExCover]   [ExCover,IsPre]
 [IsPre]
 \end{verbatim}
 
 \subsubsection{ASC Merge Laws}
 
 We have the following interactions,
-where $D$, $C$, and $X$ are the variable-sets found
-in \texttt{Disjoint}, \texttt{Covers} and \texttt{Exact} respectively.
+where $D$ and $C$ are the variable-sets found
+in \texttt{Disjoint} and \texttt{Covers} respectively.
 We also overload the notation to denote the corresponding condition.
 So, depending on context,
 $D$ can denote a variable-set
@@ -289,15 +281,12 @@ or the predicate $D \disj P$ ($P$ being the general variable in question).
 \begin{eqnarray*}
    D_1 \land D_2 &=&  D_1 \cup D_2
 \\ C_1 \land C_2 &=&  C_1 \cup C_2
-\\ X_1 \land X_2 &=&  X_1 ~\cond{X_1=X_2}~ \bot
 \\ pre_1 \land pre_2 &=& pre_1
 \\ D \land C
    &=&  \bot
         ~\cond{D \supseteq C}~
         D \land (C \setminus D)
-\\ D \land X &=&  X ~\cond{D \disj X}~ \bot
 \\ D \land pre &=&  D \land pre
-\\ C \land X &=&  X ~\cond{C \supseteq X}~ \bot
 \\ C \land pre &=&  C \land pre
 \end{eqnarray*}
 

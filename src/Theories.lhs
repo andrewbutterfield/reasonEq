@@ -373,12 +373,10 @@ assumeConj :: Monad m => String -> Theory -> m Theory
 assumeConj cjnm thry
  | null cjs     =  fail ("assumeConj '"++cjnm++"': no conjectures")
  | cjnm == "*"  =  return $ conjs_ []
-                          $ laws__ (++(map labelAsAssumed cjs))
-                          thry
+                          $ laws__ (++(map labelAsAssumed cjs)) thry
  | null cnj1    =  fail ("assumeConj '"++cjnm++"': not found")
  | otherwise    =  return $ conjs_ (before++after)
-                          $ laws__ (labelAsAssumed cnj:)
-                          thry
+                          $ laws__ (labelAsAssumed cnj:) thry
  where
    cjs = conjs thry
    (before,cnj1,after) = extract ((cjnm ==) . fst) cjs
@@ -388,17 +386,25 @@ assumeConj cjnm thry
 
 \begin{code}
 lawDemote :: Monad m => String -> Theory -> m Theory
-lawDemote "*" thry
-  = if null assl then fail "lawDemote *: no assumed laws"
-       else return $ laws_ othrl $ conjs__ (++(map fst assl)) thry
-  where
-    (assl,othrl) = partition isAssumed $ laws thry
-lawDemote "[]" thry
-  = if null assl then fail "lawDemote []: no proven laws"
-       else return $ laws_ othrl $ conjs__ (++(map fst assl)) thry
-  where
-    (assl,othrl) = partition isProven $ laws thry
-lawDemote lwnm thry = fail ("lawDemote '"++lwnm++"' NYI")
+lawDemote lnm thry
+ | null lws     =  fail ("lawDemote '"++lnm++"': no laws")
+ | lnm == "*"   =  if null assl
+                   then fail "lawDemote *: no assumed laws"
+                   else return $ laws_ othrl
+                               $ conjs__ (++(map fst assl)) thry
+ | lnm == "[]"  =  if null prfl
+                   then fail "lawDemote []: no proven laws"
+                   else return $ laws_ (axml++othrl)
+                               $ conjs__ (++(map fst prfl)) thry
+ | null law1    =  fail ("lawDemote '"++lnm++"': not found")
+ | otherwise    =  return $ laws_ (before++after)
+                          $ conjs__ ((fst theLaw):) thry
+ where
+   lws = laws thry
+   (assl,othrl) = partition isAssumed lws
+   (prfl,axml) = partition isProven othrl
+   (before,law1,after) = extract (((lnm==) . fst) .fst) lws
+   theLaw = head law1
 \end{code}
 
 \subsubsection{Add Proof to Theory}

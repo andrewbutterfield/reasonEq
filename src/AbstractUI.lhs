@@ -205,10 +205,10 @@ assumeConjecture thnm whichC reqs
 
 \begin{code}
 demoteLaw :: Monad m => String -> String -> REqState -> m REqState
-demoteLaw thnm whichC reqs
+demoteLaw thnm whichL reqs
   = case getTheory thnm $ theories reqs of
       Nothing -> fail ("No theory named '"++thnm++"'.")
-      Just thry -> do thry' <- lawDemote whichC thry
+      Just thry -> do thry' <- lawDemote whichL thry
                       return $ changed
                              $ theories__ (replaceTheory thry') $ reqs
 \end{code}

@@ -419,21 +419,21 @@ We need to find appropriate bindings for these,
 keeping the pattern side-conditions in mind.
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
-    tryCompleteBinding vts tP partsP scP bind
-      = case completeBind vts tC scC tP scP bind of
-          Yes (bind',scC',scP')  ->  tryInstantiateSC bind' scC' tP partsP scP'
-          But msgs
-           -> But ([ "try complete binding failed"
-                   , ""
-                   , trTerm 0 tC ++ " :: " ++ trTerm 0 partsP
-                   , ""
-                   , "lnm[parts]="++lnm++show parts
-                   , "tP="++trTerm 0 tP
-                   , "partsP="++trTerm 0 partsP
-                   , "tC="++trTerm 0 tC
-                   , "scC="++trSideCond scC
-                   , ""
-                   ]++msgs)
+    -- tryCompleteBinding vts tP partsP scP bind
+    --   = case completeBind vts tC scC tP scP bind of
+    --       Yes (bind',scC',scP')  ->  tryInstantiateSC bind' scC' tP partsP scP'
+    --       But msgs
+    --        -> But ([ "try complete binding failed"
+    --                , ""
+    --                , trTerm 0 tC ++ " :: " ++ trTerm 0 partsP
+    --                , ""
+    --                , "lnm[parts]="++lnm++show parts
+    --                , "tP="++trTerm 0 tP
+    --                , "partsP="++trTerm 0 partsP
+    --                , "tC="++trTerm 0 tC
+    --                , "scC="++trSideCond scC
+    --                , ""
+    --                ]++msgs)
 \end{code}
 
 \newpage

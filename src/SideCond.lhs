@@ -8,14 +8,12 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module SideCond (
   AtmSideCond
-, pattern Disjoint, pattern Exact
-, pattern Covers, pattern ExCover
-, pattern IsPre
+, pattern Disjoint, pattern Covers, pattern IsPre
 , ascGVar, ascVSet
 , SideCond, scTrue
 , mrgAtmCond, mrgSideCond, mkSideCond
 , scDischarged
-, notin, is, covers, exCover, pre
+, notin, covers, pre
 , citingASCs
 , int_tst_SideCond
 ) where
@@ -122,24 +120,13 @@ $$
 $$
 We cannot match any instance of universal closure above
 against the definition as we cannot discharge the side-condition.
-The trick is to have a special \emph{existential} side-condition,
-that can be instantiated during a proof,
-and discarded once the proof is complete.
-$$
-  [P] \defs \forall \lst x \bullet P, \quad \exists\lst x\supseteq P
-$$
-The basic rule is that a match against the LHS here,
-where $P$ is bound to some predicate term $T$ (say)
-will introduce a proof-local goal side-condition that $\lst x = T$.
-However, a match against the rhs,
-where $\lst x$ is bound to variable collection $V$ (say),
-will require the goal to have a side condition that implies
-the non-existential condition $V \supseteq T$.
-This means we add a new form of atomic side-condition
-that is only used in proofs
-\begin{eqnarray*}
-   x,\lst v      =    T && \mbox{exact}
-\end{eqnarray*}
+
+We already have to cope with $C$ matching $P$ in $P \sim R$,
+where variables in $R$, but not in $P$,
+are not in the resulting match-binding.
+If such variables occur in side-conditions,
+then we treat those variables as ``existential''.
+We are free to instantiate them using variables and terms in $P$ and $R$.
 
 \newpage
 \subsection{Atomic Side-Conditions}
@@ -150,15 +137,11 @@ data AtmSideCond
  = SD  GenVar VarSet -- Disjoint
  | SS  GenVar VarSet -- Superset (covers)
  | SP  GenVar        -- Pre
- | ESS GenVar VarSet -- Exists Superset (covers)
- | SE  GenVar VarSet -- Equals
  deriving (Eq,Ord,Show,Read)
 
 pattern Disjoint gv vs = SD  gv vs  --  vs `intersect`  gv = {}
 pattern Covers   gv vs = SS  gv vs  --  vs `supersetof` gv
 pattern IsPre    gv    = SP  gv     --  gv is pre-condition
-pattern ExCover  gv vs = ESS gv vs  --  exists vs `supersetof` gv
-pattern Exact    gv vs = SE  gv vs  --  vs      =       gv
 \end{code}
 
 Sometimes we want the \texttt{GenVar} component,
@@ -166,18 +149,14 @@ Sometimes we want the \texttt{GenVar} component,
 ascGVar :: AtmSideCond -> GenVar
 ascGVar (Disjoint gv _)  =  gv
 ascGVar (Covers   gv _)  =  gv
-ascGVar (IsPre    gv)    =  gv
-ascGVar (ExCover  gv _)  =  gv
-ascGVar (Exact    gv _)  =  gv
+ascGVar (IsPre    gv  )  =  gv
 \end{code}
 or the \texttt{VarSet} part:
 \begin{code}
 ascVSet :: AtmSideCond -> Maybe VarSet
 ascVSet (Disjoint _ vs)  =  Just vs
 ascVSet (Covers   _ vs)  =  Just vs
-ascVSet (ExCover  _ vs)  =  Just vs
-ascVSet (Exact    _ vs)  =  Just vs
-ascVSet _                =  Nothing -- IsPre
+ascVSet (IsPre    _   )  =  Nothing
 \end{code}
 
 
@@ -495,22 +474,10 @@ notin :: VarList -> GenVar -> SideCond
 vl `notin` tV  =  [ Disjoint tV (S.fromList vl) ]
 \end{code}
 
-$\lst v = \fv(T)$
-\begin{code}
-is :: VarList -> GenVar -> SideCond
-vl `is` tV  =  [ Exact tV (S.fromList vl) ]
-\end{code}
-
 $\lst v \supseteq \fv(T)$
 \begin{code}
 covers :: VarList -> GenVar -> SideCond
 vl `covers` tV  =  [ Covers tV (S.fromList vl) ]
-\end{code}
-
-$\exists\lst v \supseteq \fv(T)$
-\begin{code}
-exCover :: VarList -> GenVar -> SideCond
-vl `exCover` tV  =  [ ExCover tV (S.fromList vl) ]
 \end{code}
 
 $pre \supseteq \fv(T)$

@@ -361,10 +361,6 @@ instantiateASCvsv bind vs' v (Covers _ _)
   = instantiateCovers vs' $ instantiateVar bind v
 instantiateASCvsv bind vs' v (IsPre _)
   = fail "instantiateASC IsPre NYI"
-instantiateASCvsv bind vs' v (ExCover _ _)
-  = fail "instantiateASC ExCover should not occur!"
-instantiateASCvsv bind vs' v (Exact _ _)
-  = instantiateExact vs' $ instantiateVar bind v
 \end{code}
 
 \paragraph{Has List-Variable}~
@@ -374,8 +370,6 @@ instantiateASCvslv bind vs' lv (Disjoint _ _)
   = instantiateDisjoint vs' $ instantiateLstVar bind lv
 instantiateASCvslv bind vs' lv (Covers _ _)
   = fail "instantiateASCvslv Covers NYI"
-instantiateASCvslv bind vs' lv (Exact _ _)
-  = instantiateDisjoint vs' $ instantiateLstVar bind lv
 \end{code}
 Next,
 Dealing with each condition, now that everything is instantiated.
@@ -461,23 +455,6 @@ instantiateCovers cvs fvs
 \subsubsection{Pre-Condition}
 
 Not yet covered
-
-\subsubsection{Exactness}
-
-
-\begin{code}
-instantiateExact :: Monad m => VarSet -> VarSet -> m [AtmSideCond]
-instantiateExact cvs fvs
- | fvs == cvs = return $ map (mkX cvs) $ S.toList freeTV
- | otherwise  =  fail $ unlines
-                   [ "free-vars not exact"
-                   , "cvs = " ++ trVSet cvs
-                   , "fvs = " ++ trVSet fvs
-                   ]
- where
-   freeTV = S.filter (not . isObsGVar) fvs
-   mkX vs gv = Exact gv vs
-\end{code}
 
 
 \subsubsection{Side-condition Variable Instantiation}

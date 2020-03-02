@@ -578,11 +578,6 @@ completeASCs :: Monad m
              => [VarTable] -> Term -> SideCond -> Term -> Binding
              -> SideCond -> SideCond -> m (Binding,SideCond,SideCond)
 completeASCs vts tC scC tP bind mascP [] = return (bind,scC,mascP)
-completeASCs vts tC scC tP bind mascP (ExCover gv vs:unMappedASCs)
-  = do scE <- instantiateASC bind (Covers gv vs)
-       scC' <- mrgSideCond scC scE
-       mascP' <- mrgAtmCond (Covers gv vs) mascP
-       completeASCs vts tC scC' tP bind mascP' unMappedASCs
 completeASCs vts tC scC tP bind mascP (umSC:unMappedASCs)
   = fail ("completeBind: not yet handling unmapped: " ++ trSideCond [umSC] )
 \end{code}

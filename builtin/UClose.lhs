@@ -161,7 +161,7 @@ $$\par\vspace{-8pt}
 \begin{code}
 axUnivDef = preddef ("[]" -.- "def")
                     (univ p  === forall [xs] p)
-                    ([xs] `exCover` gvP)
+                    ([xs] `covers` gvP)
 \end{code}
 
 $$

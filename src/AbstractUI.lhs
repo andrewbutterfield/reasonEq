@@ -459,7 +459,7 @@ matchFocusAgainst lawnm theSig liveProof
 Third, a deep dive to apply \texttt{match} so we can get back errors.
 \begin{code}
 tryFocusAgainst :: String -> [Int] -> LogicSig -> LiveProof
-                -> YesBut (Binding,Term,SideCond)
+                -> YesBut (Binding,Term,SideCond,SideCond)
 tryFocusAgainst lawnm parts theSig liveProof
   = let (tz,_)      =  focus liveProof
         goalt       =  getTZ tz

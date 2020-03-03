@@ -347,7 +347,8 @@ These calls are:
 tryLawByName :: LogicSig -> Assertion -> String -> [Int] -> [MatchContext]
                -> YesBut ( Binding    -- mapping from pattern to candidate
                          , Term       -- autoInstantiated Law
-                         , SideCond ) -- updated candidate side-condition
+                         , SideCond   -- updated candidate side-condition
+                         , SideCond ) -- discharged(?) law side-condition
 tryLawByName logicsig asn@(tC,scC) lnm parts mcs
   = do (((_,(tP,scP)),_),vts) <- findLaw lnm mcs
        partsP <- findParts parts tP
@@ -462,23 +463,24 @@ Finally, try to discharge the instantiated side-condition:
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     trySCDischarge bind tP partsP scC' scP'
-      = do  if scDischarged scC' scP'
-              then Yes (bind,tP,scC')
-              else But [ "try s.c. discharge failed"
-                       , ""
-                       , trSideCond scC
-                         ++ " " ++ _implies ++ " " ++
-                         trSideCond scP'
-                       , ""
-                       , "lnm[parts]="++lnm++show parts
-                       , "tC="++trTerm 0 tC
-                       , "scC="++trSideCond scC
-                       , "tP="++trTerm 0 tP
-                       , "partsP="++trTerm 0 partsP
-                       , "scP'="++trSideCond scP'
-                       , "bind:\n"
-                       , trBinding bind
-                       ]
+      = case scDischarged scC' scP' of
+          Yes scP'' -> Yes (bind,tP,scC',scP'')
+          But whynots -> But [ "try s.c. discharge failed"
+                             , unlines' whynots
+                             , ""
+                             , trSideCond scC
+                               ++ " " ++ _implies ++ " " ++
+                               trSideCond scP'
+                             , ""
+                             , "lnm[parts]="++lnm++show parts
+                             , "tC="++trTerm 0 tC
+                             , "scC="++trSideCond scC
+                             , "tP="++trTerm 0 tP
+                             , "partsP="++trTerm 0 partsP
+                             , "scP'="++trSideCond scP'
+                             , "bind:\n"
+                             , trBinding bind
+                             ]
 \end{code}
 
 Done.
@@ -903,15 +905,14 @@ basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
   =  do bind <- match vts tC partsP
         (bind',scC',scP') <- completeBind vts tC scC tP scP bind
         scP'' <- instantiateSC bind' scP'
-        if scDischarged scC' scP''
-         then
-           [MT n asn (chkPatn mc tP) bind' scC' scP'' repl
-           -- (autoInstantiate bind' repl)
-           ]
-          -- case instantiate bind' repl of
-          --   Nothing     ->  []
-          --   Just irepl  ->  [MT n asn (chkPatn mc tP) bind' scC' scP'' irepl]
-        else []
+        case scDischarged scC' scP'' of
+          Yes _ ->  [ MT n asn (chkPatn mc tP) bind' scC' scP'' repl
+                     -- (autoInstantiate bind' repl)
+                    ]
+                    -- case instantiate bind' repl of
+                    --   Nothing     ->  []
+                    --   Just irepl  ->  [MT n asn (chkPatn mc tP) bind' scC' scP'' irepl]
+          But _ ->  []
   where
 
     chkPatn mc (Var _ v)

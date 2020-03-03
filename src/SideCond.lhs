@@ -277,7 +277,7 @@ in \texttt{Disjoint} and \texttt{Covers} respectively.
 We also overload the notation to denote the corresponding condition.
 So, depending on context,
 $D$ can denote a variable-set
-or the predicate $D \disj P$ ($P$ being the general variable in question).
+or the predicate $D \disj G$ ($G$ being the general variable in question).
 \begin{eqnarray*}
    D_1 \land D_2 &=&  D_1 \cup D_2
 \\ C_1 \land C_2 &=&  C_1 \cup C_2
@@ -351,32 +351,40 @@ mkSideCond (asc:ascs)
 \newpage
 \subsection{Discharging Side-conditions}
 
-Here we simply check validity of $sc'_C \implies sc'_P$,
-where $sc'_C$ is the candidate side-condition,
-and $sc'_P$ is the pattern side-condition translated into candidate ``space''
-after a succesful match.
+Here we simply check validity of $sc'_G \implies sc'_L$,
+where $sc'_G$ is the goal side-condition,
+and $sc'_L$ is the law side-condition translated into goal ``space''
+after a successful match.
+Because we may be handing side-conditions with ``questionable'' variables,
+we attempt to return a simplified side-condition
+that has the questionable bits that are not dischargeable.
+If we discover a contradiction,
+then we need to signal this,
+because \texttt{SideCond} cannot represent a false side-condition explicitly.
 \begin{code}
-scDischarged :: SideCond -> SideCond -> Bool
+scDischarged :: Monad m => SideCond -> SideCond -> m SideCond
 \end{code}
 We have something of the form:
 $$
- \left( \bigwedge_{i \in 1 \dots m} C_i \right)
+ \left( \bigwedge_{i \in 1 \dots m} G_i \right)
  \implies
- \left( \bigwedge_{j \in 1 \dots n} P_j \right)
+ \left( \bigwedge_{j \in 1 \dots n} L_j \right)
 $$
-In our representation both the $C_i$ and $P_j$
-are ordered by general variable.
+In our representation both the $G_i$ and $L_j$
+are ordered by general variable ($V$).
 So we can work through both lists,
-using all the $C_i$ for a given g.v.,
-to attempt to discharge all the $P_j$ for that same g.v.
-Success is when all such $P_j$ groups have been shown to be $\true$.
-Failure occurs if any $P_j$ group results in $\false$,
-or results in some ASCs remaining.
+using all the $G_i$ for a given g.v.,
+to attempt to discharge all the $L_j$ for that same g.v.
+Success is when all such $L_j$ groups have been shown to be $\true$.
+Failure occurs if any $L_j$ group results in $\false$.
+If we are left with undischarged $L_j$,
+then the interpretation depends on if we are doing many matches
+and displaying them, or actually trying to apply a match outcome.
 
 We start with simple end-cases:
 \begin{code}
-scDischarged _ []  =  True   -- C => true   is  true
-scDischarged [] _  =  False  -- true => P   is  P,  i.e., not discharged
+scDischarged _ []    =  return scTrue  -- G => true   is  true
+scDischarged [] scL  =  return scL     -- true => L is L,  i.e., not discharged
 \end{code}
 \begin{code}
 scDischarged anteSC cnsqSC
@@ -396,60 +404,73 @@ groupByGV (asc:ascs)  =  (gv,asc:ours) : groupByGV others
 
 Now onto processing those groups:
 \begin{code}
-scDischarged' :: [(GenVar,[AtmSideCond])] -> [(GenVar,[AtmSideCond])] -> Bool
-scDischarged' _ []  =  True   -- see scDischarged above
-scDischarged' [] _  =  False  -- see scDischarged above
-scDischarged' (grpC@(gvC,ascsC):restC) grpsP@(grpP@(gvP,ascsP):restP)
-  | gvC > gvP  =  False -- nothing available to discharge grpP
-  | gvC < gvP  =  scDischarged' restC grpsP -- grpC not needed
-  | otherwise  =  grpDischarged ascsC ascsP && scDischarged' restC restP
+scDischarged' :: Monad m => [(GenVar,[AtmSideCond])] -> [(GenVar,[AtmSideCond])]
+              -> m SideCond
+scDischarged' _ []      =  return scTrue                   -- discharged
+scDischarged' [] grpsL  =  return $ concat $ map snd grpsL -- not discharged
+scDischarged' (grpG@(gvG,ascsG):restG) grpsL@(grpL@(gvL,ascsL):restL)
+  | gvG < gvL  =  scDischarged' restG grpsL -- grpG not needed
+  | gvG > gvL  =  do -- nothing available to discharge grpL
+                     rest' <- scDischarged' restG restL
+                     return (ascsL++rest')
+  | otherwise  =  do -- use grpG to discharge grpL
+                     ascs' <- grpDischarged ascsG ascsL
+                     rest' <- scDischarged' restG restL
+                     return (ascs'++rest')
 \end{code}
 
-We can discharge pattern side conditions under the following
-circumstances:
+We can discharge pattern side conditions under the following circumstances:
 \begin{eqnarray*}
-   D_C \disj P \implies D_P \disj P
+   D_G \disj V \implies D_L \disj V
    & \textbf{when} &
-   D_P \subseteq D_C
-\\ C_C \supseteq P \implies C_P \supseteq P
+   D_L \subseteq D_G
+\\ C_G \supseteq V \implies C_L \supseteq V
    & \textbf{when} &
-   C_C \subseteq C_P
-\\ C_C \supseteq P \implies D_P \disj P
+   C_G \subseteq C_L
+\\ C_G \supseteq V \implies D_L \disj V
    & \textbf{when} &
-   C_C \disj D_P
+   C_G \disj D_L
 \end{eqnarray*}
-Note that knowing $D_C \disj P$
-can never force us to conclude that $C_P \supseteq P$ must be true.
+Note that knowing $D_G \disj V$
+can never force us to conclude that $C_L \supseteq V$ must be true.
+
+We can falsify pattern side conditions under the following circumstances:
+\begin{eqnarray*}
+ x
+\end{eqnarray*}
+
 
 \begin{code}
-dC `d_imp_d` dP  =  dP `S.isSubsetOf` dC
-cC `c_imp_c` cP  =  cC `S.isSubsetOf` cP
-cC `c_imp_d` dP  =  cC `disjoint` dP
+dG `d_imp_d` dL  =  dL `S.isSubsetOf` dG
+cG `c_imp_c` cL  =  cG `S.isSubsetOf` cL
+cG `c_imp_d` dL  =  cG `disjoint` dL
 \end{code}
 
 \textbf{As above, we only consider \texttt{Disjoint} and \texttt{Covers}
 for now.}
 
 \begin{code}
-grpDischarged [Disjoint _ dC,Covers _ cC] [Disjoint _ dP,Covers _ cP]
-  = (cC `c_imp_c` cP) && (dC `d_imp_d` dP || cC `c_imp_d` dP)
-grpDischarged [Disjoint _ dC,Covers _ cC] [Disjoint _ dP]
-  = (dC `d_imp_d` dP || cC `c_imp_d` dP)
-grpDischarged [_,Covers _ cC] [Covers _ cP]
-  = (cC `c_imp_c` cP)
-grpDischarged [Covers _ cC] [Disjoint _ dP,Covers _ cP]
-  = (cC `c_imp_d` dP && cC `c_imp_c` cP)
-grpDischarged [Disjoint _ dC] [Disjoint _ dP]
-  = (dC `d_imp_d` dP)
-grpDischarged [Covers _ cC] [Disjoint _ dP]
-  = (cC `c_imp_d` dP)
-grpDischarged [Covers _ cC] [Covers _ cP]
-  = (cC `c_imp_c` cP)
+grpDischarged :: Monad m => [AtmSideCond] -> [AtmSideCond] -> m [AtmSideCond]
+grpDischarged [Disjoint _ dG,Covers _ cG] [Disjoint _ dL,Covers _ cL]
+  | (cG `c_imp_c` cL)
+    && (dG `d_imp_d` dL || cG `c_imp_d` dL)               =  return []
+grpDischarged [Disjoint _ dG,Covers _ cG] [Disjoint _ dL]
+  | (dG `d_imp_d` dL || cG `c_imp_d` dL)                  =  return []
+grpDischarged [_,Covers _ cG] [Covers _ cL]
+  | (cG `c_imp_c` cL)                                     =  return []
+grpDischarged [Covers _ cG] [Disjoint _ dL,Covers _ cL]
+  | (cG `c_imp_d` dL && cG `c_imp_c` cL)                  =  return []
+grpDischarged [Disjoint _ dG] [Disjoint _ dL]
+  | (dG `d_imp_d` dL)                                     =  return []
+grpDischarged [Covers _ cG] [Disjoint _ dL]
+  | (cG `c_imp_d` dL)                                     =  return []
+grpDischarged [Covers _ cG] [Covers _ cL]
+  | (cG `c_imp_c` cL)                                     =  return []
 \end{code}
 
-Anything else we treat as false.
+Anything else we treat as false, for now.
 \begin{code}
-grpDischarged _ _ = False
+grpDischarged _ _ = fail "grpDischarged NYfI"
 \end{code}
 
 \newpage

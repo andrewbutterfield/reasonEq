@@ -1,22 +1,35 @@
-@mRepl: (not(P)[e$/x$])
-S
+@whatever:
+C
 P
-( C
+(Id "equiv")
+[ B
   P
-  (Id "lnot")
-  [ V P (VR (Id "P", VP, WS)) ] )
-( SN
-  ( {} )
-  ( { (LV (VR (Id "x", VO, WS), [], []), LV (VR (Id "e", VE, WS), [], [])) } ) )
-@bind: { P -> P, e$ -> ([],[e$]), x$ -> [x$]}
-BD
-( { ( (Id "P", VP)
-    , BV (VR (Id "P", VP, WS)) ) }
-, {}
-, { ( (Id "e", VE, [], [])
-    , BX
-      []
-      [ LV (VR (Id "e", VE, WS), [], []) ] )
-  , ( (Id "x", VO, [], [])
-    , BL
-      [ GL (LV (VR (Id "x", VO, WS), [], [])) ] ) } )
+  (Id "forall")
+  ( { GL (LV (VR (Id "x", VO, WS), [], []))
+    , GL (LV (VR (Id "y", VO, WS), [], [])) } )
+  ( C
+    P
+    (Id "implies")
+    [ I
+      P
+      (Id "land")
+      (Id "=")
+      [ LV (VR (Id "x", VO, WS), [], [])
+      , LV (VR (Id "e", VE, WS), [], []) ]
+    , C
+      P
+      (Id "lnot")
+      [ V P (VR (Id "P", VP, WS)) ] ] )
+, B
+  P
+  (Id "forall")
+  ( { GL (LV (VR (Id "y", VO, WS), [], [])) } )
+  ( S
+    P
+    ( C
+      P
+      (Id "lnot")
+      [ V P (VR (Id "P", VP, WS)) ] )
+    ( SN
+      ( {} )
+      ( { (LV (VR (Id "x", VO, WS), [], []), LV (VR (Id "e", VE, WS), [], [])) } ) ) ) ]

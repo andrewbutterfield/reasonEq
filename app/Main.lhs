@@ -834,13 +834,14 @@ tryMatch :: REPLCmd (REqState, LiveProof)
 tryMatch [] state = return state
 tryMatch args state@( reqs, liveProof)
   = do case tryFocusAgainst lawnm parts (logicsig reqs) liveProof of
-         Yes (bind,tPasC,scC',scP')
+         Yes (bind,tPasC,scP',scP'')
            -> putStrLn $ unlines
                 [ banner
                 , "Binding:\n" ++ trBinding bind
                 , "Instantiated Law = " ++ trTerm 0 tPasC
-                , "Instantiated Goal S.C. = " ++ trSideCond scC'
-                , "Discharged Law S.C. = " ++ trSideCond scP']
+                -- , "DEBUG I-LAW:\n" ++ show tPasC
+                , "Instantiated Law S.C. = " ++ trSideCond scP'
+                , "Discharged Law S.C. = " ++ trSideCond scP'']
          But msgs -> putStrLn $ unlines' ( (banner ++ " failed!") : msgs )
        userPause
        return state

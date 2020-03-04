@@ -1,7 +1,2 @@
-proof: m lnot_subst
-@mRepl:
-S P (C P (Id "lnot") [V P (VR (Id "P",VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))]))
-@bind:
-BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [((Id "e",VE,[],[]),BX [] [LV (VR (Id "e",VE,WS),[],[])]),((Id "x",VO,[],[]),BL [GL (LV (VR (Id "x",VO,WS),[],[]))])])
-req: Maybe.fromJust: Nothing
-reasonEq>
+@whatever:
+C P (Id "equiv") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "implies") [I P (Id "land") (Id "=") [LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[])],C P (Id "lnot") [V P (VR (Id "P",VP,WS))]]),B P (Id "forall") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (S P (C P (Id "lnot") [V P (VR (Id "P",VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])))]

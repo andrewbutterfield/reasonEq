@@ -457,17 +457,26 @@ so none of the lists here are empty.
 \begin{code}
 grpDischarge :: Monad m => [AtmSideCond] -> [AtmSideCond] -> m [AtmSideCond]
 grpDischarge (ascG:ascsG) ascsL
-  = case ascDischarge ascG ascsL of
+  = case ascsDischarge ascG ascsL of
       Yes ascsL'  ->  return ascsL'
       But _       ->  grpDischarge ascsG ascsL -- try next antecedent
 grpDischarge [] _  =  fail "grpDischarge: goal s.c falsifies law s.c."
 \end{code}
 
 \begin{code}
-ascDischarge :: Monad m => AtmSideCond -> [AtmSideCond] -> m [AtmSideCond]
-ascDischarge ascG ascsL = fail "ascDischarge NYI"
+ascsDischarge :: Monad m => AtmSideCond -> [AtmSideCond] -> m [AtmSideCond]
+ascsDischarge ascG (ascL:ascsL)
+  =  do ascL' <- ascDischarge ascG ascL
+        ascsL' <- ascsDischarge ascG ascsL
+        return (ascL'++ascsL')
+ascsDischarge ascG [] = return []
 \end{code}
 
+
+Finally, we get to where the real work is done:
+\begin{code}
+ascDischarge :: Monad m => AtmSideCond -> AtmSideCond -> m [AtmSideCond]
+\end{code}
 If the general variable is a standard variable $v$,
 then we can discharge or falsify an atomic side-condition
 very easily:
@@ -475,31 +484,70 @@ very easily:
    D_L \disj \setof{v} & \textbf{when} & v \notin D_L
 \\ C_L \supset \setof{v} & \textbf{when} & v \in C_L
 \end{eqnarray*}
+\begin{code}
+ascDischarge _ (Disjoint gv@(StdVar _) dL)
+  | gv `S.member` dL  =  fail "law variable s.c. (disjoint) is false"
+  | otherwise         =  return [] -- truee
+ascDischarge _ (Covers gv@(StdVar _) cL)
+  | gv `S.member` cL  =  return [] -- true
+  | otherwise         =  fail "law variable s.c. (covers) is false"
+\end{code}
+
+\newpage
 If we have a list-variable $\lst V$
 then we have a situation where we may be able to discharge,
 or falsify, but also have the possbility of being unable to do either.
 This may result in the side-condition being retained,
 perhaps ``reduced'' to some degree.
 
-
 \begin{eqnarray*}
-\\ D_G \disj \lst V \implies D_L \disj \lst V
+   D_G \disj \lst V \implies D_L \disj \lst V
    & = & (D_L\setminus D_G) \disj \lst V
 \\ & = & \true, \quad \textbf{if } D_L \subseteq D_G
-\\
-\\ C_G \supseteq \lst V \implies D_L \disj \lst V
+\end{eqnarray*}
+\begin{code}
+ascDischarge (Disjoint _ dG) (Disjoint gv dL)
+  | dL `S.isSubsetOf` dG  =  return [] -- true
+  | otherwise             =  return [Disjoint gv (dL S.\\ dG)]
+\end{code}
+
+\begin{eqnarray*}
+   C_G \supseteq \lst V \implies D_L \disj \lst V
    & = & (C_G \cap D_L) \disj \lst V
 \\ & = & \false, \quad \textbf{if } C_G \subseteq D_L
-\\
-\\ C_G \supseteq \lst V \implies C_L \supseteq \lst V
+\end{eqnarray*}
+\begin{code}
+ascDischarge (Covers _ cG) (Disjoint gv dL)
+  | cG `S.isSubsetOf` dL  =  fail "ascDischarge: covers ==> not disjoint"
+  | otherwise             =  return [Disjoint gv (cG `S.intersection` dL)]
+\end{code}
+
+\begin{eqnarray*}
+   C_G \supseteq \lst V \implies C_L \supseteq \lst V
    & = & (C_G \cap C_L) \supseteq \lst V
 \\ & = & \true, \quad \textbf{if } C_G \subseteq C_L
-\\
-\\ D_G \disj \lst V \implies C_L \supseteq \lst V
+\end{eqnarray*}
+\begin{code}
+ascDischarge (Covers _ cG) (Covers gv cL)
+  | cG `S.isSubsetOf` cL  =  return [] -- true
+  | otherwise             =  return [Covers gv (cG `S.intersection` cL)]
+\end{code}
+
+\begin{eqnarray*}
+   D_G \disj \lst V \implies C_L \supseteq \lst V
    & = & (C_L \setminus D_G) \supseteq \lst V
 \\ & = & \false, \quad \textbf{if } C_L \subseteq D_G
 \end{eqnarray*}
+\begin{code}
+ascDischarge (Disjoint _ dG) (Covers gv cL)
+  | cL `S.isSubsetOf` dG  =  fail "ascDischarge: disjoint ==> not covers"
+  | otherwise  =  return [Covers gv (cL S.\\ dG)]
+\end{code}
 
+Anything else is not handled right now;
+\begin{code}
+ascDischarge _ _ = fail "ascDischarge: NYfI"
+\end{code}
 
 
 

@@ -87,7 +87,9 @@ instantiate binding (Iter tk na ni lvs)
   = do lvtss <- instIterLVS binding lvs
        -- all have same non-zero length
        -- have the same kind of object (list-var/term)
-       return $ Cons tk na $ map mkI lvtss
+       case lvtss of
+         [lvts]  ->  return $ mkI lvts
+         _       ->  return $ Cons tk na $ map mkI lvtss
   where
     mkI :: [LVarOrTerm] -> Term
     mkI lvts@(Right _:_) = Cons tk ni    $ tmsOf lvts

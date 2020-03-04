@@ -393,7 +393,7 @@ keeping the pattern side-conditions in mind.
           qbind = questionableBinding bind sEqv unbound
           abind = mergeBindings bind qbind
         in case instantiate abind tP of
-            Yes tPasC ->  tryInstantiateSC abind scC tPasC partsP scP
+            Yes tPasC ->  tryInstantiateSC abind tPasC partsP scP
             But msgs
              -> But ([ "auto-instantiate failed"
                      , ""
@@ -441,9 +441,9 @@ keeping the pattern side-conditions in mind.
 Next, instantiate the pattern side-condition using the bindings.
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
-    tryInstantiateSC bind scC' tP partsP scP
+    tryInstantiateSC bind tP partsP scP
       = case instantiateSC bind scP of
-          Yes scP'  ->  trySCDischarge bind tP partsP scC' scP'
+          Yes scP'  ->  trySCDischarge bind tP partsP scP'
           But msgs
            -> But ([ "try s.c. instantiation failed"
                    , ""
@@ -462,9 +462,9 @@ Next, instantiate the pattern side-condition using the bindings.
 Finally, try to discharge the instantiated side-condition:
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
-    trySCDischarge bind tP partsP scC' scP'
-      = case scDischarge scC' scP' of
-          Yes scP'' -> Yes (bind,tP,scC',scP'')
+    trySCDischarge bind tP partsP scP'
+      = case scDischarge scC scP' of
+          Yes scP'' -> Yes (bind,tP,scP',scP'')
           But whynots -> But [ "try s.c. discharge failed"
                              , unlines' whynots
                              , ""

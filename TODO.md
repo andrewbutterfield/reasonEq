@@ -1,12 +1,8 @@
 # To Do
 
-
-## Discharging Side-Conditions
-
-During matching (`m`) we have questionable variabels
-so we are happy to reduce to leftover sc with same.
-During application(`a N`)
-we expect the sc to be fully discharged.
+The `tm` command now works properly, as does side-conditions instantiation
+and discharge.
+Next step is to ensure that the `m` and `a` commands do the right thing.
 
 
 ### SC Handling during Matching

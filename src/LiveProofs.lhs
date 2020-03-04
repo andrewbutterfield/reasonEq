@@ -342,7 +342,7 @@ These calls are:
   \texttt{match}%
 , \texttt{completeBind}%
 , \texttt{instantiateSC}%
-, and \texttt{scDischarged}.
+, and \texttt{scDischarge}.
 \begin{code}
 tryLawByName :: LogicSig -> Assertion -> String -> [Int] -> [MatchContext]
                -> YesBut ( Binding    -- mapping from pattern to candidate
@@ -463,7 +463,7 @@ Finally, try to discharge the instantiated side-condition:
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     trySCDischarge bind tP partsP scC' scP'
-      = case scDischarged scC' scP' of
+      = case scDischarge scC' scP' of
           Yes scP'' -> Yes (bind,tP,scC',scP'')
           But whynots -> But [ "try s.c. discharge failed"
                              , unlines' whynots
@@ -905,7 +905,7 @@ basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
   =  do bind <- match vts tC partsP
         (bind',scC',scP') <- completeBind vts tC scC tP scP bind
         scP'' <- instantiateSC bind' scP'
-        case scDischarged scC' scP'' of
+        case scDischarge scC' scP'' of
           Yes _ ->  [ MT n asn (chkPatn mc tP) bind' scC' scP'' repl
                      -- (autoInstantiate bind' repl)
                     ]

@@ -12,7 +12,7 @@ module SideCond (
 , ascGVar, ascVSet
 , SideCond, scTrue
 , mrgAtmCond, mrgSideCond, mkSideCond
-, scDischarged
+, scDischarge
 , notin, covers, pre
 , citingASCs
 , int_tst_SideCond
@@ -121,7 +121,7 @@ $$
 We cannot match any instance of universal closure above
 against the definition as we cannot discharge the side-condition.
 
-We already have to cope with $C$ matching $P$ in $P \sim R$,
+We have to cope with $C$ matching $P$ in $P \sim R$,
 where variables in $R$, but not in $P$,
 are not in the resulting match-binding.
 If such variables occur in side-conditions,
@@ -289,9 +289,13 @@ or the predicate $D \disj G$ ($G$ being the general variable in question).
 \\ D \land pre &=&  D \land pre
 \\ C \land pre &=&  C \land pre
 \end{eqnarray*}
+A consequence of this is that once we have merged,
+for any given general variable $G$,
+we will have that $D$ and $C$ are disjoint.
 
 
-\subsubsection{Merging \texttt{Disjoint} in}
+\newpage
+\subsubsection{Merging \texttt{Disjoint} into ASC}
 
 \begin{code}
 mrgAtmAtms (Disjoint gv d0) [Disjoint _ d1,Covers _ c]
@@ -305,7 +309,7 @@ mrgAtmAtms (Disjoint gv d) [Covers _ c]
  | otherwise           =  return [Disjoint gv d,Covers gv (c S.\\ d)]
 \end{code}
 
-\subsubsection{Merging \texttt{Covers} in}
+\subsubsection{Merging \texttt{Covers} into ASC}
 
 \begin{code}
 mrgAtmAtms (Covers gv c0) [Disjoint _ d,Covers _ c1]
@@ -362,7 +366,7 @@ If we discover a contradiction,
 then we need to signal this,
 because \texttt{SideCond} cannot represent a false side-condition explicitly.
 \begin{code}
-scDischarged :: Monad m => SideCond -> SideCond -> m SideCond
+scDischarge :: Monad m => SideCond -> SideCond -> m SideCond
 \end{code}
 We have something of the form:
 $$
@@ -383,12 +387,12 @@ and displaying them, or actually trying to apply a match outcome.
 
 We start with simple end-cases:
 \begin{code}
-scDischarged _ []    =  return scTrue  -- G => true   is  true
-scDischarged [] scL  =  return scL     -- true => L is L,  i.e., not discharged
+scDischarge _ []    =  return scTrue  -- G => true   is  true
+scDischarge [] scL  =  return scL     -- true => L is L,  i.e., not discharged
 \end{code}
 \begin{code}
-scDischarged anteSC cnsqSC
-  = scDischarged' (groupByGV anteSC) (groupByGV cnsqSC)
+scDischarge anteSC cnsqSC
+  = scDischarge' (groupByGV anteSC) (groupByGV cnsqSC)
 \end{code}
 
 We have a modified version of \texttt{Data.List.groupBy}
@@ -404,74 +408,100 @@ groupByGV (asc:ascs)  =  (gv,asc:ours) : groupByGV others
 
 Now onto processing those groups:
 \begin{code}
-scDischarged' :: Monad m => [(GenVar,[AtmSideCond])] -> [(GenVar,[AtmSideCond])]
+scDischarge' :: Monad m => [(GenVar,[AtmSideCond])] -> [(GenVar,[AtmSideCond])]
               -> m SideCond
-scDischarged' _ []      =  return scTrue                   -- discharged
-scDischarged' [] grpsL  =  return $ concat $ map snd grpsL -- not discharged
-scDischarged' (grpG@(gvG,ascsG):restG) grpsL@(grpL@(gvL,ascsL):restL)
-  | gvG < gvL  =  scDischarged' restG grpsL -- grpG not needed
+scDischarge' _ []      =  return scTrue                   -- discharged
+scDischarge' [] grpsL  =  return $ concat $ map snd grpsL -- not discharged
+scDischarge' (grpG@(gvG,ascsG):restG) grpsL@(grpL@(gvL,ascsL):restL)
+  | gvG < gvL  =  scDischarge' restG grpsL -- grpG not needed
   | gvG > gvL  =  do -- nothing available to discharge grpL
-                     rest' <- scDischarged' restG restL
+                     rest' <- scDischarge' restG restL
                      return (ascsL++rest')
   | otherwise  =  do -- use grpG to discharge grpL
-                     ascs' <- grpDischarged ascsG ascsL
-                     rest' <- scDischarged' restG restL
+                     ascs' <- grpDischarge ascsG ascsL
+                     rest' <- scDischarge' restG restL
                      return (ascs'++rest')
 \end{code}
 
-We can discharge pattern side conditions under the following circumstances:
-\begin{eqnarray*}
-   D_G \disj V \implies D_L \disj V
-   & \textbf{when} &
-   D_L \subseteq D_G
-\\ C_G \supseteq V \implies C_L \supseteq V
-   & \textbf{when} &
-   C_G \subseteq C_L
-\\ C_G \supseteq V \implies D_L \disj V
-   & \textbf{when} &
-   C_G \disj D_L
-\end{eqnarray*}
-Note that knowing $D_G \disj V$
-can never force us to conclude that $C_L \supseteq V$ must be true.
-
-We can falsify pattern side conditions under the following circumstances:
-\begin{eqnarray*}
- x
-\end{eqnarray*}
-
-
-\begin{code}
-dG `d_imp_d` dL  =  dL `S.isSubsetOf` dG
-cG `c_imp_c` cL  =  cG `S.isSubsetOf` cL
-cG `c_imp_d` dL  =  cG `disjoint` dL
-\end{code}
+\newpage
 
 \textbf{As above, we only consider \texttt{Disjoint} and \texttt{Covers}
 for now.}
 
+The following code assumes that the \texttt{GenVar} component
+is the same in all of the \texttt{AtmSideCond}.
+
+Here again, we have the form
+$$
+ \left( \bigwedge_{i \in \setof{D,C,pre}} G_i \right)
+ \implies
+ \left( \bigwedge_{j \in \setof{D,C,pre}} L_j \right)
+$$
+Given that
+\begin{eqnarray*}
+   A \land B \implies C &=& (A \implies C) \lor  (B \implies C)
+\\ A \implies B \land C &=& (A \implies B) \land (A \implies C)
+\end{eqnarray*}
+we see that we only need one of the $G_i$ to imply all of the $L_j$
+to succeed.
+A question that might be raised is,
+what happens if $G_D$ (say) makes $L_j$ true,
+while $G_C$ makes $L_j$ false?
+In this case, and similar,
+the goal side-condition will have been shown to be false,
+so we will never get this far.
+
+
+If we get here, then neither side-condition was trivially true,
+so none of the lists here are empty.
 \begin{code}
-grpDischarged :: Monad m => [AtmSideCond] -> [AtmSideCond] -> m [AtmSideCond]
-grpDischarged [Disjoint _ dG,Covers _ cG] [Disjoint _ dL,Covers _ cL]
-  | (cG `c_imp_c` cL)
-    && (dG `d_imp_d` dL || cG `c_imp_d` dL)               =  return []
-grpDischarged [Disjoint _ dG,Covers _ cG] [Disjoint _ dL]
-  | (dG `d_imp_d` dL || cG `c_imp_d` dL)                  =  return []
-grpDischarged [_,Covers _ cG] [Covers _ cL]
-  | (cG `c_imp_c` cL)                                     =  return []
-grpDischarged [Covers _ cG] [Disjoint _ dL,Covers _ cL]
-  | (cG `c_imp_d` dL && cG `c_imp_c` cL)                  =  return []
-grpDischarged [Disjoint _ dG] [Disjoint _ dL]
-  | (dG `d_imp_d` dL)                                     =  return []
-grpDischarged [Covers _ cG] [Disjoint _ dL]
-  | (cG `c_imp_d` dL)                                     =  return []
-grpDischarged [Covers _ cG] [Covers _ cL]
-  | (cG `c_imp_c` cL)                                     =  return []
+grpDischarge :: Monad m => [AtmSideCond] -> [AtmSideCond] -> m [AtmSideCond]
+grpDischarge (ascG:ascsG) ascsL
+  = case ascDischarge ascG ascsL of
+      Yes ascsL'  ->  return ascsL'
+      But _       ->  grpDischarge ascsG ascsL -- try next antecedent
+grpDischarge [] _  =  fail "grpDischarge: goal s.c falsifies law s.c."
 \end{code}
 
-Anything else we treat as false, for now.
 \begin{code}
-grpDischarged _ _ = fail "grpDischarged NYfI"
+ascDischarge :: Monad m => AtmSideCond -> [AtmSideCond] -> m [AtmSideCond]
+ascDischarge ascG ascsL = fail "ascDischarge NYI"
 \end{code}
+
+If the general variable is a standard variable $v$,
+then we can discharge or falsify an atomic side-condition
+very easily:
+\begin{eqnarray*}
+   D_L \disj \setof{v} & \textbf{when} & v \notin D_L
+\\ C_L \supset \setof{v} & \textbf{when} & v \in C_L
+\end{eqnarray*}
+If we have a list-variable $\lst V$
+then we have a situation where we may be able to discharge,
+or falsify, but also have the possbility of being unable to do either.
+This may result in the side-condition being retained,
+perhaps ``reduced'' to some degree.
+
+
+\begin{eqnarray*}
+\\ D_G \disj \lst V \implies D_L \disj \lst V
+   & = & (D_L\setminus D_G) \disj \lst V
+\\ & = & \true, \quad \textbf{if } D_L \subseteq D_G
+\\
+\\ C_G \supseteq \lst V \implies D_L \disj \lst V
+   & = & (C_G \cap D_L) \disj \lst V
+\\ & = & \false, \quad \textbf{if } C_G \subseteq D_L
+\\
+\\ C_G \supseteq \lst V \implies C_L \supseteq \lst V
+   & = & (C_G \cap C_L) \supseteq \lst V
+\\ & = & \true, \quad \textbf{if } C_G \subseteq C_L
+\\
+\\ D_G \disj \lst V \implies C_L \supseteq \lst V
+   & = & (C_L \setminus D_G) \supseteq \lst V
+\\ & = & \false, \quad \textbf{if } C_L \subseteq D_G
+\end{eqnarray*}
+
+
+
 
 \newpage
 \subsection{Building side-conditions.}

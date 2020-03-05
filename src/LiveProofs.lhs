@@ -340,9 +340,16 @@ Here we painstakingly check every monadic call from \texttt{match} onwards,
 and report the outcome.
 These calls are:
   \texttt{match}%
-, \texttt{completeBind}%
+, <Complete Binding>%
 , \texttt{instantiateSC}%
-, and \texttt{scDischarge}.
+, and \texttt{scDischarge},
+where <Complete Binding> for matching involves:
+\begin{verbatim}
+findUnboundVars termLVarPairings mkEquivClasses questionableBinding
+mergeBindings instantiate
+\end{verbatim}
+and <Complete Binding> for application involves(?) \texttt{completeBind}.
+
 \begin{code}
 tryLawByName :: LogicSig -> Assertion -> String -> [Int] -> [MatchContext]
                -> YesBut ( Binding    -- mapping from pattern to candidate
@@ -377,67 +384,30 @@ First, try the structural match.
                    ]++msgs)
 \end{code}
 
-At this point we have matched the candidate against part of the law,
-with the rest of the law to be the ``replacement''.
-However, the replacement may contain variables not present in the
-matched part.
-We need to find appropriate bindings for these,
-keeping the pattern side-conditions in mind.
+\newpage
+At this point the replacement may contain variables not present in the
+matched part, so we need to create temporary bindings for these.
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryAutoInstantiate vts tP partsP scP bind
-      = let
-          unbound = findUnboundVars bind tP
-          lvps = termLVarPairings tP
-          sEqv = mkEquivClasses lvps
-          qbind = questionableBinding bind sEqv unbound
-          abind = mergeBindings bind qbind
-        in case instantiate abind tP of
-            Yes tPasC ->  tryInstantiateSC abind tPasC partsP scP
-            But msgs
-             -> But ([ "auto-instantiate failed"
-                     , ""
-                     , trTerm 0 tC ++ " :: " ++ trTerm 0 partsP
-                     , ""
-                     , "lnm[parts]="++lnm++show parts
-                     , "tP="++trTerm 0 tP
-                     , "partsP="++trTerm 0 partsP
-                     , "tC="++trTerm 0 tC
-                     , "scC="++trSideCond scC
-                     , ""
-                     , "bind  = " ++ trBinding bind
-                     , "unbound = " ++ trVSet unbound
-                     , "qbind = " ++ trBinding qbind
-                     , "abind = " ++ trBinding abind
-                     ]++msgs)
+      = case autoInstantiate bind tP of
+          Yes (abind,tPasC)  ->  tryInstantiateSC abind tPasC partsP scP
+          But msgs
+           -> But ([ "auto-instantiate failed"
+                   , ""
+                   , trTerm 0 tC ++ " :: " ++ trTerm 0 partsP
+                   , ""
+                   , "lnm[parts]="++lnm++show parts
+                   , "tP="++trTerm 0 tP
+                   , "partsP="++trTerm 0 partsP
+                   , "tC="++trTerm 0 tC
+                   , "scC="++trSideCond scC
+                   , ""
+                   , "bind  = " ++ trBinding bind
+                   ]++msgs)
 \end{code}
 
-At this point we have matched the candidate against part of the law,
-with the rest of the law to be the ``replacement''.
-However, the replacement may contain variables not present in the
-matched part.
-We need to find appropriate bindings for these,
-keeping the pattern side-conditions in mind.
-\begin{code}
--- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
-    -- tryCompleteBinding vts tP partsP scP bind
-    --   = case completeBind vts tC scC tP scP bind of
-    --       Yes (bind',scC',scP')  ->  tryInstantiateSC bind' scC' tP partsP scP'
-    --       But msgs
-    --        -> But ([ "try complete binding failed"
-    --                , ""
-    --                , trTerm 0 tC ++ " :: " ++ trTerm 0 partsP
-    --                , ""
-    --                , "lnm[parts]="++lnm++show parts
-    --                , "tP="++trTerm 0 tP
-    --                , "partsP="++trTerm 0 partsP
-    --                , "tC="++trTerm 0 tC
-    --                , "scC="++trSideCond scC
-    --                , ""
-    --                ]++msgs)
-\end{code}
 
-\newpage
 Next, instantiate the pattern side-condition using the bindings.
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
@@ -529,60 +499,60 @@ getParts (p:ps) xs
 \end{code}
 
 
-\newpage
-\subsection{Completing a Binding}
-
-We have $t_C, sc_C, t_P, sc_P, t_{part}$
-and $\beta$ from matching $t_C :: t_{part}$,
-as well as the ``known'' variables $\kappa$.
-Here we need to:
-\begin{enumerate}
-  \item
-    Determine variables mentioned in the law that have not been matched ($vs_{um}$),
-    because they occur outside the matched part.
-    $$ vs_{um} = varsIn(t_P) \setminus \dom(\beta)$$
-  \item
-    Remove any that are ``known'' (perhaps bind to self?)
-    $$vs_{ukm} = vs_{um} \setminus \dom(\kappa)$$
-  \item
-    Identify the law ASCs ($sc_{umP}$) that refer to the remaining
-    unmatched variables.
-    $$sc_{umP} = sc_P \cap vs_{ukm}$$
-  \item
-    For any $asc = \exists\lst x \supseteq P$ in $sc_{umP}$ :
-    \begin{enumerate}
-      \item $asc := \lst x \supseteq P$
-      \item $sc_C := sc_C \land \lst x \subseteq \beta(P) $
-      \item Possibly bind $\lst x$ to itself?
-    \end{enumerate}
-  \item
-    Not sure what to do about other ASCs in $sc_{umP}$ just now.
-\end{enumerate}
-\textbf{
-  In fact all pattern \texttt{ExCover} should be converted to \texttt{Covers},
-  but only once the above steps have been done.
-}
-
-\begin{code}
-completeBind :: Monad m
-             => [VarTable] -> Term -> SideCond -> Term -> SideCond
-             -> Binding -> m (Binding,SideCond,SideCond)
-completeBind vts tC scC tP scP bind
-  | S.null unMappedUnkVars  =  return (bind,scC,scP)
-  | otherwise  = completeASCs vts tC scC tP bind mappedASCs unMappedASCs
-  where
-    unMappedVars = mentionedVars tP S.\\ mappedVars bind
-    unMappedUnkVars = S.filter (isUnknownGVar vts) unMappedVars
-    unMappedASCs = citingASCs unMappedUnkVars scP
-    mappedASCs = scP \\ unMappedASCs
-
-completeASCs :: Monad m
-             => [VarTable] -> Term -> SideCond -> Term -> Binding
-             -> SideCond -> SideCond -> m (Binding,SideCond,SideCond)
-completeASCs vts tC scC tP bind mascP [] = return (bind,scC,mascP)
-completeASCs vts tC scC tP bind mascP (umSC:unMappedASCs)
-  = fail ("completeBind: not yet handling unmapped: " ++ trSideCond [umSC] )
-\end{code}
+% \newpage
+% \subsection{Completing a Binding}
+%
+% We have $t_C, sc_C, t_P, sc_P, t_{part}$
+% and $\beta$ from matching $t_C :: t_{part}$,
+% as well as the ``known'' variables $\kappa$.
+% Here we need to:
+% \begin{enumerate}
+%   \item
+%     Determine variables mentioned in the law that have not been matched ($vs_{um}$),
+%     because they occur outside the matched part.
+%     $$ vs_{um} = varsIn(t_P) \setminus \dom(\beta)$$
+%   \item
+%     Remove any that are ``known'' (perhaps bind to self?)
+%     $$vs_{ukm} = vs_{um} \setminus \dom(\kappa)$$
+%   \item
+%     Identify the law ASCs ($sc_{umP}$) that refer to the remaining
+%     unmatched variables.
+%     $$sc_{umP} = sc_P \cap vs_{ukm}$$
+%   \item
+%     For any $asc = \exists\lst x \supseteq P$ in $sc_{umP}$ :
+%     \begin{enumerate}
+%       \item $asc := \lst x \supseteq P$
+%       \item $sc_C := sc_C \land \lst x \subseteq \beta(P) $
+%       \item Possibly bind $\lst x$ to itself?
+%     \end{enumerate}
+%   \item
+%     Not sure what to do about other ASCs in $sc_{umP}$ just now.
+% \end{enumerate}
+% \textbf{
+%   In fact all pattern \texttt{ExCover} should be converted to \texttt{Covers},
+%   but only once the above steps have been done.
+% }
+%
+% \begin{code}
+% completeBind :: Monad m
+%              => [VarTable] -> Term -> SideCond -> Term -> SideCond
+%              -> Binding -> m (Binding,SideCond,SideCond)
+% completeBind vts tC scC tP scP bind
+%   | S.null unMappedUnkVars  =  return (bind,scC,scP)
+%   | otherwise  = completeASCs vts tC scC tP bind mappedASCs unMappedASCs
+%   where
+%     unMappedVars = mentionedVars tP S.\\ mappedVars bind
+%     unMappedUnkVars = S.filter (isUnknownGVar vts) unMappedVars
+%     unMappedASCs = citingASCs unMappedUnkVars scP
+%     mappedASCs = scP \\ unMappedASCs
+%
+% completeASCs :: Monad m
+%              => [VarTable] -> Term -> SideCond -> Term -> Binding
+%              -> SideCond -> SideCond -> m (Binding,SideCond,SideCond)
+% completeASCs vts tC scC tP bind mascP [] = return (bind,scC,mascP)
+% completeASCs vts tC scC tP bind mascP (umSC:unMappedASCs)
+%   = fail ("completeBind: not yet handling unmapped: " ++ trSideCond [umSC] )
+% \end{code}
 
 \newpage
 \subsection{Matching in Context}
@@ -903,16 +873,11 @@ basicMatch :: MatchClass
             -> Matches
 basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
   =  do bind <- match vts tC partsP
-        (bind',scC',scP') <- completeBind vts tC scC tP scP bind
-        scP'' <- instantiateSC bind' scP'
-        case scDischarge scC' scP'' of
-          Yes _ ->  [ MT n asn (chkPatn mc tP) bind' scC' scP'' repl
-                     -- (autoInstantiate bind' repl)
-                    ]
-                    -- case instantiate bind' repl of
-                    --   Nothing     ->  []
-                    --   Just irepl  ->  [MT n asn (chkPatn mc tP) bind' scC' scP'' irepl]
-          But _ ->  []
+        (bind',replC) <- autoInstantiate bind repl
+        -- (bind',scC',scP') <- completeBind vts tC scC tP scP bind
+        scPC <- instantiateSC bind' scP
+        scD <- scDischarge scC scPC        --
+        return $ MT n asn (chkPatn mc tP) bind' scC scPC repl
   where
 
     chkPatn mc (Var _ v)
@@ -1049,13 +1014,15 @@ displayMatches matches
 shMatch (i, mtch)
  = show i ++ " : "++ ldq ++ green (nicelawname $ mName mtch) ++ rdq
    ++ "  gives  "
-   ++ (bold $ blue $ trTerm 0 $ brepl)
+   ++ (bold $ blue $ showRepl ainst)
    ++ "  " ++ shSCImplication (mLocSC mtch) (mLawSC mtch)
    ++ " " ++ shMClass (mClass mtch)
  where
     bind = mBind mtch
-    brepl = autoInstantiate bind $ mRepl mtch
+    ainst = autoInstantiate bind $ mRepl mtch
     (_,lsc) = mAsn mtch
+    showRepl Nothing = "auto-instantiate failed!!"
+    showRepl (Just (_,brepl)) = trTerm 0 brepl
 
 shSCImplication scC scPm
   =     trSideCond scC

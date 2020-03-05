@@ -51,7 +51,11 @@ Simple ranking by replacement term size,
 after the binding is applied:
 \begin{code}
 sizeRank :: RankFunction
-sizeRank _ m = termSize $ autoInstantiate (mBind m) $ mRepl m
+sizeRank _ m
+ = case instantiate (mBind m) replL of
+    Just replC  ->  termSize replC
+    Nothing     ->  termSize replL
+ where replL = mRepl m
 
 termSize :: Term -> Int
 termSize (Val _ _)       = 1

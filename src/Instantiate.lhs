@@ -646,9 +646,10 @@ Another issue, what if some are unbound? Ignore for now.
 \subsubsection{Questionable Instantiation}
 
 \begin{code}
-autoInstantiate :: Binding -> Term -> Term
+autoInstantiate :: Monad m => Binding -> Term -> m (Binding,Term)
 autoInstantiate bind trm
- = fromJust $ instantiate abind trm
+ = do trm' <- instantiate abind trm
+      return (abind, trm')
  where
    unbound  =  findUnboundVars bind trm
    lvpairs  =  termLVarPairings trm

@@ -1,8 +1,7 @@
 # To Do
 
-The `tm` command now works properly, as does side-conditions instantiation
-and discharge.
-Next step is to ensure that the `m` and `a` commands do the right thing.
+The `tm` and 'm' commands now work properly.
+Next step is to ensure that `a` command does the right thing (it's not asking to complete `?Q` vars right now).
 
 
 ### SC Handling during Matching

@@ -54,7 +54,9 @@ sizeRank :: RankFunction
 sizeRank _ m
  = case instantiate (mBind m) replL of
     Just replC  ->  termSize replC
-    Nothing     ->  termSize replL
+    -- instantiate fails if some variables not bound (?v)
+    -- rank these as 'larger'
+    Nothing     ->  10 * termSize replL
  where replL = mRepl m
 
 termSize :: Term -> Int

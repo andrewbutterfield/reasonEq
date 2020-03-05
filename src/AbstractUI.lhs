@@ -471,29 +471,6 @@ tryFocusAgainst lawnm parts theSig liveProof
 \newpage
 \subsubsection{Apply Match to Focus}
 
-% \begin{code}
-% applyMatchToFocus :: Monad m => Int -> LiveProof -> m LiveProof
-% applyMatchToFocus i liveProof
-%   = let (tz,seq') = focus liveProof
-%         dpath = fPath liveProof
-%     in do mtch  <- nlookup i $ matches liveProof
-%           let bind = mBind mtch
-%           let repl = mRepl mtch
-%           let unbound = findUnboundVars bind repl
-%           let goalAsn = conjecture liveProof
-%           (abind,brepl) <- autoInstantiate bind (mRepl mtch)
-%           return ( focus_ ((setTZ brepl tz),seq')
-%                  $ matches_ []
-%                  $ conjSC_ (mLocSC mtch)
-%                  $ stepsSoFar__
-%                     (( UseLaw (ByMatch $ mClass mtch)
-%                               (mName mtch)
-%                               (mBind mtch)
-%                               dpath
-%                      , (exitTZ tz,conjSC liveProof)):)
-%                     liveProof )
-% \end{code}
-
 We have a 2-phase approach here.
 First we find the match, determine what variables
 in the replacement are missing from the binding,
@@ -518,18 +495,18 @@ applyMatchToFocus2 :: Monad m
                    => Match -> Binding
                    -> LiveProof -> m LiveProof
 applyMatchToFocus2 mtch ubind liveProof
-  = let bind = mBind mtch `mergeBindings` ubind
+  = let cbind = mBind mtch `mergeBindings` ubind
         repl = mRepl mtch
         (tz,seq') = focus liveProof
         dpath = fPath liveProof
-    in do brepl <- instantiate bind (mRepl mtch)
+    in do brepl <- instantiate cbind (mRepl mtch)
           return ( focus_ ((setTZ brepl tz),seq')
                  $ matches_ []
                  $ conjSC_ (mLocSC mtch)
                  $ stepsSoFar__
                     (( UseLaw (ByMatch $ mClass mtch)
                               (mName mtch)
-                              (mBind mtch)
+                              cbind
                               dpath
                      , (exitTZ tz,conjSC liveProof)):)
                     liveProof )

@@ -19,7 +19,7 @@ module LiveProofs
  , dispLiveProof
  , startProof, launchProof
  , displayMatches
- , buildMatchContext, matchInContexts,matchLawByName, tryLawByName
+ , buildMatchContext, matchInContexts, matchLawByName, tryLawByName
  , proofIsComplete, finaliseProof
  , undoCalcStep
  , makeEquivalence
@@ -499,61 +499,6 @@ getParts (p:ps) xs
 \end{code}
 
 
-% \newpage
-% \subsection{Completing a Binding}
-%
-% We have $t_C, sc_C, t_P, sc_P, t_{part}$
-% and $\beta$ from matching $t_C :: t_{part}$,
-% as well as the ``known'' variables $\kappa$.
-% Here we need to:
-% \begin{enumerate}
-%   \item
-%     Determine variables mentioned in the law that have not been matched ($vs_{um}$),
-%     because they occur outside the matched part.
-%     $$ vs_{um} = varsIn(t_P) \setminus \dom(\beta)$$
-%   \item
-%     Remove any that are ``known'' (perhaps bind to self?)
-%     $$vs_{ukm} = vs_{um} \setminus \dom(\kappa)$$
-%   \item
-%     Identify the law ASCs ($sc_{umP}$) that refer to the remaining
-%     unmatched variables.
-%     $$sc_{umP} = sc_P \cap vs_{ukm}$$
-%   \item
-%     For any $asc = \exists\lst x \supseteq P$ in $sc_{umP}$ :
-%     \begin{enumerate}
-%       \item $asc := \lst x \supseteq P$
-%       \item $sc_C := sc_C \land \lst x \subseteq \beta(P) $
-%       \item Possibly bind $\lst x$ to itself?
-%     \end{enumerate}
-%   \item
-%     Not sure what to do about other ASCs in $sc_{umP}$ just now.
-% \end{enumerate}
-% \textbf{
-%   In fact all pattern \texttt{ExCover} should be converted to \texttt{Covers},
-%   but only once the above steps have been done.
-% }
-%
-% \begin{code}
-% completeBind :: Monad m
-%              => [VarTable] -> Term -> SideCond -> Term -> SideCond
-%              -> Binding -> m (Binding,SideCond,SideCond)
-% completeBind vts tC scC tP scP bind
-%   | S.null unMappedUnkVars  =  return (bind,scC,scP)
-%   | otherwise  = completeASCs vts tC scC tP bind mappedASCs unMappedASCs
-%   where
-%     unMappedVars = mentionedVars tP S.\\ mappedVars bind
-%     unMappedUnkVars = S.filter (isUnknownGVar vts) unMappedVars
-%     unMappedASCs = citingASCs unMappedUnkVars scP
-%     mappedASCs = scP \\ unMappedASCs
-%
-% completeASCs :: Monad m
-%              => [VarTable] -> Term -> SideCond -> Term -> Binding
-%              -> SideCond -> SideCond -> m (Binding,SideCond,SideCond)
-% completeASCs vts tC scC tP bind mascP [] = return (bind,scC,mascP)
-% completeASCs vts tC scC tP bind mascP (umSC:unMappedASCs)
-%   = fail ("completeBind: not yet handling unmapped: " ++ trSideCond [umSC] )
-% \end{code}
-
 \newpage
 \subsection{Matching in Context}
 
@@ -877,7 +822,7 @@ basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
         -- (bind',scC',scP') <- completeBind vts tC scC tP scP bind
         scPC <- instantiateSC bind' scP
         scD <- scDischarge scC scPC        --
-        return $ MT n asn (chkPatn mc tP) bind' scC scPC repl
+        return $ MT n asn (chkPatn mc tP) bind scC scPC repl
   where
 
     chkPatn mc (Var _ v)

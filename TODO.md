@@ -1,55 +1,15 @@
 # To Do
 
-The `tm` and 'm' commands now work properly.
-Next step is to ensure that `a` command does the right thing (it's not asking to complete `?Q` vars right now).
-
-
-### SC Handling during Matching
-
-We invoke `matchFocus` which itself calls `matchInContexts`
-which invokes `domatch` on every law in scope.
-This calls `basicMatch`  and `doPartialMatch`.
-
-The key seems to be `basicMatch` which does (among other things:)
-
-```
-bind <- match vts tC partsP
-(bind',scC',scP') <- completeBind vts tC scC tP scP bind
-scP'' <- instantiateSC bind' scP'
-if scDischarged scC' scP'' then ... -- we return a match!       
-```
 
 ### SC Handling during match Application
 
-Old `applyMatchToFocus` (deprecated) did:
+The `x$ notin P` side-conditions work fine.
 
-```
-let unbound = findUnboundVars bind repl
-let goalAsn = conjecture liveProof
-let brepl = autoInstantiate bind (mRepl mtch)
-```
+In UClose we have a problem: `m`(`[P]`) yields `forall ?x$ @ P` with s.c. `?x$ supseteq P` 
 
-New `applyMatchToFocus1` does:
+Using `a` with this results in request to bind `x$` but with empty var-lists and var-sets,
+which aren't implementated anyway, resulting in `forall x$ @ P` with no side-condition.
 
-```
-let unbound = findUnboundVars (mBind mtch) (mRepl mtch)
-```
-
-while `applyMatchToFocus2` follows up with:
-
-```
-brepl <- instantiate bind (mRepl mtch)
-```
-
-### "Instantiations" and friends
-
-1. `Instantiate.instantiate :: Monad m => Binding -> Term -> m Term`
-2. `Instantiate.instantiateSC :: Monad m => Binding -> SideCond -> m SideCond`
-3. `Instantiate.autoInstantiate :: Binding -> Term -> Term`
-4. `Instantiate.findUnboundVars :: Binding -> Term -> VarSet`
-5. `Instantiate.termLVarPairings :: Term -> [(ListVar,ListVar)]`
-6. `Instantiate.mkEquivClasses :: Eq a => [(a,a)] -> [[a]]`
-7. `Instantiate.questionableBinding :: Binding -> [[ListVar]] -> VarSet -> Binding`
 
 ## Robustness
 

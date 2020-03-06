@@ -3,13 +3,18 @@
 
 ### SC Handling during match Application
 
-The `x$ notin P` side-conditions work fine.
+We can match `[P]` against law `[]_def` to get `forall x$ @ P` with extended side-condition `x$ supseteq P`.
 
-In UClose we have a problem: `m`(`[P]`) yields `forall ?x$ @ P` with s.c. `?x$ supseteq P` 
+We can match `[Q]` against law `[]_def` to get `forall x$ @ Q` with extended side-condition `x$ supseteq Q`.
 
-Using `a` with this results in request to bind `x$` but with empty var-lists and var-sets,
-which aren't implementated anyway, resulting in `forall x$ @ P` with no side-condition.
+When we try to match `[P/\Q]` against `[]_def`, 
+the *match* fails because
 
+```
+grpDischarge: goal s.c falsifies law s.c.
+
+x̅ ⊇ P;x̅ ⊇ Q ⟹ ?̅x̅ ⊇ P;?̅x̅ ⊇ Q
+```
 
 ## Robustness
 

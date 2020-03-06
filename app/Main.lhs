@@ -891,7 +891,7 @@ requestBindings (t,f) (goalTerm,_) unbound
       gvarMenu = numberList trGVar gvars
 
       lvarPrompt = unlines' [ "numbers separated by spaces"
-                            , "enter >"
+                            , "enter > "
                             ]
 
       vlists :: [VarList]
@@ -903,6 +903,8 @@ requestBindings (t,f) (goalTerm,_) unbound
 
       -- we count from 1 !
       inrange upper i = 0 < i && i <= upper
+
+      getFrom1 list i = list!!(i-1)
 
       rB ubind [] = do putStrLn ("Done: " ++ trBinding ubind)
                        userPause
@@ -923,7 +925,7 @@ requestBindings (t,f) (goalTerm,_) unbound
              putStrLn vlistMenu
              putStrLn ("unbound "++trLVar lv)
              responseBits <- fmap (map readInt . words) $ userPrompt lvarPrompt
-             handleLVarResponse ubind gvs lv gvs' responseBits
+             handleLVarResponse ubind gvs lv gvs' $ nub responseBits
 
       handleVarResponse ubind gvs v gvs' response
        = if inrange termLen response
@@ -932,15 +934,14 @@ requestBindings (t,f) (goalTerm,_) unbound
                Just ubind'  ->  rB ubind' gvs'
          else rB ubind gvs
 
-      handleLVarResponse ubind gvs lv gvs' (i:_) -- just do one for now
-       = if inrange vlistLen i
-         then
-           case bindLVarToVList lv (vlists!!(i-1)) ubind of
-             Nothing      ->  putStrLn "bind lvar failed"
-                              >> userPause >> return ubind
-             Just ubind'  ->  rB ubind' gvs'
+      handleLVarResponse ubind gvs lv gvs' ixs -- just do one for now
+       = if all (inrange vlistLen) ixs
+         then do let myvlist = concat $ map (getFrom1 vlists) ixs
+                 case bindLVarToVList lv myvlist ubind of
+                   Nothing      ->  putStrLn "bind lvar failed"
+                                    >> userPause >> return ubind
+                   Just ubind'  ->  rB ubind' gvs'
          else rB ubind gvs
-      handleLVarResponse ubind gvs lv gvs' _ = rB ubind gvs'
 
     in rB emptyBinding $ S.toList unbound
 \end{code}

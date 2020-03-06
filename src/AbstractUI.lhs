@@ -489,7 +489,9 @@ applyMatchToFocus1 i liveProof
 Now given the match,
 and a binding for the previously unbound replacement variables ,
 we proceed to fully instantiate the replacement term,
-and use it to replace the current focus.
+and the law side-condition.
+We then try to discharge that side-condition.
+If succesful, we replace the focus.
 \begin{code}
 applyMatchToFocus2 :: Monad m
                    => Match -> VarSet -> Binding
@@ -497,12 +499,17 @@ applyMatchToFocus2 :: Monad m
 applyMatchToFocus2 mtch unbound ubind liveProof
   = let cbind = mBind mtch `mergeBindings` ubind
         repl = mRepl mtch
+        scL = snd $ mAsn mtch
+        scC = conjSC liveProof
         (tz,seq') = focus liveProof
         dpath = fPath liveProof
-    in do brepl <- instantiate cbind (mRepl mtch)
+    in do brepl  <- instantiate   cbind repl
+          scLasC <- instantiateSC cbind scL
+          scD <- scDischarge scC scLasC
+          scC' <- checkDischargedSC unbound scC scD
           return ( focus_ ((setTZ brepl tz),seq')
                  $ matches_ []
-                 $ conjSC_ (mLocSC mtch)
+                 $ conjSC_ scC'
                  $ stepsSoFar__
                     (( UseLaw (ByMatch $ mClass mtch)
                               (mName mtch)

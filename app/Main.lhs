@@ -890,49 +890,57 @@ requestBindings (t,f) (goalTerm,_) unbound
       gvarLen = length gvars
       gvarMenu = numberList trGVar gvars
 
-      gvarPrompt = unlines' [ "<c> <number-list> where "
-                            , "<c> is 's' (set) or 'l' (list)"
-                            , "<number-list> is numbers separated by spaces"
-                            , "enter > "
+      lvarPrompt = unlines' [ "numbers separated by spaces"
+                            , "enter >"
                             ]
 
-      vlists = mentionedVarLists goalTerm
-      vlistLen = length vlists
+      vlists :: [VarList]
+      vlists    = mentionedVarLists goalTerm
+                  ++ map S.toList (mentionedVarSets goalTerm)
+                  ++ map (:[]) (S.toList unbound)
+      vlistLen  = length vlists
       vlistMenu = numberList trVList vlists
 
-      unboundAsSets = map S.singleton $ S.toList unbound
-      vsets = mentionedVarSets goalTerm ++ unboundAsSets
-      vsetLen = length vsets
-      vsetMenu = numberList trVSet vsets
+      -- we count from 1 !
+      inrange upper i = 0 < i && i <= upper
 
-      rB ubind [] = return ubind
+      rB ubind [] = do putStrLn ("Done: " ++ trBinding ubind)
+                       userPause
+                       return ubind
 
       rB ubind gvs@(StdVar v : gvs')
         = do putStrLn ("bindings so far: "++trBinding ubind)
              putStrLn termMenu
              putStrLn ("unbound "++trVar v)
              response <- fmap readInt $ userPrompt "Choose term by number: "
-             handleVarResponse ubind v gvs' response
+             handleVarResponse ubind gvs v gvs' response
 
 
       rB ubind gvs@(LstVar lv : gvs')
         = do putStrLn ("bindings so far: "++trBinding ubind)
-             putStrLn ("var-lists: " ++ seplist " " trVList vlists)
-             putStrLn ("var-sets:  " ++ seplist " " trVSet vsets)
-             putStrLn gvarMenu
+             -- putStrLn ("var-lists: " ++ seplist " " trVList vlists)
+             -- putStrLn ("var-sets:  " ++ seplist " " trVSet vsets)
+             putStrLn vlistMenu
              putStrLn ("unbound "++trLVar lv)
-             responseBits <- fmap words $ userPrompt gvarPrompt
-             if null responseBits
-               then rB ubind gvs
-               else do userPrompt "list-var not handled, hit <return> to continue"
-                       rB ubind gvs'
+             responseBits <- fmap (map readInt . words) $ userPrompt lvarPrompt
+             handleLVarResponse ubind gvs lv gvs' responseBits
 
-      handleVarResponse ubind v gvs' response
-       = if response <= 0 || termLen < response
-         then rB ubind gvs
-         else case bindVarToTerm v (terms!!(response-1)) ubind of
+      handleVarResponse ubind gvs v gvs' response
+       = if inrange termLen response
+         then case bindVarToTerm v (terms!!(response-1)) ubind of
                Nothing      ->  putStrLn "bind var failed" >> return ubind
                Just ubind'  ->  rB ubind' gvs'
+         else rB ubind gvs
+
+      handleLVarResponse ubind gvs lv gvs' (i:_) -- just do one for now
+       = if inrange vlistLen i
+         then
+           case bindLVarToVList lv (vlists!!(i-1)) ubind of
+             Nothing      ->  putStrLn "bind lvar failed"
+                              >> userPause >> return ubind
+             Just ubind'  ->  rB ubind' gvs'
+         else rB ubind gvs
+      handleLVarResponse ubind gvs lv gvs' _ = rB ubind gvs'
 
     in rB emptyBinding $ S.toList unbound
 \end{code}

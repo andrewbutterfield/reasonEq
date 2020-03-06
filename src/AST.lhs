@@ -620,13 +620,16 @@ subTerms t               =  [t]
 
 \subsubsection{(General) Variables}
 
+Here we return all variables mentioned in a term,
+regardless of whether or not they are free or bound.
+
 \begin{code}
 mentionedVars :: Term -> VarSet
 mentionedVars (V _ v)       =  S.singleton $ StdVar v
 mentionedVars (C _ _ ts)    =  S.unions $ map mentionedVars ts
 mentionedVars (B _ _ vs t)  =  mentionedVars t `S.union` vs
 mentionedVars (L _ _ vl t)  =  mentionedVars t `S.union` (S.fromList vl)
-mentionedVars (X _ _)       =  S.empty
+mentionedVars (X _ t)       =  mentionedVars t
 mentionedVars (S _ t (SN tsub lvsub))
   = (mentionedVars t `S.union` tvs) `S.union` rvs
   where

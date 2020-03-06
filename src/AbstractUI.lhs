@@ -492,9 +492,9 @@ we proceed to fully instantiate the replacement term,
 and use it to replace the current focus.
 \begin{code}
 applyMatchToFocus2 :: Monad m
-                   => Match -> Binding
+                   => Match -> VarSet -> Binding
                    -> LiveProof -> m LiveProof
-applyMatchToFocus2 mtch ubind liveProof
+applyMatchToFocus2 mtch unbound ubind liveProof
   = let cbind = mBind mtch `mergeBindings` ubind
         repl = mRepl mtch
         (tz,seq') = focus liveProof

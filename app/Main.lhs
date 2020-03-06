@@ -869,7 +869,7 @@ applyMatch args pstate@(reqs, liveProof)
                          , "please supply bindings as requested"
                          ]
              ubind <- requestBindings (true,false) (conjecture liveProof) unbound
-             tryDelta (applyMatchToFocus2 mtch ubind) pstate
+             tryDelta (applyMatchToFocus2 mtch unbound ubind) pstate
   where
     true   =  theTrue  $ logicsig reqs
     false  =  theFalse $ logicsig reqs
@@ -878,6 +878,7 @@ applyMatch args pstate@(reqs, liveProof)
 For every unbound pattern variable in the replacement,
 we ask the user to pick from a list of terms:
 \begin{code}
+requestBindings :: (Term, Term) -> (Term, b) -> Set GenVar -> IO Binding
 requestBindings (t,f) (goalTerm,_) unbound
   = let
 
@@ -899,7 +900,8 @@ requestBindings (t,f) (goalTerm,_) unbound
       vlistLen = length vlists
       vlistMenu = numberList trVList vlists
 
-      vsets = mentionedVarSets goalTerm
+      unboundAsSets = map S.singleton $ S.toList unbound
+      vsets = mentionedVarSets goalTerm ++ unboundAsSets
       vsetLen = length vsets
       vsetMenu = numberList trVSet vsets
 
@@ -910,11 +912,8 @@ requestBindings (t,f) (goalTerm,_) unbound
              putStrLn termMenu
              putStrLn ("unbound "++trVar v)
              response <- fmap readInt $ userPrompt "Choose term by number: "
-             if response <= 0 || termLen < response
-               then rB ubind gvs
-               else case bindVarToTerm v (terms!!(response-1)) ubind of
-                     Nothing      ->  putStrLn "bind var failed" >> return ubind
-                     Just ubind'  ->  rB ubind' gvs'
+             handleVarResponse ubind v gvs' response
+
 
       rB ubind gvs@(LstVar lv : gvs')
         = do putStrLn ("bindings so far: "++trBinding ubind)
@@ -927,6 +926,13 @@ requestBindings (t,f) (goalTerm,_) unbound
                then rB ubind gvs
                else do userPrompt "list-var not handled, hit <return> to continue"
                        rB ubind gvs'
+
+      handleVarResponse ubind v gvs' response
+       = if response <= 0 || termLen < response
+         then rB ubind gvs
+         else case bindVarToTerm v (terms!!(response-1)) ubind of
+               Nothing      ->  putStrLn "bind var failed" >> return ubind
+               Just ubind'  ->  rB ubind' gvs'
 
     in rB emptyBinding $ S.toList unbound
 \end{code}

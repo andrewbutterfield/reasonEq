@@ -22,17 +22,19 @@ BEGIN LIVE-PROOF
 TH-NAME: UClose
 CJ-NAME: land_[]_distr
 CONJ = (C P (Id "equiv") [C P (Id "land") [X (Id "[_]") (V P (VR (Id "P",VP,WS))),X (Id "[_]") (V P (VR (Id "Q",VP,WS)))],X (Id "[_]") (C P (Id "land") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))])],[])
-SIDE = []
+SIDE = [SS (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]),SS (GV (VR (Id "Q",VP,WS))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])]
 STRAT reduce
 BEGIN SEQZIP
-TERMZIP = (X (Id "[_]") (V P (VR (Id "P",VP,WS))),[Cons' P (Id "land") [] [X (Id "[_]") (V P (VR (Id "Q",VP,WS)))],Cons' P (Id "equiv") [] [X (Id "[_]") (C P (Id "land") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))])]])
+TERMZIP = (X (Id "[_]") (C P (Id "land") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))]),[Cons' P (Id "equiv") [C P (Id "land") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS))),B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "Q",VP,WS)))]] []])
 BEGIN SEQUENT'
 SIDECOND = []
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.land_[]_distr", thDeps = [], known = VD (fromList [],fromList [],fromList []), subable = fromList [], laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
 END SEQUENT'
 END SEQZIP
-FPATH: [1,1]
+FPATH: [2]
 BEGIN LIST STEPS
+(UseLaw (ByMatch (ME [1])) "[]_def" (BD (fromList [((Id "P",VP),BV (VR (Id "Q",VP,WS)))],fromList [],fromList [((Id "x",VO,[],[]),BL [GL (LV (VR (Id "x",VO,WS),[],[]))])])) [1,2],(C P (Id "equiv") [C P (Id "land") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS))),X (Id "[_]") (V P (VR (Id "Q",VP,WS)))],X (Id "[_]") (C P (Id "land") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))])],[SS (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])]))
+(UseLaw (ByMatch (ME [1])) "[]_def" (BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [((Id "x",VO,[],[]),BL [GL (LV (VR (Id "x",VO,WS),[],[]))])])) [1,1],(C P (Id "equiv") [C P (Id "land") [X (Id "[_]") (V P (VR (Id "P",VP,WS))),X (Id "[_]") (V P (VR (Id "Q",VP,WS)))],X (Id "[_]") (C P (Id "land") [V P (VR (Id "P",VP,WS)),V P (VR (Id "Q",VP,WS))])],[]))
 END LIST STEPS
 END LIVE-PROOF
 END MAP LIVE-PROOFS

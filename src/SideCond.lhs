@@ -33,6 +33,10 @@ import Test.HUnit
 import Test.Framework as TF (defaultMain, testGroup, Test)
 import Test.Framework.Providers.HUnit (testCase)
 --import Test.Framework.Providers.QuickCheck2 (testProperty)
+
+import Debug.Trace
+dbg msg x = trace (msg++show x) x
+pdbg nm x = dbg ('@':nm++":\n") x
 \end{code}
 
 
@@ -418,9 +422,9 @@ scDischarge' (grpG@(gvG,ascsG):restG) grpsL@(grpL@(gvL,ascsL):restL)
                      rest' <- scDischarge' restG restL
                      return (ascsL++rest')
   | otherwise  =  do -- use grpG to discharge grpL
-                     ascs' <- grpDischarge ascsG ascsL
+                     ascs' <- grpDischarge (pdbg "ascsG" ascsG) $ pdbg "ascsL" ascsL
                      rest' <- scDischarge' restG restL
-                     return (ascs'++rest')
+                     return (pdbg "ascs'" ascs'++rest')
 \end{code}
 
 \newpage
@@ -432,44 +436,47 @@ The following code assumes that the \texttt{GenVar} component
 is the same in all of the \texttt{AtmSideCond}.
 
 Here again, we have the form
-$$
+\begin{equation}
  \left( \bigwedge_{i \in \setof{D,C,pre}} G_i \right)
  \implies
  \left( \bigwedge_{j \in \setof{D,C,pre}} L_j \right)
-$$
+ \label{eqn:SideCond:disharge-form}
+\end{equation}
+If we get here, then neither side-condition was trivially true,
+so none of the lists here are empty.
+
 Given that
 \begin{eqnarray*}
    A \land B \implies C &=& (A \implies C) \lor  (B \implies C)
 \\ A \implies B \land C &=& (A \implies B) \land (A \implies C)
 \end{eqnarray*}
-we see that we only need one of the $G_i$ to imply all of the $L_j$
-to succeed.
-A question that might be raised is,
-what happens if $G_D$ (say) makes $L_j$ true,
-while $G_C$ makes $L_j$ false?
-In this case, and similar,
-the goal side-condition will have been shown to be false,
-so we will never get this far.
+we can ask: in which order should we proceed?
 
-
-If we get here, then neither side-condition was trivially true,
-so none of the lists here are empty.
+Both orderings give the same outcome if all we want to do
+is to simplify an instance of (\ref{eqn:SideCond:disharge-form}).
+However, we are assuming all the $G_i$ are true,
+and want to know if that is enough to ensure that all the $L_j$
+are also true.
+There is an asymmetry here, which means that we should
+use all the $G_i$ to try and discharge each $L_i$,
+rather than the other way around.
 \begin{code}
 grpDischarge :: Monad m => [AtmSideCond] -> [AtmSideCond] -> m [AtmSideCond]
-grpDischarge (ascG:ascsG) ascsL
-  = case ascsDischarge ascG ascsL of
-      Yes ascsL'  ->  return ascsL'
-      But _       ->  grpDischarge ascsG ascsL -- try next antecedent
-grpDischarge [] _  =  fail "grpDischarge: goal s.c falsifies law s.c."
+grpDischarge _ []  =  return []
+grpDischarge ascsG (ascL:ascsL)
+  = do ascL'  <- ascsDischarge ascsG ascL
+       ascsL' <- grpDischarge ascsG ascsL
+       return (ascL'++ascsL')
 \end{code}
 
 \begin{code}
-ascsDischarge :: Monad m => AtmSideCond -> [AtmSideCond] -> m [AtmSideCond]
-ascsDischarge ascG (ascL:ascsL)
-  =  do ascL' <- ascDischarge ascG ascL
-        ascsL' <- ascsDischarge ascG ascsL
-        return (ascL'++ascsL')
-ascsDischarge ascG [] = return []
+ascsDischarge :: Monad m => [AtmSideCond] -> AtmSideCond -> m [AtmSideCond]
+ascsDischarge [] ascL = return [ascL]
+ascsDischarge (ascG:ascsG) ascL
+  =  case ascDischarge ascG ascL of
+      Yes []       ->  return []
+      Yes [ascL']  ->  ascsDischarge ascsG ascL'
+      But msgs     ->  fail $ unlines msgs
 \end{code}
 
 
@@ -477,9 +484,12 @@ Finally, we get to where the real work is done:
 \begin{code}
 ascDischarge :: Monad m => AtmSideCond -> AtmSideCond -> m [AtmSideCond]
 \end{code}
+
 If the general variable is a standard variable $v$,
 then we can discharge or falsify an atomic side-condition
 very easily:
+\textbf{NO - this is broken!!! The general variable is a proxy for
+a term}
 \begin{eqnarray*}
    D_L \disj \setof{v} & \textbf{when} & v \notin D_L
 \\ C_L \supset \setof{v} & \textbf{when} & v \in C_L
@@ -487,7 +497,7 @@ very easily:
 \begin{code}
 ascDischarge _ (Disjoint gv@(StdVar _) dL)
   | gv `S.member` dL  =  fail "law variable s.c. (disjoint) is false"
-  | otherwise         =  return [] -- truee
+  | otherwise         =  return [] -- true
 ascDischarge _ (Covers gv@(StdVar _) cL)
   | gv `S.member` cL  =  return [] -- true
   | otherwise         =  fail "law variable s.c. (covers) is false"
@@ -496,7 +506,7 @@ ascDischarge _ (Covers gv@(StdVar _) cL)
 \newpage
 If we have a list-variable $\lst V$
 then we have a situation where we may be able to discharge,
-or falsify, but also have the possbility of being unable to do either.
+or falsify, but also have the possibility of being unable to do either.
 This may result in the side-condition being retained,
 perhaps ``reduced'' to some degree.
 

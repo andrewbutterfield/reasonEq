@@ -16,6 +16,8 @@ grpDischarge: goal s.c falsifies law s.c.
 x̅ ⊇ P;x̅ ⊇ Q ⟹ ?̅x̅ ⊇ P;?̅x̅ ⊇ Q
 ```
 
+**THIS IS BECAUSE `ascDischarge` HAS `StdVar` CASES THAT COMPARE `x̅` WITH `P`, WHICH IS PLAIN WRONG**
+
 ## Robustness
 
 ### Robust Load

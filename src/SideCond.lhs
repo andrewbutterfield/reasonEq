@@ -479,40 +479,25 @@ ascsDischarge (ascG:ascsG) ascL
       But msgs     ->  fail $ unlines msgs
 \end{code}
 
+\newpage
 
 Finally, we get to where the real work is done:
 \begin{code}
 ascDischarge :: Monad m => AtmSideCond -> AtmSideCond -> m [AtmSideCond]
+-- ascDischarge ascG ascL
+-- ascGVar ascG == ascGVar ascL
 \end{code}
 
-If the general variable is a standard variable $v$,
-then we can discharge or falsify an atomic side-condition
-very easily:
-\textbf{NO - this is broken!!! The general variable is a proxy for
-a term}
-\begin{eqnarray*}
-   D_L \disj \setof{v} & \textbf{when} & v \notin D_L
-\\ C_L \supset \setof{v} & \textbf{when} & v \in C_L
-\end{eqnarray*}
-\begin{code}
-ascDischarge _ (Disjoint gv@(StdVar _) dL)
-  | gv `S.member` dL  =  fail "law variable s.c. (disjoint) is false"
-  | otherwise         =  return [] -- true
-ascDischarge _ (Covers gv@(StdVar _) cL)
-  | gv `S.member` cL  =  return [] -- true
-  | otherwise         =  fail "law variable s.c. (covers) is false"
-\end{code}
-
-\newpage
-If we have a list-variable $\lst V$
-then we have a situation where we may be able to discharge,
+We use $V$ to denote the general variable,
+which represents some set of (other) variables.
+We have a situation where we may be able to discharge,
 or falsify, but also have the possibility of being unable to do either.
 This may result in the side-condition being retained,
 perhaps ``reduced'' to some degree.
 
 \begin{eqnarray*}
-   D_G \disj \lst V \implies D_L \disj \lst V
-   & = & (D_L\setminus D_G) \disj \lst V
+   D_G \disj V \implies D_L \disj V
+   & = & (D_L\setminus D_G) \disj V
 \\ & = & \true, \quad \textbf{if } D_L \subseteq D_G
 \end{eqnarray*}
 \begin{code}
@@ -522,8 +507,8 @@ ascDischarge (Disjoint _ dG) (Disjoint gv dL)
 \end{code}
 
 \begin{eqnarray*}
-   C_G \supseteq \lst V \implies D_L \disj \lst V
-   & = & (C_G \cap D_L) \disj \lst V
+   C_G \supseteq V \implies D_L \disj V
+   & = & (C_G \cap D_L) \disj V
 \\ & = & \false, \quad \textbf{if } C_G \subseteq D_L
 \end{eqnarray*}
 \begin{code}
@@ -533,8 +518,8 @@ ascDischarge (Covers _ cG) (Disjoint gv dL)
 \end{code}
 
 \begin{eqnarray*}
-   C_G \supseteq \lst V \implies C_L \supseteq \lst V
-   & = & (C_G \cap C_L) \supseteq \lst V
+   C_G \supseteq V \implies C_L \supseteq V
+   & = & (C_G \cap C_L) \supseteq V
 \\ & = & \true, \quad \textbf{if } C_G \subseteq C_L
 \end{eqnarray*}
 \begin{code}
@@ -544,8 +529,8 @@ ascDischarge (Covers _ cG) (Covers gv cL)
 \end{code}
 
 \begin{eqnarray*}
-   D_G \disj \lst V \implies C_L \supseteq \lst V
-   & = & (C_L \setminus D_G) \supseteq \lst V
+   D_G \disj V \implies C_L \supseteq V
+   & = & (C_L \setminus D_G) \supseteq V
 \\ & = & \false, \quad \textbf{if } C_L \subseteq D_G
 \end{eqnarray*}
 \begin{code}

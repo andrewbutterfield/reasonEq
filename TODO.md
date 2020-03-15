@@ -1,22 +1,10 @@
 # To Do
 
+### Laws
 
-### SC Handling during match Application
+WE hard-coded substitution, and now we have to hard-code quantifier scope support
 
-We can match `[P]` against law `[]_def` to get `forall x$ @ P` with extended side-condition `x$ supseteq P`.
-
-We can match `[Q]` against law `[]_def` to get `forall x$ @ Q` with extended side-condition `x$ supseteq Q`.
-
-When we try to match `[P/\Q]` against `[]_def`, 
-the *match* fails because
-
-```
-grpDischarge: goal s.c falsifies law s.c.
-
-x̅ ⊇ P;x̅ ⊇ Q ⟹ ?̅x̅ ⊇ P;?̅x̅ ⊇ Q
-```
-
-**THIS IS BECAUSE `ascDischarge` HAS `StdVar` CASES THAT COMPARE `x̅` WITH `P`, WHICH IS PLAIN WRONG**
+Example: `(∀ x̅ • (∀ x̅ • P)),  x̅ ⊇ P`  should be reducible to `(∀ x̅ • P),  x̅ ⊇ P`
 
 ## Robustness
 

@@ -19,6 +19,7 @@ module AbstractUI
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, matchFocusAgainst
 , applyMatchToFocus1, applyMatchToFocus2
+, nestSimpFocus
 , substituteFocus, revSubstituteFocus
 , tryFocusAgainst
 , observeLawsInScope
@@ -519,6 +520,27 @@ applyMatchToFocus2 mtch unbound ubind liveProof
                     liveProof )
 \end{code}
 
+
+\subsubsection{Simplify Nested Quantifiers Substitution}
+
+\begin{code}
+nestSimpFocus :: Monad m => Theories -> LiveProof -> m LiveProof
+nestSimpFocus thrys liveProof
+  = let (tz,seq') = focus liveProof
+        dpath = fPath liveProof
+        t = getTZ tz
+        sams = map subable $ getTheoryDeps' (conjThName liveProof) thrys
+    in case nestSimplify t of
+        Yes t' -> return ( focus_ ((setTZ t' tz),seq')
+                         $ matches_ []
+                         $ stepsSoFar__
+                            (( NestSimp dpath
+                             , (exitTZ tz,conjSC liveProof)):)
+                            liveProof )
+        _      -> fail "nesting simplify only for nested (similar) quantifiers"
+\end{code}
+
+\subsubsection{Reverse Substitution}
 
 \subsubsection{Perform Substitution}
 

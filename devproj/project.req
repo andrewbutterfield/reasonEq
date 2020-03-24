@@ -17,27 +17,6 @@ END THEORIES
 CURRTHEORY = UClose
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("UClose","[]_idem")
-BEGIN LIVE-PROOF
-TH-NAME: UClose
-CJ-NAME: []_idem
-CONJ = (C P (Id "equiv") [X (Id "[_]") (X (Id "[_]") (V P (VR (Id "P",VP,WS)))),X (Id "[_]") (V P (VR (Id "P",VP,WS)))],[])
-SIDE = [SS (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])]
-STRAT reduce
-BEGIN SEQZIP
-TERMZIP = (B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))),[Cons' P (Id "equiv") [] [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))]])
-BEGIN SEQUENT'
-SIDECOND = []
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.[]_idem", thDeps = [], known = VD (fromList [],fromList [],fromList []), subable = fromList [], laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
-END SEQUENT'
-END SEQZIP
-FPATH: [1]
-BEGIN LIST STEPS
-(UseLaw (ByMatch (ME [1])) "[]_def" (BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [((Id "x",VO,[],[]),BL [GL (LV (VR (Id "x",VO,WS),[],[]))])])) [1,1],(C P (Id "equiv") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (X (Id "[_]") (V P (VR (Id "P",VP,WS)))),B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))],[SS (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])]))
-(UseLaw (ByMatch (ME [1])) "[]_def" (BD (fromList [((Id "P",VP),BT (X (Id "[_]") (V P (VR (Id "P",VP,WS)))))],fromList [],fromList [((Id "x",VO,[],[]),BL [GL (LV (VR (Id "x",VO,WS),[],[]))])])) [1],(C P (Id "equiv") [X (Id "[_]") (X (Id "[_]") (V P (VR (Id "P",VP,WS)))),B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))]) (V P (VR (Id "P",VP,WS)))],[SS (GV (VR (Id "P",VP,WS))) (fromList [GL (LV (VR (Id "x",VO,WS),[],[]))])]))
-(UseLaw (ByMatch (ME [1])) "[]_def" (BD (fromList [((Id "P",VP),BV (VR (Id "P",VP,WS)))],fromList [],fromList [((Id "x",VO,[],[]),BL [GL (LV (VR (Id "x",VO,WS),[],[]))])])) [2],(C P (Id "equiv") [X (Id "[_]") (X (Id "[_]") (V P (VR (Id "P",VP,WS)))),X (Id "[_]") (V P (VR (Id "P",VP,WS)))],[]))
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

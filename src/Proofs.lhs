@@ -342,7 +342,7 @@ data HowUsed
 
 The justification of a step records details of that step,
 sufficient both to document the step for the reader,
-and to be able to mechanically reply that step, or reverse it.
+and to be able to mechanically replay that step, or reverse it.
 \textbf{
   Maybe we should have the focus path ([Int]) in all variants,
   as we would like to restore the previous focus
@@ -355,6 +355,8 @@ data Justification
       Binding              -- binding from law variables to goal components
       [Int]                -- zipper descent arguments
   | Substitute         -- performed a substitution
+      [Int]                -- zipper descent arguments
+  | NestSimp           -- simplified nested quantifiers
       [Int]                -- zipper descent arguments
   | Switch             -- switched focus at sequent level
       SeqFocus             -- focus before switch -- needed to reverse this.
@@ -439,6 +441,8 @@ labelAsProven nasn (prfnm,_,_,_) =  (nasn, Proven prfnm)
 showJustification :: Justification -> String
 showJustification (UseLaw how lnm bind dpath)
   =  "   = '"++showHow how++" "++nicelawname lnm++"@" ++ show dpath ++ "'"
+showJustification (NestSimp dpath)
+  =  "   = 'nest-simp @" ++ show dpath ++ "'"
 showJustification (Substitute dpath)
   =  "   = 'substitute @" ++ show dpath ++ "'"
 showJustification (Switch from to)

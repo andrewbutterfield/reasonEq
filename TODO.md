@@ -2,15 +2,15 @@
 
 ### Laws
 
-We hard-coded substitution, and now we have to hard-code quantifier scope support
+We have hard-coded nesting simplification (`FreeVars.lhs`).
 
-Examples: 
+However, we still need a hard-coded rule of the form `(∀ x̅ • (∃ y̅ • P)) = (∃ y̅ • P)` whenever `y̅ covers P`.
 
- * `(∀ x̅ • (∀ x̅ • P)),  x̅ ⊇ P` to `(∀ x̅ • P),  x̅ ⊇ P`
- * `(∀ y̅ • (∀ x̅ • P)),  x̅ ⊇ P;y̅ ⊇ P` to `(∀ x̅ • P),  x̅ ⊇ P`
- * `(∀ x̅ • (∀ y̅ • P)),  y̅ ⊇ x̅` to `(∀ y̅ • P)` 
- * `(∀ x̅ • P),  x̅ ∉ P` to `P`
-
+When we expand `[P]` twice using `[]_def`, 
+we need to end up at `(∀ x̅ • (∀ y̅ • P)`, 
+where both `x̅` and `y̅`
+are *fresh*.
+**Having both the same is unsound**.
 
 ## Robustness
 

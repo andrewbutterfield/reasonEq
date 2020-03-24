@@ -694,6 +694,7 @@ proofREPLConfig
             , matchLawDescr
             , tryMatchDescr
             , applyMatchDescr
+            , simpNestDescr
             , substituteDescr
             , revSubstituteDescr
             , flatEquivDescr
@@ -944,6 +945,26 @@ requestBindings (t,f) (goalTerm,_) unbound
          else rB ubind gvs
 
     in rB emptyBinding $ S.toList unbound
+\end{code}
+
+\newpage
+Simplify Nested Quantifiers
+\begin{code}
+simpNestDescr = ( "n"
+                , "nest Q simplify"
+                , unlines
+                   [ "n       -- simplify nested (similar) quantifiers" ]
+                , simpNestCommand )
+
+simpNestCommand :: REPLCmd (REqState, LiveProof)
+simpNestCommand _ state@(reqs, liveProof)
+  =  case nestSimpFocus (theories reqs) liveProof of
+      Yes liveProof'  ->  return (reqs, liveProof')
+      But msgs
+       -> do putStrLn $ unlines' msgs
+             putStrLn "<return> to continue"
+             getLine
+             return (reqs, matches_ [] liveProof)
 \end{code}
 
 \newpage

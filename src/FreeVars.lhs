@@ -9,6 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module FreeVars
 ( freeVars
 , substRelFree
+, nestSimplify
 ) where
 import Data.Set(Set)
 import qualified Data.Set as S
@@ -99,12 +100,43 @@ applicable wrap tfv (t,_) = wrap t `S.member` tfv
 \newpage
 \subsection{Quantifier Nesting}
 
-We cannot write laws to simplify nested quantifiers
-because we want to condition laws to have no shadowing of bound variables.
-So we have to hardwire the basic simplication law:
-\[
-       (\Gamma_i V_i \bullet \Gamma_j V_j \bullet P)
-       =
-       (\Gamma_i (V_i\setminus V_j) \bullet \Gamma_j V_j \bullet P)
-\]
-Only applicable when variable-sets are used in a quantifier.
+Support for quantifier nesting needs to be hardwired in.
+
+\subsubsection{Nesting Simplification}
+
+So we have to hardwire the basic simplification laws:
+\begin{eqnarray*}
+   (\bb n {V_i }{\bb n {V_j} P})
+   &=& (\bb n {(V_i \cup V_j)}  P)
+\\ (\bb i {V_i} {\bb j {V_j} P)}
+   &=& (\bb i {(V_i\setminus V_j)} {\bb j {V_j}  P})
+\\ &=& \bb j {V_j}  P, \qquad \IF ~V_i \subseteq V_j
+\\ (\ll n {\sigma_i } {\ll n {\sigma_j} P})
+   &=& (\ll n {(\sigma_i \cat \sigma_j)}  P)
+\end{eqnarray*}
+
+Function \texttt{nestSimplify} returns a simplified term
+if one of the laws above applies, otherwise it fails.
+\begin{code}
+nestSimplify :: Monad m => Term -> m Term
+
+nestSimplify (Bnd tk1 n1 vs1 t1@(Bnd tk2 n2 vs2 t2))
+ | tk1 /= tk2              =  fail ("nestSimplify: mixed bind term-kinds")
+ | n1 /= n2                =  bnd tk1 n1 (vs1 S.\\ vs2) t1
+ | vs1 `S.isSubsetOf` vs2  =  return t1
+ | otherwise               =  bnd tk1 n1 (vs1 `S.union` vs2) t1
+
+nestSimplify (Lam tk1 n1 vl1 (Lam tk2 n2 vl2 t2))
+ | tk1 /= tk2  =  fail ("nestSimplify: mixed lambda term-kinds")
+ | n1  == n2   =  lam tk1 n1 (vl1 ++ vl2) t2
+ | otherwise   =  fail ("nestSimplify: mixed lambda forms")
+
+nestSimplify trm = fail "nestSimplify: not nested similar quantifiers"
+\end{code}
+
+\textbf{NOT VERY SATISFACTORY IN THE \texttt{[]\_idem} PROOF}
+
+\textsf{
+We need something that simplifies $\bb i {V_i }{\bb j {V_j} P}$
+to $\bb j {V_j} P$, because $V_j \supseteq \fv(P)$.
+}

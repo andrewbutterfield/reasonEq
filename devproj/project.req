@@ -5,16 +5,16 @@ END REQSET
 BEGIN SIGNATURE
 TRUE = K P (VB True)
 FALSE = K P (VB False)
-EQV = Id "equiv"
-IMP = Id "implies"
-AND = Id "land"
-OR = Id "lor"
+EQV = Id "equiv" 0
+IMP = Id "implies" 0
+AND = Id "land" 0
+OR = Id "lor" 0
 END SIGNATURE
 BEGIN THEORIES
 THNAMES = ["And","AndOrInvert","Equality","Equiv","Exists","ForAll","Implies","Not","Or","UClose"]
 SDAG = [[("UClose",["Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Exists",["ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("ForAll",["Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Implies",["AndOrInvert","And","Or","Not","Equiv"])],[("AndOrInvert",["And","Or","Not","Equiv"])],[("And",["Or","Not","Equiv"])],[("Or",["Not","Equiv"])],[("Not",["Equiv"])],[("Equality",[]),("Equiv",[])]]
 END THEORIES
-CURRTHEORY = UClose
+CURRTHEORY = Equiv
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
 END MAP LIVE-PROOFS

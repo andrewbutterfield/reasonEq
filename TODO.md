@@ -12,7 +12,41 @@ where both `x̅` and `y̅`
 are *fresh*.
 **Having both the same is unsound**.
 
+#### IDEA:
+
+We extend variable names `v` to `v.u` where `u` is a natural number. 
+A variable written as `v` is normally represented as `v.0`.
+
+Entering `(∀ x • (∃ y • x + y = z))` will initally result in `(∀ x.0 • (∃ y.0 • x.0 + y.0 = z.0))`
+which will then be "normalised" to ``(∀ x.1 • (∃ y.1 • x.1 + y.1 = z.0))`
+
+As far as proofs and matching are concerned, `v.n` and `v.m` are different if `n` and `m` are.
+However, when dispaying terms to the user, the `.u` part will usually be suppressed.
+One exception might be when displaying match bindings.
+
+##### Why?
+
+We could have a scheme that makes different "instances" of `v` by appending a number to make it unique,
+but then we get a lot of cluttered terms, particulary if we are using variables that already end in numbers
+(e.g. a law like `i1 + (i2 + i3) = (i1 +i2) + i3`.
+
+The approach described here has two advantages:
+
+1. we can switch easily between showing the `.u` component or not
+2. The algorthim to "normalise" terms becomes much simpler. 
+
+#### How?
+
+We first add the `u` component to the `Identifier` datatype, and set it to zero.
+Then, rebuild and check tests and proof engine is unchanged.
+
+Next, implement "normalise".
+
 ## Robustness
+
+### Demote
+
+ Demote can demote an axiom - it should really warn about that, or require a special argument to force it.
 
 ### Robust Load
 Need to make file loading robust - no runtime failure.

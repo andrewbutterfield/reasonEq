@@ -58,7 +58,7 @@ rendering of datatypes to ease debugging.
 
 \begin{code}
 trId :: Identifier -> String
-trId (Identifier s)  =  widthHack 2 $ nicesym s
+trId (Identifier s _)  =  widthHack 2 $ nicesym s
 
 -- can't handle nesting of bold, underline and colours right now...
 trVC :: VarClass -> String -> String
@@ -218,7 +218,7 @@ Rendering an infix operator with two or more arguments.
 We ensure that sub-terms are rendered with the infix operator precedence
 as their context precedence.
 \begin{code}
-trTerm ctxtp (Cons tk opn@(Identifier nm) ts@(_:_:_))
+trTerm ctxtp (Cons tk opn@(Identifier nm _) ts@(_:_:_))
  | isOp  =  trBracketIf (opp <= ctxtp)
                         $ intercalate (trId opn) $ map (trTerm opp) ts
  where
@@ -269,7 +269,7 @@ we have three cases:
 \begin{code}
 trTerm _ (Iter tk na ni lvs@(_:_:_))
  | isSymbId ni  = silentId na ++ "(" ++ seplist (trId ni) trLVar lvs ++ ")"
- where silentId na@(Identifier i)
+ where silentId na@(Identifier i _)
   -- logical-and is the 'default' for na, so we keep it 'silent'
         | i == _land  =  ""
         | otherwise   =  trId na

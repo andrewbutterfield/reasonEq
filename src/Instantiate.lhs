@@ -618,8 +618,8 @@ questionableBinding bind substEqv vs
         questionableLV lv@(LVbl (Vbl _ vc vw) is js) i
                  = LstVar (LVbl (Vbl (qI i) vc vw) is js)
 
-    qI  (Identifier i)    =  fromJust $ ident ('?':i)
-    qIn (Identifier i) n  =  fromJust $ ident ('?':i++show n)
+    qI  (Identifier i u)    =  fromJust $ uident ('?':i) u
+    qIn (Identifier i u) n  =  fromJust $ uident ('?':i) (u+n)
 \end{code}
 
 Look up cardinalities of bindings of equivalences.

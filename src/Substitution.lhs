@@ -219,7 +219,7 @@ freshLV knVars n lv@(LVbl (Vbl i vc vw) is js)
   where nlv = LVbl (Vbl (i `idNumAdd` n) vc vw) is js
 
 idNumAdd :: Identifier -> Int -> Identifier
-(Identifier i) `idNumAdd` n = fromJust $ ident (i++show n)
+(Identifier i u) `idNumAdd` n = fromJust $ uident i (u+n)
 \end{code}
 
 \newpage

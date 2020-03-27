@@ -130,7 +130,7 @@ Does a term match a basic component specification?
 basicCompSat :: Term -> BasicComp -> Bool
 basicCompSat _         AnySyn   =  True
 basicCompSat (Var _ _) VarSyn   =  True
-basicCompSat (Type _)  TypeSyn  =  True
+basicCompSat (Typ  _)  TypeSyn  =  True
 basicCompSat t         ExprSyn  =  isExpr t
 basicCompSat t         PredSyn  =  isPred t
 basicCompSat _         _        =  False

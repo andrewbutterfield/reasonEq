@@ -196,7 +196,7 @@ First, atomic terms
 \begin{code}
 trTerm p (Val tk k)           =  trValue k
 trTerm p (Var tk v)           =  trVar v
-trTerm p (Type t)             =  trType t
+trTerm p (Typ t)              =  trType t
 \end{code}
 
 A \texttt{Cons}-node with one subterm

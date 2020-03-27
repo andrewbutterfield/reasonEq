@@ -242,7 +242,7 @@ i42 = ival 42
 box p = Cons P (fromJust $ ident "BOX") [p]
 x = fromJust $ ident "x"
 vx = fromJust $ var kint $ Vbl x ObsV Static
-tint = Type int
+tint = Typ int
 iter = Iter P (fromJust $ ident "land") (fromJust $ ident "=") []
 f = fromJust $ ident "F"
 g = fromJust $ ident "G"

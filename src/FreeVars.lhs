@@ -9,6 +9,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module FreeVars
 ( freeVars
 , substRelFree
+, zeroTermIdNumbers
+, normaliseQuantifiers
 , nestSimplify
 ) where
 import Data.Set(Set)
@@ -19,6 +21,7 @@ import Data.List
 import Data.Maybe
 
 import Utilities (injMap)
+import Control (mapboth,mapaccum)
 import LexBase
 import Variables
 import AST
@@ -102,6 +105,203 @@ applicable wrap tfv (t,_) = wrap t `S.member` tfv
 
 Support for quantifier nesting needs to be hardwired in.
 
+\subsubsection{Zeroing a term}
+
+It can help to put a term into a state where all identifiers have zero
+as their unique number
+---
+this could prevent the emergence of large numbers during a long proof.
+\begin{code}
+zeroTermIdNumbers :: Term -> Term
+zeroTermIdNumbers (Var tk v) = fromJust $ var tk $ zeroVarIdNumber v
+zeroTermIdNumbers (Cons tk n ts) = Cons tk n $ map zeroTermIdNumbers ts
+zeroTermIdNumbers (Bnd tk n vs tm) = fromJust $ bnd tk n (zeroVSetIdNumbers vs)
+                                              $ zeroTermIdNumbers tm
+zeroTermIdNumbers (Lam tk n vl tm) = fromJust $ lam tk n (zeroVListIdNumbers vl)
+                                              $ zeroTermIdNumbers tm
+zeroTermIdNumbers (Cls n tm)  = Cls n $ zeroTermIdNumbers tm
+zeroTermIdNumbers (Sub tk tm s) = Sub tk (zeroTermIdNumbers tm)
+                                      $ zeroSubIdNumbers s
+zeroTermIdNumbers (Iter tk na ni lvs) = Iter tk na ni $ map zeroLVarIdNumber lvs
+zeroTermIdNumbers trm = trm
+\end{code}
+
+Drilling down \dots
+\begin{code}
+zeroSubIdNumbers :: Substn -> Substn
+zeroSubIdNumbers (Substn ts lvs) = fromJust $ substn ts0 lvs0
+ where ts0 =  map zeroTrmSbIdNumbers $ S.toList ts
+       lvs0 = map zeroLVLVIdNumbers  $ S.toList lvs
+
+zeroTrmSbIdNumbers :: (Variable,Term) -> (Variable,Term)
+zeroTrmSbIdNumbers (v,t) = (zeroVarIdNumber v, zeroTermIdNumbers t)
+
+zeroLVLVIdNumbers :: (ListVar,ListVar) -> (ListVar,ListVar)
+zeroLVLVIdNumbers (lv1,lv2) = (zeroLVarIdNumber lv1, zeroLVarIdNumber lv2)
+
+zeroVListIdNumbers :: VarList -> VarList
+zeroVListIdNumbers vl = map zeroGVarIdNumber vl
+
+zeroVSetIdNumbers :: VarSet -> VarSet
+zeroVSetIdNumbers vs = S.map zeroGVarIdNumber vs
+
+zeroGVarIdNumber :: GenVar -> GenVar
+zeroGVarIdNumber (StdVar v) = StdVar $ zeroVarIdNumber v
+zeroGVarIdNumber (LstVar lv) = LstVar $ zeroLVarIdNumber lv
+
+zeroLVarIdNumber (LVbl v is js) = LVbl (zeroVarIdNumber v) is js
+
+zeroVarIdNumber :: Variable -> Variable
+zeroVarIdNumber (Vbl idnt cls whn) = Vbl (zeroIdNumber idnt) cls whn
+
+zeroIdNumber :: Identifier -> Identifier
+zeroIdNumber (Identifier nm _) = fromJust $ uident nm 0
+\end{code}
+
+\newpage
+
+\subsubsection{Normalising Bound Variables}
+
+We want all bound-variables to be unique in a term, so that, for example,
+the term
+$$
+  \forall x \bullet x > y \land \exists x \bullet x = z + 42
+  \qquad
+  (\text{really:  }
+   \forall x_0 \bullet x_0 > y_0 \land \exists x_0 \bullet x_0 = z_0 + 42)
+$$
+becomes:
+$
+  \forall x_i \bullet x_i > y_0 \land \exists x_j \bullet x_j = z_0 + 42
+$
+where $i > 0$, $j > 0$, and $i \neq j$.
+
+Turns out there is a fairly simple algorithm, that doesn't require the
+predicate to be zero'ed in advance!
+\begin{eqnarray*}
+   \theta,\mu : VV &\defs&  name \pfun \Nat
+\\
+\\ Norm &:& T \fun T
+\\ Norm(P)                       &\defs& \pi_1(norm_\theta(P))
+\\
+\\ norm &:& VV \fun T \fun (T \times VV)
+\\ norm_\mu(v)         &\defs & (v_{\mu(v)} \cond{v \in \mu} v_0,\mu)
+\\ norm_\mu(P \land Q) &\defs & (P' \land Q',\mu'')
+\\                     &\where& (P',\mu') = norm_\mu(P)
+\\                     &      & (Q',\mu'') = norm_{\mu'}(Q)
+\\ norm_\mu(\forall x \bullet P) &\defs& (\forall x_{\mu'(x)} \bullet P',\mu'')
+\\                     &\where& \mu' = (\mu\override\maplet x 1)
+                                       \cond{x \in \mu}
+                                       (\mu\override\maplet x {\mu(x)+1})
+\\                     &      & (P',\mu'') = norm_{\mu'}(P)
+\end{eqnarray*}
+Note that we need to thread the map parameter $\mu$ into and out of each call
+to $norm$ to ensure that we get full uniqueness of bound variable numbers.
+
+We map bound variable names to their unique numbers:
+\begin{code}
+type VarVersions = Map String Int
+\end{code}
+
+Quantifier normalisation:
+\begin{code}
+normaliseQuantifiers :: Term -> Term
+normaliseQuantifiers = fst . normQ M.empty
+\end{code}
+
+The real work is done here:
+\begin{code}
+normQ :: VarVersions -> Term -> (Term, VarVersions)
+\end{code}
+
+
+
+\begin{eqnarray*}
+   norm_\mu(v)         &\defs & (v_{\mu(v)} \cond{v \in \mu} v_0,\mu)
+\end{eqnarray*}
+\begin{code}
+--normQ :: VarVersions -> Term -> (Term, VarVersions)
+normQ vv (Var tk v@(Vbl (Identifier nm _) _ _))
+     =  (fromJust $ var tk $ normQVar vv v, vv)
+\end{code}
+
+
+\newpage
+
+
+\begin{eqnarray*}
+   norm_\mu(P \land Q) &\defs & (P' \land Q',\mu'')
+\\                     &\where& (P',\mu') = norm_\mu(P)
+\\                     &      & (Q',\mu'') = norm_{\mu'}(Q)
+\end{eqnarray*}
+\begin{code}
+--normQ :: VarVersions -> Term -> (Term, VarVersions)
+-- Cons, Cls, Sub, Iter
+normQ vv (Cons tk n ts)       =  (Cons tk n ts',vv')
+                              where (ts',vv') =  mapaccum normQ vv ts
+normQ vv (Cls n tm)           =  (Cls n tm',vv')
+                              where (tm',vv') =  normQ vv tm
+normQ vv (Sub tk tm s)
+  = let (tm',vv') = normQ vv tm
+        (s',vv'') = normQSub vv' s
+    in (Sub tk tm' s',vv'')
+
+normQ vv (Iter tk na ni lvs)  =  (Iter tk na ni $ map (normQLVar vv) lvs,vv)
+\end{code}
+
+
+
+
+
+\begin{eqnarray*}
+   norm_\mu(\forall x \bullet P) &\defs& (\forall x_{\mu'(x)} \bullet P',\mu'')
+\\                     &\where& \mu' = (\mu\override\maplet x 1)
+                                       \cond{x \in \mu}
+                                       (\mu\override\maplet x {\mu(x)+1})
+\\                     &      & (P',\mu'') = norm_{\mu'}(P)
+\end{eqnarray*}
+\begin{code}
+--normQ :: VarVersions -> Term -> (Term, VarVersions)
+-- Bnd, Lam
+-- normQ vv trm  = error "normQ NYFI"
+\end{code}
+
+
+
+
+
+Anything else is unchanged
+\begin{code}
+--normQ :: VarVersions -> Term -> (Term, VarVersions)
+-- Val, Typ
+normQ vv trm = (trm, vv)
+\end{code}
+
+Drilling down \dots
+\begin{code}
+normQSub vv (Substn ts lvs)
+  = let lvl' = mapboth (normQLVar vv) $ S.toList lvs
+        (tl',vv') = normQTermSub vv $ S.toList ts
+    in (fromJust $ substn tl' lvl', vv')
+
+normQTermSub vv tl = mapaccum normQVarTerm vv tl
+
+normQVarTerm vv (v,tm)
+  = ((normQVar vv v, tm'), vv')
+  where (tm',vv') = normQ vv tm
+
+normQLVar vv (LVbl v is js) = LVbl (normQVar vv v) is js
+
+normQVar vv v@(Vbl (Identifier nm _) _ _)
+ = setVarIdNumber (M.findWithDefault 0 nm vv) v
+
+setVarIdNumber :: Int -> Variable -> Variable
+setVarIdNumber u (Vbl (Identifier nm _) cls whn)
+  = Vbl (fromJust $ uident nm u) cls whn
+\end{code}
+
+\newpage
+
 \subsubsection{Nesting Simplification}
 
 So we have to hardwire the basic simplification laws:
@@ -114,6 +314,10 @@ So we have to hardwire the basic simplification laws:
 \\ (\ll n {\sigma_i } {\ll n {\sigma_j} P})
    &=& (\ll n {(\sigma_i \cat \sigma_j)}  P)
 \end{eqnarray*}
+
+\textbf{This code may be rendered obsolete by the addition of unique numbers
+to Identifiers along with quantifier normalisation
+}
 
 Function \texttt{nestSimplify} returns a simplified term
 if one of the laws above applies, otherwise it fails.

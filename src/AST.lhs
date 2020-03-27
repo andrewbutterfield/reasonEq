@@ -20,7 +20,7 @@ module AST ( TermSub, LVarSub
            , Term, readTerm
            , pattern Val, pattern Var, pattern Cons
            , pattern Bnd, pattern Lam, pattern Cls
-           , pattern Sub, pattern Iter, pattern Type
+           , pattern Sub, pattern Iter, pattern Typ
            , var,  eVar,  pVar, var2term
            , bnd, eBnd, pBnd
            , lam,  eLam,  pLam
@@ -363,9 +363,10 @@ pattern Var  tk v          <-  V tk v
 pattern Cons tk n ts       =   C tk n ts
 pattern Bnd  tk n vs tm    <-  B tk n vs tm
 pattern Lam  tk n vl tm    <-  L tk n vl tm
-pattern Cls     n tm       =   X n tm
+pattern Cls     n    tm    =   X n tm
 pattern Sub  tk tm s       =   S tk tm s
 pattern Iter tk na ni lvs  =   I tk na ni lvs
+pattern Typ  typ           =   ET typ
 \end{code}
 
 Smart constructors for variables and binders.
@@ -452,12 +453,6 @@ pattern PBind n vs tm     <-  B P n vs tm
 pattern PLam n vl tm      <-  L P n vl tm
 pattern PSub tm s          =  S P tm s
 pattern PIter na ni lvs    =  I P na ni lvs
-\end{code}
-
-
-Pattern for embedded types:
-\begin{code}
-pattern Type t             =  ET t
 \end{code}
 
 \newpage

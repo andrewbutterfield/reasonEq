@@ -5,7 +5,9 @@ Copyright  Andrew Buttefield (c) 2019
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module Control (  BasicM
+module Control  ( mapfst, mapsnd, mappair, mapboth
+                , mapaccum
+                , BasicM
                 , matchPair
                 , Combine, defCombine
                 , manyToOne
@@ -22,6 +24,40 @@ import Control.Monad
 
 We provide general flow-of-control constructs here,
 often of a monadic flavour.
+
+\subsection{List Controls}
+
+\subsubsection{Mapping Pairs}
+
+\begin{code}
+mapfst :: (a -> c) -> [(a,b)] -> [(c,b)]
+mapfst f1 [] = []
+mapfst f1 ((x,y):xys) = (f1 x,y) : mapfst f1 xys
+
+mapsnd :: (b -> c) -> [(a,b)] -> [(a,c)]
+mapsnd f2 [] = []
+mapsnd f2 ((x,y):xys) = (x,f2 y) : mapsnd f2 xys
+
+mappair :: (a->c) -> (b->d) -> [(a,b)] -> [(c,d)]
+mappair _ _ [] = []
+mappair f1 f2 ((x,y):xys) = (f1 x,f2 y) : mappair f1 f2 xys
+
+mapboth :: (a->b) -> [(a,a)] -> [(b,b)]
+mapboth _ [] = []
+mapboth f ((x,y):xys) = (f x, f y) : mapboth f xys
+\end{code}
+
+\subsubsection{Mapping an Accumulator}
+
+\begin{code}
+mapaccum :: (a -> t -> (t,a)) -> a -> [t] -> ([t],a)
+mapaccum f acc [] = ([],acc)
+mapaccum f acc (x:xs)
+  = let
+      (x',acc') = f acc x
+      (xs',acc'') = mapaccum f acc' xs
+    in (x':xs',acc'')
+\end{code}
 
 \subsection{Matching Controls}
 

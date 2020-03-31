@@ -4,6 +4,7 @@ import Test.Framework as TF (defaultMain, Test)
 import LexBase
 import Variables
 import AST
+import FreeVars
 import SideCond
 import Binding
 import Syntax
@@ -27,6 +28,7 @@ tests
  -- ++ int_tst_Syntax
  -- ++ int_tst_Builder
  -- ++ int_tst_TermZip
+ ++ int_tst_FreeVar
  ++ tst_FreeVar
  -- ++ tst_VarData
  -- ++ tst_Binding

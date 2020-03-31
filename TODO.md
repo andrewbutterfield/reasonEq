@@ -1,5 +1,18 @@
 # To Do
 
+### Test Re-jigging
+
+Trying to have common data and function definitions for testing. Non-trivial.
+
+Want to support local (internal) tests within any module that does not export
+all data-structure details, with some hidden by invariant-checking constructor functions.
+Want lots of shorthand (partial) builders for test data for these data-structures.
+
+To avoid cyclic module imports, we need to export shorthands from non-test modules.
+Testing modules need to import the modules they test.
+
+
+
 ### Laws
 
 We have hard-coded nesting simplification (`FreeVars.lhs`).

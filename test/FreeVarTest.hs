@@ -19,16 +19,22 @@ import Test.Framework.Providers.HUnit (testCase)
 import LexBase
 import Variables
 import AST
-
+import FreeVars
 import TestRendering
+
+import TestDefs
 
 
 -- -----------------------------------------------------------------------------
-tst_group1 :: TF.Test
 
 
-tst_group1
- = testGroup "group1"
+
+-- -----------------------------------------------------------------------------
+tst_groupN :: TF.Test
+
+
+tst_groupN
+ = testGroup "groupN"
      [ testCase "1+1=2"
        ( 1+1
          @?= 2 )
@@ -39,6 +45,6 @@ tst_group1
 tst_FreeVar :: [TF.Test]
 tst_FreeVar
   = [ testGroup "\nFreeVar"
-      [ tst_group1
+      [ tst_groupN
       ]
     ]

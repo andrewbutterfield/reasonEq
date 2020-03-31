@@ -39,7 +39,6 @@ i2 = Vbl (jId "i2") ObsV Static
 g3 = Vbl (jId "g3") ObsV Static
 i3 = Vbl (jId "i3") ObsV Static
 
-identi nm i = jId (nm++show i)
 mkPS i = StdVar $ PreVar  $ identi "ps" i
 mkPL i = LstVar $ PreVars $ identi "pl" i
 mkCS i = StdVar $ PreVar  $ identi "cs" i
@@ -91,6 +90,8 @@ u = jId "u"
 v = jId "v"
 
 -- --------- Variable ----------
+
+
 
 osv = ObsVar  (jId "osv") Static
 osu = ObsVar  (jId "osu") Static
@@ -146,11 +147,13 @@ pTrue = PVal $ Boolean True
 
 -- ================ FUNCTIONS =======================
 
-
--- --------------- Function Shorthands --------------
-
 jId :: String -> Identifier
 jId = fromJust . ident
+jIdU :: String -> Int -> Identifier
+jIdU nm u = fromJust $ uident nm u
+
+identi :: String -> Int ->Identifier
+identi nm i = jId (nm++show i) -- number is part of name
 
 set :: Ord a => [a] -> Set a
 set = S.fromList

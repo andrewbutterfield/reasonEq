@@ -1,7 +1,7 @@
 module MatchingTest ( tst_Matching )
 where
 
-import Data.Maybe(fromJust)
+import Data.Maybe (fromJust)
 import Data.Map as M (fromList)
 import qualified Data.Set as S
 import Data.List (nub)
@@ -25,7 +25,6 @@ import TestDefs
 -- -----------------------------------------------------------------------------
 tst_match :: TF.Test
 
-k42 = EVal ArbType $ Integer 42
 
 tst_match =
   testGroup "match"
@@ -36,9 +35,8 @@ tst_match =
 -- -----------------------------------------------------------------------------
 tst_tsMatch :: TF.Test
 
-k58 = EVal ArbType $ Integer 58
 
-lst = fromJust $ ident "lst" ; list ts = Cons P lst ts
+lst = jId "lst" ; list ts = Cons P lst ts
 
 l_42    = list [k42]
 l_42_58 = list [k42,k58]
@@ -59,11 +57,6 @@ tst_tsMatch =
 -- -----------------------------------------------------------------------------
 tst_tvMatch, tst_vMatchVm, tst_vMatchGI :: TF.Test
 
-x = PreVar $ fromJust $ ident "x"
-xk = E ArbType
-y = PreVar $ fromJust $ ident "y"
-ex = fromJust $ eVar ArbType x
-ey = fromJust $ eVar ArbType y
 
 
 tst_vMatchVm =
@@ -76,18 +69,6 @@ tst_vMatchVm =
           @?= bindVarToTerm x ey emptyBinding )
       ]
 
-b0  = S.empty
-bx = S.singleton $ StdVar x
-by = S.singleton $ StdVar y
-ok = PreVar $ fromJust $ ident "ok"
-bool = GivenType $ fromJust $ ident "B"
-okk = E bool
-eok = fromJust $ eVar bool ok
-true = EVal bool $ Boolean True
-v42 = Vbl (fromJust $ ident "v42") ObsV Static
-v42k = E ArbType
-oK = Vbl (fromJust $ ident "oK") ObsV Static
-oKk = E ArbType
 vt = fromJust $ addKnownConst v42 k42
    $ fromJust $ addKnownConst oK eok
    $ fromJust $ addKnownVar ok bool
@@ -126,13 +107,6 @@ tst_tvMatch =
           @?= bindVarToTerm ok true emptyBinding )
       ]
 
-g1 = Vbl (fromJust $ ident "g1") ObsV Static
-i11 = Vbl (fromJust $ ident "i11") ObsV Static
-i12 = Vbl (fromJust $ ident "i12") ObsV Static
-g2 = Vbl (fromJust $ ident "g2") ObsV Static
-i2 = Vbl (fromJust $ ident "i2") ObsV Static
-g3 = Vbl (fromJust $ ident "g3") ObsV Static
-i3 = Vbl (fromJust $ ident "i3") ObsV Static
 
 gvt = fromJust $ addInstanceVar i12 g1
     $ fromJust $ addInstanceVar i2 g2
@@ -174,11 +148,6 @@ tst_vMatchGI =
 tst_vlMatch :: TF.Test
 
 -- builders
-identi nm i = fromJust $ ident (nm++show i)
-mkPS i = StdVar $ PreVar  $ identi "ps" i
-mkPL i = LstVar $ PreVars $ identi "pl" i
-mkCS i = StdVar $ PreVar  $ identi "cs" i
-mkCL i = LstVar $ PreVars $ identi "cl" i
 
 [ps1,ps2,ps3,ps4] = map mkPS [1..4]  -- std pattern vars
 [pl1,pl2,pl3,pl4] = map mkPL [1..4]  -- lst pattern vars
@@ -274,8 +243,6 @@ bind4toAll
  = bindLs pl4 [cl1,cl2,cl3,cl4]
  $ bindLN pl1     $ bindLN pl2     $ bindLN pl3       bindVOneToOne
 
-set = S.fromList
-
 tst_vsMatch =
   testGroup "vsMatch"
     [ testCase "{} :: {} (OK)"
@@ -355,26 +322,6 @@ bind1to1
 -- -----------------------------------------------------------------------------
 tst_sMatch :: TF.Test
 
-k42_for v = fromJust $ substn [(v,k42)] []
-k58_for v = fromJust $ substn [(v,k58)] []
-e =  ExprVar (fromJust $ ident "e") Static
-f =  ExprVar (fromJust $ ident "f") Static
-ee = fromJust $ eVar ArbType e
-ef = fromJust $ eVar ArbType f
-e_for v = fromJust $ substn [(v,fromJust $ eVar ArbType $ e)] []
-f_for v = fromJust $ substn [(v,fromJust $ eVar ArbType $ f)] []
-a = PreVar $ fromJust $ ident "a"
-b = PreVar $ fromJust $ ident "b"
-
-l1 = PreVars $ fromJust $ ident "l1"
-l2 = PreVars $ fromJust $ ident "l2"
-la = PreVars $ fromJust $ ident "la"
-lb = PreVars $ fromJust $ ident "lb"
-
-l1s = StaticVars $ fromJust $ ident "l1"
-l2s = StaticVars $ fromJust $ ident "l2"
-las = StaticVars $ fromJust $ ident "la"
-lbs = StaticVars $ fromJust $ ident "lb"
 
 tst_sMatch
  = testGroup "\nsMatch"

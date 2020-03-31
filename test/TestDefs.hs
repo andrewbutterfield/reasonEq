@@ -13,6 +13,76 @@ import AST
 import VarData
 import Binding
 
+
+-- ***** SCRATCH ******
+
+-- from MatchingTest
+
+b0  = S.empty
+bx = S.singleton $ StdVar x
+by = S.singleton $ StdVar y
+-- ok = PreVar $ jId "ok"
+bool = GivenType $ jId "B"
+okk = E bool
+eok = fromJust $ eVar bool ok
+true = EVal bool $ Boolean True
+v42 = Vbl (jId "v42") ObsV Static
+v42k = E ArbType
+oK = Vbl (jId "oK") ObsV Static
+oKk = E ArbType
+
+g1 = Vbl (jId "g1") ObsV Static
+i11 = Vbl (jId "i11") ObsV Static
+i12 = Vbl (jId "i12") ObsV Static
+g2 = Vbl (jId "g2") ObsV Static
+i2 = Vbl (jId "i2") ObsV Static
+g3 = Vbl (jId "g3") ObsV Static
+i3 = Vbl (jId "i3") ObsV Static
+
+identi nm i = jId (nm++show i)
+mkPS i = StdVar $ PreVar  $ identi "ps" i
+mkPL i = LstVar $ PreVars $ identi "pl" i
+mkCS i = StdVar $ PreVar  $ identi "cs" i
+mkCL i = LstVar $ PreVars $ identi "cl" i
+
+k42_for v = fromJust $ substn [(v,k42)] []
+k58_for v = fromJust $ substn [(v,k58)] []
+e =  ExprVar (jId "e") Static
+f =  ExprVar (jId "f") Static
+ee = fromJust $ eVar ArbType e
+ef = fromJust $ eVar ArbType f
+e_for v = fromJust $ substn [(v,fromJust $ eVar ArbType $ e)] []
+f_for v = fromJust $ substn [(v,fromJust $ eVar ArbType $ f)] []
+a = PreVar $ jId "a"
+b = PreVar $ jId "b"
+
+l1 = PreVars $ jId "l1"
+l2 = PreVars $ jId "l2"
+la = PreVars $ jId "la"
+lb = PreVars $ jId "lb"
+
+l1s = StaticVars $ jId "l1"
+l2s = StaticVars $ jId "l2"
+las = StaticVars $ jId "la"
+lbs = StaticVars $ jId "lb"
+
+-- from MatchScenarios
+
+int  = GivenType $ jId "Z"
+epre = PreExpr $ jId "e"
+fpre = PreExpr $ jId "f"
+
+eie = fromJust $ eVar int e
+
+e42 = EVal int $ Integer 42
+
+k = jId "ok"
+ok = PreVar k ; ok' = PostVar k ; okm = MidVar k "m"
+
+xx = jId "x"  ;  x = PreVar xx  ;  x' = PostVar xx  ;  xm = MidVar xx "m"
+wy = jId "y"  ;  y = PreVar wy  ;  y' = PostVar wy  ;  ym = MidVar wy "m"
+ze = jId "z"  ;  z = PreVar ze  ;  z' = PostVar ze  ;  zm = MidVar ze "m"
+
 -- ========== VALUES ==============
 
 -- ----------- Identifier -------
@@ -40,6 +110,7 @@ obu = ObsVar  (jId "obu") Before
 ebv = ExprVar (jId "ebv") Before
 pbv = PredVar (jId "pbv") Before
 
+
 -- ------------- ListVar ---------------
 
 lobv = PreVars $ jId "lobv"
@@ -56,9 +127,17 @@ gobu = StdVar obu
 gebv = StdVar ebv
 gpbv = StdVar pbv
 
+-- ----- TermKind -----
+
+xk = E ArbType
+
 -- ------------ Expressions (Term) -----------
 
-ce42 = EVal ArbType $ Integer 42
+k42  = EVal ArbType $ Integer 42
+k58  = EVal ArbType $ Integer 58
+
+ex = fromJust $ eVar ArbType x
+ey = fromJust $ eVar ArbType y
 
 -- ------------- Predicates (Term) ------------
 
@@ -72,6 +151,9 @@ pTrue = PVal $ Boolean True
 
 jId :: String -> Identifier
 jId = fromJust . ident
+
+set :: Ord a => [a] -> Set a
+set = S.fromList
 
 sngl :: a -> Set a
 sngl = S.singleton

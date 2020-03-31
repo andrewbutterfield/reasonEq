@@ -66,15 +66,15 @@ tst_bind_lkp_VarToTerm :: TF.Test
 tst_bind_lkp_VarToTerm
   = testGroup "lookupVarBind after bindVarToTerm"
       [ testCase "osv -> 42 (Ok)"
-        ( ( let (BindTerm ce42') = vtBindLook osv ce42 in ce42' ) @?= ce42 )
+        ( ( let (BindTerm k42') = vtBindLook osv k42 in k42' ) @?= k42 )
       , testCase "osv -> True (Not Ok)"
           ( bindVarToTerm osv pTrue emptyBinding @?= Nothing)
       , testCase "esv -> 42 (Ok)"
-        ( ( let (BindTerm ce42') = vtBindLook esv ce42 in ce42' ) @?= ce42 )
+        ( ( let (BindTerm k42') = vtBindLook esv k42 in k42' ) @?= k42 )
       , testCase "esv -> True (Not Ok)"
             ( bindVarToTerm esv pTrue emptyBinding @?= Nothing)
       , testCase "psv -> 42 (Not Ok)"
-        ( bindVarToTerm psv ce42 emptyBinding @?= Nothing)
+        ( bindVarToTerm psv k42 emptyBinding @?= Nothing)
       , testCase "psv -> True (Ok)"
         ( ( let (BindTerm pTrue') = vtBindLook psv pTrue in pTrue' ) @?= pTrue )
       ]

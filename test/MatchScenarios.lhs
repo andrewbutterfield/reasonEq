@@ -106,15 +106,7 @@ lv -~> vs  =  fromJust . addKnownVarSet  (varOf lv) (vswrap vs)
 lv ~~> vs  =  fromJust . addKnownVarSet  (varOf lv) (lswrap vs)
 \end{code}
 
-\subsubsection{Pre-defined Types}
 
-We assume the existence of types
-for boolean ($\Bool$)
-and integer ($\Int$) values.
-\begin{code}
-bool = GivenType $ jId "B"
-int  = GivenType $ jId "Z"
-\end{code}
 
 
 \newpage
@@ -125,13 +117,18 @@ $x$, $y$, and $z$, and model observations $ok$ and $ok'$.
 
 \subsubsection{Observation Variables}
 
+\textbf{
+ We may need to have a second version of \texttt{TestDefs}
+ to provide UTP tailored test values.
+ }
+
 Model observations regarding termination.
 \begin{eqnarray*}
    ok, ok'         &:&   \Bool
 \end{eqnarray*}
 \begin{code}
-k = jId "ok"
-ok = PreVar k ; ok' = PostVar k ; okm = MidVar k "m"
+-- k = jId "ok"
+-- ok = PreVar k ; ok' = PostVar k ; okm = MidVar k "m"
 -- as terms
 tok  = fromJust $ eVar bool ok
 tok' = fromJust $ eVar bool ok'
@@ -143,9 +140,9 @@ Script observations regarding values of program variables.
    x,x',y,y',z,z'  &:&   \Int
 \end{eqnarray*}
 \begin{code}
-ex = jId "x"  ;  x = PreVar ex  ;  x' = PostVar ex  ;  xm = MidVar ex "m"
-wy = jId "y"  ;  y = PreVar wy  ;  y' = PostVar wy  ;  ym = MidVar wy "m"
-ze = jId "z"  ;  z = PreVar ze  ;  z' = PostVar ze  ;  zm = MidVar ze "m"
+-- ex = jId "x"  ;  x = PreVar ex  ;  x' = PostVar ex  ;  xm = MidVar ex "m"
+-- wy = jId "y"  ;  y = PreVar wy  ;  y' = PostVar wy  ;  ym = MidVar wy "m"
+-- ze = jId "z"  ;  z = PreVar ze  ;  z' = PostVar ze  ;  zm = MidVar ze "m"
 
 [tx,tx',txm] = map (fromJust . eVar int) [x,x',xm]
 [ty,ty',tym] = map (fromJust . eVar int) [y,y',ym]
@@ -186,8 +183,7 @@ vtS_Design  =  lO ~~> [lM,lS] $ lS -~> [x,y,z] $ lM -~> [ok] $ kvDesign
 \subsubsection{Reserved List-Variable Tests}
 
 \begin{code}
-e = PreExpr $ jId "e"
-okn = MidVar k "n" ; xn = MidVar ex "n" ; yn = MidVar wy "n" ; zn = MidVar ze "n"
+okn = MidVar k "n" ; xn = MidVar xx "n" ; yn = MidVar wy "n" ; zn = MidVar ze "n"
 lOn = MidVars o "n" ; lMn = MidVars m "n" ; lSn = MidVars s "n"
 
 test_reserved_listvars
@@ -490,8 +486,6 @@ xsys = S.fromList [gxs,gys]
 
 
 \begin{code}
-set = S.fromList
-
 test_instantiation
   = testGroup "Instantiation"
     [ testCase "{x$,y$} :: {x$,y$} - succeeds 3 ways"
@@ -732,9 +726,7 @@ vtv = ScriptVar v
 gtv = StdVar vtv
 sy = ScriptVar wy
 gsy = StdVar sy
-ee = fromJust $ eVar int e
 ge = StdVar e
-e42 = EVal int $ Integer 42
 \end{code}
 
 \subsubsection{Assignment Tests}
@@ -748,12 +740,12 @@ test_simple_assignment
  = testGroup "Simple Assignment (<< ... >> denotes definition expansion)"
     [ testCase "Design |- y := 42  :: v := e, should succeed"
        ( tMatch [vtS_Design] emptyBinding S.empty S.empty
-           (wy .:= e42) (v .:= ee)
+           (wy .:= e42) (v .:= eie)
            @?= (Just $ bindVV gtv gsy $ bindVT ge e42 $ emptyBinding)
        )
     , testCase "Design |- << y := 42 >> :: << v := e >>, should succeed"
        ( tMatch [vtS_Design] emptyBinding S.empty S.empty
-           (wy `assigned` e42) (v `assigned` ee)
+           (wy `assigned` e42) (v `assigned` eie)
            @?= ( Just $ bindVV gtv gsy $ bindVT ge e42
                $ bindVV gok gok $ bindVV gok' gok'
                $ bindLL (LstVar (lS  `less` ([v],[])))
@@ -791,10 +783,9 @@ lS'vs = lS' `less` ([],[v])  ; gS'vs = LstVar lS'vs
 lSzs  = lS `less` ([],[ze])  ; gSzs  = LstVar lSzs
 lS'zs = lS' `less` ([],[ze]) ; gS'zs = LstVar lS'zs
 
-f = PreExpr $ jId "f"
 
-us_becomes_fs = u `simasgn` (LVbl f [] [])
-fs    = LVbl f [] []        ; gfs   = LstVar fs
+us_becomes_fs = u `simasgn` (LVbl fpre [] [])
+fs    = LVbl fpre [] []        ; gfs   = LstVar fs
 us'   = PostVars u          ; gus'  = LstVar us'
 lSus  = lS `less` ([],[u])  ; gSus  = LstVar lSus
 lS'us = lS' `less` ([],[u]) ; gS'us = LstVar lS'us

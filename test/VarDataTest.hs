@@ -23,29 +23,34 @@ import AST
 import VarData
 import TestRendering
 
-i = ObsVar  (fromJust $ ident "i") Static; ti = fromJust $ eVar ArbType i
-j = ObsVar  (fromJust $ ident "j") Static; tj = fromJust $ eVar ArbType j
-k = ObsVar  (fromJust $ ident "k") Static; tk = fromJust $ eVar ArbType k
-u = ObsVar  (fromJust $ ident "u") Before; tu = fromJust $ eVar ArbType u
-v = ObsVar  (fromJust $ ident "v") Before; tv = fromJust $ eVar ArbType v
-v' = ObsVar  (fromJust $ ident "v") Before; tv' = fromJust $ eVar ArbType v'
-e = ExprVar (fromJust $ ident "e") Before; te = fromJust $ eVar ArbType e
-len = ExprVar (fromJust $ ident "len") Static; tlen = fromJust $ eVar ArbType len
-p = PredVar (fromJust $ ident "P") Before; tp = fromJust $ pVar p
-pT = PredVar (fromJust $ ident "T") Static; tT = fromJust $ pVar pT
+--import TestDefs
 
-iu = fromJust $ ident "lu" ; lu = PreVars  iu ; glu  = LstVar lu
-iv = fromJust $ ident "lv" ; lv = PreVars  iv ; glv  = LstVar lv
-lw  = PreVars  $ fromJust $ ident "lw"     ; glw  = LstVar lw
-lv' = PostVars $ fromJust $ ident "lv"     ; glv' = LstVar lv'
-lvm = MidVars  (fromJust $ ident "lv") "m" ; glvm = LstVar lvm
-le  = PreExprs $ fromJust $ ident "le"     ; gle  = LstVar le
-lP  = PrePreds $ fromJust $ ident "lP"     ; glP  = LstVar lP
+jId = fromJust . ident
+sngl = S.singleton
 
-x = ObsVar (fromJust $ ident "x") Static; lx = LVbl x [] []; glx = LstVar lx
-ll  = PreVars  $ fromJust $ ident "ll"     ; gll  = LstVar ll
-ls  = PreVars  $ fromJust $ ident "ls"     ; gls  = LstVar ls
-f = ExprVar (fromJust $ ident "f") Static ; lf = LVbl f [] []
+i = ObsVar  (jId "i") Static; ti = fromJust $ eVar ArbType i
+j = ObsVar  (jId "j") Static; tj = fromJust $ eVar ArbType j
+k = ObsVar  (jId "k") Static; tk = fromJust $ eVar ArbType k
+u = ObsVar  (jId "u") Before; tu = fromJust $ eVar ArbType u
+v = ObsVar  (jId "v") Before; tv = fromJust $ eVar ArbType v
+v' = ObsVar  (jId "v") Before; tv' = fromJust $ eVar ArbType v'
+e = ExprVar (jId "e") Before; te = fromJust $ eVar ArbType e
+len = ExprVar (jId "len") Static; tlen = fromJust $ eVar ArbType len
+p = PredVar (jId "P") Before; tp = fromJust $ pVar p
+pT = PredVar (jId "T") Static; tT = fromJust $ pVar pT
+
+iu = jId "lu" ; lu = PreVars  iu ; glu  = LstVar lu
+iv = jId "lv" ; lv = PreVars  iv ; glv  = LstVar lv
+lw  = PreVars  $ jId "lw"     ; glw  = LstVar lw
+lv' = PostVars $ jId "lv"     ; glv' = LstVar lv'
+lvm = MidVars  (jId "lv") "m" ; glvm = LstVar lvm
+le  = PreExprs $ jId "le"     ; gle  = LstVar le
+lP  = PrePreds $ jId "lP"     ; glP  = LstVar lP
+
+x = ObsVar (jId "x") Static; lx = LVbl x [] []; glx = LstVar lx
+ll  = PreVars  $ jId "ll"     ; gll  = LstVar ll
+ls  = PreVars  $ jId "ls"     ; gls  = LstVar ls
+f = ExprVar (jId "f") Static ; lf = LVbl f [] []
 
 gi = StdVar i; gj = StdVar j
 gv = StdVar v; ge = StdVar e; gp = StdVar p
@@ -130,8 +135,8 @@ tst_addKnownConst
 -- -----------------------------------------------------------------------------
 tst_addKnownVar :: TF.Test
 
-tBool = GivenType $ fromJust $ ident "Bool"
-tInt = GivenType $ fromJust $ ident "Int"
+tBool = GivenType $ jId "Bool"
+tInt = GivenType $ jId "Int"
 
 tst_addKnownVar
  = testGroup "addKnownVar"
@@ -214,7 +219,7 @@ kvepTable
   $ fromJust $ addKnownVar v tInt
   $ fromJust $ addKnownVar k tBool newVarTable
 
-z = ObsVar (fromJust $ ident "z") Static
+z = ObsVar (jId "z") Static
 
 tst_lookupVarTable
  = testGroup "lookupVarTable"
@@ -240,8 +245,6 @@ tst_lookupVarTable
 
 -- -----------------------------------------------------------------------------
 tst_addKnownListVar :: TF.Test
-
-sngl = S.singleton
 
 -- setup vardata where i,j,u,len and T are known
 -- and ll and ls map to empty lists and sets respectively

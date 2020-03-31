@@ -105,9 +105,10 @@ test-suite reasonEq-test
                      , test-framework
                      , test-framework-hunit
                      -- , test-framework-quickcheck2
-  other-modules:       VarDataTest
+  other-modules:       TestDefs
+                     , VarDataTest
                      , FreeVarTest
-                     , MkTestBind
+                     -- , MkTestBind
                      , BindingTest
                      , MatchingTest
                      , MatchScenarios

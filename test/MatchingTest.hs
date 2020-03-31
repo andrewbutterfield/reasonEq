@@ -20,7 +20,7 @@ import Binding
 import Matching
 
 import TestRendering
-import MkTestBind
+import TestDefs
 
 -- -----------------------------------------------------------------------------
 tst_match :: TF.Test

@@ -27,7 +27,7 @@ import AST
 import VarData
 import Binding
 import Matching
-import MkTestBind
+import TestDefs
 import TestRendering
 \end{code}
 
@@ -95,7 +95,7 @@ THAT REQUIRES MATCHING AGAINST ``PROGRAM TEXTS.''
 The builders are designed to work with ``safe'' arguments
 and will exhibit runtime failures if used improperly.
 \begin{code}
-jId = fromJust . ident
+
 vwrap = map StdVar ;  vswrap = S.fromList . vwrap
 lwrap = map LstVar ;  lswrap = S.fromList . lwrap
 v  ^=   t  =  fromJust . addKnownConst   v  t
@@ -236,7 +236,7 @@ lSuw = lS `less` ([u,w],[])
 lSuvw = lS `less` ([u,v,w],[])
 lOu = lO `less` ([u],[])
 
-u = jId "u"  ;  vu = PreVar u  ;  gu = StdVar vu
+vu = PreVar u  ;  gu = StdVar vu
 vv = PreVar v  ; gv = StdVar vv
 w = jId "w"  ;  vw = PreVar w  ;  gw = StdVar vw
 
@@ -728,7 +728,6 @@ v `assigned` e
 
 Test values:
 \begin{code}
-v = jId "v"
 vtv = ScriptVar v
 gtv = StdVar vtv
 sy = ScriptVar wy

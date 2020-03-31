@@ -17,32 +17,11 @@ import AST
 import VarData
 import Binding
 
--- ---------------
-bindLook lkp bind pv cx
- = fromJust (lkp (fromJust (bind pv cx emptyBinding)) pv)
-bindLook2 lkp bind pv1 cx pv2
- = fromJust (lkp (fromJust (bind pv1 cx emptyBinding)) pv2)
+import TestDefs
+
 
 -- -----------------------------------------------------------------------------
 tst_bind_lkp_VarToVar :: TF.Test
-vvBindLook = bindLook lookupVarBind bindVarToVar
-vvBindLook2 = bindLook2 lookupVarBind bindVarToVar
-
-osv = ObsVar  (fromJust $ ident "osv") Static
-osu = ObsVar (fromJust $ ident "osu") Static
-esv = ExprVar (fromJust $ ident "esv") Static
-psv = PredVar (fromJust $ ident "psv") Static
-
-obv  = ObsVar (fromJust $ ident "obv" )   Before
-odmv = ObsVar (fromJust $ ident "odmv") $ During "m"
-odnv = ObsVar (fromJust $ ident "odnv") $ During "n"
-oav  = ObsVar (fromJust $ ident "oav" )   After
-otv  = ObsVar (fromJust $ ident "otv" )   Textual
-
-u = fromJust $ ident "u"
-ob_u = ObsVar u Before; oa_u = ObsVar u After; odm_u = ObsVar u $ During "m"
-v = fromJust $ ident "v"
-ob_v = ObsVar v Before; oa_v = ObsVar v After; odm_v = ObsVar v $ During "m"
 
 tst_bind_lkp_VarToVar
   = testGroup "lookupVarBind after bindVarToVar"
@@ -83,10 +62,6 @@ tst_bind_lkp_VarToVar
 
 -- -----------------------------------------------------------------------------
 tst_bind_lkp_VarToTerm :: TF.Test
-vtBindLook = bindLook lookupVarBind bindVarToTerm
-
-ce42 = EVal ArbType $ Integer 42
-pTrue = PVal $ Boolean True
 
 tst_bind_lkp_VarToTerm
   = testGroup "lookupVarBind after bindVarToTerm"
@@ -106,23 +81,6 @@ tst_bind_lkp_VarToTerm
 
 -- -----------------------------------------------------------------------------
 tst_bind_lkp_LVarToVList :: TF.Test
-llBindLook = bindLook lookupLstBind bindLVarToVList
-
-obu = ObsVar  (fromJust $ ident "obu") Before
-ebv = ExprVar (fromJust $ ident "ebv") Before
-pbv = PredVar (fromJust $ ident "pbv") Before
-
-gosu = StdVar osu
-gesv = StdVar esv
-gpsv = StdVar psv
-
-gobu = StdVar obu
-gebv = StdVar ebv
-gpbv = StdVar pbv
-
-lobv = PreVars $ fromJust $ ident "lobv"
-lebv = PreExprs $ fromJust $ ident "lebv"
-lpbv = PrePreds $ fromJust $ ident "lpbv"
 
 tst_bind_lkp_LVarToVList
  = testGroup "lookupVarBind after bindLVarToVList"
@@ -143,9 +101,6 @@ tst_bind_lkp_LVarToVList
 
 -- -----------------------------------------------------------------------------
 tst_bind_lkp_LVarToVSet :: TF.Test
-lsBindLook = bindLook lookupLstBind bindLVarToVSet
-
-sngl = S.singleton
 
 tst_bind_lkp_LVarToVSet
  = testGroup "lookupVarBind after bindLVarToVSet"

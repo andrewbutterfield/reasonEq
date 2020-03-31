@@ -106,6 +106,7 @@ test-suite reasonEq-test
                      , test-framework-hunit
                      -- , test-framework-quickcheck2
   other-modules:       VarDataTest
+                     , FreeVarTest
                      , MkTestBind
                      , BindingTest
                      , MatchingTest

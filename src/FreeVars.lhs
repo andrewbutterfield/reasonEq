@@ -374,3 +374,7 @@ nestSimplify trm = fail "nestSimplify: not nested similar quantifiers"
 We need something that simplifies $\bb i {V_i }{\bb j {V_j} P}$
 to $\bb j {V_j} P$, because $V_j \supseteq \fv(P)$.
 }
+
+\newpage
+
+\subsection{Tests}

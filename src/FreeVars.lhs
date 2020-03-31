@@ -21,7 +21,7 @@ import Data.List
 import Data.Maybe
 
 import Utilities (injMap)
-import Control (mapboth,mapaccum)
+import Control (mapboth,mapaccum,mapsnd)
 import LexBase
 import Variables
 import AST
@@ -236,7 +236,6 @@ normQ vv (Var tk v@(Vbl (Identifier nm _) _ _))
 \end{eqnarray*}
 \begin{code}
 --normQ :: VarVersions -> Term -> (Term, VarVersions)
--- Cons, Cls, Sub, Iter
 normQ vv (Cons tk n ts)       =  (Cons tk n ts',vv')
                               where (ts',vv') =  mapaccum normQ vv ts
 normQ vv (Cls n tm)           =  (Cls n tm',vv')
@@ -262,8 +261,14 @@ normQ vv (Iter tk na ni lvs)  =  (Iter tk na ni $ map (normQLVar vv) lvs,vv)
 \end{eqnarray*}
 \begin{code}
 --normQ :: VarVersions -> Term -> (Term, VarVersions)
--- Bnd, Lam
--- normQ vv trm  = error "normQ NYFI"
+normQ vv (Bnd tk n vs tm)
+ = let (vl',vv') = normQBound vv $ S.toList vs
+       (tm',vv'') =  normQ vv' tm
+   in ( fromJust $ bnd tk n (S.fromList vl') tm', vv')
+normQ vv (Lam tk n vl tm)
+ = let (vl',vv') = normQBound vv vl
+       (tm',vv'') =  normQ vv' tm
+   in ( fromJust $ lam tk n vl' tm', vv')
 \end{code}
 
 
@@ -273,11 +278,12 @@ normQ vv (Iter tk na ni lvs)  =  (Iter tk na ni $ map (normQLVar vv) lvs,vv)
 Anything else is unchanged
 \begin{code}
 --normQ :: VarVersions -> Term -> (Term, VarVersions)
--- Val, Typ
-normQ vv trm = (trm, vv)
+normQ vv trm = (trm, vv) -- Val, Typ
 \end{code}
 
-Drilling down \dots
+\newpage
+
+Functions that modify \texttt{VarVersions} \dots
 \begin{code}
 normQSub vv (Substn ts lvs)
   = let lvl' = mapboth (normQLVar vv) $ S.toList lvs
@@ -290,6 +296,30 @@ normQVarTerm vv (v,tm)
   = ((normQVar vv v, tm'), vv')
   where (tm',vv') = normQ vv tm
 
+-- (vl',vv') = normQBound vv vl
+normQBound vv [] = ([],vv)
+normQBound vv (gv:gvs)
+  = let (gv',vv') = normQBGVar vv gv
+        (gvs',vv'') = normQBound vv' gvs
+    in (gv':gvs', vv'')
+
+normQBGVar vv (LstVar lv)
+  =  let  (lv',vv') = normQBLVar vv lv  in  (LstVar lv', vv')
+normQBGVar vv (StdVar v)
+  =  let  (v', vv') = normQBVar  vv  v  in  (StdVar v',  vv')
+
+normQBLVar vv (LVbl v is js)
+  = let  (v',vv') = normQBVar vv v  in  (LVbl v' is js, vv')
+
+normQBVar vv v@(Vbl (Identifier nm _) _ _)
+ = case M.lookup nm vv of
+     Nothing ->  (setVarIdNumber 1 v, M.insert nm 1 vv)
+\end{code}
+
+
+
+Functions that lookup \texttt{VarVersions}\dots
+\begin{code}
 normQLVar vv (LVbl v is js) = LVbl (normQVar vv v) is js
 
 normQVar vv v@(Vbl (Identifier nm _) _ _)

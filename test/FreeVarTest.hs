@@ -27,30 +27,37 @@ import TestDefs
 
 -- -----------------------------------------------------------------------------
 
+tx = jVar eint x ; tx' = jVar eint x' ; txm = jVar eint xm ;
+tP = jVar P $ PredVar (jId "P") Static
 
+e42plus x = Cons eint (jId "+")[e42,x]
+
+univ = Cls (jId "[]")
+univP = univ tP
+
+tP1 = jVar P $ PredVar (jIdU "P" 1) Static
+univP1 = univ tP1
 
 -- -----------------------------------------------------------------------------
-tst_normQ :: TF.Test
-
-tx = jVar eint x ; tx' = jVar eint x' ; txm = jVar eint xm ;
-
-tst_normQ
- = testGroup "normaliseQuantifiers"
+tst_normNoQ :: TF.Test
+tst_normNoQ
+ = testGroup "normalise(No)Quantifiers"
      [ testCase "normQ 42 = 42" ( normaliseQuantifiers e42 @?= e42 )
      , testCase "normQ x = x" ( normaliseQuantifiers tx @?= tx )
      , testCase "normQ x' = x'" ( normaliseQuantifiers tx' @?= tx' )
      , testCase "normQ x_m = x_m" ( normaliseQuantifiers txm @?= txm )
+     , testCase "normQ P = P" ( normaliseQuantifiers tP @?= tP )
+     , testCase "normQ (42+x) = 42+x"
+        (normaliseQuantifiers (e42plus tx) @?= (e42plus tx))
+     -- Cls, Sub, Iter, Typ
      ]
 
 -- -----------------------------------------------------------------------------
-tst_groupN :: TF.Test
-
-
-tst_groupN
- = testGroup "groupN"
-     [ testCase "1+1=2"
-       ( 1+1
-         @?= 2 )
+tst_normWithQ :: TF.Test
+tst_normWithQ
+ = testGroup "normalise(With)Quantifiers"
+     [ testCase "normQ [P_0] = [P_1]"
+       ( normaliseQuantifiers univP @?= univP1 )
      ]
 
 
@@ -58,6 +65,7 @@ tst_groupN
 tst_FreeVar :: [TF.Test]
 tst_FreeVar
   = [ testGroup "\nFreeVar"
-      [ tst_normQ
+      [ tst_normNoQ
+      , tst_normWithQ
       ]
     ]

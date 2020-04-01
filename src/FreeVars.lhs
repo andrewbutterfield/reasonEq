@@ -219,12 +219,12 @@ normaliseQuantifiers :: Term -> Term
 normaliseQuantifiers = fst . normQ M.empty
 \end{code}
 
+\newpage
+
 The real work is done here:
 \begin{code}
 normQ :: VarVersions -> Term -> (Term, VarVersions)
 \end{code}
-
-
 
 \begin{eqnarray*}
    norm_\mu(v)         &\defs & (v_{\mu(v)} \cond{v \in \mu} v_0,\mu)
@@ -235,10 +235,6 @@ normQ vv (Var tk v@(Vbl (Identifier nm _) _ _))
      =  (fromJust $ var tk $ normQVar vv v, vv)
 \end{code}
 
-
-\newpage
-
-
 \begin{eqnarray*}
    norm_\mu(P \land Q) &\defs & (P' \land Q',\mu'')
 \\                     &\where& (P',\mu') = norm_\mu(P)
@@ -248,8 +244,6 @@ normQ vv (Var tk v@(Vbl (Identifier nm _) _ _))
 --normQ :: VarVersions -> Term -> (Term, VarVersions)
 normQ vv (Cons tk n ts)       =  (Cons tk n ts',vv')
                               where (ts',vv') =  mapaccum normQ vv ts
-normQ vv (Cls n tm)           =  (Cls n tm',vv')
-                              where (tm',vv') =  normQ vv tm
 normQ vv (Sub tk tm s)
   = let (tm',vv') = normQ vv tm
         (s',vv'') = normQSub vv' s
@@ -257,10 +251,6 @@ normQ vv (Sub tk tm s)
 
 normQ vv (Iter tk na ni lvs)  =  (Iter tk na ni $ map (normQLVar vv) lvs,vv)
 \end{code}
-
-
-
-
 
 \begin{eqnarray*}
    norm_\mu(\forall x \bullet P) &\defs& (\forall x_{\mu'(x)} \bullet P',\mu'')
@@ -279,6 +269,10 @@ normQ vv (Lam tk n vl tm)
  = let (vl',vv') = normQBound vv vl
        (tm',vv'') =  normQ vv' tm
    in ( fromJust $ lam tk n vl' tm', vv')
+normQ vv (Cls n tm)
+ = let (_,vv') = normQBound vv $ S.toList $ freeVars tm
+       (tm',vv'') = normQ vv' tm
+   in ( Cls n tm',vv'')
 \end{code}
 
 

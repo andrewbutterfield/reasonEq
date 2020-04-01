@@ -13,8 +13,10 @@ module FreeVars
 , normaliseQuantifiers
 , setVarIdNumber
 , nestSimplify
+-- exports for test only
 , int_tst_FreeVar
 ) where
+
 import Data.Set(Set)
 import qualified Data.Set as S
 import Data.Map(Map)
@@ -390,22 +392,15 @@ to $\bb j {V_j} P$, because $V_j \supseteq \fv(P)$.
 \begin{code}
 tst_setVarIdNumber :: TF.Test
 
-jId = fromJust . ident
-jIdU nm u = fromJust $ uident nm u
-identi nm i = jId (nm++show i) -- number is part of name
-
 va = Vbl (jId "a") ObsV Before
 a0 = Vbl (jIdU "a" 0) ObsV Before
 a1 = Vbl (jIdU "a" 1) ObsV Before
 
 tst_setVarIdNumber
  = testGroup "setVarIdNumber"
-     [ testCase "a is a.0"
-       ( va  @?= a0 )
-     , testCase "set a .0"
-       ( setVarIdNumber 0 va  @?= a0 )
-     , testCase "set a .1"
-       ( setVarIdNumber 1 va  @?= a1 )
+     [ testCase "a is a.0" ( va  @?= a0 )
+     , testCase "set a .0" ( setVarIdNumber 0 va  @?= a0 )
+     , testCase "set a .1" ( setVarIdNumber 1 va  @?= a1 )
      ]
 \end{code}
 

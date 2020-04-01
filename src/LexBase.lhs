@@ -14,11 +14,14 @@ module LexBase
  , idName, idUName, splitClosureId
  , Token
  , pattern ArbTok, pattern IdTok
+ -- test only below here
  , int_tst_LexBase
+ , jId, jIdU, identi
  ) where
 
 import Data.Char
 import Data.List
+import Data.Maybe (fromJust)
 import Data.Set(Set)
 import qualified Data.Set as S
 import Data.Map(Map)
@@ -169,11 +172,23 @@ pattern IdTok i = TI i
 \end{code}
 
 \newpage
+
 \subsection{Exported Test Group}
+
+
+
 \begin{code}
+
+jId :: String -> Identifier
+jId = fromJust . ident
+jIdU :: String -> Int -> Identifier
+jIdU nm u = fromJust $ uident nm u
+identi :: String -> Int ->Identifier
+identi nm i = jId (nm++show i) -- number is part of name
+
 int_tst_LexBase :: [TF.Test]
 int_tst_LexBase
- = [ testGroup "\nLexBase Internal"
+ = [ testGroup "\nLexBase (INTERNAL))"
      [ identTests
      ]
    ]

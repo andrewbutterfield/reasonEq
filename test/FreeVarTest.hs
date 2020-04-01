@@ -30,6 +30,19 @@ import TestDefs
 
 
 -- -----------------------------------------------------------------------------
+tst_normQ :: TF.Test
+
+tx = jVar eint x ; tx' = jVar eint x' ; txm = jVar eint xm ;
+
+tst_normQ
+ = testGroup "normaliseQuantifiers"
+     [ testCase "normQ 42 = 42" ( normaliseQuantifiers e42 @?= e42 )
+     , testCase "normQ x = x" ( normaliseQuantifiers tx @?= tx )
+     , testCase "normQ x' = x'" ( normaliseQuantifiers tx' @?= tx' )
+     , testCase "normQ x_m = x_m" ( normaliseQuantifiers txm @?= txm )
+     ]
+
+-- -----------------------------------------------------------------------------
 tst_groupN :: TF.Test
 
 
@@ -45,6 +58,6 @@ tst_groupN
 tst_FreeVar :: [TF.Test]
 tst_FreeVar
   = [ testGroup "\nFreeVar"
-      [ tst_groupN
+      [ tst_normQ
       ]
     ]

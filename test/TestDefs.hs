@@ -78,6 +78,9 @@ e42 = EVal int $ Integer 42
 k = jId "ok"
 ok = PreVar k ; ok' = PostVar k ; okm = MidVar k "m"
 
+
+eint = E int
+
 xx = jId "x"  ;  x = PreVar xx  ;  x' = PostVar xx  ;  xm = MidVar xx "m"
 wy = jId "y"  ;  y = PreVar wy  ;  y' = PostVar wy  ;  ym = MidVar wy "m"
 ze = jId "z"  ;  z = PreVar ze  ;  z' = PostVar ze  ;  zm = MidVar ze "m"
@@ -147,13 +150,6 @@ pTrue = PVal $ Boolean True
 
 -- ================ FUNCTIONS =======================
 
-jId :: String -> Identifier
-jId = fromJust . ident
-jIdU :: String -> Int -> Identifier
-jIdU nm u = fromJust $ uident nm u
-
-identi :: String -> Int ->Identifier
-identi nm i = jId (nm++show i) -- number is part of name
 
 set :: Ord a => [a] -> Set a
 set = S.fromList

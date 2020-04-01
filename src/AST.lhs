@@ -34,7 +34,9 @@ module AST ( TermSub, LVarSub
            , theVar, varAsTerm
            , subTerms
            , mentionedVars, mentionedVarLists, mentionedVarSets
+           -- test only below here
            , int_tst_AST
+           , jSub, jVar, jBnd, jLam
            ) where
 import Data.Char
 import Data.List
@@ -680,6 +682,13 @@ mentionedVarSets _ = []
 
 \subsection{Exported Test Group}
 \begin{code}
+jSub ts lvs  =  fromJust $ substn ts lvs
+
+jVar tk v        =  fromJust $ var tk v
+jBnd tk n vs tm  =  fromJust $ bnd tk n vs tm
+jLam tk n vl tm  =  fromJust $ lam tk n vl tm
+
+
 int_tst_AST :: [TF.Test]
 int_tst_AST
  = [ testGroup "\nAST Internal"

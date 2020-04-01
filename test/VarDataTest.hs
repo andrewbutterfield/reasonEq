@@ -25,7 +25,6 @@ import TestRendering
 
 --import TestDefs
 
-jId = fromJust . ident
 sngl = S.singleton
 
 i = ObsVar  (jId "i") Static; ti = fromJust $ eVar ArbType i

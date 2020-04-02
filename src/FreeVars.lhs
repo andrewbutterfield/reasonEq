@@ -270,13 +270,10 @@ normQ vv (Lam tk n vl tm)
        (tm',vv'') =  normQ vv' tm
    in ( fromJust $ lam tk n vl' tm', vv')
 normQ vv (Cls n tm)
- = let (_,vv') = normQBound vv $ S.toList $ freeVars tm
+ = let (_,vv') = normQBound vv $ filter isObsGVar $ S.toList $ freeVars tm
        (tm',vv'') = normQ vv' tm
    in ( Cls n tm',vv'')
 \end{code}
-
-
-
 
 
 Anything else is unchanged
@@ -317,7 +314,9 @@ normQBLVar vv (LVbl v is js)
 
 normQBVar vv v@(Vbl (Identifier nm _) _ _)
  = case M.lookup nm vv of
-     Nothing ->  (setVarIdNumber 1 v, M.insert nm 1 vv)
+     Nothing  ->  (setVarIdNumber 1 v, M.insert nm 1 vv)
+     Just u   ->  let u' = u+1
+                  in (setVarIdNumber u' v, M.insert nm u' vv)
 \end{code}
 
 

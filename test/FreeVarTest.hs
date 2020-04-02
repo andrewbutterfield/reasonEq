@@ -28,36 +28,89 @@ import TestDefs
 -- -----------------------------------------------------------------------------
 
 tx = jVar eint x ; tx' = jVar eint x' ; txm = jVar eint xm ;
+
+tb = jVar ebool b
+
+bu u = Vbl (jIdU "b" u) ObsV Before
+tbu u = jVar ebool $ bu u
+
 tP = jVar P $ PredVar (jId "P") Static
+tPu u = jVar P $ PredVar (jIdU "P" u) Static
 
 e42plus x = Cons eint (jId "+")[e42,x]
+land p q = Cons P (jId "/\\") [p,q]
 
-univ = Cls (jId "[]")
-univP = univ tP
+xs = LVbl x [] []
+ys = LVbl y [] []
+iterLVs = Iter P (jId "/\\") (jId "=") [xs,ys]
 
-tP1 = jVar P $ PredVar (jIdU "P" 1) Static
-univP1 = univ tP1
+tInt = Typ int
+
+subP =  Sub P tP sub42x_ysxs
+
+sub42x_ysxs = jSub [(x,e42)] [(ys,xs)]
 
 -- -----------------------------------------------------------------------------
 tst_normNoQ :: TF.Test
 tst_normNoQ
  = testGroup "normalise(No)Quantifiers"
-     [ testCase "normQ 42 = 42" ( normaliseQuantifiers e42 @?= e42 )
-     , testCase "normQ x = x" ( normaliseQuantifiers tx @?= tx )
-     , testCase "normQ x' = x'" ( normaliseQuantifiers tx' @?= tx' )
-     , testCase "normQ x_m = x_m" ( normaliseQuantifiers txm @?= txm )
-     , testCase "normQ P = P" ( normaliseQuantifiers tP @?= tP )
-     , testCase "normQ (42+x) = 42+x"
-        (normaliseQuantifiers (e42plus tx) @?= (e42plus tx))
-     -- Cls, Sub, Iter, Typ
+     [ testCase "42            ~> 42            "
+       ( normaliseQuantifiers e42 @?= e42 )
+     , testCase "x             ~> x             "
+       ( normaliseQuantifiers tx @?= tx )
+     , testCase "x'            ~> x'            "
+       ( normaliseQuantifiers tx' @?= tx' )
+     , testCase "x_m           ~> x_m           "
+       ( normaliseQuantifiers txm @?= txm )
+     , testCase "P             ~> P             "
+       ( normaliseQuantifiers tP @?= tP )
+     , testCase "(42+x)        ~> 42+x          "
+       (normaliseQuantifiers (e42plus tx) @?= (e42plus tx))
+     , testCase "P[42,y$/x,x$] ~> P[42,y$/x,x$] "
+       ( normaliseQuantifiers subP @?= subP )
+     , testCase "/\\(x$=y$)     ~> /\\(x$=y$)     "
+       ( normaliseQuantifiers iterLVs @?= iterLVs )
+     , testCase "Int           ~> Int           "
+       ( normaliseQuantifiers tInt @?= tInt )
      ]
 
 -- -----------------------------------------------------------------------------
+
+univ = Cls (jId "[]")
+
+univB = univ tb
+tb1 = tbu 1 ; univB1 = univ tb1
+tb2 = tbu 2 ; univB2 = univ tb2
+
+univP = univ tP
+
+exbTrue = jBnd P (jId "exists") (sngl $ StdVar b) tb
+exbTrue1 = jBnd P (jId "exists") (sngl $ StdVar (bu 1)) tb1
+exbTrue2 = jBnd P (jId "exists") (sngl $ StdVar (bu 2)) tb1
+
 tst_normWithQ :: TF.Test
 tst_normWithQ
  = testGroup "normalise(With)Quantifiers"
-     [ testCase "normQ [P_0] = [P_1]"
-       ( normaliseQuantifiers univP @?= univP1 )
+     [ testCase "[b_0]                   ~> [b_1]                   "
+       ( normaliseQuantifiers univB @?= univB1 )
+     , testCase "[[b_0]]                 ~> [[b_1]]                 "
+       ( normaliseQuantifiers (univ univB) @?= (univ univB1) )
+     , testCase "[b_0 /\\ [b_0]]          ~> [b_1 /\\ [b_2]]          "
+       ( normaliseQuantifiers (univ (land tb univB))
+          @?= (univ (land tb1 univB2)) )
+      , testCase "[P_0]                   ~> [P_0]                   "
+        ( normaliseQuantifiers univP @?= univP )
+      , testCase "[[P_0]]                 ~> [[P_0]]                 "
+        ( normaliseQuantifiers (univ univP) @?= (univ univP) )
+      , testCase "[P_0 /\\ [P_0]]          ~> [P_0 /\\ [P_0]]          "
+        ( normaliseQuantifiers (univ (land tP univP))
+           @?= (univ (land tP univP)) )
+     -- pattern Bnd  tk n vs tm    <-  B tk n vs tm
+     , testCase "exists b_0 @ b_0        ~> exists b_1 @ b_1        "
+       ( normaliseQuantifiers exbTrue @?= exbTrue1 )
+     , testCase "b_0 /\\ exists b_0 @ b_0 ~> b_0 /\\ exists b_1 @ b_1 "
+       ( normaliseQuantifiers (land tb exbTrue) @?= (land tb exbTrue1) )
+     -- pattern Lam  tk n vl tm    <-  L tk n vl tm
      ]
 
 

@@ -231,8 +231,8 @@ Some variable predicates/functions:
 \begin{code}
 isPreVar :: Variable -> Bool
 isPreVar  (VR (_, _, WB))  =  True
-isPreVar  _                     =  False
-isObsVar  (VR (_, vw, _))   =  vw == VO
+isPreVar  _                =  False
+isObsVar  (VR (_, vw, _))  =  vw == VO
 isExprVar (VR (_, vw, _))  =  vw == VE
 isPredVar (VR (_, vw, _))  =  vw == VP
 

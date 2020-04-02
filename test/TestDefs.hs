@@ -23,6 +23,7 @@ bx = S.singleton $ StdVar x
 by = S.singleton $ StdVar y
 -- ok = PreVar $ jId "ok"
 bool = GivenType $ jId "B"
+ebool = E bool
 okk = E bool
 eok = fromJust $ eVar bool ok
 true = EVal bool $ Boolean True

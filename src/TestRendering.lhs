@@ -7,21 +7,24 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module TestRendering (
-   trId
- , trVar, trLVar, trGVar
- , trVSet, trOVSet, trVList, trVariableSet
+   trId, trIdU
+ , trVar, trVarU, trLVar, trLVarU, trGVar, trGVarU
+ , trVSet, trVSetU, trOVSet, trOVSetU
+ , trVList, trVListU, trVariableSet, trVariableSetU
  , trMap
  , trType
  , trValue
- , trTerm
- , trSub
- , trTermZip
- , trSideCond
- , trAsn, trNmdAsn
+ , trTerm, trTermU
+ , trSub, trSubU
+ , trTermZip, trTermZipU
+ , trSideCond, trSideCondU
+ , trAsn, trAsnU, trNmdAsn, trNmdAsnU
  , (-.-), nicelawname
- , trVarMatchRole, trLstVarMatchRole, trVarTable
- , trLstLVarOrTerm
- , trBinding
+ , trVarMatchRole, trVarMatchRoleU
+ , trLstVarMatchRole, trLstVarMatchRoleU
+ , trVarTable, trVarTableU
+ , trLstLVarOrTerm, trLstLVarOrTermU
+ , trBinding, trBindingU
  , seplist
  , seeV, seeLV, seeGV, seeVL, seeVS
  , seeType, seeVal, seeTerm, seeBind, seeVarTable
@@ -52,6 +55,9 @@ import TermZipper
 
 We provide a simple, almost certainly un-parsable,
 rendering of datatypes to ease debugging.
+We support two ways of viewing identifiers,
+one (\texttt{trXXX}) that hides the ``unique number'' component,
+and another (\texttt{trXXXU}) that displays it.
 
 \newpage
 \subsection{Variables}
@@ -59,6 +65,9 @@ rendering of datatypes to ease debugging.
 \begin{code}
 trId :: Identifier -> String
 trId (Identifier s _)  =  widthHack 2 $ nicesym s
+
+trIdU :: Identifier -> String
+trIdU (Identifier s u)  =  widthHack 2 $ (nicesym s ++ _subNum u)
 
 -- can't handle nesting of bold, underline and colours right now...
 trVC :: VarClass -> String -> String
@@ -78,19 +87,27 @@ trVW After s       =  s++"'"
 trVW Textual s     =  s++"\""
 
 trVar :: Variable -> String
-trVar (Vbl i vc vw) = trVW vw $ trVCf vc $ trId i
+trVar = trvar trId
+trVarU = trvar trIdU
 
-trLVar :: ListVar -> String
-trLVar (LVbl (Vbl i vc vw) is js)
- = trVW vw (trVCf vc $ trLId i) ++ trLess is js
+trvar trid (Vbl i vc vw) = trVW vw $ trVCf vc $ trId i
 
-trLId i = concat $ map dia_line $ trId i
-trLess [] []  =  ""
-trLess is js  =  '\\' : ( intercalate "," ( map trId is ++ map trLId js ) )
+trLVar = trlvar trId
+trLVarU = trlvar trIdU
 
-trGVar :: GenVar -> String
-trGVar (StdVar v)   =  trVar v
-trGVar (LstVar lv)  =  trLVar lv
+trlvar trid (LVbl (Vbl i vc vw) is js)
+ = trVW vw (trVCf vc $ trlid trid i) ++ trless trid is js
+
+trlid trid i = concat $ map dia_line $ trid i
+trless trid [] []  =  ""
+trless trid is js  =  '\\' : ( intercalate "," ( map trid is ++
+                                                 map (trlid trid) js ) )
+
+trGVar = trgvar trId
+trGVarU = trgvar trIdU
+
+trgvar trid (StdVar v)   =  trvar trid v
+trgvar trid (LstVar lv)  =  trlvar trid lv
 \end{code}
 
 \subsection{Types}
@@ -189,14 +206,18 @@ highlightFocus = magenta
 
 We use a precedence argument when rendering terms.
 \begin{code}
-trTerm :: Int -> Term -> String -- 1st arg is precedence
+trTerm  :: Int -> Term -> String -- 1st arg is precedence
+trTerm = trterm trId
+trTermU :: Int -> Term -> String
+trTermU = trterm trIdU
+trterm :: (Identifier -> String) -> Int -> Term -> String
 \end{code}
 
 First, atomic terms
 \begin{code}
-trTerm p (Val tk k)           =  trValue k
-trTerm p (Var tk v)           =  trVar v
-trTerm p (Typ t)              =  trType t
+trterm trid p (Val tk k)           =  trValue k
+trterm trid p (Var tk v)           =  trVar v
+trterm trid p (Typ t)              =  trType t
 \end{code}
 
 A \texttt{Cons}-node with one subterm
@@ -205,22 +226,22 @@ a marked focus term needs highlighting;
 or an application of name $nm$ (symbol $\lhd$)
 to an atomic argument $a$ that has no parentheses: $nm~a$ ($\lhd a$).
 \begin{code}
-trTerm ctxtp (Cons tk s [t])
- | s == focusMark    =  highlightFocus $ trTerm ctxtp t
- | isAtomic t        =  trAtomic s $ trTerm 0 t
+trterm trid ctxtp (Cons tk s [t])
+ | s == focusMark    =  highlightFocus $ trterm trid ctxtp t
+ | isAtomic t        =  trAtomic s $ trterm trid 0 t
  where
    trAtomic s r
-    | isSymbId s  =  trId s ++ r
-    | otherwise   =  trId s ++ ' ':r
+    | isSymbId s  =  trid s ++ r
+    | otherwise   =  trid s ++ ' ':r
 \end{code}
 
 Rendering an infix operator with two or more arguments.
 We ensure that sub-terms are rendered with the infix operator precedence
 as their context precedence.
 \begin{code}
-trTerm ctxtp (Cons tk opn@(Identifier nm _) ts@(_:_:_))
+trterm trid ctxtp (Cons tk opn@(Identifier nm _) ts@(_:_:_))
  | isOp  =  trBracketIf (opp <= ctxtp)
-                        $ intercalate (trId opn) $ map (trTerm opp) ts
+                        $ intercalate (trId opn) $ map (trterm trid opp) ts
  where
    prcs@(opp,isOp) = prc nm
 \end{code}
@@ -228,23 +249,23 @@ trTerm ctxtp (Cons tk opn@(Identifier nm _) ts@(_:_:_))
 In all other cases we simply use classical function application notation
 $f(e_1,e_2,\dots,e_n)$.
 \begin{code}
-trTerm _ (Cons tk n ts)
-  =  trId n ++ trContainer ( "(", ",", ")" ) ts
+trterm trid _ (Cons tk n ts)
+  =  trId n ++ trcontainer trid ( "(", ",", ")" ) ts
 \end{code}
 
 Binders and substitution are straightforward:
 \begin{code}
-trTerm p (Bnd tk n vs t)  =  trAbs p tk n (S.toList vs) t
-trTerm p (Lam tk n vl t)   =  trAbs p tk n vl            t
-trTerm p (Sub tk t sub)
-  | isAtomic t  =       trTerm p t      ++ trSub p sub
-  | otherwise   =  "("++trTerm 0 t++")" ++ trSub p sub
+trterm trid p (Bnd tk n vs t)  =  trabs trid p tk n (S.toList vs) t
+trterm trid p (Lam tk n vl t)   =  trabs trid p tk n vl            t
+trterm trid p (Sub tk t sub)
+  | isAtomic t  =       trterm trid p t      ++ trsub trid p sub
+  | otherwise   =  "("++trterm trid 0 t++")" ++ trsub trid p sub
 \end{code}
 
 A closure expects the identifier to be of the form leftbracket\_rightbracket
 \begin{code}
-trTerm p (Cls n t)
-  =  nicesym lbr ++ trTerm 0 t ++ nicesym rbr
+trterm trid p (Cls n t)
+  =  nicesym lbr ++ trterm trid 0 t ++ nicesym rbr
   where (lbr,rbr) = splitClosureId n
 \end{code}
 
@@ -267,30 +288,33 @@ we have three cases:
 ~
 
 \begin{code}
-trTerm _ (Iter tk na ni lvs@(_:_:_))
+trterm trid _ (Iter tk na ni lvs@(_:_:_))
  | isSymbId ni  = silentId na ++ "(" ++ seplist (trId ni) trLVar lvs ++ ")"
  where silentId na@(Identifier i _)
   -- logical-and is the 'default' for na, so we keep it 'silent'
         | i == _land  =  ""
         | otherwise   =  trId na
 
-trTerm _ (Iter tk na ni lvs)
+trterm trid _ (Iter tk na ni lvs)
   =  trId na ++ "{" ++ trId ni ++ "(" ++ seplist "," trLVar lvs ++ ")}"
 \end{code}
 
 
 General way to render a named, bracketed and separated ``container''.
 \begin{code}
-trContainer (lbr,sep,rbr) ts
-  = lbr ++ intercalate sep (map (trTerm 0) ts) ++ rbr
+trcontainer trid (lbr,sep,rbr) ts
+  = lbr ++ intercalate sep (map (trterm trid 0) ts) ++ rbr
 \end{code}
 
 \begin{code}
-trSub ctxtp (Substn tsub lvsub)
+trSub = trsub trId
+trSubU = trsub trIdU
+
+trsub trid ctxtp (Substn tsub lvsub)
  = "[" ++
-       (trTL ctxtp "," rts  `mrg` trVL (map LstVar rlvs)) ++
+       (trtl trid ctxtp "," rts  `mrg` trvl trid (map LstVar rlvs)) ++
    "/" ++
-       trVL (map StdVar tvs ++ map LstVar tlvs) ++
+       trvl trid (map StdVar tvs ++ map LstVar tlvs) ++
    "]"
  where
   (tvs,rts) = unzip $ S.toList tsub
@@ -306,21 +330,32 @@ These will eventually do some sort of multi-line pretty-printing.
 trBracketIf True  s  =  "("++s++")"
 trBracketIf False s  =  s
 
-trApply p n (lbr,sep,rbr) ts  =  lbr ++ trTL p sep ts ++ rbr
+trapply trid p n (lbr,sep,rbr) ts  =  lbr ++ trtl trid p sep ts ++ rbr
 
-trTL p sep ts = seplist sep (trTerm p) ts
+trtl trid p sep ts = seplist sep (trterm trid p) ts
 
-trAbs p tk n vl t
- = "("++trId n ++ ' ':trVL vl ++ spaced _bullet ++ trTerm p t ++ ")"
+trabs trid p tk n vl t
+ = "("++trid n ++ ' ':trvl trid vl ++ spaced _bullet ++ trterm trid p t ++ ")"
 
-trVL = seplist "," trGVar
+trvl trid = seplist "," $ trgvar trid
 
-trVList vl  =  _langle ++ trVL vl ++ _rangle
-trVSet vs   =  "{" ++ trOVSet vs ++ "}"
-trOVSet vs  =  trVL (S.toList vs)
+trVList = trvlist trId
+trVListU = trvlist trIdU
+trvlist trid vl  =  _langle ++ trvl trid vl ++ _rangle
 
-trVariableSet vs = "{" ++ trVariableL (S.toList vs) ++ "}"
-trVariableL = seplist "," trVar
+trVSet = trvset trId
+trVSetU = trvset trIdU
+trvset trid vs   =  "{" ++ trovset trid vs ++ "}"
+
+trOVSet = trovset trId
+trOVSetU = trovset trIdU
+trovset trid vs  =  trvl trid (S.toList vs)
+
+trVariableSet = trvariableset trId
+trVariableSetU = trvariableset trIdU
+
+trvariableset trid vs = "{" ++ trvariablel trid (S.toList vs) ++ "}"
+trvariablel trid = seplist "," $ trvar trid
 
 trMap     trK trD m     = "{" ++ trMapLets trK trD (M.assocs m) ++ "}"
 trMapLets trK trD kds   = seplist "," (trMapLet trK trD) kds
@@ -331,28 +366,40 @@ trMapLet  trK trD (k,d) = trK k ++ " " ++ _maplet ++ "  "++ trD d
 
 We mark the focus, exit the zipper, and render as normal.
 \begin{code}
-trTermZip (t,wayup) = trTerm 0 $ exitTZ (markfocus t,wayup)
+trTermZip = trtz trId
+trTermZipU = trtz trIdU
+trtz trid (t,wayup) = trterm trid 0 $ exitTZ (markfocus t,wayup)
 \end{code}
 
 \subsection{Side Conditions}
 
 \begin{code}
-trSideCond [] = "_"
-trSideCond ascs
- = intcalNN ";" (map trAtmSideCond ascs)
+trSideCond = trsidecond trId
+trSideCondU = trsidecond trIdU
+trsidecond trid [] = "_"
+trsidecond trid ascs
+ = intcalNN ";" (map (tratmsidecond trid) ascs)
 
-trAtmSideCond (IsPre    gv)    = "pre:"++trGVar gv
-trAtmSideCond (Disjoint gv vs) = trOVSet vs ++ spaced _notin    ++ trGVar gv
-trAtmSideCond (Covers   gv vs) = trOVSet vs ++ spaced _supseteq ++ trGVar gv
+tratmsidecond trid (IsPre    gv)    = "pre:"++trgvar trid gv
+tratmsidecond trid (Disjoint gv vs) = trovset trid vs
+                                      ++ spaced _notin ++ trgvar trid gv
+tratmsidecond trid (Covers   gv vs) = trovset trid vs
+                                      ++ spaced _supseteq ++ trgvar trid gv
 \end{code}
 
 \subsection{Assertions}
 
 \begin{code}
-trAsn (trm,[]) = trTerm 0 trm
-trAsn (trm,sc) = trTerm 0 trm ++ ", " ++ trSideCond sc
+trAsn = trasn trId
+trAsnU = trasn trIdU
 
-trNmdAsn (lawnm,asn) =  nicelawname lawnm ++ ": " ++ trAsn asn
+trasn trid (trm,[]) = trterm trid 0 trm
+trasn trid (trm,sc) = trterm trid 0 trm ++ ", " ++ trSideCond sc
+
+trNmdAsn = trnmdasn trId
+trNmdAsnU = trnmdasn trIdU
+
+trnmdasn trid (lawnm,asn) =  nicelawname lawnm ++ ": " ++ trasn trid asn
 
 nicelawname  =  widthHack 2 . foldl1 (-.-) . map nicesym . splitOn nicesplit
 nicesplit = "_"
@@ -364,78 +411,95 @@ n1 -.- n2  =  n1 ++ nicesplit ++ n2
 
 \begin{code}
 trVarMatchRole :: VarMatchRole -> String
-trVarMatchRole (KnownConst t)  =  spaced _triangleq ++ trTerm 0 t
-trVarMatchRole (KnownVar t)    =  " : " ++ trType t
-trVarMatchRole UnknownVar      =  " ?"
+trVarMatchRole = trvmr trId
+trVarMatchRoleU = trvmr trIdU
+
+trvmr trid (KnownConst t)  =  spaced _triangleq ++ trterm trid 0 t
+trvmr trid (KnownVar t)    =  " : " ++ trType t
+trvmr trid UnknownVar      =  " ?"
 \end{code}
 
 \begin{code}
 trLstVarMatchRole :: LstVarMatchRole -> String
-trLstVarMatchRole (KnownVarList vl _ _)
-  =  spaced _triangleq ++ trVList vl
-trLstVarMatchRole (KnownVarSet  vs _ _)
-  =  spaced _triangleq ++ trVSet vs
-trLstVarMatchRole UnknownListVar     =  " ?"
+trLstVarMatchRole = trlstvarmatchrole trId
+trLstVarMatchRoleU = trlstvarmatchrole trIdU
+
+trlstvarmatchrole trid (KnownVarList vl _ _)
+  =  spaced _triangleq ++ trvlist trid vl
+trlstvarmatchrole trid (KnownVarSet  vs _ _)
+  =  spaced _triangleq ++ trvset trid vs
+trlstvarmatchrole trid UnknownListVar     =  " ?"
 \end{code}
 
 \begin{code}
 trVarTable :: VarTable -> String
-trVarTable vt
+trVarTable = trvartable trId
+trVarTableU = trvartable trIdU
+
+trvartable trid vt
  = case lns of
      []  ->  "Known Variables: None"
      _   ->  "Known Variables:\n"
              ++ unlines' lns
- where lns = (    map trVTVV (vtList vt)
-               ++ map trVTLV (stList vt)
-               ++ map trVTLV (dtList vt)
+ where lns = (    map (trvtvv trid) (vtList vt)
+               ++ map (trvtlv trid) (stList vt)
+               ++ map (trvtlv trid) (dtList vt)
               )
 
-trVTVV (v,vmr)   =  trVar v ++ trVarMatchRole    vmr
+trvtvv trid (v,vmr)   =  trVar v ++ trvmr trid    vmr
 
-trVTLV (v,lvmr)  =  trVar v ++ trLstVarMatchRole lvmr
+trvtlv trid (v,lvmr)  =  trVar v ++ trLstVarMatchRole lvmr
 \end{code}
 
 \newpage
 \subsection{Bindings}
 
 \begin{code}
-trVarBind (BindVar v) = trVar v
-trVarBind (BindTerm t) = trTerm 0 t
-trVarBind vb = _ll ++ show vb ++ _gg
+trvarbind trid (BindVar v) = trVar v
+trvarbind trid (BindTerm t) = trterm trid 0 t
+trvarbind trid vb = _ll ++ show vb ++ _gg
 
-trLstVarBind (BindList vl)    =  _langle ++ trVL vl                 ++ _rangle
-trLstVarBind (BindSet vs)     =  "{"     ++ trVL (S.toList vs)      ++ "}"
-trLstVarBind (BindTLVs tlvs)  =  trLstLVarOrTerm tlvs
+trlstvarbind trid (BindList vl)
+                          =  _langle ++ trvl trid  vl                 ++ _rangle
+trlstvarbind trid (BindSet vs)
+                          =  "{"     ++ trvl trid (S.toList vs)      ++ "}"
+trlstvarbind trid (BindTLVs tlvs)  =  trlstlvarorterm trid tlvs
 
-trLstLVarOrTerm lvts = _langle ++ seplist ", " trTLV lvts ++ _rangle
+trLstLVarOrTerm = trlstlvarorterm trId
+trLstLVarOrTermU = trlstlvarorterm trIdU
+trlstlvarorterm trid lvts = _langle ++ seplist ", " (trtlv trid) lvts ++ _rangle
 
-trTLV = either trLVar (trTerm 0)
- -- trTLV (Left lv)  =  trLVar lv
- -- trTLV (Right t)  =  trTerm 0 t
+trtlv trid = either (trlvar trid) (trterm trid 0)
+ -- trtlv trid (Left lv)  =  trLVar trid lv
+ -- trtlv trid (Right t)  =  trterm trid 0 t
 \end{code}
 
 \begin{code}
-trBinding :: Binding -> String
-trBinding = trBinding' . dumpBinding
+trBinding = trbinding trId
+trBindingU = trbinding trIdU
 
-trBinding' (vb,sb,lb)
- = "{ " ++ seplist ", " id (map trVB vb ++ map trSB sb ++ map trLB lb)
+trbinding trid = trbinding' trid . dumpBinding
+
+trbinding' trid (vb,sb,lb)
+ = "{ " ++ seplist ", " id (map (trvb trid) vb ++
+                            map (trsb trid) sb ++
+                            map (trlb trid) lb)
         ++ " }"
 
 trAssoc tr pairs = "{ " ++ seplist ", " tr pairs ++ " }"
 
-trVB ((i,vc),vb)
- = trVC vc (trId i) ++ spaced _maplet ++ trVarBind vb
+trvb trid ((i,vc),vb)
+ = trVC vc (trid i) ++ spaced _maplet ++ trvarbind trid vb
 
-trSB (s,t) = s ++ spaced _maplet ++ t
+trsb trid (s,t) = s ++ spaced _maplet ++ t
 
-trLB ((i,vc,is,js),lvb)
-  = trVC vc (trId i) ++
+trlb trid ((i,vc,is,js),lvb)
+  = trVC vc (trid i) ++
     "$" ++
     (if nowt then "" else "\\") ++
-    (if noIs then "" else seplist "," trId is) ++
-    (if noJs then "" else ";" ++ seplist "," trId js) ++
-    spaced _maplet ++ trLstVarBind lvb
+    (if noIs then "" else seplist "," trid is) ++
+    (if noJs then "" else ";" ++ seplist "," trid js) ++
+    spaced _maplet ++ trlstvarbind trid lvb
   where
     noIs = null is
     noJs = null js
@@ -444,16 +508,16 @@ trLB ((i,vc,is,js),lvb)
 
 Seeing them in all their glory:
 \begin{code}
-seeV = putStrLn . trVar
-seeLV = putStrLn . trLVar
-seeGV = putStrLn . trGVar
-seeVL = putStrLn . trVList
-seeVS = putStrLn . trVSet
+seeV = putStrLn . trVarU
+seeLV = putStrLn . trLVarU
+seeGV = putStrLn . trGVarU
+seeVL = putStrLn . trVListU
+seeVS = putStrLn . trVSetU
 seeType = putStrLn . trType
 seeVal = putStrLn . trValue
-seeTerm t = putStrLn $ trTerm 0 t
-seeBind = putStrLn . trBinding
-seeVarTable = putStrLn . trVarTable
+seeTerm t = putStrLn $ trTermU 0 t
+seeBind = putStrLn . trBindingU
+seeVarTable = putStrLn . trVarTableU
 
 seeMany see []      =  return ()
 seeMany see [x]     =  see x

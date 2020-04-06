@@ -118,11 +118,17 @@ observeTheoryNames
 \subsubsection{Observing Laws (and Conjectures)}
 
 \begin{code}
-observeLaws :: REqState -> String
-observeLaws reqs
+observeLaws :: REqState -> [String] -> String
+observeLaws reqs ["-u"]
   = let thrys = getAllTheories $ theories reqs
-    in hdr ++ (intercalate hdr $ map showTheoryLaws $ reverse thrys)
+    in hdr ++ (intercalate hdr $ map (showTheoryLaws ud) $ reverse thrys)
   where hdr = "\n---\n"
+        ud = (trTermU 0, trSideCondU)
+observeLaws reqs _
+  = let thrys = getAllTheories $ theories reqs
+    in hdr ++ (intercalate hdr $ map (showTheoryLaws nd) $ reverse thrys)
+  where hdr = "\n---\n"
+        nd = (trTerm 0, trSideCond)
 \end{code}
 
 \subsubsection{Observing Current Theory}
@@ -132,7 +138,7 @@ observeCurrTheory :: REqState -> String
 observeCurrTheory reqs
  = case getTheory (currTheory reqs) (theories reqs) of
      Nothing    ->  "No current theory."
-     Just thry  ->  showTheoryLong thry
+     Just thry  ->  showTheoryLong (trTerm 0, trSideCond) thry
 \end{code}
 
 \subsubsection{Observing Current Conjectures}
@@ -142,7 +148,7 @@ observeCurrConj :: REqState -> String
 observeCurrConj reqs
   = case getTheory (currTheory reqs) (theories reqs) of
       Nothing    ->  "No current theory."
-      Just thry  ->  showNmdAssns $ conjs thry
+      Just thry  ->  showNmdAssns (trTerm 0, trSideCond) $ conjs thry
 \end{code}
 
 \subsubsection{Observing Live Proofs}

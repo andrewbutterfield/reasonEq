@@ -342,30 +342,30 @@ showLogic logicsig
 
 Showing laws:
 \begin{code}
-showNmdAssns nasns  =  numberList (showNmdAssn $ nameWidth nasns)  nasns
+showNmdAssns dm nasns  =  numberList (showNmdAssn dm $ nameWidth nasns)  nasns
 nameWidth nasns = maximum $ map (nicelength . nicelawname . fst) nasns
 
-showNmdAssn w (nm,(trm,sc))
+showNmdAssn (showT,showSC) w (nm,(trm,sc))
   =    ldq ++ nmh ++ rdq ++ pad w nmh
-       ++ "  " ++ trTerm 0 trm ++ "  "++trSideCond sc
+       ++ "  " ++ showT trm ++ "  "++showSC sc
   where nmh = nicelawname nm
 
-showLaws []   =  "Laws: None."
-showLaws lws  =  "Laws:\n"
-                 ++ numberList (showLaw $ nameWidth $ map fst lws) lws
+showLaws _ []   =  "Laws: None."
+showLaws dm lws  =  "Laws:\n"
+                 ++ numberList (showLaw dm $ nameWidth $ map fst lws) lws
 
-showLaw w ((nm,(trm,sc)),prov)
-  =  showProv prov ++ "  " ++ showNmdAssn w (nm,(trm,sc))
+showLaw dm w ((nm,(trm,sc)),prov)
+  =  showProv prov ++ "  " ++ showNmdAssn dm w (nm,(trm,sc))
 showProv Axiom           =  _top
 showProv (Proven pname)  =  _qed
 showProv Assumed         =  "!"
 
-showConjs []   =  "Conjectures: None."
-showConjs cjs  =  "Conjectures:\n"
-                 ++ numberList (showConj $ nameWidth $ cjs) cjs
+showConjs _ []   =  "Conjectures: None."
+showConjs dm cjs  =  "Conjectures:\n"
+                 ++ numberList (showConj dm $ nameWidth $ cjs) cjs
 
-showConj w (nm,(trm,sc))
-  =  _redQ ++ "  " ++ showNmdAssn w (nm,(trm,sc))
+showConj dm w (nm,(trm,sc))
+  =  _redQ ++ "  " ++ showNmdAssn dm w (nm,(trm,sc))
 \end{code}
 
 Showing associative grouping specifications:

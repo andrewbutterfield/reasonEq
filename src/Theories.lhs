@@ -452,21 +452,21 @@ showTheoryShort thry
         else "( "++intercalate " ; " (thDeps thry)++" )"
   where deps = thDeps thry
 
-showTheoryLaws thry
+showTheoryLaws dm thry
   = unlines' (
       [ "Theory '"++thName thry++"'"
       , trVarTable (known thry)
       , "Sub-Ability: " ++ trMap trId show (subable thry)
-      , showLaws (laws thry)
-      , showConjs (conjs thry)
+      , showLaws dm (laws thry)
+      , showConjs dm (conjs thry)
       ] )
 
-showNamedTheory thnm thrys
+showNamedTheory dm thnm thrys
   = case M.lookup thnm $ tmap thrys of
       Nothing -> ("No such theory: "++thnm)
-      Just thry -> showTheoryLong thry
+      Just thry -> showTheoryLong dm thry
 
-showTheoryLong thry
+showTheoryLong dm thry
   = unlines' (
       ( "Theory '"++thName thry++"'" )
       : ( if null deps
@@ -475,8 +475,8 @@ showTheoryLong thry
       ++
       [ trVarTable (known thry)
       , "Sub-Ability: " ++ trMap trId show (subable thry)
-      , showLaws (laws thry)
-      , showConjs (conjs thry) ]
+      , showLaws dm (laws thry)
+      , showConjs dm (conjs thry) ]
     )
   where deps = thDeps thry
 

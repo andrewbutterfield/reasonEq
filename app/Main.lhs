@@ -331,6 +331,7 @@ cmdShow
         , shName++" "++shSig++" -- show logic signature"
         , shName++" "++shTheories++" -- show theories"
         , shName++" "++shLaws++" -- show laws"
+        , shName++" "++shLaws++" -u -- show variable uniqueness"
         , shName++" "++shCurrThry++" -- show 'current' theory"
         , shName++" "++shConj++" -- show current conjectures"
         , shName++" "++shLivePrf++" -- show current (live) proof"
@@ -355,7 +356,7 @@ showState (cmd:args) reqs
  | cmd == shWork      =  showWorkspaces args reqs
  | cmd == shSig       =  doshow reqs $ observeSig reqs
  | cmd == shTheories  =  doshow reqs $ observeTheories reqs
- | cmd == shLaws      =  doshow reqs $ observeLaws reqs
+ | cmd == shLaws      =  doshow reqs $ observeLaws reqs args
  | cmd == shCurrThry  =  doshow reqs $ observeCurrTheory reqs
  | cmd == shConj      =  doshow reqs $ observeCurrConj reqs
  | cmd == shLivePrf   =  doshow reqs $ observeLiveProofs reqs
@@ -1078,13 +1079,13 @@ lawInstantiateProof :: REPLCmd (REqState, LiveProof)
 lawInstantiateProof _ ps@(reqs, liveProof )
   = do let rslaws = lawInstantiate1 (logicsig reqs) liveProof
 
-       lawno <- pickByNumber "Pick a law : " showLaws rslaws
+       lawno <- pickByNumber "Pick a law : " (showLaws (trTerm 0, trSideCond)) rslaws
 
        case lawInstantiate2 rslaws lawno liveProof of
          Nothing -> return ps
          Just (lawt,vs,ts)
            -> do (cancel,vs2ts) <- pickPairing
-                   "Chosen law : " (showLaw 0)
+                   "Chosen law : " (showLaw (trTerm 0, trSideCond) 0)
                    "Free unknown law variables: " trVar
                    "Goal sub-terms:" (trTerm 0)
                    (\ v-> "Binding for "++trVar v)

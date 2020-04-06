@@ -991,6 +991,6 @@ We can display laws from a context (again, this should be done elsewhere).
 showContextLaws (nm,lws,_)
   = unlines' (
       [ "Theory '"++nm++"'"
-      , showLaws lws
+      , showLaws (trTerm 0, trSideCond) lws
       ] )
 \end{code}

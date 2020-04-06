@@ -231,8 +231,8 @@ trterm trid ctxtp (Cons tk s [t])
  | isAtomic t        =  trAtomic s $ trterm trid 0 t
  where
    trAtomic s r
-    | isSymbId s  =  trid s ++ r
-    | otherwise   =  trid s ++ ' ':r
+    | isSymbId s  =  trId s ++ r
+    | otherwise   =  trId s ++ ' ':r
 \end{code}
 
 Rendering an infix operator with two or more arguments.
@@ -256,7 +256,7 @@ trterm trid _ (Cons tk n ts)
 Binders and substitution are straightforward:
 \begin{code}
 trterm trid p (Bnd tk n vs t)  =  trabs trid p tk n (S.toList vs) t
-trterm trid p (Lam tk n vl t)   =  trabs trid p tk n vl            t
+trterm trid p (Lam tk n vl t)  =  trabs trid p tk n vl            t
 trterm trid p (Sub tk t sub)
   | isAtomic t  =       trterm trid p t      ++ trsub trid p sub
   | otherwise   =  "("++trterm trid 0 t++")" ++ trsub trid p sub
@@ -289,14 +289,14 @@ we have three cases:
 
 \begin{code}
 trterm trid _ (Iter tk na ni lvs@(_:_:_))
- | isSymbId ni  = silentId na ++ "(" ++ seplist (trId ni) trLVar lvs ++ ")"
+ | isSymbId ni  = silentId na ++ "(" ++ seplist (trId ni) (trlvar trid) lvs ++ ")"
  where silentId na@(Identifier i _)
   -- logical-and is the 'default' for na, so we keep it 'silent'
         | i == _land  =  ""
         | otherwise   =  trId na
 
 trterm trid _ (Iter tk na ni lvs)
-  =  trId na ++ "{" ++ trId ni ++ "(" ++ seplist "," trLVar lvs ++ ")}"
+  =  trId na ++ "{" ++ trId ni ++ "(" ++ seplist "," (trlvar trid) lvs ++ ")}"
 \end{code}
 
 
@@ -335,7 +335,7 @@ trapply trid p n (lbr,sep,rbr) ts  =  lbr ++ trtl trid p sep ts ++ rbr
 trtl trid p sep ts = seplist sep (trterm trid p) ts
 
 trabs trid p tk n vl t
- = "("++trid n ++ ' ':trvl trid vl ++ spaced _bullet ++ trterm trid p t ++ ")"
+ = "("++trId n ++ ' ':trvl trid vl ++ spaced _bullet ++ trterm trid p t ++ ")"
 
 trvl trid = seplist "," $ trgvar trid
 

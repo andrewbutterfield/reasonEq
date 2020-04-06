@@ -27,7 +27,6 @@ are *fresh*.
 
 #### IDEA:
 
-Done as `FreeVars.normaliseQuantifiers` - need to be able to use the renaming with the **side-conditions** too.
 
 We extend variable names `v` to `v.u` where `u` is a natural number. 
 A variable written as `v` is normally represented as `v.0`.
@@ -56,7 +55,7 @@ The approach described here has two advantages:
 We first add the `u` component to the `Identifier` datatype, and set it to zero.
 Then, rebuild and check tests and proof engine is unchanged.
 
-Next, implement "normalise".
+Done as `FreeVars.normaliseQuantifiers` which now takes an `Assertion` (which itself is now defined in module `SideCond`).
 
 ## Robustness
 

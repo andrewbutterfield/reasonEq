@@ -15,6 +15,7 @@ module FreeVars
 , nestSimplify
 -- exports for test only
 , int_tst_FreeVar
+, normQTerm
 ) where
 
 import Data.Set(Set)
@@ -29,8 +30,9 @@ import Control (mapboth,mapaccum,mapsnd)
 import LexBase
 import Variables
 import AST
+import SideCond
 
-import Test.HUnit
+import Test.HUnit ((@?=))
 --import Test.Framework as TF (testGroup, Test)
 import Test.Framework as TF (defaultMain, testGroup, Test)
 import Test.Framework.Providers.HUnit (testCase)
@@ -215,8 +217,10 @@ type VarVersions = Map String Int
 
 Quantifier normalisation:
 \begin{code}
-normaliseQuantifiers :: Term -> Term
-normaliseQuantifiers = fst . normQ M.empty
+normaliseQuantifiers :: Assertion -> Assertion
+normaliseQuantifiers (tm, sc)
+  = let (tm', vv') = normQ M.empty tm
+    in  (tm', normSC vv' sc)
 \end{code}
 
 \newpage
@@ -282,6 +286,17 @@ Anything else is unchanged
 normQ vv trm = (trm, vv) -- Val, Typ
 \end{code}
 
+
+Working on side-conditions:
+\begin{code}
+normSC :: VarVersions -> SideCond -> SideCond
+normSC vv ascs = map (normASC vv) ascs
+
+normASC vv (Disjoint gv vs)  =  Disjoint (normQGVar vv gv) (normQVSet vv vs)
+normASC vv (Covers gv vs)    =  Covers   (normQGVar vv gv) (normQVSet vv vs)
+normASC vv (IsPre gv)        =  IsPre    (normQGVar vv gv)
+\end{code}
+
 \newpage
 
 Functions that modify \texttt{VarVersions} \dots
@@ -319,10 +334,15 @@ normQBVar vv v@(Vbl (Identifier nm _) _ _)
                   in (setVarIdNumber u' v, M.insert nm u' vv)
 \end{code}
 
-
-
 Functions that lookup \texttt{VarVersions}\dots
 \begin{code}
+normQVSet vv vs = S.fromList $ map (normQGVar vv) $ S.toList vs
+
+normQVList vv vl = map (normQGVar vv) vl
+
+normQGVar vv (StdVar v)   =  StdVar $ normQVar  vv v
+normQGVar vv (LstVar lv)  =  LstVar $ normQLVar vv lv
+
 normQLVar vv (LVbl v is js) = LVbl (normQVar vv v) is js
 
 normQVar vv v@(Vbl (Identifier nm _) _ _)
@@ -383,6 +403,8 @@ to $\bb j {V_j} P$, because $V_j \supseteq \fv(P)$.
 \subsection{Tests}
 
 \begin{code}
+normQTerm tm = fst $ normaliseQuantifiers (tm, scTrue)
+
 tst_setVarIdNumber :: TF.Test
 
 va = Vbl (jId "a") ObsV Before

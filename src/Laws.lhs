@@ -11,7 +11,7 @@ module Laws
  , flattenTheEquiv, flattenTheImp, flattenTheAnd
  , flattenAssoc
  , LeftRight(..), GroupSpec(..), groupAssoc
- , Assertion, NmdAssertion
+ , NmdAssertion
  , Provenance(..)
  , Law, lawName, lawNamedAssn, lawProvenance
  , isAxiom, isProven, isAssumed
@@ -277,10 +277,6 @@ gSplit mOp i ts
 \newpage
 \subsection{Laws}
 
-An assertion is simply a predicate term coupled with side-conditions.
-\begin{code}
-type Assertion = (Term, SideCond)
-\end{code}
 
 Conjectures, hypotheses and laws always have names,
 so we introduce the idea of a named-assertion:

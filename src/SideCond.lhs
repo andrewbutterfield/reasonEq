@@ -15,6 +15,7 @@ module SideCond (
 , scDischarge, checkDischargedSC
 , notin, covers, pre
 , citingASCs
+, Assertion
 , int_tst_SideCond
 ) where
 import Data.Char
@@ -28,8 +29,9 @@ import qualified Data.Map as M
 import Utilities
 import LexBase
 import Variables
+import AST
 
-import Test.HUnit
+-- import Test.HUnit
 import Test.Framework as TF (defaultMain, testGroup, Test)
 import Test.Framework.Providers.HUnit (testCase)
 --import Test.Framework.Providers.QuickCheck2 (testProperty)
@@ -609,6 +611,14 @@ vs `cited` asc
   = case ascVSet asc of
       Nothing   ->  False
       Just vs'  ->  vs == vs'
+\end{code}
+
+
+\subsection{Assertions}
+
+An assertion is simply a predicate term coupled with side-conditions.
+\begin{code}
+type Assertion = (Term, SideCond)
 \end{code}
 
 \newpage

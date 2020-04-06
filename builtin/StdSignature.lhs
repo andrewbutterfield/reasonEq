@@ -183,5 +183,5 @@ sat p = Cls satId p
 
 General predicate laws often have side-conditions:
 \begin{code}
-preddef name prop sc = ( name, ( normaliseQuantifiers prop, sc ) )
+preddef name prop sc = ( name, normaliseQuantifiers ( prop, sc ) )
 \end{code}

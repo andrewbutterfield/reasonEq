@@ -55,23 +55,23 @@ tst_normNoQ :: TF.Test
 tst_normNoQ
  = testGroup "normalise(No)Quantifiers"
      [ testCase "42            ~> 42            "
-       ( normaliseQuantifiers e42 @?= e42 )
+       ( normQTerm e42 @?= e42 )
      , testCase "x             ~> x             "
-       ( normaliseQuantifiers tx @?= tx )
+       ( normQTerm tx @?= tx )
      , testCase "x'            ~> x'            "
-       ( normaliseQuantifiers tx' @?= tx' )
+       ( normQTerm tx' @?= tx' )
      , testCase "x_m           ~> x_m           "
-       ( normaliseQuantifiers txm @?= txm )
+       ( normQTerm txm @?= txm )
      , testCase "P             ~> P             "
-       ( normaliseQuantifiers tP @?= tP )
+       ( normQTerm tP @?= tP )
      , testCase "(42+x)        ~> 42+x          "
-       (normaliseQuantifiers (e42plus tx) @?= (e42plus tx))
+       (normQTerm (e42plus tx) @?= (e42plus tx))
      , testCase "P[42,y$/x,x$] ~> P[42,y$/x,x$] "
-       ( normaliseQuantifiers subP @?= subP )
+       ( normQTerm subP @?= subP )
      , testCase "/\\(x$=y$)     ~> /\\(x$=y$)     "
-       ( normaliseQuantifiers iterLVs @?= iterLVs )
+       ( normQTerm iterLVs @?= iterLVs )
      , testCase "Int           ~> Int           "
-       ( normaliseQuantifiers tInt @?= tInt )
+       ( normQTerm tInt @?= tInt )
      ]
 
 -- -----------------------------------------------------------------------------
@@ -92,24 +92,24 @@ tst_normWithQ :: TF.Test
 tst_normWithQ
  = testGroup "normalise(With)Quantifiers"
      [ testCase "[b_0]                   ~> [b_1]                   "
-       ( normaliseQuantifiers univB @?= univB1 )
+       ( normQTerm univB @?= univB1 )
      , testCase "[[b_0]]                 ~> [[b_1]]                 "
-       ( normaliseQuantifiers (univ univB) @?= (univ univB1) )
+       ( normQTerm (univ univB) @?= (univ univB1) )
      , testCase "[b_0 /\\ [b_0]]          ~> [b_1 /\\ [b_2]]          "
-       ( normaliseQuantifiers (univ (land tb univB))
+       ( normQTerm (univ (land tb univB))
           @?= (univ (land tb1 univB2)) )
       , testCase "[P_0]                   ~> [P_0]                   "
-        ( normaliseQuantifiers univP @?= univP )
+        ( normQTerm univP @?= univP )
       , testCase "[[P_0]]                 ~> [[P_0]]                 "
-        ( normaliseQuantifiers (univ univP) @?= (univ univP) )
+        ( normQTerm (univ univP) @?= (univ univP) )
       , testCase "[P_0 /\\ [P_0]]          ~> [P_0 /\\ [P_0]]          "
-        ( normaliseQuantifiers (univ (land tP univP))
+        ( normQTerm (univ (land tP univP))
            @?= (univ (land tP univP)) )
      -- pattern Bnd  tk n vs tm    <-  B tk n vs tm
      , testCase "exists b_0 @ b_0        ~> exists b_1 @ b_1        "
-       ( normaliseQuantifiers exbTrue @?= exbTrue1 )
+       ( normQTerm exbTrue @?= exbTrue1 )
      , testCase "b_0 /\\ exists b_0 @ b_0 ~> b_0 /\\ exists b_1 @ b_1 "
-       ( normaliseQuantifiers (land tb exbTrue) @?= (land tb exbTrue1) )
+       ( normQTerm (land tb exbTrue) @?= (land tb exbTrue1) )
      -- pattern Lam  tk n vl tm    <-  L tk n vl tm
      ]
 

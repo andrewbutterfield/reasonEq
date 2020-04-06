@@ -27,6 +27,8 @@ are *fresh*.
 
 #### IDEA:
 
+Done as `FreeVars.normaliseQuantifiers` - need to be able to use the renaming with the **side-conditions** too.
+
 We extend variable names `v` to `v.u` where `u` is a natural number. 
 A variable written as `v` is normally represented as `v.0`.
 
@@ -36,6 +38,7 @@ which will then be "normalised" to ``(∀ x.1 • (∃ y.1 • x.1 + y.1 = z.0))
 As far as proofs and matching are concerned, `v.n` and `v.m` are different if `n` and `m` are.
 However, when dispaying terms to the user, the `.u` part will usually be suppressed.
 One exception might be when displaying match bindings.
+
 
 ##### Why?
 

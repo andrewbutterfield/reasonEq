@@ -31,6 +31,7 @@ import Utilities
 import LexBase
 import Variables
 import AST
+import FreeVars (normaliseQuantifiers)
 import SideCond
 import VarData
 import Laws
@@ -182,5 +183,5 @@ sat p = Cls satId p
 
 General predicate laws often have side-conditions:
 \begin{code}
-preddef name prop sc = ( name, ( prop, sc ) )
+preddef name prop sc = ( name, ( normaliseQuantifiers prop, sc ) )
 \end{code}

@@ -1,19 +1,21 @@
 # To Do
 
-### Test Re-jigging
-
-Trying to have common data and function definitions for testing. Non-trivial.
-
-Want to support local (internal) tests within any module that does not export
-all data-structure details, with some hidden by invariant-checking constructor functions.
-Want lots of shorthand (partial) builders for test data for these data-structures.
-
-To avoid cyclic module imports, we need to export shorthands from non-test modules.
-Testing modules need to import the modules they test.
-
 
 
 ### Laws
+
+#### Bug
+
+This looks right:  `P∨(∀ x̅,y̅ • Q)≡(∀ x̅ • P∨(∀ y̅ • Q))  x̅ ∉ P`.
+
+This is wrong: `P∨(∀ x̅₁̅,y̅₁̅ • Q)≡(∀ x̅₂̅ • P∨(∀ y̅₂̅ • Q))  x̅₂̅ ∉ P`.
+
+The connection between `y̅₁̅` and `y̅₂̅` is lost. We should have α-renamings for `P` and `Q`,
+such as `Q[y̅₁̅/y̅₀̅]`
+
+It should be `P∨(∀ x̅₁̅,y̅₁̅ • Q[y̅₁̅/y̅₀̅])≡(∀ x̅₂̅ • P[x̅₁̅/x̅₀̅]∨(∀ y̅₂̅ • Q[y̅₂̅/y̅₀̅]))  x̅₂̅ ∉ P[x̅₂̅/x̅₀̅]`.
+
+But this might also work: `P∨(∀ x̅₁̅,y̅₁̅ • Q[y̅₁̅/y̅₀̅])≡(∀ x̅₁̅ • P[x̅₁̅/x̅₀̅]∨(∀ y̅₁̅ • Q[y̅₁̅/y̅₀̅]))  x̅₁̅ ∉ P[x̅₁̅/x̅₀̅]`.
 
 We have hard-coded nesting simplification (`FreeVars.lhs`).
 
@@ -56,6 +58,19 @@ We first add the `u` component to the `Identifier` datatype, and set it to zero.
 Then, rebuild and check tests and proof engine is unchanged.
 
 Done as `FreeVars.normaliseQuantifiers` which now takes an `Assertion` (which itself is now defined in module `SideCond`).
+
+### Test Re-jigging
+
+Trying to have common data and function definitions for testing. Non-trivial.
+
+Want to support local (internal) tests within any module that does not export
+all data-structure details, with some hidden by invariant-checking constructor functions.
+Want lots of shorthand (partial) builders for test data for these data-structures.
+
+To avoid cyclic module imports, we need to export shorthands from non-test modules.
+Testing modules need to import the modules they test.
+
+
 
 ## Robustness
 

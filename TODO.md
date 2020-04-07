@@ -1,64 +1,23 @@
 # To Do
 
+## Bug Fixes
 
+`normaliseQuantifier` needs to put explicit substitutions on predicate/expression variables in terms.
 
-### Laws
+## Features
 
-#### Bug
+### Quantifier Bound Variables (in Laws)
 
-This looks right:  `P∨(∀ x̅,y̅ • Q)≡(∀ x̅ • P∨(∀ y̅ • Q))  x̅ ∉ P`.
+Key decisions regarding the uniqueness or otherwise of quantifier bound variables: 
 
-This is wrong: `P∨(∀ x̅₁̅,y̅₁̅ • Q)≡(∀ x̅₂̅ • P∨(∀ y̅₂̅ • Q))  x̅₂̅ ∉ P`.
+1. do not routinely use `normaliseQuantifier` - it can be invoked as a proof step.
+2. Given something like `b ∧ (∀ b @ b ∧ (∀ b @ b))` we do require a single match binding all those `b`s to the same variable/term. If we want otherwise, we should alpha-rename some quantifiers first (`normaliseQuantifier` does them all systematically).
+3. Consider matching `[∀ x$ @ P]`  against `[P]` (part 1 of `[]_def`). How do we distinguish this `x$` from the one in the law?
+  * `[]_def` says `[P] = ∀ x$ @ P` where `x$` covers `fv.P`, so `[∀ x$ @ P] = ∀ y$ @ ∀ x$ @ P` where `y$` covers `fv(∀ x$ @ P)`, which is `fv.P \ x$`.
+  * Another way to interpret this law is as `[P] = ∀ fv.P @ P`, so `[∀ x$ @ P]` becomes `∀ fv(∀ x$ @ P) @ (∀ x$ @ P)`, which reduces to `∀ (fv.P\x$) @ (∀ x$ @ P)`.
+  * We need either a special side-condition that introduces a fresh list-variable ("new `x$` s.t. `x$` covers `fv.P`"),or a way to recongise when to interpret a standard side-condition ("`x$` covers `fv.P`") in this way.
 
-The connection between `y̅₁̅` and `y̅₂̅` is lost. We should have α-renamings for `P` and `Q`,
-such as `Q[y̅₁̅/y̅₀̅]`
-
-It should be `P∨(∀ x̅₁̅,y̅₁̅ • Q[y̅₁̅/y̅₀̅])≡(∀ x̅₂̅ • P[x̅₁̅/x̅₀̅]∨(∀ y̅₂̅ • Q[y̅₂̅/y̅₀̅]))  x̅₂̅ ∉ P[x̅₂̅/x̅₀̅]`.
-
-But this might also work: `P∨(∀ x̅₁̅,y̅₁̅ • Q[y̅₁̅/y̅₀̅])≡(∀ x̅₁̅ • P[x̅₁̅/x̅₀̅]∨(∀ y̅₁̅ • Q[y̅₁̅/y̅₀̅]))  x̅₁̅ ∉ P[x̅₁̅/x̅₀̅]`.
-
-We have hard-coded nesting simplification (`FreeVars.lhs`).
-
-However, we still need a hard-coded rule of the form `(∀ x̅ • (∃ y̅ • P)) = (∃ y̅ • P)` whenever `y̅ covers P`.
-
-When we expand `[P]` twice using `[]_def`, 
-we need to end up at `(∀ x̅ • (∀ y̅ • P)`, 
-where both `x̅` and `y̅`
-are *fresh*.
-**Having both the same is unsound**.
-
-#### IDEA:
-
-
-We extend variable names `v` to `v.u` where `u` is a natural number. 
-A variable written as `v` is normally represented as `v.0`.
-
-Entering `(∀ x • (∃ y • x + y = z))` will initally result in `(∀ x.0 • (∃ y.0 • x.0 + y.0 = z.0))`
-which will then be "normalised" to ``(∀ x.1 • (∃ y.1 • x.1 + y.1 = z.0))`
-
-As far as proofs and matching are concerned, `v.n` and `v.m` are different if `n` and `m` are.
-However, when dispaying terms to the user, the `.u` part will usually be suppressed.
-One exception might be when displaying match bindings.
-
-
-##### Why?
-
-We could have a scheme that makes different "instances" of `v` by appending a number to make it unique,
-but then we get a lot of cluttered terms, particulary if we are using variables that already end in numbers
-(e.g. a law like `i1 + (i2 + i3) = (i1 +i2) + i3`.
-
-The approach described here has two advantages:
-
-1. we can switch easily between showing the `.u` component or not
-2. The algorthim to "normalise" terms becomes much simpler. 
-
-#### How?
-
-We first add the `u` component to the `Identifier` datatype, and set it to zero.
-Then, rebuild and check tests and proof engine is unchanged.
-
-Done as `FreeVars.normaliseQuantifiers` which now takes an `Assertion` (which itself is now defined in module `SideCond`).
-
+  
 ### Test Re-jigging
 
 Trying to have common data and function definitions for testing. Non-trivial.
@@ -69,8 +28,6 @@ Want lots of shorthand (partial) builders for test data for these data-structure
 
 To avoid cyclic module imports, we need to export shorthands from non-test modules.
 Testing modules need to import the modules they test.
-
-
 
 ## Robustness
 
@@ -104,17 +61,10 @@ but shorten the list of steps anyway. See `LiveProofs.undoCalcStep` (line 810 ap
 
 ### Unique quantified variables
 
-**(Unsure about this)**
 
-We need to either have unique q.v.s, or be very careful. Consider matching `[∀ x$ @ P]`  against `[P]` (part 1 of `[]_def`). How do we distinguish this `x$` from the one in the law?
+We need to either have unique q.v.s, or be very careful. 
 
-Need care here - in the conjecture
- `(∃ x̅,y̅ • ∧(x̅=e̅)∧P)≡(∃ y̅ • P[e̅/x̅])  x̅ ∉ e̅` 
-we need `x̅` and `y̅` to be the same.
 
-What we want to avoid is "shadowing", 
-so that `(∀ x̅ • P ∨ (∀ x̅ • Q)`
-becomes `(∀ x̅ • P ∨ (∀ y̅ • Q[y̅/x̅])`. **Why?**
 
 ## Next Task(s)
 

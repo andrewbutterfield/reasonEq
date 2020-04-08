@@ -695,6 +695,7 @@ proofREPLConfig
             , matchLawDescr
             , tryMatchDescr
             , applyMatchDescr
+            -- , normQuantDescr -- reinstate when bug fixd, sc==scTrue chk done
             , simpNestDescr
             , substituteDescr
             , revSubstituteDescr
@@ -725,7 +726,7 @@ proofREPL reqs liveProof
 We have a common pattern:
 try to update a second component of a two-part state,
 in a monadic context.
-Accept if it suceeds, otherwise no change
+Accept if it succeeds, otherwise no change
 \begin{code}
 tryDelta :: Monad m => (b -> Maybe b) -> (a,b) -> m (a,b)
 tryDelta delta pstate@(reqs, liveProof)
@@ -946,6 +947,26 @@ requestBindings (t,f) (goalTerm,_) unbound
          else rB ubind gvs
 
     in rB emptyBinding $ S.toList unbound
+\end{code}
+
+\newpage
+Normalise Quantifiers
+\begin{code}
+normQuantDescr = ( "nq"
+                 , "normalise quantifiers"
+                 , unlines
+                    [ "n       -- normalise quantifiers" ]
+                 , normQuantCommand )
+
+normQuantCommand :: REPLCmd (REqState, LiveProof)
+normQuantCommand _ state@(reqs, liveProof)
+  =  case normQuantFocus (theories reqs) liveProof of
+      Yes liveProof'  ->  return (reqs, liveProof')
+      But msgs
+       -> do putStrLn $ unlines' msgs
+             putStrLn "<return> to continue"
+             getLine
+             return (reqs, matches_ [] liveProof)
 \end{code}
 
 \newpage

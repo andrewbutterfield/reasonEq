@@ -19,6 +19,7 @@ module AbstractUI
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, matchFocusAgainst
 , applyMatchToFocus1, applyMatchToFocus2
+, normQuantFocus
 , nestSimpFocus
 , substituteFocus, revSubstituteFocus
 , tryFocusAgainst
@@ -527,6 +528,29 @@ applyMatchToFocus2 mtch unbound ubind liveProof
 \end{code}
 
 
+\subsubsection{Normalise Quantifiers}
+
+\begin{code}
+normQuantFocus :: Monad m => Theories -> LiveProof -> m LiveProof
+normQuantFocus thrys liveProof
+  = let (tz,seq') = focus liveProof
+        dpath = fPath liveProof
+        t = getTZ tz
+        t' = fst  -- bit of a mess here
+              $ normaliseQuantifiers ( t
+                                     , scTrue -- and here
+                                     )
+        -- to which term variable v.u should a side-condition variable v refer?
+        -- perhaps only use if side-cond == scTrue?
+    in return ( focus_ ((setTZ t' tz),seq')
+               $ matches_ []
+               $ stepsSoFar__
+                  (( NormQuant dpath
+                   , (exitTZ tz,conjSC liveProof)):)
+                  liveProof )
+\end{code}
+
+
 \subsubsection{Simplify Nested Quantifiers Substitution}
 
 \begin{code}
@@ -535,7 +559,6 @@ nestSimpFocus thrys liveProof
   = let (tz,seq') = focus liveProof
         dpath = fPath liveProof
         t = getTZ tz
-        sams = map subable $ getTheoryDeps' (conjThName liveProof) thrys
     in case nestSimplify t of
         Yes t' -> return ( focus_ ((setTZ t' tz),seq')
                          $ matches_ []

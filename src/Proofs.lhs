@@ -357,6 +357,8 @@ data Justification
       [Int]                -- zipper descent arguments
   | Substitute         -- performed a substitution
       [Int]                -- zipper descent arguments
+  | NormQuant          -- performed a quantifier normalisation
+      [Int]                -- zipper descent arguments
   | NestSimp           -- simplified nested quantifiers
       [Int]                -- zipper descent arguments
   | Switch             -- switched focus at sequent level
@@ -442,6 +444,8 @@ labelAsProven nasn (prfnm,_,_,_) =  (nasn, Proven prfnm)
 showJustification :: Justification -> String
 showJustification (UseLaw how lnm bind dpath)
   =  "   = '"++showHow how++" "++nicelawname lnm++"@" ++ show dpath ++ "'"
+showJustification (NormQuant dpath)
+  =  "   = 'norm-quant @" ++ show dpath ++ "'"
 showJustification (NestSimp dpath)
   =  "   = 'nest-simp @" ++ show dpath ++ "'"
 showJustification (Substitute dpath)

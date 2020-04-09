@@ -334,6 +334,7 @@ cmdShow
         , shName++" "++shLaws++" -u -- show variable uniqueness"
         , shName++" "++shCurrThry++" -- show 'current' theory"
         , shName++" "++shConj++" -- show current conjectures"
+        , shName++" "++shConj++" -u -- show variable uniqueness"
         , shName++" "++shLivePrf++" -- show current (live) proof"
         , shName++" "++shProofs++" -- show completed proofs"
         , shName++" "++shProofs++" <nm> -- show proof transcript for <nm>"
@@ -358,7 +359,7 @@ showState (cmd:args) reqs
  | cmd == shTheories  =  doshow reqs $ observeTheories reqs
  | cmd == shLaws      =  doshow reqs $ observeLaws reqs args
  | cmd == shCurrThry  =  doshow reqs $ observeCurrTheory reqs
- | cmd == shConj      =  doshow reqs $ observeCurrConj reqs
+ | cmd == shConj      =  doshow reqs $ observeCurrConj reqs args
  | cmd == shLivePrf   =  doshow reqs $ observeLiveProofs reqs
 showState _ reqs      =  doshow reqs "unknown 'show' option."
 
@@ -695,7 +696,7 @@ proofREPLConfig
             , matchLawDescr
             , tryMatchDescr
             , applyMatchDescr
-            -- , normQuantDescr -- reinstate when bug fixd, sc==scTrue chk done
+            , normQuantDescr
             , simpNestDescr
             , substituteDescr
             , revSubstituteDescr

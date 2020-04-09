@@ -145,8 +145,12 @@ observeCurrTheory reqs
 \subsubsection{Observing Current Conjectures}
 
 \begin{code}
-observeCurrConj :: REqState -> String
-observeCurrConj reqs
+observeCurrConj :: REqState -> [String] -> String
+observeCurrConj reqs ["-u"]
+  = case getTheory (currTheory reqs) (theories reqs) of
+      Nothing    ->  "No current theory."
+      Just thry  ->  showNmdAssns (trTermU 0, trSideCondU) $ conjs thry
+observeCurrConj reqs _
   = case getTheory (currTheory reqs) (theories reqs) of
       Nothing    ->  "No current theory."
       Just thry  ->  showNmdAssns (trTerm 0, trSideCond) $ conjs thry
@@ -533,21 +537,18 @@ applyMatchToFocus2 mtch unbound ubind liveProof
 \begin{code}
 normQuantFocus :: Monad m => Theories -> LiveProof -> m LiveProof
 normQuantFocus thrys liveProof
-  = let (tz,seq') = focus liveProof
-        dpath = fPath liveProof
-        t = getTZ tz
-        t' = fst  -- bit of a mess here
-              $ normaliseQuantifiers ( t
-                                     , scTrue -- and here
-                                     )
-        -- to which term variable v.u should a side-condition variable v refer?
-        -- perhaps only use if side-cond == scTrue?
-    in return ( focus_ ((setTZ t' tz),seq')
-               $ matches_ []
-               $ stepsSoFar__
-                  (( NormQuant dpath
-                   , (exitTZ tz,conjSC liveProof)):)
-                  liveProof )
+ | conjSC liveProof == scTrue
+   =  let (tz,seq') = focus liveProof
+          dpath = fPath liveProof
+          t = getTZ tz
+          t' = fst $ normaliseQuantifiers ( t, scTrue )
+      in return ( focus_ ((setTZ t' tz),seq')
+                 $ matches_ []
+                 $ stepsSoFar__
+                    (( NormQuant dpath
+                     , (exitTZ tz,conjSC liveProof)):)
+                    liveProof )
+ | otherwise  =  fail "quant-norm: only when s.c. is true"
 \end{code}
 
 

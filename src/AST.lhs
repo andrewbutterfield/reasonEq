@@ -36,7 +36,7 @@ module AST ( TermSub, LVarSub
            , mentionedVars, mentionedVarLists, mentionedVarSets
            -- test only below here
            , int_tst_AST
-           , jSub, jVar, jBnd, jLam
+           , jSub, jVar, jBnd, jLam, jSubstn
            ) where
 import Data.Char
 import Data.List
@@ -97,6 +97,8 @@ substn ts lvs
  where
   ts'  = sort ts
   lvs' = sort lvs
+
+jSubstn ts lvs = fromJust $ substn ts lvs
 
 dupKeys :: Eq a => [(a,b)] -> Bool
 -- assumes list is ordered

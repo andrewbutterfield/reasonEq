@@ -1,8 +1,5 @@
 # To Do
 
-## Bug Fixes
-
-`normaliseQuantifier` needs to put explicit substitutions on predicate/expression variables in terms.
 
 ## Features
 
@@ -15,7 +12,7 @@ Key decisions regarding the uniqueness or otherwise of quantifier bound variable
 3. Consider matching `[∀ x$ @ P]`  against `[P]` (part 1 of `[]_def`). How do we distinguish this `x$` from the one in the law?
   * `[]_def` says `[P] = ∀ x$ @ P` where `x$` covers `fv.P`, so `[∀ x$ @ P] = ∀ y$ @ ∀ x$ @ P` where `y$` covers `fv(∀ x$ @ P)`, which is `fv.P \ x$`.
   * Another way to interpret this law is as `[P] = ∀ fv.P @ P`, so `[∀ x$ @ P]` becomes `∀ fv(∀ x$ @ P) @ (∀ x$ @ P)`, which reduces to `∀ (fv.P\x$) @ (∀ x$ @ P)`.
-  * We need either a special side-condition that introduces a fresh list-variable ("new `x$` s.t. `x$` covers `fv.P`"),or a way to recongise when to interpret a standard side-condition ("`x$` covers `fv.P`") in this way.
+  * We need either a special side-condition that introduces a fresh list-variable ("new `x$` s.t. `x$` covers `fv.P`"),or a way to recognise when to interpret a standard side-condition ("`x$` covers `fv.P`") in this way.
 
   
 ### Test Re-jigging

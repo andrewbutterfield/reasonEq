@@ -29,10 +29,10 @@ import TestDefs
 
 tx = jVar eint x ; tx' = jVar eint x' ; txm = jVar eint xm ;
 
-tb = jVar ebool b
+tb = jVar earb b
 
 bu u = Vbl (jIdU "b" u) ObsV Before
-tbu u = jVar ebool $ bu u
+tbu u = jVar earb $ bu u
 
 tP = jVar P $ PredVar (jId "P") Static
 tPu u = jVar P $ PredVar (jIdU "P" u) Static
@@ -87,6 +87,7 @@ univP = univ tP
 exbTrue = jBnd P (jId "exists") (sngl $ StdVar b) tb
 exbTrue1 = jBnd P (jId "exists") (sngl $ StdVar (bu 1)) tb1
 exbTrue2 = jBnd P (jId "exists") (sngl $ StdVar (bu 2)) tb1
+subP0b1 = Sub P tP $ jSubstn [(bu 0, tb1)] [(LVbl b [] [], LVbl (bu 1) [] [])]
 
 tst_normWithQ :: TF.Test
 tst_normWithQ
@@ -105,6 +106,8 @@ tst_normWithQ
       , testCase "[P_0 /\\ [P_0]]          ~> [P_0 /\\ [P_0]]          "
         ( normQTerm (univ (land tP univP))
            @?= (univ (land tP univP)) )
+      , testCase "[b_0 /\\ P_0]            ~> [b_1 /\\ P_0[b_1/b_0]]   "
+        ( normQTerm (univ (land tb tP)) @?= (univ (land tb1 subP0b1)) )
      -- pattern Bnd  tk n vs tm    <-  B tk n vs tm
      , testCase "exists b_0 @ b_0        ~> exists b_1 @ b_1        "
        ( normQTerm exbTrue @?= exbTrue1 )

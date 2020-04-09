@@ -1,21 +1,2 @@
-BD ( fromList [ ( (Id "P",VP)
-                , BT (C P (Id "\172") [V P (VR (Id "P",VP,WS))])
-                )
-     ]
-   , fromList []
-   , fromList [ ((Id "e",VE,[],[]),BL [GL (LV (VR (Id "e",VE,WS),[],[]))])
-              , ((Id "x",VO,[],[]),BL [GL (LV (VR (Id "x",VO,WS),[],[]))])
-              , ( (Id "y",VO,[],[])
-                , BS (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))])
-                )
-              ]
-   , fromList [ ( (LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))
-                , ( fromList []
-                  , fromList [ ( LV (VR (Id "x",VO,WS),[],[])
-                               , LV (VR (Id "e",VE,WS),[],[])
-                               )
-                             ]
-                  )
-                )
-              ]
-   )
+expected: X (Id "[]" 0) (C P (Id "/\\" 0) [V (E (TG (Id "B" 0))) (VR (Id "b" 1,VO,WB)),S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList [(VR (Id "b" 0,VO,WB),V (E (TG (Id "B" 0))) (VR (Id "b" 1,VO,WB)))]) (fromList [(LV (VR (Id "b" 0,VO,WB),[],[]),LV (VR (Id "b" 1,VO,WB),[],[]))]))])
+ but got: X (Id "[]" 0) (C P (Id "/\\" 0) [V (E (TG (Id "B" 0))) (VR (Id "b" 1,VO,WB)),S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList [(VR (Id "b" 0,VO,WB),V (E T) (VR (Id "b" 1,VO,WB)))]) (fromList [(LV (VR (Id "b" 0,VO,WB),[],[]),LV (VR (Id "b" 1,VO,WB),[],[]))]))])

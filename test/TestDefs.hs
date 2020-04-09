@@ -31,6 +31,7 @@ v42 = Vbl (jId "v42") ObsV Static
 v42k = E ArbType
 oK = Vbl (jId "oK") ObsV Static
 oKk = E ArbType
+earb = E ArbType
 
 g1 = Vbl (jId "g1") ObsV Static
 i11 = Vbl (jId "i11") ObsV Static

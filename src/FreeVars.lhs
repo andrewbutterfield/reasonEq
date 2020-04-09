@@ -194,25 +194,44 @@ predicate to be zero'ed in advance!
    \theta,\mu : VV &\defs&  name \pfun \Nat
 \\
 \\ Norm &:& T \fun T
-\\ Norm(P)                       &\defs& \pi_1(norm_\theta(P))
+\\ Norm(p)                       &\defs& \pi_1(norm_\theta(p))
 \\
 \\ norm &:& VV \fun T \fun (T \times VV)
 \\ norm_\mu(v)         &\defs & (v_{\mu(v)} \cond{v \in \mu} v_0,\mu)
-\\ norm_\mu(P \land Q) &\defs & (P' \land Q',\mu'')
-\\                     &\where& (P',\mu') = norm_\mu(P)
-\\                     &      & (Q',\mu'') = norm_{\mu'}(Q)
-\\ norm_\mu(\forall x \bullet P) &\defs& (\forall x_{\mu'(x)} \bullet P',\mu'')
+\\ norm_\mu(e)         &\defs & (e\sigma,\mu) \quad\where\quad \sigma=mksub(\mu)
+\\ norm_\mu(P)         &\defs & (P\sigma,\mu) \quad\where\quad \sigma=mksub(\mu)
+\\ norm_\mu(p \land q) &\defs & (p' \land q',\mu'')
+\\                     &\where& (p',\mu') = norm_\mu(p)
+\\                     &      & (q',\mu'') = norm_{\mu'}(q)
+\\ norm_\mu(\forall x \bullet p) &\defs& (\forall x_{\mu'(x)} \bullet p',\mu'')
 \\                     &\where& \mu' = (\mu\override\maplet x 1)
                                        \cond{x \in \mu}
                                        (\mu\override\maplet x {\mu(x)+1})
-\\                     &      & (P',\mu'') = norm_{\mu'}(P)
+\\                     &      & (p',\mu'') = norm_{\mu'}(p)
 \end{eqnarray*}
 Note that we need to thread the map parameter $\mu$ into and out of each call
 to $norm$ to ensure that we get full uniqueness of bound variable numbers.
 
-We map bound variable names to their unique numbers:
+We map bound variable names, and class and when attributes, to their unique numbers:
 \begin{code}
-type VarVersions = Map String Int
+type VarVersions = Map (String,VarClass,VarWhen) Int
+\end{code}
+
+We can also generate an explicit substitution from such a map:
+\begin{code}
+mkVVsubstn :: VarVersions -> Substn
+mkVVsubstn vv
+ = fromJust $ substn tsvv lvsvv
+ where
+   (tsvv,lvsvv) = unzip $ map mkvsubs $ M.assocs vv
+   mkvsubs ((nm,cls,whn),u)
+     = ((v0,tvu),(lv0,lvu))
+     where
+       v0 = Vbl (jId nm)    cls whn
+       vu = Vbl (jIdU nm u) cls whn
+       tvu = jVar (E ArbType) (Vbl (jIdU nm u) cls whn)
+       lv0 = LVbl v0 [] []
+       lvu = LVbl vu [] []
 \end{code}
 
 Quantifier normalisation:
@@ -232,17 +251,22 @@ normQ :: VarVersions -> Term -> (Term, VarVersions)
 
 \begin{eqnarray*}
    norm_\mu(v)         &\defs & (v_{\mu(v)} \cond{v \in \mu} v_0,\mu)
+\\ norm_\mu(e)         &\defs & (e\sigma,\mu) \quad\where\quad \sigma=mksub(\mu)
+\\ norm_\mu(P)         &\defs & (P\sigma,\mu) \quad\where\quad \sigma=mksub(\mu)
 \end{eqnarray*}
 \begin{code}
 --normQ :: VarVersions -> Term -> (Term, VarVersions)
-normQ vv (Var tk v@(Vbl (Identifier nm _) _ _))
-     =  (fromJust $ var tk $ normQVar vv v, vv)
+normQ vv (Var tk v@(Vbl (Identifier nm _) ObsV _))
+              =  ( fromJust $ var tk $ normQVar vv v, vv )
+normQ vv v@(Var tk _)
+ | M.null vv  =  ( v,                                 vv )
+ | otherwise  =  ( Sub tk v $ mkVVsubstn vv,          vv )
 \end{code}
 
 \begin{eqnarray*}
-   norm_\mu(P \land Q) &\defs & (P' \land Q',\mu'')
-\\                     &\where& (P',\mu') = norm_\mu(P)
-\\                     &      & (Q',\mu'') = norm_{\mu'}(Q)
+   norm_\mu(p \land q) &\defs & (p' \land q',\mu'')
+\\                     &\where& (p',\mu') = norm_\mu(p)
+\\                     &      & (q',\mu'') = norm_{\mu'}(q)
 \end{eqnarray*}
 \begin{code}
 --normQ :: VarVersions -> Term -> (Term, VarVersions)
@@ -257,11 +281,11 @@ normQ vv (Iter tk na ni lvs)  =  (Iter tk na ni $ map (normQLVar vv) lvs,vv)
 \end{code}
 
 \begin{eqnarray*}
-   norm_\mu(\forall x \bullet P) &\defs& (\forall x_{\mu'(x)} \bullet P',\mu'')
+   norm_\mu(\forall x \bullet p) &\defs& (\forall x_{\mu'(x)} \bullet p',\mu'')
 \\                     &\where& \mu' = (\mu\override\maplet x 1)
                                        \cond{x \in \mu}
                                        (\mu\override\maplet x {\mu(x)+1})
-\\                     &      & (P',\mu'') = norm_{\mu'}(P)
+\\                     &      & (p',\mu'') = norm_{\mu'}(p)
 \end{eqnarray*}
 \begin{code}
 --normQ :: VarVersions -> Term -> (Term, VarVersions)
@@ -327,11 +351,11 @@ normQBGVar vv (StdVar v)
 normQBLVar vv (LVbl v is js)
   = let  (v',vv') = normQBVar vv v  in  (LVbl v' is js, vv')
 
-normQBVar vv v@(Vbl (Identifier nm _) _ _)
- = case M.lookup nm vv of
-     Nothing  ->  (setVarIdNumber 1 v, M.insert nm 1 vv)
+normQBVar vv v@(Vbl (Identifier nm _) cls whn)
+ = case M.lookup (nm,cls,whn) vv of
+     Nothing  ->     ( setVarIdNumber 1 v,  M.insert (nm,cls,whn) 1  vv )
      Just u   ->  let u' = u+1
-                  in (setVarIdNumber u' v, M.insert nm u' vv)
+                  in ( setVarIdNumber u' v, M.insert (nm,cls,whn) u' vv )
 \end{code}
 
 Functions that lookup \texttt{VarVersions}\dots
@@ -345,8 +369,8 @@ normQGVar vv (LstVar lv)  =  LstVar $ normQLVar vv lv
 
 normQLVar vv (LVbl v is js) = LVbl (normQVar vv v) is js
 
-normQVar vv v@(Vbl (Identifier nm _) _ _)
- = setVarIdNumber (M.findWithDefault 0 nm vv) v
+normQVar vv v@(Vbl (Identifier nm _) cls whn)
+ = setVarIdNumber (M.findWithDefault 0 (nm,cls,whn) vv) v
 
 setVarIdNumber :: Int -> Variable -> Variable
 setVarIdNumber u (Vbl (Identifier nm _) cls whn)

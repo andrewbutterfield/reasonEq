@@ -3,19 +3,19 @@ DEPS = ["And","Or","Not","Equiv"]
 KNOWN = VD (fromList [],fromList [],fromList [])
 SUBABLE = fromList []
 BEGIN LIST LAWS
+(("land_lor_absorb",(C P (Id "equiv" 0) [C P (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],V P (VR (Id "P" 0,VP,WS))],[])),Assumed)
+(("lor_land_absorb",(C P (Id "equiv" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],V P (VR (Id "P" 0,VP,WS))],[])),Assumed)
+(("land_lnot_lor_absorb",(C P (Id "equiv" 0) [C P (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id "lor" 0) [C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))]],C P (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],[])),Assumed)
+(("land_lnot_lor_absorb",(C P (Id "equiv" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id "land" 0) [C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))]],C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],[])),Assumed)
+(("lor_land_distr",(C P (Id "equiv" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id "land" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],C P (Id "land" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]]],[])),Assumed)
+(("land_lor_distr",(C P (Id "equiv" 0) [C P (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id "lor" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],C P (Id "lor" 0) [C P (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]]],[])),Assumed)
+(("deMorgan_land",(C P (Id "equiv" 0) [C P (Id "lnot" 0) [C P (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],C P (Id "lor" 0) [C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))],C P (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]]],[])),Assumed)
+(("deMorgan_lor",(C P (Id "equiv" 0) [C P (Id "lnot" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],C P (Id "land" 0) [C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))],C P (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]]],[])),Assumed)
+(("equiv_replace",(C P (Id "equiv" 0) [C P (Id "land" 0) [C P (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "equiv" 0) [V P (VR (Id "R" 0,VP,WS)),V P (VR (Id "P" 0,VP,WS))]],C P (Id "land" 0) [C P (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "equiv" 0) [V P (VR (Id "R" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]]],[])),Assumed)
+(("equiv_def",(C P (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS)),C P (Id "lor" 0) [C P (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "land" 0) [C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))],C P (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]]]],[])),Assumed)
 END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS
 BEGIN LIST CONJECTURES
-("land_lor_absorb",(C P (Id "equiv" 0) [C P (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],V P (VR (Id "P" 0,VP,WS))],[]))
-("lor_land_absorb",(C P (Id "equiv" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],V P (VR (Id "P" 0,VP,WS))],[]))
-("land_lnot_lor_absorb",(C P (Id "equiv" 0) [C P (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id "lor" 0) [C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))]],C P (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],[]))
-("land_lnot_lor_absorb",(C P (Id "equiv" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id "land" 0) [C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))]],C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],[]))
-("lor_land_distr",(C P (Id "equiv" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id "land" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],C P (Id "land" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]]],[]))
-("land_lor_distr",(C P (Id "equiv" 0) [C P (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id "lor" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],C P (Id "lor" 0) [C P (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]]],[]))
-("deMorgan_land",(C P (Id "equiv" 0) [C P (Id "lnot" 0) [C P (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],C P (Id "lor" 0) [C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))],C P (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]]],[]))
-("deMorgan_lor",(C P (Id "equiv" 0) [C P (Id "lnot" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],C P (Id "land" 0) [C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))],C P (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]]],[]))
-("equiv_replace",(C P (Id "equiv" 0) [C P (Id "land" 0) [C P (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "equiv" 0) [V P (VR (Id "R" 0,VP,WS)),V P (VR (Id "P" 0,VP,WS))]],C P (Id "land" 0) [C P (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "equiv" 0) [V P (VR (Id "R" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]]],[]))
-("equiv_def",(C P (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS)),C P (Id "lor" 0) [C P (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "land" 0) [C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))],C P (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]]]],[]))
 END LIST CONJECTURES
 END THEORY AndOrInvert

@@ -867,16 +867,21 @@ applyMatch args pstate@(reqs, liveProof)
   = case applyMatchToFocus1 (args2int args) liveProof of
       Nothing -> return pstate
       Just (unbound,mtch)
-       -> do putStrLn
-               $ unlines [ "unbound = " ++ trVSet unbound
-                         , "bind = " ++ trBinding (mBind mtch)
-                         , "please supply bindings as requested"
-                         ]
-             ubind <- requestBindings (true,false) (conjecture liveProof) unbound
+       -> do ubind <- completeUnbound unbound mtch
              tryDelta (applyMatchToFocus2 mtch unbound ubind) pstate
   where
     true   =  theTrue  $ logicsig reqs
     false  =  theFalse $ logicsig reqs
+
+    completeUnbound unbound mtch
+      | S.null unbound  =  return $ mBind mtch
+      | otherwise
+          = do putStrLn
+                $ unlines [ "unbound = " ++ trVSet unbound
+                          , "bind = " ++ trBinding (mBind mtch)
+                          , "please supply bindings as requested"
+                          ]
+               requestBindings (true,false) (conjecture liveProof) unbound
 \end{code}
 
 For every unbound pattern variable in the replacement,

@@ -123,13 +123,79 @@ We will now do ``handwritten'' proofs of the conjectures.
 This will help to guide the more subtle parts of the proof engine,
 namely those to do with discharging side-conditions.
 
+\subsubsection{Proof of $\CJandUnivDistrN$}
+
+\[\CJandUnivDistr \qquad \CJandUnivDistrS\]
+
+\begin{eqnarray*}
+   && \CJandUnivDistrL
+\EQ{Law \AXUnivDefN}
+\\ && (\forall \lst x \have P) \land [Q] \qquad \lst x \supseteq P
+\EQ{Law \AXUnivDefN}
+\\ && (\forall \lst x \have P) \land (\forall \lst y \have Q)
+      \qquad \lst x \supseteq P, \lst y \supseteq Q
+\EQ{Tricky part: we can replace $\lst x$ and $\lst y$ with $\lst z$}
+\\ && (\forall \lst z \have P) \land (\forall \lst z \have Q)
+      \qquad \lst z \supseteq P, \lst z \supseteq Q
+\EQ{Do some s.c. reasoning}
+\\ && (\forall \lst z \have P) \land (\forall \lst z \have Q)
+      \qquad \lst z \supseteq P \cup Q
+\EQ{Law \AXallODistrN}
+\\ && (\forall \lst z \have P \land Q)
+      \qquad \lst z \supseteq P \cup Q
+\EQ{More s.c. reasoning}
+\\ && (\forall \lst z \have P \land Q)
+      \qquad \lst z \supseteq P \land Q
+\EQ{Law \AXUnivDefN, backwards}
+\\ && [P \land Q]
+\end{eqnarray*}
+
+The key thing here seems to be able to choose $\lst x$ appropriately,
+and the ability to do some side-condition reasoning.
+The tricky part goes away if we can
+pick any \emph{originally fresh} list variable for $\lst x$.
+A variable is ``originally fresh'' if it does not occur
+in the starting conjecture portion ($[P]\land[Q]$ here).
+This allows us to choose $\lst x$ twice in the proof.
+
+The proof then becomes:
+\begin{eqnarray*}
+   && \CJandUnivDistrL
+\EQ{Law \AXUnivDefN}
+\\ && (\forall \lst x \have P) \land [Q] \qquad \lst x \supseteq P
+\EQ{Law \AXUnivDefN}
+\\ && (\forall \lst x \have P) \land (\forall \lst x \have Q)
+      \qquad \lst x \supseteq P, \lst x \supseteq Q
+\EQ{Do some s.c. reasoning}
+\\ && (\forall \lst x \have P) \land (\forall \lst x \have Q)
+      \qquad \lst x \supseteq P \cup Q
+\EQ{Law \AXallODistrN}
+\\ && (\forall \lst x \have P \land Q)
+      \qquad \lst x \supseteq P \cup Q
+\EQ{More s.c. reasoning}
+\\ && (\forall \lst x \have P \land Q)
+      \qquad \lst x \supseteq P \land Q
+\EQ{Law \AXUnivDefN, backwards}
+\\ && [P \land Q]
+\end{eqnarray*}
+
 \subsubsection{Proof of $\CJUnivIdemN$}
 
 \[\CJUnivIdem \qquad \CJUnivIdemS\]
 
-\subsubsection{Proof of $\CJandUnivDistrN$}
+This will expand twice, and then use nesting simplification (built-in)
 
-\[\CJandUnivDistr \qquad \CJandUnivDistrS\]
+\begin{eqnarray*}
+   && [[P]]
+\EQ{Law \AXUnivDefN}
+\\&& \forall \lst x \have [P] \qquad \lst x \supseteq P
+\EQ{Law \AXUnivDefN}
+\\&& \forall \lst x \have \forall \lst x  \have P \qquad \lst x \supseteq P
+\EQ{simplify nested quantifier}
+\\&& \forall \lst x \have P \qquad \lst x \supseteq P
+\EQ{Law \AXUnivDefN, backwards}
+\\&& [P]
+\end{eqnarray*}
 
 \subsubsection{Proof of $\CJUnivIdemN$}
 
@@ -228,17 +294,6 @@ uCloseAxioms
 
 \subsection{Universal Conjectures}
 
-$$
-  \begin{array}{lll}
-     \CJUnivIdem & \CJUnivIdemS & \CJUnivIdemN
-  \end{array}
-$$\par\vspace{-8pt}
-\begin{code}
-cjUnivIdem = preddef ("[]" -.- "idem")
-                     (univ (univ p) === univ p)
-                     scTrue
-\end{code}
-
 
 $$
   \begin{array}{lll}
@@ -250,6 +305,18 @@ cjAndUnivDistr = preddef ("land" -.- "[]" -.- "distr")
                 (univ p /\ univ q === univ (p /\ q))
                 scTrue
 \end{code}
+
+$$
+  \begin{array}{lll}
+     \CJUnivIdem & \CJUnivIdemS & \CJUnivIdemN
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+cjUnivIdem = preddef ("[]" -.- "idem")
+                     (univ (univ p) === univ p)
+                     scTrue
+\end{code}
+
 
 $$
   \begin{array}{lll}

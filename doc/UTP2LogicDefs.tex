@@ -1090,7 +1090,9 @@
 \def\CJUnivIdemS{}
 
 \def\CJandUnivDistrN{\QNAME{$\land$-[]-distr}}
-\def\CJandUnivDistr{[P]\land[Q] \equiv [P\land Q]}
+\def\CJandUnivDistrL{[P]\land[Q]}
+\def\CJandUnivDistrR{[P\land Q]}
+\def\CJandUnivDistr{\CJandUnivDistrL \equiv \CJandUnivDistrR}
 \def\CJandUnivDistrS{}
 
 \def\CJtrueUnivN{\QNAME{univ-$\textit{true}$}}
@@ -1111,8 +1113,8 @@
 
 \def\CJUNIVCLOSE{
 \begin{array}{lll}
-   \CJUnivIdem & \CJUnivIdemS & \CJUnivIdemN
-\\ \CJandUnivDistr & \CJandUnivDistrS & \CJandUnivDistrN
+   \CJandUnivDistr & \CJandUnivDistrS & \CJandUnivDistrN
+\\ \CJUnivIdem & \CJUnivIdemS & \CJUnivIdemN
 \\ \CJtrueUniv & \CJtrueUnivS & \CJtrueUnivN
 \\ \CJfalseUniv & \CJfalseUnivS & \CJfalseUnivN
 \\ \CJallUnivClosed & \CJallUnivClosedS & \CJallUnivClosedN

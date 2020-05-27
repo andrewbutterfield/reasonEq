@@ -119,6 +119,48 @@ $$
 \CJUNIVCLOSE
 $$
 
+We will now do ``handwritten'' proofs of the conjectures.
+This will help to guide the more subtle parts of the proof engine,
+namely those to do with discharging side-conditions.
+
+\subsubsection{Proof of $\CJUnivIdemN$}
+
+\[\CJUnivIdem \qquad \CJUnivIdemS\]
+
+\subsubsection{Proof of $\CJandUnivDistrN$}
+
+\[\CJandUnivDistr \qquad \CJandUnivDistrS\]
+
+\subsubsection{Proof of $\CJUnivIdemN$}
+
+\[\CJtrueUniv \qquad \CJtrueUnivS\]
+
+\subsubsection{Proof of $\CJtrueUnivN$}
+
+\[\CJfalseUniv \qquad \CJfalseUnivS\]
+
+\subsubsection{Proof of $\CJallUnivClosedN$}
+
+\[\CJallUnivClosed \qquad \CJallUnivClosedS\]
+
+\subsubsection{Proof of $\CJanyUnivClosedN$}
+
+\[\CJanyUnivClosed \qquad \CJanyUnivClosedS\]
+
+\subsubsection{Proof of $\CJunivInstN$}
+
+\[\CJunivInst \qquad \CJunivInstS\]
+
+\subsubsection{Proof of $\CJunivMonoN$}
+
+\[\CJunivMono \qquad \CJunivMonoS\]
+
+\subsubsection{Proof of $\CJnecPossN$}
+
+\[\CJnecPoss \qquad \CJnecPossS\]
+
+
+
 \subsection{Predicate Infrastructure}
 
 We need to build some infrastructure here.
@@ -145,7 +187,7 @@ vx = Vbl (fromJust $ ident "x") ObsV Static ; x = StdVar vx
 lvxs = LVbl vx [] [] ; xs = LstVar lvxs
 \end{code}
 
-\newpage
+
 \subsection{Universal Axioms}
 
 % \begin{array}{lll}

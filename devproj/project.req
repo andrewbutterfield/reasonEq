@@ -14,29 +14,9 @@ BEGIN THEORIES
 THNAMES = ["And","AndOrInvert","Equality","Equiv","Exists","ForAll","Implies","Not","Or","UClose"]
 SDAG = [[("UClose",["Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Exists",["ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("ForAll",["Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Implies",["AndOrInvert","And","Or","Not","Equiv"])],[("AndOrInvert",["And","Or","Not","Equiv"])],[("And",["Or","Not","Equiv"])],[("Or",["Not","Equiv"])],[("Not",["Equiv"])],[("Equality",[]),("Equiv",[])]]
 END THEORIES
-CURRTHEORY = Implies
+CURRTHEORY = UClose
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("Exists","exists_lor_distr")
-BEGIN LIVE-PROOF
-TH-NAME: Exists
-CJ-NAME: exists_lor_distr
-CONJ = (C P (Id "equiv" 0) [B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]),C P (Id "lor" 0) [B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V P (VR (Id "P" 0,VP,WS))),B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V P (VR (Id "Q" 0,VP,WS)))]],[])
-SIDE = []
-STRAT reduce
-BEGIN SEQZIP
-TERMZIP = (C P (Id "equiv" 0) [B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 1,VO,WS),[],[]))]) (C P (Id "lor" 0) [S P (S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WS),V (E T) (VR (Id "x" 1,VO,WS)))]) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "x" 1,VO,WS),[],[]))]))) (SN (fromList [(VR (Id "x" 1,VO,WS),V (E T) (VR (Id "x" 1,VO,WS)))]) (fromList [(LV (VR (Id "x" 1,VO,WS),[],[]),LV (VR (Id "x" 1,VO,WS),[],[]))])),S P (S P (V P (VR (Id "Q" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WS),V (E T) (VR (Id "x" 1,VO,WS)))]) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "x" 1,VO,WS),[],[]))]))) (SN (fromList [(VR (Id "x" 1,VO,WS),V (E T) (VR (Id "x" 1,VO,WS)))]) (fromList [(LV (VR (Id "x" 1,VO,WS),[],[]),LV (VR (Id "x" 1,VO,WS),[],[]))]))]),C P (Id "lor" 0) [B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 2,VO,WS),[],[]))]) (S P (S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WS),V (E T) (VR (Id "x" 2,VO,WS)))]) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "x" 2,VO,WS),[],[]))]))) (SN (fromList [(VR (Id "x" 2,VO,WS),V (E T) (VR (Id "x" 2,VO,WS)))]) (fromList [(LV (VR (Id "x" 2,VO,WS),[],[]),LV (VR (Id "x" 2,VO,WS),[],[]))]))),B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 3,VO,WS),[],[]))]) (S P (S P (V P (VR (Id "Q" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WS),V (E T) (VR (Id "x" 3,VO,WS)))]) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "x" 3,VO,WS),[],[]))]))) (SN (fromList [(VR (Id "x" 3,VO,WS),V (E T) (VR (Id "x" 3,VO,WS)))]) (fromList [(LV (VR (Id "x" 3,VO,WS),[],[]),LV (VR (Id "x" 3,VO,WS),[],[]))])))]],[])
-BEGIN SEQUENT'
-SIDECOND = []
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.exists_lor_distr", thDeps = [], known = VD (fromList [],fromList [],fromList []), subable = fromList [], laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
-END SEQUENT'
-END SEQZIP
-FPATH: []
-BEGIN LIST STEPS
-(NormQuant [],(C P (Id "equiv" 0) [B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 1,VO,WS),[],[]))]) (C P (Id "lor" 0) [S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WS),V (E T) (VR (Id "x" 1,VO,WS)))]) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "x" 1,VO,WS),[],[]))])),S P (V P (VR (Id "Q" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WS),V (E T) (VR (Id "x" 1,VO,WS)))]) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "x" 1,VO,WS),[],[]))]))]),C P (Id "lor" 0) [B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 2,VO,WS),[],[]))]) (S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WS),V (E T) (VR (Id "x" 2,VO,WS)))]) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "x" 2,VO,WS),[],[]))]))),B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 3,VO,WS),[],[]))]) (S P (V P (VR (Id "Q" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WS),V (E T) (VR (Id "x" 3,VO,WS)))]) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "x" 3,VO,WS),[],[]))])))]],[]))
-(NormQuant [],(C P (Id "equiv" 0) [B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]),C P (Id "lor" 0) [B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V P (VR (Id "P" 0,VP,WS))),B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V P (VR (Id "Q" 0,VP,WS)))]],[]))
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

@@ -7,6 +7,8 @@
 %
 \def\LNAME#1{\mbox{\textsc{#1}}}
 \def\QNAME#1{\LNAME{``{#1}''}}
+\def\true{\textsf{true}}
+\def\false{\textsf{false}}
 
 
 
@@ -293,7 +295,7 @@
 
 % -- Equivalence -----------------------
 
-\def\CJeqvId{\textit{true} \equiv Q\equiv Q}
+\def\CJeqvId{\true \equiv Q\equiv Q}
 \def\CJeqvIdN{\QNAME{$\equiv$-id}}
 
 \def\CONJPROPEQUIV{
@@ -325,13 +327,13 @@
   \end{array}
 }
 
-% \def\lawFalseDef{\NmCmtLaw{\m\textit{false}-def}{$\GSN{3.8}$}{\textit{false} \equiv \lnot \textit{true}}}
+% \def\lawFalseDef{\NmCmtLaw{\m\false-def}{$\GSN{3.8}$}{\false \equiv \lnot \true}}
 % \def\lawNotEqvDistr{\NmCmtLaw{$\lnot$-$\equiv$-distr}{$\GSN{3.9}$}{\lnot(p\equiv q) \equiv \lnot p \equiv q}}
 % \def\lawNEqvDef{\NmCmtLaw{$\not\equiv$-def}{$\GSN{3.10}$}{(p\not\equiv q) \equiv \lnot(p\equiv q)}}
 % \def\lawNotEqvSwap{\NmCmtLaw{$\lnot$-$\equiv$-swap}{$\GSN{3.11}$}{\lnot p\equiv q \equiv p \equiv \lnot q}}
-% \def\lawNotFalse{\NmCmtLaw{$\textit{false}$-neg}{$\GSN{3.13}$}{\lnot \textit{false} \equiv \textit{true}}}
+% \def\lawNotFalse{\NmCmtLaw{$\false$-neg}{$\GSN{3.13}$}{\lnot \false \equiv \true}}
 % \def\lawNEqvAlt{\NmCmtLaw{$\lnot$-$\equiv$-swap}{$\GSN{3.14}$}{(p\not \equiv q) \equiv \lnot p \equiv q}}
-% \def\lawNEqvAAlt{\NmCmtLaw{$\not\equiv$-def}{$\GSN{3.15}$}{\lnot p \equiv p \equiv \textit{false}}}
+% \def\lawNEqvAAlt{\NmCmtLaw{$\not\equiv$-def}{$\GSN{3.15}$}{\lnot p \equiv p \equiv \false}}
 % \def\lawNEqvComm{\NmCmtLaw{$\not\equiv$-comm}{$\GSN{3.16}$}{(p\not \equiv q) \equiv (q\not\equiv p)}}
 % \def\lawNEqvAssoc{\NmCmtLaw{$\not\equiv$-assoc}{$\GSN{3.17}$}{((p\not\equiv q)\not\equiv r) \equiv (p\not\equiv (q\not\equiv r))}}
 % \def\lawNEqvMutual{\NmCmtLaw{$\not\equiv$-mutual}{$\GSN{3.18}$}{((p\not \equiv q)\equiv r) \equiv (p\not\equiv (q\equiv r))}}
@@ -339,10 +341,10 @@
 
 % -- Disjunction -----------------------
 
-\def\CJorZero{P \lor \textit{true} \equiv \textit{true}}
+\def\CJorZero{P \lor \true \equiv \true}
 \def\CJorZeroN{\QNAME{$\lor$-zero}}
 
-\def\CJorUnit{P \lor \textit{false} \equiv P}
+\def\CJorUnit{P \lor \false \equiv P}
 \def\CJorUnitN{\QNAME{$\lor$-unit}}
 
 \def\CJorDistr{P \lor (Q\lor R) \equiv (P\lor Q) \lor (P \lor R)}
@@ -359,8 +361,8 @@
     \\ \CJorEqvSplit & \CJorEqvSplitN
   \end{array}
 }
-% \def\lawOrZero{\NmCmtLaw{$\lor$-zero}{$\GSN{3.29}$}{p \lor \textit{true} \equiv \textit{true}}}
-% \def\lawOrUnit{\NmCmtLaw{$\lor$-unit}{$\GSN{3.30}$}{p\lor \textit{false} \equiv p}}
+% \def\lawOrZero{\NmCmtLaw{$\lor$-zero}{$\GSN{3.29}$}{p \lor \true \equiv \true}}
+% \def\lawOrUnit{\NmCmtLaw{$\lor$-unit}{$\GSN{3.30}$}{p\lor \false \equiv p}}
 % \def\lawOrDistr{\NmCmtLaw{$\lor$-$\lor$-distr}{$\GSN{3.31}$}{p \lor (q\lor r) \equiv (p\lor q) \lor (p \lor r)}}
 % \def\lawOrEqvSplit{\NmCmtLaw{$\lor$-$\equiv$-split}{$\GSN{3.32}$}{p\lor q \equiv p \lor \lnot q \equiv p}}
 %
@@ -379,16 +381,16 @@
 \def\CJandIdem{P\land P \equiv P}
 \def\CJandIdemN{\QNAME{$\land$-idem}}
 
-\def\CJandUnit{P\land \textit{true} \equiv P}
+\def\CJandUnit{P\land \true \equiv P}
 \def\CJandUnitN{\QNAME{$\land$-unit}}
 
-\def\CJandZero{P \land \textit{false} \equiv \textit{false}}
+\def\CJandZero{P \land \false \equiv \false}
 \def\CJandZeroN{\QNAME{$\land$-zero}}
 
 \def\CJandDistr{P \land (Q\land R) \equiv (P\land Q) \land (P \land R)}
 \def\CJandDistrN{\QNAME{$\land$-$\land$-distr}}
 
-\def\CJcontradict{P \land \lnot P \equiv \textit{false}}
+\def\CJcontradict{P \land \lnot P \equiv \false}
 \def\CJcontradictN{\QNAME{contradiction}}
 
 \def\CONJPROPCONJ{
@@ -407,10 +409,10 @@
 % \def\lawAndComm{\NmCmtLaw{$\land$-comm}{$\GSN{3.36}$}{p\land q \equiv q \land p}}
 % \def\lawAndAssoc{\NmCmtLaw{$\land$-assoc}{$\GSN{3.37}$}{(p\land q) \land r \equiv p \land (q \land r)}}
 % \def\lawAndIdem{\NmCmtLaw{$\land$-idem}{$\GSN{3.38}$}{p\land p \equiv p}}
-% \def\lawAndUnit{\NmCmtLaw{$\land$-unit}{$\GSN{3.39}$}{p\land \textit{true} \equiv p}}
-% \def\lawAndZero{\NmCmtLaw{$\land$-zero}{$\GSN{3.40}$}{p \land \textit{false} \equiv \textit{false}}}
+% \def\lawAndUnit{\NmCmtLaw{$\land$-unit}{$\GSN{3.39}$}{p\land \true \equiv p}}
+% \def\lawAndZero{\NmCmtLaw{$\land$-zero}{$\GSN{3.40}$}{p \land \false \equiv \false}}
 % \def\lawAndDistr{\NmCmtLaw{$\land$-$\land$-distr}{$\GSN{3.41}$}{p \land (q\land r) \equiv (p\land q) \land (p \land r)}}
-% \def\lawContradict{\NmCmtLaw{contradiction}{$\GSN{3.42}$}{p \land \lnot p \equiv \textit{false}}}
+% \def\lawContradict{\NmCmtLaw{contradiction}{$\GSN{3.42}$}{p \land \lnot p \equiv \false}}
 %
 % % Disj Conj
 % \def\lawAndOrAbs{\NmCmtLaw{$\land$-$\lor$-absorb}{$\GSN{3.43}$}{p\land (p\lor q) \equiv p}}
@@ -517,14 +519,14 @@
 \def\CJShunting{P \land Q\implies R \equiv P\implies (Q \implies R)}
 \def\CJAndImp{P \land (P\implies Q) \equiv P\land Q}
 \def\CJAndPmi{P \land (Q\implies P) \equiv P}
-\def\CJOrImp{P \lor (P\implies Q) \equiv \textit{true}}
+\def\CJOrImp{P \lor (P\implies Q) \equiv \true}
 \def\CJOrPmi{P \lor (Q\implies P) \equiv Q\implies P}
 \def\CJOrImpAnd{P \lor Q\implies P\land Q \equiv P \equiv Q}
-\def\CJImpRefl{P\implies P \equiv \textit{true}}
-\def\CJImpRZero{P \implies \textit{true} \equiv \textit{true}}
-\def\CJImpLUnit{\textit{true} \implies P \equiv P}
-\def\CJNotDefTwo{P\implies \textit{false} \equiv \lnot P}
-\def\CJFalseImp{\textit{false} \implies P \equiv \textit{true}}
+\def\CJImpRefl{P\implies P \equiv \true}
+\def\CJImpRZero{P \implies \true \equiv \true}
+\def\CJImpLUnit{\true \implies P \equiv P}
+\def\CJNotDefTwo{P\implies \false \equiv \lnot P}
+\def\CJFalseImp{\false \implies P \equiv \true}
 \def\CJImpTrans{(P\implies Q)\land (Q \implies R) \implies (P\implies R)}
 \def\CJEqvImpTrans{(P\equiv Q)\land (Q \implies R) \implies (P\implies R)}
 \def\CJImpEqvTrans{(P\implies Q)\land (Q \equiv R) \implies (P\implies R)}
@@ -602,8 +604,8 @@
 % %Equivalence and TRUE
 % \def\lawEqvAssoc{\NmCmtLaw{$\equiv$-assoc}{$\GSN{3.1}$}{((p\equiv q)\equiv r) \equiv (p\equiv (q\equiv r))}}
 % \def\lawEqvComm{\NmCmtLaw{$\equiv$-comm}{$\GSN{3.2}$}{p\equiv q \equiv q \equiv p}}
-% \def\lawEqvUnit{\NmCmtLaw{$\equiv$-unit}{$\GSN{3.3}$}{\textit{true} \equiv q \equiv q}}
-% \def\lawTrue{\NmCmtLaw{true}{$\GSN{3.4}$}{\textit{true}}}
+% \def\lawEqvUnit{\NmCmtLaw{$\equiv$-unit}{$\GSN{3.3}$}{\true \equiv q \equiv q}}
+% \def\lawTrue{\NmCmtLaw{true}{$\GSN{3.4}$}{\true}}
 % \def\lawEqvRefl{\NmCmtLaw{$\equiv$-refl}{$\GSN{3.5}$}{p\equiv p}}
 
 
@@ -617,8 +619,8 @@
 
 %%%% ==== Propositional Substitution ===========================================
 
-\def\AXtrueSubst{\textit{true}[\lst e/\lst x] \equiv \textit{true}}
-\def\AXtrueSubstN{\QNAME{\textit{true}-subst}}
+\def\AXtrueSubst{\true[\lst e/\lst x] \equiv \true}
+\def\AXtrueSubstN{\QNAME{\true-subst}}
 
 \def\AXnotSubst{(\lnot P)[\lst e/\lst x] \equiv \lnot(P[\lst e/\lst x])}
 \def\AXnotSubstN{\QNAME{$\lnot$-subst}}
@@ -647,8 +649,8 @@
   \end{array}
 }
 
-\def\CJfalseSubst{\textit{false}[\lst e/\lst x] \equiv \textit{false}}
-\def\CJfalseSubstN{\QNAME{\textit{false}-subst}}
+\def\CJfalseSubst{\false[\lst e/\lst x] \equiv \false}
+\def\CJfalseSubstN{\QNAME{\false-subst}}
 
 \def\CJandSubst{ (P \land Q)[\lst e/\lst x]
                 \equiv
@@ -948,11 +950,11 @@
 
 %% ---- Predicate Axioms - ( Gries & Schneider style ) -------------------------
 
-\def\AXAllTrueN{\QNAME{$\forall$-$\textit{true}$}}
+\def\AXAllTrueN{\QNAME{$\forall$-$\true$}}
 \def\AXAllTrue{
-  (\forall \lst x \bullet \textit{true})
+  (\forall \lst x \bullet \true)
   \equiv
-   \textit{true}
+   \true
 }
 
 \def\AXAllOnePointN{\QNAME{$\forall$-one-point}}
@@ -1002,11 +1004,11 @@
 
 
 
-\def\CJAnyFalseN{\QNAME{$\exists$-$\textit{false}$}}
+\def\CJAnyFalseN{\QNAME{$\exists$-$\false$}}
 \def\CJAnyFalse{
-  (\exists \lst x \bullet \textit{false})
+  (\exists \lst x \bullet \false)
   \equiv
-   \textit{false}
+   \false
 }
 
 \def\CJAnyOnePointN{\QNAME{$\exists$-one-point}}
@@ -1085,6 +1087,10 @@
 \end{array}
 }
 
+\def\CJUnivIdOnClosedN{\QNAME{univ-id-on-closed}}
+\def\CJUnivIdOnClosed{[P] \equiv P}
+\def\CJUnivIdOnClosedS{\emptyset \supseteq P}
+
 \def\CJUnivIdemN{\QNAME{univ-idem}}
 \def\CJUnivIdem{[[P]] \equiv [P]}
 \def\CJUnivIdemS{}
@@ -1095,12 +1101,12 @@
 \def\CJandUnivDistr{\CJandUnivDistrL \equiv \CJandUnivDistrR}
 \def\CJandUnivDistrS{}
 
-\def\CJtrueUnivN{\QNAME{univ-$\textit{true}$}}
-\def\CJtrueUniv{[\textit{true}] \equiv \textit{true} }
+\def\CJtrueUnivN{\QNAME{univ-$\true$}}
+\def\CJtrueUniv{[\true] \equiv \true }
 \def\CJtrueUnivS{}
 
-\def\CJfalseUnivN{\QNAME{univ-$\textit{false}$}}
-\def\CJfalseUniv{[\textit{false}] \equiv \textit{false} }
+\def\CJfalseUnivN{\QNAME{univ-$\false$}}
+\def\CJfalseUniv{[\false] \equiv \false }
 \def\CJfalseUnivS{}
 
 \def\CJallUnivClosedN{\QNAME{univ-$\forall$-closed}}
@@ -1113,10 +1119,11 @@
 
 \def\CJUNIVCLOSE{
 \begin{array}{lll}
-   \CJandUnivDistr & \CJandUnivDistrS & \CJandUnivDistrN
-\\ \CJUnivIdem & \CJUnivIdemS & \CJUnivIdemN
+   \CJUnivIdOnClosed & \CJUnivIdOnClosedS & \CJUnivIdOnClosedN
 \\ \CJtrueUniv & \CJtrueUnivS & \CJtrueUnivN
 \\ \CJfalseUniv & \CJfalseUnivS & \CJfalseUnivN
+\\ \CJUnivIdem & \CJUnivIdemS & \CJUnivIdemN
+\\ \CJandUnivDistr & \CJandUnivDistrS & \CJandUnivDistrN
 \\ \CJallUnivClosed & \CJallUnivClosedS & \CJallUnivClosedN
 \\ \CJanyUnivClosed & \CJanyUnivClosedS & \CJanyUnivClosedN
 \\ \CJunivInst & \CJunivInstS & \CJunivInstN

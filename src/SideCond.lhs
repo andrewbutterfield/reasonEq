@@ -126,6 +126,10 @@ $$
 $$
 We cannot match any instance of universal closure above
 against the definition as we cannot discharge the side-condition.
+Exploring proofs of the above by hand reveals the importance
+of being able to determine, at proof-time,
+if a predicate $P$ is closed ($\emptyset \supseteq P$).
+
 
 We have to cope with $C$ matching $P$ in $P \sim R$,
 where variables in $R$, but not in $P$,

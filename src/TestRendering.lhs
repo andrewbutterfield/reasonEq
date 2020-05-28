@@ -349,7 +349,9 @@ trvset trid vs   =  "{" ++ trovset trid vs ++ "}"
 
 trOVSet = trovset trId
 trOVSetU = trovset trIdU
-trovset trid vs  =  trvl trid (S.toList vs)
+trovset trid vs
+ | S.null vs  =  _emptyset
+ | otherwise  =  trvl trid (S.toList vs)
 
 trVariableSet = trvariableset trId
 trVariableSetU = trvariableset trIdU

@@ -123,6 +123,68 @@ We will now do ``handwritten'' proofs of the conjectures.
 This will help to guide the more subtle parts of the proof engine,
 namely those to do with discharging side-conditions.
 
+\subsubsection{Proof of $\CJUnivIdOnClosedN$}
+
+\[ \CJUnivIdOnClosed \qquad \CJUnivIdOnClosedS \]
+
+\begin{eqnarray*}
+  && [P] \qquad \emptyset \supseteq P
+\EQ{Law \AXUnivDefN}
+\\&& \forall \lst x \have P
+     \qquad \lst x \supseteq P, \emptyset \supseteq P
+\EQ{s. c. reasoning says we can ignore 1st s.c. here}
+\\&& \forall \lst x \have P, \qquad \emptyset \supseteq P
+\EQ{Some law about shrinking quantifier lists}
+\\&& P
+\end{eqnarray*}
+We need here to note that $\lst x \supseteq P$
+is a s.c. of a law we use, which we can show here is true.
+However, $\emptyset \supseteq P$ is a goal s.c., and should not be eliminated.
+
+\subsubsection{Proof of $\CJUnivIdemN$}
+
+\[\CJtrueUniv \qquad \CJtrueUnivS\]
+
+\begin{eqnarray*}
+  && [\true]
+\EQ{Theorem $\CJUnivIdOnClosedN$, given $\emptyset \supseteq \true$}
+\\&& \true
+\end{eqnarray*}
+
+
+
+
+\subsubsection{Proof of $\CJtrueUnivN$}
+
+\[\CJfalseUniv \qquad \CJfalseUnivS\]
+
+Previous conjecture where $\false$ replaces $\true$.
+
+\subsubsection{Proof of $\CJUnivIdemN$}
+
+\[\CJUnivIdem \qquad \CJUnivIdemS\]
+
+\begin{eqnarray*}
+  && [[P]]
+\EQ{Theorem $\CJUnivIdOnClosedN$, given $\emptyset \supseteq [P]$}
+\\&& [P]
+\end{eqnarray*}
+
+An alternative expands twice,
+and then uses nesting simplification (built-in).
+\begin{eqnarray*}
+   && [[P]]
+\EQ{Law \AXUnivDefN}
+\\&& \forall \lst x \have [P] \qquad \lst x \supseteq P
+\EQ{Law \AXUnivDefN}
+\\&& \forall \lst x \have \forall \lst x  \have P \qquad \lst x \supseteq P
+\EQ{simplify nested quantifier}
+\\&& \forall \lst x \have P \qquad \lst x \supseteq P
+\EQ{Law \AXUnivDefN, backwards}
+\\&& [P]
+\end{eqnarray*}
+
+
 \subsubsection{Proof of $\CJandUnivDistrN$}
 
 \[\CJandUnivDistr \qquad \CJandUnivDistrS\]
@@ -179,31 +241,6 @@ The proof then becomes:
 \\ && [P \land Q]
 \end{eqnarray*}
 
-\subsubsection{Proof of $\CJUnivIdemN$}
-
-\[\CJUnivIdem \qquad \CJUnivIdemS\]
-
-This will expand twice, and then use nesting simplification (built-in)
-
-\begin{eqnarray*}
-   && [[P]]
-\EQ{Law \AXUnivDefN}
-\\&& \forall \lst x \have [P] \qquad \lst x \supseteq P
-\EQ{Law \AXUnivDefN}
-\\&& \forall \lst x \have \forall \lst x  \have P \qquad \lst x \supseteq P
-\EQ{simplify nested quantifier}
-\\&& \forall \lst x \have P \qquad \lst x \supseteq P
-\EQ{Law \AXUnivDefN, backwards}
-\\&& [P]
-\end{eqnarray*}
-
-\subsubsection{Proof of $\CJUnivIdemN$}
-
-\[\CJtrueUniv \qquad \CJtrueUnivS\]
-
-\subsubsection{Proof of $\CJtrueUnivN$}
-
-\[\CJfalseUniv \qquad \CJfalseUnivS\]
 
 \subsubsection{Proof of $\CJallUnivClosedN$}
 
@@ -293,6 +330,22 @@ uCloseAxioms
 
 
 \subsection{Universal Conjectures}
+
+$$
+  \begin{array}{lll}
+     \CJUnivIdOnClosed & \CJUnivIdOnClosedS & \CJUnivIdOnClosedN
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+cjUnivIdOnClosed = preddef ("univ" -.- "id" -.- "on" -.- "closed")
+                (univ p === p )
+                ([] `covers` gvP)
+\end{code}
+
+
+
+
+
 
 
 $$
@@ -412,8 +465,9 @@ We now collect our conjecture set:
 \begin{code}
 uCloseConjs :: [NmdAssertion]
 uCloseConjs
-  = [ cjUnivIdem, cjAndUnivDistr
+  = [ cjUnivIdOnClosed
     , cjUnivTrue, cjUnivFalse
+    , cjUnivIdem, cjAndUnivDistr
     , cjUnivAllClosed, cjUnivAnyClosed
     , cjUnivInst, cjUnivMono, cjNecPoss ]
 \end{code}

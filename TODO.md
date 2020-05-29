@@ -5,30 +5,11 @@
 
 ### Quantifier Bound Variables (in Laws)
 
-12345678 1 2345678 2 2345678 3 2345678 4 2345678 5 2345678 6 2345678 7 2345678 8
+Done extensive re-jigging of `Forall`, `Exists` and `UClose`.
 
-Key decisions regarding the uniqueness or otherwise 
-of quantifier bound variables: 
-
-1. do not routinely use `normaliseQuantifier`,
-it can be invoked as a proof step.
-2. Given something like `b ∧ (∀ b @ b ∧ (∀ b @ b))` 
-we do require a single match binding all those `b`s to the same variable/term. 
-If we want otherwise, we should alpha-rename some quantifiers first
-(`normaliseQuantifier` does them all systematically).
-3. Consider matching `[∀ x$ @ P]`  against `[P]` (part 1 of `[]_def`). 
-How do we distinguish this `x$` from the one in the law?
-  * `[]_def` says `[P] = ∀ x$ @ P` where `x$` covers `fv.P`, 
-  so `[∀ x$ @ P] = ∀ y$ @ ∀ x$ @ P` where `y$` covers `fv.(∀ x$ @ P)`, 
-  which is `fv.P \ x$`.
-  * Another way to interpret this law is as `[P] = ∀ fv.P @ P`, 
-  so `[∀ x$ @ P]` becomes `∀ fv.(∀ x$ @ P) @ (∀ x$ @ P)`, 
-  which reduces to `∀ (fv.P\x$) @ (∀ x$ @ P)`.
-  * We need either a special side-condition that 
-  introduces a fresh list-variable ("new `x$` s.t. `x$` covers `fv.P`"),
-  or a way to recognise when to interpret 
-  a standard side-condition ("`x$` covers `fv.P`") in this way.
-
+Now have a problem with `land_[]_distr` proof. Law `univ_id_on_closed`
+matches `[P]` even though there is no side-condition `Ø ⊇ P`.
+The match shows the following "inference": ` _ ⟹ Ø ⊇ P`.
   
 ### Test Re-jigging
 

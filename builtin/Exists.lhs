@@ -132,11 +132,22 @@ predExistsAxioms
 
 $$
   \begin{array}{lll}
+     \CJAnyRemove & \CJAnyRemoveS & \CJAnyRemoveN
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+cjAnyRemove = preddef ("exists" -.- "remove")
+                      (exists [xs] p  ===  p)
+                      ([] `covers` gvP)
+\end{code}
+
+$$
+  \begin{array}{lll}
      \CJAnyFalse & & \CJAnyFalseN
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-cjAnyTrue = preddef ("exists" -.- "false")
+cjAnyFalse = preddef ("exists" -.- "false")
                     (exists [xs] falseP  ===  falseP)
                     scTrue
 \end{code}
@@ -220,7 +231,7 @@ We now collect all of the rest above as conjectures:
 \begin{code}
 existsConjs :: [NmdAssertion]
 existsConjs
-  = [ cjAnyTrue, cjAnyOne, cjAnyOrDistr
+  = [ cjAnyRemove, cjAnyFalse, cjAnyOne, cjAnyOrDistr
     , axAndAllScope, cjAnyInst, cjAnyDumRen ]
 \end{code}
 

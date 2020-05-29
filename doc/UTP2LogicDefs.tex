@@ -950,12 +950,14 @@
 
 %% ---- Predicate Axioms - ( Gries & Schneider style ) -------------------------
 
-\def\AXAllTrueN{\QNAME{$\forall$-$\true$}}
-\def\AXAllTrue{
-  (\forall \lst x \bullet \true)
+\def\AXAllRemoveN{\QNAME{$\forall$-remove}}
+\def\AXAllRemove{
+  (\forall \lst x \bullet P)
   \equiv
-   \true
+   P
 }
+\def\AXAllRemoveS{\emptyset \supseteq P}
+
 
 \def\AXAllOnePointN{\QNAME{$\forall$-one-point}}
 \def\AXAllOnePoint{
@@ -981,7 +983,7 @@
 
 \def\AXPREDGS{
 \begin{array}{lll}
-   \AXAllTrue     &                 & \AXAllTrueN
+   \AXAllRemove   & \AXAllRemoveS   & \AXAllRemoveN
 \\ \AXAllOnePoint & \AXAllOnePointS & \AXAllOnePointN
 \\ \AXallODistr   &                 & \AXallODistrN
 \\ \AXorAllOScope & \AXorAllOScopeS & \AXorAllOScopeN
@@ -990,6 +992,14 @@
 \end{array}
 }
 
+%%% Universal Conjectures
+
+\def\CJAllTrueN{\QNAME{$\forall$-$\true$}}
+\def\CJAllTrue{
+  (\forall \lst x \bullet \true)
+  \equiv
+   \true
+}
 
 
 
@@ -1003,6 +1013,14 @@
 }
 
 
+
+\def\CJAnyRemoveN{\QNAME{$\exists$-remove}}
+\def\CJAnyRemove{
+  (\exists \lst x \bullet P)
+  \equiv
+   P
+}
+\def\CJAnyRemoveS{\emptyset \supseteq P}
 
 \def\CJAnyFalseN{\QNAME{$\exists$-$\false$}}
 \def\CJAnyFalse{
@@ -1052,11 +1070,12 @@
 
 \def\CONJEXISTS{
 \begin{array}{lll}
-   \CJAnyFalse     &                  & \CJAnyFalseN
+   \CJAnyRemove    & \CJAnyRemoveS    & \CJAnyRemoveN
+\\ \CJAnyFalse     &                  & \CJAnyFalseN
 \\ \CJAnyOnePoint  & \CJAnyOnePointS  & \CJAnyOnePointN
 \\ \CJanyODistr    &                  & \CJanyODistrN
 \\ \CJandAnyOScope & \CJandAnyOScopeS & \CJandAnyOScopeN
-\\ \CJAnyOGen     &                  & \CJAnyOGenN
+\\ \CJAnyOGen      &                  & \CJAnyOGenN
 \\ \CJAnyDummyRen  & \CJAnyDummyRenS  & \CJAnyDummyRenN
 \end{array}
 }

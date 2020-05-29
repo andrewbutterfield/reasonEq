@@ -49,10 +49,14 @@ However we adopt here a formulation closer to that of Gries\&Schneider,
 as the Tourlakis form has useful laws such as the one-point rules
 derived from his axioms by meta-proofs
 \emph{that use non-equational reasoning}.
+One thing that is missing is an axiom that allows us to remove quantifiers
+from closed terms. The law \CJAllTrueN\ needs to be generalised to closed $P$,
+and it then becomes a conjecture.
 $$
 \AXPREDGS
 $$
 
+What seems
 \subsection{Predicate Infrastructure}
 
 We need to build some infrastructure here.
@@ -104,15 +108,15 @@ efsyzs = [(lvys,lves),(lvzs,lvfs)]
 
 $$
   \begin{array}{lll}
-     \AXAllTrue & \AXAllTrueN &
+     \AXAllRemove & \AXAllRemoveS & \AXAllRemoveN
   \end{array}
 $$
 
 \vspace{-5pt}
 \begin{code}
-axAllTrue = preddef ("forall" -.- "true")
-                    (forall [xs] trueP  ===  trueP)
-                    scTrue
+axAllRemove = preddef ("forall" -.- "remove")
+                    (forall [xs] p  ===  p)
+                    ([] `covers` gvP)
 \end{code}
 
 $$\begin{array}{lll}
@@ -200,9 +204,31 @@ We now collect all of the above as our axiom set:
 forallAxioms :: [Law]
 forallAxioms
   = map labelAsAxiom
-      [ axAllTrue, axAllOne, axAllAndDistr
+      [ axAllRemove, axAllOne, axAllAndDistr
       , axOrAllScope, axAllInst, axAllDumRen
       ]
+\end{code}
+
+\subsection{Predicate Conjectures}
+
+$$
+  \begin{array}{lll}
+     \CJAllTrue &  \CJAllTrueN &
+  \end{array}
+$$
+
+\vspace{-5pt}
+\begin{code}
+cjAllTrue = preddef ("forall" -.- "true")
+                    (forall [xs] trueP  ===  trueP)
+                    scTrue
+\end{code}
+
+We now collect our conjecture set:
+\begin{code}
+forallConjs :: [NmdAssertion]
+forallConjs
+  = [ cjAllTrue ]
 \end{code}
 
 
@@ -223,5 +249,6 @@ forallTheory
                          , equivName
                          ]
             , laws    =  forallAxioms
+            , conjs   =  forallConjs
             }
 \end{code}

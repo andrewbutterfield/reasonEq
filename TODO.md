@@ -5,11 +5,26 @@
 
 ### Quantifier Bound Variables (in Laws)
 
+The following match will fail if we try to apply it:
+
+`1 : “univ_id_on_closed”  gives  [P]  x̅ ⊇ P ⟹ Ø ⊇ P ≡[2]`
+
+This is because `x̅ ⊇ P ⟹ Ø ⊇ P` is not true.
+We need to attempt to discharge these at the match stage
+to prevent these spurious un-dischargeable matches being presented
+to the user.
+We can only do this where all parts (`x̅`,`P`) are in the binding.
+
 Done extensive re-jigging of `Forall`, `Exists` and `UClose`.
 
-Now have a problem with `land_[]_distr` proof. Law `univ_id_on_closed`
-matches `[P]` even though there is no side-condition `Ø ⊇ P`.
-The match shows the following "inference": ` _ ⟹ Ø ⊇ P`.
+We had a problem with `land_[]_distr` proof. 
+The only bug is that when we try to apply the law, it fails silently.
+It should fail with a message about being unable to discharge the
+side-condition. This is now fixed.
+
+Law `[P] => P` may need to generalise to `[P] => P[e̅/x̅]`,
+or we add a facility to add an identity substitution, 
+so `P` becomes `P[x̅/x̅]`.
   
 ### Test Re-jigging
 

@@ -318,6 +318,15 @@ reqWelcome = unlines
  ]
 \end{code}
 
+We sometimes want to wait:
+\begin{code}
+waitForReturn :: IO ()
+waitForReturn
+  = do putStrLn "<return> to continue"
+       getLine
+       return ()
+\end{code}
+
 
 \newpage
 \subsection{Show Command }
@@ -814,8 +823,7 @@ matchLawCommand args state@(reqs, liveProof)
       Yes liveProof'  ->  return (reqs, liveProof')
       But msgs
        -> do putStrLn $ unlines' msgs
-             putStrLn "<return> to continue"
-             getLine
+             waitForReturn
              return (reqs, matches_ [] liveProof)
   where lawnm = filter (not . isSpace) $ unwords args
 \end{code}
@@ -868,7 +876,13 @@ applyMatch args pstate@(reqs, liveProof)
       Nothing -> return pstate
       Just (unbound,mtch)
        -> do ubind <- completeUnbound unbound mtch
-             tryDelta (applyMatchToFocus2 mtch unbound ubind) pstate
+             case applyMatchToFocus2 mtch unbound ubind liveProof of
+               Yes liveProof' -> return(reqs, liveProof')
+               But msgs
+                -> do putStrLn ("Cannot discharge side-condition")
+                      putStrLn $ unlines msgs
+                      waitForReturn
+                      return pstate
   where
     true   =  theTrue  $ logicsig reqs
     false  =  theFalse $ logicsig reqs
@@ -970,8 +984,7 @@ normQuantCommand _ state@(reqs, liveProof)
       Yes liveProof'  ->  return (reqs, liveProof')
       But msgs
        -> do putStrLn $ unlines' msgs
-             putStrLn "<return> to continue"
-             getLine
+             waitForReturn
              return (reqs, matches_ [] liveProof)
 \end{code}
 
@@ -990,8 +1003,7 @@ simpNestCommand _ state@(reqs, liveProof)
       Yes liveProof'  ->  return (reqs, liveProof')
       But msgs
        -> do putStrLn $ unlines' msgs
-             putStrLn "<return> to continue"
-             getLine
+             waitForReturn
              return (reqs, matches_ [] liveProof)
 \end{code}
 
@@ -1010,8 +1022,7 @@ substituteCommand _ state@(reqs, liveProof)
       Yes liveProof'  ->  return (reqs, liveProof')
       But msgs
        -> do putStrLn $ unlines' msgs
-             putStrLn "<return> to continue"
-             getLine
+             waitForReturn
              return (reqs, matches_ [] liveProof)
 \end{code}
 
@@ -1031,8 +1042,7 @@ revSubstituteCommand args state@(reqs, liveProof)
       Yes liveProof'  ->  return (reqs, liveProof')
       But msgs
        -> do putStrLn $ unlines' msgs
-             putStrLn "<return> to continue"
-             getLine
+             waitForReturn
              return (reqs, matches_ [] liveProof)
 \end{code}
 

@@ -808,6 +808,9 @@ Summary:
 
 Do a basic match,
 including side-condition checking.
+If the side-conditions involve only
+variables present in the binding before auto-instantiation,
+then a failure results in the match overall failing.
 \begin{code}
 basicMatch :: MatchClass
             -> [VarTable] -- known variables in scope at this law
@@ -818,10 +821,14 @@ basicMatch :: MatchClass
             -> Matches
 basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
   =  do bind <- match vts tC partsP
+        let unbound = findUnboundVars bind repl
         (bind',replC) <- autoInstantiate bind repl
         -- (bind',scC',scP') <- completeBind vts tC scC tP scP bind
         scPC <- instantiateSC bind' scP
-        scD <- scDischarge scC scPC        --
+        scD <- scDischarge (pdbg "scC" scC) $ pdbg ("'"++n++"'\nscPC") scPC
+        -- case checkUnboundInvolved (pdbg "unbound" unbound) scC $ pdbg "scD" scD of
+        --   Yes scc | scc /= scTrue -> fail "undischargeable s.c."
+        --   _ -> return $ MT n asn (chkPatn mc tP) bind scC scPC repl
         return $ MT n asn (chkPatn mc tP) bind scC scPC repl
   where
 

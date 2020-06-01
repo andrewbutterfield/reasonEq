@@ -12,7 +12,7 @@ module SideCond (
 , ascGVar, ascVSet
 , SideCond, scTrue
 , mrgAtmCond, mrgSideCond, mkSideCond
-, scDischarge, checkDischargedSC
+, scDischarge, checkUnboundInvolved
 , notin, covers, pre
 , citingASCs
 , Assertion
@@ -558,11 +558,11 @@ are those that were unbound after initial matching.
 If not, then the match application fails.
 Otherwise, the goal side-condition is extended by this residual.
 \begin{code}
-checkDischargedSC :: Monad m => VarSet -> SideCond -> SideCond -> m SideCond
-checkDischargedSC unbound scC []  =  return scC  -- no change
-checkDischargedSC unbound scC scD
+checkUnboundInvolved :: Monad m => VarSet -> SideCond -> SideCond -> m SideCond
+checkUnboundInvolved unbound scC []  =  return scC  -- no change
+checkUnboundInvolved unbound scC scD
   | unbound `inAll` scD   =  scC `mrgSideCond` scD
-  | otherwise  =  fail "checkDischargedSC: fails"
+  | otherwise  =  fail "checkUnboundInvolved: fails"
 \end{code}
 
 \begin{code}

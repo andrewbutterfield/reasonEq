@@ -5,6 +5,10 @@
 
 ### Quantifier Bound Variables (in Laws)
 
+We need to check how side-condition assembly (`mrgSideCond`) handles
+side-conditions like `Ø ⊇ P`, particularly in concert with other side-conditions.
+
+
 The following match will fail if we try to apply it:
 
 `1 : “univ_id_on_closed”  gives  [P]  x̅ ⊇ P ⟹ Ø ⊇ P ≡[2]`
@@ -15,12 +19,6 @@ to prevent these spurious un-dischargeable matches being presented
 to the user.
 We can only do this where all parts (`x̅`,`P`) are in the binding.
 
-Done extensive re-jigging of `Forall`, `Exists` and `UClose`.
-
-We had a problem with `land_[]_distr` proof. 
-The only bug is that when we try to apply the law, it fails silently.
-It should fail with a message about being unable to discharge the
-side-condition. This is now fixed.
 
 Law `[P] => P` may need to generalise to `[P] => P[e̅/x̅]`,
 or we add a facility to add an identity substitution, 

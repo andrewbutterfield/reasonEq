@@ -518,7 +518,7 @@ applyMatchToFocus2 mtch unbound ubind liveProof
     in do brepl  <- instantiate   cbind repl
           scLasC <- instantiateSC cbind scL
           scD <- scDischarge scC scLasC
-          scC' <- checkDischargedSC unbound scC scD
+          scC' <- checkUnboundInvolved unbound scC scD
           return ( focus_ ((setTZ brepl tz),seq')
                  $ matches_ []
                  $ conjSC_ scC'

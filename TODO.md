@@ -5,15 +5,19 @@
 
 ### Quantifier Bound Variables (in Laws)
 
-We need to check how side-condition assembly (`mrgSideCond`) handles
-side-conditions like `Ø ⊇ P`, particularly in concert with other side-conditions.
 
+The following match should not be displayed,
+as the side-condition cannot be discharged.
 
-The following match will fail if we try to apply it:
+`1 : “∃_remove”  gives  P[e̅/x̅]  x̅ ∉ e̅ ⟹ Ø ⊇ P ≡[1]`.
 
-`1 : “univ_id_on_closed”  gives  [P]  x̅ ⊇ P ⟹ Ø ⊇ P ≡[2]`
+When this match is applied, we get the message
 
-This is because `x̅ ⊇ P ⟹ Ø ⊇ P` is not true.
+```
+Cannot discharge side-condition
+checkUnboundInvolved: fails
+```
+
 We need to attempt to discharge these at the match stage
 to prevent these spurious un-dischargeable matches being presented
 to the user.

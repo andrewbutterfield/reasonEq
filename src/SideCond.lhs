@@ -148,12 +148,15 @@ data AtmSideCond
  | SS  GenVar VarSet -- Superset (covers)
  | SP  GenVar        -- Pre
  deriving (Eq,Ord,Show,Read)
-
+\end{code}
+In the \texttt{SD} case, having an empty set reduces to \true,
+while in the \texttt{SS} case,
+we have an assertion that the term denoted by the general variable is closed.
+\begin{code}
 pattern Disjoint gv vs = SD  gv vs  --  vs `intersect`  gv = {}
 pattern Covers   gv vs = SS  gv vs  --  vs `supersetof` gv
 pattern IsPre    gv    = SP  gv     --  gv is pre-condition
 \end{code}
-
 Sometimes we want the \texttt{GenVar} component,
 \begin{code}
 ascGVar :: AtmSideCond -> GenVar
@@ -284,24 +287,33 @@ patterns:
 We have the following interactions,
 where $D$ and $C$ are the variable-sets found
 in \texttt{Disjoint} and \texttt{Covers} respectively.
-We also overload the notation to denote the corresponding condition.
-So, depending on context,
-$D$ can denote a variable-set
-or the predicate $D \disj G$ ($G$ being the general variable in question).
+So the semantics of the disjoint ($D$) and covering ($C$) variable-sets,
+parameterised by a general variable $G$,
+are:
 \begin{eqnarray*}
-   D_1 \land D_2 &=&  D_1 \cup D_2
-\\ C_1 \land C_2 &=&  C_1 \cup C_2
-\\ pre_1 \land pre_2 &=& pre_1
-\\ D \land C
-   &=&  \bot
-        ~\cond{D \supseteq C}~
-        D \land (C \setminus D)
-\\ D \land pre &=&  D \land pre
-\\ C \land pre &=&  C \land pre
+  \sem{\_}_{\_} &:& \power V \fun V \fun (V \fun \Bool)
+\\ \sem{D}_G &=& \fv.G \cap D = \emptyset
+\\ \sem{C}_G &=& \fv.G \subseteq C
+\\         &=& \fv.G = \emptyset, \quad \IF \quad C = \emptyset
 \end{eqnarray*}
-A consequence of this is that once we have merged,
+We get the following laws:
+\begin{eqnarray*}
+   \sem{D_1}_G \land \sem{D_2}_g &=&  \sem{D_1 \cup D_2}_G
+\\ \sem{C_1}_G \land \sem{C_2}_G &=&  \sem{C_1 \cap C_2}_G
+\\ \sem{D}_G \land \sem{C}_G
+   &=&  \sem{D}_G \land \sem{C \setminus D}_G
+\\ &=& \sem{C \setminus D}_G, \quad \IF \quad C\setminus D = \emptyset
+\\ &=& \fv.G = \emptyset \quad \IF \quad C\setminus D = \emptyset
+\end{eqnarray*}
+We not that an apparent contradiction between $D$ and $C$ (when $D \supseteq C$)
+becomes and assertion that $G$ is closed
 for any given general variable $G$,
 we will have that $D$ and $C$ are disjoint.
+
+Below, we overload the notation to denote the corresponding condition.
+So, for example, depending on context,
+$D$ can denote a variable-set
+or the predicate $D \disj G$ ($G$ being the general variable in question).
 
 
 \newpage
@@ -309,13 +321,13 @@ we will have that $D$ and $C$ are disjoint.
 
 \begin{code}
 mrgAtmAtms (Disjoint gv d0) [Disjoint _ d1,Covers _ c]
- | c `S.isSubsetOf` d'  =  fail "Disjoint covers superset"
+ | c `S.isSubsetOf` d'  =  return [Covers gv S.empty]
  | otherwise            =  return [Disjoint gv d',Covers gv (c S.\\ d')]
  where d' = d0 `S.union` d1
 mrgAtmAtms (Disjoint gv d0) [Disjoint _ d1]
                   =  return [Disjoint gv (d0 `S.union` d1)]
 mrgAtmAtms (Disjoint gv d) [Covers _ c]
- | c `S.isSubsetOf` d  =  fail "Disjoint covers superset"
+ | c `S.isSubsetOf` d  =  return [Covers gv S.empty]
  | otherwise           =  return [Disjoint gv d,Covers gv (c S.\\ d)]
 \end{code}
 
@@ -323,20 +335,31 @@ mrgAtmAtms (Disjoint gv d) [Covers _ c]
 
 \begin{code}
 mrgAtmAtms (Covers gv c0) [Disjoint _ d,Covers _ c1]
- | c' `S.isSubsetOf` d  =  fail "Superset covered by disjoint"
+ | c' `S.isSubsetOf` d  =  return [Covers gv S.empty]
  | otherwise            =  return [Disjoint gv d,Covers gv (c' S.\\ d)]
  where c' = c0 `S.union` c1
 mrgAtmAtms (Covers gv c) [Disjoint _ d]
- | c `S.isSubsetOf` d  =  fail "Superset covered by disjoint"
+ | c `S.isSubsetOf` d  =  return [Covers gv S.empty]
  | otherwise           =  return [Disjoint gv d,Covers gv (c S.\\ d)]
 mrgAtmAtms (Covers gv c0) [Covers _ c1]
-               =  return [Covers gv (c0 `S.union` c1)]
+               =  return [Covers gv (c0 `S.intersection` c1)]
 \end{code}
 
-\textbf{For now, we only consider \texttt{Disjoint} and \texttt{Covers}.}
-Every other case:
+\subsubsection{Merging \texttt{IsPre} into ASC}
 \begin{code}
-mrgAtmAtms asc ascs = fail "mrgAtmAtms: NYFI"
+mrgAtmAtms (IsPre _)   atms@[IsPre _]           =  return atms
+mrgAtmAtms p@(IsPre _) (d@(Disjoint _ _):atms)  =  fmap (d:) $ mrgAtmAtms p atms
+mrgAtmAtms p@(IsPre _) (c@(Covers _ _)  :atms)  =  fmap (c:) $ mrgAtmAtms p atms
+\end{code}
+
+\subsubsection{Failure Case}
+If none of the above arise, then we currently have a problem,
+probably with \texttt{mrgAtmCond} above.
+\begin{code}
+mrgAtmAtms atm atms
+ = fail $ unlines' [ "Unexpected fail in mrgAtmAtms:"
+                   , "atm is "++show atm
+                   , "atms are "++ show atms ]
 \end{code}
 
 \subsubsection{Merging Full Side-conditions}
@@ -475,6 +498,12 @@ grpDischarge ascsG (ascL:ascsL)
        return (ascL'++ascsL')
 \end{code}
 
+Here we are trying to show
+\begin{equation*}
+ \left( \bigwedge_{i \in \setof{D,C,pre}} G_i \right)
+ \implies
+ L_j \quad \where \quad j \in \setof{D,C,pre}
+\end{equation*}
 \begin{code}
 ascsDischarge :: Monad m => [AtmSideCond] -> AtmSideCond -> m [AtmSideCond]
 ascsDischarge [] ascL = return [ascL]
@@ -487,7 +516,13 @@ ascsDischarge (ascG:ascsG) ascL
 
 \newpage
 
-Finally, we get to where the real work is done:
+Finally, we get to where the real work is done.trying to show
+Here we are trying to show:
+\begin{equation*}
+ G_i
+ \implies
+ L_j \quad \where \quad i,j \in \setof{D,C,pre}
+\end{equation*}
 \begin{code}
 ascDischarge :: Monad m => AtmSideCond -> AtmSideCond -> m [AtmSideCond]
 -- ascDischarge ascG ascL
@@ -500,11 +535,13 @@ We have a situation where we may be able to discharge,
 or falsify, but also have the possibility of being unable to do either.
 This may result in the side-condition being retained,
 perhaps ``reduced'' to some degree.
+We use the notation $G \discharges L \mapsto R$
+to say that $G$ being true means that we can simplify $L$ to a ``residual'' $R$.
 
 \begin{eqnarray*}
-   D_G \disj V \implies D_L \disj V
-   & = & (D_L\setminus D_G) \disj V
-\\ & = & \true, \quad \textbf{if } D_L \subseteq D_G
+   D_G \disj V \discharges D_L \disj V
+   & \mapsto & (D_L\setminus D_G) \disj V
+\\ & \mapsto & \true, \quad \textbf{if } D_L \subseteq D_G
 \end{eqnarray*}
 \begin{code}
 ascDischarge (Disjoint _ dG) (Disjoint gv dL)
@@ -513,20 +550,22 @@ ascDischarge (Disjoint _ dG) (Disjoint gv dL)
 \end{code}
 
 \begin{eqnarray*}
-   C_G \supseteq V \implies D_L \disj V
-   & = & (C_G \cap D_L) \disj V
-\\ & = & \false, \quad \textbf{if } C_G \subseteq D_L
+   C_G \supseteq V \discharges D_L \disj V
+   & \mapsto & (C_G \cap D_L) \disj V
+\\ & \mapsto & \true, \quad \IF~ C_G = \emptyset
+\\ & \mapsto & \false, \quad \IF~ \emptyset \subset C_G \subseteq D_L
 \end{eqnarray*}
 \begin{code}
 ascDischarge (Covers _ cG) (Disjoint gv dL)
+  | S.null cG             =  return []
   | cG `S.isSubsetOf` dL  =  fail "ascDischarge: covers ==> not disjoint"
   | otherwise             =  return [Disjoint gv (cG `S.intersection` dL)]
 \end{code}
 
 \begin{eqnarray*}
-   C_G \supseteq V \implies C_L \supseteq V
-   & = & (C_G \cap C_L) \supseteq V
-\\ & = & \true, \quad \textbf{if } C_G \subseteq C_L
+   C_G \supseteq V \discharges C_L \supseteq V
+   & \mapsto & (C_G \cap C_L) \supseteq V
+\\ & \mapsto & \true, \quad \textbf{if } C_G \subseteq C_L
 \end{eqnarray*}
 \begin{code}
 ascDischarge (Covers _ cG) (Covers gv cL)
@@ -535,14 +574,15 @@ ascDischarge (Covers _ cG) (Covers gv cL)
 \end{code}
 
 \begin{eqnarray*}
-   D_G \disj V \implies C_L \supseteq V
-   & = & (C_L \setminus D_G) \supseteq V
-\\ & = & \false, \quad \textbf{if } C_L \subseteq D_G
+   D_G \disj V \discharges C_L \supseteq V
+   & \mapsto & (C_L \setminus D_G) \supseteq V
+\\ & \mapsto & \false, \quad \textbf{if } \emptyset \subset C_L \subseteq D_G
 \end{eqnarray*}
 \begin{code}
-ascDischarge (Disjoint _ dG) (Covers gv cL)
+ascDischarge (Disjoint _ dG) c@(Covers gv cL)
+  | S.null cL             =  return [c]
   | cL `S.isSubsetOf` dG  =  fail "ascDischarge: disjoint ==> not covers"
-  | otherwise  =  return [Covers gv (cL S.\\ dG)]
+  | otherwise             =  return [Covers gv (cL S.\\ dG)]
 \end{code}
 
 Anything else is not handled right now;

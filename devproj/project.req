@@ -14,26 +14,29 @@ BEGIN THEORIES
 THNAMES = ["And","AndOrInvert","Equality","Equiv","Exists","ForAll","Implies","Not","Or","UClose"]
 SDAG = [[("UClose",["Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Exists",["ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("ForAll",["Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Implies",["AndOrInvert","And","Or","Not","Equiv"])],[("AndOrInvert",["And","Or","Not","Equiv"])],[("And",["Or","Not","Equiv"])],[("Or",["Not","Equiv"])],[("Not",["Equiv"])],[("Equality",[]),("Equiv",[])]]
 END THEORIES
-CURRTHEORY = UClose
+CURRTHEORY = Exists
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("UClose","univ_inst")
+("Exists","exists_one_point")
 BEGIN LIVE-PROOF
-TH-NAME: UClose
-CJ-NAME: univ_inst
-CONJ = (C P (Id "implies" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),V P (VR (Id "P" 0,VP,WS))],[])
-SIDE = [SS (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])]
+TH-NAME: Exists
+CJ-NAME: exists_one_point
+CONJ = (C P (Id "equiv" 0) [B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[])),GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (C P (Id "land" 0) [I P (Id "land" 0) (Id "=" 0) [LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[])],V P (VR (Id "P" 0,VP,WS))]),B P (Id "exists" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])))],[SD (GL (LV (VR (Id "e" 0,VE,WS),[],[]))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])])
+SIDE = [SD (GL (LV (VR (Id "e" 0,VE,WS),[],[]))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])]
 STRAT reduce
 BEGIN SEQZIP
-TERMZIP = (C P (Id "implies" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V P (VR (Id "P" 0,VP,WS))),V P (VR (Id "P" 0,VP,WS))],[])
+TERMZIP = (B P (Id "exists" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))),[Cons' P (Id "lnot" 0) [] [],Cons' P (Id "equiv" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[])),GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (C P (Id "implies" 0) [I P (Id "land" 0) (Id "=" 0) [LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[])],C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]])] []])
 BEGIN SEQUENT'
-SIDECOND = []
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.univ_inst", thDeps = [], known = VD (fromList [],fromList [],fromList []), subable = fromList [], laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
+SIDECOND = [SD (GL (LV (VR (Id "e" 0,VE,WS),[],[]))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])]
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.exists_one_point", thDeps = [], known = VD (fromList [],fromList [],fromList []), subable = fromList [], laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
 END SEQUENT'
 END SEQZIP
-FPATH: []
+FPATH: [2,1]
 BEGIN LIST STEPS
-(UseLaw (ByMatch (ME [1])) "[]_def" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS)))],fromList [],fromList [((Id "x" 0,VO,[],[]),BL [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])])) [1],(C P (Id "implies" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),V P (VR (Id "P" 0,VP,WS))],[]))
+(UseLaw (ByMatch (ME [1])) "lnot_equiv_swap" (BD (fromList [((Id "P" 0,VP),BT (B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[])),GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (C P (Id "implies" 0) [I P (Id "land" 0) (Id "=" 0) [LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[])],C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]]))),((Id "Q" 0,VP),BT (B P (Id "exists" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])))))],fromList [],fromList [])) [],(C P (Id "equiv" 0) [C P (Id "lnot" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[])),GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (C P (Id "implies" 0) [I P (Id "land" 0) (Id "=" 0) [LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[])],C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]])],B P (Id "exists" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])))],[SD (GL (LV (VR (Id "e" 0,VE,WS),[],[]))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])]))
+(UseLaw (ByMatch (ME [2])) "implies_def2" (BD (fromList [((Id "P" 0,VP),BT (I P (Id "land" 0) (Id "=" 0) [LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[])])),((Id "Q" 0,VP),BT (C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]))],fromList [],fromList [])) [1,1,1],(C P (Id "equiv" 0) [C P (Id "lnot" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[])),GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (C P (Id "lor" 0) [C P (Id "lnot" 0) [I P (Id "land" 0) (Id "=" 0) [LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[])]],C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]])],B P (Id "exists" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])))],[SD (GL (LV (VR (Id "e" 0,VE,WS),[],[]))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])]))
+(UseLaw (ByMatch (ME [1])) "deMorgan_land" (BD (fromList [((Id "P" 0,VP),BT (I P (Id "land" 0) (Id "=" 0) [LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[])])),((Id "Q" 0,VP),BV (VR (Id "P" 0,VP,WS)))],fromList [],fromList [])) [1,1,1],(C P (Id "equiv" 0) [C P (Id "lnot" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[])),GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (C P (Id "lnot" 0) [C P (Id "land" 0) [I P (Id "land" 0) (Id "=" 0) [LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[])],V P (VR (Id "P" 0,VP,WS))]])],B P (Id "exists" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])))],[SD (GL (LV (VR (Id "e" 0,VE,WS),[],[]))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])]))
+(UseLaw (ByMatch (ME [1])) "exists_def" (BD (fromList [((Id "P" 0,VP),BT (C P (Id "land" 0) [I P (Id "land" 0) (Id "=" 0) [LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[])],V P (VR (Id "P" 0,VP,WS))]))],fromList [],fromList [((Id "x" 0,VO,[],[]),BS (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[])),GL (LV (VR (Id "y" 0,VO,WS),[],[]))]))])) [1],(C P (Id "equiv" 0) [B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[])),GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (C P (Id "land" 0) [I P (Id "land" 0) (Id "=" 0) [LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[])],V P (VR (Id "P" 0,VP,WS))]),B P (Id "exists" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])))],[SD (GL (LV (VR (Id "e" 0,VE,WS),[],[]))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])]))
 END LIST STEPS
 END LIVE-PROOF
 END MAP LIVE-PROOFS

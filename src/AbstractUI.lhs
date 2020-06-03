@@ -356,7 +356,8 @@ completeProof reqs liveProof
 moveFocusDown :: Monad m => Int -> LiveProof -> m LiveProof
 moveFocusDown i liveProof
   = let (tz,seq') = focus liveProof
-        (ok,tz') = downTZ i tz
+        i' = if i <= 0 then 1 else i
+        (ok,tz') = downTZ i' tz
     in if ok
         then return ( focus_ (tz',seq')
                     $ fPath__ (++[i])
@@ -518,17 +519,19 @@ applyMatchToFocus2 mtch unbound ubind liveProof
     in do brepl  <- instantiate   cbind repl
           scLasC <- instantiateSC cbind scL
           scD <- scDischarge scC scLasC
-          scC' <- checkUnboundInvolved unbound scC scD
-          return ( focus_ ((setTZ brepl tz),seq')
-                 $ matches_ []
-                 $ conjSC_ scC'
-                 $ stepsSoFar__
-                    (( UseLaw (ByMatch $ mClass mtch)
-                              (mName mtch)
-                              cbind
-                              dpath
-                     , (exitTZ tz,conjSC liveProof)):)
-                    liveProof )
+          if involvedInAll unbound scD
+            then do scC' <- scC `mrgSideCond` scD
+                    return ( focus_ ((setTZ brepl tz),seq')
+                           $ matches_ []
+                           $ conjSC_ scC'
+                           $ stepsSoFar__
+                              (( UseLaw (ByMatch $ mClass mtch)
+                                        (mName mtch)
+                                        cbind
+                                        dpath
+                               , (exitTZ tz,conjSC liveProof)):)
+                              liveProof )
+            else fail "side-cond. cannot be discharged"
 \end{code}
 
 

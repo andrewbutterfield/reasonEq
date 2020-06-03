@@ -12,7 +12,7 @@ module SideCond (
 , ascGVar, ascVSet
 , SideCond, scTrue
 , mrgAtmCond, mrgSideCond, mkSideCond
-, scDischarge, checkUnboundInvolved
+, scDischarge, involvedInAll
 , notin, covers, pre
 , citingASCs
 , Assertion
@@ -593,21 +593,14 @@ ascDischarge _ _ = fail "ascDischarge: NYfI"
 \newpage
 When discharge at match application
 results in a residual side-condition (not trivially true)
-then we need to check if all the variables in that residual
-are those that were unbound after initial matching.
-If not, then the match application fails.
-Otherwise, the goal side-condition is extended by this residual.
+then we need to check that \emph{all} the atomic side-conditions in that residual
+mention variables that were unbound after initial matching.
+If any atomic-side condition does \emph{not} mention an unbound variable,
+then there is no way it can be discharged by a judicious instantiation
+of some unbound variable.
 \begin{code}
-checkUnboundInvolved :: Monad m => VarSet -> SideCond -> SideCond -> m SideCond
-checkUnboundInvolved unbound scC []  =  return scC  -- no change
-checkUnboundInvolved unbound scC scD
-  | unbound `inAll` scD   =  scC `mrgSideCond` scD
-  | otherwise  =  fail "checkUnboundInvolved: fails"
-\end{code}
-
-\begin{code}
-inAll :: VarSet -> SideCond -> Bool
-inAll unb = all (involvedIn unb)
+involvedInAll :: VarSet -> SideCond -> Bool
+involvedInAll unb = all (involvedIn unb)
 
 involvedIn :: VarSet -> AtmSideCond -> Bool
 involvedIn unb (Disjoint _ d) =  unb `overlaps` d

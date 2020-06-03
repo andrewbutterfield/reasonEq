@@ -5,11 +5,12 @@ SUBABLE = fromList []
 BEGIN LIST LAWS
 (("[]_def",(C P (Id "equiv" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V P (VR (Id "P" 0,VP,WS)))],[SS (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])])),Axiom)
 (("sat_def",(C P (Id "equiv" 0) [X (Id "langle_rangle" 0) (V P (VR (Id "P" 0,VP,WS))),C P (Id "lnot" 0) [X (Id "[_]" 0) (C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))])]],[])),Axiom)
+(("univ_id_on_closed",(C P (Id "equiv" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),V P (VR (Id "P" 0,VP,WS))],[SS (GV (VR (Id "P" 0,VP,WS))) (fromList [])])),Proven "univ_id_on_closed")
 END LIST LAWS
 BEGIN LIST PROOFS
+("univ_id_on_closed",(C P (Id "equiv" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),V P (VR (Id "P" 0,VP,WS))],[SS (GV (VR (Id "P" 0,VP,WS))) (fromList [])]),"redinit",(V P (VR (Id "P" 0,VP,WS)),[(UseLaw (ByMatch (ME [1])) "[]_def" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS)))],fromList [],fromList [((Id "x" 0,VO,[],[]),BL [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])])) [],(X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),[SS (GV (VR (Id "P" 0,VP,WS))) (fromList [])])),(UseLaw (ByMatch (ME [1])) "forall_remove" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS)))],fromList [],fromList [((Id "x" 0,VO,[],[]),BS (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]))])) [],(B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V P (VR (Id "P" 0,VP,WS))),[SS (GV (VR (Id "P" 0,VP,WS))) (fromList [])]))]))
 END LIST PROOFS
 BEGIN LIST CONJECTURES
-("univ_id_on_closed",(C P (Id "equiv" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),V P (VR (Id "P" 0,VP,WS))],[SS (GV (VR (Id "P" 0,VP,WS))) (fromList [])]))
 ("univ_true",(C P (Id "equiv" 0) [X (Id "[_]" 0) (K P (VB True)),K P (VB True)],[]))
 ("univ_False",(C P (Id "equiv" 0) [X (Id "[_]" 0) (K P (VB False)),K P (VB False)],[]))
 ("[]_idem",(C P (Id "equiv" 0) [X (Id "[_]" 0) (X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS)))),X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS)))],[]))

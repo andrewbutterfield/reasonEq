@@ -824,12 +824,11 @@ basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
         let unbound = findUnboundVars bind repl
         (bind',replC) <- autoInstantiate bind repl
         -- (bind',scC',scP') <- completeBind vts tC scC tP scP bind
-        scPC <- instantiateSC bind' scP
-        scD <- scDischarge (pdbg "scC" scC) $ pdbg ("'"++n++"'\nscPC") scPC
-        -- case checkUnboundInvolved (pdbg "unbound" unbound) scC $ pdbg "scD" scD of
-        --   Yes scc | scc /= scTrue -> fail "undischargeable s.c."
-        --   _ -> return $ MT n asn (chkPatn mc tP) bind scC scPC repl
-        return $ MT n asn (chkPatn mc tP) bind scC scPC repl
+        scPinC <- instantiateSC bind' scP
+        scD <- scDischarge (pdbg "scC" scC) $ pdbg ("'"++n++"'\nscPinC") scPinC
+        if involvedInAll unbound scD
+          then return $ MT n asn (chkPatn mc tP) bind scC scPinC repl
+          else fail "undischargeable s.c."
   where
 
     chkPatn mc (Var _ v)

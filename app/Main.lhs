@@ -759,7 +759,7 @@ listScopeLaws _ state@( _, liveProof)
 
 Focus movement commands
 \begin{code}
-goDownDescr = ( "d", "down", "d n  -- down n", goDown )
+goDownDescr = ( "d", "down", "d n  -- down n, n=1 if ommitted", goDown )
 
 goDown :: REPLCmd (REqState, LiveProof)
 goDown args = tryDelta (moveFocusDown $ args2int args)

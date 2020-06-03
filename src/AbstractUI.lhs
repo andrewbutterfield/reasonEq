@@ -518,8 +518,8 @@ applyMatchToFocus2 mtch unbound ubind liveProof
         dpath = fPath liveProof
     in do brepl  <- instantiate   cbind repl
           scLasC <- instantiateSC cbind scL
-          scD <- scDischarge scC scLasC
-          if involvedInAll unbound scD
+          scD <- scDischarge (pdbg "scC" scC) $ pdbg "scLasC" scLasC
+          if autoInAll unbound $ pdbg "scD" scD
             then do scC' <- scC `mrgSideCond` scD
                     return ( focus_ ((setTZ brepl tz),seq')
                            $ matches_ []

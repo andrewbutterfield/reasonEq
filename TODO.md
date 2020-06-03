@@ -3,30 +3,28 @@
 
 ## Features
 
-### Quantifier Bound Variables (in Laws)
-
-
-The following match should not be displayed,
-as the side-condition cannot be discharged.
-
-`1 : “∃_remove”  gives  P[e̅/x̅]  x̅ ∉ e̅ ⟹ Ø ⊇ P ≡[1]`.
-
-When this match is applied, we get the message
-
-```
-Cannot discharge side-condition
-checkUnboundInvolved: fails
-```
-
-We need to attempt to discharge these at the match stage
-to prevent these spurious un-dischargeable matches being presented
-to the user.
-We can only do this where all parts (`x̅`,`P`) are in the binding.
-
+### Substitution Handling
 
 Law `[P] => P` may need to generalise to `[P] => P[e̅/x̅]`,
 or we add a facility to add an identity substitution, 
 so `P` becomes `P[x̅/x̅]`.
+
+
+### Quantifier Bound Variables (in Laws)
+
+The following match should not be displayed,
+as the side-condition cannot be discharged.
+
+`1 : “∃_remove”  gives  Q  _ ⟹ Ø ⊇ Q ≡[1]`.
+
+
+We need to attempt to discharge these at the match stage
+to prevent these spurious un-dischargeable matches being presented
+to the user.
+We have to admit coverage for empty set in undischarged atomic s.c.s. (`autoOrNullInAll`)
+However we need another criterie to check that all (unbound) variables in discharged s.c. involve general variables found in goal s.c.s
+So above should outlaws because `Q` does not occur in `_`.
+
   
 ### Test Re-jigging
 

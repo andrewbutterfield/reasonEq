@@ -368,7 +368,6 @@ First, try the structural match.
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryMatch vts tP partsP scP
       = case match vts tC partsP of
-          -- Yes bind  ->  tryCompleteBinding vts tP partsP scP bind
           Yes bind  ->  tryAutoInstantiate vts tP partsP scP bind
           But msgs
            -> But ([ "try match failed"
@@ -823,10 +822,10 @@ basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
   =  do bind <- match vts tC partsP
         let unbound = findUnboundVars bind repl
         (bind',replC) <- autoInstantiate bind repl
-        -- (bind',scC',scP') <- completeBind vts tC scC tP scP bind
-        scPinC <- instantiateSC bind' scP
+        unbound' <- instVarSet bind' $ pdbg "unbound" unbound
+        scPinC <- instantiateSC (pdbg "bind'" bind') scP
         scD <- scDischarge (pdbg "scC" scC) $ pdbg ("'"++n++"'\nscPinC") scPinC
-        if involvedInAll unbound scD
+        if autoOrNullInAll (pdbg "unbound'" unbound') $ pdbg "scD" scD
           then return $ MT n asn (chkPatn mc tP) bind scC scPinC repl
           else fail "undischargeable s.c."
   where

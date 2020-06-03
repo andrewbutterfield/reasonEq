@@ -387,18 +387,19 @@ assumeConj cjnm thry
 \begin{code}
 lawDemote :: Monad m => String -> Theory -> m Theory
 lawDemote lnm thry
- | null lws     =  fail ("lawDemote '"++lnm++"': no laws")
- | lnm == "*"   =  if null assl
-                   then fail "lawDemote *: no assumed laws"
-                   else return $ laws_ othrl
-                               $ conjs__ (++(map fst assl)) thry
- | lnm == "[]"  =  if null prfl
-                   then fail "lawDemote []: no proven laws"
-                   else return $ laws_ (axml++othrl)
-                               $ conjs__ (++(map fst prfl)) thry
- | null law1    =  fail ("lawDemote '"++lnm++"': not found")
- | otherwise    =  return $ laws_ (before++after)
-                          $ conjs__ ((fst theLaw):) thry
+ | null lws        =  fail ("lawDemote '"++lnm++"': no laws")
+ | lnm == "*"      =  if null assl
+                      then fail "lawDemote *: no assumed laws"
+                      else return $ laws_ othrl
+                                  $ conjs__ (++(map fst assl)) thry
+ | lnm == "[]"     =  if null prfl
+                      then fail "lawDemote []: no proven laws"
+                      else return $ laws_ (axml++assl)
+                                  $ conjs__ (++(map fst prfl)) thry
+ | null law1       =  fail ("lawDemote '"++lnm++"': not found")
+ | isAxiom theLaw  =  fail ("lawDemote '"++lnm++"' is an axiom")
+ | otherwise       =  return $ laws_ (before++after)
+                             $ conjs__ ((fst theLaw):) thry
  where
    lws = laws thry
    (assl,othrl) = partition isAssumed lws

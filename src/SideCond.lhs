@@ -12,7 +12,7 @@ module SideCond (
 , ascGVar, ascVSet
 , SideCond, scTrue
 , mrgAtmCond, mrgSideCond, mkSideCond
-, scDischarge, involvedInAll
+, scDischarge, autoInAll, autoOrNullInAll
 , notin, covers, pre
 , citingASCs
 , Assertion
@@ -451,9 +451,9 @@ scDischarge' (grpG@(gvG,ascsG):restG) grpsL@(grpL@(gvL,ascsL):restL)
                      rest' <- scDischarge' restG restL
                      return (ascsL++rest')
   | otherwise  =  do -- use grpG to discharge grpL
-                     ascs' <- grpDischarge (pdbg "ascsG" ascsG) $ pdbg "ascsL" ascsL
+                     ascs' <- grpDischarge ascsG ascsL
                      rest' <- scDischarge' restG restL
-                     return (pdbg "ascs'" ascs'++rest')
+                     return (ascs'++rest')
 \end{code}
 
 \newpage
@@ -516,7 +516,7 @@ ascsDischarge (ascG:ascsG) ascL
 
 \newpage
 
-Finally, we get to where the real work is done.trying to show
+Finally, we get to where the real work is done.
 Here we are trying to show:
 \begin{equation*}
  G_i
@@ -552,37 +552,33 @@ ascDischarge (Disjoint _ dG) (Disjoint gv dL)
 \begin{eqnarray*}
    C_G \supseteq V \discharges D_L \disj V
    & \mapsto & (C_G \cap D_L) \disj V
-\\ & \mapsto & \true, \quad \IF~ C_G = \emptyset
-\\ & \mapsto & \false, \quad \IF~ \emptyset \subset C_G \subseteq D_L
+\\ & \mapsto & \true, \quad \IF~ C_G\cap D_L = \emptyset
 \end{eqnarray*}
 \begin{code}
 ascDischarge (Covers _ cG) (Disjoint gv dL)
-  | S.null cG             =  return []
-  | cG `S.isSubsetOf` dL  =  fail "ascDischarge: covers ==> not disjoint"
-  | otherwise             =  return [Disjoint gv (cG `S.intersection` dL)]
+  | S.null dL'            =  return []
+  | otherwise             =  return [Disjoint gv dL']
+  where dL' = cG `S.intersection` dL
 \end{code}
 
 \begin{eqnarray*}
    C_G \supseteq V \discharges C_L \supseteq V
    & \mapsto & (C_G \cap C_L) \supseteq V
-\\ & \mapsto & \true, \quad \textbf{if } C_G \subseteq C_L
+\\ & \mapsto & \true, \quad \IF \quad C_G = \emptyset \lor C_G = C_L
 \end{eqnarray*}
 \begin{code}
 ascDischarge (Covers _ cG) (Covers gv cL)
-  | cG `S.isSubsetOf` cL  =  return [] -- true
-  | otherwise             =  return [Covers gv (cG `S.intersection` cL)]
+  | S.null cG || cG == cL  =  return []
+  | otherwise              =  return [Covers gv (cG `S.intersection` cL)]
 \end{code}
 
 \begin{eqnarray*}
    D_G \disj V \discharges C_L \supseteq V
    & \mapsto & (C_L \setminus D_G) \supseteq V
-\\ & \mapsto & \false, \quad \textbf{if } \emptyset \subset C_L \subseteq D_G
 \end{eqnarray*}
 \begin{code}
 ascDischarge (Disjoint _ dG) c@(Covers gv cL)
-  | S.null cL             =  return [c]
-  | cL `S.isSubsetOf` dG  =  fail "ascDischarge: disjoint ==> not covers"
-  | otherwise             =  return [Covers gv (cL S.\\ dG)]
+  =  return [Covers gv (cL S.\\ dG)]
 \end{code}
 
 Anything else is not handled right now;
@@ -599,13 +595,24 @@ If any atomic-side condition does \emph{not} mention an unbound variable,
 then there is no way it can be discharged by a judicious instantiation
 of some unbound variable.
 \begin{code}
-involvedInAll :: VarSet -> SideCond -> Bool
-involvedInAll unb = all (involvedIn unb)
-
-involvedIn :: VarSet -> AtmSideCond -> Bool
-involvedIn unb (Disjoint _ d) =  unb `overlaps` d
-involvedIn unb (Covers _ c)   =  unb `overlaps` c
-involvedIn _   _              =  False
+tolerateAuto :: VarSet -> AtmSideCond -> Bool
+tolerateAuto unbound (Disjoint _ d) =  unbound `overlaps` d
+tolerateAuto unbound (Covers _ c)   =  unbound `overlaps` c
+tolerateAuto _       _              =  False
+autoInAll unbound = all (tolerateAuto unbound)
+\end{code}
+One exception to this, during law matching,
+is that coverage may reduce to the empty set
+because unbound variables given a temporary binding
+to a ``?'' variable (\texttt{autoInstantiate})
+will not cancel out other variables that they should be able to do,
+if instantiated properly.
+\begin{code}
+tolerateAutoOrNull :: VarSet -> AtmSideCond -> Bool
+tolerateAutoOrNull unbound (Disjoint _ d) =  unbound `overlaps` d
+tolerateAutoOrNull unbound (Covers _ c)   =  S.null c || unbound `overlaps` c
+tolerateAutoOrNull _       _              =  False
+autoOrNullInAll unbound = all (tolerateAutoOrNull unbound)
 \end{code}
 
 

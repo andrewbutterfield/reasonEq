@@ -849,9 +849,10 @@ tryMatch args state@( reqs, liveProof)
          Yes (bind,tPasC,scP',scP'')
            -> putStrLn $ unlines
                 [ banner
-                , "Binding:\n" ++ trBinding bind
+                , "Binding: " ++ trBinding bind
+                -- , "Replacement: " ++ trTerm 0 repl
+                -- , "Unbound: " ++ trVSet (findUnboundVars bind repl)
                 , "Instantiated Law = " ++ trTerm 0 tPasC
-                -- , "DEBUG I-LAW:\n" ++ show tPasC
                 , "Instantiated Law S.C. = " ++ trSideCond scP'
                 , "Discharged Law S.C. = " ++ trSideCond scP'']
          But msgs -> putStrLn $ unlines' ( (banner ++ " failed!") : msgs )

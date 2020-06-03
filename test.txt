@@ -1,2 +1,4 @@
-@whatever:
-C P (Id "equiv") [B P (Id "forall") (fromList [GL (LV (VR (Id "x",VO,WS),[],[])),GL (LV (VR (Id "y",VO,WS),[],[]))]) (C P (Id "implies") [I P (Id "land") (Id "=") [LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[])],C P (Id "lnot") [V P (VR (Id "P",VP,WS))]]),B P (Id "forall") (fromList [GL (LV (VR (Id "y",VO,WS),[],[]))]) (S P (C P (Id "lnot") [V P (VR (Id "P",VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x",VO,WS),[],[]),LV (VR (Id "e",VE,WS),[],[]))])))]
+@scLasC: P <= {x$}
+@scC:    P <= {}
+@scD:    P <= {}
+[SS (GV (VR (Id "P" 0,VP,WS))) (fromList [])]

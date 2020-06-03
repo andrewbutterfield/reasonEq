@@ -8,6 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Instantiate
 ( instantiate
+, instVarSet
 , instantiateASC
 , instantiateSC
 , findUnboundVars, termLVarPairings

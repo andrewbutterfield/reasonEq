@@ -9,6 +9,10 @@ Law `[P] => P` may need to generalise to `[P] => P[e̅/x̅]`,
 or we add a facility to add an identity substitution, 
 so `P` becomes `P[x̅/x̅]`.
 
+Plan: generalise law,
+and add `P[x̅/x̅] ≡ P` as an axiom to `Equiv` 
+(we don't have a specific theory for substitutions).
+
 
 ### Quantifier Bound Variables (in Laws)
 
@@ -24,6 +28,8 @@ to the user.
 We have to admit coverage for empty set in undischarged atomic s.c.s. (`autoOrNullInAll`)
 However we need another criterie to check that all (unbound) variables in discharged s.c. involve general variables found in goal s.c.s
 So above should outlaws because `Q` does not occur in `_`.
+(even this isn't enough - we may want a more powerful check
+for *unsatisfiability* in s.c.s)
 
   
 ### Test Re-jigging

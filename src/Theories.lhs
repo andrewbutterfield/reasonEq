@@ -271,6 +271,7 @@ getTheory thnm thrys
      Just thry  ->  return thry
 \end{code}
 
+
 \subsection{Getting all Theory Dependencies}
 
 We also need to generate a list of theories from the mapping,
@@ -341,20 +342,27 @@ getTheoryProofs thNm thrys
 
 We insist, for now at least,
 that the dependencies do not change.
+This function al
 \begin{code}
-updateTheory :: String -> (Theory -> Theory) -> Theories -> Theories
+updateTheory :: Monad m => String -> (Theory -> Theory) -> Theories -> m Theories
 updateTheory thnm thryF theories@(Theories tmap sdag)
   = case M.lookup thnm tmap of
-      Nothing    ->  theories -- silent 'fail'
+      Nothing    ->  fail ("updateTheory: '"++thnm++"' not found.")
       Just thry  ->  let thry' = thryF thry
                      in if thDeps thry' == thDeps thry
-                        then Theories (M.insert thnm (thryF thry) tmap) sdag
-                        else theories -- another silent 'fail'
+                        then return $ Theories (M.insert thnm (thryF thry) tmap)
+                                               sdag
+                        else fail ( "updateTheory: '"
+                                    ++ thnm ++ "' dependencies have changed" )
 \end{code}
 
+This code ``fails'' silently
 \begin{code}
 replaceTheory :: Theory -> Theories -> Theories
-replaceTheory thry theories = updateTheory (thName thry) (const thry) theories
+replaceTheory thry theories
+ = case updateTheory (thName thry) (const thry) theories of
+     Nothing         ->  theories
+     Just theories'  ->  theories'
 \end{code}
 
 \subsubsection{Monadic Theory Updates}
@@ -410,9 +418,13 @@ lawDemote lnm thry
 
 \subsubsection{Add Proof to Theory}
 
+This code also ``fails'' silently.
 \begin{code}
 addTheoryProof :: String -> Proof -> Theories -> Theories
-addTheoryProof thname prf = updateTheory thname (proofs__ (prf:))
+addTheoryProof thname prf thrys
+  = case updateTheory thname (proofs__ (prf:)) thrys of
+      Nothing      ->  thrys
+      Just thrys'  ->  thrys'
 \end{code}
 
 \newpage

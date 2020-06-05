@@ -1187,12 +1187,17 @@ cmdBuiltin
         [ "b "++binExists++" -- list all existing builtin theories"
         , "b "++binInstalled++" -- list all installed theories"
         , "b "++binInstall++" <name> -- install builtin theory <name>"
+        , "           -- fails if theory already installed"
+        , "b "++binReset++" <name> -- reset builtin theory <name>"
+        , "           -- replaces already installed theory by builtin version"
+        , "                                        (a.k.a. 'factory setting')"
         ]
     , buildIn )
 
 binExists = "e"
 binInstalled = "i"
 binInstall = "I"
+binReset = "R"
 
 buildIn (cmd:_) reqs
  | cmd == binExists
@@ -1207,5 +1212,12 @@ buildIn (cmd:nm:_) reqs
           Just msg -> doshow reqs msg
           Nothing -> return reqs'
 
-buildIn _ reqs = doshow reqs "unrecognised 'b' otion"
+buildIn (cmd:nm:_) reqs
+ | cmd == binReset
+   = do (outcome,reqs') <- devResetBuiltin reqs nm
+        case outcome of
+          Just msg -> doshow reqs msg
+          Nothing -> return reqs'
+
+buildIn _ reqs = doshow reqs "unrecognised 'b' option"
 \end{code}

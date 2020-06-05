@@ -775,7 +775,7 @@ stepEquivalenceTheorem nm state@(reqs, liveProof)
         Just thry
           ->  let thry' = laws__ (law:) $ proofs__ (proof:) thry in
                return ( Nothing
-                      , ( theories__ (updateTheory thrynm (const thry')) reqs
+                      , ( theories__ (replaceTheory thry') reqs
                         , liveProof ) )
  where strat = strategy liveProof
 \end{code}

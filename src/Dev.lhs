@@ -7,7 +7,10 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 module Dev
 ( devInitState
-, devBIRemind, devListAllBuiltins, devInstallBuiltin
+, devBIRemind
+, devListAllBuiltins
+, devInstallBuiltin
+, devResetBuiltin
 )
 where
 
@@ -20,6 +23,7 @@ import Variables
 import AST
 import VarData
 import SideCond
+import Theories
 import REqState
 import StdSignature
 import Equivalence
@@ -93,6 +97,7 @@ devKnownBuiltins  = [ equivTheory
                     -- , xyzDTheory
                     ]
 
+biLkp :: String -> [Theory] -> Maybe Theory
 biLkp _ []  = Nothing
 biLkp nm (th:ths)
  | nm == thName th  =  Just th
@@ -107,19 +112,36 @@ devListAllBuiltins
 
 devBIRemind :: String
 devBIRemind
-  = "Remember to update AbstractUI.devKnownBuiltins with new builtins."
+  = "Remember to update Dev.devKnownBuiltins with new builtins."
 \end{code}
 
 Installing builtin theories:
 \begin{code}
 devInstallBuiltin :: REqState -> String -> IO (Maybe String,REqState)
-devInstallBuiltin reqs nm
-  = case biLkp nm devKnownBuiltins of
+devInstallBuiltin reqs thnm
+  = case biLkp thnm devKnownBuiltins of
       Nothing
-        -> return ( Just ("devInstallBuiltin: no builtin theory '"++nm++"'")
+        -> return ( Just ("devInstallBuiltin: no builtin theory '"++thnm++"'")
                   , reqs)
       Just thry
         -> case addTheory thry $ theories reqs of
              But msgs -> return (Just $ unlines' msgs,reqs)
              Yes thrys' -> return (Nothing,changed reqs{theories=thrys'})
+\end{code}
+
+Resetting an existing theory
+is only safe if the builtin version has the same dependency list
+as the theory being replaced.
+\begin{code}
+devResetBuiltin :: REqState -> String -> IO (Maybe String,REqState)
+devResetBuiltin reqs thnm
+  = case biLkp thnm devKnownBuiltins of
+     Nothing
+      -> return ( Just ("devResetBuiltin: no builtin theory '"++thnm++"'")
+                , reqs)
+     Just thry0
+      -> do let thrys  = theories reqs
+            case updateTheory thnm (const thry0) thrys of
+              But msgs   ->  return ( Just $ unlines' msgs, reqs )
+              Yes thrys' ->  return ( Nothing, changed reqs{theories=thrys'} )
 \end{code}

@@ -36,12 +36,11 @@ resolver: lts-13.10
 # non-dependency (i.e. a user package), and its test suites and benchmarks
 # will not be run. This is useful for tweaking upstream packages.
 packages:
-- location: '.'
-- location: nicesymbols
-  extra-dep: true
+- . 
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
-extra-deps: []
+extra-deps:
+ - nicesymbols
 
 # Override default flag values for local packages and extra-deps
 flags: {}

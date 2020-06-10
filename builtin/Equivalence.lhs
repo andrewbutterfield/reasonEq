@@ -34,7 +34,8 @@ import TestRendering
 \subsection{Introduction}
 
 Here we provide axioms and conjectures for $\equiv$ and $true$,
-based on \cite{gries.93}.
+based on \cite{gries.93},
+along with one key axiom regarding identity substitutions.
 
 Some useful local definitions:
 \begin{code}
@@ -44,6 +45,7 @@ r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
 vx = Vbl (fromJust $ ident "x") ObsV Static  ; lvxs = LVbl vx [] []
 ve = Vbl (fromJust $ ident "e") ExprV Static ; lves = LVbl ve [] []
 sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
+subid p = Sub P p $ fromJust $ substn [] [(lvxs,lvxs)]
 \end{code}
 
 \subsubsection{Known Variables}
@@ -55,6 +57,7 @@ equivKnown :: VarTable
 equivKnown =  newVarTable
 \end{code}
 
+\newpage
 \subsubsection{Substitutability}
 
 $$
@@ -64,7 +67,7 @@ $$
   \end{array}
 $$
 
-\vspace{-8pt}
+%\vspace{-8pt}
 \begin{code}
 equivSubAble = M.fromList [(equiv,CS)]
 -- true is a value, and so is automatically NS
@@ -124,10 +127,20 @@ $$
 axEqvSymm
  = ( "equiv" -.- "symm"
    , ( flattenEquiv ( (p === q) === (q === p) )
-   , scTrue ) )
+     , scTrue ) )
 \end{code}
 
-
+$$
+  \begin{array}{ll}
+    \AXidSubst & \AXidSubstN
+  \end{array}
+$$
+\begin{code}
+axIdSubst
+ = ( "id" -.- "subst"
+   , ( subid p === p
+     , scTrue ) )
+\end{code}
 
 We now collect all of the above as our axiom set:
 \begin{code}
@@ -136,6 +149,7 @@ equivAxioms
   = map labelAsAxiom
       [ axTrue
       , axEqvRefl, axEqvAssoc, axEqvSymm
+      , axIdSubst
       ]
 \end{code}
 

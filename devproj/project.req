@@ -25,7 +25,7 @@ CONJ = (C P (Id "implies" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),V P (VR
 SIDE = [SS (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])]
 STRAT reduce
 BEGIN SEQZIP
-TERMZIP = (C P (Id "implies" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V P (VR (Id "P" 0,VP,WS))),V P (VR (Id "P" 0,VP,WS))],[])
+TERMZIP = (C P (Id "implies" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V P (VR (Id "P" 0,VP,WS))),S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "x" 0,VO,WS),[],[]))]))],[])
 BEGIN SEQUENT'
 SIDECOND = []
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.univ_inst", thDeps = [], known = VD (fromList [],fromList [],fromList []), subable = fromList [], laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
@@ -33,7 +33,8 @@ END SEQUENT'
 END SEQZIP
 FPATH: []
 BEGIN LIST STEPS
-(UseLaw (ByMatch (ME [1])) "[]_def" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS)))],fromList [],fromList [((Id "x" 0,VO,[],[]),BL [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])])) [0],(C P (Id "implies" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),V P (VR (Id "P" 0,VP,WS))],[]))
+(UseLaw (ByMatch (ME [1])) "[]_def" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS)))],fromList [],fromList [((Id "x" 0,VO,[],[]),BL [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])])) [0],(C P (Id "implies" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "x" 0,VO,WS),[],[]))]))],[]))
+(UseLaw (ByMatch (ME [2])) "id_subst" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS)))],fromList [],fromList [((Id "x" 0,VO,[],[]),BL [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])])) [2],(C P (Id "implies" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),V P (VR (Id "P" 0,VP,WS))],[]))
 END LIST STEPS
 END LIVE-PROOF
 END MAP LIVE-PROOFS

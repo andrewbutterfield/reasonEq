@@ -217,6 +217,8 @@ tMatch' vts bind cbvs pbvs (Cons tkC nC tsC) (Cons tkP nP tsP)
 
 \subsubsection{Binding Term-Pattern (\texttt{Bnd})}
 
+We first start with the obvious rule that tries to match
+a candidate binding against a candidate pattern:
 $$
 \inferrule
    {n_C = n_P
@@ -240,6 +242,36 @@ tMatch' vts bind cbvs pbvs (Bnd tkC nC vsC tC) (Bnd tkP nP vsP tP)
           bindT  <-  tMatch vts bind cbvs' pbvs' tC tP
           vsMatch vts bindT cbvs' pbvs' vsC vsP
 \end{code}
+
+However, we also have the case when the pattern binding
+has quantifier variables that are are all unknown list-variables.
+In this case, they could all be bound to empty variable-sets,
+and then we just try to match its body, with that binding,
+to any candidate term.
+$$
+\inferrule
+   {\lst{vs}_P \not{\!\cap}~ \kappa s
+   \and
+   \beta_{vs} = \{ \lst{vs}_P \mapsto \emptyset \}
+   \and
+   \kappa s;\beta\uplus \beta_{vs};(B_C\cup vs_C,B_P\cup vs_P) \vdash t_C :: t_P \leadsto \beta'_t
+   }
+   { \kappa s;\beta;(B_C,B_P) \vdash t_C :: \bb{n_P}{\lst{vs}_P}{t_P}
+     \leadsto
+     \beta \uplus \beta'_t \uplus \beta'_{vs}
+   }
+   \quad
+   \texttt{tMatch Binding0}
+$$
+\begin{code}
+tMatch' vts bind cbvs pbvs tC (Bnd tkP nP vsP tP)
+  | all (isUnknownLstVar vts) vlP
+    =  do bind' <- bindLVarsToEmpty bind $ listVarsOf vlP
+          let pbvs' = vsP `addBoundVarSet` pbvs
+          tMatch vts bind cbvs pbvs' tC tP
+  where vlP = S.toList vsP
+\end{code}
+
 
 \subsubsection{Lambda Term-Pattern (\texttt{Lam})}
 

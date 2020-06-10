@@ -37,6 +37,10 @@ Here we provide axioms and conjectures for $\equiv$ and $true$,
 based on \cite{gries.93},
 along with one key axiom regarding identity substitutions.
 
+$$
+\AXEQUIV
+$$
+
 Some useful local definitions:
 \begin{code}
 p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
@@ -74,7 +78,6 @@ equivSubAble = M.fromList [(equiv,CS)]
 \end{code}
 
 
-\newpage
 \subsubsection{Axioms}
 
 We take \textit{true} to be axiomatic,

@@ -228,6 +228,9 @@
 
 %% ---- Propositional Axioms ---------------------------------------------------
 
+
+% Equivlances + substitution
+
 \def\AXtrue{\true}
 \def\AXtrueN{\QNAME{$\true$}}
 
@@ -247,6 +250,19 @@
 
 \def\AXidSubst{P[\lst x/\lst x] \equiv P}
 \def\AXidSubstN{\QNAME{identity-subst}}
+
+\def\AXEQUIV{
+\begin{array}{ll}
+   \AXtrue     & \AXtrueN
+\\ \AXeqvRefl  & \AXeqvReflN
+\\ \AXeqvAssoc & \AXeqvAssocN
+\\ \AXeqvSymm  & \AXeqvSymmN
+\\ \AXidSubst  & \AXidSubstN
+\end{array}
+}
+
+
+
 
 \def\AXfalseDef{\false \equiv \neg \true}
 \def\AXfalseDefN{\QNAME{$\false$-def}}
@@ -281,6 +297,7 @@
   \\ \AXeqvRefl & \AXeqvReflN
   \\ \AXeqvAssoc & \AXeqvAssocN
   \\ \AXeqvSymm & \AXeqvSymmN
+  \\ \AXidSubst & \AXidSubstN
   \\ \AXfalseDef &\AXfalseDefN
   \\ \AXnotEqvDistr & \AXnotEqvDistrN
   \\ \AXorSymm & \AXorSymmN

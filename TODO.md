@@ -5,26 +5,12 @@
 
 ### Substitution Handling
 
-Conjecture `[P] => P` may need to generalise to `[P] => P[e̅/x̅]`,
-or we add a facility to add an identity substitution, 
-so `P` becomes `P[x̅/x̅]`.
-
-Plan: generalise law,
-and add `P[x̅/x̅] ≡ P` as an axiom to `Equiv` 
-
-This works well - we can using it backwards to convert conjecture
-to `[P] => P[x̅/x̅]`. We don't need the general form as an axiom.
-
-The problem arises when we try to match this against `forall_inst`
-
-tP=(∀ x̅,y̅ • P)⟹  (∀ y̅ • P[e̅/x̅])
-tC=(∀ x̅ • P)⟹  P[x̅/x̅]
-
-We can't match `P[x̅/x̅]`  against `(∀ y̅ • P[e̅/x̅])` (structural mismatch)
-
-Do we need a special case for quantifier matching,
+Added a special case for quantifier matching,
 where all q.v.s are (unknown) list variables
-that are explicitly bound to nil, followed by matching the bodies?
+that are explicitly bound to nil, followed by matching the bodies.
+
+Add Conjecture `[P] => P[e̅/x̅]` to `UClose` and prove.
+
 
 ### Quantifier Bound Variables (in Laws)
 

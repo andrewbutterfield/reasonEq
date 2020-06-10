@@ -139,6 +139,7 @@ match :: MonadPlus mp => [VarTable] -> Candidate -> Pattern -> mp Binding
 match vts cand patn  =  tMatch vts emptyBinding noBVS noBVS cand patn
 \end{code}
 
+\newpage
 \subsection{Term Matching}
 
 \begin{code}
@@ -165,7 +166,6 @@ Term-matching is defined inductively over the pattern type.
 We start with the simple value and structural composite matches,
 and then proceed to look at variable, binder and substitution patterns.
 
-\newpage
 \subsubsection{Value Term-Pattern (\texttt{Val})}
 Values only match themselves, and add no new bindings.
 $$
@@ -215,6 +215,7 @@ tMatch' vts bind cbvs pbvs (Cons tkC nC tsC) (Cons tkP nP tsP)
  | tkC == tkP && nC == nP  =  tsMatch vts bind cbvs pbvs tsC tsP
 \end{code}
 
+\newpage
 \subsubsection{Binding Term-Pattern (\texttt{Bnd})}
 
 We first start with the obvious rule that tries to match
@@ -298,6 +299,7 @@ tMatch' vts bind cbvs pbvs (Lam tkC nC vlC tC) (Lam tkP nP vlP tP)
           bindT  <-  tMatch vts bind cbvs' pbvs' tC tP
           vlMatch vts bindT cbvs' pbvs' vlC vlP
 \end{code}
+We also have special handling here for when we have only unknown list-variables:
 $$
 \inferrule
    {\lst{vl}_P \not{\!\cap}~ \kappa s
@@ -321,6 +323,7 @@ tMatch' vts bind cbvs pbvs tC (Lam tkP nP vlP tP)
           tMatch vts bind' cbvs pbvs' tC tP
 \end{code}
 
+\newpage
 \subsubsection{Closure Term-Pattern (\texttt{Cls})}
 
 $$
@@ -461,14 +464,17 @@ A simple zip-like walk along both lists
 tsMatch :: MonadPlus mp
         => [VarTable] -> Binding -> CBVS -> PBVS
         -> [Candidate] -> [Pattern] -> mp Binding
-tsMatch _ _ _ _ cts pts
+tsMatch vts bind cbvs pvbs cts pts
  | length cts /= length pts = fail "tsMatch: length mismatch"
-tsMatch _ bind _ _ [] [] = return bind
-tsMatch vts bind cbvs pvbs (tC:tsC) (tP:tsP)
+ | otherwise  =  tsMatch' vts bind cbvs pvbs cts pts
+
+-- here both lists are the same length
+tsMatch' _ bind _ _ [] [] = return bind
+tsMatch' vts bind cbvs pvbs (tC:tsC) (tP:tsP)
  = do bind1 <- tMatch vts bind cbvs pvbs tC tP
       tsMatch vts bind1 cbvs pvbs tsC tsP
 -- should not occur!
-tsMatch _ _ _ _ _ _  =  error "tsMatch: unexpected mismatch case."
+tsMatch' _ _ _ _ _ _  =  error "tsMatch': unexpected mismatch case."
 \end{code}
 
 

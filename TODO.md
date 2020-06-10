@@ -5,11 +5,8 @@
 
 ### Substitution Handling
 
-Added a special case for quantifier matching,
-where all q.v.s are (unknown) list variables
-that are explicitly bound to nil, followed by matching the bodies.
 
-Add Conjecture `[P] => P[e̅/x̅]` to `UClose` and prove.
+Added Conjecture `[P] => P[e̅/x̅]` to `UClose` and proven.
 
 
 ### Quantifier Bound Variables (in Laws)

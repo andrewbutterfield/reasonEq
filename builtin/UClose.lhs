@@ -271,23 +271,23 @@ This consists of the predicate variables $P$ and $Q$,
 the constant  $[\_]$,
 and a generic binder variable: $\lst x$.
 
-\subsubsection{Predicate and Expression Variables}
+\subsubsection{Variables}
 
 \begin{code}
 vP = Vbl (fromJust $ ident "P") PredV Static
 gvP = StdVar vP
 p = fromJust $ pVar vP
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
-\end{code}
-
-\subsubsection{Predicate Constants}
-
-
-\subsubsection{Generic Variables}
-
-\begin{code}
 vx = Vbl (fromJust $ ident "x") ObsV Static ; x = StdVar vx
 lvxs = LVbl vx [] [] ; xs = LstVar lvxs
+ve = Vbl (fromJust $ ident "e") ObsV Static ; e = StdVar ve
+lves = LVbl ve [] [] ; es = LstVar lves
+\end{code}
+
+\subsubsection{Predicate Builders}
+
+\begin{code}
+sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
 \end{code}
 
 
@@ -341,11 +341,6 @@ cjUnivIdOnClosed = preddef ("univ" -.- "id" -.- "on" -.- "closed")
                 (univ p === p )
                 ([] `covers` gvP)
 \end{code}
-
-
-
-
-
 
 
 $$
@@ -429,6 +424,17 @@ cjUnivInst = preddef ("univ" -.- "inst")
 
 $$
   \begin{array}{lll}
+     \CJunivInstGen & \CJunivInstGenS & \CJunivInstGenN
+  \end{array}
+$$
+\begin{code}
+cjUnivInstGen = preddef ("univ" -.- "inst" -.- "gen")
+                        (univ p ==> sub p)
+                         scTrue
+\end{code}
+
+$$
+  \begin{array}{lll}
      \CJunivMono & \CJunivMonoS & \CJunivMonoN
   \end{array}
 $$\par\vspace{-8pt}
@@ -469,7 +475,8 @@ uCloseConjs
     , cjUnivTrue, cjUnivFalse
     , cjUnivIdem, cjAndUnivDistr
     , cjUnivAllClosed, cjUnivAnyClosed
-    , cjUnivInst, cjUnivMono, cjNecPoss ]
+    , cjUnivInst, cjUnivInstGen
+    , cjUnivMono, cjNecPoss ]
 \end{code}
 
 

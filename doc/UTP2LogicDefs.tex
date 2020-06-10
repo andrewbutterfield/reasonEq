@@ -1102,7 +1102,7 @@
 
 %%%% ==== Universal Closure, axioms and conjectures ============================
 
-\def\AXUnivDefN{\QNAME{univ-def}}
+\def\AXUnivDefN{\QNAME{[]-def}}
 \def\AXUnivDef{[P] \equiv \forall \lst x \bullet P}
 \def\AXUnivDefS{\lst x \supseteq P}
 
@@ -1126,11 +1126,11 @@
 \end{array}
 }
 
-\def\CJUnivIdOnClosedN{\QNAME{univ-id-on-closed}}
+\def\CJUnivIdOnClosedN{\QNAME{[]-id-on-closed}}
 \def\CJUnivIdOnClosed{[P] \equiv P}
 \def\CJUnivIdOnClosedS{\emptyset \supseteq P}
 
-\def\CJUnivIdemN{\QNAME{univ-idem}}
+\def\CJUnivIdemN{\QNAME{[]-idem}}
 \def\CJUnivIdem{[[P]] \equiv [P]}
 \def\CJUnivIdemS{}
 
@@ -1140,19 +1140,19 @@
 \def\CJandUnivDistr{\CJandUnivDistrL \equiv \CJandUnivDistrR}
 \def\CJandUnivDistrS{}
 
-\def\CJtrueUnivN{\QNAME{univ-$\true$}}
+\def\CJtrueUnivN{\QNAME{[]-$\true$}}
 \def\CJtrueUniv{[\true] \equiv \true }
 \def\CJtrueUnivS{}
 
-\def\CJfalseUnivN{\QNAME{univ-$\false$}}
+\def\CJfalseUnivN{\QNAME{[]-$\false$}}
 \def\CJfalseUniv{[\false] \equiv \false }
 \def\CJfalseUnivS{}
 
-\def\CJallUnivClosedN{\QNAME{univ-$\forall$-closed}}
+\def\CJallUnivClosedN{\QNAME{[]-$\forall$-closed}}
 \def\CJallUnivClosed{\forall \lst x \bullet [P] \equiv [P]}
 \def\CJallUnivClosedS{}
 
-\def\CJanyUnivClosedN{\QNAME{univ-$\exists$-closed}}
+\def\CJanyUnivClosedN{\QNAME{[]-$\exists$-closed}}
 \def\CJanyUnivClosed{\exists \lst x \bullet [P] \equiv [P]}
 \def\CJanyUnivClosedS{}
 
@@ -1166,6 +1166,7 @@
 \\ \CJallUnivClosed & \CJallUnivClosedS & \CJallUnivClosedN
 \\ \CJanyUnivClosed & \CJanyUnivClosedS & \CJanyUnivClosedN
 \\ \CJunivInst & \CJunivInstS & \CJunivInstN
+\\ \CJunivInstGen & \CJunivInstGenS & \CJunivInstGenN
 \\ \CJunivMono & \CJunivMonoS & \CJunivMonoN
 \\ \CJnecPoss & \CJnecPossS & \CJnecPossN
 \end{array}
@@ -1201,11 +1202,15 @@
 %%% We make AXBoxXXX into CJunivXXX using [_] notation
 %%% We re-phrase AXDIamDef as AXsatDef using <_> notation
 
-\def\CJunivInstN{\QNAME{univ-inst}}
+\def\CJunivInstN{\QNAME{[]-inst}}
 \def\CJunivInst{[P] \implies P}
 \def\CJunivInstS{}
 
-\def\CJunivMonoN{\QNAME{univ-mono}}
+\def\CJunivInstGenN{\QNAME{[]-inst-gen}}
+\def\CJunivInstGen{[P] \implies P[\lst e/\lst x]}
+\def\CJunivInstGenS{}
+
+\def\CJunivMonoN{\QNAME{[]-mono}}
 \def\CJunivMono{[P \implies Q] \implies ([P] \implies [Q])}
 \def\CJunivMonoS{}
 

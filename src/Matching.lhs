@@ -268,7 +268,7 @@ tMatch' vts bind cbvs pbvs tC (Bnd tkP nP vsP tP)
   | all (isUnknownLstVar vts) vlP
     =  do bind' <- bindLVarsToEmpty bind $ listVarsOf vlP
           let pbvs' = vsP `addBoundVarSet` pbvs
-          tMatch vts bind cbvs pbvs' tC tP
+          tMatch vts bind' cbvs pbvs' tC tP
   where vlP = S.toList vsP
 \end{code}
 
@@ -279,7 +279,7 @@ $$
 \inferrule
    {n_C = n_P
     \and
-    \beta;(B_C\cup vs_C,B_P\cup vs_P) \vdash t_C :: t_P \leadsto \beta'_t
+    \beta;(B_C\cup vl_C,B_P\cup vl_P) \vdash t_C :: t_P \leadsto \beta'_t
     \and
     \beta \vdash vl_C :: vl_P \leadsto \beta'_{vl}
    }
@@ -288,7 +288,7 @@ $$
      \beta \uplus \beta'_t \uplus \beta'_{vl}
    }
    \quad
-   \texttt{tMatch Binding}
+   \texttt{tMatch Lambda}
 $$
 \begin{code}
 tMatch' vts bind cbvs pbvs (Lam tkC nC vlC tC) (Lam tkP nP vlP tP)
@@ -297,6 +297,28 @@ tMatch' vts bind cbvs pbvs (Lam tkC nC vlC tC) (Lam tkP nP vlP tP)
           let pbvs' = vlP `addBoundVarList` pbvs
           bindT  <-  tMatch vts bind cbvs' pbvs' tC tP
           vlMatch vts bindT cbvs' pbvs' vlC vlP
+\end{code}
+$$
+\inferrule
+   {\lst{vl}_P \not{\!\cap}~ \kappa s
+   \and
+   \beta_{vl} = \{ \lst{vl}_P \mapsto \nil \}
+   \and
+   \kappa s;\beta\uplus \beta_{vl};(B_C\cup vl_C,B_P\cup vl_P) \vdash t_C :: t_P \leadsto \beta'_t
+   }
+   { \kappa s;\beta;(B_C,B_P) \vdash t_C :: \ll{n_P}{\lst{vl}_P}{t_P}
+     \leadsto
+     \beta \uplus \beta'_t \uplus \beta'_{vl}
+   }
+   \quad
+   \texttt{tMatch Lambda0}
+$$
+\begin{code}
+tMatch' vts bind cbvs pbvs tC (Lam tkP nP vlP tP)
+  | all (isUnknownLstVar vts) vlP
+    =  do bind' <- bindLVarsToEmpty bind $ listVarsOf vlP
+          let pbvs' = vlP `addBoundVarList` pbvs
+          tMatch vts bind' cbvs pbvs' tC tP
 \end{code}
 
 \subsubsection{Closure Term-Pattern (\texttt{Cls})}
@@ -312,7 +334,7 @@ $$
      \beta \uplus \beta'
    }
    \quad
-   \texttt{tMatch Binding}
+   \texttt{tMatch Closure}
 $$
 Note that here we only close w.r.t. free \emph{observational} variables.
 \begin{code}

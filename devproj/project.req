@@ -17,6 +17,47 @@ END THEORIES
 CURRTHEORY = UClose
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("UClose","necessary_poss")
+BEGIN LIVE-PROOF
+TH-NAME: UClose
+CJ-NAME: necessary_poss
+CONJ = (C P (Id "implies" 0) [X (Id "langle_rangle" 0) (V P (VR (Id "P" 0,VP,WS))),X (Id "[_]" 0) (X (Id "langle_rangle" 0) (V P (VR (Id "P" 0,VP,WS))))],[])
+SIDE = []
+STRAT reduce
+BEGIN SEQZIP
+TERMZIP = (C P (Id "lnot" 0) [X (Id "[_]" 0) (C P (Id "lnot" 0) [X (Id "[_]" 0) (C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))])])],[Cons' P (Id "land" 0) [C P (Id "lnot" 0) [X (Id "[_]" 0) (C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))])]] [],Cons' P (Id "lnot" 0) [] []])
+BEGIN SEQUENT'
+SIDECOND = []
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.necessary_poss", thDeps = [], known = VD (fromList [],fromList [],fromList []), subable = fromList [], laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: [0,2]
+BEGIN LIST STEPS
+(UseLaw (ByMatch (ME [2])) "deMorgan_land" (BD (fromList [((Id "P" 0,VP),BT (C P (Id "lnot" 0) [X (Id "[_]" 0) (C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))])])),((Id "Q" 0,VP),BT (C P (Id "lnot" 0) [X (Id "[_]" 0) (C P (Id "lnot" 0) [X (Id "[_]" 0) (C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))])])]))],fromList [],fromList [])) [],(C P (Id "lor" 0) [C P (Id "lnot" 0) [C P (Id "lnot" 0) [X (Id "[_]" 0) (C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))])]],C P (Id "lnot" 0) [C P (Id "lnot" 0) [X (Id "[_]" 0) (C P (Id "lnot" 0) [X (Id "[_]" 0) (C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))])])]]],[]))
+(UseLaw (ByMatch (ME [2])) "lnot_invol" (BD (fromList [((Id "P" 0,VP),BT (X (Id "[_]" 0) (C P (Id "lnot" 0) [X (Id "[_]" 0) (C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))])])))],fromList [],fromList [])) [2],(C P (Id "lor" 0) [C P (Id "lnot" 0) [C P (Id "lnot" 0) [X (Id "[_]" 0) (C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))])]],X (Id "[_]" 0) (C P (Id "lnot" 0) [X (Id "[_]" 0) (C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))])])],[]))
+(UseLaw (ByMatch (ME [1])) "sat_def" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS)))],fromList [],fromList [])) [2,0],(C P (Id "lor" 0) [C P (Id "lnot" 0) [C P (Id "lnot" 0) [X (Id "[_]" 0) (C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))])]],X (Id "[_]" 0) (X (Id "langle_rangle" 0) (V P (VR (Id "P" 0,VP,WS))))],[]))
+(UseLaw (ByMatch (ME [1])) "implies_def2" (BD (fromList [((Id "P" 0,VP),BT (C P (Id "lnot" 0) [X (Id "[_]" 0) (C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))])])),((Id "Q" 0,VP),BT (X (Id "[_]" 0) (X (Id "langle_rangle" 0) (V P (VR (Id "P" 0,VP,WS))))))],fromList [],fromList [])) [],(C P (Id "implies" 0) [C P (Id "lnot" 0) [X (Id "[_]" 0) (C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))])],X (Id "[_]" 0) (X (Id "langle_rangle" 0) (V P (VR (Id "P" 0,VP,WS))))],[]))
+(UseLaw (ByMatch (ME [1])) "sat_def" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS)))],fromList [],fromList [])) [0],(C P (Id "implies" 0) [X (Id "langle_rangle" 0) (V P (VR (Id "P" 0,VP,WS))),X (Id "[_]" 0) (X (Id "langle_rangle" 0) (V P (VR (Id "P" 0,VP,WS))))],[]))
+END LIST STEPS
+END LIVE-PROOF
+("UClose","univ_mono")
+BEGIN LIVE-PROOF
+TH-NAME: UClose
+CJ-NAME: univ_mono
+CONJ = (C P (Id "implies" 0) [X (Id "[_]" 0) (C P (Id "implies" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]),C P (Id "implies" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),X (Id "[_]" 0) (V P (VR (Id "Q" 0,VP,WS)))]],[])
+SIDE = []
+STRAT reduce
+BEGIN SEQZIP
+TERMZIP = (C P (Id "implies" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],[Cls' (Id "[_]" 0),Cons' P (Id "implies" 0) [] [C P (Id "implies" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),X (Id "[_]" 0) (V P (VR (Id "Q" 0,VP,WS)))]]])
+BEGIN SEQUENT'
+SIDECOND = []
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.univ_mono", thDeps = [], known = VD (fromList [],fromList [],fromList []), subable = fromList [], laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: [0,0]
+BEGIN LIST STEPS
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

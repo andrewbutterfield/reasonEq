@@ -55,7 +55,8 @@ library
                      , ForAll
                      , Exists
                      , UClose
-                     , UTPStartup
+                     , UTPSignature
+                     , UTPBase
                      , XYZ
                      , XYZDesign
                      -- in proto

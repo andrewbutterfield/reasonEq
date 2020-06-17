@@ -1,4 +1,4 @@
-\section{UTP Start-up}
+\section{UTP Base}
 \begin{verbatim}
 Copyright  Andrew Buttefield, Danny Thomas (c) 2019
 
@@ -6,9 +6,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module UTPStartup (
-  univ
-, utpStartupConjs, utpStartupName, utpStartupTheory
+module UTPBase (
+  utpBaseConjs, utpBaseName, utpBaseTheory
 ) where
 
 import Data.Maybe
@@ -149,7 +148,7 @@ lsub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
 
 
 \newpage
-\subsection{UTP-Startup Axioms}
+\subsection{UTP Base Axioms}
 
 \subsubsection{Axiom 1}
 $$
@@ -170,7 +169,7 @@ axUTP001 = preddef ("UTP" -.- "ax" -.- "001")
 \end{code}
 
 
-\subsection{UTP-Startup Conjectures}
+\subsection{UTP Base Conjectures}
 
 %\subsubsection{Conjecture 1}
 $$
@@ -264,8 +263,8 @@ cjUTPL7 = preddef ("UTP" -.- "cj" -.- "L7")
 
 We now collect our axiom set:
 \begin{code}
-utpStartupAxioms :: [Law]
-utpStartupAxioms
+utpBaseAxioms :: [Law]
+utpBaseAxioms
   = map labelAsAxiom
       [ axUTP001 ]
 \end{code}
@@ -273,8 +272,8 @@ utpStartupAxioms
 
 We now collect our conjecture set:
 \begin{code}
-utpStartupConjs :: [NmdAssertion]
-utpStartupConjs
+utpBaseConjs :: [NmdAssertion]
+utpBaseConjs
   = [ cjUTPdef,
       cjUTPdef2,
       cjUTPL1,
@@ -291,11 +290,11 @@ utpStartupConjs
 \subsection{The Predicate Theory}
 
 \begin{code}
-utpStartupName :: String
-utpStartupName = "UTPStartup"
-utpStartupTheory :: Theory
-utpStartupTheory
-  =  nullTheory { thName  =  utpStartupName
+utpBaseName :: String
+utpBaseName = "UTPBase"
+utpBaseTheory :: Theory
+utpBaseTheory
+  =  nullTheory { thName  =  utpBaseName
             , thDeps  =  [ uCloseName
                          , existsName
                          , forallName
@@ -308,7 +307,7 @@ utpStartupTheory
                          , equivName
                          ]
             , known   =  newVarTable
-            , laws    =  utpStartupAxioms
-            , conjs   =  utpStartupConjs
+            , laws    =  utpBaseAxioms
+            , conjs   =  utpBaseConjs
             }
 \end{code}

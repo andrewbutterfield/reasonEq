@@ -36,6 +36,7 @@ import Binding
 import REqState
 import AbstractUI
 import StdSignature(propSignature)
+import UTPSignature
 import Instantiate
 import TestRendering
 import TestParsing

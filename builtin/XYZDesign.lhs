@@ -38,7 +38,7 @@ import Equality
 import ForAll
 import Exists
 import UClose
-import UTPStartup
+import UTPBase
 import TestRendering
 \end{code}
 
@@ -330,7 +330,7 @@ xyzDName = "XYZDesign"
 xyzDTheory :: Theory
 xyzDTheory
   =  nullTheory { thName  =  xyzDName
-            , thDeps  =  [ utpStartupName
+            , thDeps  =  [ utpBaseName
                          , uCloseName
                          , existsName
                          , forallName

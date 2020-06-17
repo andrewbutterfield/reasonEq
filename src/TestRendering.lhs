@@ -98,7 +98,7 @@ trLVarU = trlvar trIdU
 trlvar trid (LVbl (Vbl i vc vw) is js)
  = trVW vw (trVCf vc $ trlid trid i) ++ trless trid is js
 
-trlid trid i = concat $ map dia_line $ trid i
+trlid trid i = trid i ++ "$" -- concat $ map dia_line $ trid i
 trless trid [] []  =  ""
 trless trid is js  =  '\\' : ( intercalate "," ( map trid is ++
                                                  map (trlid trid) js ) )

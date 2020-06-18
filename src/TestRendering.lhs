@@ -81,7 +81,7 @@ trVCf _ s = s -- bold s - currently can't nest these effects.
 
 trVW :: VarWhen -> String -> String
 trVW Static s      =  s
-trVW Before s      =  '`':s
+trVW Before s      =  s  -- '`':s
 trVW (During m) s  =  s++'_':m
 trVW After s       =  s++"'"
 trVW Textual s     =  s++"\""
@@ -154,6 +154,7 @@ $$
 \qquad  \equiv   \;\mapsto  2
 \qquad  \implies \;\mapsto  3
 \qquad  \lor     \;\mapsto  4
+\qquad  \cond\_  \;\mapsto  4
 \qquad  \land    \;\mapsto  5
 \qquad  \lnot    \;\mapsto  6
 $$
@@ -172,24 +173,26 @@ especially in live proofs:
 \\ forced-r  & $P \equiv (Q \equiv R)$    & $P \equiv (Q \equiv R)$
 \\\hline
 \end{tabular}
-~
+
 Based on experience with live-proof we can now say that
 we use ``non-assoc'' render mode for all associative operators.
 \begin{code}
 type InfixKind = ( Int     -- precedence
-                 , Bool )  -- true if considered a 'symbol'
+                 , Bool    -- true if binary op handling required
+                 , Bool )  -- true if ternary mixfix handling required
 prc :: String -> InfixKind
 prc n
-  | n == ";"        =  (1,True)
-  | n == ":="       =  (1,True)
-  | n == "vdash"    =  (2,True)
-  | n == "equiv"    =  (3,True)
-  | n == "implies"  =  (4,True)
-  | n == "lor"      =  (5,True) -- force parenthesis for nested 'or'
-  | n == "land"     =  (6,True) -- force parenthesis for nested 'and'
-  | n == "lnot"     =  (7,True)
-  | n == "="        =  (8,True)
-  | otherwise       =  (0,False) -- force parenthesising if not at top-level
+  | n == ";"        =  (1,True,False)
+  | n == ":="       =  (1,True,False)
+  | n == "vdash"    =  (2,True,False)
+  | n == "equiv"    =  (3,True,False)
+  | n == "implies"  =  (4,True,False)
+  | n == "lor"      =  (5,True,False) -- force parenthesis for nested 'or'
+  | n == "land"     =  (6,True,False) -- force parenthesis for nested 'and'
+  | n == "lnot"     =  (7,True,False)
+  | n == "="        =  (8,True,False)
+  | n == "cond"     =  (0,False,True) -- force parenthesis for nested 'cond'
+  | otherwise       =  (0,False,False)
 \end{code}
 
 Rather than rendering zippers on the fly,
@@ -243,7 +246,19 @@ trterm trid ctxtp (Cons tk opn@(Identifier nm _) ts@(_:_:_))
  | isOp  =  trBracketIf (opp <= ctxtp)
                         $ intercalate (trId opn) $ map (trterm trid opp) ts
  where
-   prcs@(opp,isOp) = prc nm
+   prcs@(opp,isOp,_) = prc nm
+\end{code}
+
+Rendering an ``infix-like'' ternary operator.
+For now the most significant is the conditional ($\cond\_$)
+\begin{code}
+trterm trid ctxtp (Cons tk opn@(Identifier nm _) [p,b,q])
+ | isMix3  =  trBracketIf (opp <= ctxtp)
+                        (trterm trid opp p
+                         ++ " <| " ++ trterm trid 0 b ++ " |> "
+                         ++ trterm trid opp q)
+ where
+   prcs@(opp,_,isMix3) = prc nm
 \end{code}
 
 In all other cases we simply use classical function application notation

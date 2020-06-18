@@ -7,6 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module UTPSignature (
+  bookdef,
   cond, mkSeq
 ) where
 
@@ -26,6 +27,7 @@ import Laws
 import Proofs
 import Theories
 import TestRendering
+import StdSignature
 \end{code}
 
 
@@ -33,6 +35,12 @@ import TestRendering
 
 To be done
 
+We want to map definition and law numbers
+from the book to law names.
+\begin{code}
+bookdef name alias prop sc
+  = (preddef name prop sc,(alias,name))
+\end{code}
 
 \subsection{Propositional Infrastructure}
 

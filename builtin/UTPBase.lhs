@@ -7,7 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module UTPBase (
-  utpBaseConjs, utpBaseName, utpBaseTheory
+  utpBaseConjs, utpBaseName, utpBaseTheory,
+  utpBaseAliases
 ) where
 
 import Data.Maybe
@@ -36,6 +37,7 @@ import Equality
 import ForAll
 import Exists
 import UClose
+import UTPSignature
 import TestRendering
 \end{code}
 
@@ -64,98 +66,162 @@ and non-deterministic choice are first introduced.
 
 \subsection{UTP Conditionals}
 
-\subsubsection{Axiom 1}
+\subsubsection{Defn. of Conditional}
+
+From \cite[Defn 2.1.1,p47]{UTP-book}
 $$
   \begin{array}{lll}
-     P \cond b Q \defs P \land b \lor Q \land \lnot b &
-     & \QNAME{UTP-ax-001}
+     P \cond b Q \defs (P \land b) \lor (Q \land \lnot b) &
+     & \QNAME{$\cond\_$-def}
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-mkCond p b q = PCons(fromJust $ ident "cond")[p, b, q]
-
-mkSeq p q = PCons (fromJust $ ident ";")[p, q]
-
-
-axUTP001 = preddef ("UTP" -.- "ax" -.- "001")
-                    (mkCond p b q === (p /\ b) \/ (q /\ mkNot b))
-                    scTrue
+(axCondDef,alCondDef) = bookdef ("cond" -.- "def") "Def2.1.1"
+                         (cond p b q === (p /\ b) \/ (mkNot b /\ q))
+                         scTrue
 \end{code}
 
 
-\subsubsection{UTP Conditional Conjectures}
+\subsubsection{UTP Conditional Laws}
 
-%\subsubsection{Conjecture 1}
+From \cite[2.1\textbf{L1}, p47]{UTP-book}
+$$
+  \begin{array}{lll}
+     P \cond b P \equiv P  &
+     & \QNAME{$\cond\_$-idem}
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+(cjCondL1,alCondL1) = bookdef ("cond" -.- "idem") "2.1L1"
+                       (cond p b p === p)
+                       scTrue
+\end{code}
+
+From \cite[2.1\textbf{L2}, p47]{UTP-book}
+$$
+  \begin{array}{lll}
+     P \cond b P \equiv Q \cond{\lnot b} P  &
+     & \QNAME{$\cond\_$-idem}
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+(cjCondL2,alCondL2) = bookdef ("cond" -.- "symm") "2.1L2"
+                       (cond p b q === cond q (mkNot b) p)
+                       scTrue
+\end{code}
+
+From \cite[2.1\textbf{L3}, p47]{UTP-book}
+$$
+  \begin{array}{lll}
+     ( P \cond b Q) \cond c R
+       \equiv
+       P \cond{b \land c} ( Q \cond c R)  &
+     & \QNAME{$\cond\_$-assoc}
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+(cjCondL3,alCondL3) = bookdef ("cond" -.- "assoc") "2.1L3"
+                       ( cond (cond p b q) c r
+                         ===
+                         cond p (b /\ c) (cond q c r) )
+                       scTrue
+\end{code}
+
+From \cite[2.1\textbf{L4}, p47]{UTP-book}
+$$
+  \begin{array}{lll}
+     P \cond b (Q \cond c R)
+       \equiv
+       (P \cond b Q) \cond c ( P \cond b R)  &
+     & \QNAME{$\cond\_$-distr}
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+(cjCondL4,alCondL4) = bookdef ("cond" -.- "distr")  "2.1L4"
+                       ( cond p b (cond q c r)
+                         ===
+                         cond (cond p b q) c (cond p b r) )
+                       scTrue
+\end{code}
+
+From \cite[2.1\textbf{L5}, p47]{UTP-book}
+$$
+  \begin{array}{lll}
+     P \cond \true Q \equiv P   &
+     & \QNAME{$\cond\_$-runit}
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+(cjCondL5a,alCondL5a) = bookdef ("cond" -.- "runit") "2.1L5a"
+                         (cond p trueP q === p)
+                         scTrue
+\end{code}
+
+From \cite[2.1\textbf{L5}, p47]{UTP-book}
+$$
+  \begin{array}{lll}
+     Q \cond \false P \equiv P   &
+     & \QNAME{$\cond\_$-lunit}
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+(cjCondL5b,alCondL5b) = bookdef ("cond" -.- "lunit") "2.1L5b"
+                         (cond q falseP p === p)
+                         scTrue
+\end{code}
+
+From \cite[2.1\textbf{L6}, p48]{UTP-book}
+$$
+  \begin{array}{lll}
+     P \cond b (Q \cond b R) \equiv P \cond b R  &
+     & \QNAME{$\cond\_$-absorb}
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+(cjCondL6,alCondL6) = bookdef ("cond" -.- "absorb") "2.1L6"
+                       (cond p b (cond q b r) === cond p b r)
+                       scTrue
+\end{code}
+
+From \cite[2.1\textbf{L7}, p48]{UTP-book}
+$$
+  \begin{array}{lll}
+     P \cond b (P \cond c Q) \equiv P \cond{b \lor c} Q  &
+     & \QNAME{$\cond\_$-merge}
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+(cjCondL7,alCondL7) = bookdef ("cond" -.- "merge") "2.1L7"
+                       (cond p b (cond p c q) === cond p (b \/ c) q)
+                       scTrue
+\end{code}
+
+
+The following conjectures are not in the book,
+but can be useful:
 $$
   \begin{array}{lll}
      P \cond b Q \equiv (b \implies P) \land (\lnot b \implies Q)
-     && \QNAME{UTP-cj-001}
+     && \QNAME{$\cond\_$-alt-def}
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-cjUTPdef = preddef ("UTP" -.- "cj" -.- "alt" -.- "def")
-                     (mkCond p b q === (b ==> p) /\ (mkNot b ==> q))
+cjCondAlt = preddef ("cond" -.- "alt" -.- "def")
+                     (cond p b q === (b ==> p) /\ (mkNot b ==> q))
                      scTrue
 \end{code}
 
+$$
+  \begin{array}{lll}
+     P \cond b Q \equiv (\lnot b \lor P) \equiv (b \lor Q)
+     && \QNAME{$\cond\_$-alt-def2}
+  \end{array}
+$$\par\vspace{-8pt}
 \begin{code}
-cjUTPdef2 = preddef ("UTP" -.- "cj" -.- "alt" -.- "def2")
-                     (mkCond p b q === ((mkNot b \/ p) === (b \/ q)))
+cjCondAlt2 = preddef ("cond" -.- "alt" -.- "def2")
+                     (cond p b q === ((mkNot b \/ p) === (b \/ q)))
                      scTrue
 \end{code}
-
-\begin{code}
-cjUTPL1 = preddef ("UTP" -.- "cj" -.- "L1")
-                     (mkCond p b p === p)
-                     scTrue
-\end{code}
-
-\begin{code}
-cjUTPL2 = preddef ("UTP" -.- "cj" -.- "L2")
-                     (mkCond p b q === mkCond q (mkNot b) p)
-                     scTrue
-\end{code}
-
-\begin{code}
-cjUTPL3 = preddef ("UTP" -.- "cj" -.- "L3")
-                  ( mkCond (mkCond p b q) c r
-                    ===
-                    mkCond p (b /\ c) (mkCond q c r) )
-                  scTrue
-\end{code}
-
-\begin{code}
-cjUTPL4 = preddef ("UTP" -.- "cj" -.- "L4")
-                  ( mkCond p b (mkCond q c r)
-                    ===
-                    mkCond (mkCond p b q) c (mkCond p b r) )
-                  scTrue
-\end{code}
-
-\begin{code}
-cjUTPL5a = preddef ("UTP" -.- "cj" -.- "L5a")
-                     (mkCond p trueP q === p)
-                     scTrue
-\end{code}
-
-\begin{code}
-cjUTPL5b = preddef ("UTP" -.- "cj" -.- "L5b")
-                      (mkCond p falseP q === q)
-                      scTrue
-\end{code}
-
-\begin{code}
-cjUTPL6 = preddef ("UTP" -.- "cj" -.- "L6")
-                     (mkCond p b (mkCond q b r) === mkCond p b r)
-                     scTrue
-\end{code}
-
-\begin{code}
-cjUTPL7 = preddef ("UTP" -.- "cj" -.- "L7")
-                    (mkCond p b (mkCond p c q) === mkCond p (b \/ c) q)
-                    scTrue
-\end{code}
-
 
 
 
@@ -190,7 +256,8 @@ We now collect our axiom set:
 utpBaseAxioms :: [Law]
 utpBaseAxioms
   = map labelAsAxiom
-      [ axUTP001 ]
+      [ axCondDef
+      ]
 \end{code}
 
 
@@ -198,18 +265,19 @@ We now collect our conjecture set:
 \begin{code}
 utpBaseConjs :: [NmdAssertion]
 utpBaseConjs
-  = [ cjUTPdef,
-      cjUTPdef2,
-      cjUTPL1,
-      cjUTPL2,
-      cjUTPL3,
-      cjUTPL4,
-      cjUTPL5a,
-      cjUTPL5b,
-      cjUTPL6,
-      cjUTPL7 ]
+  = [ cjCondL1, cjCondL2, cjCondL3, cjCondL4, cjCondL5a
+    , cjCondL5b, cjCondL6, cjCondL7, cjCondAlt, cjCondAlt2
+    ]
 \end{code}
 
+We now collect our alias set:
+\begin{code}
+utpBaseAliases :: [(String,String)]
+utpBaseAliases
+  = [ alCondL1, alCondL2, alCondL3, alCondL4
+    , alCondL5a, alCondL5b, alCondL6, alCondL7
+    ]
+\end{code}
 
 
 \begin{code}

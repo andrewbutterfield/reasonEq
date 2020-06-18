@@ -36,6 +36,7 @@ import Equality
 import ForAll
 import Exists
 import UClose
+import UTPBase
 \end{code}
 
 \subsection{Introduction}
@@ -64,6 +65,7 @@ devInitState
             , liveProofs = M.empty }
 
 devTheories =
+     fromJust $ addTheory utpBaseTheory $
      fromJust $ addTheory uCloseTheory $
      fromJust $ addTheory existsTheory $
      fromJust $ addTheory forallTheory $
@@ -92,7 +94,7 @@ devKnownBuiltins  = [ equivTheory
                     , forallTheory
                     , existsTheory
                     , uCloseTheory
-                    -- , utpStartupTheory
+                    , utpBaseTheory
                     -- , xyzTheory
                     -- , xyzDTheory
                     ]

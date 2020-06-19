@@ -1,5 +1,10 @@
 # To Do
 
+## Robustness
+
+Working on startup robustness
+
+Current focus: `Files.lhs` - `currentWorkspace` and `findCurrent` need to be total!
 
 ## Features
 
@@ -38,7 +43,6 @@ Want lots of shorthand (partial) builders for test data for these data-structure
 To avoid cyclic module imports, we need to export shorthands from non-test modules.
 Testing modules need to import the modules they test.
 
-## Robustness
 
 ### Demote
 

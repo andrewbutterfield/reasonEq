@@ -4,7 +4,22 @@
 
 Working on startup robustness
 
-Current focus: `Files.lhs` - `currentWorkspace` and `findCurrent` need to be total!
+### Theory Management
+
+Need commands to load a theory file
+
+### Files.lhs
+
+Current focus: `Files.lhs` - needs a re-think.
+
+`getWorkspaces` should check that it has a non-empty list of workspaces,
+and return them parsed into current-flag, name and path triples.
+
+`currentWorkspace` needs to become two different things.
+
+One loads up the current workspace, if it exists.
+
+Another creates and initialises a workspace.
 
 ## Features
 

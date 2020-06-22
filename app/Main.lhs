@@ -389,7 +389,6 @@ cmdSave
     , unlines
         [ "save          -- save all prover state to current workspace"
         , "save .        -- save current theory to current workspace"
-        , "save project  -- save non-theory prover state"
         , "save <thry>   -- save theory <thry> to current workspace"]
     , saveState )
 cmdLoad
@@ -397,8 +396,8 @@ cmdLoad
     , "load prover state from file"
     , unlines
         [ "load -- load prover state from current workspace"
-        , "load project - restore non-theory prover state"
-        , "load <thry> -- load EXISTING theory <thry> from current workspace"]
+        , "load <thry> -- load EXISTING theory <thry> from current workspace"
+        , "load new <thry> -- add NEW theory <thry> from current workspace"]
     , loadState )
 
 saveState [] reqs
@@ -429,6 +428,15 @@ loadState [nm] reqs
        (nm,thry) <- readNamedTheory dirfp nm
        putStrLn ("Theory '"++nm++"'read from  '"++projectDir reqs++"'.")
        return $ changed $ theories__ (replaceTheory thry) reqs
+loadState ["new",nm] reqs
+  = do let dirfp = projectDir reqs
+       (nm,thry) <- readNamedTheory dirfp nm
+       putStrLn ("Theory '"++nm++"'read from  '"++projectDir reqs++"'.")
+       case addTheory thry $ theories reqs of
+         Yes thrys' -> return $ changed $ theories_ thrys' reqs
+         But msgs ->
+           do putStrLn ("Add theory failed:\n"++unlines' msgs)
+              return reqs
 loadState _ reqs  =  doshow reqs "unknown 'load' option."
 \end{code}
 

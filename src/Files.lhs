@@ -64,8 +64,10 @@ createUserAppDir dirpath
 
 Get all known workspaces from user data.
 \begin{code}
+getAllWorkspaces :: FilePath -> IO (FilePath, [String])
 getAllWorkspaces dirpath
  = do projTxt <- readFile (dirpath </> wsRoot)
+      let projDescrs = lines projTxt
       return (dirpath, lines projTxt)
 \end{code}
 
@@ -86,27 +88,32 @@ we create it, and initialise the project file.
 currentWorkspace :: String -- initial project file contents
                  -> [String] -- workspace listing
                  -> IO (String,FilePath)
+currentWorkspace defReqState []
+  = error ("No workspaces defined - ")
+
 currentWorkspace defReqState wsSpecs
-  = do let (currNm, currFP) = findCurrent wsSpecs
-       exists <- doesDirectoryExist currFP
-       let projFP = currFP </> projectFile
-       if exists
-       then do exists <- doesFileExist projFP
-               if exists
-               then return (currNm,currFP)
-               else fail ("Missing file: "++projFP )
-       else do putStrLn ("Creating "++currFP)
-               createDirectory currFP
-               putStrLn ("Creating "++projFP)
-               writeFile projFP defReqState
-               return (currNm,currFP)
+  = case findCurrent wsSpecs of
+      Nothing -> error "No current workspace!"
+      Just (currNm, currFP) ->
+        do dirExists <- doesDirectoryExist currFP
+           let projFP = currFP </> projectFile
+           if dirExists
+           then do fileExists <- doesFileExist projFP
+                   if fileExists
+                   then return (currNm,currFP)
+                   else fail ("Missing file: "++projFP )
+           else do putStrLn ("Creating "++currFP)
+                   createDirectory currFP
+                   putStrLn ("Creating "++projFP)
+                   writeFile projFP defReqState
+                   return (currNm,currFP)
 \end{code}
 
 Look for the workspace marked as current:
 \begin{code}
-findCurrent [] = error "No current workspace!"
+findCurrent [] = fail "No current workspace!"
 findCurrent (ln:lns)
- | take 1 ln == [currentMarker] = (nm,fp)
+ | take 1 ln == [currentMarker] = return (nm,fp)
  | otherwise                    = findCurrent lns
  where
    (nm,after) = break (==pathSep) $ drop 1 ln

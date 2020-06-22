@@ -326,7 +326,7 @@ getTheoryConjectures thNm thrys
          Just thry  ->  return $ conjs thry
 \end{code}
 
-\subsubsection{Get Proofs for current theory}
+\subsubsection{Get Proofs from current theory}
 
 \begin{code}
 getTheoryProofs :: Monad m => String -> Theories -> m [Proof]
@@ -342,7 +342,6 @@ getTheoryProofs thNm thrys
 
 We insist, for now at least,
 that the dependencies do not change.
-This function al
 \begin{code}
 updateTheory :: Monad m => String -> (Theory -> Theory) -> Theories -> m Theories
 updateTheory thnm thryF theories@(Theories tmap sdag)

@@ -28,7 +28,7 @@ We have a directed acyclic graph (DAG)
 implemented as $\delta : N \fun \power N$.
 We require that entering  $n_0 \mapsto \{n_1,n_2,\dots,n_k\}$ into a DAG
 only succeeds if $n_0$ is not already present
-and $n_1,..,n_k$ are already present in its domain.
+and $n_1,..,n_k$ are already present, in its domain.
 Note this means that we can only enter
 $n \mapsto \emptyset$ into an empty DAG.
 

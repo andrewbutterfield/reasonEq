@@ -156,6 +156,7 @@ $$
 
 We may implement these later.
 
+\newpage
 \subsection{UTP Conditionals}
 
 \subsubsection{Defn. of Conditional}
@@ -324,33 +325,80 @@ $$
 (P \cond b R) \odot (Q \cond b S)
 $$
 Does this require us to specify that certain \texttt{Cons} names
-should be considered ``schematic''.
+should be considered ``schematic''?
 
 
-
-
-
-
-% %% TEMPLATE
-% $$
-%   \begin{array}{lll}
-%      law & sc & name
-%   \end{array}
-% $$\par\vspace{-8pt}
-% \begin{code}
-% cjXXX = preddef ("law" -.- "name")
-%                 p
-%                 scTrue
-% \end{code}
-
+\newpage
 \subsection{UTP Sequential Composition}
 
+\subsubsection{Defn. of Sequential Composition}
+
+From \cite[Defn 2.2.1,p49]{UTP-book}
+
+$$
+  \begin{array}{lll}
+     P ; Q \equiv \exists O_m \bullet P[O_m/O'] \land Q[O_m/O]
+     & m \textrm{ fresh} & \QNAME{$;$-def}
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+(axSeqDef,alSeqDef) = bookdef (";" -.- "def") "Def2.2.1"
+                       ( mkSeq p q
+                         === exists [gOm]
+                              ( (Sub P p om'sub) /\ (Sub P q omsub) )
+                       )
+                       scTrue -- for now!
+\end{code}
+
+\subsubsection{UTP Seq. Composition Laws}
+
+From \cite[2.2\textbf{L1}, p49]{UTP-book}
+
+$$
+  \begin{array}{lll}
+     P ; (Q ; R) \equiv (P;Q);R
+     && \QNAME{$;$-assoc}
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+(cjSeqAssoc,alSeqAssoc) = bookdef (";" -.- "assoc") "2.2L1"
+                           ( mkSeq p (mkSeq q r) ===  mkSeq (mkSeq p q) r )
+                           scTrue
+\end{code}
+
+
+From \cite[2.2\textbf{L2}, p49]{UTP-book}
+
+$$
+  \begin{array}{lll}
+     (P \cond b Q) ; R \equiv (P;R) \cond b (Q;R)
+     && \QNAME{$;$-$\cond\_$-l-distr}
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+(cjSeqLDistr,alSeqLDistr) = bookdef (";" -.- "cond" -.- "l" -.- "distr") "2.2L2"
+                              ( mkSeq (cond p b q) r
+                                ===
+                                cond (mkSeq p r) b (mkSeq q r)
+                              )
+                              scTrue
+\end{code}
+
+\newpage
 \subsection{UTP Assignment}
 
+
+
+\newpage
 \subsection{UTP ``Skip''}
 
+
+
+\newpage
 \subsection{UTP Non-deterministic Choice}
 
+
+\newpage
 \subsection{UTP Base Theory}
 
 We now collect our axiom set:
@@ -360,6 +408,7 @@ utpBaseAxioms
   = map labelAsAxiom
       [ axRefsDef
       , axCondDef
+      , axSeqDef
       ]
 \end{code}
 
@@ -371,6 +420,7 @@ utpBaseConjs
   = [ cjRefsOrDistr, cjRefsTrans
     , cjCondL1, cjCondL2, cjCondL3, cjCondL4, cjCondL5a
     , cjCondL5b, cjCondL6, cjCondL7, cjCondAlt, cjCondAlt2
+    , cjSeqAssoc, cjSeqLDistr
     ]
 \end{code}
 
@@ -381,6 +431,7 @@ utpBaseAliases
   = [ alRefsDef, alRefsOrDistr, alRefsTrans
     , alCondL1, alCondL2, alCondL3, alCondL4
     , alCondL5a, alCondL5b, alCondL6, alCondL7
+    , alSeqDef, alSeqAssoc, alSeqLDistr
     ]
 \end{code}
 
@@ -504,4 +555,12 @@ sub p = Sub P p $ fromJust $ substn [(vx,e)] []
 lvxs = LVbl vx [] []
 qxs = LstVar lvxs
 lsub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
+\end{code}
+
+$$ O', O, O_m, [O_m/O'], [O_m/O']$$
+\begin{code}
+o = jId "O"  ;  lO = PreVars o  ;  lO' = PostVars o  ;  lOm = MidVars o "m"
+gOm = LstVar lOm
+om'sub = fromJust $ substn [] [(lO',lOm)]
+omsub  = fromJust $ substn [] [(lO,lOm)]
 \end{code}

@@ -9,6 +9,8 @@ This Q arises from considering Ex 2.1.2 p48
 
 True for any truth-functional ⊙ .
 
+For `;` we may want to specify fresh subscripts.
+
 ## Robustness
 
 Working on startup robustness

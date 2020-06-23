@@ -32,7 +32,7 @@ module TestRendering (
 ) where
 
 import Data.Maybe(fromJust)
-import Data.Map as M (fromList,assocs)
+import Data.Map as M (fromList,assocs,lookup)
 import qualified Data.Set as S
 import Data.List (nub, sort, (\\), intercalate)
 import Data.List.Split (splitOn)
@@ -127,7 +127,6 @@ seplist :: [a] -> (b -> [a]) -> [b] -> [a]
 seplist sep tr = intercalate sep . map tr
 \end{code}
 
-\newpage
 \subsection{Terms}
 
 Kinds and Values:
@@ -147,17 +146,8 @@ trValue (Txt s)          =  show s
 
 \textbf{Before we proceed, we need a table/function that returns
 the precedence level of a \texttt{Cons} identifier.
-For now, let's hard-code one.
-Suggested Precedence Table:}
-$$
-        =        \;\mapsto  1
-\qquad  \equiv   \;\mapsto  2
-\qquad  \implies \;\mapsto  3
-\qquad  \lor     \;\mapsto  4
-\qquad  \cond\_  \;\mapsto  4
-\qquad  \land    \;\mapsto  5
-\qquad  \lnot    \;\mapsto  6
-$$
+For now, let's hard-code one.}
+
 We might also want to fine tune rendering modes,
 especially in live proofs:
 
@@ -174,26 +164,48 @@ especially in live proofs:
 \\\hline
 \end{tabular}
 
-Based on experience with live-proof we can now say that
-we use ``non-assoc'' render mode for all associative operators.
 \begin{code}
 type InfixKind = ( Int     -- precedence
                  , Bool    -- true if binary op handling required
                  , Bool )  -- true if ternary mixfix handling required
+\end{code}
+
+Based on experience with live-proof we can now say that
+we use ``non-assoc'' render mode for all associative operators.
+
+Suggested Precedence Table:
+$$
+        =        \;\mapsto  1
+\qquad  \sqsupseteq   \;\mapsto  1
+\qquad  \equiv   \;\mapsto  2
+\qquad  \implies \;\mapsto  3
+\qquad  \lor     \;\mapsto  4
+\qquad  \cond\_  \;\mapsto  4
+\qquad  \land    \;\mapsto  5
+\qquad  \lnot    \;\mapsto  6
+$$
+\begin{code}
+precTable
+ = M.fromList
+    [ ( ";"       , (1,True,False))
+    , ( ":="      , (1,True,False))
+    , ( "sqsupseteq" , (1,True,False))
+    , ( "vdash"   , (2,True,False))
+    , ( "equiv"   , (3,True,False))
+    , ( "implies" , (4,True,False))
+    , ( "lor"     , (5,True,False)) -- force parenthesis for nested 'or'
+    , ( "land"    , (6,True,False)) -- force parenthesis for nested 'and'
+    , ( "lnot"    , (7,True,False))
+    , ( "="       , (8,True,False))
+    , ( "cond"    , (0,False,True)) -- force parenthesis for nested 'cond'
+    ]
 prc :: String -> InfixKind
 prc n
-  | n == ";"        =  (1,True,False)
-  | n == ":="       =  (1,True,False)
-  | n == "vdash"    =  (2,True,False)
-  | n == "equiv"    =  (3,True,False)
-  | n == "implies"  =  (4,True,False)
-  | n == "lor"      =  (5,True,False) -- force parenthesis for nested 'or'
-  | n == "land"     =  (6,True,False) -- force parenthesis for nested 'and'
-  | n == "lnot"     =  (7,True,False)
-  | n == "="        =  (8,True,False)
-  | n == "cond"     =  (0,False,True) -- force parenthesis for nested 'cond'
-  | otherwise       =  (0,False,False)
+  = case M.lookup n precTable of
+     Nothing  ->  (0,False,False)
+     Just ik  ->  ik
 \end{code}
+
 
 Rather than rendering zippers on the fly,
 we mark the focus and un-zip,

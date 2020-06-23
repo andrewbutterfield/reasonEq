@@ -8,7 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module UTPSignature (
   bookdef,
-  cond, mkSeq
+  refines, cond, mkSeq
 ) where
 
 import Data.Maybe
@@ -60,6 +60,7 @@ r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
 \subsection{Base Language Operators}
 
 \begin{code}
+refines p q  = PCons (fromJust $ ident "sqsupseteq") [p, q]
 cond p b q  =  PCons (fromJust $ ident "cond") [p, b, q]
 mkSeq p q   =  PCons (fromJust $ ident ";"   ) [p, q]
 \end{code}

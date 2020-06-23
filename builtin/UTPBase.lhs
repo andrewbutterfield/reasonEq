@@ -62,7 +62,99 @@ assignment,
 ``Skip'',
 and non-deterministic choice are first introduced.
 
+\newpage
 \subsection{UTP Refinement}
+
+\subsubsection{Defn. of Refinement}
+
+From \cite[Sec 1.5,p34]{UTP-book},
+with addition of the notation using the $\sqsupseteq$ symbol:
+$$
+  \begin{array}{lll}
+     P \sqsupseteq S \defs [P \implies S] &
+     & \QNAME{$\sqsupseteq$-def}
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+(axRefsDef,alRefsDef) = bookdef ("sqsupseteq" -.- "def") "defd1.5p34"
+                         (refines p q === univ (p ==> q))
+                         scTrue
+\end{code}
+
+\subsubsection{UTP Refinement Laws}
+
+
+From \cite[Sec 1.5,p35]{UTP-book}
+$$
+  \begin{array}{lll}
+     (P \lor Q \sqsupseteq R)
+     \equiv
+     (P \sqsupseteq R) \land (Q \sqsupseteq R)  &
+     & \QNAME{$\sqsupseteq$-$\lor$-distr}
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+(cjRefsOrDistr,alRefsOrDistr)
+  = bookdef ("sqsupseteq" -.- "lor" -.- "distr") "assrt1.5p35"
+            ( (p \/ q) `refines` r
+              ===
+              (p `refines` r) /\ (q `refines` r))
+            scTrue
+\end{code}
+
+From \cite[Sec 1.5,pp35-36]{UTP-book}
+$$
+  \begin{array}{lll}
+     (P \sqsupseteq Q) \land (Q \sqsupseteq R) \implies (P \sqsupseteq R)  &
+     & \QNAME{$\sqsupseteq$-trans}
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+(cjRefsTrans,alRefsTrans)
+  = bookdef ("sqsupseteq" -.- "trans") "assrt1.5p36a"
+            ( (p `refines` q) /\ (q `refines` r)
+              ==>
+              (p `refines` r) )
+            scTrue
+\end{code}
+
+Other ``laws'' regarding refinement in Chapter 1:
+
+$$
+ [D \land E \implies S] \land [P \implies D] \land [Q \implies E]
+ \implies
+ [P \land Q \implies S]
+ \qquad\textrm{p36}
+$$
+
+$$
+ F\textrm{ monotonic} \land [Y \implies X] \implies [F(X)\implies F(Y)]
+ \qquad\textrm{p37}
+$$
+
+$$
+[X \land Q \implies S]
+\equiv
+[X \implies (\forall \lst x \bullet Q \implies S)]
+, \textrm{ given }\lst x \notin X
+\qquad\textrm{p39}
+$$
+
+$$
+  [ ( \exists \lst c \bullet D(\lst c)
+      \land L(\lst c,\lst a) )
+    \implies S(\lst a)
+  ]
+  \equiv
+  [ D(\lst c)
+    \implies
+    ( \forall \lst a \bullet L(\lst c,\lst a) \implies S(\lst a) )
+  ]
+, \textrm{ given }\lst c \not{\!\cap}\; \lst a
+  \qquad\textrm{p41}
+$$
+
+We may implement these later.
 
 \subsection{UTP Conditionals}
 
@@ -256,7 +348,8 @@ We now collect our axiom set:
 utpBaseAxioms :: [Law]
 utpBaseAxioms
   = map labelAsAxiom
-      [ axCondDef
+      [ axRefsDef
+      , axCondDef
       ]
 \end{code}
 
@@ -265,7 +358,8 @@ We now collect our conjecture set:
 \begin{code}
 utpBaseConjs :: [NmdAssertion]
 utpBaseConjs
-  = [ cjCondL1, cjCondL2, cjCondL3, cjCondL4, cjCondL5a
+  = [ cjRefsOrDistr, cjRefsTrans
+    , cjCondL1, cjCondL2, cjCondL3, cjCondL4, cjCondL5a
     , cjCondL5b, cjCondL6, cjCondL7, cjCondAlt, cjCondAlt2
     ]
 \end{code}
@@ -274,7 +368,8 @@ We now collect our alias set:
 \begin{code}
 utpBaseAliases :: [(String,String)]
 utpBaseAliases
-  = [ alCondL1, alCondL2, alCondL3, alCondL4
+  = [ alRefsDef, alRefsOrDistr, alRefsTrans
+    , alCondL1, alCondL2, alCondL3, alCondL4
     , alCondL5a, alCondL5b, alCondL6, alCondL7
     ]
 \end{code}

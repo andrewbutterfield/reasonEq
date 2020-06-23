@@ -6,14 +6,20 @@ Working on startup robustness
 
 ### Theory Management
 
-Need commands to load a theory file.
+In priority order:
 
-Need commands to create and populate a workspace.
+1. Load a theory "update".
+   This involves adding in new axioms and conjectures,
+   but not overwriting the status of existing laws and conjectures,
+   unless they have been changed.
 
-Need commands to load a theory "update".
-This involves adding in new axioms and conjectures,
-but not overwriting the status of existing laws and conjectures,
-unless they have been changed.
+2. Load a theory file from outside the workspace
+
+3. Create and Populate a workspace.
+
+
+
+
 In the event that a pre-existing item has changed,
 confirmation for the update should be requested from the user
 (a force option can also be provided).

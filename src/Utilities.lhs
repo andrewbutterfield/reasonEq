@@ -15,7 +15,7 @@ module Utilities (
 , trim
 , zip1, zip2, zip2'
 , nlookup, alookup
-, extract
+, extract, keyListDiff
 , numberList, numberList'
 , putPP, putShow, pp
 , YesBut(..)
@@ -144,6 +144,31 @@ extract p xs = (before,it,after)
    it = take 1 rest
    after = drop 1 rest
 \end{code}
+
+List difference, assuming any key value occurs only
+once in each list.
+\begin{code}
+keyListDiff :: ( Ord key, Eq rec)
+            => (rec -> key)  --  key function
+            -> [rec]         --  1st list
+            -> [rec]         --  2nd list
+            -> ( [rec]       --  in 1st list, but not in 2nd
+               , [rec]       --  in 2nd list, and also in 1st, but different
+               , [rec] )     --  in 2nd list, not in 1st
+keyListDiff keyf recs1 recs2
+  =  diff ([],[],[]) (sortOn keyf recs1) (sortOn keyf recs2)
+  where
+   diff (mer,dpu,wen) [] []   =  (reverse mer,   reverse dpu,    reverse wen)
+   diff (mer,dpu,wen) [] rs2  =  (reverse mer, reverse dpu, reverse wen++rs2)
+   diff (mer,dpu,wen) rs1 []  =  (reverse mer++rs1, reverse dpu, reverse wen)
+   diff (mer,dpu,wen) (r1:rs1) (r2:rs2)
+    | keyf r1 < keyf r2  =  diff (r1:mer,dpu,wen) rs1      (r2:rs2)
+    | keyf r1 > keyf r2  =  diff (mer,dpu,r2:wen) (r1:rs1) rs2
+    | r1 == r2           =  diff (mer,dpu,wen)    rs1      rs2
+    | otherwise          =  diff (mer,r2:dpu,wen) rs1      rs2
+\end{code}
+
+
 
 Unsure what these are about!
 \begin{code}

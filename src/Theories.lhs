@@ -24,6 +24,7 @@ module Theories
  , getTheoryDeps, getTheoryDeps', getAllTheories
  , listTheories, getTheoryConjectures, getTheoryProofs
  , replaceTheory, replaceTheory'
+ , updateTheory
  , newTheoryConj
  , assumeConj, lawDemote
  , addTheoryProof, upgradeConj2Law
@@ -344,7 +345,7 @@ We insist, for now at least,
 that the dependencies do not change.
 \begin{code}
 replaceTheory :: Monad m => String -> (Theory -> Theory) -> Theories -> m Theories
-replaceTheory thnm thryF theories@(Theories tmap sdag)
+replaceTheory thnm thryF (Theories tmap sdag)
   = case M.lookup thnm tmap of
       Nothing    ->  fail ("replaceTheory: '"++thnm++"' not found.")
       Just thry  ->  let thry' = thryF thry
@@ -366,7 +367,36 @@ replaceTheory' thry theories
      Just theories'  ->  theories'
 \end{code}
 
-\subsubsection{Monadic Theory Updates}
+\subsubsection{Theory Update}
+
+\begin{code}
+updateTheory :: Monad m => String -> Theory -> Bool -> Theories -> m Theories
+updateTheory thnm thry0 force (Theories tmap sdag)
+  = case M.lookup thnm tmap of
+      Nothing    ->  fail ("updateTheory: '"++thnm++"' not found.")
+      Just thry  ->
+        do let (remL,updL,newL) = keyListDiff (fst . fst) (laws thry) (laws thry0)
+           let (remC,updC,newC) = keyListDiff fst (conjs thry) (conjs thry0)
+           fail $ unlines
+            [ "updateTheory: NYfI"
+            , "remL: " ++ show (map (fst . fst) remL)
+            , "updL: " ++ show (map (fst . fst) updL)
+            , "newL: " ++ show (map (fst . fst) newL)
+            , "remC: " ++ show (map fst remC)
+            , "updC: " ++ show (map fst updC)
+            , "newC: " ++ show (map fst newC)
+            ]
+                     -- let thry' = thryF thry
+                     -- in if thDeps thry' == thDeps thry
+                     --    then return $ Theories (M.insert thnm (thryF thry) tmap)
+                     --                           sdag
+                     --    else fail ( "replaceTheory: '"
+                     --                ++ thnm ++ "' dependencies have changed" )
+\end{code}
+
+
+
+\subsubsection{Monadic Theory Component Updates}
 
 We have some updates that are monadic
 \begin{code}

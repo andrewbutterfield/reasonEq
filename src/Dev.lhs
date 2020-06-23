@@ -155,5 +155,13 @@ as the theory being replaced.
 \begin{code}
 devUpdateBuiltin :: REqState -> String -> Bool -> IO (Maybe String,REqState)
 devUpdateBuiltin reqs thnm force
-  = return (Just "devUpdateBuiltin: not yet implemented.", reqs)
+  = case biLkp thnm devKnownBuiltins of
+     Nothing
+      -> return ( Just ("devUpdateBuiltin: no builtin theory '"++thnm++"'")
+                , reqs)
+     Just thry0
+      -> do let thrys  = theories reqs
+            case updateTheory thnm thry0 force thrys of
+              But msgs   ->  return ( Just $ unlines' msgs, reqs )
+              Yes thrys' ->  return ( Nothing, changed reqs{theories=thrys'} )
 \end{code}

@@ -11,6 +11,7 @@ module Dev
 , devListAllBuiltins
 , devInstallBuiltin
 , devResetBuiltin
+, devUpdateBuiltin
 )
 where
 
@@ -146,4 +147,13 @@ devResetBuiltin reqs thnm
             case updateTheory thnm (const thry0) thrys of
               But msgs   ->  return ( Just $ unlines' msgs, reqs )
               Yes thrys' ->  return ( Nothing, changed reqs{theories=thrys'} )
+\end{code}
+
+Updating an existing theory.
+This is also only safe if the builtin version has the same dependency list
+as the theory being replaced.
+\begin{code}
+devUpdateBuiltin :: REqState -> String -> Bool -> IO (Maybe String,REqState)
+devUpdateBuiltin reqs thnm force
+  = return (Just "devUpdateBuiltin: not yet implemented.", reqs)
 \end{code}

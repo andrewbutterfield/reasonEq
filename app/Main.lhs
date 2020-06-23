@@ -1192,6 +1192,12 @@ cmdBuiltin
         , "b "++binReset++" <name> -- reset builtin theory <name>"
         , "           -- replaces already installed theory by builtin version"
         , "                                        (a.k.a. 'factory setting')"
+        , "b "++binUpdate++" <name> -- update builtin theory <name>"
+        , "           -- adds in new material from builtin version"
+        , "           -- asks user regarding revisions to existing material"
+        , "b "++binUForce++" <name> -- force-update builtin theory <name>"
+        , "           -- adds in new and revised material from builtin version"
+        , "           -- does not ask user to confirm revisions"
         ]
     , buildIn )
 
@@ -1199,6 +1205,8 @@ binExists = "e"
 binInstalled = "i"
 binInstall = "I"
 binReset = "R"
+binUpdate = "U"
+binUForce = "F"
 
 buildIn (cmd:_) reqs
  | cmd == binExists
@@ -1213,9 +1221,20 @@ buildIn (cmd:nm:_) reqs
           Just msg -> doshow reqs msg
           Nothing -> return reqs'
 
-buildIn (cmd:nm:_) reqs
  | cmd == binReset
    = do (outcome,reqs') <- devResetBuiltin reqs nm
+        case outcome of
+          Just msg -> doshow reqs msg
+          Nothing -> return reqs'
+
+ | cmd == binUpdate
+   = do (outcome,reqs') <- devUpdateBuiltin reqs nm False
+        case outcome of
+          Just msg -> doshow reqs msg
+          Nothing -> return reqs'
+
+ | cmd == binUForce
+   = do (outcome,reqs') <- devUpdateBuiltin reqs nm True
         case outcome of
           Just msg -> doshow reqs msg
           Nothing -> return reqs'

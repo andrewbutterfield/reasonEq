@@ -23,7 +23,7 @@ module Theories
  , addTheory, getTheory
  , getTheoryDeps, getTheoryDeps', getAllTheories
  , listTheories, getTheoryConjectures, getTheoryProofs
- , updateTheory, replaceTheory
+ , replaceTheory, replaceTheory'
  , newTheoryConj
  , assumeConj, lawDemote
  , addTheoryProof, upgradeConj2Law
@@ -336,30 +336,32 @@ getTheoryProofs thNm thrys
          Just thry  ->  return $ proofs thry
 \end{code}
 
-\subsection{Various Updates}
+\subsection{Various Changes}
 
-\subsubsection{Generic Theory Updates}
+\subsubsection{Generic Theory Replacement}
 
 We insist, for now at least,
 that the dependencies do not change.
 \begin{code}
-updateTheory :: Monad m => String -> (Theory -> Theory) -> Theories -> m Theories
-updateTheory thnm thryF theories@(Theories tmap sdag)
+replaceTheory :: Monad m => String -> (Theory -> Theory) -> Theories -> m Theories
+replaceTheory thnm thryF theories@(Theories tmap sdag)
   = case M.lookup thnm tmap of
-      Nothing    ->  fail ("updateTheory: '"++thnm++"' not found.")
+      Nothing    ->  fail ("replaceTheory: '"++thnm++"' not found.")
       Just thry  ->  let thry' = thryF thry
                      in if thDeps thry' == thDeps thry
                         then return $ Theories (M.insert thnm (thryF thry) tmap)
                                                sdag
-                        else fail ( "updateTheory: '"
+                        else fail ( "replaceTheory: '"
                                     ++ thnm ++ "' dependencies have changed" )
 \end{code}
 
-This code ``fails'' silently
+This code is a total version,
+in that it ``fails'' silently,
+by simply returning its input.
 \begin{code}
-replaceTheory :: Theory -> Theories -> Theories
-replaceTheory thry theories
- = case updateTheory (thName thry) (const thry) theories of
+replaceTheory' :: Theory -> Theories -> Theories
+replaceTheory' thry theories
+ = case replaceTheory (thName thry) (const thry) theories of
      Nothing         ->  theories
      Just theories'  ->  theories'
 \end{code}
@@ -421,7 +423,7 @@ This code also ``fails'' silently.
 \begin{code}
 addTheoryProof :: String -> Proof -> Theories -> Theories
 addTheoryProof thname prf thrys
-  = case updateTheory thname (proofs__ (prf:)) thrys of
+  = case replaceTheory thname (proofs__ (prf:)) thrys of
       Nothing      ->  thrys
       Just thrys'  ->  thrys'
 \end{code}

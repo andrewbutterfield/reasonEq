@@ -144,7 +144,7 @@ devResetBuiltin reqs thnm
                 , reqs)
      Just thry0
       -> do let thrys  = theories reqs
-            case updateTheory thnm (const thry0) thrys of
+            case replaceTheory thnm (const thry0) thrys of
               But msgs   ->  return ( Just $ unlines' msgs, reqs )
               Yes thrys' ->  return ( Nothing, changed reqs{theories=thrys'} )
 \end{code}

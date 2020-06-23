@@ -427,7 +427,7 @@ loadState [nm] reqs
   = do let dirfp = projectDir reqs
        (nm,thry) <- readNamedTheory dirfp nm
        putStrLn ("Theory '"++nm++"'read from  '"++projectDir reqs++"'.")
-       return $ changed $ theories__ (replaceTheory thry) reqs
+       return $ changed $ theories__ (replaceTheory' thry) reqs
 loadState ["new",nm] reqs
   = do let dirfp = projectDir reqs
        (nm,thry) <- readNamedTheory dirfp nm

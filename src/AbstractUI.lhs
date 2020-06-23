@@ -198,7 +198,7 @@ newConjecture thnm nasn reqs
       Nothing -> fail ("No theory named '"++thnm++"'.")
       Just thry -> do thry' <- newTheoryConj nasn thry
                       return $ changed
-                             $ theories__ (replaceTheory thry') $ reqs
+                             $ theories__ (replaceTheory' thry') $ reqs
 \end{code}
 
 \subsubsection{Assuming Conjectures}
@@ -210,7 +210,7 @@ assumeConjecture thnm whichC reqs
       Nothing -> fail ("No theory named '"++thnm++"'.")
       Just thry -> do thry' <- assumeConj whichC thry
                       return $ changed
-                             $ theories__ (replaceTheory thry') $ reqs
+                             $ theories__ (replaceTheory' thry') $ reqs
 \end{code}
 
 \subsubsection{Demoting Laws}
@@ -222,7 +222,7 @@ demoteLaw thnm whichL reqs
       Nothing -> fail ("No theory named '"++thnm++"'.")
       Just thry -> do thry' <- lawDemote whichL thry
                       return $ changed
-                             $ theories__ (replaceTheory thry') $ reqs
+                             $ theories__ (replaceTheory' thry') $ reqs
 \end{code}
 
 \subsubsection{Starting a Proof}
@@ -775,7 +775,7 @@ stepEquivalenceTheorem nm state@(reqs, liveProof)
         Just thry
           ->  let thry' = laws__ (law:) $ proofs__ (proof:) thry in
                return ( Nothing
-                      , ( theories__ (replaceTheory thry') reqs
+                      , ( theories__ (replaceTheory' thry') reqs
                         , liveProof ) )
  where strat = strategy liveProof
 \end{code}

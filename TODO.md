@@ -6,7 +6,18 @@ Working on startup robustness
 
 ### Theory Management
 
-Need commands to load a theory file
+Need commands to load a theory file.
+
+Need commands to create and populate a workspace.
+
+Need commands to load a theory "update".
+This involves adding in new axioms and conjectures,
+but not overwriting the status of existing laws and conjectures,
+unless they have been changed.
+In the event that a pre-existing item has changed,
+confirmation for the update should be requested from the user
+(a force option can also be provided).
+
 
 ### Files.lhs
 

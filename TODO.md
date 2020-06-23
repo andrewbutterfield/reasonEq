@@ -1,11 +1,20 @@
 # To Do
 
+? How do we specify schematic cons-names?
+Perhaps out logic signatures should be part of knownVars ?  known Names?
+
+This Q arises from considering Ex 2.1.2 p48
+
+(P ⊙ Q) ◁ b ▷ (R ⊙ S) = (P ◁ b ▷ R) ⊙ (Q ◁ b ▷ S) 
+
+True for any truth-functional ⊙ .
+
 ## Robustness
 
 Working on startup robustness
 
 ### Theory Management
-[]()
+
 In priority order:
 
 1. Load a theory "update".
@@ -16,8 +25,6 @@ In priority order:
 2. Load a theory file from outside the workspace
 
 3. Create and Populate a workspace.
-
-
 
 
 In the event that a pre-existing item has changed,

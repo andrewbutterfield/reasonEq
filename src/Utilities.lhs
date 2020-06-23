@@ -153,19 +153,22 @@ keyListDiff :: ( Ord key, Eq rec)
             -> [rec]         --  1st list
             -> [rec]         --  2nd list
             -> ( [rec]       --  in 1st list, but not in 2nd
+               , [rec]       --  same in both lists
                , [rec]       --  in 2nd list, and also in 1st, but different
                , [rec] )     --  in 2nd list, not in 1st
 keyListDiff keyf recs1 recs2
-  =  diff ([],[],[]) (sortOn keyf recs1) (sortOn keyf recs2)
+  =  diff ([],[],[],[]) (sortOn keyf recs1) (sortOn keyf recs2)
   where
-   diff (mer,dpu,wen) [] []   =  (reverse mer,   reverse dpu,    reverse wen)
-   diff (mer,dpu,wen) [] rs2  =  (reverse mer, reverse dpu, reverse wen++rs2)
-   diff (mer,dpu,wen) rs1 []  =  (reverse mer++rs1, reverse dpu, reverse wen)
-   diff (mer,dpu,wen) (r1:rs1) (r2:rs2)
-    | keyf r1 < keyf r2  =  diff (r1:mer,dpu,wen) rs1      (r2:rs2)
-    | keyf r1 > keyf r2  =  diff (mer,dpu,r2:wen) (r1:rs1) rs2
-    | r1 == r2           =  diff (mer,dpu,wen)    rs1      rs2
-    | otherwise          =  diff (mer,r2:dpu,wen) rs1      rs2
+   rev = reverse
+   -- mr (remove) qe (equal) fd (diff) wn (new)
+   diff (mr,qe,fd,wn) [] []   =  (rev mr, rev qe, rev fd, rev wn)
+   diff (mr,qe,fd,wn) [] rs2  =  (rev mr, rev qe, rev fd, rev wn++rs2)
+   diff (mr,qe,fd,wn) rs1 []  =  (rev mr++rs1, rev qe, rev fd, rev wn)
+   diff (mr,qe,fd,wn) (r1:rs1) (r2:rs2)
+    | keyf r1 < keyf r2  =  diff (r1:mr,qe,fd,wn) rs1      (r2:rs2)
+    | keyf r1 > keyf r2  =  diff (mr,qe,fd,r2:wn) (r1:rs1) rs2
+    | r1 == r2           =  diff (mr,r1:qe,fd,wn) rs1      rs2
+    | otherwise          =  diff (mr,qe,r2:fd,wn) rs1      rs2
 \end{code}
 
 

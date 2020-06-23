@@ -375,14 +375,16 @@ updateTheory thnm thry0 force (Theories tmap sdag)
   = case M.lookup thnm tmap of
       Nothing    ->  fail ("updateTheory: '"++thnm++"' not found.")
       Just thry  ->
-        do let (remL,updL,newL) = keyListDiff (fst . fst) (laws thry) (laws thry0)
-           let (remC,updC,newC) = keyListDiff fst (conjs thry) (conjs thry0)
+        do let (remL,eqL,updL,newL) = keyListDiff (fst . fst) (laws thry) (laws thry0)
+           let (remC,eqC,updC,newC) = keyListDiff fst (conjs thry) (conjs thry0)
            fail $ unlines
             [ "updateTheory: NYfI"
             , "remL: " ++ show (map (fst . fst) remL)
+            , " eqL: " ++ show (map (fst . fst)  eqL)
             , "updL: " ++ show (map (fst . fst) updL)
             , "newL: " ++ show (map (fst . fst) newL)
             , "remC: " ++ show (map fst remC)
+            , " eqC: " ++ show (map fst  eqC)
             , "updC: " ++ show (map fst updC)
             , "newC: " ++ show (map fst newC)
             ]

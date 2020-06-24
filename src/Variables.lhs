@@ -32,6 +32,7 @@ module Variables
  , pattern PreExprs, pattern PrePreds
  , isPreListVar, isObsLVar, isExprLVar, isPredLVar
  , whatLVar, timeLVar
+ , less
  , GenVar, pattern StdVar, pattern LstVar
  , isStdV, isLstV, gvarClass, gvarWhen
  , isPreGenVar, isObsGVar, isExprGVar, isPredGVar
@@ -298,6 +299,12 @@ isPredLVar (LV (v,_,_)) = isPredVar v
 
 whatLVar (LV (v,_,_)) = whatVar v
 timeLVar (LV (v,_,_)) = timeVar v
+\end{code}
+
+\begin{code}
+less :: ListVar -> ([Identifier],[Identifier]) -> ListVar
+(LVbl v is ij) `less` (iv,il)
+ = LVbl v (nub $ sort (is++iv)) (nub $ sort (is++il))
 \end{code}
 
 \newpage

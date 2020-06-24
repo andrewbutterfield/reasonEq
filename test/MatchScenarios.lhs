@@ -710,9 +710,6 @@ e1 `equal` e2  =  PCons eq [e1,e2]
 Now, subtracting from list-variables,
 and defining assigment
 \begin{code}
-(LVbl v is ij) `less` (iv,il)
- = LVbl v (nub $ sort (is++iv)) (nub $ sort (is++il))
-
 v `assigned` e
   = tok `impl` PCons land [ tok' , v' `equal` e ,  _S_v'_is_S_v ]
   where

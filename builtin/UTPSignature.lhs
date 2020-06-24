@@ -7,8 +7,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module UTPSignature (
-  bookdef,
-  refines, cond, mkSeq
+  bookdef
+, refines
+, cond, mkSeq, (.:=), skip
 ) where
 
 import Data.Maybe
@@ -38,6 +39,8 @@ To be done
 We want to map definition and law numbers
 from the book to law names.
 \begin{code}
+bookdef :: String -> String -> Term -> SideCond
+        -> (NmdAssertion, (String, String))
 bookdef name alias prop sc
   = (preddef name prop sc,(alias,name))
 \end{code}
@@ -60,7 +63,18 @@ r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
 \subsection{Base Language Operators}
 
 \begin{code}
-refines p q  = PCons (fromJust $ ident "sqsupseteq") [p, q]
-cond p b q  =  PCons (fromJust $ ident "cond") [p, b, q]
-mkSeq p q   =  PCons (fromJust $ ident ";"   ) [p, q]
+refines :: Term -> Term -> Term
+refines p q  =  PCons (jId "sqsupseteq") [p, q]
+
+cond :: Term -> Term -> Term -> Term
+cond p b q   =  PCons (jId "cond") [p, b, q]
+
+mkSeq :: Term -> Term -> Term
+mkSeq p q    =  PCons (jId ";"   ) [p, q]
+
+(.:=) :: Identifier -> Term -> Term
+v .:= e      =  PCons (jId ":=") [jVar (E ArbType) (ExprVar v Static), e]
+
+skip :: Term
+skip = jVar P $ Vbl (jId "II") PredV Static
 \end{code}

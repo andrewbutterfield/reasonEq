@@ -94,7 +94,7 @@ to variables in the all but the last categories above, as ``known'',
 while those in the last category are simply ``unknown''.
 \begin{code}
 data VarMatchRole -- Variable Matching Role
-  =  KC Term     -- Known Constant ! any free vars in term must also be known
+  =  KC Term     -- Known Constant 
   |  KV Type     -- Known Variable
   |  KG          -- Generic Variable
   |  KI Variable -- Instance Variable ! variable must be known as generic
@@ -283,20 +283,22 @@ and will be added if required.
 addKnownConst :: Monad m => Variable -> Term -> VarTable -> m VarTable
 \end{code}
 
-When adding a term entry
-we require that all free variables in a term
-must already be ``known'' in the table.
-\begin{code}
-absent vt (StdVar v)             =  lookupVarTable vt v == UV
-absent vt (LstVar (LVbl v _ _))  =  lookupLVarTable vt v == UL
-\end{code}
+We no longer require free variables in a term entry
+to be ``known''.
+% When adding a term entry
+% we require that all free variables in a term
+% must already be ``known'' in the table.
+% \begin{code}
+% absent vt (StdVar v)             =  lookupVarTable vt v == UV
+% absent vt (LstVar (LVbl v _ _))  =  lookupLVarTable vt v == UL
+% \end{code}
 
 Only static variables may name a constant,
 and we must check that we won't introduce any cycles.
 \begin{code}
 addKnownConst var@(Vbl _ _ Static) trm vt@(VD (vtable,stable,dtable))
   | StdVar var `S.member` freev  =  fail "addKnownConst: variable in term."
-  | any (absent vt) freev        =  fail "addKnownConst: term has unknowns."
+  -- | any (absent vt) freev        =  fail "addKnownConst: term has unknowns."
   | otherwise
     = case M.lookup var vtable of
         Nothing  ->  return $ VD ( M.insert var (KC trm) vtable,stable,dtable )

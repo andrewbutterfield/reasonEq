@@ -7,8 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Equality (
-  equals, isEqualTo, areEqualTo
-, equalityAxioms, equalityName, equalityTheory
+  equalityAxioms, equalityName, equalityTheory
 ) where
 
 import Data.Maybe
@@ -43,23 +42,20 @@ and expression list-variables $\lst e,\lst f$.
 \subsection{Equality Variables}
 
 \begin{code}
-ve = Vbl (fromJust $ ident "e") ExprV Static; lves = LVbl ve [] []
+ve = Vbl (jId "e") ExprV Static; lves = LVbl ve [] []
 e = fromJust $ eVar ArbType ve
 es = LVbl ve [] []
-vf = Vbl (fromJust $ ident "f") ExprV Static
+vf = Vbl (jId "f") ExprV Static
 f = fromJust $ eVar ArbType vf
 fs = LVbl vf [] []
-vg = Vbl (fromJust $ ident "g") ExprV Static
+vg = Vbl (jId "g") ExprV Static
 g = fromJust $ eVar ArbType vg
-vx = Vbl (fromJust $ ident "x") ObsV Static  ; lvxs = LVbl vx [] []
+vx = Vbl (jId "x") ObsV Static  ; lvxs = LVbl vx [] []
 \end{code}
 
 \subsection{Equality Constants}
 
 \begin{code}
-equals = fromJust $ ident "="
-isEqualTo e1 e2 = Cons P equals [e1,e2]
-areEqualTo es1 es2 = Iter P land equals [es1,es2]
 sub e = Sub (E ArbType) e $ fromJust $ substn [] [(lvxs,lves)]
 \end{code}
 

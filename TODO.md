@@ -1,7 +1,9 @@
 # To Do
 
+`TestRendering` needs a fix so that `∧(O$'=O$)` becomes `(O$'=O$)` .
+
 ? How do we specify schematic cons-names?
-Perhaps out logic signatures should be part of knownVars ?  known Names?
+Perhaps our logic signatures should be part of knownVars ?  known Names?
 
 This Q arises from considering Ex 2.1.2 p48
 
@@ -10,6 +12,13 @@ This Q arises from considering Ex 2.1.2 p48
 True for any truth-functional ⊙ .
 
 For `;` we may want to specify fresh subscripts.
+
+For simultaneous assignment we need to be able to represent
+things like
+
+`x,y$ :=  x+1,f$`
+
+This may require `Var` to contain `GenVar` rather than `Variable`.
 
 ## Robustness
 

@@ -156,7 +156,7 @@ We also have a known predicate variable $\Skip$,
 defined to be $x'=x \land y'=y \land z'=z$.
 
 \begin{code}
-skip = Vbl (fromJust $ ident "II") PredV Static
+skip = Vbl (jId "II") PredV Static
 skipDef = x' `isEqualTo` x /\ ( y' `isEqualTo` y /\ z' `isEqualTo` z)
 
 

@@ -337,7 +337,7 @@ From \cite[Defn 2.2.1,p49]{UTP-book}
 
 $$
   \begin{array}{lll}
-     P ; Q \equiv \exists O_m \bullet P[O_m/O'] \land Q[O_m/O]
+     P ; Q \defs \exists O_m \bullet P[O_m/O'] \land Q[O_m/O]
      & m \textrm{ fresh} & \QNAME{$;$-def}
   \end{array}
 $$\par\vspace{-8pt}
@@ -387,11 +387,134 @@ $$\par\vspace{-8pt}
 \newpage
 \subsection{UTP Assignment}
 
+\subsubsection{Defn. of Assignment}
 
+From \cite[Defn 2.3.1,p50]{UTP-book}
+
+$$
+  \begin{array}{lll}
+     x := e
+     \defs
+     x' = e \land O'\less x = O \less x
+     && \QNAME{$::=$-def}
+  \end{array}
+$$ %\par\vspace{-8pt}
+\begin{code}
+(axAsgDef,alAsgDef) = bookdef (":=" -.- "def") "Def2.3.1"
+                       ( ix .:= e
+                         ===
+                         (x' `isEqualTo` e)
+                         /\
+                         PIter land equals [ lO' `less` ([ix],[])
+                                           , lO  `less` ([ix],[]) ]
+                       )
+                       scTrue
+\end{code}
+For now we cannot really handle simultaneous assignment.
+It looks like we need to allow general variables to appear as terms.
+
+\subsubsection{UTP Assignment Laws}
+
+From \cite[2.3\textbf{L1}, p50]{UTP-book}
+$$
+  \begin{array}{lll}
+     x := e  =  (x,y := e,y)
+     && \QNAME{$:=$-unchanged}
+  \end{array}
+$$
+This is not definable at present
+
+From \cite[2.3\textbf{L2}, p50]{UTP-book}
+$$
+  \begin{array}{lll}
+     (x,y,z := e,f,g)  =  (y,x,z := f,e,g)
+     && \QNAME{$:=$-reorder}
+  \end{array}
+$$
+This is not definable at present
+
+From \cite[2.3\textbf{L3}, p50]{UTP-book}
+$$
+  \begin{array}{lll}
+     x := e; x := f =  x := f[e/x]
+     && \QNAME{$:=$-seq-same}
+  \end{array}
+$$
+\begin{code}
+(cjAsgSeqSame,alAsgSeqSame)
+  = bookdef (":=" -.- "seq" -.- "same") "2.3L3"
+     ( mkSeq (ix .:= e) (ix .:= f)
+       ===
+       ( ix .:= ESub ArbType f e_for_x )
+     )
+     scTrue
+\end{code}
+
+From \cite[2.3\textbf{L4}, p50]{UTP-book}
+$$
+  \begin{array}{lll}
+     x := e; P \cond b Q =  (x:=e;P) \cond{b[e/x]} (x:=e;Q)
+     && \QNAME{$:=$-seq-$\cond\_$}
+  \end{array}
+$$
+\begin{code}
+(cjAsgSeqCond,alAsgSeqCond)
+  = bookdef (":=" -.- "seq" -.- "cond") "2.3L4"
+     ( mkSeq (ix .:= e) (cond p b q)
+       ===
+       ( cond (mkSeq (ix .:= e) p)
+              (ESub ArbType b e_for_x)
+              (mkSeq (ix .:= e) q) )
+     )
+     scTrue
+\end{code}
 
 \newpage
 \subsection{UTP ``Skip''}
 
+\subsubsection{Defn. of Skip}
+
+From \cite[Defn 2.3.2,p50]{UTP-book}
+
+$$
+  \begin{array}{lll}
+     \Skip \defs O' = O
+     && \QNAME{$\Skip$-def}
+  \end{array}
+$$ %\par\vspace{-8pt}
+\begin{code}
+(axSkipDef,alSkipDef) = bookdef ("II" -.- "def") "Def2.3.2"
+                         ( skip  ===  PIter land equals [ lO', lO ] )
+                         scTrue
+\end{code}
+
+\subsubsection{UTP Skip Laws}
+
+From \cite[2.3\textbf{L5}, p50]{UTP-book}
+$$
+  \begin{array}{lll}
+     P ; \Skip \equiv P   &
+     & \QNAME{$;$-runit}
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+(cjSkipL5a,alSkipL5a) = bookdef (";" -.- "runit") "2.3L5a"
+                         (mkSeq p skip === p)
+                         scTrue
+\end{code}
+
+From \cite[2.3\textbf{L5}, p50]{UTP-book}
+$$
+  \begin{array}{lll}
+     \Skip ; P \equiv P   &
+     & \QNAME{$;$-lunit}
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+(cjSkipL5b,alSkipL5b) = bookdef (";" -.- "lunit") "2.3L5b"
+                         (mkSeq skip p === p)
+                         scTrue
+\end{code}
 
 
 \newpage
@@ -401,6 +524,14 @@ $$\par\vspace{-8pt}
 \newpage
 \subsection{UTP Base Theory}
 
+We collect our known variables:
+\begin{code}
+utpBaseKnown
+ = fromJust $ addKnownConst skipv skipDef
+            $ newVarTable
+\end{code}
+
+
 We now collect our axiom set:
 \begin{code}
 utpBaseAxioms :: [Law]
@@ -409,6 +540,8 @@ utpBaseAxioms
       [ axRefsDef
       , axCondDef
       , axSeqDef
+      , axAsgDef
+      , axSkipDef
       ]
 \end{code}
 
@@ -421,6 +554,8 @@ utpBaseConjs
     , cjCondL1, cjCondL2, cjCondL3, cjCondL4, cjCondL5a
     , cjCondL5b, cjCondL6, cjCondL7, cjCondAlt, cjCondAlt2
     , cjSeqAssoc, cjSeqLDistr
+    , cjAsgSeqSame, cjAsgSeqCond
+    , cjSkipL5a, cjSkipL5b
     ]
 \end{code}
 
@@ -432,6 +567,8 @@ utpBaseAliases
     , alCondL1, alCondL2, alCondL3, alCondL4
     , alCondL5a, alCondL5b, alCondL6, alCondL7
     , alSeqDef, alSeqAssoc, alSeqLDistr
+    , alAsgDef, alAsgSeqSame, alAsgSeqCond
+    , alSkipDef, alSkipL5a, alSkipL5b
     ]
 \end{code}
 
@@ -453,7 +590,7 @@ utpBaseTheory
                          , notName
                          , equivName
                          ]
-            , known   =  newVarTable
+            , known   =  utpBaseKnown
             , laws    =  utpBaseAxioms
             , conjs   =  utpBaseConjs
             }
@@ -467,10 +604,10 @@ that is then ``wrapped'' in different ways depending on where it is used.
 $$P \quad Q \quad R$$
 \begin{code}
 -- underying variable
-vp = Vbl (fromJust $ ident "P") PredV Static
+vp = Vbl (jId "P") PredV Static
 p = fromJust $ pVar vp
-q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
-r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
+q = fromJust $ pVar $ Vbl (jId "Q") PredV Static
+r = fromJust $ pVar $ Vbl (jId "R") PredV Static
 -- for use in side-conditions
 gvP = StdVar vp
 \end{code}
@@ -478,10 +615,10 @@ gvP = StdVar vp
 
 $$ b \quad b' \qquad c  \quad c' $$
 \begin{code}
-b  = fromJust $ pVar $ Vbl (fromJust $ ident "b") PredV Before
-b' = fromJust $ pVar $ Vbl (fromJust $ ident "b") PredV After
-c  = fromJust $ pVar $ Vbl (fromJust $ ident "c") PredV Before
-c' = fromJust $ pVar $ Vbl (fromJust $ ident "c") PredV After
+b  = fromJust $ pVar $ Vbl (jId "b") PredV Before
+b' = fromJust $ pVar $ Vbl (jId "b") PredV After
+c  = fromJust $ pVar $ Vbl (jId "c") PredV Before
+c' = fromJust $ pVar $ Vbl (jId "c") PredV After
 \end{code}
 
 
@@ -489,7 +626,7 @@ $$ v \qquad \lst v $$
 \begin{code}
 (v,vs) = (StdVar vv, LstVar lvvs)
   where
-   vv   = Vbl (fromJust $ ident "v") ObsV Static
+   vv   = Vbl (jId "v") ObsV Static
    lvvs = LVbl vv [] []
 \end{code}
 
@@ -497,18 +634,15 @@ $$ x \quad y \quad z \qquad x' \quad y' \quad z'$$
 
 Underlying variables:
 \begin{code}
-vx  = Vbl (fromJust $ ident "x") ObsV Before
-vy  = Vbl (fromJust $ ident "y") ObsV Before
-vz  = Vbl (fromJust $ ident "z") ObsV Before
-vx' = Vbl (fromJust $ ident "x") ObsV After
-vy' = Vbl (fromJust $ ident "y") ObsV After
-vz' = Vbl (fromJust $ ident "z") ObsV After
+ix = jId "x" ; vx  = Vbl ix ObsV Before ; vx' = Vbl ix ObsV After
+iy = jId "y" ; vy  = Vbl iy ObsV Before ; vy' = Vbl iy ObsV After
+iz = jId "z" ; vz  = Vbl iz ObsV Before ; vz' = Vbl iz ObsV After
 \end{code}
 
 For use in expressions  and substitution first list
 \\(e.g. $x+y$ might be \texttt{plus [x,y]}):
 \begin{code}
-[x,y,z,x',y',z'] = map (fromJust . eVar int) [vx,vy,vz,vx',vy',vz']
+[x,y,z,x',y',z'] = map (fromJust . eVar ArbType) [vx,vy,vz,vx',vy',vz']
 \end{code}
 
 For use in quantifier variable list/sets and substitution second lists
@@ -520,20 +654,20 @@ For use in quantifier variable list/sets and substitution second lists
 $$ x_m \qquad y_m \qquad z_m$$
 For use in quantifier variable list/sets and substitutions:
 \begin{code}
-xm = StdVar $ Vbl (fromJust $ ident "x") ObsV (During "m")
+xm = StdVar $ Vbl (jId "x") ObsV (During "m")
 \end{code}
 
 $$\Nat \qquad \Int$$
 \begin{code}
-nat  = GivenType $ fromJust $ ident "N"
-int  = GivenType $ fromJust $ ident "Z"
+nat  = GivenType $ jId "N"
+int  = GivenType $ jId "Z"
 \end{code}
 
 $$ e \quad \lst e  \qquad f \quad \lst f$$
 \begin{code}
 -- Underlying variables:
-ve = Vbl (fromJust $ ident "e") ExprV Before
-vf = Vbl (fromJust $ ident "f") ExprV Before
+ve = Vbl (jId "e") ExprV Before
+vf = Vbl (jId "f") ExprV Before
 -- for use in expressions
 e = fromJust $ eVar int ve
 f = fromJust $ eVar int vf
@@ -551,16 +685,23 @@ qfs = LstVar lvfs
 $$ P[e/x] \qquad P[\lst e/\lst x]$$
 \begin{code}
 -- note that [ a / v]  becomes (v,a) !
-sub p = Sub P p $ fromJust $ substn [(vx,e)] []
+e_for_x = jSubstn [(vx,e)] []
+sub p = Sub P p e_for_x
 lvxs = LVbl vx [] []
 qxs = LstVar lvxs
-lsub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
+lsub p = Sub P p $ jSubstn[] [(lvxs,lves)]
 \end{code}
 
 $$ O', O, O_m, [O_m/O'], [O_m/O']$$
 \begin{code}
 o = jId "O"  ;  lO = PreVars o  ;  lO' = PostVars o  ;  lOm = MidVars o "m"
 gOm = LstVar lOm
-om'sub = fromJust $ substn [] [(lO',lOm)]
-omsub  = fromJust $ substn [] [(lO,lOm)]
+om'sub = jSubstn[] [(lO',lOm)]
+omsub  = jSubstn[] [(lO,lOm)]
+\end{code}
+
+$$ \Skip $$
+\begin{code}
+skipv = Vbl (jId "II") PredV Static
+skipDef =  PIter land equals [ lO', lO ]
 \end{code}

@@ -32,6 +32,7 @@ module AST ( TermSub, LVarSub
            , pattern E2, pattern P2
            , termkind, isVar, isExpr, isPred, isAtomic
            , theVar, varAsTerm
+           , icomma, lvarCons
            , subTerms
            , mentionedVars, mentionedVarLists, mentionedVarSets
            -- test only below here
@@ -373,6 +374,36 @@ pattern Iter tk na ni lvs  =   I tk na ni lvs
 pattern Typ  typ           =   ET typ
 \end{code}
 
+Patterns for expressions:
+\begin{code}
+pattern EVal t k           =  K (E t) k
+pattern EVar t v          <-  V (E t) v
+pattern ECons t n ts       =  C (E t) n ts
+pattern EBind t n vs tm   <-  B (E t) n vs tm
+pattern ELam t n vl tm    <-  L (E t) n vl tm
+pattern ESub t tm s        =  S (E t) tm s
+pattern EIter t na ni lvs  =  I (E t) na ni lvs
+\end{code}
+
+Patterns for predicates:
+\begin{code}
+pattern PVal k             =  K P k
+pattern PVar v            <-  V P v
+pattern PCons n ts         =  C P n ts
+pattern PBind n vs tm     <-  B P n vs tm
+pattern PLam n vl tm      <-  L P n vl tm
+pattern PSub tm s          =  S P tm s
+pattern PIter na ni lvs    =  I P na ni lvs
+\end{code}
+
+\newpage
+Patterns for binary constructions:
+\begin{code}
+pattern E2 t n t1 t2  = C (E t) n [t1,t2]
+pattern P2   n t1 t2  = C P     n [t1,t2]
+\end{code}
+
+
 Smart constructors for variables and binders.
 
 Variable must match term-class.
@@ -437,34 +468,6 @@ binderClass (B _ _ gvs    _)  =  return $ whatGVar $ S.elemAt 0 gvs
 binderClass _ = fail "binderClass: not a binding term."
 \end{code}
 
-Patterns for expressions:
-\begin{code}
-pattern EVal t k           =  K (E t) k
-pattern EVar t v          <-  V (E t) v
-pattern ECons t n ts       =  C (E t) n ts
-pattern EBind t n vs tm   <-  B (E t) n vs tm
-pattern ELam t n vl tm    <-  L (E t) n vl tm
-pattern ESub t tm s        =  S (E t) tm s
-pattern EIter t na ni lvs  =  I (E t) na ni lvs
-\end{code}
-
-Patterns for predicates:
-\begin{code}
-pattern PVal k             =  K P k
-pattern PVar v            <-  V P v
-pattern PCons n ts         =  C P n ts
-pattern PBind n vs tm     <-  B P n vs tm
-pattern PLam n vl tm      <-  L P n vl tm
-pattern PSub tm s          =  S P tm s
-pattern PIter na ni lvs    =  I P na ni lvs
-\end{code}
-
-\newpage
-Patterns for binary constructions:
-\begin{code}
-pattern E2 t n t1 t2  = C (E t) n [t1,t2]
-pattern P2   n t1 t2  = C P     n [t1,t2]
-\end{code}
 
 It can help to test if a term is an variable, expression or predicate:
 \begin{code}
@@ -499,6 +502,12 @@ Lifting a variable to a term:
 varAsTerm :: Variable -> Term
 varAsTerm v@(PredVar _ _)  =  V P     v
 varAsTerm v                =  V (E T) v
+\end{code}
+
+Using \texttt{Iter} for a construct built from a list of list-variables
+\begin{code}
+icomma = jId ","
+lvarCons tk ni lvs = Iter tk icomma ni lvs
 \end{code}
 
 In \cite{UTP-book} we find the notion of texts, in chapters 6 and 10.

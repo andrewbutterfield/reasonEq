@@ -15,6 +15,7 @@ module StdSignature (
 , lor, mkOr, mkOrs, (\/)
 , land, mkAnd, mkAnds, (/\)
 , implies, mkImplies, (==>)
+, equals, isEqualTo, areEqualTo
 , propSignature
 , propdef
 , flattenEquiv
@@ -99,15 +100,15 @@ as they have significance for proof strategies.
 \subsubsection{Propositional Variables}
 
 \begin{code}
-p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
-q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
-r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
+p = fromJust $ pVar $ Vbl (jId "P") PredV Static
+q = fromJust $ pVar $ Vbl (jId "Q") PredV Static
+r = fromJust $ pVar $ Vbl (jId "R") PredV Static
 \end{code}
 
 \subsubsection{Propositional Type}
 
 \begin{code}
-bool = GivenType $ fromJust $ ident $ "B"
+bool = GivenType $ jId $ "B"
 \end{code}
 
 \subsubsection{Propositional Constants}
@@ -121,28 +122,32 @@ falseP = Val P $ Boolean False
 \subsection{Propositional Operators}
 
 \begin{code}
-equiv = fromJust $ ident "equiv" ; mkEquivs ps = PCons equiv ps
+equiv = jId "equiv" ; mkEquivs ps = PCons equiv ps
 mkEquiv p q = mkEquivs [p,q]
 infix 1 === ; (===) = mkEquiv
 
-implies = fromJust $ ident "implies" ; mkImplies p q = PCons implies [p,q]
+implies = jId "implies" ; mkImplies p q = PCons implies [p,q]
 infixr 2 ==> ; (==>) = mkImplies
 
-lor = fromJust $ ident "lor"
+lor = jId "lor"
 mkOrs []   =  falseP
 mkOrs [p]  =  p
 mkOrs ps   =  PCons lor ps
 mkOr p q   =  mkOrs [p,q]
 infix 3 \/ ; (\/) = mkOr
 
-land = fromJust $ ident "land"
+land = jId "land"
 mkAnds []   =  trueP
 mkAnds [p]  =  p
 mkAnds ps   =  PCons land ps
 mkAnd p q = mkAnds [p,q]
 infix 4 /\ ; (/\) = mkAnd
 
-lnot = fromJust $ ident "lnot" ; mkNot p = PCons lnot [p]
+lnot = jId "lnot" ; mkNot p = PCons lnot [p]
+
+equals = jId "="
+isEqualTo e1 e2 = Cons P equals [e1,e2]
+areEqualTo es1 es2 = Iter P land equals [es1,es2]
 \end{code}
 
 \subsubsection{The Propositional Signature}
@@ -167,10 +172,10 @@ propdef ( name, prop ) = ( name, ( prop, scTrue ) )
 \subsubsection{Predicate Constants}
 
 \begin{code}
-forallId = fromJust $ ident "forall"
+forallId = jId "forall"
 forall vl p = fromJust $ pBnd forallId (S.fromList vl) p
 
-existsId = fromJust $ ident "exists"
+existsId = jId "exists"
 exists vl p = fromJust $ pBnd existsId (S.fromList vl) p
 
 univId = fromJust $ brktIdent "[" "]"

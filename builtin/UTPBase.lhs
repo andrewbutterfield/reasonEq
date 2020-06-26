@@ -13,6 +13,7 @@ module UTPBase (
 
 import Data.Maybe
 import qualified Data.Set as S
+import qualified Data.Map as M
 
 import NiceSymbols
 
@@ -24,6 +25,7 @@ import SideCond
 import VarData
 import Laws
 import Proofs
+import Substitution
 import Theories
 
 import StdSignature
@@ -559,6 +561,13 @@ utpBaseConjs
     ]
 \end{code}
 
+We now collect our substitutability information:
+\begin{code}
+utpBaseSubAbility :: SubAbilityMap
+utpBaseSubAbility
+ = M.fromList [ ( jId "cond", CS )]
+\end{code}
+
 We now collect our alias set:
 \begin{code}
 utpBaseAliases :: [(String,String)]
@@ -591,6 +600,7 @@ utpBaseTheory
                          , equivName
                          ]
             , known   =  utpBaseKnown
+            , subable =  utpBaseSubAbility
             , laws    =  utpBaseAxioms
             , conjs   =  utpBaseConjs
             }

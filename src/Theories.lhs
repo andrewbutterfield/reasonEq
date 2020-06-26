@@ -377,23 +377,30 @@ updateTheory thnm thry0 force (Theories tmap sdag)
       Just thry  ->
         do let (remL,eqL,updL,newL) = keyListDiff (fst . fst) (laws thry) (laws thry0)
            let (remC,eqC,updC,newC) = keyListDiff fst (conjs thry) (conjs thry0)
-           fail $ unlines
-            [ "updateTheory: NYfI"
-            , "remL: " ++ show (map (fst . fst) remL)
-            , " eqL: " ++ show (map (fst . fst)  eqL)
-            , "updL: " ++ show (map (fst . fst) updL)
-            , "newL: " ++ show (map (fst . fst) newL)
-            , "remC: " ++ show (map fst remC)
-            , " eqC: " ++ show (map fst  eqC)
-            , "updC: " ++ show (map fst updC)
-            , "newC: " ++ show (map fst newC)
-            ]
-                     -- let thry' = thryF thry
-                     -- in if thDeps thry' == thDeps thry
-                     --    then return $ Theories (M.insert thnm (thryF thry) tmap)
-                     --                           sdag
-                     --    else fail ( "replaceTheory: '"
-                     --                ++ thnm ++ "' dependencies have changed" )
+           -- need to do this for VarTable ?
+           -- need to do this for SubAbilityMap ?
+           -- or are these *necessary* updates?
+           -- they can invalidate proofs.
+           if null updL && null updC
+           then
+             do  let thry' = addLaws thry newL
+                 let thry'' = addConjs thry' newC
+                 return $ Theories (M.insert thnm thry'' tmap) sdag
+           else
+             fail $ unlines
+              [ "updateTheory: can't handle law/conj. updates right now"
+              , "remL: " ++ show (map (fst . fst) remL)
+              , " eqL: " ++ show (map (fst . fst)  eqL)
+              , "updL: " ++ show (map (fst . fst) updL)
+              , "newL: " ++ show (map (fst . fst) newL)
+              , "remC: " ++ show (map fst remC)
+              , " eqC: " ++ show (map fst  eqC)
+              , "updC: " ++ show (map fst updC)
+              , "newC: " ++ show (map fst newC)
+              ]
+
+addLaws  thry newL  =  laws__ (++ newL) thry
+addConjs thry newC  =  conjs__ (++ newC) thry
 \end{code}
 
 

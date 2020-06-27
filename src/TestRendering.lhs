@@ -192,6 +192,7 @@ precTable
     , ( "sqsupseteq" , (1,True,False))
     , ( "vdash"   , (2,True,False))
     , ( "equiv"   , (3,True,False))
+    , ( "sqcap"   , (4,True,False))
     , ( "implies" , (4,True,False))
     , ( "lor"     , (5,True,False)) -- force parenthesis for nested 'or'
     , ( "land"    , (6,True,False)) -- force parenthesis for nested 'and'
@@ -316,14 +317,14 @@ we have three cases:
 
 \begin{code}
 trterm trid _ (Iter tk na ni lvs@(_:_:_))
- | isSymbId ni  = silentId na ++ "(" ++ seplist (trId ni) (trlvar trid) lvs ++ ")"
+ | isSymbId ni  = silentId na ++ "(" ++ seplist (trid ni) (trlvar trid) lvs ++ ")"
  where silentId na@(Identifier i _)
   -- logical-and is the 'default' for na, so we keep it 'silent'
-        | i == _land  =  ""
-        | otherwise   =  trId na
+        | i == "land"  =  ""
+        | otherwise    =  trid na
 
 trterm trid _ (Iter tk na ni lvs)
-  =  trId na ++ "{" ++ trId ni ++ "(" ++ seplist "," (trlvar trid) lvs ++ ")}"
+  =  trid na ++ "{" ++ trid ni ++ "(" ++ seplist "," (trlvar trid) lvs ++ ")}"
 \end{code}
 
 

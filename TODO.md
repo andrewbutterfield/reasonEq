@@ -1,9 +1,9 @@
 # To Do
 
-`TestRendering` needs a fix so that `∧(O$'=O$)` becomes `(O$'=O$)` .
-
 ? How do we specify schematic cons-names?
 Perhaps our logic signatures should be part of knownVars ?  known Names?
+
+**Yup!**
 
 This Q arises from considering Ex 2.1.2 p48
 

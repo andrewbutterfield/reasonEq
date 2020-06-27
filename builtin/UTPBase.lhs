@@ -522,6 +522,91 @@ $$\par\vspace{-8pt}
 \newpage
 \subsection{UTP Non-deterministic Choice}
 
+\subsubsection{Defn. of N.-D.-Choice}
+
+From \cite[Defn 2.4.1,p51]{UTP-book}
+
+$$
+  \begin{array}{lll}
+     P \sqcap Q = P \lor Q
+     && \QNAME{$\sqcap$-def}
+  \end{array}
+$$ %\par\vspace{-8pt}
+\begin{code}
+(axNDCDef,alNDCDef) = bookdef ("sqcap" -.- "def") "Def2.4.1"
+                         ( p `ndc` q  ===  p \/ q )
+                         scTrue
+\end{code}
+
+\subsubsection{UTP N.-D.-Choice Laws}
+
+From \cite[2.4\textbf{L1}, p52]{UTP-book}
+$$
+  \begin{array}{lll}
+     P \sqcap Q = P \lor Q
+     && \QNAME{$\sqcap$-symm}
+  \end{array}
+$$ %\par\vspace{-8pt}
+\begin{code}
+(cjNDCSymm,alNDCSymm) = bookdef ("sqcap" -.- "symm") "2.4L1"
+                         ( p `ndc` q  ===  q `ndc` p )
+                         scTrue
+\end{code}
+
+From \cite[2.4\textbf{L2}, p52]{UTP-book}
+$$
+  \begin{array}{lll}
+     P \sqcap Q = P \lor Q
+     && \QNAME{$\sqcap$-symm}
+  \end{array}
+$$ %\par\vspace{-8pt}
+\begin{code}
+(cjNDCAssoc,alNDCAssoc) = bookdef ("sqcap" -.- "assoc") "2.4L2"
+                         ( p `ndc` (q `ndc` r)  ===  (p `ndc` q) `ndc` r )
+                         scTrue
+\end{code}
+
+From \cite[2.4\textbf{L3}, p52]{UTP-book}
+$$
+  \begin{array}{lll}
+     P \sqcap P = P
+     && \QNAME{$\sqcap$-idemp}
+  \end{array}
+$$ %\par\vspace{-8pt}
+\begin{code}
+(cjNDCIdem,alNDCIdem) = bookdef ("sqcap" -.- "idem") "2.4L3"
+                         ( p `ndc` p  ===  p )
+                         scTrue
+\end{code}
+
+From \cite[2.4\textbf{L4}, p52]{UTP-book}
+$$
+  \begin{array}{lll}
+     P \sqcap (Q \sqcap R) = (P \sqcap Q) \sqcap (P \sqcap R)
+     && \QNAME{$\sqcap$-self-distr}
+  \end{array}
+$$ %\par\vspace{-8pt}
+\begin{code}
+(cjNDCDistr,alNDCDistr)
+   = bookdef ("sqcap" -.- "distr") "2.4L4"
+             ( p `ndc` (q `ndc` r)  ===  (p `ndc` q) `ndc` (p `ndc` r) )
+             scTrue
+\end{code}
+
+
+$$
+  \begin{array}{lll}
+     P \cond b (Q \sqcap R) = (P \cond b Q) \sqcap (P \cond b R)
+     && \QNAME{$\cond\_$-$\sqcap$-distr-2.4\textbf{L5}}
+  \\ (P \sqcap Q); R = (P;R) \sqcap (Q;R)
+     && \QNAME{$;$-$\sqcap$-left-distr-2.4\textbf{L6}}
+  \\ P;(Q \sqcap R); R = (P;Q) \sqcap (P;R)
+     && \QNAME{$;$-$\sqcap$-right-distr-2.4\textbf{L7}}
+  \\ P \sqcap (Q \cond b R); R = (P \sqcap Q) \cond b (P \sqcap R)
+     && \QNAME{$\sqcap$-$\cond\_$-distr-2.4\textbf{L8}}
+  \end{array}
+$$ %\par\vspace{-8pt}
+
 
 \newpage
 \subsection{UTP Base Theory}
@@ -544,6 +629,7 @@ utpBaseAxioms
       , axSeqDef
       , axAsgDef
       , axSkipDef
+      , axNDCDef
       ]
 \end{code}
 
@@ -560,6 +646,12 @@ utpBaseConjs
     , cjSkipL5a, cjSkipL5b
     ]
 \end{code}
+
+
+cjNDCSymm,alNDCSymm
+cjNDCAssoc,alNDCAssoc
+cjNDCIdem,alNDCIdem
+cjNDCDistr,alNDCDistr
 
 We now collect our substitutability information:
 \begin{code}
@@ -578,6 +670,7 @@ utpBaseAliases
     , alSeqDef, alSeqAssoc, alSeqLDistr
     , alAsgDef, alAsgSeqSame, alAsgSeqCond
     , alSkipDef, alSkipL5a, alSkipL5b
+    , alNDCDef
     ]
 \end{code}
 

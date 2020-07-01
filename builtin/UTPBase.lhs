@@ -594,18 +594,61 @@ $$ %\par\vspace{-8pt}
 \end{code}
 
 
+From \cite[2.4\textbf{L5}, p52]{UTP-book}
 $$
   \begin{array}{lll}
      P \cond b (Q \sqcap R) = (P \cond b Q) \sqcap (P \cond b R)
      && \QNAME{$\cond\_$-$\sqcap$-distr-2.4\textbf{L5}}
-  \\ (P \sqcap Q); R = (P;R) \sqcap (Q;R)
+  \end{array}
+$$ %\par\vspace{-8pt}
+\begin{code}
+(cjCondNDCDistr,alCondNDCDistr)
+   = bookdef ("cond" -.- "sqcap" -.- "distr") "2.4L5"
+             ( cond p b (q `ndc` r)  ===  (cond p b q) `ndc` (cond p b r) )
+             scTrue
+\end{code}
+
+From \cite[2.4\textbf{L6}, p52]{UTP-book}
+$$
+  \begin{array}{lll}
+     (P \sqcap Q); R = (P;R) \sqcap (Q;R)
      && \QNAME{$;$-$\sqcap$-left-distr-2.4\textbf{L6}}
-  \\ P;(Q \sqcap R); R = (P;Q) \sqcap (P;R)
+  \end{array}
+$$ %\par\vspace{-8pt}
+\begin{code}
+(cjSeqNDCLDistr,alSeqNDCLDistr)
+   = bookdef (";" -.- "sqcap" -.- "ldistr") "2.4L6"
+             ( mkSeq p q `ndc` r  ===  (mkSeq p q) `ndc` (mkSeq p r) )
+             scTrue
+\end{code}
+
+From \cite[2.4\textbf{L7}, p52]{UTP-book}
+$$
+  \begin{array}{lll}
+     P;(Q \sqcap R);  = (P;Q) \sqcap (P;R)
      && \QNAME{$;$-$\sqcap$-right-distr-2.4\textbf{L7}}
-  \\ P \sqcap (Q \cond b R); R = (P \sqcap Q) \cond b (P \sqcap R)
+  \end{array}
+$$ %\par\vspace{-8pt}
+\begin{code}
+(cjSeqNDCRDistr,alSeqNDCRDistr)
+   = bookdef (";" -.- "sqcap" -.- "rdistr") "2.4L7"
+             ( mkSeq p (q `ndc` r)  ===  (mkSeq p q) `ndc` (mkSeq p r) )
+             scTrue
+\end{code}
+
+From \cite[2.4\textbf{L8}, p52]{UTP-book}
+$$
+  \begin{array}{lll}
+     P \sqcap (Q \cond b R); R = (P \sqcap Q) \cond b (P \sqcap R)
      && \QNAME{$\sqcap$-$\cond\_$-distr-2.4\textbf{L8}}
   \end{array}
 $$ %\par\vspace{-8pt}
+\begin{code}
+(cjNDCCondDistr,alNDCCondDistr)
+   = bookdef ("sqcap" -.- "cond" -.- "distr") "2.4L8"
+             ( p `ndc` (cond q b r)  ===  cond (p `ndc` q) b (p `ndc` r) )
+             scTrue
+\end{code}
 
 
 \newpage
@@ -644,14 +687,12 @@ utpBaseConjs
     , cjSeqAssoc, cjSeqLDistr
     , cjAsgSeqSame, cjAsgSeqCond
     , cjSkipL5a, cjSkipL5b
+    , cjNDCSymm, cjNDCAssoc, cjNDCIdem, cjNDCDistr
+    , cjCondNDCDistr, cjSeqNDCLDistr, cjSeqNDCRDistr, cjNDCCondDistr
     ]
 \end{code}
 
 
-cjNDCSymm,alNDCSymm
-cjNDCAssoc,alNDCAssoc
-cjNDCIdem,alNDCIdem
-cjNDCDistr,alNDCDistr
 
 We now collect our substitutability information:
 \begin{code}
@@ -670,7 +711,8 @@ utpBaseAliases
     , alSeqDef, alSeqAssoc, alSeqLDistr
     , alAsgDef, alAsgSeqSame, alAsgSeqCond
     , alSkipDef, alSkipL5a, alSkipL5b
-    , alNDCDef
+    , alNDCDef, alNDCSymm, alNDCAssoc, alNDCIdem, alNDCDistr
+    , alCondNDCDistr, alSeqNDCLDistr, alSeqNDCRDistr, alNDCCondDistr
     ]
 \end{code}
 

@@ -9,7 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module UTPSignature (
   bookdef
 , refines
-, cond, mkSeq, (.:=), skip, ndc
+, cond, mkSeq, (.:=), skip, ndc, abort, miracle
 ) where
 
 import Data.Maybe
@@ -80,4 +80,10 @@ skip = jVar P $ Vbl (jId "II") PredV Static
 
 ndc :: Term -> Term -> Term
 ndc p q = PCons (jId "sqcap") [p, q]
+
+abort :: Term
+abort = jVar P $ Vbl (jId "bot") PredV Static
+
+miracle :: Term
+miracle = jVar P $ Vbl (jId "top") PredV Static
 \end{code}

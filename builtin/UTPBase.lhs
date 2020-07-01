@@ -63,6 +63,8 @@ sequential composition,
 assignment,
 ``Skip'',
 and non-deterministic choice are first introduced.
+Here we collect those 1st-order concepts.
+The higher-order concepts in Chapter 2 are not collected here.
 
 \newpage
 \subsection{UTP Refinement}
@@ -608,6 +610,8 @@ $$ %\par\vspace{-8pt}
              scTrue
 \end{code}
 
+\newpage
+
 From \cite[2.4\textbf{L6}, p52]{UTP-book}
 $$
   \begin{array}{lll}
@@ -618,7 +622,7 @@ $$ %\par\vspace{-8pt}
 \begin{code}
 (cjSeqNDCLDistr,alSeqNDCLDistr)
    = bookdef (";" -.- "sqcap" -.- "ldistr") "2.4L6"
-             ( mkSeq p q `ndc` r  ===  (mkSeq p q) `ndc` (mkSeq p r) )
+             ( mkSeq (p `ndc` q) r  ===  (mkSeq p r) `ndc` (mkSeq q r) )
              scTrue
 \end{code}
 
@@ -650,6 +654,42 @@ $$ %\par\vspace{-8pt}
              scTrue
 \end{code}
 
+\newpage
+\subsection{UTP Abort}
+
+\subsubsection{Defn. of Abort}
+
+From \cite[Defn 2.4.2,p53]{UTP-book}
+
+$$
+  \begin{array}{lll}
+     \bot  = \true
+     && \QNAME{$\bot$-def}
+  \end{array}
+$$ %\par\vspace{-8pt}
+\begin{code}
+(axAbortDef,alAbortDef) = bookdef ("bot" -.- "def") "Def2.4.2"
+                           ( abort  ===  trueP )
+                           scTrue
+\end{code}
+
+\subsection{UTP Miracle}
+
+\subsubsection{Defn. of Miracle}
+
+From \cite[Defn 2.5.1,p55]{UTP-book}
+
+$$
+  \begin{array}{lll}
+     \top  = \false
+     && \QNAME{$\top$-def}
+  \end{array}
+$$ %\par\vspace{-8pt}
+\begin{code}
+(axMiracleDef,alMiracleDef) = bookdef ("top" -.- "def") "Def2.5.1"
+                           ( miracle  ===  falseP )
+                           scTrue
+\end{code}
 
 \newpage
 \subsection{UTP Base Theory}
@@ -673,6 +713,7 @@ utpBaseAxioms
       , axAsgDef
       , axSkipDef
       , axNDCDef
+      , axAbortDef, axMiracleDef
       ]
 \end{code}
 
@@ -713,6 +754,7 @@ utpBaseAliases
     , alSkipDef, alSkipL5a, alSkipL5b
     , alNDCDef, alNDCSymm, alNDCAssoc, alNDCIdem, alNDCDistr
     , alCondNDCDistr, alSeqNDCLDistr, alSeqNDCRDistr, alNDCCondDistr
+    , alAbortDef, alMiracleDef
     ]
 \end{code}
 

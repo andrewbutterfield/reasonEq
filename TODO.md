@@ -145,4 +145,4 @@ We need to either have unique q.v.s, or be very careful.
 * law renaming
 
 * Generating proof graph as dot/graphviz file.
- 
+  

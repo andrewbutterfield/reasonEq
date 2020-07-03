@@ -197,22 +197,29 @@ tMatch' vts bind cbvs pbvs tC (Var tkP vP)
 
 
 \subsubsection{Constructor Term-Pattern (\texttt{Cons})}
-Constructors match if they have the same name and kind
+Constructors match if they have the same kind,
+their names match (as static predicate variables)
 and the term-lists are of the same length and corresponding terms match.
 $$
 \inferrule
-   { n_C = n_P
+   { \beta \vdash n_C :: n_P \leadsto \beta_0
      \and
      \beta \vdash t_{C_i} :: t_{P_i} \leadsto \beta_i
    }
-   {\beta \vdash \cc{n_C}{ts_C} :: \cc{n_P}{ts_P} \leadsto \uplus\{\beta_i\}}
+   {\beta \vdash \cc{n_C}{ts_C} :: \cc{n_P}{ts_P}
+    \leadsto
+    \uplus_{i \in 0\dots n}\{\beta_i\}}
    \quad
    \texttt{tMatch Cons}
 $$
 Here $ts_X = \langle t_{X_1}, t_{X_2}, \dots t_{X_n} \rangle$.
 \begin{code}
 tMatch' vts bind cbvs pbvs (Cons tkC nC tsC) (Cons tkP nP tsP)
- | tkC == tkP && nC == nP  =  tsMatch vts bind cbvs pbvs tsC tsP
+ | tkC == tkP
+   =  do let vC = Vbl nC PredV Static
+         let vP = Vbl nP PredV Static
+         bind0 <- vMatch vts bind cbvs pbvs vC vP
+         tsMatch vts bind0 cbvs pbvs tsC tsP
 \end{code}
 
 \newpage

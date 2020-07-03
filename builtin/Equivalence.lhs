@@ -43,11 +43,12 @@ $$
 
 Some useful local definitions:
 \begin{code}
-p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
-q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
-r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
-vx = Vbl (fromJust $ ident "x") ObsV Static  ; lvxs = LVbl vx [] []
-ve = Vbl (fromJust $ ident "e") ExprV Static ; lves = LVbl ve [] []
+v_equiv = Vbl equiv PredV Static
+p = jVar P $ Vbl (jId "P") PredV Static
+q = jVar P $ Vbl (jId "Q") PredV Static
+r = jVar P $ Vbl (jId "R") PredV Static
+vx = Vbl (jId "x") ObsV Static  ; lvxs = LVbl vx [] []
+ve = Vbl (jId "e") ExprV Static ; lves = LVbl ve [] []
 sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
 subid p = Sub P p $ fromJust $ substn [] [(lvxs,lvxs)]
 \end{code}
@@ -58,7 +59,7 @@ We have none.
 The value $true$ is defined as a value, and not a known variable.
 \begin{code}
 equivKnown :: VarTable
-equivKnown =  newVarTable
+equivKnown =  fromJust $ addKnownVar v_equiv ArbType $ newVarTable
 \end{code}
 
 \newpage

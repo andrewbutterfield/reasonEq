@@ -1,19 +1,26 @@
 # To Do
 
-? How do we specify schematic cons-names?
-Perhaps our logic signatures should be part of knownVars ?  known Names?
+## Upgrade No. 1
 
-**Yup!**
+Cons names will now following (Static) variable 
+matching conventions.
 
-This Q arises from considering Ex 2.1.2 p48
+So if they match themselves, 
+they must appear in knownVars.
+
+This requirement arises from considering UTP-book Ex 2.1.2 p48
 
 (P ⊙ Q) ◁ b ▷ (R ⊙ S) = (P ◁ b ▷ R) ⊙ (Q ◁ b ▷ S) 
 
 True for any truth-functional ⊙ .
 
+## Upgrade No. 2
+
 For `;` we may want to specify fresh subscripts.
 **Yes - we need to allow fresh subscript instantisation
 and we need a freshness side-condition of the defintion of seq-comp `;`**
+
+## Upgrade No. 3
 
 For simultaneous assignment we need to be able to represent
 things like

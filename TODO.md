@@ -12,6 +12,8 @@ This Q arises from considering Ex 2.1.2 p48
 True for any truth-functional ⊙ .
 
 For `;` we may want to specify fresh subscripts.
+**Yes - we need to allow fresh subscript instantisation
+and we need a freshness side-condition of the defintion of seq-comp `;`**
 
 For simultaneous assignment we need to be able to represent
 things like

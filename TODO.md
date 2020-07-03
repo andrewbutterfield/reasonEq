@@ -14,6 +14,10 @@ This requirement arises from considering UTP-book Ex 2.1.2 p48
 
 True for any truth-functional ⊙ .
 
+### Status: 
+  matching done, and `Equiv` ..`Implies` theories updated.
+  `UTPBase` needs update, and it all needs some proof testing.
+
 ## Upgrade No. 2
 
 For `;` we may want to specify fresh subscripts.

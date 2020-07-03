@@ -43,6 +43,7 @@ based on \cite{gries.93}.
 
 Some useful local definitions:
 \begin{code}
+v_imp = Vbl implies PredV Static
 p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
 r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
@@ -54,7 +55,10 @@ sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
 
 \subsubsection{Known Variables}
 
-We have none.
+\begin{code}
+impKnown :: VarTable
+impKnown =  fromJust $ addKnownVar v_imp boolf_2 $ newVarTable
+\end{code}
 
 \subsubsection{Substitutability}
 
@@ -448,6 +452,7 @@ implTheory
                          , disjName
                          , notName
                          , equivName ]
+            , known   =  impKnown
             , subable =  implSubAble
             , laws    =  implAxioms
             , conjs   =  implConjs

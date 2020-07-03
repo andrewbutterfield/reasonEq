@@ -1,6 +1,6 @@
 BEGIN THEORY Or
 DEPS = ["Not","Equiv"]
-KNOWN = VD (fromList [],fromList [],fromList [])
+KNOWN = VD (fromList [(VR (Id "lor" 0,VP,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList [])
 SUBABLE = fromList [(Id "lor" 0,CS)]
 BEGIN LIST LAWS
 (("lor_symm",(C P (Id "equiv" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "lor" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "P" 0,VP,WS))]],[])),Axiom)
@@ -8,14 +8,14 @@ BEGIN LIST LAWS
 (("lor_idem",(C P (Id "equiv" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "P" 0,VP,WS))],V P (VR (Id "P" 0,VP,WS))],[])),Axiom)
 (("lor_equiv_distr",(C P (Id "equiv" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id "equiv" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],[])),Axiom)
 (("excl-middle",(C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]],[])),Axiom)
-(("lor_zero",(C P (Id "equiv" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),K P (VB True)],K P (VB True)],[])),Assumed)
-(("lor_unit",(C P (Id "equiv" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),K P (VB False)],V P (VR (Id "P" 0,VP,WS))],[])),Assumed)
-(("lor_lor_distr",(C P (Id "equiv" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id "lor" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],C P (Id "lor" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]]],[])),Assumed)
-(("lor_equiv_split",(C P (Id "equiv" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]],V P (VR (Id "P" 0,VP,WS))],[])),Assumed)
-(("lor_subst",(C P (Id "equiv" 0) [S P (C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),C P (Id "lor" 0) [S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),S P (V P (VR (Id "Q" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))]],[])),Assumed)
 END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS
 BEGIN LIST CONJECTURES
+("lor_zero",(C P (Id "equiv" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),K P (VB True)],K P (VB True)],[]))
+("lor_unit",(C P (Id "equiv" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),K P (VB False)],V P (VR (Id "P" 0,VP,WS))],[]))
+("lor_lor_distr",(C P (Id "equiv" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id "lor" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],C P (Id "lor" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]]],[]))
+("lor_equiv_split",(C P (Id "equiv" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]],V P (VR (Id "P" 0,VP,WS))],[]))
+("lor_subst",(C P (Id "equiv" 0) [S P (C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),C P (Id "lor" 0) [S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),S P (V P (VR (Id "Q" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))]],[]))
 END LIST CONJECTURES
 END THEORY Or

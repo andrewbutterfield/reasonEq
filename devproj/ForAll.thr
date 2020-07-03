@@ -9,10 +9,10 @@ BEGIN LIST LAWS
 (("lor_forall_scope",(C P (Id "equiv" 0) [C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[])),GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V P (VR (Id "Q" 0,VP,WS)))],B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),B P (Id "forall" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V P (VR (Id "Q" 0,VP,WS)))])],[SD (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])])),Axiom)
 (("forall_inst",(C P (Id "implies" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[])),GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V P (VR (Id "P" 0,VP,WS))),B P (Id "forall" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])))],[])),Axiom)
 (("forall_alpha_rename",(C P (Id "equiv" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V P (VR (Id "P" 0,VP,WS))),B P (Id "forall" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "y" 0,VO,WS),[],[]))])))],[SD (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))])])),Axiom)
-(("forall_true",(C P (Id "equiv" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (K P (VB True)),K P (VB True)],[])),Assumed)
 END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS
 BEGIN LIST CONJECTURES
+("forall_true",(C P (Id "equiv" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (K P (VB True)),K P (VB True)],[]))
 END LIST CONJECTURES
 END THEORY ForAll

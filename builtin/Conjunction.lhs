@@ -41,6 +41,7 @@ based on \cite{gries.93}.
 
 Some useful local definitions:
 \begin{code}
+v_and = Vbl land PredV Static
 p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
 r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
@@ -51,7 +52,11 @@ sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
 
 \subsubsection{Known Variables}
 
-We have none.
+\begin{code}
+andKnown :: VarTable
+andKnown =  fromJust $ addKnownVar v_and boolf_2 $ newVarTable
+\end{code}
+
 
 \subsubsection{Substitutability}
 
@@ -238,6 +243,7 @@ conjTheory :: Theory
 conjTheory
   =  nullTheory { thName  =  conjName
             , thDeps  =  [ disjName, notName, equivName ]
+            , known   =  andKnown
             , subable =  conjSubAble
             , laws    =  conjAxioms
             , conjs   =  conjConjs

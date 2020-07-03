@@ -59,7 +59,7 @@ We have none.
 The value $true$ is defined as a value, and not a known variable.
 \begin{code}
 equivKnown :: VarTable
-equivKnown =  fromJust $ addKnownVar v_equiv ArbType $ newVarTable
+equivKnown =  fromJust $ addKnownVar v_equiv boolf_2 $ newVarTable
 \end{code}
 
 \newpage

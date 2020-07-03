@@ -40,6 +40,7 @@ based on \cite{gries.93}.
 
 Some useful local definitions:
 \begin{code}
+v_or = Vbl lor PredV Static
 p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
 r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
@@ -50,7 +51,11 @@ sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
 
 \subsubsection{Known Variables}
 
-We have none.
+\begin{code}
+orKnown :: VarTable
+orKnown =  fromJust $ addKnownVar v_or boolf_2 $ newVarTable
+\end{code}
+
 
 \subsubsection{Substitutability}
 
@@ -247,6 +252,7 @@ disjTheory :: Theory
 disjTheory
   =  nullTheory { thName  =  disjName
             , thDeps  =  [ notName, equivName ]
+            , known   =  orKnown
             , subable =  disjSubAble
             , laws    =  disjAxioms
             , conjs   =  disjConjs

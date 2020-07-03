@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module StdSignature (
-  bool
+  bool, boolf_1, boolf_2, boolf_3
 , trueP
 , falseP
 , equiv, mkEquiv, mkEquivs, (===)
@@ -105,10 +105,13 @@ q = fromJust $ pVar $ Vbl (jId "Q") PredV Static
 r = fromJust $ pVar $ Vbl (jId "R") PredV Static
 \end{code}
 
-\subsubsection{Propositional Type}
+\subsubsection{Propositional Types}
 
 \begin{code}
 bool = GivenType $ jId $ "B"
+boolf_1 = FunType bool bool
+boolf_2 = FunType bool boolf_1
+boolf_3 = FunType bool boolf_2
 \end{code}
 
 \subsubsection{Propositional Constants}

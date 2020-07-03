@@ -42,6 +42,7 @@ and expression list-variables $\lst e,\lst f$.
 \subsection{Equality Variables}
 
 \begin{code}
+v_eq = Vbl equals PredV Static
 ve = Vbl (jId "e") ExprV Static; lves = LVbl ve [] []
 e = fromJust $ eVar ArbType ve
 es = LVbl ve [] []
@@ -58,6 +59,14 @@ vx = Vbl (jId "x") ObsV Static  ; lvxs = LVbl vx [] []
 \begin{code}
 sub e = Sub (E ArbType) e $ fromJust $ substn [] [(lvxs,lves)]
 \end{code}
+
+\subsection{Equality Known Variables}
+
+\begin{code}
+eqKnown :: VarTable
+eqKnown =  fromJust $ addKnownVar v_eq boolf_2 $ newVarTable
+\end{code}
+
 
 \subsection{Equality Substitutability}
 
@@ -153,6 +162,7 @@ equalityName = "Equality"
 equalityTheory :: Theory
 equalityTheory
   =  nullTheory { thName  =  equalityName
+                , known   =  eqKnown
                 , subable =  equalSubAble
                 , laws    =  equalityAxioms
                 , conjs   =  equalityConjectures

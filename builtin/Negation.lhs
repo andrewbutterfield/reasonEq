@@ -39,6 +39,7 @@ based on \cite{gries.93}.
 
 Some useful local definitions:
 \begin{code}
+v_not = Vbl lnot PredV Static
 p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
 r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
@@ -53,7 +54,7 @@ We have none.
 The value $false$ is defined as a value, and not a known variable.
 \begin{code}
 negationKnown :: VarTable
-negationKnown =  newVarTable
+negationKnown =  fromJust $ addKnownVar v_not boolf_1 $ newVarTable
 \end{code}
 
 \subsubsection{Substitutability}
@@ -222,6 +223,7 @@ notTheory :: Theory
 notTheory
   =  nullTheory { thName  =  notName
             , thDeps  =  [equivName]
+            , known   =  negationKnown
             , subable =  negationSubAble
             , laws    =  negationAxioms
             , conjs   =  negationConjs

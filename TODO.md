@@ -29,6 +29,20 @@ things like
 
 This may require `Var` to contain `GenVar` rather than `Variable`.
 
+## Upgrade No. 4
+
+Need to re-design `TestRendering` so we can have meaningful 
+official names (`or`,`refines`) 
+that map to nice symbols (`∨`,`⊒`),
+rather than be called by their LaTeX names (`lor`,`sqsupseteq`).
+
+### Phase 1.
+  Hardcoded Mapping tables
+  
+### Phase 2.
+  Mapping tables part of `REqState`,
+  and hence loadable, saveable, and editable.
+
 ## Robustness
 
 Working on startup robustness

@@ -15,14 +15,13 @@ This requirement arises from considering UTP-book Ex 2.1.2 p48
 True for any truth-functional ⊙ .
 
 ### Status: 
-  matching done, and `Equiv` ..`Implies` theories updated.
-  `UTPBase` needs update, and it all needs some proof testing.
+  All done, but it all needs some proof testing.
 
 ## Upgrade No. 2
 
 For `;` we may want to specify fresh subscripts.
-**Yes - we need to allow fresh subscript instantisation
-and we need a freshness side-condition of the defintion of seq-comp `;`**
+**Yes - we need to allow fresh subscript instantiation
+and we need a freshness side-condition of the definition of seq-comp `;`**
 
 ## Upgrade No. 3
 

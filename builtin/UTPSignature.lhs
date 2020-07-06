@@ -8,8 +8,15 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module UTPSignature (
   bookdef
-, refines
-, cond, mkSeq, (.:=), skip, ndc, abort, miracle
+, apred1, apred11, apred2
+, i_refines, refines
+, i_cond, cond
+, i_seq, mkSeq
+, i_asg, (.:=)
+, i_skip, skip
+, i_ndc, ndc
+, i_abort, abort
+, i_miracle, miracle
 ) where
 
 import Data.Maybe
@@ -48,6 +55,16 @@ bookdef name alias prop sc
 \subsection{Propositional Infrastructure}
 
 
+\begin{code}
+i_t = jId "t"
+tvar = TypeVar i_t
+i_tn n = jId ("t"++show n)
+tnvar n = TypeVar $ i_tn n
+apred1 = FunType tvar bool
+apred11 = FunType tvar apred1
+apred2 = FunType (tnvar 1) $ FunType (tnvar 2) bool
+\end{code}
+
 We need to build some infrastructure here.
 This consists of the predicate variables $P$, $Q$ and $R$.
 
@@ -64,26 +81,34 @@ r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
 
 \begin{code}
 refines :: Term -> Term -> Term
-refines p q  =  PCons (jId "sqsupseteq") [p, q]
+i_refines    =  jId "sqsupseteq"
+refines p q  =  PCons i_refines [p, q]
 
 cond :: Term -> Term -> Term -> Term
-cond p b q   =  PCons (jId "cond") [p, b, q]
+i_cond       =  jId "cond"
+cond p b q   =  PCons i_cond [p, b, q]
 
 mkSeq :: Term -> Term -> Term
-mkSeq p q    =  PCons (jId ";"   ) [p, q]
+i_seq        =  jId ";"
+mkSeq p q    =  PCons i_seq [p, q]
 
 (.:=) :: Identifier -> Term -> Term
-v .:= e      =  PCons (jId ":=") [jVar (E ArbType) (ExprVar v Static), e]
+i_asg        =  jId ":="
+v .:= e      =  PCons i_asg [jVar (E ArbType) (ExprVar v Static), e]
 
 skip :: Term
-skip = jVar P $ Vbl (jId "II") PredV Static
+i_skip  =  jId "II"
+skip    =  jVar P $ Vbl i_skip PredV Static
 
 ndc :: Term -> Term -> Term
-ndc p q = PCons (jId "sqcap") [p, q]
+i_ndc    =  jId "sqcap"
+ndc p q  =  PCons i_ndc [p, q]
 
 abort :: Term
-abort = jVar P $ Vbl (jId "bot") PredV Static
+i_abort  =  jId "bot"
+abort    =  jVar P $ Vbl i_abort PredV Static
 
 miracle :: Term
-miracle = jVar P $ Vbl (jId "top") PredV Static
+i_miracle  =  jId "top"
+miracle    =  jVar P $ Vbl i_miracle PredV Static
 \end{code}

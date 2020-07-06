@@ -7,7 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module StdSignature (
-  bool, boolf_1, boolf_2, boolf_3
+  mkConsVar, mkConsIntro
+, bool, boolf_1, boolf_2, boolf_3
 , trueP
 , falseP
 , equiv, mkEquiv, mkEquivs, (===)
@@ -96,6 +97,18 @@ and the infix symbols $\equiv$, $\lnot$, $\lor$, $\land$ and $\implies$.
 The propositional constants, along with key propositional operators
 are also exported in a logical signature,
 as they have significance for proof strategies.
+
+Constructor names, if required to be known,
+should be declared as known static predicate variable,
+with a type that involves booleans.
+
+\begin{code}
+mkConsVar :: Identifier -> Variable
+mkConsVar i = Vbl i PredV Static
+
+mkConsIntro :: Identifier -> Type -> VarTable -> VarTable
+mkConsIntro i t = fromJust . addKnownVar (mkConsVar i) t
+\end{code}
 
 \subsubsection{Propositional Variables}
 

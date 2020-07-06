@@ -80,6 +80,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
+refinesIntro = mkConsIntro i_refines boolf_2
 (axRefsDef,alRefsDef) = bookdef ("sqsupseteq" -.- "def") "defd1.5p34"
                          (refines p q === univ (p ==> q))
                          scTrue
@@ -173,6 +174,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
+condIntro = mkConsIntro i_cond boolf_3
 (axCondDef,alCondDef) = bookdef ("cond" -.- "def") "Def2.1.1"
                          (cond p b q === (p /\ b) \/ (mkNot b /\ q))
                          scTrue
@@ -346,6 +348,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
+seqIntro = mkConsIntro i_seq boolf_2
 (axSeqDef,alSeqDef) = bookdef (";" -.- "def") "Def2.2.1"
                        ( mkSeq p q
                          === exists [gOm]
@@ -404,6 +407,7 @@ $$
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
+asgIntro = mkConsIntro i_asg apred11
 (axAsgDef,alAsgDef) = bookdef (":=" -.- "def") "Def2.3.1"
                        ( ix .:= e
                          ===
@@ -487,6 +491,7 @@ $$
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
+skipIntro = mkConsIntro i_skip bool
 (axSkipDef,alSkipDef) = bookdef ("II" -.- "def") "Def2.3.2"
                          ( skip  ===  PIter land equals [ lO', lO ] )
                          scTrue
@@ -535,6 +540,8 @@ $$
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
+v_ndc = Vbl i_ndc PredV Static
+ndcIntro = mkConsIntro i_ndc boolf_2
 (axNDCDef,alNDCDef) = bookdef ("sqcap" -.- "def") "Def2.4.1"
                          ( p `ndc` q  ===  p \/ q )
                          scTrue
@@ -668,6 +675,7 @@ $$
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
+abortIntro = mkConsIntro i_abort bool
 (axAbortDef,alAbortDef) = bookdef ("bot" -.- "def") "Def2.4.2"
                            ( abort  ===  trueP )
                            scTrue
@@ -686,6 +694,7 @@ $$
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
+miracleIntro = mkConsIntro i_miracle bool
 (axMiracleDef,alMiracleDef) = bookdef ("top" -.- "def") "Def2.5.1"
                            ( miracle  ===  falseP )
                            scTrue
@@ -697,8 +706,15 @@ $$ %\par\vspace{-8pt}
 We collect our known variables:
 \begin{code}
 utpBaseKnown
- = fromJust $ addKnownConst skipv skipDef
-            $ newVarTable
+ = refinesIntro $
+   condIntro $
+   seqIntro $
+   asgIntro $
+   skipIntro $
+   ndcIntro $
+   abortIntro $
+   miracleIntro $
+   newVarTable
 \end{code}
 
 
@@ -885,10 +901,4 @@ o = jId "O"  ;  lO = PreVars o  ;  lO' = PostVars o  ;  lOm = MidVars o "m"
 gOm = LstVar lOm
 om'sub = jSubstn[] [(lO',lOm)]
 omsub  = jSubstn[] [(lO,lOm)]
-\end{code}
-
-$$ \Skip $$
-\begin{code}
-skipv = Vbl (jId "II") PredV Static
-skipDef =  PIter land equals [ lO', lO ]
 \end{code}

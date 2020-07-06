@@ -199,6 +199,7 @@ precTable
     , ( "lnot"    , (7,True,False))
     , ( "="       , (8,True,False))
     , ( "cond"    , (0,False,True)) -- force parenthesis for nested 'cond'
+    , ( "star"    , (4,True,False)) -- force parenthesis for nested 'star'
     ]
 prc :: String -> InfixKind
 prc n

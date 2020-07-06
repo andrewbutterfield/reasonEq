@@ -295,6 +295,25 @@ $$\par\vspace{-8pt}
                        scTrue
 \end{code}
 
+From \cite[Ex. 2.1.2, p48]{UTP-book},
+for any truth-functional operator $\odot$,
+show:
+$$
+  \begin{array}{lll}
+     (P \odot Q) \cond b (R \odot S)
+     \equiv
+     (P \cond b R) \odot (Q \cond b S)  &
+     & \QNAME{$\cond\_$-mutual-distr}
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+tfo p q = Cons P (jId "star") [p,q]
+(cjCondMutual,alCondMutual)
+  = bookdef ("cond" -.- "mdistr") "Ex2.1.2"
+      ( cond (p `tfo` q) b (r `tfo` s) === tfo (cond p b r) (cond q b s) )
+      scTrue
+\end{code}
+
 
 The following conjectures are not in the book,
 but can be useful:
@@ -740,7 +759,7 @@ utpBaseConjs :: [NmdAssertion]
 utpBaseConjs
   = [ cjRefsOrDistr, cjRefsTrans
     , cjCondL1, cjCondL2, cjCondL3, cjCondL4, cjCondL5a
-    , cjCondL5b, cjCondL6, cjCondL7, cjCondAlt, cjCondAlt2
+    , cjCondL5b, cjCondL6, cjCondL7, cjCondMutual, cjCondAlt, cjCondAlt2
     , cjSeqAssoc, cjSeqLDistr
     , cjAsgSeqSame, cjAsgSeqCond
     , cjSkipL5a, cjSkipL5b
@@ -748,7 +767,6 @@ utpBaseConjs
     , cjCondNDCDistr, cjSeqNDCLDistr, cjSeqNDCRDistr, cjNDCCondDistr
     ]
 \end{code}
-
 
 
 We now collect our substitutability information:
@@ -765,6 +783,7 @@ utpBaseAliases
   = [ alRefsDef, alRefsOrDistr, alRefsTrans
     , alCondL1, alCondL2, alCondL3, alCondL4
     , alCondL5a, alCondL5b, alCondL6, alCondL7
+    , alCondMutual
     , alSeqDef, alSeqAssoc, alSeqLDistr
     , alAsgDef, alAsgSeqSame, alAsgSeqCond
     , alSkipDef, alSkipL5a, alSkipL5b
@@ -811,6 +830,7 @@ vp = Vbl (jId "P") PredV Static
 p = fromJust $ pVar vp
 q = fromJust $ pVar $ Vbl (jId "Q") PredV Static
 r = fromJust $ pVar $ Vbl (jId "R") PredV Static
+s = fromJust $ pVar $ Vbl (jId "S") PredV Static
 -- for use in side-conditions
 gvP = StdVar vp
 \end{code}

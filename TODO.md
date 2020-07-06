@@ -15,7 +15,8 @@ This requirement arises from considering UTP-book Ex 2.1.2 p48
 True for any truth-functional ⊙ .
 
 ### Status: 
-  All done, but it all needs some proof testing.
+  All done, including adding in Ex 2.1.2 above,
+  but it all needs some proof testing.
 
 ## Upgrade No. 2
 

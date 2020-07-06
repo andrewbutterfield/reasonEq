@@ -341,17 +341,6 @@ cjCondAlt2 = preddef ("cond" -.- "alt" -.- "def2")
                      scTrue
 \end{code}
 
-We have a mutual distribution law \cite[Exc 2.1.2,p48]{UTP-book},
-for any truth-functional operator $\odot$:
-
-$$
-(P \odot Q) \cond b (R \odot S)
-=
-(P \cond b R) \odot (Q \cond b S)
-$$
-Does this require us to specify that certain \texttt{Cons} names
-should be considered ``schematic''?
-
 
 \newpage
 \subsection{UTP Sequential Composition}

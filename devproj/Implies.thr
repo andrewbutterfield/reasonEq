@@ -3,8 +3,8 @@ DEPS = ["AndOrInvert","And","Or","Not","Equiv"]
 KNOWN = VD (fromList [(VR (Id "implies" 0,VP,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList [])
 SUBABLE = fromList [(Id "implies" 0,CS)]
 BEGIN LIST LAWS
+(("implies_def2",(C P (Id "equiv" 0) [C P (Id "implies" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "lor" 0) [C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))]],[])),Assumed)
 (("implies_def",(C P (Id "equiv" 0) [C P (Id "implies" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))],[])),Axiom)
-(("implies_def2",(C P (Id "equiv" 0) [C P (Id "implies" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "lor" 0) [C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))]],[])),Proven "implies_def2")
 (("implies_meet",(C P (Id "equiv" 0) [C P (Id "implies" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "equiv" 0) [C P (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "P" 0,VP,WS))]],[])),Assumed)
 (("contrapostive",(C P (Id "equiv" 0) [C P (Id "implies" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "implies" 0) [C P (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))],C P (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]]],[])),Assumed)
 (("implies_equiv_distr",(C P (Id "equiv" 0) [C P (Id "implies" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id "equiv" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],C P (Id "equiv" 0) [C P (Id "implies" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "implies" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]]],[])),Assumed)

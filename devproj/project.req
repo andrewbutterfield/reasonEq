@@ -17,6 +17,28 @@ END THEORIES
 CURRTHEORY = UTPBase
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("UTPBase","cond_mdistr")
+BEGIN LIVE-PROOF
+TH-NAME: UTPBase
+CJ-NAME: cond_mdistr
+CONJ = (C P (Id "equiv" 0) [C P (Id "cond" 0) [C P (Id "star" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "b" 0,VP,WB)),C P (Id "star" 0) [V P (VR (Id "R" 0,VP,WS)),V P (VR (Id "S" 0,VP,WS))]],C P (Id "star" 0) [C P (Id "cond" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "R" 0,VP,WS))],C P (Id "cond" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "S" 0,VP,WS))]]],[])
+SIDE = []
+STRAT redboth
+BEGIN SEQZIP
+TERMZIP = (C P (Id "star" 0) [C P (Id "lor" 0) [C P (Id "land" 0) [V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "P" 0,VP,WS))],C P (Id "land" 0) [C P (Id "lnot" 0) [V P (VR (Id "b" 0,VP,WB))],V P (VR (Id "R" 0,VP,WS))]],C P (Id "lor" 0) [C P (Id "land" 0) [V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "land" 0) [C P (Id "lnot" 0) [V P (VR (Id "b" 0,VP,WB))],V P (VR (Id "S" 0,VP,WS))]]],[])
+BEGIN SEQUENT'
+SIDECOND = []
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.cond_mdistr", thDeps = [], known = VD (fromList [],fromList [],fromList []), subable = fromList [], laws = [], proofs = [], conjs = []}, whichC = Rght, otherC = C P (Id "lor" 0) [C P (Id "land" 0) [V P (VR (Id "b" 0,VP,WB)),C P (Id "star" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],C P (Id "land" 0) [C P (Id "lnot" 0) [V P (VR (Id "b" 0,VP,WB))],C P (Id "star" 0) [V P (VR (Id "R" 0,VP,WS)),V P (VR (Id "S" 0,VP,WS))]]]}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+(UseLaw (ByMatch (ME [1])) "cond_def" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "Q" 0,VP,WS))),((Id "Q" 0,VP),BV (VR (Id "S" 0,VP,WS))),((Id "b" 0,VP),BI (Id "b" 0)),((Id "cond" 0,VP),BV (VR (Id "cond" 0,VP,WS)))],fromList [],fromList [])) [2],(C P (Id "star" 0) [C P (Id "lor" 0) [C P (Id "land" 0) [V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "P" 0,VP,WS))],C P (Id "land" 0) [C P (Id "lnot" 0) [V P (VR (Id "b" 0,VP,WB))],V P (VR (Id "R" 0,VP,WS))]],C P (Id "cond" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "S" 0,VP,WS))]],[]))
+(UseLaw (ByMatch (ME [1])) "cond_def" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS))),((Id "Q" 0,VP),BV (VR (Id "R" 0,VP,WS))),((Id "b" 0,VP),BI (Id "b" 0)),((Id "cond" 0,VP),BV (VR (Id "cond" 0,VP,WS)))],fromList [],fromList [])) [0],(C P (Id "star" 0) [C P (Id "cond" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "R" 0,VP,WS))],C P (Id "cond" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "S" 0,VP,WS))]],[]))
+(Switch CLeft CRight,(C P (Id "lor" 0) [C P (Id "land" 0) [V P (VR (Id "b" 0,VP,WB)),C P (Id "star" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],C P (Id "land" 0) [C P (Id "lnot" 0) [V P (VR (Id "b" 0,VP,WB))],C P (Id "star" 0) [V P (VR (Id "R" 0,VP,WS)),V P (VR (Id "S" 0,VP,WS))]]],[]))
+(UseLaw (ByMatch (ME [1])) "cond_def" (BD (fromList [((Id "P" 0,VP),BT (C P (Id "star" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))])),((Id "Q" 0,VP),BT (C P (Id "star" 0) [V P (VR (Id "R" 0,VP,WS)),V P (VR (Id "S" 0,VP,WS))])),((Id "b" 0,VP),BI (Id "b" 0)),((Id "cond" 0,VP),BV (VR (Id "cond" 0,VP,WS)))],fromList [],fromList [])) [],(C P (Id "cond" 0) [C P (Id "star" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "b" 0,VP,WB)),C P (Id "star" 0) [V P (VR (Id "R" 0,VP,WS)),V P (VR (Id "S" 0,VP,WS))]],[]))
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

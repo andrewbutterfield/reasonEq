@@ -16,31 +16,22 @@ True for any truth-functional ⊙ .
 
 ### Status: 
 
-All done, including adding in Ex 2.1.2 above,
-but it all needs some proof testing.
-  
-Interesting consequence:
-  
-```
-  (∀ x$ • ¬ P)≡¬(¬((∀ y$ • ¬(P[y$/x$]))))    y$ ∉ P
+We have an ongoing proof of Ex2.1.2 above, but it requires
+a case-analysis.
 
-Focus = [2]  Target (RHS): true
+When is `P(b)` equivalent to `P(true) ∧ P(false)` ?
 
+Or, `P ≡ P[true/b] ∧ P[false/b]` ?
 
-proof: tm 2 exists_def
-Match against `exists_def'[2]
-Binding: { P ⟼ (∀ y$ • ¬(P[y$/x$])), ¬ ⟼ ¬, x$ ⟼ {} }
-Instantiated Law = (∀ y$ • ¬(P[y$/x$]))≡¬(¬((∀ y$ • ¬(P[y$/x$]))))
-Instantiated Law S.C. = _
-Discharged Law S.C. = _
+When `b` is a boolean value? variable?
+
+This needs types!
+
+Example: 
+ 
 ```
 
-Look at law `exists_def`:  `(∃ x$ • P)  ≡  ¬((∀ x$ • ¬ P))`.
-
-If `x$ ⟼ {}` we have `(∃ {} • P)  ≡  ¬((∀ {} • ¬ P))`.
-
-We can drop the quantifiers, so we get `P  ≡  ¬(¬ P)`.
-
+```
 
 ## Upgrade No. 2
 

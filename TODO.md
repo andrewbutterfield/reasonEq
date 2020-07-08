@@ -15,8 +15,32 @@ This requirement arises from considering UTP-book Ex 2.1.2 p48
 True for any truth-functional ⊙ .
 
 ### Status: 
-  All done, including adding in Ex 2.1.2 above,
-  but it all needs some proof testing.
+
+All done, including adding in Ex 2.1.2 above,
+but it all needs some proof testing.
+  
+Interesting consequence:
+  
+```
+  (∀ x$ • ¬ P)≡¬(¬((∀ y$ • ¬(P[y$/x$]))))    y$ ∉ P
+
+Focus = [2]  Target (RHS): true
+
+
+proof: tm 2 exists_def
+Match against `exists_def'[2]
+Binding: { P ⟼ (∀ y$ • ¬(P[y$/x$])), ¬ ⟼ ¬, x$ ⟼ {} }
+Instantiated Law = (∀ y$ • ¬(P[y$/x$]))≡¬(¬((∀ y$ • ¬(P[y$/x$]))))
+Instantiated Law S.C. = _
+Discharged Law S.C. = _
+```
+
+Look at law `exists_def`:  `(∃ x$ • P)  ≡  ¬((∀ x$ • ¬ P))`.
+
+If `x$ ⟼ {}` we have `(∃ {} • P)  ≡  ¬((∀ {} • ¬ P))`.
+
+We can drop the quantifiers, so we get `P  ≡  ¬(¬ P)`.
+
 
 ## Upgrade No. 2
 

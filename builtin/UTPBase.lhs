@@ -169,14 +169,14 @@ We may implement these later.
 From \cite[Defn 2.1.1,p47]{UTP-book}
 $$
   \begin{array}{lll}
-     P \cond b Q \defs (P \land b) \lor (Q \land \lnot b) &
+     P \cond b Q \defs (b \land P) \lor (\lnot b \land Q) &
      & \QNAME{$\cond\_$-def}
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
 condIntro = mkConsIntro i_cond boolf_3
 (axCondDef,alCondDef) = bookdef ("cond" -.- "def") "Def2.1.1"
-                         (cond p b q === (p /\ b) \/ (mkNot b /\ q))
+                         (cond p b q === (b /\ p) \/ (mkNot b /\ q))
                          scTrue
 \end{code}
 

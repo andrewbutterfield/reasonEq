@@ -19,19 +19,14 @@ True for any truth-functional ⊙ .
 We have an ongoing proof of Ex2.1.2 above, but it requires
 a case-analysis.
 
-When is `P(b)` equivalent to `P(true) ∧ P(false)` ?
+The rule is, provided that `b:B`,
 
-Or, `P ≡ P[true/b] ∧ P[false/b]` ?
+```
+(∀ b . P)  ≡  P[true/b] ∧ P[false/b]
+```
 
-When `b` is a boolean value? variable?
 
 This needs types!
-
-Example: 
- 
-```
-
-```
 
 ## Upgrade No. 2
 

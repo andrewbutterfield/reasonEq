@@ -404,7 +404,7 @@ scDischarge :: Monad m => SideCond -> SideCond -> m SideCond
 We have something of the form:
 $$
  \left( \bigwedge_{i \in 1 \dots m} G_i \right)
- \implies
+ \vdash
  \left( \bigwedge_{j \in 1 \dots n} L_j \right)
 $$
 In our representation both the $G_i$ and $L_j$
@@ -425,7 +425,7 @@ scDischarge [] scL  =  return scL     -- true => L is L,  i.e., not discharged
 \end{code}
 \begin{code}
 scDischarge anteSC cnsqSC
-  = scDischarge' (groupByGV anteSC) (groupByGV cnsqSC)
+  = scDischarge' (pdbg "anteGrp" (groupByGV $ pdbg "anteSC" anteSC)) $ pdbg "cnsqGrp" (groupByGV $ pdbg "cnsqSC" cnsqSC)
 \end{code}
 
 We have a modified version of \texttt{Data.List.groupBy}
@@ -467,7 +467,7 @@ is the same in all of the \texttt{AtmSideCond}.
 Here again, we have the form
 \begin{equation}
  \left( \bigwedge_{i \in \setof{D,C,pre}} G_i \right)
- \implies
+ \vdash
  \left( \bigwedge_{j \in \setof{D,C,pre}} L_j \right)
  \label{eqn:SideCond:disharge-form}
 \end{equation}
@@ -501,14 +501,14 @@ grpDischarge ascsG (ascL:ascsL)
 Here we are trying to show
 \begin{equation*}
  \left( \bigwedge_{i \in \setof{D,C,pre}} G_i \right)
- \implies
+ \vdash
  L_j \quad \where \quad j \in \setof{D,C,pre}
 \end{equation*}
 \begin{code}
 ascsDischarge :: Monad m => [AtmSideCond] -> AtmSideCond -> m [AtmSideCond]
 ascsDischarge [] ascL = return [ascL]
 ascsDischarge (ascG:ascsG) ascL
-  =  case ascDischarge ascG ascL of
+  =  case ascDischarge (pdbg "ascG" ascG) $ pdbg "ascL" ascL of
       Yes []       ->  return []
       Yes [ascL']  ->  ascsDischarge ascsG ascL'
       But msgs     ->  fail $ unlines msgs
@@ -520,7 +520,7 @@ Finally, we get to where the real work is done.
 Here we are trying to show:
 \begin{equation*}
  G_i
- \implies
+ \vdash
  L_j \quad \where \quad i,j \in \setof{D,C,pre}
 \end{equation*}
 \begin{code}
@@ -538,6 +538,15 @@ perhaps ``reduced'' to some degree.
 We use the notation $G \discharges L \mapsto R$
 to say that $G$ being true means that we can simplify $L$ to a ``residual'' $R$.
 
+One special case worth special treatment is a translated law side-condition
+of the form $\emptyset \supseteq v$, where $v$ is a standard variable.
+This is simply false.
+\begin{code}
+ascDischarge _ (Covers (StdVar _) dL)
+  | S.null dL  =  fail ("Empty set cannot cover a standard variable")
+\end{code}
+
+Otherwise, we work through the combinations:
 \begin{eqnarray*}
    D_G \disj V \discharges D_L \disj V
    & \mapsto & (D_L\setminus D_G) \disj V

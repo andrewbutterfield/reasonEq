@@ -822,10 +822,10 @@ basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
   =  do bind <- match vts tC partsP
         let unbound = findUnboundVars bind repl
         (bind',replC) <- autoInstantiate bind repl
-        unbound' <- instVarSet bind' $ pdbg "unbound" unbound
-        scPinC <- instantiateSC (pdbg "bind'" bind') scP
-        scD <- scDischarge (pdbg "scC" scC) $ pdbg ("'"++n++"'\nscPinC") scPinC
-        if autoOrNullInAll (pdbg "unbound'" unbound') $ pdbg "scD" scD
+        unbound' <- instVarSet bind' unbound
+        scPinC <- instantiateSC bind' scP
+        scD <- scDischarge scC scPinC
+        if autoOrNullInAll unbound' scD
           then return $ MT n asn (chkPatn mc tP) bind scC scPinC repl
           else fail "undischargeable s.c."
   where

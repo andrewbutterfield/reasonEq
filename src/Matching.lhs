@@ -718,8 +718,14 @@ vMatch' _ bind (KnownConst (Var _ v)) vC vP
 vMatch' vts bind GenericVar vC vP
   = case lookupVarTables vts vC of
       (InstanceVar v) | v == vP  ->  bindVarToVar vP vC bind
-      _                          ->  fail "vMatch: wrong generic."
-vMatch' _ _ _ _ _                 =  fail "vMatch: knowledge mismatch."
+      _ ->  fail $ unlines [ "vMatch: wrong generic"
+                           , "vC = " ++ show vC
+                           , "vP = " ++ show vP ]
+vMatch' _ _ what vC vP  = fail $ unlines [ "vMatch: knowledge mismatch."
+                                         , "vC = " ++ show vC
+                                         , "vP = " ++ show vP
+                                         , "what(vP) = " ++ show what
+                                         ]
 \end{code}
 
 \subsubsection{Bound Pattern Variable}

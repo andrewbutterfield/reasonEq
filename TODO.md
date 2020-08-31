@@ -16,30 +16,22 @@ True for any truth-functional ⊙ .
 
 ### Status: 
 
-We have an ongoing proof of Ex2.1.2 above, but it requires
-a case-analysis.
-
-The rule is, provided that `b:B`,
-
-```
-(∀ b . P)  ≡  P[true/b] ∧ P[false/b]
-```
+Done.
 
 
-This needs types!
 
 ## Upgrade No. 2
 
 For `;` we may want to specify fresh subscripts.
 **Yes - we need to allow fresh subscript instantiation
-and we need a freshness side-condition of the definition of seq-comp `;`**
+and we need a freshness side-condition for the definition of seq-comp `;`**
 
 ## Upgrade No. 3
 
 For simultaneous assignment we need to be able to represent
 things like
 
-`x,y$ :=  x+1,f$`
+`x,y$ :=  x+1,y$`
 
 This may require `Var` to contain `GenVar` rather than `Variable`.
 
@@ -56,6 +48,37 @@ rather than be called by their LaTeX names (`lor`,`sqsupseteq`).
 ### Phase 2.
   Mapping tables part of `REqState`,
   and hence loadable, saveable, and editable.
+
+## Upgrade No. 5
+
+We have an ongoing proof of Ex2.1.2 above, but it requires
+a case-analysis.
+
+The rule is, provided that `b:B`,
+
+```
+(∀ b • P)  ≡  P[true/b] ∧ P[false/b]
+```
+
+What is the best formulation of this rule?
+
+```
+ b:B ⟹ ( (∀ b • P)  ≡  P[true/b] ∧ P[false/b] )
+```
+
+or
+
+```
+(∀ b • P)  ≡  P[true/b] ∧ P[false/b],   b:B
+```
+
+or
+
+```
+(∀ b:B • P)  ≡  P[true/b] ∧ P[false/b]
+```
+
+This needs types!
 
 ## Robustness
 

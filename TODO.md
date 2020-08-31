@@ -1,24 +1,30 @@
 # To Do
 
-## Upgrade No. 1
+## Most Urgent
 
-Cons names will now following (Static) variable 
-matching conventions.
+### Quantifier Bound Variables (in Matches)
 
-So if they match themselves, 
-they must appear in knownVars.
+The following match should not be displayed,
+as the side-condition cannot be discharged.
 
-This requirement arises from considering UTP-book Ex 2.1.2 p48
+`1 : “∃_remove”  gives  Q  _ ⟹ Ø ⊇ Q ≡[1]`.
 
-(P ⊙ Q) ◁ b ▷ (R ⊙ S) = (P ◁ b ▷ R) ⊙ (Q ◁ b ▷ S) 
+Nor this:
 
-True for any truth-functional ⊙ .
+```
+1 : “∃_remove”  gives  b∧P∨¬ b∧R★  b∧Q∨¬ b∧S  _ 
+     ⟹ Ø ⊇ P;Ø ⊇ Q;Ø ⊇ R;Ø ⊇ S;Ø ⊇ b ≡[1]
+```
+The last clause `Ø ⊇ b` is clearly false.
 
-### Status: 
-
-Done.
-
-
+We need to attempt to discharge these at the match stage
+to prevent these spurious un-dischargeable matches being presented
+to the user.
+We have to admit coverage for empty set in undischarged atomic s.c.s. (`autoOrNullInAll`)
+However we need another criterie to check that all (unbound) variables in discharged s.c. involve general variables found in goal s.c.s
+So above should be outlawed because `Q` does not occur in `_`.
+(even this isn't enough - we may want a more powerful check
+for *unsatisfiability* in s.c.s)
 
 ## Upgrade No. 2
 
@@ -124,22 +130,7 @@ Another creates and initialises a workspace.
 Added Conjecture `[P] => P[e̅/x̅]` to `UClose` and proven.
 
 
-### Quantifier Bound Variables (in Laws)
 
-The following match should not be displayed,
-as the side-condition cannot be discharged.
-
-`1 : “∃_remove”  gives  Q  _ ⟹ Ø ⊇ Q ≡[1]`.
-
-
-We need to attempt to discharge these at the match stage
-to prevent these spurious un-dischargeable matches being presented
-to the user.
-We have to admit coverage for empty set in undischarged atomic s.c.s. (`autoOrNullInAll`)
-However we need another criterie to check that all (unbound) variables in discharged s.c. involve general variables found in goal s.c.s
-So above should outlaws because `Q` does not occur in `_`.
-(even this isn't enough - we may want a more powerful check
-for *unsatisfiability* in s.c.s)
 
   
 ### Test Re-jigging

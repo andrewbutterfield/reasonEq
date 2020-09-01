@@ -17,6 +17,16 @@ Nor this:
 ```
 The last clause `Ø ⊇ b` is clearly false.
 
+**instantiateSC bypasses the use of mrgSideCond**
+
+*Suggested solution:*
+
+1. introduce `scCheck :: AtmSideCond -> m [AtmSideCond]`
+   which fails if input is false, returns [] if true, but
+   otherwise returns it as a singleton list.
+2. Make sure `scCheck` is used appropriately in `SideCond`.
+3. Make sure sure `scCheck` is used appropriately in `Instantiate`.
+
 We need to attempt to discharge these at the match stage
 to prevent these spurious un-dischargeable matches being presented
 to the user.

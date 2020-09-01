@@ -108,7 +108,19 @@ The variable-list must be retained as a unit.
    &\not\equiv&
    x \supseteq T \land y \supseteq T
 \end{eqnarray*}
+In general we are assuming that law side-conditions have term variables,
+but when we instantiate such side-conditions with a match binding,
+we may find observational variables appearing.
+In some of these cases, we may be able to simplify a side-condition further:
+\begin{eqnarray*}
+   \dots,z,\dots   \notin  z  && \false
+\\ \dots,z,\dots{} \supseteq z  && \true
+\\ \emptyset \supseteq z && \false
+\\ pre      \supseteq z  && z \textrm{ is a \texttt{Before} variable}
+\end{eqnarray*}
 
+\textbf{The Following may not be required}
+\textsf{
 To handle certain cases, particularly to do with predicate closure operators,
 we need to introduce the notion of existential side-conditions.
 For example, universal closure is typically defined as
@@ -129,6 +141,7 @@ against the definition as we cannot discharge the side-condition.
 Exploring proofs of the above by hand reveals the importance
 of being able to determine, at proof-time,
 if a predicate $P$ is closed ($\emptyset \supseteq P$).
+}
 
 
 We have to cope with $C$ matching $P$ in $P \sim R$,
@@ -250,6 +263,37 @@ into a pre-existing list ordered and structured as described above.
 \begin{code}
 mrgAtmCond :: Monad m => AtmSideCond -> SideCond -> m SideCond
 \end{code}
+
+First, we need to check for atomic side-conditions that reduce
+to false:
+\begin{eqnarray*}
+   \dots,z,\dots   \notin  z  && \false
+\\ \emptyset \supseteq z && \false
+\\ pre      \supseteq z  && z \textrm{ is not a \texttt{Before} variable}
+\end{eqnarray*}
+\begin{code}
+mrgAtmCond (Disjoint v@(StdVar (Vbl _ ObsV _)) vs) _
+  | v `S.member` vs  =  fail "atomic disjoint is False"
+mrgAtmCond (Covers v@(StdVar (Vbl _ ObsV _)) vs) _
+  | S.null vs  =  fail "atomic covers is False"
+mrgAtmCond (IsPre v@(StdVar (Vbl _ ObsV vw))) _
+  | vw /= Before  =  fail "atomic ispre is False"
+\end{code}
+
+Next we check for atomic side-conditions that reduce
+to true:
+\begin{eqnarray*}
+   \dots,z,\dots{} \supseteq z  && \true
+\\ pre      \supseteq z  && z \textrm{ is a \texttt{Before} variable}
+\end{eqnarray*}
+\begin{code}
+mrgAtmCond (Covers v@(StdVar (Vbl _ ObsV _)) vs) sc
+  | v `S.member` vs  =  return sc
+mrgAtmCond (IsPre v@(StdVar (Vbl _ ObsV vw))) sc
+  | vw == Before  =  return sc
+\end{code}
+
+
 
 1st ASC is easy:
 \begin{code}
@@ -542,8 +586,8 @@ One special case worth special treatment is a translated law side-condition
 of the form $\emptyset \supseteq v$, where $v$ is a standard variable.
 This is simply false.
 \begin{code}
-ascDischarge _ (Covers (StdVar _) dL)
-  | S.null dL  =  fail ("Empty set cannot cover a standard variable")
+ascDischarge _ (Covers (StdVar (Vbl _ ObsV _)) dL)
+  | S.null dL  =  fail ("Empty set cannot cover a standard obs. variable")
 \end{code}
 
 Otherwise, we work through the combinations:

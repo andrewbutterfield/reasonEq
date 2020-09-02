@@ -264,7 +264,6 @@ scTrue :: SideCond
 scTrue = []
 \end{code}
 
-\newpage
 \subsection{Merging Side-Conditions}
 
 The list of ASCs
@@ -284,46 +283,26 @@ into a pre-existing list ordered and structured as described above.
 mrgAtmCond :: Monad m => AtmSideCond -> SideCond -> m SideCond
 \end{code}
 
-First, we need to check for atomic side-conditions that reduce
-to false:
-\begin{eqnarray*}
-   \dots,z,\dots   \notin  z  && \false
-\\ \emptyset \supseteq z && \false
-\\ pre      \supseteq z  && z \textrm{ is not a \texttt{Before} variable}
-\end{eqnarray*}
-\begin{code}
-mrgAtmCond (Disjoint v@(StdVar (Vbl _ ObsV _)) vs) _
-  | v `S.member` vs  =  fail "atomic disjoint is False"
-mrgAtmCond (Covers v@(StdVar (Vbl _ ObsV _)) vs) _
-  | S.null vs  =  fail "atomic covers is False"
-mrgAtmCond (IsPre v@(StdVar (Vbl _ ObsV vw))) _
-  | vw /= Before  =  fail "atomic ispre is False"
-\end{code}
-
-Next we check for atomic side-conditions that reduce
-to true:
-\begin{eqnarray*}
-   \dots,z,\dots{} \supseteq z  && \true
-\\ pre      \supseteq z  && z \textrm{ is a \texttt{Before} variable}
-\end{eqnarray*}
-\begin{code}
-mrgAtmCond (Covers v@(StdVar (Vbl _ ObsV _)) vs) sc
-  | v `S.member` vs  =  return sc
-mrgAtmCond (IsPre v@(StdVar (Vbl _ ObsV vw))) sc
-  | vw == Before  =  return sc
-\end{code}
 
 
 
 1st ASC is easy:
 \begin{code}
-mrgAtmCond asc [] = return [asc]
+mrgAtmCond asc []
+  = do masc <- scCheck asc
+       case masc of
+         Nothing ->  return [] -- asc is in fact true
+         Just asc' -> return [asc']
 \end{code}
 
 Subsequent ones mean searching to see if there are already ASCs with the
 same general-variable:
 \begin{code}
-mrgAtmCond asc ascs = splice (mrgAtmAtms asc) $ brkspnBy (compareGV asc) ascs
+mrgAtmCond asc ascs
+  = do masc <- scCheck asc
+       case masc of
+         Nothing ->  return ascs
+         Just asc' -> splice (mrgAtmAtms asc) $ brkspnBy (compareGV asc) ascs
 
 compareGV asc1 asc2  =  ascGVar asc1 `compare` ascGVar asc2
 sameGV asc1 asc2     =  asc1 `compareGV` asc2 == EQ
@@ -740,18 +719,9 @@ type Assertion = (Term, SideCond)
 
 
 \newpage
-\subsection{Exported Test Group}
-\begin{code}
-int_tst_SideCond :: [TF.Test]
-int_tst_SideCond
-  = [ testGroup "\nSideCond Internal"
-       [ tst_scCheck
-       ]
-    ]
-\end{code}
 
+\subsection{SideCond Tests}
 
-\newpage
 Variable Side-Condition test values:
 \begin{code}
 i_a = fromJust $ ident "a"
@@ -789,6 +759,8 @@ v_e' = StdVar $ PostExpr $ i_e
 v_f' = StdVar $ PostExpr $ i_f
 \end{code}
 
+
+\subsubsection{Atomic Checker Tests}
 
 \begin{code}
 tst_scCheck :: TF.Test
@@ -869,5 +841,44 @@ tst_scChkIsPre
        ( scCheck (IsPre v_e') @?= tstFalse )
     , testCase "is-pre(gv_s) stands"
        ( scCheck (IsPre gv_s) @?= tstWhatever (IsPre gv_s) )
+    ]
+\end{code}
+
+\subsubsection{Merging Tests}
+
+\begin{code}
+tst_mrgAtmCond :: TF.Test
+tst_mrgAtmCond
+ = testGroup "Merging Side-Conditions"
+     [ testCase "merge gv_a `disjoint` empty  into [] is True"
+        ( mrgAtmCond (Disjoint gv_a S.empty) [] @?= Just [] )
+     , testCase "merge gv_a `disjoint` {gv_a} into [] is False"
+        ( mrgAtmCond (Disjoint gv_a $ S.singleton gv_a) [] @?= Nothing )
+     , testCase "merge v_e `coveredby` {v_f}  into [] is [itself]"
+        ( mrgAtmCond (Covers v_e $ S.singleton v_f) []
+          @?= Just [Covers v_e $ S.singleton v_f] )
+     , testCase "merge gv_a `disjoint` empty  into [asc(gv_b)] is [asc(gv_b)]]"
+        ( mrgAtmCond (Disjoint gv_a S.empty) [asc1] @?= Just [asc1] )
+     , testCase "merge gv_a `disjoint` {gv_a} into [asc(gv_b)] is False"
+        ( mrgAtmCond (Disjoint gv_a $ S.singleton gv_a) [asc1] @?= Nothing )
+     , testCase
+        "merge v_e `coveredby` {v_f}  into [asc(gv_b)] is [asc(gv_b),itself]"
+        ( mrgAtmCond (Covers v_e $ S.singleton v_f) [asc1]
+          @?= Just [asc1,Covers v_e $ S.singleton v_f] )
+     ]
+
+asc1 = (Covers gv_b $ S.fromList [gv_b,v_f])
+\end{code}
+
+
+\subsubsection{Exported Test Group}
+
+\begin{code}
+int_tst_SideCond :: [TF.Test]
+int_tst_SideCond
+  = [ testGroup "\nSideCond Internal"
+       [ tst_scCheck
+       , tst_mrgAtmCond
+       ]
     ]
 \end{code}

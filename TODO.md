@@ -24,7 +24,7 @@ The last clause `Ø ⊇ b` is clearly false.
 1. **DONE** Introduce `scCheck :: AtmSideCond -> m (Maybe AtmSideCond)`
    which fails if input `asc` is false, returns `Nothing` if 
    true but otherwise returns it as `Just asc`.
-2. Make sure `scCheck` is used appropriately in `SideCond`.
+2. **DONE** Make sure `scCheck` is used appropriately in `SideCond`.
 3. Make sure sure `scCheck` is used appropriately in `Instantiate`.
 
 We need to attempt to discharge these at the match stage

@@ -31,7 +31,7 @@ import LexBase
 import Variables
 import AST
 
--- import Test.HUnit
+import Test.HUnit hiding (Assertion)
 import Test.Framework as TF (defaultMain, testGroup, Test)
 import Test.Framework.Providers.HUnit (testCase)
 --import Test.Framework.Providers.QuickCheck2 (testProperty)
@@ -185,42 +185,70 @@ ascVSet (Covers   _ vs)  =  Just vs
 ascVSet (IsPre    _   )  =  Nothing
 \end{code}
 
-
-We will want to merge a set with a maybe-set below:
+\newpage
+It is possible to simplify some proposed atomic side-conditions
+to either true or false.
+Here we provide a monadic function that fails if the condition
+is demonstrably false,
+and otherwise returns a \texttt{Maybe} type,
+where \texttt{Nothing} denotes a condition that is true.
 \begin{code}
-mrgm :: (a -> a -> a) -> a -> Maybe (a) -> a
-mrgm op s Nothing    =  s
-mrgm op s (Just s')  =  s `op` s'
+scCheck :: Monad m => AtmSideCond -> m (Maybe AtmSideCond)
 \end{code}
 
-Variable Side-Condition test values:
+Here, $z$ denotes an (standard) observation variable,
+$T$ denotes a standard term variable,
+and $g$ denotes either $z$ or $T$.
+\begin{eqnarray*}
+   \emptyset       \notin    g  && \true
+\\ \dots,z,\dots   \notin    z  && \false
+\\ \{stdObs\}\setminus z \notin z && \true
+\end{eqnarray*}
+Note that we cannot deduce (here) that $T \notin T$ is false,
+because $T$ could correspond to the empty set.
+Nor can we assume $T \notin z$ is false, because $T$ could contain $z$.
 \begin{code}
-i_a = fromJust $ ident "a"
-i_b = fromJust $ ident "b"
-i_e = fromJust $ ident "e"
-i_f = fromJust $ ident "f"
+scCheck asc@(Disjoint sv@(StdVar v) vs)
+  | S.null vs         =  return Nothing
+  | not $ isObsVar v  =  return $ Just asc
+  | sv `S.member` vs  =  fail "atomic disjoint is False"
+  | all isObsGVar vs  =  return Nothing
+\end{code}
 
-v_a =  PreVar    $ i_a
-v_b =  PreVar    $ i_b
-v_a' = PostVar   $ i_a
-v_b' = PostVar   $ i_b
+\begin{eqnarray*}
+   \emptyset       \supseteq z  && \false
+\\ \dots,g,\dots{} \supseteq g  && \true
+\\ \{stdObs\}\setminus z \supseteq z && \false
+\end{eqnarray*}
+Here, as $T$ could be empty,
+we cannot deduce that $\emptyset \supseteq T$ is false.
+Similarly, $T \supseteq z$ could also be true.
+\begin{code}
+scCheck asc@(Covers sv@(StdVar v) vs)
+  | sv `S.member` vs  =  return Nothing
+  | not $ isObsVar v  =  return $ Just asc
+  | S.null vs         =  fail "atomic covers is False (null)"
+  | all isObsGVar vs  =  fail "atomic covers is False (all std)"
+\end{code}
 
-gv_a =  StdVar v_a
-gv_b =  StdVar v_b
-gv_a' = StdVar v_a'
-gv_b' = StdVar v_b'
+\begin{eqnarray*}
+   pre \supseteq g  && \false,  \textrm{ if $g$ is an \texttt{After} variable}
+\\ pre \supseteq g  && \true,  \textrm{ if $g$ is a \texttt{Before} variable}
+\end{eqnarray*}
+\begin{code}
+scCheck asc@(IsPre v@(StdVar (Vbl _ _ vw)))
+  | vw == After   =  fail "atomic ispre is False"
+  | vw == Before  =  return Nothing
+\end{code}
 
-s0   = S.fromList [] :: VarSet
-sa   = S.fromList [gv_a]
-sa'  = S.fromList [gv_a']
-sb   = S.fromList [gv_b]
-sab  = S.fromList [gv_a,gv_b]
-saa' = S.fromList [gv_a,gv_a']
-sab' = S.fromList [gv_a,gv_b']
-sbb' = S.fromList [gv_b,gv_b']
+For anything else, we just return the condition unchanged:
+\begin{code}
+scCheck asc = return $ Just asc
 \end{code}
 
 
+
+\newpage
 \subsection{Full Side Conditions}
 
 A ``full'' side-condition is basically a list of ASCs,
@@ -234,14 +262,6 @@ then we have the trivial side-condition, which is always true:
 \begin{code}
 scTrue :: SideCond
 scTrue = []
-\end{code}
-
-Test values:
-\begin{code}
-v_e  = StdVar $ PreExpr  $ i_e
-v_f  = StdVar $ PreExpr  $ i_f
-v_e' = StdVar $ PostExpr $ i_e
-v_f' = StdVar $ PostExpr $ i_f
 \end{code}
 
 \newpage
@@ -718,14 +738,136 @@ An assertion is simply a predicate term coupled with side-conditions.
 type Assertion = (Term, SideCond)
 \end{code}
 
+
 \newpage
 \subsection{Exported Test Group}
 \begin{code}
 int_tst_SideCond :: [TF.Test]
 int_tst_SideCond
-  = [ testGroup "\nSideCond Internal" [] ]
---      [ varSCTests
---      , sidecondTests
---      ]
---    ]
+  = [ testGroup "\nSideCond Internal"
+       [ tst_scCheck
+       ]
+    ]
+\end{code}
+
+
+\newpage
+Variable Side-Condition test values:
+\begin{code}
+i_a = fromJust $ ident "a"
+i_b = fromJust $ ident "b"
+i_e = fromJust $ ident "e"
+i_f = fromJust $ ident "f"
+
+v_a =  PreVar    $ i_a
+v_b =  PreVar    $ i_b
+v_a' = PostVar   $ i_a
+v_b' = PostVar   $ i_b
+s_s  = StaticVar $ fromJust $ ident "s"
+
+gv_a =  StdVar v_a
+gv_b =  StdVar v_b
+gv_a' = StdVar v_a'
+gv_b' = StdVar v_b'
+gv_s  = StdVar s_s
+
+s0   = S.fromList [] :: VarSet
+sa   = S.fromList [gv_a]
+sa'  = S.fromList [gv_a']
+sb   = S.fromList [gv_b]
+sab  = S.fromList [gv_a,gv_b]
+saa' = S.fromList [gv_a,gv_a']
+sab' = S.fromList [gv_a,gv_b']
+sbb' = S.fromList [gv_b,gv_b']
+\end{code}
+
+Test values:
+\begin{code}
+v_e  = StdVar $ PreExpr  $ i_e
+v_f  = StdVar $ PreExpr  $ i_f
+v_e' = StdVar $ PostExpr $ i_e
+v_f' = StdVar $ PostExpr $ i_f
+\end{code}
+
+
+\begin{code}
+tst_scCheck :: TF.Test
+tst_scCheck
+ = testGroup "atomic Side-Condition checker"
+     [ tst_scChkDisjoint
+     , tst_scChkCovers
+     , tst_scChkIsPre ]
+
+
+tstFalse = Nothing
+tstTrue  = Just Nothing
+tstWhatever sc = Just $ Just sc
+
+tst_scChkDisjoint
+ = testGroup "Disjoint"
+    [ testCase "gv_a `disjoint` empty is True"
+       ( scCheck (Disjoint gv_a S.empty) @?= tstTrue )
+    , testCase "v_e `disjoint` empty is True"
+       ( scCheck (Disjoint v_e S.empty) @?= tstTrue )
+    , testCase "gv_a `disjoint` {gv_a} is False"
+       ( scCheck (Disjoint gv_a $ S.singleton gv_a) @?= tstFalse )
+    , testCase "gv_a `disjoint` {gv_b} is True"
+       ( scCheck (Disjoint gv_a $ S.singleton gv_b) @?= tstTrue )
+    , testCase "v_e `disjoint` {v_e} stands"
+       ( scCheck (Disjoint v_e $ S.singleton v_e)
+         @?= tstWhatever  (Disjoint v_e $ S.singleton v_e) )
+    , testCase "v_e `disjoint` {v_f} stands"
+       ( scCheck (Disjoint v_e $ S.singleton v_f)
+         @?= tstWhatever  (Disjoint v_e $ S.singleton v_f) )
+    , testCase "v_e `disjoint` {gv_a} stands"
+       ( scCheck (Disjoint v_e $ S.singleton gv_a)
+         @?= tstWhatever  (Disjoint v_e $ S.singleton gv_a) )
+    , testCase "gv_a `disjoint` {v_f} stands"
+       ( scCheck (Disjoint gv_a $ S.singleton v_f)
+         @?= tstWhatever  (Disjoint gv_a $ S.singleton v_f) )
+    , testCase "gv_a `disjoint` {gv_b,v_f} stands"
+       ( scCheck (Disjoint gv_a $ S.fromList [gv_b,v_f])
+         @?= tstWhatever  (Disjoint gv_a $ S.fromList [gv_b,v_f]) )
+    ]
+
+tst_scChkCovers
+ = testGroup "Covers"
+    [ testCase "gv_a `coveredby` empty is False"
+       ( scCheck (Covers gv_a S.empty) @?= tstFalse )
+    , testCase "v_e `coveredby` empty stands"
+       ( scCheck (Covers v_e S.empty)
+         @?= tstWhatever (Covers v_e S.empty) )
+    , testCase "gv_a `coveredby` {gv_a} is True"
+       ( scCheck (Covers gv_a $ S.singleton gv_a) @?= tstTrue )
+    , testCase "gv_a `coveredby` {gv_b} is False"
+       ( scCheck (Covers gv_a $ S.singleton gv_b) @?= tstFalse )
+    , testCase "v_e `coveredby` {v_e} is True"
+       ( scCheck (Covers v_e $ S.singleton v_e) @?= tstTrue )
+    , testCase "v_e `coveredby` {v_f} stands"
+       ( scCheck (Covers v_e $ S.singleton v_f)
+         @?= tstWhatever  (Covers v_e $ S.singleton v_f) )
+    , testCase "v_e `coveredby` {gv_a} stands"
+       ( scCheck (Covers v_e $ S.singleton gv_a)
+         @?= tstWhatever  (Covers v_e $ S.singleton gv_a) )
+    , testCase "gv_a `coveredby` {v_f} stands"
+       ( scCheck (Covers gv_a $ S.singleton v_f)
+         @?= tstWhatever  (Covers gv_a $ S.singleton v_f) )
+    , testCase "gv_a `coveredby` {gv_b,v_f} stands"
+       ( scCheck (Covers gv_a $ S.fromList [gv_b,v_f])
+         @?= tstWhatever  (Covers gv_a $ S.fromList [gv_b,v_f]) )
+    ]
+
+tst_scChkIsPre
+ = testGroup "IsPre"
+    [ testCase "is-pre(gv_a) is True"
+       ( scCheck (IsPre gv_a) @?= tstTrue )
+    , testCase "is-pre(gv_a') is False"
+       ( scCheck (IsPre gv_a') @?= tstFalse )
+    , testCase "is-pre(v_e) is True"
+       ( scCheck (IsPre v_e) @?= tstTrue )
+    , testCase "is-pre(v_e') is False"
+       ( scCheck (IsPre v_e') @?= tstFalse )
+    , testCase "is-pre(gv_s) stands"
+       ( scCheck (IsPre gv_s) @?= tstWhatever (IsPre gv_s) )
+    ]
 \end{code}

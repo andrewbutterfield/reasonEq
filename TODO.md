@@ -17,7 +17,8 @@ Nor this:
 ```
 The last clause `Ø ⊇ b` is clearly false.
 
-**instantiateSC bypasses the use of mrgSideCond**
+"`instantiateSC` bypasses the use of `mrgSideCond`"
+*No, it uses `mkSideCond` whhc
 
 *Suggested solution:*
 

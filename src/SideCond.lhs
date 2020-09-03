@@ -58,7 +58,7 @@ and a set of other (general) variables ($x,\lst{v}$).
 In general with have a conjunction of atomic conditions,
 but we need to be able to distinguish between no conditions (always ``true'')
 and inconsistent conditions
-(e.g. $x \notin \fv(T) \land x = \fv(T) $, always ``false'').
+(e.g. $x \disj \fv(T) \land x = \fv(T) $, always ``false'').
 As a false side-condition means a match failure,
 we do not represent them explicitly.
 Instead, any operation on side-conditions that could result
@@ -67,7 +67,7 @@ in an inconsistent result should fail, gracefully.
 An atomic side-condition (ASC) can have one of the following forms,
 where $T$ abbreviates $\fv(T)$:
 \begin{eqnarray*}
-   x,\lst v   \notin  T
+   x,\lst v   \disj  T
    && \mbox{disjoint, short for }\{x,\lst v\} \cap \fv(T) = \emptyset
 \\ x,\lst v \supseteq T && \mbox{covering}
 \\ pre      \supseteq T && \mbox{pre-condition, no dashed variables}
@@ -78,8 +78,8 @@ In some cases, we will use a list-variable to denoted a list of terms,
 usually expressions, and we will expect there to be only one general variable
 which will itself be a list variable:
 \begin{eqnarray*}
-   \lst v   \notin  \lst e && \mbox{disjoint, short for }
-   v_1\notin \fv(e_1) \land \dots \land v_n\notin \fv(e_n)
+   \lst v   \disj  \lst e && \mbox{disjoint, short for }
+   v_1\disj \fv(e_1) \land \dots \land v_n\disj \fv(e_n)
 \\ \lst v      =    \lst e && \mbox{exact, short for }
    \{v_1\}= \fv(e_1) \land \dots \land \{v_n\} =  \fv(e_n)
 \end{eqnarray*}
@@ -90,9 +90,9 @@ We note that disjointness and being a (pre-)condition
 distribute through conjunction without restrictions,
 so we have, for example, that:
 \begin{eqnarray*}
-   x,y \notin S,T
+   x,y \disj S,T
    &\equiv&
-   x \notin S \land x \notin T \land y \notin S \land y \notin T
+   x \disj S \land x \disj T \land y \disj S \land y \disj T
 \\ pre \supseteq S,T
    &\equiv&
    pre \supseteq S \land pre \supseteq T
@@ -113,7 +113,7 @@ but when we instantiate such side-conditions with a match binding,
 we may find observational variables appearing.
 In some of these cases, we may be able to simplify a side-condition further:
 \begin{eqnarray*}
-   \dots,z,\dots   \notin  z  && \false
+   \dots,z,\dots   \disj  z  && \false
 \\ \dots,z,\dots{} \supseteq z  && \true
 \\ \emptyset \supseteq z && \false
 \\ pre      \supseteq z  && z \textrm{ is a \texttt{Before} variable}
@@ -200,13 +200,13 @@ Here, $z$ denotes an (standard) observation variable,
 $T$ denotes a standard term variable,
 and $g$ denotes either $z$ or $T$.
 \begin{eqnarray*}
-   \emptyset       \notin    g  && \true
-\\ \dots,z,\dots   \notin    z  && \false
-\\ \{stdObs\}\setminus z \notin z && \true
+   \emptyset       \disj    g  && \true
+\\ \dots,z,\dots   \disj    z  && \false
+\\ \{stdObs\}\setminus z \disj z && \true
 \end{eqnarray*}
-Note that we cannot deduce (here) that $T \notin T$ is false,
+Note that we cannot deduce (here) that $T \disj T$ is false,
 because $T$ could correspond to the empty set.
-Nor can we assume $T \notin z$ is false, because $T$ could contain $z$.
+Nor can we assume $T \disj z$ is false, because $T$ could contain $z$.
 \begin{code}
 scCheck asc@(Disjoint sv@(StdVar v) vs)
   | S.null vs         =  return Nothing
@@ -592,8 +592,8 @@ ascDischarge _ (Covers (StdVar (Vbl _ ObsV _)) dL)
 Otherwise, we work through the combinations:
 \begin{eqnarray*}
    D_G \disj V \discharges D_L \disj V
-   & \mapsto & (D_L\setminus D_G) \disj V
-\\ & \mapsto & \true, \quad \textbf{if } D_L \subseteq D_G
+   & = & \true, \quad\IF\quad D_L \subseteq D_G
+\\ & \mapsto & (D_L\setminus D_G) \disj V
 \end{eqnarray*}
 \begin{code}
 ascDischarge (Disjoint _ dG) (Disjoint gv dL)
@@ -602,40 +602,46 @@ ascDischarge (Disjoint _ dG) (Disjoint gv dL)
 \end{code}
 
 \begin{eqnarray*}
-   C_G \supseteq V \discharges D_L \disj V
-   & \mapsto & (C_G \cap D_L) \disj V
-\\ & \mapsto & \true, \quad \IF~ C_G\cap D_L = \emptyset
+   D_G \disj V \discharges C_L \supseteq V
+   & = & \false,
+     \quad\IF\quad C_L \subseteq D_G \land isStdObs(V)
+\\ & \mapsto & (C_L \setminus D_G) \supseteq V
 \end{eqnarray*}
 \begin{code}
-ascDischarge (Covers _ cG) (Disjoint gv dL)
-  | S.null dL'            =  return []
-  | otherwise             =  return [Disjoint gv dL']
-  where dL' = cG `S.intersection` dL
+ascDischarge (Disjoint _ dG) c@(Covers gv cL)
+  | cL `S.isSubsetOf` dG && isObsGVar gv  =  fail "Disj=>emptyCover"
+  | otherwise                             =  return [Covers gv (cL S.\\ dG)]
 \end{code}
 
 \begin{eqnarray*}
    C_G \supseteq V \discharges C_L \supseteq V
-   & \mapsto & (C_G \cap C_L) \supseteq V
-\\ & \mapsto & \true, \quad \IF \quad C_G = \emptyset \lor C_G = C_L
+   & = & \true, \quad \IF \quad C_G \subseteq C_L
+\\ & = & \false, \quad \IF \quad C_G \disj C_L \land isStdObs(V)
+\\ & \mapsto & (C_G \cap C_L) \supseteq V
 \end{eqnarray*}
 \begin{code}
 ascDischarge (Covers _ cG) (Covers gv cL)
-  | S.null cG || cG == cL  =  return []
-  | otherwise              =  return [Covers gv (cG `S.intersection` cL)]
+  | cG `S.isSubsetOf` cL  =  return []
+  | cG `disjoint` cL && isObsGVar gv  =  fail "CoverDisj=>noCover"
+  | otherwise  =  return [Covers gv (cG `S.intersection` cL)]
 \end{code}
 
+
 \begin{eqnarray*}
-   D_G \disj V \discharges C_L \supseteq V
-   & \mapsto & (C_L \setminus D_G) \supseteq V
+   C_G \supseteq V \discharges D_L \disj V
+   & = & \true, \quad \IF~ C_G\cap D_L = \emptyset
+\\ & \mapsto & D_L \disj V
 \end{eqnarray*}
 \begin{code}
-ascDischarge (Disjoint _ dG) c@(Covers gv cL)
-  =  return [Covers gv (cL S.\\ dG)]
+ascDischarge (Covers _ cG) d@(Disjoint gv dL)
+  | S.null (cG `S.intersection` dL)  =  return []
+  | otherwise                        =  return [d]
 \end{code}
+
 
 Anything else is not handled right now;
 \begin{code}
-ascDischarge _ _ = fail "ascDischarge: NYfI"
+ascDischarge _ ascL = return [ascL]
 \end{code}
 
 \newpage
@@ -674,7 +680,7 @@ autoOrNullInAll unbound = all (tolerateAutoOrNull unbound)
 
 Simple side-condition builders.
 
-$\lst v \notin \fv(T)$
+$\lst v \disj \fv(T)$
 \begin{code}
 notin :: VarList -> GenVar -> SideCond
 vl `notin` tV  =  [ Disjoint tV (S.fromList vl) ]
@@ -765,7 +771,7 @@ v_f' = StdVar $ PostExpr $ i_f
 \begin{code}
 tst_scCheck :: TF.Test
 tst_scCheck
- = testGroup "atomic Side-Condition checker"
+ = testGroup "Atomic Side-Condition checker"
      [ tst_scChkDisjoint
      , tst_scChkCovers
      , tst_scChkIsPre ]
@@ -870,6 +876,24 @@ tst_mrgAtmCond
 asc1 = (Covers gv_b $ S.fromList [gv_b,v_f])
 \end{code}
 
+\subsubsection{Discharge Tests}
+
+\begin{code}
+tst_ascDischarge :: TF.Test
+tst_ascDischarge
+ = testGroup "Discharging Side-Conditions"
+     [ test_DisjDischarge
+     ]
+\end{code}
+
+
+\begin{code}
+test_DisjDischarge
+  = testGroup "Disjoint discharges ..."
+      [ testCase "1+1=2" ( 1+1 @?= 2)
+      ]
+\end{code}
+
 
 \subsubsection{Exported Test Group}
 
@@ -879,6 +903,7 @@ int_tst_SideCond
   = [ testGroup "\nSideCond Internal"
        [ tst_scCheck
        , tst_mrgAtmCond
+       -- , tst_ascDischarge
        ]
     ]
 \end{code}

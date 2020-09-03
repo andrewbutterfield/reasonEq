@@ -13,7 +13,7 @@ module Instantiate
 , instantiateSC
 , findUnboundVars, termLVarPairings
 , mkEquivClasses -- should be elsewhere
-, questionableBinding, autoInstantiate
+, mkFloatingBinding, autoInstantiate
 ) where
 import Data.Maybe
 -- import Data.Either (lefts,rights)
@@ -567,10 +567,19 @@ lookupEquivClasses x (eqvc:eqvcs)
 
 \newpage
 
-\subsubsection{Mapping Replacement Variables to Questionable ones}
+\subsubsection{Mapping Replacement Variables to Floating ones}
+
+We mark a variable as ``floating'' by prepending its
+identifier with a question-mark: $idn \mapsto ?idn$.
+Some support functions:
+\begin{code}
+fI  (Identifier i u)         =  fromJust $ uident ('?':i) u
+fIn (Identifier i u) n       =  fromJust $ uident ('?':i) (u+n)
+isFloating (Identifier i u)  =  take 1 i == "?"
+\end{code}
 
 \textbf{
-Function \texttt{questionableBinding} needs
+Function \texttt{mkFloatingBinding} needs
 details regarding all substitution list-variable pairs
 in order to produce valid bindings.
 In particular, if an unbound substitution list-variable
@@ -579,8 +588,8 @@ to something of the same size as its bound partner, otherwise instantiation will
 fail when it calls \texttt{substn}.
 }
 \begin{code}
-questionableBinding :: Binding -> [[ListVar]] -> VarSet -> Binding
-questionableBinding bind substEqv vs
+mkFloatingBinding :: Binding -> [[ListVar]] -> VarSet -> Binding
+mkFloatingBinding bind substEqv vs
   = qB emptyBinding $ S.toList vs
   where
 
@@ -589,38 +598,35 @@ questionableBinding bind substEqv vs
     qB bind ((LstVar lv):vl)  =  qB (qLVB bind lv) vl
 
     qVB bind v@(Vbl i vc vw)
-      = fromJust $ bindVarToVar v (Vbl (qI i) vc vw) bind
-      where qi = qI i
+      = fromJust $ bindVarToVar v (Vbl (fI i) vc vw) bind
+      where qi = fI i
 
     qLVB bind lv@(LVbl (Vbl i _ _) _ _)
       | null lvEquivs
           = fromJust
-              $ bindLVarToVList lv [questionableLV lv i] bind
+              $ bindLVarToVList lv [floatingLV lv i] bind
       | otherwise
          = case bindSizes of
              [] -> fromJust
                       $ bindLVarToVList lv
-                          [questionableLV lv i] bind
+                          [floatingLV lv i] bind
              [0] -> fromJust $ bindLVarToVList lv [] bind
              [1] -> fromJust
                       $ bindLVarToVList lv
-                          [questionableLV lv i] bind
+                          [floatingLV lv i] bind
              [n] -> fromJust
                       $ bindLVarToVList lv
-                          (map (questionableLV lv . qIn i) [1..n]) bind
+                          (map (floatingLV lv . fIn i) [1..n]) bind
              bs -> error $ unlines
-                    ["questionableBinding : equiv class has multiple sizes"
+                    ["mkFloatingBinding : equiv class has multiple sizes"
                     ,"bs="++show bs
                     ,"lv="++show lv
                     ]
       where
         lvEquivs = lookupEquivClasses lv substEqv
         bindSizes = equivBindingsSizes bind lvEquivs
-        questionableLV lv@(LVbl (Vbl _ vc vw) is js) i
-                 = LstVar (LVbl (Vbl (qI i) vc vw) is js)
-
-    qI  (Identifier i u)    =  fromJust $ uident ('?':i) u
-    qIn (Identifier i u) n  =  fromJust $ uident ('?':i) (u+n)
+        floatingLV lv@(LVbl (Vbl _ vc vw) is js) i
+                 = LstVar (LVbl (Vbl (fI i) vc vw) is js)
 \end{code}
 
 Look up cardinalities of bindings of equivalences.
@@ -644,7 +650,7 @@ equivBindingsSizes bind (lv:lvs)
 \end{code}
 Another issue, what if some are unbound? Ignore for now.
 
-\subsubsection{Questionable Instantiation}
+\subsubsection{Floating Instantiation}
 
 \begin{code}
 autoInstantiate :: Monad m => Binding -> Term -> m (Binding,Term)
@@ -655,6 +661,6 @@ autoInstantiate bind trm
    unbound  =  findUnboundVars bind trm
    lvpairs  =  termLVarPairings trm
    substEquiv = mkEquivClasses lvpairs
-   qbind    =  questionableBinding bind substEquiv unbound
+   qbind    =  mkFloatingBinding bind substEquiv unbound
    abind    =  mergeBindings bind qbind
 \end{code}

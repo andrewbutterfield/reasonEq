@@ -25,7 +25,10 @@ The last clause `Ø ⊇ b` is clearly false.
    which fails if input `asc` is false, returns `Nothing` if 
    true but otherwise returns it as `Just asc`.
 2. **DONE** Make sure `scCheck` is used appropriately in `SideCond`.
-3. Make sure sure `scCheck` is used appropriately in `Instantiate`.
+3. **DONE** Make sure sure `scCheck` is used appropriately in `Instantiate`. *It is. What seems to be not working is `m`
+rejecting any residual ascs that do not refer to ?vars.
+
+**What was unclear was which vars need to be ?vars - the gvar in the ASC, or some of the gvars in the set?**
 
 We need to attempt to discharge these at the match stage
 to prevent these spurious un-dischargeable matches being presented

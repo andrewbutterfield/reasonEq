@@ -7,38 +7,22 @@
 The following match should not be displayed,
 as the side-condition cannot be discharged.
 
-`1 : “∃_remove”  gives  Q  _ ⟹ Ø ⊇ Q ≡[1]`.
-
-Nor this:
-
 ```
 1 : “∃_remove”  gives  b∧P∨¬ b∧R★  b∧Q∨¬ b∧S  _ 
      ⟹ Ø ⊇ P;Ø ⊇ Q;Ø ⊇ R;Ø ⊇ S;Ø ⊇ b ≡[1]
 ```
-The last clause `Ø ⊇ b` is clearly false.
+This is because all variables, including `b`, denote arbitrary *terms*, which are not guaranteed to be closed.
 
-"`instantiateSC` bypasses the use of `mrgSideCond`"
-*No, it uses `mkSideCond` whhc
+If all of these variables were "questionable":
 
-*Suggested solution:*
+```
+1 : “∃_remove”  gives  ?b∧?P∨¬ ?b∧?R★  ?b∧?Q∨¬ ?b∧?S  _ 
+     ⟹ Ø ⊇ ?P;Ø ⊇ ?Q;Ø ⊇ ?R;Ø ⊇ ?S;Ø ⊇ ?b ≡[1]
+```
+then we should display the match because we could instantiate them
+with closed terms. 
 
-1. **DONE** Introduce `scCheck :: AtmSideCond -> m (Maybe AtmSideCond)`
-   which fails if input `asc` is false, returns `Nothing` if 
-   true but otherwise returns it as `Just asc`.
-2. **DONE** Make sure `scCheck` is used appropriately in `SideCond`.
-3. **DONE** Make sure sure `scCheck` is used appropriately in `Instantiate`. *It is. What seems to be not working is `m`
-rejecting any residual ascs that do not refer to ?vars.
-
-**What was unclear was which vars need to be ?vars - the gvar in the ASC, or some of the gvars in the set?**
-
-We need to attempt to discharge these at the match stage
-to prevent these spurious un-dischargeable matches being presented
-to the user.
-We have to admit coverage for empty set in undischarged atomic s.c.s. (`autoOrNullInAll`)
-However we need another criterie to check that all (unbound) variables in discharged s.c. involve general variables found in goal s.c.s
-So above should be outlawed because `Q` does not occur in `_`.
-(even this isn't enough - we may want a more powerful check
-for *unsatisfiability* in s.c.s)
+We need to reject residual side-conditions that contain any regular term-variables.
 
 ## Upgrade No. 2
 

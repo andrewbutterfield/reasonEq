@@ -70,6 +70,8 @@ where $T$ abbreviates $\fv(T)$:
 \begin{eqnarray*}
    x,\lst v   \disj  T
    && \mbox{disjoint, short for }\{x,\lst v\} \cap \fv(T) = \emptyset
+\\ fresh~ x,\lst v
+   && \mbox{fresh, implying }\{x,\lst v\} \cap \fv(goal/law) = \emptyset
 \\ x,\lst v \supseteq T && \mbox{covering}
 \\ pre      \supseteq T && \mbox{pre-condition, no dashed variables}
 \end{eqnarray*}
@@ -81,11 +83,22 @@ which will itself be a list variable:
 \begin{eqnarray*}
    \lst v   \disj  \lst e && \mbox{disjoint, short for }
    v_1\disj \fv(e_1) \land \dots \land v_n\disj \fv(e_n)
-\\ \lst v      =    \lst e && \mbox{exact, short for }
-   \{v_1\}= \fv(e_1) \land \dots \land \{v_n\} =  \fv(e_n)
 \end{eqnarray*}
 This arises when we have side-conditions between lists of variables
 and expressions that occur in substitutions.
+
+Freshness is a special case of disjoint:
+\begin{itemize}
+  \item It applies to the whole goal or law
+  \item If the pattern fresh variables are bound in a match,
+       then the corresponding candidate variable
+        must satisfy the disjoint side-condition against
+       the entire goal.
+  \item If the pattern fresh variables are floating (not bound in a match)
+   then we can generate new candidate variables that
+   do satisfy the disjoint side-condition against
+  the entire goal.
+\end{itemize}
 
 We note that disjointness and being a (pre-)condition
 distribute through conjunction without restrictions,
@@ -120,37 +133,6 @@ In some of these cases, we may be able to simplify a side-condition further:
 \\ pre      \supseteq z  && z \textrm{ is a \texttt{Before} variable}
 \end{eqnarray*}
 
-\textbf{The Following may not be required}
-\textsf{
-To handle certain cases, particularly to do with predicate closure operators,
-we need to introduce the notion of existential side-conditions.
-For example, universal closure is typically defined as
-$$
-  [P] \defs \forall \lst x \bullet P, \quad \lst x\supseteq P
-$$
-However we have theorems about universal closure
-that have no such side-condition, such as
-$$
- [[P]] \equiv [P]
-$$
-or
-$$
-  [P \land Q] \equiv [P] \land [Q]
-$$
-We cannot match any instance of universal closure above
-against the definition as we cannot discharge the side-condition.
-Exploring proofs of the above by hand reveals the importance
-of being able to determine, at proof-time,
-if a predicate $P$ is closed ($\emptyset \supseteq P$).
-}
-
-
-We have to cope with $C$ matching $P$ in $P \sim R$,
-where variables in $R$, but not in $P$,
-are not in the resulting match-binding.
-If such variables occur in side-conditions,
-then we treat those variables as ``existential''.
-We are free to instantiate them using variables and terms in $P$ and $R$.
 
 \newpage
 \subsection{Atomic Side-Conditions}
@@ -159,6 +141,7 @@ We now introduce our notion of an atomic-side condition.
 \begin{code}
 data AtmSideCond
  = SD  GenVar VarSet -- Disjoint
+ | SF  GenVar        -- Fresh
  | SS  GenVar VarSet -- Superset (covers)
  | SP  GenVar        -- Pre
  deriving (Eq,Ord,Show,Read)
@@ -168,6 +151,7 @@ while in the \texttt{SS} case,
 we have an assertion that the term denoted by the general variable is closed.
 \begin{code}
 pattern Disjoint gv vs = SD  gv vs  --  vs `intersect`  gv = {}
+pattern Fresh    gv    = SF  gv     --  gv is fresh
 pattern Covers   gv vs = SS  gv vs  --  vs `supersetof` gv
 pattern IsPre    gv    = SP  gv     --  gv is pre-condition
 \end{code}
@@ -175,6 +159,7 @@ Sometimes we want the \texttt{GenVar} component,
 \begin{code}
 ascGVar :: AtmSideCond -> GenVar
 ascGVar (Disjoint gv _)  =  gv
+ascGVar (Fresh    gv  )  =  gv
 ascGVar (Covers   gv _)  =  gv
 ascGVar (IsPre    gv  )  =  gv
 \end{code}
@@ -183,7 +168,7 @@ or the \texttt{VarSet} part:
 ascVSet :: AtmSideCond -> Maybe VarSet
 ascVSet (Disjoint _ vs)  =  Just vs
 ascVSet (Covers   _ vs)  =  Just vs
-ascVSet (IsPre    _   )  =  Nothing
+ascVSet _                =  Nothing
 \end{code}
 
 \newpage

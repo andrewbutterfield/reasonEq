@@ -28,6 +28,10 @@ Once `scDischarge` has been applied,
 we treat residual `fresh v` as a failure,
 while any `fresh ?v` will trigger fresh generation.
 
+When a fresh variable is produced, 
+a side-condition needs to be added 
+to the goal to say that it is fresh/disjoint from everything.
+
 ## Upgrade No. 3
 
 For simultaneous assignment we need to be able to represent

@@ -2,11 +2,13 @@
 
 ## Most Urgent
 
+Fix failing tests, most due to fact that `Cons` identifier
+is now matched and included in bindings.
 
 ## Upgrade No. 2
 
 We need to allow fresh subscript instantiation
-and we need a freshness side-condition for the definition of seq-comp `;`
+and we need a subscript freshness side-condition for the definition of seq-comp `;`
 
 ## Upgrade No. 3
 

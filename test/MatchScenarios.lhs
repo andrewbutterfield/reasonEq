@@ -172,6 +172,7 @@ the other doing it in terms of sets.
 kvDesign =
     ok .:. bool $ ok' .:. bool
   $  x .:. int  $  x' .:. int  $ y .:. int $ y' .:. int $ z .:. int $ z' .:. int
+  $ v_land .:. bool $ v_equal .:. bool $ v_implies .:. bool $ v_asg .:. bool
   $ newVarTable
 
 vtL_Design =  lO ->> [lM,lS] $ lS -.> [x,y,z] $ lM -.> [ok] $ kvDesign
@@ -515,15 +516,23 @@ We want to match here using the definitions regard $O$ and friends from above.
 
 
 We need to define shorthands for
-known predicate operators $;$, $\exists$ and $\land$.
+known predicate operators $;$, $\exists$ and $\land$,
 \begin{code}
 semi = jId ";"
-exists = jId "exists"
-land = jId "land"
-
+v_semi = Vbl semi PredV Static
 p `seqComp` q = PCons semi [p,q]
-eX vs p = fromJust $ pBnd exists (S.fromList $ vs) p
+semiBinding = fromJust $ bindVarToVar v_semi v_semi emptyBinding
+semiKnown = fromJust $ addKnownVar v_semi ArbType $ newVarTable
+
+
+land = jId "land"
+v_land = Vbl land PredV Static
 p `lAnd` q = PCons land [p,q]
+andBinding = fromJust $ bindVarToVar v_land v_land emptyBinding
+andKnown = fromJust $ addKnownVar v_land ArbType $ newVarTable
+
+exists = jId "exists"
+eX vs p = fromJust $ pBnd exists (S.fromList $ vs) p
 \end{code}
 
 Also we need to insert our known variables and
@@ -624,12 +633,13 @@ test_substitution
 tstSub = defaultMain [test_substitution]
 \end{code}
 
-Now, the compositions:
+Now, the compositions.
+We need to ensure we have $\land$ bound to itself.
 \begin{code}
 smBinding
  = bindVV gvp gvp $ bindVV gvq gvq $
       bindLS gO gO $ bindLS gO' gO' $ bindLS gOm gOm $
-      emptyBinding
+      andBinding
 
 seeSMB = seeBind smBinding
 
@@ -640,7 +650,7 @@ test_composition
         @?= [ bindVV gvp gvp $ bindVV gvq gvq $ bindLL gOm gOm
             $ bindLL gO gO $ bindLL gO' gO'
             $ bindLSR gOm [] [lOm]
-            $ emptyBinding] )
+            $ andBinding] )
     , testCase "P[Om/O'] matches itself"
        (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty
                                             (endO2mid "m" p) (endO2mid "m" p) )
@@ -658,25 +668,25 @@ test_composition
         @?= [ bindVV gvp gvp $ bindVV gvq gvq
             $ bindLS gO gO $ bindLS gO' gO' $ bindLS gOm gOn
             $ bindLSR gOm [] [lOn]
-            $ emptyBinding] )
+            $ andBinding] )
     , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when M,S replaces O"
        (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty eMSpAqm eOpAqm )
         @?= [ bindVV gvp gvp $ bindVV gvq gvq
             $ bindLs gO [gM,gS] $ bindLs gO' [gM',gS'] $ bindLs gOm [gMm,gSm]
             $ bindLSR gOm [] [lMm,lSm]
-            $ emptyBinding] )
+            $ andBinding] )
     , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when M,S;n replaces O;m"
        (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty eMSpAqn eOpAqm )
         @?= [ bindVV gvp gvp $ bindVV gvq gvq
             $ bindLs gO [gM,gS] $ bindLs gO' [gM',gS'] $ bindLs gOm [gMn,gSn]
             $ bindLSR gOm [] [lMn,lSn]
-            $ emptyBinding] )
+            $ andBinding] )
     ,  testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when ok,S replaces O"
        (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty eoSpAqm eOpAqm )
         @?= [ bindVV gvp gvp $ bindVV gvq gvq
             $ bindLl gO [gok,gS] $ bindLl gO' [gok',gS']
             $ bindLSR gOm [tokm] [lSm]
-            $ emptyBinding] )
+            $ andBinding] )
     ]
 
 tstComp = defaultMain [test_composition]
@@ -699,12 +709,20 @@ We start with syntax definitions of assignment, equality
 and implication.
 \begin{code}
 asg = jId ":="
-implies = jId "implies"
-eq = jId "="
+v_asg = Vbl asg PredV Static
+v .:= e  =  PCons asg [fromJust $ eVar ArbType $ ScriptVar v, e]
+asgBinding = fromJust $ bindVarToVar v_asg v_asg emptyBinding
 
-v .:= e        =  PCons asg [fromJust $ eVar ArbType $ ScriptVar v, e]
-p `impl` q     =  PCons implies [p,q]
+implies = jId "implies"
+v_implies = Vbl implies PredV Static
+p `impl` q  =  PCons implies [p,q]
+
+eq = jId "="
+v_equal  =  Vbl eq PredV Static
 e1 `equal` e2  =  PCons eq [e1,e2]
+
+iaBinding = fromJust $ bindVarToVar v_implies v_implies andBinding
+eiaBinding = fromJust $ bindVarToVar v_equal v_equal iaBinding
 \end{code}
 
 Now, subtracting from list-variables,
@@ -738,7 +756,7 @@ test_simple_assignment
     [ testCase "Design |- y := 42  :: v := e, should succeed"
        ( tMatch [vtS_Design] emptyBinding S.empty S.empty
            (wy .:= e42) (v .:= eie)
-           @?= (Just $ bindVV gtv gsy $ bindVT ge e42 $ emptyBinding)
+           @?= (Just $ bindVV gtv gsy $ bindVT ge e42 $ asgBinding)
        )
     , testCase "Design |- << y := 42 >> :: << v := e >>, should succeed"
        ( tMatch [vtS_Design] emptyBinding S.empty S.empty
@@ -749,7 +767,7 @@ test_simple_assignment
                         (LstVar (lS  `less` ([wy],[])))
                $ bindLL (LstVar (lS' `less` ([v],[])))
                         (LstVar (lS' `less` ([wy],[])))
-               $ emptyBinding )
+               $ eiaBinding )
        )
     ]
 \end{code}
@@ -800,17 +818,17 @@ test_simultaneous_assignment
          ( tMatch [vtS_Design] emptyBinding S.empty S.empty
                   vs_becomes_es vs_becomes_es
            @?= ( Just $ bindLL gvs' gvs' $ bindLL ges ges
-                $ bindLL gSvs gSvs $ bindLL gS'vs gS'vs $ emptyBinding ) )
+                $ bindLL gSvs gSvs $ bindLL gS'vs gS'vs $ andBinding ) )
      , testCase "<< u$ := f$>> :: << v$ := e$>>"
          ( tMatch [vtS_Design] emptyBinding S.empty S.empty
                   us_becomes_fs vs_becomes_es
            @?= ( Just $ bindLL gvs' gus' $ bindLL ges gfs
-                $ bindLL gSvs gSus $ bindLL gS'vs gS'us $ emptyBinding ) )
+                $ bindLL gSvs gSus $ bindLL gS'vs gS'us $ andBinding ) )
      , testCase "(x'=1 /\\ y'=2) /\\ S'\\z = S\\z  :: << v$ := e$>>"
          ( tMatch [vtS_Design] emptyBinding S.empty S.empty
                   x'1y'2 vs_becomes_es
            @?= ( Just $ bindLt gvs' [tx',ty'] $ bindLt ges [e1,e2]
-                $ bindLL gSvs gSzs $ bindLL gS'vs gS'zs $ emptyBinding ) )
+                $ bindLL gSvs gSzs $ bindLL gS'vs gS'zs $ andBinding ) )
      ]
 
 tstAsg = defaultMain [test_assignment]

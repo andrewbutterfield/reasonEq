@@ -33,26 +33,51 @@ tst_match =
       ]
 
 -- -----------------------------------------------------------------------------
-tst_tsMatch :: TF.Test
+tst_tsMatch, tst_collMatch :: TF.Test
 
-
-lst = jId "lst" ; list ts = Cons P lst ts
+-- we consider first a known list collection type, "lst"
+lst = jId "lst" ; v_lst = Vbl lst ExprV Static
+lstKnown =  fromJust $ addKnownVar v_lst ArbType $ newVarTable
+list ts = Cons (E ArbType) lst ts
 
 l_42    = list [k42]
 l_42_58 = list [k42,k58]
 l_58_42 = list [k58,k42]
 
+lst2lst = fromJust $ bindVarToVar v_lst v_lst emptyBinding
+
 tst_tsMatch =
-  testGroup "tsMatch (via match)"
+  testGroup "tsMatch list vs. list (via match)"
       [ testCase "[42,58] :: [42,58] (OK)"
-        (match [] l_42_58 l_42_58 @?= [emptyBinding] )
+        (match [lstKnown] l_42_58 l_42_58 @?= [lst2lst] )
       , testCase "[42] :: [42,58] (FAIL)"
-        (match [] l_42 l_42_58 @?= [] )
+        (match [lstKnown] l_42 l_42_58 @?= [] )
       , testCase "[42,58] :: [42] (FAIL)"
-        (match [] l_42_58 l_42 @?= [] )
-      , testCase "[42,58] :: [42] (FAIL)"
-        (match [] l_42_58 l_58_42 @?= [] )
+        (match [lstKnown] l_42_58 l_42 @?= [] )
+      , testCase "[42,58] :: [58,42] (FAIL)"
+        (match [lstKnown] l_42_58 l_58_42 @?= [] )
       ]
+
+-- we now consider matching a generic collection pattern
+
+coll = jId "coll" ; v_coll = Vbl coll ExprV Static
+gcoll ts = Cons (E ArbType) coll ts
+
+c_42_58 = gcoll [k42,k58]
+
+coll2coll = fromJust $ bindVarToVar v_coll v_coll emptyBinding
+lst2coll  = fromJust $ bindVarToVar v_coll v_lst emptyBinding
+
+tst_collMatch =
+  testGroup "tsMatch known vs. generic (via match)"
+      [ testCase "<<42,58>> :: <<42,58>> (OK)"
+        (match [lstKnown] c_42_58 c_42_58 @?= [coll2coll] )
+      , testCase "[42,58] :: <<42,58>> (OK)"
+        (match [lstKnown] l_42_58 c_42_58 @?= [lst2coll] )
+      , testCase "<<42,58>> :: [42,58] (FAIL)"
+        (match [lstKnown] c_42_58 l_42_58 @?= [] )
+      ]
+
 
 -- -----------------------------------------------------------------------------
 tst_tvMatch, tst_vMatchVm, tst_vMatchGI :: TF.Test
@@ -402,6 +427,7 @@ tst_Matching
   = [ testGroup "\nMatching  (candidate :: pattern)"
       [ tst_match
       , tst_tsMatch
+      , tst_collMatch
       , tst_vMatchVm
       , tst_tvMatch
       , tst_vMatchGI

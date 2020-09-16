@@ -19,7 +19,7 @@ import MatchScenarios
 main = defaultMain tests
 
 tests :: [TF.Test]
-tests
+tests -- = test_match_scenarios
  =  int_tst_LexBase
  ++ int_tst_Variables
  ++ int_tst_AST

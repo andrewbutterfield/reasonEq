@@ -17,6 +17,7 @@ module AST ( TermSub, LVarSub
            , Value, pattern Boolean, pattern Integer, pattern Txt
            , TermKind(..)
            , isPredKind, isExprKind, ekType
+           , classFromKind
            , Term, readTerm
            , pattern Val, pattern Var, pattern Cons
            , pattern Bnd, pattern Lam, pattern Cls
@@ -328,6 +329,11 @@ ekType :: TermKind -> Type
 ekType (E typ)  =  typ
 \end{code}
 
+\begin{code}
+classFromKind :: TermKind -> VarClass
+classFromKind P      =  PredV
+classFromKind (E _)  =  ExprV
+\end{code}
 
 \newpage
 \subsubsection{Terms}

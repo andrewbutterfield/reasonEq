@@ -216,8 +216,9 @@ Here $ts_X = \langle t_{X_1}, t_{X_2}, \dots t_{X_n} \rangle$.
 \begin{code}
 tMatch' vts bind cbvs pbvs (Cons tkC nC tsC) (Cons tkP nP tsP)
  | tkC == tkP
-   =  do let vC = Vbl nC PredV Static
-         let vP = Vbl nP PredV Static
+   =  do let vClass = classFromKind tkC
+         let vC = Vbl nC vClass Static
+         let vP = Vbl nP vClass Static
          bind0 <- vMatch vts bind cbvs pbvs vC vP
          tsMatch vts bind0 cbvs pbvs tsC tsP
 \end{code}

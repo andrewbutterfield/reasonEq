@@ -2,33 +2,11 @@
 
 ## Most Urgent
 
-### Quantifier Bound Variables (in Matches)
-
-The following match should not be displayed,
-as the side-condition cannot be discharged.
-
-```
-1 : “∃_remove”  gives  b∧P∨¬ b∧R★  b∧Q∨¬ b∧S  _ 
-     ⟹ Ø ⊇ P;Ø ⊇ Q;Ø ⊇ R;Ø ⊇ S;Ø ⊇ b ≡[1]
-```
-This is because all variables, including `b`, denote arbitrary *terms*, which are not guaranteed to be closed.
-
-If all of these variables were "questionable":
-
-```
-1 : “∃_remove”  gives  ?b∧?P∨¬ ?b∧?R★  ?b∧?Q∨¬ ?b∧?S  _ 
-     ⟹ Ø ⊇ ?P;Ø ⊇ ?Q;Ø ⊇ ?R;Ø ⊇ ?S;Ø ⊇ ?b ≡[1]
-```
-then we should display the match because we could instantiate them
-with closed terms. 
-
-We need to reject residual side-conditions that contain any regular term-variables.
 
 ## Upgrade No. 2
 
-For `;` we may want to specify fresh subscripts.
-**Yes - we need to allow fresh subscript instantiation
-and we need a freshness side-condition for the definition of seq-comp `;`**
+We need to allow fresh subscript instantiation
+and we need a freshness side-condition for the definition of seq-comp `;`
 
 ## Upgrade No. 3
 

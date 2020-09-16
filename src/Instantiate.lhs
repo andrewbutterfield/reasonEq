@@ -567,16 +567,6 @@ lookupEquivClasses x (eqvc:eqvcs)
 
 \newpage
 
-\subsubsection{Mapping Replacement Variables to Floating ones}
-
-We mark a variable as ``floating'' by prepending its
-identifier with a question-mark: $idn \mapsto ?idn$.
-Some support functions:
-\begin{code}
-fI  (Identifier i u)         =  fromJust $ uident ('?':i) u
-fIn (Identifier i u) n       =  fromJust $ uident ('?':i) (u+n)
-isFloating (Identifier i u)  =  take 1 i == "?"
-\end{code}
 
 \textbf{
 Function \texttt{mkFloatingBinding} needs

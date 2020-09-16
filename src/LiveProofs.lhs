@@ -825,7 +825,7 @@ basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
         unbound' <- instVarSet bind' unbound
         scPinC <- instantiateSC bind' scP
         scD <- scDischarge scC scPinC
-        if autoOrNullInAll unbound' scD
+        if all isFloatingASC scD
           then return $ MT n asn (chkPatn mc tP) bind scC scPinC repl
           else fail "undischargeable s.c."
   where

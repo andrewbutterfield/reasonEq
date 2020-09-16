@@ -12,7 +12,8 @@ module SideCond (
 , ascGVar, ascVSet
 , SideCond, scTrue
 , mrgAtmCond, mrgSideCond, mkSideCond
-, scDischarge, autoInAll, autoOrNullInAll
+, scDischarge
+, isFloatingASC
 , notin, covers, pre
 , citingASCs
 , Assertion
@@ -648,16 +649,11 @@ ascDischarge _ ascL = return [ascL]
 When discharge at match application
 results in a residual side-condition (not trivially true)
 then we need to check that \emph{all} the atomic side-conditions in that residual
-mention variables that were unbound after initial matching.
-If any atomic-side condition does \emph{not} mention an unbound variable,
-then there is no way it can be discharged by a judicious instantiation
-of some unbound variable.
+mention variables that are marked as ``floating''.
+Only these can possibly be instantiated to satisfy the residual side-condition.
 \begin{code}
-tolerateAuto :: VarSet -> AtmSideCond -> Bool
-tolerateAuto unbound (Disjoint _ d) =  unbound `overlaps` d
-tolerateAuto unbound (Covers _ c)   =  unbound `overlaps` c
-tolerateAuto _       _              =  False
-autoInAll unbound = all (tolerateAuto unbound)
+isFloatingASC :: AtmSideCond -> Bool
+isFloatingASC = isFloatingGVar . ascGVar
 \end{code}
 One exception to this, during law matching,
 is that coverage may reduce to the empty set

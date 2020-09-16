@@ -42,6 +42,8 @@ module Variables
  , VarSet, stdVarSetOf, listVarSetOf
  , isPreVarSet
  , liftLess
+ , fI, fIn, fVar, fLVar, fGVar
+ , isFloating, isFloatingV, isFloatingLV, isFloatingGVar
  , int_tst_Variables
  ) where
 import Data.Char
@@ -404,6 +406,35 @@ liftLess (LV (VR (_,vc,vw), is, js))
      mkV i = VR (i,vc,vw)
      mkL j = LV (mkV j,[],[])
 \end{code}
+
+\newpage
+
+\subsection{Floating Variables}
+
+We want to mark some variables as ``floating'',
+to indicate that haven't been matched,
+and so are free to instantiated by the user in any fashion.
+We do this by prepending their
+identifiers with a question-mark: $idn \mapsto ?idn$.
+Some support functions:
+\begin{code}
+fI  (Identifier i u)    =  fromJust $ uident ('?':i) u
+fIn (Identifier i u) n  =  fromJust $ uident ('?':i) (u+n)
+fVar (Vbl i c w)        =  Vbl (fI i) c w
+fLVar (LVbl v is js)    =  LVbl (fVar v) is js
+fGVar (StdVar v)        =  StdVar $ fVar v
+fGVar (LstVar v)        =  LstVar $ fLVar v
+
+isFloating (Identifier i u)  =  take 1 i == "?"
+isFloatingV (Vbl i _ _)      =  isFloating i
+isFloatingLV (LVbl v _ _)    =  isFloatingV v
+isFloatingGVar (StdVar v)    =  isFloatingV v
+isFloatingGVar (LstVar lv)   =  isFloatingLV lv
+\end{code}
+
+
+
+
 \newpage
 
 \subsection{Exported Test Group}

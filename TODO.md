@@ -4,8 +4,29 @@
 
 ## Upgrade No. 2
 
-We need to allow fresh subscript instantiation
-and we need a subscript freshness side-condition for the definition of seq-comp `;`
+We need to allow fresh subscript/variable instantiation
+and we need a freshness side-condition for the "mid-state" variable in the definition of seq-comp `;`.
+
+```
+(P;Q) ≡ (∃ O$_m • P[O$_m/O$']∧Q[O$_m/O$])   fresh O$_m
+```
+Can we consider `fresh O$_m` the same as `O$_m ∉ P,Q` ?
+
+Not really, as in the former case we are free to generate
+a fresh variable, whereas in the latter,
+we have a condition to be satisfied given what we have.
+
+When matching the LHS, we need to generate a fresh `O$_m`.
+When matching the RHS, we need to check that `O$_m` is bound
+to something that does not occur in whatever $P$ and $Q$ are bound to.
+
+So, `fresh ?v` requires fresh generation,
+while `fresh v`, by contrast, is equivalent to `v ∉ everything`.
+
+So we add freshness as a side-condition.
+Once `scDischarge` has been applied,
+we treat residual `fresh v` as a failure,
+while any `fresh ?v` will trigger fresh generation.
 
 ## Upgrade No. 3
 

@@ -2,9 +2,6 @@
 
 ## Most Urgent
 
-Fix failing tests, most due to fact that `Cons` identifier
-is now matched and included in bindings.
-
 ## Upgrade No. 2
 
 We need to allow fresh subscript instantiation

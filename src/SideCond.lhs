@@ -172,6 +172,8 @@ ascVSet _                =  Nothing
 \end{code}
 
 \newpage
+\subsubsection{Checking Atomic Sideconditions}
+
 It is possible to simplify some proposed atomic side-conditions
 to either true or false.
 Here we provide a monadic function that fails if the condition
@@ -181,10 +183,12 @@ where \texttt{Nothing} denotes a condition that is true.
 \begin{code}
 scCheck :: Monad m => AtmSideCond -> m (Maybe AtmSideCond)
 \end{code}
-
 Here, $z$ denotes an (standard) observation variable,
 $T$ denotes a standard term variable,
 and $g$ denotes either $z$ or $T$.
+
+\paragraph{Checking Disjoint}
+
 \begin{eqnarray*}
    \emptyset       \disj    g  && \true
 \\ \dots,z,\dots   \disj    z  && \false
@@ -200,6 +204,8 @@ scCheck asc@(Disjoint sv@(StdVar v) vs)
   | sv `S.member` vs  =  fail "atomic disjoint is False"
   | all isObsGVar vs  =  return Nothing
 \end{code}
+
+\paragraph{Checking Covers}
 
 \begin{eqnarray*}
    \emptyset       \supseteq z  && \false
@@ -217,6 +223,9 @@ scCheck asc@(Covers sv@(StdVar v) vs)
   | all isObsGVar vs  =  fail "atomic covers is False (all std)"
 \end{code}
 
+\paragraph{Checking Precondition}
+
+
 \begin{eqnarray*}
    pre \supseteq g  && \false,  \textrm{ if $g$ is an \texttt{After} variable}
 \\ pre \supseteq g  && \true,  \textrm{ if $g$ is a \texttt{Before} variable}
@@ -227,7 +236,8 @@ scCheck asc@(IsPre v@(StdVar (Vbl _ _ vw)))
   | vw == Before  =  return Nothing
 \end{code}
 
-For anything else, we just return the condition unchanged:
+For anything else, we just return the condition unchanged.
+In particular, we cannot do anything with freshness at this point.
 \begin{code}
 scCheck asc = return $ Just asc
 \end{code}
@@ -310,6 +320,8 @@ patterns:
 [Covers]    [Covers,IsPre]
 [IsPre]
 \end{verbatim}
+If the general variable is required to be fresh,
+then this is inconsistent with \texttt{Covers}.
 
 \subsubsection{ASC Merge Laws}
 
@@ -327,15 +339,15 @@ are:
 \end{eqnarray*}
 We get the following laws:
 \begin{eqnarray*}
-   \sem{D_1}_G \land \sem{D_2}_g &=&  \sem{D_1 \cup D_2}_G
+   \sem{D_1}_G \land \sem{D_2}_G &=&  \sem{D_1 \cup D_2}_G
 \\ \sem{C_1}_G \land \sem{C_2}_G &=&  \sem{C_1 \cap C_2}_G
 \\ \sem{D}_G \land \sem{C}_G
    &=&  \sem{D}_G \land \sem{C \setminus D}_G
-\\ &=& \sem{C \setminus D}_G, \quad \IF \quad C\setminus D = \emptyset
-\\ &=& \fv.G = \emptyset \quad \IF \quad C\setminus D = \emptyset
+\\ &=& \sem{C \setminus D}_G, \quad \IF \quad C\setminus D \neq \emptyset
+\\ &=& \fv.G = \emptyset, \quad \IF \quad C\setminus D = \emptyset
 \end{eqnarray*}
 We not that an apparent contradiction between $D$ and $C$ (when $D \supseteq C$)
-becomes and assertion that $G$ is closed
+becomes a assertion that $G$ is closed
 for any given general variable $G$,
 we will have that $D$ and $C$ are disjoint.
 
@@ -347,7 +359,6 @@ or the predicate $D \disj G$ ($G$ being the general variable in question).
 
 \newpage
 \subsubsection{Merging \texttt{Disjoint} into ASC}
-
 \begin{code}
 mrgAtmAtms (Disjoint gv d0) [Disjoint _ d1,Covers _ c]
  | c `S.isSubsetOf` d'  =  return [Covers gv S.empty]
@@ -360,8 +371,8 @@ mrgAtmAtms (Disjoint gv d) [Covers _ c]
  | otherwise           =  return [Disjoint gv d,Covers gv (c S.\\ d)]
 \end{code}
 
-\subsubsection{Merging \texttt{Covers} into ASC}
 
+\subsubsection{Merging \texttt{Covers} into ASC}
 \begin{code}
 mrgAtmAtms (Covers gv c0) [Disjoint _ d,Covers _ c1]
  | c' `S.isSubsetOf` d  =  return [Covers gv S.empty]
@@ -379,6 +390,16 @@ mrgAtmAtms (Covers gv c0) [Covers _ c1]
 mrgAtmAtms (IsPre _)   atms@[IsPre _]           =  return atms
 mrgAtmAtms p@(IsPre _) (d@(Disjoint _ _):atms)  =  fmap (d:) $ mrgAtmAtms p atms
 mrgAtmAtms p@(IsPre _) (c@(Covers _ _)  :atms)  =  fmap (c:) $ mrgAtmAtms p atms
+\end{code}
+
+\subsubsection{Merging \texttt{Freshness} into ASC}
+\begin{code}
+mrgAtmAtms (Fresh _) atms@[Fresh _] = return atms
+mrgAtmAtms f@(Fresh _) (d@(Disjoint _ _):atms)  =  fmap (d:) $ mrgAtmAtms f atms
+mrgAtmAtms f@(Fresh _) (c@(Covers _ c1):atms)
+  | S.null c1                                   =  fmap (c:) $ mrgAtmAtms f atms
+  | otherwise  =  fail "mrgAtmAtms: fresh variables cannot cover"
+mrgAtmAtms f@(Fresh _) (x@(IsPre _):atms)       =  fmap (x:) $ mrgAtmAtms f atms
 \end{code}
 
 \subsubsection{Failure Case}

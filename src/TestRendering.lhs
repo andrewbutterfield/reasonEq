@@ -407,8 +407,8 @@ trtz trid (t,wayup) = trterm trid 0 $ exitTZ (markfocus t,wayup)
 \begin{code}
 trSideCond = trsidecond trId
 trSideCondU = trsidecond trIdU
-trsidecond trid [] = "_"
-trsidecond trid ascs
+trsidecond trid ([],_) = "_"
+trsidecond trid (ascs,fvs)
  = intcalNN ";" (map (tratmsidecond trid) ascs)
 
 tratmsidecond trid (IsPre    gv)    = "pre:"++trgvar trid gv
@@ -424,7 +424,7 @@ tratmsidecond trid (Covers   gv vs) = trovset trid vs
 trAsn = trasn trId
 trAsnU = trasn trIdU
 
-trasn trid (trm,[]) = trterm trid 0 trm
+trasn trid (trm,([],_)) = trterm trid 0 trm
 trasn trid (trm,sc) = trterm trid 0 trm ++ ", " ++ trSideCond sc
 
 trNmdAsn = trnmdasn trId

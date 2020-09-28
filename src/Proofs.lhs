@@ -492,7 +492,7 @@ shStep ( (UseLaw how lnm bind dpath), asn@(trm,sc) )
               , trBinding bind
               ]
    where
-     trSC [] = ""
+     trSC ([],_) = ""
      trSC sc = " ,  "++trSideCond sc
 shStep ( just, asn )  =  unlines' [ trAsn asn
                                   , showJustification just ]

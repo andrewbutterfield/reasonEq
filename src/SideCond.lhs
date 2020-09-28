@@ -10,7 +10,7 @@ module SideCond (
   AtmSideCond
 , pattern Disjoint, pattern Covers, pattern IsPre
 , ascGVar, ascVSet
-, SideCond, scTrue
+, SideCond, scTrue, isTrivialSC
 , mrgAtmCond, mrgSideCond, mkSideCond
 , scDischarge
 , isFloatingASC
@@ -70,8 +70,6 @@ where $T$ abbreviates $\fv(T)$:
 \begin{eqnarray*}
    x,\lst v   \disj  T
    && \mbox{disjoint, short for }\{x,\lst v\} \cap \fv(T) = \emptyset
-\\ fresh~ x,\lst v
-   && \mbox{fresh, implying }\{x,\lst v\} \cap \fv(goal/law) = \emptyset
 \\ x,\lst v \supseteq T && \mbox{covering}
 \\ pre      \supseteq T && \mbox{pre-condition, no dashed variables}
 \end{eqnarray*}
@@ -86,19 +84,6 @@ which will itself be a list variable:
 \end{eqnarray*}
 This arises when we have side-conditions between lists of variables
 and expressions that occur in substitutions.
-
-Freshness is a special case of disjoint:
-\begin{itemize}
-  \item It applies to the whole goal or law
-  \item If the pattern fresh variables are bound in a match,
-       then the corresponding candidate variable
-        must satisfy the disjoint side-condition against
-       the entire goal.
-  \item If the pattern fresh variables are floating (not bound in a match)
-   then we can generate new candidate variables that
-   do satisfy the disjoint side-condition against
-  the entire goal.
-\end{itemize}
 
 We note that disjointness and being a (pre-)condition
 distribute through conjunction without restrictions,
@@ -141,7 +126,6 @@ We now introduce our notion of an atomic-side condition.
 \begin{code}
 data AtmSideCond
  = SD  GenVar VarSet -- Disjoint
- | SF  GenVar        -- Fresh
  | SS  GenVar VarSet -- Superset (covers)
  | SP  GenVar        -- Pre
  deriving (Eq,Ord,Show,Read)
@@ -151,7 +135,6 @@ while in the \texttt{SS} case,
 we have an assertion that the term denoted by the general variable is closed.
 \begin{code}
 pattern Disjoint gv vs = SD  gv vs  --  vs `intersect`  gv = {}
-pattern Fresh    gv    = SF  gv     --  gv is fresh
 pattern Covers   gv vs = SS  gv vs  --  vs `supersetof` gv
 pattern IsPre    gv    = SP  gv     --  gv is pre-condition
 \end{code}
@@ -159,7 +142,6 @@ Sometimes we want the \texttt{GenVar} component,
 \begin{code}
 ascGVar :: AtmSideCond -> GenVar
 ascGVar (Disjoint gv _)  =  gv
-ascGVar (Fresh    gv  )  =  gv
 ascGVar (Covers   gv _)  =  gv
 ascGVar (IsPre    gv  )  =  gv
 \end{code}
@@ -247,17 +229,38 @@ scCheck asc = return $ Just asc
 \newpage
 \subsection{Full Side Conditions}
 
+Freshness is a special case of disjoint:
+\begin{itemize}
+  \item It applies to the whole goal or law
+  \item If the pattern fresh variables are bound in a match,
+       then the corresponding candidate variable
+        must satisfy the disjoint side-condition against
+       the entire goal.
+  \item If the pattern fresh variables are floating (not bound in a match)
+   then we can generate new candidate variables that
+   do satisfy the disjoint side-condition against
+  the entire goal.
+\end{itemize}
+We have to treat freshness as a top-level side-condition,
+with no attachment to any specific term-variable.
+
 A ``full'' side-condition is basically a list of ASCs,
-interpreted as their conjunction.
+interpreted as their conjunction,
+along with a set defining fresh variables.
 \begin{code}
-type SideCond = [AtmSideCond] -- all must be true
+type SideCond = ( [AtmSideCond]  -- all must be true
+                , VarSet )       -- must be fresh
 \end{code}
 
 If the atomic condition list is empty,
 then we have the trivial side-condition, which is always true:
 \begin{code}
 scTrue :: SideCond
-scTrue = []
+scTrue = ([],S.empty)
+
+isTrivialSC :: SideCond -> Bool
+isTrivialSC ([],fvs)  =  S.null fvs
+isTrivialSC _         =  False
 \end{code}
 
 \subsection{Merging Side-Conditions}
@@ -276,7 +279,7 @@ to generate side-conditions,
 by merging them in, one at a time,
 into a pre-existing list ordered and structured as described above.
 \begin{code}
-mrgAtmCond :: Monad m => AtmSideCond -> SideCond -> m SideCond
+mrgAtmCond :: Monad m => AtmSideCond -> [AtmSideCond] -> m [AtmSideCond]
 \end{code}
 
 
@@ -392,16 +395,6 @@ mrgAtmAtms p@(IsPre _) (d@(Disjoint _ _):atms)  =  fmap (d:) $ mrgAtmAtms p atms
 mrgAtmAtms p@(IsPre _) (c@(Covers _ _)  :atms)  =  fmap (c:) $ mrgAtmAtms p atms
 \end{code}
 
-\subsubsection{Merging \texttt{Freshness} into ASC}
-\begin{code}
-mrgAtmAtms (Fresh _) atms@[Fresh _] = return atms
-mrgAtmAtms f@(Fresh _) (d@(Disjoint _ _):atms)  =  fmap (d:) $ mrgAtmAtms f atms
-mrgAtmAtms f@(Fresh _) (c@(Covers _ c1):atms)
-  | S.null c1                                   =  fmap (c:) $ mrgAtmAtms f atms
-  | otherwise  =  fail "mrgAtmAtms: fresh variables cannot cover"
-mrgAtmAtms f@(Fresh _) (x@(IsPre _):atms)       =  fmap (x:) $ mrgAtmAtms f atms
-\end{code}
-
 \subsubsection{Failure Case}
 If none of the above arise, then we currently have a problem,
 probably with \texttt{mrgAtmCond} above.
@@ -412,27 +405,51 @@ mrgAtmAtms atm atms
                    , "atms are "++ show atms ]
 \end{code}
 
+\subsubsection{Merging Atomic Lists}
+
+\begin{code}
+mrgAtmCondLists :: Monad m => [AtmSideCond] -> [AtmSideCond] -> m [AtmSideCond]
+mrgAtmCondLists ascs1 [] = return ascs1
+mrgAtmCondLists ascs1 (asc:ascs2)
+     = do ascs1' <- mrgAtmCond asc ascs1
+          mrgAtmCondLists ascs1' ascs2
+\end{code}
+
+\subsubsection{Merging Atomic and Freshness Side-Conditions}
+
+
+\begin{code}
+mrgAtomicFreshConditions :: Monad m => VarSet -> [AtmSideCond] -> m SideCond
+mrgAtomicFreshConditions freshvs ascs
+  | freshvs `disjoint` coverVarsOf ascs  =  return (ascs,freshvs)
+  | otherwise  =  fail "Fresh variables cannot cover terms."
+
+coverVarsOf :: [AtmSideCond] -> VarSet
+coverVarsOf ascs = S.unions $ map coversOf ascs
+coversOf (Covers _ vs)  =  vs
+coversOf _              =  S.empty
+\end{code}
+
+\subsection{From ASC and Free-list to Side-Condition}
+
+\begin{code}
+mkSideCond :: Monad m => [AtmSideCond] -> VarSet -> m SideCond
+mkSideCond ascs fvs
+ = do ascs' <-  mrgAtmCondLists [] ascs
+      mrgAtomicFreshConditions fvs ascs
+\end{code}
+
+
 \subsubsection{Merging Full Side-conditions}
 
 Merging two side-conditions is then straightforward,
-simply merge each ASC from the one into the other,
+simply merge each ASC and fresh set from the one into the other,
 one at a time.
 \begin{code}
 mrgSideCond :: Monad m => SideCond -> SideCond -> m SideCond
-mrgSideCond ascs1 [] = return ascs1
-mrgSideCond ascs1 (asc:ascs2)
-     = do ascs1' <- mrgAtmCond asc ascs1
-          mrgSideCond ascs1' ascs2
-\end{code}
-
-\subsection{From ASC-list to Side-Condition}
-
-\begin{code}
-mkSideCond :: Monad m => [AtmSideCond] -> m SideCond
-mkSideCond [] = return []
-mkSideCond (asc:ascs)
- = do sc <- mkSideCond ascs
-      mrgAtmCond asc sc
+mrgSideCond (ascs1,fvs1) (ascs2,fvs2)
+     = do ascs' <- mrgAtmCondLists ascs1 ascs2
+          mrgAtomicFreshConditions (fvs1 `S.union` fvs2) ascs'
 \end{code}
 
 \newpage
@@ -470,12 +487,13 @@ and displaying them, or actually trying to apply a match outcome.
 
 We start with simple end-cases:
 \begin{code}
-scDischarge _ []    =  return scTrue  -- G => true   is  true
-scDischarge [] scL  =  return scL     -- true => L is L,  i.e., not discharged
-\end{code}
-\begin{code}
-scDischarge anteSC cnsqSC
-  = scDischarge' (pdbg "anteGrp" (groupByGV $ pdbg "anteSC" anteSC)) $ pdbg "cnsqGrp" (groupByGV $ pdbg "cnsqSC" cnsqSC)
+scDischarge anteSC@(anteASC,anteFvs) cnsqSC@(cnsqASC,cnsqFvs)
+  | isTrivialSC cnsqSC  =  return scTrue  -- G => true   is   true
+  | isTrivialSC anteSC  =  return cnsqSC  -- true => L   is   L, not discharged
+  | otherwise
+     = do asc' <- scDischarge' (groupByGV anteASC) (groupByGV cnsqASC)
+          let fvs' = cnsqFvs S.\\ anteFvs
+          return (asc',fvs')
 \end{code}
 
 We have a modified version of \texttt{Data.List.groupBy}
@@ -492,8 +510,8 @@ groupByGV (asc:ascs)  =  (gv,asc:ours) : groupByGV others
 Now onto processing those groups:
 \begin{code}
 scDischarge' :: Monad m => [(GenVar,[AtmSideCond])] -> [(GenVar,[AtmSideCond])]
-              -> m SideCond
-scDischarge' _ []      =  return scTrue                   -- discharged
+              -> m [AtmSideCond]
+scDischarge' _ []      =  return []                   -- discharged
 scDischarge' [] grpsL  =  return $ concat $ map snd grpsL -- not discharged
 scDischarge' (grpG@(gvG,ascsG):restG) grpsL@(grpL@(gvL,ascsL):restL)
   | gvG < gvL  =  scDischarge' restG grpsL -- grpG not needed
@@ -685,19 +703,19 @@ Simple side-condition builders.
 $\lst v \disj \fv(T)$
 \begin{code}
 notin :: VarList -> GenVar -> SideCond
-vl `notin` tV  =  [ Disjoint tV (S.fromList vl) ]
+vl `notin` tV  =  ([ Disjoint tV (S.fromList vl) ], S.empty)
 \end{code}
 
 $\lst v \supseteq \fv(T)$
 \begin{code}
 covers :: VarList -> GenVar -> SideCond
-vl `covers` tV  =  [ Covers tV (S.fromList vl) ]
+vl `covers` tV  =  ([ Covers tV (S.fromList vl) ], S.empty)
 \end{code}
 
 $pre \supseteq \fv(T)$
 \begin{code}
 pre :: GenVar -> SideCond
-pre tV  = [ IsPre tV ]
+pre tV  = ([ IsPre tV ], S.empty)
 \end{code}
 
 
@@ -708,7 +726,7 @@ First, given a variable-set,
 return all ASCs that mention any variable in that set:
 \begin{code}
 citingASCs :: VarSet -> SideCond -> [AtmSideCond]
-citingASCs vs sc = filter (cited vs) sc
+citingASCs vs (sc,_) = filter (cited vs) sc
 
 cited :: VarSet -> AtmSideCond -> Bool
 vs `cited` asc

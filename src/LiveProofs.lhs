@@ -37,6 +37,7 @@ import qualified Data.Map as M
 import Utilities
 import WriteRead
 import LexBase
+import Variables
 import AST
 import SideCond
 import TermZipper
@@ -825,7 +826,7 @@ basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
         unbound' <- instVarSet bind' unbound
         scPinC <- instantiateSC bind' scP
         scD <- scDischarge scC scPinC
-        if all isFloatingASC scD
+        if all isFloatingASC (fst scD) && all isFloatingGVar (S.toList $ snd scD)
           then return $ MT n asn (chkPatn mc tP) bind scC scPinC repl
           else fail "undischargeable s.c."
   where

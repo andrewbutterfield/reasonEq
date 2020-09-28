@@ -322,9 +322,10 @@ checkAndGroup a sstvl (lvts:lvtss)
 Doing it again, with side-conditions.
 \begin{code}
 instantiateSC :: Monad m => Binding -> SideCond -> m SideCond
-instantiateSC bind ascs
+instantiateSC bind (ascs,fvs)
   = do ascss' <- sequence $ map (instantiateASC bind) ascs
-       mkSideCond $ concat ascss'
+       fvs' <- instVarSet bind fvs
+       mkSideCond (concat ascss') fvs'
 \end{code}
 
 \begin{code}

@@ -314,7 +314,7 @@ normQ vv trm = (trm, vv) -- Val, Typ
 Working on side-conditions:
 \begin{code}
 normSC :: VarVersions -> SideCond -> SideCond
-normSC vv ascs = map (normASC vv) ascs
+normSC vv (ascs,fvs) = (map (normASC vv) ascs,normQVSet vv fvs)
 
 normASC vv (Disjoint gv vs)  =  Disjoint (normQGVar vv gv) (normQVSet vv vs)
 normASC vv (Covers gv vs)    =  Covers   (normQGVar vv gv) (normQVSet vv vs)

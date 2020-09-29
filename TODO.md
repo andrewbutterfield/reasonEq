@@ -12,25 +12,42 @@ and we need a freshness side-condition for the "mid-state" variable in the defin
 ```
 Can we consider `fresh O$_m` the same as `O$_m ∉ P,Q` ?
 
-Not really, as in the former case we are free to generate
-a fresh variable, whereas in the latter,
-we have a condition to be satisfied given what we have.
+When we match ";\_assoc" LHS (`P;(Q;R) `) against ";\_def" we obtain:
 
-When matching the LHS, we need to generate a fresh `O$_m`.
-When matching the RHS, we need to check that `O$_m` is bound
-to something that does not occur in whatever $P$ and $Q$ are bound to.
+```
+(∃ ?O$_m • P[?O$_m/?O$']∧(Q;R)[?O$_m/?O$])  ⊤ ⟹ fresh:?O$_m
+```
+Now, we should have `O$` and `O'$` as known
+and so `?O$` and `?O$'` should bind to them. 
+As `?O$_m` is fresh, it should be bind to `O$_x` where `_x` is not present in `P;(Q;R)`. In this case, `x` being the same as `m`
+is OK
 
-So, `fresh ?v` requires fresh generation,
-while `fresh v`, by contrast, is equivalent to `v ∉ everything`.
+We should get:
 
-So we add freshness as a side-condition.
-Once `scDischarge` has been applied,
-we treat residual `fresh v` as a failure,
-while any `fresh ?v` will trigger fresh generation.
+```
+(∃ O$_m • P[O$_m/O$']∧(Q;R)[O$_m/O$]) 
+```
 
-When a fresh variable is produced, 
-a side-condition needs to be added 
-to the goal to say that it is fresh/disjoint from everything.
+When we focus on `(Q;R)`, its match against ";\_def" will be:
+
+```
+(∃ ?O$_m • Q[?O$_m/?O$']∧R[?O$_m/?O$])  ⊤ ⟹ fresh:?O$_m
+```
+
+We cannot use `O$_m` here again, so lets use `x=n` (say), to obtain:
+
+```
+(∃ O$_n • Q[O$_n/O$']∧R[O$_n/O$]) 
+```
+When viewed in situ, we have:
+
+```
+(∃ O$_m • P[O$_m/O$']∧(∃ O$_n • Q[O$_n/O$']∧R[O$_n/O$])[O$_m/O$])
+```
+
+Make this so.
+
+
 
 ## Upgrade No. 3
 

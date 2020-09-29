@@ -407,15 +407,19 @@ trtz trid (t,wayup) = trterm trid 0 $ exitTZ (markfocus t,wayup)
 \begin{code}
 trSideCond = trsidecond trId
 trSideCondU = trsidecond trIdU
-trsidecond trid ([],_) = "_"
-trsidecond trid (ascs,fvs)
- = intcalNN ";" (map (tratmsidecond trid) ascs)
+trsidecond trid sc@(ascs,fvs)
+  | isTrivialSC sc  =  _top
+  | otherwise       =  intcalNN ";" (    map (tratmsidecond trid) ascs
+                                      ++ [trfresh trid fvs] )
 
 tratmsidecond trid (IsPre    gv)    = "pre:"++trgvar trid gv
 tratmsidecond trid (Disjoint gv vs) = trovset trid vs
                                       ++ spaced _notin ++ trgvar trid gv
 tratmsidecond trid (Covers   gv vs) = trovset trid vs
                                       ++ spaced _supseteq ++ trgvar trid gv
+trfresh trid fvs
+  | S.null fvs  =  ""
+  | otherwise   =  "fresh:" ++ trovset trid fvs
 \end{code}
 
 \subsection{Assertions}

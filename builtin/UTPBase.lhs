@@ -362,7 +362,7 @@ seqIntro = mkConsIntro i_seq boolf_2
                          === exists [gOm]
                               ( (Sub P p om'sub) /\ (Sub P q omsub) )
                        )
-                       scTrue -- for now!
+                       (fresh $ S.singleton gOm)
 \end{code}
 
 \subsubsection{UTP Seq. Composition Laws}

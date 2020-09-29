@@ -1,3 +1,4 @@
+
 \section{Abstract User-Interface}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2017--18
@@ -516,11 +517,11 @@ applyMatchToFocus2 mtch unbound ubind liveProof
         scC = conjSC liveProof
         (tz,seq') = focus liveProof
         dpath = fPath liveProof
-    in do brepl  <- instantiate   cbind repl
-          scLasC <- instantiateSC cbind scL
+    in do scLasC <- instantiateSC cbind scL
           scD <- scDischarge scC scLasC
-          if null scD
-            then do -- scC' <- scC `mrgSideCond` scD
+          if isTrivialSC scD
+            then do brepl  <- instantiate cbind repl
+                    -- scC' <- scC `mrgSideCond` scD
                     return ( focus_ ((setTZ brepl tz),seq')
                            $ matches_ []
                            $ conjSC_ scC

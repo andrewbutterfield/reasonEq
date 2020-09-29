@@ -14,7 +14,7 @@ module SideCond (
 , mrgAtmCond, mrgSideCond, mkSideCond
 , scDischarge
 , isFloatingASC
-, notin, covers, pre
+, notin, covers, pre, fresh
 , citingASCs
 , Assertion
 , int_tst_SideCond
@@ -718,6 +718,11 @@ pre :: GenVar -> SideCond
 pre tV  = ([ IsPre tV ], S.empty)
 \end{code}
 
+$u,v,\dots \textbf{fresh.}$
+\begin{code}
+fresh :: VarSet -> SideCond
+fresh fvs = ([],fvs)
+\end{code}
 
 \newpage
 \subsection{Side-condition Queries}

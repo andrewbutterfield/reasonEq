@@ -2,6 +2,20 @@
 
 ## Most Urgent
 
+Fix soundness bug identified by Danny Thomas:
+
+`(P ⟹ Q) ∧ (Q ≡ R) ⟹ (P ⟹ R)`
+
+using the Assume strategy.
+
+Assume `(P ⟹ Q) ; (Q ≡ R) ; P` to show `R`.
+
+Matching `8 : H.implies_==_trans.2" gives *?Q*`
+
+This can be instantiated with `true`, or whatever...
+
+PVar `Q` should be "known", so should end up being *questionable*.
+
 ## Upgrade No. 2
 
 We need to allow fresh subscript/variable instantiation

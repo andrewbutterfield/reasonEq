@@ -704,6 +704,7 @@ proofREPLConfig
       proofREPLHelpCmds
       ( map clearLong
             [ listScopeLawsDescr
+            , listScopeKnownsDescr
             , goDownDescr
             , goUpDescr
             , matchLawDescr
@@ -757,6 +758,18 @@ listScopeLawsDescr = ( "ll", "list laws"
 listScopeLaws :: REPLCmd (REqState, LiveProof)
 listScopeLaws _ state@( _, liveProof)
   = do putStrLn $ observeLawsInScope liveProof
+       userPause
+       return state
+\end{code}
+
+Listing knowns in scope for the current live proof.
+\begin{code}
+listScopeKnownsDescr = ( "lk", "list knowns"
+                     , "lk -- list all known names in scope", listScopeKnowns)
+
+listScopeKnowns :: REPLCmd (REqState, LiveProof)
+listScopeKnowns _ state@( reqs, liveProof)
+  = do putStrLn $ observeKnowns reqs []
        userPause
        return state
 \end{code}

@@ -25,7 +25,7 @@ module AbstractUI
 , nestSimpFocus
 , substituteFocus, revSubstituteFocus
 , tryFocusAgainst
-, observeLawsInScope
+, observeLawsInScope, observeKnownsInScope
 , flattenAssociative, groupAssociative
 , stepBack
 , lawInstantiate1, lawInstantiate2, lawInstantiate3
@@ -632,6 +632,16 @@ observeLawsInScope :: LiveProof -> String
 observeLawsInScope liveProof
   = let mctxts = mtchCtxts liveProof
     in hdr ++ (intercalate hdr $ map showContextLaws $ reverse mctxts)
+  where hdr = "\n---\n"
+\end{code}
+
+\subsubsection{Observing Knowns Names in Scope}
+
+\begin{code}
+observeKnownsInScope :: LiveProof -> String
+observeKnownsInScope liveProof
+  = let mctxts = mtchCtxts liveProof
+    in hdr ++ (intercalate hdr $ map showContextKnowns $ reverse mctxts)
   where hdr = "\n---\n"
 \end{code}
 

@@ -17,7 +17,7 @@ module Laws
  , isAxiom, isProven, isAssumed
  , labelAsAxiom, labelAsProof, labelAsAssumed
  , writeSignature, readSignature
- , showLogic, showNmdAssns, showLaw, showLaws, showConj, showConjs
+ , showLogic, showKnowns, showNmdAssns, showLaw, showLaws, showConj, showConjs
  , showLeftRight, showGroupSpec
  ) where
 
@@ -339,6 +339,13 @@ showLogic logicsig
              , "Disjunction:   " ++ trId   (theOr    logicsig) ]
 \end{code}
 
+
+Showing known names:
+\begin{code}
+showKnowns [] = "Knowns: None."
+showKnowns vts = "Knowns:\n"
+               ++ unlines' (map trVarTable vts)
+\end{code}
 
 Showing laws:
 \begin{code}

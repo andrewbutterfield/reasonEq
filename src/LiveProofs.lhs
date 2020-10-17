@@ -25,6 +25,7 @@ module LiveProofs
  , makeEquivalence
  , showLiveProofs
  , showContextLaws
+ , showContextKnowns
  ) where
 
 import Data.Maybe
@@ -998,5 +999,15 @@ showContextLaws (nm,lws,_)
   = unlines' (
       [ "Theory '"++nm++"'"
       , showLaws (trTerm 0, trSideCond) lws
+      ] )
+\end{code}
+
+We can display known names from a context
+(again, this also should be done elsewhere).
+\begin{code}
+showContextKnowns (nm,_,vts)
+  = unlines' (
+      [ "Theory '"++nm++"'"
+      , showKnowns vts
       ] )
 \end{code}

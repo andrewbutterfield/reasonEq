@@ -9,6 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module AbstractUI
 ( REqState
 , observeSig, observeTheories, observeTheoryNames, observeLaws
+, observeKnowns
 , observeCurrTheory, observeCurrConj
 , observeLiveProofs, observeCompleteProofs
 , setCurrentTheory
@@ -132,6 +133,18 @@ observeLaws reqs _
   where hdr = "\n---\n"
         nd = (trTerm 0, trSideCond)
 \end{code}
+
+\subsubsection{Observing Known Names}
+
+\begin{code}
+observeKnowns :: REqState -> [String] -> String
+observeKnowns reqs _
+  = let thrys = getTheoryDeps' (currTheory reqs) $ theories reqs
+    in hdr ++ (intercalate hdr $ map showTheoryKnowns thrys)
+  where hdr = "\n---\n"
+\end{code}
+
+
 
 \subsubsection{Observing Current Theory}
 

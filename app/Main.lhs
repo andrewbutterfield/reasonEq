@@ -334,6 +334,7 @@ cmdShow
         , shName++" "++shTheories++" -- show theories"
         , shName++" "++shLaws++" -- show laws"
         , shName++" "++shLaws++" -u -- show variable uniqueness"
+        , shName++" "++shKnown++" -- show known names"
         , shName++" "++shCurrThry++" -- show 'current' theory"
         , shName++" "++shConj++" -- show current conjectures"
         , shName++" "++shConj++" -u -- show variable uniqueness"
@@ -348,6 +349,7 @@ shWork = "w"
 shSig = "s"
 shTheories = "t"
 shLaws = "L"
+shKnown = "k"
 shCurrThry = "T"
 shConj = "c"
 shLivePrf = "p"
@@ -360,6 +362,7 @@ showState (cmd:args) reqs
  | cmd == shSig       =  doshow reqs $ observeSig reqs
  | cmd == shTheories  =  doshow reqs $ observeTheories reqs
  | cmd == shLaws      =  doshow reqs $ observeLaws reqs args
+ | cmd == shKnown     =  doshow reqs $ observeKnowns reqs args
  | cmd == shCurrThry  =  doshow reqs $ observeCurrTheory reqs
  | cmd == shConj      =  doshow reqs $ observeCurrConj reqs args
  | cmd == shLivePrf   =  doshow reqs $ observeLiveProofs reqs

@@ -30,6 +30,7 @@ module Theories
  , addTheoryProof, upgradeConj2Law
  , showTheories, showNamedTheory
  , showTheoryLong, showTheoryShort, showTheoryLaws
+ , showTheoryKnowns
  ) where
 
 import Data.Map (Map)
@@ -532,6 +533,10 @@ showTheoryLong dm thry
       , showConjs dm (conjs thry) ]
     )
   where deps = thDeps thry
+\end{code}
 
 
+\begin{code}
+showTheoryKnowns :: Theory -> String
+showTheoryKnowns thry = trVarTable (known thry)
 \end{code}

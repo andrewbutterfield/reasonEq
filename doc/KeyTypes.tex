@@ -1,0 +1,234 @@
+\section{Key Types}
+
+
+\subsection{AST}
+
+\subsection{SideCond}
+
+\subsection{Laws}
+
+\begin{code}
+data LogicSig
+  = LogicSig
+     { theTrue  :: Term
+     , theFalse :: Term
+     , theEqv   :: Identifier
+     , theImp   :: Identifier
+     , theAnd   :: Identifier
+     , theOr    :: Identifier
+     }
+\end{code}
+
+\begin{code}
+data LeftRight = Lft | Rght deriving (Eq,Show,Read)
+
+data GroupSpec
+  = Assoc LeftRight
+  | Gather LeftRight Int
+  | Split Int
+  deriving (Eq,Show,Read)
+\end{code}
+
+\begin{code}
+type NmdAssertion = (String,Assertion)
+\end{code}
+
+\begin{code}
+data Provenance
+  = Axiom          --  considered as `self-evidently` True
+  | Proven String  --  demonstrated by (named) proof
+  | Assumed        --  conjecture asserted w/o proof
+  deriving (Eq,Show,Read)
+\end{code}
+
+\begin{code}
+type Law = (NmdAssertion,Provenance)
+\end{code}
+
+\subsection{Proofs}
+
+\begin{code}
+data MatchClass
+  = MA       -- match all of law, with replacement 'true'
+  | ME [Int] -- match subpart of 'equiv' chain
+  | MIA      -- match implication antecedent A, replacement A /\ C
+  | MIC      -- match implication consequent C, replacement A \/ C
+  -- MEV should be last, so these matches rank low by default
+  | MEV Int  -- match PredVar at given position
+pattern MatchAll       = MA
+pattern MatchEqv is    = ME is
+pattern MatchAnte      = MIA
+pattern MatchCnsq      = MIC
+pattern MatchEqvVar i  = MEV i
+\end{code}
+
+\begin{code}
+data HowUsed
+  = ByMatch MatchClass  -- replace focus with binding(match)
+  | ByInstantiation     -- replace focus=true with binding(law)
+  deriving (Eq,Show,Read)
+\end{code}
+
+\begin{code}
+data SeqFocus = CLeft | CRight | Hyp Int deriving (Eq,Show,Read)
+\end{code}
+
+\begin{code}
+data Justification
+  = UseLaw             -- used a law
+      HowUsed              -- how law was used in proof step
+      String               -- law name
+      Binding              -- binding from law variables to goal components
+      [Int]                -- zipper descent arguments
+  | Substitute         -- performed a substitution
+      [Int]                -- zipper descent arguments
+  | NormQuant          -- performed a quantifier normalisation
+      [Int]                -- zipper descent arguments
+  | NestSimp           -- simplified nested quantifiers
+      [Int]                -- zipper descent arguments
+  | Switch             -- switched focus at sequent level
+      SeqFocus             -- focus before switch -- needed to reverse this.
+      SeqFocus             -- focus after switch
+  | CloneH Int         --  Cloned hypothesis i
+  | Flatten Identifier -- flattened use of associative operator
+  | Associate          -- grouped use of an associative operator
+      Identifier           -- operator
+      GroupSpec            -- grouping details.
+  deriving (Eq,Show,Read)
+\end{code}
+
+\begin{code}
+type CalcStep
+  = ( Justification  -- step justification
+    , Assertion )         -- previous term
+\end{code}
+
+\begin{code}
+type Calculation
+  = ( Term -- end (or current) term
+    , [ CalcStep ] )  -- calculation steps, in proof order
+\end{code}
+
+\begin{code}
+type Proof
+  = ( String -- assertion name
+    , Assertion
+    , String -- Strategy
+    , Calculation -- Simple calculational proofs for now
+    )
+\end{code}
+
+
+\subsection{Theories}
+
+\begin{code}
+data Theory
+  = Theory {
+      thName   :: String
+    , thDeps   :: [String]
+    , known    :: VarTable
+    , subable  :: SubAbilityMap
+    , laws     :: [Law]
+    , proofs   :: [Proof]
+    , conjs    :: [NmdAssertion]
+    }
+\end{code}
+
+\begin{code}
+type TheoryMap = Map String Theory
+data Theories
+  = Theories { tmap :: TheoryMap
+             , sdag :: SDAG String }
+\end{code}
+
+\subsection{Sequents}
+
+\begin{code}
+data Sequent
+  = Sequent {
+     ante :: [Theory] -- antecedent theory context
+   , hyp :: Theory -- the goal hypotheses -- we can "go" here
+   , sc :: SideCond -- of the conjecture being proven.
+   , cleft :: Term -- never 'true' to begin with.
+   , cright :: Term -- often 'true' from the start.
+   }
+  deriving (Eq, Show, Read)
+\end{code}
+
+\begin{code}
+data Laws'
+  = CLaws' { -- currently focussed on conjecture component
+      hyp0  :: Theory -- hypothesis theory
+    , whichC :: LeftRight -- which term is in the focus
+    , otherC :: Term  -- the term not in the focus
+    }
+  | HLaws' { -- currently focussed on hypothesis component
+      hname     :: String -- hyp. theory name
+    , hknown    :: VarTable
+    , hbefore   :: [Law] -- hyp. laws before focus (reversed)
+    , fhName    :: String -- focus hypothesis name
+    , fhSC      :: SideCond -- focus hypothesis sc (usually true)
+    , fhProv    :: Provenance -- focus hypothesis provenance (?)
+    , hOriginal :: Term -- the original form of the focus hypothesis
+    , hafter    :: [Law] -- hyp. laws after focus
+    , cleft0    :: Term -- left conjecture
+    , cright0   :: Term -- right conjecture
+    }
+  deriving (Eq,Show,Read)
+\end{code}
+
+\begin{code}
+data Sequent'
+  = Sequent' {
+      ante0 :: [Theory] -- context theories
+    , sc0       :: SideCond -- sequent side-condition
+    , laws'     :: Laws'
+    }
+  deriving (Eq,Show,Read)
+\end{code}
+
+
+\begin{code}
+type SeqZip = (TermZip, Sequent')
+\end{code}
+
+\subsection{LiveProofs}
+
+\begin{code}
+data Match
+ = MT { mName  ::  String     -- assertion name
+      , mAsn   ::  Assertion  -- matched assertion
+      , mClass ::  MatchClass -- match class
+      , mBind  ::  Binding    -- resulting binding
+      , mLocSC ::  SideCond   -- goal side-condition local update
+      , mLawSC ::  SideCond   -- law side-condition mapped to goal
+      , mRepl  ::  Term       -- replacement term
+      } deriving (Eq,Show,Read)
+\end{code}
+
+\begin{code}
+type MatchContext
+  = ( String       -- Theory Name
+    , [Law]        -- all laws of this theory
+    , [VarTable] ) -- all known variables here, and in dependencies
+\end{code}
+
+\begin{code}
+data LiveProof
+  = LP {
+      conjThName :: String -- conjecture theory name
+    , conjName :: String -- conjecture name
+    , conjecture :: Assertion -- assertion being proven
+    , conjSC :: SideCond -- side condition
+    , strategy :: String -- strategy
+    , mtchCtxts :: [MatchContext] -- current matching contexts
+    , focus :: SeqZip  -- current sub-term of interest
+    , fPath :: [Int] -- current term zipper descent arguments
+    , matches :: Matches -- current matches
+    , stepsSoFar :: [CalcStep]  -- calculation steps so far, most recent first
+    }
+\end{code}
+
+\begin{code}
+type LiveProofs = Map (String,String) LiveProof
+\end{code}

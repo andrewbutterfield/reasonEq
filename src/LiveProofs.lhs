@@ -274,8 +274,8 @@ startProof logicsig thys thnm cjnm asn@(t,sc)
         , stepsSoFar = []
         }
   where
-    (strat,seq) = fromJust $ reduce logicsig thys (cjnm,asn)
-    sz = leftConjFocus seq
+    (strat,sequent) = fromJust $ reduce logicsig thys (cjnm,asn)
+    sz = leftConjFocus sequent
     mcs = buildMatchContext thys
 \end{code}
 
@@ -284,7 +284,7 @@ startProof logicsig thys thnm cjnm asn@(t,sc)
 \begin{code}
 launchProof :: [Theory] -> String -> String -> Assertion -> (String,Sequent)
             -> LiveProof
-launchProof thys thnm cjnm asn@(t,sc) (strat,seq)
+launchProof thys thnm cjnm asn@(t,sc) (strat,sequent)
   = LP { conjThName = thnm
        , conjName = cjnm
        , conjecture = asn
@@ -297,8 +297,8 @@ launchProof thys thnm cjnm asn@(t,sc) (strat,seq)
        , stepsSoFar = []
        }
   where
-    sz = leftConjFocus seq
-    hthy = hyp seq
+    sz = leftConjFocus sequent
+    hthy = hyp sequent
     mcs = if null $ laws hthy
            then buildMatchContext thys
            else buildMatchContext (hthy:thys)
@@ -877,7 +877,7 @@ undoCalcStep liveProof
     -- THIS IS WRONG as we set stepsSoFar to prevSteps after doing this!
     undoCalcStep' _  = liveProof
 
-    setTerm t (tz,seq') = (mkTZ t,seq')
+    setTerm t (tz,sequent') = (mkTZ t,sequent')
 \end{code}
 
 

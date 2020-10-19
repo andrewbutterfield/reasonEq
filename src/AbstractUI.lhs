@@ -642,7 +642,8 @@ observeKnownsInScope :: LiveProof -> String
 observeKnownsInScope liveProof
   = let mctxts = mtchCtxts liveProof
     in hdr ++ (intercalate hdr $ map showContextKnowns $ reverse mctxts)
-  where hdr = "\n---\n"
+  where
+    hdr = "\n---\n"
 \end{code}
 
 

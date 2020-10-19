@@ -51,6 +51,7 @@ import TestRendering
 
 import Debug.Trace
 dbg msg x = trace (msg++show x) x
+pdbg nm x = dbg ('@':nm++":\n") x
 \end{code}
 
 We define types, including zippers,for sequents.
@@ -295,7 +296,7 @@ makeUnknownKnown thys t
   = let
      fvars = S.toList $ freeVars t
      vts = map known thys
-    in scanFreeForUnknown vts newVarTable fvars
+    in scanFreeForUnknown vts newVarTable $ pdbg "mUK.fvars" fvars
 
 scanFreeForUnknown :: [VarTable] -> VarTable -> VarList -> VarTable
 scanFreeForUnknown _ vt [] = vt
@@ -309,16 +310,16 @@ checkVarStatus vts vt v
   = case lookupVarTables vts v of
       UnknownVar
        -> case addKnownVar v ArbType vt of
-            Nothing   ->  vt -- best we can do --- shouldn't happen?
+            Nothing   ->  error ("Sequents.checkVarStatus FAILED: "++show v)
             Just vt'  ->  vt'
       _               ->  vt
 
 checkLVarStatus :: [VarTable] -> VarTable -> ListVar -> VarTable
-checkLVarStatus vts vt (LVbl v _ _)
+checkLVarStatus vts vt lv@(LVbl v _ _)
   = case lookupLVarTables vts v of
       UnknownListVar
        -> case addAbstractVarList v vt of
-            Nothing   ->  vt -- best we can do --- shouldn't happen?
+            Nothing   ->  error ("Sequents.checkLVarStatus FAILED: "++show lv)
             Just vt'  ->  vt'
       _               ->  vt
 \end{code}

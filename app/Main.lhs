@@ -769,7 +769,7 @@ listScopeKnownsDescr = ( "lk", "list knowns"
 
 listScopeKnowns :: REPLCmd (REqState, LiveProof)
 listScopeKnowns _ state@( reqs, liveProof)
-  = do putStrLn $ observeKnowns reqs []
+  = do putStrLn $ observeKnownsInProof liveProof
        userPause
        return state
 \end{code}

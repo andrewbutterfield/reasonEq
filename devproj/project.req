@@ -17,6 +17,24 @@ END THEORIES
 CURRTHEORY = Implies
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("Implies","implies_equiv_trans")
+BEGIN LIVE-PROOF
+TH-NAME: Implies
+CJ-NAME: implies_equiv_trans
+CONJ = (C P (Id "implies" 0) [C P (Id "land" 0) [C P (Id "implies" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P (Id "equiv" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],C P (Id "implies" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],([],fromList []))
+SIDE = ([],fromList [])
+STRAT assume
+BEGIN SEQZIP
+TERMZIP = (V P (VR (Id "R" 0,VP,WS)),[])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.implies_equiv_trans", thDeps = [], known = VD (fromList [(VR (Id "P" 0,VP,WS),KV T),(VR (Id "Q" 0,VP,WS),KV T),(VR (Id "R" 0,VP,WS),KV T)],fromList [],fromList []), subable = fromList [], laws = [(("H.implies_equiv_trans.1",(C P (Id "implies" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],([],fromList []))),Axiom),(("H.implies_equiv_trans.2",(C P (Id "equiv" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))],([],fromList []))),Axiom),(("H.implies_equiv_trans.3",(V P (VR (Id "P" 0,VP,WS)),([],fromList []))),Axiom)], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+END LIST STEPS
+END LIVE-PROOF
 ("UTPBase",";_assoc")
 BEGIN LIVE-PROOF
 TH-NAME: UTPBase

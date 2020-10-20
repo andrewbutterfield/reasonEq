@@ -245,6 +245,37 @@ data Provenance
 type Law = (NmdAssertion,Provenance)
 \end{code}
 
+\subsection{Binding}
+
+\begin{code}
+data VarBind = BI Identifier | BV Variable | BT Term
+pattern BindVar  v  =  BV v
+pattern BindTerm t  =  BT t
+type VarBinding = M.Map (Identifier,VarClass) VarBind
+\end{code}
+
+\begin{code}
+data LstVarBind
+ = BL  VarList
+ | BS  VarSet
+ | BX  [LVarOrTerm]
+pattern BindList vl      =  BL vl
+pattern BindSet  vs      =  BS vs
+pattern BindTLVs tlvs    =  BX tlvs
+type ListVarKey = (Identifier,VarClass,[Identifier],[Identifier])
+type ListVarBinding = M.Map ListVarKey LstVarBind
+\end{code}
+
+\subsection{Matching}
+
+\begin{code}
+type Pattern = Term
+type Candidate = Term
+type BVS = Set GenVar
+type PBVS = BVS
+type CBVS = BVS
+\end{code}
+
 \newpage
 \subsection{Proofs}
 

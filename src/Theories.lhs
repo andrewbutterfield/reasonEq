@@ -509,10 +509,10 @@ showTheoryShort thry
 showTheoryLaws dm thry
   = unlines' (
       [ "Theory '"++thName thry++"'"
-      , trVarTable (known thry)
+      , "Knowns:", trVarTable (known thry)
       , "Sub-Ability: " ++ trMap trId show (subable thry)
-      , showLaws dm (laws thry)
-      , showConjs dm (conjs thry)
+      , "Laws:", showLaws dm (laws thry)
+      , "Conjectures:", showConjs dm (conjs thry)
       ] )
 
 showNamedTheory dm thnm thrys
@@ -527,10 +527,10 @@ showTheoryLong dm thry
         then []
         else [ "depends on: "++intercalate "," deps] )
       ++
-      [ trVarTable (known thry)
+      [ "Knowns:", trVarTable (known thry)
       , "Sub-Ability: " ++ trMap trId show (subable thry)
-      , showLaws dm (laws thry)
-      , showConjs dm (conjs thry) ]
+      , "Laws:", showLaws dm (laws thry)
+      , "Conjectures:", showConjs dm (conjs thry) ]
     )
   where deps = thDeps thry
 \end{code}

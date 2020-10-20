@@ -472,14 +472,10 @@ trVarTable = trvartable trId
 trVarTableU = trvartable trIdU
 
 trvartable trid vt
- = case lns of
-     []  ->  "Known Variables: None"
-     _   ->  "Known Variables:\n"
-             ++ unlines' lns
- where lns = (    map (trvtvv trid) (vtList vt)
-               ++ map (trvtlv trid) (stList vt)
-               ++ map (trvtlv trid) (dtList vt)
-              )
+ = unlines' (   map (trvtvv trid) (vtList vt)
+             ++ map (trvtlv trid) (stList vt)
+             ++ map (trvtlv trid) (dtList vt)
+            )
 
 trvtvv trid (v,vmr)   =  trVar v ++ trvmr trid    vmr
 

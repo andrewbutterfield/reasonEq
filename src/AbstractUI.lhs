@@ -642,10 +642,10 @@ observeLawsInScope liveProof
 \begin{code}
 observeKnownsInScope :: LiveProof -> String
 observeKnownsInScope liveProof
-  = let mctxts = mtchCtxts liveProof
-    in hdr ++ (intercalate hdr $ map showContextKnowns $ reverse mctxts)
-  where
-    hdr = "\n---\n"
+  | null mctxts  =  "*Nothing* in scope!!!"
+  | otherwise    =  showContextKnowns $ head mctxts
+  where mctxts   =  mtchCtxts liveProof
+
 \end{code}
 
 

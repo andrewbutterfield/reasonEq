@@ -342,9 +342,7 @@ showLogic logicsig
 
 Showing known names:
 \begin{code}
-showKnowns [] = "Knowns: None."
-showKnowns vts = "Knowns:\n"
-               ++ unlines' (map trVarTable vts)
+showKnowns vts = unlines' (map trVarTable vts)
 \end{code}
 
 Showing laws:
@@ -357,9 +355,8 @@ showNmdAssn (showT,showSC) w (nm,(trm,sc))
        ++ "  " ++ showT trm ++ "  "++showSC sc
   where nmh = nicelawname nm
 
-showLaws _ []   =  "Laws: None."
-showLaws dm lws  =  "Laws:\n"
-                 ++ numberList (showLaw dm $ nameWidth $ map fst lws) lws
+showLaws _ []    =  "NONE."
+showLaws dm lws  =  numberList (showLaw dm $ nameWidth $ map fst lws) lws
 
 showLaw dm w ((nm,(trm,sc)),prov)
   =  showProv prov ++ "  " ++ showNmdAssn dm w (nm,(trm,sc))
@@ -367,9 +364,8 @@ showProv Axiom           =  _top
 showProv (Proven pname)  =  _qed
 showProv Assumed         =  "!"
 
-showConjs _ []   =  "Conjectures: None."
-showConjs dm cjs  =  "Conjectures:\n"
-                 ++ numberList (showConj dm $ nameWidth $ cjs) cjs
+showConjs _ []    =  "NONE."
+showConjs dm cjs  =  numberList (showConj dm $ nameWidth $ cjs) cjs
 
 showConj dm w (nm,(trm,sc))
   =  _redQ ++ "  " ++ showNmdAssn dm w (nm,(trm,sc))

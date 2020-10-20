@@ -296,7 +296,7 @@ makeUnknownKnown thys t
   = let
      fvars = S.toList $ freeVars t
      vts = map known thys
-    in scanFreeForUnknown vts newVarTable $ pdbg "mUK.fvars" fvars
+    in scanFreeForUnknown vts newVarTable fvars
 
 scanFreeForUnknown :: [VarTable] -> VarTable -> VarList -> VarTable
 scanFreeForUnknown _ vt [] = vt

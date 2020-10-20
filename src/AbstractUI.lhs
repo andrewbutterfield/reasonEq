@@ -258,7 +258,7 @@ newProof1 i reqs
             -> return
                 ( nconj
                 , availableStrategies (logicsig reqs) thys currTh nconj )
-        | otherwise -> fail "shadowed bound-vars.in conjecture"
+        | otherwise -> fail "shadowed bound-vars. in conjecture"
   where
     currTh = currTheory reqs
     getCurrConj reqs = fromJust $ getTheoryConjectures currTh thys
@@ -295,7 +295,9 @@ This should be replaced by:
 We simply check this is the case,
 rather than making it so.
 This is because we have no general way at present
-of distinguishing susbtitutable and non-substitutable terms.
+of distinguishing substitutable and non-substitutable terms.
+\textbf{Note: }
+\textsf{We do now, as theories have a \texttt{SubAbilityMap} component}
 \begin{code}
 shadowFree :: Assertion -> Bool
 shadowFree (t,sc) = shadowFree' sc S.empty t

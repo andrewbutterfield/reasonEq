@@ -612,8 +612,7 @@ doNewProof args reqs
             choice <- getLine
             case newProof2 nconj strats (readInt choice) reqs of
              Nothing -> doshow reqs "Invalid strategy no"
-             Just liveProof
-              -> proofREPL reqs liveProof
+             Just liveProof -> proofREPL reqs liveProof
 \end{code}
 
 
@@ -769,7 +768,7 @@ listScopeKnownsDescr = ( "lk", "list knowns"
 
 listScopeKnowns :: REPLCmd (REqState, LiveProof)
 listScopeKnowns _ state@( reqs, liveProof)
-  = do putStrLn $ observeKnownsInProof liveProof
+  = do putStrLn $ observeKnownsInScope liveProof
        userPause
        return state
 \end{code}

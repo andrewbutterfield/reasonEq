@@ -299,9 +299,10 @@ launchProof thys thnm cjnm asn@(t,sc) (strat,sequent)
   where
     sz = leftConjFocus sequent
     hthy = hyp sequent
-    mcs = if null $ laws hthy
-           then buildMatchContext thys
-           else buildMatchContext (hthy:thys)
+    mcs = buildMatchContext (hthy:thys)
+          -- if null $ laws hthy
+          --  then buildMatchContext thys
+          --  else buildMatchContext (hthy:thys)
 \end{code}
 
 \newpage
@@ -391,7 +392,7 @@ matched part, so we need to create temporary bindings for these.
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryAutoInstantiate vts tP partsP scP bind
-      = case autoInstantiate bind tP of
+      = case autoInstantiate vts bind tP of
           Yes (abind,tPasC)  ->  tryInstantiateSC abind tPasC partsP scP
           But msgs
            -> But ([ "auto-instantiate failed"
@@ -823,7 +824,7 @@ basicMatch :: MatchClass
 basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
   =  do bind <- match vts tC partsP
         let unbound = findUnboundVars bind repl
-        (bind',replC) <- autoInstantiate bind repl
+        (bind',replC) <- autoInstantiate vts bind repl
         unbound' <- instVarSet bind' unbound
         scPinC <- instantiateSC bind' scP
         scD <- scDischarge scC scPinC
@@ -946,7 +947,7 @@ dispLiveProof liveProof
        )
        ++
        ( " ..."
-         : displayMatches (matches liveProof)
+         : displayMatches (mtchCtxts liveProof)(matches liveProof)
          : [ underline "           "
            , dispSeqZip (fPath liveProof) (conjSC liveProof) (focus liveProof)
            , "" ]
@@ -958,12 +959,13 @@ shLiveStep ( just, asn )
   = unlines' [ trAsn asn
              , showJustification just]
 
-displayMatches :: Matches -> String
-displayMatches []  =  ""
-displayMatches matches
-  =  unlines' ( ("Matches:") : map shMatch (zip [1..] matches))
+displayMatches :: [MatchContext] -> Matches -> String
+displayMatches _ []  =  ""
+displayMatches mctxts matches
+  =  unlines' ( ("Matches:") : map (shMatch vts) (zip [1..] matches))
+  where vts = concat $ map thd3 mctxts
 
-shMatch (i, mtch)
+shMatch vts (i, mtch)
  = show i ++ " : "++ ldq ++ green (nicelawname $ mName mtch) ++ rdq
    ++ "  gives  "
    ++ (bold $ blue $ showRepl ainst)
@@ -971,7 +973,7 @@ shMatch (i, mtch)
    ++ " " ++ shMClass (mClass mtch)
  where
     bind = mBind mtch
-    ainst = autoInstantiate bind $ mRepl mtch
+    ainst = autoInstantiate vts bind $ mRepl mtch
     (_,lsc) = mAsn mtch
     showRepl Nothing = "auto-instantiate failed!!"
     showRepl (Just (_,brepl)) = trTerm 0 brepl

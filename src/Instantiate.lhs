@@ -30,6 +30,7 @@ import AST
 import SideCond
 import Binding
 import FreeVars
+import VarData
 import TestRendering
 
 import Debug.Trace
@@ -579,8 +580,8 @@ to something of the same size as its bound partner, otherwise instantiation will
 fail when it calls \texttt{substn}.
 }
 \begin{code}
-mkFloatingBinding :: Binding -> [[ListVar]] -> VarSet -> Binding
-mkFloatingBinding bind substEqv vs
+mkFloatingBinding :: [VarTable] -> Binding -> [[ListVar]] -> VarSet -> Binding
+mkFloatingBinding vts bind substEqv vs
   = qB emptyBinding $ S.toList vs
   where
 
@@ -644,14 +645,14 @@ Another issue, what if some are unbound? Ignore for now.
 \subsubsection{Floating Instantiation}
 
 \begin{code}
-autoInstantiate :: Monad m => Binding -> Term -> m (Binding,Term)
-autoInstantiate bind trm
+autoInstantiate :: Monad m => [VarTable] -> Binding -> Term -> m (Binding,Term)
+autoInstantiate vts bind trm
  = do trm' <- instantiate abind trm
       return (abind, trm')
  where
    unbound  =  findUnboundVars bind trm
    lvpairs  =  termLVarPairings trm
    substEquiv = mkEquivClasses lvpairs
-   qbind    =  mkFloatingBinding bind substEquiv unbound
+   qbind    =  mkFloatingBinding vts bind substEquiv unbound
    abind    =  mergeBindings bind qbind
 \end{code}

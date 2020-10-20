@@ -590,10 +590,17 @@ mkFloatingBinding vts bind substEqv vs
     qB bind ((LstVar lv):vl)  =  qB (qLVB bind lv) vl
 
     qVB bind v@(Vbl i vc vw)
-      = fromJust $ bindVarToVar v (Vbl (fI i) vc vw) bind
+      = case lookupVarTables vts v of
+          UnknownVar  ->  fromJust $ bindVarToVar v (Vbl (fI i) vc vw) bind
+          _           ->  fromJust $ bindVarToVar v v                  bind
       where qi = fI i
 
-    qLVB bind lv@(LVbl (Vbl i _ _) _ _)
+    qLVB bind lv@(LVbl v _ _)
+      = case lookupLVarTables vts v of
+          UnknownListVar  ->  qLVB' bind lv
+          _               ->  fromJust $ bindLVarToSSelf lv bind
+
+    qLVB' bind lv@(LVbl (Vbl i _ _) _ _)
       | null lvEquivs
           = fromJust
               $ bindLVarToVList lv [floatingLV lv i] bind

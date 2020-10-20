@@ -823,22 +823,17 @@ basicMatch :: MatchClass
             -> Matches
 basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
   =  do bind <- match vts tC partsP
-        let unbound = findUnboundVars bind repl
-        (bind',replC) <- autoInstantiate vts bind repl
-        unbound' <- instVarSet bind' unbound
-        scPinC <- instantiateSC bind' scP
+        (abind,replC) <- autoInstantiate vts bind repl
+        scPinC <- instantiateSC abind scP
         scD <- scDischarge scC scPinC
         if all isFloatingASC (fst scD) && all isFloatingGVar (S.toList $ snd scD)
-          then return $ MT n asn (chkPatn mc tP) bind scC scPinC repl
+          then return $ MT n asn (chkPatn mc tP) abind scC scPinC repl
           else fail "undischargeable s.c."
   where
 
-    chkPatn mc (Var _ v)
-      | lookupVarTables vts v == UnknownVar  =  trivialise mc
+    chkPatn (MatchEqv [i]) (Var _ v)
+      | lookupVarTables vts v == UnknownVar  =  MatchEqvVar i
     chkPatn mc _                             =  mc
-
-    trivialise (MatchEqv [i])  =  MatchEqvVar i
-    trivialise mc              =  mc
 \end{code}
 
 \subsubsection{Applying a Match}

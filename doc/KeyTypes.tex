@@ -149,7 +149,39 @@ pattern E2 t n t1 t2  = C (E t) n [t1,t2]
 pattern P2   n t1 t2  = C P     n [t1,t2]
 \end{code}
 
+\subsection{VarData}
 
+\begin{code}
+data VarMatchRole -- Variable Matching Role
+  =  KC Term     -- Known Constant
+  |  KV Type     -- Known Variable
+  |  KG          -- Generic Variable
+  |  KI Variable -- Instance Variable ! variable must be known as generic
+  |  UV          -- Unknown Variable
+pattern KnownConst trm = KC trm
+pattern KnownVar typ   = KV typ
+pattern GenericVar     = KG
+pattern InstanceVar v  = KI v
+pattern UnknownVar     = UV
+\end{code}
+
+\begin{code}
+data LstVarMatchRole -- ListVar Matching Roles
+ = KL VarList        -- Known Variable-List, all of which are themselves known
+      [Variable]     -- full expansion
+      Int            -- length of full expansion
+ | KS VarSet         -- Known Variable-Set, all of which are themselves known
+      (Set Variable) -- full expansion
+      Int            -- size of full expansion
+ | AL                -- Abstract Known Variable-List
+ | AS                -- Abstract Known Variable-Set
+ | UL                -- Unknown List-Variable
+pattern KnownVarList vl vars len  =  KL vl vars len
+pattern KnownVarSet  vs vars siz  =  KS vs vars siz
+pattern AbstractList              =  AL
+pattern AbstractSet               =  AS
+pattern UnknownListVar            =  UL
+\end{code}
 
 \subsection{SideCond}
 

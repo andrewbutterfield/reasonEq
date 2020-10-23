@@ -379,6 +379,20 @@ pattern Iter tk na ni lvs  =   I tk na ni lvs
 pattern Typ  typ           =   ET typ
 \end{code}
 
+\newpage
+\begin{code}
+data Term'                                                        --TermZipper
+  = Cons'   TermKind Identifier [Term] -- terms before focus, reversed
+                                [Term] -- terms after focus
+  | Bnd'   TermKind Identifier VarSet
+  | Lam'    TermKind Identifier VarList
+  | Cls'             Identifier
+  | Sub'    TermKind Substn
+  | Substn' TermKind Term LVarSub TermSubL  -- subst-pairs before, reversed
+                                  Variable -- focus target variable
+                                  TermSubL  -- subst-pairs after focus
+\end{code}
+
 \begin{code}
 data TermKind                                                            --AST
  = P -- predicate
@@ -387,6 +401,15 @@ data TermKind                                                            --AST
 
 \begin{code}
 type TermSub = Set (Variable,Term) -- target/replacememt                --AST
+\end{code}
+
+
+\begin{code}
+type TermSubL = [(Variable, Term)]                              --TermZipper
+\end{code}
+
+\begin{code}
+type TermZip = (Term,[Term'])                                    --TermZipper
 \end{code}
 
 \begin{code}
@@ -512,6 +535,7 @@ pattern Textual   =  WT
 data Identifier = Id String Int                                    -- LexBase
 \end{code}
 
+\newpage
 \begin{code}
 data Token                                                         -- LexBase
  = TA String
@@ -601,7 +625,6 @@ data TermKind                                                            --AST
  | E Type -- expression (with type annotation)
 \end{code}
 
-\newpage
 \begin{code}
 data Term                                                                --AST
  = K TermKind Value                    -- Value
@@ -653,6 +676,7 @@ pattern E2 t n t1 t2  = C (E t) n [t1,t2]                                --AST
 pattern P2   n t1 t2  = C P     n [t1,t2]
 \end{code}
 
+\newpage
 \subsection{VarData}
 
 \begin{code}
@@ -669,7 +693,6 @@ pattern InstanceVar v  = KI v
 pattern UnknownVar     = UV
 \end{code}
 
-\newpage
 \begin{code}
 data LstVarMatchRole -- ListVar Matching Roles                       --VarData
  = KL VarList        -- Known Variable-List, all of which are themselves known
@@ -778,6 +801,28 @@ type PBVS = BVS
 type CBVS = BVS
 \end{code}
 
+\subsection{TermZipper}
+
+\begin{code}
+type TermSubL = [(Variable, Term)]                              --TermZipper
+\end{code}
+
+\begin{code}
+data Term'                                                        --TermZipper
+  = Cons'   TermKind Identifier [Term] -- terms before focus, reversed
+                                [Term] -- terms after focus
+  | Bnd'   TermKind Identifier VarSet
+  | Lam'    TermKind Identifier VarList
+  | Cls'             Identifier
+  | Sub'    TermKind Substn
+  | Substn' TermKind Term LVarSub TermSubL  -- subst-pairs before, reversed
+                                  Variable -- focus target variable
+                                  TermSubL  -- subst-pairs after focus
+\end{code}
+
+\begin{code}
+type TermZip = (Term,[Term'])                                    --TermZipper
+\end{code}
 
 \subsection{Proofs}
 
@@ -806,7 +851,6 @@ data HowUsed                                                          --Proofs
 data SeqFocus = CLeft | CRight | Hyp Int                              --Proofs
 \end{code}
 
-\newpage
 \begin{code}
 data Justification                                                    --Proofs
   = UseLaw             -- used a law
@@ -944,7 +988,6 @@ type MatchContext                                                 --LiveProofs
     , [VarTable] ) -- all known variables here, and in dependencies
 \end{code}
 
-\newpage
 \begin{code}
 data LiveProof                                                    --LiveProofs
   = LP {

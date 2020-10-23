@@ -28,6 +28,7 @@ module Binding
 , lookupLstBind
 , bindLVarsToNull, bindLVarsToEmpty
 , mappedVars
+, generateFreshVars
 , dumpBinding
 , int_tst_Binding
 ) where
@@ -1205,6 +1206,15 @@ allLVWhen whens (i,vc,is,ij)
 allLL :: (ListVar,ListVar) -> Set ListVar
 allLL (lv1,lv2) = S.fromList [lv1,lv2]
 \end{code}
+
+
+We may need to generate fresh variables to discharge
+freshness side-conditions.
+\begin{code}
+generateFreshVars :: Term -> VarSet -> Binding -> Binding
+generateFreshVars term unfreshVs bind = bind -- for now
+\end{code}
+
 
 \newpage
 \subsection{Binding Dump}

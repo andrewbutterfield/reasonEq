@@ -2,19 +2,7 @@
 
 ## Most Urgent
 
-Fix soundness bug identified by Danny Thomas:
-
-`(P ⟹ Q) ∧ (Q ≡ R) ⟹ (P ⟹ R)`
-
-using the Assume strategy.
-
-Assume `(P ⟹ Q) ; (Q ≡ R) ; P` to show `R`.
-
-Matching `8 : H.implies_==_trans.2" gives *?Q*`
-
-This can be instantiated with `true`, or whatever...
-
-PVar `Q` should be "known", so should end up being *questionable*.
+Implement `Binding.generateFreshVars` (line 1214)
 
 ## Upgrade No. 2
 
@@ -119,7 +107,15 @@ This needs types!
 
 ## Robustness
 
-Working on startup robustness
+### Issue 1
+ 
+  There should be no runtime errors when starting up, regardless of the presence/absense or state of relevant files.
+
+### Issue 2
+
+If in one theory, if we restart a proof based in another theory, using `r`, we get the conjecture in the context of the first theory, and not that of the second. This should be fixed.
+
+
 
 ### Theory Management
 

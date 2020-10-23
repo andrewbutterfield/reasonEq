@@ -897,8 +897,7 @@ applyMatch args pstate@(reqs, liveProof)
              case applyMatchToFocus2 mtch unbound ubind liveProof of
                Yes liveProof' -> return(reqs, liveProof')
                But msgs
-                -> do putStrLn ("Cannot discharge side-condition")
-                      putStrLn $ unlines msgs
+                -> do putStrLn $ unlines msgs
                       waitForReturn
                       return pstate
   where

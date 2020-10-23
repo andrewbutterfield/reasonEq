@@ -299,10 +299,9 @@ launchProof thys thnm cjnm asn@(t,sc) (strat,sequent)
   where
     sz = leftConjFocus sequent
     hthy = hyp sequent
-    mcs = buildMatchContext (hthy:thys)
-          -- if null $ laws hthy
-          --  then buildMatchContext thys
-          --  else buildMatchContext (hthy:thys)
+    mcs = if null $ laws hthy
+          then buildMatchContext thys
+          else buildMatchContext (hthy:thys)
 \end{code}
 
 \newpage

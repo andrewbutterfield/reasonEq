@@ -532,10 +532,12 @@ applyMatchToFocus2 mtch unbound ubind liveProof
         scC = conjSC liveProof
         (tz,seq') = focus liveProof
         dpath = fPath liveProof
+        conj = exitTZ tz
     in do scLasC <- instantiateSC cbind scL
           scD <- scDischarge scC scLasC
-          if isTrivialSC scD
-            then do brepl  <- instantiate cbind repl
+          if onlyFreshSC scD
+            then do let fbind = generateFreshVars conj (snd scD) cbind
+                    brepl  <- instantiate fbind repl
                     -- scC' <- scC `mrgSideCond` scD
                     return ( focus_ ((setTZ brepl tz),seq')
                            $ matches_ []
@@ -543,11 +545,11 @@ applyMatchToFocus2 mtch unbound ubind liveProof
                            $ stepsSoFar__
                               (( UseLaw (ByMatch $ mClass mtch)
                                         (mName mtch)
-                                        cbind
+                                        fbind
                                         dpath
-                               , (exitTZ tz,conjSC liveProof)):)
+                               , (conj,conjSC liveProof)):)
                               liveProof )
-            else fail "side-cond. cannot be discharged"
+            else fail ("Undischarged side-conditions: "++trSideCond scD)
 \end{code}
 
 

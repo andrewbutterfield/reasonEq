@@ -10,7 +10,7 @@ module SideCond (
   AtmSideCond
 , pattern Disjoint, pattern Covers, pattern IsPre
 , ascGVar, ascVSet
-, SideCond, scTrue, isTrivialSC
+, SideCond, scTrue, isTrivialSC, onlyFreshSC
 , mrgAtmCond, mrgSideCond, mkSideCond
 , scDischarge
 , isFloatingASC
@@ -261,6 +261,13 @@ scTrue = ([],S.empty)
 isTrivialSC :: SideCond -> Bool
 isTrivialSC ([],fvs)  =  S.null fvs
 isTrivialSC _         =  False
+\end{code}
+
+We are also interested when the only side-conditions we
+have are to do with freshness:
+\begin{code}
+onlyFreshSC :: SideCond -> Bool
+onlyFreshSC (ascs,fvs) = null ascs && not (S.null fvs)
 \end{code}
 
 \subsection{Merging Side-Conditions}

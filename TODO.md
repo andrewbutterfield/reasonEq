@@ -4,6 +4,19 @@
 
 Implement `Binding.generateFreshVars` (line 1214)
 
+```
+proof: a22
+req: bindLVarToVList(1): already bound differently.
+d = "m"
+old r = "m"
+new r = "0"
+bind:
+fromList [("m","m")]
+
+CallStack (from HasCallStack):
+  error, called at src/Binding.lhs:1230:22 
+```
+
 ## Upgrade No. 2
 
 We need to allow fresh subscript/variable instantiation

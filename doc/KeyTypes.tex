@@ -95,6 +95,7 @@ data HowUsed                                                          --Proofs
 
 \begin{code}
 data Identifier = Id String Int                                    -- LexBase
+pattern Identifier nm u <- Id nm u
 \end{code}
 
 \newpage
@@ -498,6 +499,10 @@ pattern PredV = VP
 \end{code}
 
 \begin{code}
+newtype Variable  = VR (Identifier, VarClass, VarWhen)            --Variables
+\end{code}
+
+\begin{code}
 data VarMatchRole -- Variable Matching Role                          --VarData
   =  KC Term     -- Known Constant
   |  KV Type     -- Known Variable
@@ -526,6 +531,7 @@ pattern After     =  WA
 pattern Textual   =  WT
 \end{code}
 
+
 % ==========================================================================
 \section{By Module}
 
@@ -533,9 +539,10 @@ pattern Textual   =  WT
 
 \begin{code}
 data Identifier = Id String Int                                    -- LexBase
+pattern Identifier nm u <- Id nm u
 \end{code}
 
-\newpage
+
 \begin{code}
 data Token                                                         -- LexBase
  = TA String
@@ -558,7 +565,10 @@ pattern PredV = VP
 
 \begin{code}
 type Subscript = String                                           --Variables
-data VarWhen -- Variable role
+\end{code}
+
+\begin{code}
+data VarWhen -- Variable role                                     --Variables
   = WS            --  Static
   | WB            --  Before (pre)
   | WD Subscript  --  During (intermediate)
@@ -569,6 +579,11 @@ pattern Before    =  WB
 pattern During n  =  WD n
 pattern After     =  WA
 pattern Textual   =  WT
+\end{code}
+
+
+\begin{code}
+newtype Variable  = VR (Identifier, VarClass, VarWhen)            --Variables
 \end{code}
 
 \begin{code}
@@ -591,6 +606,7 @@ data Substn --  pair-sets below are unique in fst part
   = SN TermSub LVarSub
 \end{code}
 
+\newpage
 \begin{code}
 data Type -- most general types first                                   --AST
  = T  -- arbitrary type
@@ -661,6 +677,7 @@ pattern ESub t tm s        =  S (E t) tm s
 pattern EIter t na ni lvs  =  I (E t) na ni lvs
 \end{code}
 
+\newpage
 \begin{code}
 pattern PVal k             =  K P k                                      --AST
 pattern PVar v            <-  V P v
@@ -676,7 +693,7 @@ pattern E2 t n t1 t2  = C (E t) n [t1,t2]                                --AST
 pattern P2   n t1 t2  = C P     n [t1,t2]
 \end{code}
 
-\newpage
+
 \subsection{VarData}
 
 \begin{code}
@@ -931,6 +948,7 @@ data Sequent                                                        --Sequents
    }
 \end{code}
 
+\newpage
 \begin{code}
 data Laws'                                                          --Sequents
   = CLaws' { -- currently focussed on conjecture component

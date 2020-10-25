@@ -1208,13 +1208,50 @@ allLL (lv1,lv2) = S.fromList [lv1,lv2]
 \end{code}
 
 
+\subsection{Generating Fresh Variables}
+
 We may need to generate fresh variables to discharge
 freshness side-conditions.
 \begin{code}
 generateFreshVars :: Term -> VarSet -> Binding -> Binding
-generateFreshVars term unfreshVs bind = bind -- for now
+generateFreshVars term unfreshVs bind
+  = genFresh (mentionedVars term) bind $ S.toList unfreshVs
+
+genFresh :: VarSet -> Binding -> [GenVar] -> Binding
+genFresh _ bind []  =  bind
+genFresh free bind (gv:gvs)
+  =  genFresh free' bind' gvs
+  where
+    -- remove floating mark from identifier
+    fgv' = genFreshGVar free 0 $ sinkGV gv
+    free' = free `S.union` (S.singleton fgv')
+    bind'
+     = case bindGVarToGVar gv fgv' bind of
+         But msgs -> error $ unlines msgs
+         Yes b' -> b'
+
+genFreshGVar :: VarSet -> Int -> GenVar -> GenVar
+genFreshGVar free i gv
+  | gv' `S.member` free  =  genFreshGVar free (i+1) gv
+  | otherwise            =  gv'
+  where gv'  =  remakeGVar i gv
+
+remakeGVar i (StdVar v)   =  StdVar $ remakeVar   i v
+remakeGVar i (LstVar lv)  =  LstVar $ remakeLVar  i lv
 \end{code}
 
+
+If \texttt{VarWhen} is not \texttt{During},
+we change the identifier by appending the smallest natural number
+that means it does not appear in \texttt{free}.
+If \texttt{During}, then the subscript is the smallest natural making it unique.
+\begin{code}
+remakeVar i v@(Vbl n vc (During _))  =  Vbl n vc (During $ show i)
+remakeVar i v@(Vbl (Identifier n _) vc vw)
+                                     =  Vbl (fromJust $ ident (n++show i)) vc vw
+
+remakeLVar i lv@(LVbl v is ij) = LVbl (remakeVar i v) is ij
+\end{code}
 
 \newpage
 \subsection{Binding Dump}

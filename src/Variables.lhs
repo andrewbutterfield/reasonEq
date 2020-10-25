@@ -44,6 +44,7 @@ module Variables
  , liftLess
  , fI, fIn, fVar, fLVar, fGVar
  , isFloating, isFloatingV, isFloatingLV, isFloatingGVar
+ , sinkId, sinkV, sinkLV, sinkGV
  , int_tst_Variables
  ) where
 import Data.Char
@@ -416,22 +417,39 @@ to indicate that haven't been matched,
 and so are free to instantiated by the user in any fashion.
 We do this by prepending their
 identifiers with a question-mark: $idn \mapsto ?idn$.
-Some support functions:
 \begin{code}
-fI  (Identifier i u)    =  fromJust $ uident ('?':i) u
-fIn (Identifier i u) n  =  fromJust $ uident ('?':i) (u+n)
+floatMark  =  '?'
+\end{code}
+
+Marking as floating:
+\begin{code}
+fI  (Identifier i u)    =  fromJust $ uident (floatMark:i) u
+fIn (Identifier i u) n  =  fromJust $ uident (floatMark:i) (u+n)
 fVar (Vbl i c w)        =  Vbl (fI i) c w
 fLVar (LVbl v is js)    =  LVbl (fVar v) is js
 fGVar (StdVar v)        =  StdVar $ fVar v
 fGVar (LstVar v)        =  LstVar $ fLVar v
+\end{code}
 
-isFloating (Identifier i u)  =  take 1 i == "?"
+Checking to see if floating:
+\begin{code}
+isFloating (Identifier i u)  =  take 1 i == [floatMark]
 isFloatingV (Vbl i _ _)      =  isFloating i
 isFloatingLV (LVbl v _ _)    =  isFloatingV v
 isFloatingGVar (StdVar v)    =  isFloatingV v
 isFloatingGVar (LstVar lv)   =  isFloatingLV lv
 \end{code}
 
+Sinking:
+\begin{code}
+sinkId (Identifier (c:cs) u)
+  | c == floatMark     =  fromJust $ uident cs u
+sinkId i               =  i
+sinkV (Vbl i c w)      =  Vbl (sinkId i) c w
+sinkLV (LVbl v is js)  =  LVbl (sinkV v) is js
+sinkGV (StdVar v)      =  StdVar $ sinkV v
+sinkGV (LstVar v)      =  LstVar $ sinkLV v
+\end{code}
 
 
 

@@ -436,7 +436,7 @@ instantiateDisjoint dvs fvs
 \\ \setof{x,S} \supseteq \setof{y,S} &\text{if}&  y \in S
 \\ \setof{x,S} \supseteq \setof{y,T}
    &\text{if}&
-   y \in S \and \setof{x,S} \supseteq T
+   y \in S \land \setof{x,S} \supseteq T
 \\ \setof{\lst x,S} \supseteq \setof{\lst x,T}
    &\text{if}&
    \setof{\lst x,S} \supseteq T

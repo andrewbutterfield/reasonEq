@@ -365,6 +365,12 @@ seqIntro = mkConsIntro i_seq boolf_2
                        (fresh $ S.singleton gOm)
 \end{code}
 
+We also need to ensure that $O$ (and relations $O'$, $O_m$)
+are ``known''.
+\begin{code}
+obsIntro = fromJust . addKnownVarSet vO S.empty
+\end{code}
+
 \subsubsection{UTP Seq. Composition Laws}
 
 From \cite[2.2\textbf{L1}, p49]{UTP-book}
@@ -717,6 +723,7 @@ utpBaseKnown
  = refinesIntro $
    condIntro $
    seqIntro $
+   obsIntro $
    asgIntro $
    skipIntro $
    ndcIntro $
@@ -906,7 +913,8 @@ lsub p = Sub P p $ jSubstn[] [(lvxs,lves)]
 
 $$ O', O, O_m, [O_m/O'], [O_m/O']$$
 \begin{code}
-o = jId "O"  ;  lO = PreVars o  ;  lO' = PostVars o  ;  lOm = MidVars o "m"
+o = jId "O"  ;  vO = PreVar o
+lO = PreVars o  ;  lO' = PostVars o  ;  lOm = MidVars o "m"
 gOm = LstVar lOm
 om'sub = jSubstn[] [(lO',lOm)]
 omsub  = jSubstn[] [(lO,lOm)]

@@ -2,19 +2,21 @@
 
 ## Most Urgent
 
-Implement `Binding.generateFreshVars` (line 1214)
+We now have `O$` as known so they bind, without any `?`.
+However we cannot discharge freshness here. Current setup assumes
+freshness only applied to $?x$. Not so. We need to make `O$_m` fresh by re-binding `m` to `0`.
+(Special treatment for `During`).
 
 ```
-proof: a22
-req: bindLVarToVList(1): already bound differently.
-d = "m"
-old r = "m"
-new r = "0"
-bind:
-fromList [("m","m")]
+proof: tm 1 ;_def
+Match against `;_def'[1]
+Binding: { ; ⟼ ;, P ⟼ Q, Q ⟼ R, m ⟼ m, O$ ⟼ {O$} }
+Instantiated Law = (Q;R)≡(∃ O$_m • Q[O$_m/O$']∧R[O$_m/O$])
+Instantiated Law S.C. = fresh:O$_m
+Goal S.C. = ⊤
+Discharged Law S.C. = fresh:O$_m
 
-CallStack (from HasCallStack):
-  error, called at src/Binding.lhs:1230:22 
+hit <enter> to continue
 ```
 
 ## Upgrade No. 2

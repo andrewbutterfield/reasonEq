@@ -826,7 +826,7 @@ basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
         scPinC <- instantiateSC abind scP
         scD <- scDischarge scC scPinC
         if all isFloatingASC (fst scD) && all isFloatingGVar (S.toList $ snd scD)
-          then return $ MT n asn (chkPatn mc tP) abind scC scPinC repl
+          then return $ MT n asn (chkPatn mc tP) bind scC scPinC repl
           else fail "undischargeable s.c."
   where
 

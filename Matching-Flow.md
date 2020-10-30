@@ -48,12 +48,10 @@ LiveProofs.domatch logicsig vts asnC law
 ```
 LiveProofs.basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
   match vts tC partsP
-  findUnboundVars bind repl
   autoInstantiate bind repl
-  instVarSet bind' unbound
   instantiateSC bind' scP
   scDischarge scC scPinC
-  autoOrNullInAll unbound' scD
+  all isFloatingASC (fst scD)
 ```
 
 ## Command `tm name` (Test-Match Law "name")

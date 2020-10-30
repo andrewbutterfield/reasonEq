@@ -1,35 +1,49 @@
-@whatever:
-C
+@I_fUV.term:
+B
 P
-(Id "equiv")
-[ B
+(Id "exists" 0)
+( { GL (LV (VR (Id "O" 0, VO, WD "m"), [], [])) } )
+( C
   P
-  (Id "forall")
-  ( { GL (LV (VR (Id "x", VO, WS), [], []))
-    , GL (LV (VR (Id "y", VO, WS), [], [])) } )
-  ( C
+  (Id "land" 0)
+  [ S
     P
-    (Id "implies")
-    [ I
-      P
-      (Id "land")
-      (Id "=")
-      [ LV (VR (Id "x", VO, WS), [], [])
-      , LV (VR (Id "e", VE, WS), [], []) ]
-    , C
-      P
-      (Id "lnot")
-      [ V P (VR (Id "P", VP, WS)) ] ] )
-, B
-  P
-  (Id "forall")
-  ( { GL (LV (VR (Id "y", VO, WS), [], [])) } )
-  ( S
-    P
-    ( C
-      P
-      (Id "lnot")
-      [ V P (VR (Id "P", VP, WS)) ] )
+    (V P (VR (Id "P" 0, VP, WS)))
     ( SN
       ( {} )
-      ( { (LV (VR (Id "x", VO, WS), [], []), LV (VR (Id "e", VE, WS), [], [])) } ) ) ) ]
+      ( { (LV (VR (Id "O" 0, VO, WA), [], []), LV (VR (Id "O" 0, VO, WD "m"), [], [])) } ) )
+  , S
+    P
+    (V P (VR (Id "Q" 0, VP, WS)))
+    ( SN
+      ( {} )
+      ( { (LV (VR (Id "O" 0, VO, WB), [], []), LV (VR (Id "O" 0, VO, WD "m"), [], [])) } ) ) ] )
+@I_FUV.mentioned:
+{ GV (VR (Id "P" 0, VP, WS))
+, GV (VR (Id "Q" 0, VP, WS))
+, GL (LV (VR (Id "O" 0, VO, WB), [], []))
+, GL (LV (VR (Id "O" 0, VO, WD "m"), [], []))
+, GL (LV (VR (Id "O" 0, VO, WA), [], [])) }
+@I_fUV.bind:
+BD
+( { ( (Id ";" 0, VP)
+    , BV (VR (Id ";" 0, VP, WS)) )
+  , ( (Id "P" 0, VP)
+    , BV (VR (Id "Q" 0, VP, WS)) )
+  , ( (Id "Q" 0, VP)
+    , BV (VR (Id "R" 0, VP, WS)) ) }
+, {}
+, {} )
+@I_FUV.mapped:
+{ GV (VR (Id ";" 0, VP, WS))
+, GV (VR (Id ";" 0, VP, WB))
+, GV (VR (Id ";" 0, VP, WA))
+, GV (VR (Id ";" 0, VP, WT))
+, GV (VR (Id "P" 0, VP, WS))
+, GV (VR (Id "P" 0, VP, WB))
+, GV (VR (Id "P" 0, VP, WA))
+, GV (VR (Id "P" 0, VP, WT))
+, GV (VR (Id "Q" 0, VP, WS))
+, GV (VR (Id "Q" 0, VP, WB))
+, GV (VR (Id "Q" 0, VP, WA))
+, GV (VR (Id "Q" 0, VP, WT)) }

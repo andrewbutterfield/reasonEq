@@ -492,7 +492,10 @@ instantiateLstVar bind lv
 
 \begin{code}
 findUnboundVars :: Binding -> Term -> VarSet
-findUnboundVars bind trm = mentionedVars trm  S.\\  mappedVars bind
+findUnboundVars bind trm
+  = (pdbg "I_FUV.mentioned" (mentionedVars (pdbg "I_fUV.term" trm)))
+    S.\\
+    (pdbg "I_FUV.mapped" $ mappedVars $ pdbg "I_fUV.bind" bind)
 \end{code}
 
 

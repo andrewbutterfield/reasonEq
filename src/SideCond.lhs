@@ -267,7 +267,7 @@ We are also interested when the only side-conditions we
 have are to do with freshness:
 \begin{code}
 onlyFreshSC :: SideCond -> Bool
-onlyFreshSC (ascs,fvs) = null ascs && not (S.null fvs)
+onlyFreshSC (ascs,fvs) = null ascs
 \end{code}
 
 \subsection{Merging Side-Conditions}

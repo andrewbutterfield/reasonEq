@@ -1185,7 +1185,7 @@ bindLVarsToEmpty bind (lv:lvs)
 
 \subsection{Mapped Variables}
 
-We want to return all the variables that have been bound.
+We want to explicitly return all the variables that have been bound.
 \begin{code}
 mappedVars :: Binding -> VarSet
 mappedVars (BD (vbind,sbind,lbind))
@@ -1199,12 +1199,11 @@ mappedVars (BD (vbind,sbind,lbind))
 
 allVWhen :: [VarWhen] -> (Identifier,VarClass) -> Set Variable
 allVWhen whens (i,vc)  =  S.fromList $ map (Vbl i vc) whens
+
 allLVWhen :: [VarWhen] -> ListVarKey -> Set ListVar
 allLVWhen whens (i,vc,is,ij)
   = S.fromList $ map (lvbl is ij . Vbl i vc) whens
   where lvbl is ij v = LVbl v is ij
-allLL :: (ListVar,ListVar) -> Set ListVar
-allLL (lv1,lv2) = S.fromList [lv1,lv2]
 \end{code}
 
 
@@ -1215,7 +1214,7 @@ freshness side-conditions.
 \begin{code}
 generateFreshVars :: Term -> VarSet -> Binding -> Binding
 generateFreshVars term unfreshVs bind
-  = genFresh (mentionedVars term) bind $ S.toList unfreshVs
+  = genFresh (mentionedVars term) bind $ S.toList $ pdbg "unfreshVs" unfreshVs
 
 genFresh :: VarSet -> Binding -> [GenVar] -> Binding
 genFresh _ bind []  =  bind

@@ -2,22 +2,11 @@
 
 ## Most Urgent
 
-We now have `O$` as known so they bind, without any `?`.
-However we cannot discharge freshness here. Current setup assumes
-freshness only applied to $?x$. Not so. We need to make `O$_m` fresh by re-binding `m` to `0`.
-(Special treatment for `During`).
+We note that `O$`, `O$'` and `O$_m` are not being bound
+when `Q;R` is matched against `;_def.
+We need to bind unbound knowns to themselves.
 
-```
-proof: tm 1 ;_def
-Match against `;_def'[1]
-Binding: { ; ⟼ ;, P ⟼ Q, Q ⟼ R, m ⟼ m, O$ ⟼ {O$} }
-Instantiated Law = (Q;R)≡(∃ O$_m • Q[O$_m/O$']∧R[O$_m/O$])
-Instantiated Law S.C. = fresh:O$_m
-Goal S.C. = ⊤
-Discharged Law S.C. = fresh:O$_m
-
-hit <enter> to continue
-```
+`Binding.mappedVars` Should it maintain separation between `Static` and the dynamic variables?
 
 ## Upgrade No. 2
 

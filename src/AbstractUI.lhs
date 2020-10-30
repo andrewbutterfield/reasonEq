@@ -535,7 +535,7 @@ applyMatchToFocus2 mtch unbound ubind liveProof
         conj = exitTZ tz
     in do scLasC <- instantiateSC cbind scL
           scD <- scDischarge scC scLasC
-          if onlyFreshSC scD
+          if onlyFreshSC $ pdbg "am2f2.scD" scD
             then do let fbind = generateFreshVars conj (snd scD) cbind
                     brepl  <- instantiate fbind repl
                     -- scC' <- scC `mrgSideCond` scD

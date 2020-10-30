@@ -25,13 +25,13 @@ CONJ = (C P (Id "equiv" 0) [C P (Id ";" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id ";
 SIDE = ([],fromList [])
 STRAT redboth
 BEGIN SEQZIP
-TERMZIP = (C P (Id ";" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))],[Cons' P (Id ";" 0) [V P (VR (Id "P" 0,VP,WS))] []])
+TERMZIP = (C P (Id ";" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id ";" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],[])
 BEGIN SEQUENT'
 SIDECOND = ([],fromList [])
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.;_assoc", thDeps = [], known = VD (fromList [],fromList [],fromList []), subable = fromList [], laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = C P (Id ";" 0) [C P (Id ";" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "R" 0,VP,WS))]}
 END SEQUENT'
 END SEQZIP
-FPATH: [2]
+FPATH: []
 BEGIN LIST STEPS
 END LIST STEPS
 END LIVE-PROOF

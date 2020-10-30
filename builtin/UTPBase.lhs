@@ -351,7 +351,7 @@ From \cite[Defn 2.2.1,p49]{UTP-book}
 
 $$
   \begin{array}{lll}
-     P ; Q \defs \exists O_m \bullet P[O_m/O'] \land Q[O_m/O]
+     P ; Q \defs \exists O_0 \bullet P[O_0/O'] \land Q[O_0/O]
      & m \textrm{ fresh} & \QNAME{$;$-def}
   \end{array}
 $$\par\vspace{-8pt}
@@ -359,10 +359,10 @@ $$\par\vspace{-8pt}
 seqIntro = mkConsIntro i_seq boolf_2
 (axSeqDef,alSeqDef) = bookdef (";" -.- "def") "Def2.2.1"
                        ( mkSeq p q
-                         === exists [gOm]
-                              ( (Sub P p om'sub) /\ (Sub P q omsub) )
+                         === exists [gO0]
+                              ( (Sub P p o0'sub) /\ (Sub P q o0sub) )
                        )
-                       (fresh $ S.singleton gOm)
+                       (fresh $ S.singleton gO0)
 \end{code}
 
 We also need to ensure that $O$ (and relations $O'$, $O_m$)
@@ -911,11 +911,11 @@ qxs = LstVar lvxs
 lsub p = Sub P p $ jSubstn[] [(lvxs,lves)]
 \end{code}
 
-$$ O', O, O_m, [O_m/O'], [O_m/O']$$
+$$ O', O, O_0, [O_0/O'], [O_0/O']$$
 \begin{code}
 o = jId "O"  ;  vO = PreVar o
-lO = PreVars o  ;  lO' = PostVars o  ;  lOm = MidVars o "m"
-gOm = LstVar lOm
-om'sub = jSubstn[] [(lO',lOm)]
-omsub  = jSubstn[] [(lO,lOm)]
+lO = PreVars o  ;  lO' = PostVars o  ;  lO0 = MidVars o "0"
+gO0 = LstVar lO0
+o0'sub = jSubstn[] [(lO',lO0)]
+o0sub  = jSubstn[] [(lO,lO0)]
 \end{code}

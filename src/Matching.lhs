@@ -274,7 +274,7 @@ $$
 $$
 \begin{code}
 tMatch' vts bind cbvs pbvs tC (Bnd tkP nP vsP tP)
-  | all (isUnknownLstVar vts) vlP
+  | all (gVarIsUnknownLVar vts) vlP
     =  do bind' <- bindLVarsToEmpty bind $ listVarsOf vlP
           let pbvs' = vsP `addBoundVarSet` pbvs
           tMatch vts bind' cbvs pbvs' tC tP
@@ -325,7 +325,7 @@ $$
 $$
 \begin{code}
 tMatch' vts bind cbvs pbvs tC (Lam tkP nP vlP tP)
-  | all (isUnknownLstVar vts) vlP
+  | all (gVarIsUnknownLVar vts) vlP
     =  do bind' <- bindLVarsToEmpty bind $ listVarsOf vlP
           let pbvs' = vlP `addBoundVarList` pbvs
           tMatch vts bind' cbvs pbvs' tC tP

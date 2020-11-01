@@ -11,9 +11,9 @@ module Instantiate
 , instVarSet
 , instantiateASC
 , instantiateSC
-, findUnboundVars, termLVarPairings
-, mkEquivClasses -- should be elsewhere
-, mkFloatingBinding, autoInstantiate
+, findUnboundVars, instantiateKnown
+, termLVarPairings, mkEquivClasses -- should be elsewhere
+, mkFloatingBinding, instantiateFloating
 ) where
 import Data.Maybe
 -- import Data.Either (lefts,rights)
@@ -487,15 +487,39 @@ instantiateLstVar bind lv
               (S.fromList $ map LstVar lvs)
 \end{code}
 
+
+
+
+
 \newpage
 \subsubsection{Finding Unbound Replacement Variables}
 
 \begin{code}
 findUnboundVars :: Binding -> Term -> VarSet
-findUnboundVars bind trm
-  = (pdbg "I_FUV.mentioned" (mentionedVars (pdbg "I_fUV.term" trm)))
-    S.\\
-    (pdbg "I_FUV.mapped" $ mappedVars $ pdbg "I_fUV.bind" bind)
+findUnboundVars bind trm  =  mentionedVars trm S.\\ mappedVars bind
+\end{code}
+
+\subsubsection{Instantiate Unbound Known Variables}
+
+\begin{code}
+instantiateKnown :: Monad m => [VarTable] -> Binding -> Term -> m (Binding,Term)
+instantiateKnown vts bind trm
+ = do trm' <- instantiate kbind trm
+      return (kbind, trm')
+ where
+   unbound  =  findUnboundVars bind trm
+   kbind    =  mkKnownBinding vts unbound bind
+\end{code}
+
+\begin{code}
+mkKnownBinding :: [VarTable] -> VarSet -> Binding -> Binding
+mkKnownBinding vts unbound bind
+  = foldl mergeBindings bind
+     $ map (mkKnownBind vts) $ S.toList unbound
+
+mkKnownBind vts gv
+ | isUnknownGVar vts gv  =  emptyBinding
+ | otherwise  =  fromJust $ bindGVarToGVar gv gv emptyBinding
 \end{code}
 
 
@@ -589,8 +613,11 @@ mkFloatingBinding vts bind substEqv vs
   where
 
     qB bind [] = bind
-    qB bind ((StdVar v) :vl)  =  qB (qVB bind v)   vl
-    qB bind ((LstVar lv):vl)  =  qB (qLVB bind lv) vl
+    qB bind ((StdVar v) :vl)
+      | isUnknownVar vts v    =  qB (qVB bind v)   vl
+    qB bind ((LstVar lv):vl)
+      | isUnknownLVar vts lv  =  qB (qLVB bind lv) vl
+    qB bind (_:vl)            =  qB bind           vl
 
     qVB bind v@(Vbl i vc vw)
       = case lookupVarTables vts v of
@@ -655,14 +682,14 @@ Another issue, what if some are unbound? Ignore for now.
 \subsubsection{Floating Instantiation}
 
 \begin{code}
-autoInstantiate :: Monad m => [VarTable] -> Binding -> Term -> m (Binding,Term)
-autoInstantiate vts bind trm
+instantiateFloating :: Monad m => [VarTable] -> Binding -> Term -> m (Binding,Term)
+instantiateFloating vts bind trm
  = do trm' <- instantiate abind trm
       return (abind, trm')
  where
    unbound  =  findUnboundVars bind trm
    lvpairs  =  termLVarPairings trm
    substEquiv = mkEquivClasses lvpairs
-   qbind    =  mkFloatingBinding vts bind substEquiv unbound
-   abind    =  mergeBindings bind qbind
+   fbind    =  mkFloatingBinding vts bind substEquiv unbound
+   abind    =  mergeBindings bind fbind
 \end{code}

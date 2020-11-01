@@ -689,7 +689,7 @@ isFloatingASC = isFloatingGVar . ascGVar
 One exception to this, during law matching,
 is that coverage may reduce to the empty set
 because unbound variables given a temporary binding
-to a ``?'' variable (\texttt{autoInstantiate})
+to a ``?'' variable (\texttt{instantiateFloating})
 will not cancel out other variables that they should be able to do,
 if instantiated properly.
 \begin{code}

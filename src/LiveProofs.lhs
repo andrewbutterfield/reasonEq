@@ -370,7 +370,7 @@ First, try the structural match.
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryMatch vts tP partsP scP
       = case match vts tC partsP of
-          Yes bind  ->  tryAutoInstantiate vts tP partsP scP bind
+          Yes bind  ->  tryInstantiateKnown vts tP partsP scP bind
           But msgs
            -> But ([ "try match failed"
                    , ""
@@ -390,9 +390,9 @@ At this point the replacement may contain variables not present in the
 matched part, so we need to create temporary bindings for these.
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
-    tryAutoInstantiate vts tP partsP scP bind
-      = case autoInstantiate vts bind tP of
-          Yes (abind,tPasC)  ->  tryInstantiateSC abind tPasC partsP scP
+    tryInstantiateKnown vts tP partsP scP bind
+      = case instantiateKnown vts bind tP of
+          Yes (kbind,tPasC)  ->  tryInstantiateSC kbind tPasC partsP scP
           But msgs
            -> But ([ "auto-instantiate failed"
                    , ""
@@ -736,18 +736,21 @@ We want to display as much of each match as possible using
 the variables of the goal and focus, not those of the law.
 So we need a form of \emph{auto-completion} that flags
 those variables from $R$ that are not in $P$.
-In general we cannot expect the law side-condition
-to be fully discharged, but it may have simplified somewhat,
-to terms involving auto-completed variables from $R$.
 
-When we want to apply a given match,
-we don't want to use the auto-complete binding,
-but instead we need to get the user to assist in match-binder
-completion, based on variables and terms that appear in the goal.
-So, in summary, we have two phases:
-a fast match and auto-complete process;
-and replacement building  with user-aided completion
-based on goal fragments.
+One part of this is straightforward.
+Any unbound variables from $R \setminus P$ that are ``known''
+should be bound to themselves.
+The other part, with such variables that are not ``known``,
+can be addressed by binding them to a version of themselves
+that is marked in some distinguishing way.
+We refer to these marked versions as being ``floating'' variables.
+
+When a match is chosen to be applied,
+as part of a proof-step,
+then the user will be asked to supply instantiations for all variables
+bound to floating variables.
+The predicates $true$ and $false$, as well as any well-formed sub-component
+of the goal can be chosen.
 
 \newpage
 \subsubsection{Match and Auto-Complete}
@@ -809,9 +812,6 @@ Summary:
 
 Do a basic match,
 including side-condition checking.
-If the side-conditions involve only
-variables present in the binding before auto-instantiation,
-then a failure results in the match overall failing.
 \begin{code}
 basicMatch :: MatchClass
             -> [VarTable] -- known variables in scope at this law
@@ -822,11 +822,12 @@ basicMatch :: MatchClass
             -> Matches
 basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
   =  do bind <- match vts tC partsP
-        (abind,replC) <- autoInstantiate vts bind repl
-        scPinC <- instantiateSC abind scP
+        (kbind,_) <- instantiateKnown vts bind repl
+        (fbind,_) <- instantiateFloating vts kbind repl
+        scPinC <- instantiateSC fbind scP
         scD <- scDischarge scC scPinC
         if all isFloatingASC (fst scD)
-          then return $ MT n asn (chkPatn mc tP) bind scC scPinC repl
+          then return $ MT n asn (chkPatn mc tP) kbind scC scPinC repl
           else fail "undischargeable s.c."
   where
 
@@ -941,7 +942,7 @@ dispLiveProof liveProof
        )
        ++
        ( " ..."
-         : displayMatches (mtchCtxts liveProof)(matches liveProof)
+         : displayMatches (mtchCtxts liveProof) (matches liveProof)
          : [ underline "           "
            , dispSeqZip (fPath liveProof) (conjSC liveProof) (focus liveProof)
            , "" ]
@@ -961,13 +962,13 @@ displayMatches mctxts matches
 
 shMatch vts (i, mtch)
  = show i ++ " : "++ ldq ++ green (nicelawname $ mName mtch) ++ rdq
-   ++ "  gives  "
+   ++ " "
    ++ (bold $ blue $ showRepl ainst)
    ++ "  " ++ shSCImplication (mLocSC mtch) (mLawSC mtch)
    ++ " " ++ shMClass (mClass mtch)
  where
     bind = mBind mtch
-    ainst = autoInstantiate vts bind $ mRepl mtch
+    ainst = instantiateFloating vts bind $ mRepl mtch
     (_,lsc) = mAsn mtch
     showRepl Nothing = "auto-instantiate failed!!"
     showRepl (Just (_,brepl)) = trTerm 0 brepl

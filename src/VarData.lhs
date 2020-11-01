@@ -9,8 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module VarData ( VarMatchRole
                , pattern KnownConst, pattern KnownVar
                , pattern GenericVar, pattern InstanceVar, pattern UnknownVar
-               , isKnownConst, isKnownVar, isGenericVar, isInstanceVar
-               , isUnknownVar
+               , isKnownConst, isKnownVar
                , vmrConst, vmrType, vmrInst
                , LstVarMatchRole
                , pattern KnownVarList, pattern KnownVarSet
@@ -25,7 +24,8 @@ module VarData ( VarMatchRole
                , addAbstractVarList, addAbstractVarSet
                , lookupVarTable, lookupVarTables
                , lookupLVarTable, lookupLVarTables
-               , isUnknownStdVar, isUnknownLstVar, isUnknownGVar
+               , isUnknownVar, isUnknownLVar, isUnknownGVar
+               , gVarIsUnknownVar, gVarIsUnknownLVar
                , dEq, dvEq, dlEq, dgEq
                , insideS                    -- member modulo During
                , withinS                    -- subset modulo During
@@ -94,7 +94,7 @@ to variables in the all but the last categories above, as ``known'',
 while those in the last category are simply ``unknown''.
 \begin{code}
 data VarMatchRole -- Variable Matching Role
-  =  KC Term     -- Known Constant 
+  =  KC Term     -- Known Constant
   |  KV Type     -- Known Variable
   |  KG          -- Generic Variable
   |  KI Variable -- Instance Variable ! variable must be known as generic
@@ -111,16 +111,10 @@ pattern UnknownVar     = UV
 \newpage
 Useful predicates and destructors:
 \begin{code}
-isKnownConst (KC _)  = True
+isKnownConst (KC _)  = True     -- used
 isKnownConst _       = False
-isKnownVar (KV _)    = True
+isKnownVar (KV _)    = True     -- used
 isKnownVar _         = False
-isGenericVar KG      = True
-isGenericVar _       = False
-isInstanceVar (KI _) = True
-isInstanceVar _      = False
-isUnknownVar UV      = True
-isUnknownVar _       = False
 
 vmrConst :: VarMatchRole -> Term
 vmrConst (KC trm) =  trm
@@ -632,17 +626,23 @@ lookupLVarTables (vt:vts) lv
 
 We also want to determine if a variable is not known:
 \begin{code}
-isUnknownStdVar :: [VarTable] -> GenVar -> Bool
-isUnknownStdVar vts (StdVar v)  =  lookupVarTables  vts v == UV
-isUnknownStdVar vts _           =  False
+isUnknownVar :: [VarTable] -> Variable -> Bool
+isUnknownVar vts v  =  lookupVarTables vts v == UV
 
-isUnknownLstVar :: [VarTable] -> GenVar  -> Bool
-isUnknownLstVar vts (LstVar (LVbl v _ _))  =  lookupLVarTables vts v == UL
-isUnknownLstVar vts _                          =  False
+isUnknownLVar :: [VarTable] -> ListVar  -> Bool
+isUnknownLVar vts (LVbl v _ _)  =  lookupLVarTables vts v == UL
 
-isUnknownGVar   :: [VarTable] -> GenVar   -> Bool
-isUnknownGVar   vts (StdVar v)  =  lookupVarTables  vts v == UV
-isUnknownGVar   vts (LstVar (LVbl v _ _))  =  lookupLVarTables vts v == UL
+isUnknownGVar :: [VarTable] -> GenVar   -> Bool
+isUnknownGVar vts (StdVar v)             =  lookupVarTables  vts v == UV
+isUnknownGVar vts (LstVar (LVbl v _ _))  =  lookupLVarTables vts v == UL
+
+gVarIsUnknownVar :: [VarTable] -> GenVar  -> Bool
+gVarIsUnknownVar vts (StdVar v)  =  isUnknownVar vts v
+gVarIsUnknownVar _   _           =  False
+
+gVarIsUnknownLVar :: [VarTable] -> GenVar  -> Bool
+gVarIsUnknownLVar vts (LstVar lv)  =  isUnknownLVar vts lv
+gVarIsUnknownLVar _   _            =  False
 \end{code}
 
 \newpage

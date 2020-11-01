@@ -2,11 +2,34 @@
 
 ## Most Urgent
 
-We note that `O$`, `O$'` and `O$_m` are not being bound
-when `Q;R` is matched against `;_def.
-We need to bind unbound knowns to themselves.
+We need to sort out re-binding an already bound value.
+This should only be used when handling freshness conditions.
 
-`Binding.mappedVars` Should it maintain separation between `Static` and the dynamic variables?
+```
+10 : “;_def” (∃ O$_0 • Q[O$_0/O$']∧R[O$_0/O$])  ⊤ ⟹ fresh:O$_0 ≡[1]
+           
+
+⊢
+(∃ O$_0 • P[O$_0/O$']∧(Q;R)[O$_0/O$])    ⊤
+
+Focus = [0,2,0]  Target (RHS): (P;Q);R
+
+
+proof: a10
+@am2f2.scD:
+([],fromList [GL (LV (VR (Id "O" 0,VO,WD "0"),[],[]))])
+@unfreshVs:
+fromList [GL (LV (VR (Id "O" 0,VO,WD "0"),[],[]))]
+req: bindLVarToVList(1): already bound differently.
+d = "0"
+old r = "0"
+new r = "1"
+bind:
+fromList [("0","0")]
+
+CallStack (from HasCallStack):
+  error, called at src/Binding.lhs:1229:22 in reasonEq-0.7.6.0-Ad1JPUvmLvcJl5209JcHqp:Binding
+```
 
 ## Upgrade No. 2
 

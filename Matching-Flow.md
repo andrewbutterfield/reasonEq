@@ -48,11 +48,34 @@ LiveProofs.domatch logicsig vts asnC law
 ```
 LiveProofs.basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
   match vts tC partsP
-  autoInstantiate bind repl
+  instantiateKnown vts bind repl
   instantiateSC bind' scP
   scDischarge scC scPinC
   all isFloatingASC (fst scD)
 ```
+
+### `instantiateKnown`
+
+```
+instantiateKnown vts bind trm
+  findUnboundVars bind trm
+  mkKnownBinding vts unbound
+  mergeBindings bind qbind
+  instantiate abind trm
+```
+
+### `instantiateFloating`
+
+```
+instantiateFloating bind trm
+  findUnboundVars bind trm
+  termLVarPairings trm
+  mkEquivClasses lvpairs
+  mkFloatingBinding bind substEquiv unbound
+  mergeBindings bind qbind
+  instantiate abind trm
+```
+
 
 ## Command `tm name` (Test-Match Law "name")
 
@@ -62,7 +85,7 @@ LiveProofs.basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
 AbstractUI.tryFocusAgainst lawnm parts theSig liveProof
   LiveProofs.tryLawByName theSig (goalt,scC) lawnm parts ctxts
     Match.match vts tC partsP
-    Instantiate.autoInstantiate bind tP
+    Instantiate.instantiateFloating vts bind tP
     Instantiate.instantiateSC bind scP
     SideCond.scDischarge scC scP'
 ```

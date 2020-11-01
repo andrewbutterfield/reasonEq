@@ -2,34 +2,23 @@
 
 ## Most Urgent
 
-We need to sort out re-binding an already bound value.
-This should only be used when handling freshness conditions.
+We have the following behaviour:
 
 ```
-10 : “;_def” (∃ O$_0 • Q[O$_0/O$']∧R[O$_0/O$])  ⊤ ⟹ fresh:O$_0 ≡[1]
-           
+(∃ O$_0 • P[O$_0/O$']∧(∃ O$_1 • (Q[O$_0,O$_1/O$,O$']∧R[O$_1/O$])))    ⊤
 
-⊢
-(∃ O$_0 • P[O$_0/O$']∧(Q;R)[O$_0/O$])    ⊤
-
-Focus = [0,2,0]  Target (RHS): (P;Q);R
-
-
-proof: a10
-@am2f2.scD:
-([],fromList [GL (LV (VR (Id "O" 0,VO,WD "0"),[],[]))])
-@unfreshVs:
-fromList [GL (LV (VR (Id "O" 0,VO,WD "0"),[],[]))]
-req: bindLVarToVList(1): already bound differently.
-d = "0"
-old r = "0"
-new r = "1"
-bind:
-fromList [("0","0")]
-
-CallStack (from HasCallStack):
-  error, called at src/Binding.lhs:1229:22 in reasonEq-0.7.6.0-Ad1JPUvmLvcJl5209JcHqp:Binding
+proof: tm 1 land_exists_scope
+Match against `land_exists_scope'[1]
+Binding: { P ⟼ P[O$_0/O$'], Q ⟼ Q[O$_0,O$_1/O$,O$']∧R[O$_1/O$], ∧ ⟼ ∧, x$ ⟼ {O$_1}, y$ ⟼ {} }
+Instantiated Law = P[O$_0/O$']∧(∃ O$_1 • (Q[O$_0,O$_1/O$,O$']∧R[O$_1/O$]))≡(∃ O$_1 • P[O$_0/O$']∧(Q[O$_0,O$_1/O$,O$']∧R[O$_1/O$]))
+Instantiated Law S.C. = O$_1 ∉ P
+Goal S.C. = ⊤
+Discharged Law S.C. = O$_1 ∉ P
 ```
+
+The issue here is that when fresh `O$_0` and `O$_1` are produced,
+we forgot to extend the goal side-condition with the fact that these do not appear anywhere
+in the original goal - we should be able to discharge `O$_1 ∉ P`.
 
 ## Upgrade No. 2
 

@@ -1224,10 +1224,8 @@ genFresh free bind (gv:gvs)
     -- remove floating mark from identifier
     fgv' = genFreshGVar free 0 $ sinkGV gv
     free' = free `S.union` (S.singleton fgv')
-    bind'
-     = case bindGVarToGVar gv fgv' bind of
-         But msgs -> error $ unlines msgs
-         Yes b' -> b'
+    bind' = fromJust (bindGVarToGVar gv fgv' emptyBinding)
+            `mergeBindings` bind
 
 genFreshGVar :: VarSet -> Int -> GenVar -> GenVar
 genFreshGVar free i gv

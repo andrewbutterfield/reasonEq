@@ -536,12 +536,12 @@ applyMatchToFocus2 mtch unbound ubind liveProof
     in do scLasC <- instantiateSC cbind scL
           scD <- scDischarge scC scLasC
           if onlyFreshSC $ pdbg "am2f2.scD" scD
-            then do let fbind = generateFreshVars conj (snd scD) cbind
+            then do let (fbind,fresh) = generateFreshVars conj (snd scD) cbind
                     brepl  <- instantiate fbind repl
-                    -- scC' <- scC `mrgSideCond` scD
+                    scC' <- scC `mrgSideCond` freshAsSideCond fresh
                     return ( focus_ ((setTZ brepl tz),seq')
                            $ matches_ []
-                           $ conjSC_ scC
+                           $ conjSC_ scC'
                            $ stepsSoFar__
                               (( UseLaw (ByMatch $ mClass mtch)
                                         (mName mtch)
@@ -550,6 +550,8 @@ applyMatchToFocus2 mtch unbound ubind liveProof
                                , (conj,conjSC liveProof)):)
                               liveProof )
             else fail ("Undischarged side-conditions: "++trSideCond scD)
+
+freshAsSideCond fresh = scTrue
 \end{code}
 
 

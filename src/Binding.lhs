@@ -1212,20 +1212,26 @@ allLVWhen whens (i,vc,is,ij)
 We may need to generate fresh variables to discharge
 freshness side-conditions.
 \begin{code}
-generateFreshVars :: Term -> VarSet -> Binding -> Binding
+generateFreshVars :: Term -> VarSet -> Binding -> (Binding, VarSet)
 generateFreshVars term unfreshVs bind
-  = genFresh (mentionedVars term) bind $ S.toList $ pdbg "unfreshVs" unfreshVs
+  = genFresh (mentionedVars term) bind S.empty $ S.toList unfreshVs
 
-genFresh :: VarSet -> Binding -> [GenVar] -> Binding
-genFresh _ bind []  =  bind
-genFresh free bind (gv:gvs)
-  =  genFresh free' bind' gvs
+genFresh :: VarSet   -- existing variables
+         -> Binding  -- binding (initial, evolving)
+         -> VarSet   -- new variables
+         -> [GenVar] -- to be made fresh
+         -> (Binding, VarSet)
+genFresh _ bind fresh []  =  (bind, fresh)
+genFresh free bind fresh (gv:gvs)
+  =  genFresh free' bind' fresh' gvs
   where
     -- remove floating mark from identifier
     fgv' = genFreshGVar free 0 $ sinkGV gv
-    free' = free `S.union` (S.singleton fgv')
+    fgv's = S.singleton fgv'
+    free' = free `S.union` fgv's
     bind' = fromJust (bindGVarToGVar gv fgv' emptyBinding)
             `mergeBindings` bind
+    fresh' = fresh `S.union` fgv's
 
 genFreshGVar :: VarSet -> Int -> GenVar -> GenVar
 genFreshGVar free i gv

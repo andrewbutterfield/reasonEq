@@ -2,23 +2,12 @@
 
 ## Most Urgent
 
-We have the following behaviour:
+We need to generate freshness conditions for the goal in a proof,
+for every fresh variable created to satisfy such conditions in a law.
 
-```
-(∃ O$_0 • P[O$_0/O$']∧(∃ O$_1 • (Q[O$_0,O$_1/O$,O$']∧R[O$_1/O$])))    ⊤
-
-proof: tm 1 land_exists_scope
-Match against `land_exists_scope'[1]
-Binding: { P ⟼ P[O$_0/O$'], Q ⟼ Q[O$_0,O$_1/O$,O$']∧R[O$_1/O$], ∧ ⟼ ∧, x$ ⟼ {O$_1}, y$ ⟼ {} }
-Instantiated Law = P[O$_0/O$']∧(∃ O$_1 • (Q[O$_0,O$_1/O$,O$']∧R[O$_1/O$]))≡(∃ O$_1 • P[O$_0/O$']∧(Q[O$_0,O$_1/O$,O$']∧R[O$_1/O$]))
-Instantiated Law S.C. = O$_1 ∉ P
-Goal S.C. = ⊤
-Discharged Law S.C. = O$_1 ∉ P
-```
-
-The issue here is that when fresh `O$_0` and `O$_1` are produced,
-we forgot to extend the goal side-condition with the fact that these do not appear anywhere
-in the original goal - we should be able to discharge `O$_1 ∉ P`.
+So a goal freshness condition like `fresh O$_1` 
+can be used to discharge translated law conditions like `O$_1 ∉ P,Q`.
+They can also falsify conditions like `O$_1 ⊇ R`.
 
 ## Upgrade No. 2
 

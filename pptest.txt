@@ -1,49 +1,56 @@
-@I_fUV.term:
-B
+@am2f2.scD:
+( []
+, { GL (LV (VR (Id "O" 0, VO, WD "0"), [], [])) } )
+@aMTF2.fneeded:
+{ GL (LV (VR (Id "O" 0, VO, WD "0"), [], [])) }
+@aMTF2.conj:
+C
 P
-(Id "exists" 0)
-( { GL (LV (VR (Id "O" 0, VO, WD "m"), [], [])) } )
-( C
+(Id "equiv" 0)
+[ C
   P
-  (Id "land" 0)
-  [ S
+  (Id ";" 0)
+  [ V P (VR (Id "P" 0, VP, WS))
+  , C
     P
-    (V P (VR (Id "P" 0, VP, WS)))
-    ( SN
-      ( {} )
-      ( { (LV (VR (Id "O" 0, VO, WA), [], []), LV (VR (Id "O" 0, VO, WD "m"), [], [])) } ) )
-  , S
+    (Id ";" 0)
+    [ V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "R" 0, VP, WS)) ] ]
+, C
+  P
+  (Id ";" 0)
+  [ C
     P
-    (V P (VR (Id "Q" 0, VP, WS)))
-    ( SN
-      ( {} )
-      ( { (LV (VR (Id "O" 0, VO, WB), [], []), LV (VR (Id "O" 0, VO, WD "m"), [], [])) } ) ) ] )
-@I_FUV.mentioned:
-{ GV (VR (Id "P" 0, VP, WS))
-, GV (VR (Id "Q" 0, VP, WS))
-, GL (LV (VR (Id "O" 0, VO, WB), [], []))
-, GL (LV (VR (Id "O" 0, VO, WD "m"), [], []))
-, GL (LV (VR (Id "O" 0, VO, WA), [], [])) }
-@I_fUV.bind:
-BD
-( { ( (Id ";" 0, VP)
-    , BV (VR (Id ";" 0, VP, WS)) )
-  , ( (Id "P" 0, VP)
-    , BV (VR (Id "Q" 0, VP, WS)) )
-  , ( (Id "Q" 0, VP)
-    , BV (VR (Id "R" 0, VP, WS)) ) }
-, {}
-, {} )
-@I_FUV.mapped:
-{ GV (VR (Id ";" 0, VP, WS))
-, GV (VR (Id ";" 0, VP, WB))
-, GV (VR (Id ";" 0, VP, WA))
-, GV (VR (Id ";" 0, VP, WT))
-, GV (VR (Id "P" 0, VP, WS))
-, GV (VR (Id "P" 0, VP, WB))
-, GV (VR (Id "P" 0, VP, WA))
-, GV (VR (Id "P" 0, VP, WT))
-, GV (VR (Id "Q" 0, VP, WS))
-, GV (VR (Id "Q" 0, VP, WB))
-, GV (VR (Id "Q" 0, VP, WA))
-, GV (VR (Id "Q" 0, VP, WT)) }
+    (Id ";" 0)
+    [ V P (VR (Id "P" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS)) ]
+  , V P (VR (Id "R" 0, VP, WS)) ] ]
+
+@am2f2.scD:
+( []
+, { GL (LV (VR (Id "O" 0, VO, WD "0"), [], [])) } )
+@aMTF2.fneeded:
+{ GL (LV (VR (Id "O" 0, VO, WD "0"), [], []))
+, GL (LV (VR (Id "O" 0, VO, WD "1"), [], [])) }
+@aMTF2.conj:
+C
+P
+(Id "equiv" 0)
+[ C
+  P
+  (Id ";" 0)
+  [ V P (VR (Id "P" 0, VP, WS))
+  , C
+    P
+    (Id ";" 0)
+    [ V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "R" 0, VP, WS)) ] ]
+, C
+  P
+  (Id ";" 0)
+  [ C
+    P
+    (Id ";" 0)
+    [ V P (VR (Id "P" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS)) ]
+  , V P (VR (Id "R" 0, VP, WS)) ] ]

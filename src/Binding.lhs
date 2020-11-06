@@ -1226,7 +1226,7 @@ genFresh free bind fresh (gv:gvs)
   =  genFresh free' bind' fresh' gvs
   where
     -- remove floating mark from identifier
-    fgv' = genFreshGVar free 0 $ sinkGV gv
+    fgv' = genFreshGVar free 1 $ sinkGV gv
     fgv's = S.singleton fgv'
     free' = free `S.union` fgv's
     bind' = fromJust (bindGVarToGVar gv fgv' emptyBinding)

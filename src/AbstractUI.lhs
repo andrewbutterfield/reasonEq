@@ -529,14 +529,16 @@ applyMatchToFocus2 mtch unbound ubind liveProof
   = let cbind = mBind mtch `mergeBindings` ubind
         repl = mRepl mtch
         scL = snd $ mAsn mtch
+        conj = fst $ conjecture liveProof
         scC = conjSC liveProof
         (tz,seq') = focus liveProof
         dpath = fPath liveProof
-        conj = exitTZ tz
+        conjpart = exitTZ tz
     in do scLasC <- instantiateSC cbind scL
           scD <- scDischarge scC scLasC
           if onlyFreshSC $ pdbg "am2f2.scD" scD
-            then do let (fbind,fresh) = generateFreshVars conj (snd scD) cbind
+            then do let freshneeded = snd scD `S.union` snd scC
+                    let (fbind,fresh) = generateFreshVars (pdbg "aMTF2.conj" conj) (pdbg "aMTF2.fneeded" freshneeded) cbind
                     brepl  <- instantiate fbind repl
                     scC' <- scC `mrgSideCond` freshAsSideCond fresh
                     return ( focus_ ((setTZ brepl tz),seq')
@@ -547,11 +549,12 @@ applyMatchToFocus2 mtch unbound ubind liveProof
                                         (mName mtch)
                                         fbind
                                         dpath
-                               , (conj,conjSC liveProof)):)
+                               , (conjpart,conjSC liveProof)):)
                               liveProof )
             else fail ("Undischarged side-conditions: "++trSideCond scD)
 
-freshAsSideCond fresh = scTrue
+freshAsSideCond :: VarSet -> SideCond
+freshAsSideCond fresh = fromJust $ mkSideCond [] fresh
 \end{code}
 
 

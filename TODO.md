@@ -2,12 +2,47 @@
 
 ## Most Urgent
 
+
+### Upgrade 2
+
 We need to generate freshness conditions for the goal in a proof,
 for every fresh variable created to satisfy such conditions in a law.
 
 So a goal freshness condition like `fresh O$_1` 
 can be used to discharge translated law conditions like `O$_1 ∉ P,Q`.
 They can also falsify conditions like `O$_1 ⊇ R`.
+
+Matching `P[O$_0/O$']∧(∃ O$_1 • (Q[O$_0,O$_1/O$,O$']∧R[O$_1/O$]))`
+against `land_exists_scope` should NOT fail, but:
+
+```
+proof: tm 1 land_exists_scope
+Match against `land_exists_scope'[1]
+Binding: { P ⟼ P[O$_0/O$'], Q ⟼ Q[O$_0,O$_1/O$,O$']∧R[O$_1/O$]
+         , ∧ ⟼ ∧, x$ ⟼ {O$_1}, y$ ⟼ {} }
+Instantiated Law = P[O$_0/O$']∧(∃ O$_1 • (Q[O$_0,O$_1/O$,O$']∧R[O$_1/O$]))
+                   ≡(∃ O$_1 • P[O$_0/O$']∧(Q[O$_0,O$_1/O$,O$']∧R[O$_1/O$]))
+Instantiated Law S.C. = O$_1 ∉ P
+Goal S.C. = ⊤
+Discharged Law S.C. = O$_1 ∉ P
+```
+
+Here we need to use `fresh O$_1` to discharge `O$_1 ∉ P`.
+
+Problem is, in above proof, the `fresh O$_0` discharges itself,
+so `genFreshVars` has nothing to do.
+
+Starting in genFreshVars with one helps, a little:
+
+```
+(∃ O$_1 • P[O$_1/O$']∧((∃ O$_1 • Q[O$_1/O$']∧R[O$_1/O$]))[O$_1/O$])    fresh:O$_1,O$_2
+```
+
+See `pptest.txt` for debug info.
+
+### Factory Reset
+
+Have `b R *` set all theories to builtin
 
 ## Upgrade No. 2
 

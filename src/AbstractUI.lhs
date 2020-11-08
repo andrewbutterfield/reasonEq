@@ -529,7 +529,6 @@ applyMatchToFocus2 mtch unbound ubind liveProof
   = let cbind = mBind mtch `mergeBindings` ubind
         repl = mRepl mtch
         scL = snd $ mAsn mtch
-        conj = fst $ conjecture liveProof
         scC = conjSC liveProof
         (tz,seq') = focus liveProof
         dpath = fPath liveProof
@@ -537,8 +536,9 @@ applyMatchToFocus2 mtch unbound ubind liveProof
     in do scLasC <- instantiateSC cbind scL
           scD <- scDischarge scC scLasC
           if onlyFreshSC $ pdbg "am2f2.scD" scD
-            then do let freshneeded = snd scD `S.union` snd scC
-                    let (fbind,fresh) = generateFreshVars (pdbg "aMTF2.conj" conj) (pdbg "aMTF2.fneeded" freshneeded) cbind
+            then do let freshneeded = snd scD
+                    let knownVs = zipperVarsMentioned $ focus liveProof
+                    let (fbind,fresh) = generateFreshVars (pdbg "aMTF2.kVs" knownVs) (pdbg "aMTF2.fneeded" freshneeded) cbind
                     brepl  <- instantiate fbind repl
                     scC' <- scC `mrgSideCond` freshAsSideCond fresh
                     return ( focus_ ((setTZ brepl tz),seq')

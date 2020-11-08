@@ -21,6 +21,7 @@ module Sequents
  , switchLeftRight
  , seqGoHyp, seqLeaveHyp
  , getHypotheses
+ , zipperVarsMentioned
  , CalcStep
  , Calculation
  , Proof, displayProof
@@ -677,6 +678,48 @@ getHypotheses' (HLaws' hn hk hbef _ _ _ _ haft _ _)
             , conjs    =  []
             , proofs   =  [] }
 
+\end{code}
+
+
+\subsection{Sequent Mentioned Variables}
+
+When generating fresh variables,
+we need to know the state of the entire goal conecture
+at the relevant part of the proof,
+and not just that of the current focus, or sequent sub-component.
+We will have access to all of the above via the top-level zipper:
+\begin{code}
+zipperVarsMentioned :: SeqZip -> VarSet
+zipperVarsMentioned (tz,sequent')
+  = mentionedVars (exitTZ tz)
+    `S.union`
+    seqVarsMentioned sequent'
+\end{code}
+
+\begin{code}
+seqVarsMentioned :: Sequent' ->  VarSet
+seqVarsMentioned sequent'  =  lawsVarsMentioned $ laws' sequent'
+\end{code}
+
+\begin{code}
+lawsVarsMentioned :: Laws' -> VarSet
+lawsVarsMentioned (CLaws' hyp _ other)
+  =  (S.unions $ map lawVarsMentioned $ laws hyp)
+     `S.union`
+     mentionedVars other
+lawsVarsMentioned hlaws'@(HLaws' _ _ _ _ _ _ _ _ _ _)
+  =  (S.unions $ map lawVarsMentioned $ hbefore hlaws')
+     `S.union`
+     (S.unions $ map lawVarsMentioned $ hafter hlaws')
+     `S.union`
+     (mentionedVars $ cleft0 hlaws')
+     `S.union`
+     (mentionedVars $ cright0 hlaws')
+\end{code}
+
+\begin{code}
+lawVarsMentioned :: Law -> VarSet
+lawVarsMentioned = mentionedVars . fst . snd . fst
 \end{code}
 
 \newpage

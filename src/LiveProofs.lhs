@@ -342,15 +342,15 @@ Here we painstakingly check every monadic call from \texttt{match} onwards,
 and report the outcome.
 These calls are:
   \texttt{match}%
-, <Complete Binding>%
+, $<$Complete Binding$>$%
 , \texttt{instantiateSC}%
 , and \texttt{scDischarge},
-where <Complete Binding> for matching involves:
+where $<$Complete Binding$>$ for matching involves:
 \begin{verbatim}
 findUnboundVars termLVarPairings mkEquivClasses questionableBinding
 mergeBindings instantiate
 \end{verbatim}
-and <Complete Binding> for application involves(?) \texttt{completeBind}.
+and $<$Complete Binding$>$ for application involves(?) \texttt{completeBind}.
 
 \begin{code}
 tryLawByName :: LogicSig -> Assertion -> String -> [Int] -> [MatchContext]

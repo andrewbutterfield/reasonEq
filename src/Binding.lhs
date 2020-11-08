@@ -1212,9 +1212,9 @@ allLVWhen whens (i,vc,is,ij)
 We may need to generate fresh variables to discharge
 freshness side-conditions.
 \begin{code}
-generateFreshVars :: Term -> VarSet -> Binding -> (Binding, VarSet)
-generateFreshVars term unfreshVs bind
-  = genFresh (mentionedVars term) bind S.empty $ S.toList unfreshVs
+generateFreshVars :: VarSet -> VarSet -> Binding -> (Binding, VarSet)
+generateFreshVars knownVs unfreshVs bind
+  = genFresh knownVs bind S.empty $ S.toList unfreshVs
 
 genFresh :: VarSet   -- existing variables
          -> Binding  -- binding (initial, evolving)

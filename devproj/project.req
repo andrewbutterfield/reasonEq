@@ -22,17 +22,19 @@ BEGIN LIVE-PROOF
 TH-NAME: UTPBase
 CJ-NAME: ;_assoc
 CONJ = (C P (Id "equiv" 0) [C P (Id ";" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id ";" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],C P (Id ";" 0) [C P (Id ";" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "R" 0,VP,WS))]],([],fromList []))
-SIDE = ([],fromList [])
+SIDE = ([],fromList [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[])),GL (LV (VR (Id "O" 0,VO,WD "2"),[],[]))])
 STRAT redboth
 BEGIN SEQZIP
-TERMZIP = (C P (Id ";" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id ";" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],[])
+TERMZIP = (B P (Id "exists" 0) (fromList [GL (LV (VR (Id "O" 0,VO,WD "2"),[],[]))]) (C P (Id "land" 0) [S P (V P (VR (Id "Q" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "2"),[],[]))])),S P (V P (VR (Id "R" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WB),[],[]),LV (VR (Id "O" 0,VO,WD "2"),[],[]))]))]),[Sub' P (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WB),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))])),Cons' P (Id "land" 0) [S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))] [],Bnd' P (Id "exists" 0) (fromList [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))])])
 BEGIN SEQUENT'
 SIDECOND = ([],fromList [])
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.;_assoc", thDeps = [], known = VD (fromList [],fromList [],fromList []), subable = fromList [], laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = C P (Id ";" 0) [C P (Id ";" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "R" 0,VP,WS))]}
 END SEQUENT'
 END SEQZIP
-FPATH: []
+FPATH: [1,2,1]
 BEGIN LIST STEPS
+(UseLaw (ByMatch (ME [1])) ";_def" (BD (fromList [((Id ";" 0,VP),BV (VR (Id ";" 0,VP,WS))),((Id "P" 0,VP),BV (VR (Id "Q" 0,VP,WS))),((Id "Q" 0,VP),BV (VR (Id "R" 0,VP,WS)))],fromList [("0","2")],fromList [((Id "O" 0,VO,[],[]),BL [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])])) [1,2,1],(B P (Id "exists" 0) (fromList [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))]) (C P (Id "land" 0) [S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))])),S P (C P (Id ";" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WB),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))]),([],fromList [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))])))
+(UseLaw (ByMatch (ME [1])) ";_def" (BD (fromList [((Id ";" 0,VP),BV (VR (Id ";" 0,VP,WS))),((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS))),((Id "Q" 0,VP),BT (C P (Id ";" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]))],fromList [("0","1")],fromList [((Id "O" 0,VO,[],[]),BL [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])])) [],(C P (Id ";" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id ";" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],([],fromList [])))
 END LIST STEPS
 END LIVE-PROOF
 END MAP LIVE-PROOFS

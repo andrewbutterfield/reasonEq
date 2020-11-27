@@ -2,9 +2,6 @@
 
 ## Most Urgent
 
-Using `d` rather than `d1` to move down in focus puts `0` into the focus path, and not `1`!
-
-
 ### Upgrade 2
 
 Why can't we match `` against `land_exists_scope`?
@@ -75,7 +72,6 @@ When viewed in situ, we have:
 Make this so.
 
 
-
 ## Upgrade No. 3
 
 For simultaneous assignment we need to be able to represent
@@ -129,6 +125,11 @@ or
 ```
 
 This needs types!
+
+## Upgrade No. 6
+
+Need to find a way to change dependencies in a DAG.
+
 
 ## Robustness
 

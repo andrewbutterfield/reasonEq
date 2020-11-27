@@ -41,11 +41,13 @@ elements occur before their range elements.
 
 Key idea: represent as stratified lists.
 \begin{verbatim}
-      3     [  [ (3,[1,2]) ]
+            [
+      3        [ (3,[1,2]) ]
      / \    ,
      1 2       [ (1,[0]), (2,[0]) ]
      \ /    ,
-      0        [ (0,[]) ]  ]
+      0        [ (0,[]) ]
+            ]
 \end{verbatim}
 \begin{code}
 type SDAGEntry a  =  (a,[a])

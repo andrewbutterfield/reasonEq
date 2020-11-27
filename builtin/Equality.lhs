@@ -23,6 +23,8 @@ import Laws
 import Proofs
 import Theories
 import StdSignature
+import Equivalence
+import Implication
 import TestRendering
 \end{code}
 
@@ -162,6 +164,8 @@ equalityName = "Equality"
 equalityTheory :: Theory
 equalityTheory
   =  nullTheory { thName  =  equalityName
+                , thDeps  =  [ implName
+                             , equivName ]
                 , known   =  eqKnown
                 , subable =  equalSubAble
                 , laws    =  equalityAxioms

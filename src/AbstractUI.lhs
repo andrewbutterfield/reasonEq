@@ -376,9 +376,9 @@ moveFocusDown i liveProof
         (ok,tz') = downTZ i' tz
     in if ok
         then return ( focus_ (tz',seq')
-                    $ fPath__ (++[i])
+                    $ fPath__ (++[i'])
                     $ matches_ [] liveProof )
-        else fail ("No sub-term "++show i)
+        else fail ("No sub-term "++show i')
 
 \end{code}
 

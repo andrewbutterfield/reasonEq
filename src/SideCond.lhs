@@ -477,30 +477,35 @@ scDischarge :: Monad m => SideCond -> SideCond -> m SideCond
 \end{code}
 We have something of the form:
 $$
- \left( \bigwedge_{i \in 1 \dots m} G_i \right)
+ \left( \bigwedge_{i \in 1 \dots m} G_i \land G_F \right)
  \vdash
- \left( \bigwedge_{j \in 1 \dots n} L_j \right)
+ \left( \bigwedge_{j \in 1 \dots n} L_j \land L_F  \right)
 $$
+Here $G_F$ and $L_F$ are the fresh variables associated with
+goal and law respectively.
+As these are global,
+the plan is first to use the $G_i$ to discharge the $L_i$,
+and then finish by using $G_F$ to discharge $G_L$ and any remaining $L_i$.
+
 In our representation both the $G_i$ and $L_j$
 are ordered by general variable ($V$).
 So we can work through both lists,
 using all the $G_i$ for a given g.v.,
 to attempt to discharge all the $L_j$ for that same g.v.
+Once this is complete, we then make use of the freshness information
+to discharge further.
+
 Success is when all such $L_j$ groups have been shown to be $\true$.
 Failure occurs if any $L_j$ group results in $\false$.
-If we are left with undischarged $L_j$,
-then the interpretation depends on if we are doing many matches
-and displaying them, or actually trying to apply a match outcome.
 
-We start with simple end-cases:
+
 \begin{code}
 scDischarge anteSC@(anteASC,anteFvs) cnsqSC@(cnsqASC,cnsqFvs)
   | isTrivialSC cnsqSC  =  return scTrue  -- G => true   is   true
   | isTrivialSC anteSC  =  return cnsqSC  -- true => L   is   L, not discharged
   | otherwise
      = do asc' <- scDischarge' (groupByGV anteASC) (groupByGV cnsqASC)
-          let fvs' = cnsqFvs S.\\ anteFvs
-          return (asc',fvs')
+          freshDischarge anteFvs cnsqFvs asc'
 \end{code}
 
 We have a modified version of \texttt{Data.List.groupBy}
@@ -513,6 +518,8 @@ groupByGV (asc:ascs)  =  (gv,asc:ours) : groupByGV others
                         gv `usedIn` asc  =  gv == ascGVar asc
                         (ours,others)    =  span (usedIn gv) ascs
 \end{code}
+
+\subsubsection{Atomic Condition  Discharge}
 
 Now onto processing those groups:
 \begin{code}
@@ -676,7 +683,80 @@ Anything else is not handled right now;
 ascDischarge _ ascL = return [ascL]
 \end{code}
 
+\subsubsection{Freshness Condition  Discharge}
+
+We have reduced our original problem down to:
+$$
+ G_F
+ \vdash
+ \left( \bigwedge_{j \in J \subseteq\setof{1 \dots n}} L_j \land L_F  \right)
+$$
+The solution is
+$$
+\bigwedge_{j \in J' \subseteq J} L_j \land (L_F\setminus G_F)
+$$
+where elements of $G_F$ can be used to satisfy some $L_j$.
+
+\begin{code}
+freshDischarge :: Monad m => VarSet -> VarSet -> [AtmSideCond] -> m SideCond
+freshDischarge anteFvs cnsqFvs asc
+  = do asc' <- freshDischarge' anteFvs asc
+       return (asc' , cnsqFvs S.\\ anteFvs )
+\end{code}
+
+\begin{code}
+freshDischarge' :: Monad m => VarSet -> [AtmSideCond] -> m [AtmSideCond]
+freshDischarge' anteFvs [] = return []
+freshDischarge' anteFvs (asc:ascs)
+  = do ascl  <- freshAtomDischarge anteFvs asc
+       ascs' <- freshDischarge'    anteFvs ascs
+       return (ascl++ascs')
+\end{code}
+
+We use a set of fresh variables ($G_F$)
+to try to discharge an atomic side-condition ($L_j$):
+$$
+G_F \vdash L_j
+$$
+there are three possible outcomes:
+\begin{description}
+  \item [Contradicted]  Fail
+  \item [Fuly Discharged]  Return []
+  \item [Not Fully Discharged]  Return [$L'_j$]
+\end{description}
+\begin{code}
+freshAtomDischarge :: Monad m => VarSet -> AtmSideCond -> m [AtmSideCond]
+\end{code}
+We now consider the following possibilities:
+\begin{eqnarray*}
+   G_F \discharges D_L \disj V
+   &=& \true, \quad \IF\quad D_L \subseteq G_F
+\\ &\mapsto& D_L \setminus G_F \disj V
+\end{eqnarray*}
+\begin{code}
+freshAtomDischarge gF (Disjoint gv dL)
+  | dL `S.isSubsetOf` gF  =  return []
+  | otherwise  =  return [Disjoint gv (dL S.\\ gF)]
+\end{code}
+
+\begin{eqnarray*}
+   G_F \discharges C_L \supseteq V
+   &\mapsto&  C_L \setminus G_F \supseteq V
+\end{eqnarray*}
+\begin{code}
+freshAtomDischarge gF (Covers gv cL) = return [Covers gv (cL S.\\ gF)]
+\end{code}
+
+
+Anything else is not handled right now.
+\begin{code}
+freshAtomDischarge gF asc = return [asc]
+\end{code}
+
+
 \newpage
+\subsection{Check for Floating Conditions}
+
 When discharge at match application
 results in a residual side-condition (not trivially true)
 then we need to check that \emph{all} the atomic side-conditions in that residual

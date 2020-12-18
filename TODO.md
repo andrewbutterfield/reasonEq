@@ -4,23 +4,16 @@
 
 ### Upgrade 2
 
-Why can't we match `` against `land_exists_scope`?
+We now have to show the two following predictaes are the same
 
 ```
-(∃ O$_1 • P[O$_1/O$']∧(∃ O$_2 • (Q[O$_1,O$_2/O$,O$']∧R[O$_2/O$])))    fresh:O$_1,O$_2
-          --------------------------------------------------------
-
-Focus = [1]  Target (RHS): (P;Q);R
-
-
-proof: tm 1 land_exists_scope
-Match against `land_exists_scope'[1]
-Binding: { P ⟼ P[O$_1/O$'], Q ⟼ Q[O$_1,O$_2/O$,O$']∧R[O$_2/O$], ∧ ⟼ ∧, x$ ⟼ {O$_2}, y$ ⟼ {} }
-Instantiated Law = P[O$_1/O$']∧(∃ O$_2 • (Q[O$_1,O$_2/O$,O$']∧R[O$_2/O$]))≡(∃ O$_2 • P[O$_1/O$']∧(Q[O$_1,O$_2/O$,O$']∧R[O$_2/O$]))
-Instantiated Law S.C. = O$_2 ∉ P
-Goal S.C. = fresh:O$_1,O$_2
-Discharged Law S.C. = O$_2 ∉ P
+(∃ O$_3 • (∃ O$_4 • P[O$_4/O$']∧(Q[O$_4,O$_3/O$,O$']∧R[O$_3/O$])))
+(∃ O$_1 • (∃ O$_2 • P[O$_1/O$']∧(Q[O$_1,O$_2/O$,O$']∧R[O$_2/O$])))
 ```
+
+Given that `O$_1`..`O$_4` are fresh w.r.t. `P`..`R`.
+
+We need alpha-equivalence and a way to merge/swap nested quantifiers.
 
 ### Factory Reset
 
@@ -28,48 +21,14 @@ Have `b R *` set all theories to builtin
 
 ## Upgrade No. 2
 
-We need to allow fresh subscript/variable instantiation
-and we need a freshness side-condition for the "mid-state" variable in the definition of seq-comp `;`.
-
-```
-(P;Q) ≡ (∃ O$_m • P[O$_m/O$']∧Q[O$_m/O$])   fresh O$_m
-```
-Can we consider `fresh O$_m` the same as `O$_m ∉ P,Q` ?
-
-When we match ";\_assoc" LHS (`P;(Q;R) `) against ";\_def" we obtain:
-
-```
-(∃ ?O$_m • P[?O$_m/?O$']∧(Q;R)[?O$_m/?O$])  ⊤ ⟹ fresh:?O$_m
-```
-Now, we should have `O$` and `O'$` as known
-and so `?O$` and `?O$'` should bind to them. 
-As `?O$_m` is fresh, it should be bind to `O$_x` where `_x` is not present in `P;(Q;R)`. In this case, `x` being the same as `m`
-is OK
-
-We should get:
-
-```
-(∃ O$_m • P[O$_m/O$']∧(Q;R)[O$_m/O$]) 
-```
-
-When we focus on `(Q;R)`, its match against ";\_def" will be:
-
-```
-(∃ ?O$_m • Q[?O$_m/?O$']∧R[?O$_m/?O$])  ⊤ ⟹ fresh:?O$_m
-```
-
-We cannot use `O$_m` here again, so lets use `x=n` (say), to obtain:
-
-```
-(∃ O$_n • Q[O$_n/O$']∧R[O$_n/O$]) 
-```
-When viewed in situ, we have:
+We have made this so.
 
 ```
 (∃ O$_m • P[O$_m/O$']∧(∃ O$_n • Q[O$_n/O$']∧R[O$_n/O$])[O$_m/O$])
 ```
 
-Make this so.
+We now need to be able to swap nested (same) quantifiers 
+and have alpha-equivalence.
 
 
 ## Upgrade No. 3

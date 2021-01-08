@@ -210,7 +210,7 @@ predicate to be zero'ed in advance!
                                        (\mu\override\maplet x {\mu(x)+1})
 \\                     &      & (p',\mu'') = norm_{\mu'}(p)
 \end{eqnarray*}
-Note that we need to thread the map parameter $\mu$ into and out of each call
+Note that we need to thread the  map parameter $\mu$ into and out of each call
 to $norm$ to ensure that we get full uniqueness of bound variable numbers.
 
 We map bound variable names, and class and when attributes, to their unique numbers:
@@ -389,8 +389,9 @@ So we have to hardwire the basic simplification laws:
 \\ (\bb i {V_i} {\bb j {V_j} P)}
    &=& (\bb i {(V_i\setminus V_j)} {\bb j {V_j}  P})
 \\ &=& \bb j {V_j}  P, \qquad \IF ~V_i \subseteq V_j
-\\ (\ll n {\sigma_i } {\ll n {\sigma_j} P})
-   &=& (\ll n {(\sigma_i \cat \sigma_j)}  P)
+\\ (\ll n {\sigma_i } {\ll n {\sigma_j \cat \sigma_k} P})
+   &=& (\ll n {(\sigma_i \cat \sigma_j)}  {\ll n {\sigma_k} P}),
+       \qquad \elems \sigma_i \disj \elems \sigma_j
 \end{eqnarray*}
 
 \textbf{This code may be rendered obsolete by the addition of unique numbers

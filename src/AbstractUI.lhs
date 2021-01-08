@@ -1,4 +1,3 @@
-
 \section{Abstract User-Interface}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2017--2021

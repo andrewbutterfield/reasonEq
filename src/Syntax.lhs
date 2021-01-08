@@ -505,7 +505,7 @@ closedMixfix fs@(SimpleSpec (SimpleForm sf)) toks
     lsf = length sf
     ltoks = length toks
 \end{code}
-We note that the rule aboput duplicate tokens is perhaps a little
+We note that the rule about duplicate tokens is perhaps a little
 too strict---it outlaws syntax like $|x|$.
 
 Tests:

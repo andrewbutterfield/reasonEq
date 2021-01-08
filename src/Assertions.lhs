@@ -1,6 +1,6 @@
 \section{Assertions}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2017-2021
+Copyright  Andrew Buttefield (c) 2021
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -9,13 +9,13 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Assertions (
   Assertion
 ) where
-import Data.Char
-import Data.List
-import Data.Maybe (fromJust)
-import Data.Set(Set)
-import qualified Data.Set as S
-import Data.Map(Map)
-import qualified Data.Map as M
+-- import Data.Char
+-- import Data.List
+-- import Data.Maybe (fromJust)
+-- import Data.Set(Set)
+-- import qualified Data.Set as S
+-- import Data.Map(Map)
+-- import qualified Data.Map as M
 
 import Utilities
 import LexBase
@@ -23,9 +23,9 @@ import Variables
 import AST
 import SideCond
 
-import Test.HUnit hiding (Assertion)
-import Test.Framework as TF (defaultMain, testGroup, Test)
-import Test.Framework.Providers.HUnit (testCase)
+-- import Test.HUnit hiding (Assertion)
+-- import Test.Framework as TF (defaultMain, testGroup, Test)
+-- import Test.Framework.Providers.HUnit (testCase)
 --import Test.Framework.Providers.QuickCheck2 (testProperty)
 
 import Debug.Trace

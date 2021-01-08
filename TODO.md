@@ -4,11 +4,16 @@
 
 ### Normalisation
 
+We need this implemented as a gatekeeper for the construction of Assertions,
+and it needs to duplicate side-conditions when such refers to a multiply-used quantifier variable.
+
 We need to normalise all `Assertion`s as follows:
 
 1 all quantifier variables must be unique, arranged by using the `Int` component of the `Identifier` datatype.
 
 2 Any nested `Bind`s with the same type and identifier ahould be merged 
+
+3 All free variables at the assertion top-level have a zero `Int` component.
 
 ```
 B tk i vs1 (B tk i vs2) ⟼  B tk i (vs1 ∪ vs2)

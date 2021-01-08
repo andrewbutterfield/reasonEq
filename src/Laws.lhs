@@ -1,6 +1,6 @@
 \section{Laws}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2018
+Copyright  Andrew Buttefield (c) 2018--2021
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

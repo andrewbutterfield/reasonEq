@@ -1,6 +1,6 @@
 \section{Free Variables}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2019
+Copyright  Andrew Buttefield (c) 2019--2021
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

@@ -78,8 +78,8 @@ We do allow symbols to end with a space character%
 this is necessary for some long symbols.
 
 We also associate a natural number with every identifier
-that is used for $\alpha$-renaming.
-This is always initialised to zero when an identifier is built.
+that is used for normalisation and $\alpha$-renaming.
+This is typically initialised to zero when an identifier is built.
 \begin{code}
 data Identifier = Id String Int deriving (Eq, Ord, Show, Read)
 

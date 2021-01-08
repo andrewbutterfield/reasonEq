@@ -41,6 +41,7 @@ import LexBase
 import Variables
 import AST
 import SideCond
+import Assertions
 import TermZipper
 import VarData
 import Binding

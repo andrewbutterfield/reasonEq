@@ -24,7 +24,7 @@ module Proofs
 import Utilities
 import LexBase
 import AST
-import SideCond (Assertion)
+import Assertions
 import TermZipper
 import Binding
 import Laws

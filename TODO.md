@@ -2,9 +2,23 @@
 
 ## Most Urgent
 
+### Normalisation
+
+We need to normalise all `Assertion`s as follows:
+
+1 all quantifier variables must be unique, arranged by using the `Int` component of the `Identifier` datatype.
+
+2 Any nested `Bind`s with the same type and identifier ahould be merged 
+
+```
+B tk i vs1 (B tk i vs2) ⟼  B tk i (vs1 ∪ vs2)
+```
+
+We will provide Term builders that normalise on the fly
+
 ### Upgrade 2
 
-We now have to show the two following predictaes are the same
+We now have to show the two following predicates are the same
 
 ```
 (∃ O$_3 • (∃ O$_4 • P[O$_4/O$']∧(Q[O$_4,O$_3/O$,O$']∧R[O$_3/O$])))
@@ -13,7 +27,26 @@ We now have to show the two following predictaes are the same
 
 Given that `O$_1`..`O$_4` are fresh w.r.t. `P`..`R`.
 
-We need alpha-equivalence and a way to merge/swap nested quantifiers.
+We need alpha-equivalence check.
+
+With the normalisation described above, 
+we then use matching to find a binding, 
+which must be bijective over B varsets.
+
+Our example normalises as follows:
+
+```
+(∃ O$_3,O$_4 • P[O$_4/O$']∧(Q[O$_4,O$_3/O$,O$']∧R[O$_3/O$]))
+(∃ O$_1,O$_2 • P[O$_1/O$']∧(Q[O$_1,O$_2/O$,O$']∧R[O$_2/O$]))
+```
+
+Matching the `Bind` bodies results in the following:
+
+```
+{ O$_1 ⟼ O$_4, O$_2 ⟼ O$_3 }
+```
+
+This is a bijection.
 
 ### Factory Reset
 

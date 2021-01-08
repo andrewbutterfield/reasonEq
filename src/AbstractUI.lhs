@@ -45,6 +45,7 @@ import Utilities
 import LexBase
 import Variables
 import SideCond
+import Assertions
 import TermZipper
 import AST
 import FreeVars

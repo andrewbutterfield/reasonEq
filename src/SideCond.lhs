@@ -16,7 +16,6 @@ module SideCond (
 , isFloatingASC
 , notin, covers, pre, fresh
 , citingASCs
-, Assertion
 , int_tst_SideCond
 ) where
 import Data.Char
@@ -826,15 +825,6 @@ vs `cited` asc
       Nothing   ->  False
       Just vs'  ->  vs == vs'
 \end{code}
-
-
-\subsection{Assertions}
-
-An assertion is simply a predicate term coupled with side-conditions.
-\begin{code}
-type Assertion = (Term, SideCond)
-\end{code}
-
 
 \newpage
 

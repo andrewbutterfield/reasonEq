@@ -31,6 +31,7 @@ import LexBase
 import Variables
 import AST
 import SideCond
+import Assertions
 
 import Test.HUnit ((@?=))
 --import Test.Framework as TF (testGroup, Test)

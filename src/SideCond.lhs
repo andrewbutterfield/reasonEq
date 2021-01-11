@@ -589,7 +589,7 @@ Here we are trying to show
 ascsDischarge :: Monad m => [AtmSideCond] -> AtmSideCond -> m [AtmSideCond]
 ascsDischarge [] ascL = return [ascL]
 ascsDischarge (ascG:ascsG) ascL
-  =  case ascDischarge (pdbg "ascG" ascG) $ pdbg "ascL" ascL of
+  =  case ascDischarge ascG ascL of
       Yes []       ->  return []
       Yes [ascL']  ->  ascsDischarge ascsG ascL'
       But msgs     ->  fail $ unlines msgs

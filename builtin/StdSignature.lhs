@@ -33,7 +33,7 @@ import Utilities
 import LexBase
 import Variables
 import AST
-import FreeVars (normaliseQuantifiers)
+import Assertions (normaliseQuantifiers)
 import SideCond
 import VarData
 import Laws

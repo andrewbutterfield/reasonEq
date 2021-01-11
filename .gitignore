@@ -15,3 +15,4 @@ tgraph.png
 *.hi
 *.o
 temp.txt
+*.out

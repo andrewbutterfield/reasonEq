@@ -130,7 +130,7 @@ We collect these together:
 \begin{code}
 equalityAxioms :: [Law]
 equalityAxioms
-  = map labelAsAxiom
+  = map (labelAsAxiom . mkNmdAsn)
       [ axEqualRefl, axEqualSymm, axEqualTrans ]
 \end{code}
 
@@ -153,7 +153,7 @@ Collecting \dots
 \begin{code}
 equalityConjectures :: [NmdAssertion]
 equalityConjectures
-  = [ cjEqualSubst ]
+  = map mkNmdAsn [ cjEqualSubst ]
 \end{code}
 
 \subsection{The Equality Theory}

@@ -92,7 +92,7 @@ axImplDef
 
 \begin{code}
 implAxioms :: [Law]
-implAxioms  =  map labelAsAxiom [ axImplDef ]
+implAxioms  =  map (labelAsAxiom . mkNmdAsn) [ axImplDef ]
 \end{code}
 
 \subsection{Implication Conjectures}

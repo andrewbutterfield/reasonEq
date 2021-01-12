@@ -282,6 +282,11 @@ newProof2 (nm,asn) strats six reqs
 \newpage
 \subsection{Removing Bound Variable ``Shadowing''}
 
+\textbf{Note:}
+\textit{
+This is now ensured in any Assertion by construction.
+We retain it temporarily as a double-check.
+}
 We need to ensure that all bound variables in a conjecture
 are not ``shadowed'' by bound variables nested deeper in,
 as this makes matching and proofs-steps
@@ -300,7 +305,7 @@ of distinguishing substitutable and non-substitutable terms.
 \textsf{We do now, as theories have a \texttt{SubAbilityMap} component}
 \begin{code}
 shadowFree :: Assertion -> Bool
-shadowFree (t,sc) = shadowFree' sc S.empty t
+shadowFree (Assertion t sc) = shadowFree' sc S.empty t
 
 shadowFree' :: SideCond -> VarSet -> Term -> Bool
 shadowFree' sc bvs (Cons _ _ ts)    =  all (shadowFree' sc bvs) ts
@@ -406,10 +411,11 @@ moveConsequentFocus liveProof
       sz = focus liveProof
       (ok,sw',sz') = switchLeftRight sz
     in if ok
-        then return ( focus_ sz'
-                    $ matches_ []
-                    $ stepsSoFar__ ((sw',(exitTZ $ fst sz,conjSC liveProof)):)
-                      liveProof )
+        then do let asn' = mkAsn (exitTZ $ fst sz) (conjSC liveProof)
+                return ( focus_ sz'
+                       $ matches_ []
+                       $ stepsSoFar__ ((sw', asn'):)
+                         liveProof )
         else fail "Not in consequent"
 \end{code}
 
@@ -426,11 +432,12 @@ moveFocusToHypothesis i liveProof
       hthry' = getHypotheses seq'
       mcs = buildMatchContext (hthry':ante0 seq')
     in if ok
-        then return ( mtchCtxts_ mcs
-                    $ focus_ sz'
-                    $ matches_ []
-                    $ stepsSoFar__ ((sw', (exitTZ $ fst sz,conjSC liveProof)):)
-                      liveProof )
+        then do let asn' = mkAsn (exitTZ $ fst sz) (conjSC liveProof)
+                return ( mtchCtxts_ mcs
+                       $ focus_ sz'
+                       $ matches_ []
+                       $ stepsSoFar__ ((sw', asn'):)
+                         liveProof )
         else fail ("No hypothesis "++show i)
 \end{code}
 
@@ -447,11 +454,12 @@ moveFocusFromHypothesis liveProof
       hthry' = getHypotheses seq'
       mcs = buildMatchContext (hthry':ante0 seq')
     in if ok
-        then return ( mtchCtxts_ mcs
-                    $ focus_ sz'
-                    $ matches_ []
-                    $ stepsSoFar__ ((sw', (exitTZ $ fst sz,conjSC liveProof)):)
-                      liveProof )
+        then do let asn' = mkAsn (exitTZ $ fst sz) (conjSC liveProof)
+                return ( mtchCtxts_ mcs
+                       $ focus_ sz'
+                       $ matches_ []
+                       $ stepsSoFar__ ((sw', asn'):)
+                         liveProof )
         else fail "Not in hypotheses"
 \end{code}
 
@@ -465,7 +473,7 @@ matchFocus theSig liveProof
         goalt       =  getTZ tz
         scC         =  conjSC liveProof
         ctxts       =  mtchCtxts liveProof
-        newMatches  =  matchInContexts theSig ctxts (goalt,scC)
+        newMatches  =  matchInContexts theSig ctxts $ mkAsn goalt scC
         rankedM     =  rankAndSort sizeRank ctxts
                          $ filter isNonTrivial newMatches
     in matches_ rankedM liveProof
@@ -479,7 +487,7 @@ matchFocusAgainst lawnm theSig liveProof
         goalt       =  getTZ tz
         scC         =  conjSC liveProof
         ctxts       =  mtchCtxts liveProof
-    in case matchLawByName theSig (goalt,scC) lawnm ctxts of
+    in case matchLawByName theSig (mkAsn goalt scC) lawnm ctxts of
           Yes []    -> fail ("No matches against focus for '"++lawnm++"'")
           Yes mtchs -> return $ matches_ mtchs liveProof
           But msgs  -> fail $ unlines msgs
@@ -494,7 +502,7 @@ tryFocusAgainst lawnm parts theSig liveProof
         goalt       =  getTZ tz
         scC         =  conjSC liveProof
         ctxts       =  mtchCtxts liveProof
-    in tryLawByName theSig (goalt,scC) lawnm parts ctxts
+    in tryLawByName theSig (mkAsn goalt scC) lawnm parts ctxts
 \end{code}
 
 \newpage
@@ -549,7 +557,7 @@ applyMatchToFocus2 mtch unbound ubind liveProof
                                         (mName mtch)
                                         fbind
                                         dpath
-                               , (conjpart,conjSC liveProof)):)
+                               , (mkAsn conjpart (conjSC liveProof))):)
                               liveProof )
             else fail ("Undischarged side-conditions: "++trSideCond scD)
 
@@ -560,6 +568,8 @@ freshAsSideCond fresh = fromJust $ mkSideCond [] fresh
 
 \subsubsection{Normalise Quantifiers}
 
+\textbf{Deprecated. Should be done under the hood as required}
+
 \begin{code}
 normQuantFocus :: Monad m => Theories -> LiveProof -> m LiveProof
 normQuantFocus thrys liveProof
@@ -567,14 +577,15 @@ normQuantFocus thrys liveProof
    =  let (tz,seq') = focus liveProof
           dpath = fPath liveProof
           t = getTZ tz
-          t' = fst $ normaliseQuantifiers ( t, scTrue )
+          t' = fst $ normaliseQuantifiers t scTrue
       in return ( focus_ ((setTZ t' tz),seq')
                  $ matches_ []
                  $ stepsSoFar__
                     (( NormQuant dpath
-                     , (exitTZ tz,conjSC liveProof)):)
+                     , (mkAsn (exitTZ tz) (conjSC liveProof))):)
                     liveProof )
  | otherwise  =  fail "quant-norm: only when s.c. is true"
+ -- we can soon fix this. But this should be done automatically.
 \end{code}
 
 
@@ -591,7 +602,7 @@ nestSimpFocus thrys liveProof
                          $ matches_ []
                          $ stepsSoFar__
                             (( NestSimp dpath
-                             , (exitTZ tz,conjSC liveProof)):)
+                             , (mkAsn (exitTZ tz) (conjSC liveProof))):)
                             liveProof )
         _      -> fail "nesting simplify only for nested (similar) quantifiers"
 \end{code}
@@ -614,7 +625,7 @@ substituteFocus thrys liveProof
                          $ matches_ []
                          $ stepsSoFar__
                             (( Substitute dpath
-                             , (exitTZ tz,conjSC liveProof)):)
+                             , (mkAsn (exitTZ tz) (conjSC liveProof))):)
                             liveProof )
          _  -> fail "substitute only for explicit substitution focii"
 \end{code}
@@ -665,11 +676,11 @@ flattenAssociative opI liveProof
         t = getTZ tz
     in case flattenAssoc opI t of
         But msgs -> fail $ unlines' msgs
-        Yes t' -> return ( focus_ ((setTZ t' tz),seq')
-                         $ matches_ []
-                         $ stepsSoFar__
-                                 (((Flatten opI,(exitTZ tz,conjSC liveProof))):)
-                         $ liveProof )
+        Yes t' -> do let asn' = mkAsn (exitTZ tz) (conjSC liveProof)
+                     return ( focus_ ((setTZ t' tz),seq')
+                            $ matches_ []
+                            $ stepsSoFar__ (((Flatten opI,asn')):)
+                            $ liveProof )
 \end{code}
 
 
@@ -681,11 +692,11 @@ groupAssociative opI gs liveProof
         t = getTZ tz
     in case groupAssoc opI gs t of
         But msgs -> fail $ unlines' msgs
-        Yes t' -> return ( focus_ ((setTZ t' tz),seq')
-                         $ matches_ []
-                         $ stepsSoFar__
-                            (((Associate opI gs,(exitTZ tz,conjSC liveProof))):)
-                         $ liveProof )
+        Yes t' -> do let asn' = mkAsn (exitTZ tz) (conjSC liveProof)
+                     return ( focus_ ((setTZ t' tz),seq')
+                            $ matches_ []
+                            $ stepsSoFar__ (((Associate opI gs,asn')):)
+                            $ liveProof )
 \end{code}
 
 \subsubsection{Stepping back a proof step.}
@@ -731,7 +742,8 @@ and all the sub-terms of the complete proof goal.
 lawInstantiate2 :: Monad m
                 => [Law] -> Int -> LiveProof -> m (Law,[Variable],[Term])
 lawInstantiate2 rslaws i liveProof
-  = do law@((lnm,(lawt,lsc)),lprov) <- nlookup i rslaws
+  = do law@((lnm,asn),lprov) <- nlookup i rslaws
+       let (lawt,lsc) = unwrapASN asn
        let (tz,seq') = focus liveProof
        let psc = conjSC liveProof
        let dpath = fPath liveProof
@@ -747,7 +759,7 @@ This gives us enough to complete the instantiation.
 \begin{code}
 lawInstantiate3 :: Monad m
                 => Law -> [(Variable,Term)] -> LiveProof -> m LiveProof
-lawInstantiate3 law@((lnm,(lawt,lsc)),lprov) varTerms liveProof
+lawInstantiate3 law@((lnm,(Assertion lawt lsc)),lprov) varTerms liveProof
   = do lbind <- mkBinding emptyBinding varTerms
        ilsc <- instantiateSC lbind lsc
        nsc <- mrgSideCond (conjSC liveProof) ilsc
@@ -757,7 +769,7 @@ lawInstantiate3 law@((lnm,(lawt,lsc)),lprov) varTerms liveProof
        return ( focus_ (setTZ ilawt tz,seq')
                 $ stepsSoFar__
                   ( ( (UseLaw ByInstantiation lnm lbind dpath)
-                    , (exitTZ tz,conjSC liveProof) ) : )
+                    , (mkAsn (exitTZ tz) (conjSC liveProof)) ) : )
                   liveProof )
 
 mkBinding bind [] = return bind
@@ -780,11 +792,12 @@ cloneHypothesis i land liveProof
       currt = exitTZ tz
     in case nlookup i hypos of
         Nothing -> fail ("No such hypothesis: "++show i)
-        Just ((_,(hypt,_)),_)
-          -> return ( focus_ (mkTZ $ PCons land [hypt,currt],seq')
-                    $ matches_ []
-                    $ stepsSoFar__ ((CloneH i, (exitTZ tz,conjSC liveProof)):)
-                      liveProof )
+        Just ((_,(Assertion hypt _)),_)
+          -> do let asn' = mkAsn (exitTZ tz) (conjSC liveProof)
+                return ( focus_ (mkTZ $ PCons land [hypt,currt],seq')
+                       $ matches_ []
+                       $ stepsSoFar__ ((CloneH i, asn'):)
+                         liveProof )
 \end{code}
 
 \newpage{Equivalence Theorem from Live-Proof}

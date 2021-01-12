@@ -7,8 +7,11 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Assertions (
-  Assertion
+  Assertion, pattern Assertion, mkAsn, unwrapASN
+, pattern AssnT, assnT, pattern AssnC, assnC
 , normaliseQuantifiers
+-- for testing onl
+, normQTerm
 ) where
 -- import Data.Char
 -- import Data.List
@@ -43,7 +46,31 @@ pdbg nm x = dbg ('@':nm++":\n") x
 
 An assertion is a \emph{normalised} predicate term coupled with side-conditions.
 \begin{code}
-type Assertion = (Term, SideCond)
+newtype Assertion = ASN (Term, SideCond) deriving (Eq,Ord,Show,Read)
+
+pattern Assertion tm sc  <-  ASN (tm, sc)
+pattern AssnT tm         <-  ASN (tm, _ )
+pattern AssnC sc         <-  ASN (_,  sc)
+\end{code}
+
+
+We make an assertion by normalising its bound variables:
+\begin{code}
+mkAsn :: Term -> SideCond -> Assertion
+mkAsn tm sc  = ASN $ normaliseQuantifiers tm sc
+\end{code}
+
+We can select assertion components by function,
+and unwrap completely:
+\begin{code}
+assnT :: Assertion -> Term
+assnT (ASN (tm, _))  =  tm
+
+assnC :: Assertion -> SideCond
+assnC (ASN (_, sc))  =  sc
+
+unwrapASN :: Assertion -> (Term, SideCond)
+unwrapASN (ASN tsc)  =  tsc
 \end{code}
 
 
@@ -65,6 +92,11 @@ where $i > 0$, $j > 0$, and $i \neq j$.
 
 Turns out there is a fairly simple algorithm, that doesn't require the
 predicate to be zero'ed in advance!
+
+\textbf{Note:}
+\textit{
+We need to be careful with non-substitutable terms!
+}
 \begin{eqnarray*}
    \theta,\mu : VV &\defs&  name \pfun \Nat
 \\
@@ -111,10 +143,15 @@ mkVVsubstn vv
 
 Quantifier normalisation:
 \begin{code}
-normaliseQuantifiers :: Assertion -> Assertion
-normaliseQuantifiers (tm, sc)
+normaliseQuantifiers :: Term -> SideCond -> (Term, SideCond)
+normaliseQuantifiers tm sc
   = let (tm', vv') = normQ M.empty tm
     in  (tm', normSC vv' sc)
+\end{code}
+
+\begin{code}
+normQTerm :: Term -> Term
+normQTerm tm = fst $ normaliseQuantifiers tm scTrue
 \end{code}
 
 \newpage
@@ -186,7 +223,8 @@ normQ vv trm = (trm, vv) -- Val, Typ
 \end{code}
 
 
-Working on side-conditions:
+Working on side-conditions is tricky,
+as they mention a variable
 \begin{code}
 normSC :: VarVersions -> SideCond -> SideCond
 normSC vv (ascs,fvs) = (map (normASC vv) ascs,normQVSet vv fvs)

@@ -92,7 +92,7 @@ axGoldRule
 
 \begin{code}
 conjAxioms :: [Law]
-conjAxioms  =  map labelAsAxiom [ axGoldRule]
+conjAxioms  =  map (labelAsAxiom . mkNmdAsn) [ axGoldRule]
 \end{code}
 
 \newpage
@@ -225,8 +225,8 @@ cjAndSubst
 Pulling it all together:
 \begin{code}
 conjConjs :: [NmdAssertion]
-conjConjs
-  = [ cjandSym, cjandAssoc, cjandIdem
+conjConjs = map mkNmdAsn
+    [ cjandSym, cjandAssoc, cjandIdem
     , cjandUnit, cjandZero
     , cjandDistr
     , cjContradict

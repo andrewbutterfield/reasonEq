@@ -45,6 +45,7 @@ import LexBase
 import Variables
 import AST
 import SideCond
+import Assertions
 import VarData
 import Binding
 import Matching
@@ -428,8 +429,8 @@ trfresh trid fvs
 trAsn = trasn trId
 trAsnU = trasn trIdU
 
-trasn trid (trm,([],_)) = trterm trid 0 trm
-trasn trid (trm,sc) = trterm trid 0 trm ++ ", " ++ trSideCond sc
+trasn trid (Assertion trm ([],_))  =  trterm trid 0 trm
+trasn trid (Assertion trm sc)      =  trterm trid 0 trm ++ ", " ++ trSideCond sc
 
 trNmdAsn = trnmdasn trId
 trNmdAsnU = trnmdasn trIdU

@@ -106,7 +106,8 @@ axNotEqvDistr
 
 \begin{code}
 negationAxioms :: [Law]
-negationAxioms  = map labelAsAxiom [ axFalseDef, axNotEqvDistr ]
+negationAxioms  = map (labelAsAxiom . mkNmdAsn)
+                      [ axFalseDef, axNotEqvDistr ]
 \end{code}
 
 \subsection{Negation Conjectures}
@@ -209,9 +210,9 @@ cjNotSubst
 
 \begin{code}
 negationConjs :: [NmdAssertion]
-negationConjs
-  = [ cjSwapNot, cjNotInvol, cjNotFalse, cjNotDef
-    , cjFalseSubst, cjNotSubst ]
+negationConjs = map mkNmdAsn
+  [ cjSwapNot, cjNotInvol, cjNotFalse, cjNotDef
+  , cjFalseSubst, cjNotSubst ]
 \end{code}
 
 \subsection{The Negation Theory}

@@ -19,6 +19,7 @@ import Test.Framework.Providers.HUnit (testCase)
 import LexBase
 import Variables
 import AST
+import Assertions
 import FreeVars
 import TestRendering
 

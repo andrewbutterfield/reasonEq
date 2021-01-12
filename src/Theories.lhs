@@ -42,6 +42,7 @@ import Utilities
 import StratifiedDAG
 import Substitution
 import VarData
+import Assertions
 import Laws
 import Proofs
 

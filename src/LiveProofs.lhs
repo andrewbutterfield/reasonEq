@@ -103,7 +103,7 @@ buildMatchContext (thy:thys) -- thys not null
 \begin{code}
 data Match
  = MT { mName  ::  String     -- assertion name
-      , mAsn   ::  Assertion  -- matched assertion
+      , mAsn   ::  TermSC  -- matched assertion
       , mClass ::  MatchClass -- match class
       , mBind  ::  Binding    -- resulting binding
       , mLocSC ::  SideCond   -- goal side-condition local update
@@ -262,7 +262,7 @@ readLiveProofs thylist txts
 We need to setup a proof from a conjecture:
 \begin{code}
 startProof :: LogicSig -> [Theory] -> String -> String -> Assertion -> LiveProof
-startProof logicsig thys thnm cjnm asn@(t,sc)
+startProof logicsig thys thnm cjnm asn@(Assertion t sc)
   =  LP { conjThName = thnm
         , conjName = cjnm
         , conjecture = asn
@@ -275,7 +275,7 @@ startProof logicsig thys thnm cjnm asn@(t,sc)
         , stepsSoFar = []
         }
   where
-    (strat,sequent) = fromJust $ reduce logicsig thys (cjnm,asn)
+    (strat,sequent) = fromJust $ reduce logicsig thys (cjnm,(t,sc))
     sz = leftConjFocus sequent
     mcs = buildMatchContext thys
 \end{code}
@@ -285,7 +285,7 @@ startProof logicsig thys thnm cjnm asn@(t,sc)
 \begin{code}
 launchProof :: [Theory] -> String -> String -> Assertion -> (String,Sequent)
             -> LiveProof
-launchProof thys thnm cjnm asn@(t,sc) (strat,sequent)
+launchProof thys thnm cjnm asn@(Assertion t sc) (strat,sequent)
   = LP { conjThName = thnm
        , conjName = cjnm
        , conjecture = asn
@@ -315,7 +315,7 @@ proofIsComplete :: LogicSig -> LiveProof -> Bool
 proofIsComplete logicsig liveProof
   =  let
        sequent = exitSeqZipper $ focus liveProof
-       hypTerms = map (fst . snd . fst) $ laws $ hyp sequent
+       hypTerms = map (assnT . snd . fst) $ laws $ hyp sequent
      in cleft sequent == cright sequent -- should be alpha-equivalent
         ||
         any (== theFalse logicsig) hypTerms
@@ -359,10 +359,11 @@ tryLawByName :: LogicSig -> Assertion -> String -> [Int] -> [MatchContext]
                          , Term       -- autoInstantiated Law
                          , SideCond   -- updated candidate side-condition
                          , SideCond ) -- discharged(?) law side-condition
-tryLawByName logicsig asn@(tC,scC) lnm parts mcs
-  = do (((_,(tP,scP)),_),vts) <- findLaw lnm mcs
+tryLawByName logicsig asn@(Assertion tC scC) lnm parts mcs
+  = do (((_,asnP),_),vts) <- findLaw lnm mcs
+       let tP = assnT asnP
        partsP <- findParts parts tP
-       tryMatch vts tP partsP scP
+       tryMatch vts tP partsP $ assnC asnP
   where
 \end{code}
 
@@ -516,7 +517,8 @@ Bascially we run down the list of laws,
 returning any matches we find.
 \begin{code}
 matchLaws :: LogicSig -> Assertion -> MatchContext -> Matches
-matchLaws logicsig asn (_,lws,vts) = concat $ map (domatch logicsig vts asn) lws
+matchLaws logicsig asn (_,lws,vts)
+  = concat $ map (domatch logicsig vts $ unwrapASN asn) lws
 \end{code}
 
 Sometimes we are interested in a specific (named) law.
@@ -525,7 +527,7 @@ matchLawByName :: Monad m => LogicSig -> Assertion -> String -> [MatchContext]
                -> m Matches
 matchLawByName logicsig asn lnm mcs
  = do (law,vts) <- findLaw lnm mcs
-      return $ domatch logicsig vts asn law
+      return $ domatch logicsig vts (unwrapASN asn) law
 \end{code}
 
 For each law,
@@ -533,14 +535,14 @@ we match the whole thing,
 and if its top-level is a \texttt{Cons}
 with at least two sub-components, we try all possible partial matches.
 \begin{code}
-domatch :: LogicSig -> [VarTable] -> Assertion -> Law -> Matches
-domatch logicsig vts asnC law@((_,(tP@(Cons _ i tsP@(_:_:_)),_)),_)
+domatch :: LogicSig -> [VarTable] -> TermSC -> Law -> Matches
+domatch logicsig vts asnC law@((_,(Assertion tP@(Cons _ i tsP@(_:_:_)) _)),_)
   =    basicMatch MatchAll vts law (theTrue logicsig) asnC tP
     ++ doPartialMatch i logicsig vts law asnC tsP
 \end{code}
 Otherwise we just match against the whole law.
 \begin{code}
-domatch logicsig vts asnC law@((_,(tP,_)),_)
+domatch logicsig vts asnC law@((_,(Assertion tP _)),_)
   =  basicMatch MatchAll vts law (theTrue logicsig) asnC tP
 \end{code}
 
@@ -554,7 +556,7 @@ Here we have a top-level \texttt{Cons}
 with at least two sub-terms.
 \begin{code}
 doPartialMatch :: Identifier -> LogicSig -> [VarTable]
-               -> Law -> Assertion -> [Term]
+               -> Law -> TermSC -> [Term]
                -> Matches
 \end{code}
 
@@ -641,7 +643,7 @@ We fully support Cases A and B and give some support to Case C.
 First, Case A, which is automatically done above by \texttt{basicMatch},
 so we need not return any matches here.
 \begin{code}
-doEqvMatch :: LogicSig -> [VarTable] -> Law -> Assertion
+doEqvMatch :: LogicSig -> [VarTable] -> Law -> TermSC
            -> [Term]    -- top-level equivalence components in law
            -> Matches
 -- rule out matches against one-side of the reflexivity axiom
@@ -658,7 +660,7 @@ doEqvMatch logicsig vts law asnC tsP
 Next, Case B.
 \begin{code}
 doEqvMatchB logicsig vts law asnC mtchs _ [] = mtchs
-doEqvMatchB logicsig vts law@((_,(_,scP)),_) asnC mtchs sPt (tP:tPs)
+doEqvMatchB logicsig vts law@((_,(Assertion _ scP)),_) asnC mtchs sPt (tP:tPs)
   = let mtchs' = basicMatch (MatchEqv [length sPt + 1])
                      vts law (eqv (reverse sPt ++ tPs)) asnC tP
     in doEqvMatchB logicsig vts law asnC (mtchs'++mtchs) (tP:sPt) tPs
@@ -675,9 +677,10 @@ the first $m$ pattern components ($\setof{1\dots m}$),
 or the last $m$ (\setof{n+1-m\dots n}).
 \begin{code}
 -- doEqvMatchC logicsig vts law asnC tsP
-doEqvMatchC :: LogicSig -> [VarTable] -> Law -> Assertion ->[Term]
+doEqvMatchC :: LogicSig -> [VarTable] -> Law -> TermSC ->[Term]
             -> Matches
-doEqvMatchC logicsig vts law@((_,(_,scP)),_) asnC@(tC@(Cons tk i tsC),scC) tsP
+doEqvMatchC logicsig vts law@((_,(Assertion _ scP)),_)
+                         asnC@(tC@(Cons tk i tsC),scC) tsP
  | i == theEqv logicsig
    && cLen < pLen  = doEqvMatchC' cLen [1..cLen]
                        logicsig vts law scC tsC tsP
@@ -693,7 +696,7 @@ doEqvMatchC _ _ _ _ _ = []
 doEqvMatchC' :: Int -> [Int] -> LogicSig -> [VarTable] -> Law
              -> SideCond -> [Term] -> [Term]
              -> Matches
-doEqvMatchC' cLen is logicsig vts law@((_,(_,scP)),_) scC tsC tsP
+doEqvMatchC' cLen is logicsig vts law@((_,(Assertion _ scP)),_) scC tsC tsP
   = basicMatch (MatchEqv is) vts law (eqv tsP'') (eqv tsC,scC) (eqv tsP')
   where
     (tsP',tsP'') = splitAt cLen tsP
@@ -818,17 +821,17 @@ basicMatch :: MatchClass
             -> [VarTable] -- known variables in scope at this law
             -> Law        -- law of interest
             -> Term       -- sub-part of law not being matched
-            -> Assertion  -- candidate assertion
+            -> TermSC  -- candidate assertion
             -> Term       -- sub-part of law being matched
             -> Matches
-basicMatch mc vts law@((n,asn@(tP,scP)),_) repl asnC@(tC,scC) partsP
+basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
   =  do bind <- match vts tC partsP
         (kbind,_) <- instantiateKnown vts bind repl
         (fbind,_) <- instantiateFloating vts kbind repl
         scPinC <- instantiateSC fbind scP
         scD <- scDischarge scC scPinC
         if all isFloatingASC (fst scD)
-          then return $ MT n asn (chkPatn mc tP) kbind scC scPinC repl
+          then return $ MT n (unwrapASN asn) (chkPatn mc tP) kbind scC scPinC repl
           else fail "undischargeable s.c."
   where
 
@@ -854,7 +857,7 @@ undoCalcStep :: LiveProof -> LiveProof
 undoCalcStep liveProof
   = case stepsSoFar liveProof of
       []                       ->  liveProof
-      ((just,(term,sc)):prevSteps)
+      ((just,(Assertion term sc)):prevSteps)
         ->  matches_ []
             $ fPath_ []
             $ conjSC_ sc
@@ -901,10 +904,10 @@ makeEquivalence nm liveProof
      equiv = fromJust $ ident "equiv"
      mkEquivs ps = PCons equiv ps
      p === q = mkEquivs [p,q]
-     step0 = fst $ conjecture liveProof
+     step0 = assnT $ conjecture liveProof
      step' = exitTZ $ fst $ focus liveProof
      sc = conjSC liveProof
-     asn = ( step0 === step', sc)
+     asn = mkAsn (step0 === step') sc
      calc = ( step' , reverse $ stepsSoFar liveProof )
 \end{code}
 
@@ -948,7 +951,7 @@ dispLiveProof liveProof
            , dispSeqZip (fPath liveProof) (conjSC liveProof) (focus liveProof)
            , "" ]
        ) )
- where (trm,sc) = conjecture liveProof
+ where (trm,sc) = unwrapASN $ conjecture liveProof
 
 shLiveStep :: CalcStep -> String
 shLiveStep ( just, asn )

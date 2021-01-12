@@ -150,7 +150,7 @@ We now collect all of the above as our axiom set:
 \begin{code}
 equivAxioms :: [Law]
 equivAxioms
-  = map labelAsAxiom
+  = map (labelAsAxiom . mkNmdAsn)
       [ axTrue
       , axEqvRefl, axEqvAssoc, axEqvSymm
       , axIdSubst
@@ -201,7 +201,7 @@ cjEqvSubst
 Collected\dots
 \begin{code}
 equivConjs :: [NmdAssertion]
-equivConjs = [ cjEqvId, cjTrueSubst, cjEqvSubst ]
+equivConjs = map mkNmdAsn [ cjEqvId, cjTrueSubst, cjEqvSubst ]
 \end{code}
 
 \subsection{The Equivalence Theory}

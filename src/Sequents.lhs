@@ -8,6 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Sequents
  ( Sequent(..)
+ , TermSC, NamedTermSC
  , availableStrategies
  , reduce, redboth, redtail, redinit
  , reduceAll, reduceBoth, reduceToLeftmost, reduceToRightmost
@@ -41,6 +42,7 @@ import Variables
 import AST
 import FreeVars
 import SideCond
+import Assertions
 import TermZipper
 import VarData
 import Laws
@@ -83,6 +85,13 @@ data Sequent
 
 \subsection{Sequent Strategies}
 
+Here we unwrap \texttt{Assertion}s.
+\begin{code}
+type TermSC = (Term, SideCond)
+type NamedTermSC = (String, TermSC)
+\end{code}
+
+
 Given any conjecture (named assertion)
 we want to determine which strategies apply
 and provide a choice of sequents.
@@ -90,7 +99,7 @@ We flatten the implication when considering assumption-based sequents
 \begin{code}
 availableStrategies :: LogicSig -> Theories -> String -> NmdAssertion
                     -> [(String,Sequent)]
-availableStrategies theSig theories thnm cnj@(nm,(tconj,sc))
+availableStrategies theSig theories thnm (nm,(Assertion tconj sc))
   = catMaybes
      [ reduce  theSig thys cnj
      , redboth theSig thys cnj
@@ -98,8 +107,9 @@ availableStrategies theSig theories thnm cnj@(nm,(tconj,sc))
      , redinit theSig thys cnj
      , assume  theSig thys cflat ]
   where
+    cnj = (nm,(tconj,sc))
     thys = fromJust $ getTheoryDeps thnm theories
-    cflat = (nm,(flattenTheImp theSig tconj,sc))
+    cflat = (nm,(flattenTheImp theSig tconj, sc))
 \end{code}
 and then use the following functions to produce a sequent, if possible.
 
@@ -123,7 +133,7 @@ noHyps nm = Theory { thName   =  "H."++nm
    \mathcal L \vdash C \equiv \true
 \end{eqnarray*}
 \begin{code}
-reduce :: Monad m => LogicSig -> [Theory] -> NmdAssertion
+reduce :: Monad m => LogicSig -> [Theory] -> NamedTermSC
        -> m (String, Sequent)
 reduce logicsig thys (nm,(t,sc))
   = return ( reduceAll, Sequent thys (noHyps nm) sc t $ theTrue logicsig )
@@ -141,7 +151,7 @@ reduceAll = "reduce"
    \mathcal L \vdash C_1 \equiv C_2
 \end{eqnarray*}
 \begin{code}
-redboth :: Monad m => LogicSig -> [Theory] -> NmdAssertion
+redboth :: Monad m => LogicSig -> [Theory] -> NamedTermSC
         -> m (String, Sequent)
 redboth logicsig thys (nm,(t@(Cons tk i [tl,tr]),sc))
   | i == theEqv logicsig
@@ -167,7 +177,7 @@ bEqv n ps = Cons P n ps
    \mathcal L \vdash (C_2 \equiv \dots \equiv C_n) \equiv C_1
 \end{eqnarray*}
 \begin{code}
-redtail :: Monad m => LogicSig -> [Theory] -> NmdAssertion
+redtail :: Monad m => LogicSig -> [Theory] -> NamedTermSC
         -> m (String, Sequent)
 redtail logicsig thys (nm,(t@(Cons tk i (c1:cs@(_:_))),sc))
   | i == theEqv logicsig
@@ -185,7 +195,7 @@ reduceToLeftmost = "redtail"
 \end{eqnarray*}
 We prefer to put the smaller simpler part on the right.
 \begin{code}
-redinit :: Monad m => LogicSig -> [Theory] -> NmdAssertion
+redinit :: Monad m => LogicSig -> [Theory] -> NamedTermSC
         -> m (String, Sequent)
 redinit logicsig thys (nm,(t@(Cons tk i cs@(_:_:_)),sc))
   | i == theEqv logicsig
@@ -204,14 +214,14 @@ reduceToRightmost = "redinit"
    \mathcal L,\splitand(H) \vdash (C \equiv \true)
 \end{eqnarray*}
 \begin{code}
-assume :: Monad m => LogicSig -> [Theory] -> NmdAssertion
+assume :: Monad m => LogicSig -> [Theory] -> NamedTermSC
        -> m (String, Sequent)
 assume logicsig thys (nm,(t@(Cons tk i [ta,tc]),sc))
   | i == theImp logicsig
     = return ( "assume", Sequent thys hthry sc tc $ theTrue logicsig )
   where
     hlaws = map mkHLaw $ zip [1..] $ splitAnte logicsig ta
-    mkHLaw (i,trm) = labelAsAxiom ("H."++nm++"."++show i,(trm,scTrue))
+    mkHLaw (i,trm) = labelAsAxiom ("H."++nm++"."++show i,(mkAsn trm scTrue))
     hthry = Theory { thName   =  "H."++nm
                    , thDeps   =  []
                    , laws     =  hlaws
@@ -238,7 +248,7 @@ splitAnte _        t     =  [t]
    \mathcal L,\splitand(H) \vdash C_1 \equiv C_2
 \end{eqnarray*}
 \begin{code}
-asmboth :: Monad m => LogicSig -> [Theory] -> NmdAssertion
+asmboth :: Monad m => LogicSig -> [Theory] -> NamedTermSC
         -> m (String, Sequent)
 asmboth logicsig thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{code}
@@ -252,7 +262,7 @@ asmboth logicsig thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{eqnarray*}
 \begin{code}
 -- actually, this is done under the hood
-shunt :: Monad m => LogicSig -> [Theory] -> NmdAssertion
+shunt :: Monad m => LogicSig -> [Theory] -> NamedTermSC
       -> m (String, Sequent)
 shunt logicsig thys (nm,(t,sc)) = fail "shunt not applicable"
 \end{code}
@@ -267,7 +277,7 @@ shunt logicsig thys (nm,(t,sc)) = fail "shunt not applicable"
 \end{eqnarray*}
 \begin{code}
 -- actually, this is done under the hood
-shntboth :: Monad m => LogicSig -> [Theory] -> NmdAssertion
+shntboth :: Monad m => LogicSig -> [Theory] -> NamedTermSC
         -> m (String, Sequent)
 shntboth logicsig thys (nm,(t,sc)) = fail "shntboth not applicable"
 \end{code}
@@ -579,12 +589,13 @@ is a little more tricky:
 hypConjFocus :: Monad m => Int -> Sequent -> m SeqZip
 hypConjFocus i sequent
   = do let hthry = hyp sequent
-       (before,((hnm,(ht,hsc)),hprov),after) <- peel i $ laws hthry
+       (before,((hnm,hasn),hprov),after) <- peel i $ laws hthry
+       let ht = assnT hasn
        return ( mkTZ ht
               , Sequent' (ante sequent)
                          (sc sequent) $
                          HLaws' (thName hthry) (known hthry)
-                                before hnm hsc hprov ht after
+                                before hnm (assnC hasn) hprov ht after
                                 (cleft sequent) (cright sequent) )
 \end{code}
 
@@ -607,9 +618,9 @@ exitLaws currT  (HLaws' hnm hkn hbef fnm fsc fprov horig haft cl cr)
   =  ( Theory { thName   =  hnm
               , thDeps   =  []
               , laws     =  ( reverse hbef
-                            ++ [((fnm,(horig,fsc)),fprov)]
+                            ++ [((fnm,(mkAsn horig fsc)),fprov)]
                             ++ haft
-                            ++ [((fnm,(currT,fsc)),fprov)] )
+                            ++ [((fnm,(mkAsn currT fsc)),fprov)] )
               , known    =  hkn
               , subable  =  M.empty
               , conjs    =  []
@@ -719,7 +730,7 @@ lawsVarsMentioned hlaws'@(HLaws' _ _ _ _ _ _ _ _ _ _)
 
 \begin{code}
 lawVarsMentioned :: Law -> VarSet
-lawVarsMentioned = mentionedVars . fst . snd . fst
+lawVarsMentioned = mentionedVars . assnT . snd . fst
 \end{code}
 
 \newpage
@@ -764,7 +775,7 @@ dispConjParts fp tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
 
 
 dispHypotheses hthry  =  numberList' showHyp $ laws $ hthry
-showHyp ((_,(trm,_)),_) = trTerm 0 trm
+showHyp ((_,(Assertion trm _)),_) = trTerm 0 trm
 
 dispGoal tz sc
   = [ trTermZip tz++"    "++trSideCond sc, "" ]

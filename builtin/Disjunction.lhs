@@ -148,7 +148,7 @@ Gather them all together.
 \begin{code}
 disjAxioms :: [Law]
 disjAxioms
-  = map labelAsAxiom
+  = map (labelAsAxiom . mkNmdAsn)
       [ axOrSymm, axOrAssoc, axOrIdem, axOrEqvDistr, axExclMidl ]
 \end{code}
 
@@ -238,9 +238,10 @@ cjOrSubst
 \begin{code}
 disjConjs :: [NmdAssertion]
 disjConjs
-  = [ cjOrZero, cjOrUnit, cjOrOrDistr, cjOrEqvSplit
-    , cjOrSubst
-    ]
+  = map mkNmdAsn
+     [ cjOrZero, cjOrUnit, cjOrOrDistr, cjOrEqvSplit
+     , cjOrSubst
+     ]
 \end{code}
 
 \subsection{The Disjunction Theory}

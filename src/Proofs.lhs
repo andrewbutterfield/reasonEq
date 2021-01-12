@@ -486,7 +486,7 @@ displayProof (pnm,asn,strat,(trm',steps))
               ++ [trTerm 0 trm'] )
 
 shStep :: CalcStep -> String
-shStep ( (UseLaw how lnm bind dpath), asn@(trm,sc) )
+shStep ( (UseLaw how lnm bind dpath), asn@(Assertion trm sc) )
    = unlines' [ trTermZip (pathTZ dpath trm) ++ trSC sc
               , " = '" ++ showHow how++" "++lnm++" @" ++ show dpath ++ "'"
               , trBinding bind
@@ -501,7 +501,7 @@ shStep ( just, asn )  =  unlines' [ trAsn asn
 
 Showing Proofs:
 \begin{code}
-showProof (pnm,(trm,sc),strat,(trm',steps))
+showProof (pnm,(Assertion trm sc),strat,(trm',steps))
  = " " ++ pnm ++ "  (" ++ strat ++ ", size:" ++ show (length steps) ++ ")"
 
 showProofs _ []      =  "No Proofs yet."

@@ -32,6 +32,7 @@ import Variables
 import AST
 import VarData
 import SideCond
+import Assertions
 import Binding
 import REqState
 import AbstractUI
@@ -535,7 +536,8 @@ newConj args reqs
        case sPredParse trtxt of
          But msgs  -> doshow reqs ("Bad Term, "++unlines' msgs)
          Yes (term,_) ->
-          case newConjecture (currTheory reqs) (cjnm,(term,scTrue)) reqs of
+          case newConjecture (currTheory reqs) (cjnm,(mkAsn term scTrue)) reqs
+          of
             But msgs  -> doshow reqs (unlines' msgs)
             Yes reqs' -> do putStrLn ("Conjecture '"++cjnm++"' installed")
                             return reqs'
@@ -646,7 +648,7 @@ presentSeq (str,seq)
     trTerm 0 (cright seq)
 
 presentHyp hthy
-  = intercalate "," $ map (trTerm 0 . fst . snd . fst) $ laws hthy
+  = intercalate "," $ map (trTerm 0 . assnT . snd . fst) $ laws hthy
 \end{code}
 
 
@@ -912,14 +914,15 @@ applyMatch args pstate@(reqs, liveProof)
                           , "bind = " ++ trBinding (mBind mtch)
                           , "please supply bindings as requested"
                           ]
-               requestBindings (true,false) (conjecture liveProof) unbound
+               requestBindings (true,false)
+                               (assnT $ conjecture liveProof) unbound
 \end{code}
 
 For every unbound pattern variable in the replacement,
 we ask the user to pick from a list of terms:
 \begin{code}
-requestBindings :: (Term, Term) -> (Term, b) -> Set GenVar -> IO Binding
-requestBindings (t,f) (goalTerm,_) unbound
+requestBindings :: (Term, Term) -> Term -> Set GenVar -> IO Binding
+requestBindings (t,f) goalTerm unbound
   = let
 
       terms = t : f : subTerms goalTerm

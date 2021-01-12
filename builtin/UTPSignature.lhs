@@ -28,7 +28,7 @@ import Utilities
 import LexBase
 import Variables
 import AST
-import Assertions (normaliseQuantifiers)
+import Assertions (mkAsn)
 import SideCond
 import VarData
 import Laws

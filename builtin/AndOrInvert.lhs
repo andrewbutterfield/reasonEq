@@ -208,8 +208,8 @@ cjEqvDef
 Assemble it all:
 \begin{code}
 aoiConjs :: [NmdAssertion]
-aoiConjs
-  = [ cjAndOrAbs, cjOrAndAbs, cjAndOrNAbs, cjOrAndNAbs
+aoiConjs = map mkNmdAsn
+    [ cjAndOrAbs, cjOrAndAbs, cjAndOrNAbs, cjOrAndNAbs
     , cjOrAndDistr, cjAndOrDistr
     , cjDeMorganNand, cjDeMorganNor
     , cjEqvRepl

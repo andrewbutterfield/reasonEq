@@ -351,7 +351,7 @@ Showing laws:
 showNmdAssns dm nasns  =  numberList (showNmdAssn dm $ nameWidth nasns)  nasns
 nameWidth nasns = maximum $ map (nicelength . nicelawname . fst) nasns
 
-showNmdAssn (showT,showSC) w (nm,(trm,sc))
+showNmdAssn (showT,showSC) w (nm,(Assertion trm sc))
   =    ldq ++ nmh ++ rdq ++ pad w nmh
        ++ "  " ++ showT trm ++ "  "++showSC sc
   where nmh = nicelawname nm
@@ -359,8 +359,8 @@ showNmdAssn (showT,showSC) w (nm,(trm,sc))
 showLaws _ []    =  "NONE."
 showLaws dm lws  =  numberList (showLaw dm $ nameWidth $ map fst lws) lws
 
-showLaw dm w ((nm,(trm,sc)),prov)
-  =  showProv prov ++ "  " ++ showNmdAssn dm w (nm,(trm,sc))
+showLaw dm w (nasn,prov)
+  =  showProv prov ++ "  " ++ showNmdAssn dm w nasn
 showProv Axiom           =  _top
 showProv (Proven pname)  =  _qed
 showProv Assumed         =  "!"
@@ -368,8 +368,8 @@ showProv Assumed         =  "!"
 showConjs _ []    =  "NONE."
 showConjs dm cjs  =  numberList (showConj dm $ nameWidth $ cjs) cjs
 
-showConj dm w (nm,(trm,sc))
-  =  _redQ ++ "  " ++ showNmdAssn dm w (nm,(trm,sc))
+showConj dm w nasn
+  =  _redQ ++ "  " ++ showNmdAssn dm w nasn
 \end{code}
 
 Showing associative grouping specifications:

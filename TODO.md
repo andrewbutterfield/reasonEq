@@ -6,20 +6,28 @@
 
 We need this implemented as a gatekeeper for the construction of Assertions,
 and it needs to duplicate side-conditions when such refers to a multiply-used quantifier variable.
+We also need to handle non-substitutable terms
+(**It is now clear that n.s. indication should be part of a term itself,
+and not left to be looked up in a table. Otherwise normalisation needs to take a list of
+var tables as an argument**).
 
 We need to normalise all `Assertion`s as follows:
 
-1 all quantifier variables must be unique, arranged by using the `Int` component of the `Identifier` datatype.
+1 `Assertion` becomes an abstract (new)type that guarantees normalisation by construction.
 
-2 Any nested `Bind`s with the same type and identifier ahould be merged 
+2 All quantifier variables must be unique, arranged by using the `Int` component of the `Identifier` datatype.
 
-3 All free variables at the assertion top-level have a zero `Int` component.
+3 Any nested `Bind`s with the same type and identifier ahould be merged 
 
 ```
 B tk i vs1 (B tk i vs2) ⟼  B tk i (vs1 ∪ vs2)
 ```
 
-We will provide Term builders that normalise on the fly
+4 All free variables at the assertion top-level have a zero `Int` component.
+
+5 All variables inside a non-substitutable term have a zero `Int` component(?).
+  Should we allow n.s. terms to contain quantifiers?
+
 
 ### Upgrade 2
 

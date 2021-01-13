@@ -714,7 +714,6 @@ proofREPLConfig
             , normQuantDescr
             , simpNestDescr
             , substituteDescr
-            , revSubstituteDescr
             , flatEquivDescr
             , groupEquivDescr
             , goBackDescr
@@ -1045,28 +1044,6 @@ substituteCommand _ state@(reqs, liveProof)
              waitForReturn
              return (reqs, matches_ [] liveProof)
 \end{code}
-
-Reverse Substitution
-\begin{code}
-revSubstituteDescr = ( "rs"
-                , "reverse substitute"
-                , unlines
-                   [ "rs       -- reverse (first) subsitution"
-                   , "rs n     -- reverse nth substitution"
-                   ]
-                , revSubstituteCommand )
-
-revSubstituteCommand :: REPLCmd (REqState, LiveProof)
-revSubstituteCommand args state@(reqs, liveProof)
-  =  case revSubstituteFocus (args2int args) (theories reqs) liveProof of
-      Yes liveProof'  ->  return (reqs, liveProof')
-      But msgs
-       -> do putStrLn $ unlines' msgs
-             waitForReturn
-             return (reqs, matches_ [] liveProof)
-\end{code}
-
-
 
 
 \newpage

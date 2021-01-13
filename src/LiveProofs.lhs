@@ -478,11 +478,11 @@ Finding `parts' of a top-level constructor:
 \begin{code}
 findParts :: Monad m => [Int] -> Term -> m Term
 findParts [] t = return t
-findParts parts (Cons tk n ts)
+findParts parts (Cons tk sn n ts)
   = do ts' <- getParts (filter (>0) parts) ts
        case ts' of
          [t']  ->  return t'
-         _     ->  return $ Cons tk n ts'
+         _     ->  return $ Cons tk sn n ts'
 findParts parts t
           = fail ("findParts: "++trTerm 0 t++" "++show parts++" makes no sense")
 \end{code}
@@ -536,7 +536,7 @@ and if its top-level is a \texttt{Cons}
 with at least two sub-components, we try all possible partial matches.
 \begin{code}
 domatch :: LogicSig -> [VarTable] -> TermSC -> Law -> Matches
-domatch logicsig vts asnC law@((_,(Assertion tP@(Cons _ i tsP@(_:_:_)) _)),_)
+domatch logicsig vts asnC law@((_,(Assertion tP@(Cons _ _ i tsP@(_:_:_)) _)),_)
   =    basicMatch MatchAll vts law (theTrue logicsig) asnC tP
     ++ doPartialMatch i logicsig vts law asnC tsP
 \end{code}
@@ -578,8 +578,8 @@ If we match $Q$, we can replace $C$ by $Q\beta \lor P\beta$
 \begin{code}
 doPartialMatch i logicsig vts law asnC tsP@[ltP,rtP]
   | i == theImp logicsig
-    =    basicMatch MatchAnte vts law (Cons P land [ltP,rtP]) asnC ltP
-      ++ basicMatch MatchCnsq vts law (Cons P lor  [rtP,ltP]) asnC rtP
+    =    basicMatch MatchAnte vts law (Cons P True land [ltP,rtP]) asnC ltP
+      ++ basicMatch MatchCnsq vts law (Cons P True lor  [rtP,ltP]) asnC rtP
   where
      land = theAnd logicsig
      lor  = theOr  logicsig
@@ -667,7 +667,7 @@ doEqvMatchB logicsig vts law@((_,(Assertion _ scP)),_) asnC mtchs sPt (tP:tPs)
   where
     eqv []   =  theTrue logicsig
     eqv [t]  =  t
-    eqv ts   =  Cons P (theEqv logicsig) ts
+    eqv ts   =  Cons P True (theEqv logicsig) ts
 \end{code}
 
 \newpage
@@ -680,7 +680,7 @@ or the last $m$ (\setof{n+1-m\dots n}).
 doEqvMatchC :: LogicSig -> [VarTable] -> Law -> TermSC ->[Term]
             -> Matches
 doEqvMatchC logicsig vts law@((_,(Assertion _ scP)),_)
-                         asnC@(tC@(Cons tk i tsC),scC) tsP
+                         asnC@(tC@(Cons tk si i tsC),scC) tsP
  | i == theEqv logicsig
    && cLen < pLen  = doEqvMatchC' cLen [1..cLen]
                        logicsig vts law scC tsC tsP
@@ -702,7 +702,7 @@ doEqvMatchC' cLen is logicsig vts law@((_,(Assertion _ scP)),_) scC tsC tsP
     (tsP',tsP'') = splitAt cLen tsP
     eqv []   =  theTrue logicsig
     eqv [t]  =  t
-    eqv ts   =  Cons P (theEqv logicsig) ts
+    eqv ts   =  Cons P True (theEqv logicsig) ts
 \end{code}
 
 
@@ -902,7 +902,7 @@ makeEquivalence nm liveProof
   where
      -- hack - should refer to logicSig
      equiv = fromJust $ ident "equiv"
-     mkEquivs ps = PCons equiv ps
+     mkEquivs ps = PCons True equiv ps
      p === q = mkEquivs [p,q]
      step0 = assnT $ conjecture liveProof
      step' = exitTZ $ fst $ focus liveProof

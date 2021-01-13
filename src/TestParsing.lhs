@@ -333,7 +333,7 @@ Seen identifier and opening parenthesis.
 Look for sub-term, or closing parenthesis.
 \begin{code}
 sAppParse tk id1 smretbus (TClose ")" : tts)
-  = return ( Cons tk id1 $ reverse smretbus, tts)
+  = return ( Cons tk True id1 $ reverse smretbus, tts)
 sAppParse tk id1 smretbus tts
   = do (tsub',tts') <- sTermParse tk tts
        sAppParse' tk id1 (tsub':smretbus) tts'
@@ -345,7 +345,7 @@ Looking for comma or closing parenthesis
 sAppParse' tk id1 smretbus (TSep "," : tts)
   =  sAppParse tk id1 smretbus tts
 sAppParse' tk id1 smretbus (TClose ")" : tts)
-  =  return ( Cons tk id1 $ reverse smretbus, tts)
+  =  return ( Cons tk True id1 $ reverse smretbus, tts)
 sAppParse' tk id1 smretbus tts
   =  fail ("sAppParse': expected ',' or ')'")
 \end{code}

@@ -520,14 +520,14 @@ known predicate operators $;$, $\exists$ and $\land$,
 \begin{code}
 semi = jId ";"
 v_semi = Vbl semi PredV Static
-p `seqComp` q = PCons semi [p,q]
+p `seqComp` q = PCons False semi [p,q]
 semiBinding = fromJust $ bindVarToVar v_semi v_semi emptyBinding
 semiKnown = fromJust $ addKnownVar v_semi ArbType $ newVarTable
 
 
 land = jId "land"
 v_land = Vbl land PredV Static
-p `lAnd` q = PCons land [p,q]
+p `lAnd` q = PCons True land [p,q]
 andBinding = fromJust $ bindVarToVar v_land v_land emptyBinding
 andKnown = fromJust $ addKnownVar v_land ArbType $ newVarTable
 
@@ -710,16 +710,16 @@ and implication.
 \begin{code}
 asg = jId ":="
 v_asg = Vbl asg PredV Static
-v .:= e  =  PCons asg [fromJust $ eVar ArbType $ ScriptVar v, e]
+v .:= e  =  PCons False asg [fromJust $ eVar ArbType $ ScriptVar v, e]
 asgBinding = fromJust $ bindVarToVar v_asg v_asg emptyBinding
 
 implies = jId "implies"
 v_implies = Vbl implies PredV Static
-p `impl` q  =  PCons implies [p,q]
+p `impl` q  =  PCons True implies [p,q]
 
 eq = jId "="
 v_equal  =  Vbl eq PredV Static
-e1 `equal` e2  =  PCons eq [e1,e2]
+e1 `equal` e2  =  PCons True eq [e1,e2]
 
 iaBinding = fromJust $ bindVarToVar v_implies v_implies andBinding
 eiaBinding = fromJust $ bindVarToVar v_equal v_equal iaBinding
@@ -729,10 +729,11 @@ Now, subtracting from list-variables,
 and defining assigment
 \begin{code}
 v `assigned` e
-  = tok `impl` PCons land [ tok' , v' `equal` e ,  _S_v'_is_S_v ]
+  = tok `impl` PCons True land [ tok' , v' `equal` e ,  _S_v'_is_S_v ]
   where
     v' = fromJust $ eVar ArbType $ PostVar v
-    _S_v'_is_S_v = PIter land eq [lS' `less` ([v],[]), lS `less` ([v],[])]
+    _S_v'_is_S_v = PIter True land True eq
+                      [lS' `less` ([v],[]), lS `less` ([v],[])]
 \end{code}
 
 Test values:
@@ -785,8 +786,8 @@ test_simple_assignment
 \end{eqnarray*}
 \begin{code}
 vs `simasgn` es
-  = PCons land [ PIter land eq [vs', es]
-               , PIter land eq [lS' `less` ([],[vs]), lS `less` ([],[vs])] ]
+  = PCons True land [ PIter True land True eq [vs', es]
+               , PIter True land True eq [lS' `less` ([],[vs]), lS `less` ([],[vs])] ]
   where vs' = PostVars vs
 
 
@@ -810,7 +811,7 @@ e2 = EVal int $ Integer 2
 
 x'1y'2 = ((evar int x' `equal` e1) `lAnd` (evar int y' `equal` e2))
        `lAnd`
-       (PIter land eq [lS' `less` ([],[ze]),lS `less` ([],[ze])])
+       (PIter True land True eq [lS' `less` ([],[ze]),lS `less` ([],[ze])])
 
 test_simultaneous_assignment
  = testGroup "Simultaneous Assignment"

@@ -12,6 +12,9 @@ We also need to handle non-substitutable terms.
 and not left to be looked up in a table. Otherwise normalisation needs to take a list of
 var tables as an argument**
 
+We note that the only `Term` variants that require a substitutability marker are `Cons`
+and `Iter`.
+
 We need to normalise all `Assertion`s as follows:
 
 1 `Assertion` becomes an abstract (new)type that guarantees normalisation by construction.

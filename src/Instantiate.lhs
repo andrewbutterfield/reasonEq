@@ -63,8 +63,8 @@ instantiate binding vt@(Var tk v)
                                      , "bind = " ++ trBinding binding
                                      ]
 
-instantiate binding (Cons tk n ts)
-  = fmap (Cons tk n) $ sequence $ map (instantiate binding) ts
+instantiate binding (Cons tk sb n ts)
+  = fmap (Cons tk sb n) $ sequence $ map (instantiate binding) ts
 
 instantiate binding (Bnd tk n vs tm)
   = do vs' <- instVarSet binding vs
@@ -85,17 +85,17 @@ instantiate binding (Sub tk tm s)
        s' <- instSub binding s
        return $ Sub tk tm' s'
 
-instantiate binding (Iter tk na ni lvs)
+instantiate binding (Iter tk sa na si ni lvs)
   = do lvtss <- instIterLVS binding lvs
        -- all have same non-zero length
        -- have the same kind of object (list-var/term)
        case lvtss of
          [lvts]  ->  return $ mkI lvts
-         _       ->  return $ Cons tk na $ map mkI lvtss
+         _       ->  return $ Cons tk sa na $ map mkI lvtss
   where
     mkI :: [LVarOrTerm] -> Term
-    mkI lvts@(Right _:_) = Cons tk ni    $ tmsOf lvts
-    mkI lvts@(Left  _:_) = Iter tk na ni $ lvsOf lvts
+    mkI lvts@(Right _:_) = Cons tk si ni $ tmsOf lvts
+    mkI lvts@(Left  _:_) = Iter tk sa na si ni $ lvsOf lvts
 \end{code}
 
 \newpage
@@ -529,8 +529,8 @@ mkKnownBind vts gv
 termLVarPairings :: Term -> [(ListVar,ListVar)]
 termLVarPairings (Sub _ tm s)     =  nub ( termLVarPairings tm
                                            ++ substLVarPairings s )
-termLVarPairings (Cons _ _ ts)    =  nub $ concat $ map termLVarPairings ts
-termLVarPairings (Bnd _ _ _ tm)  =  termLVarPairings tm
+termLVarPairings (Cons _ _ _ ts)  =  nub $ concat $ map termLVarPairings ts
+termLVarPairings (Bnd _ _ _ tm)   =  termLVarPairings tm
 termLVarPairings (Lam _ _ _ tm)   =  termLVarPairings tm
 termLVarPairings (Cls _ tm)       =  termLVarPairings tm
 termLVarPairings _                =  []

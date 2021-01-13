@@ -58,19 +58,6 @@ andKnown =  fromJust $ addKnownVar v_and boolf_2 $ newVarTable
 \end{code}
 
 
-\subsubsection{Substitutability}
-
-$$
-  \begin{array}{ll}
-     \CJandSubst & \CJandSubstN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-conjSubAble = M.fromList [(land,CS)]
-\end{code}
-
 
 
 \newpage
@@ -244,7 +231,6 @@ conjTheory
   =  nullTheory { thName  =  conjName
             , thDeps  =  [ disjName, notName, equivName ]
             , known   =  andKnown
-            , subable =  conjSubAble
             , laws    =  conjAxioms
             , conjs   =  conjConjs
             }

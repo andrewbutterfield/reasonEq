@@ -215,7 +215,7 @@ we mark the focus and un-zip,
 and ensure that the term renderer checks for a marked term.
 \begin{code}
 markfocus :: Term -> Term
-markfocus t = Cons P focusMark [t]
+markfocus t = Cons P True focusMark [t]
 
 focusMark = fromJust $ ident "__focus__"
 
@@ -244,7 +244,7 @@ a marked focus term needs highlighting;
 or an application of name $nm$ (symbol $\lhd$)
 to an atomic argument $a$ that has no parentheses: $nm~a$ ($\lhd a$).
 \begin{code}
-trterm trid ctxtp (Cons tk s [t])
+trterm trid ctxtp (Cons tk _ s [t])
  | s == focusMark    =  highlightFocus $ trterm trid ctxtp t
  | isAtomic t        =  trAtomic s $ trterm trid 0 t
  where
@@ -257,7 +257,7 @@ Rendering an infix operator with two or more arguments.
 We ensure that sub-terms are rendered with the infix operator precedence
 as their context precedence.
 \begin{code}
-trterm trid ctxtp (Cons tk opn@(Identifier nm _) ts@(_:_:_))
+trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@(_:_:_))
  | isOp  =  trBracketIf (opp <= ctxtp)
                         $ intercalate (trId opn) $ map (trterm trid opp) ts
  where
@@ -267,7 +267,7 @@ trterm trid ctxtp (Cons tk opn@(Identifier nm _) ts@(_:_:_))
 Rendering an ``infix-like'' ternary operator.
 For now the most significant is the conditional ($\cond\_$)
 \begin{code}
-trterm trid ctxtp (Cons tk opn@(Identifier nm _) [p,b,q])
+trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) [p,b,q])
  | isMix3  =  trBracketIf (opp <= ctxtp)
                         (trterm trid opp p
                          ++ " <| " ++ trterm trid 0 b ++ " |> "
@@ -279,7 +279,7 @@ trterm trid ctxtp (Cons tk opn@(Identifier nm _) [p,b,q])
 In all other cases we simply use classical function application notation
 $f(e_1,e_2,\dots,e_n)$.
 \begin{code}
-trterm trid _ (Cons tk n ts)
+trterm trid _ (Cons tk _ n ts)
   =  trId n ++ trcontainer trid ( "(", ",", ")" ) ts
 \end{code}
 
@@ -318,14 +318,14 @@ we have three cases:
 ~
 
 \begin{code}
-trterm trid _ (Iter tk na ni lvs@(_:_:_))
+trterm trid _ (Iter tk _ na _ ni lvs@(_:_:_))
  | isSymbId ni  = silentId na ++ "(" ++ seplist (trid ni) (trlvar trid) lvs ++ ")"
  where silentId na@(Identifier i _)
   -- logical-and is the 'default' for na, so we keep it 'silent'
         | i == "land"  =  ""
         | otherwise    =  trid na
 
-trterm trid _ (Iter tk na ni lvs)
+trterm trid _ (Iter tk _ na _ ni lvs)
   =  trid na ++ "{" ++ trid ni ++ "(" ++ seplist "," (trlvar trid) lvs ++ ")}"
 \end{code}
 

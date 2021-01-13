@@ -118,7 +118,6 @@ and then use the following functions to produce a sequent, if possible.
 noHyps nm = Theory { thName   =  "H."++nm
                    , thDeps   =  []
                    , known    =  newVarTable
-                   , subable  =  M.empty
                    , laws     =  []
                    , proofs   =  []
                    , conjs    =  []
@@ -153,7 +152,7 @@ reduceAll = "reduce"
 \begin{code}
 redboth :: Monad m => LogicSig -> [Theory] -> NamedTermSC
         -> m (String, Sequent)
-redboth logicsig thys (nm,(t@(Cons tk i [tl,tr]),sc))
+redboth logicsig thys (nm,(t@(Cons tk sb i [tl,tr]),sc))
   | i == theEqv logicsig
       = return ( reduceBoth, Sequent thys (noHyps nm) sc tl tr )
 redboth logicsig thys (nm,(t,sc)) = fail "redboth not applicable"
@@ -166,8 +165,8 @@ We will need to convert $\seqof{P_1,\dots,P_n}$, for $n\geq 1$
 to $P_1 \equiv \dots \equiv P_n$,
 in this, and the next strategy.
 \begin{code}
-bEqv n [p]  =  p
-bEqv n ps = Cons P n ps
+bEqv _ _ [p]  =  p
+bEqv sn n ps = Cons P sn n ps
 \end{code}
 
 
@@ -179,9 +178,10 @@ bEqv n ps = Cons P n ps
 \begin{code}
 redtail :: Monad m => LogicSig -> [Theory] -> NamedTermSC
         -> m (String, Sequent)
-redtail logicsig thys (nm,(t@(Cons tk i (c1:cs@(_:_))),sc))
+redtail logicsig thys (nm,(t@(Cons tk si i (c1:cs@(_:_))),sc))
   | i == theEqv logicsig
-      = return ( reduceToLeftmost, Sequent thys (noHyps nm) sc (bEqv i cs) c1 )
+      = return ( reduceToLeftmost,
+                 Sequent thys (noHyps nm) sc (bEqv si i cs) c1 )
 redtail logicsig thys (nm,(t,sc)) = fail "redtail not applicable"
 reduceToLeftmost = "redtail"
 \end{code}
@@ -197,9 +197,10 @@ We prefer to put the smaller simpler part on the right.
 \begin{code}
 redinit :: Monad m => LogicSig -> [Theory] -> NamedTermSC
         -> m (String, Sequent)
-redinit logicsig thys (nm,(t@(Cons tk i cs@(_:_:_)),sc))
+redinit logicsig thys (nm,(t@(Cons tk si i cs@(_:_:_)),sc))
   | i == theEqv logicsig
-      = return ( reduceToRightmost, Sequent thys (noHyps nm) sc (bEqv i cs') cn )
+      = return ( reduceToRightmost,
+                 Sequent thys (noHyps nm) sc (bEqv si i cs') cn )
   where (cs',cn) = splitLast cs
 redinit logicsig thys (nm,(t,sc)) = fail "redinit not applicable"
 reduceToRightmost = "redinit"
@@ -216,7 +217,7 @@ reduceToRightmost = "redinit"
 \begin{code}
 assume :: Monad m => LogicSig -> [Theory] -> NamedTermSC
        -> m (String, Sequent)
-assume logicsig thys (nm,(t@(Cons tk i [ta,tc]),sc))
+assume logicsig thys (nm,(t@(Cons tk si i [ta,tc]),sc))
   | i == theImp logicsig
     = return ( "assume", Sequent thys hthry sc tc $ theTrue logicsig )
   where
@@ -226,15 +227,14 @@ assume logicsig thys (nm,(t@(Cons tk i [ta,tc]),sc))
                    , thDeps   =  []
                    , laws     =  hlaws
                    , known    =  makeUnknownKnown thys t
-                   , subable  =  M.empty
                    , proofs   =  []
                    , conjs    =  []
                    }
 assume _ _ _ = fail "assume not applicable"
 
 splitAnte :: LogicSig -> Term -> [Term]
-splitAnte theSig (Cons tk i ts)
- | i == theAnd theSig  =  ts
+splitAnte theSig (Cons tk si i ts)
+ | i == theAnd theSig    =  ts
 splitAnte _        t     =  [t]
 \end{code}
 
@@ -291,7 +291,7 @@ shntboth logicsig thys (nm,(t,sc)) = fail "shntboth not applicable"
 \end{eqnarray*}
 \begin{code}
 splitAnd :: LogicSig -> Term -> [Term]
-splitAnd logicsig (Cons _ i ts)
+splitAnd logicsig (Cons _ True i ts)
   | i == theAnd logicsig  =  ts
 splitAnd _ t           =  [t]
 \end{code}
@@ -622,7 +622,6 @@ exitLaws currT  (HLaws' hnm hkn hbef fnm fsc fprov horig haft cl cr)
                             ++ haft
                             ++ [((fnm,(mkAsn currT fsc)),fprov)] )
               , known    =  hkn
-              , subable  =  M.empty
               , conjs    =  []
               , proofs   =  []
               }
@@ -685,7 +684,6 @@ getHypotheses' (HLaws' hn hk hbef _ _ _ _ haft _ _)
             , thDeps   =  []
             , laws     =  (reverse hbef ++ haft)
             , known    =  hk
-            , subable  =  M.empty
             , conjs    =  []
             , proofs   =  [] }
 
@@ -768,7 +766,6 @@ dispConjParts fp tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
                     , thDeps   =  []
                     , laws     =  (reverse hbef ++ haft)
                     , known    =  hk
-                    , subable  =  M.empty
                     , conjs    =  []
                     , proofs   =  []
                     }

@@ -82,19 +82,19 @@ r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
 \begin{code}
 refines :: Term -> Term -> Term
 i_refines    =  jId "sqsupseteq"
-refines p q  =  PCons i_refines [p, q]
+refines p q  =  PCons False i_refines [p, q]
 
 cond :: Term -> Term -> Term -> Term
 i_cond       =  jId "cond"
-cond p b q   =  PCons i_cond [p, b, q]
+cond p b q   =  PCons True i_cond [p, b, q]
 
 mkSeq :: Term -> Term -> Term
 i_seq        =  jId ";"
-mkSeq p q    =  PCons i_seq [p, q]
+mkSeq p q    =  PCons False i_seq [p, q]
 
 (.:=) :: Identifier -> Term -> Term
 i_asg        =  jId ":="
-v .:= e      =  PCons i_asg [jVar (E ArbType) (ExprVar v Static), e]
+v .:= e      =  PCons False i_asg [jVar (E ArbType) (ExprVar v Static), e]
 
 skip :: Term
 i_skip  =  jId "II"
@@ -102,7 +102,7 @@ skip    =  jVar P $ Vbl i_skip PredV Static
 
 ndc :: Term -> Term -> Term
 i_ndc    =  jId "sqcap"
-ndc p q  =  PCons i_ndc [p, q]
+ndc p q  =  PCons True i_ndc [p, q]
 
 abort :: Term
 i_abort  =  jId "bot"

@@ -57,18 +57,6 @@ orKnown =  fromJust $ addKnownVar v_or boolf_2 $ newVarTable
 \end{code}
 
 
-\subsubsection{Substitutability}
-
-$$
-  \begin{array}{ll}
-     \AXorSubst & \AXorSubstN
-  \end{array}
-$$
-
-\vspace{-5pt}
-\begin{code}
-disjSubAble = M.fromList [(lor,CS)]
-\end{code}
 
 \newpage
 \subsection{Disjunction Axioms}
@@ -254,7 +242,6 @@ disjTheory
   =  nullTheory { thName  =  disjName
             , thDeps  =  [ notName, equivName ]
             , known   =  orKnown
-            , subable =  disjSubAble
             , laws    =  disjAxioms
             , conjs   =  disjConjs
             }

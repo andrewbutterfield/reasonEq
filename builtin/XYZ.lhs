@@ -189,17 +189,17 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-mkSeq p q = PCons (fromJust $ ident ";")[p, q]
+mkSeq p q = PCons False (fromJust $ ident ";")[p, q]
 
-mkIn p q = PCons (fromJust $ ident "in")[p, q]
+mkIn p q = PCons True (fromJust $ ident "in")[p, q]
 
-mkNat p = PCons (fromJust $ ident "Nat")[p]
+mkNat p = PCons True (fromJust $ ident "Nat")[p]
 
-mkSuc p = PCons (fromJust $ ident "S")[p]
+mkSuc p = PCons True (fromJust $ ident "S")[p]
 
-mkZero = PCons (fromJust $ ident "Zer")[]
+mkZero = PCons True (fromJust $ ident "Zer")[]
 
-mkPlus p q = PCons (fromJust $ ident "+")[p, q]
+mkPlus p q = PCons True (fromJust $ ident "+")[p, q]
 
 before r = Sub P r $ fromJust $ substn [(vx',xm),(vy',ym),(vz',zm)] []
 after r  = Sub P r $ fromJust $ substn [(vx,xm), (vy,ym), (vz,zm)] []
@@ -252,9 +252,9 @@ $$
   \end{array}
 $$\par%\vspace{-8pt}
 \begin{code}
-mkAsg x e = PCons (fromJust $ ident ":=")[x, e]
+mkAsg x e = PCons False (fromJust $ ident ":=")[x, e]
 
-mkCond p b q = PCons(fromJust $ ident "cond")[p, b, q]
+mkCond p b q = PCons True (fromJust $ ident "cond")[p, b, q]
 
 
 axXAsgDef = preddef ("X" -.- ":=" -.- "def")

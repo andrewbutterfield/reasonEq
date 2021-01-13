@@ -64,7 +64,7 @@ and then continue by addressing nested quantifiers.
 \begin{code}
 freeVars :: Term -> VarSet
 freeVars (Var tk v)           =  S.singleton $ StdVar v
-freeVars (Cons tk n ts)       =  S.unions $ map freeVars ts
+freeVars (Cons tk sb n ts)    =  S.unions $ map freeVars ts
 freeVars (Bnd tk n vs tm)     =  freeVars tm S.\\ vs
 freeVars (Lam tk n vl tm)     =  freeVars tm S.\\ S.fromList vl
 freeVars (Cls _ _)            =  S.empty
@@ -72,7 +72,7 @@ freeVars (Sub tk tm s)        =  (tfv S.\\ tgtvs) `S.union` rplvs
    where
      tfv            =  freeVars tm
      (tgtvs,rplvs)  =  substRelFree tfv s
-freeVars (Iter tk na ni lvs)  =  S.fromList $ map LstVar lvs
+freeVars (Iter tk sa na si ni lvs)  =  S.fromList $ map LstVar lvs
 freeVars _ = S.empty
 \end{code}
 
@@ -124,7 +124,7 @@ this could prevent the emergence of large numbers during a long proof.
 \begin{code}
 zeroTermIdNumbers :: Term -> Term
 zeroTermIdNumbers (Var tk v) = fromJust $ var tk $ zeroVarIdNumber v
-zeroTermIdNumbers (Cons tk n ts) = Cons tk n $ map zeroTermIdNumbers ts
+zeroTermIdNumbers (Cons tk sb n ts) = Cons tk sb n $ map zeroTermIdNumbers ts
 zeroTermIdNumbers (Bnd tk n vs tm) = fromJust $ bnd tk n (zeroVSetIdNumbers vs)
                                               $ zeroTermIdNumbers tm
 zeroTermIdNumbers (Lam tk n vl tm) = fromJust $ lam tk n (zeroVListIdNumbers vl)
@@ -132,7 +132,8 @@ zeroTermIdNumbers (Lam tk n vl tm) = fromJust $ lam tk n (zeroVListIdNumbers vl)
 zeroTermIdNumbers (Cls n tm)  = Cls n $ zeroTermIdNumbers tm
 zeroTermIdNumbers (Sub tk tm s) = Sub tk (zeroTermIdNumbers tm)
                                       $ zeroSubIdNumbers s
-zeroTermIdNumbers (Iter tk na ni lvs) = Iter tk na ni $ map zeroLVarIdNumber lvs
+zeroTermIdNumbers (Iter tk sa na si ni lvs)
+  = Iter tk sa na si ni $ map zeroLVarIdNumber lvs
 zeroTermIdNumbers trm = trm
 \end{code}
 

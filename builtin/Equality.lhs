@@ -70,16 +70,6 @@ eqKnown =  fromJust $ addKnownVar v_eq boolf_2 $ newVarTable
 \end{code}
 
 
-\subsection{Equality Substitutability}
-
-$$\begin{array}{ll}
-   \AXequalSubst & \AXequalSubstN
-\end{array}$$
-\vspace{-8pt}
-\begin{code}
-equalSubAble = M.fromList [(equals,CS)]
-\end{code}
-
 
 \subsection{Equality Axioms}
 
@@ -167,7 +157,6 @@ equalityTheory
                 , thDeps  =  [ implName
                              , equivName ]
                 , known   =  eqKnown
-                , subable =  equalSubAble
                 , laws    =  equalityAxioms
                 , conjs   =  equalityConjectures
                 }

@@ -138,32 +138,32 @@ falseP = Val P $ Boolean False
 \subsection{Propositional Operators}
 
 \begin{code}
-equiv = jId "equiv" ; mkEquivs ps = PCons equiv ps
+equiv = jId "equiv" ; mkEquivs ps = PCons True equiv ps
 mkEquiv p q = mkEquivs [p,q]
 infix 1 === ; (===) = mkEquiv
 
-implies = jId "implies" ; mkImplies p q = PCons implies [p,q]
+implies = jId "implies" ; mkImplies p q = PCons True implies [p,q]
 infixr 2 ==> ; (==>) = mkImplies
 
 lor = jId "lor"
 mkOrs []   =  falseP
 mkOrs [p]  =  p
-mkOrs ps   =  PCons lor ps
+mkOrs ps   =  PCons True lor ps
 mkOr p q   =  mkOrs [p,q]
 infix 3 \/ ; (\/) = mkOr
 
 land = jId "land"
 mkAnds []   =  trueP
 mkAnds [p]  =  p
-mkAnds ps   =  PCons land ps
+mkAnds ps   =  PCons True land ps
 mkAnd p q = mkAnds [p,q]
 infix 4 /\ ; (/\) = mkAnd
 
-lnot = jId "lnot" ; mkNot p = PCons lnot [p]
+lnot = jId "lnot" ; mkNot p = PCons True lnot [p]
 
 equals = jId "="
-isEqualTo e1 e2 = Cons P equals [e1,e2]
-areEqualTo es1 es2 = Iter P land equals [es1,es2]
+isEqualTo e1 e2 = Cons P True equals [e1,e2]
+areEqualTo es1 es2 = Iter P True land True equals [es1,es2]
 \end{code}
 
 \subsubsection{The Propositional Signature}

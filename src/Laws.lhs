@@ -124,18 +124,18 @@ In particular, we want to ``associatively flatten'' nested
 equivalences, conjunctions and conjunctive hypotheses.
 \begin{code}
 assocFlatten :: Identifier -> Term -> [Term]
-assocFlatten i (Cons tk j ts)
+assocFlatten i (Cons tk _ j ts)
       | i == j  = concat $ map (assocFlatten i) ts
 assocFlatten _ t = [t]
 
 flattenTheEquiv :: LogicSig -> Term -> Term
 flattenTheEquiv theSig t
-  = Cons (termkind t) eqv $ assocFlatten eqv t
+  = Cons (termkind t) True eqv $ assocFlatten eqv t
   where eqv = theEqv theSig
 
 flattenTheAnd :: LogicSig -> Term -> Term
 flattenTheAnd theSig t
-  = Cons (termkind t) and $ assocFlatten and t
+  = Cons (termkind t) True and $ assocFlatten and t
   where and = theAnd theSig
 \end{code}
 
@@ -146,7 +146,7 @@ and we have the trading rule involving conjunction.
 flattenTheImp :: LogicSig -> Term -> Term
 flattenTheImp theSig t
   | null fas   =  t
-  | otherwise  =  Cons tk imp [Cons tk and fas,tc]
+  | otherwise  =  Cons tk True imp [Cons tk True and fas,tc]
   where
     imp = theImp theSig
     (tas,tc) = collectAnte imp t
@@ -154,7 +154,7 @@ flattenTheImp theSig t
     fas = concat $ map (assocFlatten and) tas
     tk = termkind t
 
-collectAnte imp (Cons tk i [ta,tc])
+collectAnte imp (Cons tk _ i [ta,tc])
   | i == imp  = let (tas,tc') = collectAnte imp tc in (ta:tas,tc')
 collectAnte imp t = ([],t)
 \end{code}
@@ -164,10 +164,11 @@ collectAnte imp t = ([],t)
 
 \begin{code}
 flattenAssoc :: Monad m => Identifier -> Term -> m Term
-flattenAssoc assocI t@(Cons tk opI ts)
- | opI == assocI && length ts > 1  =  return $ Cons tk opI $ assocFlatten opI t
+flattenAssoc assocI t@(Cons tk sI opI ts)
+ | opI == assocI && length ts > 1
+     =  return $ Cons tk sI opI $ assocFlatten opI t
 flattenAssoc assocI _
-  =  fail ("flattenAssoc: not a '"++trId assocI++"', len > 1")
+     =  fail ("flattenAssoc: not a '"++trId assocI++"', len > 1")
 
 \end{code}
 
@@ -188,14 +189,14 @@ data GroupSpec
 Then code to do it:
 \begin{code}
 groupAssoc :: Monad m => Identifier -> GroupSpec -> Term -> m Term
-groupAssoc assocI gs (Cons tk opI ts)
- | opI == assocI && length ts > 2  =  groupAssoc' (mkOp tk opI) gs ts
+groupAssoc assocI gs (Cons tk sI opI ts)
+ | opI == assocI && length ts > 2  =  groupAssoc' (mkOp tk sI opI) gs ts
 groupAssoc assocI _ _
   =  fail ("groupAssoc: not a '"++trId assocI++"', len > 2")
 
-mkOp tk opI []   =  error "mkOp: no sub-terms"
-mkOp tk opI [t]  =  t
-mkOp tk opI ts   =  Cons tk opI ts
+mkOp tk sI opI []   =  error "mkOp: no sub-terms"
+mkOp tk sI opI [t]  =  t
+mkOp tk sI opI ts   =  Cons tk sI opI ts
 
 groupAssoc' mOp (Assoc Lft)      =  gAssocLeft mOp
 groupAssoc' mOp (Assoc Rght)     =  gAssocRight mOp

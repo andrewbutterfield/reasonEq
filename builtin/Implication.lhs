@@ -60,18 +60,6 @@ impKnown :: VarTable
 impKnown =  fromJust $ addKnownVar v_imp boolf_2 $ newVarTable
 \end{code}
 
-\subsubsection{Substitutability}
-
-$$
-  \begin{array}{ll}
-     \CJimpSubst & \CJimpSubstN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-implSubAble = M.fromList [(implies,CS)]
-\end{code}
 
 \newpage
 \subsection{Implication Axioms}
@@ -453,7 +441,6 @@ implTheory
                          , notName
                          , equivName ]
             , known   =  impKnown
-            , subable =  implSubAble
             , laws    =  implAxioms
             , conjs   =  implConjs
             }

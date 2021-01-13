@@ -18,7 +18,7 @@ module AST ( TermSub, LVarSub
            , TermKind(..)
            , isPredKind, isExprKind, ekType
            , classFromKind
-           , Term, readTerm
+           , Term, Subable, readTerm
            , pattern Val, pattern Var, pattern Cons
            , pattern Bnd, pattern Lam, pattern Cls
            , pattern Sub, pattern Iter, pattern Typ
@@ -342,19 +342,21 @@ We have a single term type (\verb"Term"),
 with an predicate/expression annotation.
 \begin{code}
 data Term
- = K TermKind Value                    -- Value
- | V TermKind Variable                 -- Variable
- | C TermKind Identifier [Term]        -- Constructor
- | B TermKind Identifier VarSet Term   -- Binder (unordered)
- | L TermKind Identifier VarList Term  -- Binder (ordered)
- | X Identifier Term                   -- Closure (always a predicate)
- | S TermKind Term Substn              -- Substitution
- | I TermKind                          -- Iterator
-     Identifier  -- top grouping constructor
-     Identifier  -- component constructor, with arity a
+ = K TermKind Value                      -- Value
+ | V TermKind Variable                   -- Variable
+ | C TermKind Subable Identifier [Term]  -- Constructor
+ | B TermKind Identifier VarSet Term     -- Binder (unordered)
+ | L TermKind Identifier VarList Term    -- Binder (ordered)
+ | X Identifier Term                     -- Closure (always a predicate)
+ | S TermKind Term Substn                -- Substitution
+ | I TermKind                            -- Iterator
+     Subable Identifier  -- top grouping constructor
+     Subable Identifier  -- component constructor, with arity a
      [ListVar]   -- list-variables, same length as component arity
- | ET Type                              -- Embedded TypeVar
+ | ET Type                               -- Embedded TypeVar
  deriving (Eq, Ord, Show, Read)
+
+type Subable = Bool  -- True if we can substitute into sub-terms
 
 readTerm :: String -> Term
 readTerm = read
@@ -369,44 +371,44 @@ all the general variables being bound will have to agree on \texttt{VarClass}.
 
 Kind-neutral patterns:
 \begin{code}
-pattern Val  tk k          =   K tk k
-pattern Var  tk v          <-  V tk v
-pattern Cons tk n ts       =   C tk n ts
-pattern Bnd  tk n vs tm    <-  B tk n vs tm
-pattern Lam  tk n vl tm    <-  L tk n vl tm
-pattern Cls     n    tm    =   X n tm
-pattern Sub  tk tm s       =   S tk tm s
-pattern Iter tk na ni lvs  =   I tk na ni lvs
-pattern Typ  typ           =   ET typ
+pattern Val  tk k                =   K tk k
+pattern Var  tk v                <-  V tk v
+pattern Cons tk sb n ts          =   C tk sb n ts
+pattern Bnd  tk n vs tm          <-  B tk n vs tm
+pattern Lam  tk n vl tm          <-  L tk n vl tm
+pattern Cls     n    tm          =   X n tm
+pattern Sub  tk tm s             =   S tk tm s
+pattern Iter tk sa na si ni lvs  =   I tk sa na si ni lvs
+pattern Typ  typ                 =   ET typ
 \end{code}
 
 Patterns for expressions:
 \begin{code}
-pattern EVal t k           =  K (E t) k
-pattern EVar t v          <-  V (E t) v
-pattern ECons t n ts       =  C (E t) n ts
-pattern EBind t n vs tm   <-  B (E t) n vs tm
-pattern ELam t n vl tm    <-  L (E t) n vl tm
-pattern ESub t tm s        =  S (E t) tm s
-pattern EIter t na ni lvs  =  I (E t) na ni lvs
+pattern EVal t k                 =   K (E t) k
+pattern EVar t v                 <-  V (E t) v
+pattern ECons t sb n ts          =   C (E t) sb n ts
+pattern EBind t n vs tm          <-  B (E t) n vs tm
+pattern ELam t n vl tm           <-  L (E t) n vl tm
+pattern ESub t tm s              =   S (E t) tm s
+pattern EIter t sa na si ni lvs  =   I (E t) sa na si ni lvs
 \end{code}
 
 Patterns for predicates:
 \begin{code}
-pattern PVal k             =  K P k
-pattern PVar v            <-  V P v
-pattern PCons n ts         =  C P n ts
-pattern PBind n vs tm     <-  B P n vs tm
-pattern PLam n vl tm      <-  L P n vl tm
-pattern PSub tm s          =  S P tm s
-pattern PIter na ni lvs    =  I P na ni lvs
+pattern PVal k                 =   K P k
+pattern PVar v                 <-  V P v
+pattern PCons sb n ts          =   C P sb n ts
+pattern PBind n vs tm          <-  B P n vs tm
+pattern PLam n vl tm           <-  L P n vl tm
+pattern PSub tm s              =   S P tm s
+pattern PIter sa na si ni lvs  =   I P sa na si ni lvs
 \end{code}
 
 \newpage
 Patterns for binary constructions:
 \begin{code}
-pattern E2 t n t1 t2  = C (E t) n [t1,t2]
-pattern P2   n t1 t2  = C P     n [t1,t2]
+pattern E2 t sb n t1 t2  = C (E t) sb n [t1,t2]
+pattern P2   sb n t1 t2  = C P     sb n [t1,t2]
 \end{code}
 
 
@@ -478,14 +480,14 @@ binderClass _ = fail "binderClass: not a binding term."
 It can help to test if a term is an variable, expression or predicate:
 \begin{code}
 termkind :: Term -> TermKind
-termkind (Val tk k)           =  tk
-termkind (Var tk v)           =  tk
-termkind (Cons tk n ts)       =  tk
-termkind (Bnd tk n vl tm)    =  tk
-termkind (Lam tk n vs tm)     =  tk
-termkind (Cls i tk)           =  P
-termkind (Sub tk tm s)        =  tk
-termkind (Iter tk na ni lvs)  =  tk
+termkind (Val tk k)                 =  tk
+termkind (Var tk v)                 =  tk
+termkind (Cons tk sb n ts)          =  tk
+termkind (Bnd tk n vl tm)           =  tk
+termkind (Lam tk n vs tm)           =  tk
+termkind (Cls i tk)                 =  P
+termkind (Sub tk tm s)              =  tk
+termkind (Iter tk sa na si ni lvs)  =  tk
 
 isVar, isExpr, isPred, isAtomic :: Term -> Bool
 isVar (Var _ _) = True ; isVar _ = False
@@ -513,7 +515,7 @@ varAsTerm v                =  V (E T) v
 Using \texttt{Iter} for a construct built from a list of list-variables
 \begin{code}
 icomma = jId ","
-lvarCons tk ni lvs = Iter tk icomma ni lvs
+lvarCons tk ni lvs = Iter tk True icomma True ni lvs
 \end{code}
 
 In \cite{UTP-book} we find the notion of texts, in chapters 6 and 10.
@@ -622,7 +624,7 @@ of a given type (terms/variables/list-variables/variable-sets/variable-lists)
 
 \begin{code}
 subTerms :: Term -> [Term]
-subTerms t@(C _ _ ts)    =  t : nub (concat $ map subTerms ts)
+subTerms t@(C _ _ _ ts)  =  t : nub (concat $ map subTerms ts)
 subTerms t@(B _ _ _ t')  =  t : subTerms t'
 subTerms t@(L _ _ _ t')  =  t : subTerms t'
 subTerms t@(X _ t')      =  t : subTerms t'
@@ -639,11 +641,11 @@ regardless of whether or not they are free or bound.
 
 \begin{code}
 mentionedVars :: Term -> VarSet
-mentionedVars (V _ v)       =  S.singleton $ StdVar v
-mentionedVars (C _ _ ts)    =  S.unions $ map mentionedVars ts
-mentionedVars (B _ _ vs t)  =  mentionedVars t `S.union` vs
-mentionedVars (L _ _ vl t)  =  mentionedVars t `S.union` (S.fromList vl)
-mentionedVars (X _ t)       =  mentionedVars t
+mentionedVars (V _ v)            =  S.singleton $ StdVar v
+mentionedVars (C _ _ _ ts)       =  S.unions $ map mentionedVars ts
+mentionedVars (B _ _ vs t)       =  mentionedVars t `S.union` vs
+mentionedVars (L _ _ vl t)       =  mentionedVars t `S.union` (S.fromList vl)
+mentionedVars (X _ t)            =  mentionedVars t
 mentionedVars (S _ t (SN tsub lvsub))
   = (mentionedVars t `S.union` tvs) `S.union` rvs
   where
@@ -653,8 +655,8 @@ mentionedVars (S _ t (SN tsub lvsub))
      rvs = S.unions (map mentionedVars rtl)
            `S.union`
            (S.map LstVar $ S.fromList rlvl)
-mentionedVars (I _ _ _ lvs)  =  S.fromList $ map LstVar lvs
-mentionedVars _ = S.empty
+mentionedVars (I _ _ _ _ _ lvs)  =  S.fromList $ map LstVar lvs
+mentionedVars _                  =  S.empty
 \end{code}
 
 \newpage
@@ -662,26 +664,25 @@ mentionedVars _ = S.empty
 
 \begin{code}
 mentionedVarLists :: Term -> [VarList]
-mentionedVarLists (C _ _ ts) = concat $ map mentionedVarLists ts
-mentionedVarLists (B _ _ _ t) = mentionedVarLists t
-mentionedVarLists (L _ _ vl t) = vl : mentionedVarLists t
-mentionedVarLists (X _ t) = mentionedVarLists t
+mentionedVarLists (C _ _ _ ts)       =  concat $ map mentionedVarLists ts
+mentionedVarLists (B _ _ _ t)        =  mentionedVarLists t
+mentionedVarLists (L _ _ vl t)       =  vl : mentionedVarLists t
+mentionedVarLists (X _ t)            =  mentionedVarLists t
 mentionedVarLists (S _ t (SN tsub lvsub))
   = mentionedVarLists t ++ concat (map mentionedVarLists rtl)
   where rtl = map snd $ S.toList tsub
-mentionedVarLists (I _ _ _ lvs) = [map LstVar lvs]
-mentionedVarLists _ = []
+mentionedVarLists (I _ _ _ _ _ lvs)  =  [map LstVar lvs]
+mentionedVarLists _                  =  []
 \end{code}
 
 Here we include the implicit variable-sets induced by substitution targets.
 \begin{code}
 mentionedVarSets :: Term -> [VarSet]
-mentionedVarSets (C _ _ ts) = concat $ map mentionedVarSets ts
-mentionedVarSets (B _ _ vs t) = vs : mentionedVarSets t
-mentionedVarSets (L _ _ _ t) = mentionedVarSets t
-mentionedVarSets (X _ t) = mentionedVarSets t
-mentionedVarSets (S _ t (SN tsub lvsub))
-  = mentionedVarSets t ++ tvs ++ rvs
+mentionedVarSets (C _ _ _ ts)             =  concat $ map mentionedVarSets ts
+mentionedVarSets (B _ _ vs t)             =  vs : mentionedVarSets t
+mentionedVarSets (L _ _ _ t)              =  mentionedVarSets t
+mentionedVarSets (X _ t)                  =  mentionedVarSets t
+mentionedVarSets (S _ t (SN tsub lvsub))  = mentionedVarSets t ++ tvs ++ rvs
   where
      (tsvl,rtl) = unzip $ S.toList tsub
      (tlvl,rlvl) = unzip $ S.toList lvsub
@@ -691,8 +692,8 @@ mentionedVarSets (S _ t (SN tsub lvsub))
      rtvs  = S.unions (concat (map mentionedVarSets rtl))
      rlvvs = S.fromList (map LstVar rlvl)
      rvs   = [rtvs,rlvvs,rtvs `S.union` rlvvs]
-mentionedVarSets (I _ _ _ lvs) = [S.fromList $ map LstVar lvs]
-mentionedVarSets _ = []
+mentionedVarSets (I _ _ _ _ _ lvs)        =  [S.fromList $ map LstVar lvs]
+mentionedVarSets _                        =  []
 \end{code}
 
 \newpage

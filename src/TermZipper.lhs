@@ -44,20 +44,20 @@ such as the notion of assertions, proof strategies,
 and proof calculations.
 
 
-We implement a zipper on the publically available patterns.
+We implement a zipper on the publicly available patterns.
 Algebraically:
 \begin{eqnarray*}
    t &::=& Val_k~n
       ~|~  Iter_k~i~i~lv
       ~|~  Type~\tau
       ~|~  Var_k~v \qquad \mbox{--- no term subcomponent}
-\\   &~|~& Cons_k~i~t^*
+\\   &~|~& Cons_k~b~i~t^*
       ~|~  Bind_k~i~vs~t
       ~|~  Lam_k~i~vl~t
       ~|~  Cls~i~t
       ~|~  Sub_k~t~s
 \\ s &::=& Substn~(v,t)^*~(v,v)^*
-\\ t' &::=& Cons'_k~i~t^*~t^*
+\\ t' &::=& Cons'_k~b~i~t^*~t^*
        ~|~  Bnd'_k~i~vs
        ~|~  Lam'_k~i~vl
        ~|~  Cls'~i
@@ -68,9 +68,9 @@ Algebraically:
 type TermSubL = [(Variable, Term)]
 
 data Term'
-  = Cons'   TermKind Identifier [Term] -- terms before focus, reversed
-                                [Term] -- terms after focus
-  | Bnd'   TermKind Identifier VarSet
+  = Cons'   TermKind Subable Identifier [Term] -- terms before focus, reversed
+                                        [Term] -- terms after focus
+  | Bnd'    TermKind Identifier VarSet
   | Lam'    TermKind Identifier VarList
   | Cls'             Identifier
   | Sub'    TermKind Substn
@@ -103,16 +103,16 @@ downTZ n tz@(t,wayup)
       Nothing  ->  (False,tz) -- null op, if not possible to descend as requested
       Just (td,t')  ->  (True,(td,t':wayup))
 
-descend n (Cons tk i ts)
+descend n (Cons tk sb i ts)
   = case peel n ts of
       Nothing  ->  Nothing
-      Just (before,nth,after)  ->  Just (nth,Cons' tk i before after)
+      Just (before,nth,after)  ->  Just (nth,Cons' tk sb i before after)
 descend 1 (Bnd tk i vs t)  =  Just (t,Bnd' tk i vs)
-descend 1 (Lam tk i vl t)   =  Just (t,Lam' tk i vl)
-descend 1 (Cls i t)         =  Just (t,Cls' i)
-descend 1 (Sub tk t sub)    =  Just (t,Sub' tk sub)
-descend n (Sub tk t sub)    =  sdescend tk t (n-1) sub
-descend _ _                 =  Nothing
+descend 1 (Lam tk i vl t)  =  Just (t,Lam' tk i vl)
+descend 1 (Cls i t)        =  Just (t,Cls' i)
+descend 1 (Sub tk t sub)   =  Just (t,Sub' tk sub)
+descend n (Sub tk t sub)   =  sdescend tk t (n-1) sub
+descend _ _                =  Nothing
 
 sdescend tk t n (Substn tsub lvsub)
   = case peel n (S.toList tsub) of
@@ -151,12 +151,12 @@ upTZ tz@(_,[]) = (False, tz) -- null op, if already at top
 upTZ (t,(parent:wayup)) =  (True, (ascend t parent, wayup))
 
 ascend :: Term -> Term' -> Term -- should always succeed
-ascend t (Cons' tk i before after)  =  Cons tk i $ wrap before t after
+ascend t (Cons' tk sb i before after)  =  Cons tk sb i $ wrap before t after
 ascend t (Bnd' tk i vs)
-  | otherwise                       =  fromJust $ bnd tk i vs t
-ascend t (Lam' tk i vl)             =  fromJust $ lam tk i vl t
-ascend t (Cls' i)                   =  Cls i t
-ascend t (Sub' tk sub)              =  Sub tk t sub
+  | otherwise                          =  fromJust $ bnd tk i vs t
+ascend t (Lam' tk i vl)                =  fromJust $ lam tk i vl t
+ascend t (Cls' i)                      =  Cls i t
+ascend t (Sub' tk sub)                 =  Sub tk t sub
 ascend t (Substn' tk tt lvarsub before v after)  =  Sub tk tt sub
   where sub = fromJust (substn (wrap before (v,t) after) (S.toList lvarsub))
 
@@ -239,23 +239,23 @@ int = GivenType $ fromJust $ ident tZ
 kint = E int
 ival i = Val kint (Integer i)
 i42 = ival 42
-box p = Cons P (fromJust $ ident "BOX") [p]
+box p = Cons P True (fromJust $ ident "BOX") [p]
 x = fromJust $ ident "x"
 vx = fromJust $ var kint $ Vbl x ObsV Static
 tint = Typ int
-iter = Iter P (fromJust $ ident "land") (fromJust $ ident "=") []
+iter = Iter P True (fromJust $ ident "land") True (fromJust $ ident "=") []
 f = fromJust $ ident "F"
 g = fromJust $ ident "G"
-cons0 = Cons P f [i42,vx,tint,iter]
-cons1 p = Cons P f [p,vx,tint,iter]
-cons2 p = Cons P f [i42,p,tint,iter]
-cons3 p = Cons P f [i42,vx,p,iter]
-cons4 p = Cons P f [i42,vx,tint,p]
+cons0 = Cons P True f [i42,vx,tint,iter]
+cons1 p = Cons P True f [p,vx,tint,iter]
+cons2 p = Cons P True f [i42,p,tint,iter]
+cons3 p = Cons P True f [i42,vx,p,iter]
+cons4 p = Cons P True f [i42,vx,tint,p]
 i99 = ival 99
-ccons p = Cons P f [i42,Cons P g [tint,p,vx],iter]
+ccons p = Cons P True f [i42,Cons P True g [tint,p,vx],iter]
 bcons 0 p = box $ ccons p
-bcons 1 p = Cons P f [i42,box $ Cons P g [tint,p,vx],iter]
-bcons 2 p = Cons P f [i42,Cons P g [tint,box p,vx],iter]
+bcons 1 p = Cons P True f [i42,box $ Cons P True g [tint,p,vx],iter]
+bcons 2 p = Cons P True f [i42,Cons P True g [tint,box p,vx],iter]
 \end{code}
 
 \begin{code}

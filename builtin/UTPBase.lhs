@@ -307,7 +307,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-tfo p q = Cons P (jId "star") [p,q]
+tfo p q = Cons P True (jId "star") [p,q]
 (cjCondMutual,alCondMutual)
   = bookdef ("cond" -.- "mdistr") "Ex2.1.2"
       ( cond (p `tfo` q) b (r `tfo` s) === tfo (cond p b r) (cond q b s) )
@@ -427,8 +427,8 @@ asgIntro = mkConsIntro i_asg apred11
                          ===
                          (x' `isEqualTo` e)
                          /\
-                         PIter land equals [ lO' `less` ([ix],[])
-                                           , lO  `less` ([ix],[]) ]
+                         PIter True land True equals [ lO' `less` ([ix],[])
+                                                     , lO  `less` ([ix],[]) ]
                        )
                        scTrue
 \end{code}
@@ -507,7 +507,7 @@ $$ %\par\vspace{-8pt}
 \begin{code}
 skipIntro = mkConsIntro i_skip bool
 (axSkipDef,alSkipDef) = bookdef ("II" -.- "def") "Def2.3.2"
-                         ( skip  ===  PIter land equals [ lO', lO ] )
+                         ( skip  ===  PIter True land True equals [ lO', lO ] )
                          scTrue
 \end{code}
 
@@ -765,13 +765,6 @@ utpBaseConjs
 \end{code}
 
 
-We now collect our substitutability information:
-\begin{code}
-utpBaseSubAbility :: SubAbilityMap
-utpBaseSubAbility
- = M.fromList [ ( jId "cond", CS )]
-\end{code}
-
 We now collect our alias set:
 \begin{code}
 utpBaseAliases :: [(String,String)]
@@ -808,7 +801,6 @@ utpBaseTheory
                          , equivName
                          ]
             , known   =  utpBaseKnown
-            , subable =  utpBaseSubAbility
             , laws    =  utpBaseAxioms
             , conjs   =  utpBaseConjs
             }

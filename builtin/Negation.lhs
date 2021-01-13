@@ -57,20 +57,6 @@ negationKnown :: VarTable
 negationKnown =  fromJust $ addKnownVar v_not boolf_1 $ newVarTable
 \end{code}
 
-\subsubsection{Substitutability}
-$$
-  \begin{array}{ll}
-     \CJfalseSubst & \CJfalseSubstN
-  \\ \AXnotSubst & \AXnotSubstN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-negationSubAble = M.fromList [(lnot,CS)]
-\end{code}
-
-
 
 \newpage
 \subsection{Negation Axioms}
@@ -225,7 +211,6 @@ notTheory
   =  nullTheory { thName  =  notName
             , thDeps  =  [equivName]
             , known   =  negationKnown
-            , subable =  negationSubAble
             , laws    =  negationAxioms
             , conjs   =  negationConjs
             }

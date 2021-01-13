@@ -117,10 +117,10 @@ an identifier, and a list of terms,
 and returns the corresponding build-result:
 \begin{code}
 buildTerm :: FormSpec
-          -> TermKind -> Identifier -> [Term]
+          -> TermKind -> Subable -> Identifier -> [Term]
           -> BuildResult
-buildTerm (SimpleSpec (SimpleForm sf)) i ts = simpleFormTerm  sf i ts
-buildTerm (IterateSpec bc lc)          i ts = iterFormTerm bc lc i ts
+buildTerm (SimpleSpec (SimpleForm sf)) i sb ts = simpleFormTerm  sf i sb ts
+buildTerm (IterateSpec bc lc)          i sb ts = iterFormTerm bc lc i ts
 \end{code}
 
 \subsubsection{Basic Component Satisfaction}
@@ -140,12 +140,12 @@ basicCompSat _         _        =  False
 
 \begin{code}
 simpleFormTerm :: [BasicComp]
-               -> TermKind -> Identifier -> [Term]
+               -> TermKind -> Subable -> Identifier -> [Term]
                -> BuildResult
-simpleFormTerm sf tk i ts
+simpleFormTerm sf tk sb i ts
   =  mkSF 1 [] sf ts
   where
-    mkSF _ []   [] []  =  Right $ Cons tk i ts
+    mkSF _ []   [] []  =  Right $ Cons tk sb i ts
     mkSF _ kibs [] []  =  Left $ BuildFail (reverse kibs) Nothing
     mkSF _ kibs [] xs  =  Left $ BuildFail (reverse kibs)
                                          $ Just $ TooLong  $ length xs
@@ -166,7 +166,7 @@ i_Q = fromJust $ ident "Q" ; v_Q = PredVar i_Q Static
 q = fromJust $ pVar v_Q
 i_c = fromJust $ ident "c" ; v_c = PreExpr i_c
 c = fromJust $ eVar ArbType v_c
-mkCond ts = simpleFormTerm condForm P i_cond ts
+mkCond ts = simpleFormTerm condForm P True i_cond ts
 
 simpleFormTermTests
  = testGroup "Builder.simpleFormTerm (P <| c |> Q)"
@@ -179,7 +179,7 @@ simpleFormTermTests
       ( mkCond [p,c]
         @?= Left (BuildFail [] (Just (TooShort 1))) )
     , testCase "Three correct terms"
-      ( mkCond [p,c,q] @?= Right (PCons i_cond [p,c,q]) )
+      ( mkCond [p,c,q] @?= Right (PCons True i_cond [p,c,q]) )
     , testCase "Three terms, 1 incorrect"
       ( mkCond [p,q,p] @?= Left (BuildFail [BadItemKind 2 ExprSyn] Nothing) )
     , testCase "One (incorrect) term"

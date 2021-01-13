@@ -75,7 +75,6 @@ data Theory
       thName   :: String
     , thDeps   :: [String]
     , known    :: VarTable
-    , subable  :: SubAbilityMap
     , laws     :: [Law]
     , proofs   :: [Proof]
     , conjs    :: [NmdAssertion]
@@ -86,7 +85,6 @@ data Theory
 thName__ f r = r{thName = f $ thName r}    ; thName_ = thName__ . const
 thDeps__ f r = r{thDeps = f $ thDeps r}    ; thDeps_ = thDeps__ . const
 known__ f r = r{known = f $ known r}       ; known_ = known__ . const
-subable__ f r = r{subable = f $ subable r} ; subable_ = subable__ . const
 laws__ f r = r{laws = f $ laws r}          ; laws_ = laws__ . const
 proofs__ f r = r{proofs = f $ proofs r}    ; proofs_ = proofs__ . const
 conjs__ f r = r{conjs = f $ conjs r}       ; conjs_ = conjs__ . const
@@ -112,7 +110,6 @@ nullTheory
   = Theory { thName   =  "0"
            , thDeps   =  []
            , known    =  newVarTable
-           , subable  =  M.empty
            , laws     =  []
            , proofs   =  []
            , conjs    =  []
@@ -137,8 +134,7 @@ writeTheory :: Theory -> [String]
 writeTheory thry
   = [ thryHDR nm
     , depsKEY ++ show (thDeps thry)
-    , knwnKEY ++ show (known thry)
-    , sbblKEY ++ show (subable thry) ] ++
+    , knwnKEY ++ show (known thry) ] ++
     writePerLine lawsKEY show (laws thry) ++
     writePerLine prfsKEY show (proofs thry) ++
     writePerLine conjKEY show (conjs thry) ++
@@ -151,20 +147,18 @@ readTheory txts
   = do (nm,  rest1) <- readKey (thryHDR "") id txts
        (deps,rest2) <- readKey depsKEY read     rest1
        (knwn,rest3) <- readKey knwnKEY read     rest2
-       (sbbl,rest4) <- readKey sbblKEY read     rest3
-       (lws, rest5) <- readPerLine lawsKEY read rest4
-       (prfs,rest6) <- readPerLine prfsKEY read rest5
-       (conj,rest7) <- readPerLine conjKEY read rest6
-       rest8        <- readThis (thryTRL nm)    rest7
+       (lws, rest4) <- readPerLine lawsKEY read rest3
+       (prfs,rest5) <- readPerLine prfsKEY read rest4
+       (conj,rest6) <- readPerLine conjKEY read rest5
+       rest7        <- readThis (thryTRL nm)    rest6
        return ( Theory { thName   =  nm
                        , thDeps   =  deps
                        , known    =  knwn
-                       , subable  =  sbbl
                        , laws     =  lws
                        , proofs   =  prfs
                        , conjs    =  conj
                        }
-              , rest8 )
+              , rest7 )
 \end{code}
 
 \newpage
@@ -511,7 +505,6 @@ showTheoryLaws dm thry
   = unlines' (
       [ "Theory '"++thName thry++"'"
       , "Knowns:", trVarTable (known thry)
-      , "Sub-Ability: " ++ trMap trId show (subable thry)
       , "Laws:", showLaws dm (laws thry)
       , "Conjectures:", showConjs dm (conjs thry)
       ] )
@@ -529,7 +522,6 @@ showTheoryLong dm thry
         else [ "depends on: "++intercalate "," deps] )
       ++
       [ "Knowns:", trVarTable (known thry)
-      , "Sub-Ability: " ++ trMap trId show (subable thry)
       , "Laws:", showLaws dm (laws thry)
       , "Conjectures:", showConjs dm (conjs thry) ]
     )

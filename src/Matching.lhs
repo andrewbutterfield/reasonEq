@@ -214,8 +214,8 @@ $$
 $$
 Here $ts_X = \langle t_{X_1}, t_{X_2}, \dots t_{X_n} \rangle$.
 \begin{code}
-tMatch' vts bind cbvs pbvs (Cons tkC nC tsC) (Cons tkP nP tsP)
- | tkC == tkP
+tMatch' vts bind cbvs pbvs (Cons tkC sbC nC tsC) (Cons tkP sbP nP tsP)
+ | tkC == tkP && sbC == sbP
    =  do let vClass = classFromKind tkC
          let vC = Vbl nC vClass Static
          let vP = Vbl nP vClass Static
@@ -373,8 +373,11 @@ $$
 $$
 
 \begin{code}
-tMatch' vts bind cbvs pbvs (Iter tkC naC niC lvsC) (Iter tkP naP niP lvsP)
-  | tkP == tkC && naC == naP && niC == niP && length lvsP == length lvsC
+tMatch' vts bind cbvs pbvs (Iter tkC saC naC siC niC lvsC)
+                           (Iter tkP saP naP siP niP lvsP)
+  | tkP == tkC && naC == naP && niC == niP
+               && saC == saP && siC == siP
+               && length lvsP == length lvsC
                =  ibind bind $ zip lvsP lvsC
   | otherwise  =  fail "tMatch: incompatible Iter."
   where
@@ -402,8 +405,9 @@ $$
 $$
 
 \begin{code}
-tMatch' vts bind cbvs pbvs tC@(Cons tkC naC tsC) (Iter tkP naP niP lvsP)
-  | tkP == tkC && naC == naP && all isNiP tsC
+tMatch' vts bind cbvs pbvs tC@(Cons tkC saC naC tsC)
+                              (Iter tkP saP naP siP niP lvsP)
+  | tkP == tkC && naC == naP && saC == saP && all isNiP tsC
                = ibind bind $ zip lvsP $ transpose $ map unNiP tsC
   | otherwise
      = fail $ unlines
@@ -418,10 +422,10 @@ tMatch' vts bind cbvs pbvs tC@(Cons tkC naC tsC) (Iter tkP naP niP lvsP)
          ]
   where
     arity = length lvsP
-    isNiP (Cons _ n ts)  =  n == niP && length ts == arity
-    isNiP _              =  False
-    unNiP (Cons _ _ ts)  =  ts
-    unNiP _              =  []
+    isNiP (Cons _ s n ts)  =  n == niP && s == siP && length ts == arity
+    isNiP _                =  False
+    unNiP (Cons _ _ _ ts)  =  ts
+    unNiP _                =  []
     ibind bind [] = return bind
     ibind bind ((lvP,tsC):rest)
       =  do bind' <- bindLVarToTList lvP tsC bind

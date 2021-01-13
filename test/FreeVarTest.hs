@@ -38,12 +38,12 @@ tbu u = jVar earb $ bu u
 tP = jVar P $ PredVar (jId "P") Static
 tPu u = jVar P $ PredVar (jIdU "P" u) Static
 
-e42plus x = Cons eint (jId "+")[e42,x]
-land p q = Cons P (jId "/\\") [p,q]
+e42plus x = Cons eint True (jId "+")[e42,x]
+land p q = Cons P True (jId "/\\") [p,q]
 
 xs = LVbl x [] []
 ys = LVbl y [] []
-iterLVs = Iter P (jId "/\\") (jId "=") [xs,ys]
+iterLVs = Iter P True (jId "/\\") True (jId "=") [xs,ys]
 
 tInt = Typ int
 

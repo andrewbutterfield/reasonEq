@@ -182,14 +182,15 @@ normQ vv v@(Var tk _)
 \end{eqnarray*}
 \begin{code}
 --normQ :: VarVersions -> Term -> (Term, VarVersions)
-normQ vv (Cons tk n ts)       =  (Cons tk n ts',vv')
+normQ vv (Cons tk sb n ts)       =  (Cons tk sb n ts',vv')
                               where (ts',vv') =  mapaccum normQ vv ts
 normQ vv (Sub tk tm s)
   = let (tm',vv') = normQ vv tm
         (s',vv'') = normQSub vv' s
     in (Sub tk tm' s',vv'')
 
-normQ vv (Iter tk na ni lvs)  =  (Iter tk na ni $ map (normQLVar vv) lvs,vv)
+normQ vv (Iter tk sa na si ni lvs)  
+  =  (Iter tk sa na si ni $ map (normQLVar vv) lvs,vv)
 \end{code}
 
 \begin{eqnarray*}

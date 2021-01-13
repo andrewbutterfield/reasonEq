@@ -63,21 +63,6 @@ equivKnown =  fromJust $ addKnownVar v_equiv boolf_2 $ newVarTable
 \end{code}
 
 \newpage
-\subsubsection{Substitutability}
-
-$$
-  \begin{array}{ll}
-     \AXeqvSubst & \AXeqvSubstN
-  \\ \AXtrueSubst & \AXtrueSubstN
-  \end{array}
-$$
-
-%\vspace{-8pt}
-\begin{code}
-equivSubAble = M.fromList [(equiv,CS)]
--- true is a value, and so is automatically NS
-\end{code}
-
 
 \subsubsection{Axioms}
 
@@ -213,7 +198,6 @@ equivTheory :: Theory
 equivTheory
   =  nullTheory { thName  =  equivName
                 , known   =  equivKnown
-                , subable =  equivSubAble
                 , laws    =  equivAxioms
                 , conjs   =  equivConjs
                 }

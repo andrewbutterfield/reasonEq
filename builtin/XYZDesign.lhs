@@ -188,7 +188,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-mkSeq p q = PCons (fromJust $ ident ";")[p, q]
+mkSeq p q = PCons False (fromJust $ ident ";")[p, q]
 before r = Sub P r $ fromJust $ substn [(vx',xm),(vy',ym),(vz',zm),(vok',okm)] []
 after r  = Sub P r $ fromJust $ substn [(vx,xm), (vy,ym), (vz,zm),(vok,okm)] []
 
@@ -237,7 +237,7 @@ $$
   \end{array}
 $$\par%\vspace{-8pt}
 \begin{code}
-mkDesign p q = PCons (fromJust $ ident "vdash") [p,q]
+mkDesign p q = PCons True (fromJust $ ident "vdash") [p,q]
 
 axDesignDef = preddef ("vdash" -.- "def")
                    ( mkDesign p q
@@ -262,7 +262,7 @@ $$
   \end{array}
 $$\par%\vspace{-8pt}
 \begin{code}
-mkAsg x e = PCons (fromJust $ ident ":=")[x, e]
+mkAsg x e = PCons False (fromJust $ ident ":=")[x, e]
 preT p = mkDesign trueP p
 
 axdXAsgDef = preddef ("X" -.- ":=" -.- "def")

@@ -22,7 +22,7 @@ module AbstractUI
 , applyMatchToFocus1, applyMatchToFocus2
 , normQuantFocus
 , nestSimpFocus
-, substituteFocus, revSubstituteFocus
+, substituteFocus
 , tryFocusAgainst
 , observeLawsInScope, observeKnownsInScope
 , flattenAssociative, groupAssociative
@@ -308,12 +308,13 @@ shadowFree :: Assertion -> Bool
 shadowFree (Assertion t sc) = shadowFree' sc S.empty t
 
 shadowFree' :: SideCond -> VarSet -> Term -> Bool
-shadowFree' sc bvs (Cons _ _ ts)    =  all (shadowFree' sc bvs) ts
-shadowFree' sc bvs (Bnd _ _ vs tm) =  shadowFree'' sc bvs vs tm
-shadowFree' sc bvs (Lam  _ _ vl tm) =  shadowFree'' sc bvs (S.fromList vl) tm
-shadowFree' sc bvs (Cls _ tm)       =  shadowFree' sc bvs tm
-shadowFree' sc bvs (Sub _ t s) =  shadowFree' sc bvs t && shadowFreeSub sc bvs s
-shadowFree' _  _   asn              = True
+shadowFree' sc bvs (Cons _ _ _ ts)   =  all (shadowFree' sc bvs) ts
+shadowFree' sc bvs (Bnd _ _ vs tm)   =  shadowFree'' sc bvs vs tm
+shadowFree' sc bvs (Lam  _ _ vl tm)  =  shadowFree'' sc bvs (S.fromList vl) tm
+shadowFree' sc bvs (Cls _ tm)        =  shadowFree' sc bvs tm
+shadowFree' sc bvs (Sub _ t s)       =  shadowFree' sc bvs t
+                                        && shadowFreeSub sc bvs s
+shadowFree' _  _   asn               =  True
 
 shadowFree'' sc bvs vs tm
  | bvs `disjoint` vs  =  shadowFree' sc (bvs `S.union` vs) tm
@@ -617,10 +618,9 @@ substituteFocus thrys liveProof
   = let (tz,seq') = focus liveProof
         dpath = fPath liveProof
         t = getTZ tz
-        sams = map subable $ getTheoryDeps' (conjThName liveProof) thrys
     in case t of
          (Sub _ tm s)
-            -> do t' <- substitute sams s tm
+            -> do t' <- substitute s tm
                   return ( focus_ ((setTZ t' tz),seq')
                          $ matches_ []
                          $ stepsSoFar__
@@ -628,20 +628,6 @@ substituteFocus thrys liveProof
                              , (mkAsn (exitTZ tz) (conjSC liveProof))):)
                             liveProof )
          _  -> fail "substitute only for explicit substitution focii"
-\end{code}
-
-\subsubsection{Reverse Substitution}
-
-\begin{code}
-revSubstituteFocus :: Monad m => Int -> Theories -> LiveProof -> m LiveProof
-revSubstituteFocus n thrys liveProof
-  = let (tz,seq') = focus liveProof
-        dpath = fPath liveProof
-        t = getTZ tz
-        sams = map subable $ getTheoryDeps' (conjThName liveProof) thrys
-        n' =  if n==0 then 1 else n
-    in do t' <- revSubstitute sams n' t
-          fail ("NYfI:revSubstituteFocus "++show n++" "++trTerm 0 t')
 \end{code}
 
 
@@ -794,7 +780,7 @@ cloneHypothesis i land liveProof
         Nothing -> fail ("No such hypothesis: "++show i)
         Just ((_,(Assertion hypt _)),_)
           -> do let asn' = mkAsn (exitTZ tz) (conjSC liveProof)
-                return ( focus_ (mkTZ $ PCons land [hypt,currt],seq')
+                return ( focus_ (mkTZ $ PCons True land [hypt,currt],seq')
                        $ matches_ []
                        $ stepsSoFar__ ((CloneH i, asn'):)
                          liveProof )

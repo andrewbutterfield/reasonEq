@@ -251,7 +251,7 @@ newProof1 :: Monad m => Int -> REqState
           -> m ( NmdAssertion
                , [(String,Sequent)] ) -- named strategy list
 newProof1 i reqs
-  = case nlookup i (getCurrConj reqs) of
+  = case nlookup i' (getCurrConj reqs) of
       Nothing  ->  fail "invalid conjecture number"
       Just nconj@(nm,asn)
         | shadowFree asn
@@ -260,6 +260,7 @@ newProof1 i reqs
                 , availableStrategies (logicsig reqs) thys currTh nconj )
         | otherwise -> fail "shadowed bound-vars. in conjecture"
   where
+    i' = if i == 0 then 1 else i
     currTh = currTheory reqs
     getCurrConj reqs = fromJust $ getTheoryConjectures currTh thys
     thys = theories reqs

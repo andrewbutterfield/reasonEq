@@ -105,8 +105,8 @@ We need to be careful with non-substitutable terms!
 \\
 \\ norm &:& VV \fun T \fun (T \times VV)
 \\ norm_\mu(v)         &\defs & (v_{\mu(v)} \cond{v \in \mu} v_0,\mu)
-\\ norm_\mu(e)         &\defs & (e\sigma,\mu) \quad\where\quad \sigma=mksub(\mu)
-\\ norm_\mu(P)         &\defs & (P\sigma,\mu) \quad\where\quad \sigma=mksub(\mu)
+\\ norm_\mu(e)         &\defs & (e,\mu)
+\\ norm_\mu(P)         &\defs & (P,\mu)
 \\ norm_\mu(p \land q) &\defs & (p' \land q',\mu'')
 \\                     &\where& (p',\mu') = norm_\mu(p)
 \\                     &      & (q',\mu'') = norm_{\mu'}(q)
@@ -163,16 +163,15 @@ normQ :: VarVersions -> Term -> (Term, VarVersions)
 
 \begin{eqnarray*}
    norm_\mu(v)         &\defs & (v_{\mu(v)} \cond{v \in \mu} v_0,\mu)
-\\ norm_\mu(e)         &\defs & (e\sigma,\mu) \quad\where\quad \sigma=mksub(\mu)
-\\ norm_\mu(P)         &\defs & (P\sigma,\mu) \quad\where\quad \sigma=mksub(\mu)
+\\ norm_\mu(e)         &\defs & (e,\mu)
+\\ norm_\mu(P)         &\defs & (P,\mu)
 \end{eqnarray*}
+It is very important not to produce substitutions on term variables here.
 \begin{code}
 --normQ :: VarVersions -> Term -> (Term, VarVersions)
 normQ vv (Var tk v@(Vbl (Identifier nm _) ObsV _))
-              =  ( fromJust $ var tk $ normQVar vv v, vv )
-normQ vv v@(Var tk _)
- | M.null vv  =  ( v,                                 vv )
- | otherwise  =  ( Sub tk v $ mkVVsubstn vv,          vv )
+                       =  ( fromJust $ var tk $ normQVar vv v, vv )
+normQ vv v@(Var tk _)  =  ( v,                                 vv )
 \end{code}
 
 \begin{eqnarray*}
@@ -189,7 +188,7 @@ normQ vv (Sub tk tm s)
         (s',vv'') = normQSub vv' s
     in (Sub tk tm' s',vv'')
 
-normQ vv (Iter tk sa na si ni lvs)  
+normQ vv (Iter tk sa na si ni lvs)
   =  (Iter tk sa na si ni $ map (normQLVar vv) lvs,vv)
 \end{code}
 

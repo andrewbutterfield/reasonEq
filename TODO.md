@@ -8,11 +8,6 @@ We need this implemented as a gatekeeper for the construction of Assertions,
 and it needs to duplicate side-conditions when such refers to a multiply-used quantifier variable.
 We also need to handle non-substitutable terms.
 
-**Whoops!**
-
-Axiom `(∀ x$ • P)≡P` normalises to `(∀ x$ • P[x,x$/x,x$])≡P[x,x$/x,x$]`.
-
-We should not apply normalising substitutions to term variables.
 
 
 We note that the only `Term` variants that require a substitutability marker are `Cons`
@@ -24,7 +19,7 @@ We need to normalise all `Assertion`s as follows:
 
 2 All quantifier variables must be unique, arranged by using the `Int` component of the `Identifier` datatype.
 
-3 Any nested `Bind`s with the same type and identifier ahould be merged 
+3 Any nested `Bind`s with the same type and identifier ahould be merged, after step 2 is done. 
 
 ```
 B tk i vs1 (B tk i vs2) ⟼  B tk i (vs1 ∪ vs2)

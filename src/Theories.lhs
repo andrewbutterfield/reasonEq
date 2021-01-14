@@ -26,7 +26,7 @@ module Theories
  , replaceTheory, replaceTheory'
  , updateTheory
  , newTheoryConj
- , assumeConj, lawDemote
+ , assumeConj, assumeDepConj, lawDemote
  , addTheoryProof, upgradeConj2Law
  , showTheories, showNamedTheory
  , showTheoryLong, showTheoryShort, showTheoryLaws
@@ -285,7 +285,7 @@ getTheoryDeps nm theories
           Nothing ->  fail ("Dep. '"++nm++"' not found.")
           Just t  -> return t
 \end{code}
-Sometimes we don't want to distinguish failure  and having no laws:
+Sometimes we don't want to distinguish failure  and having no theories:
 \begin{code}
 getTheoryDeps' :: String -> Theories -> [Theory]
 getTheoryDeps' nm theories
@@ -415,8 +415,8 @@ newTheoryConj nasn@(nm,_) thry
 \begin{code}
 assumeConj :: Monad m => String -> Theory -> m Theory
 assumeConj cjnm thry
- | null cjs     =  fail ("assumeConj '"++cjnm++"': no conjectures")
- | cjnm == "*"  =  return $ conjs_ []
+ | null cjs     =  return thry
+ | cjnm == "."  =  return $ conjs_ []
                           $ laws__ (++(map labelAsAssumed cjs)) thry
  | null cnj1    =  fail ("assumeConj '"++cjnm++"': not found")
  | otherwise    =  return $ conjs_ (before++after)
@@ -427,6 +427,23 @@ assumeConj cjnm thry
    cnj = head cnj1
 \end{code}
 
+\begin{code}
+assumeDepConj :: Monad m => String -> Theories -> m Theories
+assumeDepConj thnm thys
+  = do depthys <- fmap ttail $ getTheoryDeps thnm thys
+       assumeDepConj' thys depthys
+
+assumeDepConj' thys [] = return thys
+assumeDepConj' thys (depthy:depthys)
+  = do  depthy' <- assumeConj "." depthy
+        thys' <- replaceTheory (thName depthy) (const depthy') thys
+        assumeDepConj' thys' depthys
+\end{code}
+
+currTh = currTheory reqs
+getCurrConj reqs = fromJust $ getTheoryConjectures currTh thys
+thys = theories reqs
+thylist = fromJust $ getTheoryDeps currTh thys
 
 \begin{code}
 lawDemote :: Monad m => String -> Theory -> m Theory

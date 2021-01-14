@@ -220,11 +220,16 @@ newConjecture thnm nasn reqs
 \begin{code}
 assumeConjecture :: Monad m => String -> String -> REqState -> m REqState
 assumeConjecture thnm whichC reqs
-  = case getTheory thnm $ theories reqs of
+  = case getTheory thnm thys of
       Nothing -> fail ("No theory named '"++thnm++"'.")
-      Just thry -> do thry' <- assumeConj whichC thry
-                      return $ changed
-                             $ theories__ (replaceTheory' thry') $ reqs
+      Just thry
+        | whichC == "*"
+            ->  do thys' <- assumeDepConj thnm thys
+                   return $ changed $ theories_ thys' reqs
+        | otherwise
+            ->  do thry' <- assumeConj whichC thry
+                   return $ changed $ theories__ (replaceTheory' thry') $ reqs
+  where thys = theories reqs
 \end{code}
 
 \subsubsection{Demoting Laws}

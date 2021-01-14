@@ -8,6 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Utilities (
   utilities
 , fst3, snd3, thd3
+, ttail
 , unlines'
 , issubset
 , clearIt, clear
@@ -76,6 +77,14 @@ thd3 :: (a,b,c) -> c ; thd3(_,_,z) = z
 
 \newpage
 \subsection{List Functions}
+
+\subsubsection{Total Tail}
+
+\begin{code}
+ttail :: [a] -> [a]
+ttail []      =  []
+ttail (_:xs)  =  xs
+\end{code}
 
 \subsubsection{Predicate: has duplicates}
 \begin{code}

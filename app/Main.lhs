@@ -554,7 +554,8 @@ cmdAssume
     , "assume conjecture is law"
     , unlines
        [ "Assume n - assume conjecture 'n'"
-       , "Assume * - assume all current theory conjectures"
+       , "Assume . - assume all current theory conjectures"
+       , "Assume * - assume all dependency theory conjectures"
        ]
     , doAssumption )
 

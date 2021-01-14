@@ -8,9 +8,12 @@ We need this implemented as a gatekeeper for the construction of Assertions,
 and it needs to duplicate side-conditions when such refers to a multiply-used quantifier variable.
 We also need to handle non-substitutable terms.
 
-**It is now clear that n.s. indication should be part of a term itself,
-and not left to be looked up in a table. Otherwise normalisation needs to take a list of
-var tables as an argument**
+**Whoops!**
+
+Axiom `(∀ x$ • P)≡P` normalises to `(∀ x$ • P[x,x$/x,x$])≡P[x,x$/x,x$]`.
+
+We should not apply normalising substitutions to term variables.
+
 
 We note that the only `Term` variants that require a substitutability marker are `Cons`
 and `Iter`.

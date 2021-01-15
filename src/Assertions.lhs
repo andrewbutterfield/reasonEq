@@ -224,6 +224,8 @@ normQ vv trm = (trm, vv) -- Val, Typ
 \end{code}
 
 
+\subsection{Normalising Side-Conditions}
+
 Working on side-conditions is tricky,
 as they mention a variable that might have have been bound more than
 once before normalisation.

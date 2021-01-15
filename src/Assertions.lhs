@@ -54,7 +54,8 @@ pattern AssnC sc         <-  ASN (_,  sc)
 \end{code}
 
 
-We make an assertion by normalising its bound variables:
+We make an assertion by normalising its bound variables,
+and then merging nested quantifiers:
 \begin{code}
 mkAsn :: Term -> SideCond -> Assertion
 mkAsn tm sc  = ASN $ normaliseQuantifiers tm sc
@@ -224,7 +225,14 @@ normQ vv trm = (trm, vv) -- Val, Typ
 
 
 Working on side-conditions is tricky,
-as they mention a variable
+as they mention a variable that might have have been bound more than
+once before normalisation.
+The only safe thing to do here is duplicate the side-condition
+for each version.
+This suggests the following well-formedness condition
+for any (unnormalised) predicate:
+any side-condition variable should either be free,
+or bound precisely once.
 \begin{code}
 normSC :: VarVersions -> SideCond -> SideCond
 normSC vv (ascs,fvs) = (map (normASC vv) ascs,normQVSet vv fvs)

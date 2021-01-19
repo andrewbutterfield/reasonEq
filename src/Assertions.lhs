@@ -152,7 +152,7 @@ $$
 $$
 
 What is now clear is that automating this is tricky,
-and issues like do not seem to be discussed in most presentations of logic.
+and issues like this do not seem to be discussed in most presentations of logic.
 For now we keep it simple, and use ``hidden'' $\alpha$-substitutions
 to do it,
 by modifying the \texttt{Int} component of identifiers.
@@ -232,6 +232,7 @@ We need to be careful with non-substitutable terms!
 \\ norm_\mu(p \land q) &\defs & (p' \land q',\mu'')
 \\                     &\where& (p',\mu') = norm_\mu(p)
 \\                     &      & (q',\mu'') = norm_{\mu'}(q)
+\\ norm_\mu(p \seq q) &\defs & ((p;q)[mksub(\mu)],\mu)
 \\ norm_\mu(\forall x \bullet p) &\defs& (\forall x_{\mu'(x)} \bullet p',\mu'')
 \\                     &\where& \mu' = (\mu\override\maplet x 1)
                                        \cond{x \in \mu}
@@ -240,6 +241,14 @@ We need to be careful with non-substitutable terms!
 \end{eqnarray*}
 Note that we need to thread the  map parameter $\mu$ into and out of each call
 to $norm$ to ensure that we get full uniqueness of bound variable numbers.
+
+\textbf{Note re Higher-Order predicates}
+\textit{
+If we go higher order, then \texttt{Cons} identifiers will have
+to be normalised as well, as they might occur in quantifier lists.
+Perhaps this is a better way to deal with generic truth functions,
+such as $\odot$ from \cite[Ex. 2.1.2, p48]{UTP-book}.
+}
 
 We map bound variable names, and class and when attributes, to their unique numbers:
 \begin{code}
@@ -300,18 +309,16 @@ normQ vv v@(Var tk _)  =  ( v,                                 vv )
    norm_\mu(p \land q) &\defs & (p' \land q',\mu'')
 \\                     &\where& (p',\mu') = norm_\mu(p)
 \\                     &      & (q',\mu'') = norm_{\mu'}(q)
+\\ norm_\mu(p \seq q) &\defs & ((p;q)[mksub(\mu)],\mu)
 \end{eqnarray*}
 \begin{code}
 --normQ :: VarVersions -> Term -> (Term, VarVersions)
-normQ vv (Cons tk sb n ts)       =  (Cons tk sb n ts',vv')
-                              where (ts',vv') =  mapaccum normQ vv ts
-normQ vv (Sub tk tm s)
-  = let (tm',vv') = normQ vv tm
-        (s',vv'') = normQSub vv' s
-    in (Sub tk tm' s',vv'')
-
-normQ vv (Iter tk sa na si ni lvs)
-  =  (Iter tk sa na si ni $ map (normQLVar vv) lvs,vv)
+normQ vv t@(Cons tk sb n ts)
+  | sb         =  (Cons tk sb n ts',vv')
+  | otherwise  =  (Sub tk t s',vv)
+  where
+    (ts',vv') =  mapaccum normQ vv ts
+    s' = mkVVsubstn vv
 \end{code}
 
 \begin{eqnarray*}
@@ -337,6 +344,18 @@ normQ vv (Cls n tm)
    in ( Cls n tm',vv'')
 \end{code}
 
+\newpage
+We don't have formal specs for these - straightforward?:
+\begin{code}
+--normQ :: VarVersions -> Term -> (Term, VarVersions)
+normQ vv (Sub tk tm s)
+  = let (tm',vv') = normQ vv tm
+        (s',vv'') = normQSub vv' s
+    in (Sub tk tm' s',vv'')
+
+normQ vv (Iter tk sa na si ni lvs)
+  =  (Iter tk sa na si ni $ map (normQLVar vv) lvs,vv)
+\end{code}
 
 Anything else is unchanged
 \begin{code}
@@ -352,10 +371,6 @@ as they mention a variable that might have have been bound more than
 once before normalisation.
 The only safe thing to do here is duplicate the side-condition
 for each version.
-This suggests the following well-formedness condition
-for any (unnormalised) predicate:
-any side-condition variable should either be free,
-or bound precisely once.
 \begin{code}
 normSC :: VarVersions -> SideCond -> SideCond
 normSC vv (ascs,fvs) = (map (normASC vv) ascs,normQVSet vv fvs)

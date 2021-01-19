@@ -28,6 +28,7 @@ We really need an idea about non-interference, so the above is already normalise
 
 (A) do we need bindings to distinguish between free and bound variables,
 so any attempt to map a bound variable to anything other than a bound variable will fail?
+**Matching will catch this when binding variable lists get matched**.
 
 We need this implemented as a gatekeeper for the construction of Assertions,
 and it needs to duplicate side-conditions when such refers to a multiply-used quantifier variable.
@@ -44,16 +45,10 @@ We need to normalise all `Assertion`s as follows:
 
 2 All quantifier variables must be unique, arranged by using the `Int` component of the `Identifier` datatype.
 
-3 Any nested `Bind`s with the same type and identifier ahould be merged, after step 2 is done. 
-
-```
-B tk i vs1 (B tk i vs2) ⟼  B tk i (vs1 ∪ vs2)
-```
-
 4 All free variables at the assertion top-level have a zero `Int` component.
 
-5 All variables inside a non-substitutable term have a zero `Int` component(?).
-  Should we allow n.s. terms to contain quantifiers?
+5 All variables inside a non-substitutable term have a zero `Int` component with an explicit substitution.
+ 
 
 
 ### Upgrade 2

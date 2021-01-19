@@ -4,37 +4,14 @@
 
 ### Normalisation
 
-We need to re-think normalisation. Consider:
+We need to re-think normalisation **again**.
 
-```
-(∀ x • P(x) ∧ Q(x))  ≡  (∀ x • P(x)) ∧ (∀ x • Q(x))
-```
+The current algorithm is wrong. 
+Consider `P(x) ∧ (∀ x • Q(x))` vs. `∧ (∀ x • Q(x)) ∧ P(x)`.
 
-This normalises, under the current scheme, to
+These will become `P(x_0) ∧ (∀ x_1 • Q(x_1))` and `(∀ x_1 • Q(x_1)) ∧ P(x_1)` respectively.
 
-```
-(∀ x1 • P(x1) ∧ Q(x1))  ≡  (∀ x2 • P(x2)) ∧ (∀ x3 • Q(x3))
-```
-
-This is fine if we match the whole thing, as this becomes `true`.
-
-But if we match the LHS, we have a binding for `x1` and the "non-x1 part" of both `P` and `Q`,
-but have no bindings for `x2` and `x3` and so are free to instantiate in any way
-(which can be dangerous, as we could choose a free variable...see (A) below).
-Ideally we want to use the `x1` binding.
-
-We really need an idea about non-interference, so the above is already normalised.
-**We only need to normalise nested quantifiers**.
-
-(A) do we need bindings to distinguish between free and bound variables,
-so any attempt to map a bound variable to anything other than a bound variable will fail?
-**Matching will catch this when binding variable lists get matched**.
-
-We need this implemented as a gatekeeper for the construction of Assertions,
-and it needs to duplicate side-conditions when such refers to a multiply-used quantifier variable.
-We also need to handle non-substitutable terms.
-
-
+We cannot have a simple  left-right flow of the `VarVersion` map.
 
 We note that the only `Term` variants that require a substitutability marker are `Cons`
 and `Iter`.

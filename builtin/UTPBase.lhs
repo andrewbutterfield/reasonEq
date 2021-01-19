@@ -351,7 +351,7 @@ From \cite[Defn 2.2.1,p49]{UTP-book}
 
 $$
   \begin{array}{lll}
-     P ; Q \defs \exists O_0 \bullet P[O_0/O'] \land Q[O_0/O]
+     P \seq Q \defs \exists O_0 \bullet P[O_0/O'] \land Q[O_0/O]
      & m \textrm{ fresh} & \QNAME{$;$-def}
   \end{array}
 $$\par\vspace{-8pt}
@@ -377,7 +377,7 @@ From \cite[2.2\textbf{L1}, p49]{UTP-book}
 
 $$
   \begin{array}{lll}
-     P ; (Q ; R) \equiv (P;Q);R
+     P \seq (Q \seq R) \equiv (P\seq Q)\seq R
      && \QNAME{$;$-assoc}
   \end{array}
 $$\par\vspace{-8pt}
@@ -392,7 +392,7 @@ From \cite[2.2\textbf{L2}, p49]{UTP-book}
 
 $$
   \begin{array}{lll}
-     (P \cond b Q) ; R \equiv (P;R) \cond b (Q;R)
+     (P \cond b Q) \seq R \equiv (P\seq R) \cond b (Q\seq R)
      && \QNAME{$;$-$\cond\_$-l-distr}
   \end{array}
 $$\par\vspace{-8pt}
@@ -458,7 +458,7 @@ This is not definable at present
 From \cite[2.3\textbf{L3}, p50]{UTP-book}
 $$
   \begin{array}{lll}
-     x := e; x := f =  x := f[e/x]
+     x := e \seq x := f =  x := f[e/x]
      && \QNAME{$:=$-seq-same}
   \end{array}
 $$
@@ -475,7 +475,7 @@ $$
 From \cite[2.3\textbf{L4}, p50]{UTP-book}
 $$
   \begin{array}{lll}
-     x := e; P \cond b Q =  (x:=e;P) \cond{b[e/x]} (x:=e;Q)
+     x := e \seq P \cond b Q =  (x:=e \seq P) \cond{b[e/x]} (x:=e \seq Q)
      && \QNAME{$:=$-seq-$\cond\_$}
   \end{array}
 $$
@@ -516,7 +516,7 @@ skipIntro = mkConsIntro i_skip bool
 From \cite[2.3\textbf{L5}, p50]{UTP-book}
 $$
   \begin{array}{lll}
-     P ; \Skip \equiv P   &
+     P \seq \Skip \equiv P   &
      & \QNAME{$;$-runit}
   \end{array}
 $$\par\vspace{-8pt}
@@ -529,7 +529,7 @@ $$\par\vspace{-8pt}
 From \cite[2.3\textbf{L5}, p50]{UTP-book}
 $$
   \begin{array}{lll}
-     \Skip ; P \equiv P   &
+     \Skip \seq P \equiv P   &
      & \QNAME{$;$-lunit}
   \end{array}
 $$\par\vspace{-8pt}
@@ -636,7 +636,7 @@ $$ %\par\vspace{-8pt}
 From \cite[2.4\textbf{L6}, p52]{UTP-book}
 $$
   \begin{array}{lll}
-     (P \sqcap Q); R = (P;R) \sqcap (Q;R)
+     (P \sqcap Q) \seq R = (P \seq R) \sqcap (Q \seq R)
      && \QNAME{$;$-$\sqcap$-left-distr-2.4\textbf{L6}}
   \end{array}
 $$ %\par\vspace{-8pt}
@@ -650,7 +650,7 @@ $$ %\par\vspace{-8pt}
 From \cite[2.4\textbf{L7}, p52]{UTP-book}
 $$
   \begin{array}{lll}
-     P;(Q \sqcap R);  = (P;Q) \sqcap (P;R)
+     P \seq (Q \sqcap R) \seq   = (P \seq Q) \sqcap (P \seq R)
      && \QNAME{$;$-$\sqcap$-right-distr-2.4\textbf{L7}}
   \end{array}
 $$ %\par\vspace{-8pt}
@@ -664,7 +664,7 @@ $$ %\par\vspace{-8pt}
 From \cite[2.4\textbf{L8}, p52]{UTP-book}
 $$
   \begin{array}{lll}
-     P \sqcap (Q \cond b R); R = (P \sqcap Q) \cond b (P \sqcap R)
+     P \sqcap (Q \cond b R)\seq R = (P \sqcap Q) \cond b (P \sqcap R)
      && \QNAME{$\sqcap$-$\cond\_$-distr-2.4\textbf{L8}}
   \end{array}
 $$ %\par\vspace{-8pt}

@@ -21,7 +21,7 @@ import qualified Data.Set as S
 import Data.Map(Map)
 import qualified Data.Map as M
 
-import Utilities (injMap)
+import Utilities (injMap, YesBut(..), unlines')
 import Control (mapboth,mapaccum,mapsnd)
 import LexBase
 import Variables
@@ -371,13 +371,22 @@ as they mention a variable that might have have been bound more than
 once before normalisation.
 The only safe thing to do here is duplicate the side-condition
 for each version.
+This means, for a side-condition variable $v$ mapped to $n$,
+we need to produce $n+1$ side-conditions, for $v_0$ \dots $v_n$.
+We call this process ``spanning''.
 \begin{code}
 normSC :: VarVersions -> SideCond -> SideCond
-normSC vv (ascs,fvs) = (map (normASC vv) ascs,normQVSet vv fvs)
+normSC vv (ascs,fvs)
+  = case mkSideCond (map (normASC vv) ascs) (normFresh vv fvs) of
+      Yes sc    ->  sc
+      -- this should not fail, but just in case ...
+      But msgs  ->  error ("normSC: "++unlines' msgs)
 
 normASC vv (Disjoint gv vs)  =  Disjoint (normQGVar vv gv) (normQVSet vv vs)
 normASC vv (Covers gv vs)    =  Covers   (normQGVar vv gv) (normQVSet vv vs)
 normASC vv (IsPre gv)        =  IsPre    (normQGVar vv gv)
+
+normFresh vv vs = normQVSet vv vs
 \end{code}
 
 \newpage
@@ -419,6 +428,7 @@ normQBVar vv v@(Vbl (Identifier nm _) cls whn)
 
 Functions that lookup \texttt{VarVersions}\dots
 \begin{code}
+normQVSet :: VarVersions -> Set GenVar -> Set GenVar
 normQVSet vv vs = S.fromList $ map (normQGVar vv) $ S.toList vs
 
 normQVList vv vl = map (normQGVar vv) vl

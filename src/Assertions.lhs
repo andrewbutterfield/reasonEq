@@ -44,7 +44,128 @@ pdbg nm x = dbg ('@':nm++":\n") x
 \subsection{Introduction}
 
 
-An assertion is a \emph{normalised} predicate term coupled with side-conditions.
+An assertion is a predicate term coupled with side-conditions.
+However,
+we cannot simply pair a term and side-conditions in an arbitrary fashion.
+There are conditions that have to be satisfied
+in order for such a pairing to make sense.
+
+An obvious one is that the general variables and variable-sets mentioned
+in any assertion side-condition should appear somewhere in the assertion term.
+Such a mismatch is inconvenient, or misleading, hence worth avoiding,
+but it is not a show-stopper.
+
+
+What is a show-stopper is when a side-condition refers to a variable by some
+name, but the term contains multiple uses of that name,
+that refer to \emph{different} variables.
+This arises when a free variable's name is introduced in a binding sub-term.
+Consider the following example:
+\begin{equation}
+   x = 3 \land P \land \exists x \bullet x < 10,  \quad x \notin P
+   \label{eqn:assn:illformed}
+\end{equation}
+What does the $x$ in the side-condition refer to?
+The first free $x$, or the second bound $x$, or both?
+
+We consider such an assertion as being ill-formed.
+It should be re-written, using $\alpha$-substitution,
+so that it is clear which $x$ is meant in $x \notin P$.
+
+The following three alternatives are fine:
+\begin{eqnarray}
+   x = 3 \land P \land \exists y \bullet y < 10, &&  x \notin P
+   \label{eqn:assn:illfixx}
+\\ x = 3 \land P \land \exists y \bullet y < 10, &&  y \notin P
+   \label{eqn:assn:illfixy}
+\\ x = 3 \land P \land \exists y \bullet y < 10, &&  x \notin P, y \notin P
+   \label{eqn:assn:illfixxy}
+\end{eqnarray}
+What is clear,
+is we cannot take
+such a term as (\ref{eqn:assn:illformed}),
+and transfrom it automatically into one of
+(\ref{eqn:assn:illfixx})--(\ref{eqn:assn:illfixxy}).
+
+Even without any side-condition being present,
+it seems worth using $\alpha$-substitution
+to ensure that all bound variables are distinct.
+This means that we can use a single flat binding when matching terms.
+However,
+there are situations where we might want to
+identify what in fact are distinct bound variables,
+for pragmatic proof purposes.
+Consider the following law:
+$$
+ (\forall x \bullet P(x) \land Q(x))
+ \equiv
+ (\forall x \bullet P(x)) \land (\forall x \bullet Q(x))
+$$
+This is logically equivalent,
+provided $y$ and $z$ aren't used inside $P$ or $Q$,
+to
+$$
+ (\forall x \bullet P(x) \land Q(x))
+ \equiv
+ (\forall y \bullet P(y)) \land (\forall z \bullet Q(z))
+$$
+The question is, do we want the extra matches we might get
+use the latter as a law?
+Are there soundness issues if we use the former, with side-conditions on $x$?
+
+A more concrete example is
+the following one-point axiom for universal quantification:
+$$
+\AXAllOnePoint, \quad \AXAllOnePointS
+$$
+If we disambiguate bound variable $\lst y$ here,
+we get the following, which is OK (provided $\lst z$ is fresh).
+$$
+   (\forall \lst x,\lst y
+    \bullet \lst x = \lst e \implies P)
+   \equiv
+   (\forall \lst z \bullet p[\lst es/\lst xs][\lst z/\lst y]),
+   \quad \lst x \notin \lst e
+$$
+Note that there is an implicit condition here that $\lst x$ and $\lst y$
+denote distinct variable-sets.
+
+The universal scope axiom is
+$$
+\AXorAllOScopeL \equiv \AXorAllOScopeR, \quad \AXorAllOScopeS
+$$
+Disambiguating bound variables leads to:
+$$
+\AXorAllOScopeL
+\equiv
+\forall \lst a \bullet
+  P[\lst a/\lst x] \lor (\forall \lst b \bullet Q[\lst b/\lst y]),
+  \quad \lst x \notin P, \lst a \notin P
+$$
+The side-condition $\lst x \notin P$ allows the following simplification:
+$$
+\AXorAllOScopeL
+\equiv
+\forall \lst a \bullet
+  P \lor (\forall \lst b \bullet Q[\lst b/\lst y]),
+  \quad \lst x \notin P, \lst a \notin P
+$$
+
+What is now clear is that automating this is tricky,
+and issues like do not seem to be discussed in most presentations of logic.
+For now we keep it simple, and use ``hidden'' $\alpha$-substitutions
+to do it,
+by modifying the \texttt{Int} component of identifiers.
+In particular,
+we will transform something like (\ref{eqn:assn:illformed})
+into (\ref{eqn:assn:illfixxy}).
+Our identifier-modifying approach will produce:
+\begin{equation}
+  x_0 = 3 \land P \land \exists x_1 \bullet x_1 < 10,  x_0 \notin P, x_1 \notin P
+\end{equation}
+
+
+
 \begin{code}
 newtype Assertion = ASN (Term, SideCond) deriving (Eq,Ord,Show,Read)
 

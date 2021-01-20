@@ -907,7 +907,7 @@ makeEquivalence nm liveProof
      step0 = assnT $ conjecture liveProof
      step' = exitTZ $ fst $ focus liveProof
      sc = conjSC liveProof
-     asn = mkAsn (step0 === step') sc
+     asn = fromJust $ mkAsn (step0 === step') sc
      calc = ( step' , reverse $ stepsSoFar liveProof )
 \end{code}
 

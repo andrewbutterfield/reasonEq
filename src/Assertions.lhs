@@ -175,12 +175,12 @@ and then returning the assertion or signalling failure.
 \begin{code}
 mkAsn :: Monad m => Term -> SideCond -> m Assertion
 mkAsn tm sc
-  | safeSideCondition tm sc  = return ASN (tm, sc)
+  | safeSideCondition tm sc  = return $ ASN (tm, sc)
   | otherwise                = fail msg
   where
     msg = unlines' ["mkAsn: unsafe side-condition"
-                   , "term = " ++ trTerm 0 tm
-                   , "s.c. = " ++ trSideCond sc
+                   , "term = " ++ show tm
+                   , "s.c. = " ++ show sc
                    ]
 \end{code}
 
@@ -257,14 +257,37 @@ and agreement ($\Join$):
 \\ u    \Join \bot &\defs& u
 \\ u_1  \Join u_2  &\defs& u_1 \cond{u_1=u_2} \bot
 \end{eqnarray*}
+\begin{code}
+data Usage = Unused | Free | Bound deriving Eq
+
+compatible :: Usage -> Usage -> Bool
+compatible Free  Bound  =  False
+compatible Bound Free   =  False
+compatible _     _      =  True
+
+join :: Usage -> Usage -> Usage
+Unused `join` u       =  u
+u      `join` Unused  =  u
+u1     `join` u2
+  | u1 == u2          =  u1
+  | otherwise         =  Unused
+\end{code}
+
 \def\scSafe{\textit{scSafe}}
 \def\csafe{\textit{csafe}}
 We can now define side-condition safety of $x$ w.r.t. $t$ as follows:
 \begin{eqnarray*}
    \scSafe &:& V \fun T \fun \Bool
 \\ \scSafe_x(t) &\defs& \pi_1(\csafe_x(t))
-\\
-\\ \csafe &:& V \fun T \fun \Bool \times U
+\end{eqnarray*}
+\begin{code}
+scSafe :: Variable -> Term -> Bool
+scSafe v t = fst $ csafe v t
+\end{code}
+
+Here is where the real work is done:
+\begin{eqnarray*}
+   \csafe &:& V \fun T \fun \Bool \times U
 \\ \csafe_x(v) &\defs& (\true,f) \cond{x=v} (\false,\bot)
 \\ \csafe_x(p \land q)
    &\defs&   (ok_p \land ok_q \land u_p \simeq u_q, u_p \Join u_q)
@@ -273,8 +296,24 @@ We can now define side-condition safety of $x$ w.r.t. $t$ as follows:
 \\ \csafe_x(\forall v \bullet p)
    &\defs&   (ok_p,b) \cond{x = v}  (ok_p,u_p)
 \\ &\where& (ok_p,u_p) = \csafe_x(p)
+\\ \csafe_x(p[e/v])
+   &\defs& (ok_p \land ok_e \land u_p \simeq u_e, b)
+           \cond{x = v}
+           (ok_p \land ok_e \land u_p \simeq u_e, u_p \Join u_e)
+\\ &\where& (ok_p,u_p) = \csafe_x(p)
+\\ &      & (ok_e,u_e) = \csafe_x(e)
 \\ \csafe_x(\_) &\defs& (\true,\bot)
 \end{eqnarray*}
+\begin{code}
+csafe :: Variable -> Term -> (Bool, Usage)
+csafe _ _  =  (True, Unused)
+\end{code}
+
+Finally, we get our variables from a side-condition:
+\begin{code}
+safeSideCondition :: Term -> SideCond -> Bool
+safeSideCondition tm sc  =  True  -- for now.
+\end{code}
 
 \subsection{Normalising Bound Variables}
 
@@ -370,8 +409,9 @@ Quantifier normalisation:
 \begin{code}
 normaliseQuantifiers :: Term -> SideCond -> (Term, SideCond)
 normaliseQuantifiers tm sc
-  = let (tm', vv') = normQ M.empty tm
-    in  (tm', normSC vv' sc)
+  = error ("normaliseQuantifiers is currently broken. Do not use.")
+  -- = let (tm', vv') = normQ M.empty tm
+  --   in  (tm', normSC vv' sc)
 \end{code}
 
 \begin{code}

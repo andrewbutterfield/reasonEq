@@ -536,11 +536,11 @@ newConj args reqs
        case sPredParse trtxt of
          But msgs  -> doshow reqs ("Bad Term, "++unlines' msgs)
          Yes (term,_) ->
-          case newConjecture (currTheory reqs) (cjnm,(mkAsn term scTrue)) reqs
-          of
-            But msgs  -> doshow reqs (unlines' msgs)
-            Yes reqs' -> do putStrLn ("Conjecture '"++cjnm++"' installed")
-                            return reqs'
+           do asn' <- mkAsn term scTrue
+              case newConjecture (currTheory reqs) (cjnm,asn') reqs of
+                But msgs  -> doshow reqs (unlines' msgs)
+                Yes reqs' -> do putStrLn ("Conjecture '"++cjnm++"' installed")
+                                return reqs'
 \end{code}
 
 \newpage

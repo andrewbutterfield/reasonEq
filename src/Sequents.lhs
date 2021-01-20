@@ -222,7 +222,8 @@ assume logicsig thys (nm,(t@(Cons tk si i [ta,tc]),sc))
     = return ( "assume", Sequent thys hthry sc tc $ theTrue logicsig )
   where
     hlaws = map mkHLaw $ zip [1..] $ splitAnte logicsig ta
-    mkHLaw (i,trm) = labelAsAxiom ("H."++nm++"."++show i,(mkAsn trm scTrue))
+    mkasn trm = fromJust $ mkAsn trm scTrue -- always succeeds
+    mkHLaw (i,trm) = labelAsAxiom ("H."++nm++"."++show i,mkasn trm)
     hthry = Theory { thName   =  "H."++nm
                    , thDeps   =  []
                    , laws     =  hlaws
@@ -618,14 +619,16 @@ exitLaws currT  (HLaws' hnm hkn hbef fnm fsc fprov horig haft cl cr)
   =  ( Theory { thName   =  hnm
               , thDeps   =  []
               , laws     =  ( reverse hbef
-                            ++ [((fnm,(mkAsn horig fsc)),fprov)]
+                            ++ [((fnm,horig'),fprov)]
                             ++ haft
-                            ++ [((fnm,(mkAsn currT fsc)),fprov)] )
+                            ++ [((fnm,currT'),fprov)] )
               , known    =  hkn
               , conjs    =  []
               , proofs   =  []
               }
      , cl, cr)
+  where horig' = fromJust $ mkAsn horig fsc
+        currT' = fromJust $ mkAsn currT fsc
 \end{code}
 
 \newpage

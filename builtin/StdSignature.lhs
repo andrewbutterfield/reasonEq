@@ -179,7 +179,7 @@ flattenEquiv = flattenTheEquiv propSignature
 All \emph{propositional} laws are characterised by not having
 any side-conditions:
 \begin{code}
-propdef ( name, prop ) = ( name, mkAsn prop scTrue )
+propdef ( name, prop ) = ( name, fromJust $ mkAsn prop scTrue )
 \end{code}
 
 \subsection{Predicate Infrastructure}
@@ -204,10 +204,10 @@ sat p = Cls satId p
 General predicate laws often have side-conditions:
 \begin{code}
 preddef :: String -> Term -> SideCond -> NmdAssertion
-preddef name prop sc = ( name, mkAsn prop sc )
+preddef name prop sc = ( name, fromJust $ mkAsn prop sc )
 \end{code}
 
 \begin{code}
 mkNmdAsn :: (String, (Term, SideCond)) -> NmdAssertion
-mkNmdAsn (name, (pred, sc)) = (name, mkAsn pred sc)
+mkNmdAsn (name, (pred, sc)) = (name, fromJust $ mkAsn pred sc)
 \end{code}

@@ -102,7 +102,7 @@ $$
  (\forall x \bullet P(x)) \land (\forall x \bullet Q(x))
 $$
 This is logically equivalent,
-provided $y$ and $z$ aren't used inside $P$ or $Q$,
+provided $y$ and $z$ aren't already used inside $P$ or $Q$,
 to
 $$
  (\forall x \bullet P(x) \land Q(x))
@@ -150,20 +150,15 @@ $$
   P \lor (\forall \lst b \bullet Q[\lst b/\lst y]),
   \quad \lst x \notin P, \lst a \notin P
 $$
+However, the original formulation of the axiom,
+that re-uses bound $\lst x$ on both sides of the equivalence,
+with (both) $\lst x$ not mentioned in $P$,
+is precisely what we want.
 
-What is now clear is that automating this is tricky,
-and issues like this do not seem to be discussed in most presentations of logic.
-For now we keep it simple, and use ``hidden'' $\alpha$-substitutions
-to do it,
-by modifying the \texttt{Int} component of identifiers.
-In particular,
-we will transform something like (\ref{eqn:assn:illformed})
-into (\ref{eqn:assn:illfixxy}).
-Our identifier-modifying approach will produce:
-\begin{equation}
-  x_0 = 3 \land P \land \exists x_1 \bullet x_1 < 10,  x_0 \notin P, x_1 \notin P
-\end{equation}
-
+The plan for now, is not to normalise anything,
+but to check that any (observational)
+variable mentioned in a side-condition
+does have both free and bound occurrences.
 
 
 \begin{code}
@@ -175,11 +170,18 @@ pattern AssnC sc         <-  ASN (_,  sc)
 \end{code}
 
 
-We make an assertion by normalising its bound variables,
-and then merging nested quantifiers:
+We make an assertion by checking side-condition safety,
+and then returning the assertion or signalling failure.
 \begin{code}
-mkAsn :: Term -> SideCond -> Assertion
-mkAsn tm sc  = ASN $ normaliseQuantifiers tm sc
+mkAsn :: Monad m => Term -> SideCond -> m Assertion
+mkAsn tm sc
+  | safeSideCondition tm sc  = return ASN (tm, sc)
+  | otherwise                = fail msg
+  where
+    msg = unlines' ["mkAsn: unsafe side-condition"
+                   , "term = " ++ trTerm 0 tm
+                   , "s.c. = " ++ trSideCond sc
+                   ]
 \end{code}
 
 We can select assertion components by function,
@@ -196,7 +198,90 @@ unwrapASN (ASN tsc)  =  tsc
 \end{code}
 
 
-\subsubsection{Normalising Bound Variables}
+\subsection{Safe Side-Conditions}
+
+A side-condition is safe w.r.t. a term if any observational variable
+it mentions only occurs in the term as free, or bound, but not both.
+This has to be true, not just at the top-level,
+but at every level in the term syntax tree.
+For example, $x$ would not be safe to use in a side-condition
+in the following:
+$$
+  \forall x \bullet P(x) \lor \forall x \bullet Q(x)
+$$
+While it is not free at the top-level,
+it is free within sub-term $P(x) \lor \forall x \bullet Q(x)$,
+which is just as problematic.
+
+We can define safety (for use in side-conditions)
+of a given (observational) variable w.r.t. a given term.
+Variable $x$ is safe w.r.t. $t$
+if it is recursively safe in any sub-terms of $t$,
+and its mode of use in those sub-terms, is then either all free or all bound.
+
+We will look at the two universal quantification axioms that have
+side-conditions with observational variables:
+\begin{eqnarray}
+   \AXorAllOScopeL \equiv \AXorAllOScopeR &,& \AXorAllOScopeS
+   \label{eqn:ax:allscope}
+\\ \AXAllOnePoint                         &,& \AXAllOnePointS
+   \label{eqn:ax:all1pt}
+\end{eqnarray}
+The first (\ref{eqn:ax:allscope}) is straightforward,
+as $\lst x$ only appears in binding occurrences.
+The second (\ref{eqn:ax:all1pt}) seems problematic.
+The LHS is ok, because $\lst x$ is only free in the quantifier body,
+and is bound the the level of the LHS itself.
+However, it seems to be free in the RHS,
+as there is no (obvious) binding of $\lst x$ present.
+However, the one use of it here is as the target variable of
+a substitution, being replaced by $\lst e$.
+In effect we treat the use of an observational variable as a substitution
+target as being a binding occurrence,
+as far as side-condition safety is concerned.
+It is interesting to point out that the side condition itself is designed
+to ensure that, indeed, $\lst x$ is not still free by virtue of mentioned
+by $\lst e$.
+
+We define usage of a variable as unused ($\bot$), free ($f$), or bound ($b$),
+and a notion of ``lack of disagreement'' ($\simeq$),
+and agreement ($\Join$):
+\begin{eqnarray*}
+   u \in U        &\defs& \setof{\bot,f,b}
+\\ \_\simeq\_    &  :  & U \times U \fun \Bool
+\\ f  \simeq b   &\defs& \false
+\\ b  \simeq f   &\defs& \false
+\\ \_ \simeq \_  &\defs& \true
+\\ \_\Join\_       &  :  & U \times U \fun U
+\\ \bot \Join u    &\defs& u
+\\ u    \Join \bot &\defs& u
+\\ u_1  \Join u_2  &\defs& u_1 \cond{u_1=u_2} \bot
+\end{eqnarray*}
+\def\scSafe{\textit{scSafe}}
+\def\csafe{\textit{csafe}}
+We can now define side-condition safety of $x$ w.r.t. $t$ as follows:
+\begin{eqnarray*}
+   \scSafe &:& V \fun T \fun \Bool
+\\ \scSafe_x(t) &\defs& \pi_1(\csafe_x(t))
+\\
+\\ \csafe &:& V \fun T \fun \Bool \times U
+\\ \csafe_x(v) &\defs& (\true,f) \cond{x=v} (\false,\bot)
+\\ \csafe_x(p \land q)
+   &\defs&   (ok_p \land ok_q \land u_p \simeq u_q, u_p \Join u_q)
+\\ &\where& (ok_p,u_p) = \csafe_x(p)
+\\ &      & (ok_q,u_q) = \csafe_x(q)
+\\ \csafe_x(\forall v \bullet p)
+   &\defs&   (ok_p,b) \cond{x = v}  (ok_p,u_p)
+\\ &\where& (ok_p,u_p) = \csafe_x(p)
+\\ \csafe_x(\_) &\defs& (\true,\bot)
+\end{eqnarray*}
+
+\subsection{Normalising Bound Variables}
+
+\textbf{Note:}
+\textsf{Currently buggy as free variables that occur syntactically later
+than quantifier sub-terms will have none-zero numbering and so will
+clash with bound variables}
 
 We want all bound-variables to be unique in a term, so that, for example,
 the term
@@ -239,8 +324,17 @@ We need to be careful with non-substitutable terms!
                                        (\mu\override\maplet x {\mu(x)+1})
 \\                     &      & (p',\mu'') = norm_{\mu'}(p)
 \end{eqnarray*}
-Note that we need to thread the  map parameter $\mu$ into and out of each call
-to $norm$ to ensure that we get full uniqueness of bound variable numbers.
+\textbf{Note:}
+\textsc{Bad idea!}
+\textit{
+``Note that we need to thread the  map parameter $\mu$ into and out of each call
+to $norm$ to ensure that we get full uniqueness of bound variable numbers.''
+}
+\textbf{Correct approach:
+  do not return VV map from each recursive call,
+  so index = binding depth (``tree-local''),
+  or keep as is, but note if inside a quantifier somehow (``total'').
+}
 
 \textbf{Note re Higher-Order predicates}
 \textit{

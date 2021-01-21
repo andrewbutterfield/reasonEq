@@ -11,6 +11,7 @@ module SideCond (
 , pattern Disjoint, pattern Covers, pattern IsPre
 , ascGVar, ascVSet
 , SideCond, scTrue, isTrivialSC, onlyFreshSC
+, scGVars, scVarSet
 , mrgAtmCond, mrgSideCond, mkSideCond
 , scDischarge
 , isFloatingASC
@@ -146,10 +147,10 @@ ascGVar (IsPre    gv  )  =  gv
 \end{code}
 or the \texttt{VarSet} part:
 \begin{code}
-ascVSet :: AtmSideCond -> Maybe VarSet
-ascVSet (Disjoint _ vs)  =  Just vs
-ascVSet (Covers   _ vs)  =  Just vs
-ascVSet _                =  Nothing
+ascVSet :: AtmSideCond -> VarSet
+ascVSet (Disjoint _ vs)  =  vs
+ascVSet (Covers   _ vs)  =  vs
+ascVSet _                =  S.empty
 \end{code}
 
 \newpage
@@ -267,6 +268,17 @@ have are to do with freshness:
 \begin{code}
 onlyFreshSC :: SideCond -> Bool
 onlyFreshSC (ascs,fvs) = null ascs
+\end{code}
+
+Finally,
+sometimes we want all the general variables or variable-sets
+from a side-condition:
+\begin{code}
+scGVars :: SideCond -> Set GenVar
+scGVars (ascs,_) = S.fromList $ map ascGVar ascs
+
+scVarSet :: SideCond -> VarSet
+scVarSet (ascs,fvs) = (S.unions $ map ascVSet ascs) `S.union` fvs
 \end{code}
 
 \subsection{Merging Side-Conditions}
@@ -820,10 +832,7 @@ citingASCs :: VarSet -> SideCond -> [AtmSideCond]
 citingASCs vs (sc,_) = filter (cited vs) sc
 
 cited :: VarSet -> AtmSideCond -> Bool
-vs `cited` asc
-  = case ascVSet asc of
-      Nothing   ->  False
-      Just vs'  ->  vs == vs'
+vs `cited` asc  =  vs == ascVSet asc
 \end{code}
 
 \newpage

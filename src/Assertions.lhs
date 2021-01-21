@@ -382,9 +382,9 @@ clsafe x (t:ts)
 Safety for substitutions.
 Here we are just checking the replacement terms or variables
 \begin{eqnarray*}
-   \csubsafe_x([e/_])
+   \csubsafe_x([e/\_])
    &\defs& \csafe_x(e)
-\\ \csubsafe_x([\lst e/_])
+\\ \csubsafe_x([\lst e/\_])
    &\defs& \csafe_x(\lst e)
 \\ \csafe_x(\lst e) &=&  (\true,f) \cond{x=\lst e} (\true,\unused)
 \end{eqnarray*}
@@ -406,7 +406,7 @@ csubsafe x (Substn es lvlvs)
 Finally, we get our variables from a side-condition:
 \begin{code}
 safeSideCondition :: Term -> SideCond -> Bool
-safeSideCondition tm sc  =  True  -- for now.
+safeSideCondition tm sc  =  all (\ x -> scSafe x tm) $ S.toList $ scVarSet sc
 \end{code}
 
 \subsection{Normalising Bound Variables}

@@ -343,7 +343,7 @@ instantiateASC bind asc@(IsPre _)  =  instantiateASCvs bind S.empty asc
 
 \begin{code}
 instantiateASC bind asc
-  = case instVarSet bind $ fromJust $ ascVSet asc of
+  = case instVarSet bind $ ascVSet asc of
       But msgs -> fail $ unlines $ msgs
       Yes (vs') -> instantiateASCvs bind vs' asc
 \end{code}

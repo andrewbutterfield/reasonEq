@@ -6,10 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module AST ( TermSub, LVarSub
-           , Substn, pattern Substn, substn
-           , pattern TermSub, pattern LVarSub
-           , Type
+module AST ( Type
            , pattern ArbType,  pattern TypeVar, pattern TypeApp
            , pattern DataType, pattern FunType, pattern GivenType
            , isSubTypeOf
@@ -18,6 +15,10 @@ module AST ( TermSub, LVarSub
            , TermKind(..)
            , isPredKind, isExprKind, ekType
            , classFromKind
+           , TermSub, LVarSub
+           , Substn, pattern Substn, substn
+           , pattern TermSub, pattern LVarSub
+           , subTargets
            , Term, Subable, readTerm
            , pattern Val, pattern Var, pattern Cons
            , pattern Bnd, pattern Lam, pattern Cls
@@ -67,82 +68,6 @@ pdbg nm x = dbg ('@':nm++":\n") x
 We implement a abstract syntax tree for a notion of ``terms''
 that cover both expressions and predicates.
 We also provide a side-condition language.
-
-\newpage
-\subsection{Substitutions}
-
-Substitutions associate a list of terms (types,expressions,predicates)
-with some variables.
-We also want to allow list-variables of the appropriate kind
-to occur for things, but only when the target variable is also
-a list variable.
-\begin{code}
-type TermSub = Set (Variable,Term) -- target variable, then replacememt term
-type LVarSub = Set (ListVar,ListVar) -- target list-variable, then replacement l.v.
-data Substn --  pair-sets below are unique in fst part
-  = SN TermSub LVarSub
-  deriving (Eq,Ord,Show,Read)
-\end{code}
-
-Patterns and builders:
-\begin{code}
-pattern Substn ts lvs  <-  SN ts lvs
-pattern TermSub ts     <-  SN ts _
-pattern LVarSub lvs    <-  SN _  lvs
-
-substn :: Monad m => [(Variable,Term)] -> [(ListVar,ListVar)] -> m Substn
-substn ts lvs
- | null ts && null lvs  =  return $ SN S.empty S.empty
- | dupKeys ts'          =  fail "Term substitution has duplicate variables."
- | dupKeys lvs'         =  fail "List-var subst. has duplicate variables."
- | otherwise            =  return $ SN (S.fromList ts') (S.fromList lvs')
- where
-  ts'  = sort ts
-  lvs' = sort lvs
-
-jSubstn ts lvs = fromJust $ substn ts lvs
-
-dupKeys :: Eq a => [(a,b)] -> Bool
--- assumes list is ordered
-dupKeys ((a1,_):next@((a2,_):_))  =  a1 == a2 || dupKeys next
-dupKeys _                         =  False
-\end{code}
-
-Tests for substitution construction:
-\begin{code}
-i_a = fromJust $ ident "a"
-i_b = fromJust $ ident "b"
-i_e = fromJust $ ident "e"
-i_f = fromJust $ ident "f"
-i_v = fromJust $ ident "v"
-i_P = fromJust $ ident "P"
-i_Q = fromJust $ ident "Q"
-
-lva = ObsLVar  Before (i_a) [] []
-lvb = ObsLVar  After  (i_b) [] []
-lve = ExprLVar Before (i_e) [] []
-lvf = ExprLVar Before (i_f) [] []
-
-lvs_ord_unq = [(lva,lvf),(lvb,lve)]
-test_substn_lvs_id = testCase "LVarSub ordered, unique"
- ( substn [] lvs_ord_unq  @?= Just (SN S.empty (S.fromList lvs_ord_unq)) )
-
-lvs_unord_unq = [(lvb,lve),(lva,lvf)]
-
-test_substn_lvs_sort = testCase "LVarSub unordered, unique"
- ( substn [] lvs_unord_unq  @?= Just (SN S.empty (S.fromList lvs_ord_unq)) )
-
-lvs_unord_dup = [(lva,lva),(lvb,lve),(lva,lvf)]
-
-test_substn_lvs_dup = testCase "LVarSub with duplicates"
- ( substn [] lvs_unord_dup  @?= Nothing )
-
-substnTests = testGroup "AST.substn"
-               [ test_substn_lvs_id
-               , test_substn_lvs_sort
-               , test_substn_lvs_dup
-               ]
-\end{code}
 
 \newpage
 \subsection{Types}
@@ -202,6 +127,91 @@ areSubFieldsOf :: [(Identifier,[Type])] -> [(Identifier,[Type])] -> Bool
 ((i1,ts1):fs1) `areSubFieldsOf` ((i2,ts2):fs2)
  | i1 == i2             =  ts1 `areSubTypesOf` ts2 && fs1 `areSubFieldsOf` fs2
 _ `areSubFieldsOf` _    =  False
+\end{code}
+
+\newpage
+\subsection{Substitutions}
+
+Substitutions associate a list of terms (types,expressions,predicates)
+with some variables.
+We also want to allow list-variables of the appropriate kind
+to occur for things, but only when the target variable is also
+a list variable.
+\begin{code}
+type TermSub = Set (Variable,Term) -- target variable, then replacememt term
+type LVarSub = Set (ListVar,ListVar) -- target list-variable, then replacement l.v.
+data Substn --  pair-sets below are unique in fst part
+  = SN TermSub LVarSub
+  deriving (Eq,Ord,Show,Read)
+\end{code}
+
+Patterns and builders:
+\begin{code}
+pattern Substn ts lvs  <-  SN ts lvs
+pattern TermSub ts     <-  SN ts _
+pattern LVarSub lvs    <-  SN _  lvs
+
+substn :: Monad m => [(Variable,Term)] -> [(ListVar,ListVar)] -> m Substn
+substn ts lvs
+ | null ts && null lvs  =  return $ SN S.empty S.empty
+ | dupKeys ts'          =  fail "Term substitution has duplicate variables."
+ | dupKeys lvs'         =  fail "List-var subst. has duplicate variables."
+ | otherwise            =  return $ SN (S.fromList ts') (S.fromList lvs')
+ where
+  ts'  = sort ts
+  lvs' = sort lvs
+
+jSubstn ts lvs = fromJust $ substn ts lvs
+
+dupKeys :: Eq a => [(a,b)] -> Bool
+-- assumes list is ordered
+dupKeys ((a1,_):next@((a2,_):_))  =  a1 == a2 || dupKeys next
+dupKeys _                         =  False
+\end{code}
+
+Queries:
+\begin{code}
+subTargets :: Substn -> VarSet
+subTargets (SN ts lvs)
+  = S.map (StdVar . fst) ts
+    `S.union`
+    S.map (LstVar .fst) lvs
+\end{code}
+
+Tests for substitution construction:
+\begin{code}
+i_a = fromJust $ ident "a"
+i_b = fromJust $ ident "b"
+i_e = fromJust $ ident "e"
+i_f = fromJust $ ident "f"
+i_v = fromJust $ ident "v"
+i_P = fromJust $ ident "P"
+i_Q = fromJust $ ident "Q"
+
+lva = ObsLVar  Before (i_a) [] []
+lvb = ObsLVar  After  (i_b) [] []
+lve = ExprLVar Before (i_e) [] []
+lvf = ExprLVar Before (i_f) [] []
+
+lvs_ord_unq = [(lva,lvf),(lvb,lve)]
+test_substn_lvs_id = testCase "LVarSub ordered, unique"
+ ( substn [] lvs_ord_unq  @?= Just (SN S.empty (S.fromList lvs_ord_unq)) )
+
+lvs_unord_unq = [(lvb,lve),(lva,lvf)]
+
+test_substn_lvs_sort = testCase "LVarSub unordered, unique"
+ ( substn [] lvs_unord_unq  @?= Just (SN S.empty (S.fromList lvs_ord_unq)) )
+
+lvs_unord_dup = [(lva,lva),(lvb,lve),(lva,lvf)]
+
+test_substn_lvs_dup = testCase "LVarSub with duplicates"
+ ( substn [] lvs_unord_dup  @?= Nothing )
+
+substnTests = testGroup "AST.substn"
+               [ test_substn_lvs_id
+               , test_substn_lvs_sort
+               , test_substn_lvs_dup
+               ]
 \end{code}
 
 

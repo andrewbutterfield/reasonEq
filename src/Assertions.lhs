@@ -243,34 +243,36 @@ It is interesting to point out that the side condition itself is designed
 to ensure that, indeed, $\lst x$ is not still free by virtue of mentioned
 by $\lst e$.
 
-We define usage of a variable as unused ($\bot$), free ($f$), or bound ($b$),
+\def\unused{\ominus}
+We define usage of a variable as unused ($\unused$), free ($f$), or bound ($b$),
 and a notion of ``lack of disagreement'' ($\simeq$),
 and agreement ($\Join$):
 \begin{eqnarray*}
-   u \in U        &\defs& \setof{\bot,f,b}
+   u \in U        &\defs& \setof{\unused,f,b}
 \\ \_\simeq\_    &  :  & U \times U \fun \Bool
 \\ f  \simeq b   &\defs& \false
 \\ b  \simeq f   &\defs& \false
 \\ \_ \simeq \_  &\defs& \true
 \\ \_\Join\_       &  :  & U \times U \fun U
-\\ \bot \Join u    &\defs& u
-\\ u    \Join \bot &\defs& u
+\\ \unused \Join u    &\defs& u
+\\ u    \Join \unused &\defs& u
 \\ u_1  \Join u_2  &\defs& u_1 \cond{u_1=u_2} \bot
 \end{eqnarray*}
+Note that $\simeq$ is a definedness pre-condition for $\Join$.
 \begin{code}
-data Usage = Unused | Free | Bound deriving Eq
+data Usage = Unused | Free | Bound deriving (Eq,Show)
 
-compatible :: Usage -> Usage -> Bool
-compatible Free  Bound  =  False
-compatible Bound Free   =  False
-compatible _     _      =  True
+ucompatible :: Usage -> Usage -> Bool
+ucompatible Free  Bound  =  False
+ucompatible Bound Free   =  False
+ucompatible _     _      =  True
 
-join :: Usage -> Usage -> Usage
-Unused `join` u       =  u
-u      `join` Unused  =  u
-u1     `join` u2
+ujoin :: Usage -> Usage -> Usage
+Unused `ujoin` u       =  u
+u      `ujoin` Unused  =  u
+u1     `ujoin` u2
   | u1 == u2          =  u1
-  | otherwise         =  Unused
+  | otherwise         =  error ("ujoin - mixed usage")
 \end{code}
 
 \def\scSafe{\textit{scSafe}}
@@ -281,33 +283,125 @@ We can now define side-condition safety of $x$ w.r.t. $t$ as follows:
 \\ \scSafe_x(t) &\defs& \pi_1(\csafe_x(t))
 \end{eqnarray*}
 \begin{code}
-scSafe :: Variable -> Term -> Bool
+scSafe :: GenVar -> Term -> Bool
 scSafe v t = fst $ csafe v t
 \end{code}
 
+\newpage
 Here is where the real work is done:
 \begin{eqnarray*}
    \csafe &:& V \fun T \fun \Bool \times U
-\\ \csafe_x(v) &\defs& (\true,f) \cond{x=v} (\false,\bot)
-\\ \csafe_x(p \land q)
+\end{eqnarray*}
+\begin{code}
+csafe :: GenVar -> Term -> (Bool, Usage)
+\end{code}
+%
+\begin{eqnarray*}
+   \csafe_x(v) &\defs& (\true,f) \cond{x=v} (\true,\unused)
+\end{eqnarray*}
+\begin{code}
+csafe x (Var _ v)
+  | x == StdVar v  =  (True,Free)
+  | otherwise      =  (True,Unused)
+\end{code}
+%
+\begin{eqnarray*}
+   \csafe_x(p \land q)
    &\defs&   (ok_p \land ok_q \land u_p \simeq u_q, u_p \Join u_q)
 \\ &\where& (ok_p,u_p) = \csafe_x(p)
 \\ &      & (ok_q,u_q) = \csafe_x(q)
-\\ \csafe_x(\forall v \bullet p)
+\\ \csafe_x(p \seq q) &\defs & (\true,\unused)
+\end{eqnarray*}
+We have to trust the sensibleness of non-subst expansions.
+This should result from
+the side-condition safety of (the RHS of) their definitions.
+\begin{code}
+csafe x (Cons _ sb _ ts)
+  | sb         =  clsafe x ts
+  | otherwise  =  (True, Unused)
+\end{code}
+%
+\begin{eqnarray*}
+   \csafe_x(\forall v \bullet p)
    &\defs&   (ok_p,b) \cond{x = v}  (ok_p,u_p)
 \\ &\where& (ok_p,u_p) = \csafe_x(p)
-\\ \csafe_x(p[e/v])
+\end{eqnarray*}
+\begin{code}
+csafe x (Bnd tk n vs tm)
+  | x `S.member` vs  =  (ok,Bound)
+  | otherwise        =  (ok,u)
+  where (ok,u) = csafe x tm
+csafe x (Lam tk n vl tm)
+  | x `elem` vl  =  (ok,Bound)
+  | otherwise        =  (ok,u)
+  where (ok,u) = csafe x tm
+csafe x (Cls n tm) = (fst $ csafe x tm,Bound)
+\end{code}
+%
+\begin{eqnarray*}
+   \csafe_x(p[e/v])
    &\defs& (ok_p \land ok_e \land u_p \simeq u_e, b)
            \cond{x = v}
            (ok_p \land ok_e \land u_p \simeq u_e, u_p \Join u_e)
 \\ &\where& (ok_p,u_p) = \csafe_x(p)
 \\ &      & (ok_e,u_e) = \csafe_x(e)
-\\ \csafe_x(\_) &\defs& (\true,\bot)
 \end{eqnarray*}
 \begin{code}
-csafe :: Variable -> Term -> (Bool, Usage)
+csafe x (Sub _ tm sub)
+  | not okt                      =  (False, undefined)
+  | not oks                      =  (False, undefined)
+  | not (ucompatible ut us)      =  (False, undefined)
+  | x `S.member` subTargets sub  =  (True, Bound)
+  | otherwise  = (True, ut `ujoin` us)
+  where
+    (okt,ut) = csafe x tm
+    (oks,us) = csubsafe x sub
+\end{code}
+%
+For everything else, we assume safety (\texttt{Iter}?).
+\begin{eqnarray*}
+   \csafe_x(\_) &\defs& (\true,\unused)
+\end{eqnarray*}
+\begin{code}
 csafe _ _  =  (True, Unused)
 \end{code}
+%
+Safety for lists of terms:
+\begin{code}
+clsafe x []           =  (True, Unused)
+clsafe x (t:ts)
+ | not ok1            =  (False, undefined)
+ | ucompatible lu u1  =  (lok, u1 `ujoin` lu)
+ | otherwise          =  (False, undefined)
+ where
+   (ok1,u1) = csafe  x t
+   (lok,lu) = clsafe x ts
+\end{code}
+%
+\def\csubsafe{\textit{csubsafe}}
+Safety for substitutions.
+Here we are just checking the replacement terms or variables
+\begin{eqnarray*}
+   \csubsafe_x([e/_])
+   &\defs& \csafe_x(e)
+\\ \csubsafe_x([\lst e/_])
+   &\defs& \csafe_x(\lst e)
+\\ \csafe_x(\lst e) &=&  (\true,f) \cond{x=\lst e} (\true,\unused)
+\end{eqnarray*}
+\begin{code}
+csubsafe x (Substn es lvlvs)
+ | not okes            =  (False, undefined)
+ | ucompatible eu lvu  =  (True, eu `ujoin` lvu)
+ | otherwise           =  (False, undefined)
+ where
+   (okes,eu)           =  clsafe x (map snd $ S.toList es)
+   lvu                 =  clvsafe x (map snd $ S.toList lvlvs)
+   clvsafe x []        =  Unused
+   clvsafe x (lv:lvs)
+     | x == LstVar lv  =  Free
+     | otherwise       =  clvsafe x lvs
+\end{code}
+
 
 Finally, we get our variables from a side-condition:
 \begin{code}

@@ -2,6 +2,27 @@
 
 ## Most Urgent
 
+A match that works with `tm` but not with `m`:
+
+```
+[P]∧[Q]    ⊤
+
+Focus = [1]  Target (RHS): [P∧Q]
+
+proof: tm 1 []_def
+Match against `[]_def'[1]
+Binding: { P ⟼ P }
+Instantiated Law = [P]≡(∀ x$ • P)
+Instantiated Law S.C. = x$ ⊇ P
+Goal S.C. = ⊤
+Discharged Law S.C. = x$ ⊇ P
+```
+
+***Ok - as `x$` is introduced by the replacement, we should allow the law s.c. to be discharged
+by adding as a goal s.c..**
+
+This is similar to what happens below.
+
 Matching for seq-comp is failing:
 
 ```
@@ -52,7 +73,6 @@ Discharged Law S.C. = fresh:O$_0
 
 hit <enter> to continue
 ```
-
 
 
 ### Upgrade 2

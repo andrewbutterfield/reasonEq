@@ -126,7 +126,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjContra
- = propdef ( "contrapostive"
+ = propdef ( "contrapositive"
            , (p ==> q) === (mkNot q ==> mkNot p) )
 \end{code}
 

@@ -317,7 +317,7 @@ proofIsComplete logicsig liveProof
   =  let
        sequent = exitSeqZipper $ focus liveProof
        hypTerms = map (assnT . snd . fst) $ laws $ hyp sequent
-     in cleft sequent =~= cright sequent 
+     in cleft sequent == cright sequent   -- =~= on hold...
         ||
         any (== theFalse logicsig) hypTerms
 \end{code}

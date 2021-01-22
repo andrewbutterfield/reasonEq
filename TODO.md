@@ -33,6 +33,24 @@ hit <enter> to continue
 
 ```
 
+On the master branch we see
+
+```
+P;(Q;R)    ⊤
+
+Focus = []  Target (RHS): (P;Q);R
+
+
+proof: tm 1 ;_def
+Match against `;_def'[1]
+Binding: { ; ⟼ ;, P ⟼ P, Q ⟼ Q;R, 0 ⟼ 0, O$ ⟼ ⟨O$⟩ }
+Instantiated Law = (P;(Q;R))≡(∃ O$_0 • P[O$_0/O$']∧(Q;R)[O$_0/O$])
+Instantiated Law S.C. = fresh:O$_0
+Goal S.C. = ⊤
+Discharged Law S.C. = fresh:O$_0
+
+hit <enter> to continue
+```
 
 
 

@@ -1,44 +1,6 @@
 # To Do
 
 ## Most Urgent
-
-### Normalisation
-
-We need to re-think normalisation **again**.
-
-The current algorithm is wrong. 
-Consider `P(x) ∧ (∀ x • Q(x))` vs. `∧ (∀ x • Q(x)) ∧ P(x)`.
-
-These will become `P(x_0) ∧ (∀ x_1 • Q(x_1))` and `(∀ x_1 • Q(x_1)) ∧ P(x_1)` respectively.
-
-We cannot have a simple  left-right flow of the `VarVersion` map.
-
-We can consider several levels of normalisation, all of which are sound w.r.t. matching:
-
-* **None**: all occurences (free,bound) of any given variable will be the same, so matching will only succeed if the same candidate variable can be found for all these occurences. This means that matches may be quite rare.
-* **Tree-local**: we keep version numbers local to each top-level quantifier that starts the version numbering. So bound variables at the same "quantifier depth" have the same index. This allows more matches than having no normalisation, and many of these matches capture the intent of many laws currently in use.
-* **Total**: every binding occurence of a given variable gets a unique index. Patterns match anything that is alpha-equivalent, but partial matches result in replacements with lots of pattern variables not in the match binding, that need to be instantiated.
-
-A future upgrade should allow switching between these three ways of handling bound variables.
-For now, we go with the "tree-local" approach.
-
-
-
-We note that the only `Term` variants that require a substitutability marker are `Cons`
-and `Iter`.
-
-We need to normalise all `Assertion`s as follows:
-
-1 `Assertion` becomes an abstract (new)type that guarantees normalisation by construction.
-
-2 All quantifier variables must be unique, arranged by using the `Int` component of the `Identifier` datatype.
-
-4 All free variables at the assertion top-level have a zero `Int` component.
-
-5 All variables inside a non-substitutable term have a zero `Int` component with an explicit substitution.
- 
-
-
 ### Upgrade 2
 
 We now have to show the two following predicates are the same
@@ -52,16 +14,9 @@ Given that `O$_1`..`O$_4` are fresh w.r.t. `P`..`R`.
 
 We need alpha-equivalence check.
 
-With the normalisation described above, 
-we then use matching to find a binding, 
+We propose to use matching to find a binding, 
 which must be bijective over B varsets.
 
-Our example normalises as follows:
-
-```
-(∃ O$_3,O$_4 • P[O$_4/O$']∧(Q[O$_4,O$_3/O$,O$']∧R[O$_3/O$]))
-(∃ O$_1,O$_2 • P[O$_1/O$']∧(Q[O$_1,O$_2/O$,O$']∧R[O$_2/O$]))
-```
 
 Matching the `Bind` bodies results in the following:
 

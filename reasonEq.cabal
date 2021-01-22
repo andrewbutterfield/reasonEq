@@ -14,8 +14,9 @@ extra-source-files:  README.md
 cabal-version:       >=1.10
 
 library
-  hs-source-dirs:      src, proto, builtin
+  hs-source-dirs:      src, builtin, proto
   exposed-modules:     Utilities
+                     , Control
                      , LexBase
                      , Variables
                      , AST
@@ -27,6 +28,7 @@ library
                      , Binding
                      , Instantiate
                      , Matching
+                     , AlphaEquiv
                      , Syntax
                      , Builder
                      , TermZipper
@@ -36,7 +38,6 @@ library
                      , Theories
                      , LiveProofs
                      , StratifiedDAG
-                     , Control
                      , Persistence
                      , Files
                      , REqState
@@ -44,6 +45,9 @@ library
                      , Ranking
                      , REPL
                      , Dev
+                     , TestRendering
+                     , TestParsing
+                     , WriteRead
                      -- in builtin
                      , StdSignature
                      , Equivalence
@@ -63,9 +67,6 @@ library
                      -- in proto
                      , Acyclic
                      , TRYOUT
-                     , TestRendering
-                     , TestParsing
-                     , WriteRead
   build-depends:       base >= 4.7 && < 5
                      , haskeline
                      , containers

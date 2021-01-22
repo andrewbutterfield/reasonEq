@@ -46,6 +46,7 @@ import TermZipper
 import VarData
 import Binding
 import Matching
+import AlphaEquiv
 import Instantiate
 import Laws
 import Proofs

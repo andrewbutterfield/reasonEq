@@ -1,6 +1,41 @@
 # To Do
 
 ## Most Urgent
+
+Matching for seq-comp is failing:
+
+```
+P;(Q;R)    ⊤
+
+Focus = []  Target (RHS): (P;Q);R
+
+
+proof: tm 1 ;_def
+Match against `;_def'[1] failed!
+auto-instantiate failed
+
+P;(Q;R) :: P;Q
+
+lnm[parts]=;_def[1]
+tP=(P;Q)≡(∃ O$_0 • P[O$_0/O$']∧Q[O$_0/O$])
+partsP=P;Q
+tC=P;(Q;R)
+scC=⊤
+
+bind  = { ; ⟼ ;, P ⟼ P, Q ⟼ Q;R }
+instLLVar: l-var not found
+l-var = O$_0
+bind = { ; ⟼ ;, P ⟼ P, Q ⟼ Q;R, O$ ⟼ ⟨O$⟩ }
+instLLVar: l-var not found
+l-var = O$_0
+bind = { ; ⟼ ;, P ⟼ P, Q ⟼ Q;R, O$ ⟼ ⟨O$⟩ }
+hit <enter> to continue
+
+```
+
+
+
+
 ### Upgrade 2
 
 We now have to show the two following predicates are the same

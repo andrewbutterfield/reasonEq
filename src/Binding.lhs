@@ -29,6 +29,7 @@ module Binding
 , bindLVarsToNull, bindLVarsToEmpty
 , mappedVars
 , generateFreshVars
+, isBijectiveBinding
 , dumpBinding
 , int_tst_Binding
 ) where
@@ -1255,6 +1256,17 @@ remakeVar i v@(Vbl (Identifier n _) vc vw)
                                      =  Vbl (fromJust $ ident (n++show i)) vc vw
 
 remakeLVar i lv@(LVbl v is ij) = LVbl (remakeVar i v) is ij
+\end{code}
+
+\newpage
+\subsubsection{Bijective Bindings}
+
+For $\alpha$-equivalence testing in particular,
+we need to know if a binding is bijective.
+Each domain elements maps to a unique element of the same ``shape''.
+\begin{code}
+isBijectiveBinding :: Binding -> Bool
+isBijectiveBinding bind = False
 \end{code}
 
 \newpage

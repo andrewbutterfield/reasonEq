@@ -69,13 +69,17 @@ $$
 This mapping will result from a successful attempt to match the first
 predicate above against the second.
 This makes it simple to implement a check for $\alpha$-equivalence.
-
 \begin{code}
 isAlphaEquivalent :: Term -> Term -> Bool
 (=~=)  =  isAlphaEquivalent
 \end{code}
 
-
+We check $\alpha$-equivalence by matching one term against the other
+(ignoring variable data),
+and then checking that the match binding over is bijective.
 \begin{code}
-isAlphaEquivalent  =  (==)  -- temporary placeholder
+isAlphaEquivalent t1 t2
+  = case match [] t1 t2 of
+      Nothing    ->  False
+      Just bind  ->  isBijectiveBinding bind
 \end{code}

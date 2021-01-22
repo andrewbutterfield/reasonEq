@@ -14,9 +14,27 @@ BEGIN THEORIES
 THNAMES = ["And","AndOrInvert","Equality","Equiv","Exists","ForAll","Implies","Not","Or","UClose","UTPBase"]
 SDAG = [[("UTPBase",["UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("UClose",["Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Exists",["ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("ForAll",["Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Equality",["Implies","Equiv"])],[("Implies",["AndOrInvert","And","Or","Not","Equiv"])],[("AndOrInvert",["And","Or","Not","Equiv"])],[("And",["Or","Not","Equiv"])],[("Or",["Not","Equiv"])],[("Not",["Equiv"])],[("Equiv",[])]]
 END THEORIES
-CURRTHEORY = Exists
+CURRTHEORY = UTPBase
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("UTPBase",";_assoc")
+BEGIN LIVE-PROOF
+TH-NAME: UTPBase
+CJ-NAME: ;_assoc
+CONJ = ASN (C P True (Id "equiv" 0) [C P False (Id ";" 0) [V P (VR (Id "P" 0,VP,WS)),C P False (Id ";" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],C P False (Id ";" 0) [C P False (Id ";" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "R" 0,VP,WS))]],([],fromList []))
+SIDE = ([],fromList [])
+STRAT redboth
+BEGIN SEQZIP
+TERMZIP = (C P False (Id ";" 0) [V P (VR (Id "P" 0,VP,WS)),C P False (Id ";" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],[])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.;_assoc", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = C P False (Id ";" 0) [C P False (Id ";" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "R" 0,VP,WS))]}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

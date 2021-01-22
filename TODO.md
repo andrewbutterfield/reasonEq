@@ -16,6 +16,7 @@ auto-instantiate failed
 
 P;(Q;R) :: P;Q
 
+
 lnm[parts]=;_def[1]
 tP=(P;Q)≡(∃ O$_0 • P[O$_0/O$']∧Q[O$_0/O$])
 partsP=P;Q

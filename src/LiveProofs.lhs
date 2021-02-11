@@ -366,6 +366,12 @@ tryLawByName logicsig asn@(Assertion tC scC) lnm parts mcs
        partsP <- findParts parts tP
        tryMatch vts tP partsP $ assnC asnP
   where
+    -- below we try to do:
+    -- bind          <- match vts tC partsP
+    -- (kbind,tPasC) <- instantiateKnown vts bind tP of
+    -- scP'          <- instantiateSC bind scP of
+    -- scP''         <- scDischarge scC scP' of
+    -- return (bind,tP,scP',scP'')
 \end{code}
 
 First, try the structural match.
@@ -827,11 +833,11 @@ basicMatch :: MatchClass
             -> Matches
 basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
   =  do bind <- match vts tC partsP
-        (kbind,_) <- instantiateKnown vts bind repl
-        (fbind,_) <- instantiateFloating vts kbind repl
-        scPinC <- instantiateSC fbind scP
-        scD <- scDischarge scC scPinC
-        if all isFloatingASC (fst scD)
+        (kbind,_) <- instantiateKnown vts (pdbg "bind" bind) repl
+        (fbind,_) <- instantiateFloating vts (pdbg "kbind" kbind) repl
+        scPinC <- instantiateSC (pdbg "fbind" fbind) scP
+        scD <- scDischarge scC (pdbg "scPinC" scPinC)
+        if all isFloatingASC (fst $ pdbg "scD" scD)
           then return $ MT n (unwrapASN asn) (chkPatn mc tP) kbind scC scPinC repl
           else fail "undischargeable s.c."
   where

@@ -85,7 +85,7 @@ instantiateFloating bind trm
 AbstractUI.tryFocusAgainst lawnm parts theSig liveProof
   LiveProofs.tryLawByName theSig (goalt,scC) lawnm parts ctxts
     Match.match vts tC partsP
-    Instantiate.instantiateFloating vts bind tP
+    Instantiate.instantiateKnown vts bind tP
     Instantiate.instantiateSC bind scP
     SideCond.scDischarge scC scP'
 ```

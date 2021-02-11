@@ -2,6 +2,20 @@
 
 ## Most Urgent
 
+The problem is these lines at the end of `basicMatch`:
+
+```
+   if all isFloatingASC (fst $ pdbg "scD" scD)
+          then return $ MT n (unwrapASN asn) (chkPatn mc tP) kbind scC scPinC repl
+          else fail "undischargeable s.c."
+```
+
+These only check the `GenVar` component of atomic-side conditions,
+which in this case is `P`. But it is the `x$?` that matters here.
+In fact, the `P` is not a floating unknown.
+
+
+
 A match that works with `tm` but not with `m`:
 
 ```
@@ -18,8 +32,9 @@ Goal S.C. = ⊤
 Discharged Law S.C. = x$ ⊇ P
 ```
 
-***Ok - as `x$` is introduced by the replacement, we should allow the law s.c. to be discharged
+**Ok - as `x$` is introduced by the replacement, we should allow the law s.c. to be discharged
 by adding as a goal s.c..**
+
 
 This is similar to what happens below.
 

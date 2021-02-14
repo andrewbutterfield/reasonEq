@@ -14,6 +14,9 @@ These only check the `GenVar` component of atomic-side conditions,
 which in this case is `P`. But it is the `x$?` that matters here.
 In fact, the `P` is not a floating unknown.
 
+**Solution:** An atomic side-condition is floating if *any* component is.
+
+Match now suceeds, but instantiation during "apply match" fails.
 
 
 A match that works with `tm` but not with `m`:

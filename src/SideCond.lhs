@@ -775,7 +775,11 @@ mention variables that are marked as ``floating''.
 Only these can possibly be instantiated to satisfy the residual side-condition.
 \begin{code}
 isFloatingASC :: AtmSideCond -> Bool
-isFloatingASC = isFloatingGVar . ascGVar
+isFloatingASC (SP  gv)     = isFloatingGVar gv
+isFloatingASC (SD  gv vs)  = isFloatingGVar gv || hasFloating vs
+isFloatingASC (SS  gv vs)  = isFloatingGVar gv || hasFloating vs
+hasFloating :: VarSet -> Bool
+hasFloating vs = any isFloatingGVar $ S.toList vs
 \end{code}
 One exception to this, during law matching,
 is that coverage may reduce to the empty set

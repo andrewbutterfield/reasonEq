@@ -280,7 +280,7 @@ reqCommands = [ cmdShow, cmdSet, cmdNew
               , cmdSave, cmdLoad
               , cmdSaveConj, cmdLoadConj
               , cmdAssume, cmdDemote
-              , cmdBuiltin ]
+              , cmdBuiltin, cmdAuto ]
 
 -- we don't use these features in the top-level REPL
 reqEndCondition _ = False
@@ -341,6 +341,7 @@ cmdShow
         , shName++" "++shLivePrf++" -- show current (live) proof"
         , shName++" "++shProofs++" -- show completed proofs"
         , shName++" "++shProofs++" <nm> -- show proof transcript for <nm>"
+        , shName++" "++shAuto++" autoprover"
         ]
     , showState )
 
@@ -354,6 +355,7 @@ shCurrThry = "T"
 shConj = "c"
 shLivePrf = "p"
 shProofs = "P"
+shAuto = "A"
 
 -- these are not robust enough - need to check if component is present.
 showState (cmd:args) reqs
@@ -708,6 +710,8 @@ proofREPLConfig
             , goUpDescr
             , matchLawDescr
             , tryMatchDescr
+            , autoProofDescr
+            , autoProofDescrB
             , applyMatchDescr
             , normQuantDescr
             , simpNestDescr
@@ -843,6 +847,45 @@ matchLawCommand args state@(reqs, liveProof)
              return (reqs, matches_ [] liveProof)
   where lawnm = filter (not . isSpace) $ unwords args
 \end{code}
+
+\begin{code}
+autoProofDescr = ("au"
+            , "prove automagically changed"
+            , "au        -- prove Equiv auto"
+            , autoProofCommand)
+
+autoProofCommand :: REPLCmd (REqState, LiveProof)
+autoProofCommand [] pstate@(reqs, liveProof) = do
+    (reqs, liveProof') <- flatEquiv [] (reqs, liveProof)
+    matchLawCommand [] (reqs, liveProof')
+    applyMatch ["1"] (reqs, matchFocus (logicsig reqs) liveProof') 
+\end{code}
+
+\begin{code}
+autoProofDescrB = ("aub"
+            , "prove automagically changed"
+            , "aub        -- prove Equiv auto"
+            , autoProofCommandB)
+
+autoProofCommandB [] (reqs, liveProof) = do
+    (reqs, liveProof) <- goDown ["1"] (reqs, liveProof)
+    (reqs, liveProof) <- matchLawCommand [] (reqs, liveProof)
+    (reqs, liveProof) <- applyMatch ["1"] (reqs, matchFocus (logicsig reqs) liveProof)
+    (reqs, liveProof) <- goUp [] (reqs, liveProof)
+    (reqs, liveProof) <- goDown["2"] (reqs, liveProof)
+    (reqs, liveProof) <- matchLawCommand [] (reqs, liveProof)
+    (reqs, liveProof) <- applyMatch ["1"] (reqs, matchFocus (logicsig reqs) liveProof)
+    (reqs, liveProof) <- matchLawCommand [] (reqs, liveProof)
+    (reqs, liveProof) <- applyMatch ["1"] (reqs, matchFocus (logicsig reqs) liveProof)
+    (reqs, liveProof) <- goDown["1"] (reqs, liveProof)
+    (reqs, liveProof) <- matchLawCommand [] (reqs, liveProof)
+    (reqs, liveProof) <- applyMatch ["1"] (reqs, matchFocus (logicsig reqs) liveProof)
+    (reqs, liveProof) <- goUp [] (reqs, liveProof)
+    (reqs, liveProof) <- goUp [] (reqs, liveProof)
+    matchLawCommand [] (reqs, liveProof)
+    
+\end{code}
+
 
 Try matching focus against a specific law, to see what outcome arises
 \begin{code}
@@ -1255,4 +1298,16 @@ buildIn (cmd:nm:_) reqs
           Nothing -> return reqs'
 
 buildIn _ reqs = doshow reqs "unrecognised 'b' option"
+\end{code}
+
+Simple command to auto prove the first equivalence law
+\begin{code}
+cmdAuto :: REqCmdDescr
+cmdAuto = ("Au"
+          , "Auto Prove Equiv first law ID"
+          , ""
+          , autoProve)
+
+-- autoProve _ reqs = doshow reqs "Proving..."
+autoProve _ reqs = doNewProof ["1"] reqs 
 \end{code}

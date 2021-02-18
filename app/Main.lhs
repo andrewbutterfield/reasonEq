@@ -923,45 +923,20 @@ we ask the user to pick from a list of terms:
 \begin{code}
 requestBindings :: (Term, Term) -> Term -> Set GenVar -> IO Binding
 requestBindings (t,f) goalTerm unbound
-  = let
+  = rB emptyBinding $ S.toList unbound
+  where
+    rB ubind [] = return ubind
 
-      terms = t : f : subTerms goalTerm
-      termLen = length terms
-      termMenu = numberList (trTerm 0) terms
+    rB ubind gvs@(StdVar v : gvs')
+      = do putStrLn ("bindings so far: "++trBinding ubind)
+           putStrLn termMenu
+           putStrLn ("unbound "++trVar v)
+           response <- fmap readInt $ userPrompt "Choose term by number: "
+           handleVarResponse ubind gvs v gvs' response
 
-      gvars = S.toList $ mentionedVars goalTerm
-      gvarLen = length gvars
-      gvarMenu = numberList trGVar gvars
-
-      lvarPrompt = unlines' [ "numbers separated by spaces"
-                            , "enter > "
-                            ]
-
-      vlists :: [VarList]
-      vlists    = mentionedVarLists goalTerm
-                  ++ map S.toList (mentionedVarSets goalTerm)
-                  ++ map (:[]) (S.toList unbound)
-      vlistLen  = length vlists
-      vlistMenu = numberList trVList vlists
-
-      -- we count from 1 !
-      inrange upper i = 0 < i && i <= upper
-
-      getFrom1 list i = list!!(i-1)
-
-      rB ubind [] = do putStrLn ("Done: " ++ trBinding ubind)
-                       userPause
-                       return ubind
-
-      rB ubind gvs@(StdVar v : gvs')
-        = do putStrLn ("bindings so far: "++trBinding ubind)
-             putStrLn termMenu
-             putStrLn ("unbound "++trVar v)
-             response <- fmap readInt $ userPrompt "Choose term by number: "
-             handleVarResponse ubind gvs v gvs' response
-
-
-      rB ubind gvs@(LstVar lv : gvs')
+    rB ubind gvs@(LstVar lv : gvs')
+      | vlistLen == 1  =  handleLVarResponse ubind gvs lv gvs' [1]
+      | otherwise
         = do putStrLn ("bindings so far: "++trBinding ubind)
              -- putStrLn ("var-lists: " ++ seplist " " trVList vlists)
              -- putStrLn ("var-sets:  " ++ seplist " " trVSet vsets)
@@ -970,23 +945,45 @@ requestBindings (t,f) goalTerm unbound
              responseBits <- fmap (map readInt . words) $ userPrompt lvarPrompt
              handleLVarResponse ubind gvs lv gvs' $ nub responseBits
 
-      handleVarResponse ubind gvs v gvs' response
-       = if inrange termLen response
-         then case bindVarToTerm v (terms!!(response-1)) ubind of
-               Nothing      ->  putStrLn "bind var failed" >> return ubind
-               Just ubind'  ->  rB ubind' gvs'
-         else rB ubind gvs
+    handleVarResponse ubind gvs v gvs' response
+     = if inrange termLen response
+       then case bindVarToTerm v (terms!!(response-1)) ubind of
+             Nothing      ->  putStrLn "bind var failed" >> return ubind
+             Just ubind'  ->  rB ubind' gvs'
+       else rB ubind gvs
 
-      handleLVarResponse ubind gvs lv gvs' ixs -- just do one for now
-       = if all (inrange vlistLen) ixs
-         then do let myvlist = concat $ map (getFrom1 vlists) ixs
-                 case bindLVarToVList lv myvlist ubind of
-                   Nothing      ->  putStrLn "bind lvar failed"
-                                    >> userPause >> return ubind
-                   Just ubind'  ->  rB ubind' gvs'
-         else rB ubind gvs
+    handleLVarResponse ubind gvs lv gvs' ixs -- just do one for now
+     = if all (inrange vlistLen) ixs
+       then do let myvlist = concat $ map (getFrom1 vlists) ixs
+               case bindLVarToVList lv myvlist ubind of
+                 Nothing      ->  putStrLn "bind lvar failed"
+                                  >> userPause >> return ubind
+                 Just ubind'  ->  rB ubind' gvs'
+       else rB ubind gvs
 
-    in rB emptyBinding $ S.toList unbound
+    terms = t : f : subTerms goalTerm
+    termLen = length terms
+    termMenu = numberList (trTerm 0) terms
+
+    gvars = S.toList $ mentionedVars goalTerm
+    gvarLen = length gvars
+    gvarMenu = numberList trGVar gvars
+
+    lvarPrompt = unlines' [ "numbers separated by spaces"
+                          , "enter > "
+                          ]
+
+    vlists :: [VarList]
+    vlists    = mentionedVarLists goalTerm
+                ++ map S.toList (mentionedVarSets goalTerm)
+                ++ map (:[]) (S.toList unbound)
+    vlistLen  = length vlists
+    vlistMenu = numberList trVList vlists
+
+    -- we count from 1 !
+    inrange upper i = 0 < i && i <= upper
+
+    getFrom1 list i = list!!(i-1)
 \end{code}
 
 \newpage

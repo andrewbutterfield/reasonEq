@@ -552,13 +552,15 @@ applyMatchToFocus2 mtch unbound ubind liveProof
         dpath = fPath liveProof
         conjpart = exitTZ tz
     in do scLasC <- instantiateSC cbind scL
-          scD <- scDischarge (pdbg "scC" scC) $ pdbg "scLasC" scLasC
-          if onlyFreshOrInvolved (pdbg "unbound" unbound) $ pdbg "scD" scD
+          scD <- scDischarge scC scLasC
+          if onlyFreshOrInvolved unbound scD
             then do let freshneeded = snd scD
                     let knownVs = zipperVarsMentioned $ focus liveProof
                     let (fbind,fresh) = generateFreshVars knownVs freshneeded cbind
+                    let newLocalASC = fst scD
+                    newLocalSC <- mkSideCond newLocalASC fresh
+                    scC' <- scC `mrgSideCond` newLocalSC
                     brepl  <- instantiate fbind repl
-                    scC' <- scC `mrgSideCond` freshAsSideCond fresh
                     asn' <- mkAsn conjpart (conjSC liveProof)
                     return ( focus_ ((setTZ brepl tz),seq')
                            $ matches_ []
@@ -571,9 +573,6 @@ applyMatchToFocus2 mtch unbound ubind liveProof
                                , (asn')):)
                               liveProof )
             else fail ("Undischarged side-conditions: "++trSideCond scD)
-
-freshAsSideCond :: VarSet -> SideCond
-freshAsSideCond fresh = fromJust $ mkSideCond [] fresh
 \end{code}
 
 

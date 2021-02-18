@@ -2,14 +2,10 @@
 
 ## Most Urgent
 
+Abstract API  `applyMatchToFocus2` now seems to deal properly with with
+side-conditions involving floating variables.
 
-
-instantiation during "apply match" now works better.
-
-Probelm now is match of `[]_def` RHS against `(∀ x$ • P∧Q)` is failing.
-`tm 2 []_def` works. So now we have a match problem.
-
-Matching for seq-comp is failing:
+Is Matching for seq-comp still failing?
 
 ```
 P;(Q;R)    ⊤

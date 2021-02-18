@@ -2,10 +2,9 @@
 
 ## Most Urgent
 
-Abstract API  `applyMatchToFocus2` now seems to deal properly with with
-side-conditions involving floating variables.
+Continue proofs in `UClose` and onwards....
 
-Is Matching for seq-comp still failing?
+See if the following now works.
 
 ```
 P;(Q;R)    ⊤

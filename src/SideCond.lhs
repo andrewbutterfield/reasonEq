@@ -10,7 +10,8 @@ module SideCond (
   AtmSideCond
 , pattern Disjoint, pattern Covers, pattern IsPre
 , ascGVar, ascVSet
-, SideCond, scTrue, isTrivialSC, onlyFreshSC
+, SideCond, scTrue, isTrivialSC
+, onlyFreshSC, onlyInvolving, onlyFreshOrInvolved
 , scGVars, scVarSet
 , mrgAtmCond, mrgSideCond, mkSideCond
 , scDischarge
@@ -267,7 +268,23 @@ We are also interested when the only side-conditions we
 have are to do with freshness:
 \begin{code}
 onlyFreshSC :: SideCond -> Bool
-onlyFreshSC (ascs,fvs) = null ascs
+onlyFreshSC (ascs,_) = null ascs
+\end{code}
+or involve variables in a designated set:
+\begin{code}
+onlyInvolving :: VarSet -> SideCond -> Bool
+onlyInvolving involved (ascs,_) = all (onlyWith involved) ascs
+
+onlyWith :: VarSet -> AtmSideCond -> Bool
+onlyWith involved (SP  gv)    = gv `S.member` involved
+onlyWith involved (SD  gv vs) = gv `S.member` involved || involved `overlaps` vs
+onlyWith involved (SS  gv vs) = gv `S.member` involved || involved `overlaps` vs
+\end{code}
+We may accept either of the above:
+\begin{code}
+onlyFreshOrInvolved :: VarSet -> SideCond -> Bool
+onlyFreshOrInvolved involved ([],_)    =  True
+onlyFreshOrInvolved involved (ascs,_)  =  all (onlyWith involved) ascs
 \end{code}
 
 Finally,

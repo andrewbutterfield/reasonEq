@@ -1,7 +1,6 @@
-@scC:
-([],fromList [])
-@scLasC:
-([SS (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])],fromList [])
-@scD:
-([SS (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])],fromList [])
-Undischarged side-conditions: x$ ⊇ P
+
+@patn:
+B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))])
+
+@cand:
+C P True (Id "equiv" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V P (VR (Id "P" 0,VP,WS)))]

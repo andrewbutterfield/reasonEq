@@ -1,13 +1,24 @@
-@scC:
-( []
-, {} )
-@scLasC:
-( [ SS
-    (GV (VR (Id "P" 0, VP, WS)))
-    ( { GL (LV (VR (Id "x" 0, VO, WS), [], [])) } ) ]
-, {} )
-@scD:
-( [ SS
-    (GV (VR (Id "P" 0, VP, WS)))
-    ( { GL (LV (VR (Id "x" 0, VO, WS), [], [])) } ) ]
-, {} )
+@cand:
+B
+P
+(Id "forall" 0)
+( { GL (LV (VR (Id "x" 0, VO, WS), [], [])) } )
+( C
+  P
+  True
+  (Id "land" 0)
+  [ V P (VR (Id "P" 0, VP, WS))
+  , V P (VR (Id "Q" 0, VP, WS)) ] )
+@patn:
+C
+P
+True
+(Id "equiv" 0)
+[ X
+  (Id " [_] " 0)
+  (V P (VR (Id "P" 0, VP, WS)))
+, B
+  P
+  (Id "forall" 0)
+  ( { GL (LV (VR (Id "x" 0, VO, WS), [], [])) } )
+  (V P (VR (Id "P" 0, VP, WS))) ]

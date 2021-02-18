@@ -25,14 +25,17 @@ CONJ = ASN (C P True (Id "equiv" 0) [C P True (Id "land" 0) [X (Id "[_]" 0) (V P
 SIDE = ([],fromList [])
 STRAT redinit
 BEGIN SEQZIP
-TERMZIP = (X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),[Cons' P True (Id "land" 0) [] [X (Id "[_]" 0) (V P (VR (Id "Q" 0,VP,WS)))]])
+TERMZIP = (B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]),[])
 BEGIN SEQUENT'
 SIDECOND = ([],fromList [])
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.land_[]_distr", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = X (Id "[_]" 0) (C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))])}
 END SEQUENT'
 END SEQZIP
-FPATH: [1]
+FPATH: []
 BEGIN LIST STEPS
+(UseLaw (ByMatch (ME [2])) "forall_land_distr" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS))),((Id "Q" 0,VP),BV (VR (Id "Q" 0,VP,WS))),((Id "land" 0,VP),BV (VR (Id "land" 0,VP,WS)))],fromList [],fromList [((Id "x" 0,VO,[],[]),BS (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]))])) [],ASN (C P True (Id "land" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V P (VR (Id "P" 0,VP,WS))),B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V P (VR (Id "Q" 0,VP,WS)))],([],fromList [])))
+(UseLaw (ByMatch (ME [1])) "[]_def" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "Q" 0,VP,WS)))],fromList [],fromList [((Id "x" 0,VO,[],[]),BL [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])])) [2],ASN (C P True (Id "land" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V P (VR (Id "P" 0,VP,WS))),X (Id "[_]" 0) (V P (VR (Id "Q" 0,VP,WS)))],([],fromList [])))
+(UseLaw (ByMatch (ME [1])) "[]_def" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS)))],fromList [],fromList [((Id "x" 0,VO,[],[]),BL [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])])) [1],ASN (C P True (Id "land" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),X (Id "[_]" 0) (V P (VR (Id "Q" 0,VP,WS)))],([],fromList [])))
 END LIST STEPS
 END LIVE-PROOF
 END MAP LIVE-PROOFS

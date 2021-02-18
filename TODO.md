@@ -3,20 +3,11 @@
 ## Most Urgent
 
 
-Match now suceeds, but instantiation during "apply match" fails.
 
-Situation is at this part of `AbstractUI` code, in `applyMatchToFocus2`:
+instantiation during "apply match" now works better.
 
-```
-    in do scLasC <- instantiateSC cbind scL
-          scD <- scDischarge (pdbg "scC" scC) $ pdbg "scLasC" scLasC
-          if onlyFreshSC $ pdbg "scD" scD
-            then do ...
-            else fail ("Undischarged side-conditions: "++trSideCond scD)
-```
-
-The `onlyFreshSC` is too strict. We should also allow, and add as local side-conditions, any atomic side-condition that mentions an `unbound` variable.
-
+Probelm now is match of `[]_def` RHS against `(∀ x$ • P∧Q)` is failing.
+`tm 2 []_def` works. So now we have a match problem.
 
 Matching for seq-comp is failing:
 

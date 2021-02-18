@@ -553,7 +553,7 @@ applyMatchToFocus2 mtch unbound ubind liveProof
         conjpart = exitTZ tz
     in do scLasC <- instantiateSC cbind scL
           scD <- scDischarge (pdbg "scC" scC) $ pdbg "scLasC" scLasC
-          if onlyFreshSC $ pdbg "scD" scD
+          if onlyFreshOrInvolved (pdbg "unbound" unbound) $ pdbg "scD" scD
             then do let freshneeded = snd scD
                     let knownVs = zipperVarsMentioned $ focus liveProof
                     let (fbind,fresh) = generateFreshVars knownVs freshneeded cbind

@@ -552,8 +552,8 @@ applyMatchToFocus2 mtch unbound ubind liveProof
         dpath = fPath liveProof
         conjpart = exitTZ tz
     in do scLasC <- instantiateSC cbind scL
-          scD <- scDischarge scC scLasC
-          if onlyFreshSC scD
+          scD <- scDischarge (pdbg "scC" scC) $ pdbg "scLasC" scLasC
+          if onlyFreshSC $ pdbg "scD" scD
             then do let freshneeded = snd scD
                     let knownVs = zipperVarsMentioned $ focus liveProof
                     let (fbind,fresh) = generateFreshVars knownVs freshneeded cbind

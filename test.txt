@@ -1,17 +1,7 @@
-
-proof: a10
-@am2f2.scD:
-([],fromList [GL (LV (VR (Id "O" 0,VO,WD "0"),[],[]))])
-@aMTF2.fneeded:
-fromList [GL (LV (VR (Id "O" 0,VO,WD "0"),[],[]))]
-@aMTF2.conj:
-C P (Id "equiv" 0) [C P (Id ";" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id ";" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],C P (Id ";" 0) [C P (Id ";" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "R" 0,VP,WS))]]
-
-
-proof: a10
-@am2f2.scD:
-([],fromList [GL (LV (VR (Id "O" 0,VO,WD "0"),[],[]))])
-@aMTF2.fneeded:
-fromList [GL (LV (VR (Id "O" 0,VO,WD "0"),[],[])),GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))]
-@aMTF2.conj:
-C P (Id "equiv" 0) [C P (Id ";" 0) [V P (VR (Id "P" 0,VP,WS)),C P (Id ";" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],C P (Id ";" 0) [C P (Id ";" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "R" 0,VP,WS))]]
+@scC:
+([],fromList [])
+@scLasC:
+([SS (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])],fromList [])
+@scD:
+([SS (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])],fromList [])
+Undischarged side-conditions: x$ ⊇ P

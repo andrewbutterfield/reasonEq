@@ -2,44 +2,21 @@
 
 ## Most Urgent
 
-The problem is these lines at the end of `basicMatch`:
-
-```
-   if all isFloatingASC (fst $ pdbg "scD" scD)
-          then return $ MT n (unwrapASN asn) (chkPatn mc tP) kbind scC scPinC repl
-          else fail "undischargeable s.c."
-```
-
-These only check the `GenVar` component of atomic-side conditions,
-which in this case is `P`. But it is the `x$?` that matters here.
-In fact, the `P` is not a floating unknown.
-
-**Solution:** An atomic side-condition is floating if *any* component is.
 
 Match now suceeds, but instantiation during "apply match" fails.
 
-
-A match that works with `tm` but not with `m`:
+Situation is at this part of `AbstractUI` code, in `applyMatchToFocus2`:
 
 ```
-[P]∧[Q]    ⊤
-
-Focus = [1]  Target (RHS): [P∧Q]
-
-proof: tm 1 []_def
-Match against `[]_def'[1]
-Binding: { P ⟼ P }
-Instantiated Law = [P]≡(∀ x$ • P)
-Instantiated Law S.C. = x$ ⊇ P
-Goal S.C. = ⊤
-Discharged Law S.C. = x$ ⊇ P
+    in do scLasC <- instantiateSC cbind scL
+          scD <- scDischarge (pdbg "scC" scC) $ pdbg "scLasC" scLasC
+          if onlyFreshSC $ pdbg "scD" scD
+            then do ...
+            else fail ("Undischarged side-conditions: "++trSideCond scD)
 ```
 
-**Ok - as `x$` is introduced by the replacement, we should allow the law s.c. to be discharged
-by adding as a goal s.c..**
+The `onlyFreshSC` is too strict. We should also allow, and add as local side-conditions, any atomic side-condition that mentions an `unbound` variable.
 
-
-This is similar to what happens below.
 
 Matching for seq-comp is failing:
 

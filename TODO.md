@@ -4,57 +4,35 @@
 
 Continue proofs in `UClose` and onwards....
 
-See if the following now works.
+We want to convert `P` to `P[x$/x$]` using law `id_subst`.
+
+Test match outcome:
 
 ```
-P;(Q;R)    ⊤
+(∀ x$ • P)⟹  P    x$ ⊇ P
 
-Focus = []  Target (RHS): (P;Q);R
+Focus = [2]  Target (RHS): true
 
 
-proof: tm 1 ;_def
-Match against `;_def'[1] failed!
+proof: tm 2 id_subst
+Match against `id_subst'[2] failed!
 auto-instantiate failed
 
-P;(Q;R) :: P;Q
+P :: P
 
+lnm[parts]=id_subst[2]
+tP=P[x$/x$]≡P
+partsP=P
+tC=P
+scC=x$ ⊇ P
 
-lnm[parts]=;_def[1]
-tP=(P;Q)≡(∃ O$_0 • P[O$_0/O$']∧Q[O$_0/O$])
-partsP=P;Q
-tC=P;(Q;R)
-scC=⊤
-
-bind  = { ; ⟼ ;, P ⟼ P, Q ⟼ Q;R }
+bind  = { P ⟼ P }
 instLLVar: l-var not found
-l-var = O$_0
-bind = { ; ⟼ ;, P ⟼ P, Q ⟼ Q;R, O$ ⟼ ⟨O$⟩ }
-instLLVar: l-var not found
-l-var = O$_0
-bind = { ; ⟼ ;, P ⟼ P, Q ⟼ Q;R, O$ ⟼ ⟨O$⟩ }
+l-var = x$
+bind = { P ⟼ P }
 hit <enter> to continue
 
 ```
-
-On the master branch we see
-
-```
-P;(Q;R)    ⊤
-
-Focus = []  Target (RHS): (P;Q);R
-
-
-proof: tm 1 ;_def
-Match against `;_def'[1]
-Binding: { ; ⟼ ;, P ⟼ P, Q ⟼ Q;R, 0 ⟼ 0, O$ ⟼ ⟨O$⟩ }
-Instantiated Law = (P;(Q;R))≡(∃ O$_0 • P[O$_0/O$']∧(Q;R)[O$_0/O$])
-Instantiated Law S.C. = fresh:O$_0
-Goal S.C. = ⊤
-Discharged Law S.C. = fresh:O$_0
-
-hit <enter> to continue
-```
-
 
 ### Upgrade 2
 

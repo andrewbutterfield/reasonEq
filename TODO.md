@@ -4,36 +4,26 @@
 
 Continue proofs in `UClose` and onwards....
 
-We want to convert `P` to `P[x$/x$]` using law `id_subst`.
-
-Test match outcome:
+Problem with `univ_mono`
 
 ```
-(∀ x$ • P)⟹  P    x$ ⊇ P
+(∀ x$ • (P⟹  Q))⟹  ([P]⟹  [Q])    x$ ⊇ P;x$ ⊇ Q
 
-Focus = [2]  Target (RHS): true
+Focus = [2,2]  Target (RHS): true
 
 
-proof: tm 2 id_subst
-Match against `id_subst'[2] failed!
-auto-instantiate failed
+proof: tm 1 []_def
+Match against `[]_def'[1]
+Binding: { P ⟼ Q, x$ ⟼ ⟨?x$⟩ }
+Instantiated Law = [P]≡(∀ x$ • P)
+Instantiated Law S.C. = ?x$ ⊇ Q
+Goal S.C. = x$ ⊇ P;x$ ⊇ Q
+Discharged Law S.C. = Ø ⊇ Q
 
-P :: P
-
-lnm[parts]=id_subst[2]
-tP=P[x$/x$]≡P
-partsP=P
-tC=P
-scC=x$ ⊇ P
-
-bind  = { P ⟼ P }
-instLLVar: l-var not found
-l-var = x$
-bind = { P ⟼ P }
 hit <enter> to continue
-
 ```
 
+We have `x$ ⊇ Q` so this should discharge `?x$ ⊇ Q` and not leave `Ø ⊇ Q`.
 ### Upgrade 2
 
 We now have to show the two following predicates are the same

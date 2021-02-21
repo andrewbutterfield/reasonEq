@@ -28,6 +28,9 @@ module Binding
 , lookupLstBind
 , bindLVarsToNull, bindLVarsToEmpty
 , mappedVars
+, findUnboundVars, bindKnown
+, termLVarPairings, mkEquivClasses
+, mkFloatingBinding, bindFloating
 , generateFreshVars
 , isBijectiveBinding
 , dumpBinding
@@ -35,7 +38,7 @@ module Binding
 ) where
 import Data.Maybe (fromJust,catMaybes)
 import Data.Either
-import Data.List (nub)
+import Data.List (nub,union,(\\))
 import Data.Map(Map)
 import qualified Data.Map as M
 import Data.Set(Set)
@@ -1206,6 +1209,207 @@ allLVWhen :: [VarWhen] -> ListVarKey -> Set ListVar
 allLVWhen whens (i,vc,is,ij)
   = S.fromList $ map (lvbl is ij . Vbl i vc) whens
   where lvbl is ij v = LVbl v is ij
+\end{code}
+
+\newpage
+\subsubsection{Finding Unbound Replacement Variables}
+
+\begin{code}
+findUnboundVars :: Binding -> Term -> VarSet
+findUnboundVars bind trm  =  mentionedVars trm S.\\ mappedVars bind
+\end{code}
+
+\subsubsection{Instantiate Unbound Known Variables}
+
+\begin{code}
+bindKnown :: Monad m => [VarTable] -> Binding -> Term -> m Binding
+bindKnown vts bind trm
+ = return kbind
+ where
+   unbound  =  findUnboundVars bind trm
+   kbind    =  mkKnownBinding vts unbound bind
+\end{code}
+
+\begin{code}
+mkKnownBinding :: [VarTable] -> VarSet -> Binding -> Binding
+mkKnownBinding vts unbound bind
+  = foldl mergeBindings bind
+     $ map (mkKnownBind vts) $ S.toList unbound
+
+mkKnownBind vts gv
+ | isUnknownGVar vts gv  =  emptyBinding
+ | otherwise  =  fromJust $ bindGVarToGVar gv gv emptyBinding
+\end{code}
+
+
+\subsubsection{Collect Substitution List-Variable Pairings}
+
+\begin{code}
+termLVarPairings :: Term -> [(ListVar,ListVar)]
+termLVarPairings (Sub _ tm s)     =  nub ( termLVarPairings tm
+                                           ++ substLVarPairings s )
+termLVarPairings (Cons _ _ _ ts)  =  nub $ concat $ map termLVarPairings ts
+termLVarPairings (Bnd _ _ _ tm)   =  termLVarPairings tm
+termLVarPairings (Lam _ _ _ tm)   =  termLVarPairings tm
+termLVarPairings (Cls _ tm)       =  termLVarPairings tm
+termLVarPairings _                =  []
+
+substLVarPairings :: Substn -> [(ListVar,ListVar)]
+substLVarPairings (LVarSub lvs) = S.toList lvs
+\end{code}
+
+Given that we can have substitutions of the form
+$P[\lst y/\lst x][\lst e/\lst y]$
+what we want is an relation saying
+that $\setof{\lst e,\lst x,\lst y}$ are equivalent.
+We can represent such a relation as a set of list-variable
+sets.
+
+\newpage
+The following code is very general and should live elsewhere
+\begin{code}
+addToEquivClass :: Eq a => (a,a) -> [[a]] -> [[a]]
+-- invariant, given eqvcs = [eqvc1,eqvc2,...]
+--  z `elem` eqcvi ==> not( z `elem` eqcvj), for any j /= i
+addToEquivClass (x,y) [] =  [nub[x,y]]
+addToEquivClass (x,y) eqvcs
+  = ([x,y] `union` hasX `union` hasY):noXY
+  where
+    (hasX,hasY,noXY) = findEquivClasses x y [] [] [] eqvcs
+
+findEquivClasses
+  :: Eq a  =>  a -> a       -- x and y
+           ->  [a] -> [a]   -- accumulators for hasX, hasY
+           ->  [[a]]        -- accumulator for noXY
+           ->  [[a]]        -- equivalence classes under consideration
+           ->  ([a],[a],[[a]])
+findEquivClasses _ _ hasX hasY noXY [] = (hasX,hasY,noXY)
+findEquivClasses x y hasX hasY noXY (eqvc:eqvcs)
+  = checkX hasX hasY noXY
+  where
+    checkX hasX hasY noXY
+      | x `elem` eqvc  =  checkY eqvc hasY noXY True
+      | otherwise      =  checkY hasX hasY noXY False
+    checkY hasX hasY noXY hadX
+      | y `elem` eqvc  =  findEquivClasses x y hasX eqvc noXY eqvcs
+      | hadX           =  findEquivClasses x y hasX hasY noXY eqvcs
+      | otherwise      =  findEquivClasses x y hasX hasY (eqvc:noXY) eqvcs
+\end{code}
+
+Given a list of tuples, construct the equivalence classes:
+\begin{code}
+mkEquivClasses :: Eq a => [(a,a)] -> [[a]]
+mkEquivClasses [] = []
+mkEquivClasses (p:ps) = addToEquivClass p $ mkEquivClasses ps
+\end{code}
+
+Given equivalence classes,
+which one, if any, does a value belong to?
+\begin{code}
+lookupEquivClasses :: Eq a => a -> [[a]] -> [a]
+lookupEquivClasses x []  =  []
+lookupEquivClasses x (eqvc:eqvcs)
+ | x `elem` eqvc         =  eqvc \\ [x]
+ | otherwise             =  lookupEquivClasses x eqvcs
+\end{code}
+
+\newpage
+
+
+\textbf{
+Function \texttt{mkFloatingBinding} needs
+details regarding all substitution list-variable pairs
+in order to produce valid bindings.
+In particular, if an unbound substitution list-variable
+is paired with a bound one, then the unknown one must be bound
+to something of the same size as its bound partner, otherwise instantiation will
+fail when it calls \texttt{substn}.
+}
+\begin{code}
+mkFloatingBinding :: [VarTable] -> Binding -> [[ListVar]] -> VarSet -> Binding
+mkFloatingBinding vts bind substEqv vs
+  = qB emptyBinding $ S.toList vs
+  where
+
+    qB bind [] = bind
+    qB bind ((StdVar v) :vl)
+      | isUnknownVar vts v    =  qB (qVB bind v)   vl
+    qB bind ((LstVar lv):vl)
+      | isUnknownLVar vts lv  =  qB (qLVB bind lv) vl
+    qB bind (_:vl)            =  qB bind           vl
+
+    qVB bind v@(Vbl i vc vw)
+      = case lookupVarTables vts v of
+          UnknownVar  ->  fromJust $ bindVarToVar v (Vbl (fI i) vc vw) bind
+          _           ->  fromJust $ bindVarToVar v v                  bind
+      where qi = fI i
+
+    qLVB bind lv@(LVbl v _ _)
+      = case lookupLVarTables vts v of
+          UnknownListVar  ->  qLVB' bind lv
+          _               ->  fromJust $ bindLVarToSSelf lv bind
+
+    qLVB' bind lv@(LVbl (Vbl i _ _) _ _)
+      | null lvEquivs
+          = fromJust
+              $ bindLVarToVList lv [floatingLV lv i] bind
+      | otherwise
+         = case bindSizes of
+             [] -> fromJust
+                      $ bindLVarToVList lv
+                          [floatingLV lv i] bind
+             [0] -> fromJust $ bindLVarToVList lv [] bind
+             [1] -> fromJust
+                      $ bindLVarToVList lv
+                          [floatingLV lv i] bind
+             [n] -> fromJust
+                      $ bindLVarToVList lv
+                          (map (floatingLV lv . fIn i) [1..n]) bind
+             bs -> error $ unlines
+                    ["mkFloatingBinding : equiv class has multiple sizes"
+                    ,"bs="++show bs
+                    ,"lv="++show lv
+                    ]
+      where
+        lvEquivs = lookupEquivClasses lv substEqv
+        bindSizes = equivBindingsSizes bind lvEquivs
+        floatingLV lv@(LVbl (Vbl _ vc vw) is js) i
+                 = LstVar (LVbl (Vbl (fI i) vc vw) is js)
+\end{code}
+
+Look up cardinalities of bindings of equivalences.
+\textbf{Issue: what if their cardinality varies?}
+\begin{code}
+equivBindingsSizes :: Binding -> [ListVar] -> [Int]
+equivBindingsSizes bind [] = []
+equivBindingsSizes bind (lv:lvs)
+  = case lookupLstBind bind lv of
+       Nothing  ->  equivBindingsSizes bind lvs
+       Just (BindList vl)  ->  nub (length vl : equivBindingsSizes bind lvs)
+       Just (BindSet vs)   ->  nub (S.size vs : equivBindingsSizes bind lvs)
+       Just (BindTLVs tlvl)
+         | null tl    ->  nub (length vl : equivBindingsSizes bind lvs)
+         | otherwise  ->  error $ unlines
+                           ["equivBindingsSizes: cannot handle BX with terms"
+                           ,"tlvl="++show tlvl
+                           ,"bind="++show bind
+                           ]
+         where (tl,vl) = (tmsOf tlvl, lvsOf tlvl)
+\end{code}
+Another issue, what if some are unbound? Ignore for now.
+
+\subsubsection{Floating Instantiation}
+
+\begin{code}
+bindFloating :: Monad m => [VarTable] -> Binding -> Term -> m Binding
+bindFloating vts bind trm
+ = return abind
+ where
+   unbound  =  findUnboundVars bind trm
+   lvpairs  =  termLVarPairings trm
+   substEquiv = mkEquivClasses lvpairs
+   fbind    =  mkFloatingBinding vts bind substEquiv unbound
+   abind    =  mergeBindings bind fbind
 \end{code}
 
 

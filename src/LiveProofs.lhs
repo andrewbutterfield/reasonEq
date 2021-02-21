@@ -368,8 +368,9 @@ tryLawByName logicsig asn@(Assertion tC scC) lnm parts mcs
   where
     -- below we try to do:
     -- bind          <- match vts tC partsP
-    -- (kbind,tPasC) <- instantiateKnown vts bind tP of
-    -- scP'          <- instantiateSC bind scP of
+    -- (kbind,tPasC) <- bindKnown vts bind tP
+    -- (fbind,_)     <- bindFloating vts kbind tP
+    -- scP'          <- instantiateSC fbind scP of
     -- scP''         <- scDischarge scC scP' of
     -- return (bind,tP,scP',scP'')
 \end{code}
@@ -397,13 +398,36 @@ First, try the structural match.
 \newpage
 At this point the replacement may contain variables not present in the
 matched part, so we need to create temporary bindings for these.
+First we see if any of these are ``known''.
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryInstantiateKnown vts tP partsP scP bind
-      = case instantiateKnown vts bind tP of
-          Yes (kbind,tPasC)  ->  tryInstantiateSC kbind tPasC partsP scP
+      = case bindKnown vts bind tP of
+          Yes kbind  ->  tryInstantiateFloating vts tP partsP scP kbind
           But msgs
-           -> But ([ "auto-instantiate failed"
+           -> But ([ "instantiate knowns failed"
+                   , ""
+                   , trTerm 0 tC ++ " :: " ++ trTerm 0 partsP
+                   , ""
+                   , "lnm[parts]="++lnm++show parts
+                   , "tP="++trTerm 0 tP
+                   , "partsP="++trTerm 0 partsP
+                   , "tC="++trTerm 0 tC
+                   , "scC="++trSideCond scC
+                   , ""
+                   , "bind  = " ++ trBinding bind
+                   ]++msgs)
+\end{code}
+
+Anything unbound and not ``known'' is ``floating'',
+and we generate names for these that make their floating nature visible.
+\begin{code}
+-- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
+    tryInstantiateFloating vts tP partsP scP bind
+      = case bindFloating vts bind tP of
+          Yes fbind  ->  tryInstantiateSC fbind tP partsP scP
+          But msgs
+           -> But ([ "instantiate floating failed"
                    , ""
                    , trTerm 0 tC ++ " :: " ++ trTerm 0 partsP
                    , ""
@@ -833,8 +857,8 @@ basicMatch :: MatchClass
             -> Matches
 basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
   =  do bind <- match vts tC partsP
-        (kbind,_) <- instantiateKnown vts bind repl
-        (fbind,_) <- instantiateFloating vts kbind repl
+        kbind <- bindKnown vts bind repl
+        fbind <- bindFloating vts kbind repl
         scPinC <- instantiateSC fbind scP
         scD <- scDischarge scC scPinC
         if all isFloatingASC (fst scD)
@@ -974,15 +998,18 @@ displayMatches mctxts matches
 shMatch vts (i, mtch)
  = show i ++ " : "++ ldq ++ green (nicelawname $ mName mtch) ++ rdq
    ++ " "
-   ++ (bold $ blue $ showRepl ainst)
+   ++ (bold $ blue $ showRepl arepl)
    ++ "  " ++ shSCImplication (mLocSC mtch) (mLawSC mtch)
    ++ " " ++ shMClass (mClass mtch)
  where
     bind = mBind mtch
-    ainst = instantiateFloating vts bind $ mRepl mtch
+    repl = mRepl mtch
+    arepl = case bindFloating vts bind repl of
+              Nothing     ->  Nothing
+              Just abind  ->  instantiate abind repl
     (_,lsc) = mAsn mtch
     showRepl Nothing = "auto-instantiate failed!!"
-    showRepl (Just (_,brepl)) = trTerm 0 brepl
+    showRepl (Just brepl) = trTerm 0 brepl
 
 shSCImplication scC scPm
   =     trSideCond scC

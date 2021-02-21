@@ -11,9 +11,9 @@ module Instantiate
 , instVarSet
 , instantiateASC
 , instantiateSC
-, findUnboundVars, instantiateKnown
+, findUnboundVars, bindKnown
 , termLVarPairings, mkEquivClasses -- should be elsewhere
-, mkFloatingBinding, instantiateFloating
+, mkFloatingBinding, bindFloating
 ) where
 import Data.Maybe
 -- import Data.Either (lefts,rights)
@@ -502,10 +502,9 @@ findUnboundVars bind trm  =  mentionedVars trm S.\\ mappedVars bind
 \subsubsection{Instantiate Unbound Known Variables}
 
 \begin{code}
-instantiateKnown :: Monad m => [VarTable] -> Binding -> Term -> m (Binding,Term)
-instantiateKnown vts bind trm
- = do trm' <- instantiate kbind trm
-      return (kbind, trm')
+bindKnown :: Monad m => [VarTable] -> Binding -> Term -> m Binding
+bindKnown vts bind trm
+ = return kbind
  where
    unbound  =  findUnboundVars bind trm
    kbind    =  mkKnownBinding vts unbound bind
@@ -682,10 +681,9 @@ Another issue, what if some are unbound? Ignore for now.
 \subsubsection{Floating Instantiation}
 
 \begin{code}
-instantiateFloating :: Monad m => [VarTable] -> Binding -> Term -> m (Binding,Term)
-instantiateFloating vts bind trm
- = do trm' <- instantiate abind trm
-      return (abind, trm')
+bindFloating :: Monad m => [VarTable] -> Binding -> Term -> m Binding
+bindFloating vts bind trm
+ = return abind
  where
    unbound  =  findUnboundVars bind trm
    lvpairs  =  termLVarPairings trm

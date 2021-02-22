@@ -648,9 +648,18 @@ perhaps ``reduced'' to some degree.
 We use the notation $G \discharges L \mapsto R$
 to say that $G$ being true means that we can simplify $L$ to a ``residual'' $R$.
 
-One special case worth special treatment is a translated law side-condition
-of the form $\emptyset \supseteq v$, where $v$ is a standard variable.
-This is simply false.
+The following cases need special treatment:
+\begin{itemize}
+  \item
+    A translated law side-condition of the form $\emptyset \supseteq v$,
+    where $v$ is a standard variable.
+    This is simply false.
+  \item
+    Any occurrences of a floating variable in a translated law side-condition
+    should be retained.
+    We let $D_{?L}$ and $C_{?L}$ denote
+    the floating subsets of $D_L$ and $C_L$ respectively.
+\end{itemize}
 \begin{code}
 ascDischarge _ (Covers (StdVar (Vbl _ ObsV _)) dL)
   | S.null dL  =  fail ("Empty set cannot cover a standard obs. variable")
@@ -684,13 +693,17 @@ ascDischarge (Disjoint _ dG) c@(Covers gv cL)
    C_G \supseteq V \discharges C_L \supseteq V
    & = & \true, \quad \IF \quad C_G \subseteq C_L
 \\ & = & \false, \quad \IF \quad C_G \disj C_L \land isStdObs(V)
-\\ & \mapsto & (C_G \cap C_L) \supseteq V
+\\ & \mapsto & (C_G \cap C_L)\cup C_{?L} \supseteq V
 \end{eqnarray*}
+Here we have to ensure that $C_{?L}$ is retained, as no floating variables
+exist in $C_G$, and so the intersection would remove those in $C_L$.
 \begin{code}
 ascDischarge (Covers _ cG) (Covers gv cL)
   | cG `S.isSubsetOf` cL  =  return []
   | cG `disjoint` cL && isObsGVar gv  =  fail "CoverDisj=>noCover"
-  | otherwise  =  return [Covers gv (cG `S.intersection` cL)]
+  | otherwise  =  return
+                    [Covers gv ((cG `S.intersection` cL) `S.union` floatsOf cL)]
+  where floatsOf = S.filter isFloatingGVar
 \end{code}
 
 

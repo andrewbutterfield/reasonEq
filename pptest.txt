@@ -1,24 +1,40 @@
-@cand:
-B
-P
-(Id "forall" 0)
-( { GL (LV (VR (Id "x" 0, VO, WS), [], [])) } )
-( C
-  P
-  True
-  (Id "land" 0)
-  [ V P (VR (Id "P" 0, VP, WS))
-  , V P (VR (Id "Q" 0, VP, WS)) ] )
-@patn:
-C
-P
-True
-(Id "equiv" 0)
-[ X
-  (Id " [_] " 0)
-  (V P (VR (Id "P" 0, VP, WS)))
-, B
-  P
-  (Id "forall" 0)
-  ( { GL (LV (VR (Id "x" 0, VO, WS), [], [])) } )
-  (V P (VR (Id "P" 0, VP, WS))) ]
+@scC:
+( [ SS
+    (GV (VR (Id "P" 0, VP, WS)))
+    ( { GL (LV (VR (Id "x" 0, VO, WS), [], [])) } )
+  , SS
+    (GV (VR (Id "Q" 0, VP, WS)))
+    ( { GL (LV (VR (Id "x" 0, VO, WS), [], [])) } ) ]
+, {} )
+@scP':
+( [ SS
+    (GV (VR (Id "Q" 0, VP, WS)))
+    ( { GL (LV (VR (Id "?x" 0, VO, WS), [], [])) } ) ]
+, {} )
+@group_cnsq:  -- [(Q,{?x$ ⊇ Q})]
+[ ( GV (VR (Id "Q" 0, VP, WS))
+  ,  [SS (GV (VR (Id "Q" 0, VP, WS))) (fromList [GL (LV (VR (Id "?x" 0, VO, WS), [], []))])]
+  )
+]
+@group_ante: [(P,{x$ ⊇ P}),(Q,{x$ ⊇ Q})]
+[ ( GV (VR (Id "P" 0, VP, WS))
+  , [SS (GV (VR (Id "P" 0, VP, WS))) (fromList [GL (LV (VR (Id "x" 0, VO, WS), [], []))])]
+  )
+, ( GV (VR (Id "Q" 0, VP, WS))
+  , [SS (GV (VR (Id "Q" 0, VP, WS))) (fromList [GL (LV (VR (Id "x" 0, VO, WS), [], []))])]
+  )
+]
+@cnsqs: -- [ ?x$ ⊇ Q ]
+[ SS
+  (GV (VR (Id "Q" 0, VP, WS)))
+  ( { GL (LV (VR (Id "?x" 0, VO, WS), [], [])) } ) ]
+@antes:
+[ SS -- [ x$ ⊇ Q ]
+  (GV (VR (Id "Q" 0, VP, WS)))
+  ( { GL (LV (VR (Id "x" 0, VO, WS), [], [])) } ) ]
+@cnsq: ?x$ ⊇ Q
+SS (GV (VR (Id "Q" 0,VP,WS))) (fromList [GL (LV (VR (Id "?x" 0,VO,WS),[],[]))])
+@ante: x$ ⊇ Q
+SS (GV (VR (Id "Q" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
+@dsch: Ø ⊇ Q
+SS (GV (VR (Id "Q" 0,VP,WS))) (fromList [])

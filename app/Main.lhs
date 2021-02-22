@@ -919,8 +919,19 @@ autoProofDDescr = ("aud"
             , autoProofDCommand)
 
 autoProofDCommand :: REPLCmd (REqState, LiveProof)
-autoProofDCommand depth = do
-    tryDelta (moveToBottom 1)
+autoProofDCommand depth (reqs, liveProof) = do
+    (reqs, liveProof) <- tryDelta (followPath (args2intList depth)) (reqs, liveProof)
+    (reqs, liveProof) <- matchLawCommand [] (reqs, liveProof)
+    (reqs, liveProof) <- applyMatch ["1"] (reqs, liveProof)
+    (reqs, liveProof) <- goUp [] (reqs, liveProof)
+    (reqs, liveProof) <- matchLawCommand [] (reqs, liveProof)
+    (reqs, liveProof) <- applyMatch ["1"] (reqs, liveProof)
+    (reqs, liveProof) <- goUp [] (reqs, liveProof)
+    (reqs, liveProof) <- matchLawCommand [] (reqs, liveProof)
+    (reqs, liveProof) <- applyMatch ["1"] (reqs, liveProof)
+    (reqs, liveProof) <- goUp [] (reqs, liveProof)
+    (reqs, liveProof) <- matchLawCommand [] (reqs, liveProof)
+    applyMatch ["1"] (reqs, liveProof)
 \end{code}
 
 Try matching focus against a specific law, to see what outcome arises

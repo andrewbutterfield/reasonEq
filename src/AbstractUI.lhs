@@ -17,7 +17,7 @@ module AbstractUI
 , newProof1, newProof2, resumeProof
 , abandonProof, saveProof, completeProof
 , moveFocusDown
-, moveDownNTimes, moveToBottom, followPath
+, moveDownNTimes, moveToBottom, followPath, mUGAM
 , moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, matchFocusAgainst
@@ -406,12 +406,16 @@ moveToBottom :: Monad m => Int -> LiveProof -> m LiveProof
 moveToBottom i liveProof = moveDownNTimes 10 i liveProof
 \end{code}
 
+The error handling for numbers less than one as path options needs to be fixed.
+Firstly, this only checks the first item of the list, and secondly in the args2intList
+function in Utilities, it can't accept negative numbers.
 \begin{code}
+
 followPath :: Monad m => [Int] -> LiveProof -> m LiveProof
 followPath [] liveProof = fail ("No path to follow")
 followPath (x:xs) liveProof
     = let (tz, seq') = focus liveProof
-          x' = if x <=0 then 1 else x
+          x' = if x <=0 then 1 else x  --this error handling needs to be done better
           (ok, tz') = followTZ((x':xs)) tz
       in if ok
           then return ( focus_ (tz', seq')
@@ -435,7 +439,20 @@ moveFocusUp liveProof
 
 \end{code}
 
-\subsubsection{Move Down, Get and Apply Match}
+\subsubsection{Move Up, Get and Apply Match}
+
+\begin{code}
+
+mUGAM :: Monad m => LogicSig -> LiveProof -> m LiveProof
+mUGAM theSig liveProof
+    = let (tz, seq') = focus liveProof
+          (ok, tz') = upTZ tz
+      in if ok
+          then return ( focus_ (tz', seq')
+                      $ fPath__ init
+                      $ matches_ [] liveProof )
+          else fail "At top" 
+\end{code}
 
 \subsubsection{Switching Consequent Focus}
 

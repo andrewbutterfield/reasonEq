@@ -4,12 +4,26 @@
 
 Continue proofs in `UClose` and onwards....
 
-We need to prove a and-equiv distributivity law, to continue with `UClose` proofs.
+Stalled again:
 
-**!!!*** It doesn't hold: let `P=false` in `P∧(Q≡R)≡P∧Q≡P∧R`.
+```
+⊢
+¬((∃ x$ • P))∨(∀ x$ • (∃ x$ • P))    x$ ⊇ P
+
+Focus = [2]  Target (RHS): true
 
 
-In fact, `(P∧(Q≡R)≡P∧Q≡P∧R) ≡ P` !
+proof: tm 1 forall_remove
+Match against `forall_remove'[1]
+Binding: { P ⟼ (∃ x$ • P), x$ ⟼ {x$} }
+Instantiated Law = (∀ x$ • P)≡P
+Instantiated Law S.C. = Ø ⊇ P
+Goal S.C. = x$ ⊇ P
+Discharged Law S.C. = Ø ⊇ P
+```
+
+Given `x$ ⊇ P` we should be able to deduce `Ø ⊇ (∃ x$ • P)`.
+But the `P` inside is not the `P` being bound!
 
 ### Upgrade 2
 

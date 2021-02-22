@@ -29,7 +29,7 @@ module Utilities (
 , pad
 , splitLast, splitAround
 , brkspn, brkspnBy, splice
-, args2str, args2int, userPrompt, userPause
+, args2str, args2int, args2intList, userPrompt, userPause
 )
 where
 
@@ -304,6 +304,8 @@ numberItem' maxw (i,(str,strlen))
 
 \begin{code}
 args2int args = if null args then 0 else readInt $ head args
+
+args2intList args = if null args then [] else map(read . (:"")) $ args2str args
 
 args2str args = if null args then "" else head args
 \end{code}

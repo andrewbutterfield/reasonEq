@@ -16,7 +16,9 @@ module AbstractUI
 , assumeConjecture, demoteLaw
 , newProof1, newProof2, resumeProof
 , abandonProof, saveProof, completeProof
-, moveFocusDown, moveFocusUp, moveConsequentFocus
+, moveFocusDown
+, moveDownNTimes, moveToBottom, followPath
+, moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, matchFocusAgainst
 , applyMatchToFocus1, applyMatchToFocus2
@@ -382,6 +384,42 @@ moveFocusDown i liveProof
 
 \end{code}
 
+\begin{code}
+moveDownNTimes :: Monad m => Int -> Int -> LiveProof -> m LiveProof
+moveDownNTimes 0 i liveProof = fail("Error ")
+moveDownNTimes 1 i liveProof = moveFocusDown i liveProof
+moveDownNTimes n i liveProof
+  = let (tz,seq') = focus liveProof
+        i' = if i <= 0 then 1 else i
+        n' = if n <= 0 then 1 else n
+        (ok,tz') = followTZ (replicate n' i') tz
+    in if ok 
+        then return ( focus_ (tz', seq')
+                     $ fPath__ (++(replicate n' i'))
+                     $ matches_ [] liveProof)
+        else moveDownNTimes (n'-1) i' liveProof
+
+\end{code}
+
+\begin{code}
+moveToBottom :: Monad m => Int -> LiveProof -> m LiveProof
+moveToBottom i liveProof = moveDownNTimes 10 i liveProof
+\end{code}
+
+\begin{code}
+followPath :: Monad m => [Int] -> LiveProof -> m LiveProof
+followPath [] liveProof = fail ("No path to follow")
+followPath (x:xs) liveProof
+    = let (tz, seq') = focus liveProof
+          x' = if x <=0 then 1 else x
+          (ok, tz') = followTZ((x':xs)) tz
+      in if ok
+          then return ( focus_ (tz', seq')
+                       $ fPath__ (++((x':xs)))
+                       $ matches_ [] liveProof)
+          else followPath (init (x':xs)) liveProof
+\end{code}
+
 \subsubsection{Moving Focus Up}
 
 \begin{code}
@@ -396,6 +434,8 @@ moveFocusUp liveProof
         else fail "At top"
 
 \end{code}
+
+\subsubsection{Move Down, Get and Apply Match}
 
 \subsubsection{Switching Consequent Focus}
 

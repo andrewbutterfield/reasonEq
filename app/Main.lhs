@@ -708,10 +708,14 @@ proofREPLConfig
             , listScopeKnownsDescr
             , goDownDescr
             , goUpDescr
+            , goBottomDescr
+            , goOnPathDescr
             , matchLawDescr
             , tryMatchDescr
             , autoProofDescr
             , autoProofDescrB
+            , autoProofCDescr
+            , autoProofDDescr
             , applyMatchDescr
             , normQuantDescr
             , simpNestDescr
@@ -788,6 +792,16 @@ goUpDescr = ( "u", "up", "u  -- up", goUp )
 
 goUp :: REPLCmd (REqState, LiveProof)
 goUp _ = tryDelta moveFocusUp
+
+goBottomDescr = ("db", "downtobottom", "db n -- downtobottom n, n= 1 if ommitted", goBottom)
+
+goBottom :: REPLCmd (REqState, LiveProof)
+goBottom args = tryDelta (moveToBottom $ args2int args)
+
+goOnPathDescr = ("gp", "goonpath", "gp n0-nm -- goonpath n0-nm", goOnPath)
+
+goOnPath :: REPLCmd (REqState, LiveProof)
+goOnPath args = tryDelta (followPath $ args2intList args)
 \end{code}
 
 Switching consequent focus:
@@ -886,6 +900,28 @@ autoProofCommandB [] (reqs, liveProof) = do
     
 \end{code}
 
+\begin{code}
+autoProofCDescr = ("auc"
+            , "prove automagically changed"
+            , "auc        -- prove Equiv auto"
+            , autoProofCCommand)
+
+autoProofCCommand [] (reqs, liveProof) = do
+    (reqs, liveProof) <- matchLawCommand [] (reqs, liveProof)
+    applyMatch ["1"] (reqs, matchFocus (logicsig reqs) liveProof)
+    
+\end{code}
+
+\begin{code}
+autoProofDDescr = ("aud"
+            , "prove automagically changed"
+            , "aud        -- prove Equiv auto"
+            , autoProofDCommand)
+
+autoProofDCommand :: REPLCmd (REqState, LiveProof)
+autoProofDCommand depth = do
+    tryDelta (moveToBottom 1)
+\end{code}
 
 Try matching focus against a specific law, to see what outcome arises
 \begin{code}

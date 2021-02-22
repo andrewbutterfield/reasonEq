@@ -6,6 +6,11 @@ Continue proofs in `UClose` and onwards....
 
 We need to prove a and-equiv distributivity law, to continue with `UClose` proofs.
 
+**!!!*** It doesn't hold: let `P=false` in `P∧(Q≡R)≡P∧Q≡P∧R`.
+
+
+In fact, `(P∧(Q≡R)≡P∧Q≡P∧R) ≡ P` !
+
 ### Upgrade 2
 
 We now have to show the two following predicates are the same

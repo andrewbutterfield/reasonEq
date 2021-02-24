@@ -716,6 +716,7 @@ proofREPLConfig
             , autoProofDescrB
             , autoProofCDescr
             , autoProofDDescr
+            , getNumOfSubTermsDescr
             , applyMatchDescr
             , normQuantDescr
             , simpNestDescr
@@ -932,6 +933,20 @@ autoProofDCommand depth (reqs, liveProof) = do
     (reqs, liveProof) <- goUp [] (reqs, liveProof)
     (reqs, liveProof) <- matchLawCommand [] (reqs, liveProof)
     applyMatch ["1"] (reqs, liveProof)
+\end{code}
+
+\begin{code}
+getNumOfSubTermsDescr = ( "sn"
+                        , "num of sub terms"
+                        , "sn       -- num of sub terms"
+                        , getNumOfSubTermsCommand)
+
+getNumOfSubTermsCommand :: REPLCmd (REqState, LiveProof)
+getNumOfSubTermsCommand _ state@(_, liveProof) = do
+    putStrLn $ checkSubTermsNumbers liveProof 
+    userPause
+    return state
+
 \end{code}
 
 Try matching focus against a specific law, to see what outcome arises

@@ -15,6 +15,7 @@ module TermZipper
  , followTZ, pathTZ
  , getTZ, setTZ, setfTZ
  , int_tst_TermZip
+ , numOfSubTerms
  ) where
 
 import Data.Set (Set)
@@ -119,6 +120,20 @@ sdescend tk t n (Substn tsub lvsub)
       Nothing  ->  Nothing
       Just (before,(v,t'),after)
         -> Just (t',Substn' tk t lvsub before v after)
+\end{code}
+
+function to return number of subterms of term
+
+\begin{code}
+numOfSubTerms :: TermZip -> Int
+numOfSubTerms z = numOfSubTermsAccu z 1
+
+numOfSubTermsAccu :: TermZip -> Int -> Int
+numOfSubTermsAccu (t, tz) n 
+    = case descend n t of
+        Nothing -> (n-1)
+        Just (td, t') -> numOfSubTermsAccu (t, tz) (n+1)
+
 \end{code}
 
 \subsubsection{Zip Descent by Path}

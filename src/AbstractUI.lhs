@@ -17,7 +17,7 @@ module AbstractUI
 , newProof1, newProof2, resumeProof
 , abandonProof, saveProof, completeProof
 , moveFocusDown
-, moveDownNTimes, moveToBottom, followPath, mUGAM
+, moveDownNTimes, moveToBottom, followPath, mUGAM, checkSubTermsNumbers
 , moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, matchFocusAgainst
@@ -424,6 +424,14 @@ followPath (x:xs) liveProof
           else followPath (init (x':xs)) liveProof
 \end{code}
 
+attempting a function that will recursively move through the proof, starting eith getting the number of subterms of a term
+\begin{code}
+checkSubTermsNumbers :: LiveProof -> String
+checkSubTermsNumbers liveProof
+    = show $ numOfSubTerms tz where
+        (tz, seq') = focus liveProof
+
+\end{code}
 \subsubsection{Moving Focus Up}
 
 \begin{code}

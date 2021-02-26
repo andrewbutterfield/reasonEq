@@ -203,7 +203,7 @@ where $X$ denotes sets of observational variables,
 and $T$ denotes sets of predicate and expression variables,
 we have:
 \begin{eqnarray*}
-  & & (X_F \cup T_F) \ominus (X_B \cup T_F)
+  & & (X_F \sqcup T_F) \ominus (X_B \sqcup T_F)
 \\&=& ( X_F \ominus X_B ) \cup ( T_F \ominus T_B )
 \\&\mapsto&
       ( (X_F \setminus X_B), \emptyset ) \oplus (( T_F \setminus T_B ) , X_B )
@@ -218,8 +218,31 @@ we have:
 
 \begin{eqnarray*}
    \_\ominus\_ &:& \Set{V} \times \Set{V} \fun \FVE
-\\ F \ominus S &\defs& \textrm{tricky.....}
+\\ (X_F \sqcup T_F) \ominus (X_B \sqcup T_B)
+   &\defs& opt( (X_F \setminus X_B)
+              , ( T_F \setminus T_B ) \circleddash X_B ) )
+\\ opt(V,(F \circleddash B))
+   &\defs&
+   \left\{
+   \begin{array}{ll}
+      (V \cup F, \emptyset),     & B = \emptyset
+   \\ (V, \emptyset),            & F = \emptyset
+   \\ (V, {(F \circleddash B)}), & \textrm{otherwise}
+   \end{array}
+   \right.
 \end{eqnarray*}
+\begin{code}
+genFreeVars :: VarSet -> VarSet -> FreeVars
+genFreeVars fvs bvs
+  | S.null xb  =  (xd `S.union` td, [])
+  | S.null td  =  (xd, [])
+  | otherwise  =  (xd,[(td,xb)])
+  where
+    (xb,tb) = S.partition isObsGVar bvs
+    (xf,tf) = S.partition isObsGVar fvs
+    xd = xf S.\\ xb
+    td = tf S.\\ tb
+\end{code}
 
 \begin{eqnarray*}
    \_\oslash\_

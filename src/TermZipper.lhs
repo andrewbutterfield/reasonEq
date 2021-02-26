@@ -16,6 +16,7 @@ module TermZipper
  , getTZ, setTZ, setfTZ
  , int_tst_TermZip
  , numOfSubTerms
+ , listOfSubTerms
  ) where
 
 import Data.Set (Set)
@@ -122,7 +123,7 @@ sdescend tk t n (Substn tsub lvsub)
         -> Just (t',Substn' tk t lvsub before v after)
 \end{code}
 
-function to return number of subterms of term
+Function to return number of subterms of term
 
 \begin{code}
 numOfSubTerms :: TermZip -> Int
@@ -133,6 +134,14 @@ numOfSubTermsAccu (t, tz) n
     = case descend n t of
         Nothing -> (n-1)
         Just (td, t') -> numOfSubTermsAccu (t, tz) (n+1)
+
+listOfSubTerms :: TermZip -> [Int]
+listOfSubTerms tz = makeUpList $ numOfSubTerms tz
+
+makeUpList :: Int -> [Int]
+makeUpList 0 = []
+makeUpList 1 = [1]
+makeUpList n = makeUpList (n-1) ++ [n]
 
 \end{code}
 

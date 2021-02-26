@@ -717,6 +717,7 @@ proofREPLConfig
             , autoProofCDescr
             , autoProofDDescr
             , getNumOfSubTermsDescr
+            , getListOfSubTermsDescr
             , applyMatchDescr
             , normQuantDescr
             , simpNestDescr
@@ -944,6 +945,20 @@ getNumOfSubTermsDescr = ( "sn"
 getNumOfSubTermsCommand :: REPLCmd (REqState, LiveProof)
 getNumOfSubTermsCommand _ state@(_, liveProof) = do
     putStrLn $ checkSubTermsNumbers liveProof 
+    userPause
+    return state
+
+\end{code}
+
+\begin{code}
+getListOfSubTermsDescr = ( "sl"
+                        , "list of sub terms"
+                        , "sl       -- list of sub terms"
+                        , getListOfSubTermsCommand)
+
+getListOfSubTermsCommand :: REPLCmd (REqState, LiveProof)
+getListOfSubTermsCommand _ state@(_, liveProof) = do
+    putStrLn $ listOfSubTermsNumbers liveProof 
     userPause
     return state
 

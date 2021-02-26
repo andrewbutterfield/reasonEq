@@ -318,59 +318,62 @@ checkAndGroup a sstvl (lvts:lvtss)
 \subsection{Side-Condition Instantiation}
 
 Doing it again, with side-conditions.
+In order for this to work properly,
+we need to pass in the goal side-conditions.
 \begin{code}
-instantiateSC :: Monad m => Binding -> SideCond -> m SideCond
-instantiateSC bind (ascs,fvs)
-  = do ascss' <- sequence $ map (instantiateASC bind) ascs
+instantiateSC :: Monad m => SideCond -> Binding -> SideCond -> m SideCond
+instantiateSC gSC bind (ascs,fvs)
+  = do ascss' <- sequence $ map (instantiateASC gSC bind) ascs
        fvs' <- instVarSet bind fvs
        mkSideCond (concat ascss') fvs'
 \end{code}
 
 \begin{code}
-instantiateASC :: Monad m => Binding -> AtmSideCond -> m [AtmSideCond]
+instantiateASC :: Monad m => SideCond -> Binding -> AtmSideCond
+               -> m [AtmSideCond]
 \end{code}
 
 \paragraph{Is a Pre-condition}~
 
 \begin{code}
-instantiateASC bind asc@(IsPre _)  =  instantiateASCvs bind S.empty asc
+instantiateASC gSC bind asc@(IsPre _)  =  instantiateASCvs gSC bind S.empty asc
 \end{code}
 
 \paragraph{Has Variable-Set}~
 
 \begin{code}
-instantiateASC bind asc
+instantiateASC gSC bind asc
   = case instVarSet bind $ ascVSet asc of
       But msgs -> fail $ unlines $ msgs
-      Yes (vs') -> instantiateASCvs bind vs' asc
+      Yes (vs') -> instantiateASCvs gSC bind vs' asc
 \end{code}
 
 \paragraph{Has General Variable}~
 
 \begin{code}
-instantiateASCvs bind vs' asc
+instantiateASCvs gSC bind vs' asc
   = case ascGVar asc of
-      StdVar v  -> instantiateASCvsv  bind vs' v  asc
-      LstVar lv -> instantiateASCvslv bind vs' lv asc
+      StdVar v  -> instantiateASCvsv  gSC bind vs' v  asc
+      LstVar lv -> instantiateASCvslv gSC bind vs' lv asc
 \end{code}
 
 \paragraph{Has Standard Variable}~
 
 \begin{code}
-instantiateASCvsv bind vs' v (Disjoint _ _)
-  = instantiateDisjoint vs' $ instantiateVar bind v
-instantiateASCvsv bind vs' v (Covers _ _)
-  = instantiateCovers vs' $ instantiateVar bind v
-instantiateASCvsv bind vs' v (IsPre _)
+instantiateASCvsv gSC bind vs' v (Disjoint _ _)
+  = instantiateDisjoint gSC vs' $ instantiateVar bind v
+instantiateASCvsv gSC bind vs' v (Covers _ _)
+  = instantiateCovers gSC vs' $ instantiateVar bind v
+instantiateASCvsv gSC bind vs' v (IsPre _)
   = fail "instantiateASC IsPre NYI"
 \end{code}
 
 \paragraph{Has List-Variable}~
 
 \begin{code}
-instantiateASCvslv bind vs' lv (Disjoint _ _)
-  = instantiateDisjoint vs' $ instantiateLstVar bind lv
-instantiateASCvslv bind vs' lv (Covers _ _)
+instantiateASCvslv gSC bind vs' lv (Disjoint _ _)
+  = instantiateDisjoint gSC vs' $ instantiateLstVar bind lv
+instantiateASCvslv gSC bind vs' lv (Covers _ _)
   = fail "instantiateASCvslv Covers NYI"
 \end{code}
 Next,
@@ -405,8 +408,8 @@ See examples below
 \\ \setof{x,\lst S} \disj \setof{y,\lst S} &\text{if}&  \lst S = \emptyset
 \end{eqnarray*}
 \begin{code}
-instantiateDisjoint :: Monad m => VarSet -> VarSet -> m [AtmSideCond]
-instantiateDisjoint dvs fvs
+instantiateDisjoint :: Monad m => SideCond -> VarSet -> VarSet -> m [AtmSideCond]
+instantiateDisjoint gSC dvs fvs
  | freeObs `disjoint` dvs = return $ map (mkD dvs) $ S.toList freeTVar
  | otherwise  =  fail $ unlines
                    [ "Obs. free-vars not disjoint"
@@ -440,8 +443,8 @@ instantiateDisjoint dvs fvs
 \\ \setof{x,\lst S} \supseteq \setof{y,\lst S} &\text{if}& y \in \lst S
 \end{eqnarray*}
 \begin{code}
-instantiateCovers :: Monad m => VarSet -> VarSet -> m [AtmSideCond]
-instantiateCovers cvs fvs
+instantiateCovers :: Monad m => SideCond -> VarSet -> VarSet -> m [AtmSideCond]
+instantiateCovers gCS cvs fvs
  | freeObs `S.isSubsetOf` cvs = return $ map (mkC cvs) $ S.toList freeTVar
  | otherwise  =  fail $ unlines
                    [ "Obs. free-vars not covered"
@@ -469,7 +472,7 @@ instantiateVar bind v
   = case lookupVarBind bind v of
         Nothing            ->  S.singleton $ StdVar v
         Just (BindVar v)   ->  S.singleton $ StdVar v
-        Just (BindTerm t)  ->  freeVars t
+        Just (BindTerm t)  ->  pdbg "iV.freeVars" $ freeVars $ pdbg "iV.t" t
 
 instantiateLstVar :: Binding -> ListVar -> VarSet
 instantiateLstVar bind lv

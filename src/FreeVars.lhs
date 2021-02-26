@@ -45,6 +45,206 @@ dbg msg x = trace (msg ++ show x) x
 We start with computing the free variables of a term,
 and then continue by addressing nested quantifiers.
 
+\subsection{Need for Variable-Set Expressions}
+
+Consider the following extract from the standard free-variable definition:
+\begin{eqnarray*}
+   \fv &:& T \fun \Set{V}
+\\  \fv(\vv v)  &\defs&  \{\vv v\}
+\\ \fv(\bb n {v^+} t) &\defs& \fv(t)\setminus{v^+}
+\end{eqnarray*}
+In general we need to work with variable-set \emph{expressions}.
+In particular we need to be able to note when predicate and expression
+variables are subject to set removal because they are under a binding construct.
+
+We interpret the occurrence of a predicate or expression variable
+in a variable-set
+as symbolically denoting its putative free observational variables.
+
+So $\setof{\vv x, \vv e, \vv P}$ actually denotes
+$\setof{\vv x} \cup \fv(\vv e) \cup \fv(\vv P)$.
+
+We need to be able to represent
+$\setof{\vv x, \vv e, \vv P} \setminus B$,
+where $B$ denotes a set of variable bindings.
+In effect we have a small set expression language
+that has explicit enumerations, symbolic variables,
+with set union and difference.
+Given the following two set laws,
+\begin{eqnarray*}
+   (F_1 \cup F_2) \setminus B      &=& (F_1\setminus B) \cup (F_2 \setminus B)
+\\ (F \setminus B_1) \setminus B_2 &=& F \setminus (B_1 \cup B_2)
+\end{eqnarray*}
+\def\FVE{\textit{FVE}}
+we can represent a free-variable set-expression (\FVE) as an enumeration,
+paired with a collection of non-trivial set difference terms,
+each a pair of enumerations.
+\[
+   \bigcup
+   \left(
+   \setof{\vv v\dots}
+   ,
+   \setof{(\setof{\vv v,\dots}\circleddash\setof{\vv v,\dots})
+          ,\dots,
+          (\setof{\vv v,\dots}\circleddash\setof{\vv v,\dots})}
+   \right)
+\]
+Here we use $\circleddash$ to denote an intent to perform set subtraction.
+The first enumerations in each pair
+consist solely of predicate and expression variables.
+Also, none of those variables appear in the corresponding second enumeration.
+
+
+\begin{code}
+type FreeVars = (VarSet, [(VarSet,VarSet)])
+\end{code}
+
+We need to consider how to tidy-up/``normalise'' these
+structures.
+For example:
+\begin{eqnarray*}
+  &&  \bigcup(F,\setof{\dots,(F_i\circleddash B_i),\dots})
+\\&=& \bigcup(F,\setof{\dots,(F_i\circleddash B_i)\setminus F,\dots}),
+      \qquad \because (F \cup A) = (F \cup (A \setminus F))
+\\&=& \bigcup(F,\setof{\dots,(F_i\circleddash(B_i \cup F)),\dots})
+\\&=& \bigcup(F,\setof{\dots,(F_i\setminus F)\circleddash B_i),\dots})
+\end{eqnarray*}
+
+Lets start with some basic builders.
+\begin{eqnarray*}
+   inj &:& \Set{V} \fun \FVE
+\\ inj(F) &\defs& (F,\emptyset)
+\end{eqnarray*}
+\begin{code}
+injVarSet :: VarSet -> FreeVars
+injVarSet vs = (vs,[])
+\end{code}
+
+\begin{eqnarray*}
+   add &:& \Set{V} \times \FVE \fun \FVE
+\\ add(F',(F,D)) &=& (F' \cup F,rem_{F'}(D))
+\\ rem_{F'} \setof{F\circleddash B} &\defs& \setof{(F\setminus F')\circleddash B}
+\end{eqnarray*}
+\begin{code}
+addVarSet :: VarSet -> FreeVars -> FreeVars
+addVarSet vs (fvs, diffs)  =  (vs `S.union` fvs, map (remVarSet vs) diffs)
+remVarSet :: VarSet -> (VarSet,VarSet) -> (VarSet,VarSet)
+remVarSet vs (fvs,bvs) = (fvs S.\\ vs, bvs)
+\end{code}
+
+\begin{eqnarray*}
+   sub &:& \FVE \times \Set{V} \fun \FVE
+\\ (F,\setof{D_i}) \setminus S
+   &=&
+   (F \ominus S)
+   \oplus
+   (\emptyset, \setof{D_i \oslash S})
+\end{eqnarray*}
+\begin{code}
+subVarSet :: FreeVars -> VarSet -> FreeVars
+subVarSet (fvs, diffs) vs  =  error "subVarSet NYI"
+\end{code}
+
+All possibilities are covered by this (2nd-order) example:
+\begin{eqnarray*}
+  & & \setof{\vv x, \vv y, \vv e, \vv f, \vv P, \vv Q}
+      \setminus
+      \setof{\vv x, \vv z, \vv e, \vv g, \vv P, \vv R}
+\\&=& ( \setof{\vv y}
+      ,
+      \setof{( \setof{\vv f,\vv Q}
+               \circleddash
+               \setof{\vv x, \vv z, \vv g, \vv R} )})
+\\&=& ( \setof{\vv y}
+      ,
+      \setof{( \setof{\vv f,\vv Q}
+               \circleddash
+               \setof{\vv x, \vv z} )})
+      \qquad \because (F \setminus B) = (F \setminus (B \cap F)),
+               \textrm{ and } \vv z \in \vv f, \vv Q \textrm{ is poss.}
+\end{eqnarray*}
+In the more common first-order setting we have:
+\begin{eqnarray*}
+  & & \setof{\vv x, \vv y, \vv e, \vv f, \vv P, \vv Q}
+      \setminus
+      \setof{\vv x, \vv z}
+\\&=& ( \setof{\vv y}
+      ,
+      \setof{( \setof{\vv e, \vv f, \vv P, \vv Q}
+               \circleddash
+               \setof{\vv x, \vv z} )})
+      \qquad \vv z \in \vv e, \vv f, \vv P, \vv Q\textrm{ is poss.}
+\end{eqnarray*}
+
+The treatment of the 2nd-order example is as follows:
+\begin{eqnarray*}
+  & & \setof{\vv x, \vv y, \vv e, \vv f, \vv P, \vv Q}
+      \ominus
+      \setof{\vv x, \vv z, \vv e, \vv g, \vv P, \vv R}
+\\&=& (\setof{\vv x, \vv y} \cup \setof{\vv e, \vv f, \vv P, \vv Q})
+      \ominus
+      (\setof{\vv x, \vv z} \cup \setof{\vv e, \vv g, \vv P, \vv R})
+\\&=& ( \setof{\vv x, \vv y} \ominus \setof{\vv x, \vv z} )
+      \cup
+      ( \setof{\vv e, \vv f, \vv P, \vv Q}
+        \ominus
+        \setof{\vv e, \vv g, \vv P, \vv R} )
+\\&\mapsto&
+      ( \setof{\vv y}, \emptyset )
+      \oplus
+      ( \setof{\vv f, \vv Q}
+      ,
+      \setof{\vv x, \vv z} )
+\\&=& ( \setof{\vv y}
+      , \setof{( \setof{\vv f, \vv Q}\circleddash \setof{\vv x, \vv z} )} )
+\end{eqnarray*}
+In a general setting,
+where $X$ denotes sets of observational variables,
+and $T$ denotes sets of predicate and expression variables,
+we have:
+\begin{eqnarray*}
+  & & (X_F \cup T_F) \ominus (X_B \cup T_F)
+\\&=& ( X_F \ominus X_B ) \cup ( T_F \ominus T_B )
+\\&\mapsto&
+      ( (X_F \setminus X_B), \emptyset ) \oplus (( T_F \setminus T_B ) , X_B )
+\\&=& ( (X_F \setminus X_B)
+      , \setof{ ( ( T_F \setminus T_B ) \circleddash X_B ) } )
+\\&=& ( X_F  \cup ( T_F \setminus T_B ), \emptyset),
+      \qquad  X_B = \emptyset
+\\&=& ( X_F,  \emptyset),
+      \qquad\qquad\qquad\quad  ( T_F \setminus T_B ) = \emptyset
+\end{eqnarray*}
+
+
+\begin{eqnarray*}
+   \_\ominus\_ &:& \Set{V} \times \Set{V} \fun \FVE
+\\ F \ominus S &\defs& \textrm{tricky.....}
+\end{eqnarray*}
+
+\begin{eqnarray*}
+   \_\oslash\_
+   &:&
+   (\Set{V}\times\Set{V}) \times \Set{V} \fun \Set{V}\times\Set{V}
+\\ (F\circleddash B) \oslash S &\defs& (F \circleddash (B \cup S))
+\end{eqnarray*}
+
+\begin{eqnarray*}
+   \_\oplus\_ &:& \FVE \times \FVE \fun \FVE
+\\ (F_1,D_1) \oplus (F_2,D_2)
+   &\defs&
+   (F_1 \cup F_2, rem_{F_2}(D_1) \cup rem_{F_1}(D_2)
+\end{eqnarray*}
+\begin{code}
+mrgFreeVars :: FreeVars -> FreeVars -> FreeVars
+mrgFreeVars (fvs1,diffs1) (fvs2,diffs2)
+  =( fvs1 `S.union` fvs2
+   , map (remVarSet fvs2) diffs1 ++ map (remVarSet fvs1) diffs2 )
+\end{code}
+
+
+
+We need to keep in mind that that sets like $B$ can themselves contain
+predicate and expression variables.
 
 \subsection{Term Free Variables}
 
@@ -60,6 +260,10 @@ and then continue by addressing nested quantifiers.
 \\ \textbf{where} && v^m = v^n \cap \fv(t), t^m \textrm{ corr. to } v^m
 \\ \fv(\ii \bigoplus n {lvs}) &\defs& lvs
 \end{eqnarray*}
+
+
+
+
 
 \begin{code}
 freeVars :: Term -> VarSet

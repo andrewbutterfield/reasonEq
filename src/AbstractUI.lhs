@@ -551,7 +551,7 @@ applyMatchToFocus2 mtch unbound ubind liveProof
         (tz,seq') = focus liveProof
         dpath = fPath liveProof
         conjpart = exitTZ tz
-    in do scLasC <- instantiateSC cbind scL
+    in do scLasC <- instantiateSC scC cbind scL
           scD <- scDischarge scC scLasC
           if onlyFreshOrInvolved unbound scD
             then do let freshneeded = snd scD
@@ -759,8 +759,9 @@ lawInstantiate3 :: Monad m
                 => Law -> [(Variable,Term)] -> LiveProof -> m LiveProof
 lawInstantiate3 law@((lnm,(Assertion lawt lsc)),lprov) varTerms liveProof
   = do lbind <- mkBinding emptyBinding varTerms
-       ilsc <- instantiateSC lbind lsc
-       nsc <- mrgSideCond (conjSC liveProof) ilsc
+       let scC = conjSC liveProof
+       ilsc <- instantiateSC scC lbind lsc
+       nsc <- mrgSideCond scC ilsc
        ilawt <- instantiate lbind lawt
        let (tz,seq') = focus liveProof
        let dpath = fPath liveProof

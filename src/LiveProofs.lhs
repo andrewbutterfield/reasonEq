@@ -370,7 +370,7 @@ tryLawByName logicsig asn@(Assertion tC scC) lnm parts mcs
     -- bind          <- match vts tC partsP
     -- (kbind,tPasC) <- bindKnown vts bind tP
     -- (fbind,_)     <- bindFloating vts kbind tP
-    -- scP'          <- instantiateSC fbind scP of
+    -- scP'          <- instantiateSC scC fbind scP of
     -- scP''         <- scDischarge scC scP' of
     -- return (bind,tP,scP',scP'')
 \end{code}
@@ -446,7 +446,7 @@ Next, instantiate the pattern side-condition using the bindings.
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryInstantiateSC bind tP partsP scP
-      = case instantiateSC bind scP of
+      = case instantiateSC (pdbg "iSC.scC" scC) (pdbg "iSC.bind" bind) $ pdbg "iSC.scP" scP of
           Yes scP'  ->  trySCDischarge bind tP partsP scP'
           But msgs
            -> But ([ "try s.c. instantiation failed"
@@ -859,7 +859,7 @@ basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
   =  do bind <- match vts tC partsP
         kbind <- bindKnown vts bind repl
         fbind <- bindFloating vts kbind repl
-        scPinC <- instantiateSC fbind scP
+        scPinC <- instantiateSC scC fbind scP
         scD <- scDischarge scC scPinC
         if all isFloatingASC (fst scD)
           then return $ MT n (unwrapASN asn) (chkPatn mc tP) kbind scC scPinC repl
@@ -1016,8 +1016,8 @@ shSCImplication scC scPm
      ++ " " ++ _implies ++ " "
      ++ trSideCond scPm
 
-shMappedCond bind lsc
-  = case instantiateSC bind lsc of
+shMappedCond scC bind lsc
+  = case instantiateSC scC bind lsc of
       Nothing    ->  trSideCond lsc ++ (red " (law-sc!)")
       Just ilsc  ->  trSideCond ilsc
 

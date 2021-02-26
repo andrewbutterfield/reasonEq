@@ -1,40 +1,27 @@
-@scC:
+@iSC.scP: -- Ø ⊇ P
 ( [ SS
     (GV (VR (Id "P" 0, VP, WS)))
-    ( { GL (LV (VR (Id "x" 0, VO, WS), [], [])) } )
-  , SS
-    (GV (VR (Id "Q" 0, VP, WS)))
-    ( { GL (LV (VR (Id "x" 0, VO, WS), [], [])) } ) ]
+    ( {} ) ]
 , {} )
-@scP':
-( [ SS
-    (GV (VR (Id "Q" 0, VP, WS)))
-    ( { GL (LV (VR (Id "?x" 0, VO, WS), [], [])) } ) ]
-, {} )
-@group_cnsq:  -- [(Q,{?x$ ⊇ Q})]
-[ ( GV (VR (Id "Q" 0, VP, WS))
-  ,  [SS (GV (VR (Id "Q" 0, VP, WS))) (fromList [GL (LV (VR (Id "?x" 0, VO, WS), [], []))])]
-  )
-]
-@group_ante: [(P,{x$ ⊇ P}),(Q,{x$ ⊇ Q})]
-[ ( GV (VR (Id "P" 0, VP, WS))
-  , [SS (GV (VR (Id "P" 0, VP, WS))) (fromList [GL (LV (VR (Id "x" 0, VO, WS), [], []))])]
-  )
-, ( GV (VR (Id "Q" 0, VP, WS))
-  , [SS (GV (VR (Id "Q" 0, VP, WS))) (fromList [GL (LV (VR (Id "x" 0, VO, WS), [], []))])]
-  )
-]
-@cnsqs: -- [ ?x$ ⊇ Q ]
-[ SS
-  (GV (VR (Id "Q" 0, VP, WS)))
-  ( { GL (LV (VR (Id "?x" 0, VO, WS), [], [])) } ) ]
-@antes:
-[ SS -- [ x$ ⊇ Q ]
-  (GV (VR (Id "Q" 0, VP, WS)))
-  ( { GL (LV (VR (Id "x" 0, VO, WS), [], [])) } ) ]
-@cnsq: ?x$ ⊇ Q
-SS (GV (VR (Id "Q" 0,VP,WS))) (fromList [GL (LV (VR (Id "?x" 0,VO,WS),[],[]))])
-@ante: x$ ⊇ Q
-SS (GV (VR (Id "Q" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
-@dsch: Ø ⊇ Q
-SS (GV (VR (Id "Q" 0,VP,WS))) (fromList [])
+@iSC.bind: -- { P -> (∃ x$ • P), x$ -> {x$} }
+BD
+( { ( (Id "P" 0, VP)
+    , BT (B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0, VO, WS), [], []))]) (V P (VR (Id "P" 0, VP, WS)))) ) }
+, {}
+, { ( (Id "x" 0, VO, [], [])
+    , { ( { GL (LV (VR (Id "x" 0, VO, WS), [], [])) } ) } ) } )
+
+We know that  x$ ⊇ P  from the goal s.c.
+
+assume gx$ ⊇ gP
+bind(Ø ⊇ pP)
+ = distribute bind
+bind(Ø) ⊇ bind(pP)
+ = apply bind twice
+Ø ⊇ (∃ gx$ • gP)
+ = free vars for ∃
+Ø ⊇ (gP \ gx$)  -- we mistakenly instantiate gx$ to Ø ??
+ = assumption
+Ø ⊇ Ø
+ = supset reflexivity
+True

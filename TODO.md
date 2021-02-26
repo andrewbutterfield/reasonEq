@@ -25,6 +25,41 @@ Discharged Law S.C. = Ø ⊇ P
 Given `x$ ⊇ P` we should be able to deduce `Ø ⊇ (∃ x$ • P)`.
 But the `P` inside is not the `P` being bound!
 
+Correct calculation (`gV` is `V` in goal-space, `pV` is `V` in pattern-space)
+
+```
+assume gx$ ⊇ gP
+bind(Ø ⊇ pP)
+ = distribute bind
+bind(Ø) ⊇ bind(pP)
+ = apply bind twice
+Ø ⊇ (∃ gx$ • gP)
+ = free vars for ∃
+Ø ⊇ (gP \ gx$)  -- we mistakenly instantiate gx$ to Ø ??
+ = assumption
+Ø ⊇ Ø
+ = supset reflexivity
+True
+```
+
+Redo the above as a computation that starts with the goal s.c.
+
+```
+[gx$ ⊇ gP] |-  bind(Ø ⊇ pP)
+ = distribute bind
+[gx$ ⊇ gP] |- bind(Ø) ⊇ bind(pP)
+ = apply bind twice
+[gx$ ⊇ gP] |-  Ø ⊇ (∃ gx$ • gP)
+ = free vars for ∃
+[gx$ ⊇ gP] |-  Ø ⊇ (gP \ gx$)
+ = (Ø ⊇ (P \ T)) is same as T ⊇ P
+[gx$ ⊇ gP] |-  gx$ ⊇ gP
+ = supset reflexivity
+True
+```
+
+
+
 ### Upgrade 2
 
 We now have to show the two following predicates are the same

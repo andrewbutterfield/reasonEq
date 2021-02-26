@@ -1,12 +1,8 @@
-@scC:
-([SS (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]),SS (GV (VR (Id "Q" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])],fromList [])
-@scP':
-([SS (GV (VR (Id "Q" 0,VP,WS))) (fromList [GL (LV (VR (Id "?x" 0,VO,WS),[],[]))])],fromList [])
-@group_cnsq:
-[(GV (VR (Id "Q" 0,VP,WS)),[SS (GV (VR (Id "Q" 0,VP,WS))) (fromList [GL (LV (VR (Id "?x" 0,VO,WS),[],[]))])])]
-@group_ante:
-[(GV (VR (Id "P" 0,VP,WS)),[SS (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])]),(GV (VR (Id "Q" 0,VP,WS)),[SS (GV (VR (Id "Q" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])])]
-@cnsq:
-[SS (GV (VR (Id "Q" 0,VP,WS))) (fromList [GL (LV (VR (Id "?x" 0,VO,WS),[],[]))])]
-@ante:
-[SS (GV (VR (Id "Q" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])]
+@iSC.scP:
+([SS (GV (VR (Id "P" 0,VP,WS))) (fromList [])],fromList [])
+@iSC.bind:
+BD (fromList [((Id "P" 0,VP),BT (B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V P (VR (Id "P" 0,VP,WS)))))],fromList [],fromList [((Id "x" 0,VO,[],[]),BS (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]))])
+@iV.t:
+B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V P (VR (Id "P" 0,VP,WS)))
+@iV.freeVars:
+fromList [GV (VR (Id "P" 0,VP,WS))]

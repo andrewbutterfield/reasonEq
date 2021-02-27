@@ -142,7 +142,8 @@ remVarSet vs (fvs,bvs) = (fvs S.\\ vs, bvs)
 \end{eqnarray*}
 \begin{code}
 subVarSet :: FreeVars -> VarSet -> FreeVars
-subVarSet (fvs, diffs) vs  =  error "subVarSet NYI"
+subVarSet (fvs, diffs) vs
+ =  mrgFreeVars (genFreeVars fvs vs) (S.empty,map (subMore vs) diffs)
 \end{code}
 
 All possibilities are covered by this (2nd-order) example:
@@ -250,6 +251,11 @@ genFreeVars fvs bvs
    (\Set{V}\times\Set{V}) \times \Set{V} \fun \Set{V}\times\Set{V}
 \\ (F\circleddash B) \oslash S &\defs& (F \circleddash (B \cup S))
 \end{eqnarray*}
+\begin{code}
+-- we flip arguments to facilitate mapping
+subMore :: VarSet -> (VarSet,VarSet) -> (VarSet,VarSet)
+subMore vs (fvs,bvs)  =  (fvs,bvs `S.union` vs)
+\end{code}
 
 \begin{eqnarray*}
    \_\oplus\_ &:& \FVE \times \FVE \fun \FVE

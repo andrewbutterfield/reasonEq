@@ -57,6 +57,8 @@ In general we need to work with variable-set \emph{expressions}.
 In particular we need to be able to note when predicate and expression
 variables are subject to set removal because they are under a binding construct.
 
+\newpage
+
 We interpret the occurrence of a predicate or expression variable
 in a variable-set
 as symbolically denoting its putative free observational variables.
@@ -132,6 +134,8 @@ remVarSet :: VarSet -> (VarSet,VarSet) -> (VarSet,VarSet)
 remVarSet vs (fvs,bvs) = (fvs S.\\ vs, bvs)
 \end{code}
 
+\newpage
+
 \begin{eqnarray*}
    sub &:& \FVE \times \Set{V} \fun \FVE
 \\ (F,\setof{D_i}) \setminus S
@@ -146,6 +150,32 @@ subVarSet (fvs, diffs) vs
  =  mrgFreeVars (genFreeVars fvs vs) (S.empty,map (subMore vs) diffs)
 \end{code}
 
+\begin{eqnarray*}
+   \_\oslash\_
+   &:&
+   (\Set{V}\times\Set{V}) \times \Set{V} \fun \Set{V}\times\Set{V}
+\\ (F\circleddash B) \oslash S &\defs& (F \circleddash (B \cup S))
+\end{eqnarray*}
+\begin{code}
+-- we flip arguments to facilitate mapping
+subMore :: VarSet -> (VarSet,VarSet) -> (VarSet,VarSet)
+subMore vs (fvs,bvs)  =  (fvs,bvs `S.union` vs)
+\end{code}
+
+\begin{eqnarray*}
+   \_\oplus\_ &:& \FVE \times \FVE \fun \FVE
+\\ (F_1,D_1) \oplus (F_2,D_2)
+   &\defs&
+   (F_1 \cup F_2, rem_{F_2}(D_1) \cup rem_{F_1}(D_2)
+\end{eqnarray*}
+\begin{code}
+mrgFreeVars :: FreeVars -> FreeVars -> FreeVars
+mrgFreeVars (fvs1,diffs1) (fvs2,diffs2)
+  =( fvs1 `S.union` fvs2
+   , map (remVarSet fvs2) diffs1 ++ map (remVarSet fvs1) diffs2 )
+\end{code}
+
+Finally, transforming $F \setminus B$ into a free-variable set-expression.
 All possibilities are covered by this (2nd-order) example:
 \begin{eqnarray*}
   & & \setof{\vv x, \vv y, \vv e, \vv f, \vv P, \vv Q}
@@ -199,6 +229,9 @@ The treatment of the 2nd-order example is as follows:
 \\&=& ( \setof{\vv y}
       , \setof{( \setof{\vv f, \vv Q}\circleddash \setof{\vv x, \vv z} )} )
 \end{eqnarray*}
+
+\newpage
+
 In a general setting,
 where $X$ denotes sets of observational variables,
 and $T$ denotes sets of predicate and expression variables,
@@ -244,36 +277,6 @@ genFreeVars fvs bvs
     xd = xf S.\\ xb
     td = tf S.\\ tb
 \end{code}
-
-\begin{eqnarray*}
-   \_\oslash\_
-   &:&
-   (\Set{V}\times\Set{V}) \times \Set{V} \fun \Set{V}\times\Set{V}
-\\ (F\circleddash B) \oslash S &\defs& (F \circleddash (B \cup S))
-\end{eqnarray*}
-\begin{code}
--- we flip arguments to facilitate mapping
-subMore :: VarSet -> (VarSet,VarSet) -> (VarSet,VarSet)
-subMore vs (fvs,bvs)  =  (fvs,bvs `S.union` vs)
-\end{code}
-
-\begin{eqnarray*}
-   \_\oplus\_ &:& \FVE \times \FVE \fun \FVE
-\\ (F_1,D_1) \oplus (F_2,D_2)
-   &\defs&
-   (F_1 \cup F_2, rem_{F_2}(D_1) \cup rem_{F_1}(D_2)
-\end{eqnarray*}
-\begin{code}
-mrgFreeVars :: FreeVars -> FreeVars -> FreeVars
-mrgFreeVars (fvs1,diffs1) (fvs2,diffs2)
-  =( fvs1 `S.union` fvs2
-   , map (remVarSet fvs2) diffs1 ++ map (remVarSet fvs1) diffs2 )
-\end{code}
-
-
-
-We need to keep in mind that that sets like $B$ can themselves contain
-predicate and expression variables.
 
 \subsection{Term Free Variables}
 

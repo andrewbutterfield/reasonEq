@@ -96,11 +96,6 @@ The first enumerations in each pair
 consist solely of predicate and expression variables.
 Also, none of those variables appear in the corresponding second enumeration.
 
-
-\begin{code}
-type FreeVars = (VarSet, [(VarSet,VarSet)])
-\end{code}
-
 We need to consider how to tidy-up/``normalise'' these
 structures.
 For example:
@@ -111,8 +106,15 @@ For example:
 \\&=& \bigcup(F,\setof{\dots,(F_i\circleddash(B_i \cup F)),\dots})
 \\&=& \bigcup(F,\setof{\dots,(F_i\setminus F)\circleddash B_i),\dots})
 \end{eqnarray*}
+Bascially, there is no need for any element in $F$ to appear in any $F_i$,
+as its possible removal by $B_i$ has no effect
+on its presence as a free variable.
 
-Lets start with some basic builders.
+\begin{code}
+type FreeVars = (VarSet, [(VarSet,VarSet)])
+\end{code}
+
+A common case is where nothing is being subtracted:
 \begin{eqnarray*}
    inj &:& \Set{V} \fun \FVE
 \\ inj(F) &\defs& (F,\emptyset)
@@ -122,60 +124,10 @@ injVarSet :: VarSet -> FreeVars
 injVarSet vs = (vs,[])
 \end{code}
 
-\begin{eqnarray*}
-   add &:& \Set{V} \times \FVE \fun \FVE
-\\ add(F',(F,D)) &=& (F' \cup F,rem_{F'}(D))
-\\ rem_{F'} \setof{F\circleddash B} &\defs& \setof{(F\setminus F')\circleddash B}
-\end{eqnarray*}
-\begin{code}
-addVarSet :: VarSet -> FreeVars -> FreeVars
-addVarSet vs (fvs, diffs)  =  (vs `S.union` fvs, map (remVarSet vs) diffs)
-remVarSet :: VarSet -> (VarSet,VarSet) -> (VarSet,VarSet)
-remVarSet vs (fvs,bvs) = (fvs S.\\ vs, bvs)
-\end{code}
 
 \newpage
+Lets start with the simplest general case: $F \setminus B$ for arbitrary $F$ and $B$:
 
-\begin{eqnarray*}
-   sub &:& \FVE \times \Set{V} \fun \FVE
-\\ (F,\setof{D_i}) \setminus S
-   &=&
-   (F \ominus S)
-   \oplus
-   (\emptyset, \setof{D_i \oslash S})
-\end{eqnarray*}
-\begin{code}
-subVarSet :: FreeVars -> VarSet -> FreeVars
-subVarSet (fvs, diffs) vs
- =  mrgFreeVars (genFreeVars fvs vs) (S.empty,map (subMore vs) diffs)
-\end{code}
-
-\begin{eqnarray*}
-   \_\oslash\_
-   &:&
-   (\Set{V}\times\Set{V}) \times \Set{V} \fun \Set{V}\times\Set{V}
-\\ (F\circleddash B) \oslash S &\defs& (F \circleddash (B \cup S))
-\end{eqnarray*}
-\begin{code}
--- we flip arguments to facilitate mapping
-subMore :: VarSet -> (VarSet,VarSet) -> (VarSet,VarSet)
-subMore vs (fvs,bvs)  =  (fvs,bvs `S.union` vs)
-\end{code}
-
-\begin{eqnarray*}
-   \_\oplus\_ &:& \FVE \times \FVE \fun \FVE
-\\ (F_1,D_1) \oplus (F_2,D_2)
-   &\defs&
-   (F_1 \cup F_2, rem_{F_2}(D_1) \cup rem_{F_1}(D_2)
-\end{eqnarray*}
-\begin{code}
-mrgFreeVars :: FreeVars -> FreeVars -> FreeVars
-mrgFreeVars (fvs1,diffs1) (fvs2,diffs2)
-  =( fvs1 `S.union` fvs2
-   , map (remVarSet fvs2) diffs1 ++ map (remVarSet fvs1) diffs2 )
-\end{code}
-
-Finally, transforming $F \setminus B$ into a free-variable set-expression.
 All possibilities are covered by this (2nd-order) example:
 \begin{eqnarray*}
   & & \setof{\vv x, \vv y, \vv e, \vv f, \vv P, \vv Q}
@@ -229,8 +181,8 @@ The treatment of the 2nd-order example is as follows:
 \\&=& ( \setof{\vv y}
       , \setof{( \setof{\vv f, \vv Q}\circleddash \setof{\vv x, \vv z} )} )
 \end{eqnarray*}
-
-\newpage
+Here we use $\oplus$ to denote a binary operator that returns the ``union''
+of two free-variable sets (details to follow).
 
 In a general setting,
 where $X$ denotes sets of observational variables,
@@ -249,7 +201,7 @@ we have:
       \qquad\qquad\qquad\quad  ( T_F \setminus T_B ) = \emptyset
 \end{eqnarray*}
 
-
+We can implement this without explicitly using $\oplus$:
 \begin{eqnarray*}
    \_\ominus\_ &:& \Set{V} \times \Set{V} \fun \FVE
 \\ (X_F \sqcup T_F) \ominus (X_B \sqcup T_B)
@@ -261,7 +213,7 @@ we have:
    \begin{array}{ll}
       (V \cup F, \emptyset),     & B = \emptyset
    \\ (V, \emptyset),            & F = \emptyset
-   \\ (V, {(F \circleddash B)}), & \textrm{otherwise}
+   \\ (V, \setof{(F \circleddash B)}), & \textrm{otherwise}
    \end{array}
    \right.
 \end{eqnarray*}
@@ -277,6 +229,60 @@ genFreeVars fvs bvs
     xd = xf S.\\ xb
     td = tf S.\\ tb
 \end{code}
+
+\newpage
+
+We will need a way to merge these ``sets'' ($\oplus$),
+and a way to subtract from them ($sub$).
+\begin{eqnarray*}
+   \_\oplus\_ &:& \FVE \times \FVE \fun \FVE
+\\ (F_1,D_1) \oplus (F_2,D_2)
+   &\defs&
+   (F_1 \cup F_2, rem_{F_2}(D_1) \cup rem_{F_1}(D_2)
+\end{eqnarray*}
+\begin{code}
+mrgFreeVars :: FreeVars -> FreeVars -> FreeVars
+mrgFreeVars (fvs1,diffs1) (fvs2,diffs2)
+  =( fvs1 `S.union` fvs2
+   , map (remVarSet fvs2) diffs1 ++ map (remVarSet fvs1) diffs2 )
+\end{code}
+\begin{eqnarray*}
+   rem_{F'} \setof{F\circleddash B} &\defs& \setof{(F\setminus F')\circleddash B}
+\end{eqnarray*}
+\begin{code}
+remVarSet :: VarSet -> (VarSet,VarSet) -> (VarSet,VarSet)
+remVarSet vs (fvs,bvs) = (fvs S.\\ vs, bvs)
+\end{code}
+
+
+\begin{eqnarray*}
+   sub &:& \FVE \times \Set{V} \fun \FVE
+\\ (F,\setof{D_i}) \setminus S
+   &=&
+   (F \ominus S)
+   \oplus
+   (\emptyset, \setof{D_i \oslash S})
+\end{eqnarray*}
+\begin{code}
+subVarSet :: FreeVars -> VarSet -> FreeVars
+subVarSet (fvs, diffs) vs
+ =  mrgFreeVars (genFreeVars fvs vs) (S.empty,map (subMore vs) diffs)
+\end{code}
+
+\begin{eqnarray*}
+   \_\oslash\_
+   &:&
+   (\Set{V}\times\Set{V}) \times \Set{V} \fun \Set{V}\times\Set{V}
+\\ (F\circleddash B) \oslash S &\defs& (F \circleddash (B \cup S))
+\end{eqnarray*}
+\begin{code}
+-- we flip arguments to facilitate mapping
+subMore :: VarSet -> (VarSet,VarSet) -> (VarSet,VarSet)
+subMore vs (fvs,bvs)  =  (fvs,bvs `S.union` vs)
+\end{code}
+
+
+\newpage
 
 \subsection{Term Free Variables}
 

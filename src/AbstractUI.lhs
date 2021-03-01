@@ -430,23 +430,30 @@ This function attempts to move recursively thorugh a proof by checking for the n
 moveThroughProof :: Monad m => LiveProof -> m LiveProof
 moveThroughProof liveProof
     = let (tz, seq') = focus liveProof
-          n = numOfSubTerms tz
-      in if n > 0
-          then moveThroughProofWorker liveProof []
+          (s:ss) = listOfSubTerms tz
+          (ok, tz') = downTZ s tz
+      in if ok
+          then moveThroughProofWorker liveProof ((s:ss) ++ [0]) 
           else fail("more than 0")
 
 moveThroughProofWorker :: Monad m => LiveProof -> [Int] -> m LiveProof
-moveThroughProofWorker liveProof ss
+moveThroughProofWorker liveProof (s:ss)
     = let (tz, seq') = focus liveProof
-          n = numOfSubTerms tz
-          (s:ss') = listOfSubTerms tz ++ ss
-          (ok, tz') = downTZ s tz
-          (ok', tz'') = upTZ tz
-      in if n > 0
-          then moveThroughProofWorker (focus_ (tz', seq') $ fPath__ (++[s]) $ matches_ [] liveProof) (ss')
-          else return ( focus_ (tz', seq')
-                      $ fPath__ (++[])
-                      $ matches_ [] liveProof)
+          goingDown = s > 0 
+      in if goingDown
+          then let (ok, tz') = downTZ s tz
+                   ss' = listOfSubTerms tz' ++ [0] ++ ss
+               in if ok
+                   then moveThroughProofWorker (focus_ (tz', seq') $ fPath__ (++[s]) $ matches_ [] liveProof) (ss')
+                   else return (focus_ (tz, seq')
+                               $ fPath__ (++[])
+                               $ matches_ [] liveProof)      
+          else let (ok', tz'') = upTZ tz
+               in if ok'
+                    then moveThroughProofWorker (focus_ (tz'', seq') $ fPath__ (++[]) $ matches_ [] liveProof) (ss)
+                    else return (focus_ (tz, seq')
+                                $ fPath__ (++[])
+                                $ matches_ [] liveProof)
 \end{code}
 
 This function is just for testing in the interface

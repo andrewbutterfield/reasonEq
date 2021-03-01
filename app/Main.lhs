@@ -908,10 +908,10 @@ autoProofCDescr = ("auc"
             , "auc        -- prove Equiv auto"
             , autoProofCCommand)
 
-autoProofCCommand [] (reqs, liveProof) = do
-    (reqs, liveProof) <- matchLawCommand [] (reqs, liveProof)
-    applyMatch ["1"] (reqs, matchFocus (logicsig reqs) liveProof)
-    
+autoProofCCommand :: REPLCmd (REqState, LiveProof)
+autoProofCCommand _ = 
+   tryDelta moveThroughProof
+
 \end{code}
 
 \begin{code}

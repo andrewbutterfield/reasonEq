@@ -2,63 +2,8 @@
 
 ## Most Urgent
 
-Continue proofs in `UClose` and onwards....
-
-Stalled again:
-
-```
-⊢
-¬((∃ x$ • P))∨(∀ x$ • (∃ x$ • P))    x$ ⊇ P
-
-Focus = [2]  Target (RHS): true
-
-
-proof: tm 1 forall_remove
-Match against `forall_remove'[1]
-Binding: { P ⟼ (∃ x$ • P), x$ ⟼ {x$} }
-Instantiated Law = (∀ x$ • P)≡P
-Instantiated Law S.C. = Ø ⊇ P
-Goal S.C. = x$ ⊇ P
-Discharged Law S.C. = Ø ⊇ P
-```
-
-Given `x$ ⊇ P` we should be able to deduce `Ø ⊇ (∃ x$ • P)`.
-But the `P` inside is not the `P` being bound!
-
-Correct calculation (`gV` is `V` in goal-space, `pV` is `V` in pattern-space)
-
-```
-assume gx$ ⊇ gP
-bind(Ø ⊇ pP)
- = distribute bind
-bind(Ø) ⊇ bind(pP)
- = apply bind twice
-Ø ⊇ (∃ gx$ • gP)
- = free vars for ∃
-Ø ⊇ (gP \ gx$)  -- we mistakenly instantiate gx$ to Ø ??
- = assumption
-Ø ⊇ Ø
- = supset reflexivity
-True
-```
-
-Redo the above as a computation that starts with the goal s.c.
-
-```
-[gx$ ⊇ gP] |-  bind(Ø ⊇ pP)
- = distribute bind
-[gx$ ⊇ gP] |- bind(Ø) ⊇ bind(pP)
- = apply bind twice
-[gx$ ⊇ gP] |-  Ø ⊇ (∃ gx$ • gP)
- = free vars for ∃
-[gx$ ⊇ gP] |-  Ø ⊇ (gP \ gx$)
- = (Ø ⊇ (P \ T)) is same as T ⊇ P
-[gx$ ⊇ gP] |-  gx$ ⊇ gP
- = supset reflexivity
-True
-```
-
-
+The `FreeVarSet` data type and builders have been produced.
+Now we need to get `freeVars` to return it.
 
 ### Upgrade 2
 

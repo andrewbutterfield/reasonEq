@@ -17,6 +17,7 @@ module TermZipper
  , int_tst_TermZip
  , numOfSubTerms
  , listOfSubTerms
+ , throughProof
  ) where
 
 import Data.Set (Set)
@@ -143,6 +144,16 @@ makeUpList 0 = []
 makeUpList 1 = [1]
 makeUpList n = makeUpList (n-1) ++ [n]
 
+throughProof :: TermZip -> (Bool, TermZip)
+
+throughProof tz@(t,wayup)
+    = case numOfSubTerms tz of 0 -> (True, tz)
+                               n -> throughProofWorker tz [] (listOfSubTerms tz)
+
+throughProofWorker :: TermZip -> [Int] -> [Int] -> (Bool, TermZip)
+throughProofWorker tz@(t,wayup) path ss
+    = case ss of [] -> (True,tz)
+                 (s:_) -> downTZ s tz
 \end{code}
 
 \subsubsection{Zip Descent by Path}

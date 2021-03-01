@@ -17,7 +17,7 @@ module AbstractUI
 , newProof1, newProof2, resumeProof
 , abandonProof, saveProof, completeProof
 , moveFocusDown
-, moveDownNTimes, moveToBottom, followPath, mUGAM, checkSubTermsNumbers, listOfSubTermsNumbers
+, moveDownNTimes, moveToBottom, followPath, mUGAM, checkSubTermsNumbers, listOfSubTermsNumbers, moveThroughProof
 , moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, matchFocusAgainst
@@ -427,6 +427,26 @@ followPath (x:xs) liveProof
 This function attempts to move recursively thorugh a proof by checking for the number of sub terms
 \begin{code}
 
+moveThroughProof :: Monad m => LiveProof -> m LiveProof
+moveThroughProof liveProof
+    = let (tz, seq') = focus liveProof
+          n = numOfSubTerms tz
+      in if n > 0
+          then moveThroughProofWorker liveProof []
+          else fail("more than 0")
+
+moveThroughProofWorker :: Monad m => LiveProof -> [Int] -> m LiveProof
+moveThroughProofWorker liveProof ss
+    = let (tz, seq') = focus liveProof
+          n = numOfSubTerms tz
+          (s:ss') = listOfSubTerms tz ++ ss
+          (ok, tz') = downTZ s tz
+          (ok', tz'') = upTZ tz
+      in if n > 0
+          then moveThroughProofWorker (focus_ (tz', seq') $ fPath__ (++[s]) $ matches_ [] liveProof) (ss')
+          else return ( focus_ (tz', seq')
+                      $ fPath__ (++[])
+                      $ matches_ [] liveProof)
 \end{code}
 
 This function is just for testing in the interface
@@ -441,6 +461,7 @@ listOfSubTermsNumbers :: LiveProof -> String
 listOfSubTermsNumbers liveProof
     = show $ listOfSubTerms tz where
         (tz, seq') = focus liveProof
+
 \end{code}
 
 \subsubsection{Moving Focus Up}

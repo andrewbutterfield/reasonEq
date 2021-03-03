@@ -567,7 +567,8 @@ normQ vv (Lam tk n vl tm)
        (tm',vv'') =  normQ vv' tm
    in ( fromJust $ lam tk n vl' tm', vv')
 normQ vv (Cls n tm)
- = let (_,vv') = normQBound vv $ filter isObsGVar $ S.toList $ freeVars tm
+ = let (_,vv')    = normQBound vv
+                      $ filter isObsGVar $ S.toList $ theFreeVars $ freeVars tm
        (tm',vv'') = normQ vv' tm
    in ( Cls n tm',vv'')
 \end{code}

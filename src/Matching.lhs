@@ -352,8 +352,8 @@ Note that here we only close w.r.t. free \emph{observational} variables.
 tMatch' vts bind cbvs pbvs (Cls nC tC) (Cls nP tP)
   | nC == nP  =  tMatch vts bind cbvs' pbvs' tC tP
   where
-    cbvs' = S.filter isObsGVar (freeVars tC)
-    pbvs' = S.filter isObsGVar (freeVars tP)
+    cbvs' = S.filter isObsGVar $ theFreeVars $ freeVars tC
+    pbvs' = S.filter isObsGVar $ theFreeVars $ freeVars tP
 \end{code}
 
 

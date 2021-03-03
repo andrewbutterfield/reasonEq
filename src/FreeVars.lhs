@@ -7,7 +7,10 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module FreeVars
-( freeVars
+( FreeVars
+, freeVars
+, inFreeVars, theFreeVars
+, mrgFreeVars
 , substRelFree
 , zeroTermIdNumbers
 , setVarIdNumber
@@ -301,6 +304,11 @@ inFreeVars gv (fvs,diffs)
   = ( gv `S.member` fvs )
     ||
     ( any (S.member gv) $ map fst diffs )
+\end{code}
+Associated with this is the set of all variables satisfying the above predicate:
+\begin{code}
+theFreeVars :: FreeVars -> VarSet
+theFreeVars (fvs,diffs) = fvs `S.union` ( S.unions $ map fst diffs )
 \end{code}
 
 

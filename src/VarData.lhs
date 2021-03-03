@@ -291,7 +291,7 @@ Only static variables may name a constant,
 and we must check that we won't introduce any cycles.
 \begin{code}
 addKnownConst var@(Vbl _ _ Static) trm vt@(VD (vtable,stable,dtable))
-  | StdVar var `S.member` freev  =  fail "addKnownConst: variable in term."
+  | StdVar var `inFreeVars` freev   =  fail "addKnownConst: variable in term."
   -- | any (absent vt) freev        =  fail "addKnownConst: term has unknowns."
   | otherwise
     = case M.lookup var vtable of

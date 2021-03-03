@@ -142,7 +142,7 @@ captureAvoidance vs tm sub
   = do let tfv = freeVars tm
        let (tgtvs,rplvs) = substRelFree tfv sub
        let needsRenaming = S.toList (tgtvs `S.intersection` vs)
-       let knownVars = tfv `S.union` rplvs
+       let knownVars = theFreeVars ( tfv `mrgFreeVars` rplvs )
        mkFresh knownVars [] [] needsRenaming
 
 mkFresh :: Monad m
@@ -333,7 +333,7 @@ checkFresh vvs lls trm
      alphaRng = (S.fromList $ map (StdVar . snd) vvs)
                 `S.union`
                 (S.fromList $ map (LstVar . snd) lls)
-   in if S.null (trmFV `S.intersection` alphaRng)
+   in if S.null (theFreeVars trmFV `S.intersection` alphaRng)
        then return ()
        else fail "alphaRename: new bound-vars not fresh"
 \end{code}

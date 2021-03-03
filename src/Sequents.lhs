@@ -306,7 +306,7 @@ A key function is one that makes all unknown variables in a term become known.
 makeUnknownKnown :: [Theory] -> Term -> VarTable
 makeUnknownKnown thys t
   = let
-     fvars = S.toList $ freeVars t
+     fvars = S.toList $ theFreeVars $ freeVars t
      vts = map known thys
     in scanFreeForUnknown vts newVarTable fvars
 

@@ -2,8 +2,22 @@
 
 ## Most Urgent
 
-The `FreeVarSet` data type and builders have been produced.
-Now we need to get `freeVars` to return it.
+The `FreeVarSet` data type has now been integrated into the code.
+Mainy by using `theFreeVars . freeVars` which retursn a `VarSet`.
+
+We now need to look at code that needs this new datatype,
+most likely in `SideCOnd` and `Instantiate`, and updates it to take advantage.
+
+We want the right answer here:
+
+```
+Match against `forall_remove'[1]
+Binding: { P ⟼ (∃ x$ • P), x$ ⟼ {x$} }
+Instantiated Law = (∀ x$ • P)≡P
+Instantiated Law S.C. = Ø ⊇ P
+Goal S.C. = x$ ⊇ P
+Discharged Law S.C. = Ø ⊇ P  -- should be True!
+```
 
 ### Upgrade 2
 

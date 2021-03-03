@@ -114,6 +114,12 @@ on its presence as a free variable.
 type FreeVars = (VarSet, [(VarSet,VarSet)])
 \end{code}
 
+The empty free-variable set:
+\begin{code}
+noFreevars :: FreeVars
+noFreevars = ( S.empty, [] )
+\end{code}
+
 A common case is where nothing is being subtracted:
 \begin{eqnarray*}
    inj &:& \Set{V} \fun \FVE
@@ -254,6 +260,12 @@ remVarSet :: VarSet -> (VarSet,VarSet) -> (VarSet,VarSet)
 remVarSet vs (fvs,bvs) = (fvs S.\\ vs, bvs)
 \end{code}
 
+We also will want to merge lists of sets:
+\begin{code}
+mrgFreeVarList :: [FreeVars] -> FreeVars
+mrgFreeVarList = foldl' mrgFreeVars noFreevars
+\end{code}
+
 
 \begin{eqnarray*}
    sub &:& \FVE \times \Set{V} \fun \FVE
@@ -281,6 +293,16 @@ subMore :: VarSet -> (VarSet,VarSet) -> (VarSet,VarSet)
 subMore vs (fvs,bvs)  =  (fvs,bvs `S.union` vs)
 \end{code}
 
+Finally, we need a membership test.
+This one returns all those mentioned.
+\begin{code}
+inFreeVars :: GenVar -> FreeVars -> Bool
+inFreeVars gv (fvs,diffs)
+  = ( gv `S.member` fvs )
+    ||
+    ( any (S.member gv) $ map fst diffs )
+\end{code}
+
 
 \newpage
 
@@ -304,18 +326,18 @@ subMore vs (fvs,bvs)  =  (fvs,bvs `S.union` vs)
 
 
 \begin{code}
-freeVars :: Term -> VarSet
-freeVars (Var tk v)           =  S.singleton $ StdVar v
-freeVars (Cons tk sb n ts)    =  S.unions $ map freeVars ts
-freeVars (Bnd tk n vs tm)     =  freeVars tm S.\\ vs
-freeVars (Lam tk n vl tm)     =  freeVars tm S.\\ S.fromList vl
-freeVars (Cls _ _)            =  S.empty
-freeVars (Sub tk tm s)        =  (tfv S.\\ tgtvs) `S.union` rplvs
+freeVars :: Term -> FreeVars
+freeVars (Var tk v)                 =  injVarSet $ S.singleton $ StdVar v
+freeVars (Cons tk sb n ts)          =  mrgFreeVarList $ map freeVars ts
+freeVars (Bnd tk n vs tm)           =  subVarSet (freeVars tm) vs
+freeVars (Lam tk n vl tm)           =  subVarSet (freeVars tm) $ S.fromList vl
+freeVars (Cls _ _)                  =  noFreevars
+freeVars (Sub tk tm s)              =  mrgFreeVars (subVarSet tfv tgtvs) rplvs
    where
      tfv            =  freeVars tm
      (tgtvs,rplvs)  =  substRelFree tfv s
-freeVars (Iter tk sa na si ni lvs)  =  S.fromList $ map LstVar lvs
-freeVars _ = S.empty
+freeVars (Iter tk sa na si ni lvs)  =  injVarSet $ S.fromList $ map LstVar lvs
+freeVars _                          =  noFreevars
 \end{code}
 
 \newpage
@@ -332,7 +354,7 @@ This function returns the free variables in a substitution
 \emph{relative} to a given term to which it is being applied.
 It also returns the free variables from that term that will be substituted for.
 \begin{code}
-substRelFree :: VarSet -> Substn -> (VarSet,VarSet)
+substRelFree :: FreeVars -> Substn -> (VarSet,FreeVars)
 substRelFree tfv (Substn ts lvs) = (tgtvs,rplvs)
  where
    ts' = S.filter (applicable StdVar tfv) ts
@@ -340,16 +362,16 @@ substRelFree tfv (Substn ts lvs) = (tgtvs,rplvs)
    tgtvs = S.map (StdVar . fst) ts'
            `S.union`
            S.map (LstVar . fst) lvs'
-   rplvs = S.unions (S.map (freeVars . snd) ts')
-           `S.union`
-           S.map (LstVar .snd) lvs'
+   rplvs = ( mrgFreeVarList $ S.toList $ S.map (freeVars . snd) ts' )
+           `mrgFreeVars`
+           ( injVarSet $ S.map (LstVar .snd) lvs' )
 \end{code}
 
 A target/replacement pair is ``applicable'' if the target variable
 is in the free variables of the term being substituted.
 \begin{code}
-applicable :: (tgt -> GenVar) -> VarSet -> (tgt,rpl) -> Bool
-applicable wrap tfv (t,_) = wrap t `S.member` tfv
+applicable :: (tgt -> GenVar) -> FreeVars -> (tgt,rpl) -> Bool
+applicable wrap tfv (t,_) = wrap t `inFreeVars` tfv
 \end{code}
 
 \newpage

@@ -17,7 +17,7 @@ module AbstractUI
 , newProof1, newProof2, resumeProof
 , abandonProof, saveProof, completeProof
 , moveFocusDown
-, moveDownNTimes, moveToBottom, followPath, mUGAM, checkSubTermsNumbers, listOfSubTermsNumbers, moveThroughProof
+, moveDownNTimes, moveToBottom, followPath, mUGAM, numOfSubTerms, listOfSubTerms, checkSubTermsNumbers, listOfSubTermsNumbers, moveThroughProof
 , moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, matchFocusAgainst
@@ -145,8 +145,6 @@ observeKnowns reqs _
     in hdr ++ (intercalate hdr $ map showTheoryKnowns thrys)
   where hdr = "\n---\n"
 \end{code}
-
-
 
 \subsubsection{Observing Current Theory}
 
@@ -403,7 +401,20 @@ moveDownNTimes n i liveProof
 
 \begin{code}
 moveToBottom :: Monad m => Int -> LiveProof -> m LiveProof
-moveToBottom i liveProof = moveDownNTimes 10 i liveProof
+moveToBottom n liveProof
+    = let (tz, seq') = focus liveProof
+          n' = if n <= 0 then 1 else n
+          (ok, tz') = downTZ n' tz
+      in if ok
+          then moveToBottom n' (focus_ (tz', seq') $ fPath__ (++[n']) $ matches_ [] liveProof)
+          else return (focus_ (setTZ (Val (E ArbType) $ Integer 42) tz, seq') $ fPath__ (++[]) $ matches_ [] liveProof)
+          --else let goalt = getTZ tz
+          --         scC = conjSC liveProof
+          --         ctxts = mtchCtxts liveProof
+          --         newMatches = matchInContexts theSig ctxts (goalt, scC)
+          --         rankedM = rankAndSort sizeRank ctxts
+          --                     $ filter isNonTrivial newMatches
+          --     in return (focus_ (tz,seq') $ fPath__ (++[]) $ matches_ rankedM liveProof)
 \end{code}
 
 The error handling for numbers less than one as path options needs to be fixed.
@@ -424,11 +435,11 @@ followPath (x:xs) liveProof
           else followPath (init (x':xs)) liveProof
 \end{code}
 
-This function attempts to move recursively thorugh a proof by checking for the number of sub terms
+This function moves through a proof in a depth first manner.
 \begin{code}
 
-moveThroughProof :: Monad m => LiveProof -> m LiveProof
-moveThroughProof liveProof
+moveThroughProof :: Monad m => LiveProof ->  m LiveProof
+moveThroughProof liveProof 
     = let (tz, seq') = focus liveProof
           (s:ss) = listOfSubTerms tz
           (ok, tz') = downTZ s tz
@@ -437,23 +448,27 @@ moveThroughProof liveProof
           else fail("more than 0")
 
 moveThroughProofWorker :: Monad m => LiveProof -> [Int] -> m LiveProof
-moveThroughProofWorker liveProof (s:ss)
+moveThroughProofWorker liveProof (s:ss) 
     = let (tz, seq') = focus liveProof
           goingDown = s > 0 
       in if goingDown
           then let (ok, tz') = downTZ s tz
                    ss' = listOfSubTerms tz' ++ [0] ++ ss
                in if ok
-                   then moveThroughProofWorker (focus_ (tz', seq') $ fPath__ (++[s]) $ matches_ [] liveProof) (ss')
+                   then moveThroughProofWorker (focus_ (tz', seq') $ fPath__ (++[s]) $ matches_ [] liveProof) (ss') 
                    else return (focus_ (tz, seq')
                                $ fPath__ (++[])
                                $ matches_ [] liveProof)      
-          else let (ok', tz'') = upTZ tz
+          else let -- (tz''', seq') = (setTZ (Val (E ArbType) $ Integer 42) tz, seq')
+                    (ok', tz'') = upTZ tz
+          --else let (tz, seq') = (setTZ (Val (E ArbType) $ Integer 42) tz, seq')
                in if ok'
-                    then moveThroughProofWorker (focus_ (tz'', seq') $ fPath__ (++[]) $ matches_ [] liveProof) (ss)
-                    else return (focus_ (tz, seq')
-                                $ fPath__ (++[])
-                                $ matches_ [] liveProof)
+                   then moveThroughProofWorker (focus_ (tz'', seq') $ fPath__ (++[]) $ matches_ [] liveProof) (ss)
+                   --else return (focus_ (setTZ (Val (E ArbType) $ Integer 42) tz, seq')
+                   else return (focus_  (setTZ (Val (E ArbType) $ Integer 42) tz, seq')
+                               $ fPath__ (++[])
+                               $ matches_ [] liveProof)
+
 \end{code}
 
 This function is just for testing in the interface
@@ -617,6 +632,7 @@ applyMatchToFocus1 i liveProof
   = do  mtch  <- nlookup i $ matches liveProof
         let unbound = findUnboundVars (mBind mtch) (mRepl mtch)
         return (unbound,mtch)
+
 \end{code}
 
 Now given the match,

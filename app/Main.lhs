@@ -1,12 +1,10 @@
 \section{Main Program}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2017--18
-
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 module Main where
-
 import System.Environment
 import System.IO
 import System.FilePath
@@ -19,14 +17,11 @@ import qualified Data.Set as S
 import Data.List
 import Data.Maybe
 import Data.Char
-
 import NiceSymbols hiding (help)
-
 import Utilities
 import StratifiedDAG
 import Persistence
 import Files
-
 import LexBase
 import Variables
 import AST
@@ -42,7 +37,6 @@ import TestRendering
 import TestParsing
 import REPL
 import Dev
-
 import Debug.Trace
 dbg msg x = trace (msg++show x) x
 pdbg nm x = dbg ('@':nm++":\n") x
@@ -92,14 +86,12 @@ helpFlag        = "-h"
 helpLongFlag    = "--help"
 versionFlag     = "-v"
 versionLongFlag = "--version"
-
 guiFlag        = "-g"    --          use GUI
 replFlag       = "-r"    --          use REPL (default)
 workspaceFlag  = "-w"    -- <path>   path to prover workspace
 userFlag       = "-u"    --          run in 'User' mode
 devFlag        = "-d"    --          run in 'Dev' mode
 cwdConfig      = ".req"  -- local config file (contains flags)
-
 helpinfo
  = putStrLn $ unlines
      [ "Usage:\n"
@@ -126,11 +118,9 @@ and a corresponding parser:
 data CMDFlags = CMDFlags { usegui  :: Bool
                          , wspath :: Maybe FilePath
                          , dev     :: Bool}
-
 defFlags = CMDFlags { usegui  = False
                     , wspath = Nothing
                     , dev     = False }
-
 parseArgs :: [[Char]] -> CMDFlags
 parseArgs args = parse defFlags args where
   parse flags [] = flags
@@ -153,14 +143,12 @@ main :: IO ()
 main
   = do args <- getArgs
        info args runargs
-
 info args runargs
  | args == [helpFlag]         =  helpinfo
  | args == [helpLongFlag]     =  helpinfo
  | args == [versionFlag]      =  putStrLn name_version
  | args == [versionLongFlag]  =  putStrLn name_version
  | otherwise                  =  runargs args
-
 runargs args
   = do let flags = parseArgs args
        reqs0 <- initState flags
@@ -179,7 +167,6 @@ We assume user mode by default.
 
 \begin{code}
 initState :: CMDFlags -> IO REqState
-
 initState flags
   = case wspath flags of
       Nothing ->
@@ -205,7 +192,6 @@ initState flags
                 else do putStrLn "Running user mode, loading project state."
                         readAllState fp
            else die ("invalid workspace: "++fp)
-
 reqstate0 = REqState { inDevMode = False
                      , projectDir = ""
                      , modified = False
@@ -214,7 +200,6 @@ reqstate0 = REqState { inDevMode = False
                      , theories = noTheories
                      , currTheory = ""
                      , liveProofs = M.empty }
-
 reqset0 = REqSet { maxMatchDisplay = 40
                  }
 \end{code}
@@ -253,13 +238,9 @@ reqPrompt _ reqs = devMk ++ takeBaseName (projectDir reqs)++ "."
  where
    chgd = if modified reqs then "*" else ""
    devMk = if inDevMode reqs then "\x1f6e0 " else ""
-
 reqEOFreplacmement = [nquit]
-
 reqParser = wordParse
-
 reqQuitCmds = [nquit] ; nquit = "quit"
-
 reqQuit :: REqExit
 reqQuit _ reqs
  | inDevMode reqs  =  byeBye
@@ -271,9 +252,7 @@ reqQuit _ reqs
          writeAllState reqs
          byeBye
    byeBye = putStrLn "\nGoodbye!\n" >> return (True, reqs)
-
 reqHelpCmds = ["?","help"]
-
 reqCommands :: REqCommands
 reqCommands = [ cmdShow, cmdSet, cmdNew
               , cmdNewProof, cmdRet2Proof
@@ -281,7 +260,6 @@ reqCommands = [ cmdShow, cmdSet, cmdNew
               , cmdSaveConj, cmdLoadConj
               , cmdAssume, cmdDemote
               , cmdBuiltin, cmdAuto ]
-
 -- we don't use these features in the top-level REPL
 reqEndCondition _ = False
 reqEndTidy _ reqs = return reqs
@@ -304,7 +282,6 @@ repl :: REqState -> IO ()
 repl reqs0
   = do runREPL reqWelcome reqConfig reqs0
        return ()
-
 reqWelcome = unlines
  [ "Welcome to the "++progName++" "++version++" REPL"
  , "Type '?' for help."
@@ -344,7 +321,6 @@ cmdShow
         , shName++" "++shAuto++" autoprover"
         ]
     , showState )
-
 shName = "sh"
 shWork = "w"
 shSig = "s"
@@ -356,7 +332,6 @@ shConj = "c"
 shLivePrf = "p"
 shProofs = "P"
 shAuto = "A"
-
 -- these are not robust enough - need to check if component is present.
 showState (cmd:args) reqs
  | cmd == shProofs    =  doshow reqs $ observeCompleteProofs args reqs
@@ -369,11 +344,8 @@ showState (cmd:args) reqs
  | cmd == shConj      =  doshow reqs $ observeCurrConj reqs args
  | cmd == shLivePrf   =  doshow reqs $ observeLiveProofs reqs
 showState _ reqs      =  doshow reqs "unknown 'show' option."
-
 doshow :: REqState -> String -> IO REqState
 doshow reqs str  =  putStrLn str >> return reqs
-
-
 showWorkspaces :: [String] -> REqState -> IO REqState
 showWorkspaces args reqs
   = do (appFP,projects) <- getWorkspaces progName
@@ -404,7 +376,6 @@ cmdLoad
         , "load <thry> -- load EXISTING theory <thry> from current workspace"
         , "load new <thry> -- add NEW theory <thry> from current workspace"]
     , loadState )
-
 saveState [] reqs
   = do writeAllState reqs
        putStrLn ("REQ-STATE written to '"++projectDir reqs++"'.")
@@ -421,7 +392,6 @@ saveState [nm] reqs
              putStrLn ("Theory '"++nm'++"' written to '"++projectDir reqs++"'.")
              return reqs
 saveState _ reqs  =  doshow reqs "unknown 'save' option."
-
 loadState [] reqs
   = do let dirfp = projectDir reqs
        putStrLn ("Reading all prover state from "++dirfp++"...")
@@ -457,7 +427,6 @@ cmdSaveConj
         [ "svc -- save all laws in current theory as conjectures"
         ]
     , saveConjectures )
-
 saveConjectures _ reqs
   = case getTheory (currTheory reqs) $ theories reqs of
       Nothing
@@ -481,7 +450,6 @@ cmdLoadConj
         , "         -- proper loading to be implemented later, as needed."
         ]
     , displayConjectures )
-
 displayConjectures [nm] reqs
   = do savedConjs <- readFiledConjectures (projectDir reqs) nm
        putStrLn $ unlines' $ map (trNmdAsn) savedConjs
@@ -501,9 +469,7 @@ cmdSet
         [ "set "++setCurrThry++" 'name' -- set current theory to 'name'"
         ]
     , setState )
-
 setCurrThry = shCurrThry
-
 setState (cmd:rest) reqs
  | cmd == setCurrThry
     =  case setCurrentTheory nm reqs of
@@ -522,7 +488,6 @@ cmdNew
     , unlines
         [ "new "++shConj++" 'np1' .. 'npk' -- new conjecture 'np1-..-npk'"]
     , newThing )
-
 newThing (cmd:rest) reqs
  | cmd == shConj = newConj rest reqs
 newThing _ reqs      =  doshow reqs "unknown 'new' option."
@@ -557,7 +522,6 @@ cmdAssume
        , "Assume * - assume all current theory conjectures"
        ]
     , doAssumption )
-
 doAssumption args reqs
   =  case assumeConjecture (currTheory reqs) cjnm reqs of
          But lns     ->  doshow reqs  (unlines' lns)
@@ -578,7 +542,6 @@ cmdDemote
        , "Demote * - demote all current theory assumed laws"
        ]
     , doDemotion )
-
 doDemotion args reqs
   =  case demoteLaw (currTheory reqs) lwnm reqs of
          But lns     ->  doshow reqs  (unlines' lns)
@@ -602,7 +565,6 @@ cmdNewProof
        , "i : conjecture number"
        ]
     , doNewProof )
-
 doNewProof args reqs
   = case newProof1 (args2int args) reqs of
      Nothing -> do putStrLn "invalid conjecture number"
@@ -629,7 +591,6 @@ cmdRet2Proof
        , "    - if more than one."
        ]
     , doBack2Proof )
-
 doBack2Proof args reqs
   = case resumeProof (args2int args) reqs of
       Nothing -> do putStrLn "Can't find requested live proof"
@@ -646,7 +607,6 @@ presentSeq (str,seq)
     trTerm 0 (cleft seq)
     ++ "   =   " ++
     trTerm 0 (cright seq)
-
 presentHyp hthy
   = intercalate "," $ map (trTerm 0 . fst . snd . fst) $ laws hthy
 \end{code}
@@ -669,13 +629,9 @@ proofREPLprompt justHelped (_,liveProof)
   | otherwise   =  unlines' [ clear -- clear screen, move to top-left
                             , dispLiveProof liveProof
                             , "proof: "]
-
 proofEOFReplacement = []
-
 proofREPLParser = charTypeParse
-
 proofREPLQuitCmds = ["q"]
-
 proofREPLQuit args (reqs,liveProof)
   = do putStr "Proof Incomplete, Abandon ? [Y] : "
        hFlush stdout
@@ -683,12 +639,9 @@ proofREPLQuit args (reqs,liveProof)
        if trim inp == "Y"
         then return (True,(abandonProof reqs liveProof, liveProof))
         else return (True,(saveProof reqs liveProof, liveProof))
-
 proofREPLHelpCmds = ["?"]
-
 proofREPLEndCondition (reqs,liveProof)
   =  proofIsComplete (logicsig reqs) liveProof
-
 proofREPLEndTidy _ (reqs,liveProof)
   = do putStrLn "Proof Complete"
        return ( completeProof reqs liveProof, liveProof)
@@ -763,7 +716,6 @@ Listing laws in scope for the current live proof.
 \begin{code}
 listScopeLawsDescr = ( "ll", "list laws"
                      , "ll -- list all laws in scope", listScopeLaws)
-
 listScopeLaws :: REPLCmd (REqState, LiveProof)
 listScopeLaws _ state@( _, liveProof)
   = do putStrLn $ observeLawsInScope liveProof
@@ -775,7 +727,6 @@ Listing knowns in scope for the current live proof.
 \begin{code}
 listScopeKnownsDescr = ( "lk", "list knowns"
                      , "lk -- list all known names in scope", listScopeKnowns)
-
 listScopeKnowns :: REPLCmd (REqState, LiveProof)
 listScopeKnowns _ state@( reqs, liveProof)
   = do putStrLn $ observeKnownsInScope liveProof
@@ -786,22 +737,15 @@ listScopeKnowns _ state@( reqs, liveProof)
 Focus movement commands
 \begin{code}
 goDownDescr = ( "d", "down", "d n  -- down n, n=1 if ommitted", goDown )
-
 goDown :: REPLCmd (REqState, LiveProof)
 goDown args = tryDelta (moveFocusDown $ args2int args)
-
 goUpDescr = ( "u", "up", "u  -- up", goUp )
-
 goUp :: REPLCmd (REqState, LiveProof)
 goUp _ = tryDelta moveFocusUp
-
 goBottomDescr = ("db", "downtobottom", "db n -- downtobottom n, n= 1 if ommitted", goBottom)
-
 goBottom :: REPLCmd (REqState, LiveProof)
 goBottom args = tryDelta (moveToBottom $ args2int args)
-
 goOnPathDescr = ("gp", "goonpath", "gp n0-nm -- goonpath n0-nm", goOnPath)
-
 goOnPath :: REPLCmd (REqState, LiveProof)
 goOnPath args = tryDelta (followPath $ args2intList args)
 \end{code}
@@ -813,7 +757,6 @@ switchConsequentDescr
       unlines' [ "S  -- switch between C_left/C_right"
                , "   -- or go to C_left if in hypothesis" ]
     , switchConsequent )
-
 switchConsequent :: REPLCmd (REqState, LiveProof)
 switchConsequent _ = tryDelta moveConsequentFocus
 \end{code}
@@ -824,7 +767,6 @@ switchHypothesisDescr
   = ( "h", "to hypothesis"
     , "h i  -- focus on hypothesis i, use 'l' to exit."
     , switchHypothesis )
-
 switchHypothesis :: REPLCmd (REqState, LiveProof)
 switchHypothesis args = tryDelta (moveFocusToHypothesis $ args2int args)
 \end{code}
@@ -835,7 +777,6 @@ leaveHypothesisDescr
   = ( "l", "leave hypothesis"
     , "l  --  leave hypothesis, go to C_left."
     , leaveHypothesis )
-
 leaveHypothesis :: REPLCmd (REqState, LiveProof)
 leaveHypothesis _ = tryDelta moveFocusFromHypothesis
 \end{code}
@@ -850,7 +791,6 @@ matchLawDescr = ( "m"
                    [ "m       -- match all laws"
                    , "m lawnm -- match law 'lawnm'" ]
                 , matchLawCommand )
-
 matchLawCommand :: REPLCmd (REqState, LiveProof)
 matchLawCommand [] (reqs, liveProof)
   =  return (reqs, matchFocus (logicsig reqs) liveProof)
@@ -869,7 +809,6 @@ autoProofDescr = ("au"
             , "prove automagically changed"
             , "au        -- prove Equiv auto"
             , autoProofCommand)
-
 autoProofCommand :: REPLCmd (REqState, LiveProof)
 autoProofCommand [] pstate@(reqs, liveProof) = do
     (reqs, liveProof') <- flatEquiv [] (reqs, liveProof)
@@ -882,7 +821,6 @@ autoProofDescrB = ("aub"
             , "prove automagically changed"
             , "aub        -- prove Equiv auto"
             , autoProofCommandB)
-
 autoProofCommandB [] (reqs, liveProof) = do
     (reqs, liveProof) <- goDown ["1"] (reqs, liveProof)
     (reqs, liveProof) <- matchLawCommand [] (reqs, liveProof)
@@ -907,11 +845,9 @@ autoProofCDescr = ("auc"
             , "prove automagically changed"
             , "auc        -- prove Equiv auto"
             , autoProofCCommand)
-
 autoProofCCommand :: REPLCmd (REqState, LiveProof)
 autoProofCCommand _ = 
    tryDelta moveThroughProof
-
 \end{code}
 
 \begin{code}
@@ -919,7 +855,6 @@ autoProofDDescr = ("aud"
             , "prove automagically changed"
             , "aud        -- prove Equiv auto"
             , autoProofDCommand)
-
 autoProofDCommand :: REPLCmd (REqState, LiveProof)
 autoProofDCommand depth (reqs, liveProof) = do
     (reqs, liveProof) <- tryDelta (followPath (args2intList depth)) (reqs, liveProof)
@@ -941,13 +876,11 @@ getNumOfSubTermsDescr = ( "sn"
                         , "num of sub terms"
                         , "sn       -- num of sub terms"
                         , getNumOfSubTermsCommand)
-
 getNumOfSubTermsCommand :: REPLCmd (REqState, LiveProof)
 getNumOfSubTermsCommand _ state@(_, liveProof) = do
     putStrLn $ checkSubTermsNumbers liveProof 
     userPause
     return state
-
 \end{code}
 
 \begin{code}
@@ -955,13 +888,11 @@ getListOfSubTermsDescr = ( "sl"
                         , "list of sub terms"
                         , "sl       -- list of sub terms"
                         , getListOfSubTermsCommand)
-
 getListOfSubTermsCommand :: REPLCmd (REqState, LiveProof)
 getListOfSubTermsCommand _ state@(_, liveProof) = do
     putStrLn $ listOfSubTermsNumbers liveProof 
     userPause
     return state
-
 \end{code}
 
 Try matching focus against a specific law, to see what outcome arises
@@ -977,7 +908,6 @@ tryMatchDescr = ( "tm"
                    , "-- parts returned in same order as n1..nk"
                    ]
                 , tryMatch)
-
 tryMatch :: REPLCmd (REqState, LiveProof)
 tryMatch [] state = return state
 tryMatch args state@( reqs, liveProof)
@@ -1007,7 +937,6 @@ Applying a match.
 \begin{code}
 applyMatchDescr = ( "a", "apply match"
                   , "a i  -- apply match number i", applyMatch )
-
 applyMatch :: REPLCmd (REqState, LiveProof)
 applyMatch args pstate@(reqs, liveProof)
   = case applyMatchToFocus1 (args2int args) liveProof of
@@ -1023,7 +952,6 @@ applyMatch args pstate@(reqs, liveProof)
   where
     true   =  theTrue  $ logicsig reqs
     false  =  theFalse $ logicsig reqs
-
     completeUnbound unbound mtch
       | S.null unbound  =  return $ mBind mtch
       | otherwise
@@ -1041,43 +969,33 @@ we ask the user to pick from a list of terms:
 requestBindings :: (Term, Term) -> (Term, b) -> Set GenVar -> IO Binding
 requestBindings (t,f) (goalTerm,_) unbound
   = let
-
       terms = t : f : subTerms goalTerm
       termLen = length terms
       termMenu = numberList (trTerm 0) terms
-
       gvars = S.toList $ mentionedVars goalTerm
       gvarLen = length gvars
       gvarMenu = numberList trGVar gvars
-
       lvarPrompt = unlines' [ "numbers separated by spaces"
                             , "enter > "
                             ]
-
       vlists :: [VarList]
       vlists    = mentionedVarLists goalTerm
                   ++ map S.toList (mentionedVarSets goalTerm)
                   ++ map (:[]) (S.toList unbound)
       vlistLen  = length vlists
       vlistMenu = numberList trVList vlists
-
       -- we count from 1 !
       inrange upper i = 0 < i && i <= upper
-
       getFrom1 list i = list!!(i-1)
-
       rB ubind [] = do putStrLn ("Done: " ++ trBinding ubind)
                        userPause
                        return ubind
-
       rB ubind gvs@(StdVar v : gvs')
         = do putStrLn ("bindings so far: "++trBinding ubind)
              putStrLn termMenu
              putStrLn ("unbound "++trVar v)
              response <- fmap readInt $ userPrompt "Choose term by number: "
              handleVarResponse ubind gvs v gvs' response
-
-
       rB ubind gvs@(LstVar lv : gvs')
         = do putStrLn ("bindings so far: "++trBinding ubind)
              -- putStrLn ("var-lists: " ++ seplist " " trVList vlists)
@@ -1086,14 +1004,12 @@ requestBindings (t,f) (goalTerm,_) unbound
              putStrLn ("unbound "++trLVar lv)
              responseBits <- fmap (map readInt . words) $ userPrompt lvarPrompt
              handleLVarResponse ubind gvs lv gvs' $ nub responseBits
-
       handleVarResponse ubind gvs v gvs' response
        = if inrange termLen response
          then case bindVarToTerm v (terms!!(response-1)) ubind of
                Nothing      ->  putStrLn "bind var failed" >> return ubind
                Just ubind'  ->  rB ubind' gvs'
          else rB ubind gvs
-
       handleLVarResponse ubind gvs lv gvs' ixs -- just do one for now
        = if all (inrange vlistLen) ixs
          then do let myvlist = concat $ map (getFrom1 vlists) ixs
@@ -1102,7 +1018,6 @@ requestBindings (t,f) (goalTerm,_) unbound
                                     >> userPause >> return ubind
                    Just ubind'  ->  rB ubind' gvs'
          else rB ubind gvs
-
     in rB emptyBinding $ S.toList unbound
 \end{code}
 
@@ -1114,7 +1029,6 @@ normQuantDescr = ( "nq"
                  , unlines
                     [ "n       -- normalise quantifiers" ]
                  , normQuantCommand )
-
 normQuantCommand :: REPLCmd (REqState, LiveProof)
 normQuantCommand _ state@(reqs, liveProof)
   =  case normQuantFocus (theories reqs) liveProof of
@@ -1133,7 +1047,6 @@ simpNestDescr = ( "n"
                 , unlines
                    [ "n       -- simplify nested (similar) quantifiers" ]
                 , simpNestCommand )
-
 simpNestCommand :: REPLCmd (REqState, LiveProof)
 simpNestCommand _ state@(reqs, liveProof)
   =  case nestSimpFocus (theories reqs) liveProof of
@@ -1152,7 +1065,6 @@ substituteDescr = ( "s"
                 , unlines
                    [ "s       -- perform substitution" ]
                 , substituteCommand )
-
 substituteCommand :: REPLCmd (REqState, LiveProof)
 substituteCommand _ state@(reqs, liveProof)
   =  case substituteFocus (theories reqs) liveProof of
@@ -1172,7 +1084,6 @@ revSubstituteDescr = ( "rs"
                    , "rs n     -- reverse nth substitution"
                    ]
                 , revSubstituteCommand )
-
 revSubstituteCommand :: REPLCmd (REqState, LiveProof)
 revSubstituteCommand args state@(reqs, liveProof)
   =  case revSubstituteFocus (args2int args) (theories reqs) liveProof of
@@ -1192,7 +1103,6 @@ Flattening grouped equivalences:
 flatEquivDescr = ( "fe", "flatten equivalences"
                  , "flatten= equivalences"
                  , flatEquiv )
-
 flatEquiv :: REPLCmd (REqState, LiveProof)
 flatEquiv _ state@(reqs, _)
   = tryDelta (flattenAssociative $ theEqv $ logicsig reqs) state
@@ -1209,14 +1119,12 @@ groupEquivDescr = ( "ge", "group equivalences"
                              , "ge s <n> -- split at <n>"
                              ]
                   , groupEquiv )
-
 args2gs ["l"]                       =  return $ Assoc Lft
 args2gs ["r"]                       =  return $ Assoc Rght
 args2gs ("l":as) | args2int as > 0  =  return $ Gather Lft  $ args2int as
 args2gs ("r":as) | args2int as > 0  =  return $ Gather Rght $ args2int as
 args2gs ("s":as) | args2int as > 0  =  return $ Split       $ args2int as
 args2gs _                           =  fail "ge: invalid arguments."
-
 groupEquiv :: REPLCmd (REqState, LiveProof)
 groupEquiv args state@(reqs, _)
   = case args2gs args of
@@ -1230,7 +1138,6 @@ goBackDescr = ( "b", "go back (undo)"
               , unlines' [ "b   --- undo last proof step"
                          , "    --- cannot undo clone changes yet"]
               , goBack )
-
 goBack :: REPLCmd (REqState, LiveProof)
 goBack args  =  tryDelta (stepBack (args2int args))
 \end{code}
@@ -1248,13 +1155,10 @@ by itself conjoined with the instantiation of any law $L$
 lawInstantiateDescr = ( "i", "instantiate"
                       , "i  -- instantiate a true focus with an law"
                       , lawInstantiateProof )
-
 lawInstantiateProof :: REPLCmd (REqState, LiveProof)
 lawInstantiateProof _ ps@(reqs, liveProof )
   = do let rslaws = lawInstantiate1 (logicsig reqs) liveProof
-
        lawno <- pickByNumber "Pick a law : " (showLaws (trTerm 0, trSideCond)) rslaws
-
        case lawInstantiate2 rslaws lawno liveProof of
          Nothing -> return ps
          Just (lawt,vs,ts)
@@ -1276,7 +1180,6 @@ Hypothesis Cloning, is based on the following law:
 cloneHypothesisDescr
   = ( "c", "clone hyp", "c i  -- clone hypothesis i"
     , cloneHypotheses )
-
 cloneHypotheses :: REPLCmd (REqState, LiveProof)
 cloneHypotheses args liveState@(reqs, _)
   = tryDelta (cloneHypothesis (args2int args) (theAnd $ logicsig reqs)) liveState
@@ -1291,7 +1194,6 @@ within the proof.
 equivaleStepsDescr
   = ( "=", "equivale theorem", "= nm  -- step0 == curr-step 'nm'"
     , equivaleSteps )
-
 equivaleSteps :: REPLCmd (REqState, LiveProof)
 equivaleSteps [] liveState
  = do putStrLn ("equivale theorem - name required")
@@ -1335,45 +1237,38 @@ cmdBuiltin
         , "           -- does not ask user to confirm revisions"
         ]
     , buildIn )
-
 binExists = "e"
 binInstalled = "i"
 binInstall = "I"
 binReset = "R"
 binUpdate = "U"
 binUForce = "F"
-
 buildIn (cmd:_) reqs
  | cmd == binExists
     =  doshow reqs (devListAllBuiltins ++ '\n':devBIRemind)
  | cmd == binInstalled
    = doshow reqs $ observeTheoryNames reqs
-
 buildIn (cmd:nm:_) reqs
  | cmd == binInstall
    = do (outcome,reqs') <- devInstallBuiltin reqs nm
         case outcome of
           Just msg -> doshow reqs msg
           Nothing -> return reqs'
-
  | cmd == binReset
    = do (outcome,reqs') <- devResetBuiltin reqs nm
         case outcome of
           Just msg -> doshow reqs msg
           Nothing -> return reqs'
-
  | cmd == binUpdate
    = do (outcome,reqs') <- devUpdateBuiltin reqs nm False
         case outcome of
           Just msg -> doshow reqs msg
           Nothing -> return reqs'
-
  | cmd == binUForce
    = do (outcome,reqs') <- devUpdateBuiltin reqs nm True
         case outcome of
           Just msg -> doshow reqs msg
           Nothing -> return reqs'
-
 buildIn _ reqs = doshow reqs "unrecognised 'b' option"
 \end{code}
 
@@ -1384,7 +1279,6 @@ cmdAuto = ("Au"
           , "Auto Prove Equiv first law ID"
           , ""
           , autoProve)
-
 -- autoProve _ reqs = doshow reqs "Proving..."
 autoProve _ reqs = doNewProof ["1"] reqs 
 \end{code}

@@ -28,7 +28,7 @@ Discharged Law S.C. = Ø ⊇ P -- should be True!
 
 The above law is very specific --- what about the following instead?:
 
-`“∀_remove” (∀ x$ • A)≡A  x$ ∉ A`
+`“∀_remove” (∀ x$ • A)≡A  x$ ⋔ A`
 
 Then we would observe:
 
@@ -37,10 +37,10 @@ Then we would observe:
 Match against `forall_remove'[1]
 Binding: { A ⟼ (∃ x$ • P), x$ ⟼ {x$} }
 Instantiated Law = (∀ x$ • (∃ x$ • P))≡(∃ x$ • P)
-Instantiated Law S.C. = x$ ∉ (∃ x$ • P) 
-                      = x$ ∉ P / x$ ,     fv(∃ x$ • P)
-                      = x$ / x$ ∉ P ,     A ∉ P / B  ≡  A / B ∉ P
-                      = Ø ∉ P,
+Instantiated Law S.C. = x$ ⋔ (∃ x$ • P) 
+                      = x$ ⋔ P / x$ ,     fv(∃ x$ • P)
+                      = x$ / x$ ⋔ P ,     A ⋔ P / B  ≡  A / B ⋔ P
+                      = Ø ⋔ P,
                       = True
 Goal S.C. = x$ ⊇ P
 Discharged Law S.C. = Ø ⊇ P -- should be True!

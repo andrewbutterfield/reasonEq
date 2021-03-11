@@ -3,21 +3,49 @@
 ## Most Urgent
 
 The `FreeVarSet` data type has now been integrated into the code.
-Mainy by using `theFreeVars . freeVars` which retursn a `VarSet`.
+Mainly by using `theFreeVars . freeVars` which returns a `VarSet`.
 
 We now need to look at code that needs this new datatype,
-most likely in `SideCOnd` and `Instantiate`, and updates it to take advantage.
+most likely in `SideCond` and `Instantiate`, and update it to take advantage.
 
-We want the right answer here:
+We want the right answer here, given 
+`“∀_remove” (∀ x$ • P)≡P  Ø ⊇ P`.
 
 ```
+(∀ x$ • (∃ x$ • P))
 Match against `forall_remove'[1]
 Binding: { P ⟼ (∃ x$ • P), x$ ⟼ {x$} }
-Instantiated Law = (∀ x$ • P)≡P
-Instantiated Law S.C. = Ø ⊇ P
+Instantiated Law = (∀ x$ • (∃ x$ • P))≡(∃ x$ • P)
+Instantiated Law S.C. = Ø ⊇ (∃ x$ • P)
+                      = Ø ⊇ P / x$ ,     fv(∃ x$ • P)
+                      = Ø U x$ ⊇ P ,     A ⊇ P / B  ≡  A U B ⊇ P
+                      = x$ ⊇ P.
 Goal S.C. = x$ ⊇ P
-Discharged Law S.C. = Ø ⊇ P  -- should be True!
+Discharged Law S.C. = Ø ⊇ P -- should be True!
 ```
+
+### !!!
+
+The above law is very specific --- what about the following instead?:
+
+`“∀_remove” (∀ x$ • A)≡A  x$ ∉ A`
+
+Then we would observe:
+
+```
+(∀ x$ • (∃ x$ • P))
+Match against `forall_remove'[1]
+Binding: { A ⟼ (∃ x$ • P), x$ ⟼ {x$} }
+Instantiated Law = (∀ x$ • (∃ x$ • P))≡(∃ x$ • P)
+Instantiated Law S.C. = x$ ∉ (∃ x$ • P) 
+                      = x$ ∉ P / x$ ,     fv(∃ x$ • P)
+                      = x$ / x$ ∉ P ,     A ∉ P / B  ≡  A / B ∉ P
+                      = Ø ∉ P,
+                      = True
+Goal S.C. = x$ ⊇ P
+Discharged Law S.C. = Ø ⊇ P -- should be True!
+```
+
 
 ### Upgrade 2
 

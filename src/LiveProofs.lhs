@@ -370,9 +370,10 @@ tryLawByName logicsig asn@(Assertion tC scC) lnm parts mcs
     -- bind          <- match vts tC partsP
     -- (kbind,tPasC) <- bindKnown vts bind tP
     -- (fbind,_)     <- bindFloating vts kbind tP
+    -- tP'           <- instantiate fbind tP
     -- scP'          <- instantiateSC scC fbind scP of
     -- scP''         <- scDischarge scC scP' of
-    -- return (bind,tP,scP',scP'')
+    -- return (bind,tP',scP',scP'')
 \end{code}
 
 First, try the structural match.
@@ -425,7 +426,7 @@ and we generate names for these that make their floating nature visible.
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryInstantiateFloating vts tP partsP scP bind
       = case bindFloating vts bind tP of
-          Yes fbind  ->  tryInstantiateSC fbind tP partsP scP
+          Yes fbind  ->  tryInstantiate fbind tP partsP scP
           But msgs
            -> But ([ "instantiate floating failed"
                    , ""
@@ -442,6 +443,26 @@ and we generate names for these that make their floating nature visible.
 \end{code}
 
 
+Next, instantiate the law using the bindings.
+\begin{code}
+-- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
+    tryInstantiate bind tP partsP scP
+      = case instantiate bind tP of
+          Yes tP'  ->  tryInstantiateSC bind tP' partsP scP
+          But msgs
+           -> But ([ "try law instantiation failed"
+                   , ""
+                   , trBinding bind ++ "("++trSideCond scP++")"
+                   , ""
+                   , "lnm[parts]="++lnm++show parts
+                   , "tC="++trTerm 0 tC
+                   , "scC="++trSideCond scC
+                   , "tP="++trTerm 0 tP
+                   , "partsP="++trTerm 0 partsP
+                   , "scP="++trSideCond scP
+                   , ""
+                   ]++msgs)
+\end{code}
 Next, instantiate the pattern side-condition using the bindings.
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs

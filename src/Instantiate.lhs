@@ -40,6 +40,37 @@ pdbg nm x = dbg ('@':nm++":\n") x
 We take a pattern term and a binding
 and produce a re-constructed candidate term,
 provided every variable in the pattern is also in the binding.
+If $\beta$ is a binding, and $t$ is a term,
+we use $\beta.t$ to denote the result of this instantiation.
+Given a variable $v$ we use $\beta(v)$ to denote a binding lookup.
+
+
+\begin{eqnarray*}
+   \beta.\kk k &=& \kk k
+\\ \beta.(\vv v) &=& \beta(v)
+\\ \beta.(\cc n {ts}) &=& \cc n {(\beta^*.ts)}
+\\ \beta.(\bb n {v^+} t) &=& \bb n {\beta^*.v^+} {\beta.t}
+\\ \beta.(\ll n {v^+} t) &=& \ll n {\beta^*.v^+} {\beta.t}
+\\ \beta.(\ss t {v^n} {t^n}) &=& \ss {\beta.t} {\beta^*(v^n)} {\beta^*.t^n}
+\\ \beta.(\xx n t) &=& \xx {n} {\beta.t}
+\\ \beta.(\tt \tau) &=& \tt \tau
+\\ \beta.(\bigoplus(p)\seqof{\lst l^1,\dots,\lst l^a})
+   &=& I\seqof{g^1_1,\dots,g^a_1}
+       \oplus\dots\oplus
+       I\seqof{g^1_i,\dots,g^a_i}
+       \oplus\dots\oplus
+       I\seqof{g^1_n,\dots,g^a_n}
+\\ \where
+\\ \beta &=& \beta' \oplus
+             \setof{ \lst l^1 \mapsto \seqof{g^1_1,\dots,g^1_n}
+                   , \dots
+                   , \lst l^a \mapsto \seqof{g^a_1,\dots, g^a_n}
+                   }
+\\ I\seqof{v^1_i,\dots,v^a_i} &=& p(v^1_i,\dots,v^a_i)
+\\ I\seqof{\lst l^1_i,\dots,\lst l^a_i}
+   &=& \bigoplus(p)\seqof{\lst l^1_i,\dots,\lst l^a_i}
+\end{eqnarray*}
+
 
 \newpage
 \subsubsection{Instantiating Term with a Binding}
@@ -47,9 +78,21 @@ provided every variable in the pattern is also in the binding.
 We require every free variable in the term to be also in the binding.
 \begin{code}
 instantiate :: Monad m => Binding -> Term -> m Term
+\end{code}
 
-instantiate binding val@(Val _ _) = return val
+\begin{eqnarray*}
+   \beta.\kk k &=& \kk k
+\\ \beta.\tt \tau &=& \tt \tau
+\end{eqnarray*}
+\begin{code}
+instantiate binding v@(Val _ _)  =  return v
+instantiate binding t@(Typ _)    =  return t
+\end{code}
 
+\begin{eqnarray*}
+   \beta.(\vv v) &=& \beta(v)
+\end{eqnarray*}
+\begin{code}
 instantiate binding vt@(Var tk v)
   = case lookupVarBind binding v of
       Just (BindVar v')   ->  var tk v'
@@ -59,29 +102,71 @@ instantiate binding vt@(Var tk v)
                                      , "var = " ++ trVar v
                                      , "bind = " ++ trBinding binding
                                      ]
+\end{code}
 
+\begin{eqnarray*}
+   \beta.(\cc n {ts}) &=& \cc n {(\beta^*.ts)}
+\end{eqnarray*}
+\begin{code}
 instantiate binding (Cons tk sb n ts)
   = fmap (Cons tk sb n) $ sequence $ map (instantiate binding) ts
+\end{code}
 
+\begin{eqnarray*}
+   \beta.(\bb n {v^+} t) &=& \bb n {\beta^*.v^+} {\beta.t}
+\\ \beta.(\ll n {v^+} t) &=& \ll n {\beta^*.v^+} {\beta.t}
+\end{eqnarray*}
+\begin{code}
 instantiate binding (Bnd tk n vs tm)
   = do vs' <- instVarSet binding vs
        tm' <- instantiate binding tm
        bnd tk n vs' tm'
-
 instantiate binding (Lam tk n vl tm)
   = do vl' <- instVarList binding vl
        tm' <- instantiate binding tm
        lam tk n vl' tm'
+\end{code}
 
+\begin{eqnarray*}
+   \beta.(\xx n t) &=& \xx {n} {\beta.t}
+\end{eqnarray*}
+\begin{code}
 instantiate binding (Cls n tm)
   = do tm' <- instantiate binding tm
        return $ Cls n tm'
+\end{code}
 
+\begin{eqnarray*}
+   \beta.(\ss t {v^n} {t^n}) &=& \ss {\beta.t} {\beta^*(v^n)} {\beta^*.t^n}
+\end{eqnarray*}
+\begin{code}
 instantiate binding (Sub tk tm s)
   = do tm' <- instantiate binding tm
        s' <- instSub binding s
        return $ Sub tk tm' s'
+\end{code}
 
+\begin{eqnarray*}
+   \beta.(\bigoplus(p)\seqof{\lst l^1,\dots,\lst l^a})
+   &=& I\seqof{g^1_1,\dots,g^a_1}
+       \oplus\dots\oplus
+       I\seqof{g^1_i,\dots,g^a_i}
+       \oplus\dots\oplus
+       I\seqof{g^1_n,\dots,g^a_n}
+\\ \where
+\\ \beta &=& \beta' \oplus
+             \setof{ \lst l^1 \mapsto \seqof{g^1_1,\dots,g^1_n}
+                   , \dots
+                   , \lst l^a \mapsto \seqof{g^a_1,\dots, g^a_n}
+                   }
+\\ I\seqof{v^1_i,\dots,v^a_i} &=& p(v^1_i,\dots,v^a_i)
+\\ I\seqof{\lst l^1_i,\dots,\lst l^a_i}
+   &=& \bigoplus(p)\seqof{\lst l^1_i,\dots,\lst l^a_i}
+\end{eqnarray*}
+Note that all lists must be of the same length,
+and at any list position $i$, the general variables $g^1_i, \dots, g^a_i$
+are of the same type (std/list).
+\begin{code}
 instantiate binding (Iter tk sa na si ni lvs)
   = do lvtss <- instIterLVS binding lvs
        -- all have same non-zero length
@@ -94,6 +179,50 @@ instantiate binding (Iter tk sa na si ni lvs)
     mkI lvts@(Right _:_) = Cons tk si ni $ tmsOf lvts
     mkI lvts@(Left  _:_) = Iter tk sa na si ni $ lvsOf lvts
 \end{code}
+
+So, below, we want to return
+$
+\seqof{
+ \seqof{g^1_1,\dots,g^a_1}
+ ,
+ \dots
+ ,
+ \seqof{g^1_i,\dots,g^a_i}
+ ,
+ \dots
+ ,
+ \seqof{g^1_n,\dots,g^a_n}
+}
+$
+\begin{code}
+instIterLVS :: Monad m => Binding -> [ListVar] -> m [[LVarOrTerm]]
+instIterLVS binding lvs
+  = do lvtss <- sequence $ map (instTLGVar binding . LstVar) lvs
+       let lvtss' = transpose lvtss
+       checkAndGroup arity [] lvtss'
+       -- fail "instIterLVS NYI"
+  where
+    arity = length lvs
+
+checkAndGroup :: Monad m => Int -> [[LVarOrTerm]] -> [[LVarOrTerm]]
+              -> m [[LVarOrTerm]]
+checkAndGroup a sstvl [] = return $ reverse sstvl
+checkAndGroup a sstvl (lvts:lvtss)
+ | length lvts /= a  =  fail $ unlines
+                        [ "instIterLVS: wrong arity, expected "++show a
+                        , "lvts = " ++ trLstLVarOrTerm lvts
+                        ]
+ | null lvs  =  checkAndGroup a (map injTM ts:sstvl)  lvtss
+ | null ts   =  checkAndGroup a (map injLV lvs:sstvl) lvtss
+ | otherwise  =  fail $ unlines
+                  [ "instIterLVS: mixed var types"
+                  , "lvts = " ++ trLstLVarOrTerm lvts
+                  ]
+ where
+   (lvs,ts) = lvtmSplit lvts
+\end{code}
+
+
 
 \newpage
 
@@ -229,89 +358,6 @@ instVar binding v
 \end{code}
 
 \newpage
-
-
-Given $\bigoplus(p)\seqof{\lst l^1,\dots,\lst l^a}$, where $a > 1$%
-\footnote{
-Not sure there is a use-case for $a=1$.
-There is definitely no case for $a=0$.
-}.
-
-Assume, w.l.o.g., $\beta
-         = \setof{ \lst l^1
-                   \mapsto
-                   \seqof{g^1_1,\dots,g^1_n}
-                 , \dots
-                 , \lst l^a
-                   \mapsto
-                   \seqof{g^a_1,\dots, g^a_n}
-                 }$
-
-Note that all lists must be of the same length,
-and at any list position $i$, the general variables $g^1_i, \dots, g^a_i$
-are of the same type (std/list).
-
-The instantiation is:
-$$
- I\seqof{g^1_1,\dots,g^a_1}
- \oplus
- \dots
- \oplus
- I\seqof{g^1_i,\dots,g^a_i}
- \oplus
- \dots
- \oplus
- I\seqof{g^1_n,\dots,g^a_n}
-$$
-where
-\begin{eqnarray*}
-   I\seqof{v^1_i,\dots,v^a_i} &=& p(v^1_i,\dots,v^a_i)
-\\ I\seqof{\lst l^1_i,\dots,\lst l^a_i} &=& \bigoplus(p)\seqof{\lst l^1_i,\dots,\lst l^a_i}
-\end{eqnarray*}
-
-
-So, here, we want to return
-$$
-\seqof{
- \seqof{g^1_1,\dots,g^a_1}
- ,
- \dots
- ,
- \seqof{g^1_i,\dots,g^a_i}
- ,
- \dots
- ,
- \seqof{g^1_n,\dots,g^a_n}
-}
-$$
-
-\begin{code}
-instIterLVS :: Monad m => Binding -> [ListVar] -> m [[LVarOrTerm]]
-instIterLVS binding lvs
-  = do lvtss <- sequence $ map (instTLGVar binding . LstVar) lvs
-       let lvtss' = transpose lvtss
-       checkAndGroup arity [] lvtss'
-       -- fail "instIterLVS NYI"
-  where
-    arity = length lvs
-
-checkAndGroup :: Monad m => Int -> [[LVarOrTerm]] -> [[LVarOrTerm]]
-              -> m [[LVarOrTerm]]
-checkAndGroup a sstvl [] = return $ reverse sstvl
-checkAndGroup a sstvl (lvts:lvtss)
- | length lvts /= a  =  fail $ unlines
-                        [ "instIterLVS: wrong arity, expected "++show a
-                        , "lvts = " ++ trLstLVarOrTerm lvts
-                        ]
- | null lvs  =  checkAndGroup a (map injTM ts:sstvl)  lvtss
- | null ts   =  checkAndGroup a (map injLV lvs:sstvl) lvtss
- | otherwise  =  fail $ unlines
-                  [ "instIterLVS: mixed var types"
-                  , "lvts = " ++ trLstLVarOrTerm lvts
-                  ]
- where
-   (lvs,ts) = lvtmSplit lvts
-\end{code}
 
 
 \newpage

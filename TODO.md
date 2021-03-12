@@ -8,6 +8,9 @@ Mainly by using `theFreeVars . freeVars` which returns a `VarSet`.
 We now need to look at code that needs this new datatype,
 most likely in `SideCond` and `Instantiate`, and update it to take advantage.
 
+**The two cases below indicate that the real work has to be done in instantiating the law side-condition.** 
+This should result in a side-condition that can be represented as-is, so `scDischarge` need not be changed.
+
 We want the right answer here, given 
 `“∀_remove” (∀ x$ • P)≡P  Ø ⊇ P`.
 

@@ -10,7 +10,7 @@ module FreeVars
 ( FreeVars
 , freeVars
 , inFreeVars, theFreeVars
-, mrgFreeVars
+, mrgFreeVars, mrgFreeVarList
 , substRelFree
 , zeroTermIdNumbers
 , setVarIdNumber

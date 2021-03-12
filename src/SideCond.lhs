@@ -76,7 +76,7 @@ where $T$ abbreviates $\fv(T)$:
 \end{eqnarray*}
 In most cases the term $T$ will be very general,
 and will be represented by a variable.
-In some cases, we will use a list-variable to denoted a list of terms,
+In some cases, we will use a list-variable to denote a list of terms,
 usually expressions, and we will expect there to be only one general variable
 which will itself be a list variable:
 \begin{eqnarray*}

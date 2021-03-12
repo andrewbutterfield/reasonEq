@@ -118,7 +118,7 @@ instantiate binding (Cons tk sb n ts)
 \end{eqnarray*}
 \begin{code}
 instantiate binding (Bnd tk n vs tm)
-  = do vs' <- instVarSet binding vs
+  = do vs' <- fmap theFreeVars $ instVarSet binding vs
        tm' <- instantiate binding tm
        bnd tk n vs' tm'
 instantiate binding (Lam tk n vl tm)
@@ -197,13 +197,31 @@ $
 \begin{code}
 instIterLVS :: Monad m => Binding -> [ListVar] -> m [[LVarOrTerm]]
 instIterLVS binding lvs
-  = do lvtss <- sequence $ map (instTLGVar binding . LstVar) lvs
+  = do lvtss <- sequence $ map (instTLGVar binding) lvs
        let lvtss' = transpose lvtss
        checkAndGroup arity [] lvtss'
        -- fail "instIterLVS NYI"
   where
     arity = length lvs
+\end{code}
 
+\begin{code}
+instTLGVar :: Monad m => Binding -> ListVar -> m [LVarOrTerm]
+instTLGVar binding lv
+  = case lookupLstBind binding lv of
+      Nothing              ->  return $ [injLV lv]  -- maps to self !
+      Just (BindList vl')  ->  return $ map injGV vl'
+      Just (BindTLVs tlvs) ->  return tlvs
+      _ -> fail "instTLGVar: bound to sets."
+
+injV :: Variable -> LVarOrTerm
+injV = injTM . var2term
+injGV :: GenVar -> LVarOrTerm
+injGV (StdVar v)   =  injV v
+injGV (LstVar lv)  =  injLV lv
+\end{code}
+
+\begin{code}
 checkAndGroup :: Monad m => Int -> [[LVarOrTerm]] -> [[LVarOrTerm]]
               -> m [[LVarOrTerm]]
 checkAndGroup a sstvl [] = return $ reverse sstvl
@@ -223,8 +241,8 @@ checkAndGroup a sstvl (lvts:lvtss)
 \end{code}
 
 
-
 \newpage
+\paragraph{Instantiating Substitutions}
 
 We expect the substitution target and replacement list-variables
 to be bound to variable-lists, and not sets.
@@ -233,15 +251,13 @@ and for any target/replacement pair these lists will be of the same length.
 \begin{code}
 instSub :: Monad m => Binding -> Substn -> m Substn
 instSub binding (Substn ts lvs)
-  = do ts'  <- instZip (instVar binding)  (instantiate binding) (S.toList ts)
+  = do ts'  <- instZip (instStdVar binding)  (instantiate binding) (S.toList ts)
+       ts'' <- sequence $ map getTheTargetVar ts'
        lvss' <- instZip (instLLVar binding) (instLLVar binding) (S.toList lvs)
        let (lvts,lvrs) = unzip lvss'
        let lvs' = zip (concat lvts) (concat lvrs)
-       substn ts' lvs'
-\end{code}
+       substn ts'' lvs'
 
-
-\begin{code}
 instZip inst1 inst2 pairs
   = sequence $ map (instPair inst1 inst2) pairs
   where
@@ -249,20 +265,20 @@ instZip inst1 inst2 pairs
       = do thing1' <- inst1 thing1
            thing2' <- inst2 thing2
            return (thing1',thing2')
+
+getTheTargetVar :: Monad m => (FreeVars,Term) -> m (Variable,Term)
+getTheTargetVar (fvs,tm)
+  = do v' <- getTheVar fvs
+       return (v',tm)
+
+getTheVar :: Monad m => FreeVars -> m Variable
+getTheVar fvs@(vs,diffs)
+  = case S.toList vs of
+      [StdVar v] | null diffs  ->  return v
+      _  -> fail ("getTheVar: expected a single variable, not "++show fvs)
 \end{code}
 
-\begin{code}
-instVarSet :: Monad m => Binding -> VarSet -> m VarSet
-instVarSet binding vs
-  = fmap S.unions $ sequence $ map (instSGVar binding) $ S.toList vs
-\end{code}
-
-\begin{code}
-instVarList :: Monad m => Binding -> VarList -> m VarList
-instVarList binding vl
-  = fmap concat $ sequence $ map (instLGVar binding) vl
-\end{code}
-
+This code is used for list-var in substitutions only.
 \begin{code}
 instLLVar :: Monad m => Binding -> ListVar -> m [ListVar]
 instLLVar binding lv
@@ -282,9 +298,7 @@ instLLVar binding lv
                                      , "l-var = " ++ trLVar lv
                                      , "bind = " ++ trBinding binding
                                      ]
-\end{code}
 
-\begin{code}
 fromGVarToLVar :: Monad m => VarList -> m [ListVar]
 fromGVarToLVar [] = return []
 fromGVarToLVar (StdVar v:vl)
@@ -295,25 +309,80 @@ fromGVarToLVar (LstVar lv:vl)
 \end{code}
 
 \newpage
+
+\paragraph{Instantiate Variable Collections}
+
+The following code needs updating to handle free-variables properly.
+
+Let $g$ denote a general variable, and $G$ a set of same.
+\begin{eqnarray*}
+   \beta.G &=& \textstyle \bigcup_{g \in G} \beta.g
+\end{eqnarray*}
 \begin{code}
-instSGVar :: Monad m => Binding -> GenVar -> m VarSet
-instSGVar binding (StdVar v)
-  =  fmap (S.singleton . StdVar) $ instVar binding v
-instSGVar binding gv@(LstVar lv)
-  = case lookupLstBind binding lv of
-      Nothing              ->  return $ S.singleton gv  -- maps to self !
-      Just (BindList vl')  ->  return $ S.fromList vl'
-      Just (BindSet  vs')  ->  return vs'
-      Just (BindTLVs tlvs)
-        | null ts          ->  return $ S.fromList $ map LstVar lvs
-        | otherwise        ->  fail "instSGVar: bound to terms."
-        where (ts,lvs) = (tmsOf tlvs, lvsOf tlvs)
+instVarSet :: Monad m => Binding -> VarSet -> m FreeVars
+instVarSet binding vs
+  = do fvss <- sequence $ map (instGVar binding) $ S.toList vs
+       return $ mrgFreeVarList fvss
+\end{code}
+
+
+
+For a general variable:
+\begin{eqnarray*}
+   \beta.v &=& \beta(v)
+\\ \beta.T &=& \fv(\beta(T))
+\\ \beta.\lst g &=& \beta(\lst g)
+\end{eqnarray*}
+\begin{code}
+instGVar :: Monad m => Binding -> GenVar -> m FreeVars
+instGVar binding (StdVar v)  = instStdVar binding v
+instGVar binding (LstVar lv) = instLstVar binding lv
 \end{code}
 
 \begin{code}
+instStdVar :: Monad m => Binding -> Variable -> m FreeVars
+instStdVar binding v
+  = case lookupVarBind binding v of
+      Nothing             ->  return $ single v  -- maps to self !
+      Just (BindVar v')   ->  return $ single v'
+      Just (BindTerm t')  ->  return $ freeVars t'
+      _  ->  fail "instStdVar: bound to identifier."
+  where single v = (S.singleton (StdVar v),[])
+\end{code}
+
+\begin{code}
+instLstVar :: Monad m => Binding -> ListVar -> m FreeVars
+instLstVar binding lv
+  = case lookupLstBind binding lv of
+      Nothing              ->  return $ single lv  -- maps to self !
+      Just (BindList vl')  ->  return (S.fromList vl',[])
+      Just (BindSet  vs')  ->  return (vs',[])
+      Just (BindTLVs tlvs)
+        | null ts          ->  return (S.fromList $ map LstVar lvs,[])
+        | otherwise        ->  fail "instLstVar: bound to terms."
+        where (ts,lvs) = (tmsOf tlvs, lvsOf tlvs)
+  where
+    single lv = (S.singleton (LstVar lv),[])
+\end{code}
+
+
+
+With $L$ a list of general variables
+\begin{eqnarray*}
+   \beta.L &=& \mathsf{concat}_{g \in L} \beta.g
+\end{eqnarray*}
+\begin{code}
+instVarList :: Monad m => Binding -> VarList -> m VarList
+instVarList binding vl
+  = fmap concat $ sequence $ map (instLGVar binding) vl
+\end{code}
+We do not expect these to map to terms.
+\begin{code}
 instLGVar :: Monad m => Binding -> GenVar -> m VarList
 instLGVar binding (StdVar v)
-  =  fmap ((\x -> [x]) . StdVar) $ instVar binding v
+  =  do fvs' <- instStdVar binding v
+        v' <- getTheVar fvs'
+        return [StdVar v]
 instLGVar binding gv@(LstVar lv)
   = case lookupLstBind binding lv of
       Nothing              ->  return [gv]  -- maps to self !
@@ -321,41 +390,7 @@ instLGVar binding gv@(LstVar lv)
       _ -> fail "instLGVar: bound to sets or terms."
 \end{code}
 
-\begin{code}
-instTLGVar :: Monad m => Binding -> GenVar -> m [LVarOrTerm]
-instTLGVar binding (StdVar v)
-  =  fmap ((\t -> [t]) . injV) $ instVar binding v
-instTLGVar binding gv@(LstVar lv)
-  = case lookupLstBind binding lv of
-      Nothing              ->  return $ [injLV lv]  -- maps to self !
-      Just (BindList vl')  ->  return $ map injGV vl'
-      Just (BindTLVs tlvs) ->  return tlvs
-      _ -> fail "instTLGVar: bound to sets."
 
-injV :: Variable -> LVarOrTerm
-injV = injTM . var2term
-injGV :: GenVar -> LVarOrTerm
-injGV (StdVar v)   =  injV v
-injGV (LstVar lv)  =  injLV lv
-\end{code}
-
-% \begin{code}
-% instGVar :: Monad m => Binding -> GenVar -> m GenVar
-% instGVar binding (StdVar v)  = do iv <- instVar binding v
-%                                   return $ StdVar iv
-% instGVar binding (LstVar lv) = do ilv <- instLVar binding lv
-%                                   return $ LstVar ilv
-% \end{code}
-%
-
-\begin{code}
-instVar :: Monad m => Binding -> Variable -> m Variable
-instVar binding v
-  = case lookupVarBind binding v of
-      Nothing             ->  return v  -- maps to self !
-      Just (BindVar v')   ->  return v'
-      _  ->  fail "instVar: bound to term."
-\end{code}
 
 \newpage
 
@@ -365,13 +400,29 @@ instVar binding v
 
 Doing it again, with side-conditions.
 In order for this to work properly,
-we need to pass in the goal side-conditions.
+we need to pass in the goal side-conditions (\textbf{why?}).
+
+We let $D$ and $C$ stand for variable-sets,
+$g$ for general variables,
+$v$ for observational variables,
+and $T$ for predicate/expression (term) variables.
+
+For atomic side-conditions:
+\begin{eqnarray*}
+   \beta.(D \disj  T) &=& \textstyle
+                    \bigwedge_{g \in D}\left(\beta(g) \disj \fv(\beta(T))\right)
+\\ \beta.(C \supseteq T)  &=& \beta.C \supseteq \fv(\beta(T))
+\\ \beta(pre \supseteq T) &=& pre \supseteq \fv(\beta(T))
+\end{eqnarray*}
+
+
+
 \begin{code}
 instantiateSC :: Monad m => SideCond -> Binding -> SideCond -> m SideCond
 instantiateSC gSC bind (ascs,fvs)
   = do ascss' <- sequence $ map (instantiateASC gSC bind) ascs
        fvs' <- instVarSet bind fvs
-       mkSideCond (concat ascss') fvs'
+       mkSideCond (concat ascss') $ theFreeVars fvs'
 \end{code}
 
 \begin{code}
@@ -391,7 +442,7 @@ instantiateASC gSC bind asc@(IsPre _)  =  instantiateASCvs gSC bind S.empty asc
 instantiateASC gSC bind asc
   = case instVarSet bind $ ascVSet asc of
       But msgs -> fail $ unlines $ msgs
-      Yes (vs') -> instantiateASCvs gSC bind vs' asc
+      Yes vs' -> instantiateASCvs gSC bind (theFreeVars vs') asc
 \end{code}
 
 \paragraph{Has General Variable}~

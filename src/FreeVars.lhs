@@ -108,8 +108,10 @@ For example:
       \qquad \because (F \cup A) = (F \cup (A \setminus F))
 \\&=& \bigcup(F,\setof{\dots,(F_i\circleddash(B_i \cup F)),\dots})
 \\&=& \bigcup(F,\setof{\dots,(F_i\setminus F)\circleddash B_i),\dots})
+\\&=& \bigcup(F,\setof{\dots,(F_i\setminus F)\circleddash (B_i\setminus F),\dots})
 \end{eqnarray*}
-Bascially, there is no need for any element in $F$ to appear in any $F_i$,
+Bascially, there is no need for any element in $F$
+to appear in any $F_i$ or $B_i$,
 as its possible removal by $B_i$ has no effect
 on its presence as a free variable.
 
@@ -220,23 +222,25 @@ We can implement this without explicitly using $\oplus$:
    &\defs&
    \left\{
    \begin{array}{ll}
-      (V \cup F, \emptyset),     & B = \emptyset
-   \\ (V, \emptyset),            & F = \emptyset
-   \\ (V, \setof{(F \circleddash B)}), & \textrm{otherwise}
+      (V \cup F, \emptyset),     & B\setminus V = \emptyset
+   \\ (V, \emptyset),            & F\setminus V = \emptyset
+   \\ (V, \setof{((F\setminus V) \circleddash (B\setminus V)}), & \textrm{otherwise}
    \end{array}
    \right.
 \end{eqnarray*}
 \begin{code}
 genFreeVars :: VarSet -> VarSet -> FreeVars
 genFreeVars fvs bvs
-  | S.null xb  =  (xd `S.union` td, [])
-  | S.null td  =  (xd, [])
-  | otherwise  =  (xd,[(td,xb)])
+  | S.null b'  =  (v `S.union` f, [])
+  | S.null f'  =  (v, [])
+  | otherwise  =  (v,[(f',b')])
   where
-    (xb,tb) = S.partition isObsGVar bvs
-    (xf,tf) = S.partition isObsGVar fvs
-    xd = xf S.\\ xb
-    td = tf S.\\ tb
+    (xf,tf) = S.partition isObsGVar fvs  -- (Xf |_| Tf)
+    (xb,tb) = S.partition isObsGVar bvs  -- (Xb |_| Tb)
+    v = xf S.\\ xb                       -- V = Xf \ Xb
+    f = tf S.\\ tb                       -- F = Tf \Tb
+    b' = xb S.\\ v                       -- B' = B \ V  = Xb \ V
+    f' = f S.\\ v                        -- F' = F \ V
 \end{code}
 
 \newpage

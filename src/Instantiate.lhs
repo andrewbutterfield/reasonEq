@@ -399,13 +399,18 @@ instLGVar binding gv@(LstVar lv)
 \subsection{Side-Condition Instantiation}
 
 Doing it again, with side-conditions.
-In order for this to work properly,
-we need to pass in the goal side-conditions (\textbf{why?}).
+Bascially we drill down to the atomic side-conditions,
+instantiate and simplify those,
+and merge together.
 
-We let $D$ and $C$ stand for variable-sets,
-$g$ for general variables,
-$v$ for observational variables,
-and $T$ for predicate/expression (term) variables.
+\begin{code}
+instantiateSC :: Monad m => SideCond -> Binding -> SideCond -> m SideCond
+instantiateSC gSC bind (ascs,freshvs)
+  = do ascss' <- sequence $ map (instantiateASC gSC bind) ascs
+       freshvs' <- instVarSet bind freshvs
+       mkSideCond (concat ascss') $ theFreeVars freshvs'
+\end{code}
+
 
 For atomic side-conditions:
 \begin{eqnarray*}
@@ -414,36 +419,67 @@ For atomic side-conditions:
 \\ \beta.(C \supseteq T)  &=& \beta.C \supseteq \fv(\beta(T))
 \\ \beta(pre \supseteq T) &=& pre \supseteq \fv(\beta(T))
 \end{eqnarray*}
-
-
-
-\begin{code}
-instantiateSC :: Monad m => SideCond -> Binding -> SideCond -> m SideCond
-instantiateSC gSC bind (ascs,fvs)
-  = do ascss' <- sequence $ map (instantiateASC gSC bind) ascs
-       fvs' <- instVarSet bind fvs
-       mkSideCond (concat ascss') $ theFreeVars fvs'
-\end{code}
-
+For now, we assume that $\beta(g)$ never results in a term.
+This is true for any current%
+\footnote{
+ Theories \texttt{ForAll}, \texttt{Exists}, and \texttt{UClose}.
+}
+side-conditions.
 \begin{code}
 instantiateASC :: Monad m => SideCond -> Binding -> AtmSideCond
                -> m [AtmSideCond]
-\end{code}
 
-\paragraph{Is a Pre-condition}~
-
-\begin{code}
-instantiateASC gSC bind asc@(IsPre _)  =  instantiateASCvs gSC bind S.empty asc
-\end{code}
-
-\paragraph{Has Variable-Set}~
-
-\begin{code}
-instantiateASC gSC bind asc
+instantiateASC gSC bind asc@(Disjoint gv vs)
   = case instVarSet bind $ ascVSet asc of
       But msgs -> fail $ unlines $ msgs
       Yes vs' -> instantiateASCvs gSC bind (theFreeVars vs') asc
+
+instantiateASC gSC bind asc@(Covers gv vs)
+  = case instVarSet bind $ ascVSet asc of
+      But msgs -> fail $ unlines $ msgs
+      Yes vs' -> instantiateASCvs gSC bind (theFreeVars vs') asc
+
+instantiateASC gSC bind asc@(IsPre gv)  =  fail "instantiateASC IsPre NYI"
 \end{code}
+The most sensible thing to do is to compute $\fv(\beta(T))$,
+and then use $\beta.C$ or $\beta.D$
+to try to eliminate any use of set difference.
+
+\subsubsection{Disjointedness}
+
+\begin{eqnarray*}
+   \beta.(D \disj  T) &=& \textstyle
+                    \bigwedge_{g \in D}\left(\beta(g) \disj \fv(\beta(T))\right)
+\\ \beta(g) \disj \fv(\beta(T))
+   &=& \beta(g) \disj (F \cup \{F_i\setminus B_i\}_{i \in 1\dots N})
+\\ &=& \beta(g) \disj F \land \{\beta(g) \disj (F_i\setminus B_i)\}_{i \in 1\dots N}
+\\ &=& \beta(g) \disj F \land \{(\beta(g)\setminus B_i) \disj F_i\}_{i \in 1\dots N}
+\end{eqnarray*}
+where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
+$F \disj F_i$, $F \disj B_i$.
+
+\subsubsection{Covering}
+\begin{eqnarray*}
+   \beta.(C \supseteq T)
+   &=& \beta.C \supseteq \fv(\beta(T))
+\\ &=& \beta.C \supseteq (F \cup \{F_i\setminus B_i\}_{i \in 1\dots N})
+\\ &=& \beta.C \supseteq F \land \{\beta.C \supseteq (F_i\setminus B_i)\}_{i \in 1\dots N}
+\\ &=& \beta.C \supseteq F \land \{(\beta.C \cup B_i) \supseteq F_i\}_{i \in 1\dots N}
+\end{eqnarray*}
+where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
+$F \disj F_i$, $F \disj B_i$.
+
+\subsubsection{Pre-Condition}
+
+\begin{eqnarray*}
+   \beta(pre \supseteq T)
+   &=& pre \supseteq \fv(\beta(T))
+\\ &=& pre \supseteq (F \cup \{F_i\setminus B_i\}_{i \in 1\dots N})
+\\ &=& pre \supseteq F \land \{(pre \cup B_i) \supseteq F_i\}_{i \in 1\dots N}
+\end{eqnarray*}
+where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
+$F \disj F_i$, $F \disj B_i$.
+
 
 \paragraph{Has General Variable}~
 
@@ -552,11 +588,6 @@ instantiateCovers gCS cvs fvs
    (freeObs,freeTVar) = S.partition isObsGVar fvs
    mkC vs gv = Covers gv vs
 \end{code}
-
-
-\subsubsection{Pre-Condition}
-
-Not yet covered
 
 
 \subsubsection{Side-condition Variable Instantiation}

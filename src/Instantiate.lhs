@@ -405,13 +405,7 @@ and merge together.
 
 \begin{code}
 instantiateSC :: Monad m => SideCond -> Binding -> SideCond -> m SideCond
-instantiateSC gSC bind (ascs,freshvs)
-  = do ascss' <- sequence $ map (instantiateASC gSC bind) ascs
-       freshvs' <- instVarSet bind freshvs
-       mkSideCond (concat ascss') $ theFreeVars freshvs'
 \end{code}
-
-
 For atomic side-conditions:
 \begin{eqnarray*}
    \beta.(D \disj  T) &=& \textstyle
@@ -425,25 +419,25 @@ This is true for any current%
  Theories \texttt{ForAll}, \texttt{Exists}, and \texttt{UClose}.
 }
 side-conditions.
-\begin{code}
-instantiateASC :: Monad m => SideCond -> Binding -> AtmSideCond
-               -> m [AtmSideCond]
-
-instantiateASC gSC bind asc@(Disjoint gv vs)
-  = case instVarSet bind $ ascVSet asc of
-      But msgs -> fail $ unlines $ msgs
-      Yes vs' -> instantiateASCvs gSC bind (theFreeVars vs') asc
-
-instantiateASC gSC bind asc@(Covers gv vs)
-  = case instVarSet bind $ ascVSet asc of
-      But msgs -> fail $ unlines $ msgs
-      Yes vs' -> instantiateASCvs gSC bind (theFreeVars vs') asc
-
-instantiateASC gSC bind asc@(IsPre gv)  =  fail "instantiateASC IsPre NYI"
-\end{code}
 The most sensible thing to do is to compute $\fv(\beta(T))$,
 and then use $\beta.C$ or $\beta.D$
 to try to eliminate any use of set difference.
+\begin{code}
+instantiateSC gSC bind (ascs,freshvs)
+  = do ascss' <- sequence $ map (instantiateASC0 gSC bind) ascs
+       freshvs' <- instVarSet bind freshvs
+       mkSideCond (concat ascss') $ theFreeVars freshvs'
+\end{code}
+
+\begin{code}
+instantiateASC0 :: Monad m => SideCond -> Binding -> AtmSideCond
+               -> m [AtmSideCond]
+instantiateASC0 gSC bind asc
+  = instantiateASC gSC bind (instantiateGVar bind $ ascGVar asc) asc
+
+instantiateASC :: Monad m => SideCond -> Binding -> FreeVars -> AtmSideCond
+               -> m [AtmSideCond]
+\end{code}
 
 \subsubsection{Disjointedness}
 
@@ -457,8 +451,15 @@ to try to eliminate any use of set difference.
 \end{eqnarray*}
 where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj F_i$, $F \disj B_i$.
+\begin{code}
+instantiateASC gSC bind (fF,fLessBs) (Disjoint _ vs)
+  = case instVarSet bind vs of
+      But msgs -> fail $ unlines $ msgs
+      Yes vs' -> fail "instantiateASC Disjoint NYI"
+\end{code}
 
 \subsubsection{Covering}
+
 \begin{eqnarray*}
    \beta.(C \supseteq T)
    &=& \beta.C \supseteq \fv(\beta(T))
@@ -468,6 +469,12 @@ $F \disj F_i$, $F \disj B_i$.
 \end{eqnarray*}
 where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj F_i$, $F \disj B_i$.
+\begin{code}
+instantiateASC gSC bind (fF,fLessBs) (Covers _ vs)
+  = case instVarSet bind vs of
+      But msgs -> fail $ unlines $ msgs
+      Yes vs' -> fail "instantiateASC Covers NYI"
+\end{code}
 
 \subsubsection{Pre-Condition}
 
@@ -479,114 +486,9 @@ $F \disj F_i$, $F \disj B_i$.
 \end{eqnarray*}
 where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj F_i$, $F \disj B_i$.
-
-
-\paragraph{Has General Variable}~
-
 \begin{code}
-instantiateASCvs gSC bind vs' asc
-  = case ascGVar asc of
-      StdVar v  -> instantiateASCvsv  gSC bind vs' v  asc
-      LstVar lv -> instantiateASCvslv gSC bind vs' lv asc
-\end{code}
-
-\paragraph{Has Standard Variable}~
-
-\begin{code}
-instantiateASCvsv gSC bind vs' v (Disjoint _ _)
-  = instantiateDisjoint gSC vs' $ instantiateVar bind v
-instantiateASCvsv gSC bind vs' v (Covers _ _)
-  = instantiateCovers gSC vs' $ instantiateVar bind v
-instantiateASCvsv gSC bind vs' v (IsPre _)
-  = fail "instantiateASC IsPre NYI"
-\end{code}
-
-\paragraph{Has List-Variable}~
-
-\begin{code}
-instantiateASCvslv gSC bind vs' lv (Disjoint _ _)
-  = instantiateDisjoint gSC vs' $ instantiateLstVar bind lv
-instantiateASCvslv gSC bind vs' lv (Covers _ _)
-  = fail "instantiateASCvslv Covers NYI"
-\end{code}
-Next,
-Dealing with each condition, now that everything is instantiated.
-Assume below that
-$\setof{x,y}$ are distinct identifiers for observation variables
-and $\setof{S,T}$ are distinct identifiers for term-valued variables.
-
-\subsubsection{Disjointedness}
-
-\textbf{Wrong: trying to discharge the side-condition!}
-\textit{
-See examples below
-}
-
-\begin{eqnarray*}
-  S \disj T_1 \cup T2 &=& S \disj T_1 \land S \disj T_2
-\\ S_1 \cup S_2 \disj T &=& S_1 \disj T \land S_2 \disj T
-\end{eqnarray*}
-
-\begin{eqnarray*}
-   \setof{x,S} \disj \setof{y,T} &?&
-\\ \setof{x,S} \disj \setof{x,T} &&  \false
-\\ \setof{x,S} \disj \setof{y,S} &\text{if}&  S=\emptyset
-\\ \setof{x,S} \disj \setof{y,T}
-   &\text{if}&
-   S \disj \setof{y,T} ; T \disj \setof{x,S}
-\\&=& y \notin S \land x \notin T \land S \disj T
-\\ \setof{\lst x,S} \disj \setof{\lst x,T}
-   &\text{if}&
-   \lst x = \emptyset \land S \disj T
-\\ \setof{x,\lst S} \disj \setof{y,\lst S} &\text{if}&  \lst S = \emptyset
-\end{eqnarray*}
-\begin{code}
-instantiateDisjoint :: Monad m => SideCond -> VarSet -> VarSet -> m [AtmSideCond]
-instantiateDisjoint gSC dvs fvs
- | freeObs `disjoint` dvs = return $ map (mkD dvs) $ S.toList freeTVar
- | otherwise  =  fail $ unlines
-                   [ "Obs. free-vars not disjoint"
-                   , "dvs = " ++ trVSet dvs
-                   , "fvs = " ++ trVSet fvs
-                   ]
- where
-   (freeObs,freeTVar) = S.partition isObsGVar fvs
-   mkD vs gv = Disjoint gv vs
-\end{code}
-
-\newpage
-\subsubsection{Covering}
-
-\begin{eqnarray*}
-   S \supseteq T_1 \cup T2 &=& S \supseteq T_1 \land S \supseteq T_2
-\\ S_1 \cup S_2 \supseteq T &\neq& S_1 \supseteq T \land S_2 \supseteq T
-\end{eqnarray*}
-
-
-\begin{eqnarray*}
-   \setof{x,S} \supseteq \setof{y,T} &?&
-\\ \setof{x,S} \supseteq \setof{x,T} &\text{if}&  \setof{x,S} \supseteq T
-\\ \setof{x,S} \supseteq \setof{y,S} &\text{if}&  y \in S
-\\ \setof{x,S} \supseteq \setof{y,T}
-   &\text{if}&
-   y \in S \land \setof{x,S} \supseteq T
-\\ \setof{\lst x,S} \supseteq \setof{\lst x,T}
-   &\text{if}&
-   \setof{\lst x,S} \supseteq T
-\\ \setof{x,\lst S} \supseteq \setof{y,\lst S} &\text{if}& y \in \lst S
-\end{eqnarray*}
-\begin{code}
-instantiateCovers :: Monad m => SideCond -> VarSet -> VarSet -> m [AtmSideCond]
-instantiateCovers gCS cvs fvs
- | freeObs `S.isSubsetOf` cvs = return $ map (mkC cvs) $ S.toList freeTVar
- | otherwise  =  fail $ unlines
-                   [ "Obs. free-vars not covered"
-                   , "cvs = " ++ trVSet cvs
-                   , "fvs = " ++ trVSet fvs
-                   ]
- where
-   (freeObs,freeTVar) = S.partition isObsGVar fvs
-   mkC vs gv = Covers gv vs
+instantiateASC gSC bind (fF,fLessBs) (IsPre _)
+  =  fail "instantiateASC IsPre NYI"
 \end{code}
 
 
@@ -595,12 +497,16 @@ instantiateCovers gCS cvs fvs
 Instantiate a (std./list)-variable either according to the binding,
 or by itself if not bound:
 \begin{code}
-instantiateVar :: Binding -> Variable -> VarSet
+instantiateGVar :: Binding -> GenVar -> FreeVars
+instantiateGVar bind (StdVar v)   =  instantiateVar bind v
+instantiateGVar bind (LstVar lv)  =  (instantiateLstVar bind lv, [])
+
+instantiateVar :: Binding -> Variable -> FreeVars
 instantiateVar bind v
   = case lookupVarBind bind v of
-        Nothing            ->  S.singleton $ StdVar v
-        Just (BindVar v)   ->  S.singleton $ StdVar v
-        Just (BindTerm t)  ->  theFreeVars $ freeVars t
+        Nothing            ->  (S.singleton $ StdVar v,[])
+        Just (BindVar v)   ->  (S.singleton $ StdVar v,[])
+        Just (BindTerm t)  ->  freeVars t
 
 instantiateLstVar :: Binding -> ListVar -> VarSet
 instantiateLstVar bind lv

@@ -1,4 +1,4 @@
-\section{Abstract User-Interface}
+section{Abstract User-Interface}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2017--2021
 
@@ -400,14 +400,27 @@ moveDownNTimes n i liveProof
 \end{code}
 
 \begin{code}
-moveToBottom :: Monad m => Int -> LiveProof -> m LiveProof
-moveToBottom n liveProof
+moveToBottom :: Monad m => Int -> LogicSig -> LiveProof -> m LiveProof
+moveToBottom n theSig liveProof
     = let (tz, seq') = focus liveProof
+          goalt = getTZ tz
+          scC = conjSC liveProof
+          ctxts = mtchCtxts liveProof
           n' = if n <= 0 then 1 else n
           (ok, tz') = downTZ n' tz
       in if ok
-          then moveToBottom n' (focus_ (tz', seq') $ fPath__ (++[n']) $ matches_ [] liveProof)
-          else return (focus_ (setTZ (Val (E ArbType) $ Integer 42) tz, seq') $ fPath__ (++[]) $ matches_ [] liveProof)
+          then moveToBottom n' theSig (focus_ (tz', seq') $ fPath__ (++[n']) $ matches_ [] liveProof)
+          else case matchLawByName theSig (goalt, scC) "true" ctxts of
+                Yes [] -> return liveProof
+                --Yes mtchs -> return (focus (tz, seq') $ fPath__ (++[]) $ matches_ mtchs liveProof)
+                Yes mtchs -> return $ matches_ mtchs liveProof
+                But msgs -> fail $ unlines msgs
+
+
+
+
+
+
           --else let goalt = getTZ tz
           --         scC = conjSC liveProof
           --         ctxts = mtchCtxts liveProof
@@ -436,17 +449,35 @@ followPath (x:xs) liveProof
 \end{code}
 
 This function moves through a proof in a depth first manner.
+tryLawRecursively
+domatch
+recursive 
 \begin{code}
 
-moveThroughProof :: Monad m => LiveProof ->  m LiveProof
-moveThroughProof liveProof 
+moveThroughProof :: Monad m => LogicSig -> LiveProof ->  m LiveProof
+moveThroughProof theSig liveProof 
     = let (tz, seq') = focus liveProof
-          (s:ss) = listOfSubTerms tz
-          (ok, tz') = downTZ s tz
-      in if ok
-          then moveThroughProofWorker liveProof ((s:ss) ++ [0]) 
-          else fail("more than 0")
+          ss = listOfSubTerms tz
+      in if length ss > 0
+          then tryLawRecursively' theSig liveProof (ss ++ [0]) 
+          else fail("0")
 
+tryLawRecursively' :: Monad m => LogicSig -> LiveProof -> [Int] -> m LiveProof
+tryLawRecursively' theSig liveProof (s:ss)
+    = let (tz, seq') = focus liveProof
+          goingDown = s > 0
+      in if goingDown
+          then let (ok, tz') = downTZ s tz
+                   ss' = listOfSubTerms tz' ++ [0] ++ ss
+               in
+                   tryLawRecursively' theSig (focus_ (tz', seq') $ fPath__ (++[s]) $ matches_ [] liveProof) ss'
+          else let mmm' = (focus_ (setTZ (Val (E ArbType) $ Integer 42) tz, seq') $ fPath__ (++[]) $ matches_ [] liveProof)
+                   (tzNew, seqNew) = focus mmm'
+                   (ok', tz'') = upTZ tzNew
+              in if length ss > 0
+                   then tryLawRecursively' theSig (focus_ (tz'', seqNew) $ fPath__ (++[]) $ matches_ [] mmm') ss
+                   else return mmm'
+                      
 moveThroughProofWorker :: Monad m => LiveProof -> [Int] -> m LiveProof
 moveThroughProofWorker liveProof (s:ss) 
     = let (tz, seq') = focus liveProof
@@ -464,7 +495,7 @@ moveThroughProofWorker liveProof (s:ss)
           --else let (tz, seq') = (setTZ (Val (E ArbType) $ Integer 42) tz, seq')
                in if ok'
                    then moveThroughProofWorker (focus_ (tz'', seq') $ fPath__ (++[]) $ matches_ [] liveProof) (ss)
-                   --else return (focus_ (setTZ (Val (E ArbType) $ Integer 42) tz, seq')
+                   --else return (focus_ (tz, seq')
                    else return (focus_  (setTZ (Val (E ArbType) $ Integer 42) tz, seq')
                                $ fPath__ (++[])
                                $ matches_ [] liveProof)

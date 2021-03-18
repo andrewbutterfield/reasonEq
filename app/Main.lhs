@@ -744,7 +744,13 @@ goUp :: REPLCmd (REqState, LiveProof)
 goUp _ = tryDelta moveFocusUp
 goBottomDescr = ("db", "downtobottom", "db n -- downtobottom n, n= 1 if ommitted", goBottom)
 goBottom :: REPLCmd (REqState, LiveProof)
-goBottom args = tryDelta (moveToBottom $ args2int args)
+goBottom args (reqs, liveProof) = case (moveToBottom (args2int args) (logicsig reqs) liveProof) of
+    Yes liveProof' -> return (reqs, liveProof')
+    But msgs
+     -> do putStrLn $ unlines' msgs
+           waitForReturn
+           return (reqs, matches_ [] liveProof)
+--goBottom args (reqs, liveProof) = return (reqs, moveToBottom ( args2int args ) (logicsig reqs) liveProof)
 goOnPathDescr = ("gp", "goonpath", "gp n0-nm -- goonpath n0-nm", goOnPath)
 goOnPath :: REPLCmd (REqState, LiveProof)
 goOnPath args = tryDelta (followPath $ args2intList args)
@@ -846,8 +852,12 @@ autoProofCDescr = ("auc"
             , "auc        -- prove Equiv auto"
             , autoProofCCommand)
 autoProofCCommand :: REPLCmd (REqState, LiveProof)
-autoProofCCommand _ = 
-   tryDelta moveThroughProof
+autoProofCCommand _ (reqs, liveProof) = case moveThroughProof (logicsig reqs) liveProof of
+    Yes liveProof' -> return (reqs, liveProof')
+    But msgs
+     -> do putStrLn $ unlines' msgs
+           waitForReturn
+           return (reqs, matches_ [] liveProof)
 \end{code}
 
 \begin{code}

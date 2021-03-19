@@ -404,18 +404,17 @@ instantiate and simplify those,
 and merge together.
 
 \begin{code}
-instantiateSC :: Monad m => SideCond -> Binding -> SideCond -> m SideCond
+instantiateSC :: Monad m => Binding -> SideCond -> m SideCond
 \end{code}
 For atomic side-conditions:
 \begin{eqnarray*}
-   \beta.(D \disj  T) &=& \textstyle
-                    \bigwedge_{g \in D}\left(\beta(g) \disj \fv(\beta(T))\right)
+   \beta.(D \disj  T) &=& \beta.D \disj \fv(\beta(T))
 \\ \beta.(C \supseteq T)  &=& \beta.C \supseteq \fv(\beta(T))
 \\ \beta(pre \supseteq T) &=& pre \supseteq \fv(\beta(T))
 \end{eqnarray*}
-For now, we assume that $\beta.C$, $\beta.D$, and hence $\beta(g)$,
-never result in a term,
-and hence has no explicit $F_i\setminus B_i$ components.
+For now, we assume that $\beta.C$, $\beta.D$
+never result in terms,
+and hence have no explicit $F_i\setminus B_i$ components.
 This is true for any current%
 \footnote{
  Theories \texttt{ForAll}, \texttt{Exists}, and \texttt{UClose}.
@@ -425,20 +424,19 @@ The most sensible thing to do is to compute $\fv(\beta(T))$,
 and then use $\beta.C$ or $\beta.D$
 to try to eliminate any use of set difference.
 \begin{code}
-instantiateSC gSC bind (ascs,freshvs)
-  = do ascss' <- sequence $ map (instantiateASC gSC bind) ascs
+instantiateSC bind (ascs,freshvs)
+  = do ascss' <- sequence $ map (instantiateASC bind) ascs
        freshvs' <- instVarSet bind freshvs
        mkSideCond (concat ascss') $ theFreeVars freshvs'
 \end{code}
 We compute $\beta.C$/$\beta.D$ first, failing (for now), if it has terms,
 and then we compute  $\fv(\beta(T))$.
 \begin{code}
-instantiateASC :: Monad m => SideCond -> Binding -> AtmSideCond
-               -> m [AtmSideCond]
-instantiateASC gSC bind asc
+instantiateASC :: Monad m => Binding -> AtmSideCond -> m [AtmSideCond]
+instantiateASC bind asc
   = do (vsCD,diffs) <- instVarSet bind $ ascVSet asc
        if null diffs
-         then instASCVariant gSC bind vsCD fvsT asc
+         then instASCVariant vsCD fvsT asc
          else fail "instantiateASC: explicit diffs in var-set not handled."
   where
      fvsT = instantiateGVar bind $ ascGVar asc
@@ -446,27 +444,33 @@ instantiateASC gSC bind asc
 
 \begin{code}
 instASCVariant :: Monad m
-               => SideCond -> Binding -> VarSet -> FreeVars -> AtmSideCond
-               -> m [AtmSideCond]
-instASCVariant gSC bind vsD fvT (Disjoint _ _)
-  = fail "instASCVariant Disjoint NYI"
-instASCVariant gSC bind vsC fvT (Covers _ _)   =  instCovers bind vsC fvT
-instASCVariant gSC bind _   fvT (IsPre _)
-  =  fail "instASCVariant IsPre NYI"
+               => VarSet -> FreeVars -> AtmSideCond -> m [AtmSideCond]
+instASCVariant vsD fvT (Disjoint _ _)  =  instDisjoint vsD fvT
+instASCVariant vsC fvT (Covers _ _)    =  instCovers   vsC fvT
+instASCVariant _   fvT (IsPre _)       =  instIsPre        fvT
 \end{code}
+
 
 \subsubsection{Disjointedness}
 
 \begin{eqnarray*}
-   \beta.(D \disj  T) &=& \textstyle
-                    \bigwedge_{g \in D}\left(\beta(g) \disj \fv(\beta(T))\right)
-\\ \beta(g) \disj \fv(\beta(T))
-   &=& \beta(g) \disj (F \cup \{F_i\setminus B_i\}_{i \in 1\dots N})
-\\ &=& \beta(g) \disj F \land \{\beta(g) \disj (F_i\setminus B_i)\}_{i \in 1\dots N}
-\\ &=& \beta(g) \disj F \land \{(\beta(g)\setminus B_i) \disj F_i\}_{i \in 1\dots N}
+   \beta.(D \disj  T) &=& \beta.D \disj \fv(\beta(T))
+\\ &=& \beta.D \disj (F \cup \{F_i\setminus B_i\}_{i \in 1\dots N})
+\\ &=& \beta.D \disj F \land \{\beta.D \disj (F_i\setminus B_i)\}_{i \in 1\dots N}
+\\ &=& \beta.D \disj F \land \{(\beta.D\setminus B_i) \disj F_i\}_{i \in 1\dots N}
 \end{eqnarray*}
 where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj F_i$, $F \disj B_i$.
+\begin{code}
+instDisjoint :: Monad m => VarSet -> FreeVars -> m [AtmSideCond]
+instDisjoint vsD (fF,fLessBs)
+  =  return (asc1 ++ concat asc2)
+  where
+    asc1 = map (f1 vsD) (S.toList fF)
+    asc2 = map (f2 vsD) fLessBs
+    f1 vsD gv = Disjoint gv vsD
+    f2 vsD (vsF,vsB) = map (f1 (vsD S.\\ vsB)) (S.toList vsF)
+\end{code}
 
 \subsubsection{Covering}
 
@@ -480,9 +484,8 @@ $F \disj F_i$, $F \disj B_i$.
 where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj F_i$, $F \disj B_i$.
 \begin{code}
-instCovers :: Monad m
-           => Binding -> VarSet -> FreeVars -> m [AtmSideCond]
-instCovers bind vsC (fF,fLessBs)
+instCovers :: Monad m => VarSet -> FreeVars -> m [AtmSideCond]
+instCovers vsC (fF,fLessBs)
   =  return (asc1 ++ concat asc2)
   where
     asc1 = map (f1 vsC) (S.toList fF)
@@ -499,10 +502,19 @@ instCovers bind vsC (fF,fLessBs)
    \beta(pre \supseteq T)
    &=& pre \supseteq \fv(\beta(T))
 \\ &=& pre \supseteq (F \cup \{F_i\setminus B_i\}_{i \in 1\dots N})
-\\ &=& pre \supseteq F \land \{(pre \cup B_i) \supseteq F_i\}_{i \in 1\dots N}
+\\ &=& pre \supseteq F \land \{pre (F_i\setminus B_i)\}_{i \in 1\dots N}
 \end{eqnarray*}
 where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj F_i$, $F \disj B_i$.
+\begin{code}
+instIsPre :: Monad m => FreeVars -> m [AtmSideCond]
+instIsPre  (fF,fLessBs)
+  =  return (asc1 ++ concat asc2)
+  where
+    asc1 = map IsPre (S.toList fF)
+    asc2 = map f2 fLessBs
+    f2 (vsF,vsB) = map IsPre $ S.toList (vsF S.\\ vsB)
+\end{code}
 
 
 \subsubsection{Side-condition Variable Instantiation}

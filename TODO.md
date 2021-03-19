@@ -2,13 +2,10 @@
 
 ## Most Urgent
 
-We can handle the "Covers" case.
-
-Just need to support "Disjoint" now and revise axioms
-to be as below.
+revise axioms to be as below.
 `“∀_remove” (∀ x$ • A)≡A  x$ ⋔ A`
 
-Then we would observe:
+Then we would observe, when proving `necessary_poss`:
 
 ```
 (∀ x$ • (∃ x$ • P))

@@ -9,7 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Instantiate
 ( instantiate
 , instVarSet
-, instantiateASC
+, instASCVariant
 , instantiateSC
 ) where
 import Data.Maybe
@@ -413,7 +413,9 @@ For atomic side-conditions:
 \\ \beta.(C \supseteq T)  &=& \beta.C \supseteq \fv(\beta(T))
 \\ \beta(pre \supseteq T) &=& pre \supseteq \fv(\beta(T))
 \end{eqnarray*}
-For now, we assume that $\beta(g)$ never results in a term.
+For now, we assume that $\beta.C$, $\beta.D$, and hence $\beta(g)$,
+never result in a term,
+and hence has no explicit $F_i\setminus B_i$ components.
 This is true for any current%
 \footnote{
  Theories \texttt{ForAll}, \texttt{Exists}, and \texttt{UClose}.
@@ -424,19 +426,33 @@ and then use $\beta.C$ or $\beta.D$
 to try to eliminate any use of set difference.
 \begin{code}
 instantiateSC gSC bind (ascs,freshvs)
-  = do ascss' <- sequence $ map (instantiateASC0 gSC bind) ascs
+  = do ascss' <- sequence $ map (instantiateASC gSC bind) ascs
        freshvs' <- instVarSet bind freshvs
        mkSideCond (concat ascss') $ theFreeVars freshvs'
 \end{code}
+We compute $\beta.C$/$\beta.D$ first, failing (for now), if it has terms,
+and then we compute  $\fv(\beta(T))$.
+\begin{code}
+instantiateASC :: Monad m => SideCond -> Binding -> AtmSideCond
+               -> m [AtmSideCond]
+instantiateASC gSC bind asc
+  = do (vsCD,diffs) <- instVarSet bind $ ascVSet asc
+       if null diffs
+         then instASCVariant gSC bind vsCD fvsT asc
+         else fail "instantiateASC: explicit diffs in var-set not handled."
+  where
+     fvsT = instantiateGVar bind $ ascGVar asc
+\end{code}
 
 \begin{code}
-instantiateASC0 :: Monad m => SideCond -> Binding -> AtmSideCond
+instASCVariant :: Monad m
+               => SideCond -> Binding -> VarSet -> FreeVars -> AtmSideCond
                -> m [AtmSideCond]
-instantiateASC0 gSC bind asc
-  = instantiateASC gSC bind (instantiateGVar bind $ ascGVar asc) asc
-
-instantiateASC :: Monad m => SideCond -> Binding -> FreeVars -> AtmSideCond
-               -> m [AtmSideCond]
+instASCVariant gSC bind vsD fvT (Disjoint _ _)
+  = fail "instASCVariant Disjoint NYI"
+instASCVariant gSC bind vsC fvT (Covers _ _)   =  instCovers bind vsC fvT
+instASCVariant gSC bind _   fvT (IsPre _)
+  =  fail "instASCVariant IsPre NYI"
 \end{code}
 
 \subsubsection{Disjointedness}
@@ -451,12 +467,6 @@ instantiateASC :: Monad m => SideCond -> Binding -> FreeVars -> AtmSideCond
 \end{eqnarray*}
 where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj F_i$, $F \disj B_i$.
-\begin{code}
-instantiateASC gSC bind (fF,fLessBs) (Disjoint _ vs)
-  = case instVarSet bind vs of
-      But msgs -> fail $ unlines $ msgs
-      Yes vs' -> fail "instantiateASC Disjoint NYI"
-\end{code}
 
 \subsubsection{Covering}
 
@@ -470,11 +480,18 @@ instantiateASC gSC bind (fF,fLessBs) (Disjoint _ vs)
 where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj F_i$, $F \disj B_i$.
 \begin{code}
-instantiateASC gSC bind (fF,fLessBs) (Covers _ vs)
-  = case instVarSet bind vs of
-      But msgs -> fail $ unlines $ msgs
-      Yes vs' -> fail "instantiateASC Covers NYI"
+instCovers :: Monad m
+           => Binding -> VarSet -> FreeVars -> m [AtmSideCond]
+instCovers bind vsC (fF,fLessBs)
+  =  return (asc1 ++ concat asc2)
+  where
+    asc1 = map (f1 vsC) (S.toList fF)
+    asc2 = map (f2 vsC) fLessBs
+    f1 vsC gv = Covers gv vsC
+    f2 vsC (vsF,vsB) = map (f1 (vsC `S.union` vsB)) (S.toList vsF)
 \end{code}
+
+
 
 \subsubsection{Pre-Condition}
 
@@ -486,10 +503,6 @@ instantiateASC gSC bind (fF,fLessBs) (Covers _ vs)
 \end{eqnarray*}
 where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj F_i$, $F \disj B_i$.
-\begin{code}
-instantiateASC gSC bind (fF,fLessBs) (IsPre _)
-  =  fail "instantiateASC IsPre NYI"
-\end{code}
 
 
 \subsubsection{Side-condition Variable Instantiation}

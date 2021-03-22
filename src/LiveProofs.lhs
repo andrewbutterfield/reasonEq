@@ -20,6 +20,7 @@ module LiveProofs
  , startProof, launchProof
  , displayMatches
  , buildMatchContext, matchInContexts, matchLawByName, tryLawByName
+ , findLaw, domatch --added by me
  , proofIsComplete, finaliseProof
  , undoCalcStep
  , makeEquivalence

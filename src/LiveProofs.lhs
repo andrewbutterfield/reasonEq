@@ -1013,7 +1013,7 @@ shLiveStep ( just, asn )
 displayMatches :: [MatchContext] -> Matches -> String
 displayMatches _ []  =  ""
 displayMatches mctxts matches
-  =  unlines' ( ("Matches:") : map (shMatch vts) (zip [1..] matches))
+  =  unlines' ( ("Matches:") : map (shMatch vts) (reverse $ zip [1..] matches))
   where vts = concat $ map thd3 mctxts
 
 shMatch vts (i, mtch)

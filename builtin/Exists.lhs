@@ -138,7 +138,7 @@ $$\par\vspace{-8pt}
 \begin{code}
 cjAnyRemove = preddef ("exists" -.- "remove")
                       (exists [xs] p  ===  p)
-                      ([] `covers` gvP)
+                      ([xs] `notin` gvP)
 \end{code}
 
 $$

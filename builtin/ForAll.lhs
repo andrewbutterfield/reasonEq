@@ -116,7 +116,7 @@ $$
 \begin{code}
 axAllRemove = preddef ("forall" -.- "remove")
                     (forall [xs] p  ===  p)
-                    ([] `covers` gvP)
+                    ([xs] `notin` gvP)
 \end{code}
 
 $$\begin{array}{lll}

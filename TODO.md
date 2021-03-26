@@ -2,6 +2,72 @@
 
 ## Most Urgent
 
+Check how freshness checking works with substitutions
+- a fresh variable as replacement means it can occur as a result of the substitution.
+
+An invalid match here - this is simply wrong!
+
+```
+Focus:
+(∃ O$_1 • P[O$_1/O$']∧((∃ O$_2 • Q[O$_2/O$']∧R[O$_2/O$]))[O$_1/O$])    
+fresh:O$_1,O$_2
+
+
+Match against `land_exists_scope'[2]
+Binding: 
+  { P ⟼ P[O$_1/O$']
+  , Q ⟼ ((∃ O$_2 • Q[O$_2/O$']∧R[O$_2/O$]))[O$_1/O$]
+  , ∧ ⟼ ∧
+  , x$ ⟼ {O$_1}
+  , y$ ⟼ {} }
+  
+Instantiated Law = 
+   P[O$_1/O$']∧(∃ O$_1 • ((∃ O$_2 • Q[O$_2/O$']∧R[O$_2/O$]))[O$_1/O$])
+   ≡
+   (∃ O$_1 • P[O$_1/O$']∧((∃ O$_2 • Q[O$_2/O$']∧R[O$_2/O$]))[O$_1/O$])
+Instantiated Law S.C. = ⊤
+Goal S.C. = fresh:O$_1,O$_2
+Discharged Law S.C. = ⊤
+```
+
+**Issue seems to be the following:**
+
+While `O$_1` does not appear in `P` (being fresh)
+it will appear in  `P[O$_1/O$']` if `O$'` does.
+It looks like this is not been assessed properly.
+
+Having problem getting a good match here
+
+```
+“∧_∃_scope”       P∧(∃ x$,y$ • Q)  ≡  (∃ x$ • P∧(∃ y$ • Q))       x$ ∉ P
+
+Focus:
+P[O$_1/O$']∧((∃ O$_2 • Q[O$_2/O$']∧R[O$_2/O$]))[O$_1/O$]
+fresh:O$_1,O$_2
+
+Match against `land_exists_scope'[1]
+Binding: 
+  { P ⟼ P[O$_1/O$']
+  , Q ⟼ ((∃ O$_2 • Q[O$_2/O$']∧R[O$_2/O$]))[O$_1/O$]
+  , ∧ ⟼ ∧
+  , x$ ⟼ {}
+  , y$ ⟼ {} }
+Instantiated Law = 
+   P[O$_1/O$']∧((∃ O$_2 • Q[O$_2/O$']∧R[O$_2/O$]))[O$_1/O$]
+   ≡
+   P[O$_1/O$']∧((∃ O$_2 • Q[O$_2/O$']∧R[O$_2/O$]))[O$_1/O$]
+
+   
+Instantiated Law S.C. = ⊤
+Goal S.C. = fresh:O$_1,O$_2
+Discharged Law S.C. = ⊤
+```
+
+May need to disallow all matches where all pattern list-variables
+are bound to empty variable sets/lists.
+E.g., `{ ..., x$ ⟼ {}, y$ ⟼ {} }` from above.
+
+
 
 ### Upgrade 2
 

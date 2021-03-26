@@ -2,25 +2,6 @@
 
 ## Most Urgent
 
-revise axioms to be as below.
-`“∀_remove” (∀ x$ • A)≡A  x$ ⋔ A`
-
-Then we would observe, when proving `necessary_poss`:
-
-```
-(∀ x$ • (∃ x$ • P))
-Match against `forall_remove'[1]
-Binding: { A ⟼ (∃ x$ • P), x$ ⟼ {x$} }
-Instantiated Law = (∀ x$ • (∃ x$ • P))≡(∃ x$ • P)
-Instantiated Law S.C. = x$ ⋔ (∃ x$ • P) 
-                      = x$ ⋔ P / x$ ,     fv(∃ x$ • P)
-                      = x$ / x$ ⋔ P ,     A ⋔ P / B  ≡  A / B ⋔ P
-                      = Ø ⋔ P,
-                      = True
-Goal S.C. = x$ ⊇ P
-Discharged Law S.C. = Ø ⊇ P -- should be True!
-```
-
 
 ### Upgrade 2
 

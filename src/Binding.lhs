@@ -1462,16 +1462,6 @@ remakeVar i v@(Vbl (Identifier n _) vc vw)
 remakeLVar i lv@(LVbl v is ij) = LVbl (remakeVar i v) is ij
 \end{code}
 
-\newpage
-\subsubsection{Bijective Bindings}
-
-For $\alpha$-equivalence testing in particular,
-we need to know if a binding is bijective.
-Each domain elements maps to a unique element of the same ``shape''.
-\begin{code}
-isBijectiveBinding :: Binding -> Bool
-isBijectiveBinding bind = False
-\end{code}
 
 \newpage
 \subsection{Binding Dump}
@@ -1489,6 +1479,22 @@ dumpBinding (BD (vbind,sbind,lbind))
     , M.toList lbind
     )
 \end{code}
+
+\newpage
+\subsubsection{Bijective Bindings}
+
+For $\alpha$-equivalence testing in particular,
+we need to know if a binding is bijective.
+Each domain elements maps to a unique element of the same ``shape''.
+\begin{code}
+isBijectiveBinding :: Binding -> Bool
+isBijectiveBinding = isBijectiveDump . dumpBinding
+\end{code}
+
+\begin{code}
+isBijectiveDump (vbind,sbind,lbind) = False
+\end{code}
+
 
 \newpage
 \subsection{Binding Internal Tests}

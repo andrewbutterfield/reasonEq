@@ -76,10 +76,12 @@ isAlphaEquivalent :: Term -> Term -> Bool
 
 We check $\alpha$-equivalence by matching one term against the other
 (ignoring variable data),
-and then checking that the match binding over is bijective.
+and then checking that the match binding given is bijective.
+For now, do an equality check first.
 \begin{code}
 isAlphaEquivalent t1 t2
-  = case match [] t1 t2 of
-      Nothing    ->  False
-      Just bind  ->  isBijectiveBinding bind
+  | t1 == t2  =  True
+  | otherwise  = case match [] t1 t2 of
+                   Nothing    ->  False
+                   Just bind  ->  isBijectiveBinding bind
 \end{code}

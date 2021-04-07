@@ -2,29 +2,14 @@
 
 ## Most Urgent
 
-Nesting Quantifiers not quite right
-
-```
-(∃ O$_3 • (∃ O$_4 • R[O$_3/O$]∧(P[O$_4/O$']∧Q[O$_4,O$_3/O$,O$'])))
-   = 'nest-simp @[]'
- ...
-
-           
-
-⊢
-(∃ O$_3,O$_4 • (∃ O$_4 • R[O$_3/O$]∧(P[O$_4/O$']∧Q[O$_4,O$_3/O$,O$']))) 
-                ^^^^^^
-```
-
-
 
 ### Upgrade 2
 
 We now have to show the two following predicates are the same
 
 ```
-(∃ O$_3 • (∃ O$_4 • P[O$_4/O$']∧(Q[O$_4,O$_3/O$,O$']∧R[O$_3/O$])))
-(∃ O$_1 • (∃ O$_2 • P[O$_1/O$']∧(Q[O$_1,O$_2/O$,O$']∧R[O$_2/O$])))
+(∃ O$_3,O$_4 • P[O$_4/O$']∧(Q[O$_4,O$_3/O$,O$']∧R[O$_3/O$]))    
+(∃ O$_1,O$_2 • P[O$_1/O$']∧(Q[O$_1,O$_2/O$,O$']∧R[O$_2/O$]))
 ```
 
 Given that `O$_1`..`O$_4` are fresh w.r.t. `P`..`R`.

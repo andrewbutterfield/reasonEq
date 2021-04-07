@@ -523,25 +523,42 @@ Instantiate a (std./list)-variable either according to the binding,
 or by itself if not bound:
 \begin{code}
 instantiateGVar :: Binding -> GenVar -> FreeVars
-instantiateGVar bind (StdVar v)   =  instantiateVar bind v
-instantiateGVar bind (LstVar lv)  =  (instantiateLstVar bind lv, [])
+instantiateGVar bind (StdVar v)   =  instantiateVar    bind v
+instantiateGVar bind (LstVar lv)  =  instantiateLstVar bind lv
+\end{code}
 
+\begin{eqnarray*}
+   \beta(v) &=& v, \qquad  v \notin \beta
+\\ \beta(v) &=& \beta.v, \qquad \mbox{if $\beta.v$ is a variable}
+\\ \beta(v) &=& \fv(\beta.v), \quad \mbox{if $\beta.v$ is a term}
+\end{eqnarray*}
+\begin{code}
 instantiateVar :: Binding -> Variable -> FreeVars
 instantiateVar bind v
   = case lookupVarBind bind v of
         Nothing            ->  (S.singleton $ StdVar v,[])
-        Just (BindVar v)   ->  (S.singleton $ StdVar v,[])
+        Just (BindVar v')  ->  (S.singleton $ StdVar v',[])
         Just (BindTerm t)  ->  freeVars t
+\end{code}
 
-instantiateLstVar :: Binding -> ListVar -> VarSet
+\begin{eqnarray*}
+   \beta(\lst v) &=& \setof{\lst v}, \qquad\qquad \lst v \notin \beta
+\\ \beta(\lst v) &=& \elems(\beta.\lst v),
+    \qquad\qquad \mbox{if $\beta.\lst v$ is a list}
+\\ \beta(\lst v) &=& \beta.\lst v,
+      \qquad\qquad \mbox{if $\beta.\lst v$ is a set}
+\\ \beta(\lst v) &=& L \cup \bigcup \fv^*(T)
+     \quad \mbox{if $\beta.\lst v$ has form $(L,T)$}
+\end{eqnarray*}
+\begin{code}
+instantiateLstVar :: Binding -> ListVar -> FreeVars
 instantiateLstVar bind lv
   = case lookupLstBind bind lv of
-      Nothing             ->  S.singleton $ LstVar lv
-      Just (BindList vl)  ->  S.fromList vl
-      Just (BindSet  vs)  ->  vs
+      Nothing             ->  (S.singleton $ LstVar lv, [])
+      Just (BindList vl)  ->  (S.fromList vl, [])
+      Just (BindSet  vs)  ->  (vs, [])
       Just (BindTLVs tlvs)
        -> let (ts,lvs) = (tmsOf tlvs, lvsOf tlvs)
-          in  (S.unions $ map (theFreeVars . freeVars) ts)
-              `S.union`
-              (S.fromList $ map LstVar lvs)
+          in  mrgFreeVarList
+               (( S.fromList $ map LstVar lvs,[]) : map freeVars ts)
 \end{code}

@@ -762,7 +762,7 @@ $$
 there are three possible outcomes:
 \begin{description}
   \item [Contradicted]  Fail
-  \item [Fuly Discharged]  Return []
+  \item [Fully Discharged]  Return []
   \item [Not Fully Discharged]  Return [$L'_j$]
 \end{description}
 \begin{code}

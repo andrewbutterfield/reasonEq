@@ -479,9 +479,9 @@ nestSimplify :: Monad m => Term -> m Term
 
 nestSimplify (Bnd tk1 n1 vs1 t1@(Bnd tk2 n2 vs2 t2))
  | tk1 /= tk2              =  fail ("nestSimplify: mixed bind term-kinds")
- | n1 /= n2                =  bnd tk1 n1 (vs1 S.\\ vs2) t1
+ | n1 /= n2                =  bnd tk1 n1 (vs1 S.\\ vs2) t2
  | vs1 `S.isSubsetOf` vs2  =  return t1
- | otherwise               =  bnd tk1 n1 (vs1 `S.union` vs2) t1
+ | otherwise               =  bnd tk1 n1 (vs1 `S.union` vs2) t2
 
 nestSimplify (Lam tk1 n1 vl1 (Lam tk2 n2 vl2 t2))
  | tk1 /= tk2  =  fail ("nestSimplify: mixed lambda term-kinds")

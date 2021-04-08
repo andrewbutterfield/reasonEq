@@ -3,45 +3,10 @@
 ## Most Urgent
 
 
-### Upgrade 2
-
-We now have to show the two following predicates are the same
-
-```
-(∃ O$_3,O$_4 • P[O$_4/O$']∧(Q[O$_4,O$_3/O$,O$']∧R[O$_3/O$]))    
-(∃ O$_1,O$_2 • P[O$_1/O$']∧(Q[O$_1,O$_2/O$,O$']∧R[O$_2/O$]))
-```
-
-Given that `O$_1`..`O$_4` are fresh w.r.t. `P`..`R`.
-
-We need alpha-equivalence check.
-
-We propose to use matching to find a binding, 
-which must be bijective over B varsets.
-
-
-Matching the `Bind` bodies results in the following:
-
-```
-{ O$_1 ⟼ O$_4, O$_2 ⟼ O$_3 }
-```
-
-This is a bijection.
-
 ### Factory Reset
 
 Have `b R *` set all theories to builtin
 
-## Upgrade No. 2
-
-We have made this so.
-
-```
-(∃ O$_m • P[O$_m/O$']∧(∃ O$_n • Q[O$_n/O$']∧R[O$_n/O$])[O$_m/O$])
-```
-
-We now need to be able to swap nested (same) quantifiers 
-and have alpha-equivalence.
 
 
 ## Upgrade No. 3

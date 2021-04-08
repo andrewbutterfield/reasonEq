@@ -1492,9 +1492,84 @@ isBijectiveBinding = isBijectiveDump . dumpBinding
 \end{code}
 
 \begin{code}
-isBijectiveDump (vbind,sbind,lbind) = False
+isBijectiveDump :: ( [ ( (Identifier,VarClass), VarBind )    ]
+                   , [ ( Subscript,             Subscript )  ]
+                   , [ ( ListVarKey,            LstVarBind ) ] )
+                -> Bool
 \end{code}
 
+We have (abstracting somewhat):
+\begin{eqnarray*}
+   vbind &:& V \fun I + V + T
+\\ sbind &:& S \fun S
+\\ lbind &:& LV \fun GV^* +  \Set GV + (LV + T)^*
+\end{eqnarray*}
+\begin{code}
+isBijectiveDump (vbind,sbind,lbind)
+  = isBijectiveVarBinding vbind &&
+    isBijectiveAssocList sbind &&
+    isBijectiveLstVarBind lbind
+\end{code}
+
+
+\begin{eqnarray*}
+   vbind &:& V \fun I + V + T
+\end{eqnarray*}
+We require $vbind$ to actually be $V \fun V$,
+and bijective.
+\begin{code}
+isBijectiveVarBinding vbind
+  = case coerceAssocList varBind2Var vbind of
+      Nothing  ->  False
+      Just vvbind  ->  isBijectiveAssocList vvbind
+
+varBind2Var (BV v)  =  return v
+varBind2Var _  =  fail "VarBind not variable"
+\end{code}
+
+\begin{eqnarray*}
+   lbind &:& LV \fun GV^* +  \Set GV + (LV + T)^*
+\end{eqnarray*}
+We require $lbind$ to actually be $LV \fun LV$
+(singleton set/list),
+and bijective.
+\begin{code}
+isBijectiveLstVarBind lbind
+  = case coerceAssocList lstVarBind2LVar lbind of
+      Nothing  ->  False
+      Just lvlvbind  ->  isBijectiveAssocList lvlvbind
+
+lstVarBind2LVar (BS vs)
+  = case S.toList vs of
+      [LstVar lv]  ->  return lv
+      _            ->  fail "LstVarBind not a single list-variable"
+lstVarBind2LVar (BL [LstVar lv])  =  return lv
+lstVarBind2LVar (BX [Left lv])    =  return lv
+lstVarBind2LVar _   =  fail "LstVarBind not a single list-variable"
+\end{code}
+
+\newpage
+Coerce an association list to the expected form:
+\begin{code}
+coerceAssocList :: Monad m => (b -> m c) -> [(a,b)] -> m [(a,c)]
+coerceAssocList _ [] = return []
+coerceAssocList coerce ((a,b):abs)
+  = do c <- coerce b
+       acs <- coerceAssocList coerce abs
+       return ((a,c):acs)
+\end{code}
+
+Simple test for bijectivity, suitable for use with Binding components,
+given that they are in fact of type \texttt{Map a b}.
+\begin{code}
+isBijectiveAssocList :: (Ord a, Ord b) => [(a,b)] -> Bool
+isBijectiveAssocList assoc
+  =  cardAs == cardBs
+  where
+    (as,bs) = unzip assoc
+    cardAs = S.size $ S.fromList as
+    cardBs = S.size $ S.fromList bs
+\end{code}
 
 \newpage
 \subsection{Binding Internal Tests}

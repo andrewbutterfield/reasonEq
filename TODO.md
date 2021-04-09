@@ -36,6 +36,20 @@ Introduce `NameRendering` module.
 ### Phase 2.
   Mapping tables part of `REqState`,
   and hence loadable, saveable, and editable.
+  
+### Phase 3.
+
+ Add calibration facility.
+ 
+ This would display unicode rendering with different amounts of before/after padding
+ and allow the use to select their preferences, 
+ which would be stored in the above-mentioned mapping tables
+ 
+### Phase 4.
+
+  Replace TestRendering by a principled system that uses mappings and which can be
+  called from anywhere (i.e. distribute rendering to modules with the datatypes,
+  or modules that just import that datatype).
 
 ## Upgrade No. 5
 

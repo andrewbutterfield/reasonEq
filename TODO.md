@@ -26,6 +26,10 @@ rather than be called by their LaTeX names (`lor`,`sqsupseteq`).
 
 Need proof transcripts to show assumptions, when `assume` strategy is used.
 
+### Phase 0.
+
+Introduce `NameRendering` module.
+
 ### Phase 1.
   Hardcoded Mapping tables
   

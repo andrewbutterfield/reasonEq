@@ -1,0 +1,156 @@
+Proof transcripts cut-n-pated from reasonEq terminal into Atom text editor,
+and all double-spaces replaced by single ones.
+
+
+
+equiv_id : (true≡Q)≡Q
+by 'reduce'
+---
+(true≡Q)≡Q
+ = 'match-equiv[1] equiv_assoc @[]'
+{ P ⟼ true, Q ⟼ Q, R ⟼ Q, ≡ ⟼ ≡ }
+true≡(Q≡Q)
+ = 'match-all equiv_refl @[2]'
+{ P ⟼ Q, ≡ ⟼ ≡ }
+true≡true
+ = 'match-all equiv_refl @[]'
+{ P ⟼ true, ≡ ⟼ ≡ }
+true
+
+
+true_subst : true[e$/x$]≡true
+by 'reduce'
+---
+true[e$/x$]≡true
+ = 'substitute @[1]'
+true≡true
+ = 'match-all equiv_refl @[]'
+{ P ⟼ true, ≡ ⟼ ≡ }
+true
+
+
+equiv_subst : (P≡Q)[e$/x$]≡(P[e$/x$]≡Q[e$/x$])
+by 'reduce'
+---
+(P≡Q)[e$/x$]≡(P[e$/x$]≡Q[e$/x$])
+ = 'substitute @[1]'
+(P[e$/x$]≡Q[e$/x$])≡(P[e$/x$]≡Q[e$/x$])
+ = 'match-all equiv_refl @[]'
+{ P ⟼ P[e$/x$]≡Q[e$/x$], ≡ ⟼ ≡ }
+true
+
+lnot_equiv_swap : (¬ P≡Q)≡(P≡¬ Q)
+by 'reduce'
+---
+(¬ P≡Q)≡(P≡¬ Q)
+ = 'match-equiv[2] lnot_equiv_distr @[1]'
+{ P ⟼ P, Q ⟼ Q, ≡ ⟼ ≡, ¬ ⟼ ¬ }
+¬(P≡Q)≡(P≡¬ Q)
+ = 'match-equiv[1,2] equiv_symm @[2]'
+{ P ⟼ P, Q ⟼ ¬ Q, ≡ ⟼ ≡ }
+¬(P≡Q)≡(¬ Q≡P)
+ = 'match-equiv[2] lnot_equiv_distr @[2]'
+{ P ⟼ Q, Q ⟼ P, ≡ ⟼ ≡, ¬ ⟼ ¬ }
+¬(P≡Q)≡¬(Q≡P)
+ = 'match-equiv[1,2] equiv_symm @[2,1]'
+{ P ⟼ Q, Q ⟼ P, ≡ ⟼ ≡ }
+¬(P≡Q)≡¬(P≡Q)
+ = 'match-all equiv_refl @[]'
+{ P ⟼ ¬(P≡Q), ≡ ⟼ ≡ }
+true
+
+
+lor_subst : (P∨Q)[e$/x$]≡P[e$/x$]∨Q[e$/x$]
+by 'redboth'
+---
+(P∨Q)[e$/x$]
+ = 'substitute @[]'
+P[e$/x$]∨Q[e$/x$]
+
+
+implies_def2 : P⟹ Q≡¬ P∨Q
+by 'reduce'
+---
+P⟹ Q≡¬ P∨Q
+ = 'match-equiv[1] implies_def @[1]'
+{ P ⟼ P, Q ⟼ Q, ⟹ ⟼ ⟹ }
+(P∨Q≡Q)≡¬ P∨Q
+ = 'match-equiv[1,2] equiv_symm @[1]'
+{ P ⟼ P∨Q, Q ⟼ Q, ≡ ⟼ ≡ }
+(Q≡P∨Q)≡¬ P∨Q
+ = 'match-equiv[1] equiv_assoc @[]'
+{ P ⟼ Q, Q ⟼ P∨Q, R ⟼ ¬ P∨Q, ≡ ⟼ ≡ }
+Q≡(P∨Q≡¬ P∨Q)
+ = 'match-equiv[2] lor_symm @[2,1]'
+{ P ⟼ Q, Q ⟼ P, ∨ ⟼ ∨ }
+Q≡(Q∨P≡¬ P∨Q)
+ = 'match-equiv[2] lor_symm @[2,2]'
+{ P ⟼ Q, Q ⟼ ¬ P, ∨ ⟼ ∨ }
+Q≡(Q∨P≡Q∨¬ P)
+ = 'match-equiv[2,3] lor_equiv_distr @[2]'
+{ P ⟼ Q, Q ⟼ P, R ⟼ ¬ P, ≡ ⟼ ≡, ∨ ⟼ ∨ }
+Q≡Q∨(P≡¬ P)
+ = 'match-equiv[1,2] equiv_symm @[2,2]'
+{ P ⟼ P, Q ⟼ ¬ P, ≡ ⟼ ≡ }
+Q≡Q∨(¬ P≡P)
+ = 'match-equiv[2] lnot_equiv_distr @[2,2]'
+{ P ⟼ P, Q ⟼ P, ≡ ⟼ ≡, ¬ ⟼ ¬ }
+Q≡Q∨¬(P≡P)
+ = 'match-all equiv_refl @[2,2,1]'
+{ P ⟼ P, ≡ ⟼ ≡ }
+Q≡Q∨¬ true
+ = 'match-equiv[2] false_def @[2,2]'
+{ ¬ ⟼ ¬ }
+Q≡Q∨false
+ = 'match-equiv[1] lor_unit @[2]'
+{ P ⟼ Q, ∨ ⟼ ∨ }
+Q≡Q
+ = 'match-all equiv_refl @[]'
+{ P ⟼ Q, ≡ ⟼ ≡ }
+true
+
+
+implies_equiv_distr : P⟹ (Q≡R)≡(P⟹ Q≡P⟹ R)
+by 'redboth'
+---
+P⟹ (Q≡R)
+ = 'match-equiv[1] implies_def2 @[]'
+{ P ⟼ P, Q ⟼ Q≡R, ⟹ ⟼ ⟹ }
+¬ P∨(Q≡R)
+ = 'match-equiv[1] lor_equiv_distr @[]'
+{ P ⟼ ¬ P, Q ⟼ Q, R ⟼ R, ≡ ⟼ ≡, ∨ ⟼ ∨ }
+¬ P∨Q≡¬ P∨R
+ [switch left > right]
+P⟹ Q≡P⟹ R
+ = 'match-equiv[1] implies_def2 @[1]'
+{ P ⟼ P, Q ⟼ Q, ⟹ ⟼ ⟹ }
+¬ P∨Q≡P⟹ R
+ = 'match-equiv[1] implies_def2 @[2]'
+{ P ⟼ P, Q ⟼ R, ⟹ ⟼ ⟹ }
+¬ P∨Q≡¬ P∨R
+
+
+WE NEED TO SEE ASSUMPTIONS HERE
+
+strengthen_ante : P∧Q⟹ P
+by 'assume'
+---
+P
+ = 'match-all H.strengthen_ante.1 @[]'
+{ P ⟼ P }
+true
+
+
+weaken_cnsq : P⟹ P∨Q
+by 'assume'
+---
+P∨Q
+ = 'match-all H.weaken_cnsq.1 @[1]'
+{ P ⟼ P }
+true∨Q
+ = 'match-equiv[2] lor_symm @[]'
+{ P ⟼ Q, Q ⟼ true, ∨ ⟼ ∨ }
+Q∨true
+ = 'match-equiv[1] lor_zero @[]'
+{ P ⟼ Q, ∨ ⟼ ∨ }
+true

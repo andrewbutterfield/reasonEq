@@ -1,11 +1,10 @@
 # To Do
 
+Note that we have added file `experimental/tidy_transcripts.txt`
+to show that proof transcripts looks better wehn view in a text editor like Atom,
+with some "spaces trimming"
+
 ## Most Urgent
-
-
-### Factory Reset
-
-Have `b R *` set all theories to builtin
 
 
 
@@ -25,6 +24,8 @@ official names (`or`,`refines`)
 that map to nice symbols (`∨`,`⊒`),
 rather than be called by their LaTeX names (`lor`,`sqsupseteq`).
 
+Need proof transcripts to show assumptions, when `assume` strategy is used.
+
 ### Phase 1.
   Hardcoded Mapping tables
   
@@ -34,7 +35,7 @@ rather than be called by their LaTeX names (`lor`,`sqsupseteq`).
 
 ## Upgrade No. 5
 
-We have an ongoing proof of Ex2.1.2 above, but it requires
+We have an ongoing proof of Ex2.1.2but it requires
 a case-analysis.
 
 The rule is, provided that `b:B`,

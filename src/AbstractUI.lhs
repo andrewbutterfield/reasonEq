@@ -17,7 +17,7 @@ module AbstractUI
 , newProof1, newProof2, resumeProof
 , abandonProof, saveProof, completeProof
 , moveFocusDown
-, moveDownNTimes, moveToBottom, followPath, mUGAM, numOfSubTerms, listOfSubTerms, checkSubTermsNumbers, listOfSubTermsNumbers, trySimplifyRecursively
+, numOfSubTerms, listOfSubTerms, checkSubTermsNumbers, listOfSubTermsNumbers, trySimplifyRecursively
 , moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, matchFocusAgainst
@@ -398,124 +398,6 @@ moveFocusDown i liveProof
 \end{code}
 
 \begin{code}
-moveDownNTimes :: Monad m => Int -> Int -> LiveProof -> m LiveProof
-moveDownNTimes 0 i liveProof = fail("Error ")
-moveDownNTimes 1 i liveProof = moveFocusDown i liveProof
-moveDownNTimes n i liveProof
-  = let (tz,seq') = focus liveProof
-        i' = if i <= 0 then 1 else i
-        n' = if n <= 0 then 1 else n
-        (ok,tz') = followTZ (replicate n' i') tz
-    in if ok 
-        then return ( focus_ (tz', seq')
-                     $ fPath__ (++(replicate n' i'))
-                     $ matches_ [] liveProof)
-        else moveDownNTimes (n'-1) i' liveProof
-
-\end{code}
-
-
-\begin{code}
-moveToBottom :: Monad m => Int -> LogicSig -> LiveProof -> m LiveProof
-moveToBottom n theSig liveProof
-    = let (tz, seq') = focus liveProof
-          goalt = getTZ tz
-          scC = conjSC liveProof
-          ctxts = mtchCtxts liveProof
-          n' = if n <= 0 then 1 else n
-          (ok, tz') = downTZ n' tz
-      in if ok
-          then moveToBottom n' theSig (focus_ (tz', seq') $ fPath__ (++[n']) $ matches_ [] liveProof)
-          else let ((thnm',lws',vts'):mcs) = ctxts
-                   ((thnm,lws,vts):mcs') = mcs
-                   laws = filter (\l -> lawName l == "true") lws
-                   in if (length laws <= 0)
-                      then  fail ("no laws of this name " ++ (lawName (lws !! 1)))
-                      else let
-                          law = head laws
-                -- else let (law,vts) = findLaw "true" ctxts
-                          matches = domatch theSig vts (goalt, scC) law
-                        
-                          in if (length matches <= 0)
-                              then fail ("failed to match " ++ lawName law)
-                              else let
-                                     mtch = head matches
-                                     unbound = findUnboundVars (mBind mtch) (mRepl mtch)
-                                     ubind = completeUnbound unbound mtch
-                                     cbind = mBind mtch `mergeBindings` ubind
-                                     repl = mRepl mtch
-                                     scL = snd $ mAsn mtch
-                                     dpath = fPath liveProof
-                                     conjpart = exitTZ tz
-                                 in do scLasC <- instantiateSC cbind scL
-                                       scD <- scDischarge scC scLasC
-                                       if onlyFreshSC scD
-                                          then do let freshneeded = snd scD
-                                                  let knownVs = zipperVarsMentioned $ focus liveProof
-                                                  let (fbind, fresh) = generateFreshVars knownVs freshneeded cbind
-                                                  brepl <- instantiate fbind repl
-                                                  scC' <- scC `mrgSideCond` freshAsSideCond fresh
-                                                  return ( focus_ ((setTZ brepl tz), seq')
-                                                         $ matches_ []
-                                                         $ conjSC_ scC'
-                                                         $ stepsSoFar__
-                                                            (( UseLaw (ByMatch $ mClass mtch)
-                                                                      (mName mtch)
-                                                                      fbind
-                                                                      dpath
-                                                             , (conjpart, conjSC liveProof)):)
-                                                            liveProof)
-                                          else fail ("AAAAAH") 
-                                      where 
-                                        true = theTrue $ theSig
-                                        false = theFalse $ theSig
-                                        completeUnbound unbound mtch = mBind mtch
-                       
-
-
-       --   else case matchLawByName theSig (goalt, scC) "true" ctxts of
-       --         Yes [] -> return liveProof
-                --Yes mtchs -> return (focus (tz, seq') $ fPath__ (++[]) $ matches_ mtchs liveProof)
-       --         Yes mtchs -> return $ matches_ mtchs liveProof
-       --         But msgs -> fail $ unlines msgs
-
-
-
-
-
-
-          --else let goalt = getTZ tz
-          --         scC = conjSC liveProof
-          --         ctxts = mtchCtxts liveProof
-          --         newMatches = matchInContexts theSig ctxts (goalt, scC)
-          --         rankedM = rankAndSort sizeRank ctxts
-          --                     $ filter isNonTrivial newMatches
-          --     in return (focus_ (tz,seq') $ fPath__ (++[]) $ matches_ rankedM liveProof)
-\end{code}
-
-The error handling for numbers less than one as path options needs to be fixed.
-Firstly, this only checks the first item of the list, and secondly in the args2intList
-function in Utilities, it can't accept negative numbers.
-\begin{code}
-
-followPath :: Monad m => [Int] -> LiveProof -> m LiveProof
-followPath [] liveProof = fail ("No path to follow")
-followPath (x:xs) liveProof
-    = let (tz, seq') = focus liveProof
-          x' = if x <=0 then 1 else x  --this error handling needs to be done better
-          (ok, tz') = followTZ((x':xs)) tz
-      in if ok
-          then return ( focus_ (tz', seq')
-                       $ fPath__ (++((x':xs)))
-                       $ matches_ [] liveProof)
-          else followPath (init (x':xs)) liveProof
-\end{code}
-
-This function moves through a proof in a depth first manner.
-tryLawRecursively
-domatch
-recursive 
-\begin{code}
 
 trySimplifyRecursively :: Monad m => LogicSig -> LiveProof ->  m LiveProof
 trySimplifyRecursively theSig liveProof 
@@ -524,79 +406,6 @@ trySimplifyRecursively theSig liveProof
       in if length ss >= 0
           then trySimplifyRecursively' theSig liveProof (ss ++ [0]) 
           else fail("0")
-
-{-
-tryLawRecursively' :: Monad m => LogicSig -> LiveProof -> [Int] -> m LiveProof
-tryLawRecursively' theSig liveProof (s:ss)
-    = let (tz, seq') = focus liveProof
-          goingDown = s > 0
-      in if goingDown
-          then let (ok, tz') = downTZ s tz
-                   ss' = listOfSubTerms tz' ++ [0] ++ ss
-               in
-                   tryLawRecursively' theSig (focus_ (tz', seq') $ fPath__ (++[s]) $ matches_ [] liveProof) ss'
-          else let liveProof' = (focus_ (setTZ (Val (E ArbType) $ Integer 42) tz, seq') $ fPath__ (++[]) $ matches_ [] liveProof)
-                   goalt = getTZ tz
-                   scC = conjSC liveProof
-                   ctxts = mtchCtxts liveProof
-                   ((thnm',lws',vts'):mcs) = ctxts
-                   ((thnm,lws,vts):mcs') = mcs
-                   laws = filter (\l -> lawName l == "equiv_refl") lws
-                   --hardcoding here
-                   in if (length laws <= 0)
-                       then fail ("failed to match " ++ (lawName (lws !! 1)))
-                       else let
-                              law = head laws
-                              matches = domatch theSig vts (goalt, scC) law
-                              in if (length matches <= 0)
-                              then let (tzNew, seqNew) = focus liveProof
-                                       (ok', tz'') = upTZ tzNew
-                                       in if length ss > 0
-                                             then tryLawRecursively' theSig (focus_ (tz'', seqNew) $ fPath__ (++[]) $ matches_ [] liveProof) ss
-                                             else return liveProof
-                              else let
-                                    mtch = head matches
-                                    unbound = findUnboundVars (mBind mtch) (mRepl mtch)
-                                    ubind = mBind mtch
-                                    cbind = mBind mtch `mergeBindings` ubind
-                                    repl = mRepl mtch
-                                    scL = snd $ mAsn mtch
-                                    dPath = fPath liveProof
-                                    conjpart = exitTZ tz
-                                    in do scLasC <- instantiateSC cbind scL
-                                          scD <- scDischarge scC scLasC
-                                          if onlyFreshSC scD
-                                              then do let freshneeded = snd scD
-                                                      let knownVs = zipperVarsMentioned $ focus liveProof
-                                                      let (fbind, fresh) = generateFreshVars knownVs freshneeded cbind
-                                                      brepl <- instantiate fbind repl
-                                                      scC' <- scC `mrgSideCond` freshAsSideCond fresh
-                                                      let liveProof' = (focus_ ((setTZ brepl tz), seq')
-                                                                   $ matches_ []
-                                                                   $ conjSC_ scC'
-                                                                   $ stepsSoFar__
-                                                                       (( UseLaw (ByMatch $ mClass mtch)
-                                                                                 (mName mtch)
-                                                                                 fbind
-                                                                                 dPath
-                                                                        , (conjpart, conjSC liveProof)):)
-                                                                       liveProof)
-                                                      let (tzNew, seqNew) = focus liveProof'
-                                                      let (ok', tz2) = upTZ tzNew
-                                                      if length ss >0
-                                                            then tryLawRecursively' theSig (focus_ (tz2, seqNew) $ fPath__ (++[]) $ matches_ [] liveProof') ss
-                                                            else return liveProof'
-                                          else fail ("I'M DYING")
-       {- 
-                                     
-                   (tzNew, seqNew) = focus liveProof'
-                   (ok', tz'') = upTZ tzNew
-              in if length ss > 0
-                   then tryLawRecursively' theSig (focus_ (tz'', seqNew) $ fPath__ (++[]) $ matches_ [] liveProof') ss
-                   else return liveProof'
-         -}             
-
--}
 
 simplify :: Monad m => LogicSig -> LiveProof -> [MatchContext] -> m LiveProof
 simplify theSig liveProof ctxts
@@ -685,100 +494,6 @@ trySimplifyRecursively' theSig liveProof (s:ss)
                          then trySimplifyRecursively' theSig (focus_ (tz', seq') $ matches_ [] liveProof') ss
                          else return liveProof'
                              
-tryLawRecursively2 :: Monad m => LogicSig -> LiveProof -> [Int] -> m LiveProof
-tryLawRecursively2 theSig liveProof (s:ss)
-    = let (tz, seq') = focus liveProof
-          goingDown = s > 0
-          in if goingDown
-             then let (ok, tz') = downTZ s tz
-                      ss' = listOfSubTerms tz' ++[0] ++ ss
-                      in tryLawRecursively2 theSig (focus_ (tz', seq') $ fPath__ (++[s]) $ matches_ [] liveProof) ss'
-             else let goalt = getTZ tz
-                      scC = conjSC liveProof
-                      ctxts = mtchCtxts liveProof
-                      ((thnm, lws, vts):mcs) = ctxts
-                      simpTheories = simplificationTheories
-                      in if length simpTheories <= 0 
-                         then tryLawRecursively2 theSig liveProof ss
-                         else let simpTheory = filter(\t -> t == thnm) simpTheories
-                                  [simpTheory'] = simpTheory
-                                  simpLaws = simplificationLaws simpTheory'
-                                  in if length simpLaws <= 0
-                                     then tryLawRecursively2 theSig liveProof ss
-                                     else let simpLaw = head simpLaws
-                                              [simpLaw'] = simpLaw
-                                              laws = filter(\l -> lawName l == simpLaw) lws
-                                          in if length laws <= 0
-                                             then fail ("failed to match " ++ simpLaw ++ " length: " ++ (show $ length laws))
-                                             else let
-                                              law = head laws
-                                              matches = domatch theSig vts (goalt, scC) law
-                                              in if (length matches <= 0)
-                                                 then let (ok', tz') = upTZ tz
-                                                          in if length ss > 0
-                                                             then tryLawRecursively2 theSig (focus_ (tz', seq')
-                                                                                            $ fPath__ (++[])
-                                                                                            $ matches_ [] liveProof) ss
-                                                             else return liveProof
-                                                 else let mtch = head matches
-                                                          unbound = findUnboundVars (mBind mtch) (mRepl mtch)
-                                                          ubind = mBind mtch
-                                                          cbind = mBind mtch `mergeBindings` ubind
-                                                          repl = mRepl mtch
-                                                          scL = snd $ mAsn mtch
-                                                          dPath = fPath liveProof
-                                                          conjpart = exitTZ tz
-                                                          in do scLasC <- instantiateSC cbind scL
-                                                                scD <- scDischarge scC scLasC
-                                                                if onlyFreshSC scD
-                                                                then do let freshneeded = snd scD
-                                                                        let knownVs = zipperVarsMentioned $ focus liveProof
-                                                                        let (fbind, fresh) = generateFreshVars knownVs freshneeded cbind
-                                                                        brepl <- instantiate fbind repl
-                                                                        scC' <- scC `mrgSideCond` freshAsSideCond fresh
-                                                                        let liveProof' = (focus_ ((setTZ brepl tz), seq')
-                                                                                         $ matches_ []
-                                                                                         $ conjSC_ scC'
-                                                                                         $ stepsSoFar__
-                                                                                             (( UseLaw (ByMatch $ mClass mtch)
-                                                                                                       (mName mtch)
-                                                                                                       fbind
-                                                                                                       dPath
-                                                                                             , (conjpart, conjSC liveProof)):)
-                                                                                             liveProof)
-                                                                        let (tz, seq') = focus liveProof'
-                                                                        let (ok', tz') = upTZ tz
-                                                                        if length ss > 0
-                                                                        then tryLawRecursively2 theSig (focus_ (tz',seq')
-                                                                                                       $ fPath__ (++[])
-                                                                                                       $ matches_ [] 
-                                                                                                         liveProof') ss
-                                                                        else return liveProof'
-                                                                else fail ("sidecondition issue")              
-{-
-moveThroughProofWorker :: Monad m => LiveProof -> [Int] -> m LiveProof
-moveThroughProofWorker liveProof (s:ss) 
-    = let (tz, seq') = focus liveProof
-          goingDown = s > 0 
-      in if goingDown
-          then let (ok, tz') = downTZ s tz
-                   ss' = listOfSubTerms tz' ++ [0] ++ ss
-               in if ok
-                   then moveThroughProofWorker (focus_ (tz', seq') $ fPath__ (++[s]) $ matches_ [] liveProof) (ss') 
-                   else return (focus_ (tz, seq')
-                               $ fPath__ (++[])
-                               $ matches_ [] liveProof)      
-          else let -- (tz''', seq') = (setTZ (Val (E ArbType) $ Integer 42) tz, seq')
-                    (ok', tz'') = upTZ tz
-          --else let (tz, seq') = (setTZ (Val (E ArbType) $ Integer 42) tz, seq')
-               in if ok'
-                   then moveThroughProofWorker (focus_ (tz'', seq') $ fPath__ (++[]) $ matches_ [] liveProof) (ss)
-                   --else return (focus_ (tz, seq')
-                   else return (focus_  (setTZ (Val (E ArbType) $ Integer 42) tz, seq')
-                               $ fPath__ (++[])
-                               $ matches_ [] liveProof)
-
--}
 \end{code}
 
 This function is just for testing in the interface
@@ -809,21 +524,6 @@ moveFocusUp liveProof
                     $ matches_ [] liveProof  )
         else fail "At top"
 
-\end{code}
-
-\subsubsection{Move Up, Get and Apply Match}
-
-\begin{code}
-
-mUGAM :: Monad m => LogicSig -> LiveProof -> m LiveProof
-mUGAM theSig liveProof
-    = let (tz, seq') = focus liveProof
-          (ok, tz') = upTZ tz
-      in if ok
-          then return ( focus_ (tz', seq')
-                      $ fPath__ init
-                      $ matches_ [] liveProof )
-          else fail "At top" 
 \end{code}
 
 \subsubsection{Switching Consequent Focus}

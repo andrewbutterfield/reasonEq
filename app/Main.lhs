@@ -259,7 +259,7 @@ reqCommands = [ cmdShow, cmdSet, cmdNew
               , cmdSave, cmdLoad
               , cmdSaveConj, cmdLoadConj
               , cmdAssume, cmdDemote
-              , cmdBuiltin, cmdAuto ]
+              , cmdBuiltin]
 -- we don't use these features in the top-level REPL
 reqEndCondition _ = False
 reqEndTidy _ reqs = return reqs
@@ -318,7 +318,6 @@ cmdShow
         , shName++" "++shLivePrf++" -- show current (live) proof"
         , shName++" "++shProofs++" -- show completed proofs"
         , shName++" "++shProofs++" <nm> -- show proof transcript for <nm>"
-        , shName++" "++shAuto++" autoprover"
         ]
     , showState )
 shName = "sh"
@@ -661,14 +660,9 @@ proofREPLConfig
             , listScopeKnownsDescr
             , goDownDescr
             , goUpDescr
-            , goBottomDescr
-            , goOnPathDescr
             , matchLawDescr
             , tryMatchDescr
-            , autoProofDescr
-            , autoProofDescrB
             , simplifyDescr
-            , autoProofDDescr
             , getNumOfSubTermsDescr
             , getListOfSubTermsDescr
             , applyMatchDescr
@@ -742,18 +736,6 @@ goDown args = tryDelta (moveFocusDown $ args2int args)
 goUpDescr = ( "u", "up", "u  -- up", goUp )
 goUp :: REPLCmd (REqState, LiveProof)
 goUp _ = tryDelta moveFocusUp
-goBottomDescr = ("db", "downtobottom", "db n -- downtobottom n, n= 1 if ommitted", goBottom)
-goBottom :: REPLCmd (REqState, LiveProof)
-goBottom args (reqs, liveProof) = case (moveToBottom (args2int args) (logicsig reqs) liveProof) of
-    Yes liveProof' -> return (reqs, liveProof')
-    But msgs
-     -> do putStrLn $ unlines' msgs
-           waitForReturn
-           return (reqs, matches_ [] liveProof)
---goBottom args (reqs, liveProof) = return (reqs, moveToBottom ( args2int args ) (logicsig reqs) liveProof)
-goOnPathDescr = ("gp", "goonpath", "gp n0-nm -- goonpath n0-nm", goOnPath)
-goOnPath :: REPLCmd (REqState, LiveProof)
-goOnPath args = tryDelta (followPath $ args2intList args)
 \end{code}
 
 Switching consequent focus:
@@ -811,42 +793,6 @@ matchLawCommand args state@(reqs, liveProof)
 \end{code}
 
 \begin{code}
-autoProofDescr = ("au"
-            , "prove automagically changed"
-            , "au        -- prove Equiv auto"
-            , autoProofCommand)
-autoProofCommand :: REPLCmd (REqState, LiveProof)
-autoProofCommand [] pstate@(reqs, liveProof) = do
-    (reqs, liveProof') <- flatEquiv [] (reqs, liveProof)
-    matchLawCommand [] (reqs, liveProof')
-    applyMatch ["1"] (reqs, matchFocus (logicsig reqs) liveProof') 
-\end{code}
-
-\begin{code}
-autoProofDescrB = ("aub"
-            , "prove automagically changed"
-            , "aub        -- prove Equiv auto"
-            , autoProofCommandB)
-autoProofCommandB [] (reqs, liveProof) = do
-    (reqs, liveProof) <- goDown ["1"] (reqs, liveProof)
-    (reqs, liveProof) <- matchLawCommand [] (reqs, liveProof)
-    (reqs, liveProof) <- applyMatch ["1"] (reqs, matchFocus (logicsig reqs) liveProof)
-    (reqs, liveProof) <- goUp [] (reqs, liveProof)
-    (reqs, liveProof) <- goDown["2"] (reqs, liveProof)
-    (reqs, liveProof) <- matchLawCommand [] (reqs, liveProof)
-    (reqs, liveProof) <- applyMatch ["1"] (reqs, matchFocus (logicsig reqs) liveProof)
-    (reqs, liveProof) <- matchLawCommand [] (reqs, liveProof)
-    (reqs, liveProof) <- applyMatch ["1"] (reqs, matchFocus (logicsig reqs) liveProof)
-    (reqs, liveProof) <- goDown["1"] (reqs, liveProof)
-    (reqs, liveProof) <- matchLawCommand [] (reqs, liveProof)
-    (reqs, liveProof) <- applyMatch ["1"] (reqs, matchFocus (logicsig reqs) liveProof)
-    (reqs, liveProof) <- goUp [] (reqs, liveProof)
-    (reqs, liveProof) <- goUp [] (reqs, liveProof)
-    matchLawCommand [] (reqs, liveProof)
-    
-\end{code}
-
-\begin{code}
 simplifyDescr = ("sim"
             , "attempt to simplify proof recursively"
             , "sim        -- simplify proof recursively"
@@ -858,27 +804,6 @@ simplifyCommand _ (reqs, liveProof) = case trySimplifyRecursively (logicsig reqs
      -> do putStrLn $ unlines' msgs
            waitForReturn
            return (reqs, matches_ [] liveProof)
-\end{code}
-
-\begin{code}
-autoProofDDescr = ("aud"
-            , "prove automagically changed"
-            , "aud        -- prove Equiv auto"
-            , autoProofDCommand)
-autoProofDCommand :: REPLCmd (REqState, LiveProof)
-autoProofDCommand depth (reqs, liveProof) = do
-    (reqs, liveProof) <- tryDelta (followPath (args2intList depth)) (reqs, liveProof)
-    (reqs, liveProof) <- matchLawCommand [] (reqs, liveProof)
-    (reqs, liveProof) <- applyMatch ["1"] (reqs, liveProof)
-    (reqs, liveProof) <- goUp [] (reqs, liveProof)
-    (reqs, liveProof) <- matchLawCommand [] (reqs, liveProof)
-    (reqs, liveProof) <- applyMatch ["1"] (reqs, liveProof)
-    (reqs, liveProof) <- goUp [] (reqs, liveProof)
-    (reqs, liveProof) <- matchLawCommand [] (reqs, liveProof)
-    (reqs, liveProof) <- applyMatch ["1"] (reqs, liveProof)
-    (reqs, liveProof) <- goUp [] (reqs, liveProof)
-    (reqs, liveProof) <- matchLawCommand [] (reqs, liveProof)
-    applyMatch ["1"] (reqs, liveProof)
 \end{code}
 
 \begin{code}
@@ -1280,15 +1205,4 @@ buildIn (cmd:nm:_) reqs
           Just msg -> doshow reqs msg
           Nothing -> return reqs'
 buildIn _ reqs = doshow reqs "unrecognised 'b' option"
-\end{code}
-
-Simple command to auto prove the first equivalence law
-\begin{code}
-cmdAuto :: REqCmdDescr
-cmdAuto = ("Au"
-          , "Auto Prove Equiv first law ID"
-          , ""
-          , autoProve)
--- autoProve _ reqs = doshow reqs "Proving..."
-autoProve _ reqs = doNewProof ["1"] reqs 
 \end{code}

@@ -667,7 +667,7 @@ proofREPLConfig
             , tryMatchDescr
             , autoProofDescr
             , autoProofDescrB
-            , autoProofCDescr
+            , simplifyDescr
             , autoProofDDescr
             , getNumOfSubTermsDescr
             , getListOfSubTermsDescr
@@ -847,12 +847,12 @@ autoProofCommandB [] (reqs, liveProof) = do
 \end{code}
 
 \begin{code}
-autoProofCDescr = ("auc"
-            , "prove automagically changed"
-            , "auc        -- prove Equiv auto"
-            , autoProofCCommand)
-autoProofCCommand :: REPLCmd (REqState, LiveProof)
-autoProofCCommand _ (reqs, liveProof) = case moveThroughProof (logicsig reqs) liveProof of
+simplifyDescr = ("sim"
+            , "attempt to simplify proof recursively"
+            , "sim        -- simplify proof recursively"
+            , simplifyCommand)
+simplifyCommand :: REPLCmd (REqState, LiveProof)
+simplifyCommand _ (reqs, liveProof) = case trySimplifyRecursively (logicsig reqs) liveProof of
     Yes liveProof' -> return (reqs, liveProof')
     But msgs
      -> do putStrLn $ unlines' msgs

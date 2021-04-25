@@ -10,6 +10,7 @@ module Ranking
   , rankAndSort
   , sizeRank
   , isNonTrivial, nonTrivialSizeRank
+  , termSize
   )
 where
 

@@ -1,13 +1,28 @@
 # To Do
 
+
+
 Note that we have added file `experimental/tidy_transcripts.txt`
-to show that proof transcripts looks better wehn view in a text editor like Atom,
+to show that proof transcripts looks better when viewed in a text editor like Atom,
 with some "spaces trimming"
 
 ## Most Urgent
 
 ### Complete UTPBase proofs
 
+Doing this has shown that proof ranking and short-listing needs improvement.
+
+* Don't return matches that leave the focus un-altered.
+* Stop matches where all list variables are bound to empty.
+* Favour matches against ≡[1] over those against ≡[2] ?
+* We really need to have symmetric forms of key results, e.g., we have `P∨true≡true`, but should also have `true∨P≡true`.
+* We are getting viable matches (when applied) that show up as an message saying that auto-instantiate failed!
+* Sometimes we don't want matches presented with ?P variables
+
+We really need to able to tune things - using negation-involution to add a double-negation can be really useful.
+
+We also need laws that express equivalence in terms of implication,
+and hence in terms of and/or/invert.
 
 
 ## Upgrade No. 3
@@ -33,6 +48,7 @@ Need proof transcripts to show assumptions, when `assume` strategy is used.
 Introduce `NameRendering` module.
 
 ### Phase 1.
+
   Hardcoded Mapping tables
   
 ### Phase 2.

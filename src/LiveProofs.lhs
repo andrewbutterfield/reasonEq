@@ -317,7 +317,7 @@ proofIsComplete logicsig liveProof
   =  let
        sequent = exitSeqZipper $ focus liveProof
        hypTerms = map (assnT . snd . fst) $ laws $ hyp sequent
-     in cleft sequent =~= cright sequent 
+     in cleft sequent =~= cright sequent
         ||
         any (== theFalse logicsig) hypTerms
 \end{code}
@@ -1026,11 +1026,11 @@ shMatch vts (i, mtch)
     bind = mBind mtch
     repl = mRepl mtch
     arepl = case bindFloating vts bind repl of
-              Nothing     ->  Nothing
-              Just abind  ->  instantiate abind repl
+              But msgs   ->  But msgs
+              Yes abind  ->  instantiate abind repl
     (_,lsc) = mAsn mtch
-    showRepl Nothing = "auto-instantiate failed!!"
-    showRepl (Just brepl) = trTerm 0 brepl
+    showRepl (But msgs) = unlines ("auto-instantiate failed!!":msgs)
+    showRepl (Yes brepl) = trTerm 0 brepl
 
 shSCImplication scC scPm
   =     trSideCond scC

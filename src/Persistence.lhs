@@ -80,10 +80,9 @@ writeNamedTheoryTxt reqs (nm,thTxt)
 \begin{code}
 readNamedTheory projfp nm
   = do let fp = tfile projfp nm
-       putStrLn ("Reading theory file for '"++nm++"'")
        txt <- readFile fp
-       putStrLn ("Parsing theory file for '"++nm++"'")
        (thry,rest) <- readTheory $ lines txt
+       putStrLn ("Read theory '"++nm++"'")
        return (nm,thry)
 \end{code}
 

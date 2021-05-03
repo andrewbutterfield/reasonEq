@@ -7,6 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 module AbstractUI
 ( REqState
+, observeSettings
 , observeSig, observeTheories, observeTheoryNames, observeLaws
 , observeKnowns
 , observeCurrTheory, observeCurrConj
@@ -99,6 +100,13 @@ as a way to get user input for a subsequent modify operation.
 
 In general we propose that observer functions will support
 a number of return formats.
+
+\subsubsection{Observing Settings}
+
+\begin{code}
+observeSettings :: REqState -> String
+observeSettings reqs = showSettings $ settings reqs
+\end{code}
 
 \subsubsection{Observing Current Logic}
 

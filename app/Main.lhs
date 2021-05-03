@@ -1,6 +1,6 @@
 \section{Main Program}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2017--18
+Copyright  Andrew Buttefield (c) 2017--21
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -331,6 +331,7 @@ cmdShow
     , "show parts of the prover state"
     , unlines
         [ shName++" "++shWork++" -- show workspace info"
+        , shName++" "++shSettings++" -- show settings"
         , shName++" "++shSig++" -- show logic signature"
         , shName++" "++shTheories++" -- show theories"
         , shName++" "++shLaws++" -- show laws"
@@ -347,6 +348,7 @@ cmdShow
 
 shName = "sh"
 shWork = "w"
+shSettings = "X"
 shSig = "s"
 shTheories = "t"
 shLaws = "L"
@@ -367,7 +369,8 @@ showState (cmd:args) reqs
  | cmd == shCurrThry  =  doshow reqs $ observeCurrTheory reqs
  | cmd == shConj      =  doshow reqs $ observeCurrConj reqs args
  | cmd == shLivePrf   =  doshow reqs $ observeLiveProofs reqs
-showState _ reqs      =  doshow reqs "unknown 'show' option."
+ | cmd == shSettings  =  doshow reqs $ observeSettings reqs
+showState _ reqs      =  doshow reqs "unknown/unimplemented 'show' option."
 
 doshow :: REqState -> String -> IO REqState
 doshow reqs str  =  putStrLn str >> return reqs
@@ -498,10 +501,12 @@ cmdSet
     , "set parts of the prover state"
     , unlines
         [ "set "++setCurrThry++" 'name' -- set current theory to 'name'"
+        , "set "++setSettings++" 'setting' 'value' -- set setting=value"
         ]
     , setState )
 
 setCurrThry = shCurrThry
+setSettings = shSettings
 
 setState (cmd:rest) reqs
  | cmd == setCurrThry
@@ -509,7 +514,7 @@ setState (cmd:rest) reqs
          Nothing     ->  doshow reqs  ("No such theory: '"    ++ nm ++ "'")
          Just reqs'  ->  doshow reqs' ("Current Theory now '" ++ nm ++ "'")
  where nm = args2str rest
-setState _ reqs      =  doshow reqs "unknown 'set' option."
+setState _ reqs      =  doshow reqs "unknown/unimplemented 'set' option."
 \end{code}
 
 \subsection{New Command}

@@ -1,11 +1,14 @@
 \section{\reasonEq\ State}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2017--18
+Copyright  Andrew Buttefield (c) 2017--21
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module REqState ( REqSettings(..), REqState(..)
+module REqState ( REqSettings(..)
+                , maxMatchDisplay__, maxMatchDisplay_
+                , showSettings
+                , REqState(..)
                 , modified__, modified_, changed
                 , logic__, logic_, theories__, theories_
                 , currTheory__, currTheory_, liveProofs__, liveProofs_
@@ -32,6 +35,50 @@ import Theories
 import Sequents
 import LiveProofs
 \end{code}
+
+\subsubsection{Settings}
+
+For now,
+the only setting is one for the maximum number of matches displayed.
+
+\begin{code}
+data REqSettings
+  = REqSet {
+       maxMatchDisplay :: Int
+     }
+
+maxMatchDisplay__ f r = r{maxMatchDisplay = f $ maxMatchDisplay r}
+maxMatchDisplay_      = maxMatchDisplay__ . const
+\end{code}
+
+
+
+\begin{code}
+showSettings :: REqSettings -> String
+showSettings rsettings
+  = "Max. Match Display = " ++ (show $ maxMatchDisplay rsettings)
+\end{code}
+
+\begin{code}
+reqset = "REQSET"
+reqsetHDR = "BEGIN "++reqset ; reqsetTRL= "END "++ reqset
+mmdKey = "MMD = "
+
+writeREqSettings :: REqSettings -> [String]
+writeREqSettings rqset
+  = [ reqsetHDR
+    , mmdKey ++ show (maxMatchDisplay rqset)
+    , reqsetTRL ]
+
+readREqSettings :: Monad m => [String] -> m (REqSettings, [String])
+readREqSettings [] = fail "readREqSettings: no text"
+readREqSettings txts
+  = do rest1 <- readThis reqsetHDR txts
+       (theMMD,rest2) <- readKey mmdKey read rest1
+       rest3 <- readThis reqsetTRL rest2
+       return $ (REqSet theMMD, rest3)
+\end{code}
+
 
 \subsection{Prover State Type}
 
@@ -66,40 +113,6 @@ currTheory__ f r = r{currTheory = f $ currTheory r}
 currTheory_      = currTheory__ . const
 liveProofs__ f r = r{liveProofs = f $ liveProofs r}
 liveProofs_      = liveProofs__ . const
-\end{code}
-
-\subsubsection{Settings}
-
-For now,
-the only setting is one for the maximum number of matches displayed.
-
-\begin{code}
-data REqSettings
-  = REqSet {
-       maxMatchDisplay :: Int
-     }
-
-maxMatchDisplay__ f r = r{maxMatchDisplay = f $ maxMatchDisplay r}
-maxMatchDisplay_      = maxMatchDisplay__ . const
-
-reqset = "REQSET"
-reqsetHDR = "BEGIN "++reqset ; reqsetTRL= "END "++ reqset
-mmdKey = "MMD = "
-
-writeREqSettings :: REqSettings -> [String]
-writeREqSettings rqset
-  = [ reqsetHDR
-    , mmdKey ++ show (maxMatchDisplay rqset)
-    , reqsetTRL ]
-
-readREqSettings :: Monad m => [String] -> m (REqSettings, [String])
-readREqSettings [] = fail "readREqSettings: no text"
-readREqSettings txts
-  = do rest1 <- readThis reqsetHDR txts
-       (theMMD,rest2) <- readKey mmdKey read rest1
-       rest3 <- readThis reqsetTRL rest2
-       return $ (REqSet theMMD, rest3)
-
 \end{code}
 
 \subsection{Writing and Reading State}

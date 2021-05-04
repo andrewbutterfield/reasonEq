@@ -71,15 +71,11 @@ This is a list of the simplification laws that I will be using
 \begin{code}
 
 simplificationTheories :: [String]
-simplificationTheories = ["Equiv","Not","Or","And","AndOrInvert"]
-
-simplificationLaws :: String -> [String]
-simplificationLaws "Equiv"  = ["true", "equiv_refl","equiv_id","equiv_symm","equiv_assoc"]
-simplificationLaws "Not"  = ["lnot_invol","false_def", "false_neg", "lnot_equiv_distr"]
-simplificationLaws "Or"  = ["lor_idem","excl-middle","lor_zero","lor_unit","lor_symm"]
-simplificationLaws "And"  = ["land_idem", "land_unit", "contradiction"]
-simplificationLaws "AndOrInvert" = ["land_lor_absorb","lor_land_absorb"]
-simplificationLaws _ = []
+simplificationTheories = ["true", "equiv_refl","equiv_id","equiv_symm","equiv_assoc",
+ "lnot_invol","false_def", "false_neg", "lnot_equiv_distr",
+ "lor_idem","excl-middle","lor_zero","lor_unit","lor_symm","lor_assoc",
+ "land_idem", "land_unit", "contradiction",
+ "land_lor_absorb","lor_land_absorb"]
 \end{code}
 \subsection{Introduction}
 
@@ -397,6 +393,13 @@ moveFocusDown i liveProof
 
 \end{code}
 
+This code created by Conor Ryan:
+This is an attempt to simplify through a proof recursively.
+If a proof is considered to be like a tree, then what is happening is
+that we traverse to the leaf nodes and attempt to simplify the leaf nodes.
+Once this has been done we travel up and at each node in this level we attempt to
+simplify. This is repeatedly done until the we return to the root term of the
+proof, attempt to simply one more time and return the liveproof.
 \begin{code}
 
 trySimplifyRecursively :: Monad m => LogicSig -> LiveProof ->  m LiveProof
@@ -405,29 +408,37 @@ trySimplifyRecursively theSig liveProof
           ss = listOfSubTerms tz
       in if length ss >= 0
           then trySimplifyRecursively' theSig liveProof (ss ++ [0]) 
-          else fail("0")
+          else fail("failed to find any terms")
 
+trySimplifyRecursively' :: Monad m => LogicSig -> LiveProof -> [Int] -> m LiveProof
+trySimplifyRecursively' theSig liveProof (s:ss)
+    = let (tz, seq') = focus liveProof
+          goingDown = s > 0
+          in if goingDown
+             then let (ok, tz') = downTZ s tz
+                      ss' = listOfSubTerms tz' ++[0] ++ ss
+                      in trySimplifyRecursively' theSig (focus_ (tz', seq') $ matches_ [] liveProof) ss'
+             else do  let ctxts = mtchCtxts liveProof
+                      liveProof' <- simplify theSig liveProof ctxts
+                      let (tz, seq') = focus liveProof'
+                      let (ok, tz') = upTZ tz
+                      if length ss > 0
+                         then trySimplifyRecursively' theSig (focus_ (tz', seq') $ matches_ [] liveProof') ss
+                         else return liveProof'
+ 
 simplify :: Monad m => LogicSig -> LiveProof -> [MatchContext] -> m LiveProof
 simplify theSig liveProof ctxts
     = let ((thnm, lws, vts):mcs) = ctxts
           cnumber = length ctxts
-          simpTheories = simplificationTheories
-          simpTheory = filter(\t -> t == thnm) simpTheories
-          [simpTheory'] = simpTheory
-          simpLaws = simplificationLaws simpTheory'
-          in if length simpLaws <= 0
-                then if length mcs <= 0
-                        then return liveProof
-                        else simplify theSig liveProof mcs
-                else do liveProof' <- simplify' theSig liveProof ctxts simpLaws
-                        if length mcs <= 0
-                           then return liveProof'
-                           else simplify theSig liveProof' mcs
+          simpLaws = simplificationTheories
+          in do liveProof' <- simplify' theSig liveProof ctxts simpLaws
+                if length mcs <= 0
+                   then return liveProof'
+                   else simplify theSig liveProof' mcs
 
 simplify' :: Monad m => LogicSig -> LiveProof -> [MatchContext] -> [String] -> m LiveProof
 simplify' theSig liveProof ctxts (simpLaw:simpLaws)
     = let ((thnm,lws,vts):m) = ctxts
-          [simpLaw'] = simpLaw
           laws = filter(\l -> lawName l == simpLaw) lws
           in if length laws <= 0
                 then if (length simpLaws <= 0)
@@ -464,39 +475,27 @@ simplify' theSig liveProof ctxts (simpLaw:simpLaws)
                                                       brepl <- instantiate fbind repl
                                                       scC' <- scC `mrgSideCond` freshAsSideCond fresh
                                                       let liveProof' = (focus_ ((setTZ brepl tz), seq')
-                                                                       $ matches_ []
                                                                        $ conjSC_ scC'
+{-
+This is commented out but if left in would enable backtracking through each point of the simplification
+It is left out because when a large number of individual steps are performed it becomes tricky to use the UI
                                                                        $ stepsSoFar__
                                                                            (( UseLaw (ByMatch $ mClass mtch)
                                                                                      (mName mtch)
                                                                                      fbind
                                                                                      dPath
-                                                                           , (conjpart, conjSC liveProof)):)
+                                                                           , (conjpart, conjSC liveProof)):) -}
+
                                                                            liveProof)
                                                       if length simpLaws <= 0
                                                          then return liveProof'
                                                       else simplify' theSig liveProof' ctxts simpLaws
                                                else fail ("side condition issue")
 
-trySimplifyRecursively' :: Monad m => LogicSig -> LiveProof -> [Int] -> m LiveProof
-trySimplifyRecursively' theSig liveProof (s:ss)
-    = let (tz, seq') = focus liveProof
-          goingDown = s > 0
-          in if goingDown
-             then let (ok, tz') = downTZ s tz
-                      ss' = listOfSubTerms tz' ++[0] ++ ss
-                      in trySimplifyRecursively' theSig (focus_ (tz', seq') $ matches_ [] liveProof) ss'
-             else do  let ctxts = mtchCtxts liveProof
-                      liveProof' <- simplify theSig liveProof ctxts
-                      let (tz, seq') = focus liveProof'
-                      let (ok, tz') = upTZ tz
-                      if length ss > 0
-                         then trySimplifyRecursively' theSig (focus_ (tz', seq') $ matches_ [] liveProof') ss
-                         else return liveProof'
-                             
 \end{code}
 
-This function is just for testing in the interface
+Written by Conor Ryan:
+This function is just for testing subterm counts in the interface
 \begin{code}
 
 checkSubTermsNumbers :: LiveProof -> String

@@ -128,13 +128,13 @@ Function to return number of subterms of term
 
 \begin{code}
 numOfSubTerms :: TermZip -> Int
-numOfSubTerms z = numOfSubTermsAccu z 1
+numOfSubTerms z = numOfSubTerms' z 1
 
-numOfSubTermsAccu :: TermZip -> Int -> Int
-numOfSubTermsAccu (t, tz) n 
+numOfSubTerms' :: TermZip -> Int -> Int
+numOfSubTerms' (t, tz) n 
     = case descend n t of
         Nothing -> (n-1)
-        Just (td, t') -> numOfSubTermsAccu (t, tz) (n+1)
+        Just (td, t') -> numOfSubTerms' (t, tz) (n+1)
 
 listOfSubTerms :: TermZip -> [Int]
 listOfSubTerms tz = makeUpList $ numOfSubTerms tz
@@ -148,10 +148,10 @@ throughProof :: TermZip -> (Bool, TermZip)
 
 throughProof tz@(t,wayup)
     = case numOfSubTerms tz of 0 -> (True, tz)
-                               n -> throughProofWorker tz [] (listOfSubTerms tz)
+                               n -> throughProof' tz [] (listOfSubTerms tz)
 
-throughProofWorker :: TermZip -> [Int] -> [Int] -> (Bool, TermZip)
-throughProofWorker tz@(t,wayup) path ss
+throughProof' :: TermZip -> [Int] -> [Int] -> (Bool, TermZip)
+throughProof' tz@(t,wayup) path ss
     = case ss of [] -> (True,tz)
                  (s:_) -> downTZ s tz
 \end{code}

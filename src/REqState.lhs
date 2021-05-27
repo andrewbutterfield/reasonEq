@@ -7,10 +7,12 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 module REqState ( REqSettings(..)
                 , maxMatchDisplay__, maxMatchDisplay_
-                , showSettings
+                , rEqSettingStrings, showSettingStrings, showSettings
+                , changeSettings
                 , REqState(..)
                 , modified__, modified_, changed
                 , logic__, logic_, theories__, theories_
+                , settings__, settings_
                 , currTheory__, currTheory_, liveProofs__, liveProofs_
                 , writeREqState, readREqState1, readREqState2
                 , module TermZipper
@@ -44,20 +46,62 @@ the only setting is one for the maximum number of matches displayed.
 \begin{code}
 data REqSettings
   = REqSet {
-       maxMatchDisplay :: Int
+       maxMatchDisplay :: Int -- mmd
      }
 
 maxMatchDisplay__ f r = r{maxMatchDisplay = f $ maxMatchDisplay r}
 maxMatchDisplay_      = maxMatchDisplay__ . const
 \end{code}
 
-
+For every setting we provide both a short and long string,
+the first for use in commands, the second for display
+\begin{code}
+type SettingStrings = (String,String,String) -- short,type,long
+rEqSettingStrings = [ ("mmd","Number","Max. Match Display")
+                    ]
+showSettingStrings (short,typ,long)
+  = short ++ ":" ++ typ ++ " '" ++ long ++ "'"
+\end{code}
 
 \begin{code}
 showSettings :: REqSettings -> String
 showSettings rsettings
-  = "Max. Match Display = " ++ (show $ maxMatchDisplay rsettings)
+  = unlines' $ displaySettings rsettings rEqSettingStrings
+  where
+    displaySettings _ []        =  []
+    displaySettings r (rs:rss)  =  disp r rs : displaySettings r rss
+
+    disp r ("mmd",_,text) = text ++ " = " ++ show (maxMatchDisplay r)
 \end{code}
+
+\begin{code}
+changeSettings :: Monad m => String -> String -> REqSettings -> m REqSettings
+changeSettings name valstr rqset
+  = case lookupSettingShort name rEqSettingStrings of
+      Nothing -> fail ("No such setting: "++name)
+      Just sss -> changeSetting sss valstr rqset
+
+lookupSettingShort n []  =  Nothing
+lookupSettingShort n (sss@(s,_,_):ssss)
+  | n == s               =  Just sss
+  | otherwise            =  lookupSettingShort n ssss
+\end{code}
+
+\begin{code}
+changeSetting :: Monad m => SettingStrings  -> String -> REqSettings
+                         -> m REqSettings
+changeSetting (short,typ,_) valstr reqs
+ | typ == "Number"  =  changeNumberSetting short (readInt valstr) reqs
+ | otherwise        =  fail ("changeSetting - unknown type: "++typ)
+\end{code}
+
+\begin{code}
+changeNumberSetting :: Monad m => String  -> Int -> REqSettings -> m REqSettings
+changeNumberSetting name value reqs
+ | name == "mmd"  =  return $ maxMatchDisplay_ value reqs
+ | otherwise        =  fail ("changeNumberSetting - unknown field: "++name)
+\end{code}
+
 
 \begin{code}
 reqset = "REQSET"

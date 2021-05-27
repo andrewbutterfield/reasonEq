@@ -500,9 +500,12 @@ cmdSet
   = ( "set"
     , "set parts of the prover state"
     , unlines
-        [ "set "++setCurrThry++" 'name' -- set current theory to 'name'"
-        , "set "++setSettings++" 'setting' 'value' -- set setting=value"
-        ]
+        ( [ "set "++setCurrThry++" 'name' -- set current theory to 'name'"
+          , "set "++setSettings++" 'setting' 'value' -- set setting=value"
+          ]
+          ++ map (("      "++) .showSettingStrings) rEqSettingStrings
+          ++ ["  e.g. set X mmd 42"]
+        )
     , setState )
 
 setCurrThry = shCurrThry
@@ -511,8 +514,12 @@ setSettings = shSettings
 setState (cmd:rest) reqs
  | cmd == setCurrThry
     =  case setCurrentTheory nm reqs of
-         Nothing     ->  doshow reqs  ("No such theory: '"    ++ nm ++ "'")
-         Just reqs'  ->  doshow reqs' ("Current Theory now '" ++ nm ++ "'")
+         But msgs   ->  doshow reqs $ unlines' msgs
+         Yes reqs'  ->  doshow reqs' ("Current Theory now '" ++ nm ++ "'")
+ | cmd == setSettings
+    =  case modifySettings rest reqs of
+         But msgs    ->  doshow reqs $ unlines' msgs
+         Yes reqs'  ->  doshow reqs' ("Settings updated")
  where nm = args2str rest
 setState _ reqs      =  doshow reqs "unknown/unimplemented 'set' option."
 \end{code}

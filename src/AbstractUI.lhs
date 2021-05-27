@@ -12,6 +12,7 @@ module AbstractUI
 , observeKnowns
 , observeCurrTheory, observeCurrConj
 , observeLiveProofs, observeCompleteProofs
+, modifySettings
 , setCurrentTheory
 , newConjecture
 , assumeConjecture, demoteLaw
@@ -198,6 +199,16 @@ observeCompleteProofs args reqs
 
 \subsection{Modifying Proof-State (\texttt{REqState})}
 
+\subsubsection{Modifying Settings}
+
+\begin{code}
+modifySettings :: Monad m => [String] -> REqState -> m REqState
+modifySettings [name,value] reqs
+  = case changeSettings name value (settings reqs) of
+      But msgs  ->  fail $ unlines' msgs
+      Yes set'  ->  return $ settings_ set' reqs
+modifySettings args reqs = fail "Expected setting short name and value"
+\end{code}
 
 \subsubsection{Setting Current Theory}
 

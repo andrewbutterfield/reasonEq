@@ -502,7 +502,7 @@ matchFocus theSig liveProof
         asn'        =  fromJust $ mkAsn goalt scC -- need to fix
         newMatches  =  matchInContexts theSig ctxts asn'
         rankedM     =  rankAndSort sizeRank ctxts
-                         $ filter isNonTrivial newMatches
+                         $ filter (nonTrivialQuantifiers ctxts) newMatches
     in matches_ rankedM liveProof
 \end{code}
 

@@ -10,6 +10,7 @@ module Ranking
   , rankAndSort
   , sizeRank
   , isNonTrivial, nonTrivialSizeRank
+  , nonTrivialQuantifiers
   )
 where
 
@@ -17,6 +18,7 @@ import Data.List (sortOn)
 import qualified Data.Set as S
 
 import AST
+import Binding
 import Laws
 import Proofs
 import Instantiate
@@ -33,6 +35,7 @@ Ranking matches to show those most likely to be useful.
 \begin{code}
 type Rank = Int -- the lower, the better
 type RankFunction = [MatchContext] -> Match -> Rank
+type FilterFunction = [MatchContext] -> Match -> Bool
 \end{code}
 
 \subsection{Ranking Match Lists}
@@ -43,9 +46,9 @@ rankAndSort :: RankFunction -> [MatchContext] -> Matches -> Matches
 rankAndSort rf ctxts ms  = map snd $ sortOn fst $ zip (map (rf ctxts) ms) ms
 \end{code}
 
-\subsection{Ranking Functions}
 
-\subsubsection{Size Ranking}
+\newpage
+\subsection{Size Matters}
 
 Simple ranking by replacement term size,
 after the binding is applied:
@@ -73,7 +76,11 @@ termSize (Typ _)              =  2
 subsSize (Substn ts lvs)      =  3 * S.size ts + 2 * S.size lvs
 \end{code}
 
-\subsubsection{}
+\subsection{Penalise Trivial Matches}
+
+
+\subsubsection{Filter}
+
 Ranking by term size,
 but where being trivial has a very high penalty
 \begin{code}
@@ -83,13 +90,30 @@ isNonTrivial m
   where
      nontrivial (MatchEqvVar _)  =  False
      nontrivial _                =  True
+\end{code}
 
-nonTrivialSizeRank :: RankFunction
-nonTrivialSizeRank mctxts m
- = sizeRank mctxts m + trivialPenalty m
+\subsubsection{Ranking}
+
+\begin{code}
+trivialHit = 1000000
 
 trivialPenalty :: Match -> Int
 trivialPenalty m
   | isNonTrivial m  =  0
-  | otherwise       =  1000000
+  | otherwise       =  trivialHit
+
+nonTrivialSizeRank :: RankFunction
+nonTrivialSizeRank mctxts m
+ = sizeRank mctxts m + trivialPenalty m
+\end{code}
+
+
+\subsection{Drop Vanishing Quantifiers}
+
+Often we do not want matches in which all pattern list-variables
+are mapped to empty sets and lists.
+
+\begin{code}
+nonTrivialQuantifiers :: FilterFunction
+nonTrivialQuantifiers _  =  not . onlyTrivialQuantifiers . mBind
 \end{code}

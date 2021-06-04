@@ -33,6 +33,7 @@ module Binding
 , mkFloatingBinding, bindFloating
 , generateFreshVars
 , isBijectiveBinding
+, onlyTrivialQuantifiers
 , dumpBinding
 , int_tst_Binding
 ) where
@@ -1569,6 +1570,24 @@ isBijectiveAssocList assoc
     (as,bs) = unzip assoc
     cardAs = S.size $ S.fromList as
     cardBs = S.size $ S.fromList bs
+\end{code}
+
+\subsubsection{Trivial Quantifiers}
+
+A quantifier match is trivial if all its list-variables
+are bound to empty sets or lists.
+
+\begin{code}
+onlyTrivialQuantifiers :: Binding -> Bool
+onlyTrivialQuantifiers (BD (_,_,lbind))
+  | null lvbinds  =  False
+  | otherwise     =  all trivialListVarBind lvbinds
+  where lvbinds = M.elems lbind
+
+trivialListVarBind :: LstVarBind -> Bool
+trivialListVarBind (BL vl)   =  null vl
+trivialListVarBind (BS vs)   =  S.null vs
+trivialListVarBind (BX vts)  =  null vts
 \end{code}
 
 \newpage

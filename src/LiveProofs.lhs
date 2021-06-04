@@ -1,4 +1,4 @@
-matchLawByName\section{Live Proof Support}
+\section{Live Proof Support}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2018-2021
 

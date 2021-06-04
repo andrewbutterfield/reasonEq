@@ -2,11 +2,14 @@
 
 
 
+
 Note that we have added file `experimental/tidy_transcripts.txt`
 to show that proof transcripts looks better when viewed in a text editor like Atom,
 with some "spaces trimming"
 
 ## Most Urgent
+
+
 
 ### Complete UTPBase proofs
 
@@ -44,6 +47,10 @@ rather than be called by their LaTeX names (`lor`,`sqsupseteq`).
 Need proof transcripts to show assumptions, when `assume` strategy is used.
 
 ### Phase 0.
+
+Read [https://harry.garrood.me/blog/down-with-show-part-1/](https://harry.garrood.me/blog/down-with-show-part-1/) carefully!
+
+Look at [https://github.com/ExtremaIS/ttc-haskell](https://github.com/ExtremaIS/ttc-haskell) also.
 
 Introduce `NameRendering` module.
 

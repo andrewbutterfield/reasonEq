@@ -40,10 +40,20 @@ type FilterFunction = [MatchContext] -> Match -> Bool
 
 \subsection{Ranking Match Lists}
 
-Simple sorting according to rank:
+Simple sorting according to rank,
+with duplicate replacements removed.
 \begin{code}
 rankAndSort :: RankFunction -> [MatchContext] -> Matches -> Matches
-rankAndSort rf ctxts ms  = map snd $ sortOn fst $ zip (map (rf ctxts) ms) ms
+rankAndSort rf ctxts ms
+  =  remDupRepl $ map snd $ sortOn fst $ zip (map (rf ctxts) ms) ms
+remDupRepl []       =  []
+remDupRepl one@[_]  =  one
+remDupRepl (m1:rest@(m2:ms))
+  | sameRepl m1 m2  =       remDupRepl (m1:ms)
+  | otherwise       =  m1 : remDupRepl rest
+
+sameRepl :: Match -> Match -> Bool
+sameRepl m1 m2 = mRepl m1 == mRepl m2
 \end{code}
 
 

@@ -722,6 +722,7 @@ proofREPLConfig
             , goDownDescr
             , goUpDescr
             , matchLawDescr
+            , showMatchesDescr -- dev mode!
             , tryMatchDescr
             , applyMatchDescr
             , normQuantDescr
@@ -856,6 +857,28 @@ matchLawCommand args state@(reqs, liveProof)
              waitForReturn
              return (reqs, matches_ [] liveProof)
   where lawnm = filter (not . isSpace) $ unwords args
+\end{code}
+
+Showing match details (dev-mode)
+\begin{code}
+showMatchesDescr = ( "shr"
+                   , "show match replacements (uninstantiated)"
+                   , unlines
+                      [ "shr    -- show all replacements"
+                      , "shr n -- show first n replacements."
+                      , "--  uninstantiated: in 'law-space'."
+                      ]
+                   , showMatchesCommand )
+
+showMatchesCommand :: REPLCmd (REqState, LiveProof)
+showMatchesCommand args (reqs, liveProof)
+  =  do putStrLn $ unlines' $ map (show . mRepl) moi
+        waitForReturn
+        return (reqs, liveProof)
+  where
+    n = args2int args
+    mtchs = matches liveProof
+    moi = if n > 0 then take n mtchs else mtchs
 \end{code}
 
 Try matching focus against a specific law, to see what outcome arises

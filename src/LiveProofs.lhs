@@ -19,6 +19,7 @@ module LiveProofs
  , dispLiveProof
  , startProof, launchProof
  , displayMatches
+ , instantiateRepl, instReplInMatch
  , buildMatchContext, matchInContexts, matchLawByName, tryLawByName
  , proofIsComplete, finaliseProof
  , undoCalcStep
@@ -1019,18 +1020,33 @@ displayMatches mctxts matches
 shMatch vts (i, mtch)
  = show i ++ " : "++ ldq ++ green (nicelawname $ mName mtch) ++ rdq
    ++ " "
-   ++ (bold $ blue $ showRepl arepl)
+   ++ (bold $ blue $ showRepl $ instantiateRepl vts mtch)
    ++ "  " ++ shSCImplication (mLocSC mtch) (mLawSC mtch)
    ++ " " ++ shMClass (mClass mtch)
  where
-    bind = mBind mtch
-    repl = mRepl mtch
-    arepl = case bindFloating vts bind repl of
-              But msgs   ->  But msgs
-              Yes abind  ->  instantiate abind repl
-    (_,lsc) = mAsn mtch
+    -- bind = mBind mtch
+    -- repl = mRepl mtch
+    -- arepl = case bindFloating vts bind repl of
+    --           But msgs   ->  But msgs
+    --           Yes abind  ->  instantiate abind repl
+    -- (_,lsc) = mAsn mtch
     showRepl (But msgs) = unlines ("auto-instantiate failed!!":msgs)
     showRepl (Yes brepl) = trTerm 0 brepl
+
+instantiateRepl :: [VarTable] -> Match -> YesBut Term
+instantiateRepl vts mtch
+  = case bindFloating vts bind repl of
+            But msgs   ->  But msgs
+            Yes abind  ->  instantiate abind repl
+  where
+    bind = mBind mtch
+    repl = mRepl mtch
+
+instReplInMatch :: [VarTable] -> Match -> Match
+instReplInMatch vts mtch
+  =  case instantiateRepl vts mtch of
+       But _      ->  mtch
+       Yes irepl  ->  mtch{mRepl = irepl}
 
 shSCImplication scC scPm
   =     trSideCond scC

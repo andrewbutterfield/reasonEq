@@ -17,6 +17,7 @@ where
 import Data.List (sortOn)
 import qualified Data.Set as S
 
+import Utilities
 import AST
 import Binding
 import Laws
@@ -41,19 +42,28 @@ type FilterFunction = [MatchContext] -> Match -> Bool
 \subsection{Ranking Match Lists}
 
 Simple sorting according to rank,
-with duplicate replacements removed.
+with duplicate replacements removed
+(this requires us to instantiate the replacements).
 \begin{code}
 rankAndSort :: RankFunction -> [MatchContext] -> Matches -> Matches
 rankAndSort rf ctxts ms
-  =  remDupRepl $ map snd $ sortOn fst $ zip (map (rf ctxts) ms) ms
+  =  remDupRepl $ zip instMtchs sortedMtchs
+  where
+    sortedMtchs = map snd $ sortOn fst $ zip (map (rf ctxts) ms) ms
+    vts = concat $ map thd3 ctxts
+    instMtchs = map (instReplInMatch vts) sortedMtchs
+
+remDupRepl :: [ ( Match      --  match with mRepl instantiated by binding
+                , Match ) ]  --  match with original mRepl
+           -> [ Match ]  --  original mRepl matches with unique instantiations.
 remDupRepl []       =  []
-remDupRepl one@[_]  =  one
-remDupRepl (m1:rest@(m2:ms))
-  | sameRepl m1 m2  =       remDupRepl (m1:ms)
+remDupRepl [(_,m)]  =  [m]
+remDupRepl (im1@(i1,m1):rest@((i2,m2):ims))
+  | sameRepl i1 i2  =       remDupRepl (im1:ims)
   | otherwise       =  m1 : remDupRepl rest
 
 sameRepl :: Match -> Match -> Bool
-sameRepl m1 m2 = mRepl m1 == mRepl m2
+sameRepl i1 i2 = mRepl i1 == mRepl i2
 \end{code}
 
 

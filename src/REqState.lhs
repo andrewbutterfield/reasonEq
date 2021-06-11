@@ -7,6 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 module REqState ( REqSettings(..)
                 , maxMatchDisplay__, maxMatchDisplay_
+                , initREqSettings
                 , rEqSettingStrings, showSettingStrings, showSettings
                 , changeSettings
                 , REqState(..)
@@ -29,6 +30,7 @@ import qualified Data.Map as M
 import Data.Maybe (fromJust)
 
 import Utilities
+import Control
 import WriteRead
 import TermZipper
 import Laws
@@ -36,28 +38,89 @@ import Proofs
 import Theories
 import Sequents
 import LiveProofs
+import Ranking
 \end{code}
 
-\subsubsection{Settings}
+\subsection{Settings}
 
-For now,
-the only setting is one for the maximum number of matches displayed.
+We divide settings into three types:
+\begin{enumerate}
+  \item
+    Standalone settings,
+    whose associated behaviour is directly implemented
+    at the relevant point in the code.
+  \item
+   Specification settings, that specify more complex behaviour tuning,
+   for which it is worth to compute behaviour once when they are changed.
+  \item
+   Implementation settings,
+   are related to the specification settings above.
+   These are never directly set by the user,
+   but are computed from user-changes to the specification settings above.
+   The relationship is not one-to-one.
+   In particular,
+   a given implementation setting may be a a blend
+   of several related specification settings.
+\end{enumerate}
+
+\subsubsection{Settings Record}
 
 \begin{code}
 data REqSettings
   = REqSet {
+     -- Section 1 - standalone settings
        maxMatchDisplay :: Int -- mmd
+     -- Section 2 - settings that specify behaviour
+     , hideTrivialMatch :: Bool -- mht --> matchFilter
+     -- Section 3 - settings that implement behaviour from Section 2
+     , matchFilter :: FilterFunction
      }
 
+-- Section 1 updaters
 maxMatchDisplay__ f r = r{maxMatchDisplay = f $ maxMatchDisplay r}
 maxMatchDisplay_      = maxMatchDisplay__ . const
+
+-- Section 2 updaters
+hideTrivialMatch__ f r
+  =  matchFilterUpdate r{hideTrivialMatch = f $ hideTrivialMatch r}
+hideTrivialMatch_   =  hideTrivialMatch__ . const
+
+
+-- Section 3 updaters -- not exported, internal use only
+matchFilterUpdate r
+  = let mfu0 = acceptAll
+        mfu1 = andIfWanted (hideTrivialMatch r) isNonTrivial mfu0
+    in r{matchFilter = mfu1}
 \end{code}
+
+\begin{code}
+andIfWanted wanted currf newf
+ | wanted     =  \ctxt -> currf ctxt `andf` newf ctxt
+ | otherwise  =  currf
+\end{code}
+
+
+
+\subsubsection{Startup/Default Settings}
+
+
+\begin{code}
+initREqSettings
+  = REqSet {
+      maxMatchDisplay = 20
+    , hideTrivialMatch = False
+    , matchFilter = acceptAll
+    }
+\end{code}
+
+\subsubsection{Settings Help}
 
 For every setting we provide both a short and long string,
 the first for use in commands, the second for display
 \begin{code}
 type SettingStrings = (String,String,String) -- short,type,long
 rEqSettingStrings = [ ("mmd","Number","Max. Match Display")
+                    , ("mht","Bool","Hide Trivial Matches")
                     ]
 showSettingStrings (short,typ,long)
   = short ++ ":" ++ typ ++ " '" ++ long ++ "'"
@@ -72,6 +135,7 @@ showSettings rsettings
     displaySettings r (rs:rss)  =  disp r rs : displaySettings r rss
 
     disp r ("mmd",_,text) = text ++ " = " ++ show (maxMatchDisplay r)
+    disp r ("mht",_,text) = text ++ " = " ++ show (hideTrivialMatch r)
 \end{code}
 
 \begin{code}
@@ -91,8 +155,16 @@ lookupSettingShort n (sss@(s,_,_):ssss)
 changeSetting :: Monad m => SettingStrings  -> String -> REqSettings
                          -> m REqSettings
 changeSetting (short,typ,_) valstr reqs
+ | typ == "Bool"    =  changeBoolSetting short (readBool valstr) reqs
  | typ == "Number"  =  changeNumberSetting short (readInt valstr) reqs
  | otherwise        =  fail ("changeSetting - unknown type: "++typ)
+\end{code}
+
+\begin{code}
+changeBoolSetting :: Monad m => String  -> Bool -> REqSettings -> m REqSettings
+changeBoolSetting name value reqs
+ | name == "mht"  =  return $ hideTrivialMatch_ value reqs
+ | otherwise      =  fail ("changeBoolSetting - unknown field: "++name)
 \end{code}
 
 \begin{code}
@@ -120,7 +192,10 @@ readREqSettings txts
   = do rest1 <- readThis reqsetHDR txts
        (theMMD,rest2) <- readKey mmdKey read rest1
        rest3 <- readThis reqsetTRL rest2
-       return $ (REqSet theMMD, rest3)
+       return $ ( REqSet theMMD
+                         False
+                         acceptAll
+                , rest3 )
 \end{code}
 
 

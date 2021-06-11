@@ -59,7 +59,7 @@ devInitState
  = REqState { inDevMode = True
             , projectDir = devProjectDir
             , modified = False
-            , settings = REqSet 40
+            , settings = initREqSettings
             , logicsig = propSignature
             , theories = devTheories
             , currTheory = equivName

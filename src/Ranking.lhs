@@ -8,6 +8,11 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Ranking
   ( FilterFunction, OrderFunction, Ranking
   , filterAndSort
+  -- exported Filters
+  , acceptAll, isNonTrivial, nonTrivialQuantifiers
+  -- exported Orderings
+  , sizeOrd, favourLHSOrd
+  -- exported rankings
   , sizeRanking
   , favouriteRanking
   )
@@ -100,6 +105,19 @@ acceptAll :: FilterFunction
 acceptAll _ _ = True
 \end{code}
 
+\subsubsection{Drop Trivial Matches}
+
+Ranking by term size,
+but where being trivial has a very high penalty
+\begin{code}
+isNonTrivial :: FilterFunction
+isNonTrivial _ m
+  =  nontrivial $ mClass m
+  where
+     nontrivial (MatchEqvVar _)  =  False
+     nontrivial _                =  True
+\end{code}
+
 \subsubsection{Drop Vanishing Quantifiers}
 
 Often we do not want matches in which all pattern list-variables
@@ -142,32 +160,32 @@ subsSize (Substn ts lvs)      =  3 * S.size ts + 2 * S.size lvs
 \end{code}
 
 
-\subsubsection{Penalise Trivial Matches}
-
-Ranking by term size,
-but where being trivial has a very high penalty
-\begin{code}
-isNonTrivial :: Match -> Bool
-isNonTrivial m
-  =  nontrivial $ mClass m
-  where
-     nontrivial (MatchEqvVar _)  =  False
-     nontrivial _                =  True
-\end{code}
-
-
-\begin{code}
-trivialHit = 1000000
-
-trivialPenalty :: Match -> Int
-trivialPenalty m
-  | isNonTrivial m  =  0
-  | otherwise       =  trivialHit
-
-nonTrivialSizeOrd :: OrderFunction Int
-nonTrivialSizeOrd mctxts m
- = sizeOrd mctxts m + trivialPenalty m
-\end{code}
+% \subsubsection{Penalise Trivial Matches}
+%
+% Ranking by term size,
+% but where being trivial has a very high penalty
+% \begin{code}
+% isNonTrivial :: Match -> Bool
+% isNonTrivial m
+%   =  nontrivial $ mClass m
+%   where
+%      nontrivial (MatchEqvVar _)  =  False
+%      nontrivial _                =  True
+% \end{code}
+%
+%
+% \begin{code}
+% trivialHit = 1000000
+%
+% trivialPenalty :: Match -> Int
+% trivialPenalty m
+%   | isNonTrivial m  =  0
+%   | otherwise       =  trivialHit
+%
+% nonTrivialSizeOrd :: OrderFunction Int
+% nonTrivialSizeOrd mctxts m
+%  = sizeOrd mctxts m + trivialPenalty m
+% \end{code}
 
 \subsubsection{Favour LHS}
 

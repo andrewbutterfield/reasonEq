@@ -12,7 +12,7 @@ module Utilities (
 , unlines'
 , issubset
 , clearIt, clear
-, readInt
+, readBool, readInt
 , trim
 , zip1, zip2, zip2'
 , nlookup, alookup
@@ -372,6 +372,20 @@ isSingle _    =  False
 
 \newpage
 \subsection{Smart Readers}
+
+\subsubsection{Read Boolean}
+\begin{code}
+readBool :: String -> Bool
+readBool str
+  | map toLower str == "t"     =  True
+  | map toLower str == "true"  =  True
+  | map toLower str == "yes"   =  True
+  | int >= 0                   =  int > 0
+  where
+    int = readInt str
+readBool _                     =  False
+\end{code}
+
 
 \subsubsection{Read Integer}
 \begin{code}

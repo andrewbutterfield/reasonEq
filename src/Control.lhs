@@ -5,7 +5,10 @@ Copyright  Andrew Buttefield (c) 2019
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module Control  ( mapfst, mapsnd, mappair, mapboth
+module Control  ( fcombine
+                , andf, orf
+                , addIfWanted
+                , mapfst, mapsnd, mappair, mapboth
                 , mapaccum
                 , BasicM
                 , matchPair
@@ -24,6 +27,31 @@ import Control.Monad
 
 We provide general flow-of-control constructs here,
 often of a monadic flavour.
+
+\subsection{Function Controls}
+
+Sometimes we want to to apply a number of functions to the same thing
+and combine the results with an operator.
+This is inspired by \texttt{combine} and \verb"&&&" from LeanCheck.
+
+\begin{code}
+fcombine :: (b->c->d) -> (a->b) -> (a->c) -> a -> d
+fcombine op f1 f2 x = f1 x `op` f2 x
+\end{code}
+
+A key use-case is when \verb"b", \verb"c", and \verb"d" are in fact \verb"Bool".
+\begin{code}
+andf, orf :: (a->Bool) -> (a->Bool) -> (a->Bool)
+andf  =  fcombine (&&)
+orf   =  fcombine (||)
+\end{code}
+
+Add if wanted:
+\begin{code}
+addIfWanted opf wanted currf extraf
+ | wanted     =  currf `opf` extraf
+ | otherwise  =  currf
+\end{code}
 
 \subsection{List Controls}
 

@@ -210,14 +210,11 @@ initState flags
 reqstate0 = REqState { inDevMode = False
                      , projectDir = ""
                      , modified = False
-                     , settings = reqset0
+                     , settings = initREqSettings
                      , logicsig = propSignature
                      , theories = noTheories
                      , currTheory = ""
                      , liveProofs = M.empty }
-
-reqset0 = REqSet { maxMatchDisplay = 40
-                 }
 \end{code}
 
 \newpage

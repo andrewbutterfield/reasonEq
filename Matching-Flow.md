@@ -23,6 +23,31 @@ AbstractUI.matchFocusAgainst lawnm theSig liveProof
     LiveProofs.domatch logicsig vts asn law
 ```
 
+## Command `a num` (Apply Match No. `num`)
+
+`applyMatchToFocus1` 
+
+```
+AbstractUI.applyMatchToFocus1 i liveProof
+  Binding.findUnboundVars (mBind mtch) (mRepl mtch)
+```
+
+
+`applyMatchToFocus2`
+
+```
+AbstractUI.applyMatchToFocus2 mtch unbound ubind liveProof
+  Instantiate.instantiateSC cbind scL
+  SideCond.scDischarge scC scLasC
+  SideCond.onlyFreshOrInvolved unbound scD
+  Sequents.zipperVarsMentioned $ focus liveProof
+  Binding.generateFreshVars knownVs freshneeded cbind
+  SideCond.mkSideCond newLocalASC fresh
+  SideCond.mrgSideCond newLocalSC
+  Instantiate.instantiate fbind repl
+```
+
+
 ## Internal Functions doing matches
 
 ### `doMatch`

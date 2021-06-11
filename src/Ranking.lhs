@@ -46,7 +46,7 @@ so that the tuple itself is also an instance of \texttt{Ord}.
 \begin{code}
 type FilterFunction = [MatchContext] -> Match -> Bool
 type OrderFunction ord = [MatchContext] -> Match -> ord
-type Ranking ord = (FilterFunction, OrderFunction ord)
+type Ranking = [MatchContext] -> Matches -> Matches
 \end{code}
 
 \subsection{Ranking Match Lists}
@@ -55,7 +55,9 @@ Simple sorting according to rank,
 with duplicate replacements removed
 (this requires us to instantiate the replacements).
 \begin{code}
-filterAndSort :: Ord ord => Ranking ord -> [MatchContext] -> Matches -> Matches
+filterAndSort :: Ord ord
+              => (FilterFunction, OrderFunction ord) -> [MatchContext]
+              -> Matches -> Matches
 filterAndSort (ff,rf) ctxts ms
   =  remDupRepl $ zip instMtchs sortedMtchs
   where
@@ -83,14 +85,14 @@ sameRepl i1 i2 = mRepl i1 == mRepl i2
 \subsubsection{Size Matters}
 
 \begin{code}
-sizeRanking :: [MatchContext] -> Matches -> Matches
+sizeRanking :: Ranking
 sizeRanking = filterAndSort ( acceptAll, sizeOrd )
 \end{code}
 
 \subsubsection{No Vanishing Q, favour LHS}
 
 \begin{code}
-favouriteRanking  :: [MatchContext] -> Matches -> Matches
+favouriteRanking  :: Ranking
 favouriteRanking = filterAndSort ( nonTrivialQuantifiers, favourLHSOrd )
 \end{code}
 

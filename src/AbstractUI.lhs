@@ -493,15 +493,15 @@ moveFocusFromHypothesis liveProof
 
 First, matching all laws.
 \begin{code}
-matchFocus :: LogicSig -> LiveProof -> LiveProof -- needs to be monadic
-matchFocus theSig liveProof
+matchFocus :: LogicSig -> Ranking -> LiveProof -> LiveProof -- needs to be monadic
+matchFocus theSig ranking liveProof
   = let (tz,_)      =  focus liveProof
         goalt       =  getTZ tz
         scC         =  conjSC liveProof
         ctxts       =  mtchCtxts liveProof
         asn'        =  fromJust $ mkAsn goalt scC -- need to fix
         newMatches  =  matchInContexts theSig ctxts asn'
-        rankedM     =  favouriteRanking ctxts newMatches
+        rankedM     =  ranking ctxts newMatches
     in matches_ rankedM liveProof
 \end{code}
 

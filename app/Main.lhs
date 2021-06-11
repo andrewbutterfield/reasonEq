@@ -34,6 +34,7 @@ import VarData
 import SideCond
 import Assertions
 import Binding
+import Ranking
 import REqState
 import AbstractUI
 import StdSignature(propSignature)
@@ -845,7 +846,10 @@ matchLawDescr = ( "m"
 
 matchLawCommand :: REPLCmd (REqState, LiveProof)
 matchLawCommand [] (reqs, liveProof)
-  =  return (reqs, matchFocus (logicsig reqs) liveProof)
+  =  return (reqs, matchFocus (logicsig reqs) ranking liveProof)
+  where
+    ranking = filterAndSort (matchFilter $ settings reqs, favourLHSOrd)
+
 matchLawCommand args state@(reqs, liveProof)
   =  case matchFocusAgainst lawnm (logicsig reqs) liveProof of
       Yes liveProof'  ->  return (reqs, liveProof')
@@ -853,7 +857,8 @@ matchLawCommand args state@(reqs, liveProof)
        -> do putStrLn $ unlines' msgs
              waitForReturn
              return (reqs, matches_ [] liveProof)
-  where lawnm = filter (not . isSpace) $ unwords args
+  where
+    lawnm = filter (not . isSpace) $ unwords args
 \end{code}
 
 Showing match details (dev-mode)

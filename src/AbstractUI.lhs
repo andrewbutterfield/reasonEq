@@ -501,8 +501,7 @@ matchFocus theSig liveProof
         ctxts       =  mtchCtxts liveProof
         asn'        =  fromJust $ mkAsn goalt scC -- need to fix
         newMatches  =  matchInContexts theSig ctxts asn'
-        rankedM     =  rankAndSort sizeRank ctxts
-                         $ filter (nonTrivialQuantifiers ctxts) newMatches
+        rankedM     =  favouriteRanking ctxts newMatches
     in matches_ rankedM liveProof
 \end{code}
 

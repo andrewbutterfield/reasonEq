@@ -6,11 +6,10 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 module Ranking
-  ( Rank, RankFunction
-  , rankAndSort
-  , sizeRank
-  , isNonTrivial, nonTrivialSizeRank
-  , nonTrivialQuantifiers
+  ( FilterFunction, OrderFunction, Ranking
+  , filterAndSort
+  , sizeRanking
+  , favouriteRanking
   )
 where
 
@@ -32,11 +31,17 @@ pdbg nm x = dbg ('@':nm++":\n") x
 
 \subsection{Ranking Types}
 
-Ranking matches to show those most likely to be useful.
+Ranking involves two phases: filtering, and ordering.
+Filtering is using a predicate to decide what matches to consider
+for ranking.
+Ordering is done by computing a $n$-tuple of values ($n \geq 1$),
+to be used in sorting comparisons.
+The values should belong to a type that has an instance of \texttt{Ord},
+so that the tuple itself is also an instance of \texttt{Ord}.
 \begin{code}
-type Rank = Int -- the lower, the better
-type RankFunction = [MatchContext] -> Match -> Rank
 type FilterFunction = [MatchContext] -> Match -> Bool
+type OrderFunction ord = [MatchContext] -> Match -> ord
+type Ranking ord = (FilterFunction, OrderFunction ord)
 \end{code}
 
 \subsection{Ranking Match Lists}
@@ -45,11 +50,12 @@ Simple sorting according to rank,
 with duplicate replacements removed
 (this requires us to instantiate the replacements).
 \begin{code}
-rankAndSort :: RankFunction -> [MatchContext] -> Matches -> Matches
-rankAndSort rf ctxts ms
+filterAndSort :: Ord ord => Ranking ord -> [MatchContext] -> Matches -> Matches
+filterAndSort (ff,rf) ctxts ms
   =  remDupRepl $ zip instMtchs sortedMtchs
   where
-    sortedMtchs = map snd $ sortOn fst $ zip (map (rf ctxts) ms) ms
+    fms = filter (ff ctxts) ms
+    sortedMtchs = map snd $ sortOn fst $ zip (map (rf ctxts) fms) fms
     vts = concat $ map thd3 ctxts
     instMtchs = map (instReplInMatch vts) sortedMtchs
 
@@ -66,15 +72,54 @@ sameRepl :: Match -> Match -> Bool
 sameRepl i1 i2 = mRepl i1 == mRepl i2
 \end{code}
 
+\subsection{Rankings}
+
+
+\subsubsection{Size Matters}
+
+\begin{code}
+sizeRanking :: [MatchContext] -> Matches -> Matches
+sizeRanking = filterAndSort ( acceptAll, sizeOrd )
+\end{code}
+
+\subsubsection{No Vanishing Q, favour LHS}
+
+\begin{code}
+favouriteRanking  :: [MatchContext] -> Matches -> Matches
+favouriteRanking = filterAndSort ( nonTrivialQuantifiers, favourLHSOrd )
+\end{code}
+
 
 \newpage
-\subsection{Size Matters}
+\subsection{Filters}
+
+\subsubsection{Accept All}
+
+\begin{code}
+acceptAll :: FilterFunction
+acceptAll _ _ = True
+\end{code}
+
+\subsubsection{Drop Vanishing Quantifiers}
+
+Often we do not want matches in which all pattern list-variables
+are mapped to empty sets and lists.
+\begin{code}
+nonTrivialQuantifiers :: FilterFunction
+nonTrivialQuantifiers _  =  not . onlyTrivialQuantifiers . mBind
+\end{code}
+
+
+\newpage
+\subsection{Orderings}
+
+\subsubsection{Term Size}
 
 Simple ranking by replacement term size,
 after the binding is applied:
 \begin{code}
-sizeRank :: RankFunction
-sizeRank _ m
+sizeOrd :: OrderFunction Int
+sizeOrd _ m
  = case instantiate (mBind m) replL of
     Just replC  ->  termSize replC
     -- instantiate fails if some variables not bound (?v)
@@ -96,10 +141,8 @@ termSize (Typ _)              =  2
 subsSize (Substn ts lvs)      =  3 * S.size ts + 2 * S.size lvs
 \end{code}
 
-\subsection{Penalise Trivial Matches}
 
-
-\subsubsection{Filter}
+\subsubsection{Penalise Trivial Matches}
 
 Ranking by term size,
 but where being trivial has a very high penalty
@@ -112,7 +155,6 @@ isNonTrivial m
      nontrivial _                =  True
 \end{code}
 
-\subsubsection{Ranking}
 
 \begin{code}
 trivialHit = 1000000
@@ -122,18 +164,25 @@ trivialPenalty m
   | isNonTrivial m  =  0
   | otherwise       =  trivialHit
 
-nonTrivialSizeRank :: RankFunction
-nonTrivialSizeRank mctxts m
- = sizeRank mctxts m + trivialPenalty m
+nonTrivialSizeOrd :: OrderFunction Int
+nonTrivialSizeOrd mctxts m
+ = sizeOrd mctxts m + trivialPenalty m
 \end{code}
 
-
-\subsection{Drop Vanishing Quantifiers}
-
-Often we do not want matches in which all pattern list-variables
-are mapped to empty sets and lists.
+\subsubsection{Favour LHS}
 
 \begin{code}
-nonTrivialQuantifiers :: FilterFunction
-nonTrivialQuantifiers _  =  not . onlyTrivialQuantifiers . mBind
+favourLHSOrd :: OrderFunction (Int,Int)
+favourLHSOrd ctxt m = ( sizeOrd ctxt m
+                      , subMatchOrd $ mClass m
+                      )
+
+subMatchOrd :: MatchClass -> Int
+subMatchOrd MatchAll         =  0
+subMatchOrd MatchEqvLHS      =  1
+subMatchOrd MatchEqvRHS      =  2
+subMatchOrd (MatchEqv _)     =  2
+subMatchOrd MatchAnte        =  10
+subMatchOrd MatchCnsq        =  10
+subMatchOrd (MatchEqvVar _)  =  100
 \end{code}

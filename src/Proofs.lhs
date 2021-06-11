@@ -8,7 +8,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Proofs
  ( MatchClass
- , pattern MatchAll, pattern MatchEqv
+ , pattern MatchAll
+ , pattern MatchEqvLHS, pattern MatchEqvRHS, pattern MatchEqv
  , pattern MatchAnte, pattern MatchCnsq
  , pattern MatchEqvVar
  , HowUsed(..)
@@ -319,7 +320,9 @@ So we have a match partiality class datatype:
 \begin{code}
 data MatchClass
   = MA       -- match all of law, with replacement 'true'
-  | ME [Int] -- match subpart of 'equiv' chain
+  | MEL      -- match binary equivalence lhs
+  | MER      -- match binary equivalence rhs
+  | ME [Int] -- match subpart of 'equiv' chain, length > 2
   | MIA      -- match implication antecedent A, replacement A /\ C
   | MIC      -- match implication consequent C, replacement A \/ C
   -- MEV should be last, so these matches rank low by default
@@ -327,6 +330,8 @@ data MatchClass
   deriving (Eq,Ord,Show,Read)
 
 pattern MatchAll       = MA
+pattern MatchEqvLHS    = MEL
+pattern MatchEqvRHS    = MER
 pattern MatchEqv is    = ME is
 pattern MatchAnte      = MIA
 pattern MatchCnsq      = MIC

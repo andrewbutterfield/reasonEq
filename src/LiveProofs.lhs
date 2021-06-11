@@ -699,8 +699,12 @@ so we need not return any matches here.
 doEqvMatch :: LogicSig -> [VarTable] -> Law -> TermSC
            -> [Term]    -- top-level equivalence components in law
            -> Matches
+doEqvMatch _ vts law asnC [tP1,tP2]
 -- rule out matches against one-side of the reflexivity axiom
-doEqvMatch _ _ _ _ [tP1,tP2] | tP1 == tP2  =  []
+  | tP1 == tP2  =  []
+-- otherwise treat binary equivalence specially:
+  | otherwise  =     basicMatch MatchEqvLHS vts law tP2 asnC tP1
+                  ++ basicMatch MatchEqvRHS vts law tP1 asnC tP2
 \end{code}
 Then invoke Cases C and B, in that order.
 \begin{code}
@@ -1059,6 +1063,8 @@ shMappedCond scC bind lsc
       Just ilsc  ->  trSideCond ilsc
 
 shMClass MatchAll         =  green "*"
+shMClass MatchEqvLHS      =  green (_equiv++"lhs")
+shMClass MatchEqvRHS      =  green (_equiv++"rhs")
 shMClass (MatchEqv is)    =  green (_equiv++show is)
 shMClass MatchAnte        =  green ("*"++_implies)
 shMClass MatchCnsq        =  green (_implies++"*")

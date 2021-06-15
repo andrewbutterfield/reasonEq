@@ -721,6 +721,7 @@ proofREPLConfig
             , goUpDescr
             , matchLawDescr
             , showMatchesDescr -- dev mode!
+            , showProofSettingsDescr
             , tryMatchDescr
             , applyMatchDescr
             , normQuantDescr
@@ -881,6 +882,19 @@ showMatchesCommand args (reqs, liveProof)
     n = args2int args
     mtchs = matches liveProof
     moi = if n > 0 then take n mtchs else mtchs
+\end{code}
+
+Showing proof settings:
+\begin{code}
+showProofSettingsDescr = ( "sps"
+                         , "show proof settings"
+                         , ""
+                         , showPrfSettingsCommand )
+showPrfSettingsCommand :: REPLCmd (REqState, LiveProof)
+showPrfSettingsCommand _ pstate@(reqs, _)
+  =  do putStrLn $ observeSettings reqs
+        waitForReturn
+        return pstate
 \end{code}
 
 Try matching focus against a specific law, to see what outcome arises

@@ -72,6 +72,8 @@ data REqSettings
        maxMatchDisplay :: Int -- mmd
      -- Section 2 - settings that specify behaviour
      , hideTrivialMatch :: Bool -- mht --> matchFilter
+     , hideTrivialQuantifiers :: Bool -- mhq --> matchFilter
+     , hideFloatingVariables :: Bool -- mhf --> matchFilter
      -- Section 3 - settings that implement behaviour from Section 2
      , matchFilter :: FilterFunction
      }
@@ -82,23 +84,45 @@ maxMatchDisplay_      = maxMatchDisplay__ . const
 
 -- Section 2 updaters
 hideTrivialMatch__ f r
-  =  matchFilterUpdate r{hideTrivialMatch = f $ hideTrivialMatch r}
+  =  matchFilterUpdate' r{hideTrivialMatch = f $ hideTrivialMatch r}
 hideTrivialMatch_   =  hideTrivialMatch__ . const
+
+hideTrivialQuantifiers__ f r
+  =  matchFilterUpdate' r{hideTrivialQuantifiers = f $ hideTrivialQuantifiers r}
+hideTrivialQuantifiers_   =  hideTrivialQuantifiers__ . const
+
+hideFloatingVariables__ f r
+  =  matchFilterUpdate' r{hideFloatingVariables = f $ hideFloatingVariables r}
+hideFloatingVariables_   =  hideFloatingVariables__ . const
 
 
 -- Section 3 updaters -- not exported, internal use only
 matchFilterUpdate r
   = let mfu0 = acceptAll
         mfu1 = andIfWanted (hideTrivialMatch r) isNonTrivial mfu0
-    in r{matchFilter = mfu1}
+        mfu2 = andIfWanted (hideTrivialQuantifiers r) nonTrivialQuantifiers mfu1
+        mfu3 = andIfWanted (hideFloatingVariables r) noFloatingVariables mfu2
+    in r{matchFilter = mfu3}
+
+matchFilterUpdate' r
+  = r{matchFilter = mfu}
+  where
+    mfu = foldl mfuMrg acceptAll filterSpecs
+    mfuMrg fltsofar (enabled,flt) = andIfWanted enabled flt fltsofar
+    filterSpecs
+      = [ ( hideTrivialMatch r,       isNonTrivial )
+        , ( hideTrivialQuantifiers r, nonTrivialQuantifiers )
+        , ( hideFloatingVariables r,  noFloatingVariables )
+        ]
 \end{code}
 
 \begin{code}
-andIfWanted wanted currf newf
- | wanted     =  \ctxt -> currf ctxt `andf` newf ctxt
- | otherwise  =  currf
+andIfWanted :: Bool -> (ctx -> mtc -> Bool) -> (ctx -> mtc -> Bool)
+                    -> ctx -> mtc -> Bool
+andIfWanted wanted newf currf ctxt mtch
+ | wanted     =  currf ctxt mtch && newf ctxt mtch
+ | otherwise  =  currf ctxt mtch
 \end{code}
-
 
 
 \subsubsection{Startup/Default Settings}
@@ -109,6 +133,8 @@ initREqSettings
   = REqSet {
       maxMatchDisplay = 20
     , hideTrivialMatch = False
+    , hideTrivialQuantifiers = False
+    , hideFloatingVariables = False
     , matchFilter = acceptAll
     }
 \end{code}
@@ -121,6 +147,8 @@ the first for use in commands, the second for display
 type SettingStrings = (String,String,String) -- short,type,long
 rEqSettingStrings = [ ("mmd","Number","Max. Match Display")
                     , ("mht","Bool","Hide Trivial Matches")
+                    , ("mhq","Bool","Hide Trivial Quantifiers")
+                    , ("mhf","Bool","Hide Floating Variables")
                     ]
 showSettingStrings (short,typ,long)
   = short ++ ":" ++ typ ++ " '" ++ long ++ "'"
@@ -136,6 +164,8 @@ showSettings rsettings
 
     disp r ("mmd",_,text) = text ++ " = " ++ show (maxMatchDisplay r)
     disp r ("mht",_,text) = text ++ " = " ++ show (hideTrivialMatch r)
+    disp r ("mhq",_,text) = text ++ " = " ++ show (hideTrivialQuantifiers r)
+    disp r ("mhf",_,text) = text ++ " = " ++ show (hideFloatingVariables r)
 \end{code}
 
 \begin{code}
@@ -164,6 +194,8 @@ changeSetting (short,typ,_) valstr reqs
 changeBoolSetting :: Monad m => String  -> Bool -> REqSettings -> m REqSettings
 changeBoolSetting name value reqs
  | name == "mht"  =  return $ hideTrivialMatch_ value reqs
+ | name == "mhq"  =  return $ hideTrivialQuantifiers_ value reqs
+ | name == "mhf"  =  return $ hideFloatingVariables_ value reqs
  | otherwise      =  fail ("changeBoolSetting - unknown field: "++name)
 \end{code}
 
@@ -193,6 +225,8 @@ readREqSettings txts
        (theMMD,rest2) <- readKey mmdKey read rest1
        rest3 <- readThis reqsetTRL rest2
        return $ ( REqSet theMMD
+                         False
+                         False
                          False
                          acceptAll
                 , rest3 )
@@ -289,4 +323,38 @@ readREqState2 theSet theSig thMap txts
                          , theories = thrys
                          , currTheory = cThNm
                          , liveProofs = lPrfs }
+\end{code}
+
+\subsection{Test Functions}
+
+For \texttt{andIfWanted}
+
+\begin{code}
+yes _ _ = True
+oddt _ = odd
+event _ = even
+small _ n = n < 5
+big _ n = n > 10
+
+preds     = [  oddt, event, small,   big ]
+
+oddsmall  = [  True, False,  True, False ]
+oddbig    = [  True, False, False, True  ]
+evensmall = [ False,  True,  True, False ]
+evenbig   = [ False,  True, False, True  ]
+evens     = [ False,  True, False, False ]
+contra    = [ True,   True, False, False ]
+
+litteodd  = run $ zip oddsmall  preds
+bigodd    = run $ zip oddbig    preds
+tinyeven  = run $ zip evensmall preds
+hugeeven  = run $ zip evenbig   preds
+justevens = run $ zip evens preds
+nope      = run $ zip contra preds
+
+run spec n
+ =  f [] n
+ where
+   f = foldl mrg yes spec
+   mrg fltsofar (enabled,flt) = andIfWanted enabled flt fltsofar
 \end{code}

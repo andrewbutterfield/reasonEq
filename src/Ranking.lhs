@@ -9,7 +9,7 @@ module Ranking
   ( FilterFunction, OrderFunction, Ranking
   , filterAndSort
   -- exported Filters
-  , acceptAll, isNonTrivial, nonTrivialQuantifiers
+  , acceptAll, isNonTrivial, nonTrivialQuantifiers, noFloatingVariables
   -- exported Orderings
   , sizeOrd, favourLHSOrd
   -- exported rankings
@@ -22,12 +22,14 @@ import Data.List (sortOn)
 import qualified Data.Set as S
 
 import Utilities
+import Variables
 import AST
 import Binding
 import Laws
 import Proofs
 import Instantiate
 import LiveProofs
+import TestRendering
 
 import Debug.Trace
 dbg msg x = trace (msg++show x) x
@@ -59,12 +61,19 @@ filterAndSort :: Ord ord
               => (FilterFunction, OrderFunction ord) -> [MatchContext]
               -> Matches -> Matches
 filterAndSort (ff,rf) ctxts ms
-  =  remDupRepl $ zip instMtchs sortedMtchs
+  =  mdbg "fAS-res" $ remDupRepl fmsp
   where
-    fms = filter (ff ctxts) ms
-    sortedMtchs = map snd $ sortOn fst $ zip (map (rf ctxts) fms) fms
     vts = concat $ map thd3 ctxts
-    instMtchs = map (instReplInMatch vts) sortedMtchs
+    sms = map snd $ sortOn fst $ zip (map (rf ctxts) ms) $ mdbg "fAS-ms" ms
+    ims = map (instReplInMatch vts) $ mdbg "fAS-sms" sms
+    msp = zip (mdbg "fAS-ims" ims) sms
+    fmsp = filter (ff ctxts . fst) msp
+    -- sortedMtchs =
+    -- instMtchs = map (instReplInMatch vts) $ mdbg "fAS-sortM" sortedMtchs
+
+
+mdbg msg mtchs = trace (msg++":\n"++unlines (map mdebug mtchs)) mtchs
+mdebug mtch = trTerm 0 $ mRepl mtch
 
 remDupRepl :: [ ( Match      --  match with mRepl instantiated by binding
                 , Match ) ]  --  match with original mRepl
@@ -129,6 +138,12 @@ nonTrivialQuantifiers :: FilterFunction
 nonTrivialQuantifiers _  =  not . onlyTrivialQuantifiers . mBind
 \end{code}
 
+\subsubsection{Drop Floating Matches}
+
+\begin{code}
+noFloatingVariables :: FilterFunction
+noFloatingVariables _ =   not . any isFloatingGVar . mentionedVars . mRepl
+\end{code}
 
 \newpage
 \subsection{Orderings}

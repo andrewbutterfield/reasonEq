@@ -1,27 +1,1028 @@
-@iSC.scP: -- Ø ⊇ P
-( [ SS
-    (GV (VR (Id "P" 0, VP, WS)))
-    ( {} ) ]
-, {} )
-@iSC.bind: -- { P -> (∃ x$ • P), x$ -> {x$} }
-BD
-( { ( (Id "P" 0, VP)
-    , BT (B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0, VO, WS), [], []))]) (V P (VR (Id "P" 0, VP, WS)))) ) }
-, {}
-, { ( (Id "x" 0, VO, [], [])
-    , { ( { GL (LV (VR (Id "x" 0, VO, WS), [], [])) } ) } ) } )
-
-We know that  x$ ⊇ P  from the goal s.c.
-
-assume gx$ ⊇ gP
-bind(Ø ⊇ pP)
- = distribute bind
-bind(Ø) ⊇ bind(pP)
- = apply bind twice
-Ø ⊇ (∃ gx$ • gP)
- = free vars for ∃
-Ø ⊇ (gP \ gx$)  -- we mistakenly instantiate gx$ to Ø ??
- = assumption
-Ø ⊇ Ø
- = supset reflexivity
-True
+@fAS:ms:
+[ MT
+  {mName
+  =
+  "true"
+, mAsn
+  =
+  (K P (VB True), ([], fromList []))
+, mClass
+  =
+  MA
+, mBind
+  =
+  BD
+  ( {}
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  K
+  P
+  (VB True)
+  }
+, MT
+  {mName
+  =
+  "equiv_symm"
+, mAsn
+  =
+  ( C
+    P
+    True
+    (Id "equiv" 0)
+    [ V P (VR (Id "P" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "P" 0, VP, WS)) ]
+  , ( []
+    , {} ) )
+, mClass
+  =
+  ME
+  [ 4 ]
+, mBind
+  =
+  BD
+  ( { ( (Id "P" 0, VP)
+      , BT (K P (VB True)) ) }
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  C
+  P
+  True
+  (Id "equiv" 0)
+  [ V P (VR (Id "P" 0, VP, WS))
+  , V P (VR (Id "Q" 0, VP, WS))
+  , V P (VR (Id "Q" 0, VP, WS)) ]
+  }
+, MT
+  {mName
+  =
+  "equiv_symm"
+, mAsn
+  =
+  ( C
+    P
+    True
+    (Id "equiv" 0)
+    [ V P (VR (Id "P" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "P" 0, VP, WS)) ]
+  , ( []
+    , {} ) )
+, mClass
+  =
+  ME
+  [ 3 ]
+, mBind
+  =
+  BD
+  ( { ( (Id "Q" 0, VP)
+      , BT (K P (VB True)) ) }
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  C
+  P
+  True
+  (Id "equiv" 0)
+  [ V P (VR (Id "P" 0, VP, WS))
+  , V P (VR (Id "Q" 0, VP, WS))
+  , V P (VR (Id "P" 0, VP, WS)) ]
+  }
+, MT
+  {mName
+  =
+  "equiv_symm"
+, mAsn
+  =
+  ( C
+    P
+    True
+    (Id "equiv" 0)
+    [ V P (VR (Id "P" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "P" 0, VP, WS)) ]
+  , ( []
+    , {} ) )
+, mClass
+  =
+  ME
+  [ 2 ]
+, mBind
+  =
+  BD
+  ( { ( (Id "Q" 0, VP)
+      , BT (K P (VB True)) ) }
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  C
+  P
+  True
+  (Id "equiv" 0)
+  [ V P (VR (Id "P" 0, VP, WS))
+  , V P (VR (Id "Q" 0, VP, WS))
+  , V P (VR (Id "P" 0, VP, WS)) ]
+  }
+, MT
+  {mName
+  =
+  "equiv_symm"
+, mAsn
+  =
+  ( C
+    P
+    True
+    (Id "equiv" 0)
+    [ V P (VR (Id "P" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "P" 0, VP, WS)) ]
+  , ( []
+    , {} ) )
+, mClass
+  =
+  ME
+  [ 1 ]
+, mBind
+  =
+  BD
+  ( { ( (Id "P" 0, VP)
+      , BT (K P (VB True)) ) }
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  C
+  P
+  True
+  (Id "equiv" 0)
+  [ V P (VR (Id "Q" 0, VP, WS))
+  , V P (VR (Id "Q" 0, VP, WS))
+  , V P (VR (Id "P" 0, VP, WS)) ]
+  }
+, MT
+  {mName
+  =
+  "id_subst"
+, mAsn
+  =
+  ( C
+    P
+    True
+    (Id "equiv" 0)
+    [ S
+      P
+      (V P (VR (Id "P" 0, VP, WS)))
+      ( SN
+        ( {} )
+        ( { (LV (VR (Id "x" 0, VO, WS), [], []), LV (VR (Id "x" 0, VO, WS), [], [])) } ) )
+    , V P (VR (Id "P" 0, VP, WS)) ]
+  , ( []
+    , {} ) )
+, mClass
+  =
+  MER
+, mBind
+  =
+  BD
+  ( { ( (Id "P" 0, VP)
+      , BT (K P (VB True)) ) }
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  S
+  P
+  (V P (VR (Id "P" 0, VP, WS)))
+  ( SN
+    ( {} )
+    ( { (LV (VR (Id "x" 0, VO, WS), [], []), LV (VR (Id "x" 0, VO, WS), [], [])) } ) )
+  } ]
+@fAS:fms:
+[ MT
+  {mName
+  =
+  "true"
+, mAsn
+  =
+  (K P (VB True), ([], fromList []))
+, mClass
+  =
+  MA
+, mBind
+  =
+  BD
+  ( {}
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  K
+  P
+  (VB True)
+  }
+, MT
+  {mName
+  =
+  "equiv_symm"
+, mAsn
+  =
+  ( C
+    P
+    True
+    (Id "equiv" 0)
+    [ V P (VR (Id "P" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "P" 0, VP, WS)) ]
+  , ( []
+    , {} ) )
+, mClass
+  =
+  ME
+  [ 4 ]
+, mBind
+  =
+  BD
+  ( { ( (Id "P" 0, VP)
+      , BT (K P (VB True)) ) }
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  C
+  P
+  True
+  (Id "equiv" 0)
+  [ V P (VR (Id "P" 0, VP, WS))
+  , V P (VR (Id "Q" 0, VP, WS))
+  , V P (VR (Id "Q" 0, VP, WS)) ]
+  }
+, MT
+  {mName
+  =
+  "equiv_symm"
+, mAsn
+  =
+  ( C
+    P
+    True
+    (Id "equiv" 0)
+    [ V P (VR (Id "P" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "P" 0, VP, WS)) ]
+  , ( []
+    , {} ) )
+, mClass
+  =
+  ME
+  [ 3 ]
+, mBind
+  =
+  BD
+  ( { ( (Id "Q" 0, VP)
+      , BT (K P (VB True)) ) }
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  C
+  P
+  True
+  (Id "equiv" 0)
+  [ V P (VR (Id "P" 0, VP, WS))
+  , V P (VR (Id "Q" 0, VP, WS))
+  , V P (VR (Id "P" 0, VP, WS)) ]
+  }
+, MT
+  {mName
+  =
+  "equiv_symm"
+, mAsn
+  =
+  ( C
+    P
+    True
+    (Id "equiv" 0)
+    [ V P (VR (Id "P" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "P" 0, VP, WS)) ]
+  , ( []
+    , {} ) )
+, mClass
+  =
+  ME
+  [ 2 ]
+, mBind
+  =
+  BD
+  ( { ( (Id "Q" 0, VP)
+      , BT (K P (VB True)) ) }
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  C
+  P
+  True
+  (Id "equiv" 0)
+  [ V P (VR (Id "P" 0, VP, WS))
+  , V P (VR (Id "Q" 0, VP, WS))
+  , V P (VR (Id "P" 0, VP, WS)) ]
+  }
+, MT
+  {mName
+  =
+  "equiv_symm"
+, mAsn
+  =
+  ( C
+    P
+    True
+    (Id "equiv" 0)
+    [ V P (VR (Id "P" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "P" 0, VP, WS)) ]
+  , ( []
+    , {} ) )
+, mClass
+  =
+  ME
+  [ 1 ]
+, mBind
+  =
+  BD
+  ( { ( (Id "P" 0, VP)
+      , BT (K P (VB True)) ) }
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  C
+  P
+  True
+  (Id "equiv" 0)
+  [ V P (VR (Id "Q" 0, VP, WS))
+  , V P (VR (Id "Q" 0, VP, WS))
+  , V P (VR (Id "P" 0, VP, WS)) ]
+  }
+, MT
+  {mName
+  =
+  "id_subst"
+, mAsn
+  =
+  ( C
+    P
+    True
+    (Id "equiv" 0)
+    [ S
+      P
+      (V P (VR (Id "P" 0, VP, WS)))
+      ( SN
+        ( {} )
+        ( { (LV (VR (Id "x" 0, VO, WS), [], []), LV (VR (Id "x" 0, VO, WS), [], [])) } ) )
+    , V P (VR (Id "P" 0, VP, WS)) ]
+  , ( []
+    , {} ) )
+, mClass
+  =
+  MER
+, mBind
+  =
+  BD
+  ( { ( (Id "P" 0, VP)
+      , BT (K P (VB True)) ) }
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  S
+  P
+  (V P (VR (Id "P" 0, VP, WS)))
+  ( SN
+    ( {} )
+    ( { (LV (VR (Id "x" 0, VO, WS), [], []), LV (VR (Id "x" 0, VO, WS), [], [])) } ) )
+  } ]
+@fAS:sortM:
+[ MT
+  {mName
+  =
+  "true"
+, mAsn
+  =
+  (K P (VB True), ([], fromList []))
+, mClass
+  =
+  MA
+, mBind
+  =
+  BD
+  ( {}
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  K
+  P
+  (VB True)
+  }
+, MT
+  {mName
+  =
+  "equiv_symm"
+, mAsn
+  =
+  ( C
+    P
+    True
+    (Id "equiv" 0)
+    [ V P (VR (Id "P" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "P" 0, VP, WS)) ]
+  , ( []
+    , {} ) )
+, mClass
+  =
+  ME
+  [ 4 ]
+, mBind
+  =
+  BD
+  ( { ( (Id "P" 0, VP)
+      , BT (K P (VB True)) ) }
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  C
+  P
+  True
+  (Id "equiv" 0)
+  [ V P (VR (Id "P" 0, VP, WS))
+  , V P (VR (Id "Q" 0, VP, WS))
+  , V P (VR (Id "Q" 0, VP, WS)) ]
+  }
+, MT
+  {mName
+  =
+  "equiv_symm"
+, mAsn
+  =
+  ( C
+    P
+    True
+    (Id "equiv" 0)
+    [ V P (VR (Id "P" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "P" 0, VP, WS)) ]
+  , ( []
+    , {} ) )
+, mClass
+  =
+  ME
+  [ 3 ]
+, mBind
+  =
+  BD
+  ( { ( (Id "Q" 0, VP)
+      , BT (K P (VB True)) ) }
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  C
+  P
+  True
+  (Id "equiv" 0)
+  [ V P (VR (Id "P" 0, VP, WS))
+  , V P (VR (Id "Q" 0, VP, WS))
+  , V P (VR (Id "P" 0, VP, WS)) ]
+  }
+, MT
+  {mName
+  =
+  "equiv_symm"
+, mAsn
+  =
+  ( C
+    P
+    True
+    (Id "equiv" 0)
+    [ V P (VR (Id "P" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "P" 0, VP, WS)) ]
+  , ( []
+    , {} ) )
+, mClass
+  =
+  ME
+  [ 2 ]
+, mBind
+  =
+  BD
+  ( { ( (Id "Q" 0, VP)
+      , BT (K P (VB True)) ) }
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  C
+  P
+  True
+  (Id "equiv" 0)
+  [ V P (VR (Id "P" 0, VP, WS))
+  , V P (VR (Id "Q" 0, VP, WS))
+  , V P (VR (Id "P" 0, VP, WS)) ]
+  }
+, MT
+  {mName
+  =
+  "equiv_symm"
+, mAsn
+  =
+  ( C
+    P
+    True
+    (Id "equiv" 0)
+    [ V P (VR (Id "P" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "P" 0, VP, WS)) ]
+  , ( []
+    , {} ) )
+, mClass
+  =
+  ME
+  [ 1 ]
+, mBind
+  =
+  BD
+  ( { ( (Id "P" 0, VP)
+      , BT (K P (VB True)) ) }
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  C
+  P
+  True
+  (Id "equiv" 0)
+  [ V P (VR (Id "Q" 0, VP, WS))
+  , V P (VR (Id "Q" 0, VP, WS))
+  , V P (VR (Id "P" 0, VP, WS)) ]
+  }
+, MT
+  {mName
+  =
+  "id_subst"
+, mAsn
+  =
+  ( C
+    P
+    True
+    (Id "equiv" 0)
+    [ S
+      P
+      (V P (VR (Id "P" 0, VP, WS)))
+      ( SN
+        ( {} )
+        ( { (LV (VR (Id "x" 0, VO, WS), [], []), LV (VR (Id "x" 0, VO, WS), [], [])) } ) )
+    , V P (VR (Id "P" 0, VP, WS)) ]
+  , ( []
+    , {} ) )
+, mClass
+  =
+  MER
+, mBind
+  =
+  BD
+  ( { ( (Id "P" 0, VP)
+      , BT (K P (VB True)) ) }
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  S
+  P
+  (V P (VR (Id "P" 0, VP, WS)))
+  ( SN
+    ( {} )
+    ( { (LV (VR (Id "x" 0, VO, WS), [], []), LV (VR (Id "x" 0, VO, WS), [], [])) } ) )
+  } ]
+@fAS:instM:
+[ MT
+  {mName
+  =
+  "true"
+, mAsn
+  =
+  (K P (VB True), ([], fromList []))
+, mClass
+  =
+  MA
+, mBind
+  =
+  BD
+  ( {}
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  K
+  P
+  (VB True)
+  }
+, MT
+  {mName
+  =
+  "equiv_symm"
+, mAsn
+  =
+  ( C
+    P
+    True
+    (Id "equiv" 0)
+    [ V P (VR (Id "P" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "P" 0, VP, WS)) ]
+  , ( []
+    , {} ) )
+, mClass
+  =
+  ME
+  [ 4 ]
+, mBind
+  =
+  BD
+  ( { ( (Id "P" 0, VP)
+      , BT (K P (VB True)) ) }
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  C
+  P
+  True
+  (Id "equiv" 0)
+  [ K P (VB True)
+  , V P (VR (Id "?Q" 0, VP, WS))
+  , V P (VR (Id "?Q" 0, VP, WS)) ]
+  }
+, MT
+  {mName
+  =
+  "equiv_symm"
+, mAsn
+  =
+  ( C
+    P
+    True
+    (Id "equiv" 0)
+    [ V P (VR (Id "P" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "P" 0, VP, WS)) ]
+  , ( []
+    , {} ) )
+, mClass
+  =
+  ME
+  [ 3 ]
+, mBind
+  =
+  BD
+  ( { ( (Id "Q" 0, VP)
+      , BT (K P (VB True)) ) }
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  C
+  P
+  True
+  (Id "equiv" 0)
+  [ V P (VR (Id "?P" 0, VP, WS))
+  , K P (VB True)
+  , V P (VR (Id "?P" 0, VP, WS)) ]
+  }
+, MT
+  {mName
+  =
+  "equiv_symm"
+, mAsn
+  =
+  ( C
+    P
+    True
+    (Id "equiv" 0)
+    [ V P (VR (Id "P" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "P" 0, VP, WS)) ]
+  , ( []
+    , {} ) )
+, mClass
+  =
+  ME
+  [ 2 ]
+, mBind
+  =
+  BD
+  ( { ( (Id "Q" 0, VP)
+      , BT (K P (VB True)) ) }
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  C
+  P
+  True
+  (Id "equiv" 0)
+  [ V P (VR (Id "?P" 0, VP, WS))
+  , K P (VB True)
+  , V P (VR (Id "?P" 0, VP, WS)) ]
+  }
+, MT
+  {mName
+  =
+  "equiv_symm"
+, mAsn
+  =
+  ( C
+    P
+    True
+    (Id "equiv" 0)
+    [ V P (VR (Id "P" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "Q" 0, VP, WS))
+    , V P (VR (Id "P" 0, VP, WS)) ]
+  , ( []
+    , {} ) )
+, mClass
+  =
+  ME
+  [ 1 ]
+, mBind
+  =
+  BD
+  ( { ( (Id "P" 0, VP)
+      , BT (K P (VB True)) ) }
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  C
+  P
+  True
+  (Id "equiv" 0)
+  [ V P (VR (Id "?Q" 0, VP, WS))
+  , V P (VR (Id "?Q" 0, VP, WS))
+  , K P (VB True) ]
+  }
+, MT
+  {mName
+  =
+  "id_subst"
+, mAsn
+  =
+  ( C
+    P
+    True
+    (Id "equiv" 0)
+    [ S
+      P
+      (V P (VR (Id "P" 0, VP, WS)))
+      ( SN
+        ( {} )
+        ( { (LV (VR (Id "x" 0, VO, WS), [], []), LV (VR (Id "x" 0, VO, WS), [], [])) } ) )
+    , V P (VR (Id "P" 0, VP, WS)) ]
+  , ( []
+    , {} ) )
+, mClass
+  =
+  MER
+, mBind
+  =
+  BD
+  ( { ( (Id "P" 0, VP)
+      , BT (K P (VB True)) ) }
+  , {}
+  , {} )
+, mLocSC
+  =
+  ( []
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  S
+  P
+  (K P (VB True))
+  ( SN
+    ( {} )
+    ( { (LV (VR (Id "?x" 0, VO, WS), [], []), LV (VR (Id "?x" 0, VO, WS), [], [])) } ) )
+  } ]

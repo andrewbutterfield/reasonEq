@@ -8,11 +8,10 @@ BEGIN LIST LAWS
 (("lor_forall_scope",ASN (C P True (Id "equiv" 0) [C P True (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[])),GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V P (VR (Id "Q" 0,VP,WS)))],B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (C P True (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),B P (Id "forall" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V P (VR (Id "Q" 0,VP,WS)))])],([SD (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])],fromList []))),Axiom)
 (("forall_inst",ASN (C P True (Id "implies" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[])),GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V P (VR (Id "P" 0,VP,WS))),B P (Id "forall" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])))],([],fromList []))),Axiom)
 (("forall_alpha_rename",ASN (C P True (Id "equiv" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V P (VR (Id "P" 0,VP,WS))),B P (Id "forall" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "y" 0,VO,WS),[],[]))])))],([SD (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))])],fromList []))),Axiom)
-(("forall_true",ASN (C P True (Id "equiv" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (K P (VB True)),K P (VB True)],([],fromList []))),Proven "forall_true")
 END LIST LAWS
 BEGIN LIST PROOFS
-("forall_true",ASN (C P True (Id "equiv" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (K P (VB True)),K P (VB True)],([],fromList [])),"redinit",(K P (VB True),[(UseLaw (ByMatch (ME [1])) "forall_remove" (BD (fromList [((Id "P" 0,VP),BT (K P (VB True)))],fromList [],fromList [((Id "x" 0,VO,[],[]),BS (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]))])) [],ASN (B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (K P (VB True)),([],fromList [])))]))
 END LIST PROOFS
 BEGIN LIST CONJECTURES
+("forall_true",ASN (C P True (Id "equiv" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (K P (VB True)),K P (VB True)],([],fromList [])))
 END LIST CONJECTURES
 END THEORY ForAll

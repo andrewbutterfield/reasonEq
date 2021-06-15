@@ -1,15 +1,10 @@
 # To Do
 
-
-
-
 Note that we have added file `experimental/tidy_transcripts.txt`
 to show that proof transcripts looks better when viewed in a text editor like Atom,
 with some "spaces trimming"
 
 ## Most Urgent
-
-
 
 ### Complete UTPBase proofs
 
@@ -27,7 +22,6 @@ We really need to able to tune things - using negation-involution to add a doubl
 
 We also need laws that express equivalence in terms of implication,
 and hence in terms of and/or/invert.
-
 
 ## Upgrade No. 3
 

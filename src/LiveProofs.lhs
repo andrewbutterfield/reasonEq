@@ -19,7 +19,7 @@ module LiveProofs
  , dispLiveProof
  , startProof, launchProof
  , displayMatches
- , instantiateRepl, instReplInMatch
+ -- , instantiateRepl, instReplInMatch
  , buildMatchContext, matchInContexts, matchLawByName, tryLawByName
  , proofIsComplete, finaliseProof
  , undoCalcStep
@@ -105,12 +105,12 @@ buildMatchContext (thy:thys) -- thys not null
 \begin{code}
 data Match
  = MT { mName  ::  String     -- assertion name
-      , mAsn   ::  TermSC  -- matched assertion
+      , mAsn   ::  TermSC     -- matched assertion
       , mClass ::  MatchClass -- match class
       , mBind  ::  Binding    -- resulting binding
       , mLocSC ::  SideCond   -- goal side-condition local update
       , mLawSC ::  SideCond   -- law side-condition mapped to goal
-      , mRepl  ::  Term       -- replacement term
+      , mRepl  ::  Term       -- replacement term, instantiated with binding
       } deriving (Eq,Show,Read)
 
 type Matches = [Match]
@@ -887,8 +887,9 @@ basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
         fbind <- bindFloating vts kbind repl
         scPinC <- instantiateSC fbind scP
         scD <- scDischarge scC scPinC
+        mrepl <- instantiate fbind repl
         if all isFloatingASC (fst scD)
-          then return $ MT n (unwrapASN asn) (chkPatn mc tP) kbind scC scPinC repl
+          then return $ MT n (unwrapASN asn) (chkPatn mc tP) fbind scC scPinC mrepl
           else fail "undischargeable s.c."
   where
 
@@ -1024,7 +1025,7 @@ displayMatches mctxts matches
 shMatch vts (i, mtch)
  = show i ++ " : "++ ldq ++ green (nicelawname $ mName mtch) ++ rdq
    ++ " "
-   ++ (bold $ blue $ showRepl $ instantiateRepl vts mtch)
+   ++ (bold $ blue $ trTerm 0 $ mRepl mtch)
    ++ "  " ++ shSCImplication (mLocSC mtch) (mLawSC mtch)
    ++ " " ++ shMClass (mClass mtch)
  where
@@ -1037,20 +1038,20 @@ shMatch vts (i, mtch)
     showRepl (But msgs) = unlines ("auto-instantiate failed!!":msgs)
     showRepl (Yes brepl) = trTerm 0 brepl
 
-instantiateRepl :: [VarTable] -> Match -> YesBut Term
-instantiateRepl vts mtch
-  = case bindFloating vts bind repl of
-            But msgs   ->  But msgs
-            Yes abind  ->  instantiate abind repl
-  where
-    bind = mBind mtch
-    repl = mRepl mtch
-
-instReplInMatch :: [VarTable] -> Match -> Match
-instReplInMatch vts mtch
-  =  case instantiateRepl vts mtch of
-       But _      ->  mtch
-       Yes irepl  ->  mtch{mRepl = irepl}
+-- instantiateRepl :: [VarTable] -> Match -> YesBut Term
+-- instantiateRepl vts mtch
+--   = case bindFloating vts bind repl of
+--             But msgs   ->  But msgs
+--             Yes abind  ->  instantiate abind repl
+--   where
+--     bind = mBind mtch
+--     repl = mRepl mtch
+--
+-- instReplInMatch :: [VarTable] -> Match -> Match
+-- instReplInMatch vts mtch
+--   =  case instantiateRepl vts mtch of
+--        But _      ->  mtch
+--        Yes irepl  ->  mtch{mRepl = irepl}
 
 shSCImplication scC scPm
   =     trSideCond scC

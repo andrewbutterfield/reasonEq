@@ -61,13 +61,16 @@ filterAndSort :: Ord ord
               => (FilterFunction, OrderFunction ord) -> [MatchContext]
               -> Matches -> Matches
 filterAndSort (ff,rf) ctxts ms
-  =  mdbg "fAS-res" $ remDupRepl fmsp
+  =  mdbg "fAS-res" $ remDupRepl $ mdbg "fAS-sms" sms
   where
-    vts = concat $ map thd3 ctxts
-    sms = map snd $ sortOn fst $ zip (map (rf ctxts) ms) $ mdbg "fAS-ms" ms
-    ims = map (instReplInMatch vts) $ mdbg "fAS-sms" sms
-    msp = zip (mdbg "fAS-ims" ims) sms
-    fmsp = filter (ff ctxts . fst) msp
+    fms = filter (ff ctxts) $ mdbg "fAS-ms" ms
+    sms = map snd $ sortOn fst $ zip (map (rf ctxts) ms) $ mdbg "fAS-fms" fms
+
+    -- vts = concat $ map thd3 ctxts
+    -- sms =
+    -- ims = map (instReplInMatch vts) $ mdbg "fAS-sms" sms
+    -- msp = zip (mdbg "fAS-ims" ims) sms
+    -- fmsp = filter (ff ctxts . fst) msp
     -- sortedMtchs =
     -- instMtchs = map (instReplInMatch vts) $ mdbg "fAS-sortM" sortedMtchs
 
@@ -75,17 +78,15 @@ filterAndSort (ff,rf) ctxts ms
 mdbg msg mtchs = trace (msg++":\n"++unlines (map mdebug mtchs)) mtchs
 mdebug mtch = trTerm 0 $ mRepl mtch
 
-remDupRepl :: [ ( Match      --  match with mRepl instantiated by binding
-                , Match ) ]  --  match with original mRepl
-           -> [ Match ]  --  original mRepl matches with unique instantiations.
+remDupRepl :: [ Match  ] -> [ Match ]  --  original mRepl matches with unique instantiations.
 remDupRepl []       =  []
-remDupRepl [(_,m)]  =  [m]
-remDupRepl (im1@(i1,m1):rest@((i2,m2):ims))
-  | sameRepl i1 i2  =       remDupRepl (im1:ims)
+remDupRepl [m]  =  [m]
+remDupRepl (m1:rest@(m2:ms))
+  | sameRepl m1 m2  =       remDupRepl (m1:ms)
   | otherwise       =  m1 : remDupRepl rest
 
 sameRepl :: Match -> Match -> Bool
-sameRepl i1 i2 = mRepl i1 == mRepl i2
+sameRepl m1 m2 = mRepl m1 == mRepl m2
 \end{code}
 
 \subsection{Rankings}
@@ -154,13 +155,13 @@ Simple ranking by replacement term size,
 after the binding is applied:
 \begin{code}
 sizeOrd :: OrderFunction Int
-sizeOrd _ m
- = case instantiate (mBind m) replL of
-    Just replC  ->  termSize replC
-    -- instantiate fails if some variables not bound (?v)
-    -- rank these as 'larger'
-    Nothing     ->  10 * termSize replL
- where replL = mRepl m
+sizeOrd _ m  =  termSize $ mRepl m
+ -- = case instantiate (mBind m) replL of
+ --    Just replC  ->  termSize replC
+ --    -- instantiate fails if some variables not bound (?v)
+ --    -- rank these as 'larger'
+ --    Nothing     ->  10 * termSize replL
+ -- where replL = mRepl m
 
 termSize :: Term -> Int
 termSize (Val _ _)            =  1

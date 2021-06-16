@@ -945,9 +945,9 @@ applyMatch :: REPLCmd (REqState, LiveProof)
 applyMatch args pstate@(reqs, liveProof)
   = case applyMatchToFocus1 (args2int args) liveProof of
       Nothing -> return pstate
-      Just (unbound,mtch)
-       -> do ubind <- completeUnbound unbound mtch
-             case applyMatchToFocus2 mtch unbound ubind liveProof of
+      Just (floating,mtch)
+       -> do ubind <- completeFloating floating mtch
+             case applyMatchToFocus2 mtch floating ubind liveProof of
                Yes liveProof' -> return(reqs, liveProof')
                But msgs
                 -> do putStrLn $ unlines msgs
@@ -957,31 +957,35 @@ applyMatch args pstate@(reqs, liveProof)
     true   =  theTrue  $ logicsig reqs
     false  =  theFalse $ logicsig reqs
 
-    completeUnbound unbound mtch
-      | S.null unbound  =  return $ mBind mtch
+    completeFloating floating mtch
+      | S.null floating  =  return $ mBind mtch
       | otherwise
           = do putStrLn
-                $ unlines [ "unbound = " ++ trVSet unbound
+                $ unlines [ "floating = " ++ trVSet floating
                           , "bind = " ++ trBinding (mBind mtch)
                           , "please supply bindings as requested"
                           ]
                requestBindings (true,false)
-                               (assnT $ conjecture liveProof) unbound
+                               (assnT $ conjecture liveProof) floating
 \end{code}
 
-For every unbound pattern variable in the replacement,
+\textbf{
+  We have changed the contents of \texttt{mRepl}
+  from being in ``pattern space'', to being in ``goal space''.
+}
+For every floating pattern variable in the replacement,
 we ask the user to pick from a list of terms:
 \begin{code}
 requestBindings :: (Term, Term) -> Term -> Set GenVar -> IO Binding
-requestBindings (t,f) goalTerm unbound
-  = rB emptyBinding $ S.toList unbound
+requestBindings (t,f) goalTerm floating
+  = rB emptyBinding $ S.toList floating
   where
     rB ubind [] = return ubind
 
     rB ubind gvs@(StdVar v : gvs')
       = do putStrLn ("bindings so far: "++trBinding ubind)
            putStrLn termMenu
-           putStrLn ("unbound "++trVar v)
+           putStrLn ("floating "++trVar v)
            response <- fmap readInt $ userPrompt "Choose term by number: "
            handleVarResponse ubind gvs v gvs' response
 
@@ -992,24 +996,25 @@ requestBindings (t,f) goalTerm unbound
              -- putStrLn ("var-lists: " ++ seplist " " trVList vlists)
              -- putStrLn ("var-sets:  " ++ seplist " " trVSet vsets)
              putStrLn vlistMenu
-             putStrLn ("unbound "++trLVar lv)
+             putStrLn ("floating "++trLVar lv)
              responseBits <- fmap (map readInt . words) $ userPrompt lvarPrompt
              handleLVarResponse ubind gvs lv gvs' $ nub responseBits
 
     handleVarResponse ubind gvs v gvs' response
      = if inrange termLen response
        then case bindVarToTerm v (terms!!(response-1)) ubind of
-             Nothing      ->  putStrLn "bind var failed" >> return ubind
-             Just ubind'  ->  rB ubind' gvs'
+             But msgs      ->  putStrLn (unlines' ("bind var failed:":msgs))
+                               >> return ubind
+             Yes ubind'  ->  rB ubind' gvs'
        else rB ubind gvs
 
     handleLVarResponse ubind gvs lv gvs' ixs -- just do one for now
      = if all (inrange vlistLen) ixs
        then do let myvlist = concat $ map (getFrom1 vlists) ixs
                case bindLVarToVList lv myvlist ubind of
-                 Nothing      ->  putStrLn "bind lvar failed"
+                 But msgs      ->  putStrLn (unlines' ("bind lvar failed:":msgs))
                                   >> userPause >> return ubind
-                 Just ubind'  ->  rB ubind' gvs'
+                 Yes ubind'  ->  rB ubind' gvs'
        else rB ubind gvs
 
     terms = t : f : subTerms goalTerm
@@ -1027,7 +1032,7 @@ requestBindings (t,f) goalTerm unbound
     vlists :: [VarList]
     vlists    = mentionedVarLists goalTerm
                 ++ map S.toList (mentionedVarSets goalTerm)
-                ++ map (:[]) (S.toList unbound)
+                ++ map (:[]) (S.toList floating)
     vlistLen  = length vlists
     vlistMenu = numberList trVList vlists
 

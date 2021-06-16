@@ -470,6 +470,8 @@ showHow ByInstantiation = "instantiate"
 
 showMatchClass :: MatchClass -> String
 showMatchClass MatchAll         =  "match-all"
+showMatchClass MatchEqvLHS      =  "match-lhs"
+showMatchClass MatchEqvRHS      =  "match-rhs"
 showMatchClass (MatchEqv is)    =  "match-equiv"++show is
 showMatchClass MatchAnte        =  "match-ante"
 showMatchClass MatchCnsq        =  "match-cnsq"

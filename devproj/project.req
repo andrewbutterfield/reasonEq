@@ -17,18 +17,18 @@ END THEORIES
 CURRTHEORY = Equiv
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("Equiv","equiv_id")
+("Equiv","equiv_subst")
 BEGIN LIVE-PROOF
 TH-NAME: Equiv
-CJ-NAME: equiv_id
-CONJ = ASN (C P True (Id "equiv" 0) [C P True (Id "equiv" 0) [K P (VB True),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))],([],fromList []))
+CJ-NAME: equiv_subst
+CONJ = ASN (C P True (Id "equiv" 0) [S P (C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),C P True (Id "equiv" 0) [S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),S P (V P (VR (Id "Q" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))]],([],fromList []))
 SIDE = ([],fromList [])
 STRAT reduce
 BEGIN SEQZIP
-TERMZIP = (K P (VB True),[Cons' P True (Id "equiv" 0) [] [V P (VR (Id "Q" 0,VP,WS))],Cons' P True (Id "equiv" 0) [] [V P (VR (Id "Q" 0,VP,WS))]])
+TERMZIP = (C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],[Sub' P (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),Cons' P True (Id "equiv" 0) [] [C P True (Id "equiv" 0) [S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),S P (V P (VR (Id "Q" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))]]])
 BEGIN SEQUENT'
 SIDECOND = ([],fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.equiv_id", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.equiv_subst", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
 END SEQUENT'
 END SEQZIP
 FPATH: [1,1]

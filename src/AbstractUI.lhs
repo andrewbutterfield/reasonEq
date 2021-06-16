@@ -547,11 +547,11 @@ applyMatchToFocus1 :: Monad m
                         , Match )
 applyMatchToFocus1 i liveProof
   = do  mtch  <- nlookup i $ matches liveProof
-        let unbound = findUnboundVars (mBind mtch) (mRepl mtch)
-        return (unbound,mtch)
+        let floating = S.filter isFloatingGVar $ mentionedVars $ mRepl mtch
+        return (floating,mtch)
 \end{code}
 
-Now given the match,
+Now given the match, and the set of pattern variables
 and a binding for the previously unbound replacement variables ,
 we proceed to fully instantiate the replacement term,
 and the law side-condition.

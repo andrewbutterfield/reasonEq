@@ -21,7 +21,8 @@ module AbstractUI
 , moveFocusDown, moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, matchFocusAgainst
-, applyMatchToFocus1, applyMatchToFocus2
+, applyMatchToFocus1, applyMatchToFocus3
+, applyMatchToFocus2Std, applyMatchToFocus2Lst
 , normQuantFocus
 , nestSimpFocus
 , substituteFocus
@@ -536,32 +537,73 @@ tryFocusAgainst lawnm parts theSig liveProof
 \newpage
 \subsubsection{Apply Match to Focus}
 
-We have a 2-phase approach here.
-First we find the match, determine what variables
-in the replacement are missing from the binding,
-and return those along with the match
+We have a multi-phase approach here:
+\begin{itemize}
+  \item
+    Return specified match with a list of floating variables used
+    (\texttt{applyMatchToFocus1}).
+  \item
+    Ask the user how to replace floating variables.
+  \item
+    Re-instantiate the replacement, discharge side-condition,
+    and update the focus
+    (\texttt{applyMatchToFocus2}).
+\end{itemize}
+
+
+First we find the match and determine which determine what variables
+in the replacement are floating,
+and return those along with the match.
 \begin{code}
 applyMatchToFocus1 :: Monad m
                    => Int -> LiveProof
-                   -> m ( VarSet
-                        , Match )
+                   -> m ( VarList, VarList, VarList, [Term], Match )
 applyMatchToFocus1 i liveProof
   = do  mtch  <- nlookup i $ matches liveProof
-        let floating = S.filter isFloatingGVar $ mentionedVars $ mRepl mtch
-        return (floating,mtch)
+        let gvars = mentionedVars (mRepl mtch)
+                    `S.union`
+                    scGVars (mLawSC mtch)
+        let (stdvars,lstvars)        =  partition isStdV $ S.toList gvars
+        let stdFloating              =  filter isFloatingGVar stdvars
+        let (lstFloating,lstNormal)  =  partition isFloatingGVar lstvars
+        let replTerms                =  subTerms $ assnT $ conjecture liveProof
+        return (stdFloating, lstFloating, lstNormal, replTerms, mtch)
 \end{code}
 
-Now given the match, and the set of pattern variables
-and a binding for the previously unbound replacement variables ,
-we proceed to fully instantiate the replacement term,
-and the law side-condition.
-We then try to discharge that side-condition.
+The user's choice of a term $P$ for each floating $?x$ is used replace those
+floating variables by those terms, in the match binding,
+the match replacement predicate, and the mapped match side-condition.
+We have two calls here,
+one for standard variables,
+one for list variables.
+
+
+\begin{code}
+applyMatchToFocus2Std :: Monad m => Variable -> Term -> Match -> m Match
+applyMatchToFocus2Std v t m
+  = do let bind' = patchVarBind v t $ mBind m
+       return m{ mBind = bind' }
+  -- mBind  ::  Binding    -- resulting binding
+  -- mLawSC ::  SideCond   -- law side-condition mapped to goal
+  -- mRepl  ::  Term       -- replacement term, instantiated with binding
+
+applyMatchToFocus2Lst :: Monad m => ListVar -> VarList -> Match-> m Match
+applyMatchToFocus2Lst lv vl m = return m
+  -- mBind  ::  Binding    -- resulting binding
+  -- mLawSC ::  SideCond   -- law side-condition mapped to goal
+  -- mRepl  ::  Term       -- replacement term, instantiated with binding
+
+\end{code}
+
+
+Now given the ``float-free'' match,
+try to discharge that side-condition.
 If succesful, we replace the focus.
 \begin{code}
-applyMatchToFocus2 :: Monad m
+applyMatchToFocus3 :: Monad m
                    => Match -> VarSet -> Binding
                    -> LiveProof -> m LiveProof
-applyMatchToFocus2 mtch unbound ubind liveProof
+applyMatchToFocus3 mtch floating ubind liveProof
   = let cbind = mBind mtch `mergeBindings` ubind
         repl = mRepl mtch
         scL = snd $ mAsn mtch
@@ -571,7 +613,7 @@ applyMatchToFocus2 mtch unbound ubind liveProof
         conjpart = exitTZ tz
     in do scLasC <- instantiateSC cbind scL
           scD <- scDischarge scC scLasC
-          if onlyFreshOrInvolved unbound scD
+          if onlyFreshOrInvolved floating scD
             then do let freshneeded = snd scD
                     let knownVs = zipperVarsMentioned $ focus liveProof
                     let (fbind,fresh) = generateFreshVars knownVs freshneeded cbind

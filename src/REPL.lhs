@@ -14,6 +14,7 @@ module REPL (
   , putListOneLine
   , pickByNumber
   , selectPairings, pickPairing
+  , pickThing, pickThings
   )
 where
 
@@ -332,4 +333,41 @@ pickPairing
        putStrLn whatB
        putStrLn $ numberList showB bs
        selectPairings prompt [] bs as
+\end{code}
+
+
+\subsection{Better(?) Pickers}
+
+\begin{code}
+inRange :: Int -> Int -> Bool
+inRange size choice = choice >= 1 && choice <= size
+
+selectFrom things choice = things!!(choice-1)
+
+pickThing :: String -> (a -> String) -> [a] -> IO (Bool,a)
+pickThing hdr showThing things
+  = do putStrLn hdr
+       putStrLn $ numberList showThing things
+       choice <- fmap readInt $ userPrompt "Select by number: "
+       if inRange (length things) choice
+         then do let thing = selectFrom things choice
+                 putStrLn ("Chosen "++showThing thing)
+                 return (True,thing)
+         else return (False,error "Bad choice!")
+
+pickThings :: String -> (a -> String) -> [a] -> IO (Bool,[a])
+pickThings hdr showThing things
+  = do putStrLn hdr
+       putStrLn $ numberList showThing things
+       choicesTxt <- userPrompt "Select by numbers: "
+       let choices =  map readInt $ words choicesTxt
+       putStrLn ("Choices = "++show choices)
+       if null choices
+         then return (False,error "Nothing chosen!")
+       else if all (inRange size) choices
+         then do let wanted = map (selectFrom things) choices
+                 putStrLn ("Chosen "++unwords (map showThing wanted))
+                 return (True,wanted)
+         else return (False,error "Bad choices!")
+  where size = length things
 \end{code}

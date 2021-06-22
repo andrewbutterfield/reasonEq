@@ -945,9 +945,11 @@ applyMatch :: REPLCmd (REqState, LiveProof)
 applyMatch args pstate@(reqs, liveProof)
   = case applyMatchToFocus1 (args2int args) liveProof of
       Nothing -> return pstate
-      Just (floating,mtch)
-       -> do ubind <- completeFloating floating mtch
-             case applyMatchToFocus2 mtch floating ubind liveProof of
+      Just (fStdVars,fLstVars,gLstVars,gSubTerms,mtch)
+       -> do let availTerms = false : true : gSubTerms
+             mtch'   <-  fixFloatVars  mtch  availTerms fStdVars
+             mtch''  <-  fixFloatLVars mtch' gLstVars   fLstVars
+             case applyMatchToFocus3 mtch'' S.empty emptyBinding liveProof of
                Yes liveProof' -> return(reqs, liveProof')
                But msgs
                 -> do putStrLn $ unlines msgs
@@ -957,90 +959,31 @@ applyMatch args pstate@(reqs, liveProof)
     true   =  theTrue  $ logicsig reqs
     false  =  theFalse $ logicsig reqs
 
-    completeFloating floating mtch
-      | S.null floating  =  return $ mBind mtch
-      | otherwise
-          = do putStrLn
-                $ unlines [ "floating = " ++ trVSet floating
-                          , "bind = " ++ trBinding (mBind mtch)
-                          , "please supply bindings as requested"
-                          ]
-               requestBindings (true,false)
-                               (assnT $ conjecture liveProof) floating
+    fixFloatVars mtch _ []  = return mtch
+    fixFloatVars mtch gterms@[term] ((StdVar v):stdvars)
+      = do mtch' <- applyMatchToFocus2Std v term mtch
+           fixFloatVars mtch' gterms stdvars
+    fixFloatVars mtch gterms ((StdVar v):stdvars)
+      = do (chosen,term) <- pickThing ("Choose term to replace "++(trVar v))
+                                     (trTerm 0) gterms
+           mtch' <- if chosen
+                    then applyMatchToFocus2Std v term mtch
+                    else return mtch
+           fixFloatVars mtch' gterms stdvars
+
+    fixFloatLVars mtch gvars []  = return mtch
+    fixFloatLVars mtch gvars@[var] ((LstVar lv):lstvars)
+      = do mtch' <- applyMatchToFocus2Lst lv [var] mtch
+           fixFloatLVars mtch' gvars lstvars
+    fixFloatLVars mtch gvars ((LstVar lv):lstvars)
+      = do (chosen,vl) <- pickThings ("Choose variables to replace "++(trLVar lv))
+                                     trGVar gvars
+           mtch' <- if chosen
+                    then applyMatchToFocus2Lst lv vl mtch
+                    else return mtch
+           fixFloatLVars mtch' gvars lstvars
 \end{code}
 
-\textbf{
-  We have changed the contents of \texttt{mRepl}
-  from being in ``pattern space'', to being in ``goal space''.
-}
-For every floating pattern variable in the replacement,
-we ask the user to pick from a list of terms:
-\begin{code}
-requestBindings :: (Term, Term) -> Term -> Set GenVar -> IO Binding
-requestBindings (t,f) goalTerm floating
-  = rB emptyBinding $ S.toList floating
-  where
-    rB ubind [] = return ubind
-
-    rB ubind gvs@(StdVar v : gvs')
-      = do putStrLn ("bindings so far: "++trBinding ubind)
-           putStrLn termMenu
-           putStrLn ("floating "++trVar v)
-           response <- fmap readInt $ userPrompt "Choose term by number: "
-           handleVarResponse ubind gvs v gvs' response
-
-    rB ubind gvs@(LstVar lv : gvs')
-      | vlistLen == 1  =  handleLVarResponse ubind gvs lv gvs' [1]
-      | otherwise
-        = do putStrLn ("bindings so far: "++trBinding ubind)
-             -- putStrLn ("var-lists: " ++ seplist " " trVList vlists)
-             -- putStrLn ("var-sets:  " ++ seplist " " trVSet vsets)
-             putStrLn vlistMenu
-             putStrLn ("floating "++trLVar lv)
-             responseBits <- fmap (map readInt . words) $ userPrompt lvarPrompt
-             handleLVarResponse ubind gvs lv gvs' $ nub responseBits
-
-    handleVarResponse ubind gvs v gvs' response
-     = if inrange termLen response
-       then case bindVarToTerm v (terms!!(response-1)) ubind of
-             But msgs      ->  putStrLn (unlines' ("bind var failed:":msgs))
-                               >> return ubind
-             Yes ubind'  ->  rB ubind' gvs'
-       else rB ubind gvs
-
-    handleLVarResponse ubind gvs lv gvs' ixs -- just do one for now
-     = if all (inrange vlistLen) ixs
-       then do let myvlist = concat $ map (getFrom1 vlists) ixs
-               case bindLVarToVList lv myvlist ubind of
-                 But msgs      ->  putStrLn (unlines' ("bind lvar failed:":msgs))
-                                  >> userPause >> return ubind
-                 Yes ubind'  ->  rB ubind' gvs'
-       else rB ubind gvs
-
-    terms = t : f : subTerms goalTerm
-    termLen = length terms
-    termMenu = numberList (trTerm 0) terms
-
-    gvars = S.toList $ mentionedVars goalTerm
-    gvarLen = length gvars
-    gvarMenu = numberList trGVar gvars
-
-    lvarPrompt = unlines' [ "numbers separated by spaces"
-                          , "enter > "
-                          ]
-
-    vlists :: [VarList]
-    vlists    = mentionedVarLists goalTerm
-                ++ map S.toList (mentionedVarSets goalTerm)
-                ++ map (:[]) (S.toList floating)
-    vlistLen  = length vlists
-    vlistMenu = numberList trVList vlists
-
-    -- we count from 1 !
-    inrange upper i = 0 < i && i <= upper
-
-    getFrom1 list i = list!!(i-1)
-\end{code}
 
 \newpage
 Normalise Quantifiers

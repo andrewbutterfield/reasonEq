@@ -35,6 +35,7 @@ module Binding
 , isBijectiveBinding
 , onlyTrivialQuantifiers
 , dumpBinding
+, patchVarBind, patchVarListBind, patchVarSetBind
 , int_tst_Binding
 ) where
 import Data.Maybe (fromJust,catMaybes)
@@ -389,7 +390,7 @@ type UpdateCheck m d r  =  d  -- domain element
                         -> m r      -- resulting range element
 \end{code}
 
-Insertion first loows to see if the domain element is already
+Insertion first looks to see if the domain element is already
 present. If not, the mapping is made.
 If present, then the update function checks if old and new
 are equivalent, and proposes what the new range element should be.
@@ -1588,6 +1589,39 @@ trivialListVarBind :: LstVarBind -> Bool
 trivialListVarBind (BL vl)   =  null vl
 trivialListVarBind (BS vs)   =  S.null vs
 trivialListVarBind (BX vts)  =  null vts
+\end{code}
+
+\newpage
+\subsection{Binding Patches}
+
+In a few cases we want to replace a given range element of a binding
+with something else.
+The main use is when floating variables are being replaced by actual terms
+or variable-list,
+when a match is being applied.
+
+\begin{code}
+patchVarBind :: Variable -> Term -> Binding -> Binding
+patchVarBind v t (BD (vbind,sbind,lbind)) = BD (vbind',sbind,lbind)
+ where
+   vbind' = M.mapWithKey f vbind
+   f _ (BV v') | v == v'  =  term2VarBind t
+   f _ bv                 =  bv
+
+term2VarBind (Var _ v)  =  BV v
+term2VarBind t          =  BT t
+\end{code}
+
+\begin{code}
+patchVarListBind :: ListVar -> VarList -> Binding -> Binding
+patchVarListBind lv vl (BD (vbind,sbind,lbind)) = BD (vbind,sbind,lbind')
+  where lbind' = lbind
+\end{code}
+
+\begin{code}
+patchVarSetBind :: ListVar -> VarSet -> Binding -> Binding
+patchVarSetBind lv vs (BD (vbind,sbind,lbind)) = BD (vbind,sbind,lbind')
+  where lbind' = lbind
 \end{code}
 
 \newpage

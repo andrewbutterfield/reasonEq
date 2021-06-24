@@ -104,13 +104,14 @@ buildMatchContext (thy:thys) -- thys not null
 
 \begin{code}
 data Match
- = MT { mName  ::  String     -- assertion name
-      , mAsn   ::  TermSC     -- matched assertion
-      , mClass ::  MatchClass -- match class
-      , mBind  ::  Binding    -- resulting binding
-      , mLocSC ::  SideCond   -- goal side-condition local update
-      , mLawSC ::  SideCond   -- law side-condition mapped to goal
-      , mRepl  ::  Term       -- replacement term, instantiated with binding
+ = MT { mName    ::  String     -- assertion name
+      , mAsn     ::  TermSC     -- matched assertion
+      , mClass   ::  MatchClass -- match class
+      , mBind    ::  Binding    -- resulting binding
+      , mLawPart ::  Term       -- replacement term from law
+      , mLocSC   ::  SideCond   -- goal side-condition local update
+      , mLawSC   ::  SideCond   -- law side-condition mapped to goal
+      , mRepl    ::  Term       -- replacement term, instantiated with binding
       } deriving (Eq,Show,Read)
 
 type Matches = [Match]
@@ -887,9 +888,11 @@ basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
         fbind <- bindFloating vts kbind repl
         scPinC <- instantiateSC fbind scP
         scD <- scDischarge scC scPinC
-        mrepl <- instantiate fbind repl
+
         if all isFloatingASC (fst scD)
-          then return $ MT n (unwrapASN asn) (chkPatn mc tP) fbind scC scPinC mrepl
+          then do mrepl <- instantiate fbind repl
+                  return $ MT n (unwrapASN asn) (chkPatn mc tP)
+                              fbind repl scC scPinC mrepl
           else fail "undischargeable s.c."
   where
 

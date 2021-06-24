@@ -609,22 +609,22 @@ applyMatchToFocus3 :: Monad m
                    -> LiveProof -> m LiveProof
 applyMatchToFocus3 mtch floating ubind liveProof
   = let cbind = mBind mtch -- `mergeBindings` ubind
-        repl = mRepl mtch
+        repl = mLawPart mtch
         scL = snd $ mAsn mtch
         scC = conjSC liveProof
         (tz,seq') = focus liveProof
         dpath = fPath liveProof
         conjpart = exitTZ tz
-    in do scLasC <- instantiateSC (bdbg "cbind" cbind) $ scdbg "scL" scL
+    in do scLasC <- instantiateSC cbind scL
           scD <- scDischarge scC scLasC
-          if onlyFreshSC $ scdbg "scD" scD
+          if onlyFreshSC scD
             then do let freshneeded = snd scD
                     let knownVs = zipperVarsMentioned $ focus liveProof
-                    let (fbind,fresh) = generateFreshVars knownVs freshneeded emptyBinding
+                    let (fbind,fresh) = generateFreshVars knownVs freshneeded cbind
                     let newLocalASC = fst scD
-                    newLocalSC <- mkSideCond newLocalASC $ vsdbg "fresh" fresh
+                    newLocalSC <- mkSideCond newLocalASC fresh
                     scC' <- scC `mrgSideCond` newLocalSC
-                    brepl  <- instantiate (bdbg "fbind" fbind) $ tdbg "repl" repl
+                    brepl  <- instantiate fbind repl
                     asn' <- mkAsn conjpart (conjSC liveProof)
                     return ( focus_ ((setTZ brepl tz),seq')
                            $ matches_ []

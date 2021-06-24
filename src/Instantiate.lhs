@@ -44,7 +44,6 @@ If $\beta$ is a binding, and $t$ is a term,
 we use $\beta.t$ to denote the result of this instantiation.
 Given a variable $v$ we use $\beta(v)$ to denote a binding lookup.
 
-
 \begin{eqnarray*}
    \beta.\kk k &=& \kk k
 \\ \beta.(\vv v) &=& \beta(v)
@@ -73,9 +72,9 @@ Given a variable $v$ we use $\beta(v)$ to denote a binding lookup.
 
 
 \newpage
-\subsubsection{Instantiating Term with a Binding}
+\subsection{Instantiating Term with a (Total) Binding}
 
-We require every free variable in the term to be also in the binding.
+Here werequire every free variable in the term to be also in the binding.
 \begin{code}
 instantiate :: Monad m => Binding -> Term -> m Term
 \end{code}
@@ -309,7 +308,6 @@ fromGVarToLVar (LstVar lv:vl)
 \end{code}
 
 \newpage
-
 \paragraph{Instantiate Variable Collections}
 
 The following code needs updating to handle free-variables properly.
@@ -390,13 +388,8 @@ instLGVar binding gv@(LstVar lv)
       _ -> fail "instLGVar: bound to sets or terms."
 \end{code}
 
-
-
 \newpage
-
-
-\newpage
-\subsection{Side-Condition Instantiation}
+\subsection{Side-Condition Instantiation (Total)}
 
 Doing it again, with side-conditions.
 Bascially we drill down to the atomic side-conditions,

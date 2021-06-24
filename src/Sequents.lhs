@@ -696,7 +696,7 @@ getHypotheses' (HLaws' hn hk hbef _ _ _ _ haft _ _)
 \subsection{Sequent Mentioned Variables}
 
 When generating fresh variables,
-we need to know the state of the entire goal conecture
+we need to know the state of the entire goal conjecture
 at the relevant part of the proof,
 and not just that of the current focus, or sequent sub-component.
 We will have access to all of the above via the top-level zipper:

@@ -34,6 +34,8 @@ import TestRendering
 import Debug.Trace
 dbg msg x = trace (msg++show x) x
 pdbg nm x = dbg ('@':nm++":\n") x
+mdbg msg mtchs = trace (msg++":\n"++unlines (map mdebug mtchs)) mtchs
+mdebug mtch = trTerm 0 $ mRepl mtch
 \end{code}
 
 \subsection{Ranking Types}
@@ -61,22 +63,10 @@ filterAndSort :: Ord ord
               => (FilterFunction, OrderFunction ord) -> [MatchContext]
               -> Matches -> Matches
 filterAndSort (ff,rf) ctxts ms
-  =  mdbg "fAS-res" $ remDupRepl $ mdbg "fAS-sms" sms
+  =  remDupRepl sms
   where
-    fms = filter (ff ctxts) $ mdbg "fAS-ms" ms
-    sms = map snd $ sortOn fst $ zip (map (rf ctxts) ms) $ mdbg "fAS-fms" fms
-
-    -- vts = concat $ map thd3 ctxts
-    -- sms =
-    -- ims = map (instReplInMatch vts) $ mdbg "fAS-sms" sms
-    -- msp = zip (mdbg "fAS-ims" ims) sms
-    -- fmsp = filter (ff ctxts . fst) msp
-    -- sortedMtchs =
-    -- instMtchs = map (instReplInMatch vts) $ mdbg "fAS-sortM" sortedMtchs
-
-
-mdbg msg mtchs = trace (msg++":\n"++unlines (map mdebug mtchs)) mtchs
-mdebug mtch = trTerm 0 $ mRepl mtch
+    fms = filter (ff ctxts) ms
+    sms = map snd $ sortOn fst $ zip (map (rf ctxts) ms) fms
 
 remDupRepl :: [ Match  ] -> [ Match ]  --  original mRepl matches with unique instantiations.
 remDupRepl []       =  []

@@ -659,6 +659,18 @@ The following cases need special treatment:
     should be retained.
     We let $D_{?L}$ and $C_{?L}$ denote
     the floating subsets of $D_L$ and $C_L$ respectively.
+  \item
+    \textbf{
+      We also need to handle cases like $O_1 \notin P$.
+      This reduces to $true$ because of the following things that are
+      true for known variables $O$ and $O'$:
+      \begin{equation*}
+         O \cup O' \supseteq P
+      \qquad O \disj O'
+      \qquad O \disj O_n
+      \qquad O' \disj O_n
+    \end{equation*}
+    }
 \end{itemize}
 \begin{code}
 ascDischarge _ (Covers (StdVar (Vbl _ ObsV _)) dL)

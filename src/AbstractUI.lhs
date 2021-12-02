@@ -622,6 +622,7 @@ applyMatchToFocus3 mtch floating ubind liveProof
                     let knownVs = zipperVarsMentioned $ focus liveProof
                     let (fbind,fresh) = generateFreshVars knownVs freshneeded cbind
                     let newLocalASC = fst scD
+                    -- newLocalSC <- mkSideCond newLocalASC fresh
                     newLocalSC <- mkSideCond newLocalASC S.empty
                     scC' <- scC `mrgSideCond` newLocalSC
                     brepl  <- instantiate fbind repl

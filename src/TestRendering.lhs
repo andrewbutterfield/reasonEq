@@ -416,7 +416,7 @@ trsidecond trid sc@(ascs,fvs)
 tratmsidecond trid (IsPre    gv)    = "pre:"++trgvar trid gv
 tratmsidecond trid (Disjoint gv vs) = trovset trid vs
                                       ++ spaced _notin ++ trgvar trid gv
-tratmsidecond trid (Covers   gv vs) = trovset trid vs
+tratmsidecond trid (CoveredBy   gv vs) = trovset trid vs
                                       ++ spaced _supseteq ++ trgvar trid gv
 trfresh trid fvs
   | S.null fvs  =  ""

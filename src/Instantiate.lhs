@@ -439,7 +439,7 @@ instantiateASC bind asc
 instASCVariant :: Monad m
                => VarSet -> FreeVars -> AtmSideCond -> m [AtmSideCond]
 instASCVariant vsD fvT (Disjoint _ _)  =  instDisjoint vsD fvT
-instASCVariant vsC fvT (Covers _ _)    =  instCovers   vsC fvT
+instASCVariant vsC fvT (CoveredBy _ _)    =  instCovers   vsC fvT
 instASCVariant _   fvT (IsPre _)       =  instIsPre        fvT
 \end{code}
 
@@ -483,7 +483,7 @@ instCovers vsC (fF,fLessBs)
   where
     asc1 = map (f1 vsC) (S.toList fF)
     asc2 = map (f2 vsC) fLessBs
-    f1 vsC gv = Covers gv vsC
+    f1 vsC gv = CoveredBy gv vsC
     f2 vsC (vsF,vsB) = map (f1 (vsC `S.union` vsB)) (S.toList vsF)
 \end{code}
 

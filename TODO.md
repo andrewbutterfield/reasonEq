@@ -23,6 +23,15 @@ We really need to able to tune things - using negation-involution to add a doubl
 We also need laws that express equivalence in terms of implication,
 and hence in terms of and/or/invert.
 
+The definition of ';' only works if predicates have alphabet O+O'
+
+```
+“;_def”     (P;Q)≡(∃ O$_0 • P[O$_0/O$']∧Q[O$_0/O$])  O$,O$' ⊇ P;O$,O$' ⊇ Q;fresh:O$_0
+```
+
+This can clutter a lot of laws/conjectures.
+Is there a way to have a 'locale' that asserts this about P, Q, R, ....?
+
 ## Upgrade No. 3
 
 For simultaneous assignment we need to be able to represent

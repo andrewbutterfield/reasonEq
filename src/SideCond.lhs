@@ -8,7 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module SideCond (
   AtmSideCond
-, pattern Disjoint, pattern Covers, pattern IsPre
+, pattern Disjoint, pattern CoveredBy, pattern IsPre
 , ascGVar, ascVSet
 , SideCond, scTrue, isTrivialSC
 , onlyFreshSC, onlyInvolving, onlyFreshOrInvolved
@@ -135,22 +135,22 @@ In the \texttt{SD} case, having an empty set reduces to \true,
 while in the \texttt{SS} case,
 we have an assertion that the term denoted by the general variable is closed.
 \begin{code}
-pattern Disjoint gv vs = SD  gv vs  --  vs `intersect`  gv = {}
-pattern Covers   gv vs = SS  gv vs  --  vs `supersetof` gv
-pattern IsPre    gv    = SP  gv     --  gv is pre-condition
+pattern Disjoint  gv vs = SD  gv vs  --  gv `intersect` vs = {}
+pattern CoveredBy gv vs = SS  gv vs  --  gv  `subsetof` vs
+pattern IsPre     gv    = SP  gv     --  gv is pre-condition
 \end{code}
 Sometimes we want the \texttt{GenVar} component,
 \begin{code}
 ascGVar :: AtmSideCond -> GenVar
 ascGVar (Disjoint gv _)  =  gv
-ascGVar (Covers   gv _)  =  gv
+ascGVar (CoveredBy   gv _)  =  gv
 ascGVar (IsPre    gv  )  =  gv
 \end{code}
 or the \texttt{VarSet} part:
 \begin{code}
 ascVSet :: AtmSideCond -> VarSet
 ascVSet (Disjoint _ vs)  =  vs
-ascVSet (Covers   _ vs)  =  vs
+ascVSet (CoveredBy   _ vs)  =  vs
 ascVSet _                =  S.empty
 \end{code}
 
@@ -164,6 +164,7 @@ is demonstrably false,
 and otherwise returns a \texttt{Maybe} type,
 where \texttt{Nothing} denotes a condition that is true.
 \begin{code}
+mscTrue = Nothing
 scCheck :: Monad m => AtmSideCond -> m (Maybe AtmSideCond)
 \end{code}
 Here, $z$ denotes an (standard) observation variable,
@@ -182,13 +183,13 @@ because $T$ could correspond to the empty set.
 Nor can we assume $T \disj z$ is false, because $T$ could contain $z$.
 \begin{code}
 scCheck asc@(Disjoint sv@(StdVar v) vs)
-  | S.null vs         =  return Nothing
+  | S.null vs         =  return mscTrue
   | not $ isObsVar v  =  return $ Just asc
   | sv `S.member` vs  =  fail "atomic disjoint is False"
-  | all isObsGVar vs  =  return Nothing
+  | all isObsGVar vs  =  return mscTrue
 \end{code}
 
-\paragraph{Checking Covers}
+\paragraph{Checking CoveredBy}
 
 \begin{eqnarray*}
    \emptyset       \supseteq z  && \false
@@ -199,8 +200,8 @@ Here, as $T$ could be empty,
 we cannot deduce that $\emptyset \supseteq T$ is false.
 Similarly, $T \supseteq z$ could also be true.
 \begin{code}
-scCheck asc@(Covers sv@(StdVar v) vs)
-  | sv `S.member` vs  =  return Nothing
+scCheck asc@(CoveredBy sv@(StdVar v) vs)
+  | sv `S.member` vs  =  return mscTrue
   | not $ isObsVar v  =  return $ Just asc
   | S.null vs         =  fail "atomic covers is False (null)"
   | all isObsGVar vs  =  fail "atomic covers is False (all std)"
@@ -216,7 +217,7 @@ scCheck asc@(Covers sv@(StdVar v) vs)
 \begin{code}
 scCheck asc@(IsPre v@(StdVar (Vbl _ _ vw)))
   | vw == After   =  fail "atomic ispre is False"
-  | vw == Before  =  return Nothing
+  | vw == Before  =  return mscTrue
 \end{code}
 
 For anything else, we just return the condition unchanged.
@@ -305,7 +306,7 @@ is kept ordered by the \texttt{GenVar} component,
 If there is more than one ASC with the same general variable,
 then they are ordered as follows:
 \texttt{Disjoint},
-\texttt{Covers},
+\texttt{CoveredBy},
 and \texttt{IsPre}.
 We can only have at most one of each.
 
@@ -353,19 +354,19 @@ mrgAtmAtms asc [] = return [asc] -- it's the first.
 Given one or more pre-existing ASCs for this g.v., we note the following possible
 patterns:
 \begin{verbatim}
-[Disjoint]  [Disjoint,Covers]  [Disjoint,IsPre]
-[Disjoint,Covers,IsPre]
-[Covers]    [Covers,IsPre]
+[Disjoint]  [Disjoint,CoveredBy]  [Disjoint,IsPre]
+[Disjoint,CoveredBy,IsPre]
+[CoveredBy]    [CoveredBy,IsPre]
 [IsPre]
 \end{verbatim}
 If the general variable is required to be fresh,
-then this is inconsistent with \texttt{Covers}.
+then this is inconsistent with \texttt{CoveredBy}.
 
 \subsubsection{ASC Merge Laws}
 
 We have the following interactions,
 where $D$ and $C$ are the variable-sets found
-in \texttt{Disjoint} and \texttt{Covers} respectively.
+in \texttt{Disjoint} and \texttt{CoveredBy} respectively.
 So the semantics of the disjoint ($D$) and covering ($C$) variable-sets,
 parameterised by a general variable $G$,
 are:
@@ -398,36 +399,36 @@ or the predicate $D \disj G$ ($G$ being the general variable in question).
 \newpage
 \subsubsection{Merging \texttt{Disjoint} into ASC}
 \begin{code}
-mrgAtmAtms (Disjoint gv d0) [Disjoint _ d1,Covers _ c]
- | c `S.isSubsetOf` d'  =  return [Covers gv S.empty]
- | otherwise            =  return [Disjoint gv d',Covers gv (c S.\\ d')]
+mrgAtmAtms (Disjoint gv d0) [Disjoint _ d1,CoveredBy _ c]
+ | c `S.isSubsetOf` d'  =  return [CoveredBy gv S.empty]
+ | otherwise            =  return [Disjoint gv d',CoveredBy gv (c S.\\ d')]
  where d' = d0 `S.union` d1
 mrgAtmAtms (Disjoint gv d0) [Disjoint _ d1]
                   =  return [Disjoint gv (d0 `S.union` d1)]
-mrgAtmAtms (Disjoint gv d) [Covers _ c]
- | c `S.isSubsetOf` d  =  return [Covers gv S.empty]
- | otherwise           =  return [Disjoint gv d,Covers gv (c S.\\ d)]
+mrgAtmAtms (Disjoint gv d) [CoveredBy _ c]
+ | c `S.isSubsetOf` d  =  return [CoveredBy gv S.empty]
+ | otherwise           =  return [Disjoint gv d,CoveredBy gv (c S.\\ d)]
 \end{code}
 
 
-\subsubsection{Merging \texttt{Covers} into ASC}
+\subsubsection{Merging \texttt{CoveredBy} into ASC}
 \begin{code}
-mrgAtmAtms (Covers gv c0) [Disjoint _ d,Covers _ c1]
- | c' `S.isSubsetOf` d  =  return [Covers gv S.empty]
- | otherwise            =  return [Disjoint gv d,Covers gv (c' S.\\ d)]
+mrgAtmAtms (CoveredBy gv c0) [Disjoint _ d,CoveredBy _ c1]
+ | c' `S.isSubsetOf` d  =  return [CoveredBy gv S.empty]
+ | otherwise            =  return [Disjoint gv d,CoveredBy gv (c' S.\\ d)]
  where c' = c0 `S.union` c1
-mrgAtmAtms (Covers gv c) [Disjoint _ d]
- | c `S.isSubsetOf` d  =  return [Covers gv S.empty]
- | otherwise           =  return [Disjoint gv d,Covers gv (c S.\\ d)]
-mrgAtmAtms (Covers gv c0) [Covers _ c1]
-               =  return [Covers gv (c0 `S.intersection` c1)]
+mrgAtmAtms (CoveredBy gv c) [Disjoint _ d]
+ | c `S.isSubsetOf` d  =  return [CoveredBy gv S.empty]
+ | otherwise           =  return [Disjoint gv d,CoveredBy gv (c S.\\ d)]
+mrgAtmAtms (CoveredBy gv c0) [CoveredBy _ c1]
+               =  return [CoveredBy gv (c0 `S.intersection` c1)]
 \end{code}
 
 \subsubsection{Merging \texttt{IsPre} into ASC}
 \begin{code}
 mrgAtmAtms (IsPre _)   atms@[IsPre _]           =  return atms
 mrgAtmAtms p@(IsPre _) (d@(Disjoint _ _):atms)  =  fmap (d:) $ mrgAtmAtms p atms
-mrgAtmAtms p@(IsPre _) (c@(Covers _ _)  :atms)  =  fmap (c:) $ mrgAtmAtms p atms
+mrgAtmAtms p@(IsPre _) (c@(CoveredBy _ _)  :atms)  =  fmap (c:) $ mrgAtmAtms p atms
 \end{code}
 
 \subsubsection{Failure Case}
@@ -461,7 +462,7 @@ mrgAtomicFreshConditions freshvs ascs
 
 coverVarsOf :: [AtmSideCond] -> VarSet
 coverVarsOf ascs = S.unions $ map coversOf ascs
-coversOf (Covers _ vs)  =  vs
+coversOf (CoveredBy _ vs)  =  vs
 coversOf _              =  S.empty
 \end{code}
 
@@ -568,7 +569,7 @@ scDischarge' (grpG@(gvG,ascsG):restG) grpsL@(grpL@(gvL,ascsL):restL)
 
 \newpage
 
-\textbf{As above, we only consider \texttt{Disjoint} and \texttt{Covers}
+\textbf{As above, we only consider \texttt{Disjoint} and \texttt{CoveredBy}
 for now.}
 
 The following code assumes that the \texttt{GenVar} component
@@ -673,7 +674,7 @@ The following cases need special treatment:
     }
 \end{itemize}
 \begin{code}
-ascDischarge _ (Covers (StdVar (Vbl _ ObsV _)) dL)
+ascDischarge _ (CoveredBy (StdVar (Vbl _ ObsV _)) dL)
   | S.null dL  =  fail ("Empty set cannot cover a standard obs. variable")
 \end{code}
 
@@ -696,9 +697,9 @@ ascDischarge (Disjoint _ dG) (Disjoint gv dL)
 \\ & \mapsto & (C_L \setminus D_G) \supseteq V
 \end{eqnarray*}
 \begin{code}
-ascDischarge (Disjoint _ dG) c@(Covers gv cL)
+ascDischarge (Disjoint _ dG) c@(gv `CoveredBy` cL)
   | cL `S.isSubsetOf` dG && isObsGVar gv  =  fail "Disj=>emptyCover"
-  | otherwise                             =  return [Covers gv (cL S.\\ dG)]
+  | otherwise                             =  return [CoveredBy gv (cL S.\\ dG)]
 \end{code}
 
 \begin{eqnarray*}
@@ -710,11 +711,11 @@ ascDischarge (Disjoint _ dG) c@(Covers gv cL)
 Here we have to ensure that $C_{?L}$ is retained, as no floating variables
 exist in $C_G$, and so the intersection would remove those in $C_L$.
 \begin{code}
-ascDischarge (Covers _ cG) (Covers gv cL)
+ascDischarge (CoveredBy _ cG) (CoveredBy gv cL)
   | cG `S.isSubsetOf` cL  =  return []
   | cG `disjoint` cL && isObsGVar gv  =  fail "CoverDisj=>noCover"
   | otherwise  =  return
-                    [Covers gv ((cG `S.intersection` cL) `S.union` floatsOf cL)]
+                    [CoveredBy gv ((cG `S.intersection` cL) `S.union` floatsOf cL)]
   where floatsOf = S.filter isFloatingGVar
 \end{code}
 
@@ -725,7 +726,7 @@ ascDischarge (Covers _ cG) (Covers gv cL)
 \\ & \mapsto & D_L \disj V
 \end{eqnarray*}
 \begin{code}
-ascDischarge (Covers _ cG) d@(Disjoint gv dL)
+ascDischarge (CoveredBy _ cG) d@(Disjoint gv dL)
   | S.null (cG `S.intersection` dL)  =  return []
   | otherwise                        =  return [d]
 \end{code}
@@ -797,7 +798,7 @@ freshAtomDischarge gF (Disjoint gv dL)
    &\mapsto&  C_L \setminus G_F \supseteq V
 \end{eqnarray*}
 \begin{code}
-freshAtomDischarge gF (Covers gv cL) = return [Covers gv (cL S.\\ gF)]
+freshAtomDischarge gF (CoveredBy gv cL) = return [CoveredBy gv (cL S.\\ gF)]
 \end{code}
 
 
@@ -832,7 +833,7 @@ if instantiated properly.
 \begin{code}
 tolerateAutoOrNull :: VarSet -> AtmSideCond -> Bool
 tolerateAutoOrNull unbound (Disjoint _ d) =  unbound `overlaps` d
-tolerateAutoOrNull unbound (Covers _ c)   =  S.null c || unbound `overlaps` c
+tolerateAutoOrNull unbound (CoveredBy _ c)   =  S.null c || unbound `overlaps` c
 tolerateAutoOrNull _       _              =  False
 autoOrNullInAll unbound = all (tolerateAutoOrNull unbound)
 \end{code}
@@ -853,7 +854,7 @@ vl `notin` tV  =  ([ Disjoint tV (S.fromList vl) ], S.empty)
 $\lst v \supseteq \fv(T)$
 \begin{code}
 covers :: VarList -> GenVar -> SideCond
-vl `covers` tV  =  ([ Covers tV (S.fromList vl) ], S.empty)
+vl `covers` tV  =  ([ CoveredBy tV (S.fromList vl) ], S.empty)
 \end{code}
 
 $pre \supseteq \fv(T)$
@@ -966,30 +967,30 @@ tst_scChkDisjoint
     ]
 
 tst_scChkCovers
- = testGroup "Covers"
+ = testGroup "CoveredBy"
     [ testCase "gv_a `coveredby` empty is False"
-       ( scCheck (Covers gv_a S.empty) @?= tstFalse )
+       ( scCheck (CoveredBy gv_a S.empty) @?= tstFalse )
     , testCase "v_e `coveredby` empty stands"
-       ( scCheck (Covers v_e S.empty)
-         @?= tstWhatever (Covers v_e S.empty) )
+       ( scCheck (CoveredBy v_e S.empty)
+         @?= tstWhatever (CoveredBy v_e S.empty) )
     , testCase "gv_a `coveredby` {gv_a} is True"
-       ( scCheck (Covers gv_a $ S.singleton gv_a) @?= tstTrue )
+       ( scCheck (CoveredBy gv_a $ S.singleton gv_a) @?= tstTrue )
     , testCase "gv_a `coveredby` {gv_b} is False"
-       ( scCheck (Covers gv_a $ S.singleton gv_b) @?= tstFalse )
+       ( scCheck (CoveredBy gv_a $ S.singleton gv_b) @?= tstFalse )
     , testCase "v_e `coveredby` {v_e} is True"
-       ( scCheck (Covers v_e $ S.singleton v_e) @?= tstTrue )
+       ( scCheck (CoveredBy v_e $ S.singleton v_e) @?= tstTrue )
     , testCase "v_e `coveredby` {v_f} stands"
-       ( scCheck (Covers v_e $ S.singleton v_f)
-         @?= tstWhatever  (Covers v_e $ S.singleton v_f) )
+       ( scCheck (CoveredBy v_e $ S.singleton v_f)
+         @?= tstWhatever  (CoveredBy v_e $ S.singleton v_f) )
     , testCase "v_e `coveredby` {gv_a} stands"
-       ( scCheck (Covers v_e $ S.singleton gv_a)
-         @?= tstWhatever  (Covers v_e $ S.singleton gv_a) )
+       ( scCheck (CoveredBy v_e $ S.singleton gv_a)
+         @?= tstWhatever  (CoveredBy v_e $ S.singleton gv_a) )
     , testCase "gv_a `coveredby` {v_f} stands"
-       ( scCheck (Covers gv_a $ S.singleton v_f)
-         @?= tstWhatever  (Covers gv_a $ S.singleton v_f) )
+       ( scCheck (CoveredBy gv_a $ S.singleton v_f)
+         @?= tstWhatever  (CoveredBy gv_a $ S.singleton v_f) )
     , testCase "gv_a `coveredby` {gv_b,v_f} stands"
-       ( scCheck (Covers gv_a $ S.fromList [gv_b,v_f])
-         @?= tstWhatever  (Covers gv_a $ S.fromList [gv_b,v_f]) )
+       ( scCheck (CoveredBy gv_a $ S.fromList [gv_b,v_f])
+         @?= tstWhatever  (CoveredBy gv_a $ S.fromList [gv_b,v_f]) )
     ]
 
 tst_scChkIsPre
@@ -1018,19 +1019,19 @@ tst_mrgAtmCond
      , testCase "merge gv_a `disjoint` {gv_a} into [] is False"
         ( mrgAtmCond (Disjoint gv_a $ S.singleton gv_a) [] @?= Nothing )
      , testCase "merge v_e `coveredby` {v_f}  into [] is [itself]"
-        ( mrgAtmCond (Covers v_e $ S.singleton v_f) []
-          @?= Just [Covers v_e $ S.singleton v_f] )
+        ( mrgAtmCond (CoveredBy v_e $ S.singleton v_f) []
+          @?= Just [CoveredBy v_e $ S.singleton v_f] )
      , testCase "merge gv_a `disjoint` empty  into [asc(gv_b)] is [asc(gv_b)]]"
         ( mrgAtmCond (Disjoint gv_a S.empty) [asc1] @?= Just [asc1] )
      , testCase "merge gv_a `disjoint` {gv_a} into [asc(gv_b)] is False"
         ( mrgAtmCond (Disjoint gv_a $ S.singleton gv_a) [asc1] @?= Nothing )
      , testCase
         "merge v_e `coveredby` {v_f}  into [asc(gv_b)] is [asc(gv_b),itself]"
-        ( mrgAtmCond (Covers v_e $ S.singleton v_f) [asc1]
-          @?= Just [asc1,Covers v_e $ S.singleton v_f] )
+        ( mrgAtmCond (CoveredBy v_e $ S.singleton v_f) [asc1]
+          @?= Just [asc1,CoveredBy v_e $ S.singleton v_f] )
      ]
 
-asc1 = (Covers gv_b $ S.fromList [gv_b,v_f])
+asc1 = (CoveredBy gv_b $ S.fromList [gv_b,v_f])
 \end{code}
 
 \subsubsection{Discharge Tests}

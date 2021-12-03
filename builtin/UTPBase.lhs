@@ -352,7 +352,7 @@ From \cite[Defn 2.2.1,p49]{UTP-book}
 $$
   \begin{array}{lll}
      P \seq Q \defs \exists O_0 \bullet P[O_0/O'] \land Q[O_0/O]
-     & m \textrm{ fresh} & \QNAME{$;$-def}
+     & O,O'\supseteq P,Q; m \textrm{ fresh} & \QNAME{$;$-def}
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
@@ -362,14 +362,25 @@ seqIntro = mkConsIntro i_seq boolf_2
                          === exists [gO0]
                               ( (Sub P p o0'sub) /\ (Sub P q o0sub) )
                        )
-                       (fresh $ S.singleton gO0)
+                       seqSC
+   where
+      gP = let (PVar vp) = p in StdVar vp
+      gQ = let (PVar vq) = q in StdVar vq
+      pUnderO = [gO,gO'] `covers` gP
+      qUnderO = [gO,gO'] `covers` gQ
+      gfresh = fresh $ S.singleton gO0
+      (Just seqSC) = do under <- pUnderO `mrgSideCond` qUnderO
+                        under `mrgSideCond` gfresh
 \end{code}
 
-We also need to ensure that $O$ (and relations $O'$, $O_m$)
-are ``known''.
+We also need to ensure that $O$, $O'$, and $O_m$ are ``known''.
 \begin{code}
 obsIntro = fromJust . addKnownVarSet vO S.empty
 \end{code}
+We need to be able to make use of the following properties in proofs:
+$$
+  O \cup O' \supseteq P \qquad O \cup O' \supseteq Q \qquad \dots
+$$
 
 \subsubsection{UTP Seq. Composition Laws}
 
@@ -907,7 +918,7 @@ $$ O', O, O_0, [O_0/O'], [O_0/O']$$
 \begin{code}
 o = jId "O"  ;  vO = PreVar o
 lO = PreVars o  ;  lO' = PostVars o  ;  lO0 = MidVars o "0"
-gO0 = LstVar lO0
+gO = LstVar lO  ;  gO' = LstVar lO'  ;  gO0 = LstVar lO0
 o0'sub = jSubstn[] [(lO',lO0)]
 o0sub  = jSubstn[] [(lO,lO0)]
 \end{code}

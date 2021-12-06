@@ -13,7 +13,7 @@ module SideCond (
 , SideCond, scTrue, isTrivialSC
 , onlyFreshSC, onlyInvolving, onlyFreshOrInvolved
 , scGVars, scVarSet
-, mrgAtmCond, mrgSideCond, mkSideCond
+, mrgAtmCond, mrgSideCond, mrgSideConds, mkSideCond
 , scDischarge
 , isFloatingASC
 , notin, covers, pre, fresh
@@ -486,6 +486,12 @@ mrgSideCond :: Monad m => SideCond -> SideCond -> m SideCond
 mrgSideCond (ascs1,fvs1) (ascs2,fvs2)
      = do ascs' <- mrgAtmCondLists ascs1 ascs2
           mrgAtomicFreshConditions (fvs1 `S.union` fvs2) ascs'
+
+mrgSideConds :: Monad m => [SideCond] -> m SideCond
+mrgSideConds [] = return ([],S.empty)
+mrgSideConds (sc:scs)
+  = do  scs' <- mrgSideConds scs
+        mrgSideCond sc scs'
 \end{code}
 
 \newpage
@@ -664,41 +670,41 @@ ascDischarge _ (CoveredBy (StdVar (Vbl _ ObsV _)) dL)
     should be retained.
     We let $D_{?L}$ and $C_{?L}$ denote
     the floating subsets of $D_L$ and $C_L$ respectively.
-  \item
-    \textbf{
-      We also need to handle cases like $O_1 \notin P$.
-      This reduces to $true$ because of the following things that are
-      true for known variables $O$ and $O'$:
-      \begin{equation*}
-         O \cup O' \supseteq P
-      \qquad O \disj O'
-      \qquad O \disj O_n
-      \qquad O' \disj O_n
-    \end{equation*}
-    }
-    The assertions $O \disj O' \quad O \disj O_n \quad O' \disj O_n$
-    are true because decorations ($x'~ x_n$) designate different variables.
-    We also need the fact $O \cup O' \supseteq P$
-    as a side-condition to those definitions that depend on it
-    (most notably, that of sequential composition).
-    \begin{eqnarray*}
-       O \cup O' \supseteq P &\implies& O_m \disj P
-    \\&=& \mbox{set theory}
-    \\ && \true
-    \\
-    O \cup O' \supseteq V &\discharges& O_m \disj V
-    \end{eqnarray*}
-\begin{code}
-ascDischarge (CoveredBy (StdVar (Vbl _ PredV _)) oo'L)
-             (Disjoint gv omL)
-  | isWhenPartition oo'L omL   =  return [] -- true
-  where
-    isWhenPartition oo'L omL  -- same name, partitions {Before,During,After}
-      = False -- NYI
-\end{code}
 \end{itemize}
+We also need to handle cases like $O_1 \notin P$.
+This reduces to $true$ because of the following things that are
+true for known variables $O$ and $O'$:
+\begin{equation*}
+   O \cup O' \supseteq P
+\qquad O \disj O'
+\qquad O \disj O_n
+\qquad O' \disj O_n
+\end{equation*}
+The assertions $O \disj O' \quad O \disj O_n \quad O' \disj O_n$
+are true because decorations ($x'~ x_n$) designate different variables.
+We also need the fact $O \cup O' \supseteq P$
+as a side-condition to those definitions that depend on it
+(most notably, that of sequential composition).
+\begin{eqnarray*}
+   O \cup O' \supseteq P &\implies& O_m \disj P
+\\&=& \mbox{set theory}
+\\ && \true
+\\
+O \cup O' \supseteq V &\discharges& O_m \disj V
+\end{eqnarray*}
+This is subsumed by the
+$C_G \supseteq V \discharges D_L \disj V $
+discharge rule further below.
+% \begin{code}
+% ascDischarge (CoveredBy (StdVar (Vbl _ PredV _)) oo'L)
+%              (Disjoint gv omL)
+%   | isWhenPartition oo'L omL   =  return [] -- true
+%   where
+%     isWhenPartition oo'L omL  -- same name, partitions {Before,During,After}
+%       = False -- NYI
+% \end{code}
 
-Otherwise, we work through the combinations:
+Now, we work through the combinations:
 \begin{eqnarray*}
    D_G \disj V \discharges D_L \disj V
    & = & \true, \quad\IF\quad D_L \subseteq D_G

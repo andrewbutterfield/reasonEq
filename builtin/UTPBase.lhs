@@ -347,12 +347,21 @@ cjCondAlt2 = preddef ("cond" -.- "alt" -.- "def2")
 
 \subsubsection{Defn. of Sequential Composition}
 
+We need to know when a predicate is a UTP predicate ($O \cup O'\supseteq P$):
+\begin{code}
+assertIsUTP :: GenVar -> SideCond
+assertIsUTP gP = [gO,gO'] `covers` gP
+assertAreUTP :: [GenVar] -> SideCond
+assertAreUTP gPs = fromJust $ mrgSideConds (map assertIsUTP gPs)
+\end{code}
+
 From \cite[Defn 2.2.1,p49]{UTP-book}
 
 $$
   \begin{array}{lll}
      P \seq Q \defs \exists O_0 \bullet P[O_0/O'] \land Q[O_0/O]
-     & O,O'\supseteq P,Q; m \textrm{ fresh} & \QNAME{$;$-def}
+     & O,O'\supseteq P,Q; O_0 \textrm{ fresh}
+     & \QNAME{$;$-def}
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
@@ -366,10 +375,8 @@ seqIntro = mkConsIntro i_seq boolf_2
    where
       gP = let (PVar vp) = p in StdVar vp
       gQ = let (PVar vq) = q in StdVar vq
-      pUnderO = [gO,gO'] `covers` gP
-      qUnderO = [gO,gO'] `covers` gQ
       gfresh = fresh $ S.singleton gO0
-      (Just seqSC) = do under <- pUnderO `mrgSideCond` qUnderO
+      (Just seqSC) = do under <- assertIsUTP gP `mrgSideCond` assertIsUTP gQ
                         under `mrgSideCond` gfresh
 \end{code}
 
@@ -389,13 +396,14 @@ From \cite[2.2\textbf{L1}, p49]{UTP-book}
 $$
   \begin{array}{lll}
      P \seq (Q \seq R) \equiv (P\seq Q)\seq R
-     && \QNAME{$;$-assoc}
+     & O,O'\supseteq P,Q,R
+     & \QNAME{$;$-assoc}
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
 (cjSeqAssoc,alSeqAssoc) = bookdef (";" -.- "assoc") "2.2L1"
                            ( mkSeq p (mkSeq q r) ===  mkSeq (mkSeq p q) r )
-                           scTrue
+                           (assertAreUTP $ map (StdVar . theVar) [p,q,r] ) 
 \end{code}
 
 

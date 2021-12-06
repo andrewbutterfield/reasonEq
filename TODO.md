@@ -29,8 +29,14 @@ The definition of ';' only works if predicates have alphabet O+O'
 “;_def”     (P;Q)≡(∃ O$_0 • P[O$_0/O$']∧Q[O$_0/O$])  O$,O$' ⊇ P;O$,O$' ⊇ Q;fresh:O$_0
 ```
 
+We need any posited law to have the same side-conditions: e.g. `P;(Q;R)≡(P;Q);R`.
 This can clutter a lot of laws/conjectures.
 Is there a way to have a 'locale' that asserts this about P, Q, R, ....?
+
+**Extend side-conditions to refer to a set of common side-conditions by name?**
+We would have a side-condition called `UTPBase [P,Q,R,...]` 
+that is shorthand for `O$,O$' ⊇ P; O$,O$' ⊇ Q; O$,O$' ⊇ R;...`
+But how would `Design [P..]` capture the idea that `O` contains `ok`?
 
 ## Upgrade No. 3
 

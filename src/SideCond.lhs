@@ -655,6 +655,10 @@ The following cases need special treatment:
     A translated law side-condition of the form $\emptyset \supseteq v$,
     where $v$ is a standard variable.
     This is simply false.
+\begin{code}
+ascDischarge _ (CoveredBy (StdVar (Vbl _ ObsV _)) dL)
+  | S.null dL  =  fail ("Empty set cannot cover a standard obs. variable")
+\end{code}
   \item
     Any occurrences of a floating variable in a translated law side-condition
     should be retained.
@@ -672,11 +676,27 @@ The following cases need special treatment:
       \qquad O' \disj O_n
     \end{equation*}
     }
-\end{itemize}
+    The assertions $O \disj O' \quad O \disj O_n \quad O' \disj O_n$
+    are true because decorations ($x'~ x_n$) designate different variables.
+    We also need the fact $O \cup O' \supseteq P$
+    as a side-condition to those definitions that depend on it
+    (most notably, that of sequential composition).
+    \begin{eqnarray*}
+       O \cup O' \supseteq P &\implies& O_m \disj P
+    \\&=& \mbox{set theory}
+    \\ && \true
+    \\
+    O \cup O' \supseteq V &\discharges& O_m \disj V
+    \end{eqnarray*}
 \begin{code}
-ascDischarge _ (CoveredBy (StdVar (Vbl _ ObsV _)) dL)
-  | S.null dL  =  fail ("Empty set cannot cover a standard obs. variable")
+ascDischarge (CoveredBy (StdVar (Vbl _ PredV _)) oo'L)
+             (Disjoint gv omL)
+  | isWhenPartition oo'L omL   =  return [] -- true
+  where
+    isWhenPartition oo'L omL  -- same name, partitions {Before,During,After}
+      = False -- NYI
 \end{code}
+\end{itemize}
 
 Otherwise, we work through the combinations:
 \begin{eqnarray*}

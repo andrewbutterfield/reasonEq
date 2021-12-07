@@ -360,7 +360,7 @@ From \cite[Defn 2.2.1,p49]{UTP-book}
 $$
   \begin{array}{lll}
      P \seq Q \defs \exists O_0 \bullet P[O_0/O'] \land Q[O_0/O]
-     & O,O'\supseteq P,Q; O_0 \textrm{ fresh}
+     & O,O'\supseteq P,Q ~~ O_0 \textrm{ fresh}
      & \QNAME{$;$-def}
   \end{array}
 $$\par\vspace{-8pt}
@@ -403,7 +403,7 @@ $$\par\vspace{-8pt}
 \begin{code}
 (cjSeqAssoc,alSeqAssoc) = bookdef (";" -.- "assoc") "2.2L1"
                            ( mkSeq p (mkSeq q r) ===  mkSeq (mkSeq p q) r )
-                           (assertAreUTP $ map (StdVar . theVar) [p,q,r] ) 
+                           (assertAreUTP $ map (StdVar . theVar) [p,q,r] )
 \end{code}
 
 
@@ -412,7 +412,8 @@ From \cite[2.2\textbf{L2}, p49]{UTP-book}
 $$
   \begin{array}{lll}
      (P \cond b Q) \seq R \equiv (P\seq R) \cond b (Q\seq R)
-     && \QNAME{$;$-$\cond\_$-l-distr}
+     & O,O'\supseteq P,Q,R
+     & \QNAME{$;$-$\cond\_$-l-distr}
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
@@ -421,7 +422,7 @@ $$\par\vspace{-8pt}
                                 ===
                                 cond (mkSeq p r) b (mkSeq q r)
                               )
-                              scTrue
+                              (assertAreUTP $ map (StdVar . theVar) [p,q,r])
 \end{code}
 
 \newpage
@@ -478,7 +479,8 @@ From \cite[2.3\textbf{L3}, p50]{UTP-book}
 $$
   \begin{array}{lll}
      x := e \seq x := f =  x := f[e/x]
-     && \QNAME{$:=$-seq-same}
+     & x,e,f \in O
+     & \QNAME{$:=$-seq-same}
   \end{array}
 $$
 \begin{code}
@@ -488,14 +490,15 @@ $$
        ===
        ( ix .:= ESub ArbType f e_for_x )
      )
-     scTrue
+     scTrue -- x,e,f in O
 \end{code}
 
 From \cite[2.3\textbf{L4}, p50]{UTP-book}
 $$
   \begin{array}{lll}
      x := e \seq P \cond b Q =  (x:=e \seq P) \cond{b[e/x]} (x:=e \seq Q)
-     && \QNAME{$:=$-seq-$\cond\_$}
+     & x,e,b \in O, ~~ O,O'\supseteq P,Q
+     & \QNAME{$:=$-seq-$\cond\_$}
   \end{array}
 $$
 \begin{code}
@@ -507,7 +510,7 @@ $$
               (ESub ArbType b e_for_x)
               (mkSeq (ix .:= e) q) )
      )
-     scTrue
+     (assertAreUTP $ map (StdVar . theVar) [p,q]) -- x,e,b in O
 \end{code}
 
 \newpage
@@ -535,27 +538,27 @@ skipIntro = mkConsIntro i_skip bool
 From \cite[2.3\textbf{L5}, p50]{UTP-book}
 $$
   \begin{array}{lll}
-     P \seq \Skip \equiv P   &
+     P \seq \Skip \equiv P   & O,O'\supseteq P
      & \QNAME{$;$-runit}
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
 (cjSkipL5a,alSkipL5a) = bookdef (";" -.- "runit") "2.3L5a"
                          (mkSeq p skip === p)
-                         scTrue
+                         (assertIsUTP $ StdVar $ theVar p)
 \end{code}
 
 From \cite[2.3\textbf{L5}, p50]{UTP-book}
 $$
   \begin{array}{lll}
-     \Skip \seq P \equiv P   &
+     \Skip \seq P \equiv P   & O,O'\supseteq P
      & \QNAME{$;$-lunit}
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
 (cjSkipL5b,alSkipL5b) = bookdef (";" -.- "lunit") "2.3L5b"
                          (mkSeq skip p === p)
-                         scTrue
+                         (assertIsUTP $ StdVar $ theVar p)
 \end{code}
 
 
@@ -656,42 +659,45 @@ From \cite[2.4\textbf{L6}, p52]{UTP-book}
 $$
   \begin{array}{lll}
      (P \sqcap Q) \seq R = (P \seq R) \sqcap (Q \seq R)
-     && \QNAME{$;$-$\sqcap$-left-distr-2.4\textbf{L6}}
+     & O,O'\supseteq P,Q,R
+     & \QNAME{$;$-$\sqcap$-left-distr-2.4\textbf{L6}}
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
 (cjSeqNDCLDistr,alSeqNDCLDistr)
    = bookdef (";" -.- "sqcap" -.- "ldistr") "2.4L6"
              ( mkSeq (p `ndc` q) r  ===  (mkSeq p r) `ndc` (mkSeq q r) )
-             scTrue
+             (assertAreUTP $ map (StdVar . theVar) [p,q,r])
 \end{code}
 
 From \cite[2.4\textbf{L7}, p52]{UTP-book}
 $$
   \begin{array}{lll}
      P \seq (Q \sqcap R) \seq   = (P \seq Q) \sqcap (P \seq R)
-     && \QNAME{$;$-$\sqcap$-right-distr-2.4\textbf{L7}}
+     & O,O'\supseteq P,Q,R
+     & \QNAME{$;$-$\sqcap$-right-distr-2.4\textbf{L7}}
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
 (cjSeqNDCRDistr,alSeqNDCRDistr)
    = bookdef (";" -.- "sqcap" -.- "rdistr") "2.4L7"
              ( mkSeq p (q `ndc` r)  ===  (mkSeq p q) `ndc` (mkSeq p r) )
-             scTrue
+             (assertAreUTP $ map (StdVar . theVar) [p,q,r])
 \end{code}
 
 From \cite[2.4\textbf{L8}, p52]{UTP-book}
 $$
   \begin{array}{lll}
      P \sqcap (Q \cond b R)\seq R = (P \sqcap Q) \cond b (P \sqcap R)
-     && \QNAME{$\sqcap$-$\cond\_$-distr-2.4\textbf{L8}}
+     & O \supseteq b ~~ O,O'\supseteq P,Q,R
+     & \QNAME{$\sqcap$-$\cond\_$-distr-2.4\textbf{L8}}
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
 (cjNDCCondDistr,alNDCCondDistr)
    = bookdef ("sqcap" -.- "cond" -.- "distr") "2.4L8"
              ( p `ndc` (cond q b r)  ===  cond (p `ndc` q) b (p `ndc` r) )
-             scTrue
+             (assertAreUTP $ map (StdVar . theVar) [p,q,r])
 \end{code}
 
 \newpage

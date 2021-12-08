@@ -41,6 +41,10 @@ import Exists
 import UClose
 import UTPSignature
 import TestRendering
+
+import Debug.Trace
+dbg msg x = trace (msg++show x) x
+pdbg nm x = dbg ('@':nm++":\n") x
 \end{code}
 
 
@@ -349,10 +353,17 @@ cjCondAlt2 = preddef ("cond" -.- "alt" -.- "def2")
 
 We need to know when a predicate is a UTP predicate ($O \cup O'\supseteq P$):
 \begin{code}
-assertIsUTP :: GenVar -> SideCond
-assertIsUTP gP = [gO,gO'] `covers` gP
+assertIsUTP  :: GenVar -> SideCond
+assertIsUTP  gP  = [gO,gO'] `covers` gP
 assertAreUTP :: [GenVar] -> SideCond
-assertAreUTP gPs = fromJust $ mrgSideConds (map assertIsUTP gPs)
+assertAreUTP gPs = mrgscs $ map assertIsUTP gPs
+\end{code}
+We also want to be able to specify a UTP condition ($O \subseteq c$):
+\begin{code}
+assertIsUTPCond  :: GenVar -> SideCond
+assertIsUTPCond  gP  = [gO] `covers` gP
+assertAreUTPCond :: [GenVar] -> SideCond
+assertAreUTPCond gPs = mrgscs $ map assertIsUTPCond gPs
 \end{code}
 
 From \cite[Defn 2.2.1,p49]{UTP-book}
@@ -371,13 +382,9 @@ seqIntro = mkConsIntro i_seq boolf_2
                          === exists [gO0]
                               ( (Sub P p o0'sub) /\ (Sub P q o0sub) )
                        )
-                       seqSC
+                       (assertIsUTP gP .: assertIsUTP gQ .: gfresh)
    where
-      gP = let (PVar vp) = p in StdVar vp
-      gQ = let (PVar vq) = q in StdVar vq
       gfresh = fresh $ S.singleton gO0
-      (Just seqSC) = do under <- assertIsUTP gP `mrgSideCond` assertIsUTP gQ
-                        under `mrgSideCond` gfresh
 \end{code}
 
 We also need to ensure that $O$, $O'$, and $O_m$ are ``known''.
@@ -403,7 +410,7 @@ $$\par\vspace{-8pt}
 \begin{code}
 (cjSeqAssoc,alSeqAssoc) = bookdef (";" -.- "assoc") "2.2L1"
                            ( mkSeq p (mkSeq q r) ===  mkSeq (mkSeq p q) r )
-                           (assertAreUTP $ map (StdVar . theVar) [p,q,r] )
+                           (assertAreUTP [gP,gQ,gR] )
 \end{code}
 
 
@@ -412,7 +419,7 @@ From \cite[2.2\textbf{L2}, p49]{UTP-book}
 $$
   \begin{array}{lll}
      (P \cond b Q) \seq R \equiv (P\seq R) \cond b (Q\seq R)
-     & O,O'\supseteq P,Q,R
+     & O,O'\supseteq P,Q,R ~~ O \supseteq b
      & \QNAME{$;$-$\cond\_$-l-distr}
   \end{array}
 $$\par\vspace{-8pt}
@@ -422,7 +429,7 @@ $$\par\vspace{-8pt}
                                 ===
                                 cond (mkSeq p r) b (mkSeq q r)
                               )
-                              (assertAreUTP $ map (StdVar . theVar) [p,q,r])
+                              (assertAreUTP [gP,gQ,gR] .: assertIsUTPCond gb)
 \end{code}
 
 \newpage
@@ -490,7 +497,7 @@ $$
        ===
        ( ix .:= ESub ArbType f e_for_x )
      )
-     scTrue -- x,e,f in O
+     (assertAreUTPCond [gx,qe,qf])
 \end{code}
 
 From \cite[2.3\textbf{L4}, p50]{UTP-book}
@@ -510,7 +517,7 @@ $$
               (ESub ArbType b e_for_x)
               (mkSeq (ix .:= e) q) )
      )
-     (assertAreUTP $ map (StdVar . theVar) [p,q]) -- x,e,b in O
+     (assertAreUTP [gP,gQ] .: assertAreUTPCond [gx,qe,gb])
 \end{code}
 
 \newpage
@@ -545,7 +552,7 @@ $$\par\vspace{-8pt}
 \begin{code}
 (cjSkipL5a,alSkipL5a) = bookdef (";" -.- "runit") "2.3L5a"
                          (mkSeq p skip === p)
-                         (assertIsUTP $ StdVar $ theVar p)
+                         (assertIsUTP gP)
 \end{code}
 
 From \cite[2.3\textbf{L5}, p50]{UTP-book}
@@ -558,7 +565,7 @@ $$\par\vspace{-8pt}
 \begin{code}
 (cjSkipL5b,alSkipL5b) = bookdef (";" -.- "lunit") "2.3L5b"
                          (mkSeq skip p === p)
-                         (assertIsUTP $ StdVar $ theVar p)
+                         (assertIsUTP gP)
 \end{code}
 
 
@@ -667,7 +674,7 @@ $$ %\par\vspace{-8pt}
 (cjSeqNDCLDistr,alSeqNDCLDistr)
    = bookdef (";" -.- "sqcap" -.- "ldistr") "2.4L6"
              ( mkSeq (p `ndc` q) r  ===  (mkSeq p r) `ndc` (mkSeq q r) )
-             (assertAreUTP $ map (StdVar . theVar) [p,q,r])
+             (assertAreUTP [gP,gQ,gR])
 \end{code}
 
 From \cite[2.4\textbf{L7}, p52]{UTP-book}
@@ -682,22 +689,21 @@ $$ %\par\vspace{-8pt}
 (cjSeqNDCRDistr,alSeqNDCRDistr)
    = bookdef (";" -.- "sqcap" -.- "rdistr") "2.4L7"
              ( mkSeq p (q `ndc` r)  ===  (mkSeq p q) `ndc` (mkSeq p r) )
-             (assertAreUTP $ map (StdVar . theVar) [p,q,r])
+             (assertAreUTP [gP,gQ,gR])
 \end{code}
 
 From \cite[2.4\textbf{L8}, p52]{UTP-book}
 $$
   \begin{array}{lll}
      P \sqcap (Q \cond b R)\seq R = (P \sqcap Q) \cond b (P \sqcap R)
-     & O \supseteq b ~~ O,O'\supseteq P,Q,R
-     & \QNAME{$\sqcap$-$\cond\_$-distr-2.4\textbf{L8}}
+     & & \QNAME{$\sqcap$-$\cond\_$-distr-2.4\textbf{L8}}
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
 (cjNDCCondDistr,alNDCCondDistr)
    = bookdef ("sqcap" -.- "cond" -.- "distr") "2.4L8"
              ( p `ndc` (cond q b r)  ===  cond (p `ndc` q) b (p `ndc` r) )
-             (assertAreUTP $ map (StdVar . theVar) [p,q,r])
+             scTrue
 \end{code}
 
 \newpage
@@ -836,25 +842,22 @@ utpBaseTheory
 Most variables have an ``underlying'' definition
 that is then ``wrapped'' in different ways depending on where it is used.
 
-$$P \quad Q \quad R$$
+$$P \quad Q \quad R \quad S$$
 \begin{code}
 -- underying variable
-vp = Vbl (jId "P") PredV Static
-p = fromJust $ pVar vp
-q = fromJust $ pVar $ Vbl (jId "Q") PredV Static
-r = fromJust $ pVar $ Vbl (jId "R") PredV Static
-s = fromJust $ pVar $ Vbl (jId "S") PredV Static
--- for use in side-conditions
-gvP = StdVar vp
+vP = Vbl (jId "P") PredV Static ; p = fromJust $ pVar vP ; gP = StdVar vP
+vQ = Vbl (jId "Q") PredV Static ; q = fromJust $ pVar vQ ; gQ = StdVar vQ
+vR = Vbl (jId "R") PredV Static ; r = fromJust $ pVar vR ; gR = StdVar vR
+vS = Vbl (jId "S") PredV Static ; s = fromJust $ pVar vS ; gS = StdVar vS
 \end{code}
 
 
 $$ b \quad b' \qquad c  \quad c' $$
 \begin{code}
-b  = fromJust $ pVar $ Vbl (jId "b") PredV Before
-b' = fromJust $ pVar $ Vbl (jId "b") PredV After
-c  = fromJust $ pVar $ Vbl (jId "c") PredV Before
-c' = fromJust $ pVar $ Vbl (jId "c") PredV After
+vb  = Vbl (jId "b") PredV Before; b  = fromJust $ pVar vb;  gb  = StdVar vb
+vb' = Vbl (jId "b") PredV After;  b' = fromJust $ pVar vb'; gb' = StdVar vb'
+vc  = Vbl (jId "c") PredV Before; c  = fromJust $ pVar vc;  gc  = StdVar vc
+vc' = Vbl (jId "c") PredV After;  c' = fromJust $ pVar vc'; gc' = StdVar vc'
 \end{code}
 
 
@@ -871,6 +874,7 @@ $$ x \quad y \quad z \qquad x' \quad y' \quad z'$$
 Underlying variables:
 \begin{code}
 ix = jId "x" ; vx  = Vbl ix ObsV Before ; vx' = Vbl ix ObsV After
+gx = StdVar vx
 iy = jId "y" ; vy  = Vbl iy ObsV Before ; vy' = Vbl iy ObsV After
 iz = jId "z" ; vz  = Vbl iz ObsV Before ; vz' = Vbl iz ObsV After
 \end{code}

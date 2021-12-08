@@ -33,7 +33,7 @@ module AST ( Type
            , pattern PBind, pattern PLam, pattern PSub, pattern PIter
            , pattern E2, pattern P2
            , termkind, isVar, isExpr, isPred, isAtomic
-           , theVar, varAsTerm
+           , theVar, theGVar, varAsTerm
            , icomma, lvarCons
            , subTerms
            , mentionedVars, mentionedVarLists, mentionedVarSets
@@ -513,6 +513,8 @@ Pulling out variables:
 theVar :: Term -> Variable
 -- pre-theVar t  =  isVar t
 theVar (V _ v)  =  v
+theGVar :: Term -> GenVar
+theGVar = StdVar . theVar
 \end{code}
 
 Lifting a variable to a term:

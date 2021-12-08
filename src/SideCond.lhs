@@ -131,9 +131,10 @@ data AtmSideCond
  | SP  GenVar        -- Pre
  deriving (Eq,Ord,Show,Read)
 \end{code}
+\textbf{Note:  \texttt{Pre} is equivalent to being covered by $\lst O$ !}
 In the \texttt{SD} case, having an empty set reduces to \true,
 while in the \texttt{SS} case,
-we have an assertion that the term denoted by the general variable is closed.
+an empty set asserts that the term denoted by the general variable is closed.
 \begin{code}
 pattern Disjoint  gv vs = SD  gv vs  --  gv `intersect` vs = {}
 pattern CoveredBy gv vs = SS  gv vs  --  gv  `subsetof` vs
@@ -185,8 +186,12 @@ Nor can we assume $T \disj z$ is false, because $T$ could contain $z$.
 scCheck asc@(Disjoint sv@(StdVar v) vs)
   | S.null vs         =  return mscTrue
   | not $ isObsVar v  =  return $ Just asc
-  | sv `S.member` vs  =  fail "atomic disjoint is False"
-  | all isObsGVar vs  =  return mscTrue
+  | sv `S.member` vs  =  report "atomic disjoint is False"
+  | all isStdV    vs  =  return mscTrue
+  where
+    showsv = "v = "++show v
+    showvs = "vs = "++show vs
+    report msg = fail $ unlines' [msg,showsv,showvs]
 \end{code}
 
 \paragraph{Checking CoveredBy}
@@ -203,8 +208,12 @@ Similarly, $T \supseteq z$ could also be true.
 scCheck asc@(CoveredBy sv@(StdVar v) vs)
   | sv `S.member` vs  =  return mscTrue
   | not $ isObsVar v  =  return $ Just asc
-  | S.null vs         =  fail "atomic covers is False (null)"
-  | all isObsGVar vs  =  fail "atomic covers is False (all std)"
+  | S.null vs         =  report "atomic covers is False (null)"
+  | all isStdV vs     =  report "atomic covers is False (all std)"
+  where
+    showsv = "v = "++show v
+    showvs = "vs = "++show vs
+    report msg = fail $ unlines' [msg,showsv,showvs]
 \end{code}
 
 \paragraph{Checking Precondition}

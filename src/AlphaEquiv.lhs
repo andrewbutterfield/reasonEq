@@ -76,12 +76,32 @@ isAlphaEquivalent :: Term -> Term -> Bool
 
 We check $\alpha$-equivalence by matching one term against the other
 (ignoring variable data),
-and then checking that the match binding given is bijective.
+and then checking that the match binding given is bijective,
+with all \texttt{Cons} names bound to themselves.
 For now, do an equality check first.
 \begin{code}
 isAlphaEquivalent t1 t2
   | t1 == t2  =  True
-  | otherwise  = case match [] t1 t2 of
+  | otherwise  = case match [pdbg "cNms" consNames] (pdbg "t1" t1) $ pdbg "t2" t2 of
                    Nothing    ->  False
-                   Just bind  ->  isBijectiveBinding bind
+                   Just bind  ->  isBijectiveBinding $ pdbg "bind" bind
+  where
+    consNames = addKVs (consNamesOf t1) newVarTable
+
+addKVs [] vt      =  vt
+addKVs (i:is) vt  =  addKVs is
+                        (fromJust $ addKnownVar (Vbl i PredV Static) ArbType vt)
+\end{code}
+
+\begin{code}
+consNamesOf :: Term -> [Identifier]
+consNamesOf (Cons _ _ n ts) =  n : concat (map consNamesOf ts)
+consNamesOf (Bnd _ _ _ tm)  =  consNamesOf tm
+consNamesOf (Lam _ _ _ tm)  =  consNamesOf tm
+consNamesOf (Cls n tm)      =  n : consNamesOf tm
+consNamesOf (Sub _ tm s)    =  consNamesOf tm ++ subConsNames s
+consNamesOf _               =  []
+
+subConsNames :: Substn -> [Identifier]
+subConsNames (TermSub ts) = concat $ map (consNamesOf . snd) $ S.toList ts
 \end{code}

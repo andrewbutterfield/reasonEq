@@ -6,6 +6,34 @@ with some "spaces trimming"
 
 ## Most Urgent
 
+### alpha-equivalence is broken
+
+```
+devproj.UTPBase> N 1
+   1. 'reduce':     ⊢   P⊓Q≡Q⊓P   =   true
+   2. 'redboth':     ⊢   P⊓Q   =   Q⊓P
+   3. 'redtail':     ⊢   Q⊓P   =   P⊓Q
+   4. 'redinit':     ⊢   P⊓Q   =   Q⊓P
+Select sequent by number: 4
+
+Prover starting...
+@t2:
+C P True (Id "sqcap" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "P" 0,VP,WS))]
+@t1:
+C P True (Id "sqcap" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]
+@cNms:
+VD (fromList [(VR (Id "sqcap" 0,VP,WS),KV T)],fromList [],fromList [])
+@bind:
+BD (fromList 
+     [  ((Id "P" 0,VP),BV (VR (Id "Q" 0,VP,WS)))
+     ,  ((Id "Q" 0,VP),BV (VR (Id "P" 0,VP,WS)))
+     ,  ((Id "sqcap" 0,VP),BV (VR (Id "sqcap" 0,VP,WS)))
+     ],fromList [],fromList [])
+Proof Complete
+```
+
+
+
 ### Complete UTPBase proofs
 
 Doing this has shown that proof ranking and short-listing needs improvement.
@@ -17,6 +45,7 @@ Doing this has shown that proof ranking and short-listing needs improvement.
 * We really need to have symmetric forms of key results, e.g., we have `P∨true≡true`, but should also have `true∨P≡true`.
 * We are getting viable matches (when applied) that show up as an message saying that auto-instantiate failed! *This is because of floating variables*
 * Sometimes we don't want matches presented with ?P variables **Provide filters**
+* We need to rank laws with names for the form `xxxx_def` somewhat more highly than at present.
 
 We really need to able to tune things - using negation-involution to add a double-negation can be really useful.
 

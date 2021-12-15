@@ -227,9 +227,10 @@ isAEquiv _ _ _ _ _ = alfaFail
 Are two variables equivalent?
 \begin{code}
 isAEquivVar bvs1 bvs2 bij v1 v2
-  | isBnd1 /= isBnd2  =  alfaFail
-  | isBnd1 && areAlphaCompatible gv1 gv2 =  checkAlphaBijection bij gv1 gv2
-  | v1 == v2  =  return $ M.insert gv1 gv2 bij
+  | isBnd1 /= isBnd2                      =  alfaFail
+  | isBnd1 && areAlphaCompatible gv1 gv2  =  checkAlphaBijection bij gv1 gv2
+  | v1 == v2                              =  return $ M.insert gv1 gv2 bij
+  | otherwise                             =  alfaFail
   where
     (gv1,gv2) = (StdVar v1,StdVar v2)
     isBnd1 = gv1 `S.member` bvs1

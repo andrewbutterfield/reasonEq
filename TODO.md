@@ -6,31 +6,32 @@ with some "spaces trimming"
 
 ## Most Urgent
 
-### alpha-equivalence is broken
+###
+
+Proof fail in `UClose`
 
 ```
-devproj.UTPBase> N 1
-   1. 'reduce':     ⊢   P⊓Q≡Q⊓P   =   true
-   2. 'redboth':     ⊢   P⊓Q   =   Q⊓P
-   3. 'redtail':     ⊢   Q⊓P   =   P⊓Q
-   4. 'redinit':     ⊢   P⊓Q   =   Q⊓P
-Select sequent by number: 4
+4 : “∃_def” ¬(¬([P∧Q]))  ⊤ ⟹ ⊤ ≡lhs
+3 : “[]_def” [[P∧Q]]  ⊤ ⟹ ⊤ ≡rhs
+2 : “[]_def” (∀ ?x$ • P∧Q)  ⊤ ⟹ ?x$⊇P, ?x$⊇Q ≡lhs
+1 : “∃_remove” [P∧Q]  ⊤ ⟹ ⊤ ≡lhs
+           
 
-Prover starting...
-@t2:
-C P True (Id "sqcap" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "P" 0,VP,WS))]
-@t1:
-C P True (Id "sqcap" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]
-@cNms:
-VD (fromList [(VR (Id "sqcap" 0,VP,WS),KV T)],fromList [],fromList [])
-@bind:
-BD (fromList 
-     [  ((Id "P" 0,VP),BV (VR (Id "Q" 0,VP,WS)))
-     ,  ((Id "Q" 0,VP),BV (VR (Id "P" 0,VP,WS)))
-     ,  ((Id "sqcap" 0,VP),BV (VR (Id "sqcap" 0,VP,WS)))
-     ],fromList [],fromList [])
-Proof Complete
+⊢
+[P]∧[Q]≡[P∧Q]    ⊤
+
+Focus = [2]  Target (RHS): true
+
+
+proof: a2
+Undischarged side-conditions: ?x$⊇P, ?x$⊇Q
+
+<return> to continue
 ```
+
+The code in `AbstractUI` (`applyMatchToFocus2Lst` lines 594-598 approx) seems broken
+as does that in `Binding` (`patchVarListBind`,`patchVarSetBind`, lines 1615-1625 approx).
+The use of `Binding.patch<X>Bind` and `AbstractUI.applyMatchToFocus2<Y>` need to be reviewed and fixed
 
 
 

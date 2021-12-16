@@ -602,12 +602,12 @@ applyMatchToFocus2Lst lv vl m = return m
 
 Now given the ``float-free'' match,
 try to discharge that side-condition.
-If succesful, we replace the focus.
+If successful, we replace the focus.
 \begin{code}
 applyMatchToFocus3 :: Monad m
-                   => Match -> VarSet -> Binding
+                   => Match -> Binding
                    -> LiveProof -> m LiveProof
-applyMatchToFocus3 mtch floating ubind liveProof
+applyMatchToFocus3 mtch ubind liveProof
   = let cbind = mBind mtch -- `mergeBindings` ubind
         repl = mLawPart mtch
         scL = snd $ mAsn mtch

@@ -455,8 +455,8 @@ showJustification (NestSimp dpath)
   =  "   = 'nest-simp @" ++ show dpath ++ "'"
 showJustification (Substitute dpath)
   =  "   = 'substitute @" ++ show dpath ++ "'"
-showJustification (Switch from to)
-  =  "   [switch "++showSeqFocus from++" > "++showSeqFocus to++"]"
+showJustification (Switch from to) -- put blank line before and after
+  =  "\n   [switch "++showSeqFocus from++" > "++showSeqFocus to++"]\n"
 showJustification (CloneH i)
   =  "   [clone hypothesis "++show i++"]"
 showJustification (Flatten i)
@@ -496,7 +496,7 @@ shStep :: CalcStep -> String
 shStep ( (UseLaw how lnm bind dpath), asn@(Assertion trm sc) )
    = unlines' [ trTermZip (pathTZ dpath trm) ++ trSC sc
               , " = '" ++ showHow how++" "++lnm++" @" ++ show dpath ++ "'"
-              , trBinding bind
+              , "    " ++ trBinding bind
               ]
    where
      trSC ([],_) = ""

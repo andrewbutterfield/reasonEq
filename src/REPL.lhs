@@ -344,7 +344,11 @@ inRange size choice = choice >= 1 && choice <= size
 
 selectFrom things choice = things!!(choice-1)
 
+pickError msg = return (False,error msg)
+
 pickThing :: String -> (a -> String) -> [a] -> IO (Bool,a)
+pickThing hdr showThing [] = pickError "Nothing to choose"
+pickThing hdr showThing [thing] = return (True,thing)
 pickThing hdr showThing things
   = do putStrLn hdr
        putStrLn $ numberList showThing things
@@ -353,9 +357,11 @@ pickThing hdr showThing things
          then do let thing = selectFrom things choice
                  putStrLn ("Chosen "++showThing thing)
                  return (True,thing)
-         else return (False,error "Bad choice!")
+         else pickError "Bad choice!"
 
 pickThings :: String -> (a -> String) -> [a] -> IO (Bool,[a])
+pickThings hdr showThing [] = pickError "No things to be chosen"
+pickThings hdr showThing [thing] = return (True,[thing])
 pickThings hdr showThing things
   = do putStrLn hdr
        putStrLn $ numberList showThing things

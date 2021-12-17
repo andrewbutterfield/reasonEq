@@ -33,6 +33,18 @@ The code in `AbstractUI` (`applyMatchToFocus2Lst` lines 594-598 approx) seems br
 as does that in `Binding` (`patchVarListBind`,`patchVarSetBind`, lines 1615-1625 approx).
 The use of `Binding.patch<X>Bind` and `AbstractUI.applyMatchToFocus2<Y>` need to be reviewed and fixed
 
+What needs to happen is that all side-conditions involving floating list variables
+need to become local goal side-conditions.
+So we in effect have:
+
+```
+2 : “[]_def” (∀ ?x$ • P∧Q)  ?x$⊇P, ?x$⊇Q ⟹ ?x$⊇P, ?x$⊇Q ≡lhs
+...
+[P]∧[Q]≡[P∧Q]    ?x$⊇P, ?x$⊇Q
+
+```
+
+
 
 
 ### Complete UTPBase proofs

@@ -413,8 +413,8 @@ liftLess (LV (VR (_,vc,vw), is, js))
 \subsection{Floating Variables}
 
 We want to mark some variables as ``floating'',
-to indicate that haven't been matched,
-and so are free to instantiated by the user in any fashion.
+to indicate that they haven't been matched,
+and so are free to be instantiated by the user in some appropriate fashion.
 We do this by prepending their
 identifiers with a question-mark: $idn \mapsto ?idn$.
 \begin{code}

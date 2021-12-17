@@ -1640,7 +1640,7 @@ int_tst_Binding
 \begin{code}
 tst_bind_VarToVar :: TF.Test
 
--- naming concention ct<varname>
+-- naming convention ct<varname>
 -- c = o (ObsV), e (ExprV), p (PredV)
 -- t = s (Static), b (Before), d (During), a (After), t (Textual)
 

@@ -570,6 +570,7 @@ applyMatchToFocus1 i liveProof
         let (stdvars,lstvars)        =  partition isStdV $ S.toList gvars
         let stdFloating              =  filter isFloatingGVar stdvars
         let (lstFloating,lstNormal)  =  partition isFloatingGVar lstvars
+        -- let lstNormal' = (map sinkGV lstFloating) ++ lstNormal
         let replTerms                =  subTerms $ assnT $ conjecture liveProof
         return (stdFloating, lstFloating, lstNormal, replTerms, mtch)
 \end{code}
@@ -604,11 +605,9 @@ Now given the ``float-free'' match,
 try to discharge that side-condition.
 If successful, we replace the focus.
 \begin{code}
-applyMatchToFocus3 :: Monad m
-                   => Match -> Binding
-                   -> LiveProof -> m LiveProof
-applyMatchToFocus3 mtch ubind liveProof
-  = let cbind = mBind mtch -- `mergeBindings` ubind
+applyMatchToFocus3 :: Monad m => Match -> LiveProof -> m LiveProof
+applyMatchToFocus3 mtch liveProof
+  = let cbind = mBind mtch
         repl = mLawPart mtch
         scL = snd $ mAsn mtch
         scC = conjSC liveProof

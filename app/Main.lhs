@@ -949,7 +949,7 @@ applyMatch args pstate@(reqs, liveProof)
        -> do let availTerms = false : true : gSubTerms
              mtch'   <-  fixFloatVars  mtch  availTerms fStdVars
              mtch''  <-  fixFloatLVars mtch' gLstVars   fLstVars
-             case applyMatchToFocus3 mtch'' emptyBinding liveProof of
+             case applyMatchToFocus3 mtch'' liveProof of
                Yes liveProof' -> return(reqs, liveProof')
                But msgs
                 -> do putStrLn $ unlines msgs

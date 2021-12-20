@@ -120,6 +120,7 @@ trType (TypeVar i)        =  trId i
 trType (TypeApp i ts)     =  trId i ++ "(" ++ trTypes ts ++ ")"
 trType (DataType i itss)  =  "ADT"
 trType (FunType ta tr)    =  "("++ trType ta ++ spaced _fun ++ trType tr ++ ")"
+trType (GivenType (Identifier "B" _))      =  "\x1d539"
 trType (GivenType i)      =  trId i
 
 trTypes = seplist " " trType

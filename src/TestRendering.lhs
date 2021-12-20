@@ -120,7 +120,15 @@ trType (TypeVar i)        =  trId i
 trType (TypeApp i ts)     =  trId i ++ "(" ++ trTypes ts ++ ")"
 trType (DataType i itss)  =  "ADT"
 trType (FunType ta tr)    =  "("++ trType ta ++ spaced _fun ++ trType tr ++ ")"
-trType (GivenType (Identifier "B" _))      =  "\x1d539"
+trType (GivenType (Identifier i _))
+  -- hack - should be done in nicesymbols
+  | i == "B"  =  "\x1d539"
+  | i == "N"  =  "\x2115"
+  | i == "Z"  =  "\x2124"
+  | i == "Q"  =  "\x211a"
+  | i == "R"  =  "\x211d"
+  | i == "C"  =  "\x2102"
+  | i == "P"  =  "\x2119"
 trType (GivenType i)      =  trId i
 
 trTypes = seplist " " trType

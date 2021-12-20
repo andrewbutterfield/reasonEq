@@ -8,26 +8,29 @@ with some "spaces trimming"
 
 ###
 
-Proof fail in `UClose`
+Proof fail in `UClose` leads to the following scenario (using `tm 1 []_def`)
 
 ```
-4 : “∃_def” ¬(¬([P∧Q]))  ⊤ ⟹ ⊤ ≡lhs
-3 : “[]_def” [[P∧Q]]  ⊤ ⟹ ⊤ ≡rhs
-2 : “[]_def” (∀ ?x$ • P∧Q)  ⊤ ⟹ ?x$⊇P, ?x$⊇Q ≡lhs
-1 : “∃_remove” [P∧Q]  ⊤ ⟹ ⊤ ≡lhs
-           
-
-⊢
 [P]∧[Q]≡[P∧Q]    ⊤
-
 Focus = [2]  Target (RHS): true
-
-
-proof: a2
-Undischarged side-conditions: ?x$⊇P, ?x$⊇Q
-
-<return> to continue
+Match against `[]_def'[1]
+Binding: { P ⟼ P∧Q, x$ ⟼ ⟨?x$⟩ }
+Instantiated Law = [P∧Q]≡(∀ ?x$ • P∧Q)
+Instantiated Law S.C. = ?x$⊇P, ?x$⊇Q
+Goal S.C. = ⊤
+Discharged Law S.C. = ?x$⊇P, ?x$⊇Q
 ```
+What needs to happen is that floating `?x$` needs to become a concrete
+list variable that is not present in the goal.
+In this case, `x$` will do.
+
+We should end up with:
+```
+Binding: { P ⟼ P∧Q, x$ ⟼ ⟨x$⟩ }
+Goal S.C. =  x$⊇P, x$⊇Q
+``` 
+
+
 
 The code in `AbstractUI` (`applyMatchToFocus2Lst` lines 594-598 approx) seems broken
 as does that in `Binding` (`patchVarListBind`,`patchVarSetBind`, lines 1615-1625 approx).

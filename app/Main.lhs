@@ -947,11 +947,11 @@ applyMatch args pstate@(reqs, liveProof)
       Nothing -> return pstate
       Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)
        -> do let availTerms = false : true : gSubTerms
-             putStrLn "Fix floating variables:"
-             mtch'   <-  fixFloatVars  mtch  availTerms $ map StdVar fStdVars
-             putStrLn "Fix floating list-variables:"
-             mtch''  <-  fixFloatLVars mtch' gLstVars $ map LstVar fLstVars
-             case applyMatchToFocus3 mtch'' liveProof of
+             putStrLn ("Floating variables: " ++ trVList (map StdVar fStdVars))
+             vts   <-  fixFloatVars [] availTerms $ map StdVar fStdVars
+             putStrLn ("Floating list variables: " ++ trVList (map LstVar fLstVars))
+             lvvls  <-  fixFloatLVars [] gLstVars $ map LstVar fLstVars
+             case applyMatchToFocus2 mtch vts lvvls liveProof of
                Yes liveProof' -> return(reqs, liveProof')
                But msgs
                 -> do putStrLn $ unlines msgs
@@ -961,29 +961,27 @@ applyMatch args pstate@(reqs, liveProof)
     true   =  theTrue  $ logicsig reqs
     false  =  theFalse $ logicsig reqs
 
-    fixFloatVars mtch _ []  = return mtch
-    fixFloatVars mtch gterms@[term] ((StdVar v):stdvars)
-      = do mtch' <- applyMatchToFocus2Std v term mtch
-           fixFloatVars mtch' gterms stdvars
-    fixFloatVars mtch gterms ((StdVar v):stdvars)
+    fixFloatVars vts _ []  = return vts
+    fixFloatVars vts gterms@[term] ((StdVar v):stdvars)
+      = fixFloatVars ((v,term):vts) gterms stdvars
+    fixFloatVars vts gterms ((StdVar v):stdvars)
       = do (chosen,term) <- pickThing ("Choose term to replace "++(trVar v))
                                      (trTerm 0) gterms
-           mtch' <- if chosen
-                    then applyMatchToFocus2Std v term mtch
-                    else return mtch
-           fixFloatVars mtch' gterms stdvars
+           let vts' = if chosen then ((v,term):vts) else vts
+           fixFloatVars vts' gterms stdvars
 
-    fixFloatLVars mtch gvars []  = return mtch
-    fixFloatLVars mtch gvars@[var] ((LstVar lv):lstvars)
-      = do mtch' <- applyMatchToFocus2Lst lv [var] mtch
-           fixFloatLVars mtch' gvars lstvars
-    fixFloatLVars mtch gvars ((LstVar lv):lstvars)
-      = do (chosen,vl) <- pickThings ("Choose variables to replace "++(trLVar lv))
-                                     trGVar gvars
-           mtch' <- if chosen
-                    then applyMatchToFocus2Lst lv vl mtch
-                    else return mtch
-           fixFloatLVars mtch' gvars lstvars
+    fixFloatLVars lvvls _ []  = return lvvls
+    fixFloatLVars lvvls [] _  = return lvvls
+    fixFloatLVars lvvls gvars@[var] ((LstVar lv):lstvars)
+      = fixFloatLVars ((lv,gvars):lvvls) gvars lstvars
+    fixFloatLVars lvvls gvars ((LstVar lv):lstvars)
+      = do (chosen,(wanted,leftover))
+             <- takeThings ("Choose variables to replace "++(trLVar lv))
+                           trGVar gvars
+           if chosen
+            then do putStrLn ("-chosen list is "++trVList wanted)
+                    fixFloatLVars ((lv,wanted):lvvls) leftover lstvars
+            else fixFloatLVars lvvls gvars lstvars
 \end{code}
 
 

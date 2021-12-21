@@ -14,7 +14,7 @@ module REPL (
   , putListOneLine
   , pickByNumber
   , selectPairings, pickPairing
-  , pickThing, pickThings
+  , pickThing, pickThings, takeThings
   )
 where
 
@@ -346,6 +346,7 @@ selectFrom things choice = things!!(choice-1)
 
 pickError msg = return (False,error msg)
 
+-- pick one thing from a list
 pickThing :: String -> (a -> String) -> [a] -> IO (Bool,a)
 pickThing hdr showThing [] = pickError "Nothing to choose"
 pickThing hdr showThing [thing] = return (True,thing)
@@ -359,9 +360,9 @@ pickThing hdr showThing things
                  return (True,thing)
          else pickError "Bad choice!"
 
+-- pick zero or more things from a list
 pickThings :: String -> (a -> String) -> [a] -> IO (Bool,[a])
 pickThings hdr showThing [] = pickError "No things to be chosen"
-pickThings hdr showThing [thing] = return (True,[thing])
 pickThings hdr showThing things
   = do putStrLn hdr
        putStrLn $ numberList showThing things
@@ -376,4 +377,29 @@ pickThings hdr showThing things
                  return (True,wanted)
          else return (False,error "Bad choices!")
   where size = length things
+
+-- take things (pick and remove) from a list, returning takings and leftovers
+takeThings :: String -> (a -> String) -> [a] -> IO (Bool,([a],[a]))
+takeThings hdr showThing [] = pickError "No things to be taken"
+takeThings hdr showThing things
+  = do putStrLn hdr
+       putStrLn $ numberList showThing things
+       choicesTxt <- userPrompt "Select by numbers: "
+       let choices =  map readInt $ words choicesTxt
+       putStrLn ("Choices = "++show choices)
+       if null choices
+         then return (False,error "Nothing taken!")
+       else if all (inRange size) choices
+         then do let (wanted,leftover) = ipartition 0 choices things
+                 putStrLn ("Taken "++unwords (map showThing wanted))
+                 return (True,(wanted,leftover))
+         else return (False,error "Bad takings!")
+  where
+    size = length things
+    ipartition _ _ [] = ([],[])
+    ipartition i choices (thing:things)
+      | i `elem` choices  =  (thing:wanted,leftover)
+      | otherwise         =  (wanted,thing:leftover)
+      where (wanted,leftover) = ipartition (i+1) choices things
+
 \end{code}

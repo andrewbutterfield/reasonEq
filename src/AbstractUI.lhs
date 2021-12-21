@@ -21,7 +21,7 @@ module AbstractUI
 , moveFocusDown, moveFocusUp, moveConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, matchFocusAgainst
-, applyMatchToFocus1, applyMatchToFocus3
+, applyMatchToFocus1, applyMatchToFocus2
 , applyMatchToFocus2Std, applyMatchToFocus2Lst
 , normQuantFocus
 , nestSimpFocus
@@ -575,10 +575,13 @@ applyMatchToFocus1 i liveProof
                                `S.union`
                                scGVars (mLawSC mtch) )
         let (stdvars,lstvars)  =  partition isStdV gvars
-        let stdFloating        =  stdVarsOf $ filter isFloatingGVar stdvars
+        let stdFloating        =  filter isFloatingGVar stdvars
         let replTerms          =  subTerms $ assnT $ conjecture liveProof
-        let lstFloating        =  listVarsOf $ filter isFloatingGVar lstvars
-        return ( mtch, stdFloating, replTerms, lstFloating, gvars )
+        let lstFloating        =  filter isFloatingGVar lstvars
+        let replGVars = map sinkGV (stdFloating ++ lstFloating) ++ gvars
+        return ( mtch
+               , stdVarsOf stdFloating, replTerms
+               , listVarsOf lstFloating, replGVars )
 \end{code}
 
 The user's choice of a term $P$ for each floating $?x$ is used replace those
@@ -606,13 +609,19 @@ applyMatchToFocus2Lst lv vl m = return m
 
 \end{code}
 
-
-Now given the ``float-free'' match,
-try to discharge that side-condition.
+We take the chosen new match pairs,
+integrate them into the match,
+apply them to the replacements and side-conditions.
+We then try to discharge that side-condition.
 If successful, we replace the focus.
 \begin{code}
-applyMatchToFocus3 :: Monad m => Match -> LiveProof -> m LiveProof
-applyMatchToFocus3 mtch liveProof
+applyMatchToFocus2 :: Monad m
+                   => Match
+                   -> [(Variable,Term)]
+                   -> [(ListVar,VarList)]
+                   -> LiveProof -> m LiveProof
+applyMatchToFocus2 mtch vts lvvls liveProof
+  -- need to use vts and lvvls to update mtch and process law side-conditions
   = let cbind = mBind mtch
         repl = mLawPart mtch
         scL = snd $ mAsn mtch

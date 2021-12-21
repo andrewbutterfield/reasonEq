@@ -945,10 +945,12 @@ applyMatch :: REPLCmd (REqState, LiveProof)
 applyMatch args pstate@(reqs, liveProof)
   = case applyMatchToFocus1 (args2int args) liveProof of
       Nothing -> return pstate
-      Just (fStdVars,fLstVars,gLstVars,gSubTerms,mtch)
+      Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)
        -> do let availTerms = false : true : gSubTerms
-             mtch'   <-  fixFloatVars  mtch  availTerms fStdVars
-             mtch''  <-  fixFloatLVars mtch' gLstVars   fLstVars
+             putStrLn "Fix floating variables:"
+             mtch'   <-  fixFloatVars  mtch  availTerms $ map StdVar fStdVars
+             putStrLn "Fix floating list-variables:"
+             mtch''  <-  fixFloatLVars mtch' gLstVars $ map LstVar fLstVars
              case applyMatchToFocus3 mtch'' liveProof of
                Yes liveProof' -> return(reqs, liveProof')
                But msgs

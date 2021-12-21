@@ -24,7 +24,8 @@ What needs to happen is that floating `?x$` needs to become a concrete
 list variable that is not present in the goal.
 In this case, `x$` will do.
 
-We should end up with:
+
+We should modify the binding and add in the law s.c. as local goal s.c:
 ```
 Binding: { P ⟼ P∧Q, x$ ⟼ ⟨x$⟩ }
 Goal S.C. =  x$⊇P, x$⊇Q

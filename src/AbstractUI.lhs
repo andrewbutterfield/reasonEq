@@ -541,15 +541,16 @@ tryFocusAgainst lawnm parts theSig liveProof
 \newpage
 \subsubsection{Apply Match to Focus}
 
-We have a multi-phase approach here:
+We have a matchLawCommand-phase approach here:
 \begin{itemize}
   \item
-    Return specified match with a list of floating variables used
+    Return specified match with lists of floating variables
+    for which there is a choice of replacements,
+    along with those choices
     (\texttt{applyMatchToFocus1}).
   \item
-    Ask the user how to replace floating variables.
-  \item
-    Re-instantiate the replacement, discharge side-condition,
+    Provide floating replacement choices obtained from the user.
+    Use these to re-instantiate the replacements (in both law body and side-condition), discharge side-conditions,
     and update the focus
     (\texttt{applyMatchToFocus2}).
 \end{itemize}
@@ -557,22 +558,27 @@ We have a multi-phase approach here:
 
 First we find the match and determine which determine what variables
 in the replacement are floating,
+identify their possible replacements,
 and return those along with the match.
 \begin{code}
 applyMatchToFocus1 :: Monad m
                    => Int -> LiveProof
-                   -> m ( VarList, VarList, VarList, [Term], Match )
+                   -> m ( Match       -- the chosen match
+                        , [Variable]  -- unresolved floating variables
+                        , [Term]      -- potential variable replacements
+                        , [ListVar]   -- unresolved floating list-variables
+                        , VarList     -- potential general-variable replacements
+                        )
 applyMatchToFocus1 i liveProof
   = do  mtch  <- nlookup i $ matches liveProof
-        let gvars = mentionedVars (mRepl mtch)
-                    `S.union`
-                    scGVars (mLawSC mtch)
-        let (stdvars,lstvars)        =  partition isStdV $ S.toList gvars
-        let stdFloating              =  filter isFloatingGVar stdvars
-        let (lstFloating,lstNormal)  =  partition isFloatingGVar lstvars
-        -- let lstNormal' = (map sinkGV lstFloating) ++ lstNormal
-        let replTerms                =  subTerms $ assnT $ conjecture liveProof
-        return (stdFloating, lstFloating, lstNormal, replTerms, mtch)
+        let gvars = S.toList ( mentionedVars (mRepl mtch)
+                               `S.union`
+                               scGVars (mLawSC mtch) )
+        let (stdvars,lstvars)  =  partition isStdV gvars
+        let stdFloating        =  stdVarsOf $ filter isFloatingGVar stdvars
+        let replTerms          =  subTerms $ assnT $ conjecture liveProof
+        let lstFloating        =  listVarsOf $ filter isFloatingGVar lstvars
+        return ( mtch, stdFloating, replTerms, lstFloating, gvars )
 \end{code}
 
 The user's choice of a term $P$ for each floating $?x$ is used replace those

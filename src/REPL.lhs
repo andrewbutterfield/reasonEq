@@ -390,16 +390,20 @@ takeThings hdr showThing things
        if null choices
          then return (False,error "Nothing taken!")
        else if all (inRange size) choices
-         then do let (wanted,leftover) = ipartition 0 choices things
+         then do let (wanted,leftover) = takeOut choices things
                  putStrLn ("Taken "++unwords (map showThing wanted))
+                 putStrLn ("Rermaining "++unwords (map showThing leftover))
                  return (True,(wanted,leftover))
          else return (False,error "Bad takings!")
   where
     size = length things
-    ipartition _ _ [] = ([],[])
-    ipartition i choices (thing:things)
-      | i `elem` choices  =  (thing:wanted,leftover)
-      | otherwise         =  (wanted,thing:leftover)
-      where (wanted,leftover) = ipartition (i+1) choices things
-
+    takeOut choices things
+      = ( map (selectFrom things) choices
+        , removeChoices 1 (sort choices) things)
+    removeChoices _ [] things = things
+    removeChoices _ _  []     = []
+    removeChoices i choices@(choice:crest) things@(thing:trest)
+      | i >  choice  =  removeChoices (i+1) crest things
+      | i == choice  =  removeChoices (i+1) crest trest
+      | otherwise    =  thing : removeChoices (i+1) choices trest
 \end{code}

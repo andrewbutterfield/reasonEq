@@ -940,19 +940,27 @@ Applying a match.
 \begin{code}
 applyMatchDescr = ( "a", "apply match"
                   , "a i  -- apply match number i", applyMatch )
-
+\end{code}
+We start by obtaining the match and information about floating variables
+and possible matches (API Part 1).
+We then let the user choose how to replace floating variables.
+We then finish of the match application (API Part 2).
+\begin{code}
 applyMatch :: REPLCmd (REqState, LiveProof)
 applyMatch args pstate@(reqs, liveProof)
   = case applyMatchToFocus1 (args2int args) liveProof of
       Nothing -> return pstate
       Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)
-       -> do let availTerms = false : true : gSubTerms
+       -> do putStrLn ("Sunk list-variables: " ++ trVList gLstVars)
+             let availTerms = false : true : gSubTerms
              putStrLn ("Floating variables: " ++ trVList (map StdVar fStdVars))
              vts   <-  fixFloatVars [] availTerms $ map StdVar fStdVars
              putStrLn ("Floating list variables: " ++ trVList (map LstVar fLstVars))
              lvvls  <-  fixFloatLVars [] gLstVars $ map LstVar fLstVars
              case applyMatchToFocus2 mtch vts lvvls liveProof of
-               Yes liveProof' -> return(reqs, liveProof')
+               Yes liveProof'
+                -> do waitForReturn -- temporary
+                      return(reqs, liveProof')
                But msgs
                 -> do putStrLn $ unlines msgs
                       waitForReturn
@@ -960,26 +968,38 @@ applyMatch args pstate@(reqs, liveProof)
   where
     true   =  theTrue  $ logicsig reqs
     false  =  theFalse $ logicsig reqs
-
+\end{code}
+Ask the user to specify a replacement term for each floating standard variable:
+\begin{code}
     fixFloatVars vts _ []  = return vts
     fixFloatVars vts gterms@[term] ((StdVar v):stdvars)
-      = fixFloatVars ((v,term):vts) gterms stdvars
+      = do putStrLn ("-forced choice: "++trTerm 0 term)
+           fixFloatVars ((v,term):vts) gterms stdvars
     fixFloatVars vts gterms ((StdVar v):stdvars)
       = do (chosen,term) <- pickThing ("Choose term to replace "++(trVar v))
                                      (trTerm 0) gterms
-           let vts' = if chosen then ((v,term):vts) else vts
-           fixFloatVars vts' gterms stdvars
-
+           if chosen
+            then do putStrLn ("-chosen term is "++trTerm 0 term)
+                    fixFloatVars ((v,term):vts) gterms stdvars
+            else fixFloatVars vts gterms stdvars
+\end{code}
+Ask the user to specify a replacement variable-list/set
+for each floating list variable
+(We currently assume that each replacement variable can only be associated
+with one floating variable. Is this too restrictive?):
+\begin{code}
     fixFloatLVars lvvls _ []  = return lvvls
     fixFloatLVars lvvls [] _  = return lvvls
     fixFloatLVars lvvls gvars@[var] ((LstVar lv):lstvars)
-      = fixFloatLVars ((lv,gvars):lvvls) gvars lstvars
+      = do putStrLn ("-forced choice: "++trGVar var)
+           fixFloatLVars ((lv,gvars):lvvls) gvars lstvars
     fixFloatLVars lvvls gvars ((LstVar lv):lstvars)
-      = do (chosen,(wanted,leftover))
+      = do (chosen,choices)
              <- takeThings ("Choose variables to replace "++(trLVar lv))
                            trGVar gvars
            if chosen
-            then do putStrLn ("-chosen list is "++trVList wanted)
+            then do let (wanted,leftover) = choices
+                    putStrLn ("-chosen list is "++trVList wanted)
                     fixFloatLVars ((lv,wanted):lvvls) leftover lstvars
             else fixFloatLVars lvvls gvars lstvars
 \end{code}

@@ -22,7 +22,6 @@ module AbstractUI
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, matchFocusAgainst
 , applyMatchToFocus1, applyMatchToFocus2
-, applyMatchToFocus2Std, applyMatchToFocus2Lst
 , normQuantFocus
 , nestSimpFocus
 , substituteFocus
@@ -578,36 +577,12 @@ applyMatchToFocus1 i liveProof
         let stdFloating        =  filter isFloatingGVar stdvars
         let replTerms          =  subTerms $ assnT $ conjecture liveProof
         let lstFloating        =  filter isFloatingGVar lstvars
-        let replGVars = map sinkGV (stdFloating ++ lstFloating) ++ gvars
+        let replGVars          =  map sinkGV (stdFloating ++ lstFloating)
         return ( mtch
                , stdVarsOf stdFloating, replTerms
                , listVarsOf lstFloating, replGVars )
 \end{code}
 
-The user's choice of a term $P$ for each floating $?x$ is used replace those
-floating variables by those terms, in the match binding,
-the match replacement predicate, and the mapped match side-condition.
-We have two calls here,
-one for standard variables,
-one for list variables.
-
-
-\begin{code}
-applyMatchToFocus2Std :: Monad m => Variable -> Term -> Match -> m Match
-applyMatchToFocus2Std v t m
-  = do let bind' = patchVarBind v t $ mBind m
-       return m{ mBind = bind' }
-  -- mBind  ::  Binding    -- resulting binding
-  -- mLawSC ::  SideCond   -- law side-condition mapped to goal
-  -- mRepl  ::  Term       -- replacement term, instantiated with binding
-
-applyMatchToFocus2Lst :: Monad m => ListVar -> VarList -> Match-> m Match
-applyMatchToFocus2Lst lv vl m = return m
-  -- mBind  ::  Binding    -- resulting binding
-  -- mLawSC ::  SideCond   -- law side-condition mapped to goal
-  -- mRepl  ::  Term       -- replacement term, instantiated with binding
-
-\end{code}
 
 We take the chosen new match pairs,
 integrate them into the match,

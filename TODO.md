@@ -8,39 +8,7 @@ with some "spaces trimming"
 
 ###
 
-Proof fail in `UClose` leads to the following scenario (using `tm 1 []_def`)
-
-```
-[P]∧[Q]≡[P∧Q]    ⊤
-Focus = [2]  Target (RHS): true
-Match against `[]_def'[1]
-Binding: { P ⟼ P∧Q, x$ ⟼ ⟨?x$⟩ }
-Instantiated Law = [P∧Q]≡(∀ ?x$ • P∧Q)
-Instantiated Law S.C. = ?x$⊇P, ?x$⊇Q
-Goal S.C. = ⊤
-Discharged Law S.C. = ?x$⊇P, ?x$⊇Q
-```
-What needs to happen is that floating `?x$` needs to become a concrete
-list variable that is not present in the goal.
-In this case, `x$` will do.
-
-
-We should modify the binding and add in the law s.c. as local goal s.c:
-```
-Binding: { P ⟼ P∧Q, x$ ⟼ ⟨x$⟩ }
-Goal S.C. =  x$⊇P, x$⊇Q
-``` 
-
-
-
-The code in `AbstractUI` (`applyMatchToFocus2Lst` lines 594-598 approx) seems broken
-as does that in `Binding` (`patchVarListBind`,`patchVarSetBind`, lines 1615-1625 approx).
-The use of `Binding.patch<X>Bind` and `AbstractUI.applyMatchToFocus2<Y>` need to be reviewed and fixed
-
-What needs to happen is that all side-conditions involving floating list variables
-need to become local goal side-conditions.
-So we in effect have:
-
+Need to complete implementation of this.
 ```
 2 : “[]_def” (∀ ?x$ • P∧Q)  ?x$⊇P, ?x$⊇Q ⟹ ?x$⊇P, ?x$⊇Q ≡lhs
 ...
@@ -49,6 +17,12 @@ So we in effect have:
 ```
 
 
+1. We need `fixFloatVars` and `fixFloatLVars` to have an error indicator, 
+   as we require all floats to be fixed.
+2. We need `applyMatchToFocus2` to use the above information.
+
+The latter requires the generation of local side-conditions in certain circumstances.
+Any law side condition involving `?v` becomes a local side-condition involving its replacement.
 
 
 ### Complete UTPBase proofs

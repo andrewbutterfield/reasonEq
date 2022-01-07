@@ -388,8 +388,8 @@ takeThings hdr showThing things
        let choices =  map readInt $ words choicesTxt
        putStrLn ("Choices = "++show choices)
        if null choices
-         then return (False,error "Nothing taken!")
-       else if all (inRange size) choices
+         then return (True,([],things)) -- can choose nothing!
+       else if all (inRange size) choices && choices == nub choices
          then do let (wanted,leftover) = takeOut choices things
                  putStrLn ("Taken "++unwords (map showThing wanted))
                  putStrLn ("Rermaining "++unwords (map showThing leftover))

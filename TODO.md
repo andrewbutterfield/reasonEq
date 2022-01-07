@@ -17,9 +17,7 @@ Need to complete implementation of this.
 ```
 
 
-1. We need `fixFloatVars` and `fixFloatLVars` to have an error indicator, 
-   as we require all floats to be fixed.
-2. We need `applyMatchToFocus2` to use the above information.
+1. We need `applyMatchToFocus2` to use the `fixFloat...` information.
 
 The latter requires the generation of local side-conditions in certain circumstances.
 Any law side condition involving `?v` becomes a local side-condition involving its replacement.

@@ -944,7 +944,7 @@ applyMatchDescr = ( "a", "apply match"
 We start by obtaining the match and information about floating variables
 and possible matches (API Part 1).
 We then let the user choose how to replace floating variables.
-We then finish of the match application (API Part 2).
+We then finish off the match application (API Part 2).
 \begin{code}
 applyMatch :: REPLCmd (REqState, LiveProof)
 applyMatch args pstate@(reqs, liveProof)
@@ -954,24 +954,31 @@ applyMatch args pstate@(reqs, liveProof)
        -> do putStrLn ("Sunk list-variables: " ++ trVList gLstVars)
              let availTerms = false : true : gSubTerms
              putStrLn ("Floating variables: " ++ trVList (map StdVar fStdVars))
-             vts   <-  fixFloatVars [] availTerms $ map StdVar fStdVars
+             (vardone,vts)
+               <-  fixFloatVars [] availTerms $ map StdVar fStdVars
              putStrLn ("Floating list variables: " ++ trVList (map LstVar fLstVars))
-             lvvls  <-  fixFloatLVars [] gLstVars $ map LstVar fLstVars
-             case applyMatchToFocus2 mtch vts lvvls liveProof of
-               Yes liveProof'
-                -> do waitForReturn -- temporary
-                      return(reqs, liveProof')
-               But msgs
-                -> do putStrLn $ unlines msgs
-                      waitForReturn
-                      return pstate
+             (lvardone,lvvls)
+               <-  fixFloatLVars [] gLstVars $ map LstVar fLstVars
+             if vardone && lvardone then
+               case applyMatchToFocus2 mtch vts lvvls liveProof of
+                 Yes liveProof'
+                  -> do waitForReturn -- temporary
+                        return(reqs, liveProof')
+                 But msgs
+                  -> do putStrLn $ unlines msgs
+                        waitForReturn
+                        return pstate
+             else do putStrLn ( "Bad choices - done(var,lvar) = "
+                             ++ show (vardone,lvardone) )
+                     waitForReturn
+                     return pstate
   where
     true   =  theTrue  $ logicsig reqs
     false  =  theFalse $ logicsig reqs
 \end{code}
 Ask the user to specify a replacement term for each floating standard variable:
 \begin{code}
-    fixFloatVars vts _ []  = return vts
+    fixFloatVars vts _ []  = return (True,vts)
     fixFloatVars vts gterms@[term] ((StdVar v):stdvars)
       = do putStrLn ("-forced choice: "++trTerm 0 term)
            fixFloatVars ((v,term):vts) gterms stdvars
@@ -981,18 +988,18 @@ Ask the user to specify a replacement term for each floating standard variable:
            if chosen
             then do putStrLn ("-chosen term is "++trTerm 0 term)
                     fixFloatVars ((v,term):vts) gterms stdvars
-            else fixFloatVars vts gterms stdvars
+            else return (False,vts)
 \end{code}
 Ask the user to specify a replacement variable-list/set
 for each floating list variable
 (We currently assume that each replacement variable can only be associated
 with one floating variable. Is this too restrictive?):
 \begin{code}
-    fixFloatLVars lvvls _ []  = return lvvls
-    fixFloatLVars lvvls [] _  = return lvvls
-    fixFloatLVars lvvls gvars@[var] ((LstVar lv):lstvars)
-      = do putStrLn ("-forced choice: "++trGVar var)
-           fixFloatLVars ((lv,gvars):lvvls) gvars lstvars
+    fixFloatLVars lvvls _ []        = return (True,lvvls)
+    fixFloatLVars lvvls [] lstvars  = return (True,lvvls++empties)
+      where
+        fixAsEmpty (LstVar lvar) = (lvar,[])
+        empties = map fixAsEmpty lstvars
     fixFloatLVars lvvls gvars ((LstVar lv):lstvars)
       = do (chosen,choices)
              <- takeThings ("Choose variables to replace "++(trLVar lv))
@@ -1001,7 +1008,7 @@ with one floating variable. Is this too restrictive?):
             then do let (wanted,leftover) = choices
                     putStrLn ("-chosen list is "++trVList wanted)
                     fixFloatLVars ((lv,wanted):lvvls) leftover lstvars
-            else fixFloatLVars lvvls gvars lstvars
+            else return (False,lvvls)
 \end{code}
 
 

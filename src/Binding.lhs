@@ -274,7 +274,7 @@ the first being a ``traditional'' variable/term pair,
 which as a pattern should match one such pair in the candidate.
 The other form is that of a pair of two list-variables,
 one as target, the other as replacement.
-The target-list-variables needs to match a list of targets of either kind,
+The target-list-variable needs to match a list of targets of either kind,
 while the replacement list-variable needs to match a \textbf{corresponding} list
 of replacement terms and list-variables.
 In effect, a list-variable target/replacement pattern

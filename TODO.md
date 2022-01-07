@@ -22,6 +22,10 @@ Need to complete implementation of this.
 The latter requires the generation of local side-conditions in certain circumstances.
 Any law side condition involving `?v` becomes a local side-condition involving its replacement.
 
+*We have some hooks setup in AbstractUI. 
+ The key is `patchBinding` which will invoke patch functions in `Binding`.*
+
+
 
 ### Complete UTPBase proofs
 

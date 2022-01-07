@@ -951,7 +951,8 @@ applyMatch args pstate@(reqs, liveProof)
   = case applyMatchToFocus1 (args2int args) liveProof of
       Nothing -> return pstate
       Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)
-       -> do putStrLn ("Sunk list-variables: " ++ trVList gLstVars)
+       -> do putStrLn ("Bindings: " ++ trBinding (mBind mtch))
+             putStrLn ("Sunk list-variables: " ++ trVList gLstVars)
              let availTerms = false : true : gSubTerms
              putStrLn ("Floating variables: " ++ trVList (map StdVar fStdVars))
              (vardone,vts)
@@ -976,8 +977,13 @@ applyMatch args pstate@(reqs, liveProof)
     true   =  theTrue  $ logicsig reqs
     false  =  theFalse $ logicsig reqs
 \end{code}
+\newpage
 Ask the user to specify a replacement term for each floating standard variable:
 \begin{code}
+    fixFloatVars :: [(Variable,Term)] -- replacements so far
+                 -> [Term]            -- possible replacement terms
+                 -> VarList           -- floating standard variables
+                 -> IO (Bool,[(Variable,Term)])
     fixFloatVars vts _ []  = return (True,vts)
     fixFloatVars vts gterms@[term] ((StdVar v):stdvars)
       = do putStrLn ("-forced choice: "++trTerm 0 term)
@@ -995,6 +1001,10 @@ for each floating list variable
 (We currently assume that each replacement variable can only be associated
 with one floating variable. Is this too restrictive?):
 \begin{code}
+    fixFloatLVars :: [(ListVar,VarList)] -- replacements so far
+                  -> VarList             -- possible replacement variables
+                  -> VarList             -- floating list-variables
+                  -> IO (Bool,[(ListVar,VarList)])
     fixFloatLVars lvvls _ []        = return (True,lvvls)
     fixFloatLVars lvvls [] lstvars  = return (True,lvvls++empties)
       where

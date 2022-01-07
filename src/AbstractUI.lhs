@@ -555,7 +555,7 @@ We have a matchLawCommand-phase approach here:
 \end{itemize}
 
 
-First we find the match and determine which determine what variables
+First we find the match and determine what variables
 in the replacement are floating,
 identify their possible replacements,
 and return those along with the match.
@@ -583,33 +583,38 @@ applyMatchToFocus1 i liveProof
                , listVarsOf lstFloating, replGVars )
 \end{code}
 
-
+\newpage
 We take the chosen new match pairs,
 integrate them into the match,
 apply them to the replacements and side-conditions.
-We then try to discharge that side-condition.
+We then try to discharge the side-condition.
 If successful, we replace the focus.
 \begin{code}
 applyMatchToFocus2 :: Monad m
                    => Match
-                   -> [(Variable,Term)]
-                   -> [(ListVar,VarList)]
+                   -> [(Variable,Term)]   -- floating Variables -> Term
+                   -> [(ListVar,VarList)] -- floating ListVar -> VarList
                    -> LiveProof -> m LiveProof
 applyMatchToFocus2 mtch vts lvvls liveProof
   -- need to use vts and lvvls to update mtch and process law side-conditions
-  = let cbind = mBind mtch
+  = let cbind = mBind mtch -- need to update mBind mtch, but maybe later?
         repl = mLawPart mtch
         scL = snd $ mAsn mtch
-        scC = conjSC liveProof
+        scC = pdbg "aMTF2.scC" $ conjSC liveProof
         (tz,seq') = focus liveProof
         dpath = fPath liveProof
         conjpart = exitTZ tz
-    in do scLasC <- instantiateSC cbind scL
-          scD <- scDischarge scC scLasC
+    in do scLasC <- instantiateSC cbind $ pdbg "aMTF2.scL" scL
+          -- update cbind with (vts,lvvls) here?
+          let sbind = patchBinding vts lvvls cbind
+          let scFLasC = updateFloatingLawSCs sbind scLasC
+          scC' <- mrgSideCond scC $ pdbg "aMTF2.scFLasC" scFLasC
+          scD <- scDischarge (pdbg "aMTF2.scC'" scC') $ pdbg "aMTF2.scLasC" scLasC
           if onlyFreshSC scD
             then do let freshneeded = snd scD
                     let knownVs = zipperVarsMentioned $ focus liveProof
-                    let (fbind,fresh) = generateFreshVars knownVs freshneeded cbind
+                    let (fbind,fresh)
+                                   = generateFreshVars knownVs freshneeded sbind
                     let newLocalASC = fst scD
                     -- newLocalSC <- mkSideCond newLocalASC fresh
                     newLocalSC <- mkSideCond newLocalASC S.empty
@@ -627,9 +632,14 @@ applyMatchToFocus2 mtch vts lvvls liveProof
                                , (asn')):)
                               liveProof )
             else fail ("Undischarged side-conditions: "++trSideCond scD)
+
+patchBinding vts lvvls bind = bind -- for now
+-- will invoke patchVarBind and patchVarListBind in Binding to do the work
+
+updateFloatingLawSCs bind scLasC = scLasC -- for now
 \end{code}
 
-
+\newpage
 \subsubsection{Normalise Quantifiers}
 
 \textbf{Deprecated. Should be done under the hood as required}

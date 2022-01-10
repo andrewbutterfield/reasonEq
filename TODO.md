@@ -8,22 +8,13 @@ with some "spaces trimming"
 
 ###
 
-Need to complete implementation of this.
+Matches against `[]_def` now work,
+but
 ```
-2 : “[]_def” (∀ ?x$ • P∧Q)  ?x$⊇P, ?x$⊇Q ⟹ ?x$⊇P, ?x$⊇Q ≡lhs
-...
-[P]∧[Q]≡[P∧Q]    ?x$⊇P, ?x$⊇Q
-
+(∀ x$ • P∧Q)≡(∀ x$ • P∧Q)    x$⊇P, x$⊇Q
 ```
 
-
-1. We need `applyMatchToFocus2` to use the `fixFloat...` information.
-
-The latter requires the generation of local side-conditions in certain circumstances.
-Any law side condition involving `?v` becomes a local side-condition involving its replacement.
-
-*We have some hooks setup in AbstractUI. 
- The key is `patchBinding` which will invoke patch functions in `Binding`.*
+won't match `equiv_refl` !!  (`tm equiv_refl` works fine).
 
 
 

@@ -35,7 +35,7 @@ module Binding
 , isBijectiveBinding
 , onlyTrivialQuantifiers
 , dumpBinding
-, patchVarBind, patchVarListBind, patchVarSetBind
+, patchVarBind, patchVarListBind
 , int_tst_Binding
 ) where
 import Data.Maybe (fromJust,catMaybes)
@@ -1615,13 +1615,10 @@ term2VarBind t          =  BT t
 \begin{code}
 patchVarListBind :: ListVar -> VarList -> Binding -> Binding
 patchVarListBind lv vl (BD (vbind,sbind,lbind)) = BD (vbind,sbind,lbind')
-  where lbind' = lbind
-\end{code}
-
-\begin{code}
-patchVarSetBind :: ListVar -> VarSet -> Binding -> Binding
-patchVarSetBind lv vs (BD (vbind,sbind,lbind)) = BD (vbind,sbind,lbind')
-  where lbind' = lbind
+  where
+    lbind' = M.mapWithKey f lbind
+    f _ (BL [LstVar lv']) | lv == lv'  =  BL vl
+    f _ blv                            =  blv
 \end{code}
 
 \newpage

@@ -600,17 +600,16 @@ applyMatchToFocus2 mtch vts lvvls liveProof
   = let cbind = mBind mtch -- need to update mBind mtch, but maybe later?
         repl = mLawPart mtch
         scL = snd $ mAsn mtch
-        scC = pdbg "aMTF2.scC" $ conjSC liveProof
+        scC = scdbg "scC" $ conjSC liveProof
         (tz,seq') = focus liveProof
         dpath = fPath liveProof
         conjpart = exitTZ tz
-    in do scLasC <- instantiateSC cbind $ pdbg "aMTF2.scL" scL
-          -- update cbind with (vts,lvvls) here?
-          let sbind = patchBinding vts lvvls cbind
-          let scFLasC = updateFloatingLawSCs sbind scLasC
-          scC' <- mrgSideCond scC $ pdbg "aMTF2.scFLasC" scFLasC
-          scD <- scDischarge (pdbg "aMTF2.scC'" scC') $ pdbg "aMTF2.scLasC" scLasC
-          if onlyFreshSC scD
+    in do let sbind = patchBinding vts lvvls $ bdbg "cbind" cbind
+          scLasC <- instantiateSC (bdbg "sbind" sbind) $ scdbg "scL" scL
+          scCL <- extendGoalSCCoverage lvvls scLasC
+          scCX <- mrgSideCond scC $ scdbg "scCL" scCL
+          scD <- scDischarge (scdbg "scCX" scCX) $ scdbg "scLasC" scLasC
+          if onlyFreshSC $ scdbg "scD" scD
             then do let freshneeded = snd scD
                     let knownVs = zipperVarsMentioned $ focus liveProof
                     let (fbind,fresh)
@@ -618,7 +617,7 @@ applyMatchToFocus2 mtch vts lvvls liveProof
                     let newLocalASC = fst scD
                     -- newLocalSC <- mkSideCond newLocalASC fresh
                     newLocalSC <- mkSideCond newLocalASC S.empty
-                    scC' <- scC `mrgSideCond` newLocalSC
+                    scC' <- scCX `mrgSideCond` newLocalSC
                     brepl  <- instantiate fbind repl
                     asn' <- mkAsn conjpart (conjSC liveProof)
                     return ( focus_ ((setTZ brepl tz),seq')
@@ -627,16 +626,49 @@ applyMatchToFocus2 mtch vts lvvls liveProof
                            $ stepsSoFar__
                               (( UseLaw (ByMatch $ mClass mtch)
                                         (mName mtch)
-                                        fbind
+                                        (bdbg "fbind" fbind)
                                         dpath
                                , (asn')):)
                               liveProof )
             else fail ("Undischarged side-conditions: "++trSideCond scD)
+\end{code}
 
-patchBinding vts lvvls bind = bind -- for now
--- will invoke patchVarBind and patchVarListBind in Binding to do the work
+Here we replace floating variables in the \emph{range} of the binding
+by the replacements just chosen by the user.
+\begin{code}
+patchBinding :: [(Variable,Term)]   -- floating Variables -> Term
+             -> [(ListVar,VarList)] -- floating ListVar -> VarList
+             -> Binding -> Binding
+patchBinding [] [] bind = bind
+patchBinding ((v,t):vts) lvvls bind
+  = patchBinding vts lvvls $ bdbg "pvB.bind" $ patchVarBind v t bind
+patchBinding vts ((lv,vl):lvvls) bind
+  = patchBinding vts lvvls $ bdbg "pVLB.bind" $ patchVarListBind lv vl bind
+\end{code}
 
-updateFloatingLawSCs bind scLasC = scLasC -- for now
+\newpage
+
+If a floating replacement is used
+in a \texttt{CoveredBy} atomic law side condition,
+then we need to copy it over as a proof-local goal side-condition.
+\begin{code}
+extendGoalSCCoverage lvvls (atmSCs,_)
+  = xtndCoverage (map snd lvvls) [] (filter isCoverage atmSCs)
+  where
+    isCoverage (CoveredBy _ _)  =  True
+    isCoverage _                =  False
+
+    xtndCoverage :: Monad m
+                 => [VarList] -- floating replacements
+                 -> [AtmSideCond] -- extra side-conditions (so far)
+                 -> [AtmSideCond] -- Law coverage side-conditions
+                 -> m SideCond
+    xtndCoverage _ ascs [] = return (ascs, S.empty)
+    xtndCoverage ffvls ascs (cov@(CoveredBy gv vs) : rest)
+      | S.toList vs `elem` ffvls
+         = do ascs' <- mrgAtmCond cov ascs
+              xtndCoverage ffvls ascs' rest
+      | otherwise  =  xtndCoverage ffvls ascs rest
 \end{code}
 
 \newpage

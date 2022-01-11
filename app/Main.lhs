@@ -951,20 +951,15 @@ applyMatch args pstate@(reqs, liveProof)
   = case applyMatchToFocus1 (args2int args) liveProof of
       Nothing -> return pstate
       Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)
-       -> do putStrLn ("Bindings: " ++ trBinding (mBind mtch))
-             putStrLn ("Sunk list-variables: " ++ trVList gLstVars)
-             let availTerms = false : true : gSubTerms
-             putStrLn ("Floating variables: " ++ trVList (map StdVar fStdVars))
+       -> do let availTerms = false : true : gSubTerms
              (vardone,vts)
                <-  fixFloatVars [] availTerms $ map StdVar fStdVars
-             putStrLn ("Floating list variables: " ++ trVList (map LstVar fLstVars))
              (lvardone,lvvls)
                <-  fixFloatLVars [] gLstVars $ map LstVar fLstVars
              if vardone && lvardone then
                case applyMatchToFocus2 mtch vts lvvls liveProof of
                  Yes liveProof'
-                  -> do waitForReturn -- temporary
-                        return(reqs, liveProof')
+                  -> return(reqs, liveProof')
                  But msgs
                   -> do putStrLn $ unlines msgs
                         waitForReturn

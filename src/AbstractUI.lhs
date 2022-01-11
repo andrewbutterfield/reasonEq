@@ -600,16 +600,16 @@ applyMatchToFocus2 mtch vts lvvls liveProof
   = let cbind = mBind mtch -- need to update mBind mtch, but maybe later?
         repl = mLawPart mtch
         scL = snd $ mAsn mtch
-        scC = scdbg "scC" $ conjSC liveProof
+        scC = conjSC liveProof
         (tz,seq') = focus liveProof
         dpath = fPath liveProof
         conjpart = exitTZ tz
-    in do let sbind = patchBinding vts lvvls $ bdbg "cbind" cbind
-          scLasC <- instantiateSC (bdbg "sbind" sbind) $ scdbg "scL" scL
+    in do let sbind = patchBinding vts lvvls cbind
+          scLasC <- instantiateSC sbind scL
           scCL <- extendGoalSCCoverage lvvls scLasC
-          scCX <- mrgSideCond scC $ scdbg "scCL" scCL
-          scD <- scDischarge (scdbg "scCX" scCX) $ scdbg "scLasC" scLasC
-          if onlyFreshSC $ scdbg "scD" scD
+          scCX <- mrgSideCond scC scCL
+          scD <- scDischarge scCX scLasC
+          if onlyFreshSC scD
             then do let freshneeded = snd scD
                     let knownVs = zipperVarsMentioned $ focus liveProof
                     let (fbind,fresh)
@@ -626,7 +626,7 @@ applyMatchToFocus2 mtch vts lvvls liveProof
                            $ stepsSoFar__
                               (( UseLaw (ByMatch $ mClass mtch)
                                         (mName mtch)
-                                        (bdbg "fbind" fbind)
+                                        fbind
                                         dpath
                                , (asn')):)
                               liveProof )
@@ -641,9 +641,9 @@ patchBinding :: [(Variable,Term)]   -- floating Variables -> Term
              -> Binding -> Binding
 patchBinding [] [] bind = bind
 patchBinding ((v,t):vts) lvvls bind
-  = patchBinding vts lvvls $ bdbg "pvB.bind" $ patchVarBind v t bind
+  = patchBinding vts lvvls $ patchVarBind v t bind
 patchBinding vts ((lv,vl):lvvls) bind
-  = patchBinding vts lvvls $ bdbg "pVLB.bind" $ patchVarListBind lv vl bind
+  = patchBinding vts lvvls $ patchVarListBind lv vl bind
 \end{code}
 
 \newpage

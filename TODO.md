@@ -8,17 +8,13 @@ with some "spaces trimming"
 
 ###
 
-Matches against `[]_def` now work,
-but
+
 ```
-(∀ x$ • P∧Q)≡(∀ x$ • P∧Q)    x$⊇P, x$⊇Q
+¬(¬((∀ x$ • ¬ P)))
 ```
 
-won't match `equiv_refl` !!  (`tm equiv_refl` works fine).
+won't match `lnot_invol` LHS but will match RHS !!  (`tm 1 lnot_invol` works fine).
 
-If we convert both sides tp `[P∧Q]` we have the same issue.
-**Hypothesis** 
-*ranking duplicate removal acting on `true` outcome leaves only the (dodgy) `∃_remove` match.*
 
 
 

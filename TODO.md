@@ -16,6 +16,10 @@ but
 
 won't match `equiv_refl` !!  (`tm equiv_refl` works fine).
 
+If we convert both sides tp `[P∧Q]` we have the same issue.
+**Hypothesis** 
+*ranking duplicate removal acting on `true` outcome leaves only the (dodgy) `∃_remove` match.*
+
 
 
 ### Complete UTPBase proofs

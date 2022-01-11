@@ -53,6 +53,7 @@ type OrderFunction ord = [MatchContext] -> Match -> ord
 type Ranking = [MatchContext] -> Matches -> Matches
 \end{code}
 
+\newpage
 \subsection{Ranking Match Lists}
 
 Simple sorting according to rank,
@@ -63,12 +64,15 @@ filterAndSort :: Ord ord
               => (FilterFunction, OrderFunction ord) -> [MatchContext]
               -> Matches -> Matches
 filterAndSort (ff,rf) ctxts ms
-  =  remDupRepl sms
+  =  reverse $ remDupRepl $ reverse sms
+  -- we double reverse to ensure duplicates favour "earlier" theories
+  -- such as `Equiv`.
   where
     fms = filter (ff ctxts) ms
     sms = map snd $ sortOn fst $ zip (map (rf ctxts) ms) fms
 
-remDupRepl :: [ Match  ] -> [ Match ]  --  original mRepl matches with unique instantiations.
+remDupRepl :: [ Match  ] -> [ Match ]
+--  original mRepl matches with unique instantiations.
 remDupRepl []       =  []
 remDupRepl [m]  =  [m]
 remDupRepl (m1:rest@(m2:ms))

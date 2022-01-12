@@ -133,7 +133,7 @@ initREqSettings
   = REqSet {
       maxMatchDisplay = 20
     , hideTrivialMatch = False
-    , hideTrivialQuantifiers = False
+    , hideTrivialQuantifiers = True -- best for now
     , hideFloatingVariables = False
     , matchFilter = acceptAll
     }

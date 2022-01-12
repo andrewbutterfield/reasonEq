@@ -12,6 +12,7 @@ module Proofs
  , pattern MatchEqvLHS, pattern MatchEqvRHS, pattern MatchEqv
  , pattern MatchAnte, pattern MatchCnsq
  , pattern MatchEqvVar
+ , showMatchClass
  , HowUsed(..)
  , SeqFocus(..), Justification(..), showJustification
  , isSequentSwitch, justSwitched

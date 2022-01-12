@@ -6,30 +6,14 @@ with some "spaces trimming"
 
 ## Most Urgent
 
-###
-
-
-```
-¬(¬((∀ x$ • ¬ P)))
-```
-
-won't match `lnot_invol` LHS but will match RHS !!  (`tm 1 lnot_invol` works fine).
-
-
 
 
 ### Complete UTPBase proofs
 
 Doing this has shown that proof ranking and short-listing needs improvement.
 
-* Don't return matches that leave the focus un-altered.
-* Stop matches where all list variables are bound to empty. - DONE, but...
-* Stop matches when list-variable is floating, in Q-list, but not in body
-* Favour matches against ≡[1] over those against ≡[2] ? **We need to move away from ranking as a number and instead generate orderings,typically over tuples.** So for example we could exploit the fact that `([1],...) < ([2],...)` using the standard Haskell pair ordering.
+* Allow `REqSet` settings to be changed  from *within* a proof
 * We really need to have symmetric forms of key results, e.g., we have `P∨true≡true`, but should also have `true∨P≡true`.
-* We are getting viable matches (when applied) that show up as an message saying that auto-instantiate failed! *This is because of floating variables*
-* Sometimes we don't want matches presented with ?P variables **Provide filters**
-* We need to rank laws with names for the form `xxxx_def` somewhat more highly than at present.
 
 We really need to able to tune things - using negation-involution to add a double-negation can be really useful.
 

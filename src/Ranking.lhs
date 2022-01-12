@@ -7,14 +7,18 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 module Ranking
   ( FilterFunction, OrderFunction, Ranking
-  , filterAndSort
+  , filterAndSort -- used in Main
   -- exported Filters
-  , acceptAll, isNonTrivial, nonTrivialQuantifiers, noFloatingVariables
+  , acceptAll -- not used
+  , isNonTrivial-- used in REqState
+  , nonTrivialQuantifiers -- used in REqState
+  , noFloatingVariables -- used in REqState
   -- exported Orderings
-  , sizeOrd, favourLHSOrd
+  , sizeOrd -- not used
+  , favourLHSOrd -- used in Main
   -- exported rankings
-  , sizeRanking
-  , favouriteRanking
+  , sizeRanking -- not used
+  , favouriteRanking -- not used
   )
 where
 
@@ -34,8 +38,12 @@ import TestRendering
 import Debug.Trace
 dbg msg x = trace (msg++show x) x
 pdbg nm x = dbg ('@':nm++":\n") x
-mdbg msg mtchs = trace (msg++":\n"++unlines (map mdebug mtchs)) mtchs
+mdbg msg mtchs = trace (msg++":\n"++unlines (map mdetails mtchs)) mtchs
 mdebug mtch = trTerm 0 $ mRepl mtch
+mdetails mtch
+   = mName mtch
+     ++ " @ " ++ showMatchClass (mClass mtch)
+     ++ " -->  " ++ trTerm 0 (mRepl mtch)
 \end{code}
 
 \subsection{Ranking Types}
@@ -69,7 +77,7 @@ filterAndSort (ff,rf) ctxts ms
   -- such as `Equiv`.
   where
     fms = filter (ff ctxts) ms
-    sms = map snd $ sortOn fst $ zip (map (rf ctxts) ms) fms
+    sms = map snd $ sortOn fst $ zip (map (rf ctxts) fms) fms
 
 remDupRepl :: [ Match  ] -> [ Match ]
 --  original mRepl matches with unique instantiations.

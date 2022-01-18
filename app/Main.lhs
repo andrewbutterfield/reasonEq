@@ -623,7 +623,7 @@ doNewProof args reqs
             putStr "Select sequent by number: "
             hFlush stdout
             choice <- getLine
-            case newProof2 nconj strats (readInt choice) reqs of
+            case newProof2 nconj strats (readNat choice) reqs of
              Nothing -> doshow reqs "Invalid strategy no"
              Just liveProof -> proofREPL reqs liveProof
 \end{code}
@@ -849,7 +849,7 @@ matchLawCommand :: REPLCmd (REqState, LiveProof)
 matchLawCommand [] (reqs, liveProof)
   =  return (reqs, matchFocus (logicsig reqs) ranking liveProof)
   where
-    ranking = filterAndSort (matchFilter $ settings reqs, favourLHSOrd)
+    ranking = filterAndSort (matchFilter $ settings reqs, favourDefLHSOrd)
 
 matchLawCommand args state@(reqs, liveProof)
   =  case matchFocusAgainst lawnm (logicsig reqs) liveProof of

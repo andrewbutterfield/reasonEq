@@ -30,9 +30,20 @@ terms, side-conditions, laws, are all one-liners,
 but aggregates of these such as proofs, or theory
 will be multiline, so allowing effective version control.
 
+We generally worth with a list of strings,
+representing the lines in the text file.
+We have functions with names of the form \texttt{readXXX}
+that take zero or more specification arguments,
+then a list of strings representing the file contents,
+and returning a result wrapped by a general monad.
+The result is typically a pair consisting of the desired value,
+along with the remaining lines from the file.
+
 
 \subsection{Fixed Text}
 
+This is looking for a line that exactly matches a specified string,
+and just returns the remaining file contents.
 \begin{code}
 readThis :: Monad m => String -> [String] -> m [String]
 readThis this [] = fail "readThis: no text."
@@ -45,6 +56,8 @@ readThis this (txt:txts)
 
 \subsection{Keyed Text}
 
+This takes a specification that provides a keyword for the start of a line,
+followed by a function that ``reads'' the rest of that line.
 \begin{code}
 readKey :: Monad m => String -> (String -> a) -> [String] -> m (a,[String])
 readKey key _ [] = fail ("readKey '"++key++"': no text.")
@@ -60,7 +73,8 @@ rdKey :: (Read k, Monad m) => String -> m k
 rdKey str = return $ read str
 \end{code}
 
-\newpage{Lists}
+\newpage
+\subsection{Lists}
 
 \begin{code}
 list = "LIST"
@@ -83,7 +97,7 @@ readPerLine' trailer read tsil (txt:txts)
  | otherwise = readPerLine' trailer read (read txt:tsil) txts
 \end{code}
 
-\newpage
+
 \subsection{Maps}
 
 \begin{code}

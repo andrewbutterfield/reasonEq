@@ -39,6 +39,10 @@ import Theories
 import Sequents
 import LiveProofs
 import Ranking
+
+import Debug.Trace
+dbg msg x = trace (msg ++ show x) x
+pdbg nm x = dbg ('@':nm++":\n") x
 \end{code}
 
 \subsection{Settings}
@@ -114,6 +118,7 @@ matchFilterUpdate' r
         , ( hideTrivialQuantifiers r, nonTrivialQuantifiers )
         , ( hideFloatingVariables r,  noFloatingVariables )
         ]
+      where nTQdbg c m = dbg "** nTQ-outcome = " (nonTrivialQuantifiers c m)
 \end{code}
 
 \begin{code}
@@ -186,7 +191,7 @@ changeSetting :: Monad m => SettingStrings  -> String -> REqSettings
                          -> m REqSettings
 changeSetting (short,typ,_) valstr reqs
  | typ == "Bool"    =  changeBoolSetting short (readBool valstr) reqs
- | typ == "Number"  =  changeNumberSetting short (readInt valstr) reqs
+ | typ == "Number"  =  changeNumberSetting short (readNat valstr) reqs
  | otherwise        =  fail ("changeSetting - unknown type: "++typ)
 \end{code}
 
@@ -209,7 +214,7 @@ changeNumberSetting name value reqs
 
 \begin{code}
 reqset = "REQSET"
-reqsetHDR = "BEGIN "++reqset ; reqsetTRL= "END "++ reqset
+reqsetHDR = "BEGIN "++reqset ; reqsetTRL = "END "++ reqset
 mmdKey = "MMD = "
 
 writeREqSettings :: REqSettings -> [String]
@@ -225,8 +230,8 @@ readREqSettings txts
        (theMMD,rest2) <- readKey mmdKey read rest1
        rest3 <- readThis reqsetTRL rest2
        return $ ( REqSet theMMD
-                         False
-                         False
+                         True
+                         True
                          False
                          acceptAll
                 , rest3 )

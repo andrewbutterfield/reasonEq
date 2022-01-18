@@ -12,7 +12,7 @@ module Utilities (
 , unlines'
 , issubset
 , clearIt, clear
-, readBool, readInt
+, readBool, readNat
 , trim
 , zip1, zip2, zip2'
 , nlookup, alookup
@@ -312,7 +312,7 @@ numberItem' maxw (i,(str,strlen))
 \subsubsection{Argument String Handling}
 
 \begin{code}
-args2int args = if null args then 0 else readInt $ head args
+args2int args = if null args then 0 else readNat $ head args
 
 args2str args = if null args then "" else head args
 \end{code}
@@ -373,28 +373,30 @@ isSingle _    =  False
 \newpage
 \subsection{Smart Readers}
 
-\subsubsection{Read Boolean}
-\begin{code}
-readBool :: String -> Bool
-readBool str
-  | map toLower str == "t"     =  True
-  | map toLower str == "true"  =  True
-  | map toLower str == "yes"   =  True
-  | int >= 0                   =  int > 0
-  where
-    int = readInt str
-readBool _                     =  False
-\end{code}
-
 
 \subsubsection{Read Integer}
 \begin{code}
-readInt :: String -> Int
-readInt str
+readNat :: String -> Int
+readNat str
  | null str         =   -1
  | all isDigit str  =   read str
  | otherwise        =   -1
 \end{code}
+
+\subsubsection{Read Boolean}
+\begin{code}
+readBool :: String -> Bool
+readBool str
+  | lowstr == "t"     =  True
+  | lowstr == "true"  =  True
+  | lowstr == "yes"   =  True
+  | int >= 0          =  int > 0
+  | otherwise         =  False
+  where
+    lowstr = map toLower str
+    int = readNat str
+\end{code}
+
 \newpage
 
 

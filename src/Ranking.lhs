@@ -15,7 +15,7 @@ module Ranking
   , noFloatingVariables -- used in REqState
   -- exported Orderings
   , sizeOrd -- not used
-  , favourLHSOrd -- used in Main
+  , favourDefLHSOrd -- used in Main
   -- exported rankings
   , sizeRanking -- not used
   , favouriteRanking -- not used
@@ -105,7 +105,7 @@ sizeRanking = filterAndSort ( acceptAll, sizeOrd )
 
 \begin{code}
 favouriteRanking  :: Ranking
-favouriteRanking = filterAndSort ( nonTrivialQuantifiers, favourLHSOrd )
+favouriteRanking = filterAndSort ( nonTrivialQuantifiers, favourDefLHSOrd )
 \end{code}
 
 
@@ -121,8 +121,7 @@ acceptAll _ _ = True
 
 \subsubsection{Drop Trivial Matches}
 
-Ranking by term size,
-but where being trivial has a very high penalty
+Reject matches against a single predicate variable
 \begin{code}
 isNonTrivial :: FilterFunction
 isNonTrivial _ m
@@ -151,6 +150,8 @@ noFloatingVariables _ =   not . any isFloatingGVar . mentionedVars . mRepl
 \newpage
 \subsection{Orderings}
 
+In orderings, smaller is better.
+
 \subsubsection{Term Size}
 
 Simple ranking by replacement term size,
@@ -158,12 +159,6 @@ after the binding is applied:
 \begin{code}
 sizeOrd :: OrderFunction Int
 sizeOrd _ m  =  termSize $ mRepl m
- -- = case instantiate (mBind m) replL of
- --    Just replC  ->  termSize replC
- --    -- instantiate fails if some variables not bound (?v)
- --    -- rank these as 'larger'
- --    Nothing     ->  10 * termSize replL
- -- where replL = mRepl m
 
 termSize :: Term -> Int
 termSize (Val _ _)            =  1
@@ -180,47 +175,30 @@ subsSize (Substn ts lvs)      =  3 * S.size ts + 2 * S.size lvs
 \end{code}
 
 
-% \subsubsection{Penalise Trivial Matches}
-%
-% Ranking by term size,
-% but where being trivial has a very high penalty
-% \begin{code}
-% isNonTrivial :: Match -> Bool
-% isNonTrivial m
-%   =  nontrivial $ mClass m
-%   where
-%      nontrivial (MatchEqvVar _)  =  False
-%      nontrivial _                =  True
-% \end{code}
-%
-%
-% \begin{code}
-% trivialHit = 1000000
-%
-% trivialPenalty :: Match -> Int
-% trivialPenalty m
-%   | isNonTrivial m  =  0
-%   | otherwise       =  trivialHit
-%
-% nonTrivialSizeOrd :: OrderFunction Int
-% nonTrivialSizeOrd mctxts m
-%  = sizeOrd mctxts m + trivialPenalty m
-% \end{code}
+\subsubsection{Favour LHS and Definitions}
 
-\subsubsection{Favour LHS}
-
+Show matches to laws named as definitions first,
+then those matching LHS of equivalence laws,
+and then the rest.
 \begin{code}
-favourLHSOrd :: OrderFunction (Int,Int)
-favourLHSOrd ctxt m = ( sizeOrd ctxt m
-                      , subMatchOrd $ mClass m
-                      )
+favourDefLHSOrd :: OrderFunction (Int,Int,Int)
+favourDefLHSOrd ctxt m
+  = ( subMatchDef $ mName m
+    , subMatchOrd $ mClass m
+    , sizeOrd ctxt m
+    )
+
+subMatchDef :: String -> Int
+subMatchDef lawname
+ | take 4 (reverse lawname) == "fed_"  =  0
+ | otherwise                           =  1
 
 subMatchOrd :: MatchClass -> Int
 subMatchOrd MatchAll         =  0
 subMatchOrd MatchEqvLHS      =  1
 subMatchOrd MatchEqvRHS      =  2
 subMatchOrd (MatchEqv _)     =  2
-subMatchOrd MatchAnte        =  10
-subMatchOrd MatchCnsq        =  10
-subMatchOrd (MatchEqvVar _)  =  100
+subMatchOrd MatchAnte        =  3
+subMatchOrd MatchCnsq        =  3
+subMatchOrd (MatchEqvVar _)  =  3
 \end{code}

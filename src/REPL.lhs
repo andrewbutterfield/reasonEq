@@ -280,7 +280,7 @@ pickByNumber :: String -> (t -> String) -> t -> IO Int
 pickByNumber prompt showx x
   = do putStrLn $ showx x
        putStr prompt ; hFlush stdout ; input <- getLine
-       return $ readInt $ trim input
+       return $ readNat $ trim input
 
 \end{code}
 
@@ -353,7 +353,7 @@ pickThing hdr showThing [thing] = return (True,thing)
 pickThing hdr showThing things
   = do putStrLn hdr
        putStrLn $ numberList showThing things
-       choice <- fmap readInt $ userPrompt "Select by number: "
+       choice <- fmap readNat $ userPrompt "Select by number: "
        if inRange (length things) choice
          then do let thing = selectFrom things choice
                  putStrLn ("Chosen "++showThing thing)
@@ -367,7 +367,7 @@ pickThings hdr showThing things
   = do putStrLn hdr
        putStrLn $ numberList showThing things
        choicesTxt <- userPrompt "Select by numbers: "
-       let choices =  map readInt $ words choicesTxt
+       let choices =  map readNat $ words choicesTxt
        putStrLn ("Choices = "++show choices)
        if null choices
          then return (False,error "Nothing chosen!")
@@ -385,7 +385,7 @@ takeThings hdr showThing things
   = do putStrLn hdr
        putStrLn $ numberList showThing things
        choicesTxt <- userPrompt "Select by numbers: "
-       let choices =  map readInt $ words choicesTxt
+       let choices =  map readNat $ words choicesTxt
        putStrLn ("Choices = "++show choices)
        if null choices
          then return (True,([],things)) -- can choose nothing!

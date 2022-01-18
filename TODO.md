@@ -6,6 +6,8 @@ with some "spaces trimming"
 
 ## Most Urgent
 
+Proofs seem to ignore the hideXXX settings for some strange reason!
+Is there bug when they are all true??? Seems like it.
 
 
 ### Complete UTPBase proofs

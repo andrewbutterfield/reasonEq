@@ -746,7 +746,7 @@ This repl runs a proof.
 \begin{code}
 proofREPL reqs liveProof
  = do (reqs',_) <- runREPL
-                       (clear++"Prover starting...")
+                       (clear++"Prover starting...\n"++ observeSettings reqs)
                        proofREPLConfig
                        (reqs,liveProof)
       return reqs'

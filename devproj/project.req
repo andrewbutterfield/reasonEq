@@ -1,9 +1,9 @@
 BEGIN REQSTATE
 BEGIN REQSET
 MMD = 25
-MHT = True
+MHT = False
 MHQ = True
-MHF = True
+MHF = False
 END REQSET
 BEGIN SIGNATURE
 TRUE = K P (VB True)
@@ -26,22 +26,16 @@ TH-NAME: UTPBase
 CJ-NAME: cond_assoc
 CONJ = ASN (C P True (Id "equiv" 0) [C P True (Id "cond" 0) [C P True (Id "cond" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "c" 0,VP,WB)),V P (VR (Id "R" 0,VP,WS))],C P True (Id "cond" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "land" 0) [V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "c" 0,VP,WB))],C P True (Id "cond" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "c" 0,VP,WB)),V P (VR (Id "R" 0,VP,WS))]]],([],fromList []))
 SIDE = ([],fromList [])
-STRAT redtail
+STRAT reduce
 BEGIN SEQZIP
-TERMZIP = (C P True (Id "lor" 0) [C P True (Id "land" 0) [V P (VR (Id "c" 0,VP,WB)),C P True (Id "land" 0) [V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "P" 0,VP,WS))]],C P True (Id "land" 0) [V P (VR (Id "c" 0,VP,WB)),C P True (Id "land" 0) [C P True (Id "lnot" 0) [V P (VR (Id "b" 0,VP,WB))],V P (VR (Id "Q" 0,VP,WS))]]],[Cons' P True (Id "lor" 0) [] [C P True (Id "land" 0) [C P True (Id "lnot" 0) [V P (VR (Id "c" 0,VP,WB))],V P (VR (Id "R" 0,VP,WS))]]])
+TERMZIP = (C P True (Id "cond" 0) [C P True (Id "cond" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "c" 0,VP,WB)),V P (VR (Id "R" 0,VP,WS))],[Cons' P True (Id "equiv" 0) [] [C P True (Id "cond" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "land" 0) [V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "c" 0,VP,WB))],C P True (Id "cond" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "c" 0,VP,WB)),V P (VR (Id "R" 0,VP,WS))]]]])
 BEGIN SEQUENT'
 SIDECOND = ([],fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.cond_assoc", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Rght, otherC = C P True (Id "lor" 0) [C P True (Id "land" 0) [C P True (Id "land" 0) [V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "c" 0,VP,WB))],V P (VR (Id "P" 0,VP,WS))],C P True (Id "land" 0) [C P True (Id "lnot" 0) [C P True (Id "land" 0) [V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "c" 0,VP,WB))]],C P True (Id "lor" 0) [C P True (Id "land" 0) [V P (VR (Id "c" 0,VP,WB)),V P (VR (Id "Q" 0,VP,WS))],C P True (Id "land" 0) [C P True (Id "lnot" 0) [V P (VR (Id "c" 0,VP,WB))],V P (VR (Id "R" 0,VP,WS))]]]]}
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.cond_assoc", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
 END SEQUENT'
 END SEQZIP
-FPATH: [2,2,1]
+FPATH: [1]
 BEGIN LIST STEPS
-(UseLaw (ByMatch MEL) "land_lor_distr" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "c" 0,VP,WB))),((Id "Q" 0,VP),BT (C P True (Id "land" 0) [V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "P" 0,VP,WS))])),((Id "R" 0,VP),BT (C P True (Id "land" 0) [C P True (Id "lnot" 0) [V P (VR (Id "b" 0,VP,WB))],V P (VR (Id "Q" 0,VP,WS))])),((Id "land" 0,VP),BV (VR (Id "land" 0,VP,WS))),((Id "lor" 0,VP),BV (VR (Id "lor" 0,VP,WS)))],fromList [],fromList [])) [2,2,1],ASN (C P True (Id "lor" 0) [C P True (Id "land" 0) [V P (VR (Id "c" 0,VP,WB)),C P True (Id "lor" 0) [C P True (Id "land" 0) [V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "P" 0,VP,WS))],C P True (Id "land" 0) [C P True (Id "lnot" 0) [V P (VR (Id "b" 0,VP,WB))],V P (VR (Id "Q" 0,VP,WS))]]],C P True (Id "land" 0) [C P True (Id "lnot" 0) [V P (VR (Id "c" 0,VP,WB))],V P (VR (Id "R" 0,VP,WS))]],([],fromList [])))
-(UseLaw (ByMatch MEL) "cond_def" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS))),((Id "Q" 0,VP),BV (VR (Id "Q" 0,VP,WS))),((Id "b" 0,VP),BI (Id "b" 0)),((Id "cond" 0,VP),BV (VR (Id "cond" 0,VP,WS)))],fromList [],fromList [])) [2,2,1,2],ASN (C P True (Id "lor" 0) [C P True (Id "land" 0) [V P (VR (Id "c" 0,VP,WB)),C P True (Id "cond" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "Q" 0,VP,WS))]],C P True (Id "land" 0) [C P True (Id "lnot" 0) [V P (VR (Id "c" 0,VP,WB))],V P (VR (Id "R" 0,VP,WS))]],([],fromList [])))
-(UseLaw (ByMatch MEL) "cond_def" (BD (fromList [((Id "P" 0,VP),BT (C P True (Id "cond" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "Q" 0,VP,WS))])),((Id "Q" 0,VP),BV (VR (Id "R" 0,VP,WS))),((Id "b" 0,VP),BI (Id "c" 0)),((Id "cond" 0,VP),BV (VR (Id "cond" 0,VP,WS)))],fromList [],fromList [])) [2,2],ASN (C P True (Id "cond" 0) [C P True (Id "cond" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "c" 0,VP,WB)),V P (VR (Id "R" 0,VP,WS))],([],fromList [])))
-(Switch CLeft CRight,ASN (C P True (Id "lor" 0) [C P True (Id "land" 0) [C P True (Id "land" 0) [V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "c" 0,VP,WB))],V P (VR (Id "P" 0,VP,WS))],C P True (Id "land" 0) [C P True (Id "lnot" 0) [C P True (Id "land" 0) [V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "c" 0,VP,WB))]],C P True (Id "lor" 0) [C P True (Id "land" 0) [V P (VR (Id "c" 0,VP,WB)),V P (VR (Id "Q" 0,VP,WS))],C P True (Id "land" 0) [C P True (Id "lnot" 0) [V P (VR (Id "c" 0,VP,WB))],V P (VR (Id "R" 0,VP,WS))]]]],([],fromList [])))
-(UseLaw (ByMatch MEL) "cond_def" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "Q" 0,VP,WS))),((Id "Q" 0,VP),BV (VR (Id "R" 0,VP,WS))),((Id "b" 0,VP),BI (Id "c" 0)),((Id "cond" 0,VP),BV (VR (Id "cond" 0,VP,WS)))],fromList [],fromList [])) [2,2],ASN (C P True (Id "lor" 0) [C P True (Id "land" 0) [C P True (Id "land" 0) [V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "c" 0,VP,WB))],V P (VR (Id "P" 0,VP,WS))],C P True (Id "land" 0) [C P True (Id "lnot" 0) [C P True (Id "land" 0) [V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "c" 0,VP,WB))]],C P True (Id "cond" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "c" 0,VP,WB)),V P (VR (Id "R" 0,VP,WS))]]],([],fromList [])))
-(UseLaw (ByMatch MEL) "cond_def" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS))),((Id "Q" 0,VP),BT (C P True (Id "cond" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "c" 0,VP,WB)),V P (VR (Id "R" 0,VP,WS))])),((Id "b" 0,VP),BT (C P True (Id "land" 0) [V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "c" 0,VP,WB))])),((Id "cond" 0,VP),BV (VR (Id "cond" 0,VP,WS)))],fromList [],fromList [])) [],ASN (C P True (Id "cond" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "land" 0) [V P (VR (Id "b" 0,VP,WB)),V P (VR (Id "c" 0,VP,WB))],C P True (Id "cond" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "c" 0,VP,WB)),V P (VR (Id "R" 0,VP,WS))]],([],fromList [])))
 END LIST STEPS
 END LIVE-PROOF
 END MAP LIVE-PROOFS

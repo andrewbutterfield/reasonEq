@@ -674,12 +674,13 @@ type ProofState
 \end{code}
 From this we can define most of the REPL configuration.
 \begin{code}
-proofREPLprompt justHelped (_,liveProof)
-  | justHelped  =  unlines' [ dispLiveProof liveProof
+proofREPLprompt justHelped (reqs,liveProof)
+  | justHelped  =  unlines' [ dispLiveProof maxm liveProof
                             , "proof: "]
   | otherwise   =  unlines' [ clear -- clear screen, move to top-left
-                            , dispLiveProof liveProof
+                            , dispLiveProof maxm liveProof
                             , "proof: "]
+  where maxm = maxMatchDisplay $ settings reqs
 
 proofEOFReplacement = []
 

@@ -997,8 +997,8 @@ showLiveProof liveProof
 \begin{code}
 -- displays whole proof in proof REPL
 -- temporary
-dispLiveProof :: LiveProof -> String
-dispLiveProof liveProof
+dispLiveProof :: Int -> LiveProof -> String
+dispLiveProof maxm liveProof
  = unlines
      ( ( ("Proof for "++red (widthHack 2 $ conjName liveProof))
        : ("\t" ++ green(trTerm 0 trm ++ "  "++ trSideCond sc))
@@ -1007,7 +1007,7 @@ dispLiveProof liveProof
        )
        ++
        ( " ..."
-         : displayMatches (mtchCtxts liveProof) (matches liveProof)
+         : displayMatches maxm (mtchCtxts liveProof) (matches liveProof)
          : [ underline "           "
            , dispSeqZip (fPath liveProof) (conjSC liveProof) (focus liveProof)
            , "" ]
@@ -1019,10 +1019,11 @@ shLiveStep ( just, asn )
   = unlines' [ trAsn asn
              , showJustification just]
 
-displayMatches :: [MatchContext] -> Matches -> String
-displayMatches _ []  =  ""
-displayMatches mctxts matches
-  =  unlines' ( ("Matches:") : map (shMatch vts) (reverse $ zip [1..] matches))
+displayMatches :: Int -> [MatchContext] -> Matches -> String
+displayMatches _ _ []  =  ""
+displayMatches maxm mctxts matches
+  =  unlines' ( ("Matches:")
+                : map (shMatch vts) (reverse $ take maxm $ zip [1..] matches) )
   where vts = concat $ map thd3 mctxts
 
 shMatch vts (i, mtch)

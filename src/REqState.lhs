@@ -216,11 +216,17 @@ changeNumberSetting name value reqs
 reqset = "REQSET"
 reqsetHDR = "BEGIN "++reqset ; reqsetTRL = "END "++ reqset
 mmdKey = "MMD = "
+mhtKey = "MHT = "
+mhqKey = "MHQ = "
+mhfKey = "MHF = "
 
 writeREqSettings :: REqSettings -> [String]
 writeREqSettings rqset
   = [ reqsetHDR
     , mmdKey ++ show (maxMatchDisplay rqset)
+    , mhtKey ++ show (hideTrivialMatch rqset)
+    , mhqKey ++ show (hideTrivialQuantifiers rqset)
+    , mhfKey ++ show (hideFloatingVariables rqset)
     , reqsetTRL ]
 
 readREqSettings :: Monad m => [String] -> m (REqSettings, [String])
@@ -228,13 +234,16 @@ readREqSettings [] = fail "readREqSettings: no text"
 readREqSettings txts
   = do rest1 <- readThis reqsetHDR txts
        (theMMD,rest2) <- readKey mmdKey read rest1
-       rest3 <- readThis reqsetTRL rest2
+       (theMHT,rest3) <- readKey mhtKey readBool rest2
+       (theMHQ,rest4) <- readKey mhqKey readBool rest3
+       (theMHF,rest5) <- readKey mhfKey readBool rest4
+       rest6 <- readThis reqsetTRL rest5
        return $ ( REqSet theMMD
-                         True
-                         True
-                         False
+                         theMHT
+                         theMHQ
+                         theMHF
                          acceptAll
-                , rest3 )
+                , rest6 )
 \end{code}
 
 

@@ -1,0 +1,190 @@
+sqsupseteq_trans : (P⊒Q)∧(Q⊒R)⟹  (P⊒R)
+by 'reduce'
+---
+(P⊒Q)∧(Q⊒R)⟹  (P⊒R)
+ = 'match-lhs implies_meet @[]'
+    { P ⟼ (P⊒Q)∧(Q⊒R), Q ⟼ P⊒R, ⟹   ⟼ ⟹   }
+((P⊒Q)∧(Q⊒R))∧(P⊒R)≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs sqsupseteq_def @[1,1,1]'
+    { P ⟼ P, Q ⟼ Q, ⊒ ⟼ ⊒ }
+([P⟹  Q]∧(Q⊒R))∧(P⊒R)≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs sqsupseteq_def @[1,1,2]'
+    { P ⟼ Q, Q ⟼ R, ⊒ ⟼ ⊒ }
+([P⟹  Q]∧[Q⟹  R])∧(P⊒R)≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs sqsupseteq_def @[1,2]'
+    { P ⟼ P, Q ⟼ R, ⊒ ⟼ ⊒ }
+([P⟹  Q]∧[Q⟹  R])∧[P⟹  R]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_[]_distr @[1,1]'
+    { P ⟼ P⟹  Q, Q ⟼ Q⟹  R, ∧ ⟼ ∧ }
+[(P⟹  Q)∧(Q⟹  R)]∧[P⟹  R]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_[]_distr @[1]'
+    { P ⟼ (P⟹  Q)∧(Q⟹  R), Q ⟼ P⟹  R, ∧ ⟼ ∧ }
+[((P⟹  Q)∧(Q⟹  R))∧(P⟹  R)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs implies_def2 @[1,1,1,1]'
+    { P ⟼ P, Q ⟼ Q, ⟹   ⟼ ⟹   }
+[((¬ P∨Q)∧(Q⟹  R))∧(P⟹  R)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs implies_def2 @[1,1,1,2]'
+    { P ⟼ Q, Q ⟼ R, ⟹   ⟼ ⟹   }
+[((¬ P∨Q)∧(¬ Q∨R))∧(P⟹  R)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs implies_def2 @[1,1,2]'
+    { P ⟼ P, Q ⟼ R, ⟹   ⟼ ⟹   }
+[((¬ P∨Q)∧(¬ Q∨R))∧(¬ P∨R)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_lor_distr @[1,1,1]'
+    { P ⟼ ¬ P∨Q, Q ⟼ ¬ Q, R ⟼ R, ∧ ⟼ ∧, ∨ ⟼ ∨ }
+[((¬ P∨Q)∧¬ Q∨(¬ P∨Q)∧R)∧(¬ P∨R)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_symm @[1,1,1,1]'
+    { P ⟼ ¬ P∨Q, Q ⟼ ¬ Q, ∧ ⟼ ∧ }
+[(¬ Q∧(¬ P∨Q)∨(¬ P∨Q)∧R)∧(¬ P∨R)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_lor_distr @[1,1,1,1]'
+    { P ⟼ ¬ Q, Q ⟼ ¬ P, R ⟼ Q, ∧ ⟼ ∧, ∨ ⟼ ∨ }
+[((¬ Q∧¬ P∨¬ Q∧Q)∨(¬ P∨Q)∧R)∧(¬ P∨R)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_symm @[1,1,1,1,2]'
+    { P ⟼ ¬ Q, Q ⟼ Q, ∧ ⟼ ∧ }
+[((¬ Q∧¬ P∨Q∧¬ Q)∨(¬ P∨Q)∧R)∧(¬ P∨R)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs contradiction @[1,1,1,1,2]'
+    { P ⟼ Q, ∧ ⟼ ∧, ¬ ⟼ ¬ }
+[((¬ Q∧¬ P∨false)∨(¬ P∨Q)∧R)∧(¬ P∨R)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs lor_unit @[1,1,1,1]'
+    { P ⟼ ¬ Q∧¬ P, ∨ ⟼ ∨ }
+[(¬ Q∧¬ P∨(¬ P∨Q)∧R)∧(¬ P∨R)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_symm @[1,1,1,2]'
+    { P ⟼ ¬ P∨Q, Q ⟼ R, ∧ ⟼ ∧ }
+[(¬ Q∧¬ P∨R∧(¬ P∨Q))∧(¬ P∨R)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_lor_distr @[1,1,1,2]'
+    { P ⟼ R, Q ⟼ ¬ P, R ⟼ Q, ∧ ⟼ ∧, ∨ ⟼ ∨ }
+[(¬ Q∧¬ P∨(R∧¬ P∨R∧Q))∧(¬ P∨R)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_symm @[1,1]'
+    { P ⟼ ¬ Q∧¬ P∨(R∧¬ P∨R∧Q), Q ⟼ ¬ P∨R, ∧ ⟼ ∧ }
+[(¬ P∨R)∧(¬ Q∧¬ P∨(R∧¬ P∨R∧Q))]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_lor_distr @[1,1]'
+    { P ⟼ ¬ P∨R, Q ⟼ ¬ Q∧¬ P, R ⟼ R∧¬ P∨R∧Q, ∧ ⟼ ∧, ∨ ⟼ ∨ }
+[(¬ P∨R)∧(¬ Q∧¬ P)∨(¬ P∨R)∧(R∧¬ P∨R∧Q)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_land_distr @[1,1,1]'
+    { P ⟼ ¬ P∨R, Q ⟼ ¬ Q, R ⟼ ¬ P, ∧ ⟼ ∧ }
+[((¬ P∨R)∧¬ Q)∧((¬ P∨R)∧¬ P)∨(¬ P∨R)∧(R∧¬ P∨R∧Q)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_symm @[1,1,1,1]'
+    { P ⟼ ¬ P∨R, Q ⟼ ¬ Q, ∧ ⟼ ∧ }
+[(¬ Q∧(¬ P∨R))∧((¬ P∨R)∧¬ P)∨(¬ P∨R)∧(R∧¬ P∨R∧Q)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_lor_distr @[1,1,1,1]'
+    { P ⟼ ¬ Q, Q ⟼ ¬ P, R ⟼ R, ∧ ⟼ ∧, ∨ ⟼ ∨ }
+[(¬ Q∧¬ P∨¬ Q∧R)∧((¬ P∨R)∧¬ P)∨(¬ P∨R)∧(R∧¬ P∨R∧Q)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_symm @[1,1,1,2]'
+    { P ⟼ ¬ P∨R, Q ⟼ ¬ P, ∧ ⟼ ∧ }
+[(¬ Q∧¬ P∨¬ Q∧R)∧(¬ P∧(¬ P∨R))∨(¬ P∨R)∧(R∧¬ P∨R∧Q)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_lor_distr @[1,1,1,2]'
+    { P ⟼ ¬ P, Q ⟼ ¬ P, R ⟼ R, ∧ ⟼ ∧, ∨ ⟼ ∨ }
+[(¬ Q∧¬ P∨¬ Q∧R)∧(¬ P∧¬ P∨¬ P∧R)∨(¬ P∨R)∧(R∧¬ P∨R∧Q)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_idem @[1,1,1,2,1]'
+    { P ⟼ ¬ P, ∧ ⟼ ∧ }
+[(¬ Q∧¬ P∨¬ Q∧R)∧(¬ P∨¬ P∧R)∨(¬ P∨R)∧(R∧¬ P∨R∧Q)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs lor_land_absorb @[1,1,1,2]'
+    { P ⟼ ¬ P, Q ⟼ R, ∧ ⟼ ∧, ∨ ⟼ ∨ }
+[(¬ Q∧¬ P∨¬ Q∧R)∧¬ P∨(¬ P∨R)∧(R∧¬ P∨R∧Q)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_symm @[1,1,1]'
+    { P ⟼ ¬ Q∧¬ P∨¬ Q∧R, Q ⟼ ¬ P, ∧ ⟼ ∧ }
+[¬ P∧(¬ Q∧¬ P∨¬ Q∧R)∨(¬ P∨R)∧(R∧¬ P∨R∧Q)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_lor_distr @[1,1,1]'
+    { P ⟼ ¬ P, Q ⟼ ¬ Q∧¬ P, R ⟼ ¬ Q∧R, ∧ ⟼ ∧, ∨ ⟼ ∨ }
+[(¬ P∧(¬ Q∧¬ P)∨¬ P∧(¬ Q∧R))∨(¬ P∨R)∧(R∧¬ P∨R∧Q)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_symm @[1,1,1,1,2]'
+    { P ⟼ ¬ Q, Q ⟼ ¬ P, ∧ ⟼ ∧ }
+[(¬ P∧(¬ P∧¬ Q)∨¬ P∧(¬ Q∧R))∨(¬ P∨R)∧(R∧¬ P∨R∧Q)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-rhs land_assoc @[1,1,1,1]'
+    { P ⟼ ¬ P, Q ⟼ ¬ P, R ⟼ ¬ Q, ∧ ⟼ ∧ }
+[((¬ P∧¬ P)∧¬ Q∨¬ P∧(¬ Q∧R))∨(¬ P∨R)∧(R∧¬ P∨R∧Q)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_idem @[1,1,1,1,1]'
+    { P ⟼ ¬ P, ∧ ⟼ ∧ }
+[(¬ P∧¬ Q∨¬ P∧(¬ Q∧R))∨(¬ P∨R)∧(R∧¬ P∨R∧Q)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-rhs land_lor_distr @[1,1,1]'
+    { P ⟼ ¬ P, Q ⟼ ¬ Q, R ⟼ ¬ Q∧R, ∧ ⟼ ∧, ∨ ⟼ ∨ }
+[¬ P∧(¬ Q∨¬ Q∧R)∨(¬ P∨R)∧(R∧¬ P∨R∧Q)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs lor_land_absorb @[1,1,1,2]'
+    { P ⟼ ¬ Q, Q ⟼ R, ∧ ⟼ ∧, ∨ ⟼ ∨ }
+[¬ P∧¬ Q∨(¬ P∨R)∧(R∧¬ P∨R∧Q)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_lor_distr @[1,1,2]'
+    { P ⟼ ¬ P∨R, Q ⟼ R∧¬ P, R ⟼ R∧Q, ∧ ⟼ ∧, ∨ ⟼ ∨ }
+[¬ P∧¬ Q∨((¬ P∨R)∧(R∧¬ P)∨(¬ P∨R)∧(R∧Q))]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_land_distr @[1,1,2,1]'
+    { P ⟼ ¬ P∨R, Q ⟼ R, R ⟼ ¬ P, ∧ ⟼ ∧ }
+[¬ P∧¬ Q∨(((¬ P∨R)∧R)∧((¬ P∨R)∧¬ P)∨(¬ P∨R)∧(R∧Q))]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_symm @[1,1,2,1,1]'
+    { P ⟼ ¬ P∨R, Q ⟼ R, ∧ ⟼ ∧ }
+[¬ P∧¬ Q∨((R∧(¬ P∨R))∧((¬ P∨R)∧¬ P)∨(¬ P∨R)∧(R∧Q))]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs lor_symm @[1,1,2,1,1,2]'
+    { P ⟼ ¬ P, Q ⟼ R, ∨ ⟼ ∨ }
+[¬ P∧¬ Q∨((R∧(R∨¬ P))∧((¬ P∨R)∧¬ P)∨(¬ P∨R)∧(R∧Q))]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_lor_absorb @[1,1,2,1,1]'
+    { P ⟼ R, Q ⟼ ¬ P, ∧ ⟼ ∧, ∨ ⟼ ∨ }
+[¬ P∧¬ Q∨(R∧((¬ P∨R)∧¬ P)∨(¬ P∨R)∧(R∧Q))]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs lor_symm @[1,1,2,2,1]'
+    { P ⟼ ¬ P, Q ⟼ R, ∨ ⟼ ∨ }
+[¬ P∧¬ Q∨(R∧((¬ P∨R)∧¬ P)∨(R∨¬ P)∧(R∧Q))]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_symm @[1,1,2,2]'
+    { P ⟼ R∨¬ P, Q ⟼ R∧Q, ∧ ⟼ ∧ }
+[¬ P∧¬ Q∨(R∧((¬ P∨R)∧¬ P)∨(R∧Q)∧(R∨¬ P))]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_lor_distr @[1,1,2,2]'
+    { P ⟼ R∧Q, Q ⟼ R, R ⟼ ¬ P, ∧ ⟼ ∧, ∨ ⟼ ∨ }
+[¬ P∧¬ Q∨(R∧((¬ P∨R)∧¬ P)∨((R∧Q)∧R∨(R∧Q)∧¬ P))]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_symm @[1,1,2,2,1]'
+    { P ⟼ R∧Q, Q ⟼ R, ∧ ⟼ ∧ }
+[¬ P∧¬ Q∨(R∧((¬ P∨R)∧¬ P)∨(R∧(R∧Q)∨(R∧Q)∧¬ P))]≡(P⊒Q)∧(Q⊒R)
+ = 'match-rhs land_assoc @[1,1,2,2,1]'
+    { P ⟼ R, Q ⟼ R, R ⟼ Q, ∧ ⟼ ∧ }
+[¬ P∧¬ Q∨(R∧((¬ P∨R)∧¬ P)∨((R∧R)∧Q∨(R∧Q)∧¬ P))]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_idem @[1,1,2,2,1,1]'
+    { P ⟼ R, ∧ ⟼ ∧ }
+[¬ P∧¬ Q∨(R∧((¬ P∨R)∧¬ P)∨(R∧Q∨(R∧Q)∧¬ P))]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs lor_land_absorb @[1,1,2,2]'
+    { P ⟼ R∧Q, Q ⟼ ¬ P, ∧ ⟼ ∧, ∨ ⟼ ∨ }
+[¬ P∧¬ Q∨(R∧((¬ P∨R)∧¬ P)∨R∧Q)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_symm @[1,1,2,1,2]'
+    { P ⟼ ¬ P∨R, Q ⟼ ¬ P, ∧ ⟼ ∧ }
+[¬ P∧¬ Q∨(R∧(¬ P∧(¬ P∨R))∨R∧Q)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs land_lor_absorb @[1,1,2,1,2]'
+    { P ⟼ ¬ P, Q ⟼ R, ∧ ⟼ ∧, ∨ ⟼ ∨ }
+[¬ P∧¬ Q∨(R∧¬ P∨R∧Q)]≡(P⊒Q)∧(Q⊒R)
+ = 'match-lhs sqsupseteq_def @[2,1]'
+    { P ⟼ P, Q ⟼ Q, ⊒ ⟼ ⊒ }
+[¬ P∧¬ Q∨(R∧¬ P∨R∧Q)]≡[P⟹  Q]∧(Q⊒R)
+ = 'match-lhs implies_def2 @[2,1,1]'
+    { P ⟼ P, Q ⟼ Q, ⟹   ⟼ ⟹   }
+[¬ P∧¬ Q∨(R∧¬ P∨R∧Q)]≡[¬ P∨Q]∧(Q⊒R)
+ = 'match-lhs sqsupseteq_def @[2,2]'
+    { P ⟼ Q, Q ⟼ R, ⊒ ⟼ ⊒ }
+[¬ P∧¬ Q∨(R∧¬ P∨R∧Q)]≡[¬ P∨Q]∧[Q⟹  R]
+ = 'match-lhs implies_def2 @[2,2,1]'
+    { P ⟼ Q, Q ⟼ R, ⟹   ⟼ ⟹   }
+[¬ P∧¬ Q∨(R∧¬ P∨R∧Q)]≡[¬ P∨Q]∧[¬ Q∨R]
+ = 'match-lhs land_[]_distr @[2]'
+    { P ⟼ ¬ P∨Q, Q ⟼ ¬ Q∨R, ∧ ⟼ ∧ }
+[¬ P∧¬ Q∨(R∧¬ P∨R∧Q)]≡[(¬ P∨Q)∧(¬ Q∨R)]
+ = 'match-lhs land_lor_distr @[2,1]'
+    { P ⟼ ¬ P∨Q, Q ⟼ ¬ Q, R ⟼ R, ∧ ⟼ ∧, ∨ ⟼ ∨ }
+[¬ P∧¬ Q∨(R∧¬ P∨R∧Q)]≡[(¬ P∨Q)∧¬ Q∨(¬ P∨Q)∧R]
+ = 'match-lhs land_symm @[2,1,1]'
+    { P ⟼ ¬ P∨Q, Q ⟼ ¬ Q, ∧ ⟼ ∧ }
+[¬ P∧¬ Q∨(R∧¬ P∨R∧Q)]≡[¬ Q∧(¬ P∨Q)∨(¬ P∨Q)∧R]
+ = 'match-lhs land_lor_distr @[2,1,1]'
+    { P ⟼ ¬ Q, Q ⟼ ¬ P, R ⟼ Q, ∧ ⟼ ∧, ∨ ⟼ ∨ }
+[¬ P∧¬ Q∨(R∧¬ P∨R∧Q)]≡[(¬ Q∧¬ P∨¬ Q∧Q)∨(¬ P∨Q)∧R]
+ = 'match-lhs land_symm @[2,1,1,2]'
+    { P ⟼ ¬ Q, Q ⟼ Q, ∧ ⟼ ∧ }
+[¬ P∧¬ Q∨(R∧¬ P∨R∧Q)]≡[(¬ Q∧¬ P∨Q∧¬ Q)∨(¬ P∨Q)∧R]
+ = 'match-lhs contradiction @[2,1,1,2]'
+    { P ⟼ Q, ∧ ⟼ ∧, ¬ ⟼ ¬ }
+[¬ P∧¬ Q∨(R∧¬ P∨R∧Q)]≡[(¬ Q∧¬ P∨false)∨(¬ P∨Q)∧R]
+ = 'match-lhs lor_unit @[2,1,1]'
+    { P ⟼ ¬ Q∧¬ P, ∨ ⟼ ∨ }
+[¬ P∧¬ Q∨(R∧¬ P∨R∧Q)]≡[¬ Q∧¬ P∨(¬ P∨Q)∧R]
+ = 'match-lhs land_symm @[2,1,1]'
+    { P ⟼ ¬ Q, Q ⟼ ¬ P, ∧ ⟼ ∧ }
+[¬ P∧¬ Q∨(R∧¬ P∨R∧Q)]≡[¬ P∧¬ Q∨(¬ P∨Q)∧R]
+ = 'match-lhs land_symm @[2,1,2]'
+    { P ⟼ ¬ P∨Q, Q ⟼ R, ∧ ⟼ ∧ }
+[¬ P∧¬ Q∨(R∧¬ P∨R∧Q)]≡[¬ P∧¬ Q∨R∧(¬ P∨Q)]
+ = 'match-lhs land_lor_distr @[2,1,2]'
+    { P ⟼ R, Q ⟼ ¬ P, R ⟼ Q, ∧ ⟼ ∧, ∨ ⟼ ∨ }
+[¬ P∧¬ Q∨(R∧¬ P∨R∧Q)]≡[¬ P∧¬ Q∨(R∧¬ P∨R∧Q)]
+ = 'match-all equiv_refl @[]'
+    { P ⟼ [¬ P∧¬ Q∨(R∧¬ P∨R∧Q)], ≡ ⟼ ≡ }
+true

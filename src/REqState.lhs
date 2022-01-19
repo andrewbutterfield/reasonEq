@@ -88,27 +88,21 @@ maxMatchDisplay_      = maxMatchDisplay__ . const
 
 -- Section 2 updaters
 hideTrivialMatch__ f r
-  =  matchFilterUpdate' r{hideTrivialMatch = f $ hideTrivialMatch r}
+  =  matchFilterUpdate r{hideTrivialMatch = f $ hideTrivialMatch r}
 hideTrivialMatch_   =  hideTrivialMatch__ . const
 
 hideTrivialQuantifiers__ f r
-  =  matchFilterUpdate' r{hideTrivialQuantifiers = f $ hideTrivialQuantifiers r}
+  =  matchFilterUpdate r{hideTrivialQuantifiers = f $ hideTrivialQuantifiers r}
 hideTrivialQuantifiers_   =  hideTrivialQuantifiers__ . const
 
 hideFloatingVariables__ f r
-  =  matchFilterUpdate' r{hideFloatingVariables = f $ hideFloatingVariables r}
+  =  matchFilterUpdate r{hideFloatingVariables = f $ hideFloatingVariables r}
 hideFloatingVariables_   =  hideFloatingVariables__ . const
 
 
 -- Section 3 updaters -- not exported, internal use only
-matchFilterUpdate r
-  = let mfu0 = acceptAll
-        mfu1 = andIfWanted (hideTrivialMatch r) isNonTrivial mfu0
-        mfu2 = andIfWanted (hideTrivialQuantifiers r) nonTrivialQuantifiers mfu1
-        mfu3 = andIfWanted (hideFloatingVariables r) noFloatingVariables mfu2
-    in r{matchFilter = mfu3}
 
-matchFilterUpdate' r
+matchFilterUpdate r
   = r{matchFilter = mfu}
   where
     mfu = foldl mfuMrg acceptAll filterSpecs
@@ -237,12 +231,13 @@ readREqSettings txts
        (theMHQ,rest4) <- readKey mhqKey readBool rest3
        (theMHF,rest5) <- readKey mhfKey readBool rest4
        rest6 <- readThis reqsetTRL rest5
-       return $ ( REqSet theMMD
-                         theMHT
-                         theMHQ
-                         theMHF
-                         acceptAll
-                , rest6 )
+       return ( matchFilterUpdate
+                 ( REqSet theMMD
+                          theMHT
+                          theMHQ
+                          theMHF
+                          acceptAll )
+              , rest6 )
 \end{code}
 
 

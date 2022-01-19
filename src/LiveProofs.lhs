@@ -469,7 +469,7 @@ Next, instantiate the pattern side-condition using the bindings.
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryInstantiateSC bind tP partsP scP
-      = case instantiateSC (pdbg "iSC.bind" bind) $ pdbg "iSC.scP" scP of
+      = case instantiateSC bind scP of
           Yes scP'  ->  trySCDischarge bind tP partsP scP'
           But msgs
            -> But ([ "try s.c. instantiation failed"
@@ -891,11 +891,15 @@ basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
 
         if all isFloatingASC (fst scD)
           then do mrepl <- instantiate fbind repl
-                  return $ MT n (unwrapASN asn) (chkPatn mc tP)
+                  return $ MT n (unwrapASN asn) (chkPatn mc partsP)
                               fbind repl scC scPinC mrepl
           else fail "undischargeable s.c."
   where
 
+    chkPatn MatchEqvLHS (Var _ v)
+      | lookupVarTables vts v == UnknownVar  =  MatchEqvVar 1
+    chkPatn MatchEqvRHS (Var _ v)
+      | lookupVarTables vts v == UnknownVar  =  MatchEqvVar 2
     chkPatn (MatchEqv [i]) (Var _ v)
       | lookupVarTables vts v == UnknownVar  =  MatchEqvVar i
     chkPatn mc _                             =  mc
@@ -1071,9 +1075,9 @@ shMClass MatchAll         =  green "*"
 shMClass MatchEqvLHS      =  green (_equiv++"lhs")
 shMClass MatchEqvRHS      =  green (_equiv++"rhs")
 shMClass (MatchEqv is)    =  green (_equiv++show is)
-shMClass MatchAnte        =  green ("*"++_implies)
-shMClass MatchCnsq        =  green (_implies++"*")
-shMClass (MatchEqvVar i)  =  red "trivial!"
+shMClass MatchAnte        =  green ("* "++_implies)
+shMClass MatchCnsq        =  green (_implies++"  *")
+shMClass (MatchEqvVar i)  =  red ("trivial!"++show i)
 \end{code}
 
 We can display laws from a context (again, this should be done elsewhere).

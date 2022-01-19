@@ -118,7 +118,6 @@ matchFilterUpdate' r
         , ( hideTrivialQuantifiers r, nonTrivialQuantifiers )
         , ( hideFloatingVariables r,  noFloatingVariables )
         ]
-      where nTQdbg c m = dbg "** nTQ-outcome = " (nonTrivialQuantifiers c m)
 \end{code}
 
 \begin{code}

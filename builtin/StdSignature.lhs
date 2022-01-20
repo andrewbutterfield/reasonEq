@@ -21,7 +21,7 @@ module StdSignature (
 , propdef
 , flattenEquiv
 , forall, exists, univ, sat
-, (.:), mrgscs 
+, (.:), mrgscs
 , preddef, mkNmdAsn
 ) where
 
@@ -163,8 +163,8 @@ infix 4 /\ ; (/\) = mkAnd
 lnot = jId "lnot" ; mkNot p = PCons True lnot [p]
 
 equals = jId "="
-isEqualTo e1 e2 = Cons P True equals [e1,e2]
-areEqualTo es1 es2 = Iter P True land True equals [es1,es2]
+isEqualTo   e1  e2  = Cons P True           equals [ e1, e2]
+areEqualTo es1 es2  = Iter P True land True equals [es1,es2]
 \end{code}
 
 \subsubsection{The Propositional Signature}

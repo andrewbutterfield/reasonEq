@@ -444,7 +444,7 @@ $$
      x := e
      \defs
      x' = e \land O'\less x = O \less x
-     && \QNAME{$::=$-def}
+     && \QNAME{$:=$-def}
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
@@ -454,13 +454,38 @@ asgIntro = mkConsIntro i_asg apred11
                          ===
                          (x' `isEqualTo` e)
                          /\
-                         PIter True land True equals [ lO' `less` ([ix],[])
-                                                     , lO  `less` ([ix],[]) ]
+                         ( (lO' `less` ([ix],[]))
+                           `areEqualTo`
+                           (lO  `less` ([ix],[])) )
                        )
                        scTrue
 \end{code}
-For now we cannot really handle simultaneous assignment.
-It looks like we need to allow general variables to appear as terms.
+
+
+For simultaneous assignment we define a different operator,
+based on \cite[2.3\textbf{L2}, p50]{UTP-book}.
+
+$$
+  \begin{array}{lll}
+     \lst x ::= \lst e
+     \defs
+     \lst x' = \lst e \land O'\less {\lst x} = O \less {\lst x}
+     && \QNAME{$::=$-def}
+  \end{array}
+$$ %\par\vspace{-8pt}
+\begin{code}
+masgIntro = mkConsIntro i_masg apred11
+(axMAsgDef,alMAsgDef) = bookdef ("::=" -.- "def") "2.3L2"
+                       ( lvxs .::= lves
+                         ===
+                         (lvxs `areEqualTo` lves)
+                         /\
+                         ( (lO' `less` ([],[ix]))
+                           `areEqualTo`
+                           (lO  `less` ([],[ix])) )
+                       )
+                       scTrue
+\end{code}
 
 \subsubsection{UTP Assignment Laws}
 
@@ -480,7 +505,6 @@ $$
      && \QNAME{$:=$-reorder}
   \end{array}
 $$
-This is not definable at present
 
 From \cite[2.3\textbf{L3}, p50]{UTP-book}
 $$
@@ -756,6 +780,7 @@ utpBaseKnown
    seqIntro $
    obsIntro $
    asgIntro $
+   masgIntro $
    skipIntro $
    ndcIntro $
    abortIntro $
@@ -773,6 +798,7 @@ utpBaseAxioms
       , axCondDef
       , axSeqDef
       , axAsgDef
+      , axMAsgDef
       , axSkipDef
       , axNDCDef
       , axAbortDef, axMiracleDef
@@ -874,6 +900,7 @@ $$ x \quad y \quad z \qquad x' \quad y' \quad z'$$
 Underlying variables:
 \begin{code}
 ix = jId "x" ; vx  = Vbl ix ObsV Before ; vx' = Vbl ix ObsV After
+lvx = LVbl vx [] []
 gx = StdVar vx
 iy = jId "y" ; vy  = Vbl iy ObsV Before ; vy' = Vbl iy ObsV After
 iz = jId "z" ; vz  = Vbl iz ObsV Before ; vz' = Vbl iz ObsV After

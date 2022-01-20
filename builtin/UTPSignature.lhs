@@ -12,7 +12,7 @@ module UTPSignature (
 , i_refines, refines
 , i_cond, cond
 , i_seq, mkSeq
-, i_asg, (.:=)
+, i_asg, (.:=), i_masg, (.::=)
 , i_skip, skip
 , i_ndc, ndc
 , i_abort, abort
@@ -95,6 +95,10 @@ mkSeq p q    =  PCons False i_seq [p, q]
 (.:=) :: Identifier -> Term -> Term
 i_asg        =  jId ":="
 v .:= e      =  PCons False i_asg [jVar (E ArbType) (ExprVar v Static), e]
+
+(.::=) :: ListVar -> ListVar -> Term
+i_masg        =  jId "::="
+lv .::= le    =  PIter False land False i_masg [lv,le]
 
 skip :: Term
 i_skip  =  jId "II"

@@ -1,13 +1,7 @@
 # To Do
 
-Note that we have added file `experimental/tidy_transcripts.txt`
-to show that proof transcripts looks better when viewed in a text editor like Atom,
-with some "spaces trimming"
 
 ## Most Urgent
-
-Proofs seem to ignore the hideXXX settings for some strange reason!
-Is there bug when they are all true??? Seems like it.
 
 
 ### Complete UTPBase proofs
@@ -37,14 +31,6 @@ We would have a side-condition called `UTPBase [P,Q,R,...]`
 that is shorthand for `O$,O$' ⊇ P; O$,O$' ⊇ Q; O$,O$' ⊇ R;...`
 But how would `Design [P..]` capture the idea that `O` contains `ok`?
 
-## Upgrade No. 3
-
-For simultaneous assignment we need to be able to represent
-things like
-
-`x,y$ :=  x+1,y$`
-
-This may require `Var` to contain `GenVar` rather than `Variable`.
 
 ## Upgrade No. 4
 

@@ -3,6 +3,46 @@
 
 ## Most Urgent
 
+Bad match trying to prove `:=_simple`.
+
+```
+Proof for :=_simple
+	(x := e)  ≡  x'=e∧(O$'\x=O$\x)  ⊤
+by redinit
+ ...
+Matches:
+1 : “:=_def” x'=e  ∧  (O$'\x$=O$\x$)  ⊤ ⟹ ⊤ ≡lhs
+           
+
+⊢
+(x := e)    ⊤
+
+Focus = []  Target (RHS): x'=e  ∧  (O$'\x=O$\x)
+```
+
+The replacement has `x$` after `less` - it should be `x`!
+Try match is worse:
+
+```
+proof: tm 1 :=_def
+Match against `:=_def'[1] failed!
+try law instantiation failed
+
+{ := ⟼ :=, O$\;x ⟼ ⟨O$\x$⟩, e$ ⟼ ⟨e⟩, x$ ⟼ ⟨x⟩ }(⊤)
+
+lnm[parts]=:=_def[1]
+tC=(x := e)
+scC=⊤
+tP=(x$ := e$)  ≡  (x$'=e$)∧(O$'\x$=O$\x$)
+partsP=(x$ := e$)
+scP=⊤
+
+fromGVarToLVar: Std variable found - VR (Id "x" 0,VO,WB)
+hit <enter> to continue
+```
+
+The binding `O$\;x ⟼ ⟨O$\x$⟩` looks to be the wrong way around!
+
 
 ### Complete UTPBase proofs
 

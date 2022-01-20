@@ -439,32 +439,8 @@ $$\par\vspace{-8pt}
 
 From \cite[Defn 2.3.1,p50]{UTP-book}
 
-$$
-  \begin{array}{lll}
-     x := e
-     \defs
-     x' = e \land O'\less x = O \less x
-     && \QNAME{$:=$-def}
-  \end{array}
-$$ %\par\vspace{-8pt}
-\begin{code}
-asgIntro = mkConsIntro i_asg apred11
-(axAsgDef,alAsgDef) = bookdef (":=" -.- "def") "Def2.3.1"
-                       ( ix .:= e
-                         ===
-                         (x' `isEqualTo` e)
-                         /\
-                         ( (lO' `less` ([ix],[]))
-                           `areEqualTo`
-                           (lO  `less` ([ix],[])) )
-                       )
-                       scTrue
-\end{code}
-
-
-For simultaneous assignment we define a different operator,
-based on \cite[2.3\textbf{L2}, p50]{UTP-book}.
-
+We start by defining simultaneous assignment,
+based loosely on \cite[2.3\textbf{L2}, p50]{UTP-book}.
 $$
   \begin{array}{lll}
      \lst x ::= \lst e
@@ -474,8 +450,8 @@ $$
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
-masgIntro = mkConsIntro i_masg apred11
-(axMAsgDef,alMAsgDef) = bookdef ("::=" -.- "def") "2.3L2"
+asgIntro = mkConsIntro i_asg apred11
+(axAsgDef,alAsgDef) = bookdef (":=" -.- "def") "2.3L2"
                        ( lvxs .::= lves
                          ===
                          (lvx' `areEqualTo` lves)
@@ -487,7 +463,33 @@ masgIntro = mkConsIntro i_masg apred11
                        scTrue
 \end{code}
 
+
+
 \subsubsection{UTP Assignment Laws}
+
+
+The following (\cite[Defn 2.3.1,p50]{UTP-book}) is now a conjecture:
+$$
+  \begin{array}{lll}
+     x := e
+     \defs
+     x' = e \land O'\less x = O \less x
+     && \QNAME{$:=$-def}
+  \end{array}
+$$ %\par\vspace{-8pt}
+\begin{code}
+(cjAsgSimple,alAsgSimple) = bookdef (":=" -.- "simple") "Def2.3.1"
+                       ( vx .:= e
+                         ===
+                         (x' `isEqualTo` e)
+                         /\
+                         ( (lO' `less` ([ix],[]))
+                           `areEqualTo`
+                           (lO  `less` ([ix],[])) )
+                       )
+                       scTrue
+\end{code}
+
 
 From \cite[2.3\textbf{L1}, p50]{UTP-book}
 $$
@@ -500,19 +502,13 @@ $$
 \begin{code}
 (cjAsgUnchanged,alAsgUnchanged)
   = bookdef (":=" -.- "unchanged") "2.3L3"
-     ( (ix .:= e)
+     ( (vx .:= e)
        ===
-       ( (x' `isEqualTo` e)
-         /\
-         (y' `isEqualTo` y) )
-       /\
-       ( (lO' `less` ([ix,iy],[]))
-         `areEqualTo`
-         (lO  `less` ([ix,iy],[])) )
+       simassign [(vx,e),(vy,y)] []
      )
      scTrue
 \end{code}
-Not ideal!
+
 
 
 From \cite[2.3\textbf{L2}, p50]{UTP-book}
@@ -522,8 +518,10 @@ $$
      && \QNAME{$:=$-reorder}
   \end{array}
 $$
-This cannot be represented properly at present.
+This property is guaranteed by the use of substitution as the underlying
+representation.
 
+\newpage
 From \cite[2.3\textbf{L3}, p50]{UTP-book}
 $$
   \begin{array}{lll}
@@ -535,9 +533,9 @@ $$
 \begin{code}
 (cjAsgSeqSame,alAsgSeqSame)
   = bookdef (":=" -.- "seq" -.- "same") "2.3L3"
-     ( mkSeq (ix .:= e) (ix .:= f)
+     ( mkSeq (vx .:= e) (vx .:= f)
        ===
-       ( ix .:= ESub ArbType f e_for_x )
+       ( vx .:= ESub ArbType f e_for_x )
      )
      (assertAreUTPCond [gx,qe,qf])
 \end{code}
@@ -553,11 +551,11 @@ $$
 \begin{code}
 (cjAsgSeqCond,alAsgSeqCond)
   = bookdef (":=" -.- "seq" -.- "cond") "2.3L4"
-     ( mkSeq (ix .:= e) (cond p b q)
+     ( mkSeq (vx .:= e) (cond p b q)
        ===
-       ( cond (mkSeq (ix .:= e) p)
+       ( cond (mkSeq (vx .:= e) p)
               (ESub ArbType b e_for_x)
-              (mkSeq (ix .:= e) q) )
+              (mkSeq (vx .:= e) q) )
      )
      (assertAreUTP [gP,gQ] .: assertAreUTPCond [gx,qe,gb])
 \end{code}
@@ -798,7 +796,6 @@ utpBaseKnown
    seqIntro $
    obsIntro $
    asgIntro $
-   masgIntro $
    skipIntro $
    ndcIntro $
    abortIntro $
@@ -816,7 +813,6 @@ utpBaseAxioms
       , axCondDef
       , axSeqDef
       , axAsgDef
-      , axMAsgDef
       , axSkipDef
       , axNDCDef
       , axAbortDef, axMiracleDef
@@ -832,7 +828,7 @@ utpBaseConjs
     , cjCondL1, cjCondL2, cjCondL3, cjCondL4, cjCondL5a
     , cjCondL5b, cjCondL6, cjCondL7, cjCondMutual, cjCondAlt, cjCondAlt2
     , cjSeqAssoc, cjSeqLDistr
-    , cjAsgUnchanged, cjAsgSeqSame, cjAsgSeqCond
+    , cjAsgSimple, cjAsgUnchanged, cjAsgSeqSame, cjAsgSeqCond
     , cjSkipL5a, cjSkipL5b
     , cjNDCSymm, cjNDCAssoc, cjNDCIdem, cjNDCDistr
     , cjCondNDCDistr, cjSeqNDCLDistr, cjSeqNDCRDistr, cjNDCCondDistr
@@ -849,7 +845,7 @@ utpBaseAliases
     , alCondL5a, alCondL5b, alCondL6, alCondL7
     , alCondMutual
     , alSeqDef, alSeqAssoc, alSeqLDistr
-    , alAsgDef, alAsgSeqSame, alAsgSeqCond
+    , alAsgDef, alAsgUnchanged, alAsgSeqSame, alAsgSeqCond
     , alSkipDef, alSkipL5a, alSkipL5b
     , alNDCDef, alNDCSymm, alNDCAssoc, alNDCIdem, alNDCDistr
     , alCondNDCDistr, alSeqNDCLDistr, alSeqNDCRDistr, alNDCCondDistr

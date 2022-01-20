@@ -234,10 +234,20 @@ highlightFocus = magenta
 We use a precedence argument when rendering terms.
 \begin{code}
 trTerm  :: Int -> Term -> String -- 1st arg is precedence
-trTerm = trterm trId
+trTerm = trtermTop trId
 trTermU :: Int -> Term -> String
-trTermU = trterm trIdU
+trTermU = trtermTop trIdU
 trterm :: (Identifier -> String) -> Int -> Term -> String
+\end{code}
+
+We check at the top-level for a constructor of arity 2.
+\begin{code}
+trtermTop trid p (Cons _ _ opn@(Identifier nm _) [t1,t2])
+  | isOp  =  (trterm trid opp t1
+             ++ "  " ++ trId opn ++ "  "
+             ++ trterm trid opp t2)
+  where prcs@(opp,isOp,_) = prc nm
+trtermTop trid p t = trterm trid p t
 \end{code}
 
 First, atomic terms
@@ -296,6 +306,9 @@ Binders and substitution are straightforward:
 \begin{code}
 trterm trid p (Bnd tk n vs t)  =  trabs trid p tk n (S.toList vs) t
 trterm trid p (Lam tk n vl t)  =  trabs trid p tk n vl            t
+-- give assignment special treatment
+trterm trid p (Sub tk (PVar (PredVar (Identifier ":=" _) _)) sub)
+  =  trasg trid sub
 trterm trid p (Sub tk t sub)
   | isAtomic t  =       trterm trid p t      ++ trsub trid p sub
   | otherwise   =  "("++trterm trid 0 t++")" ++ trsub trid p sub
@@ -345,6 +358,7 @@ trcontainer trid (lbr,sep,rbr) ts
   = lbr ++ intercalate sep (map (trterm trid 0) ts) ++ rbr
 \end{code}
 
+Substitution (and assignment!)
 \begin{code}
 trSub = trsub trId
 trSubU = trsub trIdU
@@ -362,6 +376,20 @@ trsub trid ctxtp (Substn tsub lvsub)
   mrg cs  ""   =  cs
   mrg ""  cs   =  cs
   mrg cs1 cs2  =  cs1 ++ ',':cs2
+
+trasg trid (Substn tsub lvsub)
+  = "(" ++
+        trvl trid (map StdVar tvs ++ map LstVar tlvs) ++
+    " := " ++
+        (trtl trid 0 "," rts  `mrg` trvl trid (map LstVar rlvs)) ++
+    ")"
+  where
+   (tvs,rts) = unzip $ S.toList tsub
+   (tlvs,rlvs)  =  unzip $ S.toList lvsub
+   mrg ""  ""   =  ""
+   mrg cs  ""   =  cs
+   mrg ""  cs   =  cs
+   mrg cs1 cs2  =  cs1 ++ ',':cs2
 \end{code}
 
 These will eventually do some sort of multi-line pretty-printing.

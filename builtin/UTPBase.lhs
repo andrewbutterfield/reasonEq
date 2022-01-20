@@ -478,7 +478,7 @@ masgIntro = mkConsIntro i_masg apred11
 (axMAsgDef,alMAsgDef) = bookdef ("::=" -.- "def") "2.3L2"
                        ( lvxs .::= lves
                          ===
-                         (lvxs `areEqualTo` lves)
+                         (lvx' `areEqualTo` lves)
                          /\
                          ( (lO' `less` ([],[ix]))
                            `areEqualTo`
@@ -494,9 +494,26 @@ $$
   \begin{array}{lll}
      x := e  =  (x,y := e,y)
      && \QNAME{$:=$-unchanged}
+  \\ = x' = e \land y' = y \land O'\less {\lst x,\lst y} = O \less {\lst x, \lst y}
   \end{array}
 $$
-This is not definable at present
+\begin{code}
+(cjAsgUnchanged,alAsgUnchanged)
+  = bookdef (":=" -.- "unchanged") "2.3L3"
+     ( (ix .:= e)
+       ===
+       ( (x' `isEqualTo` e)
+         /\
+         (y' `isEqualTo` y) )
+       /\
+       ( (lO' `less` ([ix,iy],[]))
+         `areEqualTo`
+         (lO  `less` ([ix,iy],[])) )
+     )
+     scTrue
+\end{code}
+Not ideal!
+
 
 From \cite[2.3\textbf{L2}, p50]{UTP-book}
 $$
@@ -505,6 +522,7 @@ $$
      && \QNAME{$:=$-reorder}
   \end{array}
 $$
+This cannot be represented properly at present.
 
 From \cite[2.3\textbf{L3}, p50]{UTP-book}
 $$
@@ -814,7 +832,7 @@ utpBaseConjs
     , cjCondL1, cjCondL2, cjCondL3, cjCondL4, cjCondL5a
     , cjCondL5b, cjCondL6, cjCondL7, cjCondMutual, cjCondAlt, cjCondAlt2
     , cjSeqAssoc, cjSeqLDistr
-    , cjAsgSeqSame, cjAsgSeqCond
+    , cjAsgUnchanged, cjAsgSeqSame, cjAsgSeqCond
     , cjSkipL5a, cjSkipL5b
     , cjNDCSymm, cjNDCAssoc, cjNDCIdem, cjNDCDistr
     , cjCondNDCDistr, cjSeqNDCLDistr, cjSeqNDCRDistr, cjNDCCondDistr
@@ -900,9 +918,10 @@ $$ x \quad y \quad z \qquad x' \quad y' \quad z'$$
 Underlying variables:
 \begin{code}
 ix = jId "x" ; vx  = Vbl ix ObsV Before ; vx' = Vbl ix ObsV After
-lvx = LVbl vx [] []
+lvx = LVbl vx [] []; lvx' = LVbl vx' [] []
 gx = StdVar vx
 iy = jId "y" ; vy  = Vbl iy ObsV Before ; vy' = Vbl iy ObsV After
+lvy = LVbl vy [] []
 iz = jId "z" ; vz  = Vbl iz ObsV Before ; vz' = Vbl iz ObsV After
 \end{code}
 

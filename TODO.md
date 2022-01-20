@@ -31,6 +31,11 @@ We would have a side-condition called `UTPBase [P,Q,R,...]`
 that is shorthand for `O$,O$' ⊇ P; O$,O$' ⊇ Q; O$,O$' ⊇ R;...`
 But how would `Design [P..]` capture the idea that `O` contains `ok`?
 
+## Upgrade No. 3
+
+We can't use `Iter` to represent `(x,y) ::= (e,f)` as this has two same-length lists, each containing standard variables. 
+
+The only other use of `Iter` at present is in the definition of the one-point quantifier laws. 
 
 ## Upgrade No. 4
 

@@ -383,7 +383,7 @@ First, try the structural match.
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryMatch vts tP partsP scP
       = case match vts tC partsP of
-          Yes bind  ->  tryInstantiateKnown vts tP partsP scP $ pdbg "try.bind" bind
+          Yes bind  ->  tryInstantiateKnown vts tP partsP scP bind
           But msgs
            -> But ([ "try match failed"
                    , ""
@@ -406,7 +406,7 @@ First we see if any of these are ``known''.
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryInstantiateKnown vts tP partsP scP bind
       = case bindKnown vts bind tP of
-          Yes kbind  ->  tryInstantiateFloating vts tP partsP scP $ pdbg "try.kbind" kbind
+          Yes kbind  ->  tryInstantiateFloating vts tP partsP scP kbind
           But msgs
            -> But ([ "instantiate knowns failed"
                    , ""

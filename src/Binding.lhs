@@ -1229,21 +1229,51 @@ bindKnown vts bind trm
  = return kbind
  where
    unbound  =  findUnboundVars bind trm
-   kbind    =  mkKnownBinding vts unbound bind
+   kbind    =  mkKnownBindings vts unbound bind
 \end{code}
 
 \textbf{We need to careful here.
 Known list-variables may have ``less'' components
 that are themselves bound}
 \begin{code}
-mkKnownBinding :: [VarTable] -> VarSet -> Binding -> Binding
-mkKnownBinding vts unbound bind
+mkKnownBindings :: [VarTable] -> VarSet -> Binding -> Binding
+mkKnownBindings vts unbound bind
   = foldl mergeBindings bind
-     $ map (mkKnownBind vts) $ S.toList unbound
+     $ map (mkKnownBind bind vts) $ S.toList unbound
 
-mkKnownBind vts gv
+mkKnownBind :: Binding -> [VarTable] -> GenVar -> Binding
+mkKnownBind bind vts gv
  | isUnknownGVar vts gv  =  emptyBinding
+ | isLstV gv  =  mkKnownLstVarBind bind $ theLstVar gv
  | otherwise  =  fromJust $ bindGVarToGVar gv gv emptyBinding
+
+mkKnownLstVarBind :: Binding -> ListVar -> Binding
+mkKnownLstVarBind bind lv@(LVbl v@(Vbl _ vc vw) is js)
+  = fromJust $ bindLVarToVList lv [LstVar lv'] emptyBinding
+  where
+    (is',js') = instLess bind vc vw is js
+    lv' = LVbl v is' js'
+
+instLess :: Binding -> VarClass -> VarWhen -> [Identifier] -> [Identifier]
+         -> ([Identifier],[Identifier])
+instLess bind vc vw is js
+  =  instLVIds bind vc vw (map (instId bind vc vw) is) [] js
+
+instId bind vc vw i
+  = case lookupVarBind bind (Vbl i vc vw) of
+      Just (BI i')            ->  i'
+      Just (BV (Vbl i' _ _))  ->  i'
+      _                       ->  i
+
+instLVIds bind vc vw si sj [] = (reverse si, reverse sj)
+instLVIds bind vc vw si sj (j:js)
+  = case lookupLstBind bind (LVbl (Vbl j vc vw) [] []) of
+      Just (BL vl) -> instLVIds' bind vc vw si sj js $ idsOf vl
+      Just (BS vs) -> instLVIds' bind vc vw si sj js $ idsOf $ S.toList vs
+      _            -> instLVIds bind vc vw si (j:sj) js
+  where
+    instLVIds' bind vc vw si sj js (is',js')
+      = instLVIds bind vc vw (reverse is'++si) (reverse js'++sj) js
 \end{code}
 
 

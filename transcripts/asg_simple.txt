@@ -1,0 +1,7 @@
+:=_simple : (x := e)≡x'=e∧(O$'\x=O$\x)
+by 'redinit'
+---
+(x := e)
+ = 'match-lhs :=_def @[]'
+    { := ⟼ :=, O$\;x ⟼ ⟨O$\x⟩, e$ ⟼ ⟨e⟩, x$ ⟼ ⟨x⟩ }
+x'=e  ∧  (O$'\x=O$\x)

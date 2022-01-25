@@ -34,7 +34,8 @@ module Variables
  , whatLVar, timeLVar
  , less
  , GenVar, pattern StdVar, pattern LstVar
- , isStdV, isLstV, gvarClass, gvarWhen
+ , isStdV, isLstV, theStdVar, theLstVar
+ , gvarClass, gvarWhen
  , isPreGenVar, isObsGVar, isExprGVar, isPredGVar
  , whatGVar, timeGVar
  , VarList
@@ -337,6 +338,12 @@ Some useful predicates/functions:
 \begin{code}
 isStdV (StdVar _)  =  True ;  isStdV _  =  False
 isLstV (LstVar _)  =  True ;  isLstV _  =  False
+
+theStdVar :: GenVar -> Variable
+theStdVar (GV v) = v ; theStdVar _ = error "theStdVar: applied to LstVar"
+
+theLstVar :: GenVar -> ListVar
+theLstVar (GL lv) = lv ; theLstVar _ = error "theLstVar: applied to StdVar"
 
 varId :: Variable -> Identifier
 varId (VR(i,_,_)) = i

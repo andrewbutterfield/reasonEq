@@ -243,10 +243,22 @@ checkAndGroup a sstvl (lvts:lvtss)
 \newpage
 \paragraph{Instantiating Substitutions}
 
-We expect the substitution target and replacement list-variables
+The \texttt{Substn} constructor is used to represent substitutions,
+and assignments.
+\textbf{This may require separate treatment for the two cases.}
+
+For both,
+we expect the substitution target and replacement list-variables
 to be bound to variable-lists, and not sets.
-These lists should themselves only contain list-variables,
+
+For substitution,
+these lists should themselves only contain list-variables,
 and for any target/replacement pair these lists will be of the same length.
+
+For assignment,
+these lists can contain general variables,
+and any terms are in fact variables.
+
 \begin{code}
 instSub :: Monad m => Binding -> Substn -> m Substn
 instSub binding (Substn ts lvs)

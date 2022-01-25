@@ -383,7 +383,7 @@ First, try the structural match.
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryMatch vts tP partsP scP
       = case match vts tC partsP of
-          Yes bind  ->  tryInstantiateKnown vts tP partsP scP bind
+          Yes bind  ->  tryInstantiateKnown vts tP partsP scP $ pdbg "try.bind" bind
           But msgs
            -> But ([ "try match failed"
                    , ""
@@ -406,7 +406,7 @@ First we see if any of these are ``known''.
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryInstantiateKnown vts tP partsP scP bind
       = case bindKnown vts bind tP of
-          Yes kbind  ->  tryInstantiateFloating vts tP partsP scP kbind
+          Yes kbind  ->  tryInstantiateFloating vts tP partsP scP $ pdbg "try.kbind" kbind
           But msgs
            -> But ([ "instantiate knowns failed"
                    , ""
@@ -428,7 +428,7 @@ and we generate names for these that make their floating nature visible.
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryInstantiateFloating vts tP partsP scP bind
       = case bindFloating vts bind tP of
-          Yes fbind  ->  tryInstantiate fbind tP partsP scP
+          Yes fbind  ->  tryInstantiate (pdbg "try.fbind" fbind) tP partsP scP
           But msgs
            -> But ([ "instantiate floating failed"
                    , ""
@@ -448,13 +448,13 @@ and we generate names for these that make their floating nature visible.
 Next, instantiate the law using the bindings.
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
-    tryInstantiate bind tP partsP scP
-      = case instantiate bind tP of
-          Yes tP'  ->  tryInstantiateSC bind tP' partsP scP
+    tryInstantiate fbind tP partsP scP
+      = case instantiate fbind tP of
+          Yes tP'  ->  tryInstantiateSC fbind tP' partsP scP
           But msgs
            -> But ([ "try law instantiation failed"
                    , ""
-                   , trBinding bind ++ "("++trSideCond scP++")"
+                   , trBinding fbind ++ "("++trSideCond scP++")"
                    , ""
                    , "lnm[parts]="++lnm++show parts
                    , "tC="++trTerm 0 tC

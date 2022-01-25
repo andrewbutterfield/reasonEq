@@ -5,23 +5,8 @@
 
 Bad match trying to prove `:=_simple`.
 
-```
-Proof for :=_simple
-	(x := e)  ≡  x'=e∧(O$'\x=O$\x)  ⊤
-by redinit
- ...
-Matches:
-1 : “:=_def” x'=e  ∧  (O$'\x$=O$\x$)  ⊤ ⟹ ⊤ ≡lhs
-           
-
-⊢
-(x := e)    ⊤
-
-Focus = []  Target (RHS): x'=e  ∧  (O$'\x=O$\x)
-```
-
-The replacement has `x$` after `less` - it should be `x`!
-Try match is worse:
+The bug is at `Binding.mkKnownBin` that ignores the fact that known
+list variables may have already known "less" components.
 
 ```
 proof: tm 1 :=_def

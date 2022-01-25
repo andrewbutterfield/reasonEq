@@ -1232,6 +1232,9 @@ bindKnown vts bind trm
    kbind    =  mkKnownBinding vts unbound bind
 \end{code}
 
+\textbf{We need to careful here.
+Known list-variables may have ``less'' components
+that are themselves bound}
 \begin{code}
 mkKnownBinding :: [VarTable] -> VarSet -> Binding -> Binding
 mkKnownBinding vts unbound bind

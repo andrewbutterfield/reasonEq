@@ -443,10 +443,10 @@ We start by defining simultaneous assignment,
 based loosely on \cite[2.3\textbf{L2}, p50]{UTP-book}.
 $$
   \begin{array}{lll}
-     \lst x ::= \lst e
+     \lst x := \lst e
      \defs
      \lst x' = \lst e \land O'\less {\lst x} = O \less {\lst x}
-     && \QNAME{$::=$-def}
+     && \QNAME{$:=$-def}
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}

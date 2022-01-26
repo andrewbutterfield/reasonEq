@@ -3,30 +3,39 @@
 
 ## Most Urgent
 
-Bad match trying to prove `:=_simple`.
-
-The bug is at `Binding.mkKnownBin` that ignores the fact that known
-list variables may have already known "less" components.
+Proof of `:=_unchanged` gets stuck:
 
 ```
-proof: tm 1 :=_def
-Match against `:=_def'[1] failed!
-try law instantiation failed
+x'=e∧(y'=y∧(O$'\x,y=O$\x,y))    ⊤
 
-{ := ⟼ :=, O$\;x ⟼ ⟨O$\x$⟩, e$ ⟼ ⟨e⟩, x$ ⟼ ⟨x⟩ }(⊤)
+Focus = []  Target (LHS): x'=e  ∧  (O$'\x=O$\x)
 
-lnm[parts]=:=_def[1]
-tC=(x := e)
-scC=⊤
+proof: tm 2 :=_def
+Match against `:=_def'[2] failed!
+try match failed
+
+x'=e  ∧  (y'=y∧(O$'\x,y=O$\x,y)) :: (x$'=e$)  ∧  (O$'\x$=O$\x$)
+
+lnm[parts]=:=_def[2]
 tP=(x$ := e$)  ≡  (x$'=e$)∧(O$'\x$=O$\x$)
-partsP=(x$ := e$)
-scP=⊤
+partsP=(x$'=e$)  ∧  (O$'\x$=O$\x$)
+tC=x'=e  ∧  (y'=y∧(O$'\x,y=O$\x,y))
+scC=⊤
 
-fromGVarToLVar: Std variable found - VR (Id "x" 0,VO,WB)
-hit <enter> to continue
+tMatch: Cons not compatible with Iter.
+tkP  = P
+tkC  = P
+naP  = Id "land" 0
+naC  = Id "=" 0
+niP  = Id "=" 0
+lvsP = [LV (VR (Id "x" 0,VO,WA),[],[]),LV (VR (Id "e" 0,VE,WB),[],[])]
+tsC  = [V (E T) (VR (Id "x" 0,VO,WA)),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB))]
 ```
 
-The binding `O$\;x ⟼ ⟨O$\x$⟩` looks to be the wrong way around!
+We really needs some iteration laws that allow us to convert
+`y'=y∧(O$'\x,y=O$\x,y)` to `(O$'\x=O$\x)`
+
+An Iteration theory, perhaps? 
 
 
 ### Complete UTPBase proofs

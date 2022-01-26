@@ -356,6 +356,30 @@ tMatch' vts bind cbvs pbvs (Cls nC tC) (Cls nP tP)
     pbvs' = S.filter isObsGVar $ theFreeVars $ freeVars tP
 \end{code}
 
+\subsubsection{Substitution Term-Pattern (\texttt{Sub})}
+
+$$
+\inferrule
+   {n_C = n_P
+    \and
+    \beta \vdash t_C :: t_P \leadsto \beta'_t
+    \and
+    \beta \vdash \sigma_C :: \sigma_P \leadsto \beta'_\sigma
+   }
+   { \beta \vdash t_C\sigma_C :: t_P\sigma_P
+     \leadsto
+     \beta \uplus \beta'_t \uplus \beta'_\sigma
+   }
+   \quad
+   \texttt{tMatch Subst}
+$$
+\begin{code}
+tMatch' vts bind cbvs pbvs (Sub tkC tC subC) (Sub tkP tP subP)
+  | tkP == tkC
+    =  do bindT  <-  tMatch vts bind cbvs pbvs tC tP
+          sMatch vts bindT cbvs pbvs subC subP
+\end{code}
+
 
 \subsubsection{Iterated Term-Pattern (\texttt{Iter})}
 
@@ -387,7 +411,41 @@ tMatch' vts bind cbvs pbvs (Iter tkC saC naC siC niC lvsC)
            ibind bind' rest
 \end{code}
 
-Plus a more complicated rule:
+\newpage
+
+Matching a partial expansion against an iteration:
+$$
+\inferrule
+   {na_C = na_P \and ni_C = ni_P
+   \and
+   j \in 1 \dots\#\seqof{t_C} \and i \in 1 \dots\#lvs_P
+   \\\\
+   {t_C}_j = ni_C\seqof{t_I}_j \implies \#(\seqof{t_{I}}[j]) = \#lvs_P
+   \\\\
+   {t_C}_j = ni_C\seqof{t_I}_j
+   \implies
+   \beta_j = \{lvs_P[i] \mapsto \seqof{t_C[i]}_j\}
+   \\\\
+     {t_C}_j = \ii{na_P}{ni_P}{lvs_C} \implies \#lvs_C = \#lvs_P
+   \\\\
+     {t_C}_j = \ii{na_P}{ni_P}{lvs_C}
+     \implies
+     \beta_j = \{lvs_P[i] \mapsto lvs_C[i]\}
+   }
+   { \beta \vdash na_C({t_C}_j) :: \ii{na_P}{ni_P}{lvs_P}
+     \leadsto
+     \beta \uplus (\frown) \beta_j
+   }
+   \quad
+   \texttt{tMatch Iter-Partial}
+$$
+We use $(\frown)$ to denote the ``striping'' of the mappings,
+e.g.
+$$
+  lvsp[i] \mapsto \seqof{t_C[i]}_1 \frown \dots \frown lvs_C[\#lvs_P]
+$$
+
+Matching an a full expansion against an iteration:
 $$
 \inferrule
    {na_C = na_P \and ni_C = ni_P
@@ -401,9 +459,9 @@ $$
      \beta \uplus \{lvs_P[i] \mapsto \seqof{t_C[i]}_j\}_{i \in 1\dots\#lvs_P}
    }
    \quad
-   \texttt{tMatch Iter-Cons}
+   \texttt{tMatch Iter-Full}
 $$
-
+This does not cater for a partial expansion!
 \begin{code}
 tMatch' vts bind cbvs pbvs tC@(Cons tkC saC naC tsC)
                               (Iter tkP saP naP siP niP lvsP)
@@ -411,7 +469,7 @@ tMatch' vts bind cbvs pbvs tC@(Cons tkC saC naC tsC)
                = ibind bind $ zip lvsP $ transpose $ map unNiP tsC
   | otherwise
      = fail $ unlines
-         [ "tMatch: Cons not compatible with Iter."
+         [ "tMatch: full Cons not compatible with Iter."
          , "tkP  = " ++ show tkP
          , "tkC  = " ++ show tkC
          , "naP  = " ++ show naP
@@ -433,30 +491,6 @@ tMatch' vts bind cbvs pbvs tC@(Cons tkC saC naC tsC)
 \end{code}
 
 
-\newpage
-\subsubsection{Substitution Term-Pattern (\texttt{Sub})}
-
-$$
-\inferrule
-   {n_C = n_P
-    \and
-    \beta \vdash t_C :: t_P \leadsto \beta'_t
-    \and
-    \beta \vdash \sigma_C :: \sigma_P \leadsto \beta'_\sigma
-   }
-   { \beta \vdash t_C\sigma_C :: t_P\sigma_P
-     \leadsto
-     \beta \uplus \beta'_t \uplus \beta'_\sigma
-   }
-   \quad
-   \texttt{tMatch Subst}
-$$
-\begin{code}
-tMatch' vts bind cbvs pbvs (Sub tkC tC subC) (Sub tkP tP subP)
-  | tkP == tkC
-    =  do bindT  <-  tMatch vts bind cbvs pbvs tC tP
-          sMatch vts bindT cbvs pbvs subC subP
-\end{code}
 
 Any other case results in failure:
 \begin{code}

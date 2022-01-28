@@ -3,12 +3,13 @@
 
 ## Most Urgent
 
-Proof of `:=_unchanged` gets stuck:
+Proof of `:=_unchanged` is still stuck:
 
 ```
 x'=e∧(y'=y∧(O$'\x,y=O$\x,y))    ⊤
 
 Focus = []  Target (LHS): x'=e  ∧  (O$'\x=O$\x)
+
 
 proof: tm 2 :=_def
 Match against `:=_def'[2] failed!
@@ -19,7 +20,7 @@ x'=e  ∧  (y'=y∧(O$'\x,y=O$\x,y)) :: (x$'=e$)  ∧  (O$'\x$=O$\x$)
 lnm[parts]=:=_def[2]
 tP=(x$ := e$)  ≡  (x$'=e$)∧(O$'\x$=O$\x$)
 partsP=(x$'=e$)  ∧  (O$'\x$=O$\x$)
-tC=x'=e  ∧  (y'=y∧(O$'\x,y=O$\x,y))
+(**A) tC=x'=e  ∧  (y'=y∧(O$'\x,y=O$\x,y))
 scC=⊤
 
 tMatch: Cons not compatible with Iter.
@@ -27,10 +28,14 @@ tkP  = P
 tkC  = P
 naP  = Id "land" 0
 naC  = Id "=" 0
-niP  = Id "=" 0
-lvsP = [LV (VR (Id "x" 0,VO,WA),[],[]),LV (VR (Id "e" 0,VE,WB),[],[])]
-tsC  = [V (E T) (VR (Id "x" 0,VO,WA)),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB))]
-```
+saP  = True
+saC  = True
+(**B) tC   = C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WA)),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB))]
+tP   = I P True (Id "land" 0) True (Id "=" 0) [LV (VR (Id "x" 0,VO,WA),[],[]),LV (VR (Id "e" 0,VE,WB),[],[])]
+bind = BD (fromList [((Id "land" 0,VP),BV (VR (Id "land" 0,VP,WS)))],fromList [],fromList [])```
+
+Why hasnt `x'=e` been matched against `x$'=e$` ?
+Why is `tC` at (**A) different to that at (**B) ?
 
 We really needs some iteration laws that allow us to convert
 `y'=y∧(O$'\x,y=O$\x,y)` to `(O$'\x=O$\x)`

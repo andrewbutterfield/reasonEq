@@ -390,7 +390,7 @@ $$
    }
    { \beta \vdash \ii{na_C}{ni_C}{lvs_C} :: \ii{na_P}{ni_P}{lvs_P}
      \leadsto
-     \beta \uplus \beta \uplus \{lvs_P[i] \mapsto lvs_C[i]\}_{i \in 1\dots\#lvs_P}
+     \beta \uplus \{lvs_P[i] \mapsto lvs_C[i]\}_{i \in 1\dots\#lvs_P}
    }
    \quad
    \texttt{tMatch Iter-Self}
@@ -411,9 +411,36 @@ tMatch' vts bind cbvs pbvs (Iter tkC saC naC siC niC lvsC)
            ibind bind' rest
 \end{code}
 
-\newpage
+A general expansion of an iteration $\ii{na}{ni}{lvs}$
+will be a construction of the form $na\seqof{t_j}$
+where $t_j$ can either be:
+\begin{itemize}
+  \item
+    a $ni\seqof{vs}$, where $vs$ is a list of term-variables
+    of the same length as $lvs$;
+  \item
+    or, a $\ii{na}{ni}{lvs'}$,
+    where $lvs'$ covers a smaller range of variables.
+    This means that each list-variable in $lvs'$ will have to
+    have a ``less'' component, and it will have to be larger than any ``less''
+    component in the corresponding $lvs$ list variable.
+\end{itemize}
+All the $vs$ and $lvs'$ present should, when aggregated,
+be something that the $lvs$ can match.
 
-Matching a partial expansion against an iteration:
+Consider matching
+$x = e \land (\ii{\land}{=}{\lst v \less {x,y},\lst t \less {e,f}}) \land y = f$
+with
+$\ii{\land}{=}{\lst v,\lst t}$.
+We expect the binding
+$\{
+  \lst v \mapsto \seqof{x,\lst v \less {x,y},y}
+  ,
+  \lst t \mapsto \seqof{e,\lst t \less {e,f},f}
+  \}$.
+
+
+Matching a general expansion against an iteration:
 $$
 \inferrule
    {na_C = na_P \and ni_C = ni_P
@@ -437,7 +464,7 @@ $$
      \beta \uplus (\frown) \beta_j
    }
    \quad
-   \texttt{tMatch Iter-Partial}
+   \texttt{tMatch Iter-Cons}
 $$
 We use $(\frown)$ to denote the ``striping'' of the mappings,
 e.g.
@@ -445,6 +472,36 @@ $$
   lvsp[i] \mapsto \seqof{t_C[i]}_1 \frown \dots \frown lvs_C[\#lvs_P]
 $$
 
+\begin{code}
+tMatch' vts bind cbvs pbvs tC@(Cons tkC saC naC tsC)
+                           tP@(Iter tkP saP naP siP niP lvsP)
+  | tkP == tkC && naC == naP && saC == saP
+               = do bindLists <- iMatch (nullsFor lvsP) tsC
+                    fail "tMatch' Cons Iter NYFI"
+  | otherwise
+     = fail $ unlines
+         [ "tMatch: Cons not compatible with Iter."
+         , "tkP  = " ++ show tkP
+         , "tkC  = " ++ show tkC
+         , "naP  = " ++ show naP
+         , "naC  = " ++ show naC
+         , "saP  = " ++ show saP
+         , "saC  = " ++ show saC
+         , "tC   = " ++ show tC
+         , "tP   = " ++ show tP
+         , "bind = " ++ show bind
+         ]
+  where
+    nullsFor = map (\ _ -> [])
+    iMatch accum [] = return $ map reverse accum
+    iMatch accum (tC:tsC)
+     = do accum' <- itMatch accum tC
+          iMatch accum' tsC
+    itMatch accum tC = fail "itMatch NYI"
+\end{code}
+
+
+\textbf{The below will be subsumed by above}
 Matching an a full expansion against an iteration:
 $$
 \inferrule
@@ -459,36 +516,36 @@ $$
      \beta \uplus \{lvs_P[i] \mapsto \seqof{t_C[i]}_j\}_{i \in 1\dots\#lvs_P}
    }
    \quad
-   \texttt{tMatch Iter-Full}
+   \texttt{tMatch Iter-Only-Cons}
 $$
 This does not cater for a partial expansion!
-\begin{code}
-tMatch' vts bind cbvs pbvs tC@(Cons tkC saC naC tsC)
-                              (Iter tkP saP naP siP niP lvsP)
-  | tkP == tkC && naC == naP && saC == saP && all isNiP tsC
-               = ibind bind $ zip lvsP $ transpose $ map unNiP tsC
-  | otherwise
-     = fail $ unlines
-         [ "tMatch: full Cons not compatible with Iter."
-         , "tkP  = " ++ show tkP
-         , "tkC  = " ++ show tkC
-         , "naP  = " ++ show naP
-         , "naC  = " ++ show naC
-         , "niP  = " ++ show niP
-         , "lvsP = " ++ show lvsP
-         , "tsC  = " ++ show tsC
-         ]
-  where
-    arity = length lvsP
-    isNiP (Cons _ s n ts)  =  n == niP && s == siP && length ts == arity
-    isNiP _                =  False
-    unNiP (Cons _ _ _ ts)  =  ts
-    unNiP _                =  []
-    ibind bind [] = return bind
-    ibind bind ((lvP,tsC):rest)
-      =  do bind' <- bindLVarToTList lvP tsC bind
-            ibind bind' rest
-\end{code}
+% \begin{code}
+% tMatch' vts bind cbvs pbvs tC@(Cons tkC saC naC tsC)
+%                               (Iter tkP saP naP siP niP lvsP)
+%   | tkP == tkC && naC == naP && saC == saP && all isNiP tsC
+%                = ibind bind $ zip lvsP $ transpose $ map unNiP tsC
+%   | otherwise
+%      = fail $ unlines
+%          [ "tMatch: full Cons not compatible with Iter."
+%          , "tkP  = " ++ show tkP
+%          , "tkC  = " ++ show tkC
+%          , "naP  = " ++ show naP
+%          , "naC  = " ++ show naC
+%          , "niP  = " ++ show niP
+%          , "lvsP = " ++ show lvsP
+%          , "tsC  = " ++ show tsC
+%          ]
+%   where
+%     arity = length lvsP
+%     isNiP (Cons _ s n ts)  =  n == niP && s == siP && length ts == arity
+%     isNiP _                =  False
+%     unNiP (Cons _ _ _ ts)  =  ts
+%     unNiP _                =  []
+%     ibind bind [] = return bind
+%     ibind bind ((lvP,tsC):rest)
+%       =  do bind' <- bindLVarToTList lvP tsC bind
+%             ibind bind' rest
+% \end{code}
 
 
 

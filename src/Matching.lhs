@@ -155,9 +155,9 @@ being an sub-type of the pattern.
 \begin{code}
 tMatch vts bind cbvs pbvs tC tP
  = case (termkind tC, termkind tP) of
-    (P,P)                       ->  tMatch' vts bind cbvs pbvs tC tP
+    (P,P)                        ->  tMatch' vts bind cbvs pbvs tC tP
     (E typC, E typP)
-      | typC `isSubTypeOf` typP   ->  tMatch' vts bind cbvs pbvs tC tP
+      | typC `isSubTypeOf` typP  ->  tMatch' vts bind cbvs pbvs tC tP
     _ -> fail "tMatch: incompatible termkinds."
 \end{code}
 
@@ -216,10 +216,7 @@ Here $ts_X = \langle t_{X_1}, t_{X_2}, \dots t_{X_n} \rangle$.
 \begin{code}
 tMatch' vts bind cbvs pbvs (Cons tkC sbC nC tsC) (Cons tkP sbP nP tsP)
  | tkC == tkP && sbC == sbP
-   =  do let vClass = classFromKind tkC
-         let vC = Vbl nC vClass Static
-         let vP = Vbl nP vClass Static
-         bind0 <- vMatch vts bind cbvs pbvs vC vP
+   =  do bind0 <- consBind vts bind cbvs pbvs tkC nC nP
          tsMatch vts bind0 cbvs pbvs tsC tsP
 \end{code}
 
@@ -383,6 +380,8 @@ tMatch' vts bind cbvs pbvs (Sub tkC tC subC) (Sub tkP tP subP)
 
 \subsubsection{Iterated Term-Pattern (\texttt{Iter})}
 
+The first case is simply where the candidate is itself an iteration,
+which is essentially a structural match, even over the list-variables.
 $$
 \inferrule
    {na_C = na_P \and ni_C = ni_P
@@ -395,22 +394,49 @@ $$
    \quad
    \texttt{tMatch Iter-Self}
 $$
-
 \begin{code}
 tMatch' vts bind cbvs pbvs (Iter tkC saC naC siC niC lvsC)
                            (Iter tkP saP naP siP niP lvsP)
   | tkP == tkC && naC == naP && niC == niP
                && saC == saP && siC == siP
                && length lvsP == length lvsC
-               =  ibind bind $ zip lvsP lvsC
+               =  do bind0 <- consBind vts bind  cbvs pbvs tkC naC naP
+                     bind1 <- consBind vts bind0 cbvs pbvs tkC niC niP
+                     iibind bind1 $ zip lvsP lvsC
   | otherwise  =  fail "tMatch: incompatible Iter."
   where
-    ibind bind [] = return bind
-    ibind bind ((lvP,lvC):rest)
+    iibind bind [] = return bind
+    iibind bind ((lvP,lvC):rest)
       = do bind' <- bindLVarToVList lvP [LstVar lvC] bind
-           ibind bind' rest
+           iibind bind' rest
 \end{code}
 
+The nest case is when the candidate is an expansion of length one,
+without the application of the top-level operator $na$.
+$$
+\inferrule
+   {ni_C = ni_P \and \#\seqof{t_I} = \#lvs_P}
+   { \beta \vdash ni_C\seqof{t_I} :: \ii{na_P}{ni_P}{lvs_P}
+     \leadsto
+     \beta \uplus \{lvs_P[i] \mapsto t_I[i]\}_{i \in 1\dots\#lvs_P}
+   }
+   \quad
+   \texttt{tMatch Iter-Single}
+$$
+\begin{code}
+tMatch' vts bind cbvs pbvs tC@(Cons tkC siC niC tsC)
+                           tP@(Iter tkP saP naP siP niP lvsP)
+  | tkP == tkC && niC == niP && siC == siP
+               = do bind0 <- consBind vts bind  cbvs pbvs tkC naP naP
+                    bind1 <- consBind vts bind0 cbvs pbvs tkC niC niP
+                    iterLVarsMatch bind1 lvsP tsC
+  where
+    iterLVarsMatch bind [] [] = return bind
+    iterLVarsMatch bind (lvP:lvsP) (tC:tsC)
+      = do bind' <- bindLVarSubstRepl lvP [Right tC] bind
+           iterLVarsMatch bind' lvsP tsC
+    iterLVarsMatch bind _ _ = fail "Iter-Single - length mismatch"
+\end{code}
 A general expansion of an iteration $\ii{na}{ni}{lvs}$
 will be a construction of the form $na\seqof{t_j}$
 where $t_j$ can either be:
@@ -476,11 +502,13 @@ $$
 tMatch' vts bind cbvs pbvs tC@(Cons tkC saC naC tsC)
                            tP@(Iter tkP saP naP siP niP lvsP)
   | tkP == tkC && naC == naP && saC == saP
-               = do bindLists <- iMatch (nullsFor lvsP) tsC
+               = do bind0 <- consBind vts bind  cbvs pbvs tkC naC naP
+                    bind1 <- consBind vts bind0 cbvs pbvs tkC niP niP
+                    bindLists <- iMatch (nullsFor lvsP) tsC
                     fail "tMatch' Cons Iter NYFI"
   | otherwise
      = fail $ unlines
-         [ "tMatch: Cons not compatible with Iter."
+         [ "tMatch': General Cons not compatible with Iter."
          , "tkP  = " ++ show tkP
          , "tkC  = " ++ show tkC
          , "naP  = " ++ show naP
@@ -497,7 +525,7 @@ tMatch' vts bind cbvs pbvs tC@(Cons tkC saC naC tsC)
     iMatch accum (tC:tsC)
      = do accum' <- itMatch accum tC
           iMatch accum' tsC
-    itMatch accum tC = fail "itMatch NYI"
+    itMatch accum tC = fail "itMatch (general) NYI"
 \end{code}
 
 
@@ -557,6 +585,18 @@ tMatch' _ _ _ _ tC tP
     , "tC = " ++ show tC
     , "tP = " ++ show tP
     ]
+\end{code}
+
+\subsubsection{Term Matching Support}
+
+Binding a constructor name to itself:
+\begin{code}
+consBind vts bind cbvs pbvs tkC nC nP
+  = vMatch vts bind cbvs pbvs vC vP
+  where
+    vClass = classFromKind tkC
+    vC = Vbl nC vClass Static
+    vP = Vbl nP vClass Static
 \end{code}
 
 \subsection{Term-List Matching}
@@ -2563,11 +2603,12 @@ $ \lst v_{P} \mapsto
             \seqof{v_{C1},\dots;\dots \lst v_{Cr}}$.
 \begin{code}
 lvsMatch vts bind cbvs pbvs tsC lvsC [(vsP,esP)]
-  = bindLVarToVList vsP cTgts bind >>= bindLVarSubstRepl esP cTerms cRplL
+  = bindLVarToVList vsP cTgts bind >>= bindLVarSubstRepl esP cLVTs
   where
     cVars = map fst tsC ; cTgtL = map fst lvsC
     cTgts = (map StdVar cVars ++ map LstVar cTgtL)
     cTerms = map snd tsC ; cRplL = map snd lvsC
+    cLVTs = map Right cTerms ++ map Left cRplL
 \end{code}
 Next case, candidate is only list variables:
 \begin{code}

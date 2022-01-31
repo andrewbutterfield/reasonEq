@@ -394,7 +394,7 @@ First, try the structural match.
                    , "partsP="++trTerm 0 partsP
                    , "tC="++trTerm 0 tC
                    , "scC="++trSideCond scC
-                   , ""
+                   , "---"
                    ]++msgs)
 \end{code}
 

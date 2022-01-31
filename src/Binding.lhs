@@ -329,7 +329,7 @@ lvtmSplit :: [LVarOrTerm] -> ([ListVar],[Term]) ; lvtmSplit = partitionEithers
 
 We bind a list-variable to either a list or set of variables,
 or a list that mixes terms and list-variables.
-This latter is used when matching substitutions.
+This latter is used when matching substitutions and iterations.
 We use the variable identifier, class, and the list of `subtracted` identifiers
 as the map key.
 \begin{code}
@@ -945,26 +945,27 @@ A list variable denoting a replacement(-list) in a substitution
 may bind to a sequence of candidate replacement terms,
 and list-variables.
 \begin{code}
-bindLVarSubstRepl :: Monad m => ListVar -> [Term] -> [ListVar] -> Binding
+bindLVarSubstRepl :: Monad m => ListVar -> [LVarOrTerm] -> Binding
                   -> m Binding
 \end{code}
 
 A \texttt{Textual} pattern variable cannot bind to terms
 \begin{code}
-bindLVarSubstRepl (LVbl (Vbl _ _ Textual) _ _) _ _ binds
+bindLVarSubstRepl (LVbl (Vbl _ _ Textual) _ _) _ binds
  = fail "bindLVarSubstRepl: textual list-vars. not allowed."
 \end{code}
 
 Static patterns bind to anything in the appropriate class,
 as per Fig.\ref{fig:utp-perm-class-bind}.
 \begin{code}
-bindLVarSubstRepl (LVbl (Vbl vi vc Static) is ij) cndTs cndVL (BD (vbind,sbind,lbind))
+bindLVarSubstRepl (LVbl (Vbl vi vc Static) is ij) cndTsVL (BD (vbind,sbind,lbind))
  | all (validVarTermBinding vc) (map termkind cndTs)
     = do lbind' <- insertDR (rangeEqvLSSub "bindLVarSubstRepl(static)")
                             (vi,vc,is,ij) (BX cndTsVL) lbind
          return $ BD (vbind,sbind,lbind')
  | otherwise  =  fail "bindLVarSubstRepl: incompatible variable and terms."
- where cndTsVL = map Right cndTs ++ map Left cndVL
+ where
+   cndTs = rights cndTsVL
 \end{code}
 
 All remaining pattern cases are non-\texttt{Textual} dynamic variables.
@@ -974,43 +975,44 @@ predicate terms, all of whose dynamic variables have the same temporality.
 Dynamic observable and expression list-variables can only bind to
 expression terms, all of whose dynamic variables have the same temporality.
 \begin{code}
-bindLVarSubstRepl (LVbl (Vbl vi vc vt) is ij) cndTs cndVL (BD (vbind,sbind,lbind))
+bindLVarSubstRepl (LVbl (Vbl vi vc vt) is ij) cndTsVL (BD (vbind,sbind,lbind))
  | vc == PredV && any isExpr cndTs
            =  fail "bindLVarSubstRepl: pred. l-var. cannot bind to expression."
  | vc /= PredV && any isPred cndTs
            =  fail "bindLVarSubstRepl: non-pred. l-var. cannot bind to predicate."
  | wsize  > 1  =  fail "bindLVarSubstRepl: p.-var. mixed term temporality."
- | wsize == 0  -- term has no variables
+ | wsize == 0  -- terms have no variables
    = do lbind' <- insertDR (rangeEqvLSSub "bindLVarSubstRepl(pv1)")
-                           (vi,vc,is,ij) (BX (cndTs'++cndVL')) lbind
+                           (vi,vc,is,ij) (BX (cndTsVL')) lbind
         return $ BD (vbind,sbind,lbind')
  | otherwise
     = do sbind' <- bindSubscriptToSubscript "bindLVarSubstRepl(1)" vt thectw sbind
          lbind' <- insertDR (rangeEqvLSSub "bindLVarSubstRepl(2)")
-                            (vi,vc,is,ij) (BX (cndTs'++cndVL')) lbind
+                            (vi,vc,is,ij) (BX (cndTsVL')) lbind
          return $ BD (vbind,sbind',lbind')
  where
+   cndTs = rights cndTsVL
    ctws = temporalitiesOf cndTs
    wsize = S.size ctws
    thectw = S.elemAt 0 ctws
-   cndTs' = map (Right . dnTerm') cndTs
-   cndVL' = map (Left . dnLVar) cndVL
+   dnLVarTerm (Right t) = Right $ dnTerm' t
+   dnLVarTerm (Left lv) = Left $ dnLVar lv
+   cndTsVL' = map dnLVarTerm cndTsVL
 \end{code}
 
 Catch-all
 \begin{code}
-bindLVarSubstRepl plv cndTs cndVL _
+bindLVarSubstRepl plv cndTsVL _
  = error $ unlines
      [ "bindLVarSubstRepl: fell off end"
      , "plv = " ++ show plv
-     , "cndTs = " ++ show cndTs
-     , "cndVL = " ++ show cndVL ]
+     , "cndTsVL = " ++ show cndTsVL ]
 \end{code}
 
 A common use case:
 \begin{code}
 bindLVarToTList :: Monad m => ListVar -> [Term] -> Binding -> m Binding
-bindLVarToTList lv ts = bindLVarSubstRepl lv ts []
+bindLVarToTList lv ts = bindLVarSubstRepl lv (map Right ts)
 \end{code}
 
 

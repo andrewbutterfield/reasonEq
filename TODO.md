@@ -3,9 +3,10 @@
 
 ## Most Urgent
 
-Proof of `:=_unchanged` is still stuck:
+Proof of `:=_unchanged` is still stuck, but progress has been made.
 
 ```
+⊢
 x'=e∧(y'=y∧(O$'\x,y=O$\x,y))    ⊤
 
 Focus = []  Target (LHS): x'=e  ∧  (O$'\x=O$\x)
@@ -20,22 +21,17 @@ x'=e  ∧  (y'=y∧(O$'\x,y=O$\x,y)) :: (x$'=e$)  ∧  (O$'\x$=O$\x$)
 lnm[parts]=:=_def[2]
 tP=(x$ := e$)  ≡  (x$'=e$)∧(O$'\x$=O$\x$)
 partsP=(x$'=e$)  ∧  (O$'\x$=O$\x$)
-(**A) tC=x'=e  ∧  (y'=y∧(O$'\x,y=O$\x,y))
+tC=x'=e  ∧  (y'=y∧(O$'\x,y=O$\x,y))
 scC=⊤
+---
+itMatch (general) NYI
+hit <enter> to continue
+```
 
-tMatch: Cons not compatible with Iter.
-tkP  = P
-tkC  = P
-naP  = Id "land" 0
-naC  = Id "=" 0
-saP  = True
-saC  = True
-(**B) tC   = C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WA)),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB))]
-tP   = I P True (Id "land" 0) True (Id "=" 0) [LV (VR (Id "x" 0,VO,WA),[],[]),LV (VR (Id "e" 0,VE,WB),[],[])]
-bind = BD (fromList [((Id "land" 0,VP),BV (VR (Id "land" 0,VP,WS)))],fromList [],fromList [])```
+Why was `tC` at (**A) different to that at (**B) ?
 
-Why hasnt `x'=e` been matched against `x$'=e$` ?
-Why is `tC` at (**A) different to that at (**B) ?
+*Because one is the candidate top/focus-level, while the failure
+is where the two first sub-terms are being matched. Thos fails because we don't have a case yet to handle an iteration expansion of length 1 (which has `ni` at the top-level, and not `na`)*
 
 We really needs some iteration laws that allow us to convert
 `y'=y∧(O$'\x,y=O$\x,y)` to `(O$'\x=O$\x)`

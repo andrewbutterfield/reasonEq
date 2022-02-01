@@ -446,10 +446,8 @@ where $t_j$ can either be:
     of the same length as $lvs$;
   \item
     or, a $\ii{na}{ni}{lvs'}$,
-    where $lvs'$ covers a smaller range of variables.
-    This means that each list-variable in $lvs'$ will have to
-    have a ``less'' component, and it will have to be larger than any ``less''
-    component in the corresponding $lvs$ list variable.
+    where each  $\lst v'_i \in lvs'$ is equal to $\lst v_i \less V$,
+    for non-empty $V$
 \end{itemize}
 All the $vs$ and $lvs'$ present should, when aggregated,
 be something that the $lvs$ can match.
@@ -483,6 +481,8 @@ $$
    \\\\
      {t_C}_j = \ii{na_P}{ni_P}{lvs_C}
      \implies
+     lvs_C[i] = lvs_P[i]\less V
+     \land
      \beta_j = \{lvs_P[i] \mapsto lvs_C[i]\}
    }
    { \beta \vdash na_C({t_C}_j) :: \ii{na_P}{ni_P}{lvs_P}
@@ -498,14 +498,19 @@ $$
   lvsp[i] \mapsto \seqof{t_C[i]}_1 \frown \dots \frown lvs_C[\#lvs_P]
 $$
 
+In practise, we note that if a match is going to succeed,
+then each ${t_C}_j$ will produce a list of length $\#lvs_P$,
+and the transpose of this list will provide the "striped" bindings.
+
 \begin{code}
 tMatch' vts bind cbvs pbvs tC@(Cons tkC saC naC tsC)
                            tP@(Iter tkP saP naP siP niP lvsP)
   | tkP == tkC && naC == naP && saC == saP
                = do bind0 <- consBind vts bind  cbvs pbvs tkC naC naP
                     bind1 <- consBind vts bind0 cbvs pbvs tkC niP niP
-                    bindLists <- iMatch (nullsFor lvsP) tsC
-                    fail "tMatch' Cons Iter NYFI"
+                    termLists <- sequence $ map (itMatch len lvsP) tsC
+                    let bindLists = transpose termLists
+                    itBind bind1 lvsP bindLists
   | otherwise
      = fail $ unlines
          [ "tMatch': General Cons not compatible with Iter."
@@ -520,12 +525,26 @@ tMatch' vts bind cbvs pbvs tC@(Cons tkC saC naC tsC)
          , "bind = " ++ show bind
          ]
   where
-    nullsFor = map (\ _ -> [])
-    iMatch accum [] = return $ map reverse accum
-    iMatch accum (tC:tsC)
-     = do accum' <- itMatch accum tC
-          iMatch accum' tsC
-    itMatch accum tC = fail "itMatch (general) NYI"
+    len = length lvsP
+
+    itMatch :: MonadPlus mp => Int -> [ListVar] -> Term -> mp [LVarOrTerm]
+    itMatch len lvsP (Cons tkC siC niC tisC)
+      | tkC == tkP && siC == siP && niC == niP && length tisC == len
+        =  return $ map Right tisC
+    itMatch len lvsP (Iter tkC saC naC siC nic lvsC)
+      | tkC == tkP && naC == naP && saC == saP &&
+        siC == siP && nic == niP && length lvsC == len
+        =  return $ map Left lvsC
+    itMatch len lvsP tiC = fail "iterate expansion term does not match"
+
+    -- both lists are the same length
+    itBind :: MonadPlus mp => Binding -> [ListVar] -> [[LVarOrTerm]]
+           -> mp Binding
+    itBind bind [] []  =  return bind
+    itBind bind (lvP:lvsP) (as:aas)
+      = do bind' <- bindLVarSubstRepl lvP as bind
+           itBind bind' lvsP aas
+    itBind _ _ _ = fail "internal error in tMatch' Cons vs. Iter"
 \end{code}
 
 

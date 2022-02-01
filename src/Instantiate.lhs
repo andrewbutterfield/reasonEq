@@ -74,7 +74,7 @@ Given a variable $v$ we use $\beta(v)$ to denote a binding lookup.
 \newpage
 \subsection{Instantiating Term with a (Total) Binding}
 
-Here werequire every free variable in the term to be also in the binding.
+Here we require every free variable in the term to be also in the binding.
 \begin{code}
 instantiate :: Monad m => Binding -> Term -> m Term
 \end{code}
@@ -257,17 +257,23 @@ and for any target/replacement pair these lists will be of the same length.
 
 For assignment,
 these lists can contain general variables,
-and any terms are in fact variables.
+and arbitrary (expression) terms.
+However the assignment only the second list-var to list-var component
+of a substitution.
 
 \begin{code}
 instSub :: Monad m => Binding -> Substn -> m Substn
 instSub binding (Substn ts lvs)
   = do ts'  <- instZip (instStdVar binding)  (instantiate binding) (S.toList ts)
-       ts'' <- sequence $ map getTheTargetVar ts'
-       lvss' <- instZip (instLLVar binding) (instLLVar binding) (S.toList lvs)
-       let (lvts,lvrs) = unzip lvss'
+       ts'' <- sequence $ map getTheTargetVar $ pdbg "instSub.ts'" ts'
+       vtlvss' <- instZip (instLLVar binding) (instLLVar binding) (S.toList lvs)
+       let (lvtlvss,rvtlvss) = unzip $ pdbg "instSub.vtlvss" vtlvss'
+       let (vtts,lvts) = unzip lvtlvss
+       let (vtrs,lvrs) = unzip rvtlvss
        let lvs' = zip (concat lvts) (concat lvrs)
-       substn ts'' lvs'
+       let ts''' = zip (concat vtts) (concat vtrs)
+       ts4 <- sequence $ map getTheTermVar ts'''
+       substn (ts''++ts4) lvs'
 
 instZip inst1 inst2 pairs
   = sequence $ map (instPair inst1 inst2) pairs
@@ -282,6 +288,10 @@ getTheTargetVar (fvs,tm)
   = do v' <- getTheVar fvs
        return (v',tm)
 
+getTheTermVar :: Monad m => (Term,Term) -> m (Variable,Term)
+getTheTermVar (Var _ v,t)  = return (v,t)
+getTheTermVar (bt,_)       = fail ("getTheTermVar: expected Var, not "++show bt)
+
 getTheVar :: Monad m => FreeVars -> m Variable
 getTheVar fvs@(vs,diffs)
   = case S.toList vs of
@@ -291,19 +301,14 @@ getTheVar fvs@(vs,diffs)
 
 This code is used for list-var in substitutions only.
 \begin{code}
-instLLVar :: Monad m => Binding -> ListVar -> m [ListVar]
+instLLVar :: Monad m => Binding -> ListVar -> m ([Term],[ListVar])
 instLLVar binding lv
   = case lookupLstBind binding lv of
-      Just (BindList vl')  ->  fromGVarToLVar vl'
-      Just (BindSet  vs')  ->  fromGVarToLVar $ S.toList vs'
-      Just (BindTLVs tlvs)
-        | null ts          ->  return lvs
-        | otherwise        ->  fail $ unlines
-                                     [ "instLLVar: l-var bound to terms"
-                                     , "l-var = " ++ trLVar lv
-                                     , "bind = " ++ trBinding binding
-                                     ]
-        where (ts,lvs) = (tmsOf tlvs, lvsOf tlvs)
+      Just (BindList vl')  ->  do lvs <- fromGVarToLVar vl'
+                                  return ([],lvs)
+      Just (BindSet  vs')  ->  do lvs <- fromGVarToLVar $ S.toList vs'
+                                  return ([],lvs)
+      Just (BindTLVs tlvs) ->  return (tmsOf tlvs, lvsOf tlvs)
       Nothing              ->  fail $ unlines
                                      [ "instLLVar: l-var not found"
                                      , "l-var = " ++ trLVar lv

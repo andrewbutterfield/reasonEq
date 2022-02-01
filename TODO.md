@@ -3,35 +3,44 @@
 
 ## Most Urgent
 
-Proof of `:=_unchanged` is still stuck, but progress has been made.
+Proof of `:=_unchanged` works, but is UNSOUND
 
 ```
-⊢
-x'=e∧(y'=y∧(O$'\x,y=O$\x,y))    ⊤
-
-Focus = []  Target (LHS): x'=e  ∧  (O$'\x=O$\x)
-
-
-proof: tm 2 :=_def
-Match against `:=_def'[2] failed!
-try match failed
-
-x'=e  ∧  (y'=y∧(O$'\x,y=O$\x,y)) :: (x$'=e$)  ∧  (O$'\x$=O$\x$)
-
-lnm[parts]=:=_def[2]
-tP=(x$ := e$)  ≡  (x$'=e$)∧(O$'\x$=O$\x$)
-partsP=(x$'=e$)  ∧  (O$'\x$=O$\x$)
-tC=x'=e  ∧  (y'=y∧(O$'\x,y=O$\x,y))
-scC=⊤
+:=_unchanged : (x := e)≡(x,y := e,y)
+by 'redboth'
 ---
-itMatch (general) NYI
-hit <enter> to continue
-```
+(x := e)
+ = 'match-lhs :=_simple @[]'
+    { := ⟼ :=, e ⟼ «BI (Id "e" 0)», x ⟼ «BI (Id "x" 0)», O$\x ⟼ ⟨O$\x⟩ }
+x'=e∧(O$'\x=O$\x)
 
-Why was `tC` at (**A) different to that at (**B) ?
+   [switch left > right]
 
-*Because one is the candidate top/focus-level, while the failure
-is where the two first sub-terms are being matched. Thos fails because we don't have a case yet to handle an iteration expansion of length 1 (which has `ni` at the top-level, and not `na`)*
+(x,y := e,y)
+ = 'match-lhs :=_def @[]'
+    { := ⟼ :=, O$\;x ⟼ ⟨O$\x,y⟩, e$ ⟼ ⟨e, y⟩, x$ ⟼ ⟨x,y⟩ }
+(x'=e∧y'=y)∧(O$'\x,y=O$\x,y)
+ = 'match-lhs land_assoc @[]'
+    { P ⟼ x'=e, Q ⟼ y'=y, R ⟼ (O$'\x,y=O$\x,y), ∧ ⟼ ∧ }
+x'=e∧(y'=y∧(O$'\x,y=O$\x,y))
+ = 'match-rhs II_def @[2]'
+    { = ⟼ =, II ⟼ II, ∧ ⟼ ∧, O$ ⟼ ⟨y, O$\x,y⟩ }
+x'=e∧II  -- UNSOUND
+
+   [switch right > left]
+
+x'=e∧(O$'\x=O$\x)
+ = 'match-rhs II_def @[2,2]'
+    { = ⟼ =, II ⟼ II, ∧ ⟼ ∧, O$ ⟼ ⟨O$\x⟩ }
+x'=e  ∧  II  -- UNSOUND```
+
+The issue is that `O$` 
+should be bound to a sequence that "collapses" to itself:
+
+1. `O$ ⟼ ⟨x,O$\x⟩`
+2. `O$ ⟼ ⟨O$\x,x⟩`
+3. `O$ ⟼ ⟨x,O$\x,y ,y⟩`
+
 
 We really needs some iteration laws that allow us to convert
 `y'=y∧(O$'\x,y=O$\x,y)` to `(O$'\x=O$\x)`

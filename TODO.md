@@ -41,6 +41,12 @@ should be bound to a sequence that "collapses" to itself:
 2. `O$ ⟼ ⟨O$\x,x⟩`
 3. `O$ ⟼ ⟨x,O$\x,y ,y⟩`
 
+Similarly for `O$\w` (say):
+
+1. `O$\w ⟼ ⟨x,O$\w,x⟩`
+2. `O$\w ⟼ ⟨O$\w,x,x⟩`
+3. `O$\w ⟼ ⟨x,O$\w,x,y ,y⟩`
+
 
 We really needs some iteration laws that allow us to convert
 `y'=y∧(O$'\x,y=O$\x,y)` to `(O$'\x=O$\x)`

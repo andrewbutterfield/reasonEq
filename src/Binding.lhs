@@ -737,7 +737,7 @@ vlComp vc vw vws (gv:gvs)
    vws' = S.insert gvw vws
 \end{code}
 
-\newpage
+
 When we are inserting a variable-set (\texttt{BS}),
 we may find that a variable-list (\texttt{BL}) is present
 (or vice versa).
@@ -805,7 +805,6 @@ substReplEqv _  _   =  False
 termVarEqv (Var _ u) v =  u == v
 \end{code}
 
-\newpage
 
 \begin{code}
 bindLVarToVList :: Monad m => ListVar -> VarList -> Binding -> m Binding
@@ -826,6 +825,14 @@ bindLVarToVList lv@(LVbl (Vbl i vc Static) is ij) vl (BD (vbind,sbind,lbind))
 
 A dynamic list-variable binds to any list of dynamic variables
 all of which have the same class and temporality as itself.
+\textbf{
+We need to handle the case where a list-variable binds to
+a variable list that contains a ``lesser'' form of itself.
+A list-variable $\lst l \less U$ is a lesser form of $\lst l \less V$
+if $V \subset U$.
+The variable-list must also contain variables
+ that can make up the ``difference''.
+}
 \begin{code}
 bindLVarToVList lv@(LVbl (Vbl i vc vw) is ij) vl (BD (vbind,sbind,lbind))
  | valid

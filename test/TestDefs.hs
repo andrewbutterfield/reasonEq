@@ -195,7 +195,10 @@ bindLT (LstVar plv) ct    =  fromJust . bindLVarToTList plv [ct]
 bindLt (LstVar plv) cts   =  fromJust . bindLVarToTList plv cts
 
 bindLSR :: GenVar -> [Term] -> [ListVar] -> Binding -> Binding
-bindLSR (LstVar plv) ctsub crpl = fromJust . bindLVarSubstRepl plv ctsub crpl
+bindLSR (LstVar plv) ctsub crpl
+           = fromJust . bindLVarSubstRepl plv (map Right ctsub ++ map Left crpl)
+
+  -- ListVar -> [LVarOrTerm] -> Binding -> m Binding
 
 
 -- ------------ Lookup after Bind ----------------

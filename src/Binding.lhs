@@ -709,20 +709,80 @@ dnSubst tsub lvsub = getJust "" $ substn tsub lvsub
 \newpage
 \subsubsection{Binding List-Variables to Variable-Lists}
 
-For list-variable binding we require all variables in the list
-to have a class compatible with the list variable,
-and to have the same temporality.
-The exception is if the list-variable is static,
-in which case we need to ensure that there are no textual variables present.
+The reason for having special ``list-variables''
+is so we can refer to variable lists (and sets).
+Here we implement the corresponding binding.
+\begin{code}
+bindLVarToVList :: Monad m => ListVar -> VarList -> Binding -> m Binding
+\end{code}
+We have two orthogonal well-formedness criteria for any such binding
+($\lst\ell\less V  \mapsto \seqof{g_1,\dots,g_n}$):
+\begin{itemize}
+  \item
+    The class and temporality of $\lst\ell$
+    must agree with that of all the $g_i$.
+  \item
+    If one or more of the $g_i$ are themselves of the form $\lst\ell\less W$,
+    then we need to check that that subset,
+    viewed collectively,
+    is no larger than $\lst\ell\less V$,
+    and,
+    if smaller,
+    there are other $g_j$ that can make up the deficit
+    (at least in principle).
+    We refer to this as the feasibility of self-references in such a binding.
+\end{itemize}
+
+A \texttt{Static} list-variable binds to any variable-list
+without \texttt{Textual} variables.
+\begin{code}
+bindLVarToVList lv@(LVbl (Vbl i vc Static) is ij) vl (BD (vbind,sbind,lbind))
+ | all (validStaticGVarClass vc) vl
+   && feasibleSelfReference lv vl
+    =  do lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(static)")
+                             (i,vc,is,ij) (BL vl) lbind
+          return $ BD (vbind,sbind,lbind')
+ | otherwise = fail "bindLVarToVList: static cannot bind to any textual."
+\end{code}
+
+
+A dynamic list-variable binds to any list of dynamic variables
+all of which have the same class and temporality as itself.
+\begin{code}
+bindLVarToVList lv@(LVbl (Vbl i vc vw) is ij) vl (BD (vbind,sbind,lbind))
+ | valid
+ && feasibleSelfReference lv vl
+    = do sbind' <- bindSubscriptToSubscript "bindLVarToVList(1)" vw vlw sbind
+         lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(2)")
+                            (i,vc,is,ij) (BL $ map dnGVar vl) lbind
+         return $ BD (vbind,sbind',lbind')
+ | otherwise = fail "bindLVarToVList: incompatible dynamic temporality."
+ where
+   (valid, vlw) = vlCompatible vc vw vl
+\end{code}
+
+Anything else fails.
+\begin{code}
+bindLVarToVList _ _ _ = fail "bindLVarToVList: invalid lvar. -> vlist binding."
+\end{code}
+
+If the list-variable is static,
+then we need to ensure that the variable-list
+contains no textual variables,
+and all have a class compatible with that of the list variable.
 \begin{code}
 validStaticGVarClass vc gvar
   = gvarWhen gvar /= Textual
     &&
     validVarClassBinding vc (gvarClass gvar)
+\end{code}
 
+For a dynamic list-variable binding we require all variables in the list
+to have a class compatible with the list variable,
+and to have the same temporality.
+\begin{code}
 vlCompatible :: VarClass -> VarWhen -> VarList -> (Bool, VarWhen)
-vlCompatible vc Static vl  =  (all (validStaticGVarClass vc) vl,Static)
-vlCompatible vc vw     vl  =  vlComp vc vw S.empty vl
+vlCompatible vc vw vl  =  vlComp vc vw S.empty vl
 
 vlComp _ vw vws []
  | S.null vws  =  (True, vw)
@@ -736,7 +796,39 @@ vlComp vc vw vws (gv:gvs)
    gvw = gvarWhen gv
    vws' = S.insert gvw vws
 \end{code}
+If the list-variable occurs in the variable list,
+then we need to check that the binding is feasible.
+Consider the following (proposed) binding:
+$$
+  \lst\ell\less V
+  \mapsto
+  \seqof{ v_1,\dots,v_a
+        , \lst v_1,\dots,\lst v_b
+        , \lst\ell\less{W_1},\dots,\lst\ell\less{W_c}}
+$$
+The following needs to hold true:
+\begin{itemize}
+  \item
+    $V \subseteq W_k$
+  \item
+    The $\lst\ell\less{W_k}$ are mutually disjoint.
+    This equivalent to asserting, for $i\neq j$,
+    that $\lst\ell\less{(W_i \cup W_j)} = \emptyset$,
+    or $\lst\ell \subseteq (W_i \cup W_j)$.
+  \item
+    $\setof{v_1,\dots,v_a}$ is disjoint from $\bigcup(\lst\ell\less{W_k})$
+  \item
+    $\lst\ell\less V \setminus \bigcup(\lst\ell\less{W_k})$
+    is large enough to contain $\setof{v_1,\dots,v_a}$
+\end{itemize}
+In effect, the various parts of the variable-list need to partition
+$\lst\ell\less V$.
+\begin{code}
+feasibleSelfReference :: ListVar -> VarList -> Bool
+feasibleSelfReference lv vl = True
+\end{code}
 
+\subsubsection{Binding List-Variables to Variable-Sets}
 
 When we are inserting a variable-set (\texttt{BS}),
 we may find that a variable-list (\texttt{BL}) is present
@@ -806,54 +898,7 @@ termVarEqv (Var _ u) v =  u == v
 \end{code}
 
 
-\begin{code}
-bindLVarToVList :: Monad m => ListVar -> VarList -> Binding -> m Binding
-\end{code}
 
-A Static list-variable binds to any list without \texttt{Textual} variables.
-\begin{code}
-bindLVarToVList lv@(LVbl (Vbl i vc Static) is ij) vl (BD (vbind,sbind,lbind))
- | valid
-    =  do lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(static)")
-                             (i,vc,is,ij) (BL vl) lbind
-          return $ BD (vbind,sbind,lbind')
- | otherwise = fail "bindLVarToVList: static cannot bind to any textual."
- where
-    (valid, vlw) = vlCompatible vc Static vl
-\end{code}
-
-
-A dynamic list-variable binds to any list of dynamic variables
-all of which have the same class and temporality as itself.
-\textbf{
-We need to handle the case where a list-variable binds to
-a variable list that contains a ``lesser'' form of itself.
-A list-variable $\lst l \less U$ is a lesser form of $\lst l \less V$
-if $V \subset U$.
-The variable-list must also contain variables
- that can make up the ``difference''.
-}
-\begin{code}
-bindLVarToVList lv@(LVbl (Vbl i vc vw) is ij) vl (BD (vbind,sbind,lbind))
- | valid
-    = do sbind' <- bindSubscriptToSubscript "bindLVarToVList(1)" vw vlw sbind
-         lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(2)")
-                            (i,vc,is,ij) (bvl vl) lbind
-         return $ BD (vbind,sbind',lbind')
- | otherwise = fail "bindLVarToVList: incompatible dynamic temporality."
- where
-   (valid, vlw) = vlCompatible vc vw vl
-\end{code}
-
-Anything else fails.
-\begin{code}
-bindLVarToVList _ _ _ = fail "bindLVarToVList: invalid lvar. -> vlist binding."
-\end{code}
-
-We need to coerce dynamics temporality to \texttt{Before}.
-\begin{code}
-bvl = BL . map dnGVar
-\end{code}
 
 \newpage
 \subsubsection{Binding List-Variables to Variable-Sets}
@@ -952,8 +997,7 @@ A list variable denoting a replacement(-list) in a substitution
 may bind to a sequence of candidate replacement terms,
 and list-variables.
 \begin{code}
-bindLVarSubstRepl :: Monad m => ListVar -> [LVarOrTerm] -> Binding
-                  -> m Binding
+bindLVarSubstRepl :: Monad m => ListVar -> [LVarOrTerm] -> Binding -> m Binding
 \end{code}
 
 A \texttt{Textual} pattern variable cannot bind to terms

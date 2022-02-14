@@ -407,7 +407,7 @@ tMatch' vts bind cbvs pbvs (Iter tkC saC naC siC niC lvsC)
   where
     iibind bind [] = return bind
     iibind bind ((lvP,lvC):rest)
-      = do bind' <- bindLVarToVList lvP [LstVar lvC] bind
+      = do bind' <- bindLVarToVList (isUnknownLVar vts lvP) lvP [LstVar lvC] bind
            iibind bind' rest
 \end{code}
 
@@ -1145,7 +1145,7 @@ vlFreeMatch vts bind cbvs pbvs vlC (gvP@(LstVar lvP):vlP)
        | null vlC -> fail "vlMatch: not enough candidates."
        | gvP /= head vlC  ->  fail "vlMatch: abstract lvar. only matches self."
        | otherwise
-           -> do bind' <- bindLVarToVList lvP [gvP] bind
+           -> do bind' <- bindLVarToVList (isUnknownLVar vts lvP) lvP [gvP] bind
                  vlFreeMatch vts bind' cbvs pbvs (tail vlC) vlP
      Just kX@(KnownVarList vlK vlX xLen, uis, ujs)
        | length uis > length vlX
@@ -1161,8 +1161,9 @@ We have a simple, ``slightly greedy'' algorithm
 that matches a list-variable against the first \texttt{n} candidates.
 \begin{code}
 vlFreeMatchN vts bind cbvs pbvs bc vlC lvP vlP n
-  | precise  =  do bind' <- bindLVarToVList lvP firstnC bind
-                   vlFreeMatch vts bind' cbvs pbvs restC vlP
+  | precise
+     =  do bind' <- bindLVarToVList (isUnknownLVar vts lvP) lvP firstnC bind
+           vlFreeMatch vts bind' cbvs pbvs restC vlP
   | otherwise  =  fail "vlFreeMatchN: vlC too short."
  where
     (firstnC,restC)  =  splitAt n vlC
@@ -1185,14 +1186,14 @@ are a prefix of the candidate list.
 vlKnownMatch vts bind cbvs pbvs
                 bc vlC gvP vlK vlX uis ujs
  | not (null vlC) && gvP == head vlC -- covers lvP known to be Abstract
-    = do bind' <- bindLVarToVList lvP [gvP] bind
+    = do bind' <- bindLVarToVList (isUnknownLVar vts lvP) lvP [gvP] bind
          return (bind',tail vlC)
  | vlK `isPrefixOf` vlC && null uis
-    = do bind' <- bindLVarToVList lvP vlK bind
+    = do bind' <- bindLVarToVList (isUnknownLVar vts lvP) lvP vlK bind
          bind'' <- bindLVarsToNull bind' (map (lvr bc vw) ujs)
          return (bind'',vlC \\ vlK)
  | gvlX `isPrefixOf` vlC && null uis
-    = do bind' <- bindLVarToVList lvP gvlX bind
+    = do bind' <- bindLVarToVList (isUnknownLVar vts lvP) lvP gvlX bind
          bind'' <- bindLVarsToNull bind' (map (lvr bc vw) ujs)
          return (bind'',vlC \\ gvlX)
  | otherwise -- now for the hard stuff !!
@@ -1202,7 +1203,7 @@ vlKnownMatch vts bind cbvs pbvs
                 (bind,[],[])  -- dynamic context
                 vlC
                 (vlX,uis,ujs,length vlX-length uis) -- pattern expansion
-         bind'' <- bindLVarToVList lvP vlC1 bind'
+         bind'' <- bindLVarToVList (isUnknownLVar vts lvP) lvP vlC1 bind'
          return (bind'',vlC2)
  where
     (LstVar lvP) = gvP
@@ -1514,7 +1515,7 @@ bindLeftOvers :: MonadPlus mp
               -> [Identifier] -- subtracted variables
               -> [Identifier] -- subtracted list-variables
               -> mp Binding
-bindLeftOvers (_,bc,bw) bind xs us ls
+bindLeftOvers (vts,bc,bw) bind xs us ls
   = do (bind',xs') <- bloVars bind xs us
        bloLVars bind' xs' ls
   where
@@ -1535,11 +1536,12 @@ bindLeftOvers (_,bc,bw) bind xs us ls
 
     bloLVars bind [] [] = return bind
     bloLVars bind xs [ui]
-      = bindLVarToVList (LVbl (Vbl ui bc bw) [] []) (map StdVar xs) bind
+      = bindLVarToVList (isUnknownLVar vts lv) lv (map StdVar xs) bind
+      where lv = LVbl (Vbl ui bc bw) [] []
     bloLVars bind xs (ui:ul)
       = case lookupLstBind bind lv of
          Nothing
-           -> do bind' <- bindLVarToVList  lv [] bind
+           -> do bind' <- bindLVarToVList (isUnknownLVar vts lv) lv [] bind
                  bloLVars bind' xs ul
          Just (BindList vs)
            ->  do xs' <- getvars xs vs
@@ -1896,7 +1898,8 @@ vsKnownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
   = case expandKnown vts lvP of
       Just (AbstractSet, uis, ujs)
         | kvP `insideS` vsC
-          -> do bind' <- bindLVarToVSet lvP (S.singleton kvP) bind
+          -> do bind' <- bindLVarToVSet (isUnknownLVar vts lvP)
+                                        lvP (S.singleton kvP) bind
                 vsKnownMatch vts bind' cbvs pbvs (delS kvP vsC)
                                                  (uvsP,ulsP) kslP
         | otherwise -> fail "vsMatch: abstract lvar only matches self"
@@ -1910,7 +1913,7 @@ vsKnownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
                       (bind, S.empty, S.empty)          -- dynamic context
                       vsC
                       (vsX,uis,ujs,S.size vsX-length uis) -- pattern expansion
-                bind'' <- bindLVarToVSet lvP vsC1 bind'
+                bind'' <- bindLVarToVSet (isUnknownLVar vts lvP) lvP vsC1 bind'
                 vsKnownMatch vts bind'' cbvs pbvs vsC2 (uvsP,ulsP) kslP
       _ -> fail "vsMatch: pattern-list variable is not set-valued."
 {-
@@ -2434,10 +2437,10 @@ vsUnkLVarOneEach :: Monad m
                  -> m Binding
 vsUnkLVarOneEach bind [] [] = return bind
 vsUnkLVarOneEach bind _ [] = fail "no pattern lvars to match remaining cands."
-vsUnkLVarOneEach bind vlC [lvP]  = bindLVarToVSet lvP (S.fromList vlC) bind
+vsUnkLVarOneEach bind vlC [lvP]  = bindLVarToVSet True lvP (S.fromList vlC) bind
 vsUnkLVarOneEach bind [] ullP  = bindLVarsToEmpty bind ullP
 vsUnkLVarOneEach bind (vC:vlC) (lvP:ullP)
-  = do bind' <- bindLVarToVSet lvP (S.fromList [vC]) bind
+  = do bind' <- bindLVarToVSet True lvP (S.fromList [vC]) bind
        vsUnkLVarOneEach bind' vlC ullP
 \end{code}
 \textbf{Note: }\textsl{
@@ -2622,7 +2625,8 @@ $ \lst v_{P} \mapsto
             \seqof{v_{C1},\dots;\dots \lst v_{Cr}}$.
 \begin{code}
 lvsMatch vts bind cbvs pbvs tsC lvsC [(vsP,esP)]
-  = bindLVarToVList vsP cTgts bind >>= bindLVarSubstRepl esP cLVTs
+  = bindLVarToVList (isUnknownLVar vts vsP) vsP cTgts bind
+     >>= bindLVarSubstRepl esP cLVTs
   where
     cVars = map fst tsC ; cTgtL = map fst lvsC
     cTgts = (map StdVar cVars ++ map LstVar cTgtL)

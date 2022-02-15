@@ -1082,7 +1082,7 @@ findLstCandidate bind vlC' vlP' vlC@(gC:vlC_) vlB@(gB:vlB_) vlP
 \subsubsection{Free Variable-List Matching}
 
 Here we are doing variable-list matching where all of the
-pattern variables are free, \textit{i.e.}, not already in the binding.
+pattern variables are unbound.
 We do not attempt a complete solution,
 as in fact there can be many possible bindings.
 We adopt a heuristic that simply walks the pattern list
@@ -1775,7 +1775,7 @@ applyBindingsToSets' bind vlP' vsC (gP@(LstVar lvP):vlP)
 \subsubsection{Free Variable-Set Matching}
 
 Here we are doing variable-set matching where all of the
-pattern variables are free, \textit{i.e.}, not already in the binding.
+pattern variables are unbound.
 We do not attempt a complete solution,
 as in fact there can be many possible bindings.
 

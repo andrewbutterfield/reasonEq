@@ -712,6 +712,7 @@ dnSubst tsub lvsub = getJust "" $ substn tsub lvsub
 The reason for having special ``list-variables''
 is so we can refer to variable lists (and sets).
 Here we implement the corresponding binding.
+The first boolean parameter is true if the list-variable is ``unknown''.
 \begin{code}
 bindLVarToVList :: Monad m => Bool -> ListVar -> VarList -> Binding
                            -> m Binding
@@ -779,6 +780,7 @@ validStaticGVarClass vc gvar
     validVarClassBinding vc (gvarClass gvar)
 \end{code}
 
+\newpage
 For a dynamic list-variable binding we require all variables in the list
 to have a class compatible with the list variable,
 and to have the same temporality.
@@ -798,6 +800,9 @@ vlComp vc vw vws (gv:gvs)
    gvw = gvarWhen gv
    vws' = S.insert gvw vws
 \end{code}
+
+\subsubsection{Feasible Self-Reference}
+
 If the list-variable is known, and occurs in the variable list,
 then we need to check that the binding is feasible.
 Consider the following (proposed) binding:
@@ -808,23 +813,48 @@ $$
         , \lst v_1,\dots,\lst v_b
         , \lst\ell\less{W_1},\dots,\lst\ell\less{W_c}}
 $$
-The following needs to hold true:
+The first thing that we note is that $V$ is a set of variables
+in the pattern term,
+whilst the variables $v_i$, $\lst v_j$, and variable-sets $W_k$
+involve variables from the candidate.
+So we will analyse the binding rhs first, to simplify it and check it,
+and then may be able to deduce possible new bindings from elements of $V$
+to parts of the (simplified) rhs.
+
+As an example, consider the pattern
+$
+ x' = e \land \lst O'\less x = \lst O\less x
+$
+\\ with candidate
+$
+ a' = g \land b' = b \land \lst O'\less{a,b} = \lst O\less {a,b}
+$
+\\The resulting binding is
+$
+ \{ x \mapsto a
+  , e \mapsto g
+  , \lst O\less x \mapsto \seqof{b,\lst O\less{a,b}}
+ \}
+$
+\\We don't need to assume that the $x$ binding is done first.
+We can simplify $\seqof{b,\lst O\less{a,b}}$ to $\seqof{\lst O\less a}$.
+We can then deduce from this the need for a $x \mapsto a$ binding.
+
+The key idea is to fuse together components of the binding rhs
+to their simplest form, and then compare its size
+with that of the binding lhs.
+The key rules are:
 \begin{itemize}
   \item
-    $V \subseteq W_k$
+    Combining $\lst O\less{W_1}$ with $\lst O\less{W_2}$
+    results in $\lst O\less{W_1 \cap W_2}$.
   \item
-    The $\lst\ell\less{W_k}$ are mutually disjoint.
-    This equivalent to asserting, for $i\neq j$,
-    that $\lst\ell\less{(W_i \cup W_j)} = \emptyset$,
-    or $\lst\ell \subseteq (W_i \cup W_j)$.
-  \item
-    $\setof{v_1,\dots,v_a}$ is disjoint from $\bigcup(\lst\ell\less{W_k})$
-  \item
-    $\lst\ell\less V \setminus \bigcup(\lst\ell\less{W_k})$
-    is large enough to contain $\setof{v_1,\dots,v_a}$
+    Combining variable set $V$ with list-variable $\lst O\less W$ results in
+    variable set $V\setminus W$ combined with $\lst O \less{(W\setminus V)}$.
 \end{itemize}
-In effect, the various parts of the variable-list need to partition
-$\lst\ell\less V$.
+We get an outcome of the form $V \cup L \cup \lst O\less{W_V,W_L}$,
+where $V$ and $W_V$ are disjoint standard variable sets,
+and $L$ and $W_L$ are disjoint list-variable sets.
 \begin{code}
 feasibleSelfReference :: ListVar -> VarList -> Bool
 feasibleSelfReference lv vl  =  True

@@ -564,15 +564,15 @@ trsb trid (s,t) = s ++ spaced _maplet ++ t
 
 trlb trid ((i,vc,is,js),lvb)
   = trVC vc (trid i) ++
-    "$" ++
-    (if nowt then "" else "\\") ++
-    (if noIs then "" else seplist "," trid is) ++
-    (if noJs then "" else ";" ++ seplist "," trid js) ++
+    "$" ++ trless trid is js ++
+  --   (if nowt then "" else "\\") ++
+  --   (if noIs then "" else seplist "," trid is) ++
+  --   (if noJs then "" else ";" ++ seplist "," trid js) ++
     spaced _maplet ++ trlstvarbind trid lvb
-  where
-    noIs = null is
-    noJs = null js
-    nowt = noIs && noJs
+  -- where
+  --   noIs = null is
+  --   noJs = null js
+  --   nowt = noIs && noJs
 \end{code}
 
 Seeing them in all their glory:

@@ -5,49 +5,15 @@
 
 Proof of `:=_unchanged` works, but is UNSOUND
 
+We have a inconsistent binding
+
 ```
-:=_unchanged : (x := e)≡(x,y := e,y)
-by 'redboth'
----
-(x := e)
- = 'match-lhs :=_simple @[]'
-    { := ⟼ :=, e ⟼ «BI (Id "e" 0)», x ⟼ «BI (Id "x" 0)», O$\x ⟼ ⟨O$\x⟩ }
-x'=e∧(O$'\x=O$\x)
+O$\x$ ⟼ ⟨O$\x,y⟩, e$ ⟼ ⟨y⟩, x$ ⟼ ⟨y⟩ }
+```
 
-   [switch left > right]
+The entry `O$\x$ ⟼ ⟨O$\x,y⟩` is feasible, provided that `x$` maps to a list of length 2. Here it maps to a list of length 1.
 
-(x,y := e,y)
- = 'match-lhs :=_def @[]'
-    { := ⟼ :=, O$\;x ⟼ ⟨O$\x,y⟩, e$ ⟼ ⟨e, y⟩, x$ ⟼ ⟨x,y⟩ }
-(x'=e∧y'=y)∧(O$'\x,y=O$\x,y)
- = 'match-lhs land_assoc @[]'
-    { P ⟼ x'=e, Q ⟼ y'=y, R ⟼ (O$'\x,y=O$\x,y), ∧ ⟼ ∧ }
-x'=e∧(y'=y∧(O$'\x,y=O$\x,y))
- = 'match-rhs II_def @[2]'
-    { = ⟼ =, II ⟼ II, ∧ ⟼ ∧, O$ ⟼ ⟨y, O$\x,y⟩ }
-x'=e∧II  -- UNSOUND
-
-   [switch right > left]
-
-x'=e∧(O$'\x=O$\x)
- = 'match-rhs II_def @[2,2]'
-    { = ⟼ =, II ⟼ II, ∧ ⟼ ∧, O$ ⟼ ⟨O$\x⟩ }
-x'=e  ∧  II  -- UNSOUND```
-
-The issue is that `O$` 
-should be bound to a sequence that "collapses" to itself:
-
-1. `O$ ⟼ ⟨x,O$\x⟩`
-2. `O$ ⟼ ⟨O$\x,x⟩`
-3. `O$ ⟼ ⟨x,O$\x,y ,y⟩`
-
-Similarly for `O$\w` (say):
-
-1. `O$\w ⟼ ⟨x,O$\w,x⟩`
-2. `O$\w ⟼ ⟨O$\w,x,x⟩`
-3. `O$\w ⟼ ⟨x,O$\w,x,y ,y⟩`
-
-
+ 
 We really needs some iteration laws that allow us to convert
 `y'=y∧(O$'\x,y=O$\x,y)` to `(O$'\x=O$\x)`
 

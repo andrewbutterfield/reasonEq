@@ -849,17 +849,17 @@ The key rules are:
     Combining $\lst O\less{W_1}$ with $\lst O\less{W_2}$
     results in $\lst O\less{W_1 \cap W_2}$.
   \item
-    Combining variable set $V$ with list-variable $\lst O\less W$ results in
-    variable set $V\setminus W$ combined with $\lst O \less{(W\setminus V)}$.
+    Combining variable set $X$ with list-variable $\lst O\less W$ results in
+    variable set $X\setminus W$ combined with $\lst O \less{(W\setminus X)}$.
 \end{itemize}
-We get an outcome of the form $V \cup L \cup \lst O\less{W_V,W_L}$,
-where $V$ and $W_V$ are disjoint standard variable sets,
-and $L$ and $W_L$ are disjoint list-variable sets.
+We get an outcome of the form $X_S \cup X_L \cup \lst O\less{W_S,W_L}$,
+where $X_S$ and $W_S$ are disjoint standard variable sets,
+and $X_L$ and $W_L$ are disjoint list-variable sets.
 \begin{code}
 feasibleSelfReference :: ListVar -> VarList -> Bool
 feasibleSelfReference lv vl
   | null selfrefs  =  True
-  | otherwise      =  feasibleListSizing lv remainingVars finalSR
+  | otherwise      =  feasibleListSizing (pdbg "fLS.lv" lv) (pdbg "fLS.rvars" remainingVars) $ pdbg "fLS.finalSR" finalSR
   where
     (selfrefs,otherVars) = partition (selfref $ varOf lv) vl
     (sr1:srrest) = map theLstVar selfrefs
@@ -896,13 +896,83 @@ otherCombine vl@(gv:_) (LVbl v is js)
     ( vlis, vljs ) = idsOf vl
 \end{code}
 
-Now we do the test for feasible sizing
+\newpage
+Now we do the test for feasible sizing.
+We have a binding which is semantically the same as:
+$$
+\lst O\less {V_S,V_L}
+\mapsto
+X_S \cup X_L \cup \lst O\less{W_S,W_L}
+$$
+where $X_S$ and $W_S$ are disjoint standard variable sets,
+and $X_L$ and $W_L$ are disjoint list-variable sets.
+\begin{itemize}
+  \item
+    The cardinality of $\lst O\less {V_S,V_L}$
+    is less than or equal to that of $V_S$
+    (equal if $V_L=\emptyset$).
+    \item
+      The cardinality of $\lst O\less {W_S,W_L}$
+      is less than or equal to that of $W_S$
+      (equal if $W_L=\emptyset$).
+    \item
+      The cardinality of $X_S \cup X_L$
+      is greater than or equal to that of $X_S$
+      (equal if $X_L=\emptyset$).
+\end{itemize}
+To be feasible, it must be possible for the lhs and rhs of the binding to have the same cardinality.
+If we interpet each set as its cardinality,
+we get the following formula:
+$$
+\lst O - (V_S + V_L)
+=
+X_S + X_L + \lst O - (W_S + W_L)
+$$
+Here $V_S$, $X_S$, and $W_S$ are known fixed numbers,
+while $V_L$, $X_L$, and $W_L$ can take any value from zero upwards if non-empty,
+but equal precisely zero if empty.
+We first eliminate $\lst O$ from each,
+realising that this means we do not need to know the cardinality of it.
+$$
+- V_S - V_L
+=
+X_S + X_L - W_S - W_L
+$$
+The fixed (standard-variable) ``kernel'' of this equation is
+$$
+- V_S  = X_S - W_S
+$$
+If this identity holds, then the binding is feasible,
+because all list variables might bind to empty sets or lists.
+If the lhs is smaller, then feasibility is only possible if $W_L$
+is non-empty, as then it could remove variables on the rhs to close the gap.
+If the lhs is larger, then feasibility is possible if $X_L$
+is non-empty, as then it could add variables on the rhs to close the gap,
+or if $V_L$ is non-empty, which would remove variables on the lhs.
+
+We transform the kernel equation to
+$$
+W_S - V_S - X_S = 0
+$$
+
 \begin{code}
 feasibleListSizing :: ListVar -> VarList -> ListVar -> Bool
-feasibleListSizing lv rvars mergedSR = True
+feasibleListSizing (LVbl _ v_S v_L) rvars (LVbl _ w_S w_L)
+  | (pdbg "fLS.KERNEL" kernel) < 0  =  wL > 0
+  | kernel > 0  =  xL > 0 || vL > 0
+  | otherwise   =  True
+  where
+    (x_S,x_L) = partition isStdV rvars
+    vS = length v_S
+    xS = length x_S
+    wS = length w_S
+    kernel = wS - vS  - xS
+    vL = length v_L
+    xL = length x_L
+    wL = length w_L
 \end{code}
 
-
+\newpage
 \subsubsection{Binding List-Variables to Variable-Sets}
 
 When we are inserting a variable-set (\texttt{BS}),

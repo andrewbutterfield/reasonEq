@@ -40,7 +40,7 @@ module Binding
 ) where
 import Data.Maybe (fromJust,catMaybes)
 import Data.Either
-import Data.List (nub,union,(\\))
+import Data.List (nub,union,(\\),intersect,partition)
 import Data.Map(Map)
 import qualified Data.Map as M
 import Data.Set(Set)
@@ -857,8 +857,51 @@ where $V$ and $W_V$ are disjoint standard variable sets,
 and $L$ and $W_L$ are disjoint list-variable sets.
 \begin{code}
 feasibleSelfReference :: ListVar -> VarList -> Bool
-feasibleSelfReference lv vl  =  True
+feasibleSelfReference lv vl
+  | null selfrefs  =  True
+  | otherwise      =  feasibleListSizing lv remainingVars finalSR
+  where
+    (selfrefs,otherVars) = partition (selfref $ varOf lv) vl
+    (sr1:srrest) = map theLstVar selfrefs
+    combinedSR = selfRefCombine sr1 srrest
+    (remainingVars,finalSR) = otherCombine otherVars combinedSR
 \end{code}
+\newpage
+Combining code:
+\begin{code}
+selfref :: Variable -> GenVar -> Bool
+selfref v (LstVar lv)  =  varOf lv == v
+selfref _ _            =  False
+
+selfRefCombine :: ListVar -> [ListVar] -> ListVar
+selfRefCombine sr [] = sr
+selfRefCombine sr (sr':srrest)  =  selfRefCombine (sr `srmrg` sr') srrest
+
+srmrg :: ListVar -> ListVar -> ListVar
+(LVbl v is1 js1) `srmrg` (LVbl _ is2 js2)
+  =  LVbl v (is1 `intersect` is2) (js1 `intersect` js2)
+
+otherCombine :: VarList -> ListVar -> (VarList,ListVar)
+otherCombine [] lv  = ( [], lv )
+otherCombine vl@(gv:_) (LVbl v is js)
+  = ( vl \\ ijgvs, LVbl v (is \\ vlis) (js \\ vljs))
+  where
+    -- ijgvs
+    vc = gvarClass gv
+    vw = gvarWhen  gv
+    mkStd i = StdVar $ Vbl i vc vw
+    mkLst i = LstVar $ LVbl (Vbl i vc vw) [] []
+    ijgvs = map mkStd is ++ map mkLst js
+    -- vlis, vljs
+    ( vlis, vljs ) = idsOf vl
+\end{code}
+
+Now we do the test for feasible sizing
+\begin{code}
+feasibleListSizing :: ListVar -> VarList -> ListVar -> Bool
+feasibleListSizing lv rvars mergedSR = True
+\end{code}
+
 
 \subsubsection{Binding List-Variables to Variable-Sets}
 

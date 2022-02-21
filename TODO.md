@@ -5,10 +5,14 @@
 
 Proof of `:=_unchanged` works, but is UNSOUND
 
-We have a inconsistent binding
+We (still) have a inconsistent binding
 
 ```
-O$\x$ ⟼ ⟨O$\x,y⟩, e$ ⟼ ⟨y⟩, x$ ⟼ ⟨y⟩ }
+Match against `:=_def'[2]
+Binding: { := ⟼ :=, = ⟼ =, ∧ ⟼ ∧
+         , O$\x$ ⟼ ⟨O$\x,y⟩, O$\x,y ⟼ {O$\x,y}
+         , e$ ⟼ ⟨y⟩, x$ ⟼ ⟨y⟩ 
+         }
 ```
 
 The entry `O$\x$ ⟼ ⟨O$\x,y⟩` is feasible, provided that `x$` maps to a list of length 2. Here it maps to a list of length 1.

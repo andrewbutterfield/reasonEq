@@ -738,11 +738,19 @@ A \texttt{Static} list-variable binds to any variable-list
 without \texttt{Textual} variables.
 \begin{code}
 bindLVarToVList lv@(LVbl (Vbl i vc Static) is ij) vl (BD (vbind,sbind,lbind))
- | all (validStaticGVarClass vc) vl && feasibleSelfReference lv vl
-    =  do lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(static)")
+ | all (validStaticGVarClass vc) vl
+    =  do feasibility <- feasibleSelfReference lv vl
+          lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(static)")
                              (i,vc,is,ij) (BL vl) lbind
-          return $ BD (vbind,sbind,lbind')
- | otherwise = fail "bindLVarToVList: Static incompatible or bad self-reference."
+          case feasibility of
+            Nothing -> return $ BD (vbind,sbind,lbind')
+            Just (vs,lv'@(LVbl (Vbl _ _ _) is' ij'))
+             -> do lbind'' <- insertDR (rangeEqvLSSub "bindLVarToVList(static-self)")
+                                       (i,vc,is',ij')
+                                       (BS (S.fromList (LstVar lv':vs)))
+                                       lbind'
+                   return $ BD (vbind,sbind,lbind'')
+ | otherwise = fail "bindLVarToVList: Static incompatibility"
 \end{code}
 
 
@@ -750,12 +758,20 @@ A dynamic list-variable binds to any list of dynamic variables
 all of which have the same class and temporality as itself.
 \begin{code}
 bindLVarToVList lv@(LVbl (Vbl i vc vw) is ij) vl (BD (vbind,sbind,lbind))
- | valid && feasibleSelfReference lv vl
-    = do sbind' <- bindSubscriptToSubscript "bindLVarToVList(1)" vw vlw sbind
+ | valid
+    = do feasibility <- feasibleSelfReference lv vl
+         sbind' <- bindSubscriptToSubscript "bindLVarToVList(1)" vw vlw sbind
          lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(2)")
                             (i,vc,is,ij) (BL $ map dnGVar vl) lbind
-         return $ BD (vbind,sbind',lbind')
- | otherwise = fail "bindLVarToVList: dynamic incompatible or bad self-reference."
+         case feasibility of
+           Nothing -> return $ BD (vbind,sbind',lbind')
+           Just (vs,lv'@(LVbl (Vbl _ _ _) is' ij'))
+            -> do  lbind'' <- insertDR (rangeEqvLSSub "bindLVarToVList(2-self)")
+                                       (i,vc,is',ij')
+                                       (BS $ S.fromList $ map dnGVar (LstVar lv':vs))
+                                       lbind'
+                   return $ BD (vbind,sbind',lbind'')
+ | otherwise = fail "bindLVarToVList: dynamic incompatibility"
  where
    (valid, vlw) = vlCompatible vc vw vl
 \end{code}
@@ -861,10 +877,13 @@ This is feasible if
 matching $V$ against $(W_S \cup W_L)$
 is compatible with other bindings.
 \begin{code}
-feasibleSelfReference :: ListVar -> VarList -> Bool
+feasibleSelfReference :: Monad m => ListVar -> VarList
+                                 -> m (Maybe(VarList,ListVar))
 feasibleSelfReference lv vl
-  | null selfrefs  =  True
-  | otherwise      =  feasibleListSizing (pdbg "fLS.lv" lv) (pdbg "fLS.others" otherVars) $ pdbg "fLS.finalSR" finalSR
+  | null selfrefs  =  return Nothing
+  | feasibleListSizing (pdbg "fLS.lv" lv) (pdbg "fLS.others" otherVars) $ pdbg "fLS.finalSR" finalSR
+     = return $ Just (otherVars,finalSR)
+  | otherwise      =  fail "bindLVarToVs: infeasible self-reference"
   where
     (selfrefs,otherVars) = partition (selfref $ varOf lv) vl
     (sr1:srrest) = map theLstVar selfrefs
@@ -1056,10 +1075,18 @@ vsCompatible vc vw vs      =  vlComp vc vw S.empty (S.toList vs)
 bindLVarToVSet :: Monad m => ListVar -> VarSet -> Binding -> m Binding
 
 bindLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind))
- | valid && feasibleSelfReference lv (S.toList vs)
-    =  do lbind' <- insertDR (rangeEqvLSSub "bindLVarToVSet(static)")
+ | valid
+    =  do feasibility <- feasibleSelfReference lv (S.toList vs)
+          lbind' <- insertDR (rangeEqvLSSub "bindLVarToVSet(static)")
                              (i,vc,is,ij) (BS vs) lbind
-          return $ BD (vbind,sbind,lbind')
+          case feasibility of
+            Nothing -> return $ BD (vbind,sbind,lbind')
+            Just (vs',lv'@(LVbl (Vbl _ _ _) is' ij'))
+             -> do lbind'' <- insertDR (rangeEqvLSSub "bindLVarToVSet(static-self)")
+                                       (i,vc,is',ij')
+                                       (BS $ S.fromList (LstVar lv':vs'))
+                                       lbind'
+                   return $ BD (vbind,sbind,lbind'')
  | otherwise = fail $ unlines'
                 [ "bindLVarToVSet: static cannot bind to any textual."
                 -- having a Textual in vs is not the only reason for failure!!!
@@ -1070,11 +1097,19 @@ bindLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind))
     (valid, vsw) = vsCompatible vc Static vs
 
 bindLVarToVSet lv@(LVbl (Vbl i vc vw) is ij) vs (BD (vbind,sbind,lbind))
- | valid && feasibleSelfReference lv (S.toList vs)
-    = do sbind' <- bindSubscriptToSubscript "bindLVarToVSet(1)" vw vsw sbind
+ | valid
+    = do feasibility <- feasibleSelfReference lv (S.toList vs)
+         sbind' <- bindSubscriptToSubscript "bindLVarToVSet(1)" vw vsw sbind
          lbind' <- insertDR (rangeEqvLSSub "bindLVarToVSet(2)")
                             (i,vc,is,ij) (bvs vs) lbind
-         return $ BD (vbind,sbind',lbind')
+         case feasibility of
+           Nothing -> return $ BD (vbind,sbind',lbind')
+           Just (vs',lv'@(LVbl (Vbl _ _ _) is' ij'))
+            -> do lbind'' <- insertDR (rangeEqvLSSub "bindLVarToVSet(static-self)")
+                                      (i,vc,is',ij')
+                                      (BS $ S.fromList (LstVar lv':vs'))
+                                      lbind'
+                  return $ BD (vbind,sbind',lbind'')
  | otherwise = fail "bindLVarToVSet: incompatible dynamic temporality."
  where
    (valid, vsw) = vsCompatible vc vw vs

@@ -1,6 +1,6 @@
 \section{Binding}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2017
+Copyright  Andrew Butterfield (c) 2017-22
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -850,21 +850,30 @@ The key rules are:
     results in $\lst O\less{W_1 \cap W_2}$.
   \item
     Combining variable set $X$ with list-variable $\lst O\less W$ results in
-    variable set $X\setminus W$ combined with $\lst O \less{(W\setminus X)}$.
+    variable set $X$ combined with $\lst O \less{(W\setminus X)}$.
 \end{itemize}
 We get an outcome of the form $X_S \cup X_L \cup \lst O\less{W_S,W_L}$,
 where $X_S$ and $W_S$ are disjoint standard variable sets,
 and $X_L$ and $W_L$ are disjoint list-variable sets.
+So we now have a new binding, where the rhs is now a variable-set:
+$$
+  \lst O\less V
+  \mapsto
+  X_S \cup X_L \cup \lst O\less{W_S,W_L}
+$$
+This is feasible if
+matching $V$ against $(W_S \cup W_L)$
+is compatible with other bindings.
 \begin{code}
 feasibleSelfReference :: ListVar -> VarList -> Bool
 feasibleSelfReference lv vl
   | null selfrefs  =  True
-  | otherwise      =  feasibleListSizing (pdbg "fLS.lv" lv) (pdbg "fLS.rvars" remainingVars) $ pdbg "fLS.finalSR" finalSR
+  | otherwise      =  feasibleListSizing (pdbg "fLS.lv" lv) (pdbg "fLS.others" otherVars) $ pdbg "fLS.finalSR" finalSR
   where
     (selfrefs,otherVars) = partition (selfref $ varOf lv) vl
     (sr1:srrest) = map theLstVar selfrefs
     combinedSR = selfRefCombine sr1 srrest
-    (remainingVars,finalSR) = otherCombine otherVars combinedSR
+    finalSR = otherCombine otherVars combinedSR
 \end{code}
 \newpage
 Combining code:
@@ -881,18 +890,11 @@ srmrg :: ListVar -> ListVar -> ListVar
 (LVbl v is1 js1) `srmrg` (LVbl _ is2 js2)
   =  LVbl v (is1 `intersect` is2) (js1 `intersect` js2)
 
-otherCombine :: VarList -> ListVar -> (VarList,ListVar)
-otherCombine [] lv  = ( [], lv )
+otherCombine :: VarList -> ListVar -> ListVar
+otherCombine [] lv  =  lv
 otherCombine vl@(gv:_) (LVbl v is js)
-  = ( vl \\ ijgvs, LVbl v (is \\ vlis) (js \\ vljs))
+  = LVbl v (is \\ vlis) (js \\ vljs)
   where
-    -- ijgvs
-    vc = gvarClass gv
-    vw = gvarWhen  gv
-    mkStd i = StdVar $ Vbl i vc vw
-    mkLst i = LstVar $ LVbl (Vbl i vc vw) [] []
-    ijgvs = map mkStd is ++ map mkLst js
-    -- vlis, vljs
     ( vlis, vljs ) = idsOf vl
 \end{code}
 

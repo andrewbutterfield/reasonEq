@@ -712,9 +712,8 @@ dnSubst tsub lvsub = getJust "" $ substn tsub lvsub
 The reason for having special ``list-variables''
 is so we can refer to variable lists (and sets).
 Here we implement the corresponding binding.
-The first boolean parameter is true if the list-variable is ``unknown''.
 \begin{code}
-bindLVarToVList :: Monad m => Bool -> ListVar -> VarList -> Binding
+bindLVarToVList :: Monad m => ListVar -> VarList -> Binding
                            -> m Binding
 \end{code}
 We have two orthogonal well-formedness criteria for any such binding
@@ -724,8 +723,7 @@ We have two orthogonal well-formedness criteria for any such binding
     The class and temporality of $\lst\ell$
     must agree with that of all the $g_i$.
   \item
-    If $\lst\ell$ is ``known'',
-    and one or more of the $g_i$ are themselves of the form $\lst\ell\less W$,
+    If one or more of the $g_i$ are themselves of the form $\lst\ell\less W$,
     then we need to check that that subset,
     viewed collectively,
     is no larger than $\lst\ell\less V$,
@@ -739,34 +737,32 @@ We have two orthogonal well-formedness criteria for any such binding
 A \texttt{Static} list-variable binds to any variable-list
 without \texttt{Textual} variables.
 \begin{code}
-bindLVarToVList unknown lv@(LVbl (Vbl i vc Static) is ij) vl (BD (vbind,sbind,lbind))
- | all (validStaticGVarClass vc) vl
-   && (unknown || feasibleSelfReference lv vl)
+bindLVarToVList lv@(LVbl (Vbl i vc Static) is ij) vl (BD (vbind,sbind,lbind))
+ | all (validStaticGVarClass vc) vl && feasibleSelfReference lv vl
     =  do lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(static)")
                              (i,vc,is,ij) (BL vl) lbind
           return $ BD (vbind,sbind,lbind')
- | otherwise = fail "bindLVarToVList: static cannot bind to any textual."
+ | otherwise = fail "bindLVarToVList: Static incompatible or bad self-reference."
 \end{code}
 
 
 A dynamic list-variable binds to any list of dynamic variables
 all of which have the same class and temporality as itself.
 \begin{code}
-bindLVarToVList unknown lv@(LVbl (Vbl i vc vw) is ij) vl (BD (vbind,sbind,lbind))
- | valid
- && (unknown || feasibleSelfReference lv vl)
+bindLVarToVList lv@(LVbl (Vbl i vc vw) is ij) vl (BD (vbind,sbind,lbind))
+ | valid && feasibleSelfReference lv vl
     = do sbind' <- bindSubscriptToSubscript "bindLVarToVList(1)" vw vlw sbind
          lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(2)")
                             (i,vc,is,ij) (BL $ map dnGVar vl) lbind
          return $ BD (vbind,sbind',lbind')
- | otherwise = fail "bindLVarToVList: incompatible dynamic temporality."
+ | otherwise = fail "bindLVarToVList: dynamic incompatible or bad self-reference."
  where
    (valid, vlw) = vlCompatible vc vw vl
 \end{code}
 
 Anything else fails.
 \begin{code}
-bindLVarToVList _ _ _ _ = fail "bindLVarToVList: invalid lvar. -> vlist binding."
+bindLVarToVList _ _ _ = fail "bindLVarToVList: invalid lvar. -> vlist binding."
 \end{code}
 
 If the list-variable is static,
@@ -1057,11 +1053,10 @@ vsCompatible vc vw vs      =  vlComp vc vw S.empty (S.toList vs)
 \end{code}
 
 \begin{code}
-bindLVarToVSet :: Monad m => Bool -> ListVar -> VarSet -> Binding -> m Binding
+bindLVarToVSet :: Monad m => ListVar -> VarSet -> Binding -> m Binding
 
-bindLVarToVSet unkn lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind))
- | valid
-   && (unkn || feasibleSelfReference lv (S.toList vs))
+bindLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind))
+ | valid && feasibleSelfReference lv (S.toList vs)
     =  do lbind' <- insertDR (rangeEqvLSSub "bindLVarToVSet(static)")
                              (i,vc,is,ij) (BS vs) lbind
           return $ BD (vbind,sbind,lbind')
@@ -1074,9 +1069,8 @@ bindLVarToVSet unkn lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind)
  where
     (valid, vsw) = vsCompatible vc Static vs
 
-bindLVarToVSet unkn lv@(LVbl (Vbl i vc vw) is ij) vs (BD (vbind,sbind,lbind))
- | valid
-   && (unkn || feasibleSelfReference lv (S.toList vs))
+bindLVarToVSet lv@(LVbl (Vbl i vc vw) is ij) vs (BD (vbind,sbind,lbind))
+ | valid && feasibleSelfReference lv (S.toList vs)
     = do sbind' <- bindSubscriptToSubscript "bindLVarToVSet(1)" vw vsw sbind
          lbind' <- insertDR (rangeEqvLSSub "bindLVarToVSet(2)")
                             (i,vc,is,ij) (bvs vs) lbind
@@ -1085,7 +1079,7 @@ bindLVarToVSet unkn lv@(LVbl (Vbl i vc vw) is ij) vs (BD (vbind,sbind,lbind))
  where
    (valid, vsw) = vsCompatible vc vw vs
 
-bindLVarToVSet _ _ _ _ = fail "bindLVarToVSet: invalid lvar. -> vset binding."
+bindLVarToVSet _ _ _ = fail "bindLVarToVSet: invalid lvar. -> vset binding."
 \end{code}
 
 \begin{code}
@@ -1117,7 +1111,7 @@ bvs = BS . S.map dnGVar
 We also need some identity bindings:
 \begin{code}
 bindLVarToSSelf :: Monad m => ListVar -> Binding -> m Binding
-bindLVarToSSelf lv bind = bindLVarToVSet True lv (S.singleton $ LstVar lv) bind
+bindLVarToSSelf lv bind = bindLVarToVSet lv (S.singleton $ LstVar lv) bind
 
 bindLVarsToSSelves :: Monad m => [ListVar] -> Binding -> m Binding
 bindLVarsToSSelves [] bind = return bind
@@ -1130,7 +1124,7 @@ And binding pairs:
 \begin{code}
 bindLVarSTuple :: Monad m => (ListVar,ListVar) -> Binding -> m Binding
 bindLVarSTuple (plv,clv) bind
-                     = bindLVarToVSet False plv (S.singleton $ LstVar clv) bind
+                     = bindLVarToVSet plv (S.singleton $ LstVar clv) bind
 
 bindLVarSTuples :: Monad m => [(ListVar,ListVar)] -> Binding -> m Binding
 bindLVarSTuples [] bind = return bind
@@ -1222,10 +1216,10 @@ bindLVarToTList lv ts = bindLVarSubstRepl lv (map Right ts)
 An list-variable can bind to a singleton list of any general variable,
 while a standard-variable can only bind to a standard variable.
 \begin{code}
-bindGVarToGVar :: Monad m => Bool -> GenVar -> GenVar -> Binding -> m Binding
-bindGVarToGVar unkn (LstVar lv) gv binds = bindLVarToVList unkn lv [gv] binds
-bindGVarToGVar _  (StdVar pv) (StdVar cv) binds = bindVarToVar pv cv binds
-bindGVarToGVar _ _ _ _ = fail "bindGVarToGVar: invalid stdvar. -> lstvar. binding."
+bindGVarToGVar :: Monad m => GenVar -> GenVar -> Binding -> m Binding
+bindGVarToGVar (LstVar lv) gv binds = bindLVarToVList lv [gv] binds
+bindGVarToGVar (StdVar pv) (StdVar cv) binds = bindVarToVar pv cv binds
+bindGVarToGVar _ _ _ = fail "bindGVarToGVar: invalid stdvar. -> lstvar. binding."
 \end{code}
 
 \subsubsection{Binding General-Variables to Variable-Lists}
@@ -1234,10 +1228,10 @@ An list-variable can bind to a list of any length,
 while a standard-variable can only bind to the standard variable inside
 a singleton list.
 \begin{code}
-bindGVarToVList :: Monad m => Bool -> GenVar -> VarList -> Binding -> m Binding
-bindGVarToVList unkn (LstVar lv) vl binds = bindLVarToVList unkn lv vl binds
-bindGVarToVList _ (StdVar pv) [StdVar cv] binds = bindVarToVar pv cv binds
-bindGVarToVList _ _ _ _ = fail "bindGVarToVList: invalid gvar. -> vlist binding."
+bindGVarToVList :: Monad m => GenVar -> VarList -> Binding -> m Binding
+bindGVarToVList (LstVar lv) vl binds = bindLVarToVList lv vl binds
+bindGVarToVList (StdVar pv) [StdVar cv] binds = bindVarToVar pv cv binds
+bindGVarToVList _ _ _ = fail "bindGVarToVList: invalid gvar. -> vlist binding."
 \end{code}
 
 \newpage
@@ -1380,7 +1374,7 @@ Binding a list of list-variables to the null list:
 \begin{code}
 bindLVarsToNull bind [] = return bind
 bindLVarsToNull bind (lv:lvs)
- = do bind' <- bindLVarToVList True lv [] bind
+ = do bind' <- bindLVarToVList lv [] bind
       bindLVarsToNull bind' lvs
 \end{code}
 
@@ -1388,7 +1382,7 @@ Binding a list of list-variables to the empty set:
 \begin{code}
 bindLVarsToEmpty bind [] = return bind
 bindLVarsToEmpty bind (lv:lvs)
- = do bind' <- bindLVarToVSet True lv S.empty bind
+ = do bind' <- bindLVarToVSet lv S.empty bind
       bindLVarsToEmpty bind' lvs
 \end{code}
 
@@ -1447,11 +1441,11 @@ mkKnownBind :: Binding -> [VarTable] -> GenVar -> Binding
 mkKnownBind bind vts gv
  | isUnknownGVar vts gv  =  emptyBinding
  | isLstV gv  =  mkKnownLstVarBind bind $ theLstVar gv
- | otherwise  =  fromJust $ bindGVarToGVar False gv gv emptyBinding
+ | otherwise  =  fromJust $ bindGVarToGVar gv gv emptyBinding
 
 mkKnownLstVarBind :: Binding -> ListVar -> Binding
 mkKnownLstVarBind bind lv@(LVbl v@(Vbl _ vc vw) is js)
-  = fromJust $ bindLVarToVList False lv [LstVar lv'] emptyBinding
+  = fromJust $ bindLVarToVList lv [LstVar lv'] emptyBinding
   where
     (is',js') = instLess bind vc vw is js
     lv' = LVbl v is' js'
@@ -1590,18 +1584,18 @@ mkFloatingBinding vts bind substEqv vs
     qLVB' bind lv@(LVbl (Vbl i _ _) _ _)
       | null lvEquivs
           = fromJust
-              $ bindLVarToVList True lv [floatingLV lv i] bind
+              $ bindLVarToVList lv [floatingLV lv i] bind
       | otherwise
          = case bindSizes of
              [] -> fromJust
-                      $ bindLVarToVList True lv
+                      $ bindLVarToVList lv
                           [floatingLV lv i] bind
-             [0] -> fromJust $ bindLVarToVList True lv [] bind
+             [0] -> fromJust $ bindLVarToVList lv [] bind
              [1] -> fromJust
-                      $ bindLVarToVList True lv
+                      $ bindLVarToVList lv
                           [floatingLV lv i] bind
              [n] -> fromJust
-                      $ bindLVarToVList True lv
+                      $ bindLVarToVList lv
                           (map (floatingLV lv . fIn i) [1..n]) bind
              bs -> error $ unlines
                     ["mkFloatingBinding : equiv class has multiple sizes"
@@ -1673,7 +1667,7 @@ genFresh free bind fresh (gv:gvs)
     fgv' = genFreshGVar free 1 $ sinkGV gv
     fgv's = S.singleton fgv'
     free' = free `S.union` fgv's
-    bind' = fromJust (bindGVarToGVar True gv fgv' emptyBinding)
+    bind' = fromJust (bindGVarToGVar gv fgv' emptyBinding)
             `mergeBindings` bind
     fresh' = fresh `S.union` fgv's
 

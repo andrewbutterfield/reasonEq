@@ -749,7 +749,7 @@ bindLVarToVList lv@(LVbl (Vbl i vc Static) is ij) vl (BD (vbind,sbind,lbind))
           case feasibility of
             Nothing -> return $ BD (vbind,sbind,lbind')
             Just (vs,lv')
-             -> do bind' <- attemptFeasibleBinding vs lv'
+             -> do bind' <- attemptFeasibleBinding lv lv'
                                                    (BD (vbind,sbind,lbind'))
                    return bind'
  | otherwise = fail "bindLVarToVList: Static incompatibility"
@@ -761,14 +761,14 @@ all of which have the same class and temporality as itself.
 \begin{code}
 bindLVarToVList lv@(LVbl (Vbl i vc vw) is ij) vl (BD (vbind,sbind,lbind))
  | valid
-    = do feasibility <- feasibleSelfReference lv vl
+    = do feasibility <- feasibleSelfReference (pdbg "bLV2VL.lv" lv) $ pdbg "bLV2VL.vl" vl
          sbind' <- bindSubscriptToSubscript "bindLVarToVList(1)" vw vlw sbind
          lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(2)")
                             (i,vc,is,ij) (BL $ map dnGVar vl) lbind
          case feasibility of
            Nothing -> return $ BD (vbind,sbind',lbind')
            Just (vs,lv')
-            -> do bind' <- attemptFeasibleBinding (pdbg "AFB.vs" vs) (pdbg "AFB.lv'" lv')
+            -> do bind' <- attemptFeasibleBinding lv (pdbg "bLV2VL.lv'" lv')
                                                   (BD (vbind,sbind',lbind'))
                   return bind'
  | otherwise = fail "bindLVarToVList: dynamic incompatibility"
@@ -1006,28 +1006,40 @@ we look at simple cases:
 \end{itemize}
 
 \begin{code}
-attemptFeasibleBinding :: Monad m => VarList -> ListVar -> Binding
-                       -> m Binding
+attemptFeasibleBinding :: Monad m
+                       => ListVar  -- original list-variable being bound
+                       -> ListVar  -- simplified self-reference
+                       -> Binding -> m Binding
 
-attemptFeasibleBinding [StdVar v@(Vbl vi vc vw)]
-                       lw@(LVbl _ [i] []) (BD (vbind,sbind,lbind))
+-- case1  std -> std
+attemptFeasibleBinding lV@(LVbl (Vbl _ vc vw) [vi] [])
+                       lW@(LVbl _ [wi] [])
+                       (BD (vbind,sbind,lbind))
   = do vbind' <- insertDR (rangeEq "bindVarToVar(feasible)")
-                          (vi,vc) (BV $ Vbl i vc vw) vbind
+                          (vi,vc) (BV $ Vbl wi vc $ dnWhen vw) vbind
        return $ BD  (vbind',sbind,lbind)
 
-attemptFeasibleBinding [LstVar lv@(LVbl (Vbl vi vc vw) is ij)]
-                       lw@(LVbl _ [] [j]) (BD (vbind,sbind,lbind))
+-- case2 lst -> gens
+attemptFeasibleBinding lV@(LVbl (Vbl _ vc vw) [] [vj])
+                       lW@(LVbl _ wis wjs)
+                       (BD (vbind,sbind,lbind))
   = do lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(feasible)")
-                          (vi,vc,is,ij)
-                          (BL [LstVar $ LVbl (Vbl j vc $ dnWhen vw) [] []])
+                          (vj,vc,[],[])
+                          (BL (wvs++wlvs))
                           lbind
        return $ BD  (vbind,sbind,lbind')
+  where
+    vw' = dnWhen vw
+    wvs = map (mkv vc vw') wis
+    wlvs = map (mklv vc vw') wjs
+    mkv vc vw wi  = StdVar $ Vbl wi vc vw
+    mklv vc vw wj = LstVar $ LVbl (Vbl wj vc vw) [] []
 
-attemptFeasibleBinding vl lv _
+attemptFeasibleBinding lV lW _
  = fail $ unlines'
     [ "feasibleBinding too complex!"
-    , "vl = " ++ show vl
-    , "lv = " ++ show lv
+    , "lV = " ++ show lV
+    , "lW = " ++ show lW
     ]
 \end{code}
 
@@ -1126,7 +1138,7 @@ bindLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind))
           case feasibility of
             Nothing -> return $ BD (vbind,sbind,lbind')
             Just (vs',lv')
-             -> do bind' <-  attemptFeasibleBinding vs' lv'
+             -> do bind' <-  attemptFeasibleBinding lv lv'
                                                     (BD (vbind,sbind,lbind'))
                    return bind'
  | otherwise = fail $ unlines'
@@ -1147,7 +1159,7 @@ bindLVarToVSet lv@(LVbl (Vbl i vc vw) is ij) vs (BD (vbind,sbind,lbind))
          case feasibility of
            Nothing -> return $ BD (vbind,sbind',lbind')
            Just (vs',lv')
-            -> do bind' <-  attemptFeasibleBinding vs' lv'
+            -> do bind' <-  attemptFeasibleBinding lv lv'
                                                    (BD (vbind,sbind',lbind'))
                   return bind'
  | otherwise = fail "bindLVarToVSet: incompatible dynamic temporality."
@@ -1214,6 +1226,8 @@ bindLVarSTuples (lv2:lv2s) bind
 A list variable denoting a replacement(-list) in a substitution
 may bind to a sequence of candidate replacement terms,
 and list-variables.
+As for \texttt{bindLVarToVList} above,
+we will need to look out for list-variables bound to lesser versions
 \begin{code}
 bindLVarSubstRepl :: Monad m => ListVar -> [LVarOrTerm] -> Binding -> m Binding
 \end{code}

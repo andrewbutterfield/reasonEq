@@ -682,6 +682,10 @@ dnTerm' (Sub tk t sub)    =  Sub    tk (dnTerm' t) $ dnSub sub
 dnTerm' (Iter tk sa a sp p lvs) =  Iter tk sa a sp p (map dnLVar lvs)
 dnTerm' t                 =  t
 
+dnWhen Static   =  Static
+dnWhen Textual  =  Textual
+dnWhen _        =  Before
+
 dnVar v@(Vbl vi vc vw)
   | vw == Static || vw == Textual || vw == Before  =  v
   | otherwise                                      =  Vbl vi vc Before
@@ -744,12 +748,10 @@ bindLVarToVList lv@(LVbl (Vbl i vc Static) is ij) vl (BD (vbind,sbind,lbind))
                              (i,vc,is,ij) (BL vl) lbind
           case feasibility of
             Nothing -> return $ BD (vbind,sbind,lbind')
-            Just (vs,lv'@(LVbl (Vbl _ _ _) is' ij'))
-             -> do lbind'' <- insertDR (rangeEqvLSSub "bindLVarToVList(static-self)")
-                                       (i,vc,is',ij')
-                                       (BS (S.fromList (LstVar lv':vs)))
-                                       lbind'
-                   return $ BD (vbind,sbind,lbind'')
+            Just (vs,lv')
+             -> do bind' <- attemptFeasibleBinding vs lv'
+                                                   (BD (vbind,sbind,lbind'))
+                   return bind'
  | otherwise = fail "bindLVarToVList: Static incompatibility"
 \end{code}
 
@@ -765,12 +767,10 @@ bindLVarToVList lv@(LVbl (Vbl i vc vw) is ij) vl (BD (vbind,sbind,lbind))
                             (i,vc,is,ij) (BL $ map dnGVar vl) lbind
          case feasibility of
            Nothing -> return $ BD (vbind,sbind',lbind')
-           Just (vs,lv'@(LVbl (Vbl _ _ _) is' ij'))
-            -> do  lbind'' <- insertDR (rangeEqvLSSub "bindLVarToVList(2-self)")
-                                       (i,vc,is',ij')
-                                       (BS $ S.fromList $ map dnGVar (LstVar lv':vs))
-                                       lbind'
-                   return $ BD (vbind,sbind',lbind'')
+           Just (vs,lv')
+            -> do bind' <- attemptFeasibleBinding (pdbg "AFB.vs" vs) (pdbg "AFB.lv'" lv')
+                                                  (BD (vbind,sbind',lbind'))
+                  return bind'
  | otherwise = fail "bindLVarToVList: dynamic incompatibility"
  where
    (valid, vlw) = vlCompatible vc vw vl
@@ -880,12 +880,12 @@ is compatible with other bindings.
 feasibleSelfReference :: Monad m => ListVar -> VarList
                                  -> m (Maybe(VarList,ListVar))
 feasibleSelfReference lv vl
-  | null selfrefs  =  return Nothing
-  | feasibleListSizing (pdbg "fLS.lv" lv) (pdbg "fLS.others" otherVars) $ pdbg "fLS.finalSR" finalSR
+  | null $ pdbg "fSR.selfrefs" selfrefs  =  return Nothing
+  | feasibleListSizing lv (pdbg "fSR.otherVars" otherVars) $ pdbg "fSR.finalSR" finalSR
      = return $ Just (otherVars,finalSR)
   | otherwise      =  fail "bindLVarToVs: infeasible self-reference"
   where
-    (selfrefs,otherVars) = partition (selfref $ varOf lv) vl
+    (selfrefs,otherVars) = partition (selfref $ varOf $ pdbg "fSR.lv" lv) $ pdbg "sFR.vl" vl
     (sr1:srrest) = map theLstVar selfrefs
     combinedSR = selfRefCombine sr1 srrest
     finalSR = otherCombine otherVars combinedSR
@@ -913,7 +913,7 @@ otherCombine vl@(gv:_) (LVbl v is js)
     ( vlis, vljs ) = idsOf vl
 \end{code}
 
-\newpage
+
 Now we do the test for feasible sizing.
 We have a binding which is semantically the same as:
 $$
@@ -967,6 +967,7 @@ If the lhs is larger, then feasibility is possible if $X_L$
 is non-empty, as then it could add variables on the rhs to close the gap,
 or if $V_L$ is non-empty, which would remove variables on the lhs.
 
+\newpage
 We transform the kernel equation to
 $$
 W_S - V_S - X_S = 0
@@ -975,7 +976,7 @@ $$
 \begin{code}
 feasibleListSizing :: ListVar -> VarList -> ListVar -> Bool
 feasibleListSizing (LVbl _ v_S v_L) rvars (LVbl _ w_S w_L)
-  | (pdbg "fLS.KERNEL" kernel) < 0  =  wL > 0
+  | kernel < 0  =  wL > 0
   | kernel > 0  =  xL > 0 || vL > 0
   | otherwise   =  True
   where
@@ -988,6 +989,49 @@ feasibleListSizing (LVbl _ v_S v_L) rvars (LVbl _ w_S w_L)
     xL = length x_L
     wL = length w_L
 \end{code}
+
+We have a binding
+$
+  \lst O\less V
+  \mapsto
+  X\cup \lst O\less W
+$
+where $X$ and $W$ are disjoint that looks feasible.
+If so, then we can deduce another matching between $V$ and $W$.
+Rather than reproduce var-set to var-set matching here,
+we look at simple cases:
+\begin{itemize}
+  \item $V = \setof{v}$, and $W = \setof w$, with $v \mapsto w$
+  \item $V = \setof{\lst\ell}$, with $\lst\ell \mapsto W$.
+\end{itemize}
+
+\begin{code}
+attemptFeasibleBinding :: Monad m => VarList -> ListVar -> Binding
+                       -> m Binding
+
+attemptFeasibleBinding [StdVar v@(Vbl vi vc vw)]
+                       lw@(LVbl _ [i] []) (BD (vbind,sbind,lbind))
+  = do vbind' <- insertDR (rangeEq "bindVarToVar(feasible)")
+                          (vi,vc) (BV $ Vbl i vc vw) vbind
+       return $ BD  (vbind',sbind,lbind)
+
+attemptFeasibleBinding [LstVar lv@(LVbl (Vbl vi vc vw) is ij)]
+                       lw@(LVbl _ [] [j]) (BD (vbind,sbind,lbind))
+  = do lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(feasible)")
+                          (vi,vc,is,ij)
+                          (BL [LstVar $ LVbl (Vbl j vc $ dnWhen vw) [] []])
+                          lbind
+       return $ BD  (vbind,sbind,lbind')
+
+attemptFeasibleBinding vl lv _
+ = fail $ unlines'
+    [ "feasibleBinding too complex!"
+    , "vl = " ++ show vl
+    , "lv = " ++ show lv
+    ]
+\end{code}
+
+
 
 \newpage
 \subsubsection{Binding List-Variables to Variable-Sets}
@@ -1081,12 +1125,10 @@ bindLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind))
                              (i,vc,is,ij) (BS vs) lbind
           case feasibility of
             Nothing -> return $ BD (vbind,sbind,lbind')
-            Just (vs',lv'@(LVbl (Vbl _ _ _) is' ij'))
-             -> do lbind'' <- insertDR (rangeEqvLSSub "bindLVarToVSet(static-self)")
-                                       (i,vc,is',ij')
-                                       (BS $ S.fromList (LstVar lv':vs'))
-                                       lbind'
-                   return $ BD (vbind,sbind,lbind'')
+            Just (vs',lv')
+             -> do bind' <-  attemptFeasibleBinding vs' lv'
+                                                    (BD (vbind,sbind,lbind'))
+                   return bind'
  | otherwise = fail $ unlines'
                 [ "bindLVarToVSet: static cannot bind to any textual."
                 -- having a Textual in vs is not the only reason for failure!!!
@@ -1104,12 +1146,10 @@ bindLVarToVSet lv@(LVbl (Vbl i vc vw) is ij) vs (BD (vbind,sbind,lbind))
                             (i,vc,is,ij) (bvs vs) lbind
          case feasibility of
            Nothing -> return $ BD (vbind,sbind',lbind')
-           Just (vs',lv'@(LVbl (Vbl _ _ _) is' ij'))
-            -> do lbind'' <- insertDR (rangeEqvLSSub "bindLVarToVSet(static-self)")
-                                      (i,vc,is',ij')
-                                      (BS $ S.fromList (LstVar lv':vs'))
-                                      lbind'
-                  return $ BD (vbind,sbind',lbind'')
+           Just (vs',lv')
+            -> do bind' <-  attemptFeasibleBinding vs' lv'
+                                                   (BD (vbind,sbind',lbind'))
+                  return bind'
  | otherwise = fail "bindLVarToVSet: incompatible dynamic temporality."
  where
    (valid, vsw) = vsCompatible vc vw vs

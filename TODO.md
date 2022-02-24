@@ -4,10 +4,16 @@
 ## Most Urgent
 
  
-We really needs some iteration laws that allow us to convert
+We really needs some substitutions laws that allow us to convert
 `y'=y∧(O$'\x,y=O$\x,y)` to `(O$'\x=O$\x)`
+given that the top-level predicate is the p-var `:=`.
 
-An Iteration theory, perhaps? 
+The following axiom?
+
+```
+y$' = y$ ∧ ( O$'\x$,y$ = O$\x$,y$ )  ≡  ( O$'\x$ = O$\x$ )
+```
+
 
 
 ### Complete UTPBase proofs

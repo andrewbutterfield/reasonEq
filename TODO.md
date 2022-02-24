@@ -3,27 +3,6 @@
 
 ## Most Urgent
 
-Proof of `:=_unchanged` works, but is UNSOUND
-
-We (still) have a inconsistent binding
-
-For `tm 2 II_def` we observe
-
-```
-proof: tm 2 II_def
-@try.fbind:
-BD (fromList [((Id "=" 0,VP),BV (VR (Id "=" 0,VP,WS))),((Id "II" 0,VP),BV (VR (Id "II" 0,VP,WS))),((Id "land" 0,VP),BV (VR (Id "land" 0,VP,WS)))],fromList [],fromList [((Id "O" 0,VO,[],[]),BX [Right (V (E T) (VR (Id "y" 0,VO,WB))),Left (LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[]))])])
-Match against `II_def'[2]
-Binding: { = ⟼ =, II ⟼ II, ∧ ⟼ ∧, O$ ⟼ ⟨y, O$\x,y⟩ }
-Instantiated Law = II  ≡  y'=y∧(O$'\x,y=O$\x,y)
-Instantiated Law S.C. = ⊤
-Goal S.C. = ⊤
-Discharged Law S.C. = ⊤
-```
-
-Why isn't `feasibleSelfReference` called here?
-Because `bindLVarSubstRepl` is used for some of the bindings.
-
  
 We really needs some iteration laws that allow us to convert
 `y'=y∧(O$'\x,y=O$\x,y)` to `(O$'\x=O$\x)`

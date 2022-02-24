@@ -761,14 +761,14 @@ all of which have the same class and temporality as itself.
 \begin{code}
 bindLVarToVList lv@(LVbl (Vbl i vc vw) is ij) vl (BD (vbind,sbind,lbind))
  | valid
-    = do feasibility <- feasibleSelfReference (pdbg "bLV2VL.lv" lv) $ pdbg "bLV2VL.vl" vl
+    = do feasibility <- feasibleSelfReference lv vl
          sbind' <- bindSubscriptToSubscript "bindLVarToVList(1)" vw vlw sbind
          lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(2)")
                             (i,vc,is,ij) (BL $ map dnGVar vl) lbind
          case feasibility of
            Nothing -> return $ BD (vbind,sbind',lbind')
            Just (vs,lv')
-            -> do bind' <- attemptFeasibleBinding lv (pdbg "bLV2VL.lv'" lv')
+            -> do bind' <- attemptFeasibleBinding lv lv'
                                                   (BD (vbind,sbind',lbind'))
                   return bind'
  | otherwise = fail "bindLVarToVList: dynamic incompatibility"
@@ -880,12 +880,12 @@ is compatible with other bindings.
 feasibleSelfReference :: Monad m => ListVar -> VarList
                                  -> m (Maybe(VarList,ListVar))
 feasibleSelfReference lv vl
-  | null $ pdbg "fSR.selfrefs" selfrefs  =  return Nothing
-  | feasibleListSizing lv (pdbg "fSR.otherVars" otherVars) $ pdbg "fSR.finalSR" finalSR
+  | null selfrefs  =  return Nothing
+  | feasibleListSizing lv otherVars finalSR
      = return $ Just (otherVars,finalSR)
   | otherwise      =  fail "bindLVarToVs: infeasible self-reference"
   where
-    (selfrefs,otherVars) = partition (selfref $ varOf $ pdbg "fSR.lv" lv) $ pdbg "sFR.vl" vl
+    (selfrefs,otherVars) = partition (selfref $ varOf lv) vl
     (sr1:srrest) = map theLstVar selfrefs
     combinedSR = selfRefCombine sr1 srrest
     finalSR = otherCombine otherVars combinedSR
@@ -1227,7 +1227,7 @@ A list variable denoting a replacement(-list) in a substitution
 may bind to a sequence of candidate replacement terms,
 and list-variables.
 As for \texttt{bindLVarToVList} above,
-we will need to look out for list-variables bound to lesser versions
+we will need to look out for list-variable self-references.
 \begin{code}
 bindLVarSubstRepl :: Monad m => ListVar -> [LVarOrTerm] -> Binding -> m Binding
 \end{code}
@@ -1241,14 +1241,20 @@ bindLVarSubstRepl (LVbl (Vbl _ _ Textual) _ _) _ binds
 Static patterns bind to anything in the appropriate class,
 as per Fig.\ref{fig:utp-perm-class-bind}.
 \begin{code}
-bindLVarSubstRepl (LVbl (Vbl vi vc Static) is ij) cndTsVL (BD (vbind,sbind,lbind))
+bindLVarSubstRepl lv@(LVbl (Vbl vi vc Static) is ij) cndTsVL (BD (vbind,sbind,lbind))
  | all (validVarTermBinding vc) (map termkind cndTs)
-    = do lbind' <- insertDR (rangeEqvLSSub "bindLVarSubstRepl(static)")
+    = do feasibility <- feasibleSelfReference lv $ map LstVar cndVL
+         lbind' <- insertDR (rangeEqvLSSub "bindLVarSubstRepl(static)")
                             (vi,vc,is,ij) (BX cndTsVL) lbind
-         return $ BD (vbind,sbind,lbind')
+         case feasibility of
+           Nothing -> return $ BD (vbind,sbind,lbind')
+           Just (vs,lv')
+            -> do bind' <- attemptFeasibleBinding lv lv'
+                                                  (BD (vbind,sbind,lbind'))
+                  return bind'
  | otherwise  =  fail "bindLVarSubstRepl: incompatible variable and terms."
  where
-   cndTs = rights cndTsVL
+   (cndVL,cndTs) = partitionEithers cndTsVL
 \end{code}
 
 All remaining pattern cases are non-\texttt{Textual} dynamic variables.
@@ -1258,23 +1264,28 @@ predicate terms, all of whose dynamic variables have the same temporality.
 Dynamic observable and expression list-variables can only bind to
 expression terms, all of whose dynamic variables have the same temporality.
 \begin{code}
-bindLVarSubstRepl (LVbl (Vbl vi vc vt) is ij) cndTsVL (BD (vbind,sbind,lbind))
+bindLVarSubstRepl lv@(LVbl (Vbl vi vc vt) is ij) cndTsVL (BD (vbind,sbind,lbind))
  | vc == PredV && any isExpr cndTs
            =  fail "bindLVarSubstRepl: pred. l-var. cannot bind to expression."
  | vc /= PredV && any isPred cndTs
            =  fail "bindLVarSubstRepl: non-pred. l-var. cannot bind to predicate."
  | wsize  > 1  =  fail "bindLVarSubstRepl: p.-var. mixed term temporality."
- | wsize == 0  -- terms have no variables
-   = do lbind' <- insertDR (rangeEqvLSSub "bindLVarSubstRepl(pv1)")
-                           (vi,vc,is,ij) (BX (cndTsVL')) lbind
-        return $ BD (vbind,sbind,lbind')
- | otherwise
-    = do sbind' <- bindSubscriptToSubscript "bindLVarSubstRepl(1)" vt thectw sbind
-         lbind' <- insertDR (rangeEqvLSSub "bindLVarSubstRepl(2)")
+ | otherwise -- wsize == 0,1
+    = do feasibility <- feasibleSelfReference lv $ map LstVar cndVL
+         sbind' <- if wsize == 1
+                     then bindSubscriptToSubscript "bindLVarSubstRepl(sbind)"
+                                                   vt thectw sbind
+                     else return sbind
+         lbind' <- insertDR (rangeEqvLSSub "bindLVarSubstRepl(lbind)")
                             (vi,vc,is,ij) (BX (cndTsVL')) lbind
-         return $ BD (vbind,sbind',lbind')
+         case feasibility of
+           Nothing ->  return $ BD (vbind,sbind',lbind')
+           Just (vs,lv')
+            -> do bind' <- attemptFeasibleBinding lv lv'
+                                                  (BD (vbind,sbind',lbind'))
+                  return bind'
  where
-   cndTs = rights cndTsVL
+   (cndVL,cndTs) = partitionEithers cndTsVL
    ctws = temporalitiesOf cndTs
    wsize = S.size ctws
    thectw = S.elemAt 0 ctws

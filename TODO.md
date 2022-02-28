@@ -14,6 +14,21 @@ The following axiom?
 y$' = y$ ∧ ( O$'\x$,y$ = O$\x$,y$ )  ≡  ( O$'\x$ = O$\x$ )
 ```
 
+Can we generalise this a bit?
+
+```
+P(y$) ◊ P(O$\x$,y$)  ≡  P(O$\x$)
+```
+where `◊` is an associative and commutative binary logical operator,
+and `P(v)` is a term built over one or more of `v`, `v'`, and `v_s`,
+where we interpret `P(lv)` as `P(u) ◊ P(v) ◊ ... ◊ P(z)`,
+when `lv` expands as `{u,v,...,z}`.
+
+**Note:** our representation using substitution as the abstract syntax,
+requires `P(v)` to be a predicate 
+over precisely two dynamic instantiations of `v`.
+
+
 
 
 ### Complete UTPBase proofs

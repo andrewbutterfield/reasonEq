@@ -12,7 +12,7 @@ module UTPSignature (
 , i_refines, refines
 , i_cond, cond
 , i_seq, mkSeq
-, listwiseVTBinPred, listwiseVarBinPred
+, listwiseVarBinPred
 , i_asg, (.:=), (.::=), simassign
 , i_skip, skip
 , i_ndc, ndc
@@ -108,14 +108,20 @@ mkSeq p q    =  PCons False i_seq [p, q]
 \subsubsection{(Simultaneous) Assignement}
 $$ \lst x := \lst e $$
 \begin{code}
-listwiseVTBinPred :: [(Variable,Term)] -> [(ListVar,ListVar)] -> Substn
-listwiseVTBinPred vts lvlvs = jSubstn vts lvlvs
-
-listwiseVarBinPred :: [(Variable,Variable)] -> [(ListVar,ListVar)] -> Substn
-listwiseVarBinPred vvs lvlvs = listwiseVTBinPred (mapsnd var2term vvs) lvlvs
+listwiseVarBinPred :: TermKind -> Identifier -> Identifier
+                    -> [(Variable,Variable)] -> [(ListVar,ListVar)] -> Term
+listwiseVarBinPred tk na ni vvs lvlvs
+  | null vvs    =  doiter lvlvs
+  | null lvlvs  =  docons vvs
+  | otherwise   =  Cons tk True na [docons vvs,doiter lvlvs]
+  where
+    docons vvs = Cons tk True na $ map mkcons vvs
+    mkcons (v1,v2) = Cons tk True ni [var2term v1,var2term v2]
+    doiter lvlvs = Cons tk True na $ map mkiter lvlvs
+    mkiter (lv1,lv2) = Iter tk True na True ni [lv1,lv2]
 
 simassign :: [(Variable,Term)] -> [(ListVar,ListVar)] -> Term
-simassign vts lvlvs  =  Sub P p_asg $ listwiseVTBinPred vts lvlvs
+simassign vts lvlvs  =  Sub P p_asg $ jSubstn vts lvlvs
 
 (.:=) :: Variable -> Term -> Term
 i_asg        =  jId ":="

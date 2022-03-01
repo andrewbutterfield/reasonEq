@@ -507,10 +507,9 @@ axFusionDef
             )
             scTrue
   where
-    i_P           =  jId "P"
-    p_P           =  jVar P $ Vbl i_P PredV Static
-    fusion lvlvs  =  Sub P p_P $ listwiseVTBinPred [] lvlvs
+    fusion lvlvs  =  listwiseVarBinPred P land equals [] lvlvs
 \end{code}
+
 
 \newpage
 The following (\cite[Defn 2.3.1,p50]{UTP-book}) is now a conjecture:

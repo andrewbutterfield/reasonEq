@@ -28,13 +28,13 @@ CONJ = ASN (C P True (Id "equiv" 0) [S P (V P (VR (Id ":=" 0,VP,WS))) (SN (fromL
 SIDE = ([],fromList [])
 STRAT redboth
 BEGIN SEQZIP
-TERMZIP = (C P True (Id "land" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WA)),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB))],C P True (Id "land" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "y" 0,VO,WA)),V (E T) (VR (Id "y" 0,VO,WB))],I P True (Id "land" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[Id "x" 0,Id "y" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[])]]],[])
+TERMZIP = (I P True (Id "land" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[Id "x" 0,Id "y" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[])],[Cons' P True (Id "land" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "y" 0,VO,WA)),V (E T) (VR (Id "y" 0,VO,WB))]] [],Cons' P True (Id "land" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WA)),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB))]] []])
 BEGIN SEQUENT'
 SIDECOND = ([],fromList [])
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.:=_unchanged", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Rght, otherC = C P True (Id "land" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WA)),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB))],I P True (Id "land" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])]]}
 END SEQUENT'
 END SEQZIP
-FPATH: []
+FPATH: [2,2]
 BEGIN LIST STEPS
 (UseLaw (ByMatch MEL) "land_assoc" (BD (fromList [((Id "P" 0,VP),BT (C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WA)),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB))])),((Id "Q" 0,VP),BT (C P True (Id "=" 0) [V (E T) (VR (Id "y" 0,VO,WA)),V (E T) (VR (Id "y" 0,VO,WB))])),((Id "R" 0,VP),BT (I P True (Id "land" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[Id "x" 0,Id "y" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[])])),((Id "land" 0,VP),BV (VR (Id "land" 0,VP,WS)))],fromList [],fromList [])) [],ASN (C P True (Id "land" 0) [C P True (Id "land" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WA)),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB))],C P True (Id "=" 0) [V (E T) (VR (Id "y" 0,VO,WA)),V (E T) (VR (Id "y" 0,VO,WB))]],I P True (Id "land" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[Id "x" 0,Id "y" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[])]],([],fromList [])))
 (UseLaw (ByMatch MEL) ":=_def" (BD (fromList [((Id ":=" 0,VP),BV (VR (Id ":=" 0,VP,WS)))],fromList [],fromList [((Id "O" 0,VO,[],[Id "x" 0]),BL [GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[]))]),((Id "e" 0,VE,[],[]),BX [Right (V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB))),Right (V (E T) (VR (Id "y" 0,VO,WB)))]),((Id "x" 0,VO,[],[]),BL [GV (VR (Id "x" 0,VO,WB)),GV (VR (Id "y" 0,VO,WB))])])) [],ASN (S P (V P (VR (Id ":=" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB))),(VR (Id "y" 0,VO,WB),V (E T) (VR (Id "y" 0,VO,WB)))]) (fromList [])),([],fromList [])))

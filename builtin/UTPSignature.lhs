@@ -12,6 +12,7 @@ module UTPSignature (
 , i_refines, refines
 , i_cond, cond
 , i_seq, mkSeq
+, listwiseVTBinPred, listwiseVarBinPred
 , i_asg, (.:=), (.::=), simassign
 , i_skip, skip
 , i_ndc, ndc
@@ -24,6 +25,7 @@ import qualified Data.Set as S
 
 import NiceSymbols
 
+import Control (mapsnd)
 import Utilities
 import LexBase
 import Variables
@@ -79,38 +81,70 @@ r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
 
 \subsection{Base Language Operators}
 
+\subsubsection{Refinement}
+$$ P \sqsupseteq Q $$
 \begin{code}
 refines :: Term -> Term -> Term
 i_refines    =  jId "sqsupseteq"
 refines p q  =  PCons False i_refines [p, q]
+\end{code}
 
+\subsubsection{Conditionals}
+$$ P \cond b Q $$
+\begin{code}
 cond :: Term -> Term -> Term -> Term
 i_cond       =  jId "cond"
 cond p b q   =  PCons True i_cond [p, b, q]
+\end{code}
 
+\subsubsection{Sequential Composition}
+$$ P \seq Q $$
+\begin{code}
 mkSeq :: Term -> Term -> Term
 i_seq        =  jId ";"
 mkSeq p q    =  PCons False i_seq [p, q]
+\end{code}
+
+\subsubsection{(Simultaneous) Assignement}
+$$ \lst x := \lst e $$
+\begin{code}
+listwiseVTBinPred :: [(Variable,Term)] -> [(ListVar,ListVar)] -> Substn
+listwiseVTBinPred vts lvlvs = jSubstn vts lvlvs
+
+listwiseVarBinPred :: [(Variable,Variable)] -> [(ListVar,ListVar)] -> Substn
+listwiseVarBinPred vvs lvlvs = listwiseVTBinPred (mapsnd var2term vvs) lvlvs
+
+simassign :: [(Variable,Term)] -> [(ListVar,ListVar)] -> Term
+simassign vts lvlvs  =  Sub P p_asg $ listwiseVTBinPred vts lvlvs
 
 (.:=) :: Variable -> Term -> Term
 i_asg        =  jId ":="
 p_asg        =  jVar P $ Vbl i_asg PredV Static
-v .:= e      =  Sub P p_asg $ jSubstn [(v,e)] []
+v .:= e      =  simassign [(v,e)] []
 
 (.::=) :: ListVar -> ListVar -> Term
-lv .::= le   =  Sub P p_asg $ jSubstn [] [(lv,le)]
+lv .::= le   =  simassign [] [(lv,le)]
+\end{code}
 
-simassign :: [(Variable,Term)] -> [(ListVar,ListVar)] -> Term
-simassign vts lvlvs  =  Sub P p_asg $ jSubstn vts lvlvs
-
+\subsubsection{Skip}
+$$ \Skip $$
+\begin{code}
 skip :: Term
 i_skip  =  jId "II"
 skip    =  jVar P $ Vbl i_skip PredV Static
+\end{code}
 
+\subsubsection{Non-deterministic Choice}
+$$ P \sqcap Q $$
+\begin{code}
 ndc :: Term -> Term -> Term
 i_ndc    =  jId "sqcap"
 ndc p q  =  PCons True i_ndc [p, q]
+\end{code}
 
+\subsubsection{Abort and Miracle}
+$$ \bot \qquad \top $$
+\begin{code}
 abort :: Term
 i_abort  =  jId "bot"
 abort    =  jVar P $ Vbl i_abort PredV Static

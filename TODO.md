@@ -3,30 +3,34 @@
 
 ## Most Urgent
 
+
+**We want a property of ITERATIONS, not substitutions!!**
  
-We really needs some substitutions laws that allow us to convert
-`y'=y∧(O$'\x,y=O$\x,y)` to `(O$'\x=O$\x)`
-given that the top-level predicate is the p-var `:=`.
-
-The following axiom?
+Fun with `var_list_fusion`:
 
 ```
-y$' = y$ ∧ ( O$'\x$,y$ = O$\x$,y$ )  ≡  ( O$'\x$ = O$\x$ )
+x'=e∧(y'=y∧(O$'\x,y=O$\x,y))    ⊤
+
+Focus = []  Target (LHS): x'=e  ∧  (O$'\x=O$\x)
+
+
+proof: tm 1 var_list_fusion
+Match against `var_list_fusion'[1] failed!
+try match failed
+
+x'=e  ∧  (y'=y∧(O$'\x,y=O$\x,y)) :: P[O$\x$,y$,x$/O$'\x$,y$,x$']
+
+lnm[parts]=var_list_fusion[1]
+tP=P[O$\x$,y$,x$/O$'\x$,y$,x$']  ≡  P[O$\y$/O$'\y$]
+partsP=P[O$\x$,y$,x$/O$'\x$,y$,x$']
+tC=x'=e  ∧  (y'=y∧(O$'\x,y=O$\x,y))
+scC=⊤
+---
+tMatch: structural mismatch.
+tC = C P True (Id "land" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WA)),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB))],C P True (Id "land" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "y" 0,VO,WA)),V (E T) (VR (Id "y" 0,VO,WB))],I P True (Id "land" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[Id "x" 0,Id "y" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[])]]]
+tP = S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[Id "x" 0,Id "y" 0]),LV (VR (Id "O" 0,VO,WB),[],[Id "x" 0,Id "y" 0])),(LV (VR (Id "x" 0,VO,WA),[],[]),LV (VR (Id "x" 0,VO,WB),[],[]))]))
 ```
 
-Can we generalise this a bit?
-
-```
-P(y$) ◊ P(O$\x$,y$)  ≡  P(O$\x$)
-```
-where `◊` is an associative and commutative binary logical operator,
-and `P(v)` is a term built over one or more of `v`, `v'`, and `v_s`,
-where we interpret `P(lv)` as `P(u) ◊ P(v) ◊ ... ◊ P(z)`,
-when `lv` expands as `{u,v,...,z}`.
-
-**Note:** our representation using substitution as the abstract syntax,
-requires `P(v)` to be a predicate 
-over precisely two dynamic instantiations of `v`.
 
 
 

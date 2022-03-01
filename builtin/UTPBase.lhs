@@ -467,7 +467,52 @@ asgIntro = mkConsIntro i_asg apred11
 
 \subsubsection{UTP Assignment Laws}
 
+We start with another axiom that describes the ``fusion'' of predicates
+over lists of variables, structured in a particular way:
+$$
+  P(x_1,y_1) \diamond P(x_2,y_2) \diamond \dots \diamond P(x_n,y_n)
+$$
+Here $P(x_i,y_i)$ is a binary predicate
+whose only free variables are $x_i$ and $y_i$,
+while $\diamond$ is an associative and commutative
+binary propositional operator.
+We are interested in a form that mixes standard and \emph{known} list variables,
+and where, for any given $i$,
+that $(x_i,y_i)$ is equal to $(v,v')$ for some $v$:
+$$
+  \dots \diamond P(v,v') \diamond \dots \diamond P(O\less V,O'\less V) \diamond \dots
+$$
+By ``fusion'' we mean simplifying the above by observing that
+$\setof{v,O\less V}$ can be reduced to $\setof{O\less{(V\setminus\setof{v})}}$
+if $v \in V$.
+This leads to the following general axiom,
+in which all variables are list-variables:
+$$
+  \begin{array}{lll}
+     P(\lst x',\lst x)
+     \diamond
+     P(O' \less{\lst x,\lst y},O \less{\lst x,\lst y})
+     \defs
+     P(O' \less{\lst y},O \less{\lst y})
+     && \QNAME{var-list-fusion}
+  \end{array}
+$$ %\par\vspace{-8pt}
+\begin{code}
+axFusionDef
+  = preddef ("var" -.- "list" -.- "fusion")
+            ( fusion [ (lvx',lvx)
+                     , ( lO' `less` ([],[ix,iy]), (lO `less` ([],[ix,iy])) ) ]
+              ===
+              fusion [ ( lO' `less` ([],[iy]), (lO `less` ([],[iy])) ) ]
+            )
+            scTrue
+  where
+    i_P           =  jId "P"
+    p_P           =  jVar P $ Vbl i_P PredV Static
+    fusion lvlvs  =  Sub P p_P $ listwiseVTBinPred [] lvlvs
+\end{code}
 
+\newpage
 The following (\cite[Defn 2.3.1,p50]{UTP-book}) is now a conjecture:
 $$
   \begin{array}{lll}
@@ -813,6 +858,7 @@ utpBaseAxioms
       , axCondDef
       , axSeqDef
       , axAsgDef
+      , axFusionDef
       , axSkipDef
       , axNDCDef
       , axAbortDef, axMiracleDef

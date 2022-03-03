@@ -23,7 +23,16 @@ scC=⊤
 feasibleBinding too complex!
 lV = LV (VR (Id "O" 0,VO,WA),[],[Id "x" 0,Id "y" 0])
 lW = LV (VR (Id "O" 0,VO,WA),[Id "x" 0,Id "y" 0],[])
+bind =
+  BD ( fromList [ ( (Id "=" 0,VP),    BV (VR (Id "=" 0,VP,WS) ))
+                , ( (Id "land" 0,VP), BV (VR (Id "land" 0,VP,WS)))]
+     , fromList []
+     , fromList [ ( (Id "O" 0,VO,[],[Id "x" 0,Id "y" 0])
+                  , BL [GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[]))])
+                , ( (Id "x" 0,VO,[],[])
+                  , BX [Right (V (E T) (VR (Id "y" 0,VO,WB)))])])
 ```
+We have `O\x$,y$ -> O\x,y` and `x$ -> <y>`. We want `y$ -> <x>`.
 
 We might need to have a built-in simplifier!
 

@@ -1035,11 +1035,12 @@ attemptFeasibleBinding lV@(LVbl (Vbl _ vc vw) [] [vj])
     mkv vc vw wi  = StdVar $ Vbl wi vc vw
     mklv vc vw wj = LstVar $ LVbl (Vbl wj vc vw) [] []
 
-attemptFeasibleBinding lV lW _
+attemptFeasibleBinding lV lW bind
  = fail $ unlines'
     [ "feasibleBinding too complex!"
-    , "lV = " ++ show lV
-    , "lW = " ++ show lW
+    , "lV   =  " ++ show lV
+    , "lW   =  " ++ show lW
+    , "bind =\n  " ++ show bind
     ]
 \end{code}
 

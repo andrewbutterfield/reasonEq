@@ -32,7 +32,7 @@ module Variables
  , pattern PreExprs, pattern PrePreds
  , isPreListVar, isObsLVar, isExprLVar, isPredLVar
  , whatLVar, timeLVar
- , less
+ , less, lessVars, makeVars
  , GenVar, pattern StdVar, pattern LstVar
  , isStdV, isLstV, theStdVar, theLstVar
  , gvarClass, gvarWhen
@@ -305,10 +305,25 @@ whatLVar (LV (v,_,_)) = whatVar v
 timeLVar (LV (v,_,_)) = timeVar v
 \end{code}
 
+We provide a constructor to subtract (more) variables,
+which sorts them, as they are considered to be sets.
 \begin{code}
 less :: ListVar -> ([Identifier],[Identifier]) -> ListVar
 (LVbl v is ij) `less` (iv,il)
  = LVbl v (nub $ sort (is++iv)) (nub $ sort (is++il))
+\end{code}
+We also provide ways to get the subtracted variables back out:
+\begin{code}
+lessVars :: ListVar -> ([Variable],[ListVar])
+lessVars (LV (VR (vi,vc,vw),vis,lvis)) = makeVars vc vw vis lvis
+
+makeVars :: VarClass -> VarWhen -> [Identifier] -> [Identifier]
+         -> ([Variable],[ListVar])
+makeVars vc vw vis lvis
+  = ( map (mkv vc vw) vis, map (mklv vc vw) lvis )
+  where
+    mkv vc vw vi    =  VR (vi,vc,vw)
+    mklv vc vw lvi  =  LV (mkv vc vw lvi, [], [])
 \end{code}
 
 \newpage

@@ -518,7 +518,7 @@ varAsTerm v                =  V (E T) v
 
 Dropping a term (safely) to a variable:
 \begin{code}
-termAsVar :: Monad m => Term -> Variable
+termAsVar :: Monad m => Term -> m Variable
 termAsVar (V _ v) = return v
 termAsVar t = fail ("termAsVar: not a variable - "++show t)
 \end{code}

@@ -1001,8 +1001,23 @@ If so, then we can deduce another matching between $V$ and $W$.
 Rather than reproduce var-set to var-set matching here,
 we look at simple cases:
 \begin{itemize}
-  \item $V = \setof{v}$, and $W = \setof w$, with $v \mapsto w$
-  \item $V = \setof{\lst\ell}$, with $\lst\ell \mapsto W$.
+  \item
+    $V = \setof{v}$,
+    and $W = \setof w$,
+    which requires $v \mapsto w$.
+  \item
+    $V = \setof{\lst\ell}$,
+    which requires $\lst\ell \mapsto W$.
+  \item
+    $V = \setof{\lst\ell,\lst m}$,
+    and $W = \setof{w,x}$,
+    and $\lst\ell \mapsto \seqof{x}$,
+    which requires $\lst m \mapsto \seqof{w}$.
+    \\Generalising above:\\
+    $V = \setof{\lst\ell,\lst m}$,
+    and $X \subseteq W$,
+    and $\lst\ell \mapsto X$,
+    which requires $\lst m \mapsto W\setminus X$.
 \end{itemize}
 
 \begin{code}
@@ -1011,30 +1026,78 @@ attemptFeasibleBinding :: Monad m
                        -> ListVar  -- simplified self-reference
                        -> Binding -> m Binding
 
--- case1  std -> std
+\end{code}
+
+$V = \setof{v}$,
+and $W = \setof w$,
+which requires $v \mapsto w$.
+\begin{code}
 attemptFeasibleBinding lV@(LVbl (Vbl _ vc vw) [vi] [])
                        lW@(LVbl _ [wi] [])
                        (BD (vbind,sbind,lbind))
   = do vbind' <- insertDR (rangeEq "bindVarToVar(feasible)")
                           (vi,vc) (BV $ Vbl wi vc $ dnWhen vw) vbind
        return $ BD  (vbind',sbind,lbind)
+\end{code}
 
--- case2 lst -> gens
+$V = \setof{\lst\ell}$,
+which requires $\lst\ell \mapsto W$.
+\begin{code}
 attemptFeasibleBinding lV@(LVbl (Vbl _ vc vw) [] [vj])
                        lW@(LVbl _ wis wjs)
                        (BD (vbind,sbind,lbind))
-  = do lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(feasible)")
+  = do lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(feasible1)")
                           (vj,vc,[],[])
-                          (BL (wvs++wlvs))
+                          (BS $ S.fromList $(map StdVar wvs ++ map LstVar wlvs))
                           lbind
        return $ BD  (vbind,sbind,lbind')
   where
     vw' = dnWhen vw
-    wvs = map (mkv vc vw') wis
-    wlvs = map (mklv vc vw') wjs
-    mkv vc vw wi  = StdVar $ Vbl wi vc vw
-    mklv vc vw wj = LstVar $ LVbl (Vbl wj vc vw) [] []
+    (wvs,wlvs) = makeVars vc vw' wis wjs
+\end{code}
 
+\newpage
+
+$V = \setof{\lst\ell,\lst m}$,
+and $X \subseteq W$,
+and $\lst\ell \mapsto X$,
+which requires $\lst m \mapsto W\setminus X$.
+\begin{code}
+attemptFeasibleBinding lV@(LVbl (Vbl _ vc vw) [] js@[li,mi])
+                       lW@(LVbl _ wis wjs)
+                       bind@(BD (vbind,sbind,lbind))
+  | l_lvb /= Nothing
+    = do x <- getVarSet l_lvb
+         lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(feasible2)")
+                          (mi,vc,[],[])
+                          (BS (w S.\\ x))
+                          lbind
+         return $ BD  (vbind,sbind,lbind')
+  | m_lvb /= Nothing
+    = do x <- getVarSet m_lvb
+         lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(feasible3)")
+                          (li,vc,[],[])
+                          (BS (w S.\\ x))
+                          lbind
+         return $ BD  (vbind,sbind,lbind')
+  where
+    vw' = dnWhen vw
+    (wvs,wlvs) = makeVars vc vw' wis wjs
+    w = S.fromList (map StdVar wvs ++ map LstVar wlvs)
+    (_,[lvl,lvm]) = makeVars vc vw' [] js
+    l_lvb = lookupLstBind bind lvl
+    m_lvb = lookupLstBind bind lvm
+    getVarSet Nothing           =  fail "attemptFeasibleBinding logic error"
+    getVarSet (Just (BL vl))    =  return $ S.fromList vl
+    getVarSet (Just (BS vs))    =  return vs
+    getVarSet (Just (BX lvts))
+     | null ts    =  return $ S.fromList $ map LstVar lvs
+     | otherwise  =  fail ("getVarSet not for l-var+terms\n"++show lvts)
+     where (lvs,ts) = lvtmSplit lvts
+\end{code}
+
+Everything else is too complicated right now!
+\begin{code}
 attemptFeasibleBinding lV lW bind
  = fail $ unlines'
     [ "feasibleBinding too complex!"

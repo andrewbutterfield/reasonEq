@@ -115,10 +115,12 @@ listwiseVarBinPred tk na ni vvs lvlvs
   | null lvlvs  =  docons vvs
   | otherwise   =  Cons tk True na [docons vvs,doiter lvlvs]
   where
-    docons vvs = Cons tk True na $ map mkcons vvs
-    mkcons (v1,v2) = Cons tk True ni [varAsTerm v1,varAsTerm v2]
-    doiter lvlvs = Cons tk True na $ map mkiter lvlvs
-    mkiter (lv1,lv2) = Iter tk True na True ni [lv1,lv2]
+    docons [vv]       =  mkcons vv
+    docons vvs        =  Cons tk True na $ map mkcons vvs
+    mkcons (v1,v2)    =  Cons tk True ni [varAsTerm v1,varAsTerm v2]
+    doiter [lvlv]     =  mkiter lvlv
+    doiter lvlvs      =  Cons tk True na $ map mkiter lvlvs
+    mkiter (lv1,lv2)  =  Iter tk True na True ni [lv1,lv2]
 
 simassign :: [(Variable,Term)] -> [(ListVar,ListVar)] -> Term
 simassign vts lvlvs  =  Sub P p_asg $ jSubstn vts lvlvs

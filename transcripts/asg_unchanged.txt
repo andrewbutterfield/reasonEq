@@ -1,0 +1,30 @@
+:=_unchanged : (x := e)≡(x,y := e,y)
+by 'redboth'
+---
+(x := e)
+ = 'match-lhs :=_simple @[]'
+    { := ⟼ :=, e ⟼ «BI (Id "e" 0)», x ⟼ «BI (Id "x" 0)», O$\x ⟼ ⟨O$\x⟩ }
+x'=e∧(O$'\x=O$\x)
+
+   [switch left > right]
+
+(x,y := e,y)
+ = 'match-lhs :=_def @[]'
+    { := ⟼ :=, O$\x$ ⟼ ⟨O$\x,y⟩, e$ ⟼ ⟨e, y⟩, x$ ⟼ ⟨x,y⟩ }
+(x'=e∧y'=y)∧(O$'\x,y=O$\x,y)
+ = 'match-lhs land_assoc @[]'
+    { P ⟼ x'=e, Q ⟼ y'=y, R ⟼ (O$'\x,y=O$\x,y), ∧ ⟼ ∧ }
+x'=e∧(y'=y∧(O$'\x,y=O$\x,y))
+ = 'match-lhs var_list_fusion @[2]'
+    { = ⟼ =, ∧ ⟼ ∧, O$\x$,y$ ⟼ ⟨O$\x,y⟩, O$\y$ ⟼ ⟨O$\x⟩, x$ ⟼ ⟨y⟩, y$ ⟼ {x} }
+x'=e∧∧((O$'\x=O$\x))
+ = 'match-rhs :=_def @[]'
+    { := ⟼ :=, = ⟼ =, ∧ ⟼ ∧, O$\x$ ⟼ ⟨O$\x⟩, e$ ⟼ ⟨e⟩, x$ ⟼ ⟨x⟩ }
+(x := e)
+
+   [switch right > left]
+
+x'=e∧(O$'\x=O$\x)
+ = 'match-rhs :=_def @[]'
+    { := ⟼ :=, = ⟼ =, ∧ ⟼ ∧, O$\x$ ⟼ ⟨O$\x⟩, e$ ⟼ ⟨e⟩, x$ ⟼ ⟨x⟩ }
+(x := e)

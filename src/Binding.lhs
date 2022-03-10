@@ -1092,7 +1092,9 @@ attemptFeasibleBinding lV@(LVbl (Vbl _ vc vw) [] js@[li,mi])
     getVarSet (Just (BS vs))    =  return vs
     getVarSet (Just (BX lvts))
      | null ts    =  return $ S.fromList $ map LstVar lvs
-     | otherwise  =  fail ("getVarSet not for l-var+terms\n"++show lvts)
+     | otherwise  =  do tvs <- sequence $ map termAsVar ts
+                        return $ S.fromList
+                               $ (map StdVar tvs ++ map LstVar lvs)
      where (lvs,ts) = lvtmSplit lvts
 \end{code}
 

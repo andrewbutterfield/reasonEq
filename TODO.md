@@ -5,26 +5,20 @@
 
 
  
-Ongoing fun with `var_list_fusion`:
+Success (of a sort) in `transcripts/asg_unchanged.txt`
 
-```
-proof: tm 1 var_list_fusion
-Match against `var_list_fusion'[1] failed!
-try match failed
+We get RHS of `x'=e∧∧((O$'\x=O$\x))` and LHS of `x'=e∧(O$'\x=O$\x)`.
 
-y'=y  ∧  (O$'\x,y=O$\x,y) :: (x$'=x$)  ∧  (O$'\x$,y$=O$\x$,y$)
+Both match `x:= e`.
 
-lnm[parts]=var_list_fusion[1]
-tP=(x$'=x$)∧(O$'\x$,y$=O$\x$,y$)  ≡  ∧((O$'\y$=O$\y$))
-partsP=(x$'=x$)  ∧  (O$'\x$,y$=O$\x$,y$)
-tC=y'=y  ∧  (O$'\x,y=O$\x,y)
-scC=⊤
----
-getVarSet not for l-var+terms
-[Right (V (E T) (VR (Id "y" 0,VO,WB)))]
-hit <enter> to continue
-```
-We need to extract variable-only terms here as variables.
+They are not the same themselves.
+
+We need to collapse `∧((O$'\x=O$\x))` into `(O$'\x=O$\x)`.
+
+See `transcripts/asg_unchanged_AST.txt` 
+
+The `:=_simple` match uses a substitution. 
+The `var_list_fusion` match uses an iteration.
 
 We might need to have a built-in simplifier!
 

@@ -1,0 +1,56 @@
+
+( UseLaw (ByMatch MEL) "var_list_fusion"
+  (BD (fromList [ ((Id "=" 0,VP),    BV (VR (Id "=" 0,VP,WS)))
+                , ((Id "land" 0,VP), BV (VR (Id "land" 0,VP,WS)))
+                ]
+      ,fromList []
+      ,fromList [ ( (Id "O" 0,VO,[],[Id "x" 0,Id "y" 0])
+                  , BL [GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[]))]
+                  )
+                , ( (Id "O" 0,VO,[],[Id "y" 0])
+                  , BL [GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[]))]
+                  )
+                , ( (Id "x" 0,VO,[],[])
+                  , BX [Right (V (E T) (VR (Id "y" 0,VO,WB)))]
+                  )
+                , ( (Id "y" 0,VO,[],[])
+                  , BS (fromList [GV (VR (Id "x" 0,VO,WB))])
+                  )
+                ]
+      )
+  )
+  [2]
+, ASN ( C P True (Id "land" 0)
+          [ C P True (Id "=" 0)
+              [ V (E T) (VR (Id "x" 0,VO,WA))
+              , V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB))
+              ]
+          , C P True (Id "land" 0)
+              [ C P True (Id "=" 0)
+                  [ V (E T) (VR (Id "y" 0,VO,WA))
+                  , V (E T) (VR (Id "y" 0,VO,WB))
+                  ]
+              , I P True (Id "land" 0) True (Id "=" 0)
+                  [ LV (VR (Id "O" 0,VO,WA),[Id "x" 0,Id "y" 0],[])
+                  , LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[])
+                  ]
+              ]
+          ]
+      , ([],fromList [])
+      )
+)
+
+
+( UseLaw (ByMatch MEL) ":=_simple"
+   (BD (fromList [((Id ":=" 0,VP),BV (VR (Id ":=" 0,VP,WS))),((Id "e" 0,VE),BI (Id "e" 0)),((Id "x" 0,VO),BI (Id "x" 0))]
+       ,fromList []
+       ,fromList [((Id "O" 0,VO,[Id "x" 0],[]),BL [GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[]))])])
+   )
+   []
+, ASN ( S P (V P (VR (Id ":=" 0,VP,WS)))
+            (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB)))])
+                (fromList [])
+            )
+      , ([],fromList [])
+      )
+)

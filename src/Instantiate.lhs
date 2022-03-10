@@ -214,7 +214,7 @@ instTLGVar binding lv
       _ -> fail "instTLGVar: bound to sets."
 
 injV :: Variable -> LVarOrTerm
-injV = injTM . var2term
+injV = injTM . varAsTerm
 injGV :: GenVar -> LVarOrTerm
 injGV (StdVar v)   =  injV v
 injGV (LstVar lv)  =  injLV lv

@@ -116,7 +116,7 @@ listwiseVarBinPred tk na ni vvs lvlvs
   | otherwise   =  Cons tk True na [docons vvs,doiter lvlvs]
   where
     docons vvs = Cons tk True na $ map mkcons vvs
-    mkcons (v1,v2) = Cons tk True ni [var2term v1,var2term v2]
+    mkcons (v1,v2) = Cons tk True ni [varAsTerm v1,varAsTerm v2]
     doiter lvlvs = Cons tk True na $ map mkiter lvlvs
     mkiter (lv1,lv2) = Iter tk True na True ni [lv1,lv2]
 

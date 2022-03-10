@@ -23,7 +23,7 @@ module AST ( Type
            , pattern Val, pattern Var, pattern Cons
            , pattern Bnd, pattern Lam, pattern Cls
            , pattern Sub, pattern Iter, pattern Typ
-           , var,  eVar,  pVar, var2term
+           , var,  eVar,  pVar
            , bnd, eBnd, pBnd
            , lam,  eLam,  pLam
            , binderClass
@@ -33,7 +33,7 @@ module AST ( Type
            , pattern PBind, pattern PLam, pattern PSub, pattern PIter
            , pattern E2, pattern P2
            , termkind, isVar, isExpr, isPred, isAtomic
-           , theVar, theGVar, varAsTerm
+           , theVar, theGVar, varAsTerm, termAsVar
            , icomma, lvarCons
            , subTerms
            , mentionedVars, mentionedVarLists, mentionedVarSets
@@ -434,14 +434,6 @@ eVar t v = var (E t) v
 pVar   v = var P v
 \end{code}
 
-A smarter variable term builder,
-provided we don't mind an arbitrary type:
-\begin{code}
-var2term :: Variable -> Term
-var2term v |       isPredVar v  =  V P     v
-           | not $ isPredVar v  =  V (E T) v
-\end{code}
-
 \newpage
 All variables in a binder variable-set must have the same class.
 \begin{code}
@@ -522,6 +514,13 @@ Lifting a variable to a term:
 varAsTerm :: Variable -> Term
 varAsTerm v@(PredVar _ _)  =  V P     v
 varAsTerm v                =  V (E T) v
+\end{code}
+
+Dropping a term (safely) to a variable:
+\begin{code}
+termAsVar :: Monad m => Term -> Variable
+termAsVar (V _ v) = return v
+termAsVar t = fail ("termAsVar: not a variable - "++show t)
 \end{code}
 
 Using \texttt{Iter} for a construct built from a list of list-variables

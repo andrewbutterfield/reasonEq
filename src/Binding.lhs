@@ -1025,7 +1025,8 @@ attemptFeasibleBinding :: Monad m
                        => ListVar  -- original list-variable being bound
                        -> ListVar  -- simplified self-reference
                        -> Binding -> m Binding
-
+-- trivial case
+attemptFeasibleBinding (LVbl _ [] []) (LVbl _ [] []) bind  =  return bind
 \end{code}
 
 $V = \setof{v}$,
@@ -1611,7 +1612,9 @@ mkKnownBind bind vts gv
 
 mkKnownLstVarBind :: Binding -> ListVar -> Binding
 mkKnownLstVarBind bind lv@(LVbl v@(Vbl _ vc vw) is js)
-  = fromJust $ bindLVarToVList lv [LstVar lv'] emptyBinding
+  = case bindLVarToVList lv [LstVar lv'] emptyBinding of
+      Yes bind' -> bind'
+      But msgs -> error (unlines ("mkKLVB error":msgs))
   where
     (is',js') = instLess bind vc vw is js
     lv' = LVbl v is' js'

@@ -1,39 +1,13 @@
-@Candidate
-C
-P
-True
-(Id "land" 0)
-[ C
-  P
-  True
-  (Id "=" 0)
-  [ V (E T) (VR (Id "x" 0, VO, WA))
-  , V (E (TG (Id "Z" 0))) (VR (Id "e" 0, VE, WB)) ]
-, C
-  P
-  True
-  (Id "land" 0)
-  [ C
-    P
-    True
-    (Id "=" 0)
-    [ V (E T) (VR (Id "y" 0, VO, WA))
-    , V (E T) (VR (Id "y" 0, VO, WB)) ]
-  , I
-    P
-    True
-    (Id "land" 0)
-    True
-    (Id "=" 0)
-    [ LV (VR (Id "O" 0, VO, WA), [Id "x" 0, Id "y" 0], [])
-    , LV (VR (Id "O" 0, VO, WB), [Id "x" 0, Id "y" 0], []) ] ] ]
-@Pattern P[ O\x$,y$, x$ / O'\x$,y$, x$' ]
-S
-P
-(V P (VR (Id "P" 0, VP, WS)))
-( SN
-  ( {} )
-  ( { (LV (VR (Id "O" 0, VO, WA), [], [Id "x" 0, Id "y" 0])
-     , LV (VR (Id "O" 0, VO, WB), [], [Id "x" 0, Id "y" 0]))
-    , (LV (VR (Id "x" 0, VO, WA), [], [])
-     , LV (VR (Id "x" 0, VO, WB), [], [])) } ) )
+@partsP: ...
+@tC: ...
+
+@bK.trm: Exists O$_0 @ (P[O$_0/O$']) /\ (QO$_0/O$[])
+
+@bind: { ; -> ;, P -> (x:=e), Q -> (x:=f) }
+
+@bK.unbound: { O$, O$_0, O$' }
+
+@mKB(1).gv:
+GL (LV (VR (Id "O" 0,VO,WB),[],[]))
+@mKB(2).gv:
+GL (LV (VR (Id "O" 0,VO,WB),[],[]))

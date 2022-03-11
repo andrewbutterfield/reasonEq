@@ -3,16 +3,23 @@
 
 ## Most Urgent
 
+Latest issue  - relationship between `O$` etc and defined known names like `:=`
+and variables like `x` used in their definition
 
- 
-Success in `transcripts/asg_unchanged.txt`
+```
+((x := e);(x := f))≡(x := f[e/x])    O$⊇e, O$⊇f, O$⊇x
 
-We get RHS of `x'=e∧∧((O$'\x=O$\x))` and LHS of `x'=e∧(O$'\x=O$\x)`.
+Focus = [1]  Target (RHS): true
 
+proof: tm 1 ;_def
+Match against `;_def'[1]
+Binding: { ; ⟼ ;, P ⟼ (x := e), Q ⟼ (x := f), 0 ⟼ 0, O$ ⟼ ⟨O$⟩ }
+Instantiated Law = ((x := e);(x := f))  ≡  (∃ O$_0 • ((x := e))[O$_0/O$']∧((x := f))[O$_0/O$])
+Instantiated Law S.C. = O$,O$'⊇:=, O$,O$'⊇:=, fresh:O$_0
+Goal S.C. = O$⊇e, O$⊇f, O$⊇x
+Discharged Law S.C. = O$,O$'⊇:=, O$,O$'⊇:=, fresh:O$_0
+```
 
-The `:=_simple` match uses a substitution, as do any assignment laws.
-The `var_list_fusion` match uses an iteration, 
-because it is more general than just assignement.
 
 
 ### Complete UTPBase proofs

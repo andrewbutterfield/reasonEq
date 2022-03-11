@@ -5,22 +5,14 @@
 
 
  
-Success (of a sort) in `transcripts/asg_unchanged.txt`
+Success in `transcripts/asg_unchanged.txt`
 
 We get RHS of `x'=e∧∧((O$'\x=O$\x))` and LHS of `x'=e∧(O$'\x=O$\x)`.
 
-Both match `x:= e`.
 
-They are not the same themselves.
-
-We need to collapse `∧((O$'\x=O$\x))` into `(O$'\x=O$\x)`.
-
-See `transcripts/asg_unchanged_AST.txt` 
-
-The `:=_simple` match uses a substitution. 
-The `var_list_fusion` match uses an iteration.
-
-We might need to have a built-in simplifier!
+The `:=_simple` match uses a substitution, as do any assignment laws.
+The `var_list_fusion` match uses an iteration, 
+because it is more general than just assignement.
 
 
 ### Complete UTPBase proofs

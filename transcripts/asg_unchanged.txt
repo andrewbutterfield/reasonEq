@@ -16,7 +16,8 @@ x'=e∧(O$'\x=O$\x)
     { P ⟼ x'=e, Q ⟼ y'=y, R ⟼ (O$'\x,y=O$\x,y), ∧ ⟼ ∧ }
 x'=e∧(y'=y∧(O$'\x,y=O$\x,y))
  = 'match-lhs var_list_fusion @[2]'
-    { = ⟼ =, ∧ ⟼ ∧, O$\x$,y$ ⟼ ⟨O$\x,y⟩, O$\y$ ⟼ ⟨O$\x⟩, x$ ⟼ ⟨y⟩, y$ ⟼ {x} }
+    { = ⟼ =, ∧ ⟼ ∧
+    , O$\x$,y$ ⟼ ⟨O$\x,y⟩, O$\y$ ⟼ ⟨O$\x⟩, x$ ⟼ ⟨y⟩, y$ ⟼ {x} }
 x'=e∧∧((O$'\x=O$\x))
  = 'match-rhs :=_def @[]'
     { := ⟼ :=, = ⟼ =, ∧ ⟼ ∧, O$\x$ ⟼ ⟨O$\x⟩, e$ ⟼ ⟨e⟩, x$ ⟼ ⟨x⟩ }

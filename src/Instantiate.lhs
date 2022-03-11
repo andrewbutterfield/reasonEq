@@ -265,9 +265,9 @@ of a substitution.
 instSub :: Monad m => Binding -> Substn -> m Substn
 instSub binding (Substn ts lvs)
   = do ts'  <- instZip (instStdVar binding)  (instantiate binding) (S.toList ts)
-       ts'' <- sequence $ map getTheTargetVar $ pdbg "instSub.ts'" ts'
+       ts'' <- sequence $ map getTheTargetVar ts'
        vtlvss' <- instZip (instLLVar binding) (instLLVar binding) (S.toList lvs)
-       let (lvtlvss,rvtlvss) = unzip $ pdbg "instSub.vtlvss" vtlvss'
+       let (lvtlvss,rvtlvss) = unzip vtlvss'
        let (vtts,lvts) = unzip lvtlvss
        let (vtrs,lvrs) = unzip rvtlvss
        let lvs' = zip (concat lvts) (concat lvrs)

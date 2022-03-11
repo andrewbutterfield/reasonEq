@@ -428,7 +428,7 @@ and we generate names for these that make their floating nature visible.
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryInstantiateFloating vts tP partsP scP bind
       = case bindFloating vts bind tP of
-          Yes fbind  ->  tryInstantiate (pdbg "try.fbind" fbind) tP partsP scP
+          Yes fbind  ->  tryInstantiate fbind tP partsP scP
           But msgs
            -> But ([ "instantiate floating failed"
                    , ""

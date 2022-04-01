@@ -1,6 +1,6 @@
 \section{$\alpha$ Equivalence}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2021
+Copyright  Andrew Buttefield (c) 2021-22
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -97,13 +97,13 @@ along with a bijection between them.
 \begin{code}
 isAlphaEquivalent t1 t2 = isJust $ isAEquiv S.empty S.empty M.empty t1 t2
 
-alfaFail :: Monad m => m a
+alfaFail :: (Monad m, MonadFail m) => m a
 alfaFail = fail "not a-equiv"
 \end{code}
 
 We maintain the bound variables and the bijection at the general variable level.
 \begin{code}
-isAEquiv :: Monad m => VarSet -> VarSet -> (Map GenVar GenVar) -> Term -> Term
+isAEquiv :: (Monad m, MonadFail m) => VarSet -> VarSet -> (Map GenVar GenVar) -> Term -> Term
          ->    m (Map GenVar GenVar)
 \end{code}
 
@@ -249,7 +249,7 @@ Given a bijection, and two (bound) general variables,
 see if they are already noted, and add if not.
 Fail if they are mismatched.
 \begin{code}
-checkAlphaBijection :: Monad m => (Map GenVar GenVar) -> GenVar -> GenVar
+checkAlphaBijection :: (Monad m, MonadFail m) => (Map GenVar GenVar) -> GenVar -> GenVar
                     -> m (Map GenVar GenVar)
 
 checkAlphaBijection bij gv1 gv2
@@ -307,7 +307,7 @@ isAEquivLVLV bvs1 bvs2 bij (tlv1,rlv1) (tlv2,rlv2)
 
 Doing it with lists:
 \begin{code}
-listAEquiv :: Monad m
+listAEquiv :: (Monad m, MonadFail m)
            => ( VarSet -> VarSet -> (Map GenVar GenVar)
                 -> a -> a
                 -> m (Map GenVar GenVar) )
@@ -322,7 +322,7 @@ listAEquiv aeqv bvs1 bvs2 bij (t1:ts1) (t2:ts2)
 listAEquiv _ _ _ _ _ _ = alfaFail
 
 
-checkAlphaBijections :: Monad m => (Map GenVar GenVar) -> [GenVar] -> [GenVar]
+checkAlphaBijections :: (Monad m, MonadFail m) => (Map GenVar GenVar) -> [GenVar] -> [GenVar]
                      -> m (Map GenVar GenVar)
 
 checkAlphaBijections bij [] [] = return bij

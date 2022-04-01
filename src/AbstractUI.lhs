@@ -1,6 +1,6 @@
 \section{Abstract User-Interface}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2017--2021
+Copyright  Andrew Buttefield (c) 2017--2022
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -206,7 +206,7 @@ observeCompleteProofs args reqs
 \subsubsection{Modifying Settings}
 
 \begin{code}
-modifySettings :: Monad m => [String] -> REqState -> m REqState
+modifySettings :: (Monad m, MonadFail m) => [String] -> REqState -> m REqState
 modifySettings [name,value] reqs
   = case changeSettings name value (settings reqs) of
       But msgs  ->  fail $ unlines' msgs
@@ -217,7 +217,7 @@ modifySettings args reqs = fail "Expected setting short name and value"
 \subsubsection{Setting Current Theory}
 
 \begin{code}
-setCurrentTheory :: Monad m => String -> REqState -> m REqState
+setCurrentTheory :: (Monad m, MonadFail m) => String -> REqState -> m REqState
 setCurrentTheory thnm reqs
   = case getTheory thnm $ theories reqs of
       Nothing  ->  fail ("No theory named '"++thnm++"'.")
@@ -228,7 +228,7 @@ setCurrentTheory thnm reqs
 
 Easy, so long as we check for name clashes.
 \begin{code}
-newConjecture :: Monad m => String -> NmdAssertion -> REqState
+newConjecture :: (Monad m, MonadFail m) => String -> NmdAssertion -> REqState
               -> m REqState
 newConjecture thnm nasn reqs
   = case getTheory thnm $ theories reqs of
@@ -241,7 +241,7 @@ newConjecture thnm nasn reqs
 \subsubsection{Assuming Conjectures}
 
 \begin{code}
-assumeConjecture :: Monad m => String -> String -> REqState -> m REqState
+assumeConjecture :: (Monad m, MonadFail m) => String -> String -> REqState -> m REqState
 assumeConjecture thnm whichC reqs
   = case getTheory thnm thys of
       Nothing -> fail ("No theory named '"++thnm++"'.")
@@ -258,7 +258,7 @@ assumeConjecture thnm whichC reqs
 \subsubsection{Demoting Laws}
 
 \begin{code}
-demoteLaw :: Monad m => String -> String -> REqState -> m REqState
+demoteLaw :: (Monad m, MonadFail m) => String -> String -> REqState -> m REqState
 demoteLaw thnm whichL reqs
   = case getTheory thnm $ theories reqs of
       Nothing -> fail ("No theory named '"++thnm++"'.")
@@ -275,7 +275,7 @@ returning various items that need to be used by the concrete UI
 to collect arguments for the next call.
 
 \begin{code}
-newProof1 :: Monad m => Int -> REqState
+newProof1 :: (Monad m, MonadFail m) => Int -> REqState
           -> m ( NmdAssertion
                , [(String,Sequent)] ) -- named strategy list
 newProof1 i reqs
@@ -294,7 +294,7 @@ newProof1 i reqs
     thys = theories reqs
     thylist = fromJust $ getTheoryDeps currTh thys
 
-newProof2 :: Monad m => NmdAssertion -> [(String,Sequent)] -> Int -> REqState
+newProof2 :: (Monad m, MonadFail m) => NmdAssertion -> [(String,Sequent)] -> Int -> REqState
           -> m LiveProof
 newProof2 (nm,asn) strats six reqs
   = case nlookup six strats of
@@ -356,7 +356,7 @@ shadowFreeSub sc bvs (Substn es _)
 \subsubsection{Resuming a Proof}
 
 \begin{code}
-resumeProof :: Monad m => Int -> REqState -> m LiveProof
+resumeProof :: (Monad m, MonadFail m) => Int -> REqState -> m LiveProof
 resumeProof i reqs
   = case M.elems $ liveProofs reqs of
       []     ->  fail "No current live proofs."
@@ -404,7 +404,7 @@ completeProof reqs liveProof
 \subsubsection{Moving Focus Down}
 
 \begin{code}
-moveFocusDown :: Monad m => Int -> LiveProof -> m LiveProof
+moveFocusDown :: (Monad m, MonadFail m) => Int -> LiveProof -> m LiveProof
 moveFocusDown i liveProof
   = let (tz,seq') = focus liveProof
         i' = if i <= 0 then 1 else i
@@ -420,7 +420,7 @@ moveFocusDown i liveProof
 \subsubsection{Moving Focus Up}
 
 \begin{code}
-moveFocusUp :: Monad m => LiveProof -> m LiveProof
+moveFocusUp :: (Monad m, MonadFail m) => LiveProof -> m LiveProof
 moveFocusUp liveProof
   = let (tz,seq') = focus liveProof
         (ok,tz') = upTZ tz
@@ -435,7 +435,7 @@ moveFocusUp liveProof
 \subsubsection{Switching Consequent Focus}
 
 \begin{code}
-moveConsequentFocus :: Monad m => LiveProof -> m LiveProof
+moveConsequentFocus :: (Monad m, MonadFail m) => LiveProof -> m LiveProof
 moveConsequentFocus liveProof
   = let
       sz = focus liveProof
@@ -453,7 +453,7 @@ moveConsequentFocus liveProof
 \subsubsection{Focus into Hypotheses}
 
 \begin{code}
-moveFocusToHypothesis :: Monad m => Int -> LiveProof -> m LiveProof
+moveFocusToHypothesis :: (Monad m, MonadFail m) => Int -> LiveProof -> m LiveProof
 moveFocusToHypothesis i liveProof
   = let
       sz = focus liveProof
@@ -475,7 +475,7 @@ moveFocusToHypothesis i liveProof
 \subsubsection{Return Focus from Hypotheses}
 
 \begin{code}
-moveFocusFromHypothesis :: Monad m => LiveProof -> m LiveProof
+moveFocusFromHypothesis :: (Monad m, MonadFail m) => LiveProof -> m LiveProof
 moveFocusFromHypothesis liveProof
   = let
       sz = focus liveProof
@@ -511,7 +511,7 @@ matchFocus theSig ranking liveProof
 
 Second, matching a specific law.
 \begin{code}
-matchFocusAgainst :: Monad m => String -> LogicSig -> LiveProof -> m LiveProof
+matchFocusAgainst :: (Monad m, MonadFail m) => String -> LogicSig -> LiveProof -> m LiveProof
 matchFocusAgainst lawnm theSig liveProof
   = let (tz,_)      =  focus liveProof
         goalt       =  getTZ tz
@@ -560,7 +560,7 @@ in the replacement are floating,
 identify their possible replacements,
 and return those along with the match.
 \begin{code}
-applyMatchToFocus1 :: Monad m
+applyMatchToFocus1 :: (Monad m, MonadFail m)
                    => Int -> LiveProof
                    -> m ( Match       -- the chosen match
                         , [Variable]  -- unresolved floating variables
@@ -590,7 +590,7 @@ apply them to the replacements and side-conditions.
 We then try to discharge the side-condition.
 If successful, we replace the focus.
 \begin{code}
-applyMatchToFocus2 :: Monad m
+applyMatchToFocus2 :: (Monad m, MonadFail m)
                    => Match
                    -> [(Variable,Term)]   -- floating Variables -> Term
                    -> [(ListVar,VarList)] -- floating ListVar -> VarList
@@ -658,7 +658,7 @@ extendGoalSCCoverage lvvls (atmSCs,_)
     isCoverage (CoveredBy _ _)  =  True
     isCoverage _                =  False
 
-    xtndCoverage :: Monad m
+    xtndCoverage :: (Monad m, MonadFail m)
                  => [VarList] -- floating replacements
                  -> [AtmSideCond] -- extra side-conditions (so far)
                  -> [AtmSideCond] -- Law coverage side-conditions
@@ -677,7 +677,7 @@ extendGoalSCCoverage lvvls (atmSCs,_)
 \textbf{Deprecated. Should be done under the hood as required}
 
 \begin{code}
-normQuantFocus :: Monad m => Theories -> LiveProof -> m LiveProof
+normQuantFocus :: (Monad m, MonadFail m) => Theories -> LiveProof -> m LiveProof
 normQuantFocus thrys liveProof
  | conjSC liveProof == scTrue
    =  let (tz,seq') = focus liveProof
@@ -699,7 +699,7 @@ normQuantFocus thrys liveProof
 \subsubsection{Simplify Nested Quantifiers Substitution}
 
 \begin{code}
-nestSimpFocus :: Monad m => Theories -> LiveProof -> m LiveProof
+nestSimpFocus :: (Monad m, MonadFail m) => Theories -> LiveProof -> m LiveProof
 nestSimpFocus thrys liveProof
   = let (tz,seq') = focus liveProof
         dpath = fPath liveProof
@@ -720,7 +720,7 @@ nestSimpFocus thrys liveProof
 \subsubsection{Perform Substitution}
 
 \begin{code}
-substituteFocus :: Monad m => Theories -> LiveProof -> m LiveProof
+substituteFocus :: (Monad m, MonadFail m) => Theories -> LiveProof -> m LiveProof
 substituteFocus thrys liveProof
   = let (tz,seq') = focus liveProof
         dpath = fPath liveProof
@@ -764,7 +764,7 @@ observeKnownsInScope liveProof
 \subsubsection{Flattening and Grouping Associative Operators}
 
 \begin{code}
-flattenAssociative :: Monad m => Identifier -> LiveProof -> m LiveProof
+flattenAssociative :: (Monad m, MonadFail m) => Identifier -> LiveProof -> m LiveProof
 flattenAssociative opI liveProof
   = let (tz,seq') = focus liveProof
         t = getTZ tz
@@ -779,7 +779,7 @@ flattenAssociative opI liveProof
 
 
 \begin{code}
-groupAssociative :: Monad m => Identifier -> GroupSpec -> LiveProof
+groupAssociative :: (Monad m, MonadFail m) => Identifier -> GroupSpec -> LiveProof
                  -> m LiveProof
 groupAssociative opI gs liveProof
   = let (tz,seq') = focus liveProof
@@ -796,7 +796,7 @@ groupAssociative opI gs liveProof
 \subsubsection{Stepping back a proof step.}
 
 \begin{code}
-stepBack  :: Monad m => Int -> LiveProof -> m LiveProof
+stepBack  :: (Monad m, MonadFail m) => Int -> LiveProof -> m LiveProof
 stepBack i liveProof
   = return $ undoCalcStep liveProof
 \end{code}
@@ -833,7 +833,7 @@ We now get the law, and return it along with,
 all the unknown free variables in the law,
 and all the sub-terms of the complete proof goal.
 \begin{code}
-lawInstantiate2 :: Monad m
+lawInstantiate2 :: (Monad m, MonadFail m)
                 => [Law] -> Int -> LiveProof -> m (Law,[Variable],[Term])
 lawInstantiate2 rslaws i liveProof
   = do law@((lnm,asn),lprov) <- nlookup i rslaws
@@ -852,7 +852,7 @@ We now get back a pairing of each law unknown free-variable
 with one of the goal sub-terms, as well as the chosen law.
 This gives us enough to complete the instantiation.
 \begin{code}
-lawInstantiate3 :: Monad m
+lawInstantiate3 :: (Monad m, MonadFail m)
                 => Law -> [(Variable,Term)] -> LiveProof -> m LiveProof
 lawInstantiate3 law@((lnm,(Assertion lawt lsc)),lprov) varTerms liveProof
   = do lbind <- mkBinding emptyBinding varTerms
@@ -881,7 +881,7 @@ mkBinding bind ((v,t):rest)
 This should only be done in an assumption strategy
 that reduces all of the consequent.
 \begin{code}
-cloneHypothesis :: Monad m => Int -> Identifier -> LiveProof -> m LiveProof
+cloneHypothesis :: (Monad m, MonadFail m) => Int -> Identifier -> LiveProof -> m LiveProof
 cloneHypothesis i land liveProof
   = let
       (tz,seq') = focus liveProof
@@ -901,7 +901,7 @@ cloneHypothesis i land liveProof
 
 -- stepEquivalenceTheorem args
 \begin{code}
-stepEquivalenceTheorem :: Monad m => String -> (REqState, LiveProof)
+stepEquivalenceTheorem :: (Monad m, MonadFail m) => String -> (REqState, LiveProof)
                        -> m (Maybe String,(REqState, LiveProof))
 stepEquivalenceTheorem nm state@(reqs, liveProof)
  | strat /= reduceAll

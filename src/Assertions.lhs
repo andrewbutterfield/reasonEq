@@ -1,6 +1,6 @@
 \section{Assertions}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2021
+Copyright  Andrew Buttefield (c) 2021-22
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -173,7 +173,7 @@ pattern AssnC sc         <-  ASN (_,  sc)
 We make an assertion by checking side-condition safety,
 and then returning the assertion or signalling failure.
 \begin{code}
-mkAsn :: Monad m => Term -> SideCond -> m Assertion
+mkAsn :: (Monad m, MonadFail m) => Term -> SideCond -> m Assertion
 mkAsn tm sc
   | safeSideCondition tm sc  = return $ ASN (tm, sc)
   | otherwise                = fail msg

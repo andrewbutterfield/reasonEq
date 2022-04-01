@@ -1,6 +1,6 @@
 \section{\reasonEq\ State}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2017--21
+Copyright  Andrew Buttefield (c) 2017--22
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -167,7 +167,7 @@ showSettings rsettings
 \end{code}
 
 \begin{code}
-changeSettings :: Monad m => String -> String -> REqSettings -> m REqSettings
+changeSettings :: (Monad m, MonadFail m) => String -> String -> REqSettings -> m REqSettings
 changeSettings name valstr rqset
   = case lookupSettingShort name rEqSettingStrings of
       Nothing -> fail ("No such setting: "++name)
@@ -180,7 +180,7 @@ lookupSettingShort n (sss@(s,_,_):ssss)
 \end{code}
 
 \begin{code}
-changeSetting :: Monad m => SettingStrings  -> String -> REqSettings
+changeSetting :: (Monad m, MonadFail m) => SettingStrings  -> String -> REqSettings
                          -> m REqSettings
 changeSetting (short,typ,_) valstr reqs
  | typ == "Bool"    =  changeBoolSetting short (readBool valstr) reqs
@@ -189,7 +189,7 @@ changeSetting (short,typ,_) valstr reqs
 \end{code}
 
 \begin{code}
-changeBoolSetting :: Monad m => String  -> Bool -> REqSettings -> m REqSettings
+changeBoolSetting :: (Monad m, MonadFail m) => String  -> Bool -> REqSettings -> m REqSettings
 changeBoolSetting name value reqs
  | name == "mht"  =  return $ hideTrivialMatch_ value reqs
  | name == "mhq"  =  return $ hideTrivialQuantifiers_ value reqs
@@ -198,7 +198,7 @@ changeBoolSetting name value reqs
 \end{code}
 
 \begin{code}
-changeNumberSetting :: Monad m => String  -> Int -> REqSettings -> m REqSettings
+changeNumberSetting :: (Monad m, MonadFail m) => String  -> Int -> REqSettings -> m REqSettings
 changeNumberSetting name value reqs
  | name == "mmd"  =  return $ maxMatchDisplay_ value reqs
  | otherwise        =  fail ("changeNumberSetting - unknown field: "++name)
@@ -222,7 +222,7 @@ writeREqSettings rqset
     , mhfKey ++ show (hideFloatingVariables rqset)
     , reqsetTRL ]
 
-readREqSettings :: Monad m => [String] -> m (REqSettings, [String])
+readREqSettings :: (Monad m, MonadFail m) => [String] -> m (REqSettings, [String])
 readREqSettings [] = fail "readREqSettings: no text"
 readREqSettings txts
   = do rest1 <- readThis reqsetHDR txts
@@ -304,7 +304,7 @@ writeREqState reqs
 
 We have to split this into two phases:
 \begin{code}
-readREqState1 :: Monad m => [String]
+readREqState1 :: (Monad m, MonadFail m) => [String]
               -> m ((REqSettings,LogicSig,[String]),[String])
 readREqState1 [] = fail "readREqState1: no text."
 readREqState1 txts
@@ -314,7 +314,7 @@ readREqState1 txts
        (thryNms,rest4) <- readTheories1 rest3
        return ((theSet,theSig,thryNms),rest4)
 
-readREqState2 :: Monad m => REqSettings ->  LogicSig -> [(String,Theory)]
+readREqState2 :: (Monad m, MonadFail m) => REqSettings ->  LogicSig -> [(String,Theory)]
               -> [String] -> m REqState
 readREqState2 _ _ _ [] = fail "readREqState2: no text."
 readREqState2 theSet theSig thMap txts

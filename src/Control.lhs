@@ -1,6 +1,6 @@
 \section{Control}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2019
+Copyright  Andrew Buttefield (c) 2019-22
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -135,7 +135,7 @@ defCombine sc cs b  = (b, reverse sc ++ cs)
 \newpage
 Matching many candidates against one pattern.
 \begin{code}
-manyToOne :: MonadPlus mp
+manyToOne :: (MonadPlus mp, MonadFail mp)
           => BasicM mp b c p
           -> Combine c b b'
           -> [c] -> p -> b
@@ -153,7 +153,7 @@ manyToOne' bf cf sc p b0 (c:cs)  =  (do b <- bf c p b0 ; return $ cf sc cs b)
 Matching many candidates against many patterns,
 looking for one-to-one matches.
 \begin{code}
-manyToMany :: MonadPlus mp
+manyToMany :: (MonadPlus mp, MonadFail mp)
            => BasicM mp b c p
            -> Combine c b b'
            -> [c] -> [p] -> b
@@ -179,7 +179,7 @@ defExtract = id
 Matching candidates against many patterns,
 looking for many-to-many matches from every pattern to a candidate.
 \begin{code}
-manyToMultiple :: MonadPlus mp
+manyToMultiple :: (MonadPlus mp, MonadFail mp)
                => BasicM mp b c p
                -> Combine c b b'
                -> Extract c b b'

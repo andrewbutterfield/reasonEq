@@ -1,6 +1,6 @@
 \section{Substitution}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2019
+Copyright  Andrew Buttefield (c) 2019-22
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -50,7 +50,7 @@ The latter two then invoke term substitution to do their work.
 \subsection{Term Substitution}
 
 \begin{code}
-substitute :: Monad m => Substn -> Term -> m Term
+substitute :: (Monad m, MonadFail m) => Substn -> Term -> m Term
 \end{code}
 \begin{eqnarray*}
    \vv v \ss {} {v^n} {t^n}  &\defs&  t^i \cond{\vv v=v^i} v,
@@ -137,7 +137,7 @@ Helper functions.
 
 
 \begin{code}
-captureAvoidance :: Monad m => VarSet -> Term -> Substn -> m Substn
+captureAvoidance :: (Monad m, MonadFail m) => VarSet -> Term -> Substn -> m Substn
 captureAvoidance vs tm sub
   = do let tfv = freeVars tm
        let (tgtvs,rplvs) = substRelFree tfv sub
@@ -145,7 +145,7 @@ captureAvoidance vs tm sub
        let knownVars = theFreeVars ( tfv `mrgFreeVars` rplvs )
        mkFresh knownVars [] [] needsRenaming
 
-mkFresh :: Monad m
+mkFresh :: (Monad m, MonadFail m)
         => VarSet
         -> [(Variable,Term)]
         -> [(ListVar,ListVar)]
@@ -215,7 +215,7 @@ is defined as follows:
 where $v^j \notin v^m$.
 
 \begin{code}
-substComp :: Monad m
+substComp :: (Monad m, MonadFail m)
           => Substn  -- 1st substitution performed
           -> Substn  -- 2nd substitution performed
           -> m Substn
@@ -257,7 +257,7 @@ lvSubstitute [] rlv  =  rlv
 We will have checks and balances for when $\alpha$-substitution is invoked
 from outside.
 \begin{code}
-alphaRename :: Monad m => [(Variable,Variable)]
+alphaRename :: (Monad m, MonadFail m) => [(Variable,Variable)]
                        -> [(ListVar,ListVar)]
                        -> Term
                        -> m Term
@@ -273,7 +273,7 @@ alphaRename vvs lls trm = fail "alphaRename not applicable"
 We have some checks to do, before we apply the $\alpha$-substitution
 to the quantifier body.
 \begin{code}
-checkAndBuildAlpha :: Monad m => [(Variable,Variable)]
+checkAndBuildAlpha :: (Monad m, MonadFail m) => [(Variable,Variable)]
                               -> [(ListVar,ListVar)]
                               -> VarSet
                               -> Term
@@ -305,7 +305,7 @@ alphaAsSubstn vmap lmap
 \paragraph{Domain Checking}~
 
 \begin{code}
-checkDomain :: Monad m => [(Variable,Variable)]  -- (tgt.v,rpl.v)
+checkDomain :: (Monad m, MonadFail m) => [(Variable,Variable)]  -- (tgt.v,rpl.v)
                        -> [(ListVar,ListVar)]    -- (tgt.lv,rpl.lv)
                        -> VarSet
                        -> m ()
@@ -323,7 +323,7 @@ checkDomain vvs lls qvs
 \paragraph{Freshness Checking}~
 
 \begin{code}
-checkFresh :: Monad m => ([(Variable,Variable)])  -- (tgt.v,rpl.v)
+checkFresh :: (Monad m, MonadFail m) => ([(Variable,Variable)])  -- (tgt.v,rpl.v)
                       -> [(ListVar,ListVar)]      -- (tgt.lv,rpl.lv)
                       -> Term
                       -> m ()

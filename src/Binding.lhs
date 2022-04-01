@@ -395,7 +395,7 @@ present. If not, the mapping is made.
 If present, then the update function checks if old and new
 are equivalent, and proposes what the new range element should be.
 \begin{code}
-insertDR :: (Show d, Show r, Ord d, Monad m)
+insertDR :: (Show d, Show r, Ord d, Monad m, MonadFail m)
          => UpdateCheck m d r
          -> d -> r -> Map d r
          -> m (Map d r)
@@ -408,7 +408,7 @@ insertDR rEqv d r binding
 
 The most common case is when equivalence needs to be equality:
 \begin{code}
-rangeEq :: (Show d, Show r, Ord d, Eq r, Monad m)
+rangeEq :: (Show d, Show r, Ord d, Eq r, Monad m, MonadFail m)
         => String -> UpdateCheck m d r
 rangeEq nAPI d binding r r0
  | r == r0    =  return r
@@ -425,7 +425,7 @@ rangeEq nAPI d binding r r0
 \subsubsection{Binding Subscript to Subscript}
 
 \begin{code}
-bindSubscriptToSubscript :: Monad m
+bindSubscriptToSubscript :: (Monad m, MonadFail m)
                          => String -> VarWhen -> VarWhen -> SubBinding
                          -> m SubBinding
 bindSubscriptToSubscript what (During m) (During n) sbind
@@ -445,7 +445,7 @@ bindSubscriptToSubscript what vw1 vw2 sbind
 \subsubsection{Binding Variable to Variable}
 
 \begin{code}
-bindVarToVar :: Monad m => Variable -> Variable -> Binding -> m Binding
+bindVarToVar :: (Monad m, MonadFail m) => Variable -> Variable -> Binding -> m Binding
 \end{code}
 
 
@@ -495,7 +495,7 @@ bindVarToVar dv@(Vbl vi vc vw) rv@(Vbl xi xc xw)
 
 Can be useful to bind a list of (pattern/candidate) variables pairs:
 \begin{code}
-bindVarsToVars :: Monad m => [(Variable, Variable)] -> Binding -> m Binding
+bindVarsToVars :: (Monad m, MonadFail m) => [(Variable, Variable)] -> Binding -> m Binding
 bindVarsToVars [] bind = return bind
 bindVarsToVars ((dv,rv):rest) bind
   = do bind' <- bindVarToVar dv rv bind
@@ -505,10 +505,10 @@ bindVarsToVars ((dv,rv):rest) bind
 Also useful is binding a (list of) pattern variable(s)
 to itself (themselves):
 \begin{code}
-bindVarToSelf :: Monad m => Variable -> Binding -> m Binding
+bindVarToSelf :: (Monad m, MonadFail m) => Variable -> Binding -> m Binding
 bindVarToSelf v bind = bindVarToVar v v bind
 
-bindVarsToSelves :: Monad m => [Variable] -> Binding -> m Binding
+bindVarsToSelves :: (Monad m, MonadFail m) => [Variable] -> Binding -> m Binding
 bindVarsToSelves [] bind = return bind
 bindVarsToSelves (v:vs) bind
   = do bind' <- bindVarToSelf v bind
@@ -522,7 +522,7 @@ bindVarsToSelves (v:vs) bind
 An observation or expression variable can bind to an expression
 while a predicate variable can only bind to a predicate.
 \begin{code}
-bindVarToTerm :: Monad m => Variable -> Term -> Binding -> m Binding
+bindVarToTerm :: (Monad m, MonadFail m) => Variable -> Term -> Binding -> m Binding
 \end{code}
 
 If we are binding to a term with variant \texttt{Var},
@@ -717,7 +717,7 @@ The reason for having special ``list-variables''
 is so we can refer to variable lists (and sets).
 Here we implement the corresponding binding.
 \begin{code}
-bindLVarToVList :: Monad m => ListVar -> VarList -> Binding
+bindLVarToVList :: (Monad m, MonadFail m) => ListVar -> VarList -> Binding
                            -> m Binding
 \end{code}
 We have two orthogonal well-formedness criteria for any such binding
@@ -877,7 +877,7 @@ This is feasible if
 matching $V$ against $(W_S \cup W_L)$
 is compatible with other bindings.
 \begin{code}
-feasibleSelfReference :: Monad m => ListVar -> VarList
+feasibleSelfReference :: (Monad m, MonadFail m) => ListVar -> VarList
                                  -> m (Maybe(VarList,ListVar))
 feasibleSelfReference lv vl
   | null selfrefs  =  return Nothing
@@ -1021,7 +1021,7 @@ we look at simple cases:
 \end{itemize}
 
 \begin{code}
-attemptFeasibleBinding :: Monad m
+attemptFeasibleBinding :: (Monad m, MonadFail m)
                        => ListVar  -- original list-variable being bound
                        -> ListVar  -- simplified self-reference
                        -> Binding -> m Binding
@@ -1127,7 +1127,7 @@ then we update the set to be the list,
 or the list to be substitution replacement, in the binding.
 We require an equivalence for this:
 \begin{code}
-rangeEqvLSSub :: Monad m => String -> UpdateCheck m ListVarKey LstVarBind
+rangeEqvLSSub :: (Monad m, MonadFail m) => String -> UpdateCheck m ListVarKey LstVarBind
 \end{code}
 Variable Sets and Lists:
 \begin{code}
@@ -1195,7 +1195,7 @@ vsCompatible vc vw vs      =  vlComp vc vw S.empty (S.toList vs)
 \end{code}
 
 \begin{code}
-bindLVarToVSet :: Monad m => ListVar -> VarSet -> Binding -> m Binding
+bindLVarToVSet :: (Monad m, MonadFail m) => ListVar -> VarSet -> Binding -> m Binding
 
 bindLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind))
  | valid
@@ -1237,7 +1237,7 @@ bindLVarToVSet _ _ _ = fail "bindLVarToVSet: invalid lvar. -> vset binding."
 \end{code}
 
 \begin{code}
-overrideLVarToVSet :: Monad m => ListVar -> VarSet -> Binding -> m Binding
+overrideLVarToVSet :: (Monad m, MonadFail m) => ListVar -> VarSet -> Binding -> m Binding
 overrideLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind))
  | valid
     =  return $ BD (vbind,sbind, M.insert (i,vc,is,ij) (bvs vs) lbind)
@@ -1264,10 +1264,10 @@ bvs = BS . S.map dnGVar
 \newpage
 We also need some identity bindings:
 \begin{code}
-bindLVarToSSelf :: Monad m => ListVar -> Binding -> m Binding
+bindLVarToSSelf :: (Monad m, MonadFail m) => ListVar -> Binding -> m Binding
 bindLVarToSSelf lv bind = bindLVarToVSet lv (S.singleton $ LstVar lv) bind
 
-bindLVarsToSSelves :: Monad m => [ListVar] -> Binding -> m Binding
+bindLVarsToSSelves :: (Monad m, MonadFail m) => [ListVar] -> Binding -> m Binding
 bindLVarsToSSelves [] bind = return bind
 bindLVarsToSSelves (lv:lvs) bind
   = do bind' <- bindLVarToSSelf lv bind
@@ -1276,11 +1276,11 @@ bindLVarsToSSelves (lv:lvs) bind
 
 And binding pairs:
 \begin{code}
-bindLVarSTuple :: Monad m => (ListVar,ListVar) -> Binding -> m Binding
+bindLVarSTuple :: (Monad m, MonadFail m) => (ListVar,ListVar) -> Binding -> m Binding
 bindLVarSTuple (plv,clv) bind
                      = bindLVarToVSet plv (S.singleton $ LstVar clv) bind
 
-bindLVarSTuples :: Monad m => [(ListVar,ListVar)] -> Binding -> m Binding
+bindLVarSTuples :: (Monad m, MonadFail m) => [(ListVar,ListVar)] -> Binding -> m Binding
 bindLVarSTuples [] bind = return bind
 bindLVarSTuples (lv2:lv2s) bind
   = do bind' <- bindLVarSTuple lv2 bind
@@ -1296,7 +1296,7 @@ and list-variables.
 As for \texttt{bindLVarToVList} above,
 we will need to look out for list-variable self-references.
 \begin{code}
-bindLVarSubstRepl :: Monad m => ListVar -> [LVarOrTerm] -> Binding -> m Binding
+bindLVarSubstRepl :: (Monad m, MonadFail m) => ListVar -> [LVarOrTerm] -> Binding -> m Binding
 \end{code}
 
 A \texttt{Textual} pattern variable cannot bind to terms
@@ -1372,7 +1372,7 @@ bindLVarSubstRepl plv cndTsVL _
 
 A common use case:
 \begin{code}
-bindLVarToTList :: Monad m => ListVar -> [Term] -> Binding -> m Binding
+bindLVarToTList :: (Monad m, MonadFail m) => ListVar -> [Term] -> Binding -> m Binding
 bindLVarToTList lv ts = bindLVarSubstRepl lv (map Right ts)
 \end{code}
 
@@ -1383,7 +1383,7 @@ bindLVarToTList lv ts = bindLVarSubstRepl lv (map Right ts)
 An list-variable can bind to a singleton list of any general variable,
 while a standard-variable can only bind to a standard variable.
 \begin{code}
-bindGVarToGVar :: Monad m => GenVar -> GenVar -> Binding -> m Binding
+bindGVarToGVar :: (Monad m, MonadFail m) => GenVar -> GenVar -> Binding -> m Binding
 bindGVarToGVar (LstVar lv) gv binds = bindLVarToVList lv [gv] binds
 bindGVarToGVar (StdVar pv) (StdVar cv) binds = bindVarToVar pv cv binds
 bindGVarToGVar _ _ _ = fail "bindGVarToGVar: invalid stdvar. -> lstvar. binding."
@@ -1395,7 +1395,7 @@ An list-variable can bind to a list of any length,
 while a standard-variable can only bind to the standard variable inside
 a singleton list.
 \begin{code}
-bindGVarToVList :: Monad m => GenVar -> VarList -> Binding -> m Binding
+bindGVarToVList :: (Monad m, MonadFail m) => GenVar -> VarList -> Binding -> m Binding
 bindGVarToVList (LstVar lv) vl binds = bindLVarToVList lv vl binds
 bindGVarToVList (StdVar pv) [StdVar cv] binds = bindVarToVar pv cv binds
 bindGVarToVList _ _ _ = fail "bindGVarToVList: invalid gvar. -> vlist binding."
@@ -1461,7 +1461,7 @@ tlTempSync dn (Right tm)  =  Right $ termTempSync dn tm
 \subsubsection{Lookup (Standard) Variables}
 
 \begin{code}
-lookupVarBind :: Monad m => Binding -> Variable -> m VarBind
+lookupVarBind :: (Monad m, MonadFail m) => Binding -> Variable -> m VarBind
 lookupVarBind (BD (vbind,_,_)) v@(Vbl vi vc Static)
   = case M.lookup (vi,vc) vbind of
       Nothing  ->  fail ("lookupVarBind: Variable "++show v++" not found.")
@@ -1506,7 +1506,7 @@ lookupVarBind (BD (vbind,_,_)) v@(Vbl vi vc vw)
 
 List variable lookup is very similar:
 \begin{code}
-lookupLstBind :: Monad m => Binding -> ListVar -> m LstVarBind
+lookupLstBind :: (Monad m, MonadFail m) => Binding -> ListVar -> m LstVarBind
 
 lookupLstBind (BD (_,_,lbind)) lv@(LVbl (Vbl i vc Static) is ij)
   = case M.lookup (i,vc,is,ij) lbind of
@@ -1587,7 +1587,7 @@ findUnboundVars bind trm  =  mentionedVars trm S.\\ mappedVars bind
 \subsubsection{Instantiate Unbound Known Variables}
 
 \begin{code}
-bindKnown :: Monad m => [VarTable] -> Binding -> Term -> m Binding
+bindKnown :: (Monad m, MonadFail m) => [VarTable] -> Binding -> Term -> m Binding
 bindKnown vts bind trm
  = return kbind
  where
@@ -1802,7 +1802,7 @@ Another issue, what if some are unbound? Ignore for now.
 \subsubsection{Floating Instantiation}
 
 \begin{code}
-bindFloating :: Monad m => [VarTable] -> Binding -> Term -> m Binding
+bindFloating :: (Monad m, MonadFail m) => [VarTable] -> Binding -> Term -> m Binding
 bindFloating vts bind trm
  = return abind
  where
@@ -1952,7 +1952,7 @@ lstVarBind2LVar _   =  fail "LstVarBind not a single list-variable"
 \newpage
 Coerce an association list to the expected form:
 \begin{code}
-coerceAssocList :: Monad m => (b -> m c) -> [(a,b)] -> m [(a,c)]
+coerceAssocList :: (Monad m, MonadFail m) => (b -> m c) -> [(a,b)] -> m [(a,c)]
 coerceAssocList _ [] = return []
 coerceAssocList coerce ((a,b):abs)
   = do c <- coerce b

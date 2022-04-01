@@ -1,6 +1,6 @@
 \section{Variable Data}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2017-18
+Copyright  Andrew Buttefield (c) 2017-22
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -274,7 +274,7 @@ and will be added if required.
 \subsubsection{Inserting Known Constants}
 
 \begin{code}
-addKnownConst :: Monad m => Variable -> Term -> VarTable -> m VarTable
+addKnownConst :: (Monad m, MonadFail m) => Variable -> Term -> VarTable -> m VarTable
 \end{code}
 
 We no longer require free variables in a term entry
@@ -308,7 +308,7 @@ addKnownConst _ _ _ = fail "addKnownConst: not for Dynamic Variables."
 \subsubsection{Inserting Known Variables}
 
 \begin{code}
-addKnownVar :: Monad m => Variable -> Type -> VarTable -> m VarTable
+addKnownVar :: (Monad m, MonadFail m) => Variable -> Type -> VarTable -> m VarTable
 \end{code}
 
 Only static, textual and before/after variables can
@@ -332,7 +332,7 @@ addKnownVar var typ (VD (vtable,stable,dtable))
 \subsubsection{Inserting Generic Variables}
 
 \begin{code}
-addGenericVar :: Monad m => Variable -> VarTable -> m VarTable
+addGenericVar :: (Monad m, MonadFail m) => Variable -> VarTable -> m VarTable
 \end{code}
 
 For now we do not place any restrictions,
@@ -348,7 +348,7 @@ addGenericVar var vt@(VD (vtable,stable,dtable))
 \subsubsection{Inserting Instance Variables}
 
 \begin{code}
-addInstanceVar :: Monad m => Variable -> Variable -> VarTable -> m VarTable
+addInstanceVar :: (Monad m, MonadFail m) => Variable -> Variable -> VarTable -> m VarTable
 \end{code}
 
 We require that the variable we are inserting is not already present,
@@ -406,7 +406,7 @@ that works with lists, preserving order.
 
 \begin{code}
 checkVariableList
-  :: Monad m
+  :: (Monad m, MonadFail m)
   => VarTable  -- the table
   -> Variable -- the variable component of the list-variable about to be defined
   -> Bool     -- true if set-valued list-variables are allowed
@@ -447,7 +447,7 @@ checkVariableList vt lv@(Vbl i vc0 vw0) setsOK vl
 \subsubsection{Inserting Known Variable-List}
 
 \begin{code}
-addKnownVarList :: Monad m => Variable -> VarList -> VarTable -> m VarTable
+addKnownVarList :: (Monad m, MonadFail m) => Variable -> VarList -> VarTable -> m VarTable
 \end{code}
 
 Static List variables match lists of known variables
@@ -498,7 +498,7 @@ checkLVarListMap v vl
 \subsubsection{Inserting Known Variable-Set}
 
 \begin{code}
-addKnownVarSet :: Monad m => Variable -> VarSet -> VarTable -> m VarTable
+addKnownVarSet :: (Monad m, MonadFail m) => Variable -> VarSet -> VarTable -> m VarTable
 \end{code}
 See Variable-List insertion above.
 
@@ -536,7 +536,7 @@ addKnownVarSet lv@(Vbl i vc vw) vs vt@(VD (vtable,stable,dtable))
 \subsubsection{Inserting Abstract Variable-List}
 
 \begin{code}
-addAbstractVarList :: Monad m => Variable -> VarTable -> m VarTable
+addAbstractVarList :: (Monad m, MonadFail m) => Variable -> VarTable -> m VarTable
 
 addAbstractVarList lv@(Vbl _ _ Static) (VD (vtable,stable,dtable))
  = case M.lookup lv stable of
@@ -552,7 +552,7 @@ addAbstractVarList lv@(Vbl i vc vw) (VD (vtable,stable,dtable))
 \subsubsection{Inserting Abstract Variable-Set}
 
 \begin{code}
-addAbstractVarSet :: Monad m => Variable -> VarTable -> m VarTable
+addAbstractVarSet :: (Monad m, MonadFail m) => Variable -> VarTable -> m VarTable
 
 addAbstractVarSet lv@(Vbl _ _ Static) (VD (vtable,stable,dtable))
  = case M.lookup lv stable of
@@ -758,7 +758,7 @@ Here, we treat a list-variable,
 that has variables subtracted from it that are not part of its expansion,
 as being erroneous.
 \begin{code}
-expandKnown :: Monad m => [VarTable] -> ListVar -> m KnownExpansion
+expandKnown :: (Monad m, MonadFail m) => [VarTable] -> ListVar -> m KnownExpansion
 
 expandKnown vts lv@(LVbl v@(Vbl i vc vw) is js)
  = case lookupLVarTables vts v of
@@ -806,7 +806,7 @@ to take account for the known subtracted variables.
 This will fail if we are subtracting too much,
 or the wrong things.
 \begin{code}
-listRemove :: Monad m
+listRemove :: (Monad m, MonadFail m)
            => VarList -> [Variable] -> Int
            -> ( Int            -- no. of known vars
               , [Variable]     -- known vars
@@ -826,7 +826,7 @@ listRemove kvl expL eLen (n,kvr,uis,ujs)
 
 Doing it again, with sets
 \begin{code}
-setRemove  :: Monad m
+setRemove  :: (Monad m, MonadFail m)
            => VarSet -> (Set Variable) -> Int
            -> ( Int            -- no. of known vars
               , [Variable]     -- known vars

@@ -1,6 +1,6 @@
 \section{Free Variables}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2019--2021
+Copyright  Andrew Buttefield (c) 2019--2022
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -475,7 +475,7 @@ to Identifiers along with quantifier normalisation
 Function \texttt{nestSimplify} returns a simplified term
 if one of the laws above applies, otherwise it fails.
 \begin{code}
-nestSimplify :: Monad m => Term -> m Term
+nestSimplify :: (Monad m, MonadFail m) => Term -> m Term
 
 nestSimplify (Bnd tk1 n1 vs1 t1@(Bnd tk2 n2 vs2 t2))
  | tk1 /= tk2              =  fail ("nestSimplify: mixed bind term-kinds")

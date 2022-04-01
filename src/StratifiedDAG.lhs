@@ -1,6 +1,6 @@
 \section{Stratified DAGs}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2018
+Copyright  Andrew Buttefield (c) 2018-2022
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -58,7 +58,7 @@ type SDAG a       =  [SDAGLevel a]
 \subsection{SDAG Lookup}
 
 \begin{code}
-lkpSDAG :: (Eq a, Monad m) => a -> SDAG a -> m [a]
+lkpSDAG :: (Eq a, Monad m, MonadFail m) => a -> SDAG a -> m [a]
 lkpSDAG _ [] = fail "not found"
 lkpSDAG n (lvl:lvls) = lkpSDAG' n lvls lvl
 
@@ -103,7 +103,7 @@ mrg res@(nPresent,_,_) f  =  if nPresent then res else f res
 \subsubsection{Insertion}
 
 \begin{code}
-insSDAG :: (Eq a, Monad m)
+insSDAG :: (Eq a, Monad m, MonadFail m)
         => String -> String -> a -> [a] -> SDAG a
         -> m (SDAG a)
 insSDAG domain range n ns sdag

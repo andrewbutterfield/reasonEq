@@ -1,6 +1,6 @@
 \section{Live Proof Support}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2018-2021
+Copyright  Andrew Buttefield (c) 2018-2022
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -204,7 +204,7 @@ writeLiveProof lp
     writePerLine stepsKEY show (stepsSoFar lp) ++
     [ lprfTRL ]
 
-readLiveProof :: Monad m => [Theory] -> [String] -> m (LiveProof,[String])
+readLiveProof :: (Monad m, MonadFail m) => [Theory] -> [String] -> m (LiveProof,[String])
 readLiveProof thylist txts
   = do rest1          <- readThis lprfHDR          txts
        (thnm, rest2)  <- readKey (lpthKEY "") id   rest1
@@ -247,7 +247,7 @@ writeLiveProofs liveProofs
     writeMap liveproofs writeLiveProof liveProofs ++
     [ lprfsTRL ]
 
-readLiveProofs :: Monad m => [Theory] -> [String] -> m (LiveProofs,[String])
+readLiveProofs :: (Monad m, MonadFail m) => [Theory] -> [String] -> m (LiveProofs,[String])
 readLiveProofs thylist txts
   = do rest1         <- readThis lprfsHDR txts
        (lprfs,rest2) <- readMap liveproofs rdKey (readLiveProof thylist) rest1
@@ -520,7 +520,7 @@ Done.
 
 Looking up a law by name:
 \begin{code}
-findLaw :: Monad m => String -> [MatchContext] -> m (Law,[VarTable])
+findLaw :: (Monad m, MonadFail m) => String -> [MatchContext] -> m (Law,[VarTable])
 findLaw lnm [] = fail ("Law '"++lnm++"' not found")
 findLaw lnm ((thnm,lws,vts):mcs)
  = case filter (\law -> lawName law == lnm) lws of
@@ -530,7 +530,7 @@ findLaw lnm ((thnm,lws,vts):mcs)
 
 Finding `parts' of a top-level constructor:
 \begin{code}
-findParts :: Monad m => [Int] -> Term -> m Term
+findParts :: (Monad m, MonadFail m) => [Int] -> Term -> m Term
 findParts [] t = return t
 findParts parts (Cons tk sn n ts)
   = do ts' <- getParts (filter (>0) parts) ts
@@ -543,7 +543,7 @@ findParts parts t
 
 Assume all \texttt{Int}s are positive and non-zero
 \begin{code}
-getParts :: Monad m => [Int] -> [a] -> m [a]
+getParts :: (Monad m, MonadFail m) => [Int] -> [a] -> m [a]
 getParts [] xs = fail "getParts: no parts specified"
 getParts (p:_) [] = fail ("getParts: no parts from "++show p++" onwards")
 getParts [p] xs
@@ -577,7 +577,7 @@ matchLaws logicsig asn (_,lws,vts)
 
 Sometimes we are interested in a specific (named) law.
 \begin{code}
-matchLawByName :: Monad m => LogicSig -> Assertion -> String -> [MatchContext]
+matchLawByName :: (Monad m, MonadFail m) => LogicSig -> Assertion -> String -> [MatchContext]
                -> m Matches
 matchLawByName logicsig asn lnm mcs
  = do (law,vts) <- findLaw lnm mcs

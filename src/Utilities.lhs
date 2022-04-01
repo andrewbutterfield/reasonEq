@@ -1,6 +1,6 @@
 \section{Utilities}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2017
+Copyright  Andrew Buttefield (c) 2017-22
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -111,7 +111,7 @@ unlines' (s:ss) = s ++ '\n':unlines' ss
 
 \subsubsection{Get item from list, or fail trying}
 \begin{code}
-getitem :: (Eq a, Monad m) => a -> [a] -> m [a]
+getitem :: (Eq a, Monad m, MonadFail m) => a -> [a] -> m [a]
 getitem _ [] = fail "getitem: item not present"
 getitem a (x:xs)
  | a == x     =  return xs
@@ -121,7 +121,7 @@ getitem a (x:xs)
 
 \subsubsection{List lookup by number}
 \begin{code}
-nlookup :: Monad m => Int -> [a] -> m a
+nlookup :: (Monad m, MonadFail m) => Int -> [a] -> m a
 nlookup i things
  | i < 1 || null things  =  fail "nlookup: not found"
 nlookup 1 (thing:rest)   =  return thing
@@ -130,7 +130,7 @@ nlookup i (thing:rest)   =  nlookup (i-1) rest
 
 \subsubsection{Association-list lookup}
 \begin{code}
-alookup :: (Eq k, Monad m) => k -> [(k,d)] -> m d
+alookup :: (Eq k, Monad m, MonadFail m) => k -> [(k,d)] -> m d
 alookup k []   =  fail "alookup: not found"
 alookup k ((n,v):rest)
   | k == n     =  return v
@@ -197,7 +197,7 @@ splitLast (x:xs) = (x:xs',y) where (xs',y) = splitLast xs
 \end{code}
 
 \begin{code}
-splitAround :: (Eq a,Monad m) => a -> [a] -> m ([a],[a])
+splitAround :: (Eq a,Monad m, MonadFail m) => a -> [a] -> m ([a],[a])
 splitAround s xs
   = splitA s [] xs
   where
@@ -245,7 +245,7 @@ We return a triple, of the before-list (reversed), the chosen element,
 and the after list.
 This fails if the index does not correspond to a list position.
 \begin{code}
-peel :: Monad m => Int -> [a] -> m ([a],a,[a])
+peel :: (Monad m, MonadFail m) => Int -> [a] -> m ([a],a,[a])
 peel n xs = ent [] n xs
  where
    ent _ _ [] = fail ""
@@ -358,7 +358,7 @@ choose s
 Here is code for converting \texttt{[(a,b)]} to an injective \texttt{Map a b},
 failing if there are duplicate \texttt{b}s.
 \begin{code}
-injMap :: (Monad m, Ord a, Ord b) => [(a,b)] -> m (Map a b)
+injMap :: (Monad m, MonadFail m, Ord a, Ord b) => [(a,b)] -> m (Map a b)
 injMap abs
  | uniqueList (map snd abs)  =  return $ M.fromList abs
  | otherwise                 =  fail "injMap: range has duplicates"
@@ -442,7 +442,9 @@ instance Monad YesBut where
   return x        =  Yes x
   Yes x   >>= f   =  f x
   But msgs >>= f  =  But msgs
-  fail msg        =  But $ lines msg
+
+instance MonadFail YesBut where
+  fail msg  =  But $ lines msg
 
 instance Alternative YesBut where
   empty = But []
@@ -567,7 +569,7 @@ Internal list contents are sperated by (imaginary) whitespace,
 while external lists have internal lists as components,
 separated by commas.
 \begin{code}
-pContents :: Monad m
+pContents :: (Monad m, MonadFail m)
           => [[ShowTree]] -- completed internal lists
           -> [ShowTree]   -- internal list currently under construction
           -> [ShowTreeTok] -> m ([[ShowTree]], [ShowTreeTok])
@@ -602,7 +604,7 @@ pContents pairs app toks@(RPar:_)
 \newpage
 A recursive dive for a bracketed construct:
 \begin{code}
-pContainer :: Monad m
+pContainer :: (Monad m, MonadFail m)
            => ([ShowTree] -> ShowTree) -- STapp, STlist, or STpair
            -> ShowTreeTok              -- terminator, RSqr, or RPar
            -> [ShowTreeTok] -> m (ShowTree, [ShowTreeTok])

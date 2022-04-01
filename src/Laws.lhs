@@ -1,6 +1,6 @@
 \section{Laws}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2018--2021
+Copyright  Andrew Buttefield (c) 2018--2022
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -86,7 +86,7 @@ writeSignature theSig
     , orKEY    ++ show (theOr theSig)
     , logicTRL ]
 
-readSignature :: Monad m => [String] -> m (LogicSig,[String])
+readSignature :: (Monad m, MonadFail m) => [String] -> m (LogicSig,[String])
 readSignature [] = fail "readSignature: no text."
 readSignature txts
   = do rest1         <- readThis logicHDR txts
@@ -163,7 +163,7 @@ collectAnte imp t = ([],t)
 \subsection{Associative Grouping}
 
 \begin{code}
-flattenAssoc :: Monad m => Identifier -> Term -> m Term
+flattenAssoc :: (Monad m, MonadFail m) => Identifier -> Term -> m Term
 flattenAssoc assocI t@(Cons tk sI opI ts)
  | opI == assocI && length ts > 1
      =  return $ Cons tk sI opI $ assocFlatten opI t
@@ -188,7 +188,7 @@ data GroupSpec
 
 Then code to do it:
 \begin{code}
-groupAssoc :: Monad m => Identifier -> GroupSpec -> Term -> m Term
+groupAssoc :: (Monad m, MonadFail m) => Identifier -> GroupSpec -> Term -> m Term
 groupAssoc assocI gs (Cons tk sI opI ts)
  | opI == assocI && length ts > 2  =  groupAssoc' (mkOp tk sI opI) gs ts
 groupAssoc assocI _ _

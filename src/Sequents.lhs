@@ -1,6 +1,6 @@
 \section{Sequents}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2018
+Copyright  Andrew Buttefield (c) 2018-22
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -132,7 +132,7 @@ noHyps nm = Theory { thName   =  "H."++nm
    \mathcal L \vdash C \equiv \true
 \end{eqnarray*}
 \begin{code}
-reduce :: Monad m => LogicSig -> [Theory] -> NamedTermSC
+reduce :: (Monad m, MonadFail m) => LogicSig -> [Theory] -> NamedTermSC
        -> m (String, Sequent)
 reduce logicsig thys (nm,(t,sc))
   = return ( reduceAll, Sequent thys (noHyps nm) sc t $ theTrue logicsig )
@@ -150,7 +150,7 @@ reduceAll = "reduce"
    \mathcal L \vdash C_1 \equiv C_2
 \end{eqnarray*}
 \begin{code}
-redboth :: Monad m => LogicSig -> [Theory] -> NamedTermSC
+redboth :: (Monad m, MonadFail m) => LogicSig -> [Theory] -> NamedTermSC
         -> m (String, Sequent)
 redboth logicsig thys (nm,(t@(Cons tk sb i [tl,tr]),sc))
   | i == theEqv logicsig
@@ -176,7 +176,7 @@ bEqv sn n ps = Cons P sn n ps
    \mathcal L \vdash (C_2 \equiv \dots \equiv C_n) \equiv C_1
 \end{eqnarray*}
 \begin{code}
-redtail :: Monad m => LogicSig -> [Theory] -> NamedTermSC
+redtail :: (Monad m, MonadFail m) => LogicSig -> [Theory] -> NamedTermSC
         -> m (String, Sequent)
 redtail logicsig thys (nm,(t@(Cons tk si i (c1:cs@(_:_))),sc))
   | i == theEqv logicsig
@@ -195,7 +195,7 @@ reduceToLeftmost = "redtail"
 \end{eqnarray*}
 We prefer to put the smaller simpler part on the right.
 \begin{code}
-redinit :: Monad m => LogicSig -> [Theory] -> NamedTermSC
+redinit :: (Monad m, MonadFail m) => LogicSig -> [Theory] -> NamedTermSC
         -> m (String, Sequent)
 redinit logicsig thys (nm,(t@(Cons tk si i cs@(_:_:_)),sc))
   | i == theEqv logicsig
@@ -215,7 +215,7 @@ reduceToRightmost = "redinit"
    \mathcal L,\splitand(H) \vdash (C \equiv \true)
 \end{eqnarray*}
 \begin{code}
-assume :: Monad m => LogicSig -> [Theory] -> NamedTermSC
+assume :: (Monad m, MonadFail m) => LogicSig -> [Theory] -> NamedTermSC
        -> m (String, Sequent)
 assume logicsig thys (nm,(t@(Cons tk si i [ta,tc]),sc))
   | i == theImp logicsig
@@ -249,7 +249,7 @@ splitAnte _        t     =  [t]
    \mathcal L,\splitand(H) \vdash C_1 \equiv C_2
 \end{eqnarray*}
 \begin{code}
-asmboth :: Monad m => LogicSig -> [Theory] -> NamedTermSC
+asmboth :: (Monad m, MonadFail m) => LogicSig -> [Theory] -> NamedTermSC
         -> m (String, Sequent)
 asmboth logicsig thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{code}
@@ -263,7 +263,7 @@ asmboth logicsig thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{eqnarray*}
 \begin{code}
 -- actually, this is done under the hood
-shunt :: Monad m => LogicSig -> [Theory] -> NamedTermSC
+shunt :: (Monad m, MonadFail m) => LogicSig -> [Theory] -> NamedTermSC
       -> m (String, Sequent)
 shunt logicsig thys (nm,(t,sc)) = fail "shunt not applicable"
 \end{code}
@@ -278,7 +278,7 @@ shunt logicsig thys (nm,(t,sc)) = fail "shunt not applicable"
 \end{eqnarray*}
 \begin{code}
 -- actually, this is done under the hood
-shntboth :: Monad m => LogicSig -> [Theory] -> NamedTermSC
+shntboth :: (Monad m, MonadFail m) => LogicSig -> [Theory] -> NamedTermSC
         -> m (String, Sequent)
 shntboth logicsig thys (nm,(t,sc)) = fail "shntboth not applicable"
 \end{code}
@@ -474,7 +474,7 @@ writeSequent' seq'
     , laws'KEY ++ show (laws' seq')
     , seq'TRL ]
 
-readSequent' :: Monad m => [Theory] -> [String] -> m (Sequent',[String])
+readSequent' :: (Monad m, MonadFail m) => [Theory] -> [String] -> m (Sequent',[String])
 readSequent' thylist txts
   = do rest1 <- readThis seq'HDR txts
        -- theories are supplied, reconstructed in REqState read.
@@ -541,7 +541,7 @@ writeSeqZip (tz,seq')
     writeSequent' seq' ++
     [ szTRL ]
 
-readSeqZip :: Monad m => [Theory] -> [String] -> m (SeqZip,[String])
+readSeqZip :: (Monad m, MonadFail m) => [Theory] -> [String] -> m (SeqZip,[String])
 readSeqZip thylist txts
   = do rest1 <- readThis szHDR txts
        (tz,rest2) <- readKey tzKEY read rest1
@@ -587,7 +587,7 @@ rightConjFocus sequent
 For a hypothesis conjecture, making the sequent-zipper
 is a little more tricky:
 \begin{code}
-hypConjFocus :: Monad m => Int -> Sequent -> m SeqZip
+hypConjFocus :: (Monad m, MonadFail m) => Int -> Sequent -> m SeqZip
 hypConjFocus i sequent
   = do let hthry = hyp sequent
        (before,((hnm,hasn),hprov),after) <- peel i $ laws hthry

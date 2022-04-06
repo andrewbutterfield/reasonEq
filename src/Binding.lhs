@@ -122,7 +122,7 @@ validVarTermBinding _     _      =  False
 \end{code}
 
 As far as temporality goes,
-Static can bind to anything except Textual,
+Static can bind to anything.
 Textual can only bind to Textual \emph{variables},
 and other dynamics can only bind to the same temporality
 (Fig. \ref{fig:utp-perm-time-bind}).
@@ -132,13 +132,18 @@ and other dynamics can only bind to the same temporality
       \hline
       pattern && allowed candidates
     \\\hline
+       \texttt{Textual}
+       &$\mapsto$&
+       \texttt{Textual}
+    \\\hline
        \texttt{Static}
        &$\mapsto$&
-       \texttt{Static}, \texttt{Before}, \texttt{During}, \texttt{After}
+       \texttt{Static}, \texttt{Textual},
+       \texttt{Before}, \texttt{During}, \texttt{After}
     \\\hline
        $d$ &$\mapsto$&
        $d$, for $d$ in
-       \texttt{Before}, \texttt{During}, \texttt{After}, \texttt{Textual}
+       \texttt{Before}, \texttt{During}, \texttt{After}
     \\\hline
     \end{tabular}
   \caption{Permissible variable temporality binding combinations. }
@@ -147,9 +152,9 @@ and other dynamics can only bind to the same temporality
 \end{figure}
 \begin{code}
 validVarTimeBinding :: VarWhen -> VarWhen -> Bool
-validVarTimeBinding Static Textual  =  False
-validVarTimeBinding Static _        =  True
-validVarTimeBinding pwhen  cwhen    =  pwhen == cwhen
+validVarTimeBinding Textual cwhen  =  cwhen == Textual
+validVarTimeBinding Static  _      =  True
+validVarTimeBinding pwhen   cwhen  =  cwhen == pwhen
 \end{code}
 In a scenario where $a$ binds to $b$,
 if $a$ is dynamic,

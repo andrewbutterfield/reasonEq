@@ -35,6 +35,11 @@ like **all** truth-functional constructions
 Proposal: 
 syntactic `Cons` names will be represented by a `Textual` variable, 
 while semantic `Cons` names will use a `Static` variable.
+However, these names are just identifiers.
+For now we work with the idea that a *known* `Cons` name is syntactical,
+while an unknown name is semantic.
+We do **not** handle this in matching!
+Instead it is done when side-conditions are being manipulated.
 
 
 ### Complete UTPBase proofs

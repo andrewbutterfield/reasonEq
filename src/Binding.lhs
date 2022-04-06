@@ -436,8 +436,8 @@ bindSubscriptToSubscript :: (Monad m, MonadFail m)
 bindSubscriptToSubscript what (During m) (During n) sbind
   = insertDR (rangeEq what) m n sbind
 bindSubscriptToSubscript what vw1 vw2 sbind
- | vw1 == Static && vw2 /= Textual  =  return sbind
- | vw1 == vw2                       =  return sbind
+ | vw1 == vw2      =  return sbind
+ | vw1 == Static   =  return sbind
  | otherwise  =  fail $ unlines'
                   [ what
                   , "incompatible temporality"
@@ -459,7 +459,6 @@ any non-\texttt{Textual} thing in the appropriate class.
 \begin{code}
 bindVarToVar (Vbl vi vc Static) x@(Vbl xi xc xw)
              (BD (vbind,sbind,lbind))
- | xw == Textual  =  fail "bindVarToVar: Static cannot bind to Textual"
  | validVarClassBinding vc xc
    =  do vbind' <- insertDR (rangeEq "bindVarToVar(Static)")
                             (vi,vc) (BV x) vbind
@@ -787,14 +786,12 @@ bindLVarToVList _ _ _ = fail "bindLVarToVList: invalid lvar. -> vlist binding."
 \end{code}
 
 If the list-variable is static,
-then we need to ensure that the variable-list
-contains no textual variables,
-and all have a class compatible with that of the list variable.
+then we need to ensure that all the variable-list
+variables
+have a class compatible with that of the list variable.
 \begin{code}
-validStaticGVarClass vc gvar
-  = gvarWhen gvar /= Textual
-    &&
-    validVarClassBinding vc (gvarClass gvar)
+validStaticGVarClass :: VarClass -> GenVar -> Bool
+validStaticGVarClass vc gvar  =  validVarClassBinding vc (gvarClass gvar)
 \end{code}
 
 \newpage
@@ -1214,8 +1211,7 @@ bindLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind))
                                                     (BD (vbind,sbind,lbind'))
                    return bind'
  | otherwise = fail $ unlines'
-                [ "bindLVarToVSet: static cannot bind to any textual."
-                -- having a Textual in vs is not the only reason for failure!!!
+                [ "bindLVarToVSet: incompatible class in variable set."
                 , "lv = "++show lv
                 , "vs = "++show vs
                 ]
@@ -1234,7 +1230,7 @@ bindLVarToVSet lv@(LVbl (Vbl i vc vw) is ij) vs (BD (vbind,sbind,lbind))
             -> do bind' <-  attemptFeasibleBinding lv lv'
                                                    (BD (vbind,sbind',lbind'))
                   return bind'
- | otherwise = fail "bindLVarToVSet: incompatible dynamic temporality."
+ | otherwise = fail "bindLVarToVSet: incompatible dynamic class."
  where
    (valid, vsw) = vsCompatible vc vw vs
 
@@ -1246,7 +1242,7 @@ overrideLVarToVSet :: (Monad m, MonadFail m) => ListVar -> VarSet -> Binding -> 
 overrideLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind))
  | valid
     =  return $ BD (vbind,sbind, M.insert (i,vc,is,ij) (bvs vs) lbind)
- | otherwise = fail "overrideLVarToVSet: static cannot bind to any textual."
+ | otherwise = fail "overrideLVarToVSet: incompatible class in variable set."
  where
     (valid, vsw) = vsCompatible vc Static vs
 
@@ -1254,7 +1250,7 @@ overrideLVarToVSet lv@(LVbl (Vbl i vc vw) is ij) vs (BD (vbind,sbind,lbind))
  | valid
     = do sbind' <- bindSubscriptToSubscript "bindLVarToVSet(1)" vw vsw sbind
          return $ BD (vbind,sbind',M.insert (i,vc,is,ij) (bvs vs) lbind)
- | otherwise = fail "overrideLVarToVSet: incompatible dynamic temporality."
+ | otherwise = fail "overrideLVarToVSet: incompatible dynamic class."
  where
    (valid, vsw) = vsCompatible vc vw vs
 
@@ -1301,7 +1297,8 @@ and list-variables.
 As for \texttt{bindLVarToVList} above,
 we will need to look out for list-variable self-references.
 \begin{code}
-bindLVarSubstRepl :: (Monad m, MonadFail m) => ListVar -> [LVarOrTerm] -> Binding -> m Binding
+bindLVarSubstRepl :: (Monad m, MonadFail m)
+                  => ListVar -> [LVarOrTerm] -> Binding -> m Binding
 \end{code}
 
 A \texttt{Textual} pattern variable cannot bind to terms

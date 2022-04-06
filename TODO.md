@@ -20,9 +20,21 @@ Goal S.C. = O$⊇e, O$⊇f, O$⊇x
 Discharged Law S.C. = O$,O$'⊇:=, O$,O$'⊇:=, fresh:O$_0
 ```
 
-The real issue here is that `:=` is a known name that is different from
-other known variables such as `ok` and `ok'`. The latter need to participate in side-conditions, whereas the former does not. In some sense, `:=` is a *global*
-name, whereas `x`, `e`, `O$` and `ok` are *local* (there may be better names for the distinction than local/global!). We don't wan't to rule out Cons names as some of our proposed laws want to talk about things like **all** truth-functional constructions (e.g. `cond_mdistr` from `UTPBase` that has the name `*` for an arbitrary binary predicate).
+The real issue here is that `:=` is a known name 
+that is different from other known variables 
+such as `ok` and `ok'`. 
+The latter need to participate in side-conditions, 
+whereas the former does not. 
+In some sense, `:=` is a *syntactical* name, 
+whereas `x`, `e`, `O$` and `ok` are *semantic*. 
+We don't want to rule out all `Cons` names from side-conditions
+because some of our proposed laws want to talk about things 
+like **all** truth-functional constructions 
+(e.g. `cond_mdistr` from `UTPBase` that has the (semantic) name `*` for an arbitrary binary predicate).
+
+Proposal: 
+syntactic `Cons` names will be represented by a `Textual` variable, 
+while semantic `Cons` names will use a `Static` variable.
 
 
 ### Complete UTPBase proofs

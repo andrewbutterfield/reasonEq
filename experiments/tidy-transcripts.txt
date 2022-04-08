@@ -154,3 +154,30 @@ Q∨true
  = 'match-equiv[1] lor_zero @[]'
 { P ⟼ Q, ∨ ⟼ ∨ }
 true
+
+
+:=_unchanged : (x := e)≡(x,y := e,y)
+by 'redtail'
+---
+(x,y := e,y)
+ = 'match-lhs :=_def @[]'
+ { := ⟼ :=, O$\x$ ⟼ ⟨O$\x,y⟩, e$ ⟼ ⟨e, y⟩, x$ ⟼ ⟨x,y⟩ }
+(x'=e∧y'=y)∧(O$'\x,y=O$\x,y)
+ = 'match-lhs land_assoc @[]'
+ { P ⟼ x'=e, Q ⟼ y'=y, R ⟼ (O$'\x,y=O$\x,y), ∧ ⟼ ∧ }
+x'=e∧(y'=y∧(O$'\x,y=O$\x,y))
+ = 'match-lhs var_list_fusion @[2]'
+ { = ⟼ =, ∧ ⟼ ∧, O$\x$,y$ ⟼ ⟨O$\x,y⟩, O$\y$ ⟼ ⟨O$\x⟩, x$ ⟼ ⟨y⟩, y$ ⟼ {x} }
+x'=e∧∧((O$'\x=O$\x))
+ = 'match-rhs :=_def @[]'
+ { := ⟼ :=, = ⟼ =, ∧ ⟼ ∧, O$\x$ ⟼ ⟨O$\x⟩, e$ ⟼ ⟨e⟩, x$ ⟼ ⟨x⟩ }
+(x := e)
+
+
+:=_simple : (x := e)≡x'=e∧(O$'\x=O$\x)
+by 'redboth'
+---
+(x := e)
+ = 'match-lhs :=_def @[]'
+ { := ⟼ :=, O$\x$ ⟼ ⟨O$\x⟩, e$ ⟼ ⟨e⟩, x$ ⟼ ⟨x⟩ }
+x'=e ∧ (O$'\x=O$\x)

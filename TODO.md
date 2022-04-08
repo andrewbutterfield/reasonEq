@@ -12,6 +12,9 @@ and variables like `x` used in their definition
 Focus = [1]  Target (RHS): true
 
 proof: tm 1 ;_def
+@scP: O$,O$'⊇P, O$,O$'⊇Q, fresh:O$_0
+scP' = instantiateSC bind scP 
+@scP': O$,O$'⊇:=, O$,O$'⊇:=, fresh:O$_0
 Match against `;_def'[1]
 Binding: { ; ⟼ ;, P ⟼ (x := e), Q ⟼ (x := f), 0 ⟼ 0, O$ ⟼ ⟨O$⟩ }
 Instantiated Law = ((x := e);(x := f))  ≡  (∃ O$_0 • ((x := e))[O$_0/O$']∧((x := f))[O$_0/O$])
@@ -19,6 +22,10 @@ Instantiated Law S.C. = O$,O$'⊇:=, O$,O$'⊇:=, fresh:O$_0
 Goal S.C. = O$⊇e, O$⊇f, O$⊇x
 Discharged Law S.C. = O$,O$'⊇:=, O$,O$'⊇:=, fresh:O$_0
 ```
+
+Here we need to focus on `instantiateSC`. 
+It has to realise that `:=` is syntactic and does not belong to the free-variables of the assignment statement. It needs a `[VarTable]` argument so it can check.
+It looks like we need to pass that argument into `theFreeVars`?
 
 The real issue here is that `:=` is a known name 
 that is different from other known variables 
@@ -33,14 +40,18 @@ like **all** truth-functional constructions
 (e.g. `cond_mdistr` from `UTPBase` that has the (semantic) name `*` for an arbitrary binary predicate).
 
 Proposal: 
-syntactic `Cons` names will be represented by a `Textual` variable, 
-while semantic `Cons` names will use a `Static` variable.
-However, these names are just identifiers.
-For now we work with the idea that a *known* `Cons` name is syntactical,
-while an unknown name is semantic.
-We do **not** handle this in matching!
-Instead it is done when side-conditions are being manipulated.
+We need to introduce an intermediate level in variables - an identifier plus a "when" indicator.
+The `Identifier` in a `Cons` needs to be replaced by such an entity (Variable Name?).
 
+`Vbl i vc vw` becomes `Vbl vc (VNm i vw)`?
+
+So we have 
+
+1. `P ∧ Q` as `Cons (VNm '∧' Textual) [P,Q]`
+2. `x := e` as `Cons (VNm ':=' Textual) [x,e]`
+3. `P * Q` as `Cons (VNm '*' Static) [P,Q]`
+
+The `VNm _ Static` in `Cons` are treated as higher-order free variabes.
 
 ### Complete UTPBase proofs
 

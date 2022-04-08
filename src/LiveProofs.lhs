@@ -375,7 +375,7 @@ tryLawByName logicsig asn@(Assertion tC scC) lnm parts mcs
     -- tP'           <- instantiate fbind tP
     -- scP'          <- instantiateSC fbind scP of
     -- scP''         <- scDischarge scC scP' of
-    -- return (bind,tP',scP',scP'')
+    -- return (fbind,tP',scP',scP'')
 \end{code}
 
 First, try the structural match.

@@ -1,0 +1,77 @@
+((x := e);(x := f))≡(x := f[e/x]) O$⊇e, O$⊇f, O$⊇x
+
+Focus = [1] Target (RHS): true
+
+
+proof: tm 1 ;_def
+Match against `;_def'[1]
+Binding: { P ⟼ (x := e), Q ⟼ (x := f), 0 ⟼ 0, O$ ⟼ ⟨O$⟩ }
+Instantiated Law
+ = ((x := e);(x := f)) ≡ (∃ O$_0 • ((x := e))[O$_0/O$']∧((x := f))[O$_0/O$])
+Instantiated Law S.C. = O$,O$'⊇:=, O$,O$'⊇:=, fresh:O$_0
+Goal S.C. = O$⊇e, O$⊇f, O$⊇x
+Discharged Law S.C. = O$,O$'⊇:=, O$,O$'⊇:=, fresh:O$_0
+
+LiveProofs
+basicMatch:
+    bind0 <- match vts tC partsP
+    bind1 <- bindKnown vts bind0 repl
+    bind2 <- bindFloating vts bind1 repl
+    scP1 <- instantiateSC bind2 scP
+    scD <- scDischarge scC scP1
+    if all isFloatingASC (fst scD)
+		:: mrepl <- instantiate bind2 repl
+      return $ MT n (unwrapASN asn) (chkPatn mc partsP)
+                              bind2 repl scC scPinC mrepl
+LiveProofs
+tryMatch:
+  tC scC) lnm parts mcs
+   = do (((_,asnP),_),vts) <- findLaw lnm mcs
+        let tP = assnT asnP
+        partsP <- findParts parts tP
+        scP = assnC asnP
+tryMatch vts tP partsP scP
+     bind0          <- match vts tC partsP
+     (bind1,tPasC) <- bindKnown vts bind0 tP
+     (bind2,_)     <- bindFloating vts bind1 tP
+     tP1           <- instantiate bind2 tP
+     scP1          <- instantiateSC bind2 scP of
+     scD           <- scDischarge scC scP1
+     return (bind,tP',scP',scD)
+
+AbstractUI
+applyMatchToFocus2 mtch vts lvvls liveProof
+    bind2 = mBind mtch  -- from basicMatch above
+    repl = mLawPart mtch
+    scL = snd $ mAsn mtch
+    scC = conjSC liveProof
+    (tz,seq') = focus liveProof
+    dpath = fPath liveProof
+    conjpart = exitTZ tz
+
+    bind3 = patchBinding vts lvvls bind2
+          scLasC <- instantiateSC bind3 scL
+          scCL <- extendGoalSCCoverage lvvls scLasC
+          scCX <- mrgSideCond scC scCL
+          scD <- scDischarge scCX scLasC
+          if onlyFreshSC scD
+            then do let freshneeded = snd scD
+                    let knownVs = zipperVarsMentioned $ focus liveProof
+                    let (bind4,fresh)
+                                   = generateFreshVars knownVs freshneeded bind3
+                    let newLocalASC = fst scD
+                    -- newLocalSC <- mkSideCond newLocalASC fresh
+                    newLocalSC <- mkSideCond newLocalASC S.empty
+                    scC' <- scCX `mrgSideCond` newLocalSC
+                    brepl  <- instantiate bind4 repl
+                    asn' <- mkAsn conjpart (conjSC liveProof)
+                    return ( focus_ ((setTZ brepl tz),seq')
+                           $ matches_ []
+                           $ conjSC_ scC'
+                           $ stepsSoFar__
+                              (( UseLaw (ByMatch $ mClass mtch)
+                                        (mName mtch)
+                                        bind4
+                                        dpath
+                               , (asn')):)
+                              liveProof )

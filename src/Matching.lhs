@@ -217,7 +217,8 @@ Here $ts_X = \langle t_{X_1}, t_{X_2}, \dots t_{X_n} \rangle$.
 tMatch' vts bind cbvs pbvs (Cons tkC sbC nC tsC) (Cons tkP sbP nP tsP)
  | tkC == tkP && sbC == sbP
    =  do bind0 <- consBind vts bind cbvs pbvs tkC nC nP
-         tsMatch vts bind0 cbvs pbvs tsC tsP
+         -- tsMatch vts bind0 cbvs pbvs tsC tsP
+         tsMatch vts bind cbvs pbvs tsC tsP -- don't match
 \end{code}
 
 \newpage
@@ -402,7 +403,8 @@ tMatch' vts bind cbvs pbvs (Iter tkC saC naC siC niC lvsC)
                && length lvsP == length lvsC
                =  do bind0 <- consBind vts bind  cbvs pbvs tkC naC naP
                      bind1 <- consBind vts bind0 cbvs pbvs tkC niC niP
-                     iibind bind1 $ zip lvsP lvsC
+                     -- iibind bind1 $ zip lvsP lvsC
+                     iibind bind $ zip lvsP lvsC -- no cons just now
   | otherwise  =  fail "tMatch: incompatible Iter."
   where
     iibind bind [] = return bind
@@ -429,7 +431,8 @@ tMatch' vts bind cbvs pbvs tC@(Cons tkC siC niC tsC)
   | tkP == tkC && niC == niP && siC == siP
                = do bind0 <- consBind vts bind  cbvs pbvs tkC naP naP
                     bind1 <- consBind vts bind0 cbvs pbvs tkC niC niP
-                    iterLVarsMatch bind1 lvsP tsC
+                    -- iterLVarsMatch bind1 lvsP tsC
+                    iterLVarsMatch bind lvsP tsC -- no cons for now
   where
     iterLVarsMatch bind [] [] = return bind
     iterLVarsMatch bind (lvP:lvsP) (tC:tsC)
@@ -510,7 +513,8 @@ tMatch' vts bind cbvs pbvs tC@(Cons tkC saC naC tsC)
                     bind1 <- consBind vts bind0 cbvs pbvs tkC niP niP
                     termLists <- sequence $ map (itMatch len lvsP) tsC
                     let bindLists = transpose termLists
-                    itBind bind1 lvsP bindLists
+                    -- itBind bind1 lvsP bindLists
+                    itBind bind lvsP bindLists -- for now
   | otherwise
      = fail $ unlines
          [ "tMatch': General Cons not compatible with Iter."

@@ -1616,10 +1616,15 @@ mkKnownLstVarBind :: Binding -> ListVar -> Binding
 mkKnownLstVarBind bind lv@(LVbl v@(Vbl _ vc vw) is js)
   = case bindLVarToVList lv [LstVar lv'] emptyBinding of
       Yes bind' -> bind'
-      But msgs -> error (unlines ("mkKLVB error":msgs))
+      But msgs -> error (unlines ("mkKLVB error":msgs++moremsgs))
   where
     (is',js') = instLess bind vc vw is js
     lv' = LVbl v is' js'
+    moremsgs = [ "is = "++show is
+               , "js = "++show js
+               , "is' = "++show is'
+               , "js' = "++show js' 
+               ]
 
 instLess :: Binding -> VarClass -> VarWhen -> [Identifier] -> [Identifier]
          -> ([Identifier],[Identifier])

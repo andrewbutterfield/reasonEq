@@ -1,11 +1,6 @@
-@partsP:
-C P False (Id ";" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]
-@tC:
-C P False (Id ";" 0) [S P (V P (VR (Id ":=" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB)))]) (fromList [])),S P (V P (VR (Id ":=" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB)))]) (fromList []))]
-@bK.trm:
-B P (Id "exists" 0) (fromList [GL (LV (VR (Id "O" 0,VO,WD "0"),[],[]))]) (C P True (Id "land" 0) [S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "0"),[],[]))])),S P (V P (VR (Id "Q" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WB),[],[]),LV (VR (Id "O" 0,VO,WD "0"),[],[]))]))])
+@lV:
+LV (VR (Id "O" 0,VO,WB),[],[Id "x" 0,Id "y" 0])
+@lW:
+ LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[Id "x" 0])
 @bind:
-BD (fromList [((Id ";" 0,VP),BV (VR (Id ";" 0,VP,WS))),((Id "P" 0,VP),BT (S P (V P (VR (Id ":=" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB)))]) (fromList [])))),((Id "Q" 0,VP),BT (S P (V P (VR (Id ":=" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB)))]) (fromList []))))],fromList [],fromList [])
-@bK.unbound:
-fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WD "0"),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]
-req: Maybe.fromJust: Nothing
+ BD (fromList [],fromList [],fromList [((Id "O" 0,VO,[],[Id "x" 0,Id "y" 0]),BL [GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[Id "x" 0]))])])

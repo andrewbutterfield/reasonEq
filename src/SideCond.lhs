@@ -567,7 +567,8 @@ groupByGV (asc:ascs)  =  (gv,asc:ours) : groupByGV others
 
 Now onto processing those groups:
 \begin{code}
-scDischarge' :: (Monad m, MonadFail m) => [(GenVar,[AtmSideCond])] -> [(GenVar,[AtmSideCond])]
+scDischarge'  :: (Monad m, MonadFail m)
+              => [(GenVar,[AtmSideCond])] -> [(GenVar,[AtmSideCond])]
               -> m [AtmSideCond]
 scDischarge' _ []      =  return []                   -- discharged
 scDischarge' [] grpsL  =  return $ concat $ map snd grpsL -- not discharged

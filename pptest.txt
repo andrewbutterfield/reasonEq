@@ -1,13 +1,11 @@
-@partsP: ...
-@tC: ...
-
-@bK.trm: Exists O$_0 @ (P[O$_0/O$']) /\ (QO$_0/O$[])
-
-@bind: { ; -> ;, P -> (x:=e), Q -> (x:=f) }
-
-@bK.unbound: { O$, O$_0, O$' }
-
-@mKB(1).gv:
-GL (LV (VR (Id "O" 0,VO,WB),[],[]))
-@mKB(2).gv:
-GL (LV (VR (Id "O" 0,VO,WB),[],[]))
+@lV:
+LV (VR (Id "O" 0, VO, WB), [], [Id "x" 0, Id "y" 0])
+@lW:
+LV (VR (Id "O" 0, VO, WB), [Id "x" 0], [Id "x" 0])
+@bind:
+BD
+( {}
+, {}
+, { ( (Id "O" 0, VO, [], [Id "x" 0, Id "y" 0])
+    , BL
+      [ GL (LV (VR (Id "O" 0, VO, WB), [Id "x" 0], [Id "x" 0])) ] ) } )

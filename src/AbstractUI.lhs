@@ -646,7 +646,7 @@ patchBinding vts ((lv,vl):lvvls) bind
   = patchBinding vts lvvls $ patchVarListBind lv vl bind
 \end{code}
 
-\newpage
+\newpage 
 
 If a floating replacement is used
 in a \texttt{CoveredBy} atomic law side condition,

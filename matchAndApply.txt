@@ -37,7 +37,7 @@ tryMatch vts tP partsP scP
      tP1           <- instantiate bind2 tP
      scP1          <- instantiateSC bind2 scP of
      scD           <- scDischarge scC scP1
-     return (bind,tP',scP',scD)
+     return (bind2,tP1,scP1,scD)
 
 AbstractUI
 applyMatchToFocus2 mtch vts lvvls liveProof

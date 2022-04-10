@@ -923,7 +923,7 @@ tryMatch args state@( reqs, liveProof)
                 -- , "Replacement: " ++ trTerm 0 repl
                 -- , "Unbound: " ++ trVSet (findUnboundVars bind repl)
                 , "Instantiated Law = " ++ trTerm 0 tPasC
-                , "Instantiated Law S.C. = " ++ trSideCond scP'
+                , "Instantiated Law S.C. = " ++ trSideCond scC'
                 , "Goal S.C. = " ++ trSideCond (conjSC liveProof)
                 , "Discharged Law S.C. = " ++ trSideCond scP']
          But msgs -> putStrLn $ unlines' ( (banner ++ " failed!") : msgs )

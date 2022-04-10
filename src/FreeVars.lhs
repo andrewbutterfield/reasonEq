@@ -323,7 +323,7 @@ theFreeVars (fvs,diffs) = fvs `S.union` ( S.unions $ map fst diffs )
 \begin{eqnarray*}
    \fv(\kk k)  &\defs&  \emptyset
 \\ \fv(\vv v)  &\defs&  \{\vv v\}
-\\ \fv(\cc n {ts}) &\defs& \bigcup_{t \in ts} \fv(ts)
+\\ \fv(\cc n {ts}) &\defs& \bigcup_{t \in ts} \fv(t)
 \\ \fv(\bb n {v^+} t) &\defs& \fv(t)\setminus{v^+}
 \\ \fv(\ll n {v^+} t) &\defs& \fv(t)\setminus{v^+}
 \\ \fv(\ss t {v^n} {t^n})
@@ -332,11 +332,6 @@ theFreeVars (fvs,diffs) = fvs `S.union` ( S.unions $ map fst diffs )
 \\ \textbf{where} && v^m = v^n \cap \fv(t), t^m \textrm{ corr. to } v^m
 \\ \fv(\ii \bigoplus n {lvs}) &\defs& lvs
 \end{eqnarray*}
-
-
-
-
-
 \begin{code}
 freeVars :: Term -> FreeVars
 freeVars (Var tk v)                 =  injVarSet $ S.singleton $ StdVar v

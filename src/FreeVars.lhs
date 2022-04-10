@@ -41,6 +41,7 @@ import Test.Framework.Providers.HUnit (testCase)
 
 import Debug.Trace
 dbg msg x = trace (msg ++ show x) x
+pdbg nm x = dbg ('@':nm++":\n") x
 \end{code}
 
 \subsection{Introduction}
@@ -322,7 +323,7 @@ theFreeVars (fvs,diffs) = fvs `S.union` ( S.unions $ map fst diffs )
 
 \begin{eqnarray*}
    \fv(\kk k)  &\defs&  \emptyset
-\\ \fv(\vv v)  &\defs&  \{\vv v\}
+\\ \fv(\vv v)  &\defs&  \{\vv v\} \quad \mbox{provided $v$ is not textual}
 \\ \fv(\cc n {ts}) &\defs& \bigcup_{t \in ts} \fv(t)
 \\ \fv(\bb n {v^+} t) &\defs& \fv(t)\setminus{v^+}
 \\ \fv(\ll n {v^+} t) &\defs& \fv(t)\setminus{v^+}
@@ -331,20 +332,38 @@ theFreeVars (fvs,diffs) = fvs `S.union` ( S.unions $ map fst diffs )
    (\fv(t)\setminus{v^m})\cup \bigcup_{s \in t^m}\fv(s)
 \\ \textbf{where} && v^m = v^n \cap \fv(t), t^m \textrm{ corr. to } v^m
 \\ \fv(\ii \bigoplus n {lvs}) &\defs& lvs
+   \quad \mbox{less any textual list-vars in }lvs
 \end{eqnarray*}
 \begin{code}
 freeVars :: Term -> FreeVars
-freeVars (Var tk v)                 =  injVarSet $ S.singleton $ StdVar v
+freeVars (Var tk v@(Vbl _ _ vw))
+  | vw /= Textual                   =  injVarSet $ S.singleton $ StdVar v
 freeVars (Cons tk sb n ts)          =  mrgFreeVarList $ map freeVars ts
 freeVars (Bnd tk n vs tm)           =  subVarSet (freeVars tm) vs
 freeVars (Lam tk n vl tm)           =  subVarSet (freeVars tm) $ S.fromList vl
 freeVars (Cls _ _)                  =  noFreevars
+
+freeVars (Iter tk sa na si ni lvs)
+  =  injVarSet $ S.fromList $ map LstVar $ filter notTextualLV lvs
+
+freeVars (Sub tk (PVar (PredVar (Identifier ":=" _) _)) (Substn vts lvlvs))
+  = (foldl' mrgFreeVars noFreevars (S.map freeVars ts))
+    `mrgFreeVars`
+    (injVarSet (vs `S.union` lvs1 `S.union` lvs2))
+  where
+    ts = S.map snd vts
+    vs = S.map (StdVar . fst) vts
+    lvs1 = S.map (LstVar . fst) lvlvs
+    lvs2 = S.map (LstVar . snd) lvlvs
+
 freeVars (Sub tk tm s)              =  mrgFreeVars (subVarSet tfv tgtvs) rplvs
    where
-     tfv            =  freeVars tm
-     (tgtvs,rplvs)  =  substRelFree tfv s
-freeVars (Iter tk sa na si ni lvs)  =  injVarSet $ S.fromList $ map LstVar lvs
-freeVars _                          =  noFreevars
+     tfv            =  freeVars $ pdbg "freeVars.Sub.tm" tm
+     (tgtvs,rplvs)  =  substRelFree (pdbg "freeVars.Sub.tfv" tfv) s
+
+freeVars _  =  noFreevars
+
+notTextualLV (LVbl (Vbl _ _ vw) _ _) = vw /= Textual
 \end{code}
 
 \newpage

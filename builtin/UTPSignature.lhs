@@ -122,12 +122,14 @@ listwiseVarBinPred tk na ni vvs lvlvs
     doiter lvlvs      =  Cons tk True na $ map mkiter lvlvs
     mkiter (lv1,lv2)  =  Iter tk True na True ni [lv1,lv2]
 
+
+i_asg        =  jId ":="
+p_asg        =  jVar P $ Vbl i_asg PredV Textual
+
 simassign :: [(Variable,Term)] -> [(ListVar,ListVar)] -> Term
 simassign vts lvlvs  =  Sub P p_asg $ jSubstn vts lvlvs
 
 (.:=) :: Variable -> Term -> Term
-i_asg        =  jId ":="
-p_asg        =  jVar P $ Vbl i_asg PredV Static
 v .:= e      =  simassign [(v,e)] []
 
 (.::=) :: ListVar -> ListVar -> Term

@@ -3,8 +3,24 @@
 
 ## Most Urgent
 
-The issue with `:=` being reported as a free variable is to be resolved as follows: It will be a `Textual` variable, and these are never to be returned as free variables. Note that the name in a `Cons` is not returned as a free variable in any case. The above decision effects the fact that assignment is represented by a substitution.
+Matching and Free-Vars for assignment is now fixed. But Side-Cond instantiation returns multiple entries:
 
+```
+(x := e);(x := f)    O$⊇e, O$⊇f, O$⊇x
+
+Focus = []  Target (RHS): (x := f[e/x])
+
+
+proof: tm 1 ;_def
+Match against `;_def'[1]
+Binding: { P ⟼ (x := e), Q ⟼ (x := f), 0 ⟼ 0, O$ ⟼ ⟨O$⟩ }
+Instantiated Law = ((x := e);(x := f))  ≡  (∃ O$_0 • ((x := e))[O$_0/O$']∧((x := f))[O$_0/O$])
+
+Instantiated Law S.C. = O$,O$'⊇e, O$,O$'⊇x, O$,O$'⊇f, O$,O$'⊇x, fresh:O$_0
+
+Goal S.C. = O$⊇e, O$⊇f, O$⊇x
+Discharged Law S.C. = O$,O$'⊇f, O$,O$'⊇x, fresh:O$_0
+```
 
 ### Complete UTPBase proofs
 

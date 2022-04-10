@@ -1,9 +1,9 @@
 BEGIN REQSTATE
 BEGIN REQSET
-MMD = 10000
+MMD = 20
 MHT = False
 MHQ = True
-MHF = True
+MHF = False
 END REQSET
 BEGIN SIGNATURE
 TRUE = K P (VB True)
@@ -24,17 +24,17 @@ BEGIN MAP LIVE-PROOFS
 BEGIN LIVE-PROOF
 TH-NAME: UTPBase
 CJ-NAME: :=_seq_same
-CONJ = ASN (C P True (Id "equiv" 0) [C P False (Id ";" 0) [S P (V P (VR (Id ":=" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB)))]) (fromList [])),S P (V P (VR (Id ":=" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB)))]) (fromList []))],S P (V P (VR (Id ":=" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WB),S (E T) (V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB)))]) (fromList [])))]) (fromList []))],([SS (GV (VR (Id "e" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS (GV (VR (Id "f" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS (GV (VR (Id "x" 0,VO,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])],fromList []))
+CONJ = ASN (C P True (Id "equiv" 0) [C P False (Id ";" 0) [S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB)))]) (fromList [])),S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB)))]) (fromList []))],S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),S (E T) (V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB)))]) (fromList [])))]) (fromList []))],([SS (GV (VR (Id "e" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS (GV (VR (Id "f" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS (GV (VR (Id "x" 0,VO,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])],fromList []))
 SIDE = ([SS (GV (VR (Id "e" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS (GV (VR (Id "f" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS (GV (VR (Id "x" 0,VO,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])],fromList [])
-STRAT reduce
+STRAT redboth
 BEGIN SEQZIP
-TERMZIP = (C P False (Id ";" 0) [S P (V P (VR (Id ":=" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB)))]) (fromList [])),S P (V P (VR (Id ":=" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB)))]) (fromList []))],[Cons' P True (Id "equiv" 0) [] [S P (V P (VR (Id ":=" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WB),S (E T) (V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB)))]) (fromList [])))]) (fromList []))]])
+TERMZIP = (C P False (Id ";" 0) [S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB)))]) (fromList [])),S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB)))]) (fromList []))],[])
 BEGIN SEQUENT'
 SIDECOND = ([SS (GV (VR (Id "e" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS (GV (VR (Id "f" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS (GV (VR (Id "x" 0,VO,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])],fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.:=_seq_same", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.:=_seq_same", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),S (E T) (V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB)))]) (fromList [])))]) (fromList []))}
 END SEQUENT'
 END SEQZIP
-FPATH: [1]
+FPATH: []
 BEGIN LIST STEPS
 END LIST STEPS
 END LIVE-PROOF

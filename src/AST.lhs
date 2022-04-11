@@ -238,8 +238,10 @@ We consider a term as having the following forms:
     $\L n {v^+} t$ or $\ll n {v^+} t$.
   \item [X] A closure construct that hides all free variables:
     $\X n t$ or $\xx n t$.
-  \item [S] A term with an explicit substitution of terms for variables:
-    $\S t v t$, $\ss t {v^n} {t^n}$ or $t\sigma$.
+  \item [S] A term with an explicit substitution of general variables
+  by replacement items. Standard variables get replaced by terms,
+  while List variables get replaced by set or lists of general variables.
+    $\S t v r$, $\ss t {v^n} {r^n}$ or $t\sigma$.
   \item [I] An iteration of a term over a sequence of list-variables:
     $\I \oplus n {lv^+}$ or $\ii \bigoplus n {lvs}$.
   \item [T] An embedding of Types: $\T \tau$ or $\tt\tau$.
@@ -255,7 +257,7 @@ We consider a term as having the following forms:
                 ~|~ \C n {t^*}
                 ~|~ \B n {v^+} T
                 ~|~ \L n {v^+} T
-                ~|~ \S t V T
+                ~|~ \S t V R
                 ~|~ \X n t
                 ~|~ \I \oplus n {lv^+}
                 ~|~ \T \tau
@@ -264,7 +266,7 @@ We consider a term as having the following forms:
      ~|~ \cc n {ts}
      ~|~ \bb n {v^+} t
      ~|~ \ll n {v^+} t
-     ~|~ \ss t {v^n} {t^n}
+     ~|~ \ss t {v^n} {r^n}
      ~|~ \xx n t
      ~|~ \ii \bigoplus n {lvs}
      ~|~ \tt \tau

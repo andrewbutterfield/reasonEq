@@ -22,6 +22,8 @@ import LexBase
 import Variables
 import AST
 import FreeVars
+import VarData
+
 import TestRendering
 
 import Debug.Trace
@@ -50,17 +52,17 @@ The latter two then invoke term substitution to do their work.
 \subsection{Term Substitution}
 
 \begin{code}
-substitute :: (Monad m, MonadFail m) => Substn -> Term -> m Term
+substitute :: (Monad m, MonadFail m) => [VarTable] -> Substn -> Term -> m Term
 \end{code}
 \begin{eqnarray*}
-   \vv v \ss {} {v^n} {t^n}  &\defs&  t^i \cond{\vv v=v^i} v,
+   \vv v \ss {} {v^n} {r^n}  &\defs&  r^i \cond{\vv v=v^i} v,
                                                 \mbox{ for one $i \in 1\dots n$}
-\\ \vv P \ss {} {v^n} {t^n}
-                   &\defs&  t^i \cond{\vv P=v^i} \vv P \ss {} {v^n} {t^n},
+\\ \vv P \ss {} {v^n} {r^n}
+                   &\defs&  r^i \cond{\vv P=v^i} \vv P \ss {} {v^n} {r^n},
                                                                   \mbox{ ditto.}
 \end{eqnarray*}
 \begin{code}
-substitute sub@(Substn ts _) vrt@(Var tk v)
+substitute vts sub@(Substn ts _) vrt@(Var tk v)
   = return $ subsVar vrt v $ S.toList ts
   where
     subsVar vrt v []
@@ -76,8 +78,8 @@ substitute sub@(Substn ts _) vrt@(Var tk v)
    (\cc i {ts {\ss {} {v^n} {t^n}}}) \cond{\mathrm{CanSub}(i)} (\cc i {ts}) \ss {} {v^n} {t^n}
 \end{eqnarray*}
 \begin{code}
-substitute sub ct@(Cons tk subable i ts)
-  | subable  =  do ts' <- sequence $ map (substitute sub) ts
+substitute vts sub ct@(Cons tk subable i ts)
+  | subable  =  do ts' <- sequence $ map (substitute vts sub) ts
                    return $ Cons tk subable i ts'
   | otherwise  =  return $ Sub tk ct sub
 \end{code}
@@ -92,17 +94,17 @@ substitute sub ct@(Cons tk subable i ts)
    x^j \in \fv(t^i) \land \nu \mbox{ fresh.}
 \end{eqnarray*}
 \begin{code}
-substitute sub bt@(Bnd tk i vs tm)
+substitute vts sub bt@(Bnd tk i vs tm)
   = do alpha <- captureAvoidance vs tm sub
        let vs' = S.fromList $ quantsSubst alpha $ S.toList vs
-       asub <- substComp alpha sub
-       tm' <- substitute asub tm
+       asub <- substComp vts alpha sub
+       tm' <- substitute vts asub tm
        bnd tk i vs' tm'
-substitute sub lt@(Lam tk i vl tm)
+substitute vts sub lt@(Lam tk i vl tm)
   = do alpha <- captureAvoidance (S.fromList vl) tm sub
        let vl' = quantsSubst alpha vl
-       asub <- substComp alpha sub
-       tm' <- substitute asub tm
+       asub <- substComp vts alpha sub
+       tm' <- substitute vts asub tm
        lam tk i vl' tm'
 \end{code}
 
@@ -110,7 +112,7 @@ substitute sub lt@(Lam tk i vl tm)
 Given that we use the \texttt{Sub} term to represent assignment,
 we need to treat such seperately:
 \begin{code}
-substitute sub bt@(Sub tk (PVar (PredVar (Identifier ":=" _) _)) _)
+substitute vts sub bt@(Sub tk (PVar (PredVar (Identifier ":=" _) _)) _)
   = return $ Sub tk bt sub
 \end{code}
 \begin{eqnarray*}
@@ -119,9 +121,9 @@ substitute sub bt@(Sub tk (PVar (PredVar (Identifier ":=" _) _)) _)
    t (\ss {} {v^m} {t^m};  \ss {} {v^n} {t^n})
 \end{eqnarray*}
 \begin{code}
-substitute sub bt@(Sub tk tm s)
-  = do sub' <- substComp s sub
-       substitute sub' tm
+substitute vts sub bt@(Sub tk tm s)
+  = do sub' <- substComp vts s sub
+       substitute vts sub' tm
 \end{code}
 \begin{eqnarray*}
    (\ii \bigoplus n {lvs}) \ss {} {v^n} {t^n}
@@ -129,7 +131,7 @@ substitute sub bt@(Sub tk tm s)
    (\ii \bigoplus n {lvs \ss {} {v^n} {t^n}})
 \end{eqnarray*}
 \begin{code}
-substitute (Substn _ lvlvs) bt@(Iter tk sa na si ni lvs)
+substitute vts (Substn _ lvlvs) bt@(Iter tk sa na si ni lvs)
   = return $ Iter tk sa na si ni $ map (listVarSubstitute (S.toList lvlvs)) lvs
 \end{code}
 \begin{eqnarray*}
@@ -137,7 +139,7 @@ substitute (Substn _ lvlvs) bt@(Iter tk sa na si ni lvs)
 \\ \xx n t \ss {} {v^n} {t^n} &\defs& \xx n t
 \end{eqnarray*}
 \begin{code}
-substitute sub tm = return tm
+substitute vts sub tm = return tm
 \end{code}
 
 \subsubsection{Helper functions}
@@ -215,26 +217,27 @@ listVarSubstitute lvlvl lv
 \newpage
 \subsection{Substitution Composition}
 
-Substitution composition ($ \ss {} {v^m} {t^m};  \ss {} {v^n} {t^n}$)
+Substitution composition ($ \ss {} {v^m} {r^m};  \ss {} {v^n} {r^n}$)
 is defined as follows:
 \[
-\ss {} {v^m} {\ss {t^m} {v^n} {t^n}} \uplus  \ss {} {v^j} {t^j}
+\ss {} {v^m} {\ss {r^m} {v^n} {r^n}} \uplus  \ss {} {v^j} {r^j}
 \]
 where $v^j \notin v^m$.
 
 \begin{code}
 substComp :: (Monad m, MonadFail m)
-          => Substn  -- 1st substitution performed
+          => [VarTable]
+          -> Substn  -- 1st substitution performed
           -> Substn  -- 2nd substitution performed
           -> m Substn
-substComp (Substn ts1 lvs1) sub2@(Substn ts2 lvs2)
-  = do ts' <- varTermCompose sub2 (S.toList ts1) (S.toList ts2)
+substComp vts (Substn ts1 lvs1) sub2@(Substn ts2 lvs2)
+  = do ts' <- varTermCompose vts sub2 (S.toList ts1) (S.toList ts2)
        let lvs' = lvarLVarCompose     (S.toList lvs1) (S.toList lvs2)
        substn ts' lvs'
 
-varTermCompose sub2 tl1 tl2
+varTermCompose vts sub2 tl1 tl2
   = do let (vl1,el1) = unzip tl1
-       el1' <- sequence $ map (substitute sub2) $ el1
+       el1' <- sequence $ map (substitute vts sub2) $ el1
        let tl1' = zip vl1 el1'
        let tl2' = tl2 `strip1` vl1
        return (tl1' ++ tl2')
@@ -265,37 +268,41 @@ lvSubstitute [] rlv  =  rlv
 We will have checks and balances for when $\alpha$-substitution is invoked
 from outside.
 \begin{code}
-alphaRename :: (Monad m, MonadFail m) => [(Variable,Variable)]
-                       -> [(ListVar,ListVar)]
-                       -> Term
-                       -> m Term
-alphaRename vvs lls btm@(Bnd tk n vs tm)
-  =  do (vmap,lmap,atm) <- checkAndBuildAlpha vvs lls vs tm
+alphaRename :: (Monad m, MonadFail m)
+            => [VarTable]
+            -> [(Variable,Variable)]
+            -> [(ListVar,ListVar)]
+            -> Term
+            -> m Term
+alphaRename vts vvs lls btm@(Bnd tk n vs tm)
+  =  do (vmap,lmap,atm) <- checkAndBuildAlpha vts vvs lls vs tm
         bnd tk n (aRenVS vmap lmap vs) atm
-alphaRename vvs lls ltm@(Lam tk n vl tm)
-  =  do (vmap,lmap,atm) <- checkAndBuildAlpha vvs lls (S.fromList vl) tm
+alphaRename vts vvs lls ltm@(Lam tk n vl tm)
+  =  do (vmap,lmap,atm) <- checkAndBuildAlpha vts vvs lls (S.fromList vl) tm
         lam tk n (aRenVL vmap lmap vl) atm
-alphaRename vvs lls trm = fail "alphaRename not applicable"
+alphaRename vts vvs lls trm = fail "alphaRename not applicable"
 \end{code}
 
 We have some checks to do, before we apply the $\alpha$-substitution
 to the quantifier body.
 \begin{code}
-checkAndBuildAlpha :: (Monad m, MonadFail m) => [(Variable,Variable)]
-                              -> [(ListVar,ListVar)]
-                              -> VarSet
-                              -> Term
-                              -> m ( Map Variable Variable
-                                   , Map ListVar ListVar
-                                   , Term )
-checkAndBuildAlpha vvs lls vs tm
+checkAndBuildAlpha  :: (Monad m, MonadFail m)
+                    => [VarTable]
+                    -> [(Variable,Variable)]
+                    -> [(ListVar,ListVar)]
+                    -> VarSet
+                    -> Term
+                    -> m ( Map Variable Variable
+                         , Map ListVar ListVar
+                         , Term )
+checkAndBuildAlpha vts vvs lls vs tm
   =  do checkDomain vvs lls vs
         vmap <- injMap vvs
         lmap <- injMap lls
         checkFresh vvs lls tm
         let tvs = map liftReplVar vvs
         sub <- substn tvs lls
-        atm <- substitute sub tm
+        atm <- substitute vts sub tm
         return (vmap,lmap,atm)
 \end{code}
 
@@ -324,7 +331,7 @@ checkDomain vvs lls qvs
                 (S.fromList $ map (LstVar . fst) lls)
    in if S.null (alphaDom S.\\ qvs)
        then return ()
-       else fail "alphaRename: trying to rename free variables."
+       else fail "checkDomain: trying to rename free variables."
 \end{code}
 
 \newpage

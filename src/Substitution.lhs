@@ -105,7 +105,14 @@ substitute sub lt@(Lam tk i vl tm)
        tm' <- substitute asub tm
        lam tk i vl' tm'
 \end{code}
-\newpage
+
+
+Given that we use the \texttt{Sub} term to represent assignment,
+we need to treat such seperately:
+\begin{code}
+substitute sub bt@(Sub tk (PVar (PredVar (Identifier ":=" _) _)) _)
+  = return $ Sub tk bt sub
+\end{code}
 \begin{eqnarray*}
    (\ss t {v^m} {t^m}) \ss {} {v^n} {t^n}
    &\defs&
@@ -133,7 +140,7 @@ substitute (Substn _ lvlvs) bt@(Iter tk sa na si ni lvs)
 substitute sub tm = return tm
 \end{code}
 
-Helper functions.
+\subsubsection{Helper functions}
 
 
 \begin{code}
@@ -175,6 +182,7 @@ idNumAdd :: Identifier -> Int -> Identifier
 \end{code}
 
 \newpage
+
 This code assumes that \texttt{alpha} was produced by \texttt{captureAvoidance}.
 \begin{code}
 quantsSubst :: Substn -> VarList -> VarList

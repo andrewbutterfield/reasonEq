@@ -383,7 +383,7 @@ First, try the structural match.
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryMatch vts tP partsP scP
       = case
-          match vts tC partsP 
+                match vts tC partsP
         of
           Yes bind  ->  tryInstantiateKnown vts tP partsP scP bind
           But msgs
@@ -407,7 +407,9 @@ First we see if any of these are ``known''.
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryInstantiateKnown vts tP partsP scP bind
-      = case bindKnown vts bind tP of
+      = case
+                bindKnown vts bind tP
+        of
           Yes kbind  ->  tryInstantiateFloating vts tP partsP scP kbind
           But msgs
            -> But ([ "instantiate knowns failed"
@@ -429,7 +431,9 @@ and we generate names for these that make their floating nature visible.
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryInstantiateFloating vts tP partsP scP bind
-      = case bindFloating vts bind tP of
+      = case
+                bindFloating vts bind tP
+        of
           Yes fbind  ->  tryInstantiate fbind tP partsP scP
           But msgs
            -> But ([ "instantiate floating failed"
@@ -451,7 +455,9 @@ Next, instantiate the law using the bindings.
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryInstantiate fbind tP partsP scP
-      = case instantiate fbind tP of
+      = case
+                instantiate fbind tP
+        of
           Yes tP'  ->  tryInstantiateSC fbind tP' partsP scP
           But msgs
            -> But ([ "try law instantiation failed"
@@ -471,7 +477,9 @@ Next, instantiate the pattern side-condition using the bindings.
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     tryInstantiateSC bind tP partsP scP
-      = case instantiateSC bind scP of
+      = case
+                instantiateSC bind scP
+        of
           Yes scP'  ->  trySCDischarge bind tP partsP scP'
           But msgs
            -> But ([ "try s.c. instantiation failed"
@@ -492,7 +500,9 @@ Finally, try to discharge the instantiated side-condition:
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     trySCDischarge bind tP partsP scP'
-      = case scDischarge scC scP' of
+      = case
+                scDischarge scC scP' 
+        of
           Yes scP'' -> Yes (bind,tP,scP',scP'')
           But whynots -> But [ "try s.c. discharge failed"
                              , unlines' whynots

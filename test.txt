@@ -1,24 +1,6 @@
-@iASC.asc:
-SS (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])
-@iASC.gv:
-GV (VR (Id "P" 0,VP,WS))
-
-@iV.bind:
-BD (fromList [((Id "P" 0,VP),BT (S P (V P (VR (Id ":=" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB)))]) (fromList [])))),((Id "Q" 0,VP),BT (S P (V P (VR (Id ":=" 0,VP,WS))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB)))]) (fromList []))))],fromList [("0","0")],fromList [((Id "O" 0,VO,[],[]),BL [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])])
-@iV.v:
-VR (Id "P" 0,VP,WS)
-
-@iASC.fvsT:
-(fromList [GV (VR (Id ":=" 0,VP,WS))],[])
-@iASC.asc:
-SS (GV (VR (Id "Q" 0,VP,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])
-@iASC.gv:
-GV (VR (Id "Q" 0,VP,WS))
-@iV.v:
-VR (Id "Q" 0,VP,WS)
-@iASC.fvsT:
-(fromList [GV (VR (Id ":=" 0,VP,WS))],[])
-@iASC.vsCD:
-fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]
-@iASC.vsCD:
-fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]
+@try.scP:
+([SS (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]),SS (GV (VR (Id "Q" 0,VP,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])],fromList [GL (LV (VR (Id "O" 0,VO,WD "0"),[],[]))])
+@try.bind:
+BD (fromList [((Id "P" 0,VP),BT (S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB)))]) (fromList [])))),((Id "Q" 0,VP),BT (S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB)))]) (fromList []))))],fromList [("0","0")],fromList [((Id "O" 0,VO,[],[]),BL [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])])
+@try,scP':
+([SS (GV (VR (Id "e" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]),SS (GV (VR (Id "x" 0,VO,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]),SS (GV (VR (Id "f" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]),SS (GV (VR (Id "x" 0,VO,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])],fromList [GL (LV (VR (Id "O" 0,VO,WD "0"),[],[]))])

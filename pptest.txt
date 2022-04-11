@@ -1,51 +1,15 @@
-@iASC.asc:
-SS
-(GV (VR (Id "P" 0, VP, WS)))
-( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
-  , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } )
-@iASC.gv:
-GV (VR (Id "P" 0, VP, WS))
+try.scP  :  P ⊆ O$,O$'   Q ⊆ O$,O$'
+try.bind :  {  P ->  (x := e) , Q -> (x := f) }
 
-@iV.bind:
-BD
-( { ( (Id "P" 0, VP)
-    , BT (S P (V P (VR (Id ":=" 0, VP, WS)))
-              (SN { ( VR (Id "x" 0, VO, WB)
-                    , V (E (TG (Id "Z" 0))) (VR (Id "e" 0, VE, WB))
-                    )
-                  } 
-                  {}}
-              )
-         )
-    )
-  , ( (Id "Q" 0, VP)
-    , BT (S P (V P (VR (Id ":=" 0, VP, WS))) (SN (fromList [(VR (Id "x" 0, VO, WB), V (E (TG (Id "Z" 0))) (VR (Id "f" 0, VE, WB)))]) (fromList []))) ) }
-, { ( "0"
-    , "0" ) }
-, { ( (Id "O" 0, VO, [], [])
-    , BL
-      [ GL (LV (VR (Id "O" 0, VO, WB), [], [])) ] ) } )
+apply bind to P, Q : (x:=e) ⊆ O$,O$'   (x:=f) ⊆ O$,O$'
+take freevars      :  x,e ⊆ O$,O$'   x,f ⊆ O$,O$'
+split              :  x ⊆ O$,O$'  e ⊆ O$,O$'  x ⊆ O$,O$'  f ⊆ O$,O$'
+sort/remdup        :  e ⊆ O$,O$'  f ⊆ O$,O$'  x ⊆ O$,O$'
 
-@iV.v:
-VR (Id "P" 0, VP, WS)
-@iASC.fvsT:
-( { GV (VR (Id ":=" 0, VP, WS)) }
-, [] )
-@iASC.asc:
-SS
-(GV (VR (Id "Q" 0, VP, WS)))
-( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
-  , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } )
-@iASC.gv:
-GV (VR (Id "Q" 0, VP, WS))
-@iV.v:
-VR (Id "Q" 0, VP, WS)
-@iASC.fvsT:
-( { GV (VR (Id ":=" 0, VP, WS)) }
-, [] )
-@iASC.vsCD:
-{ GL (LV (VR (Id "O" 0, VO, WB), [], []))
-, GL (LV (VR (Id "O" 0, VO, WA), [], [])) }
-@iASC.vsCD:
-{ GL (LV (VR (Id "O" 0, VO, WB), [], []))
-, GL (LV (VR (Id "O" 0, VO, WA), [], [])) }
+But....
+
+try,scP': e ⊆ O$,O$'  x ⊆ O$,O$'  f ⊆ O$,O$'  x ⊆ O$,O$'
+
+
+@iSC.ascss': [ [ e ⊆ O$,O$' , x ⊆ O$,O$' ] , [ f ⊆ O$,O$' , x ⊆ O$,O$' ] ]
+@iSC.tFV.freshvs': { O_0 }

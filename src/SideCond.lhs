@@ -479,7 +479,7 @@ coversOf _              =  S.empty
 mkSideCond :: MonadFail m => [AtmSideCond] -> VarSet -> m SideCond
 mkSideCond ascs fvs
  = do ascs' <-  mrgAtmCondLists [] ascs
-      mrgAtomicFreshConditions fvs ascs
+      mrgAtomicFreshConditions fvs ascs'
 \end{code}
 
 

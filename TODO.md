@@ -3,24 +3,26 @@
 
 ## Most Urgent
 
-Matching and Free-Vars for assignment is now fixed. But Side-Cond instantiation returns multiple entries:
+`SideCond` is fixed. Substitution needs work
 
 ```
-(x := e);(x := f)    O$⊇e, O$⊇f, O$⊇x
+Proof for :=_seq_same
+((x := e);(x := f)) ≡ (x := f[e/x]) O$⊇e, O$⊇f, O$⊇x
+by redboth
 
-Focus = []  Target (RHS): (x := f[e/x])
-
-
-proof: tm 1 ;_def
-Match against `;_def'[1]
-Binding: { P ⟼ (x := e), Q ⟼ (x := f), 0 ⟼ 0, O$ ⟼ ⟨O$⟩ }
-Instantiated Law = ((x := e);(x := f))  ≡  (∃ O$_0 • ((x := e))[O$_0/O$']∧((x := f))[O$_0/O$])
-
-Instantiated Law S.C. = O$,O$'⊇e, O$,O$'⊇x, O$,O$'⊇f, O$,O$'⊇x, fresh:O$_0
-
-Goal S.C. = O$⊇e, O$⊇f, O$⊇x
-Discharged Law S.C. = O$,O$'⊇f, O$,O$'⊇x, fresh:O$_0
+(x := e);(x := f), O$⊇e, O$⊇f, O$⊇x
+ = 'match-lhs ;_def@[]'
+(∃ O$_1 • ((x := e))[O$_1/O$']∧((x := f))[O$_1/O$]), O$⊇e, O$⊇f, O$⊇x
+ = 'match-lhs :=_def@[1,1,1]'
+(∃ O$_1 • (x'=e∧(O$'\x=O$\x))[O$_1/O$']∧((x := f))[O$_1/O$]), O$⊇e, O$⊇f, O$⊇x
+ = 'substitute @[1,1]'
+⊢
+(∃ O$_1 • (x'=e[O$_1/O$']∧(O$'\x=O$\x))∧((x := f))[O$_1/O$]) O$⊇e, O$⊇f, O$⊇x
 ```
+
+The issue is that `(x'=e∧(O$'\x=O$\x))[O$_1/O$']` should become `x_1=e∧(O$_1\x=O$\x)`, and not `(x'=e[O$_1/O$']∧(O$'\x=O$\x))`!
+
+It looks like that we may need to pass in `VarTable`s
 
 ### Complete UTPBase proofs
 

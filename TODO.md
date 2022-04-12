@@ -5,24 +5,27 @@
 
 `SideCond` is fixed. Substitution needs work
 
-```
-Proof for :=_seq_same
-((x := e);(x := f)) ≡ (x := f[e/x]) O$⊇e, O$⊇f, O$⊇x
-by redboth
-
-(x := e);(x := f), O$⊇e, O$⊇f, O$⊇x
- = 'match-lhs ;_def@[]'
-(∃ O$_1 • ((x := e))[O$_1/O$']∧((x := f))[O$_1/O$]), O$⊇e, O$⊇f, O$⊇x
- = 'match-lhs :=_def@[1,1,1]'
-(∃ O$_1 • (x'=e∧(O$'\x=O$\x))[O$_1/O$']∧((x := f))[O$_1/O$]), O$⊇e, O$⊇f, O$⊇x
- = 'substitute @[1,1]'
-⊢
-(∃ O$_1 • (x'=e[O$_1/O$']∧(O$'\x=O$\x))∧((x := f))[O$_1/O$]) O$⊇e, O$⊇f, O$⊇x
-```
 
 The issue is that `(x'=e∧(O$'\x=O$\x))[O$_1/O$']` should become `x_1=e∧(O$_1\x=O$\x)`, and not `(x'=e[O$_1/O$']∧(O$'\x=O$\x))`!
 
 It looks like that we may need to pass in `VarTable`s
+
+We also need to involve side-conditions!
+We have `O$⊇e,f,x`, which also implies that `O$'⊇e',f',x'`.
+The substitution proceeds as follows:
+
+```
+    ( x' = e ∧ O$'\x = O$\x )[O$_1/O$']
+= distr subst. in
+    x'[O$_1/O$'] = e[O$_1/O$'] ∧ O$'\x[O$_1/O$'] = O$\x[O$_1/O$'] 
+=      O$'⊇x'        ¬(O$'⊇e)       O$'⊇O$'\x        ¬(O$'⊇O$\x)
+        x_1      =     e       ∧     O$_1\x      =     O$\x
+```
+
+Side conditions plus known list variables raise a complication (ill-formed substitutions)
+We prevent a target variable from being used more than once when we build substitutions,
+but this doesnt cater for a condition like `O$⊇e`. 
+In this context, the substitution `[3,O$_1/e,O$]` is illegal, because it asks `e` to be replaced by both `3` (directly) and `e_1` (implicitly, via membership of `O$`).
 
 ### Complete UTPBase proofs
 

@@ -23,6 +23,7 @@ import Variables
 import AST
 import FreeVars
 import VarData
+import SideCond
 
 import TestRendering
 

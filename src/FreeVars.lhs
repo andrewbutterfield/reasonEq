@@ -31,7 +31,6 @@ import Control (mapboth,mapaccum,mapsnd)
 import LexBase
 import Variables
 import AST
-import SideCond
 
 import Test.HUnit ((@?=))
 --import Test.Framework as TF (testGroup, Test)

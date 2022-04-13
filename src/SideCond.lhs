@@ -32,6 +32,7 @@ import Utilities
 import LexBase
 import Variables
 import AST
+import VarData
 
 import Test.HUnit hiding (Assertion)
 import Test.Framework as TF (defaultMain, testGroup, Test)

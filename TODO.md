@@ -3,9 +3,13 @@
 
 ## Most Urgent
 
+We need to review use of match-contexts at various levels
+in the proof system.
+In particular, extracting `VarTable`s from the top-level `mtchCntxt` component of a `LiveProof` by mapping `thd3` and then concatenating them is very inefficient: we should just take the head of the list instead.
+
 Actually, side-conditions need more work, to take account of `VarData`.
 
-1. Feed var. data into s.c. functions
+1. Feed var. data into s.c. functions **DONE**
 2. Implement var. data-aware s.c. functions
 3. Implement var. data-aware subst. functions
 

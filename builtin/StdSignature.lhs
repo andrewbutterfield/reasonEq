@@ -209,9 +209,9 @@ that are also ``total'',
 in that they return \texttt{SideCond} rather than \texttt{m SideCond}.
 \begin{code}
 (.:) :: SideCond -> SideCond -> SideCond
-sc1 .: sc2 = fromJust $ mrgSideCond sc1 sc2
+sc1 .: sc2 = fromJust $ mrgSideCond [] sc1 sc2
 mrgscs :: [SideCond] -> SideCond
-mrgscs = fromJust . mrgSideConds
+mrgscs = fromJust . mrgSideConds []
 \end{code}
 \textbf{
 These are unsafe and should only be used for the definition of builtins.

@@ -953,12 +953,12 @@ applyMatch args pstate@(reqs, liveProof)
       Nothing -> return pstate
       Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)
        -> do let availTerms = false : true : gSubTerms
-             (vardone,vts)
+             (vardone,svtms)
                <-  fixFloatVars [] availTerms $ map StdVar fStdVars
              (lvardone,lvvls)
                <-  fixFloatLVars [] gLstVars $ map LstVar fLstVars
              if vardone && lvardone then
-               case applyMatchToFocus2 mtch vts lvvls liveProof of
+               case applyMatchToFocus2 vts mtch svtms lvvls liveProof of
                  Yes liveProof'
                   -> return(reqs, liveProof')
                  But msgs
@@ -972,6 +972,7 @@ applyMatch args pstate@(reqs, liveProof)
   where
     true   =  theTrue  $ logicsig reqs
     false  =  theFalse $ logicsig reqs
+    vts = concat $ map thd3 $ mtchCtxts liveProof
 \end{code}
 \newpage
 Ask the user to specify a replacement term for each floating standard variable:
@@ -1156,7 +1157,8 @@ lawInstantiateProof _ ps@(reqs, liveProof )
                    lawt vs ts
                  if cancel then return (reqs,liveProof)
                  else do
-                  liveProof' <- lawInstantiate3 lawt vs2ts liveProof
+                  let vts = concat $ map thd3 $ mtchCtxts liveProof
+                  liveProof' <- lawInstantiate3 vts lawt vs2ts liveProof
                   return (reqs, liveProof' )
 \end{code}
 

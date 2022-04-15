@@ -120,6 +120,8 @@ In some of these cases, we may be able to simplify a side-condition further:
 \\ pre      \supseteq z  && z \textrm{ is a \texttt{Before} variable}
 \end{eqnarray*}
 
+We also need to take account of known variables of various kinds
+when evaluating and building side-conditions.
 
 \newpage
 \subsection{Atomic Side-Conditions}
@@ -165,9 +167,11 @@ Here we provide a monadic function that fails if the condition
 is demonstrably false,
 and otherwise returns a \texttt{Maybe} type,
 where \texttt{Nothing} denotes a condition that is true.
+We need to do this in general
+in the context of what is ``known'' about variables.
 \begin{code}
 mscTrue = Nothing
-scCheck :: MonadFail m => AtmSideCond -> m (Maybe AtmSideCond)
+ascCheck :: MonadFail m => [VarTable] -> AtmSideCond -> m (Maybe AtmSideCond)
 \end{code}
 Here, $z$ denotes an (standard) observation variable,
 $T$ denotes a standard term variable,
@@ -184,7 +188,7 @@ Note that we cannot deduce (here) that $T \disj T$ is false,
 because $T$ could correspond to the empty set.
 Nor can we assume $T \disj z$ is false, because $T$ could contain $z$.
 \begin{code}
-scCheck asc@(Disjoint sv@(StdVar v) vs)
+ascCheck vts asc@(Disjoint sv@(StdVar v) vs)
   | S.null vs         =  return mscTrue
   | not $ isObsVar v  =  return $ Just asc
   | sv `S.member` vs  =  report "atomic disjoint is False"
@@ -206,7 +210,7 @@ Here, as $T$ could be empty,
 we cannot deduce that $\emptyset \supseteq T$ is false.
 Similarly, $T \supseteq z$ could also be true.
 \begin{code}
-scCheck asc@(CoveredBy sv@(StdVar v) vs)
+ascCheck vts asc@(CoveredBy sv@(StdVar v) vs)
   | sv `S.member` vs  =  return mscTrue
   | not $ isObsVar v  =  return $ Just asc
   | S.null vs         =  report "atomic covers is False (null)"
@@ -225,7 +229,7 @@ scCheck asc@(CoveredBy sv@(StdVar v) vs)
 \\ pre \supseteq g  && \true,  \textrm{ if $g$ is a \texttt{Before} variable}
 \end{eqnarray*}
 \begin{code}
-scCheck asc@(IsPre v@(StdVar (Vbl _ _ vw)))
+ascCheck vts asc@(IsPre v@(StdVar (Vbl _ _ vw)))
   | vw == After   =  fail "atomic ispre is False"
   | vw == Before  =  return mscTrue
 \end{code}
@@ -233,7 +237,7 @@ scCheck asc@(IsPre v@(StdVar (Vbl _ _ vw)))
 For anything else, we just return the condition unchanged.
 In particular, we cannot do anything with freshness at this point.
 \begin{code}
-scCheck asc = return $ Just asc
+ascCheck _ asc = return $ Just asc
 \end{code}
 
 
@@ -324,14 +328,16 @@ The function \texttt{mrgAtmCond} below is the ``approved'' way
 to generate side-conditions,
 by merging them in, one at a time,
 into a pre-existing list ordered and structured as described above.
+
 \begin{code}
-mrgAtmCond :: MonadFail m => AtmSideCond -> [AtmSideCond] -> m [AtmSideCond]
+mrgAtmCond :: MonadFail m => [VarTable]
+           -> AtmSideCond -> [AtmSideCond] -> m [AtmSideCond]
 \end{code}
 
 1st ASC is easy:
 \begin{code}
-mrgAtmCond asc []
-  = do masc <- scCheck asc
+mrgAtmCond vts asc []
+  = do masc <- ascCheck vts asc
        case masc of
          Nothing ->  return [] -- asc is in fact true
          Just asc' -> return [asc']
@@ -340,11 +346,11 @@ mrgAtmCond asc []
 Subsequent ones mean searching to see if there are already ASCs with the
 same general-variable:
 \begin{code}
-mrgAtmCond asc ascs
-  = do masc <- scCheck asc
+mrgAtmCond vts asc ascs
+  = do masc <- ascCheck vts asc
        case masc of
          Nothing ->  return ascs
-         Just asc' -> splice (mrgAtmAtms asc) $ brkspnBy (compareGV asc) ascs
+         Just asc' -> splice (mrgAtmAtms vts asc) $ brkspnBy (compareGV asc) ascs
 
 compareGV asc1 asc2  =  ascGVar asc1 `compare` ascGVar asc2
 sameGV asc1 asc2     =  asc1 `compareGV` asc2 == EQ
@@ -354,8 +360,9 @@ sameGV asc1 asc2     =  asc1 `compareGV` asc2 == EQ
 
 Now, merging an ASC in with other ASCs referring to the same general variable:
 \begin{code}
-mrgAtmAtms :: MonadFail m => AtmSideCond -> [AtmSideCond] -> m [AtmSideCond]
-mrgAtmAtms asc [] = return [asc] -- it's the first.
+mrgAtmAtms :: MonadFail m => [VarTable]
+           -> AtmSideCond -> [AtmSideCond] -> m [AtmSideCond]
+mrgAtmAtms vts asc [] = return [asc] -- it's the first.
 \end{code}
 
 Given one or more pre-existing ASCs for this g.v., we note the following possible
@@ -406,13 +413,13 @@ or the predicate $D \disj G$ ($G$ being the general variable in question).
 \newpage
 \subsubsection{Merging \texttt{Disjoint} into ASC}
 \begin{code}
-mrgAtmAtms (Disjoint gv d0) [Disjoint _ d1,CoveredBy _ c]
+mrgAtmAtms vts (Disjoint gv d0) [Disjoint _ d1,CoveredBy _ c]
  | c `S.isSubsetOf` d'  =  return [CoveredBy gv S.empty]
  | otherwise            =  return [Disjoint gv d',CoveredBy gv (c S.\\ d')]
  where d' = d0 `S.union` d1
-mrgAtmAtms (Disjoint gv d0) [Disjoint _ d1]
+mrgAtmAtms vts (Disjoint gv d0) [Disjoint _ d1]
                   =  return [Disjoint gv (d0 `S.union` d1)]
-mrgAtmAtms (Disjoint gv d) [CoveredBy _ c]
+mrgAtmAtms vts (Disjoint gv d) [CoveredBy _ c]
  | c `S.isSubsetOf` d  =  return [CoveredBy gv S.empty]
  | otherwise           =  return [Disjoint gv d,CoveredBy gv (c S.\\ d)]
 \end{code}
@@ -420,56 +427,61 @@ mrgAtmAtms (Disjoint gv d) [CoveredBy _ c]
 
 \subsubsection{Merging \texttt{CoveredBy} into ASC}
 \begin{code}
-mrgAtmAtms (CoveredBy gv c0) [Disjoint _ d,CoveredBy _ c1]
+mrgAtmAtms vts (CoveredBy gv c0) [Disjoint _ d,CoveredBy _ c1]
  | c' `S.isSubsetOf` d  =  return [CoveredBy gv S.empty]
  | otherwise            =  return [Disjoint gv d,CoveredBy gv (c' S.\\ d)]
  where c' = c0 `S.union` c1
-mrgAtmAtms (CoveredBy gv c) [Disjoint _ d]
+mrgAtmAtms vts (CoveredBy gv c) [Disjoint _ d]
  | c `S.isSubsetOf` d  =  return [CoveredBy gv S.empty]
  | otherwise           =  return [Disjoint gv d,CoveredBy gv (c S.\\ d)]
-mrgAtmAtms (CoveredBy gv c0) [CoveredBy _ c1]
+mrgAtmAtms vts (CoveredBy gv c0) [CoveredBy _ c1]
                =  return [CoveredBy gv (c0 `S.intersection` c1)]
 \end{code}
 
 \subsubsection{Merging \texttt{IsPre} into ASC}
 \begin{code}
-mrgAtmAtms (IsPre _)   atms@[IsPre _]           =  return atms
-mrgAtmAtms p@(IsPre _) (d@(Disjoint _ _):atms)  =  fmap (d:) $ mrgAtmAtms p atms
-mrgAtmAtms p@(IsPre _) (c@(CoveredBy _ _)  :atms)  =  fmap (c:) $ mrgAtmAtms p atms
+mrgAtmAtms vts (IsPre _)   atms@[IsPre _]  =  return atms
+mrgAtmAtms vts p@(IsPre _) (d@(Disjoint _ _):atms)
+  =  fmap (d:) $ mrgAtmAtms vts p atms
+mrgAtmAtms vts p@(IsPre _) (c@(CoveredBy _ _)  :atms)
+  =  fmap (c:) $ mrgAtmAtms vts p atms
 \end{code}
 
 \subsubsection{Failure Case}
 If none of the above arise, then we currently have a problem,
 probably with \texttt{mrgAtmCond} above.
 \begin{code}
-mrgAtmAtms atm atms
+mrgAtmAtms vts atm atms
  = fail $ unlines' [ "Unexpected fail in mrgAtmAtms:"
                    , "atm is "++show atm
-                   , "atms are "++ show atms ]
+                   , "atms are "++ show atms
+                   , "vts is "++show vts]
 \end{code}
 
 \subsubsection{Merging Atomic Lists}
 
 \begin{code}
-mrgAtmCondLists :: MonadFail m
-                => [AtmSideCond] -> [AtmSideCond] -> m [AtmSideCond]
-mrgAtmCondLists ascs1 [] = return ascs1
-mrgAtmCondLists ascs1 (asc:ascs2)
-     = do ascs1' <- mrgAtmCond asc ascs1
-          mrgAtmCondLists ascs1' ascs2
+mrgAtmCondLists :: MonadFail m => [VarTable]
+                -> [AtmSideCond] -> [AtmSideCond] -> m [AtmSideCond]
+mrgAtmCondLists vts ascs1 [] = return ascs1
+mrgAtmCondLists vts ascs1 (asc:ascs2)
+     = do ascs1' <- mrgAtmCond vts asc ascs1
+          mrgAtmCondLists vts ascs1' ascs2
 \end{code}
 
 \subsubsection{Merging Atomic and Freshness Side-Conditions}
 
 
 \begin{code}
-mrgAtomicFreshConditions :: MonadFail m => VarSet -> [AtmSideCond] -> m SideCond
-mrgAtomicFreshConditions freshvs ascs
-  | freshvs `disjoint` coverVarsOf ascs  =  return (ascs,freshvs)
+mrgAtomicFreshConditions :: MonadFail m => [VarTable]
+                         -> VarSet -> [AtmSideCond] -> m SideCond
+mrgAtomicFreshConditions vts freshvs ascs
+  | freshvs `disjoint` coverVarsOf vts ascs  =  return (ascs,freshvs)
+  -- the above might not work - `disjoint` may need vts information
   | otherwise  =  fail "Fresh variables cannot cover terms."
 
-coverVarsOf :: [AtmSideCond] -> VarSet
-coverVarsOf ascs = S.unions $ map coversOf ascs
+coverVarsOf :: [VarTable] -> [AtmSideCond] -> VarSet
+coverVarsOf vts ascs = S.unions $ map coversOf ascs
 coversOf (CoveredBy _ vs)  =  vs
 coversOf _              =  S.empty
 \end{code}
@@ -477,10 +489,10 @@ coversOf _              =  S.empty
 \subsection{From ASC and Free-list to Side-Condition}
 
 \begin{code}
-mkSideCond :: MonadFail m => [AtmSideCond] -> VarSet -> m SideCond
-mkSideCond ascs fvs
- = do ascs' <-  mrgAtmCondLists [] ascs
-      mrgAtomicFreshConditions fvs ascs'
+mkSideCond :: MonadFail m => [VarTable] -> [AtmSideCond] -> VarSet -> m SideCond
+mkSideCond vts ascs fvs
+ = do ascs' <-  mrgAtmCondLists vts [] ascs
+      mrgAtomicFreshConditions vts fvs ascs'
 \end{code}
 
 
@@ -490,16 +502,17 @@ Merging two side-conditions is then straightforward,
 simply merge each ASC and fresh set from the one into the other,
 one at a time.
 \begin{code}
-mrgSideCond :: MonadFail m => SideCond -> SideCond -> m SideCond
-mrgSideCond (ascs1,fvs1) (ascs2,fvs2)
-     = do ascs' <- mrgAtmCondLists ascs1 ascs2
-          mrgAtomicFreshConditions (fvs1 `S.union` fvs2) ascs'
+mrgSideCond :: MonadFail m => [VarTable] -> SideCond -> SideCond -> m SideCond
+mrgSideCond vts (ascs1,fvs1) (ascs2,fvs2)
+     = do ascs' <- mrgAtmCondLists vts ascs1 ascs2
+          mrgAtomicFreshConditions vts (fvs1 `S.union` fvs2) ascs'
+          -- the above may require a vts-savvy union?
 
-mrgSideConds :: MonadFail m => [SideCond] -> m SideCond
-mrgSideConds [] = return ([],S.empty)
-mrgSideConds (sc:scs)
-  = do  scs' <- mrgSideConds scs
-        mrgSideCond sc scs'
+mrgSideConds :: MonadFail m => [VarTable] -> [SideCond] -> m SideCond
+mrgSideConds vts [] = return ([],S.empty)
+mrgSideConds vts (sc:scs)
+  = do  scs' <- mrgSideConds vts scs
+        mrgSideCond vts sc scs'
 \end{code}
 
 \newpage
@@ -516,7 +529,7 @@ If we discover a contradiction,
 then we need to signal this,
 because \texttt{SideCond} cannot represent a false side-condition explicitly.
 \begin{code}
-scDischarge :: MonadFail m => SideCond -> SideCond -> m SideCond
+scDischarge :: MonadFail m => [VarTable] -> SideCond -> SideCond -> m SideCond
 \end{code}
 We have something of the form:
 $$
@@ -543,12 +556,12 @@ Failure occurs if any $L_j$ group results in $\false$.
 
 
 \begin{code}
-scDischarge anteSC@(anteASC,anteFvs) cnsqSC@(cnsqASC,cnsqFvs)
+scDischarge vts anteSC@(anteASC,anteFvs) cnsqSC@(cnsqASC,cnsqFvs)
   | isTrivialSC cnsqSC  =  return scTrue  -- G => true   is   true
   | isTrivialSC anteSC  =  return cnsqSC  -- true => L   is   L, not discharged
   | otherwise
-     = do asc' <- scDischarge' (groupByGV anteASC) (groupByGV cnsqASC)
-          freshDischarge anteFvs cnsqFvs asc'
+     = do asc' <- scDischarge' vts (groupByGV anteASC) (groupByGV cnsqASC)
+          freshDischarge vts anteFvs cnsqFvs asc'
 \end{code}
 
 We have a modified version of \texttt{Data.List.groupBy}
@@ -566,19 +579,19 @@ groupByGV (asc:ascs)  =  (gv,asc:ours) : groupByGV others
 
 Now onto processing those groups:
 \begin{code}
-scDischarge'  :: MonadFail m
-              => [(GenVar,[AtmSideCond])] -> [(GenVar,[AtmSideCond])]
+scDischarge'  :: MonadFail m => [VarTable]
+              -> [(GenVar,[AtmSideCond])] -> [(GenVar,[AtmSideCond])]
               -> m [AtmSideCond]
-scDischarge' _ []      =  return []                   -- discharged
-scDischarge' [] grpsL  =  return $ concat $ map snd grpsL -- not discharged
-scDischarge' (grpG@(gvG,ascsG):restG) grpsL@(grpL@(gvL,ascsL):restL)
-  | gvG < gvL  =  scDischarge' restG grpsL -- grpG not needed
+scDischarge' _ _ []      =  return []                   -- discharged
+scDischarge' _ [] grpsL  =  return $ concat $ map snd grpsL -- not discharged
+scDischarge' vts (grpG@(gvG,ascsG):restG) grpsL@(grpL@(gvL,ascsL):restL)
+  | gvG < gvL  =  scDischarge' vts restG grpsL -- grpG not needed
   | gvG > gvL  =  do -- nothing available to discharge grpL
-                     rest' <- scDischarge' restG restL
+                     rest' <- scDischarge' vts restG restL
                      return (ascsL++rest')
   | otherwise  =  do -- use grpG to discharge grpL
-                     ascs' <- grpDischarge ascsG ascsL
-                     rest' <- scDischarge' restG restL
+                     ascs' <- grpDischarge vts ascsG ascsL
+                     rest' <- scDischarge' vts restG restL
                      return (ascs'++rest')
 \end{code}
 
@@ -616,11 +629,12 @@ There is an asymmetry here, which means that we should
 use all the $G_i$ to try and discharge each $L_i$,
 rather than the other way around.
 \begin{code}
-grpDischarge :: MonadFail m => [AtmSideCond] -> [AtmSideCond] -> m [AtmSideCond]
-grpDischarge _ []  =  return []
-grpDischarge ascsG (ascL:ascsL)
-  = do ascL'  <- ascsDischarge ascsG ascL
-       ascsL' <- grpDischarge ascsG ascsL
+grpDischarge :: MonadFail m => [VarTable]
+             -> [AtmSideCond] -> [AtmSideCond] -> m [AtmSideCond]
+grpDischarge _ _ []  =  return []
+grpDischarge vts ascsG (ascL:ascsL)
+  = do ascL'  <- ascsDischarge vts ascsG ascL
+       ascsL' <- grpDischarge vts ascsG ascsL
        return (ascL'++ascsL')
 \end{code}
 
@@ -631,12 +645,13 @@ Here we are trying to show
  L_j \quad \where \quad j \in \setof{D,C,pre}
 \end{equation*}
 \begin{code}
-ascsDischarge :: MonadFail m => [AtmSideCond] -> AtmSideCond -> m [AtmSideCond]
-ascsDischarge [] ascL = return [ascL]
-ascsDischarge (ascG:ascsG) ascL
-  =  case ascDischarge ascG ascL of
+ascsDischarge :: MonadFail m => [VarTable]
+              -> [AtmSideCond] -> AtmSideCond -> m [AtmSideCond]
+ascsDischarge _ [] ascL = return [ascL]
+ascsDischarge vts (ascG:ascsG) ascL
+  =  case ascDischarge vts ascG ascL of
       Yes []       ->  return []
-      Yes [ascL']  ->  ascsDischarge ascsG ascL'
+      Yes [ascL']  ->  ascsDischarge vts ascsG ascL'
       But msgs     ->  fail $ unlines msgs
 \end{code}
 
@@ -650,8 +665,9 @@ Here we are trying to show:
  L_j \quad \where \quad i,j \in \setof{D,C,pre}
 \end{equation*}
 \begin{code}
-ascDischarge :: MonadFail m => AtmSideCond -> AtmSideCond -> m [AtmSideCond]
--- ascDischarge ascG ascL
+ascDischarge :: MonadFail m => [VarTable]
+            -> AtmSideCond -> AtmSideCond -> m [AtmSideCond]
+-- ascDischarge vts ascG ascL
 -- ascGVar ascG == ascGVar ascL
 \end{code}
 
@@ -671,7 +687,7 @@ The following cases need special treatment:
     where $v$ is a standard variable.
     This is simply false.
 \begin{code}
-ascDischarge _ (CoveredBy (StdVar (Vbl _ ObsV _)) dL)
+ascDischarge _ _ (CoveredBy (StdVar (Vbl _ ObsV _)) dL)
   | S.null dL  =  fail ("Empty set cannot cover a standard obs. variable")
 \end{code}
   \item
@@ -720,7 +736,7 @@ Now, we work through the combinations:
 \\ & \mapsto & (D_L\setminus D_G) \disj V
 \end{eqnarray*}
 \begin{code}
-ascDischarge (Disjoint _ dG) (Disjoint gv dL)
+ascDischarge vts (Disjoint _ dG) (Disjoint gv dL)
   | dL `S.isSubsetOf` dG  =  return [] -- true
   | otherwise             =  return [Disjoint gv (dL S.\\ dG)]
 \end{code}
@@ -732,7 +748,7 @@ ascDischarge (Disjoint _ dG) (Disjoint gv dL)
 \\ & \mapsto & (C_L \setminus D_G) \supseteq V
 \end{eqnarray*}
 \begin{code}
-ascDischarge (Disjoint _ dG) c@(gv `CoveredBy` cL)
+ascDischarge vts (Disjoint _ dG) c@(gv `CoveredBy` cL)
   | cL `S.isSubsetOf` dG && isObsGVar gv  =  fail "Disj=>emptyCover"
   | otherwise                             =  return [CoveredBy gv (cL S.\\ dG)]
 \end{code}
@@ -746,7 +762,7 @@ ascDischarge (Disjoint _ dG) c@(gv `CoveredBy` cL)
 Here we have to ensure that $C_{?L}$ is retained, as no floating variables
 exist in $C_G$, and so the intersection would remove those in $C_L$.
 \begin{code}
-ascDischarge (CoveredBy _ cG) (CoveredBy gv cL)
+ascDischarge vts (CoveredBy _ cG) (CoveredBy gv cL)
   | cG `S.isSubsetOf` cL  =  return []
   | cG `disjoint` cL && isObsGVar gv  =  fail "CoverDisj=>noCover"
   | otherwise  =  return
@@ -761,7 +777,7 @@ ascDischarge (CoveredBy _ cG) (CoveredBy gv cL)
 \\ & \mapsto & D_L \disj V
 \end{eqnarray*}
 \begin{code}
-ascDischarge (CoveredBy _ cG) d@(Disjoint gv dL)
+ascDischarge vts (CoveredBy _ cG) d@(Disjoint gv dL)
   | S.null (cG `S.intersection` dL)  =  return []
   | otherwise                        =  return [d]
 \end{code}
@@ -769,7 +785,7 @@ ascDischarge (CoveredBy _ cG) d@(Disjoint gv dL)
 
 Anything else is not handled right now;
 \begin{code}
-ascDischarge _ ascL = return [ascL]
+ascDischarge _ _ ascL = return [ascL]
 \end{code}
 
 \subsubsection{Freshness Condition  Discharge}
@@ -787,18 +803,20 @@ $$
 where elements of $G_F$ can be used to satisfy some $L_j$.
 
 \begin{code}
-freshDischarge :: MonadFail m => VarSet -> VarSet -> [AtmSideCond] -> m SideCond
-freshDischarge anteFvs cnsqFvs asc
-  = do asc' <- freshDischarge' anteFvs asc
+freshDischarge :: MonadFail m => [VarTable]
+              -> VarSet -> VarSet -> [AtmSideCond] -> m SideCond
+freshDischarge vts anteFvs cnsqFvs asc
+  = do asc' <- freshDischarge' vts anteFvs asc
        return (asc' , cnsqFvs S.\\ anteFvs )
 \end{code}
 
 \begin{code}
-freshDischarge' :: MonadFail m => VarSet -> [AtmSideCond] -> m [AtmSideCond]
-freshDischarge' anteFvs [] = return []
-freshDischarge' anteFvs (asc:ascs)
-  = do ascl  <- freshAtomDischarge anteFvs asc
-       ascs' <- freshDischarge'    anteFvs ascs
+freshDischarge' :: MonadFail m => [VarTable]
+                -> VarSet -> [AtmSideCond] -> m [AtmSideCond]
+freshDischarge' vts anteFvs [] = return []
+freshDischarge' vts anteFvs (asc:ascs)
+  = do ascl  <- freshAtomDischarge vts anteFvs asc
+       ascs' <- freshDischarge'    vts anteFvs ascs
        return (ascl++ascs')
 \end{code}
 
@@ -814,7 +832,8 @@ there are three possible outcomes:
   \item [Not Fully Discharged]  Return [$L'_j$]
 \end{description}
 \begin{code}
-freshAtomDischarge :: MonadFail m => VarSet -> AtmSideCond -> m [AtmSideCond]
+freshAtomDischarge :: MonadFail m => [VarTable]
+                   -> VarSet -> AtmSideCond -> m [AtmSideCond]
 \end{code}
 We now consider the following possibilities:
 \begin{eqnarray*}
@@ -823,7 +842,7 @@ We now consider the following possibilities:
 \\ &\mapsto& D_L \setminus G_F \disj V
 \end{eqnarray*}
 \begin{code}
-freshAtomDischarge gF (Disjoint gv dL)
+freshAtomDischarge vts gF (Disjoint gv dL)
   | dL `S.isSubsetOf` gF  =  return []
   | otherwise  =  return [Disjoint gv (dL S.\\ gF)]
 \end{code}
@@ -833,13 +852,13 @@ freshAtomDischarge gF (Disjoint gv dL)
    &\mapsto&  C_L \setminus G_F \supseteq V
 \end{eqnarray*}
 \begin{code}
-freshAtomDischarge gF (CoveredBy gv cL) = return [CoveredBy gv (cL S.\\ gF)]
+freshAtomDischarge vts gF (CoveredBy gv cL) = return [CoveredBy gv (cL S.\\ gF)]
 \end{code}
 
 
 Anything else is not handled right now.
 \begin{code}
-freshAtomDischarge gF asc = return [asc]
+freshAtomDischarge vts gF asc = return [asc]
 \end{code}
 
 
@@ -975,71 +994,71 @@ tstTrue  = Just Nothing
 tstWhatever sc = Just $ Just sc
 
 tst_scChkDisjoint
- = testGroup "Disjoint"
+ = testGroup "Disjoint (no known vars)"
     [ testCase "gv_a `disjoint` empty is True"
-       ( scCheck (Disjoint gv_a S.empty) @?= tstTrue )
+       ( ascCheck [] (Disjoint gv_a S.empty) @?= tstTrue )
     , testCase "v_e `disjoint` empty is True"
-       ( scCheck (Disjoint v_e S.empty) @?= tstTrue )
+       ( ascCheck [] (Disjoint v_e S.empty) @?= tstTrue )
     , testCase "gv_a `disjoint` {gv_a} is False"
-       ( scCheck (Disjoint gv_a $ S.singleton gv_a) @?= tstFalse )
+       ( ascCheck [] (Disjoint gv_a $ S.singleton gv_a) @?= tstFalse )
     , testCase "gv_a `disjoint` {gv_b} is True"
-       ( scCheck (Disjoint gv_a $ S.singleton gv_b) @?= tstTrue )
+       ( ascCheck [] (Disjoint gv_a $ S.singleton gv_b) @?= tstTrue )
     , testCase "v_e `disjoint` {v_e} stands"
-       ( scCheck (Disjoint v_e $ S.singleton v_e)
+       ( ascCheck [] (Disjoint v_e $ S.singleton v_e)
          @?= tstWhatever  (Disjoint v_e $ S.singleton v_e) )
     , testCase "v_e `disjoint` {v_f} stands"
-       ( scCheck (Disjoint v_e $ S.singleton v_f)
+       ( ascCheck [] (Disjoint v_e $ S.singleton v_f)
          @?= tstWhatever  (Disjoint v_e $ S.singleton v_f) )
     , testCase "v_e `disjoint` {gv_a} stands"
-       ( scCheck (Disjoint v_e $ S.singleton gv_a)
+       ( ascCheck [] (Disjoint v_e $ S.singleton gv_a)
          @?= tstWhatever  (Disjoint v_e $ S.singleton gv_a) )
     , testCase "gv_a `disjoint` {v_f} stands"
-       ( scCheck (Disjoint gv_a $ S.singleton v_f)
+       ( ascCheck [] (Disjoint gv_a $ S.singleton v_f)
          @?= tstWhatever  (Disjoint gv_a $ S.singleton v_f) )
     , testCase "gv_a `disjoint` {gv_b,v_f} stands"
-       ( scCheck (Disjoint gv_a $ S.fromList [gv_b,v_f])
+       ( ascCheck [] (Disjoint gv_a $ S.fromList [gv_b,v_f])
          @?= tstWhatever  (Disjoint gv_a $ S.fromList [gv_b,v_f]) )
     ]
 
 tst_scChkCovers
- = testGroup "CoveredBy"
+ = testGroup "CoveredBy (no known vars)"
     [ testCase "gv_a `coveredby` empty is False"
-       ( scCheck (CoveredBy gv_a S.empty) @?= tstFalse )
+       ( ascCheck [] (CoveredBy gv_a S.empty) @?= tstFalse )
     , testCase "v_e `coveredby` empty stands"
-       ( scCheck (CoveredBy v_e S.empty)
+       ( ascCheck [] (CoveredBy v_e S.empty)
          @?= tstWhatever (CoveredBy v_e S.empty) )
     , testCase "gv_a `coveredby` {gv_a} is True"
-       ( scCheck (CoveredBy gv_a $ S.singleton gv_a) @?= tstTrue )
+       ( ascCheck [] (CoveredBy gv_a $ S.singleton gv_a) @?= tstTrue )
     , testCase "gv_a `coveredby` {gv_b} is False"
-       ( scCheck (CoveredBy gv_a $ S.singleton gv_b) @?= tstFalse )
+       ( ascCheck [] (CoveredBy gv_a $ S.singleton gv_b) @?= tstFalse )
     , testCase "v_e `coveredby` {v_e} is True"
-       ( scCheck (CoveredBy v_e $ S.singleton v_e) @?= tstTrue )
+       ( ascCheck [] (CoveredBy v_e $ S.singleton v_e) @?= tstTrue )
     , testCase "v_e `coveredby` {v_f} stands"
-       ( scCheck (CoveredBy v_e $ S.singleton v_f)
+       ( ascCheck [] (CoveredBy v_e $ S.singleton v_f)
          @?= tstWhatever  (CoveredBy v_e $ S.singleton v_f) )
     , testCase "v_e `coveredby` {gv_a} stands"
-       ( scCheck (CoveredBy v_e $ S.singleton gv_a)
+       ( ascCheck [] (CoveredBy v_e $ S.singleton gv_a)
          @?= tstWhatever  (CoveredBy v_e $ S.singleton gv_a) )
     , testCase "gv_a `coveredby` {v_f} stands"
-       ( scCheck (CoveredBy gv_a $ S.singleton v_f)
+       ( ascCheck [] (CoveredBy gv_a $ S.singleton v_f)
          @?= tstWhatever  (CoveredBy gv_a $ S.singleton v_f) )
     , testCase "gv_a `coveredby` {gv_b,v_f} stands"
-       ( scCheck (CoveredBy gv_a $ S.fromList [gv_b,v_f])
+       ( ascCheck [] (CoveredBy gv_a $ S.fromList [gv_b,v_f])
          @?= tstWhatever  (CoveredBy gv_a $ S.fromList [gv_b,v_f]) )
     ]
 
 tst_scChkIsPre
- = testGroup "IsPre"
+ = testGroup "IsPre (no known vars)"
     [ testCase "is-pre(gv_a) is True"
-       ( scCheck (IsPre gv_a) @?= tstTrue )
+       ( ascCheck [] (IsPre gv_a) @?= tstTrue )
     , testCase "is-pre(gv_a') is False"
-       ( scCheck (IsPre gv_a') @?= tstFalse )
+       ( ascCheck [] (IsPre gv_a') @?= tstFalse )
     , testCase "is-pre(v_e) is True"
-       ( scCheck (IsPre v_e) @?= tstTrue )
+       ( ascCheck [] (IsPre v_e) @?= tstTrue )
     , testCase "is-pre(v_e') is False"
-       ( scCheck (IsPre v_e') @?= tstFalse )
+       ( ascCheck [] (IsPre v_e') @?= tstFalse )
     , testCase "is-pre(gv_s) stands"
-       ( scCheck (IsPre gv_s) @?= tstWhatever (IsPre gv_s) )
+       ( ascCheck [] (IsPre gv_s) @?= tstWhatever (IsPre gv_s) )
     ]
 \end{code}
 
@@ -1048,21 +1067,21 @@ tst_scChkIsPre
 \begin{code}
 tst_mrgAtmCond :: TF.Test
 tst_mrgAtmCond
- = testGroup "Merging Side-Conditions"
+ = testGroup "Merging Side-Conditions (no known vars)"
      [ testCase "merge gv_a `disjoint` empty  into [] is True"
-        ( mrgAtmCond (Disjoint gv_a S.empty) [] @?= Just [] )
+        ( mrgAtmCond [] (Disjoint gv_a S.empty) [] @?= Just [] )
      , testCase "merge gv_a `disjoint` {gv_a} into [] is False"
-        ( mrgAtmCond (Disjoint gv_a $ S.singleton gv_a) [] @?= Nothing )
+        ( mrgAtmCond [] (Disjoint gv_a $ S.singleton gv_a) [] @?= Nothing )
      , testCase "merge v_e `coveredby` {v_f}  into [] is [itself]"
-        ( mrgAtmCond (CoveredBy v_e $ S.singleton v_f) []
+        ( mrgAtmCond [] (CoveredBy v_e $ S.singleton v_f) []
           @?= Just [CoveredBy v_e $ S.singleton v_f] )
      , testCase "merge gv_a `disjoint` empty  into [asc(gv_b)] is [asc(gv_b)]]"
-        ( mrgAtmCond (Disjoint gv_a S.empty) [asc1] @?= Just [asc1] )
+        ( mrgAtmCond [] (Disjoint gv_a S.empty) [asc1] @?= Just [asc1] )
      , testCase "merge gv_a `disjoint` {gv_a} into [asc(gv_b)] is False"
-        ( mrgAtmCond (Disjoint gv_a $ S.singleton gv_a) [asc1] @?= Nothing )
+        ( mrgAtmCond [] (Disjoint gv_a $ S.singleton gv_a) [asc1] @?= Nothing )
      , testCase
         "merge v_e `coveredby` {v_f}  into [asc(gv_b)] is [asc(gv_b),itself]"
-        ( mrgAtmCond (CoveredBy v_e $ S.singleton v_f) [asc1]
+        ( mrgAtmCond [] (CoveredBy v_e $ S.singleton v_f) [asc1]
           @?= Just [asc1,CoveredBy v_e $ S.singleton v_f] )
      ]
 

@@ -434,7 +434,7 @@ and we generate names for these that make their floating nature visible.
       = case
                 bindFloating vts bind tP
         of
-          Yes fbind  ->  tryInstantiate fbind tP partsP scP
+          Yes fbind  ->  tryInstantiate vts fbind tP partsP scP
           But msgs
            -> But ([ "instantiate floating failed"
                    , ""
@@ -454,11 +454,11 @@ and we generate names for these that make their floating nature visible.
 Next, instantiate the law using the bindings.
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
-    tryInstantiate fbind tP partsP scP
+    tryInstantiate vts fbind tP partsP scP
       = case
-                instantiate fbind tP
+                instantiate vts fbind tP
         of
-          Yes tP'  ->  tryInstantiateSC fbind tP' partsP scP
+          Yes tP'  ->  tryInstantiateSC vts fbind tP' partsP scP
           But msgs
            -> But ([ "try law instantiation failed"
                    , ""
@@ -476,11 +476,11 @@ Next, instantiate the law using the bindings.
 Next, instantiate the pattern side-condition using the bindings.
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
-    tryInstantiateSC bind tP partsP scP
+    tryInstantiateSC vts bind tP partsP scP
       = case
-                instantiateSC bind scP
+                instantiateSC vts bind scP
         of
-          Yes scP'  ->  trySCDischarge bind tP partsP scP'
+          Yes scP'  ->  trySCDischarge vts bind tP partsP scP'
           But msgs
            -> But ([ "try s.c. instantiation failed"
                    , ""
@@ -499,9 +499,9 @@ Next, instantiate the pattern side-condition using the bindings.
 Finally, try to discharge the instantiated side-condition:
 \begin{code}
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
-    trySCDischarge bind tP partsP scP'
+    trySCDischarge vts bind tP partsP scP'
       = case
-                scDischarge scC scP' 
+                scDischarge vts scC scP'
         of
           Yes scP'' -> Yes (bind,tP,scP',scP'')
           But whynots -> But [ "try s.c. discharge failed"
@@ -589,7 +589,8 @@ matchLaws logicsig asn (_,lws,vts)
 
 Sometimes we are interested in a specific (named) law.
 \begin{code}
-matchLawByName :: (Monad m, MonadFail m) => LogicSig -> Assertion -> String -> [MatchContext]
+matchLawByName :: (Monad m, MonadFail m)
+               => LogicSig -> Assertion -> String -> [MatchContext]
                -> m Matches
 matchLawByName logicsig asn lnm mcs
  = do (law,vts) <- findLaw lnm mcs
@@ -898,11 +899,11 @@ basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
   =  do bind <- match vts tC partsP
         kbind <- bindKnown vts bind repl
         fbind <- bindFloating vts kbind repl
-        scPinC <- instantiateSC fbind scP
-        scD <- scDischarge scC scPinC
+        scPinC <- instantiateSC vts fbind scP
+        scD <- scDischarge vts scC scPinC
 
         if all isFloatingASC (fst scD)
-          then do mrepl <- instantiate fbind repl
+          then do mrepl <- instantiate vts fbind repl
                   return $ MT n (unwrapASN asn) (chkPatn mc partsP)
                               fbind repl scC scPinC mrepl
           else fail "undischargeable s.c."
@@ -1079,7 +1080,7 @@ shSCImplication scC scPm
      ++ trSideCond scPm
 
 shMappedCond scC bind lsc
-  = case instantiateSC bind lsc of
+  = case instantiateSC [] bind lsc of
       Nothing    ->  trSideCond lsc ++ (red " (law-sc!)")
       Just ilsc  ->  trSideCond ilsc
 

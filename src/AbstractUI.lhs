@@ -590,12 +590,12 @@ apply them to the replacements and side-conditions.
 We then try to discharge the side-condition.
 If successful, we replace the focus.
 \begin{code}
-applyMatchToFocus2 :: MonadFail m
-                   => Match
+applyMatchToFocus2 :: MonadFail m => [VarTable]
+                   -> Match
                    -> [(Variable,Term)]   -- floating Variables -> Term
                    -> [(ListVar,VarList)] -- floating ListVar -> VarList
                    -> LiveProof -> m LiveProof
-applyMatchToFocus2 mtch vts lvvls liveProof
+applyMatchToFocus2 vtbls mtch vts lvvls liveProof
   -- need to use vts and lvvls to update mtch and process law side-conditions
   = let cbind = mBind mtch -- need to update mBind mtch, but maybe later?
         repl = mLawPart mtch
@@ -605,10 +605,10 @@ applyMatchToFocus2 mtch vts lvvls liveProof
         dpath = fPath liveProof
         conjpart = exitTZ tz
     in do let sbind = patchBinding vts lvvls cbind
-          scLasC <- instantiateSC sbind scL
-          scCL <- extendGoalSCCoverage lvvls scLasC
-          scCX <- mrgSideCond scC scCL
-          scD <- scDischarge scCX scLasC
+          scLasC <- instantiateSC vtbls sbind scL
+          scCL <- extendGoalSCCoverage vtbls lvvls scLasC
+          scCX <- mrgSideCond vtbls scC scCL
+          scD <- scDischarge vtbls scCX scLasC
           if onlyFreshSC scD
             then do let freshneeded = snd scD
                     let knownVs = zipperVarsMentioned $ focus liveProof
@@ -616,9 +616,9 @@ applyMatchToFocus2 mtch vts lvvls liveProof
                                    = generateFreshVars knownVs freshneeded sbind
                     let newLocalASC = fst scD
                     -- newLocalSC <- mkSideCond newLocalASC fresh
-                    newLocalSC <- mkSideCond newLocalASC S.empty
-                    scC' <- scCX `mrgSideCond` newLocalSC
-                    brepl  <- instantiate fbind repl
+                    newLocalSC <- mkSideCond vtbls newLocalASC S.empty
+                    scC' <- mrgSideCond vtbls scCX newLocalSC
+                    brepl  <- instantiate vtbls fbind repl
                     asn' <- mkAsn conjpart (conjSC liveProof)
                     return ( focus_ ((setTZ brepl tz),seq')
                            $ matches_ []
@@ -652,23 +652,23 @@ If a floating replacement is used
 in a \texttt{CoveredBy} atomic law side condition,
 then we need to copy it over as a proof-local goal side-condition.
 \begin{code}
-extendGoalSCCoverage lvvls (atmSCs,_)
-  = xtndCoverage (map snd lvvls) [] (filter isCoverage atmSCs)
+extendGoalSCCoverage vts lvvls (atmSCs,_)
+  = xtndCoverage vts (map snd lvvls) [] (filter isCoverage atmSCs)
   where
     isCoverage (CoveredBy _ _)  =  True
     isCoverage _                =  False
 
-    xtndCoverage :: MonadFail m
-                 => [VarList] -- floating replacements
+    xtndCoverage :: MonadFail m => [VarTable]
+                 -> [VarList] -- floating replacements
                  -> [AtmSideCond] -- extra side-conditions (so far)
                  -> [AtmSideCond] -- Law coverage side-conditions
                  -> m SideCond
-    xtndCoverage _ ascs [] = return (ascs, S.empty)
-    xtndCoverage ffvls ascs (cov@(CoveredBy gv vs) : rest)
+    xtndCoverage _ _ ascs [] = return (ascs, S.empty)
+    xtndCoverage vts ffvls ascs (cov@(CoveredBy gv vs) : rest)
       | S.toList vs `elem` ffvls
-         = do ascs' <- mrgAtmCond cov ascs
-              xtndCoverage ffvls ascs' rest
-      | otherwise  =  xtndCoverage ffvls ascs rest
+         = do ascs' <- mrgAtmCond vts cov ascs
+              xtndCoverage vts ffvls ascs' rest
+      | otherwise  =  xtndCoverage vts ffvls ascs rest
 \end{code}
 
 \newpage
@@ -853,14 +853,14 @@ We now get back a pairing of each law unknown free-variable
 with one of the goal sub-terms, as well as the chosen law.
 This gives us enough to complete the instantiation.
 \begin{code}
-lawInstantiate3 :: MonadFail m
-                => Law -> [(Variable,Term)] -> LiveProof -> m LiveProof
-lawInstantiate3 law@((lnm,(Assertion lawt lsc)),lprov) varTerms liveProof
+lawInstantiate3 :: MonadFail m => [VarTable]
+                -> Law -> [(Variable,Term)] -> LiveProof -> m LiveProof
+lawInstantiate3 vts law@((lnm,(Assertion lawt lsc)),lprov) varTerms liveProof
   = do lbind <- mkBinding emptyBinding varTerms
        let scC = conjSC liveProof
-       ilsc <- instantiateSC lbind lsc
-       nsc <- mrgSideCond scC ilsc
-       ilawt <- instantiate lbind lawt
+       ilsc <- instantiateSC vts lbind lsc
+       nsc <- mrgSideCond vts scC ilsc
+       ilawt <- instantiate vts lbind lawt
        let (tz,seq') = focus liveProof
        let dpath = fPath liveProof
        asn' <- mkAsn (exitTZ tz) (conjSC liveProof)

@@ -76,7 +76,7 @@ Given a variable $v$ we use $\beta(v)$ to denote a binding lookup.
 
 Here we require every free variable in the term to be also in the binding.
 \begin{code}
-instantiate :: MonadFail m => Binding -> Term -> m Term
+instantiate :: MonadFail m => [VarTable] -> Binding -> Term -> m Term
 \end{code}
 
 \begin{eqnarray*}
@@ -84,15 +84,15 @@ instantiate :: MonadFail m => Binding -> Term -> m Term
 \\ \beta.\tt \tau &=& \tt \tau
 \end{eqnarray*}
 \begin{code}
-instantiate binding v@(Val _ _)  =  return v
-instantiate binding t@(Typ _)    =  return t
+instantiate _ binding v@(Val _ _)  =  return v
+instantiate _ binding t@(Typ _)    =  return t
 \end{code}
 
 \begin{eqnarray*}
    \beta.(\vv v) &=& \beta(v)
 \end{eqnarray*}
 \begin{code}
-instantiate binding vt@(Var tk v)
+instantiate vts binding vt@(Var tk v)
   = case lookupVarBind binding v of
       Just (BindVar v')   ->  var tk v'
       Just (BindTerm t')  ->  return t'
@@ -107,8 +107,8 @@ instantiate binding vt@(Var tk v)
    \beta.(\cc n {ts}) &=& \cc n {(\beta^*.ts)}
 \end{eqnarray*}
 \begin{code}
-instantiate binding (Cons tk sb n ts)
-  = fmap (Cons tk sb n) $ sequence $ map (instantiate binding) ts
+instantiate vts binding (Cons tk sb n ts)
+  = fmap (Cons tk sb n) $ sequence $ map (instantiate vts binding) ts
 \end{code}
 
 \begin{eqnarray*}
@@ -116,13 +116,13 @@ instantiate binding (Cons tk sb n ts)
 \\ \beta.(\ll n {v^+} t) &=& \ll n {\beta^*.v^+} {\beta.t}
 \end{eqnarray*}
 \begin{code}
-instantiate binding (Bnd tk n vs tm)
-  = do vs' <- fmap theFreeVars $ instVarSet binding vs
-       tm' <- instantiate binding tm
+instantiate vts binding (Bnd tk n vs tm)
+  = do vs' <- fmap theFreeVars $ instVarSet vts binding vs
+       tm' <- instantiate vts binding tm
        bnd tk n vs' tm'
-instantiate binding (Lam tk n vl tm)
-  = do vl' <- instVarList binding vl
-       tm' <- instantiate binding tm
+instantiate vts binding (Lam tk n vl tm)
+  = do vl' <- instVarList vts binding vl
+       tm' <- instantiate vts binding tm
        lam tk n vl' tm'
 \end{code}
 
@@ -130,8 +130,8 @@ instantiate binding (Lam tk n vl tm)
    \beta.(\xx n t) &=& \xx {n} {\beta.t}
 \end{eqnarray*}
 \begin{code}
-instantiate binding (Cls n tm)
-  = do tm' <- instantiate binding tm
+instantiate vts binding (Cls n tm)
+  = do tm' <- instantiate vts binding tm
        return $ Cls n tm'
 \end{code}
 
@@ -139,9 +139,9 @@ instantiate binding (Cls n tm)
    \beta.(\ss t {v^n} {t^n}) &=& \ss {\beta.t} {\beta^*(v^n)} {\beta^*.t^n}
 \end{eqnarray*}
 \begin{code}
-instantiate binding (Sub tk tm s)
-  = do tm' <- instantiate binding tm
-       s' <- instSub binding s
+instantiate vts binding (Sub tk tm s)
+  = do tm' <- instantiate vts binding tm
+       s' <- instSub vts binding s
        return $ Sub tk tm' s'
 \end{code}
 
@@ -166,8 +166,8 @@ Note that all lists must be of the same length,
 and at any list position $i$, the general variables $g^1_i, \dots, g^a_i$
 are of the same type (std/list).
 \begin{code}
-instantiate binding (Iter tk sa na si ni lvs)
-  = do lvtss <- instIterLVS binding lvs
+instantiate vts binding (Iter tk sa na si ni lvs)
+  = do lvtss <- instIterLVS vts binding lvs
        -- all have same non-zero length
        -- have the same kind of object (list-var/term)
        case lvtss of
@@ -194,9 +194,10 @@ $
 }
 $
 \begin{code}
-instIterLVS :: MonadFail m => Binding -> [ListVar] -> m [[LVarOrTerm]]
-instIterLVS binding lvs
-  = do lvtss <- sequence $ map (instTLGVar binding) lvs
+instIterLVS :: MonadFail m => [VarTable]
+            -> Binding -> [ListVar] -> m [[LVarOrTerm]]
+instIterLVS vts binding lvs
+  = do lvtss <- sequence $ map (instTLGVar vts binding) lvs
        let lvtss' = transpose lvtss
        checkAndGroup arity [] lvtss'
        -- fail "instIterLVS NYI"
@@ -205,8 +206,8 @@ instIterLVS binding lvs
 \end{code}
 
 \begin{code}
-instTLGVar :: MonadFail m => Binding -> ListVar -> m [LVarOrTerm]
-instTLGVar binding lv
+instTLGVar :: MonadFail m => [VarTable] -> Binding -> ListVar -> m [LVarOrTerm]
+instTLGVar vts binding lv
   = case lookupLstBind binding lv of
       Nothing              ->  return $ [injLV lv]  -- maps to self !
       Just (BindList vl')  ->  return $ map injGV vl'
@@ -245,7 +246,7 @@ checkAndGroup a sstvl (lvts:lvtss)
 
 The \texttt{Substn} constructor is used to represent substitutions,
 and assignments.
-\textbf{This may require separate treatment for the two cases.}
+\textbf{This requires separate treatment for the two cases.}
 
 For both,
 we expect the substitution target and replacement list-variables
@@ -262,11 +263,13 @@ However the assignment only the second list-var to list-var component
 of a substitution.
 
 \begin{code}
-instSub :: MonadFail m => Binding -> Substn -> m Substn
-instSub binding (Substn ts lvs)
-  = do ts'  <- instZip (instStdVar binding)  (instantiate binding) (S.toList ts)
+instSub :: MonadFail m => [VarTable] -> Binding -> Substn -> m Substn
+instSub vts binding (Substn ts lvs)
+  = do ts'  <- instZip (instStdVar vts binding)
+                       (instantiate vts binding) (S.toList ts)
        ts'' <- sequence $ map getTheTargetVar ts'
-       vtlvss' <- instZip (instLLVar binding) (instLLVar binding) (S.toList lvs)
+       vtlvss' <- instZip (instLLVar vts binding) (instLLVar vts binding)
+                          (S.toList lvs)
        let (lvtlvss,rvtlvss) = unzip vtlvss'
        let (vtts,lvts) = unzip lvtlvss
        let (vtrs,lvrs) = unzip rvtlvss
@@ -301,8 +304,9 @@ getTheVar fvs@(vs,diffs)
 
 This code is used for list-var in substitutions only.
 \begin{code}
-instLLVar :: MonadFail m => Binding -> ListVar -> m ([Term],[ListVar])
-instLLVar binding lv
+instLLVar :: MonadFail m => [VarTable]
+          -> Binding -> ListVar -> m ([Term],[ListVar])
+instLLVar vts binding lv
   = case lookupLstBind binding lv of
       Just (BindList vl')  ->  do lvs <- fromGVarToLVar vl'
                                   return ([],lvs)
@@ -334,9 +338,9 @@ Let $g$ denote a general variable, and $G$ a set of same.
    \beta.G &=& \textstyle \bigcup_{g \in G} \beta.g
 \end{eqnarray*}
 \begin{code}
-instVarSet :: MonadFail m => Binding -> VarSet -> m FreeVars
-instVarSet binding vs
-  = do fvss <- sequence $ map (instGVar binding) $ S.toList vs
+instVarSet :: MonadFail m => [VarTable] -> Binding -> VarSet -> m FreeVars
+instVarSet vts binding vs
+  = do fvss <- sequence $ map (instGVar vts binding) $ S.toList vs
        return $ mrgFreeVarList fvss
 \end{code}
 
@@ -349,14 +353,14 @@ For a general variable:
 \\ \beta.\lst g &=& \beta(\lst g)
 \end{eqnarray*}
 \begin{code}
-instGVar :: MonadFail m => Binding -> GenVar -> m FreeVars
-instGVar binding (StdVar v)  = instStdVar binding v
-instGVar binding (LstVar lv) = instLstVar binding lv
+instGVar :: MonadFail m => [VarTable] -> Binding -> GenVar -> m FreeVars
+instGVar vts binding (StdVar v)  = instStdVar vts binding v
+instGVar vts binding (LstVar lv) = instLstVar vts binding lv
 \end{code}
 
 \begin{code}
-instStdVar :: MonadFail m => Binding -> Variable -> m FreeVars
-instStdVar binding v
+instStdVar :: MonadFail m => [VarTable] -> Binding -> Variable -> m FreeVars
+instStdVar vts binding v
   = case lookupVarBind binding v of
       Nothing             ->  return $ single v  -- maps to self !
       Just (BindVar v')   ->  return $ single v'
@@ -366,8 +370,8 @@ instStdVar binding v
 \end{code}
 
 \begin{code}
-instLstVar :: MonadFail m => Binding -> ListVar -> m FreeVars
-instLstVar binding lv
+instLstVar :: MonadFail m => [VarTable] -> Binding -> ListVar -> m FreeVars
+instLstVar vts binding lv
   = case lookupLstBind binding lv of
       Nothing              ->  return $ single lv  -- maps to self !
       Just (BindList vl')  ->  return (S.fromList vl',[])
@@ -387,18 +391,18 @@ With $L$ a list of general variables
    \beta.L &=& \mathsf{concat}_{g \in L} \beta.g
 \end{eqnarray*}
 \begin{code}
-instVarList :: MonadFail m => Binding -> VarList -> m VarList
-instVarList binding vl
-  = fmap concat $ sequence $ map (instLGVar binding) vl
+instVarList :: MonadFail m => [VarTable] -> Binding -> VarList -> m VarList
+instVarList vts binding vl
+  = fmap concat $ sequence $ map (instLGVar vts binding) vl
 \end{code}
 We do not expect these to map to terms.
 \begin{code}
-instLGVar :: MonadFail m => Binding -> GenVar -> m VarList
-instLGVar binding (StdVar v)
-  =  do fvs' <- instStdVar binding v
+instLGVar :: MonadFail m => [VarTable] -> Binding -> GenVar -> m VarList
+instLGVar vts binding (StdVar v)
+  =  do fvs' <- instStdVar vts binding v
         v' <- getTheVar fvs'
         return [StdVar v]
-instLGVar binding gv@(LstVar lv)
+instLGVar vts binding gv@(LstVar lv)
   = case lookupLstBind binding lv of
       Nothing              ->  return [gv]  -- maps to self !
       Just (BindList vl')  ->  return vl'
@@ -414,7 +418,7 @@ instantiate and simplify those,
 and merge together.
 
 \begin{code}
-instantiateSC :: MonadFail m => Binding -> SideCond -> m SideCond
+instantiateSC :: MonadFail m => [VarTable] -> Binding -> SideCond -> m SideCond
 \end{code}
 For atomic side-conditions:
 \begin{eqnarray*}
@@ -434,30 +438,31 @@ The most sensible thing to do is to compute $\fv(\beta(T))$,
 and then use $\beta.C$ or $\beta.D$
 to try to eliminate any use of set difference.
 \begin{code}
-instantiateSC bind (ascs,freshvs)
-  = do ascss' <- sequence $ map (instantiateASC bind) ascs
-       freshvs' <- instVarSet bind freshvs
-       mkSideCond (concat ascss') $ theFreeVars freshvs'
+instantiateSC vts bind (ascs,freshvs)
+  = do ascss' <- sequence $ map (instantiateASC vts bind) ascs
+       freshvs' <- instVarSet vts bind freshvs
+       mkSideCond vts (concat ascss') $ theFreeVars freshvs'
 \end{code}
 We compute $\beta.C$/$\beta.D$ first, failing (for now), if it has terms,
 and then we compute  $\fv(\beta(T))$.
 \begin{code}
-instantiateASC :: MonadFail m => Binding -> AtmSideCond -> m [AtmSideCond]
-instantiateASC bind asc
-  = do (vsCD,diffs) <- instVarSet bind $ ascVSet asc
+instantiateASC :: MonadFail m => [VarTable]
+               -> Binding -> AtmSideCond -> m [AtmSideCond]
+instantiateASC vts bind asc
+  = do (vsCD,diffs) <- instVarSet vts bind $ ascVSet asc
        if null diffs
-         then instASCVariant vsCD fvsT asc
+         then instASCVariant vts vsCD fvsT asc
          else fail "instantiateASC: explicit diffs in var-set not handled."
   where
-     fvsT = instantiateGVar bind $ ascGVar asc
+     fvsT = instantiateGVar vts bind $ ascGVar asc
 \end{code}
 
 \begin{code}
-instASCVariant :: MonadFail m
-               => VarSet -> FreeVars -> AtmSideCond -> m [AtmSideCond]
-instASCVariant vsD fvT (Disjoint _ _)   =  instDisjoint vsD fvT
-instASCVariant vsC fvT (CoveredBy _ _)  =  instCovers   vsC fvT
-instASCVariant _   fvT (IsPre _)        =  instIsPre        fvT
+instASCVariant :: MonadFail m => [VarTable]
+               -> VarSet -> FreeVars -> AtmSideCond -> m [AtmSideCond]
+instASCVariant vts vsD fvT (Disjoint _ _)   =  instDisjoint vts vsD fvT
+instASCVariant vts vsC fvT (CoveredBy _ _)  =  instCovers   vts vsC fvT
+instASCVariant vts _   fvT (IsPre _)        =  instIsPre    vts     fvT
 \end{code}
 
 
@@ -472,8 +477,8 @@ instASCVariant _   fvT (IsPre _)        =  instIsPre        fvT
 where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj F_i$, $F \disj B_i$.
 \begin{code}
-instDisjoint :: MonadFail m => VarSet -> FreeVars -> m [AtmSideCond]
-instDisjoint vsD (fF,fLessBs)
+instDisjoint :: MonadFail m => [VarTable] -> VarSet -> FreeVars -> m [AtmSideCond]
+instDisjoint vts vsD (fF,fLessBs)
   =  return (asc1 ++ concat asc2)
   where
     asc1 = map (f1 vsD) (S.toList fF)
@@ -494,8 +499,8 @@ instDisjoint vsD (fF,fLessBs)
 where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj F_i$, $F \disj B_i$.
 \begin{code}
-instCovers :: MonadFail m => VarSet -> FreeVars -> m [AtmSideCond]
-instCovers vsC (fF,fLessBs)
+instCovers :: MonadFail m => [VarTable] -> VarSet -> FreeVars -> m [AtmSideCond]
+instCovers vts vsC (fF,fLessBs)
   =  return (asc1 ++ concat asc2)
   where
     asc1 = map (f1 vsC) (S.toList fF)
@@ -517,8 +522,8 @@ instCovers vsC (fF,fLessBs)
 where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj F_i$, $F \disj B_i$.
 \begin{code}
-instIsPre :: MonadFail m => FreeVars -> m [AtmSideCond]
-instIsPre  (fF,fLessBs)
+instIsPre :: MonadFail m => [VarTable] -> FreeVars -> m [AtmSideCond]
+instIsPre  vts (fF,fLessBs)
   =  return (asc1 ++ concat asc2)
   where
     asc1 = map IsPre (S.toList fF)
@@ -532,9 +537,9 @@ instIsPre  (fF,fLessBs)
 Instantiate a (std./list)-variable either according to the binding,
 or by itself if not bound:
 \begin{code}
-instantiateGVar :: Binding -> GenVar -> FreeVars
-instantiateGVar bind (StdVar v)   =  instantiateVar    bind v
-instantiateGVar bind (LstVar lv)  =  instantiateLstVar bind lv
+instantiateGVar :: [VarTable] -> Binding -> GenVar -> FreeVars
+instantiateGVar vts bind (StdVar v)   =  instantiateVar    vts bind v
+instantiateGVar vts bind (LstVar lv)  =  instantiateLstVar vts bind lv
 \end{code}
 
 \begin{eqnarray*}
@@ -543,8 +548,8 @@ instantiateGVar bind (LstVar lv)  =  instantiateLstVar bind lv
 \\ \beta(v) &=& \fv(\beta.v), \quad \mbox{if $\beta.v$ is a term}
 \end{eqnarray*}
 \begin{code}
-instantiateVar :: Binding -> Variable -> FreeVars
-instantiateVar bind v
+instantiateVar :: [VarTable] -> Binding -> Variable -> FreeVars
+instantiateVar vts bind v
   = case lookupVarBind bind v of
         Nothing            ->  (S.singleton $ StdVar v,[])
         Just (BindVar v')  ->  (S.singleton $ StdVar v',[])
@@ -561,8 +566,8 @@ instantiateVar bind v
      \quad \mbox{if $\beta.\lst v$ has form $(L,T)$}
 \end{eqnarray*}
 \begin{code}
-instantiateLstVar :: Binding -> ListVar -> FreeVars
-instantiateLstVar bind lv
+instantiateLstVar :: [VarTable] -> Binding -> ListVar -> FreeVars
+instantiateLstVar vts bind lv
   = case lookupLstBind bind lv of
       Nothing             ->  (S.singleton $ LstVar lv, [])
       Just (BindList vl)  ->  (S.fromList vl, [])

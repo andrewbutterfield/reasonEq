@@ -3,7 +3,11 @@
 
 ## Most Urgent
 
-`SideCond` is fixed. Substitution needs work
+Actually, side-conditions need more work, to take account of `VarData`.
+
+1. Feed var. data into s.c. functions
+2. Implement var. data-aware s.c. functions
+3. Implement var. data-aware subst. functions
 
 
 The issue is that `(x'=e∧(O$'\x=O$\x))[O$_1/O$']` should become `x_1=e∧(O$_1\x=O$\x)`, and not `(x'=e[O$_1/O$']∧(O$'\x=O$\x))`!

@@ -44,6 +44,7 @@ module Variables
  , isPreVarSet
  , liftLess
  , dnWhen, dnVar, dnLVar, dnGVar
+ , varTempSync, lvarTempSync, gvarTempSync
  , fI, fIn, fVar, fLVar, fGVar
  , isFloating, isFloatingV, isFloatingLV, isFloatingGVar
  , sinkId, sinkV, sinkLV, sinkGV
@@ -455,6 +456,17 @@ dnLVar lv@(LVbl (Vbl vi vc vw) is ij)
 
 dnGVar (StdVar v)   =  StdVar $ dnVar  v
 dnGVar (LstVar lv)  =  LstVar $ dnLVar lv
+\end{code}
+
+We also need to ``un-normalise'':
+\begin{code}
+varTempSync Static v             =  v
+varTempSync vw     (Vbl i vc _)  =  Vbl i vc vw
+
+lvarTempSync vw (LVbl v is ij) = LVbl (varTempSync vw v) is ij
+
+gvarTempSync vw (StdVar v)   =  StdVar (varTempSync vw v)
+gvarTempSync vw (LstVar lv)  =  LstVar (lvarTempSync vw lv)
 \end{code}
 
 

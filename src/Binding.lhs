@@ -1402,14 +1402,6 @@ that that the returned variable, stored in the binding as \texttt{During},
 matches the temporality of the variable being looked up.
 If the lookup variable is \texttt{Static} or \texttt{Textual}, then we leave the result alone.
 \begin{code}
-varTempSync Static v             =  v
-varTempSync vw     (Vbl i vc _)  =  Vbl i vc vw
-
-lvarTempSync vw (LVbl v is ij) = LVbl (varTempSync vw v) is ij
-
-gvarTempSync vw (StdVar v)   =  StdVar (varTempSync vw v)
-gvarTempSync vw (LstVar lv)  =  LstVar (lvarTempSync vw lv)
-
  {- The use of fromJust below will always succeed,
     because none of the smart constructors care about temporality,
     and all we are doing is rebuilding something that got past them

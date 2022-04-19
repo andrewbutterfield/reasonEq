@@ -43,6 +43,7 @@ module Variables
  , VarSet, stdVarSetOf, listVarSetOf
  , isPreVarSet
  , liftLess
+ , dnWhen, dnVar, dnLVar, dnGVar
  , fI, fIn, fVar, fLVar, fGVar
  , isFloating, isFloatingV, isFloatingLV, isFloatingGVar
  , sinkId, sinkV, sinkLV, sinkGV
@@ -429,6 +430,33 @@ liftLess (LV (VR (_,vc,vw), is, js))
      mkV i = VR (i,vc,vw)
      mkL j = LV (mkV j,[],[])
 \end{code}
+
+
+\newpage
+
+\subsection{Dynamic Normalisation}
+
+Dynamic normalisation (d.n.):
+When we store a dynamic term,
+we ``normalise'' it by setting its temporality to \texttt{Before}.
+
+\begin{code}
+dnWhen Static   =  Static
+dnWhen Textual  =  Textual
+dnWhen _        =  Before
+
+dnVar v@(Vbl vi vc vw)
+  | vw == Static || vw == Textual || vw == Before  =  v
+  | otherwise                                      =  Vbl vi vc Before
+
+dnLVar lv@(LVbl (Vbl vi vc vw) is ij)
+  | vw==Static || vw==Textual || vw==Before  =  lv
+  | otherwise                                =  LVbl (Vbl vi vc Before) is ij
+
+dnGVar (StdVar v)   =  StdVar $ dnVar  v
+dnGVar (LstVar lv)  =  LstVar $ dnLVar lv
+\end{code}
+
 
 \newpage
 

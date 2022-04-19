@@ -686,21 +686,6 @@ dnTerm' (Sub tk t sub)    =  Sub    tk (dnTerm' t) $ dnSub sub
 dnTerm' (Iter tk sa a sp p lvs) =  Iter tk sa a sp p (map dnLVar lvs)
 dnTerm' t                 =  t
 
-dnWhen Static   =  Static
-dnWhen Textual  =  Textual
-dnWhen _        =  Before
-
-dnVar v@(Vbl vi vc vw)
-  | vw == Static || vw == Textual || vw == Before  =  v
-  | otherwise                                      =  Vbl vi vc Before
-
-dnLVar lv@(LVbl (Vbl vi vc vw) is ij)
-  | vw==Static || vw==Textual || vw==Before  =  lv
-  | otherwise                                =  LVbl (Vbl vi vc Before) is ij
-
-dnGVar (StdVar v)   =  StdVar $ dnVar  v
-dnGVar (LstVar lv)  =  LstVar $ dnLVar lv
-
 dnSub (Substn tsub lvsub)
  = dnSubst (dnTSub $ S.toList tsub) (dnLVSub $ S.toList lvsub)
 
@@ -1623,7 +1608,7 @@ mkKnownLstVarBind bind lv@(LVbl v@(Vbl _ vc vw) is js)
     moremsgs = [ "is = "++show is
                , "js = "++show js
                , "is' = "++show is'
-               , "js' = "++show js' 
+               , "js' = "++show js'
                ]
 
 instLess :: Binding -> VarClass -> VarWhen -> [Identifier] -> [Identifier]

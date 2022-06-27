@@ -37,6 +37,8 @@ module AST ( Type
            , icomma, lvarCons
            , subTerms
            , mentionedVars, mentionedVarLists, mentionedVarSets
+           , dnTerm, dnSub
+           , termTempSync, subTempSync, tlTempSync
            -- test only below here
            , int_tst_AST
            , jSub, jVar, jBnd, jLam, jSubstn
@@ -710,6 +712,84 @@ mentionedVarSets _                        =  []
 \end{code}
 
 \newpage
+\subsubsection{Term Dynamic normalisation}
+When we store a dynamic term,
+we sometimes ``normalise'' it by setting its temporality to \texttt{Before}.
+\begin{code}
+dnTerm :: Term -> Term
+dnTerm v@(Var tk (Vbl vi vc vw))
+  | vw == Static || vw == Textual || vw == Before  =  v
+  | otherwise            =  dnTVar  tk $ Vbl vi vc Before
+dnTerm (Cons tk sb n ts)    =  Cons tk sb n $ map dnTerm ts
+dnTerm (Bnd tk n vs t)  =  dnBind tk n (S.map dnGVar vs) $ dnTerm t
+dnTerm (Lam tk n vl t)   =  dnLam  tk n (  map dnGVar vl) $ dnTerm t
+-- dnTerm (Cls n t)      No!
+dnTerm (Sub tk t sub)    =  Sub    tk (dnTerm t) $ dnSub sub
+dnTerm (Iter tk sa a sp p lvs) =  Iter tk sa a sp p (map dnLVar lvs)
+dnTerm t                 =  t
+
+dnSub :: Substn -> Substn
+dnSub (Substn tsub lvsub)
+ = dnSubst (dnTSub $ S.toList tsub) (dnLVSub $ S.toList lvsub)
+
+dnTSub :: [(Variable, Term)] -> [(Variable, Term)]
+dnTSub tsub = map dnVT tsub ; dnVT (v,t) = (dnVar v,dnTerm t)
+
+dnLVSub :: [(ListVar, ListVar)] -> [(ListVar, ListVar)]
+dnLVSub lvsub = map dnLVLV lvsub ; dnLVLV (lv1,lv2) = (dnLVar lv1,dnLVar lv2 )
+
+dnTVar  tk       =  getJust "dnTerm2VarBind var failed"  . var  tk
+dnBind tk n vl  =  getJust "dnTerm2VarBind bnd failed" . bnd tk n vl
+dnLam  tk n vs  =  getJust "dnTerm2VarBind lam failed"  . lam  tk n vs
+dnSubst tsub lvsub = getJust "" $ substn tsub lvsub
+\end{code}
+
+We can ``un-normalise'' by providing a replacement \texttt{VarWhen} value:
+\begin{code}
+ {- The use of fromJust below will always succeed,
+    because none of the smart constructors care about temporality,
+    and all we are doing is rebuilding something that got past them
+    in the first instance -}
+termTempSync :: VarWhen -> Term -> Term
+termTempSync vw t@(Var tk v@(Vbl vi vc bw))
+ | bw == Static || bw == Textual =  t
+ | otherwise                       =  ttsVar tk $ Vbl vi vc vw
+termTempSync vw (Cons tk sb i ts)     =  Cons tk sb i $ map (termTempSync vw) ts
+termTempSync vw (Bnd tk i vs t)
+ =  ttsBind tk i (S.map (gvarTempSync vw) vs) $ termTempSync vw t
+termTempSync vw (Lam tk i vl t)
+ =  ttsLam  tk i (map (gvarTempSync vw) vl) $ termTempSync vw t
+termTempSync vw (Cls i t) = Cls i $ termTempSync vw t
+termTempSync vw (Sub tk t s)       =  Sub tk (termTempSync vw t) $ subTempSync vw s
+termTempSync vw (Iter tk sa a sp p lvs)
+  =  Iter tk sa a sp p $ map (lvarTempSync vw) lvs
+termTempSync vw t               =  t
+
+subTempSync :: VarWhen -> Substn -> Substn
+subTempSync vw (Substn tsub lsub)
+ = ttsSubstn (map (tsubSync vw) $ S.toList tsub)
+             (map (lsubSync vw) $ S.toList lsub)
+ where
+      tsubSync vw (v,  t )  =  (varTempSync vw v,   termTempSync vw t )
+      lsubSync vw (lt, lr)  =  (lvarTempSync vw lt, lvarTempSync vw lr)
+
+ttsVar  tk           =  getJust "termTempSync var failed."   . var tk
+ttsBind tk i vs      =  getJust "termTempSync bind failed."  . bnd tk i vs
+ttsLam  tk i vl      =  getJust "termTempSync lam failed."   . lam tk i vl
+ttsSubstn tsub lsub  =  getJust "subTempSync substn failed." $ substn tsub lsub
+
+tlTempSync :: VarWhen -> Either ListVar Term -> Either ListVar Term
+tlTempSync dn (Left lv)   =  Left  $ lvarTempSync dn lv
+tlTempSync dn (Right tm)  =  Right $ termTempSync dn tm
+\end{code}
+
+
+
+
+
+\newpage
+
+
 
 \subsection{Exported Test Group}
 \begin{code}

@@ -31,9 +31,9 @@ import LexBase
 import Variables
 import AST
 import VarData
+import Binding
 import SideCond
 import Assertions
-import Binding
 import Ranking
 import REqState
 import AbstractUI

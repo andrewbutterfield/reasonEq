@@ -435,10 +435,10 @@ liftLess (LV (VR (_,vc,vw), is, js))
 
 \newpage
 
-\subsection{Dynamic Normalisation}
+\subsection{Dynamic Variable Normalisation}
 
 Dynamic normalisation (d.n.):
-When we store a dynamic term,
+When we record a dynamic variable in certain circumstances,
 we ``normalise'' it by setting its temporality to \texttt{Before}.
 
 \begin{code}

@@ -241,10 +241,14 @@ We expect the behaviour shown in Fig. \ref{fig:dynamic-coherence}.
 \\\hline
 \end{tabular}
   \caption{
-    Managing Dynamic binding coherence, where
-    $s$ is \texttt{Static}, $\texttt{v}$ and $\texttt{x}$ are \texttt{Textual},
-    and $v$ and $x$ with or without decoration, are any other \texttt{Dynamic},
-    and $i_s$ and $i_v$ are the respective identifiers  underlying $s$ and the $v$s
+    Managing Dynamic binding coherence,
+    where
+    $s$ is \texttt{Static},
+    $\texttt{v}$ and $\texttt{x}$ are \texttt{Textual},
+    and $v$ and $x$ with or without decoration,
+    are any other \texttt{Dynamic},
+    and $i_s$ and $i_v$ are
+    the respective identifiers underlying $s$ and the $v$s
   }
   \label{fig:dynamic-coherence}
 \end{center}
@@ -574,7 +578,7 @@ bindVarToTerm v@(Vbl vi ExprV vt) ct (BD (vbind,sbind,lbind))
         return $ BD (vbind',sbind,lbind)
  | otherwise -- term has one temporality
     = do sbind' <- bindSubscriptToSubscript "bindVarToTerm(ev2)" vt thectw sbind
-         vbind' <- insertDR (rangeEq "bindVarToTerm(ev3)") (vi,ExprV) (dnTerm ct) vbind
+         vbind' <- insertDR (rangeEq "bindVarToTerm(ev3)") (vi,ExprV) (dnTerm2VarBind ct) vbind
          return $ BD (vbind',sbind',lbind)
  where
    ctws = temporalityOf ct
@@ -590,11 +594,11 @@ bindVarToTerm v@(Vbl vi PredV vt) ct (BD (vbind,sbind,lbind))
  | isExpr ct  =  fail "bindVarToTerm: p.-var. cannot bind expression."
  | wsize  > 1  =  fail "bindVarToTerm: p.-var. mixed term temporality."
  | wsize == 0  -- term has no variables
-   = do vbind' <- insertDR (rangeEq "bindVarToTerm(pv1)") (vi,PredV) (dnTerm ct) vbind
+   = do vbind' <- insertDR (rangeEq "bindVarToTerm(pv1)") (vi,PredV) (dnTerm2VarBind ct) vbind
         return $ BD (vbind',sbind,lbind)
  | otherwise
     = do sbind' <- bindSubscriptToSubscript "bindVarToTerm(pv2)" vt thectw sbind
-         vbind' <- insertDR (rangeEq "bindVarToTerm(pv3)") (vi,PredV) (dnTerm ct) vbind
+         vbind' <- insertDR (rangeEq "bindVarToTerm(pv3)") (vi,PredV) (dnTerm2VarBind ct) vbind
          return $ BD (vbind',sbind',lbind)
  where
    ctws = temporalityOf ct
@@ -671,31 +675,8 @@ When we store a dynamic term,
 we ``normalise'' it by setting its temporality to \texttt{Before}.
 
 \begin{code}
-dnTerm :: Term -> VarBind
-dnTerm t = BT $ dnTerm' t
-
-dnTerm' :: Term -> Term
-dnTerm' v@(Var tk (Vbl vi vc vw))
-  | vw == Static || vw == Textual || vw == Before  =  v
-  | otherwise            =  dnTVar  tk $ Vbl vi vc Before
-dnTerm' (Cons tk sb n ts)    =  Cons tk sb n $ map dnTerm' ts
-dnTerm' (Bnd tk n vs t)  =  dnBind tk n (S.map dnGVar vs) $ dnTerm' t
-dnTerm' (Lam tk n vl t)   =  dnLam  tk n (  map dnGVar vl) $ dnTerm' t
--- dnTerm' (Cls n t)      No!
-dnTerm' (Sub tk t sub)    =  Sub    tk (dnTerm' t) $ dnSub sub
-dnTerm' (Iter tk sa a sp p lvs) =  Iter tk sa a sp p (map dnLVar lvs)
-dnTerm' t                 =  t
-
-dnSub (Substn tsub lvsub)
- = dnSubst (dnTSub $ S.toList tsub) (dnLVSub $ S.toList lvsub)
-
-dnTSub tsub = map dnVT tsub ; dnVT (v,t) = (dnVar v,dnTerm' t)
-dnLVSub lvsub = map dnLVLV lvsub ; dnLVLV (lv1,lv2) = (dnLVar lv1,dnLVar lv2 )
-
-dnTVar  tk       =  getJust "dnTerm var failed"  . var  tk
-dnBind tk n vl  =  getJust "dnTerm bnd failed" . bnd tk n vl
-dnLam  tk n vs  =  getJust "dnTerm lam failed"  . lam  tk n vs
-dnSubst tsub lvsub = getJust "" $ substn tsub lvsub
+dnTerm2VarBind :: Term -> VarBind
+dnTerm2VarBind t = BT $ dnTerm t
 \end{code}
 
 
@@ -1343,7 +1324,7 @@ bindLVarSubstRepl lv@(LVbl (Vbl vi vc vt) is ij) cndTsVL (BD (vbind,sbind,lbind)
    ctws = temporalitiesOf cndTs
    wsize = S.size ctws
    thectw = S.elemAt 0 ctws
-   dnLVarTerm (Right t) = Right $ dnTerm' t
+   dnLVarTerm (Right t) = Right $ dnTerm t
    dnLVarTerm (Left lv) = Left $ dnLVar lv
    cndTsVL' = map dnLVarTerm cndTsVL
 \end{code}
@@ -1394,47 +1375,6 @@ bindGVarToVList _ _ _ = fail "bindGVarToVList: invalid gvar. -> vlist binding."
 Binding lookup is very straightforward,
 with the minor wrinkle that we need to ensure we lookup
 the subscript binding if the lookup variable has \texttt{During} temporality.
-
-\subsubsection{\texttt{During} subscript management}
-
-We need to ensure, for dynamic variables,
-that that the returned variable, stored in the binding as \texttt{During},
-matches the temporality of the variable being looked up.
-If the lookup variable is \texttt{Static} or \texttt{Textual}, then we leave the result alone.
-\begin{code}
- {- The use of fromJust below will always succeed,
-    because none of the smart constructors care about temporality,
-    and all we are doing is rebuilding something that got past them
-    in the first instance -}
-termTempSync vw t@(Var tk v@(Vbl vi vc bw))
- | bw == Static || bw == Textual =  t
- | otherwise                       =  ttsVar tk $ Vbl vi vc vw
-termTempSync vw (Cons tk sb i ts)     =  Cons tk sb i $ map (termTempSync vw) ts
-termTempSync vw (Bnd tk i vs t)
- =  ttsBind tk i (S.map (gvarTempSync vw) vs) $ termTempSync vw t
-termTempSync vw (Lam tk i vl t)
- =  ttsLam  tk i (map (gvarTempSync vw) vl) $ termTempSync vw t
-termTempSync vw (Cls i t) = Cls i $ termTempSync vw t
-termTempSync vw (Sub tk t s)       =  Sub tk (termTempSync vw t) $ subTempSync vw s
-termTempSync vw (Iter tk sa a sp p lvs)
-  =  Iter tk sa a sp p $ map (lvarTempSync vw) lvs
-termTempSync vw t               =  t
-
-subTempSync vw (Substn tsub lsub)
- = ttsSubstn (map (tsubSync vw) $ S.toList tsub)
-             (map (lsubSync vw) $ S.toList lsub)
- where
-      tsubSync vw (v,  t )  =  (varTempSync vw v,   termTempSync vw t )
-      lsubSync vw (lt, lr)  =  (lvarTempSync vw lt, lvarTempSync vw lr)
-
-ttsVar  tk           =  getJust "termTempSync var failed."   . var tk
-ttsBind tk i vs      =  getJust "termTempSync bind failed."  . bnd tk i vs
-ttsLam  tk i vl      =  getJust "termTempSync lam failed."   . lam tk i vl
-ttsSubstn tsub lsub  =  getJust "subTempSync substn failed." $ substn tsub lsub
-
-tlTempSync dn (Left lv)   =  Left  $ lvarTempSync dn lv
-tlTempSync dn (Right tm)  =  Right $ termTempSync dn tm
-\end{code}
 
 \newpage
 \subsubsection{Lookup (Standard) Variables}

@@ -44,7 +44,7 @@ module Variables
  , isPreVarSet
  , liftLess
  , dnWhen, dnVar, dnLVar, dnGVar
- , varTempSync, lvarTempSync, gvarTempSync
+ , unVar, unLVar, unGVar
  , fI, fIn, fVar, fLVar, fGVar
  , isFloating, isFloatingV, isFloatingLV, isFloatingGVar
  , sinkId, sinkV, sinkLV, sinkGV
@@ -446,27 +446,34 @@ dnWhen Static   =  Static
 dnWhen Textual  =  Textual
 dnWhen _        =  Before
 
+dnVar :: Variable -> Variable
 dnVar v@(Vbl vi vc vw)
   | vw == Static || vw == Textual || vw == Before  =  v
   | otherwise                                      =  Vbl vi vc Before
 
+dnLVar :: ListVar -> ListVar
 dnLVar lv@(LVbl (Vbl vi vc vw) is ij)
   | vw==Static || vw==Textual || vw==Before  =  lv
   | otherwise                                =  LVbl (Vbl vi vc Before) is ij
 
+dnGVar :: GenVar -> GenVar
 dnGVar (StdVar v)   =  StdVar $ dnVar  v
 dnGVar (LstVar lv)  =  LstVar $ dnLVar lv
 \end{code}
 
 We also need to ``un-normalise'':
 \begin{code}
-varTempSync Static v             =  v
-varTempSync vw     (Vbl i vc _)  =  Vbl i vc vw
+unVar :: VarWhen -> Variable -> Variable
+unVar Static v             =  v
+unVar Textual v            =  v
+unVar vw     (Vbl i vc _)  =  Vbl i vc vw
 
-lvarTempSync vw (LVbl v is ij) = LVbl (varTempSync vw v) is ij
+unLVar :: VarWhen -> ListVar -> ListVar
+unLVar vw (LVbl v is ij) = LVbl (unVar vw v) is ij
 
-gvarTempSync vw (StdVar v)   =  StdVar (varTempSync vw v)
-gvarTempSync vw (LstVar lv)  =  LstVar (lvarTempSync vw lv)
+unGVar :: VarWhen -> GenVar -> GenVar
+unGVar vw (StdVar v)   =  StdVar (unVar vw v)
+unGVar vw (LstVar lv)  =  LstVar (unLVar vw lv)
 \end{code}
 
 

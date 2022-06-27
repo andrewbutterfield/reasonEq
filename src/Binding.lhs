@@ -1399,7 +1399,7 @@ lookupVarBind (BD (vbind,sbind,_)) v@(Vbl vi vc (During m))
        case M.lookup (vi,vc) vbind of
          Nothing  ->  fail ("lookupVarBind: Variable "++show v++" not found.")
          Just (BI xi)  ->  return $ BindVar  $ Vbl xi vc (During n)
-         Just (BT xt)  ->  return $ BindTerm $ termTempSync (During n) xt
+         Just (BT xt)  ->  return $ BindTerm $ unTerm (During n) xt
          Just b -> error $ unlines
                  [ "lookupVarBind: During was bound to BV"
                  , "v = " ++ show v
@@ -1411,7 +1411,7 @@ lookupVarBind (BD (vbind,_,_)) v@(Vbl vi vc vw)
   = case M.lookup (vi,vc) vbind of
      Nothing  ->  fail ("lookupVarBind: Variable "++show v++" not found.")
      Just (BI xi)  ->  return $ BindVar  $ Vbl xi vc vw
-     Just (BT xt)  ->  return $ BindTerm $ termTempSync vw xt
+     Just (BT xt)  ->  return $ BindTerm $ unTerm vw xt
      Just b -> error $ unlines
              [ "lookupVarBind: Dynamic was bound to BV"
              , "v = " ++ show v
@@ -1439,18 +1439,18 @@ lookupLstBind (BD (_,sbind,lbind)) lv@(LVbl (Vbl i vc (During m)) is ij)
        let dn = During n in
        case M.lookup (i,vc,is,ij) lbind of
          Nothing       ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
-         Just (BL vl)  ->  return $ BindList  $ map   (gvarTempSync dn) vl
-         Just (BS vs)  ->  return $ BindSet   $ S.map (gvarTempSync dn) vs
+         Just (BL vl)  ->  return $ BindList  $ map   (unGVar dn) vl
+         Just (BS vs)  ->  return $ BindSet   $ S.map (unGVar dn) vs
          Just (BX tlvl)
-           ->  return $ BindTLVs $ map (tlTempSync dn) tlvl
+           ->  return $ BindTLVs $ map (unTL dn) tlvl
 
 lookupLstBind (BD (_,_,lbind)) lv@(LVbl (Vbl i vc vw) is ij)
   = case M.lookup (i,vc,is,ij) lbind of
      Nothing         ->  fail ("lookupLstBind: ListVar "++show lv++"not found.")
-     Just (BL vl)  ->  return $ BindList  $ map   (gvarTempSync vw) vl
-     Just (BS vs)  ->  return $ BindSet   $ S.map (gvarTempSync vw) vs
+     Just (BL vl)  ->  return $ BindList  $ map   (unGVar vw) vl
+     Just (BS vs)  ->  return $ BindSet   $ S.map (unGVar vw) vs
      Just (BX tlvl)
-       ->  return $ BindTLVs $map  (tlTempSync vw) tlvl
+       ->  return $ BindTLVs $map  (unTL vw) tlvl
 \end{code}
 
 \newpage
@@ -2023,7 +2023,7 @@ mkV v = fromJust $ var tInt v
 n_add = fromJust $ ident "add"
 
 eadd v1 v2 = Cons tInt True n_add [mkV v1, mkV v2]
-bradd vw v1 v2 = termTempSync vw $ eadd v1 v2
+bradd vw v1 v2 = unTerm vw $ eadd v1 v2
 
 u = fromJust $ ident "u"
 obu = ObsVar v Before ; oau = ObsVar v After ; otu = ObsVar v Textual

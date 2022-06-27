@@ -39,6 +39,8 @@ Side conditions plus known list variables raise a complication (ill-formed subst
 We prevent a target variable from being used more than once when we build substitutions,
 but this doesnt cater for a condition like `O$⊇e`. 
 In this context, the substitution `[3,O$_1/e,O$]` is illegal, because it asks `e` to be replaced by both `3` (directly) and `e_1` (implicitly, via membership of `O$`).
+In effect, we need to use side-conditions like `O$⊇e` to assess the validity
+of target-lists like `<e,O$>` (or `<e',O$'>` or `<e_1,O$_1>`!).
 
 ### Complete UTPBase proofs
 

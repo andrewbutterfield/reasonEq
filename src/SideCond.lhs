@@ -123,6 +123,14 @@ In some of these cases, we may be able to simplify a side-condition further:
 We also need to take account of known variables of various kinds
 when evaluating and building side-conditions.
 
+Finally, we need to consider the use dynamic normalisation here,
+in which $x' \supseteq t'$ (say)
+actually means
+$
+ x \supseteq t \land x' \supseteq t' \land x_n \supseteq t_n
+$, for all subscripts $n$.
+\textbf{Are we sure of this???? What if $t$ has before and after variables?}
+
 \newpage
 \subsection{Atomic Side-Conditions}
 

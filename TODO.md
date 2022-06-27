@@ -18,6 +18,10 @@ Actually, side-conditions need more work, to take account of `VarData`.
 2. Implement var. data-aware s.c. functions
 3. Implement var. data-aware subst. functions
 
+**We need to be careful**
+Consider `x' ⊇e t` where `t` has both before and after variables.
+Does this really generalise as just described?
+
 
 The issue is that `(x'=e∧(O$'\x=O$\x))[O$_1/O$']` should become `x_1=e∧(O$_1\x=O$\x)`, and not `(x'=e[O$_1/O$']∧(O$'\x=O$\x))`!
 
@@ -34,6 +38,7 @@ The substitution proceeds as follows:
 =      O$'⊇x'        ¬(O$'⊇e)       O$'⊇O$'\x        ¬(O$'⊇O$\x)
         x_1      =     e       ∧     O$_1\x      =     O$\x
 ```
+
 
 Side conditions plus known list variables raise a complication (ill-formed substitutions)
 We prevent a target variable from being used more than once when we build substitutions,

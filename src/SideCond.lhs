@@ -8,7 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module SideCond (
   AtmSideCond
-, pattern Disjoint, pattern CoveredBy, pattern IsPre
+, pattern Disjoint, pattern CoveredBy
 , ascGVar, ascVSet
 , SideCond, scTrue, isTrivialSC
 , onlyFreshSC, onlyInvolving, onlyFreshOrInvolved
@@ -16,7 +16,7 @@ module SideCond (
 , mrgAtmCond, mrgSideCond, mrgSideConds, mkSideCond
 , scDischarge
 , isFloatingASC
-, notin, covers, pre, fresh
+, notin, covers, fresh
 , citingASCs
 , int_tst_SideCond
 ) where
@@ -66,6 +66,8 @@ As a false side-condition means a match failure,
 we do not represent them explicitly.
 Instead, any operation on side-conditions that could result
 in an inconsistent result should fail, gracefully.
+
+\subsubsection{Atomic Side-Conditions}
 
 An atomic side-condition (ASC) can have one of the following forms,
 where $T$ abbreviates $\fv(T)$:
@@ -123,47 +125,47 @@ In some of these cases, we may be able to simplify a side-condition further:
 We also need to take account of known variables of various kinds
 when evaluating and building side-conditions.
 
-Finally, we need to consider the use dynamic normalisation here,
+\subsubsection{Side-Condition Temporality}
+
+Finally, we need to consider the use of dynamic normalisation here,
 in which $x' \supseteq t'$ (say)
 actually means
 $
  x \supseteq t \land x' \supseteq t' \land x_n \supseteq t_n
 $, for all subscripts $n$.
-\textbf{Are we sure of this???? What if $t$ has before and after variables?}
+This only makes sense if the side-condition is ``temporally uniform'',
+in that all variables involved have the same temporality.
 
 \newpage
 \subsection{Atomic Side-Conditions}
 
 We now introduce our notion of an atomic-side condition.
+We will not represent $pre$ explicitly here,
+and instead will use $\lst O \supseteq T$.
 \begin{code}
 data AtmSideCond
  = SD  GenVar VarSet -- Disjoint
- | SS  GenVar VarSet -- Superset (covers)
- | SP  GenVar        -- Pre
+ | SS  GenVar VarSet -- Superset (covers), and Pre
  deriving (Eq,Ord,Show,Read)
 \end{code}
-\textbf{Note:  \texttt{Pre} is equivalent to being covered by $\lst O$ !}
 In the \texttt{SD} case, having an empty set reduces to \true,
 while in the \texttt{SS} case,
 an empty set asserts that the term denoted by the general variable is closed.
 \begin{code}
 pattern Disjoint  gv vs = SD  gv vs  --  gv `intersect` vs = {}
 pattern CoveredBy gv vs = SS  gv vs  --  gv  `subsetof` vs
-pattern IsPre     gv    = SP  gv     --  gv is pre-condition
 \end{code}
 Sometimes we want the \texttt{GenVar} component,
 \begin{code}
 ascGVar :: AtmSideCond -> GenVar
 ascGVar (Disjoint gv _)     =  gv
 ascGVar (CoveredBy   gv _)  =  gv
-ascGVar (IsPre    gv  )     =  gv
 \end{code}
 or the \texttt{VarSet} part:
 \begin{code}
 ascVSet :: AtmSideCond -> VarSet
 ascVSet (Disjoint _ vs)     =  vs
 ascVSet (CoveredBy   _ vs)  =  vs
-ascVSet _                   =  S.empty
 \end{code}
 
 \newpage
@@ -229,19 +231,6 @@ ascCheck vts asc@(CoveredBy sv@(StdVar v) vs)
     report msg = fail $ unlines' [msg,showsv,showvs]
 \end{code}
 
-\paragraph{Checking Precondition}
-
-
-\begin{eqnarray*}
-   pre \supseteq g  && \false,  \textrm{ if $g$ is an \texttt{After} variable}
-\\ pre \supseteq g  && \true,  \textrm{ if $g$ is a \texttt{Before} variable}
-\end{eqnarray*}
-\begin{code}
-ascCheck vts asc@(IsPre v@(StdVar (Vbl _ _ vw)))
-  | vw == After   =  fail "atomic ispre is False"
-  | vw == Before  =  return mscTrue
-\end{code}
-
 For anything else, we just return the condition unchanged.
 In particular, we cannot do anything with freshness at this point.
 \begin{code}
@@ -299,7 +288,6 @@ onlyInvolving :: VarSet -> SideCond -> Bool
 onlyInvolving involved (ascs,_) = all (onlyWith involved) ascs
 
 onlyWith :: VarSet -> AtmSideCond -> Bool
-onlyWith involved (SP  gv)    = gv `S.member` involved
 onlyWith involved (SD  gv vs) = gv `S.member` involved || involved `overlaps` vs
 onlyWith involved (SS  gv vs) = gv `S.member` involved || involved `overlaps` vs
 \end{code}
@@ -328,8 +316,8 @@ is kept ordered by the \texttt{GenVar} component,
 If there is more than one ASC with the same general variable,
 then they are ordered as follows:
 \texttt{Disjoint},
-\texttt{CoveredBy},
-and \texttt{IsPre}.
+then
+\texttt{CoveredBy}.
 We can only have at most one of each.
 
 The function \texttt{mrgAtmCond} below is the ``approved'' way
@@ -376,10 +364,7 @@ mrgAtmAtms vts asc [] = return [asc] -- it's the first.
 Given one or more pre-existing ASCs for this g.v., we note the following possible
 patterns:
 \begin{verbatim}
-[Disjoint]  [Disjoint,CoveredBy]  [Disjoint,IsPre]
-[Disjoint,CoveredBy,IsPre]
-[CoveredBy]    [CoveredBy,IsPre]
-[IsPre]
+[Disjoint]  [Disjoint,CoveredBy] [CoveredBy]
 \end{verbatim}
 If the general variable is required to be fresh,
 then this is inconsistent with \texttt{CoveredBy}.
@@ -444,15 +429,6 @@ mrgAtmAtms vts (CoveredBy gv c) [Disjoint _ d]
  | otherwise           =  return [Disjoint gv d,CoveredBy gv (c S.\\ d)]
 mrgAtmAtms vts (CoveredBy gv c0) [CoveredBy _ c1]
                =  return [CoveredBy gv (c0 `S.intersection` c1)]
-\end{code}
-
-\subsubsection{Merging \texttt{IsPre} into ASC}
-\begin{code}
-mrgAtmAtms vts (IsPre _)   atms@[IsPre _]  =  return atms
-mrgAtmAtms vts p@(IsPre _) (d@(Disjoint _ _):atms)
-  =  fmap (d:) $ mrgAtmAtms vts p atms
-mrgAtmAtms vts p@(IsPre _) (c@(CoveredBy _ _)  :atms)
-  =  fmap (c:) $ mrgAtmAtms vts p atms
 \end{code}
 
 \subsubsection{Failure Case}
@@ -880,7 +856,6 @@ mention variables that are marked as ``floating''.
 Only these can possibly be instantiated to satisfy the residual side-condition.
 \begin{code}
 isFloatingASC :: AtmSideCond -> Bool
-isFloatingASC (SP  gv)     = isFloatingGVar gv
 isFloatingASC (SD  gv vs)  = isFloatingGVar gv || hasFloating vs
 isFloatingASC (SS  gv vs)  = isFloatingGVar gv || hasFloating vs
 hasFloating :: VarSet -> Bool
@@ -917,12 +892,6 @@ $\lst v \supseteq \fv(T)$
 \begin{code}
 covers :: VarList -> GenVar -> SideCond
 vl `covers` tV  =  ([ CoveredBy tV (S.fromList vl) ], S.empty)
-\end{code}
-
-$pre \supseteq \fv(T)$
-\begin{code}
-pre :: GenVar -> SideCond
-pre tV  = ([ IsPre tV ], S.empty)
 \end{code}
 
 $u,v,\dots \textbf{fresh.}$
@@ -993,8 +962,7 @@ tst_scCheck :: TF.Test
 tst_scCheck
  = testGroup "Atomic Side-Condition checker"
      [ tst_scChkDisjoint
-     , tst_scChkCovers
-     , tst_scChkIsPre ]
+     , tst_scChkCovers ]
 
 
 tstFalse = Nothing
@@ -1053,20 +1021,6 @@ tst_scChkCovers
     , testCase "gv_a `coveredby` {gv_b,v_f} stands"
        ( ascCheck [] (CoveredBy gv_a $ S.fromList [gv_b,v_f])
          @?= tstWhatever  (CoveredBy gv_a $ S.fromList [gv_b,v_f]) )
-    ]
-
-tst_scChkIsPre
- = testGroup "IsPre (no known vars)"
-    [ testCase "is-pre(gv_a) is True"
-       ( ascCheck [] (IsPre gv_a) @?= tstTrue )
-    , testCase "is-pre(gv_a') is False"
-       ( ascCheck [] (IsPre gv_a') @?= tstFalse )
-    , testCase "is-pre(v_e) is True"
-       ( ascCheck [] (IsPre v_e) @?= tstTrue )
-    , testCase "is-pre(v_e') is False"
-       ( ascCheck [] (IsPre v_e') @?= tstFalse )
-    , testCase "is-pre(gv_s) stands"
-       ( ascCheck [] (IsPre gv_s) @?= tstWhatever (IsPre gv_s) )
     ]
 \end{code}
 

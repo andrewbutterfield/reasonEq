@@ -462,7 +462,6 @@ instASCVariant :: MonadFail m => [VarTable]
                -> VarSet -> FreeVars -> AtmSideCond -> m [AtmSideCond]
 instASCVariant vts vsD fvT (Disjoint _ _)   =  instDisjoint vts vsD fvT
 instASCVariant vts vsC fvT (CoveredBy _ _)  =  instCovers   vts vsC fvT
-instASCVariant vts _   fvT (IsPre _)        =  instIsPre    vts     fvT
 \end{code}
 
 
@@ -508,29 +507,6 @@ instCovers vts vsC (fF,fLessBs)
     f1 vsC gv = CoveredBy gv vsC
     f2 vsC (vsF,vsB) = map (f1 (vsC `S.union` vsB)) (S.toList vsF)
 \end{code}
-
-
-
-\subsubsection{Pre-Condition}
-
-\begin{eqnarray*}
-   \beta(pre \supseteq T)
-   &=& pre \supseteq \fv(\beta(T))
-\\ &=& pre \supseteq (F \cup \{F_i\setminus B_i\}_{i \in 1\dots N})
-\\ &=& pre \supseteq F \land \{pre (F_i\setminus B_i)\}_{i \in 1\dots N}
-\end{eqnarray*}
-where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
-$F \disj F_i$, $F \disj B_i$.
-\begin{code}
-instIsPre :: MonadFail m => [VarTable] -> FreeVars -> m [AtmSideCond]
-instIsPre  vts (fF,fLessBs)
-  =  return (asc1 ++ concat asc2)
-  where
-    asc1 = map IsPre (S.toList fF)
-    asc2 = map f2 fLessBs
-    f2 (vsF,vsB) = map IsPre $ S.toList (vsF S.\\ vsB)
-\end{code}
-
 
 \subsubsection{Side-condition Variable Instantiation}
 

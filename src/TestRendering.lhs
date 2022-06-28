@@ -450,7 +450,6 @@ trsidecond trid sc@(ascs,fvs)
   | otherwise       =  intcalNN ", " (    map (tratmsidecond trid) ascs
                                       ++ [trfresh trid fvs] )
 
-tratmsidecond trid (IsPre    gv)     = "pre:"++trgvar trid gv
 tratmsidecond trid (Disjoint gv vs)  = trovset trid vs
                                        ++ _notin ++ trgvar trid gv
 tratmsidecond trid (CoveredBy gv vs) = trovset trid vs

@@ -125,6 +125,7 @@ In some of these cases, we may be able to simplify a side-condition further:
 We also need to take account of known variables of various kinds
 when evaluating and building side-conditions.
 
+\newpage
 \subsubsection{Side-Condition Temporality}
 
 Finally, we need to consider the use of dynamic normalisation here,
@@ -136,12 +137,54 @@ $, for all subscripts $n$.
 This only makes sense if the side-condition is ``temporally uniform'',
 in that all variables involved have the same temporality.
 
-\newpage
+In UTP,
+we typically use uppercase letters ($P, Q, \dots$) to denote predicates that
+denote pre/post relations.
+The predicates they represent are usually a mix of before- and after-variables.
+When a predicate is a pre-condition (only using before-variables),
+we usually denote this using lowercase letters ($p, q, \dots$).
+For a post-condition, only using after-variables,
+we denote this using dashed lower-case letters ($p', q', \dots$).
+
+Any side-condition with a relational predicate variable
+(e.g. $x \disj P$)
+is not temporally uniform.
+A side-condition with before-variables and a pre-condition
+(e.g. $x \disj q$)
+is temporally uniform.
+The same holds when after-variables and post-conditions are used
+(e.g. $x' \supseteq q'$).
+A non-uniform disjointness condition
+(e.g. $x \disj p'$)
+is vacuously true.
+A non-uniform superset condition
+(e.g. $y' \supseteq q$)
+is vacuously false.
+
+A predicate variable $P$ is represented as a \texttt{Static PVar},
+while $p$ and $p'$ are represented as \texttt{Before} and \texttt{After}
+\texttt{PVar}s respectively.
+A similar convention is used for expression and observation variables.
+
+A temporally uniform condition is represented using \texttt{Before}
+variables throughout,
+and is interpreted as covering cases where \texttt{Before}
+is uniformally replaced by \texttt{After}, or \texttt{During n},
+for that same value of \texttt{n}.
+For example,
+$x' \disj p'$ is represented as $x \disj p$,
+and is also interpreted as $x_i \disj p_i$
+
+Since $P$, or $p$ or $p'$ are shorthand for $fv(P)$ etc.,
+they denote sets of variables here.
+Since list-variables denote variable sets/lists, the same relationships hold,
+and the uniformity property carries over.
+
 \subsection{Atomic Side-Conditions}
 
 We now introduce our notion of an atomic-side condition.
 We will not represent $pre$ explicitly here,
-and instead will use $\lst O \supseteq T$.
+and instead will use $\lst O \supseteq T$ (which is non-uniform!).
 \begin{code}
 data AtmSideCond
  = SD  GenVar VarSet -- Disjoint
@@ -168,7 +211,6 @@ ascVSet (Disjoint _ vs)     =  vs
 ascVSet (CoveredBy   _ vs)  =  vs
 \end{code}
 
-\newpage
 \subsubsection{Checking Atomic Sideconditions}
 
 It is possible to simplify some proposed atomic side-conditions
@@ -186,13 +228,18 @@ ascCheck :: MonadFail m => [VarTable] -> AtmSideCond -> m (Maybe AtmSideCond)
 Here, $z$ denotes an (standard) observation variable,
 $T$ denotes a standard term variable,
 and $g$ denotes either $z$ or $T$.
+We also use the case conventions described earlier ($P, p, p'$).
 
 \paragraph{Checking Disjoint}
 
 \begin{eqnarray*}
-   \emptyset       \disj    g  && \true
-\\ \dots,z,\dots   \disj    z  && \false
-\\ \{stdObs\}\setminus z \disj z && \true
+   \emptyset             \disj g           &&   \true
+\\ \dots,z,\dots         \disj z           &&   \false
+\\ \{stdObs\}\setminus z \disj z           &&   \true
+\\ x                     \disj p'          &&   \true
+\\ x'                    \disj p           &&   \true
+\\ x                     \disj \lst \ell'  &&   \true
+\\ x'                    \disj \lst \ell   &&   \true
 \end{eqnarray*}
 Note that we cannot deduce (here) that $T \disj T$ is false,
 because $T$ could correspond to the empty set.
@@ -212,9 +259,13 @@ ascCheck vts asc@(Disjoint sv@(StdVar v) vs)
 \paragraph{Checking CoveredBy}
 
 \begin{eqnarray*}
-   \emptyset       \supseteq z  && \false
-\\ \dots,g,\dots{} \supseteq g  && \true
-\\ \{stdObs\}\setminus z \supseteq z && \false
+   \emptyset             \supseteq z           && \false
+\\ \dots,g,\dots{}       \supseteq g           && \true
+\\ \{stdObs\}\setminus z \supseteq z           && \false
+\\ x                     \supseteq p'          && \false
+\\ x'                    \supseteq p           && \false
+\\ x                     \supseteq \lst \ell'  && \false
+\\ x'                    \supseteq \lst \ell   && \false
 \end{eqnarray*}
 Here, as $T$ could be empty,
 we cannot deduce that $\emptyset \supseteq T$ is false.

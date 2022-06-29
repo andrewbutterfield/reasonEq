@@ -655,8 +655,8 @@ then we need to copy it over as a proof-local goal side-condition.
 extendGoalSCCoverage vts lvvls (atmSCs,_)
   = xtndCoverage vts (map snd lvvls) [] (filter isCoverage atmSCs)
   where
-    isCoverage (CoveredBy _ _)  =  True
-    isCoverage _                =  False
+    isCoverage (CoveredBy _ _ _)  =  True
+    isCoverage _                  =  False
 
     xtndCoverage :: MonadFail m => [VarTable]
                  -> [VarList] -- floating replacements
@@ -664,7 +664,7 @@ extendGoalSCCoverage vts lvvls (atmSCs,_)
                  -> [AtmSideCond] -- Law coverage side-conditions
                  -> m SideCond
     xtndCoverage _ _ ascs [] = return (ascs, S.empty)
-    xtndCoverage vts ffvls ascs (cov@(CoveredBy gv vs) : rest)
+    xtndCoverage vts ffvls ascs (cov@(CoveredBy _ gv vs) : rest)
       | S.toList vs `elem` ffvls
          = do ascs' <- mrgAtmCond vts cov ascs
               xtndCoverage vts ffvls ascs' rest

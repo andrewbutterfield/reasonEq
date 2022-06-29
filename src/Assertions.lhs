@@ -611,8 +611,8 @@ normSC vv (ascs,fvs)
       -- this should not fail, but just in case ...
       But msgs  ->  error ("normSC: "++unlines' msgs)
 
-normASC vv (Disjoint gv vs)   =  Disjoint (normQGVar vv gv) (normQVSet vv vs)
-normASC vv (CoveredBy gv vs)  =  CoveredBy   (normQGVar vv gv) (normQVSet vv vs)
+normASC vv (Disjoint  u gv vs)  =  Disjoint  u (normQGVar vv gv) (normQVSet vv vs)
+normASC vv (CoveredBy u gv vs)  =  CoveredBy u (normQGVar vv gv) (normQVSet vv vs)
 
 normFresh vv vs = normQVSet vv vs
 \end{code}

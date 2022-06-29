@@ -7,7 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module SideCond (
-  AtmSideCond
+  pattern Unif, pattern NonU
+, AtmSideCond
 , pattern Disjoint, pattern CoveredBy
 , ascGVar, ascVSet
 , SideCond, scTrue, isTrivialSC
@@ -208,8 +209,8 @@ In the \texttt{SD} case, having an empty set reduces to \true,
 while in the \texttt{SS} case,
 an empty set asserts that the term denoted by the general variable is closed.
 \begin{code}
-pattern Disjoint   u gv vs = SD  u gv vs  --  gv `intersect` vs = {}
-pattern CoveredBy  u gv vs = SS  u gv vs  --  gv  `subsetof` vs
+pattern Disjoint  u gv vs = SD u gv vs  --  gv `intersect` vs = {}
+pattern CoveredBy u gv vs = SS u gv vs  --  gv  `subsetof` vs
 \end{code}
 Sometimes we want the \texttt{GenVar} component,
 \begin{code}

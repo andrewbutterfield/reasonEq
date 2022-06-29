@@ -460,8 +460,8 @@ instantiateASC vts bind asc
 \begin{code}
 instASCVariant :: MonadFail m => [VarTable]
                -> VarSet -> FreeVars -> AtmSideCond -> m [AtmSideCond]
-instASCVariant vts vsD fvT (Disjoint _ _)   =  instDisjoint vts vsD fvT
-instASCVariant vts vsC fvT (CoveredBy _ _)  =  instCovers   vts vsC fvT
+instASCVariant vts vsD fvT (Disjoint _ _ _)   =  instDisjoint vts vsD fvT
+instASCVariant vts vsC fvT (CoveredBy _ _ _)  =  instCovers   vts vsC fvT
 \end{code}
 
 
@@ -482,7 +482,7 @@ instDisjoint vts vsD (fF,fLessBs)
   where
     asc1 = map (f1 vsD) (S.toList fF)
     asc2 = map (f2 vsD) fLessBs
-    f1 vsD gv = Disjoint gv vsD
+    f1 vsD gv = Disjoint NonU gv vsD
     f2 vsD (vsF,vsB) = map (f1 (vsD S.\\ vsB)) (S.toList vsF)
 \end{code}
 
@@ -504,7 +504,7 @@ instCovers vts vsC (fF,fLessBs)
   where
     asc1 = map (f1 vsC) (S.toList fF)
     asc2 = map (f2 vsC) fLessBs
-    f1 vsC gv = CoveredBy gv vsC
+    f1 vsC gv = CoveredBy NonU gv vsC
     f2 vsC (vsF,vsB) = map (f1 (vsC `S.union` vsB)) (S.toList vsF)
 \end{code}
 

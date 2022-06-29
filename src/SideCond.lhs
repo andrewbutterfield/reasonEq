@@ -269,11 +269,15 @@ We also use the case conventions described earlier ($P, p, p'$).
    \emptyset             \disj g           &&   \true
 \\ \dots,z,\dots         \disj z           &&   \false
 \\ \{stdObs\}\setminus z \disj z           &&   \true
-\\ x                     \disj p'          &&   \true
-\\ x'                    \disj p           &&   \true
-\\ x                     \disj \lst \ell'  &&   \true
-\\ x'                    \disj \lst \ell   &&   \true
+\\ x  \textrm{ only}     \disj p'          &&   \true
+\\ x' \textrm{ only}     \disj p           &&   \true
+\\ x  \textrm{ only}     \disj \lst \ell'  &&   \true
+\\ x' \textrm{ only}     \disj \lst \ell   &&   \true
 \end{eqnarray*}
+The last 4 lines above really refer to a situation
+where none of the temporalities in the variable-set
+match the temporality of the general variable.
+
 Note that we cannot deduce (here) that $T \disj T$ is false,
 because $T$ could correspond to the empty set.
 Nor can we assume $T \disj z$ is false, because $T$ could contain $z$.
@@ -295,11 +299,15 @@ ascCheck vts asc@(Disjoint NU  sv@(StdVar v) vs)
    \emptyset             \supseteq z           && \false
 \\ \dots,g,\dots{}       \supseteq g           && \true
 \\ \{stdObs\}\setminus z \supseteq z           && \false
-\\ x                     \supseteq p'          && \false
-\\ x'                    \supseteq p           && \false
-\\ x                     \supseteq \lst \ell'  && \false
-\\ x'                    \supseteq \lst \ell   && \false
+\\ x  \textrm{ only}     \supseteq p'          && \false
+\\ x' \textrm{ only}     \supseteq p           && \false
+\\ x  \textrm{ only}     \supseteq \lst \ell'  && \false
+\\ x' \textrm{ only}     \supseteq \lst \ell   && \false
 \end{eqnarray*}
+The last 4 lines above really refer to a situation
+where none of the temporalities in the variable-set
+match the temporality of the general variable.
+
 Here, as $T$ could be empty,
 we cannot deduce that $\emptyset \supseteq T$ is false.
 Similarly, $T \supseteq z$ could also be true.

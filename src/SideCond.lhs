@@ -170,11 +170,11 @@ A similar convention is used for expression and observation variables.
 A temporally uniform condition is represented using \texttt{Before}
 variables throughout,
 and is interpreted as covering cases where \texttt{Before}
-is uniformally replaced by \texttt{After}, or \texttt{During n},
+is uniformly replaced by \texttt{After}, or \texttt{During n},
 for that same value of \texttt{n}.
 For example,
 $x' \disj p'$ is represented as $x \disj p$,
-and is also interpreted as $x_i \disj p_i$
+and is also interpreted as $x_i \disj p_i$ for any $i$.
 
 Since $P$, or $p$ or $p'$ are shorthand for $fv(P)$ etc.,
 they denote sets of variables here.
@@ -183,7 +183,7 @@ and the uniformity property carries over.
 
 We will have a flag to indicate uniformity,
 that will be set when a side-condition is specified/built.
-We do that as almost all side-condition usage
+We do this as almost all side-condition usage
 will need to check for this property.
 \begin{code}
 data Uniformity
@@ -227,7 +227,26 @@ ascVSet (CoveredBy _ _ vs)  =  vs
 
 \subsubsection{Checking Atomic Sideconditions}
 
-It is possible to simplify some proposed atomic side-conditions
+We need to ensure that the \texttt{Uniformity} component
+of an atomic side-condition is set correctly.
+\begin{code}
+setASCUniformity :: AtmSideCond -> AtmSideCond
+setASCUniformity (Disjoint  _ gv vs)
+  | isUniform gv vs  =  Disjoint Unif (dnGVar gv) (S.map dnGVar vs)
+  | otherwise        =  Disjoint NonU         gv                vs
+setASCUniformity (CoveredBy _ gv vs)
+  | isUniform gv vs  =  CoveredBy Unif (dnGVar gv) (S.map dnGVar vs)
+  | otherwise        =  CoveredBy NonU         gv                vs
+
+isUniform :: GenVar -> VarSet -> Bool
+isUniform gv vs
+  = S.size whens == 1 && isDynamic (head $ S.elems whens)
+  where
+    whens = S.map gvarWhen (S.insert gv vs)
+\end{code}
+
+
+It is also possible to simplify some proposed atomic side-conditions
 to either true or false.
 Here we provide a monadic function that fails if the condition
 is demonstrably false,
@@ -261,8 +280,8 @@ Nor can we assume $T \disj z$ is false, because $T$ could contain $z$.
 \begin{code}
 ascCheck vts asc@(Disjoint NU  sv@(StdVar v) vs)
   | S.null vs         =  return mscTrue
-  | not $ isObsVar v  =  return $ Just asc
-  | sv `S.member` vs  =  report "atomic Disjoint NU  is False"
+  | not $ isObsVar v  =  return $ Just $ setASCUniformity asc
+  | sv `S.member` vs  =  report "atomic Disjoint is False"
   | all isStdV    vs  =  return mscTrue
   where
     showsv = "v = "++show v
@@ -287,7 +306,7 @@ Similarly, $T \supseteq z$ could also be true.
 \begin{code}
 ascCheck vts asc@(CoveredBy NU  sv@(StdVar v) vs)
   | sv `S.member` vs  =  return mscTrue
-  | not $ isObsVar v  =  return $ Just asc
+  | not $ isObsVar v  =  return $ Just $ setASCUniformity asc
   | S.null vs         =  report "atomic covers is False (null)"
   | all isStdV vs     =  report "atomic covers is False (all std)"
   where

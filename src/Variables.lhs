@@ -12,7 +12,7 @@ module Variables
  , Subscript, VarWhen
  , pattern Static
  , pattern Before, pattern During, pattern After, pattern Textual
- -- , isDynamic, isDuring
+ , isDynamic
  , Variable
  , pattern Vbl
  , varClass, varWhen
@@ -166,13 +166,14 @@ pattern After     =  WA
 pattern Textual   =  WT
 \end{code}
 
-% Textual variables are considered dynamic
-% as the generally have associated before, during and after dynamic observations.
-% \begin{code}
-% isDynamic, isDuring :: VarWhen -> Bool
-% isDynamic Static      =  False  ; isDynamic _  = True
-% isDuring  (During _)  =  True   ; isDuring  _  =  False
-% \end{code}
+We consider before, during and after variables as being ``dynamic''.
+These sometimes need special treatment.
+\begin{code}
+isDynamic :: VarWhen -> Bool
+isDynamic Static   =  False
+isDynamic Textual  =  False
+isDynamic _        =  True
+\end{code}
 
 \subsubsection{More about variables}
 

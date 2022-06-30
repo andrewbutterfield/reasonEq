@@ -3,13 +3,27 @@
 
 ## Most Urgent
 
-### Match Contexts
-
-We need to review use of match-contexts at various levels
-in the proof system.
-In particular, extracting `VarTable`s from the top-level `mtchCntxt` component of a `LiveProof` by mapping `thd3` and then concatenating them is very inefficient: we should just take the head of the list instead.
 
 ### Side Conditions
+
+Current Issue - we need to fix scDischarge given the new uniformity changes
+
+```
+
+⊢
+(x := e);(x := f)    O$⊇e, O$⊇f, O$⊇x
+
+Focus = []  Target (RHS): (x := f[e/x])
+
+
+proof: tm 1 ;_def
+Match against `;_def'[1]
+Binding: { P ⟼ (x := e), Q ⟼ (x := f), 0 ⟼ 0, O$ ⟼ ⟨O$⟩ }
+Instantiated Law = ((x := e);(x := f))  ≡  (∃ O$_0 • ((x := e))[O$_0/O$']∧((x := f))[O$_0/O$])
+Instantiated Law S.C. = O$,O$'⊇e, O$,O$'⊇f, O$,O$'⊇x, fresh:O$_0
+Goal S.C. = O$⊇e, O$⊇f, O$⊇x
+Discharged Law S.C. = O$,O$'⊇e, O$,O$'⊇f, O$,O$'⊇x, fresh:O$_0
+```
 
 Actually, side-conditions need more work, to take account of `VarData`.
 
@@ -46,6 +60,12 @@ but this doesnt cater for a condition like `O$⊇e`.
 In this context, the substitution `[3,O$_1/e,O$]` is illegal, because it asks `e` to be replaced by both `3` (directly) and `e_1` (implicitly, via membership of `O$`).
 In effect, we need to use side-conditions like `O$⊇e` to assess the validity
 of target-lists like `<e,O$>` (or `<e',O$'>` or `<e_1,O$_1>`!).
+
+### Match Contexts
+
+We need to review use of match-contexts at various levels
+in the proof system.
+In particular, extracting `VarTable`s from the top-level `mtchCntxt` component of a `LiveProof` by mapping `thd3` and then concatenating them is very inefficient: we should just take the head of the list instead.
 
 ### Complete UTPBase proofs
 

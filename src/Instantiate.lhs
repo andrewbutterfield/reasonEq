@@ -456,6 +456,10 @@ instantiateASC vts bind asc
   where
      fvsT = instantiateGVar vts bind $ ascGVar asc
 \end{code}
+\textbf{
+  The use of \texttt{ascVSet} is problematic --- loss of uniformity info.
+}
+
 
 \begin{code}
 instASCVariant :: MonadFail m => [VarTable]

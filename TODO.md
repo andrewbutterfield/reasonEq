@@ -8,6 +8,9 @@
 
 Current Issue - we need to fix scDischarge given the new uniformity changes
 
+**Note: both `Instantiate` and `Assertions` make use of functions that
+extract variable sets from side-conditions but ignore uniformity information!**
+
 ```
 
 ⊢

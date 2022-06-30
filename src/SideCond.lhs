@@ -224,6 +224,10 @@ ascVSet :: AtmSideCond -> VarSet
 ascVSet (Disjoint  _ _ vs)     =  vs
 ascVSet (CoveredBy _ _ vs)  =  vs
 \end{code}
+This latter function is less useful because it loses uniformity information
+needed to interpret dynamic variables property
+(used below and in \texttt{Instantiate.lhs}).
+
 
 \subsubsection{Checking Atomic Sideconditions}
 
@@ -406,6 +410,9 @@ scGVars (ascs,_) = S.fromList $ map ascGVar ascs
 scVarSet :: SideCond -> VarSet
 scVarSet (ascs,fvs) = (S.unions $ map ascVSet ascs) `S.union` fvs
 \end{code}
+This latter function is less useful because it loses uniformity information
+needed to interpret dynamic variables property
+(used in \texttt{Assertions.lhs}).
 
 \subsection{Merging Side-Conditions}
 

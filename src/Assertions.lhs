@@ -408,6 +408,9 @@ Finally, we get our variables from a side-condition:
 safeSideCondition :: Term -> SideCond -> Bool
 safeSideCondition tm sc  =  all (\ x -> scSafe x tm) $ S.toList $ scVarSet sc
 \end{code}
+\textbf{
+  The use of \texttt{scVarSet} is problematic --- loss of uniformity info.
+}
 
 \subsection{Normalising Bound Variables}
 

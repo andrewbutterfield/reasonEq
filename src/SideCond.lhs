@@ -248,10 +248,26 @@ isUniform gv vs
 
 It is also possible to simplify some proposed atomic side-conditions
 to either true or false.
+An important shortcut condition is when we have a dynamic general variable
+along with a variable set, all of whose members are dynamic.
+Both disjointness and coverage can be simplified
+if the general variable's temporality
+does not match that of any of the set variables.
+\begin{code}
+temporallyDisjoint :: GenVar -> VarSet -> Bool
+temporallyDisjoint gv vs
+  = isDynamic gvWhen && tempdisjoint
+  where
+    gvWhen        =  gvarWhen gv
+    vsWhens       =  S.map gvarWhen vs
+    tempdisjoint  =  not (gvWhen `S.member` vsWhens)
+\end{code}
+
 Here we provide a monadic function that fails if the condition
 is demonstrably false,
 and otherwise returns a \texttt{Maybe} type,
 where \texttt{Nothing} denotes a condition that is true.
+
 We need to do this in general
 in the context of what is ``known'' about variables.
 \begin{code}
@@ -269,26 +285,21 @@ We also use the case conventions described earlier ($P, p, p'$).
    \emptyset             \disj g           &&   \true
 \\ \dots,z,\dots         \disj z           &&   \false
 \\ \{stdObs\}\setminus z \disj z           &&   \true
-\\ x  \textrm{ only}     \disj p'          &&   \true
-\\ x' \textrm{ only}     \disj p           &&   \true
-\\ x  \textrm{ only}     \disj \lst \ell'  &&   \true
-\\ x' \textrm{ only}     \disj \lst \ell   &&   \true
+\\ V,g\textrm{ are temporally disjoint}    &&   \true
 \end{eqnarray*}
-The last 4 lines above really refer to a situation
-where none of the temporalities in the variable-set
-match the temporality of the general variable.
 
 Note that we cannot deduce (here) that $T \disj T$ is false,
 because $T$ could correspond to the empty set.
 Nor can we assume $T \disj z$ is false, because $T$ could contain $z$.
 \begin{code}
-ascCheck vts asc@(Disjoint NU  sv@(StdVar v) vs)
-  | S.null vs         =  return mscTrue
-  | not $ isObsVar v  =  return $ Just $ setASCUniformity asc
-  | sv `S.member` vs  =  report "atomic Disjoint is False"
-  | all isStdV    vs  =  return mscTrue
+ascCheck vts asc@(Disjoint NU gv vs)
+  | S.null vs                 =  return mscTrue
+  | temporallyDisjoint gv vs  =  return mscTrue
+  | not $ isObsGVar gv        =  return $ Just $ setASCUniformity asc
+  | gv `S.member` vs          =  report "atomic Disjoint is False"
+  | all isStdV    vs          =  return mscTrue
   where
-    showsv = "v = "++show v
+    showsv = "gv = "++show gv
     showvs = "vs = "++show vs
     report msg = fail $ unlines' [msg,showsv,showvs]
 \end{code}
@@ -299,26 +310,21 @@ ascCheck vts asc@(Disjoint NU  sv@(StdVar v) vs)
    \emptyset             \supseteq z           && \false
 \\ \dots,g,\dots{}       \supseteq g           && \true
 \\ \{stdObs\}\setminus z \supseteq z           && \false
-\\ x  \textrm{ only}     \supseteq p'          && \false
-\\ x' \textrm{ only}     \supseteq p           && \false
-\\ x  \textrm{ only}     \supseteq \lst \ell'  && \false
-\\ x' \textrm{ only}     \supseteq \lst \ell   && \false
+\\ V,g\textrm{ are temporally disjoint}        && \false
 \end{eqnarray*}
-The last 4 lines above really refer to a situation
-where none of the temporalities in the variable-set
-match the temporality of the general variable.
 
 Here, as $T$ could be empty,
 we cannot deduce that $\emptyset \supseteq T$ is false.
 Similarly, $T \supseteq z$ could also be true.
 \begin{code}
-ascCheck vts asc@(CoveredBy NU  sv@(StdVar v) vs)
-  | sv `S.member` vs  =  return mscTrue
-  | not $ isObsVar v  =  return $ Just $ setASCUniformity asc
-  | S.null vs         =  report "atomic covers is False (null)"
-  | all isStdV vs     =  report "atomic covers is False (all std)"
+ascCheck vts asc@(CoveredBy NU gv vs)
+  | gv `S.member` vs          =  return mscTrue
+  | temporallyDisjoint gv vs  =  report "atomic covers is False (disjoint)"
+  | not $ isObsGVar gv        =  return $ Just $ setASCUniformity asc
+  | S.null vs                 =  report "atomic covers is False (null)"
+  | all isStdV vs             =  report "atomic covers is False (all std)"
   where
-    showsv = "v = "++show v
+    showsv = "gv = "++show gv
     showvs = "vs = "++show vs
     report msg = fail $ unlines' [msg,showsv,showvs]
 \end{code}
@@ -977,19 +983,21 @@ Simple side-condition builders.
 $\lst v \disj \fv(T)$
 \begin{code}
 notin :: VarList -> GenVar -> SideCond
-vl `notin` tV  =  ([ Disjoint NU  tV (S.fromList vl) ], S.empty)
+vl `notin` tV  =  ( [ setASCUniformity $ Disjoint NU tV (S.fromList vl) ]
+                  , S.empty )
 \end{code}
 
 $\lst v \supseteq \fv(T)$
 \begin{code}
 covers :: VarList -> GenVar -> SideCond
-vl `covers` tV  =  ([ CoveredBy NU  tV (S.fromList vl) ], S.empty)
+vl `covers` tV  =  ( [ setASCUniformity $ CoveredBy NU tV (S.fromList vl) ]
+                   , S.empty )
 \end{code}
 
 $u,v,\dots \textbf{fresh.}$
 \begin{code}
 fresh :: VarSet -> SideCond
-fresh fvs = ([],fvs)
+fresh fvs = ( [], fvs )
 \end{code}
 
 \newpage

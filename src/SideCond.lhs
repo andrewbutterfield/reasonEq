@@ -479,11 +479,11 @@ then this is inconsistent with \texttt{CoveredBy}.
 We have the following interactions,
 where $D$ and $C$ are the variable-sets found
 in \texttt{Disjoint} and \texttt{CoveredBy} respectively.
-So the semantics of the Disjoint NU  ($D$) and covering ($C$) variable-sets,
+So the semantics of the disjoint ($D$) and covering ($C$) variable-sets,
 parameterised by a general variable $G$,
 are:
 \begin{eqnarray*}
-  \sem{\_}_{\_} &:& \power V \fun V \fun (V \fun \Bool)
+  \sem{\_}_{\_} &:& \power V \fun V \fun \Bool
 \\ \sem{D}_G &=& \fv.G \cap D = \emptyset
 \\ \sem{C}_G &=& \fv.G \subseteq C
 \\         &=& \fv.G = \emptyset, \quad \IF \quad C = \emptyset
@@ -494,21 +494,84 @@ We get the following laws:
 \\ \sem{C_1}_G \land \sem{C_2}_G &=&  \sem{C_1 \cap C_2}_G
 \\ \sem{D}_G \land \sem{C}_G
    &=&  \sem{D}_G \land \sem{C \setminus D}_G
-\\ &=& \sem{C \setminus D}_G, \quad \IF \quad C\setminus D \neq \emptyset
 \\ &=& \fv.G = \emptyset, \quad \IF \quad C\setminus D = \emptyset
 \end{eqnarray*}
-We not that an apparent contradiction between $D$ and $C$ (when $D \supseteq C$)
-becomes a assertion that $G$ is closed
-for any given general variable $G$,
-we will have that $D$ and $C$ are disjoint.
+We note that an apparent contradiction between $D$ and $C$ (when $D \supseteq C$)
+becomes an assertion that $G$ is closed.
+For any given general variable $G$,
+these laws ensure that we can arrange matters so  that $D$ and $C$ are disjoint.
 
 Below, we overload the notation to denote the corresponding condition.
 So, for example, depending on context,
 $D$ can denote a variable-set
 or the predicate $D \disj G$ ($G$ being the general variable in question).
 
+The laws just described above work as is if both atomic side conditions
+have the same uniformity setting.
+When a uniform condition is being merged with a non-uniform one,
+we may need to take a little more care.
 
-\newpage
+If we are combining disjoint variable sets,
+then if at least one is non-uniform, the result will be so as well.
+This will require us to ``lift'' uniform representations
+to explicit ones
+($\setof{x} \mapsto \setof{x,x',x_i,\dots}$
+  where $i$ ranges over subscripts in the non-uniform parts%
+).
+\textbf{Actually,
+ two non-uniform disjoint sets, when joined, may become uniform
+ (e.g. $\setof{x,y'} \cup \setof{x',y}$ in a context with no subscripts.)}
+
+If we are combining covering variable sets,
+then non-uniformity may well arise,
+with the need to lift uniform side-conditions as outlined above.
+However the required intersections may
+result in a final outcome that is uniform.
+This will only arise if the non-uniform set explicitly contains
+the lifting of some subset of the uniform set.
+
+For example let $C_1\setof{a,b,c}$ be a uniform condition,
+while $C_2 = \setof{a,b,c,x'}$ is a non-uniform condition.
+We can calculate their intersection:
+\begin{eqnarray*}
+   && \setof{a,b,c} \cap \setof{a,b,c,x'}
+\\ &=& \textrm{uniform lifting}
+\\ && \setof{a,a',b,b',c,c'} \cap \setof{a,b,c,x'}
+\\ &=& \textrm{intersection}
+\\ && \setof{a,b,c}
+\end{eqnarray*}
+While this ``looks'' uniform, it is not, even if the condition general variable
+is un-dashed.
+
+A uniform outcome will arise in the following case:
+\begin{eqnarray*}
+   && \setof{a,b} \cap \setof{a,a',b,b',c,x'}
+\\ &=& \textrm{uniform lifting}
+\\ && \setof{a,a',b,b'} \cap \setof{a,a',b,b',c,x'}
+\\ &=& \textrm{intersection}
+\\ && \setof{a,a',b,b'}
+\\ &=& \textrm{uniform un-lifting}
+\\ && \setof{a,b}
+\end{eqnarray*}
+
+The key principles to combining conditions of possibly different uniformity are:
+\begin{itemize}
+  \item Let $S$ denote all the explicit subscripts in the non-uniform sides.
+  \item Lift any uniform side with $x$ mapping to $x,x',x_i$ for all $ i \in S$.
+  \item Perform the relevant set operation.
+  \item If the result looks like a image of a lifting,
+    then un-lift and mark as uniform.
+    Otherwise, mark as non-uniform.
+\end{itemize}
+
+\textbf{
+  Can we do this symbolically? Should we split a condition variable-set
+  into two sets, one uniform, the other not so?
+  Perhaps we move the NU/UN indicator into the variable-set
+  and associate it with each variable?
+  What are the well-formedness Qs for these alternatives?
+}
+
 \subsubsection{Merging \texttt{Disjoint} into ASC}
 \begin{code}
 mrgAtmAtms vts (Disjoint NU  gv d0) [Disjoint NU  _ d1,CoveredBy NU  _ c]

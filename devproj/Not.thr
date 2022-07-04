@@ -4,15 +4,15 @@ KNOWN = VD (fromList [(VR (Id "lnot" 0,VP,WS),KV (TF (TG (Id "B" 0)) (TG (Id "B"
 BEGIN LIST LAWS
 (("false_def",ASN (C P True (Id "equiv" 0) [K P (VB False),C P True (Id "lnot" 0) [K P (VB True)]],([],fromList []))),Axiom)
 (("lnot_equiv_distr",ASN (C P True (Id "equiv" 0) [C P True (Id "lnot" 0) [C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],C P True (Id "equiv" 0) [C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))]],([],fromList []))),Axiom)
-(("lnot_equiv_swap",ASN (C P True (Id "equiv" 0) [C P True (Id "equiv" 0) [C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))],C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]]],([],fromList []))),Assumed)
-(("lnot_invol",ASN (C P True (Id "equiv" 0) [C P True (Id "lnot" 0) [C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]],V P (VR (Id "P" 0,VP,WS))],([],fromList []))),Assumed)
-(("false_neg",ASN (C P True (Id "equiv" 0) [C P True (Id "lnot" 0) [K P (VB False)],K P (VB True)],([],fromList []))),Assumed)
-(("lnot_def",ASN (C P True (Id "equiv" 0) [C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))],C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),K P (VB False)]],([],fromList []))),Assumed)
-(("false_subst",ASN (C P True (Id "equiv" 0) [S P (K P (VB False)) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),K P (VB False)],([],fromList []))),Assumed)
-(("lnot_subst",ASN (C P True (Id "equiv" 0) [S P (C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),C P True (Id "lnot" 0) [S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))]],([],fromList []))),Assumed)
 END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS
 BEGIN LIST CONJECTURES
+("lnot_equiv_swap",ASN (C P True (Id "equiv" 0) [C P True (Id "equiv" 0) [C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))],C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]]],([],fromList [])))
+("lnot_invol",ASN (C P True (Id "equiv" 0) [C P True (Id "lnot" 0) [C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]],V P (VR (Id "P" 0,VP,WS))],([],fromList [])))
+("false_neg",ASN (C P True (Id "equiv" 0) [C P True (Id "lnot" 0) [K P (VB False)],K P (VB True)],([],fromList [])))
+("lnot_def",ASN (C P True (Id "equiv" 0) [C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))],C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),K P (VB False)]],([],fromList [])))
+("false_subst",ASN (C P True (Id "equiv" 0) [S P (K P (VB False)) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),K P (VB False)],([],fromList [])))
+("lnot_subst",ASN (C P True (Id "equiv" 0) [S P (C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),C P True (Id "lnot" 0) [S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))]],([],fromList [])))
 END LIST CONJECTURES
 END THEORY Not

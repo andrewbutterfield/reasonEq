@@ -228,6 +228,35 @@ This latter function is less useful because it loses uniformity information
 needed to interpret dynamic variables property
 (used below and in \texttt{Instantiate.lhs}).
 
+We can determine if an atomic side-condition is ``uniform''.
+A relation $~\Re~$ between a general variable $g^t$ of temporality $t$
+and a set of general variables $G^\tau$ with temporality drawn from $\tau$,
+is uniform if:
+\begin{itemize}
+  \item The general variable $g^t$ is dynamic
+  \item All the variables in $G^\tau$ are dynamic
+  \item All of $\setof g^t \cup G^\tau$ have the same dynamicity
+     (i.e., $\tau = \setof t$).
+\end{itemize}
+\begin{code}
+isUniform :: GenVar -> VarSet -> Bool
+isUniform gv vs
+  = S.size whens == 1 && isDynamic (head $ S.elems whens)
+  where
+    whens = S.map gvarWhen (S.insert gv vs)
+\end{code}
+If $g^t ~\Re~ G^\tau$ is uniform,
+we interpret it as specifiying the following:
+$$
+  g ~\Re~ G
+  \land
+  g' ~\Re~ G'
+  \land
+  g_i ~\Re~ G_s, \mbox{ for all subscript } s \mbox{ in use.}
+$$
+We \emph{represent} the above using the \texttt{Before} form: $g ~\Re~ G$.
+
+
 
 \subsubsection{Checking Atomic Sideconditions}
 
@@ -241,14 +270,7 @@ setASCUniformity (Disjoint  _ gv vs)
 setASCUniformity (CoveredBy _ gv vs)
   | isUniform gv vs  =  CoveredBy Unif (dnGVar gv) (S.map dnGVar vs)
   | otherwise        =  CoveredBy NonU         gv                vs
-
-isUniform :: GenVar -> VarSet -> Bool
-isUniform gv vs
-  = S.size whens == 1 && isDynamic (head $ S.elems whens)
-  where
-    whens = S.map gvarWhen (S.insert gv vs)
 \end{code}
-
 
 It is also possible to simplify some proposed atomic side-conditions
 to either true or false.
@@ -267,6 +289,7 @@ temporallyDisjoint gv vs
     tempdisjoint  =  not (gvWhen `S.member` vsWhens)
 \end{code}
 
+\newpage
 Here we provide a monadic function that fails if the condition
 is demonstrably false,
 and otherwise returns a \texttt{Maybe} type,
@@ -296,10 +319,11 @@ Note that we cannot deduce (here) that $T \disj T$ is false,
 because $T$ could correspond to the empty set.
 Nor can we assume $T \disj z$ is false, because $T$ could contain $z$.
 \begin{code}
-ascCheck vts asc@(Disjoint NU gv vs)
+ascCheck vts asc@(Disjoint _ gv vs)
   | S.null vs                 =  return mscTrue
   | temporallyDisjoint gv vs  =  return mscTrue
   | not $ isObsGVar gv        =  return $ Just $ setASCUniformity asc
+  -- gv is an observation variable below here....
   | gv `S.member` vs          =  report "atomic Disjoint is False"
   | all isStdV    vs          =  return mscTrue
   where
@@ -321,10 +345,11 @@ Here, as $T$ could be empty,
 we cannot deduce that $\emptyset \supseteq T$ is false.
 Similarly, $T \supseteq z$ could also be true.
 \begin{code}
-ascCheck vts asc@(CoveredBy NU gv vs)
+ascCheck vts asc@(CoveredBy _ gv vs)
   | gv `S.member` vs          =  return mscTrue
   | temporallyDisjoint gv vs  =  report "atomic covers is False (disjoint)"
   | not $ isObsGVar gv        =  return $ Just $ setASCUniformity asc
+  -- gv is an observation variable not in vs below here....
   | S.null vs                 =  report "atomic covers is False (null)"
   | all isStdV vs             =  report "atomic covers is False (all std)"
   where
@@ -333,12 +358,10 @@ ascCheck vts asc@(CoveredBy NU gv vs)
     report msg = fail $ unlines' [msg,showsv,showvs]
 \end{code}
 
-For anything else, we just return the condition unchanged.
-In particular, we cannot do anything with freshness at this point.
+In all other cases, we return the atomic condition with uniformity set:
 \begin{code}
-ascCheck _ asc = return $ Just asc
+ascCheck _ asc = return $ Just $ setASCUniformity asc
 \end{code}
-
 
 
 \newpage
@@ -349,11 +372,11 @@ Freshness is a special case of disjoint:
   \item It applies to the whole goal or law
   \item If the pattern fresh variables are bound in a match,
        then the corresponding candidate variable
-        must satisfy the Disjoint NU  side-condition against
+        must satisfy the disjoint side-condition against
        the entire goal.
   \item If the pattern fresh variables are floating (not bound in a match)
    then we can generate new candidate variables that
-   do satisfy the Disjoint NU  side-condition against
+   do satisfy the disjoint side-condition against
   the entire goal.
 \end{itemize}
 We have to treat freshness as a top-level side-condition,
@@ -499,38 +522,23 @@ We get the following laws:
 We note that an apparent contradiction between $D$ and $C$ (when $D \supseteq C$)
 becomes an assertion that $G$ is closed.
 For any given general variable $G$,
-these laws ensure that we can arrange matters so  that $D$ and $C$ are disjoint.
+these laws ensure that we can arrange matters so that $D$ and $C$ are disjoint.
 
 Below, we overload the notation to denote the corresponding condition.
 So, for example, depending on context,
 $D$ can denote a variable-set
 or the predicate $D \disj G$ ($G$ being the general variable in question).
 
-The laws just described above work as is if both atomic side conditions
-have the same uniformity setting.
-When a uniform condition is being merged with a non-uniform one,
-we may need to take a little more care.
+Note that neither uniformity or non-uniformity in both conditions
+is preserved in the general case when we combine them.
+Disjointedness does preserve uniformity if present in both.
 
-If we are combining disjoint variable sets,
-then if at least one is non-uniform, the result will be so as well.
-This will require us to ``lift'' uniform representations
-to explicit ones
-($\setof{x} \mapsto \setof{x,x',x_i,\dots}$
-  where $i$ ranges over subscripts in the non-uniform parts%
-).
-\textbf{Actually,
- two non-uniform disjoint sets, when joined, may become uniform
- (e.g. $\setof{x,y'} \cup \setof{x',y}$ in a context with no subscripts.)}
+\textit{Example 1 }
+Two non-uniform disjoint sets, when joined, may become uniform
+ (e.g. $\setof{x,y'} \cup \setof{x',y}$ in a context with no subscripts.)
 
-If we are combining covering variable sets,
-then non-uniformity may well arise,
-with the need to lift uniform side-conditions as outlined above.
-However the required intersections may
-result in a final outcome that is uniform.
-This will only arise if the non-uniform set explicitly contains
-the lifting of some subset of the uniform set.
-
-For example let $C_1\setof{a,b,c}$ be a uniform condition,
+\textit{Example 2 }
+let $C_1\setof{a,b,c}$ be a uniform condition,
 while $C_2 = \setof{a,b,c,x'}$ is a non-uniform condition.
 We can calculate their intersection:
 \begin{eqnarray*}
@@ -543,7 +551,7 @@ We can calculate their intersection:
 While this ``looks'' uniform, it is not, even if the condition general variable
 is un-dashed.
 
-A uniform outcome will arise in the following case:
+\textit{Example 3 } A uniform outcome will arise in the following case:
 \begin{eqnarray*}
    && \setof{a,b} \cap \setof{a,a',b,b',c,x'}
 \\ &=& \textrm{uniform lifting}
@@ -553,6 +561,36 @@ A uniform outcome will arise in the following case:
 \\ &=& \textrm{uniform un-lifting}
 \\ && \setof{a,b}
 \end{eqnarray*}
+
+Side conditions currently in use:
+\begin{description}
+  \item[Forall/Exists] (all non-uniform)\\
+     $\lst x \disj P \qquad \lst x \disj e \qquad \lst y \disj P$
+   \item[UClose] (all non-uniform)\\
+    $\lst x \supseteq P \qquad \emptyset \supseteq P$
+  \item[UTPBase]~\\
+    $
+      \lst O,\lst O' \supseteq P
+      \quad
+      \lst O,\lst O' \supseteq Q
+      \quad
+      \lst O,\lst O' \supseteq R
+    $ \qquad (non-uniform)\\
+    $
+      \lst O \supseteq b
+      \quad
+      \lst O \supseteq e
+      \quad
+      \lst O \supseteq f
+      \quad
+      \lst O \supseteq x
+      \qquad \textrm{(uniform)}
+      \qquad
+      O_0 \textrm{ fresh}
+     $
+\end{description}
+
+
 
 The key principles to combining conditions of possibly different uniformity are:
 \begin{itemize}
@@ -564,39 +602,39 @@ The key principles to combining conditions of possibly different uniformity are:
     Otherwise, mark as non-uniform.
 \end{itemize}
 
-\textbf{
-  Can we do this symbolically? Should we split a condition variable-set
-  into two sets, one uniform, the other not so?
-  Perhaps we move the NU/UN indicator into the variable-set
-  and associate it with each variable?
-  What are the well-formedness Qs for these alternatives?
-}
+For now
 
 \subsubsection{Merging \texttt{Disjoint} into ASC}
 \begin{code}
+mrgAtmAtms vts (Disjoint UN  gv d0) [Disjoint UN  _ d1]
+                  =  return [Disjoint NU  gv (d0 `S.union` d1)]
+
+mrgAtmAtms vts (Disjoint NU  gv d0) [Disjoint NU  _ d1]
+                  =  return [Disjoint NU  gv (d0 `S.union` d1)]
+
+mrgAtmAtms vts (Disjoint NU  gv d) [CoveredBy NU  _ c]
+ | c `S.isSubsetOf` d  =  return [CoveredBy NU  gv S.empty]
+ | otherwise           =  return [Disjoint NU  gv d,CoveredBy NU  gv (c S.\\ d)]
+
 mrgAtmAtms vts (Disjoint NU  gv d0) [Disjoint NU  _ d1,CoveredBy NU  _ c]
  | c `S.isSubsetOf` d'  =  return [CoveredBy NU  gv S.empty]
  | otherwise            =  return [Disjoint NU  gv d',CoveredBy NU  gv (c S.\\ d')]
  where d' = d0 `S.union` d1
-mrgAtmAtms vts (Disjoint NU  gv d0) [Disjoint NU  _ d1]
-                  =  return [Disjoint NU  gv (d0 `S.union` d1)]
-mrgAtmAtms vts (Disjoint NU  gv d) [CoveredBy NU  _ c]
- | c `S.isSubsetOf` d  =  return [CoveredBy NU  gv S.empty]
- | otherwise           =  return [Disjoint NU  gv d,CoveredBy NU  gv (c S.\\ d)]
 \end{code}
 
 
 \subsubsection{Merging \texttt{CoveredBy} into ASC}
 \begin{code}
+mrgAtmAtms vts cov@(CoveredBy _ _ _) [dsj@(Disjoint _ _ _)]
+                                                     =  mrgAtmAtms vts dsj [cov]
+
+mrgAtmAtms vts (CoveredBy NU  gv c0) [CoveredBy NU  _ c1]
+               =  return [CoveredBy NU  gv (c0 `S.intersection` c1)]
+
 mrgAtmAtms vts (CoveredBy NU  gv c0) [Disjoint NU  _ d,CoveredBy NU  _ c1]
  | c' `S.isSubsetOf` d  =  return [CoveredBy NU  gv S.empty]
  | otherwise            =  return [Disjoint NU  gv d,CoveredBy NU  gv (c' S.\\ d)]
  where c' = c0 `S.union` c1
-mrgAtmAtms vts (CoveredBy NU  gv c) [Disjoint NU  _ d]
- | c `S.isSubsetOf` d  =  return [CoveredBy NU  gv S.empty]
- | otherwise           =  return [Disjoint NU  gv d,CoveredBy NU  gv (c S.\\ d)]
-mrgAtmAtms vts (CoveredBy NU  gv c0) [CoveredBy NU  _ c1]
-               =  return [CoveredBy NU  gv (c0 `S.intersection` c1)]
 \end{code}
 
 \subsubsection{Failure Case}

@@ -524,45 +524,10 @@ becomes an assertion that $G$ is closed.
 For any given general variable $G$,
 these laws ensure that we can arrange matters so that $D$ and $C$ are disjoint.
 
-Below, we overload the notation to denote the corresponding condition.
-So, for example, depending on context,
-$D$ can denote a variable-set
-or the predicate $D \disj G$ ($G$ being the general variable in question).
+All the set operations used above preserve uniformity if both set arguments
+are uniform.
 
-Note that neither uniformity or non-uniformity in both conditions
-is preserved in the general case when we combine them.
-Disjointedness does preserve uniformity if present in both.
-
-\textit{Example 1 }
-Two non-uniform disjoint sets, when joined, may become uniform
- (e.g. $\setof{x,y'} \cup \setof{x',y}$ in a context with no subscripts.)
-
-\textit{Example 2 }
-let $C_1\setof{a,b,c}$ be a uniform condition,
-while $C_2 = \setof{a,b,c,x'}$ is a non-uniform condition.
-We can calculate their intersection:
-\begin{eqnarray*}
-   && \setof{a,b,c} \cap \setof{a,b,c,x'}
-\\ &=& \textrm{uniform lifting}
-\\ && \setof{a,a',b,b',c,c'} \cap \setof{a,b,c,x'}
-\\ &=& \textrm{intersection}
-\\ && \setof{a,b,c}
-\end{eqnarray*}
-While this ``looks'' uniform, it is not, even if the condition general variable
-is un-dashed.
-
-\textit{Example 3 } A uniform outcome will arise in the following case:
-\begin{eqnarray*}
-   && \setof{a,b} \cap \setof{a,a',b,b',c,x'}
-\\ &=& \textrm{uniform lifting}
-\\ && \setof{a,a',b,b'} \cap \setof{a,a',b,b',c,x'}
-\\ &=& \textrm{intersection}
-\\ && \setof{a,a',b,b'}
-\\ &=& \textrm{uniform un-lifting}
-\\ && \setof{a,b}
-\end{eqnarray*}
-
-Side conditions currently in use:
+It is worth noting Side conditions currently in use:
 \begin{description}
   \item[Forall/Exists] (all non-uniform)\\
      $\lst x \disj P \qquad \lst x \disj e \qquad \lst y \disj P$
@@ -589,37 +554,47 @@ Side conditions currently in use:
       O_0 \textrm{ fresh}
      $
 \end{description}
-
-
+Summary: All uses of disjointness are non-uniform.
+All uniform specifications are coverings for expressions and variables.
+Not seeing any mixing of these (yet!)
 
 The key principles to combining conditions of possibly different uniformity are:
 \begin{itemize}
   \item Let $S$ denote all the explicit subscripts in the non-uniform sides.
   \item Lift any uniform side with $x$ mapping to $x,x',x_i$ for all $ i \in S$.
   \item Perform the relevant set operation.
-  \item If the result looks like a image of a lifting,
-    then un-lift and mark as uniform.
-    Otherwise, mark as non-uniform.
+  \item If the result looks like a image of a lifting:
+    then un-lift and mark as uniform;
+  \item
+    Otherwise:
+     mark as non-uniform,
+     \emph{
+       but this requires us to replace a single uniform condition
+       by several, one for each temporality,
+       and hence each with a \textbf{different} general variable.
+       This is not a good fit with the code architecture in use here.
+     }
 \end{itemize}
 
-For now
-
+For now, we only handle simple cases,
+those where both components have the same uniformity.
 \subsubsection{Merging \texttt{Disjoint} into ASC}
 \begin{code}
-mrgAtmAtms vts (Disjoint UN  gv d0) [Disjoint UN  _ d1]
-                  =  return [Disjoint NU  gv (d0 `S.union` d1)]
+mrgAtmAtms vts (Disjoint u1 gv d0) [Disjoint u2 _ d1]
+  | u1 == u2  =  return [Disjoint u1  gv (d0 `S.union` d1)]
 
-mrgAtmAtms vts (Disjoint NU  gv d0) [Disjoint NU  _ d1]
-                  =  return [Disjoint NU  gv (d0 `S.union` d1)]
+mrgAtmAtms vts (Disjoint u1 gv d) [CoveredBy u2  _ c]
+  | u1 == u2
+    = if c `S.isSubsetOf` d
+      then  return [CoveredBy u2 gv S.empty]
+      else  return [Disjoint u1 gv d,CoveredBy u2 gv (c S.\\ d)]
 
-mrgAtmAtms vts (Disjoint NU  gv d) [CoveredBy NU  _ c]
- | c `S.isSubsetOf` d  =  return [CoveredBy NU  gv S.empty]
- | otherwise           =  return [Disjoint NU  gv d,CoveredBy NU  gv (c S.\\ d)]
-
-mrgAtmAtms vts (Disjoint NU  gv d0) [Disjoint NU  _ d1,CoveredBy NU  _ c]
- | c `S.isSubsetOf` d'  =  return [CoveredBy NU  gv S.empty]
- | otherwise            =  return [Disjoint NU  gv d',CoveredBy NU  gv (c S.\\ d')]
- where d' = d0 `S.union` d1
+mrgAtmAtms vts (Disjoint u1 gv d0) [Disjoint u2 _ d1,CoveredBy u3 _ c]
+  | u1 == u2 && u1 == u3
+    = if c `S.isSubsetOf` d'
+      then  return [CoveredBy u3 gv S.empty]
+      else  return [Disjoint u1 gv d',CoveredBy u3 gv (c S.\\ d')]
+  where d' = d0 `S.union` d1
 \end{code}
 
 
@@ -628,24 +603,26 @@ mrgAtmAtms vts (Disjoint NU  gv d0) [Disjoint NU  _ d1,CoveredBy NU  _ c]
 mrgAtmAtms vts cov@(CoveredBy _ _ _) [dsj@(Disjoint _ _ _)]
                                                      =  mrgAtmAtms vts dsj [cov]
 
-mrgAtmAtms vts (CoveredBy NU  gv c0) [CoveredBy NU  _ c1]
-               =  return [CoveredBy NU  gv (c0 `S.intersection` c1)]
+mrgAtmAtms vts (CoveredBy u1 gv c0) [CoveredBy u2 _ c1]
+  | u1 == u2  = return [CoveredBy u1 gv (c0 `S.intersection` c1)]
 
-mrgAtmAtms vts (CoveredBy NU  gv c0) [Disjoint NU  _ d,CoveredBy NU  _ c1]
- | c' `S.isSubsetOf` d  =  return [CoveredBy NU  gv S.empty]
- | otherwise            =  return [Disjoint NU  gv d,CoveredBy NU  gv (c' S.\\ d)]
- where c' = c0 `S.union` c1
+mrgAtmAtms vts (CoveredBy u1 gv c0) [Disjoint u2 _ d,CoveredBy u3 _ c1]
+  | u1 == u2 && u1 == u3
+    = if c' `S.isSubsetOf` d
+      then  return [CoveredBy u1 gv S.empty]
+      else  return [Disjoint u2 gv d,CoveredBy u3 gv (c' S.\\ d)]
+  where c' = c0 `S.union` c1
 \end{code}
 
 \subsubsection{Failure Case}
-If none of the above arise, then we currently have a problem,
-probably with \texttt{mrgAtmCond} above.
+If none of the above arise, then we will need to consider how to
+extend the above code to handle more cases.
 \begin{code}
 mrgAtmAtms vts atm atms
- = fail $ unlines' [ "Unexpected fail in mrgAtmAtms:"
-                   , "atm is "++show atm
-                   , "atms are "++ show atms
-                   , "vts is "++show vts]
+  = fail $ unlines' [ "Incompleteness in mrgAtmAtms:"
+                    , "atm is   "++ show atm
+                    , "atms are "++ show atms
+                    , "vts is   "++ show vts ]
 \end{code}
 
 \subsubsection{Merging Atomic Lists}

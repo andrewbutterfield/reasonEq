@@ -18,7 +18,7 @@ module SideCond (
 , scDischarge
 , isFloatingASC
 , notin, covers, fresh
-, citingASCs
+-- , citingASCs   -- not used anywhere!
 , int_tst_SideCond
 ) where
 import Data.Char
@@ -764,9 +764,6 @@ scDischarge' vts (grpG@(gvG,ascsG):restG) grpsL@(grpL@(gvL,ascsL):restL)
 
 \newpage
 
-\textbf{As above, we only consider \texttt{Disjoint} and \texttt{CoveredBy}
-for now.}
-
 The following code assumes that the \texttt{GenVar} component
 is the same in all of the \texttt{AtmSideCond}.
 
@@ -829,7 +826,7 @@ Here we are trying to show:
 \begin{equation*}
  G_i
  \vdash
- L_j \quad \where \quad i,j \in \setof{D,C,pre}
+ L_j \quad \where \quad i,j \in \setof{D,C}
 \end{equation*}
 \begin{code}
 ascDischarge :: MonadFail m => [VarTable]
@@ -848,21 +845,20 @@ We use the notation $G \discharges L \mapsto R$
 to say that $G$ being true means that we can simplify $L$ to a ``residual'' $R$.
 
 The following cases need special treatment:
-\begin{itemize}
-  \item
-    A translated law side-condition of the form $\emptyset \supseteq v$,
-    where $v$ is a standard variable.
-    This is simply false.
+
+A translated law side-condition of the form $\emptyset \supseteq v$,
+where $v$ is a standard variable.
+This is simply false.
 \begin{code}
-ascDischarge _ _ (CoveredBy NU  (StdVar (Vbl _ ObsV _)) dL)
+ascDischarge _ _ (CoveredBy _ (StdVar (Vbl _ ObsV _)) dL)
   | S.null dL  =  fail ("Empty set cannot cover a standard obs. variable")
 \end{code}
-  \item
-    Any occurrences of a floating variable in a translated law side-condition
-    should be retained.
-    We let $D_{?L}$ and $C_{?L}$ denote
-    the floating subsets of $D_L$ and $C_L$ respectively.
-\end{itemize}
+
+Any occurrences of a floating variable in a translated law side-condition
+should be retained.
+We let $D_{?L}$ and $C_{?L}$ denote
+the floating subsets of $D_L$ and $C_L$ respectively.
+
 We also need to handle cases like $O_1 \notin P$.
 This reduces to $true$ because of the following things that are
 true for known variables $O$ and $O'$:
@@ -895,6 +891,8 @@ discharge rule further below.
 %     isWhenPartition oo'L omL  -- same name, partitions {Before,During,After}
 %       = False -- NYI
 % \end{code}
+
+We also need to handle the uniformity markings properly here.
 
 Now, we work through the combinations:
 \begin{eqnarray*}
@@ -1088,15 +1086,62 @@ fresh fvs = ( [], fvs )
 \newpage
 \subsection{Side-condition Queries}
 
-First, given a variable-set,
-return all ASCs that mention any variable in that set:
+Here we develop some set-operations that can handle a mix of uniform
+and non-uniform atomic side conditions.
+We do this by comparing variables with the same identifier and class
+from each side-condition.
+We convert variable-sets into ordered lists of lists,
+and then work through them in lock-step.
+The internal lists contain all variables with the same identifier and class,
+and will be a singleton if the condition is uniform.
 \begin{code}
-citingASCs :: VarSet -> SideCond -> [AtmSideCond]
-citingASCs vs (sc,_) = filter (cited vs) sc
+lineariseVarSet :: VarSet -> [[GenVar]]
+lineariseVarSet vs = lineariseVarList $ S.elems vs
 
-cited :: VarSet -> AtmSideCond -> Bool
-vs `cited` asc  =  vs == ascVSet asc
+lineariseVarList [] = []
+lineariseVarList (gv:gvs) = lineariseVarList' gv [] gvs
+
+lineariseVarList' gv svg [] = [ gv : svg ]
+lineariseVarList' gv svg (gv':gvs)
+ | gv `sameIdClass` gv' = lineariseVarList' gv (gv':svg) gvs
+ | otherwise = ( gv : svg) : lineariseVarList' gv' [] gvs
+
+-- perhaps we need to pull out Id,Class and compare these
+--  GenVar -> (Identifier,VarClass)
+sameIdClass (StdVar (Vbl i1 vc1 _)) (StdVar (Vbl i2 vc2 _))
+  =  i1 == i2 && vc1 == vc2
+sameIdClass (LstVar (LVbl (Vbl i1 vc1 _) _ _))
+            (LstVar (LVbl (Vbl i2 vc2 _) _ _))
+  =  i1 == i2 && vc1 == vc2
+sameIdClass _ _  =  False
 \end{code}
+Note that all the sub-lists are non-empty
+
+We now look at code to check for subsets:
+\begin{code}
+isASubsetOf :: (Uniformity,[[GenVar]]) -> (Uniformity,[[GenVar]]) -> Bool
+(_,[])    `isASubsetOf` (_,_)      =  True
+(_,(_:_)) `isASubsetOf` (_,[])     =  False
+(u1,(gv1:vl1):vls1) `isASubsetOf` (u2,(gv2:vl2):vls2)
+  = False -- for now, but this gets complicated !!!
+(u1,lvl1) `isASubsetOf` (u2,lvl2)  =  False
+\end{code}
+
+
+
+
+
+% First, given a variable-set,
+% return all ASCs that mention any variable in that set:
+% \begin{code}
+% -- NOT USED ANYWHERE!
+% citingASCs :: VarSet -> SideCond -> [AtmSideCond]
+% citingASCs vs (sc,_) = filter (cited vs) sc
+%
+% cited :: VarSet -> AtmSideCond -> Bool
+% vs `cited` asc  =  vs == ascVSet asc
+% -- this needs rework as it uses ascVSet which is uniformity-blind
+% \end{code}
 
 \newpage
 

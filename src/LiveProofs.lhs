@@ -501,7 +501,7 @@ Finally, try to discharge the instantiated side-condition:
 -- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
     trySCDischarge vts bind tP partsP scP'
       = case
-                scDischarge vts scC scP'
+                scDischarge ss scC scP'
         of
           Yes scP'' -> Yes (bind,tP,scP',scP'')
           But whynots -> But [ "try s.c. discharge failed"
@@ -520,6 +520,8 @@ Finally, try to discharge the instantiated side-condition:
                              , "bind:\n"
                              , trBinding bind
                              ]
+     where ss = S.elems $ S.map theSubscript $ S.filter isDuring
+                          $ S.map gvarWhen $ mentionedVars tC
 \end{code}
 
 Done.
@@ -900,7 +902,7 @@ basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
         kbind <- bindKnown vts bind repl
         fbind <- bindFloating vts kbind repl
         scPinC <- instantiateSC vts fbind scP
-        scD <- scDischarge vts scC scPinC
+        scD <- scDischarge ss scC scPinC
 
         if all isFloatingASC (fst scD)
           then do mrepl <- instantiate vts fbind repl
@@ -908,6 +910,8 @@ basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
                               fbind repl scC scPinC mrepl
           else fail "undischargeable s.c."
   where
+    ss = S.elems $ S.map theSubscript $ S.filter isDuring
+                 $ S.map gvarWhen $ mentionedVars tC
 
     chkPatn MatchEqvLHS (Var _ v)
       | lookupVarTables vts v == UnknownVar  =  MatchEqvVar 1

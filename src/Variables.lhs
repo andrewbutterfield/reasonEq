@@ -12,7 +12,7 @@ module Variables
  , Subscript, VarWhen
  , pattern Static
  , pattern Before, pattern During, pattern After, pattern Textual
- , isDynamic
+ , isDynamic, isDuring, theSubscript
  , Variable
  , pattern Vbl
  , varClass, varWhen
@@ -173,6 +173,11 @@ isDynamic :: VarWhen -> Bool
 isDynamic Static   =  False
 isDynamic Textual  =  False
 isDynamic _        =  True
+isDuring :: VarWhen -> Bool
+isDuring (During _)  =  True
+isDuring _           =  False
+theSubscript :: VarWhen -> Subscript
+theSubscript (During s) = s
 \end{code}
 
 \subsubsection{More about variables}

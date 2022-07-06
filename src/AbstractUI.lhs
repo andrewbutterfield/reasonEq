@@ -604,11 +604,13 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
         (tz,seq') = focus liveProof
         dpath = fPath liveProof
         conjpart = exitTZ tz
+        ss = S.elems $ S.map theSubscript $ S.filter isDuring
+                       $ S.map gvarWhen $ mentionedVars conjpart
     in do let sbind = patchBinding vts lvvls cbind
           scLasC <- instantiateSC vtbls sbind scL
           scCL <- extendGoalSCCoverage vtbls lvvls scLasC
           scCX <- mrgSideCond vtbls scC scCL
-          scD <- scDischarge vtbls scCX scLasC
+          scD <- scDischarge ss scCX scLasC
           if onlyFreshSC scD
             then do let freshneeded = snd scD
                     let knownVs = zipperVarsMentioned $ focus liveProof

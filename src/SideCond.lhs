@@ -319,7 +319,7 @@ Note that we cannot deduce (here) that $T \disj T$ is false,
 because $T$ could correspond to the empty set.
 Nor can we assume $T \disj z$ is false, because $T$ could contain $z$.
 \begin{code}
-ascCheck vts asc@(Disjoint _ gv vs)
+ascCheck ss asc@(Disjoint _ gv vs)
   | S.null vs                 =  return mscTrue
   | temporallyDisjoint gv vs  =  return mscTrue
   | not $ isObsGVar gv        =  return $ Just $ setASCUniformity asc
@@ -345,7 +345,7 @@ Here, as $T$ could be empty,
 we cannot deduce that $\emptyset \supseteq T$ is false.
 Similarly, $T \supseteq z$ could also be true.
 \begin{code}
-ascCheck vts asc@(CoveredBy _ gv vs)
+ascCheck ss asc@(CoveredBy _ gv vs)
   | gv `S.member` vs          =  return mscTrue
   | temporallyDisjoint gv vs  =  report "atomic covers is False (disjoint)"
   | not $ isObsGVar gv        =  return $ Just $ setASCUniformity asc
@@ -460,8 +460,8 @@ mrgAtmCond :: MonadFail m => [VarTable]
 
 1st ASC is easy:
 \begin{code}
-mrgAtmCond vts asc []
-  = do masc <- ascCheck vts asc
+mrgAtmCond ss asc []
+  = do masc <- ascCheck ss asc
        case masc of
          Nothing ->  return [] -- asc is in fact true
          Just asc' -> return [asc']
@@ -470,11 +470,11 @@ mrgAtmCond vts asc []
 Subsequent ones mean searching to see if there are already ASCs with the
 same general-variable:
 \begin{code}
-mrgAtmCond vts asc ascs
-  = do masc <- ascCheck vts asc
+mrgAtmCond ss asc ascs
+  = do masc <- ascCheck ss asc
        case masc of
          Nothing ->  return ascs
-         Just asc' -> splice (mrgAtmAtms vts asc) $ brkspnBy (compareGV asc) ascs
+         Just asc' -> splice (mrgAtmAtms ss asc) $ brkspnBy (compareGV asc) ascs
 
 compareGV asc1 asc2  =  ascGVar asc1 `compare` ascGVar asc2
 sameGV asc1 asc2     =  asc1 `compareGV` asc2 == EQ
@@ -486,7 +486,7 @@ Now, merging an ASC in with other ASCs referring to the same general variable:
 \begin{code}
 mrgAtmAtms :: MonadFail m => [VarTable]
            -> AtmSideCond -> [AtmSideCond] -> m [AtmSideCond]
-mrgAtmAtms vts asc [] = return [asc] -- it's the first.
+mrgAtmAtms ss asc [] = return [asc] -- it's the first.
 \end{code}
 
 Given one or more pre-existing ASCs for this g.v., we note the following possible
@@ -580,16 +580,16 @@ For now, we only handle simple cases,
 those where both components have the same uniformity.
 \subsubsection{Merging \texttt{Disjoint} into ASC}
 \begin{code}
-mrgAtmAtms vts (Disjoint u1 gv d0) [Disjoint u2 _ d1]
+mrgAtmAtms ss (Disjoint u1 gv d0) [Disjoint u2 _ d1]
   | u1 == u2  =  return [Disjoint u1  gv (d0 `S.union` d1)]
 
-mrgAtmAtms vts (Disjoint u1 gv d) [CoveredBy u2  _ c]
+mrgAtmAtms ss (Disjoint u1 gv d) [CoveredBy u2  _ c]
   | u1 == u2
     = if c `S.isSubsetOf` d
       then  return [CoveredBy u2 gv S.empty]
       else  return [Disjoint u1 gv d,CoveredBy u2 gv (c S.\\ d)]
 
-mrgAtmAtms vts (Disjoint u1 gv d0) [Disjoint u2 _ d1,CoveredBy u3 _ c]
+mrgAtmAtms ss (Disjoint u1 gv d0) [Disjoint u2 _ d1,CoveredBy u3 _ c]
   | u1 == u2 && u1 == u3
     = if c `S.isSubsetOf` d'
       then  return [CoveredBy u3 gv S.empty]
@@ -600,13 +600,13 @@ mrgAtmAtms vts (Disjoint u1 gv d0) [Disjoint u2 _ d1,CoveredBy u3 _ c]
 
 \subsubsection{Merging \texttt{CoveredBy} into ASC}
 \begin{code}
-mrgAtmAtms vts cov@(CoveredBy _ _ _) [dsj@(Disjoint _ _ _)]
-                                                     =  mrgAtmAtms vts dsj [cov]
+mrgAtmAtms ss cov@(CoveredBy _ _ _) [dsj@(Disjoint _ _ _)]
+                                                     =  mrgAtmAtms ss dsj [cov]
 
-mrgAtmAtms vts (CoveredBy u1 gv c0) [CoveredBy u2 _ c1]
+mrgAtmAtms ss (CoveredBy u1 gv c0) [CoveredBy u2 _ c1]
   | u1 == u2  = return [CoveredBy u1 gv (c0 `S.intersection` c1)]
 
-mrgAtmAtms vts (CoveredBy u1 gv c0) [Disjoint u2 _ d,CoveredBy u3 _ c1]
+mrgAtmAtms ss (CoveredBy u1 gv c0) [Disjoint u2 _ d,CoveredBy u3 _ c1]
   | u1 == u2 && u1 == u3
     = if c' `S.isSubsetOf` d
       then  return [CoveredBy u1 gv S.empty]
@@ -618,11 +618,11 @@ mrgAtmAtms vts (CoveredBy u1 gv c0) [Disjoint u2 _ d,CoveredBy u3 _ c1]
 If none of the above arise, then we will need to consider how to
 extend the above code to handle more cases.
 \begin{code}
-mrgAtmAtms vts atm atms
+mrgAtmAtms ss atm atms
   = fail $ unlines' [ "Incompleteness in mrgAtmAtms:"
                     , "atm is   "++ show atm
                     , "atms are "++ show atms
-                    , "vts is   "++ show vts ]
+                    , "ss is   "++ show ss ]
 \end{code}
 
 \subsubsection{Merging Atomic Lists}
@@ -630,10 +630,10 @@ mrgAtmAtms vts atm atms
 \begin{code}
 mrgAtmCondLists :: MonadFail m => [VarTable]
                 -> [AtmSideCond] -> [AtmSideCond] -> m [AtmSideCond]
-mrgAtmCondLists vts ascs1 [] = return ascs1
-mrgAtmCondLists vts ascs1 (asc:ascs2)
-     = do ascs1' <- mrgAtmCond vts asc ascs1
-          mrgAtmCondLists vts ascs1' ascs2
+mrgAtmCondLists ss ascs1 [] = return ascs1
+mrgAtmCondLists ss ascs1 (asc:ascs2)
+     = do ascs1' <- mrgAtmCond ss asc ascs1
+          mrgAtmCondLists ss ascs1' ascs2
 \end{code}
 
 \subsubsection{Merging Atomic and Freshness Side-Conditions}
@@ -642,13 +642,13 @@ mrgAtmCondLists vts ascs1 (asc:ascs2)
 \begin{code}
 mrgAtomicFreshConditions :: MonadFail m => [VarTable]
                          -> VarSet -> [AtmSideCond] -> m SideCond
-mrgAtomicFreshConditions vts freshvs ascs
-  | freshvs `disjoint` coverVarsOf vts ascs  =  return (ascs,freshvs)
+mrgAtomicFreshConditions ss freshvs ascs
+  | freshvs `disjoint` coverVarsOf ss ascs  =  return (ascs,freshvs)
   -- the above might not work - `disjoint` may need vts information
   | otherwise  =  fail "Fresh variables cannot cover terms."
 
 coverVarsOf :: [VarTable] -> [AtmSideCond] -> VarSet
-coverVarsOf vts ascs = S.unions $ map coversOf ascs
+coverVarsOf ss ascs = S.unions $ map coversOf ascs
 coversOf (CoveredBy NU  _ vs)  =  vs
 coversOf _              =  S.empty
 \end{code}
@@ -657,9 +657,9 @@ coversOf _              =  S.empty
 
 \begin{code}
 mkSideCond :: MonadFail m => [VarTable] -> [AtmSideCond] -> VarSet -> m SideCond
-mkSideCond vts ascs fvs
- = do ascs' <-  mrgAtmCondLists vts [] ascs
-      mrgAtomicFreshConditions vts fvs ascs'
+mkSideCond ss ascs fvs
+ = do ascs' <-  mrgAtmCondLists ss [] ascs
+      mrgAtomicFreshConditions ss fvs ascs'
 \end{code}
 
 
@@ -670,16 +670,16 @@ simply merge each ASC and fresh set from the one into the other,
 one at a time.
 \begin{code}
 mrgSideCond :: MonadFail m => [VarTable] -> SideCond -> SideCond -> m SideCond
-mrgSideCond vts (ascs1,fvs1) (ascs2,fvs2)
-     = do ascs' <- mrgAtmCondLists vts ascs1 ascs2
-          mrgAtomicFreshConditions vts (fvs1 `S.union` fvs2) ascs'
-          -- the above may require a vts-savvy union?
+mrgSideCond ss (ascs1,fvs1) (ascs2,fvs2)
+     = do ascs' <- mrgAtmCondLists ss ascs1 ascs2
+          mrgAtomicFreshConditions ss (fvs1 `S.union` fvs2) ascs'
+          -- the above may require a ss-savvy union?
 
 mrgSideConds :: MonadFail m => [VarTable] -> [SideCond] -> m SideCond
-mrgSideConds vts [] = return ([],S.empty)
-mrgSideConds vts (sc:scs)
-  = do  scs' <- mrgSideConds vts scs
-        mrgSideCond vts sc scs'
+mrgSideConds ss [] = return ([],S.empty)
+mrgSideConds ss (sc:scs)
+  = do  scs' <- mrgSideConds ss scs
+        mrgSideCond ss sc scs'
 \end{code}
 
 \newpage
@@ -696,7 +696,7 @@ If we discover a contradiction,
 then we need to signal this,
 because \texttt{SideCond} cannot represent a false side-condition explicitly.
 \begin{code}
-scDischarge :: MonadFail m => [VarTable] -> SideCond -> SideCond -> m SideCond
+scDischarge :: MonadFail m => [Subscript] -> SideCond -> SideCond -> m SideCond
 \end{code}
 We have something of the form:
 $$
@@ -723,12 +723,12 @@ Failure occurs if any $L_j$ group results in $\false$.
 
 
 \begin{code}
-scDischarge vts anteSC@(anteASC,anteFvs) cnsqSC@(cnsqASC,cnsqFvs)
+scDischarge ss anteSC@(anteASC,anteFvs) cnsqSC@(cnsqASC,cnsqFvs)
   | isTrivialSC cnsqSC  =  return scTrue  -- G => true   is   true
   | isTrivialSC anteSC  =  return cnsqSC  -- true => L   is   L, not discharged
   | otherwise
-     = do asc' <- scDischarge' vts (groupByGV anteASC) (groupByGV cnsqASC)
-          freshDischarge vts anteFvs cnsqFvs asc'
+     = do asc' <- scDischarge' ss (groupByGV anteASC) (groupByGV cnsqASC)
+          freshDischarge ss anteFvs cnsqFvs asc'
 \end{code}
 
 We have a modified version of \texttt{Data.List.groupBy}
@@ -746,19 +746,19 @@ groupByGV (asc:ascs)  =  (gv,asc:ours) : groupByGV others
 
 Now onto processing those groups:
 \begin{code}
-scDischarge'  :: MonadFail m => [VarTable]
+scDischarge'  :: MonadFail m => [Subscript]
               -> [(GenVar,[AtmSideCond])] -> [(GenVar,[AtmSideCond])]
               -> m [AtmSideCond]
 scDischarge' _ _ []      =  return []                   -- discharged
 scDischarge' _ [] grpsL  =  return $ concat $ map snd grpsL -- not discharged
-scDischarge' vts (grpG@(gvG,ascsG):restG) grpsL@(grpL@(gvL,ascsL):restL)
-  | gvG < gvL  =  scDischarge' vts restG grpsL -- grpG not needed
+scDischarge' ss (grpG@(gvG,ascsG):restG) grpsL@(grpL@(gvL,ascsL):restL)
+  | gvG < gvL  =  scDischarge' ss restG grpsL -- grpG not needed
   | gvG > gvL  =  do -- nothing available to discharge grpL
-                     rest' <- scDischarge' vts restG restL
+                     rest' <- scDischarge' ss restG restL
                      return (ascsL++rest')
   | otherwise  =  do -- use grpG to discharge grpL
-                     ascs' <- grpDischarge vts ascsG ascsL
-                     rest' <- scDischarge' vts restG restL
+                     ascs' <- grpDischarge ss ascsG ascsL
+                     rest' <- scDischarge' ss restG restL
                      return (ascs'++rest')
 \end{code}
 
@@ -793,12 +793,12 @@ There is an asymmetry here, which means that we should
 use all the $G_i$ to try and discharge each $L_i$,
 rather than the other way around.
 \begin{code}
-grpDischarge :: MonadFail m => [VarTable]
+grpDischarge :: MonadFail m => [Subscript]
              -> [AtmSideCond] -> [AtmSideCond] -> m [AtmSideCond]
 grpDischarge _ _ []  =  return []
-grpDischarge vts ascsG (ascL:ascsL)
-  = do ascL'  <- ascsDischarge vts ascsG ascL
-       ascsL' <- grpDischarge vts ascsG ascsL
+grpDischarge ss ascsG (ascL:ascsL)
+  = do ascL'  <- ascsDischarge ss ascsG ascL
+       ascsL' <- grpDischarge ss ascsG ascsL
        return (ascL'++ascsL')
 \end{code}
 
@@ -809,13 +809,13 @@ Here we are trying to show
  L_j \quad \where \quad j \in \setof{D,C,pre}
 \end{equation*}
 \begin{code}
-ascsDischarge :: MonadFail m => [VarTable]
+ascsDischarge :: MonadFail m => [Subscript]
               -> [AtmSideCond] -> AtmSideCond -> m [AtmSideCond]
 ascsDischarge _ [] ascL = return [ascL]
-ascsDischarge vts (ascG:ascsG) ascL
-  =  case ascDischarge vts ascG ascL of
+ascsDischarge ss (ascG:ascsG) ascL
+  =  case ascDischarge ss ascG ascL of
       Yes []       ->  return []
-      Yes [ascL']  ->  ascsDischarge vts ascsG ascL'
+      Yes [ascL']  ->  ascsDischarge ss ascsG ascL'
       But msgs     ->  fail $ unlines msgs
 \end{code}
 
@@ -829,9 +829,9 @@ Here we are trying to show:
  L_j \quad \where \quad i,j \in \setof{D,C}
 \end{equation*}
 \begin{code}
-ascDischarge :: MonadFail m => [VarTable]
+ascDischarge :: MonadFail m => [Subscript]
             -> AtmSideCond -> AtmSideCond -> m [AtmSideCond]
--- ascDischarge vts ascG ascL
+-- ascDischarge ss ascG ascL
 -- ascGVar ascG == ascGVar ascL
 \end{code}
 
@@ -901,12 +901,13 @@ Now, we work through the combinations:
 \\ & \mapsto & (D_L\setminus D_G) \disj V
 \end{eqnarray*}
 \begin{code}
-ascDischarge vts (Disjoint u1 _ dG) (Disjoint u2 gv dL)
-  | linL `isSCsubset` linG  =  return [] -- true
-  | otherwise               =  return [Disjoint NU  gv (dL S.\\ dG)]
+ascDischarge ss (Disjoint u1 _ dG) (Disjoint u2 gv dL)
+  | linL `subset` linG  =  return [] -- true
+  | otherwise           =  return [Disjoint NU  gv (dL S.\\ dG)]
   where
     linG = (u1,lineariseVarSet dG)
     linL = (u2,lineariseVarSet dL)
+    subset = isSCsubset ss
 \end{code}
 
 \begin{eqnarray*}
@@ -916,7 +917,7 @@ ascDischarge vts (Disjoint u1 _ dG) (Disjoint u2 gv dL)
 \\ & \mapsto & (C_L \setminus D_G) \supseteq V
 \end{eqnarray*}
 \begin{code}
-ascDischarge vts (Disjoint _ _ dG) c@(CoveredBy _ gv cL)
+ascDischarge ss (Disjoint _ _ dG) c@(CoveredBy _ gv cL)
   | cL `S.isSubsetOf` dG && isObsGVar gv  =  fail "Disj=>emptyCover"
   | otherwise                             =  return [CoveredBy NU  gv (cL S.\\ dG)]
 \end{code}
@@ -930,12 +931,13 @@ ascDischarge vts (Disjoint _ _ dG) c@(CoveredBy _ gv cL)
 Here we have to ensure that $C_{?L}$ is retained, as no floating variables
 exist in $C_G$, and so the intersection would remove those in $C_L$.
 \begin{code}
-ascDischarge vts (CoveredBy u1 _ cG) (CoveredBy u2 gv cL)
-  | linG `isSCsubset` linL            =  return []
+ascDischarge ss (CoveredBy u1 _ cG) (CoveredBy u2 gv cL)
+  | linG `subset` linL                =  return []
   | cG `disjoint` cL && isObsGVar gv  =  fail "CoverDisj=>noCover"
   | otherwise  =  return
                     [CoveredBy NU  gv ((cG `S.intersection` cL) `S.union` floatsOf cL)]
   where
+    subset = isSCsubset ss
     linG = (u1,lineariseVarSet cG)
     linL = (u2,lineariseVarSet cL)
     floatsOf = S.filter isFloatingGVar
@@ -948,7 +950,7 @@ ascDischarge vts (CoveredBy u1 _ cG) (CoveredBy u2 gv cL)
 \\ & \mapsto & D_L \disj V
 \end{eqnarray*}
 \begin{code}
-ascDischarge vts (CoveredBy NU  _ cG) d@(Disjoint NU  gv dL)
+ascDischarge ss (CoveredBy NU  _ cG) d@(Disjoint NU  gv dL)
   | S.null (cG `S.intersection` dL)  =  return []
   | otherwise                        =  return [d]
 \end{code}
@@ -974,20 +976,20 @@ $$
 where elements of $G_F$ can be used to satisfy some $L_j$.
 
 \begin{code}
-freshDischarge :: MonadFail m => [VarTable]
+freshDischarge :: MonadFail m => [Subscript]
               -> VarSet -> VarSet -> [AtmSideCond] -> m SideCond
-freshDischarge vts anteFvs cnsqFvs asc
-  = do asc' <- freshDischarge' vts anteFvs asc
+freshDischarge ss anteFvs cnsqFvs asc
+  = do asc' <- freshDischarge' ss anteFvs asc
        return (asc' , cnsqFvs S.\\ anteFvs )
 \end{code}
 
 \begin{code}
-freshDischarge' :: MonadFail m => [VarTable]
+freshDischarge' :: MonadFail m => [Subscript]
                 -> VarSet -> [AtmSideCond] -> m [AtmSideCond]
-freshDischarge' vts anteFvs [] = return []
-freshDischarge' vts anteFvs (asc:ascs)
-  = do ascl  <- freshAtomDischarge vts anteFvs asc
-       ascs' <- freshDischarge'    vts anteFvs ascs
+freshDischarge' ss anteFvs [] = return []
+freshDischarge' ss anteFvs (asc:ascs)
+  = do ascl  <- freshAtomDischarge ss anteFvs asc
+       ascs' <- freshDischarge'    ss anteFvs ascs
        return (ascl++ascs')
 \end{code}
 
@@ -1003,7 +1005,7 @@ there are three possible outcomes:
   \item [Not Fully Discharged]  Return [$L'_j$]
 \end{description}
 \begin{code}
-freshAtomDischarge :: MonadFail m => [VarTable]
+freshAtomDischarge :: MonadFail m => [Subscript]
                    -> VarSet -> AtmSideCond -> m [AtmSideCond]
 \end{code}
 We now consider the following possibilities:
@@ -1013,7 +1015,7 @@ We now consider the following possibilities:
 \\ &\mapsto& D_L \setminus G_F \disj V
 \end{eqnarray*}
 \begin{code}
-freshAtomDischarge vts gF (Disjoint NU  gv dL)
+freshAtomDischarge ss gF (Disjoint NU  gv dL)
   | dL `S.isSubsetOf` gF  =  return []
   | otherwise  =  return [Disjoint NU  gv (dL S.\\ gF)]
 \end{code}
@@ -1023,13 +1025,13 @@ freshAtomDischarge vts gF (Disjoint NU  gv dL)
    &\mapsto&  C_L \setminus G_F \supseteq V
 \end{eqnarray*}
 \begin{code}
-freshAtomDischarge vts gF (CoveredBy NU  gv cL) = return [CoveredBy NU  gv (cL S.\\ gF)]
+freshAtomDischarge ss gF (CoveredBy NU  gv cL) = return [CoveredBy NU  gv (cL S.\\ gF)]
 \end{code}
 
 
 Anything else is not handled right now.
 \begin{code}
-freshAtomDischarge vts gF asc = return [asc]
+freshAtomDischarge ss gF asc = return [asc]
 \end{code}
 
 
@@ -1112,14 +1114,14 @@ lineariseVarList' gv svg (gv':gvs)
  | gv `sameIdClass` gv' = lineariseVarList' gv (gv':svg) gvs
  | otherwise = ( gv : svg) : lineariseVarList' gv' [] gvs
 
--- perhaps we need to pull out Id,Class and compare these
---  GenVar -> (Identifier,VarClass)
-sameIdClass (StdVar (Vbl i1 vc1 _)) (StdVar (Vbl i2 vc2 _))
-  =  i1 == i2 && vc1 == vc2
-sameIdClass (LstVar (LVbl (Vbl i1 vc1 _) _ _))
-            (LstVar (LVbl (Vbl i2 vc2 _) _ _))
-  =  i1 == i2 && vc1 == vc2
-sameIdClass _ _  =  False
+getIdClass :: GenVar -> (Identifier, VarClass)
+getIdClass (StdVar (Vbl i vc _))             =  (i,vc)
+getIdClass (LstVar (LVbl (Vbl i vc _) _ _))  =  (i,vc)
+-- NOTE: this forgets the Std/Lst distinction !!!
+
+sameIdClass gv1@(StdVar _) gv2@(StdVar _)  =  getIdClass gv1 == getIdClass gv2
+sameIdClass gv1@(LstVar _) gv2@(LstVar _)  =  getIdClass gv1 == getIdClass gv2
+sameIdClass _ _                            =  False
 \end{code}
 Note that \emph{all} the sub-lists are \emph{non-empty}.
 
@@ -1127,17 +1129,18 @@ Note that \emph{all} the sub-lists are \emph{non-empty}.
 
 We now look at code to check for subsets:
 \begin{code}
-isSCsubset :: (Uniformity,[[GenVar]]) -> (Uniformity,[[GenVar]]) -> Bool
+isSCsubset :: [Subscript] -> (Uniformity,[[GenVar]]) -> (Uniformity,[[GenVar]])
+           -> Bool
 \end{code}
 
 $$ \emptyset \subseteq S$$
 \begin{code}
-(_,[])    `isSCsubset` (_,_)      =  True
+isSCsubset _ (_,[]) (_,_)      =  True
 \end{code}
 
 $$\setof{ x,\dots} \not\subseteq \emptyset$$
 \begin{code}
-(_,(_:_)) `isSCsubset` (_,[])     =  False
+isSCsubset _ (_,(_:_)) (_,[])  =  False
 \end{code}
 
 Given non-empty top-level lists, both will have non-empty sub-lists
@@ -1145,36 +1148,46 @@ Given non-empty top-level lists, both will have non-empty sub-lists
 First, we need to walk one list or the other so that \texttt{gv1}
 and \texttt{gv2} have the same identifier and class.
 \begin{code}
-ugs1@(u1,g1@(gv1:vl1):vls1) `isSCsubset` (u2,g2@(gv2:vl2):vls2)
+isSCsubset ss ugs1@(u1,g1@(gv1:vl1):vls1) (u2,g2@(gv2:vl2):vls2)
   | gv1  < gv2  =  False -- remember both are ordered by id and class
-  | gv1  > gv2  =  ugs1 `isSCsubset` (u2,vls2) -- move on up on right
+  | gv1  > gv2  =  isSCsubset ss ugs1 (u2,vls2) -- move on up on right
   | otherwise  -- gv1 `sameIdClass` gv2
-      = (u1,g1) `isUGsubset` (u2,g2) && (u1,vls1) `isSCsubset` (u2,vls2)
+      = isUGsubset ss (u1,g1) (u2,g2) && isSCsubset ss (u1,vls1) (u2,vls2)
 \end{code}
 
 \begin{code}
-(u1,lvl1) `isSCsubset` (u2,lvl2)  =  False
+isSCsubset ss (u1,lvl1) (u2,lvl2)  =  False
 \end{code}
 
 \newpage
 
 Subset checking given all with same identifier and class:
 \begin{code}
-isUGsubset :: (Uniformity,[GenVar]) -> (Uniformity,[GenVar]) -> Bool
+isUGsubset :: [Subscript] -> (Uniformity,[GenVar]) -> (Uniformity,[GenVar])
+           -> Bool
 -- both GenVar lists are non-empty and ordered
 -- all their contents have the same identifier and class
--- If ui is Uniform, then vli = []
-_ `isUGsubset` (Unif,[gv2])              =  True
-(Unif,[gv2]) `isUGsubset` _              =  True
-                                            -- careful: we lack subscript info!
-(_,vl1@(_:_)) `isUGsubset`(_,vl2@(_:_))  =  vl1 `issubset` vl2
+-- If ui is Uniform, then GenVar_i is a singleton
+isUGsubset _  _             (Unif,[_])     =  True
+isUGsubset ss (Unif,[_])    (_,vl2)        =  isAllDynamics ss vl2
+isUGsubset _  (_,vl1@(_:_)) (_,vl2@(_:_))  =  vl1 `issubset` vl2
 
-uv1 `isUGsubset` uv2 -- should never be called
+isUGsubset _ uv1 uv2 -- should never be called
   = error $ unlines'
      [ "isUGsubset: ill-formed args"
      , "(u1,vl1) = " ++ show uv1
      , "(u2,vl2) = " ++ show uv2
      ]
+\end{code}
+
+A check that a non-uniform \texttt{GenVar} list
+mentions before-, after- and all subscripts in scope.
+\begin{code}
+isAllDynamics :: [Subscript] -> [GenVar] -> Bool
+-- [GenVar] is ordered  Before,During 1,..,During n,After
+isAllDynamics ss gvs  =  map gvarWhen gvs == allTheDynamics ss
+
+allTheDynamics ss = Before : map During ss ++ [After]
 \end{code}
 
 

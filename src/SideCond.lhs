@@ -901,9 +901,12 @@ Now, we work through the combinations:
 \\ & \mapsto & (D_L\setminus D_G) \disj V
 \end{eqnarray*}
 \begin{code}
-ascDischarge vts (Disjoint _ _ dG) (Disjoint _ gv dL)
-  | dL `S.isSubsetOf` dG  =  return [] -- true
-  | otherwise             =  return [Disjoint NU  gv (dL S.\\ dG)]
+ascDischarge vts (Disjoint u1 _ dG) (Disjoint u2 gv dL)
+  | linL `isSCsubset` linG  =  return [] -- true
+  | otherwise               =  return [Disjoint NU  gv (dL S.\\ dG)]
+  where
+    linG = (u1,lineariseVarSet dG)
+    linL = (u2,lineariseVarSet dL)
 \end{code}
 
 \begin{eqnarray*}
@@ -927,12 +930,15 @@ ascDischarge vts (Disjoint _ _ dG) c@(CoveredBy _ gv cL)
 Here we have to ensure that $C_{?L}$ is retained, as no floating variables
 exist in $C_G$, and so the intersection would remove those in $C_L$.
 \begin{code}
-ascDischarge vts (CoveredBy NU _ cG) (CoveredBy NU  gv cL)
-  | cG `S.isSubsetOf` cL  =  return []
+ascDischarge vts (CoveredBy u1 _ cG) (CoveredBy u2 gv cL)
+  | linG `isSCsubset` linL            =  return []
   | cG `disjoint` cL && isObsGVar gv  =  fail "CoverDisj=>noCover"
   | otherwise  =  return
                     [CoveredBy NU  gv ((cG `S.intersection` cL) `S.union` floatsOf cL)]
-  where floatsOf = S.filter isFloatingGVar
+  where
+    linG = (u1,lineariseVarSet cG)
+    linL = (u2,lineariseVarSet cL)
+    floatsOf = S.filter isFloatingGVar
 \end{code}
 
 
@@ -1115,20 +1121,61 @@ sameIdClass (LstVar (LVbl (Vbl i1 vc1 _) _ _))
   =  i1 == i2 && vc1 == vc2
 sameIdClass _ _  =  False
 \end{code}
-Note that all the sub-lists are non-empty
+Note that \emph{all} the sub-lists are \emph{non-empty}.
+
+\subsubsection{Side-Condition Subset Query}
 
 We now look at code to check for subsets:
 \begin{code}
-isASubsetOf :: (Uniformity,[[GenVar]]) -> (Uniformity,[[GenVar]]) -> Bool
-(_,[])    `isASubsetOf` (_,_)      =  True
-(_,(_:_)) `isASubsetOf` (_,[])     =  False
-(u1,(gv1:vl1):vls1) `isASubsetOf` (u2,(gv2:vl2):vls2)
-  = False -- for now, but this gets complicated !!!
-(u1,lvl1) `isASubsetOf` (u2,lvl2)  =  False
+isSCsubset :: (Uniformity,[[GenVar]]) -> (Uniformity,[[GenVar]]) -> Bool
 \end{code}
 
+$$ \emptyset \subseteq S$$
+\begin{code}
+(_,[])    `isSCsubset` (_,_)      =  True
+\end{code}
 
+$$\setof{ x,\dots} \not\subseteq \emptyset$$
+\begin{code}
+(_,(_:_)) `isSCsubset` (_,[])     =  False
+\end{code}
 
+Given non-empty top-level lists, both will have non-empty sub-lists
+(\texttt{(gv1:vl1)} and \texttt{(gv2:vl2)} below).
+First, we need to walk one list or the other so that \texttt{gv1}
+and \texttt{gv2} have the same identifier and class.
+\begin{code}
+ugs1@(u1,g1@(gv1:vl1):vls1) `isSCsubset` (u2,g2@(gv2:vl2):vls2)
+  | gv1  < gv2  =  False -- remember both are ordered by id and class
+  | gv1  > gv2  =  ugs1 `isSCsubset` (u2,vls2) -- move on up on right
+  | otherwise  -- gv1 `sameIdClass` gv2
+      = (u1,g1) `isUGsubset` (u2,g2) && (u1,vls1) `isSCsubset` (u2,vls2)
+\end{code}
+
+\begin{code}
+(u1,lvl1) `isSCsubset` (u2,lvl2)  =  False
+\end{code}
+
+\newpage
+
+Subset checking given all with same identifier and class:
+\begin{code}
+isUGsubset :: (Uniformity,[GenVar]) -> (Uniformity,[GenVar]) -> Bool
+-- both GenVar lists are non-empty and ordered
+-- all their contents have the same identifier and class
+-- If ui is Uniform, then vli = []
+_ `isUGsubset` (Unif,[gv2])              =  True
+(Unif,[gv2]) `isUGsubset` _              =  True
+                                            -- careful: we lack subscript info!
+(_,vl1@(_:_)) `isUGsubset`(_,vl2@(_:_))  =  vl1 `issubset` vl2
+
+uv1 `isUGsubset` uv2 -- should never be called
+  = error $ unlines'
+     [ "isUGsubset: ill-formed args"
+     , "(u1,vl1) = " ++ show uv1
+     , "(u2,vl2) = " ++ show uv2
+     ]
+\end{code}
 
 
 % First, given a variable-set,

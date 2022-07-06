@@ -319,7 +319,7 @@ args2str args = if null args then "" else head args
 
 \subsection{Set Functions}
 
-\subsubsection{Subsets}
+\subsubsection{Subsets of sets as lists}
 
 \begin{code}
 issubset :: Eq a => [a] -> [a] -> Bool

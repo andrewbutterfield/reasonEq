@@ -11,6 +11,8 @@ Current Issue - we need to fix scDischarge given the new uniformity changes
 **Note: both `Instantiate` and `Assertions` make use of functions that
 extract variable sets from side-conditions but ignore uniformity information!**
 
+
+This now works (but subscripts are not handled properly!)
 ```
 
 ⊢
@@ -25,7 +27,12 @@ Binding: { P ⟼ (x := e), Q ⟼ (x := f), 0 ⟼ 0, O$ ⟼ ⟨O$⟩ }
 Instantiated Law = ((x := e);(x := f))  ≡  (∃ O$_0 • ((x := e))[O$_0/O$']∧((x := f))[O$_0/O$])
 Instantiated Law S.C. = O$,O$'⊇e, O$,O$'⊇f, O$,O$'⊇x, fresh:O$_0
 Goal S.C. = O$⊇e, O$⊇f, O$⊇x
-Discharged Law S.C. = O$,O$'⊇e, O$,O$'⊇f, O$,O$'⊇x, fresh:O$_0
+Discharged Law S.C. = fresh:O$_0
+```
+
+We get
+```
+(∃ O$_1 • ((x := e))[O$_1/O$']∧((x := f))[O$_1/O$])    O$⊇e, O$⊇f, O$⊇x
 ```
 
 Actually, side-conditions need more work, to take account of `VarData`.

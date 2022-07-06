@@ -13,8 +13,8 @@ extract variable sets from side-conditions but ignore uniformity information!**
 
 
 This now works (but subscripts are not handled properly!)
-```
 
+```
 ⊢
 (x := e);(x := f)    O$⊇e, O$⊇f, O$⊇x
 
@@ -31,6 +31,7 @@ Discharged Law S.C. = fresh:O$_0
 ```
 
 We get
+
 ```
 (∃ O$_1 • ((x := e))[O$_1/O$']∧((x := f))[O$_1/O$])    O$⊇e, O$⊇f, O$⊇x
 ```

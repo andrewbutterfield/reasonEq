@@ -612,11 +612,14 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
           if onlyFreshSC scD
             then do let freshneeded = snd scD
                     let knownVs = zipperVarsMentioned $ focus liveProof
+                    -- knownVs is all variables in entire goal and sequent
                     let (fbind,fresh)
                                    = generateFreshVars knownVs freshneeded sbind
                     let newLocalASC = fst scD
                     -- newLocalSC <- mkSideCond newLocalASC fresh
                     newLocalSC <- mkSideCond vtbls newLocalASC S.empty
+                    -- Why do we ignore `fresh`?
+                    -- Because we have made it so above?
                     scC' <- mrgSideCond vtbls scCX newLocalSC
                     brepl  <- instantiate vtbls fbind repl
                     asn' <- mkAsn conjpart (conjSC liveProof)

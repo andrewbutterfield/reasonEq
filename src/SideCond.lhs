@@ -917,7 +917,7 @@ ascDischarge ss (Disjoint u1 _ dG) (Disjoint u2 gv dL)
     linG = (u1,lineariseVarSet dG)
     linL = (u2,lineariseVarSet dL)
     subset = isSCsubset ss
-    diff = doSCdiff ss
+    diff s t = packUG $ doSCdiff ss s t
 \end{code}
 
 \begin{eqnarray*}
@@ -935,7 +935,7 @@ ascDischarge ss (Disjoint u1 _ dG) c@(CoveredBy u2 gv cL)
     linG = (u1,lineariseVarSet dG)
     linL = (u2,lineariseVarSet cL)
     subset = isSCsubset ss
-    diff = doSCdiff ss
+    diff s t = packUG $ doSCdiff ss s t
 \end{code}
 
 \begin{eqnarray*}
@@ -951,10 +951,12 @@ ascDischarge ss (CoveredBy u1 _ cG) (CoveredBy u2 gv cL)
   | linG `subset` linL                =  return []
   | linG `disj` linL && isObsGVar gv  =  fail "CoverDisj=>noCover"
   | otherwise  =  return
-                    [gv `coveredby` ((cG `S.intersection` cL) `S.union` {- floatsOf -} cL)]
+                    [gv `coveredby` ((linG `intsct` linL) `union` linF)]
   where
     subset = isSCsubset ss
     disj = isSCdisjoint ss
+    intsct = doSCint ss
+    union s t = packUG $ doSCunion ss s t
     linG = (u1,lineariseVarSet cG)
     linL = (u2,lineariseVarSet cL)
     linF = (u2,lineariseVarSet $ S.filter isFloatingGVar cL)
@@ -1041,7 +1043,7 @@ freshAtomDischarge ss gF (Disjoint u gv dL)
   | otherwise  =  return [gv `disjwith` (linL `diff` linF)]
   where
     subset = isSCsubset ss
-    diff = doSCdiff ss
+    diff s t  = packUG $ doSCdiff ss s t
     linF = (NonU,lineariseVarSet gF)
     linL = (u,lineariseVarSet dL)
 \end{code}
@@ -1054,7 +1056,7 @@ freshAtomDischarge ss gF (Disjoint u gv dL)
 freshAtomDischarge ss gF (CoveredBy u gv cL)
   = return [gv `coveredby` (linL `diff` linF)]
   where
-    diff = doSCdiff ss
+    diff s t = packUG $ doSCdiff ss s t
     linF = (NonU,lineariseVarSet gF)
     linL = (u,lineariseVarSet cL)
 \end{code}
@@ -1160,6 +1162,9 @@ When done, we need to pack them into a set again
 \begin{code}
 packVarSet :: [[GenVar]] -> VarSet
 packVarSet = S.fromList . concat
+
+packUG :: (Uniformity,[[GenVar]]) -> VarSet
+packUG (_,gss) = packVarSet gss
 \end{code}
 
 \newpage
@@ -1255,20 +1260,20 @@ isUGdisjoint _   _           _           =  False
 
 \begin{code}
 doSCdiff :: [Subscript] -> (Uniformity,[[GenVar]]) -> (Uniformity,[[GenVar]])
-         -> VarSet
+         -> (Uniformity,[[GenVar]])
 \end{code}
 
 $$S \setminus \emptyset = S \qquad \emptyset \setminus S = \emptyset$$
 \begin{code}
-doSCdiff _ (u1,vls1) (_,[])  =  packVarSet vls1
-doSCdiff _ (_,[])    (u2,_)  =  S.empty
+doSCdiff _ (u1,vls1) (_,[])  =  (u1,vls1)
+doSCdiff _ (u1,[])   (_,_)   =  (u1,[])
 \end{code}
 
 Otherwise, we walk through both sides
 \begin{code}
 doSCdiff ss ugs1 ugs2 = doSCdiff' ss [] ugs1 ugs2
 
-doSCdiff' ss slv ugs1@(u1,[]) _  =  packVarSet slv
+doSCdiff' ss slv (u1,[]) _  =  (u1,reverse slv)
 
 doSCdiff' ss slv ugs1@(u1,g1@(gv1:vl1):vls1) ugs2@(u2,g2@(gv2:vl2):vls2)
   | gv1  < gv2  =  doSCdiff' ss (g1:slv) (u1,vls1) ugs2 -- keep g1
@@ -1276,24 +1281,101 @@ doSCdiff' ss slv ugs1@(u1,g1@(gv1:vl1):vls1) ugs2@(u2,g2@(gv2:vl2):vls2)
   | null g3     =  doSCdiff' ss slv      (u1,vls1) (u2,vls2)  -- gv1 ~ gv2
   | otherwise   =  doSCdiff' ss (g3:slv) (u1,vls1) (u2,vls2)  -- gv1 ~ gv2
   where
-    g3 = doUGdiff ss (u1,g1) (u2,g2)
+    (_,g3) = doUGdiff ss (u1,g1) (u2,g2)
 \end{code}
 
 Set difference given all with same identifier and class:
 \begin{code}
 doUGdiff :: [Subscript] -> (Uniformity,[GenVar]) -> (Uniformity,[GenVar])
-         -> [GenVar]
-doUGdiff _  _            (Unif,_)  =  []
-doUGdiff ss (Unif,[gv1]) (_,g2)    =  genTheGenVars gv1 ss \\ g2
-doUGdiff ss (_,g1)       (_,g2)    =  g1 \\ g2
+         -> (Uniformity,[GenVar])
+doUGdiff _  (u1,_)       (Unif,_)  =  (u1,[])
+doUGdiff ss (Unif,[gv1]) (_,g2)    =  (NonU,genTheGenVars gv1 ss \\ g2)
+doUGdiff ss (u1,g1)      (_,g2)    =  (u1,g1 \\ g2)
 \end{code}
+
+\newpage
+\subsubsection{Side-Condition Set Intersection}
+
+\begin{code}
+doSCint :: [Subscript] -> (Uniformity,[[GenVar]]) -> (Uniformity,[[GenVar]])
+         -> (Uniformity,[[GenVar]])
+\end{code}
+
+$$S \cap \emptyset = \emptyset \qquad \emptyset \cap S = \emptyset$$
+\begin{code}
+doSCint _ _       (_,[])  =  (NonU,[])
+doSCint _ (u1,[]) _       =  (NonU,[])
+\end{code}
+
+Otherwise, we walk through both sides
+\begin{code}
+doSCint ss ugs1 ugs2 = doSCint' ss [] ugs1 ugs2
+
+doSCint' ss slv (_,[]) _      =  (NonU,reverse slv)
+doSCint' ss slv _     (_,[])  =  (NonU,reverse slv)
+
+doSCint' ss slv ugs1@(u1,g1@(gv1:vl1):vls1) ugs2@(u2,g2@(gv2:vl2):vls2)
+  | gv1  < gv2  =  doSCint' ss slv (u1,vls1) ugs2
+  | gv1  > gv2  =  doSCint' ss slv ugs1      (u2,vls2)
+  | null g3     =  doSCint' ss slv (u1,vls1) (u2,vls2)
+  | otherwise   =  doSCint' ss (g3:slv) (u1,vls1) (u2,vls2)
+  where
+    (_,g3) = doUGunion ss (u1,g1) (u2,g2)
+\end{code}
+
+Set intersection given all with same identifier and class:
+\begin{code}
+doUGint :: [Subscript] -> (Uniformity,[GenVar]) -> (Uniformity,[GenVar])
+         -> (Uniformity,[GenVar])
+doUGint _  (u1,g1)    (Unif,[_])  =  (u1,g1)
+doUGint ss (Unif,[_]) (u2,g2)     =  (u2,g2)
+doUGint ss (_,g1)     (_,g2)      =  (NonU,g1 `intersect` g2)
+\end{code}
+
 
 
 \newpage
 \subsubsection{Side-Condition Set Union}
 
-\newpage
-\subsubsection{Side-Condition Set Intersection}
+
+\begin{code}
+doSCunion :: [Subscript] -> (Uniformity,[[GenVar]]) -> (Uniformity,[[GenVar]])
+         -> (Uniformity,[[GenVar]])
+\end{code}
+
+$$S \cup \emptyset = \S \qquad \emptyset \cup S = S$$
+\begin{code}
+doSCunion _ ugs1  (_,[])  =  ugs1
+doSCunion _ (_,[]) ugs2   =  ugs2
+\end{code}
+
+Otherwise, we walk through both sides
+\begin{code}
+doSCunion ss ugs1 ugs2 = doSCunion' ss [] ugs1 ugs2
+
+doSCunion' ss slv (_,[])   (_,vls2)  =  (NonU,reverse slv ++ vls2)
+doSCunion' ss slv (_,vls1) (_,[])    =  (NonU,reverse slv ++ vls1)
+
+doSCunion' ss slv ugs1@(u1,g1@(gv1:vl1):vls1) ugs2@(u2,g2@(gv2:vl2):vls2)
+  | gv1  < gv2  =  doSCunion' ss (g1:slv) (u1,vls1) ugs2
+  | gv1  > gv2  =  doSCunion' ss (g2:slv) ugs1      (u2,vls2)
+  | otherwise   =  doSCunion' ss (g3:slv) (u1,vls1) (u2,vls2)
+  where
+    (_,g3) = doUGunion ss (u1,g1) (u2,g2)
+\end{code}
+
+Set intersection given all with same identifier and class:
+\begin{code}
+doUGunion :: [Subscript] -> (Uniformity,[GenVar]) -> (Uniformity,[GenVar])
+         -> (Uniformity,[GenVar])
+doUGunion ss ug1@(Unif,[_]) _               =  ug1
+doUGunion ss _              ug2@(Unif,[_])  =  ug2
+doUGunion ss (_,g1)         (_,g2)          =  (NonU,g1 `union` g2)
+\end{code}
+
+
+
+
 
 \newpage
 \subsubsection{Dealing with Dynamics}

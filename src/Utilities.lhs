@@ -10,7 +10,7 @@ module Utilities (
 , fst3, snd3, thd3
 , ttail
 , unlines'
-, issubset
+, issubset, isdisj
 , clearIt, clear
 , readBool, readNat
 , trim
@@ -317,14 +317,20 @@ args2int args = if null args then 0 else readNat $ head args
 args2str args = if null args then "" else head args
 \end{code}
 
-\subsection{Set Functions}
 
-\subsubsection{Subsets of sets as lists}
+\subsection{Lists acting like sets}
 
 \begin{code}
 issubset :: Eq a => [a] -> [a] -> Bool
 xs `issubset` ys  =  null (xs \\ ys)
 \end{code}
+
+\begin{code}
+isdisj :: Eq a => [a] -> [a] -> Bool
+xs `isdisj` ys  =  null (xs `intersect` ys)
+\end{code}
+
+\subsection{Set Functions}
 
 \subsubsection{Set disjointness}
 

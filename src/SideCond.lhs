@@ -272,6 +272,15 @@ setASCUniformity (CoveredBy _ gv vs)
   | otherwise        =  CoveredBy NonU         gv                vs
 \end{code}
 
+We provide some builders that set uniformity:
+\begin{code}
+disjwith :: GenVar -> VarSet -> AtmSideCond
+gv `disjwith` vs  =  setASCUniformity $ Disjoint NU gv vs
+
+coveredby :: GenVar -> VarSet -> AtmSideCond
+gv `coveredby` vs  =  setASCUniformity $ CoveredBy NU gv vs
+\end{code}
+
 It is also possible to simplify some proposed atomic side-conditions
 to either true or false.
 An important shortcut condition is when we have a dynamic general variable
@@ -903,11 +912,12 @@ Now, we work through the combinations:
 \begin{code}
 ascDischarge ss (Disjoint u1 _ dG) (Disjoint u2 gv dL)
   | linL `subset` linG  =  return [] -- true
-  | otherwise           =  return [Disjoint NU  gv (dL S.\\ dG)]
+  | otherwise           =  return [gv `disjwith` (linL `diff` linG)]
   where
     linG = (u1,lineariseVarSet dG)
     linL = (u2,lineariseVarSet dL)
     subset = isSCsubset ss
+    diff = doSCdiff ss
 \end{code}
 
 \begin{eqnarray*}
@@ -917,9 +927,15 @@ ascDischarge ss (Disjoint u1 _ dG) (Disjoint u2 gv dL)
 \\ & \mapsto & (C_L \setminus D_G) \supseteq V
 \end{eqnarray*}
 \begin{code}
-ascDischarge ss (Disjoint _ _ dG) c@(CoveredBy _ gv cL)
-  | cL `S.isSubsetOf` dG && isObsGVar gv  =  fail "Disj=>emptyCover"
-  | otherwise                             =  return [CoveredBy NU  gv (cL S.\\ dG)]
+ascDischarge ss (Disjoint u1 _ dG) c@(CoveredBy u2 gv cL)
+  | linL `subset` linG
+    && isObsGVar gv     =  fail "Disj=>emptyCover"
+  | otherwise           =  return [gv `coveredby` (linL `diff` linG)]
+  where
+    linG = (u1,lineariseVarSet dG)
+    linL = (u2,lineariseVarSet cL)
+    subset = isSCsubset ss
+    diff = doSCdiff ss
 \end{code}
 
 \begin{eqnarray*}
@@ -933,14 +949,15 @@ exist in $C_G$, and so the intersection would remove those in $C_L$.
 \begin{code}
 ascDischarge ss (CoveredBy u1 _ cG) (CoveredBy u2 gv cL)
   | linG `subset` linL                =  return []
-  | cG `disjoint` cL && isObsGVar gv  =  fail "CoverDisj=>noCover"
+  | linG `disj` linL && isObsGVar gv  =  fail "CoverDisj=>noCover"
   | otherwise  =  return
-                    [CoveredBy NU  gv ((cG `S.intersection` cL) `S.union` floatsOf cL)]
+                    [gv `coveredby` ((cG `S.intersection` cL) `S.union` {- floatsOf -} cL)]
   where
     subset = isSCsubset ss
+    disj = isSCdisjoint ss
     linG = (u1,lineariseVarSet cG)
     linL = (u2,lineariseVarSet cL)
-    floatsOf = S.filter isFloatingGVar
+    linF = (u2,lineariseVarSet $ S.filter isFloatingGVar cL)
 \end{code}
 
 
@@ -950,9 +967,13 @@ ascDischarge ss (CoveredBy u1 _ cG) (CoveredBy u2 gv cL)
 \\ & \mapsto & D_L \disj V
 \end{eqnarray*}
 \begin{code}
-ascDischarge ss (CoveredBy NU  _ cG) d@(Disjoint NU  gv dL)
-  | S.null (cG `S.intersection` dL)  =  return []
-  | otherwise                        =  return [d]
+ascDischarge ss (CoveredBy u1  _ cG) d@(Disjoint u2  gv dL)
+  | linG `disj` linL  =  return []
+  | otherwise         =  return [d]
+  where
+    disj = isSCdisjoint ss
+    linG = (u1,lineariseVarSet cG)
+    linL = (u2,lineariseVarSet dL)
 \end{code}
 
 
@@ -1015,9 +1036,14 @@ We now consider the following possibilities:
 \\ &\mapsto& D_L \setminus G_F \disj V
 \end{eqnarray*}
 \begin{code}
-freshAtomDischarge ss gF (Disjoint NU  gv dL)
-  | dL `S.isSubsetOf` gF  =  return []
-  | otherwise  =  return [Disjoint NU  gv (dL S.\\ gF)]
+freshAtomDischarge ss gF (Disjoint u gv dL)
+  | linL `subset` linF  =  return []
+  | otherwise  =  return [gv `disjwith` (linL `diff` linF)]
+  where
+    subset = isSCsubset ss
+    diff = doSCdiff ss
+    linF = (NonU,lineariseVarSet gF)
+    linL = (u,lineariseVarSet dL)
 \end{code}
 
 \begin{eqnarray*}
@@ -1025,7 +1051,12 @@ freshAtomDischarge ss gF (Disjoint NU  gv dL)
    &\mapsto&  C_L \setminus G_F \supseteq V
 \end{eqnarray*}
 \begin{code}
-freshAtomDischarge ss gF (CoveredBy NU  gv cL) = return [CoveredBy NU  gv (cL S.\\ gF)]
+freshAtomDischarge ss gF (CoveredBy u gv cL)
+  = return [gv `coveredby` (linL `diff` linF)]
+  where
+    diff = doSCdiff ss
+    linF = (NonU,lineariseVarSet gF)
+    linL = (u,lineariseVarSet cL)
 \end{code}
 
 
@@ -1058,8 +1089,9 @@ will not cancel out other variables that they should be able to do,
 if instantiated properly.
 \begin{code}
 tolerateAutoOrNull :: VarSet -> AtmSideCond -> Bool
-tolerateAutoOrNull unbound (Disjoint NU  _ d) =  unbound `overlaps` d
-tolerateAutoOrNull unbound (CoveredBy NU  _ c)   =  S.null c || unbound `overlaps` c
+-- we ignore uniformity here. Is this wise?
+tolerateAutoOrNull unbound (Disjoint _  _ d) =  unbound `overlaps` d
+tolerateAutoOrNull unbound (CoveredBy _  _ c)   =  S.null c || unbound `overlaps` c
 tolerateAutoOrNull _       _              =  False
 autoOrNullInAll unbound = all (tolerateAutoOrNull unbound)
 \end{code}
@@ -1074,15 +1106,13 @@ Simple side-condition builders.
 $\lst v \disj \fv(T)$
 \begin{code}
 notin :: VarList -> GenVar -> SideCond
-vl `notin` tV  =  ( [ setASCUniformity $ Disjoint NU tV (S.fromList vl) ]
-                  , S.empty )
+vl `notin` tV  =  ( [ tV `disjwith`(S.fromList vl) ], S.empty )
 \end{code}
 
 $\lst v \supseteq \fv(T)$
 \begin{code}
 covers :: VarList -> GenVar -> SideCond
-vl `covers` tV  =  ( [ setASCUniformity $ CoveredBy NU tV (S.fromList vl) ]
-                   , S.empty )
+vl `covers` tV  =  ( [ tV `coveredby` (S.fromList vl) ], S.empty )
 \end{code}
 
 $u,v,\dots \textbf{fresh.}$
@@ -1092,15 +1122,17 @@ fresh fvs = ( [], fvs )
 \end{code}
 
 \newpage
-\subsection{Side-condition Queries}
+\subsection{Side-condition Queries and Operations}
 
-Here we develop some set-operations that can handle a mix of uniform
-and non-uniform atomic side conditions.
+Here we develop some set queries and operations
+that can handle a mix of uniform and non-uniform atomic side conditions.
 We do this by comparing variables with the same identifier and class
 from each side-condition.
+
 We convert variable-sets into ordered lists of lists,
 and then work through them in lock-step.
 The internal lists contain all variables with the same identifier and class,
+are non-empty,
 and will be a singleton if the condition is uniform.
 \begin{code}
 lineariseVarSet :: VarSet -> [[GenVar]]
@@ -1123,11 +1155,16 @@ sameIdClass gv1@(StdVar _) gv2@(StdVar _)  =  getIdClass gv1 == getIdClass gv2
 sameIdClass gv1@(LstVar _) gv2@(LstVar _)  =  getIdClass gv1 == getIdClass gv2
 sameIdClass _ _                            =  False
 \end{code}
-Note that \emph{all} the sub-lists are \emph{non-empty}.
 
+When done, we need to pack them into a set again
+\begin{code}
+packVarSet :: [[GenVar]] -> VarSet
+packVarSet = S.fromList . concat
+\end{code}
+
+\newpage
 \subsubsection{Side-Condition Subset Query}
 
-We now look at code to check for subsets:
 \begin{code}
 isSCsubset :: [Subscript] -> (Uniformity,[[GenVar]]) -> (Uniformity,[[GenVar]])
            -> Bool
@@ -1159,8 +1196,6 @@ isSCsubset ss ugs1@(u1,g1@(gv1:vl1):vls1) (u2,g2@(gv2:vl2):vls2)
 isSCsubset ss (u1,lvl1) (u2,lvl2)  =  False
 \end{code}
 
-\newpage
-
 Subset checking given all with same identifier and class:
 \begin{code}
 isUGsubset :: [Subscript] -> (Uniformity,[GenVar]) -> (Uniformity,[GenVar])
@@ -1169,7 +1204,7 @@ isUGsubset :: [Subscript] -> (Uniformity,[GenVar]) -> (Uniformity,[GenVar])
 -- all their contents have the same identifier and class
 -- If ui is Uniform, then GenVar_i is a singleton
 isUGsubset _  _             (Unif,[_])     =  True
-isUGsubset ss (Unif,[_])    (_,vl2)        =  isAllDynamics ss vl2
+isUGsubset ss (Unif,[_])    (_,vl2)        =  hasAllDynamics ss vl2
 isUGsubset _  (_,vl1@(_:_)) (_,vl2@(_:_))  =  vl1 `issubset` vl2
 
 isUGsubset _ uv1 uv2 -- should never be called
@@ -1180,14 +1215,106 @@ isUGsubset _ uv1 uv2 -- should never be called
      ]
 \end{code}
 
+\newpage
+\subsubsection{Side-Condition Disjoint Query}
+
+\begin{code}
+isSCdisjoint :: [Subscript] -> (Uniformity,[[GenVar]]) -> (Uniformity,[[GenVar]])
+             -> Bool
+\end{code}
+
+$$\emptyset\disj S \qquad S \disj\emptyset$$
+\begin{code}
+isSCdisjoint _ (_,[]) _       =  True
+isSCdisjoint _ _      (_,[])  =  True
+\end{code}
+
+If both are non-empty, we walk both lists,
+checking for same-id/class sub-lists and checking their disjointness.
+\begin{code}
+isSCdisjoint ss ugs1@(u1,g1@(gv1:vl1):vls1) ugs2@(u2,g2@(gv2:vl2):vls2)
+  | gv1  < gv2  =  isSCsubset ss (u1,vls1) ugs2 -- move up on left
+  | gv1  > gv2  =  isSCsubset ss ugs1 (u2,vls2) -- move up on right
+  | otherwise  -- gv1 `sameIdClass` gv2
+      = isUGdisjoint ss (u1,g1) (u2,g2) && isSCdisjoint ss (u1,vls1) (u2,vls2)
+\end{code}
+
+Disjoint checking given all with same identifier and class:
+\begin{code}
+isUGdisjoint :: [Subscript] -> (Uniformity,[GenVar]) -> (Uniformity,[GenVar])
+             -> Bool
+-- both GenVar lists are non-empty and ordered
+-- all their contents have the same identifier and class
+-- If ui is Uniform, then GenVar_i is a singleton
+isUGdisjoint _   (NonU,vl1)  (NonU,vl2)  =  vl1 `isdisj` vl2
+isUGdisjoint _   _           _           =  False
+\end{code}
+
+\newpage
+\subsubsection{Side-Condition Set Difference}
+
+\begin{code}
+doSCdiff :: [Subscript] -> (Uniformity,[[GenVar]]) -> (Uniformity,[[GenVar]])
+         -> VarSet
+\end{code}
+
+$$S \setminus \emptyset = S \qquad \emptyset \setminus S = \emptyset$$
+\begin{code}
+doSCdiff _ (u1,vls1) (_,[])  =  packVarSet vls1
+doSCdiff _ (_,[])    (u2,_)  =  S.empty
+\end{code}
+
+Otherwise, we walk through both sides
+\begin{code}
+doSCdiff ss ugs1 ugs2 = doSCdiff' ss [] ugs1 ugs2
+
+doSCdiff' ss slv ugs1@(u1,[]) _  =  packVarSet slv
+
+doSCdiff' ss slv ugs1@(u1,g1@(gv1:vl1):vls1) ugs2@(u2,g2@(gv2:vl2):vls2)
+  | gv1  < gv2  =  doSCdiff' ss (g1:slv) (u1,vls1) ugs2 -- keep g1
+  | gv1  > gv2  =  doSCdiff' ss slv      ugs1      (u2,vls2)
+  | null g3     =  doSCdiff' ss slv      (u1,vls1) (u2,vls2)  -- gv1 ~ gv2
+  | otherwise   =  doSCdiff' ss (g3:slv) (u1,vls1) (u2,vls2)  -- gv1 ~ gv2
+  where
+    g3 = doUGdiff ss (u1,g1) (u2,g2)
+\end{code}
+
+Set difference given all with same identifier and class:
+\begin{code}
+doUGdiff :: [Subscript] -> (Uniformity,[GenVar]) -> (Uniformity,[GenVar])
+         -> [GenVar]
+doUGdiff _  _            (Unif,_)  =  []
+doUGdiff ss (Unif,[gv1]) (_,g2)    =  genTheGenVars gv1 ss \\ g2
+doUGdiff ss (_,g1)       (_,g2)    =  g1 \\ g2
+\end{code}
+
+
+\newpage
+\subsubsection{Side-Condition Set Union}
+
+\newpage
+\subsubsection{Side-Condition Set Intersection}
+
+\newpage
+\subsubsection{Dealing with Dynamics}
+
 A check that a non-uniform \texttt{GenVar} list
 mentions before-, after- and all subscripts in scope.
 \begin{code}
-isAllDynamics :: [Subscript] -> [GenVar] -> Bool
+hasAllDynamics :: [Subscript] -> [GenVar] -> Bool
 -- [GenVar] is ordered  Before,During 1,..,During n,After
-isAllDynamics ss gvs  =  map gvarWhen gvs == allTheDynamics ss
+hasAllDynamics ss gvs  =  map gvarWhen gvs == genTheDynamics ss
 
-allTheDynamics ss = Before : map During ss ++ [After]
+genTheDynamics :: [Subscript] -> [VarWhen]
+genTheDynamics ss = Before : map During ss ++ [After]
+
+genTheGenVars :: GenVar -> [Subscript] -> [GenVar]
+genTheGenVars (StdVar (Vbl i vc _)) ss
+  = map (StdVar . Vbl i vc) (Before : map During ss ++ [After])
+genTheGenVars (LstVar (LVbl (Vbl i vc _) is js)) ss
+  = map (LstVar . mklv i vc is js) (Before : map During ss ++ [After])
+  where
+    mklv i vc is js vw = LVbl (Vbl i vc vw) is js
 \end{code}
 
 

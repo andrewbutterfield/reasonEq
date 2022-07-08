@@ -653,7 +653,7 @@ mrgAtomicFreshConditions :: MonadFail m => [Subscript]
                          -> VarSet -> [AtmSideCond] -> m SideCond
 mrgAtomicFreshConditions ss freshvs ascs
   | freshvs `disjoint` coverVarsOf ss ascs  =  return (ascs,freshvs)
-  -- the above might not work - `disjoint` may need vts information
+  -- the above might not work - `disjoint` may need more information
   | otherwise  =  fail "Fresh variables cannot cover terms."
 
 coverVarsOf :: [Subscript] -> [AtmSideCond] -> VarSet

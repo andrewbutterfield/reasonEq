@@ -603,12 +603,13 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
         (Assertion conj _) = conjecture liveProof
         ss = S.elems $ S.map theSubscript $ S.filter isDuring
                      $ S.map gvarWhen $ mentionedVars conj
+        ictxt = mkInsCtxt ss
         scC = conjSC liveProof
         (tz,seq') = focus liveProof
         dpath = fPath liveProof
         conjpart = exitTZ tz
     in do let sbind = patchBinding vts lvvls cbind
-          scLasC <- instantiateSC vtbls sbind scL
+          scLasC <- instantiateSC ictxt sbind scL
           scCL <- extendGoalSCCoverage ss lvvls scLasC
           scCX <- mrgSideCond ss scC scCL
           scD <- scDischarge ss scCX scLasC
@@ -624,7 +625,7 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
                     -- Why do we ignore `fresh`?
                     -- Because we have made it so above?
                     scC' <- mrgSideCond ss scCX newLocalSC
-                    brepl  <- instantiate vtbls fbind repl
+                    brepl  <- instantiate ictxt fbind repl
                     asn' <- mkAsn conjpart (conjSC liveProof)
                     return ( focus_ ((setTZ brepl tz),seq')
                            $ matches_ []
@@ -875,12 +876,13 @@ lawInstantiate3 :: MonadFail m => [VarTable]
 lawInstantiate3 vts law@((lnm,(Assertion lawt lsc)),lprov) varTerms liveProof
   = do lbind <- mkBinding emptyBinding varTerms
        let scC = conjSC liveProof
-       ilsc <- instantiateSC vts lbind lsc
+       let ictxt = mkInsCtxt []  -- should be ss ?
+       ilsc <- instantiateSC ictxt lbind lsc
        let (Assertion conj _) = conjecture liveProof
        let ss = S.elems $ S.map theSubscript $ S.filter isDuring
                         $ S.map gvarWhen $ mentionedVars conj
        nsc <- mrgSideCond ss scC ilsc
-       ilawt <- instantiate vts lbind lawt
+       ilawt <- instantiate ictxt lbind lawt
        let (tz,seq') = focus liveProof
        let dpath = fPath liveProof
        asn' <- mkAsn (exitTZ tz) (conjSC liveProof)

@@ -52,6 +52,17 @@ The latter two then invoke term substitution to do their work.
 \newpage
 \subsection{Term Substitution}
 
+\textbf{
+  We need to augment below with "coverage" cases.
+  This is where a substitution target appears in a side-condition
+  that states that it covers other variables,
+  including the one currently being assessed for substitution.
+  We need to plumb side-conditions in here, as well as lists
+  of dynamic subscripts.
+  We need a substitution context argument
+  (side-cond+subscripts+vartables?+?)
+}
+
 \begin{code}
 substitute :: (Monad m, MonadFail m) => [VarTable] -> Substn -> Term -> m Term
 \end{code}
@@ -67,10 +78,16 @@ substitute vts sub@(Substn ts _) vrt@(Var tk v)
   = return $ subsVar vrt v $ S.toList ts
   where
     subsVar vrt v []
+      -- we need to handle non-ObsV better!
       | varClass v == ObsV  =  vrt
       | otherwise  =  Sub tk vrt sub
     subsVar vrt v ((tgtv,rplt):rest)
       | v == tgtv  =  rplt
+      -- we need cases where v is "covered" by the target
+      --  v is x'  and x' is coveredby O$'
+      --  tgtv is O$'
+      --  rplt is O$_1
+      --  we should return  x_1
       | otherwise  =  subsVar vrt v rest
 \end{code}
 \begin{eqnarray*}
@@ -197,11 +214,13 @@ quantSubst atl alvl gv@(StdVar v)
   = case alookup v atl of
       Nothing          ->  gv
       Just (Var _ fv)  ->  StdVar fv
+      -- again, we need to deal with "coverage" cases
       Just t -> error ("quantSubst: non-variable replacement "++trTerm 0 t)
 
 quantSubst atl alvl gv@(LstVar lv)
   = case alookup lv alvl of
       Nothing   ->  gv
+      -- again, we need to deal with "coverage" cases
       Just flv  ->  LstVar flv
 \end{code}
 
@@ -212,6 +231,7 @@ listVarSubstitute lvlvl lv
   = case alookup lv lvlvl of
       Nothing   ->  lv
       Just lv'  ->  lv'
+      -- again, we need to handle "coverage" cases
 \end{code}
 
 

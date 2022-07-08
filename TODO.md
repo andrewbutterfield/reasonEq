@@ -6,29 +6,18 @@
 
 ### Side Conditions
 
-Current Issue - we need to fix scDischarge given the new uniformity changes
 
 **Note: both `Instantiate` and `Assertions` make use of functions that
 extract variable sets from side-conditions but ignore uniformity information!**
 
 
-This now works 
-
+Moving onto substitution:
 
 ```
-(∃ O$_1 • ((x := e))[O$_1/O$']∧((x := f))[O$_1/O$])    O$⊇e, O$⊇f, O$⊇x
+(∃ O$_1 • (x'=e∧(O$'\x=O$\x))[O$_1/O$']∧((x := f))[O$_1/O$]), O$⊇e, O$⊇f, O$⊇x
+   = 'substitute @[1,1]'
+(∃ O$_1 • (x'=e[O$_1/O$']∧(O$'\x=O$\x))∧((x := f))[O$_1/O$])    O$⊇e, O$⊇f, O$⊇x
 ```
-
-Actually, side-conditions need more work, to take account of `VarData`.
-
-1. Feed var. data into s.c. functions **DONE**
-2. We should treat all `Dynamic` variations as the same in side-conditions, as done in `Binding`. So `O$⊇e` will automatically induce `O$'⊇e'`, `O$_1⊇e_1`, etc.
-2. Implement var. data-aware s.c. functions
-3. Implement var. data-aware subst. functions
-
-**We need to be careful**
-Consider `x' ⊇e t` where `t` has both before and after variables.
-Does this really generalise as just described?
 
 
 The issue is that `(x'=e∧(O$'\x=O$\x))[O$_1/O$']` should become `x_1=e∧(O$_1\x=O$\x)`, and not `(x'=e[O$_1/O$']∧(O$'\x=O$\x))`!

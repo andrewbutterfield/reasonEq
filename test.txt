@@ -1,6 +1,34 @@
-@try.scP:
-([SS (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]),SS (GV (VR (Id "Q" 0,VP,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])],fromList [GL (LV (VR (Id "O" 0,VO,WD "0"),[],[]))])
-@try.bind:
-BD (fromList [((Id "P" 0,VP),BT (S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB)))]) (fromList [])))),((Id "Q" 0,VP),BT (S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB)))]) (fromList []))))],fromList [("0","0")],fromList [((Id "O" 0,VO,[],[]),BL [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])])
-@try,scP':
-([SS (GV (VR (Id "e" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]),SS (GV (VR (Id "x" 0,VO,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]),SS (GV (VR (Id "f" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]),SS (GV (VR (Id "x" 0,VO,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])],fromList [GL (LV (VR (Id "O" 0,VO,WD "0"),[],[]))])
+sub:
+  SN ( fromList [] )
+     ( fromList [ ( LV (VR (Id "O" 0,VO,WA),[],[])       -- O$'    target
+                  , LV (VR (Id "O" 0,VO,WD "1"),[],[])   -- O$_1   replacement
+                  )
+                ]
+     )
+
+
+tm:
+  C P True (Id "land" 0)
+    [ C P True (Id "=" 0)                              -- x' = e
+        [ V (E T) (VR (Id "x" 0,VO,WA))                -- x'
+        , V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB))  -- e : Z
+        ]
+    , I P True (Id "land" 0) True (Id "=" 0)      -- /\(O$'\x = O$\x)
+        [ LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[])  -- O$'\x
+        , LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])  -- O$\x
+        ]
+    ]
+
+sc:
+  ( [ SS UN                                         -- e coveredby O$  (uniform)
+         (GV (VR (Id "e" 0,VE,WB)))                        -- e
+         (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])  -- O$
+    , SS UN                                         -- f coveredby O$  (uniform)
+         (GV (VR (Id "f" 0,VE,WB)))                        -- f
+         (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])  -- O$
+    , SS UN                                         -- x coveredby O$  (uniform)
+         (GV (VR (Id "x" 0,VO,WB)))                        -- x
+         (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])  -- O$
+    ]
+  , fromList []
+  )

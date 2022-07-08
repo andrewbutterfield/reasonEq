@@ -441,7 +441,7 @@ to try to eliminate any use of set difference.
 instantiateSC vts bind (ascs,freshvs)
   = do ascss' <- sequence $ map (instantiateASC vts bind) ascs
        freshvs' <- instVarSet vts bind freshvs
-       mkSideCond vts (concat ascss') $ theFreeVars freshvs'
+       mkSideCond [] (concat ascss') $ theFreeVars freshvs'
 \end{code}
 We compute $\beta.C$/$\beta.D$ first, failing (for now), if it has terms,
 and then we compute  $\fv(\beta(T))$.

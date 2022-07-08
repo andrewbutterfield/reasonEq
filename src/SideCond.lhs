@@ -308,7 +308,7 @@ We need to do this in general
 in the context of what is ``known'' about variables.
 \begin{code}
 mscTrue = Nothing
-ascCheck :: MonadFail m => [VarTable] -> AtmSideCond -> m (Maybe AtmSideCond)
+ascCheck :: MonadFail m => [Subscript] -> AtmSideCond -> m (Maybe AtmSideCond)
 \end{code}
 Here, $z$ denotes an (standard) observation variable,
 $T$ denotes a standard term variable,
@@ -463,7 +463,7 @@ by merging them in, one at a time,
 into a pre-existing list ordered and structured as described above.
 
 \begin{code}
-mrgAtmCond :: MonadFail m => [VarTable]
+mrgAtmCond :: MonadFail m => [Subscript]
            -> AtmSideCond -> [AtmSideCond] -> m [AtmSideCond]
 \end{code}
 
@@ -493,7 +493,7 @@ sameGV asc1 asc2     =  asc1 `compareGV` asc2 == EQ
 
 Now, merging an ASC in with other ASCs referring to the same general variable:
 \begin{code}
-mrgAtmAtms :: MonadFail m => [VarTable]
+mrgAtmAtms :: MonadFail m => [Subscript]
            -> AtmSideCond -> [AtmSideCond] -> m [AtmSideCond]
 mrgAtmAtms ss asc [] = return [asc] -- it's the first.
 \end{code}
@@ -637,7 +637,7 @@ mrgAtmAtms ss atm atms
 \subsubsection{Merging Atomic Lists}
 
 \begin{code}
-mrgAtmCondLists :: MonadFail m => [VarTable]
+mrgAtmCondLists :: MonadFail m => [Subscript]
                 -> [AtmSideCond] -> [AtmSideCond] -> m [AtmSideCond]
 mrgAtmCondLists ss ascs1 [] = return ascs1
 mrgAtmCondLists ss ascs1 (asc:ascs2)
@@ -649,14 +649,14 @@ mrgAtmCondLists ss ascs1 (asc:ascs2)
 
 
 \begin{code}
-mrgAtomicFreshConditions :: MonadFail m => [VarTable]
+mrgAtomicFreshConditions :: MonadFail m => [Subscript]
                          -> VarSet -> [AtmSideCond] -> m SideCond
 mrgAtomicFreshConditions ss freshvs ascs
   | freshvs `disjoint` coverVarsOf ss ascs  =  return (ascs,freshvs)
   -- the above might not work - `disjoint` may need vts information
   | otherwise  =  fail "Fresh variables cannot cover terms."
 
-coverVarsOf :: [VarTable] -> [AtmSideCond] -> VarSet
+coverVarsOf :: [Subscript] -> [AtmSideCond] -> VarSet
 coverVarsOf ss ascs = S.unions $ map coversOf ascs
 coversOf (CoveredBy NU  _ vs)  =  vs
 coversOf _              =  S.empty
@@ -665,7 +665,7 @@ coversOf _              =  S.empty
 \subsection{From ASC and Free-list to Side-Condition}
 
 \begin{code}
-mkSideCond :: MonadFail m => [VarTable] -> [AtmSideCond] -> VarSet -> m SideCond
+mkSideCond :: MonadFail m => [Subscript] -> [AtmSideCond] -> VarSet -> m SideCond
 mkSideCond ss ascs fvs
  = do ascs' <-  mrgAtmCondLists ss [] ascs
       mrgAtomicFreshConditions ss fvs ascs'
@@ -678,13 +678,13 @@ Merging two side-conditions is then straightforward,
 simply merge each ASC and fresh set from the one into the other,
 one at a time.
 \begin{code}
-mrgSideCond :: MonadFail m => [VarTable] -> SideCond -> SideCond -> m SideCond
+mrgSideCond :: MonadFail m => [Subscript] -> SideCond -> SideCond -> m SideCond
 mrgSideCond ss (ascs1,fvs1) (ascs2,fvs2)
      = do ascs' <- mrgAtmCondLists ss ascs1 ascs2
           mrgAtomicFreshConditions ss (fvs1 `S.union` fvs2) ascs'
           -- the above may require a ss-savvy union?
 
-mrgSideConds :: MonadFail m => [VarTable] -> [SideCond] -> m SideCond
+mrgSideConds :: MonadFail m => [Subscript] -> [SideCond] -> m SideCond
 mrgSideConds ss [] = return ([],S.empty)
 mrgSideConds ss (sc:scs)
   = do  scs' <- mrgSideConds ss scs

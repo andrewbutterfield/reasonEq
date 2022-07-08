@@ -600,16 +600,17 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
   = let cbind = mBind mtch -- need to update mBind mtch, but maybe later?
         repl = mLawPart mtch
         scL = snd $ mAsn mtch
+        (Assertion conj _) = conjecture liveProof
+        ss = S.elems $ S.map theSubscript $ S.filter isDuring
+                     $ S.map gvarWhen $ mentionedVars conj
         scC = conjSC liveProof
         (tz,seq') = focus liveProof
         dpath = fPath liveProof
         conjpart = exitTZ tz
-        ss = S.elems $ S.map theSubscript $ S.filter isDuring
-                       $ S.map gvarWhen $ mentionedVars conjpart
     in do let sbind = patchBinding vts lvvls cbind
           scLasC <- instantiateSC vtbls sbind scL
-          scCL <- extendGoalSCCoverage vtbls lvvls scLasC
-          scCX <- mrgSideCond vtbls scC scCL
+          scCL <- extendGoalSCCoverage ss lvvls scLasC
+          scCX <- mrgSideCond ss scC scCL
           scD <- scDischarge ss scCX scLasC
           if onlyFreshSC scD
             then do let freshneeded = snd scD
@@ -619,10 +620,10 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
                                    = generateFreshVars knownVs freshneeded sbind
                     let newLocalASC = fst scD
                     -- newLocalSC <- mkSideCond newLocalASC fresh
-                    newLocalSC <- mkSideCond vtbls newLocalASC S.empty
+                    newLocalSC <- mkSideCond ss newLocalASC S.empty
                     -- Why do we ignore `fresh`?
                     -- Because we have made it so above?
-                    scC' <- mrgSideCond vtbls scCX newLocalSC
+                    scC' <- mrgSideCond ss scCX newLocalSC
                     brepl  <- instantiate vtbls fbind repl
                     asn' <- mkAsn conjpart (conjSC liveProof)
                     return ( focus_ ((setTZ brepl tz),seq')
@@ -657,23 +658,29 @@ If a floating replacement is used
 in a \texttt{CoveredBy} atomic law side condition,
 then we need to copy it over as a proof-local goal side-condition.
 \begin{code}
-extendGoalSCCoverage vts lvvls (atmSCs,_)
-  = xtndCoverage vts (map snd lvvls) [] (filter isCoverage atmSCs)
+extendGoalSCCoverage ss lvvls (atmSCs,_)
+  = xtndCoverage ss (map snd lvvls) [] (filter isCoverage atmSCs)
   where
     isCoverage (CoveredBy _ _ _)  =  True
     isCoverage _                  =  False
 
-    xtndCoverage :: MonadFail m => [VarTable]
+    xtndCoverage :: MonadFail m => [Subscript]
                  -> [VarList] -- floating replacements
                  -> [AtmSideCond] -- extra side-conditions (so far)
                  -> [AtmSideCond] -- Law coverage side-conditions
                  -> m SideCond
     xtndCoverage _ _ ascs [] = return (ascs, S.empty)
-    xtndCoverage vts ffvls ascs (cov@(CoveredBy _ gv vs) : rest)
+    xtndCoverage ss ffvls ascs (cov@(CoveredBy _ gv vs) : rest)
       | S.toList vs `elem` ffvls
-         = do ascs' <- mrgAtmCond vts cov ascs
-              xtndCoverage vts ffvls ascs' rest
-      | otherwise  =  xtndCoverage vts ffvls ascs rest
+
+             -- DO WE NEED THIS?
+             -- (Assertion conj _) = conjecture liveProof
+             -- ss = S.elems $ S.map theSubscript $ S.filter isDuring
+             --              $ S.map gvarWhen $ mentionedVars conj
+
+         = do ascs' <- mrgAtmCond ss cov ascs  -- Subscripts?
+              xtndCoverage ss ffvls ascs' rest
+      | otherwise  =  xtndCoverage ss ffvls ascs rest
 \end{code}
 
 \newpage
@@ -730,10 +737,15 @@ substituteFocus thrys liveProof
   = let (tz,seq') = focus liveProof
         dpath = fPath liveProof
         t = getTZ tz
-        vts = concat $ map thd3 $ mtchCtxts liveProof
+        -- vts = concat $ map thd3 $ mtchCtxts liveProof
+        scC = conjSC liveProof
+        (Assertion conj _) = conjecture liveProof
+        ss = S.elems $ S.map theSubscript $ S.filter isDuring
+                     $ S.map gvarWhen $ mentionedVars conj
+        sctxt = mkSubCtxt scC ss
     in case t of
          (Sub _ tm s)
-            -> do t' <- substitute vts s tm
+            -> do t' <- substitute sctxt s tm
                   asn' <- mkAsn (exitTZ tz) (conjSC liveProof)
                   return ( focus_ ((setTZ t' tz),seq')
                          $ matches_ []
@@ -864,7 +876,10 @@ lawInstantiate3 vts law@((lnm,(Assertion lawt lsc)),lprov) varTerms liveProof
   = do lbind <- mkBinding emptyBinding varTerms
        let scC = conjSC liveProof
        ilsc <- instantiateSC vts lbind lsc
-       nsc <- mrgSideCond vts scC ilsc
+       let (Assertion conj _) = conjecture liveProof
+       let ss = S.elems $ S.map theSubscript $ S.filter isDuring
+                        $ S.map gvarWhen $ mentionedVars conj
+       nsc <- mrgSideCond ss scC ilsc
        ilawt <- instantiate vts lbind lawt
        let (tz,seq') = focus liveProof
        let dpath = fPath liveProof

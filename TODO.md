@@ -13,14 +13,55 @@ extract variable sets from side-conditions but ignore uniformity information!**
 
 Moving onto substitution:
 
+Term `(x'=e∧(O$'\x=O$\x))[O$_1/O$']` 
+should become `x_1=e∧(O$_1\x=O$\x)`.
+
+Current behaviour:
+
 ```
 (∃ O$_1 • (x'=e∧(O$'\x=O$\x))[O$_1/O$']∧((x := f))[O$_1/O$]), O$⊇e, O$⊇f, O$⊇x
    = 'substitute @[1,1]'
-(∃ O$_1 • (x'=e[O$_1/O$']∧(O$'\x=O$\x))∧((x := f))[O$_1/O$])    O$⊇e, O$⊇f, O$⊇x
+(∃ O$_1 • (x'=e_1∧(O$_1\x=O$\x))∧((x := f))[O$_1/O$])    O$⊇e, O$⊇f, O$⊇x
 ```
 
+So `e_1` should be `e` and `x'` should be `x_1`.
 
-The issue is that `(x'=e∧(O$'\x=O$\x))[O$_1/O$']` should become `x_1=e∧(O$_1\x=O$\x)`, and not `(x'=e[O$_1/O$']∧(O$'\x=O$\x))`!
+
+
+
+Current `pdbg` output:
+
+```
+@sub.C.i:
+Id "land" 0
+@sub.C.i:
+Id "=" 0
+@v:
+VR (Id "x" 0,VO,WA)
+@ts:
+fromList []
+@lvs:
+fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]
+@sctx:
+SCtxt {scSC = ([SS UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS UN (GV (VR (Id "f" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS UN (GV (VR (Id "x" 0,VO,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])],fromList []), scSS = []}
+@v:
+VR (Id "e" 0,VE,WB)
+@ts:
+fromList []
+@lvs:
+fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]
+@sctx:
+SCtxt {scSC = ([SS UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS UN (GV (VR (Id "f" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS UN (GV (VR (Id "x" 0,VO,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])],fromList []), scSS = []}
+@UN.vs:
+fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]
+@a tgtlv:
+LV (VR (Id "O" 0,VO,WA),[],[])
+@rBR.is:
+[]
+@rBR.repl:
+VR (Id "e" 0,VE,WD "1")
+```
+
 
 It looks like that we may need to pass in `VarTable`s
 

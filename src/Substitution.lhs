@@ -58,6 +58,7 @@ data SubContext
   =  SCtxt  { scSC :: SideCond
             , scSS :: [Subscript]
             }
+  deriving (Eq,Ord,Show,Read)
 
 mkSubCtxt = SCtxt
 \end{code}
@@ -101,23 +102,26 @@ substitute sctx sub@(Substn ts lvs) vrt@(Var tk v)
     -- work through lst-var/lst-var substitutions
     subsLVar v []
       | varClass v == ObsV  =  vrt
-      | otherwise  =  Sub tk vrt sub
+      | otherwise           =  Sub tk vrt sub
     subsLVar v ((tgtlv,rpllv):rest)
-      | v `coveredByTgt` (pdbg "a tgtlv" tgtlv) = v `replacedByRpl` rpllv
-      | otherwise  =  subsLVar v rest
+      | v `coveredByTgt` (pdbg "a tgtlv" tgtlv)  =  v `replacedByRpl` rpllv
+      | otherwise                                =  subsLVar v rest
 
     coveredByTgt v tgtlv
       = case findGenVar (StdVar v) (scSC $ pdbg "sctx" sctx) of
           Just (CoveredBy NonU _ vs)
-            ->  vs == S.singleton (LstVar tgtlv)
+            ->  (pdbg "NU.vs" vs) == S.singleton (LstVar $ pdbg "tgtlv" tgtlv)
           Just (CoveredBy Unif _ vs)
-            ->  S.size vs == 1
-                && getIdClass (StdVar v) == getIdClass (S.elemAt 0 vs)
+          -- remember: asc may be "uniform", but tgtlv is not,
+          -- so temporality must match
+            ->  S.size (pdbg "UN.vs" vs) == 1
+                && getIdClass (LstVar tgtlv) == getIdClass (S.elemAt 0 vs)
           _  ->  False
 
-    replacedByRpl v@(Vbl i vc _) (LVbl (Vbl _ _ vw) is js)
-      | i `elem` is  =  vrt -- not really covered!
-      | otherwise    =  jVar tk $ Vbl i vc vw
+    replacedByRpl v@(Vbl i vc vw) (LVbl (Vbl _ _ lvw) is js)
+      -- we need to know if v's temporality matches that of tgtlv
+      | (pdbg "rBR.i" i) `elem` (pdbg "rBR.is" is)  =  vrt -- not really covered!
+      | otherwise    =  jVar tk $ pdbg "rBR.repl" $ Vbl i vc vw
 \end{code}
 \begin{eqnarray*}
    (\cc i {ts}) \ss {} {v^n} {t^n}
@@ -127,7 +131,7 @@ substitute sctx sub@(Substn ts lvs) vrt@(Var tk v)
 \begin{code}
 substitute sctx sub ct@(Cons tk subable i ts)
   | subable  =  do ts' <- sequence $ map (substitute sctx sub) ts
-                   return $ Cons tk subable i ts'
+                   return $ Cons tk subable (pdbg "sub.C.i" i) ts'
   | otherwise  =  return $ Sub tk ct sub
 \end{code}
 \begin{eqnarray*}
@@ -179,7 +183,8 @@ substitute sctx sub bt@(Sub tk tm s)
 \end{eqnarray*}
 \begin{code}
 substitute sctx (Substn _ lvlvs) bt@(Iter tk sa na si ni lvs)
-  = return $ Iter tk sa na si ni $ map (listVarSubstitute (S.toList lvlvs)) lvs
+  = return $ Iter tk sa na si ni
+           $ map (listVarSubstitute sctx (S.toList lvlvs)) lvs
 \end{code}
 \begin{eqnarray*}
    \kk k \ss {} {v^n} {t^n}   &\defs&  \kk k
@@ -232,6 +237,7 @@ idNumAdd :: Identifier -> Int -> Identifier
 
 \newpage
 
+Used for quantifier substitution.
 This code assumes that \texttt{alpha} was produced by \texttt{captureAvoidance}.
 \begin{code}
 quantsSubst :: Substn -> VarList -> VarList
@@ -247,7 +253,7 @@ quantSubst atl alvl gv@(StdVar v)
       Just t -> error ("quantSubst: non-variable replacement "++trTerm 0 t)
 
 quantSubst atl alvl gv@(LstVar lv)
-  = case alookup lv alvl of -- what if lv has non-null is/js components??
+  = case lvlookup lv alvl of -- what if lv has non-null is/js components??
       Nothing   ->  gv
       -- again, we need to deal with "coverage" cases
       Just flv  ->  LstVar flv
@@ -255,12 +261,43 @@ quantSubst atl alvl gv@(LstVar lv)
 
 Used for \texttt{Iter} substitution.
 \begin{code}
-listVarSubstitute :: [(ListVar,ListVar)] -> ListVar -> ListVar
-listVarSubstitute lvlvl lv
-  = case alookup lv lvlvl of -- WOn't work, can't handle non-null is/js case
+listVarSubstitute :: SubContext -> [(ListVar,ListVar)] -> ListVar -> ListVar
+listVarSubstitute sctxt lvlvl lv
+  = case lvlookup lv lvlvl of
       Nothing   ->  lv
       Just lv'  ->  lv'
-      -- again, we need to handle "coverage" cases
+\end{code}
+
+We want a list-variable lookup that does flexible handling
+of the  ``less'' components,
+with post processing of the returned value.
+$$
+  lookup~\lst\ell\less{L}
+  ~in~
+  \seqof{\dots,(\lst t\less{T},\lst r\less{R}),\dots}
+$$
+What relations should we expect between $\ell$, $t$ and $r$,
+and $T$ and $R$?
+What should be true about $L$ and $T$ for the lookup to succeed?
+How should both $b$ and $B$ in final replacement $\lst b\less{B}$
+be related to $\ell$, $L$, $b$ and $R$?
+
+For now, we assume the following,
+which matches most (all?) expected use cases:
+
+$\ell,t,r$ all have the same identifier and class;
+$\ell$ and $t$ have the same temporality,
+while that of $r$ differs.
+$T = R$, $L \supseteq T$,
+and $B = L$;
+while $b$ has the same temporality as $r$.
+\begin{code}
+lvlookup :: MonadFail m => ListVar -> [(ListVar,ListVar)] -> m ListVar
+lvlookup _ [] = fail "lvlookup: list-var not found."
+lvlookup lv@(LVbl v is js) ( ((LVbl tv _ _), (LVbl rv _ _) ) : rest )
+    -- we should check that assumptions above hold!
+  | v == tv    =  return $ LVbl rv is js
+  | otherwise  =  lvlookup lv rest
 \end{code}
 
 

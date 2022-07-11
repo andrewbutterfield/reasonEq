@@ -18,6 +18,7 @@ module SideCond (
 , scDischarge
 , isFloatingASC
 , notin, covers, fresh
+, findGenVar
 -- , citingASCs   -- not used anywhere!
 , int_tst_SideCond
 ) where
@@ -422,8 +423,10 @@ onlyInvolving :: VarSet -> SideCond -> Bool
 onlyInvolving involved (ascs,_) = all (onlyWith involved) ascs
 
 onlyWith :: VarSet -> AtmSideCond -> Bool
-onlyWith involved (SD _ gv vs) = gv `S.member` involved || involved `overlaps` vs
-onlyWith involved (SS _ gv vs) = gv `S.member` involved || involved `overlaps` vs
+onlyWith involved (SD _ gv vs)
+  = gv `S.member` involved || involved `overlaps` vs
+onlyWith involved (SS _ gv vs)
+  = gv `S.member` involved || involved `overlaps` vs
 \end{code}
 We may accept either of the above:
 \begin{code}
@@ -1126,7 +1129,20 @@ fresh fvs = ( [], fvs )
 \newpage
 \subsection{Side-condition Queries and Operations}
 
-Here we develop some set queries and operations
+First, some simple queries to find atomic side-conditions of interest.
+We start by checking if a variable is mentioned.
+\begin{code}
+findGenVar :: MonadFail m => GenVar -> SideCond -> m AtmSideCond
+findGenVar gv ( ascs, _ )  =  findGV gv ascs
+
+findGV _ [] = fail "findGenVar: not in any atomic side-condition"
+findGV gv (asc:ascs)
+  | gv == ascGVar asc  =  return asc
+  | otherwise          =  findGV gv ascs
+\end{code}
+
+
+Next we develop some set queries and operations
 that can handle a mix of uniform and non-uniform atomic side conditions.
 We do this by comparing variables with the same identifier and class
 from each side-condition.
@@ -1147,15 +1163,6 @@ lineariseVarList' gv svg [] = [ gv : svg ]
 lineariseVarList' gv svg (gv':gvs)
  | gv `sameIdClass` gv' = lineariseVarList' gv (gv':svg) gvs
  | otherwise = ( gv : svg) : lineariseVarList' gv' [] gvs
-
-getIdClass :: GenVar -> (Identifier, VarClass)
-getIdClass (StdVar (Vbl i vc _))             =  (i,vc)
-getIdClass (LstVar (LVbl (Vbl i vc _) _ _))  =  (i,vc)
--- NOTE: this forgets the Std/Lst distinction !!!
-
-sameIdClass gv1@(StdVar _) gv2@(StdVar _)  =  getIdClass gv1 == getIdClass gv2
-sameIdClass gv1@(LstVar _) gv2@(LstVar _)  =  getIdClass gv1 == getIdClass gv2
-sameIdClass _ _                            =  False
 \end{code}
 
 When done, we need to pack them into a set again

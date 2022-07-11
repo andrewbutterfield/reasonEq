@@ -35,6 +35,7 @@ module Variables
  , less, lessVars, makeVars
  , GenVar, pattern StdVar, pattern LstVar
  , isStdV, isLstV, theStdVar, theLstVar
+ , getIdClass, sameIdClass
  , gvarClass, gvarWhen
  , isPreGenVar, isObsGVar, isExprGVar, isPredGVar
  , whatGVar, timeGVar
@@ -373,6 +374,16 @@ varId (VR(i,_,_)) = i
 
 varOf :: ListVar -> Variable
 varOf (LV (v,_,_)) = v
+
+getIdClass :: GenVar -> (Identifier, VarClass)
+getIdClass (StdVar (Vbl i vc _))             =  (i,vc)
+getIdClass (LstVar (LVbl (Vbl i vc _) _ _))  =  (i,vc)
+-- NOTE: this forgets the Std/Lst distinction !!!
+
+sameIdClass gv1@(StdVar _) gv2@(StdVar _)  =  getIdClass gv1 == getIdClass gv2
+sameIdClass gv1@(LstVar _) gv2@(LstVar _)  =  getIdClass gv1 == getIdClass gv2
+sameIdClass _ _                            =  False
+
 
 idsOf :: VarList -> ([Identifier],[Identifier])
 idsOf vl =  idsOf' [] [] vl

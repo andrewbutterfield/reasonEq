@@ -30,6 +30,7 @@ import TestRendering
 
 import Debug.Trace
 dbg msg x = trace (msg ++ show x) x
+pdbg nm x = dbg ('@':nm++":\n") x
 \end{code}
 
 \subsection{Introduction}
@@ -64,17 +65,6 @@ mkSubCtxt = SCtxt
 \newpage
 \subsection{Term Substitution}
 
-\textbf{
-  We need to augment below with "coverage" cases.
-  This is where a substitution target appears in a side-condition
-  that states that it covers other variables,
-  including the one currently being assessed for substitution.
-  We need to plumb side-conditions in here, as well as lists
-  of dynamic subscripts.
-  We need a substitution context argument
-  (side-cond+subscripts+vartables?+?)
-}
-
 \begin{code}
 substitute :: (Monad m, MonadFail m) => SubContext -> Substn -> Term -> m Term
 \end{code}
@@ -82,25 +72,52 @@ substitute :: (Monad m, MonadFail m) => SubContext -> Substn -> Term -> m Term
    \vv v \ss {} {v^n} {r^n}  &\defs&  r^i \cond{\vv v=v^i} v,
                                                 \mbox{ for one $i \in 1\dots n$}
 \\ \vv P \ss {} {v^n} {r^n}
-                   &\defs&  r^i \cond{\vv P=v^i} \vv P \ss {} {v^n} {r^n},
+   &\defs&  r^i \cond{\vv P=v^i} \vv P \ss {} {v^n} {r^n},
                                                                   \mbox{ ditto.}
+\\ \vv v_d \ss {} {\dots,\lst x_d,\dots} {\dots,\lst x_e,\dots}
+   &\defs&
+   \vv v_e
+   \cond{\vv v \subseteq \lst x}
+   \vv v_d \ss {} {\dots,\dots} {\dots,\dots},
+   \mbox{$d,e$ are dynamic temporalities.}
+\\ \vv P_d \ss {} {\dots,\lst x_d,\dots} {\dots,\lst x_e,\dots}
+   &\defs&
+   \vv P_e
+   \cond{\vv P \subseteq \lst x}
+   \vv P_d \ss {} {\dots,\dots} {\dots,\dots},
+   \mbox{ ditto.}
 \end{eqnarray*}
 \begin{code}
-substitute sctx sub@(Substn ts _) vrt@(Var tk v)
-  = return $ subsVar vrt v $ S.toList ts
+substitute sctx sub@(Substn ts lvs) vrt@(Var tk v)
+  = return $ subsVar (pdbg "v" v) (S.toList $ pdbg "lvs" lvs) (S.toList $ pdbg "ts" ts)
   where
-    subsVar vrt v []
-      -- we need to handle non-ObsV better!
+
+    -- work through std-var/term substitutions
+    subsVar v lvs [] = subsLVar v lvs
+    subsVar v lvs ((tgtv,rplt):rest)
+      | v == (pdbg "a tgtv" tgtv)  =  rplt
+      | otherwise  =  subsVar v lvs rest
+
+    -- work through lst-var/lst-var substitutions
+    subsLVar v []
       | varClass v == ObsV  =  vrt
       | otherwise  =  Sub tk vrt sub
-    subsVar vrt v ((tgtv,rplt):rest)
-      | v == tgtv  =  rplt
-      -- we need cases where v is "covered" by the target
-      --  v is x'  and x' is coveredby O$'
-      --  tgtv is O$'
-      --  rplt is O$_1
-      --  we should return  x_1
-      | otherwise  =  subsVar vrt v rest
+    subsLVar v ((tgtlv,rpllv):rest)
+      | v `coveredByTgt` (pdbg "a tgtlv" tgtlv) = v `replacedByRpl` rpllv
+      | otherwise  =  subsLVar v rest
+
+    coveredByTgt v tgtlv
+      = case findGenVar (StdVar v) (scSC $ pdbg "sctx" sctx) of
+          Just (CoveredBy NonU _ vs)
+            ->  vs == S.singleton (LstVar tgtlv)
+          Just (CoveredBy Unif _ vs)
+            ->  S.size vs == 1
+                && getIdClass (StdVar v) == getIdClass (S.elemAt 0 vs)
+          _  ->  False
+
+    replacedByRpl v@(Vbl i vc _) (LVbl (Vbl _ _ vw) is js)
+      | i `elem` is  =  vrt -- not really covered!
+      | otherwise    =  jVar tk $ Vbl i vc vw
 \end{code}
 \begin{eqnarray*}
    (\cc i {ts}) \ss {} {v^n} {t^n}
@@ -230,7 +247,7 @@ quantSubst atl alvl gv@(StdVar v)
       Just t -> error ("quantSubst: non-variable replacement "++trTerm 0 t)
 
 quantSubst atl alvl gv@(LstVar lv)
-  = case alookup lv alvl of
+  = case alookup lv alvl of -- what if lv has non-null is/js components??
       Nothing   ->  gv
       -- again, we need to deal with "coverage" cases
       Just flv  ->  LstVar flv
@@ -240,7 +257,7 @@ Used for \texttt{Iter} substitution.
 \begin{code}
 listVarSubstitute :: [(ListVar,ListVar)] -> ListVar -> ListVar
 listVarSubstitute lvlvl lv
-  = case alookup lv lvlvl of
+  = case alookup lv lvlvl of -- WOn't work, can't handle non-null is/js case
       Nothing   ->  lv
       Just lv'  ->  lv'
       -- again, we need to handle "coverage" cases

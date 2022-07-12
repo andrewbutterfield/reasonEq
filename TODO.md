@@ -3,53 +3,43 @@
 
 ## Most Urgent
 
+### One-Point Rules
 
-### Side Conditions
-
-
-**Note: both `Instantiate` and `Assertions` make use of functions that
-extract variable sets from side-conditions but ignore uniformity information!**
-
-
-goal matching crash!
+We now have a challenge,
+in matching the following one-point rule:
 
 ```
-(x := f[e/x])    O$⊇e, O$⊇f, O$⊇x
-
-Focus = [1,2]  Target (LHS): (∃ O$_1 • (x_1=e∧(O$_1\x=O$\x))∧(x'=f_1∧(O$'\x=O$_1\x)))
-
-
-proof: m
-@freeVars.Sub.tm:
-V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB))
-@freeVars.Sub.tfv:
-(fromList [GV (VR (Id "f" 0,VE,WB))],[])
-@freeVars.Sub.tm:
-V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB))
-@freeVars.Sub.tfv:
-(fromList [GV (VR (Id "f" 0,VE,WB))],[])
-@freeVars.Sub.tm:
-V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB))
-@freeVars.Sub.tfv:
-(fromList [GV (VR (Id "f" 0,VE,WB))],[])
-@freeVars.Sub.tm:
-V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB))
-@freeVars.Sub.tfv:
-(fromList [GV (VR (Id "f" 0,VE,WB))],[])
-@freeVars.Sub.tm:
-V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB))
-@freeVars.Sub.tfv:
-(fromList [GV (VR (Id "f" 0,VE,WB))],[])
-req: src/Binding.lhs:1150:1-32: Non-exhaustive patterns in function termVarEqv
+“∃_one_point”  (∃ x$,y$ • (x$=e$)∧P)  ≡  (∃ y$ • P[e$/x$])  x$∉e$
 ```
 
+```
+⊢
+(∃ O$_1 • (x_1=e∧(O$_1\x=O$\x))∧(x'=f_1∧(O$'\x=O$_1\x)))    O$⊇e, O$⊇f, O$⊇x
 
-Side conditions plus known list variables raise a complication (ill-formed substitutions)
-We prevent a target variable from being used more than once when we build substitutions,
-but this doesnt cater for a condition like `O$⊇e`. 
-In this context, the substitution `[3,O$_1/e,O$]` is illegal, because it asks `e` to be replaced by both `3` (directly) and `e_1` (implicitly, via membership of `O$`).
-In effect, we need to use side-conditions like `O$⊇e` to assess the validity
-of target-lists like `<e,O$>` (or `<e',O$'>` or `<e_1,O$_1>`!).
+Focus = []  Target (RHS): x'=f[e/x]  ∧  (O$'\x=O$\x)
+
+
+proof: tm 1 exists_one_point
+Match against `exists_one_point'[1] failed!
+try match failed
+
+(∃ O$_1 • (x_1=e∧(O$_1\x=O$\x))∧(x'=f_1∧(O$'\x=O$_1\x))) :: (∃ x$,y$ • (x$=e$)∧P)
+
+lnm[parts]=exists_one_point[1]
+tP=(∃ x$,y$ • (x$=e$)∧P)  ≡  (∃ y$ • P[e$/x$])
+partsP=(∃ x$,y$ • (x$=e$)∧P)
+tC=(∃ O$_1 • (x_1=e∧(O$_1\x=O$\x))∧(x'=f_1∧(O$'\x=O$_1\x)))
+scC=O$⊇e, O$⊇f, O$⊇x
+---
+vsMatch: pattern list-var's binding not in candidate set.
+hit <enter> to continue
+```
+
+Perhaps we need more conjectures in the `Exists` theory?
+And the `Forall` Theory?
+
+E.g. `(∃ x,y$ • (x=e)∧P)  ≡  (∃ y$ • P[e/x])  x∉e` 
+or `(∃ x$  • (x=e∧x$\x=y$\x)∧P)  ≡  P[e,y$\x/x,x$\x]  x∉e` .
 
 ### Match Contexts
 

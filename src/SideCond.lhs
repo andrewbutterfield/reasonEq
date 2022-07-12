@@ -213,23 +213,30 @@ an empty set asserts that the term denoted by the general variable is closed.
 pattern Disjoint  u gv vs = SD u gv vs  --  gv `intersect` vs = {}
 pattern CoveredBy u gv vs = SS u gv vs  --  gv  `subsetof` vs
 \end{code}
-Sometimes we want the \texttt{GenVar} component,
+
+Selectors:
 \begin{code}
+ascUnfm :: AtmSideCond -> Uniformity
+ascUnfm (Disjoint  u _ _)  =  u
+ascUnfm (CoveredBy u _ _)  =  u
+
+isUniform :: AtmSideCond -> Bool
+isUniform asc  =  ascUnfm asc == Unif
+
 ascGVar :: AtmSideCond -> GenVar
-ascGVar (Disjoint  _ gv _)     =  gv
+ascGVar (Disjoint  _ gv _)  =  gv
 ascGVar (CoveredBy _ gv _)  =  gv
-\end{code}
-or the \texttt{VarSet} part:
-\begin{code}
+
 ascVSet :: AtmSideCond -> VarSet
-ascVSet (Disjoint  _ _ vs)     =  vs
+ascVSet (Disjoint  _ _ vs)  =  vs
 ascVSet (CoveredBy _ _ vs)  =  vs
 \end{code}
-This latter function is less useful because it loses uniformity information
+This last function is less useful because it loses uniformity information
 needed to interpret dynamic variables property
 (used below and in \texttt{Instantiate.lhs}).
 
-We can determine if an atomic side-condition is ``uniform''.
+We can determine if the components
+used to make an atomic side-condition are ``uniform''.
 A relation $~\Re~$ between a general variable $g^t$ of temporality $t$
 and a set of general variables $G^\tau$ with temporality drawn from $\tau$,
 is uniform if:
@@ -240,8 +247,8 @@ is uniform if:
      (i.e., $\tau = \setof t$).
 \end{itemize}
 \begin{code}
-isUniform :: GenVar -> VarSet -> Bool
-isUniform gv vs
+areUniform :: GenVar -> VarSet -> Bool
+areUniform gv vs
   = S.size whens == 1 && isDynamic (head $ S.elems whens)
   where
     whens = S.map gvarWhen (S.insert gv vs)
@@ -266,10 +273,10 @@ of an atomic side-condition is set correctly.
 \begin{code}
 setASCUniformity :: AtmSideCond -> AtmSideCond
 setASCUniformity (Disjoint  _ gv vs)
-  | isUniform gv vs  =  Disjoint Unif (dnGVar gv) (S.map dnGVar vs)
+  | areUniform gv vs  =  Disjoint Unif (dnGVar gv) (S.map dnGVar vs)
   | otherwise        =  Disjoint NonU         gv                vs
 setASCUniformity (CoveredBy _ gv vs)
-  | isUniform gv vs  =  CoveredBy Unif (dnGVar gv) (S.map dnGVar vs)
+  | areUniform gv vs  =  CoveredBy Unif (dnGVar gv) (S.map dnGVar vs)
   | otherwise        =  CoveredBy NonU         gv                vs
 \end{code}
 
@@ -1137,8 +1144,13 @@ findGenVar gv ( ascs, _ )  =  findGV gv ascs
 
 findGV _ [] = fail "findGenVar: not in any atomic side-condition"
 findGV gv (asc:ascs)
-  | gv == ascGVar asc  =  return asc
-  | otherwise          =  findGV gv ascs
+  | gv `mentionedBy` asc  =  return asc
+  | otherwise             =  findGV gv ascs
+
+mentionedBy :: GenVar -> AtmSideCond -> Bool
+gv `mentionedBy` asc
+  | isUniform asc  =  gv `sameIdClass` ascGVar asc
+  | otherwise      =  gv == ascGVar asc
 \end{code}
 
 

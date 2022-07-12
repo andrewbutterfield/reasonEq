@@ -78,50 +78,53 @@ substitute :: (Monad m, MonadFail m) => SubContext -> Substn -> Term -> m Term
 \\ \vv v_d \ss {} {\dots,\lst x_d,\dots} {\dots,\lst x_e,\dots}
    &\defs&
    \vv v_e
-   \cond{\vv v \subseteq \lst x}
+   \cond{\vv v_d \subseteq \lst x_d}
    \vv v_d \ss {} {\dots,\dots} {\dots,\dots},
    \mbox{$d,e$ are dynamic temporalities.}
 \\ \vv P_d \ss {} {\dots,\lst x_d,\dots} {\dots,\lst x_e,\dots}
    &\defs&
    \vv P_e
-   \cond{\vv P \subseteq \lst x}
+   \cond{\vv P_d \subseteq \lst x_d}
    \vv P_d \ss {} {\dots,\dots} {\dots,\dots},
    \mbox{ ditto.}
 \end{eqnarray*}
 \begin{code}
 substitute sctx sub@(Substn ts lvs) vrt@(Var tk v)
-  = return $ subsVar (pdbg "v" v) (S.toList $ pdbg "lvs" lvs) (S.toList $ pdbg "ts" ts)
+  = return $ subsVar v (S.toList lvs) (S.toList ts)
   where
 
     -- work through std-var/term substitutions
     subsVar v lvs [] = subsLVar v lvs
     subsVar v lvs ((tgtv,rplt):rest)
-      | v == (pdbg "a tgtv" tgtv)  =  rplt
+      | v == tgtv  =  rplt
       | otherwise  =  subsVar v lvs rest
 
     -- work through lst-var/lst-var substitutions
     subsLVar v []
-      | varClass v == ObsV  =  vrt
-      | otherwise           =  Sub tk vrt sub
+      | varClass v == ObsV     =  vrt
+      | isDynamic $ varWhen v  =  vrt
+      | otherwise              =  Sub tk vrt sub
     subsLVar v ((tgtlv,rpllv):rest)
-      | v `coveredByTgt` (pdbg "a tgtlv" tgtlv)  =  v `replacedByRpl` rpllv
-      | otherwise                                =  subsLVar v rest
-
-    coveredByTgt v tgtlv
-      = case findGenVar (StdVar v) (scSC $ pdbg "sctx" sctx) of
+      | varWhen v /= lvarWhen tgtlv  =  subsLVar v rest
+      | otherwise
+      = case findGenVar (StdVar v) (scSC sctx) of
           Just (CoveredBy NonU _ vs)
-            ->  (pdbg "NU.vs" vs) == S.singleton (LstVar $ pdbg "tgtlv" tgtlv)
+            ->  if vs == S.singleton (LstVar tgtlv)
+                   && varWhen v == lvarWhen tgtlv
+                then v `replacedByRpl` rpllv
+                else vrt
           Just (CoveredBy Unif _ vs)
-          -- remember: asc may be "uniform", but tgtlv is not,
-          -- so temporality must match
-            ->  S.size (pdbg "UN.vs" vs) == 1
-                && getIdClass (LstVar tgtlv) == getIdClass (S.elemAt 0 vs)
-          _  ->  False
+            ->  if S.size vs == 1
+                   && getIdClass (LstVar tgtlv) == getIdClass (S.elemAt 0 vs)
+                   && varWhen v == lvarWhen tgtlv
+                then v `replacedByRpl` rpllv
+                else vrt
+          _  ->  subsLVar v rest
 
     replacedByRpl v@(Vbl i vc vw) (LVbl (Vbl _ _ lvw) is js)
       -- we need to know if v's temporality matches that of tgtlv
-      | (pdbg "rBR.i" i) `elem` (pdbg "rBR.is" is)  =  vrt -- not really covered!
-      | otherwise    =  jVar tk $ pdbg "rBR.repl" $ Vbl i vc vw
+      | i `elem` is  =  vrt -- not really covered!
+      | otherwise    =  jVar tk $ Vbl i vc lvw
 \end{code}
 \begin{eqnarray*}
    (\cc i {ts}) \ss {} {v^n} {t^n}
@@ -130,9 +133,9 @@ substitute sctx sub@(Substn ts lvs) vrt@(Var tk v)
 \end{eqnarray*}
 \begin{code}
 substitute sctx sub ct@(Cons tk subable i ts)
-  | subable  =  do ts' <- sequence $ map (substitute sctx sub) ts
-                   return $ Cons tk subable (pdbg "sub.C.i" i) ts'
-  | otherwise  =  return $ Sub tk ct sub
+  | subable    =  do ts' <- sequence $ map (substitute sctx sub) ts
+                     return $ Cons tk subable i ts'
+  | otherwise  =     return $ Sub tk ct sub
 \end{code}
 \begin{eqnarray*}
    (\bb n {x^+} t) \ss {} {v^n} {t^n}

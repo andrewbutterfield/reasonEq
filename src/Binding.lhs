@@ -1147,7 +1147,8 @@ substReplEqv (Left lv:tlvs) (LstVar lv' : vl)
   | lv == lv'       =  substReplEqv tlvs vl
 substReplEqv _  _   =  False
 
-termVarEqv (Var _ u) v =  u == v
+termVarEqv (Var _ u) v  =  u == v
+termVarEqv _         _  =  False
 \end{code}
 
 

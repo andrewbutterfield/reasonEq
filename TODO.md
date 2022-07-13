@@ -3,43 +3,16 @@
 
 ## Most Urgent
 
-### One-Point Rules
-
-We now have a challenge,
-in matching the following one-point rule:
+### Substitution Again !
 
 ```
-“∃_one_point”  (∃ x$,y$ • (x$=e$)∧P)  ≡  (∃ y$ • P[e$/x$])  x$∉e$
+(x'=f_1∧(O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x], O$⊇e, O$⊇f, O$⊇x
+   = 'substitute @[]'
+x'=f∧(O$'\x=O$\x)    O$⊇e, O$⊇f, O$⊇x
 ```
 
-```
-⊢
-(∃ O$_1 • (x_1=e∧(O$_1\x=O$\x))∧(x'=f_1∧(O$'\x=O$_1\x)))    O$⊇e, O$⊇f, O$⊇x
+`f_1[e,O$\x/x_1,O$_1\x]` needs to become `f[e/x]` somehow.
 
-Focus = []  Target (RHS): x'=f[e/x]  ∧  (O$'\x=O$\x)
-
-
-proof: tm 1 exists_one_point
-Match against `exists_one_point'[1] failed!
-try match failed
-
-(∃ O$_1 • (x_1=e∧(O$_1\x=O$\x))∧(x'=f_1∧(O$'\x=O$_1\x))) :: (∃ x$,y$ • (x$=e$)∧P)
-
-lnm[parts]=exists_one_point[1]
-tP=(∃ x$,y$ • (x$=e$)∧P)  ≡  (∃ y$ • P[e$/x$])
-partsP=(∃ x$,y$ • (x$=e$)∧P)
-tC=(∃ O$_1 • (x_1=e∧(O$_1\x=O$\x))∧(x'=f_1∧(O$'\x=O$_1\x)))
-scC=O$⊇e, O$⊇f, O$⊇x
----
-vsMatch: pattern list-var's binding not in candidate set.
-hit <enter> to continue
-```
-
-Perhaps we need more conjectures in the `Exists` theory?
-And the `Forall` Theory?
-
-E.g. `(∃ x,y$ • (x=e)∧P)  ≡  (∃ y$ • P[e/x])  x∉e` 
-or `(∃ x$  • (x=e∧x$\x=y$\x)∧P)  ≡  P[e,y$\x/x,x$\x]  x∉e` .
 
 ### Match Contexts
 

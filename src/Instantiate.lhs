@@ -393,8 +393,11 @@ instLstVar vts binding lv
       Just (BindList vl')  ->  return (S.fromList vl',[])
       Just (BindSet  vs')  ->  return (vs',[])
       Just (BindTLVs tlvs)
-        | null ts          ->  return (S.fromList $ map LstVar lvs,[])
-        | otherwise        ->  fail "instLstVar: bound to terms."
+        | all isVar ts  -> return ( S.fromList
+                                    $ ( map (StdVar . theVar) ts)
+                                        ++ (map LstVar lvs)
+                                  , [] )
+        | otherwise     ->  fail "instLstVar: bound to non-variable terms."
         where (ts,lvs) = (tmsOf tlvs, lvsOf tlvs)
   where
     single lv = (S.singleton (LstVar lv),[])

@@ -1770,9 +1770,12 @@ applyBindingsToSets' bind vlP' vsC (gP@(LstVar lvP):vlP)
         lvs = lvsOf tlvs
   where
     checkBinding vsB
-       =  if vsB `withinS` vsC
-          then applyBindingsToSets' bind vlP' (vsC `removeS` vsB) vlP
+       =  if vsBS `withinS` vsCS
+          then applyBindingsToSets' bind vlP' (vsCS `removeS` vsBS) vlP
           else fail "vsMatch: pattern list-var's binding not in candidate set."
+       where
+         vsBS = subsumeS vsB
+         vsCS = subsumeS vsC
 \end{code}
 
 \newpage

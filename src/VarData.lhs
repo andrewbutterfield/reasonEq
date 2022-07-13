@@ -29,6 +29,9 @@ module VarData ( VarMatchRole
                , dEq, dvEq, dlEq, dgEq
                , insideS                    -- member modulo During
                , withinS                    -- subset modulo During
+               , subsumeS                   -- simplifies VarSets
+               , subsumeL                   -- simplifies VarLists
+               , subsumedS                  -- simplify, then withinS
                , delS, delSl, delL          -- delete modulo During
                , removeS, removeSl, removeL -- remove modulo During
                , intsctS, intsctSl          -- intersection modulo During
@@ -42,7 +45,7 @@ import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Set (Set)
 import qualified Data.Set as S
-import Data.List (nub, deleteBy, deleteFirstsBy, intersectBy, (\\))
+import Data.List (nub, deleteBy, deleteFirstsBy, intersectBy, (\\), partition)
 
 import Utilities
 import LexBase
@@ -673,6 +676,7 @@ _            `dgEq` _             =  False
 We need to various relations and operators
 to work with the above ``subscript-blind'' comparisons.
 
+
 \subsubsection{Membership/Subset Relation ``modulo \texttt{During}''}
 
 \begin{code}
@@ -686,7 +690,7 @@ insideL (gv:gvs) gv0
  | otherwise         =  insideL gvs gv0
 
 withinS :: VarSet -> VarSet -> Bool
-vs1 `withinS` vs2 = (S.toList vs1) `withinL` (S.toList vs2)
+vs1 `withinS` vs2 = (S.elems vs1) `withinL` (S.elems vs2)
 
 withinL :: VarList -> VarList -> Bool
 vl1 `withinL` vl2 -- for all v in vl1, v in vl2 (mod. During-subscripts)
@@ -729,12 +733,55 @@ intsctL :: VarList -> VarList -> VarList
 vl1 `intsctL` vl2 = intersectBy dgEq vl1 vl2
 \end{code}
 
+\subsubsection{Subsumption Check ``modulo \texttt{During}''}
+
+We also want to support the idea that a single general variable
+can be ``part'' of a single list variable.
+For example, if $\lst O$ (say) contains $x$,
+then we could say that $x$ is part of $\lst O$,
+and so is $\lst O \less x$.
+In general, we need side-conditions (like $x \in \lst O$)
+to make this work.
+Here we do something simpler, but more limited.
+We look, within a variable-set,
+for pairs of the form $(x,\lst \ell \less{x,y})$,
+and reduce these to the equivalent $\lst\ell \less y$.
+We then compare sets simplified this way.
+\begin{code}
+subsumedS :: VarSet -> VarSet -> Bool
+vs1 `subsumedS` vs2 = (subsumeS vs1) `withinS` (subsumeS vs2)
+
+subsumedL :: VarList -> VarList -> Bool
+vl1 `subsumedL` vl2 = (subsumeL vl1) `withinL` (subsumeL vl2)
+
+subsumeS :: VarSet -> VarSet
+subsumeS vs = S.fromList $ subsumeL $ S.elems vs
+
+subsumeL :: VarList -> VarList
+subsumeL vl = subsumeL' [] lvl svl
+  where
+    (lvl,svl) = partition isLstV vl
+
+-- vacc accumulates vars that are not in any `less` set.
+subsumeL' vacc lvl []   = reverse vacc ++ lvl
+subsumeL' vacc lvl (sv@(StdVar v):svl)
+  | changed    =  subsumeL' vacc      lvl' svl
+  | otherwise  =  subsumeL' (sv:vacc) lvl  svl
+  where (changed,lvl') = subsearch (varId v) [] lvl
+
+subsearch si lvacc [] = (False,reverse lvacc)
+subsearch si lvacc (lv@(LstVar (LVbl v is js)) : lvl)
+  | si `elem` is  =  ( True
+                     , reverse lvacc ++ (LstVar $ LVbl v (is \\ [si]) js) : lvl )
+  | otherwise     =  subsearch si (lv:lvacc) lvl
+\end{code}
+
 
 \newpage
 \subsection{Evaluating Known List-Variables}
 
 If a list variable $\lst K$ is ``known'' in a \texttt{VarTable},
-then we can obtain it's complete pure variable expansion.
+then we can obtain its complete pure variable expansion.
 Given one with associated subtracted identifiers ($\lst K\less{is;js}$)
 we can derive some further information
 regarding what part of that expansion remains:

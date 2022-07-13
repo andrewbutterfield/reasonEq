@@ -13,6 +13,29 @@ x'=f∧(O$'\x=O$\x)    O$⊇e, O$⊇f, O$⊇x
 
 `f_1[e,O$\x/x_1,O$_1\x]` needs to become `f[e/x]` somehow.
 
+We note the following: `f_1` and the subst-targets `x_1` and `O$_1\x`
+have the same temporality here.
+And we know that `O$` covers `f` uniformly.
+The replacements `e` and `O$\x` have the same temporality.
+So, the subst-targets cover all of `f_1`.
+We can argue as follows where we put free variables in parentheses:
+
+```
+f_1[e,O$\x/x_1,O$_1\x]
+ = make f.v.s explicit
+f(x_1,O$_1\x)[e,O$\x/x_1,O$_1\x]
+ = independent sub-substitutions
+f(x_1,O$_1\x)[O$\x/O$_1\x][e/x_1]
+ = 1st subst - changes temporality only
+f(x_1,O$_1\x)[e/x_1]
+ = 2nd subst
+f(e,O$_1\x)
+ = make f.v.s implicit
+f[e/x]
+```
+
+We can use `subsume` to see if the targets simplify to `O$`.
+If so, we can apply the above trick.
 
 ### Match Contexts
 

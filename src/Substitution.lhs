@@ -88,6 +88,24 @@ substitute :: (Monad m, MonadFail m) => SubContext -> Substn -> Term -> m Term
    \vv P_d \ss {} {\dots,\dots} {\dots,\dots},
    \mbox{ ditto.}
 \end{eqnarray*}
+There is also a special case of $P_d[\dots]$ when
+all the targets have the same temporality as each other and cover all the free variables
+of $P_d$,
+while all the replacements also have the same temporality as each other
+(which might differ from that of the targets).
+We might show it as:
+$$
+  P_d
+  [ e_e,f_e,z_e,\dots,\lst u_e,\dots
+  /
+    x_d,y_d,z_d,\dots,\lst u_d,\dots
+  ]
+$$
+where $x,y,z,\dots,\lst u,\dots$ covers all free variables of $P$.
+This will reduce to
+$$
+  P_e[e_e,f_e/x_e,y_e]
+$$
 \begin{code}
 substitute sctx sub@(Substn ts lvs) vrt@(Var tk v)
   = return $ subsVar v (S.toList lvs) (S.toList ts)

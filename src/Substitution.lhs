@@ -69,6 +69,9 @@ mkSubCtxt = SCtxt
 \begin{code}
 substitute :: (Monad m, MonadFail m) => SubContext -> Substn -> Term -> m Term
 \end{code}
+
+\subsubsection{Var-Term Substitution}
+
 \begin{eqnarray*}
    \vv v \ss {} {v^n} {r^n}  &\defs&  r^i \cond{\vv v=v^i} v,
                                                 \mbox{ for one $i \in 1\dots n$}
@@ -93,6 +96,7 @@ all the targets have the same temporality as each other and cover all the free v
 of $P_d$,
 while all the replacements also have the same temporality as each other
 (which might differ from that of the targets).
+We shall refer to this as ``complete temporal consistency'' (c.t.c).
 We might show it as:
 $$
   P_d
@@ -101,16 +105,94 @@ $$
     x_d,y_d,z_d,\dots,\lst u_d,\dots
   ]
 $$
-where $x,y,z,\dots,\lst u,\dots$ covers all free variables of $P$.
-This will reduce to
+where $x,y,z,\dots,\lst u,\dots$ covers all free variables of $P$,
+and some targets (here $z_d,\dots,\lst u_d,\dots$)
+are replaced by versions of themselves with the replacement temporality.
+This will simplify to
 $$
   P_e[e_e,f_e/x_e,y_e]
 $$
+We refer to $[e_e,f_e/x_e,y_e]$ as the ``effective'' substitution.
+Note that the temporalities involved need not be dynamic.
+
+\textbf{For now, we assume all replacement terms are variables.}
+
+We check for c.t.c.s first.
 \begin{code}
 substitute sctx sub@(Substn ts lvs) vrt@(Var tk v)
-  = return $ subsVar v (S.toList lvs) (S.toList ts)
+  | hasCoverage && isCTC  =  return $ Sub tk (jVar tk $ setVarWhen repw v)
+                                    $ jSub effTSRepl effLVSRepl
+  | otherwise             =  return $ subsVar v (S.toList lvs) (S.toList ts)
   where
+    (hasCoverage,cover)        =  checkCoverage (subTargets sub) (scSC sctx) v
+    (isCTC,repw,effTS,effLVS)  =  assessCTC v (S.elems ts) (S.elems lvs)
+    effTSRepl                  =  map (setVTWhen repw) effTS
+    effLVSRepl                 = map (setLVLVWhen repw) effLVS
+\end{code}
 
+\newpage
+Checking for c.t.c:
+\begin{code}
+    checkCoverage tgts sc v@(Vbl _ _ sw)
+      = case findGenVar (StdVar v) sc of
+          Just (CoveredBy Unif _ vs)
+            -> let
+                 tgtl = map (setGVarWhen sw) $ subsumeL $ S.elems tgts
+                 vl = map (setGVarWhen sw) $ subsumeL $ S.elems vs
+               in  (vl == tgtl,vl) -- too strong?
+          -- we only consider uniform coverage for now
+          _                          ->  (False,[])
+
+    assessCTC v@(Vbl i vc vw) ts lvs
+      | isObsVar v  =  notCTC
+      | isCTC       =  (True,rw,effTS,effLVS)
+      where
+        (isCTC,rw,effTS,effLVS)  =  assessCTC' vw ts lvs
+    assessCTC _ _  _    =  notCTC
+    notCTC  =  (False,undefined,undefined,undefined)
+
+    -- have not yet seen replacement
+    assessCTC' sw []            []  =  notCTC
+    -- just expect replacement variables for now.
+    assessCTC' sw (vt@( Vbl ti tc tw, Var tk (Vbl ri rc rw) ):ts ) lvs
+      | sw /= tw              =  notCTC
+      | ti == ri && tc == rc  =  assessCTC'' sw rw [] [] ts lvs
+      | otherwise             =  assessCTC'' sw rw [vt] [] ts lvs
+    assessCTC' sw ts
+               ( lvlv@( ( LVbl (Vbl ti tc tw) tis tjs
+                 ,      LVbl (Vbl ri rc rw) ris rjs) )
+                 : lvs )
+      | sw /= tw   =  notCTC
+      | ti == ri && tc == rc && tis == ris && tjs == rjs
+                   =  assessCTC'' sw rw [] [] ts lvs
+      | otherwise  =  assessCTC'' sw rw [] [lvlv] ts lvs
+    assessCTC' _ _ _  =  notCTC
+
+    -- have seen replacement
+    assessCTC'' sw repw effTS effLVS [] []
+      =  ( True, repw
+         , map (setVTWhen repw) effTS
+         , map (setLVLVWhen repw) effLVS )
+    assessCTC'' sw repw effTS effLVS
+                ( vt@( Vbl ti tc tw, Var tk (Vbl ri rc rw) ):ts ) lvs
+      | sw /= tw              =  notCTC
+      | repw /= rw            =  notCTC
+      | ti == ri && tc == rc  =  assessCTC'' sw rw effTS      effLVS  ts lvs
+      | otherwise             =  assessCTC'' sw rw (vt:effTS) effLVS  ts lvs
+    assessCTC'' sw repw effTS effLVS ts
+                ( lvlv@( ( LVbl (Vbl ti tc tw) tis tjs
+                  ,      LVbl (Vbl ri rc rw) ris rjs) )
+                  : lvs )
+      | sw /= tw   =  notCTC
+      | repw /= rw            =  notCTC
+      | ti == ri && tc == rc && tis == ris && tjs == rjs
+                   =  assessCTC'' sw repw effTS effLVS        ts lvs
+      | otherwise  =  assessCTC'' sw repw effTS (lvlv:effLVS) ts lvs
+\end{code}
+
+\newpage
+Working through substitution pairs:
+\begin{code}
     -- work through std-var/term substitutions
     subsVar v lvs [] = subsLVar v lvs
     subsVar v lvs ((tgtv,rplt):rest)
@@ -144,6 +226,9 @@ substitute sctx sub@(Substn ts lvs) vrt@(Var tk v)
       | i `elem` is  =  vrt -- not really covered!
       | otherwise    =  jVar tk $ Vbl i vc lvw
 \end{code}
+
+\subsubsection{Cons-Term Substitution}
+
 \begin{eqnarray*}
    (\cc i {ts}) \ss {} {v^n} {t^n}
    &\defs&
@@ -155,6 +240,9 @@ substitute sctx sub ct@(Cons tk subable i ts)
                      return $ Cons tk subable i ts'
   | otherwise  =     return $ Sub tk ct sub
 \end{code}
+
+\subsubsection{Binding-Term Substitution}
+
 \begin{eqnarray*}
    (\bb n {x^+} t) \ss {} {v^n} {t^n}
    &\defs&
@@ -180,6 +268,9 @@ substitute sctx sub lt@(Lam tk i vl tm)
        lam tk i vl' tm'
 \end{code}
 
+\subsubsection{Substitution-Term Substitution}
+
+\paragraph{Assigment Substitution}
 
 Given that we use the \texttt{Sub} term to represent assignment,
 we need to treat such seperately:
@@ -207,6 +298,9 @@ substitute sctx (Substn _ lvlvs) bt@(Iter tk sa na si ni lvs)
   = return $ Iter tk sa na si ni
            $ map (listVarSubstitute sctx (S.toList lvlvs)) lvs
 \end{code}
+
+\subsubsection{Non-Substitable Terms}
+
 \begin{eqnarray*}
    \kk k \ss {} {v^n} {t^n}   &\defs&  \kk k
 \\ \xx n t \ss {} {v^n} {t^n} &\defs& \xx n t

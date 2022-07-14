@@ -18,6 +18,7 @@ module AST ( Type
            , TermSub, LVarSub
            , Substn, pattern Substn, substn
            , pattern TermSub, pattern LVarSub
+           , setVTWhen, setLVLVWhen
            , subTargets
            , Term, Subable, readTerm
            , pattern Val, pattern Var, pattern Cons
@@ -153,7 +154,8 @@ pattern Substn ts lvs  <-  SN ts lvs
 pattern TermSub ts     <-  SN ts _
 pattern LVarSub lvs    <-  SN _  lvs
 
-substn :: (Monad m, MonadFail m) => [(Variable,Term)] -> [(ListVar,ListVar)] -> m Substn
+substn :: (Monad m, MonadFail m) => [(Variable,Term)] -> [(ListVar,ListVar)]
+       -> m Substn
 substn ts lvs
  | null ts && null lvs  =  return $ SN S.empty S.empty
  | dupKeys ts'          =  fail "Term substitution has duplicate variables."
@@ -178,6 +180,16 @@ subTargets (SN ts lvs)
   = S.map (StdVar . fst) ts
     `S.union`
     S.map (LstVar .fst) lvs
+\end{code}
+
+Setters:
+\begin{code}
+setVTWhen :: VarWhen -> (Variable,Term) -> (Variable,Term)
+setVTWhen vw (tv,Var tk rv)  =  (setVarWhen vw tv, jVar tk $ setVarWhen vw rv)
+setVTWhen _ (tv,rt)          =  error ("setVTWhen: term is not a variable.")
+
+setLVLVWhen :: VarWhen -> (ListVar,ListVar) -> (ListVar,ListVar)
+setLVLVWhen vw (tlv,rlv)  =  (setLVarWhen vw tlv, setLVarWhen vw rlv)
 \end{code}
 
 Tests for substitution construction:

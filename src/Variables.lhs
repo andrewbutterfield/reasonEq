@@ -39,6 +39,7 @@ module Variables
  , gvarClass, gvarWhen
  , isPreGenVar, isObsGVar, isExprGVar, isPredGVar
  , whatGVar, timeGVar
+ , setVarWhen, setLVarWhen, setGVarWhen
  , VarList
  , varId, varOf, idsOf, stdVarsOf, listVarsOf
  , VarSet, stdVarSetOf, listVarSetOf
@@ -354,8 +355,6 @@ gvarClass (StdVar v)   =  varClass  v
 gvarClass (LstVar lv)  =  lvarClass lv
 gvarWhen  (StdVar v)   =  varWhen  v
 gvarWhen  (LstVar lv)  =  lvarWhen lv
-
-type VarList = [GenVar]
 \end{code}
 
 Some useful predicates/functions:
@@ -384,23 +383,6 @@ sameIdClass gv1@(StdVar _) gv2@(StdVar _)  =  getIdClass gv1 == getIdClass gv2
 sameIdClass gv1@(LstVar _) gv2@(LstVar _)  =  getIdClass gv1 == getIdClass gv2
 sameIdClass _ _                            =  False
 
-
-idsOf :: VarList -> ([Identifier],[Identifier])
-idsOf vl =  idsOf' [] [] vl
-idsOf' si sj [] = (reverse si, reverse sj)
-idsOf' si sj ((GV      (VR (i,_,_))      ):vl)  =  idsOf' (i:si) sj vl
-idsOf' si sj ((GL (LV ((VR (j,_,_)),_,_))):vl)  =  idsOf' si (j:sj) vl
-
-stdVarsOf :: VarList -> [Variable]
-stdVarsOf []             =  []
-stdVarsOf ((GV sv:gvs))  =  sv:stdVarsOf gvs
-stdVarsOf (_:gvs)        =  stdVarsOf gvs
-
-listVarsOf :: VarList -> [ListVar]
-listVarsOf []             =  []
-listVarsOf ((GL lv:gvs))  =  lv:listVarsOf gvs
-listVarsOf (_:gvs)        =  listVarsOf gvs
-
 isPreGenVar :: GenVar -> Bool
 isPreGenVar (StdVar v) = isPreVar v
 isPreGenVar (LstVar lv) = isPreListVar lv
@@ -418,7 +400,42 @@ timeGVar (GV v)   =  timeVar v
 timeGVar (GL lv)  =  timeLVar lv
 \end{code}
 
+Changing temporality:
+\begin{code}
+setVarWhen :: VarWhen -> Variable -> Variable
+setVarWhen vw (Vbl i vc _)  =  Vbl i vc vw
+
+setLVarWhen :: VarWhen -> ListVar -> ListVar
+setLVarWhen vw (LVbl v is js)  =  LVbl (setVarWhen vw v) is js
+
+setGVarWhen :: VarWhen -> GenVar -> GenVar
+setGVarWhen vw (StdVar v)   =  StdVar $ setVarWhen vw v
+setGVarWhen vw (LstVar lv)  =  LstVar $ setLVarWhen vw lv
+\end{code}
+
 \newpage
+\subsection{Variable Lists}
+
+\begin{code}
+type VarList = [GenVar]
+
+idsOf :: VarList -> ([Identifier],[Identifier])
+idsOf vl =  idsOf' [] [] vl
+idsOf' si sj [] = (reverse si, reverse sj)
+idsOf' si sj ((GV      (VR (i,_,_))      ):vl)  =  idsOf' (i:si) sj vl
+idsOf' si sj ((GL (LV ((VR (j,_,_)),_,_))):vl)  =  idsOf' si (j:sj) vl
+
+stdVarsOf :: VarList -> [Variable]
+stdVarsOf []             =  []
+stdVarsOf ((GV sv:gvs))  =  sv:stdVarsOf gvs
+stdVarsOf (_:gvs)        =  stdVarsOf gvs
+
+listVarsOf :: VarList -> [ListVar]
+listVarsOf []             =  []
+listVarsOf ((GL lv:gvs))  =  lv:listVarsOf gvs
+listVarsOf (_:gvs)        =  listVarsOf gvs
+\end{code}
+
 \subsection{Variable Sets}
 
 We also want variable sets:

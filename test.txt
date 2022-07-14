@@ -1,34 +1,33 @@
-sub:
-  SN ( fromList [] )
-     ( fromList [ ( LV (VR (Id "O" 0,VO,WA),[],[])       -- O$'    target
-                  , LV (VR (Id "O" 0,VO,WD "1"),[],[])   -- O$_1   replacement
-                  )
-                ]
-     )
+
+LEFTHAND SIDE:
+C P True (Id "land" 0)
+[ C P True (Id "=" 0)
+  [ V (E T) (VR (Id "x" 0,VO,WA))
+  , S (E (TG (Id "Z" 0)))   -- is (E T) below !!!
+      (V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB)))
+      ( SN (fromList [ (VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB)))
+                     ])
+           (fromList [])
+      )
+  ]
+, I P True (Id "land" 0) True (Id "=" 0)
+  [ LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[])
+  , LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])]
+]
 
 
-tm:
-  C P True (Id "land" 0)
-    [ C P True (Id "=" 0)                              -- x' = e
-        [ V (E T) (VR (Id "x" 0,VO,WA))                -- x'
-        , V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB))  -- e : Z
-        ]
-    , I P True (Id "land" 0) True (Id "=" 0)      -- /\(O$'\x = O$\x)
-        [ LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[])  -- O$'\x
-        , LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])  -- O$\x
-        ]
-    ]
-
-sc:
-  ( [ SS UN                                         -- e coveredby O$  (uniform)
-         (GV (VR (Id "e" 0,VE,WB)))                        -- e
-         (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])  -- O$
-    , SS UN                                         -- f coveredby O$  (uniform)
-         (GV (VR (Id "f" 0,VE,WB)))                        -- f
-         (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])  -- O$
-    , SS UN                                         -- x coveredby O$  (uniform)
-         (GV (VR (Id "x" 0,VO,WB)))                        -- x
-         (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])  -- O$
-    ]
-  , fromList []
-  )
+RIGHTHAND SIDE
+C P True (Id "land" 0)
+[ C P True (Id "=" 0)
+  [ V (E T) (VR (Id "x" 0,VO,WA))
+  , S (E T)  -- is (E (TG (Id "Z" 0))) above !!!
+      (V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB)))
+      ( SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB)))
+                     ])
+           (fromList [])
+      )
+  ]
+, I P True (Id "land" 0) True (Id "=" 0)
+  [ LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[])
+  , LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])]
+]

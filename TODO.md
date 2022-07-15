@@ -3,39 +3,49 @@
 
 ## Most Urgent
 
-### Substitution Again !
+### Crash proving :=_unchanged
 
 ```
-(x'=f_1∧(O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x], O$⊇e, O$⊇f, O$⊇x
-   = 'substitute @[]'
-x'=f∧(O$'\x=O$\x)    O$⊇e, O$⊇f, O$⊇x
+x'=e∧(y'=y∧(O$'\x,y=O$\x,y))    ⊤
+
+Focus = [2]  Target (LHS): x'=e  ∧  (O$'\x=O$\x)
+
+
+proof: m
+req: mkKLVB error
+feasibleBinding too complex!
+lV   =  LV (VR (Id "O" 0,VO,WB),[],[Id "x" 0,Id "y" 0])
+lW   =  LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[Id "x" 0])
+bind =
+  BD (fromList [],fromList [],fromList [((Id "O" 0,VO,[],[Id "x" 0,Id "y" 0]),BL [GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[Id "x" 0]))])])
+is = []
+js = [Id "x" 0,Id "y" 0]
+is' = [Id "x" 0,Id "y" 0]
+js' = [Id "x" 0]
+
+CallStack (from HasCallStack):
+  error, called at src/Binding.lhs:1537:19 in reasonEq-0.7.6.0-DB5ymsgNe1p80jwVGfFfaJ:Binding
 ```
 
-`f_1[e,O$\x/x_1,O$_1\x]` needs to become `f[e/x]` somehow.
+This doesn't crash if we attempt top-level match!
 
-We note the following: `f_1` and the subst-targets `x_1` and `O$_1\x`
-have the same temporality here.
-And we know that `O$` covers `f` uniformly.
-The replacements `e` and `O$\x` have the same temporality.
-So, the subst-targets cover all of `f_1`.
-We can argue as follows where we put free variables in parentheses:
+It tries to bind `lv` to `vl` where
 
 ```
-f_1[e,O$\x/x_1,O$_1\x]
- = make f.v.s explicit
-f(x_1,O$_1\x)[e,O$\x/x_1,O$_1\x]
- = independent sub-substitutions
-f(x_1,O$_1\x)[O$\x/O$_1\x][e/x_1]
- = 1st subst - changes temporality only
-f(x_1,O$_1\x)[e/x_1]
- = 2nd subst
-f(e,O$_1\x)
- = make f.v.s implicit
-f[e/x]
+@bLVTLL.lv:  O$\x,y
+LV (VR (Id "O" 0,VO,WB),[],[Id "x" 0,Id "y" 0])
+
+@bLVTVL.vl: O$\x,y,x$
+[GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[Id "x" 0]))]
 ```
 
-We can use `subsume` to see if the targets simplify to `O$`.
-If so, we can apply the above trick.
+This is feasible if we can assert that `x$` is empty.
+
+
+
+**We note that `attemptFeasibleBinding` in `Binding` is doing the same
+kind of thing as `subsumeL` in `VarData` !**
+
 
 ### Match Contexts
 

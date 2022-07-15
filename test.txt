@@ -1,33 +1,76 @@
-
-LEFTHAND SIDE:
-C P True (Id "land" 0)
-[ C P True (Id "=" 0)
-  [ V (E T) (VR (Id "x" 0,VO,WA))
-  , S (E (TG (Id "Z" 0)))   -- is (E T) below !!!
-      (V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB)))
-      ( SN (fromList [ (VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB)))
-                     ])
-           (fromList [])
-      )
-  ]
-, I P True (Id "land" 0) True (Id "=" 0)
-  [ LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[])
-  , LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])]
-]
+Knowns:
+:= : (t ⟶ (t ⟶ 𝔹))
+; : (𝔹 ⟶ (𝔹 ⟶ 𝔹))
+II : 𝔹
+⊥ : 𝔹
+cond : (𝔹 ⟶ (𝔹 ⟶ (𝔹 ⟶ 𝔹)))
+⊓ : (𝔹 ⟶ (𝔹 ⟶ 𝔹))
+⊒ : (𝔹 ⟶ (𝔹 ⟶ 𝔹))
+⊤ : 𝔹
+O ≜ {Ø}
 
 
-RIGHTHAND SIDE
-C P True (Id "land" 0)
-[ C P True (Id "=" 0)
-  [ V (E T) (VR (Id "x" 0,VO,WA))
-  , S (E T)  -- is (E (TG (Id "Z" 0))) above !!!
-      (V (E (TG (Id "Z" 0))) (VR (Id "f" 0,VE,WB)))
-      ( SN (fromList [(VR (Id "x" 0,VO,WB),V (E (TG (Id "Z" 0))) (VR (Id "e" 0,VE,WB)))
-                     ])
-           (fromList [])
-      )
-  ]
-, I P True (Id "land" 0) True (Id "=" 0)
-  [ LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[])
-  , LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])]
-]
+
+x'=e∧(y'=y∧(O$'\x,y=O$\x,y))    ⊤
+
+Focus = [2]  Target (LHS): x'=e  ∧  (O$'\x=O$\x)
+
+
+proof: m
+req: mkKLVB error
+
+feasibleBinding too complex!
+lV   -- O$\x,y
+  =  LV (VR (Id "O" 0,VO,WB),[],[Id "x" 0,Id "y" 0])
+lW   -- O$\x,y,x$
+  =  LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[Id "x" 0])
+bind =
+  BD ( fromList []
+     , fromList []
+     , fromList
+        [ ( (Id "O" 0,VO,[],[Id "x" 0,Id "y" 0])  -- O$\x,y
+          , BL  -- O$\x,y,x$
+             [ GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[Id "x" 0]))
+             ]
+          )
+        ]
+     )
+
+is = []
+js = [Id "x" 0,Id "y" 0]
+is' = [Id "x" 0,Id "y" 0]
+js' = [Id "x" 0]
+
+CallStack (from HasCallStack):
+  error, called at src/Binding.lhs:1537:19 in reasonEq-0.7.6.0-DB5ymsgNe1p80jwVGfFfaJ:Binding
+
+Trying to bind  lv to vl
+
+@bLVTLL.lv:  O$\x,y
+LV (VR (Id "O" 0,VO,WB),[],[Id "x" 0,Id "y" 0])
+
+@bLVTVL.vl: O$\x,y,x$
+[GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[Id "x" 0]))]
+
+Works with x$ -> nil
+
+
+x'=e∧((O$'\x,y=O$\x,y)∧y'=y)    ⊤
+
+Focus = [2]  Target (LHS): x'=e  ∧  (O$'\x=O$\x)
+
+
+proof: m
+req: mkKLVB error
+feasibleBinding too complex!
+lV   =  LV (VR (Id "O" 0,VO,WB),[],[Id "x" 0,Id "y" 0])
+lW   =  LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[Id "x" 0])
+bind =
+  BD (fromList [],fromList [],fromList [((Id "O" 0,VO,[],[Id "x" 0,Id "y" 0]),BL [GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[Id "x" 0]))])])
+is = []
+js = [Id "x" 0,Id "y" 0]
+is' = [Id "x" 0,Id "y" 0]
+js' = [Id "x" 0]
+
+CallStack (from HasCallStack):
+  error, called at src/Binding.lhs:1537:19 in reasonEq-0.7.6.0-DB5ymsgNe1p80jwVGfFfaJ:Binding

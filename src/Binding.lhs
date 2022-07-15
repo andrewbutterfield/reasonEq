@@ -851,7 +851,13 @@ feasibleSelfReference lv vl
   | null selfrefs  =  return Nothing
   | feasibleListSizing lv otherVars finalSR
      = return $ Just (otherVars,finalSR)
-  | otherwise      =  fail "bindLVarToVs: infeasible self-reference"
+  | otherwise      =  fail $ unlines'
+                         [ "bindLVarToVs: infeasible self-reference"
+                         , "lv = " ++ show lv
+                         , "vl = " ++ show vl
+                         , "otherVars = " ++ show otherVars
+                         , "finalSR =" ++ show finalSR
+                         ]
   where
     (selfrefs,otherVars) = partition (selfref $ varOf lv) vl
     (sr1:srrest) = map theLstVar selfrefs
@@ -913,49 +919,59 @@ $$
 =
 X_S + X_L + \lst O - (W_S + W_L)
 $$
-Here $V_S$, $X_S$, and $W_S$ are known fixed numbers,
+Here $V_S$, $X_S$, and $W_S$ are \emph{known} fixed numbers,
 while $V_L$, $X_L$, and $W_L$ can take any value from zero upwards if non-empty,
 but equal precisely zero if empty.
-We first eliminate $\lst O$ from each,
-realising that this means we do not need to know the cardinality of it.
+We first eliminate $\lst O$ from each side,
+realising that this means we do not need to know its cardinality.
 $$
 - V_S - V_L
 =
 X_S + X_L - W_S - W_L
 $$
-The fixed (standard-variable) ``kernel'' of this equation is
+We move all the fixed numbers to the righthand side,
+and the variable ones to the left:
 $$
-- V_S  = X_S - W_S
+W_L - V_L - X_L
+=
+X_S + V_S - W_S
 $$
-If this identity holds, then the binding is feasible,
-because all list variables might bind to empty sets or lists.
-If the lhs is smaller, then feasibility is only possible if $W_L$
-is non-empty, as then it could remove variables on the rhs to close the gap.
-If the lhs is larger, then feasibility is possible if $X_L$
-is non-empty, as then it could add variables on the rhs to close the gap,
-or if $V_L$ is non-empty, which would remove variables on the lhs.
+We refer to $X_S + V_S - W_S$ as the ``kernel''.
+
+We consider three possibilities for the kernel:
+
+\begin{tabular}{|c|p{4.5in}|}
+  \hline
+   Kernel Value & Required LHS
+\\\hline
+   $ X_S + V_S - W_S = 0$
+   & Match is feasible (all list vars, if any, map to empty) or $W_L = V_L+X_L$.
+\\\hline
+   $ X_S + V_S - W_S < 0$
+   & At least one of $V_L$ or $X_L$ is non-zero to pull LHS down.
+\\\hline
+   $ X_S + V_S - W_S > 0$
+   & $W_L$ must be non-zero to pull LHS up.
+\\\hline
+\end{tabular}
 
 \newpage
-We transform the kernel equation to
-$$
-W_S - V_S - X_S = 0
-$$
 
 \begin{code}
 feasibleListSizing :: ListVar -> VarList -> ListVar -> Bool
 feasibleListSizing (LVbl _ v_S v_L) rvars (LVbl _ w_S w_L)
-  | kernel < 0  =  wL > 0
-  | kernel > 0  =  xL > 0 || vL > 0
+  | (pdbg "kernel" kernel) < 0  =  xL > 0 || vL > 0
+  | kernel > 0  =  wL > 0
   | otherwise   =  True
   where
     (x_S,x_L) = partition isStdV rvars
-    vS = length v_S
-    xS = length x_S
-    wS = length w_S
-    kernel = wS - vS  - xS
-    vL = length v_L
-    xL = length x_L
-    wL = length w_L
+    vS = length $ pdbg "vS" v_S
+    xS = length $ pdbg "xS" x_S
+    wS = length $ pdbg "wS" w_S
+    kernel = xS + vS - wS
+    vL = length $ pdbg "vL" v_L
+    xL = length $ pdbg "xL" x_L
+    wL = length $ pdbg "wL" w_L
 \end{code}
 
 We have a binding
@@ -987,6 +1003,8 @@ we look at simple cases:
     and $\lst\ell \mapsto X$,
     which requires $\lst m \mapsto W\setminus X$.
 \end{itemize}
+
+Here is a newer case:  $\lst\ell\less{x,y}$ to $\lst\ell\less{x,y,\lst x}$.
 
 \begin{code}
 attemptFeasibleBinding :: (Monad m, MonadFail m)
@@ -1066,6 +1084,7 @@ attemptFeasibleBinding lV@(LVbl (Vbl _ vc vw) [] js@[li,mi])
                                $ (map StdVar tvs ++ map LstVar lvs)
      where (lvs,ts) = lvtmSplit lvts
 \end{code}
+
 
 Everything else is too complicated right now!
 \begin{code}

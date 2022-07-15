@@ -731,7 +731,7 @@ all of which have the same class and temporality as itself.
 \begin{code}
 bindLVarToVList lv@(LVbl (Vbl i vc vw) is ij) vl (BD (vbind,sbind,lbind))
  | valid
-    = do feasibility <- feasibleSelfReference lv vl
+    = do feasibility <- feasibleSelfReference (pdbg "bLVTLL.lv" lv) $ pdbg "bLVTVL.vl" vl
          sbind' <- bindSubscriptToSubscript "bindLVarToVList(1)" vw vlw sbind
          lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(2)")
                             (i,vc,is,ij) (BL $ map dnGVar vl) lbind
@@ -1507,34 +1507,36 @@ findUnboundVars bind trm  =  mentionedVars trm S.\\ mappedVars bind
 \subsubsection{Instantiate Unbound Known Variables}
 
 \begin{code}
-bindKnown :: (Monad m, MonadFail m) => [VarTable] -> Binding -> Term -> m Binding
+bindKnown :: MonadFail m => [VarTable] -> Binding -> Term -> m Binding
 bindKnown vts bind trm
- = return kbind
- where
-   unbound  =  findUnboundVars bind trm
-   kbind    =  mkKnownBindings vts unbound bind
+ = do let unbound  =  findUnboundVars bind trm
+      mkKnownBindings vts unbound bind
 \end{code}
 
 \textbf{We need to careful here.
 Known list-variables may have ``less'' components
 that are themselves bound}
 \begin{code}
-mkKnownBindings :: [VarTable] -> VarSet -> Binding -> Binding
+mkKnownBindings :: MonadFail m => [VarTable] -> VarSet -> Binding -> m Binding
 mkKnownBindings vts unbound bind
-  = foldl mergeBindings bind
-     $ map (mkKnownBind bind vts) $ S.toList unbound
+  = mkKBs vts bind $ S.toList unbound
+  where
+    mkKBs vts bind [] = return bind
+    mkKBs vts bind (gv:gvs)
+      = do bind' <- mkKnownBind bind vts gv
+           mkKBs vts (bind `mergeBindings` bind') gvs
 
-mkKnownBind :: Binding -> [VarTable] -> GenVar -> Binding
+mkKnownBind :: MonadFail m => Binding -> [VarTable] -> GenVar -> m Binding
 mkKnownBind bind vts gv
- | isUnknownGVar vts gv  =  emptyBinding
- | isLstV gv  =  mkKnownLstVarBind bind $ theLstVar gv
- | otherwise  =  fromJust $ bindGVarToGVar gv gv emptyBinding
+ | isUnknownGVar vts gv  =  return emptyBinding
+ | isLstV gv             =  mkKnownLstVarBind bind $ theLstVar gv
+ | otherwise             =  bindGVarToGVar gv gv emptyBinding
 
-mkKnownLstVarBind :: Binding -> ListVar -> Binding
+mkKnownLstVarBind :: MonadFail m => Binding -> ListVar -> m Binding
 mkKnownLstVarBind bind lv@(LVbl v@(Vbl _ vc vw) is js)
   = case bindLVarToVList lv [LstVar lv'] emptyBinding of
-      Yes bind' -> bind'
-      But msgs -> error (unlines ("mkKLVB error":msgs++moremsgs))
+      Yes bind' -> return bind'
+      But msgs -> fail (unlines ("mkKLVB error":msgs++moremsgs))
   where
     (is',js') = instLess bind vc vw is js
     lv' = LVbl v is' js'

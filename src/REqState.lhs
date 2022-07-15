@@ -128,7 +128,7 @@ andIfWanted wanted newf currf ctxt mtch
 
 \begin{code}
 initREqSettings
-  = REqSet {
+  = matchFilterUpdate $ REqSet {
       maxMatchDisplay = 20
     , hideTrivialMatch = False
     , hideTrivialQuantifiers = True -- best for now

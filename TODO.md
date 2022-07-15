@@ -3,44 +3,26 @@
 
 ## Most Urgent
 
-### Crash proving :=_unchanged
-
 ```
 x'=e∧(y'=y∧(O$'\x,y=O$\x,y))    ⊤
 
-Focus = [2]  Target (LHS): x'=e  ∧  (O$'\x=O$\x)
+Focus = []  Target (LHS): x'=e  ∧  (O$'\x=O$\x)
 
 
-proof: m
-req: mkKLVB error
-feasibleBinding too complex!
-lV   =  LV (VR (Id "O" 0,VO,WB),[],[Id "x" 0,Id "y" 0])
-lW   =  LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[Id "x" 0])
-bind =
-  BD (fromList [],fromList [],fromList [((Id "O" 0,VO,[],[Id "x" 0,Id "y" 0]),BL [GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[Id "x" 0]))])])
-is = []
-js = [Id "x" 0,Id "y" 0]
-is' = [Id "x" 0,Id "y" 0]
-js' = [Id "x" 0]
+proof: tm 2 :=_simple
+Match against `:=_simple'[2] failed!
+try match failed
 
-CallStack (from HasCallStack):
-  error, called at src/Binding.lhs:1537:19 in reasonEq-0.7.6.0-DB5ymsgNe1p80jwVGfFfaJ:Binding
+x'=e  ∧  (y'=y∧(O$'\x,y=O$\x,y)) :: x'=e  ∧  (O$'\x=O$\x)
+
+lnm[parts]=:=_simple[2]
+tP=(x := e)  ≡  x'=e∧(O$'\x=O$\x)
+partsP=x'=e  ∧  (O$'\x=O$\x)
+tC=x'=e  ∧  (y'=y∧(O$'\x,y=O$\x,y))
+scC=⊤
+---
+bindLVarToVs: infeasible self-reference
 ```
-
-This doesn't crash if we attempt top-level match!
-
-It tries to bind `lv` to `vl` where
-
-```
-@bLVTLL.lv:  O$\x,y
-LV (VR (Id "O" 0,VO,WB),[],[Id "x" 0,Id "y" 0])
-
-@bLVTVL.vl: O$\x,y,x$
-[GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[Id "x" 0]))]
-```
-
-This is feasible if we can assert that `x$` is empty.
-
 
 
 **We note that `attemptFeasibleBinding` in `Binding` is doing the same

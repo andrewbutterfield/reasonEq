@@ -996,8 +996,8 @@ $$ e \quad \lst e  \qquad f \quad \lst f$$
 ve = Vbl (jId "e") ExprV Before
 vf = Vbl (jId "f") ExprV Before
 -- for use in expressions
-e = fromJust $ eVar int ve
-f = fromJust $ eVar int vf
+e = fromJust $ eVar ArbType ve
+f = fromJust $ eVar ArbType vf
 -- for use in quantifiers, substitutions (first list)
 qe = StdVar ve
 qf = StdVar vf

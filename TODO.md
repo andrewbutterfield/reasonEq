@@ -10,6 +10,18 @@ Focus = []  Target (LHS): x'=e  ∧  (O$'\x=O$\x)
 
 
 proof: tm 2 :=_simple
+@xS:
+[]
+@vS:
+[Id "x" 0]
+@wS:
+[Id "x" 0,Id "y" 0]
+@kernel:
+-1
+@xL:
+[]
+@vL:
+[]
 Match against `:=_simple'[2] failed!
 try match failed
 
@@ -22,6 +34,18 @@ tC=x'=e  ∧  (y'=y∧(O$'\x,y=O$\x,y))
 scC=⊤
 ---
 bindLVarToVs: infeasible self-reference
+lv = LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[])  -- O$'\x
+vl = [GL (LV (VR (Id "O" 0,VO,WA),[Id "x" 0,Id "y" 0],[]))] -- O$'\x,y
+otherVars = []
+finalSR =LV (VR (Id "O" 0,VO,WA),[Id "x" 0,Id "y" 0],[]) -- O$'\x,y
+hit <enter> to continue
+
+
+O$'\x    :  vS={x}, vL={}
+[]       :  xS={},  xL={}
+O$'\x,y' :  wS={x,y}, wL={}
+            --
+            -1
 ```
 
 

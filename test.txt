@@ -1,76 +1,63 @@
-Knowns:
-:= : (t ⟶ (t ⟶ 𝔹))
-; : (𝔹 ⟶ (𝔹 ⟶ 𝔹))
-II : 𝔹
-⊥ : 𝔹
-cond : (𝔹 ⟶ (𝔹 ⟶ (𝔹 ⟶ 𝔹)))
-⊓ : (𝔹 ⟶ (𝔹 ⟶ 𝔹))
-⊒ : (𝔹 ⟶ (𝔹 ⟶ 𝔹))
-⊤ : 𝔹
-O ≜ {Ø}
+BEGIN LIST LAWS
+...
+
+( ( ":=_simple"
+  , ASN ( C P True (Id "equiv" 0)
+          [ S P (V P (VR (Id ":=" 0,VP,WT)))
+                (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "e" 0,VE,WB)))])
+                    (fromList [])
+                )
+          , C P True (Id "land" 0)
+            [ C P True (Id "=" 0)
+              [ V (E T) (VR (Id "x" 0,VO,WA))
+              , V (E T) (VR (Id "e" 0,VE,WB))
+              ]
+            , I P True (Id "land" 0) True (Id "=" 0)
+              [ LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[])
+              , LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])
+              ]
+            ]
+          ]
+          , ( [], fromList [] )
+        )
+  )
+  , Proven ":=_simple"
+)
+
+END LIST LAWS
 
 
+CJ-NAME: :=_unchanged
+CONJ = ASN (C P True (Id "equiv" 0) [S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "e" 0,VE,WB)))]) (fromList [])),S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "e" 0,VE,WB))),(VR (Id "y" 0,VO,WB),V (E T) (VR (Id "y" 0,VO,WB)))]) (fromList []))],([],fromList []))
+SIDE = ([],fromList [])
+STRAT redboth
+BEGIN SEQZIP
 
-x'=e∧(y'=y∧(O$'\x,y=O$\x,y))    ⊤
+TERMZIP =
+( C P True (Id "land" 0)
+  [ C P True (Id "=" 0)
+    [ V (E T) (VR (Id "x" 0,VO,WA)),V (E T) (VR (Id "e" 0,VE,WB))]
+  , C P True (Id "land" 0)
+    [ C P True (Id "=" 0)
+      [ V (E T) (VR (Id "y" 0,VO,WA)),V (E T) (VR (Id "y" 0,VO,WB))]
+    , I P True (Id "land" 0) True (Id "=" 0)
+      [ LV (VR (Id "O" 0,VO,WA),[Id "x" 0,Id "y" 0],[])
+      , LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[])
+      ]
+    ]
+  ],[]
+)
 
-Focus = [2]  Target (LHS): x'=e  ∧  (O$'\x=O$\x)
-
-
-proof: m
-req: mkKLVB error
-
-feasibleBinding too complex!
-lV   -- O$\x,y
-  =  LV (VR (Id "O" 0,VO,WB),[],[Id "x" 0,Id "y" 0])
-lW   -- O$\x,y,x$
-  =  LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[Id "x" 0])
-bind =
-  BD ( fromList []
-     , fromList []
-     , fromList
-        [ ( (Id "O" 0,VO,[],[Id "x" 0,Id "y" 0])  -- O$\x,y
-          , BL  -- O$\x,y,x$
-             [ GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[Id "x" 0]))
-             ]
-          )
-        ]
-     )
-
-is = []
-js = [Id "x" 0,Id "y" 0]
-is' = [Id "x" 0,Id "y" 0]
-js' = [Id "x" 0]
-
-CallStack (from HasCallStack):
-  error, called at src/Binding.lhs:1537:19 in reasonEq-0.7.6.0-DB5ymsgNe1p80jwVGfFfaJ:Binding
-
-Trying to bind  lv to vl
-
-@bLVTLL.lv:  O$\x,y
-LV (VR (Id "O" 0,VO,WB),[],[Id "x" 0,Id "y" 0])
-
-@bLVTVL.vl: O$\x,y,x$
-[GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[Id "x" 0]))]
-
-Works with x$ -> nil
-
-
-x'=e∧((O$'\x,y=O$\x,y)∧y'=y)    ⊤
-
-Focus = [2]  Target (LHS): x'=e  ∧  (O$'\x=O$\x)
-
-
-proof: m
-req: mkKLVB error
-feasibleBinding too complex!
-lV   =  LV (VR (Id "O" 0,VO,WB),[],[Id "x" 0,Id "y" 0])
-lW   =  LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[Id "x" 0])
-bind =
-  BD (fromList [],fromList [],fromList [((Id "O" 0,VO,[],[Id "x" 0,Id "y" 0]),BL [GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[Id "x" 0]))])])
-is = []
-js = [Id "x" 0,Id "y" 0]
-is' = [Id "x" 0,Id "y" 0]
-js' = [Id "x" 0]
-
-CallStack (from HasCallStack):
-  error, called at src/Binding.lhs:1537:19 in reasonEq-0.7.6.0-DB5ymsgNe1p80jwVGfFfaJ:Binding
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.:=_unchanged", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Rght, otherC = C P True (Id "land" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WA)),V (E T) (VR (Id "e" 0,VE,WB))],I P True (Id "land" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])]]}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+(UseLaw (ByMatch MEL) "land_assoc" (BD (fromList [((Id "P" 0,VP),BT (C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WA)),V (E T) (VR (Id "e" 0,VE,WB))])),((Id "Q" 0,VP),BT (C P True (Id "=" 0) [V (E T) (VR (Id "y" 0,VO,WA)),V (E T) (VR (Id "y" 0,VO,WB))])),((Id "R" 0,VP),BT (I P True (Id "land" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[Id "x" 0,Id "y" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[])]))],fromList [],fromList [])) [],ASN (C P True (Id "land" 0) [C P True (Id "land" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WA)),V (E T) (VR (Id "e" 0,VE,WB))],C P True (Id "=" 0) [V (E T) (VR (Id "y" 0,VO,WA)),V (E T) (VR (Id "y" 0,VO,WB))]],I P True (Id "land" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[Id "x" 0,Id "y" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[])]],([],fromList [])))
+(UseLaw (ByMatch MEL) ":=_def" (BD (fromList [((Id ":=" 0,VP),BI (Id ":=" 0))],fromList [],fromList [((Id "O" 0,VO,[],[Id "x" 0]),BL [GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0,Id "y" 0],[]))]),((Id "e" 0,VE,[],[]),BX [Right (V (E T) (VR (Id "e" 0,VE,WB))),Right (V (E T) (VR (Id "y" 0,VO,WB)))]),((Id "x" 0,VO,[],[]),BL [GV (VR (Id "x" 0,VO,WB)),GV (VR (Id "y" 0,VO,WB))])])) [],ASN (S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "e" 0,VE,WB))),(VR (Id "y" 0,VO,WB),V (E T) (VR (Id "y" 0,VO,WB)))]) (fromList [])),([],fromList [])))
+(Switch CLeft CRight,ASN (C P True (Id "land" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WA)),V (E T) (VR (Id "e" 0,VE,WB))],I P True (Id "land" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])]],([],fromList [])))
+(UseLaw (ByMatch MEL) ":=_def" (BD (fromList [((Id ":=" 0,VP),BI (Id ":=" 0))],fromList [],fromList [((Id "O" 0,VO,[],[Id "x" 0]),BL [GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[]))]),((Id "e" 0,VE,[],[]),BX [Right (V (E T) (VR (Id "e" 0,VE,WB)))]),((Id "x" 0,VO,[],[]),BL [GV (VR (Id "x" 0,VO,WB))])])) [],ASN (S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "e" 0,VE,WB)))]) (fromList [])),([],fromList [])))
+END LIST STEPS
+END LIVE-PROOF

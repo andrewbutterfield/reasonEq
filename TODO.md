@@ -3,55 +3,10 @@
 
 ## Most Urgent
 
-```
-x'=e∧(y'=y∧(O$'\x,y=O$\x,y))    ⊤
 
-Focus = []  Target (LHS): x'=e  ∧  (O$'\x=O$\x)
+### Archiving Proofs
 
-
-proof: tm 2 :=_simple
-@xS:
-[]
-@vS:
-[Id "x" 0]
-@wS:
-[Id "x" 0,Id "y" 0]
-@kernel:
--1
-@xL:
-[]
-@vL:
-[]
-Match against `:=_simple'[2] failed!
-try match failed
-
-x'=e  ∧  (y'=y∧(O$'\x,y=O$\x,y)) :: x'=e  ∧  (O$'\x=O$\x)
-
-lnm[parts]=:=_simple[2]
-tP=(x := e)  ≡  x'=e∧(O$'\x=O$\x)
-partsP=x'=e  ∧  (O$'\x=O$\x)
-tC=x'=e  ∧  (y'=y∧(O$'\x,y=O$\x,y))
-scC=⊤
----
-bindLVarToVs: infeasible self-reference
-lv = LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[])  -- O$'\x
-vl = [GL (LV (VR (Id "O" 0,VO,WA),[Id "x" 0,Id "y" 0],[]))] -- O$'\x,y
-otherVars = []
-finalSR =LV (VR (Id "O" 0,VO,WA),[Id "x" 0,Id "y" 0],[]) -- O$'\x,y
-hit <enter> to continue
-
-
-O$'\x    :  vS={x}, vL={}
-[]       :  xS={},  xL={}
-O$'\x,y' :  wS={x,y}, wL={}
-            --
-            -1
-```
-
-
-**We note that `attemptFeasibleBinding` in `Binding` is doing the same
-kind of thing as `subsumeL` in `VarData` !**
-
+Need a way to archive proofs outside theory files. Right now we lose a proof when we either demote it to try something different, or we have to re-compile and install the theory.
 
 ### Match Contexts
 

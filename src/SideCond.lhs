@@ -1294,6 +1294,8 @@ doSCdiff ss ugs1 ugs2 = doSCdiff' ss [] ugs1 ugs2
 
 doSCdiff' ss slv (u1,[]) _  =  (u1,reverse slv)
 
+doSCdiff' ss slv (u1,vls1) (_,[]) = (u1,reverse slv ++vls1)
+
 doSCdiff' ss slv ugs1@(u1,g1@(gv1:vl1):vls1) ugs2@(u2,g2@(gv2:vl2):vls2)
   | gv1  < gv2  =  doSCdiff' ss (g1:slv) (u1,vls1) ugs2 -- keep g1
   | gv1  > gv2  =  doSCdiff' ss slv      ugs1      (u2,vls2)

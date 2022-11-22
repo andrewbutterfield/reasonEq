@@ -65,26 +65,6 @@ devInitState
             , currTheory = equivName
             , liveProofs = M.empty }
 
-devTheories =
-     fromJust $ addTheory utpBaseTheory $
-     fromJust $ addTheory uCloseTheory $
-     fromJust $ addTheory existsTheory $
-     fromJust $ addTheory forallTheory $
-     fromJust $ addTheory equalityTheory $
-     fromJust $ addTheory implTheory $
-     fromJust $ addTheory aoiTheory $
-     fromJust $ addTheory conjTheory $
-     fromJust $ addTheory disjTheory $
-     fromJust $ addTheory notTheory $
-     fromJust $ addTheory equivTheory
-                          noTheories
-\end{code}
-
-\newpage
-\subsection{Development Features}
-
-Listing builtin theories:
-\begin{code}
 devKnownBuiltins  = [ equivTheory
                     , notTheory
                     , disjTheory
@@ -99,6 +79,16 @@ devKnownBuiltins  = [ equivTheory
                     -- , xyzTheory
                     -- , xyzDTheory
                     ]
+
+forceAddTheory ths th = fromJust $ addTheory th ths
+devTheories = foldl forceAddTheory noTheories $ devKnownBuiltins
+\end{code}
+
+\newpage
+\subsection{Development Features}
+
+Listing builtin theories:
+\begin{code}
 
 biLkp :: String -> [Theory] -> Maybe Theory
 biLkp _ []  = Nothing

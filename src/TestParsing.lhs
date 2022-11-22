@@ -8,6 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module TestParsing (
   mkLawName
+, s_syntax
 , sExprParse
 , sPredParse
 )
@@ -280,6 +281,18 @@ keyTrue = "true"
 keyFalse = "false"
 keySetBind = "QS"
 keyListBind = "QL"
+\end{code}
+
+\begin{code}
+s_syntax :: [String]
+s_syntax
+ = [ "Term Syntax:"
+   , "<b> ::= true | false"
+   , "<q> ::= QS | QL"
+   , "<v$> ::=  v | v $"
+   , "<t> ::= <b> | n | v | i ( t , ... , t ) | <q> i <v$> , ... ,<v$> @ <t>"
+   , "keywords: true false QS QL"
+   ]
 \end{code}
 
 \begin{code}

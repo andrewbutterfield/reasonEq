@@ -1,6 +1,6 @@
 \section{Main Program}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2017--21
+Copyright  Andrew Buttefield (c) 2017--22
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -529,7 +529,8 @@ cmdNew
   = ( "new"
     , "generate new theory items"
     , unlines
-        [ "new "++shConj++" 'np1' .. 'npk' -- new conjecture 'np1-..-npk'"]
+        ( [ "new "++shConj++" 'np1' .. 'npk' -- new conjecture 'np1-..-npk'"
+          ] ++ s_syntax )
     , newThing )
 
 newThing (cmd:rest) reqs

@@ -340,7 +340,8 @@ getTheoryProofs thNm thrys
 We insist, for now at least,
 that the dependencies do not change.
 \begin{code}
-replaceTheory :: (Monad m, MonadFail m) => String -> (Theory -> Theory) -> Theories -> m Theories
+replaceTheory :: (Monad m, MonadFail m) 
+              => String -> (Theory -> Theory) -> Theories -> m Theories
 replaceTheory thnm thryF (Theories tmap sdag)
   = case M.lookup thnm tmap of
       Nothing    ->  fail ("replaceTheory: '"++thnm++"' not found.")
@@ -371,8 +372,10 @@ updateTheory thnm thry0 force (Theories tmap sdag)
   = case M.lookup thnm tmap of
       Nothing    ->  fail ("updateTheory: '"++thnm++"' not found.")
       Just thry  ->
-        do let (remL,eqL,updL,newL) = keyListDiff (fst . fst) (laws thry) (laws thry0)
-           let (remC,eqC,updC,newC) = keyListDiff fst (conjs thry) (conjs thry0)
+        do let (remL,eqL,updL,newL) 
+                            = keyListDiff (fst . fst) (laws thry)  (laws thry0)
+           let (remC,eqC,updC,newC) 
+                            = keyListDiff fst         (conjs thry) (conjs thry0)
            -- need to do this for VarTable ?
            -- need to do this for SubAbilityMap ?
            -- or are these *necessary* updates?

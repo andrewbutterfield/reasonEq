@@ -106,12 +106,12 @@ validIdent _           =  False -- no empty/null identifiers !
 ident :: (Monad m, MonadFail m) => String -> m Identifier
 ident nm
  | validIdent nm  = return $ Id nm 0
-ident nm = fail ("'"++nm++"' is not an Identifier")
+ident nm = fail ("'"++nm++"' is not an valid Identifier")
 
 uident :: (Monad m, MonadFail m) => String -> Int -> m Identifier
 uident nm u
  | validIdent nm  = return $ Id nm u
-uident nm _ = fail ("'"++nm++"' is not an Identifier")
+uident nm _ = fail ("'"++nm++"' is not an valid Identifier")
 
 -- a hack for now - should check for validBracket-ness !!!
 brktIdent :: (Monad m, MonadFail m) => String -> String -> m Identifier

@@ -47,7 +47,7 @@ We have the following token classes:
   \item [Numbers]~
     Just integers for now,
     with a minus-sign to start if negative,
-    with no whitespece between it and the one or more (decimal) digits.
+    with no whitespace between it and the one or more (decimal) digits.
   \item [Identifiers]~
     Identifiers as per \texttt{LexBase},
     with added decoration for variable classification
@@ -190,10 +190,10 @@ tlexMinus str@(c:cs)
   | otherwise  =  mkSym "-" : tlex str
 \end{code}
 
-A \texttt{whenChar}  will end an identifier,
+A \texttt{whenChar} will end an identifier,
 if none exists at the start.
 Otherwise it is an error.
-Also a subscript appearing when a \texttt{whenChar}is laready present
+Also a subscript appearing when a \texttt{whenChar}is already present
 is an error.
 \begin{code}
 tlexId _ di ""  = [ mkDi di ]
@@ -269,31 +269,31 @@ The abstract syntax:
 \end{eqnarray*}
 
 The concrete syntax (non-terminals in \verb@<..>@):
-\begin{verbatim}
- <b> ::= true | false
- <q> ::= QS | QL
- <v$> ::=  v | v $
- <t> ::= <b> | n | v | i ( t , ... , t ) | <q> i <v$> , ... ,<v$> @ <t>
- -- keywords: true false QS QL
-\end{verbatim}
 \begin{code}
-keyTrue = "true"
-keyFalse = "false"
-keySetBind = "QS"
-keyListBind = "QL"
-\end{code}
-
-\begin{code}
-s_syntax :: [String]
 s_syntax
- = [ "Term Syntax:"
+ = [ "Lexical Tokens:"
+   , "n : int with optional leading minus"
+   , "i : reasonEq identifier"
+   , "v ::= i | ?i | i? | i_i"
+   , "Term Syntax:"
    , "<b> ::= true | false"
    , "<q> ::= QS | QL"
    , "<v$> ::=  v | v $"
    , "<t> ::= <b> | n | v | i ( t , ... , t ) | <q> i <v$> , ... ,<v$> @ <t>"
    , "keywords: true false QS QL"
+   , "keysymbols: $ , @"
    ]
+
+keyTrue = "true"
+keyFalse = "false"
+keySetBind = "QS"
+keyListBind = "QL"
+keyLstVar = "$"
+keySep = ","
+keyQBody = "@"
 \end{code}
+
+
 
 \begin{code}
 true = Vbl (fromJust $ ident "true") PredV Static

@@ -542,6 +542,7 @@ New Conjecture:
 \begin{code}
 newConj args reqs
   = do let cjnm = mkLawName args
+       putStrLn $ unlines' s_syntax
        putStr ("New conj, '"++cjnm++"', enter term :- ")
        hFlush stdout; trtxt <- getLine
        case sPredParse trtxt of

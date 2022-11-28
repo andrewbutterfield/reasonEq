@@ -18,3 +18,4 @@ temp.txt
 *.out
 *.code-workspace
 
+settings.json

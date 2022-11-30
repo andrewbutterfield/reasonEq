@@ -357,8 +357,8 @@ freeVars (Sub tk (PVar (PredVar (Identifier ":=" _) _)) (Substn vts lvlvs))
 
 freeVars (Sub tk tm s)              =  mrgFreeVars (subVarSet tfv tgtvs) rplvs
    where
-     tfv            =  freeVars $ pdbg "freeVars.Sub.tm" tm
-     (tgtvs,rplvs)  =  substRelFree (pdbg "freeVars.Sub.tfv" tfv) s
+     tfv            =  freeVars tm
+     (tgtvs,rplvs)  =  substRelFree tfv s
 
 freeVars _  =  noFreevars
 

@@ -731,7 +731,7 @@ all of which have the same class and temporality as itself.
 \begin{code}
 bindLVarToVList lv@(LVbl (Vbl i vc vw) is ij) vl (BD (vbind,sbind,lbind))
  | valid
-    = do feasibility <- feasibleSelfReference (pdbg "bLVTLL.lv" lv) $ pdbg "bLVTVL.vl" vl
+    = do feasibility <- feasibleSelfReference lv vl
          sbind' <- bindSubscriptToSubscript "bindLVarToVList(1)" vw vlw sbind
          lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(2)")
                             (i,vc,is,ij) (BL $ map dnGVar vl) lbind
@@ -960,18 +960,18 @@ We consider three possibilities for the kernel:
 \begin{code}
 feasibleListSizing :: ListVar -> VarList -> ListVar -> Bool
 feasibleListSizing (LVbl _ v_S v_L) rvars (LVbl _ w_S w_L)
-  | (pdbg "kernel" kernel) < 0  =  xL > 0 || vL > 0
+  | kernel < 0  =  xL > 0 || vL > 0
   | kernel > 0  =  wL > 0
   | otherwise   =  True
   where
     (x_S,x_L) = partition isStdV rvars
-    vS = length $ pdbg "vS" v_S
-    xS = length $ pdbg "xS" x_S
-    wS = length $ pdbg "wS" w_S
+    vS = length v_S
+    xS = length x_S
+    wS = length w_S
     kernel = xS + vS - wS
-    vL = length $ pdbg "vL" v_L
-    xL = length $ pdbg "xL" x_L
-    wL = length $ pdbg "wL" w_L
+    vL = length v_L
+    xL = length x_L
+    wL = length w_L
 \end{code}
 
 We have a binding

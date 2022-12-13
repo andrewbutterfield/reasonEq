@@ -72,8 +72,10 @@ Introduce `NameRendering` module.
  Add calibration facility.
  
  This would display unicode rendering with different amounts of before/after padding
- and allow the use to select their preferences, 
- which would be stored in the above-mentioned mapping tables
+ and allow the user to select their preferences, 
+ which would be stored in the above-mentioned mapping tables.
+
+ (This may get subsumed by using decent Terminal apps that 'get' unicode char widths)
  
 ### Phase 4.
 

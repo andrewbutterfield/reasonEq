@@ -20,6 +20,10 @@ import System.FilePath
 
 import Utilities
 import REqState
+
+import Debug.Trace
+dbg msg x = trace (msg ++ show x) x
+pdbg nm x = dbg ('@':nm++":\n") x
 \end{code}
 
 \subsection{File Paths}
@@ -47,6 +51,7 @@ cjfile pjdir nm = pjdir ++ pathSeparator : nm <.> conjectureExt
 
 \subsection{Persistent \reasonEq\ State}
 
+
 \begin{code}
 writeAllState :: REqState -> IO ()
 writeAllState reqs
@@ -71,13 +76,16 @@ readAllState projdirfp
 
 \subsection{Persistent Theory}
 
+
 \begin{code}
+writeNamedTheoryTxt :: REqState -> (FilePath, [String]) -> IO ()
 writeNamedTheoryTxt reqs (nm,thTxt)
   = do let fp = tfile (projectDir reqs) nm
        writeFile fp $ unlines thTxt
 \end{code}
 
 \begin{code}
+readNamedTheory :: String -> String -> IO ([Char], Theory)
 readNamedTheory projfp nm
   = do let fp = tfile projfp nm
        txt <- readFile fp
@@ -89,6 +97,7 @@ readNamedTheory projfp nm
 \subsection{Persistent Conjecture}
 
 \begin{code}
+writeConjectures :: Show a => REqState -> String -> [a] -> IO ()
 writeConjectures reqs nm conjs
   = do let fp = cjfile (projectDir reqs) nm
        writeFile fp $ unlines $ map show conjs

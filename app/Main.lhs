@@ -739,6 +739,7 @@ proofREPLConfig
             , leaveHypothesisDescr
             , cloneHypothesisDescr
             , equivaleStepsDescr
+            , autoDescr
             ])
       proofREPLEndCondition
       proofREPLEndTidy
@@ -837,6 +838,21 @@ leaveHypothesis :: REPLCmd (REqState, LiveProof)
 leaveHypothesis _ = tryDelta moveFocusFromHypothesis
 \end{code}
 
+\newpage
+Auto Proof
+\begin{code}
+autoDescr = ( "au"
+                , "auto proof"
+                , unlines
+                   [ "au -- auto proof"]
+                , autoCommand )
+
+autoCommand :: REPLCmd (REqState, LiveProof)
+autoCommand args state@(reqs, liveProof)
+  =  do putStrLn "auto"
+        waitForReturn
+        return (reqs, liveProof)
+\end{code}
 
 \newpage
 Law Matching

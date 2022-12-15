@@ -6,12 +6,10 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 module Persistence
-  ( writeAllState
-  , readAllState
-  , writeNamedTheoryTxt
-  , readNamedTheory
-  , writeConjectures
-  , readFiledConjectures
+  ( writeAllState, readAllState
+  , writeNamedTheoryTxt, readNamedTheory
+  , writeConjectures, readFiledConjectures
+  , writeProof, readFiledProof
   )
 where
 
@@ -47,6 +45,11 @@ For conjecture files, we use the extension \texttt{.cnj}.
 \begin{code}
 conjectureExt = "cnj"
 cjfile pjdir nm = pjdir ++ pathSeparator : nm <.> conjectureExt
+\end{code}
+For proof files, we use the extension \texttt{.prf}.
+\begin{code}
+proofExt = "prf"
+pffile pjdir nm = pjdir ++ pathSeparator : nm <.> proofExt
 \end{code}
 
 \subsection{Persistent \reasonEq\ State}
@@ -114,4 +117,21 @@ readShown [] = []
 readShown (ln:lns)
  | null (trim ln) = readShown lns
  | otherwise      = (read ln) : readShown lns
+\end{code}
+
+\subsection{Persistent Proof}
+
+\begin{code}
+writeProof :: REqState -> String -> Proof -> IO ()
+writeProof reqs nm proof
+  = do let fp = pffile (projectDir reqs) nm
+       writeFile fp $ show proof
+\end{code}
+
+\begin{code}
+readFiledProof :: FilePath -> String -> IO Proof
+readFiledProof projfp nm
+  = do let fp = pffile projfp nm
+       txt <- readFile fp
+       return $ read txt
 \end{code}

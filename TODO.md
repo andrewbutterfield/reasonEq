@@ -8,6 +8,10 @@
 
 Need a way to archive proofs outside theory files. Right now we lose a proof when we either demote it to try something different, or we have to re-compile and install the theory.
 
+Idea: completely redesign the way stuff is saved into files.
+Reduce granularity, with proofs and collections of axioms and conjectures
+in their own files.
+
 ### Match Contexts
 
 We need to review use of match-contexts at various levels

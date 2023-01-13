@@ -17,6 +17,7 @@ module LiveProofs
  , LiveProofs
  , writeLiveProofs, readLiveProofs
  , dispLiveProof
+ , dispEndProof
  , startProof, launchProof
  , displayMatches
  -- , instantiateRepl, instReplInMatch
@@ -1037,6 +1038,21 @@ dispLiveProof maxm liveProof
            , "" ]
        ) )
  where (trm,sc) = unwrapASN $ conjecture liveProof
+
+
+-- dispLiveProof but when proof is complete
+-- temporary
+dispEndProof :: LiveProof -> String
+dispEndProof liveProof
+ = unlines
+     ( ( ("\nProof for "++red (widthHack 2 $ conjName liveProof))
+       : ("\t" ++ green(trTerm 0 trm ++ "  "++ trSideCond sc))
+       : ("by "++strategy liveProof)
+       : map shLiveStep (reverse (stepsSoFar liveProof))
+       ))
+ where (trm,sc) = unwrapASN $ conjecture liveProof
+
+ 
 
 shLiveStep :: CalcStep -> String
 shLiveStep ( just, asn )

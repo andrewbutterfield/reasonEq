@@ -704,7 +704,8 @@ proofREPLEndCondition (reqs,liveProof)
   =  proofIsComplete (logicsig reqs) liveProof
 
 proofREPLEndTidy _ (reqs,liveProof)
-  = do putStrLn "Proof Complete"
+  = do putStrLn $ dispEndProof liveProof
+       putStrLn "Proof Complete"
        return ( completeProof reqs liveProof, liveProof)
 \end{code}
 

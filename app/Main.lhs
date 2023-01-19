@@ -850,9 +850,12 @@ autoDescr = ( "au"
 
 autoCommand :: REPLCmd (REqState, LiveProof)
 autoCommand args state@(reqs, liveProof)
-  =  do putStrLn "auto"
-        waitForReturn
-        return (reqs, liveProof)
+   =  do  (r, lp) <- matchLawCommand [] (reqs, liveProof)
+          (r2, lp2) <- applyMatch ["1"] (r, lp)
+          return (r2, lp2)
+ -- =  do putStrLn "auto"
+ --       waitForReturn
+ --       return (reqs, liveProof)
 \end{code}
 
 \newpage

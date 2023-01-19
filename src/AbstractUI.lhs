@@ -195,6 +195,10 @@ observeLiveProofs reqs = showLiveProofs $ liveProofs reqs
 
 \begin{code}
 observeCompleteProofs :: [String] -> REqState -> String
+observeCompleteProofs ["*"] reqs
+  = showProofs [] $ concat $ map proofs $ getAllTheories $ theories reqs
+observeCompleteProofs [nm] reqs
+  = showProofs [nm] $ concat $ map proofs $ getAllTheories $ theories reqs
 observeCompleteProofs args reqs
   = case getTheory (currTheory reqs) (theories reqs) of
       Nothing    ->  "No current theory."

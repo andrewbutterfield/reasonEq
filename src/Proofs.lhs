@@ -513,16 +513,16 @@ showProof (pnm,(Assertion trm sc),strat,(trm',steps))
  = " " ++ pnm ++ "  (" ++ strat ++ ", size:" ++ show (length steps) ++ ")"
 
 showProofs _ []      =  "No Proofs yet."
-showProofs [nm] proofs = listProofs nm proofs
+showProofs [nm] proofs = showNamedProof nm proofs
 showProofs _ proofs
   =  unlines (
        "\nCompleted Proofs (true names):"
        : map showProof proofs )
 
-listProofs _ [] = "No such proof"
-listProofs nm (prf@(pnm,_,_,_):rest)
+showNamedProof _ [] = "No such proof"
+showNamedProof nm (prf@(pnm,_,_,_):rest)
   | nm == pnm  =  displayProof prf
-  | otherwise  =   listProofs nm rest
+  | otherwise  =   showNamedProof nm rest
 
 listProof (pnm,(trm,sc),strat,(trm',steps))
  = "listProof NYI"

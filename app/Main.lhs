@@ -339,7 +339,8 @@ cmdShow
         , shName++" "++shConj++" -- show current conjectures"
         , shName++" "++shConj++" -u -- show variable uniqueness"
         , shName++" "++shLivePrf++" -- show current (live) proof"
-        , shName++" "++shProofs++" -- show completed proofs"
+        , shName++" "++shProofs++" -- show completed theory proofs"
+        , shName++" "++shProofs++" * -- show all completed proofs"
         , shName++" "++shProofs++" <nm> -- show proof transcript for <nm>"
         ]
     , showState )

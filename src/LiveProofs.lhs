@@ -1019,40 +1019,38 @@ showLiveProof liveProof
      ++ " @ " ++ dispSeqTermZip (focus liveProof)
 \end{code}
 
+
 \begin{code}
 -- displays whole proof in proof REPL
 -- temporary
 dispLiveProof :: Int -> LiveProof -> String
 dispLiveProof maxm liveProof
- = unlines
-     ( ( ("Proof for "++red (widthHack 2 $ conjName liveProof))
-       : ("\t" ++ green(trTerm 0 trm ++ "  "++ trSideCond sc))
-       : ("by "++strategy liveProof)
-       : map shLiveStep (reverse (stepsSoFar liveProof))
-       )
+ = unlines $
+       shProof liveProof
        ++
        ( " ..."
          : displayMatches maxm (mtchCtxts liveProof) (matches liveProof)
          : [ underline "           "
            , dispSeqZip (fPath liveProof) (conjSC liveProof) (focus liveProof)
            , "" ]
-       ) )
+       )
  where (trm,sc) = unwrapASN $ conjecture liveProof
 
 
 -- dispLiveProof but when proof is complete
 -- temporary
 dispEndProof :: LiveProof -> String
-dispEndProof liveProof
- = unlines
-     ( ( ("\nProof for "++red (widthHack 2 $ conjName liveProof))
+dispEndProof liveProof = unlines $ shProof liveProof
+
+
+shProof :: LiveProof -> [String]
+shProof liveProof
+ =   ( ("\nProof for "++red (widthHack 2 $ conjName liveProof))
        : ("\t" ++ green(trTerm 0 trm ++ "  "++ trSideCond sc))
        : ("by "++strategy liveProof)
        : map shLiveStep (reverse (stepsSoFar liveProof))
-       ))
+       ) 
  where (trm,sc) = unwrapASN $ conjecture liveProof
-
- 
 
 shLiveStep :: CalcStep -> String
 shLiveStep ( just, asn )

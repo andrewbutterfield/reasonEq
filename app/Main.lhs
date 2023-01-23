@@ -705,7 +705,8 @@ proofREPLEndCondition (reqs,liveProof)
   =  proofIsComplete (logicsig reqs) liveProof
 
 proofREPLEndTidy _ (reqs,liveProof)
-  = do putStrLn "Proof Complete"
+  = do putStrLn $ dispEndProof liveProof
+       putStrLn "Proof Complete"
        return ( completeProof reqs liveProof, liveProof)
 \end{code}
 
@@ -740,6 +741,7 @@ proofREPLConfig
             , leaveHypothesisDescr
             , cloneHypothesisDescr
             , equivaleStepsDescr
+            , autoDescr
             ])
       proofREPLEndCondition
       proofREPLEndTidy
@@ -838,6 +840,24 @@ leaveHypothesis :: REPLCmd (REqState, LiveProof)
 leaveHypothesis _ = tryDelta moveFocusFromHypothesis
 \end{code}
 
+\newpage
+Auto Proof
+\begin{code}
+autoDescr = ( "au"
+                , "auto proof"
+                , unlines
+                   [ "au -- auto proof"]
+                , autoCommand )
+
+autoCommand :: REPLCmd (REqState, LiveProof)
+autoCommand args state@(reqs, liveProof)
+   =  do  (r, lp) <- matchLawCommand [] (reqs, liveProof)
+          (r2, lp2) <- applyMatch ["1"] (r, lp)
+          return (r2, lp2)
+ -- =  do putStrLn "auto"
+ --       waitForReturn
+ --       return (reqs, liveProof)
+\end{code}
 
 \newpage
 Law Matching

@@ -20,6 +20,25 @@ END THEORIES
 CURRTHEORY = Not
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("Not","lnot_invol")
+BEGIN LIVE-PROOF
+TH-NAME: Not
+CJ-NAME: lnot_invol
+CONJ = ASN (C P True (Id "equiv" 0) [C P True (Id "lnot" 0) [C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]],V P (VR (Id "P" 0,VP,WS))],([],fromList []))
+SIDE = ([],fromList [])
+STRAT reduce
+BEGIN SEQZIP
+TERMZIP = (C P True (Id "equiv" 0) [C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))],C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]],[])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.lnot_invol", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+(UseLaw (ByMatch MEL) "lnot_equiv_swap" (BD (fromList [((Id "P" 0,VP),BT (C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))])),((Id "Q" 0,VP),BV (VR (Id "P" 0,VP,WS)))],fromList [],fromList [])) [],ASN (C P True (Id "equiv" 0) [C P True (Id "lnot" 0) [C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]],V P (VR (Id "P" 0,VP,WS))],([],fromList [])))
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

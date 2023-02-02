@@ -5,10 +5,11 @@ Copyright  Andrew Buttefield (c) 2017--18
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module Files (
-         getWorkspaces
-       , currentWorkspace
-       )
+module Files 
+  ( projectName, projectExt
+  , getWorkspaces
+  , currentWorkspace
+  )
 where
 
 import System.Directory
@@ -76,7 +77,9 @@ getAllWorkspaces dirpath
 
 The project/workspace master file:
 \begin{code}
-projectFile = "project.req"
+projectName = "project"
+projectExt = "req"
+projectFile =  projectName <.> projectExt
 \end{code}
 
 We lookup the current workspace.

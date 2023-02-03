@@ -240,7 +240,7 @@ readREqSettings txts
               , rest6 )
 \end{code}
 
-
+\newpage
 \subsection{Prover State Type}
 
 Here we simply aggregate the semantic equational-reasoning prover state

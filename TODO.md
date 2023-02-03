@@ -13,6 +13,13 @@ Idea: completely redesign the way stuff is saved into files.
 Reduce granularity, with proofs and collections of axioms and conjectures
 in their own files.
 
+What is the naming convention? What replaces `Theory.thr`?
+
+Do we have `Theory.thr` along with `Theory.axm`, `Theory.cnj`, `Theory.prf`?
+Or have `Theory_law_name.prf` for every proof?
+
+Do we check a proof we load up?
+
 ### Files.lhs
 
 Current focus: `Files.lhs` - needs a re-think.

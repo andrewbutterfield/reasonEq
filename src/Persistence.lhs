@@ -50,9 +50,10 @@ projectPath projDir = mkObjectPath projDir projectName projectExt
 writeAllState :: REqState -> IO ()
 writeAllState reqs
   = do let (tsTxt,nTsTxts) = writeREqState reqs
-       let fp = projectPath $ projectDir reqs
+       let pjdir = projectDir reqs
+       let fp = projectPath pjdir
        writeFile fp $ unlines tsTxt
-       sequence_ $ map (writeNamedTheoryTxt reqs) nTsTxts
+       sequence_ $ map (writeNamedTheoryTxt pjdir) nTsTxts
 \end{code}
 
 \begin{code}
@@ -79,9 +80,9 @@ theoryPath projDir theoryName = mkObjectPath projDir theoryName theoryExt
 
 
 \begin{code}
-writeNamedTheoryTxt :: REqState -> (FilePath, [String]) -> IO ()
-writeNamedTheoryTxt reqs (nm,thTxt)
-  = do let fp = theoryPath (projectDir reqs) nm
+writeNamedTheoryTxt :: FilePath -> (FilePath, [String]) -> IO ()
+writeNamedTheoryTxt pjdir (nm,thTxt)
+  = do let fp = theoryPath pjdir nm
        writeFile fp $ unlines thTxt
 \end{code}
 

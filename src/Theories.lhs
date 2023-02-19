@@ -118,6 +118,7 @@ nullTheory
            , laws     =  []
            , proofs   =  []
            , conjs    =  []
+           , simps    =  []
            }
 \end{code}
 \newpage
@@ -162,6 +163,7 @@ readTheory txts
                        , laws     =  lws
                        , proofs   =  prfs
                        , conjs    =  conj
+                       , simps    =  []
                        }
               , rest7 )
 \end{code}
@@ -512,7 +514,14 @@ upgrade cjnm thry sjc (cj@(nm,asn):cjs)
 
 \begin{code}
 lawClassify :: MonadFail m => Theory -> m Theory
-lawClassify thry = return thry
+lawClassify thry = return Theory {  thName   =  thName thry
+                                  , thDeps   =  thDeps thry
+                                  , known    =  known thry
+                                  , laws     =  laws thry
+                                  , proofs   =  proofs thry
+                                  , conjs    =  conjs thry
+                                  , simps    =  addLawsClassifier (laws thry) (simps thry)
+                                  }
 \end{code}
 
 

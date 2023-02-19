@@ -14,6 +14,7 @@ module Theories
  , laws__, laws_
  , proofs__, proofs_
  , conjs__, conjs_
+ , simps__, simps_
  , nullTheory
  , modifyNamedLaw
  , writeTheory, readTheory
@@ -31,6 +32,7 @@ module Theories
  , showTheories, showNamedTheory
  , showTheoryLong, showTheoryShort, showTheoryLaws
  , showTheoryKnowns
+ , lawClassify
  ) where
 
 import Data.Map (Map)
@@ -406,7 +408,6 @@ addConjs thry newC  =  conjs__ (++ newC) thry
 \end{code}
 
 
-
 \subsubsection{Monadic Theory Component Updates}
 
 We have some updates that are monadic
@@ -506,6 +507,14 @@ upgrade cjnm thry sjc (cj@(nm,asn):cjs)
                        $ laws__ (++[prf]) thry )
  where prf = labelAsProof cj cjnm
 \end{code}
+
+\subsubsection{Classifying}
+
+\begin{code}
+lawClassify :: MonadFail m => Theory -> m Theory
+lawClassify thry = return thry
+\end{code}
+
 
 \subsection{Showing Theories}
 

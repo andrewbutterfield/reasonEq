@@ -18,4 +18,6 @@ data LawEntry
     = String Direction 
     deriving (Eq,Show,Read)
 
+addLawsClassifier :: [Law] -> [LawEntry] -> [LawEntry]
+addLawsClassifier lws clss = clss
 \end{code}

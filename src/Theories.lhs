@@ -45,6 +45,7 @@ import VarData
 import Assertions
 import Laws
 import Proofs
+import Classifier
 
 import TestRendering
 import WriteRead
@@ -72,12 +73,13 @@ so long as there are no dependency cycles.
 \begin{code}
 data Theory
   = Theory {
-      thName   :: String
-    , thDeps   :: [String]
-    , known    :: VarTable
-    , laws     :: [Law]
-    , proofs   :: [Proof]
-    , conjs    :: [NmdAssertion]
+      thName      :: String
+    , thDeps      :: [String]
+    , known       :: VarTable
+    , laws        :: [Law]
+    , proofs      :: [Proof]
+    , simplifiers :: [Simplifiers]
+    , conjs       :: [NmdAssertion]
     }
   deriving (Eq,Show,Read)
 

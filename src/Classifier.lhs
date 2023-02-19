@@ -7,6 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 module Classifier where
 
+import Laws
+
 data Direction 
     = Leftwards 
     | Rightwards 
@@ -15,8 +17,5 @@ data Direction
 data LawEntry 
     = String Direction 
     deriving (Eq,Show,Read)
-    
-type Simplifiers = [LawEntry]
-
 
 \end{code}

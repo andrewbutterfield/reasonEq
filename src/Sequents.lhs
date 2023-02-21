@@ -115,13 +115,7 @@ and then use the following functions to produce a sequent, if possible.
 
 \subsubsection{No Hypotheses}
 \begin{code}
-noHyps nm = Theory { thName   =  "H."++nm
-                   , thDeps   =  []
-                   , known    =  newVarTable
-                   , laws     =  []
-                   , proofs   =  []
-                   , conjs    =  []
-                   }
+noHyps nm = nullTheory{ thName   =  "H."++nm }
 \end{code}
 
 \subsubsection{Strategy \textit{reduce}}
@@ -224,13 +218,11 @@ assume logicsig thys (nm,(t@(Cons tk si i [ta,tc]),sc))
     hlaws = map mkHLaw $ zip [1..] $ splitAnte logicsig ta
     mkasn trm = fromJust $ mkAsn trm scTrue -- always succeeds
     mkHLaw (i,trm) = labelAsAxiom ("H."++nm++"."++show i,mkasn trm)
-    hthry = Theory { thName   =  "H."++nm
-                   , thDeps   =  []
-                   , laws     =  hlaws
-                   , known    =  makeUnknownKnown thys t
-                   , proofs   =  []
-                   , conjs    =  []
-                   }
+    hthry = nullTheory { 
+      thName   =  "H."++nm
+    , laws     =  hlaws
+    , known    =  makeUnknownKnown thys t
+    }
 assume _ _ _ = fail "assume not applicable"
 
 splitAnte :: LogicSig -> Term -> [Term]
@@ -616,16 +608,14 @@ exitLaws :: Term -> Laws' -> (Theory, Term, Term)
 exitLaws currT (CLaws' h0 Lft  othrC)  =  (h0, currT, othrC)
 exitLaws currT (CLaws' h0 Rght othrC)  =  (h0, othrC, currT)
 exitLaws currT  (HLaws' hnm hkn hbef fnm fsc fprov horig haft cl cr)
-  =  ( Theory { thName   =  hnm
-              , thDeps   =  []
-              , laws     =  ( reverse hbef
-                            ++ [((fnm,horig'),fprov)]
-                            ++ haft
-                            ++ [((fnm,currT'),fprov)] )
-              , known    =  hkn
-              , conjs    =  []
-              , proofs   =  []
-              }
+  =  (  nullTheory { 
+        thName   =  hnm      , thDeps   =  []
+      , laws     =  ( reverse hbef
+                    ++ [((fnm,horig'),fprov)]
+                    ++ haft
+                    ++ [((fnm,currT'),fprov)] )
+      , known    =  hkn
+      }
      , cl, cr)
   where horig' = fromJust $ mkAsn horig fsc
         currT' = fromJust $ mkAsn currT fsc
@@ -683,12 +673,11 @@ getHypotheses :: Sequent' -> Theory
 getHypotheses seq' = getHypotheses' $ laws' seq'
 getHypotheses' (CLaws' hyp _ _)  =  hyp
 getHypotheses' (HLaws' hn hk hbef _ _ _ _ haft _ _)
-  =  Theory { thName   =  hn
-            , thDeps   =  []
-            , laws     =  (reverse hbef ++ haft)
-            , known    =  hk
-            , conjs    =  []
-            , proofs   =  [] }
+  = nullTheory { 
+      thName   =  hn    , thDeps   =  []
+    , laws     =  (reverse hbef ++ haft)
+    , known    =  hk
+    }
 
 \end{code}
 
@@ -765,13 +754,11 @@ dispConjParts fp tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
      ++ dispGoal tz sc
      ++ dispContext fp "Hypothesis: " (trTerm 0 horig++"  "++trSideCond sc)
   where
-     hthry = Theory { thName   =  hn
-                    , thDeps   =  []
-                    , laws     =  (reverse hbef ++ haft)
-                    , known    =  hk
-                    , conjs    =  []
-                    , proofs   =  []
-                    }
+     hthry =  nullTheory { 
+                thName   =  hn
+              , laws     =  (reverse hbef ++ haft)
+              , known    =  hk
+              }
 
 
 dispHypotheses hthry  =  numberList' showHyp $ laws $ hthry

@@ -14,10 +14,13 @@ data Direction
     | Rightwards 
     deriving (Eq,Show,Read)
 
-data LawEntry 
-    = String Direction 
-    deriving (Eq,Show,Read)
+data AutoLaws = AutoLaws
+  { simps    :: [(String, Direction)]
+  , folds    :: [String]
+  , unfolds  :: [String]
+  }
+  deriving (Eq,Show,Read)
 
-addLawsClassifier :: [Law] -> [LawEntry] -> [LawEntry]
-addLawsClassifier lws clss = clss
+addLawsClassifier :: [Law] -> AutoLaws -> AutoLaws
+addLawsClassifier lws au = au
 \end{code}

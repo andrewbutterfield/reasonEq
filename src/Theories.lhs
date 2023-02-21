@@ -14,7 +14,7 @@ module Theories
  , laws__, laws_
  , proofs__, proofs_
  , conjs__, conjs_
- , simps__, simps_
+ , auto__, auto_
  , nullTheory
  , modifyNamedLaw
  , writeTheory, readTheory
@@ -80,7 +80,7 @@ data Theory
     , known       :: VarTable
     , laws        :: [Law]
     , proofs      :: [Proof]
-    , simps       :: [LawEntry]
+    , auto        :: AutoLaws
     , conjs       :: [NmdAssertion]
     }
   deriving (Eq,Show,Read)
@@ -91,7 +91,7 @@ thDeps__ f r = r{thDeps = f $ thDeps r}    ; thDeps_ = thDeps__ . const
 known__ f r = r{known = f $ known r}       ; known_ = known__ . const
 laws__ f r = r{laws = f $ laws r}          ; laws_ = laws__ . const
 proofs__ f r = r{proofs = f $ proofs r}    ; proofs_ = proofs__ . const
-simps__ f r = r{simps = f $ simps r}       ; simps_ = simps__ . const
+auto__ f r = r{auto = f $ auto r}          ; auto_ = auto__ . const
 conjs__ f r = r{conjs = f $ conjs r}       ; conjs_ = conjs__ . const
 \end{code}
 
@@ -118,7 +118,6 @@ nullTheory
            , laws     =  []
            , proofs   =  []
            , conjs    =  []
-           , simps    =  []
            }
 \end{code}
 \newpage
@@ -163,7 +162,6 @@ readTheory txts
                        , laws     =  lws
                        , proofs   =  prfs
                        , conjs    =  conj
-                       , simps    =  []
                        }
               , rest7 )
 \end{code}
@@ -520,7 +518,7 @@ lawClassify thry = return Theory {  thName   =  thName thry
                                   , laws     =  laws thry
                                   , proofs   =  proofs thry
                                   , conjs    =  conjs thry
-                                  , simps    =  addLawsClassifier (laws thry) (simps thry)
+                                  , auto     =  addLawsClassifier (laws thry) (auto thry)
                                   }
 \end{code}
 

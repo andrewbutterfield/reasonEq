@@ -546,6 +546,7 @@ showTheoryLaws dm thry
       , "Knowns:", trVarTable (known thry)
       , "Laws:", showLaws dm (laws thry)
       , "Conjectures:", showConjs dm (conjs thry)
+      , "AutoLaws:", showAuto (auto thry)
       ] )
 
 showNamedTheory dm thnm thrys
@@ -562,7 +563,8 @@ showTheoryLong dm thry
       ++
       [ "Knowns:", trVarTable (known thry)
       , "Laws:", showLaws dm (laws thry)
-      , "Conjectures:", showConjs dm (conjs thry) ]
+      , "Conjectures:", showConjs dm (conjs thry) 
+      , "AutoLaws:", showAuto (auto thry)]
     )
   where deps = thDeps thry
 \end{code}

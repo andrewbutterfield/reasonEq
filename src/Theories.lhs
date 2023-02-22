@@ -511,15 +511,15 @@ upgrade cjnm thry sjc (cj@(nm,asn):cjs)
 \subsubsection{Classifying}
 
 \begin{code}
-lawClassify :: MonadFail m => Theory -> m Theory
-lawClassify thry = return Theory {  thName   =  thName thry
-                                  , thDeps   =  thDeps thry
-                                  , known    =  known thry
-                                  , laws     =  laws thry
-                                  , proofs   =  proofs thry
-                                  , conjs    =  conjs thry
-                                  , auto     =  addLawsClassifier (laws thry) (auto thry)
-                                  }
+lawClassify :: MonadFail m => Law -> Theory -> m Theory
+lawClassify lw thry = return Theory {  thName   =  thName thry
+                                     , thDeps   =  thDeps thry
+                                     , known    =  known thry
+                                     , laws     =  laws thry
+                                     , proofs   =  proofs thry
+                                     , conjs    =  conjs thry
+                                     , auto     =  addLawsClassifier (assnT $ snd $ lawNamedAssn lw) (auto thry)
+                                    }
 \end{code}
 
 

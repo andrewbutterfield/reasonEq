@@ -5,7 +5,6 @@ Copyright  Saqib Zardari (c) 2023
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-{-# LANGUAGE RecordWildCards #-}
 module Classifier where
 
 import Laws
@@ -34,9 +33,9 @@ showSimps :: [(String, Direction)] -> String
 showSimps (x:[]) = simpStr x
 showSimps (x:xs) = simpStr x ++ showSimps xs
 
-showAuto AutoLaws{..} =  "simps: "   ++ showSimps simps  ++ "\n"
-                      ++ "folds: "   ++ concat folds       ++ "\n"
-                      ++ "unfolds: " ++ concat unfolds     ++ "\n"
+showAuto alaws = "simps: "   ++ showSimps (simps alaws)  ++ "\n"
+              ++ "folds: "   ++ concat (folds alaws)     ++ "\n"
+              ++ "unfolds: " ++ concat (unfolds alaws)    ++ "\n"
 
 addLawsClassifier :: Term -> AutoLaws -> AutoLaws
 addLawsClassifier te au = au

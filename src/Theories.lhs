@@ -117,6 +117,7 @@ nullTheory
            , known    =  newVarTable
            , laws     =  []
            , proofs   =  []
+           , auto     =  nullAutoLaws
            , conjs    =  []
            }
 \end{code}
@@ -162,6 +163,7 @@ readTheory txts
                        , laws     =  lws
                        , proofs   =  prfs
                        , conjs    =  conj
+                       , auto     =  nullAutoLaws
                        }
               , rest7 )
 \end{code}

@@ -22,6 +22,12 @@ data AutoLaws = AutoLaws
   }
   deriving (Eq,Show,Read)
 
+nullAutoLaws
+  = AutoLaws {  simps = []
+             ,  folds = []
+             ,  unfolds = []
+             }
+
 showDir :: Direction -> String
 showDir Leftwards  = "Leftwards"
 showDir Rightwards = "Rightwards"
@@ -30,12 +36,13 @@ simpStr :: (String, Direction) -> String
 simpStr sim = "(" ++ fst sim ++ "," ++ showDir (snd sim) ++ ")"
 
 showSimps :: [(String, Direction)] -> String
+showSimps [] = ""
 showSimps (x:[]) = simpStr x
 showSimps (x:xs) = simpStr x ++ showSimps xs
 
-showAuto alaws = "simps: "   ++ showSimps (simps alaws)  ++ "\n"
-              ++ "folds: "   ++ concat (folds alaws)     ++ "\n"
-              ++ "unfolds: " ++ concat (unfolds alaws)    ++ "\n"
+showAuto alaws = "   1. simps   -> "   ++ showSimps (simps alaws)  ++ "\n"
+              ++ "   2. folds   -> "   ++ concat (folds alaws)     ++ "\n"
+              ++ "   3. unfolds -> "   ++ concat (unfolds alaws)    ++ "\n"
 
 addLawsClassifier :: Term -> AutoLaws -> AutoLaws
 addLawsClassifier te au = au

@@ -279,7 +279,8 @@ reqCommands = [ cmdShow, cmdSet, cmdNew
               , cmdSave, cmdLoad
               , cmdSaveConj, cmdLoadConj
               , cmdAssume, cmdDemote
-              , cmdBuiltin ]
+              , cmdBuiltin
+              , cmdClassify ]
 
 -- we don't use these features in the top-level REPL
 reqEndCondition _ = False
@@ -490,6 +491,22 @@ displayConjectures [nm] reqs
 displayConjectures _ reqs  =  doshow reqs "unknown 'ldc' option."
 \end{code}
 
+\subsection{Classify Command}
+\begin{code}
+cmdClassify :: REqCmdDescr
+cmdClassify
+  = ( "classify"
+    , "activate classifier"
+    , unlines ["class"]
+    , doClassify)
+
+doClassify args reqs
+  =  case classifyLaw (currTheory reqs) lwnm reqs of
+         But lns     ->  doshow reqs  (unlines' lns)
+         Yes reqs'   ->  doshow reqs' ("Classify " ++ lwnm)
+ where lwnm = args2str args
+
+\end{code}
 
 \newpage
 \subsection{Set Command}

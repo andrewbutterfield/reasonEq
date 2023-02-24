@@ -15,7 +15,7 @@ module AbstractUI
 , modifySettings
 , setCurrentTheory
 , newConjecture
-, assumeConjecture, demoteLaw
+, assumeConjecture, demoteLaw , classifyLaw
 , newProof1, newProof2, resumeProof
 , abandonProof, saveProof, completeProof
 , moveFocusDown, moveFocusUp, moveConsequentFocus
@@ -270,6 +270,33 @@ demoteLaw thnm whichL reqs
                       return $ changed
                              $ theories__ (replaceTheory' thry') $ reqs
 \end{code}
+
+
+\subsubsection{Classifying Laws}
+
+\begin{code}
+findLaw :: MonadFail m => Theory -> String -> m Law
+findLaw thry lnm
+ | null law1       =  fail ("law '"++lnm++"': not found")
+ | otherwise       =  return theLaw
+ where
+   lws = laws thry
+   (_,law1,_) = extract (((lnm==) . fst) .fst) lws
+   theLaw = head law1
+
+classifyLaw :: MonadFail m => String -> String -> REqState -> m REqState
+classifyLaw thnm whichL reqs
+  = case getTheory thnm $ theories reqs of
+      Nothing -> fail ("No theory named '"++thnm++"'.")
+      Just thry -> case findLaw thry whichL of
+                      Nothing -> fail ("No law named '"++whichL++"' in theory.")
+                      Just law -> do thry' <- lawClassify law thry
+                                     return $ changed
+                                            $ theories__ (replaceTheory' thry') $ reqs
+\end{code}
+
+
+\subsubsection{Demoting Laws}
 
 \subsubsection{Starting a Proof}
 

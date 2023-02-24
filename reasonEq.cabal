@@ -33,6 +33,7 @@ library
                      , Builder
                      , TermZipper
                      , Laws
+                     , Classifier
                      , Proofs
                      , Sequents
                      , Theories

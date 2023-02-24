@@ -14,6 +14,7 @@ module Theories
  , laws__, laws_
  , proofs__, proofs_
  , conjs__, conjs_
+ , auto__, auto_
  , nullTheory
  , writeTheory, readTheory
  , TheoryMap, Theories
@@ -30,6 +31,7 @@ module Theories
  , showTheories, showNamedTheory
  , showTheoryLong, showTheoryShort, showTheoryLaws
  , showTheoryKnowns
+ , lawClassify
  ) where
 
 import Data.Map (Map)
@@ -44,6 +46,7 @@ import VarData
 import Assertions
 import Laws
 import Proofs
+import Classifier
 
 import TestRendering
 import WriteRead
@@ -71,12 +74,13 @@ so long as there are no dependency cycles.
 \begin{code}
 data Theory
   = Theory {
-      thName   :: String
-    , thDeps   :: [String]
-    , known    :: VarTable
-    , laws     :: [Law]
-    , proofs   :: [Proof]
-    , conjs    :: [NmdAssertion]
+      thName      :: String
+    , thDeps      :: [String]
+    , known       :: VarTable
+    , laws        :: [Law]
+    , proofs      :: [Proof]
+    , auto        :: AutoLaws
+    , conjs       :: [NmdAssertion]
     }
   deriving (Eq,Show,Read)
 
@@ -86,6 +90,7 @@ thDeps__ f r = r{thDeps = f $ thDeps r}    ; thDeps_ = thDeps__ . const
 known__ f r = r{known = f $ known r}       ; known_ = known__ . const
 laws__ f r = r{laws = f $ laws r}          ; laws_ = laws__ . const
 proofs__ f r = r{proofs = f $ proofs r}    ; proofs_ = proofs__ . const
+auto__ f r = r{auto = f $ auto r}          ; auto_ = auto__ . const
 conjs__ f r = r{conjs = f $ conjs r}       ; conjs_ = conjs__ . const
 \end{code}
 
@@ -97,6 +102,7 @@ nullTheory
            , known    =  newVarTable
            , laws     =  []
            , proofs   =  []
+           , auto     =  nullAutoLaws
            , conjs    =  []
            }
 \end{code}
@@ -143,6 +149,7 @@ readTheory txts
                        , laws     =  lws
                        , proofs   =  prfs
                        , conjs    =  conj
+                       , auto     =  nullAutoLaws
                        }
               , rest7 )
 \end{code}
@@ -389,7 +396,6 @@ addConjs thry newC  =  conjs__ (++ newC) thry
 \end{code}
 
 
-
 \subsubsection{Monadic Theory Component Updates}
 
 We have some updates that are monadic
@@ -490,6 +496,21 @@ upgrade cjnm thry sjc (cj@(nm,asn):cjs)
  where prf = labelAsProof cj cjnm
 \end{code}
 
+\subsubsection{Classifying}
+
+\begin{code}
+lawClassify :: MonadFail m => Law -> Theory -> m Theory
+lawClassify lw thry = return Theory {  thName   =  thName thry
+                                     , thDeps   =  thDeps thry
+                                     , known    =  known thry
+                                     , laws     =  laws thry
+                                     , proofs   =  proofs thry
+                                     , conjs    =  conjs thry
+                                     , auto     =  addLawsClassifier (assnT $ snd $ lawNamedAssn lw) (auto thry)
+                                    }
+\end{code}
+
+
 \subsection{Showing Theories}
 
 \textbf{This should all be done via proper generic rendering code}
@@ -513,6 +534,7 @@ showTheoryLaws dm thry
       , "Knowns:", trVarTable (known thry)
       , "Laws:", showLaws dm (laws thry)
       , "Conjectures:", showConjs dm (conjs thry)
+      , "AutoLaws:", showAuto (auto thry)
       ] )
 
 showNamedTheory dm thnm thrys
@@ -529,7 +551,8 @@ showTheoryLong dm thry
       ++
       [ "Knowns:", trVarTable (known thry)
       , "Laws:", showLaws dm (laws thry)
-      , "Conjectures:", showConjs dm (conjs thry) ]
+      , "Conjectures:", showConjs dm (conjs thry) 
+      , "AutoLaws:", showAuto (auto thry)]
     )
   where deps = thDeps thry
 \end{code}

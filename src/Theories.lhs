@@ -16,7 +16,6 @@ module Theories
  , conjs__, conjs_
  , auto__, auto_
  , nullTheory
- , modifyNamedLaw
  , writeTheory, readTheory
  , TheoryMap, Theories
  , NamedTheoryTexts, writeTheories, readTheories1, readTheories2
@@ -95,21 +94,7 @@ auto__ f r = r{auto = f $ auto r}          ; auto_ = auto__ . const
 conjs__ f r = r{conjs = f $ conjs r}       ; conjs_ = conjs__ . const
 \end{code}
 
-Being able to modify a named law is useful
-\begin{code}
-modifyNamedLaw :: (Monad m, MonadFail m) => String -> (Law -> Law) -> [Law] -> m [Law]
-modifyNamedLaw lname lawf lawseq
-  =  mNL [] lawseq
-  where
-    mNL swal []  =  fail ("modifyNamedLaw: law '"++lname++"' not found")
-    mNL swal (law:rest)
-     | lawName law == lname  =  return (reverse swal ++ lawf law : rest)
-     | otherwise             =  mNL (law:swal) rest
-\end{code}
-
-It can be useful to have a null theory%
-\footnote{hypothesis?}%
-:
+We use a null theory as a base to build other theories.
 \begin{code}
 nullTheory
   = Theory { thName   =  "0"
@@ -121,6 +106,7 @@ nullTheory
            , conjs    =  []
            }
 \end{code}
+
 \newpage
 \subsection{Writing and Reading a Theory}
 

@@ -4,6 +4,7 @@
 ## Most Urgent
 
 
+
 ### Archiving Proofs
 
 Need a way to archive proofs outside theory files. Right now we lose a proof when we either demote it to try something different, or we have to re-compile and install the theory.
@@ -11,6 +12,29 @@ Need a way to archive proofs outside theory files. Right now we lose a proof whe
 Idea: completely redesign the way stuff is saved into files.
 Reduce granularity, with proofs and collections of axioms and conjectures
 in their own files.
+
+What is the naming convention? What replaces `Theory.thr`?
+
+Do we have `Theory.thr` along with `Theory.axm`, `Theory.cnj`, `Theory.prf`?
+Or have `Theory_law_name.prf` for every proof?
+
+Do we check a proof we load up?
+
+### Files.lhs
+
+Current focus: `Files.lhs` - needs a re-think.
+
+Should it merge with `Persistence.lhs`?
+
+`getWorkspaces` should check that it has a non-empty list of workspaces,
+and return them parsed into current-flag, name and path triples.
+
+`currentWorkspace` needs to become two different things.
+
+One loads up the current workspace, if it exists.
+
+Another creates and initialises a workspace.
+
 
 ### Match Contexts
 
@@ -154,18 +178,6 @@ confirmation for the update should be requested from the user
 (a force option can also be provided).
 
 
-### Files.lhs
-
-Current focus: `Files.lhs` - needs a re-think.
-
-`getWorkspaces` should check that it has a non-empty list of workspaces,
-and return them parsed into current-flag, name and path triples.
-
-`currentWorkspace` needs to become two different things.
-
-One loads up the current workspace, if it exists.
-
-Another creates and initialises a workspace.
 
 ## Features
 

@@ -5,10 +5,11 @@ Copyright  Andrew Buttefield (c) 2017--18
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module Files (
-         getWorkspaces
-       , currentWorkspace
-       )
+module Files 
+  ( projectName, projectExt
+  , getWorkspaces
+  , currentWorkspace
+  )
 where
 
 import System.Directory
@@ -44,7 +45,7 @@ getWorkspaces appname
 Useful names, markers and separators:
 \begin{code}
 wsRoot = "workspaces.wsp"
-defProjName = "MyReasonEq"
+defaultProjectName = "MyReasonEq"
 currentMarker = '*'
 pathSep = '|'
 \end{code}
@@ -55,11 +56,11 @@ createUserAppDir dirpath
   = do putStrLn ("Creating app. dir.: "++dirpath)
        createDirectory dirpath
        currDir <- getCurrentDirectory
-       let deffp = currDir </> defProjName
+       let deffp = currDir </> defaultProjectName
        putStrLn ("Creating workspace : "++deffp)
        writeFile (dirpath </> wsRoot)
         $ unlines
-            [ currentMarker:defProjName ++ pathSep:deffp ]
+            [ currentMarker:defaultProjectName ++ pathSep:deffp ]
 \end{code}
 
 Get all known workspaces from user data.
@@ -76,7 +77,9 @@ getAllWorkspaces dirpath
 
 The project/workspace master file:
 \begin{code}
-projectFile = "project.req"
+projectName = "project"
+projectExt = "req"
+projectFile =  projectName <.> projectExt
 \end{code}
 
 We lookup the current workspace.

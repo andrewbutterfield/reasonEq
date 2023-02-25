@@ -1,0 +1,75 @@
+\chapter{Classifying Laws}
+
+In order to automate proof, 
+we need a way to classify laws to help guide the tools.
+We cannot rely on exhaustive search/try techniques
+because we very quickly get into a situation that results in a 
+combinatorial explosion.
+We start with a simple classification that defines three classes:
+
+\begin{description}
+    \item[Simplify]
+      are laws that when used reduce the size of a term.
+    \item[Unfold/Expand]
+      are laws that replace terms,
+      that apply a defined name to argument terms,
+      with the expansion of its definition,
+      using those arguments.
+    \item[Fold/Contract]
+      are laws that replace terms
+      that are the expansion of some name's definition,
+      by a term that applies that name to appropriate argument terms.
+\end{description}
+
+We look at these cases in the context of equational reasoning,
+which allows us to use laws of a certain form in multiple ways.
+If any law matches a term in its entirety, 
+then the replacement term is simply \true.
+If a law has the form $P \equiv Q$ (or $e = f$),
+then if one side of the equivalence (equality) matches a term,
+we can replace that term by the other side, 
+using the match binding to do substitution.
+We refer to such laws as being \emph{equational}.
+
+\subsubsection*{Simplify}
+
+\emph{Any} law, applied in its \emph{entirety}, is a simplfication law
+(term \true\ is simpler than any other term, except \false).
+This is not as helpful as it sounds as indiscriminate use of laws
+in this way leads to the aforementioned combinatorial explosion.
+What is more interesting is to consider equational laws,
+of the form $P \equiv Q$.
+Such a law simplifies left-to-right if term $Q$ is smaller than term $P$,
+and conversely, right-to-left if $P$ is smaller than $Q$.
+If the sizes of $P$ and $Q$ are the same,
+then neither partial use of that law is a simplification.
+We compute the size of a term,
+as the total number of names/atomic values it contains.
+In quantified formula ($\forall ...$, $\exists ...$) 
+we count those two symbols as names worth one%
+\footnote{
+Often eliminating quantifiers is a sign of progress, 
+so another option would be give them a higher weighting for term size.
+}%
+.
+
+\subsubsection*{Unfold/Expand}
+
+All definitional laws, for our purposes, have to be equational.
+By convention, the name being defined should be on the lefthand side,
+and we shall assume this is the case here.
+A definition that is the wrong way around can be reversed because both
+equivalence and equality are symmetric.
+Consider a law $P \equiv Q$. What makes it a definition of a name $N$?
+The answer is, 
+at the top-level,
+that $P$ has the form of $N$ appled to zero or more terms, 
+so the law has the form
+$N(t_1,\dots,t_n) \equiv Q, \qquad n \geq 0$.
+In this case, we say that applying this law left-to-right
+is an unfold or expansion.
+
+\subsubsection*{Fold/Contract}
+
+Given the law $N(t_1,\dots,t_n) \equiv Q$ from above,
+then applying it right-to-left is a fold or contraction.

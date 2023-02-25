@@ -6,7 +6,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 module Persistence
-  ( writeAllState, readAllState
+  ( mkObjectFilename, mkObjectPath 
+  , writeAllState, readAllState
   , writeNamedTheoryTxt, readNamedTheory
   , writeConjectures, readFiledConjectures
   , writeProof, readFiledProof
@@ -17,6 +18,7 @@ import System.Directory
 import System.FilePath
 
 import Utilities
+import Files
 import REqState
 
 import Debug.Trace
@@ -26,42 +28,32 @@ pdbg nm x = dbg ('@':nm++":\n") x
 
 \subsection{File Paths}
 
+We will frequently generate pathnames given a project directory path,
+an object name and an extension that identifies the object type:
+\begin{code}
+mkObjectFilename :: String -> String -> FilePath
+mkObjectFilename oName oType  =  oName <.> oType
+mkObjectPath :: FilePath -> String -> String -> FilePath
+mkObjectPath oDir oName oType  =  oDir ++ pathSeparator : oName <.> oType
+\end{code}
+
+\newpage
+\subsection{Persistent \reasonEq\ State}
+
 In the project directory we have a top-level file called \texttt{project.req}
 that holds overall data regarding the project.
 \begin{code}
-projectRoot   = "project"
-projectExt    = "req"
-projectFile   =  projectRoot <.> projectExt
-projectPath projDir = projDir ++ pathSeparator : projectFile
-pfile reqs = projectPath $ projectDir reqs
+projectPath projDir = mkObjectPath projDir projectName projectExt
 \end{code}
-We also have files called \texttt{<thryName>.thr}
-for every theory called $\langle thryName\rangle$.
-\begin{code}
-theoryExt      =  "thr"
-tfile pjdir nm = pjdir ++ pathSeparator : nm <.> theoryExt
-\end{code}
-For conjecture files, we use the extension \texttt{.cnj}.
-\begin{code}
-conjectureExt = "cnj"
-cjfile pjdir nm = pjdir ++ pathSeparator : nm <.> conjectureExt
-\end{code}
-For proof files, we use the extension \texttt{.prf}.
-\begin{code}
-proofExt = "prf"
-pffile pjdir nm = pjdir ++ pathSeparator : nm <.> proofExt
-\end{code}
-
-\subsection{Persistent \reasonEq\ State}
-
 
 \begin{code}
 writeAllState :: REqState -> IO ()
 writeAllState reqs
   = do let (tsTxt,nTsTxts) = writeREqState reqs
-       let fp = pfile reqs
+       let pjdir = projectDir reqs
+       let fp = projectPath pjdir
        writeFile fp $ unlines tsTxt
-       sequence_ $ map (writeNamedTheoryTxt reqs) nTsTxts
+       sequence_ $ map (writeNamedTheoryTxt pjdir) nTsTxts
 \end{code}
 
 \begin{code}
@@ -79,37 +71,51 @@ readAllState projdirfp
 
 \subsection{Persistent Theory}
 
+We also have files called \texttt{<thryName>.thr}
+for every theory called $\langle thryName\rangle$.
+\begin{code}
+theoryExt      =  "thr"
+theoryPath projDir theoryName = mkObjectPath projDir theoryName theoryExt
+\end{code}
+
 
 \begin{code}
-writeNamedTheoryTxt :: REqState -> (FilePath, [String]) -> IO ()
-writeNamedTheoryTxt reqs (nm,thTxt)
-  = do let fp = tfile (projectDir reqs) nm
+writeNamedTheoryTxt :: FilePath -> (FilePath, [String]) -> IO ()
+writeNamedTheoryTxt pjdir (nm,thTxt)
+  = do let fp = theoryPath pjdir nm
        writeFile fp $ unlines thTxt
 \end{code}
 
 \begin{code}
 readNamedTheory :: String -> String -> IO ([Char], Theory)
 readNamedTheory projfp nm
-  = do let fp = tfile projfp nm
+  = do let fp = theoryPath projfp nm
        txt <- readFile fp
        (thry,rest) <- readTheory $ lines txt
        putStrLn ("Read theory '"++nm++"'")
        return (nm,thry)
 \end{code}
 
+\newpage
 \subsection{Persistent Conjecture}
+
+For conjecture files, we use the extension \texttt{.cnj}.
+\begin{code}
+conjExt = "cnj"
+conjPath projDir conjName = mkObjectPath projDir conjName conjExt
+\end{code}
 
 \begin{code}
 writeConjectures :: Show a => REqState -> String -> [a] -> IO ()
 writeConjectures reqs nm conjs
-  = do let fp = cjfile (projectDir reqs) nm
+  = do let fp = conjPath (projectDir reqs) nm
        writeFile fp $ unlines $ map show conjs
 \end{code}
 
 \begin{code}
 readFiledConjectures :: FilePath -> String -> IO [NmdAssertion]
 readFiledConjectures projfp nm
-  = do let fp = cjfile projfp nm
+  = do let fp = conjPath projfp nm
        txt <- readFile fp
        return $ readShown $ lines txt
 
@@ -121,17 +127,23 @@ readShown (ln:lns)
 
 \subsection{Persistent Proof}
 
+For proof files, we use the extension \texttt{.prf}.
+\begin{code}
+proofExt = "prf"
+proofPath projDir proofName = mkObjectPath projDir proofName proofExt
+\end{code}
+
 \begin{code}
 writeProof :: REqState -> String -> Proof -> IO ()
 writeProof reqs nm proof
-  = do let fp = pffile (projectDir reqs) nm
+  = do let fp = proofPath (projectDir reqs) nm
        writeFile fp $ show proof
 \end{code}
 
 \begin{code}
 readFiledProof :: FilePath -> String -> IO Proof
 readFiledProof projfp nm
-  = do let fp = pffile projfp nm
+  = do let fp = proofPath projfp nm
        txt <- readFile fp
        return $ read txt
 \end{code}

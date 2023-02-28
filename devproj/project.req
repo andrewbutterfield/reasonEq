@@ -17,26 +17,26 @@ BEGIN THEORIES
 THNAMES = ["And","AndOrInvert","Equality","Equiv","Exists","ForAll","Implies","Not","Or","UClose","UTPBase"]
 SDAG = [[("UTPBase",["UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("UClose",["Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Exists",["ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("ForAll",["Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Equality",["Implies","Equiv"])],[("Implies",["AndOrInvert","And","Or","Not","Equiv"])],[("AndOrInvert",["And","Or","Not","Equiv"])],[("And",["Or","Not","Equiv"])],[("Or",["Not","Equiv"])],[("Not",["Equiv"])],[("Equiv",[])]]
 END THEORIES
-CURRTHEORY = Not
+CURRTHEORY = Equiv
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("Not","lnot_invol")
+("Equiv","true_subst")
 BEGIN LIVE-PROOF
-TH-NAME: Not
-CJ-NAME: lnot_invol
-CONJ = ASN (C P True (Id "equiv" 0) [C P True (Id "lnot" 0) [C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]],V P (VR (Id "P" 0,VP,WS))],([],fromList []))
+TH-NAME: Equiv
+CJ-NAME: true_subst
+CONJ = ASN (C P True (Id "equiv" 0) [S P (K P (VB True)) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),K P (VB True)],([],fromList []))
 SIDE = ([],fromList [])
 STRAT reduce
 BEGIN SEQZIP
-TERMZIP = (C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))],[Cons' P True (Id "equiv" 0) [] [C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]]])
+TERMZIP = (S P (K P (VB True)) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),[Cons' P True (Id "equiv" 0) [K P (VB True)] []])
 BEGIN SEQUENT'
 SIDECOND = ([],fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.lnot_invol", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], conjs = []}, whichC = Lft, otherC = K P (VB True)}
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.true_subst", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K P (VB True)}
 END SEQUENT'
 END SEQZIP
-FPATH: [1]
+FPATH: [2]
 BEGIN LIST STEPS
-(UseLaw (ByMatch MEL) "lnot_equiv_swap" (BD (fromList [((Id "P" 0,VP),BT (C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))])),((Id "Q" 0,VP),BV (VR (Id "P" 0,VP,WS)))],fromList [],fromList [])) [],ASN (C P True (Id "equiv" 0) [C P True (Id "lnot" 0) [C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]],V P (VR (Id "P" 0,VP,WS))],([],fromList [])))
+(UseLaw (ByMatch (ME [1,2])) "equiv_symm" (BD (fromList [((Id "P" 0,VP),BT (S P (K P (VB True)) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])))),((Id "Q" 0,VP),BT (K P (VB True)))],fromList [],fromList [])) [],ASN (C P True (Id "equiv" 0) [S P (K P (VB True)) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),K P (VB True)],([],fromList [])))
 END LIST STEPS
 END LIVE-PROOF
 END MAP LIVE-PROOFS

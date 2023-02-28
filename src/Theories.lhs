@@ -506,7 +506,7 @@ lawClassify lw thry = return Theory {  thName   =  thName thry
                                      , laws     =  laws thry
                                      , proofs   =  proofs thry
                                      , conjs    =  conjs thry
-                                     , auto     =  addLawsClassifier (assnT $ snd $ lawNamedAssn lw) (auto thry)
+                                     , auto     =  addLawsClassifier (lawNamedAssn lw) (auto thry)
                                     }
 \end{code}
 

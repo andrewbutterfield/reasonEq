@@ -11,6 +11,7 @@ import qualified Data.Set as S
 import Laws
 import AST
 import Assertions
+import LexBase
 
 data Direction 
     = Leftwards 
@@ -66,13 +67,12 @@ termSize (Typ _)              =  2
 subsSize (Substn ts lvs)      =  3 * S.size ts + 2 * S.size lvs
 
 addSimp :: String -> Term -> [(String, Direction)]
-addSimp nme (PCons sb n (p:q:xs)) = do
-                                    let sizeP = termSize p
-                                    let sizeQ = termSize q
-                                    if sizeP > sizeQ
-                                      then [(nme, Leftwards)] 
-                                    else if sizeP < sizeQ
-                                      then [(nme, Rightwards)]
-                                    else []
+addSimp nme (PCons sb (Identifier "equiv" 0) (p:q:[])) = do let sizeP = termSize p
+                                                            let sizeQ = termSize q
+                                                            if sizeP > sizeQ
+                                                              then [(nme, Leftwards)] 
+                                                            else if sizeP < sizeQ
+                                                              then [(nme, Rightwards)]
+                                                            else []
 addSimp nme _ = []
 \end{code}

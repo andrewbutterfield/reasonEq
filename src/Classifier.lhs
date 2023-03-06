@@ -38,19 +38,19 @@ showDir Rightwards = "Rightwards"
 simpStr :: (String, Direction) -> String
 simpStr sim = "(" ++ fst sim ++ "," ++ showDir (snd sim) ++ ")"
 
-showSimps :: [(String, Direction)] -> String
-showSimps [] = ""
-showSimps (x:[]) = simpStr x
-showSimps (x:xs) = simpStr x ++ showSimps xs
+showSimps :: [(String, Direction)] -> Int -> String
+showSimps [] _ = ""
+showSimps (x:[]) n = "\n\t" ++ show n ++ ". " ++ simpStr x
+showSimps (x:xs) n = "\n\t" ++ show n ++ ". " ++ simpStr x ++ showSimps xs (n + 1)
 
-showAuto alaws = "   1. simps   -> "   ++ showSimps (simps alaws)  ++ "\n"
-              ++ "   2. folds   -> "   ++ concat (folds alaws)     ++ "\n"
-              ++ "   3. unfolds -> "   ++ concat (unfolds alaws)    ++ "\n"
+showAuto alaws = "   i. simps:"  ++ showSimps (simps alaws) 1  ++ "\n\n"
+              ++ "  ii. folds:"  ++ concat (folds alaws)       ++ "\n\n"
+              ++ " iii. unfolds:"  ++ concat (unfolds alaws)   ++ "\n\n"
 
 addLawClassifier :: NmdAssertion -> AutoLaws -> AutoLaws
 addLawClassifier (nme, asser) au = AutoLaws {  simps = simps au ++ addSimp nme (assnT asser)
-                                             ,  folds = folds au
-                                             ,  unfolds = unfolds au
+                                             , folds = folds au
+                                             , unfolds = unfolds au
                                              }
                                             
 addLawsClass :: [Law] -> AutoLaws -> AutoLaws

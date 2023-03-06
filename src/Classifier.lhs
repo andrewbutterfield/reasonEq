@@ -47,11 +47,16 @@ showAuto alaws = "   1. simps   -> "   ++ showSimps (simps alaws)  ++ "\n"
               ++ "   2. folds   -> "   ++ concat (folds alaws)     ++ "\n"
               ++ "   3. unfolds -> "   ++ concat (unfolds alaws)    ++ "\n"
 
-addLawsClassifier :: NmdAssertion -> AutoLaws -> AutoLaws
-addLawsClassifier (nme, asser) au = AutoLaws {  simps = simps au ++ addSimp nme (assnT asser)
+addLawClassifier :: NmdAssertion -> AutoLaws -> AutoLaws
+addLawClassifier (nme, asser) au = AutoLaws {  simps = simps au ++ addSimp nme (assnT asser)
                                              ,  folds = folds au
                                              ,  unfolds = unfolds au
                                              }
+                                            
+addLawsClass :: [Law] -> AutoLaws -> AutoLaws
+addLawsClass [] au = au 
+addLawsClass (x:[]) au = (addLawClassifier (lawNamedAssn x) au)
+addLawsClass (x:xs) au = addLawsClass (xs) (addLawClassifier (lawNamedAssn x) au)
 
 termSize :: Term -> Int
 termSize (Val _ _)            =  1

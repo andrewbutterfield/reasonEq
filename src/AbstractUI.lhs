@@ -275,10 +275,11 @@ demoteLaw thnm whichL reqs
 \subsubsection{Classifying Laws}
 
 \begin{code}
-findLaw :: MonadFail m => Theory -> String -> m Law
+findLaw :: MonadFail m => Theory -> String -> m [Law]
 findLaw thry lnm
+ | lnm == "."      =  return lws
  | null law1       =  fail ("law '"++lnm++"': not found")
- | otherwise       =  return theLaw
+ | otherwise       =  return [theLaw]
  where
    lws = laws thry
    (_,law1,_) = extract (((lnm==) . fst) .fst) lws

@@ -275,20 +275,26 @@ demoteLaw thnm whichL reqs
 \subsubsection{Classifying Laws}
 
 \begin{code}
-findLaw :: MonadFail m => Theory -> String -> m Law
-findLaw thry lnm
+findLaw :: MonadFail m => Theory -> String -> REqState -> m [Law]
+findLaw thry lnm reqs
+ | lnm == "*"      =  return lwsDep
+ | lnm == "."      =  return lwsCur
  | null law1       =  fail ("law '"++lnm++"': not found")
- | otherwise       =  return theLaw
+ | otherwise       =  return [theLaw]
  where
-   lws = laws thry
-   (_,law1,_) = extract (((lnm==) . fst) .fst) lws
+   currTh = currTheory reqs
+   thys = theories reqs
+   lwsCur = laws thry
+   lwsDep = concat $ map laws (fromJust $ getTheoryDeps currTh thys)
+   (_,law1,_) = extract (((lnm==) . fst) .fst) lwsCur
    theLaw = head law1
+
 
 classifyLaw :: MonadFail m => String -> String -> REqState -> m REqState
 classifyLaw thnm whichL reqs
   = case getTheory thnm $ theories reqs of
       Nothing -> fail ("No theory named '"++thnm++"'.")
-      Just thry -> case findLaw thry whichL of
+      Just thry -> case findLaw thry whichL reqs of
                       Nothing -> fail ("No law named '"++whichL++"' in theory.")
                       Just law -> do thry' <- lawClassify law thry
                                      return $ changed

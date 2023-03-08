@@ -875,24 +875,40 @@ autoCommand args state@(reqs, liveProof)
              return (reqs, liveProof)
       Just thry
        -> do let autos = auto thry
-             let mths = matchSimps (simps autos) (reqs, liveProof)
-             case matchFocusAgainst (fst $ head $ simps autos) (logicsig reqs) liveProof of
-              Yes liveProof'  ->  return (reqs, liveProof')
-              But msgs
-                -> do putStrLn $ unlines' msgs
-                      waitForReturn
-                      return (reqs, matches_ [] liveProof)
+             let (nLaws, liveProofm) = matchSimps (simps autos) (reqs, liveProof)
+             case applySimps (reqs, liveProofm) nLaws of
+              Yes liveProof' -> return (reqs, liveProof')
+              But nothing -> do putStrLn ("Can't find current theory!!!\BEL")
+                                return (reqs, liveProof)
+              
 
 
-matchSimps :: [(String, Direction)] -> (REqState, LiveProof) -> [String]
-matchSimps autos (reqs, liveProof) = findMSimps autos [] (reqs, liveProof)
+applySimps :: MonadFail m => (REqState, LiveProof) -> Int -> m LiveProof
+applySimps (reqs, liveProof) 0 = fail ("No success simp applys")
+applySimps (reqs, liveProof) n 
+    = case applyMatchToFocus1 n liveProof of
+      Nothing -> applySimps (reqs, liveProof) (n - 1)
+      Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)
+       -> do let availTerms = false : true : gSubTerms
+             let (vardone,svtms) = (true, [])
+             let (lvardone,lvvls) = (true, [])
+             case applyMatchToFocus2 vts mtch [] [] liveProof of
+                Yes liveProof' -> return liveProof'
+                But msgs -> applySimps (reqs, liveProof) (n - 1)
+  where
+    true   =  theTrue  $ logicsig reqs
+    false  =  theFalse $ logicsig reqs
+    vts = concat $ map thd3 $ mtchCtxts liveProof
 
-findMSimps :: [(String, Direction)] -> [String] -> (REqState, LiveProof) -> [String]
-findMSimps [] mths (reqs, liveProof) = mths
-findMSimps (x:xs) mths (reqs, liveProof) 
+matchSimps :: [(String, Direction)] -> (REqState, LiveProof) -> (Int, LiveProof)
+matchSimps autos (reqs, liveProof) = findMSimps autos 0 (reqs, liveProof)
+
+findMSimps :: [(String, Direction)] -> Int -> (REqState, LiveProof) -> (Int, LiveProof)
+findMSimps [] n (reqs, liveProof) = (n, liveProof)
+findMSimps (x:xs) n (reqs, liveProof) 
     = case matchFocusAgainst (fst x) (logicsig reqs) liveProof of
-        Yes liveProof'  ->  findMSimps xs (mths ++ [fst x]) (reqs, liveProof)
-        But msgs        ->  findMSimps xs mths (reqs, liveProof)
+        Yes liveProof'  ->  findMSimps xs (n + 1) (reqs, liveProof')
+        But msgs        ->  findMSimps xs n (reqs, liveProof)
 \end{code}
 
 \newpage

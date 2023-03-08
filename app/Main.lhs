@@ -878,21 +878,16 @@ autoCommand args state@(reqs, liveProof)
              let (nLaws, liveProofm) = matchSimps (simps autos) (reqs, liveProof)
              case applySimps (reqs, liveProofm) nLaws of
               Yes liveProof' -> return (reqs, liveProof')
-              But nothing -> do putStrLn ("Can't find current theory!!!\BEL")
+              But nothing -> do putStrLn ("No matching simp found")
                                 return (reqs, liveProof)
               
-
-
 applySimps :: MonadFail m => (REqState, LiveProof) -> Int -> m LiveProof
-applySimps (reqs, liveProof) 0 = fail ("No success simp applys")
+applySimps (reqs, liveProof) 0 = fail ("No successful matching simp applys")
 applySimps (reqs, liveProof) n 
     = case applyMatchToFocus1 n liveProof of
       Nothing -> applySimps (reqs, liveProof) (n - 1)
       Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)
-       -> do let availTerms = false : true : gSubTerms
-             let (vardone,svtms) = (true, [])
-             let (lvardone,lvvls) = (true, [])
-             case applyMatchToFocus2 vts mtch [] [] liveProof of
+        -> case applyMatchToFocus2 vts mtch [] [] liveProof of
                 Yes liveProof' -> return liveProof'
                 But msgs -> applySimps (reqs, liveProof) (n - 1)
   where

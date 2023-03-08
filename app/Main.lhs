@@ -875,6 +875,7 @@ autoCommand args state@(reqs, liveProof)
              return (reqs, liveProof)
       Just thry
        -> do let autos = auto thry
+             let mths = matchSimps (simps autos) (reqs, liveProof)
              case matchFocusAgainst (fst $ head $ simps autos) (logicsig reqs) liveProof of
               Yes liveProof'  ->  return (reqs, liveProof')
               But msgs
@@ -883,12 +884,15 @@ autoCommand args state@(reqs, liveProof)
                       return (reqs, matches_ [] liveProof)
 
 
-matchSimps :: [(String, Direction)] -> [String] -> (REqState, LiveProof) -> [String]
-matchSimps [] mths (reqs, liveProof) = mths
-matchSimps (x:xs) mths (reqs, liveProof) 
+matchSimps :: [(String, Direction)] -> (REqState, LiveProof) -> [String]
+matchSimps autos (reqs, liveProof) = findMSimps autos [] (reqs, liveProof)
+
+findMSimps :: [(String, Direction)] -> [String] -> (REqState, LiveProof) -> [String]
+findMSimps [] mths (reqs, liveProof) = mths
+findMSimps (x:xs) mths (reqs, liveProof) 
     = case matchFocusAgainst (fst x) (logicsig reqs) liveProof of
-        Yes liveProof'  ->  matchSimps xs (mths ++ [fst x]) (reqs, liveProof)
-        But msgs        ->  matchSimps xs mths (reqs, liveProof)
+        Yes liveProof'  ->  findMSimps xs (mths ++ [fst x]) (reqs, liveProof)
+        But msgs        ->  findMSimps xs mths (reqs, liveProof)
 \end{code}
 
 \newpage

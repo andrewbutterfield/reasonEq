@@ -44,6 +44,7 @@ import TestRendering
 import TestParsing
 import REPL
 import Dev
+import Classifier
 
 import Debug.Trace
 dbg msg x = trace (msg++show x) x
@@ -868,12 +869,26 @@ autoDescr = ( "au"
 
 autoCommand :: REPLCmd (REqState, LiveProof)
 autoCommand args state@(reqs, liveProof)
-   =  do  (r, lp) <- matchLawCommand [] (reqs, liveProof)
-          (r2, lp2) <- applyMatch ["1"] (r, lp)
-          return (r2, lp2)
- -- =  do putStrLn "auto"
- --       waitForReturn
- --       return (reqs, liveProof)
+   = case getTheory (currTheory reqs) $ theories reqs of
+      Nothing
+       -> do putStrLn ("Can't find current theory!!!\BEL")
+             return (reqs, liveProof)
+      Just thry
+       -> do let autos = auto thry
+             case matchFocusAgainst (fst $ head $ simps autos) (logicsig reqs) liveProof of
+              Yes liveProof'  ->  return (reqs, liveProof')
+              But msgs
+                -> do putStrLn $ unlines' msgs
+                      waitForReturn
+                      return (reqs, matches_ [] liveProof)
+
+
+matchSimps :: [(String, Direction)] -> [String] -> (REqState, LiveProof) -> [String]
+matchSimps [] mths (reqs, liveProof) = mths
+matchSimps (x:xs) mths (reqs, liveProof) 
+    = case matchFocusAgainst (fst x) (logicsig reqs) liveProof of
+        Yes liveProof'  ->  matchSimps xs (mths ++ [fst x]) (reqs, liveProof)
+        But msgs        ->  matchSimps xs mths (reqs, liveProof)
 \end{code}
 
 \newpage

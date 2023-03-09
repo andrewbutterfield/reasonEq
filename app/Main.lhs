@@ -45,6 +45,7 @@ import TestParsing
 import REPL
 import Dev
 import Classifier
+import LiveProofs
 
 import Debug.Trace
 dbg msg x = trace (msg++show x) x
@@ -875,35 +876,41 @@ autoCommand args state@(reqs, liveProof)
              return (reqs, liveProof)
       Just thry
        -> do let autos = auto thry
-             let (nLaws, liveProofm) = matchSimps (simps autos) (reqs, liveProof)
-             case applySimps (reqs, liveProofm) nLaws of
+             let (nLaws, liveProofm, matchLs) = matchSimps (simps autos) (reqs, liveProof)
+             case applySimps (reqs, liveProofm) nLaws matchLs of
               Yes liveProof' -> return (reqs, liveProof')
               But nothing -> do putStrLn ("No matching simp found")
                                 return (reqs, liveProof)
-              
-applySimps :: MonadFail m => (REqState, LiveProof) -> Int -> m LiveProof
-applySimps (reqs, liveProof) 0 = fail ("No successful matching simp applys")
-applySimps (reqs, liveProof) n 
+
+giveMatchClass :: (String, Direction) -> MatchClass
+giveMatchClass (_, Rightwards) = MatchEqvRHS
+giveMatchClass (_, Leftwards) = MatchEqvLHS
+            
+applySimps :: MonadFail m => (REqState, LiveProof) -> Int -> [(String, Direction)] -> m LiveProof
+applySimps (reqs, liveProof) 0 _ = fail ("No successful matching simp applys")
+applySimps (reqs, liveProof) n (x:xs)
     = case applyMatchToFocus1 n liveProof of
-      Nothing -> applySimps (reqs, liveProof) (n - 1)
+      Nothing -> applySimps (reqs, liveProof) (n - 1) xs
       Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)
-        -> case applyMatchToFocus2 vts mtch [] [] liveProof of
+        -> do
+              let newMtch = mclass_ (giveMatchClass x) mtch
+              case applyMatchToFocus2 vts newMtch [] [] liveProof of
                 Yes liveProof' -> return liveProof'
-                But msgs -> applySimps (reqs, liveProof) (n - 1)
+                But msgs -> applySimps (reqs, liveProof) (n - 1) xs
   where
     true   =  theTrue  $ logicsig reqs
     false  =  theFalse $ logicsig reqs
     vts = concat $ map thd3 $ mtchCtxts liveProof
 
-matchSimps :: [(String, Direction)] -> (REqState, LiveProof) -> (Int, LiveProof)
-matchSimps autos (reqs, liveProof) = findMSimps autos 0 (reqs, liveProof)
+matchSimps :: [(String, Direction)] -> (REqState, LiveProof) -> (Int, LiveProof, [(String, Direction)])
+matchSimps autos (reqs, liveProof) = findMSimps autos 0 (reqs, liveProof) []
 
-findMSimps :: [(String, Direction)] -> Int -> (REqState, LiveProof) -> (Int, LiveProof)
-findMSimps [] n (reqs, liveProof) = (n, liveProof)
-findMSimps (x:xs) n (reqs, liveProof) 
+findMSimps :: [(String, Direction)] -> Int -> (REqState, LiveProof) -> [(String, Direction)] -> (Int, LiveProof, [(String, Direction)])
+findMSimps [] n (reqs, liveProof) ml  = (n, liveProof, ml)
+findMSimps (x:xs) n (reqs, liveProof) ml
     = case matchFocusAgainst (fst x) (logicsig reqs) liveProof of
-        Yes liveProof'  ->  findMSimps xs (n + 1) (reqs, liveProof')
-        But msgs        ->  findMSimps xs n (reqs, liveProof)
+        Yes liveProof'  ->  findMSimps xs (n + 1) (reqs, liveProof') ([x] ++ ml)
+        But msgs        ->  findMSimps xs n (reqs, liveProof) ml
 \end{code}
 
 \newpage

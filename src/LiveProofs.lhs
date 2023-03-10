@@ -10,7 +10,6 @@ module LiveProofs
  ( MatchContext
  , Match(..), Matches
  , LiveProof(..)
- , mclass_, mclass__
  , conjThName__, conjThName_, conjName__, conjName_
  , conjecture__, conjecture_, conjSC__, conjSC_
  , strategy__, strategy_, mtchCtxts__, mtchCtxts_, focus__, focus_
@@ -115,9 +114,6 @@ data Match
       , mLawSC   ::  SideCond   -- law side-condition mapped to goal
       , mRepl    ::  Term       -- replacement term, instantiated with binding
       } deriving (Eq,Show,Read)
-
-mclass__ f lp = lp{ mClass = f $ mClass lp}
-mclass_ = mclass__ . const
 
 type Matches = [Match]
 \end{code}

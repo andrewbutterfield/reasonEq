@@ -876,10 +876,9 @@ autoCommand args state@(reqs, liveProof)
              return (reqs, liveProof)
       Just thry
        -> do let autos = auto thry
-             let (nLaws, liveProofm, matchLs) = matchSimps (simps autos) (reqs, liveProof)
-             case applySimps (reqs, liveProofm) nLaws matchLs of
+             case applySimps (simps autos) (reqs, liveProof) of
               Yes liveProof' -> return (reqs, liveProof')
-              But nothing -> do putStrLn ("No matching simp found")
+              But nothing -> do putStrLn ("No successful matching simp applys")
                                 return (reqs, liveProof)
 
 checkIsSimp :: (String, Direction) -> MatchClass -> Bool
@@ -891,32 +890,22 @@ checkIsComp :: (String, Direction) -> MatchClass -> Bool
 checkIsComp (_, Rightwards) MatchEqvLHS = True
 checkIsComp (_, Leftwards) MatchEqvRHS = True
 checkIsComp _ _ = False
-            
-applySimps :: MonadFail m => (REqState, LiveProof) -> Int -> [(String, Direction)] -> m LiveProof
-applySimps (reqs, liveProof) 0 _ = fail ("No successful matching simp applys")
-applySimps (reqs, liveProof) n (x:xs)
-    = case applyMatchToFocus1 (pdbg "aS.n" n) liveProof of
-        Nothing -> applySimps (reqs, liveProof) (n - 1) xs
-        Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)
-          -> case checkIsSimp x (mClass mtch) of 
-              False -> applySimps (reqs, liveProof) (n - 1) xs
-              True -> case applyMatchToFocus2 vts mtch [] [] liveProof of
-                        Yes liveProof' -> return liveProof'
-                        But msgs -> applySimps (reqs, liveProof) (n - 1) xs
-  where
-    true   =  theTrue  $ logicsig reqs
-    false  =  theFalse $ logicsig reqs
-    vts = concat $ map thd3 $ mtchCtxts liveProof
 
-matchSimps :: [(String, Direction)] -> (REqState, LiveProof) -> (Int, LiveProof, [(String, Direction)])
-matchSimps autos (reqs, liveProof) = findMSimps autos 0 (reqs, liveProof) []
-
-findMSimps :: [(String, Direction)] -> Int -> (REqState, LiveProof) -> [(String, Direction)] -> (Int, LiveProof, [(String, Direction)])
-findMSimps [] n (reqs, liveProof) ml  = (n, liveProof, ml)
-findMSimps (x:xs) n (reqs, liveProof) ml
+applySimps :: MonadFail m => [(String, Direction)] -> (REqState, LiveProof) -> m LiveProof
+applySimps [] (reqs, liveProof) = fail ("No successful matching simp applys")
+applySimps (x:xs) (reqs, liveProof)
     = case matchFocusAgainst (fst x) (logicsig reqs) liveProof of
-        Yes liveProof'  ->  findMSimps xs (n + 1) (reqs, liveProof') ([x] ++ ml)
-        But msgs        ->  findMSimps xs n (reqs, liveProof) ml
+        Yes liveProof' ->  case applyMatchToFocus1 1 liveProof' of
+                                Nothing -> applySimps xs (reqs, liveProof)
+                                Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)
+                                  -> case checkIsSimp x (mClass mtch) of 
+                                      False -> applySimps xs (reqs, liveProof')
+                                      True  -> case applyMatchToFocus2 vts mtch [] [] liveProof' of
+                                                 Yes liveProof'' -> return liveProof''
+                                                 But msgs        -> applySimps xs (reqs, liveProof)
+        But msgs       ->  applySimps xs (reqs, liveProof)
+   where
+    vts = concat $ map thd3 $ mtchCtxts liveProof
 \end{code}
 
 \newpage

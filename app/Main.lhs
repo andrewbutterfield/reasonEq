@@ -882,18 +882,23 @@ autoCommand args state@(reqs, liveProof)
               But nothing -> do putStrLn ("No matching simp found")
                                 return (reqs, liveProof)
 
-checkMatchClass :: (String, Direction) -> MatchClass -> Bool
-checkMatchClass (_, Rightwards) MatchEqvRHS = True
-checkMatchClass (_, Leftwards) MatchEqvLHS = True
-checkMatchClass _ _ = False
+checkIsSimp :: (String, Direction) -> MatchClass -> Bool
+checkIsSimp (_, Rightwards) MatchEqvRHS = True
+checkIsSimp (_, Leftwards) MatchEqvLHS = True
+checkIsSimp _ _ = False
+
+checkIsComp :: (String, Direction) -> MatchClass -> Bool
+checkIsComp (_, Rightwards) MatchEqvLHS = True
+checkIsComp (_, Leftwards) MatchEqvRHS = True
+checkIsComp _ _ = False
             
 applySimps :: MonadFail m => (REqState, LiveProof) -> Int -> [(String, Direction)] -> m LiveProof
 applySimps (reqs, liveProof) 0 _ = fail ("No successful matching simp applys")
 applySimps (reqs, liveProof) n (x:xs)
-    = case applyMatchToFocus1 n liveProof of
+    = case applyMatchToFocus1 (pdbg "aS.n" n) liveProof of
         Nothing -> applySimps (reqs, liveProof) (n - 1) xs
         Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)
-          -> case checkMatchClass x (mClass mtch) of 
+          -> case checkIsSimp x (mClass mtch) of 
               False -> applySimps (reqs, liveProof) (n - 1) xs
               True -> case applyMatchToFocus2 vts mtch [] [] liveProof of
                         Yes liveProof' -> return liveProof'

@@ -863,10 +863,11 @@ leaveHypothesis _ = tryDelta moveFocusFromHypothesis
 Auto Proof
 \begin{code}
 autoDescr = ( "au"
-                , "auto proof"
-                , unlines
-                   [ "au -- auto proof"]
-                , autoCommand )
+            , "auto proof"
+            , unlines
+                [ "au -- auto proof"
+                , "au c -- auto proof comp"]
+            , autoCommand )
 
 autoCommand :: REPLCmd (REqState, LiveProof)
 autoCommand args state@(reqs, liveProof)
@@ -876,10 +877,13 @@ autoCommand args state@(reqs, liveProof)
              return (reqs, liveProof)
       Just thry
        -> do let autos = auto thry
-             case applySimps (simps autos) (reqs, liveProof) of
+             let f = if input == "c" then checkIsComp else checkIsSimp
+             case applySimps f (simps autos) (reqs, liveProof) of
               Yes liveProof' -> return (reqs, liveProof')
               But nothing -> do putStrLn ("No successful matching simp applys")
                                 return (reqs, liveProof)
+    where
+      input = unwords args
 
 checkIsSimp :: (String, Direction) -> MatchClass -> Bool
 checkIsSimp (_, Rightwards) MatchEqvRHS = True
@@ -891,19 +895,20 @@ checkIsComp (_, Rightwards) MatchEqvLHS = True
 checkIsComp (_, Leftwards) MatchEqvRHS = True
 checkIsComp _ _ = False
 
-applySimps :: MonadFail m => [(String, Direction)] -> (REqState, LiveProof) -> m LiveProof
-applySimps [] (reqs, liveProof) = fail ("No successful matching simp applys")
-applySimps (x:xs) (reqs, liveProof)
+applySimps :: MonadFail m => ((String, Direction) -> MatchClass -> Bool) -> 
+                             [(String, Direction)] -> (REqState, LiveProof) -> m LiveProof
+applySimps f [] (reqs, liveProof) = fail ("No successful matching simp applys")
+applySimps f (x:xs) (reqs, liveProof)
     = case matchFocusAgainst (fst x) (logicsig reqs) liveProof of
         Yes liveProof' ->  case applyMatchToFocus1 1 liveProof' of
-                                Nothing -> applySimps xs (reqs, liveProof)
+                                Nothing -> applySimps f xs (reqs, liveProof)
                                 Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)
-                                  -> case checkIsSimp x (mClass mtch) of 
-                                      False -> applySimps xs (reqs, liveProof')
+                                  -> case f x (mClass mtch) of 
+                                      False -> applySimps f xs (reqs, liveProof')
                                       True  -> case applyMatchToFocus2 vts mtch [] [] liveProof' of
                                                  Yes liveProof'' -> return liveProof''
-                                                 But msgs        -> applySimps xs (reqs, liveProof)
-        But msgs       ->  applySimps xs (reqs, liveProof)
+                                                 But msgs        -> applySimps f xs (reqs, liveProof)
+        But msgs       ->  applySimps f xs (reqs, liveProof)
    where
     vts = concat $ map thd3 $ mtchCtxts liveProof
 \end{code}

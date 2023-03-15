@@ -120,6 +120,9 @@ knwnKEY = "KNOWN = "
 sbblKEY = "SUBABLE = "
 lawsKEY = "LAWS"
 prfsKEY = "PROOFS"
+simpKEY = "SIMPLIFIERS"
+foldKEY = "DEFFOLD"
+unflKEY = "DEFUNFOLD"
 conjKEY = "CONJECTURES"
 
 writeTheory :: Theory -> [String]
@@ -129,6 +132,9 @@ writeTheory thry
     , knwnKEY ++ show (known thry) ] ++
     writePerLine lawsKEY show (laws thry) ++
     writePerLine prfsKEY show (proofs thry) ++
+    writePerLine simpKEY show (simps $ auto thry) ++
+    writePerLine foldKEY id (folds $ auto thry) ++
+    writePerLine unflKEY id (unfolds $ auto thry) ++
     writePerLine conjKEY show (conjs thry) ++
     [ thryTRL nm ]
   where nm = thName thry
@@ -141,17 +147,20 @@ readTheory txts
        (knwn,rest3) <- readKey knwnKEY read     rest2
        (lws, rest4) <- readPerLine lawsKEY read rest3
        (prfs,rest5) <- readPerLine prfsKEY read rest4
-       (conj,rest6) <- readPerLine conjKEY read rest5
-       rest7        <- readThis (thryTRL nm)    rest6
+       (simp,rest6) <- readPerLine simpKEY read rest5
+       (fold,rest7) <- readPerLine foldKEY id   rest6
+       (unfl,rest8) <- readPerLine unflKEY id   rest7
+       (conj,rest9) <- readPerLine conjKEY read rest8
+       rest10       <- readThis (thryTRL nm)    rest9
        return ( Theory { thName   =  nm
                        , thDeps   =  deps
                        , known    =  knwn
                        , laws     =  lws
                        , proofs   =  prfs
+                       , auto     =  AutoLaws simp fold unfl
                        , conjs    =  conj
-                       , auto     =  nullAutoLaws
                        }
-              , rest7 )
+              , rest10 )
 \end{code}
 
 \newpage

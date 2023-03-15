@@ -7,12 +7,26 @@ BEGIN LIST LAWS
 (("equiv_assoc",ASN (C P True (Id "equiv" 0) [C P True (Id "equiv" 0) [C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "R" 0,VP,WS))],C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "equiv" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]]],([],fromList []))),Axiom)
 (("equiv_symm",ASN (C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "P" 0,VP,WS))],([],fromList []))),Axiom)
 (("id_subst",ASN (C P True (Id "equiv" 0) [S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "x" 0,VO,WS),[],[]))])),V P (VR (Id "P" 0,VP,WS))],([],fromList []))),Axiom)
+(("equiv_id",ASN (C P True (Id "equiv" 0) [C P True (Id "equiv" 0) [K P (VB True),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))],([],fromList []))),Assumed)
+(("true_subst",ASN (C P True (Id "equiv" 0) [S P (K P (VB True)) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),K P (VB True)],([],fromList []))),Assumed)
+(("equiv_subst",ASN (C P True (Id "equiv" 0) [S P (C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),C P True (Id "equiv" 0) [S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),S P (V P (VR (Id "Q" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))]],([],fromList []))),Assumed)
 END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS
+BEGIN LIST SIMPLIFIERS
+("id_subst",Leftwards)
+("equiv_id",Leftwards)
+("true_subst",Leftwards)
+("equiv_subst",Rightwards)
+("id_subst",Leftwards)
+("equiv_id",Leftwards)
+("true_subst",Leftwards)
+("equiv_subst",Rightwards)
+END LIST SIMPLIFIERS
+BEGIN LIST DEFFOLD
+END LIST DEFFOLD
+BEGIN LIST DEFUNFOLD
+END LIST DEFUNFOLD
 BEGIN LIST CONJECTURES
-("equiv_id",ASN (C P True (Id "equiv" 0) [C P True (Id "equiv" 0) [K P (VB True),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))],([],fromList [])))
-("true_subst",ASN (C P True (Id "equiv" 0) [S P (K P (VB True)) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),K P (VB True)],([],fromList [])))
-("equiv_subst",ASN (C P True (Id "equiv" 0) [S P (C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),C P True (Id "equiv" 0) [S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),S P (V P (VR (Id "Q" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))]],([],fromList [])))
 END LIST CONJECTURES
 END THEORY Equiv

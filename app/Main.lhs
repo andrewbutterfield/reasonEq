@@ -899,7 +899,7 @@ applySimps :: MonadFail m => ((String, Direction) -> MatchClass -> Bool) ->
                              [(String, Direction)] -> (REqState, LiveProof) -> m LiveProof
 applySimps f [] (reqs, liveProof) = fail ("No successful matching simp applys")
 applySimps f (x:xs) (reqs, liveProof)
-    = case matchFocusAgainst (fst x) (logicsig reqs) liveProof of
+    = case matchFocusAgainst (pdbg "aS.n" (fst x)) (logicsig reqs) liveProof of
         Yes liveProof' ->  case applyMatchToFocus1 1 liveProof' of
                                 Nothing -> applySimps f xs (reqs, liveProof)
                                 Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)

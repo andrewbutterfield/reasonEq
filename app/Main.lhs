@@ -893,6 +893,7 @@ checkIsSimp _ _ = False
 checkIsComp :: (String, Direction) -> MatchClass -> Bool
 checkIsComp (_, Rightwards) MatchEqvLHS = True
 checkIsComp (_, Leftwards) MatchEqvRHS = True
+checkIsComp (_, _) (MatchEqvVar _) = True
 checkIsComp _ _ = False
 
 applySimps :: MonadFail m => ((String, Direction) -> MatchClass -> Bool) -> 

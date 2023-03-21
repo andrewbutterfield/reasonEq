@@ -499,7 +499,11 @@ cmdClassify :: REqCmdDescr
 cmdClassify
   = ( "classify"
     , "activate classifier"
-    , unlines ["class"]
+    , unlines 
+       [ "classify n - classify law 'n'"
+       , "classify . - classify all current theory laws"
+       , "classify * - classify all dependency theory laws"
+       ]
     , doClassify)
 
 doClassify args reqs

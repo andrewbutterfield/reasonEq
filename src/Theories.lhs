@@ -31,7 +31,7 @@ module Theories
  , showTheories, showNamedTheory
  , showTheoryLong, showTheoryShort, showTheoryLaws
  , showTheoryKnowns
- , lawClassify
+ , lawClassify, lawDepClassify
  ) where
 
 import Data.Map (Map)
@@ -510,6 +510,18 @@ upgrade cjnm thry sjc (cj@(nm,asn):cjs)
 \begin{code}
 lawClassify :: MonadFail m => [Law] -> Theory -> m Theory
 lawClassify lw thry = return $ auto_ (addLawsClass (lw) (auto thry)) thry
+
+lawDepClassify :: MonadFail m => String -> Theories -> m Theories
+lawDepClassify thnm thys
+  = do depthys <- fmap ttail $ getTheoryDeps thnm thys
+       lawDepClassify' thys depthys
+
+lawDepClassify' thys [] = return thys
+lawDepClassify' thys (depthy:depthys)
+  = do  let lws = laws depthy
+        depthy' <- lawClassify lws depthy
+        thys' <- replaceTheory (thName depthy) (const depthy') thys
+        lawDepClassify' thys' depthys
 \end{code}
 
 

@@ -49,14 +49,19 @@ showSimps [] _ = ""
 showSimps (x:[]) n = "\n\t" ++ show n ++ ". " ++ simpStr x
 showSimps (x:xs) n = "\n\t" ++ show n ++ ". " ++ simpStr x ++ showSimps xs (n + 1)
 
+showFolds :: [String] -> Int -> String
+showFolds [] _ = ""
+showFolds (x:[]) n = "\n\t" ++ show n ++ ". " ++ x
+showFolds (x:xs) n = "\n\t" ++ show n ++ ". " ++ x ++ showFolds xs (n + 1)
+
 showAuto alaws = "   i. simps:"  ++ showSimps (simps alaws) 1  ++ "\n\n"
-              ++ "  ii. folds:"  ++ concat (folds alaws)       ++ "\n\n"
-              ++ " iii. unfolds:"  ++ concat (unfolds alaws)   ++ "\n\n"
+              ++ "  ii. folds:"  ++ showFolds (folds alaws) 1  ++ "\n\n"
+              ++ " iii. unfolds:"  ++ showFolds (unfolds alaws) 1 ++ "\n\n"
 
 addLawClassifier :: NmdAssertion -> AutoLaws -> AutoLaws
 addLawClassifier (nme, asser) au = AutoLaws {  simps = simps au ++ addSimp nme (assnT asser)
-                                             , folds = folds au
-                                             , unfolds = unfolds au
+                                             , folds = folds au ++ addFold nme (assnT asser)
+                                             , unfolds = unfolds au ++ addFold nme (assnT asser)
                                              }
                                             
 addLawsClass :: [Law] -> AutoLaws -> AutoLaws
@@ -86,4 +91,16 @@ addSimp nme (PCons sb (Identifier "equiv" 0) (p:q:[])) = do let sizeP = termSize
                                                               then [(nme, Rightwards)]
                                                             else []
 addSimp nme _ = []
+
+addFold :: String -> Term -> [(String)]
+addFold nme (PCons sb (Identifier "equiv" 0) (p:q:[])) =  if isFold p
+                                                              then [nme] 
+                                                          else []
+addFold nme _ = []
+
+isFold :: Term -> Bool
+isFold (Cons _ _ _ xs@(_:_))
+            | all isVar xs = True
+            | otherwise = False
+isFold _ = False
 \end{code}

@@ -31,6 +31,12 @@ nullAutoLaws
              ,  unfolds = []
              }
 
+combineAuto :: AutoLaws -> AutoLaws -> AutoLaws
+combineAuto a b = AutoLaws {  simps = simps a ++ simps b
+                            , folds = folds a ++ folds b
+                            , unfolds = unfolds a ++ unfolds b
+                            }
+
 showDir :: Direction -> String
 showDir Leftwards  = "Leftwards"
 showDir Rightwards = "Rightwards"

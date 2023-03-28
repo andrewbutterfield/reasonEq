@@ -880,7 +880,7 @@ autoCommand args state@(reqs, liveProof)
        -> do putStrLn ("Can't find current theory!!!\BEL")
              return (reqs, liveProof)
       Just thry
-       -> do let autos = auto thry
+       -> do let autos = allAutos thry $ theories reqs
              let f = if input == "c" then checkIsComp else checkIsSimp
              case applySimps f (simps autos) (reqs, liveProof) of
               Yes liveProof' -> return (reqs, liveProof')
@@ -888,6 +888,18 @@ autoCommand args state@(reqs, liveProof)
                                 return (reqs, liveProof)
     where
       input = unwords args
+
+allAutos :: Theory -> Theories -> AutoLaws
+allAutos thry thys = do let depthys = getTheoryDeps' (thName thry) thys
+                        combineAutos nullAutoLaws ((depAutos [] depthys) ++ [auto thry])
+
+combineAutos :: AutoLaws -> [AutoLaws] -> AutoLaws
+combineAutos auto [] = auto
+combineAutos auto (x:xs) = combineAutos (combineAuto auto x) xs
+
+depAutos :: [AutoLaws] -> [Theory] -> [AutoLaws]
+depAutos autos [] = autos
+depAutos autos (depthy:depthys) = depAutos (autos ++ [auto depthy]) depthys
 
 checkIsSimp :: (String, Direction) -> MatchClass -> Bool
 checkIsSimp (_, Rightwards) MatchEqvRHS = True

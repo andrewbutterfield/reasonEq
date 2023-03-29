@@ -94,7 +94,9 @@ addSimp nme _ = []
 
 addFold :: String -> Term -> [(String)]
 addFold nme (PCons sb (Identifier "equiv" 0) (p:q:[])) =  if isFold p
-                                                              then [nme] 
+                                                              then if checkQ q (getN p)
+                                                                      then [nme] 
+                                                                   else []
                                                           else []
 addFold nme _ = []
 
@@ -103,4 +105,13 @@ isFold (Cons _ _ _ xs@(_:_))
             | all isVar xs = True
             | otherwise = False
 isFold _ = False
+
+getN :: Term -> Identifier
+getN (Cons _ _ n _) = n
+
+checkQ :: Term -> Identifier -> Bool
+checkQ (Cons _ _ n xs@(_:_)) i
+            | all isVar xs && n == i = False
+            | otherwise = True
+checkQ _ _ = True
 \end{code}

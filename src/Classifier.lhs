@@ -59,10 +59,25 @@ showAuto alaws = "   i. simps:"  ++ showSimps (simps alaws) 1  ++ "\n\n"
               ++ " iii. unfolds:"  ++ showFolds (unfolds alaws) 1 ++ "\n\n"
 
 addLawClassifier :: NmdAssertion -> AutoLaws -> AutoLaws
-addLawClassifier (nme, asser) au = AutoLaws {  simps = simps au ++ addSimp nme (assnT asser)
-                                             , folds = folds au ++ addFold nme (assnT asser)
-                                             , unfolds = unfolds au ++ addFold nme (assnT asser)
-                                             }
+addLawClassifier (nme, asser) au = removeFoldSimps $ AutoLaws {  simps = simps au ++ addSimp nme (assnT asser)
+                                                                , folds = folds au ++ addFold nme (assnT asser)
+                                                                , unfolds = unfolds au ++ addFold nme (assnT asser)
+                                                               }
+
+removeFoldSimps :: AutoLaws -> AutoLaws
+removeFoldSimps au = AutoLaws {  simps = removeSimpsList (folds au) (simps au)
+                               , folds = folds au
+                               , unfolds = unfolds au
+                              }
+
+removeSimpsList :: [String] -> [(String, Direction)] -> [(String, Direction)]
+removeSimpsList [] ys = ys
+removeSimpsList (x:xs) ys = removeSimpsList xs $ removeSimp x ys
+
+removeSimp :: String -> [(String, Direction)] -> [(String, Direction)]
+removeSimp _ [] = []
+removeSimp x (y:ys) | x == fst y    = removeSimp x ys
+                    | otherwise = y : removeSimp x ys
                                             
 addLawsClass :: [Law] -> AutoLaws -> AutoLaws
 addLawsClass [] au = au 

@@ -117,9 +117,13 @@ addFold nme _ = []
 
 isFold :: Term -> Bool
 isFold (Cons _ _ _ xs@(_:_))
-            | all isVar xs = True
+            | all isVar xs && allUnique xs = True
             | otherwise = False
 isFold _ = False
+
+allUnique :: (Eq a) => [a] -> Bool
+allUnique []     = True
+allUnique (x:xs) = x `notElem` xs && allUnique xs
 
 getN :: Term -> Identifier
 getN (Cons _ _ n _) = n

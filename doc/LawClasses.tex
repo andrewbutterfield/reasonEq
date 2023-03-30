@@ -33,7 +33,7 @@ We refer to such laws as being \emph{equational}.
 
 \subsubsection*{Simplify}
 
-\emph{Any} law, applied in its \emph{entirety}, is a simplfication law
+\emph{Any} law, applied in its \emph{entirety}, is a simplification law
 (term \true\ is simpler than any other term, except \false).
 This is not as helpful as it sounds as indiscriminate use of laws
 in this way leads to the aforementioned combinatorial explosion.
@@ -63,13 +63,27 @@ equivalence and equality are symmetric.
 Consider a law $P \equiv Q$. What makes it a definition of a name $N$?
 The answer is, 
 at the top-level,
-that $P$ has the form of $N$ appled to zero or more terms, 
+that $P$ has the form of $N$ applied to one or more \emph{distinct variables}, 
 so the law has the form
-$N(t_1,\dots,t_n) \equiv Q, \qquad n \geq 0$.
+$$
+   N(v_1,\dots,v_n) \equiv Q, 
+   \qquad n \geq 0
+   \qquad v_i \neq v_j \mbox{ for any distinct } i,j
+$$
 In this case, we say that applying this law left-to-right
 is an unfold or expansion.
+In general we can always do such an unfold.
+
 
 \subsubsection*{Fold/Contract}
 
-Given the law $N(t_1,\dots,t_n) \equiv Q$ from above,
+Given the law $N(v_1,\dots,v_n) \equiv Q$ from above,
 then applying it right-to-left is a fold or contraction.
+However, 
+if there are variables on the lefthand side that do \emph{not} appear in $Q$,
+then we have a problem, as there will be nothing matched to them from $Q$.
+We can choose not to allow fold in this case,
+or we could allow it, but mark them in some way.
+Which is best will depend on the situation.
+
+

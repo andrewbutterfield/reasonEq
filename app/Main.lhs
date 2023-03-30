@@ -948,13 +948,12 @@ applySimps f (x:xs) (reqs, liveProof)
 
 checkIsFold :: MatchClass -> Bool
 checkIsFold  MatchEqvRHS = True
-checkIsFold  MatchEqvLHS = True
+checkIsFold  MatchEqvLHS = False
 checkIsFold  _ = False
 
 checkIsUnFold :: MatchClass -> Bool
 checkIsUnFold MatchEqvLHS = True
-checkIsUnFold MatchEqvRHS = True
-checkIsUnFold (MatchEqvVar _) = True
+checkIsUnFold MatchEqvRHS = False
 checkIsUnFold _ = False 
 
 applyFolds' :: MonadFail m => String -> AutoLaws -> (REqState, LiveProof) -> m LiveProof

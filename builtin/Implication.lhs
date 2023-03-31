@@ -74,7 +74,7 @@ $$
 \begin{code}
 axImplDef
  = ( "implies" -.- "def"
-   , ( flattenEquiv ( p ==> q === (p \/ q === q) )
+   , ( p ==> q === (p \/ q === q) 
    , scTrue ) )
 \end{code}
 

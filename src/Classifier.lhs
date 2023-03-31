@@ -31,6 +31,12 @@ nullAutoLaws
              ,  unfolds = []
              }
 
+combineAuto :: AutoLaws -> AutoLaws -> AutoLaws
+combineAuto a b = AutoLaws {  simps = simps a ++ simps b
+                            , folds = folds a ++ folds b
+                            , unfolds = unfolds a ++ unfolds b
+                            }
+
 showDir :: Direction -> String
 showDir Leftwards  = "Leftwards"
 showDir Rightwards = "Rightwards"
@@ -43,15 +49,35 @@ showSimps [] _ = ""
 showSimps (x:[]) n = "\n\t" ++ show n ++ ". " ++ simpStr x
 showSimps (x:xs) n = "\n\t" ++ show n ++ ". " ++ simpStr x ++ showSimps xs (n + 1)
 
+showFolds :: [String] -> Int -> String
+showFolds [] _ = ""
+showFolds (x:[]) n = "\n\t" ++ show n ++ ". " ++ x
+showFolds (x:xs) n = "\n\t" ++ show n ++ ". " ++ x ++ showFolds xs (n + 1)
+
 showAuto alaws = "   i. simps:"  ++ showSimps (simps alaws) 1  ++ "\n\n"
-              ++ "  ii. folds:"  ++ concat (folds alaws)       ++ "\n\n"
-              ++ " iii. unfolds:"  ++ concat (unfolds alaws)   ++ "\n\n"
+              ++ "  ii. folds:"  ++ showFolds (folds alaws) 1  ++ "\n\n"
+              ++ " iii. unfolds:"  ++ showFolds (unfolds alaws) 1 ++ "\n\n"
 
 addLawClassifier :: NmdAssertion -> AutoLaws -> AutoLaws
-addLawClassifier (nme, asser) au = AutoLaws {  simps = simps au ++ addSimp nme (assnT asser)
-                                             , folds = folds au
-                                             , unfolds = unfolds au
-                                             }
+addLawClassifier (nme, asser) au = removeFoldSimps $ AutoLaws {  simps = simps au ++ addSimp nme (assnT asser)
+                                                                , folds = folds au ++ addFold nme (assnT asser)
+                                                                , unfolds = unfolds au ++ addFold nme (assnT asser)
+                                                               }
+
+removeFoldSimps :: AutoLaws -> AutoLaws
+removeFoldSimps au = AutoLaws {  simps = removeSimpsList (folds au) (simps au)
+                               , folds = folds au
+                               , unfolds = unfolds au
+                              }
+
+removeSimpsList :: [String] -> [(String, Direction)] -> [(String, Direction)]
+removeSimpsList [] ys = ys
+removeSimpsList (x:xs) ys = removeSimpsList xs $ removeSimp x ys
+
+removeSimp :: String -> [(String, Direction)] -> [(String, Direction)]
+removeSimp _ [] = []
+removeSimp x (y:ys) | x == fst y    = removeSimp x ys
+                    | otherwise = y : removeSimp x ys
                                             
 addLawsClass :: [Law] -> AutoLaws -> AutoLaws
 addLawsClass [] au = au 
@@ -80,4 +106,31 @@ addSimp nme (PCons sb (Identifier "equiv" 0) (p:q:[])) = do let sizeP = termSize
                                                               then [(nme, Rightwards)]
                                                             else []
 addSimp nme _ = []
+
+addFold :: String -> Term -> [(String)]
+addFold nme (PCons sb (Identifier "equiv" 0) (p:q:[])) =  if isFold p
+                                                              then if checkQ q (getN p)
+                                                                      then [nme] 
+                                                                   else []
+                                                          else []
+addFold nme _ = []
+
+isFold :: Term -> Bool
+isFold (Cons _ _ _ xs@(_:_))
+            | all isVar xs && allUnique xs = True
+            | otherwise = False
+isFold _ = False
+
+allUnique :: (Eq a) => [a] -> Bool
+allUnique []     = True
+allUnique (x:xs) = x `notElem` xs && allUnique xs
+
+getN :: Term -> Identifier
+getN (Cons _ _ n _) = n
+
+checkQ :: Term -> Identifier -> Bool
+checkQ (Cons _ _ n xs@(_:_)) i
+            | all isVar xs && n == i = False
+            | otherwise = True
+checkQ _ _ = True
 \end{code}

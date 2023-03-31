@@ -869,8 +869,10 @@ Auto Proof
 autoDescr = ( "au"
             , "auto proof"
             , unlines
-                [ "au -- auto proof"
-                , "au c -- auto proof comp"]
+                [ "au -- auto proof simp"
+                , "au c -- auto proof comp"
+                , "au f -- auto proof fold"
+                , "au u -- auto proof unfold"]
             , autoCommand )
 
 autoCommand :: REPLCmd (REqState, LiveProof)
@@ -880,14 +882,36 @@ autoCommand args state@(reqs, liveProof)
        -> do putStrLn ("Can't find current theory!!!\BEL")
              return (reqs, liveProof)
       Just thry
-       -> do let autos = auto thry
-             let f = if input == "c" then checkIsComp else checkIsSimp
-             case applySimps f (simps autos) (reqs, liveProof) of
-              Yes liveProof' -> return (reqs, liveProof')
-              But nothing -> do putStrLn ("No successful matching simp applys")
-                                return (reqs, liveProof)
+       -> do let autos = allAutos thry $ theories reqs
+             case whichApply input of
+              True ->  case applyFolds' input autos (reqs, liveProof) of
+                          Yes liveProof' -> return (reqs, liveProof')
+                          But nothing -> do putStrLn ("No successful matching fold applys")
+                                            return (reqs, liveProof)
+              False -> do let f = if input == "c" then checkIsComp else checkIsSimp
+                          case applySimps' f autos (reqs, liveProof) of
+                              Yes liveProof' -> return (reqs, liveProof')
+                              But nothing -> do putStrLn ("No successful matching simp applys")
+                                                return (reqs, liveProof)
     where
       input = unwords args
+
+whichApply :: String -> Bool
+whichApply "f" = True
+whichApply "u" = True
+whichApply _ = False
+
+allAutos :: Theory -> Theories -> AutoLaws
+allAutos thry thys = do let depthys = getTheoryDeps' (thName thry) thys
+                        combineAutos nullAutoLaws ((depAutos [] depthys) ++ [auto thry])
+
+combineAutos :: AutoLaws -> [AutoLaws] -> AutoLaws
+combineAutos auto [] = auto
+combineAutos auto (x:xs) = combineAutos (combineAuto auto x) xs
+
+depAutos :: [AutoLaws] -> [Theory] -> [AutoLaws]
+depAutos autos [] = autos
+depAutos autos (depthy:depthys) = depAutos (autos ++ [auto depthy]) depthys
 
 checkIsSimp :: (String, Direction) -> MatchClass -> Bool
 checkIsSimp (_, Rightwards) MatchEqvRHS = True
@@ -899,6 +923,10 @@ checkIsComp (_, Rightwards) MatchEqvLHS = True
 checkIsComp (_, Leftwards) MatchEqvRHS = True
 checkIsComp (_, _) (MatchEqvVar _) = True
 checkIsComp _ _ = False
+
+applySimps' :: MonadFail m => ((String, Direction) -> MatchClass -> Bool) -> 
+                              AutoLaws -> (REqState, LiveProof) -> m LiveProof
+applySimps' f autos (reqs, liveProof) = applySimps f (simps autos) (reqs, liveProof)
 
 applySimps :: MonadFail m => ((String, Direction) -> MatchClass -> Bool) -> 
                              [(String, Direction)] -> (REqState, LiveProof) -> m LiveProof
@@ -914,6 +942,38 @@ applySimps f (x:xs) (reqs, liveProof)
                                                  Yes liveProof'' -> return liveProof''
                                                  But msgs        -> applySimps f xs (reqs, liveProof)
         But msgs       ->  applySimps f xs (reqs, liveProof)
+   where
+    vts = concat $ map thd3 $ mtchCtxts liveProof
+
+
+checkIsFold :: MatchClass -> Bool
+checkIsFold  MatchEqvRHS = True
+checkIsFold  MatchEqvLHS = False
+checkIsFold  _ = False
+
+checkIsUnFold :: MatchClass -> Bool
+checkIsUnFold MatchEqvLHS = True
+checkIsUnFold MatchEqvRHS = False
+checkIsUnFold _ = False 
+
+applyFolds' :: MonadFail m => String -> AutoLaws -> (REqState, LiveProof) -> m LiveProof
+applyFolds' input autos (reqs, liveProof) = do let match = if input == "f" then checkIsFold else checkIsUnFold
+                                               let lws = if input == "f" then folds autos else unfolds autos
+                                               applyFolds match lws (reqs, liveProof)
+
+applyFolds :: MonadFail m => (MatchClass -> Bool) -> [String] -> (REqState, LiveProof) -> m LiveProof
+applyFolds _ [] (reqs, liveProof) = fail ("No successful matching simp applys")
+applyFolds f (x:xs) (reqs, liveProof)
+    = case matchFocusAgainst (pdbg "aS.n" x) (logicsig reqs) liveProof of
+        Yes liveProof' ->  case applyMatchToFocus1 1 liveProof' of
+                                Nothing -> applyFolds f xs (reqs, liveProof)
+                                Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)
+                                  -> case f (mClass mtch) of 
+                                      False -> applyFolds f xs (reqs, liveProof')
+                                      True  -> case applyMatchToFocus2 vts mtch [] [] liveProof' of
+                                                 Yes liveProof'' -> return liveProof''
+                                                 But msgs        -> applyFolds f xs (reqs, liveProof)
+        But msgs       ->  applyFolds f xs (reqs, liveProof)
    where
     vts = concat $ map thd3 $ mtchCtxts liveProof
 \end{code}

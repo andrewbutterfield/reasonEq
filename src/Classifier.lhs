@@ -12,6 +12,7 @@ import Laws
 import AST
 import Assertions
 import LexBase
+import Proofs
 
 data Direction 
     = Leftwards 
@@ -31,11 +32,15 @@ nullAutoLaws
              ,  unfolds = []
              }
 
-combineAuto :: AutoLaws -> AutoLaws -> AutoLaws
-combineAuto a b = AutoLaws {  simps = simps a ++ simps b
+combineTwoAuto :: AutoLaws -> AutoLaws -> AutoLaws
+combineTwoAuto a b = AutoLaws {  simps = simps a ++ simps b
                             , folds = folds a ++ folds b
                             , unfolds = unfolds a ++ unfolds b
                             }
+
+combineAutos :: AutoLaws -> [AutoLaws] -> AutoLaws
+combineAutos auto [] = auto
+combineAutos auto (x:xs) = combineAutos (combineTwoAuto auto x) xs
 
 showDir :: Direction -> String
 showDir Leftwards  = "Leftwards"
@@ -133,4 +138,26 @@ checkQ (Cons _ _ n xs@(_:_)) i
             | all isVar xs && n == i = False
             | otherwise = True
 checkQ _ _ = True
+
+checkIsSimp :: (String, Direction) -> MatchClass -> Bool
+checkIsSimp (_, Rightwards) MatchEqvRHS = True
+checkIsSimp (_, Leftwards) MatchEqvLHS = True
+checkIsSimp _ _ = False
+
+checkIsComp :: (String, Direction) -> MatchClass -> Bool
+checkIsComp (_, Rightwards) MatchEqvLHS = True
+checkIsComp (_, Leftwards) MatchEqvRHS = True
+checkIsComp (_, _) (MatchEqvVar _) = True
+checkIsComp _ _ = False
+
+checkIsFold :: MatchClass -> Bool
+checkIsFold  MatchEqvRHS = True
+checkIsFold  MatchEqvLHS = False
+checkIsFold  _ = False
+
+checkIsUnFold :: MatchClass -> Bool
+checkIsUnFold MatchEqvLHS = True
+checkIsUnFold MatchEqvRHS = False
+checkIsUnFold _ = False 
+
 \end{code}

@@ -905,24 +905,9 @@ allAutos :: Theory -> Theories -> AutoLaws
 allAutos thry thys = do let depthys = getTheoryDeps' (thName thry) thys
                         combineAutos nullAutoLaws ((depAutos [] depthys) ++ [auto thry])
 
-combineAutos :: AutoLaws -> [AutoLaws] -> AutoLaws
-combineAutos auto [] = auto
-combineAutos auto (x:xs) = combineAutos (combineAuto auto x) xs
-
 depAutos :: [AutoLaws] -> [Theory] -> [AutoLaws]
 depAutos autos [] = autos
 depAutos autos (depthy:depthys) = depAutos (autos ++ [auto depthy]) depthys
-
-checkIsSimp :: (String, Direction) -> MatchClass -> Bool
-checkIsSimp (_, Rightwards) MatchEqvRHS = True
-checkIsSimp (_, Leftwards) MatchEqvLHS = True
-checkIsSimp _ _ = False
-
-checkIsComp :: (String, Direction) -> MatchClass -> Bool
-checkIsComp (_, Rightwards) MatchEqvLHS = True
-checkIsComp (_, Leftwards) MatchEqvRHS = True
-checkIsComp (_, _) (MatchEqvVar _) = True
-checkIsComp _ _ = False
 
 applySimps' :: MonadFail m => ((String, Direction) -> MatchClass -> Bool) -> 
                               AutoLaws -> (REqState, LiveProof) -> m LiveProof
@@ -944,17 +929,6 @@ applySimps f (x:xs) (reqs, liveProof)
         But msgs       ->  applySimps f xs (reqs, liveProof)
    where
     vts = concat $ map thd3 $ mtchCtxts liveProof
-
-
-checkIsFold :: MatchClass -> Bool
-checkIsFold  MatchEqvRHS = True
-checkIsFold  MatchEqvLHS = False
-checkIsFold  _ = False
-
-checkIsUnFold :: MatchClass -> Bool
-checkIsUnFold MatchEqvLHS = True
-checkIsUnFold MatchEqvRHS = False
-checkIsUnFold _ = False 
 
 applyFolds' :: MonadFail m => String -> AutoLaws -> (REqState, LiveProof) -> m LiveProof
 applyFolds' input autos (reqs, liveProof) = do let match = if input == "f" then checkIsFold else checkIsUnFold

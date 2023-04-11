@@ -1,5 +1,7 @@
 \chapter{Classifying Laws}
 
+\section{Introduction}
+
 In order to automate proof, 
 we need a way to classify laws to help guide the tools.
 We cannot rely on exhaustive search/try techniques
@@ -31,7 +33,7 @@ we can replace that term by the other side,
 using the match binding to do substitution.
 We refer to such laws as being \emph{equational}.
 
-\subsubsection*{Simplify}
+\section{Simplify}
 
 \emph{Any} law, applied in its \emph{entirety}, is a simplification law
 (term \true\ is simpler than any other term, except \false).
@@ -53,7 +55,7 @@ so another option would be give them a higher weighting for term size.
 }%
 .
 
-\subsubsection*{Unfold/Expand}
+\section{Unfold/Expand} 
 
 All definitional laws, for our purposes, have to be equational.
 By convention, the name being defined should be on the lefthand side,
@@ -75,7 +77,7 @@ is an unfold or expansion.
 In general we can always do such an unfold.
 
 
-\subsubsection*{Fold/Contract}
+\section{Fold/Contract}
 
 Given the law $N(v_1,\dots,v_n) \equiv Q$ from above,
 then applying it right-to-left is a fold or contraction.

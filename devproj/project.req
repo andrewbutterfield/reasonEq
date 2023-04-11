@@ -17,25 +17,27 @@ BEGIN THEORIES
 THNAMES = ["And","AndOrInvert","Equality","Equiv","Exists","ForAll","Implies","Not","Or","UClose","UTPBase"]
 SDAG = [[("UTPBase",["UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("UClose",["Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Exists",["ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("ForAll",["Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Equality",["Implies","Equiv"])],[("Implies",["AndOrInvert","And","Or","Not","Equiv"])],[("AndOrInvert",["And","Or","Not","Equiv"])],[("And",["Or","Not","Equiv"])],[("Or",["Not","Equiv"])],[("Not",["Equiv"])],[("Equiv",[])]]
 END THEORIES
-CURRTHEORY = Equiv
+CURRTHEORY = UTPBase
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("Equiv","equiv_subst")
+("UTPBase","sqsupseteq_lor_distr")
 BEGIN LIVE-PROOF
-TH-NAME: Equiv
-CJ-NAME: equiv_subst
-CONJ = ASN (C P True (Id "equiv" 0) [S P (C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),C P True (Id "equiv" 0) [S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),S P (V P (VR (Id "Q" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))]],([],fromList []))
+TH-NAME: UTPBase
+CJ-NAME: sqsupseteq_lor_distr
+CONJ = ASN (C P True (Id "equiv" 0) [C P False (Id "sqsupseteq" 0) [C P True (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "R" 0,VP,WS))],C P True (Id "land" 0) [C P False (Id "sqsupseteq" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))],C P False (Id "sqsupseteq" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]]],([],fromList []))
 SIDE = ([],fromList [])
 STRAT reduce
 BEGIN SEQZIP
-TERMZIP = (C P True (Id "equiv" 0) [S P (C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),C P True (Id "equiv" 0) [S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),S P (V P (VR (Id "Q" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))]],[])
+TERMZIP = (C P False (Id "sqsupseteq" 0) [C P True (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "R" 0,VP,WS))],[Cons' P True (Id "equiv" 0) [] [C P True (Id "land" 0) [C P False (Id "sqsupseteq" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))],C P False (Id "sqsupseteq" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]]]])
 BEGIN SEQUENT'
 SIDECOND = ([],fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.equiv_subst", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K P (VB True)}
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.sqsupseteq_lor_distr", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K P (VB True)}
 END SEQUENT'
 END SEQZIP
-FPATH: []
+FPATH: [1]
 BEGIN LIST STEPS
+(UseLaw (ByMatch MER) "sqsupseteq_def" (BD (fromList [((Id "P" 0,VP),BT (C P True (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))])),((Id "Q" 0,VP),BV (VR (Id "R" 0,VP,WS)))],fromList [],fromList [])) [1],ASN (C P True (Id "equiv" 0) [X (Id "[_]" 0) (C P True (Id "implies" 0) [C P True (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "R" 0,VP,WS))]),C P True (Id "land" 0) [C P False (Id "sqsupseteq" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))],C P False (Id "sqsupseteq" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]]],([],fromList [])))
+(UseLaw (ByMatch MEL) "sqsupseteq_def" (BD (fromList [((Id "P" 0,VP),BT (C P True (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))])),((Id "Q" 0,VP),BV (VR (Id "R" 0,VP,WS)))],fromList [],fromList [])) [1],ASN (C P True (Id "equiv" 0) [C P False (Id "sqsupseteq" 0) [C P True (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "R" 0,VP,WS))],C P True (Id "land" 0) [C P False (Id "sqsupseteq" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))],C P False (Id "sqsupseteq" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]]],([],fromList [])))
 END LIST STEPS
 END LIVE-PROOF
 END MAP LIVE-PROOFS

@@ -46,6 +46,7 @@ Some useful local definitions:
 p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
 r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
+s = fromJust $ pVar $ Vbl (fromJust $ ident "S") PredV Static
 \end{code}
 
 \subsubsection{Known Variables}
@@ -78,6 +79,19 @@ cjAndOrAbs
      , scTrue ) )
 \end{code}
 
+$$
+  \begin{array}{ll}
+     \CJUNSAT & \CJUNSATN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+cjUNSAT
+ = ( "land"
+   , ( ((p /\ mkNot p) \/ (q /\ mkNot q)) \/ (r /\ mkNot r)
+     , scTrue ) )
+\end{code}
 $$
   \begin{array}{ll}
     \CJOrAndAbs & \CJOrAndAbsN
@@ -209,7 +223,7 @@ Assemble it all:
 \begin{code}
 aoiConjs :: [NmdAssertion]
 aoiConjs = map mkNmdAsn
-    [ cjAndOrAbs, cjOrAndAbs, cjAndOrNAbs, cjOrAndNAbs
+    [ cjUNSAT, cjOrAndAbs, cjAndOrNAbs, cjOrAndNAbs
     , cjOrAndDistr, cjAndOrDistr
     , cjDeMorganNand, cjDeMorganNor
     , cjEqvRepl

@@ -44,6 +44,7 @@ import TestRendering
 import TestParsing
 import REPL
 import Dev
+import SAT
 
 import Debug.Trace
 dbg msg x = trace (msg++show x) x
@@ -745,6 +746,7 @@ proofREPLConfig
             , showMatchesDescr -- dev mode!
             , showProofSettingsDescr
             , applySATDescr
+            , testDescr
             , tryMatchDescr
             , applyMatchDescr
             , normQuantDescr
@@ -946,137 +948,35 @@ Apply SAT-solver
 applySATDescr = ("SAT"
               , "Apply SAT-solver"
               , ""
-              , applySAT )
-applySAT :: REPLCmd (REqState, LiveProof)
-applySAT _ pstate@(_,liveproof)
- = do putStrLn ""
-      putStrLn $ show $ dpll $ getTZ tz
-      waitForReturn
-      return pstate
-      where (tz,_) = focus liveproof
+              , applySATCommand)
 
+applySATCommand :: REPLCmd (REqState, LiveProof)
+applySATCommand _ (reqs,liveproof)
+  = case unsupportedOps goalt of
+          True -> case applySAT liveproof of
+                    Yes liveproof' -> return (reqs, liveproof')
+                    But msgs
+                      -> do putStrLn $ unlines' msgs
+                            waitForReturn
+                            return (reqs, liveproof) 
+          False -> do trace "Unsupported operators in current focus" waitForReturn
+                      return (reqs, liveproof) 
+    where (tz, _) = focus liveproof
+          goalt = getTZ tz
 
-implFree :: Term -> Term
-implFree x@(Val a b) = x
-implFree x@(Var a b) = x
-implFree (Cons a b (Identifier nm _) (p:[])) = Cons a b (jId nm) [(implFree p)]
-implFree (Cons a b (Identifier nm _) (p:q:[])) 
-                              | nm == "implies" = Cons a b (jId "lor") [Cons a b (jId "lnot") [(implFree p)],(implFree q)]
-                              | otherwise = Cons a b (jId nm) [(implFree p),(implFree q)]
+\end{code}
 
-                          
-nnf :: Term -> Term
-nnf t@(Val a b) = t
-nnf t@(Var a b) = t
-nnf (Cons a1 b1 (Identifier nm1 _) ((Cons a2 b2 (Identifier nm2 _) (t:[])):[])) 
-                                      | nm1 == "lnot" && nm2 == "lnot" =  nnf t
-                                      | otherwise = Cons a1 b1 (jId nm1) [Cons a2 b2 (jId nm2) [(nnf t)]]
-nnf (Cons a b (Identifier nm1 _) ((Cons a2 b2 (Identifier nm2 _) (p:q:[])):[]))  
-                                      | nm1 == "lnot" && nm2 == "lor" = Cons a b (jId "land") [(nnf (negateTerm p)), (nnf (negateTerm q))]       
-                                      | nm1 == "lnot" && nm2 == "land" = Cons a b (jId "lor") [(nnf (negateTerm p)), (nnf (negateTerm q))]    
-                                      | otherwise = Cons a b (jId nm1) [Cons a2 b2 (jId nm2) [(nnf p),(nnf q)]]        
-nnf (Cons a b (Identifier nm _) (p:q:[])) = Cons a b (jId nm) [(nnf p), (nnf q)]
-nnf (Cons a b (Identifier nm _) (p:[])) = Cons a b (jId nm) [(nnf p)]
+Testing functions
+\begin{code}
+testDescr = ("test"
+              , "Testing pre-defined function"
+              , ""
+              , testCommand)
 
-negateTerm :: Term -> Term
-negateTerm t = Cons (termkind t) True (jId "lnot") [t]
+testCommand :: REPLCmd (REqState, LiveProof)
+testCommand _ (reqs,liveproof)
+  = return (reqs, applyTest liveproof)
 
-cnf :: Term -> Term
-cnf (Cons a b (Identifier nm _) (p:q:[])) 
-                                 | nm == "land" = Cons a b (jId nm) [(cnf p), (cnf q)]  
-                                 | nm == "lor" = distr (cnf p) (cnf q)
-cnf t = t
-
-distr :: Term -> Term -> Term
-distr (Cons a b (Identifier nm _) (p:q:[])) t
-                                 | nm == "land" = Cons a b (jId "land") [(distr p t), (distr q t)]
-distr t (Cons a b (Identifier nm _) (p:q:[]))
-                                 | nm == "land" = Cons a b (jId "land") [(distr p t), (distr q t)]
-distr t1 t2 = Cons (termkind t1) True (jId "lor") [t1,t2]
-
-getUnitClauses :: Term -> [Term]
-getUnitClauses t@(Var _ _) = [t]
-getUnitClauses t@(Cons a b (Identifier nm _) (p:[]))
-                                          | nm == "lnot" = getUnitClauses p
-                                          | otherwise = []
-getUnitClauses t@(Cons a b (Identifier nm _) (p:q:[]))
-                                          | nm == "land" = getUnitClauses p ++ getUnitClauses q
-                                          | otherwise = []
-getUnitClauses t = []
-
-printArray :: [Term] -> String
-printArray [] = ""
-printArray (x:xs) = (trTerm 0 x) ++ ", " ++ (printArray xs)
-
-getAllVariables :: Term -> [Term]
-getAllVariables t@(Val _ _) = []
-getAllVariables t@(Var _ _) = [t]
-getAllVariables (Cons a b (Identifier nm _) (p:[])) = getAllVariables p
-getAllVariables (Cons a b (Identifier nm _) (p:q:[])) = (getAllVariables p ++ getAllVariables q)
-
-chooseUnassigned :: [a] -> Maybe a
-chooseUnassigned [] = Nothing
-chooseUnassigned (x:_) = Just x
-
-applyUnassigned :: Term -> Term -> Term
-applyUnassigned p@(Val _ _) _ = p
-applyUnassigned p@(Var _ x) (Var tk k) | k == x = Val tk (Boolean True)
-                                       | otherwise = p
-applyUnassigned p@(Var tk y) (Cons a b (Identifier nm _) ((Var _ x):[]))
-                                        | x == y = Val tk (Boolean False)
-                                        | otherwise = p
-applyUnassigned p@(Cons _ _ _ ((Var _ x):[])) (Var tk y)
-                                        | x == y = Val tk (Boolean False)
-                                        | otherwise = p
-applyUnassigned p@(Cons _ _ _ ((Var _ x):[])) (Cons _ _ _ ((Var tk y):[])) 
-                                        | x == y = Val tk (Boolean True)
-                                        | otherwise = p                                  
-applyUnassigned (Cons a b (Identifier nm _) (p:q:[])) t 
-                                        = Cons a b (jId nm) [applyUnassigned p t, applyUnassigned q t]
-
-simplifyFormula :: Term -> Term
-simplifyFormula t@(Cons a b (Identifier "land" _) (p:q:[])) 
-                          | ((simplifyFormula p) == (Val P (Boolean True))) && ((simplifyFormula q) == (Val P (Boolean True))) = Val P (Boolean True)
-                          | ((simplifyFormula p) == (Val P (Boolean False))) || ((simplifyFormula q) == (Val P (Boolean False))) = Val P (Boolean False)
-                          | simplifyFormula p == (Val P (Boolean True)) = simplifyFormula q
-                          | simplifyFormula q == (Val P (Boolean True)) = simplifyFormula p
-                          | otherwise = Cons a b (jId "land") [simplifyFormula p, simplifyFormula q]
-simplifyFormula t@(Cons a b (Identifier "lor" _) (p:q:[])) 
-                          | ((simplifyFormula p) == (Val P (Boolean True))) || ((simplifyFormula q) == (Val P (Boolean True))) = Val P (Boolean True)
-                          | simplifyFormula p == (Val P (Boolean False)) = simplifyFormula q
-                          | simplifyFormula q == (Val P (Boolean False)) = simplifyFormula p
-                          | otherwise = Cons a b (jId "lor") [simplifyFormula p, simplifyFormula q]
-simplifyFormula t = t
-
-checkResult :: Term -> Bool
-checkResult (Val _ x)
-            | x == (Boolean True) = True
-            | x == (Boolean False) = False 
-
-applyUnitPropagation :: Term -> [Term] -> Term
-applyUnitPropagation formula variables = foldl (\acc variable -> applyUnassigned acc variable) formula variables
-
-dpll :: Term -> Bool
-dpll t = do let normalisedFormula = cnf $ nnf $ implFree t
-            let result = dpllAlg normalisedFormula
-            result
-
-dpllAlg :: Term -> Bool
-dpllAlg form = do let f = trace ("initial " ++ (trTerm 0 $ form)) simplifyFormula (applyUnitPropagation form (nub $ getUnitClauses form))
-                  let arr = nub $ getAllVariables f
-                  case trace ("unitProp " ++ (trTerm 0 f)) chooseUnassigned arr of
-                    Nothing -> do let res = simplifyFormula f
-                                  checkResult res
-                    Just elem -> do let f1 = applyUnassigned f elem
-                                    let f2 = trace ("assigned " ++ (trTerm 0 f1)) simplifyFormula f1
-                                    case trace ("modified " ++ (trTerm 0 f2)) dpllAlg f2 of
-                                      True -> True
-                                      False -> do let elem' = Cons (termkind elem) True (jId "lnot") [elem]
-                                                  let f1' = applyUnassigned form elem'
-                                                  let f2' = trace ("assigned " ++ (trTerm 0 f1')) simplifyFormula f1'
-                                                  case trace ("modified " ++ (trTerm 0 f2')) dpllAlg f2' of
-                                                    True -> True
-                                                    False -> False
 \end{code}
 
 Try matching focus against a specific law, to see what outcome arises

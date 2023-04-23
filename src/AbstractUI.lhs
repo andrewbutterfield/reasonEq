@@ -22,6 +22,8 @@ module AbstractUI
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, matchFocusAgainst
 , applyMatchToFocus1, applyMatchToFocus2
+, applySAT
+, applyTest
 , normQuantFocus
 , nestSimpFocus
 , substituteFocus
@@ -58,6 +60,7 @@ import Sequents
 import REqState
 import Persistence
 import Ranking
+import SAT
 
 import TestRendering
 
@@ -675,6 +678,35 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
                                , (asn')):)
                               liveProof )
             else fail ("Undischarged side-conditions: "++trSideCond scD)
+\end{code}
+
+\begin{code}
+applySAT :: (Monad m, MonadFail m) => LiveProof -> m LiveProof
+applySAT liveproof = do
+    let (tz, seq) = focus liveproof
+    let goalt = getTZ tz
+    let invertedt = negateTerm goalt
+    asn <- mkAsn (exitTZ tz) (conjSC liveproof)
+    case dpll goalt ["Attempting to prove the goal term to be satisfiable\n"] of
+        (True, sxt) -> case dpll invertedt (sxt ++ ["We have proven the goal term to be satisifable. Now we will attempt to prove its negation to be satisfiable\n"]) of
+                      (True, sxt') -> return (stepsSoFar__ ((SAT sxt' (fPath liveproof), asn) :) liveproof)
+                      (False, sxf') -> do
+                          return (focus_ ((setTZ (Val P (Boolean True)) tz), seq)
+                                $ stepsSoFar__ ((SAT sxf' (fPath liveproof), asn) :) liveproof)
+        (False, sxf) -> do
+            return (focus_ ((setTZ (Val P (Boolean False)) tz), seq)
+                  $ stepsSoFar__ ((SAT sxf (fPath liveproof), asn) :) liveproof)
+
+
+\end{code}
+
+\begin{code}
+applyTest :: LiveProof -> LiveProof
+applyTest liveproof =    let (tz,seq)   =  focus liveproof
+                             goalt      =  getTZ tz
+                         in case unsupportedOps goalt of
+                            True -> trace ("True") liveproof
+                            False -> trace ("False") liveproof
 \end{code}
 
 Here we replace floating variables in the \emph{range} of the binding

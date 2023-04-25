@@ -20,29 +20,6 @@ END THEORIES
 CURRTHEORY = AndOrInvert
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("AndOrInvert","land")
-BEGIN LIVE-PROOF
-TH-NAME: AndOrInvert
-CJ-NAME: land
-CONJ = ASN (C P True (Id "lor" 0) [C P True (Id "lor" 0) [C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]],C P True (Id "land" 0) [V P (VR (Id "Q" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]]],C P True (Id "land" 0) [V P (VR (Id "R" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "R" 0,VP,WS))]]],([],fromList []))
-SIDE = ([],fromList [])
-STRAT reduce
-BEGIN SEQZIP
-TERMZIP = (K P (VB False),[])
-BEGIN SEQUENT'
-SIDECOND = ([],fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.land", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K P (VB True)}
-END SEQUENT'
-END SEQZIP
-FPATH: []
-BEGIN LIST STEPS
-(UseLaw (ByMatch MEL) "lor_idem" (BD (fromList [((Id "P" 0,VP),BT (K P (VB False)))],fromList [],fromList [])) [],ASN (C P True (Id "lor" 0) [K P (VB False),K P (VB False)],([],fromList [])))
-(SAT ["Attempting to prove the goal term to be satisfiable","CNF: Q  \8743  \172 Q","Unit Propagation: false"] [2],ASN (C P True (Id "lor" 0) [K P (VB False),C P True (Id "lor" 0) [K P (VB False),C P True (Id "land" 0) [V P (VR (Id "Q" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]]]],([],fromList [])))
-(SAT ["Attempting to prove the goal term to be satisfiable","CNF: P  \8743  \172 P","Unit Propagation: false"] [2,1],ASN (C P True (Id "lor" 0) [K P (VB False),C P True (Id "lor" 0) [C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]],C P True (Id "land" 0) [V P (VR (Id "Q" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]]]],([],fromList [])))
-(UseLaw (ByMatch MEL) "lor_symm" (BD (fromList [((Id "P" 0,VP),BT (C P True (Id "lor" 0) [C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]],C P True (Id "land" 0) [V P (VR (Id "Q" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]]])),((Id "Q" 0,VP),BT (K P (VB False)))],fromList [],fromList [])) [],ASN (C P True (Id "lor" 0) [C P True (Id "lor" 0) [C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]],C P True (Id "land" 0) [V P (VR (Id "Q" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]]],K P (VB False)],([],fromList [])))
-(SAT ["Attempting to prove the goal term to be satisfiable","CNF: R  \8743  \172 R","Unit Propagation: false"] [2],ASN (C P True (Id "lor" 0) [C P True (Id "lor" 0) [C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]],C P True (Id "land" 0) [V P (VR (Id "Q" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]]],C P True (Id "land" 0) [V P (VR (Id "R" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "R" 0,VP,WS))]]],([],fromList [])))
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

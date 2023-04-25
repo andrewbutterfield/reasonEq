@@ -63,7 +63,7 @@ type SubAbilityMaps = [SubAbilityMap]
 \end{code}
 We want to search a list of these maps, checking for substitutability
 \begin{code}
-getSubstitutability :: Monad m => SubAbilityMaps -> Identifier -> m SubAbility
+getSubstitutability :: MonadFail m => SubAbilityMaps -> Identifier -> m SubAbility
 getSubstitutability [] n  =  fail ("No substitutability defined for "++trId n)
 getSubstitutability (sam:sams) n
   = case M.lookup n sam of
@@ -96,7 +96,7 @@ The latter two then invoke term substitution to do their work.
 \subsection{Term Substitution}
 
 \begin{code}
-substitute :: Monad m => [SubAbilityMap] -> Substn -> Term -> m Term
+substitute :: MonadFail m => [SubAbilityMap] -> Substn -> Term -> m Term
 \end{code}
 \begin{eqnarray*}
    \vv v \ss {} {v^n} {t^n}  &\defs&  t^i \cond{\vv v=v^i} v,
@@ -185,7 +185,7 @@ Helper functions.
 
 
 \begin{code}
-captureAvoidance :: Monad m => VarSet -> Term -> Substn -> m Substn
+captureAvoidance :: MonadFail m => VarSet -> Term -> Substn -> m Substn
 captureAvoidance vs tm sub
   = do let tfv = freeVars tm
        let (tgtvs,rplvs) = substRelFree tfv sub
@@ -193,7 +193,7 @@ captureAvoidance vs tm sub
        let knownVars = tfv `S.union` rplvs
        mkFresh knownVars [] [] needsRenaming
 
-mkFresh :: Monad m
+mkFresh :: MonadFail m
         => VarSet
         -> [(Variable,Term)]
         -> [(ListVar,ListVar)]
@@ -263,7 +263,7 @@ is defined as follows:
 where $v^j \notin v^m$.
 
 \begin{code}
-substComp :: Monad m => [SubAbilityMap]
+substComp :: MonadFail m => [SubAbilityMap]
           -> Substn  -- 1st substitution performed
           -> Substn  -- 2nd substitution performed
           -> m Substn
@@ -305,7 +305,7 @@ lvSubstitute [] rlv  =  rlv
 We will have checks and balances for when $\alpha$-substitution is invoked
 from outside.
 \begin{code}
-alphaRename :: Monad m => SubAbilityMaps
+alphaRename :: MonadFail m => SubAbilityMaps
                        -> [(Variable,Variable)]
                        -> [(ListVar,ListVar)]
                        -> Term
@@ -322,7 +322,7 @@ alphaRename sams vvs lls trm = fail "alphaRename not applicable"
 We have some checks to do, before we apply the $\alpha$-substitution
 to the quantifier body.
 \begin{code}
-checkAndBuildAlpha :: Monad m => SubAbilityMaps
+checkAndBuildAlpha :: MonadFail m => SubAbilityMaps
                               -> [(Variable,Variable)]
                               -> [(ListVar,ListVar)]
                               -> VarSet
@@ -344,7 +344,7 @@ checkAndBuildAlpha sams vvs lls vs tm
 \paragraph{Domain Checking}~
 
 \begin{code}
-checkDomain :: Monad m => [(Variable,Variable)]  -- (tgt.v,rpl.v)
+checkDomain :: MonadFail m => [(Variable,Variable)]  -- (tgt.v,rpl.v)
                        -> [(ListVar,ListVar)]    -- (tgt.lv,rpl.lv)
                        -> VarSet
                        -> m ()
@@ -362,7 +362,7 @@ checkDomain vvs lls qvs
 \paragraph{Freshness Checking}~
 
 \begin{code}
-checkFresh :: Monad m => ([(Variable,Variable)])  -- (tgt.v,rpl.v)
+checkFresh :: MonadFail m => ([(Variable,Variable)])  -- (tgt.v,rpl.v)
                       -> [(ListVar,ListVar)]      -- (tgt.lv,rpl.lv)
                       -> Term
                       -> m ()
@@ -417,6 +417,6 @@ So, something like $C(P\sigma,Q\sigma,R\sigma)$
 becomes $C(P,Q,R)\sigma$.
 This is subject to certain conditions being true.
 \begin{code}
-revSubstitute :: Monad m => [SubAbilityMap] -> Int -> Term -> m Term
+revSubstitute :: MonadFail m => [SubAbilityMap] -> Int -> Term -> m Term
 revSubstitute sams n t = fail ("NYI:revSubstitute "++show n++" " ++ trTerm 999 t)
 \end{code}

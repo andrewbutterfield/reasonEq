@@ -135,7 +135,7 @@ $$
    \texttt{match}
 $$
 \begin{code}
-match :: MonadPlus mp => [VarTable] -> Candidate -> Pattern -> mp Binding
+match :: (MonadFail mp, MonadPlus mp) => [VarTable] -> Candidate -> Pattern -> mp Binding
 match vts cand patn  =  tMatch vts emptyBinding noBVS noBVS cand patn
 \end{code}
 
@@ -144,7 +144,7 @@ match vts cand patn  =  tMatch vts emptyBinding noBVS noBVS cand patn
 
 \begin{code}
 tMatch, tMatch' ::
-  MonadPlus mp => [VarTable] -> Binding -> CBVS -> PBVS
+  (MonadFail mp, MonadPlus mp) => [VarTable] -> Binding -> CBVS -> PBVS
                -> Candidate -> Pattern -> mp Binding
 \end{code}
 
@@ -469,7 +469,7 @@ tMatch' _ _ _ _ tC tP
 A simple zip-like walk along both lists
 (precomputing length to abort early).
 \begin{code}
-tsMatch :: MonadPlus mp
+tsMatch :: (MonadFail mp, MonadPlus mp)
         => [VarTable] -> Binding -> CBVS -> PBVS
         -> [Candidate] -> [Pattern] -> mp Binding
 tsMatch vts bind cbvs pvbs cts pts
@@ -493,7 +493,7 @@ We assume here that candidate term and pattern variable
 have the same \texttt{TermKind}.
 \begin{code}
 
-tvMatch :: Monad m
+tvMatch :: MonadFail m
        => [VarTable] -> Binding -> CBVS -> PBVS
        -> Candidate -> TermKind -> Variable -> m Binding
 \end{code}
@@ -541,7 +541,7 @@ $$
 \subsubsection{Known Pattern Variable}
 
 \begin{code}
-tkvMatch :: Monad m => [VarTable] -> Binding
+tkvMatch :: MonadFail m => [VarTable] -> Binding
        ->  Candidate -> VarMatchRole -> TermKind -> Variable -> m Binding
 -- know vP is not in pbvs, but is in vts, known as whatP
 \end{code}
@@ -690,7 +690,7 @@ whenCompKind _          _           =  False
 \newpage
 Now, onto variable matching:
 \begin{code}
-vMatch :: Monad m
+vMatch :: MonadFail m
        => [VarTable] -> Binding -> CBVS -> PBVS
        -> Variable -> Variable
        -> m Binding
@@ -743,7 +743,7 @@ $$
 $$
 In addition, both variables must have the same class.
 \begin{code}
-bvMatch :: Monad m => [VarTable] -> Binding -> CBVS
+bvMatch :: MonadFail m => [VarTable] -> Binding -> CBVS
         -> Variable -> Variable -> m Binding
 -- we know vP is in pbvs
 bvMatch vts bind cbvs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
@@ -812,7 +812,7 @@ where some candidates may be leftover, to be bound by collection variables.
 \subsection{Variable-List Matching}
 
 \begin{code}
-vlMatch :: MonadPlus mp => [VarTable] -> Binding -> CBVS -> PBVS
+vlMatch :: (MonadFail mp, MonadPlus mp) => [VarTable] -> Binding -> CBVS -> PBVS
         -> VarList -> VarList -> mp Binding
 \end{code}
 
@@ -852,12 +852,12 @@ We remove both, and continue.
 We use tail-recursion and accumulate the un-bound (or ``free'') part of both
 lists.
 \begin{code}
-applyBindingsToLists :: MonadPlus mp
+applyBindingsToLists :: (MonadFail mp, MonadPlus mp)
                  => Binding -> VarList -> VarList -> mp (VarList,VarList)
 applyBindingsToLists bind vlC vlP
   = applyBindingsToLists' bind [] [] vlC vlP
 
-applyBindingsToLists' :: MonadPlus mp
+applyBindingsToLists' :: (MonadFail mp, MonadPlus mp)
                  => Binding
                  -> VarList -> VarList
                  -> VarList -> VarList -> mp (VarList,VarList)
@@ -935,7 +935,7 @@ We adopt a heuristic that simply walks the pattern list
 from left to right and tries to bind the head pattern variable
 against some prefix of the candidate list.
 \begin{code}
-vlFreeMatch :: MonadPlus mp
+vlFreeMatch :: (MonadFail mp, MonadPlus mp)
               => [VarTable] -> Binding
               -> CBVS -> PBVS
               -> VarList -> VarList
@@ -1353,7 +1353,7 @@ rigidE _ = False
 We need part of the static context here.
 \begin{code}
 -- blo to be defined here
-bindLeftOvers :: MonadPlus mp
+bindLeftOvers :: (MonadFail mp, MonadPlus mp)
               => ( [VarTable], VarClass, VarWhen ) -- static context
               -> Binding
               -> [Variable]   -- expansion variables ( ell ++ xs)
@@ -1403,7 +1403,7 @@ bindLeftOvers (_,bc,bw) bind xs us ls
 
 \newpage
 \begin{code}
-vlExpandMatch :: MonadPlus mp
+vlExpandMatch :: (MonadFail mp, MonadPlus mp)
               => ( [VarTable], VarClass, VarWhen ) -- static context
               -> ( Binding, VarList, [Variable] )  -- dynamic context
               -> VarList -- candidate variable list.
@@ -1448,7 +1448,7 @@ vlExpandMatch sctxt@(vts,bc,bw) dctxt@(bind,kappa,ell) vlC xP@(xs,uv,ul,_)
 
 \newpage
 \begin{code}
-vlExpand2Match :: MonadPlus mp
+vlExpand2Match :: (MonadFail mp, MonadPlus mp)
                => ( [VarTable], VarClass, VarWhen ) -- static context
                -> ( Binding, VarList, [Variable] )  -- dynamic context
               -> LExpansion  -- candidate variable expansion
@@ -1548,7 +1548,7 @@ The key difference here, obviously, is that order does not matter,
 and we expect list-variables, if known, to be known as variable-sets,
 not lists.
 \begin{code}
-vsMatch :: MonadPlus mp => [VarTable] -> Binding -> CBVS -> PBVS
+vsMatch :: (MonadFail mp, MonadPlus mp) => [VarTable] -> Binding -> CBVS -> PBVS
         -> VarSet -> VarSet -> mp Binding
 -- vsC `subset` cbvs && vsP `subset` pbvc
 vsMatch vts bind cbvs pbvc vsC vsP
@@ -1562,13 +1562,13 @@ vsMatch vts bind cbvs pbvc vsC vsP
 
 \begin{code}
 applyBindingsToSets
-  :: MonadPlus mp
+  :: (MonadFail mp, MonadPlus mp)
   => Binding -> VarSet -> VarSet -> mp (VarSet,VarSet)
 applyBindingsToSets bind vsC vsP
  = applyBindingsToSets' bind [] vsC $ S.toList vsP
 
 applyBindingsToSets'
-  :: MonadPlus mp
+  :: (MonadFail mp, MonadPlus mp)
   => Binding -> VarList -> VarSet -> VarList -> mp (VarSet,VarSet)
 \end{code}
 
@@ -1658,7 +1658,7 @@ Can this mapping be built incrementally over a list of \texttt{VarTable}s?
 }
 
 \begin{code}
-vsFreeMatch :: MonadPlus mp
+vsFreeMatch :: (MonadFail mp, MonadPlus mp)
               => [VarTable] -> Binding
               -> CBVS -> PBVS
               -> VarSet -> VarSet
@@ -1718,7 +1718,7 @@ in order.
 
 
 \begin{code}
-vsKnownMatch :: MonadPlus mp
+vsKnownMatch :: (MonadFail mp, MonadPlus mp)
               => [VarTable] -> Binding
               -> CBVS -> PBVS
               -> VarSet
@@ -2022,7 +2022,7 @@ Reminder: we can never shrink the pattern if it is rigid.
 
 \newpage
 \begin{code}
-vsExpandMatch :: MonadPlus mp
+vsExpandMatch :: (MonadFail mp, MonadPlus mp)
               => ( [VarTable], VarClass, VarWhen ) -- static context
               -> ( Binding, VarSet, Set Variable )  -- dynamic context
               -> VarSet -- candidate variable list.
@@ -2068,7 +2068,7 @@ vsExpandMatch sctxt@(vts,bc,bw) dctxt@(bind,kappa,ell) vsC xP@(xs,uv,ul,_)
 
 \newpage
 \begin{code}
-vsExpand2Match :: MonadPlus mp
+vsExpand2Match :: (MonadFail mp, MonadPlus mp)
                => ( [VarTable], VarClass, VarWhen ) -- static context
                -> ( Binding, VarSet, Set Variable )  -- dynamic context
               -> SExpansion  -- candidate variable expansion
@@ -2200,7 +2200,7 @@ and candidate sets:
 }
 
 \begin{code}
-vsUnknownMatch :: MonadPlus mp
+vsUnknownMatch :: (MonadFail mp, MonadPlus mp)
                => [VarTable] -> Binding -> CBVS -> PBVS
                -> VarSet
                -> (VarSet, VarSet)
@@ -2244,7 +2244,7 @@ to all the candidates, with the remaining patterns bound to
 the empty list.
 Here we return the bindings for all possible choices.
 \begin{code}
-vsUnkLVarOneForAll :: MonadPlus mp
+vsUnkLVarOneForAll :: (MonadFail mp, MonadPlus mp)
                => [VarTable] -> Binding -> CBVS -> PBVS
                -> [GenVar] -> [ListVar]
                -> mp Binding
@@ -2253,7 +2253,7 @@ vsUnkLVarOneForAll vts bind cbvs pbvs vlC ullP
   = do emptybs <- bindLVarsToEmpty bind ullP
        updateToAll emptybs (S.fromList vlC) ullP
 
-updateToAll :: MonadPlus mp
+updateToAll :: (MonadFail mp, MonadPlus mp)
             => Binding -> Set GenVar -> [ListVar] -> mp Binding
 -- [ListVar] is not null
 updateToAll bind vsC [lvP] = overrideLVarToVSet lvP vsC bind
@@ -2275,7 +2275,7 @@ with the following exceptions:
     then the last pattern is bound to all the remaining candidates.
 \end{itemize}
 \begin{code}
-vsUnkLVarOneEach :: Monad m
+vsUnkLVarOneEach :: MonadFail m
                  => Binding -> [GenVar] -> [ListVar]
                  -> m Binding
 vsUnkLVarOneEach bind [] [] = return bind
@@ -2367,7 +2367,7 @@ $$
    \texttt{sMatch}
 $$
 \begin{code}
-sMatch :: MonadPlus mp
+sMatch :: (MonadFail mp, MonadPlus mp)
        => [VarTable] -> Binding -> CBVS -> PBVS
        -> Substn -> Substn
        -> mp Binding
@@ -2400,7 +2400,7 @@ We expect bindings of the form
  $e_{Pi} \mapsto e_{Cj}, v_{Pi} \mapsto v_{Cj}$,
 for all $i \in 1\dots m$, and $m$ values of $j$ drawn from $1\dots p$;
 \begin{code}
-vtsMatch :: MonadPlus mp
+vtsMatch :: (MonadFail mp, MonadPlus mp)
          => [VarTable] -> Binding -> CBVS -> PBVS
          -> TermSub -> TermSub
          -> mp (Binding,[(Variable,Term)])
@@ -2408,9 +2408,9 @@ vtsMatch vts bind cbvs pbvs tsC tsP
  = manyToMultiple (matchPair matchVar matchTerm) defCombine id
               (S.toList tsC) (S.toList tsP) bind
  where
-   matchVar  ::  MonadPlus mp => BasicM mp Binding Variable Variable
+   matchVar  ::  (MonadFail mp, MonadPlus mp) => BasicM mp Binding Variable Variable
    matchVar vC vP bind = vMatch vts bind cbvs pbvs vC vP
-   matchTerm ::  MonadPlus mp => BasicM mp Binding Candidate Pattern
+   matchTerm ::  (MonadFail mp, MonadPlus mp) => BasicM mp Binding Candidate Pattern
    matchTerm tC tP bind =  tMatch vts bind cbvs pbvs tC tP
 \end{code}
 
@@ -2441,7 +2441,7 @@ for $k \in 1\dots n$.
 For now we produce specific cases,
 and leave a general solution for later.
 \begin{code}
-lvsMatch :: MonadPlus mp
+lvsMatch :: (MonadFail mp, MonadPlus mp)
        => [VarTable] -> Binding -> CBVS -> PBVS
        -> [(Variable,Term)] -> [(ListVar,ListVar)] -> [(ListVar,ListVar)]
        -> mp Binding
@@ -2481,7 +2481,7 @@ lvsMatch vts bind cbvs pbvs [] lvsC lvsP -- = fail "lvsMatch [] lvsC lvsP NYI"
                                           defCombine id lvsC lvsP bind
       return bind'
  where
-   matchLVar  ::  MonadPlus mp => BasicM mp Binding ListVar ListVar
+   matchLVar  ::  (MonadFail mp, MonadPlus mp) => BasicM mp Binding ListVar ListVar
    matchLVar lvC lvP bind = vsMatch vts bind cbvs pbvs
                                     (S.singleton $ LstVar lvC)
                                     (S.singleton $ LstVar lvP)

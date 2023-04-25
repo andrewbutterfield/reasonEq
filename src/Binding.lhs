@@ -389,7 +389,7 @@ present. If not, the mapping is made.
 If present, then the update function checks if old and new
 are equivalent, and proposes what the new range element should be.
 \begin{code}
-insertDR :: (Show d, Show r, Ord d, Monad m)
+insertDR :: (Show d, Show r, Ord d, MonadFail m)
          => UpdateCheck m d r
          -> d -> r -> Map d r
          -> m (Map d r)
@@ -402,7 +402,7 @@ insertDR rEqv d r binding
 
 The most common case is when equivalence needs to be equality:
 \begin{code}
-rangeEq :: (Show d, Show r, Ord d, Eq r, Monad m)
+rangeEq :: (Show d, Show r, Ord d, Eq r, MonadFail m)
         => String -> UpdateCheck m d r
 rangeEq nAPI d binding r r0
  | r == r0    =  return r
@@ -419,7 +419,7 @@ rangeEq nAPI d binding r r0
 \subsubsection{Binding Subscript to Subscript}
 
 \begin{code}
-bindSubscriptToSubscript :: Monad m
+bindSubscriptToSubscript :: MonadFail m
                          => String -> VarWhen -> VarWhen -> SubBinding
                          -> m SubBinding
 bindSubscriptToSubscript what (During m) (During n) sbind
@@ -439,7 +439,7 @@ bindSubscriptToSubscript what vw1 vw2 sbind
 \subsubsection{Binding Variable to Variable}
 
 \begin{code}
-bindVarToVar :: Monad m => Variable -> Variable -> Binding -> m Binding
+bindVarToVar :: MonadFail m => Variable -> Variable -> Binding -> m Binding
 \end{code}
 
 
@@ -489,7 +489,7 @@ bindVarToVar dv@(Vbl vi vc vw) rv@(Vbl xi xc xw)
 
 Can be useful to bind a list of (pattern/candidate) variables pairs:
 \begin{code}
-bindVarsToVars :: Monad m => [(Variable, Variable)] -> Binding -> m Binding
+bindVarsToVars :: MonadFail m => [(Variable, Variable)] -> Binding -> m Binding
 bindVarsToVars [] bind = return bind
 bindVarsToVars ((dv,rv):rest) bind
   = do bind' <- bindVarToVar dv rv bind
@@ -499,10 +499,10 @@ bindVarsToVars ((dv,rv):rest) bind
 Also useful is binding a (list of) pattern variable(s)
 to itself (themselves):
 \begin{code}
-bindVarToSelf :: Monad m => Variable -> Binding -> m Binding
+bindVarToSelf :: MonadFail m => Variable -> Binding -> m Binding
 bindVarToSelf v bind = bindVarToVar v v bind
 
-bindVarsToSelves :: Monad m => [Variable] -> Binding -> m Binding
+bindVarsToSelves :: MonadFail m => [Variable] -> Binding -> m Binding
 bindVarsToSelves [] bind = return bind
 bindVarsToSelves (v:vs) bind
   = do bind' <- bindVarToSelf v bind
@@ -516,7 +516,7 @@ bindVarsToSelves (v:vs) bind
 An observation or expression variable can bind to an expression
 while a predicate variable can only bind to a predicate.
 \begin{code}
-bindVarToTerm :: Monad m => Variable -> Term -> Binding -> m Binding
+bindVarToTerm :: MonadFail m => Variable -> Term -> Binding -> m Binding
 \end{code}
 
 If we are binding to a term with variant \texttt{Var},
@@ -744,7 +744,7 @@ then we update the set to be the list,
 or the list to be substitution replacement, in the binding.
 We require an equivalence for this:
 \begin{code}
-rangeEqvLSSub :: Monad m => String -> UpdateCheck m ListVarKey LstVarBind
+rangeEqvLSSub :: MonadFail m => String -> UpdateCheck m ListVarKey LstVarBind
 \end{code}
 Variable Sets and Lists:
 \begin{code}
@@ -802,7 +802,7 @@ termVarEqv (Var _ u) v =  u == v
 \newpage
 
 \begin{code}
-bindLVarToVList :: Monad m => ListVar -> VarList -> Binding -> m Binding
+bindLVarToVList :: MonadFail m => ListVar -> VarList -> Binding -> m Binding
 \end{code}
 
 A Static list-variable binds to any list without \texttt{Textual} variables.
@@ -852,7 +852,7 @@ vsCompatible vc vw vs      =  vlComp vc vw S.empty (S.toList vs)
 \end{code}
 
 \begin{code}
-bindLVarToVSet :: Monad m => ListVar -> VarSet -> Binding -> m Binding
+bindLVarToVSet :: MonadFail m => ListVar -> VarSet -> Binding -> m Binding
 
 bindLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind))
  | valid
@@ -882,7 +882,7 @@ bindLVarToVSet _ _ _ = fail "bindLVarToVSet: invalid lvar. -> vset binding."
 \end{code}
 
 \begin{code}
-overrideLVarToVSet :: Monad m => ListVar -> VarSet -> Binding -> m Binding
+overrideLVarToVSet :: MonadFail m => ListVar -> VarSet -> Binding -> m Binding
 overrideLVarToVSet lv@(LVbl (Vbl i vc Static) is ij) vs (BD (vbind,sbind,lbind))
  | valid
     =  return $ BD (vbind,sbind, M.insert (i,vc,is,ij) (bvs vs) lbind)
@@ -909,10 +909,10 @@ bvs = BS . S.map dnGVar
 \newpage
 We also need some identity bindings:
 \begin{code}
-bindLVarToSSelf :: Monad m => ListVar -> Binding -> m Binding
+bindLVarToSSelf :: MonadFail m => ListVar -> Binding -> m Binding
 bindLVarToSSelf lv bind = bindLVarToVSet lv (S.singleton $ LstVar lv) bind
 
-bindLVarsToSSelves :: Monad m => [ListVar] -> Binding -> m Binding
+bindLVarsToSSelves :: MonadFail m => [ListVar] -> Binding -> m Binding
 bindLVarsToSSelves [] bind = return bind
 bindLVarsToSSelves (lv:lvs) bind
   = do bind' <- bindLVarToSSelf lv bind
@@ -921,11 +921,11 @@ bindLVarsToSSelves (lv:lvs) bind
 
 And binding pairs:
 \begin{code}
-bindLVarSTuple :: Monad m => (ListVar,ListVar) -> Binding -> m Binding
+bindLVarSTuple :: MonadFail m => (ListVar,ListVar) -> Binding -> m Binding
 bindLVarSTuple (plv,clv) bind
                            = bindLVarToVSet plv (S.singleton $ LstVar clv) bind
 
-bindLVarSTuples :: Monad m => [(ListVar,ListVar)] -> Binding -> m Binding
+bindLVarSTuples :: MonadFail m => [(ListVar,ListVar)] -> Binding -> m Binding
 bindLVarSTuples [] bind = return bind
 bindLVarSTuples (lv2:lv2s) bind
   = do bind' <- bindLVarSTuple lv2 bind
@@ -939,7 +939,7 @@ A list variable denoting a replacement(-list) in a substitution
 may bind to a sequence of candidate replacement terms,
 and list-variables.
 \begin{code}
-bindLVarSubstRepl :: Monad m => ListVar -> [Term] -> [ListVar] -> Binding
+bindLVarSubstRepl :: MonadFail m => ListVar -> [Term] -> [ListVar] -> Binding
                   -> m Binding
 \end{code}
 
@@ -1003,7 +1003,7 @@ bindLVarSubstRepl plv cndTs cndVL _
 
 A common use case:
 \begin{code}
-bindLVarToTList :: Monad m => ListVar -> [Term] -> Binding -> m Binding
+bindLVarToTList :: MonadFail m => ListVar -> [Term] -> Binding -> m Binding
 bindLVarToTList lv ts = bindLVarSubstRepl lv ts []
 \end{code}
 
@@ -1014,7 +1014,7 @@ bindLVarToTList lv ts = bindLVarSubstRepl lv ts []
 An list-variable can bind to a singleton list of any general variable,
 while a standard-variable can only bind to a standard variable.
 \begin{code}
-bindGVarToGVar :: Monad m => GenVar -> GenVar -> Binding -> m Binding
+bindGVarToGVar :: MonadFail m => GenVar -> GenVar -> Binding -> m Binding
 bindGVarToGVar (LstVar lv) gv binds = bindLVarToVList lv [gv] binds
 bindGVarToGVar (StdVar pv) (StdVar cv) binds = bindVarToVar pv cv binds
 bindGVarToGVar _ _ _ = fail "bindGVarToGVar: invalid stdvar. -> lstvar. binding."
@@ -1026,7 +1026,7 @@ An list-variable can bind to a list of any length,
 while a standard-variable can only bind to the standard variable inside
 a singleton list.
 \begin{code}
-bindGVarToVList :: Monad m => GenVar -> VarList -> Binding -> m Binding
+bindGVarToVList :: MonadFail m => GenVar -> VarList -> Binding -> m Binding
 bindGVarToVList (LstVar lv) vl binds = bindLVarToVList lv vl binds
 bindGVarToVList (StdVar pv) [StdVar cv] binds = bindVarToVar pv cv binds
 bindGVarToVList _ _ _ = fail "bindGVarToVList: invalid gvar. -> vlist binding."
@@ -1091,7 +1091,7 @@ tlTempSync dn (Right tm)  =  Right $ termTempSync dn tm
 \subsubsection{Lookup (Standard) Variables}
 
 \begin{code}
-lookupVarBind :: Monad m => Binding -> Variable -> m VarBind
+lookupVarBind :: MonadFail m => Binding -> Variable -> m VarBind
 lookupVarBind (BD (vbind,_,_)) v@(Vbl vi vc Static)
   = case M.lookup (vi,vc) vbind of
       Nothing  ->  fail ("lookupVarBind: Variable "++show v++" not found.")
@@ -1136,7 +1136,7 @@ lookupVarBind (BD (vbind,_,_)) v@(Vbl vi vc vw)
 
 List variable lookup is very similar:
 \begin{code}
-lookupLstBind :: Monad m => Binding -> ListVar -> m LstVarBind
+lookupLstBind :: MonadFail m => Binding -> ListVar -> m LstVarBind
 
 lookupLstBind (BD (_,_,lbind)) lv@(LVbl (Vbl i vc Static) is ij)
   = case M.lookup (i,vc,is,ij) lbind of

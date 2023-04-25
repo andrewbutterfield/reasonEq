@@ -102,7 +102,7 @@ unlines' (s:ss) = s ++ '\n':unlines' ss
 
 \subsubsection{Get item from list, or fail trying}
 \begin{code}
-getitem :: (Eq a, Monad m) => a -> [a] -> m [a]
+getitem :: (Eq a, MonadFail m) => a -> [a] -> m [a]
 getitem _ [] = fail "getitem: item not present"
 getitem a (x:xs)
  | a == x     =  return xs
@@ -112,7 +112,7 @@ getitem a (x:xs)
 
 \subsubsection{List lookup by number}
 \begin{code}
-nlookup :: Monad m => Int -> [a] -> m a
+nlookup :: MonadFail m => Int -> [a] -> m a
 nlookup i things
  | i < 1 || null things  =  fail "nlookup: not found"
 nlookup 1 (thing:rest)   =  return thing
@@ -121,7 +121,7 @@ nlookup i (thing:rest)   =  nlookup (i-1) rest
 
 \subsubsection{Association-list lookup}
 \begin{code}
-alookup :: (Eq k, Monad m) => k -> [(k,d)] -> m d
+alookup :: (Eq k, MonadFail m) => k -> [(k,d)] -> m d
 alookup k []   =  fail "alookup: not found"
 alookup k ((n,v):rest)
   | k == n     =  return v
@@ -188,7 +188,7 @@ splitLast (x:xs) = (x:xs',y) where (xs',y) = splitLast xs
 \end{code}
 
 \begin{code}
-splitAround :: (Eq a,Monad m) => a -> [a] -> m ([a],[a])
+splitAround :: (Eq a,MonadFail m) => a -> [a] -> m ([a],[a])
 splitAround s xs
   = splitA s [] xs
   where
@@ -222,7 +222,7 @@ brkspnBy cmp xs = let
                 (found,after)  =  span eq rest
               in (before,found,after)
 
-splice :: Monad m => ([a] -> m [a]) -> ([a],[a],[a]) -> m [a]
+splice :: MonadFail m => ([a] -> m [a]) -> ([a],[a],[a]) -> m [a]
 splice mrg (before,found,after)
   = do found' <- mrg found
        return (before++found'++after)
@@ -236,7 +236,7 @@ We return a triple, of the before-list (reversed), the chosen element,
 and the after list.
 This fails if the index does not correspond to a list position.
 \begin{code}
-peel :: Monad m => Int -> [a] -> m ([a],a,[a])
+peel :: MonadFail m => Int -> [a] -> m ([a],a,[a])
 peel n xs = ent [] n xs
  where
    ent _ _ [] = fail ""
@@ -351,7 +351,7 @@ choose s
 Here is code for converting \texttt{[(a,b)]} to an injective \texttt{Map a b},
 failing if there are duplicate \texttt{b}s.
 \begin{code}
-injMap :: (Monad m, Ord a, Ord b) => [(a,b)] -> m (Map a b)
+injMap :: (MonadFail m, Ord a, Ord b) => [(a,b)] -> m (Map a b)
 injMap abs
  | uniqueList (map snd abs)  =  return $ M.fromList abs
  | otherwise                 =  fail "injMap: range has duplicates"
@@ -419,6 +419,8 @@ instance Monad YesBut where
   return x        =  Yes x
   Yes x   >>= f   =  f x
   But msgs >>= f  =  But msgs
+
+instance MonadFail YesBut where
   fail msg        =  But $ lines msg
 
 instance Alternative YesBut where
@@ -544,7 +546,7 @@ Internal list contents are sperated by (imaginary) whitespace,
 while external lists have internal lists as components,
 separated by commas.
 \begin{code}
-pContents :: Monad m
+pContents :: MonadFail m
           => [[ShowTree]] -- completed internal lists
           -> [ShowTree]   -- internal list currently under construction
           -> [ShowTreeTok] -> m ([[ShowTree]], [ShowTreeTok])
@@ -579,7 +581,7 @@ pContents pairs app toks@(RPar:_)
 \newpage
 A recursive dive for a bracketed construct:
 \begin{code}
-pContainer :: Monad m
+pContainer :: MonadFail m
            => ([ShowTree] -> ShowTree) -- STapp, STlist, or STpair
            -> ShowTreeTok              -- terminator, RSqr, or RPar
            -> [ShowTreeTok] -> m (ShowTree, [ShowTreeTok])

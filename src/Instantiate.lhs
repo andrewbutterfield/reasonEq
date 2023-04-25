@@ -49,7 +49,7 @@ provided every variable in the pattern is also in the binding.
 
 We require every free variable in the term to be also in the binding.
 \begin{code}
-instantiate :: Monad m => Binding -> Term -> m Term
+instantiate :: MonadFail m => Binding -> Term -> m Term
 
 instantiate binding val@(Val _ _) = return val
 
@@ -105,7 +105,7 @@ to be bound to variable-lists, and not sets.
 These lists should themselves only contain list-variables,
 and for any target/replacement pair these lists will be of the same length.
 \begin{code}
-instSub :: Monad m => Binding -> Substn -> m Substn
+instSub :: MonadFail m => Binding -> Substn -> m Substn
 instSub binding (Substn ts lvs)
   = do ts'  <- instZip (instVar binding)  (instantiate binding) (S.toList ts)
        lvss' <- instZip (instLLVar binding) (instLLVar binding) (S.toList lvs)
@@ -126,19 +126,19 @@ instZip inst1 inst2 pairs
 \end{code}
 
 \begin{code}
-instVarSet :: Monad m => Binding -> VarSet -> m VarSet
+instVarSet :: MonadFail m => Binding -> VarSet -> m VarSet
 instVarSet binding vs
   = fmap S.unions $ sequence $ map (instSGVar binding) $ S.toList vs
 \end{code}
 
 \begin{code}
-instVarList :: Monad m => Binding -> VarList -> m VarList
+instVarList :: MonadFail m => Binding -> VarList -> m VarList
 instVarList binding vl
   = fmap concat $ sequence $ map (instLGVar binding) vl
 \end{code}
 
 \begin{code}
-instLLVar :: Monad m => Binding -> ListVar -> m [ListVar]
+instLLVar :: MonadFail m => Binding -> ListVar -> m [ListVar]
 instLLVar binding lv
   = case lookupLstBind binding lv of
       Just (BindList vl')  ->  fromGVarToLVar vl'
@@ -159,7 +159,7 @@ instLLVar binding lv
 \end{code}
 
 \begin{code}
-fromGVarToLVar :: Monad m => VarList -> m [ListVar]
+fromGVarToLVar :: MonadFail m => VarList -> m [ListVar]
 fromGVarToLVar [] = return []
 fromGVarToLVar (StdVar v:vl)
  = fail ("fromGVarToLVar: Std variable found - " ++ show v)
@@ -170,7 +170,7 @@ fromGVarToLVar (LstVar lv:vl)
 
 \newpage
 \begin{code}
-instSGVar :: Monad m => Binding -> GenVar -> m VarSet
+instSGVar :: MonadFail m => Binding -> GenVar -> m VarSet
 instSGVar binding (StdVar v)
   =  fmap (S.singleton . StdVar) $ instVar binding v
 instSGVar binding gv@(LstVar lv)
@@ -185,7 +185,7 @@ instSGVar binding gv@(LstVar lv)
 \end{code}
 
 \begin{code}
-instLGVar :: Monad m => Binding -> GenVar -> m VarList
+instLGVar :: MonadFail m => Binding -> GenVar -> m VarList
 instLGVar binding (StdVar v)
   =  fmap ((\x -> [x]) . StdVar) $ instVar binding v
 instLGVar binding gv@(LstVar lv)
@@ -196,7 +196,7 @@ instLGVar binding gv@(LstVar lv)
 \end{code}
 
 \begin{code}
-instTLGVar :: Monad m => Binding -> GenVar -> m [LVarOrTerm]
+instTLGVar :: MonadFail m => Binding -> GenVar -> m [LVarOrTerm]
 instTLGVar binding (StdVar v)
   =  fmap ((\t -> [t]) . injV) $ instVar binding v
 instTLGVar binding gv@(LstVar lv)
@@ -214,7 +214,7 @@ injGV (LstVar lv)  =  injLV lv
 \end{code}
 
 % \begin{code}
-% instGVar :: Monad m => Binding -> GenVar -> m GenVar
+% instGVar :: MonadFail m => Binding -> GenVar -> m GenVar
 % instGVar binding (StdVar v)  = do iv <- instVar binding v
 %                                   return $ StdVar iv
 % instGVar binding (LstVar lv) = do ilv <- instLVar binding lv
@@ -223,7 +223,7 @@ injGV (LstVar lv)  =  injLV lv
 %
 
 \begin{code}
-instVar :: Monad m => Binding -> Variable -> m Variable
+instVar :: MonadFail m => Binding -> Variable -> m Variable
 instVar binding v
   = case lookupVarBind binding v of
       Nothing             ->  return v  -- maps to self !
@@ -289,7 +289,7 @@ $$
 $$
 
 \begin{code}
-instIterLVS :: Monad m => Binding -> [ListVar] -> m [[LVarOrTerm]]
+instIterLVS :: MonadFail m => Binding -> [ListVar] -> m [[LVarOrTerm]]
 instIterLVS binding lvs
   = do lvtss <- sequence $ map (instTLGVar binding . LstVar) lvs
        let lvtss' = transpose lvtss
@@ -298,7 +298,7 @@ instIterLVS binding lvs
   where
     arity = length lvs
 
-checkAndGroup :: Monad m => Int -> [[LVarOrTerm]] -> [[LVarOrTerm]]
+checkAndGroup :: MonadFail m => Int -> [[LVarOrTerm]] -> [[LVarOrTerm]]
               -> m [[LVarOrTerm]]
 checkAndGroup a sstvl [] = return $ reverse sstvl
 checkAndGroup a sstvl (lvts:lvtss)
@@ -322,7 +322,7 @@ checkAndGroup a sstvl (lvts:lvtss)
 
 Doing it again, with side-conditions.
 \begin{code}
-instantiateSC :: Monad m => Binding -> SideCond -> m SideCond
+instantiateSC :: MonadFail m => Binding -> SideCond -> m SideCond
 instantiateSC bind (ascs,fvs)
   = do ascss' <- sequence $ map (instantiateASC bind) ascs
        fvs' <- instVarSet bind fvs
@@ -330,7 +330,7 @@ instantiateSC bind (ascs,fvs)
 \end{code}
 
 \begin{code}
-instantiateASC :: Monad m => Binding -> AtmSideCond -> m [AtmSideCond]
+instantiateASC :: MonadFail m => Binding -> AtmSideCond -> m [AtmSideCond]
 \end{code}
 
 \paragraph{Is a Pre-condition}~
@@ -408,7 +408,7 @@ See examples below
 \\ \setof{x,\lst S} \disj \setof{y,\lst S} &\text{if}&  \lst S = \emptyset
 \end{eqnarray*}
 \begin{code}
-instantiateDisjoint :: Monad m => VarSet -> VarSet -> m [AtmSideCond]
+instantiateDisjoint :: MonadFail m => VarSet -> VarSet -> m [AtmSideCond]
 instantiateDisjoint dvs fvs
  | freeObs `disjoint` dvs = return $ map (mkD dvs) $ S.toList freeTVar
  | otherwise  =  fail $ unlines
@@ -443,7 +443,7 @@ instantiateDisjoint dvs fvs
 \\ \setof{x,\lst S} \supseteq \setof{y,\lst S} &\text{if}& y \in \lst S
 \end{eqnarray*}
 \begin{code}
-instantiateCovers :: Monad m => VarSet -> VarSet -> m [AtmSideCond]
+instantiateCovers :: MonadFail m => VarSet -> VarSet -> m [AtmSideCond]
 instantiateCovers cvs fvs
  | freeObs `S.isSubsetOf` cvs = return $ map (mkC cvs) $ S.toList freeTVar
  | otherwise  =  fail $ unlines
@@ -502,7 +502,7 @@ findUnboundVars bind trm  =  mentionedVars trm S.\\ mappedVars bind
 \subsubsection{Instantiate Unbound Known Variables}
 
 \begin{code}
-instantiateKnown :: Monad m => [VarTable] -> Binding -> Term -> m (Binding,Term)
+instantiateKnown :: MonadFail m => [VarTable] -> Binding -> Term -> m (Binding,Term)
 instantiateKnown vts bind trm
  = do trm' <- instantiate kbind trm
       return (kbind, trm')
@@ -682,7 +682,7 @@ Another issue, what if some are unbound? Ignore for now.
 \subsubsection{Floating Instantiation}
 
 \begin{code}
-instantiateFloating :: Monad m => [VarTable] -> Binding -> Term -> m (Binding,Term)
+instantiateFloating :: MonadFail m => [VarTable] -> Binding -> Term -> m (Binding,Term)
 instantiateFloating vts bind trm
  = do trm' <- instantiate abind trm
       return (abind, trm')

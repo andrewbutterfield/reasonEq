@@ -90,7 +90,7 @@ pattern Substn ts lvs  <-  SN ts lvs
 pattern TermSub ts     <-  SN ts _
 pattern LVarSub lvs    <-  SN _  lvs
 
-substn :: Monad m => [(Variable,Term)] -> [(ListVar,ListVar)] -> m Substn
+substn :: MonadFail m => [(Variable,Term)] -> [(ListVar,ListVar)] -> m Substn
 substn ts lvs
  | null ts && null lvs  =  return $ SN S.empty S.empty
  | dupKeys ts'          =  fail "Term substitution has duplicate variables."
@@ -414,7 +414,7 @@ Smart constructors for variables and binders.
 
 Variable must match term-class.
 \begin{code}
-var :: Monad m => TermKind -> Variable -> m Term
+var :: MonadFail m => TermKind -> Variable -> m Term
 var P        v |       isPredVar v  =  return $ V P v
 var tk@(E _) v | not $ isPredVar v  =  return $ V tk v
 var _       _   =   fail "var: TermKind/VarClass mismatch"
@@ -468,7 +468,7 @@ uniformVarList (gv:vl) = uvl (whatGVar gv) vl
 
 It will also be good to enquire the class of a binder:
 \begin{code}
-binderClass :: Monad m => Term -> m VarClass
+binderClass :: MonadFail m => Term -> m VarClass
 binderClass (L _ _ (gv:_) _)  =  return $ whatGVar gv
 binderClass (B _ _ gvs    _)  =  return $ whatGVar $ S.elemAt 0 gvs
 binderClass _ = fail "binderClass: not a binding term."

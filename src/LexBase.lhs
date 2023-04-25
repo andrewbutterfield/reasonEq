@@ -103,18 +103,18 @@ validIdent str@(c:cs)
   where c' = last str
 validIdent _           =  False -- no empty/null identifiers !
 
-ident :: Monad m => String -> m Identifier
+ident :: MonadFail m => String -> m Identifier
 ident nm
  | validIdent nm  = return $ Id nm 0
 ident nm = fail ("'"++nm++"' is not an Identifier")
 
-uident :: Monad m => String -> Int -> m Identifier
+uident :: MonadFail m => String -> Int -> m Identifier
 uident nm u
  | validIdent nm  = return $ Id nm u
 uident nm _ = fail ("'"++nm++"' is not an Identifier")
 
 -- a hack for now - should check for validBracket-ness !!!
-brktIdent :: Monad m => String -> String -> m Identifier
+brktIdent :: MonadFail m => String -> String -> m Identifier
 brktIdent lbr rbr = return $ Id (lbr++'_':rbr) 0
 
 isNameId, isSymbId :: Identifier -> Bool

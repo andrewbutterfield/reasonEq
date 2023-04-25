@@ -63,7 +63,7 @@ mapaccum f acc (x:xs)
 
 \subsubsection{Matching types}
 \begin{description}
-  \item [\texttt{mp} :] instance of MonadPlus
+  \item [\texttt{mp} :] instance of MonadPlus and MonadFail
   \item [\texttt{b} :]  binding type
   \item [\texttt{c} :] candidate type
   \item [\texttt{p} :] pattern type
@@ -76,7 +76,7 @@ type BasicM mp b c p = c -> p -> b -> mp b
 \subsubsection{Matching pairs}
 
 \begin{code}
-matchPair :: MonadPlus mp
+matchPair :: (MonadFail mp, MonadPlus mp)
           => BasicM mp b c1 p1 -> BasicM mp b c2 p2
           -> BasicM mp b (c1,c2) (p1,p2)
 
@@ -107,7 +107,7 @@ defCombine sc cs b  = (b, reverse sc ++ cs)
 \newpage
 Matching many candidates against one pattern.
 \begin{code}
-manyToOne :: MonadPlus mp
+manyToOne :: (MonadFail mp, MonadPlus mp)
           => BasicM mp b c p
           -> Combine c b b'
           -> [c] -> p -> b
@@ -125,7 +125,7 @@ manyToOne' bf cf sc p b0 (c:cs)  =  (do b <- bf c p b0 ; return $ cf sc cs b)
 Matching many candidates against many patterns,
 looking for one-to-one matches.
 \begin{code}
-manyToMany :: MonadPlus mp
+manyToMany :: (MonadFail mp, MonadPlus mp)
            => BasicM mp b c p
            -> Combine c b b'
            -> [c] -> [p] -> b
@@ -151,7 +151,7 @@ defExtract = id
 Matching candidates against many patterns,
 looking for many-to-many matches from every pattern to a candidate.
 \begin{code}
-manyToMultiple :: MonadPlus mp
+manyToMultiple :: (MonadFail mp, MonadPlus mp)
                => BasicM mp b c p
                -> Combine c b b'
                -> Extract c b b'

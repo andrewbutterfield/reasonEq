@@ -34,7 +34,7 @@ will be multiline, so allowing effective version control.
 \subsection{Fixed Text}
 
 \begin{code}
-readThis :: Monad m => String -> [String] -> m [String]
+readThis :: MonadFail m => String -> [String] -> m [String]
 readThis this [] = fail "readThis: no text."
 readThis this (txt:txts)
  | txt == this  =  return txts
@@ -46,7 +46,7 @@ readThis this (txt:txts)
 \subsection{Keyed Text}
 
 \begin{code}
-readKey :: Monad m => String -> (String -> a) -> [String] -> m (a,[String])
+readKey :: MonadFail m => String -> (String -> a) -> [String] -> m (a,[String])
 readKey key _ [] = fail ("readKey '"++key++"': no text.")
 readKey key rd (txt:txts)
  | pre == key  =  return (rd post,txts)
@@ -56,7 +56,7 @@ readKey key rd (txt:txts)
  where
    (pre,post) = splitAt (length key) txt
 
-rdKey :: (Read k, Monad m) => String -> m k
+rdKey :: (Read k, MonadFail m) => String -> m k
 rdKey str = return $ read str
 \end{code}
 
@@ -70,7 +70,7 @@ listTRL ttl  =  "END " ++ list ++ " " ++ ttl
 writePerLine :: String -> (a -> String) -> [a] -> [String]
 writePerLine ttl write xs  =  listHDR ttl : map write xs ++ [ listTRL ttl]
 
-readPerLine :: Monad m => String -> (String -> a) -> [String]
+readPerLine :: MonadFail m => String -> (String -> a) -> [String]
             -> m ([a],[String])
 readPerLine ttl read [] = fail "readPerLine: no text."
 readPerLine ttl read (txt:txts)
@@ -102,7 +102,7 @@ writeMap title write m
 \end{code}
 
 \begin{code}
-readMap :: (Ord k, Monad m)
+readMap :: (Ord k, MonadFail m)
         => String -> (String -> m k) -> ([String] -> m (d,[String])) -> [String]
         -> m (Map k d,[String])
 readMap title rdKey rdDat [] = fail "readMap: no text."

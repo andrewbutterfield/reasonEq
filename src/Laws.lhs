@@ -86,7 +86,7 @@ writeSignature theSig
     , orKEY    ++ show (theOr theSig)
     , logicTRL ]
 
-readSignature :: Monad m => [String] -> m (LogicSig,[String])
+readSignature :: MonadFail m => [String] -> m (LogicSig,[String])
 readSignature [] = fail "readSignature: no text."
 readSignature txts
   = do rest1         <- readThis logicHDR txts
@@ -163,7 +163,7 @@ collectAnte imp t = ([],t)
 \subsection{Associative Grouping}
 
 \begin{code}
-flattenAssoc :: Monad m => Identifier -> Term -> m Term
+flattenAssoc :: MonadFail m => Identifier -> Term -> m Term
 flattenAssoc assocI t@(Cons tk opI ts)
  | opI == assocI && length ts > 1  =  return $ Cons tk opI $ assocFlatten opI t
 flattenAssoc assocI _
@@ -187,7 +187,7 @@ data GroupSpec
 
 Then code to do it:
 \begin{code}
-groupAssoc :: Monad m => Identifier -> GroupSpec -> Term -> m Term
+groupAssoc :: MonadFail m => Identifier -> GroupSpec -> Term -> m Term
 groupAssoc assocI gs (Cons tk opI ts)
  | opI == assocI && length ts > 2  =  groupAssoc' (mkOp tk opI) gs ts
 groupAssoc assocI _ _

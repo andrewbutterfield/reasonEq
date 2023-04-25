@@ -123,7 +123,7 @@ noHyps nm = Theory { thName   =  "H."++nm
    \mathcal L \vdash C \equiv \true
 \end{eqnarray*}
 \begin{code}
-reduce :: Monad m => LogicSig -> [Theory] -> NmdAssertion
+reduce :: MonadFail m => LogicSig -> [Theory] -> NmdAssertion
        -> m (String, Sequent)
 reduce logicsig thys (nm,(t,sc))
   = return ( reduceAll, Sequent thys (noHyps nm) sc t $ theTrue logicsig )
@@ -141,7 +141,7 @@ reduceAll = "reduce"
    \mathcal L \vdash C_1 \equiv C_2
 \end{eqnarray*}
 \begin{code}
-redboth :: Monad m => LogicSig -> [Theory] -> NmdAssertion
+redboth :: MonadFail m => LogicSig -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
 redboth logicsig thys (nm,(t@(Cons tk i [tl,tr]),sc))
   | i == theEqv logicsig
@@ -167,7 +167,7 @@ bEqv n ps = Cons P n ps
    \mathcal L \vdash (C_2 \equiv \dots \equiv C_n) \equiv C_1
 \end{eqnarray*}
 \begin{code}
-redtail :: Monad m => LogicSig -> [Theory] -> NmdAssertion
+redtail :: MonadFail m => LogicSig -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
 redtail logicsig thys (nm,(t@(Cons tk i (c1:cs@(_:_))),sc))
   | i == theEqv logicsig
@@ -185,7 +185,7 @@ reduceToLeftmost = "redtail"
 \end{eqnarray*}
 We prefer to put the smaller simpler part on the right.
 \begin{code}
-redinit :: Monad m => LogicSig -> [Theory] -> NmdAssertion
+redinit :: MonadFail m => LogicSig -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
 redinit logicsig thys (nm,(t@(Cons tk i cs@(_:_:_)),sc))
   | i == theEqv logicsig
@@ -204,7 +204,7 @@ reduceToRightmost = "redinit"
    \mathcal L,\splitand(H) \vdash (C \equiv \true)
 \end{eqnarray*}
 \begin{code}
-assume :: Monad m => LogicSig -> [Theory] -> NmdAssertion
+assume :: MonadFail m => LogicSig -> [Theory] -> NmdAssertion
        -> m (String, Sequent)
 assume logicsig thys (nm,(t@(Cons tk i [ta,tc]),sc))
   | i == theImp logicsig
@@ -238,7 +238,7 @@ splitAnte _        t     =  [t]
    \mathcal L,\splitand(H) \vdash C_1 \equiv C_2
 \end{eqnarray*}
 \begin{code}
-asmboth :: Monad m => LogicSig -> [Theory] -> NmdAssertion
+asmboth :: MonadFail m => LogicSig -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
 asmboth logicsig thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{code}
@@ -252,7 +252,7 @@ asmboth logicsig thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{eqnarray*}
 \begin{code}
 -- actually, this is done under the hood
-shunt :: Monad m => LogicSig -> [Theory] -> NmdAssertion
+shunt :: MonadFail m => LogicSig -> [Theory] -> NmdAssertion
       -> m (String, Sequent)
 shunt logicsig thys (nm,(t,sc)) = fail "shunt not applicable"
 \end{code}
@@ -267,7 +267,7 @@ shunt logicsig thys (nm,(t,sc)) = fail "shunt not applicable"
 \end{eqnarray*}
 \begin{code}
 -- actually, this is done under the hood
-shntboth :: Monad m => LogicSig -> [Theory] -> NmdAssertion
+shntboth :: MonadFail m => LogicSig -> [Theory] -> NmdAssertion
         -> m (String, Sequent)
 shntboth logicsig thys (nm,(t,sc)) = fail "shntboth not applicable"
 \end{code}
@@ -463,7 +463,7 @@ writeSequent' seq'
     , laws'KEY ++ show (laws' seq')
     , seq'TRL ]
 
-readSequent' :: Monad m => [Theory] -> [String] -> m (Sequent',[String])
+readSequent' :: MonadFail m => [Theory] -> [String] -> m (Sequent',[String])
 readSequent' thylist txts
   = do rest1 <- readThis seq'HDR txts
        -- theories are supplied, reconstructed in REqState read.
@@ -530,7 +530,7 @@ writeSeqZip (tz,seq')
     writeSequent' seq' ++
     [ szTRL ]
 
-readSeqZip :: Monad m => [Theory] -> [String] -> m (SeqZip,[String])
+readSeqZip :: MonadFail m => [Theory] -> [String] -> m (SeqZip,[String])
 readSeqZip thylist txts
   = do rest1 <- readThis szHDR txts
        (tz,rest2) <- readKey tzKEY read rest1
@@ -576,7 +576,7 @@ rightConjFocus sequent
 For a hypothesis conjecture, making the sequent-zipper
 is a little more tricky:
 \begin{code}
-hypConjFocus :: Monad m => Int -> Sequent -> m SeqZip
+hypConjFocus :: MonadFail m => Int -> Sequent -> m SeqZip
 hypConjFocus i sequent
   = do let hthry = hyp sequent
        (before,((hnm,(ht,hsc)),hprov),after) <- peel i $ laws hthry

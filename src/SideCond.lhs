@@ -162,7 +162,7 @@ is demonstrably false,
 and otherwise returns a \texttt{Maybe} type,
 where \texttt{Nothing} denotes a condition that is true.
 \begin{code}
-scCheck :: Monad m => AtmSideCond -> m (Maybe AtmSideCond)
+scCheck :: MonadFail m => AtmSideCond -> m (Maybe AtmSideCond)
 \end{code}
 Here, $z$ denotes an (standard) observation variable,
 $T$ denotes a standard term variable,
@@ -285,7 +285,7 @@ to generate side-conditions,
 by merging them in, one at a time,
 into a pre-existing list ordered and structured as described above.
 \begin{code}
-mrgAtmCond :: Monad m => AtmSideCond -> [AtmSideCond] -> m [AtmSideCond]
+mrgAtmCond :: MonadFail m => AtmSideCond -> [AtmSideCond] -> m [AtmSideCond]
 \end{code}
 
 
@@ -317,7 +317,7 @@ sameGV asc1 asc2     =  asc1 `compareGV` asc2 == EQ
 
 Now, merging an ASC in with other ASCs referring to the same general variable:
 \begin{code}
-mrgAtmAtms :: Monad m => AtmSideCond -> [AtmSideCond] -> m [AtmSideCond]
+mrgAtmAtms :: MonadFail m => AtmSideCond -> [AtmSideCond] -> m [AtmSideCond]
 mrgAtmAtms asc [] = return [asc] -- it's the first.
 \end{code}
 
@@ -414,7 +414,7 @@ mrgAtmAtms atm atms
 \subsubsection{Merging Atomic Lists}
 
 \begin{code}
-mrgAtmCondLists :: Monad m => [AtmSideCond] -> [AtmSideCond] -> m [AtmSideCond]
+mrgAtmCondLists :: MonadFail m => [AtmSideCond] -> [AtmSideCond] -> m [AtmSideCond]
 mrgAtmCondLists ascs1 [] = return ascs1
 mrgAtmCondLists ascs1 (asc:ascs2)
      = do ascs1' <- mrgAtmCond asc ascs1
@@ -425,7 +425,7 @@ mrgAtmCondLists ascs1 (asc:ascs2)
 
 
 \begin{code}
-mrgAtomicFreshConditions :: Monad m => VarSet -> [AtmSideCond] -> m SideCond
+mrgAtomicFreshConditions :: MonadFail m => VarSet -> [AtmSideCond] -> m SideCond
 mrgAtomicFreshConditions freshvs ascs
   | freshvs `disjoint` coverVarsOf ascs  =  return (ascs,freshvs)
   | otherwise  =  fail "Fresh variables cannot cover terms."
@@ -439,7 +439,7 @@ coversOf _              =  S.empty
 \subsection{From ASC and Free-list to Side-Condition}
 
 \begin{code}
-mkSideCond :: Monad m => [AtmSideCond] -> VarSet -> m SideCond
+mkSideCond :: MonadFail m => [AtmSideCond] -> VarSet -> m SideCond
 mkSideCond ascs fvs
  = do ascs' <-  mrgAtmCondLists [] ascs
       mrgAtomicFreshConditions fvs ascs
@@ -452,7 +452,7 @@ Merging two side-conditions is then straightforward,
 simply merge each ASC and fresh set from the one into the other,
 one at a time.
 \begin{code}
-mrgSideCond :: Monad m => SideCond -> SideCond -> m SideCond
+mrgSideCond :: MonadFail m => SideCond -> SideCond -> m SideCond
 mrgSideCond (ascs1,fvs1) (ascs2,fvs2)
      = do ascs' <- mrgAtmCondLists ascs1 ascs2
           mrgAtomicFreshConditions (fvs1 `S.union` fvs2) ascs'
@@ -472,7 +472,7 @@ If we discover a contradiction,
 then we need to signal this,
 because \texttt{SideCond} cannot represent a false side-condition explicitly.
 \begin{code}
-scDischarge :: Monad m => SideCond -> SideCond -> m SideCond
+scDischarge :: MonadFail m => SideCond -> SideCond -> m SideCond
 \end{code}
 We have something of the form:
 $$
@@ -522,7 +522,7 @@ groupByGV (asc:ascs)  =  (gv,asc:ours) : groupByGV others
 
 Now onto processing those groups:
 \begin{code}
-scDischarge' :: Monad m => [(GenVar,[AtmSideCond])] -> [(GenVar,[AtmSideCond])]
+scDischarge' :: MonadFail m => [(GenVar,[AtmSideCond])] -> [(GenVar,[AtmSideCond])]
               -> m [AtmSideCond]
 scDischarge' _ []      =  return []                   -- discharged
 scDischarge' [] grpsL  =  return $ concat $ map snd grpsL -- not discharged
@@ -571,7 +571,7 @@ There is an asymmetry here, which means that we should
 use all the $G_i$ to try and discharge each $L_i$,
 rather than the other way around.
 \begin{code}
-grpDischarge :: Monad m => [AtmSideCond] -> [AtmSideCond] -> m [AtmSideCond]
+grpDischarge :: MonadFail m => [AtmSideCond] -> [AtmSideCond] -> m [AtmSideCond]
 grpDischarge _ []  =  return []
 grpDischarge ascsG (ascL:ascsL)
   = do ascL'  <- ascsDischarge ascsG ascL
@@ -586,7 +586,7 @@ Here we are trying to show
  L_j \quad \where \quad j \in \setof{D,C,pre}
 \end{equation*}
 \begin{code}
-ascsDischarge :: Monad m => [AtmSideCond] -> AtmSideCond -> m [AtmSideCond]
+ascsDischarge :: MonadFail m => [AtmSideCond] -> AtmSideCond -> m [AtmSideCond]
 ascsDischarge [] ascL = return [ascL]
 ascsDischarge (ascG:ascsG) ascL
   =  case ascDischarge ascG ascL of
@@ -605,7 +605,7 @@ Here we are trying to show:
  L_j \quad \where \quad i,j \in \setof{D,C,pre}
 \end{equation*}
 \begin{code}
-ascDischarge :: Monad m => AtmSideCond -> AtmSideCond -> m [AtmSideCond]
+ascDischarge :: MonadFail m => AtmSideCond -> AtmSideCond -> m [AtmSideCond]
 -- ascDischarge ascG ascL
 -- ascGVar ascG == ascGVar ascL
 \end{code}
@@ -697,14 +697,14 @@ $$
 where elements of $G_F$ can be used to satisfy some $L_j$.
 
 \begin{code}
-freshDischarge :: Monad m => VarSet -> VarSet -> [AtmSideCond] -> m SideCond
+freshDischarge :: MonadFail m => VarSet -> VarSet -> [AtmSideCond] -> m SideCond
 freshDischarge anteFvs cnsqFvs asc
   = do asc' <- freshDischarge' anteFvs asc
        return (asc' , cnsqFvs S.\\ anteFvs )
 \end{code}
 
 \begin{code}
-freshDischarge' :: Monad m => VarSet -> [AtmSideCond] -> m [AtmSideCond]
+freshDischarge' :: MonadFail m => VarSet -> [AtmSideCond] -> m [AtmSideCond]
 freshDischarge' anteFvs [] = return []
 freshDischarge' anteFvs (asc:ascs)
   = do ascl  <- freshAtomDischarge anteFvs asc
@@ -724,7 +724,7 @@ there are three possible outcomes:
   \item [Not Fully Discharged]  Return [$L'_j$]
 \end{description}
 \begin{code}
-freshAtomDischarge :: Monad m => VarSet -> AtmSideCond -> m [AtmSideCond]
+freshAtomDischarge :: MonadFail m => VarSet -> AtmSideCond -> m [AtmSideCond]
 \end{code}
 We now consider the following possibilities:
 \begin{eqnarray*}

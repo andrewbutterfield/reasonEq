@@ -92,7 +92,7 @@ writeREqSettings rqset
     , mmdKey ++ show (maxMatchDisplay rqset)
     , reqsetTRL ]
 
-readREqSettings :: Monad m => [String] -> m (REqSettings, [String])
+readREqSettings :: MonadFail m => [String] -> m (REqSettings, [String])
 readREqSettings [] = fail "readREqSettings: no text"
 readREqSettings txts
   = do rest1 <- readThis reqsetHDR txts
@@ -130,7 +130,7 @@ writeREqState reqs
 
 We have to split this into two phases:
 \begin{code}
-readREqState1 :: Monad m => [String]
+readREqState1 :: MonadFail m => [String]
               -> m ((REqSettings,LogicSig,[String]),[String])
 readREqState1 [] = fail "readREqState1: no text."
 readREqState1 txts
@@ -140,7 +140,7 @@ readREqState1 txts
        (thryNms,rest4) <- readTheories1 rest3
        return ((theSet,theSig,thryNms),rest4)
 
-readREqState2 :: Monad m => REqSettings ->  LogicSig -> [(String,Theory)]
+readREqState2 :: MonadFail m => REqSettings ->  LogicSig -> [(String,Theory)]
               -> [String] -> m REqState
 readREqState2 _ _ _ [] = fail "readREqState2: no text."
 readREqState2 theSet theSig thMap txts

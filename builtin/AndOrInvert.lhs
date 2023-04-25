@@ -218,6 +218,21 @@ cjEqvDef
      , scTrue ) )
 \end{code}
 
+$$
+  \begin{array}{ll}
+    \CJTestOne & \CJTestOneN
+  \end{array}
+$$
+
+\vspace{-8pt}
+\begin{code}
+cjTestOne
+ = ( "test" -.- "1"
+   , ( (p \/ p) /\ q === p /\ q
+     , scTrue ) )
+\end{code}
+
+
 
 Assemble it all:
 \begin{code}
@@ -228,6 +243,7 @@ aoiConjs = map mkNmdAsn
     , cjDeMorganNand, cjDeMorganNor
     , cjEqvRepl
     , cjEqvDef
+    , cjTestOne
     ]
 \end{code}
 

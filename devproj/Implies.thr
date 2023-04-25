@@ -2,10 +2,20 @@ BEGIN THEORY Implies
 DEPS = ["AndOrInvert","And","Or","Not","Equiv"]
 KNOWN = VD (fromList [(VR (Id "implies" 0,VP,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList [])
 BEGIN LIST LAWS
-(("implies_def",ASN (C P True (Id "equiv" 0) [C P True (Id "implies" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P True (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))],([],fromList []))),Axiom)
+(("implies_def",ASN (C P True (Id "equiv" 0) [C P True (Id "implies" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P True (Id "equiv" 0) [C P True (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))]],([],fromList []))),Axiom)
 END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS
+BEGIN LIST SIMPLIFIERS
+END LIST SIMPLIFIERS
+BEGIN LIST DEFFOLD
+implies_def
+implies_def
+END LIST DEFFOLD
+BEGIN LIST DEFUNFOLD
+implies_def
+implies_def
+END LIST DEFUNFOLD
 BEGIN LIST CONJECTURES
 ("implies_def2",ASN (C P True (Id "equiv" 0) [C P True (Id "implies" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P True (Id "lor" 0) [C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))]],([],fromList [])))
 ("implies_meet",ASN (C P True (Id "equiv" 0) [C P True (Id "implies" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P True (Id "equiv" 0) [C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "P" 0,VP,WS))]],([],fromList [])))

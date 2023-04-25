@@ -3,7 +3,72 @@
 
 ## Most Urgent
 
+### Import loop involving `Classify`
 
+There is an import loop onvolving `Classify` and `Ranking`, which is why the main ranking function occurs in both modules. This needs to be broken in a sensible manner.
+
+### Fixing "Equivales" proof generation
+
+Given a proof attempt that reduces to `false`, we invoked the `=` command to create a proof of `(P∧¬ P∨Q∧¬ Q)∨R∧¬ R≡false`. However, it is shown as a `reduce` proof, which is how the original proof attempt was setup. The proof that results displays as:
+
+```
+this_is_false : (P∧¬ P∨Q∧¬ Q)∨R∧¬ R≡false
+by 'reduce'
+---
+(P∧¬ P∨Q∧¬ Q)∨R∧¬ R
+Attempting to prove the goal term to be satisfiable
+CNF: R  ∧  ¬ R
+Unit Propagation: false
+Path: [2]
+(P∧¬ P∨Q∧¬ Q)∨false
+ = 'match-lhs lor_symm @[]'
+    { P ⟼ P∧¬ P∨Q∧¬ Q, Q ⟼ false }
+false∨(P∧¬ P∨Q∧¬ Q)
+Attempting to prove the goal term to be satisfiable
+CNF: P  ∧  ¬ P
+Unit Propagation: false
+Path: [2,1]
+false∨(false∨Q∧¬ Q)
+Attempting to prove the goal term to be satisfiable
+CNF: Q  ∧  ¬ Q
+Unit Propagation: false
+Path: [2]
+false∨false
+ = 'match-lhs lor_idem @[]'
+    { P ⟼ false }
+false
+```
+This is not right, as it has become a reduce left-to-right proof (`redinit`), and the focii are all wrong, as all action now occurs on the LHS. We need to have a process that transforms the proof steps, and we need to provide an option to close the (failed) proof that lead to this point.
+
+It should look something like this:
+
+```
+this_is_false : (P∧¬ P∨Q∧¬ Q)∨R∧¬ R≡false
+by 'redinit'
+---
+(P∧¬ P∨Q∧¬ Q)∨R∧¬ R
+Attempting to prove the goal term to be satisfiable
+CNF: R  ∧  ¬ R
+Unit Propagation: false
+Path: [1,2]
+(P∧¬ P∨Q∧¬ Q)∨false
+ = 'match-lhs lor_symm @[]'
+    { P ⟼ P∧¬ P∨Q∧¬ Q, Q ⟼ false }
+false∨(P∧¬ P∨Q∧¬ Q)
+Attempting to prove the goal term to be satisfiable
+CNF: P  ∧  ¬ P
+Unit Propagation: false
+Path: [1,2,1]
+false∨(false∨Q∧¬ Q)
+Attempting to prove the goal term to be satisfiable
+CNF: Q  ∧  ¬ Q
+Unit Propagation: false
+Path: [1,2]
+false∨false
+ = 'match-lhs lor_idem @[]'
+    { P ⟼ false }
+false
+```
 
 ### Archiving Proofs
 

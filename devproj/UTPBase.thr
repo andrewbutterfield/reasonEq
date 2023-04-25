@@ -15,21 +15,10 @@ END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS
 BEGIN LIST SIMPLIFIERS
-(":=_def",Rightwards)
-("var_list_fusion",Leftwards)
-("II_def",Rightwards)
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
-sqsupseteq_def
-cond_def
-;_def
-sqcap_def
 END LIST DEFFOLD
 BEGIN LIST DEFUNFOLD
-sqsupseteq_def
-cond_def
-;_def
-sqcap_def
 END LIST DEFUNFOLD
 BEGIN LIST CONJECTURES
 ("sqsupseteq_lor_distr",ASN (C P True (Id "equiv" 0) [C P False (Id "sqsupseteq" 0) [C P True (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "R" 0,VP,WS))],C P True (Id "land" 0) [C P False (Id "sqsupseteq" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))],C P False (Id "sqsupseteq" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]]],([],fromList [])))

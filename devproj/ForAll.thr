@@ -12,11 +12,6 @@ END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS
 BEGIN LIST SIMPLIFIERS
-("forall_remove",Leftwards)
-("forall_one_point",Leftwards)
-("forall_land_distr",Rightwards)
-("lor_forall_scope",Rightwards)
-("forall_alpha_rename",Rightwards)
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
 END LIST DEFFOLD

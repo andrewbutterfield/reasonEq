@@ -183,7 +183,7 @@ unsupportedOps(Typ _) = False -}
 
 dpll :: Term -> [String] -> (Bool, [String])
 dpll t just = do let normalisedFormula = simplifyFormula $ cnf $ nnf $ implFree $ equivFree t
-                 let (f, justification) = storeJustification ("CNF: " ++ (trTerm 0 $ normalisedFormula) ++ "\n") just normalisedFormula
+                 let (f, justification) = storeJustification ("CNF: " ++ (trTerm 0 $ normalisedFormula)) just normalisedFormula
                  let (r, sr) = dpllAlg (f, justification)        
                  (r,sr)
 
@@ -194,17 +194,17 @@ dpllAlg :: (Term, [String]) -> (Bool, [String])
 dpllAlg (form, justification) = let f  = simplifyFormula (applyUnitPropagation form (nub $ getUnitClauses form))
                                     arr = nub $ getAllVariables f
                           in case chooseUnassigned arr of
-                            Nothing -> do let (res, sxr) = storeJustification ("Unit Propagation: " ++ (trTerm 0 f) ++ "\n") justification (simplifyFormula f)
+                            Nothing -> do let (res, sxr) = storeJustification ("Unit Propagation: " ++ (trTerm 0 f)) justification (simplifyFormula f)
                                           (checkResult res, sxr)
-                            Just elem -> do let (f1, sx1) = storeJustification ("Unit Propagation: " ++ (trTerm 0 f) ++ "\n" ++"\n" ++ "Assigning " ++ (trTerm 0 elem) ++ " to TRUE in " ++ (trTerm 0 f) ++ "\n") justification (applyUnassigned f elem)
+                            Just elem -> do let (f1, sx1) = storeJustification ("Unit Propagation: " ++ (trTerm 0 f) ++ "\n" ++ "Assigning " ++ (trTerm 0 elem) ++ " to TRUE in " ++ (trTerm 0 f)) justification (applyUnassigned f elem)
                                             let f2 = simplifyFormula f1
-                                            let (_, sx2) = storeJustification ("Resulting assignment: " ++ (trTerm 0 f2) ++ "\n") sx1 f2
+                                            let (_, sx2) = storeJustification ("Resulting assignment: " ++ (trTerm 0 f2)) sx1 f2
                                             case dpllAlg (f2, sx2) of
                                               (True, sxr) -> (True, sxr)
                                               (False, sxr') -> do  let elem' = nnf (Cons (termkind elem) True (jId "lnot") [elem])
-                                                                   let (f1', sx1') = storeJustification ("Assigning " ++ (trTerm 0 elem') ++ " to TRUE in " ++ (trTerm 0 f) ++ "\n") sxr' (applyUnassigned f elem')
+                                                                   let (f1', sx1') = storeJustification ("Assigning " ++ (trTerm 0 elem') ++ " to TRUE in " ++ (trTerm 0 f)) sxr' (applyUnassigned f elem')
                                                                    let f2' = (simplifyFormula f1')
-                                                                   let (_, sx2') = storeJustification ("Resulting assignment: " ++ (trTerm 0 f2') ++ "\n") sx1' f2'
+                                                                   let (_, sx2') = storeJustification ("Resulting assignment: " ++ (trTerm 0 f2')) sx1' f2'
                                                                    case dpllAlg (f2', sx2') of
                                                                     (True, sxr'') -> (True, sxr')
                                                                     (False, sxr'') -> (False, sxr'')

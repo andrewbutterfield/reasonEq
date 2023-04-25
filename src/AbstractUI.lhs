@@ -687,9 +687,9 @@ applySAT liveproof = do
     let goalt = getTZ tz
     let invertedt = negateTerm goalt
     asn <- mkAsn (exitTZ tz) (conjSC liveproof)
-    case dpll goalt ["Attempting to prove the goal term to be satisfiable\n"] of
-        (True, sxt) -> case dpll invertedt (sxt ++ ["We have proven the goal term to be satisifable. Now we will attempt to prove its negation to be satisfiable\n"]) of
-                      (True, sxt') -> return (stepsSoFar__ ((SAT sxt' (fPath liveproof), asn) :) liveproof)
+    case dpll goalt ["Attempting to prove the goal term to be satisfiable"] of
+        (True, sxt) -> case dpll invertedt (sxt ++ ["We have proven the goal term to be satisifable. Now we will attempt to prove its negation to be satisfiable"]) of
+                      (True, sxt') -> fail "The focus term is neither a tautology or a contradiction"
                       (False, sxf') -> do
                           return (focus_ ((setTZ (Val P (Boolean True)) tz), seq)
                                 $ stepsSoFar__ ((SAT sxf' (fPath liveproof), asn) :) liveproof)

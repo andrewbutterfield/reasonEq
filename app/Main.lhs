@@ -44,6 +44,7 @@ import TestRendering
 import TestParsing
 import REPL
 import Dev
+import SAT
 import Classifier
 import LiveProofs
 
@@ -750,6 +751,8 @@ proofREPLConfig
             , matchLawDescr
             , showMatchesDescr -- dev mode!
             , showProofSettingsDescr
+            , applySATDescr
+            , testDescr
             , tryMatchDescr
             , applyMatchDescr
             , normQuantDescr
@@ -1012,6 +1015,44 @@ showPrfSettingsCommand _ pstate@(reqs, _)
   =  do putStrLn $ observeSettings reqs
         waitForReturn
         return pstate
+\end{code}
+
+
+Apply SAT-solver
+\begin{code}
+
+applySATDescr = ("SAT"
+              , "Apply SAT-solver"
+              , ""
+              , applySATCommand)
+
+applySATCommand :: REPLCmd (REqState, LiveProof)
+applySATCommand _ (reqs,liveproof)
+  = case unsupportedOps goalt of
+          True -> case applySAT liveproof of
+                    Yes liveproof' -> return (reqs, liveproof')
+                    But msgs
+                      -> do putStrLn $ unlines' msgs
+                            waitForReturn
+                            return (reqs, liveproof) 
+          False -> do trace "Unsupported operators in current focus" waitForReturn
+                      return (reqs, liveproof) 
+    where (tz, _) = focus liveproof
+          goalt = getTZ tz
+
+\end{code}
+
+Testing functions
+\begin{code}
+testDescr = ("test"
+              , "Testing pre-defined function"
+              , ""
+              , testCommand)
+
+testCommand :: REPLCmd (REqState, LiveProof)
+testCommand _ (reqs,liveproof)
+  = return (reqs, applyTest liveproof)
+
 \end{code}
 
 Try matching focus against a specific law, to see what outcome arises

@@ -375,6 +375,9 @@ data Justification
   | Associate          -- grouped use of an associative operator
       Identifier           -- operator
       GroupSpec            -- grouping details.
+  | SAT 
+    [String]
+    [Int]
   deriving (Eq,Show,Read)
 \end{code}
 
@@ -464,6 +467,8 @@ showJustification (Flatten i)
   =  "   [flatten "++trId i++"]"
 showJustification (Associate i gs)
   =  "   ["++showGroupSpec gs++" over "++trId i++"]"
+showJustification (SAT s dpath)
+  =  unlines s ++ "Path: " ++ show dpath
 
 showHow :: HowUsed -> String
 showHow (ByMatch mc) = showMatchClass mc

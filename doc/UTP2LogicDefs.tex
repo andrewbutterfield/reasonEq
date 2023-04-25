@@ -448,6 +448,7 @@
 % \def\lawExor{\NmCmtLaw{exclusive-or}{$\GSN{3.53}$}{p\not \equiv q \equiv (\lnot p \land q) \lor (p\land \lnot q)}}
 
 \def\CJAndOrAbsN{\QNAME{$\land$-$\lor$-absorb}}
+\def\CJUNSATN{\QNAME{$\land$}}
 \def\CJOrAndAbsN{\QNAME{$\lor$-$\land$-absorb}}
 \def\CJAndOrNAbsN{\QNAME{$\land$-$\lnot$-$\lor$-absorb}}
 \def\CJOrAndNAbsN{\QNAME{$\lor$-$\lnot$-$\land$-absorb}}
@@ -459,6 +460,7 @@
 \def\CJEqvDefN{\QNAME{$\equiv$-def}}
 
 \def\CJAndOrAbs{P\land (P\lor Q) \equiv P}
+\def\CJUNSAT{P\land \lnot P}
 \def\CJOrAndAbs{P \lor (P \land Q) \equiv P}
 \def\CJAndOrNAbs{P \land (\lnot P\lor Q) \equiv P \land Q}
 \def\CJOrAndNAbs{P \lor (\lnot P \land Q) \equiv P \lor Q}
@@ -473,6 +475,8 @@
   \begin{array}{ll}
      \CJAndOrAbs
  &   \CJAndOrAbsN
+\\   \CJUNSAT
+ &   \CJUNSATN
 \\   \CJOrAndAbs
  &   \CJOrAndAbsN
 \\   \CJAndOrNAbs

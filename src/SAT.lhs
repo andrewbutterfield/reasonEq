@@ -1,5 +1,12 @@
-{-# LANGUAGE PatternSynonyms #-}
+\section{SAT Solver}
+\begin{verbatim}
+Copyright (c) Aaron Bruce 2023 
+              Andrew Buttefield (c) 2023
 
+LICENSE: BSD3, see file LICENSE at reasonEq root
+\end{verbatim}
+\begin{code}
+{-# LANGUAGE PatternSynonyms #-}
 module SAT (dpll
           , negateTerm
           , equivFree
@@ -208,3 +215,4 @@ dpllAlg (form, justification) = let f  = simplifyFormula (applyUnitPropagation f
                                                                    case dpllAlg (f2', sx2') of
                                                                     (True, sxr'') -> (True, sxr')
                                                                     (False, sxr'') -> (False, sxr'')
+\end{code}

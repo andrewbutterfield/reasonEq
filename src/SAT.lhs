@@ -18,44 +18,15 @@ module SAT (dpll
           , simplifyFormula
           , unsupportedOps) where
     
-import System.Environment
-import System.IO
-import System.FilePath
-import System.Directory
-import System.Exit
-import Data.Map (Map)
-import qualified Data.Map as M
-import Data.Set (Set)
-import qualified Data.Set as S
-import Data.List
-import Data.Maybe
-import Data.Char
-
-import NiceSymbols hiding (help)
-
-import Utilities
-import StratifiedDAG
-import Persistence
-import Files
-
+import Data.List ( nub )
 import LexBase
-import Variables
 import AST
-import VarData
-import Binding
-import SideCond
-import Assertions
-import REqState
-import StdSignature(propSignature)
-import UTPSignature
-import Instantiate
-import TestRendering
-import TestParsing
-import REPL
-import Dev
+import TestRendering ( trTerm )
 
 import Debug.Trace
+\end{code}
 
+\begin{code}
 implFree :: Term -> Term
 implFree x@(Val a b) = x
 implFree x@(Var a b) = x
@@ -63,7 +34,9 @@ implFree (Cons a b (Identifier nm _) (p:[])) = Cons a b (jId nm) [(implFree p)]
 implFree (Cons a b (Identifier nm _) (p:q:[])) 
                               | nm == "implies" = Cons a b (jId "lor") [Cons a b (jId "lnot") [(implFree p)],(implFree q)]
                               | otherwise = Cons a b (jId nm) [(implFree p),(implFree q)]
+\end{code}
 
+\begin{code}
 equivFree :: Term -> Term
 equivFree x@(Val a b) = x
 equivFree x@(Var a b) = x
@@ -76,7 +49,9 @@ equivFreeNested (Cons a b (Identifier nm _) (p:q:[]))
  = Cons a b (jId "land") [Cons a b (jId "implies") [(equivFree p), (equivFree q)], Cons a b (jId "implies") [(equivFree q), (equivFree p)]]
 equivFreeNested (Cons a b (Identifier nm _) (p:q:rest)) 
  = equivFreeNested (Cons a b (jId nm) ([(Cons a b (jId "land") [Cons a b (jId "implies") [p, q], Cons a b (jId "implies") [q, equivFree p]])] ++ rest))
-                          
+\end{code}
+
+\begin{code}
 nnf :: Term -> Term
 nnf t@(Val a b) = t
 nnf t@(Var a b) = t
@@ -92,8 +67,9 @@ nnf (Cons a b (Identifier nm _) (p:[]))
     | p == Val (termkind p) (Boolean True) = Val (termkind p) (Boolean False)
     | p == Val (termkind p) (Boolean False) = Val (termkind p) (Boolean True)
     | otherwise = Cons a b (jId nm) [(nnf p)]
+\end{code}
 
-
+\begin{code}
 negateTerm :: Term -> Term
 negateTerm t = Cons (termkind t) True (jId "lnot") [t]
 
@@ -109,7 +85,9 @@ distr (Cons a b (Identifier nm _) (p:q:[])) t
 distr t (Cons a b (Identifier nm _) (p:q:[]))
                                  | nm == "land" = Cons a b (jId "land") [(distr p t), (distr q t)]
 distr t1 t2 = Cons (termkind t1) True (jId "lor") [t1,t2]
+\end{code}
 
+\begin{code}
 getUnitClauses :: Term -> [Term]
 getUnitClauses t@(Var _ _) = [t]
 getUnitClauses t@(Cons a b (Identifier nm _) (p:[]))
@@ -119,17 +97,23 @@ getUnitClauses t@(Cons a b (Identifier nm _) (p:q:[]))
                                           | nm == "land" = getUnitClauses p ++ getUnitClauses q
                                           | otherwise = []
 getUnitClauses t = []
+\end{code}
 
+\begin{code}
 printArray :: [Term] -> String
 printArray [] = ""
 printArray (x:xs) = (trTerm 0 x) ++ ", " ++ (printArray xs)
+\end{code}
 
+\begin{code}
 getAllVariables :: Term -> [Term]
 getAllVariables t@(Val _ _) = []
 getAllVariables t@(Var _ _) = [t]
 getAllVariables t@(Cons a b (Identifier nm _) (p:[])) = [t]
 getAllVariables (Cons a b (Identifier nm _) (p:q:[])) = (getAllVariables p ++ getAllVariables q)
+\end{code}
 
+\begin{code}
 chooseUnassigned :: [a] -> Maybe a
 chooseUnassigned [] = Nothing
 chooseUnassigned (x:_) = Just x
@@ -149,7 +133,9 @@ applyUnassigned p@(Cons _ _ _ ((Var _ x):[])) (Cons _ _ _ ((Var tk y):[]))
                                         | otherwise = p                                  
 applyUnassigned (Cons a b (Identifier nm _) (p:q:[])) t 
                                         = Cons a b (jId nm) [applyUnassigned p t, applyUnassigned q t]
+\end{code}
 
+\begin{code}
 simplifyFormula :: Term -> Term
 simplifyFormula t@(Cons a b (Identifier "land" _) (p:q:[])) 
                           | ((simplifyFormula p) == (Val P (Boolean True))) && ((simplifyFormula q) == (Val P (Boolean True))) = Val P (Boolean True)
@@ -163,7 +149,9 @@ simplifyFormula t@(Cons a b (Identifier "lor" _) (p:q:[]))
                           | simplifyFormula q == (Val P (Boolean False)) = simplifyFormula p
                           | otherwise = Cons a b (jId "lor") [simplifyFormula p, simplifyFormula q]
 simplifyFormula t = t
+\end{code}
 
+\begin{code}
 checkResult :: Term -> Bool
 checkResult (Val _ x)
             | x == (Boolean True) = True
@@ -171,7 +159,9 @@ checkResult (Val _ x)
 
 applyUnitPropagation :: Term -> [Term] -> Term
 applyUnitPropagation formula variables = foldl (\acc variable -> applyUnassigned acc variable) formula variables
+\end{code}
 
+\begin{code}
 unsupportedOps :: Term -> Bool
 unsupportedOps (Val _ _) = True
 unsupportedOps (Var _ _) = True
@@ -186,17 +176,22 @@ unsupportedOps (Cls _ t) = False
 unsupportedOps (Sub _ t _) = False
 unsupportedOps (Iter _ _ _ _ _ _) = False
 unsupportedOps(Typ _) = False -}
+\end{code}
 
-
+\begin{code}
 dpll :: Term -> [String] -> (Bool, [String])
 dpll t just = do let normalisedFormula = simplifyFormula $ cnf $ nnf $ implFree $ equivFree t
                  let (f, justification) = storeJustification ("CNF: " ++ (trTerm 0 $ normalisedFormula)) just normalisedFormula
                  let (r, sr) = dpllAlg (f, justification)        
                  (r,sr)
+\end{code}
 
+\begin{code}
 storeJustification :: String -> [String] -> Term -> (Term, [String])
 storeJustification s sx t = (t, (sx ++ [s]))
+\end{code}
 
+\begin{code}
 dpllAlg :: (Term, [String]) -> (Bool, [String])
 dpllAlg (form, justification) = let f  = simplifyFormula (applyUnitPropagation form (nub $ getUnitClauses form))
                                     arr = nub $ getAllVariables f

@@ -1,6 +1,7 @@
 \section{Theories}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2018-22
+Copyright (c) Andrew Buttefield 2018-22
+              Saqib Zardari     2023
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

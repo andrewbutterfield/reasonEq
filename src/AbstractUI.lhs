@@ -1,6 +1,8 @@
 \section{Abstract User-Interface}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2017--2022
+Copyright (c) Andrew Buttefield 2017--2022
+              Saqib Zardari     2023
+              Aaron Bruce       2023
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

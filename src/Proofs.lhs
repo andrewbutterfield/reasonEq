@@ -1,6 +1,7 @@
 \section{Proof Support}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2018--2021
+Copyright (c) Andrew Buttefield 2018--2021
+              Aaron Bruce       2023
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

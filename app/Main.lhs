@@ -1,6 +1,8 @@
 \section{Main Program}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2017--22
+Copyright (c) Andrew Buttefield 2017--22
+              Saqid Zardari     2023
+              Aaron Bruce       2023
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

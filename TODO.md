@@ -3,10 +3,6 @@
 
 ## Most Urgent
 
-### Import loop involving `Classify`
-
-There is an import loop onvolving `Classify` and `Ranking`, which is why the main ranking function occurs in both modules. This needs to be broken in a sensible manner.
-
 ### Fixing "Equivales" proof generation
 
 Given a proof attempt that reduces to `false`, we invoked the `=` command to create a proof of `(P∧¬ P∨Q∧¬ Q)∨R∧¬ R≡false`. However, it is shown as a `reduce` proof, which is how the original proof attempt was setup. The proof that results displays as:

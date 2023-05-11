@@ -61,6 +61,6 @@ At any point in time it is only possible to actually be working on one of these 
 using a special proof command-line tool.
 
 There are two commands for proofs at the top level, of for starting new proofs (`N`), and the other
-for resuming working on an exisiting proof (`r`).
+for resuming working on an existing proof (`r`).
 
 A tutorial introduction to using the prover is provided in `doc/TUTORIAL.md`.

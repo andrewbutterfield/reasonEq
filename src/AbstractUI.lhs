@@ -683,25 +683,7 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
             else fail ("Undischarged side-conditions: "++trSideCond scD)
 \end{code}
 
-\begin{code}
-applySAT :: (Monad m, MonadFail m) => LiveProof -> m LiveProof
-applySAT liveproof = do
-    let (tz, seq) = focus liveproof
-    let goalt = getTZ tz
-    let invertedt = negateTerm goalt
-    asn <- mkAsn (exitTZ tz) (conjSC liveproof)
-    case dpll goalt ["Attempting to prove the goal term to be satisfiable"] of
-        (True, sxt) -> case dpll invertedt (sxt ++ ["We have proven the goal term to be satisifable. Now we will attempt to prove its negation to be satisfiable"]) of
-                      (True, sxt') -> fail "The focus term is neither a tautology or a contradiction"
-                      (False, sxf') -> do
-                          return (focus_ ((setTZ (Val P (Boolean True)) tz), seq)
-                                $ stepsSoFar__ ((SAT sxf' (fPath liveproof), asn) :) liveproof)
-        (False, sxf) -> do
-            return (focus_ ((setTZ (Val P (Boolean False)) tz), seq)
-                  $ stepsSoFar__ ((SAT sxf (fPath liveproof), asn) :) liveproof)
-
-
-\end{code}
+\newpage
 
 Here we replace floating variables in the \emph{range} of the binding
 by the replacements just chosen by the user.
@@ -715,8 +697,6 @@ patchBinding ((v,t):vts) lvvls bind
 patchBinding vts ((lv,vl):lvvls) bind
   = patchBinding vts lvvls $ patchVarListBind lv vl bind
 \end{code}
-
-\newpage
 
 If a floating replacement is used
 in a \texttt{CoveredBy} atomic law side condition,
@@ -745,6 +725,23 @@ extendGoalSCCoverage ss lvvls (atmSCs,_)
          = do ascs' <- mrgAtmCond ss cov ascs  -- Subscripts?
               xtndCoverage ss ffvls ascs' rest
       | otherwise  =  xtndCoverage ss ffvls ascs rest
+\end{code}
+
+\newpage
+\subsubsection{Apply SAT Solver to Focus}
+
+\begin{code}
+applySAT :: (Monad m, MonadFail m) => LiveProof -> m LiveProof
+applySAT liveproof 
+  = do  let (tz, seq) = focus liveproof
+        let goalt = getTZ tz
+        case satsolve goalt of
+          (Nothing, _) -> fail "term is contingent"
+          (Just truth, sxt)
+            -> do  asn <- mkAsn (exitTZ tz) (conjSC liveproof)
+                   let stepcons = ((SAT sxt (fPath liveproof), asn) :)
+                   return (focus_ (setTZ (Val P (Boolean truth)) tz, seq)
+                                  $ stepsSoFar__ stepcons liveproof)
 \end{code}
 
 \newpage

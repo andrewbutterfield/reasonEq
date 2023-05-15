@@ -9,8 +9,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module SAT 
   ( dpll
-  , negateTerm
   , supportedOps
+  , satsolve
   ) where
     
 import Data.List ( nub )
@@ -21,7 +21,7 @@ import TestRendering ( trTerm )
 import Debug.Trace
 \end{code}
 
-For now, this SAT solver only works for terms build from values, variables,
+For now, this SAT solver only works for terms built from values, variables,
 and applications of logical not, and, or, implies and equivalence.
 \begin{code}
 supportedOps :: Term -> Bool
@@ -256,7 +256,7 @@ dpllAlg (form, justification)
              (True, sxr) -> (True, sxr)
              (False, sxr') -> 
                do  let elem' 
-                         = nnf (Cons (termkind elem) True (jId "lnot") [elem])
+                        = nnf (Cons (termkind elem) True (jId "lnot") [elem])
                    let (f1', sx1') 
                           = storeJustification 
                               ( "Assigning " ++ trTerm 0 elem' 
@@ -270,4 +270,22 @@ dpllAlg (form, justification)
                    case dpllAlg (f2', sx2') of
                      (True, sxr'') -> (True, sxr')
                      (False, sxr'') -> (False, sxr'')
+\end{code}
+
+Given a predicate $P$ we first check it.
+If $P$ is not satisfiable we declare it to be $false$.
+If satisfiable, we check $\lnot P$.
+If $\lnot P$ is not satisfible then we declare $P$ to be $true$.
+Otherwise, neither $P$ nor $\lnot P$ are satisfiable,
+so $P$ is declared to be \emph{contingent}.
+\begin{code}
+satsolve :: Term -> (Maybe Bool, [String])
+satsolve goalt
+  = case dpll goalt ["check goal satisfiability"] of
+      (True, sxt) 
+        -> case dpll invertedt (sxt ++ ["satisifable - check negation"]) of
+             (True, sxt')  ->  (Nothing,sxt')
+             (False, sxf') ->  (Just True,sxf')
+      (False, sxf)         ->  (Just False, sxf)
+  where invertedt = negateTerm goalt
 \end{code}

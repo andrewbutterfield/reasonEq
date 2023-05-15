@@ -169,7 +169,7 @@ areEqualTo es1 es2  = Iter P True land True equals [es1,es2]
 
 \subsubsection{The Propositional Signature}
 \begin{code}
-propSignature = LogicSig trueP falseP equiv implies land lor
+propSignature = LogicSig trueP falseP equiv implies land lor lnot
 flattenEquiv = flattenTheEquiv propSignature
 \end{code}
 

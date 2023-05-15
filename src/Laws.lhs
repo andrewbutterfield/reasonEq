@@ -41,14 +41,11 @@ We define types for assertions and laws.
 To make the matching work effectively,
 we have to identify which constructs play key logical roles,
 such as logic values $\true$ and $\false$,
-as well as key propositional operators.
-A key principle that needs to be followed here is that any identifier
-that is used to trigger a partial match
-(currently $\equiv$ and $\implies$),
-or is added as part of a replacement
-(currently $\land$ and $\lor$),
-\emph{must} be identified in what we call a \emph{logic signature}.
-$$ \true \qquad \false \qquad \equiv \qquad \implies \qquad \land \qquad \lor$$
+as well as the key propositional operators.
+These \emph{must} be identified in what we call a \emph{logic signature}.
+$$ \true \qquad \false 
+   \qquad \equiv \qquad \implies \qquad \land \qquad \lor \qquad \lnot
+$$
 \begin{code}
 data LogicSig
   = LogicSig
@@ -58,6 +55,7 @@ data LogicSig
      , theImp   :: Identifier
      , theAnd   :: Identifier
      , theOr    :: Identifier
+     , theNot   :: Identifier
      }
 \end{code}
 
@@ -74,6 +72,7 @@ eqvKEY   = "EQV = "
 impKEY   = "IMP = "
 andKEY   = "AND = "
 orKEY    = "OR = "
+notKEY   = "NOT = "
 
 writeSignature :: LogicSig -> [String]
 writeSignature theSig
@@ -84,27 +83,30 @@ writeSignature theSig
     , impKEY   ++ show (theImp theSig)
     , andKEY   ++ show (theAnd theSig)
     , orKEY    ++ show (theOr theSig)
+    , notKEY   ++ show (theNot theSig)
     , logicTRL ]
 
 readSignature :: (Monad m, MonadFail m) => [String] -> m (LogicSig,[String])
 readSignature [] = fail "readSignature: no text."
 readSignature txts
   = do rest1         <- readThis logicHDR txts
-       (true,rest2)  <- readKey  trueKEY readTerm rest1
+       (true,rest2)  <- readKey  trueKEY  readTerm rest1
        (false,rest3) <- readKey  falseKEY readTerm rest2
-       (eqv,rest4)   <- readKey  eqvKEY readId rest3
-       (imp,rest5)   <- readKey  impKEY readId rest4
-       (and,rest6)   <- readKey  andKEY readId rest5
-       (or,rest7)    <- readKey  orKEY readId rest6
-       rest8         <- readThis logicTRL rest7
+       (eqv,rest4)   <- readKey  eqvKEY   readId   rest3
+       (imp,rest5)   <- readKey  impKEY   readId   rest4
+       (and,rest6)   <- readKey  andKEY   readId   rest5
+       (or,rest7)    <- readKey  orKEY    readId   rest6
+       (not,rest8)   <- readKey  notKEY   readId   rest7
+       rest9         <- readThis logicTRL          rest8
        return ( LogicSig{
                   theTrue = true
                 , theFalse = false
                 , theEqv = eqv
                 , theImp = imp
                 , theAnd = and
-                , theOr  = or }
-              , rest8 )
+                , theOr  = or 
+                , theNot = not }
+              , rest9 )
 \end{code}
 
 \newpage
@@ -335,10 +337,11 @@ Showing signature:
 showLogic logicsig
   = unlines' [ "Truth:       " ++ trTerm 0 (theTrue  logicsig)
              , "Falsity:     " ++ trTerm 0 (theFalse logicsig)
-             , "Equivalence:   " ++ trId   (theEqv   logicsig)
-             , "Implication:   " ++ trId   (theImp   logicsig)
-             , "Conjunction:   " ++ trId   (theAnd   logicsig)
-             , "Disjunction:   " ++ trId   (theOr    logicsig) ]
+             , "Equivalence: " ++ trId     (theEqv   logicsig)
+             , "Implication: " ++ trId     (theImp   logicsig)
+             , "Conjunction: " ++ trId     (theAnd   logicsig)
+             , "Disjunction: " ++ trId     (theOr    logicsig) 
+             , "Negation:    " ++ trId     (theNot   logicsig) ]
 \end{code}
 
 

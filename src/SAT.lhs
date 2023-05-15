@@ -10,14 +10,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module SAT 
   ( dpll
   , negateTerm
-  , equivFree
-  , implFree
-  , nnf
-  , cnf
-  , getUnitClauses
-  , applyUnitPropagation
-  , simplifyFormula
-  , unsupportedOps
+  , supportedOps
   ) where
     
 import Data.List ( nub )
@@ -31,21 +24,21 @@ import Debug.Trace
 For now, this SAT solver only works for terms build from values, variables,
 and applications of logical not, and, or, implies and equivalence.
 \begin{code}
-unsupportedOps :: Term -> Bool
-unsupportedOps (Val _ _) = True
-unsupportedOps (Var _ _) = True
-unsupportedOps (Cons _ _ (Identifier nm _) xs)
+supportedOps :: Term -> Bool
+supportedOps (Val _ _) = True
+supportedOps (Var _ _) = True
+supportedOps (Cons _ _ (Identifier nm _) xs)
   | (nm == "land") || (nm == "lnot") || (nm == "lor") 
     || (nm == "equiv") || (nm == "implies")
-       = all unsupportedOps xs
+       = all supportedOps xs
   | otherwise = False
-unsupportedOps t = False
-{-unsupportedOps (Bnd _ _ _ t) = False
-unsupportedOps (Lam _ _ _ t) = False
-unsupportedOps (Cls _ t) = False
-unsupportedOps (Sub _ t _) = False
-unsupportedOps (Iter _ _ _ _ _ _) = False
-unsupportedOps(Typ _) = False -}
+supportedOps t = False
+{-supportedOps (Bnd _ _ _ t) = False
+supportedOps (Lam _ _ _ t) = False
+supportedOps (Cls _ t) = False
+supportedOps (Sub _ t _) = False
+supportedOps (Iter _ _ _ _ _ _) = False
+supportedOps(Typ _) = False -}
 
 unsupportedError fnname t 
   = error ("SAT."++fnname++" used on non-supported term: "++trTerm 0 t)

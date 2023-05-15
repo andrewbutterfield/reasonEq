@@ -1030,17 +1030,19 @@ applySATDescr = ("sat"
 
 applySATCommand :: REPLCmd (REqState, LiveProof)
 applySATCommand _ (reqs,liveproof)
-  = case unsupportedOps goalt of
-          True -> case applySAT liveproof of
-                    Yes liveproof' -> return (reqs, liveproof')
-                    But msgs
-                      -> do putStrLn $ unlines' msgs
-                            waitForReturn
-                            return (reqs, liveproof) 
-          False -> do trace "Unsupported operators in current focus" waitForReturn
-                      return (reqs, liveproof) 
-    where (tz, _) = focus liveproof
-          goalt = getTZ tz
+  | supportedOps goalt
+    = case applySAT liveproof of
+        Yes liveproof' -> return (reqs, liveproof')
+        But msgs
+          -> do putStrLn $ unlines' msgs
+                waitForReturn
+                return (reqs, liveproof) 
+  | otherwise
+    = do  putStrLn "Unsupported operators in current focus" 
+          waitForReturn
+          return (reqs, liveproof) 
+  where (tz, _) = focus liveproof
+        goalt   = getTZ tz
 
 \end{code}
 

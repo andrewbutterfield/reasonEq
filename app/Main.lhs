@@ -750,26 +750,26 @@ proofREPLConfig
             , listScopeKnownsDescr
             , goDownDescr
             , goUpDescr
+            , goBackDescr
             , matchLawDescr
-            , showMatchesDescr -- dev mode!
-            , showProofSettingsDescr
-            , applySATDescr
-            , testDescr
-            , tryMatchDescr
             , applyMatchDescr
+            -- , testDescr
             , normQuantDescr
             , simpNestDescr
             , substituteDescr
+            , showProofSettingsDescr
             , flatEquivDescr
             , groupEquivDescr
-            , goBackDescr
             , lawInstantiateDescr
+            , applySATDescr
+            , autoDescr
             , switchConsequentDescr
             , switchHypothesisDescr
             , leaveHypothesisDescr
             , cloneHypothesisDescr
             , equivaleStepsDescr
-            , autoDescr
+            , tryMatchDescr
+            , showMatchesDescr -- dev mode!
             ])
       proofREPLEndCondition
       proofREPLEndTidy
@@ -1023,7 +1023,7 @@ showPrfSettingsCommand _ pstate@(reqs, _)
 Apply SAT-solver
 \begin{code}
 
-applySATDescr = ("SAT"
+applySATDescr = ("sat"
               , "Apply SAT-solver"
               , ""
               , applySATCommand)
@@ -1041,19 +1041,6 @@ applySATCommand _ (reqs,liveproof)
                       return (reqs, liveproof) 
     where (tz, _) = focus liveproof
           goalt = getTZ tz
-
-\end{code}
-
-Testing functions
-\begin{code}
-testDescr = ("test"
-              , "Testing pre-defined function"
-              , ""
-              , testCommand)
-
-testCommand :: REPLCmd (REqState, LiveProof)
-testCommand _ (reqs,liveproof)
-  = return (reqs, applyTest liveproof)
 
 \end{code}
 

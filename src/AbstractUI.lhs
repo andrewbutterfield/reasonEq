@@ -25,7 +25,6 @@ module AbstractUI
 , matchFocus, matchFocusAgainst
 , applyMatchToFocus1, applyMatchToFocus2
 , applySAT
-, applyTest
 , normQuantFocus
 , nestSimpFocus
 , substituteFocus
@@ -702,15 +701,6 @@ applySAT liveproof = do
                   $ stepsSoFar__ ((SAT sxf (fPath liveproof), asn) :) liveproof)
 
 
-\end{code}
-
-\begin{code}
-applyTest :: LiveProof -> LiveProof
-applyTest liveproof =    let (tz,seq)   =  focus liveproof
-                             goalt      =  getTZ tz
-                         in case unsupportedOps goalt of
-                            True -> trace ("True") liveproof
-                            False -> trace ("False") liveproof
 \end{code}
 
 Here we replace floating variables in the \emph{range} of the binding

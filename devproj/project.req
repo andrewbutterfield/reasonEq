@@ -18,9 +18,28 @@ BEGIN THEORIES
 THNAMES = ["And","AndOrInvert","Equality","Equiv","Exists","ForAll","Implies","Not","Or","UClose","UTPBase"]
 SDAG = [[("UTPBase",["UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("UClose",["Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Exists",["ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("ForAll",["Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Equality",["Implies","Equiv"])],[("Implies",["AndOrInvert","And","Or","Not","Equiv"])],[("AndOrInvert",["And","Or","Not","Equiv"])],[("And",["Or","Not","Equiv"])],[("Or",["Not","Equiv"])],[("Not",["Equiv"])],[("Equiv",[])]]
 END THEORIES
-CURRTHEORY = Equiv
+CURRTHEORY = AndOrInvert
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("AndOrInvert","land")
+BEGIN LIVE-PROOF
+TH-NAME: AndOrInvert
+CJ-NAME: land
+CONJ = ASN (C P True (Id "lor" 0) [C P True (Id "lor" 0) [C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]],C P True (Id "land" 0) [V P (VR (Id "Q" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]]],C P True (Id "land" 0) [V P (VR (Id "R" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "R" 0,VP,WS))]]],([],fromList []))
+SIDE = ([],fromList [])
+STRAT reduce
+BEGIN SEQZIP
+TERMZIP = (V P (VR (Id "R" 0,VP,WS)),[Cons' P True (Id "land" 0) [] [C P True (Id "lnot" 0) [V P (VR (Id "R" 0,VP,WS))]],Cons' P True (Id "lor" 0) [K P (VB False)] []])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.land", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K P (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: [2,1]
+BEGIN LIST STEPS
+(SAT ["check goal satisfiability","CNF: ((Q\8744P)\8743(\172 Q\8744P))  \8743  ((Q\8744\172 P)\8743(\172 Q\8744\172 P))","Unit Propagation: ((Q\8744P)\8743(\172 Q\8744P))  \8743  ((Q\8744\172 P)\8743(\172 Q\8744\172 P))\nAssigning Q to TRUE in ((Q\8744P)\8743(\172 Q\8744P))  \8743  ((Q\8744\172 P)\8743(\172 Q\8744\172 P))","Resulting assignment: P  \8743  \172 P","Unit Propagation: false","Assigning \172 Q to TRUE in ((Q\8744P)\8743(\172 Q\8744P))  \8743  ((Q\8744\172 P)\8743(\172 Q\8744\172 P))","Resulting assignment: P  \8743  \172 P","Unit Propagation: false"] [1],ASN (C P True (Id "lor" 0) [C P True (Id "lor" 0) [C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]],C P True (Id "land" 0) [V P (VR (Id "Q" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]]],C P True (Id "land" 0) [V P (VR (Id "R" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "R" 0,VP,WS))]]],([],fromList [])))
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

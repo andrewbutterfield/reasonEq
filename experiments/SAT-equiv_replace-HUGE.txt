@@ -1,3 +1,63 @@
+With term size printed out
+Proof for equiv_replace
+	(P≡Q)∧(R≡P)  ≡  (P≡Q)∧(R≡Q)  ⊤
+by reduce
+(P≡Q)∧(R≡P)≡(P≡Q)∧(R≡Q)
+check goal
+CNF: 1919
+Unit Propagation: 1919
+Assigning 2 to TRUE in 1919
+Resulting assignment: 319
+Unit Propagation: 319
+Assigning 2 to TRUE in 319
+Resulting assignment: 25
+Unit Propagation: 25
+Assigning 2 to TRUE in 25
+Resulting assignment: 1
+Unit Propagation: 1
+satisifable - check negation
+CNF: 7199
+Unit Propagation: 7199
+Assigning 2 to TRUE in 7199
+Resulting assignment: 927
+Unit Propagation: 927
+Assigning 2 to TRUE in 927
+Resulting assignment: 59
+Unit Propagation: 59
+Assigning 2 to TRUE in 59
+Resulting assignment: 1
+Unit Propagation: 1
+Assigning 1 to TRUE in 59
+Resulting assignment: 1
+Unit Propagation: 1
+Assigning 1 to TRUE in 927
+Resulting assignment: 1
+Unit Propagation: 1
+Assigning 1 to TRUE in 7199
+Resulting assignment: 971
+Unit Propagation: 971
+Assigning 1 to TRUE in 971
+Resulting assignment: 59
+Unit Propagation: 59
+Assigning 1 to TRUE in 59
+Resulting assignment: 1
+Unit Propagation: 1
+Assigning 2 to TRUE in 59
+Resulting assignment: 1
+Unit Propagation: 1
+Assigning 2 to TRUE in 971
+Resulting assignment: 1
+Unit Propagation: 1
+Path: []
+
+
+
+
+
+
+
+Below - the terms printed out
+
 
 🛠 devproj.AndOrInvert> sh P equiv_replace
 equiv_replace : (P≡Q)∧(R≡P)≡(P≡Q)∧(R≡Q)

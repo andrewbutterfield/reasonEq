@@ -203,6 +203,11 @@ getAllVariables t = unsupportedError "getAllVariables" t
 \end{code}
 
 \begin{code}
+cnfSize :: Term -> String
+cnfSize t = show $ termSize t
+\end{code}
+
+\begin{code}
 storeJustification :: String -> [String] -> Term -> (Term, [String])
 storeJustification s sx t = (t, sx ++ [s])
 \end{code}
@@ -225,21 +230,21 @@ dpllAlg (form, justification)
       Nothing -> 
         do let (res, sxr) 
                  = storeJustification 
-                     ("Unit Propagation: " ++ trTerm 0 f) 
+                     ("Unit Propagation: " ++ cnfSize f) 
                      justification 
                      (simplifyFormula f)
            (getBool res, sxr) 
       Just elem -> 
         do let (f1, sx1) 
                   = storeJustification 
-                      ( "Unit Propagation: " ++ trTerm 0 f ++ "\n" 
-                         ++ "Assigning " ++ trTerm 0 elem ++ " to TRUE in " 
-                         ++ trTerm 0 f) 
+                      ( "Unit Propagation: " ++ cnfSize f ++ "\n" 
+                         ++ "Assigning " ++ cnfSize elem ++ " to TRUE in " 
+                         ++ cnfSize f) 
                       justification (applyUnassigned f elem)
            let f2 = simplifyFormula f1
            let (_, sx2) 
                  = storeJustification 
-                     ("Resulting assignment: " ++ trTerm 0 f2) sx1 f2
+                     ("Resulting assignment: " ++ cnfSize f2) sx1 f2
            case dpllAlg (f2, sx2) of
              (True, sxr) -> (True, sxr)
              (False, sxr') -> 
@@ -247,13 +252,13 @@ dpllAlg (form, justification)
                         = nnf (Cons (termkind elem) True (jId "lnot") [elem])
                    let (f1', sx1') 
                           = storeJustification 
-                              ( "Assigning " ++ trTerm 0 elem' 
-                                ++ " to TRUE in " ++ trTerm 0 f) 
+                              ( "Assigning " ++ cnfSize elem' 
+                                ++ " to TRUE in " ++ cnfSize f) 
                               sxr' (applyUnassigned f elem')
                    let f2' = simplifyFormula f1'
                    let (_, sx2') 
                          = storeJustification 
-                             ("Resulting assignment: " ++ trTerm 0 f2') 
+                             ("Resulting assignment: " ++ cnfSize f2') 
                              sx1' f2'
                    case dpllAlg (f2', sx2') of
                      (True, sxr'') -> (True, sxr')
@@ -267,7 +272,7 @@ dpll t just
              = simplifyFormula $ cnf $ nnf $ implFree $ equivFree t
         let (f, justification) 
              = storeJustification 
-                 ("CNF: " ++ (trTerm 0 $ normalisedFormula)) 
+                 ("CNF: " ++ (cnfSize $ normalisedFormula)) 
                  just 
                  normalisedFormula
         let (r, sr) = dpllAlg (f, justification)        

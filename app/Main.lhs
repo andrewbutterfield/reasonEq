@@ -1030,20 +1030,11 @@ applySATDescr = ("sat"
 
 applySATCommand :: REPLCmd (REqState, LiveProof)
 applySATCommand _ (reqs,liveproof)
-  | supportedOps goalt
-    = case applySAT liveproof of
-        Yes liveproof' -> return (reqs, liveproof')
-        But msgs
-          -> do putStrLn $ unlines' msgs
-                waitForReturn
-                return (reqs, liveproof) 
-  | otherwise
-    = do  putStrLn "Unsupported operators in current focus" 
-          waitForReturn
-          return (reqs, liveproof) 
-  where (tz, _) = focus liveproof
-        goalt   = getTZ tz
-
+  = case applySAT liveproof of
+      Yes liveproof' -> return (reqs, liveproof')
+      But msgs -> do putStrLn $ unlines' msgs
+                     waitForReturn
+                     return (reqs, liveproof) 
 \end{code}
 
 Try matching focus against a specific law, to see what outcome arises

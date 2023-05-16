@@ -735,7 +735,8 @@ applySAT :: (Monad m, MonadFail m) => LiveProof -> m LiveProof
 applySAT liveproof 
   = do  let (tz, seq) = focus liveproof
         let goalt = getTZ tz
-        case satsolve goalt of
+        solution <- satsolve goalt
+        case solution of
           (Nothing, _) -> fail "term is contingent"
           (Just truth, sxt)
             -> do  asn <- mkAsn (exitTZ tz) (conjSC liveproof)

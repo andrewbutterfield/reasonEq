@@ -13,7 +13,7 @@ module SAT
   , satsolve
   ) where
     
-import Data.List ( nub )
+import Data.List ( nub, subsequences )
 import LexBase
 import AST
 import TestRendering ( trTerm )
@@ -21,8 +21,11 @@ import TestRendering ( trTerm )
 import Debug.Trace
 \end{code}
 
+\subsection{Supported Terms}
+
 For now, this SAT solver only works for terms built from values, variables,
-and applications of logical not, and, or, implies and equivalence.
+negation, and \emph{binary} applications of logical and, or, implies,
+and equivalence.
 \begin{code}
 supportedOps :: Term -> Bool
 supportedOps (Val _ _) = True
@@ -33,30 +36,14 @@ supportedOps (Cons _ _ (Identifier nm _) xs)
        = all supportedOps xs
   | otherwise = False
 supportedOps t = False
-{-supportedOps (Bnd _ _ _ t) = False
-supportedOps (Lam _ _ _ t) = False
-supportedOps (Cls _ t) = False
-supportedOps (Sub _ t _) = False
-supportedOps (Iter _ _ _ _ _ _) = False
-supportedOps(Typ _) = False -}
 
 unsupportedError fnname t 
   = error ("SAT."++fnname++" used on non-supported term: "++trTerm 0 t)
 \end{code}
 
+\subsection{Formula Normalisation}
 
-\begin{code}
-implFree :: Term -> Term
-implFree x@(Val a b) = x
-implFree x@(Var a b) = x
-implFree (Cons a b (Identifier nm _) [p]) = Cons a b (jId nm) [implFree p]
-implFree (Cons a b (Identifier nm _) [p,q]) 
-  | nm == "implies" 
-     = Cons a b (jId "lor") 
-                [Cons a b (jId "lnot") [implFree p],implFree q]
-  | otherwise = Cons a b (jId nm) [implFree p,implFree q]
-implFree t = unsupportedError "implFree" t
-\end{code}
+$$ P \equiv Q \mbox{ is }  (P \implies Q) \land (Q \implies P) $$
 
 \begin{code}
 equivFree :: Term -> Term
@@ -84,6 +71,27 @@ equivFreeNested (Cons a b (Identifier nm _) (p:q:rest))
 equivFreeNested t = unsupportedError "equivFreeNested" t
 \end{code}
 
+$$ P \implies Q \mbox{ is }  \lnot P \lor Q $$
+
+\begin{code}
+implFree :: Term -> Term
+implFree x@(Val a b) = x
+implFree x@(Var a b) = x
+implFree (Cons a b (Identifier nm _) [p]) = Cons a b (jId nm) [implFree p]
+implFree (Cons a b (Identifier nm _) [p,q]) 
+  | nm == "implies" 
+     = Cons a b (jId "lor") 
+                [Cons a b (jId "lnot") [implFree p],implFree q]
+  | otherwise = Cons a b (jId nm) [implFree p,implFree q]
+implFree t = unsupportedError "implFree" t
+\end{code}
+
+
+\begin{code}
+negateTerm :: Term -> Term
+negateTerm t = Cons (termkind t) True (jId "lnot") [t]
+\end{code}
+
 \begin{code}
 nnf :: Term -> Term
 nnf t@(Val a b) = t
@@ -104,11 +112,6 @@ nnf (Cons a b (Identifier nm _) (p:[]))
   | p == Val (termkind p) (Boolean False) = Val (termkind p) (Boolean True)
   | otherwise = Cons a b (jId nm) [nnf p]
 nnf t = unsupportedError "nnf" t
-\end{code}
-
-\begin{code}
-negateTerm :: Term -> Term
-negateTerm t = Cons (termkind t) True (jId "lnot") [t]
 \end{code}
 
 \begin{code}
@@ -176,6 +179,9 @@ applyUnassigned p@(Cons _ _ _ [Var _ x]) (Cons _ _ _ [Var tk y])
 applyUnassigned (Cons a b (Identifier nm _) [p,q]) t 
   = Cons a b (jId nm) [applyUnassigned p t, applyUnassigned q t]
 applyUnassigned t _ = unsupportedError "applyUnassigned" t
+
+applyUnitPropagation :: Term -> [Term] -> Term
+applyUnitPropagation  = foldl applyUnassigned
 \end{code}
 
 \begin{code}
@@ -203,23 +209,6 @@ checkResult (Val _ x)
   | x == Boolean True   =  True
   | x == Boolean False  =  False 
 checkResult t = unsupportedError "checkResult" t
-
-applyUnitPropagation :: Term -> [Term] -> Term
-applyUnitPropagation  = foldl applyUnassigned
-\end{code}
-
-\begin{code}
-dpll :: Term -> [String] -> (Bool, [String])
-dpll t just 
-  =  do let normalisedFormula 
-             = simplifyFormula $ cnf $ nnf $ implFree $ equivFree t
-        let (f, justification) 
-             = storeJustification 
-                 ("CNF: " ++ (trTerm 0 $ normalisedFormula)) 
-                 just 
-                 normalisedFormula
-        let (r, sr) = dpllAlg (f, justification)        
-        (r,sr)
 \end{code}
 
 \begin{code}
@@ -272,20 +261,37 @@ dpllAlg (form, justification)
                      (False, sxr'') -> (False, sxr'')
 \end{code}
 
+\begin{code}
+dpll :: Term -> [String] -> (Bool, [String])
+dpll t just 
+  =  do let normalisedFormula 
+             = simplifyFormula $ cnf $ nnf $ implFree $ equivFree t
+        let (f, justification) 
+             = storeJustification 
+                 ("CNF: " ++ (trTerm 0 $ normalisedFormula)) 
+                 just 
+                 normalisedFormula
+        let (r, sr) = dpllAlg (f, justification)        
+        (r,sr)
+\end{code}
+
+
 Given a predicate $P$ we first check it.
 If $P$ is not satisfiable we declare it to be $false$.
 If satisfiable, we check $\lnot P$.
-If $\lnot P$ is not satisfible then we declare $P$ to be $true$.
+If $\lnot P$ is not satisfiable then we declare $P$ to be $true$.
 Otherwise, neither $P$ nor $\lnot P$ are satisfiable,
 so $P$ is declared to be \emph{contingent}.
 \begin{code}
-satsolve :: Term -> (Maybe Bool, [String])
+satsolve :: MonadFail m => Term -> m (Maybe Bool, [String])
 satsolve goalt
-  = case dpll goalt ["check goal satisfiability"] of
-      (True, sxt) 
-        -> case dpll invertedt (sxt ++ ["satisifable - check negation"]) of
-             (True, sxt')  ->  (Nothing,sxt')
-             (False, sxf') ->  (Just True,sxf')
-      (False, sxf)         ->  (Just False, sxf)
+  | supportedOps goalt
+    = case dpll goalt ["check goal satisfiability"] of
+        (True, sxt) 
+          -> case dpll invertedt (sxt ++ ["satisifable - check negation"]) of
+              (True, sxt')  ->  return (Nothing,sxt')
+              (False, sxf') ->  return (Just True,sxf')
+        (False, sxf)        ->  return(Just False, sxf)
+  | otherwise  =  fail "unsupported term"
   where invertedt = negateTerm goalt
 \end{code}

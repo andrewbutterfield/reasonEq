@@ -173,22 +173,28 @@ applyUnitPropagation :: Term -> [Term] -> Term
 applyUnitPropagation  = foldl applyUnassigned
 \end{code}
 
+And-Or Simplification
+
 \begin{code}
+true = Val P (Boolean True)
+false = Val P (Boolean False)
+
 simplifyFormula :: Term -> Term
 simplifyFormula t@(Cons a b (Identifier "land" _) [p,q]) 
-  | (simplifyFormula p == Val P (Boolean True)) 
-    && (simplifyFormula q == Val P (Boolean True)) = Val P (Boolean True)
-  | (simplifyFormula p == Val P (Boolean False)) 
-    || (simplifyFormula q == Val P (Boolean False)) = Val P (Boolean False)
-  | simplifyFormula p == Val P (Boolean True) = simplifyFormula q
-  | simplifyFormula q == Val P (Boolean True) = simplifyFormula p
-  | otherwise = Cons a b (jId "land") [simplifyFormula p, simplifyFormula q]
-simplifyFormula t@(Cons a b (Identifier "lor" _) (p:q:[])) 
-  | (simplifyFormula p == Val P (Boolean True)) 
-    || (simplifyFormula q == Val P (Boolean True)) = Val P (Boolean True)
-  | simplifyFormula p == Val P (Boolean False) = simplifyFormula q
-  | simplifyFormula q == Val P (Boolean False) = simplifyFormula p
-  | otherwise = Cons a b (jId "lor") [simplifyFormula p, simplifyFormula q]
+  | psimp == true && qsimp == true  =  true
+  | psimp == false || qsimp == false = false
+  | psimp == true = qsimp
+  | qsimp == true = psimp
+  | otherwise = Cons a b (jId "land") [psimp, qsimp]
+  where
+    psimp = simplifyFormula p ; qsimp = simplifyFormula q
+simplifyFormula t@(Cons a b (Identifier "lor" _) [p,q]) 
+  | psimp == true || qsimp == true = true
+  | psimp == false = qsimp
+  | qsimp == false = psimp
+  | otherwise = Cons a b (jId "lor") [psimp, qsimp]
+  where
+    psimp = simplifyFormula p ; qsimp = simplifyFormula q
 simplifyFormula t = t
 \end{code}
 

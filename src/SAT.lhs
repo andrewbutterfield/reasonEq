@@ -14,6 +14,7 @@ module SAT
   ) where
     
 import Data.List ( nub, subsequences )
+import Data.Maybe ( listToMaybe )
 import LexBase
 import AST
 import TestRendering ( trTerm )
@@ -37,6 +38,7 @@ supportedOps (Cons _ _ (Identifier nm _) xs)
   | otherwise = False
 supportedOps t = False
 
+unsupportedError :: [Char] -> Term -> a
 unsupportedError fnname t 
   = error ("SAT."++fnname++" used on non-supported term: "++trTerm 0 t)
 \end{code}
@@ -86,11 +88,14 @@ implFree (Cons a b (Identifier nm _) [p,q])
 implFree t = unsupportedError "implFree" t
 \end{code}
 
+Negation normal-form, 
+obtained by using DeMorgan's Laws to drive negation down onto variables.
 
 \begin{code}
 negateTerm :: Term -> Term
 negateTerm t = Cons (termkind t) True (jId "lnot") [t]
 \end{code}
+
 
 \begin{code}
 nnf :: Term -> Term
@@ -114,6 +119,8 @@ nnf (Cons a b (Identifier nm _) (p:[]))
 nnf t = unsupportedError "nnf" t
 \end{code}
 
+Conjunctive normal form:  
+
 \begin{code}
 cnf :: Term -> Term
 cnf (Cons a b (Identifier nm _) [p,q]) 
@@ -129,6 +136,8 @@ distr t (Cons a b (Identifier nm _) [p,q])
 distr t1 t2 = Cons (termkind t1) True (jId "lor") [t1,t2]
 \end{code}
 
+\subsection{DPLL Algorithm}
+
 \begin{code}
 getUnitClauses :: Term -> [Term]
 getUnitClauses t@(Var _ _) = [t]
@@ -142,26 +151,6 @@ getUnitClauses t = []
 \end{code}
 
 \begin{code}
-printArray :: [Term] -> String
-printArray [] = ""
-printArray (x:xs) = trTerm 0 x ++ ", " ++ printArray xs
-\end{code}
-
-\begin{code}
-getAllVariables :: Term -> [Term]
-getAllVariables t@(Val _ _) = []
-getAllVariables t@(Var _ _) = [t]
-getAllVariables t@(Cons a b (Identifier nm _) [p]) = [t]
-getAllVariables (Cons a b (Identifier nm _) [p,q]) 
-  = getAllVariables p ++ getAllVariables q
-getAllVariables t = unsupportedError "getAllVariables" t
-\end{code}
-
-\begin{code}
-chooseUnassigned :: [a] -> Maybe a
-chooseUnassigned [] = Nothing
-chooseUnassigned (x:_) = Just x
-
 applyUnassigned :: Term -> Term -> Term
 applyUnassigned p@(Val _ _) _ = p
 applyUnassigned p@(Var _ x) (Var tk k)
@@ -204,11 +193,13 @@ simplifyFormula t = t
 \end{code}
 
 \begin{code}
-checkResult :: Term -> Bool
-checkResult (Val _ x)
-  | x == Boolean True   =  True
-  | x == Boolean False  =  False 
-checkResult t = unsupportedError "checkResult" t
+getAllVariables :: Term -> [Term]
+getAllVariables t@(Val _ _) = []
+getAllVariables t@(Var _ _) = [t]
+getAllVariables t@(Cons a b (Identifier nm _) [p]) = [t]
+getAllVariables (Cons a b (Identifier nm _) [p,q]) 
+  = getAllVariables p ++ getAllVariables q
+getAllVariables t = unsupportedError "getAllVariables" t
 \end{code}
 
 \begin{code}
@@ -216,20 +207,28 @@ storeJustification :: String -> [String] -> Term -> (Term, [String])
 storeJustification s sx t = (t, sx ++ [s])
 \end{code}
 
+Sometimes we expect a boolean value:
+\begin{code}
+getBool :: Term -> Bool
+getBool (Val _ (Boolean b)) = b
+getBool t = unsupportedError "getBool" t
+\end{code}
+
+
 \begin{code}
 dpllAlg :: (Term, [String]) -> (Bool, [String])
 dpllAlg (form, justification) 
   = let f = simplifyFormula 
               (applyUnitPropagation form (nub $ getUnitClauses form))
         arr = nub $ getAllVariables f
-    in case chooseUnassigned arr of
+    in case listToMaybe arr of
       Nothing -> 
         do let (res, sxr) 
                  = storeJustification 
                      ("Unit Propagation: " ++ trTerm 0 f) 
                      justification 
                      (simplifyFormula f)
-           (checkResult res, sxr)
+           (getBool res, sxr) 
       Just elem -> 
         do let (f1, sx1) 
                   = storeJustification 
@@ -286,7 +285,7 @@ so $P$ is declared to be \emph{contingent}.
 satsolve :: MonadFail m => Term -> m (Maybe Bool, [String])
 satsolve goalt
   | supportedOps goalt
-    = case dpll goalt ["check goal satisfiability"] of
+    = case dpll goalt ["check goal"] of
         (True, sxt) 
           -> case dpll invertedt (sxt ++ ["satisifable - check negation"]) of
               (True, sxt')  ->  return (Nothing,sxt')

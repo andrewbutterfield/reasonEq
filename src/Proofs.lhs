@@ -376,9 +376,10 @@ data Justification
   | Associate          -- grouped use of an associative operator
       Identifier           -- operator
       GroupSpec            -- grouping details.
-  | SAT 
-    [String]
-    [Int]
+  | SAT                -- used SAT solver
+    Bool                   -- term is satisfiable
+    Bool                   -- negation is satisfiable
+    [Int]                  -- zipper descent arguments
   deriving (Eq,Show,Read)
 \end{code}
 
@@ -468,8 +469,8 @@ showJustification (Flatten i)
   =  "   [flatten "++trId i++"]"
 showJustification (Associate i gs)
   =  "   ["++showGroupSpec gs++" over "++trId i++"]"
-showJustification (SAT s dpath)
-  =  unlines s ++ "Path: " ++ show dpath
+showJustification (SAT tsat ntsat dpath)
+  =  "   = SAT "++show tsat++" !"++show ntsat++" @" ++ show dpath
 
 showHow :: HowUsed -> String
 showHow (ByMatch mc) = showMatchClass mc

@@ -221,62 +221,29 @@ getBool t = unsupportedError "getBool" t
 
 
 \begin{code}
-dpllAlg :: (Term, [String]) -> (Bool, [String])
-dpllAlg (form, justification) 
+dpllAlg :: Term -> Bool
+dpllAlg form
   = let f = simplifyFormula 
               (applyUnitPropagation form (nub $ getUnitClauses form))
         arr = nub $ getAllVariables f
     in case listToMaybe arr of
-      Nothing -> 
-        do let (res, sxr) 
-                 = storeJustification 
-                     ("Unit Propagation: " ++ cnfSize f) 
-                     justification 
-                     (simplifyFormula f)
-           (getBool res, sxr) 
+      Nothing -> getBool $ simplifyFormula f -- do we need another simp?
       Just elem -> 
-        do let (f1, sx1) 
-                  = storeJustification 
-                      ( "Unit Propagation: " ++ cnfSize f ++ "\n" 
-                         ++ "Assigning " ++ cnfSize elem ++ " to TRUE in " 
-                         ++ cnfSize f) 
-                      justification (applyUnassigned f elem)
+        do let f1 = applyUnassigned f elem
            let f2 = simplifyFormula f1
-           let (_, sx2) 
-                 = storeJustification 
-                     ("Resulting assignment: " ++ cnfSize f2) sx1 f2
-           case dpllAlg (f2, sx2) of
-             (True, sxr) -> (True, sxr)
-             (False, sxr') -> 
+           case dpllAlg f2 of
+             True  -> True
+             False -> 
                do  let elem' 
                         = nnf (Cons (termkind elem) True (jId "lnot") [elem])
-                   let (f1', sx1') 
-                          = storeJustification 
-                              ( "Assigning " ++ cnfSize elem' 
-                                ++ " to TRUE in " ++ cnfSize f) 
-                              sxr' (applyUnassigned f elem')
+                   let f1' = applyUnassigned f elem'
                    let f2' = simplifyFormula f1'
-                   let (_, sx2') 
-                         = storeJustification 
-                             ("Resulting assignment: " ++ cnfSize f2') 
-                             sx1' f2'
-                   case dpllAlg (f2', sx2') of
-                     (True, sxr'') -> (True, sxr')
-                     (False, sxr'') -> (False, sxr'')
+                   dpllAlg f2'
 \end{code}
 
 \begin{code}
-dpll :: Term -> [String] -> (Bool, [String])
-dpll t just 
-  =  do let normalisedFormula 
-             = simplifyFormula $ cnf $ nnf $ implFree $ equivFree t
-        let (f, justification) 
-             = storeJustification 
-                 ("CNF: " ++ (cnfSize $ normalisedFormula)) 
-                 just 
-                 normalisedFormula
-        let (r, sr) = dpllAlg (f, justification)        
-        (r,sr)
+dpll :: Term -> Bool
+dpll t  =  dpllAlg $ simplifyFormula $ cnf $ nnf $ implFree $ equivFree t
 \end{code}
 
 
@@ -287,15 +254,14 @@ If $\lnot P$ is not satisfiable then we declare $P$ to be $true$.
 Otherwise, neither $P$ nor $\lnot P$ are satisfiable,
 so $P$ is declared to be \emph{contingent}.
 \begin{code}
-satsolve :: MonadFail m => Term -> m (Maybe Bool, [String])
+satsolve :: MonadFail m => Term -> m (Bool, Bool)
 satsolve goalt
   | supportedOps goalt
-    = case dpll goalt ["check goal"] of
-        (True, sxt) 
-          -> case dpll invertedt (sxt ++ ["satisifable - check negation"]) of
-              (True, sxt')  ->  return (Nothing,sxt')
-              (False, sxf') ->  return (Just True,sxf')
-        (False, sxf)        ->  return(Just False, sxf)
+    = if dpll goalt
+         then if dpll invertedt 
+                 then fail "contingent term"
+                 else return (True,False)
+         else return (False,True)
   | otherwise  =  fail "unsupported term"
   where invertedt = negateTerm goalt
 \end{code}

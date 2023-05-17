@@ -12,7 +12,7 @@ module REqState ( REqSettings(..)
                 , changeSettings
                 , REqState(..)
                 , modified__, modified_, changed
-                , logic__, logic_, theories__, theories_
+                , theories__, theories_
                 , settings__, settings_
                 , currTheory__, currTheory_, liveProofs__, liveProofs_
                 , writeREqState, readREqState1, readREqState2
@@ -253,7 +253,6 @@ data REqState
     , modified    ::  Bool -- True if anything modified but not saved
     -- all below are saved
     , settings    ::  REqSettings
-    , logicsig    ::  LogicSig
     , theories    ::  Theories
     , currTheory  ::  String
     , liveProofs  ::  LiveProofs
@@ -266,8 +265,6 @@ modified_      = modified__ . const
 changed = modified_ True
 settings__ f r = r{settings = f $ settings r}
 settings_      = settings__ . const
-logic__  f r = r{logicsig = f $ logicsig r}
-logic_    = logic__ . const
 theories__ f r = r{theories = f $ theories r}
 theories_ = theories__ . const
 currTheory__ f r = r{currTheory = f $ currTheory r}
@@ -291,7 +288,6 @@ writeREqState :: REqState -> ([String],NamedTheoryTexts)
 writeREqState reqs
   = ( [ reqstateHDR ] ++
       writeREqSettings (settings reqs) ++
-      writeSignature (logicsig reqs) ++
       thrysTxt ++
       [currThKEY ++ (currTheory reqs)] ++
       writeLiveProofs (liveProofs reqs) ++
@@ -305,19 +301,18 @@ writeREqState reqs
 We have to split this into two phases:
 \begin{code}
 readREqState1 :: (Monad m, MonadFail m) => [String]
-              -> m ((REqSettings,LogicSig,[String]),[String])
+              -> m ((REqSettings,[String]),[String])
 readREqState1 [] = fail "readREqState1: no text."
 readREqState1 txts
   = do rest1 <- readThis reqstateHDR txts
        (theSet,rest2) <- readREqSettings rest1
-       (theSig,rest3) <- readSignature rest2
-       (thryNms,rest4) <- readTheories1 rest3
-       return ((theSet,theSig,thryNms),rest4)
+       (thryNms,rest3) <- readTheories1 rest2
+       return ((theSet,thryNms),rest3)
 
-readREqState2 :: (Monad m, MonadFail m) => REqSettings ->  LogicSig -> [(String,Theory)]
+readREqState2 :: (Monad m, MonadFail m) => REqSettings ->  [(String,Theory)]
               -> [String] -> m REqState
-readREqState2 _ _ _ [] = fail "readREqState2: no text."
-readREqState2 theSet theSig thMap txts
+readREqState2 _ _ [] = fail "readREqState2: no text."
+readREqState2 theSet thMap txts
   = do (thrys,rest1) <- readTheories2 thMap txts
        (cThNm,rest2) <- readKey currThKEY id rest1
        let thylist = fromJust $ getTheoryDeps cThNm thrys
@@ -327,7 +322,6 @@ readREqState2 theSet theSig thMap txts
                          , projectDir = ""
                          , modified = False
                          , settings = theSet
-                         , logicsig = theSig
                          , theories = thrys
                          , currTheory = cThNm
                          , liveProofs = lPrfs }

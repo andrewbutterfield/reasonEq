@@ -5,63 +5,13 @@ MHT = False
 MHQ = True
 MHF = False
 END REQSET
-BEGIN SIGNATURE
-TRUE = K P (VB True)
-FALSE = K P (VB False)
-EQV = Id "equiv" 0
-IMP = Id "implies" 0
-AND = Id "land" 0
-OR = Id "lor" 0
-NOT = Id "lnot" 0
-END SIGNATURE
 BEGIN THEORIES
 THNAMES = ["And","AndOrInvert","Equality","Equiv","Exists","ForAll","Implies","Not","Or","UClose","UTPBase"]
 SDAG = [[("UTPBase",["UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("UClose",["Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Exists",["ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("ForAll",["Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Equality",["Implies","Equiv"])],[("Implies",["AndOrInvert","And","Or","Not","Equiv"])],[("AndOrInvert",["And","Or","Not","Equiv"])],[("And",["Or","Not","Equiv"])],[("Or",["Not","Equiv"])],[("Not",["Equiv"])],[("Equiv",[])]]
 END THEORIES
-CURRTHEORY = AndOrInvert
+CURRTHEORY = Equiv
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("AndOrInvert","equiv_replace")
-BEGIN LIVE-PROOF
-TH-NAME: AndOrInvert
-CJ-NAME: equiv_replace
-CONJ = ASN (C P True (Id "equiv" 0) [C P True (Id "land" 0) [C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P True (Id "equiv" 0) [V P (VR (Id "R" 0,VP,WS)),V P (VR (Id "P" 0,VP,WS))]],C P True (Id "land" 0) [C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P True (Id "equiv" 0) [V P (VR (Id "R" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]]],([],fromList []))
-SIDE = ([],fromList [])
-STRAT reduce
-BEGIN SEQZIP
-TERMZIP = (C P True (Id "equiv" 0) [C P True (Id "land" 0) [C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P True (Id "equiv" 0) [V P (VR (Id "R" 0,VP,WS)),V P (VR (Id "P" 0,VP,WS))]],C P True (Id "land" 0) [C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P True (Id "equiv" 0) [V P (VR (Id "R" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]]],[])
-BEGIN SEQUENT'
-SIDECOND = ([],fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.equiv_replace", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K P (VB True)}
-END SEQUENT'
-END SEQZIP
-FPATH: []
-BEGIN LIST STEPS
-END LIST STEPS
-END LIVE-PROOF
-("AndOrInvert","land")
-BEGIN LIVE-PROOF
-TH-NAME: AndOrInvert
-CJ-NAME: land
-CONJ = ASN (C P True (Id "lor" 0) [C P True (Id "lor" 0) [C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]],C P True (Id "land" 0) [V P (VR (Id "Q" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]]],C P True (Id "land" 0) [V P (VR (Id "R" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "R" 0,VP,WS))]]],([],fromList []))
-SIDE = ([],fromList [])
-STRAT reduce
-BEGIN SEQZIP
-TERMZIP = (K P (VB False),[])
-BEGIN SEQUENT'
-SIDECOND = ([],fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.land", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K P (VB True)}
-END SEQUENT'
-END SEQZIP
-FPATH: []
-BEGIN LIST STEPS
-(SAT False True [],ASN (C P True (Id "lor" 0) [K P (VB False),K P (VB False)],([],fromList [])))
-(SAT False True [2],ASN (C P True (Id "lor" 0) [K P (VB False),C P True (Id "land" 0) [V P (VR (Id "R" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "R" 0,VP,WS))]]],([],fromList [])))
-(SAT False True [1],ASN (C P True (Id "lor" 0) [C P True (Id "lor" 0) [K P (VB False),K P (VB False)],C P True (Id "land" 0) [V P (VR (Id "R" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "R" 0,VP,WS))]]],([],fromList [])))
-(SAT False True [1,2],ASN (C P True (Id "lor" 0) [C P True (Id "lor" 0) [K P (VB False),C P True (Id "land" 0) [V P (VR (Id "Q" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]]],C P True (Id "land" 0) [V P (VR (Id "R" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "R" 0,VP,WS))]]],([],fromList [])))
-(SAT False True [1,1],ASN (C P True (Id "lor" 0) [C P True (Id "lor" 0) [C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))]],C P True (Id "land" 0) [V P (VR (Id "Q" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]]],C P True (Id "land" 0) [V P (VR (Id "R" 0,VP,WS)),C P True (Id "lnot" 0) [V P (VR (Id "R" 0,VP,WS))]]],([],fromList [])))
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

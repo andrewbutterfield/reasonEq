@@ -17,7 +17,6 @@ module StdSignature (
 , land, mkAnd, mkAnds, (/\)
 , implies, mkImplies, (==>)
 , equals, isEqualTo, areEqualTo
-, propSignature
 , propdef
 , flattenEquiv
 , forall, exists, univ, sat
@@ -130,49 +129,43 @@ boolf_3 = FunType bool boolf_2
 
 \subsubsection{Propositional Constants}
 
+Now synonyms for the `theX` terms.
 \begin{code}
-trueP  = Val P $ Boolean True
-falseP = Val P $ Boolean False
+trueP  =  theTrue -- Val P $ Boolean True
+falseP =  theFalse -- Val P $ Boolean False
 \end{code}
 
 \newpage
 \subsection{Propositional Operators}
 
 \begin{code}
-equiv = jId "equiv" ; mkEquivs ps = PCons True equiv ps
+equiv = theEqv ; mkEquivs ps = PCons True equiv ps
 mkEquiv p q = mkEquivs [p,q]
 infix 1 === ; (===) = mkEquiv
 
-implies = jId "implies" ; mkImplies p q = PCons True implies [p,q]
+implies = theImp ; mkImplies p q = PCons True implies [p,q]
 infixr 2 ==> ; (==>) = mkImplies
 
-lor = jId "lor"
+lor = theOr
 mkOrs []   =  falseP
 mkOrs [p]  =  p
 mkOrs ps   =  PCons True lor ps
 mkOr p q   =  mkOrs [p,q]
 infix 3 \/ ; (\/) = mkOr
 
-land = jId "land"
+land = theAnd
 mkAnds []   =  trueP
 mkAnds [p]  =  p
 mkAnds ps   =  PCons True land ps
 mkAnd p q = mkAnds [p,q]
 infix 4 /\ ; (/\) = mkAnd
 
-lnot = jId "lnot" ; mkNot p = PCons True lnot [p]
+lnot = theNot ; mkNot p = PCons True lnot [p]
 
 equals = jId "="
 isEqualTo   e1  e2  = Cons P True           equals [ e1, e2]
 areEqualTo es1 es2  = Iter P True land True equals [es1,es2]
 \end{code}
-
-\subsubsection{The Propositional Signature}
-\begin{code}
-propSignature = LogicSig trueP falseP equiv implies land lor lnot
-flattenEquiv = flattenTheEquiv propSignature
-\end{code}
-
 
 
 \subsubsection{Propositional Law Shorthand}

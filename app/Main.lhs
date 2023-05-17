@@ -39,7 +39,6 @@ import Assertions
 import Ranking
 import REqState
 import AbstractUI
-import StdSignature(propSignature)
 import UTPSignature
 import Instantiate
 import TestRendering
@@ -217,7 +216,6 @@ reqstate0 = REqState { inDevMode = False
                      , projectDir = ""
                      , modified = False
                      , settings = initREqSettings
-                     , logicsig = propSignature
                      , theories = noTheories
                      , currTheory = ""
                      , liveProofs = M.empty }
@@ -728,7 +726,7 @@ proofREPLQuit args (reqs,liveProof)
 proofREPLHelpCmds = ["?"]
 
 proofREPLEndCondition (reqs,liveProof)
-  =  proofIsComplete (logicsig reqs) liveProof
+  =  proofIsComplete liveProof
 
 proofREPLEndTidy _ (reqs,liveProof)
   = do putStrLn $ dispEndProof liveProof
@@ -922,7 +920,7 @@ applySimps :: MonadFail m => ((String, Direction) -> MatchClass -> Bool) ->
                              [(String, Direction)] -> (REqState, LiveProof) -> m LiveProof
 applySimps f [] (reqs, liveProof) = fail ("No successful matching simp applys")
 applySimps f (x:xs) (reqs, liveProof)
-    = case matchFocusAgainst (pdbg "aS.n" (fst x)) (logicsig reqs) liveProof of
+    = case matchFocusAgainst (pdbg "aS.n" (fst x)) liveProof of
         Yes liveProof' ->  case applyMatchToFocus1 1 liveProof' of
                                 Nothing -> applySimps f xs (reqs, liveProof)
                                 Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)
@@ -943,7 +941,7 @@ applyFolds' input autos (reqs, liveProof) = do let match = if input == "f" then 
 applyFolds :: MonadFail m => (MatchClass -> Bool) -> [String] -> (REqState, LiveProof) -> m LiveProof
 applyFolds _ [] (reqs, liveProof) = fail ("No successful matching simp applys")
 applyFolds f (x:xs) (reqs, liveProof)
-    = case matchFocusAgainst (pdbg "aS.n" x) (logicsig reqs) liveProof of
+    = case matchFocusAgainst (pdbg "aS.n" x) liveProof of
         Yes liveProof' ->  case applyMatchToFocus1 1 liveProof' of
                                 Nothing -> applyFolds f xs (reqs, liveProof)
                                 Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)
@@ -969,12 +967,12 @@ matchLawDescr = ( "m"
 
 matchLawCommand :: REPLCmd (REqState, LiveProof)
 matchLawCommand [] (reqs, liveProof)
-  =  return (reqs, matchFocus (logicsig reqs) ranking liveProof)
+  =  return (reqs, matchFocus ranking liveProof)
   where
     ranking = filterAndSort (matchFilter $ settings reqs, favourDefLHSOrd)
 
 matchLawCommand args state@(reqs, liveProof)
-  =  case matchFocusAgainst lawnm (logicsig reqs) liveProof of
+  =  case matchFocusAgainst lawnm liveProof of
       Yes liveProof'  ->  return (reqs, liveProof')
       But msgs
        -> do putStrLn $ unlines' msgs
@@ -1054,7 +1052,7 @@ tryMatchDescr = ( "tm"
 tryMatch :: REPLCmd (REqState, LiveProof)
 tryMatch [] state = return state
 tryMatch args state@( reqs, liveProof)
-  = do case tryFocusAgainst lawnm parts (logicsig reqs) liveProof of
+  = do case tryFocusAgainst lawnm parts liveProof of
          Yes (bind,tPasC,scC',scP')
            -> putStrLn $ unlines
                 [ banner
@@ -1091,7 +1089,7 @@ applyMatch args pstate@(reqs, liveProof)
   = case applyMatchToFocus1 (args2int args) liveProof of
       Nothing -> return pstate
       Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)
-       -> do let availTerms = false : true : gSubTerms
+       -> do let availTerms = theFalse : theTrue : gSubTerms
              (vardone,svtms)
                <-  fixFloatVars [] availTerms $ map StdVar fStdVars
              (lvardone,lvvls)
@@ -1109,8 +1107,6 @@ applyMatch args pstate@(reqs, liveProof)
                      waitForReturn
                      return pstate
   where
-    true   =  theTrue  $ logicsig reqs
-    false  =  theFalse $ logicsig reqs
     vts = concat $ map thd3 $ mtchCtxts liveProof
 \end{code}
 \newpage
@@ -1225,7 +1221,7 @@ flatEquivDescr = ( "fe", "flatten equivalences"
 
 flatEquiv :: REPLCmd (REqState, LiveProof)
 flatEquiv _ state@(reqs, _)
-  = tryDelta (flattenAssociative $ theEqv $ logicsig reqs) state
+  = tryDelta (flattenAssociative $ theEqv) state
 \end{code}
 
 
@@ -1250,7 +1246,7 @@ args2gs _                           =  fail "ge: invalid arguments."
 groupEquiv :: REPLCmd (REqState, LiveProof)
 groupEquiv args state@(reqs, _)
   = case args2gs args of
-      Just gs -> tryDelta (groupAssociative (theEqv $ logicsig reqs) gs) state
+      Just gs -> tryDelta (groupAssociative theEqv gs) state
       Nothing -> putStrLn "bad arguments!" >> userPause >> return state
 \end{code}
 
@@ -1281,7 +1277,7 @@ lawInstantiateDescr = ( "i", "instantiate"
 
 lawInstantiateProof :: REPLCmd (REqState, LiveProof)
 lawInstantiateProof _ ps@(reqs, liveProof )
-  = do let rslaws = lawInstantiate1 (logicsig reqs) liveProof
+  = do let rslaws = lawInstantiate1 liveProof
 
        lawno <- pickByNumber "Pick a law : " (showLaws (trTerm 0, trSideCond)) rslaws
 
@@ -1310,7 +1306,7 @@ cloneHypothesisDescr
 
 cloneHypotheses :: REPLCmd (REqState, LiveProof)
 cloneHypotheses args liveState@(reqs, _)
-  = tryDelta (cloneHypothesis (args2int args) (theAnd $ logicsig reqs)) liveState
+  = tryDelta (cloneHypothesis (args2int args) theAnd) liveState
 \end{code}
 
 At any point in a proof, one at least one step has been taken,

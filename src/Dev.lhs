@@ -60,7 +60,6 @@ devInitState
             , projectDir = devProjectDir
             , modified = False
             , settings = initREqSettings
-            , logicsig = propSignature
             , theories = devTheories
             , currTheory = equivName
             , liveProofs = M.empty }

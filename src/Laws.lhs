@@ -7,8 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Laws
- ( LogicSig(..)
- , flattenTheEquiv, flattenTheImp, flattenTheAnd
+ ( theTrue, theFalse, theEqv, theNot, theOr,  theAnd, theImp
+ , flattenEquiv, flattenImp, flattenAnd
  , flattenAssoc
  , LeftRight(..), GroupSpec(..), groupAssoc
  , NmdAssertion
@@ -16,7 +16,6 @@ module Laws
  , Law, lawName, lawNamedAssn, lawProvenance
  , isAxiom, isProven, isAssumed
  , labelAsAxiom, labelAsProof, labelAsAssumed
- , writeSignature, readSignature
  , showLogic, showKnowns, showNmdAssns, showLaw, showLaws, showConj, showConjs
  , showLeftRight, showGroupSpec
  ) where
@@ -54,9 +53,9 @@ We give these fixed names, and below we show the symbolic forms we use here.
 \\\hline
   - & $\false$ & pred. var. \texttt{False} 
 \\\hline
-  equiv & $\equiv$ & Identifier
+  eqv & $\equiv$ & Identifier
 \\\hline
-  impl & $\implies$ & Identifier
+  imp & $\implies$ & Identifier
 \\\hline
   and & $\land$ & Identifier
 \\\hline
@@ -66,70 +65,19 @@ We give these fixed names, and below we show the symbolic forms we use here.
 \\\hline
 \end{tabular}
 
-The following datatype is to be deprecated 
-and replaced by its field components as global constants.
 \begin{code}
-data LogicSig
-  = LogicSig
-     { theTrue  :: Term
-     , theFalse :: Term
-     , theEqv   :: Identifier
-     , theImp   :: Identifier
-     , theAnd   :: Identifier
-     , theOr    :: Identifier
-     , theNot   :: Identifier
-     }
+theTrue, theFalse :: Term
+theTrue  = Val P $ Boolean True
+theFalse = Val P $ Boolean False
+
+theEqv, theNot, theOr, theAnd, theImp :: Identifier
+theEqv = jId "equiv"
+theNot = jId "lnot"
+theOr  = jId "lor"
+theAnd = jId "land"
+theImp = jId "implies"
 \end{code}
 
-\newpage
-\subsection{Writing and Reading}
-
-\begin{code}
-signature = "SIGNATURE"
-logicHDR = "BEGIN "++signature ; logicTRL ="END "++signature
-
-trueKEY  = "TRUE = "
-falseKEY = "FALSE = "
-eqvKEY   = "EQV = "
-impKEY   = "IMP = "
-andKEY   = "AND = "
-orKEY    = "OR = "
-notKEY   = "NOT = "
-
-writeSignature :: LogicSig -> [String]
-writeSignature theSig
-  = [ logicHDR
-    , trueKEY  ++ show (theTrue theSig)
-    , falseKEY ++ show (theFalse theSig)
-    , eqvKEY   ++ show (theEqv theSig)
-    , impKEY   ++ show (theImp theSig)
-    , andKEY   ++ show (theAnd theSig)
-    , orKEY    ++ show (theOr theSig)
-    , notKEY   ++ show (theNot theSig)
-    , logicTRL ]
-
-readSignature :: (Monad m, MonadFail m) => [String] -> m (LogicSig,[String])
-readSignature [] = fail "readSignature: no text."
-readSignature txts
-  = do rest1         <- readThis logicHDR txts
-       (true,rest2)  <- readKey  trueKEY  readTerm rest1
-       (false,rest3) <- readKey  falseKEY readTerm rest2
-       (eqv,rest4)   <- readKey  eqvKEY   readId   rest3
-       (imp,rest5)   <- readKey  impKEY   readId   rest4
-       (and,rest6)   <- readKey  andKEY   readId   rest5
-       (or,rest7)    <- readKey  orKEY    readId   rest6
-       (not,rest8)   <- readKey  notKEY   readId   rest7
-       rest9         <- readThis logicTRL          rest8
-       return ( LogicSig{
-                  theTrue = true
-                , theFalse = false
-                , theEqv = eqv
-                , theImp = imp
-                , theAnd = and
-                , theOr  = or 
-                , theNot = not }
-              , rest9 )
-\end{code}
 
 \newpage
 \subsection{Predicate Conditioning}
@@ -152,35 +100,31 @@ assocFlatten i (Cons tk _ j ts)
       | i == j  = concat $ map (assocFlatten i) ts
 assocFlatten _ t = [t]
 
-flattenTheEquiv :: LogicSig -> Term -> Term
-flattenTheEquiv theSig t
-  = Cons (termkind t) True eqv $ assocFlatten eqv t
-  where eqv = theEqv theSig
+flattenEquiv :: Term -> Term
+flattenEquiv t 
+  = Cons (termkind t) True theEqv $ assocFlatten theEqv t
 
-flattenTheAnd :: LogicSig -> Term -> Term
-flattenTheAnd theSig t
-  = Cons (termkind t) True and $ assocFlatten and t
-  where and = theAnd theSig
+flattenAnd :: Term -> Term
+flattenAnd t 
+  = Cons (termkind t) True theAnd $ assocFlatten theAnd t
 \end{code}
 
 For implication, we need a slighty different approach,
 as it is only right-associative,
 and we have the trading rule involving conjunction.
 \begin{code}
-flattenTheImp :: LogicSig -> Term -> Term
-flattenTheImp theSig t
+flattenImp :: Term -> Term
+flattenImp t
   | null fas   =  t
-  | otherwise  =  Cons tk True imp [Cons tk True and fas,tc]
+  | otherwise  =  Cons tk True theImp [Cons tk True theAnd fas,tc]
   where
-    imp = theImp theSig
-    (tas,tc) = collectAnte imp t
-    and = theAnd theSig
-    fas = concat $ map (assocFlatten and) tas
+    (tas,tc) = collectAnte t
+    fas = concat $ map (assocFlatten theAnd) tas
     tk = termkind t
 
-collectAnte imp (Cons tk _ i [ta,tc])
-  | i == imp  = let (tas,tc') = collectAnte imp tc in (ta:tas,tc')
-collectAnte imp t = ([],t)
+collectAnte (Cons tk _ i [ta,tc])
+  | i == theImp  = let (tas,tc') = collectAnte tc in (ta:tas,tc')
+collectAnte t = ([],t)
 \end{code}
 
 \newpage
@@ -193,7 +137,6 @@ flattenAssoc assocI t@(Cons tk sI opI ts)
      =  return $ Cons tk sI opI $ assocFlatten opI t
 flattenAssoc assocI _
      =  fail ("flattenAssoc: not a '"++trId assocI++"', len > 1")
-
 \end{code}
 
 We also want to specify and perform a number
@@ -357,13 +300,13 @@ labelAsAssumed nasn  =  (nasn, Assumed)
 Showing signature:
 \begin{code}
 showLogic logicsig
-  = unlines' [ "Truth:       " ++ trTerm 0 (theTrue  logicsig)
-             , "Falsity:     " ++ trTerm 0 (theFalse logicsig)
-             , "Equivalence: " ++ trId     (theEqv   logicsig)
-             , "Implication: " ++ trId     (theImp   logicsig)
-             , "Conjunction: " ++ trId     (theAnd   logicsig)
-             , "Disjunction: " ++ trId     (theOr    logicsig) 
-             , "Negation:    " ++ trId     (theNot   logicsig) ]
+  = unlines' [ "Truth:       " ++ trTerm 0 theTrue
+             , "Falsity:     " ++ trTerm 0 theFalse 
+             , "Equivalence: " ++ trId     theEqv   
+             , "Implication: " ++ trId     theImp   
+             , "Conjunction: " ++ trId     theAnd   
+             , "Disjunction: " ++ trId     theOr    
+             , "Negation:    " ++ trId     theNot ]
 \end{code}
 
 

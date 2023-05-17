@@ -121,7 +121,7 @@ observeSettings reqs = showSettings $ settings reqs
 
 \begin{code}
 observeSig :: REqState -> String
-observeSig reqs = showLogic $ logicsig reqs
+observeSig reqs = showLogic $ reqs
 \end{code}
 
 \subsubsection{Observing Theories}
@@ -328,7 +328,7 @@ newProof1 i reqs
         | shadowFree asn
             -> return
                 ( nconj
-                , availableStrategies (logicsig reqs) thys currTh nconj )
+                , availableStrategies thys currTh nconj )
         | otherwise -> fail "shadowed bound-vars. in conjecture"
   where
     i' = if i == 0 then 1 else i
@@ -540,28 +540,28 @@ moveFocusFromHypothesis liveProof
 
 First, matching all laws.
 \begin{code}
-matchFocus :: LogicSig -> Ranking -> LiveProof -> LiveProof -- needs to be monadic
-matchFocus theSig ranking liveProof
+matchFocus :: Ranking -> LiveProof -> LiveProof -- needs to be monadic
+matchFocus ranking liveProof
   = let (tz,_)      =  focus liveProof
         goalt       =  getTZ tz
         scC         =  conjSC liveProof
         ctxts       =  mtchCtxts liveProof
         asn'        =  fromJust $ mkAsn goalt scC -- need to fix
-        newMatches  =  matchInContexts theSig ctxts asn'
+        newMatches  =  matchInContexts ctxts asn'
         rankedM     =  ranking ctxts newMatches
     in matches_ rankedM liveProof
 \end{code}
 
 Second, matching a specific law.
 \begin{code}
-matchFocusAgainst :: MonadFail m => String -> LogicSig -> LiveProof -> m LiveProof
-matchFocusAgainst lawnm theSig liveProof
+matchFocusAgainst :: MonadFail m => String -> LiveProof -> m LiveProof
+matchFocusAgainst lawnm liveProof
   = let (tz,_)      =  focus liveProof
         goalt       =  getTZ tz
         scC         =  conjSC liveProof
         ctxts       =  mtchCtxts liveProof
     in do asn' <- mkAsn goalt scC
-          case matchLawByName theSig asn' lawnm ctxts of
+          case matchLawByName asn' lawnm ctxts of
             Yes []    -> fail ("No matches against focus for '"++lawnm++"'")
             Yes mtchs -> return $ matches_ mtchs liveProof
             But msgs  -> fail $ unlines msgs
@@ -569,15 +569,15 @@ matchFocusAgainst lawnm theSig liveProof
 
 Third, a deep dive to apply \texttt{match} so we can get back errors.
 \begin{code}
-tryFocusAgainst :: String -> [Int] -> LogicSig -> LiveProof
+tryFocusAgainst :: String -> [Int] -> LiveProof
                 -> YesBut (Binding,Term,SideCond,SideCond)
-tryFocusAgainst lawnm parts theSig liveProof
+tryFocusAgainst lawnm parts liveProof
   = let (tz,_)      =  focus liveProof
         goalt       =  getTZ tz
         scC         =  conjSC liveProof
         ctxts       =  mtchCtxts liveProof
     in do asn' <- mkAsn goalt scC
-          tryLawByName theSig asn' lawnm parts ctxts
+          tryLawByName asn' lawnm parts ctxts
 \end{code}
 
 \newpage
@@ -897,10 +897,10 @@ to collect arguments for the next call.
 We start by checking that the focus is \true,
 and that we can find some laws.
 \begin{code}
-lawInstantiate1 :: LogicSig -> LiveProof -> [Law]
-lawInstantiate1 theSig liveProof
+lawInstantiate1 :: LiveProof -> [Law]
+lawInstantiate1 liveProof
   = let currt = getTZ $ fst $ focus liveProof
-        true = theTrue theSig
+        true = theTrue
         rslaws = concat $ map snd3 $ mtchCtxts liveProof
     in if currt /= true then [] else rslaws
 \end{code}

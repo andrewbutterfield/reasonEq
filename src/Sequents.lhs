@@ -97,19 +97,19 @@ we want to determine which strategies apply
 and provide a choice of sequents.
 We flatten the implication when considering assumption-based sequents
 \begin{code}
-availableStrategies :: LogicSig -> Theories -> String -> NmdAssertion
+availableStrategies :: Theories -> String -> NmdAssertion
                     -> [(String,Sequent)]
-availableStrategies theSig theories thnm (nm,(Assertion tconj sc))
+availableStrategies theories thnm (nm,(Assertion tconj sc))
   = catMaybes
-     [ reduce  theSig thys cnj
-     , redboth theSig thys cnj
-     , redtail theSig thys cnj
-     , redinit theSig thys cnj
-     , assume  theSig thys cflat ]
+     [ reduce  thys cnj
+     , redboth thys cnj
+     , redtail thys cnj
+     , redinit thys cnj
+     , assume  thys cflat ]
   where
     cnj = (nm,(tconj,sc))
     thys = fromJust $ getTheoryDeps thnm theories
-    cflat = (nm,(flattenTheImp theSig tconj, sc))
+    cflat = (nm,(flattenImp tconj, sc))
 \end{code}
 and then use the following functions to produce a sequent, if possible.
 
@@ -126,10 +126,10 @@ noHyps nm = nullTheory{ thName   =  "H."++nm }
    \mathcal L \vdash C \equiv \true
 \end{eqnarray*}
 \begin{code}
-reduce :: (Monad m, MonadFail m) => LogicSig -> [Theory] -> NamedTermSC
+reduce :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
        -> m (String, Sequent)
-reduce logicsig thys (nm,(t,sc))
-  = return ( reduceAll, Sequent thys (noHyps nm) sc t $ theTrue logicsig )
+reduce thys (nm,(t,sc))
+  = return ( reduceAll, Sequent thys (noHyps nm) sc t $ theTrue )
 reduceAll = "reduce"
 \end{code}
 
@@ -144,12 +144,12 @@ reduceAll = "reduce"
    \mathcal L \vdash C_1 \equiv C_2
 \end{eqnarray*}
 \begin{code}
-redboth :: (Monad m, MonadFail m) => LogicSig -> [Theory] -> NamedTermSC
+redboth :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
         -> m (String, Sequent)
-redboth logicsig thys (nm,(t@(Cons tk sb i [tl,tr]),sc))
-  | i == theEqv logicsig
+redboth thys (nm,(t@(Cons tk sb i [tl,tr]),sc))
+  | i == theEqv
       = return ( reduceBoth, Sequent thys (noHyps nm) sc tl tr )
-redboth logicsig thys (nm,(t,sc)) = fail "redboth not applicable"
+redboth thys (nm,(t,sc)) = fail "redboth not applicable"
 reduceBoth = "redboth"
 \end{code}
 
@@ -170,13 +170,13 @@ bEqv sn n ps = Cons P sn n ps
    \mathcal L \vdash (C_2 \equiv \dots \equiv C_n) \equiv C_1
 \end{eqnarray*}
 \begin{code}
-redtail :: (Monad m, MonadFail m) => LogicSig -> [Theory] -> NamedTermSC
+redtail :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
         -> m (String, Sequent)
-redtail logicsig thys (nm,(t@(Cons tk si i (c1:cs@(_:_))),sc))
-  | i == theEqv logicsig
+redtail thys (nm,(t@(Cons tk si i (c1:cs@(_:_))),sc))
+  | i == theEqv
       = return ( reduceToLeftmost,
                  Sequent thys (noHyps nm) sc (bEqv si i cs) c1 )
-redtail logicsig thys (nm,(t,sc)) = fail "redtail not applicable"
+redtail thys (nm,(t,sc)) = fail "redtail not applicable"
 reduceToLeftmost = "redtail"
 \end{code}
 
@@ -189,14 +189,14 @@ reduceToLeftmost = "redtail"
 \end{eqnarray*}
 We prefer to put the smaller simpler part on the right.
 \begin{code}
-redinit :: (Monad m, MonadFail m) => LogicSig -> [Theory] -> NamedTermSC
+redinit :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
         -> m (String, Sequent)
-redinit logicsig thys (nm,(t@(Cons tk si i cs@(_:_:_)),sc))
-  | i == theEqv logicsig
+redinit thys (nm,(t@(Cons tk si i cs@(_:_:_)),sc))
+  | i == theEqv
       = return ( reduceToRightmost,
                  Sequent thys (noHyps nm) sc (bEqv si i cs') cn )
   where (cs',cn) = splitLast cs
-redinit logicsig thys (nm,(t,sc)) = fail "redinit not applicable"
+redinit thys (nm,(t,sc)) = fail "redinit not applicable"
 reduceToRightmost = "redinit"
 \end{code}
 
@@ -209,13 +209,13 @@ reduceToRightmost = "redinit"
    \mathcal L,\splitand(H) \vdash (C \equiv \true)
 \end{eqnarray*}
 \begin{code}
-assume :: (Monad m, MonadFail m) => LogicSig -> [Theory] -> NamedTermSC
+assume :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
        -> m (String, Sequent)
-assume logicsig thys (nm,(t@(Cons tk si i [ta,tc]),sc))
-  | i == theImp logicsig
-    = return ( "assume", Sequent thys hthry sc tc $ theTrue logicsig )
+assume thys (nm,(t@(Cons tk si i [ta,tc]),sc))
+  | i == theImp
+    = return ( "assume", Sequent thys hthry sc tc $ theTrue )
   where
-    hlaws = map mkHLaw $ zip [1..] $ splitAnte logicsig ta
+    hlaws = map mkHLaw $ zip [1..] $ splitAnte ta
     mkasn trm = fromJust $ mkAsn trm scTrue -- always succeeds
     mkHLaw (i,trm) = labelAsAxiom ("H."++nm++"."++show i,mkasn trm)
     hthry = nullTheory { 
@@ -223,12 +223,12 @@ assume logicsig thys (nm,(t@(Cons tk si i [ta,tc]),sc))
     , laws     =  hlaws
     , known    =  makeUnknownKnown thys t
     }
-assume _ _ _ = fail "assume not applicable"
+assume _ _ = fail "assume not applicable"
 
-splitAnte :: LogicSig -> Term -> [Term]
-splitAnte theSig (Cons tk si i ts)
- | i == theAnd theSig    =  ts
-splitAnte _        t     =  [t]
+splitAnte :: Term -> [Term]
+splitAnte (Cons tk si i ts)
+ | i == theAnd  =  ts
+splitAnte t     =  [t]
 \end{code}
 
 \newpage
@@ -241,9 +241,9 @@ splitAnte _        t     =  [t]
    \mathcal L,\splitand(H) \vdash C_1 \equiv C_2
 \end{eqnarray*}
 \begin{code}
-asmboth :: (Monad m, MonadFail m) => LogicSig -> [Theory] -> NamedTermSC
+asmboth :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
         -> m (String, Sequent)
-asmboth logicsig thys (nm,(t,sc)) = fail "asmboth not applicable"
+asmboth thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{code}
 
 \subsubsection{Strategy \textit{shunt}}
@@ -255,9 +255,9 @@ asmboth logicsig thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{eqnarray*}
 \begin{code}
 -- actually, this is done under the hood
-shunt :: (Monad m, MonadFail m) => LogicSig -> [Theory] -> NamedTermSC
+shunt :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
       -> m (String, Sequent)
-shunt logicsig thys (nm,(t,sc)) = fail "shunt not applicable"
+shunt thys (nm,(t,sc)) = fail "shunt not applicable"
 \end{code}
 
 \subsubsection{Strategy \textit{shntboth}}
@@ -270,9 +270,9 @@ shunt logicsig thys (nm,(t,sc)) = fail "shunt not applicable"
 \end{eqnarray*}
 \begin{code}
 -- actually, this is done under the hood
-shntboth :: (Monad m, MonadFail m) => LogicSig -> [Theory] -> NamedTermSC
+shntboth :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
         -> m (String, Sequent)
-shntboth logicsig thys (nm,(t,sc)) = fail "shntboth not applicable"
+shntboth thys (nm,(t,sc)) = fail "shntboth not applicable"
 \end{code}
 
 \subsubsection{Splitting Conjoined Hypotheses}
@@ -283,10 +283,10 @@ shntboth logicsig thys (nm,(t,sc)) = fail "shntboth not applicable"
    \setof{H_1,\dots,H_n}
 \end{eqnarray*}
 \begin{code}
-splitAnd :: LogicSig -> Term -> [Term]
-splitAnd logicsig (Cons _ True i ts)
-  | i == theAnd logicsig  =  ts
-splitAnd _ t           =  [t]
+splitAnd :: Term -> [Term]
+splitAnd (Cons _ True i ts)
+  | i == theAnd  =  ts
+splitAnd t       =  [t]
 \end{code}
 
 

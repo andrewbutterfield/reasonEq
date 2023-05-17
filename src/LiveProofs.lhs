@@ -265,8 +265,8 @@ readLiveProofs thylist txts
 
 We need to setup a proof from a conjecture:
 \begin{code}
-startProof :: LogicSig -> [Theory] -> String -> String -> Assertion -> LiveProof
-startProof logicsig thys thnm cjnm asn@(Assertion t sc)
+startProof :: [Theory] -> String -> String -> Assertion -> LiveProof
+startProof thys thnm cjnm asn@(Assertion t sc)
   =  LP { conjThName = thnm
         , conjName = cjnm
         , conjecture = asn
@@ -279,7 +279,7 @@ startProof logicsig thys thnm cjnm asn@(Assertion t sc)
         , stepsSoFar = []
         }
   where
-    (strat,sequent) = fromJust $ reduce logicsig thys (cjnm,(t,sc))
+    (strat,sequent) = fromJust $ reduce thys (cjnm,(t,sc))
     sz = leftConjFocus sequent
     mcs = buildMatchContext thys
 \end{code}
@@ -315,14 +315,14 @@ launchProof thys thnm cjnm asn@(Assertion t sc) (strat,sequent)
 
 We need to determine when a live proof is complete:
 \begin{code}
-proofIsComplete :: LogicSig -> LiveProof -> Bool
-proofIsComplete logicsig liveProof
+proofIsComplete :: LiveProof -> Bool
+proofIsComplete liveProof
   =  let
        sequent = exitSeqZipper $ focus liveProof
        hypTerms = map (assnT . snd . fst) $ laws $ hyp sequent
      in cleft sequent =~= cright sequent
         ||
-        any (== theFalse logicsig) hypTerms
+        any (== theFalse) hypTerms
 \end{code}
 
 \subsubsection{Finalising a complete Proof}
@@ -358,12 +358,12 @@ mergeBindings instantiate
 and $<$Complete Binding$>$ for application involves(?) \texttt{completeBind}.
 
 \begin{code}
-tryLawByName :: LogicSig -> Assertion -> String -> [Int] -> [MatchContext]
+tryLawByName :: Assertion -> String -> [Int] -> [MatchContext]
                -> YesBut ( Binding    -- mapping from pattern to candidate
                          , Term       -- autoInstantiated Law
                          , SideCond   -- updated candidate side-condition
                          , SideCond ) -- discharged(?) law side-condition
-tryLawByName logicsig asn@(Assertion tC scC) lnm parts mcs
+tryLawByName asn@(Assertion tC scC) lnm parts mcs
   = do (((_,asnP),_),vts) <- findLaw lnm mcs
        let tP = assnT asnP
        partsP <- findParts parts tP
@@ -381,7 +381,7 @@ tryLawByName logicsig asn@(Assertion tC scC) lnm parts mcs
 
 First, try the structural match.
 \begin{code}
--- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
+-- tryLawByName asn@(tC,scC) lnm parts mcs
     tryMatch vts tP partsP scP
       = case
                 match vts tC partsP
@@ -406,7 +406,7 @@ At this point the replacement may contain variables not present in the
 matched part, so we need to create temporary bindings for these.
 First we see if any of these are ``known''.
 \begin{code}
--- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
+-- tryLawByName asn@(tC,scC) lnm parts mcs
     tryInstantiateKnown vts tP partsP scP bind
       = case
                 bindKnown vts bind tP
@@ -430,7 +430,7 @@ First we see if any of these are ``known''.
 Anything unbound and not ``known'' is ``floating'',
 and we generate names for these that make their floating nature visible.
 \begin{code}
--- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
+-- tryLawByName asn@(tC,scC) lnm parts mcs
     tryInstantiateFloating vts tP partsP scP bind
       = case
                 bindFloating vts bind tP
@@ -456,7 +456,7 @@ and we generate names for these that make their floating nature visible.
 
 Next, instantiate the law using the bindings.
 \begin{code}
--- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
+-- tryLawByName asn@(tC,scC) lnm parts mcs
     tryInstantiate vts fbind tP partsP scP
       = case
                 instantiate vts fbind tP
@@ -478,7 +478,7 @@ Next, instantiate the law using the bindings.
 \end{code}
 Next, instantiate the pattern side-condition using the bindings.
 \begin{code}
--- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
+-- tryLawByName asn@(tC,scC) lnm parts mcs
     tryInstantiateSC vts bind tP partsP scP
       = case
                 instantiateSC vts bind scP
@@ -501,7 +501,7 @@ Next, instantiate the pattern side-condition using the bindings.
 
 Finally, try to discharge the instantiated side-condition:
 \begin{code}
--- tryLawByName logicsig asn@(tC,scC) lnm parts mcs
+-- tryLawByName asn@(tC,scC) lnm parts mcs
     trySCDischarge vts bind tP partsP scP'
       = case
                 scDischarge ss scC scP'
@@ -578,28 +578,28 @@ getParts (p:ps) xs
 
 First, given list of match-contexts, systematically work through them.
 \begin{code}
-matchInContexts :: LogicSig -> [MatchContext] -> Assertion -> Matches
-matchInContexts logicsig mcs asn
-  = concat $ map (matchLaws logicsig asn) mcs
+matchInContexts :: [MatchContext] -> Assertion -> Matches
+matchInContexts mcs asn
+  = concat $ map (matchLaws asn) mcs
 \end{code}
 
 Now, the code to match laws, given a context.
 Bascially we run down the list of laws,
 returning any matches we find.
 \begin{code}
-matchLaws :: LogicSig -> Assertion -> MatchContext -> Matches
-matchLaws logicsig asn (_,lws,vts)
-  = concat $ map (domatch logicsig vts $ unwrapASN asn) lws
+matchLaws :: Assertion -> MatchContext -> Matches
+matchLaws asn (_,lws,vts)
+  = concat $ map (domatch vts $ unwrapASN asn) lws
 \end{code}
 
 Sometimes we are interested in a specific (named) law.
 \begin{code}
 matchLawByName :: (Monad m, MonadFail m)
-               => LogicSig -> Assertion -> String -> [MatchContext]
+               => Assertion -> String -> [MatchContext]
                -> m Matches
-matchLawByName logicsig asn lnm mcs
+matchLawByName asn lnm mcs
  = do (law,vts) <- findLaw lnm mcs
-      return $ domatch logicsig vts (unwrapASN asn) law
+      return $ domatch vts (unwrapASN asn) law
 \end{code}
 
 For each law,
@@ -607,15 +607,15 @@ we match the whole thing,
 and if its top-level is a \texttt{Cons}
 with at least two sub-components, we try all possible partial matches.
 \begin{code}
-domatch :: LogicSig -> [VarTable] -> TermSC -> Law -> Matches
-domatch logicsig vts asnC law@((_,(Assertion tP@(Cons _ _ i tsP@(_:_:_)) _)),_)
-  =    basicMatch MatchAll vts law (theTrue logicsig) asnC tP
-    ++ doPartialMatch i logicsig vts law asnC tsP
+domatch :: [VarTable] -> TermSC -> Law -> Matches
+domatch vts asnC law@((_,(Assertion tP@(Cons _ _ i tsP@(_:_:_)) _)),_)
+  =    basicMatch MatchAll vts law theTrue asnC tP
+    ++ doPartialMatch i vts law asnC tsP
 \end{code}
 Otherwise we just match against the whole law.
 \begin{code}
-domatch logicsig vts asnC law@((_,(Assertion tP _)),_)
-  =  basicMatch MatchAll vts law (theTrue logicsig) asnC tP
+domatch vts asnC law@((_,(Assertion tP _)),_)
+  =  basicMatch MatchAll vts law theTrue asnC tP
 \end{code}
 
 
@@ -627,15 +627,15 @@ domatch logicsig vts asnC law@((_,(Assertion tP _)),_)
 Here we have a top-level \texttt{Cons}
 with at least two sub-terms.
 \begin{code}
-doPartialMatch :: Identifier -> LogicSig -> [VarTable]
+doPartialMatch :: Identifier -> [VarTable]
                -> Law -> TermSC -> [Term]
                -> Matches
 \end{code}
 
 First, if we have $\equiv$ we call an $n$-way equivalence matcher:
 \begin{code}
-doPartialMatch i logicsig vts law asnC tsP
-  | i == theEqv logicsig  =  doEqvMatch logicsig vts law asnC tsP
+doPartialMatch i vts law asnC tsP
+  | i == theEqv  =  doEqvMatch vts law asnC tsP
 \end{code}
 
 If we have $\implies$, then we can try to match either side.
@@ -648,18 +648,15 @@ with binding $\beta$,
 then we can replace $C$ by $P\beta \land Q\beta$.
 If we match $Q$, we can replace $C$ by $Q\beta \lor P\beta$
 \begin{code}
-doPartialMatch i logicsig vts law asnC tsP@[ltP,rtP]
-  | i == theImp logicsig
-    =    basicMatch MatchAnte vts law (Cons P True land [ltP,rtP]) asnC ltP
-      ++ basicMatch MatchCnsq vts law (Cons P True lor  [rtP,ltP]) asnC rtP
-  where
-     land = theAnd logicsig
-     lor  = theOr  logicsig
+doPartialMatch i vts law asnC tsP@[ltP,rtP]
+  | i == theImp
+    =    basicMatch MatchAnte vts law (Cons P True theAnd [ltP,rtP]) asnC ltP
+      ++ basicMatch MatchCnsq vts law (Cons P True theOr  [rtP,ltP]) asnC rtP
 \end{code}
 
 Anything else won't match (right now we don't support $\impliedby$).
 \begin{code}
-doPartialMatch i logicsig vts law asnC tsP
+doPartialMatch i vts law asnC tsP
   = fail ("doPartialMatch `"++trId i++"`, too many sub-terms")
 \end{code}
 
@@ -715,10 +712,10 @@ We fully support Cases A and B and give some support to Case C.
 First, Case A, which is automatically done above by \texttt{basicMatch},
 so we need not return any matches here.
 \begin{code}
-doEqvMatch :: LogicSig -> [VarTable] -> Law -> TermSC
+doEqvMatch :: [VarTable] -> Law -> TermSC
            -> [Term]    -- top-level equivalence components in law
            -> Matches
-doEqvMatch _ vts law asnC [tP1,tP2]
+doEqvMatch vts law asnC [tP1,tP2]
 -- rule out matches against one-side of the reflexivity axiom
   | tP1 == tP2  =  []
 -- otherwise treat binary equivalence specially:
@@ -727,23 +724,23 @@ doEqvMatch _ vts law asnC [tP1,tP2]
 \end{code}
 Then invoke Cases C and B, in that order.
 \begin{code}
-doEqvMatch logicsig vts law asnC tsP
-  = doEqvMatchC logicsig vts law asnC tsP
+doEqvMatch vts law asnC tsP
+  = doEqvMatchC vts law asnC tsP
     ++
-    doEqvMatchB logicsig vts law asnC [] [] tsP
+    doEqvMatchB vts law asnC [] [] tsP
 \end{code}
 
 Next, Case B.
 \begin{code}
-doEqvMatchB logicsig vts law asnC mtchs _ [] = mtchs
-doEqvMatchB logicsig vts law@((_,(Assertion _ scP)),_) asnC mtchs sPt (tP:tPs)
+doEqvMatchB vts law asnC mtchs _ [] = mtchs
+doEqvMatchB vts law@((_,(Assertion _ scP)),_) asnC mtchs sPt (tP:tPs)
   = let mtchs' = basicMatch (MatchEqv [length sPt + 1])
                      vts law (eqv (reverse sPt ++ tPs)) asnC tP
-    in doEqvMatchB logicsig vts law asnC (mtchs'++mtchs) (tP:sPt) tPs
+    in doEqvMatchB vts law asnC (mtchs'++mtchs) (tP:sPt) tPs
   where
-    eqv []   =  theTrue logicsig
+    eqv []   =  theTrue
     eqv [t]  =  t
-    eqv ts   =  Cons P True (theEqv logicsig) ts
+    eqv ts   =  Cons P True theEqv ts
 \end{code}
 
 \newpage
@@ -752,33 +749,33 @@ We will assume $m < n$ and just try $J$ being either
 the first $m$ pattern components ($\setof{1\dots m}$),
 or the last $m$ (\setof{n+1-m\dots n}).
 \begin{code}
--- doEqvMatchC logicsig vts law asnC tsP
-doEqvMatchC :: LogicSig -> [VarTable] -> Law -> TermSC ->[Term]
+-- doEqvMatchC vts law asnC tsP
+doEqvMatchC :: [VarTable] -> Law -> TermSC ->[Term]
             -> Matches
-doEqvMatchC logicsig vts law@((_,(Assertion _ scP)),_)
+doEqvMatchC vts law@((_,(Assertion _ scP)),_)
                          asnC@(tC@(Cons tk si i tsC),scC) tsP
- | i == theEqv logicsig
+ | i == theEqv
    && cLen < pLen  = doEqvMatchC' cLen [1..cLen]
-                       logicsig vts law scC tsC tsP
+                       vts law scC tsC tsP
                      ++
                      doEqvMatchC' cLen [pLen+1-cLen .. pLen]
-                       logicsig vts law scC (reverse tsC) (reverse tsP)
+                       vts law scC (reverse tsC) (reverse tsP)
  where
     cLen = length tsC
     pLen = length tsP
-doEqvMatchC _ _ _ _ _ = []
+doEqvMatchC _ _ _ _ = []
 
 -- we assume cLen < pLen here
-doEqvMatchC' :: Int -> [Int] -> LogicSig -> [VarTable] -> Law
+doEqvMatchC' :: Int -> [Int] -> [VarTable] -> Law
              -> SideCond -> [Term] -> [Term]
              -> Matches
-doEqvMatchC' cLen is logicsig vts law@((_,(Assertion _ scP)),_) scC tsC tsP
+doEqvMatchC' cLen is vts law@((_,(Assertion _ scP)),_) scC tsC tsP
   = basicMatch (MatchEqv is) vts law (eqv tsP'') (eqv tsC,scC) (eqv tsP')
   where
     (tsP',tsP'') = splitAt cLen tsP
-    eqv []   =  theTrue logicsig
+    eqv []   =  theTrue 
     eqv [t]  =  t
-    eqv ts   =  Cons P True (theEqv logicsig) ts
+    eqv ts   =  Cons P True theEqv ts
 \end{code}
 
 

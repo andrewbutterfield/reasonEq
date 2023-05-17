@@ -62,9 +62,9 @@ readAllState projdirfp
   = do let projfp = projectPath projdirfp
        putStrLn ("Reading project details from "++projfp)
        txt <- readFile projfp
-       ((settings,sig,thnms),rest1) <- readREqState1 $ lines txt
+       ((settings,thnms),rest1) <- readREqState1 $ lines txt
        nmdThrys <- sequence $ map (readNamedTheory projdirfp) thnms
-       reqs <- readREqState2 settings sig nmdThrys rest1
+       reqs <- readREqState2 settings nmdThrys rest1
        return reqs{projectDir = projdirfp}
 \end{code}
 

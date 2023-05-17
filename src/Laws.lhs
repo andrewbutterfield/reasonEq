@@ -36,6 +36,7 @@ dbg msg x = trace (msg++show x) x
 
 We define types for assertions and laws.
 
+\newpage
 \subsection{Logic Signature}
 
 To make the matching work effectively,
@@ -43,9 +44,30 @@ we have to identify which constructs play key logical roles,
 such as logic values $\true$ and $\false$,
 as well as the key propositional operators.
 These \emph{must} be identified in what we call a \emph{logic signature}.
-$$ \true \qquad \false 
-   \qquad \equiv \qquad \implies \qquad \land \qquad \lor \qquad \lnot
-$$
+We give these fixed names, and below we show the symbolic forms we use here.
+ 
+\begin{tabular}[h]{|c|c|l|}
+\hline
+  Name & Symbolic & What
+\\\hline
+  - & $\true$ & pred. var. \texttt{True} 
+\\\hline
+  - & $\false$ & pred. var. \texttt{False} 
+\\\hline
+  equiv & $\equiv$ & Identifier
+\\\hline
+  impl & $\implies$ & Identifier
+\\\hline
+  and & $\land$ & Identifier
+\\\hline
+  or & $\lor$ & Identifier
+\\\hline
+  not & $\lnot$   & Identifier
+\\\hline
+\end{tabular}
+
+The following datatype is to be deprecated 
+and replaced by its field components as global constants.
 \begin{code}
 data LogicSig
   = LogicSig

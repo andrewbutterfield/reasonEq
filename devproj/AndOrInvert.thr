@@ -2,8 +2,10 @@ BEGIN THEORY AndOrInvert
 DEPS = ["And","Or","Not","Equiv"]
 KNOWN = VD (fromList [],fromList [],fromList [])
 BEGIN LIST LAWS
+(("test_2",ASN (C P True (Id "equiv" 0) [C P True (Id "land" 0) [C P True (Id "equiv" 0) [C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P True (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "land" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]]],([],fromList []))),Proven "test_2")
 END LIST LAWS
 BEGIN LIST PROOFS
+("test_2",ASN (C P True (Id "equiv" 0) [C P True (Id "land" 0) [C P True (Id "equiv" 0) [C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P True (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "land" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]]],([],fromList [])),"reduce",(K P (VB True),[(SAT True False [],ASN (C P True (Id "equiv" 0) [C P True (Id "land" 0) [C P True (Id "equiv" 0) [C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P True (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "land" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]]],([],fromList [])))]))
 END LIST PROOFS
 BEGIN LIST SIMPLIFIERS
 END LIST SIMPLIFIERS
@@ -23,6 +25,5 @@ BEGIN LIST CONJECTURES
 ("equiv_replace",ASN (C P True (Id "equiv" 0) [C P True (Id "land" 0) [C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P True (Id "equiv" 0) [V P (VR (Id "R" 0,VP,WS)),V P (VR (Id "P" 0,VP,WS))]],C P True (Id "land" 0) [C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P True (Id "equiv" 0) [V P (VR (Id "R" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]]],([],fromList [])))
 ("equiv_def",ASN (C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS)),C P True (Id "lor" 0) [C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P True (Id "land" 0) [C P True (Id "lnot" 0) [V P (VR (Id "P" 0,VP,WS))],C P True (Id "lnot" 0) [V P (VR (Id "Q" 0,VP,WS))]]]],([],fromList [])))
 ("test_1",ASN (C P True (Id "equiv" 0) [C P True (Id "land" 0) [C P True (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "P" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))],C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],([],fromList [])))
-("test_2",ASN (C P True (Id "equiv" 0) [C P True (Id "land" 0) [C P True (Id "equiv" 0) [C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))],C P True (Id "lor" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]],C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "land" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]]],([],fromList [])))
 END LIST CONJECTURES
 END THEORY AndOrInvert

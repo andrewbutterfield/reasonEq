@@ -94,17 +94,15 @@ executable req
                      , filepath
                      , directory
                      , reasonEq
-                     , nicesymbols
   default-language:    Haskell2010
 
 test-suite reasonEq-test
   type:                exitcode-stdio-1.0
-  hs-source-dirs:      test, nicesymbols/src
+  hs-source-dirs:      test
   main-is:             Spec.hs
   build-depends:       base
                      , containers
                      , reasonEq
-                     , nicesymbols
                      , HUnit
                      -- , QuickCheck
                      , test-framework

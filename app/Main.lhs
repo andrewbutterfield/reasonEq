@@ -22,7 +22,7 @@ import Data.List
 import Data.Maybe
 import Data.Char
 
-import NiceSymbols hiding (help)
+import Symbols hiding (help)
 
 import Utilities
 import StratifiedDAG

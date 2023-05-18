@@ -38,8 +38,7 @@ import Data.List (nub, sort, (\\), intercalate)
 import Data.List.Split (splitOn)
 import Data.Char
 
-import NiceSymbols
-
+import Symbols
 import Utilities
 import LexBase
 import Variables

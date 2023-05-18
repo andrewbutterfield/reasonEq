@@ -22,11 +22,10 @@ import qualified Data.Set as S
 import Data.Maybe
 
 import Utilities
+import Symbols
 import LexBase
 import Variables
 import AST
-
-import NiceSymbols
 
 import Test.HUnit
 import Test.Framework as TF (defaultMain, testGroup, Test)

@@ -13,7 +13,7 @@ module AndOrInvert (
 
 import Data.Maybe
 
-import NiceSymbols
+import Symbols
 
 import Utilities
 import LexBase

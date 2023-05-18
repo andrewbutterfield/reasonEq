@@ -14,7 +14,7 @@ module Negation (
 import Data.Maybe
 import qualified Data.Map as M
 
-import NiceSymbols
+import Symbols
 
 import Utilities
 import LexBase

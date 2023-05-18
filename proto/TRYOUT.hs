@@ -12,7 +12,7 @@ import VarData
 import Binding
 import Matching
 
-import NiceSymbols
+import Symbols
 
 
 -- Variables

@@ -55,7 +55,7 @@ import Proofs
 import Theories
 import Sequents
 
-import NiceSymbols
+import Symbols
 import TestRendering
 
 import Debug.Trace

@@ -49,7 +49,7 @@ import Laws
 import Proofs
 import Theories
 
-import NiceSymbols
+import Symbols
 import TestRendering
 
 import Debug.Trace

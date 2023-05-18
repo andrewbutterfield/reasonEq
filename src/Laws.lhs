@@ -21,12 +21,12 @@ module Laws
  ) where
 
 import Utilities
+import Symbols
 import WriteRead
 import LexBase
 import AST
 import SideCond
 import Assertions
-import NiceSymbols
 import TestRendering
 
 import Debug.Trace

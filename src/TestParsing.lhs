@@ -21,9 +21,9 @@ import Data.Maybe(fromJust)
 import Data.List (nub, sort, (\\), intercalate)
 import Data.Char
 
-import NiceSymbols
 
 import Utilities
+import Symbols
 import LexBase
 import Variables
 import AST

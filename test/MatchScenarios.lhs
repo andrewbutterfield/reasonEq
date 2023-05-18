@@ -19,7 +19,7 @@ import Test.Framework as TF (defaultMain, testGroup, Test)
 import Test.Framework.Providers.HUnit (testCase)
 --import Test.Framework.Providers.QuickCheck2 (testProperty)
 
-import NiceSymbols
+import Symbols
 import Utilities
 import LexBase
 import Variables

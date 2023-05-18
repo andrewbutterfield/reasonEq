@@ -17,6 +17,7 @@ library
   hs-source-dirs:      src, builtin, proto
   exposed-modules:     Utilities
                      , Control
+                     , Symbols
                      , LexBase
                      , Variables
                      , AST
@@ -76,7 +77,6 @@ library
                      , directory
                      , filepath
                      , split
-                     , nicesymbols
                      -- we need to support internal tests for some modules
                      , HUnit
                      -- , QuickCheck

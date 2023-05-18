@@ -14,7 +14,7 @@ module XYZ (
 import Data.Maybe
 import qualified Data.Set as S
 
-import NiceSymbols
+import Symbols
 
 import Utilities
 import LexBase

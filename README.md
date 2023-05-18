@@ -19,9 +19,7 @@ See <https://docs.haskellstack.org/en/stable/README/>. You are strongly advised 
 
 2. Enter the directory `reasonEq'
 
-3. Give the command `git submodule sync`
-
-4. Give command `stack install` and wait. The first time you run this might take a while as it may install a local version of the Haskell compiler and required libraries. When it is done it will have installed a program called `req`.
+3. Give command `stack install` and wait. The first time you run this might take a while as it may install a local version of the Haskell compiler and required libraries. When it is done it will have installed a program called `req`.
 
 ## Running `reasonEq`/`req`
 

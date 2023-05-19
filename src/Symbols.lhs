@@ -83,15 +83,20 @@ theSymbolMap :: SymbolMap
 theSymbolMap = M.fromList theSymbolList
 \end{code}
 
-A symbol is given a name in Haskell based on the (most) common \LaTeX\ macro
-for that symbol,
-so $\implies$ (\TeX\ macro \texttt{$\backslash$implies}),
-key string ``implies'',
-is exported from this module as Haskell identifier \texttt{\_implies}.
+A symbol is given a name in Haskell,
+generally based on the (most) common \LaTeX\ macro for that symbol,
+so $\cup$ (\TeX\ macro \texttt{$\backslash$cup}),
+key string ``cup'',
+is exported from this module as Haskell identifier \texttt{\_cup}.
 \begin{verbatim}
 theSymbolList =
-  [ ..., ("implies",SymForm "==>", "\x27f9"), ...]
+  [ ..., ("cup" , SymForm "U" "\x222a"), ...]
 \end{verbatim}
+There are some key exceptions, 
+namely the symbols for the logic signature.
+
+
+
 We can invoke specific renderers if we wish:
 \begin{code}
 aa_nicesym, u8_nicesym :: String -> String
@@ -146,6 +151,11 @@ theSymbolList
   , ("lnot", SymForm "~"  "\x00ac")
   , ("land", SymForm "/\\"  "\x2227"), ("lor", SymForm "\\/"  "\x2228")
   , ("implies", SymForm "==>"  "\x27f9"), ("equiv", SymForm "=="  "\x2261")
+
+  -- here we add new short form names for the propositional operators
+  , ("not", SymForm "~"  "\x00ac")
+  , ("and", SymForm "/\\"  "\x2227"), ("or", SymForm "\\/"  "\x2228")
+  , ("imp", SymForm "==>"  "\x27f9"), ("eqv", SymForm "=="  "\x2261")
 
   , ("forall", SymForm "forall" "\x2200"), ("exists", SymForm "exists" "\x2203")
 

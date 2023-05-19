@@ -120,7 +120,7 @@ trType (TypeApp i ts)     =  trId i ++ "(" ++ trTypes ts ++ ")"
 trType (DataType i itss)  =  "ADT"
 trType (FunType ta tr)    =  "("++ trType ta ++ spaced _fun ++ trType tr ++ ")"
 trType (GivenType (Identifier i _))
-  -- hack - should be done in Symbols
+  -- hack - should be done in nicesymbols
   | i == "B"  =  "\x1d539"
   | i == "N"  =  "\x2115"
   | i == "Z"  =  "\x2124"
@@ -200,12 +200,12 @@ precTable
     , ( ":="      , (1,True,False))
     , ( "sqsupseteq" , (1,True,False))
     , ( "vdash"   , (2,True,False))
-    , ( "equiv"   , (3,True,False))
+    , ( "eqv"     , (3,True,False))
     , ( "sqcap"   , (4,True,False))
-    , ( "implies" , (4,True,False))
-    , ( "lor"     , (5,True,False)) -- force parenthesis for nested 'or'
-    , ( "land"    , (6,True,False)) -- force parenthesis for nested 'and'
-    , ( "lnot"    , (7,True,False))
+    , ( "imp"     , (4,True,False))
+    , ( "or"      , (5,True,False)) -- force parenthesis for nested 'or'
+    , ( "and"     , (6,True,False)) -- force parenthesis for nested 'and'
+    , ( "not"     , (7,True,False))
     , ( "="       , (8,True,False))
     , ( "cond"    , (0,False,True)) -- force parenthesis for nested 'cond'
     , ( "star"    , (4,True,False)) -- force parenthesis for nested 'star'

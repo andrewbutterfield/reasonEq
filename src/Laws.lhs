@@ -16,7 +16,8 @@ module Laws
  , Law, lawName, lawNamedAssn, lawProvenance
  , isAxiom, isProven, isAssumed
  , labelAsAxiom, labelAsProof, labelAsAssumed
- , showLogic, showKnowns, showNmdAssns, showLaw, showLaws, showConj, showConjs
+ , showLogic, showKnowns, showNmdAssns
+ , showLaw, showLaws, showConj, showConjs
  , showLeftRight, showGroupSpec
  ) where
 
@@ -71,11 +72,11 @@ theTrue  = Val P $ Boolean True
 theFalse = Val P $ Boolean False
 
 theEqv, theNot, theOr, theAnd, theImp :: Identifier
-theEqv = jId "equiv"
-theNot = jId "lnot"
-theOr  = jId "lor"
-theAnd = jId "land"
-theImp = jId "implies"
+theEqv = jId "eqv"
+theNot = jId "not"
+theOr  = jId "or"
+theAnd = jId "and"
+theImp = jId "imp"
 \end{code}
 
 

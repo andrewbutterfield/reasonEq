@@ -40,7 +40,16 @@ import UClose
 import UTPBase
 \end{code}
 
+
 \subsection{Introduction}
+
+This module provides behaviours that are only enabled if the prover 
+is started in ``devdelopment mode''.
+The precise behaviour of enabling development mode may change over time.
+
+\subsection{Development State}
+
+\subsubsection{Directory}
 
 We assume the the development project directory is defined as an immediate
 subdirectory called \texttt{devproj}
@@ -49,6 +58,9 @@ of the current directory from which the program was launched.
 \begin{code}
 devProjectDir = "devproj"
 \end{code}
+
+\newpage
+\subsubsection{Initial State}
 
 We present the initial state in development mode,
 which currently initialises state as having
@@ -63,6 +75,9 @@ devInitState
             , theories = devTheories
             , currTheory = equivName
             , liveProofs = M.empty }
+
+devTheories = foldl forceAddTheory noTheories $ devKnownBuiltins
+forceAddTheory ths th = fromJust $ addTheory th ths
 
 devKnownBuiltins  = [ equivTheory
                     , notTheory
@@ -79,12 +94,13 @@ devKnownBuiltins  = [ equivTheory
                     -- , xyzDTheory
                     ]
 
-forceAddTheory ths th = fromJust $ addTheory th ths
-devTheories = foldl forceAddTheory noTheories $ devKnownBuiltins
 \end{code}
 
 \newpage
 \subsection{Development Features}
+
+
+\subsubsection{Listing Builtin Theories}
 
 Listing builtin theories:
 \begin{code}
@@ -107,7 +123,8 @@ devBIRemind
   = "Remember to update Dev.devKnownBuiltins with new builtins."
 \end{code}
 
-Installing builtin theories:
+\subsubsection{Installing Builtin Theories}
+
 \begin{code}
 devInstallBuiltin :: REqState -> String -> IO (Maybe String,REqState)
 devInstallBuiltin reqs thnm
@@ -121,7 +138,9 @@ devInstallBuiltin reqs thnm
              Yes thrys' -> return (Nothing,changed reqs{theories=thrys'})
 \end{code}
 
-Resetting an existing theory
+
+\subsubsection{Resetting Existing Theory}
+
 is only safe if the builtin version has the same dependency list
 as the theory being replaced.
 \begin{code}
@@ -138,7 +157,10 @@ devResetBuiltin reqs thnm
               Yes thrys' ->  return ( Nothing, changed reqs{theories=thrys'} )
 \end{code}
 
-Updating an existing theory.
+\newpage
+
+\subsubsection{Updating Existing Theory}
+
 This is also only safe if the builtin version has the same dependency list
 as the theory being replaced.
 \begin{code}

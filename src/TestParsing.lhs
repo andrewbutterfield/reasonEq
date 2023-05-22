@@ -40,7 +40,11 @@ For now we have simple literals,
 composites done as prefix-functions applied to (-delimited lists of sub-terms,
 and binders in standard mixfix style.
 
+\newpage
+
 \subsection{Lexical Basics}
+
+\subsubsection{Tokens}
 
 We have the following token classes:
 \begin{description}
@@ -107,6 +111,8 @@ and is not really used for anything else in a math context.
 whenChar = '?'
 \end{code}
 
+\subsubsection{Character Classes}
+
 We shall predefine delimiters as constant for now.
 Later on these will be parameters to the whole parsing process.
 \begin{code}
@@ -125,6 +131,8 @@ issymbol c
                =  False
   | otherwise  =  True
 \end{code}
+
+\subsubsection{Word Classes}
 
 Making symbols and identifiers:
 \begin{code}
@@ -193,7 +201,7 @@ tlexMinus str@(c:cs)
 A \texttt{whenChar} will end an identifier,
 if none exists at the start.
 Otherwise it is an error.
-Also a subscript appearing when a \texttt{whenChar}is already present
+Also a subscript appearing when a \texttt{whenChar} is already present
 is an error.
 \begin{code}
 tlexId _ di ""  = [ mkDi di ]
@@ -217,6 +225,10 @@ tlexDuring di bus str@(c:cs)
   | otherwise  =  mkId (reverse di ++ reverse bus) : tlex str
 \end{code}
 
+Macros begin with an underscore.
+They are used to lookup names.
+Typically macro ``\texttt{\_}\textsf{macro}'' refers to whatever is 
+denoted by \LaTeX\ macro ``$\mathtt\backslash$\textsf{macro}''.
 \begin{code}
 tlexMacro orcam "" = [ mkCam orcam ]
 tlexMacro orcam str@(c:cs)
@@ -302,6 +314,7 @@ false = Vbl (fromJust $ ident "false") PredV Static
 falseP = fromJust $ pVar false
 \end{code}
 
+\newpage
 
 \subsubsection{Top level term parser}
 

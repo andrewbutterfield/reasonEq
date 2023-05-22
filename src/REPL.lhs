@@ -10,11 +10,17 @@ module REPL (
   , REPLCmd, REPLCmdDescr, REPLExit, REPLCommands
   , REPLConfig(..)
   , runREPL
+  , userPrompt, userPause
+  , clearIt, clear
+  , waitForReturn
+  , NewStatus(..)
+  , showAndQuery
   , clearLong
   , putListOneLine
   , pickByNumber
   , selectPairings, pickPairing
   , pickThing, pickThings, takeThings
+  , getConfirmedObject
   )
 where
 
@@ -52,7 +58,7 @@ while the rest are viewed as I/O actions that also modify state.
 A parser converts strings to lists of strings.
 The key point here is that the first string, if present,
 determines what command will be run,
-with the remaining strings passed as arguments to that command
+with the remaining strings passed as arguments to that command.
 We define some simple obvious parsers as well.
 \begin{code}
 type REPLArguments = [String]
@@ -256,6 +262,53 @@ longHELP cmd ((nm,_,lhelp,_):cmds)
 \newpage
 \subsection{REPL Utilities}
 
+\subsubsection{Useful IO bits and pieces}
+
+Prompting:
+\begin{code}
+userPrompt :: String -> IO String
+userPrompt str = putStr str >> hFlush stdout >> getLine
+\end{code}
+
+Screen clearing:
+\begin{code}
+clear = "\ESC[2J\ESC[1;1H"
+clearIt str = clear ++ str
+\end{code}
+
+Pausing (before \textrm{clearIt}, usually)
+\begin{code}
+userPause = userPrompt "hit <enter> to continue"
+\end{code}
+
+
+\subsubsection{Response Waiting}
+
+We sometimes want to wait:
+\begin{code}
+waitForReturn :: IO ()
+waitForReturn
+  = do putStrLn "<return> to continue"
+       getLine
+       return ()
+\end{code}
+Sometime we show what was entered and offer to keep, re-enter, or exit:
+\begin{code}
+data NewStatus = Reject | ReDo | Keep
+showAndQuery :: String -> IO NewStatus
+showAndQuery str
+  = do putStrLn "Specified:\n"
+       putStrLn str
+       putStrLn "Keep/eXit  k/x ?  (anything else means re-enter)"
+       response <- getLine
+       case take 1 response of
+         ['k']  ->  return Keep
+         ['x']  ->  return Reject
+         _      ->  return ReDo
+\end{code}
+
+
+
 \subsubsection{Screen Clearing}
 
 Screen clearing for help strings:
@@ -284,6 +337,8 @@ pickByNumber prompt showx x
 
 \end{code}
 
+\newpage
+
 \subsubsection{Pair Picking by Number}
 
 Basic picker, assuming context already displayed.
@@ -309,7 +364,6 @@ selectPairings prompt pairs bs as@(a:as')
          _ -> selectPairings prompt pairs bs as
 \end{code}
 
-\newpage
 Full picker, that generates context display.
 This is when the context is helpful information for the user when picking.
 \begin{code}
@@ -345,8 +399,12 @@ inRange size choice = choice >= 1 && choice <= size
 selectFrom things choice = things!!(choice-1)
 
 pickError msg = return (False,error msg)
+\end{code}
 
--- pick one thing from a list
+\newpage
+
+Pick one thing from a list.
+\begin{code}
 pickThing :: String -> (a -> String) -> [a] -> IO (Bool,a)
 pickThing hdr showThing [] = pickError "Nothing to choose"
 pickThing hdr showThing [thing] = return (True,thing)
@@ -359,8 +417,10 @@ pickThing hdr showThing things
                  putStrLn ("Chosen "++showThing thing)
                  return (True,thing)
          else pickError "Bad choice!"
+\end{code}
 
--- pick zero or more things from a list
+Pick zero or more things from a list.
+\begin{code}
 pickThings :: String -> (a -> String) -> [a] -> IO (Bool,[a])
 pickThings hdr showThing [] = pickError "No things to be chosen"
 pickThings hdr showThing things
@@ -377,8 +437,10 @@ pickThings hdr showThing things
                  return (True,wanted)
          else return (False,error "Bad choices!")
   where size = length things
+\end{code}
 
--- take things (pick and remove) from a list, returning takings and leftovers
+Take things (pick and remove) from a list, returning takings and leftovers.
+\begin{code}
 takeThings :: String -> (a -> String) -> [a] -> IO (Bool,([a],[a]))
 takeThings hdr showThing [] = pickError "No things to be taken"
 takeThings hdr showThing things
@@ -406,4 +468,27 @@ takeThings hdr showThing things
       | i >  choice  =  removeChoices (i+1) crest things
       | i == choice  =  removeChoices (i+1) crest trest
       | otherwise    =  thing : removeChoices (i+1) choices trest
+\end{code}
+
+Parse user input, display outcome, and request user confirmation.
+\begin{code}
+getConfirmedObject :: String -> (String -> YesBut b) -> (b -> String)
+                   -> IO (Bool, b)
+getConfirmedObject prompt parse preview =
+  do  objTxt <- userPrompt prompt
+      case parse objTxt of
+        But msgs  ->  objParseFailed prompt parse preview msgs
+        Yes obj ->
+          do  response <- showAndQuery $ preview obj
+              case response of
+                Reject  ->  return (False,obj)
+                Keep    ->  return (True,obj)
+                ReDo    ->  getConfirmedObject prompt parse preview
+
+objParseFailed prompt parse preview msgs =
+  do putStrLn $ unlines' msgs
+     response <- userPrompt "retry? [Y/n] (default Y)"
+     case take 1 response of
+       "n"  ->  return (False,undefined)
+       _    ->  getConfirmedObject prompt parse preview       
 \end{code}

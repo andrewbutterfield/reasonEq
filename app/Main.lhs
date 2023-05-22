@@ -314,15 +314,6 @@ reqWelcome = unlines
  ]
 \end{code}
 
-We sometimes want to wait:
-\begin{code}
-waitForReturn :: IO ()
-waitForReturn
-  = do putStrLn "<return> to continue"
-       getLine
-       return ()
-\end{code}
-
 
 \newpage
 \subsection{Show Command }
@@ -563,22 +554,34 @@ newThing (cmd:rest) reqs
 newThing _ reqs      =  doshow reqs "unknown 'new' option."
 \end{code}
 
+\newpage
+
 New Conjecture:
 \begin{code}
 newConj args reqs
-  = do let cjnm = mkLawName args
-       putStrLn $ unlines' s_syntax
-       putStr ("New conj, '"++cjnm++"', enter term :- ")
-       hFlush stdout; trtxt <- getLine
-       case sPredParse trtxt of
-         But msgs  -> doshow reqs ("Bad Term, "++unlines' msgs)
-         Yes (term,_) ->
-           do asn' <- mkAsn term scTrue
-              case newConjecture (currTheory reqs) (cjnm,asn') reqs of
-                But msgs  -> doshow reqs (unlines' msgs)
-                Yes reqs' -> do putStrLn ("Conjecture '"++cjnm++"' installed")
-                                return reqs'
+  = do  let cjnm = mkLawName args
+        let prompt = unlines' s_syntax 
+                     ++ "New conj, '"++cjnm++"', enter term :- "
+        let preview = trTerm 0
+        (ok,term) <- getConfirmedObject prompt parse preview
+        if ok
+          then 
+            do  asn' <- mkAsn term scTrue
+                case newConjecture 
+                      (currTheory reqs) (cjnm,asn') reqs of
+                  But msgs  -> doshow reqs (unlines' msgs)
+                  Yes reqs' -> 
+                    do putStrLn ("Conjecture '"++cjnm++"' installed")
+                       return reqs'
+          else return reqs
+
+  where
+    parse txt =
+      case sPredParse txt of
+        But msgs      ->  But msgs
+        Yes (term,_)  ->  Yes term
 \end{code}
+                  
 
 \newpage
 \subsection{Faking It}

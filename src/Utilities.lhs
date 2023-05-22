@@ -11,7 +11,6 @@ module Utilities (
 , ttail
 , unlines'
 , issubset, isdisj
-, clearIt, clear
 , readBool, readNat
 , trim
 , zip1, zip2, zip2'
@@ -30,7 +29,7 @@ module Utilities (
 , pad
 , splitLast, splitAround
 , brkspn, brkspnBy, splice
-, args2str, args2int, userPrompt, userPause
+, args2str, args2int
 )
 where
 
@@ -524,25 +523,6 @@ lex' nekot (c:cs)
 rrun nekot = Run $ reverse nekot
 
 spaced s = ' ':s ++ " "
-\end{code}
-
-\subsubsection{Useful IO bits and pieces}
-
-Prompting:
-\begin{code}
-userPrompt :: String -> IO String
-userPrompt str = putStr str >> hFlush stdout >> getLine
-\end{code}
-
-Screen clearing:
-\begin{code}
-clear = "\ESC[2J\ESC[1;1H"
-clearIt str = clear ++ str
-\end{code}
-
-Pausing (before \textrm{clearIt}, usually)
-\begin{code}
-userPause = userPrompt "hit <enter> to continue"
 \end{code}
 
 

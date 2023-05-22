@@ -141,7 +141,7 @@ devInstallBuiltin reqs thnm
 
 \subsubsection{Resetting Existing Theory}
 
-is only safe if the builtin version has the same dependency list
+Only safe if the builtin version has the same dependency list
 as the theory being replaced.
 \begin{code}
 devResetBuiltin :: REqState -> String -> IO (Maybe String,REqState)

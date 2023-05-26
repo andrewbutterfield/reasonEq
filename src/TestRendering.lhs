@@ -55,7 +55,11 @@ import TermZipper
 
 We provide a simple, almost certainly un-parsable,
 rendering of datatypes to ease debugging.
-We support two ways of viewing identifiers,
+
+We support one way of viewing identifiers,
+which basically shows the number component if non-zero,
+and hides it otherwise.
+
 one (\texttt{trXXX}) that hides the ``unique number'' component,
 and another (\texttt{trXXXU}) that displays it.
 
@@ -64,7 +68,9 @@ and another (\texttt{trXXXU}) that displays it.
 
 \begin{code}
 trId :: Identifier -> String
-trId (Identifier s _)  =  widthHack 2 $ nicesym s
+trId (Identifier s u)  
+  | u == 0     =  widthHack 2 $ nicesym s
+  | otherwise  =  widthHack 2 $ (nicesym s ++ _subNum u)
 
 trIdU :: Identifier -> String
 trIdU (Identifier s u)  =  widthHack 2 $ (nicesym s ++ _subNum u)
@@ -201,11 +207,16 @@ precTable
     , ( "sqsupseteq" , (1,True,False))
     , ( "vdash"   , (2,True,False))
     , ( "eqv"     , (3,True,False))
+    , ( "equiv"   , (3,True,False))
     , ( "sqcap"   , (4,True,False))
     , ( "imp"     , (4,True,False))
+    , ( "implies" , (4,True,False))
     , ( "or"      , (5,True,False)) -- force parenthesis for nested 'or'
+    , ( "lor"     , (5,True,False)) -- force parenthesis for nested 'or'
     , ( "and"     , (6,True,False)) -- force parenthesis for nested 'and'
+    , ( "land"    , (6,True,False)) -- force parenthesis for nested 'and'
     , ( "not"     , (7,True,False))
+    , ( "lnot"    , (7,True,False))
     , ( "="       , (8,True,False))
     , ( "cond"    , (0,False,True)) -- force parenthesis for nested 'cond'
     , ( "star"    , (4,True,False)) -- force parenthesis for nested 'star'

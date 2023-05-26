@@ -1,15 +1,88 @@
-try.scP  :  P ⊆ O$,O$'   Q ⊆ O$,O$'
-try.bind :  {  P ->  (x := e) , Q -> (x := f) }
 
-apply bind to P, Q : (x:=e) ⊆ O$,O$'   (x:=f) ⊆ O$,O$'
-take freevars      :  x,e ⊆ O$,O$'   x,f ⊆ O$,O$'
-split              :  x ⊆ O$,O$'  e ⊆ O$,O$'  x ⊆ O$,O$'  f ⊆ O$,O$'
-sort/remdup        :  e ⊆ O$,O$'  f ⊆ O$,O$'  x ⊆ O$,O$'
-
-But....
-
-try,scP': e ⊆ O$,O$'  x ⊆ O$,O$'  f ⊆ O$,O$'  x ⊆ O$,O$'
+Theory 'Equiv'
+   1. ⊤  “true”      true  ⊤
+   2. ⊤  “≡_refl”    P  ≡  P  ⊤
+   3. ⊤  “≡_assoc”   ((P≡Q)≡R)  ≡  (P≡(Q≡R))  ⊤
+   4. ⊤  “≡_symm”    P≡Q≡Q≡P  ⊤
+   5. ⊤  “id_subst”  P[x$/x$]  ≡  P  ⊤
 
 
-@iSC.ascss': [ [ e ⊆ O$,O$' , x ⊆ O$,O$' ] , [ f ⊆ O$,O$' , x ⊆ O$,O$' ] ]
-@iSC.tFV.freshvs': { O_0 }
+(true≡Q)≡Q 
+
+@bM.partsP:  true
+K P (VB True)
+@bM.tC:  -- true≡Q
+C P True (Id "equiv" 0) (true≡Q)≡Q
+         [ C P True (Id "equiv" 0) -- true≡Q
+                    [ K P (VB True), V P (VR (Id "Q" 0,VP,WS))]
+         , V P (VR (Id "Q" 0,VP,WS))   -- Q
+         ]
+
+@bM.partsP: -- P  ≡  P
+C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "P" 0,VP,WS))]
+@bM.tC:
+C P True (Id "equiv" 0) 
+         [ C P True (Id "equiv" 0) 
+                    [K P (VB True),V P (VR (Id "Q" 0,VP,WS))]
+         , V P (VR (Id "Q" 0,VP,WS))
+         ]
+@bM.vts:  { ≡ : (𝔹 ⟶ (𝔹 ⟶ 𝔹)) }
+[ VD ( fromList [ ( VR (Id "equiv" 0,VP,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+                ]
+     , fromList []
+     ,fromList []
+     )
+]
+
+@bM.partsP: ((P≡Q)≡R)  ≡  (P≡(Q≡R))
+C P True (Id "equiv" 0) 
+         [ C P True (Id "equiv" 0) 
+                    [C P True (Id "equiv" 0) 
+                              [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]
+                    ,V P (VR (Id "R" 0,VP,WS))]
+         ,C P True (Id "equiv" 0) 
+                   [V P (VR (Id "P" 0,VP,WS))
+                   ,C P True (Id "equiv" 0) 
+                             [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]
+                   ]
+         ]
+@bM.tC:
+C P True (Id "equiv" 0) 
+         [C P True (Id "equiv" 0) 
+                   [K P (VB True),V P (VR (Id "Q" 0,VP,WS))]
+         ,V P (VR (Id "Q" 0,VP,WS))
+         ]
+
+@bM.partsP:
+C P True (Id "equiv" 0) -- P≡Q≡Q≡P
+         [V P (VR (Id "P" 0,VP,WS))
+         ,V P (VR (Id "Q" 0,VP,WS))
+         ,V P (VR (Id "Q" 0,VP,WS))
+         ,V P (VR (Id "P" 0,VP,WS))]
+@bM.tC:
+C P True (Id "equiv" 0) 
+         [C P True (Id "equiv" 0) 
+                   [K P (VB True),V P (VR (Id "Q" 0,VP,WS))]
+         ,V P (VR (Id "Q" 0,VP,WS))]
+
+@bM.partsP:
+C P True (Id "equiv" 0) 
+         [ S P (V P (VR (Id "P" 0,VP,WS))) 
+               (SN (fromList []) 
+                   (fromList [ ( LV (VR (Id "x" 0,VO,WS),[],[])
+                               , LV (VR (Id "x" 0,VO,WS),[],[])
+                               )
+                             ]
+                   )
+                )
+         ,V P (VR (Id "P" 0,VP,WS))
+        ]
+@bM.tC:
+C P True (Id "equiv" 0) 
+         [C P True (Id "equiv" 0) 
+                   [K P (VB True),V P (VR (Id "Q" 0,VP,WS))]
+         ,V P (VR (Id "Q" 0,VP,WS))]
+
+
+
+

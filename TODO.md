@@ -3,6 +3,9 @@
 
 ## Most Urgent
 
+Matching via "m" command is not working.  The "tm" command is fine!
+That's because `doPartialMatch` looks for `eqv` but is getting `equiv`!
+
 ### Archiving Proofs
 
 Need a way to archive proofs outside theory files. Right now we lose a proof when we either demote it to try something different, or we have to re-compile and install the theory.

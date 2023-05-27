@@ -12,42 +12,6 @@ END THEORIES
 CURRTHEORY = Equiv
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("Equiv","equiv_id")
-BEGIN LIVE-PROOF
-TH-NAME: Equiv
-CJ-NAME: equiv_id
-CONJ = ASN (C P True (Id "equiv" 0) [C P True (Id "equiv" 0) [K P (VB True),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))],([],fromList []))
-SIDE = ([],fromList [])
-STRAT reduce
-BEGIN SEQZIP
-TERMZIP = (C P True (Id "equiv" 0) [C P True (Id "equiv" 0) [K P (VB True),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))],[])
-BEGIN SEQUENT'
-SIDECOND = ([],fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.equiv_id", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K P (VB True)}
-END SEQUENT'
-END SEQZIP
-FPATH: []
-BEGIN LIST STEPS
-END LIST STEPS
-END LIVE-PROOF
-("Exists","land_exists_scope")
-BEGIN LIVE-PROOF
-TH-NAME: Exists
-CJ-NAME: land_exists_scope
-CONJ = ASN (C P True (Id "equiv" 0) [C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[])),GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V P (VR (Id "Q" 0,VP,WS)))],B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),B P (Id "exists" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V P (VR (Id "Q" 0,VP,WS)))])],([SD NU (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])],fromList []))
-SIDE = ([SD NU (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])],fromList [])
-STRAT reduce
-BEGIN SEQZIP
-TERMZIP = (C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[])),GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V P (VR (Id "Q" 0,VP,WS)))],[Cons' P True (Id "equiv" 0) [] [B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (C P True (Id "land" 0) [V P (VR (Id "P" 0,VP,WS)),B P (Id "exists" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V P (VR (Id "Q" 0,VP,WS)))])]])
-BEGIN SEQUENT'
-SIDECOND = ([SD NU (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])],fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.land_exists_scope", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K P (VB True)}
-END SEQUENT'
-END SEQZIP
-FPATH: [1]
-BEGIN LIST STEPS
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

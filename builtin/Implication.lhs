@@ -43,7 +43,7 @@ based on \cite{gries.93}.
 
 Some useful local definitions:
 \begin{code}
-v_imp = Vbl implies PredV Static
+v_imp = Vbl theImp PredV Static
 p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
 r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static

@@ -41,7 +41,7 @@ based on \cite{gries.93}.
 
 Some useful local definitions:
 \begin{code}
-v_and = Vbl land PredV Static
+v_and = Vbl theAnd PredV Static
 p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
 q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
 r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static

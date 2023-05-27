@@ -635,7 +635,7 @@ doPartialMatch :: Identifier -> [VarTable]
 First, if we have $\equiv$ we call an $n$-way equivalence matcher:
 \begin{code}
 doPartialMatch i vts law asnC tsP
-  | (pdbg "\ndPM.i" i) == (pdbg "dPM.theEqv" theEqv)  =  doEqvMatch vts law asnC tsP
+  | i == theEqv  =  doEqvMatch vts law asnC tsP
 \end{code}
 
 If we have $\implies$, then we can try to match either side.
@@ -898,8 +898,8 @@ basicMatch :: MatchClass
             -> Term       -- sub-part of law being matched
             -> Matches
 basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
-  =  do bind <- match (pdbg "bM.vts" vts) (pdbg "bM.tC" tC) $ pdbg "bM.partsP" partsP
-        kbind <- bindKnown vts (pdbg "bM.bind" bind) repl
+  =  do bind <- match vts tC partsP
+        kbind <- bindKnown vts bind repl
         fbind <- bindFloating vts kbind repl
         let ictxt = mkInsCtxt []  -- should be ss
         scPinC <- instantiateSC ictxt fbind scP

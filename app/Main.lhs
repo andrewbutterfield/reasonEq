@@ -413,7 +413,7 @@ saveState [nm] reqs
        -> do putStrLn ("No such theory: '"++nm'++"'")
              return reqs
       Just thry
-       -> do writeNamedTheoryTxt (projectDir reqs) (nm',writeTheory thry)
+       -> do writeNamedTheory (projectDir reqs) (nm',thry)
              putStrLn ("Theory '"++nm'++"' written to '"++projectDir reqs++"'.")
              return reqs
 saveState _ reqs  =  doshow reqs "unknown 'save' option."

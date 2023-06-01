@@ -10,7 +10,7 @@ Need a way to archive proofs outside theory files. Right now we lose a proof whe
 
 #### Some observations
 
-  * We now have `project.req` that contains settings, theory setup, and live proofs. How much can be determined by looking at the contents of other files also present? For now these are just theory files.
+  * We now have `project.req` that contains settings, theory setup, and live proofs. How much can be determined by looking at the contents of other files also present? For now these are just theory files. Should we just identify a "top" theory?
 
   * The live proofs depend on an context based on the theories in scope when they were started, which is why they currently reside in `project.req` which captures that context. Could we shift these outside?
 

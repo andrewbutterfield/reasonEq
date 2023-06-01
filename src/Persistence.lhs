@@ -8,7 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Persistence
   ( mkObjectFilename, mkObjectPath 
   , writeAllState, readAllState
-  , writeNamedTheoryTxt, readNamedTheory
+  , writeNamedTheory, readNamedTheory
   , writeConjectures, readFiledConjectures
   , writeProof, readFiledProof
   )
@@ -78,6 +78,13 @@ theoryExt      =  "thr"
 theoryPath projDir theoryName = mkObjectPath projDir theoryName theoryExt
 \end{code}
 
+
+\begin{code}
+writeNamedTheory :: FilePath -> (FilePath, Theory) -> IO ()
+writeNamedTheory pjdir (nm,theory)
+  = do let fp = theoryPath pjdir nm
+       writeFile fp $ unlines $ writeTheory theory
+\end{code}
 
 \begin{code}
 writeNamedTheoryTxt :: FilePath -> (FilePath, [String]) -> IO ()

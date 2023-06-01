@@ -1,22 +1,29 @@
 # To Do
 
-
 ## Most Urgent
 
-### Archiving Proofs
+### Theory and Proof Management.
 
 Need a way to archive proofs outside theory files. Right now we lose a proof when we either demote it to try something different, or we have to re-compile and install the theory.
 
-Idea: completely redesign the way stuff is saved into files.
-Reduce granularity, with proofs and collections of axioms and conjectures
-in their own files.
+**Rethink** Keep it simple.
 
-What is the naming convention? What replaces `Theory.thr`?
+#### Some observations
 
-Do we have `Theory.thr` along with `Theory.axm`, `Theory.cnj`, `Theory.prf`?
-Or have `Theory_law_name.prf` for every proof?
+  * We now have `project.req` that contains settings, theory setup, and live proofs. How much can be determined by looking at the contents of other files also present? For now these are just theory files.
 
-Do we check a proof we load up?
+  * The live proofs depend on an context based on the theories in scope when they were started, which is why they currently reside in `project.req` which captures that context. Could we shift these outside?
+
+  * In any case, what happens to a live-proof if we edit a theory it depends on?  Should have a way fo doing impact analysis of any change we make w.r.t *all* current live proofs? Perhaps this should only be done if it becomes an issue.
+
+  * We have the notion of a "current" theory, w.r.t. which we setup proofs, and should be able to add, edit, and/or delete conjectures (axioms?), variable-table entries, and theory dependencies.
+
+  * A theory called "MyTheory" is always associated with file `MyTheory.thr`.
+
+#### Tasks
+
+Add commands to create, delete, copy/rename theories,
+with matching file support. Obviously can't create or delete the current theory, but copying is fine.
 
 ### Files.lhs
 

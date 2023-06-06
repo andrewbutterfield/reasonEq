@@ -390,15 +390,26 @@ cmdSave
     , unlines
         [ "save          -- save all prover state to current workspace"
         , "save .        -- save current theory to current workspace"
-        , "save <thry>   -- save theory <thry> to current workspace"]
+        , "save <thry>   -- save theory <thry> to current workspace"
+        , "To come:"
+        , "save prf <proof>  -- save proof <proof> to current workspace"
+        , "save cnj <conj>  -- save conjecture <cnj> to current workspace"
+        , "save ax <axiom>  -- save axiom <axiom> to current workspace"
+        ]
     , saveState )
 cmdLoad
   = ( "load"
     , "load prover state from file"
     , unlines
+
         [ "load -- load prover state from current workspace"
-        , "load <thry> -- load EXISTING theory <thry> from current workspace"
-        , "load new <thry> -- add NEW theory <thry> from current workspace"]
+        , "load <thry> -- overwrite EXISTING theory <thry> from current workspace"
+        , "load new <thry> -- add NEW theory <thry> from current workspace"
+        , "To come:"
+        , "load prf <proof>  -- load proof  <proof> to current workspace"
+        , "load cnj <conj>  -- load conjecture <cnj> to current workspace"
+        , "load ax <axiom>  -- load axiom <axiom> to current workspace"
+        ]
     , loadState )
 
 saveState [] reqs
@@ -416,6 +427,19 @@ saveState [nm] reqs
        -> do writeNamedTheory (projectDir reqs) (nm',thry)
              putStrLn ("Theory '"++nm'++"' written to '"++projectDir reqs++"'.")
              return reqs
+saveState [what,nm] reqs
+  | what == "prf"  
+      = case ( getTheory (currTheory reqs) (theories reqs) 
+               >>= find (pnm nm) . proofs
+             ) of
+          Nothing 
+            ->  do  putStrLn ("No such proof: '"++nm++"'")
+                    return reqs
+          Just prf 
+            ->  do  writeProof reqs nm prf
+                    putStrLn ("Proof '"++nm++"' saved")
+                    return reqs
+  where pnm nm (pn,_,_,_) = nm == pn
 saveState _ reqs  =  doshow reqs "unknown 'save' option."
 
 loadState [] reqs

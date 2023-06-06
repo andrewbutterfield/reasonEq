@@ -113,6 +113,11 @@ false∨false
 false
 ```
 
+### Move some help stuff to AbstractUI !!!
+
+Currently help info is in `Main.lhs`,
+but a lot of command argument interpretation is done in the Abs GUI.
+We should record some help stuff in there.
 
 
 ### Match Contexts

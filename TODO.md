@@ -4,9 +4,15 @@
 
 ### Theory and Proof Management.
 
-Need a way to archive proofs outside theory files. Right now we lose a proof when we either demote it to try something different, or we have to re-compile and install the theory.
+Need a way to archive proofs outside theory files. 
+Right now we lose a proof when we either demote it to try something different, 
+or we have to re-compile and install the theory.
 
 **Rethink** Keep it simple.
+
+Should law names be unique, or tied to a theory?
+If tied, are we obliged to use fully qualified names?
+KISS: keep them unique for now.
 
 #### Some observations
 
@@ -19,6 +25,10 @@ Need a way to archive proofs outside theory files. Right now we lose a proof whe
   * We have the notion of a "current" theory, w.r.t. which we setup proofs, and should be able to add, edit, and/or delete conjectures (axioms?), variable-table entries, and theory dependencies.
 
   * A theory called "MyTheory" is always associated with file `MyTheory.thr`.
+
+  * A proof of conjecture "my_conjecture" will be saved in `my_conjecture.prf`.
+
+  * We will add new features to existing `save`, `load` and `new` commands.
 
 #### Tasks
 

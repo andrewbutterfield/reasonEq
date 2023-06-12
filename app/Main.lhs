@@ -381,9 +381,15 @@ showWorkspaces args reqs
 \newpage
 \subsection{State Save and Restore}
 
+We save and load theories by default,
+but can also handle smaller objects such as axioms, conjetures, and proofs.
+\begin{code}
+prfObj = "prf"
+\end{code}
+
 
 \begin{code}
-cmdSave, cmdLoad :: REqCmdDescr
+cmdSave :: REqCmdDescr
 cmdSave
   = ( "save"
     , "save prover state to file"
@@ -391,26 +397,13 @@ cmdSave
         [ "save          -- save all prover state to current workspace"
         , "save .        -- save current theory to current workspace"
         , "save <thry>   -- save theory <thry> to current workspace"
+        , "save " ++ prfObj
+                  ++" <proof>  -- save proof <proof> to current workspace"
         , "To come:"
-        , "save prf <proof>  -- save proof <proof> to current workspace"
         , "save cnj <conj>  -- save conjecture <cnj> to current workspace"
         , "save ax <axiom>  -- save axiom <axiom> to current workspace"
         ]
     , saveState )
-cmdLoad
-  = ( "load"
-    , "load prover state from file"
-    , unlines
-
-        [ "load -- load prover state from current workspace"
-        , "load <thry> -- overwrite EXISTING theory <thry> from current workspace"
-        , "load new <thry> -- add NEW theory <thry> from current workspace"
-        , "To come:"
-        , "load prf <proof>  -- load proof  <proof> to current workspace"
-        , "load cnj <conj>  -- load conjecture <cnj> to current workspace"
-        , "load ax <axiom>  -- load axiom <axiom> to current workspace"
-        ]
-    , loadState )
 
 saveState [] reqs
   = do writeAllState reqs
@@ -428,7 +421,7 @@ saveState [nm] reqs
              putStrLn ("Theory '"++nm'++"' written to '"++projectDir reqs++"'.")
              return reqs
 saveState [what,nm] reqs
-  | what == "prf"  
+  | what == prfObj  
       = case ( getTheory (currTheory reqs) (theories reqs) 
                >>= find (pnm nm) . proofs
              ) of
@@ -441,6 +434,27 @@ saveState [what,nm] reqs
                     return reqs
   where pnm nm (pn,_,_,_) = nm == pn
 saveState _ reqs  =  doshow reqs "unknown 'save' option."
+\end{code}
+
+\newpage
+
+\begin{code}
+cmdLoad :: REqCmdDescr
+cmdLoad
+  = ( "load"
+    , "load prover state from file"
+    , unlines
+
+        [ "load -- load prover state from current workspace"
+        , "load <thry> -- overwrite EXISTING theory <thry> from current workspace"
+        , "load new <thry> -- add NEW theory <thry> from current workspace"
+        , "load " ++ prfObj 
+                  ++ " <proof>  -- load proof  <proof> to current workspace"
+        , "To come:"
+        , "load cnj <conj>  -- load conjecture <cnj> to current workspace"
+        , "load ax <axiom>  -- load axiom <axiom> to current workspace"
+        ]
+    , loadState )
 
 loadState [] reqs
   = do let dirfp = projectDir reqs
@@ -462,6 +476,18 @@ loadState ["new",nm] reqs
          But msgs ->
            do putStrLn ("Add theory failed:\n"++unlines' msgs)
               return reqs
+loadState [what,nm] reqs
+  | what == prfObj
+    = do result <- readProof dirfp nm
+         case result of
+           Nothing -> return reqs
+           Just prf -> do putStrLn ("Loaded:\n"++show prf++"\n Not Yet Stored")
+                          return reqs
+  where dirfp = projectDir reqs
+
+-- addTheoryProof :: String -> Proof -> Theories -> Theories
+-- addTheoryProof thname prf thrys
+
 loadState _ reqs  =  doshow reqs "unknown 'load' option."
 \end{code}
 

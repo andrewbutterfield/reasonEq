@@ -4,6 +4,8 @@
 
 ### Theory and Proof Management.
 
+reading a proof should check that proof and filename match.
+
 Need a way to archive proofs outside theory files. 
 Right now we lose a proof when we either demote it to try something different, 
 or we have to re-compile and install the theory.

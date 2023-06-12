@@ -10,7 +10,7 @@ module Persistence
   , writeAllState, readAllState
   , writeNamedTheory, readNamedTheory
   , writeConjectures, readFiledConjectures
-  , writeProof, readFiledProof
+  , writeProof, readProof
   )
 where
 
@@ -148,9 +148,14 @@ writeProof reqs nm proof
 \end{code}
 
 \begin{code}
-readFiledProof :: FilePath -> String -> IO Proof
-readFiledProof projfp nm
+readProof :: FilePath -> String -> IO (Maybe Proof)
+readProof projfp nm
   = do let fp = proofPath projfp nm
-       txt <- readFile fp
-       return $ read txt
+       fileExists <- doesFileExist fp
+       if fileExists
+       then  do  txt <- readFile fp
+                 return $ Just $ read txt
+                 -- SHOULD REALLY CHECK PROOF NAME AGAINST FILENAME
+       else  do  putStrLn ("Proof file '"++fp++"' not found.")
+                 return Nothing
 \end{code}

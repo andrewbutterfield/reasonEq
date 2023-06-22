@@ -81,19 +81,6 @@ cjAndOrAbs
 
 $$
   \begin{array}{ll}
-     \CJUNSAT & \CJUNSATN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-cjUNSAT
- = ( "land"
-   , ( ((p /\ mkNot p) \/ (q /\ mkNot q)) \/ (r /\ mkNot r)
-     , scTrue ) )
-\end{code}
-$$
-  \begin{array}{ll}
     \CJOrAndAbs & \CJOrAndAbsN
   \end{array}
 $$
@@ -218,6 +205,8 @@ cjEqvDef
      , scTrue ) )
 \end{code}
 
+\def\CJTestOne{stuff1}
+\def\CJTestOneN{\QNAME{test-one}}
 $$
   \begin{array}{ll}
     \CJTestOne & \CJTestOneN
@@ -232,6 +221,8 @@ cjTestOne
      , scTrue ) )
 \end{code}
 
+\def\CJTestTwo{stuff2}
+\def\CJTestTwoN{\QNAME{test-two}}
 $$
   \begin{array}{ll}
     \CJTestTwo & \CJTestTwoN

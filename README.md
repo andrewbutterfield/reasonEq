@@ -61,4 +61,4 @@ using a special proof command-line tool.
 There are two commands for proofs at the top level, of for starting new proofs (`N`), and the other
 for resuming working on an existing proof (`r`).
 
-A tutorial introduction to using the prover is provided in `doc/TUTORIAL.md`.
+A tutorial introduction to using the prover is provided in `TUT.pdf` at the repo top-level.

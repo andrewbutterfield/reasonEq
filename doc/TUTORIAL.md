@@ -3,29 +3,29 @@
 ## Prerequisites
 
 `reasonEq` has been installed and started for at least the first time according to instructions
-in the top-level  `README.md`.
+in the top-level `README.md`.
 
-You should have seen a transcript similar to this:
+You should have seen a transcript similar to this (precise details depend on your OS - that below was on macOS):
 
 ```
 :- req
 starting REPL...
 Running user mode, default initial state.
-Creating app. dir.: /Users/butrfeld/.reasonEq
-Creating workspace : /Users/butrfeld/TEST/MyReasonEq
-appFP = /Users/butrfeld/.reasonEq
+Creating app. dir.: /Users/yourusername/.reasonEq
+Creating workspace : /Users/yourusername/.../MyReasonEq
+appFP = /Users/yourusername/.reasonEq
 projects:
-*MyReasonEq|/Users/butrfeld/TEST/MyReasonEq
+*MyReasonEq|/Users/yourusername/.../MyReasonEq
 
-Creating /Users/butrfeld/TEST/MyReasonEq
-Creating /Users/butrfeld/TEST/MyReasonEq/project.req
+Creating /Users/yourusername/.../MyReasonEq
+Creating /Users/yourusername/../MyReasonEq/project.req
 Project Name: MyReasonEq
-Project Path: /Users/butrfeld/TEST/MyReasonEq
+Project Path: /Users/yourusername/TEST/MyReasonEq
 Loading...
 Welcome to the reasonEq 0.6.9.0 REPL
 Type '?' for help.
 
-REq ≡ 
+MyReasonEq.Equiv> 
 ```
 
 You are now using the "Top-Level" command line interface.
@@ -45,21 +45,32 @@ N -- new proof
 r -- return to live proof
 save -- save prover state to file
 load -- load prover state from file
+svc -- save conjectures
+ldc -- load conjectures
+Assume -- assume conjecture is law
+Demote -- demote law to conjectures
 b -- builtin theory handling
+classify -- activate classifier
 ```
 
 More help on a specific command is given by supplying it to help,
 so, for example, typing `? sh` results in:
 
 ```
-sh f -- show current project
+sh w -- show workspace info
+sh X -- show settings
 sh s -- show logic signature
 sh t -- show theories
 sh L -- show laws
+sh L -u -- show variable uniqueness
+sh k -- show known names
 sh T -- show 'current' theory
 sh c -- show current conjectures
+sh c -u -- show variable uniqueness
 sh p -- show current (live) proof
-sh P -- show completed proofs
+sh P -- show completed theory proofs
+sh P * -- show all completed proofs
+sh P <nm> -- show proof transcript for <nm>
 ```
 
 ## Builtin Theories
@@ -68,91 +79,104 @@ Currently it is not possible for the user to create new theories,
 or add new axioms to existing theories.
 Instead, some builtin theories have been defined, but they are not "installed" by default.
 
-The `b` command allows the installation and checking of builtin theories
+The `b` command allows the installation and checking of builtin theories. Entering `? b` results in the following:
 
 ```
 b e -- list all existing builtin theories
 b i -- list all installed theories
 b I <name> -- install builtin theory <name>
+           -- fails if theory already installed
+b R <name> -- reset builtin theory <name>
+           -- replaces already installed theory by builtin version
+                                        (a.k.a. 'factory setting')
+b U <name> -- update builtin theory <name>
+           -- adds in new material from builtin version
+           -- asks user regarding revisions to existing material
+b F <name> -- force-update builtin theory <name>
+           -- adds in new and revised material from builtin version
+           -- does not ask user to confirm revisions
 ```
 
-For this tutorial we need theories `PropAxioms` and `PropEquiv` to be installed:
+Issuing the command `b e` should result in:
 
 ```
-REq ≡ b I PropAxioms
-*REq ≡ b I PropEquiv
-*REq ≡ b i
-PropEquiv ; PropAxioms
-*REq ≡ 
+Equiv ; Not ; Or ; And ; AndOrInvert ; Implies ; Equality ; ForAll ; Exists ; UClose ; UTPBase
+Remember to update Dev.devKnownBuiltins with new builtins.
+```
+
+For this tutorial we need theory `Equiv` to be installed using `b I`,
+and checked using `b i`:
+
+```
+MyReasonEq.Equiv> b I Equiv
+MyReasonEq.Equiv*> b i
+Equiv
+MyReasonEq.Equiv*> 
 ```
 
 The asterisk on the prompt indicates that the prover state has been modified, but not yet saved.
 Save it, just to be safe:
 
 ```
-*REq ≡ save
-REQ-STATE written to '/Users/butrfeld/TEST/MyReasonEq'.
-REq ≡ 
+MyReasonEq.Equiv*> save
+REQ-STATE written to '/Users/yourusername/.../MyReasonEq'.
+MyReasonEq.Equiv>  
 ```
 
 Now, ask to see all the known laws, using `sh L` :
 
 ```
+
 ---
-Theory 'PropEquiv'
-Known Variables: None
-Laws: None.
-Conjectures:
-   1. ❓  “≡_id”  (true≡Q)≡Q  
----
-Theory 'PropAxioms'
-Known Variables:
-false ≜ ¬(true)
-true : 𝔹
+Theory 'Equiv'
+Knowns:
+≡ : (𝔹 ⟶ (𝔹 ⟶ 𝔹))
 Laws:
-   1. ⊤  “true”         true  
-   2. ⊤  “≡_refl”       P≡P  
-   3. ⊤  “≡_assoc”      ((P≡Q)≡R)≡(P≡(Q≡R))  
-   4. ⊤  “≡_symm”       P≡Q≡Q≡P  
-   5. ⊤  “false-def”    false≡¬(true)  
-   6. ⊤  “¬_≡_distr”    ¬(P≡Q)≡(¬(P)≡Q)  
-   7. ⊤  “∨_symm”       P∨Q≡Q∨P  
-   8. ⊤  “∨_assoc”      P∨Q∨R≡P∨Q∨R  
-   9. ⊤  “∨_idem”       P∨P≡P  
-  10. ⊤  “∨_≡_distr”    P∨(Q≡R)≡P∨Q≡P∨R  
-  11. ⊤  “excl-middle”  P∨¬(P)  
-  12. ⊤  “golden-rule”  P∧Q≡((P≡Q)≡P∨Q)  
-  13. ⊤  “⟹ _def”       P⟹ Q≡P∨Q≡Q  
-Conjectures: None.
+   1. ⊤  “true”      true  ⊤
+   2. ⊤  “≡_refl”    P  ≡  P  ⊤
+   3. ⊤  “≡_assoc”   ((P≡Q)≡R)  ≡  (P≡(Q≡R))  ⊤
+   4. ⊤  “≡_symm”    P≡Q≡Q≡P  ⊤
+   5. ⊤  “id_subst”  P[x$/x$]  ≡  P  ⊤
+Conjectures:
+   1. ❓  “≡_id”        (true≡Q)  ≡  Q  ⊤
+   2. ❓  “true_subst”  true[e$/x$]  ≡  true  ⊤
+   3. ❓  “≡_subst”     (P≡Q)[e$/x$]  ≡  (P[e$/x$]≡Q[e$/x$])  ⊤
+AutoLaws:
+   i. simps:
+
+  ii. folds:
+
+ iii. unfolds:
+
+
+MyReasonEq.Equiv> 
 ```
 
-We see that we have two theories installed. At the bottom is the `PropAxioms` theory, which contains thirteen laws, all marked with '⊤' to indicate that they are axioms.
-There are also two known predicate variables defined, `true` and `false`.
-Above this is the `PropEquiv` theory, which has no laws, but does contain one *conjecture*, a predicate that we hope is true, and which we shall now raise to theoremhood by proving it so. Conjectures are marked with '❓'.
+There are four sections:
+
+**Knowns** :	
+	  Identifiers that denote themselves only.
+	
+**Laws** :
+	  All available laws. Axioms are marked on the left with '⊤'
+	
+**Conjectures** :
+	  All available conjectures, marked on the left with '❓'. 
+	  These need proofs to become theorems.
+	  
+The use of '⊤' on the right indicates a trivial (true) side-condition.
+	
+**AutoLaws**:
+	  Lists of laws that can play specific roles in proof automation.
 
 ## Finding Conjectures
 
-In order to prove a conjecture we need to ensure 
-that its containing theory is "current":
+We can concentrate on conjectures using `sh c` :
 
 ```
-REq ≡ sh T
-No current theory.
-```
-
-If it isn't, as in the above example, then we can make it so:
-
-```
-REq ≡ set T PropEquiv
-Current Theory now 'PropEquiv'
-*REq ≡ 
-```
-
-At this point we can ask to see the conjectures available in the
-current theory, using `sh c` :
-
-```
-   1. “≡_id”  (true≡Q)≡Q  
+   1. “≡_id”        (true≡Q)  ≡  Q  ⊤
+   2. “true_subst”  true[e$/x$]  ≡  true  ⊤
+   3. “≡_subst”     (P≡Q)[e$/x$]  ≡  (P[e$/x$]≡Q[e$/x$])  ⊤
 ```
 
 There is only one in this case. 

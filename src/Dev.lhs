@@ -134,8 +134,10 @@ devInstallBuiltin reqs thnm
                   , reqs)
       Just thry
         -> case addTheory thry $ theories reqs of
-             But msgs -> return (Just $ unlines' msgs,reqs)
-             Yes thrys' -> return (Nothing,changed reqs{theories=thrys'})
+             But msgs -> return ( Just $ unlines' msgs,reqs )
+             Yes thrys' -> return ( Nothing
+                                  , changed reqs{ theories=thrys'
+                                                , currTheory=thnm } )
 \end{code}
 
 

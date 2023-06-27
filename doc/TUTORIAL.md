@@ -25,7 +25,7 @@ Loading...
 Welcome to the reasonEq 0.6.9.0 REPL
 Type '?' for help.
 
-MyReasonEq.Equiv> 
+MyReasonEq.> 
 ```
 
 You are now using the "Top-Level" command line interface.
@@ -108,13 +108,13 @@ For this tutorial we need theory `Equiv` to be installed using `b I`,
 and checked using `b i`:
 
 ```
-MyReasonEq.Equiv> b I Equiv
+MyReasonEq.> b I Equiv
 MyReasonEq.Equiv*> b i
 Equiv
 MyReasonEq.Equiv*> 
 ```
 
-The asterisk on the prompt indicates that the prover state has been modified, but not yet saved.
+The `Equiv` theory is installed and is now the current working theory. The prompt now includes the current theory name. The asterisk on the prompt indicates that the prover state has been modified, but not yet saved.
 Save it, just to be safe:
 
 ```

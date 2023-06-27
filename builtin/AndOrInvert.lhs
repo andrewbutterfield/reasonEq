@@ -243,7 +243,7 @@ Assemble it all:
 \begin{code}
 aoiConjs :: [NmdAssertion]
 aoiConjs = map mkNmdAsn
-    [ cjUNSAT, cjOrAndAbs, cjAndOrNAbs, cjOrAndNAbs
+    [ cjOrAndAbs, cjAndOrNAbs, cjOrAndNAbs
     , cjOrAndDistr, cjAndOrDistr
     , cjDeMorganNand, cjDeMorganNor
     , cjEqvRepl

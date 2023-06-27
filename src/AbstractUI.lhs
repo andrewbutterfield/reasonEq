@@ -131,8 +131,11 @@ observeTheories :: REqState -> String
 observeTheories reqs = showTheories $ theories reqs
 
 observeTheoryNames :: REqState -> String
-observeTheoryNames
-  = intercalate " ; " . map thName . getAllTheories . theories
+observeTheoryNames reqs
+  | null thnames  =  "<none>"
+  | otherwise     =  thnames 
+  where 
+    thnames = intercalate " ; " $ map thName $ getAllTheories $ theories reqs
 \end{code}
 
 \subsubsection{Observing Laws (and Conjectures)}

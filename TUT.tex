@@ -267,78 +267,71 @@ There are strange comments at the end
 (ie., {\color{red}\texttt{trivial!2}}, {\color{green!50!black}$\equiv$\texttt{[3,4]}}).
 We ignore these for now.
 
+In our case, we see that it matched, amongst other things,
+against the lefthand-side
+of the `$\equiv$\_assoc` law and is giving back the righthand-side. 
+This is what we want so we request that match 1 be applied,
+using command \verb"a 1" (or \verb"a1").
+
+\newpage
+This results in:
+
+\includegraphics[scale=0.75]{doc/images/2-a1.png}
+
+We see that the goal has changed, 
+and also that we have the start of a proof transcript showing the the original goal was transformed by a match with the \emph{lefthand side} of `$\equiv$\_assoc` law at the top-level
+(\verb"@[]").
+
+\newpage
+\subsection{Proof Step 2}
+
+We now want to focus attention on the $Q\equiv Q$ sub-part of the goal.
+It is the second argument to the top-level $\equiv$ operator, so we want to move the focus down to that 2nd argument.
+We do this using the command \verb"d2" (down 2):
+
+\includegraphics[scale=0.75]{doc/images/3-d2.png}
 
 
+Now we see the significance of the purple colour --- it signifies that we are focussed in on a part of the overall goal.
+Note also that the value of \verb"Focus" has changed from \verb"[]" 
+to \verb"[2]". This is a list that describes how to get from the top-level
+of the goal down to the sub-term that is the current focus.
+We now want to see what this matches against,
+so we issue the match command \verb"m" once more:
+
+\includegraphics[scale=0.75]{doc/images/4-m.png}
 
 
-% In our case, we see that it matched, amongst other things,
-%  against the lefthand-side
-% of the `$\equiv$_assoc` law and is giving back the righthand-side. 
-% This is what we want so we request that match 1 be applied,
-% using command `a 1` (or `a1`).
+Here the first match is against all of the law `$\equiv$\_refl`,
+so we use \verb"a 1" to apply it:
 
-% This results in:
-
-%\includegraphics[scale=0.75]{doc/images/n-x}
-% <img src="images/2-equiv-id-one-a1.png" alt="Proof Start" width=40%>
-
-% We see that the goal has changed,and also that we have the start of a proof transcript showing the the original goal was transformed by a match with the `$\equiv$_assoc` law at the top-level.
-
-% ### Proof Step 2
-
-% We now want to focus attention on the `Q$\equiv$Q` sub-part of the goal. It is the second argument to thew top-level `$\equiv$` operator, so we want to move the focus down to that 2nd argument.
-% We do this using the command `d 2`:
-
-%\includegraphics[scale=0.75]{doc/images/n-x}
-% <img src="images/3-equiv-id-down-2.png" alt="Proof Start" width=38%>
-
-% No we see the sginificance of the purple colour - it signifies that we are focussed in on a part of the overall goal.
-% We not want to see what this matches against,
-% so we issue the match command `m` once more:
-
-%\includegraphics[scale=0.75]{doc/images/n-x}
-% ```
-% Matches:
-% 1 : “$\equiv$_refl” gives     true  
-% 2 : “$\equiv$_symm” gives     Q$\equiv$Q  
-% 3 : “$\equiv$_symm” gives     Q$\equiv$Q  
-% 4 : “$\equiv$_symm” gives     (Q$\equiv$Q)$\equiv$Q$\equiv$Q  
-% 5 : “$\equiv$_symm” gives     P$\equiv$(Q$\equiv$Q)$\equiv$P  
-% 6 : “$\equiv$_symm” gives     P$\equiv$(Q$\equiv$Q)$\equiv$P  
-% 7 : “$\equiv$_symm” gives     Q$\equiv$Q$\equiv$(Q$\equiv$Q)  
-% 8 : “∨_idem” gives     (Q$\equiv$Q)∨(Q$\equiv$Q)  
-% 9 : “⟹ _def” gives     P⟹ (Q$\equiv$Q)$\equiv$P∨(Q$\equiv$Q) 
-% ```
+\includegraphics[scale=0.75]{doc/images/5-a1.png}
 
 
-% Here the first match is against all of the law `$\equiv$_refl`,
-% so we use `a 1` to apply it:
+Note that we are still focussed at the same place. Here we matched \emph{all} the law `$\equiv$\_refl` at the second component of the top-level goal (\verb"@[2]").
 
-%\includegraphics[scale=0.75]{doc/images/n-x}
-% <img src="images/5-equiv-id-two-a1.png" alt="Proof Start" width=38%>
+\subsection{Proof Step 3}
 
-% Note that we are still focussed at the same place. Here we matched the law `$\equiv$_refl` at the second component of the top-level goal (`@[2]`).
+To complete, we want to return to the top-level,
+so we issue the up-command \verb"u" :
 
-% ### Proof Step 3
+\includegraphics[scale=0.75]{doc/images/6-u.png}
 
-% To complete, we want to return to the top-level,
-% so we issue the up-command `u` :
 
-%\includegraphics[scale=0.75]{doc/images/n-x}
-% <img src="images/6-equiv-id-up.png" alt="Proof Start" width=38%>
+\newpage
+Now we match and see the following matches:
 
-% Now we match (`m`) and see the same matches as the previous step,
-% so we apply the first (`a1`).
+\includegraphics[scale=0.75]{doc/images/7-m.png}
 
-%\includegraphics[scale=0.75]{doc/images/n-x}
-% ```
-% proof: a1
-% Proof Complete
-% *REq $\equiv$ 
+We want the same law as the previous step,
+so we apply the first (\verb"a1").
 
-% ```
+\includegraphics[scale=0.75]{doc/images/8-a1.png}
 
-% The proof is complete, so this reported, and we exit the proof command-line and return top the top-level command line.
+
+The proof is complete, so this reported, 
+including a proof transcript, and we exit the proof command-line and return to the top-level command line.
+
 % If we now ask to see the laws using `sh L`, then almost everything
 % is unchanged, except at the top where we see:
 
@@ -358,10 +351,8 @@ We ignore these for now.
 % We see the the `PropEquiv` theory has no conjectures anymore,
 % but a new law (“$\equiv$_id”) instead. This law differs from the axioms in `PropAxioms` in that it is marked with `∎` instead of `\top` to show that it is a theorem with a proof, rather than an axiom.
 
-% ## Next Steps.
+\section{Next Steps.}
 
-% Try installing theory `PropNot` and proving its four conjectures.
-
-
+Try installing theory `Not` and proving its conjectures.
 
 \end{document}

@@ -3,6 +3,7 @@
 \usepackage{hyperref}
 \usepackage{amssymb,amsmath}
 \usepackage{fancyvrb}
+\usepackage{MnSymbol}
 \usepackage{doc/reasonEq}
 \usepackage{doc/reasonEqDefs}
 \usepackage{mathpartir}
@@ -332,27 +333,17 @@ so we apply the first (\verb"a1").
 The proof is complete, so this reported, 
 including a proof transcript, and we exit the proof command-line and return to the top-level command line.
 
-% If we now ask to see the laws using `sh L`, then almost everything
-% is unchanged, except at the top where we see:
+\subsection{The aftermath}
 
-% ```
-% *REq $\equiv$ sh L
+Now take a look at the theory using \verb"sh T":
 
-% ---
-% Theory 'PropEquiv'
-% Known Variables: None
-% Laws:
-%    1. ∎  “$\equiv$_id”  (true$\equiv$Q)$\equiv$Q  
-% Conjectures: None.
-% ---
+\includegraphics[scale=0.75]{doc/images/aftermath.png}
 
-% ```
-
-% We see the the `PropEquiv` theory has no conjectures anymore,
-% but a new law (“$\equiv$_id”) instead. This law differs from the axioms in `PropAxioms` in that it is marked with `∎` instead of `\top` to show that it is a theorem with a proof, rather than an axiom.
+We see the proven conjecture ($\equiv$\_id) has become a law. This law differs from the axioms in that it is marked on the left with $\filledmedsquare$ instead of `$\top$` to show that it is a theorem with a proof, rather than an axiom.
 
 \section{Next Steps.}
 
 Try installing theory `Not` and proving its conjectures.
+Then `Or', `And', `AndOrInvert', and `Implies'.
 
 \end{document}

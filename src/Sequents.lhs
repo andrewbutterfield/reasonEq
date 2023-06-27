@@ -10,9 +10,8 @@ module Sequents
  ( Sequent(..)
  , TermSC, NamedTermSC
  , availableStrategies
- , reduce, redboth, redtail, redinit
  , reduceAll, reduceBoth, reduceToLeftmost, reduceToRightmost
- , assume
+ , deduce
  , Sequent'(..)
  , SeqZip, writeSeqZip, readSeqZip
  , sequentFocus
@@ -101,11 +100,11 @@ availableStrategies :: Theories -> String -> NmdAssertion
                     -> [(String,Sequent)]
 availableStrategies theories thnm (nm,(Assertion tconj sc))
   = catMaybes
-     [ reduce  thys cnj
+     [ redAll  thys cnj
+     , redL2R thys cnj
+     , redR2L thys cnj
      , redboth thys cnj
-     , redtail thys cnj
-     , redinit thys cnj
-     , assume  thys cflat ]
+     , deduce  thys cflat ]
   where
     cnj = (nm,(tconj,sc))
     thys = fromJust $ getTheoryDeps thnm theories
@@ -118,19 +117,19 @@ and then use the following functions to produce a sequent, if possible.
 noHyps nm = nullTheory{ thName   =  "H."++nm }
 \end{code}
 
-\subsubsection{Strategy \textit{reduce}}
+\subsubsection{Strategy \textit{redAll}}
 
 \begin{eqnarray*}
-   reduce(C)
+   redAll(C)
    &\defs&
    \mathcal L \vdash C \equiv \true
 \end{eqnarray*}
 \begin{code}
-reduce :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
+redAll :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
        -> m (String, Sequent)
-reduce thys (nm,(t,sc))
+redAll thys (nm,(t,sc))
   = return ( reduceAll, Sequent thys (noHyps nm) sc t $ theTrue )
-reduceAll = "reduce"
+reduceAll = "red-All"
 \end{code}
 
 
@@ -150,10 +149,10 @@ redboth thys (nm,(t@(Cons tk sb i [tl,tr]),sc))
   | i == theEqv
       = return ( reduceBoth, Sequent thys (noHyps nm) sc tl tr )
 redboth thys (nm,(t,sc)) = fail "redboth not applicable"
-reduceBoth = "redboth"
+reduceBoth = "red-bth"
 \end{code}
 
-\subsubsection{Strategy \textit{redtail}}
+\subsubsection{Strategy \textit{redR2L}}
 
 We will need to convert $\seqof{P_1,\dots,P_n}$, for $n\geq 1$
 to $P_1 \equiv \dots \equiv P_n$,
@@ -165,55 +164,55 @@ bEqv sn n ps = Cons P sn n ps
 
 
 \begin{eqnarray*}
-   redtail(C_1 \equiv C_2 \equiv \dots \equiv C_n)
+   redR2L(C_1 \equiv C_2 \equiv \dots \equiv C_n)
    &\defs&
    \mathcal L \vdash (C_2 \equiv \dots \equiv C_n) \equiv C_1
 \end{eqnarray*}
 \begin{code}
-redtail :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
+redR2L :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
         -> m (String, Sequent)
-redtail thys (nm,(t@(Cons tk si i (c1:cs@(_:_))),sc))
+redR2L thys (nm,(t@(Cons tk si i (c1:cs@(_:_))),sc))
   | i == theEqv
       = return ( reduceToLeftmost,
                  Sequent thys (noHyps nm) sc (bEqv si i cs) c1 )
-redtail thys (nm,(t,sc)) = fail "redtail not applicable"
-reduceToLeftmost = "redtail"
+redR2L thys (nm,(t,sc)) = fail "redR2L not applicable"
+reduceToLeftmost = "red-R2L"
 \end{code}
 
-\subsubsection{Strategy \textit{redinit}}
+\subsubsection{Strategy \textit{redL2R}}
 
 \begin{eqnarray*}
-   redinit(C_1 \equiv \dots \equiv C_{n-1} \equiv C_n)
+   redL2R(C_1 \equiv \dots \equiv C_{n-1} \equiv C_n)
    &\defs&
    \mathcal L \vdash (C_1 \equiv \dots \equiv C_{n-1}) \equiv C_n
 \end{eqnarray*}
 We prefer to put the smaller simpler part on the right.
 \begin{code}
-redinit :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
+redL2R :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
         -> m (String, Sequent)
-redinit thys (nm,(t@(Cons tk si i cs@(_:_:_)),sc))
+redL2R thys (nm,(t@(Cons tk si i cs@(_:_:_)),sc))
   | i == theEqv
       = return ( reduceToRightmost,
                  Sequent thys (noHyps nm) sc (bEqv si i cs') cn )
   where (cs',cn) = splitLast cs
-redinit thys (nm,(t,sc)) = fail "redinit not applicable"
-reduceToRightmost = "redinit"
+redL2R thys (nm,(t,sc)) = fail "redL2R not applicable"
+reduceToRightmost = "red-L2R"
 \end{code}
 
 \newpage
-\subsubsection{Strategy \textit{assume}}
+\subsubsection{Strategy \textit{deduce}}
 
 \begin{eqnarray*}
-   assume(H \implies C)
+   deduce(H \implies C)
    &\defs&
    \mathcal L,\splitand(H) \vdash (C \equiv \true)
 \end{eqnarray*}
 \begin{code}
-assume :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
+deduce :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
        -> m (String, Sequent)
-assume thys (nm,(t@(Cons tk si i [ta,tc]),sc))
+deduce thys (nm,(t@(Cons tk si i [ta,tc]),sc))
   | i == theImp
-    = return ( "assume", Sequent thys hthry sc tc $ theTrue )
+    = return ( "deduce", Sequent thys hthry sc tc $ theTrue )
   where
     hlaws = map mkHLaw $ zip [1..] $ splitAnte ta
     mkasn trm = fromJust $ mkAsn trm scTrue -- always succeeds
@@ -223,7 +222,7 @@ assume thys (nm,(t@(Cons tk si i [ta,tc]),sc))
     , laws     =  hlaws
     , known    =  makeUnknownKnown thys t
     }
-assume _ _ = fail "assume not applicable"
+deduce _ _ = fail "deduce not applicable"
 
 splitAnte :: Term -> [Term]
 splitAnte (Cons tk si i ts)

@@ -18,7 +18,7 @@ module LiveProofs
  , writeLiveProofs, readLiveProofs
  , dispLiveProof
  , dispEndProof
- , startProof, launchProof
+ , launchProof
  , displayMatches
  -- , instantiateRepl, instReplInMatch
  , buildMatchContext, matchInContexts, matchLawByName, tryLawByName
@@ -260,29 +260,29 @@ readLiveProofs thylist txts
 \newpage
 \subsection{Proof Starting and Stopping}
 
-\subsubsection{Starting a Proof with default strategy}
+% \subsubsection{Starting a Proof with default strategy}
 
 
-We need to setup a proof from a conjecture:
-\begin{code}
-startProof :: [Theory] -> String -> String -> Assertion -> LiveProof
-startProof thys thnm cjnm asn@(Assertion t sc)
-  =  LP { conjThName = thnm
-        , conjName = cjnm
-        , conjecture = asn
-        , conjSC = sc
-        , strategy = strat
-        , mtchCtxts =  mcs
-        , focus =  sz
-        , fPath = []
-        , matches = []
-        , stepsSoFar = []
-        }
-  where
-    (strat,sequent) = fromJust $ reduce thys (cjnm,(t,sc))
-    sz = leftConjFocus sequent
-    mcs = buildMatchContext thys
-\end{code}
+% We need to setup a proof from a conjecture:
+% \begin{code}
+% startProof :: [Theory] -> String -> String -> Assertion -> LiveProof
+% startProof thys thnm cjnm asn@(Assertion t sc)
+%   =  LP { conjThName = thnm
+%         , conjName = cjnm
+%         , conjecture = asn
+%         , conjSC = sc
+%         , strategy = strat
+%         , mtchCtxts =  mcs
+%         , focus =  sz
+%         , fPath = []
+%         , matches = []
+%         , stepsSoFar = []
+%         }
+%   where
+%     (strat,sequent) = fromJust $ reduce thys (cjnm,(t,sc))
+%     sz = leftConjFocus sequent
+%     mcs = buildMatchContext thys
+% \end{code}
 
 \subsubsection{Starting a Proof with given strategy}
 

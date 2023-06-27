@@ -699,7 +699,8 @@ doNewProof args reqs
      Nothing -> do putStrLn "invalid conjecture number"
                    return reqs
      Just (nconj,strats)
-      -> do putStrLn $ numberList presentSeq $ strats
+      -> do putStrLn "Select proof strategy:"
+            putStrLn $ numberList presentSeq $ strats
             putStr "Select sequent by number: "
             hFlush stdout
             choice <- getLine
@@ -733,13 +734,20 @@ Presenting a sequent for choosing:
 presentSeq (str,seq)
   = "'" ++ str ++ "':  "
     ++ presentHyp (hyp seq)
-    ++ "   " ++ _vdash ++ "   " ++
-    trTerm 0 (cleft seq)
-    ++ "   =   " ++
-    trTerm 0 (cright seq)
-
+    ++ trTerm 0 (cleft seq)
+    ++ strdir str
+    ++ trTerm 0 (cright seq)
+  where
+    
 presentHyp hthy
-  = intercalate "," $ map (trTerm 0 . assnT . snd . fst) $ laws hthy
+  | null hstring  = ""
+  | otherwise =  hstring ++ "  " ++ _vdash ++ "    "
+  where
+    hstring  = intercalate "," $ map (trTerm 0 . assnT . snd . fst) $ laws hthy
+
+strdir str
+  | str == reduceBoth  =  "  --> ? <--  "
+  | otherwise          =  "     -->     "
 \end{code}
 
 

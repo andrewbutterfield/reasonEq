@@ -219,6 +219,7 @@ precTable
     , ( "lnot"    , (7,True,False))
     , ( "="       , (8,True,False))
     , ( "cond"    , (0,False,True)) -- force parenthesis for nested 'cond'
+    , ( "while"   , (4,True,False)) -- force parenthesis for nested 'while'
     , ( "star"    , (4,True,False)) -- force parenthesis for nested 'star'
     ]
 prc :: String -> InfixKind
@@ -299,9 +300,10 @@ For now the most significant is the conditional ($\cond\_$)
 trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) [p,b,q])
  | isMix3  =  trBracketIf (opp <= ctxtp)
                         (trterm trid opp p
-                         ++ " <| " ++ trterm trid 0 b ++ " |> "
+                         ++ trId lhd ++ trterm trid 0 b ++ trId rhd
                          ++ trterm trid opp q)
  where
+   lhd = jId "lhd" ; rhd = jId "rhd"
    prcs@(opp,_,isMix3) = prc nm
 \end{code}
 

@@ -14,7 +14,7 @@ module
   , _alpha, _beta, _theta, _iota, _mu, _pi
   , _epsilon, _tau, _sigma, _Sigma, _omega, _lambda, _Lambda
   , _top, _bot, _sqcap, _sqcup, _sqsubseteq, _sqsupseteq
-  , _lhd, _rhd
+  , _lhd, _rhd, _while
   , _true , _false , _lnot, _land, _lor, _implies, _equiv
   , _forall, _exists
   , _emptyset, _cup, _cap, _setminus
@@ -180,6 +180,9 @@ theSymbolList
   , ("triangleq", SymForm "^="  "\x225c"), ("vdash", SymForm "|-"  "\x22a2")
 
   , ("qed", SymForm "[*]"  "\x220e"), ("redQ", SymForm "??"  "\x2753")
+
+  , ("lhd", SymForm "<|" "\x25c1"), ("rhd", SymForm "|>" "\x25b7")
+  , ("while", SymForm "*" "\x229b")
   ]
 \end{code}
 
@@ -203,6 +206,7 @@ _top = nicesym "top" ; _bot = nicesym "bot"
 _sqcap = nicesym "sqcap" ; _sqcup = nicesym "sqcup"
 _sqsubseteq = nicesym "sqsubseteq" ; _sqsupseteq = nicesym "sqsupseteq"
 _lhd = nicesym "lhd" ; _rhd = nicesym "rhd"
+_while = nicesym "while"
 
 _true = nicesym "true" ; _false = nicesym "false"
 _lnot = nicesym "lnot" ; _land = nicesym "land" ; _lor = nicesym "lor"

@@ -12,6 +12,7 @@ module UTPSignature (
 , i_refines, refines
 , i_cond, cond
 , i_seq, mkSeq
+, i_while, while
 , listwiseVarBinPred
 , i_asg, (.:=), (.::=), simassign
 , i_skip, skip
@@ -103,6 +104,14 @@ $$ P \seq Q $$
 mkSeq :: Term -> Term -> Term
 i_seq        =  jId ";"
 mkSeq p q    =  PCons False i_seq [p, q]
+\end{code}
+
+\subsubsection{While Loop}
+$$ c \circledast P$$
+\begin{code}
+while :: Term -> Term -> Term
+i_while = jId "while"
+while c p = PCons False i_while [c, p]
 \end{code}
 
 \subsubsection{(Simultaneous) Assignement}

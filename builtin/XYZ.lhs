@@ -151,16 +151,11 @@ qxs = LstVar lvxs
 
 The alphabet for this theory is $\setof{x,y,z,x',y',z'}$.
 
-We also have a known predicate variable $\Skip$,
-defined to be $x'=x \land y'=y \land z'=z$.
+% We also have a known predicate variable $\Skip$,
+% defined to be $x'=x \land y'=y \land z'=z$.
 
 \begin{code}
-v_skip = Vbl (jId "II") PredV Static
-skipDef = x' `isEqualTo` x /\ ( y' `isEqualTo` y /\ z' `isEqualTo` z)
-
-
-xyzKnown  =   fromJust $ addKnownConst v_skip skipDef
-            $ fromJust $ addKnownVar vx  int
+xyzKnown  =   fromJust $ addKnownVar vx  int
             $ fromJust $ addKnownVar vy  int
             $ fromJust $ addKnownVar vz  int
             $ fromJust $ addKnownVar vx' int
@@ -173,6 +168,76 @@ xyzKnown  =   fromJust $ addKnownConst v_skip skipDef
 
 \newpage
 \subsection{XYZ Axioms}
+
+\subsubsection{Skip}
+$$
+  \begin{array}{lll}
+     skip
+     \defs
+       x'=x \land y'=y \land z'=z
+     &
+     & \QNAME{XYZ-skip-Def}
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+--v_skip = Vbl (jId "II") PredV Static
+skipDef = x' `isEqualTo` x /\ ( y' `isEqualTo` y /\ z' `isEqualTo` z)
+
+axXYZSkipDef = preddef ("XYZ" -.- "skip" -.- "def")
+                       ( skip === skipDef)
+                       scTrue
+\end{code}
+
+\subsubsection{Assignment}
+$$
+  \begin{array}{lll}
+     x := e \defs x' = e \land y' = y \land z' = z && \QNAME{X-$:=$-def}
+  \\ y := e \defs x' = x \land y' = e \land z' = z && \QNAME{Y-$:=$-def}
+  \\ z := e \defs x' = x \land y' = y \land z' = e && \QNAME{Z-$:=$-def}
+  \\
+  \end{array}
+$$\par%\vspace{-8pt}
+\begin{code}
+mkAsg x e = PCons False (fromJust $ ident ":=")[x, e]
+
+mkCond p b q = PCons True (fromJust $ ident "cond")[p, b, q]
+
+
+axXAsgDef = preddef ("X" -.- ":=" -.- "def")
+                   ( mkAsg x e
+                     ===
+                     x' `isEqualTo` e /\
+                     ( y' `isEqualTo` y /\ z' `isEqualTo` z)  )
+                    scTrue
+axYAsgDef = preddef ("Y" -.- ":=" -.- "def")
+                   ( mkAsg y e
+                     ===
+                     x' `isEqualTo` x /\
+                     ( y' `isEqualTo` e /\ z' `isEqualTo` z)  )
+                    scTrue
+axZAsgDef = preddef ("Z" -.- ":=" -.- "def")
+                   ( mkAsg z e
+                     ===
+                     x' `isEqualTo` x /\
+                     ( y' `isEqualTo` y /\ z' `isEqualTo` e)  )
+                    scTrue
+\end{code}
+
+\subsubsection{Conditional}
+$$
+  \begin{array}{lll}
+     P \lhd c \rhd Q
+     \defs
+       c \land P \lor \lnot c \land Q
+     &
+     & \QNAME{XYZ-cond-Def}
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+axXYZCondDef = preddef ("XYZ" -.- "cond" -.- "def")
+                       ( cond p c q === (c /\ p) \/ ((mkNot c) /\ q))
+                       scTrue
+\end{code}
 
 \subsubsection{Sequential Composition}
 $$
@@ -211,82 +276,24 @@ axXYZSeqDef = preddef ("XYZ" -.- ";" -.- "def")
                     scTrue
 \end{code}
 
+\subsubsection{While}
 $$
   \begin{array}{lll}
-     P ; Q
+     c \circledast P
      \defs
-     \exists O_m \bullet
-       P[O_m/O']
-       \land
-       Q[O_m/O]
+       (P;c \circledast P) \lhd c \rhd skip
      &
-     & \QNAME{XYZ-;-Def}
+     & \QNAME{XYZ-while-Def}
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-o   = fromJust $ ident "O"
-lO  = PreVars o
-lO' = PostVars o
-lOm = MidVars o "m"
-
-beforeO r = Sub P r $ fromJust $ substn [] [(lO',lOm)]
-afterO r  = Sub P r $ fromJust $ substn [] [(lO,lOm)]
-
-axSeqDef = preddef (";" -.- "def")
-                   ( mkSeq p q
-                     ===
-                     exists [LstVar lOm]
-                      (beforeO p /\ afterO q)  )
-                    scTrue
+axXYZWhileDef = preddef ("XYZ" -.- "while" -.- "def")
+                       ( while c p  
+                         === 
+                         cond (mkSeq p (while c p)) c skip)
+                       scTrue
 \end{code}
 
-\subsubsection{Assignment}
-
-$$
-  \begin{array}{lll}
-     x := e \defs x' = e \land y' = y \land z' = z && \QNAME{X-$:=$-def}
-  \\ y := e \defs x' = x \land y' = e \land z' = z && \QNAME{Y-$:=$-def}
-  \\ z := e \defs x' = x \land y' = y \land z' = e && \QNAME{Z-$:=$-def}
-  \\
-  \end{array}
-$$\par%\vspace{-8pt}
-\begin{code}
-mkAsg x e = PCons False (fromJust $ ident ":=")[x, e]
-
-mkCond p b q = PCons True (fromJust $ ident "cond")[p, b, q]
-
-
-axXAsgDef = preddef ("X" -.- ":=" -.- "def")
-                   ( mkAsg x e
-                     ===
-                     x' `isEqualTo` e /\
-                     ( y' `isEqualTo` y /\ z' `isEqualTo` z)  )
-                    scTrue
-axYAsgDef = preddef ("Y" -.- ":=" -.- "def")
-                   ( mkAsg y e
-                     ===
-                     x' `isEqualTo` x /\
-                     ( y' `isEqualTo` e /\ z' `isEqualTo` z)  )
-                    scTrue
-axZAsgDef = preddef ("Z" -.- ":=" -.- "def")
-                   ( mkAsg z e
-                     ===
-                     x' `isEqualTo` x /\
-                     ( y' `isEqualTo` y /\ z' `isEqualTo` e)  )
-                    scTrue
-
-axSeqCompL1 = preddef ("SeqComp" -.- "L1")
-                   ( mkSeq (mkSeq p q) r === mkSeq p (mkSeq q r))
-                   scTrue
-
-axSeqCompL2 = preddef ("SeqComp" -.- "L2")
-                  ( mkSeq (mkCond p b q) r === mkCond (mkSeq p r) b (mkSeq q r))
-                   scTrue
-
-
-
-
-\end{code}
 
 
 
@@ -295,12 +302,13 @@ We now collect our axiom set:
 xyzAxioms :: [Law]
 xyzAxioms
   = map labelAsAxiom
-      [ axXYZSeqDef, axSeqDef
-      , axXAsgDef, axYAsgDef, axZAsgDef
-      , axSeqCompL1, axSeqCompL2
-      --axPeano01, axPeano02, axPeano03, axPeano04, axPeano05,
-      --axPeano06, axPeano07, axPeano08, axPeano09, axPeanoAdd01,
-      --axPeanoAdd02, axPeanoAdd03
+      [ axXYZSkipDef
+      , axXAsgDef
+      , axYAsgDef
+      , axZAsgDef
+      , axXYZCondDef
+      , axXYZSeqDef
+      , axXYZWhileDef
       ]
 \end{code}
 
@@ -338,6 +346,14 @@ cjNonDeterL8 = preddef ("NonDeter" -.- "cj" -.- "L8")
                     (p \/ mkCond q b r === mkCond (p \/ q) b (p \/ r))
                     scTrue
 
+cjSeqCompL1 = preddef ("SeqComp" -.- "L1")
+                   ( mkSeq (mkSeq p q) r === mkSeq p (mkSeq q r))
+                   scTrue
+
+cjSeqCompL2 = preddef ("SeqComp" -.- "L2")
+                  ( mkSeq (mkCond p b q) r === mkCond (mkSeq p r) b (mkSeq q r))
+                   scTrue
+
 \end{code}
 
 
@@ -357,7 +373,12 @@ We now collect our conjecture set:
 \begin{code}
 xyzConjs :: [NmdAssertion]
 xyzConjs
-  = [ cjNonDeterL5, cjNonDeterL6, cjNonDeterL7, cjNonDeterL8
+  = [ cjNonDeterL5
+    , cjNonDeterL6
+    , cjNonDeterL7
+    , cjNonDeterL8
+    , cjSeqCompL1
+    , cjSeqCompL2
     ]
 \end{code}
 

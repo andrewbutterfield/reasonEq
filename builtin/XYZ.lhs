@@ -140,7 +140,9 @@ qfs = LstVar lvfs
 $$ P[e/x] \qquad P[\lst e/\lst x]$$
 \begin{code}
 -- note that [ a / v]  becomes (v,a) !
-sub_x_by_e p = Sub P p $ fromJust $ substn [(vx,e)] []
+psub var expr pred = Sub P pred $ fromJust $substn [(var,expr)] []
+esub var expr1 expr2 = Sub (E ArbType) expr2 $ fromJust $substn [(var,expr1)] []
+sub_x_by_e p = psub vx e p
 sub_xs_by_es p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
 lvxs = LVbl vx [] []
 qxs = LstVar lvxs
@@ -330,13 +332,13 @@ $$
 
 
 \begin{code}
-cjSeqAssoc = preddef (";" -.- "assoc")
+cjSeqAssoc = preddef ("seq" -.- "assoc")
                    ( mkSeq (mkSeq p q) r === mkSeq p (mkSeq q r))
                    scTrue
-cjOrSeqDistr = preddef ("lor" -.- ";" -.- "distr")
+cjOrSeqDistr = preddef ("lor" -.- "seq" -.- "distr")
                     (mkSeq (p \/ q) r === (mkSeq p r) \/ (mkSeq q r))
                     scTrue
-cjSeqOrDistr = preddef (";" -.- "lor" -.- "distr")
+cjSeqOrDistr = preddef ("seq" -.- "lor" -.- "distr")
                     (mkSeq p (q \/ r) === (mkSeq p q) \/ (mkSeq p r))
                     scTrue
 \end{code}
@@ -346,37 +348,88 @@ $$
 \begin{array}{rcll}
    \ifte \true P Q &=& Q & \CondTrueN
 \\ \ifte \false P Q &=& Q & \CondFalseN
-\\ (\ifte c P Q);R &=& \ifte c {(P;R)} {(Q;R)} & \CondRSeqN
+\\ (\ifte c P Q);R &=& \ifte c {(P;R)} {(Q;R)} & \CondSeqDistrN
+\\ \ifte c P {(Q \lor R)} &=& (\ifte c P Q) \lor (\ifte c P R) & \CondOrDistrN
+\\ P \lor (\ifte c Q R) &=& \ifte c {(P \lor Q)} {(P \lor R)} & \OrCondDistrN
 \end{array}
 $$
 \begin{code}
-cjCondRSeq = preddef ("<|>" -.- "R" -.- ";")
+vjConjTrue = preddef ("cond" -.- "true")
+                     (mkCond p trueP q === p)
+                     scTrue
+vjConjFalse = preddef ("cond" -.- "false")
+                     (mkCond p falseP q === p)
+                     scTrue
+cjCondSeqDistr = preddef ("cond" -.- "seq" -.- "distr")
                   ( mkSeq (mkCond p b q) r === mkCond (mkSeq p r) b (mkSeq q r))
                    scTrue
-cjNonDeterL5 = preddef ("<|>" -.- "lor" -.- "rdistr")
+cjCondOrDistr = preddef ("cond" -.- "lor" -.- "distr")
                     (mkCond p b (q \/ r) === (mkCond p b q) \/ (mkCond p b r))
                     scTrue
-cjNonDeterL8 = preddef ("lor" -.- "<|>" -.- "ldistr")
+cjOrCondDistr = preddef ("lor" -.- "cond" -.- "ldistr")
                     (p \/ mkCond q b r === mkCond (p \/ q) b (p \/ r))
                     scTrue
 \end{code}
 
+\newpage
 \subsubsection{Substitution}
 $$
 \begin{array}{rcll}
    P[x/y][y/x] &=& P, \quad x \notin P &  \SubInvN
 \\ P[e/x][f/x] &=& P[e[f/x]/x] & \SubCompN
-\\ P[e/x][f/y] &=& P[f/y][e/x] \quad x\notin f,y\notin e& \SubSwapN
+\\ P[e/x][f/y] &=& P[f/y][e/x] \quad y\notin e,x\notin f & \SubSwapN
 \end{array}
 $$
+These are not provable right now. We add them as pseudo-axioms for now.
+\begin{code}
+hypSubInv = preddef 
+           ("sub" -.- "inv")
+           ( psub vx y (psub vy x p)
+             ===
+             p )
+           ([StdVar vx] `notin` StdVar vp)
+hypSubComp = preddef 
+           ("sub" -.- "comp")
+           ( psub vx e (psub vx f p)
+             ===
+             psub vx (esub vx f e) p )
+           scTrue
+hypSubSwap = preddef 
+           ("sub" -.- "swap")
+           ( psub vx e (psub vy f p)
+             ===
+             psub vx e (psub vy f p) )
+           ( fromJust ( mrgSideCond []
+                          ([StdVar vx] `notin` StdVar vf)
+                          ([StdVar vy] `notin` StdVar ve) ) )
+\end{code}
 
+
+ 
+\newpage
 \subsubsection{Assignment}
 $$
 \begin{array}{rcll}
    x:=e;x:=f &=& x:=f[e/x] & \AsgSeqN
 \\ x:=e;y:=f &=& y:=f[e/x]; x:=e & \AsgSwapN
 \end{array}
-$$
+$$\par\vspace{-8pt}
+\begin{code}
+cjAsgSeq = preddef ("asg" -.- "seq")
+                   ( mkSeq (mkAsg x e) (mkAsg x f)
+                     ===
+                    (mkAsg x (Sub (E ArbType) f 
+                                $ fromJust $ substn [(vx,e)] [])) )
+                   scTrue
+cjAsgSwap = preddef ("asg" -.- "swap")
+                    ( mkSeq (mkAsg x e) (mkAsg y f) 
+                      ===
+                      mkSeq 
+                        (mkAsg y (Sub (E ArbType) f 
+                                    $ fromJust $ substn [(vx,e)] [])) 
+                        (mkAsg x e) )
+                    scTrue
+\end{code}
 
 
 % %% TEMPLATE
@@ -396,15 +449,24 @@ We now collect our conjecture set:
 xyzConjs :: [NmdAssertion]
 xyzConjs
   = [ cjSkipAlt
-    , cjCondRSeq
     , cjSeqAssoc, cjOrSeqDistr, cjSeqOrDistr
+    , vjConjTrue, vjConjFalse
+    , cjCondSeqDistr
+    , cjCondOrDistr
+    , cjOrCondDistr
+    , cjAsgSeq, cjAsgSwap
     ]
 \end{code}
-
-
-
-
-
+and our temporary law set:
+\begin{code}
+xyzHyps :: [Law]
+xyzHyps
+  = map labelAsAxiom
+        [ hypSubInv
+        , hypSubComp
+        , hypSubSwap
+        ]
+\end{code}
 
 \subsection{The Predicate Theory}
 
@@ -427,7 +489,7 @@ xyzTheory
                          , equivName
                          ]
             , known   =  xyzKnown
-            , laws    =  xyzAxioms
+            , laws    =  xyzAxioms ++ xyzHyps
             , conjs   =  xyzConjs
             }
 \end{code}

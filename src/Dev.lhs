@@ -38,6 +38,8 @@ import ForAll
 import Exists
 import UClose
 import UTPBase
+import XYZ
+--import XYZDesign
 \end{code}
 
 
@@ -90,7 +92,7 @@ devKnownBuiltins  = [ equivTheory
                     , existsTheory
                     , uCloseTheory
                     , utpBaseTheory
-                    -- , xyzTheory
+                    , xyzTheory
                     -- , xyzDTheory
                     ]
 

@@ -7,8 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module XYZ (
-  univ
-, xyzConjs, xyzName, xyzTheory
+ xyzConjs, xyzName, xyzTheory
 ) where
 
 import Data.Maybe
@@ -37,7 +36,7 @@ import Equality
 import ForAll
 import Exists
 import UClose
-import UTPBase
+-- import UTPBase
 import TestRendering
 \end{code}
 
@@ -191,15 +190,15 @@ $$\par\vspace{-8pt}
 \begin{code}
 mkSeq p q = PCons False (fromJust $ ident ";")[p, q]
 
-mkIn p q = PCons True (fromJust $ ident "in")[p, q]
+--mkIn p q = PCons True (fromJust $ ident "in")[p, q]
 
-mkNat p = PCons True (fromJust $ ident "Nat")[p]
+--mkNat p = PCons True (fromJust $ ident "Nat")[p]
 
-mkSuc p = PCons True (fromJust $ ident "S")[p]
+--mkSuc p = PCons True (fromJust $ ident "S")[p]
 
-mkZero = PCons True (fromJust $ ident "Zer")[]
+--mkZero = PCons True (fromJust $ ident "Zer")[]
 
-mkPlus p q = PCons True (fromJust $ ident "+")[p, q]
+--mkPlus p q = PCons True (fromJust $ ident "+")[p, q]
 
 before r = Sub P r $ fromJust $ substn [(vx',xm),(vy',ym),(vz',zm)] []
 after r  = Sub P r $ fromJust $ substn [(vx,xm), (vy,ym), (vz,zm)] []
@@ -285,53 +284,6 @@ axSeqCompL2 = preddef ("SeqComp" -.- "L2")
                    scTrue
 
 
-axPeano01 = preddef ("Peano" -.- "01")
-                  (mkNat mkZero)
-                  scTrue
-
-axPeano02 = preddef ("Peano" -.- "02")
-                  (p `isEqualTo` p)
-                  scTrue
-
-axPeano03 = preddef ("Peano" -.- "03")
-                  (q `isEqualTo` p === p `isEqualTo` q)
-                  scTrue
-
-axPeano04 = preddef ("Peano" -.- "04")
-                  (p `isEqualTo` q /\ q `isEqualTo` r ==> p `isEqualTo` r)
-                  scTrue
-
-axPeano05 = preddef ("Peano" -.- "05")
-                  (mkNat p /\ (p `isEqualTo` q) ==> mkNat q)
-                  scTrue
-
-axPeano06 = preddef ("Peano" -.- "06")
-                  (mkNat p ==> mkNat (mkSuc p))
-                  scTrue
-
-axPeano07 = preddef ("Peano" -.- "07")
-                  ((p `isEqualTo` q) === (mkSuc p `isEqualTo` mkSuc q))
-                  scTrue
-
-axPeano08 = preddef ("Peano" -.- "08")
-                  ((mkZero === mkSuc p) === falseP)
-                  scTrue
-
-axPeano09 = preddef ("Peano" -.- "09")
-                  (mkIn mkZero p /\ (mkIn q p ==> mkIn (mkSuc q) p) ==> p )
-                  scTrue
-
-axPeanoAdd01 = preddef ("Peano" -.- "Addition" -.- "1")
-                  (mkPlus p mkZero === p)
-                  scTrue
-
-axPeanoAdd02 = preddef ("Peano" -.- "Addition" -.- "2")
-                  (mkPlus p (mkSuc q) === mkSuc (mkPlus p q))
-                  scTrue
-
-axPeanoAdd03 = preddef ("Peano" -.- "Addition" -.- "3")
-                  (mkPlus p q === mkPlus q p)
-                  scTrue
 
 
 \end{code}
@@ -344,11 +296,11 @@ xyzAxioms :: [Law]
 xyzAxioms
   = map labelAsAxiom
       [ axXYZSeqDef, axSeqDef
-      , axXAsgDef, axYAsgDef, axZAsgDef,
-      axSeqCompL1, axSeqCompL2,
-      axPeano01, axPeano02, axPeano03, axPeano04, axPeano05,
-      axPeano06, axPeano07, axPeano08, axPeano09, axPeanoAdd01,
-      axPeanoAdd02, axPeanoAdd03
+      , axXAsgDef, axYAsgDef, axZAsgDef
+      , axSeqCompL1, axSeqCompL2
+      --axPeano01, axPeano02, axPeano03, axPeano04, axPeano05,
+      --axPeano06, axPeano07, axPeano08, axPeano09, axPeanoAdd01,
+      --axPeanoAdd02, axPeanoAdd03
       ]
 \end{code}
 
@@ -388,14 +340,6 @@ cjNonDeterL8 = preddef ("NonDeter" -.- "cj" -.- "L8")
 
 \end{code}
 
-\begin{code}
-
-cjPeanoAdd03 = preddef ("Peano" -.- "Addition" -.- "3")
-                  (mkPlus p (mkSuc mkZero) === mkSuc p)
-                  scTrue
-
-\end{code}
-
 
 % %% TEMPLATE
 % $$
@@ -413,8 +357,8 @@ We now collect our conjecture set:
 \begin{code}
 xyzConjs :: [NmdAssertion]
 xyzConjs
-  = [ cjNonDeterL5, cjNonDeterL6, cjNonDeterL7, cjNonDeterL8,
-      cjPeanoAdd03 ]
+  = [ cjNonDeterL5, cjNonDeterL6, cjNonDeterL7, cjNonDeterL8
+    ]
 \end{code}
 
 
@@ -430,8 +374,8 @@ xyzName = "XYZ"
 xyzTheory :: Theory
 xyzTheory
   =  nullTheory { thName  =  xyzName
-            , thDeps  =  [ utpBaseName
-                         , uCloseName
+            , thDeps  =  [ --utpBaseName
+                           uCloseName
                          , existsName
                          , forallName
                          , equalityName

@@ -239,6 +239,7 @@ axXYZCondDef = preddef ("XYZ" -.- "cond" -.- "def")
                        scTrue
 \end{code}
 
+\newpage
 \subsubsection{Sequential Composition}
 $$
   \begin{array}{lll}
@@ -253,18 +254,6 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
---mkSeq p q = PCons False (fromJust $ ident ";")[p, q]
-
---mkIn p q = PCons True (fromJust $ ident "in")[p, q]
-
---mkNat p = PCons True (fromJust $ ident "Nat")[p]
-
---mkSuc p = PCons True (fromJust $ ident "S")[p]
-
---mkZero = PCons True (fromJust $ ident "Zer")[]
-
---mkPlus p q = PCons True (fromJust $ ident "+")[p, q]
-
 before r = Sub P r $ fromJust $ substn [(vx',xm),(vy',ym),(vz',zm)] []
 after r  = Sub P r $ fromJust $ substn [(vx,xm), (vy,ym), (vz,zm)] []
 
@@ -277,6 +266,7 @@ axXYZSeqDef = preddef ("XYZ" -.- ";" -.- "def")
 \end{code}
 
 \subsubsection{While}
+This is not the formal definition for now - just the loop-unrolling law.
 $$
   \begin{array}{lll}
      c \circledast P

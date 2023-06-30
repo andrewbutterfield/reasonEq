@@ -14,7 +14,7 @@ module
   , _alpha, _beta, _theta, _iota, _mu, _pi
   , _epsilon, _tau, _sigma, _Sigma, _omega, _lambda, _Lambda
   , _top, _bot, _sqcap, _sqcup, _sqsubseteq, _sqsupseteq
-  , _lhd, _rhd, _while
+  , _skip, _lhd, _rhd, _while
   , _true , _false , _lnot, _land, _lor, _implies, _equiv
   , _forall, _exists
   , _emptyset, _cup, _cap, _setminus
@@ -146,7 +146,9 @@ theSymbolList
   , ("top", SymForm "T"  "\x22a4"), ("bot", SymForm "_|_"  "\x22a5")
   , ("sqcap", SymForm "|~|"  "\x2293"), ("sqcup", SymForm "|_|"  "\x2294")
   , ("sqsubseteq", SymForm "|=" "\x2291"), ("sqsupseteq", SymForm "=|" "\x2292")
+  , ("skip", SymForm "II" "II")
   , ("lhd", SymForm "<|"  "\x25c1"), ("rhd", SymForm "|>"  "\x25b7")
+  , ("while", SymForm "*" "\x229b")
 
   , ("lnot", SymForm "~"  "\x00ac")
   , ("land", SymForm "/\\"  "\x2227"), ("lor", SymForm "\\/"  "\x2228")
@@ -180,9 +182,6 @@ theSymbolList
   , ("triangleq", SymForm "^="  "\x225c"), ("vdash", SymForm "|-"  "\x22a2")
 
   , ("qed", SymForm "[*]"  "\x220e"), ("redQ", SymForm "??"  "\x2753")
-
-  , ("lhd", SymForm "<|" "\x25c1"), ("rhd", SymForm "|>" "\x25b7")
-  , ("while", SymForm "*" "\x229b")
   ]
 \end{code}
 
@@ -205,6 +204,7 @@ _lambda = nicesym "lambda" ; _Lambda = nicesym "Lambda"
 _top = nicesym "top" ; _bot = nicesym "bot"
 _sqcap = nicesym "sqcap" ; _sqcup = nicesym "sqcup"
 _sqsubseteq = nicesym "sqsubseteq" ; _sqsupseteq = nicesym "sqsupseteq"
+_skip = nicesym "skip"
 _lhd = nicesym "lhd" ; _rhd = nicesym "rhd"
 _while = nicesym "while"
 

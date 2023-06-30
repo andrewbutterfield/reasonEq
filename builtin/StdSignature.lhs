@@ -1,4 +1,4 @@
-()\section{Standard Signature}
+\section{Standard Signature}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2018--2019
 

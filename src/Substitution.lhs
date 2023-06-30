@@ -72,6 +72,15 @@ substitute :: (Monad m, MonadFail m) => SubContext -> Substn -> Term -> m Term
 
 \subsubsection{Var-Term Substitution}
 
+
+\textbf{
+  Uninterpreted Predicate/Expression variables need to have explicit substitutions.  
+  So $(\dots P \dots)[e/x]$ should become $(\dots P[e/x] \dots)$.
+  That is what the second line below says, but it is not happening.
+}
+
+
+
 \begin{eqnarray*}
    \vv v \ss {} {v^n} {r^n}  &\defs&  r^i \cond{\vv v=v^i} v,
                                                 \mbox{ for one $i \in 1\dots n$}

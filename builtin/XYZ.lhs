@@ -164,19 +164,17 @@ xyzKnown  =   fromJust $ addKnownVar vx  int
             $ newVarTable
 \end{code}
 
-%$ fromJust $ addKnownVar zero nat
-
 \newpage
 \subsection{XYZ Axioms}
 
 \subsubsection{Skip}
 $$
   \begin{array}{lll}
-     skip
+     \II
      \defs
        x'=x \land y'=y \land z'=z
      &
-     & \QNAME{XYZ-skip-Def}
+     & \QNAME{XYZ-$\II$-Def}
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
@@ -226,15 +224,15 @@ axZAsgDef = preddef ("Z" -.- ":=" -.- "def")
 \subsubsection{Conditional}
 $$
   \begin{array}{lll}
-     P \lhd c \rhd Q
+     \ifte c P Q
      \defs
        c \land P \lor \lnot c \land Q
      &
-     & \QNAME{XYZ-cond-Def}
+     & \QNAME{XYZ-$\lhd\rhd$-Def}
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-axXYZCondDef = preddef ("XYZ" -.- "cond" -.- "def")
+axXYZCondDef = preddef ("XYZ" -.- "<|>" -.- "def")
                        ( cond p c q === (c /\ p) \/ ((mkNot c) /\ q))
                        scTrue
 \end{code}
@@ -269,11 +267,11 @@ axXYZSeqDef = preddef ("XYZ" -.- ";" -.- "def")
 This is not the formal definition for now - just the loop-unrolling law.
 $$
   \begin{array}{lll}
-     c \circledast P
+     \whl c P
      \defs
        (P;c \circledast P) \lhd c \rhd skip
      &
-     & \QNAME{XYZ-while-Def}
+     & \QNAME{XYZ-$\circledast$-Def}
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
@@ -302,49 +300,83 @@ xyzAxioms
       ]
 \end{code}
 
-
-
 \subsection{XYZ Conjectures}
 
+\subsubsection{Skip}
+$$
+\begin{array}{rcll}
+   \II         &=&  x:=x, \quad x \in A & \SkipAltN
+\end{array}
+$$\par\vspace{-8pt}
 \begin{code}
-cjNonDeterL5 = preddef ("NonDeter" -.- "cj" -.- "L5")
-                    (mkCond p b (q \/ r) === (mkCond p b q) \/ (mkCond p b r))
+cjSkipAlt = preddef ("II" -.- "alt")
+                    (skip === mkAsg x x)
                     scTrue
 \end{code}
 
-\begin{code}
+\newpage
+\subsubsection{Sequential Composition}
+$$
+\begin{array}{rcll}
+   \II;P         &=&  P  & \SeqLUnitN
+\\ P;\II         &=&  P  & \SeqRUnitN
+\\ P;(Q;R) &=& (P;Q);R & \SeqAssocN
+\\ (P \lor Q);R   &=& (P;Q) \lor (Q;R) &  \OrSeqDistrN
+\\ P;(Q \lor R)   &=& (P;Q) \lor (P;R) &  \SeqOrDistrN
+\\ P;(Q \land b') &=& (P;Q) \land b'   &  \PreSeqN
+\\ (b \land P);Q  &=& b \land (P;Q)     &  \PostSeqN
+\end{array}
+$$
 
-cjNonDeterL6 = preddef ("NonDeter" -.- "cj" -.- "L6")
-                    (mkSeq (p \/ q) r === (mkSeq p r) \/ (mkSeq q r))
-                    scTrue
-
-\end{code}
-
-
-
-\begin{code}
-
-cjNonDeterL7 = preddef ("NonDeter" -.- "cj" -.- "L7")
-                    (mkSeq p (q \/ r) === (mkSeq p q) \/ (mkSeq p r))
-                    scTrue
-
-\end{code}
 
 \begin{code}
-
-cjNonDeterL8 = preddef ("NonDeter" -.- "cj" -.- "L8")
-                    (p \/ mkCond q b r === mkCond (p \/ q) b (p \/ r))
-                    scTrue
-
-cjSeqCompL1 = preddef ("SeqComp" -.- "L1")
+cjSeqAssoc = preddef (";" -.- "assoc")
                    ( mkSeq (mkSeq p q) r === mkSeq p (mkSeq q r))
                    scTrue
+cjOrSeqDistr = preddef ("lor" -.- ";" -.- "distr")
+                    (mkSeq (p \/ q) r === (mkSeq p r) \/ (mkSeq q r))
+                    scTrue
+cjSeqOrDistr = preddef (";" -.- "lor" -.- "distr")
+                    (mkSeq p (q \/ r) === (mkSeq p q) \/ (mkSeq p r))
+                    scTrue
+\end{code}
 
-cjSeqCompL2 = preddef ("SeqComp" -.- "L2")
+\subsubsection{Conditional}
+$$
+\begin{array}{rcll}
+   \ifte \true P Q &=& Q & \CondTrueN
+\\ \ifte \false P Q &=& Q & \CondFalseN
+\\ (\ifte c P Q);R &=& \ifte c {(P;R)} {(Q;R)} & \CondRSeqN
+\end{array}
+$$
+\begin{code}
+cjCondRSeq = preddef ("<|>" -.- "R" -.- ";")
                   ( mkSeq (mkCond p b q) r === mkCond (mkSeq p r) b (mkSeq q r))
                    scTrue
-
+cjNonDeterL5 = preddef ("<|>" -.- "lor" -.- "rdistr")
+                    (mkCond p b (q \/ r) === (mkCond p b q) \/ (mkCond p b r))
+                    scTrue
+cjNonDeterL8 = preddef ("lor" -.- "<|>" -.- "ldistr")
+                    (p \/ mkCond q b r === mkCond (p \/ q) b (p \/ r))
+                    scTrue
 \end{code}
+
+\subsubsection{Substitution}
+$$
+\begin{array}{rcll}
+   P[x/y][y/x] &=& P, \quad x \notin P &  \SubInvN
+\\ P[e/x][f/x] &=& P[e[f/x]/x] & \SubCompN
+\\ P[e/x][f/y] &=& P[f/y][e/x] \quad x\notin f,y\notin e& \SubSwapN
+\end{array}
+$$
+
+\subsubsection{Assignment}
+$$
+\begin{array}{rcll}
+   x:=e;x:=f &=& x:=f[e/x] & \AsgSeqN
+\\ x:=e;y:=f &=& y:=f[e/x]; x:=e & \AsgSwapN
+\end{array}
+$$
 
 
 % %% TEMPLATE
@@ -363,12 +395,9 @@ We now collect our conjecture set:
 \begin{code}
 xyzConjs :: [NmdAssertion]
 xyzConjs
-  = [ cjNonDeterL5
-    , cjNonDeterL6
-    , cjNonDeterL7
-    , cjNonDeterL8
-    , cjSeqCompL1
-    , cjSeqCompL2
+  = [ cjSkipAlt
+    , cjCondRSeq
+    , cjSeqAssoc, cjOrSeqDistr, cjSeqOrDistr
     ]
 \end{code}
 

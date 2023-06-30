@@ -12,7 +12,6 @@ END LIST DEFFOLD
 BEGIN LIST DEFUNFOLD
 END LIST DEFUNFOLD
 BEGIN LIST CONJECTURES
-("land",ASN (C P True (Id "or" 0) [C P True (Id "or" 0) [C P True (Id "and" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "not" 0) [V P (VR (Id "P" 0,VP,WS))]],C P True (Id "and" 0) [V P (VR (Id "Q" 0,VP,WS)),C P True (Id "not" 0) [V P (VR (Id "Q" 0,VP,WS))]]],C P True (Id "and" 0) [V P (VR (Id "R" 0,VP,WS)),C P True (Id "not" 0) [V P (VR (Id "R" 0,VP,WS))]]],([],fromList [])))
 ("lor_land_absorb",ASN (C P True (Id "eqv" 0) [C P True (Id "or" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "and" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],V P (VR (Id "P" 0,VP,WS))],([],fromList [])))
 ("land_lnot_lor_absorb",ASN (C P True (Id "eqv" 0) [C P True (Id "and" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "or" 0) [C P True (Id "not" 0) [V P (VR (Id "P" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))]],C P True (Id "and" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],([],fromList [])))
 ("land_lnot_lor_absorb",ASN (C P True (Id "eqv" 0) [C P True (Id "or" 0) [V P (VR (Id "P" 0,VP,WS)),C P True (Id "and" 0) [C P True (Id "not" 0) [V P (VR (Id "P" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))]],C P True (Id "or" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],([],fromList [])))

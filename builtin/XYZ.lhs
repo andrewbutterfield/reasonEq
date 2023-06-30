@@ -36,7 +36,7 @@ import Equality
 import ForAll
 import Exists
 import UClose
--- import UTPBase
+import UTPSignature
 import TestRendering
 \end{code}
 
@@ -155,11 +155,11 @@ We also have a known predicate variable $\Skip$,
 defined to be $x'=x \land y'=y \land z'=z$.
 
 \begin{code}
-skip = Vbl (jId "II") PredV Static
+v_skip = Vbl (jId "II") PredV Static
 skipDef = x' `isEqualTo` x /\ ( y' `isEqualTo` y /\ z' `isEqualTo` z)
 
 
-xyzKnown  =   fromJust $ addKnownConst skip skipDef
+xyzKnown  =   fromJust $ addKnownConst v_skip skipDef
             $ fromJust $ addKnownVar vx  int
             $ fromJust $ addKnownVar vy  int
             $ fromJust $ addKnownVar vz  int
@@ -188,7 +188,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-mkSeq p q = PCons False (fromJust $ ident ";")[p, q]
+--mkSeq p q = PCons False (fromJust $ ident ";")[p, q]
 
 --mkIn p q = PCons True (fromJust $ ident "in")[p, q]
 

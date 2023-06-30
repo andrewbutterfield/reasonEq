@@ -4,6 +4,17 @@ KNOWN = VD (fromList [],fromList [],fromList [])
 BEGIN LIST LAWS
 (("[]_def",ASN (C P True (Id "eqv" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V P (VR (Id "P" 0,VP,WS)))],([SS NU (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])],fromList []))),Axiom)
 (("sat_def",ASN (C P True (Id "eqv" 0) [X (Id "langle_rangle" 0) (V P (VR (Id "P" 0,VP,WS))),C P True (Id "not" 0) [X (Id "[_]" 0) (C P True (Id "not" 0) [V P (VR (Id "P" 0,VP,WS))])]],([],fromList []))),Axiom)
+(("univ_id_on_closed",ASN (C P True (Id "eqv" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),V P (VR (Id "P" 0,VP,WS))],([SS NU (GV (VR (Id "P" 0,VP,WS))) (fromList [])],fromList []))),Assumed)
+(("univ_true",ASN (C P True (Id "eqv" 0) [X (Id "[_]" 0) (K P (VB True)),K P (VB True)],([],fromList []))),Assumed)
+(("univ_False",ASN (C P True (Id "eqv" 0) [X (Id "[_]" 0) (K P (VB False)),K P (VB False)],([],fromList []))),Assumed)
+(("[]_idem",ASN (C P True (Id "eqv" 0) [X (Id "[_]" 0) (X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS)))),X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS)))],([],fromList []))),Assumed)
+(("land_[]_distr",ASN (C P True (Id "eqv" 0) [C P True (Id "and" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),X (Id "[_]" 0) (V P (VR (Id "Q" 0,VP,WS)))],X (Id "[_]" 0) (C P True (Id "and" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))])],([],fromList []))),Assumed)
+(("univ_forall_closed",ASN (C P True (Id "eqv" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS)))),X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS)))],([],fromList []))),Assumed)
+(("univ_exists_closed",ASN (C P True (Id "eqv" 0) [B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS)))),X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS)))],([],fromList []))),Assumed)
+(("univ_inst",ASN (C P True (Id "imp" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),V P (VR (Id "P" 0,VP,WS))],([],fromList []))),Assumed)
+(("univ_inst_gen",ASN (C P True (Id "imp" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VO,WS),[],[]))]))],([],fromList []))),Assumed)
+(("univ_mono",ASN (C P True (Id "imp" 0) [X (Id "[_]" 0) (C P True (Id "imp" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]),C P True (Id "imp" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),X (Id "[_]" 0) (V P (VR (Id "Q" 0,VP,WS)))]],([],fromList []))),Assumed)
+(("necessary_poss",ASN (C P True (Id "imp" 0) [X (Id "langle_rangle" 0) (V P (VR (Id "P" 0,VP,WS))),X (Id "[_]" 0) (X (Id "langle_rangle" 0) (V P (VR (Id "P" 0,VP,WS))))],([],fromList []))),Assumed)
 END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS
@@ -14,16 +25,5 @@ END LIST DEFFOLD
 BEGIN LIST DEFUNFOLD
 END LIST DEFUNFOLD
 BEGIN LIST CONJECTURES
-("univ_id_on_closed",ASN (C P True (Id "eqv" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),V P (VR (Id "P" 0,VP,WS))],([SS NU (GV (VR (Id "P" 0,VP,WS))) (fromList [])],fromList [])))
-("univ_true",ASN (C P True (Id "eqv" 0) [X (Id "[_]" 0) (K P (VB True)),K P (VB True)],([],fromList [])))
-("univ_False",ASN (C P True (Id "eqv" 0) [X (Id "[_]" 0) (K P (VB False)),K P (VB False)],([],fromList [])))
-("[]_idem",ASN (C P True (Id "eqv" 0) [X (Id "[_]" 0) (X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS)))),X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS)))],([],fromList [])))
-("land_[]_distr",ASN (C P True (Id "eqv" 0) [C P True (Id "and" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),X (Id "[_]" 0) (V P (VR (Id "Q" 0,VP,WS)))],X (Id "[_]" 0) (C P True (Id "and" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))])],([],fromList [])))
-("univ_forall_closed",ASN (C P True (Id "eqv" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS)))),X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS)))],([],fromList [])))
-("univ_exists_closed",ASN (C P True (Id "eqv" 0) [B P (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS)))),X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS)))],([],fromList [])))
-("univ_inst",ASN (C P True (Id "imp" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),V P (VR (Id "P" 0,VP,WS))],([],fromList [])))
-("univ_inst_gen",ASN (C P True (Id "imp" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VO,WS),[],[]))]))],([],fromList [])))
-("univ_mono",ASN (C P True (Id "imp" 0) [X (Id "[_]" 0) (C P True (Id "imp" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]),C P True (Id "imp" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),X (Id "[_]" 0) (V P (VR (Id "Q" 0,VP,WS)))]],([],fromList [])))
-("necessary_poss",ASN (C P True (Id "imp" 0) [X (Id "langle_rangle" 0) (V P (VR (Id "P" 0,VP,WS))),X (Id "[_]" 0) (X (Id "langle_rangle" 0) (V P (VR (Id "P" 0,VP,WS))))],([],fromList [])))
 END LIST CONJECTURES
 END THEORY UClose

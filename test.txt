@@ -1,1 +1,28 @@
-[("equiv_id",ASN (C P True (Id "eqv" 0) [C P True (Id "eqv" 0) [K P (VB True),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))],([],fromList [])),"reduce",(K P (VB True),[(UseLaw (ByMatch MEL) "equiv_assoc" (BD (fromList [((Id "P" 0,VP),BT (K P (VB True))),((Id "Q" 0,VP),BV (VR (Id "Q" 0,VP,WS))),((Id "R" 0,VP),BV (VR (Id "Q" 0,VP,WS)))],fromList [],fromList [])) [],ASN (C P True (Id "eqv" 0) [C P True (Id "eqv" 0) [K P (VB True),V P (VR (Id "Q" 0,VP,WS))],V P (VR (Id "Q" 0,VP,WS))],([],fromList []))),(UseLaw (ByMatch MA) "equiv_refl" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "Q" 0,VP,WS)))],fromList [],fromList [])) [2],ASN (C P True (Id "eqv" 0) [K P (VB True),C P True (Id "eqv" 0) [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]],([],fromList []))),(UseLaw (ByMatch MA) "equiv_refl" (BD (fromList [((Id "P" 0,VP),BT (K P (VB True)))],fromList [],fromList [])) [],ASN (C P True (Id "eqv" 0) [K P (VB True),K P (VB True)],([],fromList [])))]))]
+Proof for asg_seq
+	((x:=e);(x:=f))  ≡  (x:=f[e/x])  ⊤
+by red-L2R
+(x:=e);(x:=f)
+   = 'match-lhs X_:=_def@[1]'
+x'=e∧(y'=y∧z'=z);(x:=f)
+   = 'match-lhs X_:=_def@[2]'
+x'=e∧(y'=y∧z'=z);x'=f∧(y'=y∧z'=z)
+   = 'match-lhs XYZ_;_def@[]'
+(∃ x_m,y_m,z_m • (x'=e∧(y'=y∧z'=z))[x_m,y_m,z_m/x',y',z']∧(x'=f∧(y'=y∧z'=z))[x_m,y_m,z_m/x,y,z])
+   = 'substitute @[1,1]'
+(∃ x_m,y_m,z_m • (x_m=e∧(y_m=y∧z_m=z))∧(x'=f∧(y'=y∧z'=z))[x_m,y_m,z_m/x,y,z])
+   = 'substitute @[1,2]'
+(∃ x_m,y_m,z_m • (x_m=e∧(y_m=y∧z_m=z))∧(x'=f∧(y'=y_m∧z'=z_m)))
+   = 'match-lhs ∧_assoc@[1]'
+(∃ x_m,y_m,z_m • x_m=e∧((y_m=y∧z_m=z)∧(x'=f∧(y'=y_m∧z'=z_m))))
+   = 'match-lhs ∃_one_point@[]'
+(∃ y_m,z_m • ((y_m=y∧z_m=z)∧(x'=f∧(y'=y_m∧z'=z_m)))[e/x_m])
+   = 'substitute @[1]'
+(∃ y_m,z_m • (y_m=y∧z_m=z)∧(x'=f∧(y'=y_m∧z'=z_m)))
+   = 'match-lhs ∧_assoc@[1]'
+(∃ y_m,z_m • y_m=y∧(z_m=z∧(x'=f∧(y'=y_m∧z'=z_m))))
+   = 'match-lhs ∃_one_point@[]'
+(∃ z_m • (z_m=z∧(x'=f∧(y'=y_m∧z'=z_m)))[y/y_m])
+   = 'substitute @[1]'
+ ...
+
+

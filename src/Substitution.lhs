@@ -124,19 +124,17 @@ $$
 We refer to $[e_e,f_e/x_e,y_e]$ as the ``effective'' substitution.
 Note that the temporalities involved need not be dynamic.
 
-\textbf{For now, we assume all replacement terms are variables.}
-
 We check for c.t.c.s first.
 \begin{code}
 substitute sctx sub@(Substn ts lvs) vrt@(Var tk v)
   | hasCoverage && isCTC  =  return $ Sub tk (jVar tk $ setVarWhen repw v)
                                     $ jSub effTSRepl effLVSRepl
-  | otherwise             =  return $ subsVar v (S.toList lvs) (S.toList ts)
+  | otherwise             =  return $ subsVar v ts lvs
   where
     (hasCoverage,cover)        =  checkCoverage (subTargets sub) (scSC sctx) v
     (isCTC,repw,effTS,effLVS)  =  assessCTC v (S.elems ts) (S.elems lvs)
     effTSRepl                  =  map (setVTWhen repw) effTS
-    effLVSRepl                 = map (setLVLVWhen repw) effLVS
+    effLVSRepl                 =  map (setLVLVWhen repw) effLVS
 \end{code}
 
 \newpage
@@ -197,16 +195,30 @@ Checking for c.t.c:
       | ti == ri && tc == rc && tis == ris && tjs == rjs
                    =  assessCTC'' sw repw effTS effLVS        ts lvs
       | otherwise  =  assessCTC'' sw repw effTS (lvlv:effLVS) ts lvs
+    assessCTC'' sw repw effTS effLVS ts lvs
+       = error $ unlines
+         [ "assessCTC'' failed" 
+         , "ts:"
+         , show ts
+         , "lvs:"
+         , show lvs
+         ]
 \end{code}
 
 \newpage
-Working through substitution pairs:
+If the variable is Working through substitution pairs:
 \begin{code}
     -- work through std-var/term substitutions
-    subsVar v lvs [] = subsLVar v lvs
-    subsVar v lvs ((tgtv,rplt):rest)
+    subsVar :: Variable -> TermSub -> LVarSub -> Term
+    subsVar v ts lvs
+      | isObsVar v  =  subsVar' v (S.toList lvs) (S.toList ts)
+      | otherwise   =  Sub tk vrt sub
+
+    subsVar' :: Variable -> [(ListVar,ListVar)] -> [(Variable,Term)] -> Term
+    subsVar' v lvs [] = subsLVar v lvs
+    subsVar' v lvs ((tgtv,rplt):rest)
       | v == tgtv  =  rplt
-      | otherwise  =  subsVar v lvs rest
+      | otherwise  =  subsVar' v lvs rest
 
     -- work through lst-var/lst-var substitutions
     subsLVar v []

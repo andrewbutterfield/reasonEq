@@ -4,6 +4,39 @@
 
 ## In XYZ theory
 
+### Issue 1
+
+Also we can't match `z_m  =  z` in `UTPBase` against law `e  =  f` from `Equality`.
+
+```
+z_m  =  z :: e  =  f
+
+lnm[parts]==_symm[1]
+tP=e=f  ≡  f=e
+partsP=e  =  f
+tC=z_m  =  z
+scC=⊤
+---
+tMatch: structural mismatch.
+tC = V (E (TG (Id "Z" 0))) (VR (Id "z" 0,VO,WD "m"))
+tP = V (E T) (VR (Id "e" 0,VE,WS))
+```
+
+### Issue 2
+
+Match 6 is wrong !!!!
+
+```
+6 : “∃_one_point” (∃ z • (z_m=z∧(x'=f[e,e,y_m,z_m/x,x_m,y,z]∧(y'=y_m∧z'=z_m)))[y/y_m])  ⊤ ⟹ ⊤ ≡lhs
+5 : “∃_one_point” (∃ z_m • (z_m=z∧(x'=f[e,e,y_m,z_m/x,x_m,y,z]∧(y'=y_m∧z'=z_m)))[y/y_m])  ⊤ ⟹ ⊤ ≡lhs
+⊢
+(∃ y_m,z_m • y_m=y∧(z_m=z∧(x'=f[e,e,y_m,z_m/x,x_m,y,z]∧(y'=y_m∧z'=z_m))))    ⊤
+```
+
+Using `tm 1 exist_one_point` gives match 5.
+
+### Issue 3
+
 Why is the substitution broken?
 
 ```

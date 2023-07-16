@@ -790,6 +790,7 @@ nestSimpFocus thrys liveProof
 
 \subsubsection{Reverse Substitution}
 
+\newpage
 \subsubsection{Perform Substitution}
 
 \begin{code}

@@ -294,11 +294,16 @@ substitute sctx sub lt@(Lam tk i vl tm)
 \paragraph{Assigment Substitution}
 
 Given that we use the \texttt{Sub} term to represent assignment,
-we need to treat such seperately:
+we need to treat such seperately, noting that it is n.s.::
+\begin{eqnarray*}
+   (x:=e)[t^n/v^v] &=& (x:=e)[t^n/v^v]
+\end{eqnarray*}
 \begin{code}
 substitute sctx sub bt@(Sub tk (PVar (PredVar (Identifier ":=" _) _)) _)
   = return $ Sub tk bt sub
 \end{code}
+
+
 \begin{eqnarray*}
    (\ss t {v^m} {t^m}) \ss {} {v^n} {t^n}
    &\defs&
@@ -448,7 +453,7 @@ is defined as follows:
 where $v^j \notin v^m$.
 
 \begin{code}
-substComp :: (Monad m, MonadFail m)
+substComp :: MonadFail m
           => SubContext
           -> Substn  -- 1st substitution performed
           -> Substn  -- 2nd substitution performed

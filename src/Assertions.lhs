@@ -158,7 +158,7 @@ is precisely what we want.
 The plan for now, is not to normalise anything,
 but to check that any (observational)
 variable mentioned in a side-condition
-does have both free and bound occurrences.
+does not have both free and bound occurrences.
 
 
 \begin{code}
@@ -220,12 +220,15 @@ if it is recursively safe in any sub-terms of $t$,
 and its mode of use in those sub-terms, is then either all free or all bound.
 
 We will look at the two universal quantification axioms that have
-side-conditions with observational variables:
+side-conditions with observational variables,
+plus a predicate that occurs during a proof of $\II;P\equiv P$:
 \begin{eqnarray}
    \AXorAllOScopeL \equiv \AXorAllOScopeR &,& \AXorAllOScopeS
    \label{eqn:ax:allscope}
 \\ \AXAllOnePoint                         &,& \AXAllOnePointS
    \label{eqn:ax:all1pt}
+\\ (P[O_m/O])[O/O_m]                      &,& O,O' \supseteq P
+   \label{pred:P:Om:O:subst-cancel}
 \end{eqnarray}
 The first (\ref{eqn:ax:allscope}) is straightforward,
 as $\lst x$ only appears in binding occurrences.
@@ -242,6 +245,10 @@ as far as side-condition safety is concerned.
 It is interesting to point out that the side condition itself is designed
 to ensure that, indeed, $\lst x$ is not still free by virtue of mentioned
 by $\lst e$.
+\textbf{
+The third case (\ref{pred:P:Om:O:subst-cancel}) currently fails
+the safety check if the substitute command is used.
+}
 
 \def\unused{\ominus}
 We define usage of a variable as unused ($\unused$), free ($f$), or bound ($b$),
@@ -351,7 +358,6 @@ csafe x (Sub _ tm sub)
   | not okt                      =  (False, undefined)
   | not oks                      =  (False, undefined)
   | not (ucompatible ut us)      =  (False, undefined)
-  | x `S.member` subTargets sub  =  (True, Bound)
   | otherwise  = (True, ut `ujoin` us)
   where
     (okt,ut) = csafe x tm

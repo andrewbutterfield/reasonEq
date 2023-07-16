@@ -1028,7 +1028,12 @@ matchLawDescr = ( "m"
 
 matchLawCommand :: REPLCmd (REqState, LiveProof)
 matchLawCommand [] (reqs, liveProof)
-  =  return (reqs, matchFocus ranking liveProof)
+  = case matchFocus ranking liveProof of
+     Yes liveProof' ->  return (reqs, liveProof')
+     But msgs
+       -> do putStrLn $ unlines' msgs
+             waitForReturn
+             return (reqs, matches_ [] liveProof)
   where
     ranking = filterAndSort (matchFilter $ settings reqs, favourDefLHSOrd)
 

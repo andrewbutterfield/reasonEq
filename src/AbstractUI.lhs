@@ -543,16 +543,15 @@ moveFocusFromHypothesis liveProof
 
 First, matching all laws.
 \begin{code}
-matchFocus :: Ranking -> LiveProof -> LiveProof -- needs to be monadic
+matchFocus :: MonadFail m => Ranking -> LiveProof -> m LiveProof 
 matchFocus ranking liveProof
   = let (tz,_)      =  focus liveProof
         goalt       =  getTZ tz
         scC         =  conjSC liveProof
         ctxts       =  mtchCtxts liveProof
-        asn'        =  fromJust $ mkAsn goalt scC -- need to fix
-        newMatches  =  matchInContexts ctxts asn'
-        rankedM     =  ranking ctxts newMatches
-    in matches_ rankedM liveProof
+    in do asn' <- mkAsn goalt scC 
+          let rankedM = ranking ctxts $ matchInContexts ctxts asn'
+          return $ matches_ rankedM liveProof
 \end{code}
 
 Second, matching a specific law.

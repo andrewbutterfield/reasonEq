@@ -9,9 +9,31 @@ BEGIN THEORIES
 THNAMES = ["And","AndOrInvert","Equality","Equiv","Exists","ForAll","Implies","Not","Or","UClose","UTPBase","XYZ"]
 SDAG = [[("XYZ",["UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"]),("UTPBase",["UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("UClose",["Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Exists",["ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("ForAll",["Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Equality",["Implies","Equiv"])],[("Implies",["AndOrInvert","And","Or","Not","Equiv"])],[("AndOrInvert",["And","Or","Not","Equiv"])],[("And",["Or","Not","Equiv"])],[("Or",["Not","Equiv"])],[("Not",["Equiv"])],[("Equiv",[])]]
 END THEORIES
-CURRTHEORY = Exists
+CURRTHEORY = UTPBase
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("UTPBase",";_lunit")
+BEGIN LIVE-PROOF
+TH-NAME: UTPBase
+CJ-NAME: ;_lunit
+CONJ = ASN (C P True (Id "eqv" 0) [C P False (Id ";" 0) [V P (VR (Id "II" 0,VP,WS)),V P (VR (Id "P" 0,VP,WS))],V P (VR (Id "P" 0,VP,WS))],([SS NU (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])],fromList []))
+SIDE = ([SS NU (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])],fromList [])
+STRAT red-L2R
+BEGIN SEQZIP
+TERMZIP = (S P (S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WB),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WD "1"),[],[]),LV (VR (Id "O" 0,VO,WB),[],[]))])),[])
+BEGIN SEQUENT'
+SIDECOND = ([SS NU (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.;_lunit", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = V P (VR (Id "P" 0,VP,WS))}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+(UseLaw (ByMatch MEL) "exists_one_point" (BD (fromList [((Id "P" 0,VP),BT (S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WB),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))))],fromList [],fromList [((Id "e" 0,VE,[],[]),BL [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),((Id "x" 0,VO,[],[]),BL [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))]),((Id "y" 0,VO,[],[]),BS (fromList []))])) [],ASN (B P (Id "exists" 0) (fromList [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))]) (C P True (Id "and" 0) [I P True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WD "1"),[],[]),LV (VR (Id "O" 0,VO,WB),[],[])],S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WB),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))]),([SS NU (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])],fromList [])))
+(Substitute [1,1],ASN (B P (Id "exists" 0) (fromList [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))]) (C P True (Id "and" 0) [S P (I P True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WB),[],[])]) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))])),S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WB),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))]),([SS NU (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])],fromList [])))
+(UseLaw (ByMatch MEL) ";_def" (BD (fromList [((Id "P" 0,VP),BT (I P True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WB),[],[])])),((Id "Q" 0,VP),BV (VR (Id "P" 0,VP,WS)))],fromList [("0","1")],fromList [((Id "O" 0,VO,[],[]),BL [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])])) [],ASN (C P False (Id ";" 0) [I P True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WB),[],[])],V P (VR (Id "P" 0,VP,WS))],([SS NU (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])],fromList [])))
+(UseLaw (ByMatch MEL) "II_def" (BD (fromList [((Id "II" 0,VP),BV (VR (Id "II" 0,VP,WS)))],fromList [],fromList [((Id "O" 0,VO,[],[]),BL [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])])) [1],ASN (C P False (Id ";" 0) [V P (VR (Id "II" 0,VP,WS)),V P (VR (Id "P" 0,VP,WS))],([SS NU (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])],fromList [])))
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

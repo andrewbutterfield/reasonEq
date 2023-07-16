@@ -26,3 +26,32 @@ x'=e∧(y'=y∧z'=z);x'=f∧(y'=y∧z'=z)
  ...
 
 
+Subst. command not working!
+
+(P[O$_1/O$])[O$/O$_1]    O$,O$'⊇P
+
+Focus = []  Target (RHS): P
+
+
+proof: s
+mkAsn: unsafe side-condition
+term = S P (S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WB),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WD "1"),[],[]),LV (VR (Id "O" 0,VO,WB),[],[]))]))
+s.c. = ([SS NU (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])],fromList [])
+<return> to continue 
+
+⊢
+(P[O$_1/O$])[O$/O$_1]    O$,O$'⊇P
+
+Focus = []  Target (RHS): P
+
+
+proof: m
+req: Maybe.fromJust: Nothing
+CallStack (from HasCallStack):
+  error, called at libraries/base/Data/Maybe.hs:148:21 in base:Data.Maybe
+  fromJust, called at src/AbstractUI.lhs:552:24 in reasonEq-0.7.6.0-6N2FD404OSBLYIZO4LqjKQ:AbstractUI
+reasonEq% 
+
+
+
+

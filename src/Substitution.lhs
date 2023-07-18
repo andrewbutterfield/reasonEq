@@ -445,12 +445,55 @@ lvlookup lv@(LVbl v is js) ( ((LVbl tv _ _), (LVbl rv _ _) ) : rest )
 \newpage
 \subsection{Substitution Composition}
 
-Substitution composition ($ \ss {} {v^m} {r^m};  \ss {} {v^n} {r^n}$)
-is defined as follows:
-\[
-\ss {} {v^m} {\ss {r^m} {v^n} {r^n}} \uplus  \ss {} {v^j} {r^j}
-\]
-where $v^j \notin v^m$.
+Not as obvious as it looks.
+\begin{eqnarray*}
+   E &\defs& K + V + E \times E
+\\ \sigma &:& V \pfun E
+\\ \inv\sigma &\defs& v \in \sigma \implies \sigma(v)\neq v
+\\ \_.\_ &:& E \times (V \pfun E) \fun E
+\\ k.\sigma &\defs& k
+\\ v.\sigma &\defs& \ifte {v \in \sigma} {\sigma(v)} v
+\\ (e_1,e_2).\sigma &\defs& (e_1.\sigma,e_2.\sigma)
+\end{eqnarray*}
+The big question is:
+$
+\forall e,\sigma_1,\sigma_2 \bullet
+\exists \sigma \bullet 
+e.\sigma = (e.\sigma_1).\sigma_2
+$ ?
+
+We shall consider the case where we restrict $E$ to just be $V$,
+so that $\sigma : V \pfun V$:
+\begin{eqnarray*}
+(v.\sigma_1).\sigma_2
+  &=& (\ifte {v \in \sigma_1} {\sigma_1(v)} {v}).\sigma_2
+\\&=& \ifte {v \in \sigma_1} {\sigma_1(v).\sigma_2} {v.\sigma_2}
+\\&=& \ifte {v \in \sigma_1} {\sigma_1(v).\sigma_2} {\sigma_2(v)}
+\\&=& \ifte {v \in \sigma_1} 
+            {( \ifte {\sigma_1(v) \in \sigma_2} 
+                     {\sigma_2(\sigma_1(v))} 
+                     {\sigma_1(v)})} 
+            {\sigma_2(v)}
+\\ \sigma(v) 
+  &=& v \qquad\qquad\quad  \text{if}~ v \notin \sigma_1
+\\& & \sigma_1(v) \qquad\quad \text{if}~ v \in \sigma_1 \land v \notin \sigma_2
+\\& & \sigma_2(\sigma_1(v)) \quad \text{if}~ v \in \sigma_1 \land v \in \sigma_2
+\end{eqnarray*}
+This suggests that following should hold in the full $E$ setting:
+\begin{eqnarray*}
+\sigma(v) 
+  &=& v \qquad\qquad\quad  \text{if}~ v \notin \sigma_1
+\\& & \sigma_1(v) 
+      \qquad\quad \text{if}~ 
+      v \in \sigma_1 \land \sigma_1(v) \disj \sigma_2
+\\& & \sigma_2(\sigma_1(v)) 
+     \quad \text{if}~ 
+     v \in \sigma_1 \land \sigma_1(v) \subseteq \sigma_2
+\end{eqnarray*}
+
+For now, 
+substitution composition only succeeds if all replacement terms
+in the first substitution are variable terms.
 
 \begin{code}
 substComp :: MonadFail m

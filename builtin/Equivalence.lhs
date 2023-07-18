@@ -44,10 +44,13 @@ $$
 Some useful local definitions:
 \begin{code}
 v_equiv = Vbl equiv PredV Static
-p = jVar P $ Vbl (jId "P") PredV Static
+vP = Vbl (jId "P") PredV Static
+gvP = StdVar vP
+p = jVar P $ vP
 q = jVar P $ Vbl (jId "Q") PredV Static
 r = jVar P $ Vbl (jId "R") PredV Static
 vx = Vbl (jId "x") ObsV Static  ; lvxs = LVbl vx [] []
+xs = LstVar lvxs
 ve = Vbl (jId "e") ExprV Static ; lves = LVbl ve [] []
 sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
 subid p = Sub P p $ fromJust $ substn [] [(lvxs,lvxs)]
@@ -131,6 +134,18 @@ axIdSubst
      , scTrue ) )
 \end{code}
 
+$$
+\begin{array}{ll}
+   \AXnonSubst, \AXnonSubstS & \AXnonSubstN
+\end{array}  
+$$
+\begin{code}
+axNonSubst
+ = ( "non" -.- "subst"
+   , ( sub p === p
+     , [xs] `notin` gvP ) )
+\end{code}
+
 We now collect all of the above as our axiom set:
 \begin{code}
 equivAxioms :: [Law]
@@ -138,7 +153,7 @@ equivAxioms
   = map (labelAsAxiom . mkNmdAsn)
       [ axTrue
       , axEqvRefl, axEqvAssoc, axEqvSymm
-      , axIdSubst
+      , axIdSubst, axNonSubst
       ]
 \end{code}
 

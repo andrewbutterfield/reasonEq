@@ -251,6 +251,11 @@
 \def\AXidSubst{P[\lst x/\lst x] \equiv P}
 \def\AXidSubstN{\QNAME{identity-subst}}
 
+\def\AXnonSubst{P[\lst e/\lst x] \equiv P}
+\def\AXnonSubstS{\lst x \notin P}
+\def\AXnonSubstN{\QNAME{non-subst}}
+
+
 \def\AXEQUIV{
 \begin{array}{ll}
    \AXtrue     & \AXtrueN
@@ -258,6 +263,7 @@
 \\ \AXeqvAssoc & \AXeqvAssocN
 \\ \AXeqvSymm  & \AXeqvSymmN
 \\ \AXidSubst  & \AXidSubstN
+\\ \AXnonSubst, \AXnonSubstS & \AXnonSubstN
 \end{array}
 }
 

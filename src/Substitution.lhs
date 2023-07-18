@@ -501,17 +501,22 @@ substComp :: MonadFail m
           -> Substn  -- 1st substitution performed
           -> Substn  -- 2nd substitution performed
           -> m Substn
-substComp sctx (Substn ts1 lvs1) sub2@(Substn ts2 lvs2)
-  = do ts' <- varTermCompose sctx sub2 (S.toList ts1) (S.toList ts2)
-       let lvs' = lvarLVarCompose     (S.toList lvs1) (S.toList lvs2)
+substComp sctx (Substn ts1 lvs1) sub2@(Substn _ lvs2)
+  = do ts' <- varTermCompose sctx sub2 (S.toList ts1)
+       let lvs' = lvarLVarCompose (S.toList lvs1) (S.toList lvs2)
        substn ts' lvs'
 
-varTermCompose sctx sub2 tl1 tl2
-  = do let (vl1,el1) = unzip tl1
-       el1' <- sequence $ map (substitute sctx sub2) $ el1
-       let tl1' = zip vl1 el1'
-       let tl2' = tl2 `strip1` vl1
-       return (tl1' ++ tl2')
+varTermCompose sctx sub2 tl1 = vTC sctx sub2 [] tl1
+vTC sctx sub2@(Substn ts2 _) tl1' [] 
+  = do let tl2 = S.toList ts2
+       let vl1' = map fst tl1'
+       let tl2' = tl2 `strip1` vl1'
+       return (tl1'++tl2')
+vTC sctx sub2 tl1' ((vt,er@(Var _ vr)):tl1)
+  = do er' <- substitute sctx sub2 er
+       vTC sctx sub2 ((vt,er'):tl1') tl1
+vTC _ _ _ ((vt,er):_)
+  = fail ("substComp: 1st sub repl not variable: "++trTerm 0 er)
 
 strip1 :: Eq a => [(a,b)] -> [a] -> [(a,b)]
 strip1 [] _ = []

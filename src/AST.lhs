@@ -162,16 +162,23 @@ substn ts lvs
  | dupKeys ts'          =  fail "Term substitution has duplicate variables."
  | dupKeys lvs'         =  fail "List-var subst. has duplicate variables."
  | otherwise            =  return $ SN (S.fromList ts') (S.fromList lvs')
- where
-  ts'  = sort ts
-  lvs' = sort lvs
+ where  
+  ts'  = filter nontrivial $ sort ts
+  lvs' = filter (uncurry (/=)) $  sort lvs
 
-jSubstn ts lvs = fromJust $ substn ts lvs
+nontrivial :: (Variable,Term) -> Bool
+nontrivial (v,Var _ v')  =  v /= v'
+nontrivial _             =  True
 
 dupKeys :: Eq a => [(a,b)] -> Bool
 -- assumes list is ordered
 dupKeys ((a1,_):next@((a2,_):_))  =  a1 == a2 || dupKeys next
 dupKeys _                         =  False
+\end{code}
+
+Use carefully:
+\begin{code}
+jSubstn ts lvs = fromJust $ substn ts lvs
 \end{code}
 
 Queries:

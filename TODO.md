@@ -2,6 +2,10 @@
 
 ## Most Urgent
 
+## for ;-assoc
+
+Need **law** of form Q x . Q y . P == Q y. Q x . P (proven using `n` command) in `ForAll` and `Exists`.
+
 ## In XYZ theory
 
 ### Issue 1

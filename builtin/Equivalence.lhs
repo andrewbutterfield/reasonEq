@@ -35,7 +35,7 @@ import TestRendering
 
 Here we provide axioms and conjectures for $\equiv$ and $true$,
 based on \cite{gries.93},
-along with one key axiom regarding identity substitutions.
+along with two substitution axioms.
 
 $$
 \AXEQUIV

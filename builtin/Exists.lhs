@@ -214,6 +214,20 @@ cjAnyDumRen = preddef ("exists" -.- "alpha" -.- "rename")
   ([ys] `notin` gvP)
 \end{code}
 
+$$
+  \begin{array}{lll}
+     \CJAnySwap &  \CJAnySwapN &
+  \end{array}
+$$
+\vspace{-5pt}
+\begin{code}
+cjAnySwap = preddef ("exists" -.- "swap")
+                    (exists [xs] (exists [ys] p)  
+                     ===  
+                     exists [ys] (exists [xs] p))
+                    scTrue
+\end{code}
+
 
 % %% TEMPLATE
 % $$
@@ -232,7 +246,7 @@ We now collect all of the rest above as conjectures:
 existsConjs :: [NmdAssertion]
 existsConjs
   = [ cjAnyRemove, cjAnyFalse, cjAnyOne, cjAnyOrDistr
-    , axAndAllScope, cjAnyInst, cjAnyDumRen ]
+    , axAndAllScope, cjAnyInst, cjAnyDumRen, cjAnySwap ]
 \end{code}
 
 

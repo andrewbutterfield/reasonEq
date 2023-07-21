@@ -1027,6 +1027,13 @@
    \true
 }
 
+\def\CJAllSwapN{\QNAME{$\forall$-swap}}
+\def\CJAllSwap{
+  (\forall \lst x \bullet \forall \lst y \bullet P)
+  \equiv
+   (\forall \lst y \bullet \forall \lst x \bullet P)
+}
+
 
 
 %%% Existential Conjectures =========
@@ -1094,6 +1101,13 @@
 \def\CJAnySubstS{\lst x \disj \lst z}
 \def\CJAnySubstN{\QNAME{$\exists$-subst}}
 
+\def\CJAnySwapN{\QNAME{$\exists$-swap}}
+\def\CJAnySwap{
+  (\exists \lst x \bullet \exists \lst y \bullet P)
+  \equiv
+   (\exists \lst y \bullet \exists \lst x \bullet P)
+}
+
 \def\CONJEXISTS{
 \begin{array}{lll}
    \CJAnyRemove    & \CJAnyRemoveS    & \CJAnyRemoveN
@@ -1103,6 +1117,7 @@
 \\ \CJandAnyOScope & \CJandAnyOScopeS & \CJandAnyOScopeN
 \\ \CJAnyOGen      &                  & \CJAnyOGenN
 \\ \CJAnyDummyRen  & \CJAnyDummyRenS  & \CJAnyDummyRenN
+\\ \CJAnySwap      &                  & \CJAnySwapN
 \end{array}
 }
 

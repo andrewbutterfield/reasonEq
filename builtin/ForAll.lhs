@@ -56,7 +56,6 @@ $$
 \AXPREDGS
 $$
 
-What seems
 \subsection{Predicate Infrastructure}
 
 We need to build some infrastructure here.
@@ -224,11 +223,25 @@ cjAllTrue = preddef ("forall" -.- "true")
                     scTrue
 \end{code}
 
+$$
+  \begin{array}{lll}
+     \CJAllSwap &  \CJAllSwapN &
+  \end{array}
+$$
+\vspace{-5pt}
+\begin{code}
+cjAllSwap = preddef ("forall" -.- "swap")
+                    (forall [xs] (forall [ys] p)  
+                     ===  
+                     forall [ys] (forall [xs] p))
+                    scTrue
+\end{code}
+
 We now collect our conjecture set:
 \begin{code}
 forallConjs :: [NmdAssertion]
 forallConjs
-  = [ cjAllTrue ]
+  = [ cjAllTrue, cjAllSwap ]
 \end{code}
 
 

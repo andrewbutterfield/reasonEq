@@ -52,8 +52,8 @@ r = jVar P $ Vbl (jId "R") PredV Static
 vx = Vbl (jId "x") ObsV Static  ; lvxs = LVbl vx [] []
 xs = LstVar lvxs
 ve = Vbl (jId "e") ExprV Static ; lves = LVbl ve [] []
-sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
-subid p = Sub P p $ fromJust $ substn [] [(lvxs,lvxs)]
+sub p   = Sub P p $ jSubstn [] [(lvxs,lves)]
+subid p = Sub P p $ xSubstn [] [(lvxs,lvxs)]
 \end{code}
 
 \subsubsection{Known Variables}

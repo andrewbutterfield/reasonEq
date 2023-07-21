@@ -16,7 +16,7 @@ module AST ( Type
            , isPredKind, isExprKind, ekType
            , classFromKind
            , TermSub, LVarSub
-           , Substn, pattern Substn, substn
+           , Substn, pattern Substn, substn, substnxx
            , pattern TermSub, pattern LVarSub
            , setVTWhen, setLVLVWhen
            , subTargets
@@ -43,7 +43,7 @@ module AST ( Type
            , termSize
            -- test only below here
            , int_tst_AST
-           , jSub, jVar, jBnd, jLam, jSubstn
+           , jSub, jVar, jBnd, jLam, jSubstn, xSubstn
            ) where
 import Data.Char
 import Data.List
@@ -149,12 +149,17 @@ data Substn --  pair-sets below are unique in fst part
   deriving (Eq,Ord,Show,Read)
 \end{code}
 
-Patterns and builders:
+Patterns:
 \begin{code}
 pattern Substn ts lvs  <-  SN ts lvs
 pattern TermSub ts     <-  SN ts _
 pattern LVarSub lvs    <-  SN _  lvs
+\end{code}
 
+Builders: we have two variants, one (\verb"substn"), the most generally useful, 
+removes trivial substitutions ($[x/x]$),
+while another (\verb"substnxx"), for special situations, retains them.
+\begin{code}
 substn :: (Monad m, MonadFail m) => [(Variable,Term)] -> [(ListVar,ListVar)]
        -> m Substn
 substn ts lvs
@@ -165,6 +170,14 @@ substn ts lvs
  where  
   ts'  = filter nontrivial $ sort ts
   lvs' = filter (uncurry (/=)) $  sort lvs
+
+substnxx :: (Monad m, MonadFail m) => [(Variable,Term)] -> [(ListVar,ListVar)]
+       -> m Substn
+substnxx ts lvs
+ | null ts && null lvs  =  return $ SN S.empty S.empty
+ | dupKeys ts           =  fail "Term substitution has duplicate variables."
+ | dupKeys lvs          =  fail "List-var subst. has duplicate variables."
+ | otherwise            =  return $ SN (S.fromList ts) (S.fromList lvs)
 
 nontrivial :: (Variable,Term) -> Bool
 nontrivial (v,Var _ v')  =  v /= v'
@@ -179,6 +192,7 @@ dupKeys _                         =  False
 Use carefully:
 \begin{code}
 jSubstn ts lvs = fromJust $ substn ts lvs
+xSubstn ts lvs = fromJust $ substnxx ts lvs
 \end{code}
 
 Queries:

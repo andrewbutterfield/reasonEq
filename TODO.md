@@ -4,7 +4,14 @@
 
 ## for ;-assoc
 
-Need **law** of form Q x . Q y . P == Q y. Q x . P (proven using `n` command) in `ForAll` and `Exists`.
+We have  `Q x . P(x) == Q y . P(y)` which should match `P == Q`.
+
+Best solution: add alpha-renaming command.
+
+Constraint: alpha renaming `y` in `Q x . Q y . P(y)` cannot replace
+`y` by `x`.  Can use bound variables elsewhere in goal, if not in
+scope where change is to occur.
+
 
 ## In XYZ theory
 

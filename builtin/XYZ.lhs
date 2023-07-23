@@ -122,9 +122,9 @@ ve = Vbl (fromJust $ ident "e") ExprV Before
 vf = Vbl (fromJust $ ident "f") ExprV Before
 vg = Vbl (fromJust $ ident "g") ExprV Before
 -- for use in expressions
-e = fromJust $ eVar int ve
-f = fromJust $ eVar int vf
-g = fromJust $ eVar int vg
+e = fromJust $ eVar ArbType ve
+f = fromJust $ eVar ArbType vf
+g = fromJust $ eVar ArbType vg
 -- for use in quantifiers, substitutions (first list)
 qe = StdVar ve
 qf = StdVar vf

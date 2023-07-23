@@ -278,13 +278,13 @@ substitute sctx sub ct@(Cons tk subable i ts)
 substitute sctx sub bt@(Bnd tk i vs tm)
   = do alpha <- captureAvoidance vs tm sub
        let vs' = S.fromList $ quantsSubst alpha $ S.toList vs
-       asub <- substComp sctx alpha sub
+       asub <- substComp sctx alpha sub --- succeeds as alpha is var-only
        tm' <- substitute sctx asub tm
        bnd tk i vs' tm'
 substitute sctx sub lt@(Lam tk i vl tm)
   = do alpha <- captureAvoidance (S.fromList vl) tm sub
        let vl' = quantsSubst alpha vl
-       asub <- substComp sctx alpha sub
+       asub <- substComp sctx alpha sub --- succeeds as alpha is var-only
        tm' <- substitute sctx asub tm
        lam tk i vl' tm'
 \end{code}
@@ -307,12 +307,14 @@ substitute sctx sub bt@(Sub tk (PVar (PredVar (Identifier ":=" _) _)) _)
 \begin{eqnarray*}
    (\ss t {v^m} {t^m}) \ss {} {v^n} {t^n}
    &\defs&
-   t (\ss {} {v^m} {t^m};  \ss {} {v^n} {t^n})
+     {t (\ss {} {v^m} {t^m};  \ss {} {v^n} {t^n})}
+     \quad \text{if } \ss {} {v^m} {t^m};  \ss {} {v^n} {t^n} \text{ defined}
 \end{eqnarray*}
 \begin{code}
 substitute sctx sub bt@(Sub tk tm s)
-  = do sub' <- substComp sctx s sub
-       substitute sctx sub' tm
+  = case substComp sctx s sub of
+     Just sub' -> substitute sctx sub' tm
+     Nothing   -> return $ Sub tk bt sub
 \end{code}
 \begin{eqnarray*}
    (\ii \bigoplus n {lvs}) \ss {} {v^n} {t^n}
@@ -335,9 +337,14 @@ substitute sctx (Substn _ lvlvs) bt@(Iter tk sa na si ni lvs)
 substitute sctx sub tm = return tm
 \end{code}
 
+\newpage 
+
 \subsubsection{Helper functions}
 
-
+Capture avoidance produces a substitution of variables for variables,
+so that bound variables can be $\alpha$-renamed so they are not 
+affected by a substitution. This is done by changing the uniqueness number
+of the relevant variable.
 \begin{code}
 captureAvoidance :: (Monad m, MonadFail m) => VarSet -> Term -> Substn -> m Substn
 captureAvoidance vs tm sub

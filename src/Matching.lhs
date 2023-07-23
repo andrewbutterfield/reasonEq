@@ -154,11 +154,16 @@ or both are expressions with the type of the candidate
 being an sub-type of the pattern.
 \begin{code}
 tMatch vts bind cbvs pbvs tC tP
- = case (termkind tC, termkind tP) of
+ = let kC = termkind tC ; kP = termkind tP
+   in case  (kC, kP) of
     (P,P)                        ->  tMatch' vts bind cbvs pbvs tC tP
     (E typC, E typP)
       | typC `isSubTypeOf` typP  ->  tMatch' vts bind cbvs pbvs tC tP
-    _ -> fail "tMatch: incompatible termkinds."
+    _ -> fail $ unlines'
+          [ "tMatch: incompatible termkinds!"
+          , "kC = "++show kC
+          , "kP = "++show kP
+          ]
 \end{code}
 
 Term-matching is defined inductively over the pattern type.

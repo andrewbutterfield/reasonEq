@@ -10,6 +10,7 @@ module AlphaEquiv
 ( isAlphaEquivalent
 , (=~=)
   -- below exported for testing
+, isAEquiv
 ) where
 import Data.Map (Map)
 import qualified Data.Map as M
@@ -88,6 +89,7 @@ Values must be equal:
 \begin{code}
 isAEquiv _ _ bij (Val tk1 k1) (Val tk2 k2)
   | tk1 == tk2 && k1 == k2  =  return bij
+  | otherwise  =  afail "literal values differ"
 \end{code}
 
 Both variables must have same free/bound state;
@@ -95,7 +97,7 @@ Bound variables must be compatible and form a bijective map;
 Free variables must be equal;
 \begin{code}
 isAEquiv bvs1 bvs2 bij (Var tk1 v1) (Var tk2 v2)
-  | tk1 /= tk2  =  afail
+  | tk1 /= tk2  =  afail "var kind differs"
   | otherwise   =  isAEquivVar bvs1 bvs2 bij v1 v2
 \end{code}
 
@@ -103,9 +105,9 @@ Constructors must have the same number of sub-terms,
 with the corresponding ones being equivalent.
 \begin{code}
 isAEquiv bvs1 bvs2 bij (Cons tk1 sb1 n1 ts1) (Cons tk2 sb2 n2 ts2)
-  | tk1 /= tk2  =  afail
-  | sb1 /= sb2  =  afail
-  | n1  /= n2   =  afail
+  | tk1 /= tk2  =  afail "cons kind differs"
+  | sb1 /= sb2  =  afail "cons subable differs"
+  | n1  /= n2   =  afail "cons name differs"
   | otherwise   =  listAEquiv isAEquiv bvs1 bvs2 bij ts1 ts2
 \end{code}
 
@@ -115,9 +117,9 @@ Changes to \texttt{bij} due to free variables in \texttt{tm}$i$
 need to be kept.
 \begin{code}
 isAEquiv bvs1 bvs2 bij (Bnd tk1 n1 vs1 tm1) (Bnd tk2 n2 vs2 tm2)
-  | tk1        /= tk2         =  afail
-  | n1         /= n2          =  afail
-  | S.size vs1 /= S.size vs2  =  afail
+  | tk1        /= tk2         =  afail "bind kind differs"
+  | n1         /= n2          =  afail "bind name differs"
+  | S.size vs1 /= S.size vs2  =  afail "bind size differs"
   | otherwise =
       do bij'' <- isAEquiv bvs1' bvs2' bij' tm1 tm2
          let bijfree = M.filterWithKey (\k _ -> not(k `S.member` bvs1')) bij''
@@ -133,9 +135,9 @@ except that we can use the fact that we have bound variable lists,
 rather than sets, to extend the bijective map before recursing over the terms.
 \begin{code}
 isAEquiv bvs1 bvs2 bij (Lam tk1 n1 vl1 tm1) (Lam tk2 n2 vl2 tm2)
-  | tk1        /= tk2         =  afail
-  | n1         /= n2          =  afail
-  | length vl1 /= length vl2  =  afail
+  | tk1        /= tk2         =  afail "lambda kind differs"
+  | n1         /= n2          =  afail "lambda name differs"
+  | length vl1 /= length vl2  =  afail "lambda arity differs"
   | otherwise =
       do bij'' <- checkAlphaBijections bij' vl1 vl2
          bij''' <- isAEquiv bvs1' bvs2' bij'' tm1 tm2
@@ -155,7 +157,7 @@ We start body term analysis with an empty bijection,
 and there are no free variables with changes that need to be returned.
 \begin{code}
 isAEquiv bvs1 bvs2 bij (Cls n1 tm1) (Cls n2 tm2)
-  | n1 /= n2  =  afail
+  | n1 /= n2  =  afail "closure name differs"
   | otherwise =
       do bij' <- isAEquiv bvs1' bvs2' M.empty tm1 tm2
          return (seq bij' bij) -- force bij' evaluation
@@ -170,7 +172,7 @@ isAEquiv bvs1 bvs2 bij (Cls n1 tm1) (Cls n2 tm2)
 For substitution, first check the terms, then the substitution lists.
 \begin{code}
 isAEquiv bvs1 bvs2 bij (Sub tk1 tm1 s1) (Sub tk2 tm2 s2)
-  | tk1 /= tk2  =  afail
+  | tk1 /= tk2  =  afail "substn kind differs"
   | otherwise =
       do bij' <- isAEquiv bvs1 bvs2 bij tm1 tm2
          isAEquivSub bvs1 bvs2 bij' s1 s2
@@ -180,11 +182,11 @@ For now, we consider the list-variables as free at this point.
 \begin{code}
 isAEquiv bvs1 bvs2 bij (Iter tk1 sa1 na1 si1 ni1 lvs1)
                        (Iter tk2 sa2 na2 si2 ni2 lvs2)
-  | tk1 /= tk2  =  afail
-  | sa1 /= sa2  =  afail
-  | na1 /= na2  =  afail
-  | si1 /= si2  =  afail
-  | ni1 /= ni2  =  afail
+  | tk1 /= tk2  =  afail "iteration kind differs"
+  | sa1 /= sa2  =  afail "iteration outer subable differs"
+  | na1 /= na2  =  afail "iteration outer name differs"
+  | si1 /= si2  =  afail "iteration inner subable differs"
+  | ni1 /= ni2  =  afail "iteration inner name differs"
   | otherwise   =  checkAlphaBijections bij gvs1 gvs2
   where (gvs1,gvs2) = (map LstVar lvs1, map LstVar lvs2)
 \end{code}
@@ -197,7 +199,7 @@ isAEquiv bvs1 bvs2 bij (Typ typ1) (Typ typ2)
 
 Everything else is a fail.
 \begin{code}
-isAEquiv _ _ _ _ _ = afail
+isAEquiv _ _ _ _ _ = afail "term variants differ"
 \end{code}
 
 \subsection{Bound Variable $\alpha$-equivalence}
@@ -205,10 +207,10 @@ isAEquiv _ _ _ _ _ = afail
 Are two variables equivalent?
 \begin{code}
 isAEquivVar bvs1 bvs2 bij v1 v2
-  | isBnd1 /= isBnd2                      =  afail
+  | isBnd1 /= isBnd2                      =  afail "free vs. bound"
   | isBnd1 && areAlphaCompatible gv1 gv2  =  checkAlphaBijection bij gv1 gv2
   | v1 == v2                              =  return $ M.insert gv1 gv2 bij
-  | otherwise                             =  afail
+  | otherwise                             =  afail "var names differ"
   where
     (gv1,gv2) = (StdVar v1,StdVar v2)
     isBnd1 = gv1 `S.member` bvs1
@@ -218,8 +220,8 @@ isAEquivVar bvs1 bvs2 bij v1 v2
 Are two list-variables equivalent?
 \begin{code}
 isAEquivLVar bvs1 bvs2 bij (LVbl v1 is1 js1) (LVbl v2 is2 js2)
-  | is1 /= is2  =  afail
-  | js1 /= js2  =  afail
+  | is1 /= is2  =  afail "lvar IS differ"
+  | js1 /= js2  =  afail "lvar JS differ"
   | otherwise = isAEquivVar bvs1 bvs2 bij v1 v2
 \end{code}
 
@@ -236,15 +238,15 @@ checkAlphaBijection bij gv1 gv2
           then
             case M.lookup gv1 bij of
               Just gv2' | gv2 == gv2'  ->  return bij
-                        | otherwise    ->  afail
+                        | otherwise    ->  afail "gen-var not bijective (1)"
               Nothing -> if gv2 `elem` M.elems bij
-                           then afail
+                           then afail "gen-var not bijective (2)"
                            else return (M.insert gv1 gv2 bij)
           else -- not(gv1 `M.member` bij)
             if gv2 `elem` M.elems bij
-              then afail
+              then afail "gen-var not bijective (3)"
               else return (M.insert gv1 gv2 bij)
-  | otherwise  =  afail
+  | otherwise  =  afail "gen-var not bijective (4)"
 \end{code}
 
 A bound variable can match a different bound variable,
@@ -275,7 +277,7 @@ isAEquivSub bvs1 bvs2 bij (Substn ts1 lvs1) (Substn ts2 lvs2)
 Terms replacing variables:
 \begin{code}
 isAEquivTermSub bvs1 bvs2 bij ts1 ts2
-  | length tsl1 /= length tsl2 =  afail
+  | length tsl1 /= length tsl2 =  afail "term sublist lengths differ"
   | otherwise                  =  listAEquiv isAEquivTV bvs1 bvs2 bij tsl1 tsl2
   where
     tsl1  = S.toList ts1
@@ -291,7 +293,7 @@ isAEquivTV bvs1 bvs2 bij (v1,t1) (v2,t2)
 List-variables replacing same:
 \begin{code}
 isAEquivLVarSub bvs1 bvs2 bij lvs1 lvs2
-  | length lvl1 /= length lvl2 =  afail
+  | length lvl1 /= length lvl2 =  afail "lvar sublist lengths differ"
   | otherwise                  = listAEquiv isAEquivLVLV bvs1 bvs2 bij lvl1 lvl2
   where
     lvl1 = S.toList lvs1
@@ -316,7 +318,7 @@ listAEquiv aeqv bvs1 bvs2 bij [] [] = return bij
 listAEquiv aeqv bvs1 bvs2 bij (t1:ts1) (t2:ts2)
  = do bij' <- aeqv bvs1 bvs2 bij t1 t2
       listAEquiv aeqv bvs1 bvs2 bij' ts1 ts2
-listAEquiv _ _ _ _ _ _ = afail
+listAEquiv _ _ _ _ _ _ = afail "thing lists differ"
 
 
 checkAlphaBijections :: (Monad m, MonadFail m) => (Map GenVar GenVar) -> [GenVar] -> [GenVar]
@@ -326,12 +328,12 @@ checkAlphaBijections bij [] [] = return bij
 checkAlphaBijections bij (gv1:gvs1) (gv2:gvs2)
   = do bij' <- checkAlphaBijection bij gv1 gv2
        checkAlphaBijections bij' gvs1 gvs2
-checkAlphaBijections _ _ _ = afail
+checkAlphaBijections _ _ _ = afail "bijection checks fail"
 \end{code}
 
 
 We define a failure shorthand:
 \begin{code}
-afail :: (Monad m, MonadFail m) => m a
-afail = fail "not a-equiv"
+afail :: (Monad m, MonadFail m) => String -> m a
+afail why = fail ("not a-equiv: "++why)
 \end{code}

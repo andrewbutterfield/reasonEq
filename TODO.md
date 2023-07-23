@@ -4,13 +4,8 @@
 
 ## for ;-assoc
 
-We have  `Q x . P(x) == Q y . P(y)` which should match `P == Q`.
-
-Best solution: add alpha-renaming command.
-
-Constraint: alpha renaming `y` in `Q x . Q y . P(y)` cannot replace
-`y` by `x`.  Can use bound variables elsewhere in goal, if not in
-scope where change is to occur.
+Alpha-equivalence check not working.
+Introduce prover command `ta` to run check using informative monad.
 
 
 ## In XYZ theory

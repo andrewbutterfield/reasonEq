@@ -69,27 +69,6 @@ This makes it simple to implement a check for $\alpha$-equivalence.
 isAlphaEquivalent :: Term -> Term -> Bool
 (=~=)  =  isAlphaEquivalent
 \end{code}
-
-We check $\alpha$-equivalence by matching one term against the other,
-tracking bound variables on both sides.
-We expect everything to be equal,
-except bound variables.
-A bound variable can match a different bound variable,
-provided that the only difference is the variable identifier
-or a \texttt{During} subscript.
-\begin{code}
-areAlphaCompatible (StdVar (Vbl _ class1 when1))
-                   (StdVar (Vbl _ class2 when2))
-  =  class1 == class2  &&  areCompatibleWhen when1 when2
-areAlphaCompatible (LstVar (LVbl (Vbl _ class1 when1) is1 js1) )
-                   (LstVar (LVbl (Vbl _ class2 when2) is2 js2) )
-  =  class1 == class2  &&  areCompatibleWhen when1 when2
-     && is1 == is2 && js1 == js2
-areAlphaCompatible _ _ = False
-
-areCompatibleWhen (During _) (During _)  =  True
-areCompatibleWhen when1      when2       =  when1 == when2
-\end{code}
 We record a binding between the corresponding general variables,
 that must be one-to-one.
 We use a helper function that tracks bound variables from each side
@@ -221,6 +200,27 @@ isAEquiv bvs1 bvs2 bij (Typ typ1) (Typ typ2)
 Everything else is a fail.
 \begin{code}
 isAEquiv _ _ _ _ _ = alfaFail
+\end{code}
+
+We check $\alpha$-equivalence by matching one term against the other,
+tracking bound variables on both sides.
+We expect everything to be equal,
+except bound variables.
+A bound variable can match a different bound variable,
+provided that the only difference is the variable identifier
+or a \texttt{During} subscript.
+\begin{code}
+areAlphaCompatible (StdVar (Vbl _ class1 when1))
+                   (StdVar (Vbl _ class2 when2))
+  =  class1 == class2  &&  areCompatibleWhen when1 when2
+areAlphaCompatible (LstVar (LVbl (Vbl _ class1 when1) is1 js1) )
+                   (LstVar (LVbl (Vbl _ class2 when2) is2 js2) )
+  =  class1 == class2  &&  areCompatibleWhen when1 when2
+     && is1 == is2 && js1 == js2
+areAlphaCompatible _ _ = False
+
+areCompatibleWhen (During _) (During _)  =  True
+areCompatibleWhen when1      when2       =  when1 == when2
 \end{code}
 
 

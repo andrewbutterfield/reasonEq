@@ -481,14 +481,16 @@ so that $\sigma : V \pfun V$:
                      {\sigma_1(v)})} 
             {\sigma_2(v)}
 \\ \sigma(v) 
-  &=& v \qquad\qquad\quad  \text{if}~ v \notin \sigma_1
+  &=& v \qquad\qquad\quad  \text{if}~ v \notin \sigma_1 \land v \notin \sigma_2
+\\& & \sigma_2(v) \qquad\quad  \text{if}~ v \notin \sigma_1 \land v \in \sigma_2
 \\& & \sigma_1(v) \qquad\quad \text{if}~ v \in \sigma_1 \land \sigma_1(v) \notin \sigma_2
 \\& & \sigma_2(\sigma_1(v)) \quad \text{if}~ v \in \sigma_1 \land \sigma_1(v) \in \sigma_2
 \end{eqnarray*}
 This suggests that following should hold in the full $E$ setting:
 \begin{eqnarray*}
 \sigma(v) 
-  &=& v \qquad\qquad\quad  \text{if}~ v \notin \sigma_1
+  &=& v \qquad\qquad\quad  \text{if}~ v \notin \sigma_1 \land v \notin \sigma_2
+\\& & \sigma_2(v) \qquad\quad  \text{if}~ v \notin \sigma_1 \land v \in \sigma_2
 \\& & \sigma_1(v) 
       \qquad\quad \text{if}~ 
       v \in \sigma_1 \land \sigma_1(v) \disj \sigma_2

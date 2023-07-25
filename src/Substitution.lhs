@@ -503,6 +503,12 @@ For now,
 substitution composition only succeeds if all replacement terms
 in the first substitution are variable terms.
 
+An interesting counterexample is $x+y$ with $\sigma_1=[x+x,y+x/x,y]$ and
+$\sigma_2=[y-x,x^2/x,y]$. A possible $\sigma$ is 
+$[(y-x)+(y-x),x^2*(y-x)/x,y]$.
+However, computing the composition independently for $x$ and $y$
+results in $[(y-x)+(y-x),x^2*x/x,y]$.
+
 \begin{code}
 substComp :: MonadFail m
           => SubContext

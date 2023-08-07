@@ -468,46 +468,62 @@ $
 e.\sigma = (e.\sigma_1).\sigma_2
 $ ?
 
-We shall consider the case where we restrict $E$ to just be $V$,
-so that $\sigma : V \pfun V$:
-\begin{eqnarray*}
-(v.\sigma_1).\sigma_2
-  &=& (\ifte {v \in \sigma_1} {\sigma_1(v)} {v}).\sigma_2
-\\&=& \ifte {v \in \sigma_1} {\sigma_1(v).\sigma_2} {v.\sigma_2}
-\\&=& \ifte {v \in \sigma_1} {\sigma_1(v).\sigma_2} {\sigma_2(v)}
-\\&=& \ifte {v \in \sigma_1} 
-            {( \ifte {\sigma_1(v) \in \sigma_2} 
-                     {\sigma_2(\sigma_1(v))} 
-                     {\sigma_1(v)})} 
-            {\sigma_2(v)}
-\\ \sigma(v) 
-  &=& v \qquad\qquad\quad  \text{if}~ v \notin \sigma_1 \land v \notin \sigma_2
-\\& & \sigma_2(v) \qquad\quad  \text{if}~ v \notin \sigma_1 \land v \in \sigma_2
-\\& & \sigma_1(v) \qquad\quad \text{if}~ v \in \sigma_1 \land \sigma_1(v) \notin \sigma_2
-\\& & \sigma_2(\sigma_1(v)) \quad \text{if}~ v \in \sigma_1 \land \sigma_1(v) \in \sigma_2
-\end{eqnarray*}
-This suggests that following should hold in the full $E$ setting:
-\begin{eqnarray*}
-\sigma(v) 
-  &=& v \qquad\qquad\quad  \text{if}~ v \notin \sigma_1 \land v \notin \sigma_2
-\\& & \sigma_2(v) \qquad\quad  \text{if}~ v \notin \sigma_1 \land v \in \sigma_2
-\\& & \sigma_1(v) 
-      \qquad\quad \text{if}~ 
-      v \in \sigma_1 \land \sigma_1(v) \disj \sigma_2
-\\& & \sigma_2(\sigma_1(v)) 
-     \quad \text{if}~ 
-     v \in \sigma_1 \land \sigma_1(v) \subseteq \sigma_2
-\end{eqnarray*}
+We introduce some notation.  
 
-For now, 
-substitution composition only succeeds if all replacement terms
-in the first substitution are variable terms.
+If $U = \setof{u_1,\dots,u_n}$ is a set of variables, 
+then $[U/U]$ is the identity substitution $[u_1,\dots,u_n/u_1,\dots,u_n]$.
 
-An interesting counterexample is $x+y$ with $\sigma_1=[x+x,y+x/x,y]$ and
-$\sigma_2=[y-x,x^2/x,y]$. A possible $\sigma$ is 
-$[(y-x)+(y-x),x^2*(y-x)/x,y]$.
-However, computing the composition independently for $x$ and $y$
-results in $[(y-x)+(y-x),x^2*x/x,y]$.
+Also, $[e_1,\dots,e_m,U/v_1,\dots,v_m,U]$ is short for 
+$[e_1,\dots,e_m,u_1,\dots,u_n/v_1,\dots,v_m,u_1,\dots,u_n]$.
+
+We now consider the following double substitution:
+$(e[f_1,\dots,f_m/x_1,\dots,x_m])[g_1,\dots,g_n/y_1,\dots,y_n]$.
+Note that there is no restriction on the relationship between the two sets
+$\setof{x_1,\dots,x_m}$ and $\setof{y_1,\dots,y_n}$. They can be disjoint, or overlap in some way.
+
+The following obvious shorthand suggests itself: $(e[F/X])[G/Y]$,
+and we let $U = X \cup Y$, and $Z = X \cap Y$.
+
+We partition $X$ into $X'=X\setminus Z$ and $Z$,
+and let $F'$ be the replacements in $F$ for $X'$, 
+and $F_Z$ the replacements for $Z$.
+We treat $Y$ and  $G$ similarly to get $Y'$, $Y_Z$, $G'$ and $G_Z$.
+$$
+  (e[F',F_Z/X',Z])[G',G_Z/Y',Z] 
+$$
+Now consider a variable $v \in U$.
+\begin{eqnarray*}
+   v \notin X \land v \notin Y 
+   &\implies& (v[F',F_Z/X',Z])[G',G_Z/Y',Z] = v
+\\ v \notin X \land v   \in  Y 
+   &\implies& (v[F',F_Z/X',Z])[G',G_Z/Y',Z] = G' 
+   \quad \textbf{as } v \in Y'
+\\ v   \in  X \land v \notin Y 
+   &\implies& (v[F',F_Z/X',Z])[G',G_Z/Y',Z] = F'[G',G_Z/Y',Z] 
+   \quad \textbf{as } v \in X'
+\\ v   \in  X \land v   \in  Y 
+   &\implies& (v[F',F_Z/X',Z])[G',G_Z/Y',Z] = F_Z[G',G_Z/Y',Z] 
+   \quad \textbf{as } v \in Z
+\end{eqnarray*}
+This suggests the following:
+$$
+ e[F'[G',G_Z/Y',Z],G',F_Z[G',G_Z/Y',Z]/X',Y',Z]
+$$
+And we can merge $X'$ and $Z$ as $X$ and $F'$ and $F_Z$ as $F$ to get:
+$$
+ e[F[G',G_Z/Y',Z],G'/X,Y']
+$$
+Similarly for $Y$ and $G$ in the $F$ substitution:
+$$
+ e[F[G/Y],G'/X,Y']
+$$
+Theorem: given $Y'= Y \setminus X$ and $G'$ as the corresponding part of $G$,
+we have:
+$$
+ (e[F/X])[G/Y]  =  e[F[G/Y],G'/X,Y'] 
+$$
+Proof, stuctural induction on $E = K + V + E \times E$.
+Trickiest part is the variable case which has a 4-way case split.
 
 \begin{code}
 substComp :: MonadFail m

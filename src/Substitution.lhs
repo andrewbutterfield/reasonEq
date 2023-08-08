@@ -525,6 +525,13 @@ $$
 Proof, stuctural induction on $E = K + V + E \times E$.
 Trickiest part is the variable case which has a 4-way case split.
 
+\newpage
+
+Specification of substitution composition:
+$$
+ (e[F/X])[G/Y]  =  e[F[G/Y],G'/X,Y'] 
+$$
+where $[G'/Y']$ is $[G/Y]$ restricted to elements of $Y$ not in $X$.
 \begin{code}
 substComp :: MonadFail m
           => SubContext

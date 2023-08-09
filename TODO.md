@@ -43,6 +43,27 @@ Using `tm 1 exist_one_point` gives match 5.
 
 ### Issue 3
 
+#### Using new definition of subst-comp:
+
+```
+   (f[F/X])[G/Y]  = f[F[G/Y],G'/X,Y']   where Y' = Y - X
+```
+
+Then ...
+
+```
+  (f[x_m,y_m,z_m/x,y,z])[e/x_m]
+= "subst-comp"
+  f[x_m[e/x_m],y_m[e/x_m],z_m[e/x_m],e/x,y,z,x_m]
+= "substitution, 3 times"
+  f[e,y_m,z_m,e/x,y,z,x_m]
+= "assuming x_m notin f"
+  f[e,y_m,z_m/x,y,z]
+```
+
+If x_m does not occur in f, then this simplifies to:
+
+
 Why is the substitution broken?
 
 ```
@@ -51,7 +72,16 @@ Why is the substitution broken?
 (∃ y_m,z_m • (y_m=y∧z_m=z)∧(x'=f[e,e,y_m,z_m/x,x_m,y,z]∧(y'=y_m∧z'=z_m)))
 ```
 
-We have `(f[x_m,y_m,z_m/x,y,z])[e/x_m]` becoming `f[e,e,y_m,z_m/x,x_m,y,z]`!
+We have `(f[x_m,y_m,z_m/x,y,z])[e/x_m]` becoming `f[e,e,y_m,z_m/x,x_m,y,z]`!  CORRECT !
+
+
+
+
+```
+(f[x_m,y_m,z_m/x,y,z])[e/x_m]
+= f[x_m[e/x_m],y_m[e/x_m],z_m[e/x_m],e/x,y,z,x_m]
+= f[e,y_m,z_m,e/x,y,z,x_m]
+```
 
 Or `[x_m,y_m,z_m/x,y,z][e/x_m] = [e,e,y_m,z_m/x,x_m,y,z]`??
 

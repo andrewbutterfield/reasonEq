@@ -540,19 +540,21 @@ substComp :: MonadFail m
           -> Substn  -- 2nd substitution performed
           -> m Substn
 substComp sctx (Substn ts1 lvs1) sub2@(Substn ts2 lvs2)
-  = do let tl1 = S.toList ts1
-       let vl1 = map fst tl1
-       let tl2 = S.toList ts2
-       let tl2'  = filter (notTargetedIn vl1)  tl2
-       let tl1'  = mapsnd (applySub sub2) tl1
-       
-       let lvl1 = S.toList lvs1
-       let lv1 = map fst lvl1
-       let lvl2 = S.toList lvs2
-       let lvl2'  = filter (notTargetedIn lv1) lvl2
-       let lvl1' = mapsnd (applyLSub lvl2) lvl1
-       
-       substn tl2' lvl2'
+  = let 
+      -- compute G',Y'
+      tl1 = S.toList ts1
+      vl1 = map fst tl1
+      tl2 = S.toList ts2
+      tl2'  = filter (notTargetedIn vl1) tl2 -- G'/Y' for var-terms
+      lvl1 = S.toList lvs1
+      lv1 = map fst lvl1
+      lvl2 = S.toList lvs2
+      lvl2'  = filter (notTargetedIn lv1) lvl2 -- G'/Y' for list-vars
+      -- compute  F[G/Y]
+      tl1'  = mapsnd (applySub sub2) tl1
+      lvl1' = mapsnd (applyLSub tl2 lvl2) lvl1
+      -- compute  [ F[G/Y],G'  /  X,Y' ]
+    in substn (tl1'++tl2') (lvl1'++lvl2')
 
 notTargetedIn :: Eq t => [t] -> (t,r) -> Bool
 notTargetedIn ts (t,_) = not (t `elem` ts)
@@ -560,8 +562,9 @@ notTargetedIn ts (t,_) = not (t `elem` ts)
 applySub :: Substn -> Term -> Term
 applySub sub t  =  Sub (termkind t) t sub
 
-applyLSub :: [(ListVar,ListVar)] -> ListVar -> ListVar
-applyLSub lvs lv
+applyLSub :: [(Variable,Term)] -> [(ListVar,ListVar)] -> ListVar -> ListVar
+applyLSub ts lvs lv
+  -- ignore var-term subst for now
   = case alookup lv lvs of
       Nothing   ->  lv
       Just lv'  ->  lv'

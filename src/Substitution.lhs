@@ -18,6 +18,7 @@ import Data.List
 import Data.Maybe
 
 import Utilities (alookup,injMap)
+import Control (mapsnd)
 import LexBase
 import Variables
 import AST
@@ -538,40 +539,31 @@ substComp :: MonadFail m
           -> Substn  -- 1st substitution performed
           -> Substn  -- 2nd substitution performed
           -> m Substn
-substComp sctx (Substn ts1 lvs1) sub2@(Substn _ lvs2)
-  = do ts' <- varTermCompose sctx sub2 (S.toList ts1)
-       let lvs' = lvarLVarCompose (S.toList lvs1) (S.toList lvs2)
-       substn ts' lvs'
+substComp sctx (Substn ts1 lvs1) sub2@(Substn ts2 lvs2)
+  = do let tl1 = S.toList ts1
+       let vl1 = map fst tl1
+       let tl2 = S.toList ts2
+       let tl2'  = filter (notTargetedIn vl1)  tl2
+       let tl1'  = mapsnd (applySub sub2) tl1
+       
+       let lvl1 = S.toList lvs1
+       let lv1 = map fst lvl1
+       let lvl2 = S.toList lvs2
+       let lvl2'  = filter (notTargetedIn lv1) lvl2
+       let lvl1' = mapsnd (applyLSub lvl2) lvl1
+       
+       substn tl2' lvl2'
 
-varTermCompose sctx sub2 tl1 = vTC sctx sub2 [] tl1
-vTC sctx sub2@(Substn ts2 _) tl1' [] 
-  = do let tl2 = S.toList ts2
-       let vl1' = map fst tl1'
-       let tl2' = tl2 `strip1` vl1'
-       return (tl1'++tl2')
-vTC sctx sub2 tl1' ((vt,er@(Var _ vr)):tl1)
-  = do er' <- substitute sctx sub2 er
-       vTC sctx sub2 ((vt,er'):tl1') tl1
-vTC _ _ _ ((vt,er):_)
-  = fail ("substComp: 1st sub repl not variable: "++trTerm 0 er)
+notTargetedIn :: Eq t => [t] -> (t,r) -> Bool
+notTargetedIn ts (t,_) = not (t `elem` ts)
 
-strip1 :: Eq a => [(a,b)] -> [a] -> [(a,b)]
-strip1 [] _ = []
-strip1 (xy@(x,y):xys) xs
-  | x `elem` xs  =  strip1 xys xs
-  | otherwise    =  xy : strip1 xys xs
+applySub :: Substn -> Term -> Term
+applySub sub t  =  Sub (termkind t) t sub
 
-lvarLVarCompose lvlv1 lvlv2
-  = let
-     (tlv1,rlv1) = unzip lvlv1
-     rlv1' = map (lvSubstitute lvlv2) rlv1
-     lvlv1' = zip tlv1 rlv1'
-     lvlv2' = lvlv2 `strip1` tlv1
-    in lvlv1' ++ lvlv2'
-
-lvSubstitute ((tlv2,rlv2):lv2lv) rlv
-  | rlv == tlv2      =  rlv2
-  | otherwise        =  lvSubstitute lv2lv rlv
-lvSubstitute [] rlv  =  rlv
+applyLSub :: [(ListVar,ListVar)] -> ListVar -> ListVar
+applyLSub lvs lv
+  = case alookup lv lvs of
+      Nothing   ->  lv
+      Just lv'  ->  lv'
 \end{code}
 

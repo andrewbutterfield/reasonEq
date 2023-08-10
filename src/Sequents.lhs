@@ -764,10 +764,13 @@ dispHypotheses hthry  =  numberList' showHyp $ laws $ hthry
 showHyp ((_,(Assertion trm _)),_) = trTerm 0 trm
 
 dispGoal tz sc
-  = [ trTermZip tz++"    "++trSideCond sc, "" ]
+  = [ trTermZip tz++"    "++trSideCond sc ]
 
 dispContext fp what formula
-  = [ "Focus = " ++ show fp ++ "  "  ++ what ++ formula ]
+  = [ "Focus = " ++ show fp, ""
+    , what
+    , formula
+    ]
 
 dispSeqTermZip :: SeqZip -> String
 dispSeqTermZip (tz,_) = trTermZip tz

@@ -828,6 +828,7 @@ proofREPLConfig
             , cloneHypothesisDescr
             , equivaleStepsDescr
             , tryMatchDescr
+            , tryAlphaDescr
             , showMatchesDescr -- dev mode!
             ])
       proofREPLEndCondition
@@ -1101,44 +1102,6 @@ applySATCommand _ (reqs,liveproof)
                      return (reqs, liveproof) 
 \end{code}
 
-Try matching focus against a specific law, to see what outcome arises
-\begin{code}
-tryMatchDescr = ( "tm"
-                , "try match focus"
-                , unlines
-                   [ "tm             -- try match focus..."
-                   , "tm nm          -- ... against law 'nm'"
-                   , "tm n1 .. nk nm -- ... against parts n1..nk of law"
-                   , "               --     n1..nk :  numbers of parts"
-                   , "-- the n1..nk need not be in increasing order"
-                   , "-- parts returned in same order as n1..nk"
-                   ]
-                , tryMatch)
-
-tryMatch :: REPLCmd (REqState, LiveProof)
-tryMatch [] state = return state
-tryMatch args state@( reqs, liveProof)
-  = do case tryFocusAgainst lawnm parts liveProof of
-         Yes (bind,tPasC,scC',scP')
-           -> putStrLn $ unlines
-                [ banner
-                , "Binding: " ++ trBinding bind
-                -- , "Replacement: " ++ trTerm 0 repl
-                -- , "Unbound: " ++ trVSet (findUnboundVars bind repl)
-                , "Instantiated Law = " ++ trTerm 0 tPasC
-                , "Instantiated Law S.C. = " ++ trSideCond scC'
-                , "Goal S.C. = " ++ trSideCond (conjSC liveProof)
-                , "Discharged Law S.C. = " ++ trSideCond scP']
-         But msgs -> putStrLn $ unlines' ( (banner ++ " failed!") : msgs )
-       userPause
-       return state
-  where
-    (nums,rest) = span (all isDigit) args
-    parts = map read nums
-    lawnm = filter (not . isSpace) $ unwords rest
-    banner = "Match against `"++lawnm++"'"++show parts
-\end{code}
-
 \newpage
 Applying a match.
 \begin{code}
@@ -1375,7 +1338,7 @@ cloneHypotheses args liveState@(reqs, _)
   = tryDelta (cloneHypothesis (args2int args) theAnd) liveState
 \end{code}
 
-At any point in a proof, one at least one step has been taken,
+At any point in a proof, once at least one step has been taken,
 we can create a new theorem simply by equivaling the first and last predicates
 in the proof. We can then continue with the proof we have got.
 In fact, we can create a theorem that equivales any two predicates
@@ -1468,4 +1431,69 @@ buildIn (cmd:nm:_) reqs
           Nothing -> return reqs'
 
 buildIn _ reqs = doshow reqs "unrecognised 'b' option"
+\end{code}
+
+\subsubsection{In-Proof Test Commands}
+
+Try matching focus against a specific law, to see what outcome arises
+\begin{code}
+tryMatchDescr = ( "tm"
+                , "try match focus"
+                , unlines
+                   [ "tm             -- try match focus..."
+                   , "tm nm          -- ... against law 'nm'"
+                   , "tm n1 .. nk nm -- ... against parts n1..nk of law"
+                   , "               --     n1..nk :  numbers of parts"
+                   , "-- the n1..nk need not be in increasing order"
+                   , "-- parts returned in same order as n1..nk"
+                   ]
+                , tryMatch)
+
+tryMatch :: REPLCmd (REqState, LiveProof)
+tryMatch [] state = return state
+tryMatch args state@( reqs, liveProof)
+  = do case tryFocusAgainst lawnm parts liveProof of
+         Yes (bind,tPasC,scC',scP')
+           -> putStrLn $ unlines
+                [ banner
+                , "Binding: " ++ trBinding bind
+                -- , "Replacement: " ++ trTerm 0 repl
+                -- , "Unbound: " ++ trVSet (findUnboundVars bind repl)
+                , "Instantiated Law = " ++ trTerm 0 tPasC
+                , "Instantiated Law S.C. = " ++ trSideCond scC'
+                , "Goal S.C. = " ++ trSideCond (conjSC liveProof)
+                , "Discharged Law S.C. = " ++ trSideCond scP']
+         But msgs -> putStrLn $ unlines' ( (banner ++ " failed!") : msgs )
+       userPause
+       return state
+  where
+    (nums,rest) = span (all isDigit) args
+    parts = map read nums
+    lawnm = filter (not . isSpace) $ unwords rest
+    banner = "Match against `"++lawnm++"'"++show parts
+\end{code}
+
+
+Test $\alpha$-equivalence of both sides of the sequent
+\begin{code}
+tryAlphaDescr = ( "ta"
+                , "test LHS/RHS alpha-equivalence"
+                , unlines
+                   [ "ta             -- test LHS/RHS alphaequiv"
+                   ]
+                , tryAlpha)
+
+tryAlpha :: REPLCmd (REqState, LiveProof)
+tryAlpha _ state@( reqs, liveProof)
+  = do case tryAlphaEquiv liveProof of
+         Yes varmap
+           -> putStrLn $ unlines
+                [ banner
+                , "Alpha-Equiv reports " ++ show varmap
+                ]
+         But msgs -> putStrLn $ unlines' ( (banner ++ " failed!") : msgs )
+       userPause
+       return state
+  where
+    banner = "Alpha Equivalence Check"
 \end{code}

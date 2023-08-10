@@ -29,6 +29,7 @@ module AbstractUI
 , nestSimpFocus
 , substituteFocus
 , tryFocusAgainst
+, tryAlphaEquiv
 , observeLawsInScope, observeKnownsInScope
 , flattenAssociative, groupAssociative
 , stepBack
@@ -53,6 +54,7 @@ import Assertions
 import TermZipper
 import AST
 import FreeVars
+import AlphaEquiv
 import Substitution
 import Binding
 import VarData
@@ -958,6 +960,17 @@ mkBinding bind ((v,t):rest)
   = do bind' <- bindVarToTerm v t bind
        mkBinding bind' rest
 \end{code}
+
+\newpage
+
+Invoke $\alpha$-equivalence LHS/RHS check with details
+\begin{code}
+tryAlphaEquiv :: LiveProof -> YesBut (Map GenVar GenVar)
+tryAlphaEquiv liveProof
+  = let sequent = exitSeqZipper $ focus liveProof 
+    in tryAlphaEquivalence (cleft sequent) (cright sequent)
+\end{code}
+
 
 \newpage
 \subsubsection{Clone Hypotheses}

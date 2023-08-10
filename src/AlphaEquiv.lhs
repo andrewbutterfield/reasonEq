@@ -11,6 +11,7 @@ module AlphaEquiv
 , (=~=)
   -- below exported for testing
 , isAEquiv
+, tryAlphaEquivalence
 ) where
 import Data.Map (Map)
 import qualified Data.Map as M
@@ -20,7 +21,7 @@ import Data.Maybe (isJust)
 -- import Control.Monad
 -- import Data.List
 
--- import Utilities
+import Utilities
 -- import Control
 import LexBase
 import Variables
@@ -80,7 +81,7 @@ along with a bijection between them.
 
 We maintain the bound variables and the bijection at the general variable level.
 \begin{code}
-isAEquiv :: (Monad m, MonadFail m) 
+isAEquiv :: MonadFail m 
          => VarSet -> VarSet -> (Map GenVar GenVar) -> Term -> Term
          ->    m (Map GenVar GenVar)
 \end{code}
@@ -210,7 +211,13 @@ isAEquivVar bvs1 bvs2 bij v1 v2
   | isBnd1 /= isBnd2                      =  afail "free vs. bound"
   | isBnd1 && areAlphaCompatible gv1 gv2  =  checkAlphaBijection bij gv1 gv2
   | v1 == v2                              =  return $ M.insert gv1 gv2 bij
-  | otherwise                             =  afail "var names differ"
+  | otherwise =  afails [ "var names differ"
+                        , "v1   = " ++ show v1
+                        , "v2   = " ++ show v2
+                        , "bvs1 = " ++ show bvs1
+                        , "bvs2 = " ++ show bvs2
+                        , "bij  = " ++ show bij
+  ]
   where
     (gv1,gv2) = (StdVar v1,StdVar v2)
     isBnd1 = gv1 `S.member` bvs1
@@ -229,7 +236,7 @@ Given a bijection, and two (bound) general variables,
 see if they are already noted, and add if not.
 Fail if they are mismatched.
 \begin{code}
-checkAlphaBijection :: (Monad m, MonadFail m) => (Map GenVar GenVar) -> GenVar -> GenVar
+checkAlphaBijection :: MonadFail m => (Map GenVar GenVar) -> GenVar -> GenVar
                     -> m (Map GenVar GenVar)
 
 checkAlphaBijection bij gv1 gv2
@@ -278,7 +285,7 @@ Terms replacing variables:
 \begin{code}
 isAEquivTermSub bvs1 bvs2 bij ts1 ts2
   | length tsl1 /= length tsl2 =  afail "term sublist lengths differ"
-  | otherwise                  =  listAEquiv isAEquivTV bvs1 bvs2 bij tsl1 tsl2
+  | otherwise  =  listAEquiv isAEquivTV bvs1 bvs2 bij tsl1 tsl2
   where
     tsl1  = S.toList ts1
     tsl2  = S.toList ts2
@@ -294,7 +301,7 @@ List-variables replacing same:
 \begin{code}
 isAEquivLVarSub bvs1 bvs2 bij lvs1 lvs2
   | length lvl1 /= length lvl2 =  afail "lvar sublist lengths differ"
-  | otherwise                  = listAEquiv isAEquivLVLV bvs1 bvs2 bij lvl1 lvl2
+  | otherwise  =  listAEquiv isAEquivLVLV bvs1 bvs2 bij lvl1 lvl2
   where
     lvl1 = S.toList lvs1
     lvl2 = S.toList lvs2
@@ -306,7 +313,7 @@ isAEquivLVLV bvs1 bvs2 bij (tlv1,rlv1) (tlv2,rlv2)
 
 Doing it with lists:
 \begin{code}
-listAEquiv :: (Monad m, MonadFail m)
+listAEquiv :: MonadFail m
            => ( VarSet -> VarSet -> (Map GenVar GenVar)
                 -> a -> a
                 -> m (Map GenVar GenVar) )
@@ -321,7 +328,7 @@ listAEquiv aeqv bvs1 bvs2 bij (t1:ts1) (t2:ts2)
 listAEquiv _ _ _ _ _ _ = afail "thing lists differ"
 
 
-checkAlphaBijections :: (Monad m, MonadFail m) => (Map GenVar GenVar) -> [GenVar] -> [GenVar]
+checkAlphaBijections :: MonadFail m => (Map GenVar GenVar) -> [GenVar] -> [GenVar]
                      -> m (Map GenVar GenVar)
 
 checkAlphaBijections bij [] [] = return bij
@@ -332,8 +339,17 @@ checkAlphaBijections _ _ _ = afail "bijection checks fail"
 \end{code}
 
 
-We define a failure shorthand:
+We define some failure shorthands:
 \begin{code}
-afail :: (Monad m, MonadFail m) => String -> m a
+afail :: MonadFail m => String -> m a
 afail why = fail ("not a-equiv: "++why)
+
+afails :: MonadFail m => [String] -> m a
+afails whys = afail $ unlines' whys
+\end{code}
+
+
+\begin{code}
+tryAlphaEquivalence :: Term -> Term -> YesBut (Map GenVar GenVar)
+tryAlphaEquivalence t1 t2  =  isAEquiv S.empty S.empty M.empty t1 t2
 \end{code}

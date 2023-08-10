@@ -6,6 +6,7 @@ import Variables
 import AST
 import FreeVars
 import SideCond
+import Substitution
 import Binding
 import Syntax
 import Builder
@@ -24,6 +25,7 @@ tests -- = test_match_scenarios
  ++ int_tst_Variables
  ++ int_tst_AST
  ++ int_tst_SideCond
+ ++ int_tst_Subst
  ++ int_tst_Binding
  ++ int_tst_Syntax
  ++ int_tst_Builder

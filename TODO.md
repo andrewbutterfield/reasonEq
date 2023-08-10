@@ -62,24 +62,7 @@ Then ...
   f[e,y_m,z_m/x,y,z]
 ```
 
-Test fails:
-```
-Substitution Internal:
-  Substitution.substComp:
-    substComp applied to var:
-      var in no substitution: [OK]
-      var in 1st substitution: [Failed]
-expected: S (E T) (K (E T) (VI 1)) (SN (fromList [(VR (Id "x" 0,VO,WS),K (E T) (VI 3)),(VR (Id "y" 0,VO,WS),K (E T) (VI 4))]) (fromList []))
- but got: K (E T) (VI 1)
-      var in both substitutions: [Failed]
-expected: S (E T) (K (E T) (VI 2)) (SN (fromList [(VR (Id "x" 0,VO,WS),K (E T) (VI 3)),(VR (Id "y" 0,VO,WS),K (E T) (VI 4))]) (fromList []))
- but got: K (E T) (VI 2)
-      var in 2nd substitution: [OK]
-```
-We need to apply the nested substitutions
-
-**Within substComp itself?**
-
+var tests pass with constant replacements
 
 ## In UTPBase theory
 

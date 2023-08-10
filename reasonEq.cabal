@@ -1,5 +1,5 @@
 name:                reasonEq
-version:             0.7.6.0
+version:             0.8.0.0
 -- synopsis:
 -- description:
 homepage:            https://github.com/andrewbutterfield/reasonEq#readme
@@ -7,7 +7,7 @@ license:             BSD3
 license-file:        LICENSE
 author:              Andrew Butterfield
 maintainer:          Andrew.Butterfield@scss.tcd.ie
-copyright:           (c) 2017-19 Andrew Butterfield
+copyright:           (c) 2017-23 Andrew Butterfield
 category:            Theorem Provers
 build-type:          Simple
 extra-source-files:  README.md
@@ -126,6 +126,7 @@ test-suite reasonEq-test
                      , LexBase
                      , Matching
                      , SideCond
+                     , Substitution
                      , Syntax
                      , TermZipper
                      , TestRendering

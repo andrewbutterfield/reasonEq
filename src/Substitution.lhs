@@ -9,6 +9,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Substitution
 ( SubContext, mkSubCtxt
 , substitute
+-- test stuff below
+, int_tst_Subst
 ) where
 import Data.Set(Set)
 import qualified Data.Set as S
@@ -27,6 +29,11 @@ import VarData
 import SideCond
 
 import TestRendering
+
+import Test.HUnit
+import Test.Framework as TF (defaultMain, testGroup, Test)
+import Test.Framework.Providers.HUnit (testCase)
+--import Test.Framework.Providers.QuickCheck2 (testProperty)
 
 import Debug.Trace
 dbg msg x = trace (msg ++ show x) x
@@ -570,3 +577,99 @@ applyLSub ts lvs lv
       Just lv'  ->  lv'
 \end{code}
 
+
+\newpage
+
+\subsection{Exported Test Group}
+
+\subsubsection{Test Components}
+
+A collection of standard variables:
+\begin{code}
+w = StaticVar $ jId "w" -- in 1st sub
+x = StaticVar $ jId "x" -- in both subs
+y = StaticVar $ jId "y" -- in 2nd sub
+z = StaticVar $ jId "z" -- not in any sub
+\end{code}
+A collection of standard variable terms:
+\begin{code}
+tw = fromJust $ eVar ArbType w
+tx = fromJust $ eVar ArbType x
+ty = fromJust $ eVar ArbType y
+tz = fromJust $ eVar ArbType z
+\end{code}
+Making 1st and 2nd substitutions:
+\begin{code}
+sub1 t1 t2 = jSubstn [(w,t1),(x,t2)] []
+sub2 t3 t4 = jSubstn [(x,t3),(y,t4)] []
+\end{code}
+A default sub-context:
+\begin{code}
+subctxt = SCtxt scTrue []
+dosub tm sub = fromJust $ substitute subctxt sub tm
+subcomp sub1 sub2 = fromJust $ substComp subctxt sub1 sub2
+\end{code}
+A collection of standard constants:
+\begin{code}
+k1 = EVal ArbType $ Integer 1 
+k2 = EVal ArbType $ Integer 2
+k3 = EVal ArbType $ Integer 3
+k4 = EVal ArbType $ Integer 4
+\end{code}
+Some substitutions:
+\begin{code}
+s12wx = sub1 k1 k2
+s34xy = sub2 k3 k4
+\end{code}
+
+
+\subsubsection{Substitution Composition}
+
+Most of the tests are of the form: 
+ $(e\sigma_1)\sigma_2 = e(\sigma_1;\sigma_2)$
+where $e$ can be constant, variable or composite.
+\begin{code}
+subCompTest what expr sub1 sub2
+  = testCase what
+      ( dosub (dosub expr sub1) sub2
+        @?=
+        dosub expr (sub1 `subcomp` sub2)
+      )
+\end{code}
+
+The most important are when $e$ is a single variable $v$,
+
+\begin{code}
+varSubstCompTests  =  testGroup "substComp applied to var"
+ [ subCompTest "var in no substitution" tz s12wx s34xy
+ , subCompTest "var in 1st substitution" tw s12wx s34xy
+ , subCompTest "var in both substitutions" tx s12wx s34xy
+ , subCompTest "var in 2nd substitution" ty s12wx s34xy
+ ]
+\end{code}
+
+
+
+
+
+
+\begin{code}
+substCompTests  =  testGroup "Substitution.substComp"
+ [ varSubstCompTests
+ ]
+\end{code}
+
+\subsubsection{Gathering Tests}
+
+\begin{code}
+int_tst_Subst :: [TF.Test]
+int_tst_Subst
+ = [ testGroup "\nSubstitution Internal"
+     [ substCompTests
+     ]
+{-  , testGroup "QuickCheck Ident"
+     [
+       testProperty "Idents Always" prop_ident
+     ] -}
+   ]
+\end{code}

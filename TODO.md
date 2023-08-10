@@ -27,6 +27,7 @@ tMatch: structural mismatch.
 tC = V (E (TG (Id "Z" 0))) (VR (Id "z" 0,VO,WD "m"))
 tP = V (E T) (VR (Id "e" 0,VE,WS))
 ```
+Variable `e` is an Expr variable but here it should match the Obs variable `x_m`.
 
 ### Issue 2
 
@@ -61,62 +62,24 @@ Then ...
   f[e,y_m,z_m/x,y,z]
 ```
 
-If x_m does not occur in f, then this simplifies to:
-
-
-Why is the substitution broken?
-
+Test fails:
 ```
-(∃ y_m,z_m • ((y_m=y∧z_m=z)∧(x'=f[x_m,y_m,z_m/x,y,z]∧(y'=y_m∧z'=z_m)))[e/x_m])
-   = 'substitute @[1]'
-(∃ y_m,z_m • (y_m=y∧z_m=z)∧(x'=f[e,e,y_m,z_m/x,x_m,y,z]∧(y'=y_m∧z'=z_m)))
+Substitution Internal:
+  Substitution.substComp:
+    substComp applied to var:
+      var in no substitution: [OK]
+      var in 1st substitution: [Failed]
+expected: S (E T) (K (E T) (VI 1)) (SN (fromList [(VR (Id "x" 0,VO,WS),K (E T) (VI 3)),(VR (Id "y" 0,VO,WS),K (E T) (VI 4))]) (fromList []))
+ but got: K (E T) (VI 1)
+      var in both substitutions: [Failed]
+expected: S (E T) (K (E T) (VI 2)) (SN (fromList [(VR (Id "x" 0,VO,WS),K (E T) (VI 3)),(VR (Id "y" 0,VO,WS),K (E T) (VI 4))]) (fromList []))
+ but got: K (E T) (VI 2)
+      var in 2nd substitution: [OK]
 ```
+We need to apply the nested substitutions
 
-We have `(f[x_m,y_m,z_m/x,y,z])[e/x_m]` becoming `f[e,e,y_m,z_m/x,x_m,y,z]`!  CORRECT !
+**Within substComp itself?**
 
-
-
-
-```
-(f[x_m,y_m,z_m/x,y,z])[e/x_m]
-= f[x_m[e/x_m],y_m[e/x_m],z_m[e/x_m],e/x,y,z,x_m]
-= f[e,y_m,z_m,e/x,y,z,x_m]
-```
-
-Or `[x_m,y_m,z_m/x,y,z][e/x_m] = [e,e,y_m,z_m/x,x_m,y,z]`??
-
-```
-((x,y,z)[x_m,y_m,z_m/x,y,z])[e/x_m]
-= (x_m,y_m,z_m)[e/x_m]
-= (e,y_m,z_m)
-```
-This suggests that `[x_m,y_m,z_m/x,y,z][e/x_m] = [e,y_m,z_m/x,y,z]`
-
-
-Why does this fail?
-
-```
-(∃ y_m,z_m • y_m=y∧(z_m=z∧(x'=f[e,e,y_m,z_m/x,x_m,y,z]∧(y'=y_m∧z'=z_m))))    ⊤
-
-Focus = [1,1]  Target (RHS): x  :=  f[e/x]
-
-proof: tm 1 =_symm
-Match against `=_symm'[1] failed!
-try match failed
-
-y_m  =  y :: e  =  f
-
-lnm[parts]==_symm[1]
-tP=e=f  ≡  f=e
-partsP=e  =  f
-tC=y_m  =  y
-scC=⊤
----
-tMatch: structural mismatch.
-tC = V (E (TG (Id "Z" 0))) (VR (Id "y" 0,VO,WD "m"))
-tP = V (E T) (VR (Id "e" 0,VE,WS))
-```
-Variable `e` is an Expr variable but here it should match the Obs variable `x_m`.
 
 ## In UTPBase theory
 

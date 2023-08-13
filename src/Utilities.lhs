@@ -24,7 +24,7 @@ module Utilities (
 , peel
 , getJust
 , pulledFrom, getitem, choose
-, injMap
+, injMap, extdBij, bijExtend
 , spaced, intcalNN
 , pad
 , splitLast, splitAround
@@ -374,6 +374,39 @@ uniqueList  =  all isSingle . group . sort
 isSingle [_]  =  True
 isSingle _    =  False
 \end{code}
+
+Extending a pre-existing bijection with a new pair:
+\begin{code}
+extdBij :: (Ord a, Eq b, MonadFail m) 
+                => (Map a b) -> a -> b -> m (Map a b)
+extdBij bij a b
+  = if a `M.member` bij
+    then
+      case M.lookup a bij of
+        Just b' | b == b'  ->  return bij
+                | otherwise  ->  fail "extBij: range disagreement"
+        Nothing -> fail "extdBij: member not found"
+    else -- not(a `M.member` bij)
+      if b `elem` M.elems bij
+      then fail "extBij: domain disagreement"
+      else return (M.insert a b bij)
+\end{code}
+
+Extending a pre-existing bijection with another bijection:
+\begin{code}
+bijExtend :: (Ord a, Eq b, MonadFail m) 
+                => (Map a b) -> (Map a b) -> m (Map a b)
+bijExtend bij0 bijX 
+  = bextend bij0 $ M.assocs bijX
+  where
+    bextend bij [] = return bij
+    bextend bij ((a,b):bijx)
+      = do bij' <- extdBij bij a b
+           bextend bij bijx
+\end{code}
+
+
+
 
 \newpage
 \subsection{Smart Readers}

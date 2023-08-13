@@ -7,15 +7,6 @@
 Alpha-equivalence check not working.
 Introduce prover command `ta` to run check using informative monad.
 
-Code:
-```
-isAEquivVar bvs1 bvs2 bij v1 v2
-  | isBnd1 /= isBnd2                      =  afail "free vs. bound"
-  | isBnd1 && areAlphaCompatible gv1 gv2  =  checkAlphaBijection bij gv1 gv2
-  | v1 == v2                              =  return $ M.insert gv1 gv2 bij
-  | otherwise =  afails [ "var names differ"
-```
-
 Outcome:
 ```
 ⊢
@@ -25,16 +16,15 @@ Focus = []
 Target (LHS): 
 (∃ O$_1 • (∃ O$_2 • P[O$_1/O$']∧(Q[O$_1,O$_2/O$,O$']∧R[O$_2/O$])))
 
+
 proof: ta
 Alpha Equivalence Check failed!
-not a-equiv: var names differ
-v1   = VR (Id "O" 0,VO,WD "1")
-v2   = VR (Id "O" 0,VO,WD "4")
-bvs1 = fromList [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[])),GL (LV (VR (Id "O" 0,VO,WD "2"),[],[]))]
-bvs2 = fromList [GL (LV (VR (Id "O" 0,VO,WD "3"),[],[])),GL (LV (VR (Id "O" 0,VO,WD "4"),[],[]))]
-bij  = fromList [(GV (VR (Id "P" 0,VP,WS)),GV (VR (Id "P" 0,VP,WS)))]
+not a-equiv: different free variables
+gv1 = GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))
+gv2 = GL (LV (VR (Id "O" 0,VO,WD "4"),[],[]))
+bij = fromList []
 ```
-**We need to have bijections between bound (list) variables**
+Constants/Variables/Cons are OK - we need to fix binders
 
 ## In XYZ theory
 

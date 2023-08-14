@@ -2,30 +2,6 @@
 
 ## Most Urgent
 
-## for ;-assoc
-
-Alpha-equivalence check not working.
-Introduce prover command `ta` to run check using informative monad.
-
-Outcome:
-```
-⊢
-(∃ O$_4 • (∃ O$_3 • P[O$_4/O$']∧(Q[O$_4,O$_3/O$,O$']∧R[O$_3/O$])))    O$,O$'⊇P, O$,O$'⊇Q, O$,O$'⊇R
-Focus = []
-
-Target (LHS): 
-(∃ O$_1 • (∃ O$_2 • P[O$_1/O$']∧(Q[O$_1,O$_2/O$,O$']∧R[O$_2/O$])))
-
-
-proof: ta
-Alpha Equivalence Check failed!
-not a-equiv: different free variables
-gv1 = GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))
-gv2 = GL (LV (VR (Id "O" 0,VO,WD "4"),[],[]))
-bij = fromList []
-```
-Constants/Variables/Cons are OK - we need to fix binders
-
 ## In XYZ theory
 
 ### Issue 1

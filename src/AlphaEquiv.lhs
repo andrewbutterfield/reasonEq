@@ -169,14 +169,18 @@ isAEquiv bij (Cons tk1 sb1 n1 ts1) (Cons tk2 sb2 n2 ts2)
 \subsubsection{Binder $\alpha$-equivalence}
 
 When checking two binders, 
-remove the bound variables from the bijection, check the terms first,
-and use the result to guide checking the binding occurences.
+check the binding occurences first,
+remove the binding occurences (if any) from the incoming binding
+and adding the above check result.
+and use the result check the terms .
 Then discard the bound variables before computing the result bijection.
 $$
 \inferrule%
    {      n_1 = n_2
-     \and ((\beta\setminus v_1^t) \vdash t_1 \aeqv t_2 \mapsto \beta_T)
-     \and (\beta_T \vdash v_1^+ \aeqv v_2^+ \mapsto \beta_Q)
+     \and (\beta_Q = v_1^+ \times v_2^+ \text{ is bijective})
+     \and ( (\beta\setminus v_1^+)\uplus\beta_Q 
+            \vdash 
+            t_1 \aeqv t_2 \mapsto \beta_T )
    }
    { \beta 
      \vdash 
@@ -184,7 +188,7 @@ $$
      \aeqv 
      (\bb {n_2} {v_2^+} {t_2})
      \mapsto
-     \beta \uplus (\beta_Q \setminus v_1^t)
+     \beta \uplus (\beta_T \setminus v_1^t)
    }
 $$
 \begin{code}
@@ -193,10 +197,11 @@ isAEquiv bij (Bnd tk1 n1 vs1 tm1) (Bnd tk2 n2 vs2 tm2)
   | n1         /= n2          =  afail "bind name differs"
   | S.size vs1 /= S.size vs2  =  afail "bind size differs"
   | otherwise =
-      do bijT <- isAEquiv bij' tm1 tm2
-         bijQ <- listAEquiv isAEquivGVar bijT vl1 vl2
-         let bijQ' = M.filterWithKey (\k _ -> not(k `S.member` vs1)) bijQ
-         bijExtend bij bijQ'
+      do let bijQ = M.fromList $ zip vl1 vl2
+         bijQ' <- bijExtend bij' bijQ
+         bijT <- isAEquiv bijQ' tm1 tm2
+         let bijT' = M.filterWithKey (\k _ -> not(k `S.member` vs1)) bijT
+         bijExtend bij bijT'
   where
     bij' = M.filterWithKey (\k _ -> not(k `S.member` vs1)) bij
     vl1 = S.toList vs1
@@ -211,8 +216,10 @@ rather than sets.
 $$
 \inferrule%
    {      n_1 = n_2
-     \and ((\beta\setminus v_1^t) \vdash t_1 \aeqv t_2 \mapsto \beta_T)
-     \and (\beta_T \vdash v_1^+ \aeqv v_2^+ \mapsto \beta_Q)
+     \and (\beta_Q = v_1^+ \times v_2^+ \text{ is bijective})
+     \and ( (\beta\setminus v_1^+)\uplus\beta_Q 
+            \vdash 
+            t_1 \aeqv t_2 \mapsto \beta_T )
    }
    { \beta 
      \vdash 
@@ -220,7 +227,7 @@ $$
      \aeqv 
      (\ll {n_2} {v_2^+} {t_2})
      \mapsto
-     \beta \uplus (\beta_Q \setminus v_1^t)
+     \beta \uplus (\beta_T \setminus v_1^t)
    }
 $$
 \begin{code}
@@ -229,10 +236,11 @@ isAEquiv bij (Lam tk1 n1 vl1 tm1) (Lam tk2 n2 vl2 tm2)
   | n1         /= n2          =  afail "lambda name differs"
   | length vl1 /= length vl2  =  afail "lambda arity differs"
   | otherwise =
-      do bijT <- isAEquiv bij' tm1 tm2
-         bijQ <- listAEquiv isAEquivGVar bijT vl1 vl2
-         let bijQ' = M.filterWithKey (\k _ -> not(k `elem` vl1)) bijQ
-         bijExtend bij bijQ'
+      do let bijQ = M.fromList $ zip vl1 vl2
+         bijQ' <- bijExtend bij' bijQ
+         bijT <- isAEquiv bijQ' tm1 tm2
+         let bijT' = M.filterWithKey (\k _ -> not(k `elem` vl1)) bijT
+         bijExtend bij bijT'
   where
     bij' = M.filterWithKey (\k _ -> not(k `elem` vl1)) bij
 \end{code}

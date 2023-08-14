@@ -402,7 +402,7 @@ bijExtend bij0 bijX
     bextend bij [] = return bij
     bextend bij ((a,b):bijx)
       = do bij' <- extdBij bij a b
-           bextend bij bijx
+           bextend bij' bijx
 \end{code}
 
 

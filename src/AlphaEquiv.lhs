@@ -255,20 +255,27 @@ We start body term analysis with an empty bijection,
 and there are no free variables with changes that need to be returned.
 $$
 \inferrule%
-   { n_1 = n_2  \and  (\epsilon \vdash t_1 \aeqv t_2 \mapsto \beta') }
+   { n_1 = n_2  
+     \and  
+     (\beta \vdash
+        (\bb {n_1} {\fv{(t_1)}} {t_1}) 
+        \aeqv 
+        (\bb {n_2} {\fv{(t_2)}} {t_2}) 
+        \mapsto \beta' ) }
    { \beta 
      \vdash 
      \xx {n_1} {t_1}  \aeqv  \xx {n_2} {t_2}
      \mapsto
-     \beta 
+     \beta'
    }
 $$
 \begin{code}
 isAEquiv bij (Cls n1 tm1) (Cls n2 tm2)
   | n1 /= n2  =  afail "closure name differs"
-  | otherwise =
-      do bij' <- isAEquiv M.empty tm1 tm2
-         return (seq bij' bij) -- force bij' evaluation
+  | otherwise 
+    = do all1 <- pBnd n1 vs1 tm1
+         all2 <- pBnd n2 vs2 tm2
+         isAEquiv bij all1 all2
   where
     vs1 = theFreeVars $ freeVars tm1
     vs2 = theFreeVars $ freeVars tm2
@@ -395,6 +402,7 @@ notCompatibleWhen (During _) (During _)  =  False
 notCompatibleWhen when1      when2       =  when1 /= when2
 \end{code}
 
+\subsection{Substitution $\alpha$-equivalence}
 
 With substitution we check the two sub-component pair-lists.
 \begin{code}
@@ -416,8 +424,6 @@ isAEquivTV bij (v1,t1) (v2,t2)
  = do bij' <- isAEquivVar bij v1 v2
       isAEquiv bij' t1 t2
 \end{code}
-
-\newpage
 
 List-variables replacing same:
 \begin{code}

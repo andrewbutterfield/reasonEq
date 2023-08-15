@@ -2,6 +2,34 @@
 
 ## Most Urgent
 
+### In UTPBase theory
+
+Try substitute on `f_1[e[O$_1/O$'],O$\x/x_1,O$_1\x]` has no effect.
+**We need to treat `f_1` as belonging to `O$_1\anything`**
+
+```
+Proof for :=_seq_same
+	((x := e);(x := f))  ≡  (x := f[e/x])  O$⊇e, O$⊇f, O$⊇x
+by red-L2R
+(x := e);(x := f), O$⊇e, O$⊇f, O$⊇x
+   = 'match-lhs ;_def@[]'
+(∃ O$_1 • ((x := e))[O$_1/O$']∧((x := f))[O$_1/O$]), O$⊇e, O$⊇f, O$⊇x
+   = 'match-lhs :=_def@[1,1,1]'
+(∃ O$_1 • (x'=e∧∧(O$'\x=O$\x))[O$_1/O$']∧((x := f))[O$_1/O$]), O$⊇e, O$⊇f, O$⊇x
+   = 'substitute @[1,1]'
+(∃ O$_1 • (x_1=e[O$_1/O$']∧∧(O$_1\x=O$\x))∧((x := f))[O$_1/O$]), O$⊇e, O$⊇f, O$⊇x
+   = 'match-lhs :=_def@[1,2,1]'
+(∃ O$_1 • (x_1=e[O$_1/O$']∧∧(O$_1\x=O$\x))∧(x'=f∧∧(O$'\x=O$\x))[O$_1/O$]), O$⊇e, O$⊇f, O$⊇x
+   = 'substitute @[1,2]'
+(∃ O$_1 • (x_1=e[O$_1/O$']∧∧(O$_1\x=O$\x))∧(x'=f_1[/]∧∧(O$'\x=O$_1\x))), O$⊇e, O$⊇f, O$⊇x
+   = 'match-lhs ∃_one_point@[]'
+(x'=f_1[/]∧∧(O$'\x=O$_1\x))[e[O$_1/O$'],O$\x/x_1,O$_1\x], O$⊇e, O$⊇f, O$⊇x
+   = 'substitute @[]'
+⊢
+x'=f_1[e[O$_1/O$'],O$\x/x_1,O$_1\x]∧∧(O$'\x=O$\x)    O$⊇e, O$⊇f, O$⊇x
+Focus = [1,2]
+```
+
 ## In XYZ theory
 
 ### Issue 1
@@ -58,45 +86,6 @@ Then ...
 
 var tests pass with constant replacements
 
-## In UTPBase theory
-
-```
-Proof for :=_seq_same
-	((x := e);(x := f))  ≡  (x := f[e/x])  O$⊇e, O$⊇f, O$⊇x
-by red-L2R
-(x := e);(x := f), O$⊇e, O$⊇f, O$⊇x
-   = 'match-lhs ;_def@[]'
-(∃ O$_1 • ((x := e))[O$_1/O$']∧((x := f))[O$_1/O$]), O$⊇e, O$⊇f, O$⊇x
-   = 'match-lhs :=_def@[1,1,1]'
-(∃ O$_1 • (x'=e∧∧(O$'\x=O$\x))[O$_1/O$']∧((x := f))[O$_1/O$]), O$⊇e, O$⊇f, O$⊇x
-   = 'substitute @[1,1]'
-(∃ O$_1 • (x_1=e[O$_1/O$']∧∧(O$_1\x=O$\x))∧((x := f))[O$_1/O$]), O$⊇e, O$⊇f, O$⊇x
-   = 'match-lhs :=_def@[1,2,1]'
-(∃ O$_1 • (x_1=e[O$_1/O$']∧∧(O$_1\x=O$\x))∧(x'=f∧∧(O$'\x=O$\x))[O$_1/O$]), O$⊇e, O$⊇f, O$⊇x
-   = 'substitute @[1,2]'
-(∃ O$_1 • (x_1=e[O$_1/O$']∧∧(O$_1\x=O$\x))∧(x'=f_1[/]∧∧(O$'\x=O$_1\x))), O$⊇e, O$⊇f, O$⊇x
-   = 'match-lhs ∃_one_point@[]'
- ...
-⊢
-(x'=f_1[/]∧∧(O$'\x=O$_1\x))[e[O$_1/O$'],O$\x/x_1,O$_1\x]    O$⊇e, O$⊇f, O$⊇x
-
-Focus = []  Target (RHS): (x := f[e/x])
-
-proof: s
-req: src/Substitution.lhs:(181,5)-(199,68): Non-exhaustive patterns in function assessCTC''
-```
-Adding in error reporting in `assessCTC''` results in
-```
-req: assessCTC'' failed
-ts:
-[(VR (Id "x" 0,VO,WD "1"),S (E T) (V (E T) (VR (Id "e" 0,VE,WB))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))])))]
-lvs:
-[]
-
-CallStack (from HasCallStack):
-  error, called at src/Substitution.lhs:199:10 in reasonEq-0.7.6.0-6N2FD404OSBLYIZO4LqjKQ:Substitution
-```
-### See comment on line 163 !!!
 
 ### Theory and Proof Management.
 

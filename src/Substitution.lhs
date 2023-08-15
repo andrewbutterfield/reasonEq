@@ -112,8 +112,8 @@ substitute :: (Monad m, MonadFail m) => SubContext -> Substn -> Term -> m Term
    \mbox{ ditto.}
 \end{eqnarray*}
 There is also a special case of $P_d[\dots]$ when
-all the targets have the same temporality as each other and cover all the free variables
-of $P_d$,
+all the targets have the same temporality as each other 
+and cover all the free variables of $P_d$,
 while all the replacements also have the same temporality as each other
 (which might differ from that of the targets).
 We shall refer to this as ``complete temporal consistency'' (c.t.c).
@@ -138,75 +138,80 @@ Note that the temporalities involved need not be dynamic.
 We check for c.t.c.s first.
 \begin{code}
 substitute sctx sub@(Substn ts lvs) vrt@(Var tk v)
+  | isObsVar v            =  return $ subsVar v ts lvs
   | hasCoverage && isCTC  =  return $ Sub tk (jVar tk $ setVarWhen repw v)
                                     $ jSub effTSRepl effLVSRepl
   | otherwise             =  return $ subsVar v ts lvs
   where
-    (hasCoverage,cover)        =  checkCoverage (subTargets sub) (scSC sctx) v
-    (isCTC,repw,effTS,effLVS)  =  assessCTC v (S.elems ts) (S.elems lvs)
-    effTSRepl                  =  map (setVTWhen repw) effTS
-    effLVSRepl                 =  map (setLVLVWhen repw) effLVS
+    (hasCoverage,cover)       = checkCoverage (subTargets sub) (scSC sctx) v
+    (isCTC,repw,effTS,effLVS) = assessCTC (varWhen v) (S.elems ts) (S.elems lvs)
+    effTSRepl                 = map (setVTWhen repw) effTS
+    effLVSRepl                = map (setLVLVWhen repw) effLVS
 \end{code}
 
 \newpage
-Checking for c.t.c:
+
+Checking coverage, given targets $tgts$, side-condition $sc$,
+and non-observation variable $pev$:
+does $\lst v \supseteq pev$ appear uniformly in $sc$?
+If so check that $tgts$ match $\lst v$.
 \begin{code}
-    checkCoverage tgts sc v@(Vbl _ _ sw)
-      = case findGenVar (StdVar v) sc of
+    checkCoverage tgts sc pev@(Vbl _ _ vw)
+      = case findGenVar (StdVar pev) sc of
           Just (CoveredBy Unif _ vs)
             -> let
-                 tgtl = map (setGVarWhen sw) $ subsumeL $ S.elems tgts
-                 vl = map (setGVarWhen sw) $ subsumeL $ S.elems vs
+                 tgtl = map (setGVarWhen vw) $ subsumeL $ S.elems tgts
+                 vl = map (setGVarWhen vw) $ subsumeL $ S.elems vs
                in  (vl == tgtl,vl) -- too strong?
           -- we only consider uniform coverage for now
           _                          ->  (False,[])
+\end{code}
 
-    assessCTC v@(Vbl i vc vw) ts lvs
-      | isObsVar v  =  notCTC
-      | isCTC       =  (True,rw,effTS,effLVS)
-      where
-        (isCTC,rw,effTS,effLVS)  =  assessCTC' vw ts lvs
-    assessCTC _ _  _    =  notCTC
-    notCTC  =  (False,undefined,undefined,undefined)
-
-    -- have not yet seen replacement
-    assessCTC' sw []            []  =  notCTC
-    -- just expect replacement variables for now.
-    assessCTC' sw (vt@( Vbl ti tc tw, Var tk (Vbl ri rc rw) ):ts ) lvs
+Checking non-observational variable $v$ for complete temporal consistency,
+given substitution mappings.
+Not yet seen replacement:
+\begin{code}
+    assessCTC sw []            []  =  notCTC
+    assessCTC sw (vt@( Vbl ti tc tw, Var tk (Vbl ri rc rw) ):ts ) lvs
       | sw /= tw              =  notCTC
-      | ti == ri && tc == rc  =  assessCTC'' sw rw [] [] ts lvs
-      | otherwise             =  assessCTC'' sw rw [vt] [] ts lvs
-    assessCTC' sw ts
+      | ti == ri && tc == rc  =  assessCTC' sw rw [] [] ts lvs
+      | otherwise             =  assessCTC' sw rw [vt] [] ts lvs
+    assessCTC sw ts
                ( lvlv@( ( LVbl (Vbl ti tc tw) tis tjs
                  ,      LVbl (Vbl ri rc rw) ris rjs) )
                  : lvs )
       | sw /= tw   =  notCTC
       | ti == ri && tc == rc && tis == ris && tjs == rjs
-                   =  assessCTC'' sw rw [] [] ts lvs
-      | otherwise  =  assessCTC'' sw rw [] [lvlv] ts lvs
-    assessCTC' _ _ _  =  notCTC
+                   =  assessCTC' sw rw [] [] ts lvs
+      | otherwise  =  assessCTC' sw rw [] [lvlv] ts lvs
+    -- just expect replacement variables for now.
+    assessCTC _ _ _  =  notCTC
+    notCTC  =  (False,undefined,undefined,undefined)
+\end{code}
 
-    -- have seen replacement
-    assessCTC'' sw repw effTS effLVS [] []
+Have seen replacement:
+\begin{code}
+    assessCTC' sw repw effTS effLVS [] []
       =  ( True, repw
          , map (setVTWhen repw) effTS
          , map (setLVLVWhen repw) effLVS )
-    assessCTC'' sw repw effTS effLVS
+    assessCTC' sw repw effTS effLVS
                 ( vt@( Vbl ti tc tw, Var tk (Vbl ri rc rw) ):ts ) lvs
       | sw /= tw              =  notCTC
       | repw /= rw            =  notCTC
-      | ti == ri && tc == rc  =  assessCTC'' sw rw effTS      effLVS  ts lvs
-      | otherwise             =  assessCTC'' sw rw (vt:effTS) effLVS  ts lvs
-    assessCTC'' sw repw effTS effLVS ts
+      | ti == ri && tc == rc  =  assessCTC' sw rw effTS      effLVS  ts lvs
+      | otherwise             =  assessCTC' sw rw (vt:effTS) effLVS  ts lvs
+    assessCTC' sw repw effTS effLVS ts
                 ( lvlv@( ( LVbl (Vbl ti tc tw) tis tjs
                   ,      LVbl (Vbl ri rc rw) ris rjs) )
                   : lvs )
       | sw /= tw   =  notCTC
       | repw /= rw            =  notCTC
       | ti == ri && tc == rc && tis == ris && tjs == rjs
-                   =  assessCTC'' sw repw effTS effLVS        ts lvs
-      | otherwise  =  assessCTC'' sw repw effTS (lvlv:effLVS) ts lvs
-    assessCTC'' sw repw effTS effLVS ts lvs = notCTC
+                   =  assessCTC' sw repw effTS effLVS        ts lvs
+      | otherwise  =  assessCTC' sw repw effTS (lvlv:effLVS) ts lvs
+    -- just expect replacement variables for now.
+    assessCTC' sw repw effTS effLVS ts lvs = notCTC
 \end{code}
 
 \newpage
@@ -257,7 +262,9 @@ If the variable is Working through substitution pairs:
 \begin{eqnarray*}
    (\cc i {ts}) \ss {} {v^n} {t^n}
    &\defs&
-   (\cc i {ts {\ss {} {v^n} {t^n}}}) \cond{\mathrm{CanSub}(i)} (\cc i {ts}) \ss {} {v^n} {t^n}
+   ( \cc i {ts {\ss {} {v^n} {t^n}}}) 
+     \cond{\mathrm{CanSub}(i)} 
+   (\cc i {ts}) \ss {} {v^n} {t^n}
 \end{eqnarray*}
 \begin{code}
 substitute sctx sub ct@(Cons tk subable i ts)
@@ -350,7 +357,7 @@ so that bound variables can be $\alpha$-renamed so they are not
 affected by a substitution. This is done by changing the uniqueness number
 of the relevant variable.
 \begin{code}
-captureAvoidance :: (Monad m, MonadFail m) => VarSet -> Term -> Substn -> m Substn
+captureAvoidance :: MonadFail m => VarSet -> Term -> Substn -> m Substn
 captureAvoidance vs tm sub
   = do let tfv = freeVars tm
        let (tgtvs,rplvs) = substRelFree tfv sub
@@ -452,6 +459,36 @@ lvlookup lv@(LVbl v is js) ( ((LVbl tv _ _), (LVbl rv _ _) ) : rest )
   | otherwise  =  lvlookup lv rest
 \end{code}
 
+\newpage
+\subsection{Substitution Tests}
+
+Assuming that $O \supseteq f$:
+\begin{eqnarray*}
+   (\dots P \dots)[e/x] &=& (\dots P[e/x] \dots)
+\\ f[O_1/O]  &=& f_1
+\\ f'[O_1/O']  &=& f_1
+\\ f_1[O/O_1]  &=& f
+\\ f_1[O'/O_1]  &=& fe'
+\\ (x'=f \land O'\less x=O\less x)[O_1/O] &=& (x'=f_1 \land O'\less x=O_1\less x)
+\\  &\neq& (x'=f_1[/] \land O'\less x=O_1\less x)
+\end{eqnarray*}
+Also
+$$
+  P_d
+  [ e_e,f_e,z_e,\dots,\lst u_e,\dots
+  /
+    x_d,y_d,z_d,\dots,\lst u_d,\dots
+  ]
+=
+  P_e[e_e,f_e/x_e,y_e]
+$$
+
+\begin{code}
+substTests  =  testGroup "Substitution"
+ [ testCase "1+1=2" (1+1 @?= 2)
+ ]
+\end{code}
+
 
 \newpage
 \subsection{Substitution Composition}
@@ -484,7 +521,8 @@ $[e_1,\dots,e_m,u_1,\dots,u_n/v_1,\dots,v_m,u_1,\dots,u_n]$.
 We now consider the following double substitution:
 $(e[f_1,\dots,f_m/x_1,\dots,x_m])[g_1,\dots,g_n/y_1,\dots,y_n]$.
 Note that there is no restriction on the relationship between the two sets
-$\setof{x_1,\dots,x_m}$ and $\setof{y_1,\dots,y_n}$. They can be disjoint, or overlap in some way.
+$\setof{x_1,\dots,x_m}$ and $\setof{y_1,\dots,y_n}$. 
+They can be disjoint, or overlap in some way.
 
 The following obvious shorthand suggests itself: $(e[F/X])[G/Y]$,
 and we let $U = X \cup Y$, and $Z = X \cap Y$.
@@ -654,6 +692,8 @@ varSubstCompTests  =  testGroup "substComp applied to var"
 
 
 
+
+
 \begin{code}
 substCompTests  =  testGroup "Substitution.substComp"
  [ varSubstCompTests
@@ -666,7 +706,8 @@ substCompTests  =  testGroup "Substitution.substComp"
 int_tst_Subst :: [TF.Test]
 int_tst_Subst
  = [ testGroup "\nSubstitution Internal"
-     [ substCompTests
+     [ substTests
+     , substCompTests
      ]
 {-  , testGroup "QuickCheck Ident"
      [

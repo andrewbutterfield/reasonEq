@@ -4,6 +4,19 @@
 
 ### In UTPBase theory
 
+Need to add in substitution tests.
+
+
+Why does
+
+```
+(x'=f∧∧(O$'\x=O$\x))[O$_1/O$])
+   = 'substitute'
+(x'=f_1[/]∧∧(O$'\x=O$_1\x))
+```
+
+Why is it left with `f_1[/]` ?
+
 Try substitute on `f_1[e[O$_1/O$'],O$\x/x_1,O$_1\x]` has no effect.
 **We need to treat `f_1` as belonging to `O$_1\anything`**
 

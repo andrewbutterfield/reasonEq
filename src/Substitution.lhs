@@ -86,6 +86,10 @@ substitute :: (Monad m, MonadFail m) => SubContext -> Substn -> Term -> m Term
   That is what the second line below says, but it is not happening.
 }
 
+\textbf{
+  We also want $e[O_1/O] = e_1$ and $e_1[O/O_1] = e$.
+}
+
 
 
 \begin{eqnarray*}
@@ -202,14 +206,7 @@ Checking for c.t.c:
       | ti == ri && tc == rc && tis == ris && tjs == rjs
                    =  assessCTC'' sw repw effTS effLVS        ts lvs
       | otherwise  =  assessCTC'' sw repw effTS (lvlv:effLVS) ts lvs
-    assessCTC'' sw repw effTS effLVS ts lvs
-       = error $ unlines
-         [ "assessCTC'' failed" 
-         , "ts:"
-         , show ts
-         , "lvs:"
-         , show lvs
-         ]
+    assessCTC'' sw repw effTS effLVS ts lvs = notCTC
 \end{code}
 
 \newpage

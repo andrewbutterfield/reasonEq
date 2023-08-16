@@ -501,18 +501,29 @@ Also
 \begin{eqnarray*}
    (\dots P \dots)[e/x] &=& (\dots P[e/x] \dots)
 \end{eqnarray*}
+\begin{code}
+iP = jId "P" ; vP = PreCond iP ; p = fromJust $ pVar vP
+ie = jId "e" ; ve = PreExpr ie ; e = fromJust $ eVar ArbType ve
+ix = jId "x" ; vx = PreVar ix
+iC = jId "C" ; c t = PCons True iC [t]
+e_for_x = jSubstn [(vx,e)] []
+tstDeep = testCase "(P)[e/x]=(P[e/x])"
+              ( PSub (c p) e_for_x  @?=  c (PSub p e_for_x) )
+\end{code}
 
 \subsubsection{Expr Var Temporal Substitutions}
 
+Assuming $O \supseteq f$ we expect:
 \begin{eqnarray*}
-   f[O_1/O]  &=& f_1
-\\ f'[O_1/O']  &=& f_1
-\\ f_1[O/O_1]  &=& f
+   f[O_1/O]     &=& f_1  
+\\ f'[O_1/O']   &=& f_1
+\\ f_1[O/O_1]   &=& f
 \\ f_1[O'/O_1]  &=& f'
 \end{eqnarray*}
 
 \subsubsection{Assignment Proof Temporal substitution}
 
+Assuming $O \supseteq f$ we expect:
 \begin{eqnarray*}
    (x'=f \land O'\less x=O\less x)[O_1/O] 
    &=& 
@@ -548,7 +559,7 @@ Also
 
 \begin{code}
 substTests  =  testGroup "Substitution"
- [ testCase "1+1=2" (1+1 @?= 2)
+ [ tstDeep
  ]
 \end{code}
 

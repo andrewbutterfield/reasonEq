@@ -469,19 +469,82 @@ Assuming that $O \supseteq f$:
 \\ f'[O_1/O']  &=& f_1
 \\ f_1[O/O_1]  &=& f
 \\ f_1[O'/O_1]  &=& fe'
-\\ (x'=f \land O'\less x=O\less x)[O_1/O] &=& (x'=f_1 \land O'\less x=O_1\less x)
+\\ (x'=f \land O'\less x=O\less x)[O_1/O] 
+   &=& 
+   (x'=f_1 \land O'\less x=O_1\less x)
 \\  &\neq& (x'=f_1[/] \land O'\less x=O_1\less x)
 \end{eqnarray*}
 Also
-$$
-  P_d
-  [ e_e,f_e,z_e,\dots,\lst u_e,\dots
-  /
+\begin{eqnarray*}
+   P_d
+    [ e_e,f_e,z_e,\dots,\lst u_e,\dots
+    /
     x_d,y_d,z_d,\dots,\lst u_d,\dots
-  ]
-=
-  P_e[e_e,f_e/x_e,y_e]
-$$
+    ]
+  &=&
+   P_e[e_e,f_e/x_e,y_e]
+\\ P_d
+    [ e_a,f_e,z_e,\dots,\lst u_e,\dots
+    /
+    x_d,y_d,z_d,\dots,\lst u_c,\dots
+    ]
+  &=&
+   P_d
+    [ e_a,f_e,z_e,\dots,\lst u_e,\dots
+    /
+    x_d,y_d,z_d,\dots,\lst u_c,\dots
+    ]
+\end{eqnarray*}
+
+\subsubsection{Non Obs. Var. Deep Substitution}
+
+\begin{eqnarray*}
+   (\dots P \dots)[e/x] &=& (\dots P[e/x] \dots)
+\end{eqnarray*}
+
+\subsubsection{Expr Var Temporal Substitutions}
+
+\begin{eqnarray*}
+   f[O_1/O]  &=& f_1
+\\ f'[O_1/O']  &=& f_1
+\\ f_1[O/O_1]  &=& f
+\\ f_1[O'/O_1]  &=& fe'
+\end{eqnarray*}
+
+\subsubsection{Assignment Proof Temporal substitution}
+
+\begin{eqnarray*}
+   (x'=f \land O'\less x=O\less x)[O_1/O] 
+   &=& 
+   (x'=f_1 \land O'\less x=O_1\less x)
+\\  &\neq& (x'=f_1[/] \land O'\less x=O_1\less x)
+\end{eqnarray*}
+
+\subsubsection{CTC examples}
+
+\begin{eqnarray*}
+   P_d
+    [ e_e,f_e,z_e,\dots,\lst u_e,\dots
+    /
+    x_d,y_d,z_d,\dots,\lst u_d,\dots
+    ]
+  &=&
+   P_e[e_e,f_e/x_e,y_e]
+\\ P_d
+    [ e_a,f_e,z_e,\dots,\lst u_e,\dots
+    /
+    x_d,y_d,z_d,\dots,\lst u_c,\dots
+    ]
+  &=&
+   P_d
+    [ e_a,f_e,z_e,\dots,\lst u_e,\dots
+    /
+    x_d,y_d,z_d,\dots,\lst u_c,\dots
+    ]
+\end{eqnarray*}
+
+\subsubsection{Gathering Tests}
+
 
 \begin{code}
 substTests  =  testGroup "Substitution"

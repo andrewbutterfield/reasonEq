@@ -468,7 +468,7 @@ Assuming that $O \supseteq f$:
 \\ f[O_1/O]  &=& f_1
 \\ f'[O_1/O']  &=& f_1
 \\ f_1[O/O_1]  &=& f
-\\ f_1[O'/O_1]  &=& fe'
+\\ f_1[O'/O_1]  &=& f'
 \\ (x'=f \land O'\less x=O\less x)[O_1/O] 
    &=& 
    (x'=f_1 \land O'\less x=O_1\less x)
@@ -508,7 +508,7 @@ Also
    f[O_1/O]  &=& f_1
 \\ f'[O_1/O']  &=& f_1
 \\ f_1[O/O_1]  &=& f
-\\ f_1[O'/O_1]  &=& fe'
+\\ f_1[O'/O_1]  &=& f'
 \end{eqnarray*}
 
 \subsubsection{Assignment Proof Temporal substitution}

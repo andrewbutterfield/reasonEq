@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Substitution
-( SubContext, mkSubCtxt
+( SubContext, mkSubCtxt, subContext0
 , substitute
 -- test stuff below
 , int_tst_Subst
@@ -68,6 +68,8 @@ data SubContext
   deriving (Eq,Ord,Show,Read)
 
 mkSubCtxt = SCtxt
+
+subContext0 = mkSubCtxt scTrue []
 \end{code}
 
 \newpage
@@ -338,7 +340,7 @@ substitute sctx (Substn _ lvlvs) bt@(Iter tk sa na si ni lvs)
            $ map (listVarSubstitute sctx (S.toList lvlvs)) lvs
 \end{code}
 
-\subsubsection{Non-Substitable Terms}
+\subsubsection{Non-Substitutable Terms}
 
 \begin{eqnarray*}
    \kk k \ss {} {v^n} {t^n}   &\defs&  \kk k
@@ -496,6 +498,11 @@ Also
     ]
 \end{eqnarray*}
 
+Useful test bits:
+\begin{code}
+sub0 sub tm = fromJust $ substitute subContext0 sub tm
+\end{code}
+
 \subsubsection{Non Obs. Var. Deep Substitution}
 
 \begin{eqnarray*}
@@ -507,8 +514,8 @@ ie = jId "e" ; ve = PreExpr ie ; e = fromJust $ eVar ArbType ve
 ix = jId "x" ; vx = PreVar ix
 iC = jId "C" ; c t = PCons True iC [t]
 e_for_x = jSubstn [(vx,e)] []
-tstDeep = testCase "(P)[e/x]=(P[e/x])"
-              ( PSub (c p) e_for_x  @?=  c (PSub p e_for_x) )
+tstDeep = testCase "substitute [e/x] in (P)=(P[e/x])"
+              ( sub0 e_for_x (c p) @?=  c (PSub p e_for_x) )
 \end{code}
 
 \subsubsection{Expr Var Temporal Substitutions}

@@ -522,14 +522,14 @@ tstDeep = testCase "substitute [e/x] in (P)=(P[e/x])"
               ( sub0 e_for_x (c p) @?=  c (PSub p e_for_x) )
 \end{code}
 
+\newpage
+
 \subsubsection{Expr Var Temporal Substitutions}
 
 Assuming $O \supseteq f$ we expect:
 \begin{eqnarray*}
    f[O_1/O]     &=& f_1  
-\\ f'[O_1/O']   &=& f_1
-\\ f_1[O/O_1]   &=& f
-\\ f_1[O'/O_1]  &=& f'
+\\ &\vdots&
 \end{eqnarray*}
 \begin{code}
 jf = jId "f"
@@ -549,16 +549,33 @@ subObsF     = mkSubCtxt obs_covers_f []
 subObsFMid1 = mkSubCtxt obs_covers_f ["1"]
 
 mid_for_pre = jSubstn [] [(lO,lO1)]
+mid_for_post = jSubstn [] [(lO',lO1)]
+pre_for_mid = jSubstn [] [(lO1,lO)]
+post_for_mid = jSubstn [] [(lO1,lO')]
 
 esub tm sub = ESub ArbType tm sub
-
-
+\end{code}
+\begin{eqnarray*}
+   f[O_1/O]     &=& f_1  
+\\ f'[O_1/O']   &=& f_1
+\\ f_1[O/O_1]   &=& f
+\\ f_1[O'/O_1]  &=& f'
+\end{eqnarray*}
+\begin{code}
 tstExprObsSubs 
   = testGroup "Expression temporality substitutions"
       [ testCase "f[O1/O] = f1" 
         ( subC subObsFMid1 mid_for_pre f @?=  f1 )
+      , testCase "f'[O1/O'] = f1" 
+        ( subC subObsFMid1 mid_for_post f' @?=  f1 )
+      , testCase "f1[O/O1] = f" 
+        ( subC subObsFMid1 pre_for_mid f1 @?=  f )
+      , testCase "f1[O'/O1] = f'" 
+        ( subC subObsFMid1 post_for_mid f1 @?= f' )
       ]
 \end{code}
+
+\newpage
 
 \subsubsection{Assignment Proof Temporal substitution}
 

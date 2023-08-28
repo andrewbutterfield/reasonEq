@@ -357,6 +357,7 @@ trterm trid _ (Iter tk _ na _ ni lvs@(_:_:_))
  where silentId na@(Identifier i _)
   -- logical-and is the 'default' for na, so we keep it 'silent'
         | i == "land"  =  ""
+        | i == "and"   =  ""
         | otherwise    =  trid na
 
 trterm trid _ (Iter tk _ na _ ni lvs)

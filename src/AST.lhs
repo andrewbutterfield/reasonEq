@@ -43,7 +43,7 @@ module AST ( Type
            , termSize
            -- test only below here
            , int_tst_AST
-           , jSub, jVar, jBnd, jLam, jSubstn, xSubstn
+           , jSub, jVar, jBnd, jLam, jeVar, jpVar, jSubstn, xSubstn
            ) where
 import Data.Char
 import Data.List
@@ -847,6 +847,9 @@ jSub ts lvs  =  fromJust $ substn ts lvs
 jVar tk v        =  fromJust $ var tk v
 jBnd tk n vs tm  =  fromJust $ bnd tk n vs tm
 jLam tk n vl tm  =  fromJust $ lam tk n vl tm
+
+jeVar v = fromJust $ eVar ArbType v
+jpVar v = fromJust $ pVar v
 
 
 int_tst_AST :: [TF.Test]

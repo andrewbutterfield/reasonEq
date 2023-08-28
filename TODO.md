@@ -4,18 +4,11 @@
 
 ### In UTPBase theory
 
-Need to add in substitution tests.
-
-
-Why does
-
+We have a test that now succeeds
 ```
-(x'=f∧∧(O$'\x=O$\x))[O$_1/O$])
-   = 'substitute'
-(x'=f_1[/]∧∧(O$'\x=O$_1\x))
+testCase "f[O1/O] = f1" ( subC subObsFMid1 mid_for_pre f @?=  f1 )
 ```
 
-Why is it left with `f_1[/]` ?
 
 Try substitute on `f_1[e[O$_1/O$'],O$\x/x_1,O$_1\x]` has no effect.
 **We need to treat `f_1` as belonging to `O$_1\anything`**

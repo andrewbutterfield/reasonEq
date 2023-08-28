@@ -141,7 +141,7 @@ We check for c.t.c.s first.
 \begin{code}
 substitute sctx sub@(Substn ts lvs) vrt@(Var tk v)
   | isObsVar v            =  return $ subsVar v ts lvs
-  | hasCoverage && isCTC  =  return $ Sub tk (jVar tk $ setVarWhen repw v)
+  | hasCoverage && isCTC  =  return $ ctcSub tk (jVar tk $ setVarWhen repw v)
                                     $ jSub effTSRepl effLVSRepl
   | otherwise             =  return $ subsVar v ts lvs
   where
@@ -149,6 +149,9 @@ substitute sctx sub@(Substn ts lvs) vrt@(Var tk v)
     (isCTC,repw,effTS,effLVS) = assessCTC (varWhen v) (S.elems ts) (S.elems lvs)
     effTSRepl                 = map (setVTWhen repw) effTS
     effLVSRepl                = map (setLVLVWhen repw) effLVS
+    ctcSub tk tm sub@(Substn ts lvs)
+      | S.null ts && S.null lvs  =  tm
+      | otherwise                =  Sub tk tm sub
 \end{code}
 
 \newpage
@@ -500,7 +503,8 @@ Also
 
 Useful test bits:
 \begin{code}
-sub0 sub tm = fromJust $ substitute subContext0 sub tm
+subC ctxt sub tm = fromJust $ substitute ctxt sub tm
+sub0 = subC subContext0
 \end{code}
 
 \subsubsection{Non Obs. Var. Deep Substitution}
@@ -509,8 +513,8 @@ sub0 sub tm = fromJust $ substitute subContext0 sub tm
    (\dots P \dots)[e/x] &=& (\dots P[e/x] \dots)
 \end{eqnarray*}
 \begin{code}
-iP = jId "P" ; vP = PreCond iP ; p = fromJust $ pVar vP
-ie = jId "e" ; ve = PreExpr ie ; e = fromJust $ eVar ArbType ve
+iP = jId "P" ; vP = PreCond iP ; p = jpVar vP
+ie = jId "e" ; ve = PreExpr ie ; e = jeVar ve
 ix = jId "x" ; vx = PreVar ix
 iC = jId "C" ; c t = PCons True iC [t]
 e_for_x = jSubstn [(vx,e)] []
@@ -527,6 +531,34 @@ Assuming $O \supseteq f$ we expect:
 \\ f_1[O/O_1]   &=& f
 \\ f_1[O'/O_1]  &=& f'
 \end{eqnarray*}
+\begin{code}
+jf = jId "f"
+vf  = PreExpr  jf     ; f  = jeVar vf
+vf' = PostExpr jf     ; f' = jeVar vf'
+vf1 = MidExpr  jf "1" ; f1 = jeVar vf1
+
+iO = jId "O" 
+vO  = PreVar  iO     ; lO  = LVbl vO  [] []
+vO' = PostVar iO     ; lO' = LVbl vO' [] []
+vO1 = MidVar  iO "1" ; lO1 = LVbl vO1 [] []
+
+obs_covers_f = [(LstVar lO)] `covers` StdVar vf
+
+subMid1     = mkSubCtxt scTrue       ["1"]
+subObsF     = mkSubCtxt obs_covers_f []
+subObsFMid1 = mkSubCtxt obs_covers_f ["1"]
+
+mid_for_pre = jSubstn [] [(lO,lO1)]
+
+esub tm sub = ESub ArbType tm sub
+
+
+tstExprObsSubs 
+  = testGroup "Expression temporality substitutions"
+      [ testCase "f[O1/O] = f1" 
+        ( subC subObsFMid1 mid_for_pre f @?=  f1 )
+      ]
+\end{code}
 
 \subsubsection{Assignment Proof Temporal substitution}
 
@@ -567,6 +599,7 @@ Assuming $O \supseteq f$ we expect:
 \begin{code}
 substTests  =  testGroup "Substitution"
  [ tstDeep
+ , tstExprObsSubs
  ]
 \end{code}
 

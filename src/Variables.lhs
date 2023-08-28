@@ -19,8 +19,8 @@ module Variables
  , pattern ObsVar, pattern ExprVar, pattern PredVar
  , pattern StaticVar, pattern PreVar, pattern MidVar, pattern PostVar
  , pattern ScriptVar
- , pattern PreCond, pattern PostCond
- , pattern PreExpr, pattern PostExpr
+ , pattern PreCond, pattern PostCond, pattern MidCond
+ , pattern PreExpr, pattern PostExpr, pattern MidExpr
  , isPreVar, isObsVar, isExprVar, isPredVar
  , whatVar, timeVar
  , ListVar
@@ -238,8 +238,10 @@ pattern MidVar    i n  = VR (i, VO, (WD n))
 pattern ScriptVar i    = VR (i, VO, WT)
 pattern PreCond   i    = VR (i, VP, WB)
 pattern PostCond  i    = VR (i, VP, WA)
+pattern MidCond   i n  = VR (i, VP, (WD n))
 pattern PreExpr   i    = VR (i, VE, WB)
 pattern PostExpr  i    = VR (i, VE, WA)
+pattern MidExpr   i n  = VR (i, VE, (WD n))
 \end{code}
 
 Some variable predicates/functions:

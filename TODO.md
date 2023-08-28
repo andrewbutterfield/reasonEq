@@ -9,6 +9,7 @@ We have a test that now succeeds
 testCase "f[O1/O] = f1" ( subC subObsFMid1 mid_for_pre f @?=  f1 )
 ```
 
+This still fails:
 
 Try substitute on `f_1[e[O$_1/O$'],O$\x/x_1,O$_1\x]` has no effect.
 **We need to treat `f_1` as belonging to `O$_1\anything`**

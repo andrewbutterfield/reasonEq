@@ -22,18 +22,22 @@ by red-L2R
    = 'match-lhs ;_def@[]'
 (∃ O$_1 • ((x := e))[O$_1/O$']∧((x := f))[O$_1/O$]), O$⊇e, O$⊇f, O$⊇x
    = 'match-lhs :=_def@[1,1,1]'
-(∃ O$_1 • (x'=e∧∧(O$'\x=O$\x))[O$_1/O$']∧((x := f))[O$_1/O$]), O$⊇e, O$⊇f, O$⊇x
+(∃ O$_1 • (x'=e∧(O$'\x=O$\x))[O$_1/O$']∧((x := f))[O$_1/O$]), O$⊇e, O$⊇f, O$⊇x
    = 'substitute @[1,1]'
-(∃ O$_1 • (x_1=e[O$_1/O$']∧∧(O$_1\x=O$\x))∧((x := f))[O$_1/O$]), O$⊇e, O$⊇f, O$⊇x
+(∃ O$_1 • (x_1=e[O$_1/O$']∧(O$_1\x=O$\x))∧((x := f))[O$_1/O$]), O$⊇e, O$⊇f, O$⊇x
    = 'match-lhs :=_def@[1,2,1]'
-(∃ O$_1 • (x_1=e[O$_1/O$']∧∧(O$_1\x=O$\x))∧(x'=f∧∧(O$'\x=O$\x))[O$_1/O$]), O$⊇e, O$⊇f, O$⊇x
+(∃ O$_1 • (x_1=e[O$_1/O$']∧(O$_1\x=O$\x))∧(x'=f∧(O$'\x=O$\x))[O$_1/O$]), O$⊇e, O$⊇f, O$⊇x
    = 'substitute @[1,2]'
-(∃ O$_1 • (x_1=e[O$_1/O$']∧∧(O$_1\x=O$\x))∧(x'=f_1[/]∧∧(O$'\x=O$_1\x))), O$⊇e, O$⊇f, O$⊇x
+(∃ O$_1 • (x_1=e[O$_1/O$']∧(O$_1\x=O$\x))∧(x'=f_1[/]∧(O$'\x=O$_1\x))), O$⊇e, O$⊇f, O$⊇x
    = 'match-lhs ∃_one_point@[]'
-(x'=f_1[/]∧∧(O$'\x=O$_1\x))[e[O$_1/O$'],O$\x/x_1,O$_1\x], O$⊇e, O$⊇f, O$⊇x
+(x'=f_1[/]∧(O$'\x=O$_1\x))[e[O$_1/O$'],O$\x/x_1,O$_1\x], O$⊇e, O$⊇f, O$⊇x
    = 'substitute @[]'
+ ...
+
+           
+
 ⊢
-x'=f_1[e[O$_1/O$'],O$\x/x_1,O$_1\x]∧∧(O$'\x=O$\x)    O$⊇e, O$⊇f, O$⊇x
+x'=f_1[e[O$_1/O$'],O$\x/x_1,O$_1\x]∧(O$'\x=O$\x)    O$⊇e, O$⊇f, O$⊇x
 Focus = [1,2]
 ```
 

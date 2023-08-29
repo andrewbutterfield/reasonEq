@@ -351,7 +351,8 @@ cjCondAlt2 = preddef ("cond" -.- "alt" -.- "def2")
 
 \subsubsection{Defn. of Sequential Composition}
 
-We need to know when a predicate is a UTP predicate ($O \cup O'\supseteq P$):
+We need to know when a predicate is a UTP predicate ($O \cup O'\supseteq P$).
+We will do this by defining a \emph{uniform} side-condition ($O \supseteq p$).
 \begin{code}
 assertIsUTP  :: GenVar -> SideCond
 assertIsUTP  gP  = [gO,gO'] `covers` gP
@@ -365,6 +366,7 @@ assertIsUTPCond  gP  = [gO] `covers` gP
 assertAreUTPCond :: [GenVar] -> SideCond
 assertAreUTPCond gPs = mrgscs $ map assertIsUTPCond gPs
 \end{code}
+
 
 From \cite[Defn 2.2.1,p49]{UTP-book}
 
@@ -382,10 +384,11 @@ seqIntro = mkConsIntro i_seq boolf_2
                          === exists [gO0]
                               ( (Sub P p o0'sub) /\ (Sub P q o0sub) )
                        )
-                       (assertIsUTP gP .: assertIsUTP gQ .: gfresh)
+                       (assertIsUTP gp .: assertIsUTP gq .: gfresh)
    where
       gfresh = fresh $ S.singleton gO0
 \end{code}
+We want to assert $O \supseteq P$, and rely on unformity to get the rest.
 
 We also need to ensure that $O$, $O'$, and $O_m$ are ``known''.
 \begin{code}
@@ -929,12 +932,18 @@ that is then ``wrapped'' in different ways depending on where it is used.
 
 $$P \quad Q \quad R \quad S$$
 \begin{code}
--- underying variable
 vP = Vbl (jId "P") PredV Static ; p = fromJust $ pVar vP ; gP = StdVar vP
 vQ = Vbl (jId "Q") PredV Static ; q = fromJust $ pVar vQ ; gQ = StdVar vQ
 vR = Vbl (jId "R") PredV Static ; r = fromJust $ pVar vR ; gR = StdVar vR
 vS = Vbl (jId "S") PredV Static ; s = fromJust $ pVar vS ; gS = StdVar vS
 \end{code}
+For uniform side-conditions:
+\begin{code}
+gp = StdVar $ Vbl (jId "P") PredV Before
+gq = StdVar $ Vbl (jId "Q") PredV Before
+\end{code}
+
+
 
 
 $$ b \quad b' \qquad c  \quad c' $$

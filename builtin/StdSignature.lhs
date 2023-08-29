@@ -20,7 +20,6 @@ module StdSignature (
 , propdef
 , flattenEquiv
 , forall, exists, univ, sat
-, (.:), mrgscs
 , preddef, mkNmdAsn
 ) where
 
@@ -194,21 +193,6 @@ univ p = Cls univId p
 satId = fromJust $ brktIdent "langle" "rangle"
 sat p = Cls satId p
 \end{code}
-
-\subsubsection{Side-Condition Operators}
-
-We want some shorthands for assembling side-conditions,
-that are also ``total'',
-in that they return \texttt{SideCond} rather than \texttt{m SideCond}.
-\begin{code}
-(.:) :: SideCond -> SideCond -> SideCond
-sc1 .: sc2 = fromJust $ mrgSideCond [] sc1 sc2
-mrgscs :: [SideCond] -> SideCond
-mrgscs = fromJust . mrgSideConds []
-\end{code}
-\textbf{
-These are unsafe and should only be used for the definition of builtins.
-}
 
 
 \subsubsection{Predicate Law Shorthand}

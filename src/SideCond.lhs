@@ -20,6 +20,7 @@ module SideCond (
 , notin, covers, fresh
 , findGenVar
 -- , citingASCs   -- not used anywhere!
+, (.:), mrgscs
 , int_tst_SideCond
 ) where
 import Data.Char
@@ -716,7 +717,25 @@ mrgSideConds ss [] = return ([],S.empty)
 mrgSideConds ss (sc:scs)
   = do  scs' <- mrgSideConds ss scs
         mrgSideCond ss sc scs'
+
 \end{code}
+
+\subsubsection{Side-Condition Operators}
+
+We want some shorthands for assembling side-conditions,
+that are also ``total'',
+in that they return \texttt{SideCond} rather than \texttt{m SideCond}.
+\begin{code}
+(.:) :: SideCond -> SideCond -> SideCond
+sc1 .: sc2 = fromJust $ mrgSideCond [] sc1 sc2
+mrgscs :: [SideCond] -> SideCond
+mrgscs = fromJust . mrgSideConds []
+\end{code}
+\textbf{
+These are unsafe and should only be used for the definition of 
+builtins or tests.
+}
+
 
 \newpage
 \subsection{Discharging Side-conditions}

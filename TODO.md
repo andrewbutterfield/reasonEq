@@ -10,6 +10,9 @@ f_1[e[O$_1/O$'],O$\x/x_1,O$_1\x]
 ```
 this should result in ``f[e/x]``.
 
+In fact, `e[O$_1/O$'] = e` because `e` has no dashed vars,
+but again, `substitute` fails to do this.
+
 ## In XYZ theory
 
 ### Issue 1

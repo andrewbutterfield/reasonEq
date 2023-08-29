@@ -123,6 +123,11 @@ In some of these cases, we may be able to simplify a side-condition further:
 \\ \emptyset \supseteq z && \false
 \\ pre      \supseteq z  && z \textrm{ is a \texttt{Before} variable}
 \end{eqnarray*}
+For list variables, we can add:
+\begin{eqnarray*}
+   \lst\ell  \supseteq \lst\ell\less x,\dots  && \true
+\end{eqnarray*}
+
 
 We also need to take account of known variables of various kinds
 when evaluating and building side-conditions.
@@ -323,7 +328,7 @@ $T$ denotes a standard term variable,
 and $g$ denotes either $z$ or $T$.
 We also use the case conventions described earlier ($P, p, p'$).
 
-\paragraph{Checking Disjoint}
+\paragraph{Checking Disjoint $V \disj g$}
 
 \begin{eqnarray*}
    \emptyset             \disj g           &&   \true
@@ -349,12 +354,14 @@ ascCheck ss asc@(Disjoint _ gv vs)
     report msg = fail $ unlines' [msg,showsv,showvs]
 \end{code}
 
-\paragraph{Checking CoveredBy}
+\paragraph{Checking CoveredBy $V \supseteq g$}
 
 \begin{eqnarray*}
    \emptyset             \supseteq z           && \false
 \\ \dots,g,\dots{}       \supseteq g           && \true
 \\ \{stdObs\}\setminus z \supseteq z           && \false
+\\ \ell\setminus Z \supseteq \ell\setminus (Z\cup W) 
+     && \true
 \\ V,g\textrm{ are temporally disjoint}        && \false
 \end{eqnarray*}
 
@@ -363,13 +370,14 @@ we cannot deduce that $\emptyset \supseteq T$ is false.
 Similarly, $T \supseteq z$ could also be true.
 \begin{code}
 ascCheck ss asc@(CoveredBy _ gv vs)
-  | gv `S.member` vs          =  return mscTrue
+  -- | gv `S.member` vs          =  return mscTrue -- subsumed by next line
+  | any (gvCovBy gv) vs       =  return mscTrue
   | temporallyDisjoint gv vs  =  report "atomic covers is False (disjoint)"
   | not $ isObsGVar gv        =  return $ Just $ setASCUniformity asc
   -- gv is an observation variable not in vs below here....
   | S.null vs                 =  report "atomic covers is False (null)"
   | all isStdV vs             =  report "atomic covers is False (all std)"
-  where
+  where    
     showsv = "gv = "++show gv
     showvs = "vs = "++show vs
     report msg = fail $ unlines' [msg,showsv,showvs]
@@ -378,6 +386,15 @@ ascCheck ss asc@(CoveredBy _ gv vs)
 In all other cases, we return the atomic condition with uniformity set:
 \begin{code}
 ascCheck _ asc = return $ Just $ setASCUniformity asc
+\end{code}
+
+Is $\ell\less V$ covered by $\kappa\less W$ ?
+It is if $\ell=\kappa$ and $W \subseteq V$.
+\begin{code}
+gvCovBy :: GenVar -> GenVar -> Bool
+gvCovBy (LstVar (LVbl v is js)) (LstVar (LVbl covv isv jsv))
+  = v == covv && isv `issubset` is && jsv `issubset` js
+gvCovBy _ _ = False
 \end{code}
 
 

@@ -4,49 +4,11 @@
 
 ### In UTPBase theory
 
-We have a test that now succeeds
+We now have the following substitution that won't:
 ```
-testCase "f[O1/O] = f1" ( subC subObsFMid1 mid_for_pre f @?=  f1 )
+f_1[e[O$_1/O$'],O$\x/x_1,O$_1\x]
 ```
-
-This still fails:
-
-Try substitute on `f_1[e[O$_1/O$'],O$\x/x_1,O$_1\x]` has no effect.
-**We need to treat `f_1` as belonging to `O$_1\anything`**
-
-If we expand assignments first, we cannot apply ;_def
-```
-(P;Q)  ≡  (∃ O$_0 • P[O$_0/O$']∧Q[O$_0/O$])  
-O$,O$'⊇P, O$,O$'⊇Q, fresh:O$_0
-```
-
-```
-x'=e∧(O$'\x=O$\x);x'=f∧(O$'\x=O$\x)    O$⊇e, O$⊇f, O$⊇x
-Focus = []
-
-proof: tm 1 ;_def
-Match against `;_def'[1]
-Binding: { P ⟼ x'=e∧(O$'\x=O$\x), Q ⟼ x'=f∧(O$'\x=O$\x), 0 ⟼ 0, O$ ⟼ ⟨O$⟩ }
-
-Instantiated Law = 
-     (x'=e∧(O$'\x=O$\x);x'=f∧(O$'\x=O$\x)) 
-      ≡  
-     (∃ O$_0 • (x'=e∧(O$'\x=O$\x))[O$_0/O$']∧(x'=f∧(O$'\x=O$\x))[O$_0/O$])
-
-Instantiated Law S.C. = 
-   O$,O$'⊇e, O$,O$'⊇f, O$,O$'⊇x', O$,O$'⊇O$\x, O$,O$'⊇O$'\x, fresh:O$_0
-
-Goal S.C. = O$⊇e, O$⊇f, O$⊇x
-
-Discharged Law S.C. = O$,O$'⊇x', O$,O$'⊇O$\x, O$,O$'⊇O$'\x, fresh:O$_0
-```
-
-Issue: SC discharge fails on:
-```
-O$⊇x  ==>  O$,O$'⊇x'
-O$⊇x  ==>  O$,O$'⊇O$\x
-O$⊇x  ==>  O$,O$'⊇O$'\x
-```
+this should result in ``f[e/x]``.
 
 ## In XYZ theory
 

@@ -40,6 +40,8 @@ dbg msg x = trace (msg ++ show x) x
 pdbg nm x = dbg ('@':nm++":\n") x
 \end{code}
 
+\newpage
+
 \subsection{Introduction}
 
 We define a function that applies a substitution to a term.
@@ -51,6 +53,49 @@ that can represent either arbitrary sets/lists of variables,
 or very specific sets/lists of variables.
 The latter can be determined from known variable data,
 as well as side-conditions.
+We also have the complication of variable temporality that needs to be handled.
+
+\subsubsection{Temporal Uniformity}
+
+The treatment of side-conditions talks about ``temporal disjointness''.
+This also an important concept where substitution is involved:
+\begin{itemize}
+\item
+A term is \emph{temporally uniform} 
+if all free variables have the same temporality.
+\item
+A list of variables is \emph{temporally uniform} 
+if all the variables have the same temporality.
+\item
+A list of terms is \emph{temporally uniform} 
+if all the terms are temporally uniform and  have the same temporality.
+\item
+A substitution is \emph{temporally uniform} 
+if the target variable list
+% \footnote{This is the catenation of both standard and list variables}%
+is temporally uniform, 
+and the replacement list is temporally uniform.
+\end{itemize}
+We can formalise this as follows, 
+where $VW=\setof{before,during(m),after}$
+and we have $when : V \fun VW$:
+\begin{eqnarray*}
+   temp &:& T \fun \power (VW)
+\\ temp(\vv v) &\defs& \setof{when(\vv v)}
+\\ temp(\cc n {ts}) &\defs& \bigcup_{t \in ts} temp(t)
+\\  &\vdots&
+\\ utemp &:& VW \fun \Bool
+\\ utemp(W) &\defs& \#(W)=1
+\\ utemp_T &:& T \fun \Bool
+\\ utemp_T &\defs& utemp(temp(t))
+\\ utemp_{T^*} &:& T^* \fun \Bool
+\\ utemp_{T^*}(ts) &\defs& utemp(\bigcup_{t \in ts} utem_T(v))
+\\ utemp_{VL} &:& V^* \fun \Bool
+\\ utemp_{VL}(vs) &\defs& utemp(\bigcup_{v \in vs} when(v))
+\end{eqnarray*} 
+
+Now, consider a general substition $e[\lst r/\lst x]$
+
 
 \subsubsection{Substitution Contexts}
 

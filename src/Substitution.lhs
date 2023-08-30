@@ -63,13 +63,12 @@ aspects of the current state of a proof:
 \begin{code}
 data SubContext
   =  SCtxt  { scSC :: SideCond
-            , scSS :: [Subscript]
             }
   deriving (Eq,Ord,Show,Read)
 
 mkSubCtxt = SCtxt
 
-subContext0 = mkSubCtxt scTrue []
+subContext0 = mkSubCtxt scTrue
 \end{code}
 
 \newpage
@@ -149,9 +148,9 @@ substitute sctx sub@(Substn ts lvs) vrt@(Var tk v)
     (isCTC,repw,effTS,effLVS) = assessCTC (varWhen v) (S.elems ts) (S.elems lvs)
     effTSRepl                 = map (setVTWhen repw) effTS
     effLVSRepl                = map (setLVLVWhen repw) effLVS
-    ctcSub tk tm sub@(Substn ts lvs)
-      | S.null ts && S.null lvs  =  tm
-      | otherwise                =  Sub tk tm sub
+    ctcSub tk tm sub@(Substn sts slvs)
+      | S.null sts && S.null slvs  =  tm
+      | otherwise                  =  Sub tk tm sub
 \end{code}
 
 \newpage
@@ -551,9 +550,7 @@ vO1 = MidVar  iO "1" ; lO1 = LVbl vO1 [] []
 
 obs_covers_f = [(LstVar lO)] `covers` StdVar vf
 
-subMid1     = mkSubCtxt scTrue       ["1"]
-subObsF     = mkSubCtxt obs_covers_f []
-subObsFMid1 = mkSubCtxt obs_covers_f ["1"]
+subObsF     = mkSubCtxt obs_covers_f 
 
 mid_for_pre = jSubstn [] [(lO,lO1)]
 mid_for_post = jSubstn [] [(lO',lO1)]
@@ -572,13 +569,13 @@ esub tm sub = ESub ArbType tm sub
 tstExprObsSubs 
   = testGroup "Expression temporality substitutions"
       [ testCase "f[O1/O] = f1" 
-        ( subC subObsFMid1 mid_for_pre f @?=  f1 )
+        ( subC subObsF mid_for_pre f @?=  f1 )
       , testCase "f'[O1/O'] = f1" 
-        ( subC subObsFMid1 mid_for_post f' @?=  f1 )
+        ( subC subObsF mid_for_post f' @?=  f1 )
       , testCase "f1[O/O1] = f" 
-        ( subC subObsFMid1 pre_for_mid f1 @?=  f )
+        ( subC subObsF pre_for_mid f1 @?=  f )
       , testCase "f1[O'/O1] = f'" 
-        ( subC subObsFMid1 post_for_mid f1 @?= f' )
+        ( subC subObsF post_for_mid f1 @?= f' )
       ]
 \end{code}
 
@@ -596,8 +593,9 @@ Given $O \supseteq e,f$:
 \begin{code}
 obs_covers_e  = [(LstVar lO)] `covers` StdVar ve
 obs_covers_ef = obs_covers_e .: obs_covers_f
-subObsEMid1   = mkSubCtxt obs_covers_e  ["1"]
-subObsEFMid1  = mkSubCtxt obs_covers_ef ["1"]
+subObsE   = mkSubCtxt obs_covers_e
+subObsEF  = mkSubCtxt obs_covers_ef
+
 vx1 = MidVar ix "1"
 olessx  = lO  `less` ([ix],[])
 olessx' = lO' `less` ([ix],[])
@@ -606,9 +604,9 @@ sa_sub = jSubstn [(vx1,e)] [(olessx',olessx)]
 tstSameAssignSubs 
   = testGroup "Same Assignment Substitution" 
       [ testCase "e[O1/O'] = e" 
-          ( subC subObsEMid1 mid_for_post e @?= e )
+          ( subC subObsE mid_for_post e @?= e )
       , testCase "reaching f[e/x]" 
-          (subC subObsEFMid1 sa_sub f1 @?= ESub ArbType f e_for_x)
+          (subC subObsEF sa_sub f1 @?= ESub ArbType f e_for_x)
       ]      
 \end{code}
 
@@ -813,7 +811,7 @@ sub2 t3 t4 = jSubstn [(x,t3),(y,t4)] []
 \end{code}
 A default sub-context:
 \begin{code}
-subctxt = SCtxt scTrue []
+subctxt = SCtxt scTrue
 dosub tm sub = fromJust $ substitute subctxt sub tm
 subcomp sub1 sub2 = fromJust $ substComp subctxt sub1 sub2
 \end{code}

@@ -804,9 +804,7 @@ substituteFocus thrys liveProof
         -- vts = concat $ map thd3 $ mtchCtxts liveProof
         scC = conjSC liveProof
         (Assertion conj _) = conjecture liveProof
-        ss = S.elems $ S.map theSubscript $ S.filter isDuring
-                     $ S.map gvarWhen $ mentionedVars conj
-        sctxt = mkSubCtxt scC ss
+        sctxt = mkSubCtxt scC
     in case t of
          (Sub _ tm s)
             -> do t' <- substitute sctxt s tm

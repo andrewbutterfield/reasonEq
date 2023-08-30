@@ -479,6 +479,13 @@ Assuming that $O \supseteq f$:
    (x'=f_1 \land O'\less x=O_1\less x)
 \\  &\neq& (x'=f_1[/] \land O'\less x=O_1\less x)
 \end{eqnarray*}
+With: $O \supseteq e,f$:
+\begin{eqnarray*}
+   e[O_1/O'] &=& e
+\\ f_1[~e,O\less x~/~x_1,O_1\!\less x~] 
+   &=& 
+   f[e/x] 
+\end{eqnarray*}
 Also
 \begin{eqnarray*}
    P_d
@@ -577,6 +584,36 @@ tstExprObsSubs
 
 \newpage
 
+\subsubsection{Same Assignment Substitution}
+
+Given $O \supseteq e,f$:
+\begin{eqnarray*}
+   e[O_1/O'] &=& e
+\\ f_1[~e,O\less x~/~x_1,O_1\!\less x~] 
+   &=& 
+   f[e/x] 
+\end{eqnarray*}
+\begin{code}
+obs_covers_e  = [(LstVar lO)] `covers` StdVar ve
+obs_covers_ef = obs_covers_e .: obs_covers_f
+subObsEMid1   = mkSubCtxt obs_covers_e  ["1"]
+subObsEFMid1  = mkSubCtxt obs_covers_ef ["1"]
+vx1 = MidVar ix "1"
+olessx  = lO  `less` ([ix],[])
+olessx' = lO' `less` ([ix],[])
+sa_sub = jSubstn [(vx1,e)] [(olessx',olessx)]
+
+tstSameAssignSubs 
+  = testGroup "Same Assignment Substitution" 
+      [ testCase "e[O1/O'] = e" 
+          ( subC subObsEMid1 mid_for_post e @?= e )
+      , testCase "reaching f[e/x]" 
+          (subC subObsEFMid1 sa_sub f1 @?= ESub ArbType f e_for_x)
+      ]      
+\end{code}
+
+\newpage
+
 \subsubsection{Assignment Proof Temporal substitution}
 
 Assuming $O \supseteq f$ we expect:
@@ -617,6 +654,7 @@ Assuming $O \supseteq f$ we expect:
 substTests  =  testGroup "Substitution"
  [ tstDeep
  , tstExprObsSubs
+ , tstSameAssignSubs
  ]
 \end{code}
 

@@ -13,6 +13,8 @@ this should result in ``f[e/x]``.
 In fact, `e[O$_1/O$'] = e` because `e` has no dashed vars,
 but again, `substitute` fails to do this.
 
+We now have tests for these.
+
 ## In XYZ theory
 
 ### Issue 1

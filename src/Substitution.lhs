@@ -93,8 +93,31 @@ and we have $when : V \fun VW$:
 \\ utemp_{VL} &:& V^* \fun \Bool
 \\ utemp_{VL}(vs) &\defs& utemp(\bigcup_{v \in vs} when(v))
 \end{eqnarray*} 
+\begin{code}
+termTemp :: Term -> Set VarWhen
+termTemp = S.map gvarWhen . theFreeVars . freeVars
+gvarTemp :: GenVar -> Set VarWhen
+gvarTemp gv = S.singleton $ gvarWhen gv
+listTemp :: Ord a => (a -> Set VarWhen) -> [a] -> Set VarWhen
+listTemp aTemp = S.unions . map aTemp
+substTemp :: Substn 
+          -> ( Set VarWhen    -- target temporality
+             , Set VarWhen )  -- replacement temporality
+substTemp (Substn tvs lvlvs)
+  = let 
+      (vs,ts)     = unzip $ S.toList tvs
+      (tlvs,rlvs) = unzip $ S.toList lvlvs
+    in ( S.fromList (map varWhen vs ++ map lvarWhen tlvs)
+       , S.unions (map termTemp ts)
+         `S.union`
+         S.fromList (map lvarWhen rlvs) 
+       )      
+\end{code}
 
-Now, consider a general substition $e[\lst r/\lst x]$
+Now, consider a general substition $e[\lst r/\lst x]$.
+We find that if $e$ and the $\lst x$ are temporally uniform,
+with different temporalities, then the outcome is just $e$.
+(This seems to be the strongest result we get.)
 
 
 \subsubsection{Substitution Contexts}

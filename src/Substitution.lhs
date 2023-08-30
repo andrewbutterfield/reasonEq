@@ -84,14 +84,6 @@ and we have $when : V \fun VW$:
 \\ temp(\vv v) &\defs& \setof{when(\vv v)}
 \\ temp(\cc n {ts}) &\defs& \bigcup_{t \in ts} temp(t)
 \\  &\vdots&
-\\ utemp &:& VW \fun \Bool
-\\ utemp(W) &\defs& \#(W)=1
-\\ utemp_T &:& T \fun \Bool
-\\ utemp_T &\defs& utemp(temp(t))
-\\ utemp_{T^*} &:& T^* \fun \Bool
-\\ utemp_{T^*}(ts) &\defs& utemp(\bigcup_{t \in ts} utem_T(v))
-\\ utemp_{VL} &:& V^* \fun \Bool
-\\ utemp_{VL}(vs) &\defs& utemp(\bigcup_{v \in vs} when(v))
 \end{eqnarray*} 
 \begin{code}
 termTemp :: Term -> Set VarWhen
@@ -112,6 +104,25 @@ substTemp (Substn tvs lvlvs)
          `S.union`
          S.fromList (map lvarWhen rlvs) 
        )      
+\end{code}
+\begin{eqnarray*}
+   utemp &:& VW \fun \Bool
+\\ utemp(W) &\defs& \#(W)=1
+\\ utemp_T &:& T \fun \Bool
+\\ utemp_T &\defs& utemp(temp(t))
+\\ utemp_{T^*} &:& T^* \fun \Bool
+\\ utemp_{T^*}(ts) &\defs& utemp(\bigcup_{t \in ts} utem_T(v))
+\\ utemp_{VL} &:& V^* \fun \Bool
+\\ utemp_{VL}(vs) &\defs& utemp(\bigcup_{v \in vs} when(v))
+\end{eqnarray*} 
+We define a monadic function that returns the unique temporality,
+if it exists:
+\begin{code}
+theTemp :: MonadFail m => Set VarWhen -> m VarWhen
+theTemp ws 
+  = case S.toList ws of
+      [w]  ->  return w
+      _    ->  fail ("no unique temporality")
 \end{code}
 
 Now, consider a general substition $e[\lst r/\lst x]$.

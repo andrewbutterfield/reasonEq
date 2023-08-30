@@ -303,8 +303,8 @@ Both disjointness and coverage can be simplified
 if the general variable's temporality
 does not match that of any of the set variables.
 \begin{code}
-temporallyDisjoint :: GenVar -> VarSet -> Bool
-temporallyDisjoint gv vs
+isTempDisjointASC :: GenVar -> VarSet -> Bool
+isTempDisjointASC gv vs
   = isDynamic gvWhen && tempdisjoint
   where
     gvWhen        =  gvarWhen gv
@@ -344,7 +344,7 @@ Nor can we assume $T \disj z$ is false, because $T$ could contain $z$.
 \begin{code}
 ascCheck ss asc@(Disjoint _ gv vs)
   | S.null vs                 =  return mscTrue
-  | temporallyDisjoint gv vs  =  return mscTrue
+  | isTempDisjointASC gv vs   =  return mscTrue
   | not $ isObsGVar gv        =  return $ Just $ setASCUniformity asc
   -- gv is an observation variable below here....
   | gv `S.member` vs          =  report "atomic Disjoint is False"
@@ -373,7 +373,7 @@ Similarly, $T \supseteq z$ could also be true.
 ascCheck ss asc@(CoveredBy _ gv vs)
   -- | gv `S.member` vs          =  return mscTrue -- subsumed by next line
   | any (gvCovBy gv) vs       =  return mscTrue
-  | temporallyDisjoint gv vs  =  report "atomic covers is False (disjoint)"
+  | isTempDisjointASC gv vs   =  report "atomic covers is False (disjoint)"
   | not $ isObsGVar gv        =  return $ Just $ setASCUniformity asc
   -- gv is an observation variable not in vs below here....
   | S.null vs                 =  report "atomic covers is False (null)"

@@ -125,10 +125,17 @@ theTemp ws
       _    ->  fail ("no unique temporality")
 \end{code}
 
-Now, consider a general substition $e[\lst r/\lst x]$.
+Now, consider a general substitution $e[\lst r/\lst x]$.
 We find that if $e$ and the $\lst x$ are temporally uniform,
 with different temporalities, then the outcome is just $e$.
-(This seems to be the strongest result we get.)
+In any other case there are no simplifications.
+\begin{code}
+tempSubMiss :: Term -> Substn -> Bool
+tempSubMiss tm sub
+  = case ( theTemp $ termTemp tm, theTemp $ fst $ substTemp sub ) of
+      (Just tmw, Just subtw ) -> tmw /= subtw
+      _ -> False
+\end{code}
 
 
 \subsubsection{Substitution Contexts}
@@ -215,9 +222,11 @@ $$
 We refer to $[e_e,f_e/x_e,y_e]$ as the ``effective'' substitution.
 Note that the temporalities involved need not be dynamic.
 
-We check for c.t.c.s first.
+We check for disjoint variable target temporality,
+and then for c.t.c.s.
 \begin{code}
 substitute sctx sub@(Substn ts lvs) vrt@(Var tk v)
+  | tempSubMiss vrt sub   =  return vrt
   | isObsVar v            =  return $ subsVar v ts lvs
   | hasCoverage && isCTC  =  return $ ctcSub tk (jVar tk $ setVarWhen repw v)
                                     $ jSub effTSRepl effLVSRepl

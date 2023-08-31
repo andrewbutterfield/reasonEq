@@ -137,6 +137,50 @@ tempSubMiss tm sub
       _ -> False
 \end{code}
 
+\subsubsection{Target Completeness}
+
+There are two main sources of substitution in UTP: 
+for a few variables in assigments,
+and for all the observation variables in sequential composition.
+These lead to substitions that look like:
+$$f_1[e,O\less x/x_1,O_1\less x]$$
+Here the target covers all observations $O_1$, 
+and we consider $f_1$ to be a variable, representing an arbitrary term.
+We want the outcome to be $f$.
+Similarly, we expect this to work for other temporality combinations, e.g.:
+$$f'[e_1,O_1\less x/x',O'\less x] = f_1$$
+We have uniform temporalites, 
+with the term and target having the same temporality,
+but also, we have that the target covers the whole observation space of $f$,
+which is denoted by the (uniform) side-condition $O \supseteq f$.
+
+We need to be able to check when a target-list is complete.
+This means that all the target variables denote distinct variables,
+or variable-sets, and they cover the whole space ($O$).
+We assume, for simplicity,
+that all standard variables are in $O$, 
+and list variables are of the form $O\less{vs}$,
+where $vs$ contains only standard variables.
+In general we see a list like:
+$$
+[x_1,\dots,x_n,O\less{xs_1},\dots,O\less{xs_m}]
+\text{ where }
+vs_i = \setof{xs_{i1},\dots,xs_{ik_i}}
+$$
+For disjointness we can make two observations:
+\begin{itemize}
+\item
+For all $i$, $\setof{x_1,\dots,x_n}\subseteq vs_i$, 
+\item
+For any $xs_i$ and $xs_j$, $xs_i \cup xs_j = O$.
+\end{itemize}
+In theories with known fixed alphabets, these are all easy to check.
+When doing general proofs for all theories,
+we cannot verify the second observation.
+For now we only support the case where $m=1$:
+$$
+[x_1,\dots,x_n,O\less{x_1,\dots,x_n}]
+$$
 
 \subsubsection{Substitution Contexts}
 

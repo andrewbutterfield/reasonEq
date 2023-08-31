@@ -181,6 +181,23 @@ For now we only support the case where $m=1$:
 $$
 [x_1,\dots,x_n,O\less{x_1,\dots,x_n}]
 $$
+Reminder: we require temporal uniformity as well.
+If we have a complete substitution we want to know the target temporality.
+\begin{code}
+isCompleteSubst :: MonadFail m => Substn -> m VarWhen
+isCompleteSubst (Substn ts lvs) = isCompSubst (S.toList ts) (S.toList lvs)
+isCompSubst ts [(tlv@(LVbl v lessids []),_)]
+  |  tids /= lessids    =  fail "targets not disjoint"
+  |  length whns' /= 1  =  fail "targets not uniform"
+  |  twh /= varWhen v   =  fail "listvar temporality differs"
+  |  otherwise          =  return twh
+  where
+    getIdWhen (Vbl idnt _ whn) = (idnt,whn)
+    (tids,whns) = unzip $ map (getIdWhen . fst) ts
+    whns' = nub whns
+    twh = head whns
+isCompSubst _ _ = fail "too complicated to check completeness"
+\end{code}
 
 \subsubsection{Substitution Contexts}
 

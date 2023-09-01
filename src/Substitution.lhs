@@ -670,7 +670,7 @@ sub0 = subC subContext0
 \begin{code}
 iP = jId "P" ; vP = PreCond iP ; p = jpVar vP
 ie = jId "e" ; ve = PreExpr ie ; e = jeVar ve
-ix = jId "x" ; vx = PreVar ix
+ix = jId "x" ; vx = PreVar ix  ; vx' = PostVar ix; vx1 = MidVar ix "1"
 iC = jId "C" ; c t = PCons True iC [t]
 e_for_x = jSubstn [(vx,e)] []
 tstDeep = testCase "substitute [e/x] in (P)=(P[e/x])"
@@ -680,6 +680,11 @@ tstDeep = testCase "substitute [e/x] in (P)=(P[e/x])"
 \newpage
 
 \subsubsection{Expr Var Temporal Substitutions}
+
+
+We should also test tempSubMiss
+
+
 
 Assuming $O \supseteq f$ we expect:
 \begin{eqnarray*}
@@ -732,6 +737,9 @@ tstExprObsSubs
 
 \subsubsection{Same Assignment Substitution}
 
+
+
+
 Given $O \supseteq e,f$:
 \begin{eqnarray*}
    e[O_1/O'] &=& e
@@ -745,16 +753,27 @@ obs_covers_ef = obs_covers_e .: obs_covers_f
 subObsE   = mkSubCtxt obs_covers_e
 subObsEF  = mkSubCtxt obs_covers_ef
 
-vx1 = MidVar ix "1"
-olessx  = lO  `less` ([ix],[])
-olessx' = lO' `less` ([ix],[])
-sa_sub = jSubstn [(vx1,e)] [(olessx',olessx)]
+
+oless o is  = o `less` (is,[])
+
+olessx  = oless lO  [ix]
+olessx' = oless lO' [ix]
+olessx1 = oless lO1 [ix]
+sa_sub = jSubstn [(vx1,e)] [(olessx1,olessx)]
+
+iy = jId "y" ; vy = PreVar iy ; vy' = PostVar iy; vy1 = MidVar iy "1"
+iz = jId "z" ; vz = PreVar iz ; vz' = PostVar iz; vz1 = MidVar iz "1"
+
+
+
 
 tstSameAssignSubs 
   = testGroup "Same Assignment Substitution" 
       [ testCase "e[O1/O'] = e" 
           ( subC subObsE mid_for_post e @?= e )
-      , testCase "reaching f[e/x]" 
+      , testCase "[ e,O\\x / x1,O1\\x ] is uniform+complete" 
+          (isCompleteSubst sa_sub  @?= Just (During "1") )
+      , testCase "f1[ e,O\\x / x1,O1\\x ] = f[e/x]" 
           (subC subObsEF sa_sub f1 @?= ESub ArbType f e_for_x)
       ]      
 \end{code}

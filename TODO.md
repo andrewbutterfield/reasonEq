@@ -24,6 +24,8 @@ Goal S.C. = O$⊇e, O$⊇f, O$⊇x
 Discharged Law S.C. = ⊤
 ```
 
+Relevant DS stuff in test.txt
+
 ## In XYZ theory
 
 ### Issue 1

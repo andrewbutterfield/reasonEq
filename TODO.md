@@ -4,16 +4,25 @@
 
 ### In UTPBase theory
 
-We now have the following substitution that won't:
-```
-f_1[e[O$_1/O$'],O$\x/x_1,O$_1\x]
-```
-this should result in ``f[e/x]``.
+We can now prove :=_seq_same by reducing both sides
 
-In fact, `e[O$_1/O$'] = e` because `e` has no dashed vars,
-but again, `substitute` fails to do this.
+However matching `x'=f[e/x]∧(O$'\x=O$\x)` against the rhs `:=_def` fails
+in strange ways:
 
-We now have tests for these.
+`“:=_def” (x$ := e$)  ≡  (x$'=e$)∧(O$'\x$=O$\x$)`
+
+```
+x'=f[e/x]∧(O$'\x=O$\x)    O$⊇e, O$⊇f, O$⊇x
+Focus = []
+
+proof: tm 2 :=_def
+Match against `:=_def'[2]
+Binding: { := ⟼ «BI (Id "?:=" 0)», O$\x$ ⟼ ⟨O$\x⟩, e$ ⟼ ⟨f[e/x]⟩, x$ ⟼ ⟨x⟩ }
+Instantiated Law = ?:="[f[e/x]/x]  ≡  x'=f[e/x]∧(O$'\x=O$\x)
+Instantiated Law S.C. = ⊤
+Goal S.C. = O$⊇e, O$⊇f, O$⊇x
+Discharged Law S.C. = ⊤
+```
 
 ## In XYZ theory
 

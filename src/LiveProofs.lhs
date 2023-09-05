@@ -457,11 +457,11 @@ and we generate names for these that make their floating nature visible.
 Next, instantiate the law using the bindings.
 \begin{code}
 -- tryLawByName asn@(tC,scC) lnm parts mcs
-    tryInstantiate vts fbind tP partsP scP
+    tryInstantiate insctxt fbind tP partsP scP
       = case
-                instantiate vts fbind tP
+                instantiate insctxt fbind tP
         of
-          Yes tP'  ->  tryInstantiateSC vts fbind tP' partsP scP
+          Yes tP'  ->  tryInstantiateSC insctxt fbind tP' partsP scP
           But msgs
            -> But ([ "try law instantiation failed"
                    , ""
@@ -479,11 +479,11 @@ Next, instantiate the law using the bindings.
 Next, instantiate the pattern side-condition using the bindings.
 \begin{code}
 -- tryLawByName asn@(tC,scC) lnm parts mcs
-    tryInstantiateSC vts bind tP partsP scP
+    tryInstantiateSC insctxt bind tP partsP scP
       = case
-                instantiateSC vts bind scP
+                instantiateSC insctxt bind scP
         of
-          Yes scP'  ->  trySCDischarge vts bind tP partsP scP'
+          Yes scP'  ->  trySCDischarge insctxt bind tP partsP scP'
           But msgs
            -> But ([ "try s.c. instantiation failed"
                    , ""
@@ -502,7 +502,7 @@ Next, instantiate the pattern side-condition using the bindings.
 Finally, try to discharge the instantiated side-condition:
 \begin{code}
 -- tryLawByName asn@(tC,scC) lnm parts mcs
-    trySCDischarge vts bind tP partsP scP'
+    trySCDischarge insctxt bind tP partsP scP'
       = case
                 scDischarge ss scC scP'
         of

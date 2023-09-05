@@ -26,6 +26,8 @@ Discharged Law S.C. = ⊤
 
 Relevant DS stuff in test.txt
 
+**We get `:= ⟼ «BI (Id "?:=" 0)»` because instantiate forgets that assignment is represented using a substitution into the predicate variable with id `:=` .**
+
 ## In XYZ theory
 
 ### Issue 1

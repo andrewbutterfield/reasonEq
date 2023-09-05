@@ -9,7 +9,7 @@
                               , LV (VR (Id "e" 0,VE,WB),[],[]) )]
                   )
              )
-         , C P True (Id "and" 0)    -- RHS
+         , C P True (Id "and" 0)    -- RHS (x$'=e$)∧(O$'\x$=O$\x$)
              [ I P True (Id "and" 0) True (Id "=" 0) 
                  [ LV (VR (Id "x" 0,VO,WA),[],[])
                  , LV (VR (Id "e" 0,VE,WB),[],[]) ]
@@ -24,10 +24,10 @@
 , Axiom
 )
 
-
+Binding: { := ⟼ «BI (Id "?:=" 0)», O$\x$ ⟼ ⟨O$\x⟩, e$ ⟼ ⟨f[e/x]⟩, x$ ⟼ ⟨x⟩ }
 
 ( Substitute [1,2]
-, ASN ( C P True (Id "and" 0) 
+, ASN ( C P True (Id "and" 0) -- x'=f[e/x]∧(O$'\x=O$\x)
           [ C P True (Id "=" 0) 
               [ V (E T) (VR (Id "x" 0,VO,WA))
               , S (E T) 
@@ -60,13 +60,147 @@
 )
 
 
+proof: tm 2 :=_def
 
-(Substitute [1,2,2],ASN (C P True (Id "and" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WA)),S (E T) (V (E T) (VR (Id "f" 0,VE,WD "1"))) (SN (fromList [(VR (Id "x" 0,VO,WD "1"),S (E T) (V (E T) (VR (Id "e" 0,VE,WB))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))])))]) (fromList [(LV (VR (Id "O" 0,VO,WD "1"),[Id "x" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[]))]))],I P True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])]],([SS UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS UN (GV (VR (Id "f" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS UN (GV (VR (Id "x" 0,VO,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])],fromList [])))
-(Substitute [],ASN (S P (C P True (Id "and" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WA)),V (E T) (VR (Id "f" 0,VE,WD "1"))],I P True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[]),LV (VR (Id "O" 0,VO,WD "1"),[Id "x" 0],[])]]) (SN (fromList [(VR (Id "x" 0,VO,WD "1"),S (E T) (V (E T) (VR (Id "e" 0,VE,WB))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))])))]) (fromList [(LV (VR (Id "O" 0,VO,WD "1"),[Id "x" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[]))])),([SS UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS UN (GV (VR (Id "f" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS UN (GV (VR (Id "x" 0,VO,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])],fromList [])))
-(UseLaw (ByMatch MEL) "exists_one_point" (BD (fromList [((Id "P" 0,VP),BT (C P True (Id "and" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WA)),V (E T) (VR (Id "f" 0,VE,WD "1"))],I P True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[]),LV (VR (Id "O" 0,VO,WD "1"),[Id "x" 0],[])]]))],fromList [],fromList [((Id "e" 0,VE,[],[]),BX [Right (S (E T) (V (E T) (VR (Id "e" 0,VE,WB))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))),Left (LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[]))]),((Id "x" 0,VO,[],[]),BX [Right (V (E T) (VR (Id "x" 0,VO,WD "1"))),Left (LV (VR (Id "O" 0,VO,WD "1"),[Id "x" 0],[]))]),((Id "y" 0,VO,[],[]),BS (fromList []))])) [],ASN (B P (Id "exists" 0) (fromList [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))]) (C P True (Id "and" 0) [C P True (Id "and" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WD "1")),S (E T) (V (E T) (VR (Id "e" 0,VE,WB))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))],I P True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WD "1"),[Id "x" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])]],C P True (Id "and" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WA)),V (E T) (VR (Id "f" 0,VE,WD "1"))],I P True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[]),LV (VR (Id "O" 0,VO,WD "1"),[Id "x" 0],[])]]]),([SS UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS UN (GV (VR (Id "f" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS UN (GV (VR (Id "x" 0,VO,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])],fromList [])))
-(Substitute [1,2],ASN (B P (Id "exists" 0) (fromList [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))]) (C P True (Id "and" 0) [C P True (Id "and" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WD "1")),S (E T) (V (E T) (VR (Id "e" 0,VE,WB))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))],I P True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WD "1"),[Id "x" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])]],S P (C P True (Id "and" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WA)),V (E T) (VR (Id "f" 0,VE,WB))],I P True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])]]) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WB),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))]),([SS UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS UN (GV (VR (Id "f" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS UN (GV (VR (Id "x" 0,VO,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])],fromList [])))
-(UseLaw (ByMatch MEL) ":=_def" (BD (fromList [((Id ":=" 0,VP),BI (Id ":=" 0))],fromList [],fromList [((Id "O" 0,VO,[],[Id "x" 0]),BL [GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[]))]),((Id "e" 0,VE,[],[]),BX [Right (V (E T) (VR (Id "f" 0,VE,WB)))]),((Id "x" 0,VO,[],[]),BL [GV (VR (Id "x" 0,VO,WB))])])) [1,2,1],ASN (B P (Id "exists" 0) (fromList [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))]) (C P True (Id "and" 0) [C P True (Id "and" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WD "1")),S (E T) (V (E T) (VR (Id "e" 0,VE,WB))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))],I P True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WD "1"),[Id "x" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])]],S P (S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "f" 0,VE,WB)))]) (fromList []))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WB),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))]),([SS UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS UN (GV (VR (Id "f" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS UN (GV (VR (Id "x" 0,VO,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])],fromList [])))
-(Substitute [1,1],ASN (B P (Id "exists" 0) (fromList [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))]) (C P True (Id "and" 0) [S P (C P True (Id "and" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WA)),V (E T) (VR (Id "e" 0,VE,WB))],I P True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])]]) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))])),S P (S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "f" 0,VE,WB)))]) (fromList []))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WB),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))]),([SS UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS UN (GV (VR (Id "f" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS UN (GV (VR (Id "x" 0,VO,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])],fromList [])))
-(UseLaw (ByMatch MEL) ":=_def" (BD (fromList [((Id ":=" 0,VP),BI (Id ":=" 0))],fromList [],fromList [((Id "O" 0,VO,[],[Id "x" 0]),BL [GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[]))]),((Id "e" 0,VE,[],[]),BX [Right (V (E T) (VR (Id "e" 0,VE,WB)))]),((Id "x" 0,VO,[],[]),BL [GV (VR (Id "x" 0,VO,WB))])])) [1,1,1],ASN (B P (Id "exists" 0) (fromList [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))]) (C P True (Id "and" 0) [S P (S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "e" 0,VE,WB)))]) (fromList []))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))])),S P (S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "f" 0,VE,WB)))]) (fromList []))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WB),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))]),([SS UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS UN (GV (VR (Id "f" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS UN (GV (VR (Id "x" 0,VO,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])],fromList [])))
-(UseLaw (ByMatch MEL) ";_def" (BD (fromList [((Id "P" 0,VP),BT (S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "e" 0,VE,WB)))]) (fromList [])))),((Id "Q" 0,VP),BT (S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "f" 0,VE,WB)))]) (fromList []))))],fromList [("0","1")],fromList [((Id "O" 0,VO,[],[]),BL [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])])) [],ASN (C P False (Id ";" 0) [S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "e" 0,VE,WB)))]) (fromList [])),S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "f" 0,VE,WB)))]) (fromList []))],([SS UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS UN (GV (VR (Id "f" 0,VE,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]),SS UN (GV (VR (Id "x" 0,VO,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])],fromList [])))
-END LIST STEPS
+`match`:
+@patn:
+C P True (Id "and" 0) [I P True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "x" 0,VO,WA),[],[]),LV (VR (Id "e" 0,VE,WB),[],[])],I P True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[],[Id "x" 0]),LV (VR (Id "O" 0,VO,WB),[],[Id "x" 0])]]
+@cand:
+C P True (Id "and" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WA)),S (E T) (V (E T) (VR (Id "f" 0,VE,WB))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "e" 0,VE,WB)))]) (fromList []))],I P True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])]]
+Match against `:=_def'[2]
+Binding: { := ⟼ «BI (Id "?:=" 0)», O$\x$ ⟼ ⟨O$\x⟩, e$ ⟼ ⟨f[e/x]⟩, x$ ⟼ ⟨x⟩ }
+Instantiated Law = ?:="[f[e/x]/x]  ≡  x'=f[e/x]∧(O$'\x=O$\x)
+Instantiated Law S.C. = ⊤
+Goal S.C. = O$⊇e, O$⊇f, O$⊇x
+Discharged Law S.C. = ⊤
+
+`tmatch Cons`:
+@nC:
+Id "and" 0
+@nP:
+Id "and" 0
+@bind:
+BD (fromList [],fromList [],fromList [])
+Match against `:=_def'[2]
+@bind0:
+BD (fromList [((Id "and" 0,VP),BV (VR (Id "and" 0,VP,WS)))],fromList [],fromList [])
+Binding: { := ⟼ «BI (Id "?:=" 0)», O$\x$ ⟼ ⟨O$\x⟩, e$ ⟼ ⟨f[e/x]⟩, x$ ⟼ ⟨x⟩ }
+Instantiated Law = ?:="[f[e/x]/x]  ≡  x'=f[e/x]∧(O$'\x=O$\x)
+Instantiated Law S.C. = ⊤
+Goal S.C. = O$⊇e, O$⊇f, O$⊇x
+Discharged Law S.C. = ⊤
+
+`tsMatch`:
+@cts:
+[ C P True (Id "=" 0) 
+   [ V (E T) (VR (Id "x" 0,VO,WA))
+   , S (E T) 
+       (V (E T) (VR (Id "f" 0,VE,WB))) 
+       (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "e" 0,VE,WB)))]) 
+           (fromList []))]
+, I P True (Id "and" 0) True (Id "=" 0) 
+    [ LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[])
+    , LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])
+    ]
+]
+@pts:
+[ I P True (Id "and" 0) True (Id "=" 0) 
+    [ LV (VR (Id "x" 0,VO,WA),[],[])
+    , LV (VR (Id "e" 0,VE,WB),[],[])
+    ]
+, I P True (Id "and" 0) True (Id "=" 0) 
+    [ LV (VR (Id "O" 0,VO,WA),[],[Id "x" 0])
+    , LV (VR (Id "O" 0,VO,WB),[],[Id "x" 0])]
+]
+@step tP:
+I P True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "x" 0,VO,WA),[],[]),LV (VR (Id "e" 0,VE,WB),[],[])]
+@step tC:
+C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WA)),S (E T) (V (E T) (VR (Id "f" 0,VE,WB))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "e" 0,VE,WB)))]) (fromList []))]
+
+@cts:
+[ I P True (Id "and" 0) True (Id "=" 0) 
+    [ LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[])
+    , LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])
+    ]
+]
+@pts:
+[ I P True (Id "and" 0) True (Id "=" 0) 
+    [ LV (VR (Id "O" 0,VO,WA),[],[Id "x" 0])
+    , LV (VR (Id "O" 0,VO,WB),[],[Id "x" 0])
+    ]
+]
+@step tP:
+I P True (Id "and" 0) True (Id "=" 0) 
+  [ LV (VR (Id "O" 0,VO,WA),[],[Id "x" 0])
+  , LV (VR (Id "O" 0,VO,WB),[],[Id "x" 0])
+  ]
+@step tC:
+I P True (Id "and" 0) True (Id "=" 0) 
+  [ LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[])
+  , LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])
+  ]
+@rec bind1:
+BD (fromList [],fromList [],fromList [((Id "e" 0,VE,[],[]),BX [Right (S (E T) (V (E T) (VR (Id "f" 0,VE,WB))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "e" 0,VE,WB)))]) (fromList [])))]),((Id "x" 0,VO,[],[]),BX [Right (V (E T) (VR (Id "x" 0,VO,WB)))])])
+
+@cts:
+[]
+@pts:
+[]
+@rec bind1:
+BD (fromList [],fromList [],fromList [((Id "O" 0,VO,[],[Id "x" 0]),BL [GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[]))]),((Id "e" 0,VE,[],[]),BX [Right (S (E T) (V (E T) (VR (Id "f" 0,VE,WB))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "e" 0,VE,WB)))]) (fromList [])))]),((Id "x" 0,VO,[],[]),BX [Right (V (E T) (VR (Id "x" 0,VO,WB)))])])
+
+@return bind:
+BD (fromList [],fromList [],fromList [((Id "O" 0,VO,[],[Id "x" 0]),BL [GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[]))]),((Id "e" 0,VE,[],[]),BX [Right (S (E T) (V (E T) (VR (Id "f" 0,VE,WB))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "e" 0,VE,WB)))]) (fromList [])))]),((Id "x" 0,VO,[],[]),BX [Right (V (E T) (VR (Id "x" 0,VO,WB)))])])
+Match against `:=_def'[2]
+Binding: { := ⟼ «BI (Id "?:=" 0)», O$\x$ ⟼ ⟨O$\x⟩, e$ ⟼ ⟨f[e/x]⟩, x$ ⟼ ⟨x⟩ }
+Instantiated Law = ?:="[f[e/x]/x]  ≡  x'=f[e/x]∧(O$'\x=O$\x)
+Instantiated Law S.C. = ⊤
+Goal S.C. = O$⊇e, O$⊇f, O$⊇x
+Discharged Law S.C. = ⊤
+
+`tryLawByName`:
+@tLBN.bind:
+BD  ( fromList []
+    , fromList []
+    , fromList 
+       [ ( (Id "O" 0,VO,[],[Id "x" 0])
+         , BL [ GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])) ]
+         )
+       , ( (Id "e" 0,VE,[],[])
+         , BX [ Right ( S (E T) (V (E T) (VR (Id "f" 0,VE,WB))) 
+                          ( SN (fromList [ ( VR (Id "x" 0,VO,WB)
+                                           , V (E T) (VR (Id "e" 0,VE,WB)))
+                                         ] ) 
+                               (fromList [])
+                          ) 
+                      )
+              ]
+         )
+       , ( (Id "x" 0,VO,[],[])
+         ,  BX [ Right (V (E T) (VR (Id "x" 0,VO,WB))) ]
+         )
+       ]
+    )
+@tI.tP:
+C P True (Id "eqv" 0) [S P (V P (VR (Id ":=" 0,VP,WT))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WB),[],[]),LV (VR (Id "e" 0,VE,WB),[],[]))])),C P True (Id "and" 0) [I P True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "x" 0,VO,WA),[],[]),LV (VR (Id "e" 0,VE,WB),[],[])],I P True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[],[Id "x" 0]),LV (VR (Id "O" 0,VO,WB),[],[Id "x" 0])]]]
+@tIK.kbind:
+BD (fromList [],fromList []
+   ,fromList [((Id "O" 0,VO,[],[Id "x" 0]),BL [GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[]))]),((Id "e" 0,VE,[],[]),BX [Right (S (E T) (V (E T) (VR (Id "f" 0,VE,WB))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "e" 0,VE,WB)))]) (fromList [])))]),((Id "x" 0,VO,[],[]),BX [Right (V (E T) (VR (Id "x" 0,VO,WB)))])])
+@tIF.fbind:
+BD (fromList [((Id ":=" 0,VP),BI (Id "?:=" 0))],fromList []
+   ,fromList [((Id "O" 0,VO,[],[Id "x" 0]),BL [GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[]))]),((Id "e" 0,VE,[],[]),BX [Right (S (E T) (V (E T) (VR (Id "f" 0,VE,WB))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "e" 0,VE,WB)))]) (fromList [])))]),((Id "x" 0,VO,[],[]),BX [Right (V (E T) (VR (Id "x" 0,VO,WB)))])])
+@tISC.scP:
+([],fromList [])
+@tISC.scP':
+([],fromList [])
+Match against `:=_def'[2]
+Binding: { := ⟼ «BI (Id "?:=" 0)», O$\x$ ⟼ ⟨O$\x⟩, e$ ⟼ ⟨f[e/x]⟩, x$ ⟼ ⟨x⟩ }
+@tI.tP':
+C P True (Id "eqv" 0) [S P (V P (VR (Id "?:=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),S (E T) (V (E T) (VR (Id "f" 0,VE,WB))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "e" 0,VE,WB)))]) (fromList [])))]) (fromList [])),C P True (Id "and" 0) [C P True (Id "=" 0) [V (E T) (VR (Id "x" 0,VO,WA)),S (E T) (V (E T) (VR (Id "f" 0,VE,WB))) (SN (fromList [(VR (Id "x" 0,VO,WB),V (E T) (VR (Id "e" 0,VE,WB)))]) (fromList []))],I P True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[]),LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[])]]]
+Instantiated Law = ?:="[f[e/x]/x]  ≡  x'=f[e/x]∧(O$'\x=O$\x)
+Instantiated Law S.C. = ⊤
+Goal S.C. = O$⊇e, O$⊇f, O$⊇x
+@tSCD.scP'':
+([],fromList [])
+Discharged Law S.C. = ⊤
+

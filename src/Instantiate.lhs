@@ -151,14 +151,24 @@ instantiate insctxt binding (Cls n tm)
        return $ Cls n tm'
 \end{code}
 
+We need to keep in mind that we use the substitution form to represent assignment. It the term is a predicate variable ``$:=$'',
+then we have an assignment.
 \begin{eqnarray*}
-   \beta.(\ss t {v^n} {t^n}) &=& \ss {\beta.t} {\beta^*(v^n)} {\beta^*.t^n}
+   \beta.(\ss {(:=)} {v^n} {t^n}) &=& \ss {(:=)} {\beta^*(v^n)} {\beta^*.t^n}
+\\ \beta.(\ss t {v^n} {t^n}) &=& \ss {\beta.t} {\beta^*(v^n)} {\beta^*.t^n}
 \end{eqnarray*}
 \begin{code}
 instantiate insctxt binding (Sub tk tm s)
-  = do tm' <- instantiate insctxt binding tm
-       s' <- instSub insctxt binding s
-       return $ Sub tk tm' s'
+  = do s' <- instSub insctxt binding s
+       tm' <- if isAssignment tm
+              then return tm
+              else instantiate insctxt binding tm
+       return $ Sub tk (pdbg "instSub.tm'" tm') s'
+  where 
+   isAssignment (Var _ v)   =  isAssignVar $ pdbg "isAsg.v" v
+   isAssignment _           =  False
+   isAssignVar (Vbl i _ _)  =  i == assignmentId
+   assignmentId             =  jId ":="
 \end{code}
 
 \begin{eqnarray*}

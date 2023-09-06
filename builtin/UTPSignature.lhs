@@ -132,7 +132,7 @@ listwiseVarBinPred tk na ni vvs lvlvs
     mkiter (lv1,lv2)  =  Iter tk True na True ni [lv1,lv2]
 
 
-i_asg        =  jId ":="
+i_asg        =  assignmentId
 p_asg        =  jVar P $ Vbl i_asg PredV Textual
 
 simassign :: [(Variable,Term)] -> [(ListVar,ListVar)] -> Term

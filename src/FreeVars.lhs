@@ -345,15 +345,16 @@ freeVars (Cls _ _)                  =  noFreevars
 freeVars (Iter tk sa na si ni lvs)
   =  injVarSet $ S.fromList $ map LstVar $ filter notTextualLV lvs
 
-freeVars (Sub tk (PVar (PredVar (Identifier ":=" _) _)) (Substn vts lvlvs))
-  = (foldl' mrgFreeVars noFreevars (S.map freeVars ts))
-    `mrgFreeVars`
-    (injVarSet (vs `S.union` lvs1 `S.union` lvs2))
-  where
-    ts = S.map snd vts
-    vs = S.map (StdVar . fst) vts
-    lvs1 = S.map (LstVar . fst) lvlvs
-    lvs2 = S.map (LstVar . snd) lvlvs
+freeVars (Sub tk tm (Substn vts lvlvs))
+  | isAssignment tm
+      = (foldl' mrgFreeVars noFreevars (S.map freeVars ts))
+         `mrgFreeVars`
+         (injVarSet (vs `S.union` lvs1 `S.union` lvs2))
+      where
+         ts = S.map snd vts
+         vs = S.map (StdVar . fst) vts
+         lvs1 = S.map (LstVar . fst) lvlvs
+         lvs2 = S.map (LstVar . snd) lvlvs
 
 freeVars (Sub tk tm s)              =  mrgFreeVars (subVarSet tfv tgtvs) rplvs
    where

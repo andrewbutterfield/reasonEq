@@ -163,12 +163,7 @@ instantiate insctxt binding (Sub tk tm s)
        tm' <- if isAssignment tm
               then return tm
               else instantiate insctxt binding tm
-       return $ Sub tk (pdbg "instSub.tm'" tm') s'
-  where 
-   isAssignment (Var _ v)   =  isAssignVar $ pdbg "isAsg.v" v
-   isAssignment _           =  False
-   isAssignVar (Vbl i _ _)  =  i == assignmentId
-   assignmentId             =  jId ":="
+       return $ Sub tk tm' s'
 \end{code}
 
 \begin{eqnarray*}

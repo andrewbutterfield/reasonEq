@@ -463,8 +463,8 @@ we need to treat such seperately, noting that it is n.s.::
    (x:=e)[t^n/v^v] &=& (x:=e)[t^n/v^v]
 \end{eqnarray*}
 \begin{code}
-substitute sctx sub bt@(Sub tk (PVar (PredVar (Identifier ":=" _) _)) _)
-  = return $ Sub tk bt sub
+substitute sctx sub bt@(Sub tk _ _)
+  | isAssignment bt  =  return $ Sub tk bt sub
 \end{code}
 
 

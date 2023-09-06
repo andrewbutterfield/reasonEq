@@ -198,7 +198,7 @@ $$
   \end{array}
 $$\par%\vspace{-8pt}
 \begin{code}
-mkAsg x e = PCons False (fromJust $ ident ":=")[x, e]
+mkAsg (Var _ x) e = Sub P theAssignment $ jSubstn [(x,e)] []
 
 mkCond p b q = PCons True (fromJust $ ident "cond")[p, b, q]
 

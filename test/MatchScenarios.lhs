@@ -708,10 +708,10 @@ test_sequential_composition
 We start with syntax definitions of assignment, equality
 and implication.
 \begin{code}
-asg = jId ":="
-v_asg = Vbl asg PredV Static
-v .:= e  =  PCons False asg [fromJust $ eVar ArbType $ ScriptVar v, e]
-asgBinding = fromJust $ bindVarToVar v_asg v_asg emptyBinding
+asg = assignmentId
+v_asg = assignVar
+v .:= e  = Sub P theAssignment $ jSubstn [(ScriptVar v,e)] []
+asgBinding = fromJust $ bindVarToVar assignVar assignVar emptyBinding
 
 implies = jId "implies"
 v_implies = Vbl implies PredV Static

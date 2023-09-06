@@ -36,6 +36,8 @@ module AST ( Type
            , termkind, isVar, isExpr, isPred, isAtomic
            , theVar, theGVar, varAsTerm, termAsVar
            , icomma, lvarCons
+           , assignmentId
+           , assignVar, isAssignVar, theAssignment, isAssignment
            , subTerms
            , mentionedVars, mentionedVarLists, mentionedVarSets
            , dnTerm, dnSub
@@ -571,6 +573,21 @@ In \cite{UTP-book} we find the notion of texts, in chapters 6 and 10.
 We can represent these using this proposed term concept,
 as values of type \verb"Txt", or as terms with modified names.
 They don't need special handling or representation here.
+
+\subsubsection{Assignment}
+
+We represent (simultaneous) assignment (e.g $x,\lst y := e,\lst f$)
+using the substitution form, 
+\\ as $(:=)[e,\lst f/x,\lst y]$.
+
+\begin{code}
+assignmentId             =  jId ":="
+assignVar                =  ScriptVar assignmentId 
+isAssignVar (Vbl i _ _)  =  i == assignmentId
+theAssignment            =  fromJust $ pVar assignVar
+isAssignment (Var _ v)   =  isAssignVar v
+isAssignment _           =  False
+\end{code}
 
 \subsubsection{Term Tests}
 

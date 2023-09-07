@@ -3,61 +3,6 @@
 ## Most Urgent
 
 
-### Issue 
-
-Also we can't match `z_m  =  z` in `UTPBase` against law `e  =  f` from `Equality`.
-
-```
-z_m  =  z :: e  =  f
-
-lnm[parts]==_symm[1]
-tP=e=f  ≡  f=e
-partsP=e  =  f
-tC=z_m  =  z
-scC=⊤
----
-tMatch: structural mismatch.
-tC = V (E (TG (Id "Z" 0))) (VR (Id "z" 0,VO,WD "m"))
-tP = V (E T) (VR (Id "e" 0,VE,WS))
-```
-Variable `e` is an Expr variable but here it should match the Obs variable `x_m`.
-
-### Issue 
-
-Match 6 is wrong !!!!
-
-```
-6 : “∃_one_point” (∃ z • (z_m=z∧(x'=f[e,e,y_m,z_m/x,x_m,y,z]∧(y'=y_m∧z'=z_m)))[y/y_m])  ⊤ ⟹ ⊤ ≡lhs
-5 : “∃_one_point” (∃ z_m • (z_m=z∧(x'=f[e,e,y_m,z_m/x,x_m,y,z]∧(y'=y_m∧z'=z_m)))[y/y_m])  ⊤ ⟹ ⊤ ≡lhs
-⊢
-(∃ y_m,z_m • y_m=y∧(z_m=z∧(x'=f[e,e,y_m,z_m/x,x_m,y,z]∧(y'=y_m∧z'=z_m))))    ⊤
-```
-
-Using `tm 1 exist_one_point` gives match 5.
-
-### Issue 
-
-#### Using new definition of subst-comp:
-
-```
-   (f[F/X])[G/Y]  = f[F[G/Y],G'/X,Y']   where Y' = Y - X
-```
-
-Then ...
-
-```
-  (f[x_m,y_m,z_m/x,y,z])[e/x_m]
-= "subst-comp"
-  f[x_m[e/x_m],y_m[e/x_m],z_m[e/x_m],e/x,y,z,x_m]
-= "substitution, 3 times"
-  f[e,y_m,z_m,e/x,y,z,x_m]
-= "assuming x_m notin f"
-  f[e,y_m,z_m/x,y,z]
-```
-
-var tests pass with constant replacements
-
-
 ### Theory and Proof Management.
 
 reading a proof should check that proof and filename match.

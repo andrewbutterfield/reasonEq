@@ -6,6 +6,11 @@
 
 ## In XYZ theory
 
+
+### Issue
+
+ The proof `S` command does not reset focus list as displayed.
+
 ### Issue 1
 
 Also we can't match `z_m  =  z` in `UTPBase` against law `e  =  f` from `Equality`.

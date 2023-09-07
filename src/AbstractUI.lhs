@@ -492,6 +492,7 @@ switchConsequentFocus liveProof
         then do asn' <- mkAsn (exitTZ $ fst sz) (conjSC liveProof)
                 return ( focus_ sz'
                        $ matches_ []
+                       $ fPath_ []
                        $ stepsSoFar__ ((sw', asn'):)
                          liveProof )
         else fail "Not in consequent"

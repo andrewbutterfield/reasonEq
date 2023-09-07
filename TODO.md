@@ -2,6 +2,39 @@
 
 ## Most Urgent
 
+### runtime error matching P;II
+
+```
+P;II    O$,O$'⊇P
+Focus = []
+Target (RHS): 
+P
+proof: m
+req: lookupVarBind: Dynamic was bound to BV
+v = VR (Id "P" 0,VP,WB)
+b = BV (VR (Id "P" 0,VP,WS))
+vbind:
+fromList 
+  [ ((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS)))
+  , ((Id "Q" 0,VP),BV (VR (Id "II" 0,VP,WS)))
+  ]
+
+CallStack (from HasCallStack):
+  error, called at src/Binding.lhs:1435:16 in reasonEq-0.8.0.0-KgYgO8J7A9693dtZmZvJq:Binding
+reasonEq% 
+```
+
+Main binding stuff does not bind dynamic to BV,
+but we have the following (currently lines 1033-1040):
+```
+attemptFeasibleBinding lV@(LVbl (Vbl _ vc vw) [vi] [])
+                       lW@(LVbl _ [wi] [])
+                       (BD (vbind,sbind,lbind))
+  = do vbind' <- insertDR (rangeEq "bindVarToVar(feasible)")
+                          (vi,vc) (BV $ Vbl wi vc $ dnWhen vw) vbind
+       return $ BD  (vbind',sbind,lbind)
+```
+Not sure this preserves the relevant invariant.
 
 ### Theory and Proof Management.
 

@@ -2,11 +2,8 @@
 
 ## Most Urgent
 
-### SEI Exercise Solutions
 
-## In XYZ theory
-
-### Issue 1
+### Issue 
 
 Also we can't match `z_m  =  z` in `UTPBase` against law `e  =  f` from `Equality`.
 
@@ -25,7 +22,7 @@ tP = V (E T) (VR (Id "e" 0,VE,WS))
 ```
 Variable `e` is an Expr variable but here it should match the Obs variable `x_m`.
 
-### Issue 2
+### Issue 
 
 Match 6 is wrong !!!!
 
@@ -38,7 +35,7 @@ Match 6 is wrong !!!!
 
 Using `tm 1 exist_one_point` gives match 5.
 
-### Issue 3
+### Issue 
 
 #### Using new definition of subst-comp:
 

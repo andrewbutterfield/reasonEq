@@ -584,7 +584,7 @@ using the substitution form,
 assignmentId             =  jId ":="
 assignVar                =  ScriptVar assignmentId 
 isAssignVar (Vbl i _ _)  =  i == assignmentId
-theAssignment            =  fromJust $ pVar assignVar
+theAssignment            =  varAsTerm $ PredVar assignmentId Static
 isAssignment (Var _ v)   =  isAssignVar v
 isAssignment _           =  False
 \end{code}

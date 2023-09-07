@@ -2,6 +2,8 @@
 
 ## Most Urgent
 
+### SEI Exercise Solutions
+
 ## In XYZ theory
 
 ### Issue 1

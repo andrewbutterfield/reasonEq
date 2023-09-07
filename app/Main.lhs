@@ -903,7 +903,7 @@ switchConsequentDescr
     , switchConsequent )
 
 switchConsequent :: REPLCmd (REqState, LiveProof)
-switchConsequent _ = tryDelta moveConsequentFocus
+switchConsequent _ = tryDelta switchConsequentFocus
 \end{code}
 
 Switching focus to a hypothesis:

@@ -20,7 +20,7 @@ module AbstractUI
 , assumeConjecture, demoteLaw , classifyLaw
 , newProof1, newProof2, resumeProof
 , abandonProof, saveProof, completeProof
-, moveFocusDown, moveFocusUp, moveConsequentFocus
+, moveFocusDown, moveFocusUp, switchConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, matchFocusAgainst
 , applyMatchToFocus1, applyMatchToFocus2
@@ -483,8 +483,8 @@ moveFocusUp liveProof
 \subsubsection{Switching Consequent Focus}
 
 \begin{code}
-moveConsequentFocus :: MonadFail m => LiveProof -> m LiveProof
-moveConsequentFocus liveProof
+switchConsequentFocus :: MonadFail m => LiveProof -> m LiveProof
+switchConsequentFocus liveProof
   = let
       sz = focus liveProof
       (ok,sw',sz') = switchLeftRight sz

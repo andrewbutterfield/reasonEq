@@ -12,6 +12,24 @@ END THEORIES
 CURRTHEORY = UTPBase
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("UTPBase",";_runit")
+BEGIN LIVE-PROOF
+TH-NAME: UTPBase
+CJ-NAME: ;_runit
+CONJ = ASN (C P True (Id "eqv" 0) [C P False (Id ";" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "II" 0,VP,WS))],V P (VR (Id "P" 0,VP,WS))],([SS NU (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])],fromList []))
+SIDE = ([SS NU (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])],fromList [])
+STRAT red-L2R
+BEGIN SEQZIP
+TERMZIP = (C P False (Id ";" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "II" 0,VP,WS))],[])
+BEGIN SEQUENT'
+SIDECOND = ([SS NU (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.;_runit", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = V P (VR (Id "P" 0,VP,WS))}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

@@ -1,6 +1,6 @@
 BEGIN REQSTATE
 BEGIN REQSET
-MMD = 20
+MMD = 100
 MHT = False
 MHQ = True
 MHF = False

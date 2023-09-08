@@ -2,68 +2,59 @@
 
 ## Most Urgent
 
-### SEI Exercise Solutions
+### runtime error matching P;II
 
-## In XYZ theory
+```
+P;II    O$,O$'⊇P
+Focus = []
+Target (RHS): 
+P
+proof: m
+req: lookupVarBind: Dynamic was bound to BV
+v = VR (Id "P" 0,VP,WB)
+b = BV (VR (Id "P" 0,VP,WS))
+vbind:
+fromList 
+  [ ((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS)))
+  , ((Id "Q" 0,VP),BV (VR (Id "II" 0,VP,WS)))
+  ]
 
+CallStack (from HasCallStack):
+  error, called at src/Binding.lhs:1435:16 in reasonEq-0.8.0.0-KgYgO8J7A9693dtZmZvJq:Binding
+reasonEq% 
+```
+
+Main binding stuff does not bind dynamic to BV,
+but we have the following (currently lines 1033-1040):
+```
+attemptFeasibleBinding lV@(LVbl (Vbl _ vc vw) [vi] [])
+                       lW@(LVbl _ [wi] [])
+                       (BD (vbind,sbind,lbind))
+  = do vbind' <- insertDR (rangeEq "bindVarToVar(feasible)")
+                          (vi,vc) (BV $ Vbl wi vc $ dnWhen vw) vbind
+       return $ BD  (vbind',sbind,lbind)
+```
+Not sure this preserves the relevant invariant.
+
+###
 
 ### Issue
 
- The proof `S` command does not reset focus list as displayed.
-
-### Issue 1
-
-Also we can't match `z_m  =  z` in `UTPBase` against law `e  =  f` from `Equality`.
-
 ```
-z_m  =  z :: e  =  f
-
-lnm[parts]==_symm[1]
-tP=e=f  ≡  f=e
-partsP=e  =  f
-tC=z_m  =  z
-scC=⊤
----
-tMatch: structural mismatch.
-tC = V (E (TG (Id "Z" 0))) (VR (Id "z" 0,VO,WD "m"))
-tP = V (E T) (VR (Id "e" 0,VE,WS))
-```
-Variable `e` is an Expr variable but here it should match the Obs variable `x_m`.
-
-### Issue 2
-
-Match 6 is wrong !!!!
-
-```
-6 : “∃_one_point” (∃ z • (z_m=z∧(x'=f[e,e,y_m,z_m/x,x_m,y,z]∧(y'=y_m∧z'=z_m)))[y/y_m])  ⊤ ⟹ ⊤ ≡lhs
-5 : “∃_one_point” (∃ z_m • (z_m=z∧(x'=f[e,e,y_m,z_m/x,x_m,y,z]∧(y'=y_m∧z'=z_m)))[y/y_m])  ⊤ ⟹ ⊤ ≡lhs
+24 : “∀_inst” (∀ x$ • P)  ∧  P[?e$/x$]  x$⊇P ⟹ ⊤ * ⟹
 ⊢
-(∃ y_m,z_m • y_m=y∧(z_m=z∧(x'=f[e,e,y_m,z_m/x,x_m,y,z]∧(y'=y_m∧z'=z_m))))    ⊤
+(∀ x$ • P)⟹  P    x$⊇P
+Focus = [1]
+
+Target (RHS): 
+true
+
+proof: a24
+Choose variables to replace ?e$
+   1. e$
+Select by numbers: 
 ```
-
-Using `tm 1 exist_one_point` gives match 5.
-
-### Issue 3
-
-#### Using new definition of subst-comp:
-
-```
-   (f[F/X])[G/Y]  = f[F[G/Y],G'/X,Y']   where Y' = Y - X
-```
-
-Then ...
-
-```
-  (f[x_m,y_m,z_m/x,y,z])[e/x_m]
-= "subst-comp"
-  f[x_m[e/x_m],y_m[e/x_m],z_m[e/x_m],e/x,y,z,x_m]
-= "substitution, 3 times"
-  f[e,y_m,z_m,e/x,y,z,x_m]
-= "assuming x_m notin f"
-  f[e,y_m,z_m/x,y,z]
-```
-
-var tests pass with constant replacements
+We should to be able to select x$
 
 
 ### Theory and Proof Management.

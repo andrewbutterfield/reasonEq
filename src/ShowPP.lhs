@@ -118,9 +118,9 @@ main
 processArgs [] = doShowPP
 processArgs _
   =  putStrLn $ unlines
-	    [ "Usage: "
-			, "    showpp < rawfile > ppfile"
-			, "    rawprog | showp > ppfile"
-			, " showp reads stdin, writes stdout"
-			]
+       [ "Usage: "
+       , "    showpp < rawfile > ppfile"
+       , "    rawprog | showp > ppfile"
+       , " showp reads stdin, writes stdout"
+       ]
 \end{code}

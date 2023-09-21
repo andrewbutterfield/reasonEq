@@ -599,7 +599,7 @@ matchLawByName :: (Monad m, MonadFail m)
                -> m Matches
 matchLawByName asn lnm mcs
  = do (law,vts) <- findLaw lnm mcs
-      return $ domatch vts (unwrapASN asn) law
+      return $ pdbg "mLBN.domatch" $ domatch vts (unwrapASN $ pdbg "mLBN.asn" asn) $ pdbg "mLBN.law" law
 \end{code}
 
 For each law,
@@ -609,8 +609,8 @@ with at least two sub-components, we try all possible partial matches.
 \begin{code}
 domatch :: [VarTable] -> TermSC -> Law -> Matches
 domatch vts asnC law@((_,(Assertion tP@(Cons _ _ i tsP@(_:_:_)) _)),_)
-  =    basicMatch MatchAll vts law theTrue asnC tP
-    ++ doPartialMatch i vts law asnC tsP
+  =    pdbg "dom.basic" (basicMatch MatchAll vts law theTrue asnC tP)
+    ++ pdbg "dom.partial" (doPartialMatch i vts law asnC tsP)
 \end{code}
 Otherwise we just match against the whole law.
 \begin{code}
@@ -635,7 +635,7 @@ doPartialMatch :: Identifier -> [VarTable]
 First, if we have $\equiv$ we call an $n$-way equivalence matcher:
 \begin{code}
 doPartialMatch i vts law asnC tsP
-  | i == theEqv  =  doEqvMatch vts law asnC tsP
+  | i == theEqv  =  pdbg "dom.eqvM" (doEqvMatch vts law asnC tsP)
 \end{code}
 
 If we have $\implies$, then we can try to match either side.
@@ -650,8 +650,8 @@ If we match $Q$, we can replace $C$ by $Q\beta \lor P\beta$
 \begin{code}
 doPartialMatch i vts law asnC tsP@[ltP,rtP]
   | i == theImp
-    =    basicMatch MatchAnte vts law (Cons P True theAnd [ltP,rtP]) asnC ltP
-      ++ basicMatch MatchCnsq vts law (Cons P True theOr  [rtP,ltP]) asnC rtP
+    =    pdbg "dom.ante" (basicMatch MatchAnte vts law (Cons P True theAnd [ltP,rtP]) asnC ltP)
+      ++ pdbg "dom.cnsq" (basicMatch MatchCnsq vts law (Cons P True theOr  [rtP,ltP]) asnC rtP)
 \end{code}
 
 Anything else won't match (right now we don't support $\impliedby$).
@@ -709,7 +709,7 @@ Case A prevents spurious matches of \QNAME{$\equiv$-refl}
 where we match $c::P$ with replacment $P$ to obtain result $c$.
 We fully support Cases A and B and give some support to Case C.
 
-First, Case A, which is automatically done above by \texttt{basicMatch},
+First, Case A is automatically done above by \texttt{basicMatch},
 so we need not return any matches here.
 \begin{code}
 doEqvMatch :: [VarTable] -> Law -> TermSC
@@ -717,17 +717,17 @@ doEqvMatch :: [VarTable] -> Law -> TermSC
            -> Matches
 doEqvMatch vts law asnC [tP1,tP2]
 -- rule out matches against one-side of the reflexivity axiom
-  | tP1 == tP2  =  []
+  | (pdbg "eqvM.tP1" tP1) == (pdbg "eqvM.tP2" tP2)  =  []
 -- otherwise treat binary equivalence specially:
-  | otherwise  =     basicMatch MatchEqvLHS vts law tP2 asnC tP1
-                  ++ basicMatch MatchEqvRHS vts law tP1 asnC tP2
+  | otherwise  =     pdbg "eqvM.LHS" (basicMatch MatchEqvLHS vts law tP2 asnC tP1)
+                  ++ pdbg "eqvM.RHS" (basicMatch MatchEqvRHS vts law tP1 asnC tP2)
 \end{code}
 Then invoke Cases C and B, in that order.
 \begin{code}
 doEqvMatch vts law asnC tsP
-  = doEqvMatchC vts law asnC tsP
+  = pdbg "eqvM.C" (doEqvMatchC vts law asnC tsP)
     ++
-    doEqvMatchB vts law asnC [] [] tsP
+    pdbg "eqvM.B" (doEqvMatchB vts law asnC [] [] tsP)
 \end{code}
 
 Next, Case B.
@@ -898,7 +898,7 @@ basicMatch :: MatchClass
             -> Term       -- sub-part of law being matched
             -> Matches
 basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
-  =  do bind <- match vts tC partsP
+  =  do bind <- match vts (pdbg "bM.tC" tC) $ pdbg "bM.partsP" partsP
         kbind <- bindKnown vts bind repl
         fbind <- bindFloating vts kbind repl
         let ictxt = mkInsCtxt []  -- should be ss

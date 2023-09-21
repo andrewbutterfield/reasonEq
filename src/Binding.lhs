@@ -609,7 +609,7 @@ bindVarToTerm v@(Vbl vi PredV vt) ct (BD (vbind,sbind,lbind))
 Catch-all
 \begin{code}
 bindVarToTerm pv ct _
- = error $ unlines
+ = fail $ unlines
      [ "bindVarToTerm: fell off end"
      , "pv = " ++ show pv
      , "ct = " ++ show ct ]
@@ -1352,7 +1352,7 @@ bindLVarSubstRepl lv@(LVbl (Vbl vi vc vt) is ij) cndTsVL (BD (vbind,sbind,lbind)
 Catch-all
 \begin{code}
 bindLVarSubstRepl plv cndTsVL _
- = error $ unlines
+ = fail $ unlines
      [ "bindLVarSubstRepl: fell off end"
      , "plv = " ++ show plv
      , "cndTsVL = " ++ show cndTsVL ]
@@ -1404,7 +1404,7 @@ lookupVarBind :: (Monad m, MonadFail m) => Binding -> Variable -> m VarBind
 lookupVarBind (BD (vbind,_,_)) v@(Vbl vi vc Static)
   = case M.lookup (vi,vc) vbind of
       Nothing  ->  fail ("lookupVarBind: Variable "++show v++" not found.")
-      Just (BI xi) -> error $ unlines
+      Just (BI xi) -> fail $ unlines
                        [ "lookupVarBind: Static bound to (BI xi)"
                        , "v = " ++ show v
                        , "xi = " ++ show xi
@@ -1420,7 +1420,7 @@ lookupVarBind (BD (vbind,sbind,_)) v@(Vbl vi vc (During m))
          Nothing  ->  fail ("lookupVarBind: Variable "++show v++" not found.")
          Just (BI xi)  ->  return $ BindVar  $ Vbl xi vc (During n)
          Just (BT xt)  ->  return $ BindTerm $ unTerm (During n) xt
-         Just b -> error $ unlines
+         Just b -> fail $ unlines
                  [ "lookupVarBind: During was bound to BV"
                  , "v = " ++ show v
                  , "b = " ++ show b
@@ -1432,7 +1432,7 @@ lookupVarBind (BD (vbind,_,_)) v@(Vbl vi vc vw)
      Nothing  ->  fail ("lookupVarBind: Variable "++show v++" not found.")
      Just (BI xi)  ->  return $ BindVar  $ Vbl xi vc vw
      Just (BT xt)  ->  return $ BindTerm $ unTerm vw xt
-     Just b -> error $ unlines
+     Just b -> fail $ unlines
              [ "lookupVarBind: Dynamic was bound to BV"
              , "v = " ++ show v
              , "b = " ++ show b
@@ -1736,7 +1736,7 @@ equivBindingsSizes bind (lv:lvs)
        Just (BindSet vs)   ->  nub (S.size vs : equivBindingsSizes bind lvs)
        Just (BindTLVs tlvl)
          | null tl    ->  nub (length vl : equivBindingsSizes bind lvs)
-         | otherwise  ->  error $ unlines
+         | otherwise  ->  fail $ unlines
                            ["equivBindingsSizes: cannot handle BX with terms"
                            ,"tlvl="++show tlvl
                            ,"bind="++show bind

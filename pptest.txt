@@ -1,88 +1,23 @@
+@mLBN.asn:  P;(O$'=O$),   O$,O$'⊇P
+@mLBN.law:  ⊤  ";_def"  P;Q  ≡  ∃ O$_0 • P[O$_0/O$'] ∧ Q[O$_0/O$]
 
-Theory 'Equiv'
-   1. ⊤  “true”      true  ⊤
-   2. ⊤  “≡_refl”    P  ≡  P  ⊤
-   3. ⊤  “≡_assoc”   ((P≡Q)≡R)  ≡  (P≡(Q≡R))  ⊤
-   4. ⊤  “≡_symm”    P≡Q≡Q≡P  ⊤
-   5. ⊤  “id_subst”  P[x$/x$]  ≡  P  ⊤
+@bM.partsP: -- P;Q  ≡  ∃ O$_0 • P[O$_0/O$'] ∧ Q[O$_0/O$]
+@bM.tC : -- P;(O$'=O$)
 
 
-(true≡Q)≡Q 
+@dom.basic: []
+@eqvM.tP2: ∃ O$_0 • P[O$_0/O$'] ∧ Q[O$_0/O$]
+@eqvM.tP1:  P;Q
 
-@bM.partsP:  true
-K P (VB True)
-@bM.tC:  -- true≡Q
-C P True (Id "equiv" 0) (true≡Q)≡Q
-         [ C P True (Id "equiv" 0) -- true≡Q
-                    [ K P (VB True), V P (VR (Id "Q" 0,VP,WS))]
-         , V P (VR (Id "Q" 0,VP,WS))   -- Q
-         ]
+@bM.partsP: -- ∃ O$_0 • P[O$_0/O$'] ∧ Q[O$_0/O$]
+@bM.tC : -- P;(O$'=O$)
 
-@bM.partsP: -- P  ≡  P
-C P True (Id "equiv" 0) [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "P" 0,VP,WS))]
-@bM.tC:
-C P True (Id "equiv" 0) 
-         [ C P True (Id "equiv" 0) 
-                    [K P (VB True),V P (VR (Id "Q" 0,VP,WS))]
-         , V P (VR (Id "Q" 0,VP,WS))
-         ]
-@bM.vts:  { ≡ : (𝔹 ⟶ (𝔹 ⟶ 𝔹)) }
-[ VD ( fromList [ ( VR (Id "equiv" 0,VP,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
-                ]
-     , fromList []
-     ,fromList []
-     )
-]
-
-@bM.partsP: ((P≡Q)≡R)  ≡  (P≡(Q≡R))
-C P True (Id "equiv" 0) 
-         [ C P True (Id "equiv" 0) 
-                    [C P True (Id "equiv" 0) 
-                              [V P (VR (Id "P" 0,VP,WS)),V P (VR (Id "Q" 0,VP,WS))]
-                    ,V P (VR (Id "R" 0,VP,WS))]
-         ,C P True (Id "equiv" 0) 
-                   [V P (VR (Id "P" 0,VP,WS))
-                   ,C P True (Id "equiv" 0) 
-                             [V P (VR (Id "Q" 0,VP,WS)),V P (VR (Id "R" 0,VP,WS))]
-                   ]
-         ]
-@bM.tC:
-C P True (Id "equiv" 0) 
-         [C P True (Id "equiv" 0) 
-                   [K P (VB True),V P (VR (Id "Q" 0,VP,WS))]
-         ,V P (VR (Id "Q" 0,VP,WS))
-         ]
-
-@bM.partsP:
-C P True (Id "equiv" 0) -- P≡Q≡Q≡P
-         [V P (VR (Id "P" 0,VP,WS))
-         ,V P (VR (Id "Q" 0,VP,WS))
-         ,V P (VR (Id "Q" 0,VP,WS))
-         ,V P (VR (Id "P" 0,VP,WS))]
-@bM.tC:
-C P True (Id "equiv" 0) 
-         [C P True (Id "equiv" 0) 
-                   [K P (VB True),V P (VR (Id "Q" 0,VP,WS))]
-         ,V P (VR (Id "Q" 0,VP,WS))]
-
-@bM.partsP:
-C P True (Id "equiv" 0) 
-         [ S P (V P (VR (Id "P" 0,VP,WS))) 
-               (SN (fromList []) 
-                   (fromList [ ( LV (VR (Id "x" 0,VO,WS),[],[])
-                               , LV (VR (Id "x" 0,VO,WS),[],[])
-                               )
-                             ]
-                   )
-                )
-         ,V P (VR (Id "P" 0,VP,WS))
-        ]
-@bM.tC:
-C P True (Id "equiv" 0) 
-         [C P True (Id "equiv" 0) 
-                   [K P (VB True),V P (VR (Id "Q" 0,VP,WS))]
-         ,V P (VR (Id "Q" 0,VP,WS))]
+@eqvM.LHS: []
+@eqvM.RHS: []
+@dom.eqvM: []
+@dom.partial: []
+@mLBN.domatch: []
 
 
-
+!!! missing 
 

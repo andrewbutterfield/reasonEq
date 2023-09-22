@@ -12,12 +12,76 @@
 @bM.partsP: -- ∃ O$_0 • P[O$_0/O$'] ∧ Q[O$_0/O$]
 @bM.tC : -- P;(O$'=O$)
 
-@eqvM.LHS: []
-@eqvM.RHS: []
+@LHS.asnC(fst): -- P;(O$'=O$)
+C P  False  (Id ";" 0)
+  [ V P (VR (Id "P" 0, VP, WS))
+  , I P True (Id "and" 0) True (Id "=" 0)
+     [ LV (VR (Id "O" 0, VO, WA), [], [])
+     , LV (VR (Id "O" 0, VO, WB), [], []) 
+     ] 
+  ]
+
+@LHS.tP1:  -- P;Q
+C P False (Id ";" 0)
+  [ V P (VR (Id "P" 0, VP, WS))
+  , V P (VR (Id "Q" 0, VP, WS)) 
+  ]
+
+@bM.partsP:  -- P;Q
+C P False (Id ";" 0)
+  [ V P (VR (Id "P" 0, VP, WS))
+  , V P (VR (Id "Q" 0, VP, WS)) 
+  ]
+@bM.tC:   -- P;(O$'=O$)
+C P False (Id ";" 0)
+ [ V P (VR (Id "P" 0, VP, WS))
+ , I P True (Id "and" 0) True (Id "=" 0)
+   [ LV (VR (Id "O" 0, VO, WA), [], [])
+   , LV (VR (Id "O" 0, VO, WB), [], []) 
+   ] 
+  ]
+@vMatch.vC.2:
+VR (Id ";" 0, VP, WS)
+@vMatch.vC.2:
+VR (Id "P" 0, VP, WS)
+
+@tvMatch.tC:
+I P True (Id "and" 0) True (Id "=" 0)
+  [ LV (VR (Id "O" 0, VO, WA), [], [])
+  , LV (VR (Id "O" 0, VO, WB), [], []) 
+  ]
+@tvMatch.vP:
+VR (Id "Q" 0, VP, WS)
+
+@bVTV:
+BD ( fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS)))]
+   , fromList []
+   , fromList [] )
+
+@MATCH:
+BD ( fromList 
+       [ ( (Id "P" 0,VP)
+         , BV (VR (Id "P" 0,VP,WS))
+         )
+       , ( (Id "Q" 0,VP)
+         , BT ( I P True (Id "and" 0) True (Id "=" 0) 
+                  [ LV (VR (Id "O" 0,VO,WA),[],[])
+                  , LV (VR (Id "O" 0,VO,WB),[],[])
+                  ]
+              )
+         )
+       ]
+   , fromList []
+   , fromList []
+   )
+
+
+@eqvM.LHS: []  -- basicMatch MatchEqvLHS vts law tP2 asnC tP1
+@eqvM.RHS: []  -- basicMatch MatchEqvRHS vts law tP1 asnC tP2
 @dom.eqvM: []
 @dom.partial: []
 @mLBN.domatch: []
 
 
-!!! missing 
+Issue is matcjhi
 

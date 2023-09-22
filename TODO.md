@@ -6,6 +6,8 @@
 
 See `pptest.txt` for current state of play
 
+Matching works fine --- something else is causing things to fail
+
 ###
 
 ### Issue

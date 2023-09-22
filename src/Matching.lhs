@@ -36,6 +36,10 @@ import Binding
 import Debug.Trace
 dbg msg x = trace (msg ++ show x) x
 pdbg nm x = dbg ('@':nm++":\n") x
+mdbg nm x
+  = case x of 
+     Yes y -> return $ pdbg nm y
+     But msgs -> fail $ pdbg nm (unlines msgs)
 \end{code}
 
 \subsection{Matching Principles}
@@ -418,7 +422,7 @@ tMatch' vts bind cbvs pbvs (Iter tkC saC naC siC niC lvsC)
            iibind bind' rest
 \end{code}
 
-The nest case is when the candidate is an expansion of length one,
+The next case is when the candidate is an expansion of length one,
 without the application of the top-level operator $na$.
 $$
 \inferrule
@@ -695,7 +699,7 @@ $$
 $$
 \begin{code}
 --tvMatch vts bind cbvs pvbs tC tkP vP@(Vbl _ vw _)
- | otherwise                  =  bindVarToTerm vP tC bind
+ | otherwise                  =  bindVarToTerm (pdbg "tvMatch.vP" vP) (pdbg "tvMatch.tC" tC) bind
  where
    vPmr = lookupVarTables vts vP
 \end{code}
@@ -864,13 +868,13 @@ observation or expression variables,
 while other variable classes may only match their own class.
 \begin{code}
 vMatch vts bind cbvs pvbs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
- | pbound      =  bvMatch vts bind cbvs vC vP
- | vC == vP    =  bindVarToVar vP vC bind -- covers KnownVar, InstanceVar
+ | pbound      =  bvMatch vts bind cbvs (pdbg "vMatch.vC.1" vC) vP
+ | (pdbg "vMatch.vC.2" vC) == (pdbg "vMatch.vP.2" vP)    =  mdbg "bVTV" (bindVarToVar vP vC bind) -- covers KnownVar, InstanceVar
  | vwC == vwP  =  vMatch' vts bind vmr vC vP
  | vwC == ExprV && vwP == ObsV  =  vMatch' vts bind vmr vC vP
  | otherwise   =  fail "vMatch: class mismatch"
  where
-    pbound = StdVar vP `S.member` pvbs
+    pbound = StdVar (pdbg "vMatch.vP.1" vP) `S.member` pvbs
     vmr = lookupVarTables vts vP
 \end{code}
 Variable classes are compatible, but is the pattern ``known''?

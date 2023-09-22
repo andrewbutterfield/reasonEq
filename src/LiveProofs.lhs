@@ -61,6 +61,10 @@ import TestRendering
 import Debug.Trace
 dbg msg x = trace (msg++show x) x
 pdbg nm x = dbg ('@':nm++":\n") x
+mdbg nm x
+  = case x of 
+     Yes y -> return $ pdbg nm y
+     But msgs -> fail $ pdbg nm (unlines msgs)
 \end{code}
 
 \newpage
@@ -719,7 +723,7 @@ doEqvMatch vts law asnC [tP1,tP2]
 -- rule out matches against one-side of the reflexivity axiom
   | (pdbg "eqvM.tP1" tP1) == (pdbg "eqvM.tP2" tP2)  =  []
 -- otherwise treat binary equivalence specially:
-  | otherwise  =     pdbg "eqvM.LHS" (basicMatch MatchEqvLHS vts law tP2 asnC tP1)
+  | otherwise  =     pdbg "eqvM.LHS" (basicMatch MatchEqvLHS vts law tP2 (pdbg "LHS.asnC" asnC) $ pdbg "LHS.tP1" tP1)
                   ++ pdbg "eqvM.RHS" (basicMatch MatchEqvRHS vts law tP1 asnC tP2)
 \end{code}
 Then invoke Cases C and B, in that order.
@@ -898,7 +902,7 @@ basicMatch :: MatchClass
             -> Term       -- sub-part of law being matched
             -> Matches
 basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
-  =  do bind <- match vts (pdbg "bM.tC" tC) $ pdbg "bM.partsP" partsP
+  =  do bind <- mdbg "MATCH" (match vts (pdbg "bM.tC" tC) $ pdbg "bM.partsP" partsP)
         kbind <- bindKnown vts bind repl
         fbind <- bindFloating vts kbind repl
         let ictxt = mkInsCtxt []  -- should be ss

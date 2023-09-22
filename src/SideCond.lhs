@@ -31,6 +31,7 @@ import qualified Data.Set as S
 import Data.Map(Map)
 import qualified Data.Map as M
 
+import YesBut
 import Utilities
 import LexBase
 import Variables
@@ -42,9 +43,7 @@ import Test.Framework as TF (defaultMain, testGroup, Test)
 import Test.Framework.Providers.HUnit (testCase)
 --import Test.Framework.Providers.QuickCheck2 (testProperty)
 
-import Debug.Trace
-dbg msg x = trace (msg++show x) x
-pdbg nm x = dbg ('@':nm++":\n") x
+import Debugger
 \end{code}
 
 

@@ -40,9 +40,7 @@ import Sequents
 import LiveProofs
 import Ranking
 
-import Debug.Trace
-dbg msg x = trace (msg ++ show x) x
-pdbg nm x = dbg ('@':nm++":\n") x
+import Debugger
 \end{code}
 
 \subsection{Settings}

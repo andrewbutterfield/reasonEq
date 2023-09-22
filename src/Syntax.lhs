@@ -36,6 +36,7 @@ module Syntax ( BasicComp
 import Data.Maybe (fromJust)
 import qualified Data.Map as M
 
+import YesBut
 import Utilities
 import LexBase
 

@@ -46,6 +46,7 @@ import qualified Data.Map as M
 import Data.Maybe
 import Data.List
 
+import YesBut
 import Utilities
 import LexBase
 import Variables
@@ -67,13 +68,11 @@ import SAT
 
 import TestRendering
 
-import Debug.Trace
-dbg msg x = trace (msg++show x) x
-pdbg nm x = dbg ('@':nm++":\n") x
-tdbg nm t = trace (nm++" = "++trTerm 0 t) t
-scdbg nm sc = trace (nm++" = "++trSideCond sc) sc
-bdbg nm b = trace (nm++" = "++trBinding b) b
-vsdbg nm vs = trace (nm++" = "++trVSet vs) vs
+import Debugger
+tdbg nm t = trc (nm++" = "++trTerm 0 t) t
+scdbg nm sc = trc (nm++" = "++trSideCond sc) sc
+bdbg nm b = trc (nm++" = "++trBinding b) b
+vsdbg nm vs = trc (nm++" = "++trVSet vs) vs
 \end{code}
 
 \subsection{Introduction}

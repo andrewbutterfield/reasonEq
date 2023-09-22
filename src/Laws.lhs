@@ -30,8 +30,7 @@ import SideCond
 import Assertions
 import TestRendering
 
-import Debug.Trace
-dbg msg x = trace (msg++show x) x
+import Debugger
 \end{code}
 
 We define types for assertions and laws.

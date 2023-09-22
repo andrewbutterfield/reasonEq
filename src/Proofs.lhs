@@ -33,8 +33,7 @@ import Binding
 import Laws
 import TestRendering
 
-import Debug.Trace
-dbg msg x = trace (msg++show x) x
+import Debugger
 \end{code}
 
 We consider a proof as being a transcript of the steps taken

@@ -21,7 +21,8 @@ import qualified Data.Set as S
 import Data.Map(Map)
 import qualified Data.Map as M
 
-import Utilities (injMap, YesBut(..), unlines')
+import YesBut
+import Utilities (injMap, unlines')
 import Control (mapboth,mapaccum,mapsnd)
 import LexBase
 import Variables
@@ -34,9 +35,7 @@ import SideCond
 -- import Test.Framework.Providers.HUnit (testCase)
 --import Test.Framework.Providers.QuickCheck2 (testProperty)
 
-import Debug.Trace
-dbg msg x = trace (msg++show x) x
-pdbg nm x = dbg ('@':nm++":\n") x
+import Debugger
 \end{code}
 
 

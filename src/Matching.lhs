@@ -33,13 +33,7 @@ import VarData
 import Binding
 
 
-import Debug.Trace
-dbg msg x = trace (msg ++ show x) x
-pdbg nm x = dbg ('@':nm++":\n") x
-mdbg nm x
-  = case x of 
-     Yes y -> return $ pdbg nm y
-     But msgs -> fail $ pdbg nm (unlines msgs)
+import Debugger
 \end{code}
 
 \subsection{Matching Principles}

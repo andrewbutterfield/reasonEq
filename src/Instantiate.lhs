@@ -31,9 +31,7 @@ import FreeVars
 import VarData
 import TestRendering
 
-import Debug.Trace
-dbg msg x = trace (msg++show x) x
-pdbg nm x = dbg ('@':nm++":\n") x
+import Debugger
 \end{code}
 
 \subsection{Introduction}

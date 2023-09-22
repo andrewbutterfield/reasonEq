@@ -22,6 +22,7 @@ import Data.List (nub, sort, (\\), intercalate)
 import Data.Char
 
 
+import YesBut
 import Utilities
 import Symbols
 import LexBase

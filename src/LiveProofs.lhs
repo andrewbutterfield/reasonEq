@@ -37,6 +37,7 @@ import qualified Data.Set as S
 import Data.Map (Map)
 import qualified Data.Map as M
 
+import YesBut 
 import Utilities
 import WriteRead
 import LexBase
@@ -58,13 +59,7 @@ import Sequents
 import Symbols
 import TestRendering
 
-import Debug.Trace
-dbg msg x = trace (msg++show x) x
-pdbg nm x = dbg ('@':nm++":\n") x
-mdbg nm x
-  = case x of 
-     Yes y -> return $ pdbg nm y
-     But msgs -> fail $ pdbg nm (unlines msgs)
+import Debugger
 \end{code}
 
 \newpage

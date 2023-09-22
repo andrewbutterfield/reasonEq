@@ -52,8 +52,7 @@ import Classifier
 import TestRendering
 import WriteRead
 
-import Debug.Trace
-dbg msg x = trace (msg++show x) x
+import Debugger
 \end{code}
 
 We define types for single theories,

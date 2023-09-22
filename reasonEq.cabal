@@ -15,8 +15,9 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src, builtin, proto
-  exposed-modules:     Utilities
+  exposed-modules:     YesBut
                      , Debugger
+                     , Utilities
                      , Control
                      , Symbols
                      , LexBase

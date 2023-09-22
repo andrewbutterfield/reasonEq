@@ -21,9 +21,7 @@ import Utilities
 import Files
 import REqState
 
-import Debug.Trace
-dbg msg x = trace (msg ++ show x) x
-pdbg nm x = dbg ('@':nm++":\n") x
+import Debugger
 \end{code}
 
 \subsection{File Paths}

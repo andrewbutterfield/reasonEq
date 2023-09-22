@@ -21,6 +21,7 @@ import Data.Maybe (isJust)
 -- import Control.Monad
 -- import Data.List
 
+import YesBut
 import Utilities
 -- import Control
 import LexBase
@@ -31,10 +32,7 @@ import FreeVars
 -- import Binding
 -- import Matching
 
-
-import Debug.Trace
-dbg msg x = trace (msg ++ show x) x
-pdbg nm x = dbg ('@':nm++":\n") x
+import Debugger
 \end{code}
 
 \newpage

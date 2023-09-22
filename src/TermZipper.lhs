@@ -31,8 +31,7 @@ import Test.HUnit
 import Test.Framework as TF (defaultMain, testGroup, Test)
 import Test.Framework.Providers.HUnit (testCase)
 
--- import Debug.Trace
--- dbg msg x = trace (msg++show x) x
+import Debugger
 \end{code}
 
 \newpage

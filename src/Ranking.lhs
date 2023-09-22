@@ -35,11 +35,8 @@ import Instantiate
 import LiveProofs
 import TestRendering
 
-import Debug.Trace
-dbg msg x = trace (msg++show x) x
-pdbg nm x = dbg ('@':nm++":\n") x
-mdbg msg mtchs = trace (msg++":\n"++unlines (map mdetails mtchs)) mtchs
-mdebug mtch = trTerm 0 $ mRepl mtch
+import Debugger
+mtdbg msg mtchs = trc (msg++":\n"++unlines (map mdetails mtchs)) mtchs
 mdetails mtch
    = mName mtch
      ++ " @ " ++ showMatchClass (mClass mtch)

@@ -7,12 +7,12 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Debugger
- ( dbg, pdbg, mdbg ) 
+ ( dbg, pdbg, mdbg, trc ) 
 where
 
 import Debug.Trace
 
-import Utilities
+import YesBut
 \end{code}
 
 We extend \texttt{Debug.trace} in a number of ways.
@@ -40,4 +40,10 @@ mdbg nm mx
   = case mx of 
      Yes y     ->  return $ pdbg nm y
      But msgs  ->  fail $ pdbg nm (unlines msgs)
+\end{code}
+
+Finally, a version of \texttt{trace} for local customisations:
+\begin{code}
+trc :: Show a => [Char] -> a -> a
+trc = trace 
 \end{code}

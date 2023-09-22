@@ -24,6 +24,7 @@ import Data.Char
 
 import Symbols hiding (help)
 
+import YesBut
 import Utilities
 import StratifiedDAG
 import Persistence
@@ -49,9 +50,7 @@ import SAT
 import Classifier
 import LiveProofs
 
-import Debug.Trace
-dbg msg x = trace (msg++show x) x
-pdbg nm x = dbg ('@':nm++":\n") x
+import Debugger
 \end{code}
 
 \newpage

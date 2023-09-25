@@ -901,8 +901,8 @@ basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
         kbind <- bindKnown vts bind repl
         fbind <- bindFloating vts kbind repl
         let ictxt = mkInsCtxt []  -- should be ss
-        scPinC <- mdbg "basic.instantiateSC" $ instantiateSC (pdbg "ictxt" ictxt) fbind $ pdbg "scP" scP
-        scD <- mdbg "basic.scDischarge" $ scDischarge (pdbg "ss" ss) (pdbg "scC" scC) $ pdbg "scPinC" scPinC
+        scPinC <- instantiateSC ictxt fbind scP
+        scD <- scDischarge ss scC scPinC
 
         if all isFloatingASC (fst scD)
           then do mrepl <- instantiate ictxt fbind repl

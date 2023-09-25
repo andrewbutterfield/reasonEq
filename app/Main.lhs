@@ -981,7 +981,7 @@ applySimps :: MonadFail m => ((String, Direction) -> MatchClass -> Bool) ->
                              [(String, Direction)] -> (REqState, LiveProof) -> m LiveProof
 applySimps f [] (reqs, liveProof) = fail ("No successful matching simp applys")
 applySimps f (x:xs) (reqs, liveProof)
-    = case matchFocusAgainst (pdbg "aS.n" (fst x)) liveProof of
+    = case matchFocusAgainst (fst x) liveProof of
         Yes liveProof' ->  case applyMatchToFocus1 1 liveProof' of
                                 Nothing -> applySimps f xs (reqs, liveProof)
                                 Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)
@@ -1002,7 +1002,7 @@ applyFolds' input autos (reqs, liveProof) = do let match = if input == "f" then 
 applyFolds :: MonadFail m => (MatchClass -> Bool) -> [String] -> (REqState, LiveProof) -> m LiveProof
 applyFolds _ [] (reqs, liveProof) = fail ("No successful matching simp applys")
 applyFolds f (x:xs) (reqs, liveProof)
-    = case matchFocusAgainst (pdbg "aS.n" x) liveProof of
+    = case matchFocusAgainst x liveProof of
         Yes liveProof' ->  case applyMatchToFocus1 1 liveProof' of
                                 Nothing -> applyFolds f xs (reqs, liveProof)
                                 Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)

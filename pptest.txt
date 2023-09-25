@@ -14,3 +14,89 @@
 
 scDischarge ss (O$,O$'⊇P) (O$,O$'⊇P, fresh:O$_0)
   =  O$,O$'⊇P, fresh:O$_0   ????
+
+
+Binding: { P ⟼ R, Q ⟼ (O$'=O$), 0 ⟼ 0, O$ ⟼ ⟨O$⟩ }
+Instantiated Law = (R;(O$'=O$))  ≡  (∃ O$_0 • R[O$_0/O$']∧((O$'=O$))[O$_0/O$])
+Instantiated Law S.C. = O$,O$'⊇P, fresh:O$_0
+Goal S.C. = O$,O$'⊇II, O$,O$'⊇R
+Discharged Law S.C. = O$,O$'⊇P, fresh:O$_0
+
+
+@cnsq:
+[ (GV (VR (Id "P" 0, VP, WB)), [SS NU (GV (VR (Id "P" 0, VP, WB))) (fromList [GL (LV (VR (Id "O" 0, VO, WB), [], [])), GL (LV (VR (Id "O" 0, VO, WA), [], []))])])
+, (GV (VR (Id "Q" 0, VP, WB)), [SS NU (GV (VR (Id "Q" 0, VP, WB))) (fromList [GL (LV (VR (Id "O" 0, VO, WB), [], [])), GL (LV (VR (Id "O" 0, VO, WA), [], []))])]) ]
+@ante:
+[ (GV (VR (Id "R" 0, VP, WS)), [SS NU (GV (VR (Id "R" 0, VP, WS))) (fromList [GL (LV (VR (Id "O" 0, VO, WB), [], [])), GL (LV (VR (Id "O" 0, VO, WA), [], []))])]) ]
+
+
+@inst-SC.ascs: -- O$,O$' ⊇ P, O$,O$' ⊇ Q
+[ SS
+  NU
+  (GV (VR (Id "P" 0, VP, WB)))
+  ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+    , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } )
+, SS
+  NU
+  (GV (VR (Id "Q" 0, VP, WB)))
+  ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+    , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) ]
+@inst-SC.bind: -- { P ⟼ R, Q ⟼ (O$'=O$), 0 ⟼ 0, O$ ⟼ ⟨O$⟩ }
+BD
+( { ( (Id "P" 0, VP)
+    , BV (VR (Id "R" 0, VP, WS)) )
+  , ( (Id "Q" 0, VP)
+    , BT (I P True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "O" 0, VO, WA), [], []), LV (VR (Id "O" 0, VO, WB), [], [])]) ) }
+, { ( "0"
+    , "0" ) }
+, { ( (Id "O" 0, VO, [], [])
+    , BL
+      [ GL (LV (VR (Id "O" 0, VO, WB), [], [])) ] ) } )
+@inst-C.ascss':  -- O$,O$' ⊇ P, O$,O$' ⊇ O$,
+[ [ SS
+    NU
+    (GV (VR (Id "P" 0, VP, WB)))
+    ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+      , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) ]
+, [ SS
+    NU
+    (GL (LV (VR (Id "O" 0, VO, WB), [], [])))
+    ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+      , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) ] ]
+
+@iASC.fvsT:   -- P \ {}
+@iASC.asc:    -- O$,O$' ⊇ P
+@iASC.fvsT:   -- O \ {}
+
+@iASC.asc: -- O$,O$' ⊇ Q
+@iASC.vsCD: -- { O$, O$' }
+{ GL (LV (VR (Id "O" 0, VO, WB), [], []))
+, GL (LV (VR (Id "O" 0, VO, WA), [], [])) }
+@instASCVariant: -- O$,O$' ⊇ P
+[ SS
+  NU
+  (GV (VR (Id "P" 0, VP, WB)))
+  ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+    , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) ]
+
+@iASC.vsCD: -- { O$, O$' }
+{ GL (LV (VR (Id "O" 0, VO, WB), [], []))
+, GL (LV (VR (Id "O" 0, VO, WA), [], [])) }
+@instASCVariant: -- O$,O$' ⊇ O$
+[ SS
+  NU
+  (GL (LV (VR (Id "O" 0, VO, WB), [], [])))
+  ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+    , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) ]
+@inst-C.ascss':
+[ [ SS
+
+    NU
+    (GV (VR (Id "P" 0, VP, WB)))
+    ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+      , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) ]
+, [ SS
+    NU
+    (GL (LV (VR (Id "O" 0, VO, WB), [], [])))
+    ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+      , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) ] ]

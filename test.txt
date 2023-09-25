@@ -1,12 +1,22 @@
-@scP:
-([SS NU (GV (VR (Id "P" 0,VP,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]),SS NU (GV (VR (Id "Q" 0,VP,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])],fromList [GL (LV (VR (Id "O" 0,VO,WD "0"),[],[]))])
-@scC:
-([SS NU (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])],fromList [])
-@basic.instantiateSC:
-([SS NU (GV (VR (Id "P" 0,VP,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])],fromList [GL (LV (VR (Id "O" 0,VO,WD "0"),[],[]))])
-@scPinC:
-([SS NU (GV (VR (Id "P" 0,VP,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])],fromList [GL (LV (VR (Id "O" 0,VO,WD "0"),[],[]))])
-@basic.scDischarge:
-([SS NU (GV (VR (Id "P" 0,VP,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])],fromList [GL (LV (VR (Id "O" 0,VO,WD "0"),[],[]))])
-@mFA.mLBN:
-[]
+@iASC.fvsT:
+(fromList [GV (VR (Id "P" 0,VP,WB))],[])
+@iASC.asc:
+SS NU (GV (VR (Id "P" 0,VP,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])
+@iASC.fvsT:
+(fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))],[])
+@iASC.asc:
+SS NU (GV (VR (Id "Q" 0,VP,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])
+@iASC.vsCD:
+fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]
+@instASCVariant:
+[SS NU (GV (VR (Id "P" 0,VP,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])]
+@iASC.vsCD:
+fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]
+@instASCVariant:
+[SS NU (GL (LV (VR (Id "O" 0,VO,WB),[],[]))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])]
+@inst-C.ascss':
+[[SS NU (GV (VR (Id "P" 0,VP,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])],[SS NU (GL (LV (VR (Id "O" 0,VO,WB),[],[]))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])]]
+@cnsq:
+[(GV (VR (Id "P" 0,VP,WB)),[SS NU (GV (VR (Id "P" 0,VP,WB))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])])]
+@ante:
+[(GV (VR (Id "II" 0,VP,WS)),[SS NU (GV (VR (Id "II" 0,VP,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])]),(GV (VR (Id "R" 0,VP,WS)),[SS NU (GV (VR (Id "R" 0,VP,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])])]

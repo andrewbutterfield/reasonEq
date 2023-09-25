@@ -632,27 +632,27 @@ skipIntro = mkConsIntro i_skip bool
 From \cite[2.3\textbf{L5}, p50]{UTP-book}
 $$
   \begin{array}{lll}
-     P \seq \Skip \equiv P   & O,O'\supseteq P
+     R \seq \Skip \equiv R   & O,O'\supseteq R
      & \QNAME{$;$-runit}
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
 (cjSkipL5a,alSkipL5a) = bookdef (";" -.- "runit") "2.3L5a"
-                         (mkSeq p skip === p)
-                         (assertIsUTP gP)
+                         (mkSeq r skip === r)
+                         (assertAreUTP [gR,g_skip])
 \end{code}
 
 From \cite[2.3\textbf{L5}, p50]{UTP-book}
 $$
   \begin{array}{lll}
-     \Skip \seq P \equiv P   & O,O'\supseteq P
+     \Skip \seq R \equiv R   & O,O'\supseteq R
      & \QNAME{$;$-lunit}
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
 (cjSkipL5b,alSkipL5b) = bookdef (";" -.- "lunit") "2.3L5b"
-                         (mkSeq skip p === p)
-                         (assertIsUTP gP)
+                         (mkSeq skip r === r)
+                         (assertAreUTP [gR,g_skip])
 \end{code}
 
 

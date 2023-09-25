@@ -6,16 +6,16 @@
 
 See `pptest.txt` for current state of play
 
-Looks like the cause of failure is `scDischarge`
+Function `instantiateSC` seems completely broken!!!
 
 ```
-scDischarge ss (O$,O$'⊇P) (O$,O$'⊇P, fresh:O$_0)
-  =  O$,O$'⊇P, fresh:O$_0
+instantiateSC ss 
+  { P ⟼ R, Q ⟼ (O$'=O$), 0 ⟼ 0, O$ ⟼ ⟨O$⟩ }
+  (O$,O$' ⊇ P, O$,O$' ⊇ Q, )
+    =  O$,O$' ⊇ P, O$,O$' ⊇ O$
 ```
 
-It should be `fresh:O$_0` !!!
 
-###
 
 ### Issue
 

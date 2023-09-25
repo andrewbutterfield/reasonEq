@@ -15,7 +15,7 @@ module UTPSignature (
 , i_while, while
 , listwiseVarBinPred
 , i_asg, (.:=), (.::=), simassign
-, i_skip, skip
+, i_skip, skip, g_skip
 , i_ndc, ndc
 , i_abort, abort
 , i_miracle, miracle
@@ -150,7 +150,9 @@ $$ \Skip $$
 \begin{code}
 skip :: Term
 i_skip  =  jId "II"
-skip    =  jVar P $ Vbl i_skip PredV Static
+v_skip  =  Vbl i_skip PredV Static
+g_skip  =  StdVar v_skip
+skip    =  jVar P v_skip 
 \end{code}
 
 \subsubsection{Non-deterministic Choice}

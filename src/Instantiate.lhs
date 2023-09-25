@@ -80,6 +80,7 @@ aspects of the current state of a proof:
 data InsContext
   =  ICtxt  { icSS :: [Subscript]
             }
+  deriving Show  
 
 mkInsCtxt = ICtxt
 \end{code}
@@ -461,7 +462,7 @@ and then use $\beta.C$ or $\beta.D$
 to try to eliminate any use of set difference.
 \begin{code}
 instantiateSC insctxt bind (ascs,freshvs)
-  = do ascss' <- sequence $ map (instantiateASC insctxt bind) ascs
+  = do ascss' <- mdbg "inst-C.ascss'" (sequence $ map (instantiateASC insctxt bind) ascs)
        freshvs' <- instVarSet insctxt bind freshvs
        mkSideCond [] (concat ascss') $ theFreeVars freshvs'
 \end{code}
@@ -473,7 +474,7 @@ instantiateASC :: MonadFail m => InsContext
 instantiateASC insctxt bind asc
   = do (vsCD,diffs) <- instVarSet insctxt bind $ ascVSet asc
        if null diffs
-         then instASCVariant insctxt vsCD fvsT asc
+         then mdbg "instASCVariant" (instASCVariant insctxt (pdbg "iASC.vsCD" vsCD) (pdbg "iASC.fvsT" fvsT) $ pdbg "iASC.asc" asc)
          else fail "instantiateASC: explicit diffs in var-set not handled."
   where
      fvsT = instantiateGVar insctxt bind $ ascGVar asc

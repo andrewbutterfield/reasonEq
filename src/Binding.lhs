@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Binding
-( VarBind, pattern BindVar, pattern BindTerm
+( VarBind, pattern BindId, pattern BindVar, pattern BindTerm
 , LVarOrTerm
 , injLV, injTM,lvOf, tmOf
 , lvsOf, tmsOf, lvtmSplit
@@ -304,6 +304,7 @@ type VarBinding = M.Map (Identifier,VarClass) VarBind
 \end{code}
 We return just the variable or term from a lookup:
 \begin{code}
+pattern BindId   i  =  BI i
 pattern BindVar  v  =  BV v
 pattern BindTerm t  =  BT t
 \end{code}
@@ -374,6 +375,78 @@ Merging a binding (first takes precedence!):
 mergeBindings (BD (vb1,sb1,lvb1)) (BD (vb2,sb2,lvb2))
   = BD(vb1 `M.union` vb2, sb1 `M.union` sb2, lvb1 `M.union` lvb2)
 \end{code}
+
+\newpage
+\subsection{Term Dynamic normalisation}
+When we store a dynamic term,
+we sometimes ``normalise'' it by setting its temporality to \texttt{Before}.
+\begin{code}
+dnTerm :: Term -> Term
+dnTerm v@(Var tk (Vbl vi vc vw))
+  | vw == Static || vw == Textual || vw == Before  =  v
+  | otherwise            =  dnTVar  tk $ Vbl vi vc Before
+dnTerm (Cons tk sb n ts)    =  Cons tk sb n $ map dnTerm ts
+dnTerm (Bnd tk n vs t)  =  dnBind tk n (S.map dnGVar vs) $ dnTerm t
+dnTerm (Lam tk n vl t)   =  dnLam  tk n (  map dnGVar vl) $ dnTerm t
+-- dnTerm (Cls n t)      No!
+dnTerm (Sub tk t sub)    =  Sub    tk (dnTerm t) $ dnSub sub
+dnTerm (Iter tk sa a sp p lvs) =  Iter tk sa a sp p (map dnLVar lvs)
+dnTerm t                 =  t
+
+dnSub :: Substn -> Substn
+dnSub (Substn tsub lvsub)
+ = dnSubst (dnTSub $ S.toList tsub) (dnLVSub $ S.toList lvsub)
+
+dnTSub :: [(Variable, Term)] -> [(Variable, Term)]
+dnTSub tsub = map dnVT tsub ; dnVT (v,t) = (dnVar v,dnTerm t)
+
+dnLVSub :: [(ListVar, ListVar)] -> [(ListVar, ListVar)]
+dnLVSub lvsub = map dnLVLV lvsub ; dnLVLV (lv1,lv2) = (dnLVar lv1,dnLVar lv2 )
+
+dnTVar  tk      =  getJust "dnTerm2VarBind var failed"  . var  tk
+dnBind tk n vl  =  getJust "dnTerm2VarBind bnd failed" . bnd tk n vl
+dnLam  tk n vs  =  getJust "dnTerm2VarBind lam failed"  . lam  tk n vs
+dnSubst tsub lvsub = getJust "" $ substn tsub lvsub
+\end{code}
+
+We can ``un-normalise'' by providing a replacement \texttt{VarWhen} value:
+\begin{code}
+unTerm :: VarWhen -> Term -> Term
+unTerm vw t = if isTemporallyUniform t then unTerm' vw t else t
+
+unTerm' vw t@(Var tk v@(Vbl vi vc bw))
+ | bw == Static || bw == Textual =  t
+ | otherwise                       =  ttsVar tk $ Vbl vi vc vw
+unTerm' vw (Cons tk sb i ts)     =  Cons tk sb i $ map (unTerm' vw) ts
+unTerm' vw (Bnd tk i vs t)
+ =  ttsBind tk i (S.map (unGVar vw) vs) $ unTerm' vw t
+unTerm' vw (Lam tk i vl t)
+ =  ttsLam  tk i (map (unGVar vw) vl) $ unTerm' vw t
+unTerm' vw (Cls i t) = Cls i $ unTerm' vw t
+unTerm' vw (Sub tk t s)       =  Sub tk (unTerm' vw t) $ unSub vw s
+unTerm' vw (Iter tk sa a sp p lvs)
+  =  Iter tk sa a sp p $ map (unLVar vw) lvs
+unTerm' vw t               =  t
+
+unSub :: VarWhen -> Substn -> Substn
+unSub vw (Substn tsub lsub)
+ = ttsSubstn (map (tsubSync vw) $ S.toList tsub)
+             (map (lsubSync vw) $ S.toList lsub)
+ where
+      tsubSync vw (v,  t )  =  (unVar vw v,   unTerm' vw t )
+      lsubSync vw (lt, lr)  =  (unLVar vw lt, unLVar vw lr)
+
+ttsVar  tk           =  getJust "unTerm var failed."   . var tk
+ttsBind tk i vs      =  getJust "unTerm bind failed."  . bnd tk i vs
+ttsLam  tk i vl      =  getJust "unTerm lam failed."   . lam tk i vl
+ttsSubstn tsub lsub  =  getJust "unSub substn failed." $ substn tsub lsub
+
+unTL :: VarWhen -> Either ListVar Term -> Either ListVar Term
+unTL dn (Left lv)   =  Left  $ unLVar dn lv
+unTL dn (Right tm)  =  Right $ unTerm' dn tm
+\end{code}
+
+
 
 \newpage
 \subsection{Binding Insertion}
@@ -619,6 +692,8 @@ Determining the temporality of a term:
 \begin{code}
 temporalityOf :: Term -> Set VarWhen
 temporalityOf t = termTmpr S.empty [] t
+isTemporallyUniform :: Term -> Bool
+isTemporallyUniform t = S.size (temporalityOf t) <= 1
 
 -- for now we process all variables in the same way,
 -- regardless of whether their occurrence is free, binding or bound.
@@ -1431,6 +1506,7 @@ lookupVarBind (BD (vbind,_,_)) v@(Vbl vi vc vw)
      Nothing  ->  fail ("lookupVarBind: Variable "++show v++" not found.")
      Just (BI xi)  ->  return $ BindVar  $ Vbl xi vc vw
      Just (BT xt)  ->  return $ BindTerm $ unTerm vw xt
+     Just bv       ->  return bv
      Just b -> fail $ unlines
              [ "lookupVarBind: Dynamic was bound to BV"
              , "v = " ++ show v

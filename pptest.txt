@@ -1,87 +1,16 @@
-@mLBN.asn:  P;(O$'=O$),   O$,O$'⊇P
-@mLBN.law:  ⊤  ";_def"  P;Q  ≡  ∃ O$_0 • P[O$_0/O$'] ∧ Q[O$_0/O$]
-
-@bM.partsP: -- P;Q  ≡  ∃ O$_0 • P[O$_0/O$'] ∧ Q[O$_0/O$]
-@bM.tC : -- P;(O$'=O$)
-
-
-@dom.basic: []
-@eqvM.tP2: ∃ O$_0 • P[O$_0/O$'] ∧ Q[O$_0/O$]
-@eqvM.tP1:  P;Q
-
-@bM.partsP: -- ∃ O$_0 • P[O$_0/O$'] ∧ Q[O$_0/O$]
-@bM.tC : -- P;(O$'=O$)
-
-@LHS.asnC(fst): -- P;(O$'=O$)
-C P  False  (Id ";" 0)
-  [ V P (VR (Id "P" 0, VP, WS))
-  , I P True (Id "and" 0) True (Id "=" 0)
-     [ LV (VR (Id "O" 0, VO, WA), [], [])
-     , LV (VR (Id "O" 0, VO, WB), [], []) 
-     ] 
-  ]
-
-@LHS.tP1:  -- P;Q
-C P False (Id ";" 0)
-  [ V P (VR (Id "P" 0, VP, WS))
-  , V P (VR (Id "Q" 0, VP, WS)) 
-  ]
-
-@bM.partsP:  -- P;Q
-C P False (Id ";" 0)
-  [ V P (VR (Id "P" 0, VP, WS))
-  , V P (VR (Id "Q" 0, VP, WS)) 
-  ]
-@bM.tC:   -- P;(O$'=O$)
-C P False (Id ";" 0)
- [ V P (VR (Id "P" 0, VP, WS))
- , I P True (Id "and" 0) True (Id "=" 0)
-   [ LV (VR (Id "O" 0, VO, WA), [], [])
-   , LV (VR (Id "O" 0, VO, WB), [], []) 
-   ] 
-  ]
-@vMatch.vC.2:
-VR (Id ";" 0, VP, WS)
-@vMatch.vC.2:
-VR (Id "P" 0, VP, WS)
-
-@tvMatch.tC:
-I P True (Id "and" 0) True (Id "=" 0)
-  [ LV (VR (Id "O" 0, VO, WA), [], [])
-  , LV (VR (Id "O" 0, VO, WB), [], []) 
-  ]
-@tvMatch.vP:
-VR (Id "Q" 0, VP, WS)
-
-@bVTV:
-BD ( fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS)))]
-   , fromList []
-   , fromList [] )
-
-@MATCH:
-BD ( fromList 
-       [ ( (Id "P" 0,VP)
-         , BV (VR (Id "P" 0,VP,WS))
-         )
-       , ( (Id "Q" 0,VP)
-         , BT ( I P True (Id "and" 0) True (Id "=" 0) 
-                  [ LV (VR (Id "O" 0,VO,WA),[],[])
-                  , LV (VR (Id "O" 0,VO,WB),[],[])
-                  ]
-              )
-         )
-       ]
-   , fromList []
-   , fromList []
-   )
+@basic.bindKnown:   { P ⟼ P, Q ⟼ (O$'=O$), 0 ⟼ 0, O$ ⟼ ⟨O$⟩ }
+@basic.bindFloating:    { P ⟼ P, Q ⟼ (O$'=O$), 0 ⟼ 0, O$ ⟼ ⟨O$⟩ }
+@basic.instantiateSC:  O$,O$'⊇P, fresh:O$_0
+@basic.scDischarge:  O$,O$'⊇P, fresh:O$_0
 
 
-@eqvM.LHS: []  -- basicMatch MatchEqvLHS vts law tP2 asnC tP1
-@eqvM.RHS: []  -- basicMatch MatchEqvRHS vts law tP1 asnC tP2
-@dom.eqvM: []
-@dom.partial: []
-@mLBN.domatch: []
+
+@scP:  O$,O$'⊇P, O$,O$'⊇Q, fresh:O$_0
+@scC:   O$,O$'⊇P
+@basic.instantiateSC:  O$,O$'⊇P, fresh:O$_0
+@scPinC:  O$,O$'⊇P, fresh:O$_0
+@basic.scDischarge:  O$,O$'⊇P, fresh:O$_0
 
 
-Issue is matcjhi
-
+scDischarge ss (O$,O$'⊇P) (O$,O$'⊇P, fresh:O$_0)
+  =  O$,O$'⊇P, fresh:O$_0   ????

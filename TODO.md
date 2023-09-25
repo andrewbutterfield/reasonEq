@@ -6,7 +6,14 @@
 
 See `pptest.txt` for current state of play
 
-Matching works fine --- something else is causing things to fail
+Looks like the cause of failure is `scDischarge`
+
+```
+scDischarge ss (O$,O$'⊇P) (O$,O$'⊇P, fresh:O$_0)
+  =  O$,O$'⊇P, fresh:O$_0
+```
+
+It should be `fresh:O$_0` !!!
 
 ###
 

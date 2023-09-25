@@ -2,19 +2,7 @@
 
 ## Most Urgent
 
-### problem matching P;O$'=O$
-
-See `pptest.txt` for current state of play
-
-Function `instantiateSC` seems completely broken!!!
-
-```
-instantiateSC ss 
-  { P ⟼ R, Q ⟼ (O$'=O$), 0 ⟼ 0, O$ ⟼ ⟨O$⟩ }
-  (O$,O$' ⊇ P, O$,O$' ⊇ Q, )
-    =  O$,O$' ⊇ P, O$,O$' ⊇ O$
-```
-
+### problem matching `(O$'=O$)` against `=_symm`, becuase it is an Iteration.
 
 
 ### Issue

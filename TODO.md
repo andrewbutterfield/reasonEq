@@ -1,10 +1,5 @@
 # To Do
 
-## Most Urgent
-
-### problem matching `(O$'=O$)` against `=_symm`, becuase it is an Iteration.
-
-
 ### Issue
 
 ```

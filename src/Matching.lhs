@@ -225,6 +225,92 @@ tMatch' vts bind cbvs pbvs (Cons tkC sbC nC tsC) (Cons tkP sbP nP tsP)
 \end{code}
 
 \newpage
+
+Constructor patterns with variable-only sub-terms
+can also match against Iterations.
+
+Single case:
+$$
+\inferrule
+  {ni_C = n_P \and ts_P[i] = \vv v_i}
+  {\beta \vdash \ii{na_C}{ni_C}{lvs_C} :: \cc {n_P}{ts_P} 
+     \leadsto
+     \beta \uplus \{ ts_P[i] \mapsto lvs_C[i] \}_{i \in 1\dots\#lvs_C}}
+  \quad\texttt{tMatch Single-Iter}
+$$
+\begin{code}
+tMatch' vts bind cbvs pbvs (Iter tkC saC naC siC niC lvsC) (Cons tkP sbP nP tsP)
+  | tkC == tkP && niC == nP && siC == sbP
+    =  do bind0 <- consBind vts bind cbvs pbvs tkC niC nP
+          -- tsMatch vts bind0 cbvs pbvs tsC tsP
+          iterVarsMatch bind tsP lvsC  -- ignore Cons bind for now
+  where
+    iterVarsMatch bind [] [] = return bind
+    iterVarsMatch bind (Var tkP vP:tsP) (lvC:lvsC)
+      = do bind' <- bindLVarSubstRepl (LVbl vP [] []) [Left lvC] bind
+           iterVarsMatch bind tsP lvsC
+    iterVarsMatch _ _ _ = fail "Single-Iter - non-Var term or length mismatch"
+\end{code}
+
+
+$$
+\inferrule
+   {ni_C = ni_P \and \#\seqof{t_I} = \#lvs_P}
+   { \beta \vdash ni_C\seqof{t_I} :: \ii{na_P}{ni_P}{lvs_P}
+     \leadsto
+     \beta \uplus \{lvs_P[i] \mapsto t_I[i]\}_{i \in 1\dots\#lvs_P}
+   }
+   \quad
+   \texttt{tMatch Iter-Single}
+$$
+
+
+General case:
+$$
+\inferrule
+  {this}
+  {\beta \vdash \ii{na_C}{ni_C}{lvs_C} :: \cc {na_P}{ts_P}
+     \leadsto
+     \beta \uplus (\frown) \beta_j}
+  \quad
+  \texttt{tMatch Cons-Iter}
+$$
+
+$$
+\inferrule
+   {na_C = na_P \and ni_C = ni_P
+   \and
+   j \in 1 \dots\#\seqof{t_C} \and i \in 1 \dots\#lvs_P
+   \\\\
+   {t_C}_j = ni_C\seqof{t_I}_j \implies \#(\seqof{t_{I}}[j]) = \#lvs_P
+   \\\\
+   {t_C}_j = ni_C\seqof{t_I}_j
+   \implies
+   \beta_j = \{lvs_P[i] \mapsto \seqof{t_C[i]}_j\}
+   \\\\
+     {t_C}_j = \ii{na_P}{ni_P}{lvs_C} \implies \#lvs_C = \#lvs_P
+   \\\\
+     {t_C}_j = \ii{na_P}{ni_P}{lvs_C}
+     \implies
+     lvs_C[i] = lvs_P[i]\less V
+     \land
+     \beta_j = \{lvs_P[i] \mapsto lvs_C[i]\}
+   }
+   { \beta \vdash na_C({t_C}_j) :: \ii{na_P}{ni_P}{lvs_P}
+     \leadsto
+     \beta \uplus (\frown) \beta_j
+   }
+   \quad
+   \texttt{tMatch Iter-Cons}
+$$
+We use $(\frown)$ to denote the ``striping'' of the mappings,
+e.g.
+$$
+  lvsp[i] \mapsto \seqof{t_C[i]}_1 \frown \dots \frown lvs_C[\#lvs_P]
+$$
+
+
+\newpage
 \subsubsection{Binding Term-Pattern (\texttt{Bnd})}
 
 We first start with the obvious rule that tries to match
@@ -416,6 +502,8 @@ tMatch' vts bind cbvs pbvs (Iter tkC saC naC siC niC lvsC)
            iibind bind' rest
 \end{code}
 
+\newpage
+
 The next case is when the candidate is an expansion of length one,
 without the application of the top-level operator $na$.
 $$
@@ -504,7 +592,9 @@ $$
   lvsp[i] \mapsto \seqof{t_C[i]}_1 \frown \dots \frown lvs_C[\#lvs_P]
 $$
 
-In practise, we note that if a match is going to succeed,
+\newpage
+
+In practice, we note that if a match is going to succeed,
 then each ${t_C}_j$ will produce a list of length $\#lvs_P$,
 and the transpose of this list will provide the "striped" bindings.
 
@@ -555,24 +645,24 @@ tMatch' vts bind cbvs pbvs tC@(Cons tkC saC naC tsC)
 \end{code}
 
 
-\textbf{The below will be subsumed by above}
-Matching an a full expansion against an iteration:
-$$
-\inferrule
-   {na_C = na_P \and ni_C = ni_P
-   \and
-   \and j \in 1 \dots\#\seqof{t_C}
-   \and
-   \#(\seqof{t_{C}}[j]) = \#lvs_P
-   }
-   { \beta \vdash na_C(ni_C\seqof{t_C}_j) :: \ii{na_P}{ni_P}{lvs_P}
-     \leadsto
-     \beta \uplus \{lvs_P[i] \mapsto \seqof{t_C[i]}_j\}_{i \in 1\dots\#lvs_P}
-   }
-   \quad
-   \texttt{tMatch Iter-Only-Cons}
-$$
-This does not cater for a partial expansion!
+% \textbf{The below will be subsumed by above}
+% Matching an a full expansion against an iteration:
+% $$
+% \inferrule
+%    {na_C = na_P \and ni_C = ni_P
+%    \and
+%    \and j \in 1 \dots\#\seqof{t_C}
+%    \and
+%    \#(\seqof{t_{C}}[j]) = \#lvs_P
+%    }
+%    { \beta \vdash na_C(ni_C\seqof{t_C}_j) :: \ii{na_P}{ni_P}{lvs_P}
+%      \leadsto
+%      \beta \uplus \{lvs_P[i] \mapsto \seqof{t_C[i]}_j\}_{i \in 1\dots\#lvs_P}
+%    }
+%    \quad
+%    \texttt{tMatch Iter-Only-Cons}
+% $$
+% This does not cater for a partial expansion!
 % \begin{code}
 % tMatch' vts bind cbvs pbvs tC@(Cons tkC saC naC tsC)
 %                               (Iter tkP saP naP siP niP lvsP)
@@ -601,9 +691,9 @@ This does not cater for a partial expansion!
 %             ibind bind' rest
 % \end{code}
 
+\subsubsection{All cases covered}
 
-
-Any other case results in failure:
+Any other situation results in failure:
 \begin{code}
 tMatch' _ _ _ _ tC tP
  = fail $ unlines
@@ -612,6 +702,8 @@ tMatch' _ _ _ _ tC tP
     , "tP = " ++ show tP
     ]
 \end{code}
+
+\newpage
 
 \subsubsection{Term Matching Support}
 

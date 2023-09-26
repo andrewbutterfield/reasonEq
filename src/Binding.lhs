@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Binding
-( VarBind, pattern BindId, pattern BindVar, pattern BindTerm
+( VarBind, pattern BindId, pattern BindVar, pattern BindTerm, pattern BindLVar
 , LVarOrTerm
 , injLV, injTM,lvOf, tmOf
 , lvsOf, tmsOf, lvtmSplit
@@ -17,6 +17,7 @@ module Binding
 , mergeBindings
 , bindVarToVar, bindVarsToVars, bindVarToSelf, bindVarsToSelves
 , bindVarToTerm
+, bindVarToLVar
 , bindLVarToVList
 , bindLVarToVSet, overrideLVarToVSet
 , bindLVarToSSelf, bindLVarsToSSelves, bindLVarSTuples
@@ -296,9 +297,12 @@ to a list of terms to also include a list of list-variables.
 
 \subsubsection{Binding \texttt{Variable} to \texttt{Variable} or \texttt{Term}}
 
-We bind a variable identifier to either a identifier, variable or term:
+We bind a variable identifier to either 
+an identifier, variable, term, or list-variable:
 \begin{code}
-data VarBind = BI Identifier | BV Variable | BT Term deriving (Eq, Ord, Show, Read)
+data VarBind 
+  = BI Identifier | BV Variable | BT Term | BLV ListVar
+  deriving (Eq, Ord, Show, Read)
 
 type VarBinding = M.Map (Identifier,VarClass) VarBind
 \end{code}
@@ -307,6 +311,7 @@ We return just the variable or term from a lookup:
 pattern BindId   i  =  BI i
 pattern BindVar  v  =  BV v
 pattern BindTerm t  =  BT t
+pattern BindLVar lv =  BLV lv
 \end{code}
 
 \subsubsection{
@@ -526,7 +531,8 @@ bindSubscriptToSubscript what vw1 vw2 sbind
 \subsubsection{Binding Variable to Variable}
 
 \begin{code}
-bindVarToVar :: (Monad m, MonadFail m) => Variable -> Variable -> Binding -> m Binding
+bindVarToVar :: (Monad m, MonadFail m) 
+             => Variable -> Variable -> Binding -> m Binding
 \end{code}
 
 
@@ -687,6 +693,7 @@ bindVarToTerm pv ct _
      , "ct = " ++ show ct ]
 \end{code}
 
+
 \newpage
 Determining the temporality of a term:
 \begin{code}
@@ -753,6 +760,17 @@ dnTerm2VarBind :: Term -> VarBind
 dnTerm2VarBind t = BT $ dnTerm t
 \end{code}
 
+
+\subsubsection{Binding Variable to ListVar}
+
+When matching Iterations, we have expressions defined over list-variables.
+For now we don't check variable classes
+\begin{code}
+bindVarToLVar :: MonadFail m => Variable -> ListVar -> Binding -> m Binding
+bindVarToLVar (Vbl vi vc _) lv (BD (vbind,sbind,lbind))
+  = do  vbind' <- insertDR (rangeEq "bindVarToLVar") (vi, vc) (BLV lv) vbind
+        return $ BD (vbind',sbind,lbind)
+\end{code}
 
 \newpage
 \subsubsection{Binding List-Variables to Variable-Lists}
@@ -1470,7 +1488,7 @@ Binding lookup is very straightforward,
 with the minor wrinkle that we need to ensure we lookup
 the subscript binding if the lookup variable has \texttt{During} temporality.
 
-\newpage
+
 \subsubsection{Lookup (Standard) Variables}
 
 \begin{code}
@@ -1495,7 +1513,7 @@ lookupVarBind (BD (vbind,sbind,_)) v@(Vbl vi vc (During m))
          Just (BI xi)  ->  return $ BindVar  $ Vbl xi vc (During n)
          Just (BT xt)  ->  return $ BindTerm $ unTerm (During n) xt
          Just b -> fail $ unlines
-                 [ "lookupVarBind: During was bound to BV"
+                 [ "lookupVarBind: During was bound to BV/BLV"
                  , "v = " ++ show v
                  , "b = " ++ show b
                  , "vbind:\n" ++ show vbind
@@ -1507,12 +1525,12 @@ lookupVarBind (BD (vbind,_,_)) v@(Vbl vi vc vw)
      Just (BI xi)  ->  return $ BindVar  $ Vbl xi vc vw
      Just (BT xt)  ->  return $ BindTerm $ unTerm vw xt
      Just bv       ->  return bv
-     Just b -> fail $ unlines
-             [ "lookupVarBind: Dynamic was bound to BV"
-             , "v = " ++ show v
-             , "b = " ++ show b
-             , "vbind:\n" ++ show vbind
-             ]
+     -- Just b -> fail $ unlines
+     --        [ "lookupVarBind: Dynamic was bound to BV/BLV"
+     --        , "v = " ++ show v
+     --        , "b = " ++ show b
+     --        , "vbind:\n" ++ show vbind
+     --        ]
 \end{code}
 
 \newpage

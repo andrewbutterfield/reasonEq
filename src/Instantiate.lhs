@@ -106,11 +106,14 @@ instantiate _ binding t@(Typ _)    =  return t
 \begin{eqnarray*}
    \beta.(\vv v) &=& \beta(v)
 \end{eqnarray*}
+Here we do not expect any bindings to list-variables.
 \begin{code}
 instantiate insctxt binding vt@(Var tk v)
   = case lookupVarBind binding v of
       Just (BindVar v')   ->  var tk v'
       Just (BindTerm t')  ->  return t'
+      Just (BindLVar lv)  ->  fail $ unlines
+                                     [ "instantiate: naked list-variable!"]
       Nothing             ->  fail $ unlines
                                      [ "instantiate: variable not found"
                                      , "var = " ++ trVar v
@@ -118,12 +121,29 @@ instantiate insctxt binding vt@(Var tk v)
                                      ]
 \end{code}
 
+With Cons nodes we have two possibilities.
+The first is the general case where we have a list of terms as usual:
 \begin{eqnarray*}
    \beta.(\cc n {ts}) &=& \cc n {(\beta^*.ts)}
 \end{eqnarray*}
+The second is where all the terms are variables,
+and all of them are mapped by $\beta$ to list-variables.
+This results in a one-place iteration:
+\begin{eqnarray*}
+   \beta.(\cc n {vs}) &=& \ii {\land} n {(\beta^*.vs)}
+   \quad \text{ provided }  \forall_i \cdot \beta.v_i = \lst x_i, 
+\end{eqnarray*}
 \begin{code}
 instantiate insctxt binding (Cons tk sb n ts)
-  = fmap (Cons tk sb n) $ sequence $ map (instantiate insctxt binding) ts
+  | all isVar ts && all isBLVar bts 
+      = return $ (Iter tk sb (jId "and") sb n) $ map theBLVar bts
+  | otherwise 
+      = fmap (Cons tk sb n) $ sequence $ map (instantiate insctxt binding) ts
+  where 
+    bts = catMaybes $ map (lookupVarBind binding . theVar) ts
+    isBLVar (BindLVar _) = True
+    isBLVar _            = False
+    theBLVar (BindLVar lv)  =  lv
 \end{code}
 
 \begin{eqnarray*}
@@ -140,6 +160,8 @@ instantiate insctxt binding (Lam tk n vl tm)
        tm' <- instantiate insctxt binding tm
        lam tk n vl' tm'
 \end{code}
+
+\newpage
 
 \begin{eqnarray*}
    \beta.(\xx n t) &=& \xx {n} {\beta.t}
@@ -166,7 +188,7 @@ instantiate insctxt binding (Sub tk tm s)
 \end{code}
 
 \begin{eqnarray*}
-   \beta.(\bigoplus(p)\seqof{\lst l^1,\dots,\lst l^a})
+   \beta.(\ii \bigoplus p {\seqof{\lst l^1,\dots,\lst l^a}})
    &=& I\seqof{g^1_1,\dots,g^a_1}
        \oplus\dots\oplus
        I\seqof{g^1_i,\dots,g^a_i}
@@ -180,7 +202,7 @@ instantiate insctxt binding (Sub tk tm s)
                    }
 \\ I\seqof{v^1_i,\dots,v^a_i} &=& p(v^1_i,\dots,v^a_i)
 \\ I\seqof{\lst l^1_i,\dots,\lst l^a_i}
-   &=& \bigoplus(p)\seqof{\lst l^1_i,\dots,\lst l^a_i}
+   &=& \ii \bigoplus p {\seqof{\lst l^1_i,\dots,\lst l^a_i}}
 \end{eqnarray*}
 Note that all lists must be of the same length,
 and at any list position $i$, the general variables $g^1_i, \dots, g^a_i$

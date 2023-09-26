@@ -247,8 +247,8 @@ tMatch' vts bind cbvs pbvs (Iter tkC saC naC siC niC lvsC) (Cons tkP sbP nP tsP)
   where
     iterVarsMatch bind [] [] = return bind
     iterVarsMatch bind (Var tkP vP:tsP) (lvC:lvsC)
-      = do bind' <- bindLVarSubstRepl (LVbl vP [] []) [Left lvC] bind
-           iterVarsMatch bind tsP lvsC
+      = do bind' <- bindVarToLVar vP lvC bind
+           iterVarsMatch bind' tsP lvsC
     iterVarsMatch _ _ _ = fail "Single-Iter - non-Var term or length mismatch"
 \end{code}
 

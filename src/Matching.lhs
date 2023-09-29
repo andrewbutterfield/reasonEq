@@ -228,6 +228,9 @@ tMatch' vts bind cbvs pbvs (Cons tkC sbC nC tsC) (Cons tkP sbP nP tsP)
 
 Constructor patterns with variable-only sub-terms
 can also match against Iterations.
+Here we have an issue where we have nothing in the constructor
+that matches the outer name of the Iterator.
+We use a special (meta-)variable ($NA$) to record this.
 
 Single case:
 $$
@@ -235,7 +238,11 @@ $$
   {ni_C = n_P \and ts_P[i] = \vv v_i}
   {\beta \vdash \ii{na_C}{ni_C}{lvs_C} :: \cc {n_P}{ts_P} 
      \leadsto
-     \beta \uplus \{ ts_P[i] \mapsto lvs_C[i] \}_{i \in 1\dots\#lvs_C}}
+     \beta 
+     \uplus 
+     \{ NA \mapsto na_C \}
+     \uplus
+     \{ ts_P[i] \mapsto lvs_C[i] \}_{i \in 1\dots\#lvs_C}}
   \quad\texttt{tMatch Single-Iter}
 $$
 \begin{code}

@@ -1,5 +1,11 @@
 # To Do
 
+## Urgent
+
+Plan: use `NA`` to map to `na_C` when an Iterate matches a Cons.
+
+Instantiate will then look this up.
+
 ### Issue
 
 ```

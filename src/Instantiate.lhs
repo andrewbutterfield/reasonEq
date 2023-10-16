@@ -27,6 +27,7 @@ import Variables
 import AST
 import SideCond
 import Binding
+import Matching
 import FreeVars
 import VarData
 import TestRendering
@@ -127,15 +128,16 @@ The first is the general case where we have a list of terms as usual:
    \beta.(\cc n {ts}) &=& \cc n {(\beta^*.ts)}
 \end{eqnarray*}
 The second is where all the terms are variables,
-and all of them are mapped by $\beta$ to list-variables.
+all of them are mapped by $\beta$ to list-variables,
+and there is a binding from \itop\ to a variable.
 This results in a one-place iteration:
 \begin{eqnarray*}
-   \beta.(\cc n {vs}) &=& \ii {\land} n {(\beta^*.vs)}
-   \quad \text{ provided }  \forall_i \cdot \beta.v_i = \lst x_i, 
+   \beta.(\cc n {vs}) &=& \ii {\beta(\itop)} n {(\beta^*.vs)}
+   \quad \text{ provided }  \itop \in \beta \land \forall_i \cdot \beta.v_i = \lst x_i, 
 \end{eqnarray*}
 \begin{code}
 instantiate insctxt binding (Cons tk sb n ts)
-  | all isVar ts && all isBLVar bts 
+  | all isVar ts && all isBLVar bts && have_itop
       = return $ (Iter tk sb (jId "and") sb n) $ map theBLVar bts
   | otherwise 
       = fmap (Cons tk sb n) $ sequence $ map (instantiate insctxt binding) ts
@@ -144,6 +146,11 @@ instantiate insctxt binding (Cons tk sb n ts)
     isBLVar (BindLVar _) = True
     isBLVar _            = False
     theBLVar (BindLVar lv)  =  lv
+    itopv = Vbl itop (classFromKind tk) Static
+    mbitop = lookupVarBind binding itopv
+    (have_itop,the_itop) = get_itop mbitop
+    get_itop (Just (BindVar (Vbl i _ _))) = (True,i)
+    get_itop _ = (False,itop)
 \end{code}
 
 \begin{eqnarray*}

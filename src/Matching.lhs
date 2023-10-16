@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Matching
-( match
+( match, itop
   -- below exported for testing
 , tMatch, tsMatch
 , tvMatch, tkvMatch
@@ -165,9 +165,11 @@ tMatch vts bind cbvs pbvs tC tP
 \end{code}
 
 Term-matching is defined inductively over the pattern type.
-
-We start with the simple value and structural composite matches,
-and then proceed to look at variable, binder and substitution patterns.
+We also introduce a special identifier (\itop) used when 
+a constructor term matches against an interation.
+\begin{code}
+itop = jId "_itop"
+\end{code}
 
 \subsubsection{Value Term-Pattern (\texttt{Val})}
 Values only match themselves, and add no new bindings.
@@ -229,8 +231,9 @@ tMatch' vts bind cbvs pbvs (Cons tkC sbC nC tsC) (Cons tkP sbP nP tsP)
 Constructor patterns with variable-only sub-terms
 can also match against Iterations.
 Here we have an issue where we have nothing in the constructor
-that matches the outer name of the Iterator.
-We use a special (meta-)variable ($NA$) to record this.
+that matches the outer name of the Iterator, 
+and the replacement term has an occurence of the iterator.
+We use the special (meta-)variable \itop\ to record this.
 
 Single case:
 $$
@@ -240,7 +243,7 @@ $$
      \leadsto
      \beta 
      \uplus 
-     \{ NA \mapsto na_C \}
+     \{ \itop \mapsto na_C \}
      \uplus
      \{ ts_P[i] \mapsto lvs_C[i] \}_{i \in 1\dots\#lvs_C}}
   \quad\texttt{tMatch Single-Iter}
@@ -249,14 +252,16 @@ $$
 tMatch' vts bind cbvs pbvs (Iter tkC saC naC siC niC lvsC) (Cons tkP sbP nP tsP)
   | tkC == tkP && niC == nP && siC == sbP
     =  do bind0 <- consBind vts bind cbvs pbvs tkC niC nP
+          -- ignore above Cons bind for now
+          bind1 <- consBind vts bind cbvs pbvs tkC naC itop
           -- tsMatch vts bind0 cbvs pbvs tsC tsP
-          iterVarsMatch bind tsP lvsC  -- ignore Cons bind for now
+          iterVarsMatch bind1 tsP lvsC  
   where
     iterVarsMatch bind [] [] = return bind
     iterVarsMatch bind (Var tkP vP:tsP) (lvC:lvsC)
       = do bind' <- bindVarToLVar vP lvC bind
            iterVarsMatch bind' tsP lvsC
-    iterVarsMatch _ _ _ = fail "Single-Iter - non-Var term or length mismatch"
+    iterVarsMatch _ _ _ = fail "Single-Iter: non-Var term or length mismatch"
 \end{code}
 
 

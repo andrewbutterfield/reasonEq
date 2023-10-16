@@ -90,9 +90,9 @@ pattern Identifier nm u <- Id nm u
 
 decorChar = "'_$?"
 
-isIdStartChar c  =  isAscii c && (c `elem` "_?" || isAlpha c)
-isIdContChar  c  =  isAscii c && (isAlpha c || isDigit c || c `elem` decorChar)
-isValidSymbol c  =  isAscii c && not(isSpace c||isAlpha c||c `elem` "_$'.`\"")
+isIdStartChar c  =  (c `elem` "_?" || isAlpha c) && isAscii c
+isIdContChar  c  =  (isAlpha c || isDigit c || c `elem` decorChar) && isAscii c 
+isValidSymbol c  =  not(isSpace c||isAlpha c||c `elem` "_$'.`\"") && isAscii c 
 
 validIdent :: String -> Bool
 validIdent str@(c:cs)

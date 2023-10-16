@@ -115,6 +115,8 @@ test-suite reasonEq-test
                      , VarDataTest
                      , FreeVarTest
                      -- , MkTestBind
+                     , YesBut
+                     , Debugger
                      , AST
                      , BindingTest
                      , MatchingTest

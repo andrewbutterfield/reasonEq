@@ -201,14 +201,14 @@ initState flags
                  putStrLn ("Project Name: "++pname)
                  putStrLn ("Project Path: "++projfp)
                  putStrLn "Loading..."
-                 readAllState projfp
+                 readAllState reqstate0 projfp
       Just fp ->
         do ok <- doesDirectoryExist fp
            if ok
            then if dev flags
                 then return $ devInitState{ projectDir = fp }
                 else do putStrLn "Running user mode, loading project state."
-                        readAllState fp
+                        readAllState reqstate0 fp
            else die ("invalid workspace: "++fp)
 
 reqstate0 = REqState { inDevMode = False
@@ -404,10 +404,7 @@ cmdSave
         ]
     , saveState )
 
-saveState [] reqs
-  = do writeAllState reqs
-       putStrLn ("REQ-STATE written to '"++projectDir reqs++"'.")
-       return reqs{ modified = False }
+saveState [] reqs = writeAllState reqs
 saveState [nm] reqs
   = let nm' = if nm == "." then (currTheory reqs) else nm
     in
@@ -457,9 +454,7 @@ cmdLoad
 
 loadState [] reqs
   = do let dirfp = projectDir reqs
-       putStrLn ("Reading all prover state from "++dirfp++"...")
-       reqs' <- readAllState dirfp
-       putStrLn ("...done.")
+       reqs' <- readAllState reqs dirfp
        return reqs'{ inDevMode = inDevMode reqs}
 loadState [nm] reqs
   = do let dirfp = projectDir reqs

@@ -24,6 +24,7 @@ import REqState
 import Debugger
 \end{code}
 
+\newpage
 \subsection{Persistent \reasonEq\ State}
 
 In the project directory we have a top-level file called \texttt{project.req}
@@ -36,9 +37,7 @@ projectPath projDir = projDir </> projectName <.> projectExt
 writeAllState :: REqState -> IO REqState
 writeAllState reqs
   = do let pjdir = projectDir reqs
-       mifte (doesDirectoryExist pjdir)
-         (doWriteAll reqs pjdir)
-         (noSuchDirectory reqs pjdir)
+       ifDirectoryExists reqs pjdir (doWriteAll reqs pjdir)
   where
     doWriteAll reqs pjdir
       = do  let (tsTxt,nTsTxts) = writeREqState reqs
@@ -55,22 +54,20 @@ writeAllState reqs
 \begin{code}
 readAllState :: REqState -> FilePath -> IO REqState
 readAllState reqs projdirfp
-  = mifte (doesDirectoryExist projdirfp)
-      (doReadAll projdirfp)
-      (noSuchDirectory reqs projdirfp)
+  = ifDirectoryExists reqs projdirfp (doReadAll projdirfp)
   where
     doReadAll projdirfp
       = do  let projfp = projectPath projdirfp
             txt <- readFile projfp
             ((settings,thnms),rest1) <- readREqState1 $ lines txt
             nmdThrys <- sequence 
-                        $ map (readNamedTheory projdirfp) thnms
+                        $ map (getNamedTheory projdirfp) thnms
             newreqs <- readREqState2 settings nmdThrys rest1
             putStrLn ("Read project details from "++projfp)
             return newreqs{projectDir = projdirfp}
 \end{code}
 
-
+\newpage
 \subsection{Persistent Theory}
 
 We also have files called \texttt{<thryName>.thr}
@@ -84,25 +81,50 @@ theoryPath projDir thname = projDir </> thname <.> theoryExt
 \begin{code}
 writeNamedTheory :: FilePath -> (FilePath, Theory) -> IO ()
 writeNamedTheory pjdir (nm,theory)
-  = do let fp = theoryPath pjdir nm
-       writeFile fp $ unlines $ writeTheory theory
+  = ifDirectoryExists () pjdir (doWriteTheory pjdir nm theory)
+  where
+    doWriteTheory pjdir nm theory 
+      =  do let fp = theoryPath pjdir nm
+            writeFile fp $ unlines $ writeTheory theory
+            putStrLn ("Theory '"++nm++"' written to '"++pjdir++"'.")
 \end{code}
 
 \begin{code}
 writeNamedTheoryTxt :: FilePath -> (FilePath, [String]) -> IO ()
 writeNamedTheoryTxt pjdir (nm,thTxt)
-  = do let fp = theoryPath pjdir nm
-       writeFile fp $ unlines thTxt
+  = ifDirectoryExists () pjdir (doWriteTheoryTxt pjdir nm thTxt)
+  where
+    doWriteTheoryTxt pjdir nm thTxt
+      = do  let fp = theoryPath pjdir nm
+            writeFile fp $ unlines thTxt
+            putStrLn ("Theory '"++nm++"' written to '"++pjdir++"'.")
 \end{code}
 
 \begin{code}
-readNamedTheory :: String -> String -> IO ([Char], Theory)
-readNamedTheory projfp nm
-  = do let fp = theoryPath projfp nm
-       txt <- readFile fp
-       (thry,rest) <- readTheory $ lines txt
-       putStrLn ("Read theory '"++nm++"'")
-       return (nm,thry)
+readNamedTheory :: Theories -> String -> String -> IO (Bool,Bool,Theories)
+readNamedTheory thrys projfp nm
+  = ifDirectoryExists (False,False,undefined) 
+       projfp (doReadNamedTheory thrys projfp nm)
+  where
+    doReadNamedTheory thrys projfp nm
+      = do  (nm,thry) <- getNamedTheory projfp nm
+            let isOld = nm `isATheoryIn` thrys
+            let thrys' = ( if isOld
+                           then replaceTheory' thry thrys
+                           else addTheory' thry thrys )
+            if isOld 
+              then putStrLn ("Theory '"++nm++"' already exists")
+              else return ()
+            return (True,isOld,thrys')
+
+-- assumes projfp exists
+getNamedTheory :: String -> String -> IO (String,Theory)
+getNamedTheory projfp nm 
+  = do  let fp = theoryPath projfp nm
+        txt <- readFile fp
+        (thry,_) <- readTheory $ lines txt
+        putStrLn ("Read theory '"++nm++"' from "++projfp)
+        return (nm,thry)
 \end{code}
 
 \newpage
@@ -165,9 +187,18 @@ readProof projfp nm
 \subsection{Error Reporting}
 
 \begin{code}
-noSuchDirectory reqs pjdir
-  = do  putStrLn ("Directory "++pjdir++" does not exist")
-        return reqs       
+noSuchDirectory :: a -> FilePath -> IO a
+noSuchDirectory what dir
+  = do  putStrLn ("Directory "++dir++" does not exist")
+        return what       
+\end{code}
+
+\begin{code}
+ifDirectoryExists :: a -> FilePath -> IO a -> IO a
+ifDirectoryExists what dir useDirectory
+  = mifte (doesDirectoryExist dir) 
+      useDirectory
+      (noSuchDirectory what dir)      
 \end{code}
 
 

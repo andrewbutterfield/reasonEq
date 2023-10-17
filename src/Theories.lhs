@@ -21,9 +21,10 @@ module Theories
  , TheoryMap, Theories
  , NamedTheoryTexts, writeTheories, readTheories1, readTheories2
  , noTheories
- , addTheory, getTheory
+ , addTheory, addTheory', getTheory
  , getTheoryDeps, getTheoryDeps', getAllTheories
  , listTheories, getTheoryConjectures, getTheoryProofs
+ , isATheoryIn
  , replaceTheory, replaceTheory'
  , updateTheory
  , newTheoryConj
@@ -38,7 +39,7 @@ module Theories
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.List
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, isJust)
 
 import Utilities
 import StratifiedDAG
@@ -258,6 +259,12 @@ addTheory thry theories
                         nm (thDeps thry) $ sdag theories
        let tmap' = M.insert nm thry $ tmap theories
        return Theories{ tmap = tmap', sdag = sdag' }
+
+addTheory' :: Theory -> Theories -> Theories
+addTheory' thry theories
+  = case addTheory thry theories of
+      Nothing        -> theories
+      Just theories' -> theories'
 \end{code}
 
 \subsection{Retrieving a Theory}
@@ -328,6 +335,9 @@ getTheoryConjectures thNm thrys
 \subsubsection{Get Proofs from current theory}
 
 \begin{code}
+isATheoryIn :: String -> Theories -> Bool
+nm `isATheoryIn` thrys = isJust $ M.lookup nm (tmap thrys)
+
 getTheoryProofs :: (Monad m, MonadFail m) => String -> Theories -> m [Proof]
 getTheoryProofs thNm thrys
   = do case M.lookup thNm (tmap thrys) of
@@ -343,16 +353,15 @@ We insist, for now at least,
 that the dependencies do not change.
 \begin{code}
 replaceTheory :: (Monad m, MonadFail m) 
-              => String -> (Theory -> Theory) -> Theories -> m Theories
-replaceTheory thnm thryF (Theories tmap sdag)
+              => String -> Theory -> Theories -> m Theories
+replaceTheory thnm thry' (Theories tmap sdag)
   = case M.lookup thnm tmap of
       Nothing    ->  fail ("replaceTheory: '"++thnm++"' not found.")
-      Just thry  ->  let thry' = thryF thry
-                     in if thDeps thry' == thDeps thry
-                        then return $ Theories (M.insert thnm (thryF thry) tmap)
-                                               sdag
-                        else fail ( "replaceTheory: '"
-                                    ++ thnm ++ "' dependencies have changed" )
+      Just thry  ->  if thDeps thry' == thDeps thry
+                     then return $ Theories (M.insert thnm thry' tmap)
+                                            sdag
+                      else fail ( "replaceTheory: '"
+                                ++ thnm ++ "' dependencies have changed" )
 \end{code}
 
 This code is a total version,
@@ -361,7 +370,7 @@ by simply returning its input.
 \begin{code}
 replaceTheory' :: Theory -> Theories -> Theories
 replaceTheory' thry theories
- = case replaceTheory (thName thry) (const thry) theories of
+ = case replaceTheory (thName thry) thry theories of
      Nothing         ->  theories
      Just theories'  ->  theories'
 \end{code}
@@ -440,7 +449,7 @@ assumeDepConj thnm thys
 assumeDepConj' thys [] = return thys
 assumeDepConj' thys (depthy:depthys)
   = do  depthy' <- assumeConj "." depthy
-        thys' <- replaceTheory (thName depthy) (const depthy') thys
+        thys' <- replaceTheory (thName depthy) depthy' thys
         assumeDepConj' thys' depthys
 \end{code}
 
@@ -478,10 +487,14 @@ lawDemote lnm thry
 This code also ``fails'' silently.
 \begin{code}
 addTheoryProof :: String -> Proof -> Theories -> Theories
-addTheoryProof thname prf thrys
-  = case replaceTheory thname (proofs__ (prf:)) thrys of
-      Nothing      ->  thrys
-      Just thrys'  ->  thrys'
+addTheoryProof thname prf thrys@(Theories tmap sdag)
+  = case M.lookup thname tmap of
+      Nothing ->  thrys
+      Just thry ->
+        let thry' = proofs__ (prf:) thry in
+        case replaceTheory thname thry' thrys of
+          Nothing      ->  thrys
+          Just thrys'  ->  thrys'
 \end{code}
 
 \newpage
@@ -520,7 +533,7 @@ lawDepClassify' thys [] = return thys
 lawDepClassify' thys (depthy:depthys)
   = do  let lws = laws depthy
         depthy' <- lawClassify lws depthy
-        thys' <- replaceTheory (thName depthy) (const depthy') thys
+        thys' <- replaceTheory (thName depthy) depthy' thys
         lawDepClassify' thys' depthys
 \end{code}
 

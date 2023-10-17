@@ -414,7 +414,6 @@ saveState [nm] reqs
              return reqs
       Just thry
        -> do writeNamedTheory (projectDir reqs) (nm',thry)
-             putStrLn ("Theory '"++nm'++"' written to '"++projectDir reqs++"'.")
              return reqs
 saveState [what,nm] reqs
   | what == prfObj  
@@ -442,10 +441,10 @@ cmdLoad
     , unlines
 
         [ "load -- load prover state from current workspace"
-        , "load <thry> -- overwrite EXISTING theory <thry> from current workspace"
-        , "load new <thry> -- add NEW theory <thry> from current workspace"
+        , "load <thry> -- load theory <thry> from current workspace"
+        , "            -- warns if it modifies an existing theory"
         , "load " ++ prfObj 
-                  ++ " <proof>  -- load proof  <proof> to current workspace"
+                  ++ " <proof>  -- load proof <proof> to current workspace"
         , "To come:"
         , "load cnj <conj>  -- load conjecture <cnj> to current workspace"
         , "load ax <axiom>  -- load axiom <axiom> to current workspace"
@@ -458,18 +457,18 @@ loadState [] reqs
        return reqs'{ inDevMode = inDevMode reqs}
 loadState [nm] reqs
   = do let dirfp = projectDir reqs
-       (nm,thry) <- readNamedTheory dirfp nm
-       putStrLn ("Theory '"++nm++"'read from  '"++projectDir reqs++"'.")
-       return $ changed $ theories__ (replaceTheory' thry) reqs
-loadState ["new",nm] reqs
-  = do let dirfp = projectDir reqs
-       (nm,thry) <- readNamedTheory dirfp nm
-       putStrLn ("Theory '"++nm++"'read from  '"++projectDir reqs++"'.")
-       case addTheory thry $ theories reqs of
-         Yes thrys' -> return $ changed $ theories_ thrys' reqs
-         But msgs ->
-           do putStrLn ("Add theory failed:\n"++unlines' msgs)
-              return reqs
+       (ok,old,theories') <- readNamedTheory (theories reqs) dirfp nm
+       if ok
+        then ( if old
+               then do putStr "keep change? (y/N)? "
+                       hFlush stdout
+                       response <- fmap trim $ getLine
+                       if take 1 response == "y"
+                       then return $ changed $ theories_ theories' reqs
+                       else return reqs
+               else return $ changed $ theories_ theories' reqs )
+        else return reqs
+       
 loadState [what,nm] reqs
   | what == prfObj
     = do result <- readProof dirfp nm

@@ -9,11 +9,14 @@ module Files
   ( projectName, projectExt
   , getWorkspaces
   , currentWorkspace
+  , ifDirectoryExists, ifFileExists
   )
 where
 
 import System.Directory
 import System.FilePath
+
+import Control
 \end{code}
 
 \subsection{Startup}
@@ -122,3 +125,36 @@ findCurrent (ln:lns)
    (nm,after) = break (==pathSep) $ drop 1 ln
    fp = drop 1 after
 \end{code}
+
+\subsection{Error Reporting}
+
+\begin{code}
+noSuchDirectory :: a -> FilePath -> IO a
+noSuchDirectory what dir
+  = do  putStrLn ("Directory "++dir++" does not exist")
+        return what       
+\end{code}
+
+\begin{code}
+ifDirectoryExists :: a -> FilePath -> IO a -> IO a
+ifDirectoryExists what dir useDirectory
+  = mifte (doesDirectoryExist dir) 
+          useDirectory
+          (noSuchDirectory what dir)      
+\end{code}
+
+\begin{code}
+noSuchFile :: a -> FilePath -> IO a
+noSuchFile what file
+  = do  putStrLn ("File "++file++" does not exist")
+        return what       
+\end{code}
+
+\begin{code}
+ifFileExists :: a -> FilePath -> IO a -> IO a
+ifFileExists what file useFile
+  = mifte (doesFileExist file) 
+          useFile
+          (noSuchFile what file)      
+\end{code}
+

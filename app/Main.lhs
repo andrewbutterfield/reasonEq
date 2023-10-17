@@ -505,7 +505,6 @@ saveConjectures _ reqs
       Just thry
        -> do let lawConjs = map lawNamedAssn (laws thry)
              let allConjs = lawConjs ++ conjs thry
-             putStrLn $ unlines' $ map show allConjs
              writeConjectures reqs (thName thry) allConjs
              return reqs
 \end{code}

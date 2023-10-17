@@ -60,11 +60,24 @@ readAllState reqs projdirfp
       = do  let projfp = projectPath projdirfp
             txt <- readFile projfp
             ((settings,thnms),rest1) <- readREqState1 $ lines txt
-            nmdThrys <- sequence 
-                        $ map (getNamedTheory projdirfp) thnms
+            nmdThrys <- getNamedTheories projdirfp thnms
             newreqs <- readREqState2 settings nmdThrys rest1
             putStrLn ("Read project details from "++projfp)
             return newreqs{projectDir = projdirfp}
+
+getNamedTheories projfp nms
+  = ifDirectoryExists [] projfp (getNamedTheories' projfp nms)
+
+-- assumes that projfp exists
+getNamedTheories' _ [] = return []
+getNamedTheories' projfp (nm:nms)
+  = let fp = theoryPath projfp nm
+    in ifFileExists [] fp (doGetNamedTheories projfp fp nm nms)
+  where
+    doGetNamedTheories projfp fp nm nms
+      =  do nmdThry <- getNamedTheory fp nm
+            nmdThrys <- getNamedTheories' projfp nms
+            return (nmdThry:nmdThrys)
 \end{code}
 
 \newpage
@@ -103,11 +116,12 @@ writeNamedTheoryTxt pjdir (nm,thTxt)
 \begin{code}
 readNamedTheory :: Theories -> String -> String -> IO (Bool,Bool,Theories)
 readNamedTheory thrys projfp nm
-  = ifDirectoryExists (False,False,undefined) 
-       projfp (doReadNamedTheory thrys projfp nm)
+  = let fp = theoryPath projfp nm
+    in ifFileExists (False,False,undefined) 
+                    fp (doReadNamedTheory thrys fp nm)
   where
-    doReadNamedTheory thrys projfp nm
-      = do  (nm,thry) <- getNamedTheory projfp nm
+    doReadNamedTheory thrys fp nm
+      = do  (nm,thry) <- getNamedTheory fp nm
             let isOld = nm `isATheoryIn` thrys
             let thrys' = ( if isOld
                            then replaceTheory' thry thrys
@@ -117,13 +131,12 @@ readNamedTheory thrys projfp nm
               else return ()
             return (True,isOld,thrys')
 
--- assumes projfp exists
+-- assumes fp exists
 getNamedTheory :: String -> String -> IO (String,Theory)
-getNamedTheory projfp nm 
-  = do  let fp = theoryPath projfp nm
-        txt <- readFile fp
+getNamedTheory fp nm 
+  = do  txt <- readFile fp
         (thry,_) <- readTheory $ lines txt
-        putStrLn ("Read theory '"++nm++"' from "++projfp)
+        putStrLn ("Read theory '"++nm++"' from "++fp)
         return (nm,thry)
 \end{code}
 
@@ -139,16 +152,25 @@ conjPath projDir conjName = projDir </> conjName <.> conjExt
 \begin{code}
 writeConjectures :: Show a => REqState -> String -> [a] -> IO ()
 writeConjectures reqs nm conjs
-  = do let fp = conjPath (projectDir reqs) nm
-       writeFile fp $ unlines $ map show conjs
+  = let projfp = projectDir reqs
+    in ifDirectoryExists () projfp 
+       (doWriteConjs projfp nm conjs)
+  where
+    doWriteConjs projfp nm conjs
+      = do let fp = conjPath projfp nm
+           writeFile fp $ unlines $ map show conjs
+           return ()
 \end{code}
 
 \begin{code}
 readFiledConjectures :: FilePath -> String -> IO [NmdAssertion]
 readFiledConjectures projfp nm
-  = do let fp = conjPath projfp nm
-       txt <- readFile fp
-       return $ readShown $ lines txt
+  = let fp = conjPath projfp nm
+    in ifFileExists [] fp (doReadFiledConj fp)
+  where
+    doReadFiledConj fp
+      =  do  txt <- readFile fp
+             return $ readShown $ lines txt
 
 readShown [] = []
 readShown (ln:lns)
@@ -174,14 +196,13 @@ writeProof reqs nm proof
 \begin{code}
 readProof :: FilePath -> String -> IO (Maybe Proof)
 readProof projfp nm
-  = do let fp = proofPath projfp nm
-       fileExists <- doesFileExist fp
-       if fileExists
-       then  do  txt <- readFile fp
-                 return $ Just $ read txt
-                 -- SHOULD REALLY CHECK PROOF NAME AGAINST FILENAME
-       else  do  putStrLn ("Proof file '"++fp++"' not found.")
-                 return Nothing
+  = let fp = proofPath projfp nm
+    in ifFileExists Nothing fp (doReadProof fp nm)
+  where
+    doReadProof fp nm
+      =  do txt <- readFile fp
+            return $ Just $ read txt
+            -- SHOULD REALLY CHECK PROOF NAME AGAINST FILENAME
 \end{code}
 
 \subsection{Error Reporting}
@@ -197,8 +218,23 @@ noSuchDirectory what dir
 ifDirectoryExists :: a -> FilePath -> IO a -> IO a
 ifDirectoryExists what dir useDirectory
   = mifte (doesDirectoryExist dir) 
-      useDirectory
-      (noSuchDirectory what dir)      
+          useDirectory
+          (noSuchDirectory what dir)      
+\end{code}
+
+\begin{code}
+noSuchFile :: a -> FilePath -> IO a
+noSuchFile what file
+  = do  putStrLn ("File "++file++" does not exist")
+        return what       
+\end{code}
+
+\begin{code}
+ifFileExists :: a -> FilePath -> IO a -> IO a
+ifFileExists what file useFile
+  = mifte (doesFileExist file) 
+          useFile
+          (noSuchFile what file)      
 \end{code}
 
 

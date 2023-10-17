@@ -5,7 +5,8 @@ Copyright  Andrew Buttefield (c) 2019-22
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module Control  ( fcombine
+module Control  ( mifte
+                , fcombine
                 , andf, orf
                 , addIfWanted
                 , mapfst, mapsnd, mappair, mapboth
@@ -27,6 +28,15 @@ import Control.Monad
 
 We provide general flow-of-control constructs here,
 often of a monadic flavour.
+
+\subsection{Monadic conditionals}
+
+\begin{code}
+mifte :: Monad m => m Bool -> m a -> m a -> m a
+mifte mc mthen melse
+  = do c <- mc
+       if c then mthen else melse
+\end{code}
 
 \subsection{Function Controls}
 

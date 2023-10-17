@@ -38,11 +38,10 @@ plus the contents of its workspaces file.
 getWorkspaces :: String -> IO (FilePath, [String])
 getWorkspaces appname
  = do userAppPath <- getAppUserDataDirectory appname
-      exists <- doesDirectoryExist userAppPath
-      if exists
-      then getAllWorkspaces userAppPath
-      else do createUserAppDir userAppPath
-              getAllWorkspaces userAppPath
+      mifte (doesDirectoryExist userAppPath)
+            (getAllWorkspaces userAppPath)
+            (do createUserAppDir userAppPath
+                getAllWorkspaces userAppPath)
 \end{code}
 
 Useful names, markers and separators:
@@ -70,9 +69,11 @@ Get all known workspaces from user data.
 \begin{code}
 getAllWorkspaces :: FilePath -> IO (FilePath, [String])
 getAllWorkspaces dirpath
- = do projTxt <- readFile (dirpath </> wsRoot)
-      let projDescrs = lines projTxt
-      return (dirpath, lines projTxt)
+ = let wsfp = dirpath </> wsRoot
+   in ifFileExists "Workspace" ("",[]) wsfp (doGetWS wsfp)
+ where
+   doGetWS wsfp = do projTxt <- readFile wsfp
+                     return (dirpath, lines projTxt)
 \end{code}
 
 \newpage
@@ -129,32 +130,32 @@ findCurrent (ln:lns)
 \subsection{Error Reporting}
 
 \begin{code}
-noSuchDirectory :: a -> FilePath -> IO a
-noSuchDirectory what dir
-  = do  putStrLn ("Directory "++dir++" does not exist")
-        return what       
+noSuchDirectory :: String -> a -> FilePath -> IO a
+noSuchDirectory what junk dir
+  = do  putStrLn (what++" Directory "++dir++" does not exist")
+        return junk       
 \end{code}
 
 \begin{code}
-ifDirectoryExists :: a -> FilePath -> IO a -> IO a
-ifDirectoryExists what dir useDirectory
+ifDirectoryExists :: String -> a -> FilePath -> IO a -> IO a
+ifDirectoryExists what junk dir useDirectory
   = mifte (doesDirectoryExist dir) 
           useDirectory
-          (noSuchDirectory what dir)      
+          (noSuchDirectory what junk dir)      
 \end{code}
 
 \begin{code}
-noSuchFile :: a -> FilePath -> IO a
-noSuchFile what file
-  = do  putStrLn ("File "++file++" does not exist")
-        return what       
+noSuchFile :: String -> a -> FilePath -> IO a
+noSuchFile what junk file
+  = do  putStrLn (what++" File "++file++" does not exist")
+        return junk       
 \end{code}
 
 \begin{code}
-ifFileExists :: a -> FilePath -> IO a -> IO a
-ifFileExists what file useFile
+ifFileExists :: String -> a -> FilePath -> IO a -> IO a
+ifFileExists what junk file useFile
   = mifte (doesFileExist file) 
           useFile
-          (noSuchFile what file)      
+          (noSuchFile what junk file)      
 \end{code}
 

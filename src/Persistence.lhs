@@ -37,7 +37,7 @@ projectPath projDir = projDir </> projectName <.> projectExt
 writeAllState :: REqState -> IO REqState
 writeAllState reqs
   = do let pjdir = projectDir reqs
-       ifDirectoryExists reqs pjdir (doWriteAll reqs pjdir)
+       ifDirectoryExists "REQ-STATE" reqs pjdir (doWriteAll reqs pjdir)
   where
     doWriteAll reqs pjdir
       = do  let (tsTxt,nTsTxts) = writeREqState reqs
@@ -54,7 +54,7 @@ writeAllState reqs
 \begin{code}
 readAllState :: REqState -> FilePath -> IO REqState
 readAllState reqs projdirfp
-  = ifDirectoryExists reqs projdirfp (doReadAll projdirfp)
+  = ifDirectoryExists "REQ-STATE" reqs projdirfp (doReadAll projdirfp)
   where
     doReadAll projdirfp
       = do  let projfp = projectPath projdirfp
@@ -66,13 +66,13 @@ readAllState reqs projdirfp
             return newreqs{projectDir = projdirfp}
 
 getNamedTheories projfp nms
-  = ifDirectoryExists [] projfp (getNamedTheories' projfp nms)
+  = ifDirectoryExists "Theories" [] projfp (getNamedTheories' projfp nms)
 
 -- assumes that projfp exists
 getNamedTheories' _ [] = return []
 getNamedTheories' projfp (nm:nms)
   = let fp = theoryPath projfp nm
-    in ifFileExists [] fp (doGetNamedTheories projfp fp nm nms)
+    in ifFileExists "Theory" [] fp (doGetNamedTheories projfp fp nm nms)
   where
     doGetNamedTheories projfp fp nm nms
       =  do nmdThry <- getNamedTheory fp nm
@@ -94,7 +94,7 @@ theoryPath projDir thname = projDir </> thname <.> theoryExt
 \begin{code}
 writeNamedTheory :: FilePath -> (FilePath, Theory) -> IO ()
 writeNamedTheory pjdir (nm,theory)
-  = ifDirectoryExists () pjdir (doWriteTheory pjdir nm theory)
+  = ifDirectoryExists "Theory" () pjdir (doWriteTheory pjdir nm theory)
   where
     doWriteTheory pjdir nm theory 
       =  do let fp = theoryPath pjdir nm
@@ -105,7 +105,7 @@ writeNamedTheory pjdir (nm,theory)
 \begin{code}
 writeNamedTheoryTxt :: FilePath -> (FilePath, [String]) -> IO ()
 writeNamedTheoryTxt pjdir (nm,thTxt)
-  = ifDirectoryExists () pjdir (doWriteTheoryTxt pjdir nm thTxt)
+  = ifDirectoryExists "Theory" () pjdir (doWriteTheoryTxt pjdir nm thTxt)
   where
     doWriteTheoryTxt pjdir nm thTxt
       = do  let fp = theoryPath pjdir nm
@@ -117,7 +117,7 @@ writeNamedTheoryTxt pjdir (nm,thTxt)
 readNamedTheory :: Theories -> String -> String -> IO (Bool,Bool,Theories)
 readNamedTheory thrys projfp nm
   = let fp = theoryPath projfp nm
-    in ifFileExists (False,False,undefined) 
+    in ifFileExists "Theory" (False,False,undefined) 
                     fp (doReadNamedTheory thrys fp nm)
   where
     doReadNamedTheory thrys fp nm
@@ -153,7 +153,7 @@ conjPath projDir conjName = projDir </> conjName <.> conjExt
 writeConjectures :: Show a => REqState -> String -> [a] -> IO ()
 writeConjectures reqs nm conjs
   = let projfp = projectDir reqs
-    in ifDirectoryExists () projfp 
+    in ifDirectoryExists "Conjecture" () projfp 
        (doWriteConjs projfp nm conjs)
   where
     doWriteConjs projfp nm conjs
@@ -166,7 +166,7 @@ writeConjectures reqs nm conjs
 readFiledConjectures :: FilePath -> String -> IO [NmdAssertion]
 readFiledConjectures projfp nm
   = let fp = conjPath projfp nm
-    in ifFileExists [] fp (doReadFiledConj fp)
+    in ifFileExists "Conjecture" [] fp (doReadFiledConj fp)
   where
     doReadFiledConj fp
       =  do  txt <- readFile fp
@@ -189,15 +189,15 @@ proofPath projDir proofName = projDir </> proofName <.> proofExt
 \begin{code}
 writeProof :: REqState -> String -> Proof -> IO ()
 writeProof reqs nm proof
-  = do let fp = proofPath (projectDir reqs) nm
-       writeFile fp $ show proof
+  = let fp = proofPath (projectDir reqs) nm
+    in ifFileExists "Proof" () fp (writeFile fp $ show proof)
 \end{code}
 
 \begin{code}
 readProof :: FilePath -> String -> IO (Maybe Proof)
 readProof projfp nm
   = let fp = proofPath projfp nm
-    in ifFileExists Nothing fp (doReadProof fp nm)
+    in ifFileExists "Proof" Nothing fp (doReadProof fp nm)
   where
     doReadProof fp nm
       =  do txt <- readFile fp

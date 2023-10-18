@@ -424,6 +424,7 @@ substitute sctx sub ct@(Cons tk subable i ts)
   | otherwise  =     return $ Sub tk ct sub
 \end{code}
 
+\newpage
 \subsubsection{Binding-Term Substitution}
 
 \begin{eqnarray*}
@@ -436,10 +437,21 @@ substitute sctx sub ct@(Cons tk subable i ts)
 \\ \alpha &\defs&  x^j \mapsto \nu^j, \quad
    x^j \in \fv(t^i) \land \nu \mbox{ fresh.}
 \end{eqnarray*}
+\textbf{
+  This code is badly broken --- it needs to use s.c info. 
+  The rules above are for explicit variables, 
+  but we also need to handle list-variables:
+}
+\begin{eqnarray*}
+   (\bb n {\lst x^+} t) \ss {} {\lst v^n} {\lst t^n}
+   &\defs&
+   (\bb n {\lst x^+} {t\alpha \ss {} {\lst v^j} {\lst t^j}}), 
+     \quad \lst v^j \notin \lst x^+
+\end{eqnarray*}
 \begin{code}
 substitute sctx sub bt@(Bnd tk i vs tm)
-  = do alpha <- captureAvoidance vs tm sub
-       let vs' = S.fromList $ quantsSubst alpha $ S.toList vs
+  = do alpha <- captureAvoidance (pdbg "vs" vs) (pdbg "tm" tm) $ pdbg "sub" sub
+       let vs' = S.fromList $ quantsSubst (pdbg "alpha" alpha) $ S.toList vs
        asub <- substComp sctx alpha sub --- succeeds as alpha is var-only
        tm' <- substitute sctx asub tm
        bnd tk i vs' tm'
@@ -512,7 +524,7 @@ captureAvoidance :: MonadFail m => VarSet -> Term -> Substn -> m Substn
 captureAvoidance vs tm sub
   = do let tfv = freeVars tm
        let (tgtvs,rplvs) = substRelFree tfv sub
-       let needsRenaming = S.toList (tgtvs `S.intersection` vs)
+       let needsRenaming = S.toList ((pdbg "tgtvs" tgtvs) `S.intersection` vs)
        let knownVars = theFreeVars ( tfv `mrgFreeVars` rplvs )
        mkFresh knownVars [] [] needsRenaming
 

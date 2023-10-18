@@ -4,6 +4,9 @@
 
 ###
 
+`substitute` on `Bnd` (and `Lam`) does not check for quantifier hiding
+substitution targets.
+
 Issue with `s` command
 ```
 Proof for univ_inst
@@ -29,6 +32,7 @@ Focus = [1]
 ```
 
 The `non_subst` law works properly both directions, but the substitute command does not- it ignores s.c. `x$⊇P`.
+
 
 
 ## Non-Urgent

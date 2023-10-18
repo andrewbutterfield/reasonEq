@@ -2,7 +2,43 @@
 
 ## Urgent
 
+###
+
+Issue with `s` command
+```
+Proof for univ_inst
+((∀ x$ • P))[e$/x$]⟹  P, x$⊇P
+   = 'substitute @[1]'
+ ...
+⊢
+(∀ x$ • P[e$/x$])⟹  P    x$⊇P  -- WRONG `s` OUTCOME
+Focus = [1]
+```
+
+Using `non_subst` law
+```
+Proof for univ_inst
+(∀ x$ • P)⟹  P, x$⊇P
+   = 'match-eqv-pvar(2) non_subst@[1]'
+((∀ x$ • P))[e$/x$]⟹  P, x$⊇P -- CORRECT non_subst OUTCOME
+   = 'match-lhs non_subst@[1]'
+ ...
+⊢
+(∀ x$ • P)⟹  P    x$⊇P   -- CORRECT non_subst OUTCOME
+Focus = [1]
+```
+
+The `non_subst` law works properly both directions, but the substitute command does not- it ignores s.c. `x$⊇P`.
+
+
+## Non-Urgent
+
 ### Issue
+
+Law is different ?
+
+`“∀_inst” (∀ x$,y$ • P) ⟹ (∀ y$ • P[e$/x$])`
+
 
 ```
 24 : “∀_inst” (∀ x$ • P)  ∧  P[?e$/x$]  x$⊇P ⟹ ⊤ * ⟹
@@ -41,7 +77,7 @@ KISS: keep them unique for now.
 
   * The live proofs depend on an context based on the theories in scope when they were started, which is why they currently reside in `project.req` which captures that context. Could we shift these outside?
 
-  * In any case, what happens to a live-proof if we edit a theory it depends on?  Should have a way fo doing impact analysis of any change we make w.r.t *all* current live proofs? Perhaps this should only be done if it becomes an issue.
+  * In any case, what happens to a live-proof if we edit a theory it depends on?  Should have a way of doing impact analysis of any change we make w.r.t *all* current live proofs? Perhaps this should only be done if it becomes an issue.
 
   * We have the notion of a "current" theory, w.r.t. which we setup proofs, and should be able to add, edit, and/or delete conjectures (axioms?), variable-table entries, and theory dependencies.
 

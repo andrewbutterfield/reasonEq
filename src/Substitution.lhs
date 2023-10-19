@@ -513,7 +513,27 @@ substitute sctx sub tm = return tm
 
 \newpage 
 
-\subsubsection{Helper functions}
+\subsection{Effective substitution}
+
+When bindings are involved we need to compute an \emph{effective substitution}.
+Given $(\bb n {x^+} t) \ss {} {v^n} {t^n}$,
+we remove substitution pairs where the target variable $v_i \in x^+$,
+to give the effective substitution $[t^k/v^k]$.
+\begin{code}
+computeEffSubst :: VarSet -> Substn -> Substn
+computeEffSubst vs (Substn ts lvs) 
+  = let tl' =  (S.toList ts) `stdless` vs
+        lvl' = (S.toList lvs) `lstless` vs
+    in jSubstn tl' lvl'
+  where
+    tl `stdless` vs = filter (vNotin vs) tl
+    lvl `lstless` vs = filter (lvNotin vs) lvl
+    vNotin vs (v,_) =  not (StdVar v `S.member` vs)
+    lvNotin vs (lv,_) =  not (LstVar lv `S.member` vs)
+\end{code}
+
+\subsection{Capture Avoidance}
+
 
 Capture avoidance produces a substitution of variables for variables,
 so that bound variables can be $\alpha$-renamed so they are not 

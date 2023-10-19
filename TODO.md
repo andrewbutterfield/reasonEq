@@ -6,16 +6,26 @@
 
 `substitute` on `Bnd` (and `Lam`) now works properly
 
-Still issue with `s` command
+Still issues with `s` command (fails on `;_runit` proof)
+and where law `non_subst` is broken:
 ```
-(∀ x$ • P)∧P[e$/x$]⟹  P, x$⊇P
-   = 'substitute @[1,2]'
- ...
-⊢
-(∀ x$ • P)∧P[e$/x$]⟹  P    x$⊇P
-Focus = [1,2]
+“non_subst”   P[e$/x$]  ≡  P  x$∉P
+
+
+(∃ O$_1 • (O$_1=O$')∧R[O$_1/O$']) ,  O$,O$'⊇II, O$,O$'⊇R
+ = 'match-lhs exists_one_point @[]'
+    { P ⟼ R[O$_1/O$'], e$ ⟼ ⟨O$'⟩, x$ ⟼ ⟨O$_1⟩, y$ ⟼ {} }
+(R[O$_1/O$'])[O$'/O$_1] ,  O$,O$'⊇II, O$,O$'⊇R
+ = 'match-lhs non_subst @[]'
+    { P ⟼ R[O$_1/O$'], e$ ⟼ ⟨O$'⟩, x$ ⟼ ⟨O$_1⟩ }
+R[O$_1/O$'], O$,O$'⊇II, O$,O$'⊇R
+   = 'substitute @[]'
+R
 ```
-The s.c. `x$⊇P` is not being used.
+
+*The instance of `non_subst` here is where `P` is `R[O$_1/O$']` where `O$,O$'⊇R`, so  `O$_1 ∉ R`.*
+**But, `O$_1` is in `R[O$_1/O$']`**
+
 
 ## Non-Urgent
 

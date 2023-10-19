@@ -259,6 +259,25 @@ substitute sctx sub@(Substn ts lvs) vrt@(Var tk v@(Vbl i ObsV whn))
  \\
  O \supseteq e \and O,O' \supseteq P
 \end{mathpar}
+Typical substitutions in law definitions include:
+\begin{mathpar}
+  ~[\lst e/\lst x] \and [O_0/O] \and [O_0/O']  
+  \\
+  \and [e/x] \and [x/y] \and [e[f/x]/x]
+\end{mathpar}
+Typical substitutions in proofs include:
+\begin{mathpar}
+  P[x/y] \and \Skip[O_1/O] \and R[O_1/O'] \and R[O_1/O'][O'/O_1]
+  \\
+  (\exists O_2 \bullet Q[O_2/O'] \land R[O_2/O])[O_1/O]
+  \and Q[O_1,O_2/O,O']
+\end{mathpar}
+Some failing examples using \texttt{substitute}:
+\begin{eqnarray*}
+  \Skip[O_1/O] &\mapsto_s& \Skip, \qquad O,O' \supseteq \Skip
+\\ R[O_1/O']   &\mapsto_s& R, \qquad O,O' \supseteq R
+\end{eqnarray*}
+
 We assume here that $P$ is static, 
 while $e$, and hence $e'$, $e_1$, are dynamic
 (and similarly for $f$.)

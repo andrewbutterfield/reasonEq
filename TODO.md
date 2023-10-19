@@ -19,6 +19,11 @@ The s.c. `x$⊇P` is not being used.
 
 ## Non-Urgent
 
+### Idea
+
+We use `substitute` to implement  `F(P,Q)[e$/x$] -> F(P[e$/x$],Q[e$/x$])`
+But we can do it the other way as well!
+
 ### Issue
 
 Law is different ?

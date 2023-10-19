@@ -45,6 +45,7 @@ import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Maybe
 import Data.List
+import Control.Applicative
 
 import YesBut
 import Utilities
@@ -796,7 +797,8 @@ nestSimpFocus thrys liveProof
 \subsubsection{Perform Substitution}
 
 \begin{code}
-substituteFocus :: MonadFail m => Theories -> LiveProof -> m LiveProof
+substituteFocus :: (MonadFail m, Alternative m)
+                => Theories -> LiveProof -> m LiveProof
 substituteFocus thrys liveProof
   = let (tz,seq') = focus liveProof
         dpath = fPath liveProof

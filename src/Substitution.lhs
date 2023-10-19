@@ -18,6 +18,7 @@ import Data.Map(Map)
 import qualified Data.Map as M
 import Data.List
 import Data.Maybe
+import Control.Applicative
 
 import Utilities (alookup,injMap)
 import Control (mapsnd)
@@ -220,16 +221,82 @@ subContext0 = mkSubCtxt scTrue
 \section{Term Substitution}
 
 \begin{code}
-substitute :: (Monad m, MonadFail m) => SubContext -> Substn -> Term -> m Term
+substitute :: (MonadFail m, Alternative m) 
+           => SubContext -> Substn -> Term -> m Term
 \end{code}
 
-\subsection{Var-Term Substitution}
+\subsection{Variable Term Substitution}
 
+We treat observational variables ($\vv v$) 
+and term variables ($\vv e,\vv P$) differently.
+
+\subsubsection{Obs.-Variable Term Substitution}
+
+\begin{eqnarray*}
+   \vv v \ss {} {v^n} {r^n}  
+   &\defs&  
+   r_i \cond{~\exists i \bullet \vv v=v_i~} v \ss {} {v^n} {r^n}
+\\ \vv v_d \ss {} {\lst x_d^n} {\lst x_e^n}
+   &\defs&
+   \vv v_e
+   \cond{~\exists i \bullet \vv v_d \subseteq \lst x_{d,i}~}
+   \vv v_d \ss {} {\lst x_d^n} {\lst x_e^n}
+\end{eqnarray*}
+The test for $v_d \subseteq \lst x_{d,i}$ 
+is hard so we ignore this possibility for now.
+\begin{code}
+substitute sctx sub@(Substn ts lvs) vrt@(Var tk v@(Vbl i ObsV whn))
+  = (subVarLookup sub v) <|> (pure $ Sub tk vrt sub)
+\end{code}
+
+\subsubsection{Term-Variable Term Substitution}
+
+\textbf{Notes:} typical side-conditions found are as follows:
+\begin{mathpar}
+ x\notin P \and y \notin e \and  fresh:O_0
+ \\
+ \lst x \notin P \and \lst x \notin \lst e \and \lst x \supseteq P
+ \\
+ O \supseteq e \and O,O' \supseteq P
+\end{mathpar}
+We assume here that $P$ is static, 
+while $e$, and hence $e'$, $e_1$, are dynamic
+(and similarly for $f$.)
+We also let $e_a$ and $e_b$ denote different variables 
+drawn from $e,e',e_0,e_1,\dots$.
+
+We could build a table:
+$$
+\begin{array}{|c|c|c|}
+\hline
+  \text{s.c.} & \text{subst.} & \text{outcome}
+\\\hline
+  true & P[e/x] & P[e/x]
+\\\hline
+  x \notin P & P[e/x] & P
+\\\hline
+  \lst x \notin P & P[\lst e/\lst x] & P
+\\\hline
+  \lst x \supseteq P & P[\lst e/\lst x] & P[\lst e/\lst x]
+\\\hline
+  O,O' \supseteq P & P[O_a/O_b] & P[O_a/O_b]
+\\\hline
+  true & f_a[e/x_b] & f
+\\\hline
+  true & f_a[e/x_a] & f[e/x_a]
+\\\hline
+  \lst x_a \supseteq f_a & f_a[\lst x_b/\lst x_a] & f_b
+\\\hline
+  O_a \supseteq f_a & f_a[O_b/O_a] & f_b
+\\\hline
+\end{array}
+$$
+We note that $f[e/x]$ and $f[\lst e/\lst x]$ behave analagously to $P$ above,
+so we omit those cases.
 
 \textbf{
   Uninterpreted Predicate/Expression variables need to have explicit substitutions.  
   So $(\dots P \dots)[e/x]$ should become $(\dots P[e/x] \dots)$.
-  That is what the second line below says, but it is not happening.
 }
 
 \textbf{
@@ -242,17 +309,8 @@ substitute :: (Monad m, MonadFail m) => SubContext -> Substn -> Term -> m Term
 
 
 \begin{eqnarray*}
-   \vv v \ss {} {v^n} {r^n}  &\defs&  r^i \cond{\vv v=v^i} v,
-                                                \mbox{ for one $i \in 1\dots n$}
-\\ \vv P \ss {} {v^n} {r^n}
-   &\defs&  r^i \cond{\vv P=v^i} \vv P \ss {} {v^n} {r^n},
-                                                                  \mbox{ ditto.}
-\\ \vv v_d \ss {} {\dots,\lst x_d,\dots} {\dots,\lst x_e,\dots}
-   &\defs&
-   \vv v_e
-   \cond{\vv v_d \subseteq \lst x_d}
-   \vv v_d \ss {} {\dots,\dots} {\dots,\dots},
-   \mbox{$d,e$ are dynamic temporalities.}
+   \vv P \ss {} {v^n} {r^n}
+   &\defs&  r^i \cond{\vv P=v^i} \vv P \ss {} {v^n} {r^n}                                                                  \mbox{ ditto.}
 \\ \vv P_d \ss {} {\dots,\lst x_d,\dots} {\dots,\lst x_e,\dots}
    &\defs&
    \vv P_e
@@ -444,11 +502,6 @@ we do the following:
   Construct $\bb n {x^+\alpha} {t\alpha \ss {} {v^k} {t^k}}$.
 \end{enumerate}
 We handle $(\ll n {x^+} t) \ss {} {v^n} {t^n}$ in a similar fashion.
-
-\textbf{
-  This code is badly broken --- it needs to use s.c info. 
-  and compute the effective substitution first.
-}
 \begin{code}
 substitute sctx sub bt@(Bnd tk i vs tm)
   | isNullSubstn effsub  =  return bt
@@ -475,6 +528,7 @@ substitute sctx sub lt@(Lam tk i vl tm)
     effsub = computeEffSubst vs sub
 \end{code}
 
+\newpage
 \subsection{Substitution-Term Substitution}
 
 \subsubsection{Assigment Substitution}
@@ -526,7 +580,7 @@ substitute sctx sub tm = return tm
 
 \newpage 
 
-\subsection{Effective substitution}
+\subsection{Effective Substitution}
 
 When bindings are involved we need to compute an \emph{effective substitution}.
 Given $(\bb n {x^+} t) \ss {} {v^n} {t^n}$,
@@ -592,7 +646,7 @@ idNumAdd :: Identifier -> Int -> Identifier
 
 \newpage
 
-\subsection{Quantifier body substitution}
+\subsection{Quantifier Body Substitution}
 
 
 Used for quantifier substitution.

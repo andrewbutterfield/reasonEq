@@ -1,4 +1,4 @@
-\section{Abstract Syntax}
+\chapter{Abstract Syntax}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2017-2022
 
@@ -19,7 +19,7 @@ module AST ( Type
            , Substn, pattern Substn, substn, substnxx
            , pattern TermSub, pattern LVarSub
            , setVTWhen, setLVLVWhen
-           , isNullSubstn, subTargets
+           , subVarLookup, subLVarLookup, isNullSubstn, subTargets
            , Term, Subable, readTerm
            , pattern Val, pattern Var, pattern Cons
            , pattern Bnd, pattern Lam, pattern Cls
@@ -65,14 +65,14 @@ import Test.Framework.Providers.HUnit (testCase)
 import Debugger
 \end{code}
 
-\subsection{AST Introduction}
+\section{AST Introduction}
 
 We implement a abstract syntax tree for a notion of ``terms''
 that cover both expressions and predicates.
 We also provide a side-condition language.
 
 \newpage
-\subsection{Types}
+\section{Types}
 
 Types are a restrictive form of terms,
 whose main reason here is to prevent large numbers of spurious matches
@@ -98,7 +98,7 @@ pattern FunType tf ta = TF tf ta
 pattern GivenType i = TG i
 \end{code}
 
-\subsubsection{Sub-Typing}
+\subsection{Sub-Typing}
 
 No surprises here.
 \begin{code}
@@ -132,7 +132,7 @@ _ `areSubFieldsOf` _    =  False
 \end{code}
 
 \newpage
-\subsection{Substitutions}
+\section{Substitutions}
 
 Substitutions associate a list of terms (types,expressions,predicates)
 with some variables.
@@ -195,6 +195,12 @@ xSubstn ts lvs = fromJust $ substnxx ts lvs
 
 Queries:
 \begin{code}
+subVarLookup :: MonadFail m => Substn -> Variable -> m Term
+subVarLookup (SN ts _) v  = alookup v $ S.toList ts
+
+subLVarLookup :: MonadFail m => Substn -> ListVar -> m ListVar
+subLVarLookup (SN _ lvs) lv  = alookup lv $ S.toList lvs
+
 isNullSubstn :: Substn -> Bool
 isNullSubstn (SN ts lvs) = S.null ts && S.null lvs
 
@@ -253,7 +259,7 @@ substnTests = testGroup "AST.substn"
 
 
 \newpage
-\subsection{Terms}
+\section{Terms}
 
 We want to implement a collection of terms that include
 expressions and predicates defined over a range of variables
@@ -315,7 +321,7 @@ This means that expression matching requires type information,
 while that for predicates does not.
 
 
-\subsubsection{Values}
+\subsection{Values}
 
 For predicates,
 the only constants we require are $\True$ and $\False$.
@@ -341,7 +347,7 @@ pattern Txt     t  =  VT t
 \end{code}
 
 
-\subsubsection{Expressions vs. Predicates}
+\subsection{Expressions vs. Predicates}
 
 Do we have mutually recursive datatypes or an explicit tag?
 
@@ -385,7 +391,7 @@ classFromKind (E _)  =  ExprV
 \end{code}
 
 \newpage
-\subsubsection{Terms}
+\subsection{Terms}
 
 We have a single term type (\verb"Term"),
 with an predicate/expression annotation.
@@ -573,7 +579,7 @@ We can represent these using this proposed term concept,
 as values of type \verb"Txt", or as terms with modified names.
 They don't need special handling or representation here.
 
-\subsubsection{Assignment}
+\subsection{Assignment}
 
 We represent (simultaneous) assignment (e.g $x,\lst y := e,\lst f$)
 using the substitution form, 
@@ -588,7 +594,7 @@ isAssignment (Var _ v)   =  isAssignVar v
 isAssignment _           =  False
 \end{code}
 
-\subsubsection{Term Tests}
+\subsection{Term Tests}
 
 Test values:
 \begin{code}
@@ -680,12 +686,12 @@ termConstructTests  =  testGroup "Term Smart Constructors"
 
 
 \newpage
-\subsection{Parts of Terms}
+\section{Parts of Terms}
 
 Sometimes we want lists of all term components
 of a given type (terms/variables/list-variables/variable-sets/variable-lists)
 
-\subsubsection{Sub-Terms}
+\subsection{Sub-Terms}
 
 \begin{code}
 subTerms :: Term -> [Term]
@@ -699,7 +705,7 @@ subTerms t               =  [t]
 -- t = head $ subTerms t !!
 \end{code}
 
-\subsubsection{(General) Variables}
+\subsection{(General) Variables}
 
 Here we return all variables mentioned in a term,
 regardless of whether or not they are free or bound.
@@ -725,7 +731,7 @@ mentionedVars _                  =  S.empty
 \end{code}
 
 \newpage
-\subsubsection{Variable Collections}
+\subsection{Variable Collections}
 
 \begin{code}
 mentionedVarLists :: Term -> [VarList]
@@ -784,7 +790,7 @@ subsSize (Substn ts lvs)      =  3 * S.size ts + 2 * S.size lvs
 
 
 
-\subsection{Exported Test Group}
+\section{Exported Test Group}
 \begin{code}
 jSub ts lvs  =  fromJust $ substn ts lvs
 

@@ -1,4 +1,4 @@
-\section{Side Conditions}
+\chapter{Side Conditions}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2017-2022
 
@@ -48,7 +48,7 @@ import Debugger
 
 
 \newpage
-\subsection{Introduction}
+\section{Introduction}
 
 A side-condition is a property used in laws,
 typically putting a constraint on the free variables of some term.
@@ -69,7 +69,7 @@ we do not represent them explicitly.
 Instead, any operation on side-conditions that could result
 in an inconsistent result should fail, gracefully.
 
-\subsubsection{Atomic Side-Conditions}
+\subsection{Atomic Side-Conditions}
 
 An atomic side-condition (ASC) can have one of the following forms,
 where $T$ abbreviates $\fv(T)$:
@@ -133,7 +133,7 @@ We also need to take account of known variables of various kinds
 when evaluating and building side-conditions.
 
 \newpage
-\subsubsection{Side-Condition Temporality}
+\subsection{Side-Condition Temporality}
 
 Finally, we need to consider the use of dynamic normalisation here,
 in which $x' \supseteq t'$ (say)
@@ -200,7 +200,7 @@ pattern Unif = UN
 pattern NonU = NU
 \end{code}
 
-\subsection{Atomic Side-Conditions}
+\section{Atomic Side-Conditions}
 
 We now introduce our notion of an atomic-side condition.
 We will not represent $pre$ explicitly here,
@@ -271,7 +271,7 @@ We \emph{represent} the above using the \texttt{Before} form: $g ~\Re~ G$.
 
 
 
-\subsubsection{Checking Atomic Sideconditions}
+\subsection{Checking Atomic Sideconditions}
 
 We need to ensure that the \texttt{Uniformity} component
 of an atomic side-condition is set correctly.
@@ -328,7 +328,7 @@ $T$ denotes a standard term variable,
 and $g$ denotes either $z$ or $T$.
 We also use the case conventions described earlier ($P, p, p'$).
 
-\paragraph{Checking Disjoint $V \disj g$}
+\subsubsection{Checking Disjoint $V \disj g$}
 
 \begin{eqnarray*}
    \emptyset             \disj g           &&   \true
@@ -354,7 +354,7 @@ ascCheck ss asc@(Disjoint _ gv vs)
     report msg = fail $ unlines' [msg,showsv,showvs]
 \end{code}
 
-\paragraph{Checking CoveredBy $V \supseteq g$}
+\subsubsection{Checking CoveredBy $V \supseteq g$}
 
 \begin{eqnarray*}
    \emptyset             \supseteq z           && \false
@@ -399,7 +399,7 @@ gvCovBy _ _ = False
 
 
 \newpage
-\subsection{Full Side Conditions}
+\section{Full Side Conditions}
 
 Freshness is a special case of disjoint:
 \begin{itemize}
@@ -473,7 +473,7 @@ This latter function is less useful because it loses uniformity information
 needed to interpret dynamic variables property
 (used in \texttt{Assertions.lhs}).
 
-\subsection{Merging Side-Conditions}
+\section{Merging Side-Conditions}
 
 The list of ASCs
 is kept ordered by the \texttt{GenVar} component,
@@ -516,7 +516,7 @@ compareGV asc1 asc2  =  ascGVar asc1 `compare` ascGVar asc2
 sameGV asc1 asc2     =  asc1 `compareGV` asc2 == EQ
 \end{code}
 
-\subsubsection{Merging one ASC with relevant others}
+\subsection{Merging one ASC with relevant others}
 
 Now, merging an ASC in with other ASCs referring to the same general variable:
 \begin{code}
@@ -533,7 +533,7 @@ patterns:
 If the general variable is required to be fresh,
 then this is inconsistent with \texttt{CoveredBy}.
 
-\subsubsection{ASC Merge Laws}
+\subsection{ASC Merge Laws}
 
 We have the following interactions,
 where $D$ and $C$ are the variable-sets found
@@ -614,7 +614,7 @@ The key principles to combining conditions of possibly different uniformity are:
 
 For now, we only handle simple cases,
 those where both components have the same uniformity.
-\subsubsection{Merging \texttt{Disjoint} into ASC}
+\subsection{Merging \texttt{Disjoint} into ASC}
 \begin{code}
 mrgAtmAtms ss (Disjoint u1 gv d0) [Disjoint u2 _ d1]
   | u1 == u2  =  return [Disjoint u1  gv (d0 `S.union` d1)]
@@ -634,7 +634,7 @@ mrgAtmAtms ss (Disjoint u1 gv d0) [Disjoint u2 _ d1,CoveredBy u3 _ c]
 \end{code}
 
 
-\subsubsection{Merging \texttt{CoveredBy} into ASC}
+\subsection{Merging \texttt{CoveredBy} into ASC}
 \begin{code}
 mrgAtmAtms ss cov@(CoveredBy _ _ _) [dsj@(Disjoint _ _ _)]
                                                      =  mrgAtmAtms ss dsj [cov]
@@ -650,7 +650,7 @@ mrgAtmAtms ss (CoveredBy u1 gv c0) [Disjoint u2 _ d,CoveredBy u3 _ c1]
   where c' = c0 `S.union` c1
 \end{code}
 
-\subsubsection{Failure Case}
+\subsection{Failure Case}
 If none of the above arise, then we will need to consider how to
 extend the above code to handle more cases.
 \begin{code}
@@ -661,7 +661,7 @@ mrgAtmAtms ss atm atms
                     , "ss is   "++ show ss ]
 \end{code}
 
-\subsubsection{Merging Atomic Lists}
+\subsection{Merging Atomic Lists}
 
 \begin{code}
 mrgAtmCondLists :: MonadFail m => [Subscript]
@@ -672,7 +672,7 @@ mrgAtmCondLists ss ascs1 (asc:ascs2)
           mrgAtmCondLists ss ascs1' ascs2
 \end{code}
 
-\subsubsection{Merging Atomic and Freshness Side-Conditions}
+\subsection{Merging Atomic and Freshness Side-Conditions}
 
 
 \begin{code}
@@ -689,7 +689,7 @@ coversOf (CoveredBy NU  _ vs)  =  vs
 coversOf _              =  S.empty
 \end{code}
 
-\subsection{From ASC and Free-list to Side-Condition}
+\section{From ASC and Free-list to Side-Condition}
 
 \begin{code}
 mkSideCond :: MonadFail m => [Subscript] -> [AtmSideCond] -> VarSet -> m SideCond
@@ -699,7 +699,7 @@ mkSideCond ss ascs fvs
 \end{code}
 
 
-\subsubsection{Merging Full Side-conditions}
+\subsection{Merging Full Side-conditions}
 
 Merging two side-conditions is then straightforward,
 simply merge each ASC and fresh set from the one into the other,
@@ -719,7 +719,7 @@ mrgSideConds ss (sc:scs)
 
 \end{code}
 
-\subsubsection{Side-Condition Operators}
+\subsection{Side-Condition Operators}
 
 We want some shorthands for assembling side-conditions,
 that are also ``total'',
@@ -737,7 +737,7 @@ builtins or tests.
 
 
 \newpage
-\subsection{Discharging Side-conditions}
+\section{Discharging Side-conditions}
 
 Here we simply check validity of $sc'_G \implies sc'_L$,
 where $sc'_G$ is the goal side-condition,
@@ -796,7 +796,7 @@ groupByGV (asc:ascs)  =  (gv,asc:ours) : groupByGV others
                         (ours,others)    =  span (usedIn gv) ascs
 \end{code}
 
-\subsubsection{Atomic Condition  Discharge}
+\subsection{Atomic Condition  Discharge}
 
 Now onto processing those groups:
 \begin{code}
@@ -1029,7 +1029,7 @@ Anything else is not handled right now;
 ascDischarge _ _ ascL = return [ascL]
 \end{code}
 
-\subsubsection{Freshness Condition  Discharge}
+\subsection{Freshness Condition  Discharge}
 
 We have reduced our original problem down to:
 $$
@@ -1114,7 +1114,7 @@ freshAtomDischarge ss gF asc = return [asc]
 
 
 \newpage
-\subsection{Check for Floating Conditions}
+\section{Check for Floating Conditions}
 
 When discharge at match application
 results in a residual side-condition (not trivially true)
@@ -1146,7 +1146,7 @@ autoOrNullInAll unbound = all (tolerateAutoOrNull unbound)
 
 
 \newpage
-\subsection{Building side-conditions.}
+\section{Building side-conditions.}
 
 Simple side-condition builders.
 
@@ -1169,7 +1169,7 @@ fresh fvs = ( [], fvs )
 \end{code}
 
 \newpage
-\subsection{Side-condition Queries and Operations}
+\section{Side-condition Queries and Operations}
 
 First, some simple queries to find atomic side-conditions of interest.
 We start by checking if a variable is mentioned.
@@ -1222,7 +1222,7 @@ packUG (_,gss) = packVarSet gss
 \end{code}
 
 \newpage
-\subsubsection{Side-Condition Subset Query}
+\subsection{Side-Condition Subset Query}
 
 \begin{code}
 isSCsubset :: [Subscript] -> (Uniformity,[[GenVar]]) -> (Uniformity,[[GenVar]])
@@ -1275,7 +1275,7 @@ isUGsubset _ uv1 uv2 -- should never be called
 \end{code}
 
 \newpage
-\subsubsection{Side-Condition Disjoint Query}
+\subsection{Side-Condition Disjoint Query}
 
 \begin{code}
 isSCdisjoint :: [Subscript] -> (Uniformity,[[GenVar]]) -> (Uniformity,[[GenVar]])
@@ -1310,7 +1310,7 @@ isUGdisjoint _   _           _           =  False
 \end{code}
 
 \newpage
-\subsubsection{Side-Condition Set Difference}
+\subsection{Side-Condition Set Difference}
 
 \begin{code}
 doSCdiff :: [Subscript] -> (Uniformity,[[GenVar]]) -> (Uniformity,[[GenVar]])
@@ -1350,7 +1350,7 @@ doUGdiff ss (u1,g1)      (_,g2)    =  (u1,g1 \\ g2)
 \end{code}
 
 \newpage
-\subsubsection{Side-Condition Set Intersection}
+\subsection{Side-Condition Set Intersection}
 
 \begin{code}
 doSCint :: [Subscript] -> (Uniformity,[[GenVar]]) -> (Uniformity,[[GenVar]])
@@ -1391,7 +1391,7 @@ doUGint ss (_,g1)     (_,g2)      =  (NonU,g1 `intersect` g2)
 
 
 \newpage
-\subsubsection{Side-Condition Set Union}
+\subsection{Side-Condition Set Union}
 
 
 \begin{code}
@@ -1434,7 +1434,7 @@ doUGunion ss (_,g1)         (_,g2)          =  (NonU,g1 `union` g2)
 
 
 \newpage
-\subsubsection{Dealing with Dynamics}
+\subsection{Dealing with Dynamics}
 
 A check that a non-uniform \texttt{GenVar} list
 mentions before-, after- and all subscripts in scope.
@@ -1470,7 +1470,7 @@ genTheGenVars (LstVar (LVbl (Vbl i vc _) is js)) ss
 
 \newpage
 
-\subsection{SideCond Tests}
+\section{SideCond Tests}
 
 Variable Side-Condition test values:
 \begin{code}
@@ -1510,7 +1510,7 @@ v_f' = StdVar $ PostExpr $ i_f
 \end{code}
 
 
-\subsubsection{Atomic Checker Tests}
+\subsection{Atomic Checker Tests}
 
 \begin{code}
 tst_scCheck :: TF.Test
@@ -1579,7 +1579,7 @@ tst_scChkCovers
     ]
 \end{code}
 
-\subsubsection{Merging Tests}
+\subsection{Merging Tests}
 
 \begin{code}
 tst_mrgAtmCond :: TF.Test
@@ -1605,7 +1605,7 @@ tst_mrgAtmCond
 asc1 = (CoveredBy NU  gv_b $ S.fromList [gv_b,v_f])
 \end{code}
 
-\subsubsection{Discharge Tests}
+\subsection{Discharge Tests}
 
 \begin{code}
 tst_ascDischarge :: TF.Test
@@ -1624,7 +1624,7 @@ test_DisjDischarge
 \end{code}
 
 
-\subsubsection{Exported Test Group}
+\subsection{Exported Test Group}
 
 \begin{code}
 int_tst_SideCond :: [TF.Test]

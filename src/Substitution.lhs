@@ -1,4 +1,4 @@
-\section{Substitution}
+\chapter{Substitution}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2019-22
 
@@ -40,7 +40,7 @@ import Debugger
 
 \newpage
 
-\subsection{Introduction}
+\section{Introduction}
 
 We define a function that applies a substitution to a term.
 We also provide functions for $\alpha$-substitution
@@ -53,7 +53,7 @@ The latter can be determined from known variable data,
 as well as side-conditions.
 We also have the complication of variable temporality that needs to be handled.
 
-\subsubsection{Temporal Uniformity}
+\subsection{Temporal Uniformity}
 
 The treatment of side-conditions talks about ``temporal disjointness''.
 This also an important concept where substitution is involved:
@@ -135,7 +135,7 @@ tempSubMiss tm sub
       _ -> False
 \end{code}
 
-\subsubsection{Target Completeness}
+\subsection{Target Completeness}
 
 There are two main sources of substitution in UTP: 
 for a few variables in assigments,
@@ -197,7 +197,7 @@ isCompSubst ts [(tlv@(LVbl v lessids []),_)]
 isCompSubst _ _ = fail "too complicated to check completeness"
 \end{code}
 
-\subsubsection{Substitution Contexts}
+\subsection{Substitution Contexts}
 
 All substitutions need a context argument that describes the following
 aspects of the current state of a proof:
@@ -217,13 +217,13 @@ subContext0 = mkSubCtxt scTrue
 \end{code}
 
 \newpage
-\subsection{Term Substitution}
+\section{Term Substitution}
 
 \begin{code}
 substitute :: (Monad m, MonadFail m) => SubContext -> Substn -> Term -> m Term
 \end{code}
 
-\subsubsection{Var-Term Substitution}
+\subsection{Var-Term Substitution}
 
 
 \textbf{
@@ -236,6 +236,9 @@ substitute :: (Monad m, MonadFail m) => SubContext -> Substn -> Term -> m Term
   We also want $e[O_1/O] = e_1$ and $e_1[O/O_1] = e$.
 }
 
+\textbf{
+  We aslo want $P[\lst e/\lst x] = P$ if $\lst x \supseteq P$.
+}
 
 
 \begin{eqnarray*}
@@ -366,7 +369,7 @@ Have seen replacement:
 \end{code}
 
 \newpage
-If the variable is Working through substitution pairs:
+Working through substitution pairs:
 \begin{code}
     -- work through std-var/term substitutions
     subsVar :: Variable -> TermSub -> LVarSub -> Term
@@ -408,7 +411,7 @@ If the variable is Working through substitution pairs:
       | otherwise    =  jVar tk $ Vbl i vc lvw
 \end{code}
 
-\subsubsection{Cons-Term Substitution}
+\subsection{Cons-Term Substitution}
 
 \begin{eqnarray*}
    (\cc i {ts}) \ss {} {v^n} {t^n}
@@ -425,7 +428,7 @@ substitute sctx sub ct@(Cons tk subable i ts)
 \end{code}
 
 \newpage
-\subsubsection{Binding-Term Substitution}
+\subsection{Binding-Term Substitution}
 
 Given $(\bb n {x^+} t) \ss {} {v^n} {t^n}$,
 we do the following:
@@ -463,9 +466,9 @@ substitute sctx sub lt@(Lam tk i vl tm)
        lam tk i vl' tm'
 \end{code}
 
-\subsubsection{Substitution-Term Substitution}
+\subsection{Substitution-Term Substitution}
 
-\paragraph{Assigment Substitution}
+\subsubsection{Assigment Substitution}
 
 Given that we use the \texttt{Sub} term to represent assignment,
 we need to treat such seperately, noting that it is n.s.::
@@ -477,6 +480,7 @@ substitute sctx sub bt@(Sub tk _ _)
   | isAssignment bt  =  return $ Sub tk bt sub
 \end{code}
 
+\subsubsection{Substitution Substitution}
 
 \begin{eqnarray*}
    (\ss t {v^m} {t^m}) \ss {} {v^n} {t^n}
@@ -501,7 +505,7 @@ substitute sctx (Substn _ lvlvs) bt@(Iter tk sa na si ni lvs)
            $ map (listVarSubstitute sctx (S.toList lvlvs)) lvs
 \end{code}
 
-\subsubsection{Non-Substitutable Terms}
+\subsection{Non-Substitutable Terms}
 
 \begin{eqnarray*}
    \kk k \ss {} {v^n} {t^n}   &\defs&  \kk k
@@ -579,6 +583,9 @@ idNumAdd :: Identifier -> Int -> Identifier
 
 \newpage
 
+\subsection{Quantifier body substitution}
+
+
 Used for quantifier substitution.
 This code assumes that \texttt{alpha} was produced by \texttt{captureAvoidance}.
 \begin{code}
@@ -600,6 +607,9 @@ quantSubst atl alvl gv@(LstVar lv)
       -- again, we need to deal with "coverage" cases
       Just flv  ->  LstVar flv
 \end{code}
+
+\subsection{List-variable substitution}
+
 
 Used for \texttt{Iter} substitution.
 \begin{code}
@@ -643,7 +653,7 @@ lvlookup lv@(LVbl v is js) ( ((LVbl tv _ _), (LVbl rv _ _) ) : rest )
 \end{code}
 
 \newpage
-\subsection{Substitution Tests}
+\section{Substitution Tests}
 
 Assuming that $O \supseteq f$:
 \begin{eqnarray*}
@@ -692,7 +702,7 @@ subC ctxt sub tm = fromJust $ substitute ctxt sub tm
 sub0 = subC subContext0
 \end{code}
 
-\subsubsection{Non Obs. Var. Deep Substitution}
+\subsection{Non Obs. Var. Deep Substitution}
 
 \begin{eqnarray*}
    (\dots P \dots)[e/x] &=& (\dots P[e/x] \dots)
@@ -709,7 +719,7 @@ tstDeep = testCase "substitute [e/x] in (P)=(P[e/x])"
 
 \newpage
 
-\subsubsection{Expr Var Temporal Substitutions}
+\subsection{Expr Var Temporal Substitutions}
 
 
 We should also test tempSubMiss
@@ -765,7 +775,7 @@ tstExprObsSubs
 
 \newpage
 
-\subsubsection{Same Assignment Substitution}
+\subsection{Same Assignment Substitution}
 
 
 
@@ -810,7 +820,7 @@ tstSameAssignSubs
 
 \newpage
 
-\subsubsection{Assignment Proof Temporal substitution}
+\subsection{Assignment Proof Temporal substitution}
 
 Assuming $O \supseteq f$ we expect:
 \begin{eqnarray*}
@@ -820,7 +830,7 @@ Assuming $O \supseteq f$ we expect:
 \\  &\neq& (x'=f_1[/] \land O'\less x=O_1\less x)
 \end{eqnarray*}
 
-\subsubsection{CTC examples}
+\subsection{CTC examples}
 
 \begin{eqnarray*}
    P_d
@@ -843,7 +853,7 @@ Assuming $O \supseteq f$ we expect:
     ]
 \end{eqnarray*}
 
-\subsubsection{Gathering Tests}
+\subsection{Gathering Tests}
 
 
 \begin{code}
@@ -856,7 +866,7 @@ substTests  =  testGroup "Substitution"
 
 
 \newpage
-\subsection{Substitution Composition}
+\section{Substitution Composition}
 
 Not as obvious as it looks.
 \begin{eqnarray*}
@@ -984,9 +994,9 @@ applyLSub sctxt ts lvs lv
 
 \newpage
 
-\subsection{Exported Test Group}
+\section{Exported Test Group}
 
-\subsubsection{Test Components}
+\subsection{Test Components}
 
 A collection of standard variables:
 \begin{code}
@@ -1027,7 +1037,7 @@ s34xy = sub2 k3 k4
 \end{code}
 
 
-\subsubsection{Substitution Composition}
+\subsection{Substitution Composition}
 
 Most of the tests are of the form: 
  $(e\sigma_1)\sigma_2 = e(\sigma_1;\sigma_2)$
@@ -1065,7 +1075,7 @@ substCompTests  =  testGroup "Substitution.substComp"
  ]
 \end{code}
 
-\subsubsection{Gathering Tests}
+\subsection{Gathering Tests}
 
 \begin{code}
 int_tst_Subst :: [TF.Test]

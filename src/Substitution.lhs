@@ -427,30 +427,30 @@ substitute sctx sub ct@(Cons tk subable i ts)
 \newpage
 \subsubsection{Binding-Term Substitution}
 
-\begin{eqnarray*}
-   (\bb n {x^+} t) \ss {} {v^n} {t^n}
-   &\defs&
-   (\bb n {x^+\alpha} {t\alpha \ss {} {v^j} {t^j}}), \quad v^j \notin x^+
-\\ (\ll n {x^+} t) \ss {} {v^n} {t^n}
-   &\defs&
-   (\ll n {x^+\alpha} {t\alpha \ss {} {v^j} {t^j}}), \quad v^j \notin x^+
-\\ \alpha &\defs&  x^j \mapsto \nu^j, \quad
-   x^j \in \fv(t^i) \land \nu \mbox{ fresh.}
-\end{eqnarray*}
+Given $(\bb n {x^+} t) \ss {} {v^n} {t^n}$,
+we do the following:
+\begin{enumerate}
+\item
+  Remove substitution pairs where the target variable $v_i \in x^+$,
+  to give \emph{effective substitution} $[t^k/v^k]$.  
+  If $k=0$ we can stop here and return the quantifier term unchanged.
+\item 
+  Compute an $\alpha$-substitution that maps $x_i$ to fresh $\nu_i$,
+  for all $x_i \in \fv(t^k)$.
+\item
+  Construct $\bb n {x^+\alpha} {t\alpha \ss {} {v^k} {t^k}}$.
+\end{enumerate}
+We handle $(\ll n {x^+} t) \ss {} {v^n} {t^n}$ in a similar fashion.
+
 \textbf{
   This code is badly broken --- it needs to use s.c info. 
-  The rules above are for explicit variables, 
-  but we also need to handle list-variables:
+  and compute the effective substitution first.
 }
-\begin{eqnarray*}
-   (\bb n {\lst x^+} t) \ss {} {\lst v^n} {\lst t^n}
-   &\defs&
-   (\bb n {\lst x^+} {t\alpha \ss {} {\lst v^j} {\lst t^j}}), 
-     \quad \lst v^j \notin \lst x^+
-\end{eqnarray*}
 \begin{code}
 substitute sctx sub bt@(Bnd tk i vs tm)
-  = do alpha <- captureAvoidance (pdbg "vs" vs) (pdbg "tm" tm) $ pdbg "sub" sub
+--  effsubst = computeEffSubst sctx vs sub
+--  if null effsubset then return bt else ....
+  = do alpha <- captureAvoidance vs tm sub
        let vs' = S.fromList $ quantsSubst (pdbg "alpha" alpha) $ S.toList vs
        asub <- substComp sctx alpha sub --- succeeds as alpha is var-only
        tm' <- substitute sctx asub tm

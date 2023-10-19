@@ -451,19 +451,28 @@ We handle $(\ll n {x^+} t) \ss {} {v^n} {t^n}$ in a similar fashion.
 }
 \begin{code}
 substitute sctx sub bt@(Bnd tk i vs tm)
+  | isNullSubstn effsub  =  return bt
+  | otherwise 
+    = do  alpha <- captureAvoidance vs tm effsub
+          let vs' = S.fromList $ quantsSubst alpha $ S.toList vs
+          asub <- substComp sctx alpha effsub --- succeeds as alpha is var-only
+          tm' <- substitute sctx asub tm
+          bnd tk i vs' tm'
+  where
+    effsub = computeEffSubst vs sub
 --  effsubst = computeEffSubst sctx vs sub
 --  if null effsubset then return bt else ....
-  = do alpha <- captureAvoidance vs tm sub
-       let vs' = S.fromList $ quantsSubst (pdbg "alpha" alpha) $ S.toList vs
-       asub <- substComp sctx alpha sub --- succeeds as alpha is var-only
-       tm' <- substitute sctx asub tm
-       bnd tk i vs' tm'
 substitute sctx sub lt@(Lam tk i vl tm)
-  = do alpha <- captureAvoidance (S.fromList vl) tm sub
-       let vl' = quantsSubst alpha vl
-       asub <- substComp sctx alpha sub --- succeeds as alpha is var-only
-       tm' <- substitute sctx asub tm
-       lam tk i vl' tm'
+  | isNullSubstn effsub  =  return lt
+  | otherwise 
+    = do  alpha <- captureAvoidance vs tm effsub
+          let vl' = quantsSubst alpha vl
+          asub <- substComp sctx alpha effsub --- succeeds as alpha is var-only
+          tm' <- substitute sctx asub tm
+          lam tk i vl' tm'
+  where
+    vs = S.fromList vl
+    effsub = computeEffSubst vs sub
 \end{code}
 
 \subsection{Substitution-Term Substitution}

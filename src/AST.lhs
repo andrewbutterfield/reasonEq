@@ -19,7 +19,7 @@ module AST ( Type
            , Substn, pattern Substn, substn, substnxx
            , pattern TermSub, pattern LVarSub
            , setVTWhen, setLVLVWhen
-           , subTargets
+           , isNullSubstn, subTargets
            , Term, Subable, readTerm
            , pattern Val, pattern Var, pattern Cons
            , pattern Bnd, pattern Lam, pattern Cls
@@ -195,6 +195,9 @@ xSubstn ts lvs = fromJust $ substnxx ts lvs
 
 Queries:
 \begin{code}
+isNullSubstn :: Substn -> Bool
+isNullSubstn (SN ts lvs) = S.null ts && S.null lvs
+
 subTargets :: Substn -> VarSet
 subTargets (SN ts lvs)
   = S.map (StdVar . fst) ts

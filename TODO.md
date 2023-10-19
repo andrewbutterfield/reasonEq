@@ -4,36 +4,18 @@
 
 ###
 
-`substitute` on `Bnd` (and `Lam`) does not check for quantifier hiding
-substitution targets.
+`substitute` on `Bnd` (and `Lam`) now works properly
 
-Issue with `s` command
+Still issue with `s` command
 ```
-Proof for univ_inst
-((∀ x$ • P))[e$/x$]⟹  P, x$⊇P
-   = 'substitute @[1]'
+(∀ x$ • P)∧P[e$/x$]⟹  P, x$⊇P
+   = 'substitute @[1,2]'
  ...
 ⊢
-(∀ x$ • P[e$/x$])⟹  P    x$⊇P  -- WRONG `s` OUTCOME
-Focus = [1]
+(∀ x$ • P)∧P[e$/x$]⟹  P    x$⊇P
+Focus = [1,2]
 ```
-
-Using `non_subst` law
-```
-Proof for univ_inst
-(∀ x$ • P)⟹  P, x$⊇P
-   = 'match-eqv-pvar(2) non_subst@[1]'
-((∀ x$ • P))[e$/x$]⟹  P, x$⊇P -- CORRECT non_subst OUTCOME
-   = 'match-lhs non_subst@[1]'
- ...
-⊢
-(∀ x$ • P)⟹  P    x$⊇P   -- CORRECT non_subst OUTCOME
-Focus = [1]
-```
-
-The `non_subst` law works properly both directions, but the substitute command does not- it ignores s.c. `x$⊇P`.
-
-
+The s.c. `x$⊇P` is not being used.
 
 ## Non-Urgent
 

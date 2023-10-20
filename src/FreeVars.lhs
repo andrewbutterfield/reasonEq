@@ -324,14 +324,16 @@ theFreeVars (fvs,diffs) = fvs `S.union` ( S.unions $ map fst diffs )
 \\ \fv(\cc n {ts}) &\defs& \bigcup_{t \in ts} \fv(t)
 \\ \fv(\bb n {v^+} t) &\defs& \fv(t)\setminus{v^+}
 \\ \fv(\ll n {v^+} t) &\defs& \fv(t)\setminus{v^+}
+\\ \fv(\ii \bigoplus n {lvs}) &\defs& lvs
+   \quad \mbox{less any textual list-vars in }lvs
 \\ \fv(\ss t {v^n} {t^n})
    &\defs&
    (\fv(t)\setminus{v^m})\cup \bigcup_{s \in t^m}\fv(s)
 \\ \textbf{where} && v^m = v^n \cap \fv(t), t^m \textrm{ corr. to } v^m
-\\ \fv(\ii \bigoplus n {lvs}) &\defs& lvs
-   \quad \mbox{less any textual list-vars in }lvs
 \end{eqnarray*}
 \begin{code}
+notTextualLV (LVbl (Vbl _ _ vw) _ _) = vw /= Textual
+
 freeVars :: Term -> FreeVars
 freeVars (Var tk v@(Vbl _ _ vw))
   | vw /= Textual                   =  injVarSet $ S.singleton $ StdVar v
@@ -360,12 +362,10 @@ freeVars (Sub tk tm s)              =  mrgFreeVars (subVarSet tfv tgtvs) rplvs
      (tgtvs,rplvs)  =  substRelFree tfv s
 
 freeVars _  =  noFreevars
-
-notTextualLV (LVbl (Vbl _ _ vw) _ _) = vw /= Textual
 \end{code}
 
 \newpage
-\subsubsection{Substitution Free Variables}
+\subsection{Substitution Free Variables}
 
 Substitution is complicated, so here's a reminder:
 \begin{eqnarray*}

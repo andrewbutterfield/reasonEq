@@ -1,4 +1,4 @@
-\section{Utilities}
+\chapter{Utilities}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2017-22
 
@@ -55,7 +55,7 @@ utilities
 \end{code}
 
 \newpage
-\subsubsection{Maybe and related}
+\subsection{Maybe and related}
 
 A version of \texttt{fromJust}
 that gives a more helpful error message.
@@ -73,9 +73,9 @@ thd3 :: (a,b,c) -> c ; thd3(_,_,z) = z
 \end{code}
 
 \newpage
-\subsection{List Functions}
+\section{List Functions}
 
-\subsubsection{Total Tail}
+\subsection{Total Tail}
 
 \begin{code}
 ttail :: [a] -> [a]
@@ -83,13 +83,13 @@ ttail []      =  []
 ttail (_:xs)  =  xs
 \end{code}
 
-\subsubsection{Predicate: has duplicates}
+\subsection{Predicate: has duplicates}
 \begin{code}
 hasdup :: Eq a => [a] -> Bool
 hasdup xs = xs /= nub xs
 \end{code}
 
-\subsubsection{Pulling Prefix from a List}
+\subsection{Pulling Prefix from a List}
 \begin{code}
 pulledFrom :: Eq a => [a] -> [a] -> (Bool, [a])
 []     `pulledFrom` ys  =  (True, ys)
@@ -99,14 +99,14 @@ xs     `pulledFrom` []  =  (False,[])
  | otherwise  =  (False,ys)
 \end{code}
 
-\subsubsection{Un-lining without a trailing newline}
+\subsection{Un-lining without a trailing newline}
 \begin{code}
 unlines' [] = ""
 unlines' [s] = s
 unlines' (s:ss) = s ++ '\n':unlines' ss
 \end{code}
 
-\subsubsection{Get item from list, or fail trying}
+\subsection{Get item from list, or fail trying}
 \begin{code}
 getitem :: (Eq a, Monad m, MonadFail m) => a -> [a] -> m [a]
 getitem _ [] = fail "getitem: item not present"
@@ -116,7 +116,7 @@ getitem a (x:xs)
                     return (x:xs')
 \end{code}
 
-\subsubsection{List lookup by number}
+\subsection{List lookup by number}
 \begin{code}
 nlookup :: (Monad m, MonadFail m) => Int -> [a] -> m a
 nlookup i things
@@ -125,7 +125,7 @@ nlookup 1 (thing:rest)   =  return thing
 nlookup i (thing:rest)   =  nlookup (i-1) rest
 \end{code}
 
-\subsubsection{Association-list lookup}
+\subsection{Association-list lookup}
 \begin{code}
 alookup :: (Eq k, Monad m, MonadFail m) => k -> [(k,d)] -> m d
 alookup k []   =  fail "alookup: not found"
@@ -134,12 +134,12 @@ alookup k ((n,v):rest)
   | otherwise  =  alookup k rest
 \end{code}
 
-\subsubsection{Intercalation, dropping nulls}
+\subsection{Intercalation, dropping nulls}
 \begin{code}
 intcalNN sep = intercalate sep . filter (not . null)
 \end{code}
 
-\subsubsection{Splitting Lists}
+\subsection{Splitting Lists}
 
 Pulling an item out of a list, satisfying a predicate:
 \begin{code}
@@ -234,7 +234,7 @@ splice mrg (before,found,after)
        return (before++found'++after)
 \end{code}
 
-\subsubsection{`Peeling' a list}
+\subsection{`Peeling' a list}
 
 We use a number $i$ to extract the $i$th element of a list
 peeling off all the elements before it into a reversed list.
@@ -252,7 +252,7 @@ peel n xs = ent [] n xs
     | otherwise  =  ent (x:bef) (n-1) xs
 \end{code}
 
-\subsubsection{Trimming Strings}
+\subsection{Trimming Strings}
 
 \begin{code}
 trim = ltrim . reverse . ltrim . reverse
@@ -263,7 +263,7 @@ ltrim str@(c:cs)
  | otherwise  =  str
 \end{code}
 
-\subsection{Specialised Zips}
+\section{Specialised Zips}
 
 \begin{code}
 zip1 :: a -> [b] -> [(a,b)]
@@ -276,7 +276,7 @@ zip2' :: b -> [a] -> [(a,b)]
 zip2' b = map (\a->(a,b))
 \end{code}
 
-\subsubsection{Number List Display}
+\subsection{Number List Display}
 
 A common idiom is to show a list of items as a numbered list
 to make selecting them easier:
@@ -306,7 +306,7 @@ numberItem' maxw (i,(str,strlen))
   where istr = show i
 \end{code}
 
-\subsubsection{Argument String Handling}
+\subsection{Argument String Handling}
 
 \begin{code}
 args2int args = if null args then 0 else readNat $ head args
@@ -315,7 +315,7 @@ args2str args = if null args then "" else head args
 \end{code}
 
 
-\subsection{Lists acting like sets}
+\section{Lists acting like sets}
 
 \begin{code}
 issubset :: Eq a => [a] -> [a] -> Bool
@@ -327,23 +327,23 @@ isdisj :: Eq a => [a] -> [a] -> Bool
 xs `isdisj` ys  =  null (xs `intersect` ys)
 \end{code}
 
-\subsection{Set Functions}
+\section{Set Functions}
 
-\subsubsection{Set disjointness}
+\subsection{Set disjointness}
 
 \begin{code}
 disjoint :: Ord a => Set a -> Set a -> Bool
 s1 `disjoint` s2 = S.null (s1 `S.intersection` s2)
 \end{code}
 
-\subsubsection{Set overlap}
+\subsection{Set overlap}
 
 \begin{code}
 overlaps :: Ord a => Set a -> Set a -> Bool
 s1 `overlaps` s2 = not (s1 `disjoint` s2)
 \end{code}
 
-\subsubsection{Choosing element from a set}
+\subsection{Choosing element from a set}
 
 \begin{code}
 choose s
@@ -354,9 +354,9 @@ choose s
    s' = S.delete x s
 \end{code}
 
-\subsection{Map Functions}
+\section{Map Functions}
 
-\subsubsection{Building injective Maps}
+\subsection{Building injective Maps}
 
 Here is code for converting \texttt{[(a,b)]} to an injective \texttt{Map a b},
 failing if there are duplicate \texttt{b}s.
@@ -407,10 +407,10 @@ bijExtend bij0 bijX
 
 
 \newpage
-\subsection{Smart Readers}
+\section{Smart Readers}
 
 
-\subsubsection{Read Integer}
+\subsection{Read Integer}
 \begin{code}
 readNat :: String -> Int
 readNat str
@@ -419,7 +419,7 @@ readNat str
  | otherwise        =   -1
 \end{code}
 
-\subsubsection{Read Boolean}
+\subsection{Read Boolean}
 \begin{code}
 readBool :: String -> Bool
 readBool str
@@ -436,9 +436,9 @@ readBool str
 \newpage
 
 
-\subsection{Control-Flow Functions}
+\section{Control-Flow Functions}
 
-\subsubsection{Repeat Until Equal}
+\subsection{Repeat Until Equal}
 
 \begin{code}
 untilEq :: Eq a => (a -> a) -> a -> a
@@ -449,11 +449,11 @@ untilEq f x
 \end{code}
 
 \newpage
-\subsection{Possible Failure Monad}
+\section{Possible Failure Monad}
 
 
 \newpage
-\subsection{Pretty-printing Derived Show}
+\section{Pretty-printing Derived Show}
 
 A utility that parses the output of \texttt{derived} instances of \texttt{show}
 to make debugging easier.
@@ -477,7 +477,7 @@ showP = pShowTree . lexify
 Basically we look for brackets (\texttt{[]()}) and punctuation (\texttt{,})
 and build a tree.
 
-\subsubsection{Pretty-printing Tokens}
+\subsection{Pretty-printing Tokens}
 
 Tokens are the five bracketing and punctuation symbols above,
 plus any remaining contiguous runs of non-whitespace characters.
@@ -515,7 +515,7 @@ spaced s = ' ':s ++ " "
 
 
 \newpage
-\subsubsection{Parsing Tokens}
+\subsection{Parsing Tokens}
 
 We parse into a ``Show-Tree''
 \begin{code}
@@ -612,7 +612,7 @@ Informative error:
 tfail toks str = fail $ unlines [str,"Remaining tokens = " ++ show toks]
 \end{code}
 
-\subsubsection{Displaying Show-Trees}
+\subsection{Displaying Show-Trees}
 
 Heuristic Zero: all on one line:
 \begin{code}

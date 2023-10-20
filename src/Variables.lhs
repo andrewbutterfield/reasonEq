@@ -1,4 +1,4 @@
-\section{Variables}
+\chapter{Variables}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2017
 
@@ -69,7 +69,7 @@ import Test.Framework.Providers.HUnit (testCase)
 --import Test.Framework.Providers.QuickCheck2 (testProperty)
 \end{code}
 
-\subsection{Variable Introduction}
+\section{Variable Introduction}
 
 
 We want to implement a range of variables
@@ -182,9 +182,9 @@ theSubscript :: VarWhen -> Subscript
 theSubscript (During s) = s
 \end{code}
 
-\subsubsection{More about variables}
+\subsection{More about variables}
 
-\paragraph{Observational Variables}
+\subsubsection{Observational Variables}
 Observational variables record visible events/changes/values/histories
 associated with program behaviour.
 Observation or Term variables with a temporality of Text, Before, During or After,
@@ -193,7 +193,7 @@ Observation or Term variables with a temporality of Text, Before, During or Afte
 Static observational variables are also used for general predicate calculus
 purposes.
 
-\paragraph{Term Variables}
+\subsubsection{Term Variables}
 Term variables denote terms, either arbitrary or pre-determined in some way.
 If a term contains only observable variables of the same temporality,
 then it can be denoted by a term variable of that temporality.
@@ -203,7 +203,7 @@ There are no term variables that can denote both expressions and predicates.
 Static term variables may denote an term of the same sub-classification,
 with any temporality attribute.
 
-\paragraph{Variables qua Variables}
+\subsubsection{Variables qua Variables}
 Finally, for observational variables only,
 we have the notion of a (Text) variable standing for itself (\texttt{x}),
 rather than its value at some point in time.
@@ -212,7 +212,7 @@ of language constructs involving variables in an essential way,
 such as assignment.
 In a sense, these variables are static.
 
-\subsection{Variable Definition}
+\section{Variable Definition}
 
 A variable is a triple: identifier, class, and temporality/text
 \begin{code}
@@ -259,7 +259,7 @@ timeVar (VR (_,_,vt))  =  vt
 \end{code}
 
 \newpage
-\subsection{List Variables}
+\section{List Variables}
 
 In places where list of variables occur,
 it is very useful to have (single) variables
@@ -339,7 +339,7 @@ makeVars vc vw vis lvis
 \end{code}
 
 \newpage
-\subsection{Variable Lists}
+\section{Variable Lists}
 
 A variable-list is composed in general of a mix of normal variables
 and list-variables.
@@ -416,7 +416,7 @@ setGVarWhen vw (LstVar lv)  =  LstVar $ setLVarWhen vw lv
 \end{code}
 
 \newpage
-\subsection{Variable Lists}
+\section{Variable Lists}
 
 \begin{code}
 type VarList = [GenVar]
@@ -438,7 +438,7 @@ listVarsOf ((GL lv:gvs))  =  lv:listVarsOf gvs
 listVarsOf (_:gvs)        =  listVarsOf gvs
 \end{code}
 
-\subsection{Variable Sets}
+\section{Variable Sets}
 
 We also want variable sets:
 \begin{code}
@@ -471,7 +471,7 @@ liftLess (LV (VR (_,vc,vw), is, js))
 
 \newpage
 
-\subsection{Dynamic Variable Normalisation}
+\section{Dynamic Variable Normalisation}
 
 Dynamic normalisation (d.n.):
 When we record a dynamic variable in certain circumstances,
@@ -515,7 +515,7 @@ unGVar vw (LstVar lv)  =  LstVar (unLVar vw lv)
 
 \newpage
 
-\subsection{Floating Variables}
+\section{Floating Variables}
 
 We want to mark some variables as ``floating'',
 to indicate that they haven't been matched,
@@ -560,7 +560,7 @@ sinkGV (LstVar v)      =  LstVar $ sinkLV v
 
 \newpage
 
-\subsection{Exported Test Group}
+\section{Exported Test Group}
 \begin{code}
 int_tst_Variables :: [TF.Test]
 int_tst_Variables

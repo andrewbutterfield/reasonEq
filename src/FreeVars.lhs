@@ -1,4 +1,4 @@
-\section{Free Variables}
+\chapter{Free Variables}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2019--2022
 
@@ -41,12 +41,12 @@ import Test.Framework.Providers.HUnit (testCase)
 import Debugger
 \end{code}
 
-\subsection{Introduction}
+\section{Introduction}
 
 We start with computing the free variables of a term,
 and then continue by addressing nested quantifiers.
 
-\subsection{Need for Variable-Set Expressions}
+\section{Need for Variable-Set Expressions}
 
 Consider the following extract from the standard free-variable definition:
 \begin{eqnarray*}
@@ -316,7 +316,7 @@ theFreeVars (fvs,diffs) = fvs `S.union` ( S.unions $ map fst diffs )
 
 \newpage
 
-\subsection{Term Free Variables}
+\section{Term Free Variables}
 
 \begin{eqnarray*}
    \fv(\kk k)  &\defs&  \emptyset
@@ -399,11 +399,11 @@ applicable wrap tfv (t,_) = wrap t `inFreeVars` tfv
 \end{code}
 
 \newpage
-\subsection{Quantifier Nesting}
+\section{Quantifier Nesting}
 
 Support for quantifier nesting needs to be hardwired in.
 
-\subsubsection{Zeroing a term}
+\subsection{Zeroing a term}
 
 It can help to put a term into a state where all identifiers have zero
 as their unique number
@@ -466,7 +466,7 @@ setVarIdNumber u (Vbl (Identifier nm _) cls whn)
 
 \newpage
 
-\subsubsection{Nesting Simplification}
+\subsection{Nesting Simplification}
 
 So we have to hardwire the basic simplification laws:
 \begin{eqnarray*}
@@ -512,7 +512,7 @@ to $\bb j {V_j} P$, because $V_j \supseteq \fv(P)$.
 
 \newpage
 
-\subsection{Tests}
+\section{Tests}
 
 \begin{code}
 

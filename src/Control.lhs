@@ -1,4 +1,4 @@
-\section{Control}
+\chapter{Control}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2019-22
 
@@ -29,7 +29,7 @@ import Control.Monad
 We provide general flow-of-control constructs here,
 often of a monadic flavour.
 
-\subsection{Monadic conditionals}
+\section{Monadic conditionals}
 
 \begin{code}
 mifte :: Monad m => m Bool -> m a -> m a -> m a
@@ -38,7 +38,7 @@ mifte mc mthen melse
        if c then mthen else melse
 \end{code}
 
-\subsection{Function Controls}
+\section{Function Controls}
 
 Sometimes we want to to apply a number of functions to the same thing
 and combine the results with an operator.
@@ -63,9 +63,9 @@ addIfWanted opf wanted currf extraf
  | otherwise  =  currf
 \end{code}
 
-\subsection{List Controls}
+\section{List Controls}
 
-\subsubsection{Mapping Pairs}
+\subsection{Mapping Pairs}
 
 \begin{code}
 mapfst :: (a -> c) -> [(a,b)] -> [(c,b)]
@@ -85,7 +85,7 @@ mapboth _ [] = []
 mapboth f ((x,y):xys) = (f x, f y) : mapboth f xys
 \end{code}
 
-\subsubsection{Mapping an Accumulator}
+\subsection{Mapping an Accumulator}
 
 \begin{code}
 mapaccum :: (a -> t -> (t,a)) -> a -> [t] -> ([t],a)
@@ -97,9 +97,9 @@ mapaccum f acc (x:xs)
     in (x':xs',acc'')
 \end{code}
 
-\subsection{Matching Controls}
+\section{Matching Controls}
 
-\subsubsection{Matching types}
+\subsection{Matching types}
 \begin{description}
   \item [\texttt{mp} :] instance of MonadPlus
   \item [\texttt{b} :]  binding type
@@ -111,7 +111,7 @@ We can then describe a standard (basic) match as:
 type BasicM mp b c p = c -> p -> b -> mp b
 \end{code}
 
-\subsubsection{Matching pairs}
+\subsection{Matching pairs}
 
 \begin{code}
 matchPair :: MonadPlus mp
@@ -121,7 +121,7 @@ matchPair :: MonadPlus mp
 matchPair m1 m2 (c1,c2) (p1,p2) b  =   m1 c1 p1 b >>= m2 c2 p2
 \end{code}
 
-\subsubsection{Matching lists}
+\subsection{Matching lists}
 
 When we match lists sometimes we need to return
 not just bindings,

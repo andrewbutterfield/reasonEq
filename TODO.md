@@ -4,7 +4,22 @@
 
 ###
 
-`substitute` on `Bnd` (and `Lam`) now works properly
+Back to original problem:
+```
+Matches:
+23 : “∀_inst” (∀ x$ • P)  ∧  P[?e$/x$]  x$⊇P ⟹ ⊤ * ⟹
+⊢
+(∀ x$ • P)⟹  P    x$⊇P
+Focus = [1]
+Target (RHS): 
+true
+proof: a23
+Choose variables to replace ?e$
+   1. e$
+Select by numbers: 
+```
+We should be offered `x$` as well.
+We want to get `(∀ x$ • P)  ∧  P[x$/x$]`.
 
 Still issues with `s` command (fails on `;_runit` proof)
 and where law `non_subst` is broken:
@@ -26,6 +41,7 @@ R
 *The instance of `non_subst` here is where `P` is `R[O$_1/O$']` where `O$,O$'⊇R`, so  `O$_1 ∉ R`.*
 **But, `O$_1` is in `R[O$_1/O$']`**
 
+*This may be a bug in `FreeVars.freeVars`.*
 
 ## Non-Urgent
 

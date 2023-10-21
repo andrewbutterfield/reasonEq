@@ -224,6 +224,10 @@ subContext0 = mkSubCtxt scTrue
 substitute :: (MonadFail m, Alternative m) 
            => SubContext -> Substn -> Term -> m Term
 \end{code}
+We first note that $P[/] = P$:
+\begin{code}
+substitute _ sub tm | isNullSubstn sub  =  return tm
+\end{code}
 
 \subsection{Variable Term Substitution}
 

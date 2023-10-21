@@ -20,15 +20,14 @@ CONJ = ASN (C P True (Id "imp" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),V 
 SIDE = ([SS NU (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])],fromList [])
 STRAT red-All
 BEGIN SEQZIP
-TERMZIP = (S P (V P (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),[Cons' P True (Id "and" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V P (VR (Id "P" 0,VP,WS)))] [],Cons' P True (Id "imp" 0) [] [V P (VR (Id "P" 0,VP,WS))]])
+TERMZIP = (B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V P (VR (Id "P" 0,VP,WS))),[Cons' P True (Id "imp" 0) [] [V P (VR (Id "P" 0,VP,WS))]])
 BEGIN SEQUENT'
 SIDECOND = ([],fromList [])
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.univ_inst", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K P (VB True)}
 END SEQUENT'
 END SEQZIP
-FPATH: [1,2]
+FPATH: [1]
 BEGIN LIST STEPS
-(UseLaw (ByMatch MIA) "forall_inst" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS)))],fromList [],fromList [((Id "e" 0,VE,[],[]),BL [GL (LV (VR (Id "e" 0,VE,WS),[],[]))]),((Id "x" 0,VO,[],[]),BS (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])),((Id "y" 0,VO,[],[]),BS (fromList []))])) [1],ASN (C P True (Id "imp" 0) [B P (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V P (VR (Id "P" 0,VP,WS))),V P (VR (Id "P" 0,VP,WS))],([SS NU (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])],fromList [])))
 (UseLaw (ByMatch MEL) "[]_def" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS)))],fromList [],fromList [((Id "x" 0,VO,[],[]),BL [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])])) [1],ASN (C P True (Id "imp" 0) [X (Id "[_]" 0) (V P (VR (Id "P" 0,VP,WS))),V P (VR (Id "P" 0,VP,WS))],([],fromList [])))
 END LIST STEPS
 END LIVE-PROOF

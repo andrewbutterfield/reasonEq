@@ -618,14 +618,17 @@ applyMatchToFocus1 :: MonadFail m
                         )
 applyMatchToFocus1 i liveProof
   = do  mtch  <- nlookup i $ matches liveProof
+        let goal = exitTZ $ fst $ focus liveProof
         let gvars = S.toList ( mentionedVars (mRepl mtch)
+                               `S.union`
+                               mentionedVars goal
                                `S.union`
                                scGVars (mLawSC mtch) )
         let (stdvars,lstvars)  =  partition isStdV gvars
         let stdFloating        =  filter isFloatingGVar stdvars
         let replTerms          =  subTerms $ assnT $ conjecture liveProof
-        let lstFloating        =  filter isFloatingGVar lstvars
-        let replGVars          =  map sinkGV (stdFloating ++ lstFloating)
+        let (lstFloating,lstNormal)        =  partition isFloatingGVar lstvars
+        let replGVars          =  lstNormal ++ map sinkGV lstFloating
         return ( mtch
                , stdVarsOf stdFloating, replTerms
                , listVarsOf lstFloating, replGVars )

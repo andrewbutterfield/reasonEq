@@ -4,30 +4,16 @@
 
 ###
 
-We want to get `(∀ x$ • P)  ∧  P[x$/x$]`.
-We can now choose `x$` but get `(∀ x$ • P)  ∧  P[/]`.
-
 Still issues with `s` command (fails on `;_runit` proof)
-and where law `non_subst` is broken:
-```
-“non_subst”   P[e$/x$]  ≡  P  x$∉P
+and where law `non_subst :: P[e$/x$]  ≡  P  x$∉P` is broken.
 
+Substitution `(R[O$_1/O$'])[O$'/O$_1]` should result in `R[O$'/O$']'.
 
-(∃ O$_1 • (O$_1=O$')∧R[O$_1/O$']) ,  O$,O$'⊇II, O$,O$'⊇R
- = 'match-lhs exists_one_point @[]'
-    { P ⟼ R[O$_1/O$'], e$ ⟼ ⟨O$'⟩, x$ ⟼ ⟨O$_1⟩, y$ ⟼ {} }
-(R[O$_1/O$'])[O$'/O$_1] ,  O$,O$'⊇II, O$,O$'⊇R
- = 'match-lhs non_subst @[]'
-    { P ⟼ R[O$_1/O$'], e$ ⟼ ⟨O$'⟩, x$ ⟼ ⟨O$_1⟩ }
-R[O$_1/O$'], O$,O$'⊇II, O$,O$'⊇R
-   = 'substitute @[]'
-R
-```
+Using `s` command: `(R[O$_1/O$'])[O$'/O$_1]` becomes `R[O$'/O$_1]`.
 
-*The instance of `non_subst` here is where `P` is `R[O$_1/O$']` where `O$,O$'⊇R`, so  `O$_1 ∉ R`.*
-**But, `O$_1` is in `R[O$_1/O$']`**
+Using law `non_subst` it becomes `R[O$_1/O$']`.
 
-*This may be a bug in `FreeVars.freeVars`.*
+BOTH FAIL IN DIFFERENT WAYS.
 
 ## Non-Urgent
 

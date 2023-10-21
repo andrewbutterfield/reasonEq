@@ -1,4 +1,4 @@
-\section{Live Proof Support}
+\chapter{Live Proof Support}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2018-2022
 
@@ -63,7 +63,7 @@ import Debugger
 \end{code}
 
 \newpage
-\subsection{Matching Contexts}
+\section{Matching Contexts}
 
 Consider a collection of theories in an ordered list,
 where each theory appears in that list before any of those on which
@@ -100,7 +100,7 @@ buildMatchContext (thy:thys) -- thys not null
     in (thName thy, laws thy, known thy : vts') : mcs'
 \end{code}
 
-\subsection{Matches}
+\section{Matches}
 
 \begin{code}
 data Match
@@ -118,7 +118,7 @@ type Matches = [Match]
 \end{code}
 
 \newpage
-\subsection{Live Proof Type}
+\section{Live Proof Type}
 
 \begin{code}
 data LiveProof
@@ -158,7 +158,7 @@ stepsSoFar__ f lp = lp{ stepsSoFar = f $ stepsSoFar lp}
 stepsSoFar_ = stepsSoFar__ . const
 \end{code}
 
-\subsection{Live Proof Collection}
+\section{Live Proof Collection}
 
 We maintain a collection of \texttt{LiveProof}s
 as a map from theory and conjecture names to the corresponding live proof:
@@ -167,7 +167,7 @@ type LiveProofs = Map (String,String) LiveProof
 \end{code}
 
 \newpage
-\subsection{Live-Proof Write and Read}
+\section{Live-Proof Write and Read}
 
 There are two components we don't explicitly save:
 \texttt{mtchCtxts},
@@ -233,7 +233,7 @@ readLiveProof thylist txts
 
 
 \newpage
-\subsection{Writing and Reading Live Proofs}
+\section{Writing and Reading Live Proofs}
 
 \begin{code}
 liveproofs = "LIVE-PROOFS"
@@ -257,9 +257,9 @@ readLiveProofs thylist txts
 
 
 \newpage
-\subsection{Proof Starting and Stopping}
+\section{Proof Starting and Stopping}
 
-% \subsubsection{Starting a Proof with default strategy}
+% \subsection{Starting a Proof with default strategy}
 
 
 % We need to setup a proof from a conjecture:
@@ -283,7 +283,7 @@ readLiveProofs thylist txts
 %     mcs = buildMatchContext thys
 % \end{code}
 
-\subsubsection{Starting a Proof with given strategy}
+\subsection{Starting a Proof with given strategy}
 
 \begin{code}
 launchProof :: [Theory] -> String -> String -> Assertion -> (String,Sequent)
@@ -309,7 +309,7 @@ launchProof thys thnm cjnm asn@(Assertion t sc) (strat,sequent)
 \end{code}
 
 \newpage
-\subsubsection{Testing for Proof Completion}
+\subsection{Testing for Proof Completion}
 
 
 We need to determine when a live proof is complete:
@@ -324,7 +324,7 @@ proofIsComplete liveProof
         any (== theFalse) hypTerms
 \end{code}
 
-\subsubsection{Finalising a complete Proof}
+\subsection{Finalising a complete Proof}
 
 We need to convert a complete live proof to a proof:
 \begin{code}
@@ -338,7 +338,7 @@ finaliseProof liveProof
 \end{code}
 
 \newpage
-\subsection{Trying a Match}
+\section{Trying a Match}
 
 Sometimes we want to see what happens when we single out a law,
 including observing any match failure messages.
@@ -532,7 +532,7 @@ Done.
 \end{code}
 
 \newpage
-\subsubsection{Finding parts of laws}
+\subsection{Finding parts of laws}
 
 Looking up a law by name:
 \begin{code}
@@ -573,7 +573,7 @@ getParts (p:ps) xs
 
 
 \newpage
-\subsection{Matching in Context}
+\section{Matching in Context}
 
 First, given list of match-contexts, systematically work through them.
 \begin{code}
@@ -619,9 +619,9 @@ domatch vts asnC law@((_,(Assertion tP _)),_)
 
 
 \newpage
-\subsection{Assertion Matching}
+\section{Assertion Matching}
 
-\subsubsection{Partial Matching}
+\subsection{Partial Matching}
 
 Here we have a top-level \texttt{Cons}
 with at least two sub-terms.
@@ -660,7 +660,7 @@ doPartialMatch i vts law asnC tsP
 \end{code}
 
 \newpage
-\subsubsection{Equivalence Partial Matching}
+\subsection{Equivalence Partial Matching}
 
 Do an n-way equivalence match, where we want to match against all possibilities,
 exploiting the associative nature of $\equiv$,
@@ -779,7 +779,7 @@ doEqvMatchC' cLen is vts law@((_,(Assertion _ scP)),_) scC tsC tsP
 
 
 \newpage
-\subsection{Basic Matching and Application}
+\section{Basic Matching and Application}
 
 An ideal match and apply scenario could be described as follows:
 \begin{itemize}
@@ -829,7 +829,7 @@ The predicates $true$ and $false$, as well as any well-formed sub-component
 of the goal can be chosen.
 
 \newpage
-\subsubsection{Match and Auto-Complete}
+\subsection{Match and Auto-Complete}
 
 Given:
 \\ --- Goal with focus $G(C)$ and side-condition $SCG$
@@ -855,7 +855,7 @@ Summary:
 \includegraphics[scale=0.2]{doc/images/match}
 
 \newpage
-\subsubsection{Goal-Oriented Complete and Build}
+\subsection{Goal-Oriented Complete and Build}
 
 Given:
 \\ --- Goal with focus $G(C)$ and side-condition $SCG$
@@ -884,7 +884,7 @@ Summary:
 \includegraphics[scale=0.2]{doc/images/apply}
 
 \newpage
-\subsubsection{Basic Matching}
+\subsection{Basic Matching}
 
 Do a basic match,
 including side-condition checking.
@@ -922,13 +922,13 @@ basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
     chkPatn mc _                             =  mc
 \end{code}
 
-\subsubsection{Applying a Match}
+\subsection{Applying a Match}
 
 \textbf{TODO: }
 \textsf{bring match application here}
 
 \newpage
-\subsubsection{Undoing a Proof Step}
+\subsection{Undoing a Proof Step}
 
 \textbf{
  We would like to restore focus when backing up a simple step,
@@ -964,7 +964,7 @@ undoCalcStep liveProof
 
 
 \newpage
-\subsection{Making a Theorem}
+\section{Making a Theorem}
 
 Given an incomplete ``reduce all to true'' proof attempt of $P_0$
 that has done a straight calculation as far as $P_n$,
@@ -994,7 +994,7 @@ makeEquivalence nm liveProof
 \end{code}
 
 \newpage
-\subsection{Showing Live Proofs}
+\section{Showing Live Proofs}
 
 \textbf{This should all be done via proper generic rendering code}
 

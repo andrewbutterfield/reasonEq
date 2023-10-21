@@ -1,4 +1,4 @@
-\section{Matching}
+\chapter{Matching}
 \begin{verbatim}
 Copyright  Andrew Butterfield (c) 2017-22
 
@@ -36,7 +36,7 @@ import Binding
 import Debugger
 \end{code}
 
-\subsection{Matching Principles}
+\section{Matching Principles}
 
 We want to match a candidate term ($C$) against a pattern term ($P$)
 in some context ($\Gamma$),
@@ -93,7 +93,7 @@ and a rule applies provided at least one of the $\beta'_i$ is defined.
 We write $\langle\beta\rangle$ as $\beta$
 and in most rules we omit irrelevant parts of the context.
 \newpage
-\subsection{Haskell Types for Matching}
+\section{Haskell Types for Matching}
 
 We introduce some type and value synonyms,
 to make type-signatures more informative.
@@ -117,7 +117,7 @@ addBoundVarList :: VarList -> BVS -> BVS
 vl `addBoundVarList` bvs  =  (S.fromList vl) `S.union` bvs
 \end{code}
 
-\subsection{Top-level Matching}
+\section{Top-level Matching}
 
 At the top-level we have the known-variable information
 in the form of a sequence $\kappa s$ of known variable tables,
@@ -138,7 +138,7 @@ match vts cand patn  =  tMatch vts emptyBinding noBVS noBVS cand patn
 \end{code}
 
 \newpage
-\subsection{Term Matching}
+\section{Term Matching}
 
 \begin{code}
 tMatch, tMatch' ::
@@ -171,7 +171,7 @@ a constructor term matches against an interation.
 itop = jId "_itop"
 \end{code}
 
-\subsubsection{Value Term-Pattern (\texttt{Val})}
+\subsection{Value Term-Pattern (\texttt{Val})}
 Values only match themselves, and add no new bindings.
 $$
 \inferrule
@@ -185,7 +185,7 @@ tMatch' _ bind _ _ kC@(Val _ _) kP@(Val _ _)
  | kC == kP  =  return bind
 \end{code}
 
-\subsubsection{Variable Term-Pattern (\texttt{Var})}
+\subsection{Variable Term-Pattern (\texttt{Var})}
 Variable matching is complicated, so we farm it out,
 as long as \texttt{TermKind}s match.
 $$
@@ -201,7 +201,7 @@ tMatch' vts bind cbvs pbvs tC (Var tkP vP)
 \end{code}
 
 
-\subsubsection{Constructor Term-Pattern (\texttt{Cons})}
+\subsection{Constructor Term-Pattern (\texttt{Cons})}
 Constructors match if they have the same kind,
 their names match (as static predicate variables)
 and the term-lists are of the same length and corresponding terms match.
@@ -323,7 +323,7 @@ $$
 
 
 \newpage
-\subsubsection{Binding Term-Pattern (\texttt{Bnd})}
+\subsection{Binding Term-Pattern (\texttt{Bnd})}
 
 We first start with the obvious rule that tries to match
 a candidate binding against a candidate pattern:
@@ -381,7 +381,7 @@ tMatch' vts bind cbvs pbvs tC (Bnd tkP nP vsP tP)
 \end{code}
 
 
-\subsubsection{Lambda Term-Pattern (\texttt{Lam})}
+\subsection{Lambda Term-Pattern (\texttt{Lam})}
 
 $$
 \inferrule
@@ -431,7 +431,7 @@ tMatch' vts bind cbvs pbvs tC (Lam tkP nP vlP tP)
 \end{code}
 
 \newpage
-\subsubsection{Closure Term-Pattern (\texttt{Cls})}
+\subsection{Closure Term-Pattern (\texttt{Cls})}
 
 $$
 \inferrule
@@ -455,7 +455,7 @@ tMatch' vts bind cbvs pbvs (Cls nC tC) (Cls nP tP)
     pbvs' = S.filter isObsGVar $ theFreeVars $ freeVars tP
 \end{code}
 
-\subsubsection{Substitution Term-Pattern (\texttt{Sub})}
+\subsection{Substitution Term-Pattern (\texttt{Sub})}
 
 $$
 \inferrule
@@ -480,7 +480,7 @@ tMatch' vts bind cbvs pbvs (Sub tkC tC subC) (Sub tkP tP subP)
 \end{code}
 
 
-\subsubsection{Iterated Term-Pattern (\texttt{Iter})}
+\subsection{Iterated Term-Pattern (\texttt{Iter})}
 
 The first case is simply where the candidate is itself an iteration,
 which is essentially a structural match, even over the list-variables.
@@ -703,7 +703,7 @@ tMatch' vts bind cbvs pbvs tC@(Cons tkC saC naC tsC)
 %             ibind bind' rest
 % \end{code}
 
-\subsubsection{All cases covered}
+\subsection{All cases covered}
 
 Any other situation results in failure:
 \begin{code}
@@ -717,7 +717,7 @@ tMatch' _ _ _ _ tC tP
 
 \newpage
 
-\subsubsection{Term Matching Support}
+\subsection{Term Matching Support}
 
 Binding a constructor name to itself:
 \begin{code}
@@ -729,7 +729,7 @@ consBind vts bind cbvs pbvs tkC nC nP
     vP = Vbl nP vClass Static
 \end{code}
 
-\subsection{Term-List Matching}
+\section{Term-List Matching}
 
 A simple zip-like walk along both lists
 (precomputing length to abort early).
@@ -752,7 +752,7 @@ tsMatch' _ _ _ _ _ _  =  error "tsMatch': unexpected mismatch case."
 
 
 \newpage
-\subsection{Term-Variable Matching}
+\section{Term-Variable Matching}
 
 We assume here that candidate term and pattern variable
 have the same \texttt{TermKind}.
@@ -784,7 +784,7 @@ tvMatch vts bind cbvs pvbs tC tkP vP@(Vbl _ _ vt)
           ]
  | vPmr /= UnknownVar         =  tkvMatch vts bind tC vPmr tkP vP
 \end{code}
-\subsubsection{Arbitrary Pattern Variable}
+\subsection{Arbitrary Pattern Variable}
 $$
 \inferrule
    { v_P \notin B_P \cup \mathbf{dom}\,\kappa s}
@@ -803,7 +803,7 @@ $$
 \end{code}
 
 \newpage
-\subsubsection{Known Pattern Variable}
+\subsection{Known Pattern Variable}
 
 \begin{code}
 tkvMatch :: (Monad m, MonadFail m) => [VarTable] -> Binding
@@ -890,7 +890,7 @@ tkvMatch _ _ _ _ _ _ = fail "tkvMatch: candidate not this known variable."
 \end{code}
 
 \newpage
-\subsection{Variable Matching}
+\section{Variable Matching}
 
 The rules regarding suitable matches for pattern variables
 depend on what class of variable we have (\texttt{VarWhat})
@@ -994,7 +994,7 @@ vMatch' _ _ what vC vP  = fail $ unlines [ "vMatch: knowledge mismatch."
                                          ]
 \end{code}
 
-\subsubsection{Bound Pattern Variable}
+\subsection{Bound Pattern Variable}
 $$
 \inferrule
    { v_P \in B_P
@@ -1018,7 +1018,7 @@ bvMatch vts bind cbvs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
 \end{code}
 
 \newpage
-\subsection{Collection Matching}
+\section{Collection Matching}
 \label{ssec:coll-matching}
 
 There are a number of ``collections'' we have to match,
@@ -1074,7 +1074,7 @@ where some candidates may be leftover, to be bound by collection variables.
 }
 
 \newpage
-\subsection{Variable-List Matching}
+\section{Variable-List Matching}
 
 \begin{code}
 vlMatch :: (MonadPlus mp, MonadFail mp) => [VarTable] -> Binding -> CBVS -> PBVS
@@ -1107,7 +1107,7 @@ vlMatch vts bind cbvs pbvs vlC vlP
        vlFreeMatch vts bind cbvs pbvs vlC' vlP'
 \end{code}
 
-\subsubsection{Applying Bindings to Lists}
+\subsection{Applying Bindings to Lists}
 
 We simply walk up the pattern looking for variables
 already bound, and then search for what they are bound to, in the candidate
@@ -1153,7 +1153,7 @@ applyBindingsToLists' bind vlC' vlP' vlC (gP@(LstVar lvP):vlP)
 \end{code}
 
 \newpage
-\paragraph{Find Standard Pattern-Variable Binding}
+\subsubsection{Find Standard Pattern-Variable Binding}
 Found \texttt{vP} bound to \texttt{vB}.
 Now need to search \texttt{vlC} for \texttt{vB}.
 \begin{code}
@@ -1173,7 +1173,7 @@ findStdCandidate bind vlC' vlP' (gC:vlC) vB vlP
   =  findStdCandidate bind (gC:vlC') vlP' vlC vB vlP
 \end{code}
 
-\paragraph{Find List Pattern-Variable Binding}
+\subsubsection{Find List Pattern-Variable Binding}
 Found \texttt{vlP} bound to \texttt{vlB}.
 Now need to search \texttt{vlC} for \texttt{vlB}.
 \begin{code}
@@ -1190,7 +1190,7 @@ findLstCandidate bind vlC' vlP' vlC@(gC:vlC_) vlB@(gB:vlB_) vlP
 \end{code}
 
 \newpage
-\subsubsection{Free Variable-List Matching}
+\subsection{Free Variable-List Matching}
 
 Here we are doing variable-list matching where all of the
 pattern variables are unbound.
@@ -1288,7 +1288,7 @@ thus explaining why we used to get the same match several times.
 }
 
 \newpage
-\paragraph{Matching a List-Variable, known to be a list.}
+\subsubsection{Matching a List-Variable, known to be a list.}
 First we handle simple cases, where either the list-variable,
 its definition, or its expansion as variables,
 are a prefix of the candidate list.
@@ -1324,9 +1324,9 @@ vlKnownMatch vts bind cbvs pbvs
 \end{code}
 
 \newpage
-\subsubsection{Known List-Var Expansion Matching (List)}
+\subsection{Known List-Var Expansion Matching (List)}
 
-\paragraph{Classifying Expansions}
+\subsubsection{Classifying Expansions}
 Consider an expansion
 $( x_1,\dots,x_m
    \setminus
@@ -1378,7 +1378,7 @@ A key metric is the range of possible lengths that an expansion can have:
 \end{eqnarray*}
 
 
-\paragraph{Matching the list-expansion of a List-Variable.}
+\subsubsection{Matching the list-expansion of a List-Variable.}
 We now try to match (all of) \texttt{lvP} incrementally
 against a prefix of \texttt{vlC},
 using the full expansion, \texttt{vlX} and candidate variables
@@ -1440,7 +1440,7 @@ or contains one or two `empty' known list variables.}
 
 \newpage
 
-\paragraph{Rules for $\mvl$ ---}~
+\subsubsection{Rules for $\mvl$ ---}~
 
 We first start by expanding \texttt{vlP}  as \texttt{xP}
 (or \texttt{(xsP,uvP,ulP)}) and using the expansion as the basis
@@ -1462,7 +1462,7 @@ that will correspond to subtracted pattern list-variables.
 \]
 %%
 
-\paragraph{Rules for $\mvlx$ ---}~
+\subsubsection{Rules for $\mvlx$ ---}~
 
 \begin{enumerate}
 %%%%
@@ -1500,7 +1500,7 @@ If that succeeds then we add the variable to $\kappa$, and recurse.
 
 
 
-\paragraph{Rules for $\mvlxx$ ---}~
+\subsubsection{Rules for $\mvlxx$ ---}~
 
 \begin{enumerate}
 %%%%
@@ -1807,7 +1807,7 @@ vlShrinkPatnMatch sctxt@(_,bc,bw) (bind,gamma,ell)
 \end{code}
 
 \newpage
-\subsection{Variable-Set Matching}
+\section{Variable-Set Matching}
 
 We follow a similar pattern to variable-list matching.
 First apply any bindings we have, and then try to match what is left.
@@ -1825,7 +1825,7 @@ vsMatch vts bind cbvs pbvc vsC vsP
        vsFreeMatch vts bind cbvs pbvc vsC' vsP'
 \end{code}
 
-\subsubsection{Applying Bindings to Sets}
+\subsection{Applying Bindings to Sets}
 
 \begin{code}
 applyBindingsToSets
@@ -1886,7 +1886,7 @@ applyBindingsToSets' bind vlP' vsC (gP@(LstVar lvP):vlP)
 \end{code}
 
 \newpage
-\subsubsection{Free Variable-Set Matching}
+\subsection{Free Variable-Set Matching}
 
 Here we are doing variable-set matching where all of the
 pattern variables are unbound.
@@ -2036,7 +2036,7 @@ vsKnownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
 \end{code}
 
 \newpage
-\subsubsection{Known List-Var Expansion Matching (Sets)}
+\subsection{Known List-Var Expansion Matching (Sets)}
 
 Our expansion clasification devloped above for lists
 applies equally well to sets, with cardinality replacing length.
@@ -2065,7 +2065,7 @@ type SExpansion
 \end{code}
 
 
-\paragraph{Matching the set-expansion of a List-Variable.}
+\subsubsection{Matching the set-expansion of a List-Variable.}
 We now try to match (all of) \texttt{lvP} incrementally
 against a prefix of \texttt{vsC},
 using the full expansion, \texttt{vsX} and candidate variables
@@ -2132,7 +2132,7 @@ as a shorthand for $ S = T \cup V \quad\land\quad T \cap V = \emptyset$.
 
 \newpage
 
-\paragraph{Rules for $\mvs$ ---}~
+\subsubsection{Rules for $\mvs$ ---}~
 
 We first start by expanding \texttt{vlP}  as \texttt{xP}
 (or \texttt{(xsP,uvP,ulP)}) and using the expansion as the basis
@@ -2152,7 +2152,7 @@ that will correspond to subtracted pattern list-variables.
 \]
 %%
 
-\paragraph{Rules for $\mvsx$ ---}~
+\subsubsection{Rules for $\mvsx$ ---}~
 
 \begin{enumerate}
 %%%%
@@ -2190,7 +2190,7 @@ If that succeeds then we add the variable to $\kappa$, and recurse.
 
 
 
-\paragraph{Rules for $\mvsxx$ ---}~
+\subsubsection{Rules for $\mvsxx$ ---}~
 
 \begin{enumerate}
 %%%%
@@ -2561,7 +2561,7 @@ vsUnkLVarOneEach bind (vC:vlC) (lvP:ullP)
 }
 
 \newpage
-\subsection{Substitution Matching}
+\section{Substitution Matching}
 
 We will write a substitution of the form
 $$
@@ -2657,7 +2657,7 @@ sMatch' vts bind cbvs pbvs subC@(Substn tsC lvsC) subP@(Substn tsP lvsP)
       lvsMatch vts bind' cbvs pbvs tsC' (S.toList lvsC) (S.toList lvsP)
 \end{code}
 
-\subsubsection{Substitution Term/Variable matching}
+\subsection{Substitution Term/Variable matching}
 
 Matching
 $\{ e_{C1}/v_{C1} , \dots e_{Cp}/v_{Cp} \}$
@@ -2685,7 +2685,7 @@ vtsMatch vts bind cbvs pbvs tsC tsP
 \end{code}
 
 \newpage
-\subsubsection{Substitution ListVar Matching}
+\subsection{Substitution ListVar Matching}
 
 We are now matching
 \begin{eqnarray*}

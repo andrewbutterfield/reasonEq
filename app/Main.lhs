@@ -1,4 +1,4 @@
-\section{Main Program}
+\chapter{Main Program}
 \begin{verbatim}
 Copyright (c) Andrew Buttefield 2017--22
               Saqid Zardari     2023
@@ -61,7 +61,7 @@ version = "0.8.0.0"
 name_version = progName++" "++version
 \end{code}
 
-\subsection{\texttt{main}}
+\section{\texttt{main}}
 
 The program takes command-line arguments
 that tailor its behaviour.
@@ -178,7 +178,7 @@ runargs args
 
 
 \newpage
-\subsection{Initialising State}
+\section{Initialising State}
 
 We assume user mode by default.
 
@@ -223,7 +223,7 @@ reqstate0 = REqState { inDevMode = False
 \newpage
 
 
-\subsection{GUI Top-Level}
+\section{GUI Top-Level}
 
 The GUI has yet to be developed but will probably
 use \texttt{threepenny-gui} along with the Electron browser.
@@ -234,7 +234,7 @@ gui reqs0 = do putStrLn "GUI not implemented, using command-line."
 \end{code}
 
 \newpage
-\subsection{REPL Top-Level}
+\section{REPL Top-Level}
 
 We define our reasonEq REPL types first:
 \begin{code}
@@ -315,7 +315,7 @@ reqWelcome = unlines
 
 
 \newpage
-\subsection{Show Command }
+\section{Show Command }
 \begin{code}
 cmdShow :: REqCmdDescr
 cmdShow
@@ -378,7 +378,7 @@ showWorkspaces args reqs
 \end{code}
 
 \newpage
-\subsection{State Save and Restore}
+\section{State Save and Restore}
 
 We save and load theories by default,
 but can also handle smaller objects such as axioms, conjetures, and proofs.
@@ -485,7 +485,7 @@ loadState _ reqs  =  doshow reqs "unknown 'load' option."
 \end{code}
 
 \newpage
-\subsection{Conjecture Management}
+\section{Conjecture Management}
 
 \begin{code}
 cmdSaveConj :: REqCmdDescr
@@ -527,7 +527,7 @@ displayConjectures [nm] reqs
 displayConjectures _ reqs  =  doshow reqs "unknown 'ldc' option."
 \end{code}
 
-\subsection{Classify Command}
+\section{Classify Command}
 \begin{code}
 cmdClassify :: REqCmdDescr
 cmdClassify
@@ -549,7 +549,7 @@ doClassify args reqs
 \end{code}
 
 \newpage
-\subsection{Set Command}
+\section{Set Command}
 \begin{code}
 cmdSet :: REqCmdDescr
 cmdSet
@@ -580,7 +580,7 @@ setState (cmd:rest) reqs
 setState _ reqs      =  doshow reqs "unknown/unimplemented 'set' option."
 \end{code}
 
-\subsection{New Command}
+\section{New Command}
 \begin{code}
 cmdNew :: REqCmdDescr
 cmdNew
@@ -626,7 +626,7 @@ newConj args reqs
                   
 
 \newpage
-\subsection{Faking It}
+\section{Faking It}
 
 Simply assuming conjectures as laws:
 \begin{code}
@@ -671,7 +671,7 @@ doDemotion args reqs
 
 
 \newpage
-\subsection{Proving Commands}
+\section{Proving Commands}
 
 
 Then we introduce doing a proper proof:
@@ -744,7 +744,7 @@ strdir str
 
 
 \newpage
-\subsection{Proof REPL}
+\section{Proof REPL}
 
 We start by defining the proof REPL state:
 \begin{code}
@@ -1358,9 +1358,9 @@ equivaleSteps args liveState@(reqs, _)
 \end{code}
 
 \newpage
-\subsection{Development Commands}
+\section{Development Commands}
 
-\subsubsection{Builtin Theory Handling}
+\subsection{Builtin Theory Handling}
 
 \begin{code}
 cmdBuiltin :: REqCmdDescr
@@ -1425,7 +1425,7 @@ buildIn (cmd:nm:_) reqs
 buildIn _ reqs = doshow reqs "unrecognised 'b' option"
 \end{code}
 
-\subsubsection{In-Proof Test Commands}
+\subsection{In-Proof Test Commands}
 
 Try matching focus against a specific law, to see what outcome arises
 \begin{code}

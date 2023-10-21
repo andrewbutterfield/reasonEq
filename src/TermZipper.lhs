@@ -1,4 +1,4 @@
-\section{Term Zipper}
+\chapter{Term Zipper}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2018
 
@@ -35,7 +35,7 @@ import Debugger
 \end{code}
 
 \newpage
-\subsection{Introduction}
+\section{Introduction}
 
 We define types for the key concepts behind a proof,
 such as the notion of assertions, proof strategies,
@@ -84,14 +84,14 @@ type TermZip = (Term,[Term'])
 \newpage
 We now define the basic zip maneuvers.
 
-\subsection{Zip Creation}~
+\section{Zip Creation}~
 
 \begin{code}
 mkTZ :: Term -> TermZip
 mkTZ trm = (trm,[])
 \end{code}
 
-\subsection{Zip Descent}~
+\section{Zip Descent}~
 
 \begin{code}
 downTZ :: Int -> TermZip -> ( Bool -- true if descent occurred, false otherwise
@@ -119,7 +119,7 @@ sdescend tk t n (Substn tsub lvsub)
         -> Just (t',Substn' tk t lvsub before v after)
 \end{code}
 
-\subsubsection{Zip Descent by Path}
+\subsection{Zip Descent by Path}
 
 Follow a list of numbers down.
 No change if any number fails to produce a descent step.
@@ -140,7 +140,7 @@ pathTZ path = snd . followTZ path . mkTZ
 
 
 \newpage
-\subsection{Zip Ascent}~
+\section{Zip Ascent}~
 
 \begin{code}
 upTZ :: TermZip -> ( Bool -- true if ascent occurred, false otherwise
@@ -161,7 +161,7 @@ ascend t (Substn' tk tt lvarsub before v after)  =  Sub tk tt sub
 wrap before x after = reverse (x:before) ++ after
 \end{code}
 
-\subsection{Zip Exit}
+\section{Zip Exit}
 
 \begin{code}
 exitTZ :: TermZip -> Term
@@ -169,7 +169,7 @@ exitTZ (t,[])  =  t
 exitTZ tz = exitTZ $ snd $ upTZ tz
 \end{code}
 
-\subsection{Zip Get and Set}
+\section{Zip Get and Set}
 We also provide get and set functions for the zipper focus:
 \begin{code}
 getTZ :: TermZip -> Term
@@ -183,7 +183,7 @@ setfTZ f (t,wayup) = (f t, wayup)
 \end{code}
 
 \newpage
-\subsection{Zipper Tests}
+\section{Zipper Tests}
 
 These tests involve a descent of zero or more levels,
 the optional modification of the focus, and then an exit.
@@ -295,7 +295,7 @@ tstZipper
 
 \newpage
 
-\subsection{Exported Test Group}
+\section{Exported Test Group}
 \begin{code}
 int_tst_TermZip :: [TF.Test]
 int_tst_TermZip

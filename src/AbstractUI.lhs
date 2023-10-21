@@ -1,4 +1,4 @@
-\section{Abstract User-Interface}
+\chapter{Abstract User-Interface}
 \begin{verbatim}
 Copyright (c) Andrew Buttefield 2017--2022
               Saqib Zardari     2023
@@ -76,7 +76,7 @@ bdbg nm b = trc (nm++" = "++trBinding b) b
 vsdbg nm vs = trc (nm++" = "++trVSet vs) vs
 \end{code}
 
-\subsection{Introduction}
+\section{Introduction}
 
 We produce an abstract user-interface layer that wraps
 around the proof-state as encapsulated in \texttt{REqState}.
@@ -93,7 +93,7 @@ Each of those parts will be further subdivided:
 top-level (\texttt{REqState}),
 and then lower level (.e.g., \texttt{LiveProofs}).
 
-\subsection{Observing Proof-State (\texttt{REqState})}
+\section{Observing Proof-State (\texttt{REqState})}
 
 The first issue to address here is in what form such observations
 should be returned over an abstract interface,
@@ -112,21 +112,21 @@ as a way to get user input for a subsequent modify operation.
 In general we propose that observer functions will support
 a number of return formats.
 
-\subsubsection{Observing Settings}
+\subsection{Observing Settings}
 
 \begin{code}
 observeSettings :: REqState -> String
 observeSettings reqs = showSettings $ settings reqs
 \end{code}
 
-\subsubsection{Observing Current Logic}
+\subsection{Observing Current Logic}
 
 \begin{code}
 observeSig :: REqState -> String
 observeSig reqs = showLogic $ reqs
 \end{code}
 
-\subsubsection{Observing Theories}
+\subsection{Observing Theories}
 
 \begin{code}
 observeTheories :: REqState -> String
@@ -140,7 +140,7 @@ observeTheoryNames reqs
     thnames = intercalate " ; " $ map thName $ getAllTheories $ theories reqs
 \end{code}
 
-\subsubsection{Observing Laws (and Conjectures)}
+\subsection{Observing Laws (and Conjectures)}
 
 \begin{code}
 observeLaws :: REqState -> [String] -> String
@@ -156,7 +156,7 @@ observeLaws reqs _
         nd = (trTerm 0, trSideCond)
 \end{code}
 
-\subsubsection{Observing Known Names}
+\subsection{Observing Known Names}
 
 \begin{code}
 observeKnowns :: REqState -> [String] -> String
@@ -168,7 +168,7 @@ observeKnowns reqs _
 
 
 
-\subsubsection{Observing Current Theory}
+\subsection{Observing Current Theory}
 
 \begin{code}
 observeCurrTheory :: REqState -> String
@@ -178,7 +178,7 @@ observeCurrTheory reqs
      Just thry  ->  showTheoryLong (trTerm 0, trSideCond) thry
 \end{code}
 
-\subsubsection{Observing Current Conjectures}
+\subsection{Observing Current Conjectures}
 
 \begin{code}
 observeCurrConj :: REqState -> [String] -> String
@@ -192,7 +192,7 @@ observeCurrConj reqs _
       Just thry  ->  showNmdAssns (trTerm 0, trSideCond) $ conjs thry
 \end{code}
 
-\subsubsection{Observing Live Proofs}
+\subsection{Observing Live Proofs}
 
 \begin{code}
 observeLiveProofs :: REqState -> String
@@ -200,7 +200,7 @@ observeLiveProofs reqs = showLiveProofs $ liveProofs reqs
 \end{code}
 
 
-\subsubsection{Observing Completed Proofs}
+\subsection{Observing Completed Proofs}
 
 \begin{code}
 observeCompleteProofs :: [String] -> REqState -> String
@@ -214,9 +214,9 @@ observeCompleteProofs args reqs
       Just thry  ->  showProofs args $ proofs thry
 \end{code}
 
-\subsection{Modifying Proof-State (\texttt{REqState})}
+\section{Modifying Proof-State (\texttt{REqState})}
 
-\subsubsection{Modifying Settings}
+\subsection{Modifying Settings}
 
 \begin{code}
 modifySettings :: MonadFail m => [String] -> REqState -> m REqState
@@ -227,7 +227,7 @@ modifySettings [name,value] reqs
 modifySettings args reqs = fail "Expected setting short name and value"
 \end{code}
 
-\subsubsection{Setting Current Theory}
+\subsection{Setting Current Theory}
 
 \begin{code}
 setCurrentTheory :: MonadFail m => String -> REqState -> m REqState
@@ -237,7 +237,7 @@ setCurrentTheory thnm reqs
       Just _   ->  return ( changed $ currTheory_ thnm reqs)
 \end{code}
 
-\subsubsection{Adding a new conjecture}
+\subsection{Adding a new conjecture}
 
 Easy, so long as we check for name clashes.
 \begin{code}
@@ -251,7 +251,7 @@ newConjecture thnm nasn reqs
                              $ theories__ (replaceTheory' thry') $ reqs
 \end{code}
 
-\subsubsection{Assuming Conjectures}
+\subsection{Assuming Conjectures}
 
 \begin{code}
 assumeConjecture :: MonadFail m => String -> String -> REqState -> m REqState
@@ -268,7 +268,7 @@ assumeConjecture thnm whichC reqs
   where thys = theories reqs
 \end{code}
 
-\subsubsection{Demoting Laws}
+\subsection{Demoting Laws}
 
 \begin{code}
 demoteLaw :: MonadFail m => String -> String -> REqState -> m REqState
@@ -281,7 +281,7 @@ demoteLaw thnm whichL reqs
 \end{code}
 
 
-\subsubsection{Classifying Laws}
+\subsection{Classifying Laws}
 
 \begin{code}
 findLaw :: MonadFail m => Theory -> String -> m [Law]
@@ -313,9 +313,9 @@ classifyLaw thnm whichL reqs
 \end{code}
 
 
-\subsubsection{Demoting Laws}
+\subsection{Demoting Laws}
 
-\subsubsection{Starting a Proof}
+\subsection{Starting a Proof}
 
 This is not a single abstract UI call,
 but rather a series of calls, with all but the last
@@ -357,7 +357,7 @@ newProof2 (nm,asn) strats six reqs
 \end{code}
 
 \newpage
-\subsection{Removing Bound Variable ``Shadowing''}
+\section{Removing Bound Variable ``Shadowing''}
 
 \textbf{Note:}
 \textit{
@@ -401,7 +401,7 @@ shadowFreeSub sc bvs (Substn es _)
                              =  all (shadowFree' sc bvs) $ map snd $ S.toList es
 \end{code}
 
-\subsubsection{Resuming a Proof}
+\subsection{Resuming a Proof}
 
 \begin{code}
 resumeProof :: MonadFail m => Int -> REqState -> m LiveProof
@@ -414,7 +414,7 @@ resumeProof i reqs
                  else fail "No such live proof."
 \end{code}
 
-\subsubsection{Abandoning a Proof}
+\subsection{Abandoning a Proof}
 
 \begin{code}
 abandonProof :: REqState -> LiveProof -> REqState
@@ -423,7 +423,7 @@ abandonProof reqs liveProof
   where del = M.delete (conjThName liveProof,conjName liveProof)
 \end{code}
 
-\subsubsection{Saving a Proof}
+\subsection{Saving a Proof}
 
 \begin{code}
 saveProof :: REqState -> LiveProof -> REqState
@@ -432,7 +432,7 @@ saveProof reqs liveProof
   where upd = M.insert (conjThName liveProof,conjName liveProof) liveProof
 \end{code}
 
-\subsubsection{Completing a Proof}
+\subsection{Completing a Proof}
 
 \begin{code}
 completeProof :: REqState -> LiveProof -> REqState
@@ -447,9 +447,9 @@ completeProof reqs liveProof
         upgrade = upgradeConj2Law thnm cjnm
 \end{code}
 
-\subsection{Modifying Proof-State (\texttt{LiveProofs})}
+\section{Modifying Proof-State (\texttt{LiveProofs})}
 
-\subsubsection{Moving Focus Down}
+\subsection{Moving Focus Down}
 
 \begin{code}
 moveFocusDown :: MonadFail m => Int -> LiveProof -> m LiveProof
@@ -465,7 +465,7 @@ moveFocusDown i liveProof
 
 \end{code}
 
-\subsubsection{Moving Focus Up}
+\subsection{Moving Focus Up}
 
 \begin{code}
 moveFocusUp :: MonadFail m => LiveProof -> m LiveProof
@@ -480,7 +480,7 @@ moveFocusUp liveProof
 
 \end{code}
 
-\subsubsection{Switching Consequent Focus}
+\subsection{Switching Consequent Focus}
 
 \begin{code}
 switchConsequentFocus :: MonadFail m => LiveProof -> m LiveProof
@@ -499,7 +499,7 @@ switchConsequentFocus liveProof
 \end{code}
 
 
-\subsubsection{Focus into Hypotheses}
+\subsection{Focus into Hypotheses}
 
 \begin{code}
 moveFocusToHypothesis :: MonadFail m => Int -> LiveProof -> m LiveProof
@@ -521,7 +521,7 @@ moveFocusToHypothesis i liveProof
 \end{code}
 
 \newpage
-\subsubsection{Return Focus from Hypotheses}
+\subsection{Return Focus from Hypotheses}
 
 \begin{code}
 moveFocusFromHypothesis :: MonadFail m => LiveProof -> m LiveProof
@@ -542,7 +542,7 @@ moveFocusFromHypothesis liveProof
         else fail "Not in hypotheses"
 \end{code}
 
-\subsubsection{Match Laws against Focus}
+\subsection{Match Laws against Focus}
 
 First, matching all laws.
 \begin{code}
@@ -586,7 +586,7 @@ tryFocusAgainst lawnm parts liveProof
 \end{code}
 
 \newpage
-\subsubsection{Apply Match to Focus}
+\subsection{Apply Match to Focus}
 
 We have a matchLawCommand-phase approach here:
 \begin{itemize}
@@ -736,7 +736,7 @@ extendGoalSCCoverage ss lvvls (atmSCs,_)
 \end{code}
 
 \newpage
-\subsubsection{Apply SAT Solver to Focus}
+\subsection{Apply SAT Solver to Focus}
 
 \begin{code}
 applySAT :: (Monad m, MonadFail m) => LiveProof -> m LiveProof
@@ -751,7 +751,7 @@ applySAT liveproof
 \end{code}
 
 \newpage
-\subsubsection{Normalise Quantifiers}
+\subsection{Normalise Quantifiers}
 
 \textbf{Deprecated. Should be done under the hood as required}
 
@@ -775,7 +775,7 @@ normQuantFocus thrys liveProof
 \end{code}
 
 
-\subsubsection{Simplify Nested Quantifiers Substitution}
+\subsection{Simplify Nested Quantifiers Substitution}
 
 \begin{code}
 nestSimpFocus :: MonadFail m => Theories -> LiveProof -> m LiveProof
@@ -794,12 +794,12 @@ nestSimpFocus thrys liveProof
         _      -> fail "nesting simplify only for nested (similar) quantifiers"
 \end{code}
 
-\subsubsection{Reverse Substitution}
+\subsection{Reverse Substitution}
 
 This could be done by `substituteFocus` below
 
 \newpage
-\subsubsection{Perform Substitution}
+\subsection{Perform Substitution}
 
 \begin{code}
 substituteFocus :: (MonadFail m, Alternative m)
@@ -828,7 +828,7 @@ substituteFocus thrys liveProof
 \end{code}
 
 
-\subsubsection{Observing Laws in Scope}
+\subsection{Observing Laws in Scope}
 
 \begin{code}
 observeLawsInScope :: LiveProof -> String
@@ -838,7 +838,7 @@ observeLawsInScope liveProof
   where hdr = "\n---\n"
 \end{code}
 
-\subsubsection{Observing Knowns Names in Scope}
+\subsection{Observing Knowns Names in Scope}
 
 \begin{code}
 observeKnownsInScope :: LiveProof -> String
@@ -850,7 +850,7 @@ observeKnownsInScope liveProof
 \end{code}
 
 
-\subsubsection{Flattening and Grouping Associative Operators}
+\subsection{Flattening and Grouping Associative Operators}
 
 \begin{code}
 flattenAssociative :: MonadFail m => Identifier -> LiveProof -> m LiveProof
@@ -882,7 +882,7 @@ groupAssociative opI gs liveProof
                             $ liveProof )
 \end{code}
 
-\subsubsection{Stepping back a proof step.}
+\subsection{Stepping back a proof step.}
 
 \begin{code}
 stepBack  :: MonadFail m => Int -> LiveProof -> m LiveProof
@@ -891,7 +891,7 @@ stepBack i liveProof
 \end{code}
 
 \newpage
-\subsubsection{Law Instantiation}
+\subsection{Law Instantiation}
 
 \textbf{Note: }\textit{In fact, given that any predicate $P$
 can be replaced by $P\land\true$, we can in fact do the instantiation
@@ -980,7 +980,7 @@ tryAlphaEquiv liveProof
 
 
 \newpage
-\subsubsection{Clone Hypotheses}
+\subsection{Clone Hypotheses}
 
 This should only be done in an assumption strategy
 that reduces all of the consequent.

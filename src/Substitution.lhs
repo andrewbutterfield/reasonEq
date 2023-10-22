@@ -482,7 +482,7 @@ substitute sctx sub ct@(Cons tk subable i ts)
   | otherwise  =     return $ Sub tk ct sub
 \end{code}
 
-\newpage
+
 \subsection{Binding-Term Substitution}
 
 Given $(\bb n {x^+} t) \ss {} {v^n} {t^n}$,
@@ -528,7 +528,7 @@ substitute sctx sub lt@(Lam tk i vl tm)
 \newpage
 \subsection{Substitution-Term Substitution}
 
-\subsubsection{Assigment Substitution}
+\subsubsection{Assignment Substitution}
 
 Given that we use the \texttt{Sub} term to represent assignment,
 we need to treat such seperately, noting that it is n.s.::
@@ -1029,6 +1029,21 @@ $$
  (e[F/X])[G/Y]  =  e[F[G/Y],G'/X,Y'] 
 $$
 where $[G'/Y']$ is $[G/Y]$ restricted to elements of $Y$ not in $X$.
+
+\paragraph{Gotcha!}
+\begin{verbatim}
+With all three observables
+(O,O_1,O')[O_1/O']  =  (O,O_1,O_1)
+(O,O_1,O_1)[O'/O_1]  = (O,O',O')
+(O,O_1,O')([O_1/O'];[O'/O_1]) = (O,O',O')
+O -> 0 ; O_1 -> O' ; O' -> O' which simplifies to O_1 -> O
+
+However, if  O,O' covers e then there is no O_1
+(O,,O')[O_1/O']  =  (O,,O_1)
+(O,,O_1)[O'/O_1]  = (O,,O')
+(O,,O')([O_1/O'];[O'/O_1]) = (O,,O') which simpifies to the null subst.
+\end{verbatim}
+We need to post-process the composed substitution using the side-condition!
 \begin{code}
 substComp :: MonadFail m
           => SubContext

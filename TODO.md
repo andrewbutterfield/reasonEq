@@ -15,6 +15,22 @@ Using law `non_subst` it becomes `R[O$_1/O$']`.
 
 BOTH FAIL IN DIFFERENT WAYS.
 
+`s` command fails because it does not take account 
+of side-condition `O$,O$'⊇R`.
+```
+With all three observables
+(O,O_1,O')[O_1/O']  =  (O,O_1,O_1)
+(O,O_1,O_1)[O'/O_1]  = (O,O',O')
+(O,O_1,O')([O_1/O'];[O'/O_1]) = (O,O',O')
+O -> 0 ; O_1 -> O' ; O' -> O'   which simplifies to   O_1 -> O
+
+However, if  O,O' covers e then there is no O_1
+(O,,O')[O_1/O']  =  (O,,O_1)
+(O,,O_1)[O'/O_1]  = (O,,O')
+(O,,O')([O_1/O'];[O'/O_1]) = (O,,O')
+```
+Solution(?) use s.c. at end to rule-out O_1 -> O'
+
 ## Non-Urgent
 
 ### Idea

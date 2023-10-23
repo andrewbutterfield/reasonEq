@@ -320,7 +320,7 @@ theFreeVars (fvs,diffs) = fvs `S.union` ( S.unions $ map fst diffs )
 
 \begin{eqnarray*}
    \fv(\kk k)  &\defs&  \emptyset
-\\ \fv(\vv v)  &\defs&  \{\vv v\} \quad \mbox{provided $v$ is not textual}
+\\ \fv(\vv v)  &\defs&  \{\vv v\} \quad \mbox{$v$ is non-textual obs. var.}
 \\ \fv(\cc n {ts}) &\defs& \bigcup_{t \in ts} \fv(t)
 \\ \fv(\bb n {v^+} t) &\defs& \fv(t)\setminus{v^+}
 \\ \fv(\ll n {v^+} t) &\defs& \fv(t)\setminus{v^+}
@@ -335,7 +335,7 @@ theFreeVars (fvs,diffs) = fvs `S.union` ( S.unions $ map fst diffs )
 notTextualLV (LVbl (Vbl _ _ vw) _ _) = vw /= Textual
 
 freeVars :: Term -> FreeVars
-freeVars (Var tk v@(Vbl _ _ vw))
+freeVars (Var tk v@(Vbl _ ObsV vw))
   | vw /= Textual                   =  injVarSet $ S.singleton $ StdVar v
 freeVars (Cons tk sb n ts)          =  mrgFreeVarList $ map freeVars ts
 freeVars (Bnd tk n vs tm)           =  subVarSet (freeVars tm) vs

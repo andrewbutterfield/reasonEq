@@ -265,6 +265,8 @@ substitute sctx sub@(Substn ts lvs) vrt@(Var tk v@(Vbl i ObsV whn))
 
 \subsubsection{Term-Variable Term Substitution}
 
+This is the only case where we look at side-conditions.
+
 \textbf{Notes:} typical side-conditions found are as follows:
 \begin{mathpar}
  x\notin P \and y \notin e \and  fresh:O_0
@@ -312,8 +314,8 @@ Remember, here $P$ is static while $e$ is dynamic.
 \end{eqnarray*}
 \begin{code}
 substitute sctx sub@(Substn ts lvs) vrt@(Var tk v)  -- v is not ObsV
-  = (subVarLookup sub v) <|> (pure $ Sub tk vrt sub)
-  -- we need a helper that looks at s.c.s, lvs and v
+  = do resultTerm <- ((subVarLookup sub v) <|> (pure $ Sub tk vrt sub))
+       return $ sctxSimplify sctx resultTerm
 \end{code}
 
 % There is also a special case of $P_d[\dots]$ when
@@ -505,7 +507,7 @@ substitute sctx sub bt@(Bnd tk i vs tm)
   | otherwise 
     = do  alpha <- captureAvoidance vs tm effsub
           let vs' = S.fromList $ quantsSubst alpha $ S.toList vs
-          asub <- substComp sctx alpha effsub --- succeeds as alpha is var-only
+          asub <- substComp alpha effsub --- succeeds as alpha is var-only
           tm' <- substitute sctx asub tm
           bnd tk i vs' tm'
   where
@@ -517,7 +519,7 @@ substitute sctx sub lt@(Lam tk i vl tm)
   | otherwise 
     = do  alpha <- captureAvoidance vs tm effsub
           let vl' = quantsSubst alpha vl
-          asub <- substComp sctx alpha effsub --- succeeds as alpha is var-only
+          asub <- substComp alpha effsub --- succeeds as alpha is var-only
           tm' <- substitute sctx asub tm
           lam tk i vl' tm'
   where
@@ -550,7 +552,7 @@ substitute sctx sub bt@(Sub tk _ _)
 \end{eqnarray*}
 \begin{code}
 substitute sctx sub bt@(Sub tk tm s)
-  = case substComp sctx s sub of
+  = case substComp s sub of
      Just sub' -> substitute sctx sub' tm
      Nothing   -> return $ Sub tk bt sub
 \end{code}
@@ -577,6 +579,65 @@ substitute sctx sub tm = return tm
 
 \newpage 
 \subsection{Helper Functions}
+
+\subsubsection{Side-condition Simplification}
+
+Here we use side-condition information to simplify substitutions.
+We drill down to the atomic side-condition, 
+if any, 
+that mentions the term-variable.
+\begin{code}
+sctxSimplify :: SubContext -> Term -> Term
+sctxSimplify sctx (Sub tk vrt@(Var _ v) sub)  -- P[../..]
+  = Sub tk vrt $ scSimplify (scSC sctx) (StdVar v) sub
+sctxSimplify _ tm = tm
+
+scSimplify :: SideCond -> GenVar -> Substn -> Substn
+scSimplify sc gv sub 
+  = case findGenVar gv sc of
+      Nothing   ->  sub
+      Just asc  ->  ascSimplify asc gv sub
+\end{code}
+
+We have the following situation $P[T/V$] 
+and we want to know if $V$ can occur in $P$.
+We have a side-condition relating $P$ to $S$,
+so we need ask if $V$ is in $S$ or not.
+If $V \notin P$ then we can remove it from the substition.
+We get the following combinations:
+$$
+\begin{array}{|c|c|c|}
+\hline
+   P \disj S & V \in S & V \notin P
+\\\hline
+   P \disj S & V \notin S & ?
+\\\hline
+   P \subseteq S & V \in S & ?
+\\\hline
+   P \subseteq S & V \notin S & V \notin P
+\\\hline
+\end{array}
+$$
+We have to check this for all $T/V$ pairs in the substitution.
+\begin{code}
+ascSimplify :: AtmSideCond -> GenVar -> Substn -> Substn
+ascSimplify (Disjoint  u _ vs) gv sub  =  targetsCheck not vs sub
+ascSimplify (CoveredBy u _ vs) gv sub  =  targetsCheck id  vs sub
+
+targetsCheck :: (Bool -> Bool) -> VarSet -> Substn -> Substn
+targetsCheck keep vs (Substn ts lvs)
+  = let tl'  = filter (varTargetsCheck  keep vs) $ S.toList ts
+        lvl' = filter (lvarTargetsCheck keep vs) $ S.toList lvs
+    in jSubstn tl' lvl'
+
+varTargetsCheck keep vs (tv,_) = keep $ (StdVar tv `S.member` vs)
+-- we should also check if tv can be in list-vars in vs
+-- this would mean keeping the top-level SC around to check such membership
+-- to be implemented if required
+
+lvarTargetsCheck keep vs (tlv,_) = keep $ (LstVar tlv `S.member` vs)
+-- see comments above
+\end{code}
 
 \subsubsection{Variable/List-Variable Scope Analysis}
 
@@ -615,8 +676,8 @@ computeEffSubst vs (Substn ts lvs)
     lvNotin vs (lv,_) =  not (LstVar lv `S.member` vs)
 \end{code}
 
+\newpage
 \subsubsection{Capture Avoidance}
-
 
 Capture avoidance produces a substitution of variables for variables,
 so that bound variables can be $\alpha$-renamed so they are not 
@@ -1030,28 +1091,15 @@ $$
 $$
 where $[G'/Y']$ is $[G/Y]$ restricted to elements of $Y$ not in $X$.
 
-\paragraph{Gotcha!}
-\begin{verbatim}
-With all three observables
-(O,O_1,O')[O_1/O']  =  (O,O_1,O_1)
-(O,O_1,O_1)[O'/O_1]  = (O,O',O')
-(O,O_1,O')([O_1/O'];[O'/O_1]) = (O,O',O')
-O -> 0 ; O_1 -> O' ; O' -> O' which simplifies to O_1 -> O
-
-However, if  O,O' covers e then there is no O_1
-(O,,O')[O_1/O']  =  (O,,O_1)
-(O,,O_1)[O'/O_1]  = (O,,O')
-(O,,O')([O_1/O'];[O'/O_1]) = (O,,O') which simplifies to the null subst.
-\end{verbatim}
-We need to post-process the composed substitution using the side-conditions!
-However, this needs to be done at the call-site, and not here.
+Note that side-conditions play no role here. 
+Such considerations should be applied 
+after \texttt{substComp} has (fully) returned.
 \begin{code}
 substComp :: MonadFail m
-          => SubContext
-          -> Substn  -- 1st substitution performed
+          => Substn  -- 1st substitution performed
           -> Substn  -- 2nd substitution performed
           -> m Substn
-substComp sctxt (Substn ts1 lvs1) sub2@(Substn ts2 lvs2)
+substComp (Substn ts1 lvs1) sub2@(Substn ts2 lvs2)
   = let 
       -- compute G',Y'
       tl1 = S.toList ts1
@@ -1063,23 +1111,23 @@ substComp sctxt (Substn ts1 lvs1) sub2@(Substn ts2 lvs2)
       lvl2 = S.toList lvs2
       lvl2'  = filter (notTargetedIn lv1) lvl2 -- G'/Y' for list-vars
       -- compute  F[G/Y]
-      tl1'  = mapsnd (applySub sctxt sub2) tl1
-      lvl1' = mapsnd (applyLSub sctxt tl2 lvl2) lvl1
+      tl1'  = mapsnd (applySub sub2) tl1
+      lvl1' = mapsnd (applyLSub tl2 lvl2) lvl1
       -- compute  [ F[G/Y],G'  /  X,Y' ]
     in substn (tl1'++tl2') (lvl1'++lvl2')
 
 notTargetedIn :: Eq t => [t] -> (t,r) -> Bool
 notTargetedIn ts (t,_) = not (t `elem` ts)
 
-applySub :: SubContext -> Substn -> Term -> Term
-applySub sctxt sub t  
-  =  case substitute sctxt sub t of
+applySub ::  Substn -> Term -> Term
+applySub sub t  
+  =  case substitute subContext0 sub t of
        Nothing  ->  Sub (termkind t) t sub
        Just t'  ->  t
 
-applyLSub :: SubContext -> [(Variable,Term)] -> [(ListVar,ListVar)] 
+applyLSub :: [(Variable,Term)] -> [(ListVar,ListVar)] 
           -> ListVar -> ListVar
-applyLSub sctxt ts lvs lv
+applyLSub ts lvs lv
   -- ignore var-term subst for now
   = case alookup lv lvs of
       Nothing   ->  lv
@@ -1116,7 +1164,7 @@ A default sub-context:
 \begin{code}
 subctxt = SCtxt scTrue
 dosub tm sub = fromJust $ substitute subctxt sub tm
-subcomp sub1 sub2 = fromJust $ substComp subctxt sub1 sub2
+subcomp sub1 sub2 = fromJust $ substComp sub1 sub2
 \end{code}
 A collection of standard constants:
 \begin{code}

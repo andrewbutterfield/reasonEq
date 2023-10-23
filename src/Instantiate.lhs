@@ -478,6 +478,8 @@ For atomic side-conditions:
 \\ \beta.(C \supseteq T)  &=& \beta.C \supseteq \fv(\beta(T))
 \\ \beta(pre \supseteq T) &=& pre \supseteq \fv(\beta(T))
 \end{eqnarray*}
+\textbf{Theory \texttt{UTPBase} breaks the following:}
+\emph{
 For now, we assume that $\beta.C$, $\beta.D$
 never result in terms,
 and hence have no explicit $F_i\setminus B_i$ components.
@@ -489,6 +491,8 @@ side-conditions.
 The most sensible thing to do is to compute $\fv(\beta(T))$,
 and then use $\beta.C$ or $\beta.D$
 to try to eliminate any use of set difference.
+}
+\textbf{Need a full re-think!!!}
 \begin{code}
 instantiateSC insctxt bind (ascs,freshvs)
   = do ascss' <-sequence $ map (instantiateASC insctxt bind) ascs

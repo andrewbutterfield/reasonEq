@@ -4,8 +4,6 @@
 
 ###
 
-NEED TO CHECK ALL USES OF `s` IN OTHER PROOFS
-
 Still issues with law `non_subst :: P[e$/x$]  ≡  P  x$∉P` is broken.
 
 Substitution `(R[O$_1/O$'])[O$'/O$_1]` should result in `R[O$'/O$']'.
@@ -20,6 +18,17 @@ R[O$_1/O$']    O$,O$'⊇II, O$,O$'⊇R
 Focus = []
 ```
 
+**Issue is here - basically `instantiateASC` is broken.**
+```
+instantiateASC insctxt bind asc
+  = do (vsCD,diffs) <- instVarSet insctxt bind $ pdbg "ascVSet" $ ascVSet asc
+       if null diffs
+         then instASCVariant insctxt (pdbg "vsCD" vsCD) (pdbg "fvsT" fvsT) asc
+         else fail "instantiateASC: explicit diffs in var-set not handled."
+  where
+     fvsT = instantiateGVar insctxt bind $ ascGVar asc
+```
+Instantiate GVAR should return a term
 
 
 

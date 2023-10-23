@@ -1,4 +1,4 @@
-\section{Instantiate}
+\chapter{Instantiate}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2018-2022
 
@@ -35,7 +35,7 @@ import TestRendering
 import Debugger
 \end{code}
 
-\subsection{Introduction}
+\section{Introduction}
 
 We take a pattern term and a binding
 and produce a re-constructed candidate term,
@@ -70,7 +70,7 @@ Given a variable $v$ we use $\beta(v)$ to denote a binding lookup.
    &=& \bigoplus(p)\seqof{\lst l^1_i,\dots,\lst l^a_i}
 \end{eqnarray*}
 
-\subsubsection{Instantiation Contexts}
+\subsection{Instantiation Contexts}
 
 All instantiations need a context argument that describes the following
 aspects of the current state of a proof:
@@ -88,7 +88,7 @@ mkInsCtxt = ICtxt
 
 
 \newpage
-\subsection{Instantiating Term with a (Total) Binding}
+\section{Instantiating Term with a (Total) Binding}
 
 Here we require every free variable in the term to be also in the binding.
 \begin{code}
@@ -291,7 +291,7 @@ checkAndGroup a sstvl (lvts:lvtss)
 
 
 \newpage
-\paragraph{Instantiating Substitutions}
+\subsubsection{Instantiating Substitutions}
 
 The \texttt{Substn} constructor is used to represent substitutions,
 and assignments.
@@ -378,7 +378,7 @@ fromGVarToLVar (LstVar lv:vl)
 \end{code}
 
 \newpage
-\paragraph{Instantiate Variable Collections}
+\subsubsection{Instantiate Variable Collections}
 
 The following code needs updating to handle free-variables properly.
 
@@ -462,7 +462,7 @@ instLGVar insctxt binding gv@(LstVar lv)
 \end{code}
 
 \newpage
-\subsection{Side-Condition Instantiation (Total)}
+\section{Side-Condition Instantiation (Total)}
 
 Doing it again, with side-conditions.
 Bascially we drill down to the atomic side-conditions,
@@ -521,7 +521,7 @@ instASCVariant insctxt vsC fvT (CoveredBy _ _ _)  =  instCovers   insctxt vsC fv
 \end{code}
 
 
-\subsubsection{Disjointedness}
+\subsection{Disjointedness}
 
 \begin{eqnarray*}
    \beta.(D \disj  T) &=& \beta.D \disj \fv(\beta(T))
@@ -542,7 +542,7 @@ instDisjoint insctxt vsD (fF,fLessBs)
     f2 vsD (vsF,vsB) = map (f1 (vsD S.\\ vsB)) (S.toList vsF)
 \end{code}
 
-\subsubsection{Covering}
+\subsection{Covering}
 
 \begin{eqnarray*}
    \beta.(C \supseteq T)
@@ -564,7 +564,7 @@ instCovers insctxt vsC (fF,fLessBs)
     f2 vsC (vsF,vsB) = map (f1 (vsC `S.union` vsB)) (S.toList vsF)
 \end{code}
 
-\subsubsection{Side-condition Variable Instantiation}
+\subsection{Side-condition Variable Instantiation}
 
 Instantiate a (std./list)-variable either according to the binding,
 or by itself if not bound:

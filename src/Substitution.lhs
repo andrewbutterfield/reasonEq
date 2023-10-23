@@ -1041,9 +1041,10 @@ O -> 0 ; O_1 -> O' ; O' -> O' which simplifies to O_1 -> O
 However, if  O,O' covers e then there is no O_1
 (O,,O')[O_1/O']  =  (O,,O_1)
 (O,,O_1)[O'/O_1]  = (O,,O')
-(O,,O')([O_1/O'];[O'/O_1]) = (O,,O') which simpifies to the null subst.
+(O,,O')([O_1/O'];[O'/O_1]) = (O,,O') which simplifies to the null subst.
 \end{verbatim}
-We need to post-process the composed substitution using the side-condition!
+We need to post-process the composed substitution using the side-conditions!
+However, this needs to be done at the call-site, and not here.
 \begin{code}
 substComp :: MonadFail m
           => SubContext

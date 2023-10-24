@@ -652,6 +652,7 @@ deduceFreeVars insctxt t
 \begin{code}
 scExpand :: SideCond -> GenVar -> FreeVars
 scExpand sc v@(StdVar (Vbl _ ObsV _)) = injVarSet $ S.singleton v
+scExpand sc gv = injVarSet $ S.singleton gv -- need more here !!
 \end{code}
 
 \begin{eqnarray*}

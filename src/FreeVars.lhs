@@ -8,6 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module FreeVars
 ( FreeVars
+, noFreevars, injVarSet
 , freeVars
 , inFreeVars, theFreeVars
 , mrgFreeVars, mrgFreeVarList
@@ -71,23 +72,29 @@ where $B$ denotes a set of variable bindings.
 In effect we have a small set expression language
 that has explicit enumerations, symbolic variables,
 with set union and difference.
-Given the following two set laws,
+Consider the following two set laws:
 \begin{eqnarray*}
    (F_1 \cup F_2) \setminus B      &=& (F_1\setminus B) \cup (F_2 \setminus B)
 \\ (F \setminus B_1) \setminus B_2 &=& F \setminus (B_1 \cup B_2)
 \end{eqnarray*}
+The first law allows us to breakdown $F\setminus B$, 
+with $ F = \setof{v_1,\dots,v_n}$,
+into the form $\setof{v_1}\setminus B \cup \dots \cup \setof{v_n}\setminus B$.
+The second allows us to group together 
+all the $B_i$ associated with any given $F$.
 \def\FVE{\textit{FVE}}
-we can represent a free-variable set-expression (\FVE) as an enumeration,
+This means that we can represent a free-variable set-expression (\FVE) 
+as an enumeration,
 paired with a collection of non-trivial set difference terms,
-each a pair of enumerations.
+each a pair of enumerations, the first element of which is a singleton:
 \[
    \bigcup
    \left(
    \setof{\vv v\dots}
    ,
-   \setof{(\setof{\vv v,\dots}\circleddash\setof{\vv v,\dots})
+   \setof{(\vv v \circleddash\setof{\vv v,\dots})
           ,\dots,
-          (\setof{\vv v,\dots}\circleddash\setof{\vv v,\dots})}
+          (\vv v \circleddash\setof{\vv v,\dots})}
    \right)
 \]
 Here we use $\circleddash$ to denote an intent to perform set subtraction.
@@ -99,20 +106,24 @@ We need to consider how to tidy-up/``normalise'' these
 structures.
 For example:
 \begin{eqnarray*}
-  &&  \bigcup(F,\setof{\dots,(F_i\circleddash B_i),\dots})
-\\&=& \bigcup(F,\setof{\dots,(F_i\circleddash B_i)\setminus F,\dots}),
+  &&  \bigcup(F,\setof{\dots,(e_i\circleddash B_i),\dots})
+\\&=& \bigcup(F,\setof{\dots,(e_i\circleddash B_i)\setminus F,\dots}),
       \qquad \because (F \cup A) = (F \cup (A \setminus F))
-\\&=& \bigcup(F,\setof{\dots,(F_i\circleddash(B_i \cup F)),\dots})
-\\&=& \bigcup(F,\setof{\dots,(F_i\setminus F)\circleddash B_i),\dots})
-\\&=& \bigcup(F,\setof{\dots,(F_i\setminus F)\circleddash (B_i\setminus F),\dots})
+\\&=& \bigcup(F,\setof{\dots,(e_i\circleddash(B_i \cup F)),\dots})
+\\&=& \bigcup(F,\setof{\dots,(e_i\setminus F)\circleddash B_i),\dots})
+\\&=& \bigcup(F,\setof{\dots,(e_i\setminus F)\circleddash (B_i\setminus F),\dots})
 \end{eqnarray*}
 Bascially, there is no need for any element in $F$
-to appear in any $F_i$ or $B_i$,
+to appear in any $\setof{e_i}$ or $B_i$,
 as its possible removal by $B_i$ has no effect
 on its presence as a free variable.
+So we have the following structure: $(F,\setof{\dots,(e_i,B_i),\dots})$
+where all $e_i$ are distinct non.-obs. standard variables,
+and for all $i$, we have $F \disj \setof{e_i}\cup B_i$.
+
 
 \begin{code}
-type FreeVars = (VarSet, [(VarSet,VarSet)])
+type FreeVars = (VarSet, [(GenVar,VarSet)])
 \end{code}
 
 The empty free-variable set:
@@ -131,8 +142,6 @@ injVarSet :: VarSet -> FreeVars
 injVarSet vs = (vs,[])
 \end{code}
 
-
-\newpage
 Lets start with the simplest general case: $F \setminus B$ for arbitrary $F$ and $B$:
 
 All possibilities are covered by this (2nd-order) example:
@@ -152,6 +161,12 @@ All possibilities are covered by this (2nd-order) example:
                \setof{\vv x, \vv z} )})
       \qquad \because (F \setminus B) = (F \setminus (B \cap F)),
                \textrm{ and } \vv z \in \vv f, \vv Q \textrm{ is poss.}
+\\&=& ( \setof{\vv y}
+      ,
+      \setof{ ( \vv f, \setof{\vv x, \vv z} )
+              ,
+               ( \vv Q, \setof{\vv x, \vv z} )
+            })
 \end{eqnarray*}
 In the more common first-order setting we have:
 \begin{eqnarray*}
@@ -163,7 +178,15 @@ In the more common first-order setting we have:
       \setof{( \setof{\vv e, \vv f, \vv P, \vv Q}
                \circleddash
                \setof{\vv x, \vv z} )})
-      \qquad \vv z \in \vv e, \vv f, \vv P, \vv Q\textrm{ is poss.}
+      \qquad \vv x,\vv z \in \vv e, \vv f, \vv P, \vv Q\textrm{ is poss.}
+\\&=& ( \setof{\vv y}
+      ,
+      \setof{ 
+        (\vv e, \setof{\vv x, \vv z})
+      , (\vv f, \setof{\vv x, \vv z})
+      , (\vv P, \setof{\vv x, \vv z})
+      , (\vv Q, \setof{\vv x, \vv z})
+      })
 \end{eqnarray*}
 
 The treatment of the 2nd-order example is as follows:
@@ -187,6 +210,11 @@ The treatment of the 2nd-order example is as follows:
       \setof{\vv x, \vv z} )
 \\&=& ( \setof{\vv y}
       , \setof{( \setof{\vv f, \vv Q}\circleddash \setof{\vv x, \vv z} )} )
+\\&=& ( \setof{\vv y}
+      , \setof{
+          (\vv f, \setof{\vv x, \vv z})
+        , (\vv Q, \setof{\vv x, \vv z})
+        } )
 \end{eqnarray*}
 Here we use $\oplus$ to denote a binary operator that returns the ``union''
 of two free-variable sets (details to follow).
@@ -229,7 +257,7 @@ genFreeVars :: VarSet -> VarSet -> FreeVars
 genFreeVars fvs bvs
   | S.null b'  =  (v `S.union` f, [])
   | S.null f'  =  (v, [])
-  | otherwise  =  (v,[(f',b')])
+  | otherwise  =  (v, map (subfv b') $ S.toList f')
   where
     (xf,tf) = S.partition isObsGVar fvs  -- (Xf |_| Tf)
     (xb,tb) = S.partition isObsGVar bvs  -- (Xb |_| Tb)
@@ -237,6 +265,7 @@ genFreeVars fvs bvs
     f = tf S.\\ tb                       -- F = Tf \Tb
     b' = xb S.\\ v                       -- B' = B \ V  = Xb \ V
     f' = f S.\\ v                        -- F' = F \ V
+    subfv b v = (v,b)
 \end{code}
 
 \newpage
@@ -245,22 +274,27 @@ We will need a way to merge these ``sets'' ($\oplus$),
 and a way to subtract from them ($sub$).
 \begin{eqnarray*}
    \_\oplus\_ &:& \FVE \times \FVE \fun \FVE
-\\ (F_1,D_1) \oplus (F_2,D_2)
+\\ (F,\setof{(e_i,B_i)}) \oplus (G,\setof{f_j,C_j})
    &\defs&
-   (F_1 \cup F_2, rem_{F_2}(D_1) \cup rem_{F_1}(D_2)
+   ( F \cup G
+   , \setof{(e_i\setminus G,B_i\setminus G)} 
+     \cup 
+     \setof{f_j\setminus F,C_j\setminus F}
+   )
+\\ rem_{F} (e,B) &\defs& 
+     \emptyset \cond{e \in F} \setof{(e,B\setminus F)}
 \end{eqnarray*}
 \begin{code}
 mrgFreeVars :: FreeVars -> FreeVars -> FreeVars
 mrgFreeVars (fvs1,diffs1) (fvs2,diffs2)
   =( fvs1 `S.union` fvs2
-   , map (remVarSet fvs2) diffs1 ++ map (remVarSet fvs1) diffs2 )
-\end{code}
-\begin{eqnarray*}
-   rem_{F'} \setof{F\circleddash B} &\defs& \setof{(F\setminus F')\circleddash B}
-\end{eqnarray*}
-\begin{code}
-remVarSet :: VarSet -> (VarSet,VarSet) -> (VarSet,VarSet)
-remVarSet vs (fvs,bvs) = (fvs S.\\ vs, bvs)
+   , catMaybes (map (remVarSet fvs2) diffs1 ++ map (remVarSet fvs1) diffs2) 
+   )
+
+remVarSet :: VarSet -> (GenVar,VarSet) -> Maybe (GenVar,VarSet)
+remVarSet vs (ev,bvs)
+  |  ev `S.member` vs  =  Nothing
+  |  otherwise         =  Just (ev, bvs S.\\ vs)
 \end{code}
 
 We also will want to merge lists of sets:
@@ -272,11 +306,13 @@ mrgFreeVarList = foldl' mrgFreeVars noFreevars
 
 \begin{eqnarray*}
    sub &:& \FVE \times \Set{V} \fun \FVE
-\\ (F,\setof{D_i}) \setminus S
+\\ (F,\setof{(e_i,B_i)}) \setminus S
    &=&
-   (F \ominus S)
-   \oplus
-   (\emptyset, \setof{D_i \oslash S})
+   ( F \setminus S
+   ,
+     \setof{ (e_i,  (B_i \cup S))}
+   )
+\\ &=&  (F \ominus S) \oplus (\emptyset, \setof{(e_i, B_i \cup S)})
 \end{eqnarray*}
 \begin{code}
 subVarSet :: FreeVars -> VarSet -> FreeVars
@@ -287,13 +323,13 @@ subVarSet (fvs, diffs) vs
 \begin{eqnarray*}
    \_\oslash\_
    &:&
-   (\Set{V}\times\Set{V}) \times \Set{V} \fun \Set{V}\times\Set{V}
-\\ (F\circleddash B) \oslash S &\defs& (F \circleddash (B \cup S))
+   (V\times\Set{V}) \times \Set{V} \fun V\times\Set{V}
+\\ (e,B) \oslash S &\defs& (e,(B \cup S))
 \end{eqnarray*}
 \begin{code}
 -- we flip arguments to facilitate mapping
-subMore :: VarSet -> (VarSet,VarSet) -> (VarSet,VarSet)
-subMore vs (fvs,bvs)  =  (fvs,bvs `S.union` vs)
+subMore :: VarSet -> (GenVar,VarSet) -> (GenVar,VarSet)
+subMore vs (ev,bvs)  =  (ev,bvs `S.union` vs)
 \end{code}
 
 Finally, we need a membership test.
@@ -303,12 +339,12 @@ inFreeVars :: GenVar -> FreeVars -> Bool
 inFreeVars gv (fvs,diffs)
   = ( gv `S.member` fvs )
     ||
-    ( any (S.member gv) $ map fst diffs )
+    ( any (== gv) $ map fst diffs )
 \end{code}
 Associated with this is the set of all variables satisfying the above predicate:
 \begin{code}
 theFreeVars :: FreeVars -> VarSet
-theFreeVars (fvs,diffs) = fvs `S.union` ( S.unions $ map fst diffs )
+theFreeVars (fvs,diffs) = fvs `S.union` ( S.fromList $ map fst diffs )
 \end{code}
 
 

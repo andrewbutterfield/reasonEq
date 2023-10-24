@@ -557,21 +557,21 @@ instASCVariant insctxt vsC fvT (CoveredBy _ _ _)  =  instCovers   insctxt vsC fv
 
 \begin{eqnarray*}
    \beta.(D \disj  T) &=& \beta.D \disj \fv(\beta(T))
-\\ &=& \beta.D \disj (F \cup \{F_i\setminus B_i\}_{i \in 1\dots N})
-\\ &=& \beta.D \disj F \land \{\beta.D \disj (F_i\setminus B_i)\}_{i \in 1\dots N}
-\\ &=& \beta.D \disj F \land \{(\beta.D\setminus B_i) \disj F_i\}_{i \in 1\dots N}
+\\ &=& \beta.D \disj (F \cup \{e_i\setminus B_i\}_{i \in 1\dots N})
+\\ &=& \beta.D \disj F \land \{\beta.D \disj (e_i\setminus B_i)\}_{i \in 1\dots N}
+\\ &=& \beta.D \disj F \land \{(\beta.D\setminus B_i) \disj e_i\}_{i \in 1\dots N}
 \end{eqnarray*}
-where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
-$F \disj F_i$, $F \disj B_i$.
+where $\fv(\beta(T)) = F \cup \{e_i\setminus B_i\}_{i \in 1\dots N}$,
+$F \disj e_i$, $F \disj B_i$.
 \begin{code}
 instDisjoint :: MonadFail m => InsContext -> VarSet -> FreeVars -> m [AtmSideCond]
-instDisjoint insctxt vsD (fF,fLessBs)
-  =  return (asc1 ++ concat asc2)
+instDisjoint insctxt vsD (fF,vLessBs)
+  =  return (asc1s ++ asc2s)
   where
-    asc1 = map (f1 vsD) (S.toList fF)
-    asc2 = map (f2 vsD) fLessBs
-    f1 vsD gv = Disjoint NonU gv vsD
-    f2 vsD (vsF,vsB) = map (f1 (vsD S.\\ vsB)) (S.toList vsF)
+    asc1s = map (mkDisj vsD) $ S.toList fF
+    mkDisj vsD gv = Disjoint NonU gv vsD
+    asc2s = map (f2 vsD) vLessBs
+    f2 vsD (evF,vsB) = mkDisj (vsD S.\\ vsB) evF
 \end{code}
 
 \subsection{Covering}
@@ -579,21 +579,21 @@ instDisjoint insctxt vsD (fF,fLessBs)
 \begin{eqnarray*}
    \beta.(C \supseteq T)
    &=& \beta.C \supseteq \fv(\beta(T))
-\\ &=& \beta.C \supseteq (F \cup \{F_i\setminus B_i\}_{i \in 1\dots N})
-\\ &=& \beta.C \supseteq F \land \{\beta.C \supseteq (F_i\setminus B_i)\}_{i \in 1\dots N}
-\\ &=& \beta.C \supseteq F \land \{(\beta.C \cup B_i) \supseteq F_i\}_{i \in 1\dots N}
+\\ &=& \beta.C \supseteq (F \cup \{e_i\setminus B_i\}_{i \in 1\dots N})
+\\ &=& \beta.C \supseteq F \land \{\beta.C \supseteq (e_i\setminus B_i)\}_{i \in 1\dots N}
+\\ &=& \beta.C \supseteq F \land \{(\beta.C \cup B_i) \supseteq e_i\}_{i \in 1\dots N}
 \end{eqnarray*}
 where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj F_i$, $F \disj B_i$.
 \begin{code}
 instCovers :: MonadFail m => InsContext -> VarSet -> FreeVars -> m [AtmSideCond]
-instCovers insctxt vsC (fF,fLessBs)
-  =  return (asc1 ++ concat asc2)
+instCovers insctxt vsC (fF,vLessBs)
+  =  return (asc1s ++ asc2s)
   where
-    asc1 = map (f1 vsC) (S.toList fF)
-    asc2 = map (f2 vsC) fLessBs
-    f1 vsC gv = CoveredBy NonU gv vsC
-    f2 vsC (vsF,vsB) = map (f1 (vsC `S.union` vsB)) (S.toList vsF)
+    asc1s = map (mkCovers vsC) (S.toList fF)
+    mkCovers vsC gv = CoveredBy NonU gv vsC
+    asc2s = map (f2 vsC) vLessBs
+    f2 vsC (evF,vsB) = mkCovers (vsC `S.union` vsB) evF
 \end{code}
 
 \newpage
@@ -612,7 +612,7 @@ instantiateGVar insctxt bind (LstVar lv)  =  instantiateLstVar insctxt bind lv
 \\ \beta(v) &=& \beta.v, \qquad \mbox{if $\beta.v$ is an variable}
 \\ \beta(v) &=& \fv_{sc}(\beta.v), \quad \mbox{if $\beta.v$ is a term}
 \end{eqnarray*}
-\begin{code}n
+\begin{code}
 instantiateVar :: InsContext -> Binding -> Variable -> FreeVars
 instantiateVar insctxt bind v
   = case lookupVarBind bind v of
@@ -620,27 +620,28 @@ instantiateVar insctxt bind v
         Just (BindVar v')  ->  (S.singleton $ StdVar v',[])
         Just (BindTerm t)  ->  deduceFreeVars insctxt t
 \end{code}
-We note there that \texttt{FreeVars} represents the following structure:
+We note here that \texttt{FreeVars} represents the following structure:
 $$ 
 (F,D)
 =
-(F,\setof{(\dots,(F_i,B_i),\dots)})
+(F,\setof{(\dots,(e_i,B_i),\dots)})
  = 
 ( \setof{\dots,v,\dots}
-, \setof{\dots,( \setof{\dots,e,\dots} , \setof{\dots,x,\dots} ),\dots}
+, \setof{\dots,( e , \setof{\dots,x,\dots} ),\dots}
 )
 $$
 where $v$ is any general variable, 
 $e$ are non. obs. variables that don't occur in the $F$,
 and $x$ are obs. vars. or list-vars.
-It represents the variable-set: $F \cup \bigcup_i (F_i\setminus B_i)$
+It represents the variable-set: $F \cup \bigcup_i (e_i\setminus B_i)$
 \begin{eqnarray*}
    \fv_{sc}(t) &=& \bigcup_{v \in \fv(t)} \scexpand_{sc}(v)
 \end{eqnarray*}
 \begin{code}
 deduceFreeVars :: InsContext -> Term -> FreeVars
 deduceFreeVars insctxt t 
-  = mrgFreeVarList $ map scExpand (icSC insctxt) $ freeVars t
+  = mrgFreeVarList $ map (scExpand $ icSC insctxt) $ S.toList $ fst $ freeVars t
+   -- need to deal with (e,B) components too!!!
 \end{code}
 
 \begin{eqnarray*}
@@ -650,7 +651,7 @@ deduceFreeVars insctxt t
 \end{eqnarray*}
 \begin{code}
 scExpand :: SideCond -> GenVar -> FreeVars
-scExpand sc v@(StdVar (Vbl _ Obsv _)) = 
+scExpand sc v@(StdVar (Vbl _ ObsV _)) = injVarSet $ S.singleton v
 \end{code}
 
 \begin{eqnarray*}

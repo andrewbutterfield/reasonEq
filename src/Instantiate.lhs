@@ -75,11 +75,12 @@ Given a variable $v$ we use $\beta(v)$ to denote a binding lookup.
 All instantiations need a context argument that describes the following
 aspects of the current state of a proof:
 \begin{itemize}
-  \item dynamic \texttt{Subscript}s in scope
+  \item Side-Conditions
+  % \item dynamic \texttt{Subscript}s in scope
 \end{itemize}
 \begin{code}
 data InsContext
-  =  ICtxt  { icSS :: [Subscript]
+  =  ICtxt  { icSC :: SideCond
             }
   deriving Show  
 
@@ -95,6 +96,8 @@ Here we require every free variable in the term to be also in the binding.
 instantiate :: MonadFail m => InsContext -> Binding -> Term -> m Term
 \end{code}
 
+\subsection{Instantiating Values and Types}
+
 \begin{eqnarray*}
    \beta.\kk k &=& \kk k
 \\ \beta.\tt \tau &=& \tt \tau
@@ -103,6 +106,8 @@ instantiate :: MonadFail m => InsContext -> Binding -> Term -> m Term
 instantiate _ binding v@(Val _ _)  =  return v
 instantiate _ binding t@(Typ _)    =  return t
 \end{code}
+
+\subsection{Instantiating Variables}
 
 \begin{eqnarray*}
    \beta.(\vv v) &=& \beta(v)
@@ -121,6 +126,10 @@ instantiate insctxt binding vt@(Var tk v)
                                      , "bind = " ++ trBinding binding
                                      ]
 \end{code}
+
+\newpage
+
+\subsection{Instantiating Cons}
 
 With Cons nodes we have two possibilities.
 The first is the general case where we have a list of terms as usual:
@@ -153,9 +162,12 @@ instantiate insctxt binding (Cons tk sb n ts)
     get_itop _ = (False,itop)
 \end{code}
 
+\subsection{Instantiating Quantifiers}
+
 \begin{eqnarray*}
    \beta.(\bb n {v^+} t) &=& \bb n {\beta^*.v^+} {\beta.t}
 \\ \beta.(\ll n {v^+} t) &=& \ll n {\beta^*.v^+} {\beta.t}
+\\ \beta.(\xx n t)       &=& \xx {n} {\beta.t}
 \end{eqnarray*}
 \begin{code}
 instantiate insctxt binding (Bnd tk n vs tm)
@@ -166,20 +178,16 @@ instantiate insctxt binding (Lam tk n vl tm)
   = do vl' <- instVarList insctxt binding vl
        tm' <- instantiate insctxt binding tm
        lam tk n vl' tm'
-\end{code}
-
-\newpage
-
-\begin{eqnarray*}
-   \beta.(\xx n t) &=& \xx {n} {\beta.t}
-\end{eqnarray*}
-\begin{code}
 instantiate insctxt binding (Cls n tm)
   = do tm' <- instantiate insctxt binding tm
        return $ Cls n tm'
 \end{code}
 
-We need to keep in mind that we use the substitution form to represent assignment. It the term is a predicate variable ``$:=$'',
+\newpage
+\subsection{Instantiating Substitutions}
+
+We need to keep in mind that we use the substitution form to represent assignment. 
+If the term is a predicate variable ``$:=$'',
 then we have an assignment.
 \begin{eqnarray*}
    \beta.(\ss {(:=)} {v^n} {t^n}) &=& \ss {(:=)} {\beta^*(v^n)} {\beta^*.t^n}
@@ -193,6 +201,8 @@ instantiate insctxt binding (Sub tk tm s)
               else instantiate insctxt binding tm
        return $ Sub tk tm' s'
 \end{code}
+
+\subsection{Instantiating Iteration}
 
 \begin{eqnarray*}
    \beta.(\ii \bigoplus p {\seqof{\lst l^1,\dots,\lst l^a}})
@@ -227,6 +237,12 @@ instantiate insctxt binding (Iter tk sa na si ni lvs)
     mkI lvts@(Right _:_) = Cons tk si ni $ tmsOf lvts
     mkI lvts@(Left  _:_) = Iter tk sa na si ni $ lvsOf lvts
 \end{code}
+
+\newpage
+
+\section{Helper Functions}
+
+\subsection{Iteration Stuff}
 
 So, below, we want to return
 $
@@ -291,25 +307,13 @@ checkAndGroup a sstvl (lvts:lvtss)
 
 
 \newpage
-\subsubsection{Instantiating Substitutions}
+\subsection{Instantiating Substitutions}
 
 The \texttt{Substn} constructor is used to represent substitutions,
 and assignments.
-\textbf{This requires separate treatment for the two cases.}
-
-For both,
-we expect the substitution target and replacement list-variables
-to be bound to variable-lists, and not sets.
-
-For substitution,
-these lists should themselves only contain list-variables,
-and for any target/replacement pair these lists will be of the same length.
-
-For assignment,
-these lists can contain general variables,
-and arbitrary (expression) terms.
-However the assignment only the second list-var to list-var component
-of a substitution.
+While this obviously requires separate treatment for the two cases,
+it turns out that the pair-lists in the \texttt{Substn} part
+are processed the same way.
 
 \begin{code}
 instSub :: MonadFail m => InsContext -> Binding -> Substn -> m Substn
@@ -351,6 +355,7 @@ getTheVar fvs@(vs,diffs)
       _  -> fail ("getTheVar: expected a single variable, not "++show fvs)
 \end{code}
 
+\newpage
 This code is used for list-var in substitutions only.
 \begin{code}
 instLLVar :: MonadFail m => InsContext
@@ -472,35 +477,58 @@ and merge together.
 \begin{code}
 instantiateSC :: MonadFail m => InsContext -> Binding -> SideCond -> m SideCond
 \end{code}
-For atomic side-conditions:
+side-conditions:
 \begin{eqnarray*}
    \beta.(D \disj  T) &=& \beta.D \disj \fv(\beta(T))
 \\ \beta.(C \supseteq T)  &=& \beta.C \supseteq \fv(\beta(T))
-\\ \beta(pre \supseteq T) &=& pre \supseteq \fv(\beta(T))
+\\ \beta(\ispre \supseteq T) &=& \ispre \supseteq \fv(\beta(T))
+\\ \beta(\fresh F) &=& \fresh \beta(F)
 \end{eqnarray*}
-\textbf{Theory \texttt{UTPBase} breaks the following:}
-\emph{
-For now, we assume that $\beta.C$, $\beta.D$
-never result in terms,
-and hence have no explicit $F_i\setminus B_i$ components.
-This is true for any current%
-\footnote{
- Theories \texttt{ForAll}, \texttt{Exists}, and \texttt{UClose}.
-}
-side-conditions.
-The most sensible thing to do is to compute $\fv(\beta(T))$,
-and then use $\beta.C$ or $\beta.D$
-to try to eliminate any use of set difference.
-}
-\textbf{Need a full re-think!!!}
 \begin{code}
 instantiateSC insctxt bind (ascs,freshvs)
   = do ascss' <-sequence $ map (instantiateASC insctxt bind) ascs
        freshvs' <- instVarSet insctxt bind freshvs
        mkSideCond [] (concat ascss') $ theFreeVars freshvs'
 \end{code}
-We compute $\beta.C$/$\beta.D$ first, failing (for now), if it has terms,
-and then we compute  $\fv(\beta(T))$.
+For atomic side-conditions:
+\begin{eqnarray*}
+   \beta.(D \disj  T) &=& \beta.D \disj \fv(\beta(T))
+\\ \beta.(C \supseteq T)  &=& \beta.C \supseteq \fv(\beta(T))
+\\ \beta(\ispre \supseteq T) &=& \ispre \supseteq \fv(\beta(T))
+\end{eqnarray*}
+Consider this example:
+\begin{description}
+\item[Law] $P[\lst e/\lst x] = P, \qquad \lst x \notin P$
+\item[Goal] $(R[O_m/O'])[O'/O_m], \qquad O',O \supseteq R$.
+\item[Bind] 
+   $\beta
+    =
+    \setof{
+      P \mapsto R[O_m/O']
+      ,
+      \lst e \mapsto \seqof{O'}
+      ,
+      \lst x \mapsto \seqof{O_m}
+    }
+   $
+\item[FV(Sub)]
+   $\fv(\ss t {v^n} {t^n})
+      \defs
+      (\fv(t)\setminus{v^m})\cup \bigcup_{s \in t^m}\fv(s)
+       \textbf{~where~}  v^m = v^n \cap \fv(t)
+   $
+\end{description}
+\begin{eqnarray*}
+\lefteqn{\beta(\lst x \disj P)}
+\\ &=&  \beta(\lst x) \disj \fv(\beta(P))
+\\ &=& \seqof{O_m} \disj \fv(R[O_m/O'])
+\\ &=&  \seqof{O_m} \disj (\fv(R)\setminus \setof{O'}) \cup \setof{O_m}
+\\ &=&  \seqof{O_m} \disj (\setof{O,O'}\setminus \setof{O'}) \cup \setof{O_m}
+        \qquad \text{~uses~} O',O \supseteq R
+\\ &=&  \seqof{O_m} \disj (\setof{O} \cup \setof{O_m})
+\\ &=&  \seqof{O_m} \disj \setof{O,O_m}
+\\ &=&  \false
+\end{eqnarray*}
 \begin{code}
 instantiateASC :: MonadFail m => InsContext
                -> Binding -> AtmSideCond -> m [AtmSideCond]
@@ -568,6 +596,7 @@ instCovers insctxt vsC (fF,fLessBs)
     f2 vsC (vsF,vsB) = map (f1 (vsC `S.union` vsB)) (S.toList vsF)
 \end{code}
 
+\newpage
 \subsection{Side-condition Variable Instantiation}
 
 Instantiate a (std./list)-variable either according to the binding,
@@ -580,16 +609,48 @@ instantiateGVar insctxt bind (LstVar lv)  =  instantiateLstVar insctxt bind lv
 
 \begin{eqnarray*}
    \beta(v) &=& v, \qquad  v \notin \beta
-\\ \beta(v) &=& \beta.v, \qquad \mbox{if $\beta.v$ is a variable}
-\\ \beta(v) &=& \fv(\beta.v), \quad \mbox{if $\beta.v$ is a term}
+\\ \beta(v) &=& \beta.v, \qquad \mbox{if $\beta.v$ is an variable}
+\\ \beta(v) &=& \fv_{sc}(\beta.v), \quad \mbox{if $\beta.v$ is a term}
 \end{eqnarray*}
-\begin{code}
+\begin{code}n
 instantiateVar :: InsContext -> Binding -> Variable -> FreeVars
 instantiateVar insctxt bind v
   = case lookupVarBind bind v of
         Nothing            ->  (S.singleton $ StdVar v,[])
         Just (BindVar v')  ->  (S.singleton $ StdVar v',[])
-        Just (BindTerm t)  ->  freeVars t
+        Just (BindTerm t)  ->  deduceFreeVars insctxt t
+\end{code}
+We note there that \texttt{FreeVars} represents the following structure:
+$$ 
+(F,D)
+=
+(F,\setof{(\dots,(F_i,B_i),\dots)})
+ = 
+( \setof{\dots,v,\dots}
+, \setof{\dots,( \setof{\dots,e,\dots} , \setof{\dots,x,\dots} ),\dots}
+)
+$$
+where $v$ is any general variable, 
+$e$ are non. obs. variables that don't occur in the $F$,
+and $x$ are obs. vars. or list-vars.
+It represents the variable-set: $F \cup \bigcup_i (F_i\setminus B_i)$
+\begin{eqnarray*}
+   \fv_{sc}(t) &=& \bigcup_{v \in \fv(t)} \scexpand_{sc}(v)
+\end{eqnarray*}
+\begin{code}
+deduceFreeVars :: InsContext -> Term -> FreeVars
+deduceFreeVars insctxt t 
+  = mrgFreeVarList $ map scExpand (icSC insctxt) $ freeVars t
+\end{code}
+
+\begin{eqnarray*}
+   \scexpand_{sc}(v) &=& \setof v, \qquad v \text{ is obs. var.}
+\\ \scexpand_{sc}(e) &=& \ascexp_{sc}(e), \qquad v \text{ otherwise.}
+\\ \ascexp_{sc}(e) &=& 
+\end{eqnarray*}
+\begin{code}
+scExpand :: SideCond -> GenVar -> FreeVars
+scExpand sc v@(StdVar (Vbl _ Obsv _)) = 
 \end{code}
 
 \begin{eqnarray*}
@@ -598,7 +659,7 @@ instantiateVar insctxt bind v
     \qquad\qquad \mbox{if $\beta.\lst v$ is a list}
 \\ \beta(\lst v) &=& \beta.\lst v,
       \qquad\qquad \mbox{if $\beta.\lst v$ is a set}
-\\ \beta(\lst v) &=& L \cup \bigcup \fv^*(T)
+\\ \beta(\lst v) &=& L \cup \bigcup \fv_{sc}^*(T)
      \quad \mbox{if $\beta.\lst v$ has form $(L,T)$}
 \end{eqnarray*}
 \begin{code}
@@ -611,5 +672,6 @@ instantiateLstVar insctxt bind lv
       Just (BindTLVs tlvs)
        -> let (ts,lvs) = (tmsOf tlvs, lvsOf tlvs)
           in  mrgFreeVarList
-               (( S.fromList $ map LstVar lvs,[]) : map freeVars ts)
+               ( ( S.fromList $ map LstVar lvs,[]) 
+                 : map (deduceFreeVars insctxt) ts )
 \end{code}

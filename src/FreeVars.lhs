@@ -58,8 +58,6 @@ In general we need to work with variable-set \emph{expressions}.
 In particular we need to be able to note when predicate and expression
 variables are subject to set removal because they are under a binding construct.
 
-\newpage
-
 We interpret the occurrence of a predicate or expression variable
 in a variable-set
 as symbolically denoting its putative free observational variables.
@@ -320,7 +318,7 @@ theFreeVars (fvs,diffs) = fvs `S.union` ( S.unions $ map fst diffs )
 
 \begin{eqnarray*}
    \fv(\kk k)  &\defs&  \emptyset
-\\ \fv(\vv v)  &\defs&  \{\vv v\} \quad \mbox{$v$ is non-textual obs. var.}
+\\ \fv(\vv v)  &\defs&  \{\vv v\} \quad \mbox{$v$ is non-textual}
 \\ \fv(\cc n {ts}) &\defs& \bigcup_{t \in ts} \fv(t)
 \\ \fv(\bb n {v^+} t) &\defs& \fv(t)\setminus{v^+}
 \\ \fv(\ll n {v^+} t) &\defs& \fv(t)\setminus{v^+}
@@ -335,7 +333,7 @@ theFreeVars (fvs,diffs) = fvs `S.union` ( S.unions $ map fst diffs )
 notTextualLV (LVbl (Vbl _ _ vw) _ _) = vw /= Textual
 
 freeVars :: Term -> FreeVars
-freeVars (Var tk v@(Vbl _ ObsV vw))
+freeVars (Var tk v@(Vbl _ _ vw))
   | vw /= Textual                   =  injVarSet $ S.singleton $ StdVar v
 freeVars (Cons tk sb n ts)          =  mrgFreeVarList $ map freeVars ts
 freeVars (Bnd tk n vs tm)           =  subVarSet (freeVars tm) vs
@@ -356,7 +354,7 @@ freeVars (Sub tk tm (Substn vts lvlvs))
          lvs1 = S.map (LstVar . fst) lvlvs
          lvs2 = S.map (LstVar . snd) lvlvs
 
-freeVars (Sub tk tm s)              =  mrgFreeVars (subVarSet tfv tgtvs) rplvs
+freeVars (Sub tk tm s) =  mrgFreeVars (subVarSet tfv tgtvs) rplvs
    where
      tfv            =  freeVars tm
      (tgtvs,rplvs)  =  substRelFree tfv s

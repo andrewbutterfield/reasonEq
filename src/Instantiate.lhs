@@ -615,10 +615,10 @@ instantiateGVar insctxt bind (LstVar lv)  =  instantiateLstVar insctxt bind lv
 \begin{code}
 instantiateVar :: InsContext -> Binding -> Variable -> FreeVars
 instantiateVar insctxt bind v
-  = case lookupVarBind bind v of
+  = case lookupVarBind bind (pdbg "instVar.v" v) of
         Nothing            ->  (S.singleton $ StdVar v,[])
         Just (BindVar v')  ->  (S.singleton $ StdVar v',[])
-        Just (BindTerm t)  ->  deduceFreeVars insctxt t
+        Just (BindTerm t)  ->  deduceFreeVars insctxt $ pdbg "instVar.t" t
 \end{code}
 We note here that \texttt{FreeVars} represents the following structure:
 $$ 
@@ -635,24 +635,72 @@ $e$ are non. obs. variables that don't occur in the $F$,
 and $x$ are obs. vars. or list-vars.
 It represents the variable-set: $F \cup \bigcup_i (e_i\setminus B_i)$
 \begin{eqnarray*}
-   \fv_{sc}(t) &=& \bigcup_{v \in \fv(t)} \scexpand_{sc}(v)
+   \fv_{(ascs,\_)}(t) 
+   &=& 
+   \bigcup_{v \in \pi_1\fv(t)} \scvarexp_{ascs}(v)
+   \cup
+   \bigcup_{(e,B) \in \pi_2\fv(t)} \scdiffexp_{ascs}(e,B)
 \end{eqnarray*}
 \begin{code}
 deduceFreeVars :: InsContext -> Term -> FreeVars
 deduceFreeVars insctxt t 
-  = mrgFreeVarList $ map (scExpand $ icSC insctxt) $ S.toList $ fst $ freeVars t
-   -- need to deal with (e,B) components too!!!
+  = mrgFreeVarList 
+      ( map (scVarExpand $ pdbg "dFV.sc" sc) (pdbg "dFV.fF" (S.toList fF))
+        ++
+        map (scDiffExpand sc) dD )
+  where
+     sc = icSC insctxt
+     (fF,dD) = freeVars t
 \end{code}
 
 \begin{eqnarray*}
-   \scexpand_{sc}(v) &=& \setof v, \qquad v \text{ is obs. var.}
-\\ \scexpand_{sc}(e) &=& \ascexp_{sc}(e), \qquad v \text{ otherwise.}
-\\ \ascexp_{sc}(e) &=& 
+   \scvarexp_{sc}(v) &=& \setof v, \qquad v \text{ is obs. var.}
+\\ \scvarexp_{(ascs,\_)}(e) 
+   &=& \ascsvarexp(e,ascs(e)) \cond{e \in ascs} \setof e
 \end{eqnarray*}
 \begin{code}
-scExpand :: SideCond -> GenVar -> FreeVars
-scExpand sc v@(StdVar (Vbl _ ObsV _)) = injVarSet $ S.singleton v
-scExpand sc gv = injVarSet $ S.singleton gv -- need more here !!
+scVarExpand :: SideCond -> GenVar -> FreeVars
+scVarExpand _ v@(StdVar (Vbl _ ObsV _)) = injVarSet $ S.singleton v
+scVarExpand sc gv 
+  = case findAllGenVar gv sc of
+      []    ->  injVarSet $ S.singleton gv
+      ascs  ->  ascsVarExpand gv ascs
+\end{code}
+
+\newpage
+
+For any given variable, we can end up with one of three possibilities: 
+disjoint ($v \disj D$), covered ($C \supseteq v$), 
+or a mix of the two cases with $C$ and $D$ mutually disjoint.
+Note that we also need to take uniformity into account:
+we use $e \approx e'$ here to denote that either $e=e'$ 
+or uniformity is in effect and $e$ and $e'$ are dynamic 
+and differ only in temporality.
+\begin{eqnarray*}
+   \ascsvarexp(e,\seqof{C \supseteq e'})     &=& C \cond{e \approx e'} \setof e 
+\\ \ascsvarexp(e,\seqof{\_,C \supseteq e'})  &=& C \cond{e \approx e'} \setof e 
+\\ \ascsvarexp(e,\seqof{\_ \disj \_})        &=& \setof{e}
+\end{eqnarray*}
+\begin{code}
+ascsVarExpand :: GenVar -> [AtmSideCond] -> FreeVars
+ascsVarExpand e []  =  injVarSet $ S.singleton e
+ascsVarExpand e (CoveredBy Unif e' cC' : _)
+  |  (pdbg "ascsVE.e" e) `usameg` e'  =  injVarSet (S.map (gsetWhen $ gvarWhen e ) cC')
+ascsVarExpand e (CoveredBy _ e' cC : _)
+  |  e == e'        =  injVarSet cC
+ascsVarExpand e (_:ascs) = ascsVarExpand e ascs
+\end{code}
+
+
+\begin{eqnarray*}
+\scdiffexp_{sc}(e,B) 
+    &=& dosomethingwith
+         ( \scvarexp_{sc}(e)
+         , \power(\scvarexp_{sc})(B)
+         )
+\end{eqnarray*}
+\begin{code}
+scDiffExpand sc (e,bB) = noFreevars -- for now
 \end{code}
 
 \begin{eqnarray*}

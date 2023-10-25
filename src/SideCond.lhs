@@ -8,6 +8,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module SideCond (
   pattern Unif, pattern NonU
+, usame, usamel, usameg
+, setWhen, lsetWhen, gsetWhen
 , AtmSideCond
 , pattern Disjoint, pattern CoveredBy
 , ascGVar, ascVSet
@@ -18,7 +20,7 @@ module SideCond (
 , scDischarge
 , isFloatingASC
 , notin, covers, fresh
-, findGenVar
+, findGenVar, findAllGenVar
 -- , citingASCs   -- not used anywhere!
 , (.:), mrgscs
 , int_tst_SideCond
@@ -199,6 +201,33 @@ data Uniformity
 pattern Unif = UN
 pattern NonU = NU
 \end{code}
+
+We need to add an easy check that two dynamic
+variables differ only in their temporality.
+\begin{code}
+usame :: Variable -> Variable -> Bool
+usame (Vbl i1 vc1 vw1) (Vbl i2 vc2 vw2)
+       =  i1==i2 && vc1==vc2 && isDynamic vw1 && isDynamic vw2
+usamel :: ListVar -> ListVar -> Bool
+usamel (LVbl v1 is1 js1) (LVbl v2 is2 js2)
+        = v1 `usame` v2 && is1==is2 && js1==js2
+usameg :: GenVar -> GenVar -> Bool
+usameg (StdVar v1) (StdVar v2) = v1 `usame` v2
+usameg (LstVar lv1) (LstVar lv2) = lv1 `usamel` lv2
+\end{code}
+It also helps to change the dynamic temporality of a variable.
+
+\begin{code}
+setWhen :: VarWhen -> Variable -> Variable
+setWhen vw (Vbl i vc _)  = Vbl i vc vw
+lsetWhen :: VarWhen -> ListVar -> ListVar
+lsetWhen vw (LVbl (Vbl i vc _) is js)  = LVbl (Vbl i vc vw) is js
+gsetWhen :: VarWhen -> GenVar -> GenVar
+gsetWhen vw (StdVar v)   = StdVar $ setWhen  vw v
+gsetWhen vw (LstVar lv)  = LstVar $ lsetWhen vw lv
+\end{code}
+These should only be applied to variables known to be dynamic.
+
 
 \section{Atomic Side-Conditions}
 
@@ -1186,6 +1215,17 @@ mentionedBy :: GenVar -> AtmSideCond -> Bool
 gv `mentionedBy` asc
   | isUniform asc  =  gv `sameIdClass` ascGVar asc
   | otherwise      =  gv == ascGVar asc
+\end{code}
+
+We then look at returning all mentions of a variable:
+\begin{code}
+findAllGenVar :: GenVar -> SideCond -> [AtmSideCond]
+findAllGenVar gv ( ascs, _ )  =  findAGV gv [] ascs
+
+findAGV _ scsa []  =  reverse scsa
+findAGV gv scsa (asc:ascs)
+  | gv `mentionedBy` asc  =  findAGV gv (asc:scsa) ascs
+  | otherwise             =  findAGV gv scsa       ascs
 \end{code}
 
 

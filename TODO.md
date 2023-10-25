@@ -8,29 +8,9 @@ Still issues with law `non_subst :: P[e$/x$]  ≡  P  x$∉P` is broken.
 
 Substitution `(R[O$_1/O$'])[O$'/O$_1]` should result in `R[O$'/O$']'.
 
-Using law `non_subst` it becomes `R[O$_1/O$']`.
-```
-(R[O$_1/O$'])[O$'/O$_1], O$,O$'⊇II, O$,O$'⊇R
-   = 'match-lhs non_subst@[]'
- ...
-⊢
-R[O$_1/O$']    O$,O$'⊇II, O$,O$'⊇R
-Focus = []
-```
-
-**Issue is here - basically `instantiateASC` is broken.**
-```
-instantiateASC insctxt bind asc
-  = do (vsCD,diffs) <- instVarSet insctxt bind $ pdbg "ascVSet" $ ascVSet asc
-       if null diffs
-         then instASCVariant insctxt (pdbg "vsCD" vsCD) (pdbg "fvsT" fvsT) asc
-         else fail "instantiateASC: explicit diffs in var-set not handled."
-  where
-     fvsT = instantiateGVar insctxt bind $ ascGVar asc
-```
-Instantiate GVAR should return a term
-
-
+We should have fixed `instantiateVar`, 
+however it looks like the side-condition context in not being set properly
+(it's empty), at a higher level (during term instantiation?). 
 
 ## Non-Urgent
 

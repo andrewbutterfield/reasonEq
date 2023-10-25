@@ -615,10 +615,10 @@ instantiateGVar insctxt bind (LstVar lv)  =  instantiateLstVar insctxt bind lv
 \begin{code}
 instantiateVar :: InsContext -> Binding -> Variable -> FreeVars
 instantiateVar insctxt bind v
-  = case lookupVarBind bind (pdbg "instVar.v" v) of
+  = case lookupVarBind bind v of
         Nothing            ->  (S.singleton $ StdVar v,[])
         Just (BindVar v')  ->  (S.singleton $ StdVar v',[])
-        Just (BindTerm t)  ->  deduceFreeVars insctxt $ pdbg "instVar.t" t
+        Just (BindTerm t)  ->  deduceFreeVars insctxt t
 \end{code}
 We note here that \texttt{FreeVars} represents the following structure:
 $$ 
@@ -645,7 +645,7 @@ It represents the variable-set: $F \cup \bigcup_i (e_i\setminus B_i)$
 deduceFreeVars :: InsContext -> Term -> FreeVars
 deduceFreeVars insctxt t 
   = mrgFreeVarList 
-      ( map (scVarExpand $ pdbg "dFV.sc" sc) (pdbg "dFV.fF" (S.toList fF))
+      ( map (scVarExpand sc) (S.toList fF)
         ++
         map (scDiffExpand sc) dD )
   where
@@ -685,9 +685,9 @@ and differ only in temporality.
 ascsVarExpand :: GenVar -> [AtmSideCond] -> FreeVars
 ascsVarExpand e []  =  injVarSet $ S.singleton e
 ascsVarExpand e (CoveredBy Unif e' cC' : _)
-  |  (pdbg "ascsVE.e" e) `usameg` e'  =  injVarSet (S.map (gsetWhen $ gvarWhen e ) cC')
-ascsVarExpand e (CoveredBy _ e' cC : _)
-  |  e == e'        =  injVarSet cC
+  |  e `usameg` e'  =  injVarSet (S.map (gsetWhen $ gvarWhen e ) cC')
+ascsVarExpand e (CoveredBy _ e' cC' : _)
+  |  e == e'        =  injVarSet cC'
 ascsVarExpand e (_:ascs) = ascsVarExpand e ascs
 \end{code}
 

@@ -8,11 +8,19 @@ Still issues with law `non_subst :: P[e$/x$]  ≡  P  x$∉P` is broken.
 
 Substitution `(R[O$_1/O$'])[O$'/O$_1]` should result in `R[O$'/O$']'.
 
-We should have fixed `instantiateVar`, 
-however it looks like the side-condition context in not being set properly
-(it's empty), at a higher level (during term instantiation?). 
+Problems is what do we report for `fv(R[O1/O])`. 
+The `freeVars` function will return `R`, but lose information about the substitution.
+We need to add explicit variable substitutions to non.-obs. variables 
+reported in the free variables datatype.
 
-## Non-Urgent
+```
+type FreeVars = (VarSet, [(GenVar,VarSet)])
+```
+should become
+```
+type FreeVars = (VarSet, [(GenVar,VarSet)], [(Variable,Substn)])
+```
+The variables are Term variables that are under substitutions.
 
 ### Idea
 

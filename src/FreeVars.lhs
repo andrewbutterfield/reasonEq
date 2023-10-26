@@ -44,10 +44,14 @@ import Debugger
 
 \section{Introduction}
 
-We start with computing the free variables of a term,
-and then continue by addressing nested quantifiers.
+The definition of the free variables of a term/formula in logic
+is usually quite straighforward.
+However, we complicate matters by having: 
+variables that denote terms;
+explicit substituions;
+and list-variables.
 
-\section{Need for Variable-Set Expressions}
+\subsection{Need for Variable-Set Expressions}
 
 Consider the following extract from the standard free-variable definition:
 \begin{eqnarray*}
@@ -120,6 +124,61 @@ on its presence as a free variable.
 So we have the following structure: $(F,\setof{\dots,(e_i,B_i),\dots})$
 where all $e_i$ are distinct non.-obs. standard variables,
 and for all $i$, we have $F \disj \setof{e_i}\cup B_i$.
+
+So the picture we now have is:
+\begin{eqnarray*}
+   \fv &:& T \fun (\Set{V}\times\Set(V\times\Set V)
+\\  \fv(\vv v)  &\defs&  (\{\vv v\},\emptyset)
+\\ \fv(\bb n {v^+} t) 
+   &\defs& 
+   (\fv(t)\setminus\setof{\dots,e_i,\dots},\setof{\dots,(e_i,B_i),\dots}
+\end{eqnarray*}
+
+\subsection{Need to Record Substitutions}
+
+A possible definition of free-variables given an explicit substitution is:
+\begin{eqnarray*}
+   \fv(\ss t {v^n} {t^n})
+   &\defs&
+   (\fv(t)\setminus{v^m})\cup \bigcup_{s \in t^m}\fv(s)
+\\ \textbf{where} && v^m = v^n \cap \fv(t), t^m \textrm{ corr. to } v^m
+\end{eqnarray*}
+The following example illustrates the problem:
+\begin{description}
+\item[Law] $P[\lst e/\lst x] = P, \qquad \lst x \notin P$
+\item[Goal] $(R[O_m/O'])[O'/O_m], \qquad O',O \supseteq R$.
+\item[Bind] 
+   $\beta
+    =
+    \setof{
+      P \mapsto R[O_m/O']
+      ,
+      \lst e \mapsto \seqof{O'}
+      ,
+      \lst x \mapsto \seqof{O_m}
+    }
+   $
+\end{description}
+The issues arises when we try to instantiate the side-condition
+$\lst x \notin p$.
+This becomes $O_m \notin R[O_m/O']$.
+Evaluating this requires computing $\fv(R[O_m/O'])$.
+This should proceed as follows:
+\begin{eqnarray*}
+\lefteqn{\beta(\lst x \disj P)}
+\\ &=&  \beta(\lst x) \disj \fv(\beta(P))
+\\ &=& \seqof{O_m} \disj \fv(R[O_m/O'])
+\\ &=&  \seqof{O_m} \disj (\fv(R)\setminus \setof{O'}) \cup \setof{O_m}
+\\ &=&  \seqof{O_m} \disj (\setof{O,O'}\setminus \setof{O'}) \cup \setof{O_m}
+        \qquad \text{~uses~} O',O \supseteq R
+\\ &=&  \seqof{O_m} \disj (\setof{O} \cup \setof{O_m})
+\\ &=&  \seqof{O_m} \disj \setof{O,O_m}
+\\ &=&  \false
+\end{eqnarray*}
+
+
+
+\section{Free Variable Definitions}
 
 
 \begin{code}

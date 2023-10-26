@@ -79,7 +79,7 @@ From \cite[Sec 1.5,p34]{UTP-book},
 with addition of the notation using the $\sqsupseteq$ symbol:
 $$
   \begin{array}{lll}
-     P \sqsupseteq S \defs [P \implies S] &
+     P \sqsupseteq Q \defs [P \implies Q] &
      & \QNAME{$\sqsupseteq$-def}
   \end{array}
 $$\par\vspace{-8pt}

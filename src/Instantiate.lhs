@@ -650,7 +650,7 @@ deduceFreeVars insctxt t
         map (scDiffExpand sc) dD )
   where
      sc = icSC insctxt
-     (fF,dD) = freeVars t
+     (fF,dD) = pdbg "dFV.fv(t)" $ freeVars $ pdbg "dFV.t" t
 \end{code}
 
 \begin{eqnarray*}

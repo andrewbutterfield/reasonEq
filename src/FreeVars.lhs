@@ -138,10 +138,10 @@ So the picture we now have is:
 
 A possible definition of free-variables given an explicit substitution is:
 \begin{eqnarray*}
-   \fv(\ss t {v^n} {t^n})
+   \fv(\ss P {t^n} {r^n})
    &\defs&
-   (\fv(t)\setminus{v^m})\cup \bigcup_{s \in t^m}\fv(s)
-\\ \textbf{where} && v^m = v^n \cap \fv(t), t^m \textrm{ corr. to } v^m
+   (\fv(P)\setminus{t^n})\cup \fv(r^m)
+\\ \textbf{where} && t^m = t^n \cap \fv(P), r^m \textrm{ corresponds to } t^m
 \end{eqnarray*}
 The following example illustrates the problem:
 \begin{description}
@@ -203,6 +203,15 @@ S P (V P (VR (Id "R" 0,VP,WS)))
 (fromList [GV (VR (Id "R" 0,VP,WS))],[])
 \end{verbatim}
 This translates to $\fv(R[O_1/O']) = R$ !
+
+We can imagine the following process to compute $\fv(t[r^n/t^n])$ :
+\begin{itemize}
+   \item Let $fvt = \fv(t)$.
+   \item Let $vistgt = t^n \cap fvt$.
+   \item Let $visrepl = r^n | vistgt$.
+   \item Let $visfvs = \cup/\power\fv(visrepl)$.
+   \item Produce $visfvs \cup (fvt \setminus t^n)$.
+\end{itemize}
 
 
 \section{Free Variable Definitions}
@@ -446,10 +455,10 @@ theFreeVars (fvs,diffs) = fvs `S.union` ( S.fromList $ map fst diffs )
 \\ \fv(\ll n {v^+} t) &\defs& \fv(t)\setminus{v^+}
 \\ \fv(\ii \bigoplus n {lvs}) &\defs& lvs
    \quad \mbox{less any textual list-vars in }lvs
-\\ \fv(\ss t {v^n} {t^n})
+\\ \fv(\ss P {t^n} {r^n})
    &\defs&
-   (\fv(t)\setminus{v^m})\cup \bigcup_{s \in t^m}\fv(s)
-\\ \textbf{where} && v^m = v^n \cap \fv(t), t^m \textrm{ corr. to } v^m
+   (\fv(P)\setminus{t^n})\cup \fv(r^m)
+\\ \textbf{where} && t^m = t^n \cap \fv(P), r^m \textrm{ corresponds to } t^m
 \end{eqnarray*}
 \begin{code}
 notTextualLV (LVbl (Vbl _ _ vw) _ _) = vw /= Textual
@@ -468,10 +477,10 @@ freeVars (Iter tk sa na si ni lvs)
 
 \subsection{Assignment Free Variables}
 
-We use the \texttt{Sub} constructor to model assignment:
+We use the substitution to model assignment:
 $$
 v,\lst v :=  e,\lst e   
- \quad\defs\quad   \texttt{Sub ``$:=$'' } \seqof{(v,e)} \seqof{(\lst v,\lst e)}
+ \quad\defs\quad   (:=)[e,\lst e/x,\lst x]
 $$
 \begin{code}
 freeVars (Sub tk tm (Substn vts lvlvs))
@@ -491,10 +500,10 @@ freeVars (Sub tk tm (Substn vts lvlvs))
 
 Substitution is complicated, so here's a reminder:
 \begin{eqnarray*}
-   \fv(\ss t {v^n} {t^n})
+   \fv(\ss P {t^n} {r^n})
    &\defs&
-   (\fv(t)\setminus{v^m})\cup \bigcup_{s \in t^m}\fv(s)
-\\ \textbf{where} && v^m = v^n \cap \fv(t), t^m \textrm{ corr. to } v^m
+   (\fv(P)\setminus{t^n})\cup \fv(r^m)
+\\ \textbf{where} && t^m = t^n \cap \fv(P), r^m \textrm{ corresponds to } t^m
 \end{eqnarray*}
 This function returns the free variables in a substitution
 \emph{relative} to a given term to which it is being applied.
@@ -504,11 +513,21 @@ $$
 \fv(R[O_m/O']) =  (\setof{O_m},\setof{(R,\setof{O'})}) 
 $$
 Right now we have $\fv(R[O_m/O']) = R$!
+
+We can imagine the following process to compute $\fv(P[r^n/t^n])$ :
+\begin{itemize}
+   \item Let $fvp = \fv(P)$.
+   \item Let $vistgt = t^n \cap fvp$.
+   \item Let $visrepl = r^n | vistgt$.
+   \item Let $visfvs = \cup/\power\fv(visrepl)$.
+   \item Produce $visfvs \cup (fvp \setminus t^n)$.
+\end{itemize}
+
 \begin{code}
-freeVars (Sub tk tm s) =  mrgFreeVars (subVarSet tfv tgtvs) rplvs
+freeVars (Sub tk tm s) =  pdbg "freeVars" $ mrgFreeVars (subVarSet tfv $ pdbg "fV.tgtvs" tgtvs) $ pdbg "fV.rplvs" rplvs
    where
-     tfv            =  freeVars tm
-     (tgtvs,rplvs)  =  substRelFree tfv s
+     tfv            =  freeVars $ pdbg "fV.tm" tm
+     (tgtvs,rplvs)  =  substRelFree (pdbg "fV.tfv" tfv) $ pdbg "fV.s" s
 
 freeVars _  =  noFreevars
 

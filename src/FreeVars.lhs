@@ -134,7 +134,7 @@ So the picture we now have is:
    (\fv(t)\setminus\setof{\dots,e_i,\dots},\setof{\dots,(e_i,B_i),\dots}
 \end{eqnarray*}
 
-\subsection{Need to Record Substitutions}
+\subsection{Need to Record Substitutions?}
 
 A possible definition of free-variables given an explicit substitution is:
 \begin{eqnarray*}
@@ -175,7 +175,34 @@ This should proceed as follows:
 \\ &=&  \seqof{O_m} \disj \setof{O,O_m}
 \\ &=&  \false
 \end{eqnarray*}
-
+Note that the above demonstration makes use of all available information
+when its suits to do so (see ``uses'' comment above).
+The problem is the free-variable calculation, 
+which has no information about the relationship between $R$, $O'$ and $O_m$.
+\begin{eqnarray*}
+\lefteqn{\fv(R[O_m/O'])}
+\\ &=?=& \text{Defn. of $\fv$ above} 
+\\ && (\fv(R)\setminus \setof{O'}) \cup \setof{O_m}
+\\ &=& \text{$\fv$ again}
+\\ && (\setof{R}\setminus \setof{O'}) \cup \setof{O_m}
+\\ &=?=& \text{I need to pack this into $\Set{V}\times\Set(V\times\Set V)$}
+\\ && (\setof{O_m},\setof{(R,\setof{O'})}) 
+    \quad\text{I guess!}
+\end{eqnarray*}
+What does \texttt{freeVars} compute right now?
+\begin{verbatim}
+@dFV.t:
+S P (V P (VR (Id "R" 0,VP,WS))) 
+    (SN (fromList []) 
+        (fromList 
+           [( LV (VR (Id "O" 0,VO,WA),[],[])
+           ,  LV (VR (Id "O" 0,VO,WD "1"),[],[])
+           )]
+         ))
+@dFV.fv(t):
+(fromList [GV (VR (Id "R" 0,VP,WS))],[])
+\end{verbatim}
+This translates to $\fv(R[O_1/O']) = R$ !
 
 
 \section{Free Variable Definitions}
@@ -437,7 +464,16 @@ freeVars (Cls _ _)                  =  noFreevars
 
 freeVars (Iter tk sa na si ni lvs)
   =  injVarSet $ S.fromList $ map LstVar $ filter notTextualLV lvs
+\end{code}
 
+\subsection{Assignment Free Variables}
+
+We use the \texttt{Sub} constructor to model assignment:
+$$
+v,\lst v :=  e,\lst e   
+ \quad\defs\quad   \texttt{Sub ``$:=$'' } \seqof{(v,e)} \seqof{(\lst v,\lst e)}
+$$
+\begin{code}
 freeVars (Sub tk tm (Substn vts lvlvs))
   | isAssignment tm
       = (foldl' mrgFreeVars noFreevars (S.map freeVars ts))
@@ -448,13 +484,6 @@ freeVars (Sub tk tm (Substn vts lvlvs))
          vs = S.map (StdVar . fst) vts
          lvs1 = S.map (LstVar . fst) lvlvs
          lvs2 = S.map (LstVar . snd) lvlvs
-
-freeVars (Sub tk tm s) =  mrgFreeVars (subVarSet tfv tgtvs) rplvs
-   where
-     tfv            =  freeVars tm
-     (tgtvs,rplvs)  =  substRelFree tfv s
-
-freeVars _  =  noFreevars
 \end{code}
 
 \newpage
@@ -470,7 +499,19 @@ Substitution is complicated, so here's a reminder:
 This function returns the free variables in a substitution
 \emph{relative} to a given term to which it is being applied.
 It also returns the free variables from that term that will be substituted for.
+We expect the following to hold:
+$$
+\fv(R[O_m/O']) =  (\setof{O_m},\setof{(R,\setof{O'})}) 
+$$
+Right now we have $\fv(R[O_m/O']) = R$!
 \begin{code}
+freeVars (Sub tk tm s) =  mrgFreeVars (subVarSet tfv tgtvs) rplvs
+   where
+     tfv            =  freeVars tm
+     (tgtvs,rplvs)  =  substRelFree tfv s
+
+freeVars _  =  noFreevars
+
 substRelFree :: FreeVars -> Substn -> (VarSet,FreeVars)
 substRelFree tfv (Substn ts lvs) = (tgtvs,rplvs)
  where

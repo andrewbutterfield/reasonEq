@@ -319,7 +319,7 @@ where $X$ denotes sets of observational variables,
 and $T$ denotes sets of predicate and expression variables,
 we have:
 \begin{eqnarray*}
-  & & (X_F \sqcup T_F) \ominus (X_B \sqcup T_F)
+  & & (X_F \sqcup T_F) \ominus (X_B \sqcup T_B)
 \\&=& ( X_F \ominus X_B ) \cup ( T_F \ominus T_B )
 \\&\mapsto&
       ( (X_F \setminus X_B), \emptyset ) \oplus (( T_F \setminus T_B ) , X_B )
@@ -524,13 +524,27 @@ We can imagine the following process to compute $\fv(P[r^n/t^n])$ :
 \end{itemize}
 
 \begin{code}
-freeVars (Sub tk tm s) =  pdbg "freeVars" $ mrgFreeVars (subVarSet tfv $ pdbg "fV.tgtvs" tgtvs) $ pdbg "fV.rplvs" rplvs
-   where
-     tfv            =  freeVars $ pdbg "fV.tm" tm
-     (tgtvs,rplvs)  =  substRelFree (pdbg "fV.tfv" tfv) $ pdbg "fV.s" s
+freeVars (Sub tk tm sub)
+  = let
+      fvtm = freeVars $ pdbg "fV(Sub).tm" tm
+      (vistgt,visfvs) = substRelFree fvtm $ pdbg "fV(Sub).sub" sub
+      missed = subVarSet fvtm (subTargets sub)
+    in pdbg "fV(Sub)" $ mrgFreeVars (pdbg "fV(Sub).visfvs" visfvs) $ pdbg "fV(Sub).missed" missed
+\end{code}
 
-freeVars _  =  noFreevars
-
+What does \texttt{substRelFree} do?
+Given free variables $fv$, and a substitution,
+it selects pairs whose targets are in $fv$,
+returns the target variables in a set,
+and builds a new free-variables result out of the free-variables of all the
+replacements. 
+$$
+sRF~\setof{x,u,\lst u}~[e,f,\lst e,lst f/u,v,\lst u,\lst v]
+=
+(\setof{u,\lst u},\fv(e) \cup \setof{\lst e})
+$$
+This is $(vistgt,visfvs)$ from above.
+\begin{code}   
 substRelFree :: FreeVars -> Substn -> (VarSet,FreeVars)
 substRelFree tfv (Substn ts lvs) = (tgtvs,rplvs)
  where
@@ -543,6 +557,15 @@ substRelFree tfv (Substn ts lvs) = (tgtvs,rplvs)
            `mrgFreeVars`
            ( injVarSet $ S.map (LstVar .snd) lvs' )
 \end{code}
+\begin{verbatim}
+freeVars (Sub tk tm s) =  pdbg "freeVars" $ mrgFreeVars (subVarSet tfv $ pdbg "fV.tgtvs" tgtvs) $ pdbg "fV.rplvs" rplvs
+   where
+     tfv            =  freeVars $ pdbg "fV.tm" tm
+     (tgtvs,rplvs)  =  substRelFree (pdbg "fV.tfv" tfv) $ pdbg "fV.s" s
+
+freeVars _  =  noFreevars
+
+\end{verbatim}
 
 A target/replacement pair is ``applicable'' if the target variable
 is in the free variables of the term being substituted.

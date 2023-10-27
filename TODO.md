@@ -6,6 +6,28 @@
 
 Still issues with law `non_subst :: P[e$/x$]  ≡  P  x$∉P` is broken.
 
+BUG APPEARS TO BE HERE:
+
+```
+@dFV.t:  R[O1/O']
+
+@fV(Sub).sub: [O1/O']
+@fV(Sub).tm:  R
+@fV(Sub).visfvs: ({},{})  --- ??? O1 ???
+@fV(Sub).missed:  ({},{(R,{O'})})
+@fV(Sub): ({},{(R,{O'})})
+
+!!!! I think we should get   ({O1},{(R,{O'})})
+```
+
+Strange? Why does e bind to BX and x to BL ?:
+```
+[((Id "e" 0,VE,[],[]),BX [Left (LV (VR (Id "O" 0,VO,WA),[],[]))])
+,((Id "x" 0,VO,[],[]),BL [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))])
+]
+```
+Probably VE vs VO distinction.
+
 Substitution `(R[O$_1/O$'])[O$'/O$_1]` should result in `R[O$'/O$']'.
 
 Problems is what do we report for `fv(R[O1/O])`. 

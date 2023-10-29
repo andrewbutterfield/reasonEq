@@ -457,8 +457,8 @@ theFreeVars (fvs,diffs) = fvs `S.union` ( S.fromList $ map fst diffs )
    \quad \mbox{less any textual list-vars in }lvs
 \\ \fv(\ss P {t^n} {r^n})
    &\defs&
-   (\fv(P)\setminus{t^n})\cup \fv(r^m)
-\\ \textbf{where} && t^m = t^n \cap \fv(P), r^m \textrm{ corresponds to } t^m
+   (\fv(P)\setminus{t^n})\cup \fv(rs)
+\\ \textbf{where} && rs =  \setof{r | t \in(\fv(P)\cap{t^n}), [r/t] \in [r^n/t^n]}
 \end{eqnarray*}
 \begin{code}
 notTextualLV (LVbl (Vbl _ _ vw) _ _) = vw /= Textual
@@ -502,8 +502,8 @@ Substitution is complicated, so here's a reminder:
 \begin{eqnarray*}
    \fv(\ss P {t^n} {r^n})
    &\defs&
-   (\fv(P)\setminus{t^n})\cup \fv(r^m)
-\\ \textbf{where} && t^m = t^n \cap \fv(P), r^m \textrm{ corresponds to } t^m
+   (\fv(P)\setminus{t^n})\cup \fv(rs)
+\\ \textbf{where} && rs =  \setof{r | t \in(\fv(P)\cap{t^n}), [r/t] \in [r^n/t^n]}
 \end{eqnarray*}
 This function returns the free variables in a substitution
 \emph{relative} to a given term to which it is being applied.

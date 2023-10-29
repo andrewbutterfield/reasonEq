@@ -465,8 +465,14 @@ theFreeVars (fvs,diffs) = fvs `S.union` ( S.fromList $ map fst diffs )
 notTextualLV (LVbl (Vbl _ _ vw) _ _) = vw /= Textual
 
 freeVars :: SideCond -> Term -> FreeVars
-freeVars sc (Var tk v@(Vbl _ _ vw))
-  | vw /= Textual                   =  injVarSet $ S.singleton $ StdVar v
+freeVars sc (Var tk v@(Vbl _ ObsV vw))
+  | vw /= Textual  =  injVarSet $ S.singleton $ StdVar v
+  | otherwise      =  noFreevars
+freeVars sc (Var tk p@(Vbl _ _ vw)) -- not ObsV
+  = case findCoveredGenVar vP sc of
+      Nothing     ->  injVarSet $ S.singleton vP
+      Just cover  ->  injVarSet cover
+  where  vP = StdVar p
 freeVars sc (Cons tk sb n ts)          =  mrgFreeVarList $ map (freeVars sc) ts
 freeVars sc (Bnd tk n vs tm)           =  subVarSet (freeVars sc tm) vs
 freeVars sc (Lam tk n vl tm)           =  subVarSet (freeVars sc tm) $ S.fromList vl
@@ -527,10 +533,10 @@ We can imagine the following process to compute $\fvsc(P[r^n/t^n])$ :
 \begin{code}
 freeVars sc (Sub tk tm sub)
   = let
-      fvtm = freeVars sc $ pdbg "fV(Sub).tm" tm
-      (vistgt,visfvs) = substRelFree sc fvtm $ pdbg "fV(Sub).sub" sub
+      fvtm = freeVars sc tm
+      (vistgt,visfvs) = substRelFree sc fvtm sub
       missed = subVarSet fvtm (subTargets sub)
-    in pdbg "fV(Sub)" $ mrgFreeVars (pdbg "fV(Sub).visfvs" visfvs) $ pdbg "fV(Sub).missed" missed
+    in mrgFreeVars visfvs missed
 \end{code}
 
 What does \texttt{substRelFree} do?
@@ -559,10 +565,10 @@ substRelFree sc tfv (Substn ts lvs) = (tgtvs,rplvs)
            ( injVarSet $ S.map (LstVar .snd) lvs' )
 \end{code}
 \begin{verbatim}
-freeVars sc (Sub tk tm s) =  pdbg "freeVars" $ mrgFreeVars (subVarSet tfv $ pdbg "fV.tgtvs" tgtvs) $ pdbg "fV.rplvs" rplvs
+freeVars sc (Sub tk tm s) =  mrgFreeVars (subVarSet tfv tgtvs) rplvs
    where
-     tfv            =  freeVars sc $ pdbg "fV.tm" tm
-     (tgtvs,rplvs)  =  substRelFree (pdbg "fV.tfv" tfv) $ pdbg "fV.s" s
+     tfv            =  freeVars sc tm
+     (tgtvs,rplvs)  =  substRelFree sc tfv s
 
 freeVars _  =  noFreevars
 

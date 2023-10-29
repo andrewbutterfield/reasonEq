@@ -20,7 +20,7 @@ module SideCond (
 , scDischarge
 , isFloatingASC
 , notin, covers, fresh
-, findGenVar, findAllGenVar
+, findGenVar, findAllGenVar, findCoveredGenVar
 -- , citingASCs   -- not used anywhere!
 , (.:), mrgscs
 , int_tst_SideCond
@@ -1227,6 +1227,16 @@ findAGV gv scsa (asc:ascs)
   | otherwise             =  findAGV gv scsa       ascs
 \end{code}
 
+We sometimes want mentions for a specific condition type:
+\begin{code}
+findCoveredGenVar :: MonadFail m => GenVar -> SideCond -> m VarSet
+findCoveredGenVar gv ( ascs, _ ) = findCGV gv ascs
+
+findCGV gv [] = fail ("Covered "++show gv ++ " not found")
+findCGV gv ((CoveredBy _ gv' vs):ascs)
+  | gv == gv'  =  return vs
+  | otherwise  =  findCGV gv ascs
+\end{code}
 
 Next we develop some set queries and operations
 that can handle a mix of uniform and non-uniform atomic side conditions.

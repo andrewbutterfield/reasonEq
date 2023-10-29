@@ -4,8 +4,8 @@ import Test.Framework as TF (defaultMain, Test)
 import LexBase
 import Variables
 import AST
-import FreeVars
 import SideCond
+import FreeVars
 import Substitution
 import Binding
 import Syntax

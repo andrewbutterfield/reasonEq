@@ -141,8 +141,8 @@ A possible definition of free-variables given an explicit substitution is:
 \begin{eqnarray*}
    \fv(\ss P {t^n} {r^n})
    &\defs&
-   (\fv(P)\setminus{t^n})\cup \fv(r^m)
-\\ \textbf{where} && t^m = t^n \cap \fv(P), r^m \textrm{ corresponds to } t^m
+   (\fv(P)\setminus{t^n})\cup \fv(rs)
+\\ \textbf{where} && rs =  \setof{r | t \in(\fv(P)\cap{t^n}), [r/t] \in [r^n/t^n]}
 \end{eqnarray*}
 The following example illustrates the problem:
 \begin{description}
@@ -180,39 +180,38 @@ Note that the above demonstration makes use of all available information
 when its suits to do so (see ``uses'' comment above).
 The problem is the free-variable calculation, 
 which has no information about the relationship between $R$, $O'$ and $O_m$.
-\begin{eqnarray*}
-\lefteqn{\fv(R[O_m/O'])}
-\\ &=?=& \text{Defn. of $\fv$ above} 
-\\ && (\fv(R)\setminus \setof{O'}) \cup \setof{O_m}
-\\ &=& \text{$\fv$ again}
-\\ && (\setof{R}\setminus \setof{O'}) \cup \setof{O_m}
-\\ &=?=& \text{I need to pack this into $\Set{V}\times\Set(V\times\Set V)$}
-\\ && (\setof{O_m},\setof{(R,\setof{O'})}) 
-    \quad\text{I guess!}
-\end{eqnarray*}
-What does \texttt{freeVars} compute right now?
-\begin{verbatim}
-@dFV.t:
-S P (V P (VR (Id "R" 0,VP,WS))) 
-    (SN (fromList []) 
-        (fromList 
-           [( LV (VR (Id "O" 0,VO,WA),[],[])
-           ,  LV (VR (Id "O" 0,VO,WD "1"),[],[])
-           )]
-         ))
-@dFV.fv(t):
-(fromList [GV (VR (Id "R" 0,VP,WS))],[])
-\end{verbatim}
-This translates to $\fv(R[O_1/O']) = R$ !
 
-We can imagine the following process to compute $\fv(t[r^n/t^n])$ :
-\begin{itemize}
-   \item Let $fvt = \fv(t)$.
-   \item Let $vistgt = t^n \cap fvt$.
-   \item Let $visrepl = r^n | vistgt$.
-   \item Let $visfvs = \cup/\power\fv(visrepl)$.
-   \item Produce $visfvs \cup (fvt \setminus t^n)$.
-\end{itemize}
+\textbf{Solution:}
+\emph{
+  We need to bring side-conditions into this calculation 
+  as a context parameter.
+}
+
+We then see the following calculation:
+\begin{eqnarray*}
+\lefteqn{\beta(\lst x \disj P), \qquad  O,O' \supseteq R}
+\\ &=&  \beta(\lst x) \disj \fv(\beta(P))
+\\ &=& \seqof{O_m} \disj \fv(R[O_m/O'])
+\\ &=& \seqof{O_m} 
+       \disj (\fv(R) \setminus {O'}) 
+             \cup
+             \bigcup_{t \in (\fv(R)\cap {O'})}^{[r/t] \in [r^n/t^n]}
+               \power\fv \setof{r}
+\\ &=& \seqof{O_m} 
+       \disj (\setof{O,O'} \setminus {O'}) 
+             \cup
+             \bigcup_{t \in (\setof{O,O'}\cap {O'})}^{[r/t] \in [r^n/t^n]}
+               \power\fv \setof{r}
+\\ &=& \seqof{O_m} 
+       \disj \setof{O} 
+             \cup
+             \bigcup_{t \in {O'}}^{[r/t] \in [r^n/t^n]}
+               \power\fv \setof{r}
+\\ &=& \seqof{O_m} \disj \setof{O}  \cup \fv(O_m)
+\\ &=& \seqof{O_m} \disj \setof{O} \cup \setof{O_m}
+\\ &=& \seqof{O_m} \disj \setof{O,O_m}
+\\ &=& \false
+\end{eqnarray*}
 
 
 \section{Free Variable Definitions}

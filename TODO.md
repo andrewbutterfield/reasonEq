@@ -2,73 +2,8 @@
 
 ## Urgent
 
-###
+## Issues
 
-Still issues with law `non_subst :: P[e$/x$]  ≡  P  x$∉P` is broken.
-Substitution `(R[O$_1/O$'])[O$'/O$_1]` should result in `R[O$'/O$']
-
-```
-@dFV.t:  R[O1/O']
-
-@fV(Sub).sub: [O1/O']
-@fV(Sub).tm:  R
-@fV(Sub).visfvs: ({},{})  --- ??? O1 ??? NEED TO *KNOW* O' in R
-@fV(Sub).missed:  ({},{(R,{O'})})
-@fV(Sub): ({},{(R,{O'})})
-```
-!!!! I think we should get   ({O1},{(R,{O'})})
-
-Yes, but we need to know that O,O' supset R to do this
-
-`FreeVars` needs to import `SideCond`.
-`SideCond` doesn't use `VardData` so it should stop importing it
-(breaks an import cycle).
-
-
-
-'.
-
-Problems is what do we report for `fv(R[O1/O])`. 
-The `freeVars` function will return `R`, but lose information about the substitution.
-We need to add explicit variable substitutions to non.-obs. variables 
-reported in the free variables datatype.
-
-```
-type FreeVars = (VarSet, [(GenVar,VarSet)])
-```
-should become
-```
-type FreeVars = (VarSet, [(GenVar,VarSet)], [(Variable,Substn)])
-```
-The variables are Term variables that are under substitutions.
-
-### Idea
-
-We use `substitute` to implement  `F(P,Q)[e$/x$] -> F(P[e$/x$],Q[e$/x$])`
-But we can do it the other way as well!
-
-### Issue
-
-Law is different ?
-
-`“∀_inst” (∀ x$,y$ • P) ⟹ (∀ y$ • P[e$/x$])`
-
-
-```
-24 : “∀_inst” (∀ x$ • P)  ∧  P[?e$/x$]  x$⊇P ⟹ ⊤ * ⟹
-⊢
-(∀ x$ • P)⟹  P    x$⊇P
-Focus = [1]
-
-Target (RHS): 
-true
-
-proof: a24
-Choose variables to replace ?e$
-   1. e$
-Select by numbers: 
-```
-We should to be able to select x$
 
 
 ### Theory and Proof Management.

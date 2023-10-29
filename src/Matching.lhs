@@ -28,6 +28,7 @@ import Control
 import LexBase
 import Variables
 import AST
+import SideCond
 import FreeVars
 import VarData
 import Binding
@@ -451,8 +452,8 @@ Note that here we only close w.r.t. free \emph{observational} variables.
 tMatch' vts bind cbvs pbvs (Cls nC tC) (Cls nP tP)
   | nC == nP  =  tMatch vts bind cbvs' pbvs' tC tP
   where
-    cbvs' = S.filter isObsGVar $ theFreeVars $ freeVars tC
-    pbvs' = S.filter isObsGVar $ theFreeVars $ freeVars tP
+    cbvs' = S.filter isObsGVar $ theFreeVars $ freeVars scTrue tC -- safe?
+    pbvs' = S.filter isObsGVar $ theFreeVars $ freeVars scTrue tP -- safe?
 \end{code}
 
 \subsection{Substitution Term-Pattern (\texttt{Sub})}

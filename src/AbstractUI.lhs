@@ -932,7 +932,7 @@ lawInstantiate2 rslaws i liveProof
        let dpath = fPath liveProof
        let vts = concat $ map thd3 $ mtchCtxts liveProof
        let lFreeV = stdVarSetOf $ S.filter (isUnknownGVar vts)
-                                $ theFreeVars $ freeVars lawt
+                                $ theFreeVars $ freeVars lsc lawt
        let goalTerms = reverse $ subTerms (exitTZ tz)
        return (law,S.toList lFreeV,goalTerms)
 \end{code}

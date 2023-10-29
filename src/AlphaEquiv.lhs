@@ -27,6 +27,7 @@ import Utilities
 import LexBase
 import Variables
 import AST
+import SideCond
 import FreeVars
 -- import VarData
 -- import Binding
@@ -275,8 +276,8 @@ isAEquiv bij (Cls n1 tm1) (Cls n2 tm2)
          all2 <- pBnd n2 vs2 tm2
          isAEquiv bij all1 all2
   where
-    vs1 = theFreeVars $ freeVars tm1
-    vs2 = theFreeVars $ freeVars tm2
+    vs1 = theFreeVars $ freeVars scTrue tm1  -- safe?
+    vs2 = theFreeVars $ freeVars scTrue tm2  -- safe?
 \end{code}
 
 \subsubsection{Substitution $\alpha$-equivalence}

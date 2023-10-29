@@ -51,7 +51,9 @@ import Utilities
 import LexBase
 import Variables
 import AST
+import SideCond
 import FreeVars
+
 
 import Debugger
 \end{code}
@@ -276,7 +278,7 @@ and will be added if required.
 \subsubsection{Inserting Known Constants}
 
 \begin{code}
-addKnownConst :: (Monad m, MonadFail m) => Variable -> Term -> VarTable -> m VarTable
+addKnownConst :: MonadFail m => Variable -> Term -> VarTable -> m VarTable
 \end{code}
 
 We no longer require free variables in a term entry
@@ -301,7 +303,7 @@ addKnownConst var@(Vbl _ _ Static) trm vt@(VD (vtable,stable,dtable))
         Just UV  ->  return $ VD ( M.insert var (KC trm) vtable,stable,dtable )
         _ -> fail "addKnownConst: cannot update."
   where
-     freev = freeVars trm
+     freev = freeVars scTrue trm  -- always safe?
 
 addKnownConst _ _ _ = fail "addKnownConst: not for Dynamic Variables."
 \end{code}

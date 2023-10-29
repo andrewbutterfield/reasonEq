@@ -25,9 +25,9 @@ import Control (mapsnd)
 import LexBase
 import Variables
 import AST
+import SideCond
 import FreeVars
 import VarData
-import SideCond
 
 import TestRendering
 
@@ -86,7 +86,7 @@ and we have $when : V \fun VW$:
 \end{eqnarray*} 
 \begin{code}
 termTemp :: Term -> Set VarWhen
-termTemp = S.map gvarWhen . theFreeVars . freeVars
+termTemp = S.map gvarWhen . theFreeVars . freeVars scTrue -- safe?
 gvarTemp :: GenVar -> Set VarWhen
 gvarTemp gv = S.singleton $ gvarWhen gv
 listTemp :: Ord a => (a -> Set VarWhen) -> [a] -> Set VarWhen
@@ -505,7 +505,7 @@ We handle $(\ll n {x^+} t) \ss {} {v^n} {t^n}$ in a similar fashion.
 substitute sctx sub bt@(Bnd tk i vs tm)
   | isNullSubstn effsub  =  return bt
   | otherwise 
-    = do  alpha <- captureAvoidance vs tm effsub
+    = do  alpha <- captureAvoidance (scSC sctx) vs tm effsub
           let vs' = S.fromList $ quantsSubst alpha $ S.toList vs
           asub <- substComp alpha effsub --- succeeds as alpha is var-only
           tm' <- substitute sctx asub tm
@@ -517,7 +517,7 @@ substitute sctx sub bt@(Bnd tk i vs tm)
 substitute sctx sub lt@(Lam tk i vl tm)
   | isNullSubstn effsub  =  return lt
   | otherwise 
-    = do  alpha <- captureAvoidance vs tm effsub
+    = do  alpha <- captureAvoidance (scSC sctx) vs tm effsub
           let vl' = quantsSubst alpha vl
           asub <- substComp alpha effsub --- succeeds as alpha is var-only
           tm' <- substitute sctx asub tm
@@ -684,10 +684,11 @@ so that bound variables can be $\alpha$-renamed so they are not
 affected by a substitution. This is done by changing the uniqueness number
 of the relevant variable.
 \begin{code}
-captureAvoidance :: MonadFail m => VarSet -> Term -> Substn -> m Substn
-captureAvoidance vs tm sub
-  = do let tfv = freeVars tm
-       let (tgtvs,rplvs) = substRelFree tfv sub
+captureAvoidance :: MonadFail m 
+                 => SideCond -> VarSet -> Term -> Substn -> m Substn
+captureAvoidance sc vs tm sub
+  = do let tfv = freeVars sc tm
+       let (tgtvs,rplvs) = substRelFree sc tfv sub
        let needsRenaming = S.toList (tgtvs `S.intersection` vs)
        let knownVars = theFreeVars ( tfv `mrgFreeVars` rplvs )
        mkFresh knownVars [] [] needsRenaming

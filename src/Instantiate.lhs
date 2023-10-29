@@ -418,7 +418,7 @@ instStdVar insctxt binding v
   = case lookupVarBind binding v of
       Nothing             ->  return $ single v  -- maps to self !
       Just (BindVar v')   ->  return $ single v'
-      Just (BindTerm t')  ->  return $ freeVars t'
+      Just (BindTerm t')  ->  return $ freeVars (icSC insctxt) t'
       _  ->  fail "instStdVar: bound to identifier."
   where single v = (S.singleton (StdVar v),[])
 \end{code}
@@ -650,7 +650,7 @@ deduceFreeVars insctxt t
         map (scDiffExpand sc) dD )
   where
      sc = icSC insctxt
-     (fF,dD) = pdbg "dFV.fv(t)" $ freeVars $ pdbg "dFV.t" t
+     (fF,dD) = pdbg "dFV.fv(t)" $ freeVars sc $ pdbg "dFV.t" t
 \end{code}
 
 \begin{eqnarray*}

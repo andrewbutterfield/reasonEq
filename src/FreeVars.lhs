@@ -57,7 +57,7 @@ and list-variables.
 Consider the following extract from the standard free-variable definition:
 \begin{eqnarray*}
    \fv &:& T \fun \Set{V}
-\\  \fv(\vv v)  &\defs&  \{\vv v\}
+\\ \fv(\vv v)  &\defs&  \{\vv v\}
 \\ \fv(\bb n {v^+} t) &\defs& \fv(t)\setminus{v^+}
 \end{eqnarray*}
 In general we need to work with variable-set \emph{expressions}.
@@ -189,25 +189,25 @@ which has no information about the relationship between $R$, $O'$ and $O_m$.
 
 We then see the following calculation:
 \begin{eqnarray*}
-\lefteqn{\beta(\lst x \disj P), \qquad  O,O' \supseteq R}
-\\ &=&  \beta(\lst x) \disj \fv(\beta(P))
-\\ &=& \seqof{O_m} \disj \fv(R[O_m/O'])
+\lefteqn{\beta(\lst x \disj P), \qquad  sc = O,O' \supseteq R}
+\\ &=&  \beta(\lst x) \disj \fvsc(\beta(P))
+\\ &=& \seqof{O_m} \disj \fvsc(R[O_m/O'])
 \\ &=& \seqof{O_m} 
-       \disj (\fv(R) \setminus {O'}) 
+       \disj (\fvsc(R) \setminus {O'}) 
              \cup
-             \bigcup_{t \in (\fv(R)\cap {O'})}^{[r/t] \in [r^n/t^n]}
-               \power\fv \setof{r}
+             \bigcup_{t \in (\fvsc(R)\cap {O'})}^{[r/t] \in [r^n/t^n]}
+               \power\fvsc \setof{r}
 \\ &=& \seqof{O_m} 
        \disj (\setof{O,O'} \setminus {O'}) 
              \cup
              \bigcup_{t \in (\setof{O,O'}\cap {O'})}^{[r/t] \in [r^n/t^n]}
-               \power\fv \setof{r}
+               \power\fvsc \setof{r}
 \\ &=& \seqof{O_m} 
        \disj \setof{O} 
              \cup
              \bigcup_{t \in {O'}}^{[r/t] \in [r^n/t^n]}
-               \power\fv \setof{r}
-\\ &=& \seqof{O_m} \disj \setof{O}  \cup \fv(O_m)
+               \power\fvsc \setof{r}
+\\ &=& \seqof{O_m} \disj \setof{O}  \cup \fvsc(O_m)
 \\ &=& \seqof{O_m} \disj \setof{O} \cup \setof{O_m}
 \\ &=& \seqof{O_m} \disj \setof{O,O_m}
 \\ &=& \false
@@ -448,30 +448,31 @@ theFreeVars (fvs,diffs) = fvs `S.union` ( S.fromList $ map fst diffs )
 \section{Term Free Variables}
 
 \begin{eqnarray*}
-   \fv(\kk k)  &\defs&  \emptyset
-\\ \fv(\vv v)  &\defs&  \{\vv v\} \quad \mbox{$v$ is non-textual}
-\\ \fv(\cc n {ts}) &\defs& \bigcup_{t \in ts} \fv(t)
-\\ \fv(\bb n {v^+} t) &\defs& \fv(t)\setminus{v^+}
-\\ \fv(\ll n {v^+} t) &\defs& \fv(t)\setminus{v^+}
-\\ \fv(\ii \bigoplus n {lvs}) &\defs& lvs
+   \fvsc(\kk k)  &\defs&  \emptyset
+\\ \fvsc(\vv v)  &\defs&  \{\vv v\} \quad \mbox{$v$ is non-textual}
+\\ \fvsc(\vv P)  &\defs&  V \cond{(V \supseteq P) \in sc} \{\vv P\} 
+\\ \fvsc(\cc n {ts}) &\defs& \bigcup_{t \in ts} \fvsc(t)
+\\ \fvsc(\bb n {v^+} t) &\defs& \fvsc(t)\setminus{v^+}
+\\ \fvsc(\ll n {v^+} t) &\defs& \fvsc(t)\setminus{v^+}
+\\ \fvsc(\ii \bigoplus n {lvs}) &\defs& lvs
    \quad \mbox{less any textual list-vars in }lvs
-\\ \fv(\ss P {t^n} {r^n})
+\\ \fvsc(\ss P {t^n} {r^n})
    &\defs&
-   (\fv(P)\setminus{t^n})\cup \fv(rs)
-\\ \textbf{where} && rs =  \setof{r | t \in(\fv(P)\cap{t^n}), [r/t] \in [r^n/t^n]}
+   (\fvsc(P)\setminus{t^n})\cup \fvsc(rs)
+\\ \textbf{where} && rs =  \setof{r | t \in(\fvsc(P)\cap{t^n}), [r/t] \in [r^n/t^n]}
 \end{eqnarray*}
 \begin{code}
 notTextualLV (LVbl (Vbl _ _ vw) _ _) = vw /= Textual
 
-freeVars :: Term -> FreeVars
-freeVars (Var tk v@(Vbl _ _ vw))
+freeVars :: SideCond -> Term -> FreeVars
+freeVars sc (Var tk v@(Vbl _ _ vw))
   | vw /= Textual                   =  injVarSet $ S.singleton $ StdVar v
-freeVars (Cons tk sb n ts)          =  mrgFreeVarList $ map freeVars ts
-freeVars (Bnd tk n vs tm)           =  subVarSet (freeVars tm) vs
-freeVars (Lam tk n vl tm)           =  subVarSet (freeVars tm) $ S.fromList vl
-freeVars (Cls _ _)                  =  noFreevars
+freeVars sc (Cons tk sb n ts)          =  mrgFreeVarList $ map (freeVars sc) ts
+freeVars sc (Bnd tk n vs tm)           =  subVarSet (freeVars sc tm) vs
+freeVars sc (Lam tk n vl tm)           =  subVarSet (freeVars sc tm) $ S.fromList vl
+freeVars sc (Cls _ _)                  =  noFreevars
 
-freeVars (Iter tk sa na si ni lvs)
+freeVars sc (Iter tk sa na si ni lvs)
   =  injVarSet $ S.fromList $ map LstVar $ filter notTextualLV lvs
 \end{code}
 
@@ -483,9 +484,9 @@ v,\lst v :=  e,\lst e
  \quad\defs\quad   (:=)[e,\lst e/x,\lst x]
 $$
 \begin{code}
-freeVars (Sub tk tm (Substn vts lvlvs))
+freeVars sc (Sub tk tm (Substn vts lvlvs))
   | isAssignment tm
-      = (foldl' mrgFreeVars noFreevars (S.map freeVars ts))
+      = (foldl' mrgFreeVars noFreevars (S.map (freeVars sc) ts))
          `mrgFreeVars`
          (injVarSet (vs `S.union` lvs1 `S.union` lvs2))
       where
@@ -500,34 +501,34 @@ freeVars (Sub tk tm (Substn vts lvlvs))
 
 Substitution is complicated, so here's a reminder:
 \begin{eqnarray*}
-   \fv(\ss P {t^n} {r^n})
+   \fvsc(\ss P {t^n} {r^n})
    &\defs&
-   (\fv(P)\setminus{t^n})\cup \fv(rs)
-\\ \textbf{where} && rs =  \setof{r | t \in(\fv(P)\cap{t^n}), [r/t] \in [r^n/t^n]}
+   (\fvsc(P)\setminus{t^n})\cup \fvsc(rs)
+\\ \textbf{where} && rs =  \setof{r | t \in(\fvsc(P)\cap{t^n}), [r/t] \in [r^n/t^n]}
 \end{eqnarray*}
 This function returns the free variables in a substitution
 \emph{relative} to a given term to which it is being applied.
 It also returns the free variables from that term that will be substituted for.
 We expect the following to hold:
 $$
-\fv(R[O_m/O']) =  (\setof{O_m},\setof{(R,\setof{O'})}) 
+\fvsc(R[O_m/O']) =  (\setof{O_m},\setof{(R,\setof{O'})}) 
 $$
-Right now we have $\fv(R[O_m/O']) = R$!
+Right now we have $\fvsc(R[O_m/O']) = R$!
 
-We can imagine the following process to compute $\fv(P[r^n/t^n])$ :
+We can imagine the following process to compute $\fvsc(P[r^n/t^n])$ :
 \begin{itemize}
-   \item Let $fvp = \fv(P)$.
+   \item Let $fvp = \fvsc(P)$.
    \item Let $vistgt = t^n \cap fvp$.
    \item Let $visrepl = r^n | vistgt$.
-   \item Let $visfvs = \cup/\power\fv(visrepl)$.
+   \item Let $visfvs = \cup/\power\fvsc(visrepl)$.
    \item Produce $visfvs \cup (fvp \setminus t^n)$.
 \end{itemize}
 
 \begin{code}
-freeVars (Sub tk tm sub)
+freeVars sc (Sub tk tm sub)
   = let
-      fvtm = freeVars $ pdbg "fV(Sub).tm" tm
-      (vistgt,visfvs) = substRelFree fvtm $ pdbg "fV(Sub).sub" sub
+      fvtm = freeVars sc $ pdbg "fV(Sub).tm" tm
+      (vistgt,visfvs) = substRelFree sc fvtm $ pdbg "fV(Sub).sub" sub
       missed = subVarSet fvtm (subTargets sub)
     in pdbg "fV(Sub)" $ mrgFreeVars (pdbg "fV(Sub).visfvs" visfvs) $ pdbg "fV(Sub).missed" missed
 \end{code}
@@ -541,26 +542,26 @@ replacements.
 $$
 sRF~\setof{x,u,\lst u}~[e,f,\lst e,lst f/u,v,\lst u,\lst v]
 =
-(\setof{u,\lst u},\fv(e) \cup \setof{\lst e})
+(\setof{u,\lst u},\fvsc(e) \cup \setof{\lst e})
 $$
 This is $(vistgt,visfvs)$ from above.
 \begin{code}   
-substRelFree :: FreeVars -> Substn -> (VarSet,FreeVars)
-substRelFree tfv (Substn ts lvs) = (tgtvs,rplvs)
+substRelFree :: SideCond -> FreeVars -> Substn -> (VarSet,FreeVars)
+substRelFree sc tfv (Substn ts lvs) = (tgtvs,rplvs)
  where
    ts' = S.filter (applicable StdVar tfv) ts
    lvs' = S.filter (applicable LstVar tfv) lvs
    tgtvs = S.map (StdVar . fst) ts'
            `S.union`
            S.map (LstVar . fst) lvs'
-   rplvs = ( mrgFreeVarList $ S.toList $ S.map (freeVars . snd) ts' )
+   rplvs = ( mrgFreeVarList $ S.toList $ S.map (freeVars sc . snd) ts' )
            `mrgFreeVars`
            ( injVarSet $ S.map (LstVar .snd) lvs' )
 \end{code}
 \begin{verbatim}
-freeVars (Sub tk tm s) =  pdbg "freeVars" $ mrgFreeVars (subVarSet tfv $ pdbg "fV.tgtvs" tgtvs) $ pdbg "fV.rplvs" rplvs
+freeVars sc (Sub tk tm s) =  pdbg "freeVars" $ mrgFreeVars (subVarSet tfv $ pdbg "fV.tgtvs" tgtvs) $ pdbg "fV.rplvs" rplvs
    where
-     tfv            =  freeVars $ pdbg "fV.tm" tm
+     tfv            =  freeVars sc $ pdbg "fV.tm" tm
      (tgtvs,rplvs)  =  substRelFree (pdbg "fV.tfv" tfv) $ pdbg "fV.s" s
 
 freeVars _  =  noFreevars
@@ -683,7 +684,7 @@ nestSimplify trm = fail "nestSimplify: not nested similar quantifiers"
 
 \textsf{
 We need something that simplifies $\bb i {V_i }{\bb j {V_j} P}$
-to $\bb j {V_j} P$, because $V_j \supseteq \fv(P)$.
+to $\bb j {V_j} P$, because $V_j \supseteq \fvsc(P)$.
 }
 
 \newpage

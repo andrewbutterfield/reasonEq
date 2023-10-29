@@ -5,30 +5,28 @@
 ###
 
 Still issues with law `non_subst :: P[e$/x$]  ≡  P  x$∉P` is broken.
-
-BUG APPEARS TO BE HERE:
+Substitution `(R[O$_1/O$'])[O$'/O$_1]` should result in `R[O$'/O$']
 
 ```
 @dFV.t:  R[O1/O']
 
 @fV(Sub).sub: [O1/O']
 @fV(Sub).tm:  R
-@fV(Sub).visfvs: ({},{})  --- ??? O1 ???
+@fV(Sub).visfvs: ({},{})  --- ??? O1 ??? NEED TO *KNOW* O' in R
 @fV(Sub).missed:  ({},{(R,{O'})})
 @fV(Sub): ({},{(R,{O'})})
-
+```
 !!!! I think we should get   ({O1},{(R,{O'})})
-```
 
-Strange? Why does e bind to BX and x to BL ?:
-```
-[((Id "e" 0,VE,[],[]),BX [Left (LV (VR (Id "O" 0,VO,WA),[],[]))])
-,((Id "x" 0,VO,[],[]),BL [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))])
-]
-```
-Probably VE vs VO distinction.
+Yes, but we need to know that O,O' supset R to do this
 
-Substitution `(R[O$_1/O$'])[O$'/O$_1]` should result in `R[O$'/O$']'.
+`FreeVars` needs to import `SideCond`.
+`SideCond` doesn't use `VardData` so it should stop importing it
+(breaks an import cycle).
+
+
+
+'.
 
 Problems is what do we report for `fv(R[O1/O])`. 
 The `freeVars` function will return `R`, but lose information about the substitution.

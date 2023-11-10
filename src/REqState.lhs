@@ -1,4 +1,4 @@
-\section{\reasonEq\ State}
+\chapter{\reasonEq\ State}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2017--22
 
@@ -43,7 +43,7 @@ import Ranking
 import Debugger
 \end{code}
 
-\subsection{Settings}
+\section{Settings}
 
 We divide settings into three types:
 \begin{enumerate}
@@ -65,7 +65,7 @@ We divide settings into three types:
    of several related specification settings.
 \end{enumerate}
 
-\subsubsection{Settings Record}
+\subsection{Settings Record}
 
 \begin{code}
 data REqSettings
@@ -121,21 +121,21 @@ andIfWanted wanted newf currf ctxt mtch
 \end{code}
 
 
-\subsubsection{Startup/Default Settings}
+\subsection{Startup/Default Settings}
 
 
 \begin{code}
 initREqSettings
   = matchFilterUpdate $ REqSet {
       maxMatchDisplay = 20
-    , hideTrivialMatch = False
+    , hideTrivialMatch = True
     , hideTrivialQuantifiers = True -- best for now
-    , hideFloatingVariables = False
+    , hideFloatingVariables = True
     , matchFilter = acceptAll
     }
 \end{code}
 
-\subsubsection{Settings Help}
+\subsection{Settings Help}
 
 For every setting we provide both a short and long string,
 the first for use in commands, the second for display
@@ -239,7 +239,7 @@ readREqSettings txts
 \end{code}
 
 \newpage
-\subsection{Prover State Type}
+\section{Prover State Type}
 
 Here we simply aggregate the semantic equational-reasoning prover state
 
@@ -271,7 +271,7 @@ liveProofs__ f r = r{liveProofs = f $ liveProofs r}
 liveProofs_      = liveProofs__ . const
 \end{code}
 
-\subsection{Writing and Reading State}
+\section{Writing and Reading State}
 
 \begin{code}
 reqstate = "REQSTATE"
@@ -279,7 +279,7 @@ reqstateHDR = "BEGIN "++reqstate ; reqstateTLR ="END "++reqstate
 currThKEY = "CURRTHEORY = "
 \end{code}
 
-\subsubsection{Write State}
+\subsection{Write State}
 
 \begin{code}
 writeREqState :: REqState -> ([String],NamedTheoryTexts)
@@ -294,7 +294,7 @@ writeREqState reqs
   where (thrysTxt,nmdTxts) = writeTheories (theories reqs)
 \end{code}
 
-\subsubsection{Read State}
+\subsection{Read State}
 
 We have to split this into two phases:
 \begin{code}
@@ -325,7 +325,7 @@ readREqState2 theSet thMap txts
                          , liveProofs = lPrfs }
 \end{code}
 
-\subsection{Test Functions}
+\section{Test Functions}
 
 For \texttt{andIfWanted}
 

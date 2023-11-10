@@ -1,9 +1,9 @@
 BEGIN REQSTATE
 BEGIN REQSET
 MMD = 20
-MHT = False
+MHT = True
 MHQ = True
-MHF = False
+MHF = True
 END REQSET
 BEGIN THEORIES
 THNAMES = ["And","AndOrInvert","Equality","Equiv","Exists","ForAll","Implies","Not","Or","UClose","UTPBase","XYZ"]

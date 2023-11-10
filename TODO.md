@@ -4,6 +4,11 @@
 
 ## Issues
 
+* Allow `REqSet` settings to be changed  from *within* a proof
+* We really need to have symmetric forms of key results, e.g., we have `P∨true≡true`, but should also have `true∨P≡true`.
+
+
+For now, we simply hide all trivial and floating stuff by default.
 
 
 ### Theory and Proof Management.
@@ -136,8 +141,6 @@ In particular, extracting `VarTable`s from the top-level `mtchCntxt` component o
 
 Doing this has shown that proof ranking and short-listing needs improvement.
 
-* Allow `REqSet` settings to be changed  from *within* a proof
-* We really need to have symmetric forms of key results, e.g., we have `P∨true≡true`, but should also have `true∨P≡true`.
 
 We really need to able to tune things - using negation-involution to add a double-negation can be really useful.
 

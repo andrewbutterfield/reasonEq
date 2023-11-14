@@ -465,6 +465,7 @@ theFreeVars (fvs,diffs) = fvs `S.union` ( S.fromList $ map fst diffs )
 notTextualLV (LVbl (Vbl _ _ vw) _ _) = vw /= Textual
 
 freeVars :: SideCond -> Term -> FreeVars
+freeVars _ (Val _ _)  =  noFreevars
 freeVars sc (Var tk v@(Vbl _ ObsV vw))
   | vw /= Textual  =  injVarSet $ S.singleton $ StdVar v
   | otherwise      =  noFreevars
@@ -473,10 +474,10 @@ freeVars sc (Var tk p@(Vbl _ _ vw)) -- not ObsV
       Nothing     ->  injVarSet $ S.singleton vP
       Just cover  ->  injVarSet cover
   where  vP = StdVar p
-freeVars sc (Cons tk sb n ts)          =  mrgFreeVarList $ map (freeVars sc) ts
-freeVars sc (Bnd tk n vs tm)           =  subVarSet (freeVars sc tm) vs
-freeVars sc (Lam tk n vl tm)           =  subVarSet (freeVars sc tm) $ S.fromList vl
-freeVars sc (Cls _ _)                  =  noFreevars
+freeVars sc (Cons tk sb n ts)  =  mrgFreeVarList $ map (freeVars sc) ts
+freeVars sc (Bnd tk n vs tm)   =  subVarSet (freeVars sc tm) vs
+freeVars sc (Lam tk n vl tm)   =  subVarSet (freeVars sc tm) $ S.fromList vl
+freeVars sc (Cls _ _)          =  noFreevars
 
 freeVars sc (Iter tk sa na si ni lvs)
   =  injVarSet $ S.fromList $ map LstVar $ filter notTextualLV lvs
@@ -539,6 +540,11 @@ freeVars sc (Sub tk tm sub)
     in mrgFreeVars visfvs missed
 \end{code}
 
+In all other cases we return an empty set:
+\begin{code}
+freeVars _ _ = noFreevars
+\end{code}
+
 What does \texttt{substRelFree} do?
 Given free variables $fv$, and a substitution,
 it selects pairs whose targets are in $fv$,
@@ -569,9 +575,6 @@ freeVars sc (Sub tk tm s) =  mrgFreeVars (subVarSet tfv tgtvs) rplvs
    where
      tfv            =  freeVars sc tm
      (tgtvs,rplvs)  =  substRelFree sc tfv s
-
-freeVars _  =  noFreevars
-
 \end{verbatim}
 
 A target/replacement pair is ``applicable'' if the target variable

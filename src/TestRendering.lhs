@@ -19,7 +19,7 @@ module TestRendering (
  , trTermZip, trTermZipU
  , trSideCond, trSideCondU
  , trAsn, trAsnU, trNmdAsn, trNmdAsnU
- , (-.-), nicelawname
+ , truelawname, (-.-), nicelawname
  , trVarMatchRole, trVarMatchRoleU
  , trLstVarMatchRole, trLstVarMatchRoleU
  , trVarTable, trVarTableU
@@ -484,8 +484,10 @@ trasn trid (Assertion trm sc)      =  trterm trid 0 trm ++ ", " ++ trSideCond sc
 trNmdAsn = trnmdasn trId
 trNmdAsnU = trnmdasn trIdU
 
-trnmdasn trid (lawnm,asn) =  nicelawname lawnm ++ ": " ++ trasn trid asn
+trnmdasn trid (lawnm,asn) =  truelawname lawnm ++ ": " ++ trasn trid asn
 
+truelawname, nicelawname :: String -> String
+truelawname  =  id
 nicelawname  =  widthHack 2 . foldl1 (-.-) . map nicesym . splitOn nicesplit
 nicesplit = "_"
 n1 -.- n2  =  n1 ++ nicesplit ++ n2

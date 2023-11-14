@@ -318,12 +318,12 @@ showKnowns vts = unlines' (map trVarTable vts)
 Showing laws:
 \begin{code}
 showNmdAssns dm nasns  =  numberList (showNmdAssn dm $ nameWidth nasns)  nasns
-nameWidth nasns = maximum $ map (nicelength . nicelawname . fst) nasns
+nameWidth nasns = maximum $ map (nicelength . truelawname . fst) nasns
 
 showNmdAssn (showT,showSC) w (nm,(Assertion trm sc))
   =    ldq ++ nmh ++ rdq ++ pad w nmh
        ++ "  " ++ showT trm ++ "  "++showSC sc
-  where nmh = nicelawname nm
+  where nmh = truelawname nm
 
 showLaws _ []    =  "NONE."
 showLaws dm lws  =  numberList (showLaw dm $ nameWidth $ map fst lws) lws

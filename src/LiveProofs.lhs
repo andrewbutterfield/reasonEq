@@ -1061,7 +1061,7 @@ displayMatches maxm mctxts matches
   where vts = concat $ map thd3 mctxts
 
 shMatch vts (i, mtch)
- = show i ++ " : "++ ldq ++ green (nicelawname $ mName mtch) ++ rdq
+ = show i ++ " : "++ ldq ++ green (truelawname $ mName mtch) ++ rdq
    ++ " "
    ++ (bold $ blue $ trTerm 0 $ mRepl mtch)
    ++ "  " ++ shSCImplication (mLocSC mtch) (mLawSC mtch)

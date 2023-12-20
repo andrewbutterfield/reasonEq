@@ -809,6 +809,7 @@ proofREPLConfig
             , simpNestDescr
             , substituteDescr
             , showProofSettingsDescr
+            , modPrfSettingsDescr
             , flatEquivDescr
             , groupEquivDescr
             , lawInstantiateDescr
@@ -919,6 +920,7 @@ leaveHypothesisDescr
 leaveHypothesis :: REPLCmd (REqState, LiveProof)
 leaveHypothesis _ = tryDelta moveFocusFromHypothesis
 \end{code}
+
 
 \newpage
 Auto Proof
@@ -1074,6 +1076,29 @@ showPrfSettingsCommand _ pstate@(reqs, _)
   =  do putStrLn $ observeSettings reqs
         waitForReturn
         return pstate
+\end{code}
+
+Modifying proof settings:
+\begin{code}
+modPrfSettingsDescr
+  = ( "mps"
+    , "modify proof-settings"
+    , unlines
+        ( [ "mps 'setting' 'value' -- set setting=value" ]
+          ++ map (("      "++) .showSettingStrings) rEqSettingStrings
+          ++ ["  e.g. mps mmd 42"]
+        )
+    , modProofSettings )
+
+modProofSettings :: REPLCmd (REqState, LiveProof)
+modProofSettings args@[name,val] state@(reqs, liveProof)
+-- | cmd == setSettings
+    =  case modifySettings args reqs of
+         But msgs  ->  do putStrLn $ unlines' ("mps failed":msgs)
+                          waitForReturn
+                          return (reqs, liveProof)
+         Yes reqs' -> return (reqs', liveProof)
+modProofSettings _ state = return state
 \end{code}
 
 

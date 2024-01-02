@@ -192,7 +192,7 @@ initState flags
         else do  putStrLn "Running user mode, default initial state."
                  (appFP,projects) <- getWorkspaces progName
                  putStrLn ("appFP = "++appFP)
-                 putStrLn ("projects:\n"++unlines projects)
+                 putStrLn ("projects:\n"++(unlines $ map show projects))
                  (pname,projfp)
                     <- currentWorkspace
                          ( unlines $ fst $ writeREqState reqstate0 )
@@ -372,7 +372,7 @@ showWorkspaces :: [String] -> REqState -> IO REqState
 showWorkspaces args reqs
   = do (appFP,projects) <- getWorkspaces progName
        putStrLn ("Application Data:\n\t"++appFP)
-       putStrLn ("Project Folders:\n"++unlines (map ('\t':) projects))
+       putStrLn ("Project Folders:\n"++unlines (map (('\t':) . thd3) projects))
        return reqs
 \end{code}
 

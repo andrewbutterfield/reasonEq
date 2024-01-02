@@ -21,6 +21,7 @@ import System.Directory
 import System.FilePath
 
 import Utilities
+import YesBut
 import Control
 import REqState
 
@@ -43,7 +44,11 @@ We return the path of the user application directory,
 plus the contents of its workspaces file.
 
 \begin{code}
-getWorkspaces :: String -> IO (FilePath, [String])
+type WorkSpace = ( Bool -- True if the current workspace
+                 , String -- workspace name
+                 , String -- path to workspace 
+                 )
+getWorkspaces :: String -> IO (FilePath, [WorkSpace])
 getWorkspaces appname
  = do userAppPath <- getAppUserDataDirectory appname
       mifte (doesDirectoryExist userAppPath)
@@ -75,13 +80,36 @@ createUserAppDir dirpath
 
 Get all known workspaces from user data.
 \begin{code}
-getAllWorkspaces :: FilePath -> IO (FilePath, [String])
+getAllWorkspaces :: FilePath -> IO (FilePath, [WorkSpace])
 getAllWorkspaces dirpath
  = let wsfp = dirpath </> wsRoot
    in ifFileExists "Workspace" ("",[]) wsfp (doGetWS wsfp)
  where
    doGetWS wsfp = do projTxt <- readFile wsfp
-                     return (dirpath, lines projTxt)
+                     wsps <- parseWorkspaces $ lines projTxt
+                     return (dirpath, wsps)
+
+parseWorkspaces :: [String] -> IO [WorkSpace]
+parseWorkspaces lns = parseWSs [] lns
+parseWSs ssw [] = return $ reverse ssw
+parseWSs ssw (ln:lns)
+  =  case parseWorkspace ln of
+       But msgs  ->  do  putStrLn $ unlines' msgs
+                         parseWSs ssw lns
+       Yes ws    ->  parseWSs (ws:ssw) lns 
+
+parseWorkspace :: MonadFail mf => String -> mf WorkSpace
+parseWorkspace ln
+ | take 1 ln == [currentMarker]  =  parseNameAndPath True  $ drop 1 ln
+ | otherwise                     =  parseNameAndPath False ln
+ 
+parseNameAndPath isCurrent ln
+  | null nm    =  fail ("parseWorkspace - no name: "++ln)
+  | null fp    =  fail ("parseWorkspace - no filepath: "++ln)
+  | otherwise  =  return (isCurrent,nm,fp)
+  where
+    (nm,after)  =  break (==pathSep) ln
+    fp          =  drop 1 after
 \end{code}
 
 \newpage
@@ -101,7 +129,7 @@ If the current workspace does not exist,
 we create it, and initialise the project file.
 \begin{code}
 currentWorkspace :: String -- initial project file contents
-                 -> [String] -- workspace listing
+                 -> [WorkSpace] -- workspace listing
                  -> IO (String,FilePath)
 currentWorkspace defReqState []
   = error ("No workspaces defined - ")
@@ -127,12 +155,8 @@ currentWorkspace defReqState wsSpecs
 Look for the workspace marked as current:
 \begin{code}
 findCurrent [] = fail "No current workspace!"
-findCurrent (ln:lns)
- | take 1 ln == [currentMarker] = return (nm,fp)
- | otherwise                    = findCurrent lns
- where
-   (nm,after) = break (==pathSep) $ drop 1 ln
-   fp = drop 1 after
+findCurrent ((True,nm,fp):_) = return (nm,fp)
+findCurrent (_:wss) = findCurrent wss
 \end{code}
 
 \subsection{Error Reporting}

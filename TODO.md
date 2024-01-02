@@ -51,9 +51,6 @@ with matching file support. Obviously can't create or delete the current theory,
 ### Files.lhs now merged into Persistence.lhs
 
 
-`getWorkspaces` should check that it has a non-empty list of workspaces,
-and return them parsed into current-flag, name and path triples.
-
 `currentWorkspace` needs to become two different things.
 
 One loads up the current workspace, if it exists.

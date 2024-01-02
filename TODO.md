@@ -51,11 +51,9 @@ with matching file support. Obviously can't create or delete the current theory,
 ### Files.lhs now merged into Persistence.lhs
 
 
-`currentWorkspace` needs to become two different things.
+`currentWorkspace` loads up the current workspace, if it exists.
 
-One loads up the current workspace, if it exists.
-
-Another creates and initialises a workspace.
+`createWorkspace` creates and initialises a workspace.
 
 ### Fixing "Equivales" proof generation
 

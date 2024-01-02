@@ -1,6 +1,6 @@
 \chapter{Main Program}
 \begin{verbatim}
-Copyright (c) Andrew Buttefield 2017--22
+Copyright (c) Andrew Buttefield 2017--24
               Saqid Zardari     2023
               Aaron Bruce       2023
 
@@ -193,10 +193,7 @@ initState flags
                  (appFP,projects) <- getWorkspaces progName
                  putStrLn ("appFP = "++appFP)
                  putStrLn ("projects:\n"++(unlines $ map show projects))
-                 (pname,projfp)
-                    <- currentWorkspace
-                         ( unlines $ fst $ writeREqState reqstate0 )
-                                     projects
+                 (ok,pname,projfp) <- currentWorkspace projects
                  putStrLn ("Project Name: "++pname)
                  putStrLn ("Project Path: "++projfp)
                  putStrLn "Loading..."
@@ -584,15 +581,27 @@ setState _ reqs      =  doshow reqs "unknown/unimplemented 'set' option."
 cmdNew :: REqCmdDescr
 cmdNew
   = ( "new"
-    , "generate new theory items"
+    , "generate new prover items"
     , unlines
-        ( [ "new "++shConj++" 'np1' .. 'npk' -- new conjecture 'np1-..-npk'"
+        ( [ "new "++shWork++" nm absdirpath -- new workspace"
+          , "new "++shConj++" 'np1' .. 'npk' -- new conjecture 'np1-..-npk'"
           ] ++ s_syntax )
     , newThing )
 
+newThing cmdargs@[cmd,nm,fp] reqs
+ | cmd == shWork = newWorkspace nm fp reqs
 newThing (cmd:rest) reqs
  | cmd == shConj = newConj rest reqs
 newThing _ reqs      =  doshow reqs "unknown 'new' option."
+\end{code}
+
+\newpage
+
+New WorkSpace:
+\begin{code}
+newWorkspace wsName wsPath reqs
+  = do  putStrLn ("new workspace "++wsName++"|"++wsPath++"/ n.y.i!")
+        return reqs
 \end{code}
 
 \newpage

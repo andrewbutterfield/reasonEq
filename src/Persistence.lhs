@@ -1,6 +1,6 @@
 \section{Persistent Storage}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2017--21
+Copyright  Andrew Buttefield (c) 2017--24
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -113,7 +113,7 @@ parseNameAndPath isCurrent ln
 \end{code}
 
 \newpage
-\subsection{Current Workspace}
+\subsection{Creating a Workspace}
 
 The project/workspace master file:
 \begin{code}
@@ -128,28 +128,65 @@ and complain if that does not exist.
 If the current workspace does not exist,
 we create it, and initialise the project file.
 \begin{code}
-currentWorkspace :: String -- initial project file contents
-                 -> [WorkSpace] -- workspace listing
-                 -> IO (String,FilePath)
-currentWorkspace defReqState []
-  = error ("No workspaces defined - ")
+createWorkspace :: String -- Workspace Name
+                -> String -- Workspace Path
+                -> String -- initial project file contents
+                -> IO ( Bool -- True, if created
+                      , FilePath -- full pathname
+                      )
+createWorkspace wsName wsPath wsContents 
+  = do let projFP = wsPath </> projectFile
+       dirExists <- doesDirectoryExist wsPath
+       if dirExists
+       then do fileExists <- doesFileExist projFP
+               if fileExists
+               then do putStrLn ("Workspace already present: "++wsPath )
+                       return (False,projFP)
+               else do writeFile projFP wsContents
+                       return (True,projFP)
+       else do putStrLn ("Creating "++wsPath)
+               createDirectory wsPath
+               putStrLn ("Creating "++projFP)
+               writeFile projFP wsContents
+               return (True,projFP)
+\end{code}
 
-currentWorkspace defReqState wsSpecs
+\newpage
+\subsection{Current Workspace}
+
+
+We lookup the current workspace.
+If it exists, we check for the project file,
+and complain if that does not exist.
+If the current workspace does not exist, we also complain.
+\begin{code}
+currentWorkspace :: [WorkSpace]    -- workspace listing
+                 -> IO ( Bool      -- True if current workspace found
+                       , String    -- WorkSpace Name
+                       , FilePath  -- Workspace Path
+                       )
+currentWorkspace []
+  = do putStrLn "No Workspaces defined!!"
+       return noCurrentWorkspace
+
+currentWorkspace wsSpecs
   = case findCurrent wsSpecs of
-      Nothing -> error "No current workspace!"
-      Just (currNm, currFP) ->
-        do dirExists <- doesDirectoryExist currFP
-           let projFP = currFP </> projectFile
+      Nothing 
+        -> do putStrLn "No current workspace!"
+              return noCurrentWorkspace
+      Just (currWSNm, currWSFP) ->
+        do dirExists <- doesDirectoryExist currWSFP
+           let projFP = currWSFP </> projectFile
            if dirExists
            then do fileExists <- doesFileExist projFP
                    if fileExists
-                   then return (currNm,currFP)
+                   then do putStrLn ("Found workspace "++currWSNm)
+                           return (True,currWSNm,currWSFP)
                    else fail ("Missing file: "++projFP )
-           else do putStrLn ("Creating "++currFP)
-                   createDirectory currFP
-                   putStrLn ("Creating "++projFP)
-                   writeFile projFP defReqState
-                   return (currNm,currFP)
+           else do putStrLn ("No workspace directory: "++currWSFP)
+                   return noCurrentWorkspace
+
+noCurrentWorkspace = (False,"","")
 \end{code}
 
 Look for the workspace marked as current:

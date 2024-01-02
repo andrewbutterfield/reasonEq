@@ -48,11 +48,8 @@ KISS: keep them unique for now.
 Add commands to create, delete, copy/rename theories,
 with matching file support. Obviously can't create or delete the current theory, but copying is fine.
 
-### Files.lhs
+### Files.lhs now merged into Persistence.lhs
 
-Current focus: `Files.lhs` - needs a re-think.
-
-Should it merge with `Persistence.lhs`?
 
 `getWorkspaces` should check that it has a non-empty list of workspaces,
 and return them parsed into current-flag, name and path triples.

@@ -43,7 +43,6 @@ library
                      , LiveProofs
                      , StratifiedDAG
                      , Persistence
-                     , Files
                      , REqState
                      , AbstractUI
                      , Ranking

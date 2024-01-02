@@ -28,7 +28,6 @@ import YesBut
 import Utilities
 import StratifiedDAG
 import Persistence
-import Files
 
 import LexBase
 import Variables

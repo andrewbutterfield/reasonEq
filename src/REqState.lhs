@@ -11,6 +11,7 @@ module REqState ( REqSettings(..)
                 , rEqSettingStrings, showSettingStrings, showSettings
                 , changeSettings
                 , REqState(..)
+                , projectDir__, projectDir_
                 , modified__, modified_, changed
                 , theories__, theories_
                 , settings__, settings_

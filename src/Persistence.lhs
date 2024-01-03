@@ -8,7 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Persistence
   ( projectName, projectExt
   , getWorkspaces
-  , currentWorkspace
+  , currentWorkspace, createWorkspace
   , ifDirectoryExists, ifFileExists
   , writeAllState, readAllState
   , writeNamedTheory, readNamedTheory
@@ -122,32 +122,31 @@ projectExt = "req"
 projectFile =  projectName <.> projectExt
 \end{code}
 
-We lookup the current workspace.
-If it exists, we check for the project file,
-and complain if that does not exist.
-If the current workspace does not exist,
-we create it, and initialise the project file.
+To create a workspace we first check that none is already
+present at the path supplied.
+If so, we create it, and initialise the project file.
 \begin{code}
 createWorkspace :: String -- Workspace Name
-                -> String -- Workspace Path
-                -> String -- initial project file contents
+                -> REqState -- initial project file contents
                 -> IO ( Bool -- True, if created
                       , FilePath -- full pathname
                       )
-createWorkspace wsName wsPath wsContents 
-  = do let projFP = wsPath </> projectFile
+createWorkspace wsName wsReq 
+  = do let wsPath = projectDir wsReq 
+       let projFP = projectDir wsReq </> projectFile
+       putStrLn ("wsPath:"++wsPath++" projFP:"++projFP)
        dirExists <- doesDirectoryExist wsPath
        if dirExists
        then do fileExists <- doesFileExist projFP
                if fileExists
                then do putStrLn ("Workspace already present: "++wsPath )
                        return (False,projFP)
-               else do writeFile projFP wsContents
+               else do writeAllState wsReq
                        return (True,projFP)
        else do putStrLn ("Creating "++wsPath)
-               createDirectory wsPath
+               createDirectoryIfMissing True wsPath
                putStrLn ("Creating "++projFP)
-               writeFile projFP wsContents
+               writeAllState wsReq
                return (True,projFP)
 \end{code}
 

@@ -583,7 +583,8 @@ cmdNew
   = ( "new"
     , "generate new prover items"
     , unlines
-        ( [ "new "++shWork++" nm absdirpath -- new workspace"
+        ( [ "new "++shWork++" nm /absdirpath -- new workspace"
+          , "       -- do not use '~' or environment variables"
           , "new "++shConj++" 'np1' .. 'npk' -- new conjecture 'np1-..-npk'"
           ] ++ s_syntax )
     , newThing )
@@ -600,8 +601,14 @@ newThing _ reqs      =  doshow reqs "unknown 'new' option."
 New WorkSpace:
 \begin{code}
 newWorkspace wsName wsPath reqs
-  = do  putStrLn ("new workspace "++wsName++"|"++wsPath++"/ n.y.i!")
-        return reqs
+  = if '~' `elem` wsPath || '$' `elem` wsPath || take 1 wsPath /= "/"
+    then doshow reqs $ unlines'
+           [ "Absolute path required"
+           , "Cannot use '~' or environment variables" ]
+    else do  putStrLn ("Creating workspace '"++wsName++"' at "++wsPath++"/")
+             let newReqs = projectDir_ wsPath reqstate0
+             createWorkspace wsName newReqs
+             return reqs
 \end{code}
 
 \newpage

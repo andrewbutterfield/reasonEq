@@ -61,7 +61,7 @@ We divide settings into three types:
    but are computed from user-changes to the specification settings above.
    The relationship is not one-to-one.
    In particular,
-   a given implementation setting may be a a blend
+   a given implementation setting may be a blend
    of several related specification settings.
 \end{enumerate}
 

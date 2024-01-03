@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 module Persistence
   ( projectName, projectExt
-  , getWorkspaces
+  , getWorkspaces, putWorkspaces
   , currentWorkspace, createWorkspace
   , ifDirectoryExists, ifFileExists
   , writeAllState, readAllState
@@ -48,6 +48,7 @@ type WorkSpace = ( Bool -- True if the current workspace
                  , String -- workspace name
                  , String -- path to workspace 
                  )
+
 getWorkspaces :: String -> IO (FilePath, [WorkSpace])
 getWorkspaces appname
  = do userAppPath <- getAppUserDataDirectory appname
@@ -55,6 +56,14 @@ getWorkspaces appname
             (getAllWorkspaces userAppPath)
             (do createUserAppDir userAppPath
                 getAllWorkspaces userAppPath)
+
+putWorkspaces :: String -> [WorkSpace] -> IO ()
+putWorkspaces appname wss
+ = do userAppPath <- getAppUserDataDirectory appname
+      mifte (doesDirectoryExist userAppPath)
+            (putAllWorkspaces userAppPath wss)
+            (do createUserAppDir userAppPath
+                putAllWorkspaces userAppPath wss)
 \end{code}
 
 Useful names, markers and separators:
@@ -110,6 +119,19 @@ parseNameAndPath isCurrent ln
   where
     (nm,after)  =  break (==pathSep) ln
     fp          =  drop 1 after
+\end{code}
+
+Write all known workspaces to user data.
+\begin{code}
+putAllWorkspaces :: FilePath -> [WorkSpace] -> IO ()
+putAllWorkspaces dirpath wss
+ = do let wsfp = dirpath </> wsRoot
+      let wsLines = map renderWorkspaces wss
+      writeFile wsfp $ unlines wsLines
+      putStrLn ("Workspaces written to "++wsfp)
+
+renderWorkspaces (current,wsNm,wsPath)
+  = (if current then [currentMarker] else "") ++ wsNm ++ [pathSep] ++ wsPath
 \end{code}
 
 \newpage

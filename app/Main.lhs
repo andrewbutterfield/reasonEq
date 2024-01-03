@@ -608,6 +608,9 @@ newWorkspace wsName wsPath reqs
     else do  putStrLn ("Creating workspace '"++wsName++"' at "++wsPath++"/")
              let newReqs = projectDir_ wsPath reqstate0
              createWorkspace wsName newReqs
+             (usfp,wss) <- getWorkspaces progName
+             putWorkspaces progName ((False,wsName,wsPath):wss)
+             putStrLn ("New workspace recorded at "++usfp)
              return reqs
 \end{code}
 

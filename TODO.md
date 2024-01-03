@@ -43,17 +43,13 @@ KISS: keep them unique for now.
 
   * We will add new features to existing `save`, `load` and `new` commands.
 
+  * We will add `delete`, `copy` and `rename` commands.
+
 #### Tasks
 
 Add commands to create, delete, copy/rename theories,
 with matching file support. Obviously can't create or delete the current theory, but copying is fine.
 
-### Files.lhs now merged into Persistence.lhs
-
-
-`currentWorkspace` loads up the current workspace, if it exists.
-
-`createWorkspace` creates and initialises a workspace.
 
 ### Fixing "Equivales" proof generation
 

@@ -1,12 +1,11 @@
 # To Do
 
-## Urgent
+## Urgent/Now
+
+Time to add type-inference!
 
 ## Issues
 
-* Allow `REqSet` settings to be changed  from *within* a proof
-   - can now do this for proof-settings
-   
 * We really need to have symmetric forms of key results, e.g., we have `P∨true≡true`, but should also have `true∨P≡true`.
 
 

@@ -1,6 +1,6 @@
-\section{Variable Data}
+\chapter{Variable Data}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2017-22
+Copyright  Andrew Buttefield (c) 2017-24
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -59,7 +59,7 @@ import Debugger
 \end{code}
 
 \newpage
-\subsection{Variable Matching Categories}
+\section{Variable Matching Categories}
 
 Variables,
 whether of static, or any dynamic flavour,
@@ -134,7 +134,7 @@ vmrInst _       =  error "vmrInst: not generic instance"
 \end{code}
 
 \newpage
-\subsection{List-Variable Matching Categories}
+\section{List-Variable Matching Categories}
 
 List-variables can match either any list or set of variables,
 of the same class,
@@ -221,7 +221,7 @@ id2glvar vc vw j  =  LstVar $ LVbl (Vbl j vc vw) [] []
 \end{code}
 
 \newpage
-\subsection{Variable Tables}
+\section{Variable Tables}
 
 We define simple lookup tables,
 into which we can insert entries for known variables and list-variables.
@@ -259,7 +259,7 @@ dtMap ((i,vc),dlvr) = ( Vbl i vc Before, mapDLVRtoLVMR vc Before dlvr )
 \end{code}
 
 
-\subsubsection{Creating New Table}
+\subsection{Creating New Table}
 
 \begin{code}
 newVarTable :: VarTable
@@ -272,10 +272,10 @@ Updating in general involves more complicated checks
 and will be added if required.
 
 \newpage
-\subsection{Inserting Variable Entries}
+\section{Inserting Variable Entries}
 
 
-\subsubsection{Inserting Known Constants}
+\subsection{Inserting Known Constants}
 
 \begin{code}
 addKnownConst :: MonadFail m => Variable -> Term -> VarTable -> m VarTable
@@ -309,7 +309,7 @@ addKnownConst _ _ _ = fail "addKnownConst: not for Dynamic Variables."
 \end{code}
 
 
-\subsubsection{Inserting Known Variables}
+\subsection{Inserting Known Variables}
 
 \begin{code}
 addKnownVar :: (Monad m, MonadFail m) => Variable -> Type -> VarTable -> m VarTable
@@ -333,7 +333,7 @@ addKnownVar var typ (VD (vtable,stable,dtable))
 \end{code}
 
 \newpage
-\subsubsection{Inserting Generic Variables}
+\subsection{Inserting Generic Variables}
 
 \begin{code}
 addGenericVar :: (Monad m, MonadFail m) => Variable -> VarTable -> m VarTable
@@ -349,7 +349,7 @@ addGenericVar var vt@(VD (vtable,stable,dtable))
       Nothing -> return $ VD (M.insert var KG vtable, stable, dtable )
 \end{code}
 
-\subsubsection{Inserting Instance Variables}
+\subsection{Inserting Instance Variables}
 
 \begin{code}
 addInstanceVar :: (Monad m, MonadFail m) => Variable -> Variable -> VarTable -> m VarTable
@@ -373,7 +373,7 @@ addInstanceVar ivar gvar vt@(VD (vtable,stable,dtable))
 \end{code}
 
 \newpage
-\subsection{Inserting List-Variable Entries}
+\section{Inserting List-Variable Entries}
 
 List-variables entries can be concrete or abstract.
 Abstract entries mean the corresponding list-variable is to be treated as known,
@@ -390,7 +390,7 @@ i.e., already present in the tables.
 
 All variable entries (known or constant) are considered to be concrete.
 
-\subsubsection{Checking Variable Container Contents}
+\subsection{Checking Variable Container Contents}
 
 We need to check a proposed variable-container (set/list)
 to see that it satisfies the requirements given above.
@@ -448,7 +448,7 @@ checkVariableList vt lv@(Vbl i vc0 vw0) setsOK vl
            _ -> fail "checkVariableList: sets not permitted."
 \end{code}
 
-\subsubsection{Inserting Known Variable-List}
+\subsection{Inserting Known Variable-List}
 
 \begin{code}
 addKnownVarList :: (Monad m, MonadFail m) => Variable -> VarList -> VarTable -> m VarTable
@@ -499,7 +499,7 @@ checkLVarListMap v vl
 \end{code}
 
 \newpage
-\subsubsection{Inserting Known Variable-Set}
+\subsection{Inserting Known Variable-Set}
 
 \begin{code}
 addKnownVarSet :: (Monad m, MonadFail m) => Variable -> VarSet -> VarTable -> m VarTable
@@ -537,7 +537,7 @@ addKnownVarSet lv@(Vbl i vc vw) vs vt@(VD (vtable,stable,dtable))
          return $ VD (vtable, stable, M.insert iac (DS iS jS xiS size) dtable)
 \end{code}
 
-\subsubsection{Inserting Abstract Variable-List}
+\subsection{Inserting Abstract Variable-List}
 
 \begin{code}
 addAbstractVarList :: (Monad m, MonadFail m) => Variable -> VarTable -> m VarTable
@@ -553,7 +553,7 @@ addAbstractVarList lv@(Vbl i vc vw) (VD (vtable,stable,dtable))
      _ -> fail "addAbstractVarList(dynamic): already present"
 \end{code}
 
-\subsubsection{Inserting Abstract Variable-Set}
+\subsection{Inserting Abstract Variable-Set}
 
 \begin{code}
 addAbstractVarSet :: (Monad m, MonadFail m) => Variable -> VarTable -> m VarTable
@@ -570,10 +570,10 @@ addAbstractVarSe lv@(Vbl i vc vw) (VD (vtable,stable,dtable))
 \end{code}
 
 \newpage
-\subsection{Table Lookup}
+\section{Table Lookup}
 
 
-\subsubsection{Variable Lookup}
+\subsection{Variable Lookup}
 
 Variable lookup is total, returning \texttt{UV} if the variable is not present.
 \begin{code}
@@ -585,7 +585,7 @@ lookupVarTable (VD (vtable, _, _)) var
 \end{code}
 
 
-\subsubsection{List-Variable Lookup}
+\subsection{List-Variable Lookup}
 
 
 For list-variables we need to distinguish between
@@ -605,7 +605,7 @@ lookupLVarTable (VD (_,_,dtable)) lvar@(Vbl i vc vw)
      Just dlvr  ->  mapDLVRtoLVMR vc vw dlvr
 \end{code}
 
-\subsubsection{Searching Lists of Tables}
+\subsection{Searching Lists of Tables}
 
 We also have a version that searches a list of tables:
 \begin{code}
@@ -650,7 +650,7 @@ gVarIsUnknownLVar _   _            =  False
 \end{code}
 
 \newpage
-\subsection{Operations ``modulo \texttt{During}''}
+\section{Operations ``modulo \texttt{During}''}
 
 When matching variable lists and sets,
 we often need to do equality comparisons
@@ -678,7 +678,7 @@ We need to various relations and operators
 to work with the above ``subscript-blind'' comparisons.
 
 
-\subsubsection{Membership/Subset Relation ``modulo \texttt{During}''}
+\subsection{Membership/Subset Relation ``modulo \texttt{During}''}
 
 \begin{code}
 insideS :: GenVar -> VarSet -> Bool
@@ -698,7 +698,7 @@ vl1 `withinL` vl2 -- for all v in vl1, v in vl2 (mod. During-subscripts)
  = all (insideL vl2) vl1
 \end{code}
 
-\subsubsection{Delete/Difference Operation ``modulo \texttt{During}''}
+\subsection{Delete/Difference Operation ``modulo \texttt{During}''}
 
 \begin{code}
 delS :: GenVar -> VarSet -> VarSet
@@ -719,7 +719,7 @@ removeL :: VarList -> VarList -> VarList
 vl1 `removeL` vl2 = deleteFirstsBy dgEq vl1 vl2
 \end{code}
 
-\subsubsection{Intersect Operation ``modulo \texttt{During}''}
+\subsection{Intersect Operation ``modulo \texttt{During}''}
 
 Note that order is important here.
 All the intersection values will come from the first argument.
@@ -734,7 +734,7 @@ intsctL :: VarList -> VarList -> VarList
 vl1 `intsctL` vl2 = intersectBy dgEq vl1 vl2
 \end{code}
 
-\subsubsection{Subsumption Check ``modulo \texttt{During}''}
+\subsection{Subsumption Check ``modulo \texttt{During}''}
 
 We also want to support the idea that a single general variable
 can be ``part'' of a single list variable.
@@ -779,7 +779,7 @@ subsearch si lvacc (lv@(LstVar (LVbl v is js)) : lvl)
 
 
 \newpage
-\subsection{Evaluating Known List-Variables}
+\section{Evaluating Known List-Variables}
 
 If a list variable $\lst K$ is ``known'' in a \texttt{VarTable},
 then we can obtain its complete pure variable expansion.

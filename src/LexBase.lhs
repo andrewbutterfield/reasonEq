@@ -1,4 +1,4 @@
-\section{Lexical Base}
+\chapter{Lexical Base}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2017-2022
 
@@ -36,7 +36,7 @@ import Test.Framework.Providers.HUnit (testCase)
 \end{code}
 
 \newpage
-\subsection{Lexical Base Introduction}
+\section{Lexical Base Introduction}
 
 Here we define very basic lexical elements on which both the concrete
 and abstract syntaxes will be built.
@@ -57,7 +57,7 @@ For now we recognise the following kinds of tokens:
 Anything else is `arbitrary`.
 
 \newpage
-\subsection{Identifiers}
+\section{Identifiers}
 
 We consider `identifiers' to either
 be \emph{ASCII only}%
@@ -159,7 +159,7 @@ identTests
 \end{code}
 
 \newpage
-\subsection{Tokens}
+\section{Tokens}
 
 We define a basic notion of tokens as the union of the above ``wrapped'' strings
 \begin{code}
@@ -173,7 +173,7 @@ pattern IdTok i = TI i
 
 \newpage
 
-\subsection{Exported Test Group}
+\section{Exported Test Group}
 
 
 

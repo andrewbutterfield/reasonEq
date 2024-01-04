@@ -1,0 +1,10 @@
+reasonEq code direct contributors:
+
+Andrew Butterfield   2017..
+Saqid Zardari        2023
+Aaron Bruce          2023
+
+reasonEq code also based on the following:
+
+Martin Grabmueller (c) 2014 -- see MG-LICENSE.txt
+

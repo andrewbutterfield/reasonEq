@@ -29,6 +29,7 @@ library
                      , Assertions
                      , VarData
                      , Binding
+                     , Typing
                      , Instantiate
                      , Matching
                      , AlphaEquiv

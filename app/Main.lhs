@@ -34,6 +34,7 @@ import Variables
 import AST
 import VarData
 import Binding
+import Typing
 import SideCond
 import Assertions
 import Ranking

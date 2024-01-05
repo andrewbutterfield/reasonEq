@@ -262,6 +262,17 @@ mgu tis t1 t2                  =  fail ("mgu NYfI")
 
 \section{Type Inference}
 
+\subsection{Type Inferencer}
+
+This is the main entry point:
+\begin{code}
+typeInference :: MonadFail mf => Map Identifier TypeScheme -> Term -> mf Type
+typeInference env e =
+    do  (_,(s, t)) <- ti [1..] (TypeEnv env) e
+        return (apply s t)
+\end{code}
+
+
 \subsection{Literal Types}
 
 \begin{code}
@@ -270,6 +281,7 @@ tiLit (Integer _) = tInt
 tiLit (Boolean _) = tBool
 \end{code}
 
+\newpage
 \subsection{Infer Types}
 
 \begin{code}
@@ -303,14 +315,5 @@ ti tis _ (Val _ l) = return (tis,(nullSubst,tiLit l))
 --        (s2, t2) <- ti (apply s1 env'') e2
 --        return (s1 `composeSubst` s2, t2)
 ti tis env t = fail ("ti NYfI")
-\end{code}
-
-\subsection{Type Inferencer}
-
-\begin{code}
-typeInference :: MonadFail mf => Map Identifier TypeScheme -> Term -> mf Type
-typeInference env e =
-    do  (_,(s, t)) <- ti [1..] (TypeEnv env) e
-        return (apply s t)
 \end{code}
 

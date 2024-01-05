@@ -37,11 +37,13 @@ based on a version by Martin Grabm{\"u}ller (MG)
 (https://github.com/mgrabmueller).
 We follow the structure of that document.
 
-\subsection{Preliminaries}
+\section{Preliminaries}
 
 We have the following broad correspondance between MG types and ours
 (we use notation \texttt{<Typ:=val>} to denote 
 a component of type \texttt{Typ} with a specific value \texttt{val}).
+
+\subsection{Literals}
 
 The MG \h{Lit} type is a subset of our \h{Value} type:
 \begin{verbatim}
@@ -49,6 +51,8 @@ data Lit          --> data Value = ...
   =  LInt Integer       |  Integer Integer
   |  LBool Bool         |  Boolean Bool
 \end{verbatim}
+
+\subsection{Types}
 
 The MG \h{Type} type is mainly a subset of our \h{Type},
 where specific MG concrete types map to our \h{GivenType}
@@ -64,6 +68,8 @@ data Type           --> data Type = ...
 tInt   =  GivenType $ jId "Z"
 tBool  =  GivenType $ jId "B"
 \end{code}
+
+\subsection{Terms}
 
 The MG \h{Exp} type is very $\lambda$-calculus oriented,
 whereas our \h{Term} type is very model-theoretic logic oriented.
@@ -88,6 +94,9 @@ data Exp                 --> data Term = ...
                                      Term := exp2
                                      Substn :=  [exp1/var]
 \end{verbatim}
+
+\newpage
+Building the extended $\lambda$-calculus with \h{Term}s.
 \begin{code}
 eAbs :: Identifier -> Term -> Term
 eAbs x t = fromJust $ lam arbtype lambda [StdVar $ StaticVar x] t
@@ -104,11 +113,15 @@ eLet x e1 e2
   where vx = StaticVar x 
 \end{code}
 
+\subsection{Type Schemes}
+
 Our type-scheme uses our \h{Identifier} type:
 \begin{code}
 data TypeScheme = TS [Identifier] Type
 pattern Scheme qvars typ = TS qvars typ
 \end{code}
+
+\subsection{Types Class}
 
 We use the MG \h{Types} class:
 \begin{code}
@@ -145,6 +158,8 @@ instance Types TypeScheme where
     apply s (Scheme vars t)  =  Scheme vars (apply (foldr M.delete s vars) t)
 \end{code}
 
+\subsection{Type Substitutions}
+
 Our type-substitution uses \h{Identifier}:
 \begin{code}
 type TypeSubst = Map Identifier Type
@@ -155,7 +170,8 @@ composeSubst         :: TypeSubst -> TypeSubst -> TypeSubst
 composeSubst s1 s2   = (M.map (apply s1) s2) `M.union` s1
 \end{code}
 
-Type Environments:
+\subsection{Type Environments}
+
 \begin{code}
 newtype TypeEnv = TypeEnv (Map Identifier TypeScheme)
 
@@ -178,6 +194,8 @@ generalize        ::  TypeEnv -> Type -> TypeScheme
 generalize env t  =   Scheme vars t
   where vars = S.toList ((ftv t) `S.difference` (ftv env))
 \end{code}
+
+\subsection{Fresh Typenames}
 
 We do not adopt the MG monadic approach in for fresh names,
 because this code will be used within an existing monadic setup in \reasonEq.
@@ -205,9 +223,26 @@ instantiate tis (Scheme vars t)
     s = M.fromList vnvs                                 
 \end{code}
 
-\subsection{Most-General Unification}
+\newpage
+\section{Unification}
 
 We use \h{MonadFail} here to handle errors, as per the rest of \reasonEq.
+
+\subsection{Building Type-substitutions}
+
+The ``occurs-check'' occurs whenever we create a identifier-type binding:
+\begin{code}
+varBind :: MonadFail mf => Identifier -> Type -> mf TypeSubst
+varBind u t  
+  | t == TypeVar u      =  return nullSubst
+  | u `S.member` ftv t  =  fail 
+                             ("occurs check fails: " 
+                               ++ show u ++ " vs. " ++ show t)
+  | otherwise           =  return $ M.singleton u t
+\end{code}
+
+\subsection{Most-general Unification}
+
 \begin{code}
 mgu :: MonadFail mf => TIState -> Type -> Type -> mf (TIState,TypeSubst)
 mgu tis (FunType l r) (FunType l' r')  
@@ -219,13 +254,9 @@ mgu tis t (TypeVar u)          =  do ts <- varBind u t ; return (tis,ts)
 mgu tis (GivenType gt1) (GivenType gt2)
   | gt1==gt2                   =  return (tis,nullSubst)
 mgu tis t1 t2                  =  fail ("mgu NYfI")
-
-varBind :: MonadFail mf => Identifier -> Type -> mf TypeSubst
-varBind u t  
-  | t == TypeVar u      =  return nullSubst
-  | u `S.member` ftv t  =  fail 
-                             ("occurs check fails: " 
-                               ++ show u ++ " vs. " ++ show t)
-  | otherwise           =  return $ M.singleton u t
+-- missing Types
+-- ArbType
+-- TypeCons
+-- AlgType
 \end{code}
 

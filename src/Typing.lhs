@@ -210,9 +210,10 @@ instantiate tis (Scheme vars t)
 We use \h{MonadFail} here to handle errors, as per the rest of \reasonEq.
 \begin{code}
 mgu :: MonadFail mf => TIState -> Type -> Type -> mf (TIState,TypeSubst)
--- mgu (TFun l r) (TFun l' r')  =  do  s1 <- mgu l l'
---                                     s2 <- mgu (apply s1 r) (apply s1 r')
---                                    return (s1 `composeSubst` s2)
+mgu tis (FunType l r) (FunType l' r')  
+  =  do  (tis1,s1) <- mgu tis l l'
+         (tis2,s2) <- mgu tis1 (apply s1 r) (apply s1 r')
+         return ( tis2, s1 `composeSubst` s2 )
 mgu tis (TypeVar u) t          =  do ts <- varBind u t ; return (tis,ts)
 mgu tis t (TypeVar u)          =  do ts <- varBind u t ; return (tis,ts)
 mgu tis (GivenType gt1) (GivenType gt2)

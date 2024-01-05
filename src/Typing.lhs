@@ -77,7 +77,7 @@ data Exp                 --> data Term = ...
   =  EVar String               | Var TermKind Variable 
   |  ELit Lit                  | Val TermKind Value
   |  EApp Exp Exp              | Cons TermKind 
-                                      Subable := ?
+                                      Subable := True
                                       Identifier := "@"
                                       [Term] := [exp1,exp2]                
   |  EAbs String Exp           | Lam TermKind 
@@ -96,8 +96,8 @@ arbtype = E ArbType
 eFApp :: Identifier -> Term -> Term
 eFApp f t =  Cons arbtype False f [t]
 eApp :: Term -> Term -> Term
-eApp fun arg = Cons arbtype False aply [fun,arg]
-aply = jId "@"
+eApp fun arg = Cons arbtype True app [fun,arg]
+app = jId "@"
 eLet :: Identifier -> Term -> Term -> Term
 eLet x e1 e2 
   = Sub arbtype e2 $ jSubstn [(vx,e2)] []

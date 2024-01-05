@@ -289,27 +289,28 @@ tiLit (Boolean _) = tBool
 \begin{code}
 ti :: MonadFail mf 
    => TIState -> TypeEnv -> Term -> mf (TIState,(TypeSubst, Type))
---ti (TypeEnv env) (EVar n) = 
---    case Map.lookup n env of
---       Nothing     ->  throwError $ "unbound variable: " ++ n
---       Just sigma  ->  do  t <- instantiate sigma
---                           return (nullSubst, t)
+ti tis (TypeEnv env) (Var _ n) 
+  = case M.lookup n env of
+      Nothing     ->  fail $ "unbound variable: " ++ show n
+      Just sigma  ->  do let (tis',t) = instantiate tis sigma
+                         return (tis,(nullSubst, t))
 ti tis _ (Val _ l) = return (tis,(nullSubst,tiLit l))
---ti env (EAbs n e) =
+--ti tis env (EAbs n e) =
 --    do  tv <- newTyVar "a"
 --        let TypeEnv env' = remove env n
 --            env'' = TypeEnv (env' `Map.union` (Map.singleton n (Scheme [] tv)))
 --        (s1, t1) <- ti env'' e
 --        return (s1, TFun (apply s1 tv) t1)
---ti env exp@(EApp e1 e2) =
---    do  tv <- newTyVar "a"
---        (s1, t1) <- ti env e1
---        (s2, t2) <- ti (apply s1 env) e2
---        s3 <- mgu (apply s2 t1) (TFun t2 tv)
---        return (s3 `composeSubst` s2 `composeSubst` s1, apply s3 tv)
+ti tis env exp@(Cons _ True ap [e1,e2])
+  | ap == app 
+  = do  let (tis1,tv) = newTyVar tis prfxa
+        (tis2,(s1, t1)) <- ti tis1 env e1
+        (tis3,(s2, t2)) <- ti tis2 (apply s1 env) e2
+        (tis4,s3) <- mgu tis3 (apply s2 t1) (FunType t2 tv)
+        return (tis4,(s3 `composeSubst` s2 `composeSubst` s1, apply s3 tv))
 --    `catchError`
 --    \e -> throwError $ e ++ "\n in " ++ show exp
---ti env (ELet x e1 e2) =
+--ti tis env (ELet x e1 e2) =
 --    do  (s1, t1) <- ti env e1
 --        let TypeEnv env' = remove env x
 --            t' = generalize (apply s1 env) t1
@@ -317,5 +318,6 @@ ti tis _ (Val _ l) = return (tis,(nullSubst,tiLit l))
 --        (s2, t2) <- ti (apply s1 env'') e2
 --        return (s1 `composeSubst` s2, t2)
 ti tis env t = fail ("ti NYfI")
+-- missing:
 \end{code}
 

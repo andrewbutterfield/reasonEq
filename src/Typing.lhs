@@ -172,8 +172,10 @@ composeSubst s1 s2   = (M.map (apply s1) s2) `M.union` s1
 
 \subsection{Type Environments}
 
+A type environment is a mapping from a term variable to a type scheme.
 \begin{code}
-newtype TypeEnv = TypeEnv (Map Identifier TypeScheme)
+type Env = Map Variable TypeScheme
+newtype TypeEnv = TypeEnv Env
 
 instance Types TypeEnv where
     ftv (TypeEnv env)      =  ftv (M.elems env)
@@ -182,7 +184,7 @@ instance Types TypeEnv where
 
 Removing an identifier from an environment:
 \begin{code}
-remove :: TypeEnv -> Identifier -> TypeEnv
+remove :: TypeEnv -> Variable -> TypeEnv
 remove (TypeEnv env) var  =  TypeEnv (M.delete var env)
 \end{code}
 
@@ -266,7 +268,7 @@ mgu tis t1 t2                  =  fail ("mgu NYfI")
 
 This is the main entry point:
 \begin{code}
-typeInference :: MonadFail mf => Map Identifier TypeScheme -> Term -> mf Type
+typeInference :: MonadFail mf => Env -> Term -> mf Type
 typeInference env e =
     do  (_,(s, t)) <- ti [1..] (TypeEnv env) e
         return (apply s t)

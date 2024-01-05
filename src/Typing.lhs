@@ -104,16 +104,11 @@ eLet x e1 e2
   where vx = StaticVar x 
 \end{code}
 
-We have to define our own versions of type-schemes and type-substitutions
+Our type-scheme uses our \h{Identifier} type:
 \begin{code}
-data TypeScheme = TS [String] Type
+data TypeScheme = TS [Identifier] Type
 pattern Scheme qvars typ = TS qvars typ
-
-type TypeSubst = Map Identifier Type
-nullSubst :: TypeSubst
-nullSubst = M.empty
 \end{code}
-
 
 We use the MG \h{Types} class:
 \begin{code}
@@ -122,4 +117,90 @@ class Types a where
     apply  ::  TypeSubst -> a -> a
 \end{code}
 
+We specialise the MG \h{Type} instance for our types:
+\begin{code}
+instance Types Type where
+    ftv (TypeVar n)      =  S.singleton n
+    ftv (GivenType _)    =  S.empty
+    ftv (FunType t1 t2)  =  ftv t1 `S.union` ftv t2
+    ftv t                =  error ("Type.ftv NYfI: "++show t)
 
+    apply s t@(TypeVar n)    =  case M.lookup n s of
+                               Nothing  ->  t
+                               Just t'  ->  t'
+    apply s (FunType t1 t2)  = FunType (apply s t1) (apply s t2)
+    apply _ t@(GivenType _)  = t
+    apply s t                =  error ("Type.apply NYfI: "++show t)
+
+instance Types a => Types [a] where
+    apply s  =  map (apply s)
+    ftv l    =  foldr S.union S.empty (map ftv l)
+\end{code}
+
+We specialise the MG \h{Scheme} instance for our types:
+\begin{code}
+instance Types TypeScheme where
+    ftv (Scheme vars t)      =  (ftv t) `S.difference` (S.fromList vars)
+
+    apply s (Scheme vars t)  =  Scheme vars (apply (foldr M.delete s vars) t)
+\end{code}
+
+Our type-substitution uses \h{Identifier}:
+\begin{code}
+type TypeSubst = Map Identifier Type
+nullSubst :: TypeSubst
+nullSubst = M.empty
+
+composeSubst         :: TypeSubst -> TypeSubst -> TypeSubst
+composeSubst s1 s2   = (M.map (apply s1) s2) `M.union` s1
+\end{code}
+
+Type Environments:
+\begin{code}
+newtype TypeEnv = TypeEnv (Map Identifier TypeScheme)
+
+instance Types TypeEnv where
+    ftv (TypeEnv env)      =  ftv (M.elems env)
+    apply s (TypeEnv env)  =  TypeEnv (M.map (apply s) env)
+\end{code}
+
+Removing an identifier from an environment:
+\begin{code}
+remove :: TypeEnv -> Identifier -> TypeEnv
+remove (TypeEnv env) var  =  TypeEnv (M.delete var env)
+\end{code}
+
+The function \h{generalize}, given an environment and type,
+generates a type-scheme that pulls out type variables free in the type
+that are not free in the environment:
+\begin{code}
+generalize        ::  TypeEnv -> Type -> TypeScheme
+generalize env t  =   Scheme vars t
+  where vars = S.toList ((ftv t) `S.difference` (ftv env))
+\end{code}
+
+We do not adopt the MG monadic approach in for fresh names,
+because this code will be used within an existing monadic setup in \reasonEq.
+We simply pull off the head of an infinite ascending list
+\begin{code}
+type TIState = [Int]
+newTyVar :: TIState -> String -> (TIState,Type)
+newTyVar (n:ns) prefix = (ns,TypeVar $ jId (prefix++show n))
+
+prfxa = "a" ; prfxb = "b" -- used in MG code
+\end{code}
+
+Replaces all bound type variables in a type
+scheme with fresh type variables:
+\begin{code}
+instantiate :: TIState -> TypeScheme -> (TIState,Type)
+instantiate ns (Scheme vars t) 
+  = (ns',apply s t)
+  where
+    (ns',vnvs) = mapNTV ns [] vars
+    mapNTV ns vnvs [] = (ns,vnvs)
+    mapNTV ns vnvs (v:vars)
+      = let (ns',nv) = newTyVar ns prfxa 
+        in mapNTV ns' ((v,nv):vnvs) vars
+    s = M.fromList vnvs                                 
+\end{code}

@@ -7,8 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module AST ( Type
-           , pattern ArbType,  pattern TypeVar, pattern TypeApp
-           , pattern DataType, pattern FunType, pattern GivenType
+           , pattern ArbType,  pattern TypeVar, pattern TypeCons
+           , pattern AlgType, pattern FunType, pattern GivenType
            , isSubTypeOf
            , Txt
            , Value, pattern Boolean, pattern Integer, pattern Txt
@@ -92,8 +92,8 @@ data Type -- most general types first
 
 pattern ArbType = T
 pattern TypeVar i  = TV i
-pattern TypeApp i ts = TC i ts
-pattern DataType i fs = TA i fs
+pattern TypeCons i ts = TC i ts
+pattern AlgType i fs = TA i fs
 pattern FunType tf ta = TF tf ta
 pattern GivenType i = TG i
 \end{code}
@@ -106,9 +106,9 @@ isSubTypeOf :: Type -> Type -> Bool
 _ `isSubTypeOf` ArbType  =  True
 ArbType `isSubTypeOf` _  =  False
 _ `isSubTypeOf` (TypeVar _)  =  True
-(TypeApp i1 ts1) `isSubTypeOf` (TypeApp i2 ts2)
+(TypeCons i1 ts1) `isSubTypeOf` (TypeCons i2 ts2)
  | i1 == i2  =  ts1 `areSubTypesOf` ts2
-(DataType i1 fs1) `isSubTypeOf` (DataType i2 fs2)
+(AlgType i1 fs1) `isSubTypeOf` (AlgType i2 fs2)
  | i1 == i2  =  fs1 `areSubFieldsOf` fs2
 (FunType tf1 ta1) `isSubTypeOf` (FunType tf2 ta2) -- tf contravariant !
    = tf2 `isSubTypeOf` tf1 && ta1 `isSubTypeOf` ta2

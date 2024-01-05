@@ -122,8 +122,8 @@ trgvar trid (LstVar lv)  =  trlvar trid lv
 trType :: Type -> String
 trType ArbType            =  _tau
 trType (TypeVar i)        =  trId i
-trType (TypeApp i ts)     =  trId i ++ "(" ++ trTypes ts ++ ")"
-trType (DataType i itss)  =  "ADT"
+trType (TypeCons i ts)     =  trId i ++ "(" ++ trTypes ts ++ ")"
+trType (AlgType i itss)  =  "ADT"
 trType (FunType ta tr)    =  "("++ trType ta ++ spaced _fun ++ trType tr ++ ")"
 trType (GivenType (Identifier i _))
   -- hack - should be done in nicesymbols

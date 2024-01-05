@@ -185,7 +185,7 @@ We simply pull off the head of an infinite ascending list
 \begin{code}
 type TIState = [Int]
 newTyVar :: TIState -> String -> (TIState,Type)
-newTyVar (n:ns) prefix = (ns,TypeVar $ jId (prefix++show n))
+newTyVar (ti:tis) prefix = (tis,TypeVar $ jId (prefix++show ti))
 
 prfxa = "a" ; prfxb = "b" -- used in MG code
 \end{code}
@@ -194,13 +194,33 @@ Replaces all bound type variables in a type
 scheme with fresh type variables:
 \begin{code}
 instantiate :: TIState -> TypeScheme -> (TIState,Type)
-instantiate ns (Scheme vars t) 
-  = (ns',apply s t)
+instantiate tis (Scheme vars t) 
+  = (tis',apply s t)
   where
-    (ns',vnvs) = mapNTV ns [] vars
-    mapNTV ns vnvs [] = (ns,vnvs)
-    mapNTV ns vnvs (v:vars)
-      = let (ns',nv) = newTyVar ns prfxa 
-        in mapNTV ns' ((v,nv):vnvs) vars
+    (tis',vnvs) = mapNTV tis [] vars
+    mapNTV tis vnvs [] = (tis,vnvs)
+    mapNTV tis vnvs (v:vars)
+      = let (tis',nv) = newTyVar tis prfxa 
+        in mapNTV tis' ((v,nv):vnvs) vars
     s = M.fromList vnvs                                 
 \end{code}
+
+\subsection{Most-General Unification}
+
+\begin{code}
+mgu :: TIState -> Type -> Type -> (TIState,TypeSubst)
+-- mgu (TFun l r) (TFun l' r')  =  do  s1 <- mgu l l'
+--                                     s2 <- mgu (apply s1 r) (apply s1 r')
+--mgu (TVar u) t               =  varBind u t
+--mgu t (TVar u)               =  varBind u t
+--mgu TInt TInt                =  return nullSubst
+--mgu TBool TBool              =  return nullSubst
+mgu t1 t2                    =  error ("mgu NYfI")
+
+varBind :: Identifier -> Type -> TypeSubst
+varBind u t  | t == TypeVar u           =  nullSubst
+             | u `S.member` ftv t  =  error $ "occurs check fails: " ++ show u ++
+                                         " vs. " ++ show t
+             | otherwise             =  (M.singleton u t)
+\end{code}
+

@@ -260,3 +260,48 @@ mgu tis t1 t2                  =  fail ("mgu NYfI")
 -- AlgType
 \end{code}
 
+\section{Type Inference}
+
+\subsection{Literal Types}
+
+\begin{code}
+tiLit :: Value -> Type
+tiLit (Integer _) = tInt
+tiLit (Boolean _) = tBool
+\end{code}
+
+\subsection{Infer Types}
+
+\begin{code}
+ti :: MonadFail mf 
+   => TIState -> TypeEnv -> Term -> mf (TIState,(TypeSubst, Type))
+--ti (TypeEnv env) (EVar n) = 
+--    case Map.lookup n env of
+--       Nothing     ->  throwError $ "unbound variable: " ++ n
+--       Just sigma  ->  do  t <- instantiate sigma
+--                           return (nullSubst, t)
+ti tis _ (Val _ l) = return (tis,(nullSubst,tiLit l))
+--ti env (EAbs n e) =
+--    do  tv <- newTyVar "a"
+--        let TypeEnv env' = remove env n
+--            env'' = TypeEnv (env' `Map.union` (Map.singleton n (Scheme [] tv)))
+--        (s1, t1) <- ti env'' e
+--        return (s1, TFun (apply s1 tv) t1)
+--ti env exp@(EApp e1 e2) =
+--    do  tv <- newTyVar "a"
+--        (s1, t1) <- ti env e1
+--        (s2, t2) <- ti (apply s1 env) e2
+--        s3 <- mgu (apply s2 t1) (TFun t2 tv)
+--        return (s3 `composeSubst` s2 `composeSubst` s1, apply s3 tv)
+--    `catchError`
+--    \e -> throwError $ e ++ "\n in " ++ show exp
+--ti env (ELet x e1 e2) =
+--    do  (s1, t1) <- ti env e1
+--        let TypeEnv env' = remove env x
+--            t' = generalize (apply s1 env) t1
+--            env'' = TypeEnv (Map.insert x t' env')
+--        (s2, t2) <- ti (apply s1 env'') e2
+--        return (s1 `composeSubst` s2, t2)
+ti tis env t = fail ("ti NYfI")
+\end{code}
+

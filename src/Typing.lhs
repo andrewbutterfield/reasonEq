@@ -207,20 +207,24 @@ instantiate tis (Scheme vars t)
 
 \subsection{Most-General Unification}
 
+We use \h{MonadFail} here to handle errors, as per the rest of \reasonEq.
 \begin{code}
-mgu :: TIState -> Type -> Type -> (TIState,TypeSubst)
+mgu :: MonadFail mf => TIState -> Type -> Type -> mf (TIState,TypeSubst)
 -- mgu (TFun l r) (TFun l' r')  =  do  s1 <- mgu l l'
 --                                     s2 <- mgu (apply s1 r) (apply s1 r')
---mgu (TVar u) t               =  varBind u t
---mgu t (TVar u)               =  varBind u t
---mgu TInt TInt                =  return nullSubst
---mgu TBool TBool              =  return nullSubst
-mgu t1 t2                    =  error ("mgu NYfI")
+--                                    return (s1 `composeSubst` s2)
+mgu tis (TypeVar u) t          =  do ts <- varBind u t ; return (tis,ts)
+mgu tis t (TypeVar u)          =  do ts <- varBind u t ; return (tis,ts)
+mgu tis (GivenType gt1) (GivenType gt2)
+  | gt1==gt2                   =  return (tis,nullSubst)
+mgu tis t1 t2                  =  fail ("mgu NYfI")
 
-varBind :: Identifier -> Type -> TypeSubst
-varBind u t  | t == TypeVar u           =  nullSubst
-             | u `S.member` ftv t  =  error $ "occurs check fails: " ++ show u ++
-                                         " vs. " ++ show t
-             | otherwise             =  (M.singleton u t)
+varBind :: MonadFail mf => Identifier -> Type -> mf TypeSubst
+varBind u t  
+  | t == TypeVar u      =  return nullSubst
+  | u `S.member` ftv t  =  fail 
+                             ("occurs check fails: " 
+                               ++ show u ++ " vs. " ++ show t)
+  | otherwise           =  return $ M.singleton u t
 \end{code}
 

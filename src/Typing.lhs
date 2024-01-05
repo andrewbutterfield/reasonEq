@@ -305,3 +305,12 @@ ti tis _ (Val _ l) = return (tis,(nullSubst,tiLit l))
 ti tis env t = fail ("ti NYfI")
 \end{code}
 
+\subsection{Type Inferencer}
+
+\begin{code}
+typeInference :: MonadFail mf => Map Identifier TypeScheme -> Term -> mf Type
+typeInference env e =
+    do  (_,(s, t)) <- ti [1..] (TypeEnv env) e
+        return (apply s t)
+\end{code}
+

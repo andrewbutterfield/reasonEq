@@ -10,8 +10,7 @@ module AST ( Type
            , pattern ArbType,  pattern TypeVar, pattern TypeCons
            , pattern AlgType, pattern FunType, pattern GivenType
            , isSubTypeOf
-           , Txt
-           , Value, pattern Boolean, pattern Integer, pattern Txt
+           , Value, pattern Boolean, pattern Integer
            , TermKind(..)
            , isPredKind, isExprKind, ekType
            , classFromKind
@@ -332,18 +331,15 @@ and the term constructors and bindings,
 we could develop values from the ground up,
 but we would much prefer to have some built-in,
 like numbers of various kinds, and maybe characters?
-For now we start with booleans, integers and text.
+For now we start with booleans and integers.
 \begin{code}
-type Txt = String
 data Value
- = VB Bool
- | VI Integer
- | VT Txt
- deriving (Eq, Ord, Show, Read)
+  = VB Bool
+  | VI Integer
+  deriving (Eq, Ord, Show, Read)
 
 pattern Boolean b  =  VB b
 pattern Integer i  =  VI i
-pattern Txt     t  =  VT t
 \end{code}
 
 
@@ -575,9 +571,7 @@ lvarCons tk ni lvs = Iter tk True icomma True ni lvs
 \end{code}
 
 In \cite{UTP-book} we find the notion of texts, in chapters 6 and 10.
-We can represent these using this proposed term concept,
-as values of type \verb"Txt", or as terms with modified names.
-They don't need special handling or representation here.
+This has yet to be addressed.
 
 \subsection{Assignment}
 

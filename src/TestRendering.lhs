@@ -155,7 +155,6 @@ trValue :: Value -> String
 trValue (Boolean False)  =  nicesym "false"
 trValue (Boolean True)   =  nicesym "true"
 trValue (Integer i)      =  show i
-trValue (Txt s)          =  show s
 \end{code}
 
 

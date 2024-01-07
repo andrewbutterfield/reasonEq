@@ -14,6 +14,7 @@ import qualified Data.Set as S
 import Data.Map (Map)
 import qualified Data.Map as M
 
+import YesBut
 import LexBase
 import Variables
 import AST
@@ -98,8 +99,12 @@ data Exp                 --> data Term = ...
 \newpage
 Building the extended $\lambda$-calculus with \h{Term}s.
 \begin{code}
-eAbs :: Identifier -> Term -> Term
-eAbs x t = fromJust $ lam arbtype lambda [StdVar $ StaticVar x] t
+eVbl :: String -> Term
+eVbl n = jeVar $ StaticVar $ jId n
+eLitI n = Val arbtype $ Integer n
+eLitB b = Val arbtype $ Boolean b
+eAbs :: String -> Term -> Term
+eAbs x t = fromJust $ lam arbtype lambda [StdVar $ StaticVar $ jId x] t
 lambda = jId "lambda"
 arbtype = E ArbType
 eFApp :: Identifier -> Term -> Term
@@ -107,10 +112,10 @@ eFApp f t =  Cons arbtype False f [t]
 eApp :: Term -> Term -> Term
 eApp fun arg = Cons arbtype True app [fun,arg]
 app = jId "@"
-eLet :: Identifier -> Term -> Term -> Term
+eLet :: String -> Term -> Term -> Term
 eLet x e1 e2 
-  = Sub arbtype e2 $ jSubstn [(vx,e2)] []
-  where vx = StaticVar x 
+  = Sub arbtype e2 $ jSubstn [(vx,e1)] []
+  where vx = StaticVar $ jId x 
 \end{code}
 
 \subsection{Type Schemes}
@@ -255,7 +260,9 @@ mgu tis (TypeVar u) t          =  do ts <- varBind u t ; return (tis,ts)
 mgu tis t (TypeVar u)          =  do ts <- varBind u t ; return (tis,ts)
 mgu tis (GivenType gt1) (GivenType gt2)
   | gt1==gt2                   =  return (tis,nullSubst)
-mgu tis t1 t2                  =  fail ("mgu NYfI")
+mgu tis t1 t2                  =  fail ("mgu types don't unify:\n  t1 is "
+                                        ++show t1
+                                        ++"\n  t2 is "++show t2)
 -- missing Types
 -- ArbType
 -- TypeCons
@@ -325,3 +332,46 @@ ti tis env t = fail ("ti NYfI")
 -- missing:
 \end{code}
 
+\section{Tests}
+
+Example expressions:
+\begin{code}
+e0  =  eLet "id" (eAbs "x" (eVbl "x"))
+        (eVbl "id")
+
+e1  =  eLet "id" (eAbs "x" (eVbl "x"))
+        (eApp (eVbl "id") (eVbl "id"))
+
+e2  =  eLet "id" (eAbs "x" (eLet "y" (eVbl "x") (eVbl "y")))
+        (eApp (eVbl "id") (eVbl "id"))
+
+e3  =  eLet "id" (eAbs "x" (eLet "y" (eVbl "x") (eVbl "y")))
+        (eApp (eApp (eVbl "id") (eVbl "id")) (eLitI 2))
+
+e4  =  eLet "id" (eAbs "x" (eApp (eVbl "x") (eVbl "x")))
+        (eVbl "id")
+
+e5  =  eAbs "m" (eLet "y" (eVbl "m")
+                 (eLet "x" (eApp (eVbl "y") (eLitB True))
+                       (eVbl "x")))
+       
+e6  =  eApp (eLitI 2) (eLitI 2)
+\end{code}
+
+\begin{code}
+ttest :: Env -> Term -> IO ()
+ttest env e =
+    do  let res = typeInference env e
+        case res of
+          Yes t   ->  putStrLn $ show e ++ " :: " ++ show t ++ "\n"
+          But err  ->  putStrLn $ show e ++ "\n " ++ (unlines err) ++ "\n"
+\end{code}
+
+\begin{code}
+elcTest :: IO ()
+elcTest = mapM_ (ttest envId) [e0, e1, e2, e3, e4, e5, e6]
+envId = M.fromList [(StaticVar $ jId "id",Scheme [] (FunType tva tva))]
+tva = TypeVar $ jId "a"
+-- |Collecting Constraints|
+-- |main = mapM_ test' [e0, e1, e2, e3, e4, e5]|
+\end{code}

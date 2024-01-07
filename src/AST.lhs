@@ -165,8 +165,8 @@ substn ts lvs
  | dupKeys lvs'         =  fail "List-var subst. has duplicate variables."
  | otherwise            =  return $ SN (S.fromList ts') (S.fromList lvs')
  where  
-  ts'  = filter nontrivial $ sort ts
-  lvs' = filter (uncurry (/=)) $  sort lvs
+  ts'  = filter nontrivial     $ sort ts
+  lvs' = filter (uncurry (/=)) $ sort lvs
 
 substnxx :: (Monad m, MonadFail m) => [(Variable,Term)] -> [(ListVar,ListVar)]
        -> m Substn

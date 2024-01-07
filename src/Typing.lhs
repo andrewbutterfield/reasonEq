@@ -369,9 +369,7 @@ ttest env e =
 
 \begin{code}
 elcTest :: IO ()
-elcTest = mapM_ (ttest envId) [e0, e1, e2, e3, e4, e5, e6]
-envId = M.fromList [(StaticVar $ jId "id",Scheme [] (FunType tva tva))]
-tva = TypeVar $ jId "a"
+elcTest = mapM_ (ttest M.empty) [e0, e1, e2, e3, e4, e5, e6]
 -- |Collecting Constraints|
 -- |main = mapM_ test' [e0, e1, e2, e3, e4, e5]|
 \end{code}

@@ -295,12 +295,13 @@ ti tis (TypeEnv env) (Var _ n)
       Just sigma  ->  do let (tis',t) = instantiate tis sigma
                          return (tis,(nullSubst, t))
 ti tis _ (Val _ l) = return (tis,(nullSubst,tiLit l))
---ti tis env (EAbs n e) =
---    do  tv <- newTyVar "a"
---        let TypeEnv env' = remove env n
---            env'' = TypeEnv (env' `Map.union` (Map.singleton n (Scheme [] tv)))
---        (s1, t1) <- ti env'' e
---        return (s1, TFun (apply s1 tv) t1)
+ti tis env (ELam ArbType lmbd [StdVar n] e)
+  | lmbd == lambda 
+  = do let (tis1,tv) = newTyVar tis prfxa
+       let TypeEnv env' = remove env n
+       let env'' = TypeEnv (env' `M.union` (M.singleton n (Scheme [] tv)))
+       (tis2,(s1, t1)) <- ti tis env'' e
+       return (tis2,(s1, FunType (apply s1 tv) t1))
 ti tis env exp@(Cons _ True ap [e1,e2])
   | ap == app 
   = do  let (tis1,tv) = newTyVar tis prfxa
@@ -308,15 +309,18 @@ ti tis env exp@(Cons _ True ap [e1,e2])
         (tis3,(s2, t2)) <- ti tis2 (apply s1 env) e2
         (tis4,s3) <- mgu tis3 (apply s2 t1) (FunType t2 tv)
         return (tis4,(s3 `composeSubst` s2 `composeSubst` s1, apply s3 tv))
---    `catchError`
---    \e -> throwError $ e ++ "\n in " ++ show exp
---ti tis env (ELet x e1 e2) =
---    do  (s1, t1) <- ti env e1
---        let TypeEnv env' = remove env x
---            t' = generalize (apply s1 env) t1
---            env'' = TypeEnv (Map.insert x t' env')
---        (s2, t2) <- ti (apply s1 env'') e2
---        return (s1 `composeSubst` s2, t2)
+ti tis env (Sub _ e2 (Substn ves lvlvs))
+  | islet vel && S.null lvlvs
+  = do  (tis1,(s1, t1)) <- ti tis env e1
+        let TypeEnv env' = remove env x
+        let t' = generalize (apply s1 env) t1
+        let env'' = TypeEnv (M.insert x t' env')
+        (tis2,(s2, t2)) <- ti tis1 (apply s1 env'') e2
+        return (tis2,(s1 `composeSubst` s2, t2))
+  where
+    vel = S.toList ves
+    islet [_] = True; islet _ = False
+    (x,e1) = head vel
 ti tis env t = fail ("ti NYfI")
 -- missing:
 \end{code}

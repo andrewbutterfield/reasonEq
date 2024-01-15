@@ -1,5 +1,5 @@
 name:                reasonEq
-version:             0.8.0.0
+version:             0.8.5.0
 -- synopsis:
 -- description:
 homepage:            https://github.com/andrewbutterfield/reasonEq#readme
@@ -29,7 +29,6 @@ library
                      , Assertions
                      , VarData
                      , Binding
-                     , Typing
                      , Instantiate
                      , Matching
                      , AlphaEquiv
@@ -41,6 +40,8 @@ library
                      , Proofs
                      , Sequents
                      , Theories
+                     , MatchContext
+                     , Typing
                      , LiveProofs
                      , StratifiedDAG
                      , Persistence

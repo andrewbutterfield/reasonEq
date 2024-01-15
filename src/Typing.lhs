@@ -6,7 +6,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module Typing where
+module Typing (
+              )
+where
 
 import Data.Maybe
 import Data.Set (Set)
@@ -21,6 +23,7 @@ import AST
 import FreeVars
 import VarData
 import Binding
+import MatchContext
 
 import Test.HUnit
 import Test.Framework as TF (defaultMain, testGroup, Test)

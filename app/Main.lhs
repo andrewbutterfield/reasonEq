@@ -57,7 +57,7 @@ import Debugger
 
 \begin{code}
 progName = "reasonEq"
-version = "0.8.0.0"
+version = "0.8.5.0"
 name_version = progName++" "++version
 \end{code}
 

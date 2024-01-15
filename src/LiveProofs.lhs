@@ -7,8 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module LiveProofs
- ( MatchContext
- , Match(..), Matches
+ ( Match(..), Matches
  , LiveProof(..)
  , conjThName__, conjThName_, conjName__, conjName_
  , conjecture__, conjecture_, conjSC__, conjSC_
@@ -21,7 +20,7 @@ module LiveProofs
  , launchProof
  , displayMatches
  -- , instantiateRepl, instReplInMatch
- , buildMatchContext, matchInContexts, matchLawByName, tryLawByName
+ , matchInContexts, matchLawByName, tryLawByName
  , proofIsComplete, finaliseProof
  , undoCalcStep
  , makeEquivalence
@@ -55,6 +54,8 @@ import Laws
 import Proofs
 import Theories
 import Sequents
+import MatchContext
+import Typing
 
 import Symbols
 import TestRendering
@@ -63,43 +64,6 @@ import Debugger
 \end{code}
 
 \newpage
-\section{Matching Contexts}
-
-Consider a collection of theories in an ordered list,
-where each theory appears in that list before any of those on which
-it depends.
-Matching a conjecture component against all of these laws
-means working through the theories, from first to last.
-When working with a given theory, we want to match against
-all the laws in that theory, using every variable-data table
-in that theory and its dependencies.
-In particular, if a pattern variable occurs in more than one var-table,
-then we want the data from the first such table.
-
-So given that we are matching in the context of a list of dependency-ordered
-theories, we want to use a corresponding list of match contexts,
-one for each theory.
-A match context for a theory contains all the laws of that theory,
-along with a dependency-ordered list of the var-tables,
-including that of the theory itself,
-as well as those from all subsequent theories.
-\begin{code}
-type MatchContext
-  = ( String       -- Theory Name
-    , [Law]        -- all laws of this theory
-    , [VarTable] ) -- all known variables here, and in dependencies
-\end{code}
-
-Given a list of theories, we generate a list of match-contexts:
-\begin{code}
-buildMatchContext :: [Theory] -> [MatchContext]
-buildMatchContext [] = []
-buildMatchContext [thy] = [ (thName thy, laws thy, [known thy]) ]
-buildMatchContext (thy:thys) -- thys not null
-  = let mcs'@((_,_,vts'):_) = buildMatchContext thys
-    in (thName thy, laws thy, known thy : vts') : mcs'
-\end{code}
-
 \section{Matches}
 
 \begin{code}

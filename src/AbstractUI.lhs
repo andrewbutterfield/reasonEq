@@ -60,6 +60,7 @@ import AlphaEquiv
 import Substitution
 import Binding
 import VarData
+import MatchContext
 import Instantiate
 import Sequents
 import REqState

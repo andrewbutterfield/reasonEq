@@ -32,6 +32,7 @@ import Binding
 import Laws
 import Proofs
 import Instantiate
+import MatchContext
 import LiveProofs
 import TestRendering
 

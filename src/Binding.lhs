@@ -1,4 +1,4 @@
-\section{Binding}
+\chapter{Binding}
 \begin{verbatim}
 Copyright  Andrew Butterfield (c) 2017-22
 
@@ -61,7 +61,7 @@ import VarData
 import Debugger
 \end{code}
 
-\subsection{Introduction}
+\section{Introduction}
 
 Bindings are the result of matching,
 mapping pattern variables to corresponding candidate variables or terms.
@@ -293,9 +293,9 @@ to a list of terms to also include a list of list-variables.
 
 
 \newpage
-\subsection{Binding Types}
+\section{Binding Types}
 
-\subsubsection{Binding \texttt{Variable} to \texttt{Variable} or \texttt{Term}}
+\subsection{Binding \texttt{Variable} to \texttt{Variable} or \texttt{Term}}
 
 We bind a variable identifier to either 
 an identifier, variable, term, or list-variable:
@@ -314,7 +314,7 @@ pattern BindTerm t  =  BT t
 pattern BindLVar lv =  BLV lv
 \end{code}
 
-\subsubsection{
+\subsection{
   Binding \texttt{Subscript} to \texttt{Subscript}
 }
 
@@ -323,7 +323,7 @@ We bind a subscript to a subscript.
 type SubBinding = M.Map Subscript Subscript
 \end{code}
 
-\subsubsection{
+\subsection{
   Binding \texttt{ListVar} to
   \texttt{VarList}, or \texttt{VarSet},
   or a mixed \texttt{ListVar}/\texttt{Term} list.
@@ -382,7 +382,7 @@ mergeBindings (BD (vb1,sb1,lvb1)) (BD (vb2,sb2,lvb2))
 \end{code}
 
 \newpage
-\subsection{Term Dynamic normalisation}
+\section{Term Dynamic normalisation}
 When we store a dynamic term,
 we sometimes ``normalise'' it by setting its temporality to \texttt{Before}.
 \begin{code}
@@ -454,7 +454,7 @@ unTL dn (Right tm)  =  Right $ unTerm' dn tm
 
 
 \newpage
-\subsection{Binding Insertion}
+\section{Binding Insertion}
 
 If a variable is already present,
 then the new binding must be `equivalent',
@@ -508,7 +508,7 @@ rangeEq nAPI d binding r r0
 \end{code}
 
 \newpage
-\subsubsection{Binding Subscript to Subscript}
+\subsection{Binding Subscript to Subscript}
 
 \begin{code}
 bindSubscriptToSubscript :: (Monad m, MonadFail m)
@@ -528,7 +528,7 @@ bindSubscriptToSubscript what vw1 vw2 sbind
 \end{code}
 
 \newpage
-\subsubsection{Binding Variable to Variable}
+\subsection{Binding Variable to Variable}
 
 \begin{code}
 bindVarToVar :: (Monad m, MonadFail m) 
@@ -603,7 +603,7 @@ bindVarsToSelves (v:vs) bind
 
 
 \newpage
-\subsubsection{Binding Variable to Term}
+\subsection{Binding Variable to Term}
 
 An observation or expression variable can bind to an expression
 while a predicate variable can only bind to a predicate.
@@ -761,7 +761,7 @@ dnTerm2VarBind t = BT $ dnTerm t
 \end{code}
 
 
-\subsubsection{Binding Variable to ListVar}
+\subsection{Binding Variable to ListVar}
 
 When matching Iterations, we have expressions defined over list-variables.
 For now we don't check variable classes
@@ -773,7 +773,7 @@ bindVarToLVar (Vbl vi vc _) lv (BD (vbind,sbind,lbind))
 \end{code}
 
 \newpage
-\subsubsection{Binding List-Variables to Variable-Lists}
+\subsection{Binding List-Variables to Variable-Lists}
 
 The reason for having special ``list-variables''
 is so we can refer to variable lists (and sets).
@@ -873,7 +873,7 @@ vlComp vc vw vws (gv:gvs)
    vws' = S.insert gvw vws
 \end{code}
 
-\subsubsection{Feasible Self-Reference}
+\subsection{Feasible Self-Reference}
 
 If the list-variable is known, and occurs in the variable list,
 then we need to check that the binding is feasible.
@@ -1192,7 +1192,7 @@ attemptFeasibleBinding lV lW bind
 
 
 \newpage
-\subsubsection{Binding List-Variables to Variable-Sets}
+\subsection{Binding List-Variables to Variable-Sets}
 
 When we are inserting a variable-set (\texttt{BS}),
 we may find that a variable-list (\texttt{BL}) is present
@@ -1266,7 +1266,7 @@ termVarEqv _         _  =  False
 
 
 \newpage
-\subsubsection{Binding List-Variables to Variable-Sets}
+\subsection{Binding List-Variables to Variable-Sets}
 
 Similar code to \texttt{bindLVarToVList} above, except we have sets.
 \begin{code}
@@ -1367,7 +1367,7 @@ bindLVarSTuples (lv2:lv2s) bind
 \end{code}
 
 \newpage
-\subsubsection{Binding List-Variables to Substitution Replacements}
+\subsection{Binding List-Variables to Substitution Replacements}
 
 A list variable denoting a replacement(-list) in a substitution
 may bind to a sequence of candidate replacement terms,
@@ -1458,7 +1458,7 @@ bindLVarToTList lv ts = bindLVarSubstRepl lv (map Right ts)
 
 
 \newpage
-\subsubsection{Binding General-Variables to General-Variables}
+\subsection{Binding General-Variables to General-Variables}
 
 An list-variable can bind to a singleton list of any general variable,
 while a standard-variable can only bind to a standard variable.
@@ -1469,7 +1469,7 @@ bindGVarToGVar (StdVar pv) (StdVar cv) binds = bindVarToVar pv cv binds
 bindGVarToGVar _ _ _ = fail "bindGVarToGVar: invalid stdvar. -> lstvar. binding."
 \end{code}
 
-\subsubsection{Binding General-Variables to Variable-Lists}
+\subsection{Binding General-Variables to Variable-Lists}
 
 An list-variable can bind to a list of any length,
 while a standard-variable can only bind to the standard variable inside
@@ -1482,14 +1482,14 @@ bindGVarToVList _ _ _ = fail "bindGVarToVList: invalid gvar. -> vlist binding."
 \end{code}
 
 \newpage
-\subsection{Binding Lookup}
+\section{Binding Lookup}
 
 Binding lookup is very straightforward,
 with the minor wrinkle that we need to ensure we lookup
 the subscript binding if the lookup variable has \texttt{During} temporality.
 
 
-\subsubsection{Lookup (Standard) Variables}
+\subsection{Lookup (Standard) Variables}
 
 \begin{code}
 lookupVarBind :: (Monad m, MonadFail m) => Binding -> Variable -> m VarBind
@@ -1534,7 +1534,7 @@ lookupVarBind (BD (vbind,_,_)) v@(Vbl vi vc vw)
 \end{code}
 
 \newpage
-\subsubsection{Lookup List-Variables}
+\subsection{Lookup List-Variables}
 
 List variable lookup is very similar:
 \begin{code}
@@ -1567,7 +1567,7 @@ lookupLstBind (BD (_,_,lbind)) lv@(LVbl (Vbl i vc vw) is ij)
 \end{code}
 
 \newpage
-\subsection{Derived Binding Functions}
+\section{Derived Binding Functions}
 
 Binding a list of list-variables to the null list:
 \begin{code}
@@ -1585,7 +1585,7 @@ bindLVarsToEmpty bind (lv:lvs)
       bindLVarsToEmpty bind' lvs
 \end{code}
 
-\subsection{Mapped Variables}
+\section{Mapped Variables}
 
 We want to explicitly return all the variables that have been bound.
 \begin{code}
@@ -1609,14 +1609,14 @@ allLVWhen whens (i,vc,is,ij)
 \end{code}
 
 \newpage
-\subsubsection{Finding Unbound Replacement Variables}
+\subsection{Finding Unbound Replacement Variables}
 
 \begin{code}
 findUnboundVars :: Binding -> Term -> VarSet
 findUnboundVars bind trm  =  mentionedVars trm S.\\ mappedVars bind
 \end{code}
 
-\subsubsection{Instantiate Unbound Known Variables}
+\subsection{Instantiate Unbound Known Variables}
 
 \begin{code}
 bindKnown :: MonadFail m => [VarTable] -> Binding -> Term -> m Binding
@@ -1681,7 +1681,7 @@ instLVIds bind vc vw si sj (j:js)
 \end{code}
 
 
-\subsubsection{Collect Substitution List-Variable Pairings}
+\subsection{Collect Substitution List-Variable Pairings}
 
 \begin{code}
 termLVarPairings :: Term -> [(ListVar,ListVar)]
@@ -1838,7 +1838,7 @@ equivBindingsSizes bind (lv:lvs)
 \end{code}
 Another issue, what if some are unbound? Ignore for now.
 
-\subsubsection{Floating Instantiation}
+\subsection{Floating Instantiation}
 
 \begin{code}
 bindFloating :: (Monad m, MonadFail m) => [VarTable] -> Binding -> Term -> m Binding
@@ -1853,7 +1853,7 @@ bindFloating vts bind trm
 \end{code}
 
 
-\subsection{Generating Fresh Variables}
+\section{Generating Fresh Variables}
 
 We may need to generate fresh variables to discharge
 freshness side-conditions.
@@ -1904,7 +1904,7 @@ remakeLVar i lv@(LVbl v is ij) = LVbl (remakeVar i v) is ij
 
 
 \newpage
-\subsection{Binding Dump}
+\section{Binding Dump}
 
 Sometimes it is useful to dump all the binding results.
 \begin{code}
@@ -1921,7 +1921,7 @@ dumpBinding (BD (vbind,sbind,lbind))
 \end{code}
 
 \newpage
-\subsubsection{Bijective Bindings}
+\subsection{Bijective Bindings}
 
 For $\alpha$-equivalence testing in particular,
 we need to know if a binding is bijective.
@@ -2011,7 +2011,7 @@ isBijectiveAssocList assoc
     cardBs = S.size $ S.fromList bs
 \end{code}
 
-\subsubsection{Trivial Quantifiers}
+\subsection{Trivial Quantifiers}
 
 A quantifier match is trivial if all its list-variables
 are bound to empty sets or lists.
@@ -2030,7 +2030,7 @@ trivialListVarBind (BX vts)  =  null vts
 \end{code}
 
 \newpage
-\subsection{Binding Patches}
+\section{Binding Patches}
 
 In a few cases we want to replace a given range element of a binding
 with something else.
@@ -2060,7 +2060,7 @@ patchVarListBind lv vl (BD (vbind,sbind,lbind)) = BD (vbind,sbind,lbind')
 \end{code}
 
 \newpage
-\subsection{Binding Internal Tests}
+\section{Binding Internal Tests}
 
 \begin{code}
 int_tst_Binding :: [TF.Test]

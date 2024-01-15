@@ -1,4 +1,4 @@
-\section{Theories}
+\chapter{Theories}
 \begin{verbatim}
 Copyright (c) Andrew Buttefield 2018-22
               Saqib Zardari     2023
@@ -61,7 +61,7 @@ and structured collections of same.
 
 
 \newpage
-\subsection{Types for Theories}
+\section{Types for Theories}
 
 A theory is a collection of laws linked
 to information about which variables in those laws are deemed as ``known'',
@@ -109,7 +109,7 @@ nullTheory
 \end{code}
 
 \newpage
-\subsection{Writing and Reading a Theory}
+\section{Writing and Reading a Theory}
 
 \begin{code}
 thry = "THEORY"
@@ -165,7 +165,7 @@ readTheory txts
 \end{code}
 
 \newpage
-\subsection{Theory Collections}
+\section{Theory Collections}
 
 We keep a collection of theories as
 a directed acyclic graph (DAG) of same,
@@ -189,7 +189,7 @@ tmap__ f r = r{tmap = f $ tmap r} ; tmap_ = tmap__ . const
 sdag__ f r = r{sdag = f $ sdag r} ; sdag_ = sdag__ . const
 \end{code}
 
-\subsection{Writing and Reading Theory Collections}
+\section{Writing and Reading Theory Collections}
 
 \begin{code}
 thrys = "THEORIES"
@@ -234,7 +234,7 @@ readTheories2 tmp txts
        return (Theories (M.fromList tmp) sdg, rest2)
 \end{code}
 
-\subsection{No Theories}
+\section{No Theories}
 
 We start by defining a state of zero knowledge:
 \begin{code}
@@ -242,7 +242,7 @@ noTheories = Theories{ tmap = M.empty, sdag = [] }
 \end{code}
 
 \newpage
-\subsection{Adding a New Theory}
+\section{Adding a New Theory}
 
 A key principle in adding a new theory is that it can
 only be inserted if its dependencies are already present.
@@ -267,7 +267,7 @@ addTheory' thry theories
       Just theories' -> theories'
 \end{code}
 
-\subsection{Retrieving a Theory}
+\section{Retrieving a Theory}
 
 \begin{code}
 getTheory :: (Monad m, MonadFail m) => String -> Theories -> m Theory
@@ -278,7 +278,7 @@ getTheory thnm thrys
 \end{code}
 
 
-\subsection{Getting all Theory Dependencies}
+\section{Getting all Theory Dependencies}
 
 We also need to generate a list of theories from the mapping,
 given a starting point:
@@ -313,16 +313,16 @@ getAllTheories theories
 \end{code}
 
 \newpage
-\subsection{Various Lookups}
+\section{Various Lookups}
 
-\subsubsection{List all theories}
+\subsection{List all theories}
 
 \begin{code}
 listTheories :: Theories -> [String]
 listTheories thrys = M.keys $ tmap thrys
 \end{code}
 
-\subsubsection{Get Conjectures of current theory}
+\subsection{Get Conjectures of current theory}
 
 \begin{code}
 getTheoryConjectures :: (Monad m, MonadFail m) => String -> Theories -> m [NmdAssertion]
@@ -332,7 +332,7 @@ getTheoryConjectures thNm thrys
          Just thry  ->  return $ conjs thry
 \end{code}
 
-\subsubsection{Get Proofs from current theory}
+\subsection{Get Proofs from current theory}
 
 \begin{code}
 isATheoryIn :: String -> Theories -> Bool
@@ -345,9 +345,9 @@ getTheoryProofs thNm thrys
          Just thry  ->  return $ proofs thry
 \end{code}
 
-\subsection{Various Changes}
+\section{Various Changes}
 
-\subsubsection{Generic Theory Replacement}
+\subsection{Generic Theory Replacement}
 
 We insist, for now at least,
 that the dependencies do not change.
@@ -375,7 +375,7 @@ replaceTheory' thry theories
      Just theories'  ->  theories'
 \end{code}
 
-\subsubsection{Theory Update}
+\subsection{Theory Update}
 
 \begin{code}
 updateTheory :: (Monad m, MonadFail m) => String -> Theory -> Bool -> Theories -> m Theories
@@ -414,7 +414,7 @@ addConjs thry newC  =  conjs__ (++ newC) thry
 \end{code}
 
 
-\subsubsection{Monadic Theory Component Updates}
+\subsection{Monadic Theory Component Updates}
 
 We have some updates that are monadic
 \begin{code}
@@ -482,7 +482,7 @@ lawDemote lnm thry
    theLaw = head law1
 \end{code}
 
-\subsubsection{Add Proof to Theory}
+\subsection{Add Proof to Theory}
 
 This code also ``fails'' silently.
 \begin{code}
@@ -498,7 +498,7 @@ addTheoryProof thname prf thrys@(Theories tmap sdag)
 \end{code}
 
 \newpage
-\subsubsection{Upgrade (proven) Conjecture to Law}
+\subsection{Upgrade (proven) Conjecture to Law}
 
 \begin{code}
 upgradeConj2Law  :: String -> String -> Theories -> Theories
@@ -518,7 +518,7 @@ upgrade cjnm thry sjc (cj@(nm,asn):cjs)
  where prf = labelAsProof cj cjnm
 \end{code}
 
-\subsubsection{Classifying}
+\subsection{Classifying}
 
 \begin{code}
 lawClassify :: MonadFail m => [Law] -> Theory -> m Theory
@@ -538,7 +538,7 @@ lawDepClassify' thys (depthy:depthys)
 \end{code}
 
 
-\subsection{Showing Theories}
+\section{Showing Theories}
 
 \textbf{This should all be done via proper generic rendering code}
 

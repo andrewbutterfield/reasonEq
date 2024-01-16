@@ -6,7 +6,12 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module Typing (
+module Typing ( TypeVariable
+              , TypeScheme(..), pattern Scheme
+              , TermVariable
+              , Env
+              , TypeEnv(..)
+              , typeInference
               )
 where
 
@@ -111,7 +116,7 @@ instance Types TypeScheme where
 
 \subsection{Type Substitutions}
 
-A type-substition is a mappimg from type-variables to types.
+A type-substition is a mapping from type-variables to types.
 \begin{code}
 type TypeSubst = Map TypeVariable Type
 nullSubst :: TypeSubst

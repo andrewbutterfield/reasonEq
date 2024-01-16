@@ -32,7 +32,8 @@ module AST ( Type
            , pattern PVal, pattern PVar, pattern PCons
            , pattern PBind, pattern PLam, pattern PSub, pattern PIter
            , pattern E2, pattern P2
-           , termkind, isVar, isExpr, isPred, isAtomic
+           , termkind, setkind
+           , isVar, isExpr, isPred, isAtomic
            , theVar, theGVar, varAsTerm, termAsVar
            , icomma, lvarCons
            , assignmentId
@@ -528,9 +529,19 @@ termkind (Var tk v)                 =  tk
 termkind (Cons tk sb n ts)          =  tk
 termkind (Bnd tk n vl tm)           =  tk
 termkind (Lam tk n vs tm)           =  tk
-termkind (Cls i tk)                 =  P
+termkind (Cls i _)                  =  P
 termkind (Sub tk tm s)              =  tk
 termkind (Iter tk sa na si ni lvs)  =  tk
+
+setkind :: TermKind -> Term -> Term
+setkind tk (Val _ k)                 =  (Val tk k)
+setkind tk (Var _ v)                 =  fromJust $ var tk v
+setkind tk (Cons _ sb n ts)          =  (Cons tk sb n ts) 
+setkind tk (Bnd _ n vs tm)           =  fromJust $ bnd tk n vs tm 
+setkind tk (Lam _ n vl tm)           =  fromJust $ lam tk n vl tm 
+setkind tk (Sub _ tm s)              =  (Sub tk tm s)     
+setkind tk (Iter _ sa na si ni lvs)  =  (Iter tk sa na si ni lvs)
+setkind _ t                          =  t
 
 isVar, isExpr, isPred, isAtomic :: Term -> Bool
 isVar (Var _ _) = True ; isVar _ = False

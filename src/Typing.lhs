@@ -230,10 +230,37 @@ mgu fis t1 t2                  =  fail ("mgu types don't unify:\n  t1 is "
 
 This is the main entry point:
 \begin{code}
-typeInference :: MonadFail mf => Env -> Term -> mf Type
-typeInference env e =
-    do  (_,(s, t)) <- fi [1..] (TypeEnv env) e
-        return (apply s t)
+typeInference :: MonadFail mf 
+              => [VarTable] 
+              -> Term 
+              -> mf (Type,Term)
+typeInference vts trm
+  = do  let (fis,env) = buildTypeEnv vts [1..] M.empty (getVars trm)
+        (_,(sub, typ)) <- inferTypes vts fis (TypeEnv env) trm
+        let typ' = apply sub typ
+        let tk = termkind trm
+        let trm' = if isExprKind tk
+                   then setkind (E typ') trm
+                   else trm
+        return (typ',trm')
+
+getVars :: Term -> [Variable]
+getVars = stdVarsOf . S.toList . mentionedVars
+
+buildTypeEnv :: [VarTable] -> FreshInts -> Env -> [Variable] -> (FreshInts,Env)
+buildTypeEnv vts fis env [] = (fis,env)
+buildTypeEnv vts fis env (v:vs) 
+  = let (fis',env') = addVarType vts fis env v
+    in  buildTypeEnv vts fis' env' vs
+
+addVarType :: [VarTable] -> FreshInts -> Env -> Variable -> (FreshInts,Env)
+addVarType vts fis env v@(Vbl n _ _)
+  = case lookupVarTables vts v of
+      KnownConst trm ->  buildTypeEnv vts fis env (getVars trm)           
+      KnownVar typ -> (fis, M.insert n (Scheme [] typ) env)
+     -- generic or unknown
+      _ -> let (fis',tv) = newTyVar fis "a"
+           in (fis',M.insert n (Scheme [] tv) env)
 \end{code}
 
 
@@ -242,41 +269,42 @@ typeInference env e =
 \subsection{Infer Types}
 
 \begin{code}
-fi :: MonadFail mf 
-   => FreshInts -> TypeEnv -> Term -> mf (FreshInts,(TypeSubst, Type))
-fi fis (TypeEnv env) (Var _ (Vbl n _ _)) 
+inferTypes :: MonadFail mf
+           => [VarTable] -> FreshInts 
+           -> TypeEnv -> Term -> mf (FreshInts,(TypeSubst, Type))
+inferTypes vts fis (TypeEnv env) (Var _ (Vbl n _ _)) 
   = case M.lookup n env of
       Nothing     ->  fail $ "unbound variable: " ++ show n
       Just sigma  ->  do let (fis',t) = instantiate fis sigma
                          return (fis,(nullSubst, t))
-fi fis _ (Val _ l) = return (fis,(nullSubst,valueType l))
-fi fis env (ELam ArbType lmbd [StdVar (Vbl n _ _)] e)
+inferTypes vts fis _ (Val _ l) = return (fis,(nullSubst,valueType l))
+inferTypes vts fis env (ELam ArbType lmbd [StdVar (Vbl n _ _)] e)
   | lmbd == lambda 
-  = do let (tis1,tv) = newTyVar fis "a"
+  = do let (fis1,tv) = newTyVar fis "a"
        let TypeEnv env' = remove env n
        let env'' = TypeEnv (env' `M.union` (M.singleton n (Scheme [] tv)))
-       (tis2,(s1, t1)) <- fi fis env'' e
-       return (tis2,(s1, FunType (apply s1 tv) t1))
-fi fis env exp@(Cons _ True ap [e1,e2])
+       (fis2,(s1, t1)) <- inferTypes vts fis env'' e
+       return (fis2,(s1, FunType (apply s1 tv) t1))
+inferTypes vts fis env exp@(Cons _ True ap [e1,e2])
   | ap == app 
-  = do  let (tis1,tv) = newTyVar fis "a"
-        (tis2,(s1, t1)) <- fi tis1 env e1
-        (tis3,(s2, t2)) <- fi tis2 (apply s1 env) e2
-        (tis4,s3) <- mgu tis3 (apply s2 t1) (FunType t2 tv)
-        return (tis4,(s3 `composeSubst` s2 `composeSubst` s1, apply s3 tv))
-fi fis env (Sub _ e2 (Substn ves lvlvs))
+  = do  let (fis1,tv) = newTyVar fis "a"
+        (fis2,(s1, t1)) <- inferTypes vts fis1 env e1
+        (fis3,(s2, t2)) <- inferTypes vts fis2 (apply s1 env) e2
+        (fis4,s3) <- mgu fis3 (apply s2 t1) (FunType t2 tv)
+        return (fis4,(s3 `composeSubst` s2 `composeSubst` s1, apply s3 tv))
+inferTypes vts fis env (Sub _ e2 (Substn ves lvlvs))
   | islet vel && S.null lvlvs
-  = do  (tis1,(s1, t1)) <- fi fis env e1
+  = do  (fis1,(s1, t1)) <- inferTypes vts fis env e1
         let TypeEnv env' = remove env x
         let t' = generalize (apply s1 env) t1
         let env'' = TypeEnv (M.insert x t' env')
-        (tis2,(s2, t2)) <- fi tis1 (apply s1 env'') e2
-        return (tis2,(s1 `composeSubst` s2, t2))
+        (fis2,(s2, t2)) <- inferTypes vts fis1 (apply s1 env'') e2
+        return (fis2,(s1 `composeSubst` s2, t2))
   where
     vel = S.toList ves
     islet [_] = True; islet _ = False
     ((Vbl x _ _),e1) = head vel
-fi fis env t = fail ("fi NYfI")
+inferTypes vts fis env t = fail ("inferTypes NYfI")
 -- missing:
 \end{code}
 
@@ -387,7 +415,7 @@ e6  =  eApp (eLitI 2) (eLitI 2)
 \begin{code}
 ttest :: Env -> Term -> IO ()
 ttest env e =
-    do  let res = typeInference env e
+    do  let res = typeInference []  e
         case res of
           Yes t   ->  putStrLn $ show e ++ " :: " ++ show t ++ "\n"
           But err  ->  putStrLn $ show e ++ "\n " ++ (unlines err) ++ "\n"

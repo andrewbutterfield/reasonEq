@@ -28,6 +28,7 @@ import Proofs
 import Substitution
 import Theories
 
+import StdTypeSignature
 import StdSignature
 import Equivalence
 import Negation

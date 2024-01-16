@@ -8,7 +8,6 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module StdSignature (
   mkConsVar, mkConsIntro
-, bool, boolf_1, boolf_2, boolf_3
 , trueP
 , falseP
 , equiv, mkEquiv, mkEquivs, (===)

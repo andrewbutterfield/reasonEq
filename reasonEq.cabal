@@ -54,6 +54,7 @@ library
                      , TestParsing
                      , WriteRead
                      -- in builtin
+                     , StdTypeSignature
                      , StdSignature
                      , Equivalence
                      , Negation

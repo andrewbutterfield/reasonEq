@@ -27,6 +27,7 @@ import Laws
 import Proofs
 import Theories
 
+import StdTypeSignature
 import StdSignature
 import TestRendering
 \end{code}

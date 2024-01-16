@@ -25,6 +25,8 @@ import VarData
 import Binding
 import MatchContext
 
+import StdTypeSignature
+
 import Test.HUnit
 import Test.Framework as TF (defaultMain, testGroup, Test)
 import Test.Framework.Providers.HUnit (testCase)
@@ -235,13 +237,6 @@ typeInference env e =
 \end{code}
 
 
-\subsection{Literal Types}
-
-\begin{code}
-tiLit :: Value -> Type
-tiLit (Integer _) = tInt
-tiLit (Boolean _) = tBool
-\end{code}
 
 \newpage
 \subsection{Infer Types}
@@ -254,7 +249,7 @@ fi fis (TypeEnv env) (Var _ (Vbl n _ _))
       Nothing     ->  fail $ "unbound variable: " ++ show n
       Just sigma  ->  do let (fis',t) = instantiate fis sigma
                          return (fis,(nullSubst, t))
-fi fis _ (Val _ l) = return (fis,(nullSubst,tiLit l))
+fi fis _ (Val _ l) = return (fis,(nullSubst,valueType l))
 fi fis env (ELam ArbType lmbd [StdVar (Vbl n _ _)] e)
   | lmbd == lambda 
   = do let (tis1,tv) = newTyVar fis "a"
@@ -314,10 +309,6 @@ data Type           --> data Type = ...
   |  TBool                |  GivenType <Identifier:="B">
   |  TFun Type Type       |  FunType Type Type
 \end{verbatim}
-\begin{code}
-tInt   =  GivenType $ jId "Z"
-tBool  =  GivenType $ jId "B"
-\end{code}
 
 \subsection{Terms}
 

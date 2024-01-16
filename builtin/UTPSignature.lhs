@@ -38,6 +38,7 @@ import Laws
 import Proofs
 import Theories
 import TestRendering
+import StdTypeSignature
 import StdSignature
 \end{code}
 

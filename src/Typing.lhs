@@ -52,17 +52,11 @@ it ensures that the \h{TermKind} component indicates the correct type.
 
 We implement the W algorithm for type inferencing, 
 by adapting a version by Martin Grabm{\"u}ller (MG)
-(https://github.com/mgrabmueller).
-The mapping from his datatypes to ours is shown
-at the end of this chapter 
-(Sec.\ref{sec:MG-to-reasonEq},p\pageref{sec:MG-to-reasonEq}).
+(https://github.com/mgrabmueller), which is closely based on THIH by Mark P. Jones
 
 
 \section{Datatypes}
 
-We have the following broad correspondance between MG types and ours
-(we use notation \texttt{<Typ:=val>} to denote 
-a component of type \texttt{Typ} with a specific value \texttt{val}).
 
 \subsection{Type Variables}
 
@@ -273,6 +267,12 @@ addVarType vts fis env v@(Vbl n _ _)
 \newpage
 \subsection{Infer Types}
 
+We use some special names to identify lambdas and explixit application operators
+\begin{code}
+lambda = jId "lambda"
+app = jId "@"
+\end{code}
+
 \begin{code}
 inferTypes :: MonadFail mf
            => [VarTable] -> FreshInts 
@@ -313,123 +313,4 @@ inferTypes vts fis env t = fail ("inferTypes NYfI")
 -- missing:
 \end{code}
 
-
-
-\section{MG to \reasonEq\ datatype mapping}\label{sec:MG-to-reasonEq}
-
-We have the following broad correspondance between MG types and ours
-(we use notation \texttt{<Typ:=val>} to denote 
-a component of type \texttt{Typ} with a specific value \texttt{val}).
-
-\subsection{Literals}
-
-The MG \h{Lit} type is a subset of our \h{Value} type:
-\begin{verbatim}
-data Lit          --> data Value = ...
-  =  LInt Integer       |  Integer Integer
-  |  LBool Bool         |  Boolean Bool
-\end{verbatim}
-
-\subsection{Types}
-
-The MG \h{Type} type is mainly a subset of our \h{Type},
-where specific MG concrete types map to our \h{GivenType}
-with meaningful identifiers.
-\begin{verbatim}
-data Type           --> data Type = ...  
-  =  TVar String          |  TypeVar Identifier
-  |  TInt                 |  GivenType <Identifier:="Z">
-  |  TBool                |  GivenType <Identifier:="B">
-  |  TFun Type Type       |  FunType Type Type
-\end{verbatim}
-
-\subsection{Terms}
-
-The MG \h{Exp} type is very $\lambda$-calculus oriented,
-whereas our \h{Term} type is very model-theoretic logic oriented.
-We have a general $\lambda$ construct,
-and can use \h{Cons} to represent the MG \h{EApp}.
-However, there is no close correspondance for the MG \h{ELet}.
-Here we exploit the law $\LET x := e_1 \IN e_2  =  e_2[e_1/x]$
-and represent it using our \h{Sub} term.
-\begin{verbatim}
-data Exp                 --> data Term = ...
-  =  EVar String               | Var TermKind Variable 
-  |  ELit Lit                  | Val TermKind Value
-  |  EApp Exp Exp              | Cons TermKind 
-                                      Subable := True
-                                      Identifier := "@"
-                                      [Term] := [exp1,exp2]                
-  |  EAbs String Exp           | Lam TermKind 
-                                     Identifier := "lambda"
-                                     VarList   := [Variable]
-                                     Term
-  |  ELet String Exp Exp       | Sub TermKind
-                                     Term := exp2
-                                     Substn :=  [exp1/var]
-\end{verbatim}
-
-\newpage
-Building the extended $\lambda$-calculus with \h{Term}s.
-\begin{code}
-eVbl :: String -> Term
-eVbl n = jeVar $ StaticVar $ jId n
-eLitI n = Val arbtype $ Integer n
-eLitB b = Val arbtype $ Boolean b
-eAbs :: String -> Term -> Term
-eAbs x t = fromJust $ lam arbtype lambda [StdVar $ StaticVar $ jId x] t
-lambda = jId "lambda"
-arbtype = E ArbType
-eFApp :: Identifier -> Term -> Term
-eFApp f t =  Cons arbtype False f [t]
-eApp :: Term -> Term -> Term
-eApp fun arg = Cons arbtype True app [fun,arg]
-app = jId "@"
-eLet :: String -> Term -> Term -> Term
-eLet x e1 e2 
-  = Sub arbtype e2 $ jSubstn [(vx,e1)] []
-  where vx = StaticVar $ jId x 
-\end{code}
-
-\subsection{Tests}
-
-Example expressions:
-\begin{code}
-e0  =  eLet "id" (eAbs "x" (eVbl "x"))
-        (eVbl "id")
-
-e1  =  eLet "id" (eAbs "x" (eVbl "x"))
-        (eApp (eVbl "id") (eVbl "id"))
-
-e2  =  eLet "id" (eAbs "x" (eLet "y" (eVbl "x") (eVbl "y")))
-        (eApp (eVbl "id") (eVbl "id"))
-
-e3  =  eLet "id" (eAbs "x" (eLet "y" (eVbl "x") (eVbl "y")))
-        (eApp (eApp (eVbl "id") (eVbl "id")) (eLitI 2))
-
-e4  =  eLet "id" (eAbs "x" (eApp (eVbl "x") (eVbl "x")))
-        (eVbl "id")
-
-e5  =  eAbs "m" (eLet "y" (eVbl "m")
-                 (eLet "x" (eApp (eVbl "y") (eLitB True))
-                       (eVbl "x")))
-       
-e6  =  eApp (eLitI 2) (eLitI 2)
-\end{code}
-
-\begin{code}
-ttest :: Env -> Term -> IO ()
-ttest env e =
-    do  let res = typeInference []  e
-        case res of
-          Yes t   ->  putStrLn $ show e ++ " :: " ++ show t ++ "\n"
-          But err  ->  putStrLn $ show e ++ "\n " ++ (unlines err) ++ "\n"
-\end{code}
-
-\begin{code}
-elcTest :: IO ()
-elcTest = mapM_ (ttest M.empty) [e0, e1, e2, e3, e4, e5, e6]
--- |Collecting Constraints|
--- |main = mapM_ test' [e0, e1, e2, e3, e4, e5]|
-\end{code}
 

@@ -7,4 +7,5 @@ Aaron Bruce          2023
 reasonEq code also based on the following:
 
 Martin Grabmueller (c) 2014 -- see MG-LICENSE.txt
+However this is very derivative of the THIH paper by Mark P. Jones
 

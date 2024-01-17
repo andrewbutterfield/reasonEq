@@ -281,10 +281,14 @@ inferTypes :: MonadFail mf
            -> TypeEnv -> Term -> mf (FreshInts,(TypeSubst, Type))
 \end{code}
 
+\subsubsection{Values}
+
 $\ITLIT$
 \begin{code}
 inferTypes vts fis _ (Val _ l) = return (fis,(nullSubst,valueType l))
 \end{code}
+
+\subsubsection{Variables}
 
 $\ITVAR$
 \begin{code}
@@ -295,16 +299,32 @@ inferTypes vts fis (TypeEnv env) (Var _ (Vbl n _ _))
                          return (fis,(nullSubst, t))
 \end{code}
 
+\subsubsection{Abstraction}
+
 $\ITABS$
 \begin{code}
 inferTypes vts fis env (ELam ArbType lmbd [StdVar (Vbl n _ _)] e)
   | lmbd == lambda 
-  = do let (fis1,tv) = newTyVar fis "a"
-       let TypeEnv env' = remove env n
-       let env'' = TypeEnv (env' `M.union` (M.singleton n (Scheme [] tv)))
-       (fis2,(s1, t1)) <- inferTypes vts fis env'' e
+  = do let (fis1,tv,env') = abstractLambdaVar fis env n
+       (fis2,(s1, t1)) <- inferTypes vts fis1 env' e
        return (fis2,(s1, FunType (apply s1 tv) t1))
 \end{code}
+
+
+$\ITABSN$
+\begin{code}
+inferTypes vts fis env (ELam ArbType lmbd vl@(_:_) e)
+  | lmbd == lambda && all isStdV vl
+  = do -- let (fis1,tv,env') = abstractLambdaVar fis env n
+       let (fis1,tv) = newTyVar fis "a"
+       let TypeEnv env' = remove env n
+       let env'' = TypeEnv (env' `M.union` (M.singleton n (Scheme [] tv)))
+       (fis2,(s1, t1)) <- inferTypes vts fis1 env'' e
+       return (fis2,(s1, FunType (apply s1 tv) t1))
+  where n = head $ fst $ idsOf vl
+\end{code}
+
+\subsubsection{Application}
 
 $\IAPP$
 \begin{code}
@@ -316,6 +336,8 @@ inferTypes vts fis env exp@(Cons _ True ap [e1,e2])
         (fis4,s3) <- mgu fis3 (apply s2 t1) (FunType t2 tv)
         return (fis4,(s3 `composeSubst` s2 `composeSubst` s1, apply s3 tv))
 \end{code}
+
+\subsubsection{Substitution}
 
 $\ILET$
 \begin{code}
@@ -336,6 +358,28 @@ inferTypes vts fis env (Sub _ e2 (Substn ves lvlvs))
 \begin{code}
 inferTypes vts fis env t = fail ("inferTypes NYfI")
 -- missing:
+\end{code}
+
+\subsubsection{Support}
+
+\begin{code}
+abstractLambdaVar :: FreshInts -> TypeEnv -> Identifier 
+                  -> (FreshInts,Type,TypeEnv)
+abstractLambdaVar fis env n
+  = let (fis1,tv) = newTyVar fis "a"
+        TypeEnv env' = remove env n
+        env'' = TypeEnv (env' `M.union` (M.singleton n (Scheme [] tv)))
+    in (fis1,tv,env'')
+
+abstractLambdaVars  :: FreshInts -> TypeEnv -> [Identifier] 
+                  -> (FreshInts,[Type],TypeEnv)
+abstractLambdaVars fis env [n] 
+  = let (fis',tv,env') = abstractLambdaVar fis env n
+    in  (fis',[tv],env')
+abstractLambdaVars fis env (n:ns)
+  =  let (fis1,tv,env1) = abstractLambdaVar fis env n
+         (fis2,tvs,env2) = abstractLambdaVars fis1 env1 ns
+     in  (fis2,tv:tvs,env2) 
 \end{code}
 
 

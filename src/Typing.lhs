@@ -273,16 +273,30 @@ lambda = jId "lambda"
 app = jId "@"
 \end{code}
 
+\TLEGEND
+
 \begin{code}
 inferTypes :: MonadFail mf
            => [VarTable] -> FreshInts 
            -> TypeEnv -> Term -> mf (FreshInts,(TypeSubst, Type))
+\end{code}
+
+$\ITLIT$
+\begin{code}
+inferTypes vts fis _ (Val _ l) = return (fis,(nullSubst,valueType l))
+\end{code}
+
+$\ITVAR$
+\begin{code}
 inferTypes vts fis (TypeEnv env) (Var _ (Vbl n _ _)) 
   = case M.lookup n env of
       Nothing     ->  fail $ "unbound variable: " ++ show n
       Just sigma  ->  do let (fis',t) = instantiate fis sigma
                          return (fis,(nullSubst, t))
-inferTypes vts fis _ (Val _ l) = return (fis,(nullSubst,valueType l))
+\end{code}
+
+$\ITABS$
+\begin{code}
 inferTypes vts fis env (ELam ArbType lmbd [StdVar (Vbl n _ _)] e)
   | lmbd == lambda 
   = do let (fis1,tv) = newTyVar fis "a"
@@ -290,6 +304,9 @@ inferTypes vts fis env (ELam ArbType lmbd [StdVar (Vbl n _ _)] e)
        let env'' = TypeEnv (env' `M.union` (M.singleton n (Scheme [] tv)))
        (fis2,(s1, t1)) <- inferTypes vts fis env'' e
        return (fis2,(s1, FunType (apply s1 tv) t1))
+\end{code}
+
+\begin{code}
 inferTypes vts fis env exp@(Cons _ True ap [e1,e2])
   | ap == app 
   = do  let (fis1,tv) = newTyVar fis "a"
@@ -297,6 +314,9 @@ inferTypes vts fis env exp@(Cons _ True ap [e1,e2])
         (fis3,(s2, t2)) <- inferTypes vts fis2 (apply s1 env) e2
         (fis4,s3) <- mgu fis3 (apply s2 t1) (FunType t2 tv)
         return (fis4,(s3 `composeSubst` s2 `composeSubst` s1, apply s3 tv))
+\end{code}
+
+\begin{code}
 inferTypes vts fis env (Sub _ e2 (Substn ves lvlvs))
   | islet vel && S.null lvlvs
   = do  (fis1,(s1, t1)) <- inferTypes vts fis env e1
@@ -309,6 +329,9 @@ inferTypes vts fis env (Sub _ e2 (Substn ves lvlvs))
     vel = S.toList ves
     islet [_] = True; islet _ = False
     ((Vbl x _ _),e1) = head vel
+\end{code}
+
+\begin{code}
 inferTypes vts fis env t = fail ("inferTypes NYfI")
 -- missing:
 \end{code}

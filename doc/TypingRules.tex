@@ -1,0 +1,49 @@
+%
+% This document provides a single place for definitions
+% that will appear in multiple locations,
+% and so ensures they are kept consistent.
+%
+% This does not generate any typeset output.
+%
+\def\TENV{\Gamma}
+\def\litT{\mathtt{litT}}
+\def\instT{\mathtt{instT}}
+\def\newv{\mathtt{newv}}
+\def\TASSUME#1#2#3{{#2}:{#3}\mof{#1}}
+\def\TJUDGE#1#2#3#4{{#1}\vdash{#2}:{#3},{#4}}
+\def\TINFER#1#2{\inferrule{#1}{#2}}
+
+
+
+%%%%  ==== Rules ========================================================
+
+\def\TLEGEND{
+\[
+\begin{array}{l@{\;--\;}l}
+   t & \text{A Type}
+\\ \sigma & \text{Polytype of form }\forall t_1,\dots,t_n \bullet t
+\\ \TENV & \text{Environment mapping variables to polytypes}
+\\ S & \text{Substitution mapping type-variables to types}
+\\ \TASSUME\TENV{v}{\sigma} & \text{Polytype Assumption}
+\\ \TJUDGE\TENV{e}{t}{S} & \text{Typing judgement}
+\\ \litT & \text{Function mapping literal value to its type}
+\\ \instT & \text{Function instantiating polytype vars }
+\end{array}
+\]
+}
+
+\def\ITLIT{\TJUDGE\TENV{\kk k}{\litT(\kk k)}\emptyset}
+
+\def\ITVAR{
+\TINFER
+ {\TASSUME\TENV{\vv v}{\sigma} 
+  \and 
+  t = \instT(\sigma)}
+ {\TJUDGE\TENV{\vv v}{t}\emptyset}
+}
+
+\def\ITABS{
+  \TINFER
+    {t=\newv \and \TJUDGE{\TENV,x:t}{e}{t'}S}
+    {\TJUDGE\TENV{\lambda x \bullet e}{St \fun t'}{S}}
+}

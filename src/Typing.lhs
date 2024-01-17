@@ -306,6 +306,7 @@ inferTypes vts fis env (ELam ArbType lmbd [StdVar (Vbl n _ _)] e)
        return (fis2,(s1, FunType (apply s1 tv) t1))
 \end{code}
 
+$\IAPP$
 \begin{code}
 inferTypes vts fis env exp@(Cons _ True ap [e1,e2])
   | ap == app 
@@ -316,6 +317,7 @@ inferTypes vts fis env exp@(Cons _ True ap [e1,e2])
         return (fis4,(s3 `composeSubst` s2 `composeSubst` s1, apply s3 tv))
 \end{code}
 
+$\ILET$
 \begin{code}
 inferTypes vts fis env (Sub _ e2 (Substn ves lvlvs))
   | islet vel && S.null lvlvs

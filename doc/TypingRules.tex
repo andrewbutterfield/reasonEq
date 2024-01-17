@@ -9,6 +9,9 @@
 \def\litT{\mathtt{litT}}
 \def\instT{\mathtt{instT}}
 \def\newv{\mathtt{newv}}
+\def\freeT{\mathtt{freeT}}
+\def\TGEN#1{\overline{#1}}
+\def\mgu{\mathbb{\mathsf{mgu}}}
 \def\TASSUME#1#2#3{{#2}:{#3}\mof{#1}}
 \def\TJUDGE#1#2#3#4{{#1}\vdash{#2}:{#3},{#4}}
 \def\TINFER#1#2{\inferrule{#1}{#2}}
@@ -24,6 +27,12 @@
 \\ \sigma & \text{Polytype of form }\forall t_1,\dots,t_n \bullet t
 \\ \TENV & \text{Environment mapping variables to polytypes}
 \\ S & \text{Substitution mapping type-variables to types}
+\\ \freeT & \text{Returns free type-variables in its argument}
+\\ \TGEN{t} & 
+    \TGEN{t} = \forall \hat{t} \bullet t 
+               \text{ where }
+               \hat{t}=\freeT(t)-\freeT(\TENV)
+\\ \mgu & \text{Most-General Unifier}
 \\ \TASSUME\TENV{v}{\sigma} & \text{Polytype Assumption}
 \\ \TJUDGE\TENV{e}{t}{S} & \text{Typing judgement}
 \\ \litT & \text{Function mapping literal value to its type}
@@ -46,4 +55,26 @@
   \TINFER
     {t=\newv \and \TJUDGE{\TENV,x:t}{e}{t'}S}
     {\TJUDGE\TENV{\lambda x \bullet e}{St \fun t'}{S}}
+}
+
+\def\IAPP{
+  \TINFER
+    { \TJUDGE\TENV{e_0}{t_0}{S_0}
+      \and
+      \TJUDGE{S_0\TENV}{e_1}{t_1}{S_1}
+      \and
+      t' = \newv
+      \and
+      S_2 = \mgu(S_1 t_0, t_1 \fun t')
+    }
+    {\TJUDGE\TENV{e_0~e_1}{S_2 t'}{S_2 S_1 S_0}}
+}
+
+\def\ILET{
+  \TINFER
+   { \TJUDGE\TENV{e}{t}{S_0}
+     \and
+     \TJUDGE{S_0\TENV,x:\TGEN{S_0\TENV}}{e_1}{t'}{S_1}
+   }
+   {\TJUDGE\TENV{\LET x = e_0 \IN e_1}{t'}{S_1 S_0}}
 }

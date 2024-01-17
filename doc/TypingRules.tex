@@ -57,6 +57,16 @@
     {\TJUDGE\TENV{\lambda x \bullet e}{St \fun t'}{S}}
 }
 
+\def\ITABSN{
+  \TINFER
+    {  t_1=\newv,\dots,t_n=\newv 
+       \and 
+       \TJUDGE{\TENV,x_1:t_1,\dots,x_n:t_n}{e}{t'}S_i
+    }
+    {\TJUDGE\TENV{\lambda x_1,\dots,x_n \bullet e}
+     {St_1 \fun \dots \fun St_n \fun t'}{S}}
+}
+
 \def\IAPP{
   \TINFER
     { \TJUDGE\TENV{e_0}{t_0}{S_0}

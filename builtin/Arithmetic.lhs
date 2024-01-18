@@ -119,173 +119,173 @@ and then finish with integer divisions, and mixed laws.
 
 \subsection{Laws of Addition}
 
-\begin{verbatim}
-add:
-"plus-l-unit"  :  (zero `plus` e1) `equalZ` e1
-"plus-r-unit"  :  (e1 `plus` zero) `equalZ` e1
-"plus-comm"  :  (e1 `plus` e2) `equalZ` (e2 `plus` e1)
-"plus-assoc"  :  (e1 `plus` (e2 `plus` e3)) `equalZ` ((e1 `plus` e2) `plus` e3)
-"plus-cancel"  :  (e1 `equalZ` e2)===((e3 `plus` e1) `equalZ` (e3 `plus` e2))
-\end{verbatim}
-
 $$
-  \begin{array}{lll}
-     a = b  && \QNAME{whatever}
-  \end{array}
-$$\par\vspace{-8pt}
+\begin{array}{lll}
+   0+e = e  && \QNAME{$+$-l-unit}
+\\ e+0 = e  && \QNAME{$+$-r-unit}
+\\ e+f = f+e  && \QNAME{$+$-symm}
+\\ e+(f+g) = (e+f)+g  && \QNAME{$+$-assoc}
+\\ (e+f=e+g) \equiv (f=g)  && \QNAME{$+$-cancel}
+\end{array}
+$$\par\vspace{-4pt}
 \begin{code}
-axWhat1 = ( "what" -.- "the"
-            , ( e `isEqualTo` e
-              , scTrue ) )
+axAddLUnit = ( "+" -.- "l" -.- "unit",
+               (zero `add` e) `isEqualTo` e )
+axAddRUnit = ( "+" -.- "r" -.- "unit",
+               (e `add` zero) `isEqualTo` e )
+axAddSymm = ( "+" -.- "symm",
+               (e `add` f) `isEqualTo` (f `add` e) )
+axAddAssoc = ( "+" -.- "assoc",
+               (e `add` (f `add` g)) `isEqualTo` ((e `add` f) `add` g) )
+axAddCancel = ( "+" -.- "cancel",
+               ((e `add` f) `isEqualTo` (e `add` g)) 
+               === 
+               (f `isEqualTo` g) )
 \end{code}
 
 \subsection{Laws of Multiplication}
 
-\begin{verbatim}
-mul:
-"mul-l-unit"  :  (one `mul` e1) `equalZ` e1
-"mul-r-unit"  :  (e1 `mul` one) `equalZ` e1
-"mul-l-zero"  :  (zero `mul` e1) `equalZ` zero
-"mul-r-zero"  :  (e1 `mul` zero) `equalZ` zero
-"mul-comm"  :  (e1 `mul` e2) `equalZ` (e2 `mul` e1)
-"mul-assoc"  :  (e1 `mul` (e2 `mul` e3)) `equalZ` ((e1 `mul` e2) `mul` e3)
-\end{verbatim}
-
 $$
-  \begin{array}{lll}
-     a = b  && \QNAME{whatever}
-  \end{array}
-$$\par\vspace{-8pt}
+\begin{array}{lll}
+   0 * e = e  && \QNAME{$*$-l-unit}
+\\ e * 0 = e  && \QNAME{$*$-r-unit}
+\\ e * f = f * e  && \QNAME{$*$-symm}
+\\ e * (f * g) = (e * f) * g  && \QNAME{$*$-assoc}
+\\ (e * f=e * g) \equiv (f=g)  && \QNAME{$*$-cancel}
+\end{array}
+$$\par\vspace{-4pt}
+
 \begin{code}
-axWhat3 = ( "what" -.- "the"
-            , ( e `isEqualTo` e
-              , scTrue ) )
+axMulLUnit = ( "*" -.- "l" -.- "unit",
+               (one `mul` e) `isEqualTo` e )
+axMulRUnit = ( "*" -.- "r" -.- "unit",
+               (e `mul` one) `isEqualTo` e )
+axMulLZero = ( "*" -.- "l" -.- "unit",
+               (zero `mul` e) `isEqualTo` zero )
+axMulRZero = ( "*" -.- "r" -.- "unit",
+               (e `mul` zero) `isEqualTo` zero )
+axMulSymm = ( "*" -.- "symm",
+               (e `mul` f) `isEqualTo` (f `mul` e) )
+axMulAssoc = ( "*" -.- "assoc",
+               (e `mul` (f `mul` g)) `isEqualTo` ((e `mul` f) `mul` g) )
+axMulCancel = ( "*" -.- "cancel",
+               ((e `mul` f) `isEqualTo` (e `mul` g)) 
+               === 
+               (f `isEqualTo` g) )
 \end{code}
 
 
 \subsection{Laws of Subtraction}
 
-\begin{verbatim}
-sub:
-"minus-l-unit"  :  (e1 `minus` zero) `equalZ` e1
-\end{verbatim}
-
 $$
   \begin{array}{lll}
-     a = b  && \QNAME{whatever}
+     e - 0 = e  && \QNAME{$*$-r-unit}
   \end{array}
-$$\par\vspace{-8pt}
+$$\par\vspace{-4pt}
 \begin{code}
-axWhat2 = ( "what" -.- "the"
-            , ( e `isEqualTo` e
-              , scTrue ) )
+axSubRUnit = ( "-" -.- "r" -.- "unit", (e `sub` zero) `isEqualTo` e )
 \end{code}
 
 \subsection{Laws of Negation}
 
 $$
-  \begin{array}{lll}
-     (-e) = (0-e)  && \QNAME{neg-def}
-  \\ (-0) = 0      && \QNAME{neg-zero}
-  \end{array}
-$$\par\vspace{-8pt}
+\begin{array}{lll}
+   (-e) = (0-e)  && \QNAME{neg-def}
+\\ (-0) = 0      && \QNAME{neg-zero}
+\end{array}
+$$\par\vspace{-4pt}
 \begin{code}
 axNegDef = ( "neg" -.- "def"
-            , ( neg e `isEqualTo` (zero `sub` e)
-              , scTrue ) )
+           , neg e `isEqualTo` (zero `sub` e) )
 axNegZero = ( "neg" -.- "zero"
-            , ( neg zero `isEqualTo` zero
-              , scTrue ) )
+            , neg zero `isEqualTo` zero )
 \end{code}
 
 
 
 \subsection{Laws of Integer Division}
 
-\begin{verbatim}
-div:
-"divd-l-zero"  :  (zero `divd` e1) `equalZ` zero
-"divd-r-unit"  :  (e1 `divd` one) `equalZ` e1
-"divd-self"   :  (e1 `divd` e1) `equalZ` one
-\end{verbatim}
-
 $$
-  \begin{array}{lll}
-     a = b  && \QNAME{whatever}
-  \end{array}
-$$\par\vspace{-8pt}
+\begin{array}{lll}
+   0 \Div e = 0  && \QNAME{$*$-l-zero}
+\\ e \Div 1 = e  && \QNAME{$*$-r-unit}
+\\ e \Div e = 1  && \QNAME{$*$-self}
+\end{array}
+$$\par\vspace{-4pt}
 \begin{code}
-axWhat4 = ( "what" -.- "the"
-            , ( e `isEqualTo` e
-              , scTrue ) )
+axDivRUnit = ( "div" -.- "r" -.- "unit"
+             , (e `idiv` one) `isEqualTo` e )
+axDivLZero = ( "div" -.- "r" -.- "unit"
+             , (zero `idiv` e) `isEqualTo` zero )
+axDivSelf = ( "div" -.- "self"
+            , (e `idiv` e) `isEqualTo` one)
 \end{code}
 
 
 \subsection{Laws of Integer Modulo}
 
 $$
-  \begin{array}{lll}
+\begin{array}{lll}
      e \Mod e = 0  && \QNAME{mod-self}
-  \end{array}
+\end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-axWhat5 = ( "what" -.- "the"
-            , ( e `isEqualTo` e
-              , scTrue ) )
+axModSelf = ( "mod" -.- "self", (e `imod` e) `isEqualTo` zero ) 
 \end{code}
 
 
 \subsection{Laws of Mixed Arithmetic}
 
-\begin{verbatim}
-mixed:
-"plus-inv"  :  (e1 `plus` (neg e1)) `equalZ` zero
-"minus-as-plus-neg"  :  (e1 `minus` e2) `equalZ` (e1 `plus` (neg e2))
-"mul-div"  :  (e * f) `div`f = e
-"mul-mod"  : (e * f) `mod` f = 0
-\end{verbatim}
-
 $$
-  \begin{array}{lll}
-     a = b  && \QNAME{whatever}
-  \end{array}
-$$\par\vspace{-8pt}
+\begin{array}{lll}
+   e + (-e) = 0  && \QNAME{$+$-inv}
+\\ e - f = e + (f) && \QNAME{$-$-alt-def}
+\\ (e * f) \Div f = e && \QNAME{$*$-$\Div$-same}
+\\ (e * f) \Mod f = 0 && \QNAME{$*$-$\Mod$-same}
+\end{array}
+$$\par\vspace{-4pt}
 \begin{code}
-axWhat6 = ( "what" -.- "the"
-            , ( e `isEqualTo` e
-              , scTrue ) )
+axAddInv = ( "+" -.- "inv"
+           ,   (e `add` (neg e) `isEqualTo` zero ) )
+axSubAltDef = ( "-" -.- "alt" -.- "def"
+           ,   ((e `sub` f) `isEqualTo` (e `add` (neg f)) ) )
+axMulDivSame = ( "*" -.- "div" -.- "same"
+               ,   ( ((e `mul` f) `idiv` f)
+                   `isEqualTo` 
+                   e ) )
+axMulModSame = ( "*" -.- "mod" -.- "same"
+               ,   ( ((e `mul` f) `imod` f)
+                   `isEqualTo` 
+                   zero ) )
 \end{code}
 
-
-
-$$\begin{array}{ll}
-   \AXequalRefl & \AXequalReflN
-\end{array}$$
-
-\vspace{-8pt}
-\begin{code}
-axEqualRefl
- = ( "=" -.- "refl"
-   , ( e `isEqualTo` e
-   , scTrue ) )
-\end{code}
 
 We collect these together:
 \begin{code}
 arithmeticAxioms :: [Law]
 arithmeticAxioms
-  = map (labelAsAxiom . mkNmdAsn)
-      [ axNegDef, axNegZero ]
+  = map (labelAsAxiom . mkNmdAsn . addSCtrue)
+      [ axNegDef, axNegZero 
+      , axAddLUnit, axAddRUnit, axAddSymm, axAddAssoc, axAddCancel 
+      , axMulLUnit, axMulRUnit, axMulLZero, axMulRZero
+      , axMulSymm, axMulAssoc, axMulCancel 
+      , axDivRUnit, axDivLZero, axDivSelf
+      , axAddInv, axSubAltDef, axMulDivSame, axMulModSame
+      ]
+
+addSCtrue (nm,pred) = (nm, (pred,scTrue))
 \end{code}
 
 \section{Arithmetic Conjectures}
 
 
 For now we don't have any conjectures.
+We take an axiom to be a conjecture for experimentation
 \begin{code}
 arithmeticConjectures :: [NmdAssertion]
 arithmeticConjectures
-  = map mkNmdAsn [  ]
+  = map (mkNmdAsn . addSCtrue) 
+     [ axAddCancel ]
 \end{code}
 
 \section{The Arithmetic Theory}

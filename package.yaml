@@ -1,0 +1,68 @@
+name:                reasonEq
+version:             0.8.5.0
+license:             BSD3
+author:              "Andrew Butterfield"
+maintainer:          "Andrew.Butterfield@scss.tcd.ie"
+copyright:           "(c) 2017-24 Andrew Butterfield"
+
+extra-source-files:
+- README.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see README.md here
+
+dependencies:
+- base >= 4.7 && < 5
+- csv
+- containers
+- utf8-string
+- directory
+- filepath
+- process
+- bytestring
+- loc
+- text
+- HsYAML
+- haskeline
+- HUnit
+- test-framework
+- test-framework-hunit
+- split
+
+library:
+  source-dirs: 
+  - src
+  - builtin
+               
+
+executables:
+
+  req:
+    main:            Main.lhs
+    source-dirs:     app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - reasonEq
+
+tests:
+  reasonEq-test:
+    main:                Spec.hs
+    source-dirs:     test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - reasonEq
+    
+
+ 

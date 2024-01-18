@@ -1,147 +1,161 @@
-name:                reasonEq
-version:             0.8.5.0
--- synopsis:
--- description:
-homepage:            https://github.com/andrewbutterfield/reasonEq#readme
-license:             BSD3
-license-file:        LICENSE
-author:              Andrew Butterfield
-maintainer:          Andrew.Butterfield@scss.tcd.ie
-copyright:           (c) 2017-23 Andrew Butterfield
-category:            Theorem Provers
-build-type:          Simple
-extra-source-files:  README.md
-cabal-version:       >=1.10
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.35.1.
+--
+-- see: https://github.com/sol/hpack
+
+name:           reasonEq
+version:        0.8.5.0
+description:    Please see README.md here
+author:         Andrew Butterfield
+maintainer:     Andrew.Butterfield@scss.tcd.ie
+copyright:      (c) 2017-24 Andrew Butterfield
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
 
 library
-  hs-source-dirs:      src, builtin, proto
-  exposed-modules:     YesBut
-                     , Debugger
-                     , Utilities
-                     , Control
-                     , Symbols
-                     , LexBase
-                     , Variables
-                     , AST
-                     , FreeVars
-                     , Substitution
-                     , SideCond
-                     , Assertions
-                     , VarData
-                     , Binding
-                     , Instantiate
-                     , Matching
-                     , AlphaEquiv
-                     , Syntax
-                     , Builder
-                     , TermZipper
-                     , Laws
-                     , Classifier
-                     , Proofs
-                     , Sequents
-                     , Theories
-                     , MatchContext
-                     , Typing
-                     , LiveProofs
-                     , StratifiedDAG
-                     , Persistence
-                     , REqState
-                     , AbstractUI
-                     , Ranking
-                     , REPL
-                     , Dev
-                     , TestRendering
-                     , TestParsing
-                     , WriteRead
-                     -- in builtin
-                     , StdTypeSignature
-                     , StdSignature
-                     , Equivalence
-                     , Negation
-                     , Disjunction
-                     , Conjunction
-                     , AndOrInvert
-                     , Implication
-                     , Equality
-                     , ForAll
-                     , Exists
-                     , UClose
-                     , UTPSignature
-                     , UTPBase
-                     , XYZ
-                     , XYZDesign
-                     -- in proto
-                     , Acyclic
-                     , TRYOUT
-                     , SAT
-  build-depends:       base >= 4.7 && < 5
-                     , haskeline
-                     , containers
-                     , time
-                     , directory
-                     , filepath
-                     , split
-                     -- we need to support internal tests for some modules
-                     , HUnit
-                     -- , QuickCheck
-                     , test-framework
-                     , test-framework-hunit
-                     -- , test-framework-quickcheck2
-  default-language:    Haskell2010
+  exposed-modules:
+      AbstractUI
+      AlphaEquiv
+      Assertions
+      AST
+      Binding
+      Builder
+      Classifier
+      Control
+      Debugger
+      Dev
+      FreeVars
+      Instantiate
+      Laws
+      LexBase
+      LiveProofs
+      MatchContext
+      Matching
+      Persistence
+      Proofs
+      Ranking
+      REPL
+      REqState
+      SAT
+      Sequents
+      ShowPP
+      SideCond
+      StratifiedDAG
+      Substitution
+      Symbols
+      Syntax
+      TermZipper
+      TestParsing
+      TestRendering
+      Theories
+      Typing
+      Utilities
+      VarData
+      Variables
+      WriteRead
+      YesBut
+      AndOrInvert
+      Arithmetic
+      Conjunction
+      Disjunction
+      Equality
+      Equivalence
+      Exists
+      ForAll
+      Implication
+      Negation
+      StdSignature
+      StdTypeSignature
+      UClose
+      UTPBase
+      UTPSignature
+      XYZ
+      XYZDesign
+  other-modules:
+      Paths_reasonEq
+  hs-source-dirs:
+      src
+      builtin
+  build-depends:
+      HUnit
+    , HsYAML
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , csv
+    , directory
+    , filepath
+    , haskeline
+    , loc
+    , process
+    , split
+    , test-framework
+    , test-framework-hunit
+    , text
+    , utf8-string
+  default-language: Haskell2010
 
 executable req
-  hs-source-dirs:      app
-  main-is:             Main.lhs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base
-                     , containers
-                     , filepath
-                     , directory
-                     , reasonEq
-  default-language:    Haskell2010
+  main-is: Main.lhs
+  other-modules:
+      Paths_reasonEq
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      HUnit
+    , HsYAML
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , csv
+    , directory
+    , filepath
+    , haskeline
+    , loc
+    , process
+    , reasonEq
+    , split
+    , test-framework
+    , test-framework-hunit
+    , text
+    , utf8-string
+  default-language: Haskell2010
 
 test-suite reasonEq-test
-  type:                exitcode-stdio-1.0
-  hs-source-dirs:      test, src
-  main-is:             Spec.hs
-  build-depends:       base
-                     , containers
-                     , reasonEq
-                     , split
-                     , HUnit
-                     -- , QuickCheck
-                     , test-framework
-                     , test-framework-hunit
-                     -- , test-framework-quickcheck2
-  other-modules:       TestDefs
-                     , VarDataTest
-                     , FreeVarTest
-                     -- , MkTestBind
-                     , YesBut
-                     , Debugger
-                     , AST
-                     , BindingTest
-                     , MatchingTest
-                     , MatchScenarios
-                     , Symbols
-                     , Assertions
-                     , Binding
-                     , Builder
-                     , Control
-                     , FreeVars
-                     , LexBase
-                     , Matching
-                     , SideCond
-                     , Substitution
-                     , Syntax
-                     , TermZipper
-                     , TestRendering
-                     , Utilities
-                     , VarData
-                     , Variables
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  default-language:    Haskell2010
-
-source-repository head
-  type:     git
-  location: https://github.com/andrewbutterfield/reasonEq
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      BindingTest
+      FreeVarTest
+      MatchingTest
+      MatchScenarios
+      TestDefs
+      VarDataTest
+      Paths_reasonEq
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      HUnit
+    , HsYAML
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , csv
+    , directory
+    , filepath
+    , haskeline
+    , loc
+    , process
+    , reasonEq
+    , split
+    , test-framework
+    , test-framework-hunit
+    , text
+    , utf8-string
+  default-language: Haskell2010

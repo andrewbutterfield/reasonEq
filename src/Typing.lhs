@@ -302,27 +302,22 @@ inferTypes vts fis (TypeEnv env) (Var _ (Vbl n _ _))
 \subsubsection{Abstraction}
 
 $\ITABS$
+
+$\ITABSN$
 \begin{code}
-inferTypes vts fis env (ELam ArbType lmbd [StdVar (Vbl n _ _)] e)
+inferTypes vts fis env (ELam _ lmbd [StdVar (Vbl n _ _)] e)
   | lmbd == lambda 
   = do let (fis1,tv,env') = abstractLambdaVar fis env n
        (fis2,(s1, t1)) <- inferTypes vts fis1 env' e
        return (fis2,(s1, FunType (apply s1 tv) t1))
-\end{code}
-
-
-$\ITABSN$
-\begin{code}
-inferTypes vts fis env (ELam ArbType lmbd vl@(_:_) e)
-  | lmbd == lambda && all isStdV vl
-  = do -- let (fis1,tv,env') = abstractLambdaVar fis env n
-       let (fis1,tv) = newTyVar fis "a"
-       let TypeEnv env' = remove env n
-       let env'' = TypeEnv (env' `M.union` (M.singleton n (Scheme [] tv)))
-       (fis2,(s1, t1)) <- inferTypes vts fis1 env'' e
+-- for multiple abs-variables we just do a recursive trick
+inferTypes vts fis env (ELam typ lmbd (StdVar (Vbl n _ _):vl) e)
+  | lmbd == lambda
+  = do let (fis1,tv,env') = abstractLambdaVar fis env n
+       (fis2,(s1, t1)) <- inferTypes vts fis1 env' lam'
        return (fis2,(s1, FunType (apply s1 tv) t1))
-  where n = head $ fst $ idsOf vl
-\end{code}
+  where lam' = fromJust $ eLam typ lmbd vl e
+\end{code} 
 
 \subsubsection{Application}
 

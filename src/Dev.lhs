@@ -36,6 +36,7 @@ import Conjunction
 import AndOrInvert
 import Implication
 import Equality
+import Arithmetic
 import ForAll
 import Exists
 import UClose
@@ -90,6 +91,7 @@ devKnownBuiltins  = [ equivTheory
                     , aoiTheory
                     , implTheory
                     , equalityTheory
+                    , arithmeticTheory
                     , forallTheory
                     , existsTheory
                     , uCloseTheory

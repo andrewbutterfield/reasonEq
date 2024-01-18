@@ -275,7 +275,7 @@ We collect these together:
 arithmeticAxioms :: [Law]
 arithmeticAxioms
   = map (labelAsAxiom . mkNmdAsn)
-      [  ]
+      [ axNegDef, axNegZero ]
 \end{code}
 
 \section{Arithmetic Conjectures}

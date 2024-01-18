@@ -323,13 +323,19 @@ inferTypes vts fis env (ELam typ lmbd (StdVar (Vbl n _ _):vl) e)
 
 $\IAPP$
 \begin{code}
-inferTypes vts fis env exp@(Cons _ True ap [e1,e2])
-  | ap == app 
+inferTypes vts fis env (ECons _ True f [e1,e2])
+  | f == app 
   = do  let (fis1,tv) = newTyVar fis "a"
         (fis2,(s1, t1)) <- inferTypes vts fis1 env e1
         (fis3,(s2, t2)) <- inferTypes vts fis2 (apply s1 env) e2
         (fis4,s3) <- mgu fis3 (apply s2 t1) (FunType t2 tv)
         return (fis4,(s3 `composeSubst` s2 `composeSubst` s1, apply s3 tv))
+\end{code}
+
+$\ICONS$
+\begin{code}
+inferTypes vts fis env econs@(ECons _ True _ _)
+  = inferTypes vts fis env $ consToApp econs
 \end{code}
 
 \subsubsection{Substitution}
@@ -351,12 +357,14 @@ inferTypes vts fis env (Sub _ e2 (Substn ves lvlvs))
 \end{code}
 
 \begin{code}
-inferTypes vts fis env t = fail ("inferTypes NYfI")
+inferTypes vts fis env t = return (fis,(M.empty,ArbType))
 -- missing:
 \end{code}
 
 \subsubsection{Support}
 
+We convert a lambda with multiple abstraction variables
+into a recursive nesting of lambdas with a single abstraction variable.
 \begin{code}
 abstractLambdaVar :: FreshInts -> TypeEnv -> Identifier 
                   -> (FreshInts,Type,TypeEnv)
@@ -377,4 +385,15 @@ abstractLambdaVars fis env (n:ns)
      in  (fis2,tv:tvs,env2) 
 \end{code}
 
+We convert a cons $(f~e_1~e_2~\dots~e_n)$
+into nested applications $(@~(\dots(@~(@~f~ e_1)~e_2)\dots)~e_n)$.
+\begin{code}
+consToApp :: Term -> Term
+consToApp (ECons _ _ f es)
+  = foldl mkApply (fromJust $ eVar ArbType (StaticVar f)) es
+consToApp cons = cons
+
+mkApply :: Term -> Term -> Term
+mkApply f e = (ECons ArbType True app [f,e])
+\end{code}
 

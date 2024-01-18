@@ -80,6 +80,12 @@
     {\TJUDGE\TENV{e_0~e_1}{S_2 t'}{S_2 S_1 S_0}}
 }
 
+\def\ICONS{
+  \TINFER
+    {\TJUDGE\TENV{((\dots((f~ e_1)~e_2)\dots)~e_n)}{t}{S}}
+    {\TJUDGE\TENV{(f~e_1~e_2~\dots~e_n)}{t}{S}}
+}
+
 \def\ILET{
   \TINFER
    { \TJUDGE\TENV{e}{t}{S_0}

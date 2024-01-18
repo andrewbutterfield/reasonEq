@@ -118,12 +118,6 @@ r = fromJust $ pVar $ Vbl (jId "R") PredV Static
 
 \subsubsection{Propositional Types}
 
-\begin{code}
-bool = GivenType $ jId $ "B"
-boolf_1 = FunType bool bool
-boolf_2 = FunType bool boolf_1
-boolf_3 = FunType bool boolf_2
-\end{code}
 
 \subsubsection{Propositional Constants}
 

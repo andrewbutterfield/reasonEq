@@ -10,6 +10,7 @@ module StdTypeSignature (
   bool, boolf_1, boolf_2, boolf_3
 , int, intf_1, intf_2, intf_3
 , valueType
+, apred1, apred11, apred2
 ) where
 
 import LexBase
@@ -47,4 +48,16 @@ intf_3 = FunType int intf_2
 valueType :: Value -> Type
 valueType (Integer _) = bool
 valueType (Boolean _) = int
+\end{code}
+
+\subsection{Predicate Function Types}
+
+\begin{code}
+i_t = jId "t"
+tvar = TypeVar i_t
+i_tn n = jId ("t"++show n)
+tnvar n = TypeVar $ i_tn n
+apred1 = FunType tvar bool
+apred11 = FunType tvar apred1
+apred2 = FunType (tnvar 1) $ FunType (tnvar 2) bool
 \end{code}

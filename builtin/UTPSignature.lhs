@@ -8,7 +8,6 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module UTPSignature (
   bookdef
-, apred1, apred11, apred2
 , i_refines, refines
 , i_cond, cond
 , i_seq, mkSeq
@@ -58,16 +57,6 @@ bookdef name alias prop sc
 
 \subsection{Propositional Infrastructure}
 
-
-\begin{code}
-i_t = jId "t"
-tvar = TypeVar i_t
-i_tn n = jId ("t"++show n)
-tnvar n = TypeVar $ i_tn n
-apred1 = FunType tvar bool
-apred11 = FunType tvar apred1
-apred2 = FunType (tnvar 1) $ FunType (tnvar 2) bool
-\end{code}
 
 We need to build some infrastructure here.
 This consists of the predicate variables $P$, $Q$ and $R$.

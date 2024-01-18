@@ -1,4 +1,4 @@
-\section{Theory of Equality}
+\chapter{Theory of Equality}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2018
 
@@ -29,7 +29,7 @@ import Implication
 import TestRendering
 \end{code}
 
-\subsection{Introduction}
+\section{Introduction}
 
 Here we present a hard-coded implementation
 a very simple theory of equality.
@@ -42,7 +42,7 @@ This consists of the expression variables $e$, $f$ and $g$,
 the constant $=$,
 and expression list-variables $\lst e,\lst f$.
 
-\subsection{Equality Variables}
+\section{Equality Variables}
 
 \begin{code}
 v_eq = Vbl equals PredV Static
@@ -57,13 +57,13 @@ g = fromJust $ eVar ArbType vg
 vx = Vbl (jId "x") ObsV Static  ; lvxs = LVbl vx [] []
 \end{code}
 
-\subsection{Equality Constants}
+\section{Equality Constants}
 
 \begin{code}
 sub e = Sub (E ArbType) e $ fromJust $ substn [] [(lvxs,lves)]
 \end{code}
 
-\subsection{Equality Known Variables}
+\section{Equality Known Variables}
 
 \begin{code}
 eqKnown :: VarTable
@@ -72,7 +72,7 @@ eqKnown =  fromJust $ addKnownVar v_eq boolf_2 $ newVarTable
 
 
 
-\subsection{Equality Axioms}
+\section{Equality Axioms}
 
 $$\begin{array}{ll}
    \AXequalRefl & \AXequalReflN
@@ -125,7 +125,7 @@ equalityAxioms
       [ axEqualRefl, axEqualSymm, axEqualTrans ]
 \end{code}
 
-\subsection{Equality Conjectures}
+\section{Equality Conjectures}
 
 $$\begin{array}{ll}
    \AXequalSubst & \AXequalSubstN
@@ -147,7 +147,7 @@ equalityConjectures
   = map mkNmdAsn [ cjEqualSubst ]
 \end{code}
 
-\subsection{The Equality Theory}
+\section{The Equality Theory}
 
 \begin{code}
 equalityName :: String

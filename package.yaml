@@ -53,6 +53,16 @@ executables:
     dependencies:
     - reasonEq
 
+  showpp:
+    main:  Main.lhs 
+    source-dirs: spapp
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - reasonEq
+
 tests:
   reasonEq-test:
     main:                Spec.hs

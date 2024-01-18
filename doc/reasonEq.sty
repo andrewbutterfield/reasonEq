@@ -13,15 +13,22 @@
 \def\Int{\mathbb{Z}}
 \def\Nat{\mathbb{N}}
 
-\def\Seq#1{{#1}^*}
-\def\seqof#1{\langle{#1}\rangle}
-\def\nil{\seqof{}}
+% integers
+\def\Div{\mathop{\mathbf{div}}}
+\def\Mod{\mathop{\mathbf{mod}}}
+
+% sets
 \def\Set#1{\mathcal P{#1}}
 \def\setof#1{\{{#1}\}}
 \def\mof{\mathrel{\epsilon}}
+\def\disj{{\mathrel{\,\not\!\cap\;}}}
+
+% sequences
+\def\Seq#1{{#1}^*}
+\def\seqof#1{\langle{#1}\rangle}
+\def\nil{\seqof{}}
 \def\cat{\frown}
 \def\elems{\mathop{\mathrm{elems}}}
-\def\disj{{\mathrel{\,\not\!\cap\;}}}
 
 % function types
 \def\fun{\rightarrow}

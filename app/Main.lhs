@@ -1480,8 +1480,8 @@ tryMatchDescr = ( "tm"
                    , "tm nm          -- ... against law 'nm'"
                    , "tm n1 .. nk nm -- ... against parts n1..nk of law"
                    , "               --     n1..nk :  numbers of parts"
-                   , "-- the n1..nk need not be in increasing order"
-                   , "-- parts returned in same order as n1..nk"
+                   , "               --     we count from 1"
+                   , "-- n1..nk used in increasing order (sorted!)"
                    ]
                 , tryMatch)
 
@@ -1491,7 +1491,7 @@ tryMatch args state@( reqs, liveProof)
   = do case tryFocusAgainst lawnm parts liveProof of
          Yes (bind,tPasC,scC',scP')
            -> putStrLn $ unlines
-                [ banner
+                [ banner ++ " OK"
                 , "Binding: " ++ trBinding bind
                 -- , "Replacement: " ++ trTerm 0 repl
                 -- , "Unbound: " ++ trVSet (findUnboundVars bind repl)
@@ -1504,7 +1504,7 @@ tryMatch args state@( reqs, liveProof)
        return state
   where
     (nums,rest) = span (all isDigit) args
-    parts = map read nums
+    parts = sort $ filter (>0) $ map read nums
     lawnm = filter (not . isSpace) $ unwords rest
     banner = "Match against `"++lawnm++"'"++show parts
 \end{code}

@@ -1,6 +1,6 @@
 \chapter{Live Proof Support}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2018-2022
+Copyright  Andrew Buttefield (c) 2018-2024
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -331,8 +331,9 @@ tryLawByName :: Assertion -> String -> [Int] -> [MatchContext]
 tryLawByName asn@(Assertion tC scC) lnm parts mcs
   = do (((_,asnP),_),vts) <- findLaw lnm mcs
        let tP = assnT asnP
-       partsP <- findParts parts tP
-       tryMatch vts tP partsP $ assnC asnP
+       (partsP,replP) <- findParts parts tP
+       let scP = assnC asnP
+       tryMatch vts tP partsP replP scP
   where
     -- below we try to do:
     -- bind          <- match vts tC partsP
@@ -347,11 +348,11 @@ tryLawByName asn@(Assertion tC scC) lnm parts mcs
 First, try the structural match.
 \begin{code}
 -- tryLawByName asn@(tC,scC) lnm parts mcs
-    tryMatch vts tP partsP scP
+    tryMatch vts tP partsP replP scP
       = case
                 match vts tC partsP
         of
-          Yes bind  ->  tryInstantiateKnown vts tP partsP scP bind
+          Yes bind  ->  tryInstantiateKnown vts tP partsP replP scP bind
           But msgs
            -> But ([ "try match failed"
                    , ""
@@ -360,6 +361,7 @@ First, try the structural match.
                    , "lnm[parts]="++lnm++show parts
                    , "tP="++trTerm 0 tP
                    , "partsP="++trTerm 0 partsP
+                   , "replP="++trTerm 0 replP
                    , "tC="++trTerm 0 tC
                    , "scC="++trSideCond scC
                    , "---"
@@ -372,11 +374,11 @@ matched part, so we need to create temporary bindings for these.
 First we see if any of these are ``known''.
 \begin{code}
 -- tryLawByName asn@(tC,scC) lnm parts mcs
-    tryInstantiateKnown vts tP partsP scP bind
+    tryInstantiateKnown vts tP partsP replP scP bind
       = case
                 bindKnown vts bind tP
         of
-          Yes kbind  ->  tryInstantiateFloating vts tP partsP scP kbind
+          Yes kbind  ->  tryInstantiateFloating vts tP partsP replP scP kbind
           But msgs
            -> But ([ "instantiate knowns failed"
                    , ""
@@ -385,6 +387,7 @@ First we see if any of these are ``known''.
                    , "lnm[parts]="++lnm++show parts
                    , "tP="++trTerm 0 tP
                    , "partsP="++trTerm 0 partsP
+                   , "replP="++trTerm 0 replP
                    , "tC="++trTerm 0 tC
                    , "scC="++trSideCond scC
                    , ""
@@ -396,13 +399,13 @@ Anything unbound and not ``known'' is ``floating'',
 and we generate names for these that make their floating nature visible.
 \begin{code}
 -- tryLawByName asn@(tC,scC) lnm parts mcs
-    tryInstantiateFloating vts tP partsP scP bind
+    tryInstantiateFloating vts tP partsP replP scP kbind
       = case
-                bindFloating vts bind tP
+                bindFloating vts kbind tP
         of
           Yes fbind  ->  tryInstantiate
                            (mkInsCtxt scC) 
-                           fbind tP partsP scP
+                           fbind tP partsP replP scP
           But msgs
            -> But ([ "instantiate floating failed"
                    , ""
@@ -411,10 +414,11 @@ and we generate names for these that make their floating nature visible.
                    , "lnm[parts]="++lnm++show parts
                    , "tP="++trTerm 0 tP
                    , "partsP="++trTerm 0 partsP
+                   , "replP="++trTerm 0 replP
                    , "tC="++trTerm 0 tC
                    , "scC="++trSideCond scC
                    , ""
-                   , "bind  = " ++ trBinding bind
+                   , "kbind  = " ++ trBinding kbind
                    ]++msgs)
 \end{code}
 
@@ -422,11 +426,11 @@ and we generate names for these that make their floating nature visible.
 Next, instantiate the law using the bindings.
 \begin{code}
 -- tryLawByName asn@(tC,scC) lnm parts mcs
-    tryInstantiate insctxt fbind tP partsP scP
+    tryInstantiate insctxt fbind tP partsP replP scP
       = case
                 instantiate insctxt fbind tP
         of
-          Yes tP'  ->  tryInstantiateSC insctxt fbind tP' partsP scP
+          Yes tP'  ->  tryInstantiateSC insctxt fbind tP' partsP replP scP
           But msgs
            -> But ([ "try law instantiation failed"
                    , ""
@@ -437,6 +441,7 @@ Next, instantiate the law using the bindings.
                    , "scC="++trSideCond scC
                    , "tP="++trTerm 0 tP
                    , "partsP="++trTerm 0 partsP
+                   , "replP="++trTerm 0 replP
                    , "scP="++trSideCond scP
                    , ""
                    ]++msgs)
@@ -444,21 +449,22 @@ Next, instantiate the law using the bindings.
 Next, instantiate the pattern side-condition using the bindings.
 \begin{code}
 -- tryLawByName asn@(tC,scC) lnm parts mcs
-    tryInstantiateSC insctxt bind tP partsP scP
+    tryInstantiateSC insctxt fbind tP' partsP replP scP
       = case
-                instantiateSC insctxt bind scP
+                instantiateSC insctxt fbind scP
         of
-          Yes scP'  ->  trySCDischarge insctxt bind tP partsP scP'
+          Yes scP'  ->  trySCDischarge insctxt fbind tP' partsP replP scP'
           But msgs
            -> But ([ "try s.c. instantiation failed"
                    , ""
-                   , trBinding bind ++ "("++trSideCond scP++")"
+                   , trBinding fbind ++ "("++trSideCond scP++")"
                    , ""
                    , "lnm[parts]="++lnm++show parts
                    , "tC="++trTerm 0 tC
                    , "scC="++trSideCond scC
-                   , "tP="++trTerm 0 tP
+                   , "tP'="++trTerm 0 tP'
                    , "partsP="++trTerm 0 partsP
+                   , "replP="++trTerm 0 replP
                    , "scP="++trSideCond scP
                    , ""
                    ]++msgs)
@@ -467,11 +473,11 @@ Next, instantiate the pattern side-condition using the bindings.
 Finally, try to discharge the instantiated side-condition:
 \begin{code}
 -- tryLawByName asn@(tC,scC) lnm parts mcs
-    trySCDischarge insctxt bind tP partsP scP'
+    trySCDischarge insctxt fbind tP' partsP replP scP'
       = case
                 scDischarge ss scC scP'
         of
-          Yes scP'' -> Yes (bind,tP,scP',scP'')
+          Yes scP'' -> Yes (fbind,tP',scP',scP'')
           But whynots -> But [ "try s.c. discharge failed"
                              , unlines' whynots
                              , ""
@@ -482,11 +488,12 @@ Finally, try to discharge the instantiated side-condition:
                              , "lnm[parts]="++lnm++show parts
                              , "tC="++trTerm 0 tC
                              , "scC="++trSideCond scC
-                             , "tP="++trTerm 0 tP
+                             , "tP'="++trTerm 0 tP'
                              , "partsP="++trTerm 0 partsP
+                             , "replP="++trTerm 0 replP
                              , "scP'="++trSideCond scP'
-                             , "bind:\n"
-                             , trBinding bind
+                             , "fbind:\n"
+                             , trBinding fbind
                              ]
      where ss = S.elems $ S.map theSubscript $ S.filter isDuring
                           $ S.map gvarWhen $ mentionedVars tC
@@ -510,31 +517,36 @@ findLaw lnm ((thnm,lws,vts):mcs)
      (law:_)  ->  return (law,vts)
 \end{code}
 
-Finding `parts' of a top-level constructor:
+Finding `parts' of a top-level constructor.
+We assume numbers are non-zero, positive, and ordered.
 \begin{code}
-findParts :: (Monad m, MonadFail m) => [Int] -> Term -> m Term
-findParts [] t = return t
-findParts parts (Cons tk sn n ts)
-  = do ts' <- getParts (filter (>0) parts) ts
-       case ts' of
-         [t']  ->  return t'
-         _     ->  return $ Cons tk sn n ts'
+findParts :: MonadFail m 
+          => [Int]  -- we count from 1 upwards
+          -> Term  
+          -> m ( Term   -- parts found
+               , Term ) -- parts leftover (True, if none)
+findParts [] t  =  return (t,theTrue)
+findParts parts (Cons tk sn n ts)  
+  =  let (wanted,leftover) = getParts [] [] 1 parts ts
+     in return (foundCons tk sn n wanted,foundCons tk sn n leftover)
 findParts parts t
-          = fail ("findParts: "++trTerm 0 t++" "++show parts++" makes no sense")
+  = fail ("findParts: "++trTerm 0 t++" "++show parts++" makes no sense")
 \end{code}
 
 Assume all \texttt{Int}s are positive and non-zero
 \begin{code}
-getParts :: (Monad m, MonadFail m) => [Int] -> [a] -> m [a]
-getParts [] xs = fail "getParts: no parts specified"
-getParts (p:_) [] = fail ("getParts: no parts from "++show p++" onwards")
-getParts [p] xs
- | p <= length xs  = return [xs!!(p-1)]
- | otherwise = fail ("getParts: no such part number "++show p)
-getParts (p:ps) xs
- | p <= length xs  = do xps <- getParts ps xs
-                        return ((xs!!(p-1)) : xps)
- | otherwise = fail ("getParts: no such part number "++show p)
+getParts :: [a] -> [a] -> Int -> [Int] -> [a] -> ([a],[a])
+getParts wanted left _ _  []  =  (reverse wanted, reverse left)
+getParts wanted left _ [] xs  =  (reverse wanted, reverse left ++ xs)
+getParts wtd lft pos is@(i:is') (x:xs)
+  | i == pos   =  getParts (x:wtd) lft pos' is  xs
+  | otherwise  =  getParts wtd (x:lft) pos' is' xs
+  where pos' = pos+1
+
+foundCons :: Type -> Bool -> Identifier -> [Term] -> Term
+foundCons _  _  _ []   =  theTrue
+foundCons _  _  _ [t]  =  t
+foundCons tk sn n ts   =  Cons tk sn n ts
 \end{code}
 
 

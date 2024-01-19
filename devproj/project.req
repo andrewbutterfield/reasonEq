@@ -1,9 +1,9 @@
 BEGIN REQSTATE
 BEGIN REQSET
 MMD = 20
-MHT = True
-MHQ = True
-MHF = True
+MHT = False
+MHQ = False
+MHF = False
 END REQSET
 BEGIN THEORIES
 THNAMES = ["And","AndOrInvert","Arithmetic","Equality","Equiv","Exists","ForAll","Implies","Not","Or","UClose","UTPBase","XYZ"]
@@ -20,13 +20,13 @@ CONJ = ASN (C (TP 1) True (Id "eqv" 0) [C (TP 1) True (Id "=" 0) [C (TG (Id "Z" 
 SIDE = ([],fromList [])
 STRAT red-All
 BEGIN SEQZIP
-TERMZIP = (C (TP 1) True (Id "eqv" 0) [C (TP 1) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],C (TP 1) True (Id "=" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],[])
+TERMZIP = (V T (VR (Id "g" 0,VE,WS)),[Cons' (TP 1) True (Id "=" 0) [V T (VR (Id "f" 0,VE,WS))] [],Cons' (TP 1) True (Id "eqv" 0) [C (TP 1) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]]] []])
 BEGIN SEQUENT'
 SIDECOND = ([],fromList [])
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.+_cancel", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K (TP 1) (VB True)}
 END SEQUENT'
 END SEQZIP
-FPATH: []
+FPATH: [2,2]
 BEGIN LIST STEPS
 END LIST STEPS
 END LIVE-PROOF

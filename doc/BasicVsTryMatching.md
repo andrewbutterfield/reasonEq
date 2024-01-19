@@ -53,7 +53,7 @@ tryLawByName asn@(Assertion tC scC) lnm parts mcs
        kbind <- bindKnown vts bind tP
        fbind <- bindFloating vts kbind tP
        let insctxt = mkInsCtxt scC
-       tP' <-  instantiate insctxt fbind tP -- 
+       tP' <-  instantiate insctxt fbind replP -- 
        scP' <- instantiateSC insctxt fbind scP
        scP'' <- scDischarge ss scC scP'
        -- basic: if all isFloatingASC (fst scP'') ...

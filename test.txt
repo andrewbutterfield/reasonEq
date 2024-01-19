@@ -1,27 +1,20 @@
-debug
+@VTS:
+[VD (fromList [(VR (Id "*" 0,VP,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))),(VR (Id "+" 0,VP,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))),(VR (Id "-" 0,VP,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))),(VR (Id "div" 0,VP,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))),(VR (Id "mod" 0,VP,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))),(VR (Id "neg" 0,VP,WS),KV (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))],fromList [],fromList []),VD (fromList [(VR (Id "=" 0,VP,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD (fromList [(VR (Id "imp" 0,VP,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD (fromList [],fromList [],fromList []),VD (fromList [(VR (Id "and" 0,VP,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD (fromList [(VR (Id "or" 0,VP,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD (fromList [(VR (Id "not" 0,VP,WS),KV (TF (TG (Id "B" 0)) (TG (Id "B" 0))))],fromList [],fromList []),VD (fromList [(VR (Id "eqv" 0,VP,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList [])]
+@VPVPVP:
+VR (Id "*" 0,VE,WS)
+@UnknownVar:
+BD (fromList [],fromList [],fromList [])
+@VPVPVP:
+VR (Id "f" 0,VE,WS)
+@UnknownVar:
+BD (fromList [],fromList [],fromList [])
+@VPVPVP:
+VR (Id "e" 0,VE,WS)
+@UnknownVar:
+BD (fromList [((Id "f" 0,VE),BV (VR (Id "e" 0,VE,WS)))],fromList [],fromList [])
+@bind:
+BD (fromList [((Id "e" 0,VE),BV (VR (Id "f" 0,VE,WS))),((Id "f" 0,VE),BV (VR (Id "e" 0,VE,WS)))],fromList [],fromList [])
+@scD:
+([],fromList [])
 
-@try.scP:  ([x$ disj P],{})
-@try.bind: { P -> R[O1/O'] , e$ -> [O'], x$ -> [O1] }
 
-@dFV.t:  R[O1/O']
-
-@fV(Sub).sub: [O1/O']
-@fV(Sub).tm:  R
-@fV(Sub).visfvs: ({},{})  --- ??? O1 ???
-@fV(Sub).missed:  ({},{(R,{O'})})
-@fV(Sub): ({},{(R,{O'})})
-
-!!!! I think we should get   ({O1},{(R,{O'})})
-
-@dFV.fv(t): ({},{(R,{O'})})
-
-@try.scC: ([O,O' sup II,O,O' sup R],{})
-@try.scP':   ({},{})
-@try.scP'': ({},{})
-
-(Match against `non_subst'[1]
-Binding: { P ⟼ R[O$_1/O$'], e$ ⟼ ⟨O$'⟩, x$ ⟼ ⟨O$_1⟩ }
-Instantiated Law = (R[O$_1/O$'])[O$'/O$_1]  ≡  R[O$_1/O$']
-Instantiated Law S.C. = ⊤
-Goal S.C. = O$,O$'⊇II, O$,O$'⊇R
-Discharged Law S.C. = ⊤

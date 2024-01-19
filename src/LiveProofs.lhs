@@ -61,6 +61,7 @@ import Symbols
 import TestRendering
 
 import StdTypeSignature
+import StdSignature
 
 import Debugger
 \end{code}
@@ -339,7 +340,7 @@ tryLawByName asn@(Assertion tC scC) lnm parts mcs
     -- bind          <- match vts tC partsP
     -- (kbind,tPasC) <- bindKnown vts bind tP
     -- (fbind,_)     <- bindFloating vts kbind tP
-    -- tP'           <- instantiate fbind tP
+    -- tP'           <- instantiate fbind replP
     -- scP'          <- instantiateSC fbind scP of
     -- scP''         <- scDischarge scC scP' of
     -- return (fbind,tP',scP',scP'')
@@ -428,7 +429,7 @@ Next, instantiate the law using the bindings.
 -- tryLawByName asn@(tC,scC) lnm parts mcs
     tryInstantiate insctxt fbind tP partsP replP scP
       = case
-                instantiate insctxt fbind tP
+                instantiate insctxt fbind replP
         of
           Yes tP'  ->  tryInstantiateSC insctxt fbind tP' partsP replP scP
           But msgs
@@ -539,8 +540,8 @@ getParts :: [a] -> [a] -> Int -> [Int] -> [a] -> ([a],[a])
 getParts wanted left _ _  []  =  (reverse wanted, reverse left)
 getParts wanted left _ [] xs  =  (reverse wanted, reverse left ++ xs)
 getParts wtd lft pos is@(i:is') (x:xs)
-  | i == pos   =  getParts (x:wtd) lft pos' is  xs
-  | otherwise  =  getParts wtd (x:lft) pos' is' xs
+  | i == pos   =  getParts (x:wtd) lft pos' is' xs
+  | otherwise  =  getParts wtd (x:lft) pos' is  xs
   where pos' = pos+1
 
 foundCons :: Type -> Bool -> Identifier -> [Term] -> Term
@@ -576,7 +577,7 @@ matchLawByName :: (Monad m, MonadFail m)
                -> m Matches
 matchLawByName asn lnm mcs
  = do (law,vts) <- findLaw lnm mcs
-      return $ domatch vts (unwrapASN asn) law
+      return $ domatch vts (pdbg "uASN" $ unwrapASN asn) $ pdbg "law" law
 \end{code}
 
 For each law,
@@ -615,7 +616,9 @@ doPartialMatch i vts law asnC tsP
   | i == theEqv  =   doEqvMatch vts law asnC tsP
 \end{code}
 
-If we have $\implies$, then we can try to match either side.
+If we have two sub-terms,
+and either $=$ or $\implies$,
+then we can try to match either side.
 We rely here on the following law of implication:
 \begin{eqnarray*}
   P \land Q \equiv P & = \quad P \implies Q \quad = & P \lor Q \equiv Q
@@ -626,9 +629,14 @@ then we can replace $C$ by $P\beta \land Q\beta$.
 If we match $Q$, we can replace $C$ by $Q\beta \lor P\beta$
 \begin{code}
 doPartialMatch i vts law asnC tsP@[ltP,rtP]
+  | i == equals
+    =    basicMatch MatchEqvLHS vts law rtP asnC ltP
+      ++ basicMatch MatchEqvRHS vts law ltP asnC rtP
   | i == theImp
-    =    basicMatch MatchAnte vts law (Cons pred1 True theAnd [ltP,rtP]) asnC ltP
-      ++ basicMatch MatchCnsq vts law (Cons pred1 True theOr  [rtP,ltP]) asnC rtP
+    =    basicMatch MatchAnte vts law 
+                    (Cons pred1 True theAnd [ltP,rtP]) asnC ltP
+      ++ basicMatch MatchCnsq vts law 
+                    (Cons pred1 True theOr  [rtP,ltP]) asnC rtP
 \end{code}
 
 Anything else won't match (right now we don't support $\impliedby$).
@@ -876,13 +884,13 @@ basicMatch :: MatchClass
             -> Matches
 basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
   =  do bind <- match vts tC partsP
-        kbind <- bindKnown vts bind repl
+        kbind <- bindKnown vts (pdbg "bind" bind) repl
         fbind <- bindFloating vts kbind repl
         let ictxt = mkInsCtxt scC
-        scPinC <- instantiateSC ictxt fbind scP
+        scPinC <- instantiateSC ictxt (pdbg "fbind" fbind) scP
         scD <- scDischarge ss scC scPinC
 
-        if all isFloatingASC (fst scD)
+        if all isFloatingASC (fst $ pdbg "scD" scD)
           then do mrepl <- instantiate ictxt fbind repl
                   return $ MT n (unwrapASN asn) (chkPatn mc partsP)
                               fbind repl scC scPinC mrepl

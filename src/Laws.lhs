@@ -67,8 +67,8 @@ We give these fixed names, and below we show the symbolic forms we use here.
 
 \begin{code}
 theTrue, theFalse :: Term
-theTrue  = Val P $ Boolean True
-theFalse = Val P $ Boolean False
+theTrue  = Val (Pred 1) $ Boolean True
+theFalse = Val (Pred 1) $ Boolean False
 
 theEqv, theNot, theOr, theAnd, theImp :: Identifier
 theEqv = jId "eqv"
@@ -102,11 +102,11 @@ assocFlatten _ t = [t]
 
 flattenEquiv :: Term -> Term
 flattenEquiv t 
-  = Cons (termkind t) True theEqv $ assocFlatten theEqv t
+  = Cons (termtype t) True theEqv $ assocFlatten theEqv t
 
 flattenAnd :: Term -> Term
 flattenAnd t 
-  = Cons (termkind t) True theAnd $ assocFlatten theAnd t
+  = Cons (termtype t) True theAnd $ assocFlatten theAnd t
 \end{code}
 
 For implication, we need a slighty different approach,
@@ -120,7 +120,7 @@ flattenImp t
   where
     (tas,tc) = collectAnte t
     fas = concat $ map (assocFlatten theAnd) tas
-    tk = termkind t
+    tk = termtype t
 
 collectAnte (Cons tk _ i [ta,tc])
   | i == theImp  = let (tas,tc') = collectAnte tc in (ta:tas,tc')

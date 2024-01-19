@@ -66,13 +66,13 @@ Algebraically:
 type TermSubL = [(Variable, Term)]
 
 data Term'
-  = Cons'   TermKind Subable Identifier [Term] -- terms before focus, reversed
+  = Cons'   Type Subable Identifier [Term] -- terms before focus, reversed
                                         [Term] -- terms after focus
-  | Bnd'    TermKind Identifier VarSet
-  | Lam'    TermKind Identifier VarList
+  | Bnd'    Type Identifier VarSet
+  | Lam'    Type Identifier VarList
   | Cls'             Identifier
-  | Sub'    TermKind Substn
-  | Substn' TermKind Term LVarSub TermSubL  -- subst-pairs before, reversed
+  | Sub'    Type Substn
+  | Substn' Type Term LVarSub TermSubL  -- subst-pairs before, reversed
                                   Variable -- focus target variable
                                   TermSubL  -- subst-pairs after focus
   deriving (Eq,Show,Read)
@@ -232,28 +232,29 @@ dig (n:ns) tz =  dig ns $ snd $ downTZ n tz
 
 Now some useful test pieces:
 \begin{code}
+p1 = Pred 1
 tZ = "Z"
 int = GivenType $ fromJust $ ident tZ
-kint = E int
+kint = int
 ival i = Val kint (Integer i)
 i42 = ival 42
-box p = Cons P True (fromJust $ ident "BOX") [p]
+box p = Cons p1 True (fromJust $ ident "BOX") [p]
 x = fromJust $ ident "x"
 vx = fromJust $ var kint $ Vbl x ObsV Static
 tint = Typ int
-iter = Iter P True (fromJust $ ident "land") True (fromJust $ ident "=") []
+iter = Iter p1 True (fromJust $ ident "land") True (fromJust $ ident "=") []
 f = fromJust $ ident "F"
 g = fromJust $ ident "G"
-cons0 = Cons P True f [i42,vx,tint,iter]
-cons1 p = Cons P True f [p,vx,tint,iter]
-cons2 p = Cons P True f [i42,p,tint,iter]
-cons3 p = Cons P True f [i42,vx,p,iter]
-cons4 p = Cons P True f [i42,vx,tint,p]
+cons0 = Cons p1 True f [i42,vx,tint,iter]
+cons1 p = Cons p1 True f [p,vx,tint,iter]
+cons2 p = Cons p1 True f [i42,p,tint,iter]
+cons3 p = Cons p1 True f [i42,vx,p,iter]
+cons4 p = Cons p1 True f [i42,vx,tint,p]
 i99 = ival 99
-ccons p = Cons P True f [i42,Cons P True g [tint,p,vx],iter]
+ccons p = Cons p1 True f [i42,Cons p1 True g [tint,p,vx],iter]
 bcons 0 p = box $ ccons p
-bcons 1 p = Cons P True f [i42,box $ Cons P True g [tint,p,vx],iter]
-bcons 2 p = Cons P True f [i42,Cons P True g [tint,box p,vx],iter]
+bcons 1 p = Cons p1 True f [i42,box $ Cons p1 True g [tint,p,vx],iter]
+bcons 2 p = Cons p1 True f [i42,Cons p1 True g [tint,box p,vx],iter]
 \end{code}
 
 \begin{code}

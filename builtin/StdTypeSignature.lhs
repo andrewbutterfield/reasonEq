@@ -8,8 +8,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module StdTypeSignature (
   bool, boolf_1, boolf_2, boolf_3
-, int, intf_1, intf_2, intf_3
+, nat, int, intf_1, intf_2, intf_3
 , valueType
+, pred1
 , apred1, apred11, apred2
 ) where
 
@@ -26,7 +27,7 @@ Here we present a hard-coded implementation of basic types for \reasonEq.
 \subsection{Booleans}
 
 \begin{code}
-bool = GivenType $ jId $ "B"
+bool    = GivenType $ jId $ "B"
 boolf_1 = FunType bool bool
 boolf_2 = FunType bool boolf_1
 boolf_3 = FunType bool boolf_2
@@ -35,7 +36,8 @@ boolf_3 = FunType bool boolf_2
 \subsection{Integers}
 
 \begin{code}
-int = GivenType $ jId $ "Z"
+nat    = GivenType $ jId "N"
+int    = GivenType $ jId $ "Z"
 intf_1 = FunType int int
 intf_2 = FunType int intf_1
 intf_3 = FunType int intf_2
@@ -53,6 +55,7 @@ valueType (Boolean _) = int
 \subsection{Predicate Function Types}
 
 \begin{code}
+pred1 = Pred 1
 i_t = jId "t"
 tvar = TypeVar i_t
 i_tn n = jId ("t"++show n)

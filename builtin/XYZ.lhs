@@ -36,6 +36,7 @@ import Equality
 import ForAll
 import Exists
 import UClose
+import StdTypeSignature
 import UTPSignature
 import TestRendering
 \end{code}
@@ -60,14 +61,14 @@ $$P \qquad Q$$
 \begin{code}
 -- underlying variable
 vp = Vbl (fromJust $ ident "P") PredV Static
-p = fromJust $ pVar vp
-q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
-r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
+p = fromJust $ pVar 1 vp
+q = fromJust $ pVar 1 $ Vbl (fromJust $ ident "Q") PredV Static
+r = fromJust $ pVar 1 $ Vbl (fromJust $ ident "R") PredV Static
 
-b  = fromJust $ pVar $ Vbl (fromJust $ ident "b") PredV Before
-b' = fromJust $ pVar $ Vbl (fromJust $ ident "b") PredV After
-c  = fromJust $ pVar $ Vbl (fromJust $ ident "c") PredV Before
-c' = fromJust $ pVar $ Vbl (fromJust $ ident "c") PredV After
+b  = fromJust $ pVar 1 $ Vbl (fromJust $ ident "b") PredV Before
+b' = fromJust $ pVar 1 $ Vbl (fromJust $ ident "b") PredV After
+c  = fromJust $ pVar 1 $ Vbl (fromJust $ ident "c") PredV Before
+c' = fromJust $ pVar 1 $ Vbl (fromJust $ ident "c") PredV After
 
 \end{code}
 
@@ -112,7 +113,7 @@ For use in expressions and substitution first list replacements
 $$\Nat \qquad \Int$$
 \begin{code}
 nat  = GivenType $ fromJust $ ident "N"
-int  = GivenType $ fromJust $ ident "Z"
+--int  = GivenType $ fromJust $ ident "Z"
 \end{code}
 
 $$ e \quad \lst e  \qquad f \quad \lst f$$
@@ -140,10 +141,10 @@ qfs = LstVar lvfs
 $$ P[e/x] \qquad P[\lst e/\lst x]$$
 \begin{code}
 -- note that [ a / v]  becomes (v,a) !
-psub var expr pred = Sub P pred $ fromJust $substn [(var,expr)] []
-esub var expr1 expr2 = Sub (E ArbType) expr2 $ fromJust $substn [(var,expr1)] []
+psub var expr pred = Sub pred1 pred $ fromJust $substn [(var,expr)] []
+esub var expr1 expr2 = Sub ArbType expr2 $ fromJust $substn [(var,expr1)] []
 sub_x_by_e p = psub vx e p
-sub_xs_by_es p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
+sub_xs_by_es p = Sub pred1 p $ fromJust $ substn [] [(lvxs,lves)]
 lvxs = LVbl vx [] []
 qxs = LstVar lvxs
 \end{code}
@@ -198,7 +199,7 @@ $$
   \end{array}
 $$\par%\vspace{-8pt}
 \begin{code}
-mkAsg (Var _ x) e = Sub P theAssignment $ jSubstn [(x,e)] []
+mkAsg (Var _ x) e = Sub pred1 theAssignment $ jSubstn [(x,e)] []
 
 mkCond p b q = PCons True (fromJust $ ident "cond")[p, b, q]
 
@@ -254,8 +255,8 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-before r = Sub P r $ fromJust $ substn [(vx',xm),(vy',ym),(vz',zm)] []
-after r  = Sub P r $ fromJust $ substn [(vx,xm), (vy,ym), (vz,zm)] []
+before r = Sub pred1 r $ fromJust $ substn [(vx',xm),(vy',ym),(vz',zm)] []
+after r  = Sub pred1 r $ fromJust $ substn [(vx,xm), (vy,ym), (vz,zm)] []
 
 axXYZSeqDef = preddef ("XYZ" -.- ";" -.- "def")
                    ( mkSeq p q
@@ -418,14 +419,14 @@ $$\par\vspace{-8pt}
 cjAsgSeq = preddef ("asg" -.- "seq")
                    ( mkSeq (mkAsg x e) (mkAsg x f)
                      ===
-                    (mkAsg x (Sub (E ArbType) f 
+                    (mkAsg x (Sub ArbType f 
                                 $ fromJust $ substn [(vx,e)] [])) )
                    scTrue
 cjAsgSwap = preddef ("asg" -.- "swap")
                     ( mkSeq (mkAsg x e) (mkAsg y f) 
                       ===
                       mkSeq 
-                        (mkAsg y (Sub (E ArbType) f 
+                        (mkAsg y (Sub ArbType f 
                                     $ fromJust $ substn [(vx,e)] [])) 
                         (mkAsg x e) )
                     scTrue

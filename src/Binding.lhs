@@ -114,11 +114,13 @@ validVarClassBinding _     _      =  False
 \end{code}
 A similar predicate for binding to terms:
 \begin{code}
-validVarTermBinding :: VarClass -> TermKind -> Bool
-validVarTermBinding ObsV  (E _)  =  True
-validVarTermBinding ExprV (E _)  =  True
-validVarTermBinding PredV P      =  True
-validVarTermBinding _     _      =  False
+validVarTermBinding :: VarClass -> Type -> Bool
+validVarTermBinding ObsV  (Pred _)  =  False
+validVarTermBinding ObsV  _         =  True
+validVarTermBinding ExprV (Pred _)  =  False
+validVarTermBinding ExprV _         =  True
+validVarTermBinding PredV (Pred _)  =  True
+validVarTermBinding PredV _         =  False
 \end{code}
 
 As far as temporality goes,
@@ -627,7 +629,7 @@ Static patterns bind to anything in the appropriate class,
 as per Fig.\ref{fig:utp-perm-class-bind}.
 \begin{code}
 bindVarToTerm v@(Vbl vi vc Static) ct (BD (vbind,sbind,lbind))
- | validVarTermBinding vc (termkind ct)
+ | validVarTermBinding vc (termtype ct)
    = do vbind' <- insertDR (rangeEq "bindVarToTerm") (vi,vc) (BT ct) vbind
         return $ BD (vbind',sbind,lbind)
  | otherwise = fail "bindVarToTerm: incompatible variable and term."
@@ -1389,7 +1391,7 @@ Static patterns bind to anything in the appropriate class,
 as per Fig.\ref{fig:utp-perm-class-bind}.
 \begin{code}
 bindLVarSubstRepl lv@(LVbl (Vbl vi vc Static) is ij) cndTsVL (BD (vbind,sbind,lbind))
- | all (validVarTermBinding vc) (map termkind cndTs)
+ | all (validVarTermBinding vc) (map termtype cndTs)
     = do feasibility <- feasibleSelfReference lv $ map LstVar cndVL
          lbind' <- insertDR (rangeEqvLSSub "bindLVarSubstRepl(static)")
                             (vi,vc,is,ij) (BX cndTsVL) lbind
@@ -2133,7 +2135,7 @@ tstBVV = defaultMain [tst_bind_VarToVar]
 tst_bind_VarToTerm :: TF.Test
 
 int  = GivenType $ fromJust $ ident "Z"
-tInt = E int
+tInt = int
 mkV v = fromJust $ var tInt v
 n_add = fromJust $ ident "add"
 

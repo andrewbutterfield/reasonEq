@@ -60,6 +60,8 @@ import Typing
 import Symbols
 import TestRendering
 
+import StdTypeSignature
+
 import Debugger
 \end{code}
 
@@ -613,8 +615,8 @@ If we match $Q$, we can replace $C$ by $Q\beta \lor P\beta$
 \begin{code}
 doPartialMatch i vts law asnC tsP@[ltP,rtP]
   | i == theImp
-    =    basicMatch MatchAnte vts law (Cons P True theAnd [ltP,rtP]) asnC ltP
-      ++ basicMatch MatchCnsq vts law (Cons P True theOr  [rtP,ltP]) asnC rtP
+    =    basicMatch MatchAnte vts law (Cons pred1 True theAnd [ltP,rtP]) asnC ltP
+      ++ basicMatch MatchCnsq vts law (Cons pred1 True theOr  [rtP,ltP]) asnC rtP
 \end{code}
 
 Anything else won't match (right now we don't support $\impliedby$).
@@ -703,7 +705,7 @@ doEqvMatchB vts law@((_,(Assertion _ scP)),_) asnC mtchs sPt (tP:tPs)
   where
     eqv []   =  theTrue
     eqv [t]  =  t
-    eqv ts   =  Cons P True theEqv ts
+    eqv ts   =  Cons pred1 True theEqv ts
 \end{code}
 
 \newpage
@@ -738,7 +740,7 @@ doEqvMatchC' cLen is vts law@((_,(Assertion _ scP)),_) scC tsC tsP
     (tsP',tsP'') = splitAt cLen tsP
     eqv []   =  theTrue 
     eqv [t]  =  t
-    eqv ts   =  Cons P True theEqv ts
+    eqv ts   =  Cons pred1 True theEqv ts
 \end{code}
 
 

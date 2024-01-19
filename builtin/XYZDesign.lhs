@@ -40,6 +40,7 @@ import Exists
 import UClose
 import UTPBase
 import TestRendering
+import StdTypeSignature
 \end{code}
 
 
@@ -62,8 +63,8 @@ $$P \qquad Q$$
 \begin{code}
 -- underlying variable
 vp = Vbl (fromJust $ ident "P") PredV Static
-p = fromJust $ pVar vp
-q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
+p = fromJust $ pVar 1 vp
+q = fromJust $ pVar 1 $ Vbl (fromJust $ ident "Q") PredV Static
 \end{code}
 
 
@@ -114,7 +115,7 @@ For use in expressions and substitution first list replacements
 $$\Nat \qquad \Int$$
 \begin{code}
 nat  = GivenType $ fromJust $ ident "N"
-int  = GivenType $ fromJust $ ident "Z"
+--int  = GivenType $ fromJust $ ident "Z"
 \end{code}
 
 $$ e \quad \lst e  \qquad f \quad \lst f$$
@@ -140,8 +141,8 @@ qfs = LstVar lvfs
 $$ P[e/x] \qquad P[\lst e/\lst x]$$
 \begin{code}
 -- note that [ a / v]  becomes (v,a) !
-sub_x_by_e p = Sub P p $ fromJust $ substn [(vx,e)] []
-sub_xs_by_es p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
+sub_x_by_e p = Sub pred1 p $ fromJust $ substn [(vx,e)] []
+sub_xs_by_es p = Sub pred1 p $ fromJust $ substn [] [(lvxs,lves)]
 lvxs = LVbl vx [] []
 qxs = LstVar lvxs
 \end{code}
@@ -189,8 +190,8 @@ $$
 $$\par\vspace{-8pt}
 \begin{code}
 mkSeq p q = PCons False (fromJust $ ident ";")[p, q]
-before r = Sub P r $ fromJust $ substn [(vx',xm),(vy',ym),(vz',zm),(vok',okm)] []
-after r  = Sub P r $ fromJust $ substn [(vx,xm), (vy,ym), (vz,zm),(vok,okm)] []
+before r = Sub pred1 r $ fromJust $ substn [(vx',xm),(vy',ym),(vz',zm),(vok',okm)] []
+after r  = Sub pred1 r $ fromJust $ substn [(vx,xm), (vy,ym), (vz,zm),(vok,okm)] []
 
 axXYZSeqDef = preddef ("XYZD" -.- ";" -.- "def")
                    ( mkSeq p q
@@ -218,8 +219,8 @@ lO  = PreVars o
 lO' = PostVars o
 lOm = MidVars o "m"
 
-beforeO r = Sub P r $ fromJust $ substn [] [(lO',lOm)]
-afterO r  = Sub P r $ fromJust $ substn [] [(lO,lOm)]
+beforeO r = Sub pred1 r $ fromJust $ substn [] [(lO',lOm)]
+afterO r  = Sub pred1 r $ fromJust $ substn [] [(lO,lOm)]
 
 axSeqDef = preddef (";" -.- "def")
                    ( mkSeq p q

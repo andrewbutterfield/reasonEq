@@ -35,6 +35,7 @@ import Implication
 import Equality
 import ForAll
 import TestRendering
+import StdTypeSignature
 \end{code}
 
 
@@ -71,9 +72,9 @@ and a useful collection of generic binder variables: $x,y,\lst x,\lst y$.
 \begin{code}
 vP = Vbl (fromJust $ ident "P") PredV Static
 gvP = StdVar vP
-p = fromJust $ pVar vP
-q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
-r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
+p = fromJust $ pVar 1 vP
+q = fromJust $ pVar 1 $ Vbl (fromJust $ ident "Q") PredV Static
+r = fromJust $ pVar 1 $ Vbl (fromJust $ ident "R") PredV Static
 ve = Vbl (fromJust $ ident "e") ExprV Static
 lves = LVbl ve [] []
 gves = LstVar lves
@@ -98,7 +99,7 @@ lvzs = LVbl vz [] [] ; zs = LstVar lvzs
 \subsubsection{Substitutions}
 
 \begin{code}
-mksub p lvlvs = Sub P p $ fromJust $ substn [] lvlvs
+mksub p lvlvs = Sub pred1 p $ fromJust $ substn [] lvlvs
 esxs = [(lvxs,lves)]
 ysxs = [(lvxs,lvys)]
 fszs = [(lvzs,lvfs)]
@@ -159,7 +160,7 @@ $$\begin{array}{lll}
 cjAnyOne = preddef ("exists" -.- "one" -.- "point")
   ( (exists [xs,ys] ((lvxs `areEqualTo` lves) /\ p) )
     ===
-    (exists [ys] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) ) )
+    (exists [ys] (Sub pred1 p (fromJust $ substn [] [(lvxs,lves)])) ) )
   ([xs] `notin` gves)
 \end{code}
 
@@ -194,7 +195,7 @@ $$
 $$\par\vspace{-8pt}
 \begin{code}
 cjAnyInst = preddef ("exists" -.- "gen")
-  ( (exists [ys] (Sub P p (fromJust $ substn [] [(lvxs,lves)])) )
+  ( (exists [ys] (Sub pred1 p (fromJust $ substn [] [(lvxs,lves)])) )
     ==>
     (exists [xs,ys] p) )
   scTrue
@@ -210,7 +211,7 @@ $$\par\vspace{-8pt}
 cjAnyDumRen = preddef ("exists" -.- "alpha" -.- "rename")
   ( (exists [xs] p)
     ===
-    (exists [ys] (Sub P p (fromJust $ substn [] [(lvxs,lvys)])) ) )
+    (exists [ys] (Sub pred1 p (fromJust $ substn [] [(lvxs,lvys)])) ) )
   ([ys] `notin` gvP)
 \end{code}
 

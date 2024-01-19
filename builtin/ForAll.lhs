@@ -34,6 +34,7 @@ import AndOrInvert
 import Implication
 import Equality
 import TestRendering
+import StdTypeSignature
 \end{code}
 
 
@@ -68,9 +69,9 @@ and a useful collection of generic binder variables: $x,y,\lst x,\lst y$.
 \begin{code}
 vP = Vbl (fromJust $ ident "P") PredV Static
 gvP = StdVar vP
-p = fromJust $ pVar vP
-q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
-r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
+p = fromJust $ pVar 1 vP
+q = fromJust $ pVar 1 $ Vbl (fromJust $ ident "Q") PredV Static
+r = fromJust $ pVar 1 $ Vbl (fromJust $ ident "R") PredV Static
 ve = Vbl (fromJust $ ident "e") ExprV Static
 lves = LVbl ve [] [] ; gves = LstVar lves
 e = fromJust $ eVar ArbType ve
@@ -95,7 +96,7 @@ lvzs = LVbl vz [] [] ; zs = LstVar lvzs
 \subsubsection{Substitutions}
 
 \begin{code}
-mksub p lvlvs = Sub P p $ fromJust $ substn [] lvlvs
+mksub p lvlvs = Sub pred1 p $ fromJust $ substn [] lvlvs
 esxs = [(lvxs,lves)]
 ysxs = [(lvxs,lvys)]
 fszs = [(lvzs,lvfs)]

@@ -93,7 +93,7 @@ obtained by using DeMorgan's Laws to drive negation down onto variables.
 
 \begin{code}
 negateTerm :: Term -> Term
-negateTerm t = Cons (termkind t) True (jId "lnot") [t]
+negateTerm t = Cons (termtype t) True (jId "lnot") [t]
 \end{code}
 
 
@@ -113,8 +113,8 @@ nnf (Cons a b (Identifier nm1 _) [Cons a2 b2 (Identifier nm2 _) [p,q]])
     = Cons a b (jId nm1) [Cons a2 b2 (jId nm2) [nnf p,nnf q]]        
 nnf (Cons a b (Identifier nm _) [p,q]) = Cons a b (jId nm) [nnf p, nnf q]
 nnf (Cons a b (Identifier nm _) (p:[]))
-  | p == Val (termkind p) (Boolean True) = Val (termkind p) (Boolean False)
-  | p == Val (termkind p) (Boolean False) = Val (termkind p) (Boolean True)
+  | p == Val (termtype p) (Boolean True) = Val (termtype p) (Boolean False)
+  | p == Val (termtype p) (Boolean False) = Val (termtype p) (Boolean True)
   | otherwise = Cons a b (jId nm) [nnf p]
 nnf t = unsupportedError "nnf" t
 \end{code}
@@ -133,7 +133,7 @@ distr (Cons a b (Identifier nm _) [p,q]) t
   | nm == "land" = Cons a b (jId "land") [distr p t, distr q t]
 distr t (Cons a b (Identifier nm _) [p,q])
   | nm == "land" = Cons a b (jId "land") [distr p t, distr q t]
-distr t1 t2 = Cons (termkind t1) True (jId "lor") [t1,t2]
+distr t1 t2 = Cons (termtype t1) True (jId "lor") [t1,t2]
 \end{code}
 
 \subsection{DPLL Algorithm}
@@ -176,8 +176,8 @@ applyUnitPropagation  = foldl applyUnassigned
 And-Or Simplification
 
 \begin{code}
-true = Val P (Boolean True)
-false = Val P (Boolean False)
+true  = Val (Pred 1) (Boolean True)
+false = Val (Pred 1) (Boolean False)
 
 simplifyFormula :: Term -> Term
 simplifyFormula t@(Cons a b (Identifier "land" _) [p,q]) 
@@ -241,7 +241,7 @@ dpllAlg form
              True  -> True
              False -> 
                do  let elem' 
-                        = nnf (Cons (termkind elem) True (jId "lnot") [elem])
+                        = nnf (Cons (termtype elem) True (jId "lnot") [elem])
                    let f1' = applyUnassigned f elem'
                    let f2' = simplifyFormula f1'
                    dpllAlg f2'

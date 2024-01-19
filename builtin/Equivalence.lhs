@@ -47,14 +47,14 @@ Some useful local definitions:
 v_equiv = Vbl equiv PredV Static
 vP = Vbl (jId "P") PredV Static
 gvP = StdVar vP
-p = jVar P $ vP
-q = jVar P $ Vbl (jId "Q") PredV Static
-r = jVar P $ Vbl (jId "R") PredV Static
+p = jVar pred1 $ vP
+q = jVar pred1 $ Vbl (jId "Q") PredV Static
+r = jVar pred1 $ Vbl (jId "R") PredV Static
 vx = Vbl (jId "x") ObsV Static  ; lvxs = LVbl vx [] []
 xs = LstVar lvxs
 ve = Vbl (jId "e") ExprV Static ; lves = LVbl ve [] []
-sub p   = Sub P p $ jSubstn [] [(lvxs,lves)]
-subid p = Sub P p $ xSubstn [] [(lvxs,lvxs)]
+sub p   = Sub pred1 p $ jSubstn [] [(lvxs,lves)]
+subid p = Sub pred1 p $ xSubstn [] [(lvxs,lvxs)]
 \end{code}
 
 \subsubsection{Known Variables}

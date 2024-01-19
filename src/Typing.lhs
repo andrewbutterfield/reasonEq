@@ -237,9 +237,9 @@ typeInference vts trm
   = do  let (fis,env) = buildTypeEnv vts [1..] M.empty (getVars trm)
         (_,(sub, typ)) <- inferTypes vts fis (TypeEnv env) trm
         let typ' = apply sub typ
-        let tk = termkind trm
-        let trm' = if isExprKind tk
-                   then setkind (E typ') trm
+        let tk = termtype trm
+        let trm' = if isEType tk
+                   then settype typ' trm
                    else trm
         return (typ',trm')
 
@@ -305,13 +305,13 @@ $\ITABS$
 
 $\ITABSN$
 \begin{code}
-inferTypes vts fis env (ELam _ lmbd [StdVar (Vbl n _ _)] e)
+inferTypes vts fis env (Lam _ lmbd [StdVar (Vbl n _ _)] e)
   | lmbd == lambda 
   = do let (fis1,tv,env') = abstractLambdaVar fis env n
        (fis2,(s1, t1)) <- inferTypes vts fis1 env' e
        return (fis2,(s1, FunType (apply s1 tv) t1))
 -- for multiple abs-variables we just do a recursive trick
-inferTypes vts fis env (ELam typ lmbd (StdVar (Vbl n _ _):vl) e)
+inferTypes vts fis env (Lam typ lmbd (StdVar (Vbl n _ _):vl) e)
   | lmbd == lambda
   = do let (fis1,tv,env') = abstractLambdaVar fis env n
        (fis2,(s1, t1)) <- inferTypes vts fis1 env' lam'
@@ -323,7 +323,7 @@ inferTypes vts fis env (ELam typ lmbd (StdVar (Vbl n _ _):vl) e)
 
 $\IAPP$
 \begin{code}
-inferTypes vts fis env (ECons _ True f [e1,e2])
+inferTypes vts fis env (Cons _ True f [e1,e2])
   | f == app 
   = do  let (fis1,tv) = newTyVar fis "a"
         (fis2,(s1, t1)) <- inferTypes vts fis1 env e1
@@ -334,7 +334,7 @@ inferTypes vts fis env (ECons _ True f [e1,e2])
 
 $\ICONS$
 \begin{code}
-inferTypes vts fis env econs@(ECons _ True _ _)
+inferTypes vts fis env econs@(Cons _ True _ _)
   = inferTypes vts fis env $ consToApp econs
 \end{code}
 
@@ -389,11 +389,11 @@ We convert a cons $(f~e_1~e_2~\dots~e_n)$
 into nested applications $(@~(\dots(@~(@~f~ e_1)~e_2)\dots)~e_n)$.
 \begin{code}
 consToApp :: Term -> Term
-consToApp (ECons _ _ f es)
+consToApp (Cons _ _ f es)
   = foldl mkApply (fromJust $ eVar ArbType (StaticVar f)) es
 consToApp cons = cons
 
 mkApply :: Term -> Term -> Term
-mkApply f e = (ECons ArbType True app [f,e])
+mkApply f e = (Cons ArbType True app [f,e])
 \end{code}
 

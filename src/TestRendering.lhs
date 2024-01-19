@@ -146,7 +146,7 @@ seplist sep tr = intercalate sep . map tr
 
 Kinds and Values:
 \begin{code}
-trTK :: TermKind -> String
+trTK :: Type -> String
 trTK _ = "" -- ignore for now
 -- trTK P = "!"
 -- trTK (E t) = trType t
@@ -234,7 +234,7 @@ we mark the focus and un-zip,
 and ensure that the term renderer checks for a marked term.
 \begin{code}
 markfocus :: Term -> Term
-markfocus t = Cons P True focusMark [t]
+markfocus t = Cons (Pred 1) True focusMark [t]
 
 focusMark = fromJust $ ident "__focus__"
 

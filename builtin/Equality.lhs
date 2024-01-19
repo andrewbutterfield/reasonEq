@@ -60,7 +60,7 @@ vx = Vbl (jId "x") ObsV Static  ; lvxs = LVbl vx [] []
 \section{Equality Constants}
 
 \begin{code}
-sub e = Sub (E ArbType) e $ fromJust $ substn [] [(lvxs,lves)]
+sub e = Sub ArbType e $ fromJust $ substn [] [(lvxs,lves)]
 \end{code}
 
 \section{Equality Known Variables}

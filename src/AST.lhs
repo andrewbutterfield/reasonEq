@@ -1,6 +1,6 @@
 \chapter{Abstract Syntax}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2017-2022
+Copyright  Andrew Buttefield (c) 2017-2024
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -9,11 +9,11 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module AST ( Type
            , pattern ArbType,  pattern TypeVar, pattern TypeCons
            , pattern AlgType, pattern FunType, pattern GivenType
+           , pattern Pred
+           , isPType, isEType
            , isSubTypeOf
            , Value, pattern Boolean, pattern Integer
-           , TermKind(..)
-           , isPredKind, isExprKind, ekType
-           , classFromKind
+           , classFromType
            , TermSub, LVarSub
            , Substn, pattern Substn, substn, substnxx
            , pattern TermSub, pattern LVarSub
@@ -27,12 +27,10 @@ module AST ( Type
            , bnd, eBnd, pBnd
            , lam,  eLam,  pLam
            , binderClass
-           , pattern EVal, pattern EVar, pattern ECons
-           , pattern EBind, pattern ELam, pattern ESub, pattern EIter
            , pattern PVal, pattern PVar, pattern PCons
            , pattern PBind, pattern PLam, pattern PSub, pattern PIter
            , pattern E2, pattern P2
-           , termkind, setkind
+           , termtype, settype
            , isVar, isExpr, isPred, isAtomic
            , theVar, theGVar, varAsTerm, termAsVar
            , icomma, lvarCons
@@ -79,7 +77,7 @@ whose main reason here is to prevent large numbers of spurious matches
 occurring with expressions.
 
 The ordering of data-constructors here is important,
-as type-inference relies on it.
+as type-matching relies on it.
 \begin{code}
 data Type -- most general types first
  = T  -- arbitrary type
@@ -88,6 +86,7 @@ data Type -- most general types first
  | TA Identifier [(Identifier,[Type])] -- algebraic data type
  | TF Type Type -- function type
  | TG Identifier -- given type
+ | TP Int    -- predicate, with order
  deriving (Eq, Ord, Show, Read)
 
 pattern ArbType = T
@@ -96,6 +95,10 @@ pattern TypeCons i ts = TC i ts
 pattern AlgType i fs = TA i fs
 pattern FunType tf ta = TF tf ta
 pattern GivenType i = TG i
+pattern Pred i = TP i
+
+isPType (TP _) = True; isPType _ = False
+isEType = not . isPType
 \end{code}
 
 \subsection{Sub-Typing}
@@ -214,7 +217,7 @@ subTargets (SN ts lvs)
 Setters:
 \begin{code}
 setVTWhen :: VarWhen -> (Variable,Term) -> (Variable,Term)
-setVTWhen vw (tv,Var tk rv)  =  (setVarWhen vw tv, jVar tk $ setVarWhen vw rv)
+setVTWhen vw (tv,Var typ rv)  =  (setVarWhen vw tv, jVar typ $ setVarWhen vw rv)
 setVTWhen _ (tv,rt)          =  error ("setVTWhen: term is not a variable.")
 
 setLVLVWhen :: VarWhen -> (ListVar,ListVar) -> (ListVar,ListVar)
@@ -364,28 +367,8 @@ The one exception is the ``zipper'' used to focus in on sub-predicates
 and sub-expressions.
 This is much simplified by having a unified notion of ``term''.
 
-Given the role played by types,
-it makes sense that what marks the distinction between expressions
-and predicates is the presence/absence of type information.
-\begin{code}
-data TermKind
- = P -- predicate
- | E Type -- expression (with type annotation)
- deriving (Eq, Ord, Show, Read)
-
-isPredKind, isExprKind :: TermKind -> Bool
-isPredKind P     = True; isPredKind _ = False
-isExprKind (E _) = True; isExprKind _ = False
-
-ekType :: TermKind -> Type
-ekType (E typ)  =  typ
-\end{code}
-
-\begin{code}
-classFromKind :: TermKind -> VarClass
-classFromKind P      =  PredV
-classFromKind (E _)  =  ExprV
-\end{code}
+We associate a type with every term,
+with $n$th-order predicates having type \h{Pred n}.
 
 \newpage
 \subsection{Terms}
@@ -394,14 +377,14 @@ We have a single term type (\verb"Term"),
 with an predicate/expression annotation.
 \begin{code}
 data Term
- = K TermKind Value                      -- Value
- | V TermKind Variable                   -- Variable
- | C TermKind Subable Identifier [Term]  -- Constructor
- | B TermKind Identifier VarSet Term     -- Binder (unordered)
- | L TermKind Identifier VarList Term    -- Binder (ordered)
+ = K Type Value                      -- Value
+ | V Type Variable                   -- Variable
+ | C Type Subable Identifier [Term]  -- Constructor
+ | B Type Identifier VarSet Term     -- Binder (unordered)
+ | L Type Identifier VarList Term    -- Binder (ordered)
  | X Identifier Term                     -- Closure (always a predicate)
- | S TermKind Term Substn                -- Substitution
- | I TermKind                            -- Iterator
+ | S Type Term Substn                -- Substitution
+ | I Type                            -- Iterator
      Subable Identifier  -- top grouping constructor
      Subable Identifier  -- component constructor, with arity a
      [ListVar]   -- list-variables, same length as component arity
@@ -416,51 +399,41 @@ readTerm = read
 
 We  need to have a correlation between some terms
 and the variables they use.
-In particular the \texttt{TermKind} of a \texttt{V} \texttt{Term}
+In particular the \texttt{Type} of a \texttt{V} \texttt{Term}
 will have to correspond to the \texttt{VarClass} value of the variable.
 Also, in binding constructs,
 all the general variables being bound will have to agree on \texttt{VarClass}.
 
-Kind-neutral patterns:
+Neutral patterns:
 \begin{code}
-pattern Val  tk k                =   K tk k
-pattern Var  tk v                <-  V tk v
-pattern Cons tk sb n ts          =   C tk sb n ts
-pattern Bnd  tk n vs tm          <-  B tk n vs tm
-pattern Lam  tk n vl tm          <-  L tk n vl tm
+pattern Val  typ k                =   K typ k
+pattern Var  typ v                <-  V typ v
+pattern Cons typ sb n ts          =   C typ sb n ts
+pattern Bnd  typ n vs tm          <-  B typ n vs tm
+pattern Lam  typ n vl tm          <-  L typ n vl tm
 pattern Cls     n    tm          =   X n tm
-pattern Sub  tk tm s             =   S tk tm s
-pattern Iter tk sa na si ni lvs  =   I tk sa na si ni lvs
+pattern Sub  typ tm s             =   S typ tm s
+pattern Iter typ sa na si ni lvs  =   I typ sa na si ni lvs
 pattern Typ  typ                 =   ET typ
 \end{code}
 
-Patterns for expressions:
-\begin{code}
-pattern EVal t k                 =   K (E t) k
-pattern EVar t v                 <-  V (E t) v
-pattern ECons t sb n ts          =   C (E t) sb n ts
-pattern EBind t n vs tm          <-  B (E t) n vs tm
-pattern ELam t n vl tm           <-  L (E t) n vl tm
-pattern ESub t tm s              =   S (E t) tm s
-pattern EIter t sa na si ni lvs  =   I (E t) sa na si ni lvs
-\end{code}
 
 Patterns for predicates:
 \begin{code}
-pattern PVal k                 =   K P k
-pattern PVar v                 <-  V P v
-pattern PCons sb n ts          =   C P sb n ts
-pattern PBind n vs tm          <-  B P n vs tm
-pattern PLam n vl tm           <-  L P n vl tm
-pattern PSub tm s              =   S P tm s
-pattern PIter sa na si ni lvs  =   I P sa na si ni lvs
+pattern PVal k                 =   K (Pred 1) k
+pattern PVar v                 <-  V (Pred 1) v
+pattern PCons sb n ts          =   C (Pred 1) sb n ts
+pattern PBind n vs tm          <-  B (Pred 1) n vs tm
+pattern PLam n vl tm           <-  L (Pred 1) n vl tm
+pattern PSub tm s              =   S (Pred 1) tm s
+pattern PIter sa na si ni lvs  =   I (Pred 1) sa na si ni lvs
 \end{code}
 
 \newpage
 Patterns for binary constructions:
 \begin{code}
-pattern E2 t sb n t1 t2  = C (E t) sb n [t1,t2]
-pattern P2   sb n t1 t2  = C P     sb n [t1,t2]
+pattern E2 t sb n t1 t2  = C t sb n [t1,t2]
+pattern P2   sb n t1 t2  = C (Pred 1)     sb n [t1,t2]
 \end{code}
 
 
@@ -468,35 +441,42 @@ Smart constructors for variables and binders.
 
 Variable must match term-class.
 \begin{code}
-var :: (Monad m, MonadFail m) => TermKind -> Variable -> m Term
-var P        v |       isPredVar v  =  return $ V P v
-var tk@(E _) v | not $ isPredVar v  =  return $ V tk v
-var _       _   =   fail "var: TermKind/VarClass mismatch"
-eVar t v = var (E t) v
-pVar   v = var P v
+var :: (Monad m, MonadFail m) => Type -> Variable -> m Term
+var tp@(TP _) v |       isPredVar v  =  return $ V tp v
+var typ       v | not $ isPredVar v  =  return $ V typ v
+var _       _   =   fail "var: Type/VarClass mismatch"
+eVar t v = var t v
+pVar o v = var (TP o) v
 \end{code}
+
+\begin{code}
+classFromType :: Type -> VarClass
+classFromType (TP _)  =  PredV
+classFromType _       =  ExprV
+\end{code}
+
 
 \newpage
 All variables in a binder variable-set must have the same class.
 \begin{code}
-bnd tk n vs tm
+bnd typ n vs tm
  | S.null vs  =  return tm  -- vacuous binder
- | uniformVarSet vs  =  return $ B tk n vs tm
+ | uniformVarSet vs  =  return $ B typ n vs tm
  | otherwise = fail "bnd: var.-set has mixed variables."
 
-eBnd typ n vs tm  =  bnd (E typ) n vs tm
-pBnd     n vs tm  =  bnd P       n vs tm
+eBnd typ n vs tm  =  bnd typ n vs tm
+pBnd     n vs tm  =  bnd (Pred 1)       n vs tm
 \end{code}
 
 All variables in a lambda variable-list must have the same class.
 \begin{code}
-lam tk n vl tm
+lam typ n vl tm
  | null vl  =  return tm  -- vacuous binder
- | uniformVarList vl  =  return $ L tk n vl tm
+ | uniformVarList vl  =  return $ L typ n vl tm
  | otherwise = fail "lam: var.-list has mixed variables."
 
-eLam typ n vl tm  =  lam (E typ) n vl tm
-pLam     n vl tm  =  lam P       n vl tm
+eLam typ n vl tm  =  lam typ n vl tm
+pLam     n vl tm  =  lam (Pred 1)       n vl tm
 \end{code}
 
 \begin{code}
@@ -523,30 +503,33 @@ binderClass _ = fail "binderClass: not a binding term."
 
 It can help to test if a term is an variable, expression or predicate:
 \begin{code}
-termkind :: Term -> TermKind
-termkind (Val tk k)                 =  tk
-termkind (Var tk v)                 =  tk
-termkind (Cons tk sb n ts)          =  tk
-termkind (Bnd tk n vl tm)           =  tk
-termkind (Lam tk n vs tm)           =  tk
-termkind (Cls i _)                  =  P
-termkind (Sub tk tm s)              =  tk
-termkind (Iter tk sa na si ni lvs)  =  tk
+termtype :: Term -> Type
+termtype (Val typ k)                 =  typ
+termtype (Var typ v)                 =  typ
+termtype (Cons typ sb n ts)          =  typ
+termtype (Bnd typ n vl tm)           =  typ
+termtype (Lam typ n vs tm)           =  typ
+termtype (Cls i _)                   =  (Pred 1)
+termtype (Sub typ tm s)              =  typ
+termtype (Iter typ sa na si ni lvs)  =  typ
 
-setkind :: TermKind -> Term -> Term
-setkind tk (Val _ k)                 =  (Val tk k)
-setkind tk (Var _ v)                 =  fromJust $ var tk v
-setkind tk (Cons _ sb n ts)          =  (Cons tk sb n ts) 
-setkind tk (Bnd _ n vs tm)           =  fromJust $ bnd tk n vs tm 
-setkind tk (Lam _ n vl tm)           =  fromJust $ lam tk n vl tm 
-setkind tk (Sub _ tm s)              =  (Sub tk tm s)     
-setkind tk (Iter _ sa na si ni lvs)  =  (Iter tk sa na si ni lvs)
-setkind _ t                          =  t
+settype :: Type -> Term -> Term
+settype typ (Val _ k)                 =  (Val typ k)
+settype typ (Var _ v)                 =  fromJust $ var typ v
+settype typ (Cons _ sb n ts)          =  (Cons typ sb n ts) 
+settype typ (Bnd _ n vs tm)           =  fromJust $ bnd typ n vs tm 
+settype typ (Lam _ n vl tm)           =  fromJust $ lam typ n vl tm 
+settype typ (Sub _ tm s)              =  (Sub typ tm s)     
+settype typ (Iter _ sa na si ni lvs)  =  (Iter typ sa na si ni lvs)
+settype _ t                          =  t
 
 isVar, isExpr, isPred, isAtomic :: Term -> Bool
 isVar (Var _ _) = True ; isVar _ = False
-isExpr t = termkind t /= P
-isPred t = termkind t == P
+isExpr t
+  = case termtype t of 
+     (Pred _) -> False
+     _        -> True
+isPred = not . isExpr
 isAtomic (K _ _)  =  True
 isAtomic (V _ _)  =  True
 isAtomic _        =  False
@@ -564,8 +547,8 @@ theGVar = StdVar . theVar
 Lifting a variable to a term:
 \begin{code}
 varAsTerm :: Variable -> Term
-varAsTerm v@(PredVar _ _)  =  V P     v
-varAsTerm v                =  V (E T) v
+varAsTerm v@(PredVar _ _)  =  V (Pred 1)     v
+varAsTerm v                =  V T v
 \end{code}
 
 Dropping a term (safely) to a variable:
@@ -578,7 +561,7 @@ termAsVar t = fail ("termAsVar: not a variable - "++show t)
 Using \texttt{Iter} for a construct built from a list of list-variables
 \begin{code}
 icomma = jId ","
-lvarCons tk ni lvs = Iter tk True icomma True ni lvs
+lvarCons typ ni lvs = Iter typ True icomma True ni lvs
 \end{code}
 
 In \cite{UTP-book} we find the notion of texts, in chapters 6 and 10.
@@ -608,7 +591,7 @@ lv_b = VarLVar         i_b [] []
 lv_e = ExprLVar Static i_e [] []
 lv_P = PredLVar Static i_P [] []
 
-t42 = Val (E ArbType) $ VI 42
+t42 = Val ArbType $ VI 42
 n = fromJust $ ident "n"
 \end{code}
 
@@ -623,21 +606,21 @@ v_a' = PostVar   $ i_a
 v_b' = PostVar   $ i_b
 
 varConstructTests  = testGroup "AST.var,eVar,pVar"
- [ testCase "var P P (Ok)"
-   ( var P v_P  @?= Just (V P (PreCond i_P) ))
- , testCase "var (E ArbType) P (Fail)"
-   ( var (E ArbType) v_P  @?= Nothing )
- , testCase "var P a (Fail)"
-   ( var P v_a  @?= Nothing )
- , testCase "var (E ArbType) a (Ok)"
-   ( var (E ArbType) v_a
-      @?= Just (V (E ArbType) (PreVar i_a )) )
- , testCase "eVar tarb P (Fail)" ( eVar ArbType v_P  @?= Nothing )
+ [ testCase "var (Pred 1) (Pred 1) (Ok)"
+   ( var (Pred 1) v_P  @?= Just (V (Pred 1) (PreCond i_P) ))
+ , testCase "var ArbType (Pred 1) (Fail)"
+   ( var ArbType v_P  @?= Nothing )
+ , testCase "var (Pred 1) a (Fail)"
+   ( var (Pred 1) v_a  @?= Nothing )
+ , testCase "var ArbType a (Ok)"
+   ( var ArbType v_a
+      @?= Just (V ArbType (PreVar i_a )) )
+ , testCase "eVar tarb (Pred 1) (Fail)" ( eVar ArbType v_P  @?= Nothing )
  , testCase "eVar tarb a (Ok)"
-   ( eVar ArbType v_a @?= Just (V (E ArbType) (PreVar i_a ) ) )
- , testCase "pVar a (Fail)" ( pVar v_a  @?= Nothing )
- , testCase "pVar P (Ok)"
-   ( pVar v_P @?= Just (V P (PreCond i_P) ) )
+   ( eVar ArbType v_a @?= Just (V ArbType (PreVar i_a ) ) )
+ , testCase "pVar a (Fail)" ( pVar 1 v_a  @?= Nothing )
+ , testCase "pVar (Pred 1) (Ok)"
+   ( pVar 1 v_P @?= Just (V (Pred 1) (PreCond i_P) ) )
  ]
 
 gv_a =  StdVar v_a
@@ -647,42 +630,42 @@ gv_a' = StdVar v_a'
 gv_b' = StdVar v_b'
 
 bindConstructTests  =  testGroup "AST.bnd"
- [ testCase "bnd P n {} t42 (Ok)"
-   ( bnd P n S.empty t42 @?= Just t42 )
- , testCase "bnd P n {a} t42 (Ok)"
-   ( bnd P n (S.fromList [gv_a]) t42
-     @?= Just (B P n (S.fromList [gv_a]) t42) )
- , testCase "bnd P n {a$} t42 (Ok)"
-   ( bnd P n (S.fromList [LstVar lv_a]) t42
-     @?= Just (B P n (S.fromList [LstVar lv_a]) t42) )
- , testCase "bnd P n {a,a$} t42 (Ok)"
-   ( bnd P n (S.fromList [gv_a,LstVar lv_a]) t42
-     @?= Just (B P n (S.fromList [gv_a,LstVar lv_a]) t42) )
- , testCase "bnd P n {a,e$} t42 (Fail)"
-   ( bnd P n (S.fromList [gv_a,LstVar lv_e]) t42 @?= Nothing )
- , testCase "bnd P n {e$,a} t42 (Fail)"
-   ( bnd P n (S.fromList [LstVar lv_e,gv_a]) t42 @?= Nothing )
- , testCase "bnd P n {a,b,e$} t42 (Fail)"
-   ( bnd P n (S.fromList [gv_a,gv_b,LstVar lv_e]) t42 @?= Nothing )
+ [ testCase "bnd (Pred 1) n {} t42 (Ok)"
+   ( bnd (Pred 1) n S.empty t42 @?= Just t42 )
+ , testCase "bnd (Pred 1) n {a} t42 (Ok)"
+   ( bnd (Pred 1) n (S.fromList [gv_a]) t42
+     @?= Just (B (Pred 1) n (S.fromList [gv_a]) t42) )
+ , testCase "bnd (Pred 1) n {a$} t42 (Ok)"
+   ( bnd (Pred 1) n (S.fromList [LstVar lv_a]) t42
+     @?= Just (B (Pred 1) n (S.fromList [LstVar lv_a]) t42) )
+ , testCase "bnd (Pred 1) n {a,a$} t42 (Ok)"
+   ( bnd (Pred 1) n (S.fromList [gv_a,LstVar lv_a]) t42
+     @?= Just (B (Pred 1) n (S.fromList [gv_a,LstVar lv_a]) t42) )
+ , testCase "bnd (Pred 1) n {a,e$} t42 (Fail)"
+   ( bnd (Pred 1) n (S.fromList [gv_a,LstVar lv_e]) t42 @?= Nothing )
+ , testCase "bnd (Pred 1) n {e$,a} t42 (Fail)"
+   ( bnd (Pred 1) n (S.fromList [LstVar lv_e,gv_a]) t42 @?= Nothing )
+ , testCase "bnd (Pred 1) n {a,b,e$} t42 (Fail)"
+   ( bnd (Pred 1) n (S.fromList [gv_a,gv_b,LstVar lv_e]) t42 @?= Nothing )
  ]
 
 lamConstructTests  =  testGroup "AST.lam"
- [ testCase "lam P n [] t42 (Ok)"
-   ( lam P n [] t42 @?= Just t42 )
- , testCase "lam P n [a] t42 (Ok)"
-   ( lam P n [gv_a] t42 @?= Just (L P n [gv_a] t42) )
- , testCase "lam P n [a$] t42 (Ok)"
-   ( lam P n [LstVar lv_a] t42
-     @?= Just (L P n [LstVar lv_a] t42) )
- , testCase "lam P n [a,a$] t42 (Ok)"
-   ( lam P n [gv_a,LstVar lv_a] t42
-     @?= Just (L P n [gv_a,LstVar lv_a] t42) )
- , testCase "lam P n [a,e$] t42 (Fail)"
-   ( lam P n [gv_a,LstVar lv_e] t42 @?= Nothing )
- , testCase "lam P n [e$,a] t42 (Fail)"
-   ( lam P n [LstVar lv_e,gv_a] t42 @?= Nothing )
- , testCase "lam P n [a,b,e$] t42 (Fail)"
-   ( lam P n [gv_a,gv_b,LstVar lv_e] t42 @?= Nothing )
+ [ testCase "lam (Pred 1) n [] t42 (Ok)"
+   ( lam (Pred 1) n [] t42 @?= Just t42 )
+ , testCase "lam (Pred 1) n [a] t42 (Ok)"
+   ( lam (Pred 1) n [gv_a] t42 @?= Just (L (Pred 1) n [gv_a] t42) )
+ , testCase "lam (Pred 1) n [a$] t42 (Ok)"
+   ( lam (Pred 1) n [LstVar lv_a] t42
+     @?= Just (L (Pred 1) n [LstVar lv_a] t42) )
+ , testCase "lam (Pred 1) n [a,a$] t42 (Ok)"
+   ( lam (Pred 1) n [gv_a,LstVar lv_a] t42
+     @?= Just (L (Pred 1) n [gv_a,LstVar lv_a] t42) )
+ , testCase "lam (Pred 1) n [a,e$] t42 (Fail)"
+   ( lam (Pred 1) n [gv_a,LstVar lv_e] t42 @?= Nothing )
+ , testCase "lam (Pred 1) n [e$,a] t42 (Fail)"
+   ( lam (Pred 1) n [LstVar lv_e,gv_a] t42 @?= Nothing )
+ , testCase "lam (Pred 1) n [a,b,e$] t42 (Fail)"
+   ( lam (Pred 1) n [gv_a,gv_b,LstVar lv_e] t42 @?= Nothing )
  ]
 
 termConstructTests  =  testGroup "Term Smart Constructors"
@@ -799,12 +782,12 @@ subsSize (Substn ts lvs)      =  3 * S.size ts + 2 * S.size lvs
 \begin{code}
 jSub ts lvs  =  fromJust $ substn ts lvs
 
-jVar tk v        =  fromJust $ var tk v
-jBnd tk n vs tm  =  fromJust $ bnd tk n vs tm
-jLam tk n vl tm  =  fromJust $ lam tk n vl tm
+jVar typ v        =  fromJust $ var typ v
+jBnd typ n vs tm  =  fromJust $ bnd typ n vs tm
+jLam typ n vl tm  =  fromJust $ lam typ n vl tm
 
 jeVar v = fromJust $ eVar ArbType v
-jpVar v = fromJust $ pVar v
+jpVar v = fromJust $ pVar 1 v
 
 
 int_tst_AST :: [TF.Test]

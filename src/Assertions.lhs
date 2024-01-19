@@ -502,7 +502,7 @@ mkVVsubstn vv
      where
        v0 = Vbl (jId nm)    cls whn
        vu = Vbl (jIdU nm u) cls whn
-       tvu = jVar (E ArbType) (Vbl (jIdU nm u) cls whn)
+       tvu = jVar ArbType (Vbl (jIdU nm u) cls whn)
        lv0 = LVbl v0 [] []
        lvu = LVbl vu [] []
 \end{code}

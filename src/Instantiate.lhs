@@ -155,7 +155,7 @@ instantiate insctxt binding (Cons tk sb n ts)
     isBLVar (BindLVar _) = True
     isBLVar _            = False
     theBLVar (BindLVar lv)  =  lv
-    itopv = Vbl itop (classFromKind tk) Static
+    itopv = Vbl itop (classFromType tk) Static
     mbitop = lookupVarBind binding itopv
     (have_itop,the_itop) = get_itop mbitop
     get_itop (Just (BindVar (Vbl i _ _))) = (True,i)

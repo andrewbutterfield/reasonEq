@@ -310,9 +310,9 @@ keyQBody = "@"
 
 \begin{code}
 true = Vbl (fromJust $ ident "true") PredV Static
-trueP = fromJust $ pVar true
+trueP = fromJust $ pVar 1 true
 false = Vbl (fromJust $ ident "false") PredV Static
-falseP = fromJust $ pVar false
+falseP = fromJust $ pVar 1 false
 \end{code}
 
 \newpage
@@ -320,7 +320,7 @@ falseP = fromJust $ pVar false
 \subsubsection{Top level term parser}
 
 \begin{code}
-sTermParse :: (Monad m, MonadFail m) => TermKind -> [TToken] -> m (Term, [TToken])
+sTermParse :: (Monad m, MonadFail m) => Type -> [TToken] -> m (Term, [TToken])
 sTermParse tk [] =  fail "sTermParse: nothing to parse"
 
 sTermParse tk (TNum n:tts)
@@ -335,12 +335,12 @@ sTermParse tk (TId i vw:tts)
 sTermParse tk (TSym i:tts) = sIdParse tk i Static tts
 sTermParse tk (tt:tts)  = fail ("sTermParse: unexpected token: "++show tt)
 
-mkTrue P   =  trueP
-mkTrue (E _)
-  =  Val (E $ GivenType (fromJust $ ident $ _mathbb "B")) $ Boolean True
-mkFalse P  =  falseP
-mkFalse (E _)
-  =  Val (E $ GivenType (fromJust $ ident $ _mathbb "B")) $ Boolean False
+mkTrue (Pred _)   =  trueP
+mkTrue _
+  =  Val (GivenType (fromJust $ ident $ _mathbb "B")) $ Boolean True
+mkFalse (Pred _)  =  falseP
+mkFalse _
+  =  Val (GivenType (fromJust $ ident $ _mathbb "B")) $ Boolean False
 \end{code}
 
 
@@ -352,8 +352,8 @@ sIdParse tk id1 vw tts                =  return (mkVar tk id1 vw, tts)
 
 Making a variable term:
 \begin{code}
-mkVar P id1 vw   =  fromJust $ var P $ Vbl id1 PredV vw
-mkVar tk id1 vw  =  fromJust $ var tk $ Vbl id1 ObsV vw
+mkVar tp@(Pred _) id1 vw   =  fromJust $ var tp $ Vbl id1 PredV vw
+mkVar tk id1 vw         =  fromJust $ var tk $ Vbl id1 ObsV vw
 \end{code}
 
 Seen identifier and opening parenthesis.
@@ -380,9 +380,9 @@ sAppParse' tk id1 smretbus tts
 Handy specialisations:
 \begin{code}
 sExprParse :: (Monad m, MonadFail m) => String -> m (Term, [TToken])
-sExprParse = sTermParse (E ArbType) . tlex
+sExprParse = sTermParse ArbType . tlex
 sPredParse :: (Monad m, MonadFail m) => String -> m (Term, [TToken])
-sPredParse = sTermParse P . tlex
+sPredParse = sTermParse (Pred 1) . tlex
 \end{code}
 
 \subsection{Random test/prototype bits}

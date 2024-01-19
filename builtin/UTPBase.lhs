@@ -40,6 +40,7 @@ import Equality
 import ForAll
 import Exists
 import UClose
+import StdTypeSignature
 import UTPSignature
 import TestRendering
 
@@ -312,7 +313,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-tfo p q = Cons P True (jId "star") [p,q]
+tfo p q = Cons pred1 True (jId "star") [p,q]
 (cjCondMutual,alCondMutual)
   = bookdef ("cond" -.- "mdistr") "Ex2.1.2"
       ( cond (p `tfo` q) b (r `tfo` s) === tfo (cond p b r) (cond q b s) )
@@ -383,7 +384,7 @@ seqIntro = mkConsIntro i_seq boolf_2
 (axSeqDef,alSeqDef) = bookdef (";" -.- "def") "Def2.2.1"
                        ( mkSeq p q
                          === exists [gO0]
-                              ( (Sub P p o0'sub) /\ (Sub P q o0sub) )
+                              ( (Sub pred1 p o0'sub) /\ (Sub pred1 q o0sub) )
                        )
                        (assertIsUTP gp .: assertIsUTP gq .: gfresh)
    where
@@ -511,7 +512,7 @@ axFusionDef
             )
             scTrue
   where
-    fusion lvlvs  =  listwiseVarBinPred P land equals [] lvlvs
+    fusion lvlvs  =  listwiseVarBinPred pred1 land equals [] lvlvs
 \end{code}
 
 
@@ -583,7 +584,7 @@ $$
   = bookdef (":=" -.- "seq" -.- "same") "2.3L3"
      ( mkSeq (vx .:= e) (vx .:= f)
        ===
-       ( vx .:= ESub ArbType f e_for_x )
+       ( vx .:= Sub ArbType f e_for_x )
      )
      (assertAreUTPCond [gx,qe,qf])
 \end{code}
@@ -602,7 +603,7 @@ $$
      ( mkSeq (vx .:= e) (cond p b q)
        ===
        ( cond (mkSeq (vx .:= e) p)
-              (ESub ArbType b e_for_x)
+              (Sub ArbType b e_for_x)
               (mkSeq (vx .:= e) q) )
      )
      (assertAreUTP [gP,gQ] .: assertAreUTPCond [gx,qe,gb])
@@ -933,10 +934,10 @@ that is then ``wrapped'' in different ways depending on where it is used.
 
 $$P \quad Q \quad R \quad S$$
 \begin{code}
-vP = Vbl (jId "P") PredV Static ; p = fromJust $ pVar vP ; gP = StdVar vP
-vQ = Vbl (jId "Q") PredV Static ; q = fromJust $ pVar vQ ; gQ = StdVar vQ
-vR = Vbl (jId "R") PredV Static ; r = fromJust $ pVar vR ; gR = StdVar vR
-vS = Vbl (jId "S") PredV Static ; s = fromJust $ pVar vS ; gS = StdVar vS
+vP = Vbl (jId "P") PredV Static ; p = fromJust $ pVar 1 vP ; gP = StdVar vP
+vQ = Vbl (jId "Q") PredV Static ; q = fromJust $ pVar 1 vQ ; gQ = StdVar vQ
+vR = Vbl (jId "R") PredV Static ; r = fromJust $ pVar 1 vR ; gR = StdVar vR
+vS = Vbl (jId "S") PredV Static ; s = fromJust $ pVar 1 vS ; gS = StdVar vS
 \end{code}
 For uniform side-conditions:
 \begin{code}
@@ -949,10 +950,10 @@ gq = StdVar $ Vbl (jId "Q") PredV Before
 
 $$ b \quad b' \qquad c  \quad c' $$
 \begin{code}
-vb  = Vbl (jId "b") PredV Before; b  = fromJust $ pVar vb;  gb  = StdVar vb
-vb' = Vbl (jId "b") PredV After;  b' = fromJust $ pVar vb'; gb' = StdVar vb'
-vc  = Vbl (jId "c") PredV Before; c  = fromJust $ pVar vc;  gc  = StdVar vc
-vc' = Vbl (jId "c") PredV After;  c' = fromJust $ pVar vc'; gc' = StdVar vc'
+vb  = Vbl (jId "b") PredV Before; b  = fromJust $ pVar 1 vb;  gb  = StdVar vb
+vb' = Vbl (jId "b") PredV After;  b' = fromJust $ pVar 1 vb'; gb' = StdVar vb'
+vc  = Vbl (jId "c") PredV Before; c  = fromJust $ pVar 1 vc;  gc  = StdVar vc
+vc' = Vbl (jId "c") PredV After;  c' = fromJust $ pVar 1 vc'; gc' = StdVar vc'
 \end{code}
 
 
@@ -1023,10 +1024,10 @@ $$ P[e/x] \qquad P[\lst e/\lst x]$$
 \begin{code}
 -- note that [ a / v]  becomes (v,a) !
 e_for_x = jSubstn [(vx,e)] []
-sub p = Sub P p e_for_x
+sub p = Sub pred1 p e_for_x
 lvxs = LVbl vx [] []
 qxs = LstVar lvxs
-lsub p = Sub P p $ jSubstn[] [(lvxs,lves)]
+lsub p = Sub pred1 p $ jSubstn[] [(lvxs,lves)]
 \end{code}
 
 $$ O', O, O_0, [O_0/O'], [O_0/O']$$

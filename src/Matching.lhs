@@ -147,16 +147,16 @@ tMatch, tMatch' ::
                -> Candidate -> Pattern -> mp Binding
 \end{code}
 
-We note that the \texttt{TermKind} of pattern and candidate must match.
+We note that the \texttt{Type} of pattern and candidate must match.
 Either both are predicates,
 or both are expressions with the type of the candidate
 being an sub-type of the pattern.
 \begin{code}
 tMatch vts bind cbvs pbvs tC tP
- = let kC = termkind tC ; kP = termkind tP
+ = let kC = termtype tC ; kP = termtype tP
    in case  (kC, kP) of
-    (P,P)                        ->  tMatch' vts bind cbvs pbvs tC tP
-    (E typC, E typP)
+    (Pred _,Pred _)               ->  tMatch' vts bind cbvs pbvs tC tP
+    (typC, typP)
       | typC `isSubTypeOf` typP  ->  tMatch' vts bind cbvs pbvs tC tP
     _ -> fail $ unlines'
           [ "tMatch: incompatible termkinds!"
@@ -188,7 +188,7 @@ tMatch' _ bind _ _ kC@(Val _ _) kP@(Val _ _)
 
 \subsection{Variable Term-Pattern (\texttt{Var})}
 Variable matching is complicated, so we farm it out,
-as long as \texttt{TermKind}s match.
+as long as \texttt{Type}s match.
 $$
 \inferrule
    {\beta \vdash t_C :: v_P \leadsto \beta'}
@@ -198,7 +198,7 @@ $$
 $$
 \begin{code}
 tMatch' vts bind cbvs pbvs tC (Var tkP vP)
-  | tkP == termkind tC  =  tvMatch vts bind cbvs pbvs tC tkP vP
+  | tkP == termtype tC  =  tvMatch vts bind cbvs pbvs tC tkP vP
 \end{code}
 
 
@@ -725,7 +725,7 @@ Binding a constructor name to itself:
 consBind vts bind cbvs pbvs tkC nC nP
   = vMatch vts bind cbvs pbvs vC vP
   where
-    vClass = classFromKind tkC
+    vClass = classFromType tkC
     vC = Vbl nC vClass Static
     vP = Vbl nP vClass Static
 \end{code}
@@ -756,12 +756,12 @@ tsMatch' _ _ _ _ _ _  =  error "tsMatch': unexpected mismatch case."
 \section{Term-Variable Matching}
 
 We assume here that candidate term and pattern variable
-have the same \texttt{TermKind}.
+have the same \texttt{Type}.
 \begin{code}
 
 tvMatch :: (Monad m, MonadFail m)
        => [VarTable] -> Binding -> CBVS -> PBVS
-       -> Candidate -> TermKind -> Variable -> m Binding
+       -> Candidate -> Type -> Variable -> m Binding
 \end{code}
 
 First, if the candidate is a variable
@@ -808,7 +808,7 @@ $$
 
 \begin{code}
 tkvMatch :: (Monad m, MonadFail m) => [VarTable] -> Binding
-       ->  Candidate -> VarMatchRole -> TermKind -> Variable -> m Binding
+       ->  Candidate -> VarMatchRole -> Type -> Variable -> m Binding
 -- know vP is not in pbvs, but is in vts, known as whatP
 \end{code}
 $$
@@ -884,9 +884,9 @@ $$
 \begin{code}
 -- know vP is not in pbvs, but is in vts, known as whatP
 tkvMatch vts bind tC whatP tkP vP
- | isKnownConst whatP && tC == vmrConst whatP     =  bindVarToTerm vP tC bind
- | isExprKind tkP && isKnownVar whatP
-   && vmrType whatP == ekType tkP                 =  bindVarToTerm vP tC bind
+ | isKnownConst whatP && tC == vmrConst whatP  =  bindVarToTerm vP tC bind
+ | isEType tkP && isKnownVar whatP
+   && vmrType whatP == tkP                     =  bindVarToTerm vP tC bind
 tkvMatch _ _ _ _ _ _ = fail "tkvMatch: candidate not this known variable."
 \end{code}
 

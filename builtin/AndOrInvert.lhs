@@ -43,10 +43,10 @@ previously defined operators.
 
 Some useful local definitions:
 \begin{code}
-p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
-q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
-r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
-s = fromJust $ pVar $ Vbl (fromJust $ ident "S") PredV Static
+p = fromJust $ pVar 1 $ Vbl (fromJust $ ident "P") PredV Static
+q = fromJust $ pVar 1 $ Vbl (fromJust $ ident "Q") PredV Static
+r = fromJust $ pVar 1 $ Vbl (fromJust $ ident "R") PredV Static
+s = fromJust $ pVar 1 $ Vbl (fromJust $ ident "S") PredV Static
 \end{code}
 
 \subsubsection{Known Variables}

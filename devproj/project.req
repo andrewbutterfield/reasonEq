@@ -1,9 +1,9 @@
 BEGIN REQSTATE
 BEGIN REQSET
 MMD = 20
-MHT = False
-MHQ = False
-MHF = False
+MHT = True
+MHQ = True
+MHF = True
 END REQSET
 BEGIN THEORIES
 THNAMES = ["And","AndOrInvert","Arithmetic","Equality","Equiv","Exists","ForAll","Implies","Not","Or","UClose","UTPBase","XYZ"]
@@ -16,17 +16,17 @@ BEGIN MAP LIVE-PROOFS
 BEGIN LIVE-PROOF
 TH-NAME: Arithmetic
 CJ-NAME: +_cancel
-CONJ = ASN (C P True (Id "eqv" 0) [C P True (Id "=" 0) [C (E (TG (Id "Z" 0))) True (Id "+" 0) [V (E T) (VR (Id "e" 0,VE,WS)),V (E T) (VR (Id "f" 0,VE,WS))],C (E (TG (Id "Z" 0))) True (Id "+" 0) [V (E T) (VR (Id "e" 0,VE,WS)),V (E T) (VR (Id "g" 0,VE,WS))]],C P True (Id "=" 0) [V (E T) (VR (Id "f" 0,VE,WS)),V (E T) (VR (Id "g" 0,VE,WS))]],([],fromList []))
+CONJ = ASN (C (TP 1) True (Id "eqv" 0) [C (TP 1) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],C (TP 1) True (Id "=" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],([],fromList []))
 SIDE = ([],fromList [])
 STRAT red-All
 BEGIN SEQZIP
-TERMZIP = (C P True (Id "=" 0) [C (E (TG (Id "Z" 0))) True (Id "+" 0) [V (E T) (VR (Id "e" 0,VE,WS)),V (E T) (VR (Id "f" 0,VE,WS))],C (E (TG (Id "Z" 0))) True (Id "+" 0) [V (E T) (VR (Id "e" 0,VE,WS)),V (E T) (VR (Id "g" 0,VE,WS))]],[Cons' P True (Id "eqv" 0) [] [C P True (Id "=" 0) [V (E T) (VR (Id "f" 0,VE,WS)),V (E T) (VR (Id "g" 0,VE,WS))]]])
+TERMZIP = (C (TP 1) True (Id "eqv" 0) [C (TP 1) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],C (TP 1) True (Id "=" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],[])
 BEGIN SEQUENT'
 SIDECOND = ([],fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.+_cancel", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K P (VB True)}
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.+_cancel", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K (TP 1) (VB True)}
 END SEQUENT'
 END SEQZIP
-FPATH: [1]
+FPATH: []
 BEGIN LIST STEPS
 END LIST STEPS
 END LIVE-PROOF

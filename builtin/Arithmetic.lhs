@@ -72,25 +72,25 @@ i_mod = jId "mod" ; modIntro = mkConsIntro i_mod zf_2
 
 \begin{code}
 neg :: Term -> Term
-neg e = ECons z True i_neg [e]
+neg e = Cons z True i_neg [e]
 add :: Term -> Term -> Term
-add e f = ECons z True i_add [e,f]
+add e f = Cons z True i_add [e,f]
 sub :: Term -> Term -> Term
-sub e f = ECons z True i_sub [e,f]
+sub e f = Cons z True i_sub [e,f]
 mul :: Term -> Term -> Term
-mul e f = ECons z True i_mul [e,f]
+mul e f = Cons z True i_mul [e,f]
 idiv :: Term -> Term -> Term
-idiv e f = ECons z True i_div [e,f]
+idiv e f = Cons z True i_div [e,f]
 imod :: Term -> Term -> Term
-imod e f = ECons z True i_mod [e,f]
+imod e f = Cons z True i_mod [e,f]
 \end{code}
 
 
 \subsection{Arithmetic Constants and Variables}
 
 \begin{code}
-zero = Val (E z) (Integer 0)
-one  = Val (E z) (Integer 1)
+zero = Val z (Integer 0)
+one  = Val z (Integer 1)
 ve = Vbl (jId "e") ExprV Static; e = fromJust $ eVar ArbType ve
 vf = Vbl (jId "f") ExprV Static; f = fromJust $ eVar ArbType vf
 vg = Vbl (jId "g") ExprV Static; g = fromJust $ eVar ArbType vg

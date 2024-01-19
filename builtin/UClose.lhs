@@ -36,6 +36,7 @@ import Equality
 import ForAll
 import Exists
 import TestRendering
+import StdTypeSignature
 \end{code}
 
 
@@ -276,8 +277,8 @@ and a generic binder variable: $\lst x$.
 \begin{code}
 vP = Vbl (fromJust $ ident "P") PredV Static
 gvP = StdVar vP
-p = fromJust $ pVar vP
-q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
+p = fromJust $ pVar 1 vP
+q = fromJust $ pVar 1 $ Vbl (fromJust $ ident "Q") PredV Static
 vx = Vbl (fromJust $ ident "x") ObsV Static ; x = StdVar vx
 lvxs = LVbl vx [] [] ; xs = LstVar lvxs
 ve = Vbl (fromJust $ ident "e") ObsV Static ; e = StdVar ve
@@ -287,7 +288,7 @@ lves = LVbl ve [] [] ; es = LstVar lves
 \subsubsection{Predicate Builders}
 
 \begin{code}
-sub p = Sub P p $ fromJust $ substn [] [(lvxs,lves)]
+sub p = Sub pred1 p $ fromJust $ substn [] [(lvxs,lves)]
 \end{code}
 
 

@@ -892,7 +892,7 @@ mid_for_post = jSubstn [] [(lO',lO1)]
 pre_for_mid = jSubstn [] [(lO1,lO)]
 post_for_mid = jSubstn [] [(lO1,lO')]
 
-esub tm sub = ESub ArbType tm sub
+esub tm sub = Sub ArbType tm sub
 \end{code}
 \begin{eqnarray*}
    f[O_1/O]     &=& f_1  
@@ -955,7 +955,7 @@ tstSameAssignSubs
       , testCase "[ e,O\\x / x1,O1\\x ] is uniform+complete" 
           (isCompleteSubst sa_sub  @?= Just (During "1") )
       , testCase "f1[ e,O\\x / x1,O1\\x ] = f[e/x]" 
-          (subC subObsEF sa_sub f1 @?= ESub ArbType f e_for_x)
+          (subC subObsEF sa_sub f1 @?= Sub ArbType f e_for_x)
       ]      
 \end{code}
 
@@ -1123,7 +1123,7 @@ notTargetedIn ts (t,_) = not (t `elem` ts)
 applySub ::  Substn -> Term -> Term
 applySub sub t  
   =  case substitute subContext0 sub t of
-       Nothing  ->  Sub (termkind t) t sub
+       Nothing  ->  Sub (termtype t) t sub
        Just t'  ->  t
 
 applyLSub :: [(Variable,Term)] -> [(ListVar,ListVar)] 
@@ -1169,10 +1169,10 @@ subcomp sub1 sub2 = fromJust $ substComp sub1 sub2
 \end{code}
 A collection of standard constants:
 \begin{code}
-k1 = EVal ArbType $ Integer 1 
-k2 = EVal ArbType $ Integer 2
-k3 = EVal ArbType $ Integer 3
-k4 = EVal ArbType $ Integer 4
+k1 = Val ArbType $ Integer 1 
+k2 = Val ArbType $ Integer 2
+k3 = Val ArbType $ Integer 3
+k4 = Val ArbType $ Integer 4
 \end{code}
 Some substitutions:
 \begin{code}

@@ -117,7 +117,7 @@ an identifier, and a list of terms,
 and returns the corresponding build-result:
 \begin{code}
 buildTerm :: FormSpec
-          -> TermKind -> Subable -> Identifier -> [Term]
+          -> Type -> Subable -> Identifier -> [Term]
           -> BuildResult
 buildTerm (SimpleSpec (SimpleForm sf)) i sb ts = simpleFormTerm  sf i sb ts
 buildTerm (IterateSpec bc lc)          i sb ts = iterFormTerm bc lc i ts
@@ -140,7 +140,7 @@ basicCompSat _         _        =  False
 
 \begin{code}
 simpleFormTerm :: [BasicComp]
-               -> TermKind -> Subable -> Identifier -> [Term]
+               -> Type -> Subable -> Identifier -> [Term]
                -> BuildResult
 simpleFormTerm sf tk sb i ts
   =  mkSF 1 [] sf ts
@@ -161,12 +161,12 @@ Some tests:
 condForm = [PredSyn,ExprSyn,PredSyn]
 i_cond = fromJust $ ident "cond"
 i_P = fromJust $ ident "P" ; v_P = PredVar i_P Static
-p = fromJust $ pVar v_P
+p = fromJust $ pVar 1 v_P
 i_Q = fromJust $ ident "Q" ; v_Q = PredVar i_Q Static
-q = fromJust $ pVar v_Q
+q = fromJust $ pVar 1 v_Q
 i_c = fromJust $ ident "c" ; v_c = PreExpr i_c
 c = fromJust $ eVar ArbType v_c
-mkCond ts = simpleFormTerm condForm P True i_cond ts
+mkCond ts = simpleFormTerm condForm (Pred 1) True i_cond ts
 
 simpleFormTermTests
  = testGroup "Builder.simpleFormTerm (P <| c |> Q)"
@@ -208,7 +208,7 @@ simpleFormTermTests
 
 \begin{code}
 iterFormTerm :: BasicComp -> LengthConstraint
-             -> TermKind -> Identifier -> [Term]
+             -> Type -> Identifier -> [Term]
              -> BuildResult
 iterFormTerm bc lc tk i ts = nullBFail
 \end{code}

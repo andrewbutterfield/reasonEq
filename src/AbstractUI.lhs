@@ -70,6 +70,8 @@ import SAT
 
 import TestRendering
 
+import StdTypeSignature
+
 import Debugger
 tdbg nm t = trc (nm++" = "++trTerm 0 t) t
 scdbg nm sc = trc (nm++" = "++trSideCond sc) sc
@@ -747,7 +749,7 @@ applySAT liveproof
         (tsat,nottsat) <- satsolve goalt
         asn <- mkAsn (exitTZ tz) (conjSC liveproof)
         let stepcons = ((SAT tsat nottsat (fPath liveproof), asn) :)
-        return (focus_ (setTZ (Val P (Boolean tsat)) tz, seq)
+        return (focus_ (setTZ (Val pred1 (Boolean tsat)) tz, seq)
                        $ stepsSoFar__ stepcons liveproof)
 \end{code}
 

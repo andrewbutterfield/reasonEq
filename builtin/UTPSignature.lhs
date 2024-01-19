@@ -64,9 +64,9 @@ This consists of the predicate variables $P$, $Q$ and $R$.
 \subsubsection{Propositional Variables}
 
 \begin{code}
-p = fromJust $ pVar $ Vbl (fromJust $ ident "P") PredV Static
-q = fromJust $ pVar $ Vbl (fromJust $ ident "Q") PredV Static
-r = fromJust $ pVar $ Vbl (fromJust $ ident "R") PredV Static
+p = fromJust $ pVar 1 $ Vbl (fromJust $ ident "P") PredV Static
+q = fromJust $ pVar 1 $ Vbl (fromJust $ ident "Q") PredV Static
+r = fromJust $ pVar 1 $ Vbl (fromJust $ ident "R") PredV Static
 \end{code}
 
 
@@ -107,7 +107,7 @@ while c p = PCons False i_while [c, p]
 \subsubsection{(Simultaneous) Assignement}
 $$ \lst x := \lst e $$
 \begin{code}
-listwiseVarBinPred :: TermKind -> Identifier -> Identifier
+listwiseVarBinPred :: Type -> Identifier -> Identifier
                     -> [(Variable,Variable)] -> [(ListVar,ListVar)] -> Term
 listwiseVarBinPred tk na ni vvs lvlvs
   | null vvs    =  doiter lvlvs
@@ -122,11 +122,12 @@ listwiseVarBinPred tk na ni vvs lvlvs
     mkiter (lv1,lv2)  =  Iter tk True na True ni [lv1,lv2]
 
 
+p1 = Pred 1
 i_asg        =  assignmentId
-p_asg        =  jVar P $ Vbl i_asg PredV Textual
+p_asg        =  jVar p1 $ Vbl i_asg PredV Textual
 
 simassign :: [(Variable,Term)] -> [(ListVar,ListVar)] -> Term
-simassign vts lvlvs  =  Sub P p_asg $ jSubstn vts lvlvs
+simassign vts lvlvs  =  Sub p1 p_asg $ jSubstn vts lvlvs
 
 (.:=) :: Variable -> Term -> Term
 v .:= e      =  simassign [(v,e)] []
@@ -142,7 +143,7 @@ skip :: Term
 i_skip  =  jId "II"
 v_skip  =  Vbl i_skip PredV Static
 g_skip  =  StdVar v_skip
-skip    =  jVar P v_skip 
+skip    =  jVar p1 v_skip 
 \end{code}
 
 \subsubsection{Non-deterministic Choice}
@@ -158,9 +159,9 @@ $$ \bot \qquad \top $$
 \begin{code}
 abort :: Term
 i_abort  =  jId "bot"
-abort    =  jVar P $ Vbl i_abort PredV Static
+abort    =  jVar p1 $ Vbl i_abort PredV Static
 
 miracle :: Term
 i_miracle  =  jId "top"
-miracle    =  jVar P $ Vbl i_miracle PredV Static
+miracle    =  jVar p1 $ Vbl i_miracle PredV Static
 \end{code}

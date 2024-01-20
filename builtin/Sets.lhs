@@ -68,9 +68,9 @@ card_t t = FunType (power t) int
 
 \begin{eqnarray*}
    \mof &:& t \fun \Set t \fun \Bool
-\\ \cup,\cap,\setminus &:& \fun \Set t \fun \Set t \fun \Set t
-\\ \subseteq &:& \fun \Set t \fun \Set t \fun \Bool
-\\ \# && \fun \Set t \fun \Int
+\\ \cup,\cap,\setminus &:& \Set t \fun \Set t \fun \Set t
+\\ \subseteq &:& \Set t \fun \Set t \fun \Bool
+\\ \# && \Set t \fun \Int
 \end{eqnarray*}
 \begin{code}
 i_in = jId "in"     ; inIntro      = mkConsIntro i_in  $ mbr_t  elemt
@@ -98,8 +98,15 @@ s = fromJust $ eVar ArbType vS
 \section{Set Known Variables}
 
 \begin{code}
-eqKnown :: VarTable
-eqKnown =  newVarTable
+setKnown :: VarTable
+setKnown 
+  = inIntro $  
+    unionIntro $
+    intsctIntro $
+    setdiffIntro $
+    subsetIntro $
+    cardIntro $
+    newVarTable
 \end{code}
 
 
@@ -160,7 +167,7 @@ setTheory
   =  nullTheory { thName  =  setName
                 , thDeps  =  [ implName
                              , equivName ]
-                , known   =  eqKnown
+                , known   =  setKnown
                 , laws    =  setAxioms
                 , conjs   =  setConjectures
                 }

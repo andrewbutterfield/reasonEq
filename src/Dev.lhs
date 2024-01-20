@@ -44,6 +44,8 @@ import Sets
 import UTPBase
 import XYZ
 --import XYZDesign
+
+import Debugger
 \end{code}
 
 
@@ -83,7 +85,10 @@ devInitState
             , liveProofs = M.empty }
 
 devTheories = foldl forceAddTheory noTheories $ devKnownBuiltins
-forceAddTheory ths th = fromJust $ addTheory th ths
+forceAddTheory ths th 
+  = case addTheory th ths of
+      Yes ths' -> ths'
+      But msgs -> error $ unlines' (thName th : msgs)
 
 devKnownBuiltins  = [ equivTheory
                     , notTheory
@@ -91,10 +96,10 @@ devKnownBuiltins  = [ equivTheory
                     , conjTheory
                     , aoiTheory
                     , implTheory
+                    , equalityTheory
                     , forallTheory
                     , existsTheory
                     , uCloseTheory
-                    , equalityTheory
                     , arithmeticTheory
                     , setTheory
                     , utpBaseTheory

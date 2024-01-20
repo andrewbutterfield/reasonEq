@@ -577,7 +577,7 @@ matchLawByName :: (Monad m, MonadFail m)
                -> m Matches
 matchLawByName asn lnm mcs
  = do (law,vts) <- findLaw lnm mcs
-      return $ domatch vts (pdbg "uASN" $ unwrapASN asn) $ pdbg "law" law
+      return $ domatch vts (unwrapASN asn) law
 \end{code}
 
 For each law,
@@ -884,13 +884,13 @@ basicMatch :: MatchClass
             -> Matches
 basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
   =  do bind <- match vts tC partsP
-        kbind <- bindKnown vts (pdbg "bind" bind) repl
+        kbind <- bindKnown vts bind repl
         fbind <- bindFloating vts kbind repl
         let ictxt = mkInsCtxt scC
-        scPinC <- instantiateSC ictxt (pdbg "fbind" fbind) scP
+        scPinC <- instantiateSC ictxt fbind scP
         scD <- scDischarge ss scC scPinC
 
-        if all isFloatingASC (fst $ pdbg "scD" scD)
+        if all isFloatingASC (fst scD)
           then do mrepl <- instantiate ictxt fbind repl
                   return $ MT n (unwrapASN asn) (chkPatn mc partsP)
                               fbind repl scC scPinC mrepl

@@ -723,7 +723,7 @@ tMatch' _ _ _ _ tC tP
 Binding a constructor name to itself:
 \begin{code}
 consBind vts bind cbvs pbvs tkC nC nP
-  = vMatch (pdbg "VTS" vts) bind cbvs pbvs vC vP
+  = vMatch vts bind cbvs pbvs vC vP
   where
     vClass = classFromType tkC
     vC = Vbl nC vClass Static
@@ -974,17 +974,17 @@ vMatch vts bind cbvs pvbs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
  | otherwise   =  fail "vMatch: class mismatch"
  where
     pbound = StdVar vP `S.member` pvbs
-    vmr = lookupVarTables vts $ pdbg "VPVPVP" vP
+    vmr = lookupVarTables vts vP
 \end{code}
 Variable classes are compatible, but is the pattern ``known''?
 \begin{code}
 -- vC /= vP
-vMatch' _ bind UnknownVar vC vP   =  bindVarToVar vP vC $ pdbg "UnknownVar" bind
+vMatch' _ bind UnknownVar vC vP   =  bindVarToVar vP vC bind
 vMatch' _ bind (KnownConst (Var _ v)) vC vP
-  | vC == v                       =   bindVarToVar vP vC $ pdbg "KnownConst" bind
+  | vC == v                       =   bindVarToVar vP vC bind
 vMatch' vts bind GenericVar vC vP
   = case lookupVarTables vts vC of
-      (InstanceVar v) | v == vP  ->   bindVarToVar vP vC $ pdbg "InstanceVar" bind
+      (InstanceVar v) | v == vP  ->   bindVarToVar vP vC bind
       _ ->  fail $ unlines [ "vMatch: wrong generic"
                            , "vC = " ++ show vC
                            , "vP = " ++ show vP ]

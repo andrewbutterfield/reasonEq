@@ -1,6 +1,6 @@
 BEGIN THEORY Arithmetic
 DEPS = ["Implies","Equiv","Equality"]
-KNOWN = VD (fromList [(VR (Id "*" 0,VP,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))),(VR (Id "+" 0,VP,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))),(VR (Id "-" 0,VP,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))),(VR (Id "div" 0,VP,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))),(VR (Id "mod" 0,VP,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))),(VR (Id "neg" 0,VP,WS),KV (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))],fromList [],fromList [])
+KNOWN = VD (fromList [(VR (Id "*" 0,VE,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))),(VR (Id "+" 0,VE,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))),(VR (Id "-" 0,VE,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))),(VR (Id "div" 0,VE,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))),(VR (Id "mod" 0,VE,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))),(VR (Id "neg" 0,VE,WS),KV (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))],fromList [],fromList [])
 BEGIN LIST LAWS
 (("neg_def",ASN (C (TP 1) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "neg" 0) [V T (VR (Id "e" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "-" 0) [K (TG (Id "Z" 0)) (VI 0),V T (VR (Id "e" 0,VE,WS))]],([],fromList []))),Axiom)
 (("neg_zero",ASN (C (TP 1) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "neg" 0) [K (TG (Id "Z" 0)) (VI 0)],K (TG (Id "Z" 0)) (VI 0)],([],fromList []))),Axiom)

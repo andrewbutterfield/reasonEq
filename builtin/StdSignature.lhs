@@ -101,11 +101,11 @@ should be declared as known static predicate variable,
 with a type that involves booleans.
 
 \begin{code}
-mkConsVar :: Identifier -> Variable
-mkConsVar i = Vbl i PredV Static
+mkConsVar ::  Identifier -> Type -> Variable
+mkConsVar i t = Vbl i (classFromType t) Static
 
 mkConsIntro :: Identifier -> Type -> VarTable -> VarTable
-mkConsIntro i t = fromJust . addKnownVar (mkConsVar i) t
+mkConsIntro i t = fromJust . addKnownVar (mkConsVar i t) t
 \end{code}
 
 \subsubsection{Propositional Variables}

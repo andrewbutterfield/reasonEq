@@ -50,9 +50,8 @@ and integer division and modulus.
 
 These are (curried) functions of one or two integers:
 \begin{code}
-z = GivenType $ jId $ "Z"
-zf_1 = FunType z z     -- Z -> Z
-zf_2 = FunType z zf_1  -- Z -> Z -> Z
+intf_1 = FunType int int     -- Z -> Z
+intf_2 = FunType int intf_1  -- Z -> Z -> Z
 \end{code}
 
 \subsection{Arithmetic Operators}
@@ -62,35 +61,35 @@ zf_2 = FunType z zf_1  -- Z -> Z -> Z
 \\ +,-,*,\Div,\Mod &:& \Int \fun \Int \fun \Int
 \end{eqnarray*}
 \begin{code}
-i_neg = jId "neg" ; negIntro = mkConsIntro i_neg zf_1
-i_add = jId "+"   ; addIntro = mkConsIntro i_add zf_2
-i_sub = jId "-"   ; subIntro = mkConsIntro i_sub zf_2
-i_mul = jId "*"   ; mulIntro = mkConsIntro i_mul zf_2
-i_div = jId "div" ; divIntro = mkConsIntro i_div zf_2
-i_mod = jId "mod" ; modIntro = mkConsIntro i_mod zf_2
+i_neg = jId "neg" ; negIntro = mkConsIntro i_neg intf_1
+i_add = jId "+"   ; addIntro = mkConsIntro i_add intf_2
+i_sub = jId "-"   ; subIntro = mkConsIntro i_sub intf_2
+i_mul = jId "*"   ; mulIntro = mkConsIntro i_mul intf_2
+i_div = jId "div" ; divIntro = mkConsIntro i_div intf_2
+i_mod = jId "mod" ; modIntro = mkConsIntro i_mod intf_2
 \end{code}
 
 \begin{code}
 neg :: Term -> Term
-neg e = Cons z True i_neg [e]
+neg e = Cons int True i_neg [e]
 add :: Term -> Term -> Term
-add e f = Cons z True i_add [e,f]
+add e f = Cons int True i_add [e,f]
 sub :: Term -> Term -> Term
-sub e f = Cons z True i_sub [e,f]
+sub e f = Cons int True i_sub [e,f]
 mul :: Term -> Term -> Term
-mul e f = Cons z True i_mul [e,f]
+mul e f = Cons int True i_mul [e,f]
 idiv :: Term -> Term -> Term
-idiv e f = Cons z True i_div [e,f]
+idiv e f = Cons int True i_div [e,f]
 imod :: Term -> Term -> Term
-imod e f = Cons z True i_mod [e,f]
+imod e f = Cons int True i_mod [e,f]
 \end{code}
 
 
 \subsection{Arithmetic Constants and Variables}
 
 \begin{code}
-zero = Val z (Integer 0)
-one  = Val z (Integer 1)
+zero = Val int (Integer 0)
+one  = Val int (Integer 1)
 ve = Vbl (jId "e") ExprV Static; e = fromJust $ eVar ArbType ve
 vf = Vbl (jId "f") ExprV Static; f = fromJust $ eVar ArbType vf
 vg = Vbl (jId "g") ExprV Static; g = fromJust $ eVar ArbType vg

@@ -1,4 +1,4 @@
-\section{Standard Signature}
+\chapter{Standard Signature}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2018--2019
 
@@ -42,7 +42,7 @@ import TestRendering
 
 
 \newpage
-\subsection{Introduction}
+\section{Introduction}
 
 Here we present a hard-coded implementation of
 propositional equational reasoning, as inspired by Gries \& Schneider\cite{gries.93},
@@ -84,7 +84,7 @@ In general we follow the presentation order of \cite{gries.93}:
 
 
 
-\subsection{Propositional Infrastructure}
+\section{Propositional Infrastructure}
 
 
 We need to build some infrastructure here.
@@ -108,7 +108,7 @@ mkConsIntro :: Identifier -> Type -> VarTable -> VarTable
 mkConsIntro i t = fromJust . addKnownVar (mkConsVar i t) t
 \end{code}
 
-\subsubsection{Propositional Variables}
+\subsection{Propositional Variables}
 
 \begin{code}
 p = fromJust $ pVar 1 $ Vbl (jId "P") PredV Static
@@ -116,10 +116,10 @@ q = fromJust $ pVar 1 $ Vbl (jId "Q") PredV Static
 r = fromJust $ pVar 1 $ Vbl (jId "R") PredV Static
 \end{code}
 
-\subsubsection{Propositional Types}
+\subsection{Propositional Types}
 
 
-\subsubsection{Propositional Constants}
+\subsection{Propositional Constants}
 
 Now synonyms for the `theX` terms.
 \begin{code}
@@ -128,7 +128,7 @@ falseP =  theFalse -- Val P $ Boolean False
 \end{code}
 
 \newpage
-\subsection{Propositional Operators}
+\section{Propositional Operators}
 
 \begin{code}
 equiv = theEqv ; mkEquivs ps = PCons True equiv ps
@@ -161,7 +161,7 @@ areEqualTo es1 es2  = Iter p1 True land True equals [es1,es2]
 \end{code}
 
 
-\subsubsection{Propositional Law Shorthand}
+\subsection{Propositional Law Shorthand}
 
 All \emph{propositional} laws are characterised by not having
 any side-conditions:
@@ -169,10 +169,10 @@ any side-conditions:
 propdef ( name, prop ) = ( name, fromJust $ mkAsn prop scTrue )
 \end{code}
 
-\subsection{Predicate Infrastructure}
+\section{Predicate Infrastructure}
 
 
-\subsubsection{Predicate Constants}
+\subsection{Predicate Constants}
 
 \begin{code}
 forallId = jId "forall"
@@ -189,7 +189,7 @@ sat p = Cls satId p
 \end{code}
 
 
-\subsubsection{Predicate Law Shorthand}
+\subsection{Predicate Law Shorthand}
 
 General predicate laws often have side-conditions:
 \begin{code}

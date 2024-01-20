@@ -35,11 +35,12 @@ import Disjunction
 import Conjunction
 import AndOrInvert
 import Implication
-import Equality
-import Arithmetic
 import ForAll
 import Exists
 import UClose
+import Equality
+import Arithmetic
+import Sets
 import UTPBase
 import XYZ
 --import XYZDesign
@@ -90,11 +91,12 @@ devKnownBuiltins  = [ equivTheory
                     , conjTheory
                     , aoiTheory
                     , implTheory
-                    , equalityTheory
-                    , arithmeticTheory
                     , forallTheory
                     , existsTheory
                     , uCloseTheory
+                    , equalityTheory
+                    , arithmeticTheory
+                    , setTheory
                     , utpBaseTheory
                     , xyzTheory
                     -- , xyzDTheory

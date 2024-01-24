@@ -1,0 +1,64 @@
+%
+% This document provides a single place for definitions
+% that will appear in multiple locations,
+% and so ensures they are kept consistent.
+%
+% This does not generate any typeset output.
+%
+% \def\LNAME#1{\mbox{\textsc{#1}}}
+% \def\QNAME#1{\LNAME{``{#1}''}}
+% \def\true{\textsf{true}}
+% \def\false{\textsf{false}}
+
+
+%%%%  ==== Arithmetic ========================================================
+
+%% ---- Arithmetic Axioms ---------------------------------------------------
+% for now we just posit a collection of laws taken as given
+
+\def\LWaddLUnitL{0+e}
+\def\LWaddLUnitR{e}
+\def\LWaddLUnit{\LWaddLUnitL = \LWaddLUnitR}
+\def\LWaddLUnitN{\QNAME{$+$-l-unit}}
+
+\def\LWaddRUnitL{e+0}
+\def\LWaddRUnitR{e}
+\def\LWaddRUnit{\LWaddRUnitL = \LWaddRUnitR}
+\def\LWaddRUnitN{\QNAME{$+$-r-unit}}
+
+
+% \def\AXeqvAssocL{(P\equiv Q)\equiv R}
+% \def\AXeqvAssocR{P\equiv (Q\equiv R)}
+% \def\AXeqvAssoc{(\AXeqvAssocL) \equiv (\AXeqvAssocR)}
+% \def\AXeqvAssocN{\QNAME{$\equiv$-assoc}}
+
+
+% \def\AXEQUIV{
+% \begin{array}{ll}
+%    \AXtrue     & \AXtrueN
+% \\ \AXeqvRefl  & \AXeqvReflN
+% \\ \AXeqvAssoc & \AXeqvAssocN
+% \\ \AXeqvSymm  & \AXeqvSymmN
+% \\ \AXidSubst  & \AXidSubstN
+% \\ \AXnonSubst, \AXnonSubstS & \AXnonSubstN
+% \end{array}
+% }
+
+
+
+%% ---- Arithmetic Conjectures ----------------------------------------------
+
+
+% \def\CJswapNot{\lnot P\equiv Q \equiv P \equiv \lnot Q}
+% \def\CJswapNotN{\QNAME{$\lnot$-$\equiv$-swap}}
+
+
+% \def\CONJPROPNOT{
+%   \begin{array}{ll}
+%        \CJswapNot  & \CJswapNotN
+%     \\ \CJnotInvol & \CJnotInvolN
+%     \\ \CJnotFalse & \CJnotFalseN
+%     \\ \CJnotDef   & \CJnotDefN
+%   \end{array}
+% }
+

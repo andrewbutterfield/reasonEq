@@ -4,6 +4,44 @@
 
 Time to add type-inference!
 
+Done but not yet ready to be hooked in.
+Adding in Arithmetic and Set theories to test out the need for typechecking.
+
+Problem matching `e` against `*(e,f)`. 
+An expression variable should match a given-typed cons.
+
+```
+Proof for *_-_distr
+	*(e,-(f,g))  =  -(*(e,f),*(e,g))  ⊤
+by red-All
+*(e,-(f,g))=-(*(e,f),*(e,g))
+   = 'match-lhs -_alt_def@[1,2]'
+ ...
+⊢
+*(e,+(f,neg g))=-(*(e,f),*(e,g))    ⊤
+Focus = [2]
+Target (RHS): 
+true
+
+proof: tm 1 -_alt_de1 -_alt_def
+Match against `-_alt_def'[1] failed!
+try match failed
+
+-(*(e,f),*(e,g)) :: -(e,f)
+
+lnm[parts]=-_alt_def[1]
+tP=-(e,f)  =  +(e,neg f)
+partsP=-(e,f)
+replP=+(e,neg f)
+tC=-(*(e,f),*(e,g))
+scC=⊤
+---
+tMatch: structural mismatch.
+tC = C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))]
+tP = V T (VR (Id "e" 0,VE,WS))
+hit <enter> to continue
+```
+
 ## Issues
 
 * We really need to have symmetric forms of key results, e.g., we have `P∨true≡true`, but should also have `true∨P≡true`.

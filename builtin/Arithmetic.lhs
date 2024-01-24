@@ -120,8 +120,8 @@ and then finish with integer divisions, and mixed laws.
 
 $$
 \begin{array}{lll}
-   0+e = e  && \QNAME{$+$-l-unit}
-\\ e+0 = e  && \QNAME{$+$-r-unit}
+   \LWaddLUnit  && \LWaddLUnitN
+\\ \LWaddRUnit  && \LWaddRUnitN
 \\ e+f = f+e  && \QNAME{$+$-symm}
 \\ e+(f+g) = (e+f)+g  && \QNAME{$+$-assoc}
 \\ (e+f=e+g) \equiv (f=g)  && \QNAME{$+$-cancel}
@@ -146,8 +146,10 @@ axAddCancel = ( "+" -.- "cancel",
 
 $$
 \begin{array}{lll}
-   0 * e = e  && \QNAME{$*$-l-unit}
-\\ e * 0 = e  && \QNAME{$*$-r-unit}
+   1 * e = e  && \QNAME{$*$-l-unit}
+\\ e * 1 = e  && \QNAME{$*$-r-unit}
+\\ 0 * e = 0  && \QNAME{$*$-l-zero}
+\\ e * 0 = 0  && \QNAME{$*$-r-zero}
 \\ e * f = f * e  && \QNAME{$*$-symm}
 \\ e * (f * g) = (e * f) * g  && \QNAME{$*$-assoc}
 \\ (e * f=e * g) \equiv (f=g)  && \QNAME{$*$-cancel}
@@ -237,13 +239,19 @@ axModSelf = ( "mod" -.- "self", (e `imod` e) `isEqualTo` zero )
 
 $$
 \begin{array}{lll}
-   e + (-e) = 0  && \QNAME{$+$-inv}
-\\ e - f = e + (f) && \QNAME{$-$-alt-def}
+   e * (f + g) = e * f + e * g && \QNAME{$*$-$+$-distr}
+\\ e + (-e) = 0  && \QNAME{$+$-inv}
+\\ e - f = e + (-f) && \QNAME{$-$-alt-def}
 \\ (e * f) \Div f = e && \QNAME{$*$-$\Div$-same}
 \\ (e * f) \Mod f = 0 && \QNAME{$*$-$\Mod$-same}
 \end{array}
 $$\par\vspace{-4pt}
 \begin{code}
+axMulAddDistr = ( "*"-.-"+"-.-"distr" 
+                , ( e `mul` (f `add` g) 
+                    `isEqualTo` 
+                    ((e `mul` f) `add` (e `mul` g)) )
+                )
 axAddInv = ( "+" -.- "inv"
            ,   (e `add` (neg e) `isEqualTo` zero ) )
 axSubAltDef = ( "-" -.- "alt" -.- "def"
@@ -269,7 +277,7 @@ arithmeticAxioms
       , axMulLUnit, axMulRUnit, axMulLZero, axMulRZero
       , axMulSymm, axMulAssoc, axMulCancel 
       , axDivRUnit, axDivLZero, axDivSelf
-      , axAddInv, axSubAltDef, axMulDivSame, axMulModSame
+      , axMulAddDistr, axAddInv, axSubAltDef, axMulDivSame, axMulModSame
       ]
 
 addSCtrue (nm,pred) = (nm, (pred,scTrue))
@@ -277,14 +285,24 @@ addSCtrue (nm,pred) = (nm, (pred,scTrue))
 
 \section{Arithmetic Conjectures}
 
+$$
+\begin{array}{lll}
+   e * (f - g) = e * f - e * g && \QNAME{$*$-$-$-distr}
+\end{array}
+$$\par\vspace{-4pt}
+\begin{code}
+cjMulSubDistr = ( "*" -.- "-" -.- "distr"
+                , e `mul` (f `sub` g) 
+                  `isEqualTo`
+                  ((e `mul` f) `sub` (e `mul` g)) )
+\end{code}
 
-For now we don't have any conjectures.
-We take an axiom to be a conjecture for experimentation
+
 \begin{code}
 arithmeticConjectures :: [NmdAssertion]
 arithmeticConjectures
   = map (mkNmdAsn . addSCtrue) 
-     [ axAddCancel ]
+     [ cjMulSubDistr ]
 \end{code}
 
 \section{The Arithmetic Theory}

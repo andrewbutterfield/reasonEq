@@ -19,6 +19,7 @@ BEGIN LIST LAWS
 (("div_r_unit",ASN (C (TP 1) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "div" 0) [V T (VR (Id "e" 0,VE,WS)),K (TG (Id "Z" 0)) (VI 1)],V T (VR (Id "e" 0,VE,WS))],([],fromList []))),Axiom)
 (("div_r_unit",ASN (C (TP 1) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "div" 0) [K (TG (Id "Z" 0)) (VI 0),V T (VR (Id "e" 0,VE,WS))],K (TG (Id "Z" 0)) (VI 0)],([],fromList []))),Axiom)
 (("div_self",ASN (C (TP 1) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "div" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "e" 0,VE,WS))],K (TG (Id "Z" 0)) (VI 1)],([],fromList []))),Axiom)
+(("*_+_distr",ASN (C (TP 1) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],C (TG (Id "Z" 0)) True (Id "+" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]]],([],fromList []))),Axiom)
 (("+_inv",ASN (C (TP 1) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "e" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "neg" 0) [V T (VR (Id "e" 0,VE,WS))]],K (TG (Id "Z" 0)) (VI 0)],([],fromList []))),Axiom)
 (("-_alt_def",ASN (C (TP 1) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "-" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "e" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "neg" 0) [V T (VR (Id "f" 0,VE,WS))]]],([],fromList []))),Axiom)
 (("*_div_same",ASN (C (TP 1) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "div" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],V T (VR (Id "f" 0,VE,WS))],V T (VR (Id "e" 0,VE,WS))],([],fromList []))),Axiom)
@@ -33,6 +34,6 @@ END LIST DEFFOLD
 BEGIN LIST DEFUNFOLD
 END LIST DEFUNFOLD
 BEGIN LIST CONJECTURES
-("+_cancel",ASN (C (TP 1) True (Id "eqv" 0) [C (TP 1) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],C (TP 1) True (Id "=" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],([],fromList [])))
+("*_-_distr",ASN (C (TP 1) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "-" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],C (TG (Id "Z" 0)) True (Id "-" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]]],([],fromList [])))
 END LIST CONJECTURES
 END THEORY Arithmetic

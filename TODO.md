@@ -2,6 +2,8 @@
 
 ## Urgent/Now
 
+Need to fix parentheses/precedence in testrendering !!!
+
 Time to add type-inference!
 
 Done but not yet ready to be hooked in.

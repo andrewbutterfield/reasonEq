@@ -208,9 +208,9 @@ precTable
     , ( "not"     , (7,True,False))
     , ( "lnot"    , (7,True,False))
     , ( "="       , (8,True,False))
-    , ( "+"       , (9,True,False))
+    , ( "+"       , (10,True,False))
     , ( "-"       , (9,True,False))
-    , ( "*"       , (10,True,False))
+    , ( "*"       , (9,True,False))
     , ( "div"     , (10,True,False))
     , ( "mod"     , (10,True,False))
     , ( "cond"    , (0,False,True)) -- force parenthesis for nested 'cond'

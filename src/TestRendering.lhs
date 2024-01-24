@@ -1,6 +1,6 @@
-\section{Test Rendering}
+\chapter{Test Rendering}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2017
+Copyright  Andrew Buttefield (c) 2017--2024
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -51,7 +51,7 @@ import Matching
 import TermZipper
 \end{code}
 
-\subsection{Test Rendering Intro.}
+\section{Test Rendering Intro.}
 
 We provide a simple, almost certainly un-parsable,
 rendering of datatypes to ease debugging.
@@ -64,7 +64,7 @@ one (\texttt{trXXX}) that hides the ``unique number'' component,
 and another (\texttt{trXXXU}) that displays it.
 
 \newpage
-\subsection{Variables}
+\section{Variables}
 
 \begin{code}
 trId :: Identifier -> String
@@ -116,7 +116,7 @@ trgvar trid (StdVar v)   =  trvar trid v
 trgvar trid (LstVar lv)  =  trlvar trid lv
 \end{code}
 
-\subsection{Types}
+\section{Types}
 
 \begin{code}
 trType :: Type -> String
@@ -142,7 +142,7 @@ seplist :: [a] -> (b -> [a]) -> [b] -> [a]
 seplist sep tr = intercalate sep . map tr
 \end{code}
 
-\subsection{Terms}
+\section{Terms}
 
 Kinds and Values:
 \begin{code}
@@ -187,17 +187,8 @@ type InfixKind = ( Int     -- precedence
 Based on experience with live-proof we can now say that
 we use ``non-assoc'' render mode for all associative operators.
 
+\newpage
 Suggested Precedence Table:
-$$
-        =        \;\mapsto  1
-\qquad  \sqsupseteq   \;\mapsto  1
-\qquad  \equiv   \;\mapsto  2
-\qquad  \implies \;\mapsto  3
-\qquad  \lor     \;\mapsto  4
-\qquad  \cond\_  \;\mapsto  4
-\qquad  \land    \;\mapsto  5
-\qquad  \lnot    \;\mapsto  6
-$$
 \begin{code}
 precTable
  = M.fromList
@@ -217,6 +208,11 @@ precTable
     , ( "not"     , (7,True,False))
     , ( "lnot"    , (7,True,False))
     , ( "="       , (8,True,False))
+    , ( "+"       , (9,True,False))
+    , ( "-"       , (9,True,False))
+    , ( "*"       , (10,True,False))
+    , ( "div"     , (10,True,False))
+    , ( "mod"     , (10,True,False))
     , ( "cond"    , (0,False,True)) -- force parenthesis for nested 'cond'
     , ( "while"   , (4,True,False)) -- force parenthesis for nested 'while'
     , ( "star"    , (4,True,False)) -- force parenthesis for nested 'star'
@@ -279,7 +275,20 @@ trterm trid ctxtp (Cons tk _ s [t])
  where
    trAtomic s r
     | isSymbId s  =  trId s ++ r
-    | otherwise   =  trId s ++ ' ':r
+--    | otherwise   =  trId s ++ ' ':r
+    | otherwise   =  trId s ++ '(':r ++ ")"
+\end{code}
+
+Rendering an infix operator with exactly two arguments.
+We ensure that sub-terms are rendered with the infix operator precedence
+as their context precedence.
+\begin{code}
+trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@[t1,t2])
+ | isOp  =  (trterm trid opp t1
+             ++ " " ++ trId opn ++ " "
+             ++ trterm trid opp t2)
+ where
+   prcs@(opp,isOp,_) = prc nm
 \end{code}
 
 Rendering an infix operator with two or more arguments.
@@ -443,7 +452,7 @@ trMapLets trK trD kds   = seplist "," (trMapLet trK trD) kds
 trMapLet  trK trD (k,d) = trK k ++ " " ++ _maplet ++ "  "++ trD d
 \end{code}
 
-\subsection{Term Zipper}
+\section{Term Zipper}
 
 We mark the focus, exit the zipper, and render as normal.
 \begin{code}
@@ -452,7 +461,7 @@ trTermZipU = trtz trIdU
 trtz trid (t,wayup) = trterm trid 0 $ exitTZ (markfocus t,wayup)
 \end{code}
 
-\subsection{Side Conditions}
+\section{Side Conditions}
 
 \begin{code}
 trSideCond = trsidecond trId
@@ -471,7 +480,7 @@ trfresh trid fvs
   | otherwise   =  "fresh:" ++ trovset trid fvs
 \end{code}
 
-\subsection{Assertions}
+\section{Assertions}
 
 \begin{code}
 trAsn = trasn trId
@@ -493,7 +502,7 @@ n1 -.- n2  =  n1 ++ nicesplit ++ n2
 \end{code}
 
 \newpage
-\subsection{Variable Data}
+\section{Variable Data}
 
 \begin{code}
 trVarMatchRole :: VarMatchRole -> String
@@ -534,7 +543,7 @@ trvtlv trid (v,lvmr)  =  trVar v ++ trLstVarMatchRole lvmr
 \end{code}
 
 \newpage
-\subsection{Bindings}
+\section{Bindings}
 
 \begin{code}
 trvarbind trid (BindVar v) = trVar v

@@ -196,15 +196,13 @@ precTable
     , ( "imp"     , (4,LAssoc))
     , ( "or"      , (5,LAssoc)) 
     , ( "and"     , (6,LAssoc)) 
-    , ( "not"     , (7,LAssoc))
-    , ( "="       , (8,LAssoc))
-    , ( "+"       , (10,LAssoc))
-    , ( "-"       , (9,LAssoc))
+    , ( "="       , (7,LAssoc))
+    , ( "+"       , (8,LAssoc))
+    , ( "-"       , (9,NotAssoc))
     , ( "*"       , (9,LAssoc))
-    , ( "div"     , (10,LAssoc))
-    , ( "mod"     , (10,LAssoc))
-    , ( "cond"    , (0,MixFix)) 
-    , ( "while"   , (4,LAssoc)) 
+    , ( "div"     , (9,NotAssoc))
+    , ( "mod"     , (9,NotAssoc))
+--    , ( "while"   , (4,LAssoc)) 
     , ( "star"    , (4,LAssoc)) 
     ]
 opkind :: String -> OpKind
@@ -334,9 +332,10 @@ We ensure that sub-terms are rendered with the infix operator precedence
 as their context precedence.
 \begin{code}
 trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@[t1,t2])
- | isOp  =  (trterm trid opp t1
-             ++ " " ++ trId opn ++ " "
-             ++ trterm trid opp t2)
+ | isOp  =  trBracketIf (opp <= ctxtp)
+              ( trterm trid opp t1
+                ++ " " ++ trId opn ++ " "
+                ++ trterm trid opp t2 )
  where
    prcs@(opp,fixity) = opkind nm
    isOp = fixity /= NotInfix

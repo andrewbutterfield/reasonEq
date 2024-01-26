@@ -85,6 +85,7 @@ app f es
 adds es = app '+' es
 muls es = app '*' es
 xpns es = app '^' es
+neg  e  = app '_' [e]
 
 pp :: Exp -> String
 pp exp = ppp 0 exp
@@ -92,22 +93,49 @@ pp exp = ppp 0 exp
 ppp p (A c) = [c]
 ppp p (C n es) 
   = case od n of
-      Nothing             ->  ppapp        n es
-      Just (OD _ p' N)    ->  ppinfix p p' n es
-      Just (OD _ p' fix)  ->  ppinfix p p' n es
+      Nothing           ->  ppapp         n es
+      Just (OD _ p' N)  ->  ppinfix  p p' n es
+      Just (OD _ p' L)  ->  pplinfix p p' n es
+      Just (OD _ p' R)  ->  pprinfix  p p' n es
 
+pplinfix p p' n (C n' fs:es) 
+  | n == n' = pplinfix p p' n (fs++es)
+pplinfix p p' n es = ppinfix p p' n es
 
-ppapp n es     =   n:"("++intercalate "," (map (ppp 0) es)++")"
+pprinfix p p' n es@(_:_:_)
+  = case esL of
+      (C n' fs) | n == n' -> pprinfix p p' n (es'++fs)
+      _                   -> ppinfix p p' n es
+  where
+    (es',esL) = splitAtEnd es
+pprinfix p p' n es = ppinfix p p' n es
+
+splitAtEnd [x,y] = ([x],y)
+splitAtEnd (x:xs) 
+  =  let (xs',y) = splitAtEnd xs
+     in (x:xs',y)
+
+-- treat negation seperately (also lnot?)
+ppapp '_' [A n]  =  ['_',n]
+ppapp '_' [e]    =  "_("++ppp 0 e++")"
+ppapp n es       =  n:"("++intercalate "," (map (ppp 0) es)++")"
 ppinfix p p' n es
-  | p' < p     =  "("++intercalate [' ',n,' '] (map (ppp 0)  es)++")"
+  | p' <= p    =  "("++intercalate [' ',n,' '] (map (ppp 0)  es)++")"
   | otherwise  =       intercalate [' ',n,' '] (map (ppp p') es)
 
 -- test cases
 
 testcases
   = [ ( a, "a" )
+    , ( neg a, "_a" )
+    , ( neg (add a b), "_(a+b)" )
+    , ( add a b, "a+b" )
+    , ( add (mul a b) (mul c d) , "a*b+c*d" )
+    , ( mul (add a b) (add c d) , "(a+b)*(c+d)" )
     , ( add (add a b) c, "a+b+c" )
     , ( add a (add b c), "a+(b+c)" )
+    , ( sub (sub a b) c, "a-b-c" )
+    , ( sub a (sub b c), "a-(b-c)")
     , ( xpn (xpn a b) c, "(a^b)^c)" )
     , ( xpn a (xpn b c), "a^b^c" )
     ]

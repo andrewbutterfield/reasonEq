@@ -68,6 +68,7 @@ a = A 'a'
 b = A 'b'
 c = A 'c'
 d = A 'd'
+f = 'f'
 
 add x y   =  C '+' [x,y]
 sub x y   =  C '-' [x,y]
@@ -75,12 +76,16 @@ mul x y   =  C '*' [x,y]
 dvd x y   =  C '/' [x,y]
 eql x y   =  C '=' [x,y]
 cns x y   =  C ':' [x,y]
+xpn x y   =  C '^' [x,y]
 app f es  
   = case od f of
      Just (OD _ _ N)
        | length es /= 2  ->  C '?' (A f:es)
      _                   ->  C f es
- 
+adds es = app '+' es
+muls es = app '*' es
+xpns es = app '^' es
+
 pp :: Exp -> String
 pp exp = ppp 0 exp
 
@@ -96,3 +101,28 @@ ppapp n es     =   n:"("++intercalate "," (map (ppp 0) es)++")"
 ppinfix p p' n es
   | p' < p     =  "("++intercalate [' ',n,' '] (map (ppp 0)  es)++")"
   | otherwise  =       intercalate [' ',n,' '] (map (ppp p') es)
+
+-- test cases
+
+testcases
+  = [ ( a, "a" )
+    , ( add (add a b) c, "a+b+c" )
+    , ( add a (add b c), "a+(b+c)" )
+    , ( xpn (xpn a b) c, "(a^b)^c)" )
+    , ( xpn a (xpn b c), "a^b^c" )
+    ]
+
+runtest ( t, expected )
+  = putStrLn $ unlines 
+      [ "----------"
+      , show t
+      , "--"
+      , "pfx: "++pfx t
+      , "pp: "++pp t 
+      , "expected: "++expected
+      ]
+
+runtests [] = return ()
+runtests (t:ts) = runtest t >> runtests ts
+
+testall = runtests testcases

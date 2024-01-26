@@ -136,7 +136,7 @@ $$
   \end{array}
 $$\par\vspace{-4pt}
 \begin{code}
-axAllAndDistr = preddef ("forall" -.- "land" -.- "distr")
+axAllAndDistr = preddef ("forall" -.- "and" -.- "distr")
   ( (forall [xs] (p /\ q)) === (forall [xs] p) /\ (forall [xs] q) )
   scTrue
 \end{code}

@@ -91,7 +91,7 @@ $$
 
 \begin{code}
 axEqvRefl
- = ( "equiv" -.- "refl"
+ = ( "eqv" -.- "refl"
    , ( p === p
      , scTrue ) )
 \end{code}
@@ -105,7 +105,7 @@ $$
 
 \begin{code}
 axEqvAssoc
- = ( "equiv" -.- "assoc"
+ = ( "eqv" -.- "assoc"
    , ( ((p === q) === r) === (p === (q === r))
    , scTrue ) )
 \end{code}
@@ -118,7 +118,7 @@ $$
 
 \begin{code}
 axEqvSymm
- = ( "equiv" -.- "symm"
+ = ( "eqv" -.- "symm"
    , ( flattenEquiv ( (p === q) === (q === p) )
      , scTrue ) )
 \end{code}
@@ -170,7 +170,7 @@ $$
 $$
 \begin{code}
 cjEqvId
- = ( "equiv"-.-"id"
+ = ( "eqv"-.-"id"
    , ( (trueP === q) === q
      , scTrue ) )
 \end{code}
@@ -194,7 +194,7 @@ $$
 $$
 \begin{code}
 cjEqvSubst
- = ( "equiv"-.-"subst"
+ = ( "eqv"-.-"subst"
    , ( sub (p === q) === ((sub p) === (sub q))
      , scTrue ) )
 \end{code}

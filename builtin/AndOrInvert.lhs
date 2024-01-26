@@ -74,7 +74,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjAndOrAbs
- = ( "land" -.- "lor" -.- "absorb"
+ = ( "and" -.- "or" -.- "absorb"
    , ( p /\ ( p \/ q) === p
      , scTrue ) )
 \end{code}
@@ -88,7 +88,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjOrAndAbs
- = ( "lor" -.- "land" -.- "absorb"
+ = ( "or" -.- "and" -.- "absorb"
    , ( p \/ ( p /\ q) === p
      , scTrue ) )
 \end{code}
@@ -102,7 +102,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjAndOrNAbs
- = ( "land" -.- "lnot" -.- "lor" -.- "absorb"
+ = ( "and" -.- "not" -.- "or" -.- "absorb"
    , ( p /\ ( mkNot p \/ q) === p /\ q
      , scTrue ) )
 \end{code}
@@ -116,7 +116,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjOrAndNAbs
- = ( "land" -.- "lnot" -.- "lor" -.- "absorb"
+ = ( "and" -.- "not" -.- "or" -.- "absorb"
    , ( p \/ ( mkNot p /\ q) === p \/ q
      , scTrue ) )
 \end{code}
@@ -130,7 +130,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjOrAndDistr
- = ( "lor" -.- "land" -.- "distr"
+ = ( "or" -.- "and" -.- "distr"
    , ( p \/ ( q /\ r) === (p \/ q) /\ (p \/ r)
      , scTrue ) )
 \end{code}
@@ -144,7 +144,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjAndOrDistr
- = ( "land" -.- "lor" -.- "distr"
+ = ( "and" -.- "or" -.- "distr"
    , ( p /\ ( q \/ r) === p /\ q \/ p /\ r
      , scTrue ) )
 \end{code}
@@ -158,7 +158,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjDeMorganNand
- = ( "deMorgan" -.- "land"
+ = ( "deMorgan" -.- "and"
    , ( mkNot (p /\ q) === mkNot p \/ mkNot q
      , scTrue ) )
 \end{code}
@@ -172,7 +172,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjDeMorganNor
- = ( "deMorgan" -.- "lor"
+ = ( "deMorgan" -.- "or"
    , ( mkNot (p \/ q) === mkNot p /\ mkNot q
      , scTrue ) )
 \end{code}
@@ -186,7 +186,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjEqvRepl
- = ( "equiv" -.- "replace"
+ = ( "eqv" -.- "replace"
    , ( (p===q) /\ (r===p) === (p===q) /\ (r===q)
      , scTrue ) )
 \end{code}
@@ -200,7 +200,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjEqvDef
- = ( "equiv" -.- "def"
+ = ( "eqv" -.- "def"
    , ( flattenEquiv ( (p===q) === (p /\ q) \/ (mkNot p /\ mkNot q) )
      , scTrue ) )
 \end{code}

@@ -82,7 +82,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 axNotEqvDistr
- = ( "lnot" -.- "equiv" -.- "distr"
+ = ( "not" -.- "eqv" -.- "distr"
    , ( mkNot(p === q) ===  ((mkNot p) === q)
    , scTrue ) )
 \end{code}
@@ -117,7 +117,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjSwapNot
- = ( "lnot"-.-"equiv"-.-"swap"
+ = ( "not"-.-"eqv"-.-"swap"
    , (  (mkNot p === q) === (p === mkNot q)
      , scTrue ) )
 \end{code}
@@ -131,7 +131,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjNotInvol
- = ( "lnot"-.-"invol"
+ = ( "not"-.-"invol"
    , ( mkNot (mkNot p) === p
      , scTrue ) )
 \end{code}
@@ -160,7 +160,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjNotDef
- = ( "lnot"-.-"def"
+ = ( "not"-.-"def"
    , ( mkNot p === (p === falseP)
      , scTrue ) )
 \end{code}
@@ -188,7 +188,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjNotSubst
- = ( "lnot"-.-"subst"
+ = ( "not"-.-"subst"
    , ( sub (mkNot p) === mkNot (sub p)
      , scTrue ) )
 \end{code}

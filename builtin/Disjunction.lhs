@@ -71,7 +71,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 axOrSymm
- = ( "lor" -.- "symm"
+ = ( "or" -.- "symm"
    , ( p \/ q === q \/ p
    , scTrue ) )
 \end{code}
@@ -85,7 +85,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 axOrAssoc
- = ( "lor" -.- "assoc"
+ = ( "or" -.- "assoc"
    , ( (p \/ q) \/ r === p \/ (q \/ r)
    , scTrue ) )
 \end{code}
@@ -99,7 +99,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 axOrIdem
- = ( "lor" -.- "idem"
+ = ( "or" -.- "idem"
    , ( p \/ p === p
    , scTrue ) )
 \end{code}
@@ -113,7 +113,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 axOrEqvDistr
- = ( "lor" -.- "equiv" -.- "distr"
+ = ( "or" -.- "eqv" -.- "distr"
    , ( flattenEquiv ( (p \/ (q === r)) === (p \/ q === p \/ r) )
    , scTrue ) )
 \end{code}
@@ -160,7 +160,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjOrZero
- = ( "lor"-.-"zero"
+ = ( "or"-.-"zero"
    , ( (p \/ trueP) === trueP
      , scTrue ) )
 \end{code}
@@ -174,7 +174,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjOrUnit
- = ( "lor"-.-"unit"
+ = ( "or"-.-"unit"
    , ( (p \/ falseP) === p
      , scTrue ) )
 \end{code}
@@ -188,7 +188,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjOrOrDistr
- = ( "lor"-.-"lor"-.-"distr"
+ = ( "or"-.-"or"-.-"distr"
    , ( p \/ (q \/ r) === (p \/ q) \/ (p \/ r)
      , scTrue ) )
 \end{code}
@@ -202,7 +202,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjOrEqvSplit
- = ( "lor"-.-"equiv"-.-"split"
+ = ( "or"-.-"eqv"-.-"split"
    , ( flattenEquiv ( (p \/ q === p \/ mkNot q) === p )
      , scTrue ) )
 \end{code}
@@ -216,7 +216,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 cjOrSubst
- = ( "lor"-.-"subst"
+ = ( "or"-.-"subst"
    , ( sub (p \/ q) === sub p \/ sub q
      , scTrue ) )
 \end{code}

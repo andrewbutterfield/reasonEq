@@ -170,7 +170,7 @@ $$
   \end{array}
 $$\par\vspace{-4pt}
 \begin{code}
-cjAnyOrDistr = preddef ("exists" -.- "lor" -.- "distr")
+cjAnyOrDistr = preddef ("exists" -.- "or" -.- "distr")
   ( (exists [xs] (p \/ q)) === (exists [xs] p) \/ (exists [xs] q) )
   scTrue
 \end{code}
@@ -181,7 +181,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-axAndAllScope = preddef ("land" -.- "exists" -.- "scope")
+axAndAllScope = preddef ("and" -.- "exists" -.- "scope")
   ( p /\ (exists [xs,ys] q)
     === exists [xs] ( p /\ exists [ys] q) )
   ([xs] `notin` gvP)

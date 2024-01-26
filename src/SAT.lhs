@@ -32,8 +32,8 @@ supportedOps :: Term -> Bool
 supportedOps (Val _ _) = True
 supportedOps (Var _ _) = True
 supportedOps (Cons _ _ (Identifier nm _) xs)
-  | (nm == "land") || (nm == "lnot") || (nm == "lor") 
-    || (nm == "equiv") || (nm == "implies")
+  | (nm == "and") || (nm == "not") || (nm == "or") 
+    || (nm == "eqv") || (nm == "imp")
        = all supportedOps xs
   | otherwise = False
 supportedOps t = False
@@ -52,22 +52,22 @@ equivFree :: Term -> Term
 equivFree x@(Val a b) = x
 equivFree x@(Var a b) = x
 equivFree t@(Cons a b (Identifier nm _) xs)
-  | nm == "equiv" = equivFree (equivFreeNested t)
+  | nm == "eqv" = equivFree (equivFreeNested t)
   | otherwise = Cons a b (jId nm) (map equivFree xs)
 equivFree t = unsupportedError "equivFree" t
 
 equivFreeNested :: Term -> Term
 equivFreeNested (Cons a b (Identifier nm _) [p,q]) 
-  = Cons a b (jId "land") 
-             [ Cons a b (jId "implies") 
+  = Cons a b (jId "and") 
+             [ Cons a b (jId "imp") 
                         [equivFree p, equivFree q]
-             , Cons a b (jId "implies") [equivFree q, equivFree p]]
+             , Cons a b (jId "imp") [equivFree q, equivFree p]]
 equivFreeNested (Cons a b (Identifier nm _) (p:q:rest)) 
   = equivFreeNested 
      (Cons a b (jId nm) 
-       ( Cons a b (jId "land") 
-                    [ Cons a b (jId "implies") [p, q]
-                    , Cons a b (jId "implies") [q, equivFree p]
+       ( Cons a b (jId "and") 
+                    [ Cons a b (jId "imp") [p, q]
+                    , Cons a b (jId "imp") [q, equivFree p]
                     ]
          : rest ))
 equivFreeNested t = unsupportedError "equivFreeNested" t
@@ -81,9 +81,9 @@ implFree x@(Val a b) = x
 implFree x@(Var a b) = x
 implFree (Cons a b (Identifier nm _) [p]) = Cons a b (jId nm) [implFree p]
 implFree (Cons a b (Identifier nm _) [p,q]) 
-  | nm == "implies" 
-     = Cons a b (jId "lor") 
-                [Cons a b (jId "lnot") [implFree p],implFree q]
+  | nm == "imp" 
+     = Cons a b (jId "or") 
+                [Cons a b (jId "not") [implFree p],implFree q]
   | otherwise = Cons a b (jId nm) [implFree p,implFree q]
 implFree t = unsupportedError "implFree" t
 \end{code}
@@ -93,7 +93,7 @@ obtained by using DeMorgan's Laws to drive negation down onto variables.
 
 \begin{code}
 negateTerm :: Term -> Term
-negateTerm t = Cons (termtype t) True (jId "lnot") [t]
+negateTerm t = Cons (termtype t) True (jId "not") [t]
 \end{code}
 
 
@@ -102,13 +102,13 @@ nnf :: Term -> Term
 nnf t@(Val a b) = t
 nnf t@(Var a b) = t
 nnf (Cons a1 b1 (Identifier nm1 _) [Cons a2 b2 (Identifier nm2 _) [t]])
-  | nm1 == "lnot" && nm2 == "lnot" =  nnf t
+  | nm1 == "not" && nm2 == "not" =  nnf t
   | otherwise = Cons a1 b1 (jId nm1) [Cons a2 b2 (jId nm2) [nnf t]]
 nnf (Cons a b (Identifier nm1 _) [Cons a2 b2 (Identifier nm2 _) [p,q]])  
-  | nm1 == "lnot" && nm2 == "lor" 
-    = Cons a b (jId "land") [nnf (negateTerm p), nnf (negateTerm q)]       
-  | nm1 == "lnot" && nm2 == "land" 
-    = Cons a b (jId "lor") [nnf (negateTerm p), nnf (negateTerm q)]    
+  | nm1 == "not" && nm2 == "or" 
+    = Cons a b (jId "and") [nnf (negateTerm p), nnf (negateTerm q)]       
+  | nm1 == "not" && nm2 == "and" 
+    = Cons a b (jId "or") [nnf (negateTerm p), nnf (negateTerm q)]    
   | otherwise 
     = Cons a b (jId nm1) [Cons a2 b2 (jId nm2) [nnf p,nnf q]]        
 nnf (Cons a b (Identifier nm _) [p,q]) = Cons a b (jId nm) [nnf p, nnf q]
@@ -124,16 +124,16 @@ Conjunctive normal form:
 \begin{code}
 cnf :: Term -> Term
 cnf (Cons a b (Identifier nm _) [p,q]) 
-  | nm == "land" = Cons a b (jId nm) [cnf p, cnf q]  
-  | nm == "lor" = distr (cnf p) (cnf q)
+  | nm == "and" = Cons a b (jId nm) [cnf p, cnf q]  
+  | nm == "or" = distr (cnf p) (cnf q)
 cnf t = t
 
 distr :: Term -> Term -> Term
 distr (Cons a b (Identifier nm _) [p,q]) t
-  | nm == "land" = Cons a b (jId "land") [distr p t, distr q t]
+  | nm == "and" = Cons a b (jId "and") [distr p t, distr q t]
 distr t (Cons a b (Identifier nm _) [p,q])
-  | nm == "land" = Cons a b (jId "land") [distr p t, distr q t]
-distr t1 t2 = Cons (termtype t1) True (jId "lor") [t1,t2]
+  | nm == "and" = Cons a b (jId "and") [distr p t, distr q t]
+distr t1 t2 = Cons (termtype t1) True (jId "or") [t1,t2]
 \end{code}
 
 \subsection{DPLL Algorithm}
@@ -142,10 +142,10 @@ distr t1 t2 = Cons (termtype t1) True (jId "lor") [t1,t2]
 getUnitClauses :: Term -> [Term]
 getUnitClauses t@(Var _ _) = [t]
 getUnitClauses t@(Cons a b (Identifier nm _) [p])
-  | nm == "lnot" = [t]
+  | nm == "not" = [t]
   | otherwise = []
 getUnitClauses t@(Cons a b (Identifier nm _) [p,q])
-  | nm == "land" = getUnitClauses p ++ getUnitClauses q
+  | nm == "and" = getUnitClauses p ++ getUnitClauses q
   | otherwise = []
 getUnitClauses t = []
 \end{code}
@@ -180,19 +180,19 @@ true  = Val (Pred 1) (Boolean True)
 false = Val (Pred 1) (Boolean False)
 
 simplifyFormula :: Term -> Term
-simplifyFormula t@(Cons a b (Identifier "land" _) [p,q]) 
+simplifyFormula t@(Cons a b (Identifier "and" _) [p,q]) 
   | psimp == true && qsimp == true  =  true
   | psimp == false || qsimp == false = false
   | psimp == true = qsimp
   | qsimp == true = psimp
-  | otherwise = Cons a b (jId "land") [psimp, qsimp]
+  | otherwise = Cons a b (jId "and") [psimp, qsimp]
   where
     psimp = simplifyFormula p ; qsimp = simplifyFormula q
-simplifyFormula t@(Cons a b (Identifier "lor" _) [p,q]) 
+simplifyFormula t@(Cons a b (Identifier "or" _) [p,q]) 
   | psimp == true || qsimp == true = true
   | psimp == false = qsimp
   | qsimp == false = psimp
-  | otherwise = Cons a b (jId "lor") [psimp, qsimp]
+  | otherwise = Cons a b (jId "or") [psimp, qsimp]
   where
     psimp = simplifyFormula p ; qsimp = simplifyFormula q
 simplifyFormula t = t
@@ -241,7 +241,7 @@ dpllAlg form
              True  -> True
              False -> 
                do  let elem' 
-                        = nnf (Cons (termtype elem) True (jId "lnot") [elem])
+                        = nnf (Cons (termtype elem) True (jId "not") [elem])
                    let f1' = applyUnassigned f elem'
                    let f2' = simplifyFormula f1'
                    dpllAlg f2'

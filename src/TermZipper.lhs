@@ -242,7 +242,7 @@ box p = Cons p1 True (fromJust $ ident "BOX") [p]
 x = fromJust $ ident "x"
 vx = fromJust $ var kint $ Vbl x ObsV Static
 tint = Typ int
-iter = Iter p1 True (fromJust $ ident "land") True (fromJust $ ident "=") []
+iter = Iter p1 True (fromJust $ ident "and") True (fromJust $ ident "=") []
 f = fromJust $ ident "F"
 g = fromJust $ ident "G"
 cons0 = Cons p1 True f [i42,vx,tint,iter]
@@ -270,11 +270,11 @@ tstZipper
      , zipTest'' (tZ++" boxed@top is BOX.x") tint [] box
      , zipTest'' (tZ++" boxed@1 is BOX.x") tint [1] box
      , zipTest'' (tZ++" boxed@1;1 is BOX.x") tint [1,1] box
-     , zipTest'' ('(':_land++" = @ []) boxed@top is BOX.("++_land++" = @ [])")
+     , zipTest'' ('(':_and++" = @ []) boxed@top is BOX.("++_and++" = @ [])")
                  iter [] box
-     , zipTest'' ('(':_land++" = @ []) boxed@1 is BOX.("++_land++" = @ [])")
+     , zipTest'' ('(':_and++" = @ []) boxed@1 is BOX.("++_and++" = @ [])")
                  iter [1] box
-     , zipTest'' ('(':_land++" = @ []) boxed@2;1 is BOX.("++_land++" = @ [])")
+     , zipTest'' ('(':_and++" = @ []) boxed@2;1 is BOX.("++_and++" = @ [])")
                  iter [2,1] box
      , zipTest' "F(42,x,Z,/\\{=()}) boxed@1 is F(BOX.42,..)"
                cons1 [1] box i42

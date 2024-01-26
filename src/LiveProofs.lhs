@@ -483,7 +483,7 @@ Finally, try to discharge the instantiated side-condition:
                              , unlines' whynots
                              , ""
                              , trSideCond scC
-                               ++ " " ++ _implies ++ " " ++
+                               ++ " " ++ _imp ++ " " ++
                                trSideCond scP'
                              , ""
                              , "lnm[parts]="++lnm++show parts
@@ -1079,7 +1079,7 @@ shMatch vts (i, mtch)
 
 shSCImplication scC scPm
   =     trSideCond scC
-     ++ " " ++ _implies ++ " "
+     ++ " " ++ _imp ++ " "
      ++ trSideCond scPm
 
 shMappedCond scC bind lsc
@@ -1091,11 +1091,11 @@ shMappedCond scC bind lsc
       Just ilsc  ->  trSideCond ilsc
 
 shMClass MatchAll         =  green "*"
-shMClass MatchEqvLHS      =  green (_equiv++"lhs")
-shMClass MatchEqvRHS      =  green (_equiv++"rhs")
-shMClass (MatchEqv is)    =  green (_equiv++show is)
-shMClass MatchAnte        =  green ("* "++_implies)
-shMClass MatchCnsq        =  green (_implies++"  *")
+shMClass MatchEqvLHS      =  green (_eqv++"lhs")
+shMClass MatchEqvRHS      =  green (_eqv++"rhs")
+shMClass (MatchEqv is)    =  green (_eqv++show is)
+shMClass MatchAnte        =  green ("* "++_imp)
+shMClass MatchCnsq        =  green (_imp++"  *")
 shMClass (MatchEqvVar i)  =  red ("trivial!"++show i)
 \end{code}
 

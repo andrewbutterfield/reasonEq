@@ -15,7 +15,7 @@ module
   , _epsilon, _tau, _sigma, _Sigma, _omega, _lambda, _Lambda
   , _top, _bot, _sqcap, _sqcup, _sqsubseteq, _sqsupseteq
   , _skip, _lhd, _rhd, _while
-  , _true , _false , _lnot, _land, _lor, _implies, _equiv
+  , _true , _false , _not, _and, _or, _imp, _eqv
   , _forall, _exists
   , _emptyset, _cup, _cap, _setminus
   , _in, _subseteq, _supseteq, _varnothing
@@ -108,7 +108,7 @@ nicesym :: String -> String
 \end{code}
 So we shall define
 \begin{verbatim}
-_implies = nicesym "implies"
+_imp = nicesym "imp"
 \end{verbatim}
 The particular rendering used by these variables
 is as a result of conditional compilation.
@@ -150,11 +150,6 @@ theSymbolList
   , ("lhd", SymForm "<|"  "\x25c1"), ("rhd", SymForm "|>"  "\x25b7")
   , ("while", SymForm "*" "\x229b")
 
-  , ("lnot", SymForm "~"  "\x00ac")
-  , ("land", SymForm "/\\"  "\x2227"), ("lor", SymForm "\\/"  "\x2228")
-  , ("implies", SymForm "==>"  "\x27f9"), ("equiv", SymForm "=="  "\x2261")
-
-  -- here we add new short form names for the propositional operators
   , ("not", SymForm "~"  "\x00ac")
   , ("and", SymForm "/\\"  "\x2227"), ("or", SymForm "\\/"  "\x2228")
   , ("imp", SymForm "==>"  "\x27f9"), ("eqv", SymForm "=="  "\x2261")
@@ -209,8 +204,8 @@ _lhd = nicesym "lhd" ; _rhd = nicesym "rhd"
 _while = nicesym "while"
 
 _true = nicesym "true" ; _false = nicesym "false"
-_lnot = nicesym "lnot" ; _land = nicesym "land" ; _lor = nicesym "lor"
-_implies = nicesym "implies" ; _equiv = nicesym "equiv"
+_not = nicesym "not" ; _and = nicesym "and" ; _or = nicesym "or"
+_imp = nicesym "imp" ; _eqv = nicesym "eqv"
 
 _forall = nicesym "forall" ; _exists = nicesym "exists"
 
@@ -575,7 +570,7 @@ whack ss (c:cs)
  where
    cs' = whack ss cs
 
-badWidths = _implies ++ _star ++ _fun ++ _pfun ++ _ffun ++ _maplet
+badWidths = _imp ++ _star ++ _fun ++ _pfun ++ _ffun ++ _maplet
 #endif
 \end{code}
 
@@ -615,13 +610,15 @@ niceSyms
    , ("_sqcup", _sqcup)
    , ("_sqsubseteq", _sqsubseteq)
    , ("_sqsupseteq", _sqsupseteq)
+   , ("_lhd",_lhd)
+   , ("_rhd",_rhd)
    , ("_true", _true)
    , ("_false", _false)
-   , ("_lnot", _lnot)
-   , ("_land", _land)
-   , ("_lor", _lor)
-   , ("_implies", _implies)
-   , ("_equiv", _equiv)
+   , ("_not", _not)
+   , ("_and", _and)
+   , ("_or", _or)
+   , ("_imp", _imp)
+   , ("_eqv", _eqv)
    , ("_exists", _exists)
    , ("_forall", _forall)
    , ("_emptyset", _emptyset)

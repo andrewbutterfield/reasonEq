@@ -49,6 +49,8 @@ import VarData
 import Binding
 import Matching
 import TermZipper
+
+import Debugger
 \end{code}
 
 \section{Test Rendering Intro.}
@@ -144,7 +146,8 @@ seplist sep tr = intercalate sep . map tr
 
 \section{Terms}
 
-Kinds and Values:
+\subsection{Kinds and Values}
+
 \begin{code}
 trTK :: Type -> String
 trTK _ = "" -- ignore for now
@@ -157,31 +160,23 @@ trValue (Boolean True)   =  nicesym "true"
 trValue (Integer i)      =  show i
 \end{code}
 
+\subsection{Operator Fixity and Precedence}
 
-\textbf{Before we proceed, we need a table/function that returns
-the precedence level of a \texttt{Cons} identifier.
-For now, let's hard-code one.}
+He we follow the Haskell convention of associating 
+a \emph{fixity}
+(None,Left,Right) and a prededence ($p > 0$) with an infix operator.
 
-We might also want to fine tune rendering modes,
-especially in live proofs:
-
-\begin{tabular}{|c|c|c|}
-\hline
-   render-mode & $\equiv$[P,$\equiv$[Q,R]] & $\equiv$[P,Q,R]
-\\\hline
-   assoc       & $P \equiv Q \equiv R$     & $P \equiv Q \equiv R$
-\\\hline
-   non-assoc  & $P \equiv (Q \equiv R)$    & $P \equiv Q \equiv R$
-\\\hline
-   forced-l  & $P \equiv (Q \equiv R)$    & $(P \equiv Q) \equiv R$
-\\ forced-r  & $P \equiv (Q \equiv R)$    & $P \equiv (Q \equiv R)$
-\\\hline
-\end{tabular}
 
 \begin{code}
-type InfixKind = ( Int     -- precedence
-                 , Bool    -- true if binary op handling required
-                 , Bool )  -- true if ternary mixfix handling required
+data Fixity 
+  = NotAssoc -- not associative
+  | LAssoc -- left-assoc
+  | RAssoc -- right-assoc
+  | MixFix -- ternary mixfix
+  | NotInfix -- not an infix operator
+  deriving (Eq,Ord,Show)
+
+type OpKind = ( Int, Fixity )   -- precedence
 \end{code}
 
 Based on experience with live-proof we can now say that
@@ -192,38 +187,34 @@ Suggested Precedence Table:
 \begin{code}
 precTable
  = M.fromList
-    [ ( ";"       , (1,True,False))
-    , ( ":="      , (1,True,False))
-    , ( "sqsupseteq" , (1,True,False))
-    , ( "vdash"   , (2,True,False))
-    , ( "eqv"     , (3,True,False))
-    , ( "equiv"   , (3,True,False))
-    , ( "sqcap"   , (4,True,False))
-    , ( "imp"     , (4,True,False))
-    , ( "implies" , (4,True,False))
-    , ( "or"      , (5,True,False)) -- force parenthesis for nested 'or'
-    , ( "lor"     , (5,True,False)) -- force parenthesis for nested 'or'
-    , ( "and"     , (6,True,False)) -- force parenthesis for nested 'and'
-    , ( "land"    , (6,True,False)) -- force parenthesis for nested 'and'
-    , ( "not"     , (7,True,False))
-    , ( "lnot"    , (7,True,False))
-    , ( "="       , (8,True,False))
-    , ( "+"       , (10,True,False))
-    , ( "-"       , (9,True,False))
-    , ( "*"       , (9,True,False))
-    , ( "div"     , (10,True,False))
-    , ( "mod"     , (10,True,False))
-    , ( "cond"    , (0,False,True)) -- force parenthesis for nested 'cond'
-    , ( "while"   , (4,True,False)) -- force parenthesis for nested 'while'
-    , ( "star"    , (4,True,False)) -- force parenthesis for nested 'star'
+    [ ( ";"       , (1,LAssoc))
+    , ( ":="      , (1,LAssoc))
+    , ( "sqsupseteq" , (1,LAssoc))
+    , ( "vdash"   , (2,LAssoc))
+    , ( "eqv"     , (3,LAssoc))
+    , ( "sqcap"   , (4,LAssoc))
+    , ( "imp"     , (4,LAssoc))
+    , ( "or"      , (5,LAssoc)) 
+    , ( "and"     , (6,LAssoc)) 
+    , ( "not"     , (7,LAssoc))
+    , ( "="       , (8,LAssoc))
+    , ( "+"       , (10,LAssoc))
+    , ( "-"       , (9,LAssoc))
+    , ( "*"       , (9,LAssoc))
+    , ( "div"     , (10,LAssoc))
+    , ( "mod"     , (10,LAssoc))
+    , ( "cond"    , (0,MixFix)) 
+    , ( "while"   , (4,LAssoc)) 
+    , ( "star"    , (4,LAssoc)) 
     ]
-prc :: String -> InfixKind
-prc n
+opkind :: String -> OpKind
+opkind n
   = case M.lookup n precTable of
-     Nothing  ->  (0,False,False)
+     Nothing  ->  (-1,NotInfix)
      Just ik  ->  ik
 \end{code}
 
+\subsection{Focus Marking}
 
 Rather than rendering zippers on the fly,
 we mark the focus and un-zip,
@@ -237,26 +228,19 @@ focusMark = fromJust $ ident "__focus__"
 highlightFocus = magenta
 \end{code}
 
+\subsection{Rendering Terms}
+
 We use a precedence argument when rendering terms.
 \begin{code}
 trTerm  :: Int -> Term -> String -- 1st arg is precedence
-trTerm = trtermTop trId
+trTerm = trterm trId
 trTermU :: Int -> Term -> String
-trTermU = trtermTop trIdU
+trTermU = trterm trIdU
 trterm :: (Identifier -> String) -> Int -> Term -> String
 \end{code}
 
-We check at the top-level for a constructor of arity 2.
-\begin{code}
-trtermTop trid p (Cons _ _ opn@(Identifier nm _) [t1,t2])
-  | isOp  =  (trterm trid opp t1
-             ++ "  " ++ trId opn ++ "  "
-             ++ trterm trid opp t2)
-  where prcs@(opp,isOp,_) = prc nm
-trtermTop trid p t = trterm trid p t
-\end{code}
+\subsubsection{Atomic Terms}
 
-First, atomic terms
 \begin{code}
 trterm trid p (Val tk k)           =  trValue k
 trterm trid p (Var tk v)           =  trVar v
@@ -265,62 +249,13 @@ trterm trid p (Typ t)              =  trType t
 
 A \texttt{Cons}-node with one subterm
 may need special handling:
-a marked focus term needs highlighting;
-or an application of name $nm$ (symbol $\lhd$)
-to an atomic argument $a$ that has no parentheses: $nm~a$ ($\lhd a$).
+a marked focus term needs highlighting:
 \begin{code}
 trterm trid ctxtp (Cons tk _ s [t])
- | s == focusMark    =  highlightFocus $ trterm trid ctxtp t
- | isAtomic t        =  trAtomic s $ trterm trid 0 t
- where
-   trAtomic s r
-    | isSymbId s  =  trId s ++ r
---    | otherwise   =  trId s ++ ' ':r
-    | otherwise   =  trId s ++ '(':r ++ ")"
+ | s == focusMark   =  highlightFocus $ trterm trid ctxtp t
 \end{code}
 
-Rendering an infix operator with exactly two arguments.
-We ensure that sub-terms are rendered with the infix operator precedence
-as their context precedence.
-\begin{code}
-trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@[t1,t2])
- | isOp  =  (trterm trid opp t1
-             ++ " " ++ trId opn ++ " "
-             ++ trterm trid opp t2)
- where
-   prcs@(opp,isOp,_) = prc nm
-\end{code}
-
-Rendering an infix operator with two or more arguments.
-We ensure that sub-terms are rendered with the infix operator precedence
-as their context precedence.
-\begin{code}
-trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@(_:_:_))
- | isOp  =  trBracketIf (opp <= ctxtp)
-                        $ intercalate (trId opn) $ map (trterm trid opp) ts
- where
-   prcs@(opp,isOp,_) = prc nm
-\end{code}
-
-Rendering an ``infix-like'' ternary operator.
-For now the most significant is the conditional ($\cond\_$)
-\begin{code}
-trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) [p,b,q])
- | isMix3  =  trBracketIf (opp <= ctxtp)
-                        (trterm trid opp p
-                         ++ trId lhd ++ trterm trid 0 b ++ trId rhd
-                         ++ trterm trid opp q)
- where
-   lhd = jId "lhd" ; rhd = jId "rhd"
-   prcs@(opp,_,isMix3) = prc nm
-\end{code}
-
-In all other cases we simply use classical function application notation
-$f(e_1,e_2,\dots,e_n)$.
-\begin{code}
-trterm trid _ (Cons tk _ n ts)
-  =  trId n ++ trcontainer trid ( "(", ",", ")" ) ts
-\end{code}
+\subsubsection{Rendering Binders and Substitution}
 
 Binders and substitution are straightforward:
 \begin{code}
@@ -334,12 +269,16 @@ trterm trid p (Sub tk t sub)
   | otherwise   =  "("++trterm trid 0 t++")" ++ trsub trid p sub
 \end{code}
 
+\subsubsection{Rendering Closure}
+
 A closure expects the identifier to be of the form leftbracket\_rightbracket
 \begin{code}
 trterm trid p (Cls n t)
   =  nicesym lbr ++ trterm trid 0 t ++ nicesym rbr
   where (lbr,rbr) = splitClosureId n
 \end{code}
+
+\subsubsection{Rendering Iterated Constructions}
 
 For an iterated construct with listings-variable list of length $n$,
 we have three cases:
@@ -371,6 +310,59 @@ trterm trid _ (Iter tk _ na _ ni lvs@(_:_:_))
 trterm trid _ (Iter tk _ na _ ni lvs)
   =  trid na ++ "{" ++ trid ni ++ "(" ++ seplist "," (trlvar trid) lvs ++ ")}"
 \end{code}
+
+\subsubsection{Rendering Constructions}
+
+Rendering an ``infix-like'' ternary operator.
+For now the most significant is the conditional ($\cond\_$)
+\begin{code}
+trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) [p,b,q])
+ | nm == "cond"  =  trBracketIf (opp <= ctxtp)
+                        (trterm trid opp p
+                         ++ trid lhd 
+                         ++ trterm trid 0 b 
+                         ++ trid rhd
+                         ++ trterm trid opp q)
+ where
+   lhd = jId "lhd" ; rhd = jId "rhd"
+   prcs@(opp,fixity) = opkind nm
+   isMix3 = fixity == MixFix
+\end{code}
+
+Rendering an infix operator with exactly two arguments.
+We ensure that sub-terms are rendered with the infix operator precedence
+as their context precedence.
+\begin{code}
+trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@[t1,t2])
+ | isOp  =  (trterm trid opp t1
+             ++ " " ++ trId opn ++ " "
+             ++ trterm trid opp t2)
+ where
+   prcs@(opp,fixity) = opkind nm
+   isOp = fixity /= NotInfix
+\end{code}
+
+Rendering an infix operator with two or more arguments.
+We ensure that sub-terms are rendered with the infix operator precedence
+as their context precedence.
+\begin{code}
+trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@(_:_:_))
+ | isOp  =  trBracketIf (opp <= ctxtp)
+                        $ intercalate (trId opn) $ map (trterm trid opp) ts
+ where
+   prcs@(opp,fixity) = opkind nm
+   isOp = fixity /= NotInfix
+\end{code}
+
+
+In all other cases we simply use classical function application notation
+$f(e_1,e_2,\dots,e_n)$.
+\begin{code}
+trterm trid _ (Cons tk _ n ts)
+  =  trId n ++ trcontainer trid ( "(", ",", ")" ) ts
+\end{code}
+
+\subsubsection{Term Rendering Helpers}
 
 
 General way to render a named, bracketed and separated ``container''.

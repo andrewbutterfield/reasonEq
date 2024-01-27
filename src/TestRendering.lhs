@@ -245,14 +245,6 @@ trterm trid p (Var tk v)           =  trVar v
 trterm trid p (Typ t)              =  trType t
 \end{code}
 
-A \texttt{Cons}-node with one subterm
-may need special handling:
-a marked focus term needs highlighting:
-\begin{code}
-trterm trid ctxtp (Cons tk _ s [t])
- | s == focusMark   =  highlightFocus $ trterm trid ctxtp t
-\end{code}
-
 \subsubsection{Rendering Binders and Substitution}
 
 Binders and substitution are straightforward:
@@ -311,6 +303,20 @@ trterm trid _ (Iter tk _ na _ ni lvs)
 
 \subsubsection{Rendering Constructions}
 
+A \texttt{Cons}-node with one subterm
+may need special handling
+a marked focus term needs highlighting:
+\begin{code}
+trterm trid ctxtp (Cons tk _ s [t])
+ | s == focusMark  =  highlightFocus $ trterm trid ctxtp t
+ | s == jId "not"  =  trid s ++ trterm trid 99 t
+ | s == jId "neg"  =  trunary s t
+ where  
+  trunary s t
+    | isAtomic t  =  '(':(trid s)++trterm trid 0 t++")"
+    | otherwise   =  trid s ++ trterm trid 99 t
+\end{code}
+
 Rendering an ``infix-like'' ternary operator.
 For now the most significant is the conditional ($\cond\_$)
 \begin{code}
@@ -341,13 +347,46 @@ trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@[t1,t2])
    isOp = fixity /= NotInfix
 \end{code}
 
+Rendering a left-infix operator when the first sub-term uses the same operator
+$$op(\seqof{op(es)}\cat fs) = op(es\cat fs)$$
+\begin{code}
+trterm trid ctxtp (Cons tk sub opn@(Identifier nm _) 
+                  (Cons _ _ opn' ts':ts))
+ | isLFix && opn == opn'  =  trterm trid ctxtp $ Cons tk sub opn (ts'++ts)
+ where
+   prcs@(opp,fixity) = opkind nm
+   isLFix = fixity == LAssoc
+\end{code}
+
+Rendering a right-infix operator when the last sub-term uses the same operator
+$$op(es \cat \seqof{op(fs)}) = op(es\cat fs)$$
+\begin{code}
+trterm trid ctxtp (Cons tk sub opn@(Identifier nm _) ts@(_:_:_))
+ | isRFix
+   = case tE of
+       (Cons _ _ opn' ts') | opn == opn'  
+          ->  trterm trid ctxtp $ Cons tk sub opn (tsI++ts')
+       _  ->  trBracketIf (opp <= ctxtp)
+                  $ intercalate (trId opn) 
+                  $ map (trterm trid opp) ts
+ where
+   prcs@(opp,fixity)  =  opkind nm
+   isRFix             =  fixity == RAssoc
+   (tsI,tE)           =  splitAtEnd ts
+   splitAtEnd [x,y] = ([x],y)
+   splitAtEnd (x:xs) 
+     =  let (xs',y) = splitAtEnd xs
+        in (x:xs',y)
+\end{code}
+
 Rendering an infix operator with two or more arguments.
 We ensure that sub-terms are rendered with the infix operator precedence
 as their context precedence.
 \begin{code}
 trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@(_:_:_))
  | isOp  =  trBracketIf (opp <= ctxtp)
-                        $ intercalate (trId opn) $ map (trterm trid opp) ts
+                        $ intercalate (trId opn) 
+                        $ map (trterm trid opp) ts
  where
    prcs@(opp,fixity) = opkind nm
    isOp = fixity /= NotInfix

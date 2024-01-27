@@ -154,6 +154,8 @@ theSymbolList
   , ("and", SymForm "/\\"  "\x2227"), ("or", SymForm "\\/"  "\x2228")
   , ("imp", SymForm "==>"  "\x27f9"), ("eqv", SymForm "=="  "\x2261")
 
+  , ("neg", SymForm "-" "-")
+
   , ("forall", SymForm "forall" "\x2200"), ("exists", SymForm "exists" "\x2203")
 
   , ("emptyset", SymForm "{}"  "\x00d8"), ("in", SymForm "in"  "\x2208")

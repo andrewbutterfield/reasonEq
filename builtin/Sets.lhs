@@ -77,7 +77,7 @@ i_in = jId "in"     ; inIntro      = mkConsIntro i_in  $ mbr_t  elemt
 i_U = jId "union"   ; unionIntro   = mkConsIntro i_U   $ setf_2 elemt
 i_I = jId "intsct"  ; intsctIntro  = mkConsIntro i_I   $ setf_2 elemt
 i_D = jId "\\"      ; setdiffIntro = mkConsIntro i_D   $ setf_2 elemt
-i_SS = jId "subset" ; subsetIntro  = mkConsIntro i_SS  $ subs_t elemt
+i_SS = jId "subseteq" ; subsetIntro  = mkConsIntro i_SS  $ subs_t elemt
 i_crd = jId "#"     ; cardIntro    = mkConsIntro i_crd $ card_t elemt
 \end{code}
 

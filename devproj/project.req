@@ -9,28 +9,9 @@ BEGIN THEORIES
 THNAMES = ["And","AndOrInvert","Arithmetic","Equality","Equiv","Exists","ForAll","Implies","Not","Or","Sets","UClose","UTPBase","XYZ"]
 SDAG = [[("XYZ",["UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"]),("UTPBase",["UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("UClose",["Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Exists",["ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Arithmetic",["Implies","Equiv","Equality"]),("ForAll",["Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Sets",["Implies","Equiv"]),("Equality",["Implies","Equiv"])],[("Implies",["AndOrInvert","And","Or","Not","Equiv"])],[("AndOrInvert",["And","Or","Not","Equiv"])],[("And",["Or","Not","Equiv"])],[("Or",["Not","Equiv"])],[("Not",["Equiv"])],[("Equiv",[])]]
 END THEORIES
-CURRTHEORY = Arithmetic
+CURRTHEORY = Equiv
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("Arithmetic","*_-_distr")
-BEGIN LIVE-PROOF
-TH-NAME: Arithmetic
-CJ-NAME: *_-_distr
-CONJ = ASN (C (TP 1) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "-" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],C (TG (Id "Z" 0)) True (Id "-" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]]],([],fromList []))
-SIDE = ([],fromList [])
-STRAT red-All
-BEGIN SEQZIP
-TERMZIP = (C (TG (Id "Z" 0)) True (Id "-" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],[Cons' (TP 1) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "f" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "neg" 0) [V T (VR (Id "g" 0,VE,WS))]]]] []])
-BEGIN SEQUENT'
-SIDECOND = ([],fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.*_-_distr", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K (TP 1) (VB True)}
-END SEQUENT'
-END SEQZIP
-FPATH: [2]
-BEGIN LIST STEPS
-(UseLaw (ByMatch MEL) "-_alt_def" (BD (fromList [((Id "e" 0,VE),BV (VR (Id "f" 0,VE,WS))),((Id "f" 0,VE),BV (VR (Id "g" 0,VE,WS)))],fromList [],fromList [])) [1,2],ASN (C (TP 1) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "-" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],C (TG (Id "Z" 0)) True (Id "-" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]]],([],fromList [])))
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

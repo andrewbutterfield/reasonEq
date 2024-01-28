@@ -14,10 +14,10 @@ module
   , _alpha, _beta, _theta, _iota, _mu, _pi
   , _epsilon, _tau, _sigma, _Sigma, _omega, _lambda, _Lambda
   , _top, _bot, _sqcap, _sqcup, _sqsubseteq, _sqsupseteq
-  , _skip, _lhd, _rhd, _while
+  , _skip, _lif, _rif, _while
   , _true , _false , _not, _and, _or, _imp, _eqv
   , _forall, _exists
-  , _emptyset, _cup, _cap, _setminus
+  , _powerset, _emptyset, _union, _intsct, _setminus
   , _in, _subseteq, _supseteq, _varnothing
   , _neq, _notin, _nexists, _nsubseteq
   , _langle, _rangle
@@ -146,8 +146,12 @@ theSymbolList
   , ("top", SymForm "T"  "\x22a4"), ("bot", SymForm "_|_"  "\x22a5")
   , ("sqcap", SymForm "|~|"  "\x2293"), ("sqcup", SymForm "|_|"  "\x2294")
   , ("sqsubseteq", SymForm "|=" "\x2291"), ("sqsupseteq", SymForm "=|" "\x2292")
+
+  , ("lif", SymForm "<|"  "\x25c1"), ("rif", SymForm "|>"  "\x25b7")
+
+  , ("refines", SymForm "=|" "\x2292")
   , ("skip", SymForm "II" "II")
-  , ("lhd", SymForm "<|"  "\x25c1"), ("rhd", SymForm "|>"  "\x25b7")
+  , ("lif", SymForm "<|"  "\x25c1"), ("rif", SymForm "|>"  "\x25b7")
   , ("while", SymForm "*" "\x229b")
 
   , ("not", SymForm "~"  "\x00ac")
@@ -158,8 +162,11 @@ theSymbolList
 
   , ("forall", SymForm "forall" "\x2200"), ("exists", SymForm "exists" "\x2203")
 
-  , ("emptyset", SymForm "{}"  "\x00d8"), ("in", SymForm "in"  "\x2208")
   , ("cup", SymForm "U"  "\x222a"), ("cap", SymForm "I"  "\x2229")
+
+  , ("powerset", SymForm "P" "\x2119")
+  , ("emptyset", SymForm "{}"  "\x00d8"), ("in", SymForm "in"  "\x2208")
+  , ("union", SymForm "U"  "\x222a"), ("intsct", SymForm "I"  "\x2229")
   , ("subseteq", SymForm "subset" "\x2286"), ("supseteq", SymForm "supset" "\x2287")
   , ("setminus", SymForm "\\"  "\x2216"), ("varnothing", SymForm "()" "\x2205")
 
@@ -202,7 +209,7 @@ _top = nicesym "top" ; _bot = nicesym "bot"
 _sqcap = nicesym "sqcap" ; _sqcup = nicesym "sqcup"
 _sqsubseteq = nicesym "sqsubseteq" ; _sqsupseteq = nicesym "sqsupseteq"
 _skip = nicesym "skip"
-_lhd = nicesym "lhd" ; _rhd = nicesym "rhd"
+_lif = nicesym "lif" ; _rif = nicesym "rif"
 _while = nicesym "while"
 
 _true = nicesym "true" ; _false = nicesym "false"
@@ -211,8 +218,11 @@ _imp = nicesym "imp" ; _eqv = nicesym "eqv"
 
 _forall = nicesym "forall" ; _exists = nicesym "exists"
 
-_emptyset = nicesym "emptyset" ; _in = nicesym "in"
 _cup = nicesym "cup" ; _cap = nicesym "cap"
+
+_powerset = nicesym "powerset"
+_emptyset = nicesym "emptyset" ; _in = nicesym "in"
+_union = nicesym "union" ; _intsct = nicesym "intsct"
 _subseteq = nicesym "subseteq" ; _supseteq = nicesym "supseteq"
 _setminus = nicesym "setminus" ; _varnothing = nicesym "varnothing"
 
@@ -612,8 +622,8 @@ niceSyms
    , ("_sqcup", _sqcup)
    , ("_sqsubseteq", _sqsubseteq)
    , ("_sqsupseteq", _sqsupseteq)
-   , ("_lhd",_lhd)
-   , ("_rhd",_rhd)
+   , ("_lif",_lif)
+   , ("_rif",_rif)
    , ("_true", _true)
    , ("_false", _false)
    , ("_not", _not)

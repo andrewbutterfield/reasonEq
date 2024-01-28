@@ -1,0 +1,20 @@
+( "cond_idem"
+, ASN 
+    ( C (TP 1) 
+        True 
+        (Id "eqv" 0) 
+        [ C (TP 1) 
+            True 
+            (Id "cond" 0) 
+            [ V (TP 1) (VR (Id "P" 0,VP,WS))
+            , V (TP 1) (VR (Id "b" 0,VP,WB))
+            , V (TP 1) (VR (Id "P" 0,VP,WS))
+            ]
+        , V (TP 1) (VR (Id "P" 0,VP,WS))
+        ]
+    , ( []
+      , fromList []
+      )
+    )
+)
+

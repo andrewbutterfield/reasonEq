@@ -71,6 +71,7 @@ valueType (Boolean _) = int
 \subsection{Sets}
 
 \begin{code}
-power t    = TypeCons (jId "P") [t]
+powerset   = GivenType $ jId "P"
+power t    = TypeCons (jId "powerset") [t]
 \end{code}
 

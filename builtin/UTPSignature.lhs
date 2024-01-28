@@ -76,7 +76,7 @@ r = fromJust $ pVar 1 $ Vbl (fromJust $ ident "R") PredV Static
 $$ P \sqsupseteq Q $$
 \begin{code}
 refines :: Term -> Term -> Term
-i_refines    =  jId "sqsupseteq"
+i_refines    =  jId "refines"
 refines p q  =  PCons False i_refines [p, q]
 \end{code}
 

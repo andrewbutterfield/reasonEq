@@ -87,7 +87,7 @@ $$
 $$\par\vspace{-8pt}
 \begin{code}
 refinesIntro = mkConsIntro i_refines boolf_2
-(axRefsDef,alRefsDef) = bookdef ("sqsupseteq" -.- "def") "defd1.5p34"
+(axRefsDef,alRefsDef) = bookdef ("refines" -.- "def") "defd1.5p34"
                          (refines p q === univ (p ==> q))
                          scTrue
 \end{code}
@@ -106,7 +106,7 @@ $$
 $$\par\vspace{-8pt}
 \begin{code}
 (cjRefsOrDistr,alRefsOrDistr)
-  = bookdef ("sqsupseteq" -.- "lor" -.- "distr") "assrt1.5p35"
+  = bookdef ("refines" -.- "lor" -.- "distr") "assrt1.5p35"
             ( (p \/ q) `refines` r
               ===
               (p `refines` r) /\ (q `refines` r))
@@ -122,7 +122,7 @@ $$
 $$\par\vspace{-8pt}
 \begin{code}
 (cjRefsTrans,alRefsTrans)
-  = bookdef ("sqsupseteq" -.- "trans") "assrt1.5p36a"
+  = bookdef ("refines" -.- "trans") "assrt1.5p36a"
             ( (p `refines` q) /\ (q `refines` r)
               ==>
               (p `refines` r) )

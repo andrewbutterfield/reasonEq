@@ -122,13 +122,17 @@ trgvar trid (LstVar lv)  =  trlvar trid lv
 
 \begin{code}
 trType :: Type -> String
-trType ArbType            =  _tau
-trType (TypeVar i)        =  trId i
-trType (TypeCons i ts)     =  trId i ++ "(" ++ trTypes ts ++ ")"
+trType ArbType           =  _tau
+trType (TypeVar i)       =  trId i
+trType (TypeCons i [t])  =  trId i ++ " " ++ trType t 
+trType (TypeCons i ts)   =  trId i ++ "(" ++ trTypes ts ++ ")"
 trType (AlgType i itss)  =  "ADT"
-trType (FunType ta tr)    =  "("++ trType ta ++ spaced _fun ++ trType tr ++ ")"
-trType (GivenType (Identifier i _))
-  -- hack - should be done in nicesymbols
+-- fun-types are right-associative
+trType (FunType ft@(FunType _ _) tr)   
+  =  "(" ++ trType ft ++ ")" ++ spaced _fun ++ trType tr
+trType (FunType ta tr)   =  trType ta ++ spaced _fun ++ trType tr
+trType (GivenType (Identifier i _)) 
+  -- hack - should be done in Symbols
   | i == "B"  =  "\x1d539"
   | i == "N"  =  "\x2115"
   | i == "Z"  =  "\x2124"
@@ -189,7 +193,7 @@ precTable
  = M.fromList
     [ ( ";"       , (1,LAssoc))
     , ( ":="      , (1,LAssoc))
-    , ( "sqsupseteq" , (1,LAssoc))
+    , ( "refines" , (1,LAssoc))
     , ( "vdash"   , (2,LAssoc))
     , ( "eqv"     , (3,LAssoc))
     , ( "sqcap"   , (4,LAssoc))
@@ -202,8 +206,7 @@ precTable
     , ( "*"       , (9,LAssoc))
     , ( "div"     , (9,NotAssoc))
     , ( "mod"     , (9,NotAssoc))
---    , ( "while"   , (4,LAssoc)) 
-    , ( "star"    , (4,LAssoc)) 
+    , ( "while"   , (4,LAssoc)) 
     ]
 opkind :: String -> OpKind
 opkind n
@@ -323,12 +326,12 @@ For now the most significant is the conditional ($\cond\_$)
 trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) [p,b,q])
  | nm == "cond"  =  trBracketIf (opp <= ctxtp)
                         (trterm trid opp p
-                         ++ trid lhd 
+                         ++ trid lif 
                          ++ trterm trid 0 b 
-                         ++ trid rhd
+                         ++ trid rif
                          ++ trterm trid opp q)
  where
-   lhd = jId "lhd" ; rhd = jId "rhd"
+   lif = jId "lif" ; rif = jId "rif"
    prcs@(opp,fixity) = opkind nm
    isMix3 = fixity == MixFix
 \end{code}

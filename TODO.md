@@ -2,12 +2,12 @@
 
 ## Urgent/Now
 
-Need to fix parentheses/precedence in testrendering !!!
-
 Time to add type-inference!
-
 Done but not yet ready to be hooked in.
+
 Adding in Arithmetic and Set theories to test out the need for typechecking.
+
+We should treat `=` like `≡` in pattern matching.
 
 Problem matching `e` against `*(e,f)`. 
 An expression variable should match a given-typed cons.

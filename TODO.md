@@ -7,6 +7,25 @@ Done but not yet ready to be hooked in.
 
 Adding in Arithmetic and Set theories to test out the need for typechecking.
 
+We have a problem - we need to to offer `x` for `?x`
+```
+Matches:
+1 : “set_=_def” (∀ ?x • ∈(?x,∪(S,Ø)) ≡ ∈(?x,S))  ⊤ ⟹ ⊤ ≡lhs
+⊢
+∪(S,Ø) = S    ⊤
+proof: a1
+Choose term to replace ?x
+   1. false
+   2. true
+   3. ∪(S,Ø) = S
+   4. ∪(S,Ø)
+   5. S
+   6. Ø
+Select by number: 
+```
+
+Potential area of difficulty - associativity laws.
+
 We should treat `=` like `≡` in pattern matching.
 
 ## Issues

@@ -13,6 +13,7 @@ module Arithmetic (
 , i_mul, mul
 , i_div, div
 , i_mod, imod
+, zero, one
 , arithmeticAxioms, arithmeticName, arithmeticTheory
 ) where
 

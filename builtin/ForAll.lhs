@@ -1,4 +1,4 @@
-\section{Universal Quantification (For-All)}
+\chapter{Universal Quantification (For-All)}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2018
 
@@ -39,7 +39,7 @@ import StdTypeSignature
 
 
 \newpage
-\subsection{Introduction}
+\section{Introduction}
 
 
 Here we present a hard-coded implementation of
@@ -57,14 +57,14 @@ $$
 \AXPREDGS
 $$
 
-\subsection{Predicate Infrastructure}
+\section{Predicate Infrastructure}
 
 We need to build some infrastructure here.
 This consists of the predicate variables $P$, $Q$ and $R$,
 expression variable $e$,
 and a useful collection of generic binder variables: $x,y,\lst x,\lst y$.
 
-\subsubsection{Predicate and Expression Variables}
+\subsection{Predicate and Expression Variables}
 
 \begin{code}
 vP = Vbl (fromJust $ ident "P") PredV Static
@@ -81,7 +81,7 @@ f = fromJust $ eVar ArbType vf
 \end{code}
 
 
-\subsubsection{Generic Variables}
+\subsection{Generic Variables}
 
 \begin{code}
 vx = Vbl (fromJust $ ident "x") ObsV Static ; x = StdVar vx
@@ -93,7 +93,7 @@ vz = Vbl (fromJust $ ident "z") ObsV Static ; z = StdVar vz
 lvzs = LVbl vz [] [] ; zs = LstVar lvzs
 \end{code}
 
-\subsubsection{Substitutions}
+\subsection{Substitutions}
 
 \begin{code}
 mksub p lvlvs = Sub pred1 p $ fromJust $ substn [] lvlvs
@@ -104,7 +104,7 @@ efsyzs = [(lvys,lves),(lvzs,lvfs)]
 \end{code}
 
 \newpage
-\subsection{Predicate Axioms}
+\section{Predicate Axioms}
 
 $$
   \begin{array}{lll}
@@ -209,7 +209,7 @@ forallAxioms
       ]
 \end{code}
 
-\subsection{Predicate Conjectures}
+\section{Predicate Conjectures}
 
 $$
   \begin{array}{lll}
@@ -246,7 +246,7 @@ forallConjs
 \end{code}
 
 
-\subsection{The Predicate Theory}
+\section{The Predicate Theory}
 
 \begin{code}
 forallName :: String

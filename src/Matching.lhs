@@ -197,8 +197,9 @@ $$
    \texttt{tMatch Var}
 $$
 \begin{code}
-tMatch' vts bind cbvs pbvs tC (Var tkP vP)
-  | tkP == termtype tC  =  tvMatch vts bind cbvs pbvs tC tkP vP
+tMatch' vts bind cbvs pbvs tC (Var ttP vP)
+  | ttP == termtype tC  =  tvMatch vts bind cbvs pbvs tC ttP vP
+  | termtype tC `isSubTypeOf` ttP  =  tvMatch vts bind cbvs pbvs tC ttP vP
 \end{code}
 
 
@@ -220,9 +221,9 @@ $$
 $$
 Here $ts_X = \langle t_{X_1}, t_{X_2}, \dots t_{X_n} \rangle$.
 \begin{code}
-tMatch' vts bind cbvs pbvs (Cons tkC sbC nC tsC) (Cons tkP sbP nP tsP)
- | tkC == tkP && sbC == sbP
-   =  do bind0 <- consBind vts bind cbvs pbvs tkC nC nP
+tMatch' vts bind cbvs pbvs (Cons ttC sbC nC tsC) (Cons ttP sbP nP tsP)
+ | ttC == ttP && sbC == sbP
+   =  do bind0 <- consBind vts bind cbvs pbvs ttC nC nP
          -- tsMatch vts bind0 cbvs pbvs tsC tsP
          tsMatch vts bind cbvs pbvs tsC tsP -- don't match
 \end{code}
@@ -250,16 +251,16 @@ $$
   \quad\texttt{tMatch Single-Iter}
 $$
 \begin{code}
-tMatch' vts bind cbvs pbvs (Iter tkC saC naC siC niC lvsC) (Cons tkP sbP nP tsP)
-  | tkC == tkP && niC == nP && siC == sbP
-    =  do bind0 <- consBind vts bind cbvs pbvs tkC niC nP
+tMatch' vts bind cbvs pbvs (Iter ttC saC naC siC niC lvsC) (Cons ttP sbP nP tsP)
+  | ttC == ttP && niC == nP && siC == sbP
+    =  do bind0 <- consBind vts bind cbvs pbvs ttC niC nP
           -- ignore above Cons bind for now
-          bind1 <- consBind vts bind cbvs pbvs tkC naC itop
+          bind1 <- consBind vts bind cbvs pbvs ttC naC itop
           -- tsMatch vts bind0 cbvs pbvs tsC tsP
           iterVarsMatch bind1 tsP lvsC  
   where
     iterVarsMatch bind [] [] = return bind
-    iterVarsMatch bind (Var tkP vP:tsP) (lvC:lvsC)
+    iterVarsMatch bind (Var ttP vP:tsP) (lvC:lvsC)
       = do bind' <- bindVarToLVar vP lvC bind
            iterVarsMatch bind' tsP lvsC
     iterVarsMatch _ _ _ = fail "Single-Iter: non-Var term or length mismatch"
@@ -344,8 +345,8 @@ $$
    \texttt{tMatch Binding}
 $$
 \begin{code}
-tMatch' vts bind cbvs pbvs (Bnd tkC nC vsC tC) (Bnd tkP nP vsP tP)
-  | tkP == tkC && nC == nP
+tMatch' vts bind cbvs pbvs (Bnd ttC nC vsC tC) (Bnd ttP nP vsP tP)
+  | ttP == ttC && nC == nP
     =  do let cbvs' = vsC `addBoundVarSet` cbvs
           let pbvs' = vsP `addBoundVarSet` pbvs
           bindT  <-  tMatch vts bind cbvs' pbvs' tC tP
@@ -373,7 +374,7 @@ $$
    \texttt{tMatch Binding0}
 $$
 \begin{code}
-tMatch' vts bind cbvs pbvs tC (Bnd tkP nP vsP tP)
+tMatch' vts bind cbvs pbvs tC (Bnd ttP nP vsP tP)
   | all (gVarIsUnknownLVar vts) vlP
     =  do bind' <- bindLVarsToEmpty bind $ listVarsOf vlP
           let pbvs' = vsP `addBoundVarSet` pbvs
@@ -400,8 +401,8 @@ $$
    \texttt{tMatch Lambda}
 $$
 \begin{code}
-tMatch' vts bind cbvs pbvs (Lam tkC nC vlC tC) (Lam tkP nP vlP tP)
-  | tkP == tkC && nC == nP
+tMatch' vts bind cbvs pbvs (Lam ttC nC vlC tC) (Lam ttP nP vlP tP)
+  | ttP == ttC && nC == nP
     =  do let cbvs' = vlC `addBoundVarList` cbvs
           let pbvs' = vlP `addBoundVarList` pbvs
           bindT  <-  tMatch vts bind cbvs' pbvs' tC tP
@@ -424,7 +425,7 @@ $$
    \texttt{tMatch Lambda0}
 $$
 \begin{code}
-tMatch' vts bind cbvs pbvs tC (Lam tkP nP vlP tP)
+tMatch' vts bind cbvs pbvs tC (Lam ttP nP vlP tP)
   | all (gVarIsUnknownLVar vts) vlP
     =  do bind' <- bindLVarsToEmpty bind $ listVarsOf vlP
           let pbvs' = vlP `addBoundVarList` pbvs
@@ -474,8 +475,8 @@ $$
    \texttt{tMatch Subst}
 $$
 \begin{code}
-tMatch' vts bind cbvs pbvs (Sub tkC tC subC) (Sub tkP tP subP)
-  | tkP == tkC
+tMatch' vts bind cbvs pbvs (Sub ttC tC subC) (Sub ttP tP subP)
+  | ttP == ttC
     =  do bindT  <-  tMatch vts bind cbvs pbvs tC tP
           sMatch vts bindT cbvs pbvs subC subP
 \end{code}
@@ -498,13 +499,13 @@ $$
    \texttt{tMatch Iter-Self}
 $$
 \begin{code}
-tMatch' vts bind cbvs pbvs (Iter tkC saC naC siC niC lvsC)
-                           (Iter tkP saP naP siP niP lvsP)
-  | tkP == tkC && naC == naP && niC == niP
+tMatch' vts bind cbvs pbvs (Iter ttC saC naC siC niC lvsC)
+                           (Iter ttP saP naP siP niP lvsP)
+  | ttP == ttC && naC == naP && niC == niP
                && saC == saP && siC == siP
                && length lvsP == length lvsC
-               =  do bind0 <- consBind vts bind  cbvs pbvs tkC naC naP
-                     bind1 <- consBind vts bind0 cbvs pbvs tkC niC niP
+               =  do bind0 <- consBind vts bind  cbvs pbvs ttC naC naP
+                     bind1 <- consBind vts bind0 cbvs pbvs ttC niC niP
                      -- iibind bind1 $ zip lvsP lvsC
                      iibind bind $ zip lvsP lvsC -- no cons just now
   | otherwise  =  fail "tMatch: incompatible Iter."
@@ -530,11 +531,11 @@ $$
    \texttt{tMatch Iter-Single}
 $$
 \begin{code}
-tMatch' vts bind cbvs pbvs tC@(Cons tkC siC niC tsC)
-                           tP@(Iter tkP saP naP siP niP lvsP)
-  | tkP == tkC && niC == niP && siC == siP
-               = do bind0 <- consBind vts bind  cbvs pbvs tkC naP naP
-                    bind1 <- consBind vts bind0 cbvs pbvs tkC niC niP
+tMatch' vts bind cbvs pbvs tC@(Cons ttC siC niC tsC)
+                           tP@(Iter ttP saP naP siP niP lvsP)
+  | ttP == ttC && niC == niP && siC == siP
+               = do bind0 <- consBind vts bind  cbvs pbvs ttC naP naP
+                    bind1 <- consBind vts bind0 cbvs pbvs ttC niC niP
                     -- iterLVarsMatch bind1 lvsP tsC
                     iterLVarsMatch bind lvsP tsC -- no cons for now
   where
@@ -612,11 +613,11 @@ then each ${t_C}_j$ will produce a list of length $\#lvs_P$,
 and the transpose of this list will provide the "striped" bindings.
 
 \begin{code}
-tMatch' vts bind cbvs pbvs tC@(Cons tkC saC naC tsC)
-                           tP@(Iter tkP saP naP siP niP lvsP)
-  | tkP == tkC && naC == naP && saC == saP
-               = do bind0 <- consBind vts bind  cbvs pbvs tkC naC naP
-                    bind1 <- consBind vts bind0 cbvs pbvs tkC niP niP
+tMatch' vts bind cbvs pbvs tC@(Cons ttC saC naC tsC)
+                           tP@(Iter ttP saP naP siP niP lvsP)
+  | ttP == ttC && naC == naP && saC == saP
+               = do bind0 <- consBind vts bind  cbvs pbvs ttC naC naP
+                    bind1 <- consBind vts bind0 cbvs pbvs ttC niP niP
                     termLists <- sequence $ map (itMatch len lvsP) tsC
                     let bindLists = transpose termLists
                     -- itBind bind1 lvsP bindLists
@@ -624,8 +625,8 @@ tMatch' vts bind cbvs pbvs tC@(Cons tkC saC naC tsC)
   | otherwise
      = fail $ unlines
          [ "tMatch': General Cons not compatible with Iter."
-         , "tkP  = " ++ show tkP
-         , "tkC  = " ++ show tkC
+         , "ttP  = " ++ show ttP
+         , "ttC  = " ++ show ttC
          , "naP  = " ++ show naP
          , "naC  = " ++ show naC
          , "saP  = " ++ show saP
@@ -638,11 +639,11 @@ tMatch' vts bind cbvs pbvs tC@(Cons tkC saC naC tsC)
     len = length lvsP
 
     itMatch :: (MonadPlus mp, MonadFail mp) => Int -> [ListVar] -> Term -> mp [LVarOrTerm]
-    itMatch len lvsP (Cons tkC siC niC tisC)
-      | tkC == tkP && siC == siP && niC == niP && length tisC == len
+    itMatch len lvsP (Cons ttC siC niC tisC)
+      | ttC == ttP && siC == siP && niC == niP && length tisC == len
         =  return $ map Right tisC
-    itMatch len lvsP (Iter tkC saC naC siC nic lvsC)
-      | tkC == tkP && naC == naP && saC == saP &&
+    itMatch len lvsP (Iter ttC saC naC siC nic lvsC)
+      | ttC == ttP && naC == naP && saC == saP &&
         siC == siP && nic == niP && length lvsC == len
         =  return $ map Left lvsC
     itMatch len lvsP tiC = fail "iterate expansion term does not match"
@@ -677,15 +678,15 @@ tMatch' vts bind cbvs pbvs tC@(Cons tkC saC naC tsC)
 % $$
 % This does not cater for a partial expansion!
 % \begin{code}
-% tMatch' vts bind cbvs pbvs tC@(Cons tkC saC naC tsC)
-%                               (Iter tkP saP naP siP niP lvsP)
-%   | tkP == tkC && naC == naP && saC == saP && all isNiP tsC
+% tMatch' vts bind cbvs pbvs tC@(Cons ttC saC naC tsC)
+%                               (Iter ttP saP naP siP niP lvsP)
+%   | ttP == ttC && naC == naP && saC == saP && all isNiP tsC
 %                = ibind bind $ zip lvsP $ transpose $ map unNiP tsC
 %   | otherwise
 %      = fail $ unlines
 %          [ "tMatch: full Cons not compatible with Iter."
-%          , "tkP  = " ++ show tkP
-%          , "tkC  = " ++ show tkC
+%          , "ttP  = " ++ show ttP
+%          , "ttC  = " ++ show ttC
 %          , "naP  = " ++ show naP
 %          , "naC  = " ++ show naC
 %          , "niP  = " ++ show niP
@@ -722,10 +723,10 @@ tMatch' _ _ _ _ tC tP
 
 Binding a constructor name to itself:
 \begin{code}
-consBind vts bind cbvs pbvs tkC nC nP
+consBind vts bind cbvs pbvs ttC nC nP
   = vMatch vts bind cbvs pbvs vC vP
   where
-    vClass = classFromType tkC
+    vClass = classFromType ttC
     vC = Vbl nC vClass Static
     vP = Vbl nP vClass Static
 \end{code}
@@ -767,7 +768,7 @@ tvMatch :: (Monad m, MonadFail m)
 First, if the candidate is a variable
 we do variable-on-variable matching:
 \begin{code}
-tvMatch vts bind cbvs pbvs (Var tkC vC) tkP vP
+tvMatch vts bind cbvs pbvs (Var ttC vC) ttP vP
   = vMatch vts bind cbvs pbvs vC vP
 \end{code}
 
@@ -775,7 +776,7 @@ Otherwise we check if the pattern is
 bound, known, or arbitrary,
 and act accordingly.
 \begin{code}
-tvMatch vts bind cbvs pvbs tC tkP vP@(Vbl _ _ vt)
+tvMatch vts bind cbvs pvbs tC ttP vP@(Vbl _ _ vt)
  | vt == Textual              =  fail "tvMatch: var-variable cannot match term."
  | StdVar vP `S.member` pvbs
      =  fail $ unlines
@@ -783,7 +784,7 @@ tvMatch vts bind cbvs pvbs tC tkP vP@(Vbl _ _ vt)
           , "pvbs = " ++ show pvbs
           , "vP   = " ++ show vP
           ]
- | vPmr /= UnknownVar         =  tkvMatch vts bind tC vPmr tkP vP
+ | vPmr /= UnknownVar         =  tkvMatch vts bind tC vPmr ttP vP
 \end{code}
 \subsection{Arbitrary Pattern Variable}
 $$
@@ -797,7 +798,7 @@ $$
    \texttt{tvMatch Arbitrary}
 $$
 \begin{code}
---tvMatch vts bind cbvs pvbs tC tkP vP@(Vbl _ vw _)
+--tvMatch vts bind cbvs pvbs tC ttP vP@(Vbl _ vw _)
  | otherwise                  =  bindVarToTerm vP tC bind
  where
    vPmr = lookupVarTables vts vP
@@ -845,7 +846,7 @@ $$
 $$
 \begin{code}
 -- know vP is not in pbvs, but is in vts, known as whatP
-tkvMatch vts bind tC@(Var _ vC) whatP tkP vP
+tkvMatch vts bind tC@(Var _ vC) whatP ttP vP
  | vC == vP                                    =  bindVarToVar vP vP bind
  | isKnownConst whatP && tC == vmrConst whatP  =  bindVarToVar vP vC bind
 \end{code}
@@ -883,10 +884,10 @@ $$
 $$
 \begin{code}
 -- know vP is not in pbvs, but is in vts, known as whatP
-tkvMatch vts bind tC whatP tkP vP
+tkvMatch vts bind tC whatP ttP vP
  | isKnownConst whatP && tC == vmrConst whatP  =  bindVarToTerm vP tC bind
- | isEType tkP && isKnownVar whatP
-   && vmrType whatP == tkP                     =  bindVarToTerm vP tC bind
+ | isEType ttP && isKnownVar whatP
+   && vmrType whatP == ttP                     =  bindVarToTerm vP tC bind
 tkvMatch _ _ _ _ _ _ = fail "tkvMatch: candidate not this known variable."
 \end{code}
 

@@ -180,11 +180,13 @@ axMulCancel = ( "*" -.- "cancel",
 
 $$
   \begin{array}{lll}
-     e - 0 = e  && \QNAME{$*$-r-unit}
+     e - 0 = e  && \QNAME{$-$-r-unit}
+  \\ e - e = 0  && \QNAME{$-$-zero}
   \end{array}
 $$\par\vspace{-4pt}
 \begin{code}
 axSubRUnit = ( "-" -.- "r" -.- "unit", (e `sub` zero) `isEqualTo` e )
+axSubZero = ( "-" -.- "zero", (e `sub` e) `isEqualTo` zero )
 \end{code}
 
 \subsection{Laws of Negation}
@@ -198,7 +200,7 @@ $$\par\vspace{-4pt}
 \begin{code}
 axNegDef = ( "neg" -.- "def"
            , neg e `isEqualTo` (zero `sub` e) )
-axNegZero = ( "neg" -.- "zero"
+cjNegZero = ( "neg" -.- "zero"
             , neg zero `isEqualTo` zero )
 \end{code}
 
@@ -242,7 +244,9 @@ $$
    e * (f + g) = e * f + e * g && \QNAME{$*$-$+$-distr}
 \\ e + (-e) = 0  && \QNAME{$+$-inv}
 \\ e - f = e + (-f) && \QNAME{$-$-alt-def}
+\\ (-e) * f = -(e * f) && \QNAME{neg-$*$-distr}
 \\ (e * f) \Div f = e && \QNAME{$*$-$\Div$-same}
+\\ (-e) \Div f = -(e \Div f) && \QNAME{neg-$\Div$-distr}
 \\ (e * f) \Mod f = 0 && \QNAME{$*$-$\Mod$-same}
 \end{array}
 $$\par\vspace{-4pt}
@@ -256,10 +260,18 @@ axAddInv = ( "+" -.- "inv"
            ,   (e `add` (neg e) `isEqualTo` zero ) )
 axSubAltDef = ( "-" -.- "alt" -.- "def"
            ,   ((e `sub` f) `isEqualTo` (e `add` (neg f)) ) )
+axNegMulDistr = ( "neg" -.- "*" -.- "distr"
+                ,   ( (neg e) `mul` f )
+                   `isEqualTo` 
+                   neg (e `mul` f ) )
 axMulDivSame = ( "*" -.- "div" -.- "same"
                ,   ( ((e `mul` f) `idiv` f)
                    `isEqualTo` 
                    e ) )
+axNegDivDistr = ( "neg" -.- "div" -.- "distr"
+                ,   ( (neg e) `idiv` f )
+                   `isEqualTo` 
+                   neg (e `idiv` f ) )
 axMulModSame = ( "*" -.- "mod" -.- "same"
                ,   ( ((e `mul` f) `imod` f)
                    `isEqualTo` 
@@ -272,11 +284,12 @@ We collect these together:
 arithmeticAxioms :: [Law]
 arithmeticAxioms
   = map (labelAsAxiom . mkNmdAsn . addSCtrue)
-      [ axNegDef, axNegZero 
+      [ axNegDef
       , axAddLUnit, axAddRUnit, axAddSymm, axAddAssoc, axAddCancel 
+      , axSubRUnit, axSubZero
       , axMulLUnit, axMulRUnit, axMulLZero, axMulRZero
-      , axMulSymm, axMulAssoc, axMulCancel 
-      , axDivRUnit, axDivLZero, axDivSelf
+      , axMulSymm, axMulAssoc, axMulCancel, axNegMulDistr
+      , axDivRUnit, axDivLZero, axDivSelf, axNegDivDistr
       , axMulAddDistr, axAddInv, axSubAltDef, axMulDivSame, axMulModSame
       ]
 
@@ -302,7 +315,9 @@ cjMulSubDistr = ( "*" -.- "-" -.- "distr"
 arithmeticConjectures :: [NmdAssertion]
 arithmeticConjectures
   = map (mkNmdAsn . addSCtrue) 
-     [ cjMulSubDistr ]
+     [ cjMulSubDistr
+     , cjNegZero
+     ]
 \end{code}
 
 \section{The Arithmetic Theory}

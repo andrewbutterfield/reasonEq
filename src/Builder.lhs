@@ -161,12 +161,12 @@ Some tests:
 condForm = [PredSyn,ExprSyn,PredSyn]
 i_cond = fromJust $ ident "cond"
 i_P = fromJust $ ident "P" ; v_P = PredVar i_P Static
-p = fromJust $ pVar 1 v_P
+p = fromJust $ pVar ArbType v_P
 i_Q = fromJust $ ident "Q" ; v_Q = PredVar i_Q Static
-q = fromJust $ pVar 1 v_Q
+q = fromJust $ pVar ArbType v_Q
 i_c = fromJust $ ident "c" ; v_c = PreExpr i_c
 c = fromJust $ eVar ArbType v_c
-mkCond ts = simpleFormTerm condForm (Pred 1) True i_cond ts
+mkCond ts = simpleFormTerm condForm (Pred ArbType) True i_cond ts
 
 simpleFormTermTests
  = testGroup "Builder.simpleFormTerm (P <| c |> Q)"

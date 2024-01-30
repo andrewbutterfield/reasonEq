@@ -63,8 +63,8 @@ $$P \qquad Q$$
 \begin{code}
 -- underlying variable
 vp = Vbl (fromJust $ ident "P") PredV Static
-p = fromJust $ pVar 1 vp
-q = fromJust $ pVar 1 $ Vbl (fromJust $ ident "Q") PredV Static
+p = fromJust $ pVar ArbType vp
+q = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "Q") PredV Static
 \end{code}
 
 

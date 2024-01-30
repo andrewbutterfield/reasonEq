@@ -39,7 +39,7 @@ boolf_3 = FunType bool boolf_2
 \subsection{Predicate Function Types}
 
 \begin{code}
-pred1 = Pred 1
+pred1 = Pred ArbType
 i_t = jId "t"
 tvar = TypeVar i_t
 i_tn n = jId ("t"++show n)

@@ -61,14 +61,14 @@ $$P \qquad Q$$
 \begin{code}
 -- underlying variable
 vp = Vbl (fromJust $ ident "P") PredV Static
-p = fromJust $ pVar 1 vp
-q = fromJust $ pVar 1 $ Vbl (fromJust $ ident "Q") PredV Static
-r = fromJust $ pVar 1 $ Vbl (fromJust $ ident "R") PredV Static
+p = fromJust $ pVar ArbType vp
+q = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "Q") PredV Static
+r = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "R") PredV Static
 
-b  = fromJust $ pVar 1 $ Vbl (fromJust $ ident "b") PredV Before
-b' = fromJust $ pVar 1 $ Vbl (fromJust $ ident "b") PredV After
-c  = fromJust $ pVar 1 $ Vbl (fromJust $ ident "c") PredV Before
-c' = fromJust $ pVar 1 $ Vbl (fromJust $ ident "c") PredV After
+b  = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "b") PredV Before
+b' = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "b") PredV After
+c  = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "c") PredV Before
+c' = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "c") PredV After
 
 \end{code}
 

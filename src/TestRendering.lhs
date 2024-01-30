@@ -222,7 +222,7 @@ we mark the focus and un-zip,
 and ensure that the term renderer checks for a marked term.
 \begin{code}
 markfocus :: Term -> Term
-markfocus t = Cons (Pred 1) True focusMark [t]
+markfocus t = Cons (Pred ArbType) True focusMark [t]
 
 focusMark = fromJust $ ident "__focus__"
 

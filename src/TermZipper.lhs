@@ -232,7 +232,7 @@ dig (n:ns) tz =  dig ns $ snd $ downTZ n tz
 
 Now some useful test pieces:
 \begin{code}
-p1 = Pred 1
+p1 = Pred ArbType
 tZ = "Z"
 int = GivenType $ fromJust $ ident tZ
 kint = int

@@ -157,7 +157,7 @@ to $P_1 \equiv \dots \equiv P_n$,
 in this, and the next strategy.
 \begin{code}
 bEqv _ _ [p]  =  p
-bEqv sn n ps = Cons (Pred 1) sn n ps
+bEqv sn n ps = Cons (Pred ArbType) sn n ps
 \end{code}
 
 

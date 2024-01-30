@@ -64,9 +64,9 @@ This consists of the predicate variables $P$, $Q$ and $R$.
 \subsubsection{Propositional Variables}
 
 \begin{code}
-p = fromJust $ pVar 1 $ Vbl (fromJust $ ident "P") PredV Static
-q = fromJust $ pVar 1 $ Vbl (fromJust $ ident "Q") PredV Static
-r = fromJust $ pVar 1 $ Vbl (fromJust $ ident "R") PredV Static
+p = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "P") PredV Static
+q = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "Q") PredV Static
+r = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "R") PredV Static
 \end{code}
 
 
@@ -122,7 +122,7 @@ listwiseVarBinPred tk na ni vvs lvlvs
     mkiter (lv1,lv2)  =  Iter tk True na True ni [lv1,lv2]
 
 
-p1 = Pred 1
+p1 = Pred ArbType
 i_asg        =  assignmentId
 p_asg        =  jVar p1 $ Vbl i_asg PredV Textual
 

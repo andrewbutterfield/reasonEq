@@ -67,8 +67,8 @@ We give these fixed names, and below we show the symbolic forms we use here.
 
 \begin{code}
 theTrue, theFalse :: Term
-theTrue  = Val (Pred 1) $ Boolean True
-theFalse = Val (Pred 1) $ Boolean False
+theTrue  = Val (Pred ArbType) $ Boolean True
+theFalse = Val (Pred ArbType) $ Boolean False
 
 theEqv, theNot, theOr, theAnd, theImp :: Identifier
 theEqv = jId "eqv"

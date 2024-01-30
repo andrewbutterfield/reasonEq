@@ -72,9 +72,9 @@ and a useful collection of generic binder variables: $x,y,\lst x,\lst y$.
 \begin{code}
 vP = Vbl (fromJust $ ident "P") PredV Static
 gvP = StdVar vP
-p = fromJust $ pVar 1 vP
-q = fromJust $ pVar 1 $ Vbl (fromJust $ ident "Q") PredV Static
-r = fromJust $ pVar 1 $ Vbl (fromJust $ ident "R") PredV Static
+p = fromJust $ pVar ArbType vP
+q = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "Q") PredV Static
+r = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "R") PredV Static
 ve = Vbl (fromJust $ ident "e") ExprV Static
 lves = LVbl ve [] []
 gves = LstVar lves

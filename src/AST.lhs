@@ -76,8 +76,6 @@ Types are a restrictive form of terms,
 whose main reason here is to prevent large numbers of spurious matches
 occurring with expressions.
 
-The ordering of data-constructors here is important,
-as type-matching relies on it.
 \begin{code}
 data Type -- most general types first
  = T  -- arbitrary type
@@ -86,16 +84,22 @@ data Type -- most general types first
  | TA Identifier [(Identifier,[Type])] -- algebraic data type
  | TF Type Type -- function type
  | TG Identifier -- given type
- | TP Int    -- predicate, with order
+ | TP Type    -- predicate argument type
  deriving (Eq, Ord, Show, Read)
+\end{code}
+The ordering of data-constructors here is important,
+as type-matching relies on it.
 
+The construction \h{TP t}  is essentially the same as \h{TF t (TG bool).}
+
+\begin{code}
 pattern ArbType = T
 pattern TypeVar i  = TV i
 pattern TypeCons i ts = TC i ts
 pattern AlgType i fs = TA i fs
 pattern FunType tf ta = TF tf ta
 pattern GivenType i = TG i
-pattern Pred i = TP i
+pattern Pred t = TP t
 
 isPType (TP _) = True; isPType _ = False
 isEType = not . isPType
@@ -103,35 +107,37 @@ isEType = not . isPType
 
 \subsection{Sub-Typing}
 
-No surprises here.
+Note the contravariance of the first argument of \h{TF}, 
+and the argument of \h{TP}  ()
 \begin{code}
 isSubTypeOf :: Type -> Type -> Bool
-_ `isSubTypeOf` ArbType  =  True
-ArbType `isSubTypeOf` _  =  False
-_ `isSubTypeOf` (TypeVar _)  =  True
-(TypeCons i1 ts1) `isSubTypeOf` (TypeCons i2 ts2)
- | i1 == i2  =  ts1 `areSubTypesOf` ts2
-(AlgType i1 fs1) `isSubTypeOf` (AlgType i2 fs2)
- | i1 == i2  =  fs1 `areSubFieldsOf` fs2
-(FunType tf1 ta1) `isSubTypeOf` (FunType tf2 ta2) -- tf contravariant !
-   = tf2 `isSubTypeOf` tf1 && ta1 `isSubTypeOf` ta2
-(GivenType i1) `isSubTypeOf` (GivenType i2)  = i1 == i2
-_ `isSubTypeOf` _ = False
+isSubTypeOf = isSTOf
+(TC i1 ts1) `isSTOf`(TC i2 ts2) |i1==i2 = ts1 `areSTOf` ts2
+(TA i1 fs1) `isSTOf`(TA i2 fs2) |i1==i2 = fs1 `areSFOf` fs2
+(TG i1)     `isSTOf` (TG i2)            = i1 == i2
+(TF tf1 ta1)`isSTOf`(TF tf2 ta2)        = tf2 `isSTOf` tf1 && ta1 `isSTOf` ta2
+(TP tf1)    `isSTOf` (TP tf2)           = tf2 `isSTOf` tf1 
+_ `isSTOf` T       =  True
+T `isSTOf` _       =  False
+_ `isSTOf` (TV _)  =  True
+_ `isSTOf` _       = False
+\end{code}
+
+
+\begin{code}
+areSTOf :: [Type] -> [Type] -> Bool -- are SubTypesOf
+[]       `areSTOf` []        =  True
+(t1:ts1) `areSTOf` (t2:ts2)  =  t1 `isSTOf` t2 && ts1 `areSTOf` ts2
+_        `areSTOf` _         =  False
 \end{code}
 
 \begin{code}
-areSubTypesOf :: [Type] -> [Type] -> Bool
-[]       `areSubTypesOf` []        =  True
-(t1:ts1) `areSubTypesOf` (t2:ts2)  =  t1 `isSubTypeOf` t2 && ts1 `areSubTypesOf` ts2
-_        `areSubTypesOf` _         =  False
-\end{code}
-
-\begin{code}
-areSubFieldsOf :: [(Identifier,[Type])] -> [(Identifier,[Type])] -> Bool
-[] `areSubFieldsOf` []  =  True
-((i1,ts1):fs1) `areSubFieldsOf` ((i2,ts2):fs2)
- | i1 == i2             =  ts1 `areSubTypesOf` ts2 && fs1 `areSubFieldsOf` fs2
-_ `areSubFieldsOf` _    =  False
+-- areSubFieldsOf
+areSFOf :: [(Identifier,[Type])] -> [(Identifier,[Type])] -> Bool
+[] `areSFOf` []  =  True
+((i1,ts1):fs1) `areSFOf` ((i2,ts2):fs2)
+ | i1 == i2             =  ts1 `areSTOf` ts2 && fs1 `areSFOf` fs2
+_ `areSFOf` _    =  False
 \end{code}
 
 \newpage
@@ -368,7 +374,7 @@ and sub-expressions.
 This is much simplified by having a unified notion of ``term''.
 
 We associate a type with every term,
-with $n$th-order predicates having type \h{Pred n}.
+with boolean-valued predicates ($t \fun \Bool$) having type \h{TP $t$}.
 
 \newpage
 \subsection{Terms}
@@ -420,20 +426,20 @@ pattern Typ  typ                 =   ET typ
 
 Patterns for predicates:
 \begin{code}
-pattern PVal k                 =   K (Pred 1) k
-pattern PVar v                 <-  V (Pred 1) v
-pattern PCons sb n ts          =   C (Pred 1) sb n ts
-pattern PBind n vs tm          <-  B (Pred 1) n vs tm
-pattern PLam n vl tm           <-  L (Pred 1) n vl tm
-pattern PSub tm s              =   S (Pred 1) tm s
-pattern PIter sa na si ni lvs  =   I (Pred 1) sa na si ni lvs
+pattern PVal k                 =   K (TP T) k
+pattern PVar v                 <-  V (TP T) v
+pattern PCons sb n ts          =   C (TP T) sb n ts
+pattern PBind n vs tm          <-  B (TP T) n vs tm
+pattern PLam n vl tm           <-  L (TP T) n vl tm
+pattern PSub tm s              =   S (TP T) tm s
+pattern PIter sa na si ni lvs  =   I (TP T) sa na si ni lvs
 \end{code}
 
 \newpage
 Patterns for binary constructions:
 \begin{code}
-pattern E2 t sb n t1 t2  = C t sb n [t1,t2]
-pattern P2   sb n t1 t2  = C (Pred 1)     sb n [t1,t2]
+pattern E2 t sb n t1 t2  = C t     sb n [t1,t2]
+pattern P2 t sb n t1 t2  = C (TP t) sb n [t1,t2]
 \end{code}
 
 
@@ -446,7 +452,7 @@ var tp@(TP _) v |       isPredVar v  =  return $ V tp v
 var typ       v | not $ isPredVar v  =  return $ V typ v
 var _       _   =   fail "var: Type/VarClass mismatch"
 eVar t v = var t v
-pVar o v = var (TP o) v
+pVar t v = var (TP t) v
 \end{code}
 
 \begin{code}
@@ -465,7 +471,7 @@ bnd typ n vs tm
  | otherwise = fail "bnd: var.-set has mixed variables."
 
 eBnd typ n vs tm  =  bnd typ n vs tm
-pBnd     n vs tm  =  bnd (Pred 1)       n vs tm
+pBnd     n vs tm  =  bnd (TP T)       n vs tm
 \end{code}
 
 All variables in a lambda variable-list must have the same class.
@@ -476,7 +482,7 @@ lam typ n vl tm
  | otherwise = fail "lam: var.-list has mixed variables."
 
 eLam typ n vl tm  =  lam typ n vl tm
-pLam     n vl tm  =  lam (Pred 1)       n vl tm
+pLam     n vl tm  =  lam (TP T)       n vl tm
 \end{code}
 
 \begin{code}
@@ -509,7 +515,7 @@ termtype (Var typ v)                 =  typ
 termtype (Cons typ sb n ts)          =  typ
 termtype (Bnd typ n vl tm)           =  typ
 termtype (Lam typ n vs tm)           =  typ
-termtype (Cls i _)                   =  (Pred 1)
+termtype (Cls i _)                   =  (TP T)
 termtype (Sub typ tm s)              =  typ
 termtype (Iter typ sa na si ni lvs)  =  typ
 
@@ -527,7 +533,7 @@ isVar, isExpr, isPred, isAtomic :: Term -> Bool
 isVar (Var _ _) = True ; isVar _ = False
 isExpr t
   = case termtype t of 
-     (Pred _) -> False
+     (TP _) -> False
      _        -> True
 isPred = not . isExpr
 isAtomic (K _ _)  =  True
@@ -547,7 +553,7 @@ theGVar = StdVar . theVar
 Lifting a variable to a term:
 \begin{code}
 varAsTerm :: Variable -> Term
-varAsTerm v@(PredVar _ _)  =  V (Pred 1)     v
+varAsTerm v@(PredVar _ _)  =  V (TP T)     v
 varAsTerm v                =  V T v
 \end{code}
 
@@ -606,21 +612,21 @@ v_a' = PostVar   $ i_a
 v_b' = PostVar   $ i_b
 
 varConstructTests  = testGroup "AST.var,eVar,pVar"
- [ testCase "var (Pred 1) (Pred 1) (Ok)"
-   ( var (Pred 1) v_P  @?= Just (V (Pred 1) (PreCond i_P) ))
- , testCase "var ArbType (Pred 1) (Fail)"
+ [ testCase "var (TP T) (TP T) (Ok)"
+   ( var (TP T) v_P  @?= Just (V (TP T) (PreCond i_P) ))
+ , testCase "var ArbType (TP T) (Fail)"
    ( var ArbType v_P  @?= Nothing )
- , testCase "var (Pred 1) a (Fail)"
-   ( var (Pred 1) v_a  @?= Nothing )
+ , testCase "var (TP T) a (Fail)"
+   ( var (TP T) v_a  @?= Nothing )
  , testCase "var ArbType a (Ok)"
    ( var ArbType v_a
       @?= Just (V ArbType (PreVar i_a )) )
- , testCase "eVar tarb (Pred 1) (Fail)" ( eVar ArbType v_P  @?= Nothing )
+ , testCase "eVar tarb (TP T) (Fail)" ( eVar ArbType v_P  @?= Nothing )
  , testCase "eVar tarb a (Ok)"
    ( eVar ArbType v_a @?= Just (V ArbType (PreVar i_a ) ) )
- , testCase "pVar a (Fail)" ( pVar 1 v_a  @?= Nothing )
- , testCase "pVar (Pred 1) (Ok)"
-   ( pVar 1 v_P @?= Just (V (Pred 1) (PreCond i_P) ) )
+ , testCase "pVar a (Fail)" ( pVar T v_a  @?= Nothing )
+ , testCase "pVar (TP T) (Ok)"
+   ( pVar T v_P @?= Just (V (TP T) (PreCond i_P) ) )
  ]
 
 gv_a =  StdVar v_a
@@ -630,42 +636,42 @@ gv_a' = StdVar v_a'
 gv_b' = StdVar v_b'
 
 bindConstructTests  =  testGroup "AST.bnd"
- [ testCase "bnd (Pred 1) n {} t42 (Ok)"
-   ( bnd (Pred 1) n S.empty t42 @?= Just t42 )
- , testCase "bnd (Pred 1) n {a} t42 (Ok)"
-   ( bnd (Pred 1) n (S.fromList [gv_a]) t42
-     @?= Just (B (Pred 1) n (S.fromList [gv_a]) t42) )
- , testCase "bnd (Pred 1) n {a$} t42 (Ok)"
-   ( bnd (Pred 1) n (S.fromList [LstVar lv_a]) t42
-     @?= Just (B (Pred 1) n (S.fromList [LstVar lv_a]) t42) )
- , testCase "bnd (Pred 1) n {a,a$} t42 (Ok)"
-   ( bnd (Pred 1) n (S.fromList [gv_a,LstVar lv_a]) t42
-     @?= Just (B (Pred 1) n (S.fromList [gv_a,LstVar lv_a]) t42) )
- , testCase "bnd (Pred 1) n {a,e$} t42 (Fail)"
-   ( bnd (Pred 1) n (S.fromList [gv_a,LstVar lv_e]) t42 @?= Nothing )
- , testCase "bnd (Pred 1) n {e$,a} t42 (Fail)"
-   ( bnd (Pred 1) n (S.fromList [LstVar lv_e,gv_a]) t42 @?= Nothing )
- , testCase "bnd (Pred 1) n {a,b,e$} t42 (Fail)"
-   ( bnd (Pred 1) n (S.fromList [gv_a,gv_b,LstVar lv_e]) t42 @?= Nothing )
+ [ testCase "bnd (TP T) n {} t42 (Ok)"
+   ( bnd (TP T) n S.empty t42 @?= Just t42 )
+ , testCase "bnd (TP T) n {a} t42 (Ok)"
+   ( bnd (TP T) n (S.fromList [gv_a]) t42
+     @?= Just (B (TP T) n (S.fromList [gv_a]) t42) )
+ , testCase "bnd (TP T) n {a$} t42 (Ok)"
+   ( bnd (TP T) n (S.fromList [LstVar lv_a]) t42
+     @?= Just (B (TP T) n (S.fromList [LstVar lv_a]) t42) )
+ , testCase "bnd (TP T) n {a,a$} t42 (Ok)"
+   ( bnd (TP T) n (S.fromList [gv_a,LstVar lv_a]) t42
+     @?= Just (B (TP T) n (S.fromList [gv_a,LstVar lv_a]) t42) )
+ , testCase "bnd (TP T) n {a,e$} t42 (Fail)"
+   ( bnd (TP T) n (S.fromList [gv_a,LstVar lv_e]) t42 @?= Nothing )
+ , testCase "bnd (TP T) n {e$,a} t42 (Fail)"
+   ( bnd (TP T) n (S.fromList [LstVar lv_e,gv_a]) t42 @?= Nothing )
+ , testCase "bnd (TP T) n {a,b,e$} t42 (Fail)"
+   ( bnd (TP T) n (S.fromList [gv_a,gv_b,LstVar lv_e]) t42 @?= Nothing )
  ]
 
 lamConstructTests  =  testGroup "AST.lam"
- [ testCase "lam (Pred 1) n [] t42 (Ok)"
-   ( lam (Pred 1) n [] t42 @?= Just t42 )
- , testCase "lam (Pred 1) n [a] t42 (Ok)"
-   ( lam (Pred 1) n [gv_a] t42 @?= Just (L (Pred 1) n [gv_a] t42) )
- , testCase "lam (Pred 1) n [a$] t42 (Ok)"
-   ( lam (Pred 1) n [LstVar lv_a] t42
-     @?= Just (L (Pred 1) n [LstVar lv_a] t42) )
- , testCase "lam (Pred 1) n [a,a$] t42 (Ok)"
-   ( lam (Pred 1) n [gv_a,LstVar lv_a] t42
-     @?= Just (L (Pred 1) n [gv_a,LstVar lv_a] t42) )
- , testCase "lam (Pred 1) n [a,e$] t42 (Fail)"
-   ( lam (Pred 1) n [gv_a,LstVar lv_e] t42 @?= Nothing )
- , testCase "lam (Pred 1) n [e$,a] t42 (Fail)"
-   ( lam (Pred 1) n [LstVar lv_e,gv_a] t42 @?= Nothing )
- , testCase "lam (Pred 1) n [a,b,e$] t42 (Fail)"
-   ( lam (Pred 1) n [gv_a,gv_b,LstVar lv_e] t42 @?= Nothing )
+ [ testCase "lam (TP T) n [] t42 (Ok)"
+   ( lam (TP T) n [] t42 @?= Just t42 )
+ , testCase "lam (TP T) n [a] t42 (Ok)"
+   ( lam (TP T) n [gv_a] t42 @?= Just (L (TP T) n [gv_a] t42) )
+ , testCase "lam (TP T) n [a$] t42 (Ok)"
+   ( lam (TP T) n [LstVar lv_a] t42
+     @?= Just (L (TP T) n [LstVar lv_a] t42) )
+ , testCase "lam (TP T) n [a,a$] t42 (Ok)"
+   ( lam (TP T) n [gv_a,LstVar lv_a] t42
+     @?= Just (L (TP T) n [gv_a,LstVar lv_a] t42) )
+ , testCase "lam (TP T) n [a,e$] t42 (Fail)"
+   ( lam (TP T) n [gv_a,LstVar lv_e] t42 @?= Nothing )
+ , testCase "lam (TP T) n [e$,a] t42 (Fail)"
+   ( lam (TP T) n [LstVar lv_e,gv_a] t42 @?= Nothing )
+ , testCase "lam (TP T) n [a,b,e$] t42 (Fail)"
+   ( lam (TP T) n [gv_a,gv_b,LstVar lv_e] t42 @?= Nothing )
  ]
 
 termConstructTests  =  testGroup "Term Smart Constructors"
@@ -787,7 +793,7 @@ jBnd typ n vs tm  =  fromJust $ bnd typ n vs tm
 jLam typ n vl tm  =  fromJust $ lam typ n vl tm
 
 jeVar v = fromJust $ eVar ArbType v
-jpVar v = fromJust $ pVar 1 v
+jpVar v = fromJust $ pVar T v
 
 
 int_tst_AST :: [TF.Test]

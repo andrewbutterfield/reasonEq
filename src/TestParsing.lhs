@@ -310,9 +310,9 @@ keyQBody = "@"
 
 \begin{code}
 true = Vbl (fromJust $ ident "true") PredV Static
-trueP = fromJust $ pVar 1 true
+trueP = fromJust $ pVar ArbType true
 false = Vbl (fromJust $ ident "false") PredV Static
-falseP = fromJust $ pVar 1 false
+falseP = fromJust $ pVar ArbType false
 \end{code}
 
 \newpage
@@ -382,7 +382,7 @@ Handy specialisations:
 sExprParse :: (Monad m, MonadFail m) => String -> m (Term, [TToken])
 sExprParse = sTermParse ArbType . tlex
 sPredParse :: (Monad m, MonadFail m) => String -> m (Term, [TToken])
-sPredParse = sTermParse (Pred 1) . tlex
+sPredParse = sTermParse (Pred ArbType) . tlex
 \end{code}
 
 \subsection{Random test/prototype bits}

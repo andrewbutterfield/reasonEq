@@ -111,9 +111,9 @@ mkConsIntro i t = fromJust . addKnownVar (mkConsVar i t) t
 \subsection{Propositional Variables}
 
 \begin{code}
-p = fromJust $ pVar 1 $ Vbl (jId "P") PredV Static
-q = fromJust $ pVar 1 $ Vbl (jId "Q") PredV Static
-r = fromJust $ pVar 1 $ Vbl (jId "R") PredV Static
+p = fromJust $ pVar ArbType $ Vbl (jId "P") PredV Static
+q = fromJust $ pVar ArbType $ Vbl (jId "Q") PredV Static
+r = fromJust $ pVar ArbType $ Vbl (jId "R") PredV Static
 \end{code}
 
 \subsection{Propositional Types}
@@ -155,7 +155,7 @@ infix 4 /\ ; (/\) = mkAnd
 lnot = theNot ; mkNot p = PCons True lnot [p]
 
 equals = jId "="
-p1 = Pred 1
+p1 = Pred ArbType
 isEqualTo   e1  e2  = Cons p1 True           equals [ e1, e2]
 areEqualTo es1 es2  = Iter p1 True land True equals [es1,es2]
 \end{code}

@@ -934,10 +934,10 @@ that is then ``wrapped'' in different ways depending on where it is used.
 
 $$P \quad Q \quad R \quad S$$
 \begin{code}
-vP = Vbl (jId "P") PredV Static ; p = fromJust $ pVar 1 vP ; gP = StdVar vP
-vQ = Vbl (jId "Q") PredV Static ; q = fromJust $ pVar 1 vQ ; gQ = StdVar vQ
-vR = Vbl (jId "R") PredV Static ; r = fromJust $ pVar 1 vR ; gR = StdVar vR
-vS = Vbl (jId "S") PredV Static ; s = fromJust $ pVar 1 vS ; gS = StdVar vS
+vP = Vbl (jId "P") PredV Static ; p = fromJust $ pVar ArbType vP ; gP = StdVar vP
+vQ = Vbl (jId "Q") PredV Static ; q = fromJust $ pVar ArbType vQ ; gQ = StdVar vQ
+vR = Vbl (jId "R") PredV Static ; r = fromJust $ pVar ArbType vR ; gR = StdVar vR
+vS = Vbl (jId "S") PredV Static ; s = fromJust $ pVar ArbType vS ; gS = StdVar vS
 \end{code}
 For uniform side-conditions:
 \begin{code}
@@ -950,10 +950,10 @@ gq = StdVar $ Vbl (jId "Q") PredV Before
 
 $$ b \quad b' \qquad c  \quad c' $$
 \begin{code}
-vb  = Vbl (jId "b") PredV Before; b  = fromJust $ pVar 1 vb;  gb  = StdVar vb
-vb' = Vbl (jId "b") PredV After;  b' = fromJust $ pVar 1 vb'; gb' = StdVar vb'
-vc  = Vbl (jId "c") PredV Before; c  = fromJust $ pVar 1 vc;  gc  = StdVar vc
-vc' = Vbl (jId "c") PredV After;  c' = fromJust $ pVar 1 vc'; gc' = StdVar vc'
+vb  = Vbl (jId "b") PredV Before; b  = fromJust $ pVar ArbType vb;  gb  = StdVar vb
+vb' = Vbl (jId "b") PredV After;  b' = fromJust $ pVar ArbType vb'; gb' = StdVar vb'
+vc  = Vbl (jId "c") PredV Before; c  = fromJust $ pVar ArbType vc;  gc  = StdVar vc
+vc' = Vbl (jId "c") PredV After;  c' = fromJust $ pVar ArbType vc'; gc' = StdVar vc'
 \end{code}
 
 

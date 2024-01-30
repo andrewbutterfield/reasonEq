@@ -201,7 +201,7 @@ $$\par%\vspace{-8pt}
 \begin{code}
 mkAsg (Var _ x) e = Sub pred1 theAssignment $ jSubstn [(x,e)] []
 
-mkCond p b q = PCons True (fromJust $ ident "cond")[p, b, q]
+mkCond p b q = Cons arbpred True (fromJust $ ident "cond")[p, b, q]
 
 
 axXAsgDef = preddef ("X" -.- ":=" -.- "def")

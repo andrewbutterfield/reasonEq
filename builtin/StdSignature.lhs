@@ -123,39 +123,39 @@ r = fromJust $ pVar ArbType $ Vbl (jId "R") PredV Static
 
 Now synonyms for the `theX` terms.
 \begin{code}
-trueP  =  theTrue -- Val P $ Boolean True
-falseP =  theFalse -- Val P $ Boolean False
+trueP  =  theTrue -- Val arbpred $ Boolean True
+falseP =  theFalse -- Val arbpred $ Boolean False
 \end{code}
 
 \newpage
 \section{Propositional Operators}
 
 \begin{code}
-equiv = theEqv ; mkEquivs ps = PCons True equiv ps
+equiv = theEqv ; mkEquivs ps = Cons arbpred True equiv ps
 mkEquiv p q = mkEquivs [p,q]
 infix 1 === ; (===) = mkEquiv
 
-implies = theImp ; mkImplies p q = PCons True implies [p,q]
+implies = theImp ; mkImplies p q = Cons arbpred True implies [p,q]
 infixr 2 ==> ; (==>) = mkImplies
 
 lor = theOr
 mkOrs []   =  falseP
 mkOrs [p]  =  p
-mkOrs ps   =  PCons True lor ps
+mkOrs ps   =  Cons arbpred True lor ps
 mkOr p q   =  mkOrs [p,q]
 infix 3 \/ ; (\/) = mkOr
 
 land = theAnd
 mkAnds []   =  trueP
 mkAnds [p]  =  p
-mkAnds ps   =  PCons True land ps
+mkAnds ps   =  Cons arbpred True land ps
 mkAnd p q = mkAnds [p,q]
 infix 4 /\ ; (/\) = mkAnd
 
-lnot = theNot ; mkNot p = PCons True lnot [p]
+lnot = theNot ; mkNot p = Cons arbpred True lnot [p]
 
 equals = jId "="
-p1 = Pred ArbType
+p1 = arbpred
 isEqualTo   e1  e2  = Cons p1 True           equals [ e1, e2]
 areEqualTo es1 es2  = Iter p1 True land True equals [es1,es2]
 \end{code}

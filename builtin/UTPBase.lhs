@@ -624,9 +624,10 @@ $$
 $$ %\par\vspace{-8pt}
 \begin{code}
 skipIntro = mkConsIntro i_skip bool
-(axSkipDef,alSkipDef) = bookdef ("II" -.- "def") "Def2.3.2"
-                         ( skip  ===  PIter True land True equals [ lO', lO ] )
-                         scTrue
+(axSkipDef,alSkipDef) 
+  = bookdef ("II" -.- "def") "Def2.3.2"
+      ( skip  ===  Iter arbpred True land True equals [ lO', lO ] )
+      scTrue
 \end{code}
 
 \subsubsection{UTP Skip Laws}

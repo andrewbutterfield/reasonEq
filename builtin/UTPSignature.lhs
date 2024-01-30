@@ -77,7 +77,7 @@ $$ P \sqsupseteq Q $$
 \begin{code}
 refines :: Term -> Term -> Term
 i_refines    =  jId "refines"
-refines p q  =  PCons False i_refines [p, q]
+refines p q  =  Cons arbpred False i_refines [p, q]
 \end{code}
 
 \subsubsection{Conditionals}
@@ -85,7 +85,7 @@ $$ P \cond b Q $$
 \begin{code}
 cond :: Term -> Term -> Term -> Term
 i_cond       =  jId "cond"
-cond p b q   =  PCons True i_cond [p, b, q]
+cond p b q   =  Cons arbpred True i_cond [p, b, q]
 \end{code}
 
 \subsubsection{Sequential Composition}
@@ -93,7 +93,7 @@ $$ P \seq Q $$
 \begin{code}
 mkSeq :: Term -> Term -> Term
 i_seq        =  jId ";"
-mkSeq p q    =  PCons False i_seq [p, q]
+mkSeq p q    =  Cons arbpred False i_seq [p, q]
 \end{code}
 
 \subsubsection{While Loop}
@@ -101,7 +101,7 @@ $$ c \circledast P$$
 \begin{code}
 while :: Term -> Term -> Term
 i_while = jId "while"
-while c p = PCons False i_while [c, p]
+while c p = Cons arbpred False i_while [c, p]
 \end{code}
 
 \subsubsection{(Simultaneous) Assignement}
@@ -122,7 +122,7 @@ listwiseVarBinPred tk na ni vvs lvlvs
     mkiter (lv1,lv2)  =  Iter tk True na True ni [lv1,lv2]
 
 
-p1 = Pred ArbType
+p1 = arbpred
 i_asg        =  assignmentId
 p_asg        =  jVar p1 $ Vbl i_asg PredV Textual
 
@@ -151,7 +151,7 @@ $$ P \sqcap Q $$
 \begin{code}
 ndc :: Term -> Term -> Term
 i_ndc    =  jId "sqcap"
-ndc p q  =  PCons True i_ndc [p, q]
+ndc p q  =  Cons arbpred True i_ndc [p, q]
 \end{code}
 
 \subsubsection{Abort and Miracle}

@@ -19,7 +19,7 @@ module REPL (
   , putListOneLine
   , pickByNumber
   , selectPairings, pickPairing
-  , pickThing, pickThings, takeThings
+  , pickThing, pickOrProvideThing, pickThings, takeThings
   , getConfirmedObject
   )
 where
@@ -418,6 +418,26 @@ pickThing hdr showThing things
                  putStrLn ("Chosen "++showThing thing)
                  return (True,thing)
          else pickError "Bad choice!"
+\end{code}
+
+Pick one thing from a list, or accept a user-supplied string
+\begin{code}
+pickOrProvideThing :: String -> (a -> String) -> (String -> a) -> [a] 
+                   -> IO (Bool,a)
+pickOrProvideThing hdr showThing str2Thing things
+  = do putStrLn hdr
+       putStrLn $ numberList showThing things
+       response <- userPrompt "Select by number or provide string: "
+       let choice = readNat response
+       if choice == (-1)
+       then do putStrLn ("Chosen "++response)
+               return(True,str2Thing response)
+       else
+        if inRange (length things) choice
+          then do let thing = selectFrom things choice
+                  putStrLn ("Chosen "++showThing thing)
+                  return (True,thing)
+          else pickError "Bad choice!"
 \end{code}
 
 Pick zero or more things from a list.

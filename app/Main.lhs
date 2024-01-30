@@ -1174,7 +1174,9 @@ applyMatch args pstate@(reqs, liveProof)
   where
     vts = concat $ map thd3 $ mtchCtxts liveProof
 \end{code}
+
 \newpage
+
 Ask the user to specify a replacement term for each floating standard variable:
 \begin{code}
     fixFloatVars :: [(Variable,Term)] -- replacements so far
@@ -1186,13 +1188,21 @@ Ask the user to specify a replacement term for each floating standard variable:
       = do putStrLn ("-forced choice: "++trTerm 0 term)
            fixFloatVars ((v,term):vts) gterms stdvars
     fixFloatVars vts gterms ((StdVar v):stdvars)
-      = do (chosen,term) <- pickThing ("Choose term to replace "++(trVar v))
-                                     (trTerm 0) gterms
+      = do (chosen,term) 
+             <- pickOrProvideThing 
+                  ("Choose term to replace "++(trVar v))
+                  (trTerm 0) str2Term gterms
            if chosen
             then do putStrLn ("-chosen term is "++trTerm 0 term)
                     fixFloatVars ((v,term):vts) gterms stdvars
             else return (False,vts)
+
+    str2Term s 
+      = case ident s of
+          Yes i -> jeVar $ StaticVar i
+          But msgs -> jeVar $ StaticVar $ jId "InvalidIdentifier"
 \end{code}
+
 Ask the user to specify a replacement variable-list/set
 for each floating list variable
 (We currently assume that each replacement variable can only be associated

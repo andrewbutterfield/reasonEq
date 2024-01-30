@@ -20,14 +20,15 @@ CONJ = ASN (C (TP 1) True (Id "=" 0) [C (TC (Id "powerset" 0) [TV (Id "t" 0)]) F
 SIDE = ([],fromList [])
 STRAT red-All
 BEGIN SEQZIP
-TERMZIP = (C (TP 1) True (Id "=" 0) [C (TC (Id "powerset" 0) [TV (Id "t" 0)]) False (Id "union" 0) [V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "S" 0,VE,WS)),V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "emptyset" 0,VO,WS))],V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "S" 0,VE,WS))],[])
+TERMZIP = (C (TF (TV (Id "t" 0)) (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))) False (Id "in" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),C (TC (Id "powerset" 0) [TV (Id "t" 0)]) False (Id "union" 0) [V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "S" 0,VE,WS)),V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "emptyset" 0,VO,WS))]],[Cons' (TP 1) True (Id "eqv" 0) [] [C (TF (TV (Id "t" 0)) (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))) False (Id "in" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "S" 0,VE,WS))]],Bnd' (TP 1) (Id "forall" 0) (fromList [GV (VR (Id "x" 0,VO,WS))])])
 BEGIN SEQUENT'
 SIDECOND = ([],fromList [])
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.union_r_unit", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K (TP 1) (VB True)}
 END SEQUENT'
 END SEQZIP
-FPATH: []
+FPATH: [1,1]
 BEGIN LIST STEPS
+(UseLaw (ByMatch MEL) "set_=_def" (BD (fromList [((Id "S1" 0,VE),BT (C (TC (Id "powerset" 0) [TV (Id "t" 0)]) False (Id "union" 0) [V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "S" 0,VE,WS)),V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "emptyset" 0,VO,WS))])),((Id "S2" 0,VE),BV (VR (Id "S" 0,VE,WS))),((Id "x" 0,VE),BV (VR (Id "x" 0,VO,WS)))],fromList [],fromList [])) [],ASN (C (TP 1) True (Id "=" 0) [C (TC (Id "powerset" 0) [TV (Id "t" 0)]) False (Id "union" 0) [V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "S" 0,VE,WS)),V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "emptyset" 0,VO,WS))],V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "S" 0,VE,WS))],([],fromList [])))
 END LIST STEPS
 END LIVE-PROOF
 END MAP LIVE-PROOFS

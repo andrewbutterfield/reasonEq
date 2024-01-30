@@ -100,12 +100,12 @@ scard s = Cons int False i_crd [s]
 \subsection{Set Constants and Variables}
 
 \begin{code}
-vS = Vbl (jId "S") ExprV Static
+vS = StaticVar (jId "S") 
 s = fromJust $ eVar sett vS
-vSn n = Vbl (jId ("S"++show n)) ExprV Static
+vSn n = StaticVar (jId ("S"++show n)) 
 sn n = fromJust $ eVar sett $ vSn n
 s1 = sn 1; s2 = sn 2; s3 = sn 3
-vx = Vbl (jId "x") ExprV Static; gvx = StdVar vx
+vx = StaticVar (jId "x"); gvx = StdVar vx
 x = fromJust $ eVar elemt vx
 \end{code}
 
@@ -181,7 +181,7 @@ axSubSetEqDef = ( "subseteq" -.- "def"
 \end{eqnarray*}
 \begin{code}
 axMofUnion = ( "mbr" -.- "union" -.- "def"
-             , ( (x `mbr` (s1 `sunion` s1))
+             , ( (x `mbr` (s1 `sunion` s2))
                  ===
                  ((x `mbr` s1) \/ (x `mbr` s2))
              , scTrue ) )

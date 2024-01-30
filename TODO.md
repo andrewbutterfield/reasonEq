@@ -7,22 +7,35 @@ Done but not yet ready to be hooked in.
 
 Adding in Arithmetic and Set theories to test out the need for typechecking.
 
-We have a problem - we need to to offer `x` for `?x`
+We have a problem - `∈(x,S)` needs to be a predicate.
 ```
-Matches:
-1 : “set_=_def” (∀ ?x • ∈(?x,∪(S,Ø)) ≡ ∈(?x,S))  ⊤ ⟹ ⊤ ≡lhs
-⊢
-∪(S,Ø) = S    ⊤
-proof: a1
-Choose term to replace ?x
-   1. false
-   2. true
-   3. ∪(S,Ø) = S
-   4. ∪(S,Ø)
-   5. S
-   6. Ø
-Select by number: 
+(⊢
+(∀ x • ∈(x,S) ∨ false ≡ ∈(x,S))    ⊤
+Focus = [1,1]
+proof: tm 1 or_unit
+@Match against `or_unit'[1] failed!
+try match failed
+
+∈(x,S) ∨ false :: P ∨ false
+
+lnm[parts]=or_unit[1]
+tP=P ∨ false ≡ P
+partsP=P ∨ false
+replP=P
+tC=∈(x,S) ∨ false
+scC=⊤
+---
+tMatch: incompatible termkinds!
+kC = TF (TV (Id "t" 0)) (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))
+kP = TP 1
 ```
+
+### Idea
+
+Rather than `P order` we have `P predtype` where `predtype` is defined for
+types of the form `type -> bool` as being `type`.
+
+So `P ptype` is the same as `E (ptype -> bool)`.
 
 Potential area of difficulty - associativity laws.
 

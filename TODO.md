@@ -14,26 +14,15 @@ We have a problem - `∈(x,S)` needs to be a predicate.
 Have a mkType function that does this.
 
 ```
-(⊢
-(∀ x • ∈(x,S) ∨ false ≡ ∈(x,S))    ⊤
-Focus = [1,1]
-proof: tm 1 or_unit
-@Match against `or_unit'[1] failed!
-try match failed
-
-∈(x,S) ∨ false :: P ∨ false
-
-lnm[parts]=or_unit[1]
-tP=P ∨ false ≡ P
-partsP=P ∨ false
-replP=P
-tC=∈(x,S) ∨ false
-scC=⊤
 ---
-tMatch: incompatible termkinds!
+tMatch: incompatible types!
 kC = TF (TV (Id "t" 0)) (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))
-kP = TP 1
+kP = TF T (TG (Id "B" 0))
+hit <enter> to continue
 ```
+We need the dual of T here because of contravariance!!!
+
+Need to add "everything" type - sub-type of all types.
 
 ### Idea
 

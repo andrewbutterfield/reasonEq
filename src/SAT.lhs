@@ -176,8 +176,8 @@ applyUnitPropagation  = foldl applyUnassigned
 And-Or Simplification
 
 \begin{code}
-true  = Val (Pred ArbType) (Boolean True)
-false = Val (Pred ArbType) (Boolean False)
+true  = Val arbpred (Boolean True)
+false = Val arbpred (Boolean False)
 
 simplifyFormula :: Term -> Term
 simplifyFormula t@(Cons a b (Identifier "and" _) [p,q]) 

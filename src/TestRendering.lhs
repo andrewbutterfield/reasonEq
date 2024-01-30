@@ -222,7 +222,7 @@ we mark the focus and un-zip,
 and ensure that the term renderer checks for a marked term.
 \begin{code}
 markfocus :: Term -> Term
-markfocus t = Cons (Pred ArbType) True focusMark [t]
+markfocus t = Cons arbpred True focusMark [t]
 
 focusMark = fromJust $ ident "__focus__"
 
@@ -255,7 +255,7 @@ Binders and substitution are straightforward:
 trterm trid p (Bnd tk n vs t)  =  trabs trid p tk n (S.toList vs) t
 trterm trid p (Lam tk n vl t)  =  trabs trid p tk n vl            t
 -- give assignment special treatment
-trterm trid p (Sub tk (PVar (PredVar (Identifier ":=" _) _)) sub)
+trterm trid p (Sub tk (Var _ (Vbl (Identifier ":=" _) _ _)) sub)
   =  trasg trid sub
 trterm trid p (Sub tk t sub)
   | isAtomic t  =       trterm trid p t      ++ trsub trid p sub

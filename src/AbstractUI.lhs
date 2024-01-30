@@ -998,7 +998,7 @@ cloneHypothesis i land liveProof
         Nothing -> fail ("No such hypothesis: "++show i)
         Just ((_,(Assertion hypt _)),_)
           -> do asn' <- mkAsn (exitTZ tz) (conjSC liveProof)
-                return ( focus_ (mkTZ $ PCons True land [hypt,currt],seq')
+                return ( focus_ (mkTZ $ Cons arbpred True land [hypt,currt],seq')
                        $ matches_ []
                        $ stepsSoFar__ ((CloneH i, asn'):)
                          liveProof )

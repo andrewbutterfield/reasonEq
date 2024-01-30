@@ -335,10 +335,10 @@ sTermParse tk (TId i vw:tts)
 sTermParse tk (TSym i:tts) = sIdParse tk i Static tts
 sTermParse tk (tt:tts)  = fail ("sTermParse: unexpected token: "++show tt)
 
-mkTrue (Pred _)   =  trueP
+mkTrue t | isPType t  =  trueP
 mkTrue _
   =  Val (GivenType (fromJust $ ident $ _mathbb "B")) $ Boolean True
-mkFalse (Pred _)  =  falseP
+mkFalse t | isPType t  =  falseP
 mkFalse _
   =  Val (GivenType (fromJust $ ident $ _mathbb "B")) $ Boolean False
 \end{code}
@@ -352,8 +352,9 @@ sIdParse tk id1 vw tts                =  return (mkVar tk id1 vw, tts)
 
 Making a variable term:
 \begin{code}
-mkVar tp@(Pred _) id1 vw   =  fromJust $ var tp $ Vbl id1 PredV vw
-mkVar tk id1 vw         =  fromJust $ var tk $ Vbl id1 ObsV vw
+mkVar tp id1 vw 
+  | isPType tp  =  fromJust $ var tp $ Vbl id1 PredV vw
+  | otherwise   =  fromJust $ var tp $ Vbl id1 ObsV  vw
 \end{code}
 
 Seen identifier and opening parenthesis.
@@ -382,7 +383,7 @@ Handy specialisations:
 sExprParse :: (Monad m, MonadFail m) => String -> m (Term, [TToken])
 sExprParse = sTermParse ArbType . tlex
 sPredParse :: (Monad m, MonadFail m) => String -> m (Term, [TToken])
-sPredParse = sTermParse (Pred ArbType) . tlex
+sPredParse = sTermParse arbpred . tlex
 \end{code}
 
 \subsection{Random test/prototype bits}

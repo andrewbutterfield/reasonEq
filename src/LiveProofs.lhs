@@ -970,7 +970,7 @@ makeEquivalence nm liveProof
   where
      -- hack - should refer to logicSig
      equiv = fromJust $ ident "equiv"
-     mkEquivs ps = PCons True equiv ps
+     mkEquivs ps = Cons arbpred True equiv ps
      p === q = mkEquivs [p,q]
      step0 = assnT $ conjecture liveProof
      step' = exitTZ $ fst $ focus liveProof

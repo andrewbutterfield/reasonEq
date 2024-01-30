@@ -91,21 +91,23 @@ addLawsClass (x:xs) au = addLawsClass (xs) (addLawClassifier (lawNamedAssn x) au
 
 
 addSimp :: String -> Term -> [(String, Direction)]
-addSimp nme (PCons sb (Identifier "equiv" 0) (p:q:[])) = do let sizeP = termSize p
-                                                            let sizeQ = termSize q
-                                                            if sizeP > sizeQ
-                                                              then [(nme, Leftwards)] 
-                                                            else if sizeP < sizeQ
-                                                              then [(nme, Rightwards)]
-                                                            else []
+addSimp nme (Cons _ sb (Identifier "equiv" 0) (p:q:[]))
+  = do  let sizeP = termSize p
+        let sizeQ = termSize q
+        if sizeP > sizeQ
+          then [(nme, Leftwards)] 
+        else if sizeP < sizeQ
+          then [(nme, Rightwards)]
+        else []
 addSimp nme _ = []
 
 addFold :: String -> Term -> [(String)]
-addFold nme (PCons sb (Identifier "equiv" 0) (p:q:[])) =  if isFold p
-                                                              then if checkQ q (getN p)
-                                                                      then [nme] 
-                                                                   else []
-                                                          else []
+addFold nme (Cons _ sb (Identifier "equiv" 0) (p:q:[])) 
+  =  if isFold p
+     then if checkQ q (getN p)
+          then [nme] 
+          else []
+     else []
 addFold nme _ = []
 
 isFold :: Term -> Bool

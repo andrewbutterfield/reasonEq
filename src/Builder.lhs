@@ -166,7 +166,7 @@ i_Q = fromJust $ ident "Q" ; v_Q = PredVar i_Q Static
 q = fromJust $ pVar ArbType v_Q
 i_c = fromJust $ ident "c" ; v_c = PreExpr i_c
 c = fromJust $ eVar ArbType v_c
-mkCond ts = simpleFormTerm condForm (Pred ArbType) True i_cond ts
+mkCond ts = simpleFormTerm condForm arbpred True i_cond ts
 
 simpleFormTermTests
  = testGroup "Builder.simpleFormTerm (P <| c |> Q)"
@@ -179,7 +179,7 @@ simpleFormTermTests
       ( mkCond [p,c]
         @?= Left (BuildFail [] (Just (TooShort 1))) )
     , testCase "Three correct terms"
-      ( mkCond [p,c,q] @?= Right (PCons True i_cond [p,c,q]) )
+      ( mkCond [p,c,q] @?= Right (Cons arbpred True i_cond [p,c,q]) )
     , testCase "Three terms, 1 incorrect"
       ( mkCond [p,q,p] @?= Left (BuildFail [BadItemKind 2 ExprSyn] Nothing) )
     , testCase "One (incorrect) term"

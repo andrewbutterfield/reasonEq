@@ -852,10 +852,10 @@ sub0 = subC subContext0
 iP = jId "P" ; vP = PreCond iP ; p = jpVar vP
 ie = jId "e" ; ve = PreExpr ie ; e = jeVar ve
 ix = jId "x" ; vx = PreVar ix  ; vx' = PostVar ix; vx1 = MidVar ix "1"
-iC = jId "C" ; c t = PCons True iC [t]
+iC = jId "C" ; c t = Cons arbpred True iC [t]
 e_for_x = jSubstn [(vx,e)] []
 tstDeep = testCase "substitute [e/x] in (P)=(P[e/x])"
-              ( sub0 e_for_x (c p) @?=  c (PSub p e_for_x) )
+              ( sub0 e_for_x (c p) @?=  c (Sub arbpred p e_for_x) )
 \end{code}
 
 \newpage

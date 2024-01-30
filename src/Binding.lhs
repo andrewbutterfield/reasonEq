@@ -115,12 +115,9 @@ validVarClassBinding _     _      =  False
 A similar predicate for binding to terms:
 \begin{code}
 validVarTermBinding :: VarClass -> Type -> Bool
-validVarTermBinding ObsV  (Pred _)  =  False
-validVarTermBinding ObsV  _         =  True
-validVarTermBinding ExprV (Pred _)  =  False
-validVarTermBinding ExprV _         =  True
-validVarTermBinding PredV (Pred _)  =  True
-validVarTermBinding PredV _         =  False
+validVarTermBinding ObsV  t  =  isEType t
+validVarTermBinding ExprV t  =  isEType t
+validVarTermBinding PredV t  =  isPType t
 \end{code}
 
 As far as temporality goes,

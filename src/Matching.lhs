@@ -153,15 +153,13 @@ Note that predicate-type $t$ is the same as expression-type $t\fun\Bool$.
 \begin{code}
 tMatch vts bind cbvs pbvs tC tP
  = let kC = termtype tC ; kP = termtype tP
-   in case  (kC, kP) of
-    (Pred _,Pred _)               ->  tMatch' vts bind cbvs pbvs tC tP
-    (typC, typP)
-      | typC `isSubTypeOf` typP  ->  tMatch' vts bind cbvs pbvs tC tP
-    _ -> fail $ unlines'
-          [ "tMatch: incompatible termkinds!"
-          , "kC = "++show kC
-          , "kP = "++show kP
-          ]
+   in if kC `isSubTypeOf` kP
+      then tMatch' vts bind cbvs pbvs tC tP
+      else fail $ unlines'
+            [ "tMatch: incompatible types!"
+            , "kC = "++show kC
+            , "kP = "++show kP
+            ]
 \end{code}
 
 Term-matching is defined inductively over the pattern type.

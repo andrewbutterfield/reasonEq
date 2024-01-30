@@ -6,10 +6,10 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module AST ( Type, bool
+module AST ( Type
+           , bool, arbpred
            , pattern ArbType,  pattern TypeVar, pattern TypeCons
            , pattern AlgType, pattern FunType, pattern GivenType
-           , pattern Pred
            , isPType, isEType
            , isSubTypeOf
            , Value, pattern Boolean, pattern Integer
@@ -27,9 +27,6 @@ module AST ( Type, bool
            , bnd, eBnd, pBnd
            , lam,  eLam,  pLam
            , binderClass
-           , pattern PVal, pattern PVar, pattern PCons
-           , pattern PBind, pattern PLam, pattern PSub, pattern PIter
-           , pattern E2, pattern P2
            , termtype, settype
            , isVar, isExpr, isPred, isAtomic
            , theVar, theGVar, varAsTerm, termAsVar
@@ -84,7 +81,6 @@ data Type -- most general types first
  | TA Identifier [(Identifier,[Type])] -- algebraic data type
  | TF Type Type -- function type
  | TG Identifier -- given type
- | TP Type    -- type must be of form  t -> bool
  deriving (Eq, Ord, Show, Read)
 \end{code}
 The ordering of data-constructors here is important,
@@ -98,21 +94,23 @@ pattern TypeCons i ts = TC i ts
 pattern AlgType i fs = TA i fs
 pattern FunType tf ta = TF tf ta
 pattern GivenType i = TG i
-pattern Pred t = TP t
 
-isPType (TP _) = True; isPType _ = False
+bool  = TG $ jId $ "B"
+arbpred = TF T bool
+
+-- isPtype t if t has shape  t1 -> t2 -> ... -> tn -> bool
+-- which is really t1 -> (t2 -> (... -> (tn -> bool)...))
+isPType (TF _ t@(TF _ _))  =  isPType t
+isPType (TF _ t)           =  t == bool
+isPType _                  = False
 isEType = not . isPType
 \end{code}
 
 \subsection{Sub-Typing}
 
-Note the contravariance of the first argument of \h{TF}, 
-and the argument of \h{TP}  ()
 \begin{code}
 isSubTypeOf :: Type -> Type -> Bool
 isSubTypeOf = isSTOf
-
-bool  = TG $ jId $ "B"
 
 _       `isSTOf` T        =  True
 T       `isSTOf` _        =  False
@@ -123,11 +121,6 @@ _       `isSTOf` (TV _)   =  True
 (TA i1 fs1) `isSTOf` (TA i2 fs2) | i1==i2 = fs1 `areSFOf` fs2
 
 (TF tf1 ta1) `isSTOf` (TF tf2 ta2)  =  tf2 `isSTOf` tf1 && ta1 `isSTOf` ta2
-(TP tf1)     `isSTOf` (TP tf2)      =  tf2 `isSTOf` tf1 
-
--- TP tf == TF t bool
-(TF tf1 ta1) `isSTOf` (TP tf2) | ta1==bool = tf2 `isSTOf` tf1 
-(TP tf1) `isSTOf` (TF tf2 ta2) | ta2==bool = tf2 `isSTOf` tf1 
 
 _ `isSTOf` _       = False
 \end{code}
@@ -381,9 +374,7 @@ there is little to differentiate the two approaches.
 The one exception is the ``zipper'' used to focus in on sub-predicates
 and sub-expressions.
 This is much simplified by having a unified notion of ``term''.
-
-We associate a type with every term,
-with boolean-valued predicates ($t \fun \Bool$) having type \h{TP $t$}.
+We identify predicates as terms whose type has the form $t \fun \Bool$.
 
 \newpage
 \subsection{Terms}
@@ -433,41 +424,23 @@ pattern Typ  typ                 =   ET typ
 \end{code}
 
 
-Patterns for predicates:
-\begin{code}
-pattern PVal k                 =   K (TP T) k
-pattern PVar v                 <-  V (TP T) v
-pattern PCons sb n ts          =   C (TP T) sb n ts
-pattern PBind n vs tm          <-  B (TP T) n vs tm
-pattern PLam n vl tm           <-  L (TP T) n vl tm
-pattern PSub tm s              =   S (TP T) tm s
-pattern PIter sa na si ni lvs  =   I (TP T) sa na si ni lvs
-\end{code}
-
-\newpage
-Patterns for binary constructions:
-\begin{code}
-pattern E2 t sb n t1 t2  = C t     sb n [t1,t2]
-pattern P2 t sb n t1 t2  = C (TP t) sb n [t1,t2]
-\end{code}
-
 
 Smart constructors for variables and binders.
 
 Variable must match term-class.
 \begin{code}
 var :: (Monad m, MonadFail m) => Type -> Variable -> m Term
-var tp@(TP _) v |       isPredVar v  =  return $ V tp v
-var typ       v | not $ isPredVar v  =  return $ V typ v
+var tp@(TF _ t) v | t == bool && isPredVar v  =  return $ V tp v
+var typ       v   | not $ isPredVar v         =  return $ V typ v
 var _       _   =   fail "var: Type/VarClass mismatch"
 eVar t v = var t v
-pVar t v = var (TP t) v
+pVar t v = var arbpred v
 \end{code}
 
 \begin{code}
 classFromType :: Type -> VarClass
-classFromType (TP _)  =  PredV
-classFromType _       =  ExprV
+classFromType (TF _ t) | t == bool  =  PredV
+classFromType _                     =  ExprV
 \end{code}
 
 
@@ -480,7 +453,7 @@ bnd typ n vs tm
  | otherwise = fail "bnd: var.-set has mixed variables."
 
 eBnd typ n vs tm  =  bnd typ n vs tm
-pBnd     n vs tm  =  bnd (TP T)       n vs tm
+pBnd     n vs tm  =  bnd arbpred       n vs tm
 \end{code}
 
 All variables in a lambda variable-list must have the same class.
@@ -491,7 +464,7 @@ lam typ n vl tm
  | otherwise = fail "lam: var.-list has mixed variables."
 
 eLam typ n vl tm  =  lam typ n vl tm
-pLam     n vl tm  =  lam (TP T)       n vl tm
+pLam     n vl tm  =  lam arbpred       n vl tm
 \end{code}
 
 \begin{code}
@@ -524,7 +497,7 @@ termtype (Var typ v)                 =  typ
 termtype (Cons typ sb n ts)          =  typ
 termtype (Bnd typ n vl tm)           =  typ
 termtype (Lam typ n vs tm)           =  typ
-termtype (Cls i _)                   =  (TP T)
+termtype (Cls i _)                   =  arbpred
 termtype (Sub typ tm s)              =  typ
 termtype (Iter typ sa na si ni lvs)  =  typ
 
@@ -542,8 +515,8 @@ isVar, isExpr, isPred, isAtomic :: Term -> Bool
 isVar (Var _ _) = True ; isVar _ = False
 isExpr t
   = case termtype t of 
-     (TP _) -> False
-     _        -> True
+     (TF _ t) | t == bool -> False
+     _                    -> True
 isPred = not . isExpr
 isAtomic (K _ _)  =  True
 isAtomic (V _ _)  =  True
@@ -562,7 +535,7 @@ theGVar = StdVar . theVar
 Lifting a variable to a term:
 \begin{code}
 varAsTerm :: Variable -> Term
-varAsTerm v@(PredVar _ _)  =  V (TP T)     v
+varAsTerm v@(PredVar _ _)  =  V arbpred     v
 varAsTerm v                =  V T v
 \end{code}
 
@@ -621,21 +594,21 @@ v_a' = PostVar   $ i_a
 v_b' = PostVar   $ i_b
 
 varConstructTests  = testGroup "AST.var,eVar,pVar"
- [ testCase "var (TP T) (TP T) (Ok)"
-   ( var (TP T) v_P  @?= Just (V (TP T) (PreCond i_P) ))
- , testCase "var ArbType (TP T) (Fail)"
+ [ testCase "var arbpred arbpred (Ok)"
+   ( var arbpred v_P  @?= Just (V arbpred (PreCond i_P) ))
+ , testCase "var ArbType arbpred (Fail)"
    ( var ArbType v_P  @?= Nothing )
- , testCase "var (TP T) a (Fail)"
-   ( var (TP T) v_a  @?= Nothing )
+ , testCase "var arbpred a (Fail)"
+   ( var arbpred v_a  @?= Nothing )
  , testCase "var ArbType a (Ok)"
    ( var ArbType v_a
       @?= Just (V ArbType (PreVar i_a )) )
- , testCase "eVar tarb (TP T) (Fail)" ( eVar ArbType v_P  @?= Nothing )
+ , testCase "eVar tarb arbpred (Fail)" ( eVar ArbType v_P  @?= Nothing )
  , testCase "eVar tarb a (Ok)"
    ( eVar ArbType v_a @?= Just (V ArbType (PreVar i_a ) ) )
  , testCase "pVar a (Fail)" ( pVar T v_a  @?= Nothing )
- , testCase "pVar (TP T) (Ok)"
-   ( pVar T v_P @?= Just (V (TP T) (PreCond i_P) ) )
+ , testCase "pVar arbpred (Ok)"
+   ( pVar T v_P @?= Just (V arbpred (PreCond i_P) ) )
  ]
 
 gv_a =  StdVar v_a
@@ -645,42 +618,42 @@ gv_a' = StdVar v_a'
 gv_b' = StdVar v_b'
 
 bindConstructTests  =  testGroup "AST.bnd"
- [ testCase "bnd (TP T) n {} t42 (Ok)"
-   ( bnd (TP T) n S.empty t42 @?= Just t42 )
- , testCase "bnd (TP T) n {a} t42 (Ok)"
-   ( bnd (TP T) n (S.fromList [gv_a]) t42
-     @?= Just (B (TP T) n (S.fromList [gv_a]) t42) )
- , testCase "bnd (TP T) n {a$} t42 (Ok)"
-   ( bnd (TP T) n (S.fromList [LstVar lv_a]) t42
-     @?= Just (B (TP T) n (S.fromList [LstVar lv_a]) t42) )
- , testCase "bnd (TP T) n {a,a$} t42 (Ok)"
-   ( bnd (TP T) n (S.fromList [gv_a,LstVar lv_a]) t42
-     @?= Just (B (TP T) n (S.fromList [gv_a,LstVar lv_a]) t42) )
- , testCase "bnd (TP T) n {a,e$} t42 (Fail)"
-   ( bnd (TP T) n (S.fromList [gv_a,LstVar lv_e]) t42 @?= Nothing )
- , testCase "bnd (TP T) n {e$,a} t42 (Fail)"
-   ( bnd (TP T) n (S.fromList [LstVar lv_e,gv_a]) t42 @?= Nothing )
- , testCase "bnd (TP T) n {a,b,e$} t42 (Fail)"
-   ( bnd (TP T) n (S.fromList [gv_a,gv_b,LstVar lv_e]) t42 @?= Nothing )
+ [ testCase "bnd arbpred n {} t42 (Ok)"
+   ( bnd arbpred n S.empty t42 @?= Just t42 )
+ , testCase "bnd arbpred n {a} t42 (Ok)"
+   ( bnd arbpred n (S.fromList [gv_a]) t42
+     @?= Just (B arbpred n (S.fromList [gv_a]) t42) )
+ , testCase "bnd arbpred n {a$} t42 (Ok)"
+   ( bnd arbpred n (S.fromList [LstVar lv_a]) t42
+     @?= Just (B arbpred n (S.fromList [LstVar lv_a]) t42) )
+ , testCase "bnd arbpred n {a,a$} t42 (Ok)"
+   ( bnd arbpred n (S.fromList [gv_a,LstVar lv_a]) t42
+     @?= Just (B arbpred n (S.fromList [gv_a,LstVar lv_a]) t42) )
+ , testCase "bnd arbpred n {a,e$} t42 (Fail)"
+   ( bnd arbpred n (S.fromList [gv_a,LstVar lv_e]) t42 @?= Nothing )
+ , testCase "bnd arbpred n {e$,a} t42 (Fail)"
+   ( bnd arbpred n (S.fromList [LstVar lv_e,gv_a]) t42 @?= Nothing )
+ , testCase "bnd arbpred n {a,b,e$} t42 (Fail)"
+   ( bnd arbpred n (S.fromList [gv_a,gv_b,LstVar lv_e]) t42 @?= Nothing )
  ]
 
 lamConstructTests  =  testGroup "AST.lam"
- [ testCase "lam (TP T) n [] t42 (Ok)"
-   ( lam (TP T) n [] t42 @?= Just t42 )
- , testCase "lam (TP T) n [a] t42 (Ok)"
-   ( lam (TP T) n [gv_a] t42 @?= Just (L (TP T) n [gv_a] t42) )
- , testCase "lam (TP T) n [a$] t42 (Ok)"
-   ( lam (TP T) n [LstVar lv_a] t42
-     @?= Just (L (TP T) n [LstVar lv_a] t42) )
- , testCase "lam (TP T) n [a,a$] t42 (Ok)"
-   ( lam (TP T) n [gv_a,LstVar lv_a] t42
-     @?= Just (L (TP T) n [gv_a,LstVar lv_a] t42) )
- , testCase "lam (TP T) n [a,e$] t42 (Fail)"
-   ( lam (TP T) n [gv_a,LstVar lv_e] t42 @?= Nothing )
- , testCase "lam (TP T) n [e$,a] t42 (Fail)"
-   ( lam (TP T) n [LstVar lv_e,gv_a] t42 @?= Nothing )
- , testCase "lam (TP T) n [a,b,e$] t42 (Fail)"
-   ( lam (TP T) n [gv_a,gv_b,LstVar lv_e] t42 @?= Nothing )
+ [ testCase "lam arbpred n [] t42 (Ok)"
+   ( lam arbpred n [] t42 @?= Just t42 )
+ , testCase "lam arbpred n [a] t42 (Ok)"
+   ( lam arbpred n [gv_a] t42 @?= Just (L arbpred n [gv_a] t42) )
+ , testCase "lam arbpred n [a$] t42 (Ok)"
+   ( lam arbpred n [LstVar lv_a] t42
+     @?= Just (L arbpred n [LstVar lv_a] t42) )
+ , testCase "lam arbpred n [a,a$] t42 (Ok)"
+   ( lam arbpred n [gv_a,LstVar lv_a] t42
+     @?= Just (L arbpred n [gv_a,LstVar lv_a] t42) )
+ , testCase "lam arbpred n [a,e$] t42 (Fail)"
+   ( lam arbpred n [gv_a,LstVar lv_e] t42 @?= Nothing )
+ , testCase "lam arbpred n [e$,a] t42 (Fail)"
+   ( lam arbpred n [LstVar lv_e,gv_a] t42 @?= Nothing )
+ , testCase "lam arbpred n [a,b,e$] t42 (Fail)"
+   ( lam arbpred n [gv_a,gv_b,LstVar lv_e] t42 @?= Nothing )
  ]
 
 termConstructTests  =  testGroup "Term Smart Constructors"

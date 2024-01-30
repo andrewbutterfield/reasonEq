@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module StdTypeSignature (
-  bool, boolf_1, boolf_2, boolf_3
+  boolf_1, boolf_2, boolf_3
 , pred1
 , apred1, apred11, apred2
 , nat, int
@@ -30,7 +30,6 @@ Here we present a hard-coded implementation of basic types for \reasonEq.
 \subsection{Booleans}
 
 \begin{code}
-bool    = GivenType $ jId $ "B"
 boolf_1 = FunType bool bool
 boolf_2 = FunType bool boolf_1
 boolf_3 = FunType bool boolf_2

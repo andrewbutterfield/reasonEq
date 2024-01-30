@@ -6,7 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module AST ( Type
+module AST ( Type, bool
            , pattern ArbType,  pattern TypeVar, pattern TypeCons
            , pattern AlgType, pattern FunType, pattern GivenType
            , pattern Pred
@@ -84,13 +84,12 @@ data Type -- most general types first
  | TA Identifier [(Identifier,[Type])] -- algebraic data type
  | TF Type Type -- function type
  | TG Identifier -- given type
- | TP Type    -- predicate argument type
+ | TP Type    -- type must be of form  t -> bool
  deriving (Eq, Ord, Show, Read)
 \end{code}
 The ordering of data-constructors here is important,
 as type-matching relies on it.
 
-The construction \h{TP t}  is essentially the same as \h{TF t (TG bool).}
 
 \begin{code}
 pattern ArbType = T
@@ -112,14 +111,24 @@ and the argument of \h{TP}  ()
 \begin{code}
 isSubTypeOf :: Type -> Type -> Bool
 isSubTypeOf = isSTOf
-(TC i1 ts1) `isSTOf`(TC i2 ts2) |i1==i2 = ts1 `areSTOf` ts2
-(TA i1 fs1) `isSTOf`(TA i2 fs2) |i1==i2 = fs1 `areSFOf` fs2
-(TG i1)     `isSTOf` (TG i2)            = i1 == i2
-(TF tf1 ta1)`isSTOf`(TF tf2 ta2)        = tf2 `isSTOf` tf1 && ta1 `isSTOf` ta2
-(TP tf1)    `isSTOf` (TP tf2)           = tf2 `isSTOf` tf1 
-_ `isSTOf` T       =  True
-T `isSTOf` _       =  False
-_ `isSTOf` (TV _)  =  True
+
+bool  = TG $ jId $ "B"
+
+_       `isSTOf` T        =  True
+T       `isSTOf` _        =  False
+_       `isSTOf` (TV _)   =  True
+(TG i1) `isSTOf` (TG i2)  =  i1 == i2
+
+(TC i1 ts1) `isSTOf` (TC i2 ts2) | i1==i2 = ts1 `areSTOf` ts2
+(TA i1 fs1) `isSTOf` (TA i2 fs2) | i1==i2 = fs1 `areSFOf` fs2
+
+(TF tf1 ta1) `isSTOf` (TF tf2 ta2)  =  tf2 `isSTOf` tf1 && ta1 `isSTOf` ta2
+(TP tf1)     `isSTOf` (TP tf2)      =  tf2 `isSTOf` tf1 
+
+-- TP tf == TF t bool
+(TF tf1 ta1) `isSTOf` (TP tf2) | ta1==bool = tf2 `isSTOf` tf1 
+(TP tf1) `isSTOf` (TF tf2 ta2) | ta2==bool = tf2 `isSTOf` tf1 
+
 _ `isSTOf` _       = False
 \end{code}
 

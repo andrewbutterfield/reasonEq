@@ -147,10 +147,9 @@ tMatch, tMatch' ::
                -> Candidate -> Pattern -> mp Binding
 \end{code}
 
-We note that the \texttt{Type} of pattern and candidate must match.
-Either both are predicates,
-or both are expressions with the type of the candidate
-being an sub-type of the pattern.
+We note that the \texttt{Type} of pattern and candidate must agree,
+in that the candidate is a subtype of the pattern.
+Note that predicate-type $t$ is the same as expression-type $t\fun\Bool$.
 \begin{code}
 tMatch vts bind cbvs pbvs tC tP
  = let kC = termtype tC ; kP = termtype tP

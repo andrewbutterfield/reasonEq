@@ -8,6 +8,11 @@ Done but not yet ready to be hooked in.
 Adding in Arithmetic and Set theories to test out the need for typechecking.
 
 We have a problem - `∈(x,S)` needs to be a predicate.
+
+**PLAN**  Wrap `GivenType t bool`  as `Pred (GivenType t bool)`.
+
+Have a mkType function that does this.
+
 ```
 (⊢
 (∀ x • ∈(x,S) ∨ false ≡ ∈(x,S))    ⊤
@@ -33,9 +38,9 @@ kP = TP 1
 ### Idea
 
 Rather than `P order` we have `P predtype` where `predtype` is defined for
-types of the form `type -> bool` as being `type`.
+types of the form `type -> bool` as being `type`. **NO - DOES NOT WORK**
 
-So `P ptype` is the same as `E (ptype -> bool)`.
+So `P type` is the same as `E (ptype -> bool)`.
 
 Potential area of difficulty - associativity laws.
 

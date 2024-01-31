@@ -27,6 +27,7 @@ import StdSignature
 import Equivalence
 import Implication
 import Equality
+import ForAll
 import TestRendering
 
 import Arithmetic
@@ -321,6 +322,7 @@ setTheory
                 , thDeps  =  [ implName
                              , equivName 
                              , equalityName
+                             , forallName
                              ]
                 , known   =  setKnown
                 , laws    =  setAxioms

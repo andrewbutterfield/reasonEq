@@ -10,6 +10,7 @@ module AST ( Type
            , bool, arbpred
            , pattern ArbType,  pattern TypeVar, pattern TypeCons
            , pattern AlgType, pattern FunType, pattern GivenType
+           , pattern BottomType
            , isPType, isEType
            , isSubTypeOf
            , Value, pattern Boolean, pattern Integer
@@ -75,12 +76,13 @@ occurring with expressions.
 
 \begin{code}
 data Type -- most general types first
- = T  -- arbitrary type
+ = T  -- arbitrary type -- top of sub-type relation
  | TV Identifier -- type variable
  | TC Identifier [Type] -- type constructor, applied
  | TA Identifier [(Identifier,[Type])] -- algebraic data type
  | TF Type Type -- function type
  | TG Identifier -- given type
+ | TB -- bottom type,  bottom of sub-type relation
  deriving (Eq, Ord, Show, Read)
 \end{code}
 The ordering of data-constructors here is important,
@@ -94,33 +96,69 @@ pattern TypeCons i ts = TC i ts
 pattern AlgType i fs = TA i fs
 pattern FunType tf ta = TF tf ta
 pattern GivenType i = TG i
+pattern BottomType = TB
 
 bool  = TG $ jId $ "B"
-arbpred = TF T bool
+arbpred = TF TB bool
 
 -- isPtype t if t has shape  t1 -> t2 -> ... -> tn -> bool
 -- which is really t1 -> (t2 -> (... -> (tn -> bool)...))
-isPType (TF _ t@(TF _ _))  =  isPType t
-isPType (TF _ t)           =  t == bool
-isPType _                  = False
-isEType = not . isPType
+lasttype (TF _ ta)  =  lasttype ta
+lasttype t          =  t
+
+isPType (TF _ t)  =  lasttype t == bool
+isPType _         =  False
+isEType           =  not . isPType
 \end{code}
 
 \subsection{Sub-Typing}
 
+We want a pattern of type $\bot \fun \Bool$
+to match a candidate of type $t \fun (\Set t \fun \Bool)$.
+We might try asking is the candidate a subtype of the pattern?
+$$ t \fun (\Set t \fun \Bool)  \subseteq \bot \fun \Bool$$
+However a simple contravariant test won't work.
+as it as it requires:
+$$ \bot \subseteq t 
+   \quad\land\quad
+   (\Set t \fun \Bool)  \subseteq \Bool
+$$
+The first test always succeeds, but the second does not in this case.
+What we want is that any function-type whose "last" input is boolean,
+can match a pattern of type $\bot \fun \Bool$.
+We can generalise $\Bool$ to be any type.
+
+So, given a function $\bot \fun t$ we define "sub-typing" as follows:
+$$
+t_1 \fun t_2 \fun \dots \fun t_n \fun t'
+\subseteq
+\bot \fun t, \qquad \IF \quad t' \subseteq t
+$$
+Here neither $t$ nor $t'$ are function types.
+
+
 \begin{code}
 isSubTypeOf :: Type -> Type -> Bool
-isSubTypeOf = isSTOf
+isSubTypeOf (TF tf1 ta1) (TF TB ta2)   =  lasttype ta1 `isSTOf` ta2
+isSubTypeOf t1           t2            =  t1 `isSTOf` t2
+
+isSTOf :: Type -> Type -> Bool
+-- normal subtyping
+-- true outcomes first, to catch x==x case
 
 _       `isSTOf` T        =  True
 T       `isSTOf` _        =  False
+TB      `isSTOf` _        =  True
+_       `isSTOf` TB       =  False
+
 _       `isSTOf` (TV _)   =  True
 (TG i1) `isSTOf` (TG i2)  =  i1 == i2
 
 (TC i1 ts1) `isSTOf` (TC i2 ts2) | i1==i2 = ts1 `areSTOf` ts2
 (TA i1 fs1) `isSTOf` (TA i2 fs2) | i1==i2 = fs1 `areSFOf` fs2
 
-(TF tf1 ta1) `isSTOf` (TF tf2 ta2)  =  tf2 `isSTOf` tf1 && ta1 `isSTOf` ta2
+(TF tf1 ta1) `isSTOf` (TF tf2 ta2)  
+                             =  tf2 `isSTOf` tf1 && ta1 `isSTOf` ta2
 
 _ `isSTOf` _       = False
 \end{code}

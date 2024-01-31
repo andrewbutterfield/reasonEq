@@ -7,22 +7,23 @@ Done but not yet ready to be hooked in.
 
 Adding in Arithmetic and Set theories to test out the need for typechecking.
 
-We have a problem - `∈(x,S)` needs to be a predicate.
 
-**PLAN**  Wrap `GivenType t bool`  as `Pred (GivenType t bool)`.
-
-Have a mkType function that does this.
-
+**UNSOUND!!!**
 ```
----
-tMatch: incompatible types!
-kC = TF (TV (Id "t" 0)) (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))
-kP = TF T (TG (Id "B" 0))
-hit <enter> to continue
-```
-We need the dual of T here because of contravariance!!!
+Proof for union_r_unit
+	∪(S,Ø) = S  ⊤
+by red-All
+∪(S,Ø) = S
+   = 'match-lhs set_=_def@[]'
+(∀ x • ∈(x,∪(S,Ø)) ≡ ∈(x,S))
+   = 'match-lhs mbr_Ø@[1,1]'
+ ...
 
-Need to add "everything" type - sub-type of all types.
+⊢
+(∀ x • false ≡ ∈(x,S))    ⊤
+Focus = [1,1]
+```
+**Empty set symbol should be iknown - it shouldn't be matching anything!!!!**
 
 ### Idea
 

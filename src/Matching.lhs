@@ -195,7 +195,6 @@ $$
 $$
 \begin{code}
 tMatch' vts bind cbvs pbvs tC (Var ttP vP)
-  | ttP == termtype tC  =  tvMatch vts bind cbvs pbvs tC ttP vP
   | termtype tC `isSubTypeOf` ttP  =  tvMatch vts bind cbvs pbvs tC ttP vP
 \end{code}
 
@@ -781,7 +780,7 @@ tvMatch vts bind cbvs pvbs tC ttP vP@(Vbl _ _ vt)
           , "pvbs = " ++ show pvbs
           , "vP   = " ++ show vP
           ]
- | vPmr /= UnknownVar         =  tkvMatch vts bind tC vPmr ttP vP
+ | (pdbg "tvM.vPmr" vPmr) /= UnknownVar         =  tkvMatch vts bind tC vPmr ttP vP
 \end{code}
 \subsection{Arbitrary Pattern Variable}
 $$
@@ -798,7 +797,7 @@ $$
 --tvMatch vts bind cbvs pvbs tC ttP vP@(Vbl _ vw _)
  | otherwise                  =  bindVarToTerm vP tC bind
  where
-   vPmr = lookupVarTables vts vP
+   vPmr = lookupVarTables (pdbg "tvM.vts" vts) $ pdbg "tvM.vP" vP
 \end{code}
 
 \newpage
@@ -931,7 +930,7 @@ Instance variable & \texttt{InstanceVar} & Itself only
 \end{tabular}
 
 Finally, rules based on the static or dynamic nature of known variables,
-that do not apply if the variable is bound.
+(that do not apply if the variable is bound(????)).
 \begin{itemize}
   \item Static variables can match static or dynamic variables.
   \item Dynamic variables can only match those that have the

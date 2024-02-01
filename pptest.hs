@@ -1,8 +1,11 @@
 @tvM.vts:
 [ VD
-  ( { (VR (Id "#" 0, VE, WS), KV (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TG (Id "Z" 0))))
-    , (VR (Id "\\" 0, VE, WS), KV (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TC (Id "powerset" 0) [TV (Id "t" 0)]))))
-    , (VR (Id "emptyset" 0, VE, WS), KV (TC (Id "powerset" 0) [TV (Id "t" 0)]))
+  ( { ( VR (Id "#" 0, VE, WS)
+      , KV (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TG (Id "Z" 0))))
+    , ( VR (Id "\\" 0, VE, WS)
+      , KV (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TC (Id "powerset" 0) [TV (Id "t" 0)]))))
+    , (VR (Id "emptyset" 0, VE, WS)
+      , KV (TC (Id "powerset" 0) [TV (Id "t" 0)]))
     , (VR (Id "in" 0, VE, WS), KV (TF (TV (Id "t" 0)) (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))))
     , (VR (Id "intsct" 0, VE, WS), KV (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TC (Id "powerset" 0) [TV (Id "t" 0)]))))
     , (VR (Id "subseteq" 0, VE, WS), KV (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))))

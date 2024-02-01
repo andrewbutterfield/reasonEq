@@ -2,11 +2,11 @@
 
 ## Urgent/Now
 
-Time to add type-inference!
-Done but not yet ready to be hooked in.
+All other known names in sets have function types and appear as Cons *identifiers*. The emptyset symbol has a constructed type and appears as a "variable" (it's really a constant.) I suspect the matcher does due diligence
+on constructor names but not variables.
 
-Adding in Arithmetic and Set theories to test out the need for typechecking.
-
+It was also declared as an `eVar`, now a `var`.
+It seems to match in some situations and not others.
 
 **UNSOUND!!!**
 ```
@@ -23,7 +23,19 @@ by red-All
 (∀ x • false ≡ ∈(x,S))    ⊤
 Focus = [1,1]
 ```
-**Empty set symbol should be iknown - it shouldn't be matching anything!!!!**
+**Empty set symbol should be known - it shouldn't be matching anything!!!!**
+
+```
+(∀ x • ∈(x,∪(S,Ø)) ≡ ∈(x,S))    ⊤
+Focus = [1,1]
+proof: tm 1 mbr_emptyset
+Match against `mbr_emptyset'[1] OK
+Binding: { Ø ⟼ ∪(S,Ø), x ⟼ x }
+Instantiated Law = false
+Instantiated Law S.C. = ⊤
+Goal S.C. = ⊤
+Discharged Law S.C. = ⊤
+```
 
 ### Idea
 
@@ -37,6 +49,12 @@ Potential area of difficulty - associativity laws.
 We should treat `=` like `≡` in pattern matching.
 
 ## Issues
+
+Time to add type-inference!
+Done but not yet ready to be hooked in.
+
+Adding in Arithmetic and Set theories to test out the need for typechecking.
+
 
 * We really need to have symmetric forms of key results, e.g., we have `P∨true≡true`, but should also have `true∨P≡true`.
 

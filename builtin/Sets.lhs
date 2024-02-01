@@ -83,7 +83,7 @@ i_crd = jId "#"       ; cardIntro    = mkConsIntro i_crd $ card_t elemt
 
 \begin{code}
 mtset :: Term
-mtset = fromJust $ eVar sett $ StaticVar i_mt
+mtset = fromJust $ var sett $ StaticVar i_mt
 senum :: [Term] -> Term
 senum ts = Cons sett True i_set ts
 ssingle :: Term -> Term

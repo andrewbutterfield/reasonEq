@@ -19,32 +19,22 @@ PVars and EVars are variables whose values are terms of the corresponding type. 
 **Getting totally spurious matches in Sets**
 
 **UNSOUND!!!**
-```
-Proof for union_r_unit
-	∪(S,Ø) = S  ⊤
-by red-All
-∪(S,Ø) = S
-   = 'match-lhs set_=_def@[]'
-(∀ x • ∈(x,∪(S,Ø)) ≡ ∈(x,S))
-   = 'match-lhs mbr_Ø@[1,1]'
- ...
 
-⊢
-(∀ x • false ≡ ∈(x,S))    ⊤
-Focus = [1,1]
+**lookupVarTables BUG???**
 ```
-**Empty set symbol should be known - it shouldn't be matching anything!!!!**
-
-```
-(∀ x • ∈(x,∪(S,Ø)) ≡ ∈(x,S))    ⊤
-Focus = [1,1]
-proof: tm 1 mbr_emptyset
-Match against `mbr_emptyset'[1] OK
-Binding: { Ø ⟼ ∪(S,Ø), x ⟼ x }
-Instantiated Law = false
-Instantiated Law S.C. = ⊤
-Goal S.C. = ⊤
-Discharged Law S.C. = ⊤
+@vM.vts:
+[ VD ( { (VR (Id "and" 0, VP, WS), KV ...) }, {}, {} )
+, VD ( { (VR (Id "or" 0, VP, WS), KV ...) }, {}, {} )
+, VD ( { (VR (Id "not" 0, VP, WS), KV ...) }, {}, {} )
+, VD ( { (VR (Id "eqv" 0, VP, WS), KV ...) }, {}, {} ) ]
+@vM.vmr:
+UV
+@vM.vP:
+VR (Id "and" 0, VO, WS)
+@vM.vC:
+VR (Id "or" 0, VO, WS)
+Match against `and_zero'[1] OK
+Binding: { P ⟼ ∈(x,S), ∧ ⟼ ∨ }
 ```
 
 ### Idea

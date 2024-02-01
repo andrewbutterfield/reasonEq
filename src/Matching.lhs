@@ -220,8 +220,8 @@ Here $ts_X = \langle t_{X_1}, t_{X_2}, \dots t_{X_n} \rangle$.
 tMatch' vts bind cbvs pbvs (Cons ttC sbC nC tsC) (Cons ttP sbP nP tsP)
  | ttC == ttP && sbC == sbP
    =  do bind0 <- consBind vts bind cbvs pbvs ttC nC nP
-         -- tsMatch vts bind0 cbvs pbvs tsC tsP
-         tsMatch vts bind cbvs pbvs tsC tsP -- don't match
+         tsMatch vts bind0 cbvs pbvs tsC tsP
+         -- tsMatch vts bind cbvs pbvs tsC tsP -- ???
 \end{code}
 
 \newpage
@@ -717,7 +717,7 @@ tMatch' _ _ _ _ tC tP
 
 \subsection{Term Matching Support}
 
-Binding a constructor name to itself:
+Matching two constructor names:
 \begin{code}
 consBind vts bind cbvs pbvs ttC nC nP
   = vMatch vts bind cbvs pbvs vC vP
@@ -965,12 +965,12 @@ while other variable classes may only match their own class.
 vMatch vts bind cbvs pvbs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
  | pbound      =  bvMatch vts bind cbvs vC vP
  | vC == vP    =  bindVarToVar vP vC bind -- covers KnownVar, InstanceVar
- | vwC == vwP  =  vMatch' vts bind vmr vC vP
+ | vwC == vwP  =  vMatch' vts bind (pdbg "vM.vmr" vmr) (pdbg "vM.vC" vC) $ pdbg "vM.vP" vP
  | vwC == ExprV && vwP == ObsV  =  vMatch' vts bind vmr vC vP
  | otherwise   =  fail "vMatch: class mismatch"
  where
     pbound = StdVar vP `S.member` pvbs
-    vmr = lookupVarTables vts vP
+    vmr = lookupVarTables (pdbg "vM.vts" vts) vP
 \end{code}
 Variable classes are compatible, but is the pattern ``known''?
 \begin{code}

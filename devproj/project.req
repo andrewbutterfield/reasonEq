@@ -9,9 +9,30 @@ BEGIN THEORIES
 THNAMES = ["And","AndOrInvert","Arithmetic","Equality","Equiv","Exists","ForAll","Implies","Not","Or","Sets","UClose","UTPBase","XYZ"]
 SDAG = [[("XYZ",["UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"]),("UTPBase",["UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("UClose",["Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Sets",["Implies","Equiv","Equality","ForAll"]),("Exists",["ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Arithmetic",["Implies","Equiv","Equality"]),("ForAll",["Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Equality",["Implies","Equiv"])],[("Implies",["AndOrInvert","And","Or","Not","Equiv"])],[("AndOrInvert",["And","Or","Not","Equiv"])],[("And",["Or","Not","Equiv"])],[("Or",["Not","Equiv"])],[("Not",["Equiv"])],[("Equiv",[])]]
 END THEORIES
-CURRTHEORY = Or
+CURRTHEORY = Sets
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("Sets","union_r_unit")
+BEGIN LIVE-PROOF
+TH-NAME: Sets
+CJ-NAME: union_r_unit
+CONJ = ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TC (Id "powerset" 0) [TV (Id "t" 0)]) False (Id "union" 0) [V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "S" 0,VO,WS)),V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "emptyset" 0,VO,WS))],V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "S" 0,VO,WS))],([],fromList []))
+SIDE = ([],fromList [])
+STRAT red-All
+BEGIN SEQZIP
+TERMZIP = (C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [C (TF (TV (Id "t" 0)) (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))) False (Id "in" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "S" 0,VO,WS))],K (TF TB (TG (Id "B" 0))) (VB False)],[Cons' (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [] [C (TF (TV (Id "t" 0)) (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))) False (Id "in" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "S" 0,VO,WS))]],Bnd' (TF TB (TG (Id "B" 0))) (Id "forall" 0) (fromList [GV (VR (Id "x" 0,VO,WS))])])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.union_r_unit", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K (TF TB (TG (Id "B" 0))) (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: [1,1]
+BEGIN LIST STEPS
+(UseLaw (ByMatch MEL) "mbr_emptyset" (BD (fromList [((Id "emptyset" 0,VO),BV (VR (Id "emptyset" 0,VO,WS))),((Id "in" 0,VO),BV (VR (Id "in" 0,VO,WS))),((Id "x" 0,VO),BV (VR (Id "x" 0,VO,WS)))],fromList [],fromList [])) [1,1,2],ASN (B (TF TB (TG (Id "B" 0))) (Id "forall" 0) (fromList [GV (VR (Id "x" 0,VO,WS))]) (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [C (TF (TV (Id "t" 0)) (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))) False (Id "in" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "S" 0,VO,WS))],C (TF (TV (Id "t" 0)) (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))) False (Id "in" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "emptyset" 0,VO,WS))]],C (TF (TV (Id "t" 0)) (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))) False (Id "in" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "S" 0,VO,WS))]]),([],fromList [])))
+(UseLaw (ByMatch MEL) "mbr_union_def" (BD (fromList [((Id "S1" 0,VO),BV (VR (Id "S" 0,VO,WS))),((Id "S2" 0,VO),BV (VR (Id "emptyset" 0,VO,WS))),((Id "in" 0,VO),BV (VR (Id "in" 0,VO,WS))),((Id "union" 0,VO),BV (VR (Id "union" 0,VO,WS))),((Id "x" 0,VO),BV (VR (Id "x" 0,VO,WS)))],fromList [],fromList [])) [1,1],ASN (B (TF TB (TG (Id "B" 0))) (Id "forall" 0) (fromList [GV (VR (Id "x" 0,VO,WS))]) (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF (TV (Id "t" 0)) (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))) False (Id "in" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),C (TC (Id "powerset" 0) [TV (Id "t" 0)]) False (Id "union" 0) [V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "S" 0,VO,WS)),V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "emptyset" 0,VO,WS))]],C (TF (TV (Id "t" 0)) (TF (TC (Id "powerset" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))) False (Id "in" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "S" 0,VO,WS))]]),([],fromList [])))
+(UseLaw (ByMatch MEL) "set_=_def" (BD (fromList [((Id "=" 0,VO),BV (VR (Id "=" 0,VO,WS))),((Id "S1" 0,VO),BT (C (TC (Id "powerset" 0) [TV (Id "t" 0)]) False (Id "union" 0) [V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "S" 0,VO,WS)),V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "emptyset" 0,VO,WS))])),((Id "S2" 0,VO),BV (VR (Id "S" 0,VO,WS))),((Id "x" 0,VO),BV (VR (Id "x" 0,VO,WS)))],fromList [],fromList [])) [],ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TC (Id "powerset" 0) [TV (Id "t" 0)]) False (Id "union" 0) [V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "S" 0,VO,WS)),V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "emptyset" 0,VO,WS))],V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "S" 0,VO,WS))],([],fromList [])))
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

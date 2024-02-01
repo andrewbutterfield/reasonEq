@@ -69,6 +69,8 @@ import Test.Framework.Providers.HUnit (testCase)
 --import Test.Framework.Providers.QuickCheck2 (testProperty)
 \end{code}
 
+
+\newpage
 \section{Variable Introduction}
 
 
@@ -79,7 +81,7 @@ We also want to support the notion of list-variables that denote lists of variab
 We start with a table (Fig. \ref{fig:utp-vv}) that identifies
 the variety of variables we expect to support.
 
-\begin{figure}
+\begin{figure}[h]
   \begin{center}
     \begin{tabular}{l|c|cc}
        \multicolumn{1}{r|}{class}
@@ -102,13 +104,24 @@ the variety of variables we expect to support.
 Variables fall into two broad classes:
 \begin{description}
   \item[Obs]
-    Variables that represent some aspect of an observation
+    Variables ($x,v,\dots$)that represent some aspect of an observation
     that might be made of a program or its behaviour.
   \item[Term]
     Variables that stand for terms,
-    which can themselves be categorised as either expressions (Expr)
-    or predicates (Pred).
+    which can themselves be categorised as 
+    either expressions (Expr, $e,f,\dots$)
+    or predicates (Pred, $P,Q,\dots$).
 \end{description}
+The key feature that distinguishes observation variables from term variables
+has to do with free-variables. 
+An observation variable can be determined to be free or bound
+in a containing term in the usual way.
+A term variable is different as in general it is associated with
+a set of free variables and another set of bound variables,
+based on the whatever term ``value'' it has.
+The best we can do in general is say (for example) that:
+$\fv(x = e \land P) = \setof x \cup \fv(e) \cup \fv(P)$.
+In particular, $\fv(x = e \land P)$ cannot be $\setof{x,e,P}$.
 \begin{code}
 data VarClass -- Classification
   = VO -- Observation
@@ -121,7 +134,6 @@ pattern ExprV = VE
 pattern PredV = VP
 \end{code}
 
-\newpage
 Within these classes, we can also classify variables further
 in terms of their ``temporality''.
 We describe behaviour in terms of relations between ``before''
@@ -199,7 +211,7 @@ If a term contains only observable variables of the same temporality,
 then it can be denoted by a term variable of that temporality.
 Term variables are sub-classified by those that denote expressions (Expr)
 and those that denote predicates (Pred).
-There are no term variables that can denote both expressions and predicates.
+Predicates are boolean valued expressions, so there is an overlap.
 Static term variables may denote an term of the same sub-classification,
 with any temporality attribute.
 

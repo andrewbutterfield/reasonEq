@@ -201,7 +201,7 @@ tMatch' vts bind cbvs pbvs tC (Var ttP vP)
 
 \subsection{Constructor Term-Pattern (\texttt{Cons})}
 Constructors match if they have the same kind,
-their names match (as static predicate variables)
+their names match (as static observation variables)
 and the term-lists are of the same length and corresponding terms match.
 $$
 \inferrule
@@ -722,9 +722,8 @@ Binding a constructor name to itself:
 consBind vts bind cbvs pbvs ttC nC nP
   = vMatch vts bind cbvs pbvs vC vP
   where
-    vClass = classFromType ttC
-    vC = Vbl nC vClass Static
-    vP = Vbl nP vClass Static
+    vC = Vbl nC ObsV Static
+    vP = Vbl nP ObsV Static
 \end{code}
 
 \section{Term-List Matching}

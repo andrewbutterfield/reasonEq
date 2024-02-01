@@ -97,12 +97,11 @@ are also exported in a logical signature,
 as they have significance for proof strategies.
 
 Constructor names, if required to be known,
-should be declared as known static predicate variable,
-with a type that involves booleans.
+should be declared as known static observation variables.
 
 \begin{code}
 mkConsVar ::  Identifier -> Type -> Variable
-mkConsVar i t = Vbl i (classFromType t) Static
+mkConsVar i t = Vbl i ObsV Static
 
 mkConsIntro :: Identifier -> Type -> VarTable -> VarTable
 mkConsIntro i t = fromJust . addKnownVar (mkConsVar i t) t

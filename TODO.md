@@ -8,6 +8,16 @@ on constructor names but not variables.
 It was also declared as an `eVar`, now a `var`.
 It seems to match in some situations and not others.
 
+We find that `mkConsIntro` uses `classFromType`. 
+This is not a good idea. Type and class should be independent.
+A predicate is a term of type $t \fun \Bool$.
+All other terms are non-predicates.
+PVars and EVars are variables whose values are terms of the corresponding type. Their free-variables are contingent on what term value they have. Observation variables denote some value, and can be free or bound (at the 1st-order level).
+
+*Lower level theories work fine*.
+
+**Getting totally spurious matches in Sets**
+
 **UNSOUND!!!**
 ```
 Proof for union_r_unit

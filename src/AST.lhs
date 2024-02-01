@@ -14,7 +14,6 @@ module AST ( Type
            , isPType, isEType
            , isSubTypeOf
            , Value, pattern Boolean, pattern Integer
-           , classFromType
            , TermSub, LVarSub
            , Substn, pattern Substn, substn, substnxx
            , pattern TermSub, pattern LVarSub
@@ -474,13 +473,6 @@ var _       _   =   fail "var: Type/VarClass mismatch"
 eVar t v = var t v
 pVar t v = var arbpred v
 \end{code}
-
-\begin{code}
-classFromType :: Type -> VarClass
-classFromType (TF _ t) | t == bool  =  PredV
-classFromType _                     =  ExprV
-\end{code}
-
 
 \newpage
 All variables in a binder variable-set must have the same class.

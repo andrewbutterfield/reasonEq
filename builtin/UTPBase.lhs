@@ -44,9 +44,7 @@ import StdTypeSignature
 import UTPSignature
 import TestRendering
 
-import Debug.Trace
-dbg msg x = trace (msg++show x) x
-pdbg nm x = dbg ('@':nm++":\n") x
+import Debugger
 \end{code}
 
 

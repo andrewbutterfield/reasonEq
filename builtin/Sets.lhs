@@ -209,12 +209,12 @@ cjUAssoc  = ( "union" -.- "assoc"
 \end{eqnarray*}
 \begin{code}
 axMofIntsct = ( "mbr" -.- "intsct" -.- "def"
-             , ( (x `mbr` (s1 `sintsct` s1))
+             , ( (x `mbr` (s1 `sintsct` s2))
                  ===
                  ((x `mbr` s1) /\ (x `mbr` s2))
              , scTrue ) )
 cjIZero = ( "intsct" -.- "zero"
-           , ( (s `sintsct` mtset) `isEqualTo` s
+           , ( (s `sintsct` mtset) `isEqualTo` mtset
            , scTrue ) )
 cjISymm  = ( "intsct" -.- "symm"
            , ( (s1 `sintsct` s2) `isEqualTo` (s2 `sintsct` s1)
@@ -235,7 +235,7 @@ cjIAssoc  = ( "intsct" -.- "assoc"
 \end{eqnarray*}
 \begin{code}
 axMofDiff = ( "mbr" -.- "\\" -.- "def"
-             , ( (x `mbr` (s1 `sdiff` s1))
+             , ( (x `mbr` (s1 `sdiff` s2))
                  ===
                  ((x `mbr` s1) /\ mkNot(x `mbr` s2))
              , scTrue ) )

@@ -44,7 +44,7 @@ based on \cite{gries.93}.
 
 Some useful local definitions:
 \begin{code}
-v_imp = Vbl theImp PredV Static
+v_imp = Vbl theImp ObsV Static
 p = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "P") PredV Static
 q = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "Q") PredV Static
 r = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "R") PredV Static

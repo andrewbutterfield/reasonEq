@@ -41,7 +41,7 @@ based on \cite{gries.93}.
 
 Some useful local definitions:
 \begin{code}
-v_or = Vbl theOr PredV Static
+v_or = Vbl theOr ObsV Static
 p = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "P") PredV Static
 q = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "Q") PredV Static
 r = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "R") PredV Static

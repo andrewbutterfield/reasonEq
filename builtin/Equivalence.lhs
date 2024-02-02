@@ -44,7 +44,7 @@ $$
 
 Some useful local definitions:
 \begin{code}
-v_equiv = Vbl equiv PredV Static
+v_equiv = Vbl equiv ObsV Static
 vP = Vbl (jId "P") PredV Static
 gvP = StdVar vP
 p = jVar pred1 $ vP

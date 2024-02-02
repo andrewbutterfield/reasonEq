@@ -108,6 +108,8 @@ sn n = fromJust $ eVar sett $ vSn n
 s1 = sn 1; s2 = sn 2; s3 = sn 3
 vx = StaticVar (jId "x"); gvx = StdVar vx
 x = fromJust $ eVar elemt vx
+vy = StaticVar (jId "y"); gvy = StdVar vy
+y = fromJust $ eVar elemt vy
 \end{code}
 
 \section{Set Known Variables}
@@ -139,7 +141,7 @@ finishing off with set cardinality.
 The rest of the axioms are associated with set-operators.
 \begin{eqnarray*}
    x \mof \emptyset  &=& \false
-\\ x \mof \setof x   &=& \true
+\\ x \mof \setof y   &=& x = y
 \end{eqnarray*}
 \vspace{-8pt}
 \begin{code}
@@ -147,6 +149,9 @@ axMofEmpty = ( "mbr" -.- "emptyset"
              , ( (x `mbr` mtset) `isEqualTo` falseP
              , scTrue ) )
 axMofSingle = ( "mbr" -.- "singleton"
+             , ( (x `mbr` ssingle y) `isEqualTo` (x `isEqualTo` y)
+             , scTrue ) )
+cjMofSingle = ( "mbr" -.- "set" -.- "self"
              , ( (x `mbr` ssingle x) `isEqualTo` trueP
              , scTrue ) )
 \end{code}
@@ -305,7 +310,8 @@ Collecting \dots
 setConjectures :: [NmdAssertion]
 setConjectures
   = map mkNmdAsn 
-     [ cjURUnit, cjUSymm, cjUAssoc 
+     [ cjMofSingle
+     , cjURUnit, cjUSymm, cjUAssoc 
      , cjIZero, cjISymm, cjIAssoc
      , cjDRUnit, cjDSymm
      ]

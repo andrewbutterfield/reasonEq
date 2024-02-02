@@ -191,22 +191,28 @@ Suggested Precedence Table:
 \begin{code}
 precTable
  = M.fromList
-    [ ( ";"       , (1,LAssoc))
-    , ( ":="      , (1,LAssoc))
-    , ( "refines" , (1,LAssoc))
-    , ( "vdash"   , (2,LAssoc))
-    , ( "eqv"     , (3,LAssoc))
-    , ( "sqcap"   , (4,LAssoc))
-    , ( "imp"     , (4,LAssoc))
-    , ( "or"      , (5,LAssoc)) 
-    , ( "and"     , (6,LAssoc)) 
-    , ( "="       , (7,LAssoc))
-    , ( "+"       , (8,LAssoc))
-    , ( "-"       , (9,NotAssoc))
-    , ( "*"       , (9,LAssoc))
-    , ( "div"     , (9,NotAssoc))
-    , ( "mod"     , (9,NotAssoc))
-    , ( "while"   , (4,LAssoc)) 
+    [ ( ";"        , (1,LAssoc))
+    , ( ":="       , (1,NotAssoc))
+    , ( "refines"  , (1,LAssoc))
+    , ( "vdash"    , (2,LAssoc))
+    , ( "eqv"      , (3,LAssoc))
+    , ( "sqcap"    , (4,LAssoc))
+    , ( "imp"      , (4,LAssoc))
+    , ( "or"       , (5,LAssoc)) 
+    , ( "and"      , (6,LAssoc)) 
+    , ( "*"        , (9,LAssoc))
+    , ( "="        , (7,NotAssoc))
+    , ( "in"       , (7,NotAssoc))
+    , ( "subseteq" , (7,NotAssoc))
+    , ( "+"        , (8,LAssoc))
+    , ( "union"    , (8,LAssoc))
+    , ( "-"        , (9,NotAssoc))
+    , ( "\\"       , (9,NotAssoc))
+    , ( "*"        , (9,LAssoc))
+    , ( "intsct"   , (9,LAssoc))
+    , ( "div"      , (9,NotAssoc))
+    , ( "mod"      , (9,NotAssoc))
+    , ( "while"    , (4,LAssoc)) 
     ]
 opkind :: String -> OpKind
 opkind n
@@ -395,6 +401,11 @@ trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@(_:_:_))
    isOp = fixity /= NotInfix
 \end{code}
 
+We have some containers such as sets:
+\begin{code}
+trterm trid _ (Cons tk _ n ts)
+  | n == jId "set"  =  trcontainer trid ( "{", ",", "}" ) ts
+\end{code}
 
 In all other cases we simply use classical function application notation
 $f(e_1,e_2,\dots,e_n)$.

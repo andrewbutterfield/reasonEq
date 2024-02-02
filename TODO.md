@@ -2,6 +2,15 @@
 
 ## Urgent/Now
 
+Want to have general settings away from files that contain syntax,
+so that syntax changes only affect those files, and not the settings.
+
+So proof settings should not be in `project.req`, for instance.
+
+Proof settings command syntax is dreadful!
+Should be the same in main and proof REPLs
+`set [no-]setting`
+
 
 ### Idea
 

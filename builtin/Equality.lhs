@@ -45,14 +45,14 @@ and expression list-variables $\lst e,\lst f$.
 \section{Equality Variables}
 
 \begin{code}
-v_eq = Vbl equals PredV Static
-ve = Vbl (jId "e") ExprV Static; lves = LVbl ve [] []
+v_eq = Vbl equals ObsV Static
+ve = Vbl (jId "e") ObsV Static; lves = LVbl ve [] []
 e = fromJust $ eVar ArbType ve
 es = LVbl ve [] []
-vf = Vbl (jId "f") ExprV Static
+vf = Vbl (jId "f") ObsV Static
 f = fromJust $ eVar ArbType vf
 fs = LVbl vf [] []
-vg = Vbl (jId "g") ExprV Static
+vg = Vbl (jId "g") ObsV Static
 g = fromJust $ eVar ArbType vg
 vx = Vbl (jId "x") ObsV Static  ; lvxs = LVbl vx [] []
 \end{code}

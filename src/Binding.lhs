@@ -112,12 +112,14 @@ validVarClassBinding ExprV ExprV  =  True
 validVarClassBinding PredV PredV  =  True
 validVarClassBinding _     _      =  False
 \end{code}
-A similar predicate for binding to terms:
+A similar predicate for binding to terms
+(currently deprecated):
 \begin{code}
 validVarTermBinding :: VarClass -> Type -> Bool
-validVarTermBinding ObsV  t  =  isEType t
-validVarTermBinding ExprV t  =  isEType t
-validVarTermBinding PredV t  =  isPType t
+validVarTermBinding _     _  =  True
+--validVarTermBinding ObsV  t  =  isEType t
+--validVarTermBinding ExprV t  =  isEType t
+--validVarTermBinding PredV t  =  isPType t
 \end{code}
 
 As far as temporality goes,
@@ -629,7 +631,12 @@ bindVarToTerm v@(Vbl vi vc Static) ct (BD (vbind,sbind,lbind))
  | validVarTermBinding vc (termtype ct)
    = do vbind' <- insertDR (rangeEq "bindVarToTerm") (vi,vc) (BT ct) vbind
         return $ BD (vbind',sbind,lbind)
- | otherwise = fail "bindVarToTerm: incompatible variable and term."
+ | otherwise 
+    = fail $ unlines'
+        [ "bindVarToTerm: incompatible variable and term."
+        , "variable: " ++ show v
+        , "term:     " ++ show ct
+        ]
 \end{code}
 
 All remaining pattern cases are non-\texttt{Textual} dynamic variables.

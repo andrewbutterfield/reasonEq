@@ -130,8 +130,8 @@ initREqSettings
   = matchFilterUpdate $ REqSet {
       maxMatchDisplay = 20
     , hideTrivialMatch = True
-    , hideTrivialQuantifiers = True -- best for now
-    , hideFloatingVariables = True
+    , hideTrivialQuantifiers = True 
+    , hideFloatingVariables = False 
     , matchFilter = acceptAll
     }
 \end{code}

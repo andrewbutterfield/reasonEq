@@ -1,14 +1,10 @@
-@vM.vts:
-[VD (fromList [(VR (Id "and" 0,VP,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD (fromList [(VR (Id "or" 0,VP,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD (fromList [(VR (Id "not" 0,VP,WS),KV (TF (TG (Id "B" 0)) (TG (Id "B" 0))))],fromList [],fromList []),VD (fromList [(VR (Id "eqv" 0,VP,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList [])]
-@vM.vmr:
-UV
-@vM.vP:
-VR (Id "and" 0,VO,WS)
-@vM.vC:
-VR (Id "or" 0,VO,WS)
-@tvM.vts:
-[VD (fromList [(VR (Id "and" 0,VP,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD (fromList [(VR (Id "or" 0,VP,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD (fromList [(VR (Id "not" 0,VP,WS),KV (TF (TG (Id "B" 0)) (TG (Id "B" 0))))],fromList [],fromList []),VD (fromList [(VR (Id "eqv" 0,VP,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList [])]
 @tvM.vP:
-VR (Id "P" 0,VP,WS)
+VR (Id "emptyset" 0,VO,WS)
 @tvM.vPmr:
-UV
+KV (TC (Id "powerset" 0) [TV (Id "t" 0)])
+@tkvM.tC:
+C (TC (Id "powerset" 0) [TV (Id "t" 0)]) False (Id "union" 0) [V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "S" 0,VO,WS)),V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "emptyset" 0,VO,WS))]
+@tkvM.whatP:
+KV (TC (Id "powerset" 0) [TV (Id "t" 0)])
+@tkvM.vP:
+VR (Id "emptyset" 0,VO,WS)

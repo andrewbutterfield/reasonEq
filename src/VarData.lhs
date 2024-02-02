@@ -79,7 +79,8 @@ can belong to one of the following categories as regards matching:
         and can take many possible values from a defined type.
         it has a predefined interpretation in some intended semantic model,
         and can only match itself;
-     \\or (ii) the variable denotes expressions or predicates of a particular type.
+     \\or (ii) the variable denotes expressions 
+       or predicates of a particular type (????? NOT SURE ABOUT THIS!!!).
   \item[Generic Variable]~\\
     This is a variable used to define some generic properties,
     via appropriate axioms.

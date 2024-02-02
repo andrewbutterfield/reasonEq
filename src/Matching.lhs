@@ -779,7 +779,7 @@ tvMatch vts bind cbvs pvbs tC ttP vP@(Vbl _ _ vt)
           , "pvbs = " ++ show pvbs
           , "vP   = " ++ show vP
           ]
- | (pdbg "tvM.vPmr" vPmr) /= UnknownVar         =  tkvMatch vts bind tC vPmr ttP vP
+ | vPmr /= UnknownVar  =  tkvMatch vts bind tC vPmr ttP vP
 \end{code}
 \subsection{Arbitrary Pattern Variable}
 $$
@@ -796,12 +796,13 @@ $$
 --tvMatch vts bind cbvs pvbs tC ttP vP@(Vbl _ vw _)
  | otherwise                  =  bindVarToTerm vP tC bind
  where
-   vPmr = lookupVarTables (pdbg "tvM.vts" vts) $ pdbg "tvM.vP" vP
+   vPmr = lookupVarTables vts vP
 \end{code}
 
 \newpage
 \subsection{Known Pattern Variable}
 
+Here the candidate term is NOT a variable term.
 \begin{code}
 tkvMatch :: (Monad m, MonadFail m) => [VarTable] -> Binding
        ->  Candidate -> VarMatchRole -> Type -> Variable -> m Binding
@@ -841,9 +842,10 @@ $$
 $$
 \begin{code}
 -- know vP is not in pbvs, but is in vts, known as whatP
-tkvMatch vts bind tC@(Var _ vC) whatP ttP vP
- | vC == vP                                    =  bindVarToVar vP vP bind
- | isKnownConst whatP && tC == vmrConst whatP  =  bindVarToVar vP vC bind
+-- THIS NEVER ARISES AS THIS FN IS ONLY USED BY tvMatch
+--tkvMatch vts bind tC@(Var _ vC) whatP ttP vP
+-- | vC == vP                                    =  bindVarToVar vP vP bind
+-- | isKnownConst whatP && tC == vmrConst whatP  =  bindVarToVar vP vC bind
 \end{code}
 $$
 \inferrule
@@ -880,6 +882,7 @@ $$
 \begin{code}
 -- know vP is not in pbvs, but is in vts, known as whatP
 tkvMatch vts bind tC whatP ttP vP
+ | isKnownVar whatP = fail "tkvMatch: known-var can only match self"
  | isKnownConst whatP && tC == vmrConst whatP  =  bindVarToTerm vP tC bind
  | isEType ttP && isKnownVar whatP
    && vmrType whatP == ttP                     =  bindVarToTerm vP tC bind
@@ -964,13 +967,13 @@ while other variable classes may only match their own class.
 \begin{code}
 vMatch vts bind cbvs pvbs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
  | pbound      =  bvMatch vts bind cbvs vC vP
- | vC == vP    =  bindVarToVar vP vC bind -- covers KnownVar, InstanceVar
- | vwC == vwP  =  vMatch' vts bind (pdbg "vM.vmr" vmr) (pdbg "vM.vC" vC) $ pdbg "vM.vP" vP
+ | vC == vP    =  bindVarToVar vP vC bind 
+ | vwC == vwP  =  vMatch' vts bind vmr vC vP
  | vwC == ExprV && vwP == ObsV  =  vMatch' vts bind vmr vC vP
  | otherwise   =  fail "vMatch: class mismatch"
  where
     pbound = StdVar vP `S.member` pvbs
-    vmr = lookupVarTables (pdbg "vM.vts" vts) vP
+    vmr = lookupVarTables vts vP
 \end{code}
 Variable classes are compatible, but is the pattern ``known''?
 \begin{code}

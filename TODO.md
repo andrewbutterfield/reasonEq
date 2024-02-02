@@ -2,49 +2,9 @@
 
 ## Urgent/Now
 
-All other known names in sets have function types and appear as Cons *identifiers*. The emptyset symbol has a constructed type and appears as a "variable" (it's really a constant.) I suspect the matcher does due diligence
-on constructor names but not variables.
-
-It was also declared as an `eVar`, now a `var`.
-It seems to match in some situations and not others.
-
-We find that `mkConsIntro` uses `classFromType`. 
-This is not a good idea. Type and class should be independent.
-A predicate is a term of type $t \fun \Bool$.
-All other terms are non-predicates.
-PVars and EVars are variables whose values are terms of the corresponding type. Their free-variables are contingent on what term value they have. Observation variables denote some value, and can be free or bound (at the 1st-order level).
-
-*Lower level theories work fine*.
-
-**Getting totally spurious matches in Sets**
-
-**UNSOUND!!!**
-
-**lookupVarTables BUG???**
-```
-@vM.vts:
-[ VD ( { (VR (Id "and" 0, VP, WS), KV ...) }, {}, {} )
-, VD ( { (VR (Id "or" 0, VP, WS), KV ...) }, {}, {} )
-, VD ( { (VR (Id "not" 0, VP, WS), KV ...) }, {}, {} )
-, VD ( { (VR (Id "eqv" 0, VP, WS), KV ...) }, {}, {} ) ]
-@vM.vmr:
-UV
-@vM.vP:
-VR (Id "and" 0, VO, WS)
-@vM.vC:
-VR (Id "or" 0, VO, WS)
-Match against `and_zero'[1] OK
-Binding: { P ⟼ ∈(x,S), ∧ ⟼ ∨ }
-```
 
 ### Idea
 
-Rather than `P order` we have `P predtype` where `predtype` is defined for
-types of the form `type -> bool` as being `type`. **NO - DOES NOT WORK**
-
-So `P type` is the same as `E (ptype -> bool)`.
-
-Potential area of difficulty - associativity laws.
 
 We should treat `=` like `≡` in pattern matching.
 

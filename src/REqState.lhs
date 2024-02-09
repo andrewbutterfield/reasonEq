@@ -73,11 +73,11 @@ We divide settings into three types:
 data REqSettings
   = REqSet {
      -- Section 1 - standalone settings
-       maxMatchDisplay :: Int -- mmd
+       maxMatchDisplay :: Int -- mm, maxmatches
      -- Section 2 - settings that specify behaviour
-     , hideTrivialMatch :: Bool -- mht --> matchFilter
-     , hideTrivialQuantifiers :: Bool -- mhq --> matchFilter
-     , hideFloatingVariables :: Bool -- mhf --> matchFilter
+     , showTrivialMatches :: Bool -- tm, trivialmatch --> matchFilter
+     , showTrivialQuantifiers :: Bool -- tq, trivialquant --> matchFilter
+     , showFloatingVariables :: Bool -- fv, floatvars --> matchFilter
      -- Section 3 - settings that implement behaviour from Section 2
      , matchFilter :: FilterFunction
      }
@@ -87,30 +87,30 @@ maxMatchDisplay__ f r = r{maxMatchDisplay = f $ maxMatchDisplay r}
 maxMatchDisplay_      = maxMatchDisplay__ . const
 
 -- Section 2 updaters
-hideTrivialMatch__ f r
-  =  matchFilterUpdate r{hideTrivialMatch = f $ hideTrivialMatch r}
-hideTrivialMatch_   =  hideTrivialMatch__ . const
+showTrivialMatch__ f r
+  =  matchFilterUpdate r{showTrivialMatches = f $ showTrivialMatches r}
+showTrivialMatch_   =  showTrivialMatch__ . const
 
-hideTrivialQuantifiers__ f r
-  =  matchFilterUpdate r{hideTrivialQuantifiers = f $ hideTrivialQuantifiers r}
-hideTrivialQuantifiers_   =  hideTrivialQuantifiers__ . const
+showTrivialQuantifiers__ f r
+  =  matchFilterUpdate r{showTrivialQuantifiers = f $ showTrivialQuantifiers r}
+showTrivialQuantifiers_   =  showTrivialQuantifiers__ . const
 
-hideFloatingVariables__ f r
-  =  matchFilterUpdate r{hideFloatingVariables = f $ hideFloatingVariables r}
-hideFloatingVariables_   =  hideFloatingVariables__ . const
+showFloatingVariables__ f r
+  =  matchFilterUpdate r{showFloatingVariables = f $ showFloatingVariables r}
+showFloatingVariables_   =  showFloatingVariables__ . const
 
 
 -- Section 3 updaters -- not exported, internal use only
-
+-- NOW WORKS INCORRECTLY (hide -> show in field names but not HERE)
 matchFilterUpdate r
   = r{matchFilter = mfu}
   where
     mfu = foldl mfuMrg acceptAll filterSpecs
     mfuMrg fltsofar (enabled,flt) = andIfWanted enabled flt fltsofar
     filterSpecs
-      = [ ( hideTrivialMatch r,       isNonTrivial )
-        , ( hideTrivialQuantifiers r, nonTrivialQuantifiers )
-        , ( hideFloatingVariables r,  noFloatingVariables )
+      = [ ( showTrivialMatches r,       isNonTrivial )
+        , ( showTrivialQuantifiers r, nonTrivialQuantifiers )
+        , ( showFloatingVariables r,  noFloatingVariables )
         ]
 \end{code}
 
@@ -130,9 +130,9 @@ andIfWanted wanted newf currf ctxt mtch
 initREqSettings
   = matchFilterUpdate $ REqSet {
       maxMatchDisplay = 20
-    , hideTrivialMatch = True
-    , hideTrivialQuantifiers = True 
-    , hideFloatingVariables = False 
+    , showTrivialMatches = True
+    , showTrivialQuantifiers = True 
+    , showFloatingVariables = False 
     , matchFilter = acceptAll
     }
 \end{code}
@@ -143,10 +143,10 @@ For every setting we provide both a short and long string,
 the first for use in commands, the second for display
 \begin{code}
 type SettingStrings = (String,String,String) -- short,type,long
-rEqSettingStrings = [ ("mmd","Number","Max. Match Display")
-                    , ("mht","Bool","Hide Trivial Matches")
-                    , ("mhq","Bool","Hide Trivial Quantifiers")
-                    , ("mhf","Bool","Hide Floating Variables")
+rEqSettingStrings = [ ("mm","Number","Max. Match Display")
+                    , ("tm","Bool","Show Trivial Matches")
+                    , ("tq","Bool","Show Trivial Quantifiers")
+                    , ("fv","Bool","Show Floating Variables")
                     ]
 showSettingStrings (short,typ,long)
   = short ++ ":" ++ typ ++ " '" ++ long ++ "'"
@@ -160,10 +160,10 @@ showSettings rsettings
     displaySettings _ []        =  []
     displaySettings r (rs:rss)  =  disp r rs : displaySettings r rss
 
-    disp r ("mmd",_,text) = text ++ " = " ++ show (maxMatchDisplay r)
-    disp r ("mht",_,text) = text ++ " = " ++ show (hideTrivialMatch r)
-    disp r ("mhq",_,text) = text ++ " = " ++ show (hideTrivialQuantifiers r)
-    disp r ("mhf",_,text) = text ++ " = " ++ show (hideFloatingVariables r)
+    disp r ("mm",_,text) = text ++ " = " ++ show (maxMatchDisplay r)
+    disp r ("tm",_,text) = text ++ " = " ++ show (showTrivialMatches r)
+    disp r ("tq",_,text) = text ++ " = " ++ show (showTrivialQuantifiers r)
+    disp r ("fv",_,text) = text ++ " = " ++ show (showFloatingVariables r)
 \end{code}
 
 \begin{code}
@@ -191,16 +191,16 @@ changeSetting (short,typ,_) valstr reqs
 \begin{code}
 changeBoolSetting :: (Monad m, MonadFail m) => String  -> Bool -> REqSettings -> m REqSettings
 changeBoolSetting name value reqs
- | name == "mht"  =  return $ hideTrivialMatch_ value reqs
- | name == "mhq"  =  return $ hideTrivialQuantifiers_ value reqs
- | name == "mhf"  =  return $ hideFloatingVariables_ value reqs
+ | name == "tm"  =  return $ showTrivialMatch_ value reqs
+ | name == "tq"  =  return $ showTrivialQuantifiers_ value reqs
+ | name == "fv"  =  return $ showFloatingVariables_ value reqs
  | otherwise      =  fail ("changeBoolSetting - unknown field: "++name)
 \end{code}
 
 \begin{code}
 changeNumberSetting :: (Monad m, MonadFail m) => String  -> Int -> REqSettings -> m REqSettings
 changeNumberSetting name value reqs
- | name == "mmd"  =  return $ maxMatchDisplay_ value reqs
+ | name == "mm"  =  return $ maxMatchDisplay_ value reqs
  | otherwise        =  fail ("changeNumberSetting - unknown field: "++name)
 \end{code}
 
@@ -208,28 +208,28 @@ changeNumberSetting name value reqs
 \begin{code}
 reqset = "REQSET"
 reqsetHDR = "BEGIN "++reqset ; reqsetTRL = "END "++ reqset
-mmdKey = "MMD = "
-mhtKey = "MHT = "
-mhqKey = "MHQ = "
-mhfKey = "MHF = "
+mmKey = "MM = "
+tmKey = "TM = "
+tqKey = "TQ = "
+fvKey = "FV = "
 
 writeREqSettings :: REqSettings -> [String]
 writeREqSettings rqset
   = [ reqsetHDR
-    , mmdKey ++ show (maxMatchDisplay rqset)
-    , mhtKey ++ show (hideTrivialMatch rqset)
-    , mhqKey ++ show (hideTrivialQuantifiers rqset)
-    , mhfKey ++ show (hideFloatingVariables rqset)
+    , mmKey ++ show (maxMatchDisplay rqset)
+    , tmKey ++ show (showTrivialMatches rqset)
+    , tqKey ++ show (showTrivialQuantifiers rqset)
+    , fvKey ++ show (showFloatingVariables rqset)
     , reqsetTRL ]
 
 readREqSettings :: (Monad m, MonadFail m) => [String] -> m (REqSettings, [String])
 readREqSettings [] = fail "readREqSettings: no text"
 readREqSettings txts
   = do rest1 <- readThis reqsetHDR txts
-       (theMMD,rest2) <- readKey mmdKey read rest1
-       (theMHT,rest3) <- readKey mhtKey readBool rest2
-       (theMHQ,rest4) <- readKey mhqKey readBool rest3
-       (theMHF,rest5) <- readKey mhfKey readBool rest4
+       (theMMD,rest2) <- readKey mmKey read rest1
+       (theMHT,rest3) <- readKey tmKey readBool rest2
+       (theMHQ,rest4) <- readKey tqKey readBool rest3
+       (theMHF,rest5) <- readKey fvKey readBool rest4
        rest6 <- readThis reqsetTRL rest5
        return ( matchFilterUpdate
                  ( REqSet theMMD

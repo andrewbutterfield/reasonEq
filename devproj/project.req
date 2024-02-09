@@ -3,7 +3,7 @@ BEGIN THEORIES
 THNAMES = ["And","AndOrInvert","Arithmetic","Equality","Equiv","Exists","ForAll","Implies","Not","Or","Sets","UClose","UTPBase","XYZ"]
 SDAG = [[("XYZ",["UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"]),("UTPBase",["UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("UClose",["Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Sets",["Implies","Equiv","Equality","ForAll"]),("Exists",["ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Arithmetic",["Implies","Equiv","Equality"]),("ForAll",["Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Equality",["Implies","Equiv"])],[("Implies",["AndOrInvert","And","Or","Not","Equiv"])],[("AndOrInvert",["And","Or","Not","Equiv"])],[("And",["Or","Not","Equiv"])],[("Or",["Not","Equiv"])],[("Not",["Equiv"])],[("Equiv",[])]]
 END THEORIES
-CURRTHEORY = ForAll
+CURRTHEORY = Exists
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
 END MAP LIVE-PROOFS

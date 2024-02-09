@@ -1,6 +1,6 @@
 BEGIN REQSET
-MMD = 99
-MHT = True
-MHQ = True
-MHF = False
+MM = 20
+TM = True
+TQ = True
+FV = False
 END REQSET

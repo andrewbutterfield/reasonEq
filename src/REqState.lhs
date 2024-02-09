@@ -16,7 +16,8 @@ module REqState ( REqSettings(..)
                 , theories__, theories_
                 , settings__, settings_
                 , currTheory__, currTheory_, liveProofs__, liveProofs_
-                , writeREqState, readREqState1, readREqState2
+                , writeREqState
+                , readREqState1, readREqSettings, readREqState2
                 , module TermZipper
                 , module Laws
                 , module Proofs
@@ -272,6 +273,7 @@ liveProofs__ f r = r{liveProofs = f $ liveProofs r}
 liveProofs_      = liveProofs__ . const
 \end{code}
 
+\newpage
 \section{Writing and Reading State}
 
 \begin{code}
@@ -283,14 +285,15 @@ currThKEY = "CURRTHEORY = "
 \subsection{Write State}
 
 \begin{code}
-writeREqState :: REqState -> ([String],NamedTheoryTexts)
+writeREqState :: REqState -> ([String],[String],NamedTheoryTexts)
 writeREqState reqs
   = ( [ reqstateHDR ] ++
-      writeREqSettings (settings reqs) ++
+      -- writeREqSettings (settings reqs) ++
       thrysTxt ++
       [currThKEY ++ (currTheory reqs)] ++
       writeLiveProofs (liveProofs reqs) ++
       [ reqstateTLR ]
+    , writeREqSettings (settings reqs)
     , nmdTxts )
   where (thrysTxt,nmdTxts) = writeTheories (theories reqs)
 \end{code}
@@ -300,13 +303,12 @@ writeREqState reqs
 We have to split this into two phases:
 \begin{code}
 readREqState1 :: (Monad m, MonadFail m) => [String]
-              -> m ((REqSettings,[String]),[String])
+              -> m ([String],[String])
 readREqState1 [] = fail "readREqState1: no text."
 readREqState1 txts
   = do rest1 <- readThis reqstateHDR txts
-       (theSet,rest2) <- readREqSettings rest1
-       (thryNms,rest3) <- readTheories1 rest2
-       return ((theSet,thryNms),rest3)
+       (thryNms,rest2) <- readTheories1 rest1
+       return (thryNms,rest2)
 
 readREqState2 :: (Monad m, MonadFail m) => REqSettings ->  [(String,Theory)]
               -> [String] -> m REqState

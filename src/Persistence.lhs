@@ -1,4 +1,4 @@
-\section{Persistent Storage}
+\chapter{Persistent Storage}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2017--24
 
@@ -6,8 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 module Persistence
-  ( projectName, projectExt
-  , getWorkspaces, putWorkspaces
+  ( getWorkspaces, putWorkspaces
   , currentWorkspace, createWorkspace
   , ifDirectoryExists, ifFileExists
   , writeAllState, readAllState
@@ -28,7 +27,7 @@ import REqState
 import Debugger
 \end{code}
 
-\subsection{Startup}
+\section{Startup}
 
 We check first for the existence of the ``user application''
 directory. If it exists, then we use its contents
@@ -38,7 +37,7 @@ so we create it, and create a default workspace
 in the current working directory.
 
 
-\subsection{User Application Directory}
+\section{User Application Directory}
 
 We return the path of the user application directory,
 plus the contents of its workspaces file.
@@ -135,14 +134,7 @@ renderWorkspaces (current,wsNm,wsPath)
 \end{code}
 
 \newpage
-\subsection{Creating a Workspace}
-
-The project/workspace master file:
-\begin{code}
-projectName = "project"
-projectExt = "req"
-projectFile =  projectName <.> projectExt
-\end{code}
+\section{Creating a Workspace}
 
 To create a workspace we first check that none is already
 present at the path supplied.
@@ -173,7 +165,7 @@ createWorkspace wsName wsReq
 \end{code}
 
 \newpage
-\subsection{Current Workspace}
+\section{Current Workspace}
 
 
 We lookup the current workspace.
@@ -217,7 +209,7 @@ findCurrent ((True,nm,fp):_) = return (nm,fp)
 findCurrent (_:wss) = findCurrent wss
 \end{code}
 
-\subsection{Error Reporting}
+\section{Error Reporting}
 
 \begin{code}
 noSuchDirectory :: String -> a -> FilePath -> IO a
@@ -251,12 +243,21 @@ ifFileExists what junk file useFile
 
 
 \newpage
-\subsection{Persistent \reasonEq\ State}
+\section{Persistent \reasonEq\ State}
 
-In the project directory we have a top-level file called \texttt{project.req}
+In the project directory we have top-level files
 that holds overall data regarding the project.
 \begin{code}
-projectPath projDir = projDir </> projectName <.> projectExt
+projectName = "project"
+projectExt = "req"
+projectFile =  projectName <.> projectExt
+settingsName = "settings"
+settingsFile = settingsName <.> projectExt
+\end{code}
+
+\begin{code}
+projectPath projDir = projDir </> projectFile
+settingsPath projDir = projDir </> settingsFile
 \end{code}
 
 \begin{code}
@@ -266,9 +267,11 @@ writeAllState reqs
        ifDirectoryExists "REQ-STATE" reqs pjdir (doWriteAll reqs pjdir)
   where
     doWriteAll reqs pjdir
-      = do  let (tsTxt,nTsTxts) = writeREqState reqs
+      = do  let (tsTxt,setsTxt,nTsTxts) = writeREqState reqs
             let fp = projectPath pjdir
             writeFile fp $ unlines tsTxt
+            let sp = settingsPath pjdir
+            writeFile sp $ unlines setsTxt
             sequence_ $ map (writeNamedTheoryTxt pjdir) nTsTxts
             putStrLn ("REQ-STATE written to '"++projectDir reqs++"'.")
             return reqs{ modified = False }
@@ -284,12 +287,15 @@ readAllState reqs projdirfp
   where
     doReadAll projdirfp
       = do  let projfp = projectPath projdirfp
-            txt <- readFile projfp
-            ((settings,thnms),rest1) <- readREqState1 $ lines txt
+            ptxt <- readFile projfp
+            (thnms,rest1) <- readREqState1 $ lines ptxt
             nmdThrys <- getNamedTheories projdirfp thnms
-            newreqs <- readREqState2 settings nmdThrys rest1
+            stext <- readFile $ settingsPath projdirfp
+            (ssettings,_) <- readREqSettings $ lines stext
+            nmdThrys <- getNamedTheories projdirfp thnms
+            newreqs <- readREqState2 ssettings nmdThrys rest1
             putStrLn ("Read project details from "++projfp)
-            return newreqs{projectDir = projdirfp}
+            return newreqs{projectDir = projdirfp, settings = ssettings}
 
 getNamedTheories projfp nms
   = ifDirectoryExists "Theories" [] projfp (getNamedTheories' projfp nms)
@@ -307,7 +313,7 @@ getNamedTheories' projfp (nm:nms)
 \end{code}
 
 \newpage
-\subsection{Persistent Theory}
+\section{Persistent Theory}
 
 We also have files called \texttt{<thryName>.thr}
 for every theory called $\langle thryName\rangle$.
@@ -367,7 +373,7 @@ getNamedTheory fp nm
 \end{code}
 
 \newpage
-\subsection{Persistent Conjecture}
+\section{Persistent Conjecture}
 
 For conjecture files, we use the extension \texttt{.cnj}.
 \begin{code}
@@ -404,7 +410,7 @@ readShown (ln:lns)
  | otherwise      = (read ln) : readShown lns
 \end{code}
 
-\subsection{Persistent Proof}
+\section{Persistent Proof}
 
 For proof files, we use the extension \texttt{.prf}.
 \begin{code}

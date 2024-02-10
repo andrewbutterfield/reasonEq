@@ -81,12 +81,18 @@ data REqSettings
      -- Section 3 - settings that implement behaviour from Section 2
      , matchFilter :: FilterFunction
      }
+\end{code}
 
--- Section 1 updaters
+\subsubsection{Section 1 Updaters}
+
+\begin{code}
 maxMatchDisplay__ f r = r{maxMatchDisplay = f $ maxMatchDisplay r}
 maxMatchDisplay_      = maxMatchDisplay__ . const
+\end{code}
 
--- Section 2 updaters
+\subsubsection{Section 2 Updaters}
+
+\begin{code}
 showTrivialMatch__ f r
   =  matchFilterUpdate r{showTrivialMatches = f $ showTrivialMatches r}
 showTrivialMatch_   =  showTrivialMatch__ . const
@@ -194,7 +200,7 @@ changeBoolSetting name value reqs
  | name == "tm"  =  return $ showTrivialMatch_ value reqs
  | name == "tq"  =  return $ showTrivialQuantifiers_ value reqs
  | name == "fv"  =  return $ showFloatingVariables_ value reqs
- | otherwise      =  fail ("changeBoolSetting - unknown field: "++name)
+ | otherwise     =  fail ("changeBoolSetting - unknown field: "++name)
 \end{code}
 
 \begin{code}

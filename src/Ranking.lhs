@@ -1,4 +1,4 @@
-\section{Term and Match Ranking}
+\chapter{Term and Match Ranking}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2017--18
 
@@ -9,7 +9,7 @@ module Ranking
   ( FilterFunction, OrderFunction, Ranking
   , filterAndSort -- used in Main
   -- exported Filters
-  , acceptAll -- not used
+  , acceptAll -- used in REqState
   , isNonTrivial-- used in REqState
   , nonTrivialQuantifiers -- used in REqState
   , noFloatingVariables -- used in REqState
@@ -44,7 +44,7 @@ mdetails mtch
      ++ " -->  " ++ trTerm 0 (mRepl mtch)
 \end{code}
 
-\subsection{Ranking Types}
+\section{Ranking Types}
 
 Ranking involves two phases: filtering, and ordering.
 Filtering is using a predicate to decide what matches to consider
@@ -60,7 +60,7 @@ type Ranking = [MatchContext] -> Matches -> Matches
 \end{code}
 
 \newpage
-\subsection{Ranking Match Lists}
+\section{Ranking Match Lists}
 
 Simple sorting according to rank,
 with duplicate replacements removed
@@ -89,17 +89,17 @@ sameRepl :: Match -> Match -> Bool
 sameRepl m1 m2 = mRepl m1 == mRepl m2
 \end{code}
 
-\subsection{Rankings}
+\section{Rankings}
 
 
-\subsubsection{Size Matters}
+\subsection{Size Matters}
 
 \begin{code}
 sizeRanking :: Ranking
 sizeRanking = filterAndSort ( acceptAll, sizeOrd )
 \end{code}
 
-\subsubsection{No Vanishing Q, favour LHS}
+\subsection{No Vanishing Q, favour LHS}
 
 \begin{code}
 favouriteRanking  :: Ranking
@@ -108,16 +108,16 @@ favouriteRanking = filterAndSort ( nonTrivialQuantifiers, favourDefLHSOrd )
 
 
 \newpage
-\subsection{Filters}
+\section{Filters}
 
-\subsubsection{Accept All}
+\subsection{Accept All}
 
 \begin{code}
 acceptAll :: FilterFunction
 acceptAll _ _ = True
 \end{code}
 
-\subsubsection{Drop Trivial Matches}
+\subsection{Accept Trivial Matches}
 
 Reject matches against a single predicate variable
 \begin{code}
@@ -129,7 +129,7 @@ isNonTrivial _ m
      nontrivial _                =  True
 \end{code}
 
-\subsubsection{Drop Vanishing Quantifiers}
+\subsection{Accept Vanishing Quantifiers}
 
 Often we do not want matches in which all pattern list-variables
 are mapped to empty sets and lists.
@@ -138,7 +138,7 @@ nonTrivialQuantifiers :: FilterFunction
 nonTrivialQuantifiers _  =  not . onlyTrivialQuantifiers . mBind
 \end{code}
 
-\subsubsection{Drop Floating Matches}
+\subsection{Accept Floating Matches}
 
 \begin{code}
 noFloatingVariables :: FilterFunction
@@ -146,11 +146,11 @@ noFloatingVariables _ =   not . any isFloatingGVar . mentionedVars . mRepl
 \end{code}
 
 \newpage
-\subsection{Orderings}
+\section{Orderings}
 
 In orderings, smaller is better.
 
-\subsubsection{Term Size}
+\subsection{Term Size}
 
 Simple ranking by replacement term size,
 after the binding is applied:
@@ -160,7 +160,7 @@ sizeOrd _ m  =  termSize $ mRepl m
 \end{code}
 
 
-\subsubsection{Favour LHS and Definitions}
+\subsection{Favour LHS and Definitions}
 
 Show matches to laws named as definitions first,
 then those matching LHS of equivalence laws,

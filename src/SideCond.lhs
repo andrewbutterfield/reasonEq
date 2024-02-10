@@ -1232,10 +1232,10 @@ We sometimes want mentions for a specific condition type:
 findCoveredGenVar :: MonadFail m => GenVar -> SideCond -> m VarSet
 findCoveredGenVar gv ( ascs, _ ) = findCGV gv ascs
 
-findCGV gv [] = fail ("Covered "++show gv ++ " not found")
+findCGV gv []        =  fail ("Covered "++show gv ++ " not found")
 findCGV gv ((CoveredBy _ gv' vs):ascs)
-  | gv == gv'  =  return vs
-  | otherwise  =  findCGV gv ascs
+  | gv == gv'        =  return vs
+findCGV gv (_:ascs)  =  findCGV gv ascs
 \end{code}
 
 Next we develop some set queries and operations

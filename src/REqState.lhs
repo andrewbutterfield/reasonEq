@@ -104,19 +104,25 @@ showTrivialQuantifiers_   =  showTrivialQuantifiers__ . const
 showFloatingVariables__ f r
   =  matchFilterUpdate r{showFloatingVariables = f $ showFloatingVariables r}
 showFloatingVariables_   =  showFloatingVariables__ . const
+\end{code}
+
+\subsubsection{Section 3 Updaters}
 
 
--- Section 3 updaters -- not exported, internal use only
--- NOW WORKS INCORRECTLY (hide -> show in field names but not HERE)
+
+Section 3 updaters --- not exported, internal use only.
+NOW WORKS INCORRECTLY (hide became show in field names but not HERE)
+
+\begin{code}
 matchFilterUpdate r
   = r{matchFilter = mfu}
   where
     mfu = foldl mfuMrg acceptAll filterSpecs
     mfuMrg fltsofar (enabled,flt) = andIfWanted enabled flt fltsofar
     filterSpecs
-      = [ ( showTrivialMatches r,       isNonTrivial )
-        , ( showTrivialQuantifiers r, nonTrivialQuantifiers )
-        , ( showFloatingVariables r,  noFloatingVariables )
+      = [ ( not $ showTrivialMatches r,     isNonTrivial          )
+        , ( not $ showTrivialQuantifiers r, nonTrivialQuantifiers )
+        , ( not $ showFloatingVariables r,  noFloatingVariables   )
         ]
 \end{code}
 

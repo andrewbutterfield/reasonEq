@@ -1088,7 +1088,7 @@ Showing proof settings:
 \begin{code}
 showProofSettingsDescr = ( "sps"
                          , "show proof settings"
-                         , ""
+                         , "show proof settings"
                          , showPrfSettingsCommand )
 showPrfSettingsCommand :: REPLCmd (REqState, LiveProof)
 showPrfSettingsCommand _ pstate@(reqs, _)
@@ -1105,7 +1105,9 @@ modPrfSettingsDescr
     , unlines
         ( [ "mps 'setting' 'value' -- set setting=value" ]
           ++ map (("      "++) .showSettingStrings) rEqSettingStrings
-          ++ ["  e.g. mps mmd 42"]
+          ++ [ "Aliases for True: true t on yes y (any case), num > 0"
+             , "Aliases for False: anything else"
+             , "  e.g. mps tq on" ]
         )
     , modProofSettings )
 

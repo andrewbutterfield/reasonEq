@@ -423,14 +423,13 @@ readNat str
 \begin{code}
 readBool :: String -> Bool
 readBool str
-  | lowstr == "t"     =  True
-  | lowstr == "true"  =  True
-  | lowstr == "yes"   =  True
-  | int >= 0          =  int > 0
-  | otherwise         =  False
+  | lowstr `elem`  =  trueAliases  =  True
+  | int >= 0                       =  int > 0
+  | otherwise                      =  False
   where
-    lowstr = map toLower str
-    int = readNat str
+    lowstr       =  map toLower str
+    trueAliases  =  [ "t", "true", "yes", "on" ] 
+    int          =  readNat str
 \end{code}
 
 \newpage

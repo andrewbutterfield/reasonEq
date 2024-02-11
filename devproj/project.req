@@ -6,24 +6,6 @@ END THEORIES
 CURRTHEORY = Exists
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("Exists","and_exists_scope")
-BEGIN LIVE-PROOF
-TH-NAME: Exists
-CJ-NAME: and_exists_scope
-CONJ = ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),B (TF TB (TG (Id "B" 0))) (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[])),GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS)))],B (TF TB (TG (Id "B" 0))) (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),B (TF TB (TG (Id "B" 0))) (Id "exists" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS)))])],([SD NU (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])],fromList []))
-SIDE = ([SD NU (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])],fromList [])
-STRAT red-All
-BEGIN SEQZIP
-TERMZIP = (C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),B (TF TB (TG (Id "B" 0))) (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[])),GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS)))],[Cons' (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [] [B (TF TB (TG (Id "B" 0))) (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),B (TF TB (TG (Id "B" 0))) (Id "exists" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS)))])]])
-BEGIN SEQUENT'
-SIDECOND = ([SD NU (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])],fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.and_exists_scope", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K (TF TB (TG (Id "B" 0))) (VB True)}
-END SEQUENT'
-END SEQZIP
-FPATH: [1]
-BEGIN LIST STEPS
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

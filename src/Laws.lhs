@@ -259,6 +259,7 @@ data Provenance
   = Axiom          --  considered as `self-evidently` True
   | Proven String  --  demonstrated by (named) proof
   | Assumed        --  conjecture asserted w/o proof
+  | Suspect String --  was Proven but a used law has changed
   deriving (Eq,Show,Read)
 \end{code}
 

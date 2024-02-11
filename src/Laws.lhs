@@ -258,8 +258,8 @@ However, we also want to specify the provenance of each law.
 data Provenance
   = Axiom          --  considered as `self-evidently` True
   | Proven String  --  demonstrated by (named) proof
-  | Assumed        --  conjecture asserted w/o proof
   | Suspect String --  was Proven but a used law has changed
+  | Assumed        --  conjecture asserted w/o proof
   deriving (Eq,Show,Read)
 \end{code}
 

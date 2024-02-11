@@ -2,6 +2,16 @@
 
 ## Urgent/Now
 
+Start Developing theories for:
+
+* Hoare Triples
+* Weakest Precondition
+* UTCP
+* Designs
+* Reactive Systems
+
+
+### Parked for Now
 
 Want to have general settings away from files that contain syntax,
 so that syntax changes only affect those files, and not the settings.
@@ -54,7 +64,8 @@ KISS: keep them unique for now.
 
   * The live proofs depend on an context based on the theories in scope when they were started, which is why they currently reside in `project.req` which captures that context. Could we shift these outside?
 
-  * In any case, what happens to a live-proof if we edit a theory it depends on?  Should have a way of doing impact analysis of any change we make w.r.t *all* current live proofs? Perhaps this should only be done if it becomes an issue.
+  * In any case, what happens to a live-proof if we edit a theory it depends on?  Should have a way of doing impact analysis of any change we make w.r.t *all* current live proofs? Perhaps this should only be done if it becomes an issue. Note: the `Provenance` datatype now has a 
+  `Suspect` variant.
 
   * We have the notion of a "current" theory, w.r.t. which we setup proofs, and should be able to add, edit, and/or delete conjectures (axioms?), variable-table entries, and theory dependencies.
 

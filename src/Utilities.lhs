@@ -423,9 +423,9 @@ readNat str
 \begin{code}
 readBool :: String -> Bool
 readBool str
-  | lowstr `elem`  =  trueAliases  =  True
-  | int >= 0                       =  int > 0
-  | otherwise                      =  False
+  | lowstr `elem` trueAliases  =  True
+  | int >= 0                   =  int > 0
+  | otherwise                  =  False
   where
     lowstr       =  map toLower str
     trueAliases  =  [ "t", "true", "yes", "on" ] 

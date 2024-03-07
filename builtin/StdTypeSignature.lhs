@@ -12,7 +12,8 @@ module StdTypeSignature (
 , apred1, apred11, apred2
 , nat, int
 , valueType
-, power
+, powerSym, powerset, power
+, starSym, listof, star
 ) where
 
 import LexBase
@@ -70,7 +71,17 @@ valueType (Boolean _) = int
 \subsection{Sets}
 
 \begin{code}
-powerset   = GivenType $ jId "P"
-power t    = TypeCons (jId "powerset") [t]
+powerSym  =  jId "P"
+powerset  =  GivenType powerSym
+power t   =  TypeCons powerSym [t]
+\end{code}
+
+
+\subsection{Lists}
+
+\begin{code}
+starSym  =  jId "*"
+listof   =  GivenType starSym
+star t   =  TypeCons starSym [t]
 \end{code}
 

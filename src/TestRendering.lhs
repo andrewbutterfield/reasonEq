@@ -124,7 +124,10 @@ trgvar trid (LstVar lv)  =  trlvar trid lv
 trType :: Type -> String
 trType ArbType           =  _tau
 trType (TypeVar i)       =  trId i
-trType (TypeCons i [t])  =  trId i ++ " " ++ trType t 
+trType (TypeCons (Identifier i _) [t])
+  | i == "*"             =  (trBracketIf (not $ isAtmType t) (trType t)) 
+                             ++ "\x002a "
+trType (TypeCons i [t])  =  trId i ++ " " ++ trType t
 trType (TypeCons i ts)   =  trId i ++ "(" ++ trTypes ts ++ ")"
 trType (AlgType i itss)  =  "ADT"
 -- fun-types are right-associative
@@ -140,6 +143,7 @@ trType (GivenType (Identifier i _))
   | i == "R"  =  "\x211d"
   | i == "C"  =  "\x2102"
   | i == "P"  =  "\x2119"
+  | i == "*"  =  "\x002a"
 trType (GivenType i)      =  trId i
 
 trTypes = seplist " " trType
@@ -401,10 +405,11 @@ trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@(_:_:_))
    isOp = fixity /= NotInfix
 \end{code}
 
-We have some containers such as sets:
+We have some containers such as sets and lists:
 \begin{code}
 trterm trid _ (Cons tk _ n ts)
   | n == jId "set"  =  trcontainer trid ( "{", ",", "}" ) ts
+  | n == jId "seq"  =  trcontainer trid ( "[", ",", "]" ) ts
 \end{code}
 
 In all other cases we simply use classical function application notation

@@ -7,6 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module AST ( Type
+           , isAtmType
            , bool, arbpred
            , pattern ArbType,  pattern TypeVar, pattern TypeCons
            , pattern AlgType, pattern FunType, pattern GivenType
@@ -83,6 +84,12 @@ data Type -- most general types first
  | TG Identifier -- given type
  | TB -- bottom type,  bottom of sub-type relation
  deriving (Eq, Ord, Show, Read)
+
+isAtmType :: Type -> Bool
+isAtmType T       =  True
+isAtmType (TV _)  =  True
+isAtmType (TG _)  =  True
+isAtmType TB      =  True
 \end{code}
 The ordering of data-constructors here is important,
 as type-matching relies on it.

@@ -7,6 +7,9 @@ Start Developing theories for:
 * Hoare Triples
 * Weakest Precondition
 * UTCP
+  depends on:
+  * Sets
+  * Lists
 * Designs
 * Reactive Systems
 

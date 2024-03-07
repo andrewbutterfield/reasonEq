@@ -41,6 +41,7 @@ import UClose
 import Equality
 import Arithmetic
 import Sets
+import Lists
 import UTPBase
 import XYZ
 --import XYZDesign
@@ -102,6 +103,7 @@ devKnownBuiltins  = [ equivTheory
                     , uCloseTheory
                     , arithmeticTheory
                     , setTheory
+                    , listTheory
                     , utpBaseTheory
                     , xyzTheory
                     -- , xyzDTheory

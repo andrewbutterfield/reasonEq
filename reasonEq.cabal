@@ -66,6 +66,7 @@ library
       Exists
       ForAll
       Implication
+      Lists
       Negation
       Sets
       StdSignature

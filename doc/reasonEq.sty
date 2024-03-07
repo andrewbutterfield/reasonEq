@@ -27,8 +27,14 @@
 \def\Seq#1{{#1}^*}
 \def\seqof#1{\langle{#1}\rangle}
 \def\nil{\seqof{}}
+\def\cons{\mathop{{\scriptscriptstyle{\circ\atop\circ}}}}
+% \def\cons{\mathop{\colon}}
 \def\cat{\frown}
-\def\elems{\mathop{\mathrm{elems}}}
+\def\pfx{\preceq}
+\def\sngl{\mathop{\mathsf{sngl}}}
+\def\elems{\mathop{\mathsf{elems}}}
+\def\rev{\mathop{\mathsf{rev}}}
+\def\len{\mathop{\mathsf{len}}}
 
 % function types
 \def\fun{\rightarrow}

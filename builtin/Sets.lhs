@@ -42,7 +42,7 @@ a very simple theory of (typed) sets.
 
 
 We need to build some infrastructure here.
-This consists of the set variables $S$, $T$ and $g$,
+This consists of the set variables $S$, $S_n$,
 type constructor $\Set{}$, and
 the constants $\emptyset$, $\mof$, ${\_}$, $\cup$, $\cap$, $\setminus$.
 
@@ -329,6 +329,7 @@ setTheory
                              , equivName 
                              , equalityName
                              , forallName
+                             , arithmeticName
                              ]
                 , known   =  setKnown
                 , laws    =  setAxioms

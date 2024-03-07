@@ -24,7 +24,7 @@ module Utilities (
 , getJust
 , pulledFrom, getitem, choose
 , injMap, extdBij, bijExtend
-, spaced, intcalNN
+, pspace, spacep, spaced, intcalNN
 , pad
 , splitLast, splitAround
 , brkspn, brkspnBy, splice
@@ -508,7 +508,9 @@ lex' nekot (c:cs)
 
 rrun nekot = Run $ reverse nekot
 
-spaced s = ' ':s ++ " "
+pspace s = ' ':s
+spacep s = s ++ " "
+spaced s = ' ':pspace s ++ " "
 \end{code}
 
 

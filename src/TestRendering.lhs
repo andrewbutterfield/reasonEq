@@ -132,11 +132,11 @@ trType (TypeCons i ts)   =  trId i ++ "(" ++ trTypes ts ++ ")"
 trType (AlgType i itss)  =  "ADT"
 -- fun-types are right-associative
 trType (FunType ft@(FunType _ _) tr)   
-  =  "(" ++ trType ft ++ ")" ++ spaced _fun ++ trType tr
-trType (FunType ta tr)   =  trType ta ++ spaced _fun ++ trType tr
+  =  "(" ++ trType ft ++ ")" ++ spacep _fun ++ trType tr
+trType (FunType ta tr)   =  trType ta ++ spacep _fun ++ trType tr
 trType (GivenType (Identifier i _)) 
   -- hack - should be done in Symbols
-  | i == "B"  =  "\x1d539"
+  | i == "B"  =  " \x1d539 "
   | i == "N"  =  "\x2115"
   | i == "Z"  =  "\x2124"
   | i == "Q"  =  "\x211a"

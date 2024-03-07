@@ -160,7 +160,8 @@ theSymbolList
 
   , ("neg", SymForm "-" "-")
 
-  , ("cons", SymForm ":" ":")
+  , ("cons", SymForm ":" ":"), ("cat", SymForm "^" "\x2322")
+  , ("pfx", SymForm "<=" "\x227c")
 
   , ("forall", SymForm "forall" "\x2200"), ("exists", SymForm "exists" "\x2203")
 

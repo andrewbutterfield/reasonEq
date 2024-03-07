@@ -106,6 +106,10 @@ tl :: Term -> Term
 tl lst = Cons (seqf_1 contt) False i_tl [lst]
 cons :: Term -> Term -> Term
 cons x lst = Cons (cons_t contt) False i_cons [x,lst]
+cat :: Term -> Term -> Term
+cat s1 s2 = Cons (seqf_2 contt) False i_cat [s1,s2]
+pfx :: Term -> Term -> Term
+pfx s1 s2 = Cons (pfx_t contt) False i_pfx [s1,s2]
 \end{code}
 
 
@@ -179,11 +183,21 @@ cjHdConsTl = ( "hd" -.-  "cons" -.- "tl"
 \end{eqnarray*}
 \vspace{-8pt}
 \begin{code}
-ax2 = ( "ax" -.- "1"
-      , ( falseP
+axNilCatDef = ( "nil" -.- "cat" -.- "def"
+              , ( (nilseq `cat` s) `isEqualTo` s
+              , scTrue ) )
+axConsCatDef = ( "cons" -.- "cat" -.- "def"
+               , ( ((x `cons` s1) `cat` s2) 
+                   `isEqualTo` 
+                   ( x `cons` (s1 `cat` s2))
+               , scTrue ) )
+cjCatNil = ( "cat" -.-  "nil"
+      , ( (s `cat` nilseq) `isEqualTo` s
         , scTrue ) )
-cj2 = ( "cj" -.-  "1"
-      , ( trueP
+cjCatAssoc = ( "cat" -.-  "assoc"
+      , ( (s1 `cat` (s2 `cat` s3))
+          `isEqualTo`
+          ((s1 `cat` s2) `cat` s3)
         , scTrue ) )
 \end{code}
 
@@ -194,16 +208,20 @@ cj2 = ( "cj" -.-  "1"
 \\ (x \cons \sigma) \pfx (y \cons \sigma')
    &\defs&
    x = y \land \sigma \pfx \sigma'
-\\ \sigma \pfx \nil &=& \sigma = \nil
-\\ \nil \pfx \sngl(c) &=& \true
+\\ \sigma \pfx \nil &\equiv& \sigma = \nil
 \end{eqnarray*}
 \vspace{-8pt}
 \begin{code}
-ax3 = ( "ax" -.- "1"
-      , ( falseP
+axNilPfx = ( "nil" -.- "pfx" -.- "def"
+      , ( nilseq `pfx` s
         , scTrue ) )
-cj3 = ( "cj" -.-  "1"
-      , ( trueP
+axConsPfx = ( "cons" -.- "pfx" -.- "def"
+      , ( ((x `cons` s1) `pfx` (y `cons` s2))
+          ===
+          ((x `isEqualTo` y) /\ (s1 `pfx` s2))
+        , scTrue ) )
+cjSPfx = ( "s" -.-  "pfx" -.- "nil"
+      , ( (s `pfx` nilseq) === (s `isEqualTo` nilseq)
         , scTrue ) )
 \end{code}
 
@@ -211,14 +229,15 @@ cj3 = ( "cj" -.-  "1"
 
 \begin{eqnarray*}
    \sngl(x) &\defs& x \cons \nil
+\\ \nil \pfx \sngl(x) &\equiv& \true
 \end{eqnarray*}
 \vspace{-8pt}
 \begin{code}
-ax4 = ( "ax" -.- "1"
-      , ( falseP
+axSnglDef = ( "sngl" -.- "def"
+      , ( (ssingle x) `isEqualTo` (x `cons` nilseq)
         , scTrue ) )
-cj4 = ( "cj" -.-  "1"
-      , ( trueP
+cjSnglPfx = ( "nil" -.-  "pfx" -.- "sngl"
+      , ( nilseq `pfx` (ssingle x)
         , scTrue ) )
 \end{code}
 
@@ -288,6 +307,9 @@ listAxioms :: [Law]
 listAxioms
   = map (labelAsAxiom . mkNmdAsn)
       [ axHdDef, axTlDef
+      , axNilCatDef, axConsCatDef
+      , axNilPfx, axConsPfx
+      , axSnglDef
       ]
 \end{code}
 
@@ -298,6 +320,9 @@ listConjectures :: [NmdAssertion]
 listConjectures
   = map mkNmdAsn 
      [ cjHdConsTl
+     , cjCatNil, cjCatAssoc
+     , cjSPfx
+     , cjSnglPfx
      ]
 \end{code}
 

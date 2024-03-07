@@ -160,6 +160,8 @@ theSymbolList
 
   , ("neg", SymForm "-" "-")
 
+  , ("cons", SymForm ":" ":")
+
   , ("forall", SymForm "forall" "\x2200"), ("exists", SymForm "exists" "\x2203")
 
   , ("cup", SymForm "U"  "\x222a"), ("cap", SymForm "I"  "\x2229")

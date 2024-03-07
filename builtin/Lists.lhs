@@ -100,6 +100,12 @@ senum :: [Term] -> Term
 senum ts = Cons seqt True i_seq ts
 ssingle :: Term -> Term
 ssingle t = senum [t]
+hd :: Term -> Term
+hd lst = Cons (hd_t contt) False i_hd [lst]
+tl :: Term -> Term
+tl lst = Cons (seqf_1 contt) False i_tl [lst]
+cons :: Term -> Term -> Term
+cons x lst = Cons (cons_t contt) False i_cons [x,lst]
 \end{code}
 
 
@@ -139,58 +145,141 @@ listKnown
 
 \section{List Laws}
 
-Definitions (as Axioms)
+\subsection{Construction/Destruction}
+
 \begin{eqnarray*}
    \hd (x \cons \_) &\defs& x
 \\ \tl (\_ \cons \sigma) &\defs& \sigma
-\\ \nil \cat \sigma &\defs& \sigma
-\\ (x \cons \sigma) \cat \sigma' &\defs& x \cons (\sigma \cat \sigma')
-\\ \nil \pfx \sigma &\defs& \true
-\\ (x \cons \sigma) \pfx (y \cons \sigma')
-   &\defs&
-   x = y \land \sigma \pfx \sigma'
-\\ \sngl(x) &\defs& x \cons \nil
-\\ \rev(\nil) &\defs& \nil
-\\ \rev (x\cons \sigma) &\defs& \rev(\sigma) \cat \sngl(x)
-\\ \elems(\nil) &\defs& \emptyset
-\\ \elems (x\cons \sigma) &\defs& \setof{x} \cup \elems(\sigma)
-\\ \len(\nil) &\defs& 0
-\\ \len (\_\cons \sigma) &\defs& 1 + \len(\sigma) 
-\end{eqnarray*}
-
-Laws (as Conjectures)
-\begin{eqnarray*}
-   \hd (x \cons \_) \cons \tl (\_ \cons \sigma)  &=& x \cons \sigma
-\\ \sigma \cat \nil &=& \sigma
-\\ \sigma_1 \cat (\sigma_2 \cat \sigma_2) 
-    &=& (\sigma_1 \cat \sigma_2) \cat \sigma_2
-\\ \sigma \pfx \nil &=& \sigma = \nil
-\\ \nil \pfx \sngl(c) &=& \true
-\\ \rev(\rev(\sigma)) &=& \sigma
-\\ \rev(\sigma_1 \cat \sigma_2) &=& \rev(\sigma_2) \cat \rev(\sigma_1)
-\\ \rev(\sngl(x)) &=& \sngl(x)
-\\ \elems(\sigma_1 \cat \sigma_2) &=& \elems(\sigma_1) \cup \elems(\sigma_2)
-\\ \elems(\sngl(x)) &=& \setof{x}
-\\ \len(\sigma_1 \cat \sigma_2) &=& \len(\sigma_1) + \len(\sigma_2)
-\\ \len(\sngl(x)) &=& 1
-\\ \len(\rev(\sigma)) &=& \len(\sigma)
-\end{eqnarray*}
-
-Template
-\begin{eqnarray*}
-   x \mof \emptyset  &=& \false
-\\ x \mof \seqof y   &=& x = y
+\\ \hd (x \cons \_) \cons \tl (\_ \cons \sigma)  &=& x \cons \sigma
 \end{eqnarray*}
 \vspace{-8pt}
 \begin{code}
-ax1 = ( "ax" -.- "1"
+axHdDef = ( "hd" -.- "def"
+      , ( hd (x `cons` s) `isEqualTo` x
+        , scTrue ) )
+axTlDef = ( "tl" -.- "def"
+      , ( tl (x `cons` s) `isEqualTo` s
+        , scTrue ) )
+cjHdConsTl = ( "hd" -.-  "cons" -.- "tl"
+             , ( (hd (x `cons` s)) `cons` (tl (x `cons` s)) 
+                 `isEqualTo` 
+                  (x `cons` s)
+             , scTrue ) )
+\end{code}
+
+
+\subsection{Concatenation}
+
+\begin{eqnarray*}
+   \nil \cat \sigma &\defs& \sigma
+\\ (x \cons \sigma) \cat \sigma' &\defs& x \cons (\sigma \cat \sigma')
+\\ \sigma \cat \nil &=& \sigma
+\\ \sigma_1 \cat (\sigma_2 \cat \sigma_2) 
+    &=& (\sigma_1 \cat \sigma_2) \cat \sigma_2
+\end{eqnarray*}
+\vspace{-8pt}
+\begin{code}
+ax2 = ( "ax" -.- "1"
       , ( falseP
         , scTrue ) )
-cj1 = ( "cj" -.-  "1"
+cj2 = ( "cj" -.-  "1"
       , ( trueP
         , scTrue ) )
 \end{code}
 
+\subsection{Prefix}
+
+\begin{eqnarray*}
+   \nil \pfx \sigma &\defs& \true
+\\ (x \cons \sigma) \pfx (y \cons \sigma')
+   &\defs&
+   x = y \land \sigma \pfx \sigma'
+\\ \sigma \pfx \nil &=& \sigma = \nil
+\\ \nil \pfx \sngl(c) &=& \true
+\end{eqnarray*}
+\vspace{-8pt}
+\begin{code}
+ax3 = ( "ax" -.- "1"
+      , ( falseP
+        , scTrue ) )
+cj3 = ( "cj" -.-  "1"
+      , ( trueP
+        , scTrue ) )
+\end{code}
+
+\subsection{Singleton}
+
+\begin{eqnarray*}
+   \sngl(x) &\defs& x \cons \nil
+\end{eqnarray*}
+\vspace{-8pt}
+\begin{code}
+ax4 = ( "ax" -.- "1"
+      , ( falseP
+        , scTrue ) )
+cj4 = ( "cj" -.-  "1"
+      , ( trueP
+        , scTrue ) )
+\end{code}
+
+\subsection{Reverse}
+
+\begin{eqnarray*}
+   \rev(\nil) &\defs& \nil
+\\ \rev(\rev(\sigma)) &=& \sigma
+\\ \rev(\sigma_1 \cat \sigma_2) &=& \rev(\sigma_2) \cat \rev(\sigma_1)
+\\ \rev(\sngl(x)) &=& \sngl(x)
+\\ \rev (x\cons \sigma) &\defs& \rev(\sigma) \cat \sngl(x)
+\end{eqnarray*}
+\vspace{-8pt}
+\begin{code}
+ax5 = ( "ax" -.- "1"
+      , ( falseP
+        , scTrue ) )
+cj5 = ( "cj" -.-  "1"
+      , ( trueP
+        , scTrue ) )
+\end{code}
+
+\subsection{Elements}
+
+\begin{eqnarray*}
+   \elems(\nil) &\defs& \emptyset
+\\ \elems (x\cons \sigma) &\defs& \setof{x} \cup \elems(\sigma)
+\\ \elems(\sigma_1 \cat \sigma_2) &=& \elems(\sigma_1) \cup \elems(\sigma_2)
+\\ \elems(\sngl(x)) &=& \setof{x}
+\end{eqnarray*}
+\vspace{-8pt}
+\begin{code}
+ax6 = ( "ax" -.- "1"
+      , ( falseP
+        , scTrue ) )
+cj6 = ( "cj" -.-  "1"
+      , ( trueP
+        , scTrue ) )
+\end{code}
+
+\subsection{Length}
+
+\begin{eqnarray*}
+   \len(\nil) &\defs& 0
+\\ \len (\_\cons \sigma) &\defs& 1 + \len(\sigma) 
+\\ \len(\sigma_1 \cat \sigma_2) &=& \len(\sigma_1) + \len(\sigma_2)
+\\ \len(\sngl(x)) &=& 1
+\\ \len(\rev(\sigma)) &=& \len(\sigma)
+\end{eqnarray*}
+\vspace{-8pt}
+\begin{code}
+ax7 = ( "ax" -.- "1"
+      , ( falseP
+        , scTrue ) )
+cj7 = ( "cj" -.-  "1"
+      , ( trueP
+        , scTrue ) )
+\end{code}
+
+
+\section{Assembly}
 
 
 We collect these together:
@@ -198,7 +287,7 @@ We collect these together:
 listAxioms :: [Law]
 listAxioms
   = map (labelAsAxiom . mkNmdAsn)
-      [ ax1
+      [ axHdDef, axTlDef
       ]
 \end{code}
 
@@ -208,7 +297,7 @@ Collecting \dots
 listConjectures :: [NmdAssertion]
 listConjectures
   = map mkNmdAsn 
-     [ cj1
+     [ cjHdConsTl
      ]
 \end{code}
 

@@ -1,6 +1,7 @@
-\section{Classifier}
+\chapter{Classifier}
 \begin{verbatim}
 Copyright  Saqib Zardari (c) 2023
+           Andrew Butterfield (c) 2024
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -14,6 +15,10 @@ import Assertions
 import LexBase
 import Proofs
 
+import Debugger
+\end{code}
+
+\begin{code}
 data Direction 
     = Leftwards 
     | Rightwards 
@@ -25,7 +30,9 @@ data AutoLaws = AutoLaws
   , unfolds  :: [String]
   }
   deriving (Eq,Show,Read)
+\end{code}
 
+\begin{code}
 nullAutoLaws
   = AutoLaws {  simps = []
              ,  folds = []
@@ -41,7 +48,9 @@ combineTwoAuto a b = AutoLaws {  simps = simps a ++ simps b
 combineAutos :: AutoLaws -> [AutoLaws] -> AutoLaws
 combineAutos auto [] = auto
 combineAutos auto (x:xs) = combineAutos (combineTwoAuto auto x) xs
+\end{code}
 
+\begin{code}
 showDir :: Direction -> String
 showDir Leftwards  = "Leftwards"
 showDir Rightwards = "Rightwards"
@@ -52,7 +61,8 @@ simpStr sim = "(" ++ fst sim ++ "," ++ showDir (snd sim) ++ ")"
 showSimps :: [(String, Direction)] -> Int -> String
 showSimps [] _ = ""
 showSimps (x:[]) n = "\n\t" ++ show n ++ ". " ++ simpStr x
-showSimps (x:xs) n = "\n\t" ++ show n ++ ". " ++ simpStr x ++ showSimps xs (n + 1)
+showSimps (x:xs) n = "\n\t" ++ show n ++ ". " 
+                     ++ simpStr x ++ showSimps xs (n + 1)
 
 showFolds :: [String] -> Int -> String
 showFolds [] _ = ""
@@ -62,18 +72,25 @@ showFolds (x:xs) n = "\n\t" ++ show n ++ ". " ++ x ++ showFolds xs (n + 1)
 showAuto alaws = "   i. simps:"  ++ showSimps (simps alaws) 1  ++ "\n\n"
               ++ "  ii. folds:"  ++ showFolds (folds alaws) 1  ++ "\n\n"
               ++ " iii. unfolds:"  ++ showFolds (unfolds alaws) 1 ++ "\n\n"
+\end{code}
 
+\begin{code}
 addLawClassifier :: NmdAssertion -> AutoLaws -> AutoLaws
-addLawClassifier (nme, asser) au = removeFoldSimps $ AutoLaws {  simps = simps au ++ addSimp nme (assnT asser)
-                                                                , folds = folds au ++ addFold nme (assnT asser)
-                                                                , unfolds = unfolds au ++ addFold nme (assnT asser)
-                                                               }
+addLawClassifier (nme, asser) au 
+  = removeFoldSimps 
+      $ AutoLaws { simps = simps au ++ addSimp nme (assnT asser)
+                 , folds = folds au ++ addFold nme (assnT asser)
+                 , unfolds = unfolds au ++ addFold nme (assnT asser)
+                 }
+\end{code}
 
+\begin{code}
 removeFoldSimps :: AutoLaws -> AutoLaws
-removeFoldSimps au = AutoLaws {  simps = removeSimpsList (folds au) (simps au)
-                               , folds = folds au
-                               , unfolds = unfolds au
-                              }
+removeFoldSimps au 
+  = AutoLaws { simps = removeSimpsList (folds au) (simps au)
+             , folds = folds au
+             , unfolds = unfolds au
+             }
 
 removeSimpsList :: [String] -> [(String, Direction)] -> [(String, Direction)]
 removeSimpsList [] ys = ys
@@ -83,13 +100,17 @@ removeSimp :: String -> [(String, Direction)] -> [(String, Direction)]
 removeSimp _ [] = []
 removeSimp x (y:ys) | x == fst y    = removeSimp x ys
                     | otherwise = y : removeSimp x ys
-                                            
+\end{code}
+
+\begin{code}
 addLawsClass :: [Law] -> AutoLaws -> AutoLaws
 addLawsClass [] au = au 
 addLawsClass (x:[]) au = (addLawClassifier (lawNamedAssn x) au)
-addLawsClass (x:xs) au = addLawsClass (xs) (addLawClassifier (lawNamedAssn x) au)
+addLawsClass (x:xs) au 
+  = addLawsClass (xs) (addLawClassifier (lawNamedAssn x) au)
+\end{code}
 
-
+\begin{code}
 addSimp :: String -> Term -> [(String, Direction)]
 addSimp nme (Cons _ sb (Identifier "equiv" 0) (p:q:[]))
   = do  let sizeP = termSize p
@@ -100,7 +121,9 @@ addSimp nme (Cons _ sb (Identifier "equiv" 0) (p:q:[]))
           then [(nme, Rightwards)]
         else []
 addSimp nme _ = []
+\end{code}
 
+\begin{code}
 addFold :: String -> Term -> [(String)]
 addFold nme (Cons _ sb (Identifier "equiv" 0) (p:q:[])) 
   =  if isFold p
@@ -109,7 +132,9 @@ addFold nme (Cons _ sb (Identifier "equiv" 0) (p:q:[]))
           else []
      else []
 addFold nme _ = []
+\end{code}
 
+\begin{code}
 isFold :: Term -> Bool
 isFold (Cons _ _ _ xs@(_:_))
             | all isVar xs && allUnique xs = True
@@ -128,7 +153,9 @@ checkQ (Cons _ _ n xs@(_:_)) i
             | all isVar xs && n == i = False
             | otherwise = True
 checkQ _ _ = True
+\end{code}
 
+\begin{code}
 checkIsSimp :: (String, Direction) -> MatchClass -> Bool
 checkIsSimp (_, Rightwards) MatchEqvRHS = True
 checkIsSimp (_, Leftwards) MatchEqvLHS = True
@@ -149,5 +176,4 @@ checkIsUnFold :: MatchClass -> Bool
 checkIsUnFold MatchEqvLHS = True
 checkIsUnFold MatchEqvRHS = False
 checkIsUnFold _ = False 
-
 \end{code}

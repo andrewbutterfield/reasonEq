@@ -45,7 +45,7 @@ a very simple theory of (typed) lists.
 We need to build some infrastructure here.
 This consists of the list variables $\sigma$, $\sigma_n$,
 type constructor $\Seq{}$, and
-the constants $\nil$, $\cons$, $\cat$, $\pfx$, 
+the constants $\nil$, $\cons$, $\hd$, $\tl$, $\cat$, $\pfx$, 
  $\sngl$, $\rev$, $\elems$, $\len$.
 
 
@@ -58,6 +58,7 @@ seqt  = star contt
 seqf_1 t = FunType (star t) (star t)
 seqf_2 t = FunType (star t) (seqf_1 t)
 cons_t t = FunType t (seqf_1 t)
+hd_t t   = FunType (star t) t
 pfx_t t = FunType (star t) $ FunType (star t) bool
 sngl_t t = FunType t (star t)
 elems_t t = FunType (star t) (power t)
@@ -69,23 +70,27 @@ len_t t = FunType (star t) int
 \begin{eqnarray*}
    \nil &:& \Seq t
 \\ \cons &:& t \fun \Seq t \fun \Seq t
+\\ \hd &:& \Seq t \fun t
+\\ \tl &:& \Seq t \fun \Seq t
 \\ \cat &:& \Seq t \fun \Seq t \fun \Seq t
 \\ \pfx &:& \Seq t \fun \Seq t \fun \Bool
-\\ \sngl &:& \Seq t, \qquad  x : t
+\\ \sngl &:& t \fun \Seq t
 \\ \rev &:& \Seq t \fun \Seq t
 \\ \elems &:& \Seq t \fun \Set t
 \\ \len &:& \Seq t \fun \Nat
 \end{eqnarray*}
 \begin{code}
 i_nil   = jId "nil"   ; nilIntro    = mkConsIntro i_nil     seqt
-i_cons  = jId "cons"  ; consIntro   = mkConsIntro i_cons  $ cons_t contt
+i_cons  = jId "cons"  ; consIntro   = mkConsIntro i_cons  $ cons_t  contt
+i_hd    = jId "hd"    ; hdIntro     = mkConsIntro i_hd    $ hd_t    contt
+i_tl    = jId "tl"    ; tlIntro     = mkConsIntro i_tl    $ seqf_1  contt
 i_seq   = jId "seq"   
-i_cat   = jId "cat"   ; catIntro    = mkConsIntro i_cat   $ seqf_2 contt
-i_pfx   = jId "pfx"   ; pfxIntro    = mkConsIntro i_pfx   $ pfx_t contt
-i_sngl  = jId "sngl"  ; snglIntro   = mkConsIntro i_sngl  $ sngl_t contt
-i_rev   = jId "rev"   ; revIntro    = mkConsIntro i_rev   $ seqf_1 contt
+i_cat   = jId "cat"   ; catIntro    = mkConsIntro i_cat   $ seqf_2  contt
+i_pfx   = jId "pfx"   ; pfxIntro    = mkConsIntro i_pfx   $ pfx_t   contt
+i_sngl  = jId "sngl"  ; snglIntro   = mkConsIntro i_sngl  $ sngl_t  contt
+i_rev   = jId "rev"   ; revIntro    = mkConsIntro i_rev   $ seqf_1  contt
 i_elems = jId "elems" ; elemslIntro = mkConsIntro i_elems $ elems_t contt
-i_len   = jId "len"   ; lenlIntro   = mkConsIntro i_len   $ len_t contt
+i_len   = jId "len"   ; lenlIntro   = mkConsIntro i_len   $ len_t   contt
 \end{code}
 
 \begin{code}
@@ -101,9 +106,9 @@ ssingle t = senum [t]
 \subsection{List Constants and Variables}
 
 \begin{code}
-vS = StaticVar (jId "S") 
+vS = StaticVar (jId "sigma") 
 s = fromJust $ eVar seqt vS
-vSn n = StaticVar (jId ("S"++show n)) 
+vSn n = StaticVar (jId ("s"++show n)) 
 sn n = fromJust $ eVar seqt $ vSn n
 s1 = sn 1; s2 = sn 2; s3 = sn 3
 vx = StaticVar (jId "x"); gvx = StdVar vx
@@ -119,6 +124,8 @@ listKnown :: VarTable
 listKnown 
   = nilIntro $
     consIntro $
+    hdIntro $
+    tlIntro $
     catIntro $
     pfxIntro $
     snglIntro $
@@ -132,13 +139,26 @@ listKnown
 
 \section{List Laws}
 
-We do seq-membership first, then seq relations equality and subseq,
-and then work through the three main seq operators: 
-union, intersection, and difference,
-finishing off with seq cardinality.
+\begin{eqnarray*}
+   \hd (x \cons \_) &\defs& x
+\\ \tl (\_ \cons \sigma) &\defs& \sigma
+\\ \nil \cat \sigma &\defs& \sigma
+\\ (x \cons \sigma) \cat \sigma' &\defs& x \cons (\sigma \cat \sigma')
+\\ \nil \pfx \sigma &\defs& \true
+\\ (x \cons \sigma) \pfx (y \cons \sigma')
+   &\defs&
+   x = y \land \sigma \pfx \sigma'
+\\ \sngl(x) &\defs& x \cons \nil
+\\ \rev(\nil) &\defs& \nil
+\\ \rev (x\cons \sigma) &\defs& \rev(\sigma) \cat \sngl(x)
+\\ \elems(\nil) &\defs& \emptyset
+\\ \elems (x\cons \sigma) &\defs& \setof{x} \cup \elems(\sigma)
+\\ \len(\nil) &\defs& 0
+\\ \len (\_\cons \sigma) &\defs& 1 + \len(\sigma) 
+\end{eqnarray*}
 
 
-The rest of the axioms are associated with set-operators.
+Template
 \begin{eqnarray*}
    x \mof \emptyset  &=& \false
 \\ x \mof \seqof y   &=& x = y

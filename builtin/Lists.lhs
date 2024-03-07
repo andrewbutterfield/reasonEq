@@ -139,6 +139,7 @@ listKnown
 
 \section{List Laws}
 
+Definitions (as Axioms)
 \begin{eqnarray*}
    \hd (x \cons \_) &\defs& x
 \\ \tl (\_ \cons \sigma) &\defs& \sigma
@@ -157,6 +158,23 @@ listKnown
 \\ \len (\_\cons \sigma) &\defs& 1 + \len(\sigma) 
 \end{eqnarray*}
 
+Laws (as Conjectures)
+\begin{eqnarray*}
+   \hd (x \cons \_) \cons \tl (\_ \cons \sigma)  &=& x \cons \sigma
+\\ \sigma \cat \nil &=& \sigma
+\\ \sigma_1 \cat (\sigma_2 \cat \sigma_2) 
+    &=& (\sigma_1 \cat \sigma_2) \cat \sigma_2
+\\ \sigma \pfx \nil &=& \sigma = \nil
+\\ \nil \pfx \sngl(c) &=& \true
+\\ \rev(\rev(\sigma)) &=& \sigma
+\\ \rev(\sigma_1 \cat \sigma_2) &=& \rev(\sigma_2) \cat \rev(\sigma_1)
+\\ \rev(\sngl(x)) &=& \sngl(x)
+\\ \elems(\sigma_1 \cat \sigma_2) &=& \elems(\sigma_1) \cup \elems(\sigma_2)
+\\ \elems(\sngl(x)) &=& \setof{x}
+\\ \len(\sigma_1 \cat \sigma_2) &=& \len(\sigma_1) + \len(\sigma_2)
+\\ \len(\sngl(x)) &=& 1
+\\ \len(\rev(\sigma)) &=& \len(\sigma)
+\end{eqnarray*}
 
 Template
 \begin{eqnarray*}

@@ -1,4 +1,4 @@
-\section{UTP Base}
+\chapter{UTP Base}
 \begin{verbatim}
 Copyright  Andrew Buttefield, Danny Thomas (c) 2019
 
@@ -48,7 +48,7 @@ import Debugger
 \end{code}
 
 
-\subsection{Introduction}
+\section{Introduction}
 
 
 By ``UTP Base'' we mean the basic most common UTP definitions
@@ -71,9 +71,9 @@ Here we collect those 1st-order concepts.
 The higher-order concepts in Chapter 2 are not collected here.
 
 \newpage
-\subsection{UTP Refinement}
+\section{UTP Refinement}
 
-\subsubsection{Defn. of Refinement}
+\subsection{Defn. of Refinement}
 
 From \cite[Sec 1.5,p34]{UTP-book},
 with addition of the notation using the $\sqsupseteq$ symbol:
@@ -90,7 +90,7 @@ refinesIntro = mkConsIntro i_refines boolf_2
                          scTrue
 \end{code}
 
-\subsubsection{UTP Refinement Laws}
+\subsection{UTP Refinement Laws}
 
 
 From \cite[Sec 1.5,p35]{UTP-book}
@@ -166,9 +166,9 @@ $$
 We may implement these later.
 
 \newpage
-\subsection{UTP Conditionals}
+\section{UTP Conditionals}
 
-\subsubsection{Defn. of Conditional}
+\subsection{Defn. of Conditional}
 
 From \cite[Defn 2.1.1,p47]{UTP-book}
 $$
@@ -185,7 +185,7 @@ condIntro = mkConsIntro i_cond boolf_3
 \end{code}
 
 
-\subsubsection{UTP Conditional Laws}
+\subsection{UTP Conditional Laws}
 
 From \cite[2.1\textbf{L1}, p47]{UTP-book}
 $$
@@ -347,9 +347,9 @@ cjCondAlt2 = preddef ("cond" -.- "alt" -.- "def2")
 
 
 \newpage
-\subsection{UTP Sequential Composition}
+\section{UTP Sequential Composition}
 
-\subsubsection{Defn. of Sequential Composition}
+\subsection{Defn. of Sequential Composition}
 
 We need to know when a predicate is a UTP predicate ($O \cup O'\supseteq P$).
 We will do this by defining a \emph{uniform} side-condition ($O \supseteq p$).
@@ -399,7 +399,7 @@ $$
   O \cup O' \supseteq P \qquad O \cup O' \supseteq Q \qquad \dots
 $$
 
-\subsubsection{UTP Seq. Composition Laws}
+\subsection{UTP Seq. Composition Laws}
 
 From \cite[2.2\textbf{L1}, p49]{UTP-book}
 
@@ -436,9 +436,9 @@ $$\par\vspace{-8pt}
 \end{code}
 
 \newpage
-\subsection{UTP Assignment}
+\section{UTP Assignment}
 
-\subsubsection{Defn. of Assignment}
+\subsection{Defn. of Assignment}
 
 From \cite[Defn 2.3.1,p50]{UTP-book}
 
@@ -468,7 +468,7 @@ asgIntro = mkConsIntro i_asg apred11
 
 
 
-\subsubsection{UTP Assignment Laws}
+\subsection{UTP Assignment Laws}
 
 We start with another axiom that describes the ``fusion'' of predicates
 over lists of variables, structured in a particular way:
@@ -608,9 +608,9 @@ $$
 \end{code}
 
 \newpage
-\subsection{UTP ``Skip''}
+\section{UTP ``Skip''}
 
-\subsubsection{Defn. of Skip}
+\subsection{Defn. of Skip}
 
 From \cite[Defn 2.3.2,p50]{UTP-book}
 
@@ -628,7 +628,7 @@ skipIntro = mkConsIntro i_skip bool
       scTrue
 \end{code}
 
-\subsubsection{UTP Skip Laws}
+\subsection{UTP Skip Laws}
 
 From \cite[2.3\textbf{L5}, p50]{UTP-book}
 $$
@@ -658,9 +658,9 @@ $$\par\vspace{-8pt}
 
 
 \newpage
-\subsection{UTP Non-deterministic Choice}
+\section{UTP Non-deterministic Choice}
 
-\subsubsection{Defn. of N.-D.-Choice}
+\subsection{Defn. of N.-D.-Choice}
 
 From \cite[Defn 2.4.1,p51]{UTP-book}
 
@@ -678,7 +678,7 @@ ndcIntro = mkConsIntro i_ndc boolf_2
                          scTrue
 \end{code}
 
-\subsubsection{UTP N.-D.-Choice Laws}
+\subsection{UTP N.-D.-Choice Laws}
 
 From \cite[2.4\textbf{L1}, p52]{UTP-book}
 $$
@@ -795,9 +795,9 @@ $$ %\par\vspace{-8pt}
 \end{code}
 
 \newpage
-\subsection{UTP Abort}
+\section{UTP Abort}
 
-\subsubsection{Defn. of Abort}
+\subsection{Defn. of Abort}
 
 From \cite[Defn 2.4.2,p53]{UTP-book}
 
@@ -814,9 +814,9 @@ abortIntro = mkConsIntro i_abort bool
                            scTrue
 \end{code}
 
-\subsection{UTP Miracle}
+\section{UTP Miracle}
 
-\subsubsection{Defn. of Miracle}
+\subsection{Defn. of Miracle}
 
 From \cite[Defn 2.5.1,p55]{UTP-book}
 
@@ -834,7 +834,7 @@ miracleIntro = mkConsIntro i_miracle bool
 \end{code}
 
 \newpage
-\subsection{UTP Base Theory}
+\section{UTP Base Theory}
 
 We collect our known variables:
 \begin{code}
@@ -926,7 +926,7 @@ utpBaseTheory
             }
 \end{code}
 
-\subsection{UTP Base Infrastructure}
+\section{UTP Base Infrastructure}
 
 Most variables have an ``underlying'' definition
 that is then ``wrapped'' in different ways depending on where it is used.

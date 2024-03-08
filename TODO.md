@@ -8,8 +8,9 @@ Start Developing theories for:
 * Weakest Precondition
 * UTCP
   depends on:
-  * Sets
-  * Lists
+  * Arithmetic (done)
+  * Sets (done)
+  * Lists (done)
 * Designs
 * Reactive Systems
 

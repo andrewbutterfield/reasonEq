@@ -43,7 +43,8 @@ import Arithmetic
 import Sets
 import Lists
 import UTPBase
-import XYZ
+import UTCP
+--import XYZ
 --import XYZDesign
 
 import Debugger
@@ -105,7 +106,8 @@ devKnownBuiltins  = [ equivTheory
                     , setTheory
                     , listTheory
                     , utpBaseTheory
-                    , xyzTheory
+                    , utcpTheory
+                    -- , xyzTheory
                     -- , xyzDTheory
                     ]
 

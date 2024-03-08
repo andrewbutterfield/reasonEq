@@ -1,0 +1,99 @@
+\def\setof#1{\{#1\}}
+
+\def\Atom{\textsf{Atom}}
+\def\Label{\textsf{Label}}
+\def\Comm{\textsf{Comm}}
+\def\View{\textsf{View}}
+\def\catom#1{\langle#1\rangle}
+\def\cid{\textsf{id}}
+\def\cskip{\texttt{skip}}
+\def\cseq{\mathbin{;\!;}}
+\def\semlbr{[\![}
+\def\semrbr{]\!]}
+\def\sem#1{\semlbr{#1}\semrbr}
+\def\fun{\rightarrow}
+\def\defs{\widehat=}
+\def\cond#1{\mathrel{\lhd{#1}\rhd}}
+\def\Skip{I\!I}
+\def\ndc{\sqcap}
+\def\seq{\mathrel{;}}
+\def\phlor{\phantom{\lor}}
+\def\sminus{\!\setminus\!}
+
+\def\Axiom{\textsf{Axiom}}
+\def\prule#1#2#3{\vdash\setof{#1}~#2~\setof{#3}}
+\def\entail#1#2{{#1}~\vDash~{#2}}
+\def\reify#1{\lfloor{#1}\rfloor}
+\def\actj#1#2#3{#1\Vdash\setof{#2}\setof{#3}}
+
+\def\VN#1{\ensuremath{\mathsf{#1}}}
+\def\VT#1{\ensuremath{\mathtt{#1}}}
+
+\def\Comm{\VN{Comm}}
+\def\Vskip{\VT{skip}}
+
+\def\arr#1{\stackrel{#1}{\fun}}
+\def\arrs{\fun^*}
+\def\pfun{\rightharpoonup}
+\def\ffun{\pfun_{fin}}
+
+% healthiness
+\def\WWH#1#2#3#4{\mathbf{#1}_{#2,#3}^{#4}}
+\def\I#1#2#3{I_{#1,#2}^{#3}}
+\def\DLP#1#2#3{\WWH{DL}{#1}{#2}{#3}}
+\def\KSP#1#2#3{\WWH{KS}{#1}{#2}{#3}}
+\def\WP#1#2#3{\WWH{W}{#1}{#2}{#3}}
+\def\DL{\DLP{in}{out}{g}}
+\def\KS{\KSP{in}{out}{g}}
+%\def\W{\WP{in}{out}{g}}
+\def\W{\mathbf{W}}
+
+
+% semantic macros
+\def\lexc#1#2{ls\ominus(#1|#2)}
+\def\lupd#1#2{ls'=\lexc{#1}{#2}}
+\def\ss{s'=s}
+\def\atomdo#1{s' \in \sem{#1}s}
+\def\arr#1{\stackrel{#1}\rightarrow}
+
+% semantic shorthand macros
+\def\ado#1{\lfloor#1\rfloor}
+\def\llsbr{\langle\!|}
+\def\rlsbr{|\!\rangle}
+\def\LUPD#1#2{\llsbr#1\blacktriangleright#2\rlsbr}
+\def\LNDC#1#2#3#4{
+ \llsbr
+ #1\blacktriangleright#2
+ \ndc
+ #3\blacktriangleright#4
+ \rlsbr
+}
+\def\LS#1{\llsbr?#1\rlsbr}
+\def\LSd#1{\llsbr?#1\rlsbr'}
+\def\D{\LS{out} \land \Skip}
+\def\B#1{\overline{#1}}
+
+% proof/calculation stuff
+\def\say#1{\textrm{``#1''}}
+\def\EQ#1{\\&=&\say{#1}}
+\def\EOLC#1{\textrm{ --- ``#1''}}
+
+\def\RLEQNS#1{
+  {$$\begin{array}{rcl@{\quad}l}
+    #1
+  \end{array}$$}
+}
+\def\ltype#1{
+ {\scriptscriptstyle\langle\!\langle}
+ #1
+ {\scriptscriptstyle\rangle\!\rangle}
+}
+
+\def\DL{\mathbf{DL}}
+\def\LE{\mathbf{LE}}
+\def\WWW{\mathbf{WwW}}
+\def\W{\mathbf{W}}
+\def\HL{\mathbf{HL}}
+
+\def\dcond#1{\mathrel{\blacktriangleleft{#1}\blacktriangleright}}
+\def\ddo{\mathrel{\circledast}}

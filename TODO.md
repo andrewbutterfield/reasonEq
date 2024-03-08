@@ -6,7 +6,7 @@ Start Developing theories for:
 
 * Hoare Triples
 * Weakest Precondition
-* UTCP
+* UTCP  (in progress)
   depends on:
   * Arithmetic (done)
   * Sets (done)
@@ -14,6 +14,34 @@ Start Developing theories for:
 * Designs
 * Reactive Systems
 
+We have a problem:
+```
+⊢
+X(E,a,E,N)    ⊤
+Focus = []
+
+Target (RHS): 
+(E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N
+
+
+proof: tm 1 X_def
+Match against `X_def'[1] failed!
+try match failed
+
+X(E,a,E,N) :: X(E,a,R,A)
+
+lnm[parts]=X_def[1]
+tP=X(E,a,R,A) ≡ (E ⊆ ls ∧ a) ∧ ls' = ls \ R ∪ A
+partsP=X(E,a,R,A)
+replP=(E ⊆ ls ∧ a) ∧ ls' = ls \ R ∪ A
+tC=X(E,a,E,N)
+scC=⊤
+---
+vMatch: knowledge mismatch.
+vC = VR (Id "N" 0,VO,WS)
+vP = VR (Id "A" 0,VO,WS)
+what(vP) = KV (TG (Id "B" 0))
+```
 
 ### Parked for Now
 

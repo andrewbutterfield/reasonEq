@@ -7,7 +7,13 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module UTCP (
-  utcpConjs, utcpName, utcpTheory
+  i_atom, atom
+, i_cskip, cskip
+, i_cseq, cseq
+, i_cplus, cplus
+, i_cpll, cpll
+, i_cstar, cstar
+, utcpConjs, utcpName, utcpTheory
 ) where
 
 import Data.Maybe
@@ -113,16 +119,41 @@ then the low-level semantics that defines basic building blocks.
 
 \begin{eqnarray*}
    a &\in& \Atom
-\\ C &::=&
- \Atm a 
- \mid \cskip 
- \mid C 
- \cseq C 
- \mid C+C 
- \mid C 
- \pll C 
- \mid C^*
+\\ C &::=& \Atm a \mid \cskip \mid C \cseq C \mid C+C \mid C \pll C \mid C^*
 \end{eqnarray*}
+\begin{code}
+atom :: Term -> Term
+i_atom  =  jId "atom"
+atom a  =  Cons arbpred False i_atom [a]
+atomIntro  =  mkConsIntro i_atom boolf_1
+
+cskip :: Term
+i_cskip  =  jId "cskip"
+v_cskip  =  Vbl i_cskip PredV Static
+g_cskip  =  StdVar v_cskip
+cskip    =  jVar arbpred v_cskip 
+cskipIntro  =  mkConsIntro i_cskip bool
+
+cseq :: Term -> Term -> Term
+i_cseq = jId "cseq"
+cseq c d = Cons arbpred True i_cseq [c,d]
+cseqIntro  =  mkConsIntro i_cseq boolf_2
+
+cplus :: Term -> Term -> Term
+i_cplus = jId "cplus"
+cplus c d = Cons arbpred True i_cplus [c,d]
+cplusIntro  =  mkConsIntro i_cplus boolf_2
+
+cpll :: Term -> Term -> Term
+i_cpll = jId "cpll"
+cpll c d = Cons arbpred True i_cpll [c,d]
+cpllIntro  =  mkConsIntro i_cpll boolf_2
+
+cstar :: Term -> Term
+i_cstar  =  jId "cstar"
+cstar c  =  Cons arbpred True i_cstar [c]
+cstarIntro  =  mkConsIntro i_cstar boolf_1
+\end{code}
 
 \section{Low-Level Semantics}
 
@@ -972,7 +1003,13 @@ Looks like we need the calculator!!!
 We collect our known variables:
 \begin{code}
 utcpKnown
- = newVarTable
+ = atomIntro $
+   cskipIntro $
+   cseqIntro $
+   cplusIntro $
+   cpllIntro $
+   cstarIntro $
+   newVarTable
 \end{code}
 
 

@@ -210,13 +210,14 @@ Label-set handling:
 \\ ls(\B L) &\defs& L \cap ls = \emptyset
 }
 
-
+\newpage
 \section{Alphabet}
 
 \begin{eqnarray*}
    s, s' &:& \mathcal S
 \\ ls, ls' &:& \mathcal P (R)
 \\ r &:& R
+\\ \lst O &=& \setof{s,ls}
 \end{eqnarray*}
 \begin{code}
 is  = jId "s" 
@@ -256,6 +257,9 @@ and noting that these do \emph{not} mention $r$
    &=&
    P ; c * P \cond c \Skip & \lref{unfold-loop}
 }
+Having defined $\lst O = \setof{s,ls}$, the above should all work.
+
+
 \section{Healthiness}
 
 General shorthand, and Label Exclusivity invariant ($LE$):

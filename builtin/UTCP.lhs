@@ -47,6 +47,9 @@ import Exists
 import UClose
 import UTPSignature
 import UTPBase
+import Arithmetic
+import Sets
+import Lists
 import TestRendering
 
 import Debugger
@@ -155,6 +158,14 @@ cstar c  =  Cons arbpred True i_cstar [c]
 cstarIntro  =  mkConsIntro i_cstar boolf_1
 \end{code}
 
+We want predicate variables $C$, $D$, $E$ and $F$:
+\begin{code}
+c = fromJust $ pVar ArbType $ Vbl (jId "C") PredV Static
+d = fromJust $ pVar ArbType $ Vbl (jId "D") PredV Static
+e = fromJust $ pVar ArbType $ Vbl (jId "E") PredV Static
+f = fromJust $ pVar ArbType $ Vbl (jId "F") PredV Static
+\end{code}
+
 \section{Low-Level Semantics}
 
 
@@ -175,6 +186,15 @@ rexpr branchnos done
   = Cons rexpr_t True i_rexpr 
       $ ( map (Val ArbType . Integer) branchnos 
           ++ [Val ArbType $ Boolean done] )
+rdemo :: Term
+rdemo 
+  = lenum [ rexpr [] False
+          , rexpr [] True
+          , rexpr [1] False
+          , rexpr [2] True
+          , rexpr [2,1] False
+          ]
+cjDemo = ( "r" -.- "demo", ( rdemo, scTrue ) )
 \end{code}
 
 Label-set handling:
@@ -459,6 +479,68 @@ Also, with the role played by $\Skip$ we can say that:
 \\&=& \bigvee_{i \in \Nat} (\Skip;C)^i
 \\&=&\W(\Skip ;C)
 }
+
+\newpage
+\section{UTCP Theory}
+
+We collect our known variables:
+\begin{code}
+utcpKnown
+ = atomIntro $
+   cskipIntro $
+   cseqIntro $
+   cplusIntro $
+   cpllIntro $
+   cstarIntro $
+   newVarTable
+\end{code}
+
+
+We now collect our axiom set:
+\begin{code}
+utcpAxioms :: [Law]
+utcpAxioms
+  = map labelAsAxiom
+      [ 
+      ]
+\end{code}
+
+
+We now collect our conjecture set:
+\begin{code}
+utcpConjs :: [NmdAssertion]
+utcpConjs
+  = map mkNmdAsn
+      [ cjDemo
+      ]
+\end{code}
+
+
+
+\begin{code}
+utcpName :: String
+utcpName = "UTCP"
+utcpTheory :: Theory
+utcpTheory
+  =  nullTheory { thName  =  utcpName
+            , thDeps  =  [ utpBaseName
+                         , uCloseName
+                         , existsName
+                         , forallName
+                         , equalityName
+                         , implName
+                         , aoiName
+                         , conjName
+                         , disjName
+                         , notName
+                         , equivName
+                         ]
+            , known   =  utcpKnown
+            , laws    =  utcpAxioms
+            , conjs   =  utcpConjs
+            }
+\end{code}
+
 
 \section{Rough Work}
 
@@ -1009,62 +1091,3 @@ Looks like we need the calculator!!!
 
 
 
-\newpage
-\section{UTCP Theory}
-
-We collect our known variables:
-\begin{code}
-utcpKnown
- = atomIntro $
-   cskipIntro $
-   cseqIntro $
-   cplusIntro $
-   cpllIntro $
-   cstarIntro $
-   newVarTable
-\end{code}
-
-
-We now collect our axiom set:
-\begin{code}
-utcpAxioms :: [Law]
-utcpAxioms
-  = map labelAsAxiom
-      [ 
-      ]
-\end{code}
-
-
-We now collect our conjecture set:
-\begin{code}
-utcpConjs :: [NmdAssertion]
-utcpConjs
-  = [ 
-    ]
-\end{code}
-
-
-
-\begin{code}
-utcpName :: String
-utcpName = "UTCP"
-utcpTheory :: Theory
-utcpTheory
-  =  nullTheory { thName  =  utcpName
-            , thDeps  =  [ utpBaseName
-                         , uCloseName
-                         , existsName
-                         , forallName
-                         , equalityName
-                         , implName
-                         , aoiName
-                         , conjName
-                         , disjName
-                         , notName
-                         , equivName
-                         ]
-            , known   =  utcpKnown
-            , laws    =  utcpAxioms
-            , conjs   =  utcpConjs
-            }
-\end{code}

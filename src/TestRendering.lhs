@@ -409,11 +409,16 @@ trterm trid ctxtp (Cons tk _ opn@(Identifier nm _) ts@(_:_:_))
    isOp = fixity /= NotInfix
 \end{code}
 
-We have some containers such as sets and lists:
+We have some containers such as sets, lists and UTCP roots:
 \begin{code}
 trterm trid _ (Cons tk _ n ts)
   | n == jId "set"  =  trcontainer trid ( "{", ",", "}" ) ts
   | n == jId "seq"  =  trcontainer trid ( "[", ",", "]" ) ts
+  | n == jId "r"    =  "r"++concat (map trRoot ts)
+  where 
+    trRoot (Val _ (Integer i)) = show i
+    trRoot (Val _ (Boolean b)) = if b then "!" else ""
+    trRoot _ = ""
 \end{code}
 
 In all other cases we simply use classical function application notation

@@ -7,7 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Lists (
-  listAxioms, listName, listTheory
+  nilseq, lenum, lsngl, hd, tl, cons, cat, pfx, rev, elems, len
+, listAxioms, listName, listTheory
 ) where
 
 import Data.Maybe
@@ -166,15 +167,15 @@ listKnown
 \begin{code}
 axHdDef = ( "hd" -.- "def"
           , ( hd (x `cons` s) `isEqualTo` x
-          , scTrue ) )
+            , scTrue ) )
 axTlDef = ( "tl" -.- "def"
           , ( tl (x `cons` s) `isEqualTo` s
-          , scTrue ) )
+            , scTrue ) )
 cjHdConsTl = ( "hd" -.-  "cons" -.- "tl"
              , ( (hd (x `cons` s)) `cons` (tl (x `cons` s)) 
                  `isEqualTo` 
                   (x `cons` s)
-             , scTrue ) )
+               , scTrue ) )
 \end{code}
 
 

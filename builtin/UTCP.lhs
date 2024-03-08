@@ -186,14 +186,18 @@ rexpr branchnos done
   = Cons rexpr_t True i_rexpr 
       $ ( map (Val ArbType . Integer) branchnos 
           ++ [Val ArbType $ Boolean done] )
+\end{code}
+We want to predefine some common roots (all those used in semantics)
+\begin{code}
+r = rexpr [] False
+r' = rexpr [] True
+r1 = rexpr [1] False
+r1' = rexpr [1] True
+r2 = rexpr [2] False
+r2' = rexpr [2] True
 rdemo :: Term
 rdemo 
-  = lenum [ rexpr [] False
-          , rexpr [] True
-          , rexpr [1] False
-          , rexpr [2] True
-          , rexpr [2,1] False
-          ]
+  = lenum [ r, r', r1, r1', r2, r2' ]
 cjDemo = ( "r" -.- "demo", ( rdemo, scTrue ) )
 \end{code}
 

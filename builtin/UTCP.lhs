@@ -164,6 +164,18 @@ Root expressions:
 \\ \sigma,\varsigma &\defs& S^*
 \\ R &::=& r\sigma | r\sigma\done
 }
+Given that root-expressions are always of the form $r\sigma[\done]$ 
+where $r$ is the one and only variable called ``r'', 
+we can represent them just by $\sigma[\done]$.
+\begin{code}
+rexpr :: [Integer] -> Bool -> Term
+rexpr_t = GivenType $ jId "RE"
+i_rexpr = jId "r"
+rexpr branchnos done 
+  = Cons rexpr_t True i_rexpr 
+      $ ( map (Val ArbType . Integer) branchnos 
+          ++ [Val ArbType $ Boolean done] )
+\end{code}
 
 Label-set handling:
 \RLEQNS{

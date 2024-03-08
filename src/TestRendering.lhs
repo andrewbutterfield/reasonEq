@@ -125,6 +125,8 @@ trType :: Type -> String
 trType ArbType           =  _tau
 trType (TypeVar i)       =  trId i
 trType (TypeCons (Identifier i _) [t])
+  | i == "P"             =  "\x2119 "
+                            ++ (trBracketIf (not $ isAtmType t) (trType t)) 
   | i == "*"             =  (trBracketIf (not $ isAtmType t) (trType t)) 
                              ++ "\x002a "
 trType (TypeCons i [t])  =  trId i ++ " " ++ trType t

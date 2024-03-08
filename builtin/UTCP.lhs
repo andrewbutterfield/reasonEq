@@ -189,11 +189,11 @@ rexpr branchnos done
 \end{code}
 We want to predefine some common roots (all those used in semantics)
 \begin{code}
-r = rexpr [] False
-r' = rexpr [] True
-r1 = rexpr [1] False
+r   = rexpr []  False
+r'  = rexpr []  True
+r1  = rexpr [1] False
 r1' = rexpr [1] True
-r2 = rexpr [2] False
+r2  = rexpr [2] False
 r2' = rexpr [2] True
 rdemo :: Term
 rdemo 
@@ -218,6 +218,27 @@ Label-set handling:
 \\ ls, ls' &:& \mathcal P (R)
 \\ r &:& R
 \end{eqnarray*}
+\begin{code}
+is  = jId "s" 
+vs = Vbl is ObsV Before
+vs' = Vbl is ObsV After
+state_t = GivenType $ jId "S"
+obs_vs_Intro  = mkKnownVar vs state_t
+obs_vs'_Intro = mkKnownVar vs' state_t
+ils  = jId "ls" 
+vls = Vbl ils ObsV Before
+vls' = Vbl ils ObsV After
+ls_t = power rexpr_t
+obs_vls_Intro  = mkKnownVar vls ls_t
+obs_vls'_Intro = mkKnownVar vls' ls_t
+ir  = jId "r" 
+vr =  Vbl ir ObsV Static
+r_t = rexpr_t
+obs_r_Intro  = mkKnownVar vr rexpr_t
+o = jId "O"  ;  vO = PreVar o
+obsIntro = fromJust . addKnownVarSet vO (S.fromList $ map StdVar [vs,vls])
+\end{code}
+
 
 \section{Standard UTP}
 ``Standard'' UTP Constructs, specialised for our alphabet,
@@ -496,8 +517,13 @@ utcpKnown
    cplusIntro $
    cpllIntro $
    cstarIntro $
+   obsIntro $
+   obs_vs_Intro $ obs_vs'_Intro $
+   obs_vls_Intro $ obs_vls'_Intro $
+   obs_r_Intro $
    newVarTable
 \end{code}
+
 
 
 We now collect our axiom set:

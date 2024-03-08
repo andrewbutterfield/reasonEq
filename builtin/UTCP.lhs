@@ -313,6 +313,45 @@ and that our semantic predicates are closed under mumbling.
    &\defs&
    X(E|a|E|N) & \lref{defn-$A$}
 }
+\begin{code}
+-- X(E|a|R|A)
+xact :: Term -> Term -> Term -> Term -> Term
+i_xact = jId "X"
+xact e act r a = Cons arbpred False i_xact [e,act,r,a]
+xactIntro = mkConsIntro i_xact bool
+-- A(E|a|N)
+i_aact = jId "A"
+aact e act n = Cons arbpred False i_aact [e,act,n]
+aactIntro = mkConsIntro i_aact bool
+\end{code}
+
+We need to define some variables ($E$, $a$, $R$, $A$, $N$)
+\begin{code}
+vE = jVar ls_t $ StaticVar $ jId "E"
+va = jVar bool $ StaticVar $ jId "a"
+vR = jVar ls_t $ StaticVar $ jId "R"
+vA = jVar ls_t $ StaticVar $ jId "A"
+tls = jVar ls_t vls
+tls' = jVar ls_t vls'
+-- X(E|a|R|A)
+axXDef = ( "X" -.- "def"
+         , ( (xact vE va vR vA)
+             ===
+             ((vE `subseteq` tls) /\ va) /\
+             (tls' `isEqualTo` ((tls `sdiff` vR) `sunion` vA))
+           , scTrue ) ) 
+-- A(E|a|N)
+vN = jVar ls_t $ StaticVar $ jId "N"
+axADef = ( "A" -.- "def"
+         , ( (aact vE va vN) === (xact vE va vE vN)
+           , scTrue ) )
+cjAAlt = ( "A" -.- "alt"
+         , ( (aact vE va vN)
+             ===
+             ((vE `subseteq` tls) /\ va) /\
+             (tls' `isEqualTo` ((tls `sdiff` vE) `sunion` vN))
+           , scTrue ) )
+\end{code}
 
 \subsection{Commands}
 
@@ -521,6 +560,8 @@ utcpKnown
    cplusIntro $
    cpllIntro $
    cstarIntro $
+   xactIntro $ 
+   aactIntro $
    obsIntro $
    obs_vs_Intro $ obs_vs'_Intro $
    obs_vls_Intro $ obs_vls'_Intro $
@@ -534,8 +575,8 @@ We now collect our axiom set:
 \begin{code}
 utcpAxioms :: [Law]
 utcpAxioms
-  = map labelAsAxiom
-      [ 
+  = map (labelAsAxiom . mkNmdAsn)
+      [ axXDef, axADef
       ]
 \end{code}
 
@@ -545,7 +586,8 @@ We now collect our conjecture set:
 utcpConjs :: [NmdAssertion]
 utcpConjs
   = map mkNmdAsn
-      [ cjDemo
+      [ cjAAlt,
+        cjDemo
       ]
 \end{code}
 

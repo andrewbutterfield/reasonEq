@@ -75,7 +75,7 @@ $$
 axGoldRule
  = ( "golden-rule"
    , ( (p /\ q) === ((p === q) === p \/ q)
-   , scTrue ) )
+     , scTrue ) )
 \end{code}
 
 \begin{code}

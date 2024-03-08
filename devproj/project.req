@@ -1,11 +1,30 @@
 BEGIN REQSTATE
 BEGIN THEORIES
-THNAMES = ["And","AndOrInvert","Arithmetic","Equality","Equiv","Exists","ForAll","Implies","Lists","Not","Or","Sets","UClose","UTPBase","XYZ"]
-SDAG = [[("XYZ",["UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"]),("UTPBase",["UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Lists",["Implies","Equiv","Equality","ForAll","Arithmetic","Sets"]),("UClose",["Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Sets",["Implies","Equiv","Equality","ForAll","Arithmetic"]),("Exists",["ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Arithmetic",["Implies","Equiv","Equality"]),("ForAll",["Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Equality",["Implies","Equiv"])],[("Implies",["AndOrInvert","And","Or","Not","Equiv"])],[("AndOrInvert",["And","Or","Not","Equiv"])],[("And",["Or","Not","Equiv"])],[("Or",["Not","Equiv"])],[("Not",["Equiv"])],[("Equiv",[])]]
+THNAMES = ["And","AndOrInvert","Arithmetic","Equality","Equiv","Exists","ForAll","Implies","Lists","Not","Or","Sets","UClose","UTCP","UTPBase"]
+SDAG = [[("UTCP",["UTPBase","UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("UTPBase",["UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Lists",["Implies","Equiv","Equality","ForAll","Arithmetic","Sets"]),("UClose",["Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Sets",["Implies","Equiv","Equality","ForAll","Arithmetic"]),("Exists",["ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Arithmetic",["Implies","Equiv","Equality"]),("ForAll",["Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Equality",["Implies","Equiv"])],[("Implies",["AndOrInvert","And","Or","Not","Equiv"])],[("AndOrInvert",["And","Or","Not","Equiv"])],[("And",["Or","Not","Equiv"])],[("Or",["Not","Equiv"])],[("Not",["Equiv"])],[("Equiv",[])]]
 END THEORIES
-CURRTHEORY = Lists
+CURRTHEORY = UTCP
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("UTCP","A_alt")
+BEGIN LIVE-PROOF
+TH-NAME: UTCP
+CJ-NAME: A_alt
+CONJ = ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) False (Id "A" 0) [V (TC (Id "P" 0) [TG (Id "RE" 0)]) (VR (Id "E" 0,VO,WS)),V (TG (Id "B" 0)) (VR (Id "a" 0,VO,WS)),V (TC (Id "P" 0) [TG (Id "RE" 0)]) (VR (Id "N" 0,VO,WS))],C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TG (Id "B" 0)) False (Id "subseteq" 0) [V (TC (Id "P" 0) [TG (Id "RE" 0)]) (VR (Id "E" 0,VO,WS)),V (TC (Id "P" 0) [TG (Id "RE" 0)]) (VR (Id "ls" 0,VO,WB))],V (TG (Id "B" 0)) (VR (Id "a" 0,VO,WS))],C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V (TC (Id "P" 0) [TG (Id "RE" 0)]) (VR (Id "ls" 0,VO,WA)),C (TC (Id "P" 0) [TV (Id "t" 0)]) False (Id "union" 0) [C (TC (Id "P" 0) [TV (Id "t" 0)]) False (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "RE" 0)]) (VR (Id "ls" 0,VO,WB)),V (TC (Id "P" 0) [TG (Id "RE" 0)]) (VR (Id "E" 0,VO,WS))],V (TC (Id "P" 0) [TG (Id "RE" 0)]) (VR (Id "N" 0,VO,WS))]]]],([],fromList []))
+SIDE = ([],fromList [])
+STRAT red-L2R
+BEGIN SEQZIP
+TERMZIP = (C (TF TB (TG (Id "B" 0))) False (Id "X" 0) [V (TC (Id "P" 0) [TG (Id "RE" 0)]) (VR (Id "E" 0,VO,WS)),V (TG (Id "B" 0)) (VR (Id "a" 0,VO,WS)),V (TC (Id "P" 0) [TG (Id "RE" 0)]) (VR (Id "E" 0,VO,WS)),V (TC (Id "P" 0) [TG (Id "RE" 0)]) (VR (Id "N" 0,VO,WS))],[])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.A_alt", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TG (Id "B" 0)) False (Id "subseteq" 0) [V (TC (Id "P" 0) [TG (Id "RE" 0)]) (VR (Id "E" 0,VO,WS)),V (TC (Id "P" 0) [TG (Id "RE" 0)]) (VR (Id "ls" 0,VO,WB))],V (TG (Id "B" 0)) (VR (Id "a" 0,VO,WS))],C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V (TC (Id "P" 0) [TG (Id "RE" 0)]) (VR (Id "ls" 0,VO,WA)),C (TC (Id "P" 0) [TV (Id "t" 0)]) False (Id "union" 0) [C (TC (Id "P" 0) [TV (Id "t" 0)]) False (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "RE" 0)]) (VR (Id "ls" 0,VO,WB)),V (TC (Id "P" 0) [TG (Id "RE" 0)]) (VR (Id "E" 0,VO,WS))],V (TC (Id "P" 0) [TG (Id "RE" 0)]) (VR (Id "N" 0,VO,WS))]]]}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+(UseLaw (ByMatch MEL) "A_def" (BD (fromList [((Id "A" 0,VO),BV (VR (Id "A" 0,VO,WS))),((Id "E" 0,VO),BV (VR (Id "E" 0,VO,WS))),((Id "N" 0,VO),BV (VR (Id "N" 0,VO,WS))),((Id "a" 0,VO),BV (VR (Id "a" 0,VO,WS)))],fromList [],fromList [])) [],ASN (C (TF TB (TG (Id "B" 0))) False (Id "A" 0) [V (TC (Id "P" 0) [TG (Id "RE" 0)]) (VR (Id "E" 0,VO,WS)),V (TG (Id "B" 0)) (VR (Id "a" 0,VO,WS)),V (TC (Id "P" 0) [TG (Id "RE" 0)]) (VR (Id "N" 0,VO,WS))],([],fromList [])))
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

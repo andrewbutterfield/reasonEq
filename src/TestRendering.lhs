@@ -146,6 +146,8 @@ trType (GivenType (Identifier i _))
   | i == "*"  =  "\x002a"
 trType (GivenType i)      =  trId i
 
+trType BottomType = _bot
+
 trTypes = seplist " " trType
 
 seplist :: [a] -> (b -> [a]) -> [b] -> [a]

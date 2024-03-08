@@ -7,7 +7,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Sets (
-  setAxioms, setName, setTheory
+  mtset, senum, ssingle, mbr
+, subseteq, sunion, sintsct, sdiff, scard
+, setAxioms, setName, setTheory
 ) where
 
 import Data.Maybe

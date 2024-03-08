@@ -87,7 +87,7 @@ i_tl    = jId "tl"    ; tlIntro     = mkConsIntro i_tl    $ seqf_1  contt
 i_seq   = jId "seq"   
 i_cat   = jId "cat"   ; catIntro    = mkConsIntro i_cat   $ seqf_2  contt
 i_pfx   = jId "pfx"   ; pfxIntro    = mkConsIntro i_pfx   $ pfx_t   contt
-i_sngl  = jId "sngl"  ; snglIntro   = mkConsIntro i_sngl  $ sngl_t  contt
+i_lsngl = jId "lsngl" ; snglIntro   = mkConsIntro i_lsngl $ sngl_t  contt
 i_rev   = jId "rev"   ; revIntro    = mkConsIntro i_rev   $ seqf_1  contt
 i_elems = jId "elems" ; elemslIntro = mkConsIntro i_elems $ elems_t contt
 i_len   = jId "len"   ; lenlIntro   = mkConsIntro i_len   $ len_t   contt
@@ -96,10 +96,10 @@ i_len   = jId "len"   ; lenlIntro   = mkConsIntro i_len   $ len_t   contt
 \begin{code}
 nilseq :: Term
 nilseq = fromJust $ var seqt $ StaticVar i_nil
-senum :: [Term] -> Term
-senum ts = Cons seqt True i_seq ts
-ssingle :: Term -> Term
-ssingle t = senum [t]
+lenum :: [Term] -> Term
+lenum ts = Cons seqt True i_seq ts
+lsngl :: Term -> Term
+lsngl t = lenum [t]
 hd :: Term -> Term
 hd lst = Cons (hd_t contt) False i_hd [lst]
 tl :: Term -> Term
@@ -110,6 +110,12 @@ cat :: Term -> Term -> Term
 cat s1 s2 = Cons (seqf_2 contt) False i_cat [s1,s2]
 pfx :: Term -> Term -> Term
 pfx s1 s2 = Cons (pfx_t contt) False i_pfx [s1,s2]
+rev :: Term -> Term
+rev s = Cons (seqf_1 contt) False i_rev [s]
+elems :: Term -> Term
+elems s = Cons (elems_t contt) False i_elems [s]
+len :: Term -> Term
+len s = Cons (len_t contt) False i_len [s]
 \end{code}
 
 
@@ -159,11 +165,11 @@ listKnown
 \vspace{-8pt}
 \begin{code}
 axHdDef = ( "hd" -.- "def"
-      , ( hd (x `cons` s) `isEqualTo` x
-        , scTrue ) )
+          , ( hd (x `cons` s) `isEqualTo` x
+          , scTrue ) )
 axTlDef = ( "tl" -.- "def"
-      , ( tl (x `cons` s) `isEqualTo` s
-        , scTrue ) )
+          , ( tl (x `cons` s) `isEqualTo` s
+          , scTrue ) )
 cjHdConsTl = ( "hd" -.-  "cons" -.- "tl"
              , ( (hd (x `cons` s)) `cons` (tl (x `cons` s)) 
                  `isEqualTo` 
@@ -185,20 +191,20 @@ cjHdConsTl = ( "hd" -.-  "cons" -.- "tl"
 \begin{code}
 axNilCatDef = ( "nil" -.- "cat" -.- "def"
               , ( (nilseq `cat` s) `isEqualTo` s
-              , scTrue ) )
+                , scTrue ) )
 axConsCatDef = ( "cons" -.- "cat" -.- "def"
                , ( ((x `cons` s1) `cat` s2) 
                    `isEqualTo` 
                    ( x `cons` (s1 `cat` s2))
-               , scTrue ) )
+                 , scTrue ) )
 cjCatNil = ( "cat" -.-  "nil"
-      , ( (s `cat` nilseq) `isEqualTo` s
-        , scTrue ) )
-cjCatAssoc = ( "cat" -.-  "assoc"
-      , ( (s1 `cat` (s2 `cat` s3))
-          `isEqualTo`
-          ((s1 `cat` s2) `cat` s3)
-        , scTrue ) )
+           , ( (s `cat` nilseq) `isEqualTo` s
+           , scTrue ) )
+cjCatAssoc =  ( "cat" -.-  "assoc"
+              , ( (s1 `cat` (s2 `cat` s3))
+                  `isEqualTo`
+                  ((s1 `cat` s2) `cat` s3)
+                , scTrue ) )
 \end{code}
 
 \subsection{Prefix}
@@ -212,19 +218,20 @@ cjCatAssoc = ( "cat" -.-  "assoc"
 \end{eqnarray*}
 \vspace{-8pt}
 \begin{code}
-axNilPfx = ( "nil" -.- "pfx" -.- "def"
-      , ( nilseq `pfx` s
-        , scTrue ) )
+axNilPfx =  ( "nil" -.- "pfx" -.- "def"
+            , ( nilseq `pfx` s
+              , scTrue ) )
 axConsPfx = ( "cons" -.- "pfx" -.- "def"
-      , ( ((x `cons` s1) `pfx` (y `cons` s2))
-          ===
-          ((x `isEqualTo` y) /\ (s1 `pfx` s2))
-        , scTrue ) )
-cjSPfx = ( "s" -.-  "pfx" -.- "nil"
-      , ( (s `pfx` nilseq) === (s `isEqualTo` nilseq)
-        , scTrue ) )
+            , ( ((x `cons` s1) `pfx` (y `cons` s2))
+                ===
+                ((x `isEqualTo` y) /\ (s1 `pfx` s2))
+              , scTrue ) )
+cjSPfx =  ( "s" -.-  "pfx" -.- "nil"
+          , ( (s `pfx` nilseq) === (s `isEqualTo` nilseq)
+            , scTrue ) )
 \end{code}
 
+\newpage
 \subsection{Singleton}
 
 \begin{eqnarray*}
@@ -233,31 +240,40 @@ cjSPfx = ( "s" -.-  "pfx" -.- "nil"
 \end{eqnarray*}
 \vspace{-8pt}
 \begin{code}
-axSnglDef = ( "sngl" -.- "def"
-      , ( (ssingle x) `isEqualTo` (x `cons` nilseq)
-        , scTrue ) )
-cjSnglPfx = ( "nil" -.-  "pfx" -.- "sngl"
-      , ( nilseq `pfx` (ssingle x)
-        , scTrue ) )
+axSnglDef = ( "lsngl" -.- "def"
+            , ( (lsngl x) `isEqualTo` (x `cons` nilseq)
+              , scTrue ) )
+cjSnglPfx = ( "nil" -.-  "pfx" -.- "lsngl"
+            , ( nilseq `pfx` (lsngl x)
+              , scTrue ) )
 \end{code}
 
 \subsection{Reverse}
 
 \begin{eqnarray*}
    \rev(\nil) &\defs& \nil
+\\ \rev (x\cons \sigma) &\defs& \rev(\sigma) \cat \sngl(x)
 \\ \rev(\rev(\sigma)) &=& \sigma
 \\ \rev(\sigma_1 \cat \sigma_2) &=& \rev(\sigma_2) \cat \rev(\sigma_1)
 \\ \rev(\sngl(x)) &=& \sngl(x)
-\\ \rev (x\cons \sigma) &\defs& \rev(\sigma) \cat \sngl(x)
 \end{eqnarray*}
 \vspace{-8pt}
 \begin{code}
-ax5 = ( "ax" -.- "1"
-      , ( falseP
-        , scTrue ) )
-cj5 = ( "cj" -.-  "1"
-      , ( trueP
-        , scTrue ) )
+axRevNilDef = ( "rev" -.- "nil" -.- "def"
+              , ( rev nilseq `isEqualTo` nilseq
+                , scTrue ) )
+axRevConsDef =  ( "rev" -.- "cons" -.- "def"
+                , ( (rev (x `cons` s)) `isEqualTo` (rev s `cat` lsngl x)
+                  , scTrue ) )
+cjRevRevId =  ( "rev" -.-  "rev" -.- "id"
+              , ( (rev (rev s)) `isEqualTo` s
+                , scTrue ) )
+cjRevCat =  ( "rev" -.-  "cat"
+            , ( (rev (s1 `cat` s2)) `isEqualTo` ((rev s2) `cat` (rev s1))
+              , scTrue ) )
+cjRevSngl = ( "rev" -.-  "lsngl"
+            , ( (rev (lsngl x)) `isEqualTo` lsngl x
+              , scTrue ) )
 \end{code}
 
 \subsection{Elements}
@@ -270,11 +286,19 @@ cj5 = ( "cj" -.-  "1"
 \end{eqnarray*}
 \vspace{-8pt}
 \begin{code}
-ax6 = ( "ax" -.- "1"
-      , ( falseP
+axElemsNilDef = ( "elems" -.- "nil" -.- "def"
+                , ( (elems nilseq) `isEqualTo` mtset
+                  , scTrue ) )
+axElemsConsDef =  ( "elems" -.- "cons" -.- "def"
+                  , ( (elems (x `cons` s))
+                      `isEqualTo`
+                      (ssingle x `sunion` elems s)
+                    , scTrue ) )
+cjElemsCat = ( "elems" -.-  "cat"
+      , ( (elems (s1 `cat` s2)) `isEqualTo` (elems s1) `sunion` (elems s2)
         , scTrue ) )
-cj6 = ( "cj" -.-  "1"
-      , ( trueP
+cjElemsSngl = ( "elems" -.-  "lsngl"
+      , ( (elems $ lsngl x) `isEqualTo` ssingle x
         , scTrue ) )
 \end{code}
 
@@ -289,12 +313,21 @@ cj6 = ( "cj" -.-  "1"
 \end{eqnarray*}
 \vspace{-8pt}
 \begin{code}
-ax7 = ( "ax" -.- "1"
-      , ( falseP
-        , scTrue ) )
-cj7 = ( "cj" -.-  "1"
-      , ( trueP
-        , scTrue ) )
+axLenNilDef = ( "len" -.- "nil" -.- "def"
+              , ( (len nilseq) `isEqualTo` zero
+                , scTrue ) )
+axLenConsDef =  ( "len" -.- "cons" -.- "def"
+                , ( (len (x `cons` s)) `isEqualTo` (one `add` len s)
+                  , scTrue ) )
+cjLenCat =  ( "len" -.-  "cat"
+            , ( (len (s1 `cat` s2)) `isEqualTo` ((len s1) `add` (len s2))
+              , scTrue ) )
+cjLenSngl = ( "len" -.-  "lsngl"
+            , ( (len $ lsngl x) `isEqualTo` one
+              , scTrue ) )
+cjLenRev =  ( "len" -.-  "rev"
+            , ( (len $ rev s) `isEqualTo` len s
+              , scTrue ) )
 \end{code}
 
 
@@ -310,6 +343,9 @@ listAxioms
       , axNilCatDef, axConsCatDef
       , axNilPfx, axConsPfx
       , axSnglDef
+      , axRevNilDef, axRevConsDef
+      , axElemsNilDef, axElemsConsDef
+      , axLenNilDef, axLenConsDef
       ]
 \end{code}
 
@@ -323,6 +359,9 @@ listConjectures
      , cjCatNil, cjCatAssoc
      , cjSPfx
      , cjSnglPfx
+     , cjRevRevId, cjRevCat, cjRevSngl
+     , cjElemsCat, cjElemsSngl
+     , cjLenCat, cjLenSngl, cjLenRev
      ]
 \end{code}
 

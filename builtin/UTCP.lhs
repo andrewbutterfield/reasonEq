@@ -101,17 +101,15 @@ import Debugger
 \def\say#1{\mbox{#1}}
 
 
-
-
-
 \section{Introduction}
 
 Here we implement the rooted version of UTCP.
+We present the syntax,
+then the low-level semantics that defines basic building blocks.
 
-\newpage
 
 
-\subsection*{Syntax for UTCP and CKA}
+\section{Syntax for UTCP and CKA}
 
 \begin{eqnarray*}
    a &\in& \Atom
@@ -126,9 +124,8 @@ Here we implement the rooted version of UTCP.
  \mid C^*
 \end{eqnarray*}
 
-\subsection{Formal Definition of UTCP}
+\section{Low-Level Semantics}
 
-\subsubsection{Definitions}
 
 Root expressions: 
 \RLEQNS{
@@ -146,7 +143,8 @@ Label-set handling:
 \\ ls(\B L) &\defs& L \cap ls = \emptyset
 }
 
-\subsubsection{Alphabet}
+
+\section{Alphabet}
 
 \begin{eqnarray*}
    s, s' &:& \mathcal S
@@ -154,7 +152,23 @@ Label-set handling:
 \\ r &:& R
 \end{eqnarray*}
 
-\subsubsection{Healthiness}
+\section{Standard UTP}
+``Standard'' UTP Constructs, specialised for our alphabet,
+and noting that these do \emph{not} mention $r$
+\RLEQNS{
+   \Skip &=& ls'=ls \land s'=s & \lref{defn-$\Skip$}
+\\ P \cond c Q
+   &\defs&
+   c \land P \lor \lnot c \land Q & \lref{defn-cond}
+\\ P ; Q
+   &~\defs~&
+   \exists s_m,ls_m \bullet P[s_m,ls_m/s',ls'] \land Q[s_m,ls_m/s,ls]
+   \lref{defn-$;$}
+\\ c * P
+   &=&
+   P ; c * P \cond c \Skip & \lref{unfold-loop}
+}
+\section{Healthiness}
 
 General shorthand, and Label Exclusivity invariant ($LE$):
 \RLEQNS{
@@ -182,11 +196,11 @@ the label-set $ls$,
 and that our semantic predicates are closed under mumbling.
 \RLEQNS{
    ii &~\defs~& s'=s & \lref{defn-$ii$}
-\\ C^0 &\defs& ii \land ls' = ls & \lref{defn-$C^i$-base}
+\\ C^0 &\defs& \Skip  & \lref{defn-$C^i$-base}
 \\ C^{n+1} &\defs& C ; C^n & \lref{defn-$C^i$-rec}
 \\ \bigvee_{i \in \Nat} C^i
    &=& 
-   ii \lor (C\seq\bigvee_{i \in \Nat} C^i)
+   \Skip \lor (C\seq\bigvee_{i \in \Nat} C^i)
    &\lref{mumble-closure}
 \\ \W(C)
    &\defs&
@@ -194,23 +208,11 @@ and that our semantic predicates are closed under mumbling.
    & \lref{defn-$\W$}
 }
 
-``Standard'' UTP Constructs, noting that these do \emph{not} mention $r$
-\RLEQNS{
-   \Skip &=& ls'=ls \land s'=s & \lref{defn-$\Skip$}
-\\ P \cond c Q
-   &\defs&
-   c \land P \lor \lnot c \land Q & \lref{defn-cond}
-\\ P ; Q
-   &~\defs~&
-   \exists s_m,ls_m \bullet P[s_m,ls_m/s',ls'] \land Q[s_m,ls_m/s,ls]
-   \lref{defn-$;$}
-\\ c * P
-   &=&
-   P ; c * P \cond c \Skip & \lref{unfold-loop}
-}
-We note that $C^0 = \Skip$ here.
 
-UTCP-specific constructs:
+\section{UTCP Semantics}
+
+\subsection{Atomic Actions}
+
 \RLEQNS{
    X(E|a|R|A)
    &~\defs~&
@@ -220,7 +222,9 @@ UTCP-specific constructs:
    X(E|a|E|N) & \lref{defn-$A$}
 }
 
-The definitions, using the new shorthands (they lack sufficient invariants):
+\subsection{Commands}
+
+(they lack sufficient invariants):
 \RLEQNS{
    \Atm a &~\defs~&\W(A(r|a|r!)) & \lref{defn-$\Atm a$}
 \\ \cskip &\defs& \Atm{ii} & \lref{defn-$\cskip$}
@@ -258,6 +262,8 @@ $$
 State $s$ is unchanged, and either $ls$ is unchanged (stutter),
 or flow-control ``moves'' from $r$ to $r!$.
 
+\section{Invariant Satisfaction}
+
 We specify how $A$ and $X$ atomic actions 
 should satisfy a label-based invariant $I$: 
 \RLEQNS{
@@ -281,14 +287,7 @@ should satisfy a label-based invariant $I$:
 }
 
 
-\subsection{Formal Definition of CKA}
-
-We use the presentation from Kapp{\'e} et. al.%
-\cite{DBLP:conf/esop/KappeB0Z18}, 
-as its notation is a closer match to UTCP 
-than the more abstraction one in the seminal paper
-introducing the concept by Hoare et al.%
-\cite{DBLP:conf/concur/HoareMSW09}.
+\section{Laws of CKA}
 
 \begin{mathpar}
 e+0 = e \and e+e = e \and e+f = f+e \and e+(f+g) = (e+f)+g
@@ -308,7 +307,8 @@ e \pll 0 = 0 \and e \pll (f+g) = e \pll f + e \pll g
 (e\pll f);(g\pll h) \leq (e;g)\pll (f;h)
 \end{mathpar}
 
-\subsection{The Theorems}
+
+\section{The Theorems}
 
 There are some clear mappings between the CKA and UTCP notations:
 \begin{mathpar}
@@ -364,11 +364,12 @@ Key concepts (in approx order of presentation):
    \item Bijections and why they are relevant
 \end{itemize}
 
-
+\subsection{Bijections}
 
 Some bijection laws:
 \RLEQNS{
-   \beta(x)=\beta(y) &~\equiv~& x=y & \isbij
+   \beta &:& A \fun b
+\\ \beta(x)=\beta(y) &~\equiv~& x=y & \isbij
 \\ \inv\beta(\beta(x))  &=& x
 \\ \beta(\inv\beta(y))  &=& y
 \\ \isbij(\beta) &\equiv& \isbij(\beta^{-1})
@@ -389,6 +390,35 @@ then we have:
 
 We define the \emph{kernel} of an bijection of type $A \fun A$ 
 to be the mappings such that $\beta(x) \neq x$.
+
+
+\subsection{Summary}
+
+\begin{enumerate}
+\item We calculate out the LHS + RHS
+\item We re-arrange to get complete flow-paths
+\item We identify the relevant bijection kernel
+\end{enumerate}
+
+Because the all the substitutions are sound and ground we can work ``inside''
+the $\W$ healthiness condition.
+Let $\gamma$ be a sound and ground substitution.
+Then $\W(C)\gamma  =  \W(C\gamma)$.
+This means we do not need to expand or evaluate $\W(C)$ here,
+but just focus on $C\gamma$.
+
+Also, with the role played by $\Skip$ we can say that:
+\RLEQNS{
+\lefteqn{\Skip;\W(C)}
+\\&=& \Skip;\bigvee_{i \in \Nat} C^i
+\\&=& \bigvee_{i \in \Nat} (\Skip;C^i)
+\\&=& \bigvee_{i \in \Nat} C^i
+\\&=& \bigvee_{i \in \Nat} (\Skip;C)^i
+\\&=&\W(\Skip ;C)
+}
+
+\section{Rough Work}
+
 
 
 Consider $X(E_1|a|R_1|A_1) ; X(E_2|b|R_2,A_2)$,
@@ -550,31 +580,6 @@ $\left\{\begin{array}{l}
 $
 
 \noindent Now the bijection is clear.
-
-\subsubsection{Summary}
-
-\begin{enumerate}
-\item We calculate out the LHS + RHS
-\item We re-arrange to get complete flow-paths
-\item We identify the relevant bijection kernel
-\end{enumerate}
-
-Because the all the substitutions are sound and ground we can work ``inside''
-the $\W$ healthiness condition.
-Let $\gamma$ be a sound and ground substitution.
-Then $\gamma(\W(C))  =  \W(\gamma(C))$.
-This means we do not need to expand or evaluate $\W(C)$ here,
-but just focus on $C$.
-
-Indeed, can we say that:
-\RLEQNS{
-\lefteqn{\Skip;\W(C)}
-\\&=& \Skip;\bigvee_{i \in \Nat} C^i
-\\&=& \bigvee_{i \in \Nat} (\Skip;C^i)
-\\&=& \bigvee_{i \in \Nat} C^i
-\\&=& \bigvee_{i \in \Nat} (\Skip;C)^i
-\\&=&\W(\Skip ;C)
-}
 
 \newpage
 For some proofs we want to show the following (for arbitrary $\sigma$):

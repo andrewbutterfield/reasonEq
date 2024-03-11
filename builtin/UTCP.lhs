@@ -305,10 +305,12 @@ and that our semantic predicates are closed under mumbling.
 
 \subsection{Atomic Actions}
 
+\subsubsection{Basic Definitions}
+
 \RLEQNS{
-   X(E|a|R|A)
+   X(E|a|R|N)
    &~\defs~&
-   ls(E) \land [a] \land ls'=(ls\setminus R)\cup A & \lref{defn-$X$}
+   ls(E) \land [a] \land ls'=(ls\setminus R)\cup N & \lref{defn-$X$}
 \\ A(E|a|N)
    &\defs&
    X(E|a|E|N) & \lref{defn-$A$}
@@ -325,7 +327,7 @@ aact e act n = Cons arbpred False i_aact [e,act,n]
 aactIntro = mkConsIntro i_aact bool
 \end{code}
 
-We need to define some variables ($E$, $a$, $R$, $A$, $N$)
+We need to define some variables ($E$, $a$, $R$, $N$)
 \begin{code}
 vE = jVar ls_t $ StaticVar $ jId "E"
 va = jpVar $ PredVar (jId "a") Static
@@ -350,6 +352,43 @@ cjAAlt = ( "A" -.- "alt"
              ((vE `subseteq` tls) /\ va) /\
              (tls' `isEqualTo` ((tls `sdiff` vE) `sunion` vN))
            , scTrue ) )
+\end{code}
+
+\newpage
+\subsubsection{Atomic Action Composition}
+
+The most important law we need is that regarding sequential composition
+of $X$-actions:
+\RLEQNS{
+\\ \lefteqn{X(E_1|a|R_1|N_1) ; X(E_2|b|R_2,N_2)}
+\\ &\equiv&
+   E_2 \cap (R_1\sminus N_1) = \emptyset
+  ~\land~
+   X(E_1 \cup (E_2\sminus N_1)
+       \mid a\seq b
+       \mid R_1 \cup R_2
+       \mid (N_1 \sminus R_2) \cup  N_2)
+       & \lref{$X$-$X$-comp}
+}
+\begin{code}
+vE1 = jVar ls_t $ StaticVar $ jId "E1"
+vE2 = jVar ls_t $ StaticVar $ jId "E2"
+vb = jpVar $ PredVar (jId "b") Static
+vR1 = jVar ls_t $ StaticVar $ jId "R1"
+vR2 = jVar ls_t $ StaticVar $ jId "R2"
+vN1 = jVar ls_t $ StaticVar $ jId "N1"
+vN2 = jVar ls_t $ StaticVar $ jId "N2"
+cjXXComp = ( "X" -.- "X" -.- "comp"
+           , ( mkSeq (xact vE1 va vR1 vN1) (xact vE2 vb vR1 vN1)
+               ===
+               (vE2 `sunion` (vR1 `sdiff` vN1) `isEqualTo` mtset)
+               /\
+               (xact 
+                 (vE1 `sunion` (vE2 `sdiff` vN1)) 
+                 (mkSeq va vb) 
+                 (vR1 `sunion` vR2) 
+                 ((vN1 `sdiff` vR2) `sunion` vN2) )
+             , scTrue ))
 \end{code}
 
 \subsection{Commands}
@@ -585,8 +624,8 @@ We now collect our conjecture set:
 utcpConjs :: [NmdAssertion]
 utcpConjs
   = map mkNmdAsn
-      [ cjAAlt,
-        cjDemo
+      [ cjAAlt, cjXXComp
+      , cjDemo
       ]
 \end{code}
 

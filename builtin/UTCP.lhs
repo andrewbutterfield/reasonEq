@@ -328,20 +328,19 @@ aactIntro = mkConsIntro i_aact bool
 We need to define some variables ($E$, $a$, $R$, $A$, $N$)
 \begin{code}
 vE = jVar ls_t $ StaticVar $ jId "E"
-va = jVar bool $ StaticVar $ jId "a"
+va = jpVar $ PredVar (jId "a") Static
 vR = jVar ls_t $ StaticVar $ jId "R"
-vA = jVar ls_t $ StaticVar $ jId "A"
+vN = jVar ls_t $ StaticVar $ jId "N"
 tls = jVar ls_t vls
 tls' = jVar ls_t vls'
--- X(E|a|R|A)
+-- X(E|a|R|N)
 axXDef = ( "X" -.- "def"
-         , ( (xact vE va vR vA)
+         , ( (xact vE va vR vN)
              ===
              ((vE `subseteq` tls) /\ va) /\
-             (tls' `isEqualTo` ((tls `sdiff` vR) `sunion` vA))
+             (tls' `isEqualTo` ((tls `sdiff` vR) `sunion` vN))
            , scTrue ) ) 
 -- A(E|a|N)
-vN = jVar ls_t $ StaticVar $ jId "N"
 axADef = ( "A" -.- "def"
          , ( (aact vE va vN) === (xact vE va vE vN)
            , scTrue ) )

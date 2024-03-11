@@ -14,6 +14,24 @@ Start Developing theories for:
 * Designs
 * Reactive Systems
 
+Seq. Comp: `";_def"`
+```
+(P ; Q) ≡ (∃ O$_0  • P[O$_0/O$'] ∧ Q[O$_0/O$])  O$,O$'⊇P, O$,O$'⊇Q, fresh:O$_0
+```
+
+Command `tm 1 ;_def` reports:
+```
+Match against `;_def'[1] OK
+Binding: { ;  ⟼ ;, P  ⟼ X(E1,a,R1,N1), Q  ⟼ X(E2,b,R1,N1), 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }
+Instantiated Law = (∃ O$_0  • (X(E1,a,R1,N1))[O$_0/O$'] ∧ (X(E2,b,R1,N1))[O$_0/O$])
+Instantiated Law S.C. = O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇R1, O$,O$'⊇a, O$,O$'⊇b, fresh:O$_0
+Goal S.C. = ⊤
+Discharged Law S.C. = O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇R1, O$,O$'⊇a, O$,O$'⊇b, fresh:O$_0
+```
+The issue is that these side-conditions *should* only apply to dynamic variables.
+
+
+
 
 ## Next in Line
 

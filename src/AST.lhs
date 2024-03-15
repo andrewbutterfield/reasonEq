@@ -807,6 +807,7 @@ subsSize (Substn ts lvs)      =  3 * S.size ts + 2 * S.size lvs
 \begin{code}
 jSub ts lvs  =  fromJust $ substn ts lvs
 
+jVar :: Type -> Variable -> Term
 jVar typ v        =  fromJust $ var typ v
 jBnd typ n vs tm  =  fromJust $ bnd typ n vs tm
 jLam typ n vl tm  =  fromJust $ lam typ n vl tm

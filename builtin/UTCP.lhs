@@ -329,10 +329,10 @@ aactIntro = mkConsIntro i_aact bool
 
 We need to define some variables ($E$, $a$, $R$, $N$)
 \begin{code}
-vE = jVar ls_t $ StaticVar $ jId "E"
+vE = jVar ls_t $ ExprVar (jId "E") Static
+vR = jVar ls_t $ ExprVar (jId "R") Static
+vN = jVar ls_t $ ExprVar (jId "N") Static
 va = jpVar $ PredVar (jId "a") Static
-vR = jVar ls_t $ StaticVar $ jId "R"
-vN = jVar ls_t $ StaticVar $ jId "N"
 tls = jVar ls_t vls
 tls' = jVar ls_t vls'
 -- X(E|a|R|N)

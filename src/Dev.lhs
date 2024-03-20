@@ -38,6 +38,7 @@ import Implication
 import ForAll
 import Exists
 import UClose
+import LTL
 import Equality
 import Arithmetic
 import Sets
@@ -102,6 +103,7 @@ devKnownBuiltins  = [ equivTheory
                     , forallTheory
                     , existsTheory
                     , uCloseTheory
+                    , ltlTheory
                     , arithmeticTheory
                     , setTheory
                     , listTheory

@@ -173,7 +173,19 @@ axNextImpliesDistr
             scTrue
 \end{code}
 
-% %% TEMPLATE
+$$
+  \begin{array}{lll}
+     \next p \equiv \lnot \next \lnot p &  & \QNAME{linearity}
+  \end{array}
+$$\par
+
+\vspace{-8pt}
+\begin{code}
+cjLinearity = ( "linearity"
+              , (  mkN p === mkNot (mkN (mkNot p))
+                , scTrue ) )
+\end{code}
+
 % $$
 %   \begin{array}{lll}
 %      law & sc & name
@@ -182,9 +194,19 @@ axNextImpliesDistr
 %
 %\vspace{-8pt}
 % \begin{code}
-% axXXX = preddef ("law" -.- "name")
-%   p
-%   scTrue
+% cjYYY = ( "conj"-.-"name"
+%         , (  p
+%           , scTrue ) )
+% \end{code}
+
+% $$
+%   \begin{array}{lll}
+%      law & sc & name
+%   \end{array}
+% $$\par
+%
+%\vspace{-8pt}
+% \begin{code}
 % cjYYY = ( "conj"-.-"name"
 %         , (  p
 %           , scTrue ) )
@@ -336,8 +358,9 @@ ltlAxioms
 We now collect our conjecture set:
 \begin{code}
 ltlConjs :: [NmdAssertion]
-ltlConjs
-  = [  ]
+ltlConjs = map mkNmdAsn
+    [ cjLinearity
+    ]
 \end{code}
 
 

@@ -74,11 +74,11 @@ from high to low:
 \end{eqnarray*}
 
 \begin{code}
-theN = jId "next"       ; mkN p   = Cons arbpred True theNext       [p]
-theE = jId "eventually" ; mkE p   = Cons arbpred True theEventually [p]
-theA = jId "always"     ; mkA p   = Cons arbpred True theA          [p]
-theU = jId "until"      ; mkU p q = Cons arbpred True theU        [p,q]
-theW = jId "wuntil"     ; mkW p q = Cons arbpred True theW        [p,q]
+theN = jId "next"       ; mkN p   = Cons arbpred True theN [p]
+theE = jId "eventually" ; mkE p   = Cons arbpred True theE [p]
+theA = jId "always"     ; mkA p   = Cons arbpred True theA [p]
+theU = jId "until"      ; mkU p q = Cons arbpred True theU [p,q]
+theW = jId "wuntil"     ; mkW p q = Cons arbpred True theW [p,q]
 \end{code}
 
 

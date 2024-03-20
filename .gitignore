@@ -4,6 +4,7 @@
 *.aux
 *.log
 MAIN.pdf
+TUT.pdf
 *.gz
 *.bbl
 *.blg

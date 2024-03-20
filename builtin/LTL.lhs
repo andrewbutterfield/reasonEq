@@ -143,13 +143,50 @@ that property $p$ holds \emph{at} position $j$ in $\sigma$.
 
 \subsection{The Next Operator ($\next$)}
 
+\begin{eqnarray*}
+  (\sigma,j) \models \next p  &\IFF&  (\sigma,j+1) \models p
+\end{eqnarray*}
+
 \subsection{The Until Operator ($\until$)}
+
+\begin{eqnarray*}
+  (\sigma,j) \models p \until q  
+  &\IFF&  
+  \exists k \mid k \geq j \bullet
+  (\sigma,k) \models q
+  \land 
+  (\forall i \mid j \leq i < k \bullet
+  (\sigma,i) \models p)
+\end{eqnarray*}
 
 \subsection{The Eventually Operator ($\eventually$)}
 
+\begin{eqnarray*}
+  (\sigma,j) \models \eventually p 
+  &\IFF&  
+  \exists k \mid k \geq j \bullet
+  (\sigma,k) \models p
+\end{eqnarray*}
+
+
 \subsection{The Always Operator ($\always$)}
 
+\begin{eqnarray*}
+  (\sigma,j) \models \always p 
+  &\IFF&  
+  \forall k \mid k \geq j \bullet
+  (\sigma,k) \models p
+\end{eqnarray*}
+
 \subsection{The Wait Operator ($\wait$)}
+
+\begin{eqnarray*}
+  (\sigma,j) \models p \wait q  
+  &\IFF&  
+  (\sigma,j) \models p \until q
+  \quad\lor\quad 
+  (\sigma,j) \models \always p
+\end{eqnarray*}
 
 
 % %% TEMPLATE

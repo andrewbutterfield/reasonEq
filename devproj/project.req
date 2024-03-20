@@ -6,6 +6,30 @@ END THEORIES
 CURRTHEORY = LTL
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("LTL","next_true")
+BEGIN LIVE-PROOF
+TH-NAME: LTL
+CJ-NAME: next_true
+CONJ = ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [K (TF TB (TG (Id "B" 0))) (VB True)],K (TF TB (TG (Id "B" 0))) (VB True)],([],fromList []))
+SIDE = ([],fromList [])
+STRAT red-All
+BEGIN SEQZIP
+TERMZIP = (C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [K (TF TB (TG (Id "B" 0))) (VB True),C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [K (TF TB (TG (Id "B" 0))) (VB True)],C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [K (TF TB (TG (Id "B" 0))) (VB True)]]],[])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.next_true", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K (TF TB (TG (Id "B" 0))) (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+(UseLaw (ByMatch MEL) "or_symm" (BD (fromList [((Id "P" 0,VP),BT (C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [K (TF TB (TG (Id "B" 0))) (VB True)])),((Id "Q" 0,VP),BT (C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [K (TF TB (TG (Id "B" 0))) (VB True)])),((Id "or" 0,VO),BV (VR (Id "or" 0,VO,WS)))],fromList [],fromList [])) [2],ASN (C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [K (TF TB (TG (Id "B" 0))) (VB True),C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [K (TF TB (TG (Id "B" 0))) (VB True)],C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [K (TF TB (TG (Id "B" 0))) (VB True)]]],([],fromList [])))
+(UseLaw (ByMatch MEL) "and_unit" (BD (fromList [((Id "P" 0,VP),BT (C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [K (TF TB (TG (Id "B" 0))) (VB True)])),((Id "and" 0,VO),BV (VR (Id "and" 0,VO,WS)))],fromList [],fromList [])) [2,1],ASN (C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [K (TF TB (TG (Id "B" 0))) (VB True),C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [K (TF TB (TG (Id "B" 0))) (VB True)],K (TF TB (TG (Id "B" 0))) (VB True)],C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [K (TF TB (TG (Id "B" 0))) (VB True)]]],([],fromList [])))
+(UseLaw (ByMatch MA) "excl-middle" (BD (fromList [((Id "P" 0,VP),BT (C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [K (TF TB (TG (Id "B" 0))) (VB True)])),((Id "not" 0,VO),BV (VR (Id "not" 0,VO,WS))),((Id "or" 0,VO),BV (VR (Id "or" 0,VO,WS)))],fromList [],fromList [])) [1],ASN (C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [K (TF TB (TG (Id "B" 0))) (VB True)],C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [K (TF TB (TG (Id "B" 0))) (VB True)]]],C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [K (TF TB (TG (Id "B" 0))) (VB True)],K (TF TB (TG (Id "B" 0))) (VB True)],C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [K (TF TB (TG (Id "B" 0))) (VB True)]]],([],fromList [])))
+(UseLaw (ByMatch MEL) "and_unit" (BD (fromList [((Id "P" 0,VP),BT (C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [K (TF TB (TG (Id "B" 0))) (VB True)])),((Id "and" 0,VO),BV (VR (Id "and" 0,VO,WS)))],fromList [],fromList [])) [1,1],ASN (C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [K (TF TB (TG (Id "B" 0))) (VB True)],K (TF TB (TG (Id "B" 0))) (VB True)],C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [K (TF TB (TG (Id "B" 0))) (VB True)]]],C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [K (TF TB (TG (Id "B" 0))) (VB True)],K (TF TB (TG (Id "B" 0))) (VB True)],C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [K (TF TB (TG (Id "B" 0))) (VB True)]]],([],fromList [])))
+(UseLaw (ByMatch MEL) "or_and_distr" (BD (fromList [((Id "P" 0,VP),BT (C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [K (TF TB (TG (Id "B" 0))) (VB True)],K (TF TB (TG (Id "B" 0))) (VB True)])),((Id "Q" 0,VP),BT (C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [K (TF TB (TG (Id "B" 0))) (VB True)]])),((Id "R" 0,VP),BT (C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [K (TF TB (TG (Id "B" 0))) (VB True)])),((Id "and" 0,VO),BV (VR (Id "and" 0,VO,WS))),((Id "or" 0,VO),BV (VR (Id "or" 0,VO,WS)))],fromList [],fromList [])) [],ASN (C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [K (TF TB (TG (Id "B" 0))) (VB True)],K (TF TB (TG (Id "B" 0))) (VB True)],C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [K (TF TB (TG (Id "B" 0))) (VB True)]],C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [K (TF TB (TG (Id "B" 0))) (VB True)]]],([],fromList [])))
+(UseLaw (ByMatch (ME [1,2])) "eqv_def" (BD (fromList [((Id "P" 0,VP),BT (C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [K (TF TB (TG (Id "B" 0))) (VB True)])),((Id "Q" 0,VP),BT (K (TF TB (TG (Id "B" 0))) (VB True))),((Id "eqv" 0,VO),BV (VR (Id "eqv" 0,VO,WS)))],fromList [],fromList [])) [],ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [K (TF TB (TG (Id "B" 0))) (VB True)],K (TF TB (TG (Id "B" 0))) (VB True)],([],fromList [])))
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

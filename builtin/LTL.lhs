@@ -55,8 +55,8 @@ and Tourlakis \cite{journals/logcom/Tourlakis01}.
 \def\next{\mathop{\circ}}
 \def\eventually{\mathop{\diamond}}
 \def\always{\mathop{\smallsquare}}
-\def\until{\mathof{\mathcal{U}}}
-\def\wuntil{\mathof{\mathcal{W}}}
+\def\until{\mathop{\mathcal{U}}}
+\def\wuntil{\mathop{\mathcal{W}}}
 
 We have the following additional logic operators in LTL:
 $\next~\eventually~\always~\until~\wuntil$.
@@ -72,6 +72,15 @@ from high to low:
 \\&& \implies \quad \Longleftarrow
 \\&& \equiv
 \end{eqnarray*}
+
+\begin{code}
+theN = jId "next"       ; mkN p   = Cons arbpred True theNext       [p]
+theE = jId "eventually" ; mkE p   = Cons arbpred True theEventually [p]
+theA = jId "always"     ; mkA p   = Cons arbpred True theA          [p]
+theU = jId "until"      ; mkU p q = Cons arbpred True theU        [p,q]
+theW = jId "wuntil"     ; mkW p q = Cons arbpred True theW        [p,q]
+\end{code}
+
 
 \section{Predicate Infrastructure}
 

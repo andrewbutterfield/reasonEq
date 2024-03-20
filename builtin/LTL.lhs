@@ -162,7 +162,8 @@ axNextSelfDual
 
 $$
   \begin{array}{lll}
-     \next \lnot p \equiv \lnot \next p &  & \QNAME{$\next$-$\implies$-distr}
+     \next (p \implies q) \equiv \next p \implies \next q 
+     && \QNAME{$\next$-$\implies$-distr}
   \end{array}
 $$\par
 \vspace{-8pt}
@@ -178,7 +179,6 @@ $$
      \next p \equiv \lnot \next \lnot p &  & \QNAME{linearity}
   \end{array}
 $$\par
-
 \vspace{-8pt}
 \begin{code}
 cjLinearity = ( "linearity"
@@ -186,31 +186,68 @@ cjLinearity = ( "linearity"
                 , scTrue ) )
 \end{code}
 
-% $$
-%   \begin{array}{lll}
-%      law & sc & name
-%   \end{array}
-% $$\par
-%
-%\vspace{-8pt}
-% \begin{code}
-% cjYYY = ( "conj"-.-"name"
-%         , (  p
-%           , scTrue ) )
-% \end{code}
+$$
+  \begin{array}{lll}
+     \next(p \lor q) \equiv \next p \lor \next q 
+     && \QNAME{$\next$-$\lor$-distr}
+  \end{array}
+$$\par
+\vspace{-8pt}
+\begin{code}
+cjNextOrDistr = ( "next"-.-"or"-.-"distr"
+        , (  mkN( p \/ q) === mkN p \/ mkN q
+          , scTrue ) )
+\end{code}
 
-% $$
-%   \begin{array}{lll}
-%      law & sc & name
-%   \end{array}
-% $$\par
-%
-%\vspace{-8pt}
-% \begin{code}
-% cjYYY = ( "conj"-.-"name"
-%         , (  p
-%           , scTrue ) )
-% \end{code}
+$$
+  \begin{array}{lll}
+     \next(p \land q) \equiv \next p \land \next q 
+     && \QNAME{$\next$-$\land$-distr}
+  \end{array}
+$$\par
+\vspace{-8pt}
+\begin{code}
+cjNextAndDistr = ( "next"-.-"and"-.-"distr"
+        , (  mkN( p /\ q) === mkN p /\ mkN q
+          , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{lll}
+     \next(p \equiv q) \equiv \next p \equiv \next q 
+     && \QNAME{$\next$-$\equiv$-distr}
+  \end{array}
+$$\par
+\vspace{-8pt}
+\begin{code}
+cjNextEqvDistr = ( "next"-.-"eqv"-.-"distr"
+        , (  mkN( p === q) === (mkN p === mkN q)
+          , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{lll}
+     \next \true \equiv \true && \QNAME{$\next$-$\true$}
+  \end{array}
+$$\par
+\vspace{-8pt}
+\begin{code}
+cjNextTrue = ( "next"-.-"true"
+             , (  mkN trueP === trueP
+               , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{lll}
+     \next \false \equiv \false && \QNAME{$\next$-$\false$}
+  \end{array}
+$$\par
+\vspace{-8pt}
+\begin{code}
+cjNextFalse = ( "next"-.-"false"
+        , (  mkN falseP === falseP
+          , scTrue ) )
+\end{code}
 
 
 \subsection{The Until Operator ($\until$)}
@@ -360,6 +397,7 @@ We now collect our conjecture set:
 ltlConjs :: [NmdAssertion]
 ltlConjs = map mkNmdAsn
     [ cjLinearity
+    , cjNextOrDistr, cjNextAndDistr, cjNextEqvDistr, cjNextTrue, cjNextFalse
     ]
 \end{code}
 

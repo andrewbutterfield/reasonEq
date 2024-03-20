@@ -147,6 +147,50 @@ that property $p$ holds \emph{at} position $j$ in $\sigma$.
   (\sigma,j) \models \next p  &\IFF&  (\sigma,j+1) \models p
 \end{eqnarray*}
 
+$$
+  \begin{array}{lll}
+     \next \lnot p \equiv \lnot \next p &  & \QNAME{$\next$-self-dual}
+  \end{array}
+$$\par
+\vspace{-8pt}
+\begin{code}
+axNextSelfDual 
+  = preddef ("next" -.- "self" -.- "dual")
+            (mkN (mkNot p) === mkNot (mkN p))
+            scTrue
+\end{code}
+
+$$
+  \begin{array}{lll}
+     \next \lnot p \equiv \lnot \next p &  & \QNAME{$\next$-$\implies$-distr}
+  \end{array}
+$$\par
+\vspace{-8pt}
+\begin{code}
+axNextImpliesDistr 
+  = preddef ("next" -.- "implies" -.- "distr")
+            (mkN (p ==> q) ===  mkN p ==> mkN q)
+            scTrue
+\end{code}
+
+% %% TEMPLATE
+% $$
+%   \begin{array}{lll}
+%      law & sc & name
+%   \end{array}
+% $$\par
+%
+%\vspace{-8pt}
+% \begin{code}
+% axXXX = preddef ("law" -.- "name")
+%   p
+%   scTrue
+% cjYYY = ( "conj"-.-"name"
+%         , (  p
+%           , scTrue ) )
+% \end{code}
+
+
 \subsection{The Until Operator ($\until$)}
 
 \begin{eqnarray*}
@@ -159,6 +203,24 @@ that property $p$ holds \emph{at} position $j$ in $\sigma$.
   (\sigma,i) \models p)
 \end{eqnarray*}
 
+% %% TEMPLATE
+% $$
+%   \begin{array}{lll}
+%      law & sc & name
+%   \end{array}
+% $$\par
+%
+%\vspace{-8pt}
+% \begin{code}
+% axXXX = preddef ("law" -.- "name")
+%   p
+%   scTrue
+% cjYYY = ( "conj"-.-"name"
+%         , (  p
+%           , scTrue ) )
+% \end{code}
+
+
 \subsection{The Eventually Operator ($\eventually$)}
 
 \begin{eqnarray*}
@@ -167,6 +229,23 @@ that property $p$ holds \emph{at} position $j$ in $\sigma$.
   \exists k \mid k \geq j \bullet
   (\sigma,k) \models p
 \end{eqnarray*}
+
+% %% TEMPLATE
+% $$
+%   \begin{array}{lll}
+%      law & sc & name
+%   \end{array}
+% $$\par
+%
+%\vspace{-8pt}
+% \begin{code}
+% axXXX = preddef ("law" -.- "name")
+%   p
+%   scTrue
+% cjYYY = ( "conj"-.-"name"
+%         , (  p
+%           , scTrue ) )
+% \end{code}
 
 
 \subsection{The Always Operator ($\always$)}
@@ -177,6 +256,24 @@ that property $p$ holds \emph{at} position $j$ in $\sigma$.
   \forall k \mid k \geq j \bullet
   (\sigma,k) \models p
 \end{eqnarray*}
+
+% %% TEMPLATE
+% $$
+%   \begin{array}{lll}
+%      law & sc & name
+%   \end{array}
+% $$\par
+%
+%\vspace{-8pt}
+% \begin{code}
+% axXXX = preddef ("law" -.- "name")
+%   p
+%   scTrue
+% cjYYY = ( "conj"-.-"name"
+%         , (  p
+%           , scTrue ) )
+% \end{code}
+
 
 \subsection{The Wait Operator ($\wait$)}
 
@@ -201,7 +298,11 @@ that property $p$ holds \emph{at} position $j$ in $\sigma$.
 % axXXX = preddef ("law" -.- "name")
 %   p
 %   scTrue
+% cjYYY = ( "conj"-.-"name"
+%         , (  p
+%           , scTrue ) )
 % \end{code}
+
 
 \section{LTL Theory Assembly}
 
@@ -225,7 +326,7 @@ We now collect all of the above as our axiom set:
 ltlAxioms :: [Law]
 ltlAxioms
   = map labelAsAxiom
-      [ 
+      [ axNextSelfDual, axNextImpliesDistr
       ]
 \end{code}
 

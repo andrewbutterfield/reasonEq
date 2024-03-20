@@ -159,6 +159,9 @@ theSymbolList
   , ("imp", SymForm "==>"  "\x27f9"), ("eqv", SymForm "=="  "\x2261")
 
   , ("neg", SymForm "-" "-")
+  , ("next", SymForm "()" "\x25cb")
+  , ("eventually", SymForm "<>" "\x25c7")
+  , ("always", SymForm "[]" "\x25fb")
 
   , ("cons", SymForm ":" ":"), ("cat", SymForm "^" "\x2322")
   , ("pfx", SymForm "<=" "\x227c")

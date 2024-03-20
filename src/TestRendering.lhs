@@ -215,6 +215,8 @@ precTable
     , ( "pfx"      , (7,NotAssoc))
     , ( "in"       , (7,NotAssoc))
     , ( "subseteq" , (7,NotAssoc))
+    , ( "until"    , (8,NotAssoc))
+    , ( "wait"     , (8,NotAssoc))
     , ( "+"        , (8,LAssoc))
     , ( "union"    , (8,LAssoc))
     , ( "-"        , (8,NotAssoc))

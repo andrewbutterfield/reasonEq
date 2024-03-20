@@ -52,21 +52,16 @@ and Tourlakis \cite{journals/logcom/Tourlakis01}.
 
 \section{LTL Signature}
 
-\def\next{\mathop{\circ}}
-\def\eventually{\mathop{\diamond}}
-\def\always{\mathop{\smallsquare}}
-\def\until{\mathop{\mathcal{U}}}
-\def\wuntil{\mathop{\mathcal{W}}}
 
 We have the following additional logic operators in LTL:
-$\next~\eventually~\always~\until~\wuntil$.
+$\next~\eventually~\always~\until~\wait$.
 
 We have the following precedences in \cite{DBLP:journals/csur/WarfordVS20},
 from high to low:
 \begin{eqnarray*}
 \\ && [x:=e]
 \\ && \lnot \quad \next \quad \eventually \quad \always 
-\\ && \until \quad \wuntil
+\\ && \until \quad \wait
 \\&& =
 \\&& \lor \quad \land
 \\&& \implies \quad \Longleftarrow
@@ -75,12 +70,16 @@ from high to low:
 
 \begin{code}
 theN = jId "next"       ; mkN p   = Cons arbpred True theN [p]
+v_next = Vbl theN ObsV Static
 theE = jId "eventually" ; mkE p   = Cons arbpred True theE [p]
+v_event = Vbl theE ObsV Static
 theA = jId "always"     ; mkA p   = Cons arbpred True theA [p]
+v_always = Vbl theA ObsV Static
 theU = jId "until"      ; mkU p q = Cons arbpred True theU [p,q]
-theW = jId "wuntil"     ; mkW p q = Cons arbpred True theW [p,q]
+v_until = Vbl theU ObsV Static
+theW = jId "wait"       ; mkW p q = Cons arbpred True theW [p,q]
+v_wait = Vbl theW ObsV Static
 \end{code}
-
 
 \section{Predicate Infrastructure}
 
@@ -128,8 +127,29 @@ fszs = [(lvzs,lvfs)]
 efsyzs = [(lvys,lves),(lvzs,lvfs)]
 \end{code}
 
-\newpage
-\section{Predicate Axioms}
+
+\section{Temporal Operators}
+
+Based on \cite{DBLP:journals/csur/WarfordVS20}:
+Given a set $V$ of variables, 
+we define a state $s$ as a total mapping from the variables in $V$
+to values in some appropriate domain.
+We define a model $\sigma$ over $V$ as an infinite sequence of states:
+$s_0,s_1,s_2,\dots$.
+An anchored sequence $(\sigma,j)$ is such a sequence 
+paired with an index $j$ that identifies $s_j$.
+LTL entailment $(\sigma,j) \models p$ states 
+that property $p$ holds \emph{at} position $j$ in $\sigma$.
+
+\subsection{The Next Operator ($\next$)}
+
+\subsection{The Until Operator ($\until$)}
+
+\subsection{The Eventually Operator ($\eventually$)}
+
+\subsection{The Always Operator ($\always$)}
+
+\subsection{The Wait Operator ($\wait$)}
 
 
 % %% TEMPLATE
@@ -146,6 +166,23 @@ efsyzs = [(lvys,lves),(lvzs,lvfs)]
 %   scTrue
 % \end{code}
 
+\section{LTL Theory Assembly}
+
+\subsection{LTL Known Names}
+
+\begin{code}
+ltlKnown :: VarTable
+ltlKnown  = fromJust $ addKnownVar v_next boolf_1 $
+            fromJust $ addKnownVar v_event boolf_1 $
+            fromJust $ addKnownVar v_always boolf_1 $
+            fromJust $ addKnownVar v_until boolf_2 $ 
+            fromJust $ addKnownVar v_wait boolf_2 $ 
+            newVarTable
+
+\end{code}
+
+\subsection{LTL Axioms}
+
 We now collect all of the above as our axiom set:
 \begin{code}
 ltlAxioms :: [Law]
@@ -155,7 +192,7 @@ ltlAxioms
       ]
 \end{code}
 
-\section{Predicate Conjectures}
+\subsection{LTL Conjectures}
 
 
 We now collect our conjecture set:
@@ -166,25 +203,26 @@ ltlConjs
 \end{code}
 
 
-\section{The Predicate Theory}
+\subsection{The Predicate Theory}
 
 \begin{code}
 ltlName :: String
 ltlName = "LTL"
 ltlTheory :: Theory
 ltlTheory
-  =  nullTheory { thName  =  ltlName
-            , thDeps  =  [ equalityName
-                         , existsName
-                         , forallName
-                         , implName
-                         , aoiName
-                         , conjName
-                         , disjName
-                         , notName
-                         , equivName
-                         ]
-            , laws    =  ltlAxioms
-            , conjs   =  ltlConjs
+  = nullTheory  { thName  =  ltlName
+                , thDeps  = [ equalityName
+                            , existsName
+                            , forallName
+                            , implName
+                            , aoiName
+                            , conjName
+                            , disjName
+                            , notName
+                            , equivName
+                            ]
+                , known = ltlKnown
+                , laws  = ltlAxioms
+                , conjs = ltlConjs
             }
 \end{code}

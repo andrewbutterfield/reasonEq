@@ -15,6 +15,13 @@ END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS
 BEGIN LIST SIMPLIFIERS
+("exists_def",Rightwards)
+("exists_remove",Leftwards)
+("exists_false",Leftwards)
+("exists_one_point",Leftwards)
+("exists_or_distr",Rightwards)
+("and_exists_scope",Rightwards)
+("exists_alpha_rename",Rightwards)
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
 END LIST DEFFOLD

@@ -17,6 +17,15 @@ END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS
 BEGIN LIST SIMPLIFIERS
+("or_and_absorb",Leftwards)
+("and_not_or_absorb",Leftwards)
+("and_not_or_absorb",Leftwards)
+("or_and_distr",Rightwards)
+("and_or_distr",Rightwards)
+("deMorgan_and",Rightwards)
+("deMorgan_or",Rightwards)
+("test_1",Leftwards)
+("test_2",Leftwards)
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
 END LIST DEFFOLD

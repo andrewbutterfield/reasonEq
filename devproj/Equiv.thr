@@ -15,6 +15,11 @@ END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS
 BEGIN LIST SIMPLIFIERS
+("id_subst",Leftwards)
+("non_subst",Leftwards)
+("eqv_id",Leftwards)
+("true_subst",Leftwards)
+("eqv_subst",Rightwards)
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
 END LIST DEFFOLD

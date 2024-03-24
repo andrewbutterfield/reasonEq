@@ -15,10 +15,18 @@ END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS
 BEGIN LIST SIMPLIFIERS
+("and_idem",Leftwards)
+("and_unit",Leftwards)
+("and_zero",Leftwards)
+("and_and_distr",Rightwards)
+("contradiction",Leftwards)
+("and_subst",Rightwards)
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
+golden-rule
 END LIST DEFFOLD
 BEGIN LIST DEFUNFOLD
+golden-rule
 END LIST DEFUNFOLD
 BEGIN LIST CONJECTURES
 END LIST CONJECTURES

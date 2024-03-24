@@ -6,7 +6,13 @@ Copyright  Saqib Zardari (c) 2023
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module Classifier where
+module Classifier 
+  ( Direction(..)
+  , AutoLaws(..)
+  , nullAutoLaws, combineAutos, showAuto
+  , addLawsClass
+  , checkIsComp, checkIsSimp, checkIsFold, checkIsUnFold
+  ) where
 
 import qualified Data.Set as S
 import Laws
@@ -17,6 +23,10 @@ import Proofs
 
 import Debugger
 \end{code}
+
+\section{Classifier Declarations}
+
+\subsection{Classifier Types}
 
 \begin{code}
 data Direction 
@@ -32,6 +42,8 @@ data AutoLaws = AutoLaws
   deriving (Eq,Show,Read)
 \end{code}
 
+\newpage
+\subsection{Classifier Top-Level Operations}
 \begin{code}
 nullAutoLaws
   = AutoLaws {  simps = []
@@ -49,6 +61,8 @@ combineAutos :: AutoLaws -> [AutoLaws] -> AutoLaws
 combineAutos auto [] = auto
 combineAutos auto (x:xs) = combineAutos (combineTwoAuto auto x) xs
 \end{code}
+
+\subsection{Classifier Display}
 
 \begin{code}
 showDir :: Direction -> String
@@ -74,32 +88,16 @@ showAuto alaws = "   i. simps:"  ++ showSimps (simps alaws) 1  ++ "\n\n"
               ++ " iii. unfolds:"  ++ showFolds (unfolds alaws) 1 ++ "\n\n"
 \end{code}
 
+\section{Classifier Top Level}
+
 \begin{code}
 addLawClassifier :: NmdAssertion -> AutoLaws -> AutoLaws
 addLawClassifier (nme, asser) au 
   = removeFoldSimps 
       $ AutoLaws { simps = simps au ++ addSimp nme (assnT asser)
-                 , folds = folds au ++ addFold nme (assnT asser)
+                 , folds = folds au ++ (addFold nme (assnT asser))
                  , unfolds = unfolds au ++ addFold nme (assnT asser)
                  }
-\end{code}
-
-\begin{code}
-removeFoldSimps :: AutoLaws -> AutoLaws
-removeFoldSimps au 
-  = AutoLaws { simps = removeSimpsList (folds au) (simps au)
-             , folds = folds au
-             , unfolds = unfolds au
-             }
-
-removeSimpsList :: [String] -> [(String, Direction)] -> [(String, Direction)]
-removeSimpsList [] ys = ys
-removeSimpsList (x:xs) ys = removeSimpsList xs $ removeSimp x ys
-
-removeSimp :: String -> [(String, Direction)] -> [(String, Direction)]
-removeSimp _ [] = []
-removeSimp x (y:ys) | x == fst y    = removeSimp x ys
-                    | otherwise = y : removeSimp x ys
 \end{code}
 
 \begin{code}
@@ -181,3 +179,24 @@ checkIsUnFold MatchEqvLHS = True
 checkIsUnFold MatchEqvRHS = False
 checkIsUnFold _ = False 
 \end{code}
+
+\section{Remove Fold Simplifiers}
+
+\begin{code}
+removeFoldSimps :: AutoLaws -> AutoLaws
+removeFoldSimps au 
+  = AutoLaws { simps = removeSimpsList (folds au) (simps au)
+             , folds = folds au
+             , unfolds = unfolds au
+             }
+
+removeSimpsList :: [String] -> [(String, Direction)] -> [(String, Direction)]
+removeSimpsList [] ys = ys
+removeSimpsList (x:xs) ys = removeSimpsList xs $ removeSimp x ys
+
+removeSimp :: String -> [(String, Direction)] -> [(String, Direction)]
+removeSimp _ [] = []
+removeSimp x (y:ys) | x == fst y    = removeSimp x ys
+                    | otherwise = y : removeSimp x ys
+\end{code}
+

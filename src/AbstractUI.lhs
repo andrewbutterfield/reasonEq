@@ -283,7 +283,7 @@ demoteLaw thnm whichL reqs
                              $ theories__ (replaceTheory' thry') $ reqs
 \end{code}
 
-
+\newpage
 \subsection{Classifying Laws}
 
 \begin{code}
@@ -309,9 +309,9 @@ classifyLaw thnm whichL reqs
         | otherwise
             ->  do case findLaw thry whichL of
                       Nothing -> fail ("No law named '"++whichL++"' in theory.")
-                      Just law -> do thry' <- lawClassify law thry
-                                     return $ changed
-                                            $ theories__ (replaceTheory' thry') $ reqs
+                      Just lws -> do  thry' <- lawClassify lws thry
+                                      return $ changed
+                                             $ theories__ (replaceTheory' thry') $ reqs
     where thys = theories reqs
 \end{code}
 

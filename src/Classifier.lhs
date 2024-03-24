@@ -110,9 +110,12 @@ addLawsClass (x:xs) au
   = addLawsClass (xs) (addLawClassifier (lawNamedAssn x) au)
 \end{code}
 
+
+\section{Identify Simplifiers}
+
 \begin{code}
 addSimp :: String -> Term -> [(String, Direction)]
-addSimp nme (Cons _ sb (Identifier "equiv" 0) (p:q:[]))
+addSimp nme (Cons _ sb (Identifier "eqv" 0) (p:q:[]))
   = do  let sizeP = termSize p
         let sizeQ = termSize q
         if sizeP > sizeQ
@@ -123,9 +126,12 @@ addSimp nme (Cons _ sb (Identifier "equiv" 0) (p:q:[]))
 addSimp nme _ = []
 \end{code}
 
+
+\section{Identify Folds}
+
 \begin{code}
 addFold :: String -> Term -> [(String)]
-addFold nme (Cons _ sb (Identifier "equiv" 0) (p:q:[])) 
+addFold nme (Cons _ sb (Identifier "eqv" 0) (p:q:[])) 
   =  if isFold p
      then if checkQ q (getN p)
           then [nme] 
@@ -149,9 +155,7 @@ getN :: Term -> Identifier
 getN (Cons _ _ n _) = n
 
 checkQ :: Term -> Identifier -> Bool
-checkQ (Cons _ _ n xs@(_:_)) i
-            | all isVar xs && n == i = False
-            | otherwise = True
+checkQ (Cons _ _ n _) i  =  n /= i
 checkQ _ _ = True
 \end{code}
 

@@ -231,7 +231,7 @@ gui reqs0 = do putStrLn "GUI not implemented, using command-line."
 \end{code}
 
 \newpage
-\section{REPL Top-Level}
+\chapter{REPL Top-Level}
 
 We define our reasonEq REPL types first:
 \begin{code}
@@ -690,10 +690,10 @@ doDemotion args reqs
 
 
 \newpage
-\section{Proving Commands}
+\section{Proof Access Commands}
 
+\subsection{New Proof} 
 
-Then we introduce doing a proper proof:
 \begin{code}
 cmdNewProof :: REqCmdDescr
 cmdNewProof
@@ -720,6 +720,8 @@ doNewProof args reqs
              Just liveProof -> proofREPL reqs liveProof
 \end{code}
 
+\newpage
+\subsection{Return to Live Proof}
 
 \begin{code}
 cmdRet2Proof :: REqCmdDescr
@@ -754,7 +756,9 @@ presentHyp hthy
   | null hstring  = ""
   | otherwise =  hstring ++ "  " ++ _vdash ++ "    "
   where
-    hstring  = intercalate "," $ map (trTerm 0 . assnT . snd . fst) $ laws hthy
+    hstring  = intercalate "," 
+               $ map (trTerm 0 . assnT . snd . fst) 
+               $ laws hthy
 
 strdir str
   | str == reduceBoth  =  "  --> ? <--  "
@@ -763,7 +767,9 @@ strdir str
 
 
 \newpage
-\section{Proof REPL}
+\chapter{Proof REPL}
+
+\section{Proof State}
 
 We start by defining the proof REPL state:
 \begin{code}
@@ -806,6 +812,9 @@ proofREPLEndTidy _ (reqs,liveProof)
        return ( completeProof reqs liveProof, liveProof)
 \end{code}
 
+\newpage
+
+The proof configuration
 \begin{code}
 proofREPLConfig
   = REPLC
@@ -869,6 +878,49 @@ tryDelta delta pstate@(reqs, liveProof)
        Just liveProof'  ->  return (reqs, liveProof')
 \end{code}
 
+\section{Proof Settings}
+
+Showing proof settings:
+\begin{code}
+showProofSettingsDescr = ( "sps"
+                         , "show proof settings"
+                         , "show proof settings"
+                         , showPrfSettingsCommand )
+showPrfSettingsCommand :: REPLCmd (REqState, LiveProof)
+showPrfSettingsCommand _ pstate@(reqs, _)
+  =  do putStrLn $ observeSettings reqs
+        waitForReturn
+        return pstate
+\end{code}
+
+Modifying proof settings:
+\begin{code}
+modPrfSettingsDescr
+  = ( "mps"
+    , "modify proof-settings"
+    , unlines
+        ( [ "mps 'setting' 'value' -- set setting=value" ]
+          ++ map (("      "++) .showSettingStrings) rEqSettingStrings
+          ++ [ "Aliases for True: true t on yes y (any case), num > 0"
+             , "Aliases for False: anything else"
+             , "  e.g. mps tq on" ]
+        )
+    , modProofSettings )
+
+modProofSettings :: REPLCmd (REqState, LiveProof)
+modProofSettings args@[name,val] state@(reqs, liveProof)
+-- | cmd == setSettings
+    =  case modifySettings args reqs of
+         But msgs  ->  do putStrLn $ unlines' ("mps failed":msgs)
+                          waitForReturn
+                          return (reqs, liveProof)
+         Yes reqs' -> return (reqs', liveProof)
+modProofSettings _ state = return state
+\end{code}
+
+
+\section{Listings}
+
 Listing laws in scope for the current live proof.
 \begin{code}
 listScopeLawsDescr = ( "ll", "list laws"
@@ -892,6 +944,8 @@ listScopeKnowns _ state@( reqs, liveProof)
        userPause
        return state
 \end{code}
+
+\section{Focus Management}
 
 Focus movement commands
 \begin{code}
@@ -940,97 +994,21 @@ leaveHypothesis :: REPLCmd (REqState, LiveProof)
 leaveHypothesis _ = tryDelta moveFocusFromHypothesis
 \end{code}
 
-
-\newpage
-Auto Proof
+Undoing the previous step (if any)
 \begin{code}
-autoDescr = ( "au"
-            , "auto proof"
-            , unlines
-                [ "au -- auto proof simp"
-                , "au c -- auto proof comp"
-                , "au f -- auto proof fold"
-                , "au u -- auto proof unfold"]
-            , autoCommand )
+goBackDescr = ( "b", "go back (undo)"
+              , unlines' [ "b   --- undo last proof step"
+                         , "    --- cannot undo clone changes yet"]
+              , goBack )
 
-autoCommand :: REPLCmd (REqState, LiveProof)
-autoCommand args state@(reqs, liveProof)
-   = case getTheory (currTheory reqs) $ theories reqs of
-      Nothing
-       -> do putStrLn ("Can't find current theory!!!\BEL")
-             return (reqs, liveProof)
-      Just thry
-       -> do let autos = allAutos thry $ theories reqs
-             case whichApply input of
-              True ->  case applyFolds' input autos (reqs, liveProof) of
-                          Yes liveProof' -> return (reqs, liveProof')
-                          But nothing -> do putStrLn ("No successful matching fold applys")
-                                            return (reqs, liveProof)
-              False -> do let f = if input == "c" then checkIsComp else checkIsSimp
-                          case applySimps' f autos (reqs, liveProof) of
-                              Yes liveProof' -> return (reqs, liveProof')
-                              But nothing -> do putStrLn ("No successful matching simp applys")
-                                                return (reqs, liveProof)
-    where
-      input = unwords args
-
-whichApply :: String -> Bool
-whichApply "f" = True
-whichApply "u" = True
-whichApply _ = False
-
-allAutos :: Theory -> Theories -> AutoLaws
-allAutos thry thys = do let depthys = getTheoryDeps' (thName thry) thys
-                        combineAutos nullAutoLaws ((depAutos [] depthys) ++ [auto thry])
-
-depAutos :: [AutoLaws] -> [Theory] -> [AutoLaws]
-depAutos autos [] = autos
-depAutos autos (depthy:depthys) = depAutos (autos ++ [auto depthy]) depthys
-
-applySimps' :: MonadFail m => ((String, Direction) -> MatchClass -> Bool) -> 
-                              AutoLaws -> (REqState, LiveProof) -> m LiveProof
-applySimps' f autos (reqs, liveProof) = applySimps f (simps autos) (reqs, liveProof)
-
-applySimps :: MonadFail m => ((String, Direction) -> MatchClass -> Bool) -> 
-                             [(String, Direction)] -> (REqState, LiveProof) -> m LiveProof
-applySimps f [] (reqs, liveProof) = fail ("No successful matching simp applys")
-applySimps f (x:xs) (reqs, liveProof)
-    = case matchFocusAgainst (fst x) liveProof of
-        Yes liveProof' ->  case applyMatchToFocus1 1 liveProof' of
-                                Nothing -> applySimps f xs (reqs, liveProof)
-                                Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)
-                                  -> case f x (mClass mtch) of 
-                                      False -> applySimps f xs (reqs, liveProof')
-                                      True  -> case applyMatchToFocus2 vts mtch [] [] liveProof' of
-                                                 Yes liveProof'' -> return liveProof''
-                                                 But msgs        -> applySimps f xs (reqs, liveProof)
-        But msgs       ->  applySimps f xs (reqs, liveProof)
-   where
-    vts = concat $ map thd3 $ mtchCtxts liveProof
-
-applyFolds' :: MonadFail m => String -> AutoLaws -> (REqState, LiveProof) -> m LiveProof
-applyFolds' input autos (reqs, liveProof) = do let match = if input == "f" then checkIsFold else checkIsUnFold
-                                               let lws = if input == "f" then folds autos else unfolds autos
-                                               applyFolds match lws (reqs, liveProof)
-
-applyFolds :: MonadFail m => (MatchClass -> Bool) -> [String] -> (REqState, LiveProof) -> m LiveProof
-applyFolds _ [] (reqs, liveProof) = fail ("No successful matching simp applys")
-applyFolds f (x:xs) (reqs, liveProof)
-    = case matchFocusAgainst x liveProof of
-        Yes liveProof' ->  case applyMatchToFocus1 1 liveProof' of
-                                Nothing -> applyFolds f xs (reqs, liveProof)
-                                Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars)
-                                  -> case f (mClass mtch) of 
-                                      False -> applyFolds f xs (reqs, liveProof')
-                                      True  -> case applyMatchToFocus2 vts mtch [] [] liveProof' of
-                                                 Yes liveProof'' -> return liveProof''
-                                                 But msgs        -> applyFolds f xs (reqs, liveProof)
-        But msgs       ->  applyFolds f xs (reqs, liveProof)
-   where
-    vts = concat $ map thd3 $ mtchCtxts liveProof
+goBack :: REPLCmd (REqState, LiveProof)
+goBack args  =  tryDelta (stepBack (args2int args))
 \end{code}
 
+
 \newpage
+\section{Matching}
+
 Law Matching
 \begin{code}
 matchLawDescr = ( "m"
@@ -1084,62 +1062,6 @@ showMatchesCommand args (reqs, liveProof)
     moi = if n > 0 then take n mtchs else mtchs
 \end{code}
 
-Showing proof settings:
-\begin{code}
-showProofSettingsDescr = ( "sps"
-                         , "show proof settings"
-                         , "show proof settings"
-                         , showPrfSettingsCommand )
-showPrfSettingsCommand :: REPLCmd (REqState, LiveProof)
-showPrfSettingsCommand _ pstate@(reqs, _)
-  =  do putStrLn $ observeSettings reqs
-        waitForReturn
-        return pstate
-\end{code}
-
-Modifying proof settings:
-\begin{code}
-modPrfSettingsDescr
-  = ( "mps"
-    , "modify proof-settings"
-    , unlines
-        ( [ "mps 'setting' 'value' -- set setting=value" ]
-          ++ map (("      "++) .showSettingStrings) rEqSettingStrings
-          ++ [ "Aliases for True: true t on yes y (any case), num > 0"
-             , "Aliases for False: anything else"
-             , "  e.g. mps tq on" ]
-        )
-    , modProofSettings )
-
-modProofSettings :: REPLCmd (REqState, LiveProof)
-modProofSettings args@[name,val] state@(reqs, liveProof)
--- | cmd == setSettings
-    =  case modifySettings args reqs of
-         But msgs  ->  do putStrLn $ unlines' ("mps failed":msgs)
-                          waitForReturn
-                          return (reqs, liveProof)
-         Yes reqs' -> return (reqs', liveProof)
-modProofSettings _ state = return state
-\end{code}
-
-
-Apply SAT-solver
-\begin{code}
-
-applySATDescr = ("sat"
-              , "Apply SAT-solver"
-              , ""
-              , applySATCommand)
-
-applySATCommand :: REPLCmd (REqState, LiveProof)
-applySATCommand _ (reqs,liveproof)
-  = case applySAT liveproof of
-      Yes liveproof' -> return (reqs, liveproof')
-      But msgs -> do putStrLn $ unlines' msgs
-                     waitForReturn
-                     return (reqs, liveproof) 
-\end{code}
-
 \newpage
 Applying a match.
 \begin{code}
@@ -1177,7 +1099,7 @@ applyMatch args pstate@(reqs, liveProof)
     vts = concat $ map thd3 $ mtchCtxts liveProof
 \end{code}
 
-\newpage
+
 
 Ask the user to specify a replacement term for each floating standard variable:
 \begin{code}
@@ -1205,6 +1127,8 @@ Ask the user to specify a replacement term for each floating standard variable:
           But msgs -> jeVar $ StaticVar $ jId "InvalidIdentifier"
 \end{code}
 
+\newpage
+
 Ask the user to specify a replacement variable-list/set
 for each floating list variable
 (We currently assume that each replacement variable can only be associated
@@ -1230,8 +1154,10 @@ with one floating variable. Is this too restrictive?):
             else return (False,lvvls)
 \end{code}
 
+\section{High-Level Operations}
 
-\newpage
+\subsection{Quantifier Handling}
+
 Normalise Quantifiers
 \begin{code}
 normQuantDescr = ( "nq"
@@ -1250,7 +1176,7 @@ normQuantCommand _ state@(reqs, liveProof)
              return (reqs, matches_ [] liveProof)
 \end{code}
 
-\newpage
+
 Simplify Nested Quantifiers
 \begin{code}
 simpNestDescr = ( "n"
@@ -1270,6 +1196,9 @@ simpNestCommand _ state@(reqs, liveProof)
 \end{code}
 
 \newpage
+\subsection{Substitution Handling}
+
+
 Perform Substitution
 \begin{code}
 substituteDescr = ( "s"
@@ -1288,57 +1217,8 @@ substituteCommand _ state@(reqs, liveProof)
              return (reqs, matches_ [] liveProof)
 \end{code}
 
+\subsection{Instantiation}
 
-\newpage
-Flattening grouped equivalences:
-\begin{code}
-flatEquivDescr = ( "fe", "flatten equivalences"
-                 , "flatten= equivalences"
-                 , flatEquiv )
-
-flatEquiv :: REPLCmd (REqState, LiveProof)
-flatEquiv _ state@(reqs, _)
-  = tryDelta (flattenAssociative $ theEqv) state
-\end{code}
-
-
-Re-grouping flattened equivalences:
-\begin{code}
-groupEquivDescr = ( "ge", "group equivalences"
-                  , unlines' [ "ge l -- associate to the left"
-                             , "ge r -- associate to the right"
-                             , "ge l <n> -- gather first <n>"
-                             , "ge r <n> -- gather last <n>"
-                             , "ge s <n> -- split at <n>"
-                             ]
-                  , groupEquiv )
-
-args2gs ["l"]                       =  return $ Assoc Lft
-args2gs ["r"]                       =  return $ Assoc Rght
-args2gs ("l":as) | args2int as > 0  =  return $ Gather Lft  $ args2int as
-args2gs ("r":as) | args2int as > 0  =  return $ Gather Rght $ args2int as
-args2gs ("s":as) | args2int as > 0  =  return $ Split       $ args2int as
-args2gs _                           =  fail "ge: invalid arguments."
-
-groupEquiv :: REPLCmd (REqState, LiveProof)
-groupEquiv args state@(reqs, _)
-  = case args2gs args of
-      Just gs -> tryDelta (groupAssociative theEqv gs) state
-      Nothing -> putStrLn "bad arguments!" >> userPause >> return state
-\end{code}
-
-Undoing the previous step (if any)
-\begin{code}
-goBackDescr = ( "b", "go back (undo)"
-              , unlines' [ "b   --- undo last proof step"
-                         , "    --- cannot undo clone changes yet"]
-              , goBack )
-
-goBack :: REPLCmd (REqState, LiveProof)
-goBack args  =  tryDelta (stepBack (args2int args))
-\end{code}
-
-\newpage
 Law Instantiation.
 Replacing \textit{true} by a law, with unknown variables
 suitably instantiated.
@@ -1373,6 +1253,10 @@ lawInstantiateProof _ ps@(reqs, liveProof )
                   liveProof' <- lawInstantiate3 vts lawt vs2ts liveProof
                   return (reqs, liveProof' )
 \end{code}
+
+\newpage
+
+\subsection{Hypothesis Handling}
 
 Hypothesis Cloning, is based on the following law:
 \[H \implies C \equiv H \implies H \land C\]
@@ -1414,6 +1298,186 @@ equivaleSteps args liveState@(reqs, _)
 \end{code}
 
 \newpage
+
+\section{Automation}
+
+\subsection{Equivalence Flattening}
+
+Flattening grouped equivalences:
+\begin{code}
+flatEquivDescr = ( "fe", "flatten equivalences"
+                 , "flatten= equivalences"
+                 , flatEquiv )
+
+flatEquiv :: REPLCmd (REqState, LiveProof)
+flatEquiv _ state@(reqs, _)
+  = tryDelta (flattenAssociative $ theEqv) state
+\end{code}
+
+
+Re-grouping flattened equivalences:
+\begin{code}
+groupEquivDescr = ( "ge", "group equivalences"
+                  , unlines' [ "ge l -- associate to the left"
+                             , "ge r -- associate to the right"
+                             , "ge l <n> -- gather first <n>"
+                             , "ge r <n> -- gather last <n>"
+                             , "ge s <n> -- split at <n>"
+                             ]
+                  , groupEquiv )
+
+args2gs ["l"]                       =  return $ Assoc Lft
+args2gs ["r"]                       =  return $ Assoc Rght
+args2gs ("l":as) | args2int as > 0  =  return $ Gather Lft  $ args2int as
+args2gs ("r":as) | args2int as > 0  =  return $ Gather Rght $ args2int as
+args2gs ("s":as) | args2int as > 0  =  return $ Split       $ args2int as
+args2gs _                           =  fail "ge: invalid arguments."
+
+groupEquiv :: REPLCmd (REqState, LiveProof)
+groupEquiv args state@(reqs, _)
+  = case args2gs args of
+      Just gs -> tryDelta (groupAssociative theEqv gs) state
+      Nothing -> putStrLn "bad arguments!" >> userPause >> return state
+\end{code}
+
+\subsection{SAT-Solving}
+
+Apply SAT-solver
+\begin{code}
+applySATDescr = ("sat"
+              , "Apply SAT-solver"
+              , ""
+              , applySATCommand)
+
+applySATCommand :: REPLCmd (REqState, LiveProof)
+applySATCommand _ (reqs,liveproof)
+  = case applySAT liveproof of
+      Yes liveproof' -> return (reqs, liveproof')
+      But msgs -> do putStrLn $ unlines' msgs
+                     waitForReturn
+                     return (reqs, liveproof) 
+\end{code}
+
+\newpage
+
+\subsection{Auto Law Application}
+
+Automatically apply laws of a specified kind
+\begin{code}
+autoDescr = ( "au"
+            , "auto proof"
+            , unlines
+                [ "au -- auto proof simp"
+                , "au c -- auto proof comp"
+                , "au f -- auto proof fold"
+                , "au u -- auto proof unfold"]
+            , autoCommand )
+
+autoCommand :: REPLCmd (REqState, LiveProof)
+autoCommand args state@(reqs, liveProof)
+  = case getTheory (currTheory reqs) $ theories reqs of
+      Nothing ->
+        do putStrLn ("Can't find current theory!!!\BEL")
+           return (reqs, liveProof)
+      Just thry ->
+        do  let autos = allAutos thry $ theories reqs
+            case whichApply input of
+              True ->  
+                case applyFolds' input autos (reqs, liveProof) of
+                  Yes liveProof' -> return (reqs, liveProof')
+                  But nothing -> 
+                    do putStrLn ("No successful matching fold applys")
+                       return (reqs, liveProof)
+              False -> 
+                do  let f = if input == "c" then checkIsComp else checkIsSimp
+                    case applySimps' f autos (reqs, liveProof) of
+                      Yes liveProof' -> return (reqs, liveProof')
+                      But nothing -> 
+                        do putStrLn ("No successful matching simp applys")
+                           return (reqs, liveProof)
+    where
+      input = unwords args
+\end{code}
+
+\begin{code}
+whichApply :: String -> Bool
+whichApply "f" = True
+whichApply "u" = True
+whichApply _ = False
+
+allAutos :: Theory -> Theories -> AutoLaws
+allAutos thry thys 
+  = do  let depthys = getTheoryDeps' (thName thry) thys
+        combineAutos nullAutoLaws ((depAutos [] depthys) ++ [auto thry])
+
+depAutos :: [AutoLaws] -> [Theory] -> [AutoLaws]
+depAutos autos [] = autos
+depAutos autos (depthy:depthys) = depAutos (autos ++ [auto depthy]) depthys
+\end{code}
+
+\newpage
+
+Applying Simplifiers
+\begin{code}
+applySimps' :: MonadFail m 
+            => ((String, Direction) -> MatchClass -> Bool) -> AutoLaws 
+            -> (REqState, LiveProof) -> m LiveProof
+applySimps' f autos (reqs, liveProof) 
+  = applySimps f (simps autos) (reqs, liveProof)
+
+applySimps :: MonadFail m 
+           => ((String, Direction) -> MatchClass -> Bool) 
+           -> [(String, Direction)] -> (REqState, LiveProof) -> m LiveProof
+applySimps f [] (reqs, liveProof) 
+  = fail ("No successful matching simp appliess")
+applySimps f (x:xs) (reqs, liveProof)
+  = case matchFocusAgainst (fst x) liveProof of
+      Yes liveProof' ->  
+        case applyMatchToFocus1 1 liveProof' of
+          Nothing -> applySimps f xs (reqs, liveProof)
+          Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars) ->
+            case f x (mClass mtch) of 
+              False -> applySimps f xs (reqs, liveProof')
+              True  -> 
+                case applyMatchToFocus2 vts mtch [] [] liveProof' of
+                  Yes liveProof'' -> return liveProof''
+                  But msgs -> applySimps f xs (reqs, liveProof)
+      But msgs  ->  applySimps f xs (reqs, liveProof)
+  where vts = concat $ map thd3 $ mtchCtxts liveProof
+\end{code}
+
+Applying Fold/Unfolds
+\begin{code}
+applyFolds' :: MonadFail m 
+            => String -> AutoLaws -> (REqState, LiveProof) -> m LiveProof
+applyFolds' input autos (reqs, liveProof) 
+  = do  let match = if input == "f" then checkIsFold else checkIsUnFold
+        let lws = if input == "f" then folds autos else unfolds autos
+        applyFolds match lws (reqs, liveProof)
+
+applyFolds :: MonadFail m 
+           => (MatchClass -> Bool) -> [String] 
+           -> (REqState, LiveProof) -> m LiveProof
+applyFolds _ [] (reqs, liveProof) 
+  = fail ("No successful matching fold/unfold applies")
+applyFolds f (x:xs) (reqs, liveProof)
+  = case matchFocusAgainst x liveProof of
+      Yes liveProof' ->  
+        case applyMatchToFocus1 1 liveProof' of
+          Nothing -> applyFolds f xs (reqs, liveProof)
+          Just (mtch,fStdVars,gSubTerms,fLstVars,gLstVars) ->
+            case f (mClass mtch) of 
+              False -> applyFolds f xs (reqs, liveProof')
+              True  -> 
+                case applyMatchToFocus2 vts mtch [] [] liveProof' of
+                  Yes liveProof'' -> return liveProof''
+                  But msgs        -> applyFolds f xs (reqs, liveProof)
+      But msgs       ->  applyFolds f xs (reqs, liveProof)
+  where vts = concat $ map thd3 $ mtchCtxts liveProof
+\end{code}
+
+
+\newpage
 \section{Development Commands}
 
 \subsection{Builtin Theory Handling}
@@ -1427,25 +1491,21 @@ cmdBuiltin
         [ "b "++binExists++" -- list all existing builtin theories"
         , "b "++binInstalled++" -- list all installed theories"
         , "b "++binInstall++" <name> -- install builtin theory <name>"
-        , "           -- fails if theory already installed"
+        , "    -- fails if theory already installed"
         , "b "++binReset++" <name> -- reset builtin theory <name>"
-        , "           -- replaces already installed theory by builtin version"
-        , "                                        (a.k.a. 'factory setting')"
+        , "    -- replaces already installed theory by builtin version"
+        , "                               (a.k.a. 'factory setting')"
         , "b "++binUpdate++" <name> -- update builtin theory <name>"
-        , "           -- adds in new material from builtin version"
-        , "           -- asks user regarding revisions to existing material"
+        , "    -- adds in new material from builtin version"
+        , "    -- asks user regarding revisions to existing material"
         , "b "++binUForce++" <name> -- force-update builtin theory <name>"
-        , "           -- adds in new and revised material from builtin version"
-        , "           -- does not ask user to confirm revisions"
+        , "    -- adds in new and revised material from builtin version"
+        , "    -- does not ask user to confirm revisions"
         ]
     , buildIn )
 
-binExists = "e"
-binInstalled = "i"
-binInstall = "I"
-binReset = "R"
-binUpdate = "U"
-binUForce = "F"
+binExists = "e" ; binInstalled = "i" ; binInstall = "I"
+binReset = "R" ; binUpdate = "U" ; binUForce = "F"
 
 buildIn (cmd:_) reqs
  | cmd == binExists
@@ -1493,25 +1553,25 @@ tryMatchDescr = ( "tm"
                    , "tm n1 .. nk nm -- ... against parts n1..nk of law"
                    , "               --     n1..nk :  numbers of parts"
                    , "               --     we count from 1"
-                   , "-- n1..nk used in increasing order (sorted!)"
+                   , "  -- n1..nk used in increasing order (sorted!)"
                    ]
                 , tryMatch)
 
 tryMatch :: REPLCmd (REqState, LiveProof)
 tryMatch [] state = return state
 tryMatch args state@( reqs, liveProof)
-  = do case tryFocusAgainst lawnm parts liveProof of
-         Yes (bind,tPasC,scC',scP')
-           -> putStrLn $ unlines
-                [ banner ++ " OK"
-                , "Binding: " ++ trBinding bind
-                , "Instantiated Law = " ++ trTerm 0 tPasC
-                , "Instantiated Law S.C. = " ++ trSideCond scC'
-                , "Goal S.C. = " ++ trSideCond (conjSC liveProof)
-                , "Discharged Law S.C. = " ++ trSideCond scP']
-         But msgs -> putStrLn $ unlines' ( (banner ++ " failed!") : msgs )
-       userPause
-       return state
+  = do  case tryFocusAgainst lawnm parts liveProof of
+          Yes (bind,tPasC,scC',scP') ->
+            putStrLn $ unlines
+              [ banner ++ " OK"
+              , "Binding: " ++ trBinding bind
+              , "Instantiated Law = " ++ trTerm 0 tPasC
+              , "Instantiated Law S.C. = " ++ trSideCond scC'
+              , "Goal S.C. = " ++ trSideCond (conjSC liveProof)
+              , "Discharged Law S.C. = " ++ trSideCond scP']
+          But msgs -> putStrLn $ unlines' ( (banner ++ " failed!") : msgs )
+        userPause
+        return state
   where
     (nums,rest) = span (all isDigit) args
     parts = sort $ filter (>0) $ map read nums
@@ -1525,21 +1585,22 @@ Test $\alpha$-equivalence of both sides of the sequent
 tryAlphaDescr = ( "ta"
                 , "test LHS/RHS alpha-equivalence"
                 , unlines
-                   [ "ta             -- test LHS/RHS alphaequiv"
+                   [ "ta     -- test LHS/RHS alphaequiv"
                    ]
                 , tryAlpha)
 
 tryAlpha :: REPLCmd (REqState, LiveProof)
 tryAlpha _ state@( reqs, liveProof)
-  = do case tryAlphaEquiv liveProof of
-         Yes varmap
-           -> putStrLn $ unlines
-                [ banner
-                , "Alpha-Equiv reports " ++ show varmap
-                ]
-         But msgs -> putStrLn $ unlines' ( (banner ++ " failed!") : msgs )
-       userPause
-       return state
+  = do  case tryAlphaEquiv liveProof of
+          Yes varmap ->
+            putStrLn $ unlines
+              [ banner
+              , "Alpha-Equiv reports " ++ show varmap
+              ]
+          But msgs -> 
+            putStrLn $ unlines' ( (banner ++ " failed!") : msgs )
+        userPause
+        return state
   where
     banner = "Alpha Equivalence Check"
 \end{code}

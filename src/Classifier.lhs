@@ -111,9 +111,22 @@ addLawsClass (x:xs) au
 
 \section{Identify Simplifiers}
 
+Given a law $P \equiv Q$ (or $e = f$),
+we compare the sizes of $P$ and $Q$.
+If $P$ is larger that $Q$, 
+then using the law left-to-right is a simplification.
+If $Q$ is larger, then right-to-left simplifies.
+For now any size difference at all is used to classify laws.
+A possible future modification might require a size difference threshold.
 \begin{code}
 addSimp :: String -> Term -> [(String, Direction)]
-addSimp nme (Cons _ sb (Identifier "eqv" 0) (p:q:[]))
+addSimp nme (Cons _ _ (Identifier "eqv" 0) (p:q:[]))
+  = checkSimp nme p q
+addSimp nme (Cons _ _ (Identifier "=" 0) (e:f:[]))
+  = checkSimp nme e f
+addSimp _ _ = []
+
+checkSimp nme p q
   = do  let sizeP = termSize p
         let sizeQ = termSize q
         if sizeP > sizeQ
@@ -121,7 +134,6 @@ addSimp nme (Cons _ sb (Identifier "eqv" 0) (p:q:[]))
         else if sizeP < sizeQ
           then [(nme, Rightwards)]
         else []
-addSimp nme _ = []
 \end{code}
 
 

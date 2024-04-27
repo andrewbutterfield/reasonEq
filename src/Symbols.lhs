@@ -160,6 +160,7 @@ theSymbolList
 
   , ("neg", SymForm "-" "-")
   , ("next", SymForm "()" "\x25cb")
+  , ( "until", SymForm "U" "\x1200")
   , ("eventually", SymForm "<>" "\x25c7")
   , ("always", SymForm "[]" "\x25fb")
 

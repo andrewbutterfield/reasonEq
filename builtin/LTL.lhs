@@ -128,6 +128,7 @@ efsyzs = [(lvys,lves),(lvzs,lvfs)]
 \end{code}
 
 
+\newpage
 \section{Temporal Operators}
 
 Based on \cite{DBLP:journals/csur/WarfordVS20}:
@@ -141,6 +142,7 @@ paired with an index $j$ that identifies $s_j$.
 LTL entailment $(\sigma,j) \models p$ states 
 that property $p$ holds \emph{at} position $j$ in $\sigma$.
 
+\newpage
 \subsection{The Next Operator ($\next$)}
 
 \begin{eqnarray*}
@@ -249,7 +251,7 @@ cjNextFalse = ( "next"-.-"false"
           , scTrue ) )
 \end{code}
 
-
+\newpage
 \subsection{The Until Operator ($\until$)}
 
 \begin{eqnarray*}
@@ -262,24 +264,166 @@ cjNextFalse = ( "next"-.-"false"
   (\sigma,i) \models p)
 \end{eqnarray*}
 
+$$
+  \begin{array}{lll}
+     \next (p \until q) \equiv \next p \until \next q 
+     && \QNAME{$\next$-$\until$-distr}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+axNextUntilDistr 
+  = preddef ("next" -.- "until" -.- "distr")
+            ( mkN (p `mkU` q) === (mkN p) `mkU` (mkN q) )
+            scTrue
+\end{code}
+
+$$
+  \begin{array}{lll}
+     \next (p \until q) \equiv \next p \until \next q 
+     && \QNAME{$\until$-def}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+axUntilDef
+  = preddef ("until" -.- "def")
+            ( (p `mkU` q) === q \/ (p /\ mkN (p `mkU` q)) )
+            scTrue
+\end{code}
+
+$$
+  \begin{array}{lll}
+     (p \until \false) \equiv \false
+     && \QNAME{$\until$-r-zero}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+axUntilRZero
+  = preddef ("until" -.- "r" -.- "zero")
+            ( (p `mkU` falseP) === falseP )
+            scTrue
+\end{code}
+
+$$
+  \begin{array}{lll}
+     (p \until (q \lor r)) \equiv p \until q \lor p \until r
+     && \QNAME{$\until$-$\lor$-l-distr}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+axUntilOrLDistr
+  = preddef ("until" -.- "or" -.- "l" -.- "distr")
+            ( (p `mkU` (q \/ r)) === (p `mkU` q) \/ (p `mkU` r) )
+            scTrue
+\end{code}
+
+$$
+  \begin{array}{lll}
+     p \until r \lor q \until r \implies (p \lor q) \until r
+     && \QNAME{$\until$-$\lor$-r-distr}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+axUntilOrRDistr
+  = preddef ("until" -.- "or" -.- "r" -.- "distr")
+            ( (p `mkU` r) \/ (q `mkU` r) ==> ((p \/ q) `mkU` r) )
+            scTrue
+\end{code}
+
+$$
+  \begin{array}{lll}
+     (p \until (q \land r)) \implies p \until q \land p \until r
+     && \QNAME{$\until$-$\land$-l-distr}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+axUntilAndLDistr
+  = preddef ("until" -.- "and" -.- "l" -.- "distr")
+            ( (p `mkU` (q /\ r)) ==> (p `mkU` q) /\ (p `mkU` r) )
+            scTrue
+\end{code}
+
+$$
+  \begin{array}{lll}
+     ( p \until r \land q \until r \equiv (p \land q) \until r) )
+     && \QNAME{$\until$-$\land$-r-distr}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+axUntilAndRDistr
+  = preddef ("until" -.- "and" -.- "r" -.- "distr")
+            ( (p `mkU` r) /\ (q `mkU` r) === ((p /\ q) `mkU` r) )
+            scTrue
+\end{code}
+
+$$
+  \begin{array}{lll}
+      p \until q \land \lnot q \until r \implies p \until r 
+     && \QNAME{$\until$-$\implies$-ord}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+axUntilImplOrd
+  = preddef ("until" -.- "impl" -.- "ord")
+            ( (p `mkU` r) /\ (mkNot q `mkU` r) ==> (p `mkU` r) )
+            scTrue
+\end{code}
+
+$$
+  \begin{array}{lll}
+      p \until (q \until r) \implies (p \lor q) \until r 
+     && \QNAME{$\until$-$\lor$-r-ord}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+axUntilOrROrd
+  = preddef ("until" -.- "or" -.- "r" -.- "ord")
+            ( (p `mkU` (q `mkU` r)) ==> ((p \/ q) `mkU` r) )
+            scTrue
+\end{code}
+
+$$
+  \begin{array}{lll}
+      p \until (q \land r) \implies (p \until q) \until r 
+     && \QNAME{$\land$-$\until$-r-ord}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+axAndUntilROrd
+  = preddef ("and" -.- "until" -.- "r" -.- "ord")
+            ( p `mkU` (q /\ r) ==> (p `mkU` q) `mkU` r  )
+            scTrue
+\end{code}
+
+
+
 % %% TEMPLATE
 % $$
 %   \begin{array}{lll}
 %      law & sc & name
 %   \end{array}
 % $$\par
-%
 %\vspace{-8pt}
 % \begin{code}
-% axXXX = preddef ("law" -.- "name")
-%   p
-%   scTrue
+% axXXX 
+%   = preddef ("law" -.- "name")
+%             p
+%             scTrue
 % cjYYY = ( "conj"-.-"name"
 %         , (  p
 %           , scTrue ) )
 % \end{code}
 
-
+\newpage
 \subsection{The Eventually Operator ($\eventually$)}
 
 \begin{eqnarray*}
@@ -386,6 +530,9 @@ ltlAxioms :: [Law]
 ltlAxioms
   = map labelAsAxiom
       [ axNextSelfDual, axNextImpliesDistr
+      , axNextUntilDistr, axUntilDef, axUntilRZero
+      , axUntilOrLDistr, axUntilOrRDistr, axUntilAndLDistr, axUntilAndRDistr
+      , axUntilImplOrd, axUntilOrROrd, axAndUntilROrd
       ]
 \end{code}
 

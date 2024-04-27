@@ -1,0 +1,147 @@
+🛠 devproj.LTL*> sh T
+
+Theory 'LTL'
+depends on: Equality,Exists,ForAll,Implies,AndOrInvert,And,Or,Not,Equiv
+Knowns:
+◻ :  𝔹 ⟶  𝔹 
+◇ :  𝔹 ⟶  𝔹 
+○ :  𝔹 ⟶  𝔹 
+ሀ :  𝔹 ⟶  𝔹 ⟶  𝔹 
+wait :  𝔹 ⟶  𝔹 ⟶  𝔹 
+Laws:
+   1. ⊤  “next_self_dual”      ○(¬P) ≡ ¬○(P)  ⊤
+   2. ⊤  “next_implies_distr”  ○(P ⟹   Q) ≡ ○(P) ⟹   ○(Q)  ⊤
+   3. ⊤  “next_U_distr”        ○(P ሀ Q) ≡ ○(P) ሀ ○(Q)  ⊤
+   4. ⊤  “U_def”               P ሀ Q ≡ Q ∨ P ∧ ○(P ሀ Q)  ⊤
+   5. ⊤  “U_false_r_zero”      P ሀ false ≡ false  ⊤
+   6. ⊤  “U_or_l_distr”        P ሀ (Q ∨ R) ≡ P ሀ Q ∨ P ሀ R  ⊤
+   7. ⊤  “U_or_r_distr”        P ሀ R ∨ Q ሀ R ⟹   (P ∨ Q) ሀ R  ⊤
+   8. ⊤  “U_and_l_distr”       P ሀ (Q ∧ R) ⟹   P ሀ Q ∧ P ሀ R  ⊤
+   9. ⊤  “U_and_r_distr”       P ሀ R ∧ Q ሀ R ≡ (P ∧ Q) ሀ R  ⊤
+  10. ⊤  “U_impl_ord”          P ሀ R ∧ ¬Q ሀ R ⟹   P ሀ R  ⊤
+  11. ⊤  “U_or_r_ord”          P ሀ (Q ሀ R) ⟹   (P ∨ Q) ሀ R  ⊤
+  12. ⊤  “and_U_r_ord”         P ሀ (Q ∧ R) ⟹   (P ሀ Q) ሀ R  ⊤
+  13. ∎  “U_imp_r_distr”       (P ⟹   Q) ሀ R ⟹   (P ሀ R ⟹   Q ሀ R)  ⊤
+  14. ∎  “U_true_r_zero”       P ሀ true ≡ true  ⊤
+  15. ∎  “U_l_unit”            false ሀ Q ≡ Q  ⊤
+  16. ∎  “U_idem”              P ሀ P ≡ P  ⊤
+  17. ∎  “U_exc_mdl”           P ሀ Q ∨ P ሀ ¬Q  ⊤
+Conjectures:
+   1. ❓  “linearity”       ○(P) ≡ ¬○(¬P)  ⊤
+   2. ❓  “next_or_distr”   ○(P ∨ Q) ≡ ○(P) ∨ ○(Q)  ⊤
+   3. ❓  “next_and_distr”  ○(P ∧ Q) ≡ ○(P) ∧ ○(Q)  ⊤
+   4. ❓  “next_eqv_distr”  ○(P ≡ Q) ≡ (○(P) ≡ ○(Q))  ⊤
+   5. ❓  “next_true”       ○(true) ≡ true  ⊤
+   6. ❓  “next_false”      ○(false) ≡ false  ⊤
+AutoLaws:
+   i. simps:
+
+  ii. folds:
+
+ iii. unfolds:
+
+
+🛠 devproj.LTL*> sh P
+
+Completed Proofs (true names):
+ U_exc_mdl  (red-All, size:3)
+ U_idem  (red-L2R, size:2)
+ U_l_unit  (red-L2R, size:4)
+ U_true_r_zero  (red-L2R, size:3)
+ U_imp_r_distr  (red-All, size:8)
+
+🛠 devproj.LTL*> sh P U_imp_r_distr
+
+U_imp_r_distr : (P ⟹   Q) ሀ R ⟹   (P ሀ R ⟹   Q ሀ R)
+by 'red-All'
+---
+(P ⟹   Q) ሀ R ⟹   (P ሀ R ⟹   Q ሀ R)
+ = 'match-rhs shunting @[]'
+    { P  ⟼ (P ⟹   Q) ሀ R, Q  ⟼ P ሀ R, R  ⟼ Q ሀ R, ⟹    ⟼ ⟹   }
+(P ⟹   Q) ሀ R ∧ P ሀ R ⟹   Q ሀ R
+ = 'match-lhs U_and_r_distr @[1]'
+    { P  ⟼ P ⟹   Q, Q  ⟼ P, R  ⟼ R, ∧  ⟼ ∧, ሀ  ⟼ ሀ }
+((P ⟹   Q) ∧ P) ሀ R ⟹   Q ሀ R
+ = 'match-lhs and_symm @[1,1]'
+    { P  ⟼ P ⟹   Q, Q  ⟼ P, ∧  ⟼ ∧ }
+(P ∧ (P ⟹   Q)) ሀ R ⟹   Q ሀ R
+ = 'match-lhs GS3.66 @[1,1]'
+    { P  ⟼ P, Q  ⟼ Q, ∧  ⟼ ∧, ⟹    ⟼ ⟹   }
+(P ∧ Q) ሀ R ⟹   Q ሀ R
+ = 'match-rhs U_and_r_distr @[1]'
+    { P  ⟼ P, Q  ⟼ Q, R  ⟼ R, ∧  ⟼ ∧, ሀ  ⟼ ሀ }
+P ሀ R ∧ Q ሀ R ⟹   Q ሀ R
+ = 'match-lhs shunting @[]'
+    { P  ⟼ P ሀ R, Q  ⟼ Q ሀ R, R  ⟼ Q ሀ R, ∧  ⟼ ∧, ⟹    ⟼ ⟹   }
+P ሀ R ⟹   (Q ሀ R ⟹   Q ሀ R)
+ = 'match-lhs imp_refl @[2]'
+    { P  ⟼ Q ሀ R, ⟹    ⟼ ⟹   }
+P ሀ R ⟹   true
+ = 'match-lhs imp_r-zero @[]'
+    { P  ⟼ P ሀ R, ⟹    ⟼ ⟹   }
+true
+
+🛠 devproj.LTL*> sh P U_true_r_zero
+
+U_true_r_zero : P ሀ true ≡ true
+by 'red-L2R'
+---
+P ሀ true
+ = 'match-lhs U_def @[]'
+    { P  ⟼ P, Q  ⟼ true, ሀ  ⟼ ሀ }
+true ∨ P ∧ ○(P ሀ true)
+ = 'match-lhs or_symm @[]'
+    { P  ⟼ true, Q  ⟼ P ∧ ○(P ሀ true), ∨  ⟼ ∨ }
+P ∧ ○(P ሀ true) ∨ true
+ = 'match-lhs or_zero @[]'
+    { P  ⟼ P ∧ ○(P ሀ true), ∨  ⟼ ∨ }
+true
+
+🛠 devproj.LTL*> sh P U_l_unit
+
+U_l_unit : false ሀ Q ≡ Q
+by 'red-L2R'
+---
+false ሀ Q
+ = 'match-lhs U_def @[]'
+    { P  ⟼ false, Q  ⟼ Q, ሀ  ⟼ ሀ }
+Q ∨ false ∧ ○(false ሀ Q)
+ = 'match-lhs and_symm @[2]'
+    { P  ⟼ false, Q  ⟼ ○(false ሀ Q), ∧  ⟼ ∧ }
+Q ∨ ○(false ሀ Q) ∧ false
+ = 'match-lhs and_zero @[2]'
+    { P  ⟼ ○(false ሀ Q), ∧  ⟼ ∧ }
+Q ∨ false
+ = 'match-lhs or_unit @[]'
+    { P  ⟼ Q, ∨  ⟼ ∨ }
+Q
+
+🛠 devproj.LTL*> sh P U_idem
+
+U_idem : P ሀ P ≡ P
+by 'red-L2R'
+---
+P ሀ P
+ = 'match-lhs U_def @[]'
+    { P  ⟼ P, Q  ⟼ P, ሀ  ⟼ ሀ }
+P ∨ P ∧ ○(P ሀ P)
+ = 'match-lhs or_and_absorb @[]'
+    { P  ⟼ P, Q  ⟼ ○(P ሀ P), ∧  ⟼ ∧, ∨  ⟼ ∨ }
+P
+
+🛠 devproj.LTL*> sh P U_exc_mdl
+
+U_exc_mdl : P ሀ Q ∨ P ሀ ¬Q
+by 'red-All'
+---
+P ሀ Q ∨ P ሀ ¬Q
+ = 'match-rhs U_or_l_distr @[]'
+    { P  ⟼ P, Q  ⟼ Q, R  ⟼ ¬Q, ∨  ⟼ ∨, ሀ  ⟼ ሀ }
+P ሀ (Q ∨ ¬Q)
+ = 'match-all excl-middle @[2]'
+    { P  ⟼ Q, ¬  ⟼ ¬, ∨  ⟼ ∨ }
+P ሀ true
+ = 'match-lhs U_true_r_zero @[]'
+    { P  ⟼ P, ሀ  ⟼ ሀ }
+true
+

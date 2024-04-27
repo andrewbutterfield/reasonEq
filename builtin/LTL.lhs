@@ -273,7 +273,7 @@ $$\par
 \vspace{-4pt}
 \begin{code}
 axNextUntilDistr 
-  = preddef ("next" -.- "until" -.- "distr")
+  = preddef ("next" -.- "U" -.- "distr")
             ( mkN (p `mkU` q) === (mkN p) `mkU` (mkN q) )
             scTrue
 \end{code}
@@ -287,7 +287,7 @@ $$\par
 \vspace{-4pt}
 \begin{code}
 axUntilDef
-  = preddef ("until" -.- "def")
+  = preddef ("U" -.- "def")
             ( (p `mkU` q) === q \/ (p /\ mkN (p `mkU` q)) )
             scTrue
 \end{code}
@@ -295,13 +295,13 @@ axUntilDef
 $$
   \begin{array}{lll}
      (p \until \false) \equiv \false
-     && \QNAME{$\until$-r-zero}
+     && \QNAME{$\until$-$\false$-r-zero}
   \end{array}
 $$\par
 \vspace{-4pt}
 \begin{code}
 axUntilRZero
-  = preddef ("until" -.- "r" -.- "zero")
+  = preddef ("U" -.- "false"-.-"r" -.- "zero")
             ( (p `mkU` falseP) === falseP )
             scTrue
 \end{code}
@@ -315,7 +315,7 @@ $$\par
 \vspace{-4pt}
 \begin{code}
 axUntilOrLDistr
-  = preddef ("until" -.- "or" -.- "l" -.- "distr")
+  = preddef ("U" -.- "or" -.- "l" -.- "distr")
             ( (p `mkU` (q \/ r)) === (p `mkU` q) \/ (p `mkU` r) )
             scTrue
 \end{code}
@@ -329,7 +329,7 @@ $$\par
 \vspace{-4pt}
 \begin{code}
 axUntilOrRDistr
-  = preddef ("until" -.- "or" -.- "r" -.- "distr")
+  = preddef ("U" -.- "or" -.- "r" -.- "distr")
             ( (p `mkU` r) \/ (q `mkU` r) ==> ((p \/ q) `mkU` r) )
             scTrue
 \end{code}
@@ -343,7 +343,7 @@ $$\par
 \vspace{-4pt}
 \begin{code}
 axUntilAndLDistr
-  = preddef ("until" -.- "and" -.- "l" -.- "distr")
+  = preddef ("U" -.- "and" -.- "l" -.- "distr")
             ( (p `mkU` (q /\ r)) ==> (p `mkU` q) /\ (p `mkU` r) )
             scTrue
 \end{code}
@@ -357,7 +357,7 @@ $$\par
 \vspace{-4pt}
 \begin{code}
 axUntilAndRDistr
-  = preddef ("until" -.- "and" -.- "r" -.- "distr")
+  = preddef ("U" -.- "and" -.- "r" -.- "distr")
             ( (p `mkU` r) /\ (q `mkU` r) === ((p /\ q) `mkU` r) )
             scTrue
 \end{code}
@@ -371,7 +371,7 @@ $$\par
 \vspace{-4pt}
 \begin{code}
 axUntilImplOrd
-  = preddef ("until" -.- "impl" -.- "ord")
+  = preddef ("U" -.- "impl" -.- "ord")
             ( (p `mkU` r) /\ (mkNot q `mkU` r) ==> (p `mkU` r) )
             scTrue
 \end{code}
@@ -385,7 +385,7 @@ $$\par
 \vspace{-4pt}
 \begin{code}
 axUntilOrROrd
-  = preddef ("until" -.- "or" -.- "r" -.- "ord")
+  = preddef ("U" -.- "or" -.- "r" -.- "ord")
             ( (p `mkU` (q `mkU` r)) ==> ((p \/ q) `mkU` r) )
             scTrue
 \end{code}
@@ -399,11 +399,77 @@ $$\par
 \vspace{-4pt}
 \begin{code}
 axAndUntilROrd
-  = preddef ("and" -.- "until" -.- "r" -.- "ord")
+  = preddef ("and" -.- "U" -.- "r" -.- "ord")
             ( p `mkU` (q /\ r) ==> (p `mkU` q) `mkU` r  )
             scTrue
 \end{code}
 
+$$
+  \begin{array}{lll}
+     (p \implies q) \until r 
+     \implies
+     (p \until r \implies q \until r) 
+     && \QNAME{$\until$-$\implies$-r-distr}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+cjUntilImpRDistr = ( "U"-.-"imp"-.-"r"-.-"distr"
+        , (  ((p ==> q) `mkU` r) ==> (p `mkU` r ==> q `mkU` r)
+          , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{lll}
+     p \until \true \equiv \true
+     && \QNAME{$\until$-$\true$-r-zero}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+cjUntilTrueRZero = ( "U"-.-"true"-.-"r"-.-"zero"
+        , (  p `mkU` trueP === trueP
+          , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{lll}
+     \false \until q \equiv q
+     && \QNAME{$\until$-l-unit}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+cjUntilLUnit = ( "U"-.-"l"-.-"unit"
+        , (  falseP `mkU` q === q
+          , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{lll}
+     p \until p \equiv p
+     && \QNAME{$\until$-idem}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+cjUntilIdem = ( "U"-.-"idem"
+        , (  p `mkU` p === p
+          , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{lll}
+     p \until q \lor  p \until \lnot q
+     && \QNAME{$\until$-exc-mdl}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+cjUntilExcMdl = ( "U"-.-"exc"-.-"mdl"
+        , (  p `mkU` q \/ p `mkU` mkNot q
+          , scTrue ) )
+\end{code}
 
 
 % %% TEMPLATE
@@ -545,6 +611,8 @@ ltlConjs :: [NmdAssertion]
 ltlConjs = map mkNmdAsn
     [ cjLinearity
     , cjNextOrDistr, cjNextAndDistr, cjNextEqvDistr, cjNextTrue, cjNextFalse
+    , cjUntilImpRDistr, cjUntilTrueRZero, cjUntilLUnit
+    , cjUntilIdem,cjUntilExcMdl
     ]
 \end{code}
 

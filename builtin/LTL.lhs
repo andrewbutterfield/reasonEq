@@ -142,6 +142,10 @@ paired with an index $j$ that identifies $s_j$.
 LTL entailment $(\sigma,j) \models p$ states 
 that property $p$ holds \emph{at} position $j$ in $\sigma$.
 
+We use ``WVS.n'' to refer to axiom or theorem (n) 
+from \cite{DBLP:journals/csur/WarfordVS20}.
+
+
 \newpage
 \subsection{The Next Operator ($\next$)}
 
@@ -470,6 +474,9 @@ cjUntilExcMdl = ( "U"-.-"exc"-.-"mdl"
         , (  p `mkU` q \/ p `mkU` mkNot q
           , scTrue ) )
 \end{code}
+
+Theorems WVS.24 to WVS.30 to follow.
+
 
 
 % %% TEMPLATE

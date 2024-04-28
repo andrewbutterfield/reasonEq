@@ -441,7 +441,19 @@ assumeConj cjnm thry
 \end{code}
 
 \begin{code}
-assumeDepConj :: (Monad m, MonadFail m) => String -> Theories -> m Theories
+assumeConjRange :: MonadFail m => Int -> Int -> Theory -> m Theory
+assumeConjRange lo hi thry
+  | null cnjs'  =  return thry
+  | otherwise   = return $ conjs_ (before++after)
+                         $ laws__ (++( map labelAsAssumed cnjs')) thry
+  where
+    lo' = min lo hi
+    hi' = max lo hi
+    (before,cnjs',after)  = splitBetween lo' hi' $ conjs thry
+\end{code}
+
+\begin{code}
+assumeDepConj :: MonadFail m => String -> Theories -> m Theories
 assumeDepConj thnm thys
   = do depthys <- fmap ttail $ getTheoryDeps thnm thys
        assumeDepConj' thys depthys

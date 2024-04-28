@@ -26,6 +26,7 @@ module Utilities (
 , injMap, extdBij, bijExtend
 , pspace, spacep, spaced, intcalNN
 , pad
+, splitBetween
 , splitLast, splitAround
 , brkspn, brkspnBy, splice
 , args2str, args2int
@@ -175,6 +176,22 @@ keyListDiff keyf recs1 recs2
     | keyf r1 > keyf r2  =  diff (mr,qe,fd,r2:wn) (r1:rs1) rs2
     | r1 == r2           =  diff (mr,r1:qe,fd,wn) rs1      rs2
     | otherwise          =  diff (mr,qe,r2:fd,wn) rs1      rs2
+\end{code}
+
+This splits 
+$\langle x_1,dots,x_l,x_{lo},\dots,x_{hi},x_h,\dots,x_n\rangle$ 
+into 
+$(\langle x_1,dots,x_l \rangle,
+  \langle x_{lo},\dots,x_{hi} \rangle,
+  \langle x_h,\dots,x_n \rangle
+)$
+\begin{code}
+splitBetween :: Int -> Int -> [a] -> ([a],[a],[a])
+splitBetween lo hi list 
+ = let 
+     (before,rest) = splitAt (lo-1) list
+     (middle,after) = splitAt (1+hi-lo) rest
+    in (before,middle,after)
 \end{code}
 
 

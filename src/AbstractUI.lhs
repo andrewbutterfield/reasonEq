@@ -43,6 +43,7 @@ import Data.Set (Set)
 import qualified Data.Set as S
 import Data.Map (Map)
 import qualified Data.Map as M
+import Data.Char
 import Data.Maybe
 import Data.List
 import Control.Applicative
@@ -257,18 +258,26 @@ newConjecture thnm nasn reqs
 \subsection{Assuming Conjectures}
 
 \begin{code}
-assumeConjecture :: MonadFail m => String -> String -> REqState -> m REqState
-assumeConjecture thnm whichC reqs
-  = case getTheory thnm thys of
+assumeConjecture :: MonadFail m => String -> [String] -> REqState -> m REqState
+assumeConjecture thnm args reqs
+  = case getTheory thnm (theories reqs) of
       Nothing -> fail ("No theory named '"++thnm++"'.")
-      Just thry
-        | whichC == "*"
-            ->  do thys' <- assumeDepConj thnm thys
-                   return $ changed $ theories_ thys' reqs
-        | otherwise
-            ->  do thry' <- assumeConj whichC thry
-                   return $ changed $ theories__ (replaceTheory' thry') $ reqs
-  where thys = theories reqs
+      Just thry  ->  doAssumption thnm thry args reqs
+
+doAssumption thnm thry [arg1,arg2] reqs
+  | all isDigit arg1 && all isDigit arg2
+      = do thry' <- assumeConjRange (read arg1) (read arg2) thry
+           return $ changed $ theories__ (replaceTheory' thry') $ reqs 
+doAssumption thnm thry args reqs
+  | whichC == "*"
+      = do thys' <- assumeDepConj thnm thys
+           return $ changed $ theories_ thys' reqs
+  | otherwise
+      = do thry' <- assumeConj whichC thry
+           return $ changed $ theories__ (replaceTheory' thry') $ reqs
+  where
+    whichC = args2str args
+    thys = theories reqs
 \end{code}
 
 \subsection{Demoting Laws}

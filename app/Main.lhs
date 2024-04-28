@@ -652,19 +652,19 @@ Simply assuming conjectures as laws:
 cmdAssume :: REqCmdDescr
 cmdAssume
   = ( "Assume"
-    , "assume conjecture is law"
+    , "assume conjecture as law"
     , unlines
-       [ "Assume n - assume conjecture 'n'"
+       [ "Assume name - assume conjecture 'name'"
+       , "Assume lo hi - assume conjectures numbered lo,..,hi (incl.)"
        , "Assume . - assume all current theory conjectures"
        , "Assume * - assume all dependency theory conjectures"
        ]
     , doAssumption )
 
 doAssumption args reqs
-  =  case assumeConjecture (currTheory reqs) cjnm reqs of
+  =  case assumeConjecture (currTheory reqs) args reqs of
          But lns     ->  doshow reqs  (unlines' lns)
-         Yes reqs'  ->  doshow reqs' ("Assumed " ++ cjnm)
- where cjnm = args2str args
+         Yes reqs'  ->  doshow reqs' ("Assumed " ++ args2str args)
 \end{code}
 
 

@@ -475,17 +475,200 @@ cjUntilExcMdl = ( "U"-.-"exc"-.-"mdl"
           , scTrue ) )
 \end{code}
 
-Theorems WVS.24 to WVS.30 to follow.
+\newpage
+$$
+  \begin{array}{lll}
+     \lnot p \until (q \until r) \land p \until r
+     \implies
+     q \until r 
+     && \QNAME{WVS.24}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+cjWVS24 = ( "WVS.24"
+        , ( (mkNot p `mkU` (q `mkU` r)) /\ p `mkU` q ==> q `mkU` r
+          , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{lll}
+     p \until (\lnot q \until r) \land q \until r
+     \implies
+     p \until r 
+     && \QNAME{WVS.25}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+cjWVS25 = ( "WVS.25"
+        , ( (p `mkU` (mkNot q `mkU` r)) /\ q `mkU` r ==> p `mkU` r
+          , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{lll}
+     p \until q \land \lnot q \until p \implies p 
+     && \QNAME{WVS.26}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+cjWVS26 = ( "WVS.26"
+        , ( (p `mkU` q) /\ (mkNot q `mkU` p) ==> p
+          , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{lll}
+     p \land \lnot p \until q \implies q 
+     && \QNAME{WVS.27}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+cjWVS27 = ( "WVS.27"
+        , ( p /\ (mkNot p `mkU` q) ==> q
+          , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{lll}
+     p \until q \implies p \lor q
+     && \QNAME{WVS.28}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+cjWVS28 = ( "WVS.28"
+        , ( p `mkU` q ==> p \/ q
+          , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{lll}
+     q \implies p \until q 
+     && \QNAME{$\until$-insert}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+cjUntilInsert = ( "U" -.- "insert"
+        , ( q ==> p `mkU` q
+          , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{lll}
+     p \land q \implies p \until q 
+     && \QNAME{WVS.30}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+cjWVS30 = ( "WVS.30"
+        , ( p /\ q ==> p `mkU` q
+          , scTrue ) )
+\end{code}
 
 
+$$
+  \begin{array}{lll}
+     p \lor p \until q \equiv p \lor q 
+     && \QNAME{absorb-WVS.31}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+cjUntilAbs31 = ( "absorb"-.-"WVS.31"
+        , ( p \/ p `mkU` q === p \/ q
+          , scTrue ) )
+\end{code} 
 
-% %% TEMPLATE
+$$
+  \begin{array}{lll}
+     p \until q \lor q \equiv p \until q 
+     && \QNAME{absorb-WVS.32}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+cjUntilAbs32 = ( "absorb"-.-"WVS.32"
+        , ( p `mkU` q \/ q === p `mkU` q
+          , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{lll}
+     p \until q \land q \equiv q
+     && \QNAME{absorb-WVS.33}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+cjUntilAbs33 = ( "absorb"-.-"WVS.33"
+        , ( p `mkU` q /\ q === q
+          , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{lll}
+     p \until q \lor (p \land q) \equiv p \until q 
+     && \QNAME{absorb-WVS.34}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+cjUntilAbs34 = ( "absorb"-.-"WVS.34"
+        , ( p `mkU` q \/ (p /\ q) ===  p `mkU` q
+          , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{lll}
+     p \until q \land (p \lor q) \equiv p \until q 
+     && \QNAME{absorb-WVS.35}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+cjUntilAbs35 = ( "absorb"-.-"WVS.35"
+        , ( p `mkU` q /\ (p \/ q) === p `mkU` q
+          , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{lll}
+     p \until (p \until q) \equiv p \until q 
+     && \QNAME{$U$-l-abs}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+cjUntilLAbs = ( "U"-.-"l"-.-"abs"
+        , ( p `mkU` (p `mkU` q) === p `mkU` q
+          , scTrue ) )
+\end{code}
+
+$$
+  \begin{array}{lll}
+     (p \until q) \until q \equiv p \until q
+     && \QNAME{$U$-r-abs}
+  \end{array}
+$$\par
+\vspace{-4pt}
+\begin{code}
+cjUntilRAbs = ( "U"-.-"r"-.-"abs"
+        , ( (p `mkU` q) `mkU` q === p `mkU` q
+          , scTrue ) )
+\end{code}
+
 % $$
 %   \begin{array}{lll}
 %      law & sc & name
 %   \end{array}
 % $$\par
-%\vspace{-8pt}
+%\vspace{-4pt}
 % \begin{code}
 % axXXX 
 %   = preddef ("law" -.- "name")
@@ -620,6 +803,9 @@ ltlConjs = map mkNmdAsn
     , cjNextOrDistr, cjNextAndDistr, cjNextEqvDistr, cjNextTrue, cjNextFalse
     , cjUntilImpRDistr, cjUntilTrueRZero, cjUntilLUnit
     , cjUntilIdem,cjUntilExcMdl
+    , cjWVS24, cjWVS25, cjWVS26, cjWVS27, cjWVS28, cjUntilInsert, cjWVS30
+    , cjUntilAbs31, cjUntilAbs32, cjUntilAbs33, cjUntilAbs34, cjUntilAbs35
+    , cjUntilLAbs, cjUntilRAbs
     ]
 \end{code}
 

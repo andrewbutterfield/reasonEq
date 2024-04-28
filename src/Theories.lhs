@@ -28,7 +28,7 @@ module Theories
  , replaceTheory, replaceTheory'
  , updateTheory
  , newTheoryConj
- , assumeConj, assumeDepConj, lawDemote
+ , assumeConj, assumeConjRange, assumeDepConj, lawDemote
  , addTheoryProof, upgradeConj2Law
  , showTheories, showNamedTheory
  , showTheoryLong, showTheoryShort, showTheoryLaws
@@ -140,7 +140,7 @@ writeTheory thry
     [ thryTRL nm ]
   where nm = thName thry
 
-readTheory :: (Monad m, MonadFail m) => [String] -> m (Theory,[String])
+readTheory :: MonadFail m => [String] -> m (Theory,[String])
 readTheory [] = fail "readTheory: no text."
 readTheory txts
   = do (nm,  rest1) <- readKey (thryHDR "") id txts
@@ -218,14 +218,14 @@ writeTheories theories
 
 -- we split theory reading into two phases.
 -- First get the list of theories.
-readTheories1 :: (Monad m, MonadFail m) => [String] -> m ([String],[String])
+readTheories1 :: MonadFail m => [String] -> m ([String],[String])
 readTheories1 [] = fail "readTheories1: no text."
 readTheories1 txts
   = do rest1         <- readThis thrysHDR      txts
        (thnms,rest2) <- readKey thnmsKEY read rest1
        return (thnms, rest2)
 -- Second get rest
-readTheories2 :: (Monad m, MonadFail m) => [(String,Theory)] -> [String]
+readTheories2 :: MonadFail m => [(String,Theory)] -> [String]
               -> m (Theories,[String])
 readTheories2 _ [] = fail "readTheories2: no text."
 readTheories2 tmp txts
@@ -252,7 +252,7 @@ by trying to add to that component first.
 If that succeeds,
 then we just add to the map component without any further checks.
 \begin{code}
-addTheory :: (Monad m, MonadFail m) => Theory -> Theories -> m Theories
+addTheory :: MonadFail m => Theory -> Theories -> m Theories
 addTheory thry theories
   = do let nm = thName thry
        sdag' <- insSDAG "theory" "dependencies"
@@ -270,7 +270,7 @@ addTheory' thry theories
 \section{Retrieving a Theory}
 
 \begin{code}
-getTheory :: (Monad m, MonadFail m) => String -> Theories -> m Theory
+getTheory :: MonadFail m => String -> Theories -> m Theory
 getTheory thnm thrys
  = case M.lookup thnm $ tmap thrys of
      Nothing    ->  fail ("Theory '"++thnm++"' not found.")
@@ -283,7 +283,7 @@ getTheory thnm thrys
 We also need to generate a list of theories from the mapping,
 given a starting point:
 \begin{code}
-getTheoryDeps :: (Monad m, MonadFail m) => String -> Theories -> m [Theory]
+getTheoryDeps :: MonadFail m => String -> Theories -> m [Theory]
 getTheoryDeps nm theories
   = case getSDAGdeps nm $ sdag theories of
       []  ->  fail ("No such theory: '"++nm++"'")
@@ -325,7 +325,7 @@ listTheories thrys = M.keys $ tmap thrys
 \subsection{Get Conjectures of current theory}
 
 \begin{code}
-getTheoryConjectures :: (Monad m, MonadFail m) => String -> Theories -> m [NmdAssertion]
+getTheoryConjectures :: MonadFail m => String -> Theories -> m [NmdAssertion]
 getTheoryConjectures thNm thrys
   = do case M.lookup thNm (tmap thrys) of
          Nothing    ->  fail ("Conjectures: theory '"++thNm++", not found")
@@ -338,7 +338,7 @@ getTheoryConjectures thNm thrys
 isATheoryIn :: String -> Theories -> Bool
 nm `isATheoryIn` thrys = isJust $ M.lookup nm (tmap thrys)
 
-getTheoryProofs :: (Monad m, MonadFail m) => String -> Theories -> m [Proof]
+getTheoryProofs :: MonadFail m => String -> Theories -> m [Proof]
 getTheoryProofs thNm thrys
   = do case M.lookup thNm (tmap thrys) of
          Nothing    ->  fail ("Proofs: theory '"++thNm++", not found")
@@ -352,7 +352,7 @@ getTheoryProofs thNm thrys
 We insist, for now at least,
 that the dependencies do not change.
 \begin{code}
-replaceTheory :: (Monad m, MonadFail m) 
+replaceTheory :: MonadFail m 
               => String -> Theory -> Theories -> m Theories
 replaceTheory thnm thry' (Theories tmap sdag)
   = case M.lookup thnm tmap of
@@ -378,7 +378,7 @@ replaceTheory' thry theories
 \subsection{Theory Update}
 
 \begin{code}
-updateTheory :: (Monad m, MonadFail m) => String -> Theory -> Bool -> Theories -> m Theories
+updateTheory :: MonadFail m => String -> Theory -> Bool -> Theories -> m Theories
 updateTheory thnm thry0 force (Theories tmap sdag)
   = case M.lookup thnm tmap of
       Nothing    ->  fail ("updateTheory: '"++thnm++"' not found.")
@@ -418,7 +418,7 @@ addConjs thry newC  =  conjs__ (++ newC) thry
 
 We have some updates that are monadic
 \begin{code}
-newTheoryConj :: (Monad m, MonadFail m) => NmdAssertion -> Theory -> m Theory
+newTheoryConj :: MonadFail m => NmdAssertion -> Theory -> m Theory
 newTheoryConj nasn@(nm,_) thry
   | nm `elem` map (fst . fst) (laws thry) = fail "name in use in laws!"
   | nm `elem` map fst  (conjs thry) = fail "name in use in conjectures!"
@@ -426,7 +426,7 @@ newTheoryConj nasn@(nm,_) thry
 \end{code}
 
 \begin{code}
-assumeConj :: (Monad m, MonadFail m) => String -> Theory -> m Theory
+assumeConj :: MonadFail m => String -> Theory -> m Theory
 assumeConj cjnm thry
  | null cjs     =  return thry
  | cjnm == "."  =  return $ conjs_ []
@@ -459,7 +459,7 @@ thys = theories reqs
 thylist = fromJust $ getTheoryDeps currTh thys
 
 \begin{code}
-lawDemote :: (Monad m, MonadFail m) => String -> Theory -> m Theory
+lawDemote :: MonadFail m => String -> Theory -> m Theory
 lawDemote lnm thry
  | null lws        =  fail ("lawDemote '"++lnm++"': no laws")
  | lnm == "*"      =  if null assl

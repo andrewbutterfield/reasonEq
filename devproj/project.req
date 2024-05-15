@@ -6,6 +6,26 @@ END THEORIES
 CURRTHEORY = LTL
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("LTL","U_r_abs")
+BEGIN LIVE-PROOF
+TH-NAME: LTL
+CJ-NAME: U_r_abs
+CONJ = ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],([],fromList []))
+SIDE = ([],fromList [])
+STRAT red-All
+BEGIN SEQZIP
+TERMZIP = (C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS)),C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]]]],[Cons' (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS)),C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]]]],V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]] []])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.U_r_abs", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K (TF TB (TG (Id "B" 0))) (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: [2]
+BEGIN LIST STEPS
+(UseLaw (ByMatch MEL) "U_def" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS))),((Id "Q" 0,VP),BV (VR (Id "Q" 0,VP,WS))),((Id "until" 0,VO),BV (VR (Id "until" 0,VO,WS)))],fromList [],fromList [])) [2],ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS)),C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]]]],V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],([],fromList [])))
+(UseLaw (ByMatch MEL) "U_def" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS))),((Id "Q" 0,VP),BV (VR (Id "Q" 0,VP,WS))),((Id "until" 0,VO),BV (VR (Id "until" 0,VO,WS)))],fromList [],fromList [])) [1,1],ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],([],fromList [])))
+END LIST STEPS
+END LIVE-PROOF
 ("LTL","WVS.24")
 BEGIN LIVE-PROOF
 TH-NAME: LTL
@@ -14,14 +34,53 @@ CONJ = ASN (C (TF TB (TG (Id "B" 0))) True (Id "imp" 0) [C (TF TB (TG (Id "B" 0)
 SIDE = ([],fromList [])
 STRAT red-All
 BEGIN SEQZIP
-TERMZIP = (C (TF TB (TG (Id "B" 0))) True (Id "imp" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "R" 0,VP,WS))]],C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "R" 0,VP,WS))]],[])
+TERMZIP = (C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "R" 0,VP,WS))]],C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],[Cons' (TF TB (TG (Id "B" 0))) True (Id "imp" 0) [] [C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "R" 0,VP,WS))]]])
 BEGIN SEQUENT'
 SIDECOND = ([],fromList [])
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.WVS.24", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K (TF TB (TG (Id "B" 0))) (VB True)}
 END SEQUENT'
 END SEQZIP
-FPATH: []
+FPATH: [1]
 BEGIN LIST STEPS
+END LIST STEPS
+END LIVE-PROOF
+("LTL","WVS.28")
+BEGIN LIVE-PROOF
+TH-NAME: LTL
+CJ-NAME: WVS.28
+CONJ = ASN (C (TF TB (TG (Id "B" 0))) True (Id "imp" 0) [C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],([],fromList []))
+SIDE = ([],fromList [])
+STRAT red-All
+BEGIN SEQZIP
+TERMZIP = (C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],[Cons' (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))] [],Cons' (TF TB (TG (Id "B" 0))) True (Id "or" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))] [],Cons' (TF TB (TG (Id "B" 0))) True (Id "imp" 0) [] [C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]]])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.WVS.28", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K (TF TB (TG (Id "B" 0))) (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: [1,2,2]
+BEGIN LIST STEPS
+(UseLaw (ByMatch MEL) "U_def" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS))),((Id "Q" 0,VP),BV (VR (Id "Q" 0,VP,WS))),((Id "until" 0,VO),BV (VR (Id "until" 0,VO,WS)))],fromList [],fromList [])) [1],ASN (C (TF TB (TG (Id "B" 0))) True (Id "imp" 0) [C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],([],fromList [])))
+END LIST STEPS
+END LIVE-PROOF
+("LTL","absorb_WVS.31")
+BEGIN LIVE-PROOF
+TH-NAME: LTL
+CJ-NAME: absorb_WVS.31
+CONJ = ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],([],fromList []))
+SIDE = ([],fromList [])
+STRAT red-All
+BEGIN SEQZIP
+TERMZIP = (C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]]]],[Cons' (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [] [C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]]])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.absorb_WVS.31", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K (TF TB (TG (Id "B" 0))) (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: [1]
+BEGIN LIST STEPS
+(UseLaw (ByMatch MER) "or_assoc" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS))),((Id "Q" 0,VP),BV (VR (Id "Q" 0,VP,WS))),((Id "R" 0,VP),BT (C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]]])),((Id "or" 0,VO),BV (VR (Id "or" 0,VO,WS)))],fromList [],fromList [])) [1],ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS)),C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),C (TF TB (TG (Id "B" 0))) True (Id "next" 0) [C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]]]]],C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],([],fromList [])))
+(UseLaw (ByMatch MEL) "U_def" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS))),((Id "Q" 0,VP),BV (VR (Id "Q" 0,VP,WS))),((Id "until" 0,VO),BV (VR (Id "until" 0,VO,WS)))],fromList [],fromList [])) [1,2],ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),C (TF TB (TG (Id "B" 0))) True (Id "until" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],([],fromList [])))
 END LIST STEPS
 END LIVE-PROOF
 END MAP LIVE-PROOFS

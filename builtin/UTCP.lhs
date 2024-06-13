@@ -168,6 +168,13 @@ f = fromJust $ pVar ArbType $ Vbl (jId "F") PredV Static
 
 \section{Low-Level Semantics}
 
+\textbf{
+Seriously consider going back to $in$,$g$, and $out$.
+Also, we may want $r'$ to denote the after-value of $r$,
+with a healthiness conditions that asserts $r'=r$,
+to give a homogeneous alphabet.
+}
+
 
 Root expressions: 
 \RLEQNS{
@@ -216,7 +223,7 @@ Label-set handling:
 \begin{eqnarray*}
    s, s' &:& \mathcal S
 \\ ls, ls' &:& \mathcal P (R)
-\\ r &:& R
+\\ r &:& R \qquad  \textbf{(also }r':R\textbf{ ?)}
 \\ \lst O &=& \setof{s,ls}
 \end{eqnarray*}
 \begin{code}
@@ -279,6 +286,12 @@ General shorthand, and Label Exclusivity invariant ($LE$):
 \\&& \lref{short-lbl-exclusive}
 \\ LE &~\defs~& [r|r!]  \qquad \lref{inv-label-excl}
 \\ DL &~\defs & \{r|r\done\} \qquad \lref{disj-lbls}
+}
+
+\textbf{Also?}
+\RLEQNS{
+   \mathbf{SV}_x(C) &\defs& C \land x'=x
+\\ \mathbf{SVL}(C) &\defs& \mathbf{SV}_r(C)
 }
 
 

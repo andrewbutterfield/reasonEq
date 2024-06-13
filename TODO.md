@@ -13,7 +13,11 @@ f.v. of above expr are `{in,ls,s,s',ls',out}`,
 but `{in,out}` are static.
 We want to say that  `O$,O$' ⊇ ({.....} restricted to dynamic-variables)`.
 
+One possibility:  
+a static-var healthiness condition 
+`SV_x(P) ^= P /\ x = x'`.
 
+So we add `SV(in) /\ SV(g) /\ SV(out)`.
 
 
 

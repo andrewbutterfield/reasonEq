@@ -31,7 +31,10 @@ Instantiated Law S.C. = O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇R1, O$,O
 Goal S.C. = ⊤
 Discharged Law S.C. = O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇R1, O$,O$'⊇a, O$,O$'⊇b, O$,O$'⊇ls, O$,O$'⊇ls', fresh:O$_0
 ```
+
 We have that `O  ≜ {ls,s}`, so we need to use this.
+
+look at `bindKnown` and `bindFloating` in `Binding`.
 
 
 ### Works for handling actual theory observables

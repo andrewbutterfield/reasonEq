@@ -75,7 +75,7 @@ card_t t = FunType (power t) int
 \begin{code}
 i_mt = jId "emptyset" ; mtIntro      = mkConsIntro i_mt  sett
 i_set = jId "set"   
-i_in = jId "in"       ; inIntro      = mkConsIntro i_in  $ mbr_t  elemt
+i_mbr = jId "mbr"     ; inIntro     = mkConsIntro  i_mbr $ mbr_t  elemt
 i_U = jId "union"     ; unionIntro   = mkConsIntro i_U   $ setf_2 elemt
 i_I = jId "intsct"    ; intsctIntro  = mkConsIntro i_I   $ setf_2 elemt
 i_D = jId "\\"        ; setdiffIntro = mkConsIntro i_D   $ setf_2 elemt
@@ -91,7 +91,7 @@ senum ts = Cons sett True i_set ts
 ssingle :: Term -> Term
 ssingle t = senum [t]
 mbr :: Term -> Term -> Term
-mbr e s = Cons (mbr_t elemt) False i_in [e,s]
+mbr e s = Cons (mbr_t elemt) False i_mbr [e,s]
 subseteq s1 s2 = Cons bool False i_SS [s1,s2]
 sunion s1 s2 = Cons sett False i_U [s1,s2]
 sintsct s1 s2 = Cons sett False i_I [s1,s2]

@@ -213,7 +213,7 @@ precTable
     , ( "cat"      , (7,RAssoc))
     , ( "="        , (7,NotAssoc))
     , ( "pfx"      , (7,NotAssoc))
-    , ( "in"       , (7,NotAssoc))
+    , ( "mbr"      , (7,NotAssoc))
     , ( "subseteq" , (7,NotAssoc))
     , ( "until"    , (8,NotAssoc))
     , ( "wait"     , (8,NotAssoc))

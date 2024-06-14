@@ -970,7 +970,9 @@ vMatch vts bind cbvs pvbs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
  | vC == vP    =  bindVarToVar vP vC bind 
  | vwC == vwP  =  vMatch' vts bind vmr vC vP
  | vwC == ExprV && vwP == ObsV  =  vMatch' vts bind vmr vC vP
- | otherwise   =  fail "vMatch: class mismatch"
+ | otherwise   =  fail $ unlines [ "vMatch: class mismatch"
+                                 , "vC = " ++ show vC
+                                 , "vP = " ++ show vP ]
  where
     pbound = StdVar vP `S.member` pvbs
     vmr = lookupVarTables vts vP

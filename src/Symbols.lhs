@@ -18,7 +18,7 @@ module
   , _true , _false , _not, _and, _or, _imp, _eqv
   , _forall, _exists
   , _powerset, _emptyset, _union, _intsct, _setminus
-  , _in, _subseteq, _supseteq, _varnothing
+  , _mbr, _subseteq, _supseteq, _varnothing
   , _neq, _notin, _nexists, _nsubseteq
   , _langle, _rangle
   , _parallel, _Cap
@@ -172,7 +172,7 @@ theSymbolList
   , ("cup", SymForm "U"  "\x222a"), ("cap", SymForm "I"  "\x2229")
 
   , ("powerset", SymForm "P" "\x2119")
-  , ("emptyset", SymForm "{}"  "\x00d8"), ("in", SymForm "in"  "\x2208")
+  , ("emptyset", SymForm "{}"  "\x00d8"), ("mbr", SymForm "mbr"  "\x2208")
   , ("union", SymForm "U"  "\x222a"), ("intsct", SymForm "I"  "\x2229")
   , ("subseteq", SymForm "subset" "\x2286"), ("supseteq", SymForm "supset" "\x2287")
   , ("setminus", SymForm "\\"  "\x2216"), ("varnothing", SymForm "()" "\x2205")
@@ -228,7 +228,7 @@ _forall = nicesym "forall" ; _exists = nicesym "exists"
 _cup = nicesym "cup" ; _cap = nicesym "cap"
 
 _powerset = nicesym "powerset"
-_emptyset = nicesym "emptyset" ; _in = nicesym "in"
+_emptyset = nicesym "emptyset" ; _mbr = nicesym "mbr"
 _union = nicesym "union" ; _intsct = nicesym "intsct"
 _subseteq = nicesym "subseteq" ; _supseteq = nicesym "supseteq"
 _setminus = nicesym "setminus" ; _varnothing = nicesym "varnothing"
@@ -644,7 +644,7 @@ niceSyms
    , ("_cup", _cup)
    , ("_cap", _cap)
    , ("_setminus", _setminus)
-   , ("_in", _in)
+   , ("_mbr", _mbr)
    , ("_subseteq", _subseteq)
    , ("_supseteq", _supseteq)
    , ("_varnothing", _varnothing)

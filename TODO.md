@@ -38,11 +38,12 @@ look at `bindKnown` and `bindFloating` in `Binding`.
 
 
 ### Works for handling actual theory observables
+
 One possibility:  
 a static-var healthiness condition 
 `SV_x(P) ^= P /\ x = x'`.
 
-So we add `SV(in) /\ SV(g) /\ SV(out)`.
+So we add `(SV_in o SV_g o SV_out)(P)`.
 
 
 

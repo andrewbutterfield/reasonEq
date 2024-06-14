@@ -168,45 +168,32 @@ f = fromJust $ pVar ArbType $ Vbl (jId "F") PredV Static
 
 \section{Low-Level Semantics}
 
-\textbf{
-Seriously consider going back to $in$,$g$, and $out$.
-Also, we may want $r'$ to denote the after-value of $r$,
-with a healthiness conditions that asserts $r'=r$,
-to give a homogeneous alphabet.
-}
+\subsection{Label Generator Expressions}
 
-
-Root expressions: 
+Terse generator expression syntax:
 \RLEQNS{
-   S &\defs& \setof{1,2} 
-\\ \sigma,\varsigma &\defs& S^*
-\\ R &::=& r\sigma | r\sigma\done
+   g \in GVar &\defs& \setof{g}\qquad  \text{The \emph{sole} generator variable}
+\\ p \in GPostOp &::=&  {:} \mid 1 \mid 2
+\\ G \in GExpr &::=& g \mid G_p
+\\ L \in LExpr &::=& \ell_G
 }
-Given that root-expressions are always of the form $r\sigma[\done]$ 
-where $r$ is the one and only variable called ``r'', 
-we can represent them just by $\sigma[\done]$.
+Given that generator-expressions are always of the form $g\rho$ 
+where $\rho : \Seq{GPostOp}$
+and $g$ is the one and only variable (called ``g''), 
+we can represent them just by $\rho$.
+Here these post-operators are represented as integers,
+with zero representing ``:''.
 \begin{code}
-rexpr :: [Integer] -> Bool -> Term
-rexpr_t = GivenType $ jId "RE"
-i_rexpr = jId "r"
-rexpr branchnos done 
-  = Cons rexpr_t True i_rexpr 
-      $ ( map (Val ArbType . Integer) branchnos 
-          ++ [Val ArbType $ Boolean done] )
+gexpr :: [Integer] -> Term
+gexpr_t = GivenType $ jId "GE"
+i_gexpr = jId "G"
+gexpr gops 
+  = Cons gexpr_t True i_gexpr 
+      $ ( map (Val ArbType . Integer) gops )
+lexpr_t = GivenType $ jId "LE"
 \end{code}
-We want to predefine some common roots (all those used in semantics)
-\begin{code}
-r   = rexpr []  False
-r'  = rexpr []  True
-r1  = rexpr [1] False
-r1' = rexpr [1] True
-r2  = rexpr [2] False
-r2' = rexpr [2] True
-rdemo :: Term
-rdemo 
-  = lenum [ r, r', r1, r1', r2, r2' ]
-cjDemo = ( "r" -.- "demo", ( rdemo, scTrue ) )
-\end{code}
+
+\subsection{Label-Sets}
 
 Label-set handling:
 \RLEQNS{
@@ -223,7 +210,8 @@ Label-set handling:
 \begin{eqnarray*}
    s, s' &:& \mathcal S
 \\ ls, ls' &:& \mathcal P (R)
-\\ r &:& R \qquad  \textbf{(also }r':R\textbf{ ?)}
+\\ g &:& G           \qquad \textbf{(also }g':G\textbf{ ?)}
+\\ in,out &:& LExpr  \qquad \textbf{(also }in',out':LExpr\textbf{ ?)}
 \\ \lst O &=& \setof{s,ls}
 \end{eqnarray*}
 \begin{code}
@@ -236,13 +224,21 @@ obs_vs'_Intro = mkKnownVar vs' state_t
 ils  = jId "ls" 
 vls = Vbl ils ObsV Before
 vls' = Vbl ils ObsV After
-ls_t = power rexpr_t
+ls_t = power lexpr_t
 obs_vls_Intro  = mkKnownVar vls ls_t
 obs_vls'_Intro = mkKnownVar vls' ls_t
-ir  = jId "r" 
-vr =  Vbl ir ObsV Static
-r_t = rexpr_t
-obs_r_Intro  = mkKnownVar vr rexpr_t
+ig  = jId "g" 
+vg =  Vbl ig ObsV Static
+g_t = gexpr_t
+obs_g_Intro  = mkKnownVar vg gexpr_t
+iin  = jId "in" 
+vin =  Vbl iin ObsV Static
+in_t = lexpr_t
+obs_in_Intro  = mkKnownVar vin lexpr_t
+iout  = jId "out" 
+vout =  Vbl iout ObsV Static
+out_t = lexpr_t
+obs_out_Intro  = mkKnownVar vout lexpr_t
 o = jId "O"  ;  vO = PreVar o
 obsIntro = fromJust . addKnownVarSet vO (S.fromList $ map StdVar [vs,vls])
 \end{code}
@@ -542,7 +538,7 @@ Key concepts (in approx order of presentation):
      (e.g. $C$, $D$, etc.).
    \item ``flows''. 
      $\W(C)$ is $\bigvee(C^i)$ which computes all possible flows.
-     \\Emphasise that we can read off flows based on root expressions.
+     \\Emphasise that we can read off flows based on generator expressions.
    \item Bijections and why they are relevant
 \end{itemize}
 
@@ -616,7 +612,9 @@ utcpKnown
    obsIntro $
    obs_vs_Intro $ obs_vs'_Intro $
    obs_vls_Intro $ obs_vls'_Intro $
-   obs_r_Intro $
+   obs_g_Intro $
+   obs_in_Intro $
+   obs_out_Intro $
    newVarTable
 \end{code}
 
@@ -638,7 +636,6 @@ utcpConjs :: [NmdAssertion]
 utcpConjs
   = map mkNmdAsn
       [ cjAAlt, cjXXComp
-      , cjDemo
       ]
 \end{code}
 

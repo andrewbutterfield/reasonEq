@@ -380,13 +380,13 @@ of $X$-actions:
        & \lref{$X$-$X$-comp}
 }
 \begin{code}
-vE1 = jVar ls_t $ StaticVar $ jId "E1"
-vE2 = jVar ls_t $ StaticVar $ jId "E2"
+vE1 = jVar ls_t $ ExprVar (jId "E1") Static
+vE2 = jVar ls_t $ ExprVar (jId "E2") Static
 vb = jpVar $ PredVar (jId "b") Static
-vR1 = jVar ls_t $ StaticVar $ jId "R1"
-vR2 = jVar ls_t $ StaticVar $ jId "R2"
-vN1 = jVar ls_t $ StaticVar $ jId "N1"
-vN2 = jVar ls_t $ StaticVar $ jId "N2"
+vR1 = jVar ls_t $ ExprVar (jId "R1") Static
+vR2 = jVar ls_t $ ExprVar (jId "R2") Static
+vN1 = jVar ls_t $ ExprVar (jId "N1") Static
+vN2 = jVar ls_t $ ExprVar (jId "N2") Static
 cjXXComp = ( "X" -.- "X" -.- "comp"
            , ( mkSeq (xact vE1 va vR1 vN1) (xact vE2 vb vR1 vN1)
                ===

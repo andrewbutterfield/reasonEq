@@ -356,7 +356,15 @@ $T$ denotes a standard term variable,
 and $g$ denotes either $z$ or $T$.
 We also use the case conventions described earlier ($P, p, p'$).
 
-\subsubsection{Checking Disjoint $V \disj g$}
+
+\subsubsection%
+{Checking 
+ Disjoint 
+ $ V 
+   \disj
+   g 
+   $
+}
 
 \begin{eqnarray*}
    \emptyset             \disj g           &&   \true
@@ -867,7 +875,7 @@ Given that
 we can ask: in which order should we proceed?
 
 Both orderings give the same outcome if all we want to do
-is to simplify an instance of (\ref{eqn:SideCond:disharge-form}).
+is to simplify an instance of (\ref{eqn:SideCond:discharge-form}).
 However, we are assuming all the $G_i$ are true,
 and want to know if that is enough to ensure that all the $L_j$
 are also true.

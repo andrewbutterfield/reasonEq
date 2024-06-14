@@ -284,24 +284,17 @@ addKnownConst :: MonadFail m => Variable -> Term -> VarTable -> m VarTable
 
 We no longer require free variables in a term entry
 to be ``known''.
-% When adding a term entry
-% we require that all free variables in a term
-% must already be ``known'' in the table.
-% \begin{code}
-% absent vt (StdVar v)             =  lookupVarTable vt v == UV
-% absent vt (LstVar (LVbl v _ _))  =  lookupLVarTable vt v == UL
-% \end{code}
-
 Only static variables may name a constant,
 and we must check that we won't introduce any cycles.
 \begin{code}
 addKnownConst var@(Vbl _ _ Static) trm vt@(VD (vtable,stable,dtable))
-  | StdVar var `inFreeVars` freev   =  fail "addKnownConst: variable in term."
-  -- | any (absent vt) freev        =  fail "addKnownConst: term has unknowns."
+  | StdVar var `inFreeVars` freev = fail "addKnownConst: variable in term."
   | otherwise
     = case M.lookup var vtable of
-        Nothing  ->  return $ VD ( M.insert var (KC trm) vtable,stable,dtable )
-        Just UV  ->  return $ VD ( M.insert var (KC trm) vtable,stable,dtable )
+        Nothing
+          ->  return $ VD ( M.insert var (KC trm) vtable,stable,dtable )
+        Just UV  
+          ->  return $ VD ( M.insert var (KC trm) vtable,stable,dtable )
         _ -> fail "addKnownConst: cannot update."
   where
      freev = freeVars scTrue trm  -- always safe?
@@ -313,7 +306,8 @@ addKnownConst _ _ _ = fail "addKnownConst: not for Dynamic Variables."
 \subsection{Inserting Known Variables}
 
 \begin{code}
-addKnownVar :: (Monad m, MonadFail m) => Variable -> Type -> VarTable -> m VarTable
+addKnownVar :: (Monad m, MonadFail m) 
+            => Variable -> Type -> VarTable -> m VarTable
 \end{code}
 
 Only static, textual and before/after variables can
@@ -337,7 +331,8 @@ addKnownVar var typ (VD (vtable,stable,dtable))
 \subsection{Inserting Generic Variables}
 
 \begin{code}
-addGenericVar :: (Monad m, MonadFail m) => Variable -> VarTable -> m VarTable
+addGenericVar :: (Monad m, MonadFail m) 
+              => Variable -> VarTable -> m VarTable
 \end{code}
 
 For now we do not place any restrictions,
@@ -353,7 +348,8 @@ addGenericVar var vt@(VD (vtable,stable,dtable))
 \subsection{Inserting Instance Variables}
 
 \begin{code}
-addInstanceVar :: (Monad m, MonadFail m) => Variable -> Variable -> VarTable -> m VarTable
+addInstanceVar :: (Monad m, MonadFail m) 
+               => Variable -> Variable -> VarTable -> m VarTable
 \end{code}
 
 We require that the variable we are inserting is not already present,
@@ -413,7 +409,7 @@ that works with lists, preserving order.
 checkVariableList
   :: (Monad m, MonadFail m)
   => VarTable  -- the table
-  -> Variable -- the variable component of the list-variable about to be defined
+  -> Variable -- the variable part of the list-va about being defined
   -> Bool     -- true if set-valued list-variables are allowed
   -> VarList
   -> m ( [Variable] -- the full expansion
@@ -452,7 +448,8 @@ checkVariableList vt lv@(Vbl i vc0 vw0) setsOK vl
 \subsection{Inserting Known Variable-List}
 
 \begin{code}
-addKnownVarList :: (Monad m, MonadFail m) => Variable -> VarList -> VarTable -> m VarTable
+addKnownVarList :: (Monad m, MonadFail m) 
+                => Variable -> VarList -> VarTable -> m VarTable
 \end{code}
 
 Static List variables match lists of known variables
@@ -466,7 +463,8 @@ addKnownVarList lv@(Vbl _ _ Static) vl vt@(VD (vtable,stable,dtable))
  where
    newSKVL lv vl vt@(VD (vtable,stable,dtable))
     = do ( expanse, size ) <- checkVariableList vt lv False vl
-         return $ VD (vtable, M.insert lv (KL vl expanse size) stable, dtable)
+         return $ 
+           VD (vtable, M.insert lv (KL vl expanse size) stable, dtable)
 \end{code}
 
 Dynamic list-variables
@@ -485,7 +483,8 @@ addKnownVarList lv@(Vbl i vc vw) vl vt@(VD (vtable,stable,dtable))
     = do ( expanse, size ) <- checkVariableList vt lv False vl
          let (is,js) = idsOf vl
          let xis = map varId expanse
-         return $ VD (vtable, stable, M.insert iac (DL is js xis size) dtable)
+         return $ 
+           VD (vtable, stable, M.insert iac (DL is js xis size) dtable)
 \end{code}
 
 
@@ -503,7 +502,8 @@ checkLVarListMap v vl
 \subsection{Inserting Known Variable-Set}
 
 \begin{code}
-addKnownVarSet :: (Monad m, MonadFail m) => Variable -> VarSet -> VarTable -> m VarTable
+addKnownVarSet :: (Monad m, MonadFail m) 
+               => Variable -> VarSet -> VarTable -> m VarTable
 \end{code}
 See Variable-List insertion above.
 
@@ -535,13 +535,15 @@ addKnownVarSet lv@(Vbl i vc vw) vs vt@(VD (vtable,stable,dtable))
          let iS = S.fromList is
          let jS = S.fromList js
          let xiS = S.fromList $ map varId expanse
-         return $ VD (vtable, stable, M.insert iac (DS iS jS xiS size) dtable)
+         return $ 
+           VD (vtable, stable, M.insert iac (DS iS jS xiS size) dtable)
 \end{code}
 
 \subsection{Inserting Abstract Variable-List}
 
 \begin{code}
-addAbstractVarList :: (Monad m, MonadFail m) => Variable -> VarTable -> m VarTable
+addAbstractVarList :: (Monad m, MonadFail m) 
+                   => Variable -> VarTable -> m VarTable
 
 addAbstractVarList lv@(Vbl _ _ Static) (VD (vtable,stable,dtable))
  = case M.lookup lv stable of
@@ -557,7 +559,8 @@ addAbstractVarList lv@(Vbl i vc vw) (VD (vtable,stable,dtable))
 \subsection{Inserting Abstract Variable-Set}
 
 \begin{code}
-addAbstractVarSet :: (Monad m, MonadFail m) => Variable -> VarTable -> m VarTable
+addAbstractVarSet :: (Monad m, MonadFail m) 
+                  => Variable -> VarTable -> m VarTable
 
 addAbstractVarSet lv@(Vbl _ _ Static) (VD (vtable,stable,dtable))
  = case M.lookup lv stable of
@@ -774,7 +777,8 @@ subsumeL' vacc lvl (sv@(StdVar v):svl)
 subsearch si lvacc [] = (False,reverse lvacc)
 subsearch si lvacc (lv@(LstVar (LVbl v is js)) : lvl)
   | si `elem` is  =  ( True
-                     , reverse lvacc ++ (LstVar $ LVbl v (is \\ [si]) js) : lvl )
+                     , reverse lvacc 
+                         ++ (LstVar $ LVbl v (is \\ [si]) js) : lvl )
   | otherwise     =  subsearch si (lv:lvacc) lvl
 \end{code}
 
@@ -807,15 +811,18 @@ Here, we treat a list-variable,
 that has variables subtracted from it that are not part of its expansion,
 as being erroneous.
 \begin{code}
-expandKnown :: (Monad m, MonadFail m) => [VarTable] -> ListVar -> m KnownExpansion
+expandKnown :: (Monad m, MonadFail m) 
+            => [VarTable] -> ListVar -> m KnownExpansion
 
 expandKnown vts lv@(LVbl v@(Vbl i vc vw) is js)
  = case lookupLVarTables vts v of
-     KL kvl expL eLen -> listRemove kvl expL eLen (expandLess vts vc vw is js)
-     KS kvs expS eSiz -> setRemove  kvs expS eSiz (expandLess vts vc vw is js)
-     AL               -> return (AL, is, js)
-     AS               -> return (AS, is, js)
-     _ -> fail "expandKnown: not known."
+     KL kvl expL eLen 
+         -> listRemove kvl expL eLen (expandLess vts vc vw is js)
+     KS kvs expS eSiz 
+         -> setRemove  kvs expS eSiz (expandLess vts vc vw is js)
+     AL  -> return (AL, is, js)
+     AS  -> return (AS, is, js)
+     _   -> fail "expandKnown: not known."
 \end{code}
 
 We return an integer and three lists: the known variables to be removed,
@@ -865,7 +872,7 @@ listRemove :: (Monad m, MonadFail m)
                  , [Identifier]   -- remaining unknown is components
                  , [Identifier] ) -- remaining unknown js components
 listRemove kvl expL eLen (n,kvr,uis,ujs)
-  | eLen < n + luis = fail "expandKnown(listings): extra subtracted variables."
+  | eLen < n + luis = fail "expandKnown(List): extra subtracted variables."
   | null (kvr \\ expL)
      = return ( KL kvl (expL \\ kvr) (eLen - n), uis, ujs)
   | otherwise  =  fail "expandKnown(List): irrelevant subtracted variables."

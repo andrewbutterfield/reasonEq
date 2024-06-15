@@ -452,9 +452,9 @@ Next, instantiate the pattern side-condition using the bindings.
 -- tryLawByName asn@(tC,scC) lnm parts mcs
     tryInstantiateSC insctxt fbind tP' partsP replP scP
       = case
-                instantiateSC insctxt fbind scP
+                instantiateSC insctxt (pdbg "tISC.fbind" fbind) $ pdbg "tISC.scP" scP
         of
-          Yes scP'  ->  trySCDischarge insctxt fbind tP' partsP replP scP'
+          Yes scP'  ->  trySCDischarge insctxt fbind tP' partsP replP $ pdbg "tISC.scP'" scP'
           But msgs
            -> But ([ "try s.c. instantiation failed"
                    , ""

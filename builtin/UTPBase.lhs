@@ -7,8 +7,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module UTPBase (
-  utpBaseConjs, utpBaseName, utpBaseTheory,
-  utpBaseAliases
+  assertIsUTP, assertAreUTP, assertIsUTPCond, assertAreUTPCond
+, utpBaseConjs, utpBaseName, utpBaseTheory
+, utpBaseAliases
 ) where
 
 import Data.Maybe

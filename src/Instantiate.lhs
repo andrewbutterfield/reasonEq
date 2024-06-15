@@ -499,7 +499,7 @@ For atomic side-conditions:
 Consider this example:
 \begin{description}
 \item[Law] $P[\lst e/\lst x] = P, \qquad \lst x \notin P$
-\item[Goal] $(R[O_m/O'])[O'/O_m], \qquad O',O \supseteq R$.
+\item[Goal] $R[O_m/O'])[O'/O_m], \qquad O',O \supseteq R$.
 \item[Bind] 
    $\beta
     =
@@ -529,6 +529,32 @@ Consider this example:
 \\ &=&  \seqof{O_m} \disj \setof{O,O_m}
 \\ &=&  \false
 \end{eqnarray*}
+
+Now consider another example (UTCP theory):
+\begin{description}
+\item[Static Vars (not in $O,O'$.)]
+   $E_i, R_i, N_i$.
+\item[Known Vars] $O = \setof{s,ls}$.
+\item[Law] $P;Q = \exists O_0 \bullet P[O_0/O'] \land Q[O_0/O], 
+\qquad \fresh O_0$
+\item[Goal] $(E_1 \subseteq ls \land a \land ls'=(ls\setminus R_1)\cup N_1)
+             ;
+             (E_2 \subseteq ls \land b \land ls'=(ls\setminus _2)\cup N_2) 
+             \qquad O',O \supseteq a,b$
+\item[Bind] 
+   $\beta
+    =
+    \setof{
+      P \mapsto (E_1 \subseteq ls \land a \land ls'=(ls\setminus R_1)\cup N_1)
+      ,
+      Q \mapsto (E_2 \subseteq ls \land b \land ls'=(ls\setminus R_2)\cup N_2)
+      ,
+      0 \mapsto 0
+      ,
+      O \mapsto \seqof{O}
+    }
+   $
+\end{description}
 \begin{code}
 instantiateASC :: MonadFail m => InsContext
                -> Binding -> AtmSideCond -> m [AtmSideCond]

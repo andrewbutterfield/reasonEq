@@ -1,10 +1,55 @@
-@tvM.vP:
-VR (Id "emptyset" 0,VO,WS)
-@tvM.vPmr:
-KV (TC (Id "powerset" 0) [TV (Id "t" 0)])
-@tkvM.tC:
-C (TC (Id "powerset" 0) [TV (Id "t" 0)]) False (Id "union" 0) [V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "S" 0,VO,WS)),V (TC (Id "powerset" 0) [TV (Id "t" 0)]) (VR (Id "emptyset" 0,VO,WS))]
-@tkvM.whatP:
-KV (TC (Id "powerset" 0) [TV (Id "t" 0)])
-@tkvM.vP:
-VR (Id "emptyset" 0,VO,WS)
+Match against `;_def'[1] OK
+
+Binding: 
+{ ;  ⟼ ;
+, P  ⟼ (E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1
+, Q  ⟼ (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2
+, 0  ⟼ 0
+, O$  ⟼ ⟨O$⟩ 
+}
+
+Instantiated Law 
+= ∃ O$_0  • 
+   ((E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$'] 
+   ∧ 
+   ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_0/O$]
+
+
+
+Instantiated Law S.C. 
+ = O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇N2, O$,O$'⊇R1, O$,O$'⊇R2
+ , O$,O$'⊇ls, O$,O$'⊇ls'
+ , fresh:O$_0
+
+Goal S.C. = O$,O$'⊇a, O$,O$'⊇b
+
+Discharged Law S.C. 
+ = O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇N2, O$,O$'⊇R1, O$,O$'⊇R2
+ , O$,O$'⊇ls, O$,O$'⊇ls'
+ , fresh:O$_0
+
+
+
+
+
+
+
+
+
+
+Instantiated Law S.C. (INCORRECT) 
+ = O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇N2, O$,O$'⊇R1, O$,O$'⊇R2
+ , O$,O$'⊇a, O$,O$'⊇b
+ , O$,O$'⊇ls, O$,O$'⊇ls', fresh:O$_0
+
+ SHOULD BE: 
+ = O$,O$'⊇a, O$,O$'⊇b
+ , O$,O$'⊇ls, O$,O$'⊇ls', fresh:O$_0
+
+
+Goal S.C. = ⊤ (INCORRECT)
+
+ SHOULD BE:
+ = O$,O$'⊇a, O$,O$'⊇b
+
+Discharged Law S.C. = O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇N2, O$,O$'⊇R1, O$,O$'⊇R2, O$,O$'⊇a, O$,O$'⊇b, O$,O$'⊇ls, O$,O$'⊇ls', fresh:O$_0

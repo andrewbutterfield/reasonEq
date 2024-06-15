@@ -319,7 +319,7 @@ and that our semantic predicates are closed under mumbling.
 \RLEQNS{
    X(E|a|R|N)
    &~\defs~&
-   ls(E) \land [a] \land ls'=(ls\setminus R)\cup N & \lref{defn-$X$}
+   ls(E) \land a \land ls'=(ls\setminus R)\cup N & \lref{defn-$X$}
 \\ A(E|a|N)
    &\defs&
    X(E|a|E|N) & \lref{defn-$A$}
@@ -341,24 +341,24 @@ We need to define some variables ($E$, $a$, $R$, $N$)
 vE = jVar ls_t $ ExprVar (jId "E") Static
 vR = jVar ls_t $ ExprVar (jId "R") Static
 vN = jVar ls_t $ ExprVar (jId "N") Static
-va = jpVar $ PredVar (jId "a") Static
+va = Vbl (jId "a") PredV Static ; a = fromJust $ pVar ArbType va ; ga = StdVar va
 tls = jVar ls_t vls
 tls' = jVar ls_t vls'
 -- X(E|a|R|N)
 axXDef = ( "X" -.- "def"
-         , ( (xact vE va vR vN)
+         , ( (xact vE a vR vN)
              ===
-             ((vE `subseteq` tls) /\ va) /\
+             ((vE `subseteq` tls) /\ a) /\
              (tls' `isEqualTo` ((tls `sdiff` vR) `sunion` vN))
            , scTrue ) ) 
 -- A(E|a|N)
 axADef = ( "A" -.- "def"
-         , ( (aact vE va vN) === (xact vE va vE vN)
+         , ( (aact vE a vN) === (xact vE a vE vN)
            , scTrue ) )
 cjAAlt = ( "A" -.- "alt"
-         , ( (aact vE va vN)
+         , ( (aact vE a vN)
              ===
-             ((vE `subseteq` tls) /\ va) /\
+             ((vE `subseteq` tls) /\ a) /\
              (tls' `isEqualTo` ((tls `sdiff` vE) `sunion` vN))
            , scTrue ) )
 \end{code}
@@ -382,22 +382,22 @@ of $X$-actions:
 \begin{code}
 vE1 = jVar ls_t $ ExprVar (jId "E1") Static
 vE2 = jVar ls_t $ ExprVar (jId "E2") Static
-vb = jpVar $ PredVar (jId "b") Static
+vb = Vbl (jId "b") PredV Static ; b = fromJust $ pVar ArbType vb ; gb = StdVar vb
 vR1 = jVar ls_t $ ExprVar (jId "R1") Static
 vR2 = jVar ls_t $ ExprVar (jId "R2") Static
 vN1 = jVar ls_t $ ExprVar (jId "N1") Static
 vN2 = jVar ls_t $ ExprVar (jId "N2") Static
 cjXXComp = ( "X" -.- "X" -.- "comp"
-           , ( mkSeq (xact vE1 va vR1 vN1) (xact vE2 vb vR1 vN1)
+           , ( mkSeq (xact vE1 a vR1 vN1) (xact vE2 b vR2 vN2)
                ===
                (vE2 `sunion` (vR1 `sdiff` vN1) `isEqualTo` mtset)
                /\
                (xact 
                  (vE1 `sunion` (vE2 `sdiff` vN1)) 
-                 (mkSeq va vb) 
+                 (mkSeq a b) 
                  (vR1 `sunion` vR2) 
                  ((vN1 `sdiff` vR2) `sunion` vN2) )
-             , scTrue ))
+             , assertAreUTP [ga,gb] ))
 \end{code}
 
 \subsection{Commands}

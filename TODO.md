@@ -34,7 +34,7 @@ Discharged Law S.C. = O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇R1, O$,O$'
 
 We have that `O  ≜ {ls,s}`, so we need to use this.
 
-look at `bindKnown` and `bindFloating` in `Binding`.
+SOLUTION: fix `instantiateSC`, involving adding `VarData` to `InsContext`.
 
 
 ### Works for handling actual theory observables

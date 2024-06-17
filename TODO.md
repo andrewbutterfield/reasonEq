@@ -25,12 +25,27 @@ E2 ∪ R1 \ N1 = Ø ∧ X(E1 ∪ E2 \ N1,a ; b,R1 ∪ R2,N1 \ R2 ∪ N2)
 
 proof: tm 1 ;_def
 Match against `;_def'[1] OK
-Binding: { ;  ⟼ ;, P  ⟼ (E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1, Q  ⟼ (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R1 ∪ N1, 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }
-Instantiated Law = (∃ O$_0  • ((E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$'] ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$])
-Instantiated Law S.C. = O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇R1, O$,O$'⊇a, O$,O$'⊇b, O$,O$'⊇ls, O$,O$'⊇ls', fresh:O$_0
+Binding: 
+{ ;  ⟼ ;
+, P  ⟼ (E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1
+, Q  ⟼ (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R1 ∪ N1
+, 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }
+
+Instantiated Law = 
+∃ O$_0  • ((E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$'] ∧ 
+          ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$]
+
+Instantiated Law S.C. = 
+O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇R1
+, O$,O$'⊇a, O$,O$'⊇b
+, O$,O$'⊇ls, O$,O$'⊇ls'
+, fresh:O$_0
+
 Goal S.C. = ⊤
 Discharged Law S.C. = O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇R1, O$,O$'⊇a, O$,O$'⊇b, O$,O$'⊇ls, O$,O$'⊇ls', fresh:O$_0
 ```
+
+Here we also have `E1`,`E2`,`R1`,`R2`,`N1`, and `N2` as (static) free variables.
 
 We have that `O  ≜ {ls,s}`, so we need to use this.
 

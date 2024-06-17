@@ -520,6 +520,7 @@ Consider this example:
        \textbf{~where~}  v^m = v^n \cap \fv(t)
    $
 \end{description}
+The following should fail as $\lst x (O_m)$ is in $P (R[O_m/O'])$.
 \begin{eqnarray*}
 \lefteqn{\beta(\lst x \disj P)}
 \\ &=&  \beta(\lst x) \disj \fv(\beta(P))
@@ -538,10 +539,10 @@ Now consider another example (UTCP theory):
    $E_i, R_i, N_i$.
 \item[Known Vars] $O = \setof{s,ls}$.
 \item[Law] $P;Q = \exists O_0 \bullet P[O_0/O'] \land Q[O_0/O], 
-\qquad \fresh O_0$
+\qquad O,O' \supseteq P; O,O' \supseteq Q; \fresh O_0$
 \item[Goal] $(E_1 \subseteq ls \land a \land ls'=(ls\setminus R_1)\cup N_1)
              ;
-             (E_2 \subseteq ls \land b \land ls'=(ls\setminus _2)\cup N_2) 
+             (E_1 \subseteq ls \land a \land ls'=(ls\setminus R_1)\cup N_1) 
              \qquad O',O \supseteq a,b$
 \item[Bind] 
    $\beta
@@ -557,6 +558,58 @@ Now consider another example (UTCP theory):
     }
    $
 \end{description}
+The following should succeed because $E_i,R_i,N_i$ are not in $O$,
+while $ls,ls'$ and $a$ and $b$ are covered by $O,O'$.
+We start by processing the match predicate:
+\begin{eqnarray*}
+\lefteqn{\beta(\exists O_0 \bullet P[O_0/O'] \land Q[O_0/O])}
+\\ &=& \exists O_0 \bullet \beta(P[O_0/O']) \land \beta(Q[O_0/O])
+\\ &=& \exists O_0 \bullet \beta(P)[O_0/O'] \land \beta(Q)[O_0/O]
+       \qquad O,0 \mapsto O,0
+\\ &=& \exists O_0 \bullet 
+       (E_1 \subseteq ls \land a \land ls'=(ls\setminus R_1)\cup N_1)[O_0/O'] 
+       \land 
+       (E_2 \subseteq ls \land b \land ls'=(ls\setminus R_2)\cup N_2)[O_0/O]
+\\ &=& \exists O_0 \bullet 
+       (E_1 \subseteq ls)[O_0/O'] \land 
+       a[O_0/O'] \land 
+       (ls'=(ls\setminus R_1)\cup N_1)[O_0/O'] 
+       \land {}
+\\ & & \phantom{\exists O_0 \bullet {}}
+      (E_2 \subseteq ls)[O_0/O] \land 
+      b[O_0/O] \land 
+      (ls'=(ls\setminus R_2)\cup N_2)[O_0/O] 
+\\ &=& \exists O_0 \bullet 
+       (E_1 \subseteq ls) \land 
+       a[O_0/O'] \land 
+       (ls_0=(ls\setminus R_1)\cup N_1)[O_0/O'] 
+       \land {} \qquad \text{uses } O=\setof{s,ls}, \dots
+\\ & & \phantom{\exists O_0 \bullet {}}
+      (E_2 \subseteq ls_0) \land 
+      b[O_0/O] \land 
+      (ls'=(ls_0\setminus R_2)\cup N_2)
+\end{eqnarray*}
+Now, the law side-condition:
+\begin{eqnarray*}
+\lefteqn{\beta(O,O' \supseteq P \land  O,O' \supseteq Q \land \fresh O_0)}
+\\ &=& \beta(O,O' \supseteq P) \land  
+       \beta(O,O' \supseteq Q) \land \beta(\fresh O_0)
+\\ &=& O,O' \supseteq \beta(P) \land  
+       O,O' \supseteq \beta(Q) \land \fresh O_0
+\\ &=& O,O' \supseteq 
+           \fv(E_1 \subseteq ls \land a \land ls'=(ls\setminus R_1)\cup N_1)) 
+           \land  {} 
+\\ & & O,O' \supseteq 
+           \fv(E_2 \subseteq ls \land b \land ls'=(ls\setminus R_2)\cup N_2)
+           \land \fresh O_0
+\\ &=& \setof{s,ls,s',ls'} \supseteq  
+           \fv(E_1 \subseteq ls \land a \land ls'=(ls\setminus R_1)\cup N_1)) 
+           \land  {} \qquad \text{uses } O = \setof{s,ls},\dots
+\\ & & \setof{s,ls,s',ls'} \supseteq 
+           \fv(E_2 \subseteq ls \land b \land ls'=(ls\setminus R_2)\cup N_2)
+           \land \fresh O_0
+\end{eqnarray*}
+\textbf{At this point we want $\fv$ to ignore $E_i,R_i,N_i$.}
 \begin{code}
 instantiateASC :: MonadFail m => InsContext
                -> Binding -> AtmSideCond -> m [AtmSideCond]

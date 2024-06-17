@@ -37,7 +37,8 @@ import Debugger
 
 \section{Introduction}
 
-We take a pattern term and a binding
+We take a pattern term and a binding,
+along with relevant context imformation,
 and produce a re-constructed candidate term,
 provided every variable in the pattern is also in the binding.
 If $\beta$ is a binding, and $t$ is a term,
@@ -80,7 +81,8 @@ aspects of the current state of a proof:
 \end{itemize}
 \begin{code}
 data InsContext
-  =  ICtxt  { icSC :: SideCond
+  =  ICtxt  { icVTs :: [VarTable]
+            , icSC :: SideCond
             }
   deriving Show  
 

@@ -405,7 +405,7 @@ and we generate names for these that make their floating nature visible.
                 bindFloating vts kbind tP
         of
           Yes fbind  ->  tryInstantiate
-                           (mkInsCtxt scC) 
+                           (mkInsCtxt vts scC) 
                            fbind tP partsP replP scP
           But msgs
            -> But ([ "instantiate floating failed"
@@ -886,7 +886,7 @@ basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
   =  do bind <- match vts tC partsP
         kbind <- bindKnown vts bind repl
         fbind <- bindFloating vts kbind repl
-        let ictxt = mkInsCtxt scC
+        let ictxt = mkInsCtxt vts scC
         scPinC <- instantiateSC ictxt fbind scP
         scD <- scDischarge ss scC scPinC
 
@@ -1082,9 +1082,9 @@ shSCImplication scC scPm
      ++ " " ++ _imp ++ " "
      ++ trSideCond scPm
 
-shMappedCond scC bind lsc
+shMappedCond vts scC bind lsc
   = case instantiateSC
-           (mkInsCtxt scC) 
+           (mkInsCtxt vts scC) 
            bind lsc
     of
       Nothing    ->  trSideCond lsc ++ (red " (law-sc!)")

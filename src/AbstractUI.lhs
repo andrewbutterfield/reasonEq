@@ -667,7 +667,7 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
         ss = S.elems $ S.map theSubscript $ S.filter isDuring
                      $ S.map gvarWhen $ mentionedVars conj
         scC = conjSC liveProof
-        ictxt = mkInsCtxt scC
+        ictxt = mkInsCtxt vtbls scC
         (tz,seq') = focus liveProof
         dpath = fPath liveProof
         conjpart = exitTZ tz
@@ -958,7 +958,7 @@ lawInstantiate3 :: MonadFail m => [VarTable]
 lawInstantiate3 vts law@((lnm,(Assertion lawt lsc)),lprov) varTerms liveProof
   = do lbind <- mkBinding emptyBinding varTerms
        let scC = conjSC liveProof
-       let ictxt = mkInsCtxt scC
+       let ictxt = mkInsCtxt vts scC
        ilsc <- instantiateSC ictxt lbind lsc
        let (Assertion conj _) = conjecture liveProof
        let ss = S.elems $ S.map theSubscript $ S.filter isDuring

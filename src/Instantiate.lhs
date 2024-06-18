@@ -539,7 +539,7 @@ Now consider another example (UTCP theory):
    $E_i, R_i, N_i$.
 \item[Known Vars] $O = \setof{s,ls}$.
 \item[Law] $P;Q = \exists O_0 \bullet P[O_0/O'] \land Q[O_0/O], 
-\qquad O,O' \supseteq P; O,O' \supseteq Q; \fresh O_0$
+\qquad O,O' \supseteq_d P; O,O' \supseteq_d Q; \fresh O_0$
 \item[Goal] $(E_1 \subseteq ls \land a \land ls'=(ls\setminus R_1)\cup N_1)
              ;
              (E_1 \subseteq ls \land a \land ls'=(ls\setminus R_1)\cup N_1) 
@@ -591,25 +591,28 @@ We start by processing the match predicate:
 \end{eqnarray*}
 Now, the law side-condition:
 \begin{eqnarray*}
-\lefteqn{\beta(O,O' \supseteq P \land  O,O' \supseteq Q \land \fresh O_0)}
-\\ &=& \beta(O,O' \supseteq P) \land  
-       \beta(O,O' \supseteq Q) \land \beta(\fresh O_0)
-\\ &=& O,O' \supseteq \beta(P) \land  
-       O,O' \supseteq \beta(Q) \land \fresh O_0
+\lefteqn{\beta(O,O' \supseteq_d P \land  O,O' \supseteq_d Q \land \fresh O_0)}
+\\ &=& \beta(O,O' \supseteq_d P) \land  
+       \beta(O,O' \supseteq_d Q) \land \beta(\fresh O_0)
+\\ &=& O,O' \supseteq_d \beta(P) \land  
+       O,O' \supseteq_d \beta(Q) \land \fresh O_0
 \\ &=& O,O' \supseteq 
-           \fv(E_1 \subseteq ls \land a \land ls'=(ls\setminus R_1)\cup N_1)) 
+           \dfv(E_1 \subseteq ls \land a \land ls'=(ls\setminus R_1)\cup N_1)) 
            \land  {} 
 \\ & & O,O' \supseteq 
-           \fv(E_2 \subseteq ls \land b \land ls'=(ls\setminus R_2)\cup N_2)
+           \dfv(E_2 \subseteq ls \land b \land ls'=(ls\setminus R_2)\cup N_2)
            \land \fresh O_0
-\\ &=& \setof{s,ls,s',ls'} \supseteq  
-           \fv(E_1 \subseteq ls \land a \land ls'=(ls\setminus R_1)\cup N_1)) 
-           \land  {} \qquad \text{uses } O = \setof{s,ls},\dots
-\\ & & \setof{s,ls,s',ls'} \supseteq 
-           \fv(E_2 \subseteq ls \land b \land ls'=(ls\setminus R_2)\cup N_2)
-           \land \fresh O_0
+\\ &=& O,O' \supseteq \setof{ls,ls'} \cup \fv(a) 
+       \land  
+       O,O' \supseteq \setof{ls,ls'} \cup \fv(b)
+\\ &=& \true, \qquad \text{uses } \fv(a),\fv(b) \subseteq O,O'
 \end{eqnarray*}
-\textbf{At this point we want $\fv$ to ignore $E_i,R_i,N_i$.}
+We define dynamic free variables ($\dfv$) as:
+\begin{eqnarray*}
+  \dfv &:& T \fun \Set V
+\\ \dfv(t) &\defs& filter(isDynamic,\fv(t)) 
+\end{eqnarray*}
+
 \begin{code}
 instantiateASC :: MonadFail m => InsContext
                -> Binding -> AtmSideCond -> m [AtmSideCond]

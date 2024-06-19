@@ -2,69 +2,6 @@
 
 ## Urgent/Now
 
-FAILING TESTS
-
-```
-SideCond Internal:
-  Atomic Side-Condition checker:
-    Disjoint NU  (no known vars):
-      gv_a `disjoint` empty is True: [OK]
-      v_e `disjoint` empty is True: [OK]
-      gv_a `disjoint` {gv_a} is False: [OK]
-      gv_a `disjoint` {gv_b} is True: [OK]
-      v_e `disjoint` {v_e} stands: [Failed]
-expected: Just (Just (SD NU (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "e" 0,VE,WB))])))
- but got: Just (Just (SD UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "e" 0,VE,WB))])))
-      v_e `disjoint` {v_f} stands: [Failed]
-expected: Just (Just (SD NU (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "f" 0,VE,WB))])))
- but got: Just (Just (SD UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "f" 0,VE,WB))])))
-      v_e `disjoint` {gv_a} stands: [Failed]
-expected: Just (Just (SD NU (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "a" 0,VO,WB))])))
- but got: Just (Just (SD UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "a" 0,VO,WB))])))
-      gv_a `disjoint` {v_f} stands: [Failed]
-expected: Just (Just (SD NU (GV (VR (Id "a" 0,VO,WB))) (fromList [GV (VR (Id "f" 0,VE,WB))])))
- but got: Just Nothing
-      gv_a `disjoint` {gv_b,v_f} stands: [Failed]
-expected: Just (Just (SD NU (GV (VR (Id "a" 0,VO,WB))) (fromList [GV (VR (Id "b" 0,VO,WB)),GV (VR (Id "f" 0,VE,WB))])))
- but got: Just Nothing
-    CoveredBy NU  (no known vars):
-      gv_a `coveredby` empty is False: [OK]
-      v_e `coveredby` empty stands: [Failed]
-expected: Just (Just (SS NU (GV (VR (Id "e" 0,VE,WB))) (fromList [])))
- but got: Nothing
-      gv_a `coveredby` {gv_a} is True: [Failed]
-expected: Just Nothing
- but got: Nothing
-      gv_a `coveredby` {gv_b} is False: [OK]
-      v_e `coveredby` {v_e} is True: [Failed]
-expected: Just Nothing
- but got: Just (Just (SS UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "e" 0,VE,WB))])))
-      v_e `coveredby` {v_f} stands: [Failed]
-expected: Just (Just (SS NU (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "f" 0,VE,WB))])))
- but got: Just (Just (SS UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "f" 0,VE,WB))])))
-      v_e `coveredby` {gv_a} stands: [Failed]
-expected: Just (Just (SS NU (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "a" 0,VO,WB))])))
- but got: Just (Just (SS UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "a" 0,VO,WB))])))
-      gv_a `coveredby` {v_f} stands: [Failed]
-expected: Just (Just (SS NU (GV (VR (Id "a" 0,VO,WB))) (fromList [GV (VR (Id "f" 0,VE,WB))])))
- but got: Nothing
-      gv_a `coveredby` {gv_b,v_f} stands: [Failed]
-expected: Just (Just (SS NU (GV (VR (Id "a" 0,VO,WB))) (fromList [GV (VR (Id "b" 0,VO,WB)),GV (VR (Id "f" 0,VE,WB))])))
- but got: Nothing
-  Merging Side-Conditions (no known vars):
-    merge gv_a `disjoint` empty  into [] is True: [OK]
-    merge gv_a `disjoint` {gv_a} into [] is False: [OK]
-    merge v_e `coveredby` {v_f}  into [] is [itself]: [Failed]
-expected: Just [SS NU (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "f" 0,VE,WB))])]
- but got: Just [SS UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "f" 0,VE,WB))])]
-    merge gv_a `disjoint` empty  into [asc(gv_b)] is [asc(gv_b)]]: [OK]
-    merge gv_a `disjoint` {gv_a} into [asc(gv_b)] is False: [OK]
-    merge v_e `coveredby` {v_f}  into [asc(gv_b)] is [asc(gv_b),itself]: [OK]
-
-Substitution Internal:
-
-```
-
 
 BIGGER ISSUE
 
@@ -76,33 +13,12 @@ Target (RHS):
 E2 ∪ R1 \ N1 = Ø ∧ X(E1 ∪ E2 \ N1,a ; b,R1 ∪ R2,N1 \ R2 ∪ N2)
 
 
-proof: tm 1 ;_def
-Match against `;_def'[1] OK
-Binding: 
-{ ;  ⟼ ;
-, P  ⟼ (E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1
-, Q  ⟼ (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R1 ∪ N1
-, 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }
-
-Instantiated Law = 
-∃ O$_0  • ((E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$'] ∧ 
-          ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$]
-
-Instantiated Law S.C. = 
-O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇R1
-, O$,O$'⊇a, O$,O$'⊇b
-, O$,O$'⊇ls, O$,O$'⊇ls'
-, fresh:O$_0
-
-Goal S.C. = ⊤
-Discharged Law S.C. = O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇R1, O$,O$'⊇a, O$,O$'⊇b, O$,O$'⊇ls, O$,O$'⊇ls', fresh:O$_0
+Instantiated Law S.C. 
+  = O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇N2, O$,O$'⊇R1, O$,O$'⊇R2, 
+    O$,O$'⊇ls, O$,O$'⊇ls', fresh:O$_0
 ```
 
-Here we also have `E1`,`E2`,`R1`,`R2`,`N1`, and `N2` as (static) free variables.
-
-We have that `O  ≜ {ls,s}`, so we need to use this.
-
-SOLUTION: fix `instantiateSC`, involving adding `VarData` to `InsContext`.
+**We need to create a new `CoversDynamic` atomic side-condition.**
 
 
 ### Works for handling actual theory observables

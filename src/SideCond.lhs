@@ -61,7 +61,7 @@ given a logic like ours with explicit expression and predicate
 A side condition is about a relationship between the free variables
 of term ($T$),
 and a set of other (general) variables ($x,\lst{v}$).
-In general with have a conjunction of atomic conditions,
+In general we have a conjunction of atomic conditions,
 but we need to be able to distinguish between no conditions (always ``true'')
 and inconsistent conditions
 (e.g. $x \disj \fv(T) \land x = \fv(T) $, always ``false'').

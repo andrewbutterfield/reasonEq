@@ -118,7 +118,7 @@ An observation variable can be determined to be free or bound
 in a containing term in the usual way.
 A term variable is different as in general it is associated with
 a set of free variables and another set of bound variables,
-based on the whatever term ``value'' it has.
+based on whatever term ``value'' it has.
 The best we can do in general is say (for example) that:
 $\fv(x = e \land P) = \setof x \cup \fv(e) \cup \fv(P)$.
 In particular, $\fv(x = e \land P)$ cannot be $\setof{x,e,P}$.

@@ -2,16 +2,69 @@
 
 ## Urgent/Now
 
-BIG ISSUE
+FAILING TESTS
 
-What if we have?
-   `O$,O$' ⊇ ({in} ⊆ ls ∧ a) ∧ ls' = ls \ {in} ∪ {out}`
-   i.e.
-   `{ls,ls',s,s'} ⊇ ({in} ⊆ ls ∧ a) ∧ ls' = ls \ {in} ∪ {out}`
+```
+SideCond Internal:
+  Atomic Side-Condition checker:
+    Disjoint NU  (no known vars):
+      gv_a `disjoint` empty is True: [OK]
+      v_e `disjoint` empty is True: [OK]
+      gv_a `disjoint` {gv_a} is False: [OK]
+      gv_a `disjoint` {gv_b} is True: [OK]
+      v_e `disjoint` {v_e} stands: [Failed]
+expected: Just (Just (SD NU (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "e" 0,VE,WB))])))
+ but got: Just (Just (SD UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "e" 0,VE,WB))])))
+      v_e `disjoint` {v_f} stands: [Failed]
+expected: Just (Just (SD NU (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "f" 0,VE,WB))])))
+ but got: Just (Just (SD UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "f" 0,VE,WB))])))
+      v_e `disjoint` {gv_a} stands: [Failed]
+expected: Just (Just (SD NU (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "a" 0,VO,WB))])))
+ but got: Just (Just (SD UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "a" 0,VO,WB))])))
+      gv_a `disjoint` {v_f} stands: [Failed]
+expected: Just (Just (SD NU (GV (VR (Id "a" 0,VO,WB))) (fromList [GV (VR (Id "f" 0,VE,WB))])))
+ but got: Just Nothing
+      gv_a `disjoint` {gv_b,v_f} stands: [Failed]
+expected: Just (Just (SD NU (GV (VR (Id "a" 0,VO,WB))) (fromList [GV (VR (Id "b" 0,VO,WB)),GV (VR (Id "f" 0,VE,WB))])))
+ but got: Just Nothing
+    CoveredBy NU  (no known vars):
+      gv_a `coveredby` empty is False: [OK]
+      v_e `coveredby` empty stands: [Failed]
+expected: Just (Just (SS NU (GV (VR (Id "e" 0,VE,WB))) (fromList [])))
+ but got: Nothing
+      gv_a `coveredby` {gv_a} is True: [Failed]
+expected: Just Nothing
+ but got: Nothing
+      gv_a `coveredby` {gv_b} is False: [OK]
+      v_e `coveredby` {v_e} is True: [Failed]
+expected: Just Nothing
+ but got: Just (Just (SS UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "e" 0,VE,WB))])))
+      v_e `coveredby` {v_f} stands: [Failed]
+expected: Just (Just (SS NU (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "f" 0,VE,WB))])))
+ but got: Just (Just (SS UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "f" 0,VE,WB))])))
+      v_e `coveredby` {gv_a} stands: [Failed]
+expected: Just (Just (SS NU (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "a" 0,VO,WB))])))
+ but got: Just (Just (SS UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "a" 0,VO,WB))])))
+      gv_a `coveredby` {v_f} stands: [Failed]
+expected: Just (Just (SS NU (GV (VR (Id "a" 0,VO,WB))) (fromList [GV (VR (Id "f" 0,VE,WB))])))
+ but got: Nothing
+      gv_a `coveredby` {gv_b,v_f} stands: [Failed]
+expected: Just (Just (SS NU (GV (VR (Id "a" 0,VO,WB))) (fromList [GV (VR (Id "b" 0,VO,WB)),GV (VR (Id "f" 0,VE,WB))])))
+ but got: Nothing
+  Merging Side-Conditions (no known vars):
+    merge gv_a `disjoint` empty  into [] is True: [OK]
+    merge gv_a `disjoint` {gv_a} into [] is False: [OK]
+    merge v_e `coveredby` {v_f}  into [] is [itself]: [Failed]
+expected: Just [SS NU (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "f" 0,VE,WB))])]
+ but got: Just [SS UN (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "f" 0,VE,WB))])]
+    merge gv_a `disjoint` empty  into [asc(gv_b)] is [asc(gv_b)]]: [OK]
+    merge gv_a `disjoint` {gv_a} into [asc(gv_b)] is False: [OK]
+    merge v_e `coveredby` {v_f}  into [asc(gv_b)] is [asc(gv_b),itself]: [OK]
 
-f.v. of above expr are `{in,ls,s,s',ls',out}`,
-but `{in,out}` are static.
-We want to say that  `O$,O$' ⊇ ({.....} restricted to dynamic-variables)`.
+Substitution Internal:
+
+```
+
 
 BIGGER ISSUE
 

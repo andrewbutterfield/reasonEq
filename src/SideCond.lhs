@@ -78,6 +78,8 @@ where $T$ abbreviates $\fv(T)$:
    x,\lst v   \disj  T
    && \mbox{disjoint, short for }\{x,\lst v\} \cap \fv(T) = \emptyset
 \\ x,\lst v \supseteq T && \mbox{covering}
+\\ x,\lst v \supseteq_d T && 
+   \mbox{covering dynamics, short for } \{x,\lst v\} \cap \dfv(T) = \emptyset
 \\ pre      \supseteq T && \mbox{pre-condition, no dashed variables}
 \end{eqnarray*}
 In most cases the term $T$ will be very general,
@@ -121,8 +123,9 @@ In some of these cases, we may be able to simplify a side-condition further:
 \begin{eqnarray*}
    \dots,z,\dots   \disj  z  && \false
 \\ \dots,z,\dots{} \supseteq z  && \true
-\\ \emptyset \supseteq z && \false
-\\ pre      \supseteq z  && z \textrm{ is a \texttt{Before} variable}
+\\ \emptyset \supseteq z   && \false
+\\ \emptyset \supseteq_d z && \lnot\isdyn(z)
+\\ pre       \supseteq z   && z \textrm{ is a \texttt{Before} variable}
 \end{eqnarray*}
 For list variables, we can add:
 \begin{eqnarray*}

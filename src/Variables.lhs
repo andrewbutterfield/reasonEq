@@ -180,7 +180,7 @@ pattern After     =  WA
 pattern Textual   =  WT
 \end{code}
 
-We consider before, during and after variables as being ``dynamic''.
+We consider before, during and after variables as being ``dynamic'' ($\isdyn$).
 These sometimes need special treatment.
 \begin{code}
 isDynamic :: VarWhen -> Bool

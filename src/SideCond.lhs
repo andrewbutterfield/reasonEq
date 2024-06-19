@@ -7,11 +7,12 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module SideCond (
-  pattern Unif, pattern NonU
+  Uniformity, pattern Unif, pattern NonU
 , usame, usamel, usameg
 , setWhen, lsetWhen, gsetWhen
 , AtmSideCond
 , pattern Disjoint, pattern CoveredBy
+, setASCUniformity
 , ascGVar, ascVSet
 , SideCond, scTrue, isTrivialSC
 , onlyFreshSC, onlyInvolving, onlyFreshOrInvolved
@@ -203,13 +204,6 @@ data Uniformity
 pattern Unif = UN
 pattern NonU = NU
 \end{code}
-
-\textbf{Important note:}
-A uniform superset condition $x \supseteq P$
-is always interpreted as $x \supseteq_d P$.
-This means that we do not need to distinguish this case
-in our data structure definitions below.
-
 We need to add an easy check that two dynamic
 variables differ only in their temporality.
 \begin{code}
@@ -314,10 +308,10 @@ of an atomic side-condition is set correctly.
 setASCUniformity :: AtmSideCond -> AtmSideCond
 setASCUniformity (Disjoint  _ gv vs)
   | areUniform gv vs  =  Disjoint Unif (dnGVar gv) (S.map dnGVar vs)
-  | otherwise        =  Disjoint NonU         gv                vs
+  | otherwise         =  Disjoint NonU         gv                vs
 setASCUniformity (CoveredBy _ gv vs)
   | areUniform gv vs  =  CoveredBy Unif (dnGVar gv) (S.map dnGVar vs)
-  | otherwise        =  CoveredBy NonU         gv                vs
+  | otherwise         =  CoveredBy NonU         gv                vs
 \end{code}
 
 We provide some builders that set uniformity:
@@ -365,13 +359,7 @@ We also use the case conventions described earlier ($P, p, p'$).
 
 
 \subsubsection%
-{Checking 
- Disjoint 
- $ V 
-   \disj
-   g 
-   $
-}
+{Checking Disjoint $ V \disj g$}
 
 \begin{eqnarray*}
    \emptyset             \disj g           &&   \true
@@ -405,18 +393,16 @@ ascCheck ss asc@(Disjoint _ gv vs)
 \\ \{stdObs\}\setminus z \supseteq z           && \false
 \\ \ell\setminus Z \supseteq \ell\setminus (Z\cup W) 
      && \true
-\\ V,g\textrm{ are temporally disjoint}        
-    && \lnot\mathsf{uniform}(V \supseteq g)
+\\ V,g\textrm{ are temporally disjoint}        && \false
 \end{eqnarray*}
 
 Here, as $T$ could be empty,
 we cannot deduce that $\emptyset \supseteq T$ is false.
 Similarly, $T \supseteq z$ could also be true.
 \begin{code}
-ascCheck ss asc@(CoveredBy u gv vs)
+ascCheck ss asc@(CoveredBy _ gv vs)
   -- | gv `S.member` vs  =  return mscTrue -- subsumed by next line
   | any (gvCovBy gv) vs  =  return mscTrue
-  | isdisj && u == Unif  =  return mscTrue
   | isdisj               =  report "non-U atomic covers is False (disjoint)"
   | not $ isObsGVar gv   =  return $ Just $ setASCUniformity asc
   -- gv is an observation variable not in vs below here....

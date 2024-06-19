@@ -56,16 +56,6 @@ BD
       , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } )
   , SS
     NU
-    (GV (VR (Id "a" 0, VP, WS)))
-    ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
-      , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } )
-  , SS
-    NU
-    (GV (VR (Id "b" 0, VP, WS)))
-    ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
-      , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } )
-  , SS
-    NU
     (GV (VR (Id "ls" 0, VO, WB)))
     ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
       , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } )

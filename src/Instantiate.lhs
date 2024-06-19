@@ -10,7 +10,7 @@ module Instantiate
 ( InsContext, mkInsCtxt
 , instantiate
 , instVarSet
-, instASCVariant
+, instASC
 , instantiateSC
 ) where
 import Data.Maybe
@@ -619,7 +619,7 @@ instantiateASC :: MonadFail m => InsContext
 instantiateASC insctxt bind asc
   = do (vsCD,diffs) <- instVarSet insctxt bind $ ascVSet asc
        if null diffs
-         then instASCVariant insctxt vsCD fvsT asc
+         then instASC insctxt vsCD fvsT asc
          else fail "instantiateASC: explicit diffs in var-set not handled."
   where
      fvsT = instantiateGVar insctxt bind $ ascGVar asc
@@ -630,13 +630,14 @@ instantiateASC insctxt bind asc
 
 
 \begin{code}
-instASCVariant :: MonadFail m => InsContext
+instASC :: MonadFail m => InsContext
                -> VarSet -> FreeVars -> AtmSideCond -> m [AtmSideCond]
-instASCVariant insctxt vsD fvT (Disjoint _ _ _)   =  instDisjoint insctxt vsD fvT
-instASCVariant insctxt vsC fvT (CoveredBy _ _ _)  =  instCovers   insctxt vsC fvT
+instASC insctxt vsD fvT (Disjoint _ _ _)   =  instDisjoint insctxt vsD fvT
+instASC insctxt vsC fvT (CoveredBy u _ _)  =  instCovers u insctxt vsC fvT
 \end{code}
 
 
+\newpage
 \subsection{Disjointedness}
 
 \begin{eqnarray*}
@@ -648,34 +649,52 @@ instASCVariant insctxt vsC fvT (CoveredBy _ _ _)  =  instCovers   insctxt vsC fv
 where $\fv(\beta(T)) = F \cup \{e_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj e_i$, $F \disj B_i$.
 \begin{code}
-instDisjoint :: MonadFail m => InsContext -> VarSet -> FreeVars -> m [AtmSideCond]
+instDisjoint :: MonadFail m 
+             => InsContext -> VarSet -> FreeVars -> m [AtmSideCond]
 instDisjoint insctxt vsD (fF,vLessBs)
   =  return (asc1s ++ asc2s)
   where
     asc1s = map (mkDisj vsD) $ S.toList fF
-    mkDisj vsD gv = Disjoint NonU gv vsD
+    mkDisj vsD gv = setASCUniformity $ Disjoint NonU gv vsD
     asc2s = map (f2 vsD) vLessBs
     f2 vsD (evF,vsB) = mkDisj (vsD S.\\ vsB) evF
 \end{code}
 
 \subsection{Covering}
 
+
+The general case, 
+where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
+$F \disj F_i$, $F \disj B_i$:
 \begin{eqnarray*}
    \beta.(C \supseteq T)
    &=& \beta.C \supseteq \fv(\beta(T))
-\\ &=& \beta.C \supseteq (F \cup \{e_i\setminus B_i\}_{i \in 1\dots N})
-\\ &=& \beta.C \supseteq F \land \{\beta.C \supseteq (e_i\setminus B_i)\}_{i \in 1\dots N}
-\\ &=& \beta.C \supseteq F \land \{(\beta.C \cup B_i) \supseteq e_i\}_{i \in 1\dots N}
+\\ &=& \beta.C \supseteq (F \cup \{e_i\setminus B_i\})
+\\ &=& \beta.C \supseteq F \land \{\beta.C \supseteq (e_i\setminus B_i)\}
+\\ &=& \beta.C \supseteq F \land \{(\beta.C \cup B_i) \supseteq e_i\}
 \end{eqnarray*}
-where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
-$F \disj F_i$, $F \disj B_i$.
+We next observe that if $C \supseteq T$ is uniform,
+then it is interpreted as $C \supseteq_d T$.
+We assume here that $S$ is all non-dynamic variables.
+\begin{eqnarray*}
+   \beta.(C \supseteq_d T)
+   &=& \beta.C \supseteq \dfv(\beta(T))
+\\ &=& \beta.C \supseteq (\fv(\beta(T)) \setminus S)
+\\ &=& \beta.C \supseteq (F \cup \{e_i\setminus B_i\}) \setminus S
+\\ &=& \beta.C \supseteq (F \setminus S \cup \{e_i\setminus (B_i \cup S)\}) 
+\\ &=& \beta.C \supseteq F \setminus S \land \{\beta.C \supseteq (e_i\setminus (B_i \cup S))\}
+\\ &=& \beta.C \supseteq F \land \{(\beta.C \cup B_i) \supseteq e_i\}
+\end{eqnarray*}
+
 \begin{code}
-instCovers :: MonadFail m => InsContext -> VarSet -> FreeVars -> m [AtmSideCond]
-instCovers insctxt vsC (fF,vLessBs)
+instCovers :: MonadFail m 
+           => Uniformity -> InsContext -> VarSet -> FreeVars 
+           -> m [AtmSideCond]
+instCovers u insctxt vsC (fF,vLessBs)
   =  return (asc1s ++ asc2s)
   where
     asc1s = map (mkCovers vsC) (S.toList fF)
-    mkCovers vsC gv = CoveredBy NonU gv vsC
+    mkCovers vsC gv = setASCUniformity $ CoveredBy NonU gv vsC
     asc2s = map (f2 vsC) vLessBs
     f2 vsC (evF,vsB) = mkCovers (vsC `S.union` vsB) evF
 \end{code}

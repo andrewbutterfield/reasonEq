@@ -204,6 +204,12 @@ pattern Unif = UN
 pattern NonU = NU
 \end{code}
 
+\textbf{Important note:}
+A uniform superset condition $x \supseteq P$
+is always interpreted as $x \supseteq_d P$.
+This means that we do not need to distinguish this case
+in our data structure definitions below.
+
 We need to add an easy check that two dynamic
 variables differ only in their temporality.
 \begin{code}
@@ -299,8 +305,6 @@ $$
   g_i ~\Re~ G_s, \mbox{ for all subscript } s \mbox{ in use.}
 $$
 We \emph{represent} the above using the \texttt{Before} form: $g ~\Re~ G$.
-
-
 
 \subsection{Checking Atomic Sideconditions}
 

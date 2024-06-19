@@ -405,22 +405,25 @@ ascCheck ss asc@(Disjoint _ gv vs)
 \\ \{stdObs\}\setminus z \supseteq z           && \false
 \\ \ell\setminus Z \supseteq \ell\setminus (Z\cup W) 
      && \true
-\\ V,g\textrm{ are temporally disjoint}        && \false
+\\ V,g\textrm{ are temporally disjoint}        
+    && \lnot\mathsf{uniform}(V \supseteq g)
 \end{eqnarray*}
 
 Here, as $T$ could be empty,
 we cannot deduce that $\emptyset \supseteq T$ is false.
 Similarly, $T \supseteq z$ could also be true.
 \begin{code}
-ascCheck ss asc@(CoveredBy _ gv vs)
-  -- | gv `S.member` vs          =  return mscTrue -- subsumed by next line
-  | any (gvCovBy gv) vs       =  return mscTrue
-  | isTempDisjointASC gv vs   =  report "atomic covers is False (disjoint)"
-  | not $ isObsGVar gv        =  return $ Just $ setASCUniformity asc
+ascCheck ss asc@(CoveredBy u gv vs)
+  -- | gv `S.member` vs  =  return mscTrue -- subsumed by next line
+  | any (gvCovBy gv) vs  =  return mscTrue
+  | isdisj && u == Unif  =  return mscTrue
+  | isdisj               =  report "non-U atomic covers is False (disjoint)"
+  | not $ isObsGVar gv   =  return $ Just $ setASCUniformity asc
   -- gv is an observation variable not in vs below here....
-  | S.null vs                 =  report "atomic covers is False (null)"
-  | all isStdV vs             =  report "atomic covers is False (all std)"
-  where    
+  | S.null vs            =  report "atomic covers is False (null)"
+  | all isStdV vs        =  report "atomic covers is False (all std)"
+  where 
+    isdisj = isTempDisjointASC gv vs
     showsv = "gv = "++show gv
     showvs = "vs = "++show vs
     report msg = fail $ unlines' [msg,showsv,showvs]

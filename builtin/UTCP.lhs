@@ -341,7 +341,8 @@ We need to define some variables ($E$, $a$, $R$, $N$)
 vE = jVar ls_t $ ExprVar (jId "E") Static
 vR = jVar ls_t $ ExprVar (jId "R") Static
 vN = jVar ls_t $ ExprVar (jId "N") Static
-va = Vbl (jId "a") PredV Static ; a = fromJust $ pVar ArbType va ; ga = StdVar va
+va = Vbl (jId "a") PredV Static 
+a = fromJust $ pVar ArbType va ; ga = StdVar va
 tls = jVar ls_t vls
 tls' = jVar ls_t vls'
 -- X(E|a|R|N)

@@ -22,16 +22,16 @@ b0  = S.empty
 bx = S.singleton $ StdVar x
 by = S.singleton $ StdVar y
 -- ok = PreVar $ jId "ok"
-bool = GivenType $ jId "B"
-ebool = E bool
-okk = E bool
+-- bool = GivenType $ jId "B"
+-- ebool = E bool
+okk = bool
 eok = fromJust $ eVar bool ok
-true = EVal bool $ Boolean True
+true = Boolean True
 v42 = Vbl (jId "v42") ObsV Static
-v42k = E ArbType
+v42k = ArbType
 oK = Vbl (jId "oK") ObsV Static
-oKk = E ArbType
-earb = E ArbType
+oKk = ArbType
+earb = ArbType
 
 g1 = Vbl (jId "g1") ObsV Static
 i11 = Vbl (jId "i11") ObsV Static
@@ -75,13 +75,13 @@ fpre = PreExpr $ jId "f"
 
 eie = fromJust $ eVar int e
 
-e42 = EVal int $ Integer 42
+e42 = Val int $ Integer 42
 
 k = jId "ok"
 ok = PreVar k ; ok' = PostVar k ; okm = MidVar k "m"
 
 
-eint = E int
+eint = int
 
 xx = jId "x"  ;  x = PreVar xx  ;  x' = PostVar xx  ;  xm = MidVar xx "m"
 wy = jId "y"  ;  y = PreVar wy  ;  y' = PostVar wy  ;  ym = MidVar wy "m"
@@ -135,19 +135,19 @@ gpbv = StdVar pbv
 
 -- ----- TermKind -----
 
-xk = E ArbType
+xk = ArbType
 
 -- ------------ Expressions (Term) -----------
 
-k42  = EVal ArbType $ Integer 42
-k58  = EVal ArbType $ Integer 58
+k42  = Val ArbType $ Integer 42
+k58  = Val ArbType $ Integer 58
 
 ex = fromJust $ eVar ArbType x
 ey = fromJust $ eVar ArbType y
 
 -- ------------- Predicates (Term) ------------
 
-pTrue = PVal $ Boolean True
+pTrue = Val ArbType $ Boolean True
 
 
 -- ================ FUNCTIONS =======================

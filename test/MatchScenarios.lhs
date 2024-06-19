@@ -520,14 +520,14 @@ known predicate operators $;$, $\exists$ and $\land$,
 \begin{code}
 semi = jId ";"
 v_semi = Vbl semi PredV Static
-p `seqComp` q = PCons False semi [p,q]
+p `seqComp` q = Cons  ArbType False semi [p,q]
 semiBinding = fromJust $ bindVarToVar v_semi v_semi emptyBinding
 semiKnown = fromJust $ addKnownVar v_semi ArbType $ newVarTable
 
 
 land = jId "land"
 v_land = Vbl land PredV Static
-p `lAnd` q = PCons True land [p,q]
+p `lAnd` q = Cons  ArbType True land [p,q]
 andBinding = fromJust $ bindVarToVar v_land v_land emptyBinding
 andKnown = fromJust $ addKnownVar v_land ArbType $ newVarTable
 
@@ -550,33 +550,33 @@ gS  = LstVar lS ; gS'  = LstVar lS' ; gSm  = LstVar lSm  ; gSn = LstVar lSn
 We also need some predicates to throw around ($P$, $Q$):
 \begin{code}
 vp = PredVar (jId "P") Static ; gvp = StdVar vp
-p = fromJust $ pVar vp
+p = fromJust $ pVar  ArbType vp
 vq = PredVar (jId "Q") Static ; gvq = StdVar vq
-q = fromJust $ pVar vq
+q = fromJust $ pVar  ArbType vq
 
 -- builder for exists Om @ P[...] /\ Q[...]
 eOpAqm = eOpAq "m" ; eOpAqn = eOpAq "n"
 eOpAq n = eX [gvDurRen n gOm] (endO2mid n p `lAnd` begO2mid n q)
-endO2mid n p = PSub p $ fromJust $ substn [] [(lO',lvDurRen n lOm)]
-begO2mid n p = PSub p $ fromJust $ substn [] [(lO,lvDurRen n lOm)]
+endO2mid n p = Sub  ArbType p $ fromJust $ substn [] [(lO',lvDurRen n lOm)]
+begO2mid n p = Sub  ArbType p $ fromJust $ substn [] [(lO,lvDurRen n lOm)]
 
 -- builder for exists Mm,Sm @ P[...] /\ Q[...]
 eMSpAqm = eMSpAq "m" ; eMSpAqn = eMSpAq "n"
 eMSpAq n
  = eX [gvDurRen n gMm,gvDurRen n gSm] (endMS2mid n p `lAnd` begMS2mid n q)
 endMS2mid n p
-  = PSub p $ fromJust $ substn [] [(lM',lvDurRen n lMm),(lS',lvDurRen n lSm)]
+  = Sub  ArbType p $ fromJust $ substn [] [(lM',lvDurRen n lMm),(lS',lvDurRen n lSm)]
 begMS2mid n p
-  = PSub p $ fromJust $ substn [] [(lM,lvDurRen n lMm),(lS,lvDurRen n lSm)]
+  = Sub  ArbType p $ fromJust $ substn [] [(lM,lvDurRen n lMm),(lS,lvDurRen n lSm)]
 
 -- builder for exists ok,Sm @ P[...] /\ Q[...]
 eoSpAqm = eoSpAq "m" ; eoSpAqn = eoSpAq "n"
 eoSpAq n
  = eX [gvDurRen n gokm,gvDurRen n gSm] (endoS2mid n p `lAnd` begoS2mid n q)
 endoS2mid n p
-  = PSub p $ fromJust $ substn [(ok',evar bool $ vDurRen n okm)] [(lS',lvDurRen n lSm)]
+  = Sub  ArbType p $ fromJust $ substn [(ok',evar bool $ vDurRen n okm)] [(lS',lvDurRen n lSm)]
 begoS2mid n p
-  = PSub p $ fromJust $ substn [(ok,evar bool $ vDurRen n okm)] [(lS,lvDurRen n lSm)]
+  = Sub  ArbType p $ fromJust $ substn [(ok,evar bool $ vDurRen n okm)] [(lS,lvDurRen n lSm)]
 
 evar t v = fromJust $ eVar t v
 \end{code}
@@ -710,16 +710,16 @@ and implication.
 \begin{code}
 asg = assignmentId
 v_asg = assignVar
-v .:= e  = Sub P theAssignment $ jSubstn [(ScriptVar v,e)] []
+v .:= e  = Sub ArbType theAssignment $ jSubstn [(ScriptVar v,e)] []
 asgBinding = fromJust $ bindVarToVar assignVar assignVar emptyBinding
 
 implies = jId "implies"
 v_implies = Vbl implies PredV Static
-p `impl` q  =  PCons True implies [p,q]
+p `impl` q  =  Cons  ArbType True implies [p,q]
 
 eq = jId "="
 v_equal  =  Vbl eq PredV Static
-e1 `equal` e2  =  PCons True eq [e1,e2]
+e1 `equal` e2  =  Cons  ArbType True eq [e1,e2]
 
 iaBinding = fromJust $ bindVarToVar v_implies v_implies andBinding
 eiaBinding = fromJust $ bindVarToVar v_equal v_equal iaBinding
@@ -729,10 +729,10 @@ Now, subtracting from list-variables,
 and defining assigment
 \begin{code}
 v `assigned` e
-  = tok `impl` PCons True land [ tok' , v' `equal` e ,  _S_v'_is_S_v ]
+  = tok `impl` Cons  ArbType True land [ tok' , v' `equal` e ,  _S_v'_is_S_v ]
   where
     v' = fromJust $ eVar ArbType $ PostVar v
-    _S_v'_is_S_v = PIter True land True eq
+    _S_v'_is_S_v = Iter  ArbType True land True eq
                       [lS' `less` ([v],[]), lS `less` ([v],[])]
 \end{code}
 
@@ -786,8 +786,8 @@ test_simple_assignment
 \end{eqnarray*}
 \begin{code}
 vs `simasgn` es
-  = PCons True land [ PIter True land True eq [vs', es]
-               , PIter True land True eq [lS' `less` ([],[vs]), lS `less` ([],[vs])] ]
+  = Cons  ArbType True land [ Iter  ArbType True land True eq [vs', es]
+               , Iter  ArbType True land True eq [lS' `less` ([],[vs]), lS `less` ([],[vs])] ]
   where vs' = PostVars vs
 
 
@@ -806,12 +806,12 @@ us'   = PostVars u          ; gus'  = LstVar us'
 lSus  = lS `less` ([],[u])  ; gSus  = LstVar lSus
 lS'us = lS' `less` ([],[u]) ; gS'us = LstVar lS'us
 
-e1 = EVal int $ Integer 1
-e2 = EVal int $ Integer 2
+e1 = Val int $ Integer 1
+e2 = Val int $ Integer 2
 
 x'1y'2 = ((evar int x' `equal` e1) `lAnd` (evar int y' `equal` e2))
        `lAnd`
-       (PIter True land True eq [lS' `less` ([],[ze]),lS `less` ([],[ze])])
+       (Iter  ArbType True land True eq [lS' `less` ([],[ze]),lS `less` ([],[ze])])
 
 test_simultaneous_assignment
  = testGroup "Simultaneous Assignment"

@@ -35,19 +35,19 @@ tb = jVar earb b
 bu u = Vbl (jIdU "b" u) ObsV Before
 tbu u = jVar earb $ bu u
 
-tP = jVar P $ PredVar (jId "P") Static
-tPu u = jVar P $ PredVar (jIdU "P" u) Static
+tP = jVar ArbType $ PredVar (jId "P") Static
+tPu u = jVar ArbType $ PredVar (jIdU "P" u) Static
 
 e42plus x = Cons eint True (jId "+")[e42,x]
-land p q = Cons P True (jId "/\\") [p,q]
+land p q = Cons ArbType True (jId "/\\") [p,q]
 
 xs = LVbl x [] []
 ys = LVbl y [] []
-iterLVs = Iter P True (jId "/\\") True (jId "=") [xs,ys]
+iterLVs = Iter ArbType True (jId "/\\") True (jId "=") [xs,ys]
 
 tInt = Typ int
 
-subP =  Sub P tP sub42x_ysxs
+subP =  Sub ArbType tP sub42x_ysxs
 
 sub42x_ysxs = jSub [(x,e42)] [(ys,xs)]
 
@@ -85,10 +85,10 @@ tb2 = tbu 2 ; univB2 = univ tb2
 
 univP = univ tP
 
-exbTrue = jBnd P (jId "exists") (sngl $ StdVar b) tb
-exbTrue1 = jBnd P (jId "exists") (sngl $ StdVar (bu 1)) tb1
-exbTrue2 = jBnd P (jId "exists") (sngl $ StdVar (bu 2)) tb1
-subP0b1 = Sub P tP $ jSubstn [(bu 0, tb1)] [(LVbl b [] [], LVbl (bu 1) [] [])]
+exbTrue = jBnd ArbType (jId "exists") (sngl $ StdVar b) tb
+exbTrue1 = jBnd ArbType (jId "exists") (sngl $ StdVar (bu 1)) tb1
+exbTrue2 = jBnd ArbType (jId "exists") (sngl $ StdVar (bu 2)) tb1
+subP0b1 = Sub ArbType tP $ jSubstn [(bu 0, tb1)] [(LVbl b [] [], LVbl (bu 1) [] [])]
 
 tst_normWithQ :: TF.Test
 tst_normWithQ

@@ -35,8 +35,8 @@ v = ObsVar  (jId "v") Before; tv = fromJust $ eVar ArbType v
 v' = ObsVar  (jId "v") Before; tv' = fromJust $ eVar ArbType v'
 e = ExprVar (jId "e") Before; te = fromJust $ eVar ArbType e
 len = ExprVar (jId "len") Static; tlen = fromJust $ eVar ArbType len
-p = PredVar (jId "P") Before; tp = fromJust $ pVar p
-pT = PredVar (jId "T") Static; tT = fromJust $ pVar pT
+p = PredVar (jId "P") Before; tp = jVar ArbType p
+pT = PredVar (jId "T") Static; tT = jVar ArbType pT
 
 iu = jId "lu" ; lu = PreVars  iu ; glu  = LstVar lu
 iv = jId "lv" ; lv = PreVars  iv ; glv  = LstVar lv
@@ -102,9 +102,9 @@ tst_vardata_inserts -- not run as standard regression
 -- -----------------------------------------------------------------------------
 tst_addKnownConst :: TF.Test
 
-k42 = EVal ArbType $ Integer 42
-k99 = EVal ArbType $ Integer 99
-pTrue = PVal $ Boolean True
+k42 = Val ArbType $ Integer 42
+k99 = Val ArbType $ Integer 99
+pTrue = Val ArbType $ Boolean True
 ki = fromJust $ eVar ArbType i
 kj = fromJust $ eVar ArbType j
 kk = fromJust $ eVar ArbType k

@@ -38,7 +38,7 @@ tst_tsMatch, tst_collMatch :: TF.Test
 -- we consider first a known list collection type, "lst"
 lst = jId "lst" ; v_lst = Vbl lst ExprV Static
 lstKnown =  fromJust $ addKnownVar v_lst ArbType $ newVarTable
-list ts = Cons (E ArbType) True lst ts
+list ts = Cons ArbType True lst ts
 
 l_42    = list [k42]
 l_42_58 = list [k42,k58]
@@ -61,7 +61,7 @@ tst_tsMatch =
 -- we now consider matching a generic collection pattern
 
 coll = jId "coll" ; v_coll = Vbl coll ExprV Static
-gcoll ts = Cons (E ArbType) True coll ts
+gcoll ts = Cons ArbType True coll ts
 
 c_42_58 = gcoll [k42,k58]
 
@@ -125,11 +125,11 @@ tst_tvMatch =
         ( (tvMatch [vt] emptyBinding b0 b0 eok oKk oK :: [Binding] )
           @?= bindVarToVar oK ok emptyBinding )
       , testCase "true :: ok, known (Ok)"
-        ( (tvMatch [vt] emptyBinding b0 b0 true okk ok :: [Binding] )
-          @?= bindVarToTerm ok true emptyBinding )
+        ( (tvMatch [vt] emptyBinding b0 b0 pTrue okk ok :: [Binding] )
+          @?= bindVarToTerm ok pTrue emptyBinding )
       , testCase "true :: g1, known (Ok)"
-        ( (tvMatch [vt] emptyBinding b0 b0 true okk ok :: [Binding] )
-          @?= bindVarToTerm ok true emptyBinding )
+        ( (tvMatch [vt] emptyBinding b0 b0 pTrue okk ok :: [Binding] )
+          @?= bindVarToTerm ok pTrue emptyBinding )
       ]
 
 

@@ -78,11 +78,21 @@ where $T$ abbreviates $\fv(T)$:
 \begin{eqnarray*}
    x,\lst v   \disj  T
    && \mbox{disjoint, short for }\{x,\lst v\} \cap \fv(T) = \emptyset
-\\ x,\lst v \supseteq T && \mbox{covering}
-\\ x,\lst v \supseteq_d T && 
-   \mbox{covering dynamics, short for } \{x,\lst v\} \cap \dfv(T) = \emptyset
+\\ x,\lst v \supseteq T 
+   && \mbox{covering, short for }\{x,\lst v\} \supseteq \fv(T)
+\\ x_d,\lst v_d \supseteq_d T 
+   && \mbox{dynamic coverage, short for } \{x_d,\lst v_d\} \supseteq \dfv(T)
 \\ pre      \supseteq T && \mbox{pre-condition, no dashed variables}
 \end{eqnarray*}
+For dynamic coverage, a fuller more rigorous definition is:
+\begin{equation*}
+V \supseteq_d T 
+\quad\defs\quad 
+(\forall g \in V \bullet \isdyn(g))
+\land
+V \supseteq \dfv(T)
+\end{equation*}
+
 In most cases the term $T$ will be very general,
 and will be represented by a variable.
 In some cases, we will use a list-variable to denote a list of terms,
@@ -131,6 +141,7 @@ In some of these cases, we may be able to simplify a side-condition further:
 For list variables, we can add:
 \begin{eqnarray*}
    \lst\ell  \supseteq \lst\ell\less x,\dots  && \true
+\\ \lst\ell  \supseteq_d \lst\ell\less x,\dots  && \isdyn(\lst\ell)
 \end{eqnarray*}
 
 

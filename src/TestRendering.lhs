@@ -533,10 +533,15 @@ trsidecond trid sc@(ascs,fvs)
   | otherwise       =  intcalNN ", " (    map (tratmsidecond trid) ascs
                                       ++ [trfresh trid fvs] )
 
-tratmsidecond trid (Disjoint _ gv vs)  = trovset trid vs
-                                         ++ _notin ++ trgvar trid gv
-tratmsidecond trid (CoveredBy _ gv vs) = trovset trid vs
-                                         ++ _supseteq ++ trgvar trid gv
+tratmsidecond trid (Disjoint _ gv vs)
+  = trovset trid vs ++ _notin ++ trgvar trid gv
+
+tratmsidecond trid (CoveredBy _ gv vs) 
+  = trovset trid vs ++ _supseteq ++ trgvar trid gv
+
+tratmsidecond trid (DynamicCoverage _ gv vs) 
+  = trovset trid vs ++ _supseteq ++ [_subChar 't'] ++ trgvar trid gv
+
 trfresh trid fvs
   | S.null fvs  =  ""
   | otherwise   =  "fresh:" ++ trovset trid fvs

@@ -11,9 +11,9 @@ module SideCond (
 , usame, usamel, usameg
 , setWhen, lsetWhen, gsetWhen
 , AtmSideCond
-, pattern Disjoint, pattern CoveredBy
-, setASCUniformity
+, pattern Disjoint, pattern CoveredBy, pattern DynamicCoverage
 , ascGVar, ascVSet
+, disjfrom, coveredby, dyncovered
 , SideCond, scTrue, isTrivialSC
 , onlyFreshSC, onlyInvolving, onlyFreshOrInvolved
 , scGVars, scVarSet
@@ -148,17 +148,7 @@ For list variables, we can add:
 We also need to take account of known variables of various kinds
 when evaluating and building side-conditions.
 
-\newpage
 \subsection{Side-Condition Temporality}
-
-Finally, we need to consider the use of dynamic normalisation here,
-in which $x' \supseteq t'$ (say)
-actually means
-$
- x \supseteq t \land x' \supseteq t' \land x_n \supseteq t_n
-$, for all subscripts $n$.
-This only makes sense if the side-condition is ``temporally uniform'',
-in that all variables involved have the same temporality.
 
 In UTP,
 we typically use uppercase letters ($P, Q, \dots$) to denote predicates that
@@ -168,6 +158,21 @@ When a predicate is a pre-condition (only using before-variables),
 we usually denote this using lowercase letters ($p, q, \dots$).
 For a post-condition, only using after-variables,
 we denote this using dashed lower-case letters ($p', q', \dots$).
+
+Consider a relation $x_{d_1} \mathcal R t_{d_2}$ between a dynamic variable $x_{d_1}$
+and a dynamic term variable $t_{d_2}$.
+Here $\mathcal R$ can be any of $\disj$, $\supseteq$ or $\supseteq_d$.
+If $d_1 = d_2$ ($d$, say)
+then we can conclude that $x_d \mathcal R t_d$ implies
+\begin{equation*}
+x \mathcal R t 
+\land
+x' \mathcal R t'
+\land
+x_n \mathcal R t_n, \text{ for all subscripts } n
+\end{equation*}
+This means that the side-condition is ``temporally uniform'',
+in that all variables involved have the same temporality.
 
 Any side-condition with a relational predicate variable
 (e.g. $x \disj P$)
@@ -251,36 +256,38 @@ and instead will use $\lst O \supseteq T$ (which is non-uniform!).
 data AtmSideCond
  = SD Uniformity GenVar VarSet -- Disjoint
  | SS Uniformity GenVar VarSet -- Superset (covers), and Pre
+ | ST Uniformity GenVar VarSet -- Dynamic Coverage (covers_d)
  deriving (Eq,Ord,Show,Read)
 \end{code}
 In the \texttt{SD} case, having an empty set reduces to \true,
 while in the \texttt{SS} case,
 an empty set asserts that the term denoted by the general variable is closed.
 \begin{code}
-pattern Disjoint  u gv vs = SD u gv vs  --  gv `intersect` vs = {}
-pattern CoveredBy u gv vs = SS u gv vs  --  gv  `subsetof` vs
+pattern Disjoint  u gv vs = SD u gv vs         -- FV(gv) `intersect` vs = {}
+pattern CoveredBy u gv vs = SS u gv vs         -- FV(gv)  `subsetof` vs
+pattern DynamicCoverage  u gv vs = ST u gv vs  -- DFV(gv) `subsetof` vs
 \end{code}
 
 Selectors:
 \begin{code}
 ascUnfm :: AtmSideCond -> Uniformity
-ascUnfm (Disjoint  u _ _)  =  u
-ascUnfm (CoveredBy u _ _)  =  u
+ascUnfm (SD u _ _)  =  u
+ascUnfm (SS u _ _)  =  u
+ascUnfm (ST u _ _)  =  u
 
 isUniform :: AtmSideCond -> Bool
 isUniform asc  =  ascUnfm asc == Unif
 
 ascGVar :: AtmSideCond -> GenVar
-ascGVar (Disjoint  _ gv _)  =  gv
-ascGVar (CoveredBy _ gv _)  =  gv
+ascGVar (SD _ gv _)  =  gv
+ascGVar (SS _ gv _)  =  gv
+ascGVar (ST _ gv _)  =  gv
 
 ascVSet :: AtmSideCond -> VarSet
-ascVSet (Disjoint  _ _ vs)  =  vs
-ascVSet (CoveredBy _ _ vs)  =  vs
+ascVSet (SD _ _ vs)  =  vs
+ascVSet (SS _ _ vs)  =  vs
+ascVSet (ST _ _ vs)  =  vs
 \end{code}
-This last function is less useful because it loses uniformity information
-needed to interpret dynamic variables property
-(used below and in \texttt{Instantiate.lhs}).
 
 We can determine if the components
 used to make an atomic side-condition are ``uniform''.
@@ -317,21 +324,27 @@ We need to ensure that the \texttt{Uniformity} component
 of an atomic side-condition is set correctly.
 \begin{code}
 setASCUniformity :: AtmSideCond -> AtmSideCond
-setASCUniformity (Disjoint  _ gv vs)
-  | areUniform gv vs  =  Disjoint Unif (dnGVar gv) (S.map dnGVar vs)
-  | otherwise         =  Disjoint NonU         gv                vs
-setASCUniformity (CoveredBy _ gv vs)
-  | areUniform gv vs  =  CoveredBy Unif (dnGVar gv) (S.map dnGVar vs)
-  | otherwise         =  CoveredBy NonU         gv                vs
+setASCUniformity (SD _ gv vs)  =  setWithUniformity SD gv vs
+setASCUniformity (SS _ gv vs)  =  setWithUniformity SS gv vs
+setASCUniformity (ST _ gv vs)  =  setWithUniformity ST gv vs
+
+setWithUniformity :: (Uniformity -> GenVar -> VarSet -> AtmSideCond) 
+                  -> GenVar -> VarSet -> AtmSideCond
+setWithUniformity scRelation gv vs
+  | areUniform gv vs  =  scRelation Unif (dnGVar gv) (S.map dnGVar vs)
+  | otherwise         =  scRelation NonU         gv                vs
 \end{code}
 
 We provide some builders that set uniformity:
 \begin{code}
-disjwith :: GenVar -> VarSet -> AtmSideCond
-gv `disjwith` vs  =  setASCUniformity $ Disjoint NU gv vs
+disjfrom :: GenVar -> VarSet -> AtmSideCond
+gv `disjfrom` vs  =  setWithUniformity Disjoint gv vs
 
 coveredby :: GenVar -> VarSet -> AtmSideCond
-gv `coveredby` vs  =  setASCUniformity $ CoveredBy NU gv vs
+gv `coveredby` vs  =  setWithUniformity CoveredBy gv vs
+
+dyncovered :: GenVar -> VarSet -> AtmSideCond
+gv `dyncovered` vs  =  setWithUniformity CoveredBy gv vs
 \end{code}
 
 It is also possible to simplify some proposed atomic side-conditions
@@ -361,7 +374,8 @@ We need to do this in general
 in the context of what is ``known'' about variables.
 \begin{code}
 mscTrue = Nothing
-ascCheck :: MonadFail m => [Subscript] -> AtmSideCond -> m (Maybe AtmSideCond)
+ascCheck :: MonadFail m => [Subscript] -> AtmSideCond 
+         -> m (Maybe AtmSideCond)
 \end{code}
 Here, $z$ denotes an (standard) observation variable,
 $T$ denotes a standard term variable,
@@ -1000,7 +1014,7 @@ Now, we work through the combinations:
 \begin{code}
 ascDischarge ss (Disjoint u1 _ dG) (Disjoint u2 gv dL)
   | linL `subset` linG  =  return [] -- true
-  | otherwise           =  return [gv `disjwith` (linL `diff` linG)]
+  | otherwise           =  return [gv `disjfrom` (linL `diff` linG)]
   where
     linG = (u1,lineariseVarSet dG)
     linL = (u2,lineariseVarSet dL)
@@ -1128,7 +1142,7 @@ We now consider the following possibilities:
 \begin{code}
 freshAtomDischarge ss gF (Disjoint u gv dL)
   | linL `subset` linF  =  return []
-  | otherwise  =  return [gv `disjwith` (linL `diff` linF)]
+  | otherwise  =  return [gv `disjfrom` (linL `diff` linF)]
   where
     subset = isSCsubset ss
     diff s t  = packUG $ doSCdiff ss s t
@@ -1196,7 +1210,7 @@ Simple side-condition builders.
 $\lst v \disj \fv(T)$
 \begin{code}
 notin :: VarList -> GenVar -> SideCond
-vl `notin` tV  =  ( [ tV `disjwith`(S.fromList vl) ], S.empty )
+vl `notin` tV  =  ( [ tV `disjfrom`(S.fromList vl) ], S.empty )
 \end{code}
 
 $\lst v \supseteq \fv(T)$

@@ -655,7 +655,7 @@ instDisjoint insctxt vsD (fF,vLessBs)
   =  return (asc1s ++ asc2s)
   where
     asc1s = map (mkDisj vsD) $ S.toList fF
-    mkDisj vsD gv = setASCUniformity $ Disjoint NonU gv vsD
+    mkDisj vsD gv = gv `disjfrom` vsD
     asc2s = map (f2 vsD) vLessBs
     f2 vsD (evF,vsB) = mkDisj (vsD S.\\ vsB) evF
 \end{code}
@@ -694,7 +694,7 @@ instCovers u insctxt vsC (fF,vLessBs)
   =  return (asc1s ++ asc2s)
   where
     asc1s = map (mkCovers vsC) (S.toList fF)
-    mkCovers vsC gv = setASCUniformity $ CoveredBy NonU gv vsC
+    mkCovers vsC gv = gv `coveredby` vsC
     asc2s = map (f2 vsC) vLessBs
     f2 vsC (evF,vsB) = mkCovers (vsC `S.union` vsB) evF
 \end{code}

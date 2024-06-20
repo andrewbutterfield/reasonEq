@@ -352,7 +352,7 @@ cjCondAlt2 = preddef ("cond" -.- "alt" -.- "def2")
 
 \subsection{Defn. of Sequential Composition}
 
-We need to know when a predicate is a UTP predicate ($O \cup O'\supseteq_d P$).
+We need to know when a predicate is a UTP predicate ($O \cup O'\supseteq_a P$).
 \begin{code}
 assertIsUTP  :: GenVar -> SideCond
 assertIsUTP  gP  = [gO,gO'] `dyncover` gP
@@ -373,7 +373,7 @@ From \cite[Defn 2.2.1,p49]{UTP-book}
 $$
   \begin{array}{lll}
      P \seq Q \defs \exists O_0 \bullet P[O_0/O'] \land Q[O_0/O]
-     & O,O'\supseteq_d P,Q ~~ O_0 \textrm{ fresh}
+     & O,O'\supseteq_a P,Q ~~ O_0 \textrm{ fresh}
      & \QNAME{$;$-def}
   \end{array}
 $$\par\vspace{-8pt}

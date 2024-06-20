@@ -20,7 +20,7 @@ module SideCond (
 , mrgAtmCond, mrgSideCond, mrgSideConds, mkSideCond
 , scDischarge
 , isFloatingASC
-, notin, covers, fresh
+, notin, covers, dyncover, fresh
 , findGenVar, findAllGenVar, findCoveredGenVar
 -- , citingASCs   -- not used anywhere!
 , (.:), mrgscs
@@ -577,8 +577,8 @@ is kept ordered by the \texttt{GenVar} component,
 If there is more than one ASC with the same general variable,
 then they are ordered as follows:
 \texttt{Disjoint},
-then
-\texttt{CoveredBy}.
+\texttt{CoveredBy},
+\texttt{DynamicCoverage}.
 We can only have at most one of each.
 
 The function \texttt{mrgAtmCond} below is the ``approved'' way
@@ -625,17 +625,21 @@ mrgAtmAtms ss asc [] = return [asc] -- it's the first.
 Given one or more pre-existing ASCs for this g.v., we note the following possible
 patterns:
 \begin{verbatim}
-[Disjoint]  [Disjoint,CoveredBy] [CoveredBy]
+[Disjoint] [CoveredBy] [DynamicCoverage]
+[Disjoint,CoveredBy] [Disjoint,DynamicCoverage] [CoveredBy,DynamicCoverage]
+[Disjoint,CoveredBy,DynamicCoverage]
 \end{verbatim}
 If the general variable is required to be fresh,
-then this is inconsistent with \texttt{CoveredBy}.
+then this is inconsistent with \texttt{CoveredBy}
+and \texttt{DynamicCoverage}.
 
 \subsection{ASC Merge Laws}
 
 We have the following interactions,
 where $D$ and $C$ are the variable-sets found
 in \texttt{Disjoint} and \texttt{CoveredBy} respectively.
-So the semantics of the disjoint ($D$) and covering ($C$) variable-sets,
+So the semantics of the disjoint ($D$), covering ($C$),
+and dynamic covering ($C_d$) variable-sets,
 parameterised by a general variable $G$,
 are:
 \begin{eqnarray*}
@@ -643,15 +647,30 @@ are:
 \\ \sem{D}_G &=& \fv.G \cap D = \emptyset
 \\ \sem{C}_G &=& \fv.G \subseteq C
 \\         &=& \fv.G = \emptyset, \quad \IF \quad C = \emptyset
+\\ \sem{C_d}_G &=& \dfv.G \subseteq C \land \forall_{\isdyn}(C)
+\\             &=& \dfv.G = \emptyset, \quad \IF \quad C = \emptyset
 \end{eqnarray*}
-We get the following laws:
+We get the following (fairly obvious) laws:
 \begin{eqnarray*}
    \sem{D_1}_G \land \sem{D_2}_G &=&  \sem{D_1 \cup D_2}_G
 \\ \sem{C_1}_G \land \sem{C_2}_G &=&  \sem{C_1 \cap C_2}_G
+\\ \sem{C1_d}_G \land \sem{C2_d}_G &=&  \sem{(C1 \cap C2)_d}_G
 \\ \sem{D}_G \land \sem{C}_G
    &=&  \sem{D}_G \land \sem{C \setminus D}_G
 \\ &=& \fv.G = \emptyset, \quad \IF \quad C\setminus D = \emptyset
+\\ \sem{D}_G \land \sem{C_d}_G
+   &=&  \sem{D}_G \land \sem{(C \setminus D)_d}_G
+\\ &=& \fv.G = \emptyset, \quad \IF \quad C\setminus D = \emptyset
 \end{eqnarray*}
+Combining the two coverage conditions goes as follows:
+\begin{eqnarray*}
+\lefteqn{\sem{C1}_G \land \sem{C2_d}_G}
+\\ &=& \fv.G \subseteq C1
+       \land
+       \dfv.G \subseteq C2 \land \forall_{\isdyn}(C2)
+\end{eqnarray*}
+There is no simple simplication of this.
+
 We note that an apparent contradiction between $D$ and $C$ (when $D \supseteq C$)
 becomes an assertion that $G$ is closed.
 For any given general variable $G$,
@@ -660,7 +679,7 @@ these laws ensure that we can arrange matters so that $D$ and $C$ are disjoint.
 All the set operations used above preserve uniformity if both set arguments
 are uniform.
 
-It is worth noting Side conditions currently in use:
+It is worth noting side conditions currently in use:
 \begin{description}
   \item[Forall/Exists] (all non-uniform)\\
      $\lst x \disj P \qquad \lst x \disj e \qquad \lst y \disj P$
@@ -668,11 +687,11 @@ It is worth noting Side conditions currently in use:
     $\lst x \supseteq P \qquad \emptyset \supseteq P$
   \item[UTPBase]~\\
     $
-      \lst O,\lst O' \supseteq P
+      \lst O,\lst O' \supseteq_d P
       \quad
-      \lst O,\lst O' \supseteq Q
+      \lst O,\lst O' \supseteq_d Q
       \quad
-      \lst O,\lst O' \supseteq R
+      \lst O,\lst O' \supseteq_d R
     $ \qquad (non-uniform)\\
     $
       \lst O \supseteq b
@@ -687,27 +706,9 @@ It is worth noting Side conditions currently in use:
       O_0 \textrm{ fresh}
      $
 \end{description}
-Summary: All uses of disjointness are non-uniform.
+Summary: All uses of disjointness and dynamic-coverage are non-uniform.
 All uniform specifications are coverings for expressions and variables.
 Not seeing any mixing of these (yet!)
-
-The key principles to combining conditions of possibly different uniformity are:
-\begin{itemize}
-  \item Let $S$ denote all the explicit subscripts in the non-uniform sides.
-  \item Lift any uniform side with $x$ mapping to $x,x',x_i$ for all $ i \in S$.
-  \item Perform the relevant set operation.
-  \item If the result looks like a image of a lifting:
-    then un-lift and mark as uniform;
-  \item
-    Otherwise:
-     mark as non-uniform,
-     \emph{
-       but this requires us to replace a single uniform condition
-       by several, one for each temporality,
-       and hence each with a \textbf{different} general variable.
-       This is not a good fit with the code architecture in use here.
-     }
-\end{itemize}
 
 For now, we only handle simple cases,
 those where both components have the same uniformity.
@@ -1257,6 +1258,12 @@ $\lst v \supseteq \fv(T)$
 \begin{code}
 covers :: VarList -> GenVar -> SideCond
 vl `covers` tV  =  ( [ tV `coveredby` (S.fromList vl) ], S.empty )
+\end{code}
+
+$\lst v \supseteq_d \fv(T)$
+\begin{code}
+dyncvr :: VarList -> GenVar -> SideCond
+vl `dyncover` tV  =  ( [ tV `dyncovered` (S.fromList vl) ], S.empty )
 \end{code}
 
 $u,v,\dots \textbf{fresh.}$

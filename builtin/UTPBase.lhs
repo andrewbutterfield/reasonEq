@@ -352,18 +352,17 @@ cjCondAlt2 = preddef ("cond" -.- "alt" -.- "def2")
 
 \subsection{Defn. of Sequential Composition}
 
-We need to know when a predicate is a UTP predicate ($O \cup O'\supseteq P$).
-We will do this by defining a \emph{uniform} side-condition ($O \supseteq p$).
+We need to know when a predicate is a UTP predicate ($O \cup O'\supseteq_d P$).
 \begin{code}
 assertIsUTP  :: GenVar -> SideCond
-assertIsUTP  gP  = [gO,gO'] `covers` gP
+assertIsUTP  gP  = [gO,gO'] `dyncover` gP
 assertAreUTP :: [GenVar] -> SideCond
 assertAreUTP gPs = mrgscs $ map assertIsUTP gPs
 \end{code}
 We also want to be able to specify a UTP condition ($O \subseteq c$):
 \begin{code}
 assertIsUTPCond  :: GenVar -> SideCond
-assertIsUTPCond  gP  = [gO] `covers` gP
+assertIsUTPCond  gP  = [gO] `dyncover` gP
 assertAreUTPCond :: [GenVar] -> SideCond
 assertAreUTPCond gPs = mrgscs $ map assertIsUTPCond gPs
 \end{code}
@@ -374,7 +373,7 @@ From \cite[Defn 2.2.1,p49]{UTP-book}
 $$
   \begin{array}{lll}
      P \seq Q \defs \exists O_0 \bullet P[O_0/O'] \land Q[O_0/O]
-     & O,O'\supseteq P,Q ~~ O_0 \textrm{ fresh}
+     & O,O'\supseteq_d P,Q ~~ O_0 \textrm{ fresh}
      & \QNAME{$;$-def}
   \end{array}
 $$\par\vspace{-8pt}

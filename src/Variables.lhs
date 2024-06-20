@@ -15,7 +15,7 @@ module Variables
  , isDynamic, isDuring, theSubscript
  , Variable
  , pattern Vbl
- , varClass, varWhen
+ , varClass, varWhen, isDynVar
  , pattern ObsVar, pattern ExprVar, pattern PredVar
  , pattern StaticVar, pattern PreVar, pattern MidVar, pattern PostVar
  , pattern ScriptVar
@@ -25,7 +25,7 @@ module Variables
  , whatVar, timeVar
  , ListVar
  , pattern LVbl
- , lvarClass, lvarWhen
+ , lvarClass, lvarWhen, isDynLVar
  , pattern ObsLVar, pattern VarLVar, pattern ExprLVar, pattern PredLVar
  , pattern StaticVars, pattern PreVars, pattern PostVars, pattern MidVars
  , pattern ScriptVars
@@ -36,7 +36,7 @@ module Variables
  , GenVar, pattern StdVar, pattern LstVar
  , isStdV, isLstV, theStdVar, theLstVar
  , getIdClass, sameIdClass
- , gvarClass, gvarWhen
+ , gvarClass, gvarWhen, isDynGVar
  , isPreGenVar, isObsGVar, isExprGVar, isPredGVar
  , whatGVar, timeGVar
  , setVarWhen, setLVarWhen, setGVarWhen
@@ -234,11 +234,11 @@ newtype Variable  = VR (Identifier, VarClass, VarWhen)
 pattern Vbl idnt cls whn = VR (idnt, cls, whn)
 varClass (Vbl _ vc _)  =  vc
 varWhen  (Vbl _ _ vw)  =  vw
+isDynVar = isDynamic . varWhen
 
 pattern ObsVar  i vw = VR (i, VO, vw)
 pattern ExprVar i vw = VR (i, VE, vw)
 pattern PredVar i vw = VR (i, VP, vw)
-
 \end{code}
 
 We also have some pre-wrapped patterns for common cases:
@@ -295,6 +295,7 @@ newtype ListVar = LV (Variable, [Identifier], [Identifier])
 pattern LVbl v is js = LV (v,is,js)
 lvarClass (LVbl v _ _)  =  varClass v
 lvarWhen  (LVbl v _ _)  =  varWhen  v
+isDynLVar = isDynamic . lvarWhen
 
 pattern ObsLVar  k i is js = LV (VR (i,VO,k), is,js)
 pattern VarLVar    i is js = LV (VR (i,VO,WT),is,js)
@@ -369,6 +370,7 @@ gvarClass (StdVar v)   =  varClass  v
 gvarClass (LstVar lv)  =  lvarClass lv
 gvarWhen  (StdVar v)   =  varWhen  v
 gvarWhen  (LstVar lv)  =  lvarWhen lv
+isDynGVar = isDynamic . gvarWhen
 \end{code}
 
 Some useful predicates/functions:

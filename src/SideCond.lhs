@@ -364,7 +364,6 @@ isTempDisjointASC gv vs
     tempdisjoint  =  not (gvWhen `S.member` vsWhens)
 \end{code}
 
-\newpage
 Here we provide a monadic function that fails if the condition
 is demonstrably false,
 and otherwise returns a \texttt{Maybe} type,
@@ -416,7 +415,7 @@ ascCheck ss asc@(Disjoint _ gv vs)
    \emptyset             \supseteq z           && \false
 \\ \dots,g,\dots{}       \supseteq g           && \true
 \\ \{stdObs\}\setminus z \supseteq z           && \false
-\\ \ell\setminus Z \supseteq \ell\setminus (Z\cup W) 
+\\ \lst\ell\setminus Z \supseteq \lst\ell\setminus (Z\cup W) 
      && \true
 \\ V,g\textrm{ are temporally disjoint}        && \false
 \end{eqnarray*}
@@ -428,13 +427,54 @@ Similarly, $T \supseteq z$ could also be true.
 ascCheck ss asc@(CoveredBy _ gv vs)
   -- | gv `S.member` vs  =  return mscTrue -- subsumed by next line
   | any (gvCovBy gv) vs  =  return mscTrue
-  | isdisj               =  report "non-U atomic covers is False (disjoint)"
+  | isTmpDisj            =  report "non-U atomic cover False (disjoint)"
   | not $ isObsGVar gv   =  return $ Just $ setASCUniformity asc
   -- gv is an observation variable not in vs below here....
-  | S.null vs            =  report "atomic covers is False (null)"
-  | all isStdV vs        =  report "atomic covers is False (all std)"
+  | S.null vs            =  report "atomic cover False (null)"
+  | all isStdV vs        =  report "atomic cover False (all std)"
   where 
-    isdisj = isTempDisjointASC gv vs
+    isTmpDisj = isTempDisjointASC gv vs
+    showsv = "gv = "++show gv
+    showvs = "vs = "++show vs
+    report msg = fail $ unlines' [msg,showsv,showvs]
+\end{code}
+
+\newpage
+\subsubsection{Checking DynamicCoverage $V \supseteq_d g$}
+
+We first check that $V$ is only dynamic:
+\begin{eqnarray*}
+   \exists v \in V \bullet \lnot\isdyn(v) && \false
+\end{eqnarray*}
+Assuming $\forall v \in V \bullet \isdyn(v)$ we then proceed:
+\begin{eqnarray*}
+   \emptyset             \supseteq_d z   &&  \lnot\isdyn(z)
+\\ \lst\ell\setminus Z \supseteq_d \lst\ell\setminus (Z\cup W) 
+                                         &&  \true
+\\ \dots,g,\dots{}       \supseteq_d g   &&  \true
+\\ \{stdObs\}\setminus z \supseteq_d z   &&  \false
+\\ V,g\textrm{ are temporally disjoint}  &&  \false
+\end{eqnarray*}
+
+Here, as $T$ could be empty,
+we cannot deduce that $\emptyset \supseteq T$ is false.
+Similarly, $T \supseteq z$ could also be true.
+\begin{code}
+ascCheck ss asc@(CoveredBy _ gv vs)
+  | hasStatic            =  report "atomic dyncover False (static)"
+  -- | gv `S.member` vs  =  return mscTrue -- subsumed by next line
+  | any (gvCovBy gv) vs  =  return mscTrue
+  | isTmpDisj            =  report "non-U dyncover False (disjoint)"
+  | not $ isObsGVar gv   =  return $ Just $ setASCUniformity asc
+  -- gv is an observation variable not in vs below here....
+  | S.null vs 
+      =  if isDynGVar gv
+         then report "atomic dyncover False (null)"
+         else return $ Just $ setASCUniformity asc
+  | all isStdV vs        =  report "atomic dyncover False (all std)"
+  where 
+    hasStatic = any (not . isDynGVar) vs
+    isTmpDisj = isTempDisjointASC gv vs
     showsv = "gv = "++show gv
     showvs = "vs = "++show vs
     report msg = fail $ unlines' [msg,showsv,showvs]

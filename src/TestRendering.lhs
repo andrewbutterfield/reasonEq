@@ -540,7 +540,7 @@ tratmsidecond trid (CoveredBy _ gv vs)
   = trovset trid vs ++ _supseteq ++ trgvar trid gv
 
 tratmsidecond trid (DynamicCoverage _ gv vs) 
-  = trovset trid vs ++ _supseteq ++ [_subChar 't'] ++ trgvar trid gv
+  = trovset trid vs ++ _supseteq ++ _subStr "a" ++ trgvar trid gv
 
 trfresh trid fvs
   | S.null fvs  =  ""

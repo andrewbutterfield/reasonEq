@@ -539,7 +539,7 @@ Now consider another example (UTCP theory):
    $E_i, R_i, N_i$.
 \item[Known Vars] $O = \setof{s,ls}$.
 \item[Law] $P;Q = \exists O_0 \bullet P[O_0/O'] \land Q[O_0/O], 
-\qquad O,O' \supseteq_d P; O,O' \supseteq_d Q; \fresh O_0$
+\qquad O,O' \supseteq_a P; O,O' \supseteq_a Q; \fresh O_0$
 \item[Goal] $(E_1 \subseteq ls \land a \land ls'=(ls\setminus R_1)\cup N_1)
              ;
              (E_1 \subseteq ls \land a \land ls'=(ls\setminus R_1)\cup N_1) 
@@ -591,11 +591,11 @@ We start by processing the match predicate:
 \end{eqnarray*}
 Now, the law side-condition:
 \begin{eqnarray*}
-\lefteqn{\beta(O,O' \supseteq_d P \land  O,O' \supseteq_d Q \land \fresh O_0)}
-\\ &=& \beta(O,O' \supseteq_d P) \land  
-       \beta(O,O' \supseteq_d Q) \land \beta(\fresh O_0)
-\\ &=& O,O' \supseteq_d \beta(P) \land  
-       O,O' \supseteq_d \beta(Q) \land \fresh O_0
+\lefteqn{\beta(O,O' \supseteq_a P \land  O,O' \supseteq_a Q \land \fresh O_0)}
+\\ &=& \beta(O,O' \supseteq_a P) \land  
+       \beta(O,O' \supseteq_a Q) \land \beta(\fresh O_0)
+\\ &=& O,O' \supseteq_a \beta(P) \land  
+       O,O' \supseteq_a \beta(Q) \land \fresh O_0
 \\ &=& O,O' \supseteq 
            \dfv(E_1 \subseteq ls \land a \land ls'=(ls\setminus R_1)\cup N_1)) 
            \land  {} 
@@ -674,10 +674,10 @@ $F \disj F_i$, $F \disj B_i$:
 \\ &=& \beta.C \supseteq F \land \{(\beta.C \cup B_i) \supseteq e_i\}
 \end{eqnarray*}
 We next observe that if $C \supseteq T$ is uniform,
-then it is interpreted as $C \supseteq_d T$.
+then it is interpreted as $C \supseteq_a T$.
 We assume here that $S$ is all non-dynamic variables.
 \begin{eqnarray*}
-   \beta.(C \supseteq_d T)
+   \beta.(C \supseteq_a T)
    &=& \beta.C \supseteq \dfv(\beta(T))
 \\ &=& \beta.C \supseteq (\fv(\beta(T)) \setminus S)
 \\ &=& \beta.C \supseteq (F \cup \{e_i\setminus B_i\}) \setminus S

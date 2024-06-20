@@ -80,18 +80,21 @@ where $T$ abbreviates $\fv(T)$:
    && \mbox{disjoint, short for }\{x,\lst v\} \cap \fv(T) = \emptyset
 \\ x,\lst v \supseteq T 
    && \mbox{covering, short for }\{x,\lst v\} \supseteq \fv(T)
-\\ x_d,\lst v_d \supseteq_d T 
+\\ x_d,\lst v_d \supseteq_a T 
    && \mbox{dynamic coverage, short for } \{x_d,\lst v_d\} \supseteq \dfv(T)
 \\ pre      \supseteq T && \mbox{pre-condition, no dashed variables}
 \end{eqnarray*}
+The dynamic variables here correspond to what UTP calls the ``alphabet''
+of a predicate, hence the use of subscript `a'.`
 For dynamic coverage, a fuller more rigorous definition is:
 \begin{equation*}
-V \supseteq_d T 
+V \supseteq_a T 
 \quad\defs\quad 
 (\forall g \in V \bullet \isdyn(g))
 \land
 V \supseteq \dfv(T)
 \end{equation*}
+We use the suffix 
 
 In most cases the term $T$ will be very general,
 and will be represented by a variable.
@@ -135,13 +138,13 @@ In some of these cases, we may be able to simplify a side-condition further:
    \dots,z,\dots   \disj  z  && \false
 \\ \dots,z,\dots{} \supseteq z  && \true
 \\ \emptyset \supseteq z   && \false
-\\ \emptyset \supseteq_d z && \lnot\isdyn(z)
+\\ \emptyset \supseteq_a z && \lnot\isdyn(z)
 \\ pre       \supseteq z   && z \textrm{ is a \texttt{Before} variable}
 \end{eqnarray*}
 For list variables, we can add:
 \begin{eqnarray*}
    \lst\ell  \supseteq \lst\ell\less x,\dots  && \true
-\\ \lst\ell  \supseteq_d \lst\ell\less x,\dots  && \isdyn(\lst\ell)
+\\ \lst\ell  \supseteq_a \lst\ell\less x,\dots  && \isdyn(\lst\ell)
 \end{eqnarray*}
 
 
@@ -161,7 +164,7 @@ we denote this using dashed lower-case letters ($p', q', \dots$).
 
 Consider a relation $x_{d_1} \mathcal R t_{d_2}$ between a dynamic variable $x_{d_1}$
 and a dynamic term variable $t_{d_2}$.
-Here $\mathcal R$ can be any of $\disj$, $\supseteq$ or $\supseteq_d$.
+Here $\mathcal R$ can be any of $\disj$, $\supseteq$ or $\supseteq_a$.
 If $d_1 = d_2$ ($d$, say)
 then we can conclude that $x_d \mathcal R t_d$ implies
 \begin{equation*}
@@ -344,7 +347,7 @@ coveredby :: GenVar -> VarSet -> AtmSideCond
 gv `coveredby` vs  =  setWithUniformity CoveredBy gv vs
 
 dyncovered :: GenVar -> VarSet -> AtmSideCond
-gv `dyncovered` vs  =  setWithUniformity CoveredBy gv vs
+gv `dyncovered` vs  =  setWithUniformity DynamicCoverage gv vs
 \end{code}
 
 It is also possible to simplify some proposed atomic side-conditions
@@ -440,7 +443,7 @@ ascCheck ss asc@(CoveredBy _ gv vs)
 \end{code}
 
 \newpage
-\subsubsection{Checking DynamicCoverage $V \supseteq_d g$}
+\subsubsection{Checking DynamicCoverage $V \supseteq_a g$}
 
 We first check that $V$ is only dynamic:
 \begin{eqnarray*}
@@ -448,11 +451,11 @@ We first check that $V$ is only dynamic:
 \end{eqnarray*}
 Assuming $\forall v \in V \bullet \isdyn(v)$ we then proceed:
 \begin{eqnarray*}
-   \emptyset             \supseteq_d z   &&  \lnot\isdyn(z)
-\\ \lst\ell\setminus Z \supseteq_d \lst\ell\setminus (Z\cup W) 
+   \emptyset             \supseteq_a z   &&  \lnot\isdyn(z)
+\\ \lst\ell\setminus Z \supseteq_a \lst\ell\setminus (Z\cup W) 
                                          &&  \true
-\\ \dots,g,\dots{}       \supseteq_d g   &&  \true
-\\ \{stdObs\}\setminus z \supseteq_d z   &&  \false
+\\ \dots,g,\dots{}       \supseteq_a g   &&  \true
+\\ \{stdObs\}\setminus z \supseteq_a z   &&  \false
 \\ V,g\textrm{ are temporally disjoint}  &&  \false
 \end{eqnarray*}
 
@@ -687,11 +690,11 @@ It is worth noting side conditions currently in use:
     $\lst x \supseteq P \qquad \emptyset \supseteq P$
   \item[UTPBase]~\\
     $
-      \lst O,\lst O' \supseteq_d P
+      \lst O,\lst O' \supseteq_a P
       \quad
-      \lst O,\lst O' \supseteq_d Q
+      \lst O,\lst O' \supseteq_a Q
       \quad
-      \lst O,\lst O' \supseteq_d R
+      \lst O,\lst O' \supseteq_a R
     $ \qquad (non-uniform)\\
     $
       \lst O \supseteq b
@@ -1260,9 +1263,9 @@ covers :: VarList -> GenVar -> SideCond
 vl `covers` tV  =  ( [ tV `coveredby` (S.fromList vl) ], S.empty )
 \end{code}
 
-$\lst v \supseteq_d \fv(T)$
+$\lst v \supseteq_a \fv(T)$
 \begin{code}
-dyncvr :: VarList -> GenVar -> SideCond
+dyncover :: VarList -> GenVar -> SideCond
 vl `dyncover` tV  =  ( [ tV `dyncovered` (S.fromList vl) ], S.empty )
 \end{code}
 

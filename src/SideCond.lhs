@@ -673,6 +673,13 @@ Combining the two coverage conditions goes as follows:
        \dfv.G \subseteq C2 \land \forall_{\isdyn}(C2)
 \end{eqnarray*}
 There is no simple simplication of this.
+So we have the following 3-way rule:
+\begin{eqnarray*}
+   \sem{D}_G \land \sem{C1}_G \land \sem{C2_d}_G
+   &=&  \sem{D}_G \land 
+        \sem{C1 \setminus D}_G \land \sem{(C2 \setminus D)_d}_G
+\\ &=& \fv.G = \emptyset, \quad\IF\quad (C1 \cup C2) \setminus D = \emptyset
+\end{eqnarray*}
 
 We note that an apparent contradiction between $D$ and $C$ (when $D \supseteq C$)
 becomes an assertion that $G$ is closed.

@@ -689,6 +689,23 @@ these laws ensure that we can arrange matters so that $D$ and $C$ are disjoint.
 All the set operations used above preserve uniformity if both set arguments
 are uniform.
 
+It is instructive to ask when each of the three conditions 
+is (trivially?) $\true$:
+\begin{eqnarray*}
+   \sem{\emptyset}_G &=& \fv.G \cap \emptyset = \true
+\\ \sem{U}_G &=& \fv.G \subseteq U = \true
+\\ \sem{U_d}_G &=& \dfv.G \subseteq U_d \land \forall_{\isdyn}(U_d) = \true
+\end{eqnarray*}
+Here $U$ ($U_d$) is the set of all variables (all dynamic variables) in play.
+This allows us to represent all atomic side-conditions regarding general variable $G$ as:
+\begin{equation*}
+\sem{D}_G \land \sem{C}_G \land \sem{C_d}_G
+\quad\text{or}\quad
+(G,D,C,C_d)
+\end{equation*}
+
+
+
 It is worth noting side conditions currently in use:
 \begin{description}
   \item[Forall/Exists] (all non-uniform)\\

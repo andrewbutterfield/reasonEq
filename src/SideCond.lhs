@@ -14,7 +14,7 @@ module SideCond (
 , onlyFreshSC -- , onlyInvolving, onlyFreshOrInvolved
 -- , scGVars
 , scVarSet
-, mrgAtmCond, mrgSideCond, mrgSideConds, mkSideCond
+, mrgTVarConds, mrgSideCond, mrgSideConds, mkSideCond
 , scDischarge
 , isFloatingASC
 , notin, covers, dyncover, fresh
@@ -363,7 +363,6 @@ a list of term-variable side-conditions,
 interpreted as their conjunction,
 along with a set defining fresh variables.
 \begin{code}
--- type SideCond = ( [TVarSideConds]  -- all must be true
 type SideCond = ( [TVarSideConds]  -- all must be true
                 , VarSet )       -- must be fresh
 \end{code}
@@ -395,68 +394,66 @@ scVarSet (tvscs,fvs) = (S.unions $ map tvscVSet tvscs) `S.union` fvs
 
 \section{Merging Side-Conditions}
 
-The list of ASCs
+The list of TVSCs
 is kept ordered by the \texttt{GenVar} component,
-If there is more than one ASC with the same general variable,
-then they are ordered as follows:
-\texttt{Disjoint},
-\texttt{CoveredBy},
-\texttt{DynamicCoverage}.
-We can only have at most one of each.
+and any given such variable occurs at most once.
 
-The function \texttt{mrgAtmCond} below is the ``approved'' way
+
+The function \texttt{mrgTVarConds} below is the ``approved'' way
 to generate side-conditions,
 by merging them in, one at a time,
 into a pre-existing list ordered and structured as described above.
 
 \begin{code}
-mrgAtmCond :: MonadFail m => [Subscript]
+mrgTVarConds :: MonadFail m => [Subscript]
            -> TVarSideConds -> [TVarSideConds] -> m [TVarSideConds]
 \end{code}
 
-1st ASC is easy:
+1st TVSC is easy:
 \begin{code}
-mrgAtmCond ss asc []
-  = do masc <- tvscCheck ss asc
+mrgTVarConds ss tvsc []
+  = do masc <- tvscCheck ss tvsc
        case masc of
-         Nothing ->  return [] -- asc is in fact true
-         Just asc' -> return [asc']
+         Nothing ->  return [] -- tvsc is in fact true
+         Just tvsc' -> return [tvsc']
 \end{code}
 
-Subsequent ones mean searching to see if there are already ASCs with the
+Subsequent ones mean searching to see if there are already TVSCs with the
 same general-variable:
 \begin{code}
-mrgAtmCond ss asc ascs
-  = do masc <- tvscCheck ss asc
-       case masc of
-         Nothing ->  return ascs
-         Just asc' -> splice (mrgAtmAtms ss asc) $ brkspnBy (compareGV asc) ascs
-
-compareGV asc1 asc2  =  termVar asc1 `compare` termVar asc2
-sameGV asc1 asc2     =  asc1 `compareGV` asc2 == EQ
+mrgTVarConds ss tvsc (tvsc1:tvscs)
+  | termVar tvsc == termVar tvsc1
+    = do  masc <- tvscCheck ss tvsc
+          case masc of
+            Nothing
+              ->  return tvscs
+            Just tvsc'
+              ->  do tvsc'' <- mrgTVarTVar ss tvsc' tvsc1
+                     return (tvsc'':tvscs)
+  | otherwise = tvsc' : mrgTVarConds ss tvsc tvscs
 \end{code}
 
-\subsection{Merging one ASC with relevant others}
+\subsection{Merging one TVSC with relevant others}
 
-Now, merging an ASC in with other ASCs referring to the same general variable:
+Now, merging an TVSC in with other TVSCs referring to the same general variable:
 \begin{code}
-mrgAtmAtms :: MonadFail m => [Subscript]
-           -> TVarSideConds -> [TVarSideConds] -> m [TVarSideConds]
-mrgAtmAtms ss asc [] = return [asc] -- it's the first.
+mrgTVarTVar :: MonadFail m => [Subscript]
+           -> TVarSideConds -> TVarSideConds -> m TVarSideConds
+mrgTVarTVar ss (TVSC gv vsD1 mvsC1 mvsCd1) (TVSC _ vsD2 mvsC2 mvsCd2) 
+  = let 
+      vsD'   =  vsD1    `S.union`   vsD2
+      mvsC'  =  mvsC1  `mintersect` mvsC2
+      mvsCd' =  mvsCd1 `mintersect` mvsCd2
+    in tvscCheck ss gv vsD' mvsC' mvsCd'
+
+-- Nothing here denotes the relevant universal set - unit for intersection
+Nothing  `mintersect` mvs       =  mvs
+mvs      `mintersect` Nothing   =  mvs
+Just vs1 `mintersect` Just vs2  =  vs1 `S.intersection` vs2
 \end{code}
 
-Given one or more pre-existing ASCs for this g.v., we note the following possible
-patterns:
-\begin{verbatim}
-[Disjoint] [CoveredBy] [DynamicCoverage]
-[Disjoint,CoveredBy] [Disjoint,DynamicCoverage] [CoveredBy,DynamicCoverage]
-[Disjoint,CoveredBy,DynamicCoverage]
-\end{verbatim}
-If the general variable is required to be fresh,
-then this is inconsistent with \texttt{CoveredBy}
-and \texttt{DynamicCoverage}.
 
-\subsection{ASC Merge Laws}
+\subsection{TVSC Merge Laws}
 
 We have the following interactions,
 where $D$ and $C$ are the variable-sets found
@@ -551,63 +548,16 @@ It is worth noting side conditions currently in use:
 \end{description}
 
 
-\subsection{Merging \texttt{Disjoint} into ASC}
+
+\subsection{Merging Term-Var Side-Condition Lists}
 
 \begin{code}
-mrgAtmAtms ss (Disjoint u1 gv d0) [Disjoint u2 _ d1]
-  | u1 == u2  =  return [Disjoint u1  gv (d0 `S.union` d1)]
-
-mrgAtmAtms ss (Disjoint u1 gv d) [CoveredBy u2  _ c]
-  | u1 == u2
-    = if c `S.isSubsetOf` d
-      then  return [CoveredBy u2 gv S.empty]
-      else  return [Disjoint u1 gv d,CoveredBy u2 gv (c S.\\ d)]
-
-mrgAtmAtms ss (Disjoint u1 gv d0) [Disjoint u2 _ d1,CoveredBy u3 _ c]
-  | u1 == u2 && u1 == u3
-    = if c `S.isSubsetOf` d'
-      then  return [CoveredBy u3 gv S.empty]
-      else  return [Disjoint u1 gv d',CoveredBy u3 gv (c S.\\ d')]
-  where d' = d0 `S.union` d1
-\end{code}
-
-
-\subsection{Merging \texttt{CoveredBy} into ASC}
-\begin{code}
-mrgAtmAtms ss cov@(CoveredBy _ _ _) [dsj@(Disjoint _ _ _)]
-                                                     =  mrgAtmAtms ss dsj [cov]
-
-mrgAtmAtms ss (CoveredBy u1 gv c0) [CoveredBy u2 _ c1]
-  | u1 == u2  = return [CoveredBy u1 gv (c0 `S.intersection` c1)]
-
-mrgAtmAtms ss (CoveredBy u1 gv c0) [Disjoint u2 _ d,CoveredBy u3 _ c1]
-  | u1 == u2 && u1 == u3
-    = if c' `S.isSubsetOf` d
-      then  return [CoveredBy u1 gv S.empty]
-      else  return [Disjoint u2 gv d,CoveredBy u3 gv (c' S.\\ d)]
-  where c' = c0 `S.union` c1
-\end{code}
-
-\subsection{Failure Case}
-If none of the above arise, then we will need to consider how to
-extend the above code to handle more cases.
-\begin{code}
-mrgAtmAtms ss atm atms
-  = fail $ unlines' [ "Incompleteness in mrgAtmAtms:"
-                    , "atm is   "++ show atm
-                    , "atms are "++ show atms
-                    , "ss is   "++ show ss ]
-\end{code}
-
-\subsection{Merging Atomic Lists}
-
-\begin{code}
-mrgAtmCondLists :: MonadFail m => [Subscript]
+mrgTVarCondLists :: MonadFail m => [Subscript]
                 -> [TVarSideConds] -> [TVarSideConds] -> m [TVarSideConds]
-mrgAtmCondLists ss ascs1 [] = return ascs1
-mrgAtmCondLists ss ascs1 (asc:ascs2)
-     = do ascs1' <- mrgAtmCond ss asc ascs1
-          mrgAtmCondLists ss ascs1' ascs2
+mrgTVarCondLists ss tvscs1 [] = return tvscs1
+mrgTVarCondLists ss tvscs1 (tvsc:tvscs2)
+     = do tvscs1' <- mrgTVarConds ss tvsc tvscs1
+          mrgTVarCondLists ss tvscs1' tvscs2
 \end{code}
 
 \subsection{Merging Atomic and Freshness Side-Conditions}
@@ -616,37 +566,39 @@ mrgAtmCondLists ss ascs1 (asc:ascs2)
 \begin{code}
 mrgAtomicFreshConditions :: MonadFail m => [Subscript]
                          -> VarSet -> [TVarSideConds] -> m SideCond
-mrgAtomicFreshConditions ss freshvs ascs
-  | freshvs `disjoint` coverVarsOf ss ascs  =  return (ascs,freshvs)
+mrgAtomicFreshConditions ss freshvs tvscs
+  | freshvs `disjoint` coverVarsOf ss tvscs  =  return (tvscs,freshvs)
   -- the above might not work - `disjoint` may need more information
   | otherwise  =  fail "Fresh variables cannot cover terms."
 
 coverVarsOf :: [Subscript] -> [TVarSideConds] -> VarSet
-coverVarsOf ss ascs = S.unions $ map coversOf ascs
+coverVarsOf ss tvscs = S.unions $ map coversOf tvscs
 coversOf (CoveredBy NU  _ vs)  =  vs
 coversOf _              =  S.empty
 \end{code}
 
-\section{From ASC and Free-list to Side-Condition}
+\section{From TVSC and Free-list to Side-Condition}
 
 \begin{code}
-mkSideCond :: MonadFail m => [Subscript] -> [TVarSideConds] -> VarSet -> m SideCond
-mkSideCond ss ascs fvs
- = do ascs' <-  mrgAtmCondLists ss [] ascs
-      mrgAtomicFreshConditions ss fvs ascs'
+mkSideCond :: MonadFail m 
+           => [Subscript] -> [TVarSideConds] -> VarSet -> m SideCond
+mkSideCond ss tvscs fvs
+ = do tvscs' <-  mrgTVarCondLists ss [] tvscs
+      mrgAtomicFreshConditions ss fvs tvscs'
 \end{code}
 
 
 \subsection{Merging Full Side-conditions}
 
 Merging two side-conditions is then straightforward,
-simply merge each ASC and fresh set from the one into the other,
+simply merge each TVSC and fresh set from the one into the other,
 one at a time.
 \begin{code}
-mrgSideCond :: MonadFail m => [Subscript] -> SideCond -> SideCond -> m SideCond
-mrgSideCond ss (ascs1,fvs1) (ascs2,fvs2)
-     = do ascs' <- mrgAtmCondLists ss ascs1 ascs2
-          mrgAtomicFreshConditions ss (fvs1 `S.union` fvs2) ascs'
+mrgSideCond :: MonadFail m 
+            => [Subscript] -> SideCond -> SideCond -> m SideCond
+mrgSideCond ss (tvscs1,fvs1) (tvscs2,fvs2)
+     = do tvscs' <- mrgTVarCondLists ss tvscs1 tvscs2
+          mrgAtomicFreshConditions ss (fvs1 `S.union` fvs2) tvscs'
           -- the above may require a ss-savvy union?
 
 mrgSideConds :: MonadFail m => [Subscript] -> [SideCond] -> m SideCond
@@ -719,19 +671,19 @@ scDischarge ss anteSC@(anteASC,anteFvs) cnsqSC@(cnsqASC,cnsqFvs)
   | isTrivialSC cnsqSC  =  return scTrue  -- G => true   is   true
   | isTrivialSC anteSC  =  return cnsqSC  -- true => L   is   L, not discharged
   | otherwise
-     = do asc' <- scDischarge' ss (groupByGV anteASC) (groupByGV cnsqASC)
-          freshDischarge ss anteFvs cnsqFvs asc'
+     = do tvsc' <- scDischarge' ss (groupByGV anteASC) (groupByGV cnsqASC)
+          freshDischarge ss anteFvs cnsqFvs tvsc'
 \end{code}
 
 We have a modified version of \texttt{Data.List.groupBy}
 \begin{code}
 groupByGV :: [TVarSideConds] -> [(GenVar,[TVarSideConds])]
 groupByGV []          =  []
-groupByGV (asc:ascs)  =  (gv,asc:ours) : groupByGV others
+groupByGV (tvsc:tvscs)  =  (gv,tvsc:ours) : groupByGV others
                       where
-                        gv               =  termVar asc
-                        gv `usedIn` asc  =  gv == termVar asc
-                        (ours,others)    =  span (usedIn gv) ascs
+                        gv               =  termVar tvsc
+                        gv `usedIn` tvsc  =  gv == termVar tvsc
+                        (ours,others)    =  span (usedIn gv) tvscs
 \end{code}
 
 \subsection{Atomic Condition  Discharge}
@@ -749,9 +701,9 @@ scDischarge' ss (grpG@(gvG,ascsG):restG) grpsL@(grpL@(gvL,ascsL):restL)
                      rest' <- scDischarge' ss restG restL
                      return (ascsL++rest')
   | otherwise  =  do -- use grpG to discharge grpL
-                     ascs' <- grpDischarge ss ascsG ascsL
+                     tvscs' <- grpDischarge ss ascsG ascsL
                      rest' <- scDischarge' ss restG restL
-                     return (ascs'++rest')
+                     return (tvscs'++rest')
 \end{code}
 
 \newpage
@@ -909,7 +861,7 @@ ascDischarge ss (Disjoint u1 _ dG) (Disjoint u2 gv dL)
 \\ & \mapsto & (C_L \setminus D_G) \supseteq V
 \end{eqnarray*}
 \begin{code}
-ascDischarge ss (Disjoint u1 _ dG) c@(CoveredBy u2 gv cL)
+ascDischarge ss (Disjoint u1 _ dG) cc@(CoveredBy u2 gv cL)
   | linL `subset` linG
     && isObsGVar gv     =  fail "Disj=>emptyCover"
   | otherwise           =  return [gv `coveredby` (linL `diff` linG)]
@@ -983,19 +935,19 @@ where elements of $G_F$ can be used to satisfy some $L_j$.
 \begin{code}
 freshDischarge :: MonadFail m => [Subscript]
               -> VarSet -> VarSet -> [TVarSideConds] -> m SideCond
-freshDischarge ss anteFvs cnsqFvs asc
-  = do asc' <- freshDischarge' ss anteFvs asc
-       return (asc' , cnsqFvs S.\\ anteFvs )
+freshDischarge ss anteFvs cnsqFvs tvsc
+  = do tvsc' <- freshDischarge' ss anteFvs tvsc
+       return (tvsc' , cnsqFvs S.\\ anteFvs )
 \end{code}
 
 \begin{code}
 freshDischarge' :: MonadFail m => [Subscript]
                 -> VarSet -> [TVarSideConds] -> m [TVarSideConds]
 freshDischarge' ss anteFvs [] = return []
-freshDischarge' ss anteFvs (asc:ascs)
-  = do ascl  <- freshAtomDischarge ss anteFvs asc
-       ascs' <- freshDischarge'    ss anteFvs ascs
-       return (ascl++ascs')
+freshDischarge' ss anteFvs (tvsc:tvscs)
+  = do ascl  <- freshAtomDischarge ss anteFvs tvsc
+       tvscs' <- freshDischarge'    ss anteFvs tvscs
+       return (ascl++tvscs')
 \end{code}
 
 We use a set of fresh variables ($G_F$)
@@ -1046,7 +998,7 @@ freshAtomDischarge ss gF (CoveredBy u gv cL)
 
 Anything else is not handled right now.
 \begin{code}
-freshAtomDischarge ss gF asc = return [asc]
+freshAtomDischarge ss gF tvsc = return [tvsc]
 \end{code}
 
 
@@ -1117,38 +1069,38 @@ First, some simple queries to find term variable side-conditions of interest.
 We start by checking if a variable is mentioned.
 \begin{code}
 findGenVar :: MonadFail m => GenVar -> SideCond -> m TVarSideConds
-findGenVar gv ( ascs, _ )  =  findGV gv ascs
+findGenVar gv ( tvscs, _ )  =  findGV gv tvscs
 
 findGV _ [] = fail "findGenVar: not in any term variable side-condition"
-findGV gv (asc:ascs)
-  | gv `mentionedBy` asc  =  return asc
-  | otherwise             =  findGV gv ascs
+findGV gv (tvsc:tvscs)
+  | gv `mentionedBy` tvsc  =  return tvsc
+  | otherwise             =  findGV gv tvscs
 
 mentionedBy :: GenVar -> TVarSideConds -> Bool
-gv `mentionedBy` asc
-  | otherwise      =  gv == termVar asc
+gv `mentionedBy` tvsc
+  | otherwise      =  gv == termVar tvsc
 \end{code}
 
 We then look at returning all mentions of a variable:
 \begin{code}
 findAllGenVar :: GenVar -> SideCond -> [TVarSideConds]
-findAllGenVar gv ( ascs, _ )  =  findAGV gv [] ascs
+findAllGenVar gv ( tvscs, _ )  =  findAGV gv [] tvscs
 
 findAGV _ scsa []  =  reverse scsa
-findAGV gv scsa (asc:ascs)
-  | gv `mentionedBy` asc  =  findAGV gv (asc:scsa) ascs
-  | otherwise             =  findAGV gv scsa       ascs
+findAGV gv scsa (tvsc:tvscs)
+  | gv `mentionedBy` tvsc  =  findAGV gv (tvsc:scsa) tvscs
+  | otherwise             =  findAGV gv scsa       tvscs
 \end{code}
 
 We sometimes want mentions for a specific condition type:
 \begin{code}
 findCoveredGenVar :: MonadFail m => GenVar -> SideCond -> m VarSet
-findCoveredGenVar gv ( ascs, _ ) = findCGV gv ascs
+findCoveredGenVar gv ( tvscs, _ ) = findCGV gv tvscs
 
 findCGV gv []        =  fail ("Covered "++show gv ++ " not found")
-findCGV gv ((CoveredBy _ gv' vs):ascs)
+findCGV gv ((CoveredBy _ gv' vs):tvscs)
   | gv == gv'        =  return vs
-findCGV gv (_:ascs)  =  findCGV gv ascs
+findCGV gv (_:tvscs)  =  findCGV gv tvscs
 \end{code}
 
 
@@ -1413,14 +1365,14 @@ genTheGenVars (LstVar (LVbl (Vbl i vc _) is js)) ss
 
 
 % First, given a variable-set,
-% return all ASCs that mention any variable in that set:
+% return all TVSCs that mention any variable in that set:
 % \begin{code}
 % -- NOT USED ANYWHERE!
 % citingASCs :: VarSet -> SideCond -> [TVarSideConds]
 % citingASCs vs (sc,_) = filter (cited vs) sc
 %
 % cited :: VarSet -> TVarSideConds -> Bool
-% vs `cited` asc  =  vs == tvscVSet asc
+% vs `cited` tvsc  =  vs == tvscVSet tvsc
 % \end{code}
 
 \newpage
@@ -1541,23 +1493,23 @@ tst_mrgAtmCond :: TF.Test
 tst_mrgAtmCond
  = testGroup "Merging Side-Conditions (no known vars)"
      [ testCase "merge gv_a `disjoint` empty  into [] is True"
-        ( mrgAtmCond [] (Disjoint NU  gv_a S.empty) [] @?= Just [] )
+        ( mrgTVarConds [] (Disjoint NU  gv_a S.empty) [] @?= Just [] )
      , testCase "merge gv_a `disjoint` {gv_a} into [] is False"
-        ( mrgAtmCond [] (Disjoint NU  gv_a $ S.singleton gv_a) [] @?= Nothing )
+        ( mrgTVarConds [] (Disjoint NU  gv_a $ S.singleton gv_a) [] @?= Nothing )
      , testCase "merge v_e `coveredby` {v_f}  into [] is [itself]"
-        ( mrgAtmCond [] (CoveredBy NU  v_e $ S.singleton v_f) []
+        ( mrgTVarConds [] (CoveredBy NU  v_e $ S.singleton v_f) []
           @?= Just [CoveredBy NU  v_e $ S.singleton v_f] )
-     , testCase "merge gv_a `disjoint` empty  into [asc(gv_b)] is [asc(gv_b)]]"
-        ( mrgAtmCond [] (Disjoint NU  gv_a S.empty) [asc1] @?= Just [asc1] )
-     , testCase "merge gv_a `disjoint` {gv_a} into [asc(gv_b)] is False"
-        ( mrgAtmCond [] (Disjoint NU  gv_a $ S.singleton gv_a) [asc1] @?= Nothing )
+     , testCase "merge gv_a `disjoint` empty  into [tvsc(gv_b)] is [tvsc(gv_b)]]"
+        ( mrgTVarConds [] (Disjoint NU  gv_a S.empty) [tvsc1] @?= Just [tvsc1] )
+     , testCase "merge gv_a `disjoint` {gv_a} into [tvsc(gv_b)] is False"
+        ( mrgTVarConds [] (Disjoint NU  gv_a $ S.singleton gv_a) [tvsc1] @?= Nothing )
      , testCase
-        "merge v_e `coveredby` {v_f}  into [asc(gv_b)] is [asc(gv_b),itself]"
-        ( mrgAtmCond [] (CoveredBy NU  v_e $ S.singleton v_f) [asc1]
-          @?= Just [asc1,CoveredBy NU  v_e $ S.singleton v_f] )
+        "merge v_e `coveredby` {v_f}  into [tvsc(gv_b)] is [tvsc(gv_b),itself]"
+        ( mrgTVarConds [] (CoveredBy NU  v_e $ S.singleton v_f) [tvsc1]
+          @?= Just [tvsc1,CoveredBy NU  v_e $ S.singleton v_f] )
      ]
 
-asc1 = (CoveredBy NU  gv_b $ S.fromList [gv_b,v_f])
+tvsc1 = (CoveredBy NU  gv_b $ S.fromList [gv_b,v_f])
 \end{code}
 
 \subsection{Discharge Tests}

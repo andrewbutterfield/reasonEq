@@ -7,16 +7,13 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module SideCond (
-  Uniformity, pattern Unif, pattern NonU
-, usame, usamel, usameg
-, setWhen, lsetWhen, gsetWhen
-, AtmSideCond
-, pattern Disjoint, pattern CoveredBy, pattern DynamicCoverage
-, ascGVar, ascVSet
+  TVarSideConds, tvscTrue
+, tvscVSet
 , disjfrom, coveredby, dyncovered
 , SideCond, scTrue, isTrivialSC
-, onlyFreshSC, onlyInvolving, onlyFreshOrInvolved
-, scGVars, scVarSet
+, onlyFreshSC -- , onlyInvolving, onlyFreshOrInvolved
+-- , scGVars
+, scVarSet
 , mrgAtmCond, mrgSideCond, mrgSideConds, mkSideCond
 , scDischarge
 , isFloatingASC
@@ -62,7 +59,7 @@ given a logic like ours with explicit expression and predicate
 A side condition is about a relationship between the free variables
 of term ($T$),
 and a set of other (general) variables ($x,\lst{v}$).
-In general we have a conjunction of atomic conditions,
+In general we have a conjunction of term variable conditions,
 but we need to be able to distinguish between no conditions (always ``true'')
 and inconsistent conditions
 (e.g. $x \disj \fv(T) \land x = \fv(T) $, always ``false'').
@@ -71,9 +68,9 @@ we do not represent them explicitly.
 Instead, any operation on side-conditions that could result
 in an inconsistent result should fail, gracefully.
 
-\subsection{Atomic Side-Conditions}
+\subsection{Term-Variable Side-Conditions}
 
-An atomic side-condition (ASC) can have one of the following forms,
+An term variable side-condition (TVSC) can have one of the following forms,
 where $T$ abbreviates $\fv(T)$:
 \begin{eqnarray*}
    x,\lst v   \disj  T
@@ -161,234 +158,54 @@ $$
   (C \setminus D) \supseteq T 
   \land (C_d \setminus D) \supseteq_a T
 $$
+We can compress this to $(T,D,C,C_d)$.
 
-\subsection{Side-Condition Temporality}
-
-In UTP,
-we typically use uppercase letters ($P, Q, \dots$) to denote predicates that
-denote pre/post relations.
-The predicates they represent are usually a mix of before- and after-variables.
-When a predicate is a pre-condition (only using before-variables),
-we usually denote this using lowercase letters ($p, q, \dots$).
-For a post-condition, only using after-variables,
-we denote this using dashed lower-case letters ($p', q', \dots$).
-
-Consider a relation $x_{d_1} \mathcal R t_{d_2}$ between a dynamic variable $x_{d_1}$
-and a dynamic term variable $t_{d_2}$.
-Here $\mathcal R$ can be any of $\disj$, $\supseteq$ or $\supseteq_a$.
-If $d_1 = d_2$ ($d$, say)
-then we can conclude that $x_d \mathcal R t_d$ implies
-\begin{equation*}
-x \mathcal R t 
-\land
-x' \mathcal R t'
-\land
-x_n \mathcal R t_n, \text{ for all subscripts } n
-\end{equation*}
-This means that the side-condition is ``temporally uniform'',
-in that all variables involved have the same temporality.
-
-Any side-condition with a relational predicate variable
-(e.g. $x \disj P$)
-is not temporally uniform.
-A side-condition with before-variables and a pre-condition
-(e.g. $x \disj q$)
-is temporally uniform.
-The same holds when after-variables and post-conditions are used
-(e.g. $x' \supseteq q'$).
-A non-uniform disjointness condition
-(e.g. $x \disj p'$)
-is vacuously true.
-A non-uniform superset condition
-(e.g. $y' \supseteq q$)
-is vacuously false.
-
-A predicate variable $P$ is represented as a \texttt{Static PVar},
-while $p$ and $p'$ are represented as \texttt{Before} and \texttt{After}
-\texttt{PVar}s respectively.
-A similar convention is used for expression and observation variables.
-
-A temporally uniform condition is represented using \texttt{Before}
-variables throughout,
-and is interpreted as covering cases where \texttt{Before}
-is uniformly replaced by \texttt{After}, or \texttt{During n},
-for that same value of \texttt{n}.
-For example,
-$x' \disj p'$ is represented as $x \disj p$,
-and is also interpreted as $x_i \disj p_i$ for any $i$.
-
-Since $P$, or $p$ or $p'$ are shorthand for $fv(P)$ etc.,
-they denote sets of variables here.
-Since list-variables denote variable sets/lists, the same relationships hold,
-and the uniformity property carries over.
-
-We will have a flag to indicate uniformity,
-that will be set when a side-condition is specified/built.
-We do this as almost all side-condition usage
-will need to check for this property.
-\begin{code}
-data Uniformity
-  = UN -- Uniform
-  | NU -- Not Uniform
-  deriving (Eq,Ord,Show,Read)
-pattern Unif = UN
-pattern NonU = NU
-\end{code}
-We need to add an easy check that two dynamic
-variables differ only in their temporality.
-\begin{code}
-usame :: Variable -> Variable -> Bool
-usame (Vbl i1 vc1 vw1) (Vbl i2 vc2 vw2)
-       =  i1==i2 && vc1==vc2 && isDynamic vw1 && isDynamic vw2
-usamel :: ListVar -> ListVar -> Bool
-usamel (LVbl v1 is1 js1) (LVbl v2 is2 js2)
-        = v1 `usame` v2 && is1==is2 && js1==js2
-usameg :: GenVar -> GenVar -> Bool
-usameg (StdVar v1) (StdVar v2) = v1 `usame` v2
-usameg (LstVar lv1) (LstVar lv2) = lv1 `usamel` lv2
-\end{code}
-It also helps to change the dynamic temporality of a variable.
-
-\begin{code}
-setWhen :: VarWhen -> Variable -> Variable
-setWhen vw (Vbl i vc _)  = Vbl i vc vw
-lsetWhen :: VarWhen -> ListVar -> ListVar
-lsetWhen vw (LVbl (Vbl i vc _) is js)  = LVbl (Vbl i vc vw) is js
-gsetWhen :: VarWhen -> GenVar -> GenVar
-gsetWhen vw (StdVar v)   = StdVar $ setWhen  vw v
-gsetWhen vw (LstVar lv)  = LstVar $ lsetWhen vw lv
-\end{code}
-These should only be applied to variables known to be dynamic.
-
+The disjoint condition is true for any variable if $D$ is null.
+The coverage conditions are true if $C$ or $C_d$ cover all possible variables, which we can capture with the idea of a universe set $U$ or $U_d$.
+So we can represent the true side-conition for any $T$ by:
+$$
+  \emptyset \disj T \land 
+  U \supseteq T 
+  \land U_d \supseteq_a T
+$$
+This compresses to $(T,\emptyset,U,U_d)$.
 
 \section{Term Variable Side-Conditions}
 
-\begin{code}
-data  TVarSideConds
-  = TVSC  { termVar       ::  GenVar
-          , uniform       ::  Bool
-          , disjointFrom  ::  VarSet
-          , coveredBy     ::  VarSet
-          , dynCovered    ::  VarSet
-          }
-\end{code}
-
-\section{Atomic Side-Conditions}
-
-We now introduce our notion of an atomic-side condition.
+We now introduce our notion of term-variable side-conditions.
 We will not represent $pre$ explicitly here,
-and instead will use $\lst O \supseteq T$ (which is non-uniform!).
+and instead will use $\lst O \supseteq T$.
+We use $\texttt{Just } C$ to represent general $C$,
+and $\texttt{Nothing}$ to represent $U$
+(and similarly for $C_d$).
 \begin{code}
-data AtmSideCond
- = SD Uniformity GenVar VarSet -- Disjoint
- | SS Uniformity GenVar VarSet -- Superset (covers), and Pre
- | ST Uniformity GenVar VarSet -- Dynamic Coverage (covers_d)
- deriving (Eq,Ord,Show,Read)
+data  TVarSideConds -- (T,D,C,C_d)
+  = TVSC  { termVar         ::  GenVar        --  T
+          , disjointFrom    ::  VarSet        --  D
+          , coveredBy       ::  Maybe VarSet  --  U  | C
+          , coveredDynamic  ::  Maybe VarSet  --  Ud | Cd
+          }
+tvscTrue t = TVSC t S.null Nothing Nothing
 \end{code}
-In the \texttt{SD} case, having an empty set reduces to \true,
-while in the \texttt{SS} case,
-an empty set asserts that the term denoted by the general variable is closed.
-\begin{code}
-pattern Disjoint  u gv vs = SD u gv vs         -- FV(gv) `intersect` vs = {}
-pattern CoveredBy u gv vs = SS u gv vs         -- FV(gv)  `subsetof` vs
-pattern DynamicCoverage  u gv vs = ST u gv vs  -- DFV(gv) `subsetof` vs
-\end{code}
+
 
 Selectors:
 \begin{code}
-ascUnfm :: AtmSideCond -> Uniformity
-ascUnfm (SD u _ _)  =  u
-ascUnfm (SS u _ _)  =  u
-ascUnfm (ST u _ _)  =  u
-
-isUniform :: AtmSideCond -> Bool
-isUniform asc  =  ascUnfm asc == Unif
-
-ascGVar :: AtmSideCond -> GenVar
-ascGVar (SD _ gv _)  =  gv
-ascGVar (SS _ gv _)  =  gv
-ascGVar (ST _ gv _)  =  gv
-
-ascVSet :: AtmSideCond -> VarSet
-ascVSet (SD _ _ vs)  =  vs
-ascVSet (SS _ _ vs)  =  vs
-ascVSet (ST _ _ vs)  =  vs
+tvscVSet :: TVarSideConds -> VarSet
+tvscVSet tvsc  
+  =  disjointFrom tvsc `S.union` coveredBy tvsc `S.union` coveredDynamic tvsc
 \end{code}
 
-We can determine if the components
-used to make an atomic side-condition are ``uniform''.
-A relation $~\Re~$ between a general variable $g^t$ of temporality $t$
-and a set of general variables $G^\tau$ with temporality drawn from $\tau$,
-is uniform if:
-\begin{itemize}
-  \item The general variable $g^t$ is dynamic
-  \item All the variables in $G^\tau$ are dynamic
-  \item All of $\setof g^t \cup G^\tau$ have the same dynamicity
-     (i.e., $\tau = \setof t$).
-\end{itemize}
+We provide some builders when only one of the three conditions is involved:
 \begin{code}
-areUniform :: GenVar -> VarSet -> Bool
-areUniform gv vs
-  = S.size whens == 1 && isDynamic (head $ S.elems whens)
-  where
-    whens = S.map gvarWhen (S.insert gv vs)
+disjfrom, coveredby, dyncovered :: GenVar -> VarSet -> TVarSideConds
+gv `disjfrom`   vs  =  TVSC gv vs     Nothing   Nothing
+gv `coveredby`  vs  =  TVSC gv S.null (Just vs) Nothing
+gv `dyncovered` vs  =  TVSC gv S.null Nothing   (Just vs) 
 \end{code}
-If $g^t ~\Re~ G^\tau$ is uniform,
-we interpret it as specifiying the following:
-$$
-  g ~\Re~ G
-  \land
-  g' ~\Re~ G'
-  \land
-  g_i ~\Re~ G_s, \mbox{ for all subscript } s \mbox{ in use.}
-$$
-We \emph{represent} the above using the \texttt{Before} form: $g ~\Re~ G$.
+
 
 \subsection{Checking Atomic Sideconditions}
-
-We need to ensure that the \texttt{Uniformity} component
-of an atomic side-condition is set correctly.
-\begin{code}
-setASCUniformity :: AtmSideCond -> AtmSideCond
-setASCUniformity (SD _ gv vs)  =  setWithUniformity SD gv vs
-setASCUniformity (SS _ gv vs)  =  setWithUniformity SS gv vs
-setASCUniformity (ST _ gv vs)  =  setWithUniformity ST gv vs
-
-setWithUniformity :: (Uniformity -> GenVar -> VarSet -> AtmSideCond) 
-                  -> GenVar -> VarSet -> AtmSideCond
-setWithUniformity scRelation gv vs
-  | areUniform gv vs  =  scRelation Unif (dnGVar gv) (S.map dnGVar vs)
-  | otherwise         =  scRelation NonU         gv                vs
-\end{code}
-
-We provide some builders that set uniformity:
-\begin{code}
-disjfrom :: GenVar -> VarSet -> AtmSideCond
-gv `disjfrom` vs  =  setWithUniformity Disjoint gv vs
-
-coveredby :: GenVar -> VarSet -> AtmSideCond
-gv `coveredby` vs  =  setWithUniformity CoveredBy gv vs
-
-dyncovered :: GenVar -> VarSet -> AtmSideCond
-gv `dyncovered` vs  =  setWithUniformity DynamicCoverage gv vs
-\end{code}
-
-It is also possible to simplify some proposed atomic side-conditions
-to either true or false.
-An important shortcut condition is when we have a dynamic general variable
-along with a variable set, all of whose members are dynamic.
-Both disjointness and coverage can be simplified
-if the general variable's temporality
-does not match that of any of the set variables.
-\begin{code}
-isTempDisjointASC :: GenVar -> VarSet -> Bool
-isTempDisjointASC gv vs
-  = isDynamic gvWhen && tempdisjoint
-  where
-    gvWhen        =  gvarWhen gv
-    vsWhens       =  S.map gvarWhen vs
-    tempdisjoint  =  not (gvWhen `S.member` vsWhens)
-\end{code}
 
 Here we provide a monadic function that fails if the condition
 is demonstrably false,
@@ -397,15 +214,23 @@ where \texttt{Nothing} denotes a condition that is true.
 
 We need to do this in general
 in the context of what is ``known'' about variables.
-\begin{code}
-mscTrue = Nothing
-ascCheck :: MonadFail m => [Subscript] -> AtmSideCond 
-         -> m (Maybe AtmSideCond)
-\end{code}
 Here, $z$ denotes an (standard) observation variable,
 $T$ denotes a standard term variable,
 and $g$ denotes either $z$ or $T$.
 We also use the case conventions described earlier ($P, p, p'$).
+
+\begin{code}
+mscTrue = Nothing
+tvscCheck :: MonadFail m => [Subscript] -> TVarSideConds 
+          -> m (Maybe TVarSideConds)
+tvscCheck ss (TVSC gv vsD mvsC mvsCd)
+  = do  vsD'   <- disjointCheck  ss gv vsD
+        mvsC'  <- coveredByCheck ss gv mvsC
+        mvsCd' <- covDynCheck    ss gv mvsCd
+        return $ TVSC gv vsD' mvsC' mvsCd'
+
+univTrue = Nothing
+\end{code}
 
 
 \subsubsection%
@@ -415,21 +240,21 @@ We also use the case conventions described earlier ($P, p, p'$).
    \emptyset             \disj g           &&   \true
 \\ \dots,z,\dots         \disj z           &&   \false
 \\ \{stdObs\}\setminus z \disj z           &&   \true
-\\ V,g\textrm{ are temporally disjoint}    &&   \true
 \end{eqnarray*}
 
 Note that we cannot deduce (here) that $T \disj T$ is false,
 because $T$ could correspond to the empty set.
 Nor can we assume $T \disj z$ is false, because $T$ could contain $z$.
 \begin{code}
-ascCheck ss asc@(Disjoint _ gv vs)
-  | S.null vs                 =  return mscTrue
-  | isTempDisjointASC gv vs   =  return mscTrue
-  | not $ isObsGVar gv        =  return $ Just $ setASCUniformity asc
-  -- gv is an observation variable below here....
-  | gv `S.member` vs          =  report "atomic Disjoint is False"
-  | all isStdV    vs          =  return mscTrue
+disjointCheck  :: MonadFail m 
+               => [Subscript] -> GenVar -> VarSet -> m VarSet
+disjointCheck ss gv vs
+  | S.null vs                 =  return disjointTrue
+  | not $ isObsGVar gv        =  return vs
+  | gv `S.member` vs          =  report "tvar disjoint fails"
+  | all isStdV    vs          =  return disjointTrue
   where
+    disjointTrue = S.null
     showsv = "gv = "++show gv
     showvs = "vs = "++show vs
     report msg = fail $ unlines' [msg,showsv,showvs]
@@ -443,23 +268,22 @@ ascCheck ss asc@(Disjoint _ gv vs)
 \\ \{stdObs\}\setminus z \supseteq z           && \false
 \\ \lst\ell\setminus Z \supseteq \lst\ell\setminus (Z\cup W) 
      && \true
-\\ V,g\textrm{ are temporally disjoint}        && \false
 \end{eqnarray*}
 
 Here, as $T$ could be empty,
 we cannot deduce that $\emptyset \supseteq T$ is false.
 Similarly, $T \supseteq z$ could also be true.
 \begin{code}
-ascCheck ss asc@(CoveredBy _ gv vs)
-  -- | gv `S.member` vs  =  return mscTrue -- subsumed by next line
-  | any (gvCovBy gv) vs  =  return mscTrue
-  | isTmpDisj            =  report "non-U atomic cover False (disjoint)"
-  | not $ isObsGVar gv   =  return $ Just $ setASCUniformity asc
-  -- gv is an observation variable not in vs below here....
-  | S.null vs            =  report "atomic cover False (null)"
-  | all isStdV vs        =  report "atomic cover False (all std)"
+coveredByCheck  :: MonadFail m 
+               => [Subscript] -> GenVar -> Maybe VarSet -> m (Maybe VarSet)
+
+coveredByCheck ss gv Nothing = return covByTrue  -- U
+coveredByCheck ss gv jvs@(Just vs)
+  | any (gvCovBy gv) vs  =  return univTrue
+  | not $ isObsGVar gv   =  return jvs
+  | S.null vs            =  report "tvar cover fails (null)"
+  | all isStdV vs        =  report "tvat cover fails (all std)"
   where 
-    isTmpDisj = isTempDisjointASC gv vs
     showsv = "gv = "++show gv
     showvs = "vs = "++show vs
     report msg = fail $ unlines' [msg,showsv,showvs]
@@ -479,37 +303,32 @@ Assuming $\forall v \in V \bullet \isdyn(v)$ we then proceed:
                                          &&  \true
 \\ \dots,g,\dots{}       \supseteq_a g   &&  \true
 \\ \{stdObs\}\setminus z \supseteq_a z   &&  \false
-\\ V,g\textrm{ are temporally disjoint}  &&  \false
 \end{eqnarray*}
 
 Here, as $T$ could be empty,
 we cannot deduce that $\emptyset \supseteq T$ is false.
 Similarly, $T \supseteq z$ could also be true.
 \begin{code}
-ascCheck ss asc@(CoveredBy _ gv vs)
-  | hasStatic            =  report "atomic dyncover False (static)"
-  -- | gv `S.member` vs  =  return mscTrue -- subsumed by next line
-  | any (gvCovBy gv) vs  =  return mscTrue
-  | isTmpDisj            =  report "non-U dyncover False (disjoint)"
-  | not $ isObsGVar gv   =  return $ Just $ setASCUniformity asc
-  -- gv is an observation variable not in vs below here....
+coveredDynCov  :: MonadFail m 
+               => [Subscript] -> GenVar -> Maybe VarSet -> m (Maybe VarSet)
+
+coveredDynCov ss gv Nothing = return covByTrue  -- U
+coveredDynCov ss gv jvs@(Just vs)
+  | hasStatic            =  report "tvar dyncover fails (static)"
+  | any (gvCovBy gv) vs  =  return univTrue
+  | not $ isObsGVar gv   =  return jvs
   | S.null vs 
       =  if isDynGVar gv
-         then report "atomic dyncover False (null)"
-         else return $ Just $ setASCUniformity asc
-  | all isStdV vs        =  report "atomic dyncover False (all std)"
+         then report "atomic dyncover fails (null)"
+         else return jvs
+  | all isStdV vs        =  report "tvar dyncover fails (all std)"
   where 
     hasStatic = any (not . isDynGVar) vs
-    isTmpDisj = isTempDisjointASC gv vs
     showsv = "gv = "++show gv
     showvs = "vs = "++show vs
     report msg = fail $ unlines' [msg,showsv,showvs]
 \end{code}
 
-In all other cases, we return the atomic condition with uniformity set:
-\begin{code}
-ascCheck _ asc = return $ Just $ setASCUniformity asc
-\end{code}
 
 Is $\ell\less V$ covered by $\kappa\less W$ ?
 It is if $\ell=\kappa$ and $W \subseteq V$.
@@ -539,15 +358,17 @@ Freshness is a special case of disjoint:
 We have to treat freshness as a top-level side-condition,
 with no attachment to any specific term-variable.
 
-A ``full'' side-condition is basically a list of ASCs,
+A ``full'' side-condition is basically 
+a list of term-variable side-conditions,
 interpreted as their conjunction,
 along with a set defining fresh variables.
 \begin{code}
-type SideCond = ( [AtmSideCond]  -- all must be true
+-- type SideCond = ( [TVarSideConds]  -- all must be true
+type SideCond = ( [TVarSideConds]  -- all must be true
                 , VarSet )       -- must be fresh
 \end{code}
 
-If the atomic condition list is empty,
+If the term variable condition list is empty,
 then we have the trivial side-condition, which is always true:
 \begin{code}
 scTrue :: SideCond
@@ -562,39 +383,15 @@ We are also interested when the only side-conditions we
 have are to do with freshness:
 \begin{code}
 onlyFreshSC :: SideCond -> Bool
-onlyFreshSC (ascs,_) = null ascs
+onlyFreshSC (tvscs,_) = null tvscs
 \end{code}
-or involve variables in a designated set:
-\begin{code}
-onlyInvolving :: VarSet -> SideCond -> Bool
-onlyInvolving involved (ascs,_) = all (onlyWith involved) ascs
-
-onlyWith :: VarSet -> AtmSideCond -> Bool
-onlyWith involved (SD _ gv vs)
-  = gv `S.member` involved || involved `overlaps` vs
-onlyWith involved (SS _ gv vs)
-  = gv `S.member` involved || involved `overlaps` vs
-\end{code}
-We may accept either of the above:
-\begin{code}
-onlyFreshOrInvolved :: VarSet -> SideCond -> Bool
-onlyFreshOrInvolved involved ([],_)    =  True
-onlyFreshOrInvolved involved (ascs,_)  =  all (onlyWith involved) ascs
-\end{code}
-
 Finally,
-sometimes we want all the general variables or variable-sets
+sometimes we want all the variable-sets
 from a side-condition:
 \begin{code}
-scGVars :: SideCond -> Set GenVar
-scGVars (ascs,_) = S.fromList $ map ascGVar ascs
-
 scVarSet :: SideCond -> VarSet
-scVarSet (ascs,fvs) = (S.unions $ map ascVSet ascs) `S.union` fvs
+scVarSet (tvscs,fvs) = (S.unions $ map tvscVSet tvscs) `S.union` fvs
 \end{code}
-This latter function is less useful because it loses uniformity information
-needed to interpret dynamic variables property
-(used in \texttt{Assertions.lhs}).
 
 \section{Merging Side-Conditions}
 
@@ -614,13 +411,13 @@ into a pre-existing list ordered and structured as described above.
 
 \begin{code}
 mrgAtmCond :: MonadFail m => [Subscript]
-           -> AtmSideCond -> [AtmSideCond] -> m [AtmSideCond]
+           -> TVarSideConds -> [TVarSideConds] -> m [TVarSideConds]
 \end{code}
 
 1st ASC is easy:
 \begin{code}
 mrgAtmCond ss asc []
-  = do masc <- ascCheck ss asc
+  = do masc <- tvscCheck ss asc
        case masc of
          Nothing ->  return [] -- asc is in fact true
          Just asc' -> return [asc']
@@ -630,12 +427,12 @@ Subsequent ones mean searching to see if there are already ASCs with the
 same general-variable:
 \begin{code}
 mrgAtmCond ss asc ascs
-  = do masc <- ascCheck ss asc
+  = do masc <- tvscCheck ss asc
        case masc of
          Nothing ->  return ascs
          Just asc' -> splice (mrgAtmAtms ss asc) $ brkspnBy (compareGV asc) ascs
 
-compareGV asc1 asc2  =  ascGVar asc1 `compare` ascGVar asc2
+compareGV asc1 asc2  =  termVar asc1 `compare` termVar asc2
 sameGV asc1 asc2     =  asc1 `compareGV` asc2 == EQ
 \end{code}
 
@@ -644,7 +441,7 @@ sameGV asc1 asc2     =  asc1 `compareGV` asc2 == EQ
 Now, merging an ASC in with other ASCs referring to the same general variable:
 \begin{code}
 mrgAtmAtms :: MonadFail m => [Subscript]
-           -> AtmSideCond -> [AtmSideCond] -> m [AtmSideCond]
+           -> TVarSideConds -> [TVarSideConds] -> m [TVarSideConds]
 mrgAtmAtms ss asc [] = return [asc] -- it's the first.
 \end{code}
 
@@ -709,9 +506,6 @@ becomes an assertion that $G$ is closed.
 For any given general variable $G$,
 these laws ensure that we can arrange matters so that $D$ and $C$ are disjoint.
 
-All the set operations used above preserve uniformity if both set arguments
-are uniform.
-
 It is instructive to ask when each of the three conditions 
 is (trivially?) $\true$:
 \begin{eqnarray*}
@@ -720,7 +514,7 @@ is (trivially?) $\true$:
 \\ \sem{U_d}_G &=& \dfv.G \subseteq U_d \land \forall_{\isdyn}(U_d) = \true
 \end{eqnarray*}
 Here $U$ ($U_d$) is the set of all variables (all dynamic variables) in play.
-This allows us to represent all atomic side-conditions regarding general variable $G$ as:
+This allows us to represent all term variable side-conditions regarding general variable $G$ as:
 \begin{equation*}
 \sem{D}_G \land \sem{C}_G \land \sem{C_d}_G
 \quad\text{or}\quad
@@ -731,9 +525,9 @@ This allows us to represent all atomic side-conditions regarding general variabl
 
 It is worth noting side conditions currently in use:
 \begin{description}
-  \item[Forall/Exists] (all non-uniform)\\
+  \item[Forall/Exists]~\\
      $\lst x \disj P \qquad \lst x \disj e \qquad \lst y \disj P$
-   \item[UClose] (all non-uniform)\\
+   \item[UClose]~\\
     $\lst x \supseteq P \qquad \emptyset \supseteq P$
   \item[UTPBase]~\\
     $
@@ -742,7 +536,7 @@ It is worth noting side conditions currently in use:
       \lst O,\lst O' \supseteq_a Q
       \quad
       \lst O,\lst O' \supseteq_a R
-    $ \qquad (non-uniform)\\
+    $ \\
     $
       \lst O \supseteq b
       \quad
@@ -751,18 +545,14 @@ It is worth noting side conditions currently in use:
       \lst O \supseteq f
       \quad
       \lst O \supseteq x
-      \qquad \textrm{(uniform)}
       \qquad
       O_0 \textrm{ fresh}
      $
 \end{description}
-Summary: All uses of disjointness and dynamic-coverage are non-uniform.
-All uniform specifications are coverings for expressions and variables.
-Not seeing any mixing of these (yet!)
 
-For now, we only handle simple cases,
-those where both components have the same uniformity.
+
 \subsection{Merging \texttt{Disjoint} into ASC}
+
 \begin{code}
 mrgAtmAtms ss (Disjoint u1 gv d0) [Disjoint u2 _ d1]
   | u1 == u2  =  return [Disjoint u1  gv (d0 `S.union` d1)]
@@ -813,7 +603,7 @@ mrgAtmAtms ss atm atms
 
 \begin{code}
 mrgAtmCondLists :: MonadFail m => [Subscript]
-                -> [AtmSideCond] -> [AtmSideCond] -> m [AtmSideCond]
+                -> [TVarSideConds] -> [TVarSideConds] -> m [TVarSideConds]
 mrgAtmCondLists ss ascs1 [] = return ascs1
 mrgAtmCondLists ss ascs1 (asc:ascs2)
      = do ascs1' <- mrgAtmCond ss asc ascs1
@@ -825,13 +615,13 @@ mrgAtmCondLists ss ascs1 (asc:ascs2)
 
 \begin{code}
 mrgAtomicFreshConditions :: MonadFail m => [Subscript]
-                         -> VarSet -> [AtmSideCond] -> m SideCond
+                         -> VarSet -> [TVarSideConds] -> m SideCond
 mrgAtomicFreshConditions ss freshvs ascs
   | freshvs `disjoint` coverVarsOf ss ascs  =  return (ascs,freshvs)
   -- the above might not work - `disjoint` may need more information
   | otherwise  =  fail "Fresh variables cannot cover terms."
 
-coverVarsOf :: [Subscript] -> [AtmSideCond] -> VarSet
+coverVarsOf :: [Subscript] -> [TVarSideConds] -> VarSet
 coverVarsOf ss ascs = S.unions $ map coversOf ascs
 coversOf (CoveredBy NU  _ vs)  =  vs
 coversOf _              =  S.empty
@@ -840,7 +630,7 @@ coversOf _              =  S.empty
 \section{From ASC and Free-list to Side-Condition}
 
 \begin{code}
-mkSideCond :: MonadFail m => [Subscript] -> [AtmSideCond] -> VarSet -> m SideCond
+mkSideCond :: MonadFail m => [Subscript] -> [TVarSideConds] -> VarSet -> m SideCond
 mkSideCond ss ascs fvs
  = do ascs' <-  mrgAtmCondLists ss [] ascs
       mrgAtomicFreshConditions ss fvs ascs'
@@ -935,12 +725,12 @@ scDischarge ss anteSC@(anteASC,anteFvs) cnsqSC@(cnsqASC,cnsqFvs)
 
 We have a modified version of \texttt{Data.List.groupBy}
 \begin{code}
-groupByGV :: [AtmSideCond] -> [(GenVar,[AtmSideCond])]
+groupByGV :: [TVarSideConds] -> [(GenVar,[TVarSideConds])]
 groupByGV []          =  []
 groupByGV (asc:ascs)  =  (gv,asc:ours) : groupByGV others
                       where
-                        gv               =  ascGVar asc
-                        gv `usedIn` asc  =  gv == ascGVar asc
+                        gv               =  termVar asc
+                        gv `usedIn` asc  =  gv == termVar asc
                         (ours,others)    =  span (usedIn gv) ascs
 \end{code}
 
@@ -949,8 +739,8 @@ groupByGV (asc:ascs)  =  (gv,asc:ours) : groupByGV others
 Now onto processing those groups:
 \begin{code}
 scDischarge'  :: MonadFail m => [Subscript]
-              -> [(GenVar,[AtmSideCond])] -> [(GenVar,[AtmSideCond])]
-              -> m [AtmSideCond]
+              -> [(GenVar,[TVarSideConds])] -> [(GenVar,[TVarSideConds])]
+              -> m [TVarSideConds]
 scDischarge' _ _ []      =  return []                   -- discharged
 scDischarge' _ [] grpsL  =  return $ concat $ map snd grpsL -- not discharged
 scDischarge' ss (grpG@(gvG,ascsG):restG) grpsL@(grpL@(gvL,ascsL):restL)
@@ -967,7 +757,7 @@ scDischarge' ss (grpG@(gvG,ascsG):restG) grpsL@(grpL@(gvL,ascsL):restL)
 \newpage
 
 The following code assumes that the \texttt{GenVar} component
-is the same in all of the \texttt{AtmSideCond}.
+is the same in all of the \texttt{TVarSideConds}.
 
 Here again, we have the form
 \begin{equation}
@@ -996,7 +786,7 @@ use all the $G_i$ to try and discharge each $L_i$,
 rather than the other way around.
 \begin{code}
 grpDischarge :: MonadFail m => [Subscript]
-             -> [AtmSideCond] -> [AtmSideCond] -> m [AtmSideCond]
+             -> [TVarSideConds] -> [TVarSideConds] -> m [TVarSideConds]
 grpDischarge _ _ []  =  return []
 grpDischarge ss ascsG (ascL:ascsL)
   = do ascL'  <- ascsDischarge ss ascsG ascL
@@ -1012,7 +802,7 @@ Here we are trying to show
 \end{equation*}
 \begin{code}
 ascsDischarge :: MonadFail m => [Subscript]
-              -> [AtmSideCond] -> AtmSideCond -> m [AtmSideCond]
+              -> [TVarSideConds] -> TVarSideConds -> m [TVarSideConds]
 ascsDischarge _ [] ascL = return [ascL]
 ascsDischarge ss (ascG:ascsG) ascL
   =  case ascDischarge ss ascG ascL of
@@ -1032,9 +822,9 @@ Here we are trying to show:
 \end{equation*}
 \begin{code}
 ascDischarge :: MonadFail m => [Subscript]
-            -> AtmSideCond -> AtmSideCond -> m [AtmSideCond]
+            -> TVarSideConds -> TVarSideConds -> m [TVarSideConds]
 -- ascDischarge ss ascG ascL
--- ascGVar ascG == ascGVar ascL
+-- termVar ascG == termVar ascL
 \end{code}
 
 We use $V$ to denote the general variable,
@@ -1094,7 +884,6 @@ discharge rule further below.
 %       = False -- NYI
 % \end{code}
 
-We also need to handle the uniformity markings properly here.
 
 Now, we work through the combinations:
 \begin{eqnarray*}
@@ -1193,7 +982,7 @@ where elements of $G_F$ can be used to satisfy some $L_j$.
 
 \begin{code}
 freshDischarge :: MonadFail m => [Subscript]
-              -> VarSet -> VarSet -> [AtmSideCond] -> m SideCond
+              -> VarSet -> VarSet -> [TVarSideConds] -> m SideCond
 freshDischarge ss anteFvs cnsqFvs asc
   = do asc' <- freshDischarge' ss anteFvs asc
        return (asc' , cnsqFvs S.\\ anteFvs )
@@ -1201,7 +990,7 @@ freshDischarge ss anteFvs cnsqFvs asc
 
 \begin{code}
 freshDischarge' :: MonadFail m => [Subscript]
-                -> VarSet -> [AtmSideCond] -> m [AtmSideCond]
+                -> VarSet -> [TVarSideConds] -> m [TVarSideConds]
 freshDischarge' ss anteFvs [] = return []
 freshDischarge' ss anteFvs (asc:ascs)
   = do ascl  <- freshAtomDischarge ss anteFvs asc
@@ -1210,7 +999,7 @@ freshDischarge' ss anteFvs (asc:ascs)
 \end{code}
 
 We use a set of fresh variables ($G_F$)
-to try to discharge an atomic side-condition ($L_j$):
+to try to discharge an term variable side-condition ($L_j$):
 $$
 G_F \vdash L_j
 $$
@@ -1222,7 +1011,7 @@ there are three possible outcomes:
 \end{description}
 \begin{code}
 freshAtomDischarge :: MonadFail m => [Subscript]
-                   -> VarSet -> AtmSideCond -> m [AtmSideCond]
+                   -> VarSet -> TVarSideConds -> m [TVarSideConds]
 \end{code}
 We now consider the following possibilities:
 \begin{eqnarray*}
@@ -1266,11 +1055,11 @@ freshAtomDischarge ss gF asc = return [asc]
 
 When discharge at match application
 results in a residual side-condition (not trivially true)
-then we need to check that \emph{all} the atomic side-conditions in that residual
+then we need to check that \emph{all} the term variable side-conditions in that residual
 mention variables that are marked as ``floating''.
 Only these can possibly be instantiated to satisfy the residual side-condition.
 \begin{code}
-isFloatingASC :: AtmSideCond -> Bool
+isFloatingASC :: TVarSideConds -> Bool
 isFloatingASC (SD  _ gv vs)  = isFloatingGVar gv || hasFloating vs
 isFloatingASC (SS  _ gv vs)  = isFloatingGVar gv || hasFloating vs
 hasFloating :: VarSet -> Bool
@@ -1283,8 +1072,7 @@ to a ``?'' variable (\texttt{bindFloating})
 will not cancel out other variables that they should be able to do,
 if instantiated properly.
 \begin{code}
-tolerateAutoOrNull :: VarSet -> AtmSideCond -> Bool
--- we ignore uniformity here. Is this wise?
+tolerateAutoOrNull :: VarSet -> TVarSideConds -> Bool
 tolerateAutoOrNull unbound (Disjoint _  _ d) =  unbound `overlaps` d
 tolerateAutoOrNull unbound (CoveredBy _  _ c)   =  S.null c || unbound `overlaps` c
 tolerateAutoOrNull _       _              =  False
@@ -1325,26 +1113,25 @@ fresh fvs = ( [], fvs )
 \newpage
 \section{Side-condition Queries and Operations}
 
-First, some simple queries to find atomic side-conditions of interest.
+First, some simple queries to find term variable side-conditions of interest.
 We start by checking if a variable is mentioned.
 \begin{code}
-findGenVar :: MonadFail m => GenVar -> SideCond -> m AtmSideCond
+findGenVar :: MonadFail m => GenVar -> SideCond -> m TVarSideConds
 findGenVar gv ( ascs, _ )  =  findGV gv ascs
 
-findGV _ [] = fail "findGenVar: not in any atomic side-condition"
+findGV _ [] = fail "findGenVar: not in any term variable side-condition"
 findGV gv (asc:ascs)
   | gv `mentionedBy` asc  =  return asc
   | otherwise             =  findGV gv ascs
 
-mentionedBy :: GenVar -> AtmSideCond -> Bool
+mentionedBy :: GenVar -> TVarSideConds -> Bool
 gv `mentionedBy` asc
-  | isUniform asc  =  gv `sameIdClass` ascGVar asc
-  | otherwise      =  gv == ascGVar asc
+  | otherwise      =  gv == termVar asc
 \end{code}
 
 We then look at returning all mentions of a variable:
 \begin{code}
-findAllGenVar :: GenVar -> SideCond -> [AtmSideCond]
+findAllGenVar :: GenVar -> SideCond -> [TVarSideConds]
 findAllGenVar gv ( ascs, _ )  =  findAGV gv [] ascs
 
 findAGV _ scsa []  =  reverse scsa
@@ -1364,16 +1151,11 @@ findCGV gv ((CoveredBy _ gv' vs):ascs)
 findCGV gv (_:ascs)  =  findCGV gv ascs
 \end{code}
 
-Next we develop some set queries and operations
-that can handle a mix of uniform and non-uniform atomic side conditions.
-We do this by comparing variables with the same identifier and class
-from each side-condition.
 
 We convert variable-sets into ordered lists of lists,
 and then work through them in lock-step.
 The internal lists contain all variables with the same identifier and class,
-are non-empty,
-and will be a singleton if the condition is uniform.
+are non-empty.
 \begin{code}
 lineariseVarSet :: VarSet -> [[GenVar]]
 lineariseVarSet vs = lineariseVarList $ S.elems vs
@@ -1392,15 +1174,15 @@ When done, we need to pack them into a set again
 packVarSet :: [[GenVar]] -> VarSet
 packVarSet = S.fromList . concat
 
-packUG :: (Uniformity,[[GenVar]]) -> VarSet
-packUG (_,gss) = packVarSet gss
+packUG :: [[GenVar]] -> VarSet
+packUG (gss) = packVarSet gss
 \end{code}
 
 \newpage
 \subsection{Side-Condition Subset Query}
 
 \begin{code}
-isSCsubset :: [Subscript] -> (Uniformity,[[GenVar]]) -> (Uniformity,[[GenVar]])
+isSCsubset :: [Subscript] -> ([[GenVar]]) -> ([[GenVar]])
            -> Bool
 \end{code}
 
@@ -1432,11 +1214,10 @@ isSCsubset ss (u1,lvl1) (u2,lvl2)  =  False
 
 Subset checking given all with same identifier and class:
 \begin{code}
-isUGsubset :: [Subscript] -> (Uniformity,[GenVar]) -> (Uniformity,[GenVar])
+isUGsubset :: [Subscript] -> ([GenVar]) -> ([GenVar])
            -> Bool
 -- both GenVar lists are non-empty and ordered
 -- all their contents have the same identifier and class
--- If ui is Uniform, then GenVar_i is a singleton
 isUGsubset _  _             (Unif,[_])     =  True
 isUGsubset ss (Unif,[_])    (_,vl2)        =  hasAllDynamics ss vl2
 isUGsubset _  (_,vl1@(_:_)) (_,vl2@(_:_))  =  vl1 `issubset` vl2
@@ -1453,7 +1234,7 @@ isUGsubset _ uv1 uv2 -- should never be called
 \subsection{Side-Condition Disjoint Query}
 
 \begin{code}
-isSCdisjoint :: [Subscript] -> (Uniformity,[[GenVar]]) -> (Uniformity,[[GenVar]])
+isSCdisjoint :: [Subscript] -> ([[GenVar]]) -> ([[GenVar]])
              -> Bool
 \end{code}
 
@@ -1475,7 +1256,7 @@ isSCdisjoint ss ugs1@(u1,g1@(gv1:vl1):vls1) ugs2@(u2,g2@(gv2:vl2):vls2)
 
 Disjoint checking given all with same identifier and class:
 \begin{code}
-isUGdisjoint :: [Subscript] -> (Uniformity,[GenVar]) -> (Uniformity,[GenVar])
+isUGdisjoint :: [Subscript] -> ([GenVar]) -> ([GenVar])
              -> Bool
 -- both GenVar lists are non-empty and ordered
 -- all their contents have the same identifier and class
@@ -1488,8 +1269,8 @@ isUGdisjoint _   _           _           =  False
 \subsection{Side-Condition Set Difference}
 
 \begin{code}
-doSCdiff :: [Subscript] -> (Uniformity,[[GenVar]]) -> (Uniformity,[[GenVar]])
-         -> (Uniformity,[[GenVar]])
+doSCdiff :: [Subscript] -> ([[GenVar]]) -> ([[GenVar]])
+         -> ([[GenVar]])
 \end{code}
 
 $$S \setminus \emptyset = S \qquad \emptyset \setminus S = \emptyset$$
@@ -1517,8 +1298,8 @@ doSCdiff' ss slv ugs1@(u1,g1@(gv1:vl1):vls1) ugs2@(u2,g2@(gv2:vl2):vls2)
 
 Set difference given all with same identifier and class:
 \begin{code}
-doUGdiff :: [Subscript] -> (Uniformity,[GenVar]) -> (Uniformity,[GenVar])
-         -> (Uniformity,[GenVar])
+doUGdiff :: [Subscript] -> ([GenVar]) -> ([GenVar])
+         -> ([GenVar])
 doUGdiff _  (u1,_)       (Unif,_)  =  (u1,[])
 doUGdiff ss (Unif,[gv1]) (_,g2)    =  (NonU,genTheGenVars gv1 ss \\ g2)
 doUGdiff ss (u1,g1)      (_,g2)    =  (u1,g1 \\ g2)
@@ -1528,8 +1309,8 @@ doUGdiff ss (u1,g1)      (_,g2)    =  (u1,g1 \\ g2)
 \subsection{Side-Condition Set Intersection}
 
 \begin{code}
-doSCint :: [Subscript] -> (Uniformity,[[GenVar]]) -> (Uniformity,[[GenVar]])
-         -> (Uniformity,[[GenVar]])
+doSCint :: [Subscript] -> ([[GenVar]]) -> ([[GenVar]])
+         -> ([[GenVar]])
 \end{code}
 
 $$S \cap \emptyset = \emptyset \qquad \emptyset \cap S = \emptyset$$
@@ -1556,8 +1337,8 @@ doSCint' ss slv ugs1@(u1,g1@(gv1:vl1):vls1) ugs2@(u2,g2@(gv2:vl2):vls2)
 
 Set intersection given all with same identifier and class:
 \begin{code}
-doUGint :: [Subscript] -> (Uniformity,[GenVar]) -> (Uniformity,[GenVar])
-         -> (Uniformity,[GenVar])
+doUGint :: [Subscript] -> ([GenVar]) -> ([GenVar])
+         -> ([GenVar])
 doUGint _  (u1,g1)    (Unif,[_])  =  (u1,g1)
 doUGint ss (Unif,[_]) (u2,g2)     =  (u2,g2)
 doUGint ss (_,g1)     (_,g2)      =  (NonU,g1 `intersect` g2)
@@ -1570,8 +1351,8 @@ doUGint ss (_,g1)     (_,g2)      =  (NonU,g1 `intersect` g2)
 
 
 \begin{code}
-doSCunion :: [Subscript] -> (Uniformity,[[GenVar]]) -> (Uniformity,[[GenVar]])
-         -> (Uniformity,[[GenVar]])
+doSCunion :: [Subscript] -> ([[GenVar]]) -> ([[GenVar]])
+         -> ([[GenVar]])
 \end{code}
 
 $$S \cup \emptyset = \S \qquad \emptyset \cup S = S$$
@@ -1597,8 +1378,8 @@ doSCunion' ss slv ugs1@(u1,g1@(gv1:vl1):vls1) ugs2@(u2,g2@(gv2:vl2):vls2)
 
 Set intersection given all with same identifier and class:
 \begin{code}
-doUGunion :: [Subscript] -> (Uniformity,[GenVar]) -> (Uniformity,[GenVar])
-         -> (Uniformity,[GenVar])
+doUGunion :: [Subscript] -> ([GenVar]) -> ([GenVar])
+         -> ([GenVar])
 doUGunion ss ug1@(Unif,[_]) _               =  ug1
 doUGunion ss _              ug2@(Unif,[_])  =  ug2
 doUGunion ss (_,g1)         (_,g2)          =  (NonU,g1 `union` g2)
@@ -1635,12 +1416,11 @@ genTheGenVars (LstVar (LVbl (Vbl i vc _) is js)) ss
 % return all ASCs that mention any variable in that set:
 % \begin{code}
 % -- NOT USED ANYWHERE!
-% citingASCs :: VarSet -> SideCond -> [AtmSideCond]
+% citingASCs :: VarSet -> SideCond -> [TVarSideConds]
 % citingASCs vs (sc,_) = filter (cited vs) sc
 %
-% cited :: VarSet -> AtmSideCond -> Bool
-% vs `cited` asc  =  vs == ascVSet asc
-% -- this needs rework as it uses ascVSet which is uniformity-blind
+% cited :: VarSet -> TVarSideConds -> Bool
+% vs `cited` asc  =  vs == tvscVSet asc
 % \end{code}
 
 \newpage
@@ -1702,54 +1482,54 @@ tstWhatever sc = Just $ Just sc
 tst_scChkDisjoint
  = testGroup "Disjoint NU  (no known vars)"
     [ testCase "gv_a `disjoint` empty is True"
-       ( ascCheck [] (Disjoint NU  gv_a S.empty) @?= tstTrue )
+       ( tvscCheck [] (Disjoint NU  gv_a S.empty) @?= tstTrue )
     , testCase "v_e `disjoint` empty is True"
-       ( ascCheck [] (Disjoint NU  v_e S.empty) @?= tstTrue )
+       ( tvscCheck [] (Disjoint NU  v_e S.empty) @?= tstTrue )
     , testCase "gv_a `disjoint` {gv_a} is False"
-       ( ascCheck [] (Disjoint NU  gv_a $ S.singleton gv_a) @?= tstFalse )
+       ( tvscCheck [] (Disjoint NU  gv_a $ S.singleton gv_a) @?= tstFalse )
     , testCase "gv_a `disjoint` {gv_b} is True"
-       ( ascCheck [] (Disjoint NU  gv_a $ S.singleton gv_b) @?= tstTrue )
+       ( tvscCheck [] (Disjoint NU  gv_a $ S.singleton gv_b) @?= tstTrue )
     , testCase "v_e `disjoint` {v_e} stands"
-       ( ascCheck [] (Disjoint NU  v_e $ S.singleton v_e)
+       ( tvscCheck [] (Disjoint NU  v_e $ S.singleton v_e)
          @?= tstWhatever  (Disjoint NU  v_e $ S.singleton v_e) )
     , testCase "v_e `disjoint` {v_f} stands"
-       ( ascCheck [] (Disjoint NU  v_e $ S.singleton v_f)
+       ( tvscCheck [] (Disjoint NU  v_e $ S.singleton v_f)
          @?= tstWhatever  (Disjoint NU  v_e $ S.singleton v_f) )
     , testCase "v_e `disjoint` {gv_a} stands"
-       ( ascCheck [] (Disjoint NU  v_e $ S.singleton gv_a)
+       ( tvscCheck [] (Disjoint NU  v_e $ S.singleton gv_a)
          @?= tstWhatever  (Disjoint NU  v_e $ S.singleton gv_a) )
     , testCase "gv_a `disjoint` {v_f} stands"
-       ( ascCheck [] (Disjoint NU  gv_a $ S.singleton v_f)
+       ( tvscCheck [] (Disjoint NU  gv_a $ S.singleton v_f)
          @?= tstWhatever  (Disjoint NU  gv_a $ S.singleton v_f) )
     , testCase "gv_a `disjoint` {gv_b,v_f} stands"
-       ( ascCheck [] (Disjoint NU  gv_a $ S.fromList [gv_b,v_f])
+       ( tvscCheck [] (Disjoint NU  gv_a $ S.fromList [gv_b,v_f])
          @?= tstWhatever  (Disjoint NU  gv_a $ S.fromList [gv_b,v_f]) )
     ]
 
 tst_scChkCovers
  = testGroup "CoveredBy NU  (no known vars)"
     [ testCase "gv_a `coveredby` empty is False"
-       ( ascCheck [] (CoveredBy NU  gv_a S.empty) @?= tstFalse )
+       ( tvscCheck [] (CoveredBy NU  gv_a S.empty) @?= tstFalse )
     , testCase "v_e `coveredby` empty stands"
-       ( ascCheck [] (CoveredBy NU  v_e S.empty)
+       ( tvscCheck [] (CoveredBy NU  v_e S.empty)
          @?= tstWhatever (CoveredBy NU  v_e S.empty) )
     , testCase "gv_a `coveredby` {gv_a} is True"
-       ( ascCheck [] (CoveredBy NU  gv_a $ S.singleton gv_a) @?= tstTrue )
+       ( tvscCheck [] (CoveredBy NU  gv_a $ S.singleton gv_a) @?= tstTrue )
     , testCase "gv_a `coveredby` {gv_b} is False"
-       ( ascCheck [] (CoveredBy NU  gv_a $ S.singleton gv_b) @?= tstFalse )
+       ( tvscCheck [] (CoveredBy NU  gv_a $ S.singleton gv_b) @?= tstFalse )
     , testCase "v_e `coveredby` {v_e} is True"
-       ( ascCheck [] (CoveredBy NU  v_e $ S.singleton v_e) @?= tstTrue )
+       ( tvscCheck [] (CoveredBy NU  v_e $ S.singleton v_e) @?= tstTrue )
     , testCase "v_e `coveredby` {v_f} stands"
-       ( ascCheck [] (CoveredBy NU  v_e $ S.singleton v_f)
+       ( tvscCheck [] (CoveredBy NU  v_e $ S.singleton v_f)
          @?= tstWhatever  (CoveredBy NU  v_e $ S.singleton v_f) )
     , testCase "v_e `coveredby` {gv_a} stands"
-       ( ascCheck [] (CoveredBy NU  v_e $ S.singleton gv_a)
+       ( tvscCheck [] (CoveredBy NU  v_e $ S.singleton gv_a)
          @?= tstWhatever  (CoveredBy NU  v_e $ S.singleton gv_a) )
     , testCase "gv_a `coveredby` {v_f} stands"
-       ( ascCheck [] (CoveredBy NU  gv_a $ S.singleton v_f)
+       ( tvscCheck [] (CoveredBy NU  gv_a $ S.singleton v_f)
          @?= tstWhatever  (CoveredBy NU  gv_a $ S.singleton v_f) )
     , testCase "gv_a `coveredby` {gv_b,v_f} stands"
-       ( ascCheck [] (CoveredBy NU  gv_a $ S.fromList [gv_b,v_f])
+       ( tvscCheck [] (CoveredBy NU  gv_a $ S.fromList [gv_b,v_f])
          @?= tstWhatever  (CoveredBy NU  gv_a $ S.fromList [gv_b,v_f]) )
     ]
 \end{code}

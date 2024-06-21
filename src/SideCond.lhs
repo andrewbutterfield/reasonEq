@@ -147,9 +147,20 @@ For list variables, we can add:
 \\ \lst\ell  \supseteq_a \lst\ell\less x,\dots  && \isdyn(\lst\ell)
 \end{eqnarray*}
 
-
 We also need to take account of known variables of various kinds
 when evaluating and building side-conditions.
+
+In general a given term variable $T$ could be involved 
+in all three condition types:
+$$
+  D \disj T \land C \supseteq T \land C_d \supseteq_a T
+$$
+which can be normalised to
+$$
+  D \disj T \land 
+  (C \setminus D) \supseteq T 
+  \land (C_d \setminus D) \supseteq_a T
+$$
 
 \subsection{Side-Condition Temporality}
 
@@ -249,6 +260,18 @@ gsetWhen vw (LstVar lv)  = LstVar $ lsetWhen vw lv
 \end{code}
 These should only be applied to variables known to be dynamic.
 
+
+\section{Term Variable Side-Conditions}
+
+\begin{code}
+data  TVarSideConds
+  = TVSC  { termVar       ::  GenVar
+          , uniform       ::  Bool
+          , disjointFrom  ::  VarSet
+          , coveredBy     ::  VarSet
+          , dynCovered    ::  VarSet
+          }
+\end{code}
 
 \section{Atomic Side-Conditions}
 

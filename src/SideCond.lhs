@@ -560,21 +560,23 @@ mrgTVarCondLists ss tvscs1 (tvsc:tvscs2)
           mrgTVarCondLists ss tvscs1' tvscs2
 \end{code}
 
-\subsection{Merging Atomic and Freshness Side-Conditions}
+\subsection{Merging Term Variable and Freshness Side-Conditions}
 
 
 \begin{code}
-mrgAtomicFreshConditions :: MonadFail m => [Subscript]
-                         -> VarSet -> [TVarSideConds] -> m SideCond
-mrgAtomicFreshConditions ss freshvs tvscs
-  | freshvs `disjoint` coverVarsOf ss tvscs  =  return (tvscs,freshvs)
+mrgTVarFreshConditions :: MonadFail m 
+                       => [Subscript] -> VarSet -> [TVarSideConds] 
+                       -> m SideCond
+mrgTVarFreshConditions ss freshvs tvscs
+  | freshvs `disjoint` coveredVarsOf ss tvscs  =  return (tvscs,freshvs)
   -- the above might not work - `disjoint` may need more information
   | otherwise  =  fail "Fresh variables cannot cover terms."
 
-coverVarsOf :: [Subscript] -> [TVarSideConds] -> VarSet
-coverVarsOf ss tvscs = S.unions $ map coversOf tvscs
-coversOf (CoveredBy NU  _ vs)  =  vs
-coversOf _              =  S.empty
+coveredVarsOf :: [Subscript] -> [TVarSideConds] -> VarSet
+coveredVarsOf ss tvscs = S.unions $ map coveringsOf tvscs
+coveringsOf (TVSC _ _ mvsC mvsCd)  =  cvr mvsC `S.union` cvr mvsCd
+cvr Nothing    =  S.empty -- universe does not contain fresh vars
+cvr (Just vs)  =  vs
 \end{code}
 
 \section{From TVSC and Free-list to Side-Condition}
@@ -584,7 +586,7 @@ mkSideCond :: MonadFail m
            => [Subscript] -> [TVarSideConds] -> VarSet -> m SideCond
 mkSideCond ss tvscs fvs
  = do tvscs' <-  mrgTVarCondLists ss [] tvscs
-      mrgAtomicFreshConditions ss fvs tvscs'
+      mrgTVarFreshConditions ss fvs tvscs'
 \end{code}
 
 
@@ -598,7 +600,7 @@ mrgSideCond :: MonadFail m
             => [Subscript] -> SideCond -> SideCond -> m SideCond
 mrgSideCond ss (tvscs1,fvs1) (tvscs2,fvs2)
      = do tvscs' <- mrgTVarCondLists ss tvscs1 tvscs2
-          mrgAtomicFreshConditions ss (fvs1 `S.union` fvs2) tvscs'
+          mrgTVarFreshConditions ss (fvs1 `S.union` fvs2) tvscs'
           -- the above may require a ss-savvy union?
 
 mrgSideConds :: MonadFail m => [Subscript] -> [SideCond] -> m SideCond
@@ -667,117 +669,62 @@ Failure occurs if any $L_j$ group results in $\false$.
 
 
 \begin{code}
-scDischarge ss anteSC@(anteASC,anteFvs) cnsqSC@(cnsqASC,cnsqFvs)
-  | isTrivialSC cnsqSC  =  return scTrue  -- G => true   is   true
-  | isTrivialSC anteSC  =  return cnsqSC  -- true => L   is   L, not discharged
+scDischarge ss anteSC@(anteTVSC,anteFvs) cnsqSC@(cnsqTVSC,cnsqFvs)
+  | isTrivialSC cnsqSC  =  return scTrue  -- (G => true) = true
+  | isTrivialSC anteSC  =  return cnsqSC  -- (true => L) = L
   | otherwise
-     = do tvsc' <- scDischarge' ss (groupByGV anteASC) (groupByGV cnsqASC)
+     = do tvsc' <- scDischarge' ss anteTVSC cnsqTVSC
           freshDischarge ss anteFvs cnsqFvs tvsc'
 \end{code}
 
-We have a modified version of \texttt{Data.List.groupBy}
-\begin{code}
-groupByGV :: [TVarSideConds] -> [(GenVar,[TVarSideConds])]
-groupByGV []          =  []
-groupByGV (tvsc:tvscs)  =  (gv,tvsc:ours) : groupByGV others
-                      where
-                        gv               =  termVar tvsc
-                        gv `usedIn` tvsc  =  gv == termVar tvsc
-                        (ours,others)    =  span (usedIn gv) tvscs
-\end{code}
+% We have a modified version of \texttt{Data.List.groupBy}
+% \begin{code}
+% groupByGV :: [TVarSideConds] -> [(GenVar,[TVarSideConds])]
+% groupByGV []          =  []
+% groupByGV (tvsc:tvscs)  =  (gv,tvsc:ours) : groupByGV others
+%                       where
+%                         gv               =  termVar tvsc
+%                         gv `usedIn` tvsc  =  gv == termVar tvsc
+%                         (ours,others)    =  span (usedIn gv) tvscs
+% \end{code}
 
-\subsection{Atomic Condition  Discharge}
+\subsection{Term-Variable  Condition  Discharge}
 
-Now onto processing those groups:
+Now onto processing those ordered Term-Variable Side-Conditions:
 \begin{code}
 scDischarge'  :: MonadFail m => [Subscript]
-              -> [(GenVar,[TVarSideConds])] -> [(GenVar,[TVarSideConds])]
+              -> [TVarSideConds] -> [TVarSideConds]
               -> m [TVarSideConds]
-scDischarge' _ _ []      =  return []                   -- discharged
-scDischarge' _ [] grpsL  =  return $ concat $ map snd grpsL -- not discharged
-scDischarge' ss (grpG@(gvG,ascsG):restG) grpsL@(grpL@(gvL,ascsL):restL)
-  | gvG < gvL  =  scDischarge' ss restG grpsL -- grpG not needed
-  | gvG > gvL  =  do -- nothing available to discharge grpL
+scDischarge' _ _ []      =  return []     --  discharged
+scDischarge' _ [] tvscL  =  return tvscL  --  not discharged
+scDischarge' ss        (tvscG@(TVSC gvG _ _ _):restG) 
+                tvscLs@(tvscL@(TVSC gvL _ _ _):restL)
+  | gvG < gvL  =  scDischarge' ss restG tvscLs -- tvscG not needed
+  | gvG > gvL  =  do -- nothing available to discharge tvscL
                      rest' <- scDischarge' ss restG restL
                      return (ascsL++rest')
-  | otherwise  =  do -- use grpG to discharge grpL
-                     tvscs' <- grpDischarge ss ascsG ascsL
+  | otherwise  =  do -- use tvscG to discharge tvscL
+                     tvsc' <- tvscDischarge ss tvscG tvscsL
                      rest' <- scDischarge' ss restG restL
-                     return (tvscs'++rest')
+                     return (tvsc':rest')
 \end{code}
 
 \newpage
 
-The following code assumes that the \texttt{GenVar} component
-is the same in all of the \texttt{TVarSideConds}.
 
-Here again, we have the form
+At this point we have the form, for given term-variable $T$:
 \begin{equation}
- \left( \bigwedge_{i \in \setof{D,C,pre}} G_i \right)
+ \left( D_G \disj T \land C_G \supseteq T \land Cd_G \supseteq_a T \right)
  \vdash
- \left( \bigwedge_{j \in \setof{D,C,pre}} L_j \right)
- \label{eqn:SideCond:disharge-form}
+ \left( D_L \disj T \land C_L \supseteq T \land Cd_L \supseteq_a T \right)
 \end{equation}
-If we get here, then neither side-condition was trivially true,
-so none of the lists here are empty.
+Finally, we have arrived at where the real work is done.
 
-Given that
-\begin{eqnarray*}
-   A \land B \implies C &=& (A \implies C) \lor  (B \implies C)
-\\ A \implies B \land C &=& (A \implies B) \land (A \implies C)
-\end{eqnarray*}
-we can ask: in which order should we proceed?
-
-Both orderings give the same outcome if all we want to do
-is to simplify an instance of (\ref{eqn:SideCond:discharge-form}).
-However, we are assuming all the $G_i$ are true,
-and want to know if that is enough to ensure that all the $L_j$
-are also true.
-There is an asymmetry here, which means that we should
-use all the $G_i$ to try and discharge each $L_i$,
-rather than the other way around.
 \begin{code}
-grpDischarge :: MonadFail m => [Subscript]
-             -> [TVarSideConds] -> [TVarSideConds] -> m [TVarSideConds]
-grpDischarge _ _ []  =  return []
-grpDischarge ss ascsG (ascL:ascsL)
-  = do ascL'  <- ascsDischarge ss ascsG ascL
-       ascsL' <- grpDischarge ss ascsG ascsL
-       return (ascL'++ascsL')
+tvscDischarge :: MonadFail m => [Subscript]
+              -> TVarSideConds -> TVarSideConds -> m TVarSideConds
 \end{code}
 
-Here we are trying to show
-\begin{equation*}
- \left( \bigwedge_{i \in \setof{D,C,pre}} G_i \right)
- \vdash
- L_j \quad \where \quad j \in \setof{D,C,pre}
-\end{equation*}
-\begin{code}
-ascsDischarge :: MonadFail m => [Subscript]
-              -> [TVarSideConds] -> TVarSideConds -> m [TVarSideConds]
-ascsDischarge _ [] ascL = return [ascL]
-ascsDischarge ss (ascG:ascsG) ascL
-  =  case ascDischarge ss ascG ascL of
-      Yes []       ->  return []
-      Yes [ascL']  ->  ascsDischarge ss ascsG ascL'
-      But msgs     ->  fail $ unlines msgs
-\end{code}
-
-\newpage
-
-Finally, we get to where the real work is done.
-Here we are trying to show:
-\begin{equation*}
- G_i
- \vdash
- L_j \quad \where \quad i,j \in \setof{D,C}
-\end{equation*}
-\begin{code}
-ascDischarge :: MonadFail m => [Subscript]
-            -> TVarSideConds -> TVarSideConds -> m [TVarSideConds]
--- ascDischarge ss ascG ascL
--- termVar ascG == termVar ascL
-\end{code}
 
 We use $V$ to denote the general variable,
 which represents some set of (other) variables.
@@ -794,7 +741,7 @@ A translated law side-condition of the form $\emptyset \supseteq v$,
 where $v$ is a standard variable.
 This is simply false.
 \begin{code}
-ascDischarge _ _ (CoveredBy _ (StdVar (Vbl _ ObsV _)) dL)
+tvscDischarge _ _ (TVSC (StdVar (Vbl _ ObsV _)) dL _ _)
   | S.null dL  =  fail ("Empty set cannot cover a standard obs. variable")
 \end{code}
 
@@ -843,16 +790,16 @@ Now, we work through the combinations:
    & = & \true, \quad\IF\quad D_L \subseteq D_G
 \\ & \mapsto & (D_L\setminus D_G) \disj V
 \end{eqnarray*}
-\begin{code}
-ascDischarge ss (Disjoint u1 _ dG) (Disjoint u2 gv dL)
-  | linL `subset` linG  =  return [] -- true
-  | otherwise           =  return [gv `disjfrom` (linL `diff` linG)]
-  where
-    linG = (u1,lineariseVarSet dG)
-    linL = (u2,lineariseVarSet dL)
-    subset = isSCsubset ss
-    diff s t = packUG $ doSCdiff ss s t
-\end{code}
+% \begin{code}
+% ascDischarge ss (Disjoint u1 _ dG) (Disjoint u2 gv dL)
+%   | linL `subset` linG  =  return [] -- true
+%   | otherwise           =  return [gv `disjfrom` (linL `diff` linG)]
+%   where
+%     linG = (u1,lineariseVarSet dG)
+%     linL = (u2,lineariseVarSet dL)
+%     subset = isSCsubset ss
+%     diff s t = packUG $ doSCdiff ss s t
+% \end{code}
 
 \begin{eqnarray*}
    D_G \disj V \discharges C_L \supseteq V
@@ -860,17 +807,17 @@ ascDischarge ss (Disjoint u1 _ dG) (Disjoint u2 gv dL)
      \quad\IF\quad C_L \subseteq D_G \land isStdObs(V)
 \\ & \mapsto & (C_L \setminus D_G) \supseteq V
 \end{eqnarray*}
-\begin{code}
-ascDischarge ss (Disjoint u1 _ dG) cc@(CoveredBy u2 gv cL)
-  | linL `subset` linG
-    && isObsGVar gv     =  fail "Disj=>emptyCover"
-  | otherwise           =  return [gv `coveredby` (linL `diff` linG)]
-  where
-    linG = (u1,lineariseVarSet dG)
-    linL = (u2,lineariseVarSet cL)
-    subset = isSCsubset ss
-    diff s t = packUG $ doSCdiff ss s t
-\end{code}
+% \begin{code}
+% ascDischarge ss (Disjoint u1 _ dG) cc@(CoveredBy u2 gv cL)
+%   | linL `subset` linG
+%     && isObsGVar gv     =  fail "Disj=>emptyCover"
+%   | otherwise           =  return [gv `coveredby` (linL `diff` linG)]
+%   where
+%     linG = (u1,lineariseVarSet dG)
+%     linL = (u2,lineariseVarSet cL)
+%     subset = isSCsubset ss
+%     diff s t = packUG $ doSCdiff ss s t
+% \end{code}
 
 \begin{eqnarray*}
    C_G \supseteq V \discharges C_L \supseteq V
@@ -880,21 +827,21 @@ ascDischarge ss (Disjoint u1 _ dG) cc@(CoveredBy u2 gv cL)
 \end{eqnarray*}
 Here we have to ensure that $C_{?L}$ is retained, as no floating variables
 exist in $C_G$, and so the intersection would remove those in $C_L$.
-\begin{code}
-ascDischarge ss (CoveredBy u1 _ cG) (CoveredBy u2 gv cL)
-  | linG `subset` linL                =  return []
-  | linG `disj` linL && isObsGVar gv  =  fail "CoverDisj=>noCover"
-  | otherwise  =  return
-                    [gv `coveredby` ((linG `intsct` linL) `union` linF)]
-  where
-    subset = isSCsubset ss
-    disj = isSCdisjoint ss
-    intsct = doSCint ss
-    union s t = packUG $ doSCunion ss s t
-    linG = (u1,lineariseVarSet cG)
-    linL = (u2,lineariseVarSet cL)
-    linF = (u2,lineariseVarSet $ S.filter isFloatingGVar cL)
-\end{code}
+% \begin{code}
+% ascDischarge ss (CoveredBy u1 _ cG) (CoveredBy u2 gv cL)
+%   | linG `subset` linL                =  return []
+%   | linG `disj` linL && isObsGVar gv  =  fail "CoverDisj=>noCover"
+%   | otherwise  =  return
+%                     [gv `coveredby` ((linG `intsct` linL) `union` linF)]
+%   where
+%     subset = isSCsubset ss
+%     disj = isSCdisjoint ss
+%     intsct = doSCint ss
+%     union s t = packUG $ doSCunion ss s t
+%     linG = (u1,lineariseVarSet cG)
+%     linL = (u2,lineariseVarSet cL)
+%     linF = (u2,lineariseVarSet $ S.filter isFloatingGVar cL)
+% \end{code}
 
 
 \begin{eqnarray*}
@@ -902,35 +849,44 @@ ascDischarge ss (CoveredBy u1 _ cG) (CoveredBy u2 gv cL)
    & = & \true, \quad \IF~ C_G\cap D_L = \emptyset
 \\ & \mapsto & D_L \disj V
 \end{eqnarray*}
-\begin{code}
-ascDischarge ss (CoveredBy u1  _ cG) d@(Disjoint u2  gv dL)
-  | linG `disj` linL  =  return []
-  | otherwise         =  return [d]
-  where
-    disj = isSCdisjoint ss
-    linG = (u1,lineariseVarSet cG)
-    linL = (u2,lineariseVarSet dL)
-\end{code}
+% \begin{code}
+% ascDischarge ss (CoveredBy u1  _ cG) d@(Disjoint u2  gv dL)
+%   | linG `disj` linL  =  return []
+%   | otherwise         =  return [d]
+%   where
+%     disj = isSCdisjoint ss
+%     linG = (u1,lineariseVarSet cG)
+%     linL = (u2,lineariseVarSet dL)
+% \end{code}
 
 
 Anything else is not handled right now;
 \begin{code}
-ascDischarge _ _ ascL = return [ascL]
+tvscDischarge _ _ tvscL = return tvscL
 \end{code}
 
 \subsection{Freshness Condition  Discharge}
 
 We have reduced our original problem down to:
 $$
- G_F
+ \fresh G_F
  \vdash
- \left( \bigwedge_{j \in J \subseteq\setof{1 \dots n}} L_j \land L_F  \right)
+ \left( D_L \disj T 
+ \land C_L \supseteq T 
+        \land Cd_L \supseteq_a T 
+        \land \fresh L_F  
+ \right)
 $$
 The solution is
 $$
-\bigwedge_{j \in J' \subseteq J} L_j \land (L_F\setminus G_F)
+ \left( D'_L \disj T 
+ \land C'_L \supseteq T 
+        \land Cd'_L \supseteq_a T 
+        \land \fresh (L_F \setminus G_F)  
+ \right)
 $$
-where elements of $G_F$ can be used to satisfy some $L_j$.
+where elements of $G_F$ can be used to satisfy some $\setof{D,C,Cd}_L$,
+resulting in modified versions $\setof{D',C',Cd'}_L$.
 
 \begin{code}
 freshDischarge :: MonadFail m => [Subscript]
@@ -945,7 +901,7 @@ freshDischarge' :: MonadFail m => [Subscript]
                 -> VarSet -> [TVarSideConds] -> m [TVarSideConds]
 freshDischarge' ss anteFvs [] = return []
 freshDischarge' ss anteFvs (tvsc:tvscs)
-  = do ascl  <- freshAtomDischarge ss anteFvs tvsc
+  = do ascl  <- freshTVarDischarge ss anteFvs tvsc
        tvscs' <- freshDischarge'    ss anteFvs tvscs
        return (ascl++tvscs')
 \end{code}
@@ -962,7 +918,7 @@ there are three possible outcomes:
   \item [Not Fully Discharged]  Return [$L'_j$]
 \end{description}
 \begin{code}
-freshAtomDischarge :: MonadFail m => [Subscript]
+freshTVarDischarge :: MonadFail m => [Subscript]
                    -> VarSet -> TVarSideConds -> m [TVarSideConds]
 \end{code}
 We now consider the following possibilities:
@@ -971,34 +927,34 @@ We now consider the following possibilities:
    &=& \true, \quad \IF\quad D_L \subseteq G_F
 \\ &\mapsto& D_L \setminus G_F \disj V
 \end{eqnarray*}
-\begin{code}
-freshAtomDischarge ss gF (Disjoint u gv dL)
-  | linL `subset` linF  =  return []
-  | otherwise  =  return [gv `disjfrom` (linL `diff` linF)]
-  where
-    subset = isSCsubset ss
-    diff s t  = packUG $ doSCdiff ss s t
-    linF = (NonU,lineariseVarSet gF)
-    linL = (u,lineariseVarSet dL)
-\end{code}
+% \begin{code}
+% freshTVarDischarge ss gF (Disjoint u gv dL)
+%   | linL `subset` linF  =  return []
+%   | otherwise  =  return [gv `disjfrom` (linL `diff` linF)]
+%   where
+%     subset = isSCsubset ss
+%     diff s t  = packUG $ doSCdiff ss s t
+%     linF = (NonU,lineariseVarSet gF)
+%     linL = (u,lineariseVarSet dL)
+% \end{code}
 
 \begin{eqnarray*}
    G_F \discharges C_L \supseteq V
    &\mapsto&  C_L \setminus G_F \supseteq V
 \end{eqnarray*}
-\begin{code}
-freshAtomDischarge ss gF (CoveredBy u gv cL)
-  = return [gv `coveredby` (linL `diff` linF)]
-  where
-    diff s t = packUG $ doSCdiff ss s t
-    linF = (NonU,lineariseVarSet gF)
-    linL = (u,lineariseVarSet cL)
-\end{code}
+% \begin{code}
+% freshTVarDischarge ss gF (CoveredBy u gv cL)
+%   = return [gv `coveredby` (linL `diff` linF)]
+%   where
+%     diff s t = packUG $ doSCdiff ss s t
+%     linF = (NonU,lineariseVarSet gF)
+%     linL = (u,lineariseVarSet cL)
+% \end{code}
 
 
 Anything else is not handled right now.
 \begin{code}
-freshAtomDischarge ss gF tvsc = return [tvsc]
+freshTVarDischarge ss gF tvsc = return [tvsc]
 \end{code}
 
 

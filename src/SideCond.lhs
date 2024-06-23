@@ -16,7 +16,7 @@ module SideCond (
 , scVarSet
 , mrgTVarConds, mrgSideCond, mrgSideConds, mkSideCond
 , scDischarge
-, isFloatingASC
+, isFloatingTVSC
 , notin, covers, dyncover, fresh
 , findGenVar, findAllGenVar, findCoveredGenVar
 -- , citingASCs   -- not used anywhere!
@@ -967,25 +967,30 @@ then we need to check that \emph{all} the term variable side-conditions in that 
 mention variables that are marked as ``floating''.
 Only these can possibly be instantiated to satisfy the residual side-condition.
 \begin{code}
-isFloatingASC :: TVarSideConds -> Bool
-isFloatingASC (SD  _ gv vs)  = isFloatingGVar gv || hasFloating vs
-isFloatingASC (SS  _ gv vs)  = isFloatingGVar gv || hasFloating vs
+isFloatingTVSC :: TVarSideConds -> Bool
+isFloatingTVSC (TVSC  gv vsD mvsC mvsCd)
+  = isFloatingGVar gv || 
+    ( hasFloating vsD && hasFloatingM mvsC && hasFloatingM mvsCd )
 hasFloating :: VarSet -> Bool
 hasFloating vs = any isFloatingGVar $ S.toList vs
+hasFloatingM :: Maybe VarSet -> Bool
+hasFloatingM Nothing = False
+hasFloatingM (Just vs) = hasFLoating vs
 \end{code}
-One exception to this, during law matching,
-is that coverage may reduce to the empty set
-because unbound variables given a temporary binding
-to a ``?'' variable (\texttt{bindFloating})
-will not cancel out other variables that they should be able to do,
-if instantiated properly.
-\begin{code}
-tolerateAutoOrNull :: VarSet -> TVarSideConds -> Bool
-tolerateAutoOrNull unbound (Disjoint _  _ d) =  unbound `overlaps` d
-tolerateAutoOrNull unbound (CoveredBy _  _ c)   =  S.null c || unbound `overlaps` c
-tolerateAutoOrNull _       _              =  False
-autoOrNullInAll unbound = all (tolerateAutoOrNull unbound)
-\end{code}
+% One exception to this, during law matching,
+% is that coverage may reduce to the empty set
+% because unbound variables given a temporary binding
+% to a ``?'' variable (\texttt{bindFloating})
+% will not cancel out other variables that they should be able to do,
+% if instantiated properly.
+% \begin{code}
+% tolerateAutoOrNull :: VarSet -> TVarSideConds -> Bool
+% tolerateAutoOrNull unbound (TVSC _ vsD mvsC mvsCd) 
+% =  unbound `overlaps` vsD
+% tolerateAutoOrNull unbound (CoveredBy _  _ c)   =  S.null c || unbound `overlaps` c
+% tolerateAutoOrNull _       _              =  False
+% autoOrNullInAll unbound = all (tolerateAutoOrNull unbound)
+% \end{code}
 
 
 
@@ -1053,9 +1058,9 @@ We sometimes want mentions for a specific condition type:
 findCoveredGenVar :: MonadFail m => GenVar -> SideCond -> m VarSet
 findCoveredGenVar gv ( tvscs, _ ) = findCGV gv tvscs
 
-findCGV gv []        =  fail ("Covered "++show gv ++ " not found")
-findCGV gv ((CoveredBy _ gv' vs):tvscs)
-  | gv == gv'        =  return vs
+findCGV gv []         =  fail ("Covered "++show gv ++ " not found")
+findCGV gv ((TVSC gv' _ (Just vs) _):tvscs)
+  | gv == gv'         =  return vs
 findCGV gv (_:tvscs)  =  findCGV gv tvscs
 \end{code}
 
@@ -1088,6 +1093,9 @@ packUG (gss) = packVarSet gss
 
 \newpage
 \subsection{Side-Condition Subset Query}
+
+
+\textbf{ALL NOW REDUNDANT AS UNIFORMITY COMPONENT NO LONGER EXISTS}
 
 \begin{code}
 isSCsubset :: [Subscript] -> ([[GenVar]]) -> ([[GenVar]])
@@ -1126,9 +1134,9 @@ isUGsubset :: [Subscript] -> ([GenVar]) -> ([GenVar])
            -> Bool
 -- both GenVar lists are non-empty and ordered
 -- all their contents have the same identifier and class
-isUGsubset _  _             (Unif,[_])     =  True
-isUGsubset ss (Unif,[_])    (_,vl2)        =  hasAllDynamics ss vl2
-isUGsubset _  (_,vl1@(_:_)) (_,vl2@(_:_))  =  vl1 `issubset` vl2
+isUGsubset _  _             [_]     =  True
+isUGsubset ss [_]    vl2        =  hasAllDynamics ss vl2
+isUGsubset _  vl1@(_:_) vl2@(_:_)  =  vl1 `issubset` vl2
 
 isUGsubset _ uv1 uv2 -- should never be called
   = error $ unlines'
@@ -1169,7 +1177,7 @@ isUGdisjoint :: [Subscript] -> ([GenVar]) -> ([GenVar])
 -- both GenVar lists are non-empty and ordered
 -- all their contents have the same identifier and class
 -- If ui is Uniform, then GenVar_i is a singleton
-isUGdisjoint _   (NonU,vl1)  (NonU,vl2)  =  vl1 `isdisj` vl2
+isUGdisjoint _   vl1  vl2  =  vl1 `isdisj` vl2
 isUGdisjoint _   _           _           =  False
 \end{code}
 
@@ -1183,34 +1191,34 @@ doSCdiff :: [Subscript] -> ([[GenVar]]) -> ([[GenVar]])
 
 $$S \setminus \emptyset = S \qquad \emptyset \setminus S = \emptyset$$
 \begin{code}
-doSCdiff _ (u1,vls1) (_,[])  =  (u1,vls1)
-doSCdiff _ (u1,[])   (_,_)   =  (u1,[])
+doSCdiff _ vls1 []  =  vls1
+doSCdiff _ [] _   =  []
 \end{code}
 
 Otherwise, we walk through both sides
 \begin{code}
 doSCdiff ss ugs1 ugs2 = doSCdiff' ss [] ugs1 ugs2
 
-doSCdiff' ss slv (u1,[]) _  =  (u1,reverse slv)
+doSCdiff' ss slv [] _  =  reverse slv
 
-doSCdiff' ss slv (u1,vls1) (_,[]) = (u1,reverse slv ++vls1)
+doSCdiff' ss slv vls1 [] = reverse slv ++vls1
 
-doSCdiff' ss slv ugs1@(u1,g1@(gv1:vl1):vls1) ugs2@(u2,g2@(gv2:vl2):vls2)
-  | gv1  < gv2  =  doSCdiff' ss (g1:slv) (u1,vls1) ugs2 -- keep g1
-  | gv1  > gv2  =  doSCdiff' ss slv      ugs1      (u2,vls2)
-  | null g3     =  doSCdiff' ss slv      (u1,vls1) (u2,vls2)  -- gv1 ~ gv2
-  | otherwise   =  doSCdiff' ss (g3:slv) (u1,vls1) (u2,vls2)  -- gv1 ~ gv2
+doSCdiff' ss slv (g1@(gv1:vl1):vls1) (g2@(gv2:vl2):vls2)
+  | gv1  < gv2  =  doSCdiff' ss (g1:slv) vls1 g2 -- keep g1
+  | gv1  > gv2  =  doSCdiff' ss slv      ugs1      vls2
+  | null g3     =  doSCdiff' ss slv      vls1 vls2  -- gv1 ~ gv2
+  | otherwise   =  doSCdiff' ss (g3:slv) vls1 vls2  -- gv1 ~ gv2
   where
-    (_,g3) = doUGdiff ss (u1,g1) (u2,g2)
+    g3 = doUGdiff ss g1 g2
 \end{code}
 
 Set difference given all with same identifier and class:
 \begin{code}
 doUGdiff :: [Subscript] -> ([GenVar]) -> ([GenVar])
          -> ([GenVar])
-doUGdiff _  (u1,_)       (Unif,_)  =  (u1,[])
-doUGdiff ss (Unif,[gv1]) (_,g2)    =  (NonU,genTheGenVars gv1 ss \\ g2)
-doUGdiff ss (u1,g1)      (_,g2)    =  (u1,g1 \\ g2)
+doUGdiff _  u1       _  =  []
+doUGdiff ss [gv1] g2    =  genTheGenVars gv1 ss \\ g2
+doUGdiff ss g1     g2    =  g1 \\ g2
 \end{code}
 
 \newpage
@@ -1247,9 +1255,9 @@ Set intersection given all with same identifier and class:
 \begin{code}
 doUGint :: [Subscript] -> ([GenVar]) -> ([GenVar])
          -> ([GenVar])
-doUGint _  (u1,g1)    (Unif,[_])  =  (u1,g1)
-doUGint ss (Unif,[_]) (u2,g2)     =  (u2,g2)
-doUGint ss (_,g1)     (_,g2)      =  (NonU,g1 `intersect` g2)
+doUGint _  g1    [_]  =  g1
+doUGint ss [_] g2   =  g2
+doUGint ss g1     g2     =  g1 `intersect` g2
 \end{code}
 
 
@@ -1288,9 +1296,9 @@ Set intersection given all with same identifier and class:
 \begin{code}
 doUGunion :: [Subscript] -> ([GenVar]) -> ([GenVar])
          -> ([GenVar])
-doUGunion ss ug1@(Unif,[_]) _               =  ug1
-doUGunion ss _              ug2@(Unif,[_])  =  ug2
-doUGunion ss (_,g1)         (_,g2)          =  (NonU,g1 `union` g2)
+doUGunion ss ug1@[_] _               =  ug1
+doUGunion ss _              ug2@[_]  =  ug2
+doUGunion ss g1         g2          =  g1 `union` g2
 \end{code}
 
 

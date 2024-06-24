@@ -185,7 +185,18 @@ data  TVarSideConds -- (T,D,C,C_d)
           , coveredBy       ::  Maybe VarSet  --  U  | C
           , coveredDynamic  ::  Maybe VarSet  --  Ud | Cd
           }
-tvscTrue t = TVSC t S.null Nothing Nothing
+disjTrue = S.empty
+covByTrue = Nothing
+tvscTrue t = TVSC t disjTrue covByTrue covByTrue
+\end{code}
+
+We need a smart builder here to handle all being true:
+\begin{code}
+mkTVSC :: GenVar -> VarSet -> Maybe VarSet -> Maybe VarSet -> Maybe TVarSideConds
+mkTVSC gv vsD mvsC mvsCd
+  = if vsD == disjTrue && mvsC == covByTrue && mvsCd == covByTrue
+    then Nothing -- denotes True
+    else Just $ TVSC gv vsD mvsC mvsCd
 \end{code}
 
 
@@ -199,9 +210,9 @@ tvscVSet tvsc
 We provide some builders when only one of the three conditions is involved:
 \begin{code}
 disjfrom, coveredby, dyncovered :: GenVar -> VarSet -> TVarSideConds
-gv `disjfrom`   vs  =  TVSC gv vs     Nothing   Nothing
-gv `coveredby`  vs  =  TVSC gv S.null (Just vs) Nothing
-gv `dyncovered` vs  =  TVSC gv S.null Nothing   (Just vs) 
+gv `disjfrom`   vs  =  TVSC gv vs       covByTrue covByTrue
+gv `coveredby`  vs  =  TVSC gv disjTrue (Just vs) covByTrue
+gv `dyncovered` vs  =  TVSC gv disjTrue covByTrue (Just vs) 
 \end{code}
 
 
@@ -226,12 +237,9 @@ tvscCheck :: MonadFail m => [Subscript] -> TVarSideConds
 tvscCheck ss (TVSC gv vsD mvsC mvsCd)
   = do  vsD'   <- disjointCheck  ss gv vsD
         mvsC'  <- coveredByCheck ss gv mvsC
-        mvsCd' <- covDynCheck    ss gv mvsCd
-        return $ TVSC gv vsD' mvsC' mvsCd'
-
-univTrue = Nothing
+        mvsCd' <- dynCvrgCheck   ss gv mvsCd
+        return $ mkTVSC gv vsD' mvsC' mvsCd'
 \end{code}
-
 
 \subsubsection%
 {Checking Disjoint $ V \disj g$}
@@ -249,12 +257,11 @@ Nor can we assume $T \disj z$ is false, because $T$ could contain $z$.
 disjointCheck  :: MonadFail m 
                => [Subscript] -> GenVar -> VarSet -> m VarSet
 disjointCheck ss gv vs
-  | S.null vs                 =  return disjointTrue
+  | S.null vs                 =  return disjTrue
   | not $ isObsGVar gv        =  return vs
   | gv `S.member` vs          =  report "tvar disjoint fails"
-  | all isStdV    vs          =  return disjointTrue
+  | all isStdV    vs          =  return disjTrue
   where
-    disjointTrue = S.null
     showsv = "gv = "++show gv
     showvs = "vs = "++show vs
     report msg = fail $ unlines' [msg,showsv,showvs]
@@ -279,7 +286,7 @@ coveredByCheck  :: MonadFail m
 
 coveredByCheck ss gv Nothing = return covByTrue  -- U
 coveredByCheck ss gv jvs@(Just vs)
-  | any (gvCovBy gv) vs  =  return univTrue
+  | any (gvCovBy gv) vs  =  return covByTrue
   | not $ isObsGVar gv   =  return jvs
   | S.null vs            =  report "tvar cover fails (null)"
   | all isStdV vs        =  report "tvat cover fails (all std)"
@@ -309,13 +316,13 @@ Here, as $T$ could be empty,
 we cannot deduce that $\emptyset \supseteq T$ is false.
 Similarly, $T \supseteq z$ could also be true.
 \begin{code}
-coveredDynCov  :: MonadFail m 
+dynCvrgCheck  :: MonadFail m 
                => [Subscript] -> GenVar -> Maybe VarSet -> m (Maybe VarSet)
 
-coveredDynCov ss gv Nothing = return covByTrue  -- U
-coveredDynCov ss gv jvs@(Just vs)
+dynCvrgCheck ss gv Nothing = return covByTrue  -- U
+dynCvrgCheck ss gv jvs@(Just vs)
   | hasStatic            =  report "tvar dyncover fails (static)"
-  | any (gvCovBy gv) vs  =  return univTrue
+  | any (gvCovBy gv) vs  =  return covByTrue
   | not $ isObsGVar gv   =  return jvs
   | S.null vs 
       =  if isDynGVar gv
@@ -428,28 +435,32 @@ mrgTVarConds ss tvsc (tvsc1:tvscs)
             Nothing
               ->  return tvscs
             Just tvsc'
-              ->  do tvsc'' <- mrgTVarTVar ss tvsc' tvsc1
-                     return (tvsc'':tvscs)
-  | otherwise = tvsc' : mrgTVarConds ss tvsc tvscs
+              ->  case mrgTVarTVar ss tvsc' tvsc1 of
+                    Nothing            -> fail "mgrTVarConds: false s.c."
+                    Just Nothing       -> return tvscs -- mrg is true 
+                    Just (Just tvsc'') -> return (tvsc'':tvscs)
+  | otherwise 
+    = do  tvscs' <- mrgTVarConds ss tvsc1 tvscs
+          return (tvsc:tvscs')
 \end{code}
 
 \subsection{Merging one TVSC with relevant others}
 
-Now, merging an TVSC in with other TVSCs referring to the same general variable:
+Now, merging an TVSC in with another TVSC referring to the same general variable:
 \begin{code}
 mrgTVarTVar :: MonadFail m => [Subscript]
-           -> TVarSideConds -> TVarSideConds -> m TVarSideConds
+           -> TVarSideConds -> TVarSideConds -> m (Maybe TVarSideConds)
 mrgTVarTVar ss (TVSC gv vsD1 mvsC1 mvsCd1) (TVSC _ vsD2 mvsC2 mvsCd2) 
   = let 
       vsD'   =  vsD1    `S.union`   vsD2
       mvsC'  =  mvsC1  `mintersect` mvsC2
       mvsCd' =  mvsCd1 `mintersect` mvsCd2
-    in tvscCheck ss gv vsD' mvsC' mvsCd'
+    in tvscCheck ss (TVSC gv vsD' mvsC' mvsCd')
 
 -- Nothing here denotes the relevant universal set - unit for intersection
 Nothing  `mintersect` mvs       =  mvs
 mvs      `mintersect` Nothing   =  mvs
-Just vs1 `mintersect` Just vs2  =  vs1 `S.intersection` vs2
+Just vs1 `mintersect` Just vs2  =  Just (vs1 `S.intersection` vs2)
 \end{code}
 
 
@@ -702,9 +713,9 @@ scDischarge' ss        (tvscG@(TVSC gvG _ _ _):restG)
   | gvG < gvL  =  scDischarge' ss restG tvscLs -- tvscG not needed
   | gvG > gvL  =  do -- nothing available to discharge tvscL
                      rest' <- scDischarge' ss restG restL
-                     return (ascsL++rest')
+                     return (tvscsL++rest')
   | otherwise  =  do -- use tvscG to discharge tvscL
-                     tvsc' <- tvscDischarge ss tvscG tvscsL
+                     tvsc' <- tvscDischarge ss tvscG tvscL
                      rest' <- scDischarge' ss restG restL
                      return (tvsc':rest')
 \end{code}

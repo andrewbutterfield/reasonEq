@@ -7,7 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module SideCond (
-  TVarSideConds, tvscTrue
+  TVarSideConds(..), mkTVSC
+, tvscTrue, disjTrue, covByTrue
 , tvscVSet
 , disjfrom, coveredby, dyncovered
 , SideCond, scTrue, isTrivialSC
@@ -185,7 +186,7 @@ data  TVarSideConds -- (T,D,C,C_d)
           , coveredBy       ::  Maybe VarSet  --  U  | C
           , coveredDynamic  ::  Maybe VarSet  --  Ud | Cd
           }
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show, Read)
 disjTrue = S.empty
 covByTrue = Nothing
 tvscTrue t = TVSC t disjTrue covByTrue covByTrue

@@ -1,4 +1,4 @@
-\section{Assertions}
+\chapter{Assertions}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2021-22
 
@@ -40,7 +40,7 @@ import Debugger
 
 
 \newpage
-\subsection{Introduction}
+\section{Introduction}
 
 
 An assertion is a predicate term coupled with side-conditions.
@@ -197,7 +197,7 @@ unwrapASN (ASN tsc)  =  tsc
 \end{code}
 
 
-\subsection{Safe Side-Conditions}
+\section{Safe Side-Conditions}
 
 A side-condition is safe w.r.t. a term if any observational variable
 it mentions only occurs in the term as free, or bound, but not both.
@@ -417,7 +417,7 @@ safeSideCondition tm sc  =  all (\ x -> scSafe x tm) $ S.toList $ scVarSet sc
   The use of \texttt{scVarSet} is problematic --- loss of uniformity info.
 }
 
-\subsection{Normalising Bound Variables}
+\section{Normalising Bound Variables}
 
 \textbf{Note:}
 \textsf{Currently buggy as free variables that occur syntactically later
@@ -602,7 +602,7 @@ normQ vv trm = (trm, vv) -- Val, Typ
 \end{code}
 
 
-\subsection{Normalising Side-Conditions}
+\section{Normalising Side-Conditions}
 
 Working on side-conditions is tricky,
 as they mention a variable that might have have been bound more than
@@ -614,14 +614,18 @@ we need to produce $n+1$ side-conditions, for $v_0$ \dots $v_n$.
 We call this process ``spanning''.
 \begin{code}
 normSC :: VarVersions -> SideCond -> SideCond
-normSC vv (ascs,fvs)
-  = case mkSideCond [] (map (normASC vv) ascs) (normFresh vv fvs) of
+normSC vv (tvscs,fvs)
+  = case mkSideCond [] (map (fromJust . normASC vv) tvscs) (normFresh vv fvs) of
       Yes sc    ->  sc
       -- this should not fail, but just in case ...
       But msgs  ->  error ("normSC: "++unlines' msgs)
 
-normASC vv (Disjoint  u gv vs)  =  Disjoint  u (normQGVar vv gv) (normQVSet vv vs)
-normASC vv (CoveredBy u gv vs)  =  CoveredBy u (normQGVar vv gv) (normQVSet vv vs)
+normASC vv (TVSC gv vsD mvsC mvsCd)  
+  =  mkTVSC (normQGVar vv gv) (normQVSet vv vsD) 
+            (normQVMset vv mvsC) (normQVMset vv mvsCd)
+
+normQVMset _ Nothing = Nothing
+normQVMset vv (Just vs) = Just $ normQVSet vv vs
 
 normFresh vv vs = normQVSet vv vs
 \end{code}

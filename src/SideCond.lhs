@@ -185,6 +185,7 @@ data  TVarSideConds -- (T,D,C,C_d)
           , coveredBy       ::  Maybe VarSet  --  U  | C
           , coveredDynamic  ::  Maybe VarSet  --  Ud | Cd
           }
+  deriving (Eq, Show)
 disjTrue = S.empty
 covByTrue = Nothing
 tvscTrue t = TVSC t disjTrue covByTrue covByTrue
@@ -200,11 +201,18 @@ mkTVSC gv vsD mvsC mvsCd
 \end{code}
 
 
-Selectors:
+Collecting all sets explicitly mentioned:
 \begin{code}
 tvscVSet :: TVarSideConds -> VarSet
 tvscVSet tvsc  
-  =  disjointFrom tvsc `S.union` coveredBy tvsc `S.union` coveredDynamic tvsc
+  =  disjointFrom tvsc 
+     `S.union` 
+     (asSet $ coveredBy tvsc) 
+     `S.union` 
+     (asSet $ coveredDynamic tvsc)
+  where 
+   asSet Nothing    =  S.empty
+   asSet (Just vs)  =  vs
 \end{code}
 
 We provide some builders when only one of the three conditions is involved:
@@ -713,7 +721,7 @@ scDischarge' ss        (tvscG@(TVSC gvG _ _ _):restG)
   | gvG < gvL  =  scDischarge' ss restG tvscLs -- tvscG not needed
   | gvG > gvL  =  do -- nothing available to discharge tvscL
                      rest' <- scDischarge' ss restG restL
-                     return (tvscsL++rest')
+                     return (tvscL:rest')
   | otherwise  =  do -- use tvscG to discharge tvscL
                      tvsc' <- tvscDischarge ss tvscG tvscL
                      rest' <- scDischarge' ss restG restL
@@ -786,8 +794,8 @@ This is subsumed by the
 $C_G \supseteq V \discharges D_L \disj V $
 discharge rule further below.
 % \begin{code}
-% ascDischarge (CoveredBy NU  (StdVar (Vbl _ PredV _)) oo'L)
-%              (Disjoint NU  gv omL)
+% ascDischarge (coveredby  (StdVar (Vbl _ PredV _)) oo'L)
+%              (disjfrom  gv omL)
 %   | isWhenPartition oo'L omL   =  return [] -- true
 %   where
 %     isWhenPartition oo'L omL  -- same name, partitions {Before,During,After}
@@ -986,7 +994,7 @@ hasFloating :: VarSet -> Bool
 hasFloating vs = any isFloatingGVar $ S.toList vs
 hasFloatingM :: Maybe VarSet -> Bool
 hasFloatingM Nothing = False
-hasFloatingM (Just vs) = hasFLoating vs
+hasFloatingM (Just vs) = hasFloating vs
 \end{code}
 % One exception to this, during law matching,
 % is that coverage may reduce to the empty set
@@ -1103,220 +1111,6 @@ packUG (gss) = packVarSet gss
 \end{code}
 
 \newpage
-\subsection{Side-Condition Subset Query}
-
-
-\textbf{ALL NOW REDUNDANT AS UNIFORMITY COMPONENT NO LONGER EXISTS}
-
-\begin{code}
-isSCsubset :: [Subscript] -> ([[GenVar]]) -> ([[GenVar]])
-           -> Bool
-\end{code}
-
-$$ \emptyset \subseteq S$$
-\begin{code}
-isSCsubset _ (_,[]) (_,_)      =  True
-\end{code}
-
-$$\setof{ x,\dots} \not\subseteq \emptyset$$
-\begin{code}
-isSCsubset _ (_,(_:_)) (_,[])  =  False
-\end{code}
-
-Given non-empty top-level lists, both will have non-empty sub-lists
-(\texttt{(gv1:vl1)} and \texttt{(gv2:vl2)} below).
-First, we need to walk one list or the other so that \texttt{gv1}
-and \texttt{gv2} have the same identifier and class.
-\begin{code}
-isSCsubset ss ugs1@(u1,g1@(gv1:vl1):vls1) (u2,g2@(gv2:vl2):vls2)
-  | gv1  < gv2  =  False -- remember both are ordered by id and class
-  | gv1  > gv2  =  isSCsubset ss ugs1 (u2,vls2) -- move on up on right
-  | otherwise  -- gv1 `sameIdClass` gv2
-      = isUGsubset ss (u1,g1) (u2,g2) && isSCsubset ss (u1,vls1) (u2,vls2)
-\end{code}
-
-\begin{code}
-isSCsubset ss (u1,lvl1) (u2,lvl2)  =  False
-\end{code}
-
-Subset checking given all with same identifier and class:
-\begin{code}
-isUGsubset :: [Subscript] -> ([GenVar]) -> ([GenVar])
-           -> Bool
--- both GenVar lists are non-empty and ordered
--- all their contents have the same identifier and class
-isUGsubset _  _             [_]     =  True
-isUGsubset ss [_]    vl2        =  hasAllDynamics ss vl2
-isUGsubset _  vl1@(_:_) vl2@(_:_)  =  vl1 `issubset` vl2
-
-isUGsubset _ uv1 uv2 -- should never be called
-  = error $ unlines'
-     [ "isUGsubset: ill-formed args"
-     , "(u1,vl1) = " ++ show uv1
-     , "(u2,vl2) = " ++ show uv2
-     ]
-\end{code}
-
-\newpage
-\subsection{Side-Condition Disjoint Query}
-
-\begin{code}
-isSCdisjoint :: [Subscript] -> ([[GenVar]]) -> ([[GenVar]])
-             -> Bool
-\end{code}
-
-$$\emptyset\disj S \qquad S \disj\emptyset$$
-\begin{code}
-isSCdisjoint _ (_,[]) _       =  True
-isSCdisjoint _ _      (_,[])  =  True
-\end{code}
-
-If both are non-empty, we walk both lists,
-checking for same-id/class sub-lists and checking their disjointness.
-\begin{code}
-isSCdisjoint ss ugs1@(u1,g1@(gv1:vl1):vls1) ugs2@(u2,g2@(gv2:vl2):vls2)
-  | gv1  < gv2  =  isSCsubset ss (u1,vls1) ugs2 -- move up on left
-  | gv1  > gv2  =  isSCsubset ss ugs1 (u2,vls2) -- move up on right
-  | otherwise  -- gv1 `sameIdClass` gv2
-      = isUGdisjoint ss (u1,g1) (u2,g2) && isSCdisjoint ss (u1,vls1) (u2,vls2)
-\end{code}
-
-Disjoint checking given all with same identifier and class:
-\begin{code}
-isUGdisjoint :: [Subscript] -> ([GenVar]) -> ([GenVar])
-             -> Bool
--- both GenVar lists are non-empty and ordered
--- all their contents have the same identifier and class
--- If ui is Uniform, then GenVar_i is a singleton
-isUGdisjoint _   vl1  vl2  =  vl1 `isdisj` vl2
-isUGdisjoint _   _           _           =  False
-\end{code}
-
-\newpage
-\subsection{Side-Condition Set Difference}
-
-\begin{code}
-doSCdiff :: [Subscript] -> ([[GenVar]]) -> ([[GenVar]])
-         -> ([[GenVar]])
-\end{code}
-
-$$S \setminus \emptyset = S \qquad \emptyset \setminus S = \emptyset$$
-\begin{code}
-doSCdiff _ vls1 []  =  vls1
-doSCdiff _ [] _   =  []
-\end{code}
-
-Otherwise, we walk through both sides
-\begin{code}
-doSCdiff ss ugs1 ugs2 = doSCdiff' ss [] ugs1 ugs2
-
-doSCdiff' ss slv [] _  =  reverse slv
-
-doSCdiff' ss slv vls1 [] = reverse slv ++vls1
-
-doSCdiff' ss slv (g1@(gv1:vl1):vls1) (g2@(gv2:vl2):vls2)
-  | gv1  < gv2  =  doSCdiff' ss (g1:slv) vls1 g2 -- keep g1
-  | gv1  > gv2  =  doSCdiff' ss slv      ugs1      vls2
-  | null g3     =  doSCdiff' ss slv      vls1 vls2  -- gv1 ~ gv2
-  | otherwise   =  doSCdiff' ss (g3:slv) vls1 vls2  -- gv1 ~ gv2
-  where
-    g3 = doUGdiff ss g1 g2
-\end{code}
-
-Set difference given all with same identifier and class:
-\begin{code}
-doUGdiff :: [Subscript] -> ([GenVar]) -> ([GenVar])
-         -> ([GenVar])
-doUGdiff _  u1       _  =  []
-doUGdiff ss [gv1] g2    =  genTheGenVars gv1 ss \\ g2
-doUGdiff ss g1     g2    =  g1 \\ g2
-\end{code}
-
-\newpage
-\subsection{Side-Condition Set Intersection}
-
-\begin{code}
-doSCint :: [Subscript] -> ([[GenVar]]) -> ([[GenVar]])
-         -> ([[GenVar]])
-\end{code}
-
-$$S \cap \emptyset = \emptyset \qquad \emptyset \cap S = \emptyset$$
-\begin{code}
-doSCint _ _       (_,[])  =  (NonU,[])
-doSCint _ (u1,[]) _       =  (NonU,[])
-\end{code}
-
-Otherwise, we walk through both sides
-\begin{code}
-doSCint ss ugs1 ugs2 = doSCint' ss [] ugs1 ugs2
-
-doSCint' ss slv (_,[]) _      =  (NonU,reverse slv)
-doSCint' ss slv _     (_,[])  =  (NonU,reverse slv)
-
-doSCint' ss slv ugs1@(u1,g1@(gv1:vl1):vls1) ugs2@(u2,g2@(gv2:vl2):vls2)
-  | gv1  < gv2  =  doSCint' ss slv (u1,vls1) ugs2
-  | gv1  > gv2  =  doSCint' ss slv ugs1      (u2,vls2)
-  | null g3     =  doSCint' ss slv (u1,vls1) (u2,vls2)
-  | otherwise   =  doSCint' ss (g3:slv) (u1,vls1) (u2,vls2)
-  where
-    (_,g3) = doUGunion ss (u1,g1) (u2,g2)
-\end{code}
-
-Set intersection given all with same identifier and class:
-\begin{code}
-doUGint :: [Subscript] -> ([GenVar]) -> ([GenVar])
-         -> ([GenVar])
-doUGint _  g1    [_]  =  g1
-doUGint ss [_] g2   =  g2
-doUGint ss g1     g2     =  g1 `intersect` g2
-\end{code}
-
-
-
-\newpage
-\subsection{Side-Condition Set Union}
-
-
-\begin{code}
-doSCunion :: [Subscript] -> ([[GenVar]]) -> ([[GenVar]])
-         -> ([[GenVar]])
-\end{code}
-
-$$S \cup \emptyset = \S \qquad \emptyset \cup S = S$$
-\begin{code}
-doSCunion _ ugs1  (_,[])  =  ugs1
-doSCunion _ (_,[]) ugs2   =  ugs2
-\end{code}
-
-Otherwise, we walk through both sides
-\begin{code}
-doSCunion ss ugs1 ugs2 = doSCunion' ss [] ugs1 ugs2
-
-doSCunion' ss slv (_,[])   (_,vls2)  =  (NonU,reverse slv ++ vls2)
-doSCunion' ss slv (_,vls1) (_,[])    =  (NonU,reverse slv ++ vls1)
-
-doSCunion' ss slv ugs1@(u1,g1@(gv1:vl1):vls1) ugs2@(u2,g2@(gv2:vl2):vls2)
-  | gv1  < gv2  =  doSCunion' ss (g1:slv) (u1,vls1) ugs2
-  | gv1  > gv2  =  doSCunion' ss (g2:slv) ugs1      (u2,vls2)
-  | otherwise   =  doSCunion' ss (g3:slv) (u1,vls1) (u2,vls2)
-  where
-    (_,g3) = doUGunion ss (u1,g1) (u2,g2)
-\end{code}
-
-Set intersection given all with same identifier and class:
-\begin{code}
-doUGunion :: [Subscript] -> ([GenVar]) -> ([GenVar])
-         -> ([GenVar])
-doUGunion ss ug1@[_] _               =  ug1
-doUGunion ss _              ug2@[_]  =  ug2
-doUGunion ss g1         g2          =  g1 `union` g2
-\end{code}
-
-
-
-
-
-\newpage
 \subsection{Dealing with Dynamics}
 
 A check that a non-uniform \texttt{GenVar} list
@@ -1406,58 +1200,60 @@ tstFalse = Nothing
 tstTrue  = Just Nothing
 tstWhatever sc = Just $ Just sc
 
+
+
 tst_scChkDisjoint
- = testGroup "Disjoint NU  (no known vars)"
+ = testGroup "disjfrom  (no known vars)"
     [ testCase "gv_a `disjoint` empty is True"
-       ( tvscCheck [] (Disjoint NU  gv_a S.empty) @?= tstTrue )
+       ( tvscCheck [] (disjfrom  gv_a S.empty) @?= tstTrue )
     , testCase "v_e `disjoint` empty is True"
-       ( tvscCheck [] (Disjoint NU  v_e S.empty) @?= tstTrue )
+       ( tvscCheck [] (disjfrom  v_e S.empty) @?= tstTrue )
     , testCase "gv_a `disjoint` {gv_a} is False"
-       ( tvscCheck [] (Disjoint NU  gv_a $ S.singleton gv_a) @?= tstFalse )
+       ( tvscCheck [] (disjfrom  gv_a $ S.singleton gv_a) @?= tstFalse )
     , testCase "gv_a `disjoint` {gv_b} is True"
-       ( tvscCheck [] (Disjoint NU  gv_a $ S.singleton gv_b) @?= tstTrue )
+       ( tvscCheck [] (disjfrom  gv_a $ S.singleton gv_b) @?= tstTrue )
     , testCase "v_e `disjoint` {v_e} stands"
-       ( tvscCheck [] (Disjoint NU  v_e $ S.singleton v_e)
-         @?= tstWhatever  (Disjoint NU  v_e $ S.singleton v_e) )
+       ( tvscCheck [] (disjfrom  v_e $ S.singleton v_e)
+         @?= tstWhatever  (disjfrom  v_e $ S.singleton v_e) )
     , testCase "v_e `disjoint` {v_f} stands"
-       ( tvscCheck [] (Disjoint NU  v_e $ S.singleton v_f)
-         @?= tstWhatever  (Disjoint NU  v_e $ S.singleton v_f) )
+       ( tvscCheck [] (disjfrom  v_e $ S.singleton v_f)
+         @?= tstWhatever  (disjfrom  v_e $ S.singleton v_f) )
     , testCase "v_e `disjoint` {gv_a} stands"
-       ( tvscCheck [] (Disjoint NU  v_e $ S.singleton gv_a)
-         @?= tstWhatever  (Disjoint NU  v_e $ S.singleton gv_a) )
+       ( tvscCheck [] (disjfrom  v_e $ S.singleton gv_a)
+         @?= tstWhatever  (disjfrom  v_e $ S.singleton gv_a) )
     , testCase "gv_a `disjoint` {v_f} stands"
-       ( tvscCheck [] (Disjoint NU  gv_a $ S.singleton v_f)
-         @?= tstWhatever  (Disjoint NU  gv_a $ S.singleton v_f) )
+       ( tvscCheck [] (disjfrom  gv_a $ S.singleton v_f)
+         @?= tstWhatever  (disjfrom  gv_a $ S.singleton v_f) )
     , testCase "gv_a `disjoint` {gv_b,v_f} stands"
-       ( tvscCheck [] (Disjoint NU  gv_a $ S.fromList [gv_b,v_f])
-         @?= tstWhatever  (Disjoint NU  gv_a $ S.fromList [gv_b,v_f]) )
+       ( tvscCheck [] (disjfrom  gv_a $ S.fromList [gv_b,v_f])
+         @?= tstWhatever  (disjfrom  gv_a $ S.fromList [gv_b,v_f]) )
     ]
 
 tst_scChkCovers
- = testGroup "CoveredBy NU  (no known vars)"
+ = testGroup "coveredby  (no known vars)"
     [ testCase "gv_a `coveredby` empty is False"
-       ( tvscCheck [] (CoveredBy NU  gv_a S.empty) @?= tstFalse )
+       ( tvscCheck [] (coveredby  gv_a S.empty) @?= tstFalse )
     , testCase "v_e `coveredby` empty stands"
-       ( tvscCheck [] (CoveredBy NU  v_e S.empty)
-         @?= tstWhatever (CoveredBy NU  v_e S.empty) )
+       ( tvscCheck [] (coveredby  v_e S.empty)
+         @?= tstWhatever (coveredby  v_e S.empty) )
     , testCase "gv_a `coveredby` {gv_a} is True"
-       ( tvscCheck [] (CoveredBy NU  gv_a $ S.singleton gv_a) @?= tstTrue )
+       ( tvscCheck [] (coveredby  gv_a $ S.singleton gv_a) @?= tstTrue )
     , testCase "gv_a `coveredby` {gv_b} is False"
-       ( tvscCheck [] (CoveredBy NU  gv_a $ S.singleton gv_b) @?= tstFalse )
+       ( tvscCheck [] (coveredby  gv_a $ S.singleton gv_b) @?= tstFalse )
     , testCase "v_e `coveredby` {v_e} is True"
-       ( tvscCheck [] (CoveredBy NU  v_e $ S.singleton v_e) @?= tstTrue )
+       ( tvscCheck [] (coveredby  v_e $ S.singleton v_e) @?= tstTrue )
     , testCase "v_e `coveredby` {v_f} stands"
-       ( tvscCheck [] (CoveredBy NU  v_e $ S.singleton v_f)
-         @?= tstWhatever  (CoveredBy NU  v_e $ S.singleton v_f) )
+       ( tvscCheck [] (coveredby  v_e $ S.singleton v_f)
+         @?= tstWhatever  (coveredby  v_e $ S.singleton v_f) )
     , testCase "v_e `coveredby` {gv_a} stands"
-       ( tvscCheck [] (CoveredBy NU  v_e $ S.singleton gv_a)
-         @?= tstWhatever  (CoveredBy NU  v_e $ S.singleton gv_a) )
+       ( tvscCheck [] (coveredby  v_e $ S.singleton gv_a)
+         @?= tstWhatever  (coveredby  v_e $ S.singleton gv_a) )
     , testCase "gv_a `coveredby` {v_f} stands"
-       ( tvscCheck [] (CoveredBy NU  gv_a $ S.singleton v_f)
-         @?= tstWhatever  (CoveredBy NU  gv_a $ S.singleton v_f) )
+       ( tvscCheck [] (coveredby  gv_a $ S.singleton v_f)
+         @?= tstWhatever  (coveredby  gv_a $ S.singleton v_f) )
     , testCase "gv_a `coveredby` {gv_b,v_f} stands"
-       ( tvscCheck [] (CoveredBy NU  gv_a $ S.fromList [gv_b,v_f])
-         @?= tstWhatever  (CoveredBy NU  gv_a $ S.fromList [gv_b,v_f]) )
+       ( tvscCheck [] (coveredby  gv_a $ S.fromList [gv_b,v_f])
+         @?= tstWhatever  (coveredby  gv_a $ S.fromList [gv_b,v_f]) )
     ]
 \end{code}
 
@@ -1468,23 +1264,23 @@ tst_mrgAtmCond :: TF.Test
 tst_mrgAtmCond
  = testGroup "Merging Side-Conditions (no known vars)"
      [ testCase "merge gv_a `disjoint` empty  into [] is True"
-        ( mrgTVarConds [] (Disjoint NU  gv_a S.empty) [] @?= Just [] )
+        ( mrgTVarConds [] (disjfrom  gv_a S.empty) [] @?= Just [] )
      , testCase "merge gv_a `disjoint` {gv_a} into [] is False"
-        ( mrgTVarConds [] (Disjoint NU  gv_a $ S.singleton gv_a) [] @?= Nothing )
+        ( mrgTVarConds [] (disjfrom  gv_a $ S.singleton gv_a) [] @?= Nothing )
      , testCase "merge v_e `coveredby` {v_f}  into [] is [itself]"
-        ( mrgTVarConds [] (CoveredBy NU  v_e $ S.singleton v_f) []
-          @?= Just [CoveredBy NU  v_e $ S.singleton v_f] )
+        ( mrgTVarConds [] (coveredby  v_e $ S.singleton v_f) []
+          @?= Just [coveredby  v_e $ S.singleton v_f] )
      , testCase "merge gv_a `disjoint` empty  into [tvsc(gv_b)] is [tvsc(gv_b)]]"
-        ( mrgTVarConds [] (Disjoint NU  gv_a S.empty) [tvsc1] @?= Just [tvsc1] )
+        ( mrgTVarConds [] (disjfrom  gv_a S.empty) [tvsc1] @?= Just [tvsc1] )
      , testCase "merge gv_a `disjoint` {gv_a} into [tvsc(gv_b)] is False"
-        ( mrgTVarConds [] (Disjoint NU  gv_a $ S.singleton gv_a) [tvsc1] @?= Nothing )
+        ( mrgTVarConds [] (disjfrom  gv_a $ S.singleton gv_a) [tvsc1] @?= Nothing )
      , testCase
         "merge v_e `coveredby` {v_f}  into [tvsc(gv_b)] is [tvsc(gv_b),itself]"
-        ( mrgTVarConds [] (CoveredBy NU  v_e $ S.singleton v_f) [tvsc1]
-          @?= Just [tvsc1,CoveredBy NU  v_e $ S.singleton v_f] )
+        ( mrgTVarConds [] (coveredby  v_e $ S.singleton v_f) [tvsc1]
+          @?= Just [tvsc1,coveredby  v_e $ S.singleton v_f] )
      ]
 
-tvsc1 = (CoveredBy NU  gv_b $ S.fromList [gv_b,v_f])
+tvsc1 = (coveredby  gv_b $ S.fromList [gv_b,v_f])
 \end{code}
 
 \subsection{Discharge Tests}
@@ -1500,7 +1296,7 @@ tst_ascDischarge
 
 \begin{code}
 test_DisjDischarge
-  = testGroup "Disjoint NU  discharges ..."
+  = testGroup "disjfrom  discharges ..."
       [ testCase "1+1=2" ( 1+1 @?= 2)
       ]
 \end{code}

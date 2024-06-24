@@ -2,23 +2,19 @@
 
 ## Urgent/Now
 
-
-BIGGER ISSUE
+Need to get s.c. discharge up  and running
 
 ```
-(E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1 ; (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R1 ∪ N1    ⊤
-Focus = []
-
-Target (RHS): 
-E2 ∪ R1 \ N1 = Ø ∧ X(E1 ∪ E2 \ N1,a ; b,R1 ∪ R2,N1 \ R2 ∪ N2)
-
-
-Instantiated Law S.C. 
-  = O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇N2, O$,O$'⊇R1, O$,O$'⊇R2, 
-    O$,O$'⊇ls, O$,O$'⊇ls', fresh:O$_0
+proof: tm 1 forall_remove
+@tISC.scP':
+([TVSC (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) Nothing Nothing],fromList [])
+Match against `forall_remove'[1] OK
+Binding: { P  ⟼ ¬P, x$  ⟼ {x$} }
+Instantiated Law = ¬P
+Instantiated Law S.C. = x$∉P
+Goal S.C. = x$∉P
+Discharged Law S.C. = x$∉P
 ```
-
-**We need to create a new `CoversDynamic` atomic side-condition.**
 
 
 ### Works for handling actual theory observables

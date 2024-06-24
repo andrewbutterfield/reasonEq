@@ -8,7 +8,9 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module SideCond (
   MVarSet, uset
-, TVarSideConds(..), mkTVSC
+, TVarSideConds(..)
+, termVar, disjointFrom, coveredBy, coveredDynamic
+, mkTVSC
 , tvscTrue, disjTrue, covByTrue
 , tvscVSet
 , disjfrom, coveredby, dyncovered
@@ -189,12 +191,21 @@ uset (Just vs)  =  vs
 We bring it all together here:
 \begin{code}
 data  TVarSideConds -- (T,D,C,C_d)
-  = TVSC  { termVar         ::  GenVar        --  T
-          , disjointFrom    ::  VarSet        --  D
-          , coveredBy       ::  MVarSet  --  U  | C
-          , coveredDynamic  ::  MVarSet  --  Ud | Cd
-          }
+  = TVSC  GenVar        --  T
+          VarSet        --  D
+          MVarSet  --  U  | C
+          MVarSet  --  Ud | Cd
   deriving (Eq, Ord, Show, Read)
+
+termVar        :: TVarSideConds -> GenVar
+termVar (TVSC gv vsD mvsC mvsCd)         =  gv
+disjointFrom   :: TVarSideConds -> VarSet
+disjointFrom (TVSC gv vsD mvsC mvsCd)    =  vsD
+coveredBy      :: TVarSideConds -> MVarSet
+coveredBy (TVSC gv vsD mvsC mvsCd)       =  mvsC
+coveredDynamic :: TVarSideConds -> MVarSet
+coveredDynamic (TVSC gv vsD mvsC mvsCd)  =  mvsCd
+
 disjTrue = S.empty
 covByTrue = Nothing
 tvscTrue t = TVSC t disjTrue covByTrue covByTrue
@@ -273,14 +284,15 @@ Nor can we assume $T \disj z$ is false, because $T$ could contain $z$.
 \begin{code}
 disjointCheck  :: MonadFail m 
                => [Subscript] -> GenVar -> VarSet -> m VarSet
-disjointCheck ss gv vs
-  | S.null vs                 =  return disjTrue
-  | not $ isObsGVar gv        =  return vs
-  | gv `S.member` vs          =  report "tvar disjoint fails"
-  | all isStdV    vs          =  return disjTrue
+disjointCheck ss gv vsD
+  | S.null vsD          =  return disjTrue
+  | not $ isObsGVar gv  =  return vsD
+  | gv `S.member` vsD   =  report "tvar disjoint fails"
+  | all isStdV    vsD   =  return disjTrue
+  | otherwise           =  return vsD
   where
     showsv = "gv = "++show gv
-    showvs = "vs = "++show vs
+    showvs = "vsD = "++show vsD
     report msg = fail $ unlines' [msg,showsv,showvs]
 \end{code}
 
@@ -301,16 +313,17 @@ Similarly, $T \supseteq z$ could also be true.
 coveredByCheck  :: MonadFail m 
                => [Subscript] -> GenVar -> MVarSet -> m (MVarSet)
 
-coveredByCheck ss gv Nothing = return covByTrue  -- U
-coveredByCheck ss gv jvs@(Just vs)
-  | any (gvCovBy gv) vs  =  return covByTrue
-  | not $ isObsGVar gv   =  return jvs
-  | S.null vs            =  report "tvar cover fails (null)"
-  | all isStdV vs        =  report "tvat cover fails (all std)"
+coveredByCheck ss gv Nothing  =  return covByTrue  -- U
+coveredByCheck ss gv jvsC@(Just vsC)
+  | any (gvCovBy gv) vsC      =  return covByTrue
+  | not $ isObsGVar gv        =  return jvsC
+  | S.null vsC                =  report "tvar cover fails (null)"
+  | all isStdV vsC            =  report "tvat cover fails (all std)"
   where 
     showsv = "gv = "++show gv
-    showvs = "vs = "++show vs
+    showvs = "vsC = "++show vsC
     report msg = fail $ unlines' [msg,showsv,showvs]
+coveredByCheck _ _ mvsC = return mvsC
 \end{code}
 
 \newpage
@@ -336,21 +349,22 @@ Similarly, $T \supseteq z$ could also be true.
 dynCvrgCheck  :: MonadFail m 
                => [Subscript] -> GenVar -> MVarSet -> m (MVarSet)
 
-dynCvrgCheck ss gv Nothing = return covByTrue  -- U
-dynCvrgCheck ss gv jvs@(Just vs)
-  | hasStatic            =  report "tvar dyncover fails (static)"
-  | any (gvCovBy gv) vs  =  return covByTrue
-  | not $ isObsGVar gv   =  return jvs
-  | S.null vs 
+dynCvrgCheck ss gv Nothing  =  return covByTrue  -- U
+dynCvrgCheck ss gv jvsCd@(Just vsCd)
+  | hasStatic               =  report "tvar dyncover fails (static)"
+  | any (gvCovBy gv) vsCd   =  return covByTrue
+  | not $ isObsGVar gv      =  return jvsCd
+  | S.null vsCd 
       =  if isDynGVar gv
          then report "atomic dyncover fails (null)"
-         else return jvs
-  | all isStdV vs        =  report "tvar dyncover fails (all std)"
+         else return jvsCd
+  | all isStdV vsCd         =  report "tvar dyncover fails (all std)"
   where 
-    hasStatic = any (not . isDynGVar) vs
+    hasStatic = any (not . isDynGVar) vsCd
     showsv = "gv = "++show gv
-    showvs = "vs = "++show vs
+    showvs = "vsCd = "++show vsCd
     report msg = fail $ unlines' [msg,showsv,showvs]
+dynCvrgCheck _ _ mvsCd  =  return mvsCd
 \end{code}
 
 

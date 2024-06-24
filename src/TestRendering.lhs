@@ -528,19 +528,26 @@ trtz trid (t,wayup) = trterm trid 0 $ exitTZ (markfocus t,wayup)
 \begin{code}
 trSideCond = trsidecond trId
 trSideCondU = trsidecond trIdU
-trsidecond trid sc@(ascs,fvs)
+trsidecond trid sc@(tvscs,fvs)
   | isTrivialSC sc  =  _top
-  | otherwise       =  intcalNN ", " (    map (tratmsidecond trid) ascs
+  | otherwise       =  intcalNN ", " ( concat (map (trtvarsidecond trid) tvscs)
                                       ++ [trfresh trid fvs] )
 
-tratmsidecond trid (Disjoint _ gv vs)
-  = trovset trid vs ++ _notin ++ trgvar trid gv
+trtvarsidecond trid (TVSC gv vsD mvsC mvsCd)
+  = [trDisjSC trid gv vsD, trCovByM trid gv mvsC, trDynCovM trid gv mvsCd]
 
-tratmsidecond trid (CoveredBy _ gv vs) 
-  = trovset trid vs ++ _supseteq ++ trgvar trid gv
+trDisjSC trid gv vsD
+  | S.null vsD  =  ""
+  | otherwise   =  trovset trid vsD ++ _notin ++ trgvar trid gv
 
-tratmsidecond trid (DynamicCoverage _ gv vs) 
-  = trovset trid vs ++ _supseteq ++ _subStr "a" ++ trgvar trid gv
+trCovByM trid gv Nothing = ""
+trCovByM trid gv (Just vsC) 
+  = trovset trid vsC ++ _supseteq ++ trgvar trid gv
+
+trDynCovM trid gv Nothing = ""
+trDynCovM trid gv (Just vsC) 
+  = trovset trid vsC ++ _supseteq ++_subStr "a" ++ trgvar trid gv
+
 
 trfresh trid fvs
   | S.null fvs  =  ""

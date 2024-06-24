@@ -7,7 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module SideCond (
-  TVarSideConds(..), mkTVSC
+  MVarSet, uset
+, TVarSideConds(..), mkTVSC
 , tvscTrue, disjTrue, covByTrue
 , tvscVSet
 , disjfrom, coveredby, dyncovered
@@ -180,11 +181,18 @@ We use $\texttt{Just } C$ to represent general $C$,
 and $\texttt{Nothing}$ to represent $U$
 (and similarly for $C_d$).
 \begin{code}
+type MVarSet = Maybe VarSet
+uset :: MVarSet -> VarSet
+uset Nothing    =  S.singleton (StdVar $ StaticVar $ jId "UNIVERSE")
+uset (Just vs)  =  vs 
+\end{code}
+We bring it all together here:
+\begin{code}
 data  TVarSideConds -- (T,D,C,C_d)
   = TVSC  { termVar         ::  GenVar        --  T
           , disjointFrom    ::  VarSet        --  D
-          , coveredBy       ::  Maybe VarSet  --  U  | C
-          , coveredDynamic  ::  Maybe VarSet  --  Ud | Cd
+          , coveredBy       ::  MVarSet  --  U  | C
+          , coveredDynamic  ::  MVarSet  --  Ud | Cd
           }
   deriving (Eq, Ord, Show, Read)
 disjTrue = S.empty
@@ -194,7 +202,7 @@ tvscTrue t = TVSC t disjTrue covByTrue covByTrue
 
 We need a smart builder here to handle all being true:
 \begin{code}
-mkTVSC :: GenVar -> VarSet -> Maybe VarSet -> Maybe VarSet -> Maybe TVarSideConds
+mkTVSC :: GenVar -> VarSet -> MVarSet -> MVarSet -> Maybe TVarSideConds
 mkTVSC gv vsD mvsC mvsCd
   = if vsD == disjTrue && mvsC == covByTrue && mvsCd == covByTrue
     then Nothing -- denotes True
@@ -291,7 +299,7 @@ we cannot deduce that $\emptyset \supseteq T$ is false.
 Similarly, $T \supseteq z$ could also be true.
 \begin{code}
 coveredByCheck  :: MonadFail m 
-               => [Subscript] -> GenVar -> Maybe VarSet -> m (Maybe VarSet)
+               => [Subscript] -> GenVar -> MVarSet -> m (MVarSet)
 
 coveredByCheck ss gv Nothing = return covByTrue  -- U
 coveredByCheck ss gv jvs@(Just vs)
@@ -326,7 +334,7 @@ we cannot deduce that $\emptyset \supseteq T$ is false.
 Similarly, $T \supseteq z$ could also be true.
 \begin{code}
 dynCvrgCheck  :: MonadFail m 
-               => [Subscript] -> GenVar -> Maybe VarSet -> m (Maybe VarSet)
+               => [Subscript] -> GenVar -> MVarSet -> m (MVarSet)
 
 dynCvrgCheck ss gv Nothing = return covByTrue  -- U
 dynCvrgCheck ss gv jvs@(Just vs)
@@ -407,6 +415,8 @@ from a side-condition:
 scVarSet :: SideCond -> VarSet
 scVarSet (tvscs,fvs) = (S.unions $ map tvscVSet tvscs) `S.union` fvs
 \end{code}
+
+
 
 \section{Merging Side-Conditions}
 
@@ -993,7 +1003,7 @@ isFloatingTVSC (TVSC  gv vsD mvsC mvsCd)
     ( hasFloating vsD && hasFloatingM mvsC && hasFloatingM mvsCd )
 hasFloating :: VarSet -> Bool
 hasFloating vs = any isFloatingGVar $ S.toList vs
-hasFloatingM :: Maybe VarSet -> Bool
+hasFloatingM :: MVarSet -> Bool
 hasFloatingM Nothing = False
 hasFloatingM (Just vs) = hasFloating vs
 \end{code}

@@ -10,7 +10,7 @@ module Instantiate
 ( InsContext, mkInsCtxt
 , instantiate
 , instVarSet
-, instASC
+, instTVSC
 , instantiateSC
 ) where
 import Data.Maybe
@@ -472,7 +472,7 @@ instLGVar insctxt binding gv@(LstVar lv)
 \section{Side-Condition Instantiation (Total)}
 
 Doing it again, with side-conditions.
-Bascially we drill down to the atomic side-conditions,
+Btvscially we drill down to the atomic side-conditions,
 instantiate and simplify those,
 and merge together.
 
@@ -487,10 +487,10 @@ side-conditions:
 \\ \beta(\fresh F) &=& \fresh \beta(F)
 \end{eqnarray*}
 \begin{code}
-instantiateSC insctxt bind (ascs,freshvs)
-  = do ascss' <-sequence $ map (instantiateASC insctxt bind) ascs
+instantiateSC insctxt bind (tvscs,freshvs)
+  = do tvscss' <-sequence $ map (instantiateTVSC insctxt bind) tvscs
        freshvs' <- instVarSet insctxt bind freshvs
-       mkSideCond [] (concat ascss') $ theFreeVars freshvs'
+       mkSideCond [] (concat tvscss') $ theFreeVars freshvs'
 \end{code}
 For atomic side-conditions:
 \begin{eqnarray*}
@@ -614,26 +614,26 @@ We define dynamic free variables ($\dfv$) as:
 \end{eqnarray*}
 
 \begin{code}
-instantiateASC :: MonadFail m => InsContext
-               -> Binding -> AtmSideCond -> m [AtmSideCond]
-instantiateASC insctxt bind asc
-  = do (vsCD,diffs) <- instVarSet insctxt bind $ ascVSet asc
+instantiateTVSC :: MonadFail m => InsContext
+               -> Binding -> TVarSideConds -> m [TVarSideConds]
+instantiateTVSC insctxt bind tvsc
+  = do (vsDC,diffs) <- instVarSet insctxt bind $ tvscVSet tvsc
        if null diffs
-         then instASC insctxt vsCD fvsT asc
-         else fail "instantiateASC: explicit diffs in var-set not handled."
+         then instTVSC insctxt vsDC fvsT tvsc
+         else fail "instantiateTVSC: explicit diffs in var-set not handled."
   where
-     fvsT = instantiateGVar insctxt bind $ ascGVar asc
+     fvsT = instantiateGVar insctxt bind $ termVar tvsc
 \end{code}
-\textbf{
-  The use of \texttt{ascVSet} is problematic --- loss of uniformity info.
-}
-
 
 \begin{code}
-instASC :: MonadFail m => InsContext
-               -> VarSet -> FreeVars -> AtmSideCond -> m [AtmSideCond]
-instASC insctxt vsD fvT (Disjoint _ _ _)   =  instDisjoint insctxt vsD fvT
-instASC insctxt vsC fvT (CoveredBy u _ _)  =  instCovers u insctxt vsC fvT
+instTVSC :: MonadFail m => InsContext
+               -> VarSet -> FreeVars -> TVarSideConds -> m [TVarSideConds]
+instTVSC insctxt vsDC fvT (TVSC _ vsD mvsC mvsCd)   
+  = do  tvscsD <- instDisjoint insctxt vsD   fvT
+        tvscsC <- instCovers   insctxt mvsC  fvT
+        -- we assume here that we don't need to check for observables
+        tvscCd <- instCovers   insctxt mvsCd fvT 
+        return (tvscsD++tvscsC++tvscCd)
 \end{code}
 
 
@@ -650,13 +650,13 @@ where $\fv(\beta(T)) = F \cup \{e_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj e_i$, $F \disj B_i$.
 \begin{code}
 instDisjoint :: MonadFail m 
-             => InsContext -> VarSet -> FreeVars -> m [AtmSideCond]
+             => InsContext -> VarSet -> FreeVars -> m [TVarSideConds]
 instDisjoint insctxt vsD (fF,vLessBs)
-  =  return (asc1s ++ asc2s)
+  =  return (tvsc1s ++ tvsc2s)
   where
-    asc1s = map (mkDisj vsD) $ S.toList fF
+    tvsc1s = map (mkDisj vsD) $ S.toList fF
     mkDisj vsD gv = gv `disjfrom` vsD
-    asc2s = map (f2 vsD) vLessBs
+    tvsc2s = map (f2 vsD) vLessBs
     f2 vsD (evF,vsB) = mkDisj (vsD S.\\ vsB) evF
 \end{code}
 
@@ -688,14 +688,14 @@ We assume here that $S$ is all non-dynamic variables.
 
 \begin{code}
 instCovers :: MonadFail m 
-           => Uniformity -> InsContext -> VarSet -> FreeVars 
-           -> m [AtmSideCond]
-instCovers u insctxt vsC (fF,vLessBs)
-  =  return (asc1s ++ asc2s)
+           => InsContext -> (Maybe VarSet) -> FreeVars 
+           -> m [TVarSideConds]
+instCovers insctxt Nothing    (fF,vLessBs)  =  return []
+instCovers insctxt (Just vsC) (fF,vLessBs)  =  return (tvsc1s ++ tvsc2s)
   where
-    asc1s = map (mkCovers vsC) (S.toList fF)
+    tvsc1s = map (mkCovers vsC) (S.toList fF)
     mkCovers vsC gv = gv `coveredby` vsC
-    asc2s = map (f2 vsC) vLessBs
+    tvsc2s = map (f2 vsC) vLessBs
     f2 vsC (evF,vsB) = mkCovers (vsC `S.union` vsB) evF
 \end{code}
 
@@ -738,11 +738,11 @@ $e$ are non. obs. variables that don't occur in the $F$,
 and $x$ are obs. vars. or list-vars.
 It represents the variable-set: $F \cup \bigcup_i (e_i\setminus B_i)$
 \begin{eqnarray*}
-   \fv_{(ascs,\_)}(t) 
+   \fv_{(tvscs,\_)}(t) 
    &=& 
-   \bigcup_{v \in \pi_1\fv(t)} \scvarexp_{ascs}(v)
+   \bigcup_{v \in \pi_1\fv(t)} \scvarexp_{tvscs}(v)
    \cup
-   \bigcup_{(e,B) \in \pi_2\fv(t)} \scdiffexp_{ascs}(e,B)
+   \bigcup_{(e,B) \in \pi_2\fv(t)} \scdiffexp_{tvscs}(e,B)
 \end{eqnarray*}
 \begin{code}
 deduceFreeVars :: InsContext -> Term -> FreeVars
@@ -758,8 +758,8 @@ deduceFreeVars insctxt t
 
 \begin{eqnarray*}
    \scvarexp_{sc}(v) &=& \setof v, \qquad v \text{ is obs. var.}
-\\ \scvarexp_{(ascs,\_)}(e) 
-   &=& \ascsvarexp(e,ascs(e)) \cond{e \in ascs} \setof e
+\\ \scvarexp_{(tvscs,\_)}(e) 
+   &=& \tvscsvarexp(e,tvscs(e)) \cond{e \in tvscs} \setof e
 \end{eqnarray*}
 \begin{code}
 scVarExpand :: SideCond -> GenVar -> FreeVars
@@ -767,31 +767,26 @@ scVarExpand _ v@(StdVar (Vbl _ ObsV _)) = injVarSet $ S.singleton v
 scVarExpand sc gv 
   = case findAllGenVar gv sc of
       []    ->  injVarSet $ S.singleton gv
-      ascs  ->  ascsVarExpand gv ascs
+      tvscs  ->  tvscsVarExpand gv tvscs
 \end{code}
 
 \newpage
 
-For any given variable, we can end up with one of three possibilities: 
-disjoint ($v \disj D$), covered ($C \supseteq v$), 
-or a mix of the two cases with $C$ and $D$ mutually disjoint.
-Note that we also need to take uniformity into account:
-we use $e \approx e'$ here to denote that either $e=e'$ 
-or uniformity is in effect and $e$ and $e'$ are dynamic 
-and differ only in temporality.
+For any given variable, we can end up with one of these possibilities: 
+disjoint ($v \disj D$), covered ($C \supseteq v$),
+dynamic coverage ($Cd \supseteq_a v$),  
+or a mix of the cases with $C$ and $Cd$ disjoint from $D$.
 \begin{eqnarray*}
-   \ascsvarexp(e,\seqof{C \supseteq e'})     &=& C \cond{e \approx e'} \setof e 
-\\ \ascsvarexp(e,\seqof{\_,C \supseteq e'})  &=& C \cond{e \approx e'} \setof e 
-\\ \ascsvarexp(e,\seqof{\_ \disj \_})        &=& \setof{e}
+   \tvscsvarexp(e,\seqof{C \supseteq e'})     &=& C \cond{e = e'} \setof e 
+\\ \tvscsvarexp(e,\seqof{\_,C \supseteq e'})  &=& C \cond{e = e'} \setof e 
+\\ \tvscsvarexp(e,\seqof{\_ \disj \_})        &=& \setof{e}
 \end{eqnarray*}
 \begin{code}
-ascsVarExpand :: GenVar -> [AtmSideCond] -> FreeVars
-ascsVarExpand e []  =  injVarSet $ S.singleton e
-ascsVarExpand e (CoveredBy Unif e' cC' : _)
-  |  e `usameg` e'  =  injVarSet (S.map (gsetWhen $ gvarWhen e ) cC')
-ascsVarExpand e (CoveredBy _ e' cC' : _)
-  |  e == e'        =  injVarSet cC'
-ascsVarExpand e (_:ascs) = ascsVarExpand e ascs
+tvscsVarExpand :: GenVar -> [TVarSideConds] -> FreeVars
+tvscsVarExpand e []  =  injVarSet $ S.singleton e
+tvscsVarExpand e (TVSC e' _ (Just vsC) _ : _)
+  |  e == e'        =  injVarSet vsC
+tvscsVarExpand e (_:tvscs) = tvscsVarExpand e tvscs
 \end{code}
 
 

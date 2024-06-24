@@ -609,7 +609,8 @@ We have a matchLawCommand-phase approach here:
     (\texttt{applyMatchToFocus1}).
   \item
     Provide floating replacement choices obtained from the user.
-    Use these to re-instantiate the replacements (in both law body and side-condition), discharge side-conditions,
+    Use these to re-instantiate the replacements 
+    (in both law body and side-condition), discharge side-conditions,
     and update the focus
     (\texttt{applyMatchToFocus2}).
 \end{itemize}
@@ -635,7 +636,7 @@ applyMatchToFocus1 i liveProof
                                `S.union`
                                mentionedVars goal
                                `S.union`
-                               scGVars (mLawSC mtch) )
+                               scVarSet (mLawSC mtch) )
         let (stdvars,lstvars)  =  partition isStdV gvars
         let stdFloating        =  filter isFloatingGVar stdvars
         let replTerms          =  subTerms $ assnT $ conjecture liveProof
@@ -722,29 +723,31 @@ If a floating replacement is used
 in a \texttt{CoveredBy} atomic law side condition,
 then we need to copy it over as a proof-local goal side-condition.
 \begin{code}
-extendGoalSCCoverage ss lvvls (atmSCs,_)
-  = xtndCoverage ss (map snd lvvls) [] (filter isCoverage atmSCs)
+extendGoalSCCoverage ss lvvls (tvarSCs,_)
+  = xtndCoverage ss (map snd lvvls) [] (filter isCoverage tvarSCs)
   where
-    isCoverage (CoveredBy _ _ _)  =  True
-    isCoverage _                  =  False
+    isCoverage (TVSC _ _ mvsC mvsCd)  =  mvsC /= Nothing || mvsCd /= Nothing
 
     xtndCoverage :: MonadFail m => [Subscript]
                  -> [VarList] -- floating replacements
-                 -> [AtmSideCond] -- extra side-conditions (so far)
-                 -> [AtmSideCond] -- Law coverage side-conditions
+                 -> [TVarSideConds] -- extra side-conditions (so far)
+                 -> [TVarSideConds] -- Law coverage side-conditions
                  -> m SideCond
-    xtndCoverage _ _ ascs [] = return (ascs, S.empty)
-    xtndCoverage ss ffvls ascs (cov@(CoveredBy _ gv vs) : rest)
-      | S.toList vs `elem` ffvls
+    xtndCoverage _ _ tvscs [] = return (tvscs, S.empty)
+    xtndCoverage ss ffvls tvscs ((TVSC gv _ mvsC mvsCd) : rest)
+      | S.toList vsC `elem` ffvls
 
              -- DO WE NEED THIS?
              -- (Assertion conj _) = conjecture liveProof
              -- ss = S.elems $ S.map theSubscript $ S.filter isDuring
              --              $ S.map gvarWhen $ mentionedVars conj
 
-         = do ascs' <- mrgAtmCond ss cov ascs  -- Subscripts?
-              xtndCoverage ss ffvls ascs' rest
-      | otherwise  =  xtndCoverage ss ffvls ascs rest
+         = do tvscs' <- mrgTVarConds ss justcov tvscs  -- Subscripts?
+              xtndCoverage ss ffvls tvscs' rest
+      | otherwise  =  xtndCoverage ss ffvls tvscs rest
+      where 
+         vsC = uset mvsC `S.union` uset mvsCd
+         justcov = TVSC gv disjTrue mvsC mvsCd
 \end{code}
 
 \newpage

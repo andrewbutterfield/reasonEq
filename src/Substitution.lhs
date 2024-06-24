@@ -596,7 +596,7 @@ scSimplify :: SideCond -> GenVar -> Substn -> Substn
 scSimplify sc gv sub 
   = case findGenVar gv sc of
       Nothing   ->  sub
-      Just asc  ->  ascSimplify asc gv sub
+      Just tvsc  ->  tvscSimplify tvsc gv sub
 \end{code}
 
 We have the following situation $P[T/V$] 
@@ -620,9 +620,12 @@ $$
 $$
 We have to check this for all $T/V$ pairs in the substitution.
 \begin{code}
-ascSimplify :: AtmSideCond -> GenVar -> Substn -> Substn
-ascSimplify (Disjoint  u _ vs) gv sub  =  targetsCheck not vs sub
-ascSimplify (CoveredBy u _ vs) gv sub  =  targetsCheck id  vs sub
+tvscSimplify :: TVarSideConds -> GenVar -> Substn -> Substn
+tvscSimplify (TVSC _ vsD mvsC mvsCd) gv sub  
+  =  mSimp mvsCd $ mSimp mvsC $ targetsCheck not vsD sub
+  where 
+    mSimp Nothing sub    =  sub
+    mSimp (Just vs) sub  =  targetsCheck id  vs sub
 
 targetsCheck :: (Bool -> Bool) -> VarSet -> Substn -> Substn
 targetsCheck keep vs (Substn ts lvs)

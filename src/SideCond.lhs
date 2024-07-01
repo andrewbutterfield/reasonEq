@@ -749,6 +749,7 @@ scDischarge' ss        (tvscG@(TVSC gvG _ _ _):restG)
                      return (tvscL:rest')
   | otherwise  =  do -- use tvscG to discharge tvscL
                      tvsc' <- tvscDischarge ss tvscG tvscL
+                     -- need to run checkTVSC on this result
                      rest' <- scDischarge' ss restG restL
                      return (tvsc':rest')
 \end{code}
@@ -810,14 +811,64 @@ as a side-condition to those definitions that depend on it
 (most notably, that of sequential composition).
 \begin{eqnarray*}
    O \cup O' \supseteq P &\implies& O_m \disj P
-\\&=& \mbox{set theory}
+\\&=& O_m \disj (O \cup O')\mbox{, set theory}
 \\ && \true
 \\
-O \cup O' \supseteq V &\discharges& O_m \disj V
+O \cup O' \supseteq V &\discharges& O_m \disj V \text{, for any }m
 \end{eqnarray*}
 This is subsumed by the
 $C_G \supseteq V \discharges D_L \disj V $
 discharge rule further below.
+
+\begin{code}
+tvscDischarge ss (TVSC gv vsDG mvsCG mvsCdG) (TVSC _ vsDL mvsCL mvsCdL)
+  = do  vsD' <- ddDischarge ss vsDG vsDL
+        mvsC' <- ccDischarge ss mvsCG mvsCL
+        mvsCd' <- ccDischarge ss mvsCdG mvsCdL
+        return $ TVSC gv vsD' mvsC' mvsCd' -- should mkTVSC this
+\end{code}
+
+\newpage
+\subsubsection{Pairwise Discharging}
+
+\begin{eqnarray*}
+   D_G \disj V \discharges D_L \disj V
+   & = & \true
+         \quad\cond{D_L \subseteq D_G}\quad (D_L\setminus D_G) \disj V
+\end{eqnarray*}
+\begin{code}
+ddDischarge :: MonadFail m => [Subscript] -> VarSet -> VarSet -> m VarSet
+ddDischarge ss vsDG vsDL = return (vsDL `S.difference` vsDG)
+\end{code}
+
+\begin{eqnarray*}
+   C_G \supseteq V \discharges C_L \supseteq V
+   & = & \true, \quad \IF \quad C_G \subseteq C_L
+\\ & = & \false, \quad \IF \quad C_G \disj C_L \land isStdObs(V)
+\\ & = & (C_G \cap C_L)\cup C_{?L} \supseteq V, \quad \textbf{otherwise}
+\end{eqnarray*}
+Remember, here \texttt{Nothing} denotes the universal set.
+\begin{code}
+ccDischarge :: MonadFail m => [Subscript] -> MVarSet -> MVarSet -> m MVarSet
+ccDischarge ss _           Nothing      =  return Nothing
+ccDischarge ss (Just vsCG) (Just vsCL)
+  =  return $ Just ( (vsCG `S.intersection` vsCL) `S.union` vsCLf )
+  where vsCLf = S.filter isFloatingGVar vsCL
+\end{code}
+
+\begin{eqnarray*}
+   D_G \disj V \discharges C_L \supseteq V
+   & = & \false
+         \quad\cond{C_L \subseteq D_G \land isStdObs(V)}\quad
+         (C_L \setminus D_G) \supseteq V
+\\ C_G \supseteq V \discharges D_L \disj V
+   & = & \true
+         \quad\cond{C_G\cap D_L = \emptyset}\quad
+         D_L \disj V
+\end{eqnarray*}
+
+
+
 % \begin{code}
 % ascDischarge (coveredby  (StdVar (Vbl _ PredV _)) oo'L)
 %              (disjfrom  gv omL)
@@ -831,26 +882,25 @@ discharge rule further below.
 Now, we work through the combinations:
 \begin{eqnarray*}
    D_G \disj V \discharges D_L \disj V
-   & = & \true, \quad\IF\quad D_L \subseteq D_G
-\\ & \mapsto & (D_L\setminus D_G) \disj V
+   & = & \true
+         \quad\cond{D_L \subseteq D_G}\quad (D_L\setminus D_G) \disj V
+\\ D_G \disj V \discharges C_L \supseteq V
+   & = & \false
+         \quad\cond{C_L \subseteq D_G \land isStdObs(V)}\quad
+         (C_L \setminus D_G) \supseteq V
+\\ C_G \supseteq V \discharges C_L \supseteq V
+   & = & \true, \quad \IF \quad C_G \subseteq C_L
+\\ & = & \false, \quad \IF \quad C_G \disj C_L \land isStdObs(V)
+\\ & = & (C_G \cap C_L)\cup C_{?L} \supseteq V, \quad \textbf{otherwise}
+\\ C_G \supseteq V \discharges D_L \disj V
+   & = & \true
+         \quad\cond{C_G\cap D_L = \emptyset}\quad
+         D_L \disj V
 \end{eqnarray*}
-% \begin{code}
-% ascDischarge ss (Disjoint u1 _ dG) (Disjoint u2 gv dL)
-%   | linL `subset` linG  =  return [] -- true
-%   | otherwise           =  return [gv `disjfrom` (linL `diff` linG)]
-%   where
-%     linG = (u1,lineariseVarSet dG)
-%     linL = (u2,lineariseVarSet dL)
-%     subset = isSCsubset ss
-%     diff s t = packUG $ doSCdiff ss s t
-% \end{code}
 
-\begin{eqnarray*}
-   D_G \disj V \discharges C_L \supseteq V
-   & = & \false,
-     \quad\IF\quad C_L \subseteq D_G \land isStdObs(V)
-\\ & \mapsto & (C_L \setminus D_G) \supseteq V
-\end{eqnarray*}
+
+
+
 % \begin{code}
 % ascDischarge ss (Disjoint u1 _ dG) cc@(CoveredBy u2 gv cL)
 %   | linL `subset` linG
@@ -863,12 +913,6 @@ Now, we work through the combinations:
 %     diff s t = packUG $ doSCdiff ss s t
 % \end{code}
 
-\begin{eqnarray*}
-   C_G \supseteq V \discharges C_L \supseteq V
-   & = & \true, \quad \IF \quad C_G \subseteq C_L
-\\ & = & \false, \quad \IF \quad C_G \disj C_L \land isStdObs(V)
-\\ & \mapsto & (C_G \cap C_L)\cup C_{?L} \supseteq V
-\end{eqnarray*}
 Here we have to ensure that $C_{?L}$ is retained, as no floating variables
 exist in $C_G$, and so the intersection would remove those in $C_L$.
 % \begin{code}
@@ -888,11 +932,6 @@ exist in $C_G$, and so the intersection would remove those in $C_L$.
 % \end{code}
 
 
-\begin{eqnarray*}
-   C_G \supseteq V \discharges D_L \disj V
-   & = & \true, \quad \IF~ C_G\cap D_L = \emptyset
-\\ & \mapsto & D_L \disj V
-\end{eqnarray*}
 % \begin{code}
 % ascDischarge ss (CoveredBy u1  _ cG) d@(Disjoint u2  gv dL)
 %   | linG `disj` linL  =  return []
@@ -904,10 +943,10 @@ exist in $C_G$, and so the intersection would remove those in $C_L$.
 % \end{code}
 
 
-Anything else is not handled right now;
-\begin{code}
-tvscDischarge _ _ tvscL = return tvscL
-\end{code}
+% Anything else is not handled right now;
+% \begin{code}
+% tvscDischarge _ _ tvscL = return tvscL
+% \end{code}
 
 \subsection{Freshness Condition  Discharge}
 

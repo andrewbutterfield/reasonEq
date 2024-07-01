@@ -13,9 +13,10 @@ Binding: { P  ⟼ ¬P, x$  ⟼ {x$} }
 Instantiated Law = ¬P
 Instantiated Law S.C. = x$∉P
 Goal S.C. = x$∉P
-Discharged Law S.C. = x$∉P
+Discharged Law S.C. = 
 ```
 
+Note blank after last equals-sign above !!!
 
 ### Works for handling actual theory observables
 

@@ -822,10 +822,17 @@ discharge rule further below.
 
 \begin{code}
 tvscDischarge ss (TVSC gv vsDG mvsCG mvsCdG) (TVSC _ vsDL mvsCL mvsCdL)
-  = do  vsD' <- ddDischarge ss vsDG vsDL
-        mvsC' <- ccDischarge ss mvsCG mvsCL
-        mvsCd' <- ccDischarge ss mvsCdG mvsCdL
-        return $ TVSC gv vsD' mvsC' mvsCd' -- should mkTVSC this
+  = do  vsD'    <- ddDischarge ss vsDG   vsDL
+        vsD''   <- cdDischarge ss mvsCG  vsD'
+        vsD'''  <- cdDischarge ss mvsCdG vsD''
+
+        mvsC'   <- ccDischarge ss mvsCG mvsCL
+        mvsC''  <- dcDischarge ss vsDG  mvsC'
+
+        mvsCd'  <- ccDischarge ss mvsCdG mvsCdL
+        mvsCd'' <- dcDischarge ss vsDG   mvsCd'
+
+        return $ TVSC gv vsD''' mvsC'' mvsCd'' -- should mkTVSC this
 \end{code}
 
 \newpage
@@ -861,92 +868,24 @@ ccDischarge ss (Just vsCG) (Just vsCL)
    & = & \false
          \quad\cond{C_L \subseteq D_G \land isStdObs(V)}\quad
          (C_L \setminus D_G) \supseteq V
-\\ C_G \supseteq V \discharges D_L \disj V
-   & = & \true
-         \quad\cond{C_G\cap D_L = \emptyset}\quad
-         D_L \disj V
 \end{eqnarray*}
+\begin{code}
+dcDischarge :: MonadFail m => [Subscript] -> VarSet -> MVarSet -> m MVarSet
+dcDischarge ss _    Nothing      =  return Nothing
+dcDischarge ss vsDG (Just vsCL)  =  return $ Just (vsCL `S.difference` vsDG)
+\end{code}
 
-
-
-% \begin{code}
-% ascDischarge (coveredby  (StdVar (Vbl _ PredV _)) oo'L)
-%              (disjfrom  gv omL)
-%   | isWhenPartition oo'L omL   =  return [] -- true
-%   where
-%     isWhenPartition oo'L omL  -- same name, partitions {Before,During,After}
-%       = False -- NYI
-% \end{code}
-
-
-Now, we work through the combinations:
 \begin{eqnarray*}
-   D_G \disj V \discharges D_L \disj V
-   & = & \true
-         \quad\cond{D_L \subseteq D_G}\quad (D_L\setminus D_G) \disj V
-\\ D_G \disj V \discharges C_L \supseteq V
-   & = & \false
-         \quad\cond{C_L \subseteq D_G \land isStdObs(V)}\quad
-         (C_L \setminus D_G) \supseteq V
-\\ C_G \supseteq V \discharges C_L \supseteq V
-   & = & \true, \quad \IF \quad C_G \subseteq C_L
-\\ & = & \false, \quad \IF \quad C_G \disj C_L \land isStdObs(V)
-\\ & = & (C_G \cap C_L)\cup C_{?L} \supseteq V, \quad \textbf{otherwise}
-\\ C_G \supseteq V \discharges D_L \disj V
+   C_G \supseteq V \discharges D_L \disj V
    & = & \true
          \quad\cond{C_G\cap D_L = \emptyset}\quad
          D_L \disj V
 \end{eqnarray*}
-
-
-
-
-% \begin{code}
-% ascDischarge ss (Disjoint u1 _ dG) cc@(CoveredBy u2 gv cL)
-%   | linL `subset` linG
-%     && isObsGVar gv     =  fail "Disj=>emptyCover"
-%   | otherwise           =  return [gv `coveredby` (linL `diff` linG)]
-%   where
-%     linG = (u1,lineariseVarSet dG)
-%     linL = (u2,lineariseVarSet cL)
-%     subset = isSCsubset ss
-%     diff s t = packUG $ doSCdiff ss s t
-% \end{code}
-
-Here we have to ensure that $C_{?L}$ is retained, as no floating variables
-exist in $C_G$, and so the intersection would remove those in $C_L$.
-% \begin{code}
-% ascDischarge ss (CoveredBy u1 _ cG) (CoveredBy u2 gv cL)
-%   | linG `subset` linL                =  return []
-%   | linG `disj` linL && isObsGVar gv  =  fail "CoverDisj=>noCover"
-%   | otherwise  =  return
-%                     [gv `coveredby` ((linG `intsct` linL) `union` linF)]
-%   where
-%     subset = isSCsubset ss
-%     disj = isSCdisjoint ss
-%     intsct = doSCint ss
-%     union s t = packUG $ doSCunion ss s t
-%     linG = (u1,lineariseVarSet cG)
-%     linL = (u2,lineariseVarSet cL)
-%     linF = (u2,lineariseVarSet $ S.filter isFloatingGVar cL)
-% \end{code}
-
-
-% \begin{code}
-% ascDischarge ss (CoveredBy u1  _ cG) d@(Disjoint u2  gv dL)
-%   | linG `disj` linL  =  return []
-%   | otherwise         =  return [d]
-%   where
-%     disj = isSCdisjoint ss
-%     linG = (u1,lineariseVarSet cG)
-%     linL = (u2,lineariseVarSet dL)
-% \end{code}
-
-
-% Anything else is not handled right now;
-% \begin{code}
-% tvscDischarge _ _ tvscL = return tvscL
-% \end{code}
+\begin{code}
+cdDischarge :: MonadFail m => [Subscript] -> MVarSet -> VarSet -> m VarSet
+cdDischarge ss Nothing vsDL      =  return vsDL
+cdDischarge ss (Just vsCG) vsDL  =  return (vsCG `S.intersection` vsDL) 
+\end{code}
 
 \subsection{Freshness Condition  Discharge}
 

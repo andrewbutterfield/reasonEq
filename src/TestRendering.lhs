@@ -530,9 +530,12 @@ trSideCond = trsidecond trId
 trSideCondU = trsidecond trIdU
 trsidecond trid sc@(tvscs,fvs)
   | isTrivialSC sc  =  _top
-  | otherwise       =  intcalNN ", " ( concat (map (trtvarsidecond trid) tvscs)
-                                      ++ [trfresh trid fvs] )
+  | otherwise       =  intcalNN ", " 
+                         ( concat (map (trtvarsidecond trid) tvscs)
+                           ++ [trfresh trid fvs] )
 
+trtvarsidecond trid (TVSC gv vsD Nothing Nothing)
+  | S.null vsD  = [_top]
 trtvarsidecond trid (TVSC gv vsD mvsC mvsCd)
   = [trDisjSC trid gv vsD, trCovByM trid gv mvsC, trDynCovM trid gv mvsCd]
 

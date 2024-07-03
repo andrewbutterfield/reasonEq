@@ -6,17 +6,21 @@ Need to get s.c. discharge up  and running
 
 ```
 proof: tm 1 forall_remove
-@tISC.scP':
+@tSCD.scC:
+([TVSC (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) Nothing Nothing],fromList [])
+@tSCD.scP':
 ([TVSC (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) Nothing Nothing],fromList [])
 Match against `forall_remove'[1] OK
 Binding: { P  ⟼ ¬P, x$  ⟼ {x$} }
 Instantiated Law = ¬P
 Instantiated Law S.C. = x$∉P
 Goal S.C. = x$∉P
-Discharged Law S.C. = 
+@tSCD.scP'':
+([TVSC (GV (VR (Id "P" 0,VP,WS))) (fromList []) Nothing Nothing],fromList [])
+Discharged Law S.C. = ⊤
 ```
 
-Note blank after last equals-sign above !!!
+The issue is that `scP''` should be `([],fromList [])`.
 
 ### Works for handling actual theory observables
 

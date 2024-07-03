@@ -686,7 +686,8 @@ If we discover a contradiction,
 then we need to signal this,
 because \texttt{SideCond} cannot represent a false side-condition explicitly.
 \begin{code}
-scDischarge :: MonadFail m => [Subscript] -> SideCond -> SideCond -> m SideCond
+scDischarge :: MonadFail m 
+            => [Subscript] -> SideCond -> SideCond -> m SideCond
 \end{code}
 We have something of the form:
 $$
@@ -711,7 +712,6 @@ to discharge further.
 Success is when all such $L_j$ groups have been shown to be $\true$.
 Failure occurs if any $L_j$ group results in $\false$.
 
-
 \begin{code}
 scDischarge ss anteSC@(anteTVSC,anteFvs) cnsqSC@(cnsqTVSC,cnsqFvs)
   | isTrivialSC cnsqSC  =  return scTrue  -- (G => true) = true
@@ -720,17 +720,6 @@ scDischarge ss anteSC@(anteTVSC,anteFvs) cnsqSC@(cnsqTVSC,cnsqFvs)
      = do tvsc' <- scDischarge' ss anteTVSC cnsqTVSC
           freshDischarge ss anteFvs cnsqFvs tvsc'
 \end{code}
-
-% We have a modified version of \texttt{Data.List.groupBy}
-% \begin{code}
-% groupByGV :: [TVarSideConds] -> [(GenVar,[TVarSideConds])]
-% groupByGV []          =  []
-% groupByGV (tvsc:tvscs)  =  (gv,tvsc:ours) : groupByGV others
-%                       where
-%                         gv               =  termVar tvsc
-%                         gv `usedIn` tvsc  =  gv == termVar tvsc
-%                         (ours,others)    =  span (usedIn gv) tvscs
-% \end{code}
 
 \subsection{Term-Variable  Condition  Discharge}
 
@@ -749,9 +738,12 @@ scDischarge' ss        (tvscG@(TVSC gvG _ _ _):restG)
                      return (tvscL:rest')
   | otherwise  =  do -- use tvscG to discharge tvscL
                      tvsc' <- tvscDischarge ss tvscG tvscL
-                     -- need to run checkTVSC on this result
-                     rest' <- scDischarge' ss restG restL
-                     return (tvsc':rest')
+                     tvscChecked <- tvscCheck ss tvsc'
+                     case tvscChecked of
+                       Nothing ->  scDischarge' ss restG restL
+                       Just tvsc'' -> do
+                         rest' <- scDischarge' ss restG restL
+                         return (tvsc'':rest')
 \end{code}
 
 \newpage

@@ -6,25 +6,6 @@ END THEORIES
 CURRTHEORY = Exists
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("Exists","exists_remove")
-BEGIN LIVE-PROOF
-TH-NAME: Exists
-CJ-NAME: exists_remove
-CONJ = ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [B (TF TB (TG (Id "B" 0))) (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))),V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))],([TVSC (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) Nothing Nothing],fromList []))
-SIDE = ([TVSC (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) Nothing Nothing],fromList [])
-STRAT red-L2R
-BEGIN SEQZIP
-TERMZIP = (B (TF TB (TG (Id "B" 0))) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))]),[Cons' (TF TB (TG (Id "B" 0))) True (Id "not" 0) [] []])
-BEGIN SEQUENT'
-SIDECOND = ([TVSC (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) Nothing Nothing],fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.exists_remove", thDeps = [], known = VD (fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))}
-END SEQUENT'
-END SEQZIP
-FPATH: [1]
-BEGIN LIST STEPS
-(UseLaw (ByMatch MEL) "exists_def" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS)))],fromList [],fromList [((Id "x" 0,VO,[],[]),BS (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]))])) [],ASN (B (TF TB (TG (Id "B" 0))) (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))),([TVSC (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) Nothing Nothing],fromList [])))
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

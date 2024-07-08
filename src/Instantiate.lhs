@@ -22,6 +22,7 @@ import qualified Data.Map as M
 import Data.List
 
 import Utilities
+import Control
 import LexBase
 import Variables
 import AST
@@ -38,7 +39,7 @@ import Debugger
 \section{Introduction}
 
 We take a pattern term and a binding,
-along with relevant context imformation,
+along with relevant context information,
 and produce a re-constructed candidate term,
 provided every variable in the pattern is also in the binding.
 If $\beta$ is a binding, and $t$ is a term,
@@ -76,17 +77,35 @@ Given a variable $v$ we use $\beta(v)$ to denote a binding lookup.
 All instantiations need a context argument that describes the following
 aspects of the current state of a proof:
 \begin{itemize}
+  \item Set of known dynamic observables
   \item Side-Conditions
-  % \item dynamic \texttt{Subscript}s in scope
 \end{itemize}
 \begin{code}
 data InsContext
-  =  ICtxt  { icVTs :: [VarTable]
+  =  ICtxt  { icDV :: VarSet
             , icSC :: SideCond
             }
   deriving Show  
 
-mkInsCtxt = ICtxt
+mkInsCtxt :: [VarTable] -> SideCond -> InsContext
+mkInsCtxt vts sc = ICtxt (getDynamicObservables vts) sc
+\end{code}
+
+We assume the convention that $O$ and $O'$ denote all the dynamic observables
+in a theory:
+\begin{code}
+o = jId "O"  ;  vO = PreVar o
+lO = PreVars o  ;  lO' = PostVars o  
+-- gO = LstVar lO  ;  gO' = LstVar lO' 
+
+getDynamicObservables vts
+ = getDynamicObs vts lO `S.union` getDynamicObs vts lO'
+
+getDynamicObs vts (LVbl lv _ _)
+  = case lookupLVarTables vts lv of
+      KnownVarList _ vl _   ->  S.fromList $ map StdVar vl
+      KnownVarSet  _ vs _   ->  S.map StdVar vs
+      _                     ->  S.empty
 \end{code}
 
 
@@ -472,7 +491,7 @@ instLGVar insctxt binding gv@(LstVar lv)
 \section{Side-Condition Instantiation (Total)}
 
 Doing it again, with side-conditions.
-Btvscially we drill down to the atomic side-conditions,
+Basically we drill down to the atomic side-conditions,
 instantiate and simplify those,
 and merge together.
 
@@ -631,8 +650,7 @@ instTVSC :: MonadFail m => InsContext
 instTVSC insctxt vsDC fvT (TVSC _ vsD mvsC mvsCd)   
   = do  tvscsD <- instDisjoint insctxt vsD   fvT
         tvscsC <- instCovers   insctxt mvsC  fvT
-        -- we assume here that we don't need to check for observables
-        tvscCd <- instCovers   insctxt mvsCd fvT 
+        tvscCd <- instDynCvg   insctxt mvsCd fvT 
         return (tvscsD++tvscsC++tvscCd)
 \end{code}
 
@@ -673,18 +691,6 @@ $F \disj F_i$, $F \disj B_i$:
 \\ &=& \beta.C \supseteq F \land \{\beta.C \supseteq (e_i\setminus B_i)\}
 \\ &=& \beta.C \supseteq F \land \{(\beta.C \cup B_i) \supseteq e_i\}
 \end{eqnarray*}
-We next observe that if $C \supseteq T$ is uniform,
-then it is interpreted as $C \supseteq_a T$.
-We assume here that $S$ is all non-dynamic variables.
-\begin{eqnarray*}
-   \beta.(C \supseteq_a T)
-   &=& \beta.C \supseteq \dfv(\beta(T))
-\\ &=& \beta.C \supseteq (\fv(\beta(T)) \setminus S)
-\\ &=& \beta.C \supseteq (F \cup \{e_i\setminus B_i\}) \setminus S
-\\ &=& \beta.C \supseteq (F \setminus S \cup \{e_i\setminus (B_i \cup S)\}) 
-\\ &=& \beta.C \supseteq F \setminus S \land \{\beta.C \supseteq (e_i\setminus (B_i \cup S))\}
-\\ &=& \beta.C \supseteq F \land \{(\beta.C \cup B_i) \supseteq e_i\}
-\end{eqnarray*}
 
 \begin{code}
 instCovers :: MonadFail m 
@@ -697,6 +703,53 @@ instCovers insctxt (Just vsC) (fF,vLessBs)  =  return (tvsc1s ++ tvsc2s)
     mkCovers vsC gv = gv `coveredby` vsC
     tvsc2s = map (f2 vsC) vLessBs
     f2 vsC (evF,vsB) = mkCovers (vsC `S.union` vsB) evF
+\end{code}
+
+\newpage
+\subsection{Dynamic Coverage}
+
+The general case, 
+where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
+$F \disj F_i$, $F \disj B_i$:
+
+We assume here that $D$ covers all dynamic variables.
+\begin{eqnarray*}
+   \beta.(C \supseteq_a T)
+   &=& \beta.C \supseteq \dfv(\beta(T))
+\\ &=& \beta.C \supseteq (\fv(\beta(T)) \mid_D)
+\\ &=& \beta.C \supseteq (F \cup \{e_i\setminus B_i\})  \mid_D
+\\ &=& \beta.C \supseteq (F  \mid_D \cup \{e_i\setminus B_i\} \mid_D) 
+\\ &=& \beta.C \supseteq (F  \mid_D \cup \{(e_i \mid_D)\setminus B_i\} ) 
+\\ &=& \beta.C \supseteq (F  \mid_D \cup \{(e_i \cap D)\setminus B_i\} ) 
+\\ &=& \beta.C \supseteq F \mid_D 
+       \land \{\beta.C \supseteq ((e_i \cap D)\setminus B_i)\} 
+\\ &=& \beta.C \supseteq F \mid_D 
+       \land \{e_i \in \beta.C \cond{e_i \in D \land e_i \notin B_i} \true \} 
+\end{eqnarray*}
+We include $e_i$ if $e_i \in D \land e_i \notin B_i$.
+
+
+\begin{code}
+instDynCvg :: MonadFail m 
+           => InsContext -> (Maybe VarSet) -> FreeVars 
+           -> m [TVarSideConds]
+instDynCvg insctxt Nothing    (fF,vLessBs)  =  return []
+instDynCvg insctxt (Just vsC) (fF,vLessBs)  =  return (tvsc1s ++ tvsc2s)
+  where  -- icDV ::: VarSet
+    -- type FreeVars = ( VarSet , [( GenVar , VarSet )])
+    restrict2 vS vR
+      | S.null vR  =  vS
+      | otherwise  =  vS `S.intersection` vR 
+    mkDynCovers vsC gv = gv `dyncovered` vsC
+    vsD = icDV insctxt
+    fFD = fF `restrict2` vsD
+    isIn vsD (ev,_) = ev `S.member` vsD
+    vDLessBs = filter (isIn vsD) vLessBs
+    isSeparate (ev,vsB) = not ( ev `S.member` vsB)
+    vDNotInBs = filter isSeparate vDLessBs
+    f2 vsC (evFD,vsB) = mkDynCovers vsC evFD
+    tvsc1s = map (mkDynCovers vsC) (S.toList fFD)
+    tvsc2s = map (f2 vsC) vDNotInBs
 \end{code}
 
 \newpage

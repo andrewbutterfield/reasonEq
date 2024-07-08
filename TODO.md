@@ -5,25 +5,23 @@
 ```
 (E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1 ; (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2    
 O$,O$'⊇ₐb, O$,O$'⊇ₐa
-Focus = []
-
 proof: tm 1 ;_def
 Match against `;_def'[1] OK
 Binding: { ;  ⟼ ;, P  ⟼ (E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1
-, Q  ⟼ (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2, 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }
+         , Q  ⟼ (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2, 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }
 Instantiated Law 
-  = (∃ O$_0  • ((E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$'] ∧ 
-    ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_0/O$])
+  = ∃ O$_0  • ((E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$'] 
+            ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_0/O$]
 Instantiated Law S.C. 
- = O$,O$'⊇ls', O$,O$'⊇ls, O$,O$'⊇a, O$,O$'⊇R1, O$,O$'⊇N1, O$,O$'⊇E1
-   , ⊤, ⊤, ⊤, ⊤, ⊤, ⊤
-   , O$,O$'⊇ls', O$,O$'⊇ls, O$,O$'⊇b, O$,O$'⊇R2, O$,O$'⊇N2, O$,O$'⊇E2 
-   , fresh:O$_0
+  = O$,O$'⊇ₐls', O$,O$'⊇ₐls, O$,O$'⊇ₐa, O$,O$'⊇ₐR1, O$,O$'⊇ₐN1, O$,O$'⊇ₐE1
+  , ⊤, ⊤, ⊤, ⊤, ⊤, ⊤
+  , O$,O$'⊇ₐls', O$,O$'⊇ₐls, O$,O$'⊇ₐb, O$,O$'⊇ₐR2, O$,O$'⊇ₐN2, O$,O$'⊇ₐE2
+  , fresh:O$_0
 Goal S.C. = O$,O$'⊇ₐb, O$,O$'⊇ₐa
 Discharged Law S.C. 
-  = O$,O$'⊇ls', O$,O$'⊇ls, O$,O$'⊇a, O$,O$'⊇R1, O$,O$'⊇N1, O$,O$'⊇E1
+  = O$,O$'⊇ₐls', O$,O$'⊇ₐls, O$,O$'⊇ₐa, O$,O$'⊇ₐR1, O$,O$'⊇ₐN1, O$,O$'⊇ₐE1
   , ⊤, ⊤, ⊤, ⊤, ⊤, ⊤
-  , O$,O$'⊇ls', O$,O$'⊇ls, O$,O$'⊇b, O$,O$'⊇R2, O$,O$'⊇N2, O$,O$'⊇E2
+  , O$,O$'⊇ₐls', O$,O$'⊇ₐls, O$,O$'⊇ₐb, O$,O$'⊇ₐR2, O$,O$'⊇ₐN2, O$,O$'⊇ₐE2
   , fresh:O$_0
 ```
 

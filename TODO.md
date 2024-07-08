@@ -1,87 +1,34 @@
 # To Do
 
+## URGENT
 
-### Works for handling actual theory observables
-
-One possibility:  
-a static-var healthiness condition 
-`SV_x(P) ^= P /\ x = x'`.
-
-So we add `(SV_in o SV_g o SV_out)(P)`.
-
-
-
-Start Developing theories for:
-
-* Hoare Triples
-* Weakest Precondition
-* UTCP  (in progress)
-  depends on:
-  * Arithmetic (done)
-  * Sets (done)
-  * Lists (done)
-* Designs
-* Reactive Systems
-
-Seq. Comp: `";_def"`
 ```
-(P ; Q) ≡ (∃ O$_0  • P[O$_0/O$'] ∧ Q[O$_0/O$])  O$,O$'⊇P, O$,O$'⊇Q, fresh:O$_0
-```
-
-Command `tm 1 ;_def` reports:
-```
-Match against `;_def'[1] OK
-Binding: { ;  ⟼ ;, P  ⟼ X(E1,a,R1,N1), Q  ⟼ X(E2,b,R1,N1), 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }
-Instantiated Law = (∃ O$_0  • (X(E1,a,R1,N1))[O$_0/O$'] ∧ (X(E2,b,R1,N1))[O$_0/O$])
-
-Law S.C. = O$,O$'⊇P, O$,O$'⊇Q, fresh:O$_0
-
-
-
-Instantiated Law S.C. = O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇R1, O$,O$'⊇a, O$,O$'⊇b, fresh:O$_0
-Goal S.C. = ⊤
-Discharged Law S.C. = O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇R1, O$,O$'⊇a, O$,O$'⊇b, fresh:O$_0
-```
-The issue is that these side-conditions *should* only apply to dynamic variables,
-and `a` and `b` should be predicate variables.
-
-It happens also if we expand the X definitions:
-```
-⊢
-(E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1 ; (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R1 ∪ N1    ⊤
-
+(E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1 ; (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2    
+O$,O$'⊇ₐb, O$,O$'⊇ₐa
+Focus = []
 
 proof: tm 1 ;_def
 Match against `;_def'[1] OK
-Binding: 
-  { ;  ⟼ ;
-  , P  ⟼ (E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1
-  , Q  ⟼ (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R1 ∪ N1
-  , 0  ⟼ 0
-  , O$  ⟼ ⟨O$⟩ 
-  }
+Binding: { ;  ⟼ ;, P  ⟼ (E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1
+, Q  ⟼ (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2, 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }
 Instantiated Law 
-  = ∃ O$_0  • 
-       ((E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$'] 
-       ∧ 
-       ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$]
-
-Instantiated Law S.C.
- = O$,O$' ⊇ (E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1
- , O$,O$' ⊇ (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R1 ∪ N1
-
- 
-
-
-= O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇R1, O$,O$'⊇a, O$,O$'⊇b, O$,O$'⊇ls, O$,O$'⊇ls', fresh:O$_0
-Goal S.C. = ⊤
-Discharged Law S.C. = O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇R1, O$,O$'⊇a, O$,O$'⊇b, O$,O$'⊇ls, O$,O$'⊇ls', fresh:O$_0
+  = (∃ O$_0  • ((E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$'] ∧ 
+    ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_0/O$])
+Instantiated Law S.C. 
+ = O$,O$'⊇ls', O$,O$'⊇ls, O$,O$'⊇a, O$,O$'⊇R1, O$,O$'⊇N1, O$,O$'⊇E1
+   , ⊤, ⊤, ⊤, ⊤, ⊤, ⊤
+   , O$,O$'⊇ls', O$,O$'⊇ls, O$,O$'⊇b, O$,O$'⊇R2, O$,O$'⊇N2, O$,O$'⊇E2 
+   , fresh:O$_0
+Goal S.C. = O$,O$'⊇ₐb, O$,O$'⊇ₐa
+Discharged Law S.C. 
+  = O$,O$'⊇ls', O$,O$'⊇ls, O$,O$'⊇a, O$,O$'⊇R1, O$,O$'⊇N1, O$,O$'⊇E1
+  , ⊤, ⊤, ⊤, ⊤, ⊤, ⊤
+  , O$,O$'⊇ls', O$,O$'⊇ls, O$,O$'⊇b, O$,O$'⊇R2, O$,O$'⊇N2, O$,O$'⊇E2
+  , fresh:O$_0
 ```
 
 
-
-
-## Next in Line
+### Next in Line
 
 The following laws in UTP base seem to match anything:
 ```
@@ -114,7 +61,30 @@ A(E,a,N) ≡ (E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N
 (O$'=O$)    ⊤
 ```
 
-### Parked for Now
+## Parked for Now
+
+### Works for handling actual theory observables
+
+One possibility:  
+a static-var healthiness condition 
+`SV_x(P) ^= P /\ x = x'`.
+
+So we add `(SV_in o SV_g o SV_out)(P)`.
+
+
+
+Start Developing theories for:
+
+* Hoare Triples
+* Weakest Precondition
+* UTCP  (in progress)
+  depends on:
+  * Arithmetic (done)
+  * Sets (done)
+  * Lists (done)
+* Designs
+* Reactive Systems
+
 
 Want to have general settings away from files that contain syntax,
 so that syntax changes only affect those files, and not the settings.

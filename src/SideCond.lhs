@@ -850,6 +850,7 @@ Remember, here \texttt{Nothing} denotes the universal set.
 \begin{code}
 ccDischarge :: MonadFail m => [Subscript] -> MVarSet -> MVarSet -> m MVarSet
 ccDischarge ss _           Nothing      =  return Nothing
+ccDischarge ss Nothing     mvsCL        =  return mvsCL
 ccDischarge ss (Just vsCG) (Just vsCL)
   =  return $ Just ( (vsCG `S.intersection` vsCL) `S.union` vsCLf )
   where vsCLf = S.filter isFloatingGVar vsCL

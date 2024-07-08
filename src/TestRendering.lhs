@@ -330,9 +330,12 @@ a marked focus term needs highlighting:
 \begin{code}
 trterm trid ctxtp (Cons tk _ s [t])
  | s == focusMark  =  highlightFocus $ trterm trid ctxtp t
- | s == jId "not"  =  trid s ++ trterm trid 99 t
+ | s == jId "not"  =  trnot s t
  | s == jId "neg"  =  trunary s t
  where  
+  trnot s t
+    | isAtomic t  =  trid s ++ trterm trid 99 t    
+    | otherwise   =  (trid s)++"("++trterm trid 0 t++")"
   trunary s t
     | isAtomic t  =  '(':(trid s)++trterm trid 0 t++")"
     | otherwise   =  trid s ++ trterm trid 99 t

@@ -103,9 +103,9 @@ getDynamicObservables vts
 
 getDynamicObs vts (LVbl lv _ _)
   = case lookupLVarTables vts lv of
-      KnownVarList _ vl _   ->  S.fromList $ map StdVar vl
-      KnownVarSet  _ vs _   ->  S.map StdVar vs
-      _                     ->  S.empty
+      KnownVarList kvl _ _   ->  S.fromList kvl
+      KnownVarSet  kvs _ _   ->  kvs
+      _                      ->  S.empty
 \end{code}
 
 
@@ -733,8 +733,8 @@ We include $e_i$ if $e_i \in D \land e_i \notin B_i$.
 instDynCvg :: MonadFail m 
            => InsContext -> (Maybe VarSet) -> FreeVars 
            -> m [TVarSideConds]
-instDynCvg insctxt Nothing    (fF,vLessBs)  =  return []
-instDynCvg insctxt (Just vsC) (fF,vLessBs)  =  return (tvsc1s ++ tvsc2s)
+instDynCvg insctxt Nothing    (fF,vLessBs)  =  return $ pdbg "iDC.Nothing" []
+instDynCvg insctxt (Just vsC) (fF,vLessBs)  =  return $ pdbg "iDC.Just" (tvsc1s ++ tvsc2s)
   where  -- icDV ::: VarSet
     -- type FreeVars = ( VarSet , [( GenVar , VarSet )])
     restrict2 vS vR
@@ -742,14 +742,14 @@ instDynCvg insctxt (Just vsC) (fF,vLessBs)  =  return (tvsc1s ++ tvsc2s)
       | otherwise  =  vS `S.intersection` vR 
     mkDynCovers vsC gv = gv `dyncovered` vsC
     vsD = icDV insctxt
-    fFD = fF `restrict2` vsD
+    fFD = (pdbg "iDC.fF" fF) `restrict2` (pdbg "iDC.vsD" vsD)
     isIn vsD (ev,_) = ev `S.member` vsD
-    vDLessBs = filter (isIn vsD) vLessBs
+    vDLessBs = filter (isIn vsD) $ pdbg "iDC.vLessBs" vLessBs
     isSeparate (ev,vsB) = not ( ev `S.member` vsB)
-    vDNotInBs = filter isSeparate vDLessBs
+    vDNotInBs = filter isSeparate $ pdbg "iDC.vDLessBs" vDLessBs
     f2 vsC (evFD,vsB) = mkDynCovers vsC evFD
-    tvsc1s = map (mkDynCovers vsC) (S.toList fFD)
-    tvsc2s = map (f2 vsC) vDNotInBs
+    tvsc1s = map (mkDynCovers vsC) (S.toList $ pdbg "iDC.fFD" fFD)
+    tvsc2s = map (f2 vsC) $ pdbg "iDC.vDNotInBs" vDNotInBs
 \end{code}
 
 \newpage

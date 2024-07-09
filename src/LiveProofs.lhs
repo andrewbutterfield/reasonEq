@@ -508,13 +508,16 @@ Done.
 \newpage
 \subsection{Finding parts of laws}
 
-Looking up a law by name:
+Looking up a law by name.
+We always want to return the var data tables for the theory from which
+the lookup is made, rather than the theory where the law is found.
 \begin{code}
-findLaw :: (Monad m, MonadFail m) => String -> [MatchContext] -> m (Law,[VarTable])
-findLaw lnm [] = fail ("Law '"++lnm++"' not found")
-findLaw lnm ((thnm,lws,vts):mcs)
+findLaw :: MonadFail m => String -> [MatchContext] -> m (Law,[VarTable])
+findLaw lnm mcs@((_,_,vts):_) = findLaw' vts lnm (map snd3 mcs)
+findLaw' vts lnm [] = fail ("Law '"++lnm++"' not found")
+findLaw' vts  lnm (lws:lwss)
  = case filter (\law -> lawName law == lnm) lws of
-     []       ->  findLaw lnm mcs
+     []       ->  findLaw' vts lnm lwss
      (law:_)  ->  return (law,vts)
 \end{code}
 

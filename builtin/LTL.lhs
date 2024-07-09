@@ -774,7 +774,7 @@ ltlKnown  = fromJust $ addKnownVar v_next boolf_1 $
             fromJust $ addKnownVar v_always boolf_1 $
             fromJust $ addKnownVar v_until boolf_2 $ 
             fromJust $ addKnownVar v_wait boolf_2 $ 
-            newVarTable
+            newNamedVarTable ltlName
 
 \end{code}
 

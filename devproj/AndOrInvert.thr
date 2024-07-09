@@ -1,6 +1,6 @@
 BEGIN THEORY AndOrInvert
 DEPS = ["And","Or","Not","Equiv"]
-KNOWN = VD (fromList [],fromList [],fromList [])
+KNOWN = VD ("AndOrInvert",fromList [],fromList [],fromList [])
 BEGIN LIST LAWS
 (("or_and_absorb",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))],([],fromList []))),Assumed)
 (("and_not_or_absorb",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))],V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],([],fromList []))),Assumed)

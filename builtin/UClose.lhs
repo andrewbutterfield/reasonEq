@@ -499,7 +499,7 @@ uCloseTheory
                          , notName
                          , equivName
                          ]
-            , known   =  newVarTable
+            , known   =  newNamedVarTable uCloseName
             , laws    =  uCloseAxioms
             , conjs   =  uCloseConjs
             }

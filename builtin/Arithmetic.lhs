@@ -107,7 +107,7 @@ arithmeticKnown
     mulIntro $
     divIntro $
     modIntro $
-    newVarTable
+    newNamedVarTable arithmeticName
 \end{code}
 
 

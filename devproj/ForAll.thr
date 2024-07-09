@@ -1,6 +1,6 @@
 BEGIN THEORY ForAll
 DEPS = ["Equality","Implies","AndOrInvert","And","Or","Not","Equiv"]
-KNOWN = VD (fromList [],fromList [],fromList [])
+KNOWN = VD ("",fromList [],fromList [],fromList [])
 BEGIN LIST LAWS
 (("forall_remove",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [B (TF TB (TG (Id "B" 0))) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))),V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))],([TVSC (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) Nothing Nothing],fromList []))),Axiom)
 (("forall_one_point",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [B (TF TB (TG (Id "B" 0))) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[])),GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (C (TF TB (TG (Id "B" 0))) True (Id "imp" 0) [I (TF TB (TG (Id "B" 0))) True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[])],V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))]),B (TF TB (TG (Id "B" 0))) (Id "forall" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (S (TF TB (TG (Id "B" 0))) (V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])))],([TVSC (GL (LV (VR (Id "e" 0,VE,WS),[],[]))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) Nothing Nothing],fromList []))),Axiom)

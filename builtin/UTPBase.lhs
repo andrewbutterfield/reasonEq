@@ -848,7 +848,7 @@ utpBaseKnown
    ndcIntro $
    abortIntro $
    miracleIntro $
-   newVarTable
+   newNamedVarTable utpBaseName
 \end{code}
 
 

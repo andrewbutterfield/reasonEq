@@ -55,7 +55,8 @@ We have none.
 The value $false$ is defined as a value, and not a known variable.
 \begin{code}
 negationKnown :: VarTable
-negationKnown =  fromJust $ addKnownVar v_not boolf_1 $ newVarTable
+negationKnown =  fromJust $ addKnownVar v_not boolf_1 
+                          $ newNamedVarTable notName
 \end{code}
 
 

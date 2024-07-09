@@ -164,7 +164,7 @@ xyzKnown  =   fromJust $ addKnownVar vx  int
             $ fromJust $ addKnownVar vx' int
             $ fromJust $ addKnownVar vy' int
             $ fromJust $ addKnownVar vz' int
-            $ newVarTable
+            $ newNamedVarTable xyzName
 \end{code}
 
 \newpage

@@ -126,7 +126,7 @@ setKnown
     setdiffIntro $
     subsetIntro $
     cardIntro $
-    newVarTable
+    newNamedVarTable setName
 \end{code}
 
 

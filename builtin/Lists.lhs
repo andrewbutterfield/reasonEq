@@ -149,7 +149,7 @@ listKnown
     revIntro $
     elemslIntro $
     lenlIntro $
-    newVarTable
+    newNamedVarTable listName
 \end{code}
 
 

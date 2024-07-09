@@ -616,7 +616,7 @@ utcpKnown
    obs_g_Intro $
    obs_in_Intro $
    obs_out_Intro $
-   newVarTable
+   newNamedVarTable utcpName
 \end{code}
 
 

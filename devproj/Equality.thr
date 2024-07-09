@@ -1,6 +1,6 @@
 BEGIN THEORY Equality
 DEPS = ["Implies","Equiv"]
-KNOWN = VD (fromList [(VR (Id "=" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList [])
+KNOWN = VD ("Equality",fromList [(VR (Id "=" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList [])
 BEGIN LIST LAWS
 (("=_refl",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "e" 0,VO,WS)),V T (VR (Id "e" 0,VO,WS))],([],fromList []))),Axiom)
 (("=_symm",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "e" 0,VO,WS)),V T (VR (Id "f" 0,VO,WS))],C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "f" 0,VO,WS)),V T (VR (Id "e" 0,VO,WS))]],([],fromList []))),Axiom)

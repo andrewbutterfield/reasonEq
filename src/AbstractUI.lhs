@@ -296,8 +296,8 @@ demoteLaw thnm whichL reqs
 \subsection{Classifying Laws}
 
 \begin{code}
-findLaw :: MonadFail m => Theory -> String -> m [Law]
-findLaw thry lnm
+getLaws :: MonadFail m => Theory -> String -> m [Law]
+getLaws thry lnm
  | lnm == "."      =  return lwsCur
  | null law1       =  fail ("law '"++lnm++"': not found")
  | otherwise       =  return [theLaw]
@@ -316,7 +316,7 @@ classifyLaw thnm whichL reqs
             ->  do thys' <- lawDepClassify thnm thys
                    return $ changed $ theories_ thys' reqs
         | otherwise
-            ->  do case findLaw thry whichL of
+            ->  do case getLaws thry whichL of
                       Nothing -> fail ("No law named '"++whichL++"' in theory.")
                       Just lws -> do  thry' <- lawClassify lws thry
                                       return $ changed

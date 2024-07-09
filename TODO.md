@@ -42,15 +42,15 @@ fromList [GV (VR (Id "ls" 0,VO,WB)),GV (VR (Id "ls" 0,VO,WA))]
 Match against `;_def'[1] OK
 Binding: { ;  ⟼ ;, P  ⟼ (E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1, Q  ⟼ (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2, 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }
 Instantiated Law = (∃ O$_0  • ((E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$'] ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_0/O$])
-Instantiated Law S.C. = O$,O$'⊇ₐls', O$,O$'⊇ₐls, ⊤, ⊤, ⊤, ⊤, ⊤, ⊤, O$,O$'⊇ₐls', O$,O$'⊇ₐls, fresh:O$_0
+Instantiated Law S.C. = O$,O$'⊇ₐls', O$,O$'⊇ₐls, O$,O$'⊇ₐls', O$,O$'⊇ₐls, fresh:O$_0
 Goal S.C. = O$,O$'⊇ₐb, O$,O$'⊇ₐa
-Discharged Law S.C. = O$,O$'⊇ₐls', O$,O$'⊇ₐls, ⊤, ⊤, ⊤, ⊤, ⊤, ⊤, O$,O$'⊇ₐls', O$,O$'⊇ₐls, fresh:O$_0
+Discharged Law S.C. = O$,O$'⊇ₐls', O$,O$'⊇ₐls, O$,O$'⊇ₐls', O$,O$'⊇ₐls, fresh:O$_0
 ```
 
 Looks like `instDynCvg` is doing the right thing.
 
 **
-THE ISSUE HERE SEEMS TO BE ALL THE 'T' IN THE Inst S.C. and the failure to 
+THE ISSUE HERE SEEMS now TO BE the failure to 
 use knowledge about ls and ls' to complete
 **
 

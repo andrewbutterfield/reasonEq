@@ -17,7 +17,7 @@ module VarData ( VarMatchRole
                , pattern UnknownListVar
                , VarTable
                , vtList, stList, dtList
-               , newVarTable
+               , newVarTable, newNamedVarTable
                , addKnownConst, addKnownVar
                , addGenericVar, addInstanceVar
                , addKnownVarList , addKnownVarSet
@@ -237,9 +237,12 @@ of the same temporality.
 Variables or list-variables that are \texttt{Static} can map to anything.
 This means that for dynamic variables,
 we use domain and range types that do not mention temporality.
+We also associate a name with a table, 
+usually that of the theory in which it occurs.
 \begin{code}
 newtype VarTable
-  = VD ( Map Variable   VarMatchRole
+  = VD ( String
+       , Map Variable   VarMatchRole
        , Map Variable   LstVarMatchRole
        , Map IdAndClass DynamicLstVarRole
        )
@@ -250,11 +253,11 @@ newtype VarTable
 We will want to inspect tables.
 \begin{code}
 vtList :: VarTable -> [(Variable,VarMatchRole)]
-vtList (VD (vtable, _, _)) = M.toList vtable
+vtList (VD (_,vtable, _, _)) = M.toList vtable
 stList :: VarTable -> [(Variable,LstVarMatchRole)]
-stList (VD (_, stable, _)) = M.toList stable
+stList (VD (_,_, stable, _)) = M.toList stable
 dtList :: VarTable -> [(Variable,LstVarMatchRole)]
-dtList (VD (_, _, dtable)) = map dtMap $ M.toList dtable
+dtList (VD (_,_, _, dtable)) = map dtMap $ M.toList dtable
 
 dtMap ((i,vc),dlvr) = ( Vbl i vc Before, mapDLVRtoLVMR vc Before dlvr )
 \end{code}
@@ -264,7 +267,10 @@ dtMap ((i,vc),dlvr) = ( Vbl i vc Before, mapDLVRtoLVMR vc Before dlvr )
 
 \begin{code}
 newVarTable :: VarTable
-newVarTable = VD (M.empty, M.empty, M.empty)
+newVarTable = VD ("", M.empty, M.empty, M.empty)
+
+newNamedVarTable :: String -> VarTable
+newNamedVarTable name = VD (name, M.empty, M.empty, M.empty)
 \end{code}
 
 As a general principle,
@@ -287,14 +293,14 @@ to be ``known''.
 Only static variables may name a constant,
 and we must check that we won't introduce any cycles.
 \begin{code}
-addKnownConst var@(Vbl _ _ Static) trm vt@(VD (vtable,stable,dtable))
+addKnownConst var@(Vbl _ _ Static) trm vt@(VD (nm,vtable,stable,dtable))
   | StdVar var `inFreeVars` freev = fail "addKnownConst: variable in term."
   | otherwise
     = case M.lookup var vtable of
         Nothing
-          ->  return $ VD ( M.insert var (KC trm) vtable,stable,dtable )
+          ->  return $ VD (nm, M.insert var (KC trm) vtable,stable,dtable )
         Just UV  
-          ->  return $ VD ( M.insert var (KC trm) vtable,stable,dtable )
+          ->  return $ VD (nm, M.insert var (KC trm) vtable,stable,dtable )
         _ -> fail "addKnownConst: cannot update."
   where
      freev = freeVars scTrue trm  -- always safe?
@@ -323,8 +329,8 @@ addKnownVar (ObsVar _ (During _)) _ _
   =  fail "addKnownVar: not for During Variables."
 
 -- we allow updating here as it does not effect table integrity.
-addKnownVar var typ (VD (vtable,stable,dtable))
-  =  return $ VD ( M.insert var (KV typ) vtable,stable,dtable )
+addKnownVar var typ (VD (nm,vtable,stable,dtable))
+  =  return $ VD (nm, M.insert var (KV typ) vtable,stable,dtable )
 \end{code}
 
 \newpage
@@ -339,10 +345,10 @@ For now we do not place any restrictions,
 except that the variable cannot already be present in the table
 but might limit these to static term variables in the future.
 \begin{code}
-addGenericVar var vt@(VD (vtable,stable,dtable))
+addGenericVar var vt@(VD (nm,vtable,stable,dtable))
   = case M.lookup var vtable of
       Just _ -> fail "addGenericVar: variable already present"
-      Nothing -> return $ VD (M.insert var KG vtable, stable, dtable )
+      Nothing -> return $ VD (nm,M.insert var KG vtable, stable, dtable )
 \end{code}
 
 \subsection{Inserting Instance Variables}
@@ -356,7 +362,7 @@ We require that the variable we are inserting is not already present,
 and that the variable we are linking to is present as generic.
 For now we expect both variables to have the same class and temporality.
 \begin{code}
-addInstanceVar ivar gvar vt@(VD (vtable,stable,dtable))
+addInstanceVar ivar gvar vt@(VD (nm,vtable,stable,dtable))
  | whatVar ivar /= whatVar gvar = fail "addInstanceVar: class mismatch."
  | timeVar ivar /= timeVar gvar = fail "addInstanceVar: temporality mismatch."
  | otherwise
@@ -365,7 +371,7 @@ addInstanceVar ivar gvar vt@(VD (vtable,stable,dtable))
          Nothing
           -> case M.lookup gvar vtable of
                Just KG
-                -> return $ VD (M.insert ivar (KI gvar) vtable, stable, dtable )
+                -> return $ VD (nm,M.insert ivar (KI gvar) vtable, stable, dtable )
                _ -> fail "addInstanceVar: no such generic variable"
 \end{code}
 
@@ -455,16 +461,16 @@ addKnownVarList :: (Monad m, MonadFail m)
 Static List variables match lists of known variables
 of the same class as themselves.
 \begin{code}
-addKnownVarList lv@(Vbl _ _ Static) vl vt@(VD (vtable,stable,dtable))
+addKnownVarList lv@(Vbl _ _ Static) vl vt@(VD (nm,vtable,stable,dtable))
  = case M.lookup lv stable of
     Nothing  ->  newSKVL lv vl vt
     Just UL  ->  newSKVL lv vl vt
     _        ->  fail "addKnownVarList(Static): trying to update."
  where
-   newSKVL lv vl vt@(VD (vtable,stable,dtable))
+   newSKVL lv vl vt@(VD (nm,vtable,stable,dtable))
     = do ( expanse, size ) <- checkVariableList vt lv False vl
          return $ 
-           VD (vtable, M.insert lv (KL vl expanse size) stable, dtable)
+           VD (nm,vtable, M.insert lv (KL vl expanse size) stable, dtable)
 \end{code}
 
 Dynamic list-variables
@@ -472,19 +478,19 @@ can only be defined as equal to a list of general variables,
 with the same class and appropriate temporality.
 We also need to check to avoid cycles, or a crossover to variable-sets.
 \begin{code}
-addKnownVarList lv@(Vbl i vc vw) vl vt@(VD (vtable,stable,dtable))
+addKnownVarList lv@(Vbl i vc vw) vl vt@(VD (nm,vtable,stable,dtable))
  = case M.lookup iac dtable of
     Nothing  ->  newDKVL lv vl vt
     Just UD  ->  newDKVL lv vl vt
     _        ->  fail "addKnownVarList(dynamic): trying to update."
  where
    iac = (i,vc)
-   newDKVL lv vl vt@(VD (vtable,stable,dtable))
+   newDKVL lv vl vt@(VD (nm,vtable,stable,dtable))
     = do ( expanse, size ) <- checkVariableList vt lv False vl
          let (is,js) = idsOf vl
          let xis = map varId expanse
          return $ 
-           VD (vtable, stable, M.insert iac (DL is js xis size) dtable)
+           VD (nm,vtable, stable, M.insert iac (DL is js xis size) dtable)
 \end{code}
 
 
@@ -508,20 +514,20 @@ addKnownVarSet :: (Monad m, MonadFail m)
 See Variable-List insertion above.
 
 \begin{code}
-addKnownVarSet lv@(Vbl i vc Static) vs vt@(VD (vtable,stable,dtable))
+addKnownVarSet lv@(Vbl i vc Static) vs vt@(VD (nm,vtable,stable,dtable))
  = case M.lookup lv stable of
     Nothing  ->  newSKVS lv vs vt
     Just UL  ->  newSKVS lv vs vt
     _        ->  fail "addKnownVarSet(Static): trying to update."
  where
-   newSKVS lv vs vt@(VD (vtable,stable,dtable))
+   newSKVS lv vs vt@(VD (nm,vtable,stable,dtable))
     = do ( expanse, size ) <- checkVariableList vt lv True $ S.toList vs
          let expS = S.fromList expanse
-         return $ VD (vtable, M.insert lv (KS vs expS size) stable, dtable)
+         return $ VD (nm,vtable, M.insert lv (KS vs expS size) stable, dtable)
 \end{code}
 
 \begin{code}
-addKnownVarSet lv@(Vbl i vc vw) vs vt@(VD (vtable,stable,dtable))
+addKnownVarSet lv@(Vbl i vc vw) vs vt@(VD (nm,vtable,stable,dtable))
  = case M.lookup iac dtable of
     Nothing  ->  newDKVS lv vs vt
     Just UD  ->  newDKVS lv vs vt
@@ -529,14 +535,14 @@ addKnownVarSet lv@(Vbl i vc vw) vs vt@(VD (vtable,stable,dtable))
  where
    iac = (i,vc)
    vl = S.toList vs
-   newDKVS lv vs vt@(VD (vtable,stable,dtable))
+   newDKVS lv vs vt@(VD (nm,vtable,stable,dtable))
     = do ( expanse, size ) <- checkVariableList vt lv True vl
          let (is,js) = idsOf vl
          let iS = S.fromList is
          let jS = S.fromList js
          let xiS = S.fromList $ map varId expanse
          return $ 
-           VD (vtable, stable, M.insert iac (DS iS jS xiS size) dtable)
+           VD (nm,vtable, stable, M.insert iac (DS iS jS xiS size) dtable)
 \end{code}
 
 \subsection{Inserting Abstract Variable-List}
@@ -545,14 +551,14 @@ addKnownVarSet lv@(Vbl i vc vw) vs vt@(VD (vtable,stable,dtable))
 addAbstractVarList :: (Monad m, MonadFail m) 
                    => Variable -> VarTable -> m VarTable
 
-addAbstractVarList lv@(Vbl _ _ Static) (VD (vtable,stable,dtable))
+addAbstractVarList lv@(Vbl _ _ Static) (VD (nm,vtable,stable,dtable))
  = case M.lookup lv stable of
-     Nothing -> return $ VD(vtable,M.insert lv AL stable,dtable)
+     Nothing -> return $ VD (nm,vtable,M.insert lv AL stable,dtable)
      _ -> fail "addAbstractVarList(Static): already present"
 
-addAbstractVarList lv@(Vbl i vc vw) (VD (vtable,stable,dtable))
+addAbstractVarList lv@(Vbl i vc vw) (VD (nm,vtable,stable,dtable))
  = case M.lookup (i,vc) dtable of
-     Nothing -> return $ VD(vtable,stable,M.insert (i,vc) DAL dtable)
+     Nothing -> return $ VD (nm,vtable,stable,M.insert (i,vc) DAL dtable)
      _ -> fail "addAbstractVarList(dynamic): already present"
 \end{code}
 
@@ -562,14 +568,14 @@ addAbstractVarList lv@(Vbl i vc vw) (VD (vtable,stable,dtable))
 addAbstractVarSet :: (Monad m, MonadFail m) 
                   => Variable -> VarTable -> m VarTable
 
-addAbstractVarSet lv@(Vbl _ _ Static) (VD (vtable,stable,dtable))
+addAbstractVarSet lv@(Vbl _ _ Static) (VD (nm,vtable,stable,dtable))
  = case M.lookup lv stable of
-     Nothing -> return $ VD(vtable,M.insert lv AS stable,dtable)
+     Nothing -> return $ VD (nm,vtable,M.insert lv AS stable,dtable)
      _ -> fail "addAbstractVarSet(Static): already present"
 
-addAbstractVarSe lv@(Vbl i vc vw) (VD (vtable,stable,dtable))
+addAbstractVarSe lv@(Vbl i vc vw) (VD (nm,vtable,stable,dtable))
  = case M.lookup (i,vc) dtable of
-     Nothing -> return $ VD(vtable,stable,M.insert (i,vc) DAS dtable)
+     Nothing -> return $ VD (nm,vtable,stable,M.insert (i,vc) DAS dtable)
      _ -> fail "addAbstractVarSet(dynamic): already present"
 \end{code}
 
@@ -582,7 +588,7 @@ addAbstractVarSe lv@(Vbl i vc vw) (VD (vtable,stable,dtable))
 Variable lookup is total, returning \texttt{UV} if the variable is not present.
 \begin{code}
 lookupVarTable :: VarTable -> Variable -> VarMatchRole
-lookupVarTable (VD (vtable, _, _)) var
+lookupVarTable (VD (_,vtable, _, _)) var
  = case M.lookup var vtable of
      Nothing   ->  UV
      Just vmr  ->  vmr
@@ -598,12 +604,12 @@ and the others.
 \begin{code}
 lookupLVarTable :: VarTable -> Variable -> LstVarMatchRole
 
-lookupLVarTable (VD (_,stable,_)) lvar@(Vbl _ _ Static)
+lookupLVarTable (VD (_,_,stable,_)) lvar@(Vbl _ _ Static)
  = case M.lookup lvar stable of
      Nothing    ->  UL
      Just lvmr  ->  lvmr
 
-lookupLVarTable (VD (_,_,dtable)) lvar@(Vbl i vc vw)
+lookupLVarTable (VD (_,_,_,dtable)) lvar@(Vbl i vc vw)
  = case M.lookup (i,vc) dtable of
      Nothing    ->  UL
      Just dlvr  ->  mapDLVRtoLVMR vc vw dlvr

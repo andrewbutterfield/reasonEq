@@ -595,10 +595,15 @@ It is worth noting side conditions currently in use:
 
 \subsection{Merging Term-Var Side-Condition Lists}
 
+We check for side-conditions that are trivially true,
+as sometimes these result from instantiating law side-conditions
+with match bindings.
 \begin{code}
 mrgTVarCondLists :: MonadFail m => [Subscript]
                 -> [TVarSideConds] -> [TVarSideConds] -> m [TVarSideConds]
 mrgTVarCondLists ss tvscs1 [] = return tvscs1
+mrgTVarCondLists ss tvscs1 (TVSC _ vsD Nothing Nothing:tvscs2)
+  | S.null vsD  =  mrgTVarCondLists ss tvscs1 tvscs2
 mrgTVarCondLists ss tvscs1 (tvsc:tvscs2)
      = do tvscs1' <- mrgTVarConds ss tvsc tvscs1
           mrgTVarCondLists ss tvscs1' tvscs2

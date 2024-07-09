@@ -507,7 +507,7 @@ side-conditions:
 \end{eqnarray*}
 \begin{code}
 instantiateSC insctxt bind (tvscs,freshvs)
-  = do tvscss' <-sequence $ map (instantiateTVSC insctxt bind) tvscs
+  = do tvscss' <- sequence $ map (instantiateTVSC insctxt bind) tvscs
        freshvs' <- instVarSet insctxt bind freshvs
        mkSideCond [] (concat tvscss') $ theFreeVars freshvs'
 \end{code}

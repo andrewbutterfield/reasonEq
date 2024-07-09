@@ -1,72 +1,60 @@
-@iDC.fF:
-{ GV (VR (Id "E2" 0, VE, WS))
-, GV (VR (Id "N2" 0, VE, WS))
-, GV (VR (Id "R2" 0, VE, WS))
-, GV (VR (Id "b" 0, VP, WS))
-, GV (VR (Id "ls" 0, VO, WB))
-, GV (VR (Id "ls" 0, VO, WA)) }
-@iDC.vsD:
-{ GV (VR (Id "ls" 0, VO, WB))
-, GV (VR (Id "ls" 0, VO, WA))
-, GV (VR (Id "s" 0, VO, WB))
-, GV (VR (Id "s" 0, VO, WA)) }
-@iDC.fFD:
-{ GV (VR (Id "ls" 0, VO, WB))
-, GV (VR (Id "ls" 0, VO, WA)) }
-@iDC.vLessBs:
-[]
-@iDC.vDLessBs:
-[]
-@iDC.vDNotInBs:
-[]
-@iDC.Just:
-[ TVSC
-  (GV (VR (Id "ls" 0, VO, WB)))
-  ( {} )
-  Nothing
-  ( Just
-    ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
-      , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) )
-, TVSC
-  (GV (VR (Id "ls" 0, VO, WA)))
-  ( {} )
-  Nothing
-  ( Just
-    ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
-      , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) ) ]
-@iDC.fF:
-{ GV (VR (Id "E1" 0, VE, WS))
-, GV (VR (Id "N1" 0, VE, WS))
-, GV (VR (Id "R1" 0, VE, WS))
-, GV (VR (Id "a" 0, VP, WS))
-, GV (VR (Id "ls" 0, VO, WB))
-, GV (VR (Id "ls" 0, VO, WA)) }
-@iDC.vsD:
-{ GV (VR (Id "ls" 0, VO, WB))
-, GV (VR (Id "ls" 0, VO, WA))
-, GV (VR (Id "s" 0, VO, WB))
-, GV (VR (Id "s" 0, VO, WA)) }
-@iDC.fFD:
-{ GV (VR (Id "ls" 0, VO, WB))
-, GV (VR (Id "ls" 0, VO, WA)) }
-@iDC.vLessBs:
-[]
-@iDC.vDLessBs:
-[]
-@iDC.vDNotInBs:
-[]
-@iDC.Just:
-[ TVSC
-  (GV (VR (Id "ls" 0, VO, WB)))
-  ( {} )
-  Nothing
-  ( Just
-    ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
-      , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) )
-, TVSC
-  (GV (VR (Id "ls" 0, VO, WA)))
-  ( {} )
-  Nothing
-  ( Just
-    ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
-      , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) ) ]
+@tryISC.scP':
+( [ TVSC
+    (GV (VR (Id "ls" 0, VO, WA)))
+    ( {} )
+    Nothing
+    ( Just
+      ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+        , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) )
+  , TVSC
+    (GV (VR (Id "ls" 0, VO, WB)))
+    ( {} )
+    Nothing
+    ( Just
+      ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+        , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) )
+  , TVSC
+    (GV (VR (Id "ls" 0, VO, WA)))
+    ( {} )
+    Nothing
+    Nothing
+  , TVSC
+    (GV (VR (Id "ls" 0, VO, WB)))
+    ( {} )
+    Nothing
+    Nothing
+  , TVSC
+    (GV (VR (Id "a" 0, VP, WS)))
+    ( {} )
+    Nothing
+    Nothing
+  , TVSC
+    (GV (VR (Id "R1" 0, VE, WS)))
+    ( {} )
+    Nothing
+    Nothing
+  , TVSC
+    (GV (VR (Id "N1" 0, VE, WS)))
+    ( {} )
+    Nothing
+    Nothing
+  , TVSC
+    (GV (VR (Id "E1" 0, VE, WS)))
+    ( {} )
+    Nothing
+    Nothing
+  , TVSC
+    (GV (VR (Id "ls" 0, VO, WA)))
+    ( {} )
+    Nothing
+    ( Just
+      ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+        , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) )
+  , TVSC
+    (GV (VR (Id "ls" 0, VO, WB)))
+    ( {} )
+    Nothing
+    ( Just
+      ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+        , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) ) ]
+, { GL (LV (VR (Id "O" 0, VO, WD "0"), [], [])) } )

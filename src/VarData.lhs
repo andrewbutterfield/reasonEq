@@ -39,6 +39,7 @@ module VarData ( VarMatchRole
                , expandKnown
                , genExpandToList
                , genExpandToSet
+               , getDynamicObservables
                ) where
 --import Data.Maybe (fromJust)
 import Data.Map (Map)
@@ -924,3 +925,25 @@ genExpandToSet vts (LstVar lv)
      Just ((KnownVarSet _ expS _), uis, ujs) -> return (expS,uis,ujs)
      _ -> fail "vlExpandMatch: unknown lvar, or list-valued."
 \end{code}
+
+\newpage
+\section{Getting Known Dynamic Variables}
+
+We assume the convention that $O$ and $O'$ denote all the dynamic observables
+in a theory:
+\begin{code}
+o = jId "O"  ;  vO = PreVar o
+lO = PreVars o  ;  lO' = PostVars o  
+-- gO = LstVar lO  ;  gO' = LstVar lO' 
+
+getDynamicObservables :: [VarTable] -> VarSet
+getDynamicObservables vts
+ = getDynamicObs vts lO `S.union` getDynamicObs vts lO'
+
+getDynamicObs vts (LVbl lv _ _)
+  = case lookupLVarTables vts lv of
+      KnownVarList kvl _ _   ->  S.fromList kvl
+      KnownVarSet  kvs _ _   ->  kvs
+      _                      ->  S.empty
+\end{code}
+

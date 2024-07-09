@@ -91,22 +91,6 @@ mkInsCtxt :: [VarTable] -> SideCond -> InsContext
 mkInsCtxt vts sc = ICtxt (getDynamicObservables vts) sc
 \end{code}
 
-We assume the convention that $O$ and $O'$ denote all the dynamic observables
-in a theory:
-\begin{code}
-o = jId "O"  ;  vO = PreVar o
-lO = PreVars o  ;  lO' = PostVars o  
--- gO = LstVar lO  ;  gO' = LstVar lO' 
-
-getDynamicObservables vts
- = getDynamicObs vts lO `S.union` getDynamicObs vts lO'
-
-getDynamicObs vts (LVbl lv _ _)
-  = case lookupLVarTables vts lv of
-      KnownVarList kvl _ _   ->  S.fromList kvl
-      KnownVarSet  kvs _ _   ->  kvs
-      _                      ->  S.empty
-\end{code}
 
 
 \newpage

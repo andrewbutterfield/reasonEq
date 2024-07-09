@@ -930,20 +930,19 @@ genExpandToSet vts (LstVar lv)
 \section{Getting Known Dynamic Variables}
 
 We assume the convention that $O$ and $O'$ denote all the dynamic observables
-in a theory:
+in a theory and we provide a set that contains their expansions,
+if any.
 \begin{code}
-o = jId "O"  ;  vO = PreVar o
-lO = PreVars o  ;  lO' = PostVars o  
--- gO = LstVar lO  ;  gO' = LstVar lO' 
-
 getDynamicObservables :: [VarTable] -> VarSet
 getDynamicObservables vts
- = getDynamicObs vts lO `S.union` getDynamicObs vts lO'
+ = (pdbg "GDO.pre" $ getDynamicObs vts allPreObs)
+   `S.union` 
+   (pdbg "GDO.post" $ getDynamicObs vts allPostObs)
 
 getDynamicObs vts (LVbl lv _ _)
-  = case lookupLVarTables vts lv of
+  = case lookupLVarTables (pdbg "GDO.vts" vts) $ pdbg "GDO.lv" lv of
       KnownVarList kvl _ _   ->  S.fromList kvl
-      KnownVarSet  kvs _ _   ->  kvs
+      KnownVarSet  kvs _ _   ->  pdbg "GDO.kvs" kvs
       _                      ->  S.empty
 \end{code}
 

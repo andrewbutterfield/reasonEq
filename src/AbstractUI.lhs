@@ -668,13 +668,14 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
         ss = S.elems $ S.map theSubscript $ S.filter isDuring
                      $ S.map gvarWhen $ mentionedVars conj
         scC = conjSC liveProof
-        ictxt = mkInsCtxt vtbls scC
+        obsv = getDynamicObservables vtbls
+        ictxt = ICtxt obsv scC
         (tz,seq') = focus liveProof
         dpath = fPath liveProof
         conjpart = exitTZ tz
     in do let sbind = patchBinding vts lvvls cbind
           scLasC <- instantiateSC ictxt sbind scL
-          scCL <- extendGoalSCCoverage ss lvvls scLasC
+          scCL <- extendGoalSCCoverage obsv lvvls scLasC
           scCX <- mrgSideCond S.empty scC scCL
           scD <- scDischarge (getDynamicObservables vtbls) scCX scLasC
           if onlyFreshSC scD
@@ -723,18 +724,18 @@ If a floating replacement is used
 in a \texttt{CoveredBy} atomic law side condition,
 then we need to copy it over as a proof-local goal side-condition.
 \begin{code}
-extendGoalSCCoverage ss lvvls (tvarSCs,_)
-  = xtndCoverage ss (map snd lvvls) [] (filter isCoverage tvarSCs)
+extendGoalSCCoverage obsv lvvls (tvarSCs,_)
+  = xtndCoverage (pdbg "extGSCC.obsv" obsv) (map snd lvvls) [] (filter isCoverage tvarSCs)
   where
     isCoverage (TVSC _ _ mvsC mvsCd)  =  mvsC /= Nothing || mvsCd /= Nothing
 
-    xtndCoverage :: MonadFail m => [Subscript]
+    xtndCoverage :: MonadFail m => VarSet
                  -> [VarList] -- floating replacements
                  -> [TVarSideConds] -- extra side-conditions (so far)
                  -> [TVarSideConds] -- Law coverage side-conditions
                  -> m SideCond
     xtndCoverage _ _ tvscs [] = return (tvscs, S.empty)
-    xtndCoverage ss ffvls tvscs ((TVSC gv _ mvsC mvsCd) : rest)
+    xtndCoverage obsv ffvls tvscs ((TVSC gv _ mvsC mvsCd) : rest)
       | S.toList vsC `elem` ffvls
 
              -- DO WE NEED THIS?
@@ -742,9 +743,9 @@ extendGoalSCCoverage ss lvvls (tvarSCs,_)
              -- ss = S.elems $ S.map theSubscript $ S.filter isDuring
              --              $ S.map gvarWhen $ mentionedVars conj
 
-         = do tvscs' <- mrgTVarConds S.empty justcov tvscs  -- Subscripts?
-              xtndCoverage ss ffvls tvscs' rest
-      | otherwise  =  xtndCoverage ss ffvls tvscs rest
+         = do tvscs' <- mrgTVarConds obsv justcov tvscs  
+              xtndCoverage obsv ffvls tvscs' rest
+      | otherwise  =  xtndCoverage obsv ffvls tvscs rest
       where 
          vsC = uset mvsC `S.union` uset mvsCd
          justcov = TVSC gv disjTrue mvsC mvsCd

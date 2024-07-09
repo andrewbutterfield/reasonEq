@@ -14,6 +14,7 @@ module SideCond (
 , tvscTrue, disjTrue, covByTrue
 , tvscVSet
 , disjfrom, coveredby, dyncovered
+, allPreObs, allPostObs, allDynObs
 , SideCond, scTrue, isTrivialSC
 , onlyFreshSC -- , onlyInvolving, onlyFreshOrInvolved
 -- , scGVars
@@ -257,6 +258,8 @@ Here, $z$ denotes an (standard) observation variable,
 $T$ denotes a standard term variable,
 and $g$ denotes either $z$ or $T$.
 We also use the case conventions described earlier ($P, p, p'$).
+In addition $DO$ represent the dynamic observables,
+and is equal to $O \cup O'$.
 
 \begin{code}
 mscTrue = Nothing
@@ -265,12 +268,12 @@ tvscCheck :: MonadFail m => VarSet -> TVarSideConds
 tvscCheck obsv (TVSC gv vsD mvsC mvsCd)
   = do  vsD'   <- disjointCheck  obsv gv vsD
         mvsC'  <- coveredByCheck obsv gv mvsC
-        mvsCd' <- dynCvrgCheck   obsv gv mvsCd
+        mvsCd' <- dynCvrgCheck   (pdbg "tvscCheck.obsv" obsv) gv mvsCd
         return $ mkTVSC gv vsD' mvsC' mvsCd'
 \end{code}
 
-\subsubsection%
-{Checking Disjoint $ V \disj g$}
+\newpage
+\subsubsection{Checking Disjoint $ V \disj g$}
 
 \begin{eqnarray*}
    \emptyset             \disj g           &&   \true
@@ -326,8 +329,33 @@ coveredByCheck obsv gv jvsC@(Just vsC)
 coveredByCheck _ _ mvsC = return mvsC
 \end{code}
 
+
+Is $\ell\less V$ covered by $\kappa\less W$ ?
+It is if $\ell=\kappa$ and $W \subseteq V$.
+\begin{code}
+gvCovBy :: GenVar -> GenVar -> Bool
+gvCovBy (LstVar (LVbl v is js)) (LstVar (LVbl covv isv jsv))
+  = v == covv && isv `issubset` is && jsv `issubset` js
+gvCovBy _ _ = False
+\end{code}
+
+
 \newpage
 \subsubsection{Checking DynamicCoverage $V \supseteq_a g$}
+
+We start by defining the standard way 
+to refer to all pre- and post-observations:
+\begin{code}
+o = jId "O"  ;  vO = PreVar o
+allPreObs, allPostObs :: ListVar
+allPreObs = PreVars o  ;  allPostObs = PostVars o 
+allDynObs :: VarSet
+allDynObs = S.fromList $ map LstVar [allPreObs,allPostObs]
+\end{code}
+We expect most uses of dynamic coverage to have the form $O,O' \supseteq_a V$.
+Here $V$ may contain $O$ and $O'$, 
+where $O$ ($O'$) is defined to be the set $ObsV$ ($ObsV'$) of actual observables, if any.
+The \texttt{obsv} variable-set argument contains $ObsV \cup ObsV'$.
 
 We first check that $V$ is only dynamic:
 \begin{eqnarray*}
@@ -336,6 +364,8 @@ We first check that $V$ is only dynamic:
 Assuming $\forall v \in V \bullet \isdyn(v)$ we then proceed:
 \begin{eqnarray*}
    \emptyset             \supseteq_a z   &&  \lnot\isdyn(z)
+\\ O,O' \supseteq_a V &&  
+        \true, \quad \IF \quad V \subseteq O \cup O' \cup ObsV
 \\ \lst\ell\setminus Z \supseteq_a \lst\ell\setminus (Z\cup W) 
                                          &&  \true
 \\ \dots,g,\dots{}       \supseteq_a g   &&  \true
@@ -351,6 +381,9 @@ dynCvrgCheck  :: MonadFail m
 
 dynCvrgCheck obsv gv Nothing  =  return covByTrue  -- U
 dynCvrgCheck obsv gv jvsCd@(Just vsCd)
+  | (pdbg "dCC.vsCd" vsCd) == allDynObs 
+     && (pdbg "dCC.gv" gv) `S.member` (pdbg "dCC.obsv" obsv `S.union` allDynObs)
+                            =  return covByTrue
   | hasStatic               =  report "tvar dyncover fails (static)"
   | any (gvCovBy gv) vsCd   =  return covByTrue
   | not $ isObsGVar gv      =  return jvsCd
@@ -367,15 +400,6 @@ dynCvrgCheck obsv gv jvsCd@(Just vsCd)
 dynCvrgCheck _ _ mvsCd  =  return mvsCd
 \end{code}
 
-
-Is $\ell\less V$ covered by $\kappa\less W$ ?
-It is if $\ell=\kappa$ and $W \subseteq V$.
-\begin{code}
-gvCovBy :: GenVar -> GenVar -> Bool
-gvCovBy (LstVar (LVbl v is js)) (LstVar (LVbl covv isv jsv))
-  = v == covv && isv `issubset` is && jsv `issubset` js
-gvCovBy _ _ = False
-\end{code}
 
 
 \newpage
@@ -452,7 +476,7 @@ mrgTVarConds :: MonadFail m => VarSet
 1st TVSC is easy:
 \begin{code}
 mrgTVarConds obsv tvsc []
-  = do masc <- tvscCheck obsv tvsc
+  = do masc <- tvscCheck (pdbg "mrgTVarConds.obsv.0" obsv) tvsc
        case masc of
          Nothing ->  return [] -- tvsc is in fact true
          Just tvsc' -> return [tvsc']
@@ -463,7 +487,7 @@ same general-variable:
 \begin{code}
 mrgTVarConds obsv tvsc (tvsc1:tvscs)
   | termVar tvsc == termVar tvsc1
-    = do  masc <- tvscCheck obsv tvsc
+    = do  masc <- tvscCheck (pdbg "mrgTVarConds.obsv.1" obsv) tvsc
           case masc of
             Nothing
               ->  return tvscs
@@ -473,7 +497,7 @@ mrgTVarConds obsv tvsc (tvsc1:tvscs)
                     Just Nothing       -> return tvscs -- mrg is true 
                     Just (Just tvsc'') -> return (tvsc'':tvscs)
   | otherwise 
-    = do  tvscs' <- mrgTVarConds obsv tvsc1 tvscs
+    = do  tvscs' <- mrgTVarConds (pdbg "mrgTVarConds.obsv.2" obsv) tvsc1 tvscs
           return (tvsc:tvscs')
 \end{code}
 
@@ -488,7 +512,7 @@ mrgTVarTVar obsv (TVSC gv vsD1 mvsC1 mvsCd1) (TVSC _ vsD2 mvsC2 mvsCd2)
       vsD'   =  vsD1    `S.union`   vsD2
       mvsC'  =  mvsC1  `mintersect` mvsC2
       mvsCd' =  mvsCd1 `mintersect` mvsCd2
-    in tvscCheck obsv (TVSC gv vsD' mvsC' mvsCd')
+    in tvscCheck (pdbg "mrgTVarTVar.obsv" obsv) (TVSC gv vsD' mvsC' mvsCd')
 
 -- Nothing here denotes the relevant universal set - unit for intersection
 Nothing  `mintersect` mvs       =  mvs
@@ -722,7 +746,7 @@ scDischarge obsv anteSC@(anteTVSC,anteFvs) cnsqSC@(cnsqTVSC,cnsqFvs)
   | isTrivialSC cnsqSC  =  return scTrue  -- (G => true) = true
   | isTrivialSC anteSC  =  return cnsqSC  -- (true => L) = L
   | otherwise
-     = do tvsc' <- scDischarge' obsv anteTVSC cnsqTVSC
+     = do tvsc' <- scDischarge' (pdbg "scDischarge.obsv" obsv) anteTVSC cnsqTVSC
           freshDischarge obsv anteFvs cnsqFvs tvsc'
 \end{code}
 
@@ -736,14 +760,14 @@ scDischarge'  :: MonadFail m => VarSet
 scDischarge' _ _ []      =  return []     --  discharged
 scDischarge' _ [] tvscL  =  return tvscL  --  not discharged
 scDischarge' obsv        (tvscG@(TVSC gvG _ _ _):restG) 
-                tvscLs@(tvscL@(TVSC gvL _ _ _):restL)
+                  tvscLs@(tvscL@(TVSC gvL _ _ _):restL)
   | gvG < gvL  =  scDischarge' obsv restG tvscLs -- tvscG not needed
   | gvG > gvL  =  do -- nothing available to discharge tvscL
                      rest' <- scDischarge' obsv restG restL
                      return (tvscL:rest')
   | otherwise  =  do -- use tvscG to discharge tvscL
                      tvsc' <- tvscDischarge obsv tvscG tvscL
-                     tvscChecked <- tvscCheck obsv tvsc'
+                     tvscChecked <- tvscCheck (pdbg "scDischarge'.obsv" obsv) tvsc'
                      case tvscChecked of
                        Nothing ->  scDischarge' obsv restG restL
                        Just tvsc'' -> do
@@ -776,12 +800,12 @@ This may result in the side-condition being retained,
 perhaps ``reduced'' to some degree.
 We use the notation $G \discharges L \mapsto R$
 to say that $G$ being true means that we can simplify $L$ to a ``residual'' $R$.
-We also have a set of all variables ($D$) that are known dynamic observables
-For example, given $O,O' \supseteq_a ls$, and knowlege that $ls \in D$,
+We also have a set of all variables ($DO$) that are known dynamic observables
+For example, given $O,O' \supseteq_a ls$, and knowlege that $ls \in O$,
 we should be able to reduce this to true.
 \begin{eqnarray*}
-   O,O' \supseteq_a v &=& v \in D
-\\ O,O' \supseteq v &=& v \in D
+   O,O' \supseteq_a v &=& v \in O \lor v \in O'
+\\ O,O' \supseteq v &=& v \in O \lor v \in O'
 \end{eqnarray*}
 
 The following cases need special treatment:
@@ -853,7 +877,9 @@ ddDischarge obsv vsDG vsDL = return (vsDL `S.difference` vsDG)
 \end{code}
 
 \begin{eqnarray*}
-   C_G \supseteq V \discharges C_L \supseteq V
+   \_ \discharges C_L \supseteq V
+   & = & \true, \quad \IF \quad V \in Obs \land C_L = Obs
+\\ C_G \supseteq V \discharges C_L \supseteq V
    & = & \true, \quad \IF \quad C_G \subseteq C_L
 \\ & = & \false, \quad \IF \quad C_G \disj C_L \land isStdObs(V)
 \\ & = & (C_G \cap C_L)\cup C_{?L} \supseteq V, \quad \textbf{otherwise}
@@ -861,8 +887,8 @@ ddDischarge obsv vsDG vsDL = return (vsDL `S.difference` vsDG)
 Remember, here \texttt{Nothing} denotes the universal set.
 \begin{code}
 ccDischarge :: MonadFail m => VarSet -> MVarSet -> MVarSet -> m MVarSet
-ccDischarge obsv _           Nothing      =  return Nothing
-ccDischarge obsv Nothing     mvsCL        =  return mvsCL
+ccDischarge obsv _           Nothing  =  return Nothing
+ccDischarge obsv Nothing     mvsCL    =  return mvsCL
 ccDischarge obsv (Just vsCG) (Just vsCL)
   =  return $ Just ( (vsCG `S.intersection` vsCL) `S.union` vsCLf )
   where vsCLf = S.filter isFloatingGVar vsCL

@@ -1,60 +1,354 @@
-@tryISC.scP':
-( [ TVSC
-    (GV (VR (Id "ls" 0, VO, WA)))
-    ( {} )
-    Nothing
-    ( Just
-      ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
-        , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) )
-  , TVSC
-    (GV (VR (Id "ls" 0, VO, WB)))
-    ( {} )
-    Nothing
-    ( Just
-      ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
-        , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) )
-  , TVSC
-    (GV (VR (Id "ls" 0, VO, WA)))
-    ( {} )
-    Nothing
-    Nothing
-  , TVSC
-    (GV (VR (Id "ls" 0, VO, WB)))
-    ( {} )
-    Nothing
-    Nothing
-  , TVSC
-    (GV (VR (Id "a" 0, VP, WS)))
-    ( {} )
-    Nothing
-    Nothing
-  , TVSC
-    (GV (VR (Id "R1" 0, VE, WS)))
-    ( {} )
-    Nothing
-    Nothing
-  , TVSC
-    (GV (VR (Id "N1" 0, VE, WS)))
-    ( {} )
-    Nothing
-    Nothing
-  , TVSC
-    (GV (VR (Id "E1" 0, VE, WS)))
-    ( {} )
-    Nothing
-    Nothing
-  , TVSC
-    (GV (VR (Id "ls" 0, VO, WA)))
-    ( {} )
-    Nothing
-    ( Just
-      ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
-        , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) )
-  , TVSC
-    (GV (VR (Id "ls" 0, VO, WB)))
-    ( {} )
-    Nothing
-    ( Just
-      ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
-        , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) ) ]
-, { GL (LV (VR (Id "O" 0, VO, WD "0"), [], [])) } )
+@mkIC.vts:
+[ VD
+  ( "UTCP"
+  , { (VR (Id "A" 0, VO, WS), KV (TG (Id "B" 0)))
+    , (VR (Id "X" 0, VO, WS), KV (TG (Id "B" 0)))
+    , (VR (Id "atom" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TG (Id "B" 0))))
+    , (VR (Id "cpll" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+    , (VR (Id "cplus" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+    , (VR (Id "cseq" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+    , (VR (Id "cskip" 0, VO, WS), KV (TG (Id "B" 0)))
+    , (VR (Id "cstar" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TG (Id "B" 0))))
+    , (VR (Id "g" 0, VO, WS), KV (TG (Id "GE" 0)))
+    , (VR (Id "in" 0, VO, WS), KV (TG (Id "LE" 0)))
+    , (VR (Id "ls" 0, VO, WB), KV (TC (Id "P" 0) [TG (Id "LE" 0)]))
+    , (VR (Id "ls" 0, VO, WA), KV (TC (Id "P" 0) [TG (Id "LE" 0)]))
+    , (VR (Id "out" 0, VO, WS), KV (TG (Id "LE" 0)))
+    , (VR (Id "s" 0, VO, WB), KV (TG (Id "S" 0)))
+    , (VR (Id "s" 0, VO, WA), KV (TG (Id "S" 0))) }
+  , {}
+  , { ( (Id "O" 0, VO)
+      , DS
+        ( { Id "ls" 0
+          , Id "s" 0 } )
+        ( {} )
+        ( { Id "ls" 0
+          , Id "s" 0 } )
+        2 ) } )
+, VD
+  ( "UTPBase"
+  , { (VR (Id ":=" 0, VO, WS), KV (TF (TV (Id "t" 0)) (TF (TV (Id "t" 0)) (TG (Id "B" 0)))))
+    , (VR (Id ";" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+    , (VR (Id "II" 0, VO, WS), KV (TG (Id "B" 0)))
+    , (VR (Id "bot" 0, VO, WS), KV (TG (Id "B" 0)))
+    , (VR (Id "cond" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))))
+    , (VR (Id "refines" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+    , (VR (Id "sqcap" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+    , (VR (Id "top" 0, VO, WS), KV (TG (Id "B" 0))) }
+  , {}
+  , { ( (Id "O" 0, VO)
+      , DS
+        ( {} )
+        ( {} )
+        ( {} )
+        0 ) } )
+, VD
+  ( "UClose"
+  , {}
+  , {}
+  , {} )
+, VD
+  ( ""
+  , {}
+  , {}
+  , {} )
+, VD
+  ( ""
+  , {}
+  , {}
+  , {} )
+, VD
+  ( "Equality"
+  , { (VR (Id "=" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))) }
+  , {}
+  , {} )
+, VD
+  ( "Implies"
+  , { (VR (Id "imp" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))) }
+  , {}
+  , {} )
+, VD
+  ( "AndOrInvert"
+  , {}
+  , {}
+  , {} )
+, VD
+  ( "And"
+  , { (VR (Id "and" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))) }
+  , {}
+  , {} )
+, VD
+  ( "Or"
+  , { (VR (Id "or" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))) }
+  , {}
+  , {} )
+, VD
+  ( "Not"
+  , { (VR (Id "not" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) }
+  , {}
+  , {} )
+, VD
+  ( "Equiv"
+  , { (VR (Id "eqv" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))) }
+  , {}
+  , {} ) ]
+@GDO.vts:
+[ VD
+  ( "UTCP"
+  , { (VR (Id "A" 0, VO, WS), KV (TG (Id "B" 0)))
+    , (VR (Id "X" 0, VO, WS), KV (TG (Id "B" 0)))
+    , (VR (Id "atom" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TG (Id "B" 0))))
+    , (VR (Id "cpll" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+    , (VR (Id "cplus" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+    , (VR (Id "cseq" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+    , (VR (Id "cskip" 0, VO, WS), KV (TG (Id "B" 0)))
+    , (VR (Id "cstar" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TG (Id "B" 0))))
+    , (VR (Id "g" 0, VO, WS), KV (TG (Id "GE" 0)))
+    , (VR (Id "in" 0, VO, WS), KV (TG (Id "LE" 0)))
+    , (VR (Id "ls" 0, VO, WB), KV (TC (Id "P" 0) [TG (Id "LE" 0)]))
+    , (VR (Id "ls" 0, VO, WA), KV (TC (Id "P" 0) [TG (Id "LE" 0)]))
+    , (VR (Id "out" 0, VO, WS), KV (TG (Id "LE" 0)))
+    , (VR (Id "s" 0, VO, WB), KV (TG (Id "S" 0)))
+    , (VR (Id "s" 0, VO, WA), KV (TG (Id "S" 0))) }
+  , {}
+  , { ( (Id "O" 0, VO)
+      , DS
+        ( { Id "ls" 0
+          , Id "s" 0 } )
+        ( {} )
+        ( { Id "ls" 0
+          , Id "s" 0 } )
+        2 ) } )
+, VD
+  ( "UTPBase"
+  , { (VR (Id ":=" 0, VO, WS), KV (TF (TV (Id "t" 0)) (TF (TV (Id "t" 0)) (TG (Id "B" 0)))))
+    , (VR (Id ";" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+    , (VR (Id "II" 0, VO, WS), KV (TG (Id "B" 0)))
+    , (VR (Id "bot" 0, VO, WS), KV (TG (Id "B" 0)))
+    , (VR (Id "cond" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))))
+    , (VR (Id "refines" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+    , (VR (Id "sqcap" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+    , (VR (Id "top" 0, VO, WS), KV (TG (Id "B" 0))) }
+  , {}
+  , { ( (Id "O" 0, VO)
+      , DS
+        ( {} )
+        ( {} )
+        ( {} )
+        0 ) } )
+, VD
+  ( "UClose"
+  , {}
+  , {}
+  , {} )
+, VD
+  ( ""
+  , {}
+  , {}
+  , {} )
+, VD
+  ( ""
+  , {}
+  , {}
+  , {} )
+, VD
+  ( "Equality"
+  , { (VR (Id "=" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))) }
+  , {}
+  , {} )
+, VD
+  ( "Implies"
+  , { (VR (Id "imp" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))) }
+  , {}
+  , {} )
+, VD
+  ( "AndOrInvert"
+  , {}
+  , {}
+  , {} )
+, VD
+  ( "And"
+  , { (VR (Id "and" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))) }
+  , {}
+  , {} )
+, VD
+  ( "Or"
+  , { (VR (Id "or" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))) }
+  , {}
+  , {} )
+, VD
+  ( "Not"
+  , { (VR (Id "not" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) }
+  , {}
+  , {} )
+, VD
+  ( "Equiv"
+  , { (VR (Id "eqv" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))) }
+  , {}
+  , {} ) ]
+@GDO.lv:
+VR (Id "O" 0, VO, WA)
+@GDO.kvs:
+{ GV (VR (Id "ls" 0, VO, WA))
+, GV (VR (Id "s" 0, VO, WA)) }
+@GDO.post:
+{ GV (VR (Id "ls" 0, VO, WA))
+, GV (VR (Id "s" 0, VO, WA)) }
+@GDO.vts:
+[ VD
+  ( "UTCP"
+  , { (VR (Id "A" 0, VO, WS), KV (TG (Id "B" 0)))
+    , (VR (Id "X" 0, VO, WS), KV (TG (Id "B" 0)))
+    , (VR (Id "atom" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TG (Id "B" 0))))
+    , (VR (Id "cpll" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+    , (VR (Id "cplus" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+    , (VR (Id "cseq" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+    , (VR (Id "cskip" 0, VO, WS), KV (TG (Id "B" 0)))
+    , (VR (Id "cstar" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TG (Id "B" 0))))
+    , (VR (Id "g" 0, VO, WS), KV (TG (Id "GE" 0)))
+    , (VR (Id "in" 0, VO, WS), KV (TG (Id "LE" 0)))
+    , (VR (Id "ls" 0, VO, WB), KV (TC (Id "P" 0) [TG (Id "LE" 0)]))
+    , (VR (Id "ls" 0, VO, WA), KV (TC (Id "P" 0) [TG (Id "LE" 0)]))
+    , (VR (Id "out" 0, VO, WS), KV (TG (Id "LE" 0)))
+    , (VR (Id "s" 0, VO, WB), KV (TG (Id "S" 0)))
+    , (VR (Id "s" 0, VO, WA), KV (TG (Id "S" 0))) }
+  , {}
+  , { ( (Id "O" 0, VO)
+      , DS
+        ( { Id "ls" 0
+          , Id "s" 0 } )
+        ( {} )
+        ( { Id "ls" 0
+          , Id "s" 0 } )
+        2 ) } )
+, VD
+  ( "UTPBase"
+  , { (VR (Id ":=" 0, VO, WS), KV (TF (TV (Id "t" 0)) (TF (TV (Id "t" 0)) (TG (Id "B" 0)))))
+    , (VR (Id ";" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+    , (VR (Id "II" 0, VO, WS), KV (TG (Id "B" 0)))
+    , (VR (Id "bot" 0, VO, WS), KV (TG (Id "B" 0)))
+    , (VR (Id "cond" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))))
+    , (VR (Id "refines" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+    , (VR (Id "sqcap" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+    , (VR (Id "top" 0, VO, WS), KV (TG (Id "B" 0))) }
+  , {}
+  , { ( (Id "O" 0, VO)
+      , DS
+        ( {} )
+        ( {} )
+        ( {} )
+        0 ) } )
+, VD
+  ( "UClose"
+  , {}
+  , {}
+  , {} )
+, VD
+  ( ""
+  , {}
+  , {}
+  , {} )
+, VD
+  ( ""
+  , {}
+  , {}
+  , {} )
+, VD
+  ( "Equality"
+  , { (VR (Id "=" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))) }
+  , {}
+  , {} )
+, VD
+  ( "Implies"
+  , { (VR (Id "imp" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))) }
+  , {}
+  , {} )
+, VD
+  ( "AndOrInvert"
+  , {}
+  , {}
+  , {} )
+, VD
+  ( "And"
+  , { (VR (Id "and" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))) }
+  , {}
+  , {} )
+, VD
+  ( "Or"
+  , { (VR (Id "or" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))) }
+  , {}
+  , {} )
+, VD
+  ( "Not"
+  , { (VR (Id "not" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) }
+  , {}
+  , {} )
+, VD
+  ( "Equiv"
+  , { (VR (Id "eqv" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))) }
+  , {}
+  , {} ) ]
+@GDO.lv:
+VR (Id "O" 0, VO, WB)
+@GDO.kvs:
+{ GV (VR (Id "ls" 0, VO, WB))
+, GV (VR (Id "s" 0, VO, WB)) }
+@GDO.pre:
+{ GV (VR (Id "ls" 0, VO, WB))
+, GV (VR (Id "s" 0, VO, WB)) }
+@dCC.vsCd:
+{ GL (LV (VR (Id "O" 0, VO, WB), [], []))
+, GL (LV (VR (Id "O" 0, VO, WA), [], [])) }
+@mrgTVarConds.obsv.0:
+{}
+@tvscCheck.obsv:
+{}
+@dCC.obsv:
+{}
+@dCC.gv:
+GV (VR (Id "ls" 0, VO, WB))
+@dCC.vsCd:
+{ GL (LV (VR (Id "O" 0, VO, WB), [], []))
+, GL (LV (VR (Id "O" 0, VO, WA), [], [])) }
+@mrgTVarConds.obsv.2:
+{}
+@mrgTVarConds.obsv.0:
+{}
+@tvscCheck.obsv:
+{}
+@dCC.obsv:
+{}
+@dCC.gv:
+GV (VR (Id "ls" 0, VO, WB))
+@dCC.vsCd:
+{ GL (LV (VR (Id "O" 0, VO, WB), [], []))
+, GL (LV (VR (Id "O" 0, VO, WA), [], [])) }
+@mrgTVarConds.obsv.2:
+{}
+@mrgTVarConds.obsv.2:
+{}
+@mrgTVarConds.obsv.0:
+{}
+@tvscCheck.obsv:
+{}
+@dCC.obsv:
+{}
+@dCC.gv:
+GV (VR (Id "ls" 0, VO, WB))
+@dCC.vsCd:
+{ GL (LV (VR (Id "O" 0, VO, WB), [], []))
+, GL (LV (VR (Id "O" 0, VO, WA), [], [])) }
+@mrgTVarConds.obsv.2:
+{}
+@mrgTVarConds.obsv.2:
+{}
+@mrgTVarConds.obsv.2:
+{}
+@mrgTVarConds.obsv.0:
+{}
+@tvscCheck.obsv:
+{}
+@dCC.obsv:
+{}
+@dCC.gv:
+GV (VR (Id "ls" 0, VO, WB))

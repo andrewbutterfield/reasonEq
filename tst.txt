@@ -1,2 +1,80 @@
-@tryISC.scP':
-([TVSC (GV (VR (Id "ls" 0,VO,WA))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),TVSC (GV (VR (Id "ls" 0,VO,WB))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),TVSC (GV (VR (Id "ls" 0,VO,WA))) (fromList []) Nothing Nothing,TVSC (GV (VR (Id "ls" 0,VO,WB))) (fromList []) Nothing Nothing,TVSC (GV (VR (Id "a" 0,VP,WS))) (fromList []) Nothing Nothing,TVSC (GV (VR (Id "R1" 0,VE,WS))) (fromList []) Nothing Nothing,TVSC (GV (VR (Id "N1" 0,VE,WS))) (fromList []) Nothing Nothing,TVSC (GV (VR (Id "E1" 0,VE,WS))) (fromList []) Nothing Nothing,TVSC (GV (VR (Id "ls" 0,VO,WA))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),TVSC (GV (VR (Id "ls" 0,VO,WB))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]))],fromList [GL (LV (VR (Id "O" 0,VO,WD "0"),[],[]))])
+
+proof: tm 1 ;_def
+@mkIC.vts:
+[VD ("UTCP",fromList [(VR (Id "A" 0,VO,WS),KV (TG (Id "B" 0))),(VR (Id "X" 0,VO,WS),KV (TG (Id "B" 0))),(VR (Id "atom" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TG (Id "B" 0)))),(VR (Id "cpll" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "cplus" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "cseq" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "cskip" 0,VO,WS),KV (TG (Id "B" 0))),(VR (Id "cstar" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TG (Id "B" 0)))),(VR (Id "g" 0,VO,WS),KV (TG (Id "GE" 0))),(VR (Id "in" 0,VO,WS),KV (TG (Id "LE" 0))),(VR (Id "ls" 0,VO,WB),KV (TC (Id "P" 0) [TG (Id "LE" 0)])),(VR (Id "ls" 0,VO,WA),KV (TC (Id "P" 0) [TG (Id "LE" 0)])),(VR (Id "out" 0,VO,WS),KV (TG (Id "LE" 0))),(VR (Id "s" 0,VO,WB),KV (TG (Id "S" 0))),(VR (Id "s" 0,VO,WA),KV (TG (Id "S" 0)))],fromList [],fromList [((Id "O" 0,VO),DS (fromList [Id "ls" 0,Id "s" 0]) (fromList []) (fromList [Id "ls" 0,Id "s" 0]) 2)]),VD ("UTPBase",fromList [(VR (Id ":=" 0,VO,WS),KV (TF (TV (Id "t" 0)) (TF (TV (Id "t" 0)) (TG (Id "B" 0))))),(VR (Id ";" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "II" 0,VO,WS),KV (TG (Id "B" 0))),(VR (Id "bot" 0,VO,WS),KV (TG (Id "B" 0))),(VR (Id "cond" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))),(VR (Id "refines" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "sqcap" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "top" 0,VO,WS),KV (TG (Id "B" 0)))],fromList [],fromList [((Id "O" 0,VO),DS (fromList []) (fromList []) (fromList []) 0)]),VD ("UClose",fromList [],fromList [],fromList []),VD ("",fromList [],fromList [],fromList []),VD ("",fromList [],fromList [],fromList []),VD ("Equality",fromList [(VR (Id "=" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD ("Implies",fromList [(VR (Id "imp" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD ("AndOrInvert",fromList [],fromList [],fromList []),VD ("And",fromList [(VR (Id "and" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD ("Or",fromList [(VR (Id "or" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD ("Not",fromList [(VR (Id "not" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TG (Id "B" 0))))],fromList [],fromList []),VD ("Equiv",fromList [(VR (Id "eqv" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList [])]
+@GDO.vts:
+[VD ("UTCP",fromList [(VR (Id "A" 0,VO,WS),KV (TG (Id "B" 0))),(VR (Id "X" 0,VO,WS),KV (TG (Id "B" 0))),(VR (Id "atom" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TG (Id "B" 0)))),(VR (Id "cpll" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "cplus" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "cseq" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "cskip" 0,VO,WS),KV (TG (Id "B" 0))),(VR (Id "cstar" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TG (Id "B" 0)))),(VR (Id "g" 0,VO,WS),KV (TG (Id "GE" 0))),(VR (Id "in" 0,VO,WS),KV (TG (Id "LE" 0))),(VR (Id "ls" 0,VO,WB),KV (TC (Id "P" 0) [TG (Id "LE" 0)])),(VR (Id "ls" 0,VO,WA),KV (TC (Id "P" 0) [TG (Id "LE" 0)])),(VR (Id "out" 0,VO,WS),KV (TG (Id "LE" 0))),(VR (Id "s" 0,VO,WB),KV (TG (Id "S" 0))),(VR (Id "s" 0,VO,WA),KV (TG (Id "S" 0)))],fromList [],fromList [((Id "O" 0,VO),DS (fromList [Id "ls" 0,Id "s" 0]) (fromList []) (fromList [Id "ls" 0,Id "s" 0]) 2)]),VD ("UTPBase",fromList [(VR (Id ":=" 0,VO,WS),KV (TF (TV (Id "t" 0)) (TF (TV (Id "t" 0)) (TG (Id "B" 0))))),(VR (Id ";" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "II" 0,VO,WS),KV (TG (Id "B" 0))),(VR (Id "bot" 0,VO,WS),KV (TG (Id "B" 0))),(VR (Id "cond" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))),(VR (Id "refines" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "sqcap" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "top" 0,VO,WS),KV (TG (Id "B" 0)))],fromList [],fromList [((Id "O" 0,VO),DS (fromList []) (fromList []) (fromList []) 0)]),VD ("UClose",fromList [],fromList [],fromList []),VD ("",fromList [],fromList [],fromList []),VD ("",fromList [],fromList [],fromList []),VD ("Equality",fromList [(VR (Id "=" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD ("Implies",fromList [(VR (Id "imp" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD ("AndOrInvert",fromList [],fromList [],fromList []),VD ("And",fromList [(VR (Id "and" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD ("Or",fromList [(VR (Id "or" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD ("Not",fromList [(VR (Id "not" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TG (Id "B" 0))))],fromList [],fromList []),VD ("Equiv",fromList [(VR (Id "eqv" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList [])]
+@GDO.lv:
+VR (Id "O" 0,VO,WA)
+@GDO.kvs:
+fromList [GV (VR (Id "ls" 0,VO,WA)),GV (VR (Id "s" 0,VO,WA))]
+@GDO.post:
+fromList [GV (VR (Id "ls" 0,VO,WA)),GV (VR (Id "s" 0,VO,WA))]
+@GDO.vts:
+[VD ("UTCP",fromList [(VR (Id "A" 0,VO,WS),KV (TG (Id "B" 0))),(VR (Id "X" 0,VO,WS),KV (TG (Id "B" 0))),(VR (Id "atom" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TG (Id "B" 0)))),(VR (Id "cpll" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "cplus" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "cseq" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "cskip" 0,VO,WS),KV (TG (Id "B" 0))),(VR (Id "cstar" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TG (Id "B" 0)))),(VR (Id "g" 0,VO,WS),KV (TG (Id "GE" 0))),(VR (Id "in" 0,VO,WS),KV (TG (Id "LE" 0))),(VR (Id "ls" 0,VO,WB),KV (TC (Id "P" 0) [TG (Id "LE" 0)])),(VR (Id "ls" 0,VO,WA),KV (TC (Id "P" 0) [TG (Id "LE" 0)])),(VR (Id "out" 0,VO,WS),KV (TG (Id "LE" 0))),(VR (Id "s" 0,VO,WB),KV (TG (Id "S" 0))),(VR (Id "s" 0,VO,WA),KV (TG (Id "S" 0)))],fromList [],fromList [((Id "O" 0,VO),DS (fromList [Id "ls" 0,Id "s" 0]) (fromList []) (fromList [Id "ls" 0,Id "s" 0]) 2)]),VD ("UTPBase",fromList [(VR (Id ":=" 0,VO,WS),KV (TF (TV (Id "t" 0)) (TF (TV (Id "t" 0)) (TG (Id "B" 0))))),(VR (Id ";" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "II" 0,VO,WS),KV (TG (Id "B" 0))),(VR (Id "bot" 0,VO,WS),KV (TG (Id "B" 0))),(VR (Id "cond" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))),(VR (Id "refines" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "sqcap" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "top" 0,VO,WS),KV (TG (Id "B" 0)))],fromList [],fromList [((Id "O" 0,VO),DS (fromList []) (fromList []) (fromList []) 0)]),VD ("UClose",fromList [],fromList [],fromList []),VD ("",fromList [],fromList [],fromList []),VD ("",fromList [],fromList [],fromList []),VD ("Equality",fromList [(VR (Id "=" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD ("Implies",fromList [(VR (Id "imp" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD ("AndOrInvert",fromList [],fromList [],fromList []),VD ("And",fromList [(VR (Id "and" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD ("Or",fromList [(VR (Id "or" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD ("Not",fromList [(VR (Id "not" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TG (Id "B" 0))))],fromList [],fromList []),VD ("Equiv",fromList [(VR (Id "eqv" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList [])]
+@GDO.lv:
+VR (Id "O" 0,VO,WB)
+@GDO.kvs:
+fromList [GV (VR (Id "ls" 0,VO,WB)),GV (VR (Id "s" 0,VO,WB))]
+@GDO.pre:
+fromList [GV (VR (Id "ls" 0,VO,WB)),GV (VR (Id "s" 0,VO,WB))]
+@dCC.vsCd:
+fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]
+@mrgTVarConds.obsv.0:
+fromList []
+@tvscCheck.obsv:
+fromList []
+@dCC.obsv:
+fromList []
+@dCC.gv:
+GV (VR (Id "ls" 0,VO,WB))
+@dCC.vsCd:
+fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]
+@mrgTVarConds.obsv.2:
+fromList []
+@mrgTVarConds.obsv.0:
+fromList []
+@tvscCheck.obsv:
+fromList []
+@dCC.obsv:
+fromList []
+@dCC.gv:
+GV (VR (Id "ls" 0,VO,WB))
+@dCC.vsCd:
+fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]
+@mrgTVarConds.obsv.2:
+fromList []
+@mrgTVarConds.obsv.2:
+fromList []
+@mrgTVarConds.obsv.0:
+fromList []
+@tvscCheck.obsv:
+fromList []
+@dCC.obsv:
+fromList []
+@dCC.gv:
+GV (VR (Id "ls" 0,VO,WB))
+@dCC.vsCd:
+fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]
+@mrgTVarConds.obsv.2:
+fromList []
+@mrgTVarConds.obsv.2:
+fromList []
+@mrgTVarConds.obsv.2:
+fromList []
+@mrgTVarConds.obsv.0:
+fromList []
+@tvscCheck.obsv:
+fromList []
+@dCC.obsv:
+fromList []
+@dCC.gv:
+GV (VR (Id "ls" 0,VO,WB))
+Match against `;_def'[1] OK
+Binding: { ;  ⟼ ;, P  ⟼ (E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1, Q  ⟼ (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2, 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }
+Instantiated Law = (∃ O$_0  • ((E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$'] ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_0/O$])
+Instantiated Law S.C. = O$,O$'⊇ₐls', O$,O$'⊇ₐls, O$,O$'⊇ₐls', O$,O$'⊇ₐls, fresh:O$_0
+Goal S.C. = O$,O$'⊇ₐb, O$,O$'⊇ₐa
+Discharged Law S.C. = O$,O$'⊇ₐls', O$,O$'⊇ₐls, O$,O$'⊇ₐls', O$,O$'⊇ₐls, fresh:O$_0
+
+hit <enter> to continue

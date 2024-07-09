@@ -404,7 +404,7 @@ and we generate names for these that make their floating nature visible.
       = case
                 bindFloating vts kbind tP
         of
-          Yes fbind  ->  tryInstantiate
+          Yes fbind  ->  tryInstantiate vts
                            (mkInsCtxt vts scC) 
                            fbind tP partsP replP scP
           But msgs
@@ -427,11 +427,11 @@ and we generate names for these that make their floating nature visible.
 Next, instantiate the law using the bindings.
 \begin{code}
 -- tryLawByName asn@(tC,scC) lnm parts mcs
-    tryInstantiate insctxt fbind tP partsP replP scP
+    tryInstantiate vts insctxt fbind tP partsP replP scP
       = case
                 instantiate insctxt fbind replP
         of
-          Yes tP'  ->  tryInstantiateSC insctxt fbind tP' partsP replP scP
+          Yes tP'  ->  tryInstantiateSC vts insctxt fbind tP' partsP replP scP
           But msgs
            -> But ([ "try law instantiation failed"
                    , ""
@@ -450,11 +450,11 @@ Next, instantiate the law using the bindings.
 Next, instantiate the pattern side-condition using the bindings.
 \begin{code}
 -- tryLawByName asn@(tC,scC) lnm parts mcs
-    tryInstantiateSC insctxt fbind tP' partsP replP scP
+    tryInstantiateSC vts insctxt fbind tP' partsP replP scP
       = case
                 instantiateSC insctxt fbind scP
         of
-          Yes scP'  ->  trySCDischarge insctxt fbind tP' partsP replP scP'
+          Yes scP'  ->  trySCDischarge vts fbind tP' partsP replP scP'
           But msgs
            -> But ([ "try s.c. instantiation failed"
                    , ""
@@ -474,9 +474,9 @@ Next, instantiate the pattern side-condition using the bindings.
 Finally, try to discharge the instantiated side-condition:
 \begin{code}
 -- tryLawByName asn@(tC,scC) lnm parts mcs
-    trySCDischarge insctxt fbind tP' partsP replP scP'
+    trySCDischarge vts fbind tP' partsP replP scP'
       = case
-                scDischarge ss scC scP'
+                scDischarge (getDynamicObservables vts) scC scP'
         of
           Yes scP'' -> Yes (fbind,tP',scP',scP'')
           But whynots -> But [ "try s.c. discharge failed"
@@ -891,7 +891,7 @@ basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
         fbind <- bindFloating vts kbind repl
         let ictxt = mkInsCtxt vts scC
         scPinC <- instantiateSC ictxt fbind scP
-        scD <- scDischarge ss scC scPinC
+        scD <- scDischarge (getDynamicObservables vts) scC scPinC
 
         if all isFloatingTVSC (fst scD)
           then do mrepl <- instantiate ictxt fbind repl

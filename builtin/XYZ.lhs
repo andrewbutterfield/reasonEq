@@ -400,7 +400,7 @@ hypSubSwap = preddef
            ( psub vx e (psub vy f p)
              ===
              psub vx e (psub vy f p) )
-           ( fromJust ( mrgSideCond []
+           ( fromJust ( mrgSideCond S.empty
                           ([StdVar vx] `notin` StdVar vf)
                           ([StdVar vy] `notin` StdVar ve) ) )
 \end{code}

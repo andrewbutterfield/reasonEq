@@ -675,8 +675,8 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
     in do let sbind = patchBinding vts lvvls cbind
           scLasC <- instantiateSC ictxt sbind scL
           scCL <- extendGoalSCCoverage ss lvvls scLasC
-          scCX <- mrgSideCond ss scC scCL
-          scD <- scDischarge ss scCX scLasC
+          scCX <- mrgSideCond S.empty scC scCL
+          scD <- scDischarge (getDynamicObservables vtbls) scCX scLasC
           if onlyFreshSC scD
             then do let freshneeded = snd scD
                     let knownVs = zipperVarsMentioned $ focus liveProof
@@ -685,10 +685,10 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
                                    = generateFreshVars knownVs freshneeded sbind
                     let newLocalASC = fst scD
                     -- newLocalSC <- mkSideCond newLocalASC fresh
-                    newLocalSC <- mkSideCond ss newLocalASC S.empty
+                    newLocalSC <- mkSideCond S.empty newLocalASC S.empty
                     -- Why do we ignore `fresh`?
                     -- Because we have made it so above?
-                    scC' <- mrgSideCond ss scCX newLocalSC
+                    scC' <- mrgSideCond S.empty scCX newLocalSC
                     brepl  <- instantiate ictxt fbind repl
                     asn' <- mkAsn conjpart (conjSC liveProof)
                     return ( focus_ ((setTZ brepl tz),seq')
@@ -742,7 +742,7 @@ extendGoalSCCoverage ss lvvls (tvarSCs,_)
              -- ss = S.elems $ S.map theSubscript $ S.filter isDuring
              --              $ S.map gvarWhen $ mentionedVars conj
 
-         = do tvscs' <- mrgTVarConds ss justcov tvscs  -- Subscripts?
+         = do tvscs' <- mrgTVarConds S.empty justcov tvscs  -- Subscripts?
               xtndCoverage ss ffvls tvscs' rest
       | otherwise  =  xtndCoverage ss ffvls tvscs rest
       where 
@@ -966,7 +966,7 @@ lawInstantiate3 vts law@((lnm,(Assertion lawt lsc)),lprov) varTerms liveProof
        let (Assertion conj _) = conjecture liveProof
        let ss = S.elems $ S.map theSubscript $ S.filter isDuring
                         $ S.map gvarWhen $ mentionedVars conj
-       nsc <- mrgSideCond ss scC ilsc
+       nsc <- mrgSideCond S.empty scC ilsc
        ilawt <- instantiate ictxt lbind lawt
        let (tz,seq') = focus liveProof
        let dpath = fPath liveProof

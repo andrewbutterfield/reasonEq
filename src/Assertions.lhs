@@ -615,7 +615,7 @@ We call this process ``spanning''.
 \begin{code}
 normSC :: VarVersions -> SideCond -> SideCond
 normSC vv (tvscs,fvs)
-  = case mkSideCond [] (map (fromJust . normASC vv) tvscs) (normFresh vv fvs) of
+  = case mkSideCond S.empty (map (fromJust . normASC vv) tvscs) (normFresh vv fvs) of
       Yes sc    ->  sc
       -- this should not fail, but just in case ...
       But msgs  ->  error ("normSC: "++unlines' msgs)

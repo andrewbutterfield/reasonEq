@@ -676,7 +676,7 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
     in do let sbind = patchBinding vts lvvls cbind
           scLasC <- instantiateSC ictxt sbind scL
           scCL <- extendGoalSCCoverage obsv lvvls scLasC
-          scCX <- mrgSideCond S.empty scC scCL
+          scCX <- mrgSideCond obsv scC scCL
           scD <- scDischarge (getDynamicObservables vtbls) scCX scLasC
           if onlyFreshSC scD
             then do let freshneeded = snd scD
@@ -685,11 +685,10 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
                     let (fbind,fresh)
                                    = generateFreshVars knownVs freshneeded sbind
                     let newLocalASC = fst scD
-                    -- newLocalSC <- mkSideCond newLocalASC fresh
-                    newLocalSC <- mkSideCond S.empty newLocalASC S.empty
+                    newLocalSC <- mkSideCond obsv newLocalASC S.empty
                     -- Why do we ignore `fresh`?
                     -- Because we have made it so above?
-                    scC' <- mrgSideCond S.empty scCX newLocalSC
+                    scC' <- mrgSideCond obsv scCX newLocalSC
                     brepl  <- instantiate ictxt fbind repl
                     asn' <- mkAsn conjpart (conjSC liveProof)
                     return ( focus_ ((setTZ brepl tz),seq')

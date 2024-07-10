@@ -935,14 +935,14 @@ if any.
 \begin{code}
 getDynamicObservables :: [VarTable] -> VarSet
 getDynamicObservables vts
- = (pdbg "GDO.pre" $ getDynamicObs vts allPreObs)
+ = (getDynamicObs vts allPreObs)
    `S.union` 
-   (pdbg "GDO.post" $ getDynamicObs vts allPostObs)
+   (getDynamicObs vts allPostObs)
 
 getDynamicObs vts (LVbl lv _ _)
-  = case lookupLVarTables (pdbg "GDO.vts" vts) $ pdbg "GDO.lv" lv of
+  = case lookupLVarTables vts lv of
       KnownVarList kvl _ _   ->  S.fromList kvl
-      KnownVarSet  kvs _ _   ->  pdbg "GDO.kvs" kvs
+      KnownVarSet  kvs _ _   ->  kvs
       _                      ->  S.empty
 \end{code}
 

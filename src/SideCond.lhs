@@ -268,7 +268,7 @@ tvscCheck :: MonadFail m => VarSet -> TVarSideConds
 tvscCheck obsv (TVSC gv vsD mvsC mvsCd)
   = do  vsD'   <- disjointCheck  obsv gv vsD
         mvsC'  <- coveredByCheck obsv gv mvsC
-        mvsCd' <- dynCvrgCheck   (pdbg "tvscCheck.obsv" obsv) gv mvsCd
+        mvsCd' <- dynCvrgCheck   obsv gv mvsCd
         return $ mkTVSC gv vsD' mvsC' mvsCd'
 \end{code}
 
@@ -511,7 +511,7 @@ mrgTVarTVar obsv (TVSC gv vsD1 mvsC1 mvsCd1) (TVSC _ vsD2 mvsC2 mvsCd2)
       vsD'   =  vsD1    `S.union`   vsD2
       mvsC'  =  mvsC1  `mintersect` mvsC2
       mvsCd' =  mvsCd1 `mintersect` mvsCd2
-    in tvscCheck (pdbg "mrgTVarTVar.obsv" obsv) (TVSC gv vsD' mvsC' mvsCd')
+    in tvscCheck obsv (TVSC gv vsD' mvsC' mvsCd')
 
 -- Nothing here denotes the relevant universal set - unit for intersection
 Nothing  `mintersect` mvs       =  mvs
@@ -626,9 +626,9 @@ mrgTVarCondLists :: MonadFail m => VarSet
                 -> [TVarSideConds] -> [TVarSideConds] -> m [TVarSideConds]
 mrgTVarCondLists obsv tvscs1 [] = return tvscs1
 mrgTVarCondLists obsv tvscs1 (TVSC _ vsD Nothing Nothing:tvscs2)
-  | S.null vsD  =  mrgTVarCondLists (pdbg "mrgTVarCondLists.obsv.1" obsv) tvscs1 tvscs2
+  | S.null vsD  =  mrgTVarCondLists obsv tvscs1 tvscs2
 mrgTVarCondLists obsv tvscs1 (tvsc:tvscs2)
-     = do tvscs1' <- mrgTVarConds (pdbg "mrgTVarCondLists.obsv.2" obsv) tvsc tvscs1
+     = do tvscs1' <- mrgTVarConds obsv tvsc tvscs1
           mrgTVarCondLists obsv tvscs1' tvscs2
 \end{code}
 
@@ -657,7 +657,7 @@ cvr (Just vs)  =  vs
 mkSideCond :: MonadFail m 
            => VarSet -> [TVarSideConds] -> VarSet -> m SideCond
 mkSideCond obsv tvscs fvs
- = do tvscs' <-  mrgTVarCondLists (pdbg "mkSideCond.obsv" obsv) [] tvscs
+ = do tvscs' <-  mrgTVarCondLists obsv [] tvscs
       mrgTVarFreshConditions obsv fvs tvscs'
 \end{code}
 
@@ -671,7 +671,7 @@ one at a time.
 mrgSideCond :: MonadFail m 
             => VarSet -> SideCond -> SideCond -> m SideCond
 mrgSideCond obsv (tvscs1,fvs1) (tvscs2,fvs2)
-     = do tvscs' <- mrgTVarCondLists (pdbg "mrgSideCond.obsv" obsv) tvscs1 tvscs2
+     = do tvscs' <- mrgTVarCondLists obsv tvscs1 tvscs2
           mrgTVarFreshConditions obsv (fvs1 `S.union` fvs2) tvscs'
           -- the above may require a obsv-savvy union?
 
@@ -745,7 +745,7 @@ scDischarge obsv anteSC@(anteTVSC,anteFvs) cnsqSC@(cnsqTVSC,cnsqFvs)
   | isTrivialSC cnsqSC  =  return scTrue  -- (G => true) = true
   | isTrivialSC anteSC  =  return cnsqSC  -- (true => L) = L
   | otherwise
-     = do tvsc' <- scDischarge' (pdbg "scDischarge.obsv" obsv) anteTVSC cnsqTVSC
+     = do tvsc' <- scDischarge' obsv anteTVSC cnsqTVSC
           freshDischarge obsv anteFvs cnsqFvs tvsc'
 \end{code}
 
@@ -766,7 +766,7 @@ scDischarge' obsv        (tvscG@(TVSC gvG _ _ _):restG)
                      return (tvscL:rest')
   | otherwise  =  do -- use tvscG to discharge tvscL
                      tvsc' <- tvscDischarge obsv tvscG tvscL
-                     tvscChecked <- tvscCheck (pdbg "scDischarge'.obsv" obsv) tvsc'
+                     tvscChecked <- tvscCheck obsv tvsc'
                      case tvscChecked of
                        Nothing ->  scDischarge' obsv restG restL
                        Just tvsc'' -> do

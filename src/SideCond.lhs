@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module SideCond (
-  MVarSet, uset
+  UVarSet, uset
 , TVarSideConds(..)
 , termVar, disjointFrom, coveredBy, coveredDynamic
 , mkTVSC
@@ -73,7 +73,7 @@ we do not represent them explicitly.
 Instead, any operation on side-conditions that could result
 in an inconsistent result should fail, gracefully.
 
-\subsection{Term-Variable Side-Conditions}
+\subsection{Term/Variable-Set Relations}
 
 An term variable side-condition (TVSC) can have one of the following forms,
 where $T$ abbreviates $\fv(T)$:
@@ -167,45 +167,76 @@ We can compress this to $(T,D,C,C_d)$.
 
 The disjoint condition is true for any variable if $D$ is null.
 The coverage conditions are true if $C$ or $C_d$ cover all possible variables, which we can capture with the idea of a universe set $U$ or $U_d$.
-So we can represent the true side-conition for any $T$ by:
+So we can represent the true side-condition for any $T$ by:
 $$
   \emptyset \disj T \land 
   U \supseteq T 
   \land U_d \supseteq_a T
 $$
 This compresses to $(T,\emptyset,U,U_d)$.
+We use $\texttt{Just } C$ to represent general $C$,
+and $\texttt{Nothing}$ to represent $U$
+(and similarly for $C_d$).
+\begin{code}
+type UVarSet = Maybe VarSet
+uset :: UVarSet -> VarSet
+uset Nothing    =  S.singleton (StdVar $ StaticVar $ jId "UNIVERSE")
+uset (Just vs)  =  vs 
 
+-- lift regular set operarions to UVarSet, where Nothing is the universal set
+udiff :: UVarSet -> UVarSet -> UVarSet
+udiff _        Nothing   =  Just S.empty
+udiff Nothing  _         =  Nothing -- approximation
+udiff (Just s) (Just t)  =  Just (s `S.difference` t)
+
+uunion :: UVarSet -> UVarSet -> UVarSet
+uunion _        Nothing   =  Nothing
+uunion Nothing  _         =  Nothing
+uunion (Just s) (Just t)  =  Just (s `S.union` t)
+
+uintsct :: UVarSet -> UVarSet -> UVarSet
+uintsct uset1    Nothing   =  uset1
+uintsct Nothing  uset2     =  uset2
+uintsct (Just s) (Just t)  =  Just (s `S.intersection` t)
+
+unull :: UVarSet -> Bool
+unull Nothing = False
+unull (Just s)  = S.null s
+
+usubset :: UVarSet -> UVarSet -> Bool
+usubset _        Nothing   =  True
+usubset Nothing  _         =  False
+usubset (Just s) (Just t)  =  s `S.isSubsetOf` t
+
+udisj :: UVarSet -> UVarSet -> Bool
+udisj uset1    Nothing   =  unull uset1
+udisj Nothing  uset2     =  unull uset2
+udisj (Just s) (Just t)  =  S.null (s `S.intersection` t)
+\end{code}
+
+\newpage
 \section{Term Variable Side-Conditions}
 
 We now introduce our notion of term-variable side-conditions.
 We will not represent $pre$ explicitly here,
 and instead will use $\lst O \supseteq T$.
-We use $\texttt{Just } C$ to represent general $C$,
-and $\texttt{Nothing}$ to represent $U$
-(and similarly for $C_d$).
-\begin{code}
-type MVarSet = Maybe VarSet
-uset :: MVarSet -> VarSet
-uset Nothing    =  S.singleton (StdVar $ StaticVar $ jId "UNIVERSE")
-uset (Just vs)  =  vs 
-\end{code}
-We bring it all together here:
+
 \begin{code}
 data  TVarSideConds -- (T,D,C,C_d)
   = TVSC  GenVar        --  T
           VarSet        --  D
-          MVarSet  --  U  | C
-          MVarSet  --  Ud | Cd
+          UVarSet  --  U  | C
+          UVarSet  --  Ud | Cd
   deriving (Eq, Ord, Show, Read)
 
 termVar        :: TVarSideConds -> GenVar
-termVar (TVSC gv vsD mvsC mvsCd)         =  gv
+termVar (TVSC gv vsD uvsC uvsCd)         =  gv
 disjointFrom   :: TVarSideConds -> VarSet
-disjointFrom (TVSC gv vsD mvsC mvsCd)    =  vsD
-coveredBy      :: TVarSideConds -> MVarSet
-coveredBy (TVSC gv vsD mvsC mvsCd)       =  mvsC
-coveredDynamic :: TVarSideConds -> MVarSet
-coveredDynamic (TVSC gv vsD mvsC mvsCd)  =  mvsCd
+disjointFrom (TVSC gv vsD uvsC uvsCd)    =  vsD
+coveredBy      :: TVarSideConds -> UVarSet
+coveredBy (TVSC gv vsD uvsC uvsCd)       =  uvsC
+coveredDynamic :: TVarSideConds -> UVarSet
+coveredDynamic (TVSC gv vsD uvsC uvsCd)  =  uvsCd
 
 disjTrue = S.empty
 covByTrue = Nothing
@@ -214,11 +245,11 @@ tvscTrue t = TVSC t disjTrue covByTrue covByTrue
 
 We need a smart builder here to handle all being true:
 \begin{code}
-mkTVSC :: GenVar -> VarSet -> MVarSet -> MVarSet -> Maybe TVarSideConds
-mkTVSC gv vsD mvsC mvsCd
-  = if vsD == disjTrue && mvsC == covByTrue && mvsCd == covByTrue
+mkTVSC :: GenVar -> VarSet -> UVarSet -> UVarSet -> Maybe TVarSideConds
+mkTVSC gv vsD uvsC uvsCd
+  = if vsD == disjTrue && uvsC == covByTrue && uvsCd == covByTrue
     then Nothing -- denotes True
-    else Just $ TVSC gv vsD mvsC mvsCd
+    else Just $ TVSC gv vsD uvsC uvsCd
 \end{code}
 
 
@@ -265,11 +296,11 @@ and is equal to $O \cup O'$.
 mscTrue = Nothing
 tvscCheck :: MonadFail m => VarSet -> TVarSideConds 
           -> m (Maybe TVarSideConds)
-tvscCheck obsv (TVSC gv vsD mvsC mvsCd)
+tvscCheck obsv (TVSC gv vsD uvsC uvsCd)
   = do  vsD'   <- disjointCheck  obsv gv vsD
-        mvsC'  <- coveredByCheck obsv gv mvsC
-        mvsCd' <- dynCvrgCheck   obsv gv mvsCd
-        return $ mkTVSC gv vsD' mvsC' mvsCd'
+        uvsC'  <- coveredByCheck obsv gv uvsC
+        uvsCd' <- dynCvrgCheck   obsv gv uvsCd
+        return $ mkTVSC gv vsD' uvsC' uvsCd'
 \end{code}
 
 \newpage
@@ -314,7 +345,7 @@ we cannot deduce that $\emptyset \supseteq T$ is false.
 Similarly, $T \supseteq z$ could also be true.
 \begin{code}
 coveredByCheck  :: MonadFail m 
-               => VarSet -> GenVar -> MVarSet -> m (MVarSet)
+               => VarSet -> GenVar -> UVarSet -> m (UVarSet)
 
 coveredByCheck obsv gv Nothing  =  return covByTrue  -- U
 coveredByCheck obsv gv jvsC@(Just vsC)
@@ -326,7 +357,7 @@ coveredByCheck obsv gv jvsC@(Just vsC)
     showsv = "gv = "++show gv
     showvs = "vsC = "++show vsC
     report msg = fail $ unlines' [msg,showsv,showvs]
-coveredByCheck _ _ mvsC = return mvsC
+coveredByCheck _ _ uvsC = return uvsC
 \end{code}
 
 
@@ -377,7 +408,7 @@ we cannot deduce that $\emptyset \supseteq T$ is false.
 Similarly, $T \supseteq z$ could also be true.
 \begin{code}
 dynCvrgCheck  :: MonadFail m 
-               => VarSet -> GenVar -> MVarSet -> m (MVarSet)
+               => VarSet -> GenVar -> UVarSet -> m (UVarSet)
 
 dynCvrgCheck obsv gv Nothing  =  return covByTrue  -- U
 dynCvrgCheck obsv gv jvsCd@(Just vsCd)
@@ -396,7 +427,7 @@ dynCvrgCheck obsv gv jvsCd@(Just vsCd)
     showsv = "gv = "++show gv
     showvs = "vsCd = "++show vsCd
     report msg = fail $ unlines' [msg,showsv,showvs]
-dynCvrgCheck _ _ mvsCd  =  return mvsCd
+dynCvrgCheck _ _ uvsCd  =  return uvsCd
 \end{code}
 
 
@@ -506,17 +537,12 @@ Now, merging an TVSC in with another TVSC referring to the same general variable
 \begin{code}
 mrgTVarTVar :: MonadFail m => VarSet
            -> TVarSideConds -> TVarSideConds -> m (Maybe TVarSideConds)
-mrgTVarTVar obsv (TVSC gv vsD1 mvsC1 mvsCd1) (TVSC _ vsD2 mvsC2 mvsCd2) 
+mrgTVarTVar obsv (TVSC gv vsD1 uvsC1 uvsCd1) (TVSC _ vsD2 uvsC2 uvsCd2) 
   = let 
-      vsD'   =  vsD1    `S.union`   vsD2
-      mvsC'  =  mvsC1  `mintersect` mvsC2
-      mvsCd' =  mvsCd1 `mintersect` mvsCd2
-    in tvscCheck obsv (TVSC gv vsD' mvsC' mvsCd')
-
--- Nothing here denotes the relevant universal set - unit for intersection
-Nothing  `mintersect` mvs       =  mvs
-mvs      `mintersect` Nothing   =  mvs
-Just vs1 `mintersect` Just vs2  =  Just (vs1 `S.intersection` vs2)
+      vsD'   =  vsD1   `S.union` vsD2
+      uvsC'  =  uvsC1  `uintsct` uvsC2
+      uvsCd' =  uvsCd1 `uintsct` uvsCd2
+    in tvscCheck obsv (TVSC gv vsD' uvsC' uvsCd')
 \end{code}
 
 
@@ -646,7 +672,7 @@ mrgTVarFreshConditions obsv freshvs tvscs
 
 coveredVarsOf :: VarSet -> [TVarSideConds] -> VarSet
 coveredVarsOf obsv tvscs = S.unions $ map coveringsOf tvscs
-coveringsOf (TVSC _ _ mvsC mvsCd)  =  cvr mvsC `S.union` cvr mvsCd
+coveringsOf (TVSC _ _ uvsC uvsCd)  =  cvr uvsC `S.union` cvr uvsCd
 cvr Nothing    =  S.empty -- universe does not contain fresh vars
 cvr (Just vs)  =  vs
 \end{code}
@@ -848,18 +874,18 @@ $C_G \supseteq V \discharges D_L \disj V $
 discharge rule further below.
 
 \begin{code}
-tvscDischarge obsv (TVSC gv vsDG mvsCG mvsCdG) (TVSC _ vsDL mvsCL mvsCdL)
+tvscDischarge obsv (TVSC gv vsDG uvsCG uvsCdG) (TVSC _ vsDL uvsCL uvsCdL)
   = do  vsD'    <- ddDischarge obsv vsDG   vsDL
-        vsD''   <- cdDischarge obsv mvsCG  vsD'
-        vsD'''  <- cdDischarge obsv mvsCdG vsD''
+        vsD''   <- cdDischarge obsv uvsCG  vsD'
+        vsD'''  <- cdDischarge obsv uvsCdG vsD''
 
-        mvsC'   <- ccDischarge obsv mvsCG mvsCL
-        mvsC''  <- dcDischarge obsv vsDG  mvsC'
+        uvsC'   <- ccDischarge obsv uvsCG uvsCL
+        uvsC''  <- dcDischarge obsv vsDG  uvsC'
 
-        mvsCd'  <- ccDischarge obsv mvsCdG mvsCdL
-        mvsCd'' <- dcDischarge obsv vsDG   mvsCd'
+        uvsCd'  <- ccDischarge obsv uvsCdG uvsCdL
+        uvsCd'' <- dcDischarge obsv vsDG   uvsCd'
 
-        return $ TVSC gv vsD''' mvsC'' mvsCd'' 
+        return $ TVSC gv vsD''' uvsC'' uvsCd'' 
 \end{code}
 
 \newpage
@@ -885,12 +911,15 @@ ddDischarge obsv vsDG vsDL = return (vsDL `S.difference` vsDG)
 \end{eqnarray*}
 Remember, here \texttt{Nothing} denotes the universal set.
 \begin{code}
-ccDischarge :: MonadFail m => VarSet -> MVarSet -> MVarSet -> m MVarSet
-ccDischarge obsv _           Nothing  =  return Nothing
-ccDischarge obsv Nothing     mvsCL    =  return mvsCL
-ccDischarge obsv (Just vsCG) (Just vsCL)
-  =  return $ Just ( (vsCG `S.intersection` vsCL) `S.union` vsCLf )
-  where vsCLf = S.filter isFloatingGVar vsCL
+ccDischarge :: MonadFail m 
+            => VarSet -> UVarSet -> UVarSet 
+            -> m UVarSet
+ccDischarge obsv uvsCG uvsCL
+  | uvsCG `usubset` uvsCL  =  return Nothing
+  | otherwise              =  return ((uvsCG `uintsct` uvsCL) `uunion` uvsCLf)
+  where uvsCLf = case uvsCL of
+                   Nothing    ->  Nothing
+                   Just vsCL  ->  Just $ S.filter isFloatingGVar vsCL
 \end{code}
 
 \begin{eqnarray*}
@@ -900,7 +929,7 @@ ccDischarge obsv (Just vsCG) (Just vsCL)
          (C_L \setminus D_G) \supseteq V
 \end{eqnarray*}
 \begin{code}
-dcDischarge :: MonadFail m => VarSet -> VarSet -> MVarSet -> m MVarSet
+dcDischarge :: MonadFail m => VarSet -> VarSet -> UVarSet -> m UVarSet
 dcDischarge obsv _    Nothing      =  return Nothing
 dcDischarge obsv vsDG (Just vsCL)  =  return $ Just (vsCL `S.difference` vsDG)
 \end{code}
@@ -912,7 +941,7 @@ dcDischarge obsv vsDG (Just vsCL)  =  return $ Just (vsCL `S.difference` vsDG)
          D_L \disj V
 \end{eqnarray*}
 \begin{code}
-cdDischarge :: MonadFail m => VarSet -> MVarSet -> VarSet -> m VarSet
+cdDischarge :: MonadFail m => VarSet -> UVarSet -> VarSet -> m VarSet
 cdDischarge obsv Nothing vsDL      =  return vsDL
 cdDischarge obsv (Just vsCG) vsDL  =  return (vsCG `S.intersection` vsDL) 
 \end{code}
@@ -941,19 +970,21 @@ where elements of $G_F$ can be used to satisfy some $\setof{D,C,Cd}_L$,
 resulting in modified versions $\setof{D',C',Cd'}_L$.
 
 \begin{code}
-freshDischarge :: MonadFail m => VarSet
-              -> VarSet -> VarSet -> [TVarSideConds] -> m SideCond
+freshDischarge :: MonadFail m 
+               => VarSet -> VarSet -> VarSet -> [TVarSideConds] 
+               -> m SideCond
 freshDischarge obsv anteFvs cnsqFvs tvsc
-  = do tvsc' <- freshDischarge' obsv anteFvs tvsc
-       return (tvsc' , cnsqFvs S.\\ anteFvs )
+  = do tvsc' <- ((freshDischarge' obsv) $! (pdbg "anteFvs" anteFvs)) $! (pdbg "tvsc" tvsc)
+       return (tvsc' , (pdbg "cnsqFvss" cnsqFvs) S.\\ anteFvs )
 \end{code}
 
 \begin{code}
-freshDischarge' :: MonadFail m => VarSet
-                -> VarSet -> [TVarSideConds] -> m [TVarSideConds]
-freshDischarge' obsv anteFvs [] = return []
+freshDischarge' :: MonadFail m 
+                => VarSet -> VarSet -> [TVarSideConds] 
+                -> m [TVarSideConds]
+freshDischarge' obsv anteFvs [] = return $ pdbg "tvsc'" []
 freshDischarge' obsv anteFvs (tvsc:tvscs)
-  = do ascl  <- freshTVarDischarge obsv anteFvs tvsc
+  = do ascl   <- freshTVarDischarge obsv anteFvs tvsc
        tvscs' <- freshDischarge'    obsv anteFvs tvscs
        return (ascl++tvscs')
 \end{code}
@@ -970,45 +1001,30 @@ there are three possible outcomes:
   \item [Not Fully Discharged]  Return [$L'_j$]
 \end{description}
 \begin{code}
-freshTVarDischarge :: MonadFail m => VarSet
-                   -> VarSet -> TVarSideConds -> m [TVarSideConds]
+freshTVarDischarge :: MonadFail m 
+                   => VarSet -> VarSet -> TVarSideConds 
+                   -> m [TVarSideConds]
 \end{code}
 We now consider the following possibilities:
 \begin{eqnarray*}
    G_F \discharges D_L \disj V
    &=& \true, \quad \IF\quad D_L \subseteq G_F
 \\ &\mapsto& D_L \setminus G_F \disj V
-\end{eqnarray*}
-% \begin{code}
-% freshTVarDischarge obsv gF (Disjoint u gv dL)
-%   | linL `subset` linF  =  return []
-%   | otherwise  =  return [gv `disjfrom` (linL `diff` linF)]
-%   where
-%     subset = isSCsubset obsv
-%     diff s t  = packUG $ doSCdiff obsv s t
-%     linF = (NonU,lineariseVarSet gF)
-%     linL = (u,lineariseVarSet dL)
-% \end{code}
-
-\begin{eqnarray*}
-   G_F \discharges C_L \supseteq V
+\\ G_F \discharges C_L \supseteq V
    &\mapsto&  C_L \setminus G_F \supseteq V
+\\ G_F \discharges Cd_L \supseteq_a V
+   &\mapsto&  Cd_L \setminus G_F \supseteq_a V
 \end{eqnarray*}
-% \begin{code}
-% freshTVarDischarge obsv gF (CoveredBy u gv cL)
-%   = return [gv `coveredby` (linL `diff` linF)]
-%   where
-%     diff s t = packUG $ doSCdiff obsv s t
-%     linF = (NonU,lineariseVarSet gF)
-%     linL = (u,lineariseVarSet cL)
-% \end{code}
-
-
-Anything else is not handled right now.
 \begin{code}
-freshTVarDischarge obsv gF tvsc = return [tvsc]
+freshTVarDischarge obsv gF (TVSC gv vsD uvsC uvsCd)
+  | tvsc' == tvscTrue gv  =  return []
+  | otherwise             =  return [tvsc']
+  where
+    uvsgF = Just gF
+    tvsc' = TVSC gv (vsD `S.difference` gF) 
+                    (uvsC `udiff` uvsgF) 
+                    (uvsCd `udiff` uvsgF)
 \end{code}
-
 
 \newpage
 \section{Check for Floating Conditions}
@@ -1020,12 +1036,12 @@ mention variables that are marked as ``floating''.
 Only these can possibly be instantiated to satisfy the residual side-condition.
 \begin{code}
 isFloatingTVSC :: TVarSideConds -> Bool
-isFloatingTVSC (TVSC  gv vsD mvsC mvsCd)
+isFloatingTVSC (TVSC  gv vsD uvsC uvsCd)
   = isFloatingGVar gv || 
-    ( hasFloating vsD && hasFloatingM mvsC && hasFloatingM mvsCd )
+    ( hasFloating vsD && hasFloatingM uvsC && hasFloatingM uvsCd )
 hasFloating :: VarSet -> Bool
 hasFloating vs = any isFloatingGVar $ S.toList vs
-hasFloatingM :: MVarSet -> Bool
+hasFloatingM :: UVarSet -> Bool
 hasFloatingM Nothing = False
 hasFloatingM (Just vs) = hasFloating vs
 \end{code}
@@ -1037,7 +1053,7 @@ hasFloatingM (Just vs) = hasFloating vs
 % if instantiated properly.
 % \begin{code}
 % tolerateAutoOrNull :: VarSet -> TVarSideConds -> Bool
-% tolerateAutoOrNull unbound (TVSC _ vsD mvsC mvsCd) 
+% tolerateAutoOrNull unbound (TVSC _ vsD uvsC uvsCd) 
 % =  unbound `overlaps` vsD
 % tolerateAutoOrNull unbound (CoveredBy _  _ c)   =  S.null c || unbound `overlaps` c
 % tolerateAutoOrNull _       _              =  False

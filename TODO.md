@@ -2,21 +2,43 @@
 
 ## URGENT
 
-We need to sort out fresh-variable handling
+Progress (for UTPBase ;_def), but now this:
 ```
-(E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1 ; (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2
+(∃ O$_1  • (O$_1=O$') ∧ R[O$_1/O$'])    O$,O$'⊇ₐII, O$,O$'⊇ₐR
+Focus = []
+proof: tm 1 exists_one_point
+@anteFvs:
+fromList []
+@tvsc:
+[TVSC (GL (LV (VR (Id "O" 0,VO,WA),[],[]))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) Nothing Nothing]
+Match against `exists_one_point'[1] OK
+Binding: { P  ⟼ R[O$_1/O$'], ∧  ⟼ ∧, e$  ⟼ ⟨O$'⟩, x$  ⟼ ⟨O$_1⟩, y$  ⟼ {} }
+Instantiated Law = (R[O$_1/O$'])[O$'/O$_1]
+Instantiated Law S.C. = x$∉O$'   --- WRONG should be O$_1 notin O$'
+Goal S.C. = O$,O$'⊇ₐII, O$,O$'⊇ₐR
+@cnsqFvss:
+fromList []
+Discharged Law S.C. = x$∉O$'
+```
+
+and also this REGRESSION in UTCP:
+```
+(E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1 ; (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2    
 O$,O$'⊇ₐb, O$,O$'⊇ₐa
 Focus = []
 proof: tm 1 ;_def
+@anteFvs:
+fromList []
+@tvsc:
+[TVSC (GV (VR (Id "ls" 0,VO,WA))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),TVSC (GV (VR (Id "ls" 0,VO,WB))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),TVSC (GV (VR (Id "a" 0,VP,WS))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),TVSC (GV (VR (Id "R1" 0,VE,WS))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),TVSC (GV (VR (Id "N1" 0,VE,WS))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),TVSC (GV (VR (Id "E1" 0,VE,WS))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),TVSC (GV (VR (Id "ls" 0,VO,WA))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),TVSC (GV (VR (Id "ls" 0,VO,WB))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),TVSC (GV (VR (Id "b" 0,VP,WS))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),TVSC (GV (VR (Id "R2" 0,VE,WS))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),TVSC (GV (VR (Id "N2" 0,VE,WS))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),TVSC (GV (VR (Id "E2" 0,VE,WS))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]))]
 Match against `;_def'[1] OK
-Binding: { ;  ⟼ ;, P  ⟼ (E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1
-         , Q  ⟼ (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2, 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }
-Instantiated Law 
- = (∃ O$_0  • ((E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$'] 
-            ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_0/O$])
-Instantiated Law S.C. = fresh:O$_0
+Binding: { ;  ⟼ ;, P  ⟼ (E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1, Q  ⟼ (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2, 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }
+Instantiated Law = (∃ O$_0  • ((E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$'] ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_0/O$])
+Instantiated Law S.C. = O$,O$'⊇ₐls', O$,O$'⊇ₐls, O$,O$'⊇ₐa, O$,O$'⊇ₐR1, O$,O$'⊇ₐN1, O$,O$'⊇ₐE1, O$,O$'⊇ₐls', O$,O$'⊇ₐls, O$,O$'⊇ₐb, O$,O$'⊇ₐR2, O$,O$'⊇ₐN2, O$,O$'⊇ₐE2, fresh:O$_0
 Goal S.C. = O$,O$'⊇ₐb, O$,O$'⊇ₐa
-Discharged Law S.C. = fresh:O$_0
+@cnsqFvss:
+fromList [GL (LV (VR (Id "O" 0,VO,WD "0"),[],[]))]
+Discharged Law S.C. = O$,O$'⊇ₐls', O$,O$'⊇ₐls, O$,O$'⊇ₐa, O$,O$'⊇ₐR1, O$,O$'⊇ₐN1, O$,O$'⊇ₐE1, O$,O$'⊇ₐls', O$,O$'⊇ₐls, O$,O$'⊇ₐb, O$,O$'⊇ₐR2, O$,O$'⊇ₐN2, O$,O$'⊇ₐE2, fresh:O$_0
 ```
 
 ### Next in Line

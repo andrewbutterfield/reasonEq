@@ -718,22 +718,21 @@ instDynCvg :: MonadFail m
            => InsContext -> (Maybe VarSet) -> FreeVars 
            -> m [TVarSideConds]
 instDynCvg insctxt Nothing    (fF,vLessBs)  =  return []
-instDynCvg insctxt (Just vsC) (fF,vLessBs)  =  return (tvsc1s ++ tvsc2s)
-  where  -- icDV ::: VarSet
-    -- type FreeVars = ( VarSet , [( GenVar , VarSet )])
+instDynCvg insctxt (Just vsCd) (fF,vLessBs)  =  return (tvsc1s ++ tvsc2s)
+  where
     restrict2 vS vR
       | S.null vR  =  vS
       | otherwise  =  vS `S.intersection` vR 
-    mkDynCovers vsC gv = gv `dyncovered` vsC
+    mkDynCovers vs gv = gv `dyncovered` vs
     vsD = icDV insctxt
     fFD = fF `restrict2` vsD
     isIn vsD (ev,_) = ev `S.member` vsD
     vDLessBs = filter (isIn vsD) vLessBs
     isSeparate (ev,vsB) = not ( ev `S.member` vsB)
     vDNotInBs = filter isSeparate vDLessBs
-    f2 vsC (evFD,vsB) = mkDynCovers vsC evFD
-    tvsc1s = map (mkDynCovers vsC) (S.toList fFD)
-    tvsc2s = map (f2 vsC) vDNotInBs
+    f2 vs (evFD,vsB) = mkDynCovers vs evFD
+    tvsc1s = map (mkDynCovers vsCd) (S.toList fFD)
+    tvsc2s = map (f2 vsCd) vDNotInBs
 \end{code}
 
 \newpage

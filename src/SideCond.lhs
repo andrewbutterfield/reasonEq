@@ -766,6 +766,10 @@ to discharge further.
 Success is when all such $L_j$ groups have been shown to be $\true$.
 Failure occurs if any $L_j$ group results in $\false$.
 
+Note that the freshness criteria may only be partly resolved here,
+and its final resolution will require examining the free variables 
+of the goal.
+
 \begin{code}
 scDischarge obsv anteSC@(anteTVSC,anteFvs) cnsqSC@(cnsqTVSC,cnsqFvs)
   | isTrivialSC cnsqSC  =  return scTrue  -- (G => true) = true
@@ -974,15 +978,15 @@ freshDischarge :: MonadFail m
                => VarSet -> VarSet -> VarSet -> [TVarSideConds] 
                -> m SideCond
 freshDischarge obsv anteFvs cnsqFvs tvsc
-  = do tvsc' <- ((freshDischarge' obsv) $! (pdbg "anteFvs" anteFvs)) $! (pdbg "tvsc" tvsc)
-       return (tvsc' , (pdbg "cnsqFvss" cnsqFvs) S.\\ anteFvs )
+  = do tvsc' <- freshDischarge' obsv anteFvs tvsc
+       return (tvsc' , cnsqFvs S.\\ anteFvs )
 \end{code}
 
 \begin{code}
 freshDischarge' :: MonadFail m 
                 => VarSet -> VarSet -> [TVarSideConds] 
                 -> m [TVarSideConds]
-freshDischarge' obsv anteFvs [] = return $ pdbg "tvsc'" []
+freshDischarge' obsv anteFvs [] = return []
 freshDischarge' obsv anteFvs (tvsc:tvscs)
   = do ascl   <- freshTVarDischarge obsv anteFvs tvsc
        tvscs' <- freshDischarge'    obsv anteFvs tvscs
@@ -1020,10 +1024,10 @@ freshTVarDischarge obsv gF (TVSC gv vsD uvsC uvsCd)
   | tvsc' == tvscTrue gv  =  return []
   | otherwise             =  return [tvsc']
   where
-    uvsgF = Just gF
+    uvsgF = Just $ pdbg "fTVD.gF" gF
     tvsc' = TVSC gv (vsD `S.difference` gF) 
                     (uvsC `udiff` uvsgF) 
-                    (uvsCd `udiff` uvsgF)
+                    (pdbg "fTVD.uvsCd" uvsCd `udiff` uvsgF)
 \end{code}
 
 \newpage

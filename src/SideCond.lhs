@@ -381,8 +381,7 @@ dynCvrgCheck  :: MonadFail m
 
 dynCvrgCheck obsv gv Nothing  =  return covByTrue  -- U
 dynCvrgCheck obsv gv jvsCd@(Just vsCd)
-  | (pdbg "dCC.vsCd" vsCd) == allDynObs 
-     && (pdbg "dCC.gv" gv) `S.member` (pdbg "dCC.obsv" obsv `S.union` allDynObs)
+  | vsCd == allDynObs && gv `S.member` (obsv `S.union` allDynObs)
                             =  return covByTrue
   | hasStatic               =  report "tvar dyncover fails (static)"
   | any (gvCovBy gv) vsCd   =  return covByTrue
@@ -476,7 +475,7 @@ mrgTVarConds :: MonadFail m => VarSet
 1st TVSC is easy:
 \begin{code}
 mrgTVarConds obsv tvsc []
-  = do masc <- tvscCheck (pdbg "mrgTVarConds.obsv.0" obsv) tvsc
+  = do masc <- tvscCheck obsv tvsc
        case masc of
          Nothing ->  return [] -- tvsc is in fact true
          Just tvsc' -> return [tvsc']
@@ -487,7 +486,7 @@ same general-variable:
 \begin{code}
 mrgTVarConds obsv tvsc (tvsc1:tvscs)
   | termVar tvsc == termVar tvsc1
-    = do  masc <- tvscCheck (pdbg "mrgTVarConds.obsv.1" obsv) tvsc
+    = do  masc <- tvscCheck obsv tvsc
           case masc of
             Nothing
               ->  return tvscs
@@ -497,7 +496,7 @@ mrgTVarConds obsv tvsc (tvsc1:tvscs)
                     Just Nothing       -> return tvscs -- mrg is true 
                     Just (Just tvsc'') -> return (tvsc'':tvscs)
   | otherwise 
-    = do  tvscs' <- mrgTVarConds (pdbg "mrgTVarConds.obsv.2" obsv) tvsc1 tvscs
+    = do  tvscs' <- mrgTVarConds obsv tvsc1 tvscs
           return (tvsc:tvscs')
 \end{code}
 
@@ -627,9 +626,9 @@ mrgTVarCondLists :: MonadFail m => VarSet
                 -> [TVarSideConds] -> [TVarSideConds] -> m [TVarSideConds]
 mrgTVarCondLists obsv tvscs1 [] = return tvscs1
 mrgTVarCondLists obsv tvscs1 (TVSC _ vsD Nothing Nothing:tvscs2)
-  | S.null vsD  =  mrgTVarCondLists obsv tvscs1 tvscs2
+  | S.null vsD  =  mrgTVarCondLists (pdbg "mrgTVarCondLists.obsv.1" obsv) tvscs1 tvscs2
 mrgTVarCondLists obsv tvscs1 (tvsc:tvscs2)
-     = do tvscs1' <- mrgTVarConds obsv tvsc tvscs1
+     = do tvscs1' <- mrgTVarConds (pdbg "mrgTVarCondLists.obsv.2" obsv) tvsc tvscs1
           mrgTVarCondLists obsv tvscs1' tvscs2
 \end{code}
 
@@ -658,7 +657,7 @@ cvr (Just vs)  =  vs
 mkSideCond :: MonadFail m 
            => VarSet -> [TVarSideConds] -> VarSet -> m SideCond
 mkSideCond obsv tvscs fvs
- = do tvscs' <-  mrgTVarCondLists obsv [] tvscs
+ = do tvscs' <-  mrgTVarCondLists (pdbg "mkSideCond.obsv" obsv) [] tvscs
       mrgTVarFreshConditions obsv fvs tvscs'
 \end{code}
 
@@ -672,7 +671,7 @@ one at a time.
 mrgSideCond :: MonadFail m 
             => VarSet -> SideCond -> SideCond -> m SideCond
 mrgSideCond obsv (tvscs1,fvs1) (tvscs2,fvs2)
-     = do tvscs' <- mrgTVarCondLists obsv tvscs1 tvscs2
+     = do tvscs' <- mrgTVarCondLists (pdbg "mrgSideCond.obsv" obsv) tvscs1 tvscs2
           mrgTVarFreshConditions obsv (fvs1 `S.union` fvs2) tvscs'
           -- the above may require a obsv-savvy union?
 

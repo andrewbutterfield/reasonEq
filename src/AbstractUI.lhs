@@ -724,7 +724,7 @@ in a \texttt{CoveredBy} atomic law side condition,
 then we need to copy it over as a proof-local goal side-condition.
 \begin{code}
 extendGoalSCCoverage obsv lvvls (tvarSCs,_)
-  = xtndCoverage (pdbg "extGSCC.obsv" obsv) (map snd lvvls) [] (filter isCoverage tvarSCs)
+  = xtndCoverage obsv (map snd lvvls) [] (filter isCoverage tvarSCs)
   where
     isCoverage (TVSC _ _ mvsC mvsCd)  =  mvsC /= Nothing || mvsCd /= Nothing
 

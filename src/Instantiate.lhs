@@ -88,7 +88,7 @@ data InsContext
   deriving Show  
 
 mkInsCtxt :: [VarTable] -> SideCond -> InsContext
-mkInsCtxt vts sc = ICtxt (getDynamicObservables $ pdbg "mkIC.vts" vts) sc
+mkInsCtxt vts sc = ICtxt (getDynamicObservables vts) sc
 \end{code}
 
 

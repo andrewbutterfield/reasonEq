@@ -659,22 +659,29 @@ instantiateTVSC insctxt bind tvsc@(TVSC gT vsD mvsC mvsCd)
        fmvsC   <-  instUVarSet insctxt bind mvsC
        fmvsCd  <-  instUVarSet insctxt bind mvsCd
        if null diffsT
-         then instTVSC insctxt fvsT fvsD fmvsC fmvsCd
+         then do tvscss <- mapM (instTVSC insctxt fvsD fmvsC fmvsCd) 
+                                (S.toList fvsT)
+                 return $ concat tvscss
          else fail "instantiateTVSC: explicit diffs in var-set not handled."
 \end{code}
 
-
+\begin{eqnarray*}
+\lefteqn{\textsf{for } t \in \fv(\beta(T)):}
+\\&& ( t , \bigcup(\power\beta.D) 
+              , \bigcup(\power\beta.C) , \bigcup(\power\beta.Cd) )
+\\&=& t \notin \bigcup(\power\beta.D) 
+        \land t \in \bigcup(\power\beta.C)
+        \land t \in \bigcup(\power\beta.Cd)\mid_D
+\end{eqnarray*}
 \begin{code}
 instTVSC :: MonadFail m 
-         => InsContext -> VarSet -> FreeVars -> UFreeVars -> UFreeVars 
+         => InsContext -> FreeVars -> UFreeVars -> UFreeVars -> GenVar
          -> m [TVarSideConds]
-instTVSC insctxt fvsT fvsD fmvsC fmvsCd  
-  = do  -- for every vT in fvsT do:
-          -- tvscsD <- instDisjoint insctxt fvsD fvsT
-          -- tvscsC <- instCovers   insctxt mvsC  fvsT
-          -- tvscCd <- instDynCvg   insctxt mvsCd fvsT 
-          -- return (tvscsD++tvscsC++tvscCd)
-        return []
+instTVSC insctxt fvsD fmvsC fmvsCd gT 
+  = do tvscsD <- instDisjoint insctxt fvsD   gT
+       tvscsC <- instCovers   insctxt fmvsC  gT
+       tvscCd <- instDynCvg   insctxt fmvsCd gT 
+       return (tvscsD++tvscsC++tvscCd)
 \end{code}
 
 \subsection{Disjointedness}
@@ -689,8 +696,8 @@ where $\fv(\beta(T)) = F \cup \{e_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj e_i$, $F \disj B_i$.
 \begin{code}
 instDisjoint :: MonadFail m 
-             => InsContext -> VarSet -> FreeVars -> m [TVarSideConds]
-instDisjoint insctxt vsD (fF,vLessBs)
+             => InsContext -> FreeVars -> GenVar -> m [TVarSideConds]
+instDisjoint insctxt fvsD@(fF,vLessBs) gv
   =  return (tvsc1s ++ tvsc2s)
   where
     tvsc1s = map (mkDisj vsD) $ S.toList fF
@@ -715,10 +722,10 @@ $F \disj F_i$, $F \disj B_i$:
 
 \begin{code}
 instCovers :: MonadFail m 
-           => InsContext -> (Maybe VarSet) -> FreeVars -- UFreeVars !!!
+           => InsContext -> UFreeVars -> GenVar-- UFreeVars !!!
            -> m [TVarSideConds]
-instCovers insctxt Nothing    (fF,vLessBs)  =  return []
-instCovers insctxt (Just vsC) (fF,vLessBs)  =  return (tvsc1s ++ tvsc2s)
+instCovers insctxt (Nothing,_)       gv  =  return []
+instCovers insctxt (Just fF,vLessBs) gv  =  return (tvsc1s ++ tvsc2s)
   where
     tvsc1s = map (mkCovers vsC) (S.toList fF)
     mkCovers vsC gv = gv `coveredby` vsC
@@ -752,10 +759,10 @@ We include $e_i$ if $e_i \in D \land e_i \notin B_i$.
 
 \begin{code}
 instDynCvg :: MonadFail m 
-           => InsContext -> (Maybe VarSet) -> FreeVars 
+           => InsContext -> UFreeVars -> GenVar
            -> m [TVarSideConds]
-instDynCvg insctxt Nothing    (fF,vLessBs)  =  return []
-instDynCvg insctxt (Just vsCd) (fF,vLessBs)  =  return (tvsc1s ++ tvsc2s)
+instDynCvg insctxt (Nothing,vLessBs)    gv    =  return []
+instDynCvg insctxt (Just vsCd,vLessBs)  gv  =  return (tvsc1s ++ tvsc2s)
   where
     restrict2 vS vR
       | S.null vR  =  vS

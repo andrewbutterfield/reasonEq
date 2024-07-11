@@ -49,7 +49,7 @@ The definition of the free variables of a term/formula in logic
 is usually quite straighforward.
 However, we complicate matters by having: 
 variables that denote terms;
-explicit substituions;
+explicit substitutions;
 and list-variables.
 
 \subsection{Need for Variable-Set Expressions}

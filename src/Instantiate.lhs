@@ -402,10 +402,21 @@ Let $g$ denote a general variable, and $G$ a set of same.
    \beta.G &=& \textstyle \bigcup_{g \in G} \beta.g
 \end{eqnarray*}
 \begin{code}
-instVarSet :: MonadFail m => InsContext -> Binding -> VarSet -> m FreeVars
+instVarSet :: MonadFail m 
+           => InsContext -> Binding -> VarSet 
+           -> m FreeVars
 instVarSet insctxt binding vs
   = do fvss <- sequence $ map (instGVar insctxt binding) $ S.toList vs
        return $ mrgFreeVarList fvss
+
+type UFreeVars = (UVarSet,[(GenVar,VarSet)])
+instUVarSet :: MonadFail m 
+            => InsContext -> Binding -> UVarSet 
+            -> m UFreeVars
+instUVarSet _       _        Nothing   =  return (Nothing,[]) 
+instUVarSet insctxt binding (Just vs)  
+  =  do (f,less) <- instVarSet insctxt binding vs 
+        return (Just f,less)
 \end{code}
 
 
@@ -506,6 +517,9 @@ For atomic side-conditions:
 \\ \beta.(C \supseteq T)  &=& \beta.C \supseteq \fv(\beta(T))
 \\ \beta(\ispre \supseteq T) &=& \ispre \supseteq \fv(\beta(T))
 \end{eqnarray*}
+
+\subsection{SC Instantiation Examples}
+
 Consider this example:
 \begin{description}
 \item[Law] $P[\lst e/\lst x] = P, \qquad \lst x \notin P$
@@ -621,30 +635,48 @@ We define dynamic free variables ($\dfv$) as:
 \\ \dfv(t) &\defs& filter(isDynamic,\fv(t)) 
 \end{eqnarray*}
 
-\begin{code}
-instantiateTVSC :: MonadFail m => InsContext
-               -> Binding -> TVarSideConds -> m [TVarSideConds]
-instantiateTVSC insctxt bind tvsc
-  = do (vsDC,diffs) <- instVarSet insctxt bind $ tvscVSet tvsc
-       if null diffs
-         then instTVSC insctxt vsDC fvsT tvsc
-         else fail "instantiateTVSC: explicit diffs in var-set not handled."
-  where
-     fvsT = instantiateGVar insctxt bind $ termVar tvsc
-\end{code}
-
-\begin{code}
-instTVSC :: MonadFail m => InsContext
-               -> VarSet -> FreeVars -> TVarSideConds -> m [TVarSideConds]
-instTVSC insctxt vsDC fvT (TVSC _ vsD mvsC mvsCd)   
-  = do  tvscsD <- instDisjoint insctxt vsD   fvT
-        tvscsC <- instCovers   insctxt mvsC  fvT
-        tvscCd <- instDynCvg   insctxt mvsCd fvT 
-        return (tvscsD++tvscsC++tvscCd)
-\end{code}
-
-
 \newpage
+\subsection{Instantiating TVCS}
+
+\begin{eqnarray*}
+\lefteqn{\beta.(T,D,C,Cd)}
+\\ &\approx& (\fv(\beta(T)),\beta.D,\beta.C,\beta.Cd)
+\\ &=& \bigwedge_{t \in \fv(\beta(T))}
+          ( t , \bigcup(\power\beta.D) 
+              , \bigcup(\power\beta.C) , \bigcup(\power\beta.Cd) )
+\end{eqnarray*}
+Remember that free-variables are denoted by an expression of the form:
+$(F \cup \bigcup_i\setof{\dots,(e_i \setminus B_i),\dots})$ 
+where $e_i$ are expression or predicate variables, 
+and $F$ is disjoint from any $e_i,B_i$.
+\begin{code}
+instantiateTVSC :: MonadFail m 
+                => InsContext -> Binding -> TVarSideConds 
+                -> m [TVarSideConds]
+instantiateTVSC insctxt bind tvsc@(TVSC gT vsD mvsC mvsCd)
+  = do let (fvsT,diffsT) = instantiateGVar insctxt bind gT
+       fvsD    <-  instVarSet insctxt bind vsD
+       fmvsC   <-  instUVarSet insctxt bind mvsC
+       fmvsCd  <-  instUVarSet insctxt bind mvsCd
+       if null diffsT
+         then instTVSC insctxt fvsT fvsD fmvsC fmvsCd
+         else fail "instantiateTVSC: explicit diffs in var-set not handled."
+\end{code}
+
+
+\begin{code}
+instTVSC :: MonadFail m 
+         => InsContext -> VarSet -> FreeVars -> UFreeVars -> UFreeVars 
+         -> m [TVarSideConds]
+instTVSC insctxt fvsT fvsD fmvsC fmvsCd  
+  = do  -- for every vT in fvsT do:
+          -- tvscsD <- instDisjoint insctxt fvsD fvsT
+          -- tvscsC <- instCovers   insctxt mvsC  fvsT
+          -- tvscCd <- instDynCvg   insctxt mvsCd fvsT 
+          -- return (tvscsD++tvscsC++tvscCd)
+        return []
+\end{code}
+
 \subsection{Disjointedness}
 
 \begin{eqnarray*}
@@ -683,7 +715,7 @@ $F \disj F_i$, $F \disj B_i$:
 
 \begin{code}
 instCovers :: MonadFail m 
-           => InsContext -> (Maybe VarSet) -> FreeVars 
+           => InsContext -> (Maybe VarSet) -> FreeVars -- UFreeVars !!!
            -> m [TVarSideConds]
 instCovers insctxt Nothing    (fF,vLessBs)  =  return []
 instCovers insctxt (Just vsC) (fF,vLessBs)  =  return (tvsc1s ++ tvsc2s)

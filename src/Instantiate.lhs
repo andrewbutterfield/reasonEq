@@ -390,6 +390,11 @@ fromGVarToLVar (LstVar lv:vl)
 \newpage
 \subsubsection{Instantiate Variable Collections}
 
+When we use a binding to instantiate variables and variable-sets/lists,
+we need to keep in mind that some variables might be bound to terms,
+in which case we need to return the free-variables for that term.
+This is why all the functions here return \texttt{FreeVars} 
+rather than \texttt{VarSet}.
 The following code needs updating to handle free-variables properly.
 
 Let $g$ denote a general variable, and $G$ a set of same.

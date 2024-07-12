@@ -13,7 +13,7 @@ module SideCond (
 , mkTVSC
 , tvscTrue, disjTrue, covByTrue
 , tvscVSet
-, disjfrom, coveredby, dyncovered
+, disjfrom, coveredby, dyncovered, ucoveredby, udyncovered
 , allPreObs, allPostObs, allDynObs
 , SideCond, scTrue, isTrivialSC
 , onlyFreshSC -- , onlyInvolving, onlyFreshOrInvolved
@@ -272,7 +272,12 @@ We provide some builders when only one of the three conditions is involved:
 disjfrom, coveredby, dyncovered :: GenVar -> VarSet -> TVarSideConds
 gv `disjfrom`   vs  =  TVSC gv vs       covByTrue covByTrue
 gv `coveredby`  vs  =  TVSC gv disjTrue (Just vs) covByTrue
-gv `dyncovered` vs  =  TVSC gv disjTrue covByTrue (Just vs) 
+gv `dyncovered` vs  =  TVSC gv disjTrue covByTrue (Just vs)
+ucoveredby, udyncovered :: GenVar -> UVarSet -> TVarSideConds
+gv `ucoveredby`  Nothing    =  tvscTrue gv
+gv `ucoveredby`  (Just vs)  =  gv `coveredby`  vs
+gv `udyncovered` Nothing    =  tvscTrue gv
+gv `udyncovered` (Just vs)  =  gv `dyncovered` vs
 \end{code}
 
 
@@ -770,14 +775,43 @@ Note that the freshness criteria may only be partly resolved here,
 and its final resolution will require examining the free variables 
 of the goal.
 
+This is the first point in matching where the expanded known observables
+are available, as variable \texttt{obsv}.
+We first use those to simplfiy the consqequence.
+
 \begin{code}
 scDischarge obsv anteSC@(anteTVSC,anteFvs) cnsqSC@(cnsqTVSC,cnsqFvs)
-  | isTrivialSC cnsqSC  =  return scTrue  -- (G => true) = true
-  | isTrivialSC anteSC  =  return cnsqSC  -- (true => L) = L
-  | otherwise
-     = do tvsc' <- scDischarge' obsv anteTVSC cnsqTVSC
-          freshDischarge obsv anteFvs cnsqFvs tvsc'
+  = do cnsqTVSC' <- tvscMrg obsv $ map (knownObsDischarge obsv) cnsqTVSC
+       let cnsqSC' = (cnsqTVSC',cnsqFvs)
+       if isTrivialSC cnsqSC' then return scTrue
+       else if isTrivialSC anteSC then return cnsqSC'
+       else do tvsc' <- scDischarge' obsv anteTVSC cnsqTVSC'
+               freshDischarge obsv anteFvs cnsqFvs tvsc'
+    
+tvscMrg obs [] = return []
+tvscMrg obs (tvsc:tvscs) = mrgTVarConds obs tvsc tvscs    
 \end{code}
+
+
+
+\subsection{Known Observable  Discharge}
+
+\begin{code}
+knownObsDischarge :: VarSet -> TVarSideConds -> TVarSideConds
+knownObsDischarge obs ( TVSC gv vsD uvsC uvsCd )
+                    =   TVSC gv vsD uvsC (obsDischarge obs gv uvsCd)
+\end{code}
+Discharging dynamic coverage  ($Cd \supseteq_a V$).
+Here $V \notin Cd$ or else this would have collapsed to $\true$ earlier.
+We check if it is in $obs$, which is the expansion of $Cd$.
+\begin{code}
+obsDischarge :: VarSet -> GenVar -> UVarSet -> UVarSet
+obsDischarge obsv gv uvsCd
+  | gv `S.member` obsv  =  Nothing
+  | otherwise           =  uvsCd
+\end{code}
+
+
 
 \subsection{Term-Variable  Condition  Discharge}
 
@@ -883,13 +917,13 @@ tvscDischarge obsv (TVSC gv vsDG uvsCG uvsCdG) (TVSC _ vsDL uvsCL uvsCdL)
         vsD''   <- cdDischarge obsv uvsCG  vsD'
         vsD'''  <- cdDischarge obsv uvsCdG vsD''
 
-        uvsC'   <- ccDischarge obsv uvsCG uvsCL
-        uvsC''  <- dcDischarge obsv vsDG  uvsC'
+        uvsC'   <- ccDischarge obsv uvsCG  uvsCL
+        uvsC''  <- dcDischarge obsv vsDG   uvsC'
 
         uvsCd'  <- ccDischarge obsv uvsCdG uvsCdL
         uvsCd'' <- dcDischarge obsv vsDG   uvsCd'
 
-        return $ TVSC gv vsD''' uvsC'' uvsCd'' 
+        return $ TVSC gv vsD''' uvsC'' (obsDischarge obsv gv uvsCd'')
 \end{code}
 
 \newpage
@@ -950,6 +984,8 @@ cdDischarge obsv Nothing vsDL      =  return vsDL
 cdDischarge obsv (Just vsCG) vsDL  =  return (vsCG `S.intersection` vsDL) 
 \end{code}
 
+
+
 \subsection{Freshness Condition  Discharge}
 
 We have reduced our original problem down to:
@@ -1009,7 +1045,14 @@ freshTVarDischarge :: MonadFail m
                    => VarSet -> VarSet -> TVarSideConds 
                    -> m [TVarSideConds]
 \end{code}
-We now consider the following possibilities:
+Given
+\[G_F \discharges (D \disj V,C \supseteq V,Cd \supseteq_a V)\]
+we can simplify the discharge portion of this to 
+\[( D\setminus G_F \disj V
+  , C\setminus G_F \supseteq V
+  , Cd\setminus G_F \supseteq_a V )\]
+based on the idea that $G_F \disj V$ by construction
+(it's what it means for be fresh!).
 \begin{eqnarray*}
    G_F \discharges D_L \disj V
    &=& \true, \quad \IF\quad D_L \subseteq G_F
@@ -1022,12 +1065,15 @@ We now consider the following possibilities:
 \begin{code}
 freshTVarDischarge obsv gF (TVSC gv vsD uvsC uvsCd)
   | tvsc' == tvscTrue gv  =  return []
-  | otherwise             =  return [tvsc']
+  | otherwise  =  return [tvsc']
   where
-    uvsgF = Just $ pdbg "fTVD.gF" gF
-    tvsc' = TVSC gv (vsD `S.difference` gF) 
-                    (uvsC `udiff` uvsgF) 
-                    (pdbg "fTVD.uvsCd" uvsCd `udiff` uvsgF)
+    uvsgF = Just gF
+    vsD' = vsD `S.difference` gF
+    uvsC' = uvsC `udiff` uvsgF
+    uvsCd' = if gv `S.member` obsv
+             then uvsCd `udiff` uvsgF
+             else Nothing
+    tvsc' = TVSC gv vsD' uvsC' uvsCd'
 \end{code}
 
 \newpage

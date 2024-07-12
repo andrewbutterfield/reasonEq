@@ -677,11 +677,12 @@ instantiateTVSC insctxt bind tvsc@(TVSC gT vsD mvsC mvsCd)
 instTVSC :: MonadFail m 
          => InsContext -> FreeVars -> UFreeVars -> UFreeVars -> GenVar
          -> m [TVarSideConds]
-instTVSC insctxt fvsD fmvsC fmvsCd gT 
-  = do tvscsD <- instDisjoint insctxt fvsD   gT
-       tvscsC <- instCovers   insctxt fmvsC  gT
-       tvscCd <- instDynCvg   insctxt fmvsCd gT 
-       return (tvscsD++tvscsC++tvscCd)
+-- we ignore the vBless components for now
+instTVSC insctxt fvsD@(vsD,_) fmvsC@(mvsC,_) fmvsCd@(mvsCd,_) gT 
+  = do let tvscsD = gT `disjfrom`    vsD  
+       let tvscsC = gT `ucoveredby`  mvsC 
+       let tvscCd = gT `udyncovered` mvsCd 
+       return [tvscsD,tvscsC,tvscCd]
 \end{code}
 
 \subsection{Disjointedness}
@@ -694,17 +695,17 @@ instTVSC insctxt fvsD fmvsC fmvsCd gT
 \end{eqnarray*}
 where $\fv(\beta(T)) = F \cup \{e_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj e_i$, $F \disj B_i$.
-\begin{code}
-instDisjoint :: MonadFail m 
-             => InsContext -> FreeVars -> GenVar -> m [TVarSideConds]
-instDisjoint insctxt fvsD@(fF,vLessBs) gv
-  =  return (tvsc1s ++ tvsc2s)
-  where
-    tvsc1s = map (mkDisj vsD) $ S.toList fF
-    mkDisj vsD gv = gv `disjfrom` vsD
-    tvsc2s = map (f2 vsD) vLessBs
-    f2 vsD (evF,vsB) = mkDisj (vsD S.\\ vsB) evF
-\end{code}
+% \begin{code}
+% instDisjoint :: MonadFail m 
+%              => InsContext -> FreeVars -> GenVar -> m [TVarSideConds]
+% instDisjoint insctxt fvsD@(fF,vLessBs) gv
+%   =  return (tvsc1s ++ tvsc2s)
+%   where
+%     tvsc1s = map (mkDisj vsD) $ S.toList fF
+%     mkDisj vsD gv = gv `disjfrom` vsD
+%     tvsc2s = map (f2 vsD) vLessBs
+%     f2 vsD (evF,vsB) = mkDisj (vsD S.\\ vsB) evF
+% \end{code}
 
 \subsection{Covering}
 
@@ -720,18 +721,18 @@ $F \disj F_i$, $F \disj B_i$:
 \\ &=& \beta.C \supseteq F \land \{(\beta.C \cup B_i) \supseteq e_i\}
 \end{eqnarray*}
 
-\begin{code}
-instCovers :: MonadFail m 
-           => InsContext -> UFreeVars -> GenVar-- UFreeVars !!!
-           -> m [TVarSideConds]
-instCovers insctxt (Nothing,_)       gv  =  return []
-instCovers insctxt (Just fF,vLessBs) gv  =  return (tvsc1s ++ tvsc2s)
-  where
-    tvsc1s = map (mkCovers vsC) (S.toList fF)
-    mkCovers vsC gv = gv `coveredby` vsC
-    tvsc2s = map (f2 vsC) vLessBs
-    f2 vsC (evF,vsB) = mkCovers (vsC `S.union` vsB) evF
-\end{code}
+% \begin{code}
+% instCovers :: MonadFail m 
+%            => InsContext -> UFreeVars -> GenVar-- UFreeVars !!!
+%            -> m [TVarSideConds]
+% instCovers insctxt (Nothing,_)       gv  =  return []
+% instCovers insctxt (Just fF,vLessBs) gv  =  return (tvsc1s ++ tvsc2s)
+%   where
+%     tvsc1s = map (mkCovers vsC) (S.toList fF)
+%     mkCovers vsC gv = gv `coveredby` vsC
+%     tvsc2s = map (f2 vsC) vLessBs
+%     f2 vsC (evF,vsB) = mkCovers (vsC `S.union` vsB) evF
+% \end{code}
 
 \newpage
 \subsection{Dynamic Coverage}
@@ -757,27 +758,27 @@ We assume here that $D$ covers all dynamic variables.
 We include $e_i$ if $e_i \in D \land e_i \notin B_i$.
 
 
-\begin{code}
-instDynCvg :: MonadFail m 
-           => InsContext -> UFreeVars -> GenVar
-           -> m [TVarSideConds]
-instDynCvg insctxt (Nothing,vLessBs)    gv    =  return []
-instDynCvg insctxt (Just vsCd,vLessBs)  gv  =  return (tvsc1s ++ tvsc2s)
-  where
-    restrict2 vS vR
-      | S.null vR  =  vS
-      | otherwise  =  vS `S.intersection` vR 
-    mkDynCovers vs gv = gv `dyncovered` vs
-    vsD = icDV insctxt
-    fFD = fF `restrict2` vsD
-    isIn vsD (ev,_) = ev `S.member` vsD
-    vDLessBs = filter (isIn vsD) vLessBs
-    isSeparate (ev,vsB) = not ( ev `S.member` vsB)
-    vDNotInBs = filter isSeparate vDLessBs
-    f2 vs (evFD,vsB) = mkDynCovers vs evFD
-    tvsc1s = map (mkDynCovers vsCd) (S.toList fFD)
-    tvsc2s = map (f2 vsCd) vDNotInBs
-\end{code}
+% \begin{code}
+% instDynCvg :: MonadFail m 
+%            => InsContext -> UFreeVars -> GenVar
+%            -> m [TVarSideConds]
+% instDynCvg insctxt (Nothing,vLessBs)    gv    =  return []
+% instDynCvg insctxt (Just vsCd,vLessBs)  gv  =  return (tvsc1s ++ tvsc2s)
+%   where
+%     restrict2 vS vR
+%       | S.null vR  =  vS
+%       | otherwise  =  vS `S.intersection` vR 
+%     mkDynCovers vs gv = gv `dyncovered` vs
+%     vsD = icDV insctxt
+%     fFD = fF `restrict2` vsD
+%     isIn vsD (ev,_) = ev `S.member` vsD
+%     vDLessBs = filter (isIn vsD) vLessBs
+%     isSeparate (ev,vsB) = not ( ev `S.member` vsB)
+%     vDNotInBs = filter isSeparate vDLessBs
+%     f2 vs (evFD,vsB) = mkDynCovers vs evFD
+%     tvsc1s = map (mkDynCovers vsCd) (S.toList fFD)
+%     tvsc2s = map (f2 vsCd) vDNotInBs
+% \end{code}
 
 \newpage
 \subsection{Side-condition Variable Instantiation}

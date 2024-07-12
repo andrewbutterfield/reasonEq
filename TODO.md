@@ -2,27 +2,7 @@
 
 ## URGENT
 
-After any call to `scDischarge`, if there is a non-empty fresh-vars set returned,
-then this must be checked against the goal.
 
-Progress (for UTPBase ;_def), but now this:
-```
-(∃ O$_1  • (O$_1=O$') ∧ R[O$_1/O$'])    O$,O$'⊇ₐII, O$,O$'⊇ₐR
-Focus = []
-proof: tm 1 exists_one_point
-@anteFvs:
-fromList []
-@tvsc:
-[TVSC (GL (LV (VR (Id "O" 0,VO,WA),[],[]))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) Nothing Nothing]
-Match against `exists_one_point'[1] OK
-Binding: { P  ⟼ R[O$_1/O$'], ∧  ⟼ ∧, e$  ⟼ ⟨O$'⟩, x$  ⟼ ⟨O$_1⟩, y$  ⟼ {} }
-Instantiated Law = (R[O$_1/O$'])[O$'/O$_1]
-Instantiated Law S.C. = x$∉O$'   --- WRONG should be O$_1 notin O$'
-Goal S.C. = O$,O$'⊇ₐII, O$,O$'⊇ₐR
-@cnsqFvss:
-fromList []
-Discharged Law S.C. = x$∉O$'
-```
 The law s.c. is `x$∉e$`, which should be instantiated as `O$_1∉O$'`,
 and is trivially satisfied.
 

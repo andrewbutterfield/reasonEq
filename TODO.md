@@ -2,9 +2,20 @@
 
 ## URGENT
 
+```
+(∃ O$_1  • (O$_1=O$') ∧ R[O$_1/O$'])    O$,O$'⊇ₐII, O$,O$'⊇ₐR
+Focus = []
+proof: tm 1 exists_one_point
+Match against `exists_one_point'[1] OK
+Binding: { P  ⟼ R[O$_1/O$'], ∧  ⟼ ∧, e$  ⟼ ⟨O$'⟩, x$  ⟼ ⟨O$_1⟩, y$  ⟼ {} }
+Instantiated Law = (R[O$_1/O$'])[O$'/O$_1]
+Instantiated Law S.C. = O$_1∉O$'
+Goal S.C. = O$,O$'⊇ₐII, O$,O$'⊇ₐR
+Discharged Law S.C. = O$_1∉O$'
+```
 
-The law s.c. is `x$∉e$`, which should be instantiated as `O$_1∉O$'`,
-and is trivially satisfied.
+The law s.c. is `x$∉e$`, which is correctly instantiated as `O$_1∉O$'`,
+but should be trivially satisfied, as `v_d∉{v,v'}` by definition.
 
 and also a REGRESSION in UTCP caused by fact that re-entering a proof can 
 get locked into the wrong base theory

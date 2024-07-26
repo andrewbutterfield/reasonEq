@@ -312,9 +312,12 @@ tvscCheck obsv (TVSC gv vsD uvsC uvsCd)
 \subsubsection{Checking Disjoint $ V \disj g$}
 
 \begin{eqnarray*}
-   \emptyset             \disj g           &&   \true
-\\ \dots,z,\dots         \disj z           &&   \false
-\\ \{stdObs\}\setminus z \disj z           &&   \true
+   \emptyset              \disj g           &&   \true
+\\ \dots,z,\dots          \disj z           &&   \false
+\\ \{stdObs\}\setminus z  \disj z           &&   \true
+\\ \{v,v'\}               \disj v_d         &&   \true
+\\ \{\lst\ell,\lst\ell'\} \disj \lst\ell_d  &&   \true
+\\ temp(V)\disj temp(g) && \true
 \end{eqnarray*}
 
 Note that we cannot deduce (here) that $T \disj T$ is false,
@@ -324,12 +327,15 @@ Nor can we assume $T \disj z$ is false, because $T$ could contain $z$.
 disjointCheck  :: MonadFail m 
                => VarSet -> GenVar -> VarSet -> m VarSet
 disjointCheck obsv gv vsD
-  | S.null vsD          =  return disjTrue
-  | not $ isObsGVar gv  =  return vsD
-  | gv `S.member` vsD   =  report "tvar disjoint fails"
-  | all isStdV    vsD   =  return disjTrue
-  | otherwise           =  return vsD
+  | S.null vsD                       =  return disjTrue
+  | not (gvwhen `S.member` vsDwhen)  =  return disjTrue
+  | not $ isObsGVar gv               =  return vsD
+  | gv `S.member` vsD                =  report "tvar disjoint fails"
+  | all isStdV    vsD                =  return disjTrue
+  | otherwise                        =  return vsD
   where
+    gvwhen = gvarWhen gv
+    vsDwhen = S.map gvarWhen vsD
     showsv = "gv = "++show gv
     showvs = "vsD = "++show vsD
     report msg = fail $ unlines' [msg,showsv,showvs]

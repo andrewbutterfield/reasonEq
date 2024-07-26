@@ -12,6 +12,9 @@ Focus = [1,1,1,1]
 Here we should be able to say that `O$'` does NOT cover `E1`,
 so we can obtain just `(E1 ⊆ ls)`.
 
+The Substitution code is very old and treats `P` and `e` differently,
+and seems not to consider static variables at all! BIG RETHINK
+
 a REGRESSION in UTCP caused by fact that re-entering a proof can 
 get locked into the wrong base theory
 

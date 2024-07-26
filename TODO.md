@@ -2,6 +2,16 @@
 
 ## URGENT
 
+```
+(∃ O$_1  • (((E1 ⊆ ls)[O$_1/O$'] ∧ a[O$_1/O$']) ∧ ls' = (ls \ R1 ∪ N1)[O$_1/O$']) ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$]), O$,O$'⊇ₐb, O$,O$'⊇ₐa
+   = 'substitute @[1,1,1,1]'
+(∃ O$_1  • (((E1 ⊆ ls)[O$_1/O$'] ∧ a[O$_1/O$']) ∧ ls' = (ls \ R1 ∪ N1)[O$_1/O$']) ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$])    O$,O$'⊇ₐb, O$,O$'⊇ₐa
+Focus = [1,1,1,1]
+```
+
+Here we should be able to say that `O$'` does NOT cover `E1`,
+so we can obtain just `(E1 ⊆ ls)`.
+
 a REGRESSION in UTCP caused by fact that re-entering a proof can 
 get locked into the wrong base theory
 

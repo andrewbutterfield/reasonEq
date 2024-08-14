@@ -12,6 +12,10 @@ O$,O$'⊇ₐa
 Here, `E1` is a static expression variable denoting some set,
 while `a` is a static predicate variable whose alphabet is `O$ ∪ O$'`.
 
+**In fact, `E1` is a set whose elements are generated labels**,
+which means that we have `in,g,out ⊇ E1`, 
+and we know that `{in,out,g}` is disjoint from `O$ ∪ O$'`.
+
 
 Here we should be able to say that `O$'` does NOT cover `E1`,
 so we can obtain just `(E1 ⊆ ls)`, while the substitution on `a` needs to remain.

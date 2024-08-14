@@ -2,15 +2,30 @@
 
 ## URGENT
 
+Consider this fragment:
+
 ```
-(∃ O$_1  • (((E1 ⊆ ls)[O$_1/O$'] ∧ a[O$_1/O$']) ∧ ls' = (ls \ R1 ∪ N1)[O$_1/O$']) ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$]), O$,O$'⊇ₐb, O$,O$'⊇ₐa
-   = 'substitute @[1,1,1,1]'
-(∃ O$_1  • (((E1 ⊆ ls)[O$_1/O$'] ∧ a[O$_1/O$']) ∧ ls' = (ls \ R1 ∪ N1)[O$_1/O$']) ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$])    O$,O$'⊇ₐb, O$,O$'⊇ₐa
-Focus = [1,1,1,1]
+E1[O$_1/O$'] ⊆ ls ∧ a[O$_1/O$']
+O$,O$'⊇ₐa
 ```
 
+Here, `E1` is a static expression variable denoting some set,
+while `a` is a static predicate variable whose alphabet is `O$ ∪ O$'`.
+
+
 Here we should be able to say that `O$'` does NOT cover `E1`,
-so we can obtain just `(E1 ⊆ ls)`.
+so we can obtain just `(E1 ⊆ ls)`, while the substitution on `a` needs to remain.
+
+We have the following error:
+```
+∃ O$_1  • ((E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1)[O$_1/O$'] ∧ ...
+   = 'substitute @[1,1]'
+(∃ O$_1  • ((E1[O$_1/O$'] ⊆ ls ∧ a[O$_1/O$']) 
+         ∧ ls' = ls \ R1[O$_1/O$'] ∪ N1[O$_1/O$']) ∧ ...
+```
+
+What didn't happen was that we should have had `ls'[O$_1/O$']` 
+which would turn into `ls_1`.
 
 The Substitution code is very old and treats `P` and `e` differently,
 and seems not to consider static variables at all! BIG RETHINK
@@ -100,12 +115,9 @@ Done but not yet ready to be hooked in.
 
 Adding in Arithmetic and Set theories to test out the need for typechecking.
 
-
 * We really need to have symmetric forms of key results, e.g., we have `P∨true≡true`, but should also have `true∨P≡true`.
 
-
 For now, we simply hide all trivial and floating stuff by default.
-
 
 ### Theory and Proof Management.
 
@@ -225,7 +237,6 @@ In particular, extracting `VarTable`s from the top-level `mtchCntxt` component o
 ### Complete UTPBase proofs
 
 Doing this has shown that proof ranking and short-listing needs improvement.
-
 
 We really need to able to tune things - using negation-involution to add a double-negation can be really useful.
 

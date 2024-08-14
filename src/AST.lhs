@@ -228,8 +228,8 @@ substnxx :: (Monad m, MonadFail m) => [(Variable,Term)] -> [(ListVar,ListVar)]
        -> m Substn
 substnxx ts lvs
  | null ts && null lvs  =  return $ SN S.empty S.empty
- | dupKeys ts           =  fail "Term substitution has duplicate variables."
- | dupKeys lvs          =  fail "List-var subst. has duplicate variables."
+ | dupKeys $ sort ts    =  fail "Term substitution has duplicate variables."
+ | dupKeys $ sort lvs   =  fail "List-var subst. has duplicate variables."
  | otherwise            =  return $ SN (S.fromList ts) (S.fromList lvs)
 
 nontrivial :: (Variable,Term) -> Bool
@@ -461,10 +461,10 @@ pattern Var  typ v                <-  V typ v
 pattern Cons typ sb n ts          =   C typ sb n ts
 pattern Bnd  typ n vs tm          <-  B typ n vs tm
 pattern Lam  typ n vl tm          <-  L typ n vl tm
-pattern Cls     n    tm          =   X n tm
-pattern Sub  typ tm s             =   S typ tm s
+pattern Cls      n    tm          =   X n tm
+pattern Sub  typ      tm s        =   S typ tm s
 pattern Iter typ sa na si ni lvs  =   I typ sa na si ni lvs
-pattern Typ  typ                 =   ET typ
+pattern Typ  typ                  =   ET typ
 \end{code}
 
 

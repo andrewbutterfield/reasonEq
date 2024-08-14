@@ -139,7 +139,7 @@ tempSubMiss tm sub
 \subsection{Target Completeness}
 
 There are two main sources of substitution in UTP: 
-for a few variables in assigments,
+for a few variables in assignments,
 and for all the observation variables in sequential composition.
 These drill down to substitutions that look like:
 $$f_1[e,O\less x/x_1,O_1\less x]$$
@@ -204,7 +204,7 @@ All substitutions need a context argument that describes the following
 aspects of the current state of a proof:
 \begin{itemize}
   \item side-conditions
-  \item dynamic \texttt{Subscript}s in scope
+  % \item dynamic \texttt{Subscript}s in scope
 \end{itemize}
 \begin{code}
 data SubContext

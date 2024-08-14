@@ -40,6 +40,7 @@ import Sets
 Here we present a hard-coded implementation
 a very simple theory of (typed) lists.
 
+\newpage
 \section{Lists Signature}
 
 
@@ -54,16 +55,16 @@ the constants $\nil$, $\cons$, $\hd$, $\tl$, $\cat$, $\pfx$,
 
 These include:
 \begin{code}
-contt = TypeVar $ jId "t"
-seqt  = star contt
-seqf_1 t = FunType (star t) (star t)
-seqf_2 t = FunType (star t) (seqf_1 t)
-cons_t t = FunType t (seqf_1 t)
-hd_t t   = FunType (star t) t
-pfx_t t = FunType (star t) $ FunType (star t) bool
-sngl_t t = FunType t (star t)
+contt     = TypeVar $ jId "t"
+seqt      = star contt
+seqf_1 t  = FunType (star t) (star t)
+seqf_2 t  = FunType (star t) (seqf_1 t)
+cons_t t  = FunType t        (seqf_1 t)
+hd_t t    = FunType (star t) t
+pfx_t t   = FunType (star t) $ FunType (star t) bool
+sngl_t t  = FunType t        (star t)
 elems_t t = FunType (star t) (power t)
-len_t t = FunType (star t) int
+len_t t   = FunType (star t) int
 \end{code}
 
 \subsection{List Values/Operators}
@@ -94,6 +95,8 @@ i_elems = jId "elems" ; elemslIntro = mkConsIntro i_elems $ elems_t contt
 i_len   = jId "len"   ; lenlIntro   = mkConsIntro i_len   $ len_t   contt
 \end{code}
 
+\newpage
+All list expressions are substitutable.
 \begin{code}
 nilseq :: Term
 nilseq = fromJust $ var seqt $ StaticVar i_nil
@@ -101,22 +104,16 @@ lenum :: [Term] -> Term
 lenum ts = Cons seqt True i_seq ts
 lsngl :: Term -> Term
 lsngl t = lenum [t]
-hd :: Term -> Term
-hd lst = Cons (hd_t contt) False i_hd [lst]
-tl :: Term -> Term
-tl lst = Cons (seqf_1 contt) False i_tl [lst]
-cons :: Term -> Term -> Term
-cons x lst = Cons (cons_t contt) False i_cons [x,lst]
-cat :: Term -> Term -> Term
-cat s1 s2 = Cons (seqf_2 contt) False i_cat [s1,s2]
-pfx :: Term -> Term -> Term
-pfx s1 s2 = Cons (pfx_t contt) False i_pfx [s1,s2]
-rev :: Term -> Term
-rev s = Cons (seqf_1 contt) False i_rev [s]
-elems :: Term -> Term
-elems s = Cons (elems_t contt) False i_elems [s]
-len :: Term -> Term
-len s = Cons (len_t contt) False i_len [s]
+hd, tl, elems, len, rev :: Term -> Term
+hd lst  = Cons (hd_t contt)    True i_hd    [lst]
+tl lst  = Cons (seqf_1 contt)  True i_tl    [lst]
+elems s = Cons (elems_t contt) True i_elems [s]
+len s   = Cons (len_t contt)   True i_len   [s]
+rev s   = Cons (seqf_1 contt)  True i_rev   [s]
+cons, cat, pfx :: Term -> Term -> Term
+cons x lst = Cons (cons_t contt) True i_cons [x,lst]
+cat s1 s2  = Cons (seqf_2 contt) True i_cat  [s1,s2]
+pfx s1 s2  = Cons (pfx_t contt)  True i_pfx  [s1,s2]
 \end{code}
 
 
@@ -153,7 +150,7 @@ listKnown
 \end{code}
 
 
-
+\newpage
 \section{List Laws}
 
 \subsection{Construction/Destruction}
@@ -208,6 +205,7 @@ cjCatAssoc =  ( "cat" -.-  "assoc"
                 , scTrue ) )
 \end{code}
 
+\newpage
 \subsection{Prefix}
 
 \begin{eqnarray*}

@@ -72,10 +72,11 @@ card_t t = FunType (power t) int
 \\ \subseteq &:& \Set t \fun \Set t \fun \Bool
 \\ \# && \Set t \fun \Int
 \end{eqnarray*}
+All of the above are substitutable.
 \begin{code}
 i_mt = jId "emptyset" ; mtIntro      = mkConsIntro i_mt  sett
 i_set = jId "set"   
-i_mbr = jId "mbr"     ; inIntro     = mkConsIntro  i_mbr $ mbr_t  elemt
+i_mbr = jId "mbr"     ; inIntro      = mkConsIntro i_mbr $ mbr_t  elemt
 i_U = jId "union"     ; unionIntro   = mkConsIntro i_U   $ setf_2 elemt
 i_I = jId "intsct"    ; intsctIntro  = mkConsIntro i_I   $ setf_2 elemt
 i_D = jId "\\"        ; setdiffIntro = mkConsIntro i_D   $ setf_2 elemt
@@ -91,12 +92,12 @@ senum ts = Cons sett True i_set ts
 ssingle :: Term -> Term
 ssingle t = senum [t]
 mbr :: Term -> Term -> Term
-mbr e s = Cons (mbr_t elemt) False i_mbr [e,s]
-subseteq s1 s2 = Cons bool False i_SS [s1,s2]
-sunion s1 s2 = Cons sett False i_U [s1,s2]
-sintsct s1 s2 = Cons sett False i_I [s1,s2]
-sdiff s1 s2 = Cons sett False i_D [s1,s2]
-scard s = Cons int False i_crd [s]
+mbr e s        = Cons (mbr_t elemt) True i_mbr [e,s]
+subseteq s1 s2 = Cons bool          True i_SS  [s1,s2]
+sunion s1 s2   = Cons sett          True i_U   [s1,s2]
+sintsct s1 s2  = Cons sett          True i_I   [s1,s2]
+sdiff s1 s2    = Cons sett          True i_D   [s1,s2]
+scard s        = Cons int           True i_crd [s]
 \end{code}
 
 

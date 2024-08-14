@@ -141,7 +141,7 @@ tempSubMiss tm sub
 There are two main sources of substitution in UTP: 
 for a few variables in assigments,
 and for all the observation variables in sequential composition.
-These lead to substitions that look like:
+These drill down to substitutions that look like:
 $$f_1[e,O\less x/x_1,O_1\less x]$$
 Here the target covers all observations $O_1$, 
 and we consider $f_1$ to be a variable, representing an arbitrary term.

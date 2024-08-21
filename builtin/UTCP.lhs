@@ -239,7 +239,11 @@ iout  = jId "out"
 vout =  Vbl iout ObsV Static
 out_t = lexpr_t
 obs_out_Intro  = mkKnownVar vout lexpr_t
-o = jId "O"  ;  vO = PreVar o
+o = jId "O"  
+vO  = PreVar o  ; lO  = LVbl vO [] []  ; gO  = LstVar lO
+vO' = PostVar o ; lO' = LVbl vO' [] [] ; gO' = LstVar lO'
+dynAlf = [gO,gO']
+stAlf  = map StdVar [vin,vg,vout]
 obsIntro = fromJust . addKnownVarSet vO (S.fromList $ map StdVar [vs,vls])
 \end{code}
 
@@ -316,51 +320,62 @@ and that our semantic predicates are closed under mumbling.
 
 \subsubsection{Basic Definitions}
 
-\RLEQNS{
-   X(E|a|R|N)
-   &~\defs~&
-   ls(E) \land a \land ls'=(ls\setminus R)\cup N & \lref{defn-$X$}
-\\ A(E|a|N)
-   &\defs&
-   X(E|a|E|N) & \lref{defn-$A$}
-}
-\begin{code}
--- X(E|a|R|A)
-xact :: Term -> Term -> Term -> Term -> Term
-i_xact = jId "X"
-xact e act r a = Cons arbpred False i_xact [e,act,r,a]
-xactIntro = mkConsIntro i_xact bool
--- A(E|a|N)
-i_aact = jId "A"
-aact e act n = Cons arbpred False i_aact [e,act,n]
-aactIntro = mkConsIntro i_aact bool
-\end{code}
-
+We know that $\lst O = \setof{s,ls}$, and similarly  for $\lst O'$,
+but we also need to assert that $\setof{E,N,R} \disj \setof{\lst O,\lst O'}$.
 We need to define some variables ($E$, $a$, $R$, $N$)
 \begin{code}
-vE = jVar ls_t $ ExprVar (jId "E") Static
-vR = jVar ls_t $ ExprVar (jId "R") Static
-vN = jVar ls_t $ ExprVar (jId "N") Static
+vE = ExprVar (jId "E") Static ; tE = jVar ls_t vE ; gE = StdVar vE
+vN = ExprVar (jId "N") Static ; tN = jVar ls_t vN ; gN = StdVar vN
+vR = ExprVar (jId "R") Static ; tR = jVar ls_t vR
 va = Vbl (jId "a") PredV Static 
 a = fromJust $ pVar ArbType va ; ga = StdVar va
 tls = jVar ls_t vls
 tls' = jVar ls_t vls'
--- X(E|a|R|N)
+eNotObs = [gO,gO'] `notin` gE
+nNotObs = [gO,gO'] `notin` gN
+eNO = [gE] `notin` gO  -- but this is really gE notin fv(gO), gO is listvar
+\end{code}
+
+\RLEQNS{
+   X(E|a|R|N)
+   ~\defs~
+   ls(E) \land a \land ls'=(ls\setminus R)\cup N 
+   & \setof{E,N,R} \disj \setof{\lst O,\lst O'}
+   & \lref{defn-$X$}
+}
+\begin{code}
+xact :: Term -> Term -> Term -> Term -> Term
+i_xact = jId "X"
+xact e act r a = Cons arbpred False i_xact [e,act,r,a]
+xactIntro = mkConsIntro i_xact bool
 axXDef = ( "X" -.- "def"
-         , ( (xact vE a vR vN)
+         , ( (xact tE a tR tN)
              ===
-             ((vE `subseteq` tls) /\ a) /\
-             (tls' `isEqualTo` ((tls `sdiff` vR) `sunion` vN))
-           , scTrue ) ) 
--- A(E|a|N)
+             ((tE `subseteq` tls) /\ a) /\
+             (tls' `isEqualTo` ((tls `sdiff` tR) `sunion` tN))
+           -- , eNotObs .: nNotObs  ) ) 
+           , mrgscs [eNotObs,nNotObs]  ) ) 
+\end{code}
+
+\RLEQNS{
+   A(E|a|N)
+   ~\defs~
+   X(E|a|E|N) 
+   & \setof{E,N} \disj \setof{\lst O,\lst O'}
+   & \lref{defn-$A$}
+}
+\begin{code}
+i_aact = jId "A"
+aact e act n = Cons arbpred False i_aact [e,act,n]
+aactIntro = mkConsIntro i_aact bool
 axADef = ( "A" -.- "def"
-         , ( (aact vE a vN) === (xact vE a vE vN)
+         , ( (aact tE a tN) === (xact tE a tE tN)
            , scTrue ) )
 cjAAlt = ( "A" -.- "alt"
-         , ( (aact vE a vN)
+         , ( (aact tE a tN)
              ===
-             ((vE `subseteq` tls) /\ a) /\
-             (tls' `isEqualTo` ((tls `sdiff` vE) `sunion` vN))
+             ((tE `subseteq` tls) /\ a) /\
+             (tls' `isEqualTo` ((tls `sdiff` tE) `sunion` tN))
            , scTrue ) )
 \end{code}
 

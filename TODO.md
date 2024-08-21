@@ -2,7 +2,22 @@
 
 ## URGENT
 
-Consider this fragment:
+
+We know we need to capture that E,R,N do not overlap with O$,O$'
+
+`[gO,gO'] `notin` gE` says `O$,O$'∉E`, but we really want `N∉O$,O$'`,
+but is meant to really mean `N ∉ fv(O$,O$')`.
+
+Perhaps we interpret the "free-variables" of {O$,O$'} as fv(O$) ∪ fv(O$'),
+which then becomes {s,ls,s',ls'} in the UTCP case?
+
+We find that `mrgscs [eNotObs,nNotObs]` reduces to `O$,O$'∉N`.
+
+We want to 
+
+
+
+
 
 ```
 E1[O$_1/O$'] ⊆ ls ∧ a[O$_1/O$']

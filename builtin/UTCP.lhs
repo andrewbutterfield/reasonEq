@@ -354,9 +354,9 @@ axXDef = ( "X" -.- "def"
              ===
              ((tE `subseteq` tls) /\ a) /\
              (tls' `isEqualTo` ((tls `sdiff` tR) `sunion` tN))
-           -- , eNotObs .: nNotObs  ) ) 
-           , eNO ) )
-           -- , eNO .: nNO) ) 
+           -- , eNotObs .: nNotObs  ) )  -- returns nNotObs
+           , eNO ) ) -- returns eNO
+           -- , eNO .: nNO) )  -- returns scTrue
 \end{code}
 
 \RLEQNS{

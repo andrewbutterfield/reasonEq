@@ -5,13 +5,18 @@
 
 We know we need to capture that E,R,N do not overlap with O$,O$'
 
-`[gO,gO'] `notin` gE` says `O$,O$'∉E`, but we really want `N∉O$,O$'`,
-but is meant to really mean `N ∉ fv(O$,O$')`.
+`[gO,gO'] `notin` gE` says `O$,O$' ∉ E`, but we really want `E ∉ O$,O$'`,
+but is meant to really mean `E ∉ fv(O$,O$')`.
 
 Perhaps we interpret the "free-variables" of {O$,O$'} as fv(O$) ∪ fv(O$'),
 which then becomes {s,ls,s',ls'} in the UTCP case?
 
-We find that `mrgscs [eNotObs,nNotObs]` reduces to `O$,O$'∉N`.
+We find that `mrgscs [eNotObs,nNotObs]` reduces to `O$,O$' ∉ N`.
+
+Not sure about `SideCond.disjointCheck`.  Is `E`,`N` being `Static` an issue?
+
+If we try to build `E ∉ O$` we get it. 
+If we try to do `E ∉ O$ ; N ∉ O$` we get `scTrue` !
 
 We want to 
 

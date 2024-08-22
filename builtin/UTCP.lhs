@@ -334,6 +334,7 @@ tls' = jVar ls_t vls'
 eNotObs = [gO,gO'] `notin` gE
 nNotObs = [gO,gO'] `notin` gN
 eNO = [gE] `notin` gO  -- but this is really gE notin fv(gO), gO is listvar
+nNO = [gN] `notin` gO  -- but this is really gN notin fv(gO), gO is listvar
 \end{code}
 
 \RLEQNS{
@@ -354,7 +355,8 @@ axXDef = ( "X" -.- "def"
              ((tE `subseteq` tls) /\ a) /\
              (tls' `isEqualTo` ((tls `sdiff` tR) `sunion` tN))
            -- , eNotObs .: nNotObs  ) ) 
-           , mrgscs [eNotObs,nNotObs]  ) ) 
+           , eNO ) )
+           -- , eNO .: nNO) ) 
 \end{code}
 
 \RLEQNS{

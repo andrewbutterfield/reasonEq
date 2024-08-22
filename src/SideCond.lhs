@@ -280,7 +280,7 @@ gv `udyncovered` Nothing    =  tvscTrue gv
 gv `udyncovered` (Just vs)  =  gv `dyncovered` vs
 \end{code}
 
-
+\newpage
 \subsection{Checking Atomic Sideconditions}
 
 Here we provide a monadic function that fails if the condition
@@ -308,7 +308,7 @@ tvscCheck obsv (TVSC gv vsD uvsC uvsCd)
         return $ mkTVSC gv vsD' uvsC' uvsCd'
 \end{code}
 
-\newpage
+
 \subsubsection{Checking Disjoint $ V \disj g$}
 
 \begin{eqnarray*}
@@ -341,6 +341,7 @@ disjointCheck obsv gv vsD
     report msg = fail $ unlines' [msg,showsv,showvs]
 \end{code}
 
+\newpage
 \subsubsection{Checking CoveredBy $V \supseteq g$}
 
 \begin{eqnarray*}

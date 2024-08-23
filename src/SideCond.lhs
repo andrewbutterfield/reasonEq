@@ -73,7 +73,16 @@ we do not represent them explicitly.
 Instead, any operation on side-conditions that could result
 in an inconsistent result should fail, gracefully.
 
-\subsection{Term/Variable-Set Relations}
+NEW: the term $T$ is represented using the \texttt{StdVar} variant of a 
+\texttt{GenVar}. 
+However there are emerging use cases that want to relate a list-variable with a
+set of general variables. 
+These crop up in the UTCP theory when defining $X(E|R|a|N)$,
+such as $\lst O,\lst O' \disj E$, 
+or $\setof{E} \disj \lst O \land \setof{E} \disj \lst O'$, 
+where $E$ is an (unknown) expression variable.
+
+\subsection{Term (List-Variable?)/Variable-Set Relations}
 
 An term variable side-condition (TVSC) can have one of the following forms,
 where $T$ abbreviates $\fv(T)$:
@@ -109,6 +118,9 @@ which will itself be a list variable:
 \end{eqnarray*}
 This arises when we have side-conditions between lists of variables
 and expressions that occur in substitutions.
+We could also have the UTCP situation mentioned above where the term is replaced
+by a list variable, which in this case represents a set of variables, not terms
+(not entirely sure about this).
 
 We note that disjointness and being a (pre-)condition
 distribute through conjunction without restrictions,
@@ -283,24 +295,32 @@ gv `udyncovered` (Just vs)  =  gv `dyncovered` vs
 \newpage
 \subsection{Checking Atomic Sideconditions}
 
+What we have is are relations $R$ between a general variable $g$
+and a set of general variables $V$:
+\begin{eqnarray*}
+   R &:& \Set(GVar) \times GVar \fun \Bool
+\end{eqnarray*}
+
 Here we provide a monadic function that fails if the condition
 is demonstrably false,
 and otherwise returns a \texttt{Maybe} type,
-where \texttt{Nothing} denotes a condition that is true.
+where \texttt{Nothing} denotes a condition that is demonstrably true.
 
 We need to do this in general
-in the context of what is ``known'' about variables.
+in the context of what is know about variables,
+based on just the variables themselves (class and temporality, but no var-data!).
 Here, $z$ denotes an (standard) observation variable,
+$\lst\ell$ denotes a list variable,
 $T$ denotes a standard term variable,
-and $g$ denotes either $z$ or $T$.
+and $g$ denotes  $z$, $\lst\ell$, or $T$.
 We also use the case conventions described earlier ($P, p, p'$).
-In addition $DO$ represent the dynamic observables,
-and is equal to $O \cup O'$.
+In addition $DO$ represents dynamic observables
+(not necessarily elements of $O \cup O'$ !).
 
 \begin{code}
 mscTrue = Nothing
-tvscCheck :: MonadFail m => VarSet -> TVarSideConds 
-          -> m (Maybe TVarSideConds)
+tvscCheck :: MonadFail m => VarSet -> VarSideConds 
+          -> m (Maybe VarSideConds)
 tvscCheck obsv (TVSC gv vsD uvsC uvsCd)
   = do  vsD'   <- disjointCheck  obsv gv vsD
         uvsC'  <- coveredByCheck obsv gv uvsC

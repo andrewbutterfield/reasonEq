@@ -614,8 +614,8 @@ we need to produce $n+1$ side-conditions, for $v_0$ \dots $v_n$.
 We call this process ``spanning''.
 \begin{code}
 normSC :: VarVersions -> SideCond -> SideCond
-normSC vv (tvscs,fvs)
-  = case mkSideCond S.empty (map (fromJust . normASC vv) tvscs) (normFresh vv fvs) of
+normSC vv (vscs,fvs)
+  = case mkSideCond S.empty (map (fromJust . normASC vv) vscs) (normFresh vv fvs) of
       Yes sc    ->  sc
       -- this should not fail, but just in case ...
       But msgs  ->  error ("normSC: "++unlines' msgs)

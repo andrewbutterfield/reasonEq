@@ -506,10 +506,10 @@ side-conditions:
 \\ \beta(\fresh F) &=& \fresh \beta(F)
 \end{eqnarray*}
 \begin{code}
-instantiateSC insctxt bind (tvscs,freshvs)
-  = do tvscss' <- sequence $ map (instantiateTVSC insctxt bind) tvscs
+instantiateSC insctxt bind (vscs,freshvs)
+  = do vscss' <- sequence $ map (instantiateTVSC insctxt bind) vscs
        freshvs' <- instVarSet insctxt bind freshvs
-       mkSideCond (icDV insctxt) (concat tvscss') $ theFreeVars freshvs'
+       mkSideCond (icDV insctxt) (concat vscss') $ theFreeVars freshvs'
 \end{code}
 For atomic side-conditions:
 \begin{eqnarray*}
@@ -651,17 +651,17 @@ where $e_i$ are expression or predicate variables,
 and $F$ is disjoint from any $e_i,B_i$.
 \begin{code}
 instantiateTVSC :: MonadFail m 
-                => InsContext -> Binding -> TVarSideConds 
-                -> m [TVarSideConds]
-instantiateTVSC insctxt bind tvsc@(TVSC gT vsD mvsC mvsCd)
+                => InsContext -> Binding -> VarSideConds 
+                -> m [VarSideConds]
+instantiateTVSC insctxt bind vsc@(TVSC gT vsD mvsC mvsCd)
   = do let (fvsT,diffsT) = instantiateGVar insctxt bind gT
        fvsD    <-  instVarSet insctxt bind vsD
        fmvsC   <-  instUVarSet insctxt bind mvsC
        fmvsCd  <-  instUVarSet insctxt bind mvsCd
        if null diffsT
-         then do tvscss <- mapM (instTVSC insctxt fvsD fmvsC fmvsCd) 
+         then do vscss <- mapM (instTVSC insctxt fvsD fmvsC fmvsCd) 
                                 (S.toList fvsT)
-                 return $ concat tvscss
+                 return $ concat vscss
          else fail "instantiateTVSC: explicit diffs in var-set not handled."
 \end{code}
 
@@ -676,13 +676,13 @@ instantiateTVSC insctxt bind tvsc@(TVSC gT vsD mvsC mvsCd)
 \begin{code}
 instTVSC :: MonadFail m 
          => InsContext -> FreeVars -> UFreeVars -> UFreeVars -> GenVar
-         -> m [TVarSideConds]
+         -> m [VarSideConds]
 -- we ignore the vBless components for now
 instTVSC insctxt fvsD@(vsD,_) fmvsC@(mvsC,_) fmvsCd@(mvsCd,_) gT 
-  = do let tvscsD = gT `disjfrom`    vsD  
-       let tvscsC = gT `ucoveredby`  mvsC 
-       let tvscCd = gT `udyncovered` mvsCd 
-       return [tvscsD,tvscsC,tvscCd]
+  = do let vscsD = gT `disjfrom`    vsD  
+       let vscsC = gT `ucoveredby`  mvsC 
+       let vscCd = gT `udyncovered` mvsCd 
+       return [vscsD,vscsC,vscCd]
 \end{code}
 
 \subsection{Disjointedness}
@@ -697,13 +697,13 @@ where $\fv(\beta(T)) = F \cup \{e_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj e_i$, $F \disj B_i$.
 % \begin{code}
 % instDisjoint :: MonadFail m 
-%              => InsContext -> FreeVars -> GenVar -> m [TVarSideConds]
+%              => InsContext -> FreeVars -> GenVar -> m [VarSideConds]
 % instDisjoint insctxt fvsD@(fF,vLessBs) gv
-%   =  return (tvsc1s ++ tvsc2s)
+%   =  return (vsc1s ++ vsc2s)
 %   where
-%     tvsc1s = map (mkDisj vsD) $ S.toList fF
+%     vsc1s = map (mkDisj vsD) $ S.toList fF
 %     mkDisj vsD gv = gv `disjfrom` vsD
-%     tvsc2s = map (f2 vsD) vLessBs
+%     vsc2s = map (f2 vsD) vLessBs
 %     f2 vsD (evF,vsB) = mkDisj (vsD S.\\ vsB) evF
 % \end{code}
 
@@ -724,13 +724,13 @@ $F \disj F_i$, $F \disj B_i$:
 % \begin{code}
 % instCovers :: MonadFail m 
 %            => InsContext -> UFreeVars -> GenVar-- UFreeVars !!!
-%            -> m [TVarSideConds]
+%            -> m [VarSideConds]
 % instCovers insctxt (Nothing,_)       gv  =  return []
-% instCovers insctxt (Just fF,vLessBs) gv  =  return (tvsc1s ++ tvsc2s)
+% instCovers insctxt (Just fF,vLessBs) gv  =  return (vsc1s ++ vsc2s)
 %   where
-%     tvsc1s = map (mkCovers vsC) (S.toList fF)
+%     vsc1s = map (mkCovers vsC) (S.toList fF)
 %     mkCovers vsC gv = gv `coveredby` vsC
-%     tvsc2s = map (f2 vsC) vLessBs
+%     vsc2s = map (f2 vsC) vLessBs
 %     f2 vsC (evF,vsB) = mkCovers (vsC `S.union` vsB) evF
 % \end{code}
 
@@ -761,9 +761,9 @@ We include $e_i$ if $e_i \in D \land e_i \notin B_i$.
 % \begin{code}
 % instDynCvg :: MonadFail m 
 %            => InsContext -> UFreeVars -> GenVar
-%            -> m [TVarSideConds]
+%            -> m [VarSideConds]
 % instDynCvg insctxt (Nothing,vLessBs)    gv    =  return []
-% instDynCvg insctxt (Just vsCd,vLessBs)  gv  =  return (tvsc1s ++ tvsc2s)
+% instDynCvg insctxt (Just vsCd,vLessBs)  gv  =  return (vsc1s ++ vsc2s)
 %   where
 %     restrict2 vS vR
 %       | S.null vR  =  vS
@@ -776,8 +776,8 @@ We include $e_i$ if $e_i \in D \land e_i \notin B_i$.
 %     isSeparate (ev,vsB) = not ( ev `S.member` vsB)
 %     vDNotInBs = filter isSeparate vDLessBs
 %     f2 vs (evFD,vsB) = mkDynCovers vs evFD
-%     tvsc1s = map (mkDynCovers vsCd) (S.toList fFD)
-%     tvsc2s = map (f2 vsCd) vDNotInBs
+%     vsc1s = map (mkDynCovers vsCd) (S.toList fFD)
+%     vsc2s = map (f2 vsCd) vDNotInBs
 % \end{code}
 
 \newpage
@@ -819,11 +819,11 @@ $e$ are non. obs. variables that don't occur in the $F$,
 and $x$ are obs. vars. or list-vars.
 It represents the variable-set: $F \cup \bigcup_i (e_i\setminus B_i)$
 \begin{eqnarray*}
-   \fv_{(tvscs,\_)}(t) 
+   \fv_{(vscs,\_)}(t) 
    &=& 
-   \bigcup_{v \in \pi_1\fv(t)} \scvarexp_{tvscs}(v)
+   \bigcup_{v \in \pi_1\fv(t)} \scvarexp_{vscs}(v)
    \cup
-   \bigcup_{(e,B) \in \pi_2\fv(t)} \scdiffexp_{tvscs}(e,B)
+   \bigcup_{(e,B) \in \pi_2\fv(t)} \scdiffexp_{vscs}(e,B)
 \end{eqnarray*}
 \begin{code}
 deduceFreeVars :: InsContext -> Term -> FreeVars
@@ -839,8 +839,8 @@ deduceFreeVars insctxt t
 
 \begin{eqnarray*}
    \scvarexp_{sc}(v) &=& \setof v, \qquad v \text{ is obs. var.}
-\\ \scvarexp_{(tvscs,\_)}(e) 
-   &=& \tvscsvarexp(e,tvscs(e)) \cond{e \in tvscs} \setof e
+\\ \scvarexp_{(vscs,\_)}(e) 
+   &=& \vscsvarexp(e,vscs(e)) \cond{e \in vscs} \setof e
 \end{eqnarray*}
 \begin{code}
 scVarExpand :: SideCond -> GenVar -> FreeVars
@@ -848,7 +848,7 @@ scVarExpand _ v@(StdVar (Vbl _ ObsV _)) = injVarSet $ S.singleton v
 scVarExpand sc gv 
   = case findAllGenVar gv sc of
       []    ->  injVarSet $ S.singleton gv
-      tvscs  ->  tvscsVarExpand gv tvscs
+      vscs  ->  vscsVarExpand gv vscs
 \end{code}
 
 \newpage
@@ -858,16 +858,16 @@ disjoint ($v \disj D$), covered ($C \supseteq v$),
 dynamic coverage ($Cd \supseteq_a v$),  
 or a mix of the cases with $C$ and $Cd$ disjoint from $D$.
 \begin{eqnarray*}
-   \tvscsvarexp(e,\seqof{C \supseteq e'})     &=& C \cond{e = e'} \setof e 
-\\ \tvscsvarexp(e,\seqof{\_,C \supseteq e'})  &=& C \cond{e = e'} \setof e 
-\\ \tvscsvarexp(e,\seqof{\_ \disj \_})        &=& \setof{e}
+   \vscsvarexp(e,\seqof{C \supseteq e'})     &=& C \cond{e = e'} \setof e 
+\\ \vscsvarexp(e,\seqof{\_,C \supseteq e'})  &=& C \cond{e = e'} \setof e 
+\\ \vscsvarexp(e,\seqof{\_ \disj \_})        &=& \setof{e}
 \end{eqnarray*}
 \begin{code}
-tvscsVarExpand :: GenVar -> [TVarSideConds] -> FreeVars
-tvscsVarExpand e []  =  injVarSet $ S.singleton e
-tvscsVarExpand e (TVSC e' _ (Just vsC) _ : _)
+vscsVarExpand :: GenVar -> [VarSideConds] -> FreeVars
+vscsVarExpand e []  =  injVarSet $ S.singleton e
+vscsVarExpand e (TVSC e' _ (Just vsC) _ : _)
   |  e == e'        =  injVarSet vsC
-tvscsVarExpand e (_:tvscs) = tvscsVarExpand e tvscs
+vscsVarExpand e (_:vscs) = vscsVarExpand e vscs
 \end{code}
 
 

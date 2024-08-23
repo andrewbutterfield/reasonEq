@@ -531,10 +531,10 @@ trtz trid (t,wayup) = trterm trid 0 $ exitTZ (markfocus t,wayup)
 \begin{code}
 trSideCond = trsidecond trId
 trSideCondU = trsidecond trIdU
-trsidecond trid sc@(tvscs,fvs)
+trsidecond trid sc@(vscs,fvs)
   | isTrivialSC sc  =  _top
   | otherwise       =  intcalNN ", " 
-                         ( concat (map (trtvarsidecond trid) tvscs)
+                         ( concat (map (trtvarsidecond trid) vscs)
                            ++ [trfresh trid fvs] )
 
 trtvarsidecond trid (TVSC gv vsD Nothing Nothing)

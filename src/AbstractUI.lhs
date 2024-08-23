@@ -730,11 +730,11 @@ extendGoalSCCoverage obsv lvvls (tvarSCs,_)
 
     xtndCoverage :: MonadFail m => VarSet
                  -> [VarList] -- floating replacements
-                 -> [TVarSideConds] -- extra side-conditions (so far)
-                 -> [TVarSideConds] -- Law coverage side-conditions
+                 -> [VarSideConds] -- extra side-conditions (so far)
+                 -> [VarSideConds] -- Law coverage side-conditions
                  -> m SideCond
-    xtndCoverage _ _ tvscs [] = return (tvscs, S.empty)
-    xtndCoverage obsv ffvls tvscs ((TVSC gv _ mvsC mvsCd) : rest)
+    xtndCoverage _ _ vscs [] = return (vscs, S.empty)
+    xtndCoverage obsv ffvls vscs ((TVSC gv _ mvsC mvsCd) : rest)
       | S.toList vsC `elem` ffvls
 
              -- DO WE NEED THIS?
@@ -742,9 +742,9 @@ extendGoalSCCoverage obsv lvvls (tvarSCs,_)
              -- ss = S.elems $ S.map theSubscript $ S.filter isDuring
              --              $ S.map gvarWhen $ mentionedVars conj
 
-         = do tvscs' <- mrgTVarConds obsv justcov tvscs  
-              xtndCoverage obsv ffvls tvscs' rest
-      | otherwise  =  xtndCoverage obsv ffvls tvscs rest
+         = do vscs' <- mrgTVarConds obsv justcov vscs  
+              xtndCoverage obsv ffvls vscs' rest
+      | otherwise  =  xtndCoverage obsv ffvls vscs rest
       where 
          vsC = uset mvsC `S.union` uset mvsCd
          justcov = TVSC gv disjTrue mvsC mvsCd

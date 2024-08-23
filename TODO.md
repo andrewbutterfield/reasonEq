@@ -18,7 +18,7 @@ Not sure about `SideCond.disjointCheck`.  Is `E`,`N` being `Static` an issue?
 If we try to build `E ∉ O$` we get it. 
 If we try to do `E ∉ O$ ; N ∉ O$` we get `scTrue` !
 
-We want to 
+NOT SURE WE WANT the `E ∉ O$` FORM!
 
 
 

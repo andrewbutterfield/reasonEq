@@ -295,7 +295,7 @@ gv `udyncovered` (Just vs)  =  gv `dyncovered` vs
 \newpage
 \subsection{Checking Atomic Sideconditions}
 
-What we have is are relations $R$ between a general variable $g$
+What we have are relations $R$ between a general variable $g$
 and a set of general variables $V$:
 \begin{eqnarray*}
    R &:& \Set(GVar) \times GVar \fun \Bool
@@ -331,18 +331,23 @@ vscCheck obsv (VSC gv vsD uvsC uvsCd)
 
 \subsubsection{Checking Disjoint $ V \disj g$}
 
+First, remember the underlying interpretation:
 \begin{eqnarray*}
-   \emptyset              \disj g           &&   \true
-\\ \dots,z,\dots          \disj z           &&   \false
-\\ \{stdObs\}\setminus z  \disj z           &&   \true
-\\ \{v,v'\}               \disj v_d         &&   \true
-\\ \{\lst\ell,\lst\ell'\} \disj \lst\ell_d  &&   \true
-\\ temp(V)\disj temp(g) && \true
+   V \disj z &\equiv&  z \notin V
+\\ V \disj P &\equiv&  V \cap \fv(P) = \emptyset
+\\ V \disj p &\equiv&  V \cap \fv(p) = \emptyset
+\\ V \disj p' &\equiv&  V \cap \fv(p') = \emptyset
+\\ V \disj \lst\ell &\equiv&  V \cap \lst\ell = \emptyset
 \end{eqnarray*}
-
+We note that $g \in V$ 
+where $g$ is not static ($T,P,E$) 
+allows us to immediately return false.
 Note that we cannot deduce (here) that $T \disj T$ is false,
-because $T$ could correspond to the empty set.
-Nor can we assume $T \disj z$ is false, because $T$ could contain $z$.
+because $\fv(T)$ could correspond to the empty set.
+Nor can we assume $\setof{T} \disj z$ is false, 
+because $\fv(T)$ could contain $z$.
+If the temporality of everything in $V$ 
+differs from the temporality of $g$ then we can always return true.
 \begin{code}
 disjointCheck  :: MonadFail m 
                => VarSet -> GenVar -> VarSet -> m VarSet

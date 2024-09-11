@@ -666,6 +666,7 @@ utcpTheory :: Theory
 utcpTheory
   =  nullTheory { thName  =  utcpName
             , thDeps  =  [ utpBaseName
+                         , setName
                          , uCloseName
                          , existsName
                          , forallName

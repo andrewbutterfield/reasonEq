@@ -117,7 +117,7 @@ $$\par\vspace{-8pt}
 axAnyDef = preddef ("exists" -.- "def")
   ( (exists [xs] p)
     ===
-    (mkNot $ forall [xs] $ mkNot p) )
+    (mkNot $ forAll [xs] $ mkNot p) )
   scTrue
 \end{code}
 

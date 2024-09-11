@@ -141,8 +141,8 @@ qfs = LstVar lvfs
 $$ P[e/x] \qquad P[\lst e/\lst x]$$
 \begin{code}
 -- note that [ a / v]  becomes (v,a) !
-psub var expr pred = Sub pred1 pred $ fromJust $substn [(var,expr)] []
-esub var expr1 expr2 = Sub ArbType expr2 $ fromJust $substn [(var,expr1)] []
+psub var expr pred = Sub pred1 pred $ fromJust $ substn [(var,expr)] []
+esub var expr1 expr2 = Sub ArbType expr2 $ fromJust $ substn [(var,expr1)] []
 sub_x_by_e p = psub vx e p
 sub_xs_by_es p = Sub pred1 p $ fromJust $ substn [] [(lvxs,lves)]
 lvxs = LVbl vx [] []

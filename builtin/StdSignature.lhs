@@ -18,7 +18,7 @@ module StdSignature (
 , equals, isEqualTo, areEqualTo
 , propdef
 , flattenEquiv
-, forall, exists, univ, sat
+, forAll, exists, univ, sat
 , preddef, mkNmdAsn
 ) where
 
@@ -178,7 +178,7 @@ propdef ( name, prop ) = ( name, fromJust $ mkAsn prop scTrue )
 
 \begin{code}
 forallId = jId "forall"
-forall vl p = fromJust $ pBnd forallId (S.fromList vl) p
+forAll vl p = fromJust $ pBnd forallId (S.fromList vl) p
 
 existsId = jId "exists"
 exists vl p = fromJust $ pBnd existsId (S.fromList vl) p

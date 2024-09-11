@@ -306,7 +306,7 @@ $$
 $$\par\vspace{-8pt}
 \begin{code}
 axUnivDef = preddef ("[]" -.- "def")
-                    (univ p  === forall [xs] p)
+                    (univ p  === forAll [xs] p)
                     ([xs] `covers` gvP)
 \end{code}
 
@@ -396,7 +396,7 @@ $$
 $$\par\vspace{-8pt}
 \begin{code}
 cjUnivAllClosed = preddef ("univ" -.- "forall" -.- "closed")
-                          ((forall [xs] $ univ p) === univ p)
+                          ((forAll [xs] $ univ p) === univ p)
                           scTrue
 \end{code}
 

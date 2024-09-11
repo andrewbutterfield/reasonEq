@@ -169,13 +169,13 @@ cjMofSingle = ( "mbr" -.- "set" -.- "self"
 axSetEqDef = ( "set" -.- "=" -.- "def"
              , ( (s1 `isEqualTo` s2) 
                  ===
-                 forall [gvx]
+                 forAll [gvx]
                  (x `mbr` s1 === x `mbr` s2)
              , scTrue ) )
 axSubSetEqDef = ( "subseteq" -.- "def"
                 , ( (s1 `subseteq` s2) 
                     ===
-                    forall [gvx]
+                    forAll [gvx]
                     (x `mbr` s1 ==> x `mbr` s2)
                 , scTrue ) )
 \end{code}

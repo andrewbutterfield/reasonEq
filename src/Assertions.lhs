@@ -620,8 +620,8 @@ normSC vv (vscs,fvs)
       -- this should not fail, but just in case ...
       But msgs  ->  error ("normSC: "++unlines' msgs)
 
-normASC vv (TVSC gv vsD mvsC mvsCd)  
-  =  mkTVSC (normQGVar vv gv) (normQVSet vv vsD) 
+normASC vv (VSC gv vsD mvsC mvsCd)  
+  =  mkVSC (normQGVar vv gv) (normQVSet vv vsD) 
             (normQVMset vv mvsC) (normQVMset vv mvsCd)
 
 normQVMset _ Nothing = Nothing

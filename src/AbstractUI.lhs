@@ -726,7 +726,7 @@ then we need to copy it over as a proof-local goal side-condition.
 extendGoalSCCoverage obsv lvvls (tvarSCs,_)
   = xtndCoverage obsv (map snd lvvls) [] (filter isCoverage tvarSCs)
   where
-    isCoverage (TVSC _ _ mvsC mvsCd)  =  mvsC /= Nothing || mvsCd /= Nothing
+    isCoverage (VSC _ _ mvsC mvsCd)  =  mvsC /= Nothing || mvsCd /= Nothing
 
     xtndCoverage :: MonadFail m => VarSet
                  -> [VarList] -- floating replacements
@@ -734,7 +734,7 @@ extendGoalSCCoverage obsv lvvls (tvarSCs,_)
                  -> [VarSideConds] -- Law coverage side-conditions
                  -> m SideCond
     xtndCoverage _ _ vscs [] = return (vscs, S.empty)
-    xtndCoverage obsv ffvls vscs ((TVSC gv _ mvsC mvsCd) : rest)
+    xtndCoverage obsv ffvls vscs ((VSC gv _ mvsC mvsCd) : rest)
       | S.toList vsC `elem` ffvls
 
              -- DO WE NEED THIS?
@@ -747,7 +747,7 @@ extendGoalSCCoverage obsv lvvls (tvarSCs,_)
       | otherwise  =  xtndCoverage obsv ffvls vscs rest
       where 
          vsC = uset mvsC `S.union` uset mvsCd
-         justcov = TVSC gv disjTrue mvsC mvsCd
+         justcov = VSC gv disjTrue mvsC mvsCd
 \end{code}
 
 \newpage

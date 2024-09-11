@@ -537,9 +537,9 @@ trsidecond trid sc@(vscs,fvs)
                          ( concat (map (trtvarsidecond trid) vscs)
                            ++ [trfresh trid fvs] )
 
-trtvarsidecond trid (TVSC gv vsD Nothing Nothing)
+trtvarsidecond trid (VSC gv vsD Nothing Nothing)
   | S.null vsD  = [_top]
-trtvarsidecond trid (TVSC gv vsD mvsC mvsCd)
+trtvarsidecond trid (VSC gv vsD mvsC mvsCd)
   = [trDisjSC trid gv vsD, trCovByM trid gv mvsC, trDynCovM trid gv mvsCd]
 
 trDisjSC trid gv vsD

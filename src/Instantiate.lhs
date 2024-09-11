@@ -10,7 +10,7 @@ module Instantiate
 ( InsContext(..), mkInsCtxt
 , instantiate
 , instVarSet
-, instTVSC
+, instVSC
 , instantiateSC
 ) where
 import Data.Maybe
@@ -507,7 +507,7 @@ side-conditions:
 \end{eqnarray*}
 \begin{code}
 instantiateSC insctxt bind (vscs,freshvs)
-  = do vscss' <- sequence $ map (instantiateTVSC insctxt bind) vscs
+  = do vscss' <- sequence $ map (instantiateVSC insctxt bind) vscs
        freshvs' <- instVarSet insctxt bind freshvs
        mkSideCond (icDV insctxt) (concat vscss') $ theFreeVars freshvs'
 \end{code}
@@ -650,19 +650,19 @@ $(F \cup \bigcup_i\setof{\dots,(e_i \setminus B_i),\dots})$
 where $e_i$ are expression or predicate variables, 
 and $F$ is disjoint from any $e_i,B_i$.
 \begin{code}
-instantiateTVSC :: MonadFail m 
+instantiateVSC :: MonadFail m 
                 => InsContext -> Binding -> VarSideConds 
                 -> m [VarSideConds]
-instantiateTVSC insctxt bind vsc@(TVSC gT vsD mvsC mvsCd)
+instantiateVSC insctxt bind vsc@(VSC gT vsD mvsC mvsCd)
   = do let (fvsT,diffsT) = instantiateGVar insctxt bind gT
        fvsD    <-  instVarSet insctxt bind vsD
        fmvsC   <-  instUVarSet insctxt bind mvsC
        fmvsCd  <-  instUVarSet insctxt bind mvsCd
        if null diffsT
-         then do vscss <- mapM (instTVSC insctxt fvsD fmvsC fmvsCd) 
+         then do vscss <- mapM (instVSC insctxt fvsD fmvsC fmvsCd) 
                                 (S.toList fvsT)
                  return $ concat vscss
-         else fail "instantiateTVSC: explicit diffs in var-set not handled."
+         else fail "instantiateVSC: explicit diffs in var-set not handled."
 \end{code}
 
 \begin{eqnarray*}
@@ -674,11 +674,11 @@ instantiateTVSC insctxt bind vsc@(TVSC gT vsD mvsC mvsCd)
         \land t \in \bigcup(\power\beta.Cd)\mid_D
 \end{eqnarray*}
 \begin{code}
-instTVSC :: MonadFail m 
+instVSC :: MonadFail m 
          => InsContext -> FreeVars -> UFreeVars -> UFreeVars -> GenVar
          -> m [VarSideConds]
 -- we ignore the vBless components for now
-instTVSC insctxt fvsD@(vsD,_) fmvsC@(mvsC,_) fmvsCd@(mvsCd,_) gT 
+instVSC insctxt fvsD@(vsD,_) fmvsC@(mvsC,_) fmvsCd@(mvsCd,_) gT 
   = do let vscsD = gT `disjfrom`    vsD  
        let vscsC = gT `ucoveredby`  mvsC 
        let vscCd = gT `udyncovered` mvsCd 
@@ -865,7 +865,7 @@ or a mix of the cases with $C$ and $Cd$ disjoint from $D$.
 \begin{code}
 vscsVarExpand :: GenVar -> [VarSideConds] -> FreeVars
 vscsVarExpand e []  =  injVarSet $ S.singleton e
-vscsVarExpand e (TVSC e' _ (Just vsC) _ : _)
+vscsVarExpand e (VSC e' _ (Just vsC) _ : _)
   |  e == e'        =  injVarSet vsC
 vscsVarExpand e (_:vscs) = vscsVarExpand e vscs
 \end{code}

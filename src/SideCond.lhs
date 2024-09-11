@@ -10,7 +10,7 @@ module SideCond (
   UVarSet, uset
 , VarSideConds(..)
 , termVar, disjointFrom, coveredBy, coveredDynamic
-, mkTVSC
+, mkVSC
 , vscTrue, disjTrue, covByTrue
 , vscVSet
 , disjfrom, coveredby, dyncovered, ucoveredby, udyncovered
@@ -21,7 +21,7 @@ module SideCond (
 , scVarSet
 , mrgTVarConds, mrgSideCond, mrgSideConds, mkSideCond
 , scDischarge
-, isFloatingTVSC
+, isFloatingVSC
 , notin, covers, dyncover, fresh
 , findGenVar, findAllGenVar, findCoveredGenVar
 -- , citingASCs   -- not used anywhere!
@@ -84,7 +84,7 @@ where $E$ is an (unknown) expression variable.
 
 \subsection{Term (List-Variable?)/Variable-Set Relations}
 
-An term variable side-condition (TVSC) can have one of the following forms,
+An term variable side-condition (VSC) can have one of the following forms,
 where $T$ abbreviates $\fv(T)$:
 \begin{eqnarray*}
    x,\lst v   \disj  T
@@ -235,33 +235,33 @@ and instead will use $\lst O \supseteq T$.
 
 \begin{code}
 data  VarSideConds -- (T,D,C,C_d)
-  = TVSC  GenVar        --  T
+  = VSC  GenVar        --  T
           VarSet        --  D
           UVarSet  --  U  | C
           UVarSet  --  Ud | Cd
   deriving (Eq, Ord, Show, Read)
 
 termVar        :: VarSideConds -> GenVar
-termVar (TVSC gv vsD uvsC uvsCd)         =  gv
+termVar (VSC gv vsD uvsC uvsCd)         =  gv
 disjointFrom   :: VarSideConds -> VarSet
-disjointFrom (TVSC gv vsD uvsC uvsCd)    =  vsD
+disjointFrom (VSC gv vsD uvsC uvsCd)    =  vsD
 coveredBy      :: VarSideConds -> UVarSet
-coveredBy (TVSC gv vsD uvsC uvsCd)       =  uvsC
+coveredBy (VSC gv vsD uvsC uvsCd)       =  uvsC
 coveredDynamic :: VarSideConds -> UVarSet
-coveredDynamic (TVSC gv vsD uvsC uvsCd)  =  uvsCd
+coveredDynamic (VSC gv vsD uvsC uvsCd)  =  uvsCd
 
 disjTrue = S.empty
 covByTrue = Nothing
-vscTrue t = TVSC t disjTrue covByTrue covByTrue
+vscTrue t = VSC t disjTrue covByTrue covByTrue
 \end{code}
 
 We need a smart builder here to handle all being true:
 \begin{code}
-mkTVSC :: GenVar -> VarSet -> UVarSet -> UVarSet -> Maybe VarSideConds
-mkTVSC gv vsD uvsC uvsCd
+mkVSC :: GenVar -> VarSet -> UVarSet -> UVarSet -> Maybe VarSideConds
+mkVSC gv vsD uvsC uvsCd
   = if vsD == disjTrue && uvsC == covByTrue && uvsCd == covByTrue
     then Nothing -- denotes True
-    else Just $ TVSC gv vsD uvsC uvsCd
+    else Just $ VSC gv vsD uvsC uvsCd
 \end{code}
 
 
@@ -282,9 +282,9 @@ vscVSet vsc
 We provide some builders when only one of the three conditions is involved:
 \begin{code}
 disjfrom, coveredby, dyncovered :: GenVar -> VarSet -> VarSideConds
-gv `disjfrom`   vs  =  TVSC gv vs       covByTrue covByTrue
-gv `coveredby`  vs  =  TVSC gv disjTrue (Just vs) covByTrue
-gv `dyncovered` vs  =  TVSC gv disjTrue covByTrue (Just vs)
+gv `disjfrom`   vs  =  VSC gv vs       covByTrue covByTrue
+gv `coveredby`  vs  =  VSC gv disjTrue (Just vs) covByTrue
+gv `dyncovered` vs  =  VSC gv disjTrue covByTrue (Just vs)
 ucoveredby, udyncovered :: GenVar -> UVarSet -> VarSideConds
 gv `ucoveredby`  Nothing    =  vscTrue gv
 gv `ucoveredby`  (Just vs)  =  gv `coveredby`  vs
@@ -321,11 +321,11 @@ In addition $DO$ represents dynamic observables
 mscTrue = Nothing
 vscCheck :: MonadFail m => VarSet -> VarSideConds 
           -> m (Maybe VarSideConds)
-vscCheck obsv (TVSC gv vsD uvsC uvsCd)
+vscCheck obsv (VSC gv vsD uvsC uvsCd)
   = do  vsD'   <- disjointCheck  obsv gv vsD
         uvsC'  <- coveredByCheck obsv gv uvsC
         uvsCd' <- dynCvrgCheck   obsv gv uvsCd
-        return $ mkTVSC gv vsD' uvsC' uvsCd'
+        return $ mkVSC gv vsD' uvsC' uvsCd'
 \end{code}
 
 
@@ -520,7 +520,7 @@ scVarSet (vscs,fvs) = (S.unions $ map vscVSet vscs) `S.union` fvs
 
 \section{Merging Side-Conditions}
 
-The list of TVSCs
+The list of VSCs
 is kept ordered by the \texttt{GenVar} component,
 and any given such variable occurs at most once.
 
@@ -535,7 +535,7 @@ mrgTVarConds :: MonadFail m => VarSet
            -> VarSideConds -> [VarSideConds] -> m [VarSideConds]
 \end{code}
 
-1st TVSC is easy:
+1st VSC is easy:
 \begin{code}
 mrgTVarConds obsv vsc []
   = do masc <- vscCheck obsv vsc
@@ -544,7 +544,7 @@ mrgTVarConds obsv vsc []
          Just vsc' -> return [vsc']
 \end{code}
 
-Subsequent ones mean searching to see if there are already TVSCs with the
+Subsequent ones mean searching to see if there are already VSCs with the
 same general-variable:
 \begin{code}
 mrgTVarConds obsv vsc (vsc1:vscs)
@@ -563,22 +563,22 @@ mrgTVarConds obsv vsc (vsc1:vscs)
           return (vsc:vscs')
 \end{code}
 
-\subsection{Merging one TVSC with relevant others}
+\subsection{Merging one VSC with relevant others}
 
-Now, merging an TVSC in with another TVSC referring to the same general variable:
+Now, merging an VSC in with another VSC referring to the same general variable:
 \begin{code}
 mrgTVarTVar :: MonadFail m => VarSet
            -> VarSideConds -> VarSideConds -> m (Maybe VarSideConds)
-mrgTVarTVar obsv (TVSC gv vsD1 uvsC1 uvsCd1) (TVSC _ vsD2 uvsC2 uvsCd2) 
+mrgTVarTVar obsv (VSC gv vsD1 uvsC1 uvsCd1) (VSC _ vsD2 uvsC2 uvsCd2) 
   = let 
       vsD'   =  vsD1   `S.union` vsD2
       uvsC'  =  uvsC1  `uintsct` uvsC2
       uvsCd' =  uvsCd1 `uintsct` uvsCd2
-    in vscCheck obsv (TVSC gv vsD' uvsC' uvsCd')
+    in vscCheck obsv (VSC gv vsD' uvsC' uvsCd')
 \end{code}
 
 
-\subsection{TVSC Merge Laws}
+\subsection{VSC Merge Laws}
 
 We have the following interactions,
 where $D$ and $C$ are the variable-sets found
@@ -683,7 +683,7 @@ with match bindings.
 mrgTVarCondLists :: MonadFail m => VarSet
                 -> [VarSideConds] -> [VarSideConds] -> m [VarSideConds]
 mrgTVarCondLists obsv vscs1 [] = return vscs1
-mrgTVarCondLists obsv vscs1 (TVSC _ vsD Nothing Nothing:vscs2)
+mrgTVarCondLists obsv vscs1 (VSC _ vsD Nothing Nothing:vscs2)
   | S.null vsD  =  mrgTVarCondLists obsv vscs1 vscs2
 mrgTVarCondLists obsv vscs1 (vsc:vscs2)
      = do vscs1' <- mrgTVarConds obsv vsc vscs1
@@ -704,12 +704,12 @@ mrgTVarFreshConditions obsv freshvs vscs
 
 coveredVarsOf :: VarSet -> [VarSideConds] -> VarSet
 coveredVarsOf obsv vscs = S.unions $ map coveringsOf vscs
-coveringsOf (TVSC _ _ uvsC uvsCd)  =  cvr uvsC `S.union` cvr uvsCd
+coveringsOf (VSC _ _ uvsC uvsCd)  =  cvr uvsC `S.union` cvr uvsCd
 cvr Nothing    =  S.empty -- universe does not contain fresh vars
 cvr (Just vs)  =  vs
 \end{code}
 
-\section{From TVSC and Free-list to Side-Condition}
+\section{From VSC and Free-list to Side-Condition}
 
 \begin{code}
 mkSideCond :: MonadFail m 
@@ -723,7 +723,7 @@ mkSideCond obsv vscs fvs
 \subsection{Merging Full Side-conditions}
 
 Merging two side-conditions is then straightforward,
-simply merge each TVSC and fresh set from the one into the other,
+simply merge each VSC and fresh set from the one into the other,
 one at a time.
 \begin{code}
 mrgSideCond :: MonadFail m 
@@ -807,12 +807,12 @@ are available, as variable \texttt{obsv}.
 We first use those to simplfiy the consqequence.
 
 \begin{code}
-scDischarge obsv anteSC@(anteTVSC,anteFvs) cnsqSC@(cnsqTVSC,cnsqFvs)
-  = do cnsqTVSC' <- vscMrg obsv $ map (knownObsDischarge obsv) cnsqTVSC
-       let cnsqSC' = (cnsqTVSC',cnsqFvs)
+scDischarge obsv anteSC@(anteVSC,anteFvs) cnsqSC@(cnsqVSC,cnsqFvs)
+  = do cnsqVSC' <- vscMrg obsv $ map (knownObsDischarge obsv) cnsqVSC
+       let cnsqSC' = (cnsqVSC',cnsqFvs)
        if isTrivialSC cnsqSC' then return scTrue
        else if isTrivialSC anteSC then return cnsqSC'
-       else do vsc' <- scDischarge' obsv anteTVSC cnsqTVSC'
+       else do vsc' <- scDischarge' obsv anteVSC cnsqVSC'
                freshDischarge obsv anteFvs cnsqFvs vsc'
     
 vscMrg obs [] = return []
@@ -825,8 +825,8 @@ vscMrg obs (vsc:vscs) = mrgTVarConds obs vsc vscs
 
 \begin{code}
 knownObsDischarge :: VarSet -> VarSideConds -> VarSideConds
-knownObsDischarge obs ( TVSC gv vsD uvsC uvsCd )
-                    =   TVSC gv vsD uvsC (obsDischarge obs gv uvsCd)
+knownObsDischarge obs ( VSC gv vsD uvsC uvsCd )
+                    =   VSC gv vsD uvsC (obsDischarge obs gv uvsCd)
 \end{code}
 Discharging dynamic coverage  ($Cd \supseteq_a V$).
 Here $V \notin Cd$ or else this would have collapsed to $\true$ earlier.
@@ -849,8 +849,8 @@ scDischarge'  :: MonadFail m => VarSet
               -> m [VarSideConds]
 scDischarge' _ _ []      =  return []     --  discharged
 scDischarge' _ [] vscL  =  return vscL  --  not discharged
-scDischarge' obsv        (vscG@(TVSC gvG _ _ _):restG) 
-                  vscLs@(vscL@(TVSC gvL _ _ _):restL)
+scDischarge' obsv        (vscG@(VSC gvG _ _ _):restG) 
+                  vscLs@(vscL@(VSC gvL _ _ _):restL)
   | gvG < gvL  =  scDischarge' obsv restG vscLs -- vscG not needed
   | gvG > gvL  =  do -- nothing available to discharge vscL
                      rest' <- scDischarge' obsv restG restL
@@ -904,7 +904,7 @@ A translated law side-condition of the form $\emptyset \supseteq v$,
 where $v$ is a standard variable.
 This is simply false.
 \begin{code}
-vscDischarge _ _ (TVSC (StdVar (Vbl _ ObsV _)) dL _ _)
+vscDischarge _ _ (VSC (StdVar (Vbl _ ObsV _)) dL _ _)
   | S.null dL  =  fail ("Empty set cannot cover a standard obs. variable")
 \end{code}
 
@@ -939,7 +939,7 @@ $C_G \supseteq V \discharges D_L \disj V $
 discharge rule further below.
 
 \begin{code}
-vscDischarge obsv (TVSC gv vsDG uvsCG uvsCdG) (TVSC _ vsDL uvsCL uvsCdL)
+vscDischarge obsv (VSC gv vsDG uvsCG uvsCdG) (VSC _ vsDL uvsCL uvsCdL)
   = do  vsD'    <- ddDischarge obsv vsDG   vsDL
         vsD''   <- cdDischarge obsv uvsCG  vsD'
         vsD'''  <- cdDischarge obsv uvsCdG vsD''
@@ -950,7 +950,7 @@ vscDischarge obsv (TVSC gv vsDG uvsCG uvsCdG) (TVSC _ vsDL uvsCL uvsCdL)
         uvsCd'  <- ccDischarge obsv uvsCdG uvsCdL
         uvsCd'' <- dcDischarge obsv vsDG   uvsCd'
 
-        return $ TVSC gv vsD''' uvsC'' (obsDischarge obsv gv uvsCd'')
+        return $ VSC gv vsD''' uvsC'' (obsDischarge obsv gv uvsCd'')
 \end{code}
 
 \newpage
@@ -1090,7 +1090,7 @@ based on the idea that $G_F \disj V$ by construction
    &\mapsto&  Cd_L \setminus G_F \supseteq_a V
 \end{eqnarray*}
 \begin{code}
-freshTVarDischarge obsv gF (TVSC gv vsD uvsC uvsCd)
+freshTVarDischarge obsv gF (VSC gv vsD uvsC uvsCd)
   | vsc' == vscTrue gv  =  return []
   | otherwise  =  return [vsc']
   where
@@ -1100,7 +1100,7 @@ freshTVarDischarge obsv gF (TVSC gv vsD uvsC uvsCd)
     uvsCd' = if gv `S.member` obsv
              then uvsCd `udiff` uvsgF
              else Nothing
-    vsc' = TVSC gv vsD' uvsC' uvsCd'
+    vsc' = VSC gv vsD' uvsC' uvsCd'
 \end{code}
 
 \newpage
@@ -1112,8 +1112,8 @@ then we need to check that \emph{all} the term variable side-conditions in that 
 mention variables that are marked as ``floating''.
 Only these can possibly be instantiated to satisfy the residual side-condition.
 \begin{code}
-isFloatingTVSC :: VarSideConds -> Bool
-isFloatingTVSC (TVSC  gv vsD uvsC uvsCd)
+isFloatingVSC :: VarSideConds -> Bool
+isFloatingVSC (VSC  gv vsD uvsC uvsCd)
   = isFloatingGVar gv || 
     ( hasFloating vsD && hasFloatingM uvsC && hasFloatingM uvsCd )
 hasFloating :: VarSet -> Bool
@@ -1130,7 +1130,7 @@ hasFloatingM (Just vs) = hasFloating vs
 % if instantiated properly.
 % \begin{code}
 % tolerateAutoOrNull :: VarSet -> VarSideConds -> Bool
-% tolerateAutoOrNull unbound (TVSC _ vsD uvsC uvsCd) 
+% tolerateAutoOrNull unbound (VSC _ vsD uvsC uvsCd) 
 % =  unbound `overlaps` vsD
 % tolerateAutoOrNull unbound (CoveredBy _  _ c)   =  S.null c || unbound `overlaps` c
 % tolerateAutoOrNull _       _              =  False
@@ -1204,7 +1204,7 @@ findCoveredGenVar :: MonadFail m => GenVar -> SideCond -> m VarSet
 findCoveredGenVar gv ( vscs, _ ) = findCGV gv vscs
 
 findCGV gv []         =  fail ("Covered "++show gv ++ " not found")
-findCGV gv ((TVSC gv' _ (Just vs) _):vscs)
+findCGV gv ((VSC gv' _ (Just vs) _):vscs)
   | gv == gv'         =  return vs
 findCGV gv (_:vscs)  =  findCGV gv vscs
 \end{code}
@@ -1260,7 +1260,7 @@ genTheGenVars (LstVar (LVbl (Vbl i vc _) is js)) ss
 
 
 % First, given a variable-set,
-% return all TVSCs that mention any variable in that set:
+% return all VSCs that mention any variable in that set:
 % \begin{code}
 % -- NOT USED ANYWHERE!
 % citingASCs :: VarSet -> SideCond -> [VarSideConds]

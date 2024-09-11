@@ -893,7 +893,7 @@ basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
         scPinC <- instantiateSC ictxt fbind scP
         scD <- scDischarge (getDynamicObservables vts) scC scPinC
 
-        if all isFloatingTVSC (fst scD)
+        if all isFloatingVSC (fst scD)
           then do mrepl <- instantiate ictxt fbind repl
                   return $ MT n (unwrapASN asn) (chkPatn mc partsP)
                               fbind repl scC scPinC mrepl

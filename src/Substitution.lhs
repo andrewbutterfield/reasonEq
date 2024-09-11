@@ -621,7 +621,7 @@ $$
 We have to check this for all $T/V$ pairs in the substitution.
 \begin{code}
 vscSimplify :: VarSideConds -> GenVar -> Substn -> Substn
-vscSimplify (TVSC _ vsD mvsC mvsCd) gv sub  
+vscSimplify (VSC _ vsD mvsC mvsCd) gv sub  
   =  mSimp mvsCd $ mSimp mvsC $ targetsCheck not vsD sub
   where 
     mSimp Nothing sub    =  sub

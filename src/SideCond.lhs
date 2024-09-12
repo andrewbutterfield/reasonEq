@@ -523,63 +523,59 @@ scVarSet (vscs,fvs) = (S.unions $ map vscVSet vscs) `S.union` fvs
 \end{code}
 
 
-
+\newpage
 \section{Merging Side-Conditions}
 
 The list of VSCs
 is kept ordered by the \texttt{GenVar} component,
 and any given such variable occurs at most once.
-
-
 The function \texttt{mrgVarConds} below is the ``approved'' way
 to generate side-conditions,
 by merging them in, one at a time,
 into a pre-existing list ordered and structured as described above.
-
-
-
 \begin{code}
-mrgVarConds :: MonadFail m => VarSet
-           -> VarSideConds -> [VarSideConds] -> m [VarSideConds]
+mrgVarConds :: MonadFail m 
+            => VarSet -> VarSideConds -> [VarSideConds] -> m [VarSideConds]
 \end{code}
-\textbf{Invariant}
-Given \texttt{mrgVarConds obs vsc vscs}
-we have that 
-for all \texttt{vsc'} in \texttt{vscs}
- that 
-\texttt{vscCheck obsv vsc' == Just vsc'}.
+\textbf{Invariant}\\
+For \texttt{mrgVarConds obs vsc vscs} we have:\\
+\texttt{vscs} is ordered, and\\
+for all \texttt{vsc'} in \texttt{vscs}\\
+that \texttt{vscCheck obsv vsc' == Just vsc'}.
 
 
-1st VSC is easy:
+We start by checking the new VCS:
 \begin{code}
-mrgVarConds obsv vsc []
+mrgVarConds obsv vsc vscs
   = do masc <- vscCheck obsv vsc
        case masc of
-         Nothing ->  return [] -- vsc is in fact true
-         Just vsc' -> return [vsc']
+         Nothing    ->  return vscs -- vsc is in fact true
+         Just vsc'  ->  mrgVSC obsv vsc' vscs
 \end{code}
 
-Subsequent ones mean searching to see if there are already VSCs with the
-same general-variable:
+Now we search to see if there is a VSCs with the
+same general-variable, respecting the ordering:
 \begin{code}
-mrgVarConds obsv vsc (vsc1:vscs)
-  | termVar vsc == termVar vsc1
-    = do  masc <- vscCheck obsv vsc
-          case masc of
-            Nothing
-              ->  return vscs
-            Just vsc'
-              ->  case mrgSameGVSC obsv vsc' vsc1 of
-                    Nothing            -> fail "mgrTVarConds: false s.c."
-                    Just Nothing       -> return vscs -- mrg is true 
-                    Just (Just vsc'') -> return (vsc'':vscs)
-  | otherwise 
-    = do  vscs' <- mrgVarConds obsv vsc1 vscs
-          return (vsc:vscs')
-\end{code}
-\textbf{We DONT vscCheck vsc if list head has different var}
+mrgVSC :: MonadFail m 
+       => VarSet -> VarSideConds -> [VarSideConds] -> m [VarSideConds]
 
-\subsection{Merging one VSC with relevant others}
+mrgVSC obsv vsc' []  = return [vsc']
+
+mrgVSC obsv vsc' vscs@(vsc1:vscs')
+  | v' < v1  =  return (vsc':vscs)
+  | v' > v1  =  do vscs'' <- mrgVSC obsv vsc' vscs'
+                   return ( vsc1 : vscs'' )
+  | otherwise -- v' == v1
+    = do  case mrgSameGVSC obsv vsc' vsc1 of
+            Nothing            -> fail "mgrTVarConds: false s.c."
+            Just Nothing       -> return vscs' -- mrg is true 
+            Just (Just vsc'') -> return (vsc'':vscs')
+  where
+    v' = termVar vsc'
+    v1 = termVar vsc1
+\end{code}
+
+\subsection{Merging two (checked) VSCs}
 
 Now, merging an VSC in with another VSC referring to the same general variable:
 \begin{code}
@@ -593,7 +589,7 @@ mrgSameGVSC obsv (VSC gv vsD1 uvsC1 uvsCd1) (VSC _ vsD2 uvsC2 uvsCd2)
     in vscCheck obsv (VSC gv vsD' uvsC' uvsCd')
 \end{code}
 
-
+\newpage
 \subsection{VSC Merge Laws}
 
 We have the following interactions,

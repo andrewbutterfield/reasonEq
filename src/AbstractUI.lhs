@@ -742,7 +742,7 @@ extendGoalSCCoverage obsv lvvls (tvarSCs,_)
              -- ss = S.elems $ S.map theSubscript $ S.filter isDuring
              --              $ S.map gvarWhen $ mentionedVars conj
 
-         = do vscs' <- mrgTVarConds obsv justcov vscs  
+         = do vscs' <- mrgVarConds obsv justcov vscs  
               xtndCoverage obsv ffvls vscs' rest
       | otherwise  =  xtndCoverage obsv ffvls vscs rest
       where 

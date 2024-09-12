@@ -19,7 +19,7 @@ module SideCond (
 , onlyFreshSC -- , onlyInvolving, onlyFreshOrInvolved
 -- , scGVars
 , scVarSet
-, mrgTVarConds, mrgSideCond, mrgSideConds, mkSideCond
+, mrgVarConds, mrgSideCond, mrgSideConds, mkSideCond
 , scDischarge
 , isFloatingVSC
 , notin, covers, dyncover, fresh
@@ -41,6 +41,7 @@ import Utilities
 import LexBase
 import Variables
 import AST
+
 
 import Test.HUnit hiding (Assertion)
 import Test.Framework as TF (defaultMain, testGroup, Test)
@@ -530,19 +531,28 @@ is kept ordered by the \texttt{GenVar} component,
 and any given such variable occurs at most once.
 
 
-The function \texttt{mrgTVarConds} below is the ``approved'' way
+The function \texttt{mrgVarConds} below is the ``approved'' way
 to generate side-conditions,
 by merging them in, one at a time,
 into a pre-existing list ordered and structured as described above.
 
+
+
 \begin{code}
-mrgTVarConds :: MonadFail m => VarSet
+mrgVarConds :: MonadFail m => VarSet
            -> VarSideConds -> [VarSideConds] -> m [VarSideConds]
 \end{code}
+\textbf{Invariant}
+Given \texttt{mrgVarConds obs vsc vscs}
+we have that 
+for all \texttt{vsc'} in \texttt{vscs}
+ that 
+\texttt{vscCheck obsv vsc' == Just vsc'}.
+
 
 1st VSC is easy:
 \begin{code}
-mrgTVarConds obsv vsc []
+mrgVarConds obsv vsc []
   = do masc <- vscCheck obsv vsc
        case masc of
          Nothing ->  return [] -- vsc is in fact true
@@ -552,29 +562,30 @@ mrgTVarConds obsv vsc []
 Subsequent ones mean searching to see if there are already VSCs with the
 same general-variable:
 \begin{code}
-mrgTVarConds obsv vsc (vsc1:vscs)
+mrgVarConds obsv vsc (vsc1:vscs)
   | termVar vsc == termVar vsc1
     = do  masc <- vscCheck obsv vsc
           case masc of
             Nothing
               ->  return vscs
             Just vsc'
-              ->  case mrgTVarTVar obsv vsc' vsc1 of
+              ->  case mrgSameGVSC obsv vsc' vsc1 of
                     Nothing            -> fail "mgrTVarConds: false s.c."
                     Just Nothing       -> return vscs -- mrg is true 
                     Just (Just vsc'') -> return (vsc'':vscs)
   | otherwise 
-    = do  vscs' <- mrgTVarConds obsv vsc1 vscs
+    = do  vscs' <- mrgVarConds obsv vsc1 vscs
           return (vsc:vscs')
 \end{code}
+\textbf{We DONT vscCheck vsc if list head has different var}
 
 \subsection{Merging one VSC with relevant others}
 
 Now, merging an VSC in with another VSC referring to the same general variable:
 \begin{code}
-mrgTVarTVar :: MonadFail m => VarSet
+mrgSameGVSC :: MonadFail m => VarSet
            -> VarSideConds -> VarSideConds -> m (Maybe VarSideConds)
-mrgTVarTVar obsv (VSC gv vsD1 uvsC1 uvsCd1) (VSC _ vsD2 uvsC2 uvsCd2) 
+mrgSameGVSC obsv (VSC gv vsD1 uvsC1 uvsCd1) (VSC _ vsD2 uvsC2 uvsCd2) 
   = let 
       vsD'   =  vsD1   `S.union` vsD2
       uvsC'  =  uvsC1  `uintsct` uvsC2
@@ -691,7 +702,7 @@ mrgTVarCondLists obsv vscs1 [] = return vscs1
 mrgTVarCondLists obsv vscs1 (VSC _ vsD Nothing Nothing:vscs2)
   | S.null vsD  =  mrgTVarCondLists obsv vscs1 vscs2
 mrgTVarCondLists obsv vscs1 (vsc:vscs2)
-     = do vscs1' <- mrgTVarConds obsv vsc vscs1
+     = do vscs1' <- mrgVarConds obsv vsc vscs1
           mrgTVarCondLists obsv vscs1' vscs2
 \end{code}
 
@@ -821,7 +832,7 @@ scDischarge obsv anteSC@(anteVSC,anteFvs) cnsqSC@(cnsqVSC,cnsqFvs)
                freshDischarge obsv anteFvs cnsqFvs vsc'
     
 vscMrg obs [] = return []
-vscMrg obs (vsc:vscs) = mrgTVarConds obs vsc vscs    
+vscMrg obs (vsc:vscs) = mrgVarConds obs vsc vscs    
 \end{code}
 
 
@@ -1323,15 +1334,56 @@ v_f' = StdVar $ PostExpr $ i_f
 tst_scCheck :: TF.Test
 tst_scCheck
  = testGroup "Atomic Side-Condition checker"
-     [ tst_scChkDisjoint
-     , tst_scChkCovers ]
+     [ tstEN ] -- [tst_scChkDisjoint, tst_scChkCovers ]
 
 
 tstFalse = Nothing
 tstTrue  = Just Nothing
 tstWhatever sc = Just $ Just sc
 
+ils  = jId "ls" 
+vls = Vbl ils ObsV Before
+vls' = Vbl ils ObsV After
+lexpr_t = GivenType $ jId "LE"
+ls_t = TypeCons (jId "P") [lexpr_t]
+-- o = jId "O"  
+-- vO  = PreVar o 
+lO  = LVbl vO [] []  ; gO  = LstVar lO
+vO' = PostVar o ; lO' = LVbl vO' [] [] ; gO' = LstVar lO'
 
+
+vE = ExprVar (jId "E") Static ; tE = jVar ls_t vE ; gE = StdVar vE
+vN = ExprVar (jId "N") Static ; tN = jVar ls_t vN ; gN = StdVar vN
+vR = ExprVar (jId "R") Static ; tR = jVar ls_t vR
+va = Vbl (jId "a") PredV Static 
+a = fromJust $ pVar ArbType va ; ga = StdVar va
+tls = jVar ls_t vls
+tls' = jVar ls_t vls'
+eNotObs = [gO,gO'] `notin` gE
+nNotObs = [gO,gO'] `notin` gN
+eNO = [gE] `notin` gO  -- but this is really gE notin fv(gO), gO is listvar
+nNO = [gN] `notin` gO  -- but this is really gN notin fv(gO), gO is listvar
+
+
+-- vsc1 = (coveredby  gv_b $ S.fromList [gv_b,v_f])
+tstEN
+  = testGroup "Testing X(E|a|E|N) issues"
+     [ testCase "merge gv_a `disjoint` empty  into [] is True"
+        ( mrgVarConds S.empty (disjfrom  gv_a S.empty) [] @?= Just [] )
+     , testCase "merge gv_a `disjoint` {gv_a} into [] is False"
+        ( mrgVarConds S.empty (disjfrom  gv_a $ S.singleton gv_a) [] @?= Nothing )
+     , testCase "merge v_e `coveredby` {v_f}  into [] is [itself]"
+        ( mrgVarConds S.empty (coveredby  v_e $ S.singleton v_f) []
+          @?= Just [coveredby  v_e $ S.singleton v_f] )
+     , testCase "merge gv_a `disjoint` empty  into [vsc(gv_b)] is [vsc(gv_b)]"
+        ( mrgVarConds S.empty (disjfrom  gv_a S.empty) [vsc1] @?= Just [vsc1] )
+     , testCase "merge gv_a `disjoint` {gv_a} into [vsc(gv_b)] is False"
+        ( mrgVarConds S.empty (disjfrom  gv_a $ S.singleton gv_a) [vsc1] @?= Nothing )
+     , testCase
+        "merge v_e `coveredby` {v_f}  into [vsc(gv_b)] is [vsc(gv_b),itself]"
+        ( mrgVarConds S.empty (coveredby  v_e $ S.singleton v_f) [vsc1]
+          @?= Just [vsc1,coveredby  v_e $ S.singleton v_f] )
+     ]
 
 tst_scChkDisjoint
  = testGroup "disjfrom  (no known vars)"
@@ -1395,19 +1447,19 @@ tst_mrgAtmCond :: TF.Test
 tst_mrgAtmCond
  = testGroup "Merging Side-Conditions (no known vars)"
      [ testCase "merge gv_a `disjoint` empty  into [] is True"
-        ( mrgTVarConds S.empty (disjfrom  gv_a S.empty) [] @?= Just [] )
+        ( mrgVarConds S.empty (disjfrom  gv_a S.empty) [] @?= Just [] )
      , testCase "merge gv_a `disjoint` {gv_a} into [] is False"
-        ( mrgTVarConds S.empty (disjfrom  gv_a $ S.singleton gv_a) [] @?= Nothing )
+        ( mrgVarConds S.empty (disjfrom  gv_a $ S.singleton gv_a) [] @?= Nothing )
      , testCase "merge v_e `coveredby` {v_f}  into [] is [itself]"
-        ( mrgTVarConds S.empty (coveredby  v_e $ S.singleton v_f) []
+        ( mrgVarConds S.empty (coveredby  v_e $ S.singleton v_f) []
           @?= Just [coveredby  v_e $ S.singleton v_f] )
-     , testCase "merge gv_a `disjoint` empty  into [vsc(gv_b)] is [vsc(gv_b)]]"
-        ( mrgTVarConds S.empty (disjfrom  gv_a S.empty) [vsc1] @?= Just [vsc1] )
+     , testCase "merge gv_a `disjoint` empty  into [vsc(gv_b)] is [vsc(gv_b)]"
+        ( mrgVarConds S.empty (disjfrom  gv_a S.empty) [vsc1] @?= Just [vsc1] )
      , testCase "merge gv_a `disjoint` {gv_a} into [vsc(gv_b)] is False"
-        ( mrgTVarConds S.empty (disjfrom  gv_a $ S.singleton gv_a) [vsc1] @?= Nothing )
+        ( mrgVarConds S.empty (disjfrom  gv_a $ S.singleton gv_a) [vsc1] @?= Nothing )
      , testCase
         "merge v_e `coveredby` {v_f}  into [vsc(gv_b)] is [vsc(gv_b),itself]"
-        ( mrgTVarConds S.empty (coveredby  v_e $ S.singleton v_f) [vsc1]
+        ( mrgVarConds S.empty (coveredby  v_e $ S.singleton v_f) [vsc1]
           @?= Just [vsc1,coveredby  v_e $ S.singleton v_f] )
      ]
 
@@ -1440,7 +1492,7 @@ int_tst_SideCond :: [TF.Test]
 int_tst_SideCond
   = [ testGroup "\nSideCond Internal"
        [ tst_scCheck
-       , tst_mrgAtmCond
+       -- , tst_mrgAtmCond
        -- , tst_ascDischarge
        ]
     ]

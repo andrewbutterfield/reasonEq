@@ -3,6 +3,37 @@
 ## URGENT
 
 
+```
+vsc1 = (coveredby  gv_b $ S.fromList [gv_b,v_f])
+
+testCase "merge gv_a `disjoint` empty  into [vsc(gv_b)] is [vsc(gv_b)]"
+    ( mrgVarConds 
+        S.empty 
+        (disjfrom  gv_a S.empty) 
+        [coveredby  gv_b $ S.fromList [gv_b,v_f]] 
+        @?= Just [coveredby  gv_b $ S.fromList [gv_b,v_f]] 
+        )
+
+(a `disj` empty)  `mrg` [(b `coveredby` {b,f})] 
+ = << V `disj` empty = True >> 
+True `mrg` [(b `coveredby` {b,f})]
+ = << True `mrg` vcs = vcs >>
+[(b `coveredby` {b,f})]
+
+merge gv_a `disjoint` empty  into [vsc(gv_b)] is [vsc(gv_b)]: [Failed]
+expected: 
+  Just 
+    [ VSC (GV (VR (Id "b" 0,VO,WB))) 
+          (fromList []) 
+          (Just (fromList 
+                   [GV (VR (Id "b" 0,VO,WB)),GV (VR (Id "f" 0,VE,WB))]
+          )) 
+          Nothing
+    ]
+ but got: Nothing
+
+```
+
 We know we need to capture that E,R,N do not overlap with O$,O$'
 
 `[gO,gO'] `notin` gE` says `O$,O$' ∉ E`, but we really want `E ∉ O$,O$'`,

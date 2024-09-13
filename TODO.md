@@ -19,7 +19,13 @@ testCase "gv_a `disjoint` {v_f} stands"
       gv_a `disjoint` {v_f} stands: [Failed]
 expected: Just (Just (VSC (GV (VR (Id "a" 0,VO,WB))) (fromList [GV (VR (Id "f" 0,VE,WB))]) Nothing Nothing))
  but got: Just Nothing
+```
 
+### Relevant definitions
+
+```
+covByTrue = Nothing
+gv `disjfrom` vs  =  VSC gv vs  covByTrue covByTrue
 ```
 
 We know we need to capture that E,R,N do not overlap with O$,O$'

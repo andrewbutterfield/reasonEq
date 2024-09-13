@@ -1330,7 +1330,7 @@ v_f' = StdVar $ PostExpr $ i_f
 tst_scCheck :: TF.Test
 tst_scCheck
  = testGroup "Atomic Side-Condition checker"
-     [ tstEN ] -- [tst_scChkDisjoint, tst_scChkCovers ]
+     [tst_scChkDisjoint, tst_scChkCovers ]
 
 
 tstFalse = Nothing
@@ -1487,9 +1487,10 @@ test_DisjDischarge
 int_tst_SideCond :: [TF.Test]
 int_tst_SideCond
   = [ testGroup "\nSideCond Internal"
-       [ tst_scCheck
-       -- , tst_mrgAtmCond
-       -- , tst_ascDischarge
+       [ 
+         tst_scCheck
+       , tst_mrgAtmCond
+       , tst_ascDischarge
        ]
     ]
 \end{code}

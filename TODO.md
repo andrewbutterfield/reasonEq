@@ -2,35 +2,23 @@
 
 ## URGENT
 
+### TestCode
 
 ```
-vsc1 = (coveredby  gv_b $ S.fromList [gv_b,v_f])
+tstWhatever = Just . Just 
+v_f  = StdVar $ PreExpr  $ i_f
+gv_a =  StdVar $ PreVar $ i_a
+testCase "gv_a `disjoint` {v_f} stands"
+       ( vscCheck S.empty (disjfrom  gv_a $ S.singleton v_f)
+         @?= tstWhatever  (disjfrom  gv_a $ S.singleton v_f) )
+```
 
-testCase "merge gv_a `disjoint` empty  into [vsc(gv_b)] is [vsc(gv_b)]"
-    ( mrgVarConds 
-        S.empty 
-        (disjfrom  gv_a S.empty) 
-        [coveredby  gv_b $ S.fromList [gv_b,v_f]] 
-        @?= Just [coveredby  gv_b $ S.fromList [gv_b,v_f]] 
-        )
+### Test Output
 
-(a `disj` empty)  `mrg` [(b `coveredby` {b,f})] 
- = << V `disj` empty = True >> 
-True `mrg` [(b `coveredby` {b,f})]
- = << True `mrg` vcs = vcs >>
-[(b `coveredby` {b,f})]
-
-merge gv_a `disjoint` empty  into [vsc(gv_b)] is [vsc(gv_b)]: [Failed]
-expected: 
-  Just 
-    [ VSC (GV (VR (Id "b" 0,VO,WB))) 
-          (fromList []) 
-          (Just (fromList 
-                   [GV (VR (Id "b" 0,VO,WB)),GV (VR (Id "f" 0,VE,WB))]
-          )) 
-          Nothing
-    ]
- but got: Nothing
+```
+      gv_a `disjoint` {v_f} stands: [Failed]
+expected: Just (Just (VSC (GV (VR (Id "a" 0,VO,WB))) (fromList [GV (VR (Id "f" 0,VE,WB))]) Nothing Nothing))
+ but got: Just Nothing
 
 ```
 

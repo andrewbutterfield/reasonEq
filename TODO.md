@@ -17,7 +17,12 @@ testCase "gv_a `disjoint` {v_f} stands"
 
 ```
       gv_a `disjoint` {v_f} stands: [Failed]
-expected: Just (Just (VSC (GV (VR (Id "a" 0,VO,WB))) (fromList [GV (VR (Id "f" 0,VE,WB))]) Nothing Nothing))
+expected: 
+  Just (Just 
+    (VSC (GV (VR (Id "a" 0,VO,WB))) 
+         (fromList [GV (VR (Id "f" 0,VE,WB))]) 
+         Nothing Nothing
+    ))
  but got: Just Nothing
 ```
 
@@ -25,8 +30,56 @@ expected: Just (Just (VSC (GV (VR (Id "a" 0,VO,WB))) (fromList [GV (VR (Id "f" 0
 
 ```
 covByTrue = Nothing
-gv `disjfrom` vs  =  VSC gv vs  covByTrue covByTrue
+gv `disjfrom` vs  =  VSC gv vs covByTrue covByTrue
 ```
+
+### Code Evaluation
+
+```
+vscCheck S.empty (disjfrom  gv_a $ S.singleton v_f)
+  =* vscCheck {} (VSC gv_a {v_f} Nothing Nothing)
+  =* do vsD'   <- disjointCheck  {} gv_a {v_f}
+        uvsC'  <- coveredByCheck {} gv_a Nothing
+        uvsCd' <- dynCvrgCheck   {} gv_a Nothing
+        return $ mkVSC gv vsD' uvsC' uvsCd'
+  =* do vsD'   <- disjointCheck  {} gv_a {v_f}
+        return $ mkVSC gv_a vsD' Nothing Nothing
+```
+
+Looking at `disjointCheck`:
+
+```
+disjointCheck  {} gv_a {v_f}
+  =* disjointCheck obsv gv_a {v_f}
+       | S.null {v_f}                     =  return disjTrue
+       | not (gvwhen `S.member` vsDwhen)  =  return disjTrue
+       | not $ isObsGVar gv_a             =  return {v_f}
+       | gv_a `S.member` {v_f}            =  report "..."
+       | all isStdV    {v_f}              =  return disjTrue
+       | otherwise                        =  return vsD
+       where
+        gvwhen = gvarWhen gv_a
+        vsDwhen = S.map gvarWhen {v_f}
+        showsv = "gv = "++show gv_a
+        showvs = "vsD = "++show {v_f}
+        report msg = fail $ unlines' [msg,showsv,showvs]
+  =*   | S.null {v_f}                     =  return disjTrue   -- FALSE
+       | not (Before `S.member` {Before}) =  return disjTrue   -- FALSE
+       | not $ isObsGVar gv_a             =  return {v_f}      -- FALSE
+       | gv_a `S.member` {v_f}            =  report "..."      -- FALSE
+       | all isStdV    {v_f}              =  return disjTrue   -- TRUE
+       | otherwise                        =  return vsD
+       where
+        Before = gvarWhen gv_a
+        {Before} = S.map gvarWhen {v_f}
+        showsv = "gv = "++show gv_a
+        showvs = "vsD = "++show {v_f}
+        report msg = fail $ unlines' [msg,showsv,showvs]
+```
+
+**TEST IS RIGHT, CODE IS WRONG**
+
+
 
 We know we need to capture that E,R,N do not overlap with O$,O$'
 

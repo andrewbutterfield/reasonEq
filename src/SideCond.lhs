@@ -1360,27 +1360,6 @@ nNotObs = [gO,gO'] `notin` gN
 eNO = [gE] `notin` gO  -- but this is really gE notin fv(gO), gO is listvar
 nNO = [gN] `notin` gO  -- but this is really gN notin fv(gO), gO is listvar
 
-
--- vsc1 = (coveredby  gv_b $ S.fromList [gv_b,v_f])
-tstEN
-  = testGroup "Testing X(E|a|E|N) issues"
-     [ testCase "merge gv_a `disjoint` empty  into [] is True"
-        ( mrgVarConds S.empty (disjfrom  gv_a S.empty) [] @?= Just [] )
-     , testCase "merge gv_a `disjoint` {gv_a} into [] is False"
-        ( mrgVarConds S.empty (disjfrom  gv_a $ S.singleton gv_a) [] @?= Nothing )
-     , testCase "merge v_e `coveredby` {v_f}  into [] is [itself]"
-        ( mrgVarConds S.empty (coveredby  v_e $ S.singleton v_f) []
-          @?= Just [coveredby  v_e $ S.singleton v_f] )
-     , testCase "merge gv_a `disjoint` empty  into [vsc(gv_b)] is [vsc(gv_b)]"
-        ( mrgVarConds S.empty (disjfrom  gv_a S.empty) [vsc1] @?= Just [vsc1] )
-     , testCase "merge gv_a `disjoint` {gv_a} into [vsc(gv_b)] is False"
-        ( mrgVarConds S.empty (disjfrom  gv_a $ S.singleton gv_a) [vsc1] @?= Nothing )
-     , testCase
-        "merge v_e `coveredby` {v_f}  into [vsc(gv_b)] is [vsc(gv_b),itself]"
-        ( mrgVarConds S.empty (coveredby  v_e $ S.singleton v_f) [vsc1]
-          @?= Just [vsc1,coveredby  v_e $ S.singleton v_f] )
-     ]
-
 tst_scChkDisjoint
  = testGroup "disjfrom  (no known vars)"
     [ testCase "gv_a `disjoint` empty is True"

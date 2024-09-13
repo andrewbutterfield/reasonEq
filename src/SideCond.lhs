@@ -236,7 +236,7 @@ and instead will use $\lst O \supseteq T$.
 
 \begin{code}
 data  VarSideConds -- (T,D,C,C_d)
-  = VSC  GenVar        --  T
+  = VSC  GenVar        --  T,l$
           VarSet        --  D
           UVarSet  --  U  | C
           UVarSet  --  Ud | Cd
@@ -253,7 +253,7 @@ coveredDynamic (VSC gv vsD uvsC uvsCd)  =  uvsCd
 
 disjTrue = S.empty
 covByTrue = Nothing
-vscTrue t = VSC t disjTrue covByTrue covByTrue
+vscTrue gv = VSC gv disjTrue covByTrue covByTrue
 \end{code}
 
 We need a smart builder here to handle all being true:
@@ -299,24 +299,13 @@ gv `udyncovered` (Just vs)  =  gv `dyncovered` vs
 What we have are relations $R$ between a general variable $g$
 and a set of general variables $V$:
 \begin{eqnarray*}
-   R &:& \Set(GVar) \times GVar \fun \Bool
+   R &:& GVar \times \Set(GVar) \fun \Bool
 \end{eqnarray*}
 
 Here we provide a monadic function that fails if the condition
 is demonstrably false,
 and otherwise returns a \texttt{Maybe} type,
 where \texttt{Nothing} denotes a condition that is demonstrably true.
-
-We need to do this in general
-in the context of what is know about variables,
-based on just the variables themselves (class and temporality, but no var-data!).
-Here, $z$ denotes an (standard) observation variable,
-$\lst\ell$ denotes a list variable,
-$T$ denotes a standard term variable,
-and $g$ denotes  $z$, $\lst\ell$, or $T$.
-We also use the case conventions described earlier ($P, p, p'$).
-In addition $DO$ represents dynamic observables
-(not necessarily elements of $O \cup O'$ !).
 
 \begin{code}
 mscTrue = Nothing
@@ -329,42 +318,30 @@ vscCheck obsv (VSC gv vsD uvsC uvsCd)
         return $ mkVSC gv vsD' uvsC' uvsCd'
 \end{code}
 
+The key trick is to take \m{g ~R~ \setof{g_1,\dots,g_n}}
+and break it down into individual comparisons (\m{g ~R~ \setof{g_i}}).
+
 
 \subsubsection{Checking Disjoint $ V \disj g$}
 
-First, remember the underlying interpretation:
-\begin{eqnarray*}
-   V \disj z &\equiv&  z \notin V
-\\ V \disj P &\equiv&  V \cap \fv(P) = \emptyset
-\\ V \disj p &\equiv&  V \cap \fv(p) = \emptyset
-\\ V \disj p' &\equiv&  V \cap \fv(p') = \emptyset
-\\ V \disj \lst\ell &\equiv&  V \cap \lst\ell = \emptyset
-\end{eqnarray*}
-We note that $g \in V$ 
-where $g$ is not static ($T,P,E$) 
-allows us to immediately return false.
-Note that we cannot deduce (here) that $T \disj T$ is false,
-because $\fv(T)$ could correspond to the empty set.
-Nor can we assume $\setof{T} \disj z$ is false, 
-because $\fv(T)$ could contain $z$.
-If the temporality of everything in $V$ 
-differs from the temporality of $g$ then we can always return true.
+Here, \m{g \disj \setof{g_1,\dots,g_n}}
+reduces to \m{\bigwedge_{i \in 1\dots n}(g \disj \setof{g_i})}.
+
 \begin{code}
 disjointCheck  :: MonadFail m 
                => VarSet -> GenVar -> VarSet -> m VarSet
-disjointCheck obsv gv vsD
-  | S.null vsD                       =  return disjTrue
-  | not (gvwhen `S.member` vsDwhen)  =  return disjTrue
-  | not $ isObsGVar gv               =  return vsD
-  | gv `S.member` vsD                =  report "tvar disjoint fails"
-  | all isStdV    vsD                =  return disjTrue
-  | otherwise                        =  return vsD
-  where
-    gvwhen = gvarWhen gv
-    vsDwhen = S.map gvarWhen vsD
-    showsv = "gv = "++show gv
-    showvs = "vsD = "++show vsD
-    report msg = fail $ unlines' [msg,showsv,showvs]
+disjointCheck obs gv vsD
+  = disjCheck obs gv S.empty $ S.toList vsD
+
+
+disjCheck :: MonadFail m
+        => VarSet -> GenVar -> VarSet -> [GenVar] -> m VarSet
+disjCheck obs gv vsd [] = return vsd
+disjCheck obs gv vsd (gvd:gvs) = do
+  vsd' <- disjChk obs gvd $ sort [gv,gvd]
+  disjCheck obs gv (vsd `S.union` vsd') gvs
+
+disjChk obs gvd [gv1,gv2] = return $ S.singleton gvd -- for now
 \end{code}
 
 \newpage

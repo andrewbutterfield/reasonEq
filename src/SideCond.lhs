@@ -337,11 +337,31 @@ disjointCheck obs gv vsD
 disjCheck :: MonadFail m
         => VarSet -> GenVar -> VarSet -> [GenVar] -> m VarSet
 disjCheck obs gv vsd [] = return vsd
-disjCheck obs gv vsd (gvd:gvs) = do
-  vsd' <- disjChk obs gvd $ sort [gv,gvd]
-  disjCheck obs gv (vsd `S.union` vsd') gvs
+disjCheck obs gv@(StdVar v1@(ObsVar _ _)) vsd ((StdVar v2@(ObsVar _ _)):gvs)
+  | v1 == v2   =  fail "disjCheck: same variable"
+  | otherwise  =  disjCheck obs gv vsd gvs
+disjCheck obs gv vsd (gvd:gvs)
+  = do  vsd'  <-  if gv < gvd then disjChk obs gvd gv gvd
+                              else disjChk obs gvd gvd gv  -- gvd <= gv
+        disjCheck obs gv (vsd `S.union` vsd') gvs
+\end{code}
 
-disjChk obs gvd [gv1,gv2] = return $ S.singleton gvd -- for now
+Here we have ruled out both being observables,
+and have \h{gv1} as the ``smaller'' GVar.
+If we have equality now, they must either be the same term variable or 
+the same list-variable. 
+In both cases they could end up designating an empty variable state,
+so we need to defer.
+If the first is a term variable, while the second is a list variable,
+then we can assert disjointness
+Otherwise, we need to defer the decision until we see what the free-variables
+for the term turn out to be.
+\begin{code}
+-- gv1 <= gv2
+disjChk obs gvd gv1@(StdVar (ExprVar _ _)) gv2@(LstVar _)  =  return disjTrue
+disjChk obs gvd gv1@(StdVar (PredVar _ _)) gv2@(LstVar _)  =  return disjTrue
+-- here we cannot be definitive, so retain this variable in s.c.
+disjChk _ gvd _ _  =  return $ S.singleton gvd 
 \end{code}
 
 \newpage
@@ -1359,9 +1379,9 @@ tst_scChkDisjoint
     , testCase "gv_a `disjoint` {v_f} stands"
        ( vscCheck S.empty (disjfrom  gv_a $ S.singleton v_f)
          @?= tstWhatever  (disjfrom  gv_a $ S.singleton v_f) )
-    , testCase "gv_a `disjoint` {gv_b,v_f} stands"
+    , testCase "gv_a `disjoint` {gv_b,v_f} stands without gv_b"
        ( vscCheck S.empty (disjfrom  gv_a $ S.fromList [gv_b,v_f])
-         @?= tstWhatever  (disjfrom  gv_a $ S.fromList [gv_b,v_f]) )
+         @?= tstWhatever  (disjfrom  gv_a $ S.fromList [v_f]) )
     ]
 
 tst_scChkCovers

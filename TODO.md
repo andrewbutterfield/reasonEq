@@ -51,7 +51,7 @@ Looking at `disjointCheck`:
 *Nearly there, but*
 
 Consider `P disj O$,O$'`. This might be true if fv(P) are not in alphabet,
-or it cold be true. This is why the observation variables (`obs`) are present.
+or it could be false. This is why the observation variables (`obs`) are present.
 
 
 

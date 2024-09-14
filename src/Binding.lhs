@@ -1,3 +1,4 @@
+1136
 \chapter{Binding}
 \begin{verbatim}
 Copyright  Andrew Butterfield (c) 2017-22
@@ -1133,7 +1134,8 @@ attemptFeasibleBinding lV@(LVbl (Vbl _ vc vw) [] [vj])
                        (BD (vbind,sbind,lbind))
   = do lbind' <- insertDR (rangeEqvLSSub "bindLVarToVList(feasible1)")
                           (vj,vc,[],[])
-                          (BS $ S.fromList $(map StdVar wvs ++ map LstVar wlvs))
+                          (BS $ S.fromList 
+                              $ (map StdVar wvs ++ map LstVar wlvs))
                           lbind
        return $ BD  (vbind,sbind,lbind')
   where
@@ -1569,7 +1571,7 @@ lookupLstBind (BD (_,_,lbind)) lv@(LVbl (Vbl i vc vw) is ij)
      Just (BL vl)  ->  return $ BindList  $ map   (unGVar vw) vl
      Just (BS vs)  ->  return $ BindSet   $ S.map (unGVar vw) vs
      Just (BX tlvl)
-       ->  return $ BindTLVs $map  (unTL vw) tlvl
+       ->  return $ BindTLVs $ map  (unTL vw) tlvl
 \end{code}
 
 \newpage

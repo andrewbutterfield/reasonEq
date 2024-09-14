@@ -48,36 +48,10 @@ vscCheck S.empty (disjfrom  gv_a $ S.singleton v_f)
 
 Looking at `disjointCheck`:
 
-```
-disjointCheck  {} gv_a {v_f}
-  =* disjointCheck obsv gv_a {v_f}
-       | S.null {v_f}                     =  return disjTrue
-       | not (gvwhen `S.member` vsDwhen)  =  return disjTrue
-       | not $ isObsGVar gv_a             =  return {v_f}
-       | gv_a `S.member` {v_f}            =  report "..."
-       | all isStdV    {v_f}              =  return disjTrue
-       | otherwise                        =  return vsD
-       where
-        gvwhen = gvarWhen gv_a
-        vsDwhen = S.map gvarWhen {v_f}
-        showsv = "gv = "++show gv_a
-        showvs = "vsD = "++show {v_f}
-        report msg = fail $ unlines' [msg,showsv,showvs]
-  =*   | S.null {v_f}                     =  return disjTrue   -- FALSE
-       | not (Before `S.member` {Before}) =  return disjTrue   -- FALSE
-       | not $ isObsGVar gv_a             =  return {v_f}      -- FALSE
-       | gv_a `S.member` {v_f}            =  report "..."      -- FALSE
-       | all isStdV    {v_f}              =  return disjTrue   -- TRUE
-       | otherwise                        =  return vsD
-       where
-        Before = gvarWhen gv_a
-        {Before} = S.map gvarWhen {v_f}
-        showsv = "gv = "++show gv_a
-        showvs = "vsD = "++show {v_f}
-        report msg = fail $ unlines' [msg,showsv,showvs]
-```
+*Nearly there, but*
 
-**TEST IS RIGHT, CODE IS WRONG**
+Consider `P disj O$,O$'`. This might be true if fv(P) are not in alphabet,
+or it cold be true. This is why the observation variables (`obs`) are present.
 
 
 

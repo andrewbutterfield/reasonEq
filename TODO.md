@@ -24,6 +24,8 @@ Goal S.C. = Ø⊇P
 Discharged Law S.C. = ⊤
 ```
 
+**!!! We haven't fixed the covers-by stuff**
+
 
 ### TestCode
 

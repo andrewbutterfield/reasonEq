@@ -50,8 +50,9 @@ Looking at `disjointCheck`:
 
 *Nearly there, but*
 
-Consider `P disj O$,O$'`. This might be true if fv(P) are not in alphabet,
-or it could be false. This is why the observation variables (`obs`) are present.
+**Design decision: get rid of obs, or any VarData. Resolve those issues at
+discharge time when full information is available.
+Here we just look for what can be simplified given the VSCs.** 
 
 
 

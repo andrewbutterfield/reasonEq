@@ -676,7 +676,7 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
     in do let sbind = patchBinding vts lvvls cbind
           scLasC <- instantiateSC ictxt sbind scL
           scCL <- extendGoalSCCoverage obsv lvvls scLasC
-          scCX <- mrgSideCond obsv scC scCL
+          scCX <- mrgSideCond scC scCL
           scD <- scDischarge (getDynamicObservables vtbls) scCX scLasC
           if onlyFreshSC scD
             then do let freshneeded = snd scD
@@ -685,10 +685,10 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
                     let (fbind,fresh)
                                    = generateFreshVars knownVs freshneeded sbind
                     let newLocalASC = fst scD
-                    newLocalSC <- mkSideCond obsv newLocalASC S.empty
+                    newLocalSC <- mkSideCond newLocalASC S.empty
                     -- Why do we ignore `fresh`?
                     -- Because we have made it so above?
-                    scC' <- mrgSideCond obsv scCX newLocalSC
+                    scC' <- mrgSideCond scCX newLocalSC
                     brepl  <- instantiate ictxt fbind repl
                     asn' <- mkAsn conjpart (conjSC liveProof)
                     return ( focus_ ((setTZ brepl tz),seq')
@@ -742,7 +742,7 @@ extendGoalSCCoverage obsv lvvls (tvarSCs,_)
              -- ss = S.elems $ S.map theSubscript $ S.filter isDuring
              --              $ S.map gvarWhen $ mentionedVars conj
 
-         = do vscs' <- mrgVarConds obsv justcov vscs  
+         = do vscs' <- mrgVarConds justcov vscs  
               xtndCoverage obsv ffvls vscs' rest
       | otherwise  =  xtndCoverage obsv ffvls vscs rest
       where 
@@ -966,7 +966,7 @@ lawInstantiate3 vts law@((lnm,(Assertion lawt lsc)),lprov) varTerms liveProof
        let (Assertion conj _) = conjecture liveProof
        let ss = S.elems $ S.map theSubscript $ S.filter isDuring
                         $ S.map gvarWhen $ mentionedVars conj
-       nsc <- mrgSideCond S.empty scC ilsc
+       nsc <- mrgSideCond scC ilsc
        ilawt <- instantiate ictxt lbind lawt
        let (tz,seq') = focus liveProof
        let dpath = fPath liveProof

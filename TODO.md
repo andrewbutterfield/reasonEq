@@ -2,6 +2,29 @@
 
 ## URGENT
 
+### BREAKING
+
+We have removed obs-var set argument from VSC building.
+
+Working through laws/conjectures with side-conditions
+
+Problem proving `univ_id_on_closed`  ([P] ≡ P  Ø⊇P).
+
+We can match `[]_def` rhs to get `[[P]]`, but matching lhs fails with `m`.
+
+It suceeds with `tm`
+
+```
+proof: tm 1 []_def
+Match against `[]_def'[1] OK
+Binding: { P  ⟼ P, x$  ⟼ ⟨?x$⟩ }
+Instantiated Law = (∀ ?x$  • P)
+Instantiated Law S.C. = ?x$⊇P
+Goal S.C. = Ø⊇P
+Discharged Law S.C. = ⊤
+```
+
+
 ### TestCode
 
 ```

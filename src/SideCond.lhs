@@ -309,12 +309,12 @@ where \texttt{Nothing} denotes a condition that is demonstrably true.
 
 \begin{code}
 mscTrue = Nothing
-vscCheck :: MonadFail m => VarSet -> VarSideConds 
+vscCheck :: MonadFail m => VarSideConds 
           -> m (Maybe VarSideConds)
-vscCheck obsv (VSC gv vsD uvsC uvsCd)
-  = do  vsD'   <- disjointCheck  obsv gv vsD
-        uvsC'  <- coveredByCheck obsv gv uvsC
-        uvsCd' <- dynCvrgCheck   obsv gv uvsCd
+vscCheck (VSC gv vsD uvsC uvsCd)
+  = do  vsD'   <- disjointCheck  gv vsD
+        uvsC'  <- coveredByCheck gv uvsC
+        uvsCd' <- dynCvrgCheck   gv uvsCd
         return $ mkVSC gv vsD' uvsC' uvsCd'
 \end{code}
 
@@ -328,22 +328,21 @@ Here, \m{g \disj \setof{g_1,\dots,g_n}}
 reduces to \m{\bigwedge_{i \in 1\dots n}(g \disj \setof{g_i})}.
 
 \begin{code}
-disjointCheck  :: MonadFail m 
-               => VarSet -> GenVar -> VarSet -> m VarSet
-disjointCheck obs gv vsD
-  = disjCheck obs gv S.empty $ S.toList vsD
+disjointCheck  :: MonadFail m => GenVar -> VarSet -> m VarSet
+disjointCheck gv vsD
+  = disjCheck gv S.empty $ S.toList vsD
 
 
 disjCheck :: MonadFail m
-        => VarSet -> GenVar -> VarSet -> [GenVar] -> m VarSet
-disjCheck obs gv vsd [] = return vsd
-disjCheck obs gv@(StdVar v1@(ObsVar _ _)) vsd ((StdVar v2@(ObsVar _ _)):gvs)
+          => GenVar -> VarSet -> [GenVar] -> m VarSet
+disjCheck gv vsd [] = return vsd
+disjCheck gv@(StdVar v1@(ObsVar _ _)) vsd ((StdVar v2@(ObsVar _ _)):gvs)
   | v1 == v2   =  fail "disjCheck: same variable"
-  | otherwise  =  disjCheck obs gv vsd gvs
-disjCheck obs gv vsd (gvd:gvs)
-  = do  vsd'  <-  if gv < gvd then disjChk obs gvd gv gvd
-                              else disjChk obs gvd gvd gv  -- gvd <= gv
-        disjCheck obs gv (vsd `S.union` vsd') gvs
+  | otherwise  =  disjCheck gv vsd gvs
+disjCheck gv vsd (gvd:gvs)
+  = do  vsd'  <-  if gv < gvd then disjChk gvd gv gvd
+                              else disjChk gvd gvd gv  -- gvd <= gv
+        disjCheck gv (vsd `S.union` vsd') gvs
 \end{code}
 
 Here we have ruled out both being observables,
@@ -358,10 +357,10 @@ Otherwise, we need to defer the decision until we see what the free-variables
 for the term turn out to be.
 \begin{code}
 -- gv1 <= gv2
-disjChk obs gvd gv1@(StdVar (ExprVar _ _)) gv2@(LstVar _)  =  return disjTrue
-disjChk obs gvd gv1@(StdVar (PredVar _ _)) gv2@(LstVar _)  =  return disjTrue
+disjChk gvd gv1@(StdVar (ExprVar _ _)) gv2@(LstVar _)  =  return disjTrue
+disjChk gvd gv1@(StdVar (PredVar _ _)) gv2@(LstVar _)  =  return disjTrue
 -- here we cannot be definitive, so retain this variable in s.c.
-disjChk _ gvd _ _  =  return $ S.singleton gvd 
+disjChk gvd _ _  =  return $ S.singleton gvd 
 \end{code}
 
 \newpage
@@ -379,11 +378,10 @@ Here, as $T$ could be empty,
 we cannot deduce that $\emptyset \supseteq T$ is false.
 Similarly, $T \supseteq z$ could also be true.
 \begin{code}
-coveredByCheck  :: MonadFail m 
-               => VarSet -> GenVar -> UVarSet -> m (UVarSet)
+coveredByCheck :: MonadFail m => GenVar -> UVarSet -> m (UVarSet)
 
-coveredByCheck obsv gv Nothing  =  return covByTrue  -- U
-coveredByCheck obsv gv jvsC@(Just vsC)
+coveredByCheck gv Nothing  =  return covByTrue  -- U
+coveredByCheck gv jvsC@(Just vsC)
   | any (gvCovBy gv) vsC      =  return covByTrue
   | not $ isObsGVar gv        =  return jvsC
   | S.null vsC                =  report "tvar cover fails (null)"
@@ -392,7 +390,7 @@ coveredByCheck obsv gv jvsC@(Just vsC)
     showsv = "gv = "++show gv
     showvs = "vsC = "++show vsC
     report msg = fail $ unlines' [msg,showsv,showvs]
-coveredByCheck _ _ uvsC = return uvsC
+coveredByCheck _ uvsC = return uvsC
 \end{code}
 
 
@@ -442,13 +440,10 @@ Here, as $T$ could be empty,
 we cannot deduce that $\emptyset \supseteq T$ is false.
 Similarly, $T \supseteq z$ could also be true.
 \begin{code}
-dynCvrgCheck  :: MonadFail m 
-               => VarSet -> GenVar -> UVarSet -> m (UVarSet)
+dynCvrgCheck :: MonadFail m => GenVar -> UVarSet -> m (UVarSet)
 
-dynCvrgCheck obsv gv Nothing  =  return covByTrue  -- U
-dynCvrgCheck obsv gv jvsCd@(Just vsCd)
-  | vsCd == allDynObs && gv `S.member` (obsv `S.union` allDynObs)
-                            =  return covByTrue
+dynCvrgCheck gv Nothing  =  return covByTrue  -- U
+dynCvrgCheck gv jvsCd@(Just vsCd)
   | hasStatic               =  report "tvar dyncover fails (static)"
   | any (gvCovBy gv) vsCd   =  return covByTrue
   | not $ isObsGVar gv      =  return jvsCd
@@ -462,7 +457,7 @@ dynCvrgCheck obsv gv jvsCd@(Just vsCd)
     showsv = "gv = "++show gv
     showvs = "vsCd = "++show vsCd
     report msg = fail $ unlines' [msg,showsv,showvs]
-dynCvrgCheck _ _ uvsCd  =  return uvsCd
+dynCvrgCheck _ uvsCd  =  return uvsCd
 \end{code}
 
 
@@ -532,38 +527,38 @@ by merging them in, one at a time,
 into a pre-existing list ordered and structured as described above.
 \begin{code}
 mrgVarConds :: MonadFail m 
-            => VarSet -> VarSideConds -> [VarSideConds] -> m [VarSideConds]
+            => VarSideConds -> [VarSideConds] -> m [VarSideConds]
 \end{code}
 \textbf{Invariant}\\
-For \texttt{mrgVarConds obs vsc vscs} we have:\\
+For \texttt{mrgVarConds vsc vscs} we have:\\
 \texttt{vscs} is ordered, and\\
 for all \texttt{vsc'} in \texttt{vscs}\\
-that \texttt{vscCheck obsv vsc' == Just vsc'}.
+that \texttt{vscCheck vsc' == Just vsc'}.
 
 
 We start by checking the new VCS:
 \begin{code}
-mrgVarConds obsv vsc vscs
-  = do masc <- vscCheck obsv vsc
+mrgVarConds vsc vscs
+  = do masc <- vscCheck vsc
        case masc of
          Nothing    ->  return vscs -- vsc is in fact true
-         Just vsc'  ->  mrgVSC obsv vsc' vscs
+         Just vsc'  ->  mrgVSC vsc' vscs
 \end{code}
 
 Now we search to see if there is a VSCs with the
 same general-variable, respecting the ordering:
 \begin{code}
 mrgVSC :: MonadFail m 
-       => VarSet -> VarSideConds -> [VarSideConds] -> m [VarSideConds]
+       => VarSideConds -> [VarSideConds] -> m [VarSideConds]
 
-mrgVSC obsv vsc' []  = return [vsc']
+mrgVSC vsc' []  = return [vsc']
 
-mrgVSC obsv vsc' vscs@(vsc1:vscs')
+mrgVSC vsc' vscs@(vsc1:vscs')
   | v' < v1  =  return (vsc':vscs)
-  | v' > v1  =  do vscs'' <- mrgVSC obsv vsc' vscs'
+  | v' > v1  =  do vscs'' <- mrgVSC vsc' vscs'
                    return ( vsc1 : vscs'' )
   | otherwise -- v' == v1
-    = do  case mrgSameGVSC obsv vsc' vsc1 of
+    = do  case mrgSameGVSC vsc' vsc1 of
             Nothing            -> fail "mgrTVarConds: false s.c."
             Just Nothing       -> return vscs' -- mrg is true 
             Just (Just vsc'') -> return (vsc'':vscs')
@@ -576,14 +571,14 @@ mrgVSC obsv vsc' vscs@(vsc1:vscs')
 
 Now, merging an VSC in with another VSC referring to the same general variable:
 \begin{code}
-mrgSameGVSC :: MonadFail m => VarSet
-           -> VarSideConds -> VarSideConds -> m (Maybe VarSideConds)
-mrgSameGVSC obsv (VSC gv vsD1 uvsC1 uvsCd1) (VSC _ vsD2 uvsC2 uvsCd2) 
+mrgSameGVSC :: MonadFail m 
+            => VarSideConds -> VarSideConds -> m (Maybe VarSideConds)
+mrgSameGVSC (VSC gv vsD1 uvsC1 uvsCd1) (VSC _ vsD2 uvsC2 uvsCd2) 
   = let 
       vsD'   =  vsD1   `S.union` vsD2
       uvsC'  =  uvsC1  `uintsct` uvsC2
       uvsCd' =  uvsCd1 `uintsct` uvsCd2
-    in vscCheck obsv (VSC gv vsD' uvsC' uvsCd')
+    in vscCheck (VSC gv vsD' uvsC' uvsCd')
 \end{code}
 
 \newpage
@@ -689,14 +684,14 @@ We check for side-conditions that are trivially true,
 as sometimes these result from instantiating law side-conditions
 with match bindings.
 \begin{code}
-mrgTVarCondLists :: MonadFail m => VarSet
-                -> [VarSideConds] -> [VarSideConds] -> m [VarSideConds]
-mrgTVarCondLists obsv vscs1 [] = return vscs1
-mrgTVarCondLists obsv vscs1 (VSC _ vsD Nothing Nothing:vscs2)
-  | S.null vsD  =  mrgTVarCondLists obsv vscs1 vscs2
-mrgTVarCondLists obsv vscs1 (vsc:vscs2)
-     = do vscs1' <- mrgVarConds obsv vsc vscs1
-          mrgTVarCondLists obsv vscs1' vscs2
+mrgTVarCondLists :: MonadFail m 
+                 => [VarSideConds] -> [VarSideConds] -> m [VarSideConds]
+mrgTVarCondLists vscs1 [] = return vscs1
+mrgTVarCondLists vscs1 (VSC _ vsD Nothing Nothing:vscs2)
+  | S.null vsD  =  mrgTVarCondLists vscs1 vscs2
+mrgTVarCondLists vscs1 (vsc:vscs2)
+     = do vscs1' <- mrgVarConds vsc vscs1
+          mrgTVarCondLists vscs1' vscs2
 \end{code}
 
 \subsection{Merging Term Variable and Freshness Side-Conditions}
@@ -704,15 +699,15 @@ mrgTVarCondLists obsv vscs1 (vsc:vscs2)
 
 \begin{code}
 mrgTVarFreshConditions :: MonadFail m 
-                       => VarSet -> VarSet -> [VarSideConds] 
+                       => VarSet -> [VarSideConds] 
                        -> m SideCond
-mrgTVarFreshConditions obsv freshvs vscs
-  | freshvs `disjoint` coveredVarsOf obsv vscs  =  return (vscs,freshvs)
+mrgTVarFreshConditions freshvs vscs
+  | freshvs `disjoint` coveredVarsOf vscs  =  return (vscs,freshvs)
   -- the above might not work - `disjoint` may need more information
   | otherwise  =  fail "Fresh variables cannot cover terms."
 
-coveredVarsOf :: VarSet -> [VarSideConds] -> VarSet
-coveredVarsOf obsv vscs = S.unions $ map coveringsOf vscs
+coveredVarsOf :: [VarSideConds] -> VarSet
+coveredVarsOf vscs = S.unions $ map coveringsOf vscs
 coveringsOf (VSC _ _ uvsC uvsCd)  =  cvr uvsC `S.union` cvr uvsCd
 cvr Nothing    =  S.empty -- universe does not contain fresh vars
 cvr (Just vs)  =  vs
@@ -722,10 +717,10 @@ cvr (Just vs)  =  vs
 
 \begin{code}
 mkSideCond :: MonadFail m 
-           => VarSet -> [VarSideConds] -> VarSet -> m SideCond
-mkSideCond obsv vscs fvs
- = do vscs' <-  mrgTVarCondLists obsv [] vscs
-      mrgTVarFreshConditions obsv fvs vscs'
+           => [VarSideConds] -> VarSet -> m SideCond
+mkSideCond vscs fvs
+ = do vscs' <-  mrgTVarCondLists [] vscs
+      mrgTVarFreshConditions fvs vscs'
 \end{code}
 
 
@@ -736,17 +731,17 @@ simply merge each VSC and fresh set from the one into the other,
 one at a time.
 \begin{code}
 mrgSideCond :: MonadFail m 
-            => VarSet -> SideCond -> SideCond -> m SideCond
-mrgSideCond obsv (vscs1,fvs1) (vscs2,fvs2)
-     = do vscs' <- mrgTVarCondLists obsv vscs1 vscs2
-          mrgTVarFreshConditions obsv (fvs1 `S.union` fvs2) vscs'
+            => SideCond -> SideCond -> m SideCond
+mrgSideCond (vscs1,fvs1) (vscs2,fvs2)
+     = do vscs' <- mrgTVarCondLists vscs1 vscs2
+          mrgTVarFreshConditions (fvs1 `S.union` fvs2) vscs'
           -- the above may require a obsv-savvy union?
 
-mrgSideConds :: MonadFail m => VarSet -> [SideCond] -> m SideCond
-mrgSideConds obsv [] = return ([],S.empty)
-mrgSideConds obsv (sc:scs)
-  = do  scs' <- mrgSideConds obsv scs
-        mrgSideCond obsv sc scs'
+mrgSideConds :: MonadFail m => [SideCond] -> m SideCond
+mrgSideConds [] = return ([],S.empty)
+mrgSideConds (sc:scs)
+  = do  scs' <- mrgSideConds scs
+        mrgSideCond sc scs'
 
 \end{code}
 
@@ -757,9 +752,9 @@ that are also ``total'',
 in that they return \texttt{SideCond} rather than \texttt{m SideCond}.
 \begin{code}
 (.:) :: SideCond -> SideCond -> SideCond
-sc1 .: sc2 = fromJust $ mrgSideCond S.empty sc1 sc2
+sc1 .: sc2 = fromJust $ mrgSideCond sc1 sc2
 mrgscs :: [SideCond] -> SideCond
-mrgscs = fromJust . mrgSideConds S.empty
+mrgscs = fromJust . mrgSideConds
 \end{code}
 \textbf{
 These are unsafe and should only be used for the definition of 
@@ -813,19 +808,19 @@ of the goal.
 
 This is the first point in matching where the expanded known observables
 are available, as variable \texttt{obsv}.
-We first use those to simplfiy the consqequence.
+We first simplfiy the consequence 
 
 \begin{code}
 scDischarge obsv anteSC@(anteVSC,anteFvs) cnsqSC@(cnsqVSC,cnsqFvs)
-  = do cnsqVSC' <- vscMrg obsv $ map (knownObsDischarge obsv) cnsqVSC
+  = do cnsqVSC' <- vscMrg $ map (knownObsDischarge obsv) cnsqVSC
        let cnsqSC' = (cnsqVSC',cnsqFvs)
        if isTrivialSC cnsqSC' then return scTrue
        else if isTrivialSC anteSC then return cnsqSC'
        else do vsc' <- scDischarge' obsv anteVSC cnsqVSC'
                freshDischarge obsv anteFvs cnsqFvs vsc'
     
-vscMrg obs [] = return []
-vscMrg obs (vsc:vscs) = mrgVarConds obs vsc vscs    
+vscMrg [] = return []
+vscMrg (vsc:vscs) = mrgVarConds vsc vscs    
 \end{code}
 
 
@@ -866,7 +861,7 @@ scDischarge' obsv        (vscG@(VSC gvG _ _ _):restG)
                      return (vscL:rest')
   | otherwise  =  do -- use vscG to discharge vscL
                      vsc' <- vscDischarge obsv vscG vscL
-                     vscChecked <- vscCheck obsv vsc'
+                     vscChecked <- vscCheck vsc'
                      case vscChecked of
                        Nothing ->  scDischarge' obsv restG restL
                        Just vsc'' -> do
@@ -1360,54 +1355,54 @@ nNO = [gN] `notin` gO  -- but this is really gN notin fv(gO), gO is listvar
 tst_scChkDisjoint
  = testGroup "disjfrom  (no known vars)"
     [ testCase "gv_a `disjoint` empty is True"
-       ( vscCheck S.empty (disjfrom  gv_a S.empty) @?= tstTrue )
+       ( vscCheck (disjfrom  gv_a S.empty) @?= tstTrue )
     , testCase "v_e `disjoint` empty is True"
-       ( vscCheck S.empty (disjfrom  v_e S.empty) @?= tstTrue )
+       ( vscCheck (disjfrom  v_e S.empty) @?= tstTrue )
     , testCase "gv_a `disjoint` {gv_a} is False"
-       ( vscCheck S.empty (disjfrom  gv_a $ S.singleton gv_a) @?= tstFalse )
+       ( vscCheck (disjfrom  gv_a $ S.singleton gv_a) @?= tstFalse )
     , testCase "gv_a `disjoint` {gv_b} is True"
-       ( vscCheck S.empty (disjfrom  gv_a $ S.singleton gv_b) @?= tstTrue )
+       ( vscCheck (disjfrom  gv_a $ S.singleton gv_b) @?= tstTrue )
     , testCase "v_e `disjoint` {v_e} stands"
-       ( vscCheck S.empty (disjfrom  v_e $ S.singleton v_e)
+       ( vscCheck (disjfrom  v_e $ S.singleton v_e)
          @?= tstWhatever  (disjfrom  v_e $ S.singleton v_e) )
     , testCase "v_e `disjoint` {v_f} stands"
-       ( vscCheck S.empty (disjfrom  v_e $ S.singleton v_f)
+       ( vscCheck (disjfrom  v_e $ S.singleton v_f)
          @?= tstWhatever  (disjfrom  v_e $ S.singleton v_f) )
     , testCase "v_e `disjoint` {gv_a} stands"
-       ( vscCheck S.empty (disjfrom  v_e $ S.singleton gv_a)
+       ( vscCheck (disjfrom  v_e $ S.singleton gv_a)
          @?= tstWhatever  (disjfrom  v_e $ S.singleton gv_a) )
     , testCase "gv_a `disjoint` {v_f} stands"
-       ( vscCheck S.empty (disjfrom  gv_a $ S.singleton v_f)
+       ( vscCheck (disjfrom  gv_a $ S.singleton v_f)
          @?= tstWhatever  (disjfrom  gv_a $ S.singleton v_f) )
     , testCase "gv_a `disjoint` {gv_b,v_f} stands without gv_b"
-       ( vscCheck S.empty (disjfrom  gv_a $ S.fromList [gv_b,v_f])
+       ( vscCheck (disjfrom  gv_a $ S.fromList [gv_b,v_f])
          @?= tstWhatever  (disjfrom  gv_a $ S.fromList [v_f]) )
     ]
 
 tst_scChkCovers
  = testGroup "coveredby  (no known vars)"
     [ testCase "gv_a `coveredby` empty is False"
-       ( vscCheck S.empty (coveredby  gv_a S.empty) @?= tstFalse )
+       ( vscCheck (coveredby  gv_a S.empty) @?= tstFalse )
     , testCase "v_e `coveredby` empty stands"
-       ( vscCheck S.empty (coveredby  v_e S.empty)
+       ( vscCheck (coveredby  v_e S.empty)
          @?= tstWhatever (coveredby  v_e S.empty) )
     , testCase "gv_a `coveredby` {gv_a} is True"
-       ( vscCheck S.empty (coveredby  gv_a $ S.singleton gv_a) @?= tstTrue )
+       ( vscCheck (coveredby  gv_a $ S.singleton gv_a) @?= tstTrue )
     , testCase "gv_a `coveredby` {gv_b} is False"
-       ( vscCheck S.empty (coveredby  gv_a $ S.singleton gv_b) @?= tstFalse )
+       ( vscCheck (coveredby  gv_a $ S.singleton gv_b) @?= tstFalse )
     , testCase "v_e `coveredby` {v_e} is True"
-       ( vscCheck S.empty (coveredby  v_e $ S.singleton v_e) @?= tstTrue )
+       ( vscCheck (coveredby  v_e $ S.singleton v_e) @?= tstTrue )
     , testCase "v_e `coveredby` {v_f} stands"
-       ( vscCheck S.empty (coveredby  v_e $ S.singleton v_f)
+       ( vscCheck (coveredby  v_e $ S.singleton v_f)
          @?= tstWhatever  (coveredby  v_e $ S.singleton v_f) )
     , testCase "v_e `coveredby` {gv_a} stands"
-       ( vscCheck S.empty (coveredby  v_e $ S.singleton gv_a)
+       ( vscCheck (coveredby  v_e $ S.singleton gv_a)
          @?= tstWhatever  (coveredby  v_e $ S.singleton gv_a) )
     , testCase "gv_a `coveredby` {v_f} stands"
-       ( vscCheck S.empty (coveredby  gv_a $ S.singleton v_f)
+       ( vscCheck (coveredby  gv_a $ S.singleton v_f)
          @?= tstWhatever  (coveredby  gv_a $ S.singleton v_f) )
     , testCase "gv_a `coveredby` {gv_b,v_f} stands"
-       ( vscCheck S.empty (coveredby  gv_a $ S.fromList [gv_b,v_f])
+       ( vscCheck (coveredby  gv_a $ S.fromList [gv_b,v_f])
          @?= tstWhatever  (coveredby  gv_a $ S.fromList [gv_b,v_f]) )
     ]
 \end{code}
@@ -1419,19 +1414,19 @@ tst_mrgAtmCond :: TF.Test
 tst_mrgAtmCond
  = testGroup "Merging Side-Conditions (no known vars)"
      [ testCase "merge gv_a `disjoint` empty  into [] is True"
-        ( mrgVarConds S.empty (disjfrom  gv_a S.empty) [] @?= Just [] )
+        ( mrgVarConds (disjfrom  gv_a S.empty) [] @?= Just [] )
      , testCase "merge gv_a `disjoint` {gv_a} into [] is False"
-        ( mrgVarConds S.empty (disjfrom  gv_a $ S.singleton gv_a) [] @?= Nothing )
+        ( mrgVarConds (disjfrom  gv_a $ S.singleton gv_a) [] @?= Nothing )
      , testCase "merge v_e `coveredby` {v_f}  into [] is [itself]"
-        ( mrgVarConds S.empty (coveredby  v_e $ S.singleton v_f) []
+        ( mrgVarConds (coveredby  v_e $ S.singleton v_f) []
           @?= Just [coveredby  v_e $ S.singleton v_f] )
      , testCase "merge gv_a `disjoint` empty  into [vsc(gv_b)] is [vsc(gv_b)]"
-        ( mrgVarConds S.empty (disjfrom  gv_a S.empty) [vsc1] @?= Just [vsc1] )
+        ( mrgVarConds (disjfrom  gv_a S.empty) [vsc1] @?= Just [vsc1] )
      , testCase "merge gv_a `disjoint` {gv_a} into [vsc(gv_b)] is False"
-        ( mrgVarConds S.empty (disjfrom  gv_a $ S.singleton gv_a) [vsc1] @?= Nothing )
+        ( mrgVarConds (disjfrom  gv_a $ S.singleton gv_a) [vsc1] @?= Nothing )
      , testCase
         "merge v_e `coveredby` {v_f}  into [vsc(gv_b)] is [vsc(gv_b),itself]"
-        ( mrgVarConds S.empty (coveredby  v_e $ S.singleton v_f) [vsc1]
+        ( mrgVarConds (coveredby  v_e $ S.singleton v_f) [vsc1]
           @?= Just [vsc1,coveredby  v_e $ S.singleton v_f] )
      ]
 

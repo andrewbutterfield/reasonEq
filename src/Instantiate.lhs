@@ -509,7 +509,7 @@ side-conditions:
 instantiateSC insctxt bind (vscs,freshvs)
   = do vscss' <- sequence $ map (instantiateVSC insctxt bind) vscs
        freshvs' <- instVarSet insctxt bind freshvs
-       mkSideCond (icDV insctxt) (concat vscss') $ theFreeVars freshvs'
+       mkSideCond (concat vscss') $ theFreeVars freshvs'
 \end{code}
 For atomic side-conditions:
 \begin{eqnarray*}

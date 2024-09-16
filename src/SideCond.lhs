@@ -366,41 +366,43 @@ disjChk gvd _ _  =  return $ S.singleton gvd
 \newpage
 \subsubsection{Checking CoveredBy $V \supseteq g$}
 
-\begin{eqnarray*}
-   \emptyset             \supseteq z           && \false
-\\ \dots,g,\dots{}       \supseteq g           && \true
-\\ \{stdObs\}\setminus z \supseteq z           && \false
-\\ \lst\ell\setminus Z \supseteq \lst\ell\setminus (Z\cup W) 
-     && \true
-\end{eqnarray*}
+We may have \m{V} as the universal set, in which case  we return true.
+Otherwise, we can reduce \m{\setof{g_1,\dots,g_n} \supseteq g}
+to \m{g \in \setof{g_1,\dots,g_n}}.
+However we need to keep in mind that \m{} can denote the universal set.
 
-Here, as $T$ could be empty,
-we cannot deduce that $\emptyset \supseteq T$ is false.
-Similarly, $T \supseteq z$ could also be true.
 \begin{code}
-coveredByCheck :: MonadFail m => GenVar -> UVarSet -> m (UVarSet)
+coveredByCheck :: MonadFail m => GenVar -> UVarSet -> m UVarSet
 
 coveredByCheck gv Nothing  =  return covByTrue  -- U
 coveredByCheck gv jvsC@(Just vsC)
-  | any (gvCovBy gv) vsC      =  return covByTrue
-  | not $ isObsGVar gv        =  return jvsC
-  | S.null vsC                =  report "tvar cover fails (null)"
-  | all isStdV vsC            =  report "tvat cover fails (all std)"
-  where 
-    showsv = "gv = "++show gv
-    showvs = "vsC = "++show vsC
-    report msg = fail $ unlines' [msg,showsv,showvs]
-coveredByCheck _ uvsC = return uvsC
+  = covByCheck gv S.empty $ S.toList vsC
 \end{code}
+We work through the variable-set, looking for the genvar.
+We removing any observables that don't match.
+Failure occurs if everything in the set was an observable that wasn't the
+same as the genvar.
+\begin{code}
+covByCheck :: MonadFail m => GenVar -> VarSet -> [GenVar] -> m UVarSet
 
-
+covByCheck gv vsc []
+  | S.null vsc && isObsGVar gv  = fail "covered by nothing" 
+  -- term-vars,list-vars may evaluate to the empty-set, in which case this is true
+  | otherwise  = return $ Just vsc
+covByCheck gv vsc (gvc:gvs)
+  | gv == gvc       =  return covByTrue -- even if empty
+  | lvCovBy gv gvc  =  return covByTrue
+  | isObsGVar gvc   =  covByCheck gv vsc gvs 
+  -- if not obsvar, it is possible it might contain gv 
+  | otherwise       =  covByCheck gv (S.insert gvc vsc) gvs
+\end{code}
 Is $\ell\less V$ covered by $\kappa\less W$ ?
 It is if $\ell=\kappa$ and $W \subseteq V$.
 \begin{code}
-gvCovBy :: GenVar -> GenVar -> Bool
-gvCovBy (LstVar (LVbl v is js)) (LstVar (LVbl covv isv jsv))
+lvCovBy :: GenVar -> GenVar -> Bool
+lvCovBy (LstVar (LVbl v is js)) (LstVar (LVbl covv isv jsv))
   = v == covv && isv `issubset` is && jsv `issubset` js
-gvCovBy _ _ = False
+lvCovBy _ _ = False
 \end{code}
 
 
@@ -445,7 +447,7 @@ dynCvrgCheck :: MonadFail m => GenVar -> UVarSet -> m (UVarSet)
 dynCvrgCheck gv Nothing  =  return covByTrue  -- U
 dynCvrgCheck gv jvsCd@(Just vsCd)
   | hasStatic               =  report "tvar dyncover fails (static)"
-  | any (gvCovBy gv) vsCd   =  return covByTrue
+  | any (lvCovBy gv) vsCd   =  return covByTrue
   | not $ isObsGVar gv      =  return jvsCd
   | S.null vsCd 
       =  if isDynGVar gv

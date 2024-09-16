@@ -4,28 +4,30 @@
 
 ### BREAKING
 
-We have removed obs-var set argument from VSC building.
-
-Working through laws/conjectures with side-conditions
-
-Problem proving `univ_id_on_closed`  ([P] ≡ P  Ø⊇P).
-
-We can match `[]_def` rhs to get `[[P]]`, but matching lhs fails with `m`.
-
-It suceeds with `tm`
+Bad substitute in proof
 
 ```
-proof: tm 1 []_def
-Match against `[]_def'[1] OK
-Binding: { P  ⟼ P, x$  ⟼ ⟨?x$⟩ }
-Instantiated Law = (∀ ?x$  • P)
-Instantiated Law S.C. = ?x$⊇P
-Goal S.C. = Ø⊇P
-Discharged Law S.C. = ⊤
+Proof for :=_seq_same
+	((x := e) ; (x := f)) ≡ (x := f[e/x])  O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
+by red-L2R
+(x := e) ; (x := f), O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
+   = 'match-lhs :=_def@[1]'
+x' = e ∧ (O$'\x=O$\x) ; (x := f), O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
+   = 'match-lhs :=_def@[2]'
+x' = e ∧ (O$'\x=O$\x) ; x' = f ∧ (O$'\x=O$\x), O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
+   = 'match-lhs ;_def@[]'
+(∃ O$_1  • (x' = e ∧ (O$'\x=O$\x))[O$_1/O$'] ∧ (x' = f ∧ (O$'\x=O$\x))[O$_1/O$]), O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
+   = 'substitute @[1,1]'
+⊢
+(∃ O$_1  • (x' = e[/] ∧ (O$_1\x=O$\x)) ∧ (x' = f ∧ (O$'\x=O$\x))[O$_1/O$])    O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
+Focus = []
+Target (RHS): 
+(x := f[e/x])
 ```
 
-**!!! We haven't fixed the covers-by stuff**
-
+Term `(x' = e ∧ (O$'\x=O$\x))[O$_1/O$']`
+should become:
+`(x_1 = e ∧ (O$_1\x=O$\x))`
 
 ### TestCode
 

@@ -363,18 +363,18 @@ disjChk gvd gv1@(StdVar (PredVar _ _)) gv2@(LstVar _)  =  return disjTrue
 disjChk gvd _ _  =  return $ S.singleton gvd 
 \end{code}
 
-\newpage
+% \newpage
 \subsubsection{Checking CoveredBy $V \supseteq g$}
 
 We may have \m{V} as the universal set, in which case  we return true.
 Otherwise, we can reduce \m{\setof{g_1,\dots,g_n} \supseteq g}
 to \m{g \in \setof{g_1,\dots,g_n}}.
-However we need to keep in mind that \m{} can denote the universal set.
+However we need to keep in mind that \m{g} can denote the universal set.
 
 \begin{code}
 coveredByCheck :: MonadFail m => GenVar -> UVarSet -> m UVarSet
 
-coveredByCheck gv Nothing  =  return covByTrue  -- U
+coveredByCheck gv Nothing  =  return covByTrue  -- gv `coveredby` U
 coveredByCheck gv jvsC@(Just vsC)
   = covByCheck gv S.empty $ S.toList vsC
 \end{code}
@@ -390,10 +390,10 @@ covByCheck gv vsc []
   -- term-vars,list-vars may evaluate to the empty-set, in which case this is true
   | otherwise  = return $ Just vsc
 covByCheck gv vsc (gvc:gvs)
-  | gv == gvc       =  return covByTrue -- even if empty
+  | gv == gvc       =  return covByTrue 
   | lvCovBy gv gvc  =  return covByTrue
-  | isObsGVar gvc   =  covByCheck gv vsc gvs 
-  -- if not obsvar, it is possible it might contain gv 
+  | isObsGVar gv && isObsGVar gvc  =  covByCheck gv vsc gvs
+  -- if either is termvar then gv could be covered by gvs
   | otherwise       =  covByCheck gv (S.insert gvc vsc) gvs
 \end{code}
 Is $\ell\less V$ covered by $\kappa\less W$ ?
@@ -1405,7 +1405,7 @@ tst_scChkCovers
          @?= tstWhatever  (coveredby  gv_a $ S.singleton v_f) )
     , testCase "gv_a `coveredby` {gv_b,v_f} stands"
        ( vscCheck (coveredby  gv_a $ S.fromList [gv_b,v_f])
-         @?= tstWhatever  (coveredby  gv_a $ S.fromList [gv_b,v_f]) )
+         @?= tstWhatever  (coveredby  gv_a $ S.fromList [v_f]) )
     ]
 \end{code}
 

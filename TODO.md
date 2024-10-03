@@ -29,6 +29,28 @@ Term `(x' = e ∧ (O$'\x=O$\x))[O$_1/O$']`
 should become:
 `(x_1 = e ∧ (O$_1\x=O$\x))`
 
+### ISSUE
+
+```
+Match against `=_subst'[1] failed!
+try match failed
+
+(x' = e)[O$_1/O$'] :: (e = f)[e$/x$]
+
+lnm[parts]==_subst[1]
+tP=(e = f)[e$/x$] ≡ e[e$/x$] = f[e$/x$]
+partsP=(e = f)[e$/x$]
+replP=e[e$/x$] = f[e$/x$]
+tC=(x' = e)[O$_1/O$']
+scC=O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
+tMatch: structural mismatch.
+tC = S (TF TB (TG (Id "B" 0))) (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "x" 0,VO,WA)),V T (VR (Id "e" 0,VE,WB))]) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))
+tP = S T (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "e" 0,VO,WS)),V T (VR (Id "f" 0,VO,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VO,WS),[],[]))]))
+```
+
+Is it the `x$` and `e$` (static) in substitution failing to match `O$_1` and `O$'` ?
+See `ppt.txt`.
+
 ### TestCode
 
 ```

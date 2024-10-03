@@ -379,9 +379,8 @@ coveredByCheck gv jvsC@(Just vsC)
   = covByCheck gv S.empty $ S.toList vsC
 \end{code}
 We work through the variable-set, looking for the genvar.
-We removing any observables that don't match.
-Failure occurs if everything in the set was an observable that wasn't the
-same as the genvar.
+We remove any observables that can't match.
+Failure occurs if the genvar is an observable and the ending var-set is empty.
 \begin{code}
 covByCheck :: MonadFail m => GenVar -> VarSet -> [GenVar] -> m UVarSet
 
@@ -444,22 +443,23 @@ Similarly, $T \supseteq z$ could also be true.
 \begin{code}
 dynCvrgCheck :: MonadFail m => GenVar -> UVarSet -> m (UVarSet)
 
-dynCvrgCheck gv Nothing  =  return covByTrue  -- U
+dynCvrgCheck gv Nothing  =  return covByTrue  -- gv `dyncoveredby` U
 dynCvrgCheck gv jvsCd@(Just vsCd)
-  | hasStatic               =  report "tvar dyncover fails (static)"
-  | any (lvCovBy gv) vsCd   =  return covByTrue
-  | not $ isObsGVar gv      =  return jvsCd
-  | S.null vsCd 
-      =  if isDynGVar gv
-         then report "atomic dyncover fails (null)"
-         else return jvsCd
-  | all isStdV vsCd         =  report "tvar dyncover fails (all std)"
+  | notAllDyn  =  report "tvar dyncover fails (static)"
+  | otherwise  = covByCheck gv S.empty $ S.toList vsCd
+--  | any (lvCovBy gv) vsCd   =  return covByTrue
+--  | not $ isObsGVar gv      =  return jvsCd
+--  | S.null vsCd 
+--      =  if isDynGVar gv
+--         then report "atomic dyncover fails (null)"
+--         else return jvsCd
+--  | all isStdV vsCd         =  report "tvar dyncover fails (all std)"
   where 
-    hasStatic = any (not . isDynGVar) vsCd
+    notAllDyn = not $ all isDynGVar vsCd
     showsv = "gv = "++show gv
     showvs = "vsCd = "++show vsCd
     report msg = fail $ unlines' [msg,showsv,showvs]
-dynCvrgCheck _ uvsCd  =  return uvsCd
+-- dynCvrgCheck _ uvsCd  =  return uvsCd
 \end{code}
 
 

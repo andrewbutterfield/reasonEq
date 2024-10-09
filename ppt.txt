@@ -1,33 +1,31 @@
 @tC:
 S
-( TF
-  TB
-  ( TG
-    (Id "B" 0) ) )
-( C
-  ( TF
-    TB
-    ( TG
-      (Id "B" 0) ) )
-  True
-  (Id "=" 0)
-  [ V T (VR (Id "x" 0, VO, WA))
-  , V T (VR (Id "e" 0, VE, WB)) ] )
+( TF TB ( TG (Id "B" 0) ) )        <-- T
+( C ( TF TB ( TG (Id "B" 0) ) )
+    True
+    (Id "=" 0)
+    [ V T (VR (Id "x" 0, VO, WA))   <-- V T (VR (Id "e" 0, VO, WS))
+    , V T (VR (Id "e" 0, VE, WB))   <-- V T (VR (Id "f" 0, VO, WS))
+    ] 
+)
 ( SN
   ( {} )
-  ( { (LV (VR (Id "O" 0, VO, WA), [], []), LV (VR (Id "O" 0, VO, WD "1"), [], [])) } ) )
+  ( { ( LV (VR (Id "O" 0, VO, WA),     [], []) <-- LV (VR (Id "x" 0, VO, WS), [], [])
+      , LV (VR (Id "O" 0, VO, WD "1"), [], []) <-- LV (VR (Id "e" 0, VO, WS), [], [])
+      ) } ) )
+
 @tP:
 S
 T
-( C
-  ( TF
-    TB
-    ( TG
-      (Id "B" 0) ) )
-  True
-  (Id "=" 0)
-  [ V T (VR (Id "e" 0, VO, WS))
-  , V T (VR (Id "f" 0, VO, WS)) ] )
+( C ( TF TB ( TG (Id "B" 0) ) )
+    True
+    (Id "=" 0)
+    [ V T (VR (Id "e" 0, VO, WS))
+    , V T (VR (Id "f" 0, VO, WS)) 
+    ] 
+)
 ( SN
   ( {} )
-  ( { (LV (VR (Id "x" 0, VO, WS), [], []), LV (VR (Id "e" 0, VO, WS), [], [])) } ) )
+  ( { ( LV (VR (Id "x" 0, VO, WS), [], [])
+      , LV (VR (Id "e" 0, VO, WS), [], [])
+      ) } ) )

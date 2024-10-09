@@ -4,52 +4,25 @@
 
 ### BREAKING
 
-Bad substitute in proof
+
 
 ```
-Proof for :=_seq_same
-	((x := e) ; (x := f)) ≡ (x := f[e/x])  O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
-by red-L2R
-(x := e) ; (x := f), O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
-   = 'match-lhs :=_def@[1]'
-x' = e ∧ (O$'\x=O$\x) ; (x := f), O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
-   = 'match-lhs :=_def@[2]'
-x' = e ∧ (O$'\x=O$\x) ; x' = f ∧ (O$'\x=O$\x), O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
-   = 'match-lhs ;_def@[]'
-(∃ O$_1  • (x' = e ∧ (O$'\x=O$\x))[O$_1/O$'] ∧ (x' = f ∧ (O$'\x=O$\x))[O$_1/O$]), O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
-   = 'substitute @[1,1]'
-⊢
-(∃ O$_1  • (x' = e[/] ∧ (O$_1\x=O$\x)) ∧ (x' = f ∧ (O$'\x=O$\x))[O$_1/O$])    O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
+x' = e ∧ (O$'\x=O$\x) ; x' = f ∧ (O$'\x=O$\x)    O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
 Focus = []
-Target (RHS): 
-(x := f[e/x])
-```
-
-Term `(x' = e ∧ (O$'\x=O$\x))[O$_1/O$']`
-should become:
-`(x_1 = e ∧ (O$_1\x=O$\x))`
-
-### ISSUE
-
-```
-Match against `=_subst'[1] failed!
-try match failed
-
-(x' = e)[O$_1/O$'] :: (e = f)[e$/x$]
-
-lnm[parts]==_subst[1]
-tP=(e = f)[e$/x$] ≡ e[e$/x$] = f[e$/x$]
-partsP=(e = f)[e$/x$]
-replP=e[e$/x$] = f[e$/x$]
-tC=(x' = e)[O$_1/O$']
+proof: tm 1 ;_def
+Match against `;_def'[1] failed!
+try s.c. instantiation failed -- Line 459 in LiveProofs.lhs
+{ ;  ⟼ ;, P  ⟼ x' = e ∧ (O$'\x=O$\x), Q  ⟼ x' = f ∧ (O$'\x=O$\x), 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }(O$,O$'⊇ₐP, O$,O$'⊇ₐQ, fresh:O$_0)
+lnm[parts]=;_def[1]
+tC=x' = e ∧ (O$'\x=O$\x) ; x' = f ∧ (O$'\x=O$\x)
 scC=O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
-tMatch: structural mismatch.
-tC = S (TF TB (TG (Id "B" 0))) (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "x" 0,VO,WA)),V T (VR (Id "e" 0,VE,WB))]) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))
-tP = S T (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "e" 0,VO,WS)),V T (VR (Id "f" 0,VO,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VO,WS),[],[]))]))
+tP'=(∃ O$_0  • (x' = e ∧ (O$'\x=O$\x))[O$_0/O$'] ∧ (x' = f ∧ (O$'\x=O$\x))[O$_0/O$])
+partsP=P ; Q
+replP=(∃ O$_0  • P[O$_0/O$'] ∧ Q[O$_0/O$])
+scP=O$,O$'⊇ₐP, O$,O$'⊇ₐQ, fresh:O$_0
+covered by nothing -- Line 388 in SideCond.lhs
 ```
 
-Is it the `x$` and `e$` (static) in substitution failing to match `O$_1` and `O$'` ?
-See `ppt.txt`.
 
 ### TestCode
 

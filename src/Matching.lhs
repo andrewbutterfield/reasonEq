@@ -134,7 +134,9 @@ $$
    \texttt{match}
 $$
 \begin{code}
-match :: (MonadPlus mp, MonadFail mp) => [VarTable] -> Candidate -> Pattern -> mp Binding
+match :: (MonadPlus mp, MonadFail mp) 
+      => [VarTable] 
+      -> Candidate -> Pattern -> mp Binding
 match vts cand patn  =  tMatch vts emptyBinding noBVS noBVS cand patn
 \end{code}
 
@@ -142,9 +144,9 @@ match vts cand patn  =  tMatch vts emptyBinding noBVS noBVS cand patn
 \section{Term Matching}
 
 \begin{code}
-tMatch, tMatch' ::
-  (MonadPlus mp, MonadFail mp) => [VarTable] -> Binding -> CBVS -> PBVS
-               -> Candidate -> Pattern -> mp Binding
+tMatch, tMatch' :: (MonadPlus mp, MonadFail mp) 
+                => [VarTable] -> Binding -> CBVS -> PBVS
+                -> Candidate -> Pattern -> mp Binding
 \end{code}
 
 We note that the \texttt{Type} of pattern and candidate must agree,
@@ -164,7 +166,7 @@ tMatch vts bind cbvs pbvs tC tP
 
 Term-matching is defined inductively over the pattern type.
 We also introduce a special identifier (\itop) used when 
-a constructor term matches against an interation.
+a constructor term matches against an iteration.
 \begin{code}
 itop = jId "_itop"
 \end{code}
@@ -218,7 +220,7 @@ $$
 Here $ts_X = \langle t_{X_1}, t_{X_2}, \dots t_{X_n} \rangle$.
 \begin{code}
 tMatch' vts bind cbvs pbvs (Cons ttC sbC nC tsC) (Cons ttP sbP nP tsP)
- | ttC == ttP && sbC == sbP
+ | ttC `isSubTypeOf` ttP && sbC == sbP
    =  do bind0 <- consBind vts bind cbvs pbvs ttC nC nP
          tsMatch vts bind0 cbvs pbvs tsC tsP
          -- tsMatch vts bind cbvs pbvs tsC tsP -- ???
@@ -248,7 +250,7 @@ $$
 $$
 \begin{code}
 tMatch' vts bind cbvs pbvs (Iter ttC saC naC siC niC lvsC) (Cons ttP sbP nP tsP)
-  | ttC == ttP && niC == nP && siC == sbP
+  | ttC `isSubTypeOf` ttP && niC == nP && siC == sbP
     =  do bind0 <- consBind vts bind cbvs pbvs ttC niC nP
           -- ignore above Cons bind for now
           bind1 <- consBind vts bind cbvs pbvs ttC naC itop
@@ -342,7 +344,7 @@ $$
 $$
 \begin{code}
 tMatch' vts bind cbvs pbvs (Bnd ttC nC vsC tC) (Bnd ttP nP vsP tP)
-  | ttP == ttC && nC == nP
+  | ttC `isSubTypeOf` ttP && nC == nP
     =  do let cbvs' = vsC `addBoundVarSet` cbvs
           let pbvs' = vsP `addBoundVarSet` pbvs
           bindT  <-  tMatch vts bind cbvs' pbvs' tC tP
@@ -398,7 +400,7 @@ $$
 $$
 \begin{code}
 tMatch' vts bind cbvs pbvs (Lam ttC nC vlC tC) (Lam ttP nP vlP tP)
-  | ttP == ttC && nC == nP
+  | ttC `isSubTypeOf` ttP && nC == nP
     =  do let cbvs' = vlC `addBoundVarList` cbvs
           let pbvs' = vlP `addBoundVarList` pbvs
           bindT  <-  tMatch vts bind cbvs' pbvs' tC tP
@@ -472,8 +474,8 @@ $$
 $$
 \begin{code}
 tMatch' vts bind cbvs pbvs (Sub ttC tC subC) (Sub ttP tP subP)
-  | ttP == ttC
-    =  do bindT  <-  tMatch vts bind cbvs pbvs tC tP
+  | ttC `isSubTypeOf` ttP 
+    = do  bindT  <-  tMatch vts bind cbvs pbvs tC tP
           sMatch vts bindT cbvs pbvs subC subP
 \end{code}
 

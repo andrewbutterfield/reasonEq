@@ -150,7 +150,7 @@ isSubTypeOf t1           t2            =  t1 `isSTOf` t2
 
 isSTOf :: Type -> Type -> Bool
 -- normal subtyping
--- true outcomes first, to catch x==x case
+-- true outcomes first, to catch t==t case
 
 _       `isSTOf` T        =  True
 T       `isSTOf` _        =  False

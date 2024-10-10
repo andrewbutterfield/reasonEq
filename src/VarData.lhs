@@ -930,8 +930,18 @@ genExpandToSet vts (LstVar lv)
 \section{Getting Known Dynamic Variables}
 
 We assume the convention that $O$ and $O'$ denote all the dynamic observables
-in a theory and we provide a set that contains their expansions,
+in a theory. 
+\begin{code}
+o = jId "O"  ;  vO = PreVar o
+allPreObs, allPostObs :: ListVar
+allPreObs = PreVars o  ;  allPostObs = PostVars o 
+allDynObs :: VarSet
+allDynObs = S.fromList $ map LstVar [allPreObs,allPostObs]
+\end{code}
+
+We provide a set that contains their expansions,
 if any.
+
 \begin{code}
 getDynamicObservables :: [VarTable] -> VarSet
 getDynamicObservables vts

@@ -14,7 +14,6 @@ module SideCond (
 , vscTrue, disjTrue, covByTrue
 , vscVSet
 , disjfrom, coveredby, dyncovered, ucoveredby, udyncovered
-, allPreObs, allPostObs, allDynObs
 , SideCond, scTrue, isTrivialSC
 , onlyFreshSC -- , onlyInvolving, onlyFreshOrInvolved
 -- , scGVars
@@ -408,24 +407,17 @@ lvCovBy _ _ = False
 \newpage
 \subsubsection{Checking DynamicCoverage $V \supseteq_a g$}
 
-We start by defining the standard way 
-to refer to all pre- and post-observations:
-\begin{code}
-o = jId "O"  ;  vO = PreVar o
-allPreObs, allPostObs :: ListVar
-allPreObs = PreVars o  ;  allPostObs = PostVars o 
-allDynObs :: VarSet
-allDynObs = S.fromList $ map LstVar [allPreObs,allPostObs]
-\end{code}
-We expect most uses of dynamic coverage to have the form $O,O' \supseteq_a V$.
-Here $V$ may contain $O$ and $O'$, 
-where $O$ ($O'$) is defined to be the set $ObsV$ ($ObsV'$) of actual observables, if any.
-The \texttt{obsv} variable-set argument contains $ObsV \cup ObsV'$.
-
-We first check that $V$ is only dynamic:
+We note that if $g$ is not dynamic, then the condition is trivially true.
 \begin{eqnarray*}
-   \exists v \in V \bullet \lnot\isdyn(v) && \false
+   \lnot\isdyn(g)  && \true
 \end{eqnarray*}
+We first check that all of $V$ is dynamic:
+\begin{eqnarray*}
+   \exists g_i \in V \bullet \lnot\isdyn(g_i) && \false
+\end{eqnarray*}
+We can reduce checking \m{\setof{g_1,\dots,g_n} \supseteq g}
+to checking \m{\bigvee_{i \in 1,\dots,n} g = g_i \lor g \in g_i}.
+
 Assuming $\forall v \in V \bullet \isdyn(v)$ we then proceed:
 \begin{eqnarray*}
    \emptyset             \supseteq_a z   &&  \lnot\isdyn(z)
@@ -1336,8 +1328,8 @@ vls = Vbl ils ObsV Before
 vls' = Vbl ils ObsV After
 lexpr_t = GivenType $ jId "LE"
 ls_t = TypeCons (jId "P") [lexpr_t]
--- o = jId "O"  
--- vO  = PreVar o 
+o = jId "O"  
+vO  = PreVar o 
 lO  = LVbl vO [] []  ; gO  = LstVar lO
 vO' = PostVar o ; lO' = LVbl vO' [] [] ; gO' = LstVar lO'
 

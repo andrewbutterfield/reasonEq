@@ -323,8 +323,8 @@ and break it down into individual comparisons (\m{g ~R~ \setof{g_i}}).
 
 \subsubsection{Checking Disjoint $ V \disj g$}
 
-Here, \m{g \disj \setof{g_1,\dots,g_n}}
-reduces to \m{\bigwedge_{i \in 1\dots n}(g \disj \setof{g_i})}.
+Here, checking \m{g \disj \setof{g_1,\dots,g_n}}
+reduces to checking \m{\bigwedge_{i \in 1\dots n}(g \disj \setof{g_i})}.
 
 \begin{code}
 disjointCheck  :: MonadFail m => GenVar -> VarSet -> m VarSet
@@ -362,12 +362,12 @@ disjChk gvd gv1@(StdVar (PredVar _ _)) gv2@(LstVar _)  =  return disjTrue
 disjChk gvd _ _  =  return $ S.singleton gvd 
 \end{code}
 
-% \newpage
+\newpage
 \subsubsection{Checking CoveredBy $V \supseteq g$}
 
 We may have \m{V} as the universal set, in which case  we return true.
-Otherwise, we can reduce \m{\setof{g_1,\dots,g_n} \supseteq g}
-to \m{g \in \setof{g_1,\dots,g_n}}.
+Otherwise, we can reduce checking \m{\setof{g_1,\dots,g_n} \supseteq g}
+to checking \m{\bigvee_{i \in 1,\dots,n} g = g_i \lor g \in g_i}.
 However we need to keep in mind that \m{g} can denote the universal set.
 
 \begin{code}
@@ -435,23 +435,24 @@ Similarly, $T \supseteq z$ could also be true.
 \begin{code}
 dynCvrgCheck :: MonadFail m => GenVar -> UVarSet -> m (UVarSet)
 
-dynCvrgCheck gv Nothing  =  return covByTrue  -- gv `dyncoveredby` U
+dynCvrgCheck gv _ | not (isDynGVar gv)  =  return covByTrue  -- trivially
+dynCvrgCheck gv Nothing                 =  return covByTrue
 dynCvrgCheck gv jvsCd@(Just vsCd)
   | notAllDyn  =  report "tvar dyncover fails (static)"
-  | otherwise  = covByCheck gv S.empty $ S.toList vsCd
---  | any (lvCovBy gv) vsCd   =  return covByTrue
---  | not $ isObsGVar gv      =  return jvsCd
---  | S.null vsCd 
---      =  if isDynGVar gv
---         then report "atomic dyncover fails (null)"
---         else return jvsCd
---  | all isStdV vsCd         =  report "tvar dyncover fails (all std)"
+--  | otherwise  = covByCheck gv S.empty $ S.toList vsCd
+  | any (lvCovBy gv) vsCd   =  return covByTrue
+  | not $ isObsGVar gv      =  return jvsCd
+  | S.null vsCd 
+      =  if isDynGVar gv
+         then report "atomic dyncover fails (null)"
+         else return jvsCd
+  | all isStdV vsCd         =  report "tvar dyncover fails (all std)"
   where 
     notAllDyn = not $ all isDynGVar vsCd
     showsv = "gv = "++show gv
     showvs = "vsCd = "++show vsCd
     report msg = fail $ unlines' [msg,showsv,showvs]
--- dynCvrgCheck _ uvsCd  =  return uvsCd
+dynCvrgCheck _ uvsCd  =  return uvsCd
 \end{code}
 
 
@@ -875,8 +876,10 @@ At this point we have the form, for given term-variable $T$:
 Finally, we have arrived at where the real work is done.
 
 \begin{code}
-vscDischarge :: MonadFail m => VarSet
-              -> VarSideConds -> VarSideConds -> m VarSideConds
+vscDischarge  :: MonadFail m 
+              => VarSet
+              -> VarSideConds -> VarSideConds 
+              -> m VarSideConds
 \end{code}
 
 

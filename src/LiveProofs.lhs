@@ -435,7 +435,8 @@ Next, instantiate the law using the bindings.
           But msgs
            -> But ([ "try law instantiation failed"
                    , ""
-                   , trBinding fbind ++ "("++trSideCond scP++")"
+                   , trBinding fbind
+                   , "&& "++trSideCond scP
                    , ""
                    , "lnm[parts]="++lnm++show parts
                    , "tC="++trTerm 0 tC
@@ -458,7 +459,8 @@ Next, instantiate the pattern side-condition using the bindings.
           But msgs
            -> But ([ "try s.c. instantiation failed"
                    , ""
-                   , trBinding fbind ++ "("++trSideCond scP++")"
+                   , trBinding fbind
+                   , "&& "++trSideCond scP
                    , ""
                    , "lnm[parts]="++lnm++show parts
                    , "tC="++trTerm 0 tC

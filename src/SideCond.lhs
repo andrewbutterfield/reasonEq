@@ -910,8 +910,8 @@ A translated law side-condition of the form $\emptyset \supseteq v$,
 where $v$ is a standard variable.
 This is simply false.
 \begin{code}
-vscDischarge _ _ (VSC (StdVar (Vbl _ ObsV _)) dL _ _)
-  | S.null dL  =  fail ("Empty set cannot cover a standard obs. variable")
+vscDischarge _ _ (VSC (StdVar (Vbl _ ObsV _)) _ (Just vsC) _)
+  | S.null vsC  =  fail ("Empty set cannot cover a standard obs. variable")
 \end{code}
 
 Any occurrences of a floating variable in a translated law side-condition

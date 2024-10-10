@@ -4,25 +4,16 @@
 
 ### BREAKING
 
+Back to substitution bugs!
+
+`(x := e)[O$_1/O$']` should NOT yield `(x,O$' := e,O$_1)` !
+Assignment is n.s. !
+
+`(x' = e)[O$_1/O$']` should NOT be `x' = e[/]`.
+Using `=_subst` gives `x'[O$_1/O$'] = e[O$_1/O$']`.
 
 
-```
-x' = e ∧ (O$'\x=O$\x) ; x' = f ∧ (O$'\x=O$\x)    O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
-Focus = []
-proof: tm 1 ;_def
-Match against `;_def'[1] failed!
-try s.c. instantiation failed -- Line 459 in LiveProofs.lhs
-{ ;  ⟼ ;, P  ⟼ x' = e ∧ (O$'\x=O$\x), Q  ⟼ x' = f ∧ (O$'\x=O$\x), 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }(O$,O$'⊇ₐP, O$,O$'⊇ₐQ, fresh:O$_0)
-lnm[parts]=;_def[1]
-tC=x' = e ∧ (O$'\x=O$\x) ; x' = f ∧ (O$'\x=O$\x)
-scC=O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
-tP'=(∃ O$_0  • (x' = e ∧ (O$'\x=O$\x))[O$_0/O$'] ∧ (x' = f ∧ (O$'\x=O$\x))[O$_0/O$])
-partsP=P ; Q
-replP=(∃ O$_0  • P[O$_0/O$'] ∧ Q[O$_0/O$])
-scP=O$,O$'⊇ₐP, O$,O$'⊇ₐQ, fresh:O$_0
-covered by nothing -- Line 388 in SideCond.lhs
-```
-
+The substitute `s` command and law `=_subst` should give the same result.
 
 ### TestCode
 

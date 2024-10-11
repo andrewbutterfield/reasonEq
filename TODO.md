@@ -7,7 +7,11 @@
 Back to substitution bugs!
 
 `(x := e)[O$_1/O$']` should NOT yield `(x,O$' := e,O$_1)` !
-Assignment is n.s. !
+Assignment is n.s. ! 
+
+Issue: `Sub` has no substitutability indicator.
+Assignment is represented by a substitution on a predicate variable `:=`,
+which also has no subst-indicator.
 
 `(x' = e)[O$_1/O$']` should NOT be `x' = e[/]`.
 Using `=_subst` gives `x'[O$_1/O$'] = e[O$_1/O$']`.

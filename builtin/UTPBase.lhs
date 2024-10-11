@@ -80,7 +80,7 @@ From \cite[Sec 1.5,p34]{UTP-book},
 with addition of the notation using the $\sqsupseteq$ symbol:
 $$
   \begin{array}{lll}
-     P \sqsupseteq Q \defs [P \implies Q] &
+     P \sqsupseteq Q ~\defs~ [P \implies Q] &
      & \QNAME{$\sqsupseteq$-def}
   \end{array}
 $$\par\vspace{-8pt}
@@ -174,7 +174,7 @@ We may implement these later.
 From \cite[Defn 2.1.1,p47]{UTP-book}
 $$
   \begin{array}{lll}
-     P \cond b Q \defs (b \land P) \lor (\lnot b \land Q) &
+     P \cond b Q ~\defs~ (b \land P) \lor (\lnot b \land Q) &
      & \QNAME{$\cond\_$-def}
   \end{array}
 $$\par\vspace{-8pt}
@@ -372,7 +372,7 @@ From \cite[Defn 2.2.1,p49]{UTP-book}
 
 $$
   \begin{array}{lll}
-     P \seq Q \defs \exists O_0 \bullet P[O_0/O'] \land Q[O_0/O]
+     P \seq Q ~\defs~ \exists O_0 \bullet P[O_0/O'] \land Q[O_0/O]
      & O,O'\supseteq_a P,Q ~~ O_0 \textrm{ fresh}
      & \QNAME{$;$-def}
   \end{array}
@@ -447,7 +447,7 @@ based loosely on \cite[2.3\textbf{L2}, p50]{UTP-book}.
 $$
   \begin{array}{lll}
      \lst x := \lst e
-     \defs
+     ~\defs~
      \lst x' = \lst e \land O'\less {\lst x} = O \less {\lst x}
      && \QNAME{$:=$-def}
   \end{array}
@@ -495,7 +495,7 @@ $$
      P(\lst x',\lst x)
      \diamond
      P(O' \less{\lst x,\lst y},O \less{\lst x,\lst y})
-     \defs
+     ~\defs~
      P(O' \less{\lst y},O \less{\lst y})
      && \QNAME{var-list-fusion}
   \end{array}
@@ -519,7 +519,7 @@ The following (\cite[Defn 2.3.1,p50]{UTP-book}) is now a conjecture:
 $$
   \begin{array}{lll}
      x := e
-     \defs
+     ~\defs~
      x' = e \land O'\less x = O \less x
      && \QNAME{$:=$-def}
   \end{array}
@@ -616,7 +616,7 @@ From \cite[Defn 2.3.2,p50]{UTP-book}
 
 $$
   \begin{array}{lll}
-     \Skip \defs O' = O
+     \Skip ~\defs~ O' = O
      && \QNAME{$\Skip$-def}
   \end{array}
 $$ %\par\vspace{-8pt}

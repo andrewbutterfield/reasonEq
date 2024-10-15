@@ -231,71 +231,48 @@ substitute _ sub tm | isNullSubstn sub  =  return tm
 
 \subsection{Variable Term Substitution}
 
-We treat observational variables ($\vv v$) 
-and term variables ($\vv e,\vv P$) differently.
+We are dealing with the case $\vv s \ss {} {g^n} {r^n}$,
+where $s$ denotes a standard variable,
+$\ell$ denotes a list variable,
+and $g$ denotes a general variable.
+Different variations of $s$ are indicated by:
+\begin{itemize}
+  \item  $x$ is a static observation variable.
+  \item  $\prv x$, $\psv x$, $x_d$ are dynamic observation variables, 
+    with $\dyn x$ covering all possibilities.
+  \item  $P$ is a static term (expression or predicate) variable.
+  \item  $\prv e$, $\psv e$, $e_d$ are dynamic term variables.
+\end{itemize}
 
-We assume here that $P$ is static, 
-while $e$, and hence $e'$, $e_1$, are dynamic
-(and similarly for $f$.)
-We also let $e_a$ and $e_b$ denote variables 
-with different temporality
-drawn from $e,e',e_0,e_1,\dots$.
-
+\begin{eqnarray*}
+   \vv s \ss {} {g^n} {r^n}  
+   &=&  r_i ~~\IF~~ \exists i \bullet \vv s=g_i
+\\ \prv x \ss {} {g^n} {r^n}  
+   &=&  \dyn x ~~\IF~~ \exists i \bullet \prv O=g_i \land \dyn O=r_i 
+     \land \prv O \supseteq x
+\\ \psv x \ss {} {g^n} {r^n}  
+   &=&  \dyn x ~~\IF~~ \exists i \bullet \psv O=g_i  \land \dyn O=r_i
+     \land \psv O \supseteq x
+\\ x_d \ss {} {g^n} {r^n}  
+   &=&  \dyn x ~~\IF~~ \exists i \bullet O_d=g_i  \land \dyn O=r_i
+     \land O_d \supseteq x
+\\ \vv s \ss {} {g^n} {r^n}  &=& \vv s \ss {} {g^n} {r^n}  ~~\textbf{otherwise}
+\end{eqnarray*}
 
 \subsubsection{Obs.-Variable Term Substitution}
 
-\begin{eqnarray*}
-   \vv v \ss {} {v^n} {r^n}  
-   &\defs&  
-   r_i \cond{~\exists i \bullet \vv v=v_i~} \vv v 
-\\ \vv v_a \ss {} {\lst x_a^n} {\lst x_b^n}
-   &\defs&
-   \vv v_b
-   \cond{~\exists i \bullet \vv v_a \subseteq \lst x_{a,i}~}
-   \vv v_a \ss {} {\lst x_a^n} {\lst x_b^n}
-\end{eqnarray*}
-The test for $v_d \subseteq \lst x_{d,i}$ 
-is hard, generally requiring side-conditions,
-so we ignore this possibility for now.
-Note also that it implies that the entire substitution is temporally uniform.
 \begin{code}
 substitute sctx sub@(Substn ts lvs) vrt@(Var tk v@(Vbl i ObsV whn))
-  = (subVarLookup sub v) <|> (pure vrt)
+  = do resultTerm <- (subVarLookup sub v) <|> (lstObsLookup lvs vrt) 
+       return $ sctxSimplify sctx resultTerm
+  where
+    lstObsLookup lvs vrt
+      | any (isObsLVar . snd) lvs  =  pure (Sub tk vrt sub)
+      | otherwise                  =  pure vrt
 \end{code}
 
 \subsubsection{Term-Variable Term Substitution}
 
-This is the only case where we look at side-conditions.
-
-\textbf{Notes:} typical side-conditions found are as follows:
-\begin{mathpar}
- x\notin P \and y \notin e \and  fresh:O_0
- \and
- \lst x \notin P \and \lst x \notin \lst e \and \lst x \supseteq P
- \and
- O \supseteq e \and O,O' \supseteq P
-\end{mathpar}
-Typical substitutions in law definitions include:
-\begin{mathpar}
-  ~[\lst e/\lst x] \and [O_0/O] \and [O_0/O']  
-  \and
-  \and [e/x] \and [x/y] \and [e[f/x]/x]
-\end{mathpar}
-Typical substitutions in proofs include:
-\begin{mathpar}
-  P[x/y] \and \Skip[O_1/O] \and R[O_1/O'] \and R[O_1/O'][O'/O_1]
-  \and 
-  Q[O_1,O_2/O,O']
-  \and
-  (\exists O_2 \bullet Q[O_2/O'] \land R[O_2/O])[O_1/O]
-\end{mathpar}
-Some failing examples using \texttt{substitute}:
-\begin{eqnarray*}
-  O,O' \supseteq \Skip : \Skip[O_1/O] &\mapsto_s& \Skip, 
-  \qquad \text{---should be } \Skip[O_1/O]
-\\ O,O' \supseteq R : R[O_1/O']   &\mapsto_s& R, 
-  \qquad \text{---should be } R[O_1/O']
-\end{eqnarray*}
 
 Remember, here $P$ is static while $e$ is dynamic.
 \begin{eqnarray*}

@@ -244,22 +244,29 @@ Different variations of $s$ are indicated by:
   \item  $\prv e$, $\psv e$, $e_d$ are dynamic term variables.
 \end{itemize}
 
+If the variable is in the substitution target list,
+then we apply that change:
 \begin{eqnarray*}
    \vv s \ss {} {g^n} {r^n}  
-   &=&  r_i ~~\IF~~ \exists i \bullet \vv s=g_i
-\\ \prv x \ss {} {g^n} {r^n}  
-   &=&  \dyn x ~~\IF~~ \exists i \bullet \prv O=g_i \land \dyn O=r_i 
-     \land \prv O \supseteq x
-\\ \psv x \ss {} {g^n} {r^n}  
-   &=&  \dyn x ~~\IF~~ \exists i \bullet \psv O=g_i  \land \dyn O=r_i
-     \land \psv O \supseteq x
-\\ x_d \ss {} {g^n} {r^n}  
-   &=&  \dyn x ~~\IF~~ \exists i \bullet O_d=g_i  \land \dyn O=r_i
-     \land O_d \supseteq x
-\\ \vv s \ss {} {g^n} {r^n}  &=& \vv s \ss {} {g^n} {r^n}  ~~\textbf{otherwise}
+   &=&  r_i ~~\IF~~ \exists i \bullet \vv g_i = s
 \end{eqnarray*}
+This covers all cases: $\vv s \in \setof{x,e,P,\dots}$.
 
 \subsubsection{Obs.-Variable Term Substitution}
+
+\begin{eqnarray*}
+   \prv x \ss {} {g^n} {r^n}  
+   &=&  \dyn x ~~\IF~~ \exists i \bullet g_i = \prv O \land r_i=\dyn O
+     \land \prv O \supseteq \prv x
+\\ \psv x \ss {} {g^n} {r^n}  
+   &=&  \dyn x ~~\IF~~ \exists i \bullet g_i = \psv O\land r_i = \dyn O
+     \land \psv O \supseteq \psv x
+\\ x_d \ss {} {g^n} {r^n}  
+   &=&  \dyn x ~~\IF~~ \exists i \bullet g_i = O_d \land r_i = \dyn O
+     \land O_d \supseteq x_d
+\end{eqnarray*}
+
+
 
 \begin{code}
 substitute sctx sub@(Substn ts lvs) vrt@(Var tk v@(Vbl i ObsV whn))
@@ -274,26 +281,34 @@ substitute sctx sub@(Substn ts lvs) vrt@(Var tk v@(Vbl i ObsV whn))
 \subsubsection{Term-Variable Term Substitution}
 
 
-Remember, here $P$ is static while $e$ is dynamic.
+Remember, here $P$ is static while $\dyn e$ are dynamic.
 \begin{eqnarray*}
-   \vv P \ss {} {v^n} {r^n}
-   &\defs&  r_i \cond{~\exists i \bullet \vv v_i=P~} \vv P \ss {} {v^n} {r^n} 
-\\ \vv P \ss {} {x^m;\lst x^n} {y^m;\lst y^n}
-   &\defs&
-   \vv P
-   \cond{~P \disj \cup_i\seqof{x^m,\lst x^n}~}
-   \vv P \ss {} {x^m;\lst x^n} {y^m;\lst y^n}
-\\ \vv e_a \ss {} {\lst x_a^n} {\lst x_b^n}
-   &\defs&
-   \vv e_b
-   \cond{~\exists i \bullet \vv v_a \subseteq \lst x_{a,i}~}
-   \vv e_a \ss {} {\lst x_a^n} {\lst x_b^n}
+   \prv e \ss {} {g^n} {r^n}  
+   &=&  \dyn e ~~\IF~~ \exists i \bullet g_i = \prv O \land \dyn O=r_i 
+     \land \prv O \supseteq \prv e
+\\ \psv e \ss {} {g^n} {r^n}  
+   &=&  \dyn e ~~\IF~~ \exists i \bullet g_i = \psv O\land \dyn O=r_i
+     \land \psv O \supseteq \psv e
+\\ e_d \ss {} {g^n} {r^n}  
+   &=&  \dyn e ~~\IF~~ \exists i \bullet g_i = O_d \land \dyn O=r_i
+     \land O_d \supseteq e_d
 \end{eqnarray*}
 \begin{code}
 substitute sctx sub@(Substn ts lvs) vrt@(Var tk v)  -- v is not ObsV
   = do resultTerm <- ((subVarLookup sub v) <|> (pure $ Sub tk vrt sub))
        return $ sctxSimplify sctx resultTerm
 \end{code}
+
+\subsubsection{Variable Term Substitution Catch-All}
+
+
+\begin{eqnarray*}
+   \vv s \ss {} {g^n} {r^n}  &=& \vv s \ss {} {g^n} {r^n}  ~~\textbf{otherwise}
+\end{eqnarray*}
+\begin{code}
+substitute sctx sub vrt@(Var tk _) = pure $ Sub tk vrt sub
+\end{code}
+
 
 % There is also a special case of $P_d[\dots]$ when
 % all the targets have the same temporality as each other 

@@ -232,7 +232,16 @@ substitute _ sub tm | isNullSubstn sub  =  return tm
 \subsection{Variable Term Substitution}
 
 We are dealing with the case $\vv s \ss {} {g^n} {r^n}$,
-where $s$ denotes a standard variable,
+where $s$ denotes a standard variable.
+
+\textbf{NOTE: }
+\textsf{
+ We first scan the var-term pairs looking for $\vv s$,
+ returning the replacement if found.
+ Otherwise we scan the list-var pairs, with the side-conditions in hand,
+ looking for a list-variable that covers $\vv s$.
+}
+
 $\ell$ denotes a list variable,
 and $g$ denotes a general variable.
 Different variations of $s$ are indicated by:

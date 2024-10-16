@@ -231,243 +231,68 @@ substitute _ sub tm | isNullSubstn sub  =  return tm
 
 \subsection{Variable Term Substitution}
 
-We are dealing with the case $\vv s \ss {} {g^n} {r^n}$,
-where $s$ denotes a standard variable.
-
-\textbf{NOTE: }
-\textsf{
- We first scan the var-term pairs looking for $\vv s$,
- returning the replacement if found.
- Otherwise we scan the list-var pairs, with the side-conditions in hand,
- looking for a list-variable that covers $\vv s$.
-}
-
-$\ell$ denotes a list variable,
-and $g$ denotes a general variable.
-Different variations of $s$ are indicated by:
-\begin{itemize}
-  \item  $x$ is a static observation variable.
-  \item  $\prv x$, $\psv x$, $x_d$ are dynamic observation variables, 
-    with $\dyn x$ covering all possibilities.
-  \item  $P$ is a static term (expression or predicate) variable.
-  \item  $\prv e$, $\psv e$, $e_d$ are dynamic term variables.
-\end{itemize}
-
-If the variable is in the substitution target list,
-then we apply that change:
-\begin{eqnarray*}
-   \vv s \ss {} {g^n} {r^n}  
-   &=&  r_i ~~\IF~~ \exists i \bullet \vv g_i = s
-\end{eqnarray*}
-This covers all cases: $\vv s \in \setof{x,e,P,\dots}$.
-
-\subsubsection{Obs.-Variable Term Substitution}
-
-\begin{eqnarray*}
-   \prv x \ss {} {g^n} {r^n}  
-   &=&  \dyn x ~~\IF~~ \exists i \bullet g_i = \prv O \land r_i=\dyn O
-     \land \prv O \supseteq \prv x
-\\ \psv x \ss {} {g^n} {r^n}  
-   &=&  \dyn x ~~\IF~~ \exists i \bullet g_i = \psv O\land r_i = \dyn O
-     \land \psv O \supseteq \psv x
-\\ x_d \ss {} {g^n} {r^n}  
-   &=&  \dyn x ~~\IF~~ \exists i \bullet g_i = O_d \land r_i = \dyn O
-     \land O_d \supseteq x_d
-\end{eqnarray*}
-
+We are dealing with the case $\vv v \ss {} {g^n} {r^n}$,
+where $v$ denotes a standard variable. 
+We first scan the var-term pairs looking for $\vv s$,
+returning the replacement if found.
+Otherwise we scan the list-var pairs, with the side-conditions in hand,
+looking for a list-variable that covers $\vv s$.
+If nothing is found we return a substitution term with only the list-vars.
 
 
 \begin{code}
-substitute sctx sub@(Substn ts lvs) vrt@(Var tk v@(Vbl i ObsV whn))
-  = do resultTerm <- (subVarLookup sub v) <|> (lstObsLookup lvs vrt) 
-       return $ sctxSimplify sctx resultTerm
+substitute sctx@(SCtxt sc) sub@(Substn vts lvlvs) vrt@(Var tk v)
+  =  alookup (pdbg "subvrt.v" v) (pdbg "subvrt.vts" $ S.toList vts) 
+     <|> lvlvlSubstitute (pdbg "subvrt.sc" sc) v (pdbg "subvrt.lvlvl" lvlvl)
+     <|> pure (Sub (pdbg "subvrt.tk" tk) vrt (jSubstn [] lvlvl))
   where
-    lstObsLookup lvs vrt
-      | any (isObsLVar . snd) lvs  =  pure (Sub tk vrt sub)
-      | otherwise                  =  pure vrt
+    lvlvl = S.toList lvlvs
+
+    lvlvlSubstitute sc v []  =  fail "all lvlv done"
+    lvlvlSubstitute sc v ((tlv,rlv):lvlvl)
+      = lvlvSubstitute sc v (pdbg "llsub.tlv" tlv) (pdbg "llsub.rlv" rlv) 
+        <|> lvlvlSubstitute sc v lvlvl
+
 \end{code}
 
-\subsubsection{Term-Variable Term Substitution}
-
-
-Remember, here $P$ is static while $\dyn e$ are dynamic.
+For now we just consider substitutions involving 
+different dynamic variants of the same list variable $\ell$.
 \begin{eqnarray*}
-   \prv e \ss {} {g^n} {r^n}  
-   &=&  \dyn e ~~\IF~~ \exists i \bullet g_i = \prv O \land \dyn O=r_i 
-     \land \prv O \supseteq \prv e
-\\ \psv e \ss {} {g^n} {r^n}  
-   &=&  \dyn e ~~\IF~~ \exists i \bullet g_i = \psv O\land \dyn O=r_i
-     \land \psv O \supseteq \psv e
-\\ e_d \ss {} {g^n} {r^n}  
-   &=&  \dyn e ~~\IF~~ \exists i \bullet g_i = O_d \land \dyn O=r_i
-     \land O_d \supseteq e_d
+   \prv v \ss{}{\prv\ell}{\dyn\ell}  &=&  \dyn v ~~\IF~~ \prv\ell \supseteq \prv v
+\\ \psv v \ss{}{\psv\ell}{\dyn\ell}  &=&  \dyn v ~~\IF~~ \psv\ell \supseteq \psv v
+\\ v_d    \ss{}{\ell_d}  {\dyn\ell}  &=&  \dyn v ~~\IF~~ \ell_d \supseteq v_d
 \end{eqnarray*}
+Here we have substitution $v[\ell^R\less{s_R}/\ell^T\less{s_T}]$
+and variable side-condition $(D \disj V, C \supseteq V, Cd \supseteq_a V )^{+}$.
+
+We fail if any of the following hold:
+the dynamicity of $v$ differs from that of $\ell^T$;
+the underlying variables in $\ell^R$ and $\ell^T$ are different;
+$v \in s_T$;
+$v \in s_R$;
+$v$ not mentioned in the side-condition;
+Given v.s.c. $(v,D,C,Cd)$, $\ell^T$ not in $C \cup Cd$.
 \begin{code}
-substitute sctx sub@(Substn ts lvs) vrt@(Var tk v)  -- v is not ObsV
-  = do resultTerm <- ((subVarLookup sub v) <|> (pure $ Sub tk vrt sub))
-       return $ sctxSimplify sctx resultTerm
+    lvlvSubstitute sc            v@(Vbl i  vc vw) 
+                      tlv@(LVbl tv@(Vbl ti _  tw) tis _) 
+                      rlv@(LVbl rv@(Vbl ri _  rw) ris _)
+      | vw /= tw  = fail "v,tv dynamicity differs"
+      | tv /= rv  =  fail "tv,rv differ"
+      | i `elem` tis || i `elem` ris  =  fail "v removed"
+      | otherwise
+          = case findGenVar (StdVar v) sc of
+              Nothing ->  fail "v not mentioned" 
+              Just (VSC _ _ uvsc uvsCd)
+                | not ( LstVar tlv `umbr` (uvsc `uunion` uvsCd) ) 
+                             -> fail  "tlv not mentioned in s.c."
+\end{code}
+If all above don't hold, 
+we return $\vv v$ with its dynamicity changed to that of $\ell^R$.
+\begin{code}
+                | otherwise  ->  pure $ jVar tk (Vbl i vc rw)       
 \end{code}
 
-\subsubsection{Variable Term Substitution Catch-All}
 
-
-\begin{eqnarray*}
-   \vv s \ss {} {g^n} {r^n}  &=& \vv s \ss {} {g^n} {r^n}  ~~\textbf{otherwise}
-\end{eqnarray*}
-\begin{code}
-substitute sctx sub vrt@(Var tk _) = pure $ Sub tk vrt sub
-\end{code}
-
-
-% There is also a special case of $P_d[\dots]$ when
-% all the targets have the same temporality as each other 
-% and cover all the free variables of $P_d$,
-% while all the replacements also have the same temporality as each other
-% (which might differ from that of the targets).
-% We shall refer to this as ``complete temporal consistency'' (c.t.c).
-% We might show it as:
-% $$
-%   P_d
-%   [ e_e,f_e,z_e,\dots,\lst u_e,\dots
-%   /
-%     x_d,y_d,z_d,\dots,\lst u_d,\dots
-%   ]
-% $$
-% where $x,y,z,\dots,\lst u,\dots$ covers all free variables of $P$,
-% and some targets (here $z_d,\dots,\lst u_d,\dots$)
-% are replaced by versions of themselves with the replacement temporality.
-% This will simplify to
-% $$
-%   P_e[e_e,f_e/x_e,y_e]
-% $$
-% We refer to $[e_e,f_e/x_e,y_e]$ as the ``effective'' substitution.
-% Note that the temporalities involved need not be dynamic.
-
-% We check for disjoint variable target temporality,
-% and then for c.t.c.s.
-
-  % | tempSubMiss vrt sub   =  return vrt
-  % | isObsVar v            =  return $ subsVar v ts lvs
-  % | hasCoverage && isCTC  =  return $ ctcSub tk (jVar tk $ setVarWhen repw v)
-  %                                   $ jSub effTSRepl effLVSRepl
-  % | otherwise             =  return $ subsVar v ts lvs
-  % where
-  %   (hasCoverage,cover)       = checkCoverage (subTargets sub) (scSC sctx) v
-  %   (isCTC,repw,effTS,effLVS) = assessCTC (varWhen v) (S.elems ts) (S.elems lvs)
-  %   effTSRepl                 = map (setVTWhen repw) effTS
-  %   effLVSRepl                = map (setLVLVWhen repw) effLVS
-  %   ctcSub tk tm sub@(Substn sts slvs)
-  %     | S.null sts && S.null slvs  =  tm
-  %     | otherwise                  =  Sub tk tm sub
-
-
-% \newpage
-
-% Checking coverage, given targets $tgts$, side-condition $sc$,
-% and non-observation variable $pev$:
-% does $\lst v \supseteq pev$ appear uniformly in $sc$?
-% If so check that $tgts$ match $\lst v$.
-% \begin{code}
-%     checkCoverage tgts sc pev@(Vbl _ _ vw)
-%       = case findGenVar (StdVar pev) sc of
-%           Just (CoveredBy Unif _ vs)
-%             -> let
-%                  tgtl = map (setGVarWhen vw) $ subsumeL $ S.elems tgts
-%                  vl = map (setGVarWhen vw) $ subsumeL $ S.elems vs
-%                in  (vl == tgtl,vl) -- too strong?
-%           -- we only consider uniform coverage for now
-%           _                          ->  (False,[])
-% \end{code}
-
-% Checking non-observational variable $v$ for complete temporal consistency,
-% given substitution mappings.
-% Not yet seen replacement:
-% \begin{code}
-%     assessCTC sw []            []  =  notCTC
-%     assessCTC sw (vt@( Vbl ti tc tw, Var tk (Vbl ri rc rw) ):ts ) lvs
-%       | sw /= tw              =  notCTC
-%       | ti == ri && tc == rc  =  assessCTC' sw rw [] [] ts lvs
-%       | otherwise             =  assessCTC' sw rw [vt] [] ts lvs
-%     assessCTC sw ts
-%                ( lvlv@( ( LVbl (Vbl ti tc tw) tis tjs
-%                  ,      LVbl (Vbl ri rc rw) ris rjs) )
-%                  : lvs )
-%       | sw /= tw   =  notCTC
-%       | ti == ri && tc == rc && tis == ris && tjs == rjs
-%                    =  assessCTC' sw rw [] [] ts lvs
-%       | otherwise  =  assessCTC' sw rw [] [lvlv] ts lvs
-%     -- just expect replacement variables for now.
-%     assessCTC _ _ _  =  notCTC
-%     notCTC  =  (False,undefined,undefined,undefined)
-% \end{code}
-
-% Have seen replacement:
-% \begin{code}
-%     assessCTC' sw repw effTS effLVS [] []
-%       =  ( True, repw
-%          , map (setVTWhen repw) effTS
-%          , map (setLVLVWhen repw) effLVS )
-%     assessCTC' sw repw effTS effLVS
-%                 ( vt@( Vbl ti tc tw, Var tk (Vbl ri rc rw) ):ts ) lvs
-%       | sw /= tw              =  notCTC
-%       | repw /= rw            =  notCTC
-%       | ti == ri && tc == rc  =  assessCTC' sw rw effTS      effLVS  ts lvs
-%       | otherwise             =  assessCTC' sw rw (vt:effTS) effLVS  ts lvs
-%     assessCTC' sw repw effTS effLVS ts
-%                 ( lvlv@( ( LVbl (Vbl ti tc tw) tis tjs
-%                   ,      LVbl (Vbl ri rc rw) ris rjs) )
-%                   : lvs )
-%       | sw /= tw   =  notCTC
-%       | repw /= rw            =  notCTC
-%       | ti == ri && tc == rc && tis == ris && tjs == rjs
-%                    =  assessCTC' sw repw effTS effLVS        ts lvs
-%       | otherwise  =  assessCTC' sw repw effTS (lvlv:effLVS) ts lvs
-%     -- just expect replacement variables for now.
-%     assessCTC' sw repw effTS effLVS ts lvs = notCTC
-% \end{code}
-
-% \newpage
-% Working through substitution pairs:
-% \begin{code}
-%     -- work through std-var/term substitutions
-%     subsVar :: Variable -> TermSub -> LVarSub -> Term
-%     subsVar v ts lvs
-%       | isObsVar v  =  subsVar' v (S.toList lvs) (S.toList ts)
-%       | otherwise   =  Sub tk vrt sub
-
-%     subsVar' :: Variable -> [(ListVar,ListVar)] -> [(Variable,Term)] -> Term
-%     subsVar' v lvs [] = subsLVar v lvs
-%     subsVar' v lvs ((tgtv,rplt):rest)
-%       | v == tgtv  =  rplt
-%       | otherwise  =  subsVar' v lvs rest
-
-%     -- work through lst-var/lst-var substitutions
-%     subsLVar v []
-%       | varClass v == ObsV     =  vrt
-%       | isDynamic $ varWhen v  =  vrt
-%       | otherwise              =  Sub tk vrt sub
-%     subsLVar v ((tgtlv,rpllv):rest)
-%       | varWhen v /= lvarWhen tgtlv  =  subsLVar v rest
-%       | otherwise
-%       = case findGenVar (StdVar v) (scSC sctx) of
-%           Just (CoveredBy NonU _ vs)
-%             ->  if vs == S.singleton (LstVar tgtlv)
-%                    && varWhen v == lvarWhen tgtlv
-%                 then v `replacedByRpl` rpllv
-%                 else vrt
-%           Just (CoveredBy Unif _ vs)
-%             ->  if S.size vs == 1
-%                    && getIdClass (LstVar tgtlv) == getIdClass (S.elemAt 0 vs)
-%                    && varWhen v == lvarWhen tgtlv
-%                 then v `replacedByRpl` rpllv
-%                 else vrt
-%           _  ->  subsLVar v rest
-
-%     replacedByRpl v@(Vbl i vc vw) (LVbl (Vbl _ _ lvw) is js)
-%       -- we need to know if v's temporality matches that of tgtlv
-%       | i `elem` is  =  vrt -- not really covered!
-%       | otherwise    =  jVar tk $ Vbl i vc lvw
-% \end{code}
 
 \subsection{Cons-Term Substitution}
 

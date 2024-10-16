@@ -8,6 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module SideCond (
   UVarSet, uset
+, umbr, udiff, uunion, uintsct, unull, usubset, udisj
 , VarSideConds(..)
 , termVar, disjointFrom, coveredBy, coveredDynamic
 , mkVSC
@@ -196,6 +197,11 @@ uset Nothing    =  S.singleton (StdVar $ StaticVar $ jId "UNIVERSE")
 uset (Just vs)  =  vs 
 
 -- lift regular set operarions to UVarSet, where Nothing is the universal set
+
+umbr :: GenVar -> UVarSet -> Bool
+umbr _ Nothing  =  True
+umbr gv (Just s)  = gv `S.member` s
+
 udiff :: UVarSet -> UVarSet -> UVarSet
 udiff _        Nothing   =  Just S.empty
 udiff Nothing  _         =  Nothing -- approximation

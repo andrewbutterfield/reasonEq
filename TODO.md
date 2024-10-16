@@ -6,18 +6,22 @@
 
 Back to substitution bugs!
 
-`(x := e)[O$_1/O$']` should NOT yield `(x,O$' := e,O$_1)` !
-Assignment is n.s. ! 
+Doing substitute (`s`) on `x'[O$_1/O$']` results in
 
-Issue: `Sub` has no substitutability indicator.
-Assignment is represented by a substitution on a predicate variable `:=`,
-which also has no subst-indicator.
+```
+proof: s
+@subvrt.vts:
+[]
+@subvrt.lvlvl:
+[(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]
+@llsub.tlv:
+LV (VR (Id "O" 0,VO,WA),[],[])
+@llsub.rlv:
+LV (VR (Id "O" 0,VO,WD "1"),[],[])
+```
 
-`(x' = e)[O$_1/O$']` should NOT be `x' = e[/]`.
-Using `=_subst` gives `x'[O$_1/O$'] = e[O$_1/O$']`.
+Lines 245-253 of `Substitution.lhs`.
 
-
-The substitute `s` command and law `=_subst` should give the same result.
 
 ### TestCode
 

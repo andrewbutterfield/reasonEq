@@ -23,7 +23,7 @@ module SideCond (
 , scDischarge
 , isFloatingVSC
 , notin, covers, dyncover, fresh
-, findGenVar, findAllGenVar, findCoveredGenVar
+, findGenVarInSC, findAllGenVar, findCoveredGenVar, findDynCvrdGenVar
 -- , citingASCs   -- not used anywhere!
 , (.:), mrgscs
 , int_tst_SideCond
@@ -1181,17 +1181,16 @@ fresh fvs = ( [], fvs )
 First, some simple queries to find term variable side-conditions of interest.
 We start by checking if a variable is mentioned.
 \begin{code}
-findGenVar :: MonadFail m => GenVar -> SideCond -> m VarSideConds
-findGenVar gv ( vscs, _ )  =  findGV gv vscs
+findGenVarInSC :: MonadFail m => GenVar -> SideCond -> m VarSideConds
+findGenVarInSC gv ( vscs, _ )  =  findGV gv vscs
 
-findGV _ [] = fail "findGenVar: not in any term variable side-condition"
+findGV _ [] = fail "findGenVarInSC: not in any term variable side-condition"
 findGV gv (vsc:vscs)
   | gv `mentionedBy` vsc  =  return vsc
   | otherwise             =  findGV gv vscs
 
 mentionedBy :: GenVar -> VarSideConds -> Bool
-gv `mentionedBy` vsc
-  | otherwise      =  gv == termVar vsc
+gv `mentionedBy` vsc  =  gv == termVar vsc
 \end{code}
 
 We then look at returning all mentions of a variable:
@@ -1206,6 +1205,8 @@ findAGV gv scsa (vsc:vscs)
 \end{code}
 
 We sometimes want mentions for a specific condition type:
+
+For (regular) coverage we look for precisely the given general variable.
 \begin{code}
 findCoveredGenVar :: MonadFail m => GenVar -> SideCond -> m VarSet
 findCoveredGenVar gv ( vscs, _ ) = findCGV gv vscs
@@ -1214,6 +1215,19 @@ findCGV gv []         =  fail ("Covered "++show gv ++ " not found")
 findCGV gv ((VSC gv' _ (Just vs) _):vscs)
   | gv == gv'         =  return vs
 findCGV gv (_:vscs)  =  findCGV gv vscs
+\end{code}
+
+For dynamic coverage we don't care about temporality,
+but do report what temporality was found.
+\begin{code}
+findDynCvrdGenVar :: MonadFail m => GenVar -> SideCond -> m ( VarSet, VarWhen )
+findDynCvrdGenVar gv ( vscs, _ ) = findDCGV gv vscs
+
+findDCGV gv []         =  fail ("DynCovered "++show gv ++ " not found")
+findDCGV gv ((VSC gv' _ _ (Just vs)):vscs)
+  = case gv `dynGVarEq` gv' of
+      Just vw'  ->  return (vs, vw')
+      Nothing   ->  findDCGV gv vscs
 \end{code}
 
 

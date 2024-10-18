@@ -21,7 +21,7 @@ module Variables
  , pattern ScriptVar
  , pattern PreCond, pattern PostCond, pattern MidCond
  , pattern PreExpr, pattern PostExpr, pattern MidExpr
- , isPreVar, isObsVar, isExprVar, isPredVar
+ , isPreVar, isObsVar, isExprVar, isPredVar, dynVarEq
  , whatVar, timeVar
  , ListVar
  , pattern LVbl
@@ -30,14 +30,14 @@ module Variables
  , pattern StaticVars, pattern PreVars, pattern PostVars, pattern MidVars
  , pattern ScriptVars
  , pattern PreExprs, pattern PrePreds
- , isPreListVar, isObsLVar, isExprLVar, isPredLVar
+ , isPreListVar, isObsLVar, isExprLVar, isPredLVar, dynLVarEq
  , whatLVar, timeLVar
  , less, lessVars, makeVars
  , GenVar, pattern StdVar, pattern LstVar
  , isStdV, isLstV, theStdVar, theLstVar
  , getIdClass, sameIdClass
  , gvarClass, gvarWhen, isDynGVar
- , isPreGenVar, isObsGVar, isExprGVar, isPredGVar
+ , isPreGenVar, isObsGVar, isExprGVar, isPredGVar, dynGVarEq
  , whatGVar, timeGVar
  , setVarWhen, setLVarWhen, setGVarWhen
  , VarList
@@ -267,7 +267,15 @@ isPredVar (VR (_, vw, _))  =  vw == VP
 
 whatVar (VR (_,vc,_))  =  vc
 timeVar (VR (_,_,vt))  =  vt
+\end{code}
 
+Sometimes we want to compare two variables, while ignoring their temporality.
+Such a comparison can fail, or succeed, returning the temporality of the 2nd variable.
+\begin{code}
+dynVarEq :: MonadFail m => Variable -> Variable -> m VarWhen
+(VR (i1,c1,_)) `dynVarEq` (VR (i2,c2,w2))
+  | i1 == i2 && c1 == c2  =  return w2
+  | otherwise             =  fail "dynVarEq: fails"
 \end{code}
 
 \newpage
@@ -329,6 +337,17 @@ isPredLVar (LV (v,_,_)) = isPredVar v
 whatLVar (LV (v,_,_)) = whatVar v
 timeLVar (LV (v,_,_)) = timeVar v
 \end{code}
+
+Sometimes we also want to compare two list variables, 
+while ignoring their temporality.
+Such a comparison can fail, or succeed, returning the temporality of the 2nd variable.
+\begin{code}
+dynLVarEq :: MonadFail m => ListVar -> ListVar -> m VarWhen
+(LV (v1,is1,js1)) `dynLVarEq` (LV (v2,is2,js2))
+  | is1 == is2 && js1 == js2  =  v1 `dynVarEq` v2
+  | otherwise                 =  fail "dynLVarEq: fails"
+\end{code}
+
 
 We provide a constructor to subtract (more) variables,
 which sorts them, as they are considered to be sets.
@@ -415,6 +434,17 @@ whatGVar (GL lv)  =  whatLVar lv
 timeGVar (GV v)   =  timeVar v
 timeGVar (GL lv)  =  timeLVar lv
 \end{code}
+
+Sometimes we also want to compare two general variables, 
+while ignoring their temporality.
+Such a comparison can fail, or succeed, returning the temporality of the 2nd variable.
+\begin{code}
+dynGVarEq :: MonadFail m => GenVar -> GenVar -> m VarWhen
+(GV v1)  `dynGVarEq` (GV v2)   =  v1  `dynVarEq`  v2
+(GL lv1) `dynGVarEq` (GL lv2)  =  lv1 `dynLVarEq` lv2
+_        `dynGVarEq` _         =  fail "dynLVarEq: fails"
+\end{code}
+
 
 Changing temporality:
 \begin{code}

@@ -267,23 +267,25 @@ and variable side-condition $(D \disj V, C \supseteq V, Cd \supseteq_a V )^{+}$.
 
 We fail if any of the following hold:
 the dynamicity of $v$ differs from that of $\ell^T$;
-the underlying variables in $\ell^R$ and $\ell^T$ are different;
+the underlying identifiers in $\ell^R$ and $\ell^T$ are different;
 $v \in s_T$;
 $v \in s_R$;
-$v$ not mentioned in the side-condition;
+$v$ not mentioned in the side-condition (after adjusting for temporality?);
 Given v.s.c. $(v,D,C,Cd)$, $\ell^T$ not in $C \cup Cd$.
 \begin{code}
     lvlvSubstitute sc            v@(Vbl i  vc vw) 
                       tlv@(LVbl tv@(Vbl ti _  tw) tis _) 
                       rlv@(LVbl rv@(Vbl ri _  rw) ris _)
-      | vw /= tw  = fail "v,tv dynamicity differs"
-      | tv /= rv  =  fail "tv,rv differ"
+      | (pdbg "X.vw "vw) /= (pdbg "X.tw" tw)  = fail "v,tv dynamicity differs"
+      | (pdbg "X.ti" ti) /= (pdbg "X.ri" ri)  =  fail "ti,ri differ"
       | i `elem` tis || i `elem` ris  =  fail "v removed"
       | otherwise
-          = case findGenVar (StdVar v) sc of
-              Nothing ->  fail "v not mentioned" 
+      -- v might be mentioned in sc, if so process it.
+      -- if not, we might want to ignore temporality and check again
+          = case findGenVarInSC (pdbg "X.gv" $ StdVar v) sc of
+              Nothing ->  fail (show (pdbg "X.v" v) ++ " not mentioned" ) 
               Just (VSC _ _ uvsc uvsCd)
-                | not ( LstVar tlv `umbr` (uvsc `uunion` uvsCd) ) 
+                | not ( LstVar (pdbg "X.tlv" tlv) `umbr` (pdbg "X.uvsc" uvsc `uunion` pdbg "X.uvsCd" uvsCd) ) 
                              -> fail  "tlv not mentioned in s.c."
 \end{code}
 If all above don't hold, 
@@ -420,7 +422,7 @@ sctxSimplify _ tm = tm
 
 scSimplify :: SideCond -> GenVar -> Substn -> Substn
 scSimplify sc gv sub 
-  = case findGenVar gv sc of
+  = case findGenVarInSC gv sc of
       Nothing   ->  sub
       Just vsc  ->  vscSimplify vsc gv sub
 \end{code}

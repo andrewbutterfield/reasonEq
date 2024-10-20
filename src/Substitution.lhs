@@ -242,15 +242,15 @@ If nothing is found we return a substitution term with only the list-vars.
 
 \begin{code}
 substitute sctx@(SCtxt sc) sub@(Substn vts lvlvs) vrt@(Var tk v)
-  =  alookup (pdbg "subvrt.v" v) (pdbg "subvrt.vts" $ S.toList vts) 
-     <|> lvlvlSubstitute (pdbg "subvrt.sc" sc) v (pdbg "subvrt.lvlvl" lvlvl)
-     <|> pure (Sub (pdbg "subvrt.tk" tk) vrt (jSubstn [] lvlvl))
+  =  alookup v (S.toList vts) 
+     <|> lvlvlSubstitute sc v lvlvl
+     <|> pure (Sub tk vrt (jSubstn [] lvlvl))
   where
     lvlvl = S.toList lvlvs
 
     lvlvlSubstitute sc v []  =  fail "all lvlv done"
     lvlvlSubstitute sc v ((tlv,rlv):lvlvl)
-      = lvlvSubstitute sc v (pdbg "llsub.tlv" tlv) (pdbg "llsub.rlv" rlv) 
+      = lvlvSubstitute sc v tlv rlv
         <|> lvlvlSubstitute sc v lvlvl
 
 \end{code}
@@ -270,23 +270,24 @@ the dynamicity of $v$ differs from that of $\ell^T$;
 the underlying identifiers in $\ell^R$ and $\ell^T$ are different;
 $v \in s_T$;
 $v \in s_R$;
-$v$ not mentioned in the side-condition (after adjusting for temporality?);
+$v$ not mentioned in the side-condition, after adjusting for temporality;
 Given v.s.c. $(v,D,C,Cd)$, $\ell^T$ not in $C \cup Cd$.
 \begin{code}
     lvlvSubstitute sc            v@(Vbl i  vc vw) 
                       tlv@(LVbl tv@(Vbl ti _  tw) tis _) 
                       rlv@(LVbl rv@(Vbl ri _  rw) ris _)
-      | (pdbg "X.vw "vw) /= (pdbg "X.tw" tw)  = fail "v,tv dynamicity differs"
-      | (pdbg "X.ti" ti) /= (pdbg "X.ri" ri)  =  fail "ti,ri differ"
+      | vw /= tw  = fail "v,tv dynamicity differs"
+      | ti /= ri  =  fail "ti,ri differ"
       | i `elem` tis || i `elem` ris  =  fail "v removed"
       | otherwise
-      -- v might be mentioned in sc, if so process it.
-      -- if not, we might want to ignore temporality and check again
-          = case findGenVarInSC (pdbg "X.gv" $ StdVar v) sc of
-              Nothing ->  fail (show (pdbg "X.v" v) ++ " not mentioned" ) 
-              Just (VSC _ _ uvsc uvsCd)
-                | not ( LstVar (pdbg "X.tlv" tlv) `umbr` (pdbg "X.uvsc" uvsc `uunion` pdbg "X.uvsCd" uvsCd) ) 
-                             -> fail  "tlv not mentioned in s.c."
+      -- for now we just check that tlv is dynamically covered
+          = case findDynCvrdGenVar (StdVar v) sc of
+              Nothing ->  fail (show v ++ " not mentioned" ) 
+              Just ( (Just uvsCd), foundVW )
+                | not ( LstVar (setLVarWhen foundVW tlv) 
+                        `umbr` 
+                        (Just uvsCd) ) 
+                  -> fail  "tlv not mentioned in s.c."
 \end{code}
 If all above don't hold, 
 we return $\vv v$ with its dynamicity changed to that of $\ell^R$.

@@ -1220,13 +1220,13 @@ findCGV gv (_:vscs)  =  findCGV gv vscs
 For dynamic coverage we don't care about temporality,
 but do report what temporality was found.
 \begin{code}
-findDynCvrdGenVar :: MonadFail m => GenVar -> SideCond -> m ( VarSet, VarWhen )
+findDynCvrdGenVar :: MonadFail m => GenVar -> SideCond -> m ( UVarSet, VarWhen )
 findDynCvrdGenVar gv ( vscs, _ ) = findDCGV gv vscs
 
 findDCGV gv []         =  fail ("DynCovered "++show gv ++ " not found")
-findDCGV gv ((VSC gv' _ _ (Just vs)):vscs)
+findDCGV gv ((VSC gv' _ _ uvs):vscs)
   = case gv `dynGVarEq` gv' of
-      Just vw'  ->  return (vs, vw')
+      Just vw'  ->  return (uvs, vw')
       Nothing   ->  findDCGV gv vscs
 \end{code}
 

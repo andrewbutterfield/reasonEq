@@ -4,23 +4,31 @@
 
 ### BREAKING
 
-Back to substitution bugs!
-
-Doing substitute (`s`) on `x'[O$_1/O$']` results in
+#### Assignment Substitution
 
 ```
-proof: s
-@subvrt.vts:
-[]
-@subvrt.lvlvl:
-[(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]
-@llsub.tlv:
-LV (VR (Id "O" 0,VO,WA),[],[])
-@llsub.rlv:
-LV (VR (Id "O" 0,VO,WD "1"),[],[])
+(∃ O$_1  • ((x := e))[O$_1/O$'] ∧ ((x := f))[O$_1/O$]), O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
+   = 'substitute @[1,1]'
+(∃ O$_1  • (O$' := O$_1)        ∧ ((x := f))[O$_1/O$]), O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
 ```
 
-Lines 245-253 of `Substitution.lhs`.
+#### One-Point Law
+
+One-point law matching and s.c. discharge needs fixing:
+```
+(∃ O$_1  • (x_1 = e[O$_1/O$'] ∧ (O$_1\x=O$\x)) ∧ (x'[O$_1/O$] = f_1 ∧ (O$'\x=O$_1\x)))    O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
+Focus = []
+proof: tm 1 exists_one_point
+Match against `exists_one_point'[1] OK
+Binding: { P  ⟼ x'[O$_1/O$] = f_1 ∧ (O$'\x=O$_1\x), ∧  ⟼ ∧, e$  ⟼ ⟨e[O$_1/O$'], O$\x⟩, x$  ⟼ ⟨x_1, O$_1\x⟩, y$  ⟼ {} }
+Instantiated Law = (x'[O$_1/O$] = f_1 ∧ (O$'\x=O$_1\x))[e[O$_1/O$'],O$\x/x_1,O$_1\x]
+Instantiated Law S.C. = x_1,O$_1\x∉O$\x
+Goal S.C. = O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
+Discharged Law S.C. = x_1,O$_1\x∉O$\x
+```
+
+
+
 
 
 ### TestCode

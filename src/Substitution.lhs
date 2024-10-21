@@ -367,8 +367,8 @@ we need to treat such seperately, noting that it is n.s.::
    (x:=e)[t^n/v^v] &=& (x:=e)[t^n/v^v]
 \end{eqnarray*}
 \begin{code}
-substitute sctx sub bt@(Sub tk _ _)
-  | isAssignment bt  =  return $ Sub tk bt sub
+substitute sctx sub st@(Sub tk bt _)
+  | isAssignment bt  =  return $ Sub tk st sub
 \end{code}
 
 \subsubsection{Substitution Substitution}

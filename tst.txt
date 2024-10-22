@@ -1,3 +1,8 @@
-@subst.isAssignmentbt:
-S (TF TB (TG (Id "B" 0))) (V (TF TB (TG (Id "B" 0))) (VR (Id ":=" 0,VP,WT))) (SN (fromList [(VR (Id "x" 0,VO,WB),V T (VR (Id "e" 0,VE,WB)))]) (fromList []))
-
+@scD.cnsqVSC:
+[VSC (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "x" 0,VO,WD "1"))]) Nothing Nothing,VSC (GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[]))) (fromList [GV (VR (Id "x" 0,VO,WD "1")),GL (LV (VR (Id "O" 0,VO,WD "1"),[Id "x" 0],[]))]) Nothing Nothing]
+@scD.obsv:
+fromList []
+@scD.cnsqVSC':
+[VSC (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "x" 0,VO,WD "1"))]) Nothing Nothing,VSC (GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[]))) (fromList [GV (VR (Id "x" 0,VO,WD "1")),GL (LV (VR (Id "O" 0,VO,WD "1"),[Id "x" 0],[]))]) Nothing Nothing]
+@scD.anteSC:
+([VSC (GV (VR (Id "e" 0,VE,WB))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])),VSC (GV (VR (Id "f" 0,VE,WB))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])),VSC (GV (VR (Id "x" 0,VO,WB))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]))],fromList [])

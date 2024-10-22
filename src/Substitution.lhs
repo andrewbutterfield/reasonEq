@@ -297,7 +297,7 @@ we fail if $\ell^T$ overlaps with $D$ or is not in $C \cup Cd$.
              Just ( (VSC gv' vsD uvsC uvsCd), Nothing ) -- gv==StdVar v
                 | gtlv `S.member` vsD  
                     ->  fail "tlv mentioned in disjoint-set"
-                | not ( gtlv `umbr` (uvsC `uunion` uvsCd) )
+                | not ( ( gtlv `umbr` uvsC) && (gtlv `umbr` uvsCd) )
                     ->  fail "tlv not mentioned in coverage"
                 | otherwise  ->  pure $ jVar tk (Vbl i vc rw)   
              Just ( (VSC gv' _ _ (Just vsCd)), Just vw' ) -- gv~~StdVar v 

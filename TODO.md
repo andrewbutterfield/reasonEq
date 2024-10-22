@@ -4,27 +4,68 @@
 
 ### BREAKING
 
-#### Assignment Substitution
-
-fixed
 
 #### One-Point Law
 
 One-point law matching and s.c. discharge needs fixing:
 ```
-Instantiated Law S.C. = x_1,O$_1\x ∉ O$\x
+(∃ O$_1  • (x_1 = e ∧ (O$_1\x=O$\x)) ∧ (x' = f_1 ∧ (O$'\x=O$_1\x)))    
+O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
+Match against `exists_one_point'[1] OK
+Binding: 
+  { P  ⟼ x' = f_1 ∧ (O$'\x=O$_1\x)
+  , ∧  ⟼ ∧
+  , e$  ⟼ ⟨e, O$\x⟩
+  , x$  ⟼ ⟨x_1, O$_1\x⟩
+  , y$  ⟼ {} 
+  }
+Instantiated Law = (x' = f_1 ∧ (O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x]
+Instantiated Law S.C. = x_1∉e, x_1,O$_1\x∉O$\x
 Goal S.C. = O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
-Discharged Law S.C. = x_1,O$_1\x ∉ O$\x
+Discharged Law S.C. = x_1,O$_1\x∉O$\x
 ```
-Work on instantiated law s.c.:
+
+Looking at law s.c., applying the binding and simplifying:
 ```
-x_1,O$_1\x ∉ O$\x
-  =  simplify rhs
-O$_1  ∉ O$\x
-  =  z$_1 always disjoint from z
+x$ ∉ e$
+  =  "bindings"
+⟨x_1, O$_1\x⟩ ∉ ⟨e[O$_1/O$'], O$\x⟩ 
+  =  "simplify"
+O$_1 ∉ ⟨e[O$_1/O$'], O$\x⟩ 
+  =  "distr"
+O$_1 ∉ e[O$_1/O$']  /\ O$_1 ∉ O$\x
+  = "diff dyn implies disjoint"
+O$_1 ∉ e[O$_1/O$']
+  = "e is before"
+O$_1 ∉ e
+  = "diff dyn implies disjoint"
 True
 ```
-This is an issue for side-condition construction! Not discharge
+
+However, looking at instantiated and discharged s.c.s,
+we see they all reduce to true.
+All the rules (simplify, diff-dyn) can be **invoked at s.c. build time**
+
+Looking at instantiated law s.c.:
+```
+x_1 ∉ e  /\  ⟨x_1, O$_1\x⟩ ∉ O$\x
+  = "e is before"
+true /\ ⟨x_1, O$_1\x⟩ ∉ O$\x
+  = "simplify
+O$_1 ∉ O$\x
+  = "diff dyn implies disjoint
+True
+```
+
+Looking at discharged laws s.c.:
+```
+⟨x_1, O$_1\x⟩ ∉ O$\x
+  = "simplify"
+O$_1 ∉ O$\x
+  = "diff dyn implies disjoint
+True
+```
+
 
 ### TestCode
 

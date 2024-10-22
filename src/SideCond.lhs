@@ -24,13 +24,14 @@ module SideCond (
 , isFloatingVSC
 , notin, covers, dyncover, fresh
 , findGenVarInSC, findAllGenVar, findCoveredGenVar, findDynCvrdGenVar
+, mentionedBy
 -- , citingASCs   -- not used anywhere!
 , (.:), mrgscs
 , int_tst_SideCond
 ) where
 import Data.Char
 import Data.List
-import Data.Maybe (fromJust)
+import Data.Maybe (isJust, fromJust)
 import Data.Set(Set)
 import qualified Data.Set as S
 import Data.Map(Map)
@@ -1186,11 +1187,8 @@ findGenVarInSC gv ( vscs, _ )  =  findGV gv vscs
 
 findGV _ [] = fail "findGenVarInSC: not in any term variable side-condition"
 findGV gv (vsc:vscs)
-  | gv `mentionedBy` vsc  =  return vsc
-  | otherwise             =  findGV gv vscs
-
-mentionedBy :: GenVar -> VarSideConds -> Bool
-gv `mentionedBy` vsc  =  gv == termVar vsc
+  | gv == termVar vsc  =  return vsc
+  | otherwise          =  findGV gv vscs
 \end{code}
 
 We then look at returning all mentions of a variable:
@@ -1200,8 +1198,8 @@ findAllGenVar gv ( vscs, _ )  =  findAGV gv [] vscs
 
 findAGV _ scsa []  =  reverse scsa
 findAGV gv scsa (vsc:vscs)
-  | gv `mentionedBy` vsc  =  findAGV gv (vsc:scsa) vscs
-  | otherwise             =  findAGV gv scsa       vscs
+  | gv == termVar vsc  =  findAGV gv (vsc:scsa) vscs
+  | otherwise          =  findAGV gv scsa       vscs
 \end{code}
 
 We sometimes want mentions for a specific condition type:
@@ -1230,6 +1228,19 @@ findDCGV gv ((VSC gv' _ _ uvs):vscs)
       Nothing   ->  findDCGV gv vscs
 \end{code}
 
+We have a catch-all :
+\begin{code}
+mentionedBy :: MonadFail m 
+            => GenVar -> [VarSideConds] -> m ( VarSideConds, Maybe VarWhen)
+gv `mentionedBy` []  =  fail "variable not mentioned"
+gv `mentionedBy` (vsc@(VSC gv' _ _ uvsCd):vscs)
+  | gv == gv'       =  return ( vsc, Nothing )
+  | isJust uvsCd -- we need an explicit mention of gv'
+      = case gv `dynGVarEq` gv' of
+          Just vw'  ->  return ( vsc, Just vw')
+          _         ->  gv `mentionedBy` vscs
+  | otherwise       =   gv `mentionedBy` vscs
+\end{code}
 
 We convert variable-sets into ordered lists of lists,
 and then work through them in lock-step.

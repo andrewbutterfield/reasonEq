@@ -247,31 +247,43 @@ substitute sctx@(SCtxt sc) sub@(Substn vts lvlvs) vrt@(Var tk v)
      <|> pure (Sub tk vrt (jSubstn [] lvlvl))
   where
     lvlvl = S.toList lvlvs
-
-    lvlvlSubstitute sc v []  =  fail "all lvlv done"
-    lvlvlSubstitute sc v ((tlv,rlv):lvlvl)
-      = lvlvSubstitute sc v tlv rlv
-        <|> lvlvlSubstitute sc v lvlvl
-
 \end{code}
-
-For now we just consider substitutions involving 
-different dynamic variants of the same list variable $\ell$.
+What we try next is to scan the list-var substitutions 
+($\setof{\dots,\ell^R/\ell^T,\dots$}),
+asking the following questions:
+\begin{enumerate}
+  \item Is $v$ definitely in $\ell^T$?  
+        If so, exit the scan and return $v$ modifed as follows:
 \begin{eqnarray*}
    \prv v \ss{}{\prv\ell}{\dyn\ell}  &=&  \dyn v ~~\IF~~ \prv\ell \supseteq \prv v
 \\ \psv v \ss{}{\psv\ell}{\dyn\ell}  &=&  \dyn v ~~\IF~~ \psv\ell \supseteq \psv v
 \\ v_d    \ss{}{\ell_d}  {\dyn\ell}  &=&  \dyn v ~~\IF~~ \ell_d \supseteq v_d
 \end{eqnarray*}
-Here we have substitution $v[\ell^R\less{s_R}/\ell^T\less{s_T}]$
-and variable side-condition $(D \disj V, C \supseteq V, Cd \supseteq_a V )^{+}$.
+  \item Is $v$ definitely not in $\ell^T$ ?
+        If so, skip and move on.
+  \item Otherwise, $v$ might be in $\ell^T$,
+        so exit the scan and return the explicit substitution $v[\ell^R/\ell^T]$.
+\end{enumerate}
+If neither option 1 or 3 occurs, having scanned the whole list,
+we simply return $v$.
+\begin{code}
+    lvlvlSubstitute sc v []  =  pure vrt
+    lvlvlSubstitute sc v ((tlv,rlv):lvlvl)
+      = lvlvSubstitute sc v tlv rlv
+        <|> lvlvlSubstitute sc v lvlvl
+\end{code}
 
-We fail if any of the following hold:
-the dynamicity of $v$ differs from that of $\ell^T$;
-the underlying identifiers in $\ell^R$ and $\ell^T$ are different;
-$v \in s_T$;
-$v \in s_R$;
-$v$ not mentioned in the side-condition, after adjusting for temporality;
-Given v.s.c. $(v,D,C,Cd)$, $\ell^T$ not in $C \cup Cd$.
+\newpage
+Here, in general, we have substitution $v[\ell^R\less{s_R}/\ell^T\less{s_T}]$
+and variable side-condition $(D \disj V, C \supseteq V, Cd \supseteq_a V )^{+}$.
+We fail if any of the following hold:\\
+the dynamicity of $v$ differs from that of $\ell^T$ \\
+the underlying identifiers in $\ell^R$ and $\ell^T$ are different;\\
+$v \in s_T$; \\
+$v \in s_R$;\\
+$v$ not mentioned in the side-condition, after adjusting for temporality;\\
+Given v.s.c. $(v,D,C,Cd)$, 
+we fail if $\ell^T$ overlaps with $D$ or is not in $C \cup Cd$.
 \begin{code}
     lvlvSubstitute sc            v@(Vbl i  vc vw) 
                       tlv@(LVbl tv@(Vbl ti _  tw) tis _) 
@@ -280,19 +292,21 @@ Given v.s.c. $(v,D,C,Cd)$, $\ell^T$ not in $C \cup Cd$.
       | ti /= ri  =  fail "ti,ri differ"
       | i `elem` tis || i `elem` ris  =  fail "v removed"
       | otherwise
-      -- for now we just check that tlv is dynamically covered
-          = case findDynCvrdGenVar (StdVar v) sc of
-              Nothing ->  fail (show v ++ " not mentioned" ) 
-              Just ( (Just uvsCd), foundVW )
-                | not ( LstVar (setLVarWhen foundVW tlv) 
-                        `umbr` 
-                        (Just uvsCd) ) 
-                  -> fail  "tlv not mentioned in s.c."
-\end{code}
-If all above don't hold, 
-we return $\vv v$ with its dynamicity changed to that of $\ell^R$.
-\begin{code}
-                | otherwise  ->  pure $ jVar tk (Vbl i vc rw)       
+        =  case (StdVar v `mentionedBy` fst sc) of
+             Nothing  ->  fail (show v ++ " not mentioned" ) 
+             Just ( (VSC gv' vsD uvsC uvsCd), Nothing ) -- gv==StdVar v
+                | gtlv `S.member` vsD  
+                    ->  fail "tlv mentioned in disjoint-set"
+                | not ( gtlv `umbr` (uvsC `uunion` uvsCd) )
+                    ->  fail "tlv not mentioned in coverage"
+                | otherwise  ->  pure $ jVar tk (Vbl i vc rw)   
+             Just ( (VSC gv' _ _ (Just vsCd)), Just vw' ) -- gv~~StdVar v 
+                | not ( setGVarWhen vw' gtlv `umbr` (Just vsCd) ) 
+                    -> fail  "tlv not mentioned in dyn. s.c."
+                | otherwise  ->  pure $ jVar tk (Vbl i vc rw)   
+             _  ->  fail "lvlvSubstitute: this shouldn't happen"   
+      where
+        gtlv = LstVar tlv 
 \end{code}
 
 

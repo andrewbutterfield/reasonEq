@@ -4,6 +4,10 @@
 
 ### BREAKING
 
+The three functions `disjfrom`, `coveredby`, `dyncovered` are used everywhere,
+particularly in instantiation.
+These need to be smart and kill anything that is obviously false.
+However, they return `VarSideConds`, rather than `m VarSideConds`.
 
 #### One-Point Law
 

@@ -318,21 +318,23 @@ mscTrue = Nothing
 vscCheck :: MonadFail m => VarSideConds 
           -> m (Maybe VarSideConds)
 vscCheck (VSC gv vsD uvsC uvsCd)
-  = do  vsD'   <- disjointCheck  gv vsD
+  = do  vsD'   <- disjointCheck  (pdbg "vscCheck.gv" gv) $ pdbg "vscCheck.vsD" vsD
         uvsC'  <- coveredByCheck gv uvsC
         uvsCd' <- dynCvrgCheck   gv uvsCd
-        return $ mkVSC gv vsD' uvsC' uvsCd'
+        return $ mkVSC gv (pdbg "vscCheck.vsD'" vsD') uvsC' uvsCd'
 \end{code}
 
 The key trick is to take \m{g ~R~ \setof{g_1,\dots,g_n}}
 and break it down into individual comparisons (\m{g ~R~ \setof{g_i}}).
 
-
 \subsubsection{Checking Disjoint $ V \disj g$}
 
 Here, checking \m{g \disj \setof{g_1,\dots,g_n}}
-reduces to checking \m{\bigwedge_{i \in 1\dots n}(g \disj \setof{g_i})}.
-
+reduces to checking \m{\bigwedge_{i \in 1\dots n}(g \disj g_i)}.
+\begin{itemize}
+  \item definitely \false : \m{g = g_i}
+  \item definitely \true : \m{g} and \m{g_i} have different dynamicity.
+\end{itemize}
 \begin{code}
 disjointCheck  :: MonadFail m => GenVar -> VarSet -> m VarSet
 disjointCheck gv vsD
@@ -342,31 +344,10 @@ disjointCheck gv vsD
 disjCheck :: MonadFail m
           => GenVar -> VarSet -> [GenVar] -> m VarSet
 disjCheck gv vsd [] = return vsd
-disjCheck gv@(StdVar v1@(ObsVar _ _)) vsd ((StdVar v2@(ObsVar _ _)):gvs)
-  | v1 == v2   =  fail "disjCheck: same variable"
-  | otherwise  =  disjCheck gv vsd gvs
 disjCheck gv vsd (gvd:gvs)
-  = do  vsd'  <-  if gv < gvd then disjChk gvd gv gvd
-                              else disjChk gvd gvd gv  -- gvd <= gv
-        disjCheck gv (vsd `S.union` vsd') gvs
-\end{code}
-
-Here we have ruled out both being observables,
-and have \h{gv1} as the ``smaller'' GVar.
-If we have equality now, they must either be the same term variable or 
-the same list-variable. 
-In both cases they could end up designating an empty variable state,
-so we need to defer.
-If the first is a term variable, while the second is a list variable,
-then we can assert disjointness
-Otherwise, we need to defer the decision until we see what the free-variables
-for the term turn out to be.
-\begin{code}
--- gv1 <= gv2
-disjChk gvd gv1@(StdVar (ExprVar _ _)) gv2@(LstVar _)  =  return disjTrue
-disjChk gvd gv1@(StdVar (PredVar _ _)) gv2@(LstVar _)  =  return disjTrue
--- here we cannot be definitive, so retain this variable in s.c.
-disjChk gvd _ _  =  return $ S.singleton gvd 
+  | gv == gvd                    =  fail "disjCheck: same variable"
+  | timeGVar gv /= timeGVar gvd  =  disjCheck gv vsd                 gvs
+  | otherwise                    =  disjCheck gv (S.insert gvd vsd) gvs
 \end{code}
 
 \newpage
@@ -814,10 +795,10 @@ We first simplfiy the consequence
 
 \begin{code}
 scDischarge obsv anteSC@(anteVSC,anteFvs) cnsqSC@(cnsqVSC,cnsqFvs)
-  = do cnsqVSC' <- vscMrg $ map (knownObsDischarge $ pdbg "scD.obsv" obsv) $ pdbg "scD.cnsqVSC" cnsqVSC
-       let cnsqSC' = (pdbg "scD.cnsqVSC'" cnsqVSC',cnsqFvs)
+  = do cnsqVSC' <- vscMrg $ map (knownObsDischarge obsv) cnsqVSC
+       let cnsqSC' = (cnsqVSC',cnsqFvs)
        if isTrivialSC cnsqSC' then return scTrue
-       else if isTrivialSC $ pdbg "scD.anteSC" anteSC then return cnsqSC'
+       else if isTrivialSC anteSC then return cnsqSC'
        else do vsc' <- scDischarge' obsv anteVSC cnsqVSC'
                freshDischarge obsv anteFvs cnsqFvs vsc'
     

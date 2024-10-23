@@ -4,10 +4,46 @@
 
 ### BREAKING
 
-The three functions `disjfrom`, `coveredby`, `dyncovered` are used everywhere,
-particularly in instantiation.
+The three functions `disjfrom`, `coveredby`, `dyncovered` are used as follows:
+
+ * `disjfrom` in SideCond to define `notin` only, used once in Instantiate.
+
+ * `notin` used in builtins (Exists,ForAll,Equivalence,XYZ,UTCP), and for testing in SideCond
+
+ * `coveredby` in SideCond to define `ucoveredby`, `covers` and for testing
+
+ * `ucoveredby` used in Instantiate
+
+ * `covers` used in builtins (UClose) , and for testing in Substitution
+
+* `dyncovered` in SideCond to define `dyncover`.
+
+* `dyncover` used in builtins (UTPBase)
+
 These need to be smart and kill anything that is obviously false.
 However, they return `VarSideConds`, rather than `m VarSideConds`.
+
+Perhaps we need to make more use of `vscCheck`?
+
+Currently: used in SideCond for testing and as follows: 
+
+ * `mrgVarConds`  
+     calls `mrgVSC` which calls `mrgSameGVSC` which calls `vscCheck`.
+     is called by `mrgTVarCondLists`, `vscMrg`.
+
+* `vscMrg` called by `scDischarge`.
+
+* `mrgTVarCondLists` called by `mkSideCond`, `mrgSideCond`
+
+ 
+
+
+
+
+
+
+
+
 
 #### One-Point Law
 

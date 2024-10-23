@@ -5,9 +5,15 @@
 ### BREAKING
 
 
-Solved what was an instantiation problem.
+
+
 
 Still have a substitute problem.
+
+REAL ISSUE - we need a holistic view of the substitution - this one 
+is uniform and complete.
+
+These are common enough (any use of seq-comp!) to get special handling.
 
 ```
 (x' = f_1 ∧ (O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x], O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
@@ -30,6 +36,27 @@ x' = f_1[e,O$\x/x_1,O$_1\x] ∧ ((O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x],
    = 'substitute @[1,2]'x' = f_1 ∧ ((O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x]    O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
 ```
 We should have `f_1[e,O$\x/x_1,O$_1\x] = f[e/x]`.
+
+### Lifted Set Algebra
+
+We really need a lifted algebra for list-variable set membership.
+
+`l$\A U l$\B = l$\(A intsct B)`
+
+We need to normalise something like `{...,l$\A,...,l$\B,...}`
+to `{...,l$\(A intsct B),...}`
+
+We will have interactions involving standard and list-variables,
+e.g.
+
+`{...,x,...,l$\{x,y},...} = {...,l$\{y},...}`
+
+What about pathological cases - different list-vars that "represent"
+overlapping sets of ordinary variables?
+
+`{...,a,...,l1$\{a,b},...,l2$\{a,c},...}`
+
+
 
 ### TestCode
 

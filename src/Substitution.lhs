@@ -239,6 +239,10 @@ Otherwise we scan the list-var pairs, with the side-conditions in hand,
 looking for a list-variable that covers $\vv s$.
 If nothing is found we return a substitution term with only the list-vars.
 
+\textbf{Now} we have case \m{f_1[e,\lst O\less x/x_1,\lst O_1\less x]}
+which should result in \m{f[e/x]}.
+Currently we get \m{f_1} as an outcome.
+The \h{alookup} below will fail as \m{f_1 \notin \dom\setof{(x_1,e)}}.
 
 \begin{code}
 substitute sctx@(SCtxt sc) sub@(Substn vts lvlvs) vrt@(Var tk v)
@@ -261,11 +265,16 @@ asking the following questions:
 \end{eqnarray*}
   \item Is $v$ definitely not in $\ell^T$ ?
         If so, skip and move on.
+        \\ This is dangerous and fails for something like 
+           \m{f_1[e,\lst O\less x/x_1,\lst O_1\less x]}.
   \item Otherwise, $v$ might be in $\ell^T$,
         so exit the scan and return the explicit substitution $v[\ell^R/\ell^T]$.
 \end{enumerate}
 If neither option 1 or 3 occurs, having scanned the whole list,
 we simply return $v$.
+
+\textbf{Now} we have \m{\h{v} = f_1} 
+and \m{\h{lvlvl} = \seqof{(\lst O_1\less x,\lst O\less x)}}.
 \begin{code}
     lvlvlSubstitute sc v []  =  pure vrt
     lvlvlSubstitute sc v ((tlv,rlv):lvlvl)
@@ -274,16 +283,31 @@ we simply return $v$.
 \end{code}
 
 \newpage
+
+\textbf{Now} we have \m{\h{v} = f_1} with
+\m{\ell^R = \lst O}, \m{s_R = \setof{x}}
+and
+\m{\ell^T = \lst O_1}, \m{s_T = \setof{x}}
+and side-condition \m{\lst O \supseteq_a f,x}.
+
 Here, in general, we have substitution $v[\ell^R\less{s_R}/\ell^T\less{s_T}]$
 and variable side-condition $(D \disj V, C \supseteq V, Cd \supseteq_a V )^{+}$.
 We fail if any of the following hold:\\
-the dynamicity of $v$ differs from that of $\ell^T$ \\
-the underlying identifiers in $\ell^R$ and $\ell^T$ are different;\\
-$v \in s_T$; \\
-$v \in s_R$;\\
-$v$ not mentioned in the side-condition, after adjusting for temporality;\\
-Given v.s.c. $(v,D,C,Cd)$, 
-we fail if $\ell^T$ overlaps with $D$ or is not in $C \cup Cd$.
+the dynamicity of $v$ differs from that of $\ell^T$  
+(\m{f_1 \approx \lst O_1} OK) \\
+the underlying identifiers in $\ell^R$ and $\ell^T$ are different;
+(\m{\lst O \approx \lst O_1} OK) \\
+$v \in s_T$; (\m{f_1 \in \setof{x}} OK)\\
+$v \in s_R$; (\m{f_1 \in \setof{x}} OK)\\
+$v$ not mentioned in the side-condition, after adjusting for temporality;
+(\m{f_1 \notin \lst O \supseteq_a f,x} OK) \\
+Given v.s.c. $(v,D,C,Cd)$  (\m{f_1,\emptyset,U,\setof{\lst O}}), 
+we fail if $\ell^T\less{s_T}$ 
+definitely overlaps with $D$ or is 
+definitely not in $C \cup Cd$
+(\m{\lst O_1 \cap x} or \m{\lst O_1 \notin_a \setof{\lst O}}).
+
+We fail because it is judged that \m{\lst O\less x \notin \setof{\lst O}}
 \begin{code}
     lvlvSubstitute sc            v@(Vbl i  vc vw) 
                       tlv@(LVbl tv@(Vbl ti _  tw) tis _) 
@@ -301,7 +325,7 @@ we fail if $\ell^T$ overlaps with $D$ or is not in $C \cup Cd$.
                     ->  fail "tlv not mentioned in coverage"
                 | otherwise  ->  pure $ jVar tk (Vbl i vc rw)   
              Just ( (VSC gv' _ _ (Just vsCd)), Just vw' ) -- gv~~StdVar v 
-                | not ( setGVarWhen vw' gtlv `umbr` (Just vsCd) ) 
+                | not $ pdbg "HERE" ( setGVarWhen (pdbg "vw'" vw') (pdbg "gtlv" gtlv) `umbr` (Just $ pdbg "vsCd" vsCd) ) 
                     -> fail  "tlv not mentioned in dyn. s.c."
                 | otherwise  ->  pure $ jVar tk (Vbl i vc rw)   
              _  ->  fail "lvlvSubstitute: this shouldn't happen"   

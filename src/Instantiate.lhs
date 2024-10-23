@@ -319,6 +319,22 @@ and assignments.
 While this obviously requires separate treatment for the two cases,
 it turns out that the pair-lists in the \texttt{Substn} part
 are processed the same way.
+\begin{eqnarray*}
+   \beta.\ss {}{v^n} {t^n} &=& \ss {} {\beta^*(v^n)} {\beta^*.t^n}
+\end{eqnarray*}
+
+Right now we have:
+\begin{eqnarray*}
+   \h{binding} 
+   &=&
+   \m{
+     \lst e  \mapsto \seqof{\mathbf{e}, \lst O \less{x}}
+   , \lst x  \mapsto \seqof{x_1,\lst O_1\less{x}} 
+   }
+\\ \h{ts} &=& \m{[]}
+\\ \h{lvs} &=& \m{[\lst e/\lst x]}
+\end{eqnarray*}
+Here $\mathbf{e}$ denotes a term that is just a variable.
 
 \begin{code}
 instSub :: MonadFail m => InsContext -> Binding -> Substn -> m Substn
@@ -326,8 +342,10 @@ instSub insctxt binding (Substn ts lvs)
   = do ts'  <- instZip (instStdVar insctxt binding)
                        (instantiate insctxt binding) (S.toList ts)
        ts'' <- sequence $ map getTheTargetVar ts'
-       vtlvss' <- instZip (instLLVar insctxt binding) (instLLVar insctxt binding)
-                          (S.toList lvs)
+       vtlvss' <- instZip 
+                    (instLLVar insctxt binding) -- 
+                    (instLLVar insctxt binding)
+                    (pdbg "instSub.lvs" $ S.toList lvs)
        let (lvtlvss,rvtlvss) = unzip vtlvss'
        let (vtts,lvts) = unzip lvtlvss
        let (vtrs,lvrs) = unzip rvtlvss
@@ -362,15 +380,30 @@ getTheVar fvs@(vs,diffs)
 
 \newpage
 This code is used for list-var in substitutions only.
+We need to keep in mind that list-variables can be bound to 
+lists and sets of general variables,
+and lists containing a mix of terms and list-variables.
+
+Right now we have:
+\begin{eqnarray*}
+   \h{binding} 
+   &=&
+   \m{
+     \lst e  \mapsto \seqof{\mathbf{e}, \lst O \less{x}}
+   , \lst x  \mapsto \seqof{x_1,\lst O_1\less{x}} 
+   }
+\\ \h{ts} &=& \m{[]}
+\\ \h{lvs} &=& \m{[\lst e/\lst x]}
+\end{eqnarray*}
+Here $\mathbf{e}$ denotes a term that is just a variable.
+
 \begin{code}
 instLLVar :: MonadFail m => InsContext
           -> Binding -> ListVar -> m ([Term],[ListVar])
 instLLVar insctxt binding lv
-  = case lookupLstBind binding lv of
-      Just (BindList vl')  ->  do lvs <- fromGVarToLVar vl'
-                                  return ([],lvs)
-      Just (BindSet  vs')  ->  do lvs <- fromGVarToLVar $ S.toList vs'
-                                  return ([],lvs)
+  = case lookupLstBind (pdbg "instLLVar.binding" binding) lv of
+      Just (BindList vl')  ->  return $ fromGVarsToTermLVarLists [] [] vl'
+      Just (BindSet  vs')  ->  return $ fromGVarsToTermLVarLists [] []$ S.toList vs'
       Just (BindTLVs tlvs) ->  return (tmsOf tlvs, lvsOf tlvs)
       Nothing              ->  fail $ unlines
                                      [ "instLLVar: l-var not found"
@@ -378,13 +411,13 @@ instLLVar insctxt binding lv
                                      , "bind = " ++ trBinding binding
                                      ]
 
-fromGVarToLVar :: MonadFail m => VarList -> m [ListVar]
-fromGVarToLVar [] = return []
-fromGVarToLVar (StdVar v:vl)
- = fail ("fromGVarToLVar: Std variable found - " ++ show v)
-fromGVarToLVar (LstVar lv:vl)
-  = do lvs <- fromGVarToLVar vl
-       return (lv:lvs)
+fromGVarsToTermLVarLists :: [Term] -> [ListVar] -> VarList -> ([Term],[ListVar])
+fromGVarsToTermLVarLists smret sravl []  =  (reverse smret, reverse sravl)
+fromGVarsToTermLVarLists smret sravl (StdVar v@(Vbl _ vc _):vl)
+  | vc == PredV  =  fromGVarsToTermLVarLists (jpVar v : smret) sravl vl
+  | otherwise    =  fromGVarsToTermLVarLists (jeVar v : smret) sravl vl
+fromGVarsToTermLVarLists smret sravl (LstVar lv:vl)
+  = fromGVarsToTermLVarLists smret (lv:sravl) vl
 \end{code}
 
 \newpage

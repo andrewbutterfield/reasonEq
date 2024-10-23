@@ -318,10 +318,10 @@ mscTrue = Nothing
 vscCheck :: MonadFail m => VarSideConds 
           -> m (Maybe VarSideConds)
 vscCheck (VSC gv vsD uvsC uvsCd)
-  = do  vsD'   <- disjointCheck  (pdbg "vscCheck.gv" gv) $ pdbg "vscCheck.vsD" vsD
+  = do  vsD'   <- disjointCheck  gv vsD
         uvsC'  <- coveredByCheck gv uvsC
         uvsCd' <- dynCvrgCheck   gv uvsCd
-        return $ mkVSC gv (pdbg "vscCheck.vsD'" vsD') uvsC' uvsCd'
+        return $ mkVSC gv vsD' uvsC' uvsCd'
 \end{code}
 
 The key trick is to take \m{g ~R~ \setof{g_1,\dots,g_n}}

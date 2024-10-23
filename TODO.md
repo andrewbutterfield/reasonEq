@@ -5,78 +5,31 @@
 ### BREAKING
 
 
-Substitute has problems (again), but it looks like an apply match problem.
+Solved what was an instantiation problem.
+
+Still have a substitute problem.
 
 ```
- “and_subst”      (P ∧ Q)[e$/x$] ≡ P[e$/x$] ∧ Q[e$/x$]  ⊤
-(x' = f_1 ∧ (O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x]    O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
-Focus = []
-proof: tm 1 and_subst
-Match against `and_subst'[1] failed!
-try law instantiation failed
-{ P  ⟼ x' = f_1
-, Q  ⟼ (O$'\x=O$_1\x)
-, ∧  ⟼ ∧
-, e$  ⟼ ⟨e, O$\x⟩
-, x$  ⟼ ⟨x_1,O$_1\x⟩ 
-}
-&& ⊤
-lnm[parts]=and_subst[1]
-tC=(x' = f_1 ∧ (O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x]
-scC=O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
-tP=(P ∧ Q)[e$/x$] ≡ P[e$/x$] ∧ Q[e$/x$]
-partsP=(P ∧ Q)[e$/x$]
-replP=P[e$/x$] ∧ Q[e$/x$]
-scP=⊤
-fromGVarToLVar: Std variable found - VR (Id "x" 0,VO,WD "1")
-fromGVarToLVar: Std variable found - VR (Id "x" 0,VO,WD "1")
+(x' = f_1 ∧ (O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x], O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
+   = 'substitute @[]'
+ x' = f_1 ∧ (O$'\x=O$\x)    O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
 ```
 
-The three functions `disjfrom`, `coveredby`, `dyncovered` are used as follows:
-
- * `disjfrom` in SideCond to define `notin` only, used once in Instantiate.
-
- * `notin` used in builtins (Exists,ForAll,Equivalence,XYZ,UTCP), and for testing in SideCond
-
- * `coveredby` in SideCond to define `ucoveredby`, `covers` and for testing
-
- * `ucoveredby` used in Instantiate
-
- * `covers` used in builtins (UClose) , and for testing in Substitution
-
-* `dyncovered` in SideCond to define `dyncover`.
-
-* `dyncover` used in builtins (UTPBase)
-
-These need to be smart and kill anything that is obviously false.
-However, they return `VarSideConds`, rather than `m VarSideConds`.
-
-Perhaps we need to make more use of `vscCheck`?
-
-Currently: used in SideCond for testing and as follows: 
-
- * `mrgVarConds`  
-     calls `mrgVSC` which calls `mrgSameGVSC` which calls `vscCheck`.
-     is called by `mrgTVarCondLists`, `vscMrg`.
-
-* `vscMrg` called by `scDischarge`.
-
-* `mrgTVarCondLists` called by `mkSideCond`, `mrgSideCond`
-
- 
-
-
-
-
-
-
-
-
-#### One-Point Law
-
-FIXED
-
-
+If we use the substitute laws, we get 
+```
+(x' = f_1 ∧ (O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x], O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
+   = 'match-lhs ∧_subst@[]'
+(x' = f_1)[e,O$\x/x_1,O$_1\x] ∧ ((O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x], 
+                                                            O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
+   = 'match-lhs =_subst@[1]'
+x'[e,O$\x/x_1,O$_1\x] = f_1[e,O$\x/x_1,O$_1\x] 
+∧ ((O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x],                       O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
+   = 'substitute @[1,1]'
+x' = f_1[e,O$\x/x_1,O$_1\x] ∧ ((O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x], 
+                                                          O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
+   = 'substitute @[1,2]'x' = f_1 ∧ ((O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x]    O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
+```
+We should have `f_1[e,O$\x/x_1,O$_1\x] = f[e/x]`.
 
 ### TestCode
 

@@ -1,8 +1,8 @@
-@scD.cnsqVSC:
-[VSC (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "x" 0,VO,WD "1"))]) Nothing Nothing,VSC (GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[]))) (fromList [GV (VR (Id "x" 0,VO,WD "1")),GL (LV (VR (Id "O" 0,VO,WD "1"),[Id "x" 0],[]))]) Nothing Nothing]
-@scD.obsv:
-fromList []
-@scD.cnsqVSC':
-[VSC (GV (VR (Id "e" 0,VE,WB))) (fromList [GV (VR (Id "x" 0,VO,WD "1"))]) Nothing Nothing,VSC (GL (LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[]))) (fromList [GV (VR (Id "x" 0,VO,WD "1")),GL (LV (VR (Id "O" 0,VO,WD "1"),[Id "x" 0],[]))]) Nothing Nothing]
-@scD.anteSC:
-([VSC (GV (VR (Id "e" 0,VE,WB))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])),VSC (GV (VR (Id "f" 0,VE,WB))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])),VSC (GV (VR (Id "x" 0,VO,WB))) (fromList []) Nothing (Just (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))]))],fromList [])
+@instSub.lvs:
+[(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]
+@instLLVar.binding:
+BD (fromList [((Id "P" 0,VP),BT (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "x" 0,VO,WA)),V T (VR (Id "f" 0,VE,WD "1"))])),((Id "Q" 0,VP),BT (I (TF TB (TG (Id "B" 0))) True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[]),LV (VR (Id "O" 0,VO,WD "1"),[Id "x" 0],[])])),((Id "and" 0,VO),BV (VR (Id "and" 0,VO,WS)))],fromList [],fromList [((Id "e" 0,VE,[],[]),BX [Right (V T (VR (Id "e" 0,VE,WB))),Left (LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[]))]),((Id "x" 0,VO,[],[]),BL [GV (VR (Id "x" 0,VO,WD "1")),GL (LV (VR (Id "O" 0,VO,WD "1"),[Id "x" 0],[]))])])
+@instSub.lvs:
+[(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]
+@instLLVar.binding:
+BD (fromList [((Id "P" 0,VP),BT (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "x" 0,VO,WA)),V T (VR (Id "f" 0,VE,WD "1"))])),((Id "Q" 0,VP),BT (I (TF TB (TG (Id "B" 0))) True (Id "and" 0) True (Id "=" 0) [LV (VR (Id "O" 0,VO,WA),[Id "x" 0],[]),LV (VR (Id "O" 0,VO,WD "1"),[Id "x" 0],[])])),((Id "and" 0,VO),BV (VR (Id "and" 0,VO,WS)))],fromList [],fromList [((Id "e" 0,VE,[],[]),BX [Right (V T (VR (Id "e" 0,VE,WB))),Left (LV (VR (Id "O" 0,VO,WB),[Id "x" 0],[]))]),((Id "x" 0,VO,[],[]),BL [GV (VR (Id "x" 0,VO,WD "1")),GL (LV (VR (Id "O" 0,VO,WD "1"),[Id "x" 0],[]))])])

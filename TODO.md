@@ -4,6 +4,34 @@
 
 ### BREAKING
 
+
+Substitute has problems (again), but it looks like an apply match problem.
+
+```
+ “and_subst”      (P ∧ Q)[e$/x$] ≡ P[e$/x$] ∧ Q[e$/x$]  ⊤
+(x' = f_1 ∧ (O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x]    O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
+Focus = []
+proof: tm 1 and_subst
+Match against `and_subst'[1] failed!
+try law instantiation failed
+{ P  ⟼ x' = f_1
+, Q  ⟼ (O$'\x=O$_1\x)
+, ∧  ⟼ ∧
+, e$  ⟼ ⟨e, O$\x⟩
+, x$  ⟼ ⟨x_1,O$_1\x⟩ 
+}
+&& ⊤
+lnm[parts]=and_subst[1]
+tC=(x' = f_1 ∧ (O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x]
+scC=O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
+tP=(P ∧ Q)[e$/x$] ≡ P[e$/x$] ∧ Q[e$/x$]
+partsP=(P ∧ Q)[e$/x$]
+replP=P[e$/x$] ∧ Q[e$/x$]
+scP=⊤
+fromGVarToLVar: Std variable found - VR (Id "x" 0,VO,WD "1")
+fromGVarToLVar: Std variable found - VR (Id "x" 0,VO,WD "1")
+```
+
 The three functions `disjfrom`, `coveredby`, `dyncovered` are used as follows:
 
  * `disjfrom` in SideCond to define `notin` only, used once in Instantiate.
@@ -44,67 +72,10 @@ Currently: used in SideCond for testing and as follows:
 
 
 
-
 #### One-Point Law
 
-One-point law matching and s.c. discharge needs fixing:
-```
-(∃ O$_1  • (x_1 = e ∧ (O$_1\x=O$\x)) ∧ (x' = f_1 ∧ (O$'\x=O$_1\x)))    
-O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
-Match against `exists_one_point'[1] OK
-Binding: 
-  { P  ⟼ x' = f_1 ∧ (O$'\x=O$_1\x)
-  , ∧  ⟼ ∧
-  , e$  ⟼ ⟨e, O$\x⟩
-  , x$  ⟼ ⟨x_1, O$_1\x⟩
-  , y$  ⟼ {} 
-  }
-Instantiated Law = (x' = f_1 ∧ (O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x]
-Instantiated Law S.C. = x_1∉e, x_1,O$_1\x∉O$\x
-Goal S.C. = O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
-Discharged Law S.C. = x_1,O$_1\x∉O$\x
-```
+FIXED
 
-Looking at law s.c., applying the binding and simplifying:
-```
-x$ ∉ e$
-  =  "bindings"
-⟨x_1, O$_1\x⟩ ∉ ⟨e[O$_1/O$'], O$\x⟩ 
-  =  "simplify"
-O$_1 ∉ ⟨e[O$_1/O$'], O$\x⟩ 
-  =  "distr"
-O$_1 ∉ e[O$_1/O$']  /\ O$_1 ∉ O$\x
-  = "diff dyn implies disjoint"
-O$_1 ∉ e[O$_1/O$']
-  = "e is before"
-O$_1 ∉ e
-  = "diff dyn implies disjoint"
-True
-```
-
-However, looking at instantiated and discharged s.c.s,
-we see they all reduce to true.
-All the rules (simplify, diff-dyn) can be **invoked at s.c. build time**
-
-Looking at instantiated law s.c.:
-```
-x_1 ∉ e  /\  ⟨x_1, O$_1\x⟩ ∉ O$\x
-  = "e is before"
-true /\ ⟨x_1, O$_1\x⟩ ∉ O$\x
-  = "simplify
-O$_1 ∉ O$\x
-  = "diff dyn implies disjoint
-True
-```
-
-Looking at discharged laws s.c.:
-```
-⟨x_1, O$_1\x⟩ ∉ O$\x
-  = "simplify"
-O$_1 ∉ O$\x
-  = "diff dyn implies disjoint
-True
-```
 
 
 ### TestCode

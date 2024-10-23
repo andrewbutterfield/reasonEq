@@ -1,9 +1,104 @@
 \chapter{General-Variable Set Theory}\label{chp:genvar-set-theory}
 
+\section{Introduction}
+
 This chapter takes the ideas from the chapter on matching Features
 \ref{chp:match-feat}
 and develops a sound theory of set operations over sets containing
 both standard and list variables (a.k.a. ``general variables'').
 
+We will start with a very general abstraction in which we ignore the
+nuances of variable classes and temporality.
 
+\section{Abstract GenVars}
+
+\subsection{Variable Definitions}
+
+Standard variables ($StdVar$) take on values from some observation space.
+Here these are written using single lowercase letters, 
+possibly with simple subscripts:
+
+$$a,b,c_1,d_i,\dots  ~:~  StdVar$$
+
+List variables ($LstVar$) take on values that denote sets of standard variables.
+Their \emph{base} form is written 
+using a lowercase letter followed by the dollar symbol ($\lst{}$),
+possibly with simple subscripts:
+
+$$\lst z,\lst y,\lst x_1,\lst v_i,\dots ~:~ LstVar$$
+
+General variables can be Standard and/or List variables
+($GenVar = StdVar \uplus LstVar$).
+When the distinction is not important,
+they are written as single lowercase Greek letters, 
+possibly with simple subscripts:
+
+$$\alpha,\beta,\gamma_1,\delta_i,\dots ~:~ GenVar$$
+
+List variables have an \emph{extended} form where they have an associated list
+of general variables, 
+which denote the removal of (standard) variables from the base form.
+
+$$\lst z\less{\beta_1,\dots,\beta_n} ~:~ LstVar$$
+
+\subsection{GenVar Sets}
+
+We want to reason about sets of general variables
+($\setof{\alpha,\beta,\gamma_2,\delta_i,\dots}$).
+associated with the usual set-theoretic operations such as
+membership ($\in$),
+union ($\cup$),
+intersection ($\cap$),
+and removal ($\setminus$).
+We expect all the usual laws of such operators to hold.
+Variables denoting these sets are written as single uppercase letters, 
+possibly with simple subscripts:
+
+$$A,B,C_1,D_i,\dots ~:~ \power GenVar$$
+
+\subsection{GenVar Interpretation}
+
+A GenVar Set defines a set of standard variables.
+Any standard variable explicitly denotes itself,
+while list variables need an \emph{interpretation} 
+that maps them to a set of standard variables.
+In general we do not require an interpretation to have entries
+for all list variables present, 
+nor do we require any such entry to provide just standard variables.
+However, 
+we do rule out cyclic interpretations where list variables are mapped
+to variable sets that contain themselves.
+This flexibility regarding interpretations is needed 
+because we have many general laws 
+that are designed to apply to a wide range of theories,
+each of which will have its own specific collection of standard variables.
+
+We define an interpretation ($Intp$) as a partial mapping from list variables
+to sets of general variables:
+
+\def\intp{\mathcal I}
+$$\intp ~:~ Intp ~=~ LstVar \pfun \power GenVar $$
+
+A \emph{ground} interpretation is one were all GenVar sets in its range
+only contain standard variables.
+
+An interpretation is \emph{complete} w.r.t a GenVar set 
+when every list variable mentioned in that set 
+has an mapping in the interpretation.
+
+An interpretation is \emph{full} w.r.t a GenVar set 
+when it is ground and complete for that set.
+
+\subsection{GenVar Set Evaluation}
+
+We start the definition of set evaluation w.r.t. an interpretation,
+by focussing on a single list variable and doing a single lookup ($lvstep$):
+\begin{eqnarray}
+   lvstep &:& Intp \fun LstVar \fun \power GenVar
+\\ lvstep_\intp\sem{\lst x}
+   &\defs& 
+   \setof{\lst x} \cond{\lst x \notin \dom\intp} \intp(\lst x)
+\end{eqnarray}
+
+TO COME, full instantiation.
 

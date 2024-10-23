@@ -1,46 +1,28 @@
-@scD.cnsqVSC:
-[ VSC
-  (GV (VR (Id "e" 0, VE, WB)))
-  ( { GV (VR (Id "x" 0, VO, WD "1")) } )
-  Nothing
-  Nothing
-, VSC
-  (GL (LV (VR (Id "O" 0, VO, WB), [Id "x" 0], [])))
-  ( { GV (VR (Id "x" 0, VO, WD "1"))
-    , GL (LV (VR (Id "O" 0, VO, WD "1"), [Id "x" 0], [])) } )
-  Nothing
-  Nothing ]
-@scD.obsv:
+@vscCheck.vsD: x_1, O$_1\x  -- same as O$_1
+{ GV (VR (Id "x" 0, VO, WD "1"))
+, GL (LV (VR (Id "O" 0, VO, WD "1"), [Id "x" 0], [])) }
+@vscCheck.gv:  e
+GV (VR (Id "e" 0, VE, WB))
+@vscCheck.vsD':   x_1     -- same as O$_1
+{ GV (VR (Id "x" 0, VO, WD "1")) }
+
+@vscCheck.vsD:  x_1, O$_1\x   -- same as O$_1
+{ GV (VR (Id "x" 0, VO, WD "1"))
+, GL (LV (VR (Id "O" 0, VO, WD "1"), [Id "x" 0], [])) }
+@vscCheck.gv:  O$\x
+GL (LV (VR (Id "O" 0, VO, WB), [Id "x" 0], []))
+@vscCheck.vsD':  x_1, O$_1\x   -- same as O$_1  incorrect, should be true
+{ GV (VR (Id "x" 0, VO, WD "1"))
+, GL (LV (VR (Id "O" 0, VO, WD "1"), [Id "x" 0], [])) }
+
+@vscCheck.vsD:  x_1
+{ GV (VR (Id "x" 0, VO, WD "1")) }
+@vscCheck.gv:  e 
+GV (VR (Id "e" 0, VE, WB))
+@vscCheck.vsD': x_1      -- same as O$_1
+{ GV (VR (Id "x" 0, VO, WD "1")) }
+
+@vscCheck.vsD:
 {}
-@scD.cnsqVSC':
-[ VSC
-  (GV (VR (Id "e" 0, VE, WB)))
-  ( { GV (VR (Id "x" 0, VO, WD "1")) } )
-  Nothing
-  Nothing
-, VSC
-  (GL (LV (VR (Id "O" 0, VO, WB), [Id "x" 0], [])))
-  ( { GV (VR (Id "x" 0, VO, WD "1"))
-    , GL (LV (VR (Id "O" 0, VO, WD "1"), [Id "x" 0], [])) } )
-  Nothing
-  Nothing ]
-@scD.anteSC:
-( [ VSC
-    (GV (VR (Id "e" 0, VE, WB)))
-    ( {} )
-    Nothing
-    ( Just
-      ( { GL (LV (VR (Id "O" 0, VO, WB), [], [])) } ) )
-  , VSC
-    (GV (VR (Id "f" 0, VE, WB)))
-    ( {} )
-    Nothing
-    ( Just
-      ( { GL (LV (VR (Id "O" 0, VO, WB), [], [])) } ) )
-  , VSC
-    (GV (VR (Id "x" 0, VO, WB)))
-    ( {} )
-    Nothing
-    ( Just
-      ( { GL (LV (VR (Id "O" 0, VO, WB), [], [])) } ) ) ]
-, {} )
+@vscCheck.vsD':
+{}

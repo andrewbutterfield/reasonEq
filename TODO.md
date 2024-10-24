@@ -62,59 +62,6 @@ overlapping sets of ordinary variables?
 
 
 
-### TestCode
-
-```
-tstWhatever = Just . Just 
-v_f  = StdVar $ PreExpr  $ i_f
-gv_a =  StdVar $ PreVar $ i_a
-testCase "gv_a `disjoint` {v_f} stands"
-       ( vscCheck S.empty (disjfrom  gv_a $ S.singleton v_f)
-         @?= tstWhatever  (disjfrom  gv_a $ S.singleton v_f) )
-```
-
-### Test Output
-
-```
-      gv_a `disjoint` {v_f} stands: [Failed]
-expected: 
-  Just (Just 
-    (VSC (GV (VR (Id "a" 0,VO,WB))) 
-         (fromList [GV (VR (Id "f" 0,VE,WB))]) 
-         Nothing Nothing
-    ))
- but got: Just Nothing
-```
-
-### Relevant definitions
-
-```
-covByTrue = Nothing
-gv `disjfrom` vs  =  VSC gv vs covByTrue covByTrue
-```
-
-### Code Evaluation
-
-```
-vscCheck S.empty (disjfrom  gv_a $ S.singleton v_f)
-  =* vscCheck {} (VSC gv_a {v_f} Nothing Nothing)
-  =* do vsD'   <- disjointCheck  {} gv_a {v_f}
-        uvsC'  <- coveredByCheck {} gv_a Nothing
-        uvsCd' <- dynCvrgCheck   {} gv_a Nothing
-        return $ mkVSC gv vsD' uvsC' uvsCd'
-  =* do vsD'   <- disjointCheck  {} gv_a {v_f}
-        return $ mkVSC gv_a vsD' Nothing Nothing
-```
-
-Looking at `disjointCheck`:
-
-*Nearly there, but*
-
-**Design decision: get rid of obs, or any VarData. Resolve those issues at
-discharge time when full information is available.
-Here we just look for what can be simplified given the VSCs.** 
-
-
 
 We know we need to capture that E,R,N do not overlap with O$,O$'
 

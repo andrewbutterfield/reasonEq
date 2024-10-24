@@ -237,7 +237,7 @@ We first scan the var-term pairs looking for $\vv s$,
 returning the replacement if found.
 Otherwise we scan the list-var pairs, with the side-conditions in hand,
 looking for a list-variable that covers $\vv s$.
-If nothing is found we return a substitution term with only the list-vars.
+If nothing is found we return an the substitution unchanged.
 
 \textbf{Now} we have case \m{f_1[e,\lst O\less x/x_1,\lst O_1\less x]}
 which should result in \m{f[e/x]}.
@@ -246,10 +246,12 @@ The \h{alookup} below will fail as \m{f_1 \notin \dom\setof{(x_1,e)}}.
 
 \begin{code}
 substitute sctx@(SCtxt sc) sub@(Substn vts lvlvs) vrt@(Var tk v)
-  =  alookup v (S.toList vts) 
+  =  alookup v vtl 
      <|> lvlvlSubstitute sc v lvlvl
-     <|> pure (Sub tk vrt (jSubstn [] lvlvl))
+     <|> uniformSubstitute sc v vtl lvlvl
+     <|> pure (Sub tk vrt sub)
   where
+    vtl = S.toList vts
     lvlvl = S.toList lvlvs
 \end{code}
 What we try next is to scan the list-var substitutions 
@@ -265,18 +267,16 @@ asking the following questions:
 \end{eqnarray*}
   \item Is $v$ definitely not in $\ell^T$ ?
         If so, skip and move on.
-        \\ This is dangerous and fails for something like 
-           \m{f_1[e,\lst O\less x/x_1,\lst O_1\less x]}.
   \item Otherwise, $v$ might be in $\ell^T$,
         so exit the scan and return the explicit substitution $v[\ell^R/\ell^T]$.
 \end{enumerate}
 If neither option 1 or 3 occurs, having scanned the whole list,
-we simply return $v$.
+we simply fail.
 
 \textbf{Now} we have \m{\h{v} = f_1} 
 and \m{\h{lvlvl} = \seqof{(\lst O_1\less x,\lst O\less x)}}.
 \begin{code}
-    lvlvlSubstitute sc v []  =  pure vrt
+    lvlvlSubstitute sc v []  =  fail "no lv target match found"
     lvlvlSubstitute sc v ((tlv,rlv):lvlvl)
       = lvlvSubstitute sc v tlv rlv
         <|> lvlvlSubstitute sc v lvlvl
@@ -325,12 +325,52 @@ We fail because it is judged that \m{\lst O\less x \notin \setof{\lst O}}
                     ->  fail "tlv not mentioned in coverage"
                 | otherwise  ->  pure $ jVar tk (Vbl i vc rw)   
              Just ( (VSC gv' _ _ (Just vsCd)), Just vw' ) -- gv~~StdVar v 
-                | not $ pdbg "HERE" ( setGVarWhen (pdbg "vw'" vw') (pdbg "gtlv" gtlv) `umbr` (Just $ pdbg "vsCd" vsCd) ) 
+                | not ( setGVarWhen vw' gtlv `umbr` Just vsCd ) 
                     -> fail  "tlv not mentioned in dyn. s.c."
                 | otherwise  ->  pure $ jVar tk (Vbl i vc rw)   
              _  ->  fail "lvlvSubstitute: this shouldn't happen"   
       where
         gtlv = LstVar tlv 
+\end{code}
+The last thing we try is to see if we have a uniform substitution.
+This means that:
+(i) the target variables all have the same temporality;
+(ii) they ``cover'' a complete list variable;
+(iii) the replacements all have the same temporality;
+(iv) they  ``cover'' a complete list variable.
+For example:
+$$[e,f,\lst O\less{x,y}/x_1,y_1,\lst O_1\less{x,y}]$$
+Here the targets cover $\lst O_1$ while the replacements cover $\lst O$.
+
+Here we only look for simple patterns such as above.
+Basically we look for one or more var-term entries,
+with terms that are variable terms,
+and one listvar entry, where the removed variables are precisely
+the target variables on the var-term list:
+$$
+   \seqof{(x,tv1),(y,tv2),(z,tv3)}
+   \quad
+   \seqof{(\lst\ell\less{x,y,z},\lst\rho\less{x,y,z})}
+$$
+However,
+we do have a variable ($v$) being substituted,
+and the first thing we do is check that its temporality matches that
+of the first target variable. 
+If not, there is no uniform substituion that can work here.
+\begin{code}
+    uniformSubstitute :: MonadFail m
+                      => SideCond -> Variable 
+                      -> [(Variable,Term)] -> [(ListVar,ListVar)]
+                      -> m Term
+    uniformSubstitute sc v vtl@((u,_):_) [(tlv,rlt)]
+      | varWhen v /= varWhen u  =  fail "uniformity is inapplicable"
+      | otherwise  =  fail "uniformSubstitute NYfI"
+      where
+        tvws = nub $ map (varWhen . fst) vtl
+        ttws = nub $ concat 
+                   $ map ((map gvarWhen) . S.toList . fst . freeVars sc . snd) 
+                         vtl
+    uniformSubstitute _ _ _ _ = fail "not uniform or not supported"
 \end{code}
 
 

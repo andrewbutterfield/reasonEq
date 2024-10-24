@@ -17,48 +17,68 @@ nuances of variable classes and temporality.
 Standard variables ($StdVar$) take on values from some observation space.
 Here these are written using single lowercase letters, 
 possibly with simple subscripts:
-
+%
 $$a,b,c_1,d_i,\dots  ~:~  StdVar$$
-
+%
 List variables ($LstVar$) take on values that denote sets of standard variables.
 Their \emph{base} form is written 
 using a lowercase letter followed by the dollar symbol ($\lst{}$),
 possibly with simple subscripts:
-
+%
 $$\lst z,\lst y,\lst x_1,\lst v_i,\dots ~:~ LstVar$$
-
+%
 General variables can be Standard and/or List variables
 ($GenVar = StdVar \uplus LstVar$).
+We assume two predicates $isStd$ and $isLst$ that distinguish these.
 When the distinction is not important,
 they are written as single lowercase Greek letters, 
 possibly with simple subscripts:
-
+%
 $$\alpha,\beta,\gamma_1,\delta_i,\dots ~:~ GenVar$$
-
+%
 List variables have an \emph{extended} form where they have an associated list
-of general variables, 
-which denote the removal of (standard) variables from the base form.
-
+of general variables, each in base form only,
+that denote the removal of these variables from the top-level base form.
+%
 $$\lst z\less{\beta_1,\dots,\beta_n} ~:~ LstVar$$
+%
+We also require that no $\beta$ can have $\lst z$ as its base form.
 
 \subsection{GenVar Sets}
 
-We want to reason about sets of general variables
-($\setof{\alpha,\beta,\gamma_2,\delta_i,\dots}$).
+We want to reason about sets of general variables 
+($\setof{\alpha,\beta,\gamma_2,\delta_i,\dots} ~:~ GVSet$)
 associated with the usual set-theoretic operations such as
 membership ($\in$),
 union ($\cup$),
 intersection ($\cap$),
 and removal ($\setminus$).
+%
+$$GVSet ~=~ \power GenVar$$
+%
 We expect all the usual laws of such operators to hold.
 Variables denoting these sets are written as single uppercase letters, 
 possibly with simple subscripts:
+%
+$$A,B,C_1,D_i,\dots ~:~ GVSet$$
 
-$$A,B,C_1,D_i,\dots ~:~ \power GenVar$$
+\subsection{Simplifying Extended List-Variables}
+
+If we have a set of list variables, with some sharing the same base form,
+but with differing removal lists, these can be simplified as follows:
+\begin{eqnarray*}
+   \lst x \less\emptyset &=& \lst x
+\\ \lst x \less A, \lst x \less B &=& \lst x \less{A\cap B}
+\\ \lst x,\lst x \less B &=& \lst x
+\end{eqnarray*}
+This should always be done, 
+so that in any set, 
+the base form of any given list variable appears at most once.
 
 \subsection{GenVar Interpretation}
 
-A GenVar Set defines a set of standard variables.
+A GenVar Set ($GVSet$) is intended to ultimately define
+a specific set of \emph{standard} variables.
 Any standard variable explicitly denotes itself,
 while list variables need an \emph{interpretation} 
 that maps them to a set of standard variables.
@@ -75,30 +95,107 @@ each of which will have its own specific collection of standard variables.
 
 We define an interpretation ($Intp$) as a partial mapping from list variables
 to sets of general variables:
-
+%
 \def\intp{\mathcal I}
-$$\intp ~:~ Intp ~=~ LstVar \pfun \power GenVar $$
+$$\intp ~:~ Intp ~=~ LstVar \pfun GVSet$$
+%
+A \emph{ground} interpretation is one were all sets in its range
+contain only standard variables.
 
-A \emph{ground} interpretation is one were all GenVar sets in its range
-only contain standard variables.
-
-An interpretation is \emph{complete} w.r.t a GenVar set 
+An interpretation is \emph{complete} w.r.t a set 
 when every list variable mentioned in that set 
 has an mapping in the interpretation.
 
-An interpretation is \emph{full} w.r.t a GenVar set 
+An interpretation is \emph{full} w.r.t a set 
 when it is ground and complete for that set.
+
+Once we have interpretations,
+we can add extra laws, e.g.:
+\begin{eqnarray*}
+   y,\lst x \less{A \uplus \setof{y}} 
+   &=& \lst x \less A
+   \quad \text{provided } y \in \intp(\lst x)
+\end{eqnarray*}
 
 \subsection{GenVar Set Evaluation}
 
 We start the definition of set evaluation w.r.t. an interpretation,
-by focussing on a single list variable and doing a single lookup ($lvstep$):
+by focussing on a single variable and doing a lookup ($gvlkp$):
 \begin{eqnarray}
-   lvstep &:& Intp \fun LstVar \fun \power GenVar
-\\ lvstep_\intp\sem{\lst x}
+   gvlkp                   &  :  & Intp \fun GenVar \fun GVSet
+\\ gvlkp_\intp(x)      &\defs& \setof{x}
+\\ gvlkp_\intp(\lst x)
    &\defs& 
    \setof{\lst x} \cond{\lst x \notin \dom\intp} \intp(\lst x)
+\\ gvlkp_I(\lst x \less{\beta_1,\dots,\beta_n})
+   &\defs& 
+   tidyup
+     (  gvlkp_\intp(\lst x)
+     ,  \bigcup map(gvlkp_\intp\setof{\beta_1,\dots,\beta_n}) )
 \end{eqnarray}
+Note that $\intp(\lst xs)$ can contain extended list-vars,
+including $\lst x\less B$.
+The $tidyup$ function returns a set of general variables,
+those returned by the first $gvlkp$ call,
+with extended annotations drawn from the mapped $gvlkp$ calls,
+simplified as far as possible.
+\begin{eqnarray}
+   tidyup &:& GVSet \fun GVSet \fun GVSet
+\\ tidyup(\emptyset,\_) &\defs& \emptyset
+\\ tidyup(\setof{\nu},D) &\defs& simpless(\nu,D)
+\\ tidyup((U \cup V),D) 
+   &\defs& tidyup(U,D) \cup tidyup(U,D)
+\end{eqnarray}
+The last line holds true regardless of how the input set contents ($W$)
+are distributed between $U$ and $V$, as long as $W=U \cup V$.
+Ideally both $U \subset W$ and $V \subset W$ should hold too!
+E.g.:
+%
+$$
+  tidyup(W,D) 
+  =
+  simpless(\nu,D)
+  \cup 
+  tidyup(W\setminus\setof{\nu},D)
+  , \nu \in W
+$$
+With $simpless(\nu,D)$ we are going construct $\nu\less{D}$,
+simplifying where we can, noting that $\nu$ itself may have an extended form.
+We will return either such a variable, or an empty set.
+Note that $\nu$ can be either standard or a list variable.
+\begin{eqnarray}
+   simpless &:& GenVar \fun GVSet \fun GVSet
+\\ simpless(x,D) &\defs& \emptyset \cond{x \in D} \setof{x}
+\\ simpless(\lst x,D)
+   &\defs&
+   \emptyset
+   \cond{\lst x \in D}
+   ( \setof{\lst x\less\beta}
+     \cond{ \beta \in D}
+     \setof{\lst x}
+   )
+\end{eqnarray}
+The case $(\lst x\less D,D')$ is complicated.
 
-TO COME, full instantiation.
+
+We now want to extend this to 
+evaluating a GenVar set w.r.t. to some interpretation.
+We start with a single step that looks up all the list variables,
+and adds those results in with all the standard variables ($intstep$):
+\begin{eqnarray}
+   intstep                  &  :  & Intp \fun GVSet \fun GVSet
+\\ intstep_\intp(\emptyset) &\defs& \emptyset
+\\ intstep_\intp(\setof{\nu}) &\defs& gvlkp_I\sem{\nu}
+\\ intstep_\intp(U \cup V)    &  =  & intstep_I(U) \cup intstep_I(V)
+\end{eqnarray}
+Finally, we repeatedly apply $intstep$ 
+until the result stops changing:
+\begin{eqnarray}
+   vseval          &  :  & Intp \fun GVSet \fun GVSet
+\\ vseval_\intp(W) 
+   &\defs& 
+   \LET~W' = intstep_I(W)
+   ~\IN~ W \cond{ W=W' } vseval_I(W')
+\end{eqnarray}
+If $I$ is complete, then this results in a set containing only standard variables.
 

@@ -51,10 +51,14 @@ e.g.
 
 `{...,x,...,l$\{x,y},...} = {...,l$\{y},...}`
 
+**NOTE** *the above only works if `l$` is known to contain `y`!*
+
 What about pathological cases - different list-vars that "represent"
 overlapping sets of ordinary variables?
 
 `{...,a,...,l1$\{a,b},...,l2$\{a,c},...}`
+
+**We try to avoid this pathology by careful theory construction**
 
 
 

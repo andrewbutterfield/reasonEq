@@ -2,66 +2,6 @@
 
 ## URGENT
 
-### BREAKING
-
-
-
-
-
-Still have a substitute problem.
-
-REAL ISSUE - we need a holistic view of the substitution - this one 
-is uniform and complete.
-
-These are common enough (any use of seq-comp!) to get special handling.
-
-```
-(x' = f_1 ∧ (O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x], O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
-   = 'substitute @[]'
- x' = f_1 ∧ (O$'\x=O$\x)    O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
-```
-
-If we use the substitute laws, we get 
-```
-(x' = f_1 ∧ (O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x], O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
-   = 'match-lhs ∧_subst@[]'
-(x' = f_1)[e,O$\x/x_1,O$_1\x] ∧ ((O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x], 
-                                                            O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
-   = 'match-lhs =_subst@[1]'
-x'[e,O$\x/x_1,O$_1\x] = f_1[e,O$\x/x_1,O$_1\x] 
-∧ ((O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x],                       O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
-   = 'substitute @[1,1]'
-x' = f_1[e,O$\x/x_1,O$_1\x] ∧ ((O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x], 
-                                                          O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
-   = 'substitute @[1,2]'x' = f_1 ∧ ((O$'\x=O$_1\x))[e,O$\x/x_1,O$_1\x]    O$⊇ₐe, O$⊇ₐf, O$⊇ₐx
-```
-We should have `f_1[e,O$\x/x_1,O$_1\x] = f[e/x]`.
-
-### Lifted Set Algebra
-
-We really need a lifted algebra for list-variable set membership.
-
-`l$\A U l$\B = l$\(A intsct B)`
-
-We need to normalise something like `{...,l$\A,...,l$\B,...}`
-to `{...,l$\(A intsct B),...}`
-
-We will have interactions involving standard and list-variables,
-e.g.
-
-`{...,x,...,l$\{x,y},...} = {...,l$\{y},...}`
-
-**NOTE** *the above only works if `l$` is known to contain `y`!*
-
-What about pathological cases - different list-vars that "represent"
-overlapping sets of ordinary variables?
-
-`{...,a,...,l1$\{a,b},...,l2$\{a,c},...}`
-
-**We try to avoid this pathology by careful theory construction**
-
-
-
 
 We know we need to capture that E,R,N do not overlap with O$,O$'
 
@@ -79,9 +19,6 @@ If we try to build `E ∉ O$` we get it.
 If we try to do `E ∉ O$ ; N ∉ O$` we get `scTrue` !
 
 NOT SURE WE WANT the `E ∉ O$` FORM!
-
-
-
 
 
 ```

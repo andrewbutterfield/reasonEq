@@ -21,7 +21,7 @@ import Data.Maybe
 import Control.Applicative
 
 import Utilities (alookup,injMap)
-import Control (mapsnd)
+import Control (mapfst,mapsnd)
 import LexBase
 import Variables
 import AST
@@ -248,7 +248,7 @@ The \h{alookup} below will fail as \m{f_1 \notin \dom\setof{(x_1,e)}}.
 substitute sctx@(SCtxt sc) sub@(Substn vts lvlvs) vrt@(Var tk v)
   =  alookup v vtl 
      <|> lvlvlSubstitute sc v lvlvl
-     <|> uniformSubstitute sc v vtl lvlvl
+     <|> uniformSubstitute sc vrt vtl lvlvl
      <|> pure (Sub tk vrt sub)
   where
     vtl = S.toList vts
@@ -346,31 +346,63 @@ Here we only look for simple patterns such as above.
 Basically we look for one or more var-term entries,
 with terms that are variable terms,
 and one listvar entry, where the removed variables are precisely
-the target variables on the var-term list:
+the target variables on the var-term list.
+We also have that all target variables have the same temporality $t$,
+and the replacement all have the same temporality $d$:
 $$
-   \seqof{(x,tv1),(y,tv2),(z,tv3)}
+   \seqof{(x_t,tv1_r),(y_t,tv2_r),(z_t,tv3_r)}
    \quad
-   \seqof{(\lst\ell\less{x,y,z},\lst\rho\less{x,y,z})}
+   \seqof{(\lst\ell_t\less{x,y,z},\lst\rho_d\less{x,y,z})}
 $$
 However,
-we do have a variable ($v$) being substituted,
-and the first thing we do is check that its temporality matches that
+we do have a variable ($v_t$) being substituted.
+$$
+  v_t[tv1_r,tv2_r,tv3_r,\lst\rho_r\less{x,y,z}/x_t,y_t,z_t,\lst\ell_t\less{x,y,z}] 
+  =  
+  v_r[tv1_r,tv2_r,tv3_r/x_r,y_r,z_r]
+$$
+which can be simplifed further if $v_r$ is an observable.
+
+The first thing we do is check that the temporality of $v$ matches that
 of the first target variable. 
-If not, there is no uniform substituion that can work here.
+If not, there is no uniform substitution that can work here,
+and there is only one target variable, then we can simply return $v$,
+otherwise we fail.
 \begin{code}
     uniformSubstitute :: MonadFail m
-                      => SideCond -> Variable 
+                      => SideCond -> Term -- (Var tk v) 
                       -> [(Variable,Term)] -> [(ListVar,ListVar)]
                       -> m Term
-    uniformSubstitute sc v vtl@((u,_):_) [(tlv,rlt)]
-      | varWhen v /= varWhen u  =  fail "uniformity is inapplicable"
-      | otherwise  =  fail "uniformSubstitute NYfI"
+    uniformSubstitute sc vrt@(Var tk v)  
+                         vtl@((u,_):_) 
+                         [ ( tlv@(LVbl (Vbl tid _ _) tis [])
+                           , rlv@(LVbl (Vbl rid _ _) ris []) ) ]
+      | tid /= rid              = usfail "different id in list-vars"
+      | varWhen v /= varWhen u  = if length vtl == 1 
+                                  then return vrt 
+                                  else usfail "uniformity is inapplicable"
+      | length tvws /= 1        =  usfail "vars not uniform"
+      | tvw /= tlvw             =  usfail "targets not uniform"
+      | length ttws /= 1        =  usfail "terms not uniform"
+      | ttw /= rlvw             =  usfail "replacements not uniform"
+      | otherwise               =  doUnifSub ttw tk v vtl 
       where
+        usfail msg = fail ("uniformSubstitute: "++msg)
         tvws = nub $ map (varWhen . fst) vtl
+        tvw = head tvws
+        tlvw = lvarWhen tlv
         ttws = nub $ concat 
-                   $ map ((map gvarWhen) . S.toList . fst . freeVars sc . snd) 
+                   $ map ( (map gvarWhen) . S.toList . fst .
+                                         freeVars sc . snd ) 
                          vtl
+        ttw = head $ ttws
+        rlvw = lvarWhen rlv
     uniformSubstitute _ _ _ _ = fail "not uniform or not supported"
+
+    doUnifSub rw tk v vtl  
+      = return $ Sub tk (jVar tk $ setVarWhen rw v) 
+                     $ jSubstn (mapfst (setVarWhen rw) vtl) []
+    -- we'll do the simplification for observables later
 \end{code}
 
 

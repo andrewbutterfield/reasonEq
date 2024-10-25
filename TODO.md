@@ -2,6 +2,14 @@
 
 ## URGENT
 
+```
+(∃ O$_1  • ((E1[O$_1/O$'] ⊆ ls[O$_1/O$'] ∧ a[O$_1/O$']) ∧ ls'[O$_1/O$'] = ls[O$_1/O$'] \ R1[O$_1/O$'] ∪ N1[O$_1/O$']) ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$]), O$,O$'⊇ₐa, O$,O$'⊇ₐb
+(∃ O$_1  • ((E1[O$_1/O$'] ⊆ ls[O$_1/O$'] ∧ a[O$_1/O$']) ∧ ls'[O$_1/O$'] = ls[O$_1/O$'] \ R1[O$_1/O$'] ∪ N1[O$_1/O$']) ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$])    O$,O$'⊇ₐa, O$,O$'⊇ₐb
+Focus = [1,1,1,1,1]
+```
+
+Here we need to have side-conditions that say that Ei,Ri, and Ni 
+are disjoint from O$,O$',O$_1
 
 We know we need to capture that E,R,N do not overlap with O$,O$'
 

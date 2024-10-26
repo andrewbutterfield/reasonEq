@@ -2,62 +2,21 @@
 
 ## URGENT
 
-```
-(∃ O$_1  • ((E1[O$_1/O$'] ⊆ ls[O$_1/O$'] ∧ a[O$_1/O$']) ∧ ls'[O$_1/O$'] = ls[O$_1/O$'] \ R1[O$_1/O$'] ∪ N1[O$_1/O$']) ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$]), O$,O$'⊇ₐa, O$,O$'⊇ₐb
-(∃ O$_1  • ((E1[O$_1/O$'] ⊆ ls[O$_1/O$'] ∧ a[O$_1/O$']) ∧ ls'[O$_1/O$'] = ls[O$_1/O$'] \ R1[O$_1/O$'] ∪ N1[O$_1/O$']) ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$])    O$,O$'⊇ₐa, O$,O$'⊇ₐb
-Focus = [1,1,1,1,1]
-```
+Fixed the A,X side conditions regarding E1,R1,etc..
 
-Here we need to have side-conditions that say that Ei,Ri, and Ni 
-are disjoint from O$,O$',O$_1
-
-We know we need to capture that E,R,N do not overlap with O$,O$'
-
-`[gO,gO'] `notin` gE` says `O$,O$' ∉ E`, but we really want `E ∉ O$,O$'`,
-but is meant to really mean `E ∉ fv(O$,O$')`.
-
-Perhaps we interpret the "free-variables" of {O$,O$'} as fv(O$) ∪ fv(O$'),
-which then becomes {s,ls,s',ls'} in the UTCP case?
-
-We find that `mrgscs [eNotObs,nNotObs]` reduces to `O$,O$' ∉ N`.
-
-Not sure about `SideCond.disjointCheck`.  Is `E`,`N` being `Static` an issue?
-
-If we try to build `E ∉ O$` we get it. 
-If we try to do `E ∉ O$ ; N ∉ O$` we get `scTrue` !
-
-NOT SURE WE WANT the `E ∉ O$` FORM!
-
+Now we need to revisit s.c. discharge
 
 ```
-E1[O$_1/O$'] ⊆ ls ∧ a[O$_1/O$']
-O$,O$'⊇ₐa
+X(E,a,E,N)    ⊤
+Focus = []
+proof: tm 1 X_def
+Match against `X_def'[1] OK
+Binding: { E  ⟼ E, N  ⟼ N, R  ⟼ E, X  ⟼ X, a  ⟼ a, ls  ⟼ «BI (Id "ls" 0)» }
+Instantiated Law = (E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N
+Instantiated Law S.C. = E∉O$
+Goal S.C. = ⊤
+Discharged Law S.C. = E∉O$
 ```
-
-Here, `E1` is a static expression variable denoting some set,
-while `a` is a static predicate variable whose alphabet is `O$ ∪ O$'`.
-
-**In fact, `E1` is a set whose elements are generated labels**,
-which means that we have `in,g,out ⊇ E1`, 
-and we know that `{in,out,g}` is disjoint from `O$ ∪ O$'`.
-
-
-Here we should be able to say that `O$'` does NOT cover `E1`,
-so we can obtain just `(E1 ⊆ ls)`, while the substitution on `a` needs to remain.
-
-We have the following error:
-```
-∃ O$_1  • ((E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1)[O$_1/O$'] ∧ ...
-   = 'substitute @[1,1]'
-(∃ O$_1  • ((E1[O$_1/O$'] ⊆ ls ∧ a[O$_1/O$']) 
-         ∧ ls' = ls \ R1[O$_1/O$'] ∪ N1[O$_1/O$']) ∧ ...
-```
-
-What didn't happen was that we should have had `ls'[O$_1/O$']` 
-which would turn into `ls_1`.
-
-The Substitution code is very old and treats `P` and `e` differently,
-and seems not to consider static variables at all! BIG RETHINK
 
 a REGRESSION in UTCP caused by fact that re-entering a proof can 
 get locked into the wrong base theory

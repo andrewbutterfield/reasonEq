@@ -7,7 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module UTPBase (
-  assertIsUTP, assertAreUTP, assertIsUTPCond, assertAreUTPCond
+  isUTPDynObs, areUTPDynObs, isUTPCond, areUTPCond, isUTPStcObs
+, areUTPStcObs
 , utpBaseConjs, utpBaseName, utpBaseTheory
 , utpBaseAliases
 ) where
@@ -352,20 +353,33 @@ cjCondAlt2 = preddef ("cond" -.- "alt" -.- "def2")
 
 \subsection{Defn. of Sequential Composition}
 
-We need to know when a predicate is a UTP predicate ($O \cup O'\supseteq_a P$).
+We need to be able to specify that a term variable $P$
+is a standard UTP predicate in that defines a homogenous relation 
+using dynamic observables ($O \cup O'\supseteq_a P$):
 \begin{code}
-assertIsUTP  :: GenVar -> SideCond
-assertIsUTP  gP  = [gO,gO'] `dyncover` gP
-assertAreUTP :: [GenVar] -> SideCond
-assertAreUTP gPs = mrgscs $ map assertIsUTP gPs
+isUTPDynObs  :: GenVar -> SideCond
+isUTPDynObs  gP  = [gO,gO'] `dyncover` gP
+areUTPDynObs :: [GenVar] -> SideCond
+areUTPDynObs gPs = mrgscs $ map isUTPDynObs gPs
 \end{code}
-We also want to be able to specify a UTP condition ($O \subseteq c$):
+We also want to be able to specify that a term variable $c$
+is a UTP condition ($O \supseteq_a c$):
 \begin{code}
-assertIsUTPCond  :: GenVar -> SideCond
-assertIsUTPCond  gP  = [gO] `dyncover` gP
-assertAreUTPCond :: [GenVar] -> SideCond
-assertAreUTPCond gPs = mrgscs $ map assertIsUTPCond gPs
+isUTPCond  :: GenVar -> SideCond
+isUTPCond  gc  = [gO] `dyncover` gc
+areUTPCond :: [GenVar] -> SideCond
+areUTPCond gcs = mrgscs $ map isUTPCond gcs
 \end{code}
+We also need to specify a term variable $S$ 
+that only contains static observables:
+($O \cup O'\disj S$):
+\begin{code}
+isUTPStcObs  :: GenVar -> SideCond
+isUTPStcObs  gS  = [gO,gO'] `notin` gS
+areUTPStcObs :: [GenVar] -> SideCond
+areUTPStcObs gSs = mrgscs $ map isUTPStcObs gSs
+\end{code}
+
 
 
 From \cite[Defn 2.2.1,p49]{UTP-book}
@@ -384,7 +398,7 @@ seqIntro = mkConsIntro i_seq boolf_2
                          === exists [gO0]
                               ( (Sub pred1 p o0'sub) /\ (Sub pred1 q o0sub) )
                        )
-                       (assertIsUTP gp .: assertIsUTP gq .: gfresh)
+                       (isUTPDynObs gp .: isUTPDynObs gq .: gfresh)
    where
       gfresh = fresh $ S.singleton gO0
 \end{code}
@@ -413,7 +427,7 @@ $$\par\vspace{-8pt}
 \begin{code}
 (cjSeqAssoc,alSeqAssoc) = bookdef (";" -.- "assoc") "2.2L1"
                            ( mkSeq p (mkSeq q r) ===  mkSeq (mkSeq p q) r )
-                           (assertAreUTP [gP,gQ,gR] )
+                           (areUTPDynObs [gP,gQ,gR] )
 \end{code}
 
 
@@ -432,7 +446,7 @@ $$\par\vspace{-8pt}
                                 ===
                                 cond (mkSeq p r) b (mkSeq q r)
                               )
-                              (assertAreUTP [gP,gQ,gR] .: assertIsUTPCond gb)
+                              (areUTPDynObs [gP,gQ,gR] .: isUTPCond gb)
 \end{code}
 
 \newpage
@@ -584,7 +598,7 @@ $$
        ===
        ( vx .:= Sub ArbType f e_for_x )
      )
-     (assertAreUTPCond [gx,qe,qf])
+     (areUTPCond [gx,qe,qf])
 \end{code}
 
 From \cite[2.3\textbf{L4}, p50]{UTP-book}
@@ -604,7 +618,7 @@ $$
               (Sub ArbType b e_for_x)
               (mkSeq (vx .:= e) q) )
      )
-     (assertAreUTP [gP,gQ] .: assertAreUTPCond [gx,qe,gb])
+     (areUTPDynObs [gP,gQ] .: areUTPCond [gx,qe,gb])
 \end{code}
 
 \newpage
@@ -640,7 +654,7 @@ $$\par\vspace{-8pt}
 \begin{code}
 (cjSkipL5a,alSkipL5a) = bookdef (";" -.- "runit") "2.3L5a"
                          (mkSeq r skip === r)
-                         (assertAreUTP [gR,g_skip])
+                         (areUTPDynObs [gR,g_skip])
 \end{code}
 
 From \cite[2.3\textbf{L5}, p50]{UTP-book}
@@ -653,7 +667,7 @@ $$\par\vspace{-8pt}
 \begin{code}
 (cjSkipL5b,alSkipL5b) = bookdef (";" -.- "lunit") "2.3L5b"
                          (mkSeq skip r === r)
-                         (assertAreUTP [gR,g_skip])
+                         (areUTPDynObs [gR,g_skip])
 \end{code}
 
 
@@ -762,7 +776,7 @@ $$ %\par\vspace{-8pt}
 (cjSeqNDCLDistr,alSeqNDCLDistr)
    = bookdef (";" -.- "sqcap" -.- "ldistr") "2.4L6"
              ( mkSeq (p `ndc` q) r  ===  (mkSeq p r) `ndc` (mkSeq q r) )
-             (assertAreUTP [gP,gQ,gR])
+             (areUTPDynObs [gP,gQ,gR])
 \end{code}
 
 From \cite[2.4\textbf{L7}, p52]{UTP-book}
@@ -777,7 +791,7 @@ $$ %\par\vspace{-8pt}
 (cjSeqNDCRDistr,alSeqNDCRDistr)
    = bookdef (";" -.- "sqcap" -.- "rdistr") "2.4L7"
              ( mkSeq p (q `ndc` r)  ===  (mkSeq p q) `ndc` (mkSeq p r) )
-             (assertAreUTP [gP,gQ,gR])
+             (areUTPDynObs [gP,gQ,gR])
 \end{code}
 
 From \cite[2.4\textbf{L8}, p52]{UTP-book}

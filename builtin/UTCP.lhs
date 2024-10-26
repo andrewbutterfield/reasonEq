@@ -209,8 +209,8 @@ Label-set handling:
 
 \begin{eqnarray*}
    s, s' &:& \mathcal S
-\\ ls, ls' &:& \mathcal P (R)
-\\ g &:& G           \qquad \textbf{(also }g':G\textbf{ ?)}
+\\ ls, ls' &:& \mathcal P (LExpr)
+\\ g &:&  GExpr         \qquad \textbf{(also }g':G\textbf{ ?)}
 \\ in,out &:& LExpr  \qquad \textbf{(also }in',out':LExpr\textbf{ ?)}
 \\ \lst O &=& \setof{s,ls}
 \end{eqnarray*}
@@ -259,7 +259,7 @@ and noting that these do \emph{not} mention $r$
 \\ P ; Q
    &~\defs~&
    \exists s_m,ls_m \bullet P[s_m,ls_m/s',ls'] \land Q[s_m,ls_m/s,ls]
-   \lref{defn-$;$}
+   & \lref{defn-$;$}
 \\ c * P
    &=&
    P ; c * P \cond c \Skip & \lref{unfold-loop}
@@ -327,8 +327,7 @@ We need to define some variables ($E$, $a$, $R$, $N$)
 vE = ExprVar (jId "E") Static ; tE = jVar ls_t vE ; gE = StdVar vE
 vN = ExprVar (jId "N") Static ; tN = jVar ls_t vN ; gN = StdVar vN
 vR = ExprVar (jId "R") Static ; tR = jVar ls_t vR
-va = Vbl (jId "a") PredV Static 
-a = fromJust $ pVar ArbType va ; ga = StdVar va
+va = Vbl (jId "a") PredV Static ; a = fromJust $ pVar ArbType va 
 tls = jVar ls_t vls
 tls' = jVar ls_t vls'
 eNotObs = [gO,gO'] `notin` gE
@@ -396,26 +395,31 @@ of $X$-actions:
        \mid R_1 \cup R_2
        \mid (N_1 \sminus R_2) \cup  N_2)
        & \lref{$X$-$X$-comp}
+\\ && \lst O,\lst O' \supseteq_a a,b
+      \qquad
+      \lst O,\lst O' \disj E_1,R_1,N_1,E_2,R_2,N_2
 }
 \begin{code}
-vE1 = jVar ls_t $ ExprVar (jId "E1") Static
-vE2 = jVar ls_t $ ExprVar (jId "E2") Static
-vb = Vbl (jId "b") PredV Static ; b = fromJust $ pVar ArbType vb ; gb = StdVar vb
-vR1 = jVar ls_t $ ExprVar (jId "R1") Static
-vR2 = jVar ls_t $ ExprVar (jId "R2") Static
-vN1 = jVar ls_t $ ExprVar (jId "N1") Static
-vN2 = jVar ls_t $ ExprVar (jId "N2") Static
+vb = Vbl (jId "b") PredV Static ; b = fromJust $ pVar ArbType vb
+vE1 = ExprVar (jId "E1") Static ; sE1 = jVar ls_t vE1
+vE2 = ExprVar (jId "E2") Static ; sE2 = jVar ls_t vE2
+vR1 = ExprVar (jId "R1") Static ; sR1 = jVar ls_t vR1
+vR2 = ExprVar (jId "R2") Static ; sR2 = jVar ls_t vR2
+vN1 = ExprVar (jId "N1") Static ; sN1 = jVar ls_t vN1
+vN2 = ExprVar (jId "N2") Static ; sN2 = jVar ls_t vN2
 cjXXComp = ( "X" -.- "X" -.- "comp"
-           , ( mkSeq (xact vE1 a vR1 vN1) (xact vE2 b vR2 vN2)
+           , ( mkSeq (xact sE1 a sR1 sN1) (xact sE2 b sR2 sN2)
                ===
-               (vE2 `sunion` (vR1 `sdiff` vN1) `isEqualTo` mtset)
+               (sE2 `sunion` (sR1 `sdiff` sN1) `isEqualTo` mtset)
                /\
                (xact 
-                 (vE1 `sunion` (vE2 `sdiff` vN1)) 
+                 (sE1 `sunion` (sE2 `sdiff` sN1)) 
                  (mkSeq a b) 
-                 (vR1 `sunion` vR2) 
-                 ((vN1 `sdiff` vR2) `sunion` vN2) )
-             , assertAreUTP [ga,gb] ))
+                 (sR1 `sunion` sR2) 
+                 ((sN1 `sdiff` sR2) `sunion` sN2) )
+             , areUTPDynObs (map StdVar [va,vb])
+               .: 
+               areUTPStcObs (map StdVar [vE1,vE2,vR1,vR2,vN1,vN2]) ) )
 \end{code}
 
 \subsection{Commands}

@@ -333,7 +333,8 @@ Here, checking \m{g \disj \setof{g_1,\dots,g_n}}
 reduces to checking \m{\bigwedge_{i \in 1\dots n}(g \disj g_i)}.
 \begin{itemize}
   \item definitely \false : \m{g = g_i}
-  \item definitely \true : \m{g} and \m{g_i} have different dynamicity.
+  \item definitely \true : \m{g} and \m{g_i} 
+     are both dynamic and have different dynamicity.
 \end{itemize}
 \begin{code}
 disjointCheck  :: MonadFail m => GenVar -> VarSet -> m VarSet
@@ -345,9 +346,13 @@ disjCheck :: MonadFail m
           => GenVar -> VarSet -> [GenVar] -> m VarSet
 disjCheck gv vsd [] = return vsd
 disjCheck gv vsd (gvd:gvs)
-  | gv == gvd                    =  fail "disjCheck: same variable"
-  | timeGVar gv /= timeGVar gvd  =  disjCheck gv vsd                 gvs
-  | otherwise                    =  disjCheck gv (S.insert gvd vsd) gvs
+  | gv == gvd             =  fail "disjCheck: same variable"
+  | gvw /= gvdw && bothd  =  disjCheck gv vsd                gvs
+  | otherwise             =  disjCheck gv (S.insert gvd vsd) gvs
+  where
+    gvw = gvarWhen gv
+    gvdw = gvarWhen gvd
+    bothd = isDynamic gvw && isDynamic gvdw
 \end{code}
 
 \newpage
@@ -721,10 +726,9 @@ mrgSideCond (vscs1,fvs1) (vscs2,fvs2)
           -- the above may require a obsv-savvy union?
 
 mrgSideConds :: MonadFail m => [SideCond] -> m SideCond
-mrgSideConds [] = return ([],S.empty)
-mrgSideConds (sc:scs)
-  = do  scs' <- mrgSideConds scs
-        mrgSideCond sc scs'
+mrgSideConds []        = return ([],S.empty)
+-- mrgSideConds [sc]      =  return sc
+mrgSideConds (sc:scs)  =  do scs' <- mrgSideConds scs ; mrgSideCond sc scs'
 
 \end{code}
 

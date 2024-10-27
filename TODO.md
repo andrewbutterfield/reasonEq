@@ -30,6 +30,10 @@ For `ls[O$_1/O$']` it should be `ls` because while `O$,O$' ⊇ₐ ls` should be 
 
 **ISSUE - we are NOT exploiting the fact that `O$` is known to be `{ls,s}`.**
 
+**In the substitute command!**
+
+**We need to add VarData extracts to SubContext**
+
 
 
 a REGRESSION in UTCP caused by fact that re-entering a proof can 

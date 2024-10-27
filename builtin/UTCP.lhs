@@ -353,9 +353,7 @@ axXDef = ( "X" -.- "def"
              ===
              ((tE `subseteq` tls) /\ a) /\
              (tls' `isEqualTo` ((tls `sdiff` tR) `sunion` tN))
-           -- , eNotObs .: nNotObs  ) )  -- returns nNotObs
-           , eNO ) ) -- returns eNO
-           -- , eNO .: nNO) )  -- returns scTrue
+         , areUTPStcObs (map StdVar [vE,vR,vN] ) ) )
 \end{code}
 
 \RLEQNS{
@@ -377,7 +375,7 @@ cjAAlt = ( "A" -.- "alt"
              ===
              ((tE `subseteq` tls) /\ a) /\
              (tls' `isEqualTo` ((tls `sdiff` tE) `sunion` tN))
-           , scTrue ) )
+           , areUTPStcObs (map StdVar [vE,vN] ) ) )
 \end{code}
 
 \newpage

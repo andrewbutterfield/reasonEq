@@ -234,27 +234,48 @@ substitute _ sub tm | isNullSubstn sub  =  return tm
 
 We are dealing with the case $\vv v \ss {} {g^n} {r^n}$,
 where $v$ denotes a standard variable. 
-We first scan the var-term pairs looking for $\vv s$,
-returning the replacement if found.
-Otherwise we scan the list-var pairs, with the side-conditions in hand,
-looking for a list-variable that covers $\vv s$.
-If nothing is found we return an the substitution unchanged.
-
-\textbf{Now} we have case \m{f_1[e,\lst O\less x/x_1,\lst O_1\less x]}
-which should result in \m{f[e/x]}.
-Currently we get \m{f_1} as an outcome.
-The \h{alookup} below will fail as \m{f_1 \notin \dom\setof{(x_1,e)}}.
-
 \begin{code}
-substitute sctx@(SCtxt sc) sub@(Substn vts lvlvs) vrt@(Var tk v)
-  =  alookup v vtl 
-     <|> lvlvlSubstitute sc v lvlvl
-     <|> uniformSubstitute sc vrt vtl lvlvl
+substitute sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
+\end{code}
+
+We first scan the var-term pairs looking for $\vv v$,
+returning the replacement if found:
+\begin{code}
+-- substitute sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
+  =  let vtl = S.toList vts ; lvlvl = S.toList lvlvs in
+-- we should also use vdata to "expand" sc here
+     alookup v vtl 
+\end{code}
+Next we scan the list-variable  pairs, with the side-conditions in hand,
+looking for a list-variable that covers $\vv v$:
+\begin{code}
+-- substitute sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
+--   let vtl = S.toList vts ; lvlvl = S.toList lvlvs in
+     <|> lvlvlSubstitute sctx v lvlvl
+\end{code}
+Then we see if we have a uniform substitution, 
+provided that $\vv v$ is dynamic:
+\begin{code}
+-- substitute sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
+--   let vtl = S.toList vts ; lvlvl = S.toList lvlvs in
+     <|> uniformSubstitute sctx vrt vtl lvlvl
+\end{code}
+If nothing is found we return the substitution unchanged:
+\begin{code}
+-- substitute sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
      <|> pure (Sub tk vrt sub)
   where
-    vtl = S.toList vts
-    lvlvl = S.toList lvlvs
 \end{code}
+
+\newpage
+\subsubsection{Does a list-variable cover the standard variable?}
+
+\textbf{Note:}
+\textsf{
+It is very hard to track the scope of the following material.
+The functions below should be top-level with appropriate extra parameters.
+}
+
 What we try next is to scan the list-var substitutions 
 ($\setof{\dots,\ell^R/\ell^T,\dots$}),
 asking the following questions:
@@ -274,43 +295,15 @@ asking the following questions:
 If neither option 1 or 3 occurs, having scanned the whole list,
 we simply fail.
 
-\textbf{Now} we have \m{\h{v} = f_1} 
-and \m{\h{lvlvl} = \seqof{(\lst O_1\less x,\lst O\less x)}}.
 \begin{code}
-    lvlvlSubstitute sc v []  =  fail "no lv target match found"
-    lvlvlSubstitute sc v ((tlv,rlv):lvlvl)
-      = lvlvSubstitute sc v tlv rlv
-        <|> lvlvlSubstitute sc v lvlvl
+    lvlvlSubstitute sctxt v []  =  fail "no lv target match found"
+    lvlvlSubstitute sctxt v ((tlv,rlv):lvlvl)
+      = lvlvSubstitute sctxt v tlv rlv
+        <|> lvlvlSubstitute sctxt v lvlvl
 \end{code}
 
-\newpage
-
-\textbf{Now} we have \m{\h{v} = f_1} with
-\m{\ell^R = \lst O}, \m{s_R = \setof{x}}
-and
-\m{\ell^T = \lst O_1}, \m{s_T = \setof{x}}
-and side-condition \m{\lst O \supseteq_a f,x}.
-
-Here, in general, we have substitution $v[\ell^R\less{s_R}/\ell^T\less{s_T}]$
-and variable side-condition $(D \disj V, C \supseteq V, Cd \supseteq_a V )^{+}$.
-We fail if any of the following hold:\\
-the dynamicity of $v$ differs from that of $\ell^T$  
-(\m{f_1 \approx \lst O_1} OK) \\
-the underlying identifiers in $\ell^R$ and $\ell^T$ are different;
-(\m{\lst O \approx \lst O_1} OK) \\
-$v \in s_T$; (\m{f_1 \in \setof{x}} OK)\\
-$v \in s_R$; (\m{f_1 \in \setof{x}} OK)\\
-$v$ not mentioned in the side-condition, after adjusting for temporality;
-(\m{f_1 \notin \lst O \supseteq_a f,x} OK) \\
-Given v.s.c. $(v,D,C,Cd)$  (\m{f_1,\emptyset,U,\setof{\lst O}}), 
-we fail if $\ell^T\less{s_T}$ 
-definitely overlaps with $D$ or is 
-definitely not in $C \cup Cd$
-(\m{\lst O_1 \cap x} or \m{\lst O_1 \notin_a \setof{\lst O}}).
-
-We fail because it is judged that \m{\lst O\less x \notin \setof{\lst O}}
 \begin{code}
-    lvlvSubstitute sc            v@(Vbl i  vc vw) 
+    lvlvSubstitute sctx@(SubCtxt sc vdata) v@(Vbl i  vc vw) 
                       tlv@(LVbl tv@(Vbl ti _  tw) tis _) 
                       rlv@(LVbl rv@(Vbl ri _  rw) ris _)
       | vw /= tw  = fail "v,tv dynamicity differs"
@@ -322,6 +315,7 @@ We fail because it is judged that \m{\lst O\less x \notin \setof{\lst O}}
              Just ( (VSC gv' vsD uvsC uvsCd), Nothing ) -- gv==StdVar v
                 | gtlv `S.member` vsD  
                     ->  fail "tlv mentioned in disjoint-set"
+      -- we should repeat this check with vsD contents expanded using vdata
                 | not ( ( gtlv `umbr` uvsC) && (gtlv `umbr` uvsCd) )
                     ->  fail "tlv not mentioned in coverage"
                 | otherwise  ->  pure $ jVar tk (Vbl i vc rw)   
@@ -333,6 +327,10 @@ We fail because it is judged that \m{\lst O\less x \notin \setof{\lst O}}
       where
         gtlv = LstVar tlv 
 \end{code}
+
+\newpage
+\subsubsection{Does a uniform substitution cover the standard variable?}
+
 The last thing we try is to see if we have a uniform substitution.
 This means that:
 (i) the target variables all have the same temporality;
@@ -371,10 +369,10 @@ and there is only one target variable, then we can simply return $v$,
 otherwise we fail.
 \begin{code}
     uniformSubstitute :: MonadFail m
-                      => SideCond -> Term -- (Var tk v) 
+                      => SubContext -> Term -- (Var tk v) 
                       -> [(Variable,Term)] -> [(ListVar,ListVar)]
                       -> m Term
-    uniformSubstitute sc vrt@(Var tk v)  
+    uniformSubstitute sctx@(SubCtxt sc vdata) vrt@(Var tk v)  
                          vtl@((u,_):_) 
                          [ ( tlv@(LVbl (Vbl tid _ _) tis [])
                            , rlv@(LVbl (Vbl rid _ _) ris []) ) ]
@@ -445,7 +443,7 @@ We handle $(\ll n {x^+} t) \ss {} {v^n} {t^n}$ in a similar fashion.
 substitute sctx sub bt@(Bnd tk i vs tm)
   | isNullSubstn effsub  =  return bt
   | otherwise 
-    = do  alpha <- captureAvoidance (scSC sctx) vs tm effsub
+    = do  alpha <- captureAvoidance (subSC sctx) vs tm effsub
           let vs' = S.fromList $ quantsSubst alpha $ S.toList vs
           asub <- substComp alpha effsub --- succeeds as alpha is var-only
           tm' <- substitute sctx asub tm
@@ -457,7 +455,7 @@ substitute sctx sub bt@(Bnd tk i vs tm)
 substitute sctx sub lt@(Lam tk i vl tm)
   | isNullSubstn effsub  =  return lt
   | otherwise 
-    = do  alpha <- captureAvoidance (scSC sctx) vs tm effsub
+    = do  alpha <- captureAvoidance (subSC sctx) vs tm effsub
           let vl' = quantsSubst alpha vl
           asub <- substComp alpha effsub --- succeeds as alpha is var-only
           tm' <- substitute sctx asub tm
@@ -529,7 +527,7 @@ that mentions the term-variable.
 \begin{code}
 sctxSimplify :: SubContext -> Term -> Term
 sctxSimplify sctx (Sub tk vrt@(Var _ v) sub)  -- P[../..]
-  = Sub tk vrt $ scSimplify (scSC sctx) (StdVar v) sub
+  = Sub tk vrt $ scSimplify (subSC sctx) (StdVar v) sub
 sctxSimplify _ tm = tm
 
 scSimplify :: SideCond -> GenVar -> Substn -> Substn
@@ -828,7 +826,7 @@ vO1 = MidVar  iO "1" ; lO1 = LVbl vO1 [] []
 
 obs_covers_f = [(LstVar lO)] `covers` StdVar vf
 
-subObsF     = mkSubCtxt obs_covers_f 
+subObsF     = mkSubCtxt obs_covers_f []
 
 mid_for_pre = jSubstn [] [(lO,lO1)]
 mid_for_post = jSubstn [] [(lO',lO1)]
@@ -874,8 +872,8 @@ Given $O \supseteq e,f$:
 \begin{code}
 obs_covers_e  = [(LstVar lO)] `covers` StdVar ve
 obs_covers_ef = obs_covers_e .: obs_covers_f
-subObsE   = mkSubCtxt obs_covers_e
-subObsEF  = mkSubCtxt obs_covers_ef
+subObsE   = mkSubCtxt obs_covers_e []
+subObsEF  = mkSubCtxt obs_covers_ef []
 
 
 oless o is  = o `less` (is,[])
@@ -1106,8 +1104,8 @@ sub2 t3 t4 = jSubstn [(x,t3),(y,t4)] []
 \end{code}
 A default sub-context:
 \begin{code}
-subctxt = SCtxt scTrue
-dosub tm sub = fromJust $ substitute subctxt sub tm
+subctxt0 = SubCtxt scTrue []
+dosub tm sub = fromJust $ substitute subctxt0 sub tm
 subcomp sub1 sub2 = fromJust $ substComp sub1 sub2
 \end{code}
 A collection of standard constants:

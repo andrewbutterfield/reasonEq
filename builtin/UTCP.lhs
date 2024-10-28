@@ -1217,22 +1217,3 @@ The miraculous stuff:
          \lor A(r|ii|r2) \lor ii \lor A(r2!|ii|r!) ~)^i )
 \end{eqnarray*}
 Looks like we need the calculator!!!
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

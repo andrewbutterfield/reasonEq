@@ -826,7 +826,7 @@ substituteFocus thrys liveProof
         -- vts = concat $ map thd3 $ mtchCtxts liveProof
         scC = conjSC liveProof
         (Assertion conj _) = conjecture liveProof
-        sctxt = mkSubCtxt scC
+        sctxt = mkSubCtxt scC $ thd3 $ head $ mtchCtxts liveProof
     in case t of
          (Sub _ tm s)
             -> do t' <- substitute sctxt s tm

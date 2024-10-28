@@ -204,17 +204,18 @@ All substitutions need a context argument that describes the following
 aspects of the current state of a proof:
 \begin{itemize}
   \item side-conditions
-  % \item dynamic \texttt{Subscript}s in scope
+  \item list-var variable data
 \end{itemize}
 \begin{code}
 data SubContext
-  =  SCtxt  { scSC :: SideCond
+  = SubCtxt { subSC :: SideCond
+            , subVD :: [VarTable]
             }
-  deriving (Eq,Ord,Show,Read)
+  deriving (Eq,Show)
 
-mkSubCtxt = SCtxt
+mkSubCtxt = SubCtxt
 
-subContext0 = mkSubCtxt scTrue
+subContext0 = mkSubCtxt scTrue []
 \end{code}
 
 \newpage

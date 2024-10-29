@@ -8,7 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module SideCond (
   UVarSet, uset
-, umbr, udiff, uunion, uintsct, unull, usubset, udisj
+, umbr, udiff, uunion, uintsct, unull, usubset, udisj, umap
 , VarSideConds(..)
 , termVar, disjointFrom, coveredBy, coveredDynamic
 , mkVSC
@@ -231,6 +231,10 @@ udisj :: UVarSet -> UVarSet -> Bool
 udisj uset1    Nothing   =  unull uset1
 udisj Nothing  uset2     =  unull uset2
 udisj (Just s) (Just t)  =  S.null (s `S.intersection` t)
+
+umap :: (VarSet -> VarSet) -> UVarSet -> UVarSet
+umap _ Nothing   =  Nothing
+umap f (Just s)  =  Just $ f s
 \end{code}
 
 \newpage

@@ -40,6 +40,7 @@ module VarData ( VarMatchRole
                , genExpandToList
                , genExpandToSet
                , getDynamicObservables
+               , mapVToverVarSet
                ) where
 --import Data.Maybe (fromJust)
 import Data.Map (Map)
@@ -76,12 +77,10 @@ can belong to one of the following categories as regards matching:
     If the value is denoted by a term then any free variables
     present must also be known.
   \item[Known Variable]~\\
-    Either (i) the variable is an static or dynamic (before/after) observation
-        and can take many possible values from a defined type.
-        it has a predefined interpretation in some intended semantic model,
-        and can only match itself;
-     \\or (ii) the variable denotes expressions 
-       or predicates of a particular type (????? NOT SURE ABOUT THIS!!!).
+    The variable is an static or dynamic (before/after) observation
+    and can take many possible values from a defined type.
+    It has a predefined interpretation in some intended semantic model,
+    and can only match itself.
   \item[Generic Variable]~\\
     This is a variable used to define some generic properties,
     via appropriate axioms.
@@ -98,6 +97,7 @@ can belong to one of the following categories as regards matching:
 We refer, simply,
 to variables in the all but the last categories above, as ``known'',
 while those in the last category are simply ``unknown''.
+We use the unknown category when a variable lookup fails.
 \begin{code}
 data VarMatchRole -- Variable Matching Role
   =  KC Term     -- Known Constant
@@ -908,6 +908,7 @@ setRemove  kvs expS eSiz (n,kvr,uis,ujs)
     kvrS = S.fromList kvr
 \end{code}
 
+
 Sometimes we expect very specific expansion results.
 
 \begin{code}
@@ -955,4 +956,26 @@ getDynamicObs vts (LVbl lv _ _)
       KnownVarSet  kvs _ _   ->  kvs
       _                      ->  S.empty
 \end{code}
+
+
+\newpage
+\section{Mapping Variable Tables over a Variable Set}
+
+What it says on the tin --- keep total for now
+\begin{code}
+mapVToverVarSet :: [VarTable] -> VarSet -> VarSet
+mapVToverVarSet vts vs = S.fromList $ mapTS vts [] $ S.toList vs
+
+mapTS vts svg [] =  svg
+mapTS vts svg (gv@(StdVar v):gvs)
+  = case lookupVarTables vts v of
+      KC (Var _ tv)  ->  mapTS vts (StdVar v:svg) gvs
+      _              ->  mapTS vts (gv:svg)       gvs
+mapTS vts svg (gv@(LstVar (LVbl v _ _)):gvs)
+  = case lookupLVarTables vts v of
+      KL kvl _ _  ->  mapTS vts (kvl++svg)          gvs
+      KS kvs _ _  ->  mapTS vts (S.toList kvs++svg) gvs
+      _           ->  mapTS vts (gv:svg)           gvs
+\end{code}
+
 

@@ -182,6 +182,9 @@ $$
 $$
 Reminder: we require temporal uniformity as well.
 If we have a complete substitution we want to know the target temporality.
+\textbf{NOTE: 
+ not used anywhere but similar code appears in \h{uniformSubstitute} below.
+ }
 \begin{code}
 isCompleteSubst :: MonadFail m => Substn -> m VarWhen
 isCompleteSubst (Substn ts lvs) = isCompSubst (S.toList ts) (S.toList lvs)
@@ -251,7 +254,7 @@ looking for a list-variable that covers $\vv v$:
 \begin{code}
 -- substitute sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
 --   let vtl = S.toList vts ; lvlvl = S.toList lvlvs in
-     <|> lvlvlSubstitute sctx v lvlvl
+     <|> lvlvlSubstitute sctx tk v lvlvl
 \end{code}
 Then we see if we have a uniform substitution, 
 provided that $\vv v$ is dynamic:
@@ -267,142 +270,6 @@ If nothing is found we return the substitution unchanged:
   where
 \end{code}
 
-\newpage
-\subsubsection{Does a list-variable cover the standard variable?}
-
-\textbf{Note:}
-\textsf{
-It is very hard to track the scope of the following material.
-The functions below should be top-level with appropriate extra parameters.
-}
-
-What we try next is to scan the list-var substitutions 
-($\setof{\dots,\ell^R/\ell^T,\dots$}),
-asking the following questions:
-\begin{enumerate}
-  \item Is $v$ definitely in $\ell^T$?  
-        If so, exit the scan and return $v$ modifed as follows:
-\begin{eqnarray*}
-   \prv v \ss{}{\prv\ell}{\dyn\ell}  &=&  \dyn v ~~\IF~~ \prv\ell \supseteq \prv v
-\\ \psv v \ss{}{\psv\ell}{\dyn\ell}  &=&  \dyn v ~~\IF~~ \psv\ell \supseteq \psv v
-\\ v_d    \ss{}{\ell_d}  {\dyn\ell}  &=&  \dyn v ~~\IF~~ \ell_d \supseteq v_d
-\end{eqnarray*}
-  \item Is $v$ definitely not in $\ell^T$ ?
-        If so, skip and move on.
-  \item Otherwise, $v$ might be in $\ell^T$,
-        so exit the scan and return the explicit substitution $v[\ell^R/\ell^T]$.
-\end{enumerate}
-If neither option 1 or 3 occurs, having scanned the whole list,
-we simply fail.
-
-\begin{code}
-    lvlvlSubstitute sctxt v []  =  fail "no lv target match found"
-    lvlvlSubstitute sctxt v ((tlv,rlv):lvlvl)
-      = lvlvSubstitute sctxt v tlv rlv
-        <|> lvlvlSubstitute sctxt v lvlvl
-\end{code}
-
-\begin{code}
-    lvlvSubstitute sctx@(SubCtxt sc vdata) v@(Vbl i  vc vw) 
-                      tlv@(LVbl tv@(Vbl ti _  tw) tis _) 
-                      rlv@(LVbl rv@(Vbl ri _  rw) ris _)
-      | vw /= tw  = fail "v,tv dynamicity differs"
-      | ti /= ri  =  fail "ti,ri differ"
-      | i `elem` tis || i `elem` ris  =  fail "v removed"
-      | otherwise
-        =  case (StdVar v `mentionedBy` fst sc) of
-             Nothing  ->  fail (show v ++ " not mentioned" ) 
-             Just ( (VSC gv' vsD uvsC uvsCd), Nothing ) -- gv==StdVar v
-                | gtlv `S.member` vsD  
-                    ->  fail "tlv mentioned in disjoint-set"
-      -- we should repeat this check with vsD contents expanded using vdata
-                | not ( ( gtlv `umbr` uvsC) && (gtlv `umbr` uvsCd) )
-                    ->  fail "tlv not mentioned in coverage"
-                | otherwise  ->  pure $ jVar tk (Vbl i vc rw)   
-             Just ( (VSC gv' _ _ (Just vsCd)), Just vw' ) -- gv~~StdVar v 
-                | not ( setGVarWhen vw' gtlv `umbr` Just vsCd ) 
-                    -> fail  "tlv not mentioned in dyn. s.c."
-                | otherwise  ->  pure $ jVar tk (Vbl i vc rw)   
-             _  ->  fail "lvlvSubstitute: this shouldn't happen"   
-      where
-        gtlv = LstVar tlv 
-\end{code}
-
-\newpage
-\subsubsection{Does a uniform substitution cover the standard variable?}
-
-The last thing we try is to see if we have a uniform substitution.
-This means that:
-(i) the target variables all have the same temporality;
-(ii) they ``cover'' a complete list variable;
-(iii) the replacements all have the same temporality;
-(iv) they  ``cover'' a complete list variable.
-For example:
-$$[e,f,\lst O\less{x,y}/x_1,y_1,\lst O_1\less{x,y}]$$
-Here the targets cover $\lst O_1$ while the replacements cover $\lst O$.
-
-Here we only look for simple patterns such as above.
-Basically we look for one or more var-term entries,
-with terms that are variable terms,
-and one listvar entry, where the removed variables are precisely
-the target variables on the var-term list.
-We also have that all target variables have the same temporality $t$,
-and the replacement all have the same temporality $d$:
-$$
-   \seqof{(x_t,tv1_r),(y_t,tv2_r),(z_t,tv3_r)}
-   \quad
-   \seqof{(\lst\ell_t\less{x,y,z},\lst\rho_d\less{x,y,z})}
-$$
-However,
-we do have a variable ($v_t$) being substituted.
-$$
-  v_t[tv1_r,tv2_r,tv3_r,\lst\rho_r\less{x,y,z}/x_t,y_t,z_t,\lst\ell_t\less{x,y,z}] 
-  =  
-  v_r[tv1_r,tv2_r,tv3_r/x_r,y_r,z_r]
-$$
-which can be simplifed further if $v_r$ is an observable.
-
-The first thing we do is check that the temporality of $v$ matches that
-of the first target variable. 
-If not, there is no uniform substitution that can work here,
-and there is only one target variable, then we can simply return $v$,
-otherwise we fail.
-\begin{code}
-    uniformSubstitute :: MonadFail m
-                      => SubContext -> Term -- (Var tk v) 
-                      -> [(Variable,Term)] -> [(ListVar,ListVar)]
-                      -> m Term
-    uniformSubstitute sctx@(SubCtxt sc vdata) vrt@(Var tk v)  
-                         vtl@((u,_):_) 
-                         [ ( tlv@(LVbl (Vbl tid _ _) tis [])
-                           , rlv@(LVbl (Vbl rid _ _) ris []) ) ]
-      | tid /= rid              = usfail "different id in list-vars"
-      | varWhen v /= varWhen u  = if length vtl == 1 
-                                  then return vrt 
-                                  else usfail "uniformity is inapplicable"
-      | length tvws /= 1        =  usfail "vars not uniform"
-      | tvw /= tlvw             =  usfail "targets not uniform"
-      | length ttws /= 1        =  usfail "terms not uniform"
-      | ttw /= rlvw             =  usfail "replacements not uniform"
-      | otherwise               =  doUnifSub ttw tk v vtl 
-      where
-        usfail msg = fail ("uniformSubstitute: "++msg)
-        tvws = nub $ map (varWhen . fst) vtl
-        tvw = head tvws
-        tlvw = lvarWhen tlv
-        ttws = nub $ concat 
-                   $ map ( (map gvarWhen) . S.toList . fst .
-                                         freeVars sc . snd ) 
-                         vtl
-        ttw = head $ ttws
-        rlvw = lvarWhen rlv
-    uniformSubstitute _ _ _ _ = fail "not uniform or not supported"
-
-    doUnifSub rw tk v vtl  
-      = return $ Sub tk (jVar tk $ setVarWhen rw v) 
-                     $ jSubstn (mapfst (setVarWhen rw) vtl) []
-    -- we'll do the simplification for observables later
-\end{code}
 
 
 
@@ -422,7 +289,7 @@ substitute sctx sub ct@(Cons tk subable i ts)
   | otherwise  =     return $ Sub tk ct sub
 \end{code}
 
-
+\newpage
 \subsection{Binding-Term Substitution}
 
 Given $(\bb n {x^+} t) \ss {} {v^n} {t^n}$,
@@ -465,6 +332,20 @@ substitute sctx sub lt@(Lam tk i vl tm)
     effsub = computeEffSubst vs sub
 \end{code}
 
+\subsection{Iteration Substitution}
+
+\begin{eqnarray*}
+   (\ii \bigoplus n {lvs}) \ss {} {v^n} {t^n}
+   &\defs&
+   (\ii \bigoplus n {lvs \ss {} {v^n} {t^n}})
+\end{eqnarray*}
+\begin{code}
+substitute sctx (Substn _ lvlvs) bt@(Iter tk sa na si ni lvs)
+  = return $ Iter tk sa na si ni
+           $ map (listVarSubstitute sctx (S.toList lvlvs)) lvs
+\end{code}
+
+
 \newpage
 \subsection{Substitution-Term Substitution}
 
@@ -480,6 +361,7 @@ substitute sctx sub st@(Sub tk bt _)
   | isAssignment bt  =  return $ Sub tk st sub
 \end{code}
 
+
 \subsubsection{Substitution Substitution}
 
 \begin{eqnarray*}
@@ -494,16 +376,7 @@ substitute sctx sub bt@(Sub tk tm s)
      Just sub' -> substitute sctx sub' tm
      Nothing   -> return $ Sub tk bt sub
 \end{code}
-\begin{eqnarray*}
-   (\ii \bigoplus n {lvs}) \ss {} {v^n} {t^n}
-   &\defs&
-   (\ii \bigoplus n {lvs \ss {} {v^n} {t^n}})
-\end{eqnarray*}
-\begin{code}
-substitute sctx (Substn _ lvlvs) bt@(Iter tk sa na si ni lvs)
-  = return $ Iter tk sa na si ni
-           $ map (listVarSubstitute sctx (S.toList lvlvs)) lvs
-\end{code}
+
 
 \subsection{Non-Substitutable Terms}
 
@@ -518,8 +391,161 @@ substitute sctx sub tm = return tm
 \newpage 
 \subsection{Helper Functions}
 
+\subsubsection{Does a list-variable cover the standard variable?}
+
+
+What we try next is to scan the list-var substitutions 
+($\setof{\dots,\ell^R/\ell^T,\dots$}),
+asking the following questions:
+\begin{enumerate}
+  \item Is $v$ definitely in $\ell^T$?  
+        If so, exit the scan and return $v$ modifed as follows:
+\begin{eqnarray*}
+   \prv v \ss{}{\prv\ell}{\dyn\ell}  &=&  \dyn v ~~\IF~~ \prv\ell \supseteq \prv v
+\\ \psv v \ss{}{\psv\ell}{\dyn\ell}  &=&  \dyn v ~~\IF~~ \psv\ell \supseteq \psv v
+\\ v_d    \ss{}{\ell_d}  {\dyn\ell}  &=&  \dyn v ~~\IF~~ \ell_d \supseteq v_d
+\end{eqnarray*}
+  \item Is $v$ definitely not in $\ell^T$ ?
+        If so, skip and move on.
+  \item Otherwise, $v$ might be in $\ell^T$,
+        so exit the scan and return the explicit substitution $v[\ell^R/\ell^T]$.
+\end{enumerate}
+If neither option 1 or 3 occurs, having scanned the whole list,
+we simply fail.
+
+\begin{code}
+lvlvlSubstitute sctxt tk v []  =  fail "no lv target match found"
+lvlvlSubstitute sctxt tk v ((tlv,rlv):lvlvl)
+  = lvlvSubstitute sctxt tk v tlv rlv
+    <|> lvlvlSubstitute sctxt tk v lvlvl
+\end{code}
+
+\begin{code}
+lvlvSubstitute :: MonadFail m 
+               => SubContext -> Type -> Variable 
+               -> ListVar -> ListVar -> m Term
+lvlvSubstitute sctx@(SubCtxt sc vdata) tk v@(Vbl i  vc vw) 
+                  tlv@(LVbl tv@(Vbl ti _  tw) tis _) 
+                  rlv@(LVbl rv@(Vbl ri _  rw) ris _)
+  | vw /= tw  = fail "v,tv dynamicity differs"
+  | ti /= ri  =  fail "ti,ri differ"
+  | i `elem` tis || i `elem` ris  =  fail "v removed"
+  | otherwise
+    =  case (StdVar v `mentionedBy` fst sc) of
+          Nothing  ->  fail (show v ++ " not mentioned" ) 
+          Just ( (VSC gv' vsD uvsC uvsCd), Nothing ) -- gv==StdVar v
+            | gtlv `S.member` (pdbg "vsD" vsD)  ||  gtlv `S.member` (pdbg "vsDX" vsDX)
+                ->  fail "tlv mentioned in disjoint-set"
+            | not ( ( gtlv `umbr` uvsC) && (gtlv `umbr` uvsCd) )
+                ->  fail "tlv not mentioned in coverage"
+            | not ( ( gtlv `umbr` uvsCX) && (gtlv `umbr` uvsCdX) )
+                ->  fail "tlv not mentioned in expanded coverage"
+            | otherwise  ->  pure $ jVar tk (Vbl i vc rw) 
+            where
+              vsDX    =  mapVToverVarSet vdata vsD 
+              uvsCX   =  umap (mapVToverVarSet vdata) uvsC
+              uvsCdX  =  umap (mapVToverVarSet vdata) uvsCd
+          Just ( (VSC gv' _ _ (Just vsCd)), Just vw' ) -- gv~~StdVar v 
+            | not ( setGVarWhen vw' gtlv `umbr` Just vsCd ) 
+                -> fail  "tlv not mentioned in dyn. s.c."
+            | not ( setGVarWhen vw' gtlv `umbr` Just vsCdX ) 
+                -> fail  "tlv not mentioned in expanded dyn. s.c."
+            | otherwise  ->  pure $ jVar tk (Vbl i vc rw)
+            where
+              vsCdX  =  mapVToverVarSet vdata vsCd
+          _  ->  fail "lvlvSubstitute: this shouldn't happen"   
+  where
+    gtlv = LstVar $ pdbg "decl.gtlv" tlv 
+\end{code}
+
+
+\newpage
+\subsubsection{Does a uniform substitution cover the standard variable?}
+
+The last thing we try is to see if we have a uniform substitution.
+This means that:
+(i) the target variables all have the same temporality;
+(ii) they ``cover'' a complete list variable;
+(iii) the replacements all have the same temporality;
+(iv) they  ``cover'' a complete list variable.
+For example:
+$$[e,f,\lst O\less{x,y}/x_1,y_1,\lst O_1\less{x,y}]$$
+Here the targets cover $\lst O_1$ while the replacements cover $\lst O$.
+
+Here we only look for simple patterns such as above.
+Basically we look for one or more var-term entries,
+with terms that are variable terms,
+and one listvar entry, where the removed variables are precisely
+the target variables on the var-term list.
+We also have that all target variables have the same temporality $t$,
+and the replacement all have the same temporality $d$:
+$$
+   \seqof{(x_t,tv1_d),(y_t,tv2_d),(z_t,tv3_d)}
+   \quad
+   \seqof{(\lst\ell_t\less{x,y,z},\lst\rho_d\less{x,y,z})}
+$$
+However,
+we do have a variable ($v_t$) being substituted.
+$$
+  v_t[tv1_d,tv2_d,tv3_d,\lst\rho_d\less{x,y,z}/x_t,y_t,z_t,\lst\ell_t\less{x,y,z}] 
+  =  
+  v_t[tv1_d,tv2_d,tv3_d/x_d,y_d,z_d]
+$$
+which can be simplifed further if $v_r$ is an observable,
+to either one of the $tvN_r$ if $v_r$ is one of $x_r$, $y_r$, $z_r$,
+or just $v_r$ (fail) if not.
+\textbf{
+  NOTE: if $\lst\ell_t$ is ``known'', and $v_t \notin \setof{x_t,y_t,z_t}$,
+  then its replacement may be available.
+}
+
+The first thing we do is check that the temporality of $v$ matches that
+of the first target variable. 
+If not, there is no uniform substitution that can work here,
+and there is only one target variable, then we can simply return $v$,
+otherwise we fail.
+\begin{code}
+uniformSubstitute :: MonadFail m
+                  => SubContext -> Term -- (Var tk v) 
+                  -> [(Variable,Term)] -> [(ListVar,ListVar)]
+                  -> m Term
+uniformSubstitute sctx@(SubCtxt sc vdata) vrt@(Var tk v)  
+                      vtl@((u,_):_) 
+                      [ ( tlv@(LVbl (Vbl tid _ _) tis [])
+                        , rlv@(LVbl (Vbl rid _ _) ris []) ) ]
+  | tid /= rid              = usfail "different id in list-vars"
+  | varWhen v /= varWhen u  = if length vtl == 1 
+                              then return vrt 
+                              else usfail "uniformity is inapplicable"
+  | length tvws /= 1        =  usfail "vars not uniform"
+  | tvw /= tlvw             =  usfail "targets not uniform"
+  | length ttws /= 1        =  usfail "terms not uniform"
+  | ttw /= rlvw             =  usfail "replacements not uniform"
+  | otherwise               =  doUnifSub ttw tk v vtl 
+  where
+    usfail msg = fail ("uniformSubstitute: "++msg)
+    tvws = nub $ map (varWhen . fst) vtl
+    tvw = head tvws
+    tlvw = lvarWhen tlv
+    ttws = nub $ concat 
+                $ map ( (map gvarWhen) . S.toList . fst .
+                                      freeVars sc . snd ) 
+                      vtl
+    ttw = head $ ttws
+    rlvw = lvarWhen rlv
+uniformSubstitute _ _ _ _ = fail "not uniform or not supported"
+
+doUnifSub rw tk v vtl  
+  = return $ Sub tk (jVar tk $ setVarWhen rw v) 
+                  $ jSubstn (mapfst (setVarWhen rw) vtl) []
+-- we'll do the simplification for observables later
+\end{code}
+
+
 \subsubsection{Side-condition Simplification}
 
+
+\textbf{NOTE: not currently used anywhere!!!!!}
 Here we use side-condition information to simplify substitutions.
 We drill down to the atomic side-condition, 
 if any, 

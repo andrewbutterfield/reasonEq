@@ -23,6 +23,7 @@ import Data.List
 
 import Utilities
 import Control
+import UnivSets
 import LexBase
 import Variables
 import AST
@@ -417,10 +418,10 @@ type UFreeVars = (UVarSet,[(GenVar,VarSet)])
 instUVarSet :: MonadFail m 
             => InsContext -> Binding -> UVarSet 
             -> m UFreeVars
-instUVarSet _       _        Nothing   =  return (Nothing,[]) 
-instUVarSet insctxt binding (Just vs)  
+instUVarSet _       _        Everything   =  return (Everything,[]) 
+instUVarSet insctxt binding (Listed vs)  
   =  do (f,less) <- instVarSet insctxt binding vs 
-        return (Just f,less)
+        return (Listed f,less)
 \end{code}
 
 
@@ -869,7 +870,7 @@ or a mix of the cases with $C$ and $Cd$ disjoint from $D$.
 \begin{code}
 vscsVarExpand :: GenVar -> [VarSideConds] -> FreeVars
 vscsVarExpand e []  =  injVarSet $ S.singleton e
-vscsVarExpand e (VSC e' _ (Just vsC) _ : _)
+vscsVarExpand e (VSC e' _ (Listed vsC) _ : _)
   |  e == e'        =  injVarSet vsC
 vscsVarExpand e (_:vscs) = vscsVarExpand e vscs
 \end{code}

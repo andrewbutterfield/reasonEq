@@ -24,6 +24,7 @@ import qualified Data.Map as M
 import YesBut
 import Utilities (injMap, unlines')
 import Control (mapboth,mapaccum,mapsnd)
+import UnivSets
 import LexBase
 import Variables
 import AST
@@ -624,8 +625,8 @@ normASC vv (VSC gv vsD mvsC mvsCd)
   =  mkVSC (normQGVar vv gv) (normQVSet vv vsD) 
             (normQVMset vv mvsC) (normQVMset vv mvsCd)
 
-normQVMset _ Nothing = Nothing
-normQVMset vv (Just vs) = Just $ normQVSet vv vs
+normQVMset _ Everything = Everything
+normQVMset vv (Listed vs) = Listed $ normQVSet vv vs
 
 normFresh vv vs = normQVSet vv vs
 \end{code}

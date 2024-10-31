@@ -8,7 +8,6 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module SideCond (
   UVarSet, uset
-, umbr, udiff, uunion, uintsct, unull, usubset, udisj, umap
 , VarSideConds(..)
 , termVar, disjointFrom, coveredBy, coveredDynamic
 , mkVSC
@@ -38,6 +37,7 @@ import Data.Map(Map)
 import qualified Data.Map as M
 
 import YesBut
+import UnivSets
 import Utilities
 import LexBase
 import Variables
@@ -188,53 +188,14 @@ $$
   \land U_d \supseteq_a T
 $$
 This compresses to $(T,\emptyset,U,U_d)$.
-We use $\texttt{Just } C$ to represent general $C$,
-and $\texttt{Nothing}$ to represent $U$
+We use $\texttt{Listed } C$ to represent general $C$,
+and $\texttt{Everything}$ to represent $U$
 (and similarly for $C_d$).
+
 \begin{code}
-type UVarSet = Maybe VarSet
+type UVarSet = UnivSet GenVar
 uset :: UVarSet -> VarSet
-uset Nothing    =  S.singleton (StdVar $ StaticVar $ jId "UNIVERSE")
-uset (Just vs)  =  vs 
-
--- lift regular set operarions to UVarSet, where Nothing is the universal set
-
-umbr :: GenVar -> UVarSet -> Bool
-umbr _ Nothing  =  True
-umbr gv (Just s)  = gv `S.member` s
-
-udiff :: UVarSet -> UVarSet -> UVarSet
-udiff _        Nothing   =  Just S.empty
-udiff Nothing  _         =  Nothing -- approximation
-udiff (Just s) (Just t)  =  Just (s `S.difference` t)
-
-uunion :: UVarSet -> UVarSet -> UVarSet
-uunion _        Nothing   =  Nothing
-uunion Nothing  _         =  Nothing
-uunion (Just s) (Just t)  =  Just (s `S.union` t)
-
-uintsct :: UVarSet -> UVarSet -> UVarSet
-uintsct uset1    Nothing   =  uset1
-uintsct Nothing  uset2     =  uset2
-uintsct (Just s) (Just t)  =  Just (s `S.intersection` t)
-
-unull :: UVarSet -> Bool
-unull Nothing = False
-unull (Just s)  = S.null s
-
-usubset :: UVarSet -> UVarSet -> Bool
-usubset _        Nothing   =  True
-usubset Nothing  _         =  False
-usubset (Just s) (Just t)  =  s `S.isSubsetOf` t
-
-udisj :: UVarSet -> UVarSet -> Bool
-udisj uset1    Nothing   =  unull uset1
-udisj Nothing  uset2     =  unull uset2
-udisj (Just s) (Just t)  =  S.null (s `S.intersection` t)
-
-umap :: (VarSet -> VarSet) -> UVarSet -> UVarSet
-umap _ Nothing   =  Nothing
-umap f (Just s)  =  Just $ f s
+uset = dropset (StdVar $ StaticVar $ jId "UNIVERSE")
 \end{code}
 
 \newpage
@@ -262,7 +223,7 @@ coveredDynamic :: VarSideConds -> UVarSet
 coveredDynamic (VSC gv vsD uvsC uvsCd)  =  uvsCd
 
 disjTrue = S.empty
-covByTrue = Nothing
+covByTrue = Everything
 vscTrue gv = VSC gv disjTrue covByTrue covByTrue
 \end{code}
 
@@ -286,21 +247,21 @@ vscVSet vsc
      `S.union` 
      (asSet $ coveredDynamic vsc)
   where 
-   asSet Nothing    =  S.empty
-   asSet (Just vs)  =  vs
+   asSet Everything    =  S.empty
+   asSet (Listed vs)  =  vs
 \end{code}
 
 We provide some builders when only one of the three conditions is involved:
 \begin{code}
 disjfrom, coveredby, dyncovered :: GenVar -> VarSet -> VarSideConds
 gv `disjfrom`   vs  =  VSC gv vs       covByTrue covByTrue
-gv `coveredby`  vs  =  VSC gv disjTrue (Just vs) covByTrue
-gv `dyncovered` vs  =  VSC gv disjTrue covByTrue (Just vs)
+gv `coveredby`  vs  =  VSC gv disjTrue (Listed vs) covByTrue
+gv `dyncovered` vs  =  VSC gv disjTrue covByTrue (Listed vs)
 ucoveredby, udyncovered :: GenVar -> UVarSet -> VarSideConds
-gv `ucoveredby`  Nothing    =  vscTrue gv
-gv `ucoveredby`  (Just vs)  =  gv `coveredby`  vs
-gv `udyncovered` Nothing    =  vscTrue gv
-gv `udyncovered` (Just vs)  =  gv `dyncovered` vs
+gv `ucoveredby`  Everything    =  vscTrue gv
+gv `ucoveredby`  (Listed vs)  =  gv `coveredby`  vs
+gv `udyncovered` Everything    =  vscTrue gv
+gv `udyncovered` (Listed vs)  =  gv `dyncovered` vs
 \end{code}
 
 \newpage
@@ -370,8 +331,8 @@ However we need to keep in mind that \m{g} can denote the universal set.
 \begin{code}
 coveredByCheck :: MonadFail m => GenVar -> UVarSet -> m UVarSet
 
-coveredByCheck gv Nothing  =  return covByTrue  -- gv `coveredby` U
-coveredByCheck gv jvsC@(Just vsC)
+coveredByCheck gv Everything  =  return covByTrue  -- gv `coveredby` U
+coveredByCheck gv jvsC@(Listed vsC)
   = covByCheck gv S.empty $ S.toList vsC
 \end{code}
 We work through the variable-set, looking for the genvar.
@@ -383,7 +344,7 @@ covByCheck :: MonadFail m => GenVar -> VarSet -> [GenVar] -> m UVarSet
 covByCheck gv vsc []
   | S.null vsc && isObsGVar gv  = fail "covered by nothing" 
   -- term-vars,list-vars may evaluate to the empty-set, in which case this is true
-  | otherwise  = return $ Just vsc
+  | otherwise  = return $ Listed vsc
 covByCheck gv vsc (gvc:gvs)
   | gv == gvc       =  return covByTrue 
   | lvCovBy gv gvc  =  return covByTrue
@@ -433,8 +394,8 @@ Similarly, $T \supseteq z$ could also be true.
 dynCvrgCheck :: MonadFail m => GenVar -> UVarSet -> m (UVarSet)
 
 dynCvrgCheck gv _ | not (isDynGVar gv)  =  return covByTrue  -- trivially
-dynCvrgCheck gv Nothing                 =  return covByTrue
-dynCvrgCheck gv jvsCd@(Just vsCd)
+dynCvrgCheck gv Everything                 =  return covByTrue
+dynCvrgCheck gv jvsCd@(Listed vsCd)
   | notAllDyn  =  report "tvar dyncover fails (static)"
 --  | otherwise  = covByCheck gv S.empty $ S.toList vsCd
   | any (lvCovBy gv) vsCd   =  return covByTrue
@@ -679,7 +640,7 @@ with match bindings.
 mrgTVarCondLists :: MonadFail m 
                  => [VarSideConds] -> [VarSideConds] -> m [VarSideConds]
 mrgTVarCondLists vscs1 [] = return vscs1
-mrgTVarCondLists vscs1 (VSC _ vsD Nothing Nothing:vscs2)
+mrgTVarCondLists vscs1 (VSC _ vsD Everything Everything:vscs2)
   | S.null vsD  =  mrgTVarCondLists vscs1 vscs2
 mrgTVarCondLists vscs1 (vsc:vscs2)
      = do vscs1' <- mrgVarConds vsc vscs1
@@ -701,8 +662,8 @@ mrgTVarFreshConditions freshvs vscs
 coveredVarsOf :: [VarSideConds] -> VarSet
 coveredVarsOf vscs = S.unions $ map coveringsOf vscs
 coveringsOf (VSC _ _ uvsC uvsCd)  =  cvr uvsC `S.union` cvr uvsCd
-cvr Nothing    =  S.empty -- universe does not contain fresh vars
-cvr (Just vs)  =  vs
+cvr Everything    =  S.empty -- universe does not contain fresh vars
+cvr (Listed vs)  =  vs
 \end{code}
 
 \section{From VSC and Free-list to Side-Condition}
@@ -829,7 +790,7 @@ We check if it is in $obs$, which is the expansion of $Cd$.
 \begin{code}
 obsDischarge :: VarSet -> GenVar -> UVarSet -> UVarSet
 obsDischarge obsv gv uvsCd
-  | gv `S.member` obsv  =  Nothing
+  | gv `S.member` obsv  =  Everything
   | otherwise           =  uvsCd
 \end{code}
 
@@ -901,7 +862,7 @@ A translated law side-condition of the form $\emptyset \supseteq v$,
 where $v$ is a standard variable.
 This is simply false.
 \begin{code}
-vscDischarge _ _ (VSC (StdVar (Vbl _ ObsV _)) _ (Just vsC) _)
+vscDischarge _ _ (VSC (StdVar (Vbl _ ObsV _)) _ (Listed vsC) _)
   | S.null vsC  =  fail ("Empty set cannot cover a standard obs. variable")
 \end{code}
 
@@ -971,17 +932,17 @@ ddDischarge obsv vsDG vsDL = return (vsDL `S.difference` vsDG)
 \\ & = & \false, \quad \IF \quad C_G \disj C_L \land isStdObs(V)
 \\ & = & (C_G \cap C_L)\cup C_{?L} \supseteq V, \quad \textbf{otherwise}
 \end{eqnarray*}
-Remember, here \texttt{Nothing} denotes the universal set.
+Remember, here \texttt{Everything} denotes the universal set.
 \begin{code}
 ccDischarge :: MonadFail m 
             => VarSet -> UVarSet -> UVarSet 
             -> m UVarSet
 ccDischarge obsv uvsCG uvsCL
-  | uvsCG `usubset` uvsCL  =  return Nothing
+  | uvsCG `usubset` uvsCL  =  return Everything
   | otherwise              =  return ((uvsCG `uintsct` uvsCL) `uunion` uvsCLf)
   where uvsCLf = case uvsCL of
-                   Nothing    ->  Nothing
-                   Just vsCL  ->  Just $ S.filter isFloatingGVar vsCL
+                   Everything    ->  Everything
+                   Listed vsCL  ->  Listed $ S.filter isFloatingGVar vsCL
 \end{code}
 
 \begin{eqnarray*}
@@ -992,8 +953,8 @@ ccDischarge obsv uvsCG uvsCL
 \end{eqnarray*}
 \begin{code}
 dcDischarge :: MonadFail m => VarSet -> VarSet -> UVarSet -> m UVarSet
-dcDischarge obsv _    Nothing      =  return Nothing
-dcDischarge obsv vsDG (Just vsCL)  =  return $ Just (vsCL `S.difference` vsDG)
+dcDischarge obsv _    Everything      =  return Everything
+dcDischarge obsv vsDG (Listed vsCL)  =  return $ Listed (vsCL `S.difference` vsDG)
 \end{code}
 
 \begin{eqnarray*}
@@ -1004,8 +965,8 @@ dcDischarge obsv vsDG (Just vsCL)  =  return $ Just (vsCL `S.difference` vsDG)
 \end{eqnarray*}
 \begin{code}
 cdDischarge :: MonadFail m => VarSet -> UVarSet -> VarSet -> m VarSet
-cdDischarge obsv Nothing vsDL      =  return vsDL
-cdDischarge obsv (Just vsCG) vsDL  =  return (vsCG `S.intersection` vsDL) 
+cdDischarge obsv Everything vsDL      =  return vsDL
+cdDischarge obsv (Listed vsCG) vsDL  =  return (vsCG `S.intersection` vsDL) 
 \end{code}
 
 
@@ -1091,12 +1052,12 @@ freshTVarDischarge obsv gF (VSC gv vsD uvsC uvsCd)
   | vsc' == vscTrue gv  =  return []
   | otherwise  =  return [vsc']
   where
-    uvsgF = Just gF
+    uvsgF = Listed gF
     vsD' = vsD `S.difference` gF
     uvsC' = uvsC `udiff` uvsgF
     uvsCd' = if gv `S.member` obsv
              then uvsCd `udiff` uvsgF
-             else Nothing
+             else Everything
     vsc' = VSC gv vsD' uvsC' uvsCd'
 \end{code}
 
@@ -1116,8 +1077,8 @@ isFloatingVSC (VSC  gv vsD uvsC uvsCd)
 hasFloating :: VarSet -> Bool
 hasFloating vs = any isFloatingGVar $ S.toList vs
 hasFloatingM :: UVarSet -> Bool
-hasFloatingM Nothing = False
-hasFloatingM (Just vs) = hasFloating vs
+hasFloatingM Everything = False
+hasFloatingM (Listed vs) = hasFloating vs
 \end{code}
 % One exception to this, during law matching,
 % is that coverage may reduce to the empty set
@@ -1199,7 +1160,7 @@ findCoveredGenVar :: MonadFail m => GenVar -> SideCond -> m VarSet
 findCoveredGenVar gv ( vscs, _ ) = findCGV gv vscs
 
 findCGV gv []         =  fail ("Covered "++show gv ++ " not found")
-findCGV gv ((VSC gv' _ (Just vs) _):vscs)
+findCGV gv ((VSC gv' _ (Listed vs) _):vscs)
   | gv == gv'         =  return vs
 findCGV gv (_:vscs)  =  findCGV gv vscs
 \end{code}
@@ -1224,7 +1185,7 @@ mentionedBy :: MonadFail m
 gv `mentionedBy` []  =  fail "variable not mentioned"
 gv `mentionedBy` (vsc@(VSC gv' _ _ uvsCd):vscs)
   | gv == gv'       =  return ( vsc, Nothing )
-  | isJust uvsCd -- we need an explicit mention of gv'
+  | isListed uvsCd -- we need an explicit mention of gv'
       = case gv `dynGVarEq` gv' of
           Just vw'  ->  return ( vsc, Just vw')
           _         ->  gv `mentionedBy` vscs

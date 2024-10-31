@@ -50,6 +50,7 @@ import Control.Applicative
 
 import YesBut
 import Utilities
+import UnivSets
 import LexBase
 import Variables
 import SideCond
@@ -726,7 +727,7 @@ then we need to copy it over as a proof-local goal side-condition.
 extendGoalSCCoverage obsv lvvls (tvarSCs,_)
   = xtndCoverage obsv (map snd lvvls) [] (filter isCoverage tvarSCs)
   where
-    isCoverage (VSC _ _ mvsC mvsCd)  =  mvsC /= Nothing || mvsCd /= Nothing
+    isCoverage (VSC _ _ mvsC mvsCd)  =  mvsC /= Everything || mvsCd /= Everything
 
     xtndCoverage :: MonadFail m => VarSet
                  -> [VarList] -- floating replacements

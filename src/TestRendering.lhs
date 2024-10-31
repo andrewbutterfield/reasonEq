@@ -40,6 +40,7 @@ import Data.Char
 
 import Symbols
 import Utilities
+import UnivSets
 import LexBase
 import Variables
 import AST
@@ -537,7 +538,7 @@ trsidecond trid sc@(vscs,fvs)
                          ( concat (map (trtvarsidecond trid) vscs)
                            ++ [trfresh trid fvs] )
 
-trtvarsidecond trid (VSC gv vsD Nothing Nothing)
+trtvarsidecond trid (VSC gv vsD Everything Everything)
   | S.null vsD  = [_top]
 trtvarsidecond trid (VSC gv vsD mvsC mvsCd)
   = [trDisjSC trid gv vsD, trCovByM trid gv mvsC, trDynCovM trid gv mvsCd]
@@ -546,12 +547,12 @@ trDisjSC trid gv vsD
   | S.null vsD  =  ""
   | otherwise   =  trovset trid vsD ++ _notin ++ trgvar trid gv
 
-trCovByM trid gv Nothing = ""
-trCovByM trid gv (Just vsC) 
+trCovByM trid gv Everything = ""
+trCovByM trid gv (Listed vsC) 
   = trovset trid vsC ++ _supseteq ++ trgvar trid gv
 
-trDynCovM trid gv Nothing = ""
-trDynCovM trid gv (Just vsC) 
+trDynCovM trid gv Everything = ""
+trDynCovM trid gv (Listed vsC) 
   = trovset trid vsC ++ _supseteq ++_subStr "a" ++ trgvar trid gv
 
 

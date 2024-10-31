@@ -22,6 +22,7 @@ import Control.Applicative
 
 import Utilities (alookup,injMap)
 import Control (mapfst,mapsnd)
+import UnivSets
 import LexBase
 import Variables
 import AST
@@ -445,10 +446,10 @@ lvlvSubstitute sctx@(SubCtxt sc vdata) tk v@(Vbl i  vc vw)
               vsDX    =  mapVToverVarSet vdata vsD 
               uvsCX   =  umap (mapVToverVarSet vdata) uvsC
               uvsCdX  =  umap (mapVToverVarSet vdata) uvsCd
-          Just ( (VSC gv' _ _ (Just vsCd)), Just vw' ) -- gv~~StdVar v 
-            | not ( setGVarWhen vw' gtlv `umbr` Just vsCd ) 
+          Just ( (VSC gv' _ _ (Listed vsCd)), Just vw' ) -- gv~~StdVar v 
+            | not ( setGVarWhen vw' gtlv `umbr` Listed vsCd ) 
                 -> fail  "tlv not mentioned in dyn. s.c."
-            | not ( setGVarWhen vw' gtlv `umbr` Just vsCdX ) 
+            | not ( setGVarWhen vw' gtlv `umbr` Listed vsCdX ) 
                 -> fail  "tlv not mentioned in expanded dyn. s.c."
             | otherwise  ->  pure $ jVar tk (Vbl i vc rw)
             where
@@ -588,8 +589,8 @@ vscSimplify :: VarSideConds -> GenVar -> Substn -> Substn
 vscSimplify (VSC _ vsD mvsC mvsCd) gv sub  
   =  mSimp mvsCd $ mSimp mvsC $ targetsCheck not vsD sub
   where 
-    mSimp Nothing sub    =  sub
-    mSimp (Just vs) sub  =  targetsCheck id  vs sub
+    mSimp Everything sub    =  sub
+    mSimp (Listed vs) sub  =  targetsCheck id  vs sub
 
 targetsCheck :: (Bool -> Bool) -> VarSet -> Substn -> Substn
 targetsCheck keep vs (Substn ts lvs)

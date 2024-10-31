@@ -1,6 +1,6 @@
 \chapter{Substitution}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2019-22
+Copyright  Andrew Buttefield (c) 2019-24
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -248,14 +248,14 @@ returning the replacement if found:
 -- substitute sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
   =  let vtl = S.toList vts ; lvlvl = S.toList lvlvs in
 -- we should also use vdata to "expand" sc here
-     alookup v vtl 
+     alookup v vtl
 \end{code}
 Next we scan the list-variable  pairs, with the side-conditions in hand,
 looking for a list-variable that covers $\vv v$:
 \begin{code}
 -- substitute sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
 --   let vtl = S.toList vts ; lvlvl = S.toList lvlvs in
-     <|> lvlvlSubstitute sctx tk v lvlvl
+     <|> lvlvlSubstitute sctx vrt lvlvl
 \end{code}
 Then we see if we have a uniform substitution, 
 provided that $\vv v$ is dynamic:
@@ -396,67 +396,105 @@ substitute sctx sub tm = return tm
 
 
 What we try next is to scan the list-var substitutions 
-($\setof{\dots,\ell^R/\ell^T,\dots$}),
+($\setof{\dots,(\ell^T/\ell^R),\dots$})
 asking the following questions:
 \begin{enumerate}
-  \item Is $v$ definitely in $\ell^T$?  
-        If so, exit the scan and return $v$ modifed as follows:
+  \item Is $v$ definitely in some $\ell^T$?  
+        If so, note \emph{the} relevant $(\ell^T,\ell^R)$ pair,
+        and exit the scan.
+  \item Is $v$ definitely not in $\ell^T$ ?
+        If so, skip and move on.
+  \item Otherwise, $v$ might be in $\ell^T$,
+        so add the relevant $(\ell^T,\ell^R)$ pair to a list
+\end{enumerate}
+We will get the following outcomes: 
+we either have one applicable substitution pair, 
+or a list of zero or more possible substitutions.
+\begin{enumerate}
+  \item Found definite pair $(\ell^T,\ell^R)$?
+    Return $v$ modified as follows: 
 \begin{eqnarray*}
    \prv v \ss{}{\prv\ell}{\dyn\ell}  &=&  \dyn v ~~\IF~~ \prv\ell \supseteq \prv v
 \\ \psv v \ss{}{\psv\ell}{\dyn\ell}  &=&  \dyn v ~~\IF~~ \psv\ell \supseteq \psv v
 \\ v_d    \ss{}{\ell_d}  {\dyn\ell}  &=&  \dyn v ~~\IF~~ \ell_d \supseteq v_d
 \end{eqnarray*}
-  \item Is $v$ definitely not in $\ell^T$ ?
-        If so, skip and move on.
-  \item Otherwise, $v$ might be in $\ell^T$,
-        so exit the scan and return the explicit substitution $v[\ell^R/\ell^T]$.
+  \item Have empty list of possible substitutions?
+    Return $v$ unmodified
+  \item Have non-empty list $[\dots/\dots]$ of substitutions?
+    Return explicit substitution $v[\dots/\dots]$, or fail.
+    \textbf{Should this be done after uniform subs checking?}
 \end{enumerate}
-If neither option 1 or 3 occurs, having scanned the whole list,
-we simply fail.
 
 \begin{code}
-lvlvlSubstitute sctxt tk v []  =  fail "no lv target match found"
-lvlvlSubstitute sctxt tk v ((tlv,rlv):lvlvl)
-  = lvlvSubstitute sctxt tk v tlv rlv
-    <|> lvlvlSubstitute sctxt tk v lvlvl
+type PossLVSub = Either LVarSub [LVarSub]
+lvlvlSubstitute :: (MonadFail m, Alternative m)
+                => SubContext -> Term
+               -> [LVarSub] -> m Term
+lvlvlSubstitute sctxt vrt@(Var tk v@(Vbl i  vc vw)) lvlvl
+  = case lvlvlSubstScan sctxt tk v [] lvlvl of
+      Left (tlv, rlv@(LVbl (Vbl r_ _  rw) _ _))  
+                ->  pure $ jVar tk (Vbl i vc rw)
+      Right []  ->  return vrt
+      Right _   -> fail "scan inconclusive"
+
+
+lvlvlSubstScan sctxt tk v poss [] = Right poss
+lvlvlSubstScan sctxt tk v poss (lvlv:lvlvl)
+  = case lvlvSubstitute sctxt tk v lvlv of
+      Right []   ->  lvlvlSubstScan sctxt tk v    poss  lvlvl
+      Right [p]  ->  lvlvlSubstScan sctxt tk v (p:poss) lvlvl
+      left       ->  left
 \end{code}
 
+Given $v[\ell^R/\ell^T]$ we ask the following questions:
+\begin{enumerate}
+  \item Is $v$ definitely in $\ell^T$?  
+        If so, report this substitution as the one: 
+        ($\h{Left}~(\ell^T,\ell^R)$).
+  \item Is $v$ definitely not in $\ell^T$ ?
+        If so, report this as not applicable: 
+        ($\h{Right}~\seqof{}$).
+  \item Otherwise, $v$ might be in $\ell^T$,
+        so report it as possible:
+        ($\h{Right}~\seqof{(\ell^T,\ell^R)}$).
+\end{enumerate}
+
+First we look at cases that definitely rule the substitution out.
 \begin{code}
-lvlvSubstitute :: MonadFail m 
-               => SubContext -> Type -> Variable 
-               -> ListVar -> ListVar -> m Term
+lvlvSubstitute :: SubContext -> Type -> Variable -> LVarSub -> PossLVSub
 lvlvSubstitute sctx@(SubCtxt sc vdata) tk v@(Vbl i  vc vw) 
-                  tlv@(LVbl tv@(Vbl ti _  tw) tis _) 
-                  rlv@(LVbl rv@(Vbl ri _  rw) ris _)
-  | vw /= tw  = fail "v,tv dynamicity differs"
-  | ti /= ri  =  fail "ti,ri differ"
-  | i `elem` tis || i `elem` ris  =  fail "v removed"
+                  lvlv@( tlv@(LVbl tv@(Vbl ti _  tw) tis _) 
+                       , rlv@(LVbl rv@(Vbl ri _  rw) ris _) )
+  | vw /= tw  = Right [] -- v,tv dynamicity differs, both being dynamic
+  | ti /= ri  = Right [] -- ti,ri differ
+  | i `elem` tis || i `elem` ris  =  Right [] -- v removed
   | otherwise
-    =  case (StdVar v `mentionedBy` fst sc) of
-          Nothing  ->  fail (show v ++ " not mentioned" ) 
+    =  case (StdVar v) `mentionedBy` fst sc of
+          Nothing  ->  Right [lvlv] -- v not mentioned 
           Just ( (VSC gv' vsD uvsC uvsCd), Nothing ) -- gv==StdVar v
-            | gtlv `S.member` (pdbg "vsD" vsD)  ||  gtlv `S.member` (pdbg "vsDX" vsDX)
-                ->  fail "tlv mentioned in disjoint-set"
+            | gtlv `S.member` vsD  ||  gtlv `S.member` vsDX
+                ->  Right [lvlv] -- tlv mentioned in disjoint-set
             | not ( ( gtlv `umbr` uvsC) && (gtlv `umbr` uvsCd) )
-                ->  fail "tlv not mentioned in coverage"
+                ->  Right [lvlv] -- tlv not mentioned in coverage
             | not ( ( gtlv `umbr` uvsCX) && (gtlv `umbr` uvsCdX) )
-                ->  fail "tlv not mentioned in expanded coverage"
-            | otherwise  ->  pure $ jVar tk (Vbl i vc rw) 
+                ->  Right [] -- tlv not mentioned in expanded coverage
+            | otherwise  ->  Left lvlv 
             where
               vsDX    =  mapVToverVarSet vdata vsD 
               uvsCX   =  umap (mapVToverVarSet vdata) uvsC
               uvsCdX  =  umap (mapVToverVarSet vdata) uvsCd
           Just ( (VSC gv' _ _ (Listed vsCd)), Just vw' ) -- gv~~StdVar v 
             | not ( setGVarWhen vw' gtlv `umbr` Listed vsCd ) 
-                -> fail  "tlv not mentioned in dyn. s.c."
+                -> Right [lvlv] -- tlv not mentioned in dyn. s.c.
             | not ( setGVarWhen vw' gtlv `umbr` Listed vsCdX ) 
-                -> fail  "tlv not mentioned in expanded dyn. s.c."
-            | otherwise  ->  pure $ jVar tk (Vbl i vc rw)
+                -> Right [lvlv] -- tlv not mentioned in expanded dyn. s.c.
+            | otherwise  ->  Left lvlv
             where
               vsCdX  =  mapVToverVarSet vdata vsCd
-          _  ->  fail "lvlvSubstitute: this shouldn't happen"   
+          _  ->  Right [lvlv] -- this shouldn't happen 
   where
-    gtlv = LstVar $ pdbg "decl.gtlv" tlv 
+    diffdynamic = isDynamic vw && vw /= tw
+    gtlv = LstVar tlv 
 \end{code}
 
 

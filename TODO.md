@@ -4,29 +4,9 @@
 
 Fixed the A,X side conditions regarding E1,R1,etc..
 
-Another substitution issue:
+`E1` and `ls` substitutions now work, but `a[O$_1/O$']` becomes `a` which is wrong
 
-```
-(∃ O$_1  • 
-  ( (E1[O$_1/O$'] ⊆ ls[O$_1/O$'] ∧ a[O$_1/O$']) 
-  ∧ ls'[O$_1/O$'] = ls[O$_1/O$'] \ R1[O$_1/O$'] ∪ N1[O$_1/O$']
-  ) 
-  ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$])
-  O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, O$,O$'⊇ₐa
-   = 'substitute @[1,1,1,1,1]'
- (∃ O$_1  •
-   ( (E1[O$_1/O$'] ⊆ ls[O$_1/O$'] ∧ a[O$_1/O$']) 
-   ∧ ls'[O$_1/O$'] = ls[O$_1/O$'] \ R1[O$_1/O$'] ∪ N1[O$_1/O$']
-   ) 
-   ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$])    
-  O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, O$,O$'⊇ₐa
-```
 
-Same thing happens with `ls[O$_1/O$']` with no change.
-
-For `E1[O$_1/O$']` it should be `E1` because `O$,O$' ∉ E1`.
-
-For `ls[O$_1/O$']` it should be `ls` because while `O$,O$' ⊇ₐ ls` should be inferrable, we have that `O$' ∉ ls`.
 
 
 
@@ -34,7 +14,12 @@ For `ls[O$_1/O$']` it should be `ls` because while `O$,O$' ⊇ₐ ls` should be 
 a REGRESSION in UTCP caused by fact that re-entering a proof can 
 get locked into the wrong base theory
 
+
+
 ### Next in Line
+
+Add in match display option to hide trivial substitution results,
+(e.g.: `X(E1,a,R1,N1) ∧ (X(E1,a,R1,N1))[/]`)
 
 The following laws in UTP base seem to match anything:
 ```

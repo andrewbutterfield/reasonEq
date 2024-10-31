@@ -464,6 +464,31 @@ lvlvSubstitute sctx@(SubCtxt sc vdata) tk v@(Vbl i  vc vw)
   | i `elem` tis || i `elem` ris  =  Right [] -- v removed
   | otherwise
   -- not isDyn || vw=tw ; ti==ri ; i notelem tis,ris
+\end{code}
+At this point we get into details, concerning $v[\ell^R/\ell^T]$.
+We have two sources of extra information, variable data and side-conditions.
+For now we focus on side-conditions.
+Here are the current examples we have:
+\begin{eqnarray*}
+   E_1[\lst O_1/\lst O'] 
+   ~~~\text{given}~~~ 
+   E_1 \disj \lst O,\lst O'     
+   &\mapsto& E_1
+\\   a[\lst O_1/\lst O'] 
+   ~~~\text{given}~~~ 
+   a \subseteq_a \lst O,\lst O' 
+   &\mapsto& a[\lst O_1/\lst O']
+\\  ls[\lst O_1/\lst O'] 
+    ~~~\text{given}~~~
+     \lst O = \setof{s,ls}       
+   &\mapsto& ls
+\\ ls'[\lst O_1/\lst O'] 
+   ~~~\text{given}~~~
+   \lst O = \setof{s,ls}       
+   &\mapsto& ls_1
+\end{eqnarray*}
+For $a$ should we have $a \subseteq \lst O,\lst O$?
+\begin{code}
     =  case (StdVar v) `mentionedBy` fst sc of
           Nothing  ->  Right [lvlv] -- v not mentioned 
           Just ( (VSC gv' vsD uvsC uvsCd), Nothing ) -- gv==StdVar v

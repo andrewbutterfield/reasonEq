@@ -6,6 +6,10 @@ Fixed the A,X side conditions regarding E1,R1,etc..
 
 `E1` and `ls` substitutions now work, but `a[O$_1/O$']` becomes `a` which is wrong
 
+Note that `E1` and `a` are static.  
+
+`E1` is not in `O$'` which is why we can drop the substitution.
+However, `a` has alphabet `{O$,O$'}` so we keep the substitution.
 
 
 

@@ -1702,7 +1702,7 @@ termLVarPairings (Cls _ tm)       =  termLVarPairings tm
 termLVarPairings _                =  []
 
 substLVarPairings :: Substn -> [(ListVar,ListVar)]
-substLVarPairings (LVarSub lvs) = S.toList lvs
+substLVarPairings (LVarSubs lvs) = S.toList lvs
 \end{code}
 
 Given that we can have substitutions of the form

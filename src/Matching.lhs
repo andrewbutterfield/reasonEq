@@ -2676,7 +2676,7 @@ for all $i \in 1\dots m$, and $m$ values of $j$ drawn from $1\dots p$;
 \begin{code}
 vtsMatch :: (MonadPlus mp, MonadFail mp)
          => [VarTable] -> Binding -> CBVS -> PBVS
-         -> TermSub -> TermSub
+         -> TermSubs -> TermSubs
          -> mp (Binding,[(Variable,Term)])
 vtsMatch vts bind cbvs pbvs tsC tsP
  = manyToMultiple (matchPair matchVar matchTerm) defCombine id

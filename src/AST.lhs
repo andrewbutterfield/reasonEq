@@ -15,9 +15,9 @@ module AST ( Type
            , isPType, isEType
            , isSubTypeOf
            , Value, pattern Boolean, pattern Integer
-           , TermSub, LVarSub
+           , TermSub, TermSubs, LVarSub, LVarSubs
            , Substn, pattern Substn, substn, substnxx
-           , pattern TermSub, pattern LVarSub
+           , pattern TermSubs, pattern LVarSubs
            , setVTWhen, setLVLVWhen
            , subVarLookup, subLVarLookup, isNullSubstn, subTargets
            , Term, Subable, readTerm
@@ -195,18 +195,20 @@ We also want to allow list-variables of the appropriate kind
 to occur for things, but only when the target variable is also
 a list variable.
 \begin{code}
-type TermSub = Set (Variable,Term) -- target variable, then replacememt term
-type LVarSub = Set (ListVar,ListVar) -- target list-variable, then replacement l.v.
+type TermSub  = (Variable,Term) -- target, then replacememt 
+type TermSubs = Set TermSub
+type LVarSub  = (ListVar,ListVar) -- target, then replacement
+type LVarSubs = Set LVarSub
 data Substn --  pair-sets below are unique in fst part
-  = SN TermSub LVarSub
+  = SN TermSubs LVarSubs
   deriving (Eq,Ord,Show,Read)
 \end{code}
 
 Patterns:
 \begin{code}
 pattern Substn ts lvs  <-  SN ts lvs
-pattern TermSub ts     <-  SN ts _
-pattern LVarSub lvs    <-  SN _  lvs
+pattern TermSubs ts     <-  SN ts _
+pattern LVarSubs lvs    <-  SN _  lvs
 \end{code}
 
 Builders: we have two variants, one (\verb"substn"), the most generally useful, 
@@ -292,17 +294,17 @@ lve = ExprLVar Before (i_e) [] []
 lvf = ExprLVar Before (i_f) [] []
 
 lvs_ord_unq = [(lva,lvf),(lvb,lve)]
-test_substn_lvs_id = testCase "LVarSub ordered, unique"
+test_substn_lvs_id = testCase "LVarSubs ordered, unique"
  ( substn [] lvs_ord_unq  @?= Just (SN S.empty (S.fromList lvs_ord_unq)) )
 
 lvs_unord_unq = [(lvb,lve),(lva,lvf)]
 
-test_substn_lvs_sort = testCase "LVarSub unordered, unique"
+test_substn_lvs_sort = testCase "LVarSubs unordered, unique"
  ( substn [] lvs_unord_unq  @?= Just (SN S.empty (S.fromList lvs_ord_unq)) )
 
 lvs_unord_dup = [(lva,lva),(lvb,lve),(lva,lvf)]
 
-test_substn_lvs_dup = testCase "LVarSub with duplicates"
+test_substn_lvs_dup = testCase "LVarSubs with duplicates"
  ( substn [] lvs_unord_dup  @?= Nothing )
 
 substnTests = testGroup "AST.substn"

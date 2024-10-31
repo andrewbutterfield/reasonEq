@@ -240,33 +240,27 @@ We are dealing with the case $\vv v \ss {} {g^n} {r^n}$,
 where $v$ denotes a standard variable. 
 \begin{code}
 substitute sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
+  =  let vtl = S.toList vts ; lvlvl = S.toList lvlvs in
 \end{code}
 
 We first scan the var-term pairs looking for $\vv v$,
 returning the replacement if found:
 \begin{code}
--- substitute sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
-  =  let vtl = S.toList vts ; lvlvl = S.toList lvlvs in
 -- we should also use vdata to "expand" sc here
      alookup v vtl
 \end{code}
 Next we scan the list-variable  pairs, with the side-conditions in hand,
 looking for a list-variable that covers $\vv v$:
 \begin{code}
--- substitute sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
---   let vtl = S.toList vts ; lvlvl = S.toList lvlvs in
      <|> lvlvlSubstitute sctx vrt lvlvl
 \end{code}
 Then we see if we have a uniform substitution, 
 provided that $\vv v$ is dynamic:
 \begin{code}
--- substitute sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
---   let vtl = S.toList vts ; lvlvl = S.toList lvlvs in
      <|> uniformSubstitute sctx vrt vtl lvlvl
 \end{code}
 If nothing is found we return the substitution unchanged:
 \begin{code}
--- substitute sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
      <|> pure (Sub tk vrt sub)
   where
 \end{code}
@@ -465,36 +459,38 @@ lvlvSubstitute :: SubContext -> Type -> Variable -> LVarSub -> PossLVSub
 lvlvSubstitute sctx@(SubCtxt sc vdata) tk v@(Vbl i  vc vw) 
                   lvlv@( tlv@(LVbl tv@(Vbl ti _  tw) tis _) 
                        , rlv@(LVbl rv@(Vbl ri _  rw) ris _) )
-  | vw /= tw  = Right [] -- v,tv dynamicity differs, both being dynamic
+  | diffdynamic  = Right [] -- v,tv dynamicity differs, both being dynamic
   | ti /= ri  = Right [] -- ti,ri differ
   | i `elem` tis || i `elem` ris  =  Right [] -- v removed
   | otherwise
+  -- not isDyn || vw=tw ; ti==ri ; i notelem tis,ris
     =  case (StdVar v) `mentionedBy` fst sc of
           Nothing  ->  Right [lvlv] -- v not mentioned 
           Just ( (VSC gv' vsD uvsC uvsCd), Nothing ) -- gv==StdVar v
             | gtlv `S.member` vsD  ||  gtlv `S.member` vsDX
-                ->  Right [lvlv] -- tlv mentioned in disjoint-set
-            | not ( ( gtlv `umbr` uvsC) && (gtlv `umbr` uvsCd) )
-                ->  Right [lvlv] -- tlv not mentioned in coverage
-            | not ( ( gtlv `umbr` uvsCX) && (gtlv `umbr` uvsCdX) )
-                ->  Right [] -- tlv not mentioned in expanded coverage
+                ->  Right [] -- tlv mentioned in disjoint-set
+            | ( gtlv `umbr` uvsC) || (gtlv `umbr` uvsCd)
+                ->  possub vw lvlv -- tlv in coverage
+            | ( gtlv `umbr` uvsCX) || (gtlv `umbr` uvsCdX) 
+                ->  possub vw lvlv -- tlv not mentioned in expanded coverage
             | otherwise  ->  Left lvlv 
             where
               vsDX    =  mapVToverVarSet vdata vsD 
               uvsCX   =  umap (mapVToverVarSet vdata) uvsC
               uvsCdX  =  umap (mapVToverVarSet vdata) uvsCd
           Just ( (VSC gv' _ _ (Listed vsCd)), Just vw' ) -- gv~~StdVar v 
-            | not ( setGVarWhen vw' gtlv `umbr` Listed vsCd ) 
-                -> Right [lvlv] -- tlv not mentioned in dyn. s.c.
-            | not ( setGVarWhen vw' gtlv `umbr` Listed vsCdX ) 
-                -> Right [lvlv] -- tlv not mentioned in expanded dyn. s.c.
-            | otherwise  ->  Left lvlv
+            | setGVarWhen vw' gtlv `S.member` vsCd 
+                -> Left lvlv -- tlv not mentioned in dyn. s.c.
+            | setGVarWhen vw' gtlv `S.member` vsCdX 
+                -> Left lvlv -- tlv not mentioned in expanded dyn. s.c.
+            | otherwise  ->  Right [lvlv]
             where
               vsCdX  =  mapVToverVarSet vdata vsCd
           _  ->  Right [lvlv] -- this shouldn't happen 
   where
     diffdynamic = isDynamic vw && vw /= tw
     gtlv = LstVar tlv 
+    possub vw lvlv = if isDynamic vw then Left lvlv else Right [lvlv]
 \end{code}
 
 

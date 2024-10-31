@@ -28,11 +28,6 @@ For `E1[O$_1/O$']` it should be `E1` because `O$,O$' ∉ E1`.
 
 For `ls[O$_1/O$']` it should be `ls` because while `O$,O$' ⊇ₐ ls` should be inferrable, we have that `O$' ∉ ls`.
 
-**ISSUE - we are NOT exploiting the fact that `O$` is known to be `{ls,s}`.**
-
-**In the substitute command!**
-
-**We need to add VarData extracts to SubContext**
 
 
 

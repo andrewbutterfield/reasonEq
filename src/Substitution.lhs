@@ -440,6 +440,7 @@ lvlvlSubstScan sctxt tk v poss (lvlv:lvlvl)
       left       ->  left
 \end{code}
 
+\newpage
 Given $v[\ell^R/\ell^T]$ we ask the following questions:
 \begin{enumerate}
   \item Is $v$ definitely in $\ell^T$?  
@@ -460,10 +461,14 @@ lvlvSubstitute sctx@(SubCtxt sc vdata) tk v@(Vbl i  vc vw)
                   lvlv@( tlv@(LVbl tv@(Vbl ti _  tw) tis _) 
                        , rlv@(LVbl rv@(Vbl ri _  rw) ris _) )
   | diffdynamic  = Right [] -- v,tv dynamicity differs, both being dynamic
+  -- vw notdyn || vw=tw 
   | ti /= ri  = Right [] -- ti,ri differ
+  -- vw notdyn || vw=tw ; ti==ri 
   | i `elem` tis || i `elem` ris  =  Right [] -- v removed
-  | otherwise
-  -- not isDyn || vw=tw ; ti==ri ; i notelem tis,ris
+  -- vw notdyn || vw=tw ; ti==ri ; i notelem tis,ris
+  | otherwise = lvlvSub sctx tk v lvlv
+  where
+    diffdynamic = isDynamic vw && vw /= tw
 \end{code}
 At this point we get into details, concerning $v[\ell^R/\ell^T]$.
 We have two sources of extra information, variable data and side-conditions.
@@ -477,7 +482,7 @@ Here are the current examples we have:
 \\   a[\lst O_1/\lst O'] 
    ~~~\text{given}~~~ 
    a \subseteq_a \lst O,\lst O' 
-   &\mapsto& a[\lst O_1/\lst O']
+   &=& a[\lst O_1/\lst O']
 \\  ls[\lst O_1/\lst O'] 
     ~~~\text{given}~~~
      \lst O = \setof{s,ls}       
@@ -486,36 +491,66 @@ Here are the current examples we have:
    ~~~\text{given}~~~
    \lst O = \setof{s,ls}       
    &\mapsto& ls_1
+\\ E_2[\lst O_1/\lst O] 
+   ~~~\text{given}~~~ 
+   E_2 \disj \lst O,\lst O'     
+   &\mapsto& E_2
+\\   a[\lst O_1/\lst O] 
+   ~~~\text{given}~~~ 
+   a \subseteq_a \lst O,\lst O' 
+   &=& a[\lst O_1/\lst O]
+\\  ls[\lst O_1/\lst O] 
+    ~~~\text{given}~~~
+     \lst O = \setof{s,ls}       
+   &\mapsto& ls_1
+\\ ls'[\lst O_1/\lst O] 
+   ~~~\text{given}~~~
+   \lst O = \setof{s,ls}  
+   &\mapsto& ls'
 \end{eqnarray*}
-For $a$ should we have $a \subseteq \lst O,\lst O$?
+Note that $E_i$ and $a$ are not observation variables, but $ls$ and $ls'$ are.
+For $a$ should we have $a \subseteq \lst O,\lst O$,
+rather than $a \subseteq_a \lst O,\lst O$?
+
+\newpage
+
+The basic idea seems to be, if $v$ is an observable, then look at variable-data,
+otherwise look to side-conditions.
+
+Observation Variables should be associated with $\lst O$,
+or at least whatever list-variable is being used for the substitution target.
 \begin{code}
-    =  case (StdVar v) `mentionedBy` fst sc of
-          Nothing  ->  Right [lvlv] -- v not mentioned 
-          Just ( (VSC gv' vsD uvsC uvsCd), Nothing ) -- gv==StdVar v
-            | gtlv `S.member` vsD  ||  gtlv `S.member` vsDX
-                ->  Right [] -- tlv mentioned in disjoint-set
-            | ( gtlv `umbr` uvsC) || (gtlv `umbr` uvsCd)
-                ->  possub vw lvlv -- tlv in coverage
-            | ( gtlv `umbr` uvsCX) || (gtlv `umbr` uvsCdX) 
-                ->  possub vw lvlv -- tlv not mentioned in expanded coverage
-            | otherwise  ->  Left lvlv 
-            where
-              vsDX    =  mapVToverVarSet vdata vsD 
-              uvsCX   =  umap (mapVToverVarSet vdata) uvsC
-              uvsCdX  =  umap (mapVToverVarSet vdata) uvsCd
-          Just ( (VSC gv' _ _ (Listed vsCd)), Just vw' ) -- gv~~StdVar v 
-            | setGVarWhen vw' gtlv `S.member` vsCd 
-                -> Left lvlv -- tlv not mentioned in dyn. s.c.
-            | setGVarWhen vw' gtlv `S.member` vsCdX 
-                -> Left lvlv -- tlv not mentioned in expanded dyn. s.c.
-            | otherwise  ->  Right [lvlv]
-            where
-              vsCdX  =  mapVToverVarSet vdata vsCd
-          _  ->  Right [lvlv] -- this shouldn't happen 
+lvlvSub sctx@(SubCtxt sc vdata) tk v@(Vbl i ObsV vw) 
+        lvlv@( tlv@(LVbl tv@(Vbl ti _  tw) tis _) 
+                       , rlv@(LVbl rv@(Vbl ri _  rw) ris _) )
+  -- vw notdyn || vw=tw ; ti==ri ; i notelem tis,ris
+  = case lookupLVarTs vdata tlv of
+      KnownVarList vl _ _  ->  lvlvObsSub vl
+      KnownVarSet  vs _ _  ->  lvlvObsSub (S.toList vs)
+      _  ->  Right [lvlv] 
   where
-    diffdynamic = isDynamic vw && vw /= tw
-    gtlv = LstVar tlv 
-    possub vw lvlv = if isDynamic vw then Left lvlv else Right [lvlv]
+    lvlvObsSub vl = if (StdVar v) `elem` vl then Left lvlv else Right []
+\end{code}
+
+Term Variables should have side-conditions:
+\begin{code}
+lvlvSub sctx@(SubCtxt sc vdata) tk v@(Vbl i vc vw) 
+        lvlv@( tlv@(LVbl tv@(Vbl ti _  tw) tis _) 
+                       , rlv@(LVbl rv@(Vbl ri _  rw) ris _) )
+  -- vw notdyn || vw=tw ; ti==ri ; i notelem tis,ris
+  -- vc = ExprV,PredV
+  = case (StdVar v) `mentionedBy` fst sc of
+      Nothing  ->  Right [lvlv] -- v not mentioned 
+      Just ( (VSC gv' vsD uvsC uvsCd), Nothing ) -- gv==StdVar v
+        | gtlv `S.member` vsD 
+            ->  Right [] -- tlv mentioned in disjoint-set
+        | gtlv `umbr` uvsC
+            ->  possub vw lvlv -- tlv in coverage
+        | otherwise  ->  Left lvlv 
+      _  ->  Right [lvlv] -- this shouldn't happen for Term Vars?
+    where
+      gtlv = LstVar tlv 
+      possub vw lvlv = if isDynamic vw then Left lvlv else Right [lvlv]
 \end{code}
 
 

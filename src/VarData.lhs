@@ -20,10 +20,11 @@ module VarData ( VarMatchRole
                , newVarTable, newNamedVarTable
                , addKnownConst, addKnownVar
                , addGenericVar, addInstanceVar
+               , addKnownLListVar, addKnownSListVar
                , addKnownVarList , addKnownVarSet
                , addAbstractVarList, addAbstractVarSet
-               , lookupVarTable, lookupVarTables
-               , lookupLVarTable, lookupLVarTables
+               , lookupLVarTs, lookupVarTable, lookupVarTables
+               , lookupLVar, lookupLVarTable, lookupLVarTables
                , isUnknownVar, isUnknownLVar, isUnknownGVar
                , gVarIsUnknownVar, gVarIsUnknownLVar
                , dEq, dvEq, dlEq, dgEq
@@ -402,7 +403,7 @@ We also need to ensure, if the list-variable is dynamic,
 that all the container variables have the same temporality
 as that list-variable.
 If a list-variable is to be defined as a list of variables,
-then none of the list-variables in that last can denote a variable-set.
+then none of the list-variables in that list can denote a variable-set.
 This is because there is no really good way to convert a
 set of variables into a list.
 There is no similar constraint for the converse case,
@@ -455,7 +456,11 @@ checkVariableList vt lv@(Vbl i vc0 vw0) setsOK vl
 \subsection{Inserting Known Variable-List}
 
 \begin{code}
-addKnownVarList :: (Monad m, MonadFail m) 
+addKnownLListVar :: MonadFail m 
+                => ListVar -> VarList -> VarTable -> m VarTable
+addKnownLListVar (LVbl v _ _) vl vt = addKnownVarList v vl vt
+
+addKnownVarList :: MonadFail m
                 => Variable -> VarList -> VarTable -> m VarTable
 \end{code}
 
@@ -509,6 +514,10 @@ checkLVarListMap v vl
 \subsection{Inserting Known Variable-Set}
 
 \begin{code}
+addKnownSListVar :: MonadFail m 
+                => ListVar -> VarSet -> VarTable -> m VarTable
+addKnownSListVar (LVbl v _ _) vs vt = addKnownVarSet v vs vt
+
 addKnownVarSet :: (Monad m, MonadFail m) 
                => Variable -> VarSet -> VarTable -> m VarTable
 \end{code}
@@ -603,6 +612,9 @@ For list-variables we need to distinguish between
 those whose temporality is \texttt{During},
 and the others.
 \begin{code}
+lookupLVar :: VarTable -> ListVar -> LstVarMatchRole
+lookupLVar vt (LVbl v _ _) = lookupLVarTable vt v
+
 lookupLVarTable :: VarTable -> Variable -> LstVarMatchRole
 
 lookupLVarTable (VD (_,_,stable,_)) lvar@(Vbl _ _ Static)
@@ -631,6 +643,9 @@ lookupVarTables (vt:vts) v
 
 Again, we want to be able to search lists of tables.
 \begin{code}
+lookupLVarTs :: [VarTable] -> ListVar -> LstVarMatchRole
+lookupLVarTs vts (LVbl v _ _) = lookupLVarTables vts v
+
 lookupLVarTables :: [VarTable] -> Variable -> LstVarMatchRole
 lookupLVarTables [] _ = UL
 lookupLVarTables (vt:vts) lv

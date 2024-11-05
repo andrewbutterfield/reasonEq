@@ -328,8 +328,7 @@ readREqState2 _ _ [] = fail "readREqState2: no text."
 readREqState2 theSet thMap txts
   = do (thrys,rest1) <- readTheories2 thMap txts
        (cThNm,rest2) <- readKey currThKEY id rest1
-       let thylist = fromJust $ getTheoryDeps cThNm thrys
-       (lPrfs,rest3) <- readLiveProofs thylist rest2
+       (lPrfs,rest3) <- readLiveProofs thrys rest2
        readThis reqstateTLR rest3 -- ignore any junk after trailer.
        return $ REqState { inDevMode = False
                          , projectDir = ""

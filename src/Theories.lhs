@@ -18,7 +18,7 @@ module Theories
  , auto__, auto_
  , nullTheory
  , writeTheory, readTheory
- , TheoryMap, Theories
+ , TheoryMap, Theories(..)
  , NamedTheoryTexts, writeTheories, readTheories1, readTheories2
  , noTheories
  , addTheory, addTheory', getTheory

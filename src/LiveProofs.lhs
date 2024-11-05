@@ -171,14 +171,15 @@ writeLiveProof lp
     writePerLine stepsKEY show (stepsSoFar lp) ++
     [ lprfTRL ]
 
-readLiveProof :: MonadFail m => [Theory] -> [String] -> m (LiveProof,[String])
-readLiveProof thylist txts
+readLiveProof :: MonadFail m => Theories -> [String] -> m (LiveProof,[String])
+readLiveProof thrys txts
   = do rest1          <- readThis lprfHDR          txts
        (thnm, rest2)  <- readKey (lpthKEY "") id   rest1
        (cjnm, rest3)  <- readKey (lpcjKEY "") id   rest2
        (conj, rest4)  <- readKey conjKEY read      rest3
        (sc,   rest5)  <- readKey cjscKEY read      rest4
        (strt, rest6)  <- readKey (strtKey "") id   rest5
+       let thylist = fromJust $ getTheoryDeps thnm thrys
        let mctxts = buildMatchContext thylist
        (fcs,  rest7)  <- readSeqZip thylist        rest6
        (fpth, rest8)  <- readKey fpathKEY read     rest7
@@ -214,10 +215,10 @@ writeLiveProofs liveProofs
     writeMap liveproofs writeLiveProof liveProofs ++
     [ lprfsTRL ]
 
-readLiveProofs :: MonadFail m => [Theory] -> [String] -> m (LiveProofs,[String])
-readLiveProofs thylist txts
+readLiveProofs :: MonadFail m => Theories -> [String] -> m (LiveProofs,[String])
+readLiveProofs thrys txts
   = do rest1         <- readThis lprfsHDR txts
-       (lprfs,rest2) <- readMap liveproofs rdKey (readLiveProof thylist) rest1
+       (lprfs,rest2) <- readMap liveproofs rdKey (readLiveProof thrys) rest1
        rest3         <- readThis lprfsTRL rest2
        return (lprfs,rest3)
 \end{code}

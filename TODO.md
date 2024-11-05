@@ -3,15 +3,14 @@
 ## URGENT
 
 
-a REGRESSION in UTCP caused by fact that re-entering a proof can 
-get locked into the wrong base theory
+Add in match display option to hide trivial substitution results,
+(e.g.: `X(E1,a,R1,N1) ∧ (X(E1,a,R1,N1))[/]`)
 
-
+Modify proof display not to show side-conditions in the proof-so-far part,
+but just show on a separate line before the current proof state.
 
 ### Next in Line
 
-Add in match display option to hide trivial substitution results,
-(e.g.: `X(E1,a,R1,N1) ∧ (X(E1,a,R1,N1))[/]`)
 
 The following laws in UTP base seem to match anything:
 ```

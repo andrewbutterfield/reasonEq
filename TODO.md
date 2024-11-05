@@ -2,10 +2,6 @@
 
 ## URGENT
 
-
-Modify proof display not to show side-conditions in the proof-so-far part,
-but just show on a separate line before the current proof state.
-
 ### Next in Line
 
 

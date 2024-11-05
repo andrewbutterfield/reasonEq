@@ -1,6 +1,7 @@
 BEGIN REQSET
-MM = 20
-TM = True
+MM = 30
+TM = False
 TQ = False
-FV = False
+TX = False
+FV = True
 END REQSET

@@ -1034,15 +1034,15 @@ dispEndProof liveProof = unlines $ shProof liveProof
 shProof :: LiveProof -> [String]
 shProof liveProof
  =   ( ("\nProof for "++red (widthHack 2 $ conjName liveProof))
-       : ("\t" ++ green(trTerm 0 trm ++ "  "++ trSideCond sc))
+       : ("\t" ++ green(trTerm 0 trm ++ "\n\t"++ trSideCond sc))
        : ("by "++strategy liveProof)
        : map shLiveStep (reverse (stepsSoFar liveProof))
        ) 
  where (trm,sc) = unwrapASN $ conjecture liveProof
 
 shLiveStep :: CalcStep -> String
-shLiveStep ( just, asn )
-  = unlines' [ trAsn asn
+shLiveStep ( just, asn@(Assertion tm sc) )
+  = unlines' [ trTerm 0 tm
              , showJustification just]
 
 displayMatches :: Int -> [MatchContext] -> Matches -> String
@@ -1056,8 +1056,8 @@ shMatch vts (i, mtch)
  = show i ++ " : "++ ldq ++ green (truelawname $ mName mtch) ++ rdq
    ++ " "
    ++ (bold $ blue $ trTerm 0 $ mRepl mtch)
-   ++ "  " ++ shSCImplication (mLocSC mtch) (mLawSC mtch)
    ++ " " ++ shMClass (mClass mtch)
+   ++ "\n  " ++ shSCImplication (mLocSC mtch) (mLawSC mtch)
  where
     -- bind = mBind mtch
     -- repl = mRepl mtch
@@ -1096,13 +1096,13 @@ shMappedCond vts scC bind lsc
       Nothing    ->  trSideCond lsc ++ (red " (law-sc!)")
       Just ilsc  ->  trSideCond ilsc
 
-shMClass MatchAll         =  green "*"
-shMClass MatchEqvLHS      =  green (_eqv++"lhs")
-shMClass MatchEqvRHS      =  green (_eqv++"rhs")
-shMClass (MatchEqv is)    =  green (_eqv++show is)
-shMClass MatchAnte        =  green ("* "++_imp)
-shMClass MatchCnsq        =  green (_imp++"  *")
-shMClass (MatchEqvVar i)  =  red ("trivial!"++show i)
+shMClass MatchAll         =  green "[*]"
+shMClass MatchEqvLHS      =  green ("["++_eqv++"lhs]")
+shMClass MatchEqvRHS      =  green ("["++_eqv++"rhs]")
+shMClass (MatchEqv is)    =  green ("["++_eqv++show is++"]")
+shMClass MatchAnte        =  green ("[* "++_imp++" ]")
+shMClass MatchCnsq        =  green ("["++_imp++"  *]")
+shMClass (MatchEqvVar i)  =  red ("[trivial!"++show i++"]")
 \end{code}
 
 We can display laws from a context (again, this should be done elsewhere).

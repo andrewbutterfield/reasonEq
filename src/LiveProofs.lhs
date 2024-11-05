@@ -171,7 +171,7 @@ writeLiveProof lp
     writePerLine stepsKEY show (stepsSoFar lp) ++
     [ lprfTRL ]
 
-readLiveProof :: (Monad m, MonadFail m) => [Theory] -> [String] -> m (LiveProof,[String])
+readLiveProof :: MonadFail m => [Theory] -> [String] -> m (LiveProof,[String])
 readLiveProof thylist txts
   = do rest1          <- readThis lprfHDR          txts
        (thnm, rest2)  <- readKey (lpthKEY "") id   rest1
@@ -214,7 +214,7 @@ writeLiveProofs liveProofs
     writeMap liveproofs writeLiveProof liveProofs ++
     [ lprfsTRL ]
 
-readLiveProofs :: (Monad m, MonadFail m) => [Theory] -> [String] -> m (LiveProofs,[String])
+readLiveProofs :: MonadFail m => [Theory] -> [String] -> m (LiveProofs,[String])
 readLiveProofs thylist txts
   = do rest1         <- readThis lprfsHDR txts
        (lprfs,rest2) <- readMap liveproofs rdKey (readLiveProof thylist) rest1
@@ -577,7 +577,7 @@ matchLaws asn (_,lws,vts)
 
 Sometimes we are interested in a specific (named) law.
 \begin{code}
-matchLawByName :: (Monad m, MonadFail m)
+matchLawByName :: MonadFail m
                => Assertion -> String -> [MatchContext]
                -> m Matches
 matchLawByName asn lnm mcs

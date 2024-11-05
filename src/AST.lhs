@@ -215,7 +215,7 @@ Builders: we have two variants, one (\verb"substn"), the most generally useful,
 removes trivial substitutions ($[x/x]$),
 while another (\verb"substnxx"), for special situations, retains them.
 \begin{code}
-substn :: (Monad m, MonadFail m) => [(Variable,Term)] -> [(ListVar,ListVar)]
+substn :: MonadFail m => [(Variable,Term)] -> [(ListVar,ListVar)]
        -> m Substn
 substn ts lvs
  | null ts && null lvs  =  return $ SN S.empty S.empty
@@ -226,7 +226,7 @@ substn ts lvs
   ts'  = filter nontrivial     $ sort ts
   lvs' = filter (uncurry (/=)) $ sort lvs
 
-substnxx :: (Monad m, MonadFail m) => [(Variable,Term)] -> [(ListVar,ListVar)]
+substnxx :: MonadFail m => [(Variable,Term)] -> [(ListVar,ListVar)]
        -> m Substn
 substnxx ts lvs
  | null ts && null lvs  =  return $ SN S.empty S.empty
@@ -475,7 +475,7 @@ Smart constructors for variables and binders.
 
 Variable must match term-class.
 \begin{code}
-var :: (Monad m, MonadFail m) => Type -> Variable -> m Term
+var :: MonadFail m => Type -> Variable -> m Term
 var tp@(TF _ t) v | t == bool && isPredVar v  =  return $ V tp v
 var typ       v   | not $ isPredVar v         =  return $ V typ v
 var _       _   =   fail "var: Type/VarClass mismatch"
@@ -521,7 +521,7 @@ uniformVarList (gv:vl) = uvl (whatGVar gv) vl
 
 It will also be good to enquire the class of a binder:
 \begin{code}
-binderClass :: (Monad m, MonadFail m) => Term -> m VarClass
+binderClass :: MonadFail m => Term -> m VarClass
 binderClass (L _ _ (gv:_) _)  =  return $ whatGVar gv
 binderClass (B _ _ gvs    _)  =  return $ whatGVar $ S.elemAt 0 gvs
 binderClass _ = fail "binderClass: not a binding term."
@@ -580,7 +580,7 @@ varAsTerm v                =  V T v
 
 Dropping a term (safely) to a variable:
 \begin{code}
-termAsVar :: (Monad m, MonadFail m) => Term -> m Variable
+termAsVar :: MonadFail m => Term -> m Variable
 termAsVar (V _ v) = return v
 termAsVar t = fail ("termAsVar: not a variable - "++show t)
 \end{code}

@@ -755,7 +755,7 @@ extendGoalSCCoverage obsv lvvls (tvarSCs,_)
 \subsection{Apply SAT Solver to Focus}
 
 \begin{code}
-applySAT :: (Monad m, MonadFail m) => LiveProof -> m LiveProof
+applySAT :: MonadFail m => LiveProof -> m LiveProof
 applySAT liveproof 
   = do  let (tz, seq) = focus liveproof
         let goalt = getTZ tz

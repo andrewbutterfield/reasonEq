@@ -131,7 +131,7 @@ collectAnte t = ([],t)
 \subsection{Associative Grouping}
 
 \begin{code}
-flattenAssoc :: (Monad m, MonadFail m) => Identifier -> Term -> m Term
+flattenAssoc :: MonadFail m => Identifier -> Term -> m Term
 flattenAssoc assocI t@(Cons tk sI opI ts)
  | opI == assocI && length ts > 1
      =  return $ Cons tk sI opI $ assocFlatten opI t
@@ -155,7 +155,7 @@ data GroupSpec
 
 Then code to do it:
 \begin{code}
-groupAssoc :: (Monad m, MonadFail m) => Identifier -> GroupSpec -> Term -> m Term
+groupAssoc :: MonadFail m => Identifier -> GroupSpec -> Term -> m Term
 groupAssoc assocI gs (Cons tk sI opI ts)
  | opI == assocI && length ts > 2  =  groupAssoc' (mkOp tk sI opI) gs ts
 groupAssoc assocI _ _

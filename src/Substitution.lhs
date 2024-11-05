@@ -755,7 +755,7 @@ captureAvoidance sc vs tm sub
        let knownVars = theFreeVars ( tfv `mrgFreeVars` rplvs )
        mkFresh knownVars [] [] needsRenaming
 
-mkFresh :: (Monad m, MonadFail m)
+mkFresh :: MonadFail m
         => VarSet
         -> [(Variable,Term)]
         -> [(ListVar,ListVar)]

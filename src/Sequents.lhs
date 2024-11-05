@@ -123,7 +123,7 @@ noHyps nm = nullTheory{ thName   =  "H."++nm }
    \mathcal L \vdash C \equiv \true
 \end{eqnarray*}
 \begin{code}
-redAll :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
+redAll :: MonadFail m => [Theory] -> NamedTermSC
        -> m (String, Sequent)
 redAll thys (nm,(t,sc))
   = return ( reduceAll, Sequent thys (noHyps nm) sc t $ theTrue )
@@ -141,7 +141,7 @@ reduceAll = "red-All"
    \mathcal L \vdash C_1 \equiv C_2
 \end{eqnarray*}
 \begin{code}
-redboth :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
+redboth :: MonadFail m => [Theory] -> NamedTermSC
         -> m (String, Sequent)
 redboth thys (nm,(t@(Cons tk sb i [tl,tr]),sc))
   | i == theEqv
@@ -167,7 +167,7 @@ bEqv sn n ps = Cons arbpred sn n ps
    \mathcal L \vdash (C_2 \equiv \dots \equiv C_n) \equiv C_1
 \end{eqnarray*}
 \begin{code}
-redR2L :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
+redR2L :: MonadFail m => [Theory] -> NamedTermSC
         -> m (String, Sequent)
 redR2L thys (nm,(t@(Cons tk si i (c1:cs@(_:_))),sc))
   | i == theEqv
@@ -186,7 +186,7 @@ reduceToLeftmost = "red-R2L"
 \end{eqnarray*}
 We prefer to put the smaller simpler part on the right.
 \begin{code}
-redL2R :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
+redL2R :: MonadFail m => [Theory] -> NamedTermSC
         -> m (String, Sequent)
 redL2R thys (nm,(t@(Cons tk si i cs@(_:_:_)),sc))
   | i == theEqv
@@ -206,7 +206,7 @@ reduceToRightmost = "red-L2R"
    \mathcal L,\splitand(H) \vdash (C \equiv \true)
 \end{eqnarray*}
 \begin{code}
-deduce :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
+deduce :: MonadFail m => [Theory] -> NamedTermSC
        -> m (String, Sequent)
 deduce thys (nm,(t@(Cons tk si i [ta,tc]),sc))
   | i == theImp
@@ -238,7 +238,7 @@ splitAnte t     =  [t]
    \mathcal L,\splitand(H) \vdash C_1 \equiv C_2
 \end{eqnarray*}
 \begin{code}
-asmboth :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
+asmboth :: MonadFail m => [Theory] -> NamedTermSC
         -> m (String, Sequent)
 asmboth thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{code}
@@ -252,7 +252,7 @@ asmboth thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{eqnarray*}
 \begin{code}
 -- actually, this is done under the hood
-shunt :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
+shunt :: MonadFail m => [Theory] -> NamedTermSC
       -> m (String, Sequent)
 shunt thys (nm,(t,sc)) = fail "shunt not applicable"
 \end{code}
@@ -267,7 +267,7 @@ shunt thys (nm,(t,sc)) = fail "shunt not applicable"
 \end{eqnarray*}
 \begin{code}
 -- actually, this is done under the hood
-shntboth :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
+shntboth :: MonadFail m => [Theory] -> NamedTermSC
         -> m (String, Sequent)
 shntboth thys (nm,(t,sc)) = fail "shntboth not applicable"
 \end{code}
@@ -463,7 +463,7 @@ writeSequent' seq'
     , laws'KEY ++ show (laws' seq')
     , seq'TRL ]
 
-readSequent' :: (Monad m, MonadFail m) => [Theory] -> [String] -> m (Sequent',[String])
+readSequent' :: MonadFail m => [Theory] -> [String] -> m (Sequent',[String])
 readSequent' thylist txts
   = do rest1 <- readThis seq'HDR txts
        -- theories are supplied, reconstructed in REqState read.
@@ -530,7 +530,7 @@ writeSeqZip (tz,seq')
     writeSequent' seq' ++
     [ szTRL ]
 
-readSeqZip :: (Monad m, MonadFail m) => [Theory] -> [String] -> m (SeqZip,[String])
+readSeqZip :: MonadFail m => [Theory] -> [String] -> m (SeqZip,[String])
 readSeqZip thylist txts
   = do rest1 <- readThis szHDR txts
        (tz,rest2) <- readKey tzKEY read rest1
@@ -576,7 +576,7 @@ rightConjFocus sequent
 For a hypothesis conjecture, making the sequent-zipper
 is a little more tricky:
 \begin{code}
-hypConjFocus :: (Monad m, MonadFail m) => Int -> Sequent -> m SeqZip
+hypConjFocus :: MonadFail m => Int -> Sequent -> m SeqZip
 hypConjFocus i sequent
   = do let hthry = hyp sequent
        (before,((hnm,hasn),hprov),after) <- peel i $ laws hthry

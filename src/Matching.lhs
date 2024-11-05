@@ -757,7 +757,7 @@ We assume here that candidate term and pattern variable
 have the same \texttt{Type}.
 \begin{code}
 
-tvMatch :: (Monad m, MonadFail m)
+tvMatch :: MonadFail m
        => [VarTable] -> Binding -> CBVS -> PBVS
        -> Candidate -> Type -> Variable -> m Binding
 \end{code}
@@ -806,7 +806,7 @@ $$
 
 Here the candidate term is NOT a variable term.
 \begin{code}
-tkvMatch :: (Monad m, MonadFail m) => [VarTable] -> Binding
+tkvMatch :: MonadFail m => [VarTable] -> Binding
        ->  Candidate -> VarMatchRole -> Type -> Variable -> m Binding
 -- know vP is not in pbvs, but is in vts, known as whatP
 \end{code}
@@ -957,7 +957,7 @@ whenCompKind _          _           =  False
 \newpage
 Now, onto variable matching:
 \begin{code}
-vMatch :: (Monad m, MonadFail m)
+vMatch :: MonadFail m
        => [VarTable] -> Binding -> CBVS -> PBVS
        -> Variable -> Variable
        -> m Binding
@@ -1012,7 +1012,7 @@ $$
 $$
 In addition, both variables must have the same class.
 \begin{code}
-bvMatch :: (Monad m, MonadFail m) => [VarTable] -> Binding -> CBVS
+bvMatch :: MonadFail m => [VarTable] -> Binding -> CBVS
         -> Variable -> Variable -> m Binding
 -- we know vP is in pbvs
 bvMatch vts bind cbvs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
@@ -2549,7 +2549,7 @@ with the following exceptions:
     then the last pattern is bound to all the remaining candidates.
 \end{itemize}
 \begin{code}
-vsUnkLVarOneEach :: (Monad m, MonadFail m)
+vsUnkLVarOneEach :: MonadFail m
                  => Binding -> [GenVar] -> [ListVar]
                  -> m Binding
 vsUnkLVarOneEach bind [] [] = return bind

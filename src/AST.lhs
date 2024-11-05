@@ -36,6 +36,7 @@ module AST ( Type
            , assignVar, isAssignVar, theAssignment, isAssignment
            , subTerms
            , mentionedVars, mentionedVarLists, mentionedVarSets
+           , onlyTrivialQuantifiers, anyTrivialSubstitution
            , termSize
            -- test only below here
            , int_tst_AST
@@ -719,6 +720,39 @@ subTerms t@(S _ t' (SN tsub _))
 subTerms t               =  [t]
 -- t = head $ subTerms t !!
 \end{code}
+
+\subsection{Trivial Quantifiers}
+
+A quantifier match is trivial if all its list-variables
+are bound to empty sets or lists.
+
+
+\begin{code}
+onlyTrivialQuantifiers :: Term -> Bool
+onlyTrivialQuantifiers term = all trivialQuantifier $ subTerms term
+
+trivialQuantifier :: Term -> Bool
+trivialQuantifier (B _ _ vs _)  =  S.null vs
+trivialQuantifier (L _ _ vl _)  =    null vl
+trivialQuantifier _ = False
+\end{code}
+
+
+\subsection{Trivial Substitution}
+
+A substitution is trivial if both its substitution lists are null.
+
+\begin{code}
+anyTrivialSubstitution :: Term -> Bool
+anyTrivialSubstitution term = any trivialSubst $ subTerms term
+
+trivialSubst :: Term -> Bool
+trivialSubst (S _ _ (SN ts lvs))  =  S.null ts && S.null lvs
+trivialSubst _                    =  False
+\end{code}
+
+
+
 
 \subsection{(General) Variables}
 

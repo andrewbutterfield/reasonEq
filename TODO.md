@@ -3,11 +3,6 @@
 ## URGENT
 
 
-Add in match display option to hide trivial substitution results,
-(e.g.: `X(E1,a,R1,N1) ∧ (X(E1,a,R1,N1))[/]`)
-
- **This is all broken: we need to look at instantiated outcomes, not bindings**
-
 Modify proof display not to show side-conditions in the proof-so-far part,
 but just show on a separate line before the current proof state.
 

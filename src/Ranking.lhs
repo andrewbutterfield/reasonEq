@@ -136,7 +136,7 @@ Often we do not want matches in which all pattern list-variables
 are mapped to empty sets and lists.
 \begin{code}
 nonTrivialQuantifiers :: FilterFunction
-nonTrivialQuantifiers _  =  not . onlyTrivialQuantifiers . mBind
+nonTrivialQuantifiers _  =  not . onlyTrivialQuantifiers . mRepl
 \end{code}
 
 \subsection{Accept Empty Substitutions}
@@ -144,7 +144,7 @@ nonTrivialQuantifiers _  =  not . onlyTrivialQuantifiers . mBind
 Often we do not want matches that contain empty substitutions ($t[/]$).
 \begin{code}
 nonTrivialSubstitution :: FilterFunction
-nonTrivialSubstitution _  =  not . anyTrivialSubstitution . mBind
+nonTrivialSubstitution _  =  not . anyTrivialSubstitution . mRepl
 \end{code}
 
 \subsection{Accept Floating Matches}

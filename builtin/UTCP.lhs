@@ -335,12 +335,22 @@ nNotObs = [gO,gO'] `notin` gN
 eNO = [gE] `notin` gO  -- but this is really gE notin fv(gO), gO is listvar
 nNO = [gN] `notin` gO  -- but this is really gN notin fv(gO), gO is listvar
 \end{code}
+We also need the fact that the alphabet of $a$ is limited
+to $\setof{s,s'}$:
+\begin{code}
+isUTCPAtomic  :: GenVar -> SideCond
+isUTCPAtomic  gc  = [StdVar vs,StdVar vs'] `dyncover` gc
+areUTCPAtomic :: [GenVar] -> SideCond
+areUTCPAtomic gcs = mrgscs $ map isUTCPAtomic gcs
+\end{code}
 
 \RLEQNS{
    X(E|a|R|N)
    ~\defs~
    ls(E) \land a \land ls'=(ls\setminus R)\cup N 
    & \setof{E,N,R} \disj \setof{\lst O,\lst O'}
+     ;
+     \setof{s,s'} \supseteq_a \setof{a}
    & \lref{defn-$X$}
 }
 \begin{code}
@@ -353,7 +363,9 @@ axXDef = ( "X" -.- "def"
              ===
              ((tE `subseteq` tls) /\ a) /\
              (tls' `isEqualTo` ((tls `sdiff` tR) `sunion` tN))
-         , areUTPStcObs (map StdVar [vE,vR,vN] ) ) )
+         , --areUTPStcObs (map StdVar [vE,vR,vN] ) 
+           -- .: 
+           isUTCPAtomic  (StdVar va) ) )
 \end{code}
 
 \RLEQNS{
@@ -361,6 +373,8 @@ axXDef = ( "X" -.- "def"
    ~\defs~
    X(E|a|E|N) 
    & \setof{E,N} \disj \setof{\lst O,\lst O'}
+     ;
+     \setof{s,s'} \supseteq_a \setof{a}
    & \lref{defn-$A$}
 }
 \begin{code}

@@ -1,4 +1,4 @@
-\section{Sequents}
+\chapter{Sequents}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2018-22
 
@@ -57,7 +57,7 @@ import Debugger
 We define types, including zippers,for sequents.
 
 \newpage
-\subsection{Sequent Type}
+\section{Sequent Type}
 
 A sequent is a collection containing
 (i) $\mathcal L$ and $\mathcal H$ as a list of theories
@@ -80,7 +80,7 @@ data Sequent
   deriving (Eq, Show, Read)
 \end{code}
 
-\subsection{Sequent Strategies}
+\section{Sequent Strategies}
 
 Here we unwrap \texttt{Assertion}s.
 \begin{code}
@@ -110,12 +110,12 @@ availableStrategies theories thnm (nm,(Assertion tconj sc))
 \end{code}
 and then use the following functions to produce a sequent, if possible.
 
-\subsubsection{No Hypotheses}
+\subsection{No Hypotheses}
 \begin{code}
 noHyps nm = nullTheory{ thName   =  "H."++nm }
 \end{code}
 
-\subsubsection{Strategy \textit{redAll}}
+\subsection{Strategy \textit{redAll}}
 
 \begin{eqnarray*}
    redAll(C)
@@ -133,7 +133,7 @@ reduceAll = "red-All"
 
 
 \newpage
-\subsubsection{Strategy \textit{redboth}}
+\subsection{Strategy \textit{redboth}}
 
 \begin{eqnarray*}
    redboth(C_1 \equiv C_2)
@@ -150,7 +150,7 @@ redboth thys (nm,(t,sc)) = fail "redboth not applicable"
 reduceBoth = "red-bth"
 \end{code}
 
-\subsubsection{Strategy \textit{redR2L}}
+\subsection{Strategy \textit{redR2L}}
 
 We will need to convert $\seqof{P_1,\dots,P_n}$, for $n\geq 1$
 to $P_1 \equiv \dots \equiv P_n$,
@@ -177,7 +177,7 @@ redR2L thys (nm,(t,sc)) = fail "redR2L not applicable"
 reduceToLeftmost = "red-R2L"
 \end{code}
 
-\subsubsection{Strategy \textit{redL2R}}
+\subsection{Strategy \textit{redL2R}}
 
 \begin{eqnarray*}
    redL2R(C_1 \equiv \dots \equiv C_{n-1} \equiv C_n)
@@ -198,7 +198,7 @@ reduceToRightmost = "red-L2R"
 \end{code}
 
 \newpage
-\subsubsection{Strategy \textit{deduce}}
+\subsection{Strategy \textit{deduce}}
 
 \begin{eqnarray*}
    deduce(H \implies C)
@@ -229,7 +229,7 @@ splitAnte t     =  [t]
 \end{code}
 
 \newpage
-\subsubsection{Strategy \textit{asmboth}}
+\subsection{Strategy \textit{asmboth}}
 
 
 \begin{eqnarray*}
@@ -243,7 +243,7 @@ asmboth :: MonadFail m => [Theory] -> NamedTermSC
 asmboth thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{code}
 
-\subsubsection{Strategy \textit{shunt}}
+\subsection{Strategy \textit{shunt}}
 
 \begin{eqnarray*}
    shunt(H_1 \implies \dots H_m \implies C)
@@ -257,7 +257,7 @@ shunt :: MonadFail m => [Theory] -> NamedTermSC
 shunt thys (nm,(t,sc)) = fail "shunt not applicable"
 \end{code}
 
-\subsubsection{Strategy \textit{shntboth}}
+\subsection{Strategy \textit{shntboth}}
 
 
 \begin{eqnarray*}
@@ -272,7 +272,7 @@ shntboth :: MonadFail m => [Theory] -> NamedTermSC
 shntboth thys (nm,(t,sc)) = fail "shntboth not applicable"
 \end{code}
 
-\subsubsection{Splitting Conjoined Hypotheses}
+\subsection{Splitting Conjoined Hypotheses}
 
 \begin{eqnarray*}
    \splitand(H_1 \land \dots \land H_n)
@@ -288,7 +288,7 @@ splitAnd t       =  [t]
 
 
 \newpage
-\subsection{Making Unknown Variables Known}
+\section{Making Unknown Variables Known}
 
 A key function is one that makes all unknown variables in a term become known.
 \begin{code}
@@ -327,12 +327,12 @@ checkLVarStatus vts vt lv@(LVbl v _ _)
 
 
 \newpage
-\subsection{Sequent Zipper}
+\section{Sequent Zipper}
 
 We will need a zipper for sequents as we can focus in on any term
 in \texttt{hyp}, \texttt{cleft} or \texttt{cright}.
 
-\subsubsection{Sequent Zipper Algebra}
+\subsection{Sequent Zipper Algebra}
 
 The sequent type can be summarised algebraically as
 \begin{eqnarray*}
@@ -434,7 +434,7 @@ We now refactor this by expanding the $A_i$ and merging
 
 
 \newpage
-\subsubsection{Sequent Zipper Types}
+\subsection{Sequent Zipper Types}
 
 We start with the top-level common part:
 $$S'(t) = T^* \times SC \times ( {\cdots + \cdots} )$$
@@ -551,7 +551,7 @@ sequentFocus (_,seq')
 \end{code}
 
 \newpage
-\subsubsection{Sequent Zipper Construction}
+\subsection{Sequent Zipper Construction}
 
 
 To create a sequent-zipper,
@@ -589,7 +589,7 @@ hypConjFocus i sequent
                                 (cleft sequent) (cright sequent) )
 \end{code}
 
-\subsubsection{Sequent Zipper Destructor}
+\subsection{Sequent Zipper Destructor}
 
 Exiting a zipper:
 \begin{code}
@@ -619,7 +619,7 @@ exitLaws currT  (HLaws' hnm hkn hbef fnm fsc fprov horig haft cl cr)
 \end{code}
 
 \newpage
-\subsubsection{Sequent Zipper Moves}
+\subsection{Sequent Zipper Moves}
 
 The usual up/down actions just invoke the corresponding \texttt{TermZip} action.
 \begin{code}
@@ -679,7 +679,7 @@ getHypotheses' (HLaws' hn hk hbef _ _ _ _ haft _ _)
 \end{code}
 
 
-\subsection{Sequent Mentioned Variables}
+\section{Sequent Mentioned Variables}
 
 When generating fresh variables,
 we need to know the state of the entire goal conjecture
@@ -721,7 +721,7 @@ lawVarsMentioned = mentionedVars . assnT . snd . fst
 \end{code}
 
 \newpage
-\subsection{Showing Sequents}
+\section{Showing Sequents}
 
 \textbf{This should all be done via proper generic rendering code}
 

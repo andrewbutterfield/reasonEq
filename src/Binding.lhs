@@ -36,6 +36,7 @@ module Binding
 , generateFreshVars
 , isBijectiveBinding
 , onlyTrivialQuantifiers
+, anyTrivialSubstitution
 , dumpBinding
 , patchVarBind, patchVarListBind
 , int_tst_Binding
@@ -2024,6 +2025,8 @@ isBijectiveAssocList assoc
 A quantifier match is trivial if all its list-variables
 are bound to empty sets or lists.
 
+\textbf{Note: this won't always work - we need to inspect the instantiated term}
+
 \begin{code}
 onlyTrivialQuantifiers :: Binding -> Bool
 onlyTrivialQuantifiers (BD (_,_,lbind))
@@ -2035,6 +2038,25 @@ trivialListVarBind :: LstVarBind -> Bool
 trivialListVarBind (BL vl)   =  null vl
 trivialListVarBind (BS vs)   =  S.null vs
 trivialListVarBind (BX vts)  =  null vts
+\end{code}
+
+\subsection{Trivial Substitution}
+
+A substitution is trivial if both its substitution lists are null.
+
+\textbf{Note: this won't always work - we need to inspect the instantiated term}
+
+\begin{code}
+anyTrivialSubstitution :: Binding -> Bool
+anyTrivialSubstitution (BD (vbind,_,_))
+  | null vbinds  =  False
+  | otherwise    =  any trivialSubstBind vbinds
+  where vbinds = M.elems $ pdbg "aTS.vbind" vbind
+
+trivialSubstBind :: VarBind -> Bool
+trivialSubstBind (BT (Sub _ _ (Substn ts lvs)))
+  =  S.null ts && S.null lvs
+trivialSubstBind _ =  False
 \end{code}
 
 \newpage

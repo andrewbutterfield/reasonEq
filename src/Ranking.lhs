@@ -12,6 +12,7 @@ module Ranking
   , acceptAll -- used in REqState
   , isNonTrivial-- used in REqState
   , nonTrivialQuantifiers -- used in REqState
+  , nonTrivialSubstitution -- used in REqState
   , noFloatingVariables -- used in REqState
   -- exported Orderings
   , sizeOrd -- not used
@@ -136,6 +137,14 @@ are mapped to empty sets and lists.
 \begin{code}
 nonTrivialQuantifiers :: FilterFunction
 nonTrivialQuantifiers _  =  not . onlyTrivialQuantifiers . mBind
+\end{code}
+
+\subsection{Accept Empty Substitutions}
+
+Often we do not want matches that contain empty substitutions ($t[/]$).
+\begin{code}
+nonTrivialSubstitution :: FilterFunction
+nonTrivialSubstitution _  =  not . anyTrivialSubstitution . mBind
 \end{code}
 
 \subsection{Accept Floating Matches}

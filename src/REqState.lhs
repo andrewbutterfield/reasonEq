@@ -77,6 +77,7 @@ data REqSettings
      -- Section 2 - settings that specify behaviour
      , showTrivialMatches :: Bool -- tm, trivialmatch --> matchFilter
      , showTrivialQuantifiers :: Bool -- tq, trivialquant --> matchFilter
+     , showTrivialSubst :: Bool -- ts, trivialsubst --> matchFilter
      , showFloatingVariables :: Bool -- fv, floatvars --> matchFilter
      -- Section 3 - settings that implement behaviour from Section 2
      , matchFilter :: FilterFunction
@@ -101,6 +102,10 @@ showTrivialQuantifiers__ f r
   =  matchFilterUpdate r{showTrivialQuantifiers = f $ showTrivialQuantifiers r}
 showTrivialQuantifiers_   =  showTrivialQuantifiers__ . const
 
+showTrivialSubst__ f r
+  =  matchFilterUpdate r{showTrivialSubst = f $ showTrivialSubst r}
+showTrivialSubst_   =  showTrivialSubst__ . const
+
 showFloatingVariables__ f r
   =  matchFilterUpdate r{showFloatingVariables = f $ showFloatingVariables r}
 showFloatingVariables_   =  showFloatingVariables__ . const
@@ -122,6 +127,7 @@ matchFilterUpdate r
     filterSpecs
       = [ ( not $ showTrivialMatches r,     isNonTrivial          )
         , ( not $ showTrivialQuantifiers r, nonTrivialQuantifiers )
+        , ( not $ showTrivialSubst r,       nonTrivialSubstitution)
         , ( not $ showFloatingVariables r,  noFloatingVariables   )
         ]
 \end{code}
@@ -141,10 +147,11 @@ andIfWanted wanted newf currf ctxt mtch
 \begin{code}
 initREqSettings
   = matchFilterUpdate $ REqSet {
-      maxMatchDisplay = 20
-    , showTrivialMatches = True
-    , showTrivialQuantifiers = True 
-    , showFloatingVariables = False 
+      maxMatchDisplay        = 30
+    , showTrivialMatches     = False
+    , showTrivialQuantifiers = False 
+    , showTrivialSubst       = False
+    , showFloatingVariables  = True 
     , matchFilter = acceptAll
     }
 \end{code}
@@ -158,6 +165,7 @@ type SettingStrings = (String,String,String) -- short,type,long
 rEqSettingStrings = [ ("mm","Number","Max. Match Display")
                     , ("tm","Bool","Show Trivial Matches")
                     , ("tq","Bool","Show Trivial Quantifiers")
+                    , ("ts","Bool","Show Trivial Subsitutions")
                     , ("fv","Bool","Show Floating Variables")
                     ]
 showSettingStrings (short,typ,long)
@@ -175,6 +183,7 @@ showSettings rsettings
     disp r ("mm",_,text) = text ++ " = " ++ show (maxMatchDisplay r)
     disp r ("tm",_,text) = text ++ " = " ++ show (showTrivialMatches r)
     disp r ("tq",_,text) = text ++ " = " ++ show (showTrivialQuantifiers r)
+    disp r ("ts",_,text) = text ++ " = " ++ show (showTrivialSubst r)
     disp r ("fv",_,text) = text ++ " = " ++ show (showFloatingVariables r)
 \end{code}
 
@@ -205,6 +214,7 @@ changeBoolSetting :: MonadFail m => String  -> Bool -> REqSettings -> m REqSetti
 changeBoolSetting name value reqs
  | name == "tm"  =  return $ showTrivialMatch_ value reqs
  | name == "tq"  =  return $ showTrivialQuantifiers_ value reqs
+ | name == "ts"  =  return $ showTrivialSubst_ value reqs
  | name == "fv"  =  return $ showFloatingVariables_ value reqs
  | otherwise     =  fail ("changeBoolSetting - unknown field: "++name)
 \end{code}
@@ -223,6 +233,7 @@ reqsetHDR = "BEGIN "++reqset ; reqsetTRL = "END "++ reqset
 mmKey = "MM = "
 tmKey = "TM = "
 tqKey = "TQ = "
+tsKey = "TX = "  -- TS is in use
 fvKey = "FV = "
 
 writeREqSettings :: REqSettings -> [String]
@@ -231,6 +242,7 @@ writeREqSettings rqset
     , mmKey ++ show (maxMatchDisplay rqset)
     , tmKey ++ show (showTrivialMatches rqset)
     , tqKey ++ show (showTrivialQuantifiers rqset)
+    , tsKey ++ show (showTrivialSubst rqset)
     , fvKey ++ show (showFloatingVariables rqset)
     , reqsetTRL ]
 
@@ -241,15 +253,17 @@ readREqSettings txts
        (theMMD,rest2) <- readKey mmKey read rest1
        (theMHT,rest3) <- readKey tmKey readBool rest2
        (theMHQ,rest4) <- readKey tqKey readBool rest3
-       (theMHF,rest5) <- readKey fvKey readBool rest4
-       rest6 <- readThis reqsetTRL rest5
+       (theMHS,rest5) <- readKey tsKey readBool rest4
+       (theMHF,rest6) <- readKey fvKey readBool rest5
+       rest7 <- readThis reqsetTRL rest6
        return ( matchFilterUpdate
                  ( REqSet theMMD
                           theMHT
                           theMHQ
+                          theMHS
                           theMHF
                           acceptAll )
-              , rest6 )
+              , rest7 )
 \end{code}
 
 \newpage

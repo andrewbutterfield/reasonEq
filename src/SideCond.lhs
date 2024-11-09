@@ -682,6 +682,7 @@ mkSideCond vscs fvs
 Merging two side-conditions is then straightforward,
 simply merge each VSC and fresh set from the one into the other,
 one at a time.
+\textbf{Note: \h{mrgSideCond} is NOT commutative, and can be lossy}.
 \begin{code}
 mrgSideCond :: MonadFail m 
             => SideCond -> SideCond -> m SideCond

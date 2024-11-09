@@ -358,14 +358,13 @@ xact :: Term -> Term -> Term -> Term -> Term
 i_xact = jId "X"
 xact e act r a = Cons arbpred False i_xact [e,act,r,a]
 xactIntro = mkConsIntro i_xact bool
+xactSC = isUTCPAtomic  (StdVar va) .: areUTPStcObs (map StdVar [vE,vR,vN])
 axXDef = ( "X" -.- "def"
          , ( (xact tE a tR tN)
              ===
              ((tE `subseteq` tls) /\ a) /\
              (tls' `isEqualTo` ((tls `sdiff` tR) `sunion` tN))
-         , --areUTPStcObs (map StdVar [vE,vR,vN] ) 
-           -- .: 
-           isUTCPAtomic  (StdVar va) ) )
+           , xactSC ) )
 \end{code}
 
 \RLEQNS{
@@ -381,15 +380,16 @@ axXDef = ( "X" -.- "def"
 i_aact = jId "A"
 aact e act n = Cons arbpred False i_aact [e,act,n]
 aactIntro = mkConsIntro i_aact bool
+aactSC = isUTCPAtomic  (StdVar va) .: areUTPStcObs (map StdVar [vE,vN] )
 axADef = ( "A" -.- "def"
          , ( (aact tE a tN) === (xact tE a tE tN)
-           , scTrue ) )
+           , aactSC ) )
 cjAAlt = ( "A" -.- "alt"
          , ( (aact tE a tN)
              ===
              ((tE `subseteq` tls) /\ a) /\
              (tls' `isEqualTo` ((tls `sdiff` tE) `sunion` tN))
-           , areUTPStcObs (map StdVar [vE,vN] ) ) )
+           , aactSC ) ) 
 \end{code}
 
 \newpage
@@ -429,9 +429,10 @@ cjXXComp = ( "X" -.- "X" -.- "comp"
                  (mkSeq a b) 
                  (sR1 `sunion` sR2) 
                  ((sN1 `sdiff` sR2) `sunion` sN2) )
-             , areUTPDynObs (map StdVar [va,vb])
-               .: 
-               areUTPStcObs (map StdVar [vE1,vE2,vR1,vR2,vN1,vN2]) ) )
+             ,    areUTCPAtomic (map StdVar [vb])
+               .: areUTCPAtomic (map StdVar [va])
+               .: areUTPStcObs  (map StdVar [vE1,vE2,vR1,vR2,vN1,vN2]) 
+               ) )
 \end{code}
 
 \subsection{Commands}

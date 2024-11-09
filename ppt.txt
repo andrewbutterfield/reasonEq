@@ -1,18 +1,58 @@
-@instSub.lvs:  -- [e$/x$]
-[ (LV (VR (Id "x" 0, VO, WS), [], [])
-, LV (VR (Id "e" 0, VE, WS), [], [])) ]
-@instLLVar.binding:
-BD  -- {  e$ -> < e, O$\x > , x$ -> < x_1, O$_1\x >}
-( {}
-, {}
-, { ( (Id "e" 0, VE, [], [])  -- e$ -> < e , O$\x >
-    , BX
-      [ Right
-        (V T (VR (Id "e" 0, VE, WB)))
-      , Left
-        (LV (VR (Id "O" 0, VO, WB), [Id "x" 0], [])) ] )
-  , ( (Id "x" 0, VO, [], []) -- x$ -> < x_1 , O$_1\x  >
-    , BL
-      [ GV (VR (Id "x" 0, VO, WD "1"))
-      , GL (LV (VR (Id "O" 0, VO, WD "1"), [Id "x" 0], [])) ] ) } )
+@Xdef.scE:
+( [ VSC
+    (GV (VR (Id "E" 0, VE, WS)))
+    ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+      , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } )
+    Everything
+    Everything ]
+, {} )
+@Xdef.sca:
+( [ VSC
+    (GV (VR (Id "a" 0, VP, WS)))
+    ( {} )
+    Everything
+    ( Listed
+      ( { GV (VR (Id "s" 0, VO, WB))
+        , GV (VR (Id "s" 0, VO, WA)) } ) ) ]
+, {} )
+@Xdef.sc:
+( [ VSC
+    (GV (VR (Id "E" 0, VE, WS)))
+    ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+      , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } )
+    Everything
+    Everything ]
+, {} )
 
+@Xdef.sca:
+( [ VSC
+    (GV (VR (Id "a" 0, VP, WS)))
+    ( {} )
+    Everything
+    ( Listed
+      ( { GV (VR (Id "s" 0, VO, WB))
+        , GV (VR (Id "s" 0, VO, WA)) } ) ) ]
+, {} )
+@Xdef.scE:
+( [ VSC
+    (GV (VR (Id "E" 0, VE, WS)))
+    ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+      , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } )
+    Everything
+    Everything ]
+, {} )
+@Xdef.sc:
+( [ VSC
+    (GV (VR (Id "E" 0, VE, WS)))
+    ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+      , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } )
+    Everything
+    Everything
+  , VSC
+    (GV (VR (Id "a" 0, VP, WS)))
+    ( {} )
+    Everything
+    ( Listed
+      ( { GV (VR (Id "s" 0, VO, WB))
+        , GV (VR (Id "s" 0, VO, WA)) } ) ) ]
+, {} )

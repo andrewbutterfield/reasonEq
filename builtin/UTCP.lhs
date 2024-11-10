@@ -429,8 +429,8 @@ cjXXComp = ( "X" -.- "X" -.- "comp"
                  (mkSeq a b) 
                  (sR1 `sunion` sR2) 
                  ((sN1 `sdiff` sR2) `sunion` sN2) )
-             ,    areUTCPAtomic (map StdVar [vb])
-               .: areUTCPAtomic (map StdVar [va])
+             ,    areUTCPAtomic (map StdVar [va])
+               .: areUTCPAtomic (map StdVar [vb])
                .: areUTPStcObs  (map StdVar [vE1,vE2,vR1,vR2,vN1,vN2]) 
                ) )
 \end{code}

@@ -3,18 +3,6 @@
 ## URGENT
 
 
-`areUTPStcObs (map StdVar [vE,vR,vN] ) .: isUTCPAtomic  (StdVar va)`
-is not adding in second component!
-
-We find that `O$,O$'∉E  .:  s,s'⊇ₐ` results in `O$,O$'∉E`
-whereas `s,s'⊇ₐ .: O$,O$'∉E` results in `s,s'⊇ₐ, O$,O$'∉E`.
-
-So `sc1 .: sc2` is not equal to `sc2 .: sc1` in general.
-
-Also `s,s'⊇ₐx .: s,s'⊇ₐy` equals `s,s'⊇ₐx` for any `x`,`y`.
-
- 
-
 ### Next in Line
 
 

@@ -11,7 +11,7 @@ module SideCond (
 , VarSideConds(..)
 , termVar, disjointFrom, coveredBy, coveredDynamic
 , mkVSC
-, vscTrue, disjTrue, covByTrue
+, vscTrue, disjTrue, covByTrue, isTrueVSC
 , vscVSet
 , disjfrom, coveredby, dyncovered, ucoveredby, udyncovered
 , SideCond, scTrue, isTrivialSC
@@ -225,6 +225,8 @@ coveredDynamic (VSC gv vsD uvsC uvsCd)  =  uvsCd
 disjTrue = S.empty
 covByTrue = Everything
 vscTrue gv = VSC gv disjTrue covByTrue covByTrue
+isTrueVSC (VSC _ vsD Everything Everything)  =  S.null vsD
+isTrueVSC _                                  =  False
 \end{code}
 
 We need a smart builder here to handle all being true:
@@ -636,10 +638,11 @@ with match bindings.
 mrgTVarCondLists :: MonadFail m 
                  => [VarSideConds] -> [VarSideConds] -> m [VarSideConds]
 mrgTVarCondLists vscs1 []  =  return vscs1
-mrgTVarCondLists [] vscs2  =  return vscs2
 mrgTVarCondLists (vsc:vscs1) vscs2
-     = do vscs2' <- mrgVarConds vsc vscs2 
-          mrgTVarCondLists vscs1 vscs2'
+  | isTrueVSC vsc  =  mrgTVarCondLists vscs1 vscs2
+  | otherwise = do 
+      vscs2' <- mrgVarConds vsc vscs2 
+      mrgTVarCondLists vscs1 vscs2'
 \end{code}
 
 \subsection{Merging Term Variable and Freshness Side-Conditions}
@@ -667,8 +670,8 @@ cvr (Listed vs)  =  vs
 mkSideCond :: MonadFail m 
            => [VarSideConds] -> VarSet -> m SideCond
 mkSideCond vscs fvs
- = do vscs' <-  mrgTVarCondLists [] vscs
-      mrgTVarFreshConditions fvs vscs'
+ = do vscs' <-  mrgTVarCondLists vscs []
+      mrgTVarFreshConditions fvs $ filter (not . isTrueVSC) vscs'
 \end{code}
 
 
@@ -688,9 +691,9 @@ mrgSideCond (vscs1,fvs1) (vscs2,fvs2)
 
 mrgSideConds :: MonadFail m => [SideCond] -> m SideCond
 mrgSideConds []        = return ([],S.empty)
--- mrgSideConds [sc]      =  return sc
-mrgSideConds (sc:scs)  =  do scs' <- mrgSideConds scs ; mrgSideCond sc scs'
-
+mrgSideConds (sc:scs)
+  | isTrivialSC sc  =  mrgSideConds scs
+  | otherwise       =  do scs' <- mrgSideConds scs ; mrgSideCond sc scs'
 \end{code}
 
 \subsection{Side-Condition Operators}
@@ -699,10 +702,10 @@ We want some shorthands for assembling side-conditions,
 that are also ``total'',
 in that they return \texttt{SideCond} rather than \texttt{m SideCond}.
 \begin{code}
-(.:) :: SideCond -> SideCond -> SideCond
-sc1 .: sc2 = fromJust $ mrgSideCond sc1 sc2
 mrgscs :: [SideCond] -> SideCond
 mrgscs = fromJust . mrgSideConds
+(.:) :: SideCond -> SideCond -> SideCond
+sc1 .: sc2 = mrgscs [sc1,sc2]
 \end{code}
 \textbf{
 These are unsafe and should only be used for the definition of 

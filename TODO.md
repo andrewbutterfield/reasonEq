@@ -2,6 +2,9 @@
 
 ## URGENT
 
+In `instantiateSC` we can't use `concat vscss'` 
+as it breaks the `gv` ordering that is relied upo by most `SideCond` code.
+
 
 ### Next in Line
 

@@ -365,10 +365,7 @@ lvCovBy _ _ = False
 \newpage
 \subsubsection{Checking DynamicCoverage $V \supseteq_a g$}
 
-We note that if $g$ is not dynamic, then the condition is trivially true.
-\begin{eqnarray*}
-   \lnot\isdyn(g)  && \true
-\end{eqnarray*}
+
 We first check that all of $V$ is dynamic:
 \begin{eqnarray*}
    \exists g_i \in V \bullet \lnot\isdyn(g_i) && \false
@@ -393,8 +390,7 @@ Similarly, $T \supseteq z$ could also be true.
 \begin{code}
 dynCvrgCheck :: MonadFail m => GenVar -> UVarSet -> m (UVarSet)
 
-dynCvrgCheck gv _ | not (isDynGVar gv)  =  return covByTrue  -- trivially
-dynCvrgCheck gv Everything                 =  return covByTrue
+dynCvrgCheck gv Everything  =  return covByTrue
 dynCvrgCheck gv jvsCd@(Listed vsCd)
   | notAllDyn  =  report "tvar dyncover fails (static)"
 --  | otherwise  = covByCheck gv S.empty $ S.toList vsCd
@@ -639,12 +635,11 @@ with match bindings.
 \begin{code}
 mrgTVarCondLists :: MonadFail m 
                  => [VarSideConds] -> [VarSideConds] -> m [VarSideConds]
-mrgTVarCondLists vscs1 [] = return vscs1
-mrgTVarCondLists vscs1 (VSC _ vsD Everything Everything:vscs2)
-  | S.null vsD  =  mrgTVarCondLists vscs1 vscs2
-mrgTVarCondLists vscs1 (vsc:vscs2)
-     = do vscs1' <- mrgVarConds vsc vscs1
-          mrgTVarCondLists vscs1' vscs2
+mrgTVarCondLists vscs1 []  =  return vscs1
+mrgTVarCondLists [] vscs2  =  return vscs2
+mrgTVarCondLists (vsc:vscs1) vscs2
+     = do vscs2' <- mrgVarConds vsc vscs2 
+          mrgTVarCondLists vscs1 vscs2'
 \end{code}
 
 \subsection{Merging Term Variable and Freshness Side-Conditions}

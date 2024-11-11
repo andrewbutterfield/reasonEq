@@ -1816,17 +1816,12 @@ vlShrinkPatnMatch sctxt@(_,bc,bw) (bind,gamma,ell)
 We follow a similar pattern to variable-list matching.
 First apply any bindings we have, and then try to match what is left.
 The key difference here, obviously, is that order does not matter.
-\textbf{and we expect list-variables, if known, to be known as variable-sets,
-not lists (Really?). Why not interpet a list as a set --- simples!}
 \begin{code}
 vsMatch :: (MonadPlus mp, MonadFail mp) => [VarTable] -> Binding -> CBVS -> PBVS
         -> VarSet -> VarSet -> mp Binding
--- vsC `subset` cbvs && vsP `subset` pbvc
-vsMatch vts bind cbvs pbvc vsC vsP
-  = -- vlMatch vts bind cbvs pbvc (S.toList vsC) (S.toList vsP)
-    -- `mplus`
-    do (vsC',vsP') <- applyBindingsToSets bind vsC vsP
-       vsFreeMatch vts bind cbvs pbvc vsC' vsP'
+vsMatch vts bind cbvs pbvc vsC vsP = do
+  (vsC',vsP') <- applyBindingsToSets vts bind vsC vsP
+  vsFreeMatch vts bind cbvs pbvc vsC' vsP'
 \end{code}
 
 \subsection{Applying Bindings to Sets}
@@ -1834,44 +1829,44 @@ vsMatch vts bind cbvs pbvc vsC vsP
 \begin{code}
 applyBindingsToSets
   :: (MonadPlus mp, MonadFail mp)
-  => Binding -> VarSet -> VarSet -> mp (VarSet,VarSet)
-applyBindingsToSets bind vsC vsP
- = applyBindingsToSets' bind [] vsC $ S.toList vsP
+  => [VarTable] -> Binding -> VarSet -> VarSet -> mp (VarSet,VarSet)
+applyBindingsToSets vts bind vsC vsP
+ = applyBindingsToSets' vts bind [] vsC $ S.toList vsP
 
 applyBindingsToSets'
   :: (MonadPlus mp, MonadFail mp)
-  => Binding -> VarList -> VarSet -> VarList -> mp (VarSet,VarSet)
+  => [VarTable] -> Binding -> VarList -> VarSet -> VarList -> mp (VarSet,VarSet)
 \end{code}
 
 Pattern list (set) empty, return the leftovers
 \begin{code}
-applyBindingsToSets' bind vlP vsC [] = return (vsC,S.fromList vlP)
+applyBindingsToSets' vts bind vlP vsC [] = return (vsC,S.fromList vlP)
 \end{code}
 
 When the first pattern variable is standard:
 \begin{code}
-applyBindingsToSets' bind vlP' vsC (gP@(StdVar vP):vlP)
+applyBindingsToSets' vts bind vlP' vsC (gP@(StdVar vP):vlP)
  = case lookupVarBind bind vP of
-    Nothing -> applyBindingsToSets' bind (gP:vlP') vsC vlP
+    Nothing -> applyBindingsToSets' vts bind (gP:vlP') vsC vlP
     Just (BindTerm _) -> fail "vsMatch: pattern var already bound to term."
     Just (BindVar vB)
      -> let gB = StdVar vB in
         if gB `insideS` vsC
-        then applyBindingsToSets' bind vlP' (S.delete gB vsC) vlP
+        then applyBindingsToSets' vts bind vlP' (S.delete gB vsC) vlP
         else fail "vsMatch: std-pattern var's binding not in candidate set."
 \end{code}
 
 \newpage
 When the first pattern variable is a list-variable:
 \begin{code}
-applyBindingsToSets' bind vlP' vsC (gP@(LstVar lvP):vlP)
- = case pdbg "aBTS'.lookupLstBind" $ lookupLstBind (pdbg "aBTS'.bind" bind) (pdbg "abTS'.lvP" lvP) of
-    Nothing -> applyBindingsToSets' bind (gP:vlP') vsC vlP
-    Just (BindSet vsB) -> checkBinding vsB
-    Just (BindList vlB) -> checkBinding $ S.fromList vlB
+applyBindingsToSets' vts bind vlP' vsC (gP@(LstVar lvP):vlP)
+ = case lookupLstBind bind lvP of
+    Nothing -> applyBindingsToSets' vts bind (gP:vlP') vsC vlP
+    Just (BindSet vsB) -> checkBinding vts vsB
+    Just (BindList vlB) -> checkBinding vts $ S.fromList vlB
     Just (BindTLVs tlvs)
       | all isVar ts
-         -> checkBinding
+         -> checkBinding vts
             $ S.fromList (map (StdVar . theVar) ts ++ map LstVar lvs)
       | otherwise
           -> fail "vsMatch: list-variable bound to at least one non-Var term"
@@ -1881,13 +1876,17 @@ applyBindingsToSets' bind vlP' vsC (gP@(LstVar lvP):vlP)
         lvs :: [ListVar]
         lvs = lvsOf tlvs
   where
-    checkBinding vsB
-       =  if (pdbg "aBTS'.vsBS" vsBS) `withinS` (pdbg "aBTS'.vsCS" vsCS)
-          then applyBindingsToSets' bind vlP' (vsCS `removeS` vsBS) vlP
-          else fail "vsMatch: pattern list-var's binding not in candidate set."
+    checkBinding vts vsB
+      | vsBS `withinS` vsCS
+        = applyBindingsToSets' vts bind vlP' (vsCS `removeS` vsBS) vlP
+      | vsBS `withinS` vsCSx
+        = applyBindingsToSets' vts bind vlP' (vsCSx `removeS` vsBS) vlP
+      | otherwise
+        = fail "vsMatch: pattern list-var's binding not in candidate set."
        where
-         vsBS = subsumeS $ pdbg "aBTS'.vsB" vsB
-         vsCS = subsumeS $ pdbg "aBTS'.vsC" vsC
+         vsBS = subsumeS vsB
+         vsCS = subsumeS vsC
+         vsCSx = mapVToverVarSet vts vsCS
 \end{code}
 
 \newpage

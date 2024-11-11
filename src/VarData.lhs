@@ -160,10 +160,10 @@ re-compute this.
 Static list-variables can match any variable list or set.
 \begin{code}
 data LstVarMatchRole -- ListVar Matching Roles
- = KL VarList        -- Known Variable-List, all of which are themselves known
+ = KL VarList        -- Known Variable-List (all known?)
       [Variable]     -- full expansion
       Int            -- length of full expansion
- | KS VarSet         -- Known Variable-Set, all of which are themselves known
+ | KS VarSet         -- Known Variable-Set (all known?)
       (Set Variable) -- full expansion
       Int            -- size of full expansion
  | AL                -- Abstract Known Variable-List

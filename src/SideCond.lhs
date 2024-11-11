@@ -18,7 +18,8 @@ module SideCond (
 , onlyFreshSC -- , onlyInvolving, onlyFreshOrInvolved
 -- , scGVars
 , scVarSet
-, mrgVarConds, mrgSideCond, mrgSideConds, mkSideCond
+, mrgVarConds, joinVarConds, concatVarConds
+, mrgSideCond, mrgSideConds, mkSideCond
 , scDischarge
 , isFloatingVSC
 , notin, covers, dyncover, fresh
@@ -530,6 +531,22 @@ mrgSameGVSC (VSC gv vsD1 uvsC1 uvsCd1) (VSC _ vsD2 uvsC2 uvsCd2)
       uvsC'  =  uvsC1  `uintsct` uvsC2
       uvsCd' =  uvsCd1 `uintsct` uvsCd2
     in vscCheck (VSC gv vsD' uvsC' uvsCd')
+\end{code}
+
+Finally, something to merge lists (and lists of lists) of VSCs:
+\begin{code}
+joinVarConds :: MonadFail m 
+             => [VarSideConds] -> [VarSideConds] -> m [VarSideConds]
+joinVarConds vscs1 [] = return vscs1
+joinVarConds vscs1 (vsc2:vscs2) = do
+  vscs1' <- mrgVSC vsc2 vscs1
+  joinVarConds vscs1' vscs2
+concatVarConds :: MonadFail m => [[VarSideConds]] -> m [VarSideConds]
+concatVarConds [] = return []
+concatVarConds [vscs] = return vscs
+concatVarConds (vscs1:vscs2:vscss) = do
+  vscs' <- joinVarConds vscs1 vscs2
+  concatVarConds (vscs':vscss)
 \end{code}
 
 \newpage

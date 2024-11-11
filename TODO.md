@@ -26,6 +26,45 @@ Discharged Law S.C. = ls_1∉N1, ls_1∉R1, ls_1∉ls
 
 Now we need to discharge: `ls_1∉N1, ls_1∉R1, ls_1∉ls`.
 
+```
+ “;_def”   (P ; Q) ≡ (∃ O$_0  • P[O$_0/O$'] ∧ Q[O$_0/O$]) 
+           O$,O$'⊇ₐP, O$,O$'⊇ₐQ, fresh:O$_0
+
+SC O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, 
+   s,s'⊇ₐa, s,s'⊇ₐb
+
+(E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1 ; (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2
+   = 'match-lhs ;_def@[]'
+(∃ O$_1  • ((E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1)[O$_1/O$'] 
+         ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$])
+```
+We'd expect `fresh O$_1` to be added here.
+
+In fact, a successful s.c. discharge can have remaining fresh variable conditions,
+and does in the case of `;_def`.
+
+```
+(E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1 ; (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2
+ O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb
+Match against `;_def'[1] OK
+Binding: 
+{ ;  ⟼ ;
+, P  ⟼ (E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1
+, Q  ⟼ (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2
+, 0  ⟼ 0
+, O$  ⟼ ⟨O$⟩ 
+}
+Instantiated Law = (∃ O$_0  • ((E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$'] 
+                            ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_0/O$])
+Instantiated Law S.C. 
+ = O$,O$'⊇ₐE1, O$,O$'⊇ₐE2, O$,O$'⊇ₐN1, O$,O$'⊇ₐN2, O$,O$'⊇ₐR1, O$,O$'⊇ₐR2, 
+   O$,O$'⊇ₐa, O$,O$'⊇ₐb, O$,O$'⊇ₐls, O$,O$'⊇ₐls', fresh:O$_0
+Goal S.C. = O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, 
+            s,s'⊇ₐa, s,s'⊇ₐb
+Discharged Law S.C. = fresh:O$_0
+```
+Here s.c. `fresh:O$_0` disappears, and we end up with `O$_1`.
+
 
 ### Next in Line
 

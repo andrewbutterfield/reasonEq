@@ -655,6 +655,7 @@ with match bindings.
 mrgTVarCondLists :: MonadFail m 
                  => [VarSideConds] -> [VarSideConds] -> m [VarSideConds]
 mrgTVarCondLists vscs1 []  =  return vscs1
+mrgTVarCondLists [] vscs2  =  return vscs2
 mrgTVarCondLists (vsc:vscs1) vscs2
   | isTrueVSC vsc  =  mrgTVarCondLists vscs1 vscs2
   | otherwise = do 
@@ -911,6 +912,11 @@ O \cup O' \supseteq V &\discharges& O_m \disj V \text{, for any }m
 This is subsumed by the
 $C_G \supseteq V \discharges D_L \disj V $
 discharge rule further below.
+
+Another case is $\lst O,\lst O' \disj N \implies ls_1 \disj N$,
+given that $ls \in \lst O$. 
+We cannot immediately assume it's true as the antecedent doesn't prevent
+$ls_1 \in N$. However, if $ls_1$ is fresh, this will be the case.
 
 \begin{code}
 vscDischarge obsv (VSC gv vsDG uvsCG uvsCdG) (VSC _ vsDL uvsCL uvsCdL)

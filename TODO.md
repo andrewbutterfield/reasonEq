@@ -5,27 +5,26 @@
 Issue with one-point rule
 
 ```
-@aBTS'.bind:
-BD
-( { ( (Id "P" 0, VP), BT (C ... ) )
-  , ( (Id "and" 0, VO), BV (VR (Id "and" 0, VO, WS)) ) }
-, {}
-, { ( (Id "e" 0, VE, [], []), BX [Right ... (Id "union" 0) ...] ) 
-  , ( (Id "x" 0, VO, [], []), BX [ Right ... Id "ls" 0, VO, WD "1".. ] ) 
-  } )
-@abTS'.lvP: LV (VR (Id "x" 0, VO, WS), [], [])
-@aBTS'.lookupLstBind:
-Just( BX [ Right  (V (TC (Id "P" 0) [TG (Id "LE" 0)]) 
-                     (VR (Id "ls" 0, VO, WD "1"))) ] )
-@aBTS'.vsB: { GV (VR (Id "ls" 0, VO, WD "1")) }
-@aBTS'.vsBS: { GV (VR (Id "ls" 0, VO, WD "1")) }
-@aBTS'.vsC: { GL (LV (VR (Id "O" 0, VO, WD "1"), [], [])) }
-@aBTS'.vsCS: { GL (LV (VR (Id "O" 0, VO, WD "1"), [], [])) }
----
-vsMatch: pattern list-var's binding not in candidate set.
+(∃ O$_1  • ls_1 = ls \ R1 ∪ N1 ∧ ((E1 ⊆ ls ∧ a[O$_1/O$']) 
+         ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ ls' = ls_1 \ R2 ∪ N2)))
+ O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, 
+ s,s'⊇ₐa, s,s'⊇ₐb
+Focus = []
+Match against `exists_one_point'[1] OK
+Binding: 
+{ P  ⟼ (E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ ls' = ls_1 \ R2 ∪ N2)
+, ∧  ⟼ ∧
+, e$  ⟼ ⟨ls \ R1 ∪ N1⟩
+, x$  ⟼ ⟨ls_1⟩
+, y$  ⟼ {s_1} 
+}
+Instantiated Law = (∃ s_1  • ((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ ls' = ls_1 \ R2 ∪ N2))[ls \ R1 ∪ N1/ls_1])
+Instantiated Law S.C. = ls_1∉N1, ls_1∉R1, ls_1∉ls
+Goal S.C. = O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb
+Discharged Law S.C. = ls_1∉N1, ls_1∉R1, ls_1∉ls
 ```
-We have `vsBS withinS vsCS` being false, 
-but if we expanded vsCS contents it wuld be true (`ls_1` is in `O$_1`).
+
+Now we need to discharge: `ls_1∉N1, ls_1∉R1, ls_1∉ls`.
 
 
 ### Next in Line

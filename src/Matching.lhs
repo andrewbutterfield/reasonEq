@@ -1815,9 +1815,9 @@ vlShrinkPatnMatch sctxt@(_,bc,bw) (bind,gamma,ell)
 
 We follow a similar pattern to variable-list matching.
 First apply any bindings we have, and then try to match what is left.
-The key difference here, obviously, is that order does not matter,
-and we expect list-variables, if known, to be known as variable-sets,
-not lists.
+The key difference here, obviously, is that order does not matter.
+\textbf{and we expect list-variables, if known, to be known as variable-sets,
+not lists (Really?). Why not interpet a list as a set --- simples!}
 \begin{code}
 vsMatch :: (MonadPlus mp, MonadFail mp) => [VarTable] -> Binding -> CBVS -> PBVS
         -> VarSet -> VarSet -> mp Binding
@@ -1861,10 +1861,11 @@ applyBindingsToSets' bind vlP' vsC (gP@(StdVar vP):vlP)
         else fail "vsMatch: std-pattern var's binding not in candidate set."
 \end{code}
 
+\newpage
 When the first pattern variable is a list-variable:
 \begin{code}
 applyBindingsToSets' bind vlP' vsC (gP@(LstVar lvP):vlP)
- = case lookupLstBind bind lvP of
+ = case pdbg "aBTS'.lookupLstBind" $ lookupLstBind (pdbg "aBTS'.bind" bind) (pdbg "abTS'.lvP" lvP) of
     Nothing -> applyBindingsToSets' bind (gP:vlP') vsC vlP
     Just (BindSet vsB) -> checkBinding vsB
     Just (BindList vlB) -> checkBinding $ S.fromList vlB
@@ -1881,12 +1882,12 @@ applyBindingsToSets' bind vlP' vsC (gP@(LstVar lvP):vlP)
         lvs = lvsOf tlvs
   where
     checkBinding vsB
-       =  if vsBS `withinS` vsCS
+       =  if (pdbg "aBTS'.vsBS" vsBS) `withinS` (pdbg "aBTS'.vsCS" vsCS)
           then applyBindingsToSets' bind vlP' (vsCS `removeS` vsBS) vlP
           else fail "vsMatch: pattern list-var's binding not in candidate set."
        where
-         vsBS = subsumeS vsB
-         vsCS = subsumeS vsC
+         vsBS = subsumeS $ pdbg "aBTS'.vsB" vsB
+         vsCS = subsumeS $ pdbg "aBTS'.vsC" vsC
 \end{code}
 
 \newpage

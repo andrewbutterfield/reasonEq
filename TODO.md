@@ -2,11 +2,35 @@
 
 ## URGENT
 
-In `instantiateSC` we can't use `concat vscss'` 
-as it breaks the `gv` ordering that is relied upo by most `SideCond` code.
+Issue with one-point rule
+
+```
+@aBTS'.bind:
+BD
+( { ( (Id "P" 0, VP), BT (C ... ) )
+  , ( (Id "and" 0, VO), BV (VR (Id "and" 0, VO, WS)) ) }
+, {}
+, { ( (Id "e" 0, VE, [], []), BX [Right ... (Id "union" 0) ...] ) 
+  , ( (Id "x" 0, VO, [], []), BX [ Right ... Id "ls" 0, VO, WD "1".. ] ) 
+  } )
+@abTS'.lvP: LV (VR (Id "x" 0, VO, WS), [], [])
+@aBTS'.lookupLstBind:
+Just( BX [ Right  (V (TC (Id "P" 0) [TG (Id "LE" 0)]) 
+                     (VR (Id "ls" 0, VO, WD "1"))) ] )
+@aBTS'.vsB: { GV (VR (Id "ls" 0, VO, WD "1")) }
+@aBTS'.vsBS: { GV (VR (Id "ls" 0, VO, WD "1")) }
+@aBTS'.vsC: { GL (LV (VR (Id "O" 0, VO, WD "1"), [], [])) }
+@aBTS'.vsCS: { GL (LV (VR (Id "O" 0, VO, WD "1"), [], [])) }
+---
+vsMatch: pattern list-var's binding not in candidate set.
+```
+We have `vsBS withinS vsCS` being false, 
+but if we expanded vsCS contents it wuld be true (`ls_1` is in `O$_1`).
 
 
 ### Next in Line
+
+Trivial quantifiers are being shown even when disabled
 
 
 The following laws in UTP base seem to match anything:

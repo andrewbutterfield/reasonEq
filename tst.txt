@@ -1,15 +1,14 @@
-@Xdef.scE:
-([VSC (GV (VR (Id "E" 0,VE,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]) Everything Everything],fromList [])
-@Xdef.sca:
-([VSC (GV (VR (Id "a" 0,VP,WS))) (fromList []) Everything (Listed (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]))],fromList [])
-@Xdef.sc:
-([VSC (GV (VR (Id "E" 0,VE,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]) Everything Everything],fromList [])
-
-
-@Xdef.sca:
-([VSC (GV (VR (Id "a" 0,VP,WS))) (fromList []) Everything (Listed (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]))],fromList [])
-@Xdef.scE:
-([VSC (GV (VR (Id "E" 0,VE,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]) Everything Everything],fromList [])
-@Xdef.sc:
-([VSC (GV (VR (Id "E" 0,VE,WS))) (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]) Everything Everything,VSC (GV (VR (Id "a" 0,VP,WS))) (fromList []) Everything (Listed (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]))],fromList [])
-
+@aBTS'.bind:
+BD (fromList [((Id "P" 0,VP),BT (C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "subseteq" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E1" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB))],S (TF TB (TG (Id "B" 0))) (V (TF TB (TG (Id "B" 0))) (VR (Id "a" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))],C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "subseteq" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E2" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WD "1"))],S (TF TB (TG (Id "B" 0))) (V (TF TB (TG (Id "B" 0))) (VR (Id "b" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WB),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))],C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WA)),C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "union" 0) [C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WD "1")),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R2" 0,VE,WS))],V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N2" 0,VE,WS))]]]])),((Id "and" 0,VO),BV (VR (Id "and" 0,VO,WS)))],fromList [],fromList [((Id "e" 0,VE,[],[]),BX [Right (C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "union" 0) [C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R1" 0,VE,WS))],V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N1" 0,VE,WS))])]),((Id "x" 0,VO,[],[]),BX [Right (V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WD "1")))])])
+@abTS'.lvP:
+LV (VR (Id "x" 0,VO,WS),[],[])
+@aBTS'.lookupLstBind:
+Just (BX [Right (V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WD "1")))])
+@aBTS'.vsB:
+fromList [GV (VR (Id "ls" 0,VO,WD "1"))]
+@aBTS'.vsBS:
+fromList [GV (VR (Id "ls" 0,VO,WD "1"))]
+@aBTS'.vsC:
+fromList [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))]
+@aBTS'.vsCS:
+fromList [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))]

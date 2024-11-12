@@ -685,11 +685,7 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
                     -- knownVs is all variables in entire goal and sequent
                     let (fbind,fresh)
                                    = generateFreshVars knownVs freshneeded sbind
-                    let newLocalASC = fst scD
-                    newLocalSC <- mkSideCond newLocalASC S.empty
-                    -- Why do we ignore `fresh`?
-                    -- Because we have made it so above?
-                    scC' <- mrgSideCond scCX newLocalSC
+                    let scC' = addFreshVars fresh scCX
                     brepl  <- instantiate ictxt fbind repl
                     asn' <- mkAsn conjpart (conjSC liveProof)
                     return ( focus_ ((setTZ brepl tz),seq')

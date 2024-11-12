@@ -499,8 +499,6 @@ Finally, try to discharge the instantiated side-condition:
                              , "fbind:\n"
                              , trBinding fbind
                              ]
-     where ss = S.elems $ S.map theSubscript $ S.filter isDuring
-                          $ S.map gvarWhen $ mentionedVars tC
 \end{code}
 
 Done.
@@ -890,23 +888,21 @@ basicMatch :: MatchClass
             -> TermSC  -- candidate assertion
             -> Term       -- sub-part of law being matched
             -> Matches
-basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
+basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) replP asnC@(tC,scC) partsP
   =  do bind <- match vts tC partsP
-        kbind <- bindKnown vts bind repl
-        fbind <- bindFloating vts kbind repl
+        kbind <- bindKnown vts bind replP
+        fbind <- bindFloating vts kbind replP
         let ictxt = mkInsCtxt vts scC
         scPinC <- instantiateSC ictxt fbind scP
-        scD <- scDischarge (getDynamicObservables vts) scC scPinC
+        scD@(_,freshD) <- scDischarge (getDynamicObservables vts) scC scPinC
+        let sc' =  addFreshVars freshD scC
 
         if all isFloatingVSC (fst scD)
-          then do mrepl <- instantiate ictxt fbind repl
+          then do mrepl <- instantiate ictxt fbind replP
                   return $ MT n (unwrapASN asn) (chkPatn mc partsP)
-                              fbind repl scC scPinC mrepl
+                              fbind replP sc' scPinC mrepl
           else fail "undischargeable s.c."
   where
-    ss = S.elems $ S.map theSubscript $ S.filter isDuring
-                 $ S.map gvarWhen $ mentionedVars tC
-
     chkPatn MatchEqvLHS (Var _ v)
       | lookupVarTables vts v == UnknownVar  =  MatchEqvVar 1
     chkPatn MatchEqvRHS (Var _ v)

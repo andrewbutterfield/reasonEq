@@ -22,6 +22,7 @@ module SideCond (
 , mrgSideCond, mrgSideConds, mkSideCond
 , scDischarge
 , isFloatingVSC
+, addFreshVars
 , notin, covers, dyncover, fresh
 , findGenVarInSC, findAllGenVar, findCoveredGenVar, findDynCvrdGenVar
 , mentionedBy
@@ -1117,6 +1118,14 @@ hasFloatingM (Listed vs) = hasFloating vs
 % autoOrNullInAll unbound = all (tolerateAutoOrNull unbound)
 % \end{code}
 
+\section{Add Generated Fresh Variables}
+
+Later proof steps need to know this has happened\dots
+
+\begin{code}
+addFreshVars :: VarSet -> SideCond -> SideCond
+addFreshVars freshlynew (vscs,freshv) = (vscs,freshlynew `S.union` freshv)
+\end{code}
 
 
 \newpage
@@ -1213,6 +1222,7 @@ gv `mentionedBy` (vsc@(VSC gv' _ _ uvsCd):vscs)
           _         ->  gv `mentionedBy` vscs
   | otherwise       =   gv `mentionedBy` vscs
 \end{code}
+
 
 We convert variable-sets into ordered lists of lists,
 and then work through them in lock-step.

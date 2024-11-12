@@ -859,7 +859,8 @@ Produce:
 \\ --- Law side-condition in Goal space $SCL'$
 \\ --- Side-condition discharge outcome $sc$
 \\ --- Replacement Predicate in Goal space $C'$
-\\ --- Goal with updated focus $G(C')$
+\\ --- Goal with updated focus $G(C')$ 
+\\ --- Goal side-condition $SCG$ extended with any fresh variables introduced in $sc$.
 
 Process:
 \begin{eqnarray*}
@@ -868,6 +869,7 @@ Process:
 \\ sc &=& discharge(SCG\implies SCL')
 \\ C' &=&\beta'(C)
 \\ G(C') &=& G(C)[C'/C]
+\\ sc' &=& SCG \cup freshvars(sc)
 \end{eqnarray*}
 
 Summary:

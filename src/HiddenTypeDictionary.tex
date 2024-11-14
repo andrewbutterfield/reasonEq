@@ -1,0 +1,82 @@
+\chapter{Hidden Types}
+
+Copyright  Andrew Buttefield \copyright\ 2024
+
+LICENSE: BSD3, see file LICENSE at reasonEq root
+
+
+Here we keep copies of internal DS definitions
+for easy reference when looking at \h{Show} output
+
+Format maps a (short) Data Constructor and its associated Types to the corresponding Type Name.
+
+\begin{code}
+DC ty1 ... tyn -->  TypeName
+\end{code}
+
+
+\begin{code}
+VO  -->  VarClass
+VE  -->  VarClass
+VP   -->  VarClass
+
+WS  -->  VarWhen
+WB  -->  VarWhen
+WD Subscript  -->  VarWhen
+WA  -->  VarWhen
+WT   -->  VarWhen
+
+GV Variable -->  GenVar
+GL ListVar   -->  GenVar
+
+T  -->  Type
+TV Identifier  -->  Type
+TC Identifier [Type]  -->  Type
+TA Identifier [(Identifier,[Type])]  -->  Type
+TF Type Type  -->  Type
+TG Identifier -->  Type
+TB   -->  Type
+
+SN TermSubs LVarSubs   -->  Substn
+
+VB Bool = VI Integer   -->  Value
+VB Bool = VI Integer   -->  Value
+
+K Type Value  -->  Term
+V Type Variable  -->  Term
+C Type Subable Identifier [Term]  -->  Term
+B Type Identifier VarSet Term  -->  Term
+L Type Identifier VarList Term  -->  Term
+X Identifier Term  -->  Term
+S Type Term Substn -->  Term
+I Type Subable Identifier Subable Identifier [ListVar]  -->  Term
+ET Type   -->  Term
+
+KC Term = KV Type = KG = KI Variable = UV   -->  VarMatchRole
+KC Term = KV Type = KG = KI Variable = UV   -->  VarMatchRole
+KC Term = KV Type = KG = KI Variable = UV   -->  VarMatchRole
+KC Term = KV Type = KG = KI Variable = UV   -->  VarMatchRole
+KC Term = KV Type = KG = KI Variable = UV   -->  VarMatchRole
+
+KL VarList [Variable] Int  -->  LstVarMatchRole
+KS VarSet (Set Variable) Int  -->  LstVarMatchRole
+AL  -->  LstVarMatchRole
+AS  -->  LstVarMatchRole
+UL   -->  LstVarMatchRole
+
+DL [Identifier] [Identifier] [Identifier] Int  -->  DynamicLstVarRole
+DS (Set Identifier) (Set Identifier) (Set Identifier) Int --> DynamicLstVarRole
+DAL  -->  DynamicLstVarRole
+DAS  -->  DynamicLstVarRole
+UD   -->  DynamicLstVarRole
+
+BI Identifier  -->  VarBind
+BV Variable   -->  VarBind
+BT Term  -->  VarBind
+BLV ListVar   -->  VarBind
+
+
+BL  VarList  -->  LstVarBind
+BS  VarSet  -->  LstVarBind
+BX  [LVarOrTerm]   -->  LstVarBind
+\end{code}

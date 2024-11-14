@@ -129,7 +129,7 @@ pattern GivenType i = TG i
 pattern BottomType = TB
 
 bool  = TG $ jId $ "B"
-arbpred = TF TB bool
+arbpred = TF TB bool -- top of the predicate subtype lattice (see below)
 
 -- isPtype t if t has shape  t1 -> t2 -> ... -> tn -> bool
 -- which is really t1 -> (t2 -> (... -> (tn -> bool)...))
@@ -182,37 +182,38 @@ $$
  ~\land~
  \sigma_n \subseteq_T \tau_n
 $$
-
-We want a pattern of type $\bot \fun \Bool$
-to match a candidate of type $t \fun (\Set t \fun \Bool)$.
-We might try asking is the candidate a subtype of the pattern?
-$$ t \fun (\Set t \fun \Bool)  \subseteq \bot \fun \Bool$$
-
-\textbf{NEED TO FIX THIS BELOW}
+In the type system here, an expression of type bool,
+has its type represented by $\Bool$,
+while predicates have a type of the form $t1\fun \dots tn \fun \Bool$.
+For subtyping below these should be treated as the same,
+so we extend our relation by adding:
+\begin{eqnarray*}
+   \Bool &\subseteq_T& \bot\fun\Bool
+\\ \tau \fun \Bool &\subseteq_T& \bot\fun\Bool
+\\ \tau_1 \fun \tau_2 \fun \Bool &\subseteq_T& \bot\fun\Bool
+\\  &\vdots
+\end{eqnarray*}
 \begin{code}
+
+
+
 isSubTypeOf :: Type -> Type -> Bool
-isSubTypeOf (TF tf1 ta1) (TF TB ta2)   =  lasttype ta1 `isSTOf` ta2
-isSubTypeOf t1           t2            =  t1 `isSTOf` t2
+isSubTypeOf t1 t2
+  | lasttype t1 == bool && t2 == arbpred  =  True
+isSubTypeOf t1  t2                        =  t1 `isSTOf` t2
 
 isSTOf :: Type -> Type -> Bool
--- normal subtyping
 -- true outcomes first, to catch t==t case
-
-_       `isSTOf` T        =  True
-T       `isSTOf` _        =  False
-TB      `isSTOf` _        =  True
-_       `isSTOf` TB       =  False
-
-_       `isSTOf` (TV _)   =  True
-(TG i1) `isSTOf` (TG i2)  =  i1 == i2
-
-(TC i1 ts1) `isSTOf` (TC i2 ts2) | i1==i2 = ts1 `areSTOf` ts2
-(TA i1 fs1) `isSTOf` (TA i2 fs2) | i1==i2 = fs1 `areSFOf` fs2
-
+_            `isSTOf` T        =  True
+T            `isSTOf` _        =  False
+TB           `isSTOf` _        =  True
+_            `isSTOf` TB       =  False
+(TC i1 ts1)  `isSTOf` (TC i2 ts2) | i1==i2 = ts1 `areSTOf` ts2
+(TA i1 fs1)  `isSTOf` (TA i2 fs2) | i1==i2 = fs1 `areSFOf` fs2
 (TF tf1 ta1) `isSTOf` (TF tf2 ta2)  
-                             =  tf2 `isSTOf` tf1 && ta1 `isSTOf` ta2
-
-_ `isSTOf` _       = False
+                               =  tf2 `isSTOf` tf1 && ta1 `isSTOf` ta2
+(TG i1)      `isSTOf` (TG i2)  =  i1 == i2
+_            `isSTOf` _        = False
 \end{code}
 
 
@@ -228,7 +229,7 @@ _        `areSTOf` _         =  False
 areSFOf :: [(Identifier,[Type])] -> [(Identifier,[Type])] -> Bool
 [] `areSFOf` []  =  True
 ((i1,ts1):fs1) `areSFOf` ((i2,ts2):fs2)
- | i1 == i2             =  ts1 `areSTOf` ts2 && fs1 `areSFOf` fs2
+ | i1 == i2      =  ts1 `areSTOf` ts2 && fs1 `areSFOf` fs2
 _ `areSFOf` _    =  False
 \end{code}
 

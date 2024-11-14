@@ -75,6 +75,29 @@ Types are a restrictive form of terms,
 whose main reason here is to prevent large numbers of spurious matches
 occurring with expressions.
 
+We have the following type expressions:
+\begin{description}
+  \item [Arbitrary] $\top$, most general, or \emph{universal} (a.k.a. ``top'').
+  \item [Variables] $n$.
+  \item [Constructors] $n(\tau,\dots)$.
+  \item [Algebraic] $n\seqof{n(\tau,\dots)}$, can be recursive.
+  \item [Given] $\gg g$.
+  \item [Bottom] $\bot$, the empty type.
+\end{description}
+
+
+\begin{eqnarray*}
+   t,TC,DT,DC &\in& Name
+\\ \tau \in Type &::=& \top 
+                  \mid t 
+                  \mid TC(\tau,\dots)
+                  \mid DT\seqof{DC(\tau,\dots)}
+                  \mid \tau\fun\tau
+                  \mid \gg g 
+                  \mid \bot
+\end{eqnarray*}
+
+
 \begin{code}
 data Type -- most general types first
  = T  -- arbitrary type -- top of sub-type relation
@@ -93,7 +116,7 @@ isAtmType (TG _)  =  True
 isAtmType TB      =  True
 \end{code}
 The ordering of data-constructors here is important,
-as type-matching relies on it.
+as type-matching relies on it. \textbf{How?}
 
 
 \begin{code}
@@ -120,30 +143,52 @@ isEType           =  not . isPType
 
 \subsection{Sub-Typing}
 
+We say that $\tau_1$ is a subtype of $\tau_2$ ($\tau_1\subseteq_T\tau_2$)
+if every value in $\tau_1$ is also in $\tau_2$.
+This means we can use a value of type $\tau_1$ whenever a value of type $\tau_2$ is expected.
+We can immediately identify the following laws:
+\begin{eqnarray*}
+   \tau &\subseteq_T& \top
+\\ t_1 &\subseteq_T& t_2 ~~\where~~ t_1=t_2
+\\ TC(\tau_1,\dots,\tau_n) 
+   &\subseteq_T& 
+   TC(\tau'_1,\dots,\tau'_n) ~~\where~~ \forall i . \tau_i \subseteq_T \tau'_i, 
+\\ DT(\seqof{TC_1(\dots),\dots,TC_n(\dots)})
+   &\subseteq_T& 
+   DT(\seqof{TC_1(\dots'),\dots,TC_n(\dots'),\dots}) 
+\\ && \where~~ \forall i . TC_i(\dots) \subseteq_T TC_i(\dots') 
+\\ \tau_{a_1} \fun \tau_{r_1} &\subseteq_T& \tau_{a_2} \fun \tau_{r_2}
+   ~~\where~~ \tau_{a_2} \subseteq_T \tau_{a_1} 
+            \land
+            \tau_{r_1} \subseteq_T \tau_{r_2}
+\\ \gg{g}_1 &\subseteq_T& \gg{g}_2 ~~\where~~ \gg{g}_1=\gg{g}_2
+\\ \bot &\subseteq_T& \tau
+\end{eqnarray*}
+Note that $t$, $TC()$, $DT\seqof{}$, and $\gg{g}$ are mutually incomparable,
+and also the contravariance of the function argument types.
+The contravariance extends to higher-order functions as follows:
+$$
+\sigma_1 \fun \dots \sigma_{n-1} \fun \sigma_n
+~\subseteq_T~
+\tau_1 \fun \dots \tau_{n-1} \fun \tau_n
+$$
+is equivalent to:
+$$
+ \tau_1 \subseteq_T \sigma_1 
+ ~\land~
+ \dots
+ ~\land~
+ \tau_{n-1} \subseteq_T \sigma_{n-1}
+ ~\land~
+ \sigma_n \subseteq_T \tau_n
+$$
+
 We want a pattern of type $\bot \fun \Bool$
 to match a candidate of type $t \fun (\Set t \fun \Bool)$.
 We might try asking is the candidate a subtype of the pattern?
 $$ t \fun (\Set t \fun \Bool)  \subseteq \bot \fun \Bool$$
-However a simple contravariant test won't work.
-as it as it requires:
-$$ \bot \subseteq t 
-   \quad\land\quad
-   (\Set t \fun \Bool)  \subseteq \Bool
-$$
-The first test always succeeds, but the second does not in this case.
-What we want is that any function-type whose "last" input is boolean,
-can match a pattern of type $\bot \fun \Bool$.
-We can generalise $\Bool$ to be any type.
 
-So, given a function $\bot \fun t$ we define "sub-typing" as follows:
-$$
-t_1 \fun t_2 \fun \dots \fun t_n \fun t'
-\subseteq
-\bot \fun t, \qquad \IF \quad t' \subseteq t
-$$
-Here neither $t$ nor $t'$ are function types.
-
-
+\textbf{NEED TO FIX THIS BELOW}
 \begin{code}
 isSubTypeOf :: Type -> Type -> Bool
 isSubTypeOf (TF tf1 ta1) (TF TB ta2)   =  lasttype ta1 `isSTOf` ta2

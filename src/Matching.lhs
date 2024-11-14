@@ -159,8 +159,11 @@ tMatch vts bind cbvs pbvs tC tP
       then tMatch' vts bind cbvs pbvs tC tP
       else fail $ unlines'
             [ "tMatch: incompatible types!"
+            , "tC = "++show tC
             , "kC = "++show kC
+            , "tP = "++show tP
             , "kP = "++show kP
+            , "bind = "++show bind
             ]
 \end{code}
 

@@ -500,7 +500,7 @@ rangeEq :: (Show d, Show r, Ord d, Eq r, MonadFail m)
 rangeEq nAPI d binding r r0
  | r == r0    =  return r
  | otherwise  =  fail $ unlines
-                  [ (nAPI++": already bound differently.")
+                  [ (nAPI++": already bound differently(1).")
                   , "d = " ++ show d
                   , "old r = " ++ show r0
                   , "new r = " ++ show r
@@ -1241,10 +1241,10 @@ If none of the above, then we expect full equality.
 rangeEqvLSSub nAPI lv binding vc1 vc2
  | vc1 == vc2  =  return vc1
  | otherwise  =  fail $ unlines
-                  [ (nAPI++": already bound differently.")
+                  [ (nAPI++": already bound differently(2).")
                   , "lv = " ++ show lv
-                  , "vc1 = " ++ show vc1
-                  , "vc2 = " ++ show vc2
+                  , "new vc1 = " ++ show vc1
+                  , "old vc2 = " ++ show vc2
                   , "bind:\n" ++ show binding
                   ]
 \end{code}

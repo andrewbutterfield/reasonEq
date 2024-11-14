@@ -4,13 +4,73 @@
 
 Issue with one-point rule
 
+
+Seems to work with `tm`:
+
+```
+proof: tm 1 exists_one_point
+Match against `exists_one_point'[1] OK
+Binding: 
+{ P  ⟼ (E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ ls' = ls_1 \ R2 ∪ N2)
+, ∧  ⟼ ∧
+, e$  ⟼ ⟨ls \ R1 ∪ N1⟩
+, x$  ⟼ ⟨ls_1⟩
+, y$  ⟼ {s_1} }
+Instantiated Law = (∃ s_1  • ((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ ls' = ls_1 \ R2 ∪ N2))[ls \ R1 ∪ N1/ls_1])
+Instantiated Law S.C. = ls_1∉N1, ls_1∉R1, ls_1∉ls
+Goal S.C. = O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb
+Discharged Law S.C. = ls_1∉N1, ls_1∉R1, ls_1∉ls
+```
+
+Looking add using `and_subst` law rather than `s` command:
+```
+(∃ O$_1  • 
+    ((E1 ⊆ ls ∧ a)[O$_1/O$'] ∧ (ls' = ls \ R1 ∪ N1)[O$_1/O$']) 
+    ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$])
+ O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb
+Focus = [1,1,1]
+Match against `and_subst'[1] failed!
+try match failed
+(E1 ⊆ ls ∧ a)[O$_1/O$'] :: (P ∧ Q)[e$/x$]
+lnm[parts]=and_subst[1]
+tP=(P ∧ Q)[e$/x$] ≡ P[e$/x$] ∧ Q[e$/x$]
+partsP=(P ∧ Q)[e$/x$]
+replP=P[e$/x$] ∧ Q[e$/x$]
+tC=(E1 ⊆ ls ∧ a)[O$_1/O$']
+scC=O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb
+---
+tMatch: incompatible types!
+tC = C (TG (Id "B" 0)) 
+       True 
+       (Id "subseteq" 0) 
+       [ V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E1" 0,VE,WS))
+       , V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB))
+       ]
+kC = TG (Id "B" 0)
+tP = V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))
+kP = TF TB (TG (Id "B" 0))
+bind = BD ( fromList [((Id "and" 0,VO),BV (VR (Id "and" 0,VO,WS)))]
+          , fromList []
+          , fromList [] ) 
+```
+We have  `(E1 ⊆ ls ∧ a) :: B` and `P :: _|_ -> B`,
+with a binding so far of `{and -> and}`.
+
+**Pattern `and` is an observation variable while replacement `and` is static!!!**
+
+
+
 ```
 (∃ O$_1  • ls_1 = ls \ R1 ∪ N1 ∧ ((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ ls' = ls_1 \ R2 ∪ N2)))
  O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1
 Match against `exists_one_point'[1] failed!
 try match failed
 
-ls_1 = ls \ R1 ∪ N1 ∧ ((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ ls' = ls_1 \ R2 ∪ N2)) :: (∃ x$,y$  • (x$=e$) ∧ P)
+ls_1 = ls \ R1 ∪ N1 
+∧ 
+((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ ls' = ls_1 \ R2 ∪ N2)) 
+:: 
+(∃ x$,y$  • (x$=e$) ∧ P)
 
 lnm[parts]=exists_one_point[1]
 tP=(∃ x$,y$  • (x$=e$) ∧ P) ≡ (∃ y$  • P[e$/x$])
@@ -26,7 +86,13 @@ vc2 = BS (fromList [])
 bind:
 fromList [((Id "x" 0,VO,[],[]),BS (fromList [])),((Id "y" 0,VO,[],[]),BS (fromList []))]
 ```
-
+This translates to
+```
+lv = x
+vc1 = ls_1 : P LE
+vc2 = {}
+bind [ x$ |-> {}, y$ |-> {} ]
+```
 
 
 ### Next in Line

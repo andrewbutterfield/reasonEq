@@ -56,7 +56,9 @@ bind = BD ( fromList [((Id "and" 0,VO),BV (VR (Id "and" 0,VO,WS)))]
 We have  `(E1 ⊆ ls ∧ a) :: B` and `P :: _|_ -> B`,
 with a binding so far of `{and -> and}`.
 
-**Pattern `and` is an observation variable while replacement `and` is static!!!**
+**Pattern `and` is an observation variable, should be a predvar!!!**
+
+**Should the type of `E1 ⊇ ls` be Boolean, or a Predicate (function from interpretation to Boolean)?**
 
 
 

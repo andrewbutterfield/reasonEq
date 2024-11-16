@@ -4,21 +4,41 @@
 
 Issue with one-point rule
 
+What we observe instrumenting `scDischarge`:
+
 ```
-(∃ O$_1  • ls_1 = ls \ R1 ∪ N1 ∧ ((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ (ls' = ls \ R2 ∪ N2)[O$_1/O$])))
- O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb
-Focus = []
+@cnsqVSC: s_1∉N1, ls_1∉R1, ls_1∉ls   **OK**
+@cnsqSC': s_1∉N1, ls_1∉R1, ls_1∉ls
+@cnsqFv1 -- not shown
+@anteVSC: O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2,
+          s,s'⊇ₐa, s,s'⊇ₐb
+@obsv: ls,ls',s,s'
+@vsc': s_1∉N1, ls_1∉R1, ls_1∉ls
+@anteFvs: O$_1{ GL (LV (VR (Id "O" 0, VO, WD "1"), [], [])) }
+@cnsqFvs2: {}
+```
 
-Target (RHS): 
-E2 ∪ R1 \ N1 = Ø ∧ X(E1 ∪ E2 \ N1,a ; b,R1 ∪ R2,N1 \ R2 ∪ N2)
 
-
-proof: tm 1 exists_one_point
+```
+(∃ O$_1  • 
+    ls_1 = ls \ R1 ∪ N1 ∧ 
+    ((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ ls' = ls_1 \ R2 ∪ N2)))
+ O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, 
+ s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1
 Match against `exists_one_point'[1] OK
-Binding: { P  ⟼ (E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ (ls' = ls \ R2 ∪ N2)[O$_1/O$]), ∧  ⟼ ∧, e$  ⟼ ⟨ls \ R1 ∪ N1⟩, x$  ⟼ ⟨ls_1⟩, y$  ⟼ {s_1} }
-Instantiated Law = (∃ s_1  • ((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ (ls' = ls \ R2 ∪ N2)[O$_1/O$]))[ls \ R1 ∪ N1/ls_1])
+Binding: { 
+  P  ⟼ (E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ ls' = ls_1 \ R2 ∪ N2)
+  , ∧  ⟼ ∧
+  , e$  ⟼ ⟨ls \ R1 ∪ N1⟩
+  , x$  ⟼ ⟨ls_1⟩
+  , y$  ⟼ {s_1} }
+Instantiated Law = 
+(∃ s_1  • 
+   ((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ ls' = ls_1 \ R2 ∪ N2))
+   [ls \ R1 ∪ N1/ls_1]
+)
 Instantiated Law S.C. = ls_1∉N1, ls_1∉R1, ls_1∉ls
-Goal S.C. = O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb
+Goal S.C. = O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1
 Discharged Law S.C. = ls_1∉N1, ls_1∉R1, ls_1∉ls
 ```
 

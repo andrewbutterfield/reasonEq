@@ -782,12 +782,12 @@ We first simplfiy the consequence
 
 \begin{code}
 scDischarge obsv anteSC@(anteVSC,anteFvs) cnsqSC@(cnsqVSC,cnsqFvs)
-  = do cnsqVSC' <- vscMrg $ map (knownObsDischarge obsv) cnsqVSC
-       let cnsqSC' = (cnsqVSC',cnsqFvs)
+  = do cnsqVSC' <- vscMrg $ map (knownObsDischarge obsv) $ pdbg "cnsqVSC" cnsqVSC
+       let cnsqSC' = (pdbg "cnsqSC'" cnsqVSC',pdbg "cnsqFvs1" cnsqFvs)
        if isTrivialSC cnsqSC' then return scTrue
        else if isTrivialSC anteSC then return cnsqSC'
-       else do vsc' <- scDischarge' obsv anteVSC cnsqVSC'
-               freshDischarge obsv anteFvs cnsqFvs vsc'
+       else do vsc' <- scDischarge' (pdbg "obsv" obsv) (pdbg "anteVSC" anteVSC) cnsqVSC'
+               freshDischarge obsv (pdbg "anteFvs" anteFvs) (pdbg "cnsqFvs2" cnsqFvs) $ pdbg "vsc'" vsc'
     
 vscMrg [] = return []
 vscMrg (vsc:vscs) = mrgVarConds vsc vscs    

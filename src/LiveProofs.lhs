@@ -1014,9 +1014,8 @@ dispLiveProof maxm liveProof
  = unlines $
        shProof liveProof
        ++
-       ( " ..."
-         : displayMatches maxm (mtchCtxts liveProof) (matches liveProof)
-         : [ underline "           "
+       ( displayMatches maxm (mtchCtxts liveProof) (matches liveProof)
+         : [ "-----------" -- underline "           "
            , dispSeqZip (fPath liveProof) (conjSC liveProof) (focus liveProof)
            , "" ]
        )
@@ -1051,18 +1050,12 @@ displayMatches maxm mctxts matches
   where vts = concat $ map thd3 mctxts
 
 shMatch vts (i, mtch)
- = show i ++ " : "++ ldq ++ green (truelawname $ mName mtch) ++ rdq
-   ++ " "
-   ++ (bold $ blue $ trTerm 0 $ mRepl mtch)
+ = show i ++ " : "++ ldq ++ red (truelawname $ mName mtch) ++ rdq
    ++ " " ++ shMClass (mClass mtch)
-   ++ "\n  " ++ shSCImplication (mLocSC mtch) (mLawSC mtch)
+   ++ lnindent ++ (bold $ blue $ trTerm 0 $ mRepl mtch)
+   ++ lnindent ++ shSCImplication (mLocSC mtch) (mLawSC mtch)
  where
-    -- bind = mBind mtch
-    -- repl = mRepl mtch
-    -- arepl = case bindFloating vts bind repl of
-    --           But msgs   ->  But msgs
-    --           Yes abind  ->  instantiate abind repl
-    -- (_,lsc) = mAsn mtch
+    lnindent = "\n    "
     showRepl (But msgs) = unlines ("auto-instantiate failed!!":msgs)
     showRepl (Yes brepl) = trTerm 0 brepl
 
@@ -1098,8 +1091,8 @@ shMClass MatchAll         =  green "[*]"
 shMClass MatchEqvLHS      =  green ("["++_eqv++"lhs]")
 shMClass MatchEqvRHS      =  green ("["++_eqv++"rhs]")
 shMClass (MatchEqv is)    =  green ("["++_eqv++show is++"]")
-shMClass MatchAnte        =  green ("[* "++_imp++" ]")
-shMClass MatchCnsq        =  green ("["++_imp++"  *]")
+shMClass MatchAnte        =  green ("[*"++_imp++" ]")
+shMClass MatchCnsq        =  green ("["++_imp++" *]")
 shMClass (MatchEqvVar i)  =  red ("[trivial!"++show i++"]")
 \end{code}
 

@@ -4,22 +4,52 @@
 
 Issue with one-point rule
 
+Problem 1: we should not produce `ls_1∉ls` during sc construction/instantiation.
+It is vacuously true.
+During discharge we need to explicitly compare variables
+with the `obsv` values to see if we can discharge them.
+So, for instance, `O$_n` being known as fresh,
+and `O$={..,x,..}` or `O$'={..,x',..}` implies that `x_n` is disjoint from all term variables
+(not under a substitution `[x_n/x]` or `[x_n/x']).
+
 What we observe instrumenting `scDischarge`:
 
 ```
 @cnsqVSC: s_1∉N1, ls_1∉R1, ls_1∉ls   **OK**
-@cnsqSC': s_1∉N1, ls_1∉R1, ls_1∉ls
+@cnsqVSC': s_1∉N1, ls_1∉R1, ls_1∉ls   **OK**
 @cnsqFv1 -- not shown
 @anteVSC: O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2,
           s,s'⊇ₐa, s,s'⊇ₐb
 @obsv: ls,ls',s,s'
 @vsc': s_1∉N1, ls_1∉R1, ls_1∉ls
-@anteFvs: O$_1{ GL (LV (VR (Id "O" 0, VO, WD "1"), [], [])) }
+@anteFvs: O$_1
 @cnsqFvs2: {}
 ```
 
+```
+obsv = {ls,ls',s,s'}
+scDischarge'
+    [O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2,
+          s,s'⊇ₐa, s,s'⊇ₐb]
+    [s_1∉N1, ls_1∉R1, ls_1∉ls]
+  = "gvG < gvL "
+scDischarge'
+    []
+    [s_1∉N1, ls_1∉R1, ls_1∉ls]
+  = "2nd patn"
+[s_1∉N1, ls_1∉R1, ls_1∉ls]
+```
+This is OK. We need freshness of `O$_1$ here to discharge.
 
 ```
+obsv = {ls,ls',s,s'}
+freshDischarge 
+  {O$_1} 
+  {} 
+  [s_1∉N1, ls_1∉R1, ls_1∉ls]
+```
+
+
 (∃ O$_1  • 
     ls_1 = ls \ R1 ∪ N1 ∧ 
     ((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ ls' = ls_1 \ R2 ∪ N2)))

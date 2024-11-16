@@ -232,6 +232,10 @@ isTrueVSC _                                  =  False
 \end{code}
 
 We need a smart builder here to handle all being true:
+\textbf{NOTE: this should do elementary checking, 
+so that VSCs like $ls_1 \disj ls$ gets turned into \h{disjTrue}.
+These emerge as a result of match binding instantiations.
+}
 \begin{code}
 mkVSC :: GenVar -> VarSet -> UVarSet -> UVarSet -> Maybe VarSideConds
 mkVSC gv vsD uvsC uvsCd
@@ -256,6 +260,7 @@ vscVSet vsc
 \end{code}
 
 We provide some builders when only one of the three conditions is involved:
+\textbf{NOTE: should we use mkVSC here? Types will change}
 \begin{code}
 disjfrom, coveredby, dyncovered :: GenVar -> VarSet -> VarSideConds
 gv `disjfrom`   vs  =  VSC gv vs       covByTrue covByTrue
@@ -782,12 +787,12 @@ We first simplfiy the consequence
 
 \begin{code}
 scDischarge obsv anteSC@(anteVSC,anteFvs) cnsqSC@(cnsqVSC,cnsqFvs)
-  = do cnsqVSC' <- vscMrg $ map (knownObsDischarge obsv) $ pdbg "cnsqVSC" cnsqVSC
-       let cnsqSC' = (pdbg "cnsqSC'" cnsqVSC',pdbg "cnsqFvs1" cnsqFvs)
+  = do cnsqVSC' <- vscMrg $ map (knownObsDischarge obsv) cnsqVSC
+       let cnsqSC' = (cnsqVSC',cnsqFvs)
        if isTrivialSC cnsqSC' then return scTrue
        else if isTrivialSC anteSC then return cnsqSC'
-       else do vsc' <- scDischarge' (pdbg "obsv" obsv) (pdbg "anteVSC" anteVSC) cnsqVSC'
-               freshDischarge obsv (pdbg "anteFvs" anteFvs) (pdbg "cnsqFvs2" cnsqFvs) $ pdbg "vsc'" vsc'
+       else do vsc' <- scDischarge' obsv anteVSC cnsqVSC'
+               freshDischarge obsv anteFvs cnsqFvs vsc'
     
 vscMrg [] = return []
 vscMrg (vsc:vscs) = mrgVarConds vsc vscs    
@@ -1023,7 +1028,7 @@ freshDischarge :: MonadFail m
                -> m SideCond
 freshDischarge obsv anteFvs cnsqFvs vsc
   = do vsc' <- freshDischarge' obsv anteFvs vsc
-       return (vsc' , cnsqFvs S.\\ anteFvs )
+       return (pdbg "vsc'" vsc' , cnsqFvs S.\\ anteFvs )
 \end{code}
 
 \begin{code}
@@ -1075,10 +1080,10 @@ freshTVarDischarge obsv gF (VSC gv vsD uvsC uvsCd)
   | vsc' == vscTrue gv  =  return []
   | otherwise  =  return [vsc']
   where
-    uvsgF = Listed gF
-    vsD' = vsD `S.difference` gF
-    uvsC' = uvsC `udiff` uvsgF
-    uvsCd' = if gv `S.member` obsv
+    uvsgF = Listed $ pdbg "gF" gF
+    vsD' = (pdbg "vsD" vsD) `S.difference` gF
+    uvsC' = (pdbg "uvSC" uvsC) `udiff` uvsgF
+    uvsCd' = if (pdbg "gv" gv) `S.member` obsv
              then uvsCd `udiff` uvsgF
              else Everything
     vsc' = VSC gv vsD' uvsC' uvsCd'

@@ -231,17 +231,48 @@ isTrueVSC (VSC _ vsD Everything Everything)  =  S.null vsD
 isTrueVSC _                                  =  False
 \end{code}
 
-We need a smart builder here to handle all being true:
-\textbf{NOTE: this should do elementary checking, 
-so that VSCs like $ls_1 \disj ls$ gets turned into \h{disjTrue}.
-These emerge as a result of match binding instantiations.
-}
+We need a smart builder here:
+we first compare \h{gv} with the three sets to see
+if we can deduce truth/falsity here and now;
+then we check to see if everything has reduced to true.
+We do checks for evident truth. 
+We don't look for evident falsity because we have no way to indicate that here.
 \begin{code}
 mkVSC :: GenVar -> VarSet -> UVarSet -> UVarSet -> Maybe VarSideConds
 mkVSC gv vsD uvsC uvsCd
-  = if vsD == disjTrue && uvsC == covByTrue && uvsCd == covByTrue
+  = if (pdbg "***.vsD'" vsD') == disjTrue && uvsC' == covByTrue && uvsCd' == covByTrue
     then Nothing -- denotes True
-    else Just $ VSC gv vsD uvsC uvsCd
+    else Just $ VSC gv vsD' uvsC' uvsCd'
+  where
+    vsD'   =  checkSC obviousDisj   (pdbg "@@@.gv" gv) $ pdbg "@@@.vsD" vsD
+    uvsC'  =  checkSCu obviousCovBy gv uvsC
+    uvsCd' =  checkSCu obviousDCov  gv uvsCd
+    checkSC obvious  gv vs          = S.filter (not . obvious gv) vs
+    checkSCu obvious gv Everything  = Everything
+    checkSCu obvious gv (Listed vs) = Listed $ checkSC obvious gv vs
+\end{code}
+The idea is that we can deduce $g \mathcal R V$ if for all $g' \in V$,
+we can definitively deduce $g \mathcal R \setof{g'}$.
+In effect we return of all $g' \in V$ for which we cannot definitely assert that $\mathcal R$ holds.
+
+So, $\h{chk}_R~g~V = \h{filter}~(\lnot \circ (g\mathcal{R}))~V$.
+
+When can we deduce that $g \disj \setof{g'}$ is obviously true?
+\begin{code}
+obviousDisj (StdVar (Vbl i1 c1 w1)) (StdVar (Vbl i2 c2 w2))
+                     =  pdbg "VERDICT" ((pdbg "I1" i1) == (pdbg "I2" i2) && (pdbg "C1" c1) == (pdbg "C2" c2) && (pdbg "W1" w1) /= (pdbg "W2" w2))
+obviousDisj (LstVar (LVbl (Vbl i1 c1 w1) is1 js1))
+            (LstVar (LVbl (Vbl i2 c2 w2) is2 js2))
+                     =  i1 == i2 && c1 == c2 && w1 /= w2
+obviousDisj _ _      =  False
+\end{code}
+When can we deduce that $g \subseteq \setof{g'}$ is obviously true?
+\begin{code}
+obviousCovBy gv gv'  =  gv == gv' 
+\end{code}
+When can we deduce that $g \subseteq_a \setof{g'}$ is obviously true?
+\begin{code}
+obviousDCov gv gv'   =  isDynGVar gv  && gv == gv' 
 \end{code}
 
 
@@ -1028,7 +1059,7 @@ freshDischarge :: MonadFail m
                -> m SideCond
 freshDischarge obsv anteFvs cnsqFvs vsc
   = do vsc' <- freshDischarge' obsv anteFvs vsc
-       return (pdbg "vsc'" vsc' , cnsqFvs S.\\ anteFvs )
+       return (vsc' , cnsqFvs S.\\ anteFvs )
 \end{code}
 
 \begin{code}
@@ -1080,10 +1111,10 @@ freshTVarDischarge obsv gF (VSC gv vsD uvsC uvsCd)
   | vsc' == vscTrue gv  =  return []
   | otherwise  =  return [vsc']
   where
-    uvsgF = Listed $ pdbg "gF" gF
-    vsD' = (pdbg "vsD" vsD) `S.difference` gF
-    uvsC' = (pdbg "uvSC" uvsC) `udiff` uvsgF
-    uvsCd' = if (pdbg "gv" gv) `S.member` obsv
+    uvsgF = Listed gF
+    vsD' = vsD `S.difference` gF
+    uvsC' = uvsC `udiff` uvsgF
+    uvsCd' = if gv `S.member` obsv
              then uvsCd `udiff` uvsgF
              else Everything
     vsc' = VSC gv vsD' uvsC' uvsCd'

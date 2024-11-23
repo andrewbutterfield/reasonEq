@@ -686,10 +686,10 @@ instVSC :: MonadFail m
          -> m [VarSideConds]
 -- we ignore the vBless components for now
 instVSC insctxt fvsD@(vsD,_) fmvsC@(mvsC,_) fmvsCd@(mvsCd,_) gT 
-  = do let vscsD = gT `disjfrom`    vsD  
-       let vscsC = gT `ucoveredby`  mvsC 
-       let vscCd = gT `udyncovered` mvsCd 
-       return [vscsD,vscsC,vscCd]
+  = do let mvscsD = mkVSC gT vsD      covByTrue covByTrue
+       let mvscsC = mkVSC gT disjTrue mvsC      covByTrue
+       let mvscCd =  mkVSC gT disjTrue covByTrue mvsCd 
+       return $ catMaybes [mvscsD,mvscsC,mvscCd]
 \end{code}
 
 \subsection{Disjointedness}

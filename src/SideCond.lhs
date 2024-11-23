@@ -567,7 +567,7 @@ mrgSameGVSC (VSC gv vsD1 uvsC1 uvsCd1) (VSC _ vsD2 uvsC2 uvsCd2)
       vsD'   =  vsD1   `S.union` vsD2
       uvsC'  =  uvsC1  `uintsct` uvsC2
       uvsCd' =  uvsCd1 `uintsct` uvsCd2
-    in vscCheck (VSC gv vsD' uvsC' uvsCd')
+    in return $ mkVSC gv vsD' uvsC' uvsCd'
 \end{code}
 
 Finally, something to merge lists (and lists of lists) of VSCs:
@@ -967,7 +967,9 @@ vscDischarge obsv (VSC gv vsDG uvsCG uvsCdG) (VSC _ vsDL uvsCL uvsCdL)
         uvsCd'  <- ccDischarge obsv uvsCdG uvsCdL
         uvsCd'' <- dcDischarge obsv vsDG   uvsCd'
 
-        return $ VSC gv vsD''' uvsC'' (obsDischarge obsv gv uvsCd'')
+        case mkVSC gv vsD''' uvsC'' (obsDischarge obsv gv uvsCd'') of
+          Nothing   ->  return $ vscTrue gv
+          Just vsc  ->  return vsc
 \end{code}
 
 \newpage
@@ -1117,7 +1119,9 @@ freshTVarDischarge obsv gF (VSC gv vsD uvsC uvsCd)
     uvsCd' = if gv `S.member` obsv
              then uvsCd `udiff` uvsgF
              else Everything
-    vsc' = VSC gv vsD' uvsC' uvsCd'
+    vsc' = case mkVSC gv vsD' uvsC' uvsCd' of
+             Nothing   ->  vscTrue gv
+             Just vsc  ->  vsc
 \end{code}
 
 \newpage

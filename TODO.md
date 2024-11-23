@@ -4,71 +4,17 @@
 
 Issue with one-point rule
 
-Problem 1: we should not produce `ls_1∉ls` during sc construction/instantiation.
-It is vacuously true.
+Now all VSC are built using mkVSC, so `ls_1∉ls` no longer appears
 
-**changes to `mkVSC` should have stopped this!**
-
-**`mkVSC` does reduce `ls_1∉ls` to true (`Nothing`)**
-
-New tests confirm this.
-
-
-```
-obviousDisj (StdVar (Vbl i1 c1 w1)) (StdVar (Vbl i2 c2 w2))
-                     =  i1 == i2 && c1 == c2 && w1 /= w2
-```
-VSC (GV (VR (Id "ls" 0,VO,WB))) 
-    (fromList [GV (VR (Id "ls" 0,VO,WD "1"))]) 
-    Everything 
-    Everything
-```
-
-It's going astray somewhere!
+Current state of play:
 ```
 proof: tm 1 exists_one_point
-@@@@.vsD:
-fromList [GV (VR (Id "ls" 0,VO,WD "1"))]
-@@@@.gv:
-GV (VR (Id "N1" 0,VE,WS))
-@I1:
-Id "N1" 0
-@I2:
-Id "ls" 0
-@VERDICT:
-False
-@***.vsD':
-fromList [GV (VR (Id "ls" 0,VO,WD "1"))]
-@@@@.vsD:
-fromList [GV (VR (Id "ls" 0,VO,WD "1"))]
-@@@@.gv:
-GV (VR (Id "N1" 0,VE,WS))
-@I1:
-Id "N1" 0
-@I2:
-Id "ls" 0
-@VERDICT:
-False
-@***.vsD':
-fromList [GV (VR (Id "ls" 0,VO,WD "1"))]
-@@@@.vsD:
-fromList [GV (VR (Id "ls" 0,VO,WD "1"))]
-@@@@.gv:
-GV (VR (Id "R1" 0,VE,WS))
-@I1:
-Id "R1" 0
-@I2:
-Id "ls" 0
-@VERDICT:
-False
-@***.vsD':
-fromList [GV (VR (Id "ls" 0,VO,WD "1"))]
 Match against `exists_one_point'[1] OK
 Binding: { P  ⟼ (E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ ls' = ls_1 \ R2 ∪ N2), ∧  ⟼ ∧, e$  ⟼ ⟨ls \ R1 ∪ N1⟩, x$  ⟼ ⟨ls_1⟩, y$  ⟼ {s_1} }
 Instantiated Law = (∃ s_1  • ((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ ls' = ls_1 \ R2 ∪ N2))[ls \ R1 ∪ N1/ls_1])
-Instantiated Law S.C. = ls_1∉N1, ls_1∉R1, ls_1∉ls
+Instantiated Law S.C. = ls_1∉N1, ls_1∉R1
 Goal S.C. = O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1
-Discharged Law S.C. = ls_1∉N1, ls_1∉R1, ls_1∉ls
+Discharged Law S.C. = ls_1∉N1, ls_1∉R1
 ```
 
 

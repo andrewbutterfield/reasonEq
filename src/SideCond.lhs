@@ -240,11 +240,11 @@ We don't look for evident falsity because we have no way to indicate that here.
 \begin{code}
 mkVSC :: GenVar -> VarSet -> UVarSet -> UVarSet -> Maybe VarSideConds
 mkVSC gv vsD uvsC uvsCd
-  = if (pdbg "***.vsD'" vsD') == disjTrue && uvsC' == covByTrue && uvsCd' == covByTrue
+  = if vsD' == disjTrue && uvsC' == covByTrue && uvsCd' == covByTrue
     then Nothing -- denotes True
     else Just $ VSC gv vsD' uvsC' uvsCd'
   where
-    vsD'   =  checkSC obviousDisj   (pdbg "@@@.gv" gv) $ pdbg "@@@.vsD" vsD
+    vsD'   =  checkSC  obviousDisj  gv vsD
     uvsC'  =  checkSCu obviousCovBy gv uvsC
     uvsCd' =  checkSCu obviousDCov  gv uvsCd
     checkSC obvious  gv vs          = S.filter (not . obvious gv) vs
@@ -260,7 +260,7 @@ So, $\h{chk}_R~g~V = \h{filter}~(\lnot \circ (g\mathcal{R}))~V$.
 When can we deduce that $g \disj \setof{g'}$ is obviously true?
 \begin{code}
 obviousDisj (StdVar (Vbl i1 c1 w1)) (StdVar (Vbl i2 c2 w2))
-                     =  pdbg "VERDICT" ((pdbg "I1" i1) == (pdbg "I2" i2) && (pdbg "C1" c1) == (pdbg "C2" c2) && (pdbg "W1" w1) /= (pdbg "W2" w2))
+                     =  i1 == i2 && c1 == c2 && w1 /= w2
 obviousDisj (LstVar (LVbl (Vbl i1 c1 w1) is1 js1))
             (LstVar (LVbl (Vbl i2 c2 w2) is2 js2))
                      =  i1 == i2 && c1 == c2 && w1 /= w2

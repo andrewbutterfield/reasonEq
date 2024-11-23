@@ -1378,6 +1378,7 @@ tstWhatever sc = Just $ Just sc
 ils  = jId "ls" 
 vls = Vbl ils ObsV Before
 vls' = Vbl ils ObsV After
+vls1 = Vbl ils ObsV $ During "1"
 lexpr_t = GivenType $ jId "LE"
 ls_t = TypeCons (jId "P") [lexpr_t]
 o = jId "O"  
@@ -1400,7 +1401,13 @@ nNO = [gN] `notin` gO  -- but this is really gN notin fv(gO), gO is listvar
 
 tst_scChkDisjoint
  = testGroup "disjfrom  (no known vars)"
-    [ testCase "gv_a `disjoint` empty is True"
+    [ testCase "Definitely True: ls   `disj` ls'"
+       ( mkVSC (StdVar vls) (S.singleton $ StdVar vls') Everything Everything 
+         @?= Nothing )
+    , testCase "Definitely True: ls_1 `disj` ls"
+       ( mkVSC (StdVar vls1) (S.singleton $ StdVar vls) Everything Everything 
+         @?= Nothing )
+    , testCase "gv_a `disjoint` empty is True"
        ( vscCheck (disjfrom  gv_a S.empty) @?= tstTrue )
     , testCase "v_e `disjoint` empty is True"
        ( vscCheck (disjfrom  v_e S.empty) @?= tstTrue )

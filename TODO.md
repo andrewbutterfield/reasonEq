@@ -9,6 +9,11 @@ It is vacuously true.
 
 **changes to `mkVSC` should have stopped this!**
 
+**`mkVSC` does reduce `ls_1∉ls` to true (`Nothing`)**
+
+New tests confirm this.
+
+
 ```
 obviousDisj (StdVar (Vbl i1 c1 w1)) (StdVar (Vbl i2 c2 w2))
                      =  i1 == i2 && c1 == c2 && w1 /= w2

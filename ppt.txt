@@ -1,34 +1,5 @@
-@vsD:
-{ GV (VR (Id "ls" 0, VO, WD "1")) }
-@vsD:
-{ GV (VR (Id "ls" 0, VO, WD "1")) }
-@vsD:
-{ GV (VR (Id "ls" 0, VO, WD "1")) }
-@uvSC:
-Everything
-@gv:
-GV (VR (Id "N1" 0, VE, WS))
-@uvSC:
-Everything
-@gv:
-GV (VR (Id "R1" 0, VE, WS))
-@uvSC:
-Everything
-@gv:
-GV (VR (Id "ls" 0, VO, WB))
-@vsc':
-[ VSC
-  (GV (VR (Id "N1" 0, VE, WS)))
-  ( { GV (VR (Id "ls" 0, VO, WD "1")) } )
-  Everything
-  Everything
-, VSC
-  (GV (VR (Id "R1" 0, VE, WS)))
-  ( { GV (VR (Id "ls" 0, VO, WD "1")) } )
-  Everything
-  Everything
-, VSC
-  (GV (VR (Id "ls" 0, VO, WB)))
-  ( { GV (VR (Id "ls" 0, VO, WD "1")) } )
-  Everything
-  Everything ]
+@scC: O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, 
+      s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1
+@scP1:ls_1 disj N1, ls_1 disj R1
+@gDO(vts):  ls,ls',s,s'
+@scP2: ls_1 disj N1, ls_1 disj R1

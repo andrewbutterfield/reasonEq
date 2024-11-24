@@ -17,81 +17,18 @@ Goal S.C. = O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,
 Discharged Law S.C. = ls_1∉N1, ls_1∉R1
 ```
 
-
-
-
-
-
-During discharge we need to explicitly compare variables
-with the `obsv` values to see if we can discharge them.
-So, for instance, `O$_n` being known as fresh,
-and `O$={..,x,..}` or `O$'={..,x',..}` implies that `x_n` is disjoint from all term variables
-(not under a substitution `[x_n/x]` or `[x_n/x']).
-
-What we observe instrumenting `scDischarge`:
-
 ```
-@cnsqVSC: s_1∉N1, ls_1∉R1, ls_1∉ls   **OK**
-@cnsqVSC': s_1∉N1, ls_1∉R1, ls_1∉ls   **OK**
-@cnsqFv1 -- not shown
-@anteVSC: O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2,
-          s,s'⊇ₐa, s,s'⊇ₐb
-@obsv: ls,ls',s,s'
-@vsc': s_1∉N1, ls_1∉R1, ls_1∉ls
-@anteFvs: O$_1
-@cnsqFvs2: {}
+@gDO(vts):  ls,ls',s,s'
+@scC: O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, 
+      s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1
+@scP1:ls_1 disj N1, ls_1 disj R1
+-->
+@scP2: ls_1 disj N1, ls_1 disj R1
 ```
 
-```
-obsv = {ls,ls',s,s'}
-scDischarge'
-    [O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2,
-          s,s'⊇ₐa, s,s'⊇ₐb]
-    [s_1∉N1, ls_1∉R1, ls_1∉ls]
-  = "gvG < gvL "
-scDischarge'
-    []
-    [s_1∉N1, ls_1∉R1, ls_1∉ls]
-  = "2nd patn"
-[s_1∉N1, ls_1∉R1, ls_1∉ls]
-```
-This is OK. We need freshness of `O$_1$ here to discharge.
+We want `O$,O$'∉N1` and `ls_1∉N1` to transform the latter into True,
+because `O$⊇ls`.
 
-```
-obsv = {ls,ls',s,s'}
-freshDischarge 
-  {O$_1} 
-  {} 
-  [s_1∉N1, ls_1∉R1, ls_1∉ls]
-```
-
-
-(∃ O$_1  • 
-    ls_1 = ls \ R1 ∪ N1 ∧ 
-    ((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ ls' = ls_1 \ R2 ∪ N2)))
- O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, 
- s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1
-Match against `exists_one_point'[1] OK
-Binding: { 
-  P  ⟼ (E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ ls' = ls_1 \ R2 ∪ N2)
-  , ∧  ⟼ ∧
-  , e$  ⟼ ⟨ls \ R1 ∪ N1⟩
-  , x$  ⟼ ⟨ls_1⟩
-  , y$  ⟼ {s_1} }
-Instantiated Law = 
-(∃ s_1  • 
-   ((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ ls' = ls_1 \ R2 ∪ N2))
-   [ls \ R1 ∪ N1/ls_1]
-)
-Instantiated Law S.C. = ls_1∉N1, ls_1∉R1, ls_1∉ls
-Goal S.C. = O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1
-Discharged Law S.C. = ls_1∉N1, ls_1∉R1, ls_1∉ls
-```
-
-**Pattern `and` is an observation variable, should be a predvar!!!**
-
-**Should the type of `E1 ⊇ ls` be Boolean, or a Predicate (function from interpretation to Boolean)?** 
-*this no longer matters because `B`,`t1->B`,`t1->t2->B`,... are all viewed as subtypes of `bot->B`, a.k.a. `arbpred`.*
 
 
 ### Next in Line

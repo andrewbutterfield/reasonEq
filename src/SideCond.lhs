@@ -833,6 +833,16 @@ vscMrg (vsc:vscs) = mrgVarConds vsc vscs
 
 \subsection{Known Observable  Discharge}
 
+The intention when stating a side-condition of the form $v_d \rel \lst\ell_d$,
+where $v_d$ is a \emph{dynamic} observation variable with dynamicity $d$,
+$\rel$ typically ranges over $\disj$, $\subseteq$, and $\subseteq_a$,
+and $\lst\ell_d$ is a list-variable of the same dynamicity,
+is that it holds when we replace $d$ by any  different dynamicity (e.g., $e$):
+$$
+v_d \rel \lst\ell_d  \equiv \forall e \bullet v_e \rel \lst\ell_e
+$$
+
+
 \begin{code}
 knownObsDischarge :: VarSet -> VarSideConds -> VarSideConds
 knownObsDischarge obs ( VSC gv vsD uvsC uvsCd )
@@ -1031,7 +1041,7 @@ cdDischarge obsv (Listed vsCG) vsDL  =  return (vsCG `S.intersection` vsDL)
 \end{code}
 
 
-
+\newpage
 \subsection{Freshness Condition  Discharge}
 
 We have reduced our original problem down to:
@@ -1054,6 +1064,19 @@ $$
 $$
 where elements of $G_F$ can be used to satisfy some $\setof{D,C,Cd}_L$,
 resulting in modified versions $\setof{D',C',Cd'}_L$.
+
+\textbf{NOTE:}
+\textsf{
+We need to use freshness to show fresh-vars as being disjoint from
+any pre-existing ``sets``.
+For example, 
+$$
+\lst O,\lst O' \disj N \land x \in \lst O
+\land \fresh{\lst O_d}
+\implies
+x_d \disj N
+$$
+}
 
 \begin{code}
 freshDischarge :: MonadFail m 

@@ -270,6 +270,8 @@ When can we deduce that $g \subseteq \setof{g'}$ is obviously true?
 \begin{code}
 obviousCovBy gv gv'  =  gv == gv' 
 \end{code}
+
+\newpage
 When can we deduce that $g \subseteq_a \setof{g'}$ is obviously true?
 \begin{code}
 obviousDCov gv gv'   =  isDynGVar gv  && gv == gv' 
@@ -291,7 +293,6 @@ vscVSet vsc
 \end{code}
 
 We provide some builders when only one of the three conditions is involved:
-\textbf{NOTE: should we use mkVSC here? Types will change}
 \begin{code}
 disjfrom, coveredby, dyncovered :: GenVar -> VarSet -> VarSideConds
 gv `disjfrom`   vs  =  VSC gv vs       covByTrue covByTrue
@@ -304,7 +305,7 @@ gv `udyncovered` Everything    =  vscTrue gv
 gv `udyncovered` (Listed vs)  =  gv `dyncovered` vs
 \end{code}
 
-\newpage
+
 \subsection{Checking Atomic Sideconditions}
 
 What we have are relations $R$ between a general variable $g$
@@ -332,6 +333,7 @@ vscCheck (VSC gv vsD uvsC uvsCd)
 The key trick is to take \m{g ~R~ \setof{g_1,\dots,g_n}}
 and break it down into individual comparisons (\m{g ~R~ \setof{g_i}}).
 
+\newpage
 \subsubsection{Checking Disjoint $ V \disj g$}
 
 Here, checking \m{g \disj \setof{g_1,\dots,g_n}}
@@ -360,7 +362,7 @@ disjCheck gv vsd (gvd:gvs)
     bothd = isDynamic gvw && isDynamic gvdw
 \end{code}
 
-\newpage
+
 \subsubsection{Checking CoveredBy $V \supseteq g$}
 
 We may have \m{V} as the universal set, in which case  we return true.
@@ -771,6 +773,18 @@ builtins or tests.
 \newpage
 \section{Discharging Side-conditions}
 
+
+\textbf{
+  This whole section needs rework. 
+  In particular code like \h{knownObsDischarge} seems to assume that
+  the sets $C$ and $Cd$ coincide with $\lst O,\lst O'$.
+  This is not the case in general.
+  We also need to note that $\lst O' = (\lst O)'$ only for homogenous
+  relations.
+  Perhaps we should use freshness early to simplify things?
+  (e.g., $\fresh x_1 \land N \disj \lst O,\lst O' \implies x_1 \notin N$)
+}
+
 Here we simply check validity of $sc'_G \implies sc'_L$,
 where $sc'_G$ is the goal side-condition,
 and $sc'_L$ is the law side-condition translated into goal ``space''
@@ -830,7 +844,7 @@ vscMrg (vsc:vscs) = mrgVarConds vsc vscs
 \end{code}
 
 
-
+\newpage
 \subsection{Known Observable  Discharge}
 
 The intention when stating a side-condition of the form $v_d \rel \lst\ell_d$,
@@ -846,20 +860,28 @@ $$
 \begin{code}
 knownObsDischarge :: VarSet -> VarSideConds -> VarSideConds
 knownObsDischarge obs ( VSC gv vsD uvsC uvsCd )
-                    =   VSC gv vsD uvsC (obsDischarge obs gv uvsCd)
+                    =   VSC gv vsD uvsC (obsCdDischarge obs gv uvsCd)
 \end{code}
+
+Discharging coverage  ($C \supseteq V$).
+Here $V \notin C$ or else this would have collapsed to $\true$ earlier.
+We check if it is in $obs$, which is included the expansion of $C$.
+
+
 Discharging dynamic coverage  ($Cd \supseteq_a V$).
 Here $V \notin Cd$ or else this would have collapsed to $\true$ earlier.
 We check if it is in $obs$, which is the expansion of $Cd$.
 \begin{code}
-obsDischarge :: VarSet -> GenVar -> UVarSet -> UVarSet
-obsDischarge obsv gv uvsCd
+obsCdDischarge :: VarSet -> GenVar -> UVarSet -> UVarSet
+obsCdDischarge obsv gv uvsCd
   | gv `S.member` obsv  =  Everything
   | otherwise           =  uvsCd
 \end{code}
 
+Note that here we have not considered freshness, 
+which may produce further simplifications.
 
-
+\newpage
 \subsection{Term-Variable  Condition  Discharge}
 
 Now onto processing those ordered Term-Variable Side-Conditions:
@@ -977,7 +999,7 @@ vscDischarge obsv (VSC gv vsDG uvsCG uvsCdG) (VSC _ vsDL uvsCL uvsCdL)
         uvsCd'  <- ccDischarge obsv uvsCdG uvsCdL
         uvsCd'' <- dcDischarge obsv vsDG   uvsCd'
 
-        case mkVSC gv vsD''' uvsC'' (obsDischarge obsv gv uvsCd'') of
+        case mkVSC gv vsD''' uvsC'' (obsCdDischarge obsv gv uvsCd'') of
           Nothing   ->  return $ vscTrue gv
           Just vsc  ->  return vsc
 \end{code}

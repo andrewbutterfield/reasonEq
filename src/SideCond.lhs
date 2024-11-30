@@ -864,13 +864,28 @@ We first simplfiy the consequence
 
 \begin{code}
 scDischarge obsv anteSC@(anteVSC,anteFvs) cnsqSC@(cnsqVSC,cnsqFvs)
-  = do cnsqVSC' <- vscMrg $ map (knownObsDischarge obsv) cnsqVSC
+  = do let freshObs = obsv `S.union` instFreshObsV obsv anteFvs
+       cnsqVSC' <- vscMrg $ map (knownObsDischarge freshObs) cnsqVSC
        let cnsqSC' = (cnsqVSC',cnsqFvs)
        if isTrivialSC cnsqSC' then return scTrue
        else if isTrivialSC anteSC then return cnsqSC'
        else do vsc' <- scDischarge' obsv anteVSC cnsqVSC'
                freshDischarge obsv anteFvs cnsqFvs vsc'
     
+instFreshObsV :: VarSet -> VarSet -> VarSet
+instFreshObsV obsv freshvs 
+  =  S.unions $ S.map (instFreshO obsv) freshvs
+
+instFreshO :: VarSet -> GenVar -> VarSet
+instFreshO obsv fresh = S.unions $ S.map (instFreshV fresh) obsv
+
+instFreshV :: GenVar -> GenVar -> VarSet
+instFreshV fresh obs  
+  | gvarWhen obs `elem` [Before,After] && isDuring freshd 
+               =  S.singleton $ setGVarWhen freshd obs 
+  | otherwise  =  S.empty
+  where freshd = gvarWhen fresh
+
 vscMrg [] = return []
 vscMrg (vsc:vscs) = mrgVarConds vsc vscs    
 \end{code}
@@ -892,7 +907,9 @@ $$
 \begin{code}
 knownObsDischarge :: VarSet -> VarSideConds -> VarSideConds
 knownObsDischarge obs ( VSC gv vsD uvsC uvsCd )
-                    =   VSC gv vsD uvsC (obsCdDischarge obs gv uvsCd)
+                    =   VSC gv vsD 
+                               uvsC 
+                               (obsCdDischarge obs gv uvsCd)
 \end{code}
 
 Discharging coverage  ($C \supseteq V$).

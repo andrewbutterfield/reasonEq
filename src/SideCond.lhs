@@ -773,6 +773,38 @@ builtins or tests.
 \newpage
 \section{Discharging Side-conditions}
 
+We start with some examples that arise from key theories:
+\begin{description}
+  \item[forall\_remove]
+    Instantiated Law = $\lnot P$ \newline
+    Instantiated Law S.C. = $\lst x \disj P$ \newline
+    Goal S.C. = $\lst x \disj P$ \newline
+    Discharged Law S.C. = $\top$  (CORRECT)
+  \item[forall\_one\_point]
+    Instantiated Law = $\forall \lst y \bullet (\lnot P)[\lst e/\lst x]$ \newline
+    Instantiated Law S.C. = $\lst x \disj \lst e$ \newline
+    Goal S.C. = $\lst x \disj \lst e$ \newline
+    Discharged Law S.C. = $\top$  (CORRECT)
+  \item[X\_X\_comp]~
+    Instantiated Law S.C. = $ls_1 \disj N1, ls_1 \disj R1$ \newline
+    Goal S.C.: \newline
+    $\lst O,\lst O' \disj E1, \lst O,\lst O' \disj E2, \lst O,\lst O' \disj N1, \lst O,\lst O' \disj N2, \lst O,\lst O' \disj R1, \lst O,\lst O' \disj R2,$ \newline
+    $s,s' \supseteq_a a, s,s' \supseteq_a b, fresh:\lst O_1$ \newline
+    Discharged Law S.C. = $ls_1 \disj N1, ls_1 \disj R1$ (INCORRECT) \newline
+    Should be: $\top$. 
+    From $fresh:\lst O_1$ we should immediately be able 
+    to say that $ls_1 \notin N1,R1$.
+    \newline
+    We also know that $\lst O = \setof{s,ls}$ (homogeneous),
+    which then means that $s_1$ and $ls_1$ are fresh.
+\end{description}
+General comment about freshness: 
+if $fresh: f$, 
+and term-variable $N$ occurs in the goal, and is not under a substitution 
+of the form $[f/\_]$,
+then $f \disj N$ holds.
+
+
 
 \textbf{
   This whole section needs rework. 

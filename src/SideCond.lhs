@@ -865,8 +865,8 @@ We first simplfiy the consequence
 \begin{code}
 scDischarge obsv anteSC@(anteVSC,anteFvs) cnsqSC@(cnsqVSC,cnsqFvs)
   = do let freshObs = obsv `S.union` instFreshObsV obsv anteFvs
-       cnsqVSC' <- vscMrg $ map (knownObsDischarge freshObs) cnsqVSC
-       let cnsqSC' = (cnsqVSC',cnsqFvs)
+       cnsqVSC' <- vscMrg $ map (knownObsDischarge freshObs) $ pdbg "scD.cnsqVSC" cnsqVSC
+       let cnsqSC' = (pdbg "scD.csnqVSC'" cnsqVSC',cnsqFvs)
        if isTrivialSC cnsqSC' then return scTrue
        else if isTrivialSC anteSC then return cnsqSC'
        else do vsc' <- scDischarge' obsv anteVSC cnsqVSC'
@@ -902,24 +902,19 @@ is that it holds when we replace $d$ by any  different dynamicity (e.g., $e$):
 $$
 v_d \rel \lst\ell_d  \equiv \forall e \bullet v_e \rel \lst\ell_e
 $$
+We can truthify disjointness, and falsify coverage here.
 
-
+For now we deal with the simplest case: 
+remove any fresh variables found in the disjoint set.
 \begin{code}
 knownObsDischarge :: VarSet -> VarSideConds -> VarSideConds
 knownObsDischarge obs ( VSC gv vsD uvsC uvsCd )
-                    =   VSC gv vsD 
+                    =   VSC gv (vsD S.\\ obs) 
                                uvsC 
                                (obsCdDischarge obs gv uvsCd)
 \end{code}
 
-Discharging coverage  ($C \supseteq V$).
-Here $V \notin C$ or else this would have collapsed to $\true$ earlier.
-We check if it is in $obs$, which is included the expansion of $C$.
 
-
-Discharging dynamic coverage  ($Cd \supseteq_a V$).
-Here $V \notin Cd$ or else this would have collapsed to $\true$ earlier.
-We check if it is in $obs$, which is the expansion of $Cd$.
 \begin{code}
 obsCdDischarge :: VarSet -> GenVar -> UVarSet -> UVarSet
 obsCdDischarge obsv gv uvsCd

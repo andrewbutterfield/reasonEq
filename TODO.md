@@ -2,32 +2,24 @@
 
 ## URGENT
 
-Issue with one-point rule
+ **MATCH  COMMAND DOESN'T SHOW THIS !**
 
-Now all VSC are built using mkVSC, so `ls_1∉ls` no longer appears
+ *How does match (m) diverge from test-match (tm ?*)
 
 Current state of play:
 ```
 proof: tm 1 exists_one_point
+@scD.cnsqVSC:
+[VSC (GV (VR (Id "N1" 0,VE,WS))) (fromList [GV (VR (Id "ls" 0,VO,WD "1"))]) Everything Everything,VSC (GV (VR (Id "R1" 0,VE,WS))) (fromList [GV (VR (Id "ls" 0,VO,WD "1"))]) Everything Everything]
+@scD.csnqVSC':
+[VSC (GV (VR (Id "R1" 0,VE,WS))) (fromList []) Everything Everything]
 Match against `exists_one_point'[1] OK
-Binding: { P  ⟼ (E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ ls' = ls_1 \ R2 ∪ N2), ∧  ⟼ ∧, e$  ⟼ ⟨ls \ R1 ∪ N1⟩, x$  ⟼ ⟨ls_1⟩, y$  ⟼ {s_1} }
-Instantiated Law = (∃ s_1  • ((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls_1 ∧ b[O$_1/O$]) ∧ ls' = ls_1 \ R2 ∪ N2))[ls \ R1 ∪ N1/ls_1])
+Binding: { P  ⟼ (E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$], ∧  ⟼ ∧, e$  ⟼ ⟨ls \ R1 ∪ N1⟩, x$  ⟼ ⟨ls_1⟩, y$  ⟼ {s_1} }
+Instantiated Law = (∃ s_1  • ((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$])[ls \ R1 ∪ N1/ls_1])
 Instantiated Law S.C. = ls_1∉N1, ls_1∉R1
 Goal S.C. = O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1
-Discharged Law S.C. = ls_1∉N1, ls_1∉R1
+Discharged Law S.C. = ⊤
 ```
-
-```
-@gDO(vts):  ls,ls',s,s'
-@scC: O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, 
-      s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1
-@scP1:ls_1 disj N1, ls_1 disj R1
--->
-@scP2: ls_1 disj N1, ls_1 disj R1
-```
-
-We want `O$,O$'∉N1` and `ls_1∉N1` to transform the latter into True,
-because `O$⊇ls`.
 
 
 

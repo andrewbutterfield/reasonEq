@@ -479,9 +479,9 @@ Finally, try to discharge the instantiated side-condition:
 -- tryLawByName asn@(tC,scC) lnm parts mcs
     trySCDischarge vts fbind tP' partsP replP scP'
       = case
-                scDischarge (pdbg "gDO(vts)" $ getDynamicObservables vts) (pdbg "scC" scC) $ pdbg "scP1" scP'
+                scDischarge (getDynamicObservables vts) scC scP'
         of
-          Yes scP'' -> Yes (fbind,tP',scP',pdbg "scP2" scP'')
+          Yes scP'' -> Yes (fbind,tP',scP',scP'')
           But whynots -> But [ "try s.c. discharge failed"
                              , unlines' whynots
                              , ""

@@ -865,8 +865,8 @@ We first simplfiy the consequence
 \begin{code}
 scDischarge obsv anteSC@(anteVSC,anteFvs) cnsqSC@(cnsqVSC,cnsqFvs)
   = do let freshObs = obsv `S.union` instFreshObsV obsv anteFvs
-       cnsqVSC' <- vscMrg $ map (knownObsDischarge freshObs) $ pdbg "scD.cnsqVSC" cnsqVSC
-       let cnsqSC' = (pdbg "scD.csnqVSC'" cnsqVSC',cnsqFvs)
+       cnsqVSC' <- vscMrg $ map (knownObsDischarge freshObs) cnsqVSC
+       let cnsqSC' = (cnsqVSC',cnsqFvs)
        if isTrivialSC cnsqSC' then return scTrue
        else if isTrivialSC anteSC then return cnsqSC'
        else do vsc' <- scDischarge' obsv anteVSC cnsqVSC'
@@ -904,13 +904,14 @@ v_d \rel \lst\ell_d  \equiv \forall e \bullet v_e \rel \lst\ell_e
 $$
 We can truthify disjointness, and falsify coverage here.
 
-For now we deal with the simplest case: 
-remove any fresh variables found in the disjoint set.
+For now we deal with the simplest cases: 
+remove any fresh variables found in the disjoint set,
+and see if \h{gv} is in the coverage sets:
 \begin{code}
 knownObsDischarge :: VarSet -> VarSideConds -> VarSideConds
 knownObsDischarge obs ( VSC gv vsD uvsC uvsCd )
                     =   VSC gv (vsD S.\\ obs) 
-                               uvsC 
+                               (obsCdDischarge obs gv uvsC) 
                                (obsCdDischarge obs gv uvsCd)
 \end{code}
 
@@ -921,9 +922,6 @@ obsCdDischarge obsv gv uvsCd
   | gv `S.member` obsv  =  Everything
   | otherwise           =  uvsCd
 \end{code}
-
-Note that here we have not considered freshness, 
-which may produce further simplifications.
 
 \newpage
 \subsection{Term-Variable  Condition  Discharge}

@@ -330,13 +330,14 @@ tryLawByName :: Assertion -> String -> [Int] -> [MatchContext]
                          , Term       -- autoInstantiated Law
                          , SideCond   -- updated candidate side-condition
                          , SideCond ) -- discharged(?) law side-condition
-tryLawByName asn@(Assertion tC scC) lnm parts mcs
+tryLawByName (Assertion tC scC) lnm parts mcs
   = do (((_,asnP),_),vts) <- findLaw lnm mcs
        let tP = assnT asnP
        (partsP,replP) <- findParts parts tP
        let scP = assnC asnP
        tryMatch vts tP partsP replP scP
   where
+    ndbg v = pdbg (v++" ("++lnm++")")
     -- below we try to do:
     -- bind          <- match vts tC partsP
     -- (kbind,tPasC) <- bindKnown vts bind tP
@@ -352,9 +353,9 @@ First, try the structural match.
 -- tryLawByName asn@(tC,scC) lnm parts mcs
     tryMatch vts tP partsP replP scP
       = case
-                match vts tC partsP
+                match (ndbg "TLBN.vts" vts) (ndbg "TLBN.tC" tC) $ ndbg "TLBN.partsP" partsP
         of
-          Yes bind  ->  tryInstantiateKnown vts tP partsP replP scP bind
+          Yes bind  ->  tryInstantiateKnown vts tP partsP replP scP $ ndbg "TLBN.BIND" bind
           But msgs
            -> But ([ "try match failed"
                    , ""
@@ -481,7 +482,7 @@ Finally, try to discharge the instantiated side-condition:
       = case
                 scDischarge (getDynamicObservables vts) scC scP'
         of
-          Yes scP'' -> Yes (fbind,tP',scP',scP'')
+          Yes scP'' -> Yes (fbind,tP',scP',pdbg "tLBN.scP'" scP'')
           But whynots -> But [ "try s.c. discharge failed"
                              , unlines' whynots
                              , ""
@@ -888,21 +889,21 @@ basicMatch :: MatchClass
             -> TermSC  -- candidate assertion
             -> Term       -- sub-part of law being matched
             -> Matches
-basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) replP asnC@(tC,scC) partsP
-  =  do bind <- match vts tC partsP
-        kbind <- bindKnown vts bind replP
-        fbind <- bindFloating vts kbind replP
-        let ictxt = mkInsCtxt vts scC
-        scPinC <- instantiateSC ictxt fbind scP
-        scD@(_,freshD) <- scDischarge (getDynamicObservables vts) scC scPinC
-        let sc' =  addFreshVars freshD scC
+basicMatch mc vts law@((n,asnP@(Assertion tP scP)),_) replP (tC,scC) partsP
+  =  do bind <- match (ndbg "BM.vts" vts) (ndbg "BM.tC" tC) $ ndbg "BM.partsP" partsP
+        kbind <- bindKnown vts (ndbg "BM.BIND" bind) tP
+        fbind <- bindFloating vts kbind tP -- was replP 
+        let insctxt = mkInsCtxt vts scC
+        tP' <- instantiate insctxt fbind replP
+        scP' <- instantiateSC insctxt fbind scP
+        scP'' <- scDischarge (getDynamicObservables vts) scC scP'
 
-        if all isFloatingVSC (fst scD)
-          then do mrepl <- instantiate ictxt fbind replP
-                  return $ MT n (unwrapASN asn) (chkPatn mc partsP)
-                              fbind replP sc' scPinC mrepl
+        if all isFloatingVSC (fst scP'')
+          then return $ MT n (unwrapASN asnP) (chkPatn mc partsP)
+                             fbind replP scC scP' tP'
           else fail "undischargeable s.c."
   where
+    ndbg v = pdbg (v++" ("++n++")")
     chkPatn MatchEqvLHS (Var _ v)
       | lookupVarTables vts v == UnknownVar  =  MatchEqvVar 1
     chkPatn MatchEqvRHS (Var _ v)

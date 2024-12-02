@@ -6,6 +6,20 @@
 
  *How does match (m) diverge from test-match (tm ?*)
 
+Match sees vartables (`vts`) from `Exists` down to `Equiv`, 
+except that `Exists` and `Forall` have empty string names.
+
+Test-Match sees vartables (`vts) from UTCP to Equiv
+, via `UTPBase;UClose;Sets`, with same empty names as above.
+
+Theories `Exists` and `Forall` have no known variables. Not sure why the names
+are empty in the resulting `vts` table.
+
+From Theory `UTCP`, command `sh L` shows all laws from `UTCP` down to `Equiv`
+(incl. `Lists` and `LTL`).
+
+From Live proof of `X_X_comp` we  all above, except for `Lists` and `LTL`.
+
 Current state of play:
 ```
 proof: tm 1 exists_one_point

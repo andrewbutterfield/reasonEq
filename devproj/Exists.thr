@@ -1,6 +1,6 @@
 BEGIN THEORY Exists
 DEPS = ["ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"]
-KNOWN = VD ("",fromList [],fromList [],fromList [])
+KNOWN = VD ("Exists",fromList [],fromList [],fromList [])
 BEGIN LIST LAWS
 (("exists_def",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [B (TF TB (TG (Id "B" 0))) (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))),C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [B (TF TB (TG (Id "B" 0))) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))])]],([],fromList []))),Axiom)
 (("exists_remove",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [B (TF TB (TG (Id "B" 0))) (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))),V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))],([VSC (GV (VR (Id "P" 0,VP,WS))) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) Everything Everything],fromList []))),Assumed)

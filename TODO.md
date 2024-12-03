@@ -6,8 +6,17 @@
 
  *How does match (m) diverge from test-match (tm ?*)
 
+Commands `tm` and `m lawname` use `findLaw lname mcs` to give `(law,vts)`
+where `vts` is from the head of `mcs`.
+
+Command `m` maps `matchLaws` over `mcs` so each law gets packaged with the
+`vts` defined in its *own* theory.
+
 Match sees vartables (`vts`) from `Exists` down to `Equiv`, 
 except that `Exists` and `Forall` have empty string names.
+
+Matching using `m exists_one_point` results in 2 matches (one erroneous),
+seeing vartables as per Test-Match below
 
 Test-Match sees vartables (`vts) from UTCP to Equiv
 , via `UTPBase;UClose;Sets`, with same empty names as above.
@@ -34,7 +43,40 @@ Instantiated Law S.C. = ls_1∉N1, ls_1∉R1
 Goal S.C. = O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1
 Discharged Law S.C. = ⊤
 ```
+ **USING `m exists_one_point` has matches, one of which is unsound!!!**
 
+ ```
+ Matches:
+2 : “exists_one_point” [≡lhs]
+    (∃ s  • ((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$])[ls \ R1 ∪ N1/ls_1])
+    O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1 ⟹ ls_1∉N1, ls_1∉R1
+1 : “exists_one_point” [≡lhs]
+    (∃ s_1  • ((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$])[ls \ R1 ∪ N1/ls_1])
+    O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1 ⟹ ls_1∉N1, ls_1∉R1
+-----------
+
+⊢
+(∃ O$_1  • ls_1 = ls \ R1 ∪ N1 ∧ ((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$]))
+ O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1
+Focus = []
+
+Target (RHS): 
+E2 ∪ R1 \ N1 = Ø ∧ X(E1 ∪ E2 \ N1,a ; b,R1 ∪ R2,N1 \ R2 ∪ N2)
+```
+
+We get a match that binds `y` (actually `y$`) to `s`, 
+as well as the correct binding to `s_1`.
+
+**BAD SUBSTITUTION**
+
+```
+(∃ s_1  • (E1 ⊆ ls ∧ (a[O$_1/O$'])[ls \ R1 ∪ N1/ls_1]) ∧ (((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$])[ls \ R1 ∪ N1/ls_1])
+   = 'substitute @[1,1,2]'
+(∃ s_1  • (E1 ⊆ ls ∧ a) ∧ (((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$])[ls \ R1 ∪ N1/ls_1])
+ O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1
+```
+
+*`(a[O$_1/O$'])[ls \ R1 ∪ N1/ls_1]` becomes `a`, but should be  `a[s_1/s']`*
 
 
 ### Next in Line

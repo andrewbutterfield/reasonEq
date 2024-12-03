@@ -337,7 +337,6 @@ tryLawByName (Assertion tC scC) lnm parts mcs
        let scP = assnC asnP
        tryMatch vts tP partsP replP scP
   where
-    ndbg v = pdbg (v++" ("++lnm++")")
     -- below we try to do:
     -- bind          <- match vts tC partsP
     -- (kbind,tPasC) <- bindKnown vts bind tP
@@ -353,9 +352,9 @@ First, try the structural match.
 -- tryLawByName asn@(tC,scC) lnm parts mcs
     tryMatch vts tP partsP replP scP
       = case
-                match (ndbg "TLBN.vts" vts) (ndbg "TLBN.tC" tC) $ ndbg "TLBN.partsP" partsP
+                match vts tC partsP
         of
-          Yes bind  ->  tryInstantiateKnown vts tP partsP replP scP $ ndbg "TLBN.BIND" bind
+          Yes bind  ->  tryInstantiateKnown vts tP partsP replP scP bind
           But msgs
            -> But ([ "try match failed"
                    , ""
@@ -559,19 +558,20 @@ foundCons tk sn n ts   =  Cons tk sn n ts
 \newpage
 \section{Matching in Context}
 
-First, given list of match-contexts, systematically work through them.
+First, given list of match-contexts, systematically work through them,
+carrying the top-level view of the variable-tables along.
 \begin{code}
 matchInContexts :: [MatchContext] -> Assertion -> Matches
-matchInContexts mcs asn
-  = concat $ map (matchLaws asn) mcs
+matchInContexts mcs@((_,lws,vts):_) asn
+  = concat $ map (matchLaws vts asn) mcs
 \end{code}
 
 Now, the code to match laws, given a context.
 Bascially we run down the list of laws,
 returning any matches we find.
 \begin{code}
-matchLaws :: Assertion -> MatchContext -> Matches
-matchLaws asn (_,lws,vts)
+matchLaws :: [VarTable] -> Assertion -> MatchContext -> Matches
+matchLaws vts asn (_,lws,_)
   = concat $ map (domatch vts $ unwrapASN asn) lws
 \end{code}
 
@@ -890,8 +890,8 @@ basicMatch :: MatchClass
             -> Term       -- sub-part of law being matched
             -> Matches
 basicMatch mc vts law@((n,asnP@(Assertion tP scP)),_) replP (tC,scC) partsP
-  =  do bind <- match (ndbg "BM.vts" vts) (ndbg "BM.tC" tC) $ ndbg "BM.partsP" partsP
-        kbind <- bindKnown vts (ndbg "BM.BIND" bind) tP
+  =  do bind <- match vts tC partsP
+        kbind <- bindKnown vts bind tP
         fbind <- bindFloating vts kbind tP -- was replP 
         let insctxt = mkInsCtxt vts scC
         tP' <- instantiate insctxt fbind replP
@@ -903,7 +903,6 @@ basicMatch mc vts law@((n,asnP@(Assertion tP scP)),_) replP (tC,scC) partsP
                              fbind replP scC scP' tP'
           else fail "undischargeable s.c."
   where
-    ndbg v = pdbg (v++" ("++n++")")
     chkPatn MatchEqvLHS (Var _ v)
       | lookupVarTables vts v == UnknownVar  =  MatchEqvVar 1
     chkPatn MatchEqvRHS (Var _ v)

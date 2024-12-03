@@ -268,6 +268,7 @@ existsTheory
                          , notName
                          , equivName
                          ]
+            , known   =  newNamedVarTable existsName
             , laws    =  predExistsAxioms
             , conjs   =  existsConjs
             }

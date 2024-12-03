@@ -262,6 +262,7 @@ forallTheory
                          , notName
                          , equivName
                          ]
+            , known = newNamedVarTable forallName
             , laws    =  forallAxioms
             , conjs   =  forallConjs
             }

@@ -2,71 +2,6 @@
 
 ## URGENT
 
- **MATCH  COMMAND DOESN'T SHOW THIS !**
-
- *How does match (m) diverge from test-match (tm ?*)
-
-Commands `tm` and `m lawname` use `findLaw lname mcs` to give `(law,vts)`
-where `vts` is from the head of `mcs`.
-
-Command `m` maps `matchLaws` over `mcs` so each law gets packaged with the
-`vts` defined in its *own* theory.
-
-Match sees vartables (`vts`) from `Exists` down to `Equiv`, 
-except that `Exists` and `Forall` have empty string names.
-
-Matching using `m exists_one_point` results in 2 matches (one erroneous),
-seeing vartables as per Test-Match below
-
-Test-Match sees vartables (`vts) from UTCP to Equiv
-, via `UTPBase;UClose;Sets`, with same empty names as above.
-
-Theories `Exists` and `Forall` have no known variables. Not sure why the names
-are empty in the resulting `vts` table.
-
-From Theory `UTCP`, command `sh L` shows all laws from `UTCP` down to `Equiv`
-(incl. `Lists` and `LTL`).
-
-From Live proof of `X_X_comp` we  all above, except for `Lists` and `LTL`.
-
-Current state of play:
-```
-proof: tm 1 exists_one_point
-@scD.cnsqVSC:
-[VSC (GV (VR (Id "N1" 0,VE,WS))) (fromList [GV (VR (Id "ls" 0,VO,WD "1"))]) Everything Everything,VSC (GV (VR (Id "R1" 0,VE,WS))) (fromList [GV (VR (Id "ls" 0,VO,WD "1"))]) Everything Everything]
-@scD.csnqVSC':
-[VSC (GV (VR (Id "R1" 0,VE,WS))) (fromList []) Everything Everything]
-Match against `exists_one_point'[1] OK
-Binding: { P  ⟼ (E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$], ∧  ⟼ ∧, e$  ⟼ ⟨ls \ R1 ∪ N1⟩, x$  ⟼ ⟨ls_1⟩, y$  ⟼ {s_1} }
-Instantiated Law = (∃ s_1  • ((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$])[ls \ R1 ∪ N1/ls_1])
-Instantiated Law S.C. = ls_1∉N1, ls_1∉R1
-Goal S.C. = O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1
-Discharged Law S.C. = ⊤
-```
- **USING `m exists_one_point` has matches, one of which is unsound!!!**
-
- ```
- Matches:
-2 : “exists_one_point” [≡lhs]
-    (∃ s  • ((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$])[ls \ R1 ∪ N1/ls_1])
-    O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1 ⟹ ls_1∉N1, ls_1∉R1
-1 : “exists_one_point” [≡lhs]
-    (∃ s_1  • ((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$])[ls \ R1 ∪ N1/ls_1])
-    O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1 ⟹ ls_1∉N1, ls_1∉R1
------------
-
-⊢
-(∃ O$_1  • ls_1 = ls \ R1 ∪ N1 ∧ ((E1 ⊆ ls ∧ a[O$_1/O$']) ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$]))
- O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1
-Focus = []
-
-Target (RHS): 
-E2 ∪ R1 \ N1 = Ø ∧ X(E1 ∪ E2 \ N1,a ; b,R1 ∪ R2,N1 \ R2 ∪ N2)
-```
-
-We get a match that binds `y` (actually `y$`) to `s`, 
-as well as the correct binding to `s_1`.
-
 **BAD SUBSTITUTION**
 
 ```
@@ -78,6 +13,19 @@ as well as the correct binding to `s_1`.
 
 *`(a[O$_1/O$'])[ls \ R1 ∪ N1/ls_1]` becomes `a`, but should be  `a[s_1/s']`*
 
+
+Law `non_subst` matches `(E1 ⊆ ls ∧ a[O$_1/O$'])[ls \ R1 ∪ N1/ls_1]`, 
+but shouldn't. 
+It also incorrectly matches `(a[O$_1/O$'])[ls \ R1 ∪ N1/ls_1]`.
+
+We need to use s.c. info about the alphabet of `a`, which is `{s,s'}`
+and the fact that it is under substitution `[O$_1/O$]`
+
+Perhaps a subst-comp bug? 
+The composition should be `[s_1,ls \ R1 ∪ N1/s',ls']` given that `O$ = {s,ls}`.
+This then collapses to `[s_1/s']` because `ls` is not in the alphabet of `a`.
+
+It correctly matches `(E1 ⊆ ls)[ls \ R1 ∪ N1/ls_1]` to yield `(E1 ⊆ ls)`.
 
 ### Next in Line
 

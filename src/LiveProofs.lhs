@@ -481,7 +481,7 @@ Finally, try to discharge the instantiated side-condition:
       = case
                 scDischarge (getDynamicObservables vts) scC scP'
         of
-          Yes scP'' -> Yes (fbind,tP',scP',pdbg "tLBN.scP'" scP'')
+          Yes scP'' -> Yes (fbind,tP',scP',scP'')
           But whynots -> But [ "try s.c. discharge failed"
                              , unlines' whynots
                              , ""

@@ -835,8 +835,6 @@ substituteFocus thrys liveProof
                             (( Substitute dpath
                              , (asn')):)
                             liveProof )
-        -- (Cons n [(Sub tm1 sub),(Sub tm2 sub),..,(Sub tmN sub)])
-        -- would yield  Sub (Cons n [tm1,tm2,..,tmN]) sub
          _  -> fail "substitute only for explicit substitution focii"
 \end{code}
 

@@ -1108,7 +1108,7 @@ and we let $U = X \cup Y$, and $Z = X \cap Y$.
 We partition $X$ into $X'=X\setminus Z$ and $Z$,
 and let $F'$ be the replacements in $F$ for $X'$, 
 and $F_Z$ the replacements for $Z$.
-We treat $Y$ and  $G$ similarly to get $Y'$, $Y_Z$, $G'$ and $G_Z$.
+We treat $Y$ and  $G$ similarly to get $Y'$, $Z$, $G'$ and $G_Z$.
 $$
   (e[F',F_Z/X',Z])[G',G_Z/Y',Z] 
 $$
@@ -1117,15 +1117,18 @@ Now consider a variable $v \in U$.
    v \notin X \land v \notin Y 
    &\implies& (v[F',F_Z/X',Z])[G',G_Z/Y',Z] = v
 \\ v \notin X \land v   \in  Y 
-   &\implies& (v[F',F_Z/X',Z])[G',G_Z/Y',Z] = G' 
+   &\implies& (v[F',F_Z/X',Z])[G',G_Z/Y',Z] = G'(v)
    \quad \textbf{as } v \in Y'
 \\ v   \in  X \land v \notin Y 
-   &\implies& (v[F',F_Z/X',Z])[G',G_Z/Y',Z] = F'[G',G_Z/Y',Z] 
+   &\implies& (v[F',F_Z/X',Z])[G',G_Z/Y',Z] = (F'[G',G_Z/Y',Z])(v)
    \quad \textbf{as } v \in X'
 \\ v   \in  X \land v   \in  Y 
-   &\implies& (v[F',F_Z/X',Z])[G',G_Z/Y',Z] = F_Z[G',G_Z/Y',Z] 
+   &\implies& (v[F',F_Z/X',Z])[G',G_Z/Y',Z] = (F_Z[G',G_Z/Y',Z])(v) 
    \quad \textbf{as } v \in Z
 \end{eqnarray*}
+Here $H(v)$ denotes the application of substitution component in $H$ 
+that targets $v$.
+
 This suggests the following:
 $$
  e[F'[G',G_Z/Y',Z],G',F_Z[G',G_Z/Y',Z]/X',Y',Z]
@@ -1146,27 +1149,73 @@ $$
 Proof, stuctural induction on $E = K + V + E \times E$.
 Trickiest part is the variable case which has a 4-way case split.
 
+\newpage
 Now we consider the following concrete example: 
-\m{([\lst O_1/\lst O'])[ls \setminus R_1 \cup N_1/ls_1]}.
+\m{(a[\lst O_1/\lst O'])[ls \setminus R_1 \cup N_1/ls_1]}.
+
+Given that $\lst O = \setof{s,ls}$, uniformly,
+and that $\setof{a,a'} \supseteq_a a$, we can proceed as follows:
+\begin{eqnarray*}
+\lefteqn{(a[\lst O_1/\lst O'])[ls \setminus R_1 \cup N_1/ls_1]}
+\EQ{expand $\lst O$}
+\\&& (a[s_1,ls_1/s',ls'])[ls \setminus R_1 \cup N_1/ls_1]
+\EQ{$s,s' \supseteq_a a$}
+\\&& (a[s_1/s'])[ls \setminus R_1 \cup N_1/ls_1]
+\EQ{now we have $s,s_1 \supseteq_a a[s_1/s']$}
+\\&& (a[s_1/s'])[ls \setminus R_1 \cup N_1/ls_1]
+\\&& a[s_1/s']
+\end{eqnarray*}
+
+
+Now lets ignore what $\lst O$ and $a$ actually are,
+and do the composition
 
 So, 
-$F$ = \m{\setof{\lst O_1}}, 
-$X$ = \m{\setof{\lst O'}},
-$G$ = \m{ls\setminus R_1\cup N_1},
-$Y$ = \m{\setof{ls_1}}.
+$F$ = \m{\seqof{\lst O_1}}, 
+$X$ = \m{\seqof{\lst O'}},
+$G$ = \m{\seqof{ls\setminus R_1\cup N_1}},
+$Y$ = \m{\seqof{ls_1}}.
+
+We compute $Y'$ as \m{\seqof{ls_1}} (i.e., $Y$),
+and $G'$ as \m{\seqof{ls\setminus R_1\cup N_1}}.
+
+So the result $[F[G/Y],G'/X,Y']$
+becomes 
+\m{ [  \lst O_1[ls\setminus R_1\cup N_1/ls_1],ls\setminus R_1\cup N_1 
+      /  \lst O',ls_1 
+    ]}.
+
+If all these are just arbitrary variables then it simplies thus:
+\m{[  \lst O_1,ls\setminus R_1\cup N_1 /  \lst O',ls_1 ]},
+and applying to \m{a} simply results in \m{a}.
+
+However, if we \emph{know} that $\lst O = \setof{s,ls}$, uniformly,
+and that $\setof{a,a'} \supseteq_a a$, then a different result emerges:
+\begin{eqnarray*}
+\lefteqn{a[\lst O_1[ls\setminus R_1\cup N_1/ls_1],ls\setminus R_1\cup N_1 
+           /\lst O',ls_1]}
+\EQ{defn. of $\lst O$ applied to $\lst O_1$ (repl.) and $\lst O'$ (tgt.)}
+\\&& a[\seqof{s_1,ls_1}[ls\setminus R_1\cup N_1/ls_1],ls\setminus R_1\cup N_1 
+           /\seqof{s',ls'},ls_1]
+\EQ{apply subst}
+\\&& a[\seqof{s_1,ls\setminus R_1\cup N_1},ls\setminus R_1\cup N_1 
+           /\seqof{s',ls'},ls_1]
+\EQ{flatten}
+\\&& a[s_1,ls\setminus R_1\cup N_1,ls\setminus R_1\cup N_1 / s',ls',ls_1]
+\EQ{$s,s' \supseteq_a a$}
+\\&& a[s_1/s']
+\end{eqnarray*}
+We have shown that side-conditions need not play a role here,
+while computing the composition.
+Such considerations should be applied 
+after \texttt{substComp} has (fully) returned.
 
 \newpage
-
 Specification of substitution composition:
 $$
  (e[F/X])[G/Y]  =  e[F[G/Y],G'/X,Y'] 
 $$
 where $[G'/Y']$ is $[G/Y]$ restricted to elements of $Y$ not in $X$.
-
-
-Note that side-conditions play no role here. 
-Such considerations should be applied 
-after \texttt{substComp} has (fully) returned.
 \begin{code}
 substComp :: MonadFail m
           => Substn  -- 1st substitution performed

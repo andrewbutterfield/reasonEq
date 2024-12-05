@@ -1146,6 +1146,15 @@ $$
 Proof, stuctural induction on $E = K + V + E \times E$.
 Trickiest part is the variable case which has a 4-way case split.
 
+Now we consider the following concrete example: 
+\m{([\lst O_1/\lst O'])[ls \setminus R_1 \cup N_1/ls_1]}.
+
+So, 
+$F$ = \m{\setof{\lst O_1}}, 
+$X$ = \m{\setof{\lst O'}},
+$G$ = \m{ls\setminus R_1\cup N_1},
+$Y$ = \m{\setof{ls_1}}.
+
 \newpage
 
 Specification of substitution composition:
@@ -1153,6 +1162,7 @@ $$
  (e[F/X])[G/Y]  =  e[F[G/Y],G'/X,Y'] 
 $$
 where $[G'/Y']$ is $[G/Y]$ restricted to elements of $Y$ not in $X$.
+
 
 Note that side-conditions play no role here. 
 Such considerations should be applied 

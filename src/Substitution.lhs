@@ -308,8 +308,8 @@ substitute sctx sub bt@(Bnd tk i vs tm)
     = do  alpha <- captureAvoidance (subSC sctx) vs tm effsub
           let vs' = S.fromList $ quantsSubst alpha $ S.toList vs
           asub <- substComp alpha effsub --- succeeds as alpha is var-only
-          -- **** we need to post-process using O$ and side-conds ****
-          tm' <- substitute sctx asub tm
+          let asub' = substComplete sctx tm asub
+          tm' <- substitute sctx asub' tm
           bnd tk i vs' tm'
   where
     effsub = computeEffSubst vs sub
@@ -321,8 +321,8 @@ substitute sctx sub lt@(Lam tk i vl tm)
     = do  alpha <- captureAvoidance (subSC sctx) vs tm effsub
           let vl' = quantsSubst alpha vl
           asub <- substComp alpha effsub --- succeeds as alpha is var-only
-          -- **** we need to post-process using O$ and side-conds ****
-          tm' <- substitute sctx asub tm
+          let asub' = substComplete sctx tm asub
+          tm' <- substitute sctx asub' tm
           lam tk i vl' tm'
   where
     vs = S.fromList vl
@@ -370,8 +370,8 @@ substitute sctx sub st@(Sub tk bt _)
 \begin{code}
 substitute sctx sub bt@(Sub tk tm s)
   = case substComp s sub of
-     Just sub' -> substitute sctx sub' tm
-     -- **** we need to post-process using O$ and side-conds ****
+     Just sub' -> let sub'' = substComplete sctx tm sub'
+                  in substitute sctx sub'' tm
      -- Nothing NEVER occurs, substComp is total
      Nothing   -> return $ Sub tk bt sub
 \end{code}
@@ -1172,7 +1172,7 @@ and that $\setof{a,a'} \supseteq_a a$, we can proceed as follows:
 
 
 Now lets ignore what $\lst O$ and $a$ actually are,
-and do the composition.
+and do the composition (we shall call this \emph{syntactic} composition).
 
 So, 
 $F$ = \m{\seqof{\lst O_1}}, 
@@ -1215,9 +1215,13 @@ while computing the composition.
 in substitution/quantifier lists be disjoint 
 is crucial for allowing this separation.}
 Such considerations should be applied 
-after \texttt{substComp} has returned.
+after syntactic composotion has been done.
+The post-processing step is basically a \emph{semantic} completion.
 
 \newpage
+
+\subsection{Syntactic Substitution Composition}
+
 Specification of substitution composition:
 $$
  (e[F/X])[G/Y]  =  e[F[G/Y],G'/X,Y'] 
@@ -1263,6 +1267,110 @@ applyLSub ts lvs lv
       Just lv'  ->  lv'
 \end{code}
 
+\newpage
+\subsection{Semantic Substitution Completion}
+
+We have a result from syntactic substitution composition of the form:
+\[[F[G/Y],G'/X,Y']\]
+However, this also in the context of some term $t$ being substituted.
+
+The general case is that some list-variables will be known,
+and have definitions in terms of observation variables.
+We will also have side-conditions associated with term variables.
+
+This process has two phases: the first is independent of the term,
+and simply uses the list-variable data:
+\begin{eqnarray*}
+\lefteqn{t[\lst O_1[ls\setminus R_1\cup N_1/ls_1],ls\setminus R_1\cup N_1 
+           /\lst O',ls_1]}
+\EQ{defn. of $\lst O$ applied to $\lst O_1$ (repl.) and $\lst O'$ (tgt.)}
+\\&& t[\seqof{s_1,ls_1}[ls\setminus R_1\cup N_1/ls_1],ls\setminus R_1\cup N_1 
+           /\seqof{s',ls'},ls_1]
+\EQ{apply subst}
+\\&& t[\seqof{s_1,ls\setminus R_1\cup N_1},ls\setminus R_1\cup N_1 
+           /\seqof{s',ls'},ls_1]
+\EQ{flatten}
+\\&& t[s_1,ls\setminus R_1\cup N_1,ls\setminus R_1\cup N_1 / s',ls',ls_1]
+\end{eqnarray*}
+The second phase looks at the actual term being substituted:
+\begin{eqnarray*}
+\lefteqn{a[s_1,ls\setminus R_1\cup N_1,ls\setminus R_1\cup N_1 / s',ls',ls_1]}
+\EQ{$s,s' \supseteq_a a$}
+\\&& a[s_1/s']
+\end{eqnarray*}
+Note, this second phase is best done 
+when we have drilled down to a single term-variable.
+However, 
+should the first phase be done before we get down to these variables?
+What if $\lst O$ (say) occurs elsewhere in $t$?
+
+For now we only trigger both phases of semantic completion,
+at the term variable level.
+
+\begin{code}
+substComplete :: SubContext -> Term -> Substn -> Substn
+substComplete sctxt (Var _ tv@(Vbl _ vc _)) sub
+  | vc /= ObsV  =  subComplete sctxt tv sub
+substComplete sctxt tm sub = sub
+
+subComplete :: SubContext -> Variable -> Substn -> Substn
+subComplete sctxt tv sub 
+  = let sub1 = subComplete1 sctxt sub
+    in subComplete2 sctxt tv sub1
+\end{code}
+
+\subsubsection{Semantic completion, phase 1}
+Expand list-variable definitions.
+
+\begin{code}
+subComplete1 :: SubContext -> Substn -> Substn
+subComplete1 (SubCtxt _ vts) sub@(Substn ts lvs)
+  | chgd       =  jSubstn (S.toList ts) lvl1
+  | otherwise  =  sub
+  where (chgd,ts1,lvl1) = lvsComplete1 vts lvs
+
+lvsComplete1 :: [VarTable] -> LVarSubs -> (Bool,[TermSub],[LVarSub])
+lvsComplete1 vts lvs  = lvsComp1 vts False [] [] $ S.toList lvs
+
+lvsComp1 _   chgd ts' lvs' []              = (chgd,ts',lvs')
+lvsComp1 vts chgd ts' lvs' (trlv:lvl)
+  = lvsComp1 vts chgd' (newts++ts') (modlvs++lvs') lvl
+  where (chgd',newts,modlvs) = tlrlComp1 vts chgd trlv
+
+tlrlComp1 :: [VarTable] -> Bool -> LVarSub -> (Bool,[TermSub],[LVarSub])
+tlrlComp1 vts chgd trlv@(tlv,rlv) 
+  = case (tlvknown,rlvknown) of
+      (Just (texp,_,_),Just (rexp,_,_))  ->  tlrlRoles1 chgd trlv texp rexp
+      _                                  ->  (chgd,[],[trlv])
+  where 
+    tlvknown  =  expandKnown vts tlv
+    rlvknown  =  expandKnown vts rlv
+
+tlrlRoles1 :: Bool -> LVarSub -> LstVarMatchRole -> LstVarMatchRole 
+           -> (Bool,[TermSub],[LVarSub])
+tlrlRoles1 chgd trlv 
+           (KnownVarList _ texp tlen) 
+           (KnownVarList _ rexp rlen)
+  | tlen == rlen  = (chgd,fuse1 texp rexp,[])
+tlrlRoles1 chgd trlv 
+           (KnownVarSet _ texp tlen) 
+           (KnownVarSet _ rexp rlen)
+  | tlen == rlen  = (chgd,fuse1 (S.toList texp) (S.toList rexp),[])
+tlrlRoles1 chgd trlv texp rexp = (chgd,[],[trlv])
+
+fuse1 :: [Variable] -> [Variable] -> [TermSub]
+fuse1 tvars rvars = map fuse1' $ zip tvars rvars
+
+fuse1' :: (Variable,Variable) -> TermSub
+fuse1' (tvar,rvar) = (tvar,fromJust $ var ArbType rvar)
+\end{code}
+
+\subsubsection{Semantic completion, phase 2}
+Tailor substitution for given term-variable.
+\begin{code}
+subComplete2 :: SubContext -> Variable -> Substn -> Substn
+subComplete2 (SubCtxt sc _) tv sub1 = sub1
+\end{code}
 
 \newpage
 
@@ -1293,7 +1401,8 @@ A default sub-context:
 \begin{code}
 subctxt0 = SubCtxt scTrue []
 dosub tm sub = fromJust $ substitute subctxt0 sub tm
-subcomp sub1 sub2 = fromJust $ substComp sub1 sub2
+subsyncomp sub1 sub2 = fromJust $ substComp sub1 sub2
+subsemcomp sctx tm sub1 sub2 = substComplete sctx tm $ subsyncomp sub1 sub2
 \end{code}
 A collection of standard constants:
 \begin{code}
@@ -1319,7 +1428,7 @@ subCompTest what expr sub1 sub2
   = testCase what
       ( dosub (dosub expr sub1) sub2
         @?=
-        dosub expr (sub1 `subcomp` sub2)
+        dosub expr (sub1 `subsyncomp` sub2)
       )
 \end{code}
 

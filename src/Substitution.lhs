@@ -308,6 +308,7 @@ substitute sctx sub bt@(Bnd tk i vs tm)
     = do  alpha <- captureAvoidance (subSC sctx) vs tm effsub
           let vs' = S.fromList $ quantsSubst alpha $ S.toList vs
           asub <- substComp alpha effsub --- succeeds as alpha is var-only
+          -- **** we need to post-process using O$ and side-conds ****
           tm' <- substitute sctx asub tm
           bnd tk i vs' tm'
   where
@@ -320,6 +321,7 @@ substitute sctx sub lt@(Lam tk i vl tm)
     = do  alpha <- captureAvoidance (subSC sctx) vs tm effsub
           let vl' = quantsSubst alpha vl
           asub <- substComp alpha effsub --- succeeds as alpha is var-only
+          -- **** we need to post-process using O$ and side-conds ****
           tm' <- substitute sctx asub tm
           lam tk i vl' tm'
   where
@@ -369,6 +371,8 @@ substitute sctx sub st@(Sub tk bt _)
 substitute sctx sub bt@(Sub tk tm s)
   = case substComp s sub of
      Just sub' -> substitute sctx sub' tm
+     -- **** we need to post-process using O$ and side-conds ****
+     -- Nothing NEVER occurs, substComp is total
      Nothing   -> return $ Sub tk bt sub
 \end{code}
 
@@ -1168,7 +1172,7 @@ and that $\setof{a,a'} \supseteq_a a$, we can proceed as follows:
 
 
 Now lets ignore what $\lst O$ and $a$ actually are,
-and do the composition
+and do the composition.
 
 So, 
 $F$ = \m{\seqof{\lst O_1}}, 
@@ -1207,8 +1211,11 @@ and that $\setof{a,a'} \supseteq_a a$, then a different result emerges:
 \end{eqnarray*}
 We have shown that side-conditions need not play a role here,
 while computing the composition.
+\emph{It is clear that the requirement that list-variables
+in substitution/quantifier lists be disjoint 
+is crucial for allowing this separation.}
 Such considerations should be applied 
-after \texttt{substComp} has (fully) returned.
+after \texttt{substComp} has returned.
 
 \newpage
 Specification of substitution composition:
@@ -1220,7 +1227,7 @@ where $[G'/Y']$ is $[G/Y]$ restricted to elements of $Y$ not in $X$.
 substComp :: MonadFail m
           => Substn  -- 1st substitution performed
           -> Substn  -- 2nd substitution performed
-          -> m Substn
+          -> m Substn -- always `returns`
 substComp (Substn ts1 lvs1) sub2@(Substn ts2 lvs2)
   = let 
       -- compute G',Y'
@@ -1236,7 +1243,7 @@ substComp (Substn ts1 lvs1) sub2@(Substn ts2 lvs2)
       tl1'  = mapsnd (applySub sub2) tl1
       lvl1' = mapsnd (applyLSub tl2 lvl2) lvl1
       -- compute  [ F[G/Y],G'  /  X,Y' ]
-    in substn (tl1'++tl2') (lvl1'++lvl2')
+    in substn (tl1'++tl2') (lvl1'++lvl2') -- should never `fail`
 
 notTargetedIn :: Eq t => [t] -> (t,r) -> Bool
 notTargetedIn ts (t,_) = not (t `elem` ts)

@@ -23,6 +23,7 @@ module VarData ( VarMatchRole
                , addKnownLListVar, addKnownSListVar
                , addKnownVarList , addKnownVarSet
                , addAbstractVarList, addAbstractVarSet
+               , mkKnownVar, mkConsVar, mkConsIntro
                , lookupLVarTs, lookupVarTable, lookupVarTables
                , lookupLVar, lookupLVarTable, lookupLVarTables
                , isUnknownVar, isUnknownLVar, isUnknownGVar
@@ -43,7 +44,7 @@ module VarData ( VarMatchRole
                , getDynamicObservables
                , mapVToverVarSet
                ) where
---import Data.Maybe (fromJust)
+import Data.Maybe (fromJust)
 import Data.Map (Map)
 import qualified Data.Map as M
 import Data.Set (Set)
@@ -588,6 +589,24 @@ addAbstractVarSe lv@(Vbl i vc vw) (VD (nm,vtable,stable,dtable))
      Nothing -> return $ VD (nm,vtable,stable,M.insert (i,vc) DAS dtable)
      _ -> fail "addAbstractVarSet(dynamic): already present"
 \end{code}
+
+
+\subsection{Common VarData Builders}
+
+Constructor names, if required to be known,
+should be declared as known static observation variables.
+
+\begin{code}
+mkKnownVar :: Variable -> Type -> VarTable -> VarTable
+mkKnownVar v t  = fromJust . addKnownVar v t
+
+mkConsVar ::  Identifier -> Type -> Variable
+mkConsVar i t = Vbl i ObsV Static
+
+mkConsIntro :: Identifier -> Type -> VarTable -> VarTable
+mkConsIntro i t = mkKnownVar (mkConsVar i t) t
+\end{code}
+
 
 \newpage
 \section{Table Lookup}

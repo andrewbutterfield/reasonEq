@@ -1463,27 +1463,34 @@ obs_vs'_Intro = mkKnownVar vs' ArbType
 ils  = jId "ls" 
 vls = Vbl ils ObsV Before
 vls' = Vbl ils ObsV After
+vls1 = Vbl ils ObsV (During "1")
 obs_vls_Intro  = mkKnownVar vls ArbType
 obs_vls'_Intro = mkKnownVar vls' ArbType
 
 -- o = jId "O"  ;  vO = PreVar o
 -- lO = PreVars o  ;  lO' = PostVars o  ;  lO0 = MidVars o "0"
-gO = LstVar lO  ;  gO' = LstVar lO'  
+gO = LstVar lO  ;  gO' = LstVar lO'  -- lO1 = MidVars o "1"
 obsIntro = fromJust . addKnownVarSet vO (S.fromList $ map StdVar [vs,vls])
 
 vN = ExprVar (jId "N") Static ; tN = jVar ArbType vN ; gN = StdVar vN
 vR = ExprVar (jId "R") Static ; tR = jVar ArbType vR ; gR = StdVar vR
 va = Vbl (jId "a") PredV Static ; a = fromJust $ pVar ArbType va 
 xxSc = ([StdVar vs,StdVar vs'] `dyncover`  (StdVar va)) 
-         .: ([gO,gO'] `notin` gN)
-         .: ([gO,gO'] `notin` gR)
+       --   .: ([gO,gO'] `notin` gN)
+       --   .: ([gO,gO'] `notin` gR)
 xxVts = obs_vs_Intro $ obs_vs'_Intro $ newNamedVarTable "XX_Test"
 xxSCtxt = mkSubCtxt xxSc [xxVts]
+ls_R_N  = fromJust $ eVar ArbType $ ExprVar (jId "ls_R_N") Static
+xx_sub00 = jSubstn [] [(lO',lO1)]
+xx_subls = jSubstn [(vls1,ls_R_N)] []
+xx_a_subOO_subls 
+  = Sub ArbType (Sub ArbType a xx_sub00) xx_subls
 \end{code}
 
 \begin{code}
 xxSubstCompTests  =  testGroup "substComp used for UTCP:X_X_comp"
- [ testCase "xxSubstCompTests NYI" (1+1 @?= 3)
+ [ testCase "xxSubstCompTests NYI" 
+     (xx_a_subOO_subls @?= Val ArbType (Integer 42))
  ]
 \end{code}
 

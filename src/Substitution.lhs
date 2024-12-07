@@ -1425,7 +1425,8 @@ s34xy = sub2 k3 k4
 These are tests are of the form: 
  $(e\sigma_1)\sigma_2 = e(\sigma_1;\sigma_2)$
 where $e$ can be constant, variable or composite,
-and there are no known variables or side-conditions.
+and there are no known variables or side-conditions
+(i.e. just syntactic substitution composition).
 \begin{code}
 subCompTest what expr sub1 sub2
   = testCase what
@@ -1449,14 +1450,19 @@ varSubstCompTests  =  testGroup "substComp applied to var"
 
 \subsubsection{Scenario Tests}
 
-The scenario we have in mind is 
+The scenario we have in mind is from the proof of UTCP law X\_X\_comp.
 \m{(a[\lst O_1/\lst O'])[ls \setminus R_1 \cup N_1/ls_1]}
 where $\lst O = \setof{ls,s}$
 and $\setof{s,s'} \supseteq_a a$.
+The syntactic step results in 
+\m{a[\lst O_1,ls\setminus R_1\cup N_1 /  \lst O',ls_1 ]}
+while the semantic post-processing gives \m{a[s_1/s']}.
 \begin{code}
 is  = jId "s" 
 vs = Vbl is ObsV Before
 vs' = Vbl is ObsV After
+vs1 = Vbl is ObsV (During "1")
+ts1 = fromJust $ eVar ArbType vs1
 obs_vs_Intro  = mkKnownVar vs ArbType
 obs_vs'_Intro = mkKnownVar vs' ArbType
 
@@ -1481,16 +1487,27 @@ xxSc = ([StdVar vs,StdVar vs'] `dyncover`  (StdVar va))
 xxVts = obs_vs_Intro $ obs_vs'_Intro $ newNamedVarTable "XX_Test"
 xxSCtxt = mkSubCtxt xxSc [xxVts]
 ls_R_N  = fromJust $ eVar ArbType $ ExprVar (jId "ls_R_N") Static
-xx_sub00 = jSubstn [] [(lO',lO1)]
+
+-- starting substitution (a[O$1/O$'])(ls_R_N/ls1)
+xx_subOO = jSubstn [] [(lO',lO1)]
 xx_subls = jSubstn [(vls1,ls_R_N)] []
-xx_a_subOO_subls 
-  = Sub ArbType (Sub ArbType a xx_sub00) xx_subls
+xx_a_subOO_subls = Sub ArbType (Sub ArbType a xx_subOO) xx_subls
+xx_subss  = jSubstn [(vs',ts1)] []
+
+-- after syntactic   a[O$1,ls_R_N/O$',ls1]
+xx_subOls = jSubstn [(vls1,ls_R_N)] [(lO',lO1)]
+xx_a_subOls = Sub ArbType a xx_subOls
+
+-- after semantic 
+xx_a_subss = Sub ArbType a xx_subss
 \end{code}
 
 \begin{code}
 xxSubstCompTests  =  testGroup "substComp used for UTCP:X_X_comp"
- [ testCase "xxSubstCompTests NYI" 
-     (xx_a_subOO_subls @?= Val ArbType (Integer 42))
+ [ testCase "substComp X-X-comp example" 
+     (substComp xx_subOO xx_subls @?= Just xx_subOls)
+ , testCase "substComplete X-X-comp example"
+     (substComplete xxSCtxt a xx_subOls @?= xx_subss)
  ]
 \end{code}
 

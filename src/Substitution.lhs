@@ -1420,9 +1420,12 @@ s34xy = sub2 k3 k4
 
 \subsection{Substitution Composition}
 
-Most of the tests are of the form: 
+\subsubsection{End-to-end Tests}
+
+These are tests are of the form: 
  $(e\sigma_1)\sigma_2 = e(\sigma_1;\sigma_2)$
-where $e$ can be constant, variable or composite.
+where $e$ can be constant, variable or composite,
+and there are no known variables or side-conditions.
 \begin{code}
 subCompTest what expr sub1 sub2
   = testCase what
@@ -1444,6 +1447,45 @@ varSubstCompTests  =  testGroup "substComp applied to var"
 \end{code}
 
 
+\subsubsection{Scenario Tests}
+
+The scenario we have in mind is 
+\m{(a[\lst O_1/\lst O'])[ls \setminus R_1 \cup N_1/ls_1]}
+where $\lst O = \setof{ls,s}$
+and $\setof{s,s'} \supseteq_a a$.
+\begin{code}
+is  = jId "s" 
+vs = Vbl is ObsV Before
+vs' = Vbl is ObsV After
+obs_vs_Intro  = mkKnownVar vs ArbType
+obs_vs'_Intro = mkKnownVar vs' ArbType
+
+ils  = jId "ls" 
+vls = Vbl ils ObsV Before
+vls' = Vbl ils ObsV After
+obs_vls_Intro  = mkKnownVar vls ArbType
+obs_vls'_Intro = mkKnownVar vls' ArbType
+
+-- o = jId "O"  ;  vO = PreVar o
+-- lO = PreVars o  ;  lO' = PostVars o  ;  lO0 = MidVars o "0"
+gO = LstVar lO  ;  gO' = LstVar lO'  
+obsIntro = fromJust . addKnownVarSet vO (S.fromList $ map StdVar [vs,vls])
+
+vN = ExprVar (jId "N") Static ; tN = jVar ArbType vN ; gN = StdVar vN
+vR = ExprVar (jId "R") Static ; tR = jVar ArbType vR ; gR = StdVar vR
+va = Vbl (jId "a") PredV Static ; a = fromJust $ pVar ArbType va 
+xxSc = ([StdVar vs,StdVar vs'] `dyncover`  (StdVar va)) 
+         .: ([gO,gO'] `notin` gN)
+         .: ([gO,gO'] `notin` gR)
+xxVts = obs_vs_Intro $ obs_vs'_Intro $ newNamedVarTable "XX_Test"
+xxSCtxt = mkSubCtxt xxSc [xxVts]
+\end{code}
+
+\begin{code}
+xxSubstCompTests  =  testGroup "substComp used for UTCP:X_X_comp"
+ [ testCase "xxSubstCompTests NYI" (1+1 @?= 3)
+ ]
+\end{code}
 
 
 
@@ -1464,6 +1506,7 @@ int_tst_Subst
  = [ testGroup "\nSubstitution Internal"
      [ substTests
      , substCompTests
+     , xxSubstCompTests
      ]
 {-  , testGroup "QuickCheck Ident"
      [

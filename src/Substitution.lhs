@@ -1215,7 +1215,7 @@ while computing the composition.
 in substitution/quantifier lists be disjoint 
 is crucial for allowing this separation.}
 Such considerations should be applied 
-after syntactic composotion has been done.
+after syntactic composition has been done.
 The post-processing step is basically a \emph{semantic} completion.
 
 \newpage
@@ -1266,6 +1266,11 @@ applyLSub ts lvs lv
       Nothing   ->  lv
       Just lv'  ->  lv'
 \end{code}
+This transforms \m{(a[\lst O_1/\lst O'])[ls \setminus R_1 \cup N_1/ls_1]} 
+into 
+\m{ [  \lst O_1[ls\setminus R_1\cup N_1/ls_1],ls\setminus R_1\cup N_1 
+      /  \lst O',ls_1 
+    ]}.
 
 \newpage
 \subsection{Semantic Substitution Completion}
@@ -1364,6 +1369,14 @@ fuse1 tvars rvars = map fuse1' $ zip tvars rvars
 fuse1' :: (Variable,Variable) -> TermSub
 fuse1' (tvar,rvar) = (tvar,fromJust $ var ArbType rvar)
 \end{code}
+Given \m{\lst O = \setof{s,ls}}, uniformly,
+and \m{\setof{a,a'} \supseteq_a a},
+this transforms
+\m{ [  \lst O_1[ls\setminus R_1\cup N_1/ls_1],ls\setminus R_1\cup N_1 
+      /  \lst O',ls_1 
+    ]}
+into 
+\m{[s_1,ls\setminus R_1\cup N_1,ls\setminus R_1\cup N_1 / s',ls',ls_1]}.
 
 \subsubsection{Semantic completion, phase 2}
 Tailor substitution for given term-variable.
@@ -1371,6 +1384,10 @@ Tailor substitution for given term-variable.
 subComplete2 :: SubContext -> Variable -> Substn -> Substn
 subComplete2 (SubCtxt sc _) tv sub1 = sub1
 \end{code}
+Given \m{\lst O = \setof{s,ls}}, uniformly,
+this transforms 
+\m{[s_1,ls\setminus R_1\cup N_1,ls\setminus R_1\cup N_1 / s',ls',ls_1]}
+into \m{a[s_1/s']}.
 
 \newpage
 
@@ -1492,23 +1509,27 @@ ls_R_N  = fromJust $ eVar ArbType $ ExprVar (jId "ls_R_N") Static
 xx_subOO = jSubstn [] [(lO',lO1)]
 xx_subls = jSubstn [(vls1,ls_R_N)] []
 xx_a_subOO_subls = Sub ArbType (Sub ArbType a xx_subOO) xx_subls
-xx_subss  = jSubstn [(vs',ts1)] []
 
 -- after syntactic   a[O$1,ls_R_N/O$',ls1]
 xx_subOls = jSubstn [(vls1,ls_R_N)] [(lO',lO1)]
 xx_a_subOls = Sub ArbType a xx_subOls
 
 -- after semantic 
+xx_subss  = jSubstn [(vs',ts1)] []
 xx_a_subss = Sub ArbType a xx_subss
 \end{code}
 
 \begin{code}
 xxSubstCompTests  =  testGroup "substComp used for UTCP:X_X_comp"
- [ testCase "substComp X-X-comp example" 
-     (substComp xx_subOO xx_subls @?= Just xx_subOls)
- , testCase "substComplete X-X-comp example"
-     (substComplete xxSCtxt a xx_subOls @?= xx_subss)
- ]
+  [ testCase "substComp X-X-comp example" 
+      (substComp xx_subOO xx_subls @?= Just  )
+  , testCase "substComplete X-X-comp example"
+      (substComplete xxSCtxt a xx_subOls @?= xx_subss)
+  , testCase "subComplete1 X-X-comp example"
+      (subComplete1 xxSCtxt xx_subOls @?= xx_subss)
+  , testCase "subComplete2 X-X-comp example"
+      (subComplete2 xxSCtxt va xx_subOls @?= xx_subss)
+  ]
 \end{code}
 
 

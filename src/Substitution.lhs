@@ -1154,20 +1154,36 @@ Proof, stuctural induction on $E = K + V + E \times E$.
 Trickiest part is the variable case which has a 4-way case split.
 
 \newpage
+
+\def\xxaExample{(a[\lst O_1/\lst O'])[ls \setminus R_1 \cup N_1/ls_1]}
+\def\xxaCompNonRec{
+ [\lst O_1[ls\setminus R_1\cup N_1/ls_1],ls\setminus R_1\cup N_1/\lst O',ls_1]
+ }
+\def\xxaCompRec{
+ [ls\setminus R_1\cup N_1,\lst O_1/ls_1,\lst O']
+}
+\def\xxaCmpOneNonRec{
+   [s_1,ls\setminus R_1\cup N_1,ls\setminus R_1\cup N_1 / s',ls',ls_1]
+}
+\def\xxaCmpOneRec{
+   [ls\setminus R_1\cup N_1,s_1,ls_1/ls_1,s',ls']
+}
+\def\xxaCmpTwo{[s_1/s']}
+
 Now we consider the following concrete example: 
-\m{(a[\lst O_1/\lst O'])[ls \setminus R_1 \cup N_1/ls_1]}.
+\m{\xxaExample}.
 
 Given that $\lst O = \setof{s,ls}$, uniformly,
 and that $\setof{a,a'} \supseteq_a a$, we can proceed as follows:
 \begin{eqnarray*}
-\lefteqn{(a[\lst O_1/\lst O'])[ls \setminus R_1 \cup N_1/ls_1]}
+\lefteqn{\xxaExample}
 \EQ{expand $\lst O$}
 \\&& (a[s_1,ls_1/s',ls'])[ls \setminus R_1 \cup N_1/ls_1]
 \EQ{$s,s' \supseteq_a a$}
-\\&& (a[s_1/s'])[ls \setminus R_1 \cup N_1/ls_1]
-\EQ{now we have $s,s_1 \supseteq_a a[s_1/s']$}
-\\&& (a[s_1/s'])[ls \setminus R_1 \cup N_1/ls_1]
-\\&& a[s_1/s']
+\\&& (a\xxaCmpTwo)[ls \setminus R_1 \cup N_1/ls_1]
+\EQ{now we have $s,s_1 \supseteq_a a\xxaCmpTwo$}
+\\&& (a\xxaCmpTwo)[ls \setminus R_1 \cup N_1/ls_1]
+\\&& a\xxaCmpTwo
 \end{eqnarray*}
 
 
@@ -1185,9 +1201,7 @@ and $G'$ as \m{\seqof{ls\setminus R_1\cup N_1}}.
 
 So the result $[F[G/Y],G'/X,Y']$
 becomes 
-\m{ [  \lst O_1[ls\setminus R_1\cup N_1/ls_1],ls\setminus R_1\cup N_1 
-      /  \lst O',ls_1 
-    ]}.
+\m{ \xxaCompNonRec}.
 
 If all these are just arbitrary variables then it simplies thus:
 \m{[  \lst O_1,ls\setminus R_1\cup N_1 /  \lst O',ls_1 ]},
@@ -1205,9 +1219,9 @@ and that $\setof{a,a'} \supseteq_a a$, then a different result emerges:
 \\&& a[\seqof{s_1,ls\setminus R_1\cup N_1},ls\setminus R_1\cup N_1 
            /\seqof{s',ls'},ls_1]
 \EQ{flatten}
-\\&& a[s_1,ls\setminus R_1\cup N_1,ls\setminus R_1\cup N_1 / s',ls',ls_1]
+\\&& a\xxaCmpOneNonRec
 \EQ{$s,s' \supseteq_a a$}
-\\&& a[s_1/s']
+\\&& a\xxaCmpTwo
 \end{eqnarray*}
 We have shown that side-conditions need not play a role here,
 while computing the composition.
@@ -1254,7 +1268,7 @@ notTargetedIn ts (t,_) = not (t `elem` ts)
 
 applySub ::  Substn -> Term -> Term
 applySub sub t  
-  =  case substitute subContext0 sub t of
+  =  case substitute subContext0 sub t of -- note effective recursion !
        Nothing  ->  Sub (termtype t) t sub
        Just t'  ->  t
 
@@ -1266,12 +1280,12 @@ applyLSub ts lvs lv
       Nothing   ->  lv
       Just lv'  ->  lv'
 \end{code}
-This transforms \m{(a[\lst O_1/\lst O'])[ls \setminus R_1 \cup N_1/ls_1]} 
-into 
-\m{ [  \lst O_1[ls\setminus R_1\cup N_1/ls_1],ls\setminus R_1\cup N_1 
-      /  \lst O',ls_1 
-    ]}.
-
+This should transform \m{\xxaExample} into \m{\xxaCompNonRec}.
+In fact, due to the (recursive) call to \h{substitute},
+this returns \m{\xxaCompRec}.
+It turns out this makes no difference to the final outcome,
+so we leave it.
+ 
 \newpage
 \subsection{Semantic Substitution Completion}
 
@@ -1295,13 +1309,13 @@ and simply uses the list-variable data:
 \\&& t[\seqof{s_1,ls\setminus R_1\cup N_1},ls\setminus R_1\cup N_1 
            /\seqof{s',ls'},ls_1]
 \EQ{flatten}
-\\&& t[s_1,ls\setminus R_1\cup N_1,ls\setminus R_1\cup N_1 / s',ls',ls_1]
+\\&& t\xxaCmpOneNonRec
 \end{eqnarray*}
 The second phase looks at the actual term being substituted:
 \begin{eqnarray*}
-\lefteqn{a[s_1,ls\setminus R_1\cup N_1,ls\setminus R_1\cup N_1 / s',ls',ls_1]}
+\lefteqn{a\xxaCmpOneNonRec}
 \EQ{$s,s' \supseteq_a a$}
-\\&& a[s_1/s']
+\\&& a\xxaCmpTwo
 \end{eqnarray*}
 Note, this second phase is best done 
 when we have drilled down to a single term-variable.
@@ -1369,14 +1383,17 @@ fuse1 tvars rvars = map fuse1' $ zip tvars rvars
 fuse1' :: (Variable,Variable) -> TermSub
 fuse1' (tvar,rvar) = (tvar,fromJust $ var ArbType rvar)
 \end{code}
-Given \m{\lst O = \setof{s,ls}}, uniformly,
-and \m{\setof{a,a'} \supseteq_a a},
+Given \m{\lst O = \setof{s,ls}} uniformly,
 this transforms
-\m{ [  \lst O_1[ls\setminus R_1\cup N_1/ls_1],ls\setminus R_1\cup N_1 
-      /  \lst O',ls_1 
-    ]}
+\m{\xxaCompNonRec}
+\newline
 into 
-\m{[s_1,ls\setminus R_1\cup N_1,ls\setminus R_1\cup N_1 / s',ls',ls_1]}.
+\m{\xxaCmpOneNonRec}.
+Given that \h{substComp} currently returns 
+\m{\xxaCompRec}
+we actually get \m{\xxaCmpOneRec}.
+
+
 
 \subsubsection{Semantic completion, phase 2}
 Tailor substitution for given term-variable.
@@ -1384,10 +1401,33 @@ Tailor substitution for given term-variable.
 subComplete2 :: SubContext -> Variable -> Substn -> Substn
 subComplete2 (SubCtxt sc _) tv sub1 = sub1
 \end{code}
-Given \m{\lst O = \setof{s,ls}}, uniformly,
+Given \m{\setof{a,a'} \supseteq_a a},
 this transforms 
-\m{[s_1,ls\setminus R_1\cup N_1,ls\setminus R_1\cup N_1 / s',ls',ls_1]}
-into \m{a[s_1/s']}.
+\m{\xxaCmpOneNonRec}
+into \m{\xxaCmpTwo}.
+Given that \h{subComplete1} currently returns 
+\m{\xxaCmpOneRec}
+we would get \m{\xxaCmpTwo.}
+
+The overall picture looks as follows, 
+where the current implementation is recursive:
+$$
+\begin{array}{lcr}
+   \text{no recursion}
+   & \xxaExample
+   & \text{recursive}
+\\ & \h{substComp}
+\\ ~\xxaCompNonRec 
+   && \xxaCompRec
+\\ & \h{subComplete1}
+\\ ~\xxaCmpOneNonRec
+   && \xxaCmpOneRec
+\\ & \h{subComplete2}
+\\ ~\xxaCmpTwo && \xxaCmpTwo
+\end{array}
+$$
+
+
 
 \newpage
 
@@ -1468,12 +1508,12 @@ varSubstCompTests  =  testGroup "substComp applied to var"
 \subsubsection{Scenario Tests}
 
 The scenario we have in mind is from the proof of UTCP law X\_X\_comp.
-\m{(a[\lst O_1/\lst O'])[ls \setminus R_1 \cup N_1/ls_1]}
+\m{\xxaExample}
 where $\lst O = \setof{ls,s}$
 and $\setof{s,s'} \supseteq_a a$.
 The syntactic step results in 
 \m{a[\lst O_1,ls\setminus R_1\cup N_1 /  \lst O',ls_1 ]}
-while the semantic post-processing gives \m{a[s_1/s']}.
+while the semantic post-processing gives \m{a\xxaCmpTwo}.
 \begin{code}
 is  = jId "s" 
 vs = Vbl is ObsV Before
@@ -1487,6 +1527,7 @@ ils  = jId "ls"
 vls = Vbl ils ObsV Before
 vls' = Vbl ils ObsV After
 vls1 = Vbl ils ObsV (During "1")
+tls1 = fromJust $ eVar ArbType vls1
 obs_vls_Intro  = mkKnownVar vls ArbType
 obs_vls'_Intro = mkKnownVar vls' ArbType
 
@@ -1504,17 +1545,28 @@ xxSc = ([StdVar vs,StdVar vs'] `dyncover`  (StdVar va))
 xxVts = obs_vs_Intro $ obs_vs'_Intro $ newNamedVarTable "XX_Test"
 xxSCtxt = mkSubCtxt xxSc [xxVts]
 ls_R_N  = fromJust $ eVar ArbType $ ExprVar (jId "ls_R_N") Static
+\end{code}
 
--- starting substitution (a[O$1/O$'])(ls_R_N/ls1)
+Starting point:\m{\xxaExample}
+\begin{code}
 xx_subOO = jSubstn [] [(lO',lO1)]
 xx_subls = jSubstn [(vls1,ls_R_N)] []
 xx_a_subOO_subls = Sub ArbType (Sub ArbType a xx_subOO) xx_subls
+\end{code}
 
--- after syntactic   a[O$1,ls_R_N/O$',ls1]
+After \h{substComp}: \m\xxaCompRec
+\begin{code}
 xx_subOls = jSubstn [(vls1,ls_R_N)] [(lO',lO1)]
 xx_a_subOls = Sub ArbType a xx_subOls
+\end{code}
 
--- after semantic 
+After \h{subComplete1}: \m\xxaCmpOneRec
+\begin{code}
+xx_sublssls  = jSubstn [(vls1,ls_R_N),(vs',ts1),(vls',tls1)] []
+\end{code}
+
+After \h{subComplete2}: \m\xxaCmpTwo
+\begin{code}
 xx_subss  = jSubstn [(vs',ts1)] []
 xx_a_subss = Sub ArbType a xx_subss
 \end{code}
@@ -1522,13 +1574,13 @@ xx_a_subss = Sub ArbType a xx_subss
 \begin{code}
 xxSubstCompTests  =  testGroup "substComp used for UTCP:X_X_comp"
   [ testCase "substComp X-X-comp example" 
-      (substComp xx_subOO xx_subls @?= Just  )
+      (substComp xx_subOO xx_subls @?= Just xx_subOls)
+  , testCase "subComplete1 X-X-comp example"
+      (subComplete1 xxSCtxt xx_subOls @?= xx_sublssls)
+  , testCase "subComplete2 X-X-comp example"
+      (subComplete2 xxSCtxt va xx_sublssls @?= xx_subss)
   , testCase "substComplete X-X-comp example"
       (substComplete xxSCtxt a xx_subOls @?= xx_subss)
-  , testCase "subComplete1 X-X-comp example"
-      (subComplete1 xxSCtxt xx_subOls @?= xx_subss)
-  , testCase "subComplete2 X-X-comp example"
-      (subComplete2 xxSCtxt va xx_subOls @?= xx_subss)
   ]
 \end{code}
 

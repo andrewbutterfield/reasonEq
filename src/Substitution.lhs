@@ -1355,7 +1355,7 @@ lvsComplete1 vts lvs  = lvsComp1 vts False [] [] $ S.toList lvs
 lvsComp1 _   chgd ts' lvs' []              = (chgd,ts',lvs')
 lvsComp1 vts chgd ts' lvs' (trlv:lvl)
   = lvsComp1 vts chgd' (newts++ts') (modlvs++lvs') lvl
-  where (chgd',newts,modlvs) = pdbg "tlrlComp1" $ tlrlComp1 vts chgd trlv
+  where (chgd',newts,modlvs) = tlrlComp1 vts chgd trlv
 \end{code}
 
 Here we are processing a single list-var substitution: $[\lst r/\lst \ell]$.
@@ -1363,13 +1363,13 @@ Here we are processing a single list-var substitution: $[\lst r/\lst \ell]$.
 tlrlComp1 :: [VarTable] -> Bool -> LVarSub -> (Bool,[TermSub],[LVarSub])
 tlrlComp1 vts chgd trlv@(tlv,rlv) 
   = case (tlvknown,rlvknown) of
-      (Just (tmr,[],[]),Just (rmr,[],[]))  ->  tlrlRoles1 chgd trlv (pdbg "tmr" tmr) $ pdbg "rmr" rmr
+      (Just (tmr,[],[]),Just (rmr,[],[]))  ->  tlrlRoles1 chgd trlv tmr rmr
       -- (Just (texp,tis,tjs),Just (rexp,ris,rjs))
       -- need to do case when is,js aren't null !!!
       _                                  ->  (chgd,[],[trlv])
   where 
-    tlvknown  =  pdbg "tlvknown" $ expandKnown (pdbg "vts" vts) $ pdbg "tlv" tlv
-    rlvknown  =  pdbg "rlvknown" $ expandKnown vts $ pdbg "rlv" rlv
+    tlvknown  =  expandKnown vts tlv
+    rlvknown  =  expandKnown vts rlv
 
 tlrlRoles1 :: Bool -> LVarSub -> LstVarMatchRole -> LstVarMatchRole 
            -> (Bool,[TermSub],[LVarSub])
@@ -1380,7 +1380,7 @@ tlrlRoles1 chgd trlv
 tlrlRoles1 chgd trlv 
            (KnownVarSet _ txpnd tlen) 
            (KnownVarSet _ rxpnd rlen)
-  | tlen == rlen  = (True,fuse1 (pdbg "txpnd" $ S.toList txpnd) (pdbg "rxpnd" $ S.toList rxpnd),[])
+  | tlen == rlen  = (True,fuse1 (S.toList txpnd) (S.toList rxpnd),[])
 tlrlRoles1 chgd trlv tmr rmr = (chgd,[],[trlv])
 
 fuse1 :: [Variable] -> [Variable] -> [TermSub]
@@ -1400,14 +1400,28 @@ Given that \h{substComp} currently returns
 we actually get \m{\xxaCmpOneRec}.
 
 
-
+\newpage
 \subsubsection{Semantic completion, phase 2}
 Tailor substitution for given term-variable.
 \begin{code}
 subComplete2 :: SubContext -> Variable -> Substn -> Substn
-subComplete2 (SubCtxt sc _) tv sub1 = sub1
+subComplete2 (SubCtxt sc _) tv sub1@(Substn ts lvs)
+  = case findGenVarInSC gtv sc of
+      Nothing  ->  pdbg "sC2.Nothing.sub1" sub1
+      Just (VSC _ vsD uvsC uvsCd)  
+        ->  jSubstn (pdbg "sC2.Just.ts'" ts') (S.toList lvs)
+            where
+              uvsCov = uvsC `uunion` uvsCd 
+              ts' = filter (allowed vsD uvsCov) $ S.toList $ pdbg "sC2.Just.ts"ts
+              allowed vD vC (t,_) 
+                = let gt = StdVar t
+                  in gt `lmbr` uvsCd || gt `lmbr` uvsC || not( gt `S.member` vsD)
+  where
+    lmbr gv Everything = False
+    lmbr gv (Listed vs) = gv `S.member` vs
+    gtv = StdVar tv
 \end{code}
-Given \m{\setof{a,a'} \supseteq_a a},
+Given \m{\setof{s,s'} \supseteq_a a},
 this transforms 
 \m{\xxaCmpOneNonRec}
 into \m{\xxaCmpTwo}.

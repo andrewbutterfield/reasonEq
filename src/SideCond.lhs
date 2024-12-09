@@ -24,7 +24,8 @@ module SideCond (
 , isFloatingVSC
 , addFreshVars
 , notin, covers, dyncover, fresh
-, findGenVarInSC, findAllGenVar, findCoveredGenVar, findDynCvrdGenVar
+, findGenVarInSC, findAllGenVar
+, findDisjointGenVar, findCoveredGenVar, findDynCvrdGenVar
 , mentionedBy
 -- , citingASCs   -- not used anywhere!
 , (.:), mrgscs
@@ -1311,6 +1312,17 @@ findAGV gv scsa (vsc:vscs)
 \end{code}
 
 We sometimes want mentions for a specific condition type:
+
+For disjointness we look for precisely the given general variable.
+\begin{code}
+findDisjointGenVar :: MonadFail m => GenVar -> SideCond -> m VarSet
+findDisjointGenVar gv ( vscs, _ ) = findDGV gv vscs
+
+findDGV gv []         =  fail ("Disjoint "++show gv ++ " not found")
+findDGV gv ((VSC gv' vsD _ _):vscs)
+  | gv == gv' && not (S.null vsD)  =  return vsD
+findDGV gv (_:vscs)                =  findDGV gv vscs
+\end{code}
 
 For (regular) coverage we look for precisely the given general variable.
 \begin{code}

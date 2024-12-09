@@ -52,6 +52,42 @@ SN
 ( { (VR (Id "ls" 0, VO, WA), V T (VR (Id "ls" 0, VO, WD "1")))
   , (VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1"))) } )
 ( {} )
+
+    subComplete1 X-X-comp example: [Failed]
+expected: 
+SN
+( { (VR (Id "ls" 0, VO, WD "1"), V T (VR (Id "ls_R_N" 0, VE, WS)))
+  , (VR (Id "ls" 0, VO, WA), V T (VR (Id "ls" 0, VO, WD "1")))
+  , (VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1"))) } )
+( {} )
+ but got: 
+SN
+( { (VR (Id "ls" 0, VO, WA), V T (VR (Id "ls" 0, VO, WD "1")))
+  , (VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1"))) } )
+( {} )
+
+    subComplete2 X-X-comp example: [Failed]
+expected: 
+SN
+( { (VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1"))) } )
+( {} )
+ but got: 
+SN
+( { (VR (Id "ls" 0, VO, WD "1"), V T (VR (Id "ls_R_N" 0, VE, WS)))
+  , (VR (Id "ls" 0, VO, WA), V T (VR (Id "ls" 0, VO, WD "1")))
+  , (VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1"))) } )
+( {} )
+
+    substComplete X-X-comp example: [Failed]
+expected: 
+SN
+( { (VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1"))) } )
+( {} )
+ but got: 
+SN
+( { (VR (Id "ls" 0, VO, WA), V T (VR (Id "ls" 0, VO, WD "1")))
+  , (VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1"))) } )
+( {} )
 @vts:
 [ VD
   ( "UTCP"

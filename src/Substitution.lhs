@@ -1345,9 +1345,9 @@ Expand list-variable definitions.
 \begin{code}
 subComplete1 :: SubContext -> Substn -> Substn
 subComplete1 (SubCtxt _ vts) sub@(Substn ts lvs)
-  | chgd       =  pdbg "subComplete1" $  jSubstn ts1 lvl1
+  | chgd       =  jSubstn (ts1++S.toList ts) lvl1
   | otherwise  =  sub
-  where (chgd,ts1,lvl1) = lvsComplete1 (pdbg "vts" vts) lvs
+  where (chgd,ts1,lvl1) = lvsComplete1 vts lvs
 
 lvsComplete1 :: [VarTable] -> LVarSubs -> (Bool,[TermSub],[LVarSub])
 lvsComplete1 vts lvs  = lvsComp1 vts False [] [] $ S.toList lvs

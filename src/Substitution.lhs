@@ -1338,15 +1338,16 @@ subComplete sctxt tv sub
     in subComplete2 sctxt tv sub1
 \end{code}
 
+\newpage
 \subsubsection{Semantic completion, phase 1}
 Expand list-variable definitions.
 
 \begin{code}
 subComplete1 :: SubContext -> Substn -> Substn
 subComplete1 (SubCtxt _ vts) sub@(Substn ts lvs)
-  | chgd       =  jSubstn (S.toList ts) lvl1
+  | chgd       =  pdbg "subComplete1" $  jSubstn ts1 lvl1
   | otherwise  =  sub
-  where (chgd,ts1,lvl1) = lvsComplete1 vts lvs
+  where (chgd,ts1,lvl1) = lvsComplete1 (pdbg "vts" vts) lvs
 
 lvsComplete1 :: [VarTable] -> LVarSubs -> (Bool,[TermSub],[LVarSub])
 lvsComplete1 vts lvs  = lvsComp1 vts False [] [] $ S.toList lvs
@@ -1354,28 +1355,33 @@ lvsComplete1 vts lvs  = lvsComp1 vts False [] [] $ S.toList lvs
 lvsComp1 _   chgd ts' lvs' []              = (chgd,ts',lvs')
 lvsComp1 vts chgd ts' lvs' (trlv:lvl)
   = lvsComp1 vts chgd' (newts++ts') (modlvs++lvs') lvl
-  where (chgd',newts,modlvs) = tlrlComp1 vts chgd trlv
+  where (chgd',newts,modlvs) = pdbg "tlrlComp1" $ tlrlComp1 vts chgd trlv
+\end{code}
 
+Here we are processing a single list-var substitution: $[\lst r/\lst \ell]$.
+\begin{code}
 tlrlComp1 :: [VarTable] -> Bool -> LVarSub -> (Bool,[TermSub],[LVarSub])
 tlrlComp1 vts chgd trlv@(tlv,rlv) 
   = case (tlvknown,rlvknown) of
-      (Just (texp,_,_),Just (rexp,_,_))  ->  tlrlRoles1 chgd trlv texp rexp
+      (Just (tmr,[],[]),Just (rmr,[],[]))  ->  tlrlRoles1 chgd trlv (pdbg "tmr" tmr) $ pdbg "rmr" rmr
+      -- (Just (texp,tis,tjs),Just (rexp,ris,rjs))
+      -- need to do case when is,js aren't null !!!
       _                                  ->  (chgd,[],[trlv])
   where 
-    tlvknown  =  expandKnown vts tlv
-    rlvknown  =  expandKnown vts rlv
+    tlvknown  =  pdbg "tlvknown" $ expandKnown (pdbg "vts" vts) $ pdbg "tlv" tlv
+    rlvknown  =  pdbg "rlvknown" $ expandKnown vts $ pdbg "rlv" rlv
 
 tlrlRoles1 :: Bool -> LVarSub -> LstVarMatchRole -> LstVarMatchRole 
            -> (Bool,[TermSub],[LVarSub])
 tlrlRoles1 chgd trlv 
-           (KnownVarList _ texp tlen) 
-           (KnownVarList _ rexp rlen)
-  | tlen == rlen  = (chgd,fuse1 texp rexp,[])
+           (KnownVarList _ txpnd tlen) 
+           (KnownVarList _ rxpnd rlen)
+  | tlen == rlen  = (True,fuse1 txpnd rxpnd,[])
 tlrlRoles1 chgd trlv 
-           (KnownVarSet _ texp tlen) 
-           (KnownVarSet _ rexp rlen)
-  | tlen == rlen  = (chgd,fuse1 (S.toList texp) (S.toList rexp),[])
-tlrlRoles1 chgd trlv texp rexp = (chgd,[],[trlv])
+           (KnownVarSet _ txpnd tlen) 
+           (KnownVarSet _ rxpnd rlen)
+  | tlen == rlen  = (True,fuse1 (pdbg "txpnd" $ S.toList txpnd) (pdbg "rxpnd" $ S.toList rxpnd),[])
+tlrlRoles1 chgd trlv tmr rmr = (chgd,[],[trlv])
 
 fuse1 :: [Variable] -> [Variable] -> [TermSub]
 fuse1 tvars rvars = map fuse1' $ zip tvars rvars
@@ -1542,7 +1548,13 @@ va = Vbl (jId "a") PredV Static ; a = fromJust $ pVar ArbType va
 xxSc = ([StdVar vs,StdVar vs'] `dyncover`  (StdVar va)) 
        --   .: ([gO,gO'] `notin` gN)
        --   .: ([gO,gO'] `notin` gR)
-xxVts = obs_vs_Intro $ obs_vs'_Intro $ newNamedVarTable "XX_Test"
+xxVts 
+  = obsIntro 
+  $ obs_vls_Intro 
+  $ obs_vls'_Intro 
+  $ obs_vs_Intro 
+  $ obs_vs'_Intro 
+  $ newNamedVarTable "XX_Test"
 xxSCtxt = mkSubCtxt xxSc [xxVts]
 ls_R_N  = fromJust $ eVar ArbType $ ExprVar (jId "ls_R_N") Static
 \end{code}

@@ -195,7 +195,7 @@ data DynamicLstVarRole -- Dynamic ListVar Matching Roles
       Int               -- length of full expansion
  | DS (Set Identifier)  -- Known-set, Variable identifiers
       (Set Identifier)  -- Known-set, List-Variable identifiers
-      (Set Identifier)  -- full expnasion
+      (Set Identifier)  -- full expansion
       Int               -- size of full expansion
  | DAL                  -- Abstract Known List
  | DAS                  -- Abstract Known Set
@@ -437,7 +437,7 @@ checkVariableList vt lv@(Vbl i vc0 vw0) setsOK vl
     | invalid vw  =  fail "checkVariableList: temporality mismatch"
     | otherwise
        = case lookupVarTable vt v of
-           UV  ->  fail "checkVariableList: unknown variable"
+           UV  ->  fail ("checkVariableList: unknown variable "++show v)
            _   ->  chkVL invalid (v:srav) (len+1) vl
 
   chkVL invalid srav len (LstVar (LVbl v@(Vbl _ vc vw) _ _):vl)

@@ -1337,6 +1337,12 @@ subComplete sctxt tv sub
   = let sub1 = subComplete1 sctxt sub
     in subComplete2 sctxt tv sub1
 \end{code}
+\textbf{Note: }
+\textsf{
+This completion is in fact independent of substitution \textbf{composition},
+as it uses the sub-context to simplify a single substitution.
+This need not be limited to those produced by composition.
+}
 
 \newpage
 \subsubsection{Semantic completion, phase 1}
@@ -1403,21 +1409,37 @@ we actually get \m{\xxaCmpOneRec}.
 \newpage
 \subsubsection{Semantic completion, phase 2}
 Tailor substitution for given term-variable.
+Consider a term-variable \m{T},
+with general side condition 
+\m{T \disj D \land T \subseteq C \land T \subseteq_a C_d}.
+Given a target variable \m{t} and replacement term \m{r},
+we want to ask when we can definitely state that \m{T[r/t]=T},
+based on $t$'s membership of $D$, $C$, and $C_d$.
+We note that \m{D \disj C \cup C_d} by construction.
+We can consider cases:
+\begin{itemize}
+  \item \m{t \in D}: then \m{T[r/t]=T}.
+  \item \m{t \in C \cup C_d}: then \m{T[r/t]=T[r/t]}
+  \item \m{t \notin D \cup C \cup C_d}: then \m{T[r/t]=T}
+\end{itemize}
+In short, 
+if \m{t} is in the coverage of \m{T} 
+then we retain the \m{[r/t]} substitution,
+otherwise we drop it as it won't apply.
 \begin{code}
 subComplete2 :: SubContext -> Variable -> Substn -> Substn
 subComplete2 (SubCtxt sc _) tv sub1@(Substn ts lvs)
   = case findGenVarInSC gtv sc of
       Nothing  ->  pdbg "sC2.Nothing.sub1" sub1
-      Just (VSC _ vsD uvsC uvsCd)  
+      Just (VSC _ _ uvsC uvsCd)  
         ->  jSubstn (pdbg "sC2.Just.ts'" ts') (S.toList lvs)
             where
-              uvsCov = uvsC `uunion` uvsCd 
-              ts' = filter (allowed vsD uvsCov) $ S.toList $ pdbg "sC2.Just.ts"ts
-              allowed vD vC (t,_) 
+              ts' = filter allowed $ S.toList $ pdbg "sC2.Just.ts"ts
+              allowed (t,_) 
                 = let gt = StdVar t
-                  in gt `lmbr` uvsCd || gt `lmbr` uvsC || not( gt `S.member` vsD)
+                  in gt `lmbr` uvsCd || gt `lmbr` uvsC 
   where
-    lmbr gv Everything = False
+    lmbr gv Everything = False -- Everything really means irrelevant!!!
     lmbr gv (Listed vs) = gv `S.member` vs
     gtv = StdVar tv
 \end{code}

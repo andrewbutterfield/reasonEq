@@ -247,23 +247,22 @@ We first scan the var-term pairs looking for $\vv v$,
 returning the replacement if found:
 \begin{code}
 -- we should also use vdata to "expand" sc here
-     (alookup (pdbg "alookup.v" v) $ pdbg "alookup.vtl" vtl)
-\end{code}
-Next we scan the list-variable  pairs, with the side-conditions in hand,
-looking for a list-variable that covers $\vv v$:
-\begin{code}
-     <|> (lvlvlSubstitute sctx (pdbg "lvlvlSubstitute.vrt" vrt) $ pdbg "lvlvlSubstitute.lvlvl" lvlvl)
+     alookup v vtl
 \end{code}
 Then we see if we have a uniform substitution, 
 provided that $\vv v$ is dynamic:
 \begin{code}
-     <|> (uniformSubstitute sctx vrt (pdbg "uniformSubstitute.vtl" vtl) lvlvl)
+     <|> uniformSubstitute sctx vrt vtl lvlvl
+\end{code}
+Next we scan the list-variable  pairs, with the side-conditions in hand,
+looking for a list-variable that covers $\vv v$:
+\begin{code}
+     <|> lvlvlSubstitute sctx vrt lvlvl
 \end{code}
 If nothing is found we return the substitution 
 after running it through semantic completion:
 \begin{code}
-     <|> (pure (Sub tk vrt $ pdbg "substComplete" $ substComplete sctx vrt sub))
-  where
+     <|> (pure (Sub tk vrt $ substComplete sctx vrt sub))
 \end{code}
 
 
@@ -419,6 +418,7 @@ or a list of zero or more possible substitutions.
 \end{eqnarray*}
   \item Have empty list of possible substitutions?
     Return $v$ unmodified
+  \item Have a singleton list $[\ell^R/\ell^T]$ giving \emph{one} possible substitution? Return $v[\ell^R/\ell^T]$.
   \item Have non-empty list $[\dots/\dots]$ of substitutions?
     Return explicit substitution $v[\dots/\dots]$, or fail.
     \textbf{Should this be done after uniform subs checking?}
@@ -430,11 +430,11 @@ lvlvlSubstitute :: (MonadFail m, Alternative m)
                 => SubContext -> Term
                -> [LVarSub] -> m Term
 lvlvlSubstitute sctxt vrt@(Var tk v@(Vbl i  vc vw)) lvlvl
-  = case pdbg "lvlvlSubstScan" $ lvlvlSubstScan sctxt tk v [] lvlvl of
+  = case lvlvlSubstScan sctxt tk v [] lvlvl of
       Left (tlv, rlv@(LVbl (Vbl r_ _  rw) _ _))  
                 ->  pure $ jVar tk (Vbl i vc rw)
       Right []  ->  return vrt
-      Right _   -> fail "scan inconclusive"
+      Right lvlvl'  -> return $ Sub tk vrt $ jSubstn [] lvlvl'
 
 
 lvlvlSubstScan sctxt tk v poss [] = Right poss
@@ -477,18 +477,10 @@ lvlvSubstitute sctx@(SubCtxt sc vdata) tk v@(Vbl i  vc vw)
 \end{code}
 At this point we get into details, concerning $v[\ell^R/\ell^T]$.
 We have two sources of extra information, variable data and side-conditions.
-For now we focus on side-conditions.
-Here are the current examples we have:
+
+Here are examples of where observation variables are being substituted:
 \begin{eqnarray*}
-   E_1[\lst O_1/\lst O'] 
-   ~~~\text{given}~~~ 
-   E_1 \disj \lst O,\lst O'     
-   &\mapsto& E_1
-\\   a[\lst O_1/\lst O'] 
-   ~~~\text{given}~~~ 
-   a \subseteq_a \lst O,\lst O' 
-   &=& a[\lst O_1/\lst O']
-\\  ls[\lst O_1/\lst O'] 
+    ls[\lst O_1/\lst O'] 
     ~~~\text{given}~~~
      \lst O = \setof{s,ls}       
    &\mapsto& ls
@@ -496,14 +488,6 @@ Here are the current examples we have:
    ~~~\text{given}~~~
    \lst O = \setof{s,ls}       
    &\mapsto& ls_1
-\\ E_2[\lst O_1/\lst O] 
-   ~~~\text{given}~~~ 
-   E_2 \disj \lst O,\lst O'     
-   &\mapsto& E_2
-\\   a[\lst O_1/\lst O] 
-   ~~~\text{given}~~~ 
-   a \subseteq_a \lst O,\lst O' 
-   &=& a[\lst O_1/\lst O]
 \\  ls[\lst O_1/\lst O] 
     ~~~\text{given}~~~
      \lst O = \setof{s,ls}       
@@ -511,13 +495,14 @@ Here are the current examples we have:
 \\ ls'[\lst O_1/\lst O] 
    ~~~\text{given}~~~
    \lst O = \setof{s,ls}  
-   &\mapsto& ls'
+   &\mapsto& ls' 
+\\ ls[\lst O_1/\lst O] 
+   ~~~\text{given}~~~
+   \lst O = \setof{s}  
+   &\mapsto& ls 
 \end{eqnarray*}
-Note that $E_i$ and $a$ are not observation variables, but $ls$ and $ls'$ are.
 For $a$ should we have $a \subseteq \lst O,\lst O$,
 rather than $a \subseteq_a \lst O,\lst O$?
-
-\newpage
 
 The basic idea seems to be, if $v$ is an observable, then look at variable-data,
 otherwise look to side-conditions.
@@ -527,7 +512,7 @@ or at least whatever list-variable is being used for the substitution target.
 \begin{code}
 lvlvSub sctx@(SubCtxt sc vdata) tk v@(Vbl i ObsV vw) 
         lvlv@( tlv@(LVbl tv@(Vbl ti _  tw) tis _) 
-                       , rlv@(LVbl rv@(Vbl ri _  rw) ris _) )
+             , rlv@(LVbl rv@(Vbl ri _  rw) ris _) )
   -- vw notdyn || vw=tw ; ti==ri ; i notelem tis,ris
   = case lookupLVarTs vdata tlv of
       KnownVarList vl _ _  ->  lvlvObsSub vl
@@ -537,11 +522,41 @@ lvlvSub sctx@(SubCtxt sc vdata) tk v@(Vbl i ObsV vw)
     lvlvObsSub vl = if (StdVar v) `elem` vl then Left lvlv else Right []
 \end{code}
 
-Term Variables should have side-conditions:
+\newpage
+
+For term variables we have the following examples:
+\begin{eqnarray*}
+   E_1[\lst O_1/\lst O'] 
+   ~~~\text{given}~~~ 
+   E_1 \disj \lst O,\lst O'     
+   &\mapsto& E_1
+\\   a[\lst O_1/\lst O'] 
+   ~~~\text{given}~~~ 
+   a \subseteq_a \lst O,\lst O' 
+   &=& a[\lst O_1/\lst O']
+\\ E_2[\lst O_1/\lst O] 
+   ~~~\text{given}~~~ 
+   E_2 \disj \lst O,\lst O'     
+   &\mapsto& E_2
+\\   a[\lst O_1/\lst O] 
+   ~~~\text{given}~~~ 
+   a \subseteq_a \lst O,\lst O' 
+   &=& a[\lst O_1/\lst O]
+\\   a[\lst O_1/\lst O] 
+   ~~~\text{given}~~~ 
+   a \subseteq_a \setof{s,s'} \land \lst O = \setof{s,ls}
+   &\mapsto& a[s_1/s]
+\\   a[\lst O_1/\lst O] 
+   ~~~\text{given}~~~ 
+   a \subseteq_a \setof{s,s',ls,ls',\dots} \land \lst O = \setof{s,ls}
+   &\mapsto& a[s_1,ls_1/s,ls]
+\end{eqnarray*}
+
+Term Variables should have side-conditions: 
 \begin{code}
 lvlvSub sctx@(SubCtxt sc vdata) tk v@(Vbl i vc vw) 
         lvlv@( tlv@(LVbl tv@(Vbl ti _  tw) tis _) 
-                       , rlv@(LVbl rv@(Vbl ri _  rw) ris _) )
+             , rlv@(LVbl rv@(Vbl ri _  rw) ris _) )
   -- vw notdyn || vw=tw ; ti==ri ; i notelem tis,ris
   -- vc = ExprV,PredV
   = case (StdVar v) `mentionedBy` fst sc of
@@ -1431,11 +1446,11 @@ otherwise we drop it as it won't apply.
 subComplete2 :: SubContext -> Variable -> Substn -> Substn
 subComplete2 (SubCtxt sc _) tv sub1@(Substn ts lvs)
   = case findGenVarInSC gtv sc of
-      Nothing  ->  pdbg "sC2.Nothing.sub1" sub1
+      Nothing  ->  sub1
       Just (VSC _ _ uvsC uvsCd)  
-        ->  jSubstn (pdbg "sC2.Just.ts'" ts') (S.toList lvs)
+        ->  jSubstn ts' (S.toList lvs)
             where
-              ts' = filter allowed $ S.toList $ pdbg "sC2.Just.ts"ts
+              ts' = filter allowed $ S.toList ts
               allowed (t,_) 
                 = let gt = StdVar t
                   in gt `lmbr` uvsCd || gt `lmbr` uvsC 

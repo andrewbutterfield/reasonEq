@@ -247,21 +247,22 @@ We first scan the var-term pairs looking for $\vv v$,
 returning the replacement if found:
 \begin{code}
 -- we should also use vdata to "expand" sc here
-     alookup v vtl
+     (alookup (pdbg "alookup.v" v) $ pdbg "alookup.vtl" vtl)
 \end{code}
 Next we scan the list-variable  pairs, with the side-conditions in hand,
 looking for a list-variable that covers $\vv v$:
 \begin{code}
-     <|> lvlvlSubstitute sctx vrt lvlvl
+     <|> (lvlvlSubstitute sctx (pdbg "lvlvlSubstitute.vrt" vrt) $ pdbg "lvlvlSubstitute.lvlvl" lvlvl)
 \end{code}
 Then we see if we have a uniform substitution, 
 provided that $\vv v$ is dynamic:
 \begin{code}
-     <|> uniformSubstitute sctx vrt vtl lvlvl
+     <|> (uniformSubstitute sctx vrt (pdbg "uniformSubstitute.vtl" vtl) lvlvl)
 \end{code}
-If nothing is found we return the substitution unchanged:
+If nothing is found we return the substitution 
+after running it through semantic completion:
 \begin{code}
-     <|> pure (Sub tk vrt sub)
+     <|> (pure (Sub tk vrt $ pdbg "substComplete" $ substComplete sctx vrt sub))
   where
 \end{code}
 
@@ -429,7 +430,7 @@ lvlvlSubstitute :: (MonadFail m, Alternative m)
                 => SubContext -> Term
                -> [LVarSub] -> m Term
 lvlvlSubstitute sctxt vrt@(Var tk v@(Vbl i  vc vw)) lvlvl
-  = case lvlvlSubstScan sctxt tk v [] lvlvl of
+  = case pdbg "lvlvlSubstScan" $ lvlvlSubstScan sctxt tk v [] lvlvl of
       Left (tlv, rlv@(LVbl (Vbl r_ _  rw) _ _))  
                 ->  pure $ jVar tk (Vbl i vc rw)
       Right []  ->  return vrt

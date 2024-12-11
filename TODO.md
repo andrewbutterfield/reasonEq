@@ -5,6 +5,18 @@
 **Should a substitution have a boolean that indicates if it is uniform?**
 *It would be set by the exported subst builder.*
 
+We have the issue with `Equiv.non_subst`. 
+It shouldn't match `a[O$_1/O$']` to yield `a`.
+
+```
+Match against `non_subst'[1] OK
+Binding: { P  ⟼ a, e$  ⟼ ⟨O$_1⟩, x$  ⟼ ⟨O$'⟩ }
+Instantiated Law = a
+Instantiated Law S.C. = O$'∉a
+Goal S.C. = O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1
+Discharged Law S.C. = ⊤
+```
+
 **BAD SUBSTITUTION**
 
 ```

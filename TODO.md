@@ -2,6 +2,9 @@
 
 ## URGENT
 
+**Should a substitution have a boolean that indicates if it is uniform?**
+*It would be set by the exported subst builder.*
+
 **BAD SUBSTITUTION**
 
 ```

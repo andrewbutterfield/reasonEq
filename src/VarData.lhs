@@ -154,7 +154,7 @@ An abstract list-variable can only match itself.
 A concrete list-variable ultimately resolves down
 to a set or list of known variables.
 The contents and size of that collection are important,
-so we store this information explicilty here,
+so we store this information explicitly here,
 to avoid the need for matching algorithms to continually
 re-compute this.
 

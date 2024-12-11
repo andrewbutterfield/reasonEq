@@ -266,9 +266,14 @@ looking for a list-variable that covers $\vv v$:
 If nothing is found we return the substitution 
 after running it through semantic completion:
 \begin{code}
-     <|> (pure (Sub tk vrt $ substComplete sctx vrt sub))
+     -- <|> (pure (Sub tk vrt $ substComplete sctx vrt sub))
 \end{code}
-
+\textbf{Note:}
+\textsf{
+   It is possible that \h{lvlvlSubstitute} could do the work
+   of \h{uniformSubstitute} if we had a boolean indicating 
+   if the original substitution was \emph{uniform}.
+}
 
 
 
@@ -396,43 +401,82 @@ applySubst sctx sub tm = return tm
 
 \subsubsection{Does a list-variable cover the standard variable?}
 
+We assume that the variable-term substitutions did not apply,
+so we have the case 
+$$v[\lst r_1,\dots \lst r_N/\lst x_1,\dots,\lst x_N].$$
+We first ask is there there an $\lst x_i$ that can cover $v$?
+This requires $\lst x_i$ having an expansion 
+as a target \emph{list} of standard variables, 
+and $\lst r_i$ expanding to such a replacement list of the same length.
 
-What we try next is to scan the list-var substitutions 
-($\setof{\dots,(\ell^T/\ell^R),\dots$})
-asking the following questions:
-\begin{enumerate}
-  \item Is $v$ definitely in some $\ell^T$?  
-        If so, note \emph{the} relevant $(\ell^T,\ell^R)$ pair,
-        and exit the scan.
-  \item Is $v$ definitely not in $\ell^T$ ?
-        If so, skip and move on.
-  \item Otherwise, $v$ might be in $\ell^T$,
-        so add the relevant $(\ell^T,\ell^R)$ pair to a list
-\end{enumerate}
-We will get the following outcomes: 
-we either have one applicable substitution pair, 
-or a list of zero or more possible substitutions.
-\begin{enumerate}
-  \item Found definite pair $(\ell^T,\ell^R)$?
-    Return $v$ modified as follows: 
-\begin{eqnarray*}
-   \prv v \ss{}{\prv\ell}{\dyn\ell}  &=&  \dyn v ~~\IF~~ \prv\ell \supseteq \prv v
-\\ \psv v \ss{}{\psv\ell}{\dyn\ell}  &=&  \dyn v ~~\IF~~ \psv\ell \supseteq \psv v
-\\ v_d    \ss{}{\ell_d}  {\dyn\ell}  &=&  \dyn v ~~\IF~~ \ell_d \supseteq v_d
-\end{eqnarray*}
-  \item Have empty list of possible substitutions?
-    Return $v$ unmodified
-  \item Have a singleton list $[\ell^R/\ell^T]$ giving \emph{one} possible substitution? Return $v[\ell^R/\ell^T]$.
-  \item Have non-empty list $[\dots/\dots]$ of substitutions?
-    Return explicit substitution $v[\dots/\dots]$, or fail.
-    \textbf{Should this be done after uniform subs checking?}
-\end{enumerate}
+If $v$ is an observation variable, 
+and occurs at position $j$ in the target list,
+then the outcome is a term based on the variable 
+at position $j$ in the replacement list.
+\textbf{Note:}
+\textsf{
+ we may be able to hand uniform substitution here, 
+ if we had a uniformity flag passed in.
+ Then the check for $v$ occuring in the target list would ignore
+ dynamicity, while the replacement dynamicity would be adjusted to match $v$'s.
+}
+
+
+If $v$ is an expression or predicate variable, 
+we check for a side-condition that mentions $v$, 
+in which we also expand any list variables mentioned there.
+We then construct a substitution term $v[\dots/\dots]$ 
+that is limited to those variables we know can be in (the alphabet of) $v$.
+
 
 \begin{code}
 type PossLVSub = Either LVarSub [LVarSub]
-lvlvlSubstitute :: (MonadFail m, Alternative m)
-                => SubContext -> Term
-               -> [LVarSub] -> m Term
+lvlvlSubstitute :: MonadFail m
+                => SubContext -> Term -> [LVarSub] 
+                -> m Term
+\end{code}
+
+We treat observation variables first.
+\begin{code}
+lvlvlSubstitute (SubCtxt sc vts) vrt@(Var tk v@(Vbl i  ObsV vw)) lvlvl
+  = scan v lvlvl
+  where 
+
+    scan :: MonadFail m => Variable -> [LVarSub] -> m Term
+    scan v [] = fail "lvlvSub.search(obs): not found(1)"
+    scan v (lvlv:lvlvs)
+      = case check v lvlv of
+          Nothing  ->  scan v lvlvs
+          Just rv  ->  return $ jVar tk rv
+
+    check :: MonadFail m => Variable -> LVarSub -> m Variable
+    check v (tlv,rlv) = do
+      (tlvK,rlvK) <- getKnown tlv rlv
+      tvl <- getVarList tlvK
+      rvl <- getVarList rlvK
+      search v tvl rvl
+
+    getKnown :: MonadFail m 
+             => ListVar -> ListVar -> m (KnownExpansion,KnownExpansion)
+    getKnown tlv rlv = do
+      tlvKnown <- expandKnown vts tlv
+      rlvKnown <- expandKnown vts rlv
+      return (tlvKnown,rlvKnown)
+
+    getVarList :: MonadFail m => KnownExpansion -> m [Variable]
+    getVarList (KnownVarList _ expansion _,_,_) = return expansion
+    getVarList _ = fail "lvlvSub.search(obs): not known var-list"
+
+    search :: MonadFail m => Variable -> [Variable] -> [Variable] -> m Variable
+    search v [] _ = fail "lvlvSub.search(obs): not found(2)"
+    search v _ [] = fail "lvlvSub.search(obs): not found(3)"
+    search v (tv:tvK) (rv:rvK)
+      | v == tv  =  return rv
+      | otherwise  =  search v tvK rvK
+\end{code}
+
+Now we deal with term variables.
+\begin{code}
 lvlvlSubstitute sctxt vrt@(Var tk v@(Vbl i  vc vw)) lvlvl
   = case lvlvlSubstScan sctxt tk v [] lvlvl of
       Left (tlv, rlv@(LVbl (Vbl r_ _  rw) _ _))  
@@ -449,7 +493,7 @@ lvlvlSubstScan sctxt tk v poss (lvlv:lvlvl)
       left       ->  left
 \end{code}
 
-\newpage
+
 Given $v[\ell^R/\ell^T]$ we ask the following questions:
 \begin{enumerate}
   \item Is $v$ definitely in $\ell^T$?  
@@ -479,6 +523,7 @@ lvlvSubstitute sctx@(SubCtxt sc vdata) tk v@(Vbl i  vc vw)
   where
     diffdynamic = isDynamic vw && vw /= tw
 \end{code}
+
 At this point we get into details, concerning $v[\ell^R/\ell^T]$.
 We have two sources of extra information, variable data and side-conditions.
 
@@ -526,7 +571,6 @@ lvlvSub sctx@(SubCtxt sc vdata) tk v@(Vbl i ObsV vw)
     lvlvObsSub vl = if (StdVar v) `elem` vl then Left lvlv else Right []
 \end{code}
 
-\newpage
 
 For term variables we have the following examples:
 \begin{eqnarray*}

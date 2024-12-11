@@ -244,7 +244,7 @@ vO  = PreVar o  ; lO  = LVbl vO [] []  ; gO  = LstVar lO
 vO' = PostVar o ; lO' = LVbl vO' [] [] ; gO' = LstVar lO'
 dynAlf = [gO,gO']
 stAlf  = map StdVar [vin,vg,vout]
-obsIntro = fromJust . addKnownVarSet vO (S.fromList $ map StdVar [vs,vls])
+obsIntro = fromJust . addKnownVarList vO (map StdVar [vs,vls])
 \end{code}
 
 

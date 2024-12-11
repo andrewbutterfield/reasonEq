@@ -827,7 +827,7 @@ substituteFocus thrys liveProof
         sctxt = mkSubCtxt scC $ thd3 $ head $ mtchCtxts liveProof
     in case t of
          (Sub _ tm s)
-            -> do t' <- substitute sctxt s tm
+            -> do t' <- applySubst sctxt s tm
                   asn' <- mkAsn (exitTZ tz) (conjSC liveProof)
                   return ( focus_ ((setTZ t' tz),seq')
                          $ matches_ []

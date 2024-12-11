@@ -8,7 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Substitution
 ( SubContext, mkSubCtxt, subContext0
-, substitute
+, applySubst
 -- test stuff below
 , int_tst_Subst
 ) where
@@ -226,12 +226,12 @@ subContext0 = mkSubCtxt scTrue []
 \section{Term Substitution}
 
 \begin{code}
-substitute :: (MonadFail m, Alternative m) 
+applySubst :: (MonadFail m, Alternative m) 
            => SubContext -> Substn -> Term -> m Term
 \end{code}
 We first note that $P[/] = P$:
 \begin{code}
-substitute _ sub tm | isNullSubstn sub  =  return tm
+applySubst _ sub tm | isNullSubstn sub  =  return tm
 \end{code}
 
 \subsection{Variable Term Substitution}
@@ -239,16 +239,20 @@ substitute _ sub tm | isNullSubstn sub  =  return tm
 We are dealing with the case $\vv v \ss {} {g^n} {r^n}$,
 where $v$ denotes a standard variable. 
 \begin{code}
-substitute sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
+applySubst sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
   =  let vtl = S.toList vts ; lvlvl = S.toList lvlvs in
 \end{code}
 
-We first scan the var-term pairs looking for $\vv v$,
-returning the replacement if found:
+If we have $v[\dots,r,\dots/\dots,v,\dots]$ we return $r$:
 \begin{code}
--- we should also use vdata to "expand" sc here
      alookup v vtl
 \end{code}
+\textbf{Note:}
+\textsf{
+  we need to handle uniform substitutions here as well.
+  Or do we catch that below?  
+}
+
 Then we see if we have a uniform substitution, 
 provided that $\vv v$ is dynamic:
 \begin{code}
@@ -278,8 +282,8 @@ after running it through semantic completion:
    (\cc i {ts}) \ss {} {v^n} {t^n}
 \end{eqnarray*}
 \begin{code}
-substitute sctx sub ct@(Cons tk subable i ts)
-  | subable    =  do ts' <- sequence $ map (substitute sctx sub) ts
+applySubst sctx sub ct@(Cons tk subable i ts)
+  | subable    =  do ts' <- sequence $ map (applySubst sctx sub) ts
                      return $ Cons tk subable i ts'
   | otherwise  =     return $ Sub tk ct sub
 \end{code}
@@ -302,27 +306,27 @@ we do the following:
 \end{enumerate}
 We handle $(\ll n {x^+} t) \ss {} {v^n} {t^n}$ in a similar fashion.
 \begin{code}
-substitute sctx sub bt@(Bnd tk i vs tm)
+applySubst sctx sub bt@(Bnd tk i vs tm)
   | isNullSubstn effsub  =  return bt
   | otherwise 
     = do  alpha <- captureAvoidance (subSC sctx) vs tm effsub
           let vs' = S.fromList $ quantsSubst alpha $ S.toList vs
           asub <- substComp alpha effsub --- succeeds as alpha is var-only
           let asub' = substComplete sctx tm asub
-          tm' <- substitute sctx asub' tm
+          tm' <- applySubst sctx asub' tm
           bnd tk i vs' tm'
   where
     effsub = computeEffSubst vs sub
 --  effsubst = computeEffSubst sctx vs sub
 --  if null effsubset then return bt else ....
-substitute sctx sub lt@(Lam tk i vl tm)
+applySubst sctx sub lt@(Lam tk i vl tm)
   | isNullSubstn effsub  =  return lt
   | otherwise 
     = do  alpha <- captureAvoidance (subSC sctx) vs tm effsub
           let vl' = quantsSubst alpha vl
           asub <- substComp alpha effsub --- succeeds as alpha is var-only
           let asub' = substComplete sctx tm asub
-          tm' <- substitute sctx asub' tm
+          tm' <- applySubst sctx asub' tm
           lam tk i vl' tm'
   where
     vs = S.fromList vl
@@ -337,7 +341,7 @@ substitute sctx sub lt@(Lam tk i vl tm)
    (\ii \bigoplus n {lvs \ss {} {v^n} {t^n}})
 \end{eqnarray*}
 \begin{code}
-substitute sctx (Substn _ lvlvs) bt@(Iter tk sa na si ni lvs)
+applySubst sctx (Substn _ lvlvs) bt@(Iter tk sa na si ni lvs)
   = return $ Iter tk sa na si ni
            $ map (listVarSubstitute sctx (S.toList lvlvs)) lvs
 \end{code}
@@ -354,7 +358,7 @@ we need to treat such seperately, noting that it is n.s.::
    (x:=e)[t^n/v^v] &=& (x:=e)[t^n/v^v]
 \end{eqnarray*}
 \begin{code}
-substitute sctx sub st@(Sub tk bt _)
+applySubst sctx sub st@(Sub tk bt _)
   | isAssignment bt  =  return $ Sub tk st sub
 \end{code}
 
@@ -368,10 +372,10 @@ substitute sctx sub st@(Sub tk bt _)
      \quad \text{if } \ss {} {v^m} {t^m};  \ss {} {v^n} {t^n} \text{ defined}
 \end{eqnarray*}
 \begin{code}
-substitute sctx sub bt@(Sub tk tm s)
+applySubst sctx sub bt@(Sub tk tm s)
   = case substComp s sub of
      Just sub' -> let sub'' = substComplete sctx tm sub'
-                  in substitute sctx sub'' tm
+                  in applySubst sctx sub'' tm
      -- Nothing NEVER occurs, substComp is total
      Nothing   -> return $ Sub tk bt sub
 \end{code}
@@ -384,7 +388,7 @@ substitute sctx sub bt@(Sub tk tm s)
 \\ \xx n t \ss {} {v^n} {t^n} &\defs& \xx n t
 \end{eqnarray*}
 \begin{code}
-substitute sctx sub tm = return tm
+applySubst sctx sub tm = return tm
 \end{code}
 
 \newpage 
@@ -921,7 +925,7 @@ Also
 
 Useful test bits:
 \begin{code}
-subC ctxt sub tm = fromJust $ substitute ctxt sub tm
+subC ctxt sub tm = fromJust $ applySubst ctxt sub tm
 sub0 = subC subContext0
 \end{code}
 
@@ -936,7 +940,7 @@ ie = jId "e" ; ve = PreExpr ie ; e = jeVar ve
 ix = jId "x" ; vx = PreVar ix  ; vx' = PostVar ix; vx1 = MidVar ix "1"
 iC = jId "C" ; c t = Cons arbpred True iC [t]
 e_for_x = jSubstn [(vx,e)] []
-tstDeep = testCase "substitute [e/x] in (P)=(P[e/x])"
+tstDeep = testCase "applySubst [e/x] in (P)=(P[e/x])"
               ( sub0 e_for_x (c p) @?=  c (Sub arbpred p e_for_x) )
 \end{code}
 
@@ -1284,7 +1288,7 @@ notTargetedIn ts (t,_) = not (t `elem` ts)
 
 applySub ::  Substn -> Term -> Term
 applySub sub t  
-  =  case substitute subContext0 sub t of -- note effective recursion !
+  =  case applySubst subContext0 sub t of -- note effective recursion !
        Nothing  ->  Sub (termtype t) t sub
        Just t'  ->  t
 
@@ -1297,7 +1301,7 @@ applyLSub ts lvs lv
       Just lv'  ->  lv'
 \end{code}
 This should transform \m{\xxaExample} into \m{\xxaCompNonRec}.
-In fact, due to the (recursive) call to \h{substitute},
+In fact, due to the (recursive) call to \h{applySubst},
 this returns \m{\xxaCompRec}.
 It turns out this makes no difference to the final outcome,
 so we leave it.
@@ -1515,7 +1519,7 @@ sub2 t3 t4 = jSubstn [(x,t3),(y,t4)] []
 A default sub-context:
 \begin{code}
 subctxt0 = SubCtxt scTrue []
-dosub tm sub = fromJust $ substitute subctxt0 sub tm
+dosub tm sub = fromJust $ applySubst subctxt0 sub tm
 subsyncomp sub1 sub2 = fromJust $ substComp sub1 sub2
 subsemcomp sctx tm sub1 sub2 = substComplete sctx tm $ subsyncomp sub1 sub2
 \end{code}

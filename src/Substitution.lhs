@@ -403,9 +403,9 @@ applySubst sctx sub tm = return tm
 
 We assume that the variable-term substitutions did not apply,
 so we have the case 
-$$v[\lst r_1,\dots \lst r_N/\lst x_1,\dots,\lst x_N].$$
-We first ask is there there an $\lst x_i$ that can cover $v$?
-This requires $\lst x_i$ having an expansion 
+$$v[\lst r_1,\dots \lst r_N/\lst t_1,\dots,\lst t_N].$$
+We first ask is there there an $\lst t_i$ that can cover $v$?
+This requires $\lst t_i$ having an expansion 
 as a target \emph{list} of standard variables, 
 and $\lst r_i$ expanding to such a replacement list of the same length.
 
@@ -413,14 +413,17 @@ If $v$ is an observation variable,
 and occurs at position $j$ in the target list,
 then the outcome is a term based on the variable 
 at position $j$ in the replacement list.
+
 \textbf{Note:}
-\textsf{
- we may be able to hand uniform substitution here, 
+\textsl{
+ we may be able to handle uniform substitution here, 
  if we had a uniformity flag passed in.
  Then the check for $v$ occuring in the target list would ignore
  dynamicity, while the replacement dynamicity would be adjusted to match $v$'s.
+  Some of the local scan code here could probably be global and shared
+  by both the obs-var and term-var code here. 
+  This would help with the check and replacement customisation needed.
 }
-
 
 If $v$ is an expression or predicate variable, 
 we check for a side-condition that mentions $v$, 
@@ -437,13 +440,20 @@ lvlvlSubstitute :: MonadFail m
 \end{code}
 
 We treat observation variables first.
+
+Recall:
+$$v[\lst r_1,\dots \lst r_N/\lst t_1,\dots,\lst t_N].$$
+If $v$ is an observation variable, 
+and occurs at location $j$ in the expansion of $\lst t_i$,
+then the outcome is a variable-term based on the variable 
+at position $j$ in the expansion of $\lst r_i$.
 \begin{code}
 lvlvlSubstitute (SubCtxt sc vts) vrt@(Var tk v@(Vbl i  ObsV vw)) lvlvl
   = scan v lvlvl
   where 
 
     scan :: MonadFail m => Variable -> [LVarSub] -> m Term
-    scan v [] = fail "lvlvSub.search(obs): not found(1)"
+    scan v [] = fail "lvlvSub.search(obs): not found"
     scan v (lvlv:lvlvs)
       = case check v lvlv of
           Nothing  ->  scan v lvlvs
@@ -451,40 +461,92 @@ lvlvlSubstitute (SubCtxt sc vts) vrt@(Var tk v@(Vbl i  ObsV vw)) lvlvl
 
     check :: MonadFail m => Variable -> LVarSub -> m Variable
     check v (tlv,rlv) = do
-      (tlvK,rlvK) <- getKnown tlv rlv
-      tvl <- getVarList tlvK
-      rvl <- getVarList rlvK
-      search v tvl rvl
-
-    getKnown :: MonadFail m 
-             => ListVar -> ListVar -> m (KnownExpansion,KnownExpansion)
-    getKnown tlv rlv = do
-      tlvKnown <- expandKnown vts tlv
-      rlvKnown <- expandKnown vts rlv
-      return (tlvKnown,rlvKnown)
+      tlvK <- expandKnown vts tlv
+      rlvK <- expandKnown vts rlv
+      tlvExp <- getVarList tlvK
+      rlvExp <- getVarList rlvK
+      search v tlvExp rlvExp
 
     getVarList :: MonadFail m => KnownExpansion -> m [Variable]
     getVarList (KnownVarList _ expansion _,_,_) = return expansion
     getVarList _ = fail "lvlvSub.search(obs): not known var-list"
 
     search :: MonadFail m => Variable -> [Variable] -> [Variable] -> m Variable
-    search v [] _ = fail "lvlvSub.search(obs): not found(2)"
-    search v _ [] = fail "lvlvSub.search(obs): not found(3)"
+    search v [] _ = fail "lvlvSub.search(obs): short target list"
+    search v _ [] = fail "lvlvSub.search(obs): short repl. list"
     search v (tv:tvK) (rv:rvK)
       | v == tv  =  return rv
       | otherwise  =  search v tvK rvK
 \end{code}
 
+\newpage
 Now we deal with term variables.
+
+Recall:
+$$v[\lst r_1,\dots \lst r_N/\lst t_1,\dots,\lst t_N].$$
+If $v$ is an expression or predicate variable, 
+we check for a side-condition that mentions $v$, 
+in which we also expand any list variables mentioned there.
+If there is no such side-condition, then we fail.
+We then search the substitution pairs.
+For each $\lst r_i/\lst t_i$ pair, 
+we check that both list-vars are known variable sequences of the same length
+($[y_1,\dots,y_N/x_1,\dots,x_N]$),
+We then check the target sequence against the side conditions,
+by computing $(\seqof{x_i}\setminus D)\cap C$.
+If this is non-empty and different to $[x_1,\dots,x_N]$,
+then we succeed and return a revised substitution.
+If it is empty, and any $x_i \in D$,
+we succeed but return the variable without any substitution.
+If not, we skip to the next pair.
+We then construct a substitution term $v[\dots/\dots]$ 
+that is limited to those variables we know can be in (the alphabet of) $v$.
 \begin{code}
-lvlvlSubstitute sctxt vrt@(Var tk v@(Vbl i  vc vw)) lvlvl
-  = case lvlvlSubstScan sctxt tk v [] lvlvl of
-      Left (tlv, rlv@(LVbl (Vbl r_ _  rw) _ _))  
-                ->  pure $ jVar tk (Vbl i vc rw)
-      Right []  ->  return vrt
-      Right lvlvl'  -> return $ Sub tk vrt $ jSubstn [] lvlvl'
+lvlvlSubstitute (SubCtxt (vscs,_) vts) vrt@(Var tk v@(Vbl i  vc vw)) lvlvl
+                                             -- vc in {ExprV,PredV}
+  = do (vsc,mwhen) <- gv `mentionedBy` vscs
+       -- for now we don't expand contents of vsD, uvsC, uvsCd
+       scan vsc v lvlvl
+  where
+    gv = StdVar v
+
+    scan :: MonadFail m => VarSideConds -> Variable -> [LVarSub] -> m Term
+    scan vsc v [] = fail "lvlvSub.search(term): not found"
+    scan vsc v (lvlv:lvlvs)
+      = case getLVarExpansions v lvlv of
+          Nothing  ->  scan vsc v lvlvs
+          Just (tlvExp,rlvExp) 
+            ->  do effSub <- processExpansions vsc [] tlvExp rlvExp
+                   fail "lvlvlSub(term) nyFi"
+
+    getLVarExpansions :: MonadFail m 
+                      => Variable -> LVarSub -> m ([Variable],[Variable])
+    getLVarExpansions v (tlv,rlv) = do
+      tlvK <- expandKnown vts tlv
+      rlvK <- expandKnown vts rlv
+      tlvExp <- getVarList tlvK
+      rlvExp <- getVarList rlvK
+      return (tlvExp,rlvExp)
+      
+    getVarList :: MonadFail m => KnownExpansion -> m [Variable]
+    getVarList (KnownVarList _ expansion _,_,_) = return expansion
+    getVarList _ = fail "lvlvSub.search(term): not known var-list"
+
+    processExpansions vsc ko [] []  = return $ reverse ko
+    processExpansions vsc ko _  []  = fail "lvlvSub.procExp: short repl." 
+    processExpansions vsc ko []  _  = fail "lvlvSub.procExp: short target" 
+    processExpansions vsc ko (tv:tvl) (rv:rvl) = fail "procExp nyFi"
+\end{code}
 
 
+
+% lvlvlSubstitute sctxt vrt@(Var tk v@(Vbl i  vc vw)) lvlvl
+%   = case lvlvlSubstScan sctxt tk v [] lvlvl of
+%       Left (tlv, rlv@(LVbl (Vbl r_ _  rw) _ _))  
+%                 ->  pure $ jVar tk (Vbl i vc rw)
+%       Right []  ->  return vrt
+%       Right lvlvl'  -> return $ Sub tk vrt $ jSubstn [] lvlvl'
+\begin{code}
 lvlvlSubstScan sctxt tk v poss [] = Right poss
 lvlvlSubstScan sctxt tk v poss (lvlv:lvlvl)
   = case lvlvSubstitute sctxt tk v lvlv of
@@ -493,7 +555,7 @@ lvlvlSubstScan sctxt tk v poss (lvlv:lvlvl)
       left       ->  left
 \end{code}
 
-
+% OBSOLETE?
 Given $v[\ell^R/\ell^T]$ we ask the following questions:
 \begin{enumerate}
   \item Is $v$ definitely in $\ell^T$?  

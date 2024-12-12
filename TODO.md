@@ -17,30 +17,7 @@ Goal S.C. = O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,
 Discharged Law S.C. = ⊤
 ```
 
-**BAD SUBSTITUTION**
-
-```
-(∃ s_1  • (E1 ⊆ ls ∧ (a[O$_1/O$'])[ls \ R1 ∪ N1/ls_1]) ∧ (((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$])[ls \ R1 ∪ N1/ls_1])
-   = 'substitute @[1,1,2]'
-(∃ s_1  • (E1 ⊆ ls ∧ a) ∧ (((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_1/O$])[ls \ R1 ∪ N1/ls_1])
- O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1
-```
-
-*`(a[O$_1/O$'])[ls \ R1 ∪ N1/ls_1]` becomes `a`, but should be  `a[s_1/s']`*
-
-
-Law `non_subst` matches `(E1 ⊆ ls ∧ a[O$_1/O$'])[ls \ R1 ∪ N1/ls_1]`, 
-but shouldn't. 
-It also incorrectly matches `(a[O$_1/O$'])[ls \ R1 ∪ N1/ls_1]`.
-
-We need to use s.c. info about the alphabet of `a`, which is `{s,s'}`
-and the fact that it is under substitution `[O$_1/O$]`
-
-Perhaps a subst-comp bug? 
-The composition should be `[s_1,ls \ R1 ∪ N1/s',ls']` given that `O$ = {s,ls}`.
-This then collapses to `[s_1/s']` because `ls` is not in the alphabet of `a`.
-
-It correctly matches `(E1 ⊆ ls)[ls \ R1 ∪ N1/ls_1]` to yield `(E1 ⊆ ls)`.
+Discharge is wrong:  `O$={ls,s} /\ s,s' ⊇ₐ a =/=> O$' ∉ a`
 
 ### Next in Line
 

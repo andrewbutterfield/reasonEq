@@ -261,7 +261,7 @@ provided that $\vv v$ is dynamic:
 Next we scan the list-variable  pairs, with the side-conditions in hand,
 looking for a list-variable that covers $\vv v$:
 \begin{code}
-     <|> lvlvlSubstitute sctx vrt lvlvl
+     <|> lvlvlSubstitute sctx vrt vtl lvlvl
 \end{code}
 If nothing is found we return the substitution 
 after running it through semantic completion:
@@ -435,7 +435,7 @@ that is limited to those variables we know can be in (the alphabet of) $v$.
 \begin{code}
 type PossLVSub = Either LVarSub [LVarSub]
 lvlvlSubstitute :: MonadFail m
-                => SubContext -> Term -> [LVarSub] 
+                => SubContext -> Term -> [TermSub] -> [LVarSub] 
                 -> m Term
 \end{code}
 
@@ -448,7 +448,7 @@ and occurs at location $j$ in the expansion of $\lst t_i$,
 then the outcome is a variable-term based on the variable 
 at position $j$ in the expansion of $\lst r_i$.
 \begin{code}
-lvlvlSubstitute (SubCtxt sc vts) vrt@(Var tk v@(Vbl i  ObsV vw)) lvlvl
+lvlvlSubstitute (SubCtxt sc vts) vrt@(Var tk v@(Vbl i  ObsV vw)) vtl lvlvl
   = scan v lvlvl
   where 
 
@@ -502,8 +502,9 @@ If not, we skip to the next pair.
 We then construct a substitution term $v[\dots/\dots]$ 
 that is limited to those variables we know can be in (the alphabet of) $v$.
 \begin{code}
-lvlvlSubstitute (SubCtxt (vscs,_) vts) vrt@(Var tk v@(Vbl i  vc vw)) lvlvl
-                                             -- vc in {ExprV,PredV}
+lvlvlSubstitute (SubCtxt (vscs,_) vts) 
+                vrt@(Var tk v@(Vbl i  vc vw)) vtl lvlvl
+                                   -- vc in {ExprV,PredV}
   = do (vsc,mwhen) <- gv `mentionedBy` vscs
        -- for now we don't expand contents of vsD, uvsC, uvsCd
        scan vsc v lvlvl
@@ -514,10 +515,8 @@ lvlvlSubstitute (SubCtxt (vscs,_) vts) vrt@(Var tk v@(Vbl i  vc vw)) lvlvl
     scan vsc v [] = fail "lvlvSub.search(term): not found"
     scan vsc v (lvlv:lvlvs)
       = case getLVarExpansions v lvlv of
-          Nothing  ->  scan vsc v lvlvs
-          Just (tlvExp,rlvExp) 
-            ->  do effSub <- processExpansions vsc [] tlvExp rlvExp
-                   fail "lvlvlSub(term) nyFi"
+          Nothing               ->  scan vsc v lvlvs
+          Just (tlvExp,rlvExp)  ->  handleExpansions v lvlvs vsc tlvExp rlvExp
 
     getLVarExpansions :: MonadFail m 
                       => Variable -> LVarSub -> m ([Variable],[Variable])
@@ -532,10 +531,34 @@ lvlvlSubstitute (SubCtxt (vscs,_) vts) vrt@(Var tk v@(Vbl i  vc vw)) lvlvl
     getVarList (KnownVarList _ expansion _,_,_) = return expansion
     getVarList _ = fail "lvlvSub.search(term): not known var-list"
 
-    processExpansions vsc ko [] []  = return $ reverse ko
-    processExpansions vsc ko _  []  = fail "lvlvSub.procExp: short repl." 
-    processExpansions vsc ko []  _  = fail "lvlvSub.procExp: short target" 
-    processExpansions vsc ko (tv:tvl) (rv:rvl) = fail "procExp nyFi"
+    handleExpansions v lvlvs vsc tlvExp rlvExp
+      = case processExpansions vsc False [] tlvExp rlvExp of
+          Nothing  ->  scan vsc v lvlvs
+          Just (False,_)   ->  fail "lvlvSub.search(term): no change"
+          Just (_,[])      ->  return $ mkTVSubst vrt vtl
+          Just (_,vtl')  ->  return $ mkTVSubst vrt (map liftRepl vtl'++vtl)
+
+    processExpansions :: MonadFail m 
+                      => VarSideConds -> Bool -> [(Variable,Variable)]
+                      -> [Variable] -> [Variable]
+                      -> m (Bool,[(Variable,Variable)])
+    processExpansions vsc chgd ko [] []  = return $ (chgd,reverse ko)
+    processExpansions vsc _    ko _  []  = fail "lvlvSub.procExp: short repl." 
+    processExpansions vsc _    ko []  _  = fail "lvlvSub.procExp: short target" 
+    processExpansions vsc@(VSC _ vD uvsC uvsCd) chgd ko (tv:tvl) (rv:rvl)
+      | gv `S.member` vD  =  fail "lvlvSub.procExpr: disjoint target"
+      | gv `cvdby` uvsC   =  processExpansions vsc chgd ((tv,rv):ko) tvl rvl
+      | gv `cvdby` uvsCd  =  processExpansions vsc chgd ((tv,rv):ko) tvl rvl
+      | otherwise         =  processExpansions vsc True ko tvl rvl
+      where
+        gv = StdVar tv
+        gv `cvdby` Everything  =  False -- denotes "vacuously true"
+        gv `cvdby` (Listed vs) = gv `S.member` vs
+
+    mkTVSubst vrt [] =  vrt
+    mkTVSubst vrt vtl = Sub (termtype vrt) vrt $ jSubstn vtl []
+
+    liftRepl (tv,rv) = (tv, fromJust $ var ArbType rv)
 \end{code}
 
 

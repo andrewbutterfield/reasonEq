@@ -19,6 +19,8 @@ Discharged Law S.C. = ⊤
 
 Discharge is wrong:  `O$={ls,s} /\ s,s' ⊇ₐ a =/=> O$' ∉ a`
 
+Also, `ls'[O$_1/O$]` should reduce to `ls'` but doesn't.
+
 ### Next in Line
 
 Trivial quantifiers are being shown even when disabled

@@ -1352,7 +1352,7 @@ We have a catch-all :
 \begin{code}
 mentionedBy :: MonadFail m 
             => GenVar -> [VarSideConds] -> m ( VarSideConds, Maybe VarWhen)
-gv `mentionedBy` []  =  fail "variable not mentioned"
+gv `mentionedBy` []  =  fail ("variable "++show gv++" not mentioned")
 gv `mentionedBy` (vsc@(VSC gv' _ _ uvsCd):vscs)
   | gv == gv'       =  return ( vsc, Nothing )
   | isListed uvsCd -- we need an explicit mention of gv'

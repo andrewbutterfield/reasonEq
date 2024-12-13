@@ -776,28 +776,39 @@ builtins or tests.
 
 We start with some examples that arise from key theories:
 \begin{description}
-  \item[forall\_remove]
+  \item[ForAll.forall\_remove]
     Instantiated Law = $\lnot P$ \newline
     Instantiated Law S.C. = $\lst x \disj P$ \newline
     Goal S.C. = $\lst x \disj P$ \newline
     Discharged Law S.C. = $\top$  (CORRECT)
-  \item[forall\_one\_point]
+  \item[ForAll.forall\_one\_point]
     Instantiated Law = $\forall \lst y \bullet (\lnot P)[\lst e/\lst x]$ \newline
     Instantiated Law S.C. = $\lst x \disj \lst e$ \newline
     Goal S.C. = $\lst x \disj \lst e$ \newline
     Discharged Law S.C. = $\top$  (CORRECT)
-  \item[X\_X\_comp]~
+  \item[UTCP.X\_X\_comp]~
     Instantiated Law S.C. = $ls_1 \disj N1, ls_1 \disj R1$ \newline
     Goal S.C.: \newline
     $\lst O,\lst O' \disj E1, \lst O,\lst O' \disj E2, \lst O,\lst O' \disj N1, \lst O,\lst O' \disj N2, \lst O,\lst O' \disj R1, \lst O,\lst O' \disj R2,$ \newline
     $s,s' \supseteq_a a, s,s' \supseteq_a b, fresh:\lst O_1$ \newline
-    Discharged Law S.C. = $ls_1 \disj N1, ls_1 \disj R1$ (INCORRECT) \newline
-    Should be: $\top$. 
-    From $fresh:\lst O_1$ we should immediately be able 
-    to say that $ls_1 \notin N1,R1$.
+    Discharged Law S.C. = $\top$.
+    From $fresh:\lst O_1$ we deduce $fresh: ls_1,s_1$,
+    and should immediately be able to say that therefore $ls_1 \notin N1,R1$.
     \newline
     We also know that $\lst O = \setof{s,ls}$ (homogeneous),
     which then means that $s_1$ and $ls_1$ are fresh.
+    \textbf{NOW FIXED}
+  \item[UTCP.X\_X\_comp]~
+    Instantiated Law S.C. = $\lst O' \disj a$ \newline
+    Goal S.C.: \newline
+    $\lst O,\lst O' \disj E1, \lst O,\lst O' \disj E2, \lst O,\lst O' \disj N1, \lst O,\lst O' \disj N2, \lst O,\lst O' \disj R1, \lst O,\lst O' \disj R2,$ \newline
+    Discharged Law S.C. = $\top$ (INCORRECT)\newline
+    Should be $\bot$ (FALSE).
+    Discharge is wrong:  
+    $\lst O=\setof{ls,s} \land \setof{s,s'} \supseteq_a  a 
+     \not\implies 
+     \lst O' \disj a$.
+     It implies $\lnot(\lst O' \disj a)$, because $s \in a$.
 \end{description}
 General comment about freshness: 
 if $fresh: f$, 
@@ -805,7 +816,22 @@ and term-variable $N$ occurs in the goal, and is not under a substitution
 of the form $[f/\_]$,
 then $f \disj N$ holds.
 
-
+We need a gallery of ``interesting'' side-conditions:
+\begin{mathpar}
+   fresh: \lst O_1 \land 
+   \lst O = \setof{ls,s} 
+   \implies 
+   ls_1 \notin T 
+          \mapsto \top
+\\ fresh: \lst O_1 \land 
+   \lst O = \setof{ls,s} 
+   \implies 
+   ls_1 \subseteq T \mapsto  \bot
+\\ \lst O = \setof{ls,s} \land 
+   s,s' \supseteq_a a 
+   \implies 
+   \lst O' \disj a \mapsto \bot \qquad (\lst O' \cap a = \setof{s'})
+\end{mathpar}
 
 \textbf{
   This whole section needs rework. 
@@ -895,32 +921,42 @@ vscMrg (vsc:vscs) = mrgVarConds vsc vscs
 \newpage
 \subsection{Known Observable  Discharge}
 
-The intention when stating a side-condition of the form $v_d \rel \lst\ell_d$,
-where $v_d$ is a \emph{dynamic} observation variable with dynamicity $d$,
-$\rel$ typically ranges over $\disj$, $\subseteq$, and $\subseteq_a$,
-and $\lst\ell_d$ is a list-variable of the same dynamicity,
-is that it holds when we replace $d$ by any  different dynamicity (e.g., $e$):
-$$
-v_d \rel \lst\ell_d  \equiv \forall e \bullet v_e \rel \lst\ell_e
-$$
-We can truthify disjointness, and falsify coverage here.
+Here we ask how does $fresh: f_n$
+modify $g \disj D \land g \subseteq C \land g \subseteq_c Cd$
+and $f_n \disj D \land f_n \subseteq C \land f_n \subseteq_c Cd$.
 
-For now we deal with the simplest cases: 
-remove any fresh variables found in the disjoint set,
-and see if \h{gv} is in the coverage sets:
+Examples (based on $\lst O = \setof{ls,s}$): 
+\begin{itemize}
+  \item
+    $fresh: \lst O_1 \implies fresh: ls_1 \implies ls_1 \notin T$
+    where $T$ is a term-variable from the goal.
+    \newline
+    \textbf{Note: }
+    \textsl{here $T$ corresponds to \h{gv} below,
+    while \h{vsD} contains $ls_1$}    
+\end{itemize}
+\textbf{Note:}
+For disjointness there is a symmetry:  
+$g \disj \setof{u,v}$ 
+can be 
+$\setof{g} \disj \setof{u} ,\setof{g} \disj \setof{v}$ 
+which is
+$\setof{u} \disj \setof{g} ,\setof{} \disj \setof{vg}$
+which collapses to
+$u,v \disj g$.
 \begin{code}
 knownObsDischarge :: VarSet -> VarSideConds -> VarSideConds
-knownObsDischarge obs ( VSC gv vsD uvsC uvsCd )
-                    =   VSC gv (vsD S.\\ obs) 
-                               (obsCdDischarge obs gv uvsC) 
-                               (obsCdDischarge obs gv uvsCd)
+knownObsDischarge freshObs ( VSC gv vsD uvsC uvsCd )
+                    =   VSC gv (vsD S.\\ freshObs) 
+                               (obsCdDischarge freshObs gv uvsC) 
+                               (obsCdDischarge freshObs gv uvsCd)
 \end{code}
 
 
 \begin{code}
 obsCdDischarge :: VarSet -> GenVar -> UVarSet -> UVarSet
-obsCdDischarge obsv gv uvsCd
-  | gv `S.member` obsv  =  Everything
+obsCdDischarge freshObs gv uvsCd
+  | gv `S.member` freshObs  =  Everything
   | otherwise           =  uvsCd
 \end{code}
 

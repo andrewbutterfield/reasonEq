@@ -241,32 +241,34 @@ where $v$ denotes a standard variable.
 \begin{code}
 applySubst sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
   =  let vtl = S.toList vts ; lvlvl = S.toList lvlvs in
+  -- ADD UNIFORMITY TO \h{Substn} ????
 \end{code}
 
 If we have $v[\dots,r,\dots/\dots,v,\dots]$ we return $r$:
 \begin{code}
-     alookup v vtl
+     ( alookup v vtl )
 \end{code}
 \textbf{Note:}
 \textsf{
   we need to handle uniform substitutions here as well.
   Or do we catch that below?  
 }
+\textbf{LETS DO UNIFORMITY HERE - SIMPLEST}
 
 Then we see if we have a uniform substitution, 
 provided that $\vv v$ is dynamic:
 \begin{code}
-     <|> uniformSubstitute sctx vrt vtl lvlvl
+     <|> ( uniformSubstitute sctx vrt vtl lvlvl )
 \end{code}
 Next we scan the list-variable  pairs, with the side-conditions in hand,
 looking for a list-variable that covers $\vv v$:
 \begin{code}
-     <|> lvlvlSubstitute sctx vrt vtl lvlvl
+     <|> ( lvlvlSubstitute sctx vrt vtl lvlvl )
 \end{code}
 If nothing is found we return the substitution 
 after running it through semantic completion:
 \begin{code}
-     -- <|> (pure (Sub tk vrt $ substComplete sctx vrt sub))
+     -- <|> ( pure (Sub tk vrt $ substComplete sctx vrt sub) )
 \end{code}
 \textbf{Note:}
 \textsf{
@@ -274,6 +276,7 @@ after running it through semantic completion:
    of \h{uniformSubstitute} if we had a boolean indicating 
    if the original substitution was \emph{uniform}.
 }
+\textbf{DUMP \h{uniformSubstitute}.}
 
 
 
@@ -451,9 +454,10 @@ at position $j$ in the expansion of $\lst r_i$.
 lvlvlSubstitute (SubCtxt sc vts) vrt@(Var tk v@(Vbl i  ObsV vw)) vtl lvlvl
   = scan v lvlvl
   where 
+    vfail reason = fail ("lvlvSub.search(obs): "++show v++" "++reason)
 
     scan :: MonadFail m => Variable -> [LVarSub] -> m Term
-    scan v [] = fail "lvlvSub.search(obs): not found"
+    scan v [] = vfail "not found"
     scan v (lvlv:lvlvs)
       = case check v lvlv of
           Nothing  ->  scan v lvlvs
@@ -469,11 +473,11 @@ lvlvlSubstitute (SubCtxt sc vts) vrt@(Var tk v@(Vbl i  ObsV vw)) vtl lvlvl
 
     getVarList :: MonadFail m => KnownExpansion -> m [Variable]
     getVarList (KnownVarList _ expansion _,_,_) = return expansion
-    getVarList _ = fail "lvlvSub.search(obs): not known var-list"
+    getVarList _ = vfail "not known var-list"
 
     search :: MonadFail m => Variable -> [Variable] -> [Variable] -> m Variable
-    search v [] _ = fail "lvlvSub.search(obs): short target list"
-    search v _ [] = fail "lvlvSub.search(obs): short repl. list"
+    search v [] _ = fail "short target list"
+    search v _ [] = fail "short repl. list"
     search v (tv:tvK) (rv:rvK)
       | v == tv  =  return rv
       | otherwise  =  search v tvK rvK

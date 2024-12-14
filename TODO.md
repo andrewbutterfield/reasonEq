@@ -4,6 +4,7 @@
 
 **Should a substitution have a boolean that indicates if it is uniform?**
 *It would be set by the exported subst builder.*
+**LEANING TOWARDS YES HERE**
 
 We have the issue with `Equiv.non_subst`. 
 It shouldn't match `a[O$_1/O$']` to yield `a`.

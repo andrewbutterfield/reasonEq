@@ -250,6 +250,7 @@ data Substn --  pair-sets below are unique in fst part
   = SN TermSubs LVarSubs
   deriving (Eq,Ord,Show,Read)
 \end{code}
+\textbf{ADD EXPLICIT UNIFORMITY INDICATOR TO \h{Substn} ?}
 
 Patterns:
 \begin{code}

@@ -984,8 +984,8 @@ scDischarge' obsv        (vscG@(VSC gvG _ _ _):restG)
                      rest' <- scDischarge' obsv restG restL
                      return (vscL:rest')
   | otherwise  =  do -- use vscG to discharge vscL
-                     vsc' <- vscDischarge obsv vscG vscL
-                     vscChecked <- vscCheck vsc'
+                     vsc' <- vscDischarge (pdbg "scDchg'3.obsv" obsv) (pdbg "scDchg'3.vscG" vscG) $ pdbg "scDchg'3.vscL" vscL
+                     vscChecked <- vscCheck $ pdbg "scDchg'3.vsc'" vsc'
                      case vscChecked of
                        Nothing ->  scDischarge' obsv restG restL
                        Just vsc'' -> do
@@ -994,7 +994,7 @@ scDischarge' obsv        (vscG@(VSC gvG _ _ _):restG)
 \end{code}
 
 \newpage
-
+\subsubsection{VSC Discharge}
 
 At this point we have the form, for given term-variable $T$:
 \begin{equation}

@@ -797,7 +797,6 @@ We start with some examples that arise from key theories:
     \newline
     We also know that $\lst O = \setof{s,ls}$ (homogeneous),
     which then means that $s_1$ and $ls_1$ are fresh.
-    \textbf{NOW FIXED}
   \item[UTCP.X\_X\_comp]~
     Instantiated Law S.C. = $\lst O' \disj a$ \newline
     Goal S.C.: \newline
@@ -891,12 +890,12 @@ We first simplfiy the consequence
 
 \begin{code}
 scDischarge obsv anteSC@(anteVSC,anteFvs) cnsqSC@(cnsqVSC,cnsqFvs)
-  = do let freshObs = obsv `S.union` instFreshObsV obsv anteFvs
-       cnsqVSC' <- vscMrg $ map (knownObsDischarge freshObs) cnsqVSC
-       let cnsqSC' = (cnsqVSC',cnsqFvs)
-       if isTrivialSC cnsqSC' then return scTrue
-       else if isTrivialSC anteSC then return cnsqSC'
-       else do vsc' <- scDischarge' obsv anteVSC cnsqVSC'
+  = do -- let freshObs = obsv `S.union` instFreshObsV obsv anteFvs
+       -- cnsqVSC' <- vscMrg $ map (knownObsDischarge freshObs) cnsqVSC
+       -- let cnsqSC' = (cnsqVSC',cnsqFvs)
+       if isTrivialSC cnsqSC then return scTrue
+       else if isTrivialSC anteSC then return cnsqSC
+       else do vsc' <- scDischarge' obsv anteVSC cnsqVSC
                freshDischarge obsv anteFvs cnsqFvs vsc'
     
 instFreshObsV :: VarSet -> VarSet -> VarSet
@@ -918,41 +917,49 @@ vscMrg (vsc:vscs) = mrgVarConds vsc vscs
 \end{code}
 
 
-\newpage
-\subsection{Known Observable  Discharge}
+% \newpage
+% \subsection{Known Observable  Discharge}
 
-Here we ask how does $fresh: f_n$
-modify $g \disj D \land g \subseteq C \land g \subseteq_c Cd$
-and $f_n \disj D \land f_n \subseteq C \land f_n \subseteq_c Cd$.
+% Here we ask how does $fresh: f_n$
+% modify $g \disj D \land g \subseteq C \land g \subseteq_c Cd$
+% and $f_n \disj D \land f_n \subseteq C \land f_n \subseteq_c Cd$.
 
-Examples (based on $\lst O = \setof{ls,s}$): 
-\begin{itemize}
-  \item
-    $fresh: \lst O_1 \implies fresh: ls_1 \implies ls_1 \notin T$
-    where $T$ is a term-variable from the goal.
-    \newline
-    \textbf{Note: }
-    \textsl{here $T$ corresponds to \h{gv} below,
-    while \h{vsD} contains $ls_1$}    
-\end{itemize}
-\textbf{Note:}
-For disjointness there is a symmetry:  
-$g \disj \setof{u,v}$ 
-can be 
-$\setof{g} \disj \setof{u} ,\setof{g} \disj \setof{v}$ 
-which is
-$\setof{u} \disj \setof{g} ,\setof{} \disj \setof{vg}$
-which collapses to
-$u,v \disj g$.
-\begin{code}
-knownObsDischarge :: VarSet -> VarSideConds -> VarSideConds
-knownObsDischarge freshObs ( VSC gv vsD uvsC uvsCd )
-                    =   VSC gv (vsD S.\\ freshObs) 
-                               (obsCdDischarge freshObs gv uvsC) 
-                               (obsCdDischarge freshObs gv uvsCd)
-\end{code}
+% Examples (based on $\lst O = \setof{ls,s}$): 
+% \begin{itemize}
+%   \item
+%     $fresh: \lst O_1 \implies fresh: ls_1 \implies ls_1 \notin T$
+%     where $T$ is a term-variable from the goal.
+%     \newline
+%     \textbf{Note: }
+%     \textsl{here $T$ corresponds to \h{gv} below,
+%     while \h{vsD} contains $ls_1$}    
+% \end{itemize}
+% \textbf{Note:}
+% For disjointness there is a symmetry:  
+% $g \disj \setof{u,v}$ 
+% can be 
+% $\setof{g} \disj \setof{u} ,\setof{g} \disj \setof{v}$ 
+% which is
+% $\setof{u} \disj \setof{g} ,\setof{} \disj \setof{vg}$
+% which collapses to
+% $u,v \disj g$.
+% \begin{code}
+% knownObsDischarge :: VarSet -> VarSideConds -> VarSideConds
+% knownObsDischarge freshObs ( VSC gv vsD uvsC uvsCd )
+%                     =   VSC gv vsD -- (vsD S.\\ freshObs) 
+%                                uvsC -- (obsCdDischarge freshObs gv uvsC) 
+%                                uvsCd -- (obsCdDischarge freshObs gv uvsCd)
+% \end{code}
 
 
+% \begin{code}
+% obsDDischarge :: VarSet -> GenVar -> UVarSet -> UVarSet
+% obsDDischarge freshObs gv uvsCd
+%   | gv `S.member` freshObs  =  Everything
+%   | otherwise           =  uvsCd
+% \end{code}
+
+\textbf{USED BELOW BUT NOT SURE WHY !!!!}
 \begin{code}
 obsCdDischarge :: VarSet -> GenVar -> UVarSet -> UVarSet
 obsCdDischarge freshObs gv uvsCd
@@ -1078,6 +1085,7 @@ vscDischarge obsv (VSC gv vsDG uvsCG uvsCdG) (VSC _ vsDL uvsCL uvsCdL)
         uvsCd'  <- ccDischarge obsv uvsCdG uvsCdL
         uvsCd'' <- dcDischarge obsv vsDG   uvsCd'
 
+        --  obsCdDischarge converts uvsCd'' to Everything if gv is in obsv
         case mkVSC gv vsD''' uvsC'' (obsCdDischarge obsv gv uvsCd'') of
           Nothing   ->  return $ vscTrue gv
           Just vsc  ->  return vsc
@@ -1428,6 +1436,7 @@ packUG (gss) = packVarSet gss
 \newpage
 \subsection{Dealing with Dynamics}
 
+\textbf{NOT USED ANYWHERE!}
 A check that a non-uniform \texttt{GenVar} list
 mentions before-, after- and all subscripts in scope.
 \begin{code}

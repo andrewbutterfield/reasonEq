@@ -2,11 +2,7 @@
 
 ## URGENT
 
-**Should a substitution have a boolean that indicates if it is uniform?**
-*It would be set by the exported subst builder.*
-**LEANING TOWARDS YES HERE**
-
-We have the issue with `Equiv.non_subst`. 
+We STILL have the issue with `Equiv.non_subst`. 
 It shouldn't match `a[O$_1/O$']` to yield `a`.
 
 ```
@@ -20,7 +16,24 @@ Discharged Law S.C. = ⊤
 
 Discharge is wrong:  `O$={ls,s} /\ s,s' ⊇ₐ a =/=> O$' ∉ a`
 
-Also, `ls'[O$_1/O$]` should reduce to `ls'` but doesn't.
+Another example of breaking things:
+```
+5 : “and_exists_scope” [≡rhs]
+    ((a ∧ b) ∧ E2 ⊆ ls \ R1 ∪ N1) ∧ (∃ s  • ls' = (ls \ R1 ∪ N1) \ R2 ∪ N2)
+    O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1 ⟹ s∉E2, s∉N1, s∉R1, s∉a, s∉b, s∉ls
+
+proof: tm 2 and_exists_scope
+Match against `and_exists_scope'[2] OK
+Binding: { P  ⟼ (a ∧ b) ∧ E2 ⊆ ls \ R1 ∪ N1, Q  ⟼ ls' = (ls \ R1 ∪ N1) \ R2 ∪ N2, ∧  ⟼ ∧, x$  ⟼ {s}, y$  ⟼ {} }
+Instantiated Law = ((a ∧ b) ∧ E2 ⊆ ls \ R1 ∪ N1) ∧ (∃ s  • ls' = (ls \ R1 ∪ N1) \ R2 ∪ N2)
+Instantiated Law S.C. = s∉E2, s∉N1, s∉R1, s∉a, s∉b, s∉ls
+Goal S.C. = O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1
+Discharged Law S.C. = ⊤
+```
+
+Discharge is wrong:  `O$={ls,s} /\ s,s' ⊇ₐ a =/=> s ∉ a`
+
+**Goal S.C discharging disjoint works when s.c. is disjoint, but fails when s.c is covered**
 
 ### Next in Line
 

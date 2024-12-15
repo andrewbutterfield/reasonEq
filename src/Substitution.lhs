@@ -457,7 +457,7 @@ lvlvlSubstitute (SubCtxt sc vts) vrt@(Var tk v@(Vbl i  ObsV vw)) vtl lvlvl
     vfail reason = fail ("lvlvSub.search(obs): "++show v++" "++reason)
 
     scan :: MonadFail m => Variable -> [LVarSub] -> m Term
-    scan v [] = vfail "not found"
+    scan v [] = return vrt
     scan v (lvlv:lvlvs)
       = case check v lvlv of
           Nothing  ->  scan v lvlvs
@@ -516,7 +516,7 @@ lvlvlSubstitute (SubCtxt (vscs,_) vts)
     gv = StdVar v
 
     scan :: MonadFail m => VarSideConds -> Variable -> [LVarSub] -> m Term
-    scan vsc v [] = fail "lvlvSub.search(term): not found"
+    scan vsc v [] = return vrt
     scan vsc v (lvlv:lvlvs)
       = case getLVarExpansions v lvlv of
           Nothing               ->  scan vsc v lvlvs

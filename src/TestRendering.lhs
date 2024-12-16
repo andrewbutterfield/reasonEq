@@ -38,6 +38,7 @@ import Data.List (nub, sort, (\\), intercalate)
 import Data.List.Split (splitOn)
 import Data.Char
 
+import NotApplicable
 import Symbols
 import Utilities
 import UnivSets
@@ -538,21 +539,21 @@ trsidecond trid sc@(vscs,fvs)
                          ( concat (map (trtvarsidecond trid) vscs)
                            ++ [trfresh trid fvs] )
 
-trtvarsidecond trid (VSC gv vsD Everything Everything)
-  | S.null vsD  = [_top]
-trtvarsidecond trid (VSC gv vsD mvsC mvsCd)
-  = [trDisjSC trid gv vsD, trCovByM trid gv mvsC, trDynCovM trid gv mvsCd]
+trtvarsidecond trid (VSC gv NA NA NA) = [_top]
+trtvarsidecond trid (VSC gv mvsD mvsC mvsCd)
+  = [trDisjSC trid gv mvsD, trCovByM trid gv mvsC, trDynCovM trid gv mvsCd]
 
-trDisjSC trid gv vsD
+trDisjSC trid gv NA = ""
+trDisjSC trid gv (The vsD)
   | S.null vsD  =  ""
   | otherwise   =  trovset trid vsD ++ _notin ++ trgvar trid gv
 
-trCovByM trid gv Everything = ""
-trCovByM trid gv (Listed vsC) 
+trCovByM trid gv NA = ""
+trCovByM trid gv (The vsC) 
   = trovset trid vsC ++ _supseteq ++ trgvar trid gv
 
-trDynCovM trid gv Everything = ""
-trDynCovM trid gv (Listed vsC) 
+trDynCovM trid gv NA = ""
+trDynCovM trid gv (The vsC) 
   = trovset trid vsC ++ _supseteq ++_subStr "a" ++ trgvar trid gv
 
 

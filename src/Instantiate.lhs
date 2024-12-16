@@ -21,6 +21,7 @@ import Data.Map(Map)
 import qualified Data.Map as M
 import Data.List
 
+import NotApplicable
 import Utilities
 import Control
 import UnivSets
@@ -414,14 +415,14 @@ instVarSet insctxt binding vs
   = do fvss <- sequence $ map (instGVar insctxt binding) $ S.toList vs
        return $ mrgFreeVarList fvss
 
-type UFreeVars = (UVarSet,[(GenVar,VarSet)])
+type UFreeVars = (NVarSet,[(GenVar,VarSet)])
 instUVarSet :: MonadFail m 
-            => InsContext -> Binding -> UVarSet 
+            => InsContext -> Binding -> NVarSet 
             -> m UFreeVars
-instUVarSet _       _        Everything   =  return (Everything,[]) 
-instUVarSet insctxt binding (Listed vs)  
+instUVarSet _       _        NA   =  return (NA,[]) 
+instUVarSet insctxt binding (The vs)  
   =  do (f,less) <- instVarSet insctxt binding vs 
-        return (Listed f,less)
+        return (The f,less)
 \end{code}
 
 
@@ -660,13 +661,13 @@ and $F$ is disjoint from any $e_i,B_i$.
 instantiateVSC :: MonadFail m 
                 => InsContext -> Binding -> VarSideConds 
                 -> m [VarSideConds]
-instantiateVSC insctxt bind vsc@(VSC gT vsD mvsC mvsCd)
+instantiateVSC insctxt bind vsc@(VSC gT mvsD mvsC mvsCd)
   = do let (fvsT,diffsT) = instantiateGVar insctxt bind gT
-       fvsD    <-  instVarSet insctxt bind vsD
+       fmvsD   <-  instUVarSet insctxt bind mvsD
        fmvsC   <-  instUVarSet insctxt bind mvsC
        fmvsCd  <-  instUVarSet insctxt bind mvsCd
        if null diffsT
-         then do vscss <- mapM (instVSC insctxt fvsD fmvsC fmvsCd) 
+         then do vscss <- mapM (instVSC insctxt fmvsD fmvsC fmvsCd) 
                                 (S.toList fvsT)
                  return $ concat vscss
          else fail "instantiateVSC: explicit diffs in var-set not handled."
@@ -682,13 +683,13 @@ instantiateVSC insctxt bind vsc@(VSC gT vsD mvsC mvsCd)
 \end{eqnarray*}
 \begin{code}
 instVSC :: MonadFail m 
-         => InsContext -> FreeVars -> UFreeVars -> UFreeVars -> GenVar
+         => InsContext -> UFreeVars -> UFreeVars -> UFreeVars -> GenVar
          -> m [VarSideConds]
 -- we ignore the vBless components for now
-instVSC insctxt fvsD@(vsD,_) fmvsC@(mvsC,_) fmvsCd@(mvsCd,_) gT 
-  = do let mvscsD = mkVSC gT vsD      covByTrue covByTrue
-       let mvscsC = mkVSC gT disjTrue mvsC      covByTrue
-       let mvscCd =  mkVSC gT disjTrue covByTrue mvsCd 
+instVSC insctxt fvsD@(mvsD,_) fmvsC@(mvsC,_) fmvsCd@(mvsCd,_) gT 
+  = do let mvscsD =  mkVSC gT mvsD   covByNA covByNA
+       let mvscsC =  mkVSC gT disjNA mvsC    covByNA
+       let mvscCd =  mkVSC gT disjNA covByNA mvsCd 
        return $ catMaybes [mvscsD,mvscsC,mvscCd]
 \end{code}
 
@@ -872,7 +873,7 @@ or a mix of the cases with $C$ and $Cd$ disjoint from $D$.
 \begin{code}
 vscsVarExpand :: GenVar -> [VarSideConds] -> FreeVars
 vscsVarExpand e []  =  injVarSet $ S.singleton e
-vscsVarExpand e (VSC e' _ (Listed vsC) _ : _)
+vscsVarExpand e (VSC e' _ (The vsC) _ : _)
   |  e == e'        =  injVarSet vsC
 vscsVarExpand e (_:vscs) = vscsVarExpand e vscs
 \end{code}

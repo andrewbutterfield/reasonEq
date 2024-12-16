@@ -48,6 +48,7 @@ import Data.Maybe
 import Data.List
 import Control.Applicative
 
+import NotApplicable
 import YesBut
 import Utilities
 import UnivSets
@@ -724,7 +725,7 @@ extendGoalSCCoverage obsv lvvls (tvarSCs,_)
   = xtndCoverage obsv (map snd lvvls) [] (filter isCoverage tvarSCs)
   where
     isCoverage (VSC _ _ mvsC mvsCd)  
-      =  mvsC /= Everything || mvsCd /= Everything
+      =  mvsC /= NA || mvsCd /= NA
 
     xtndCoverage :: MonadFail m => VarSet
                  -> [VarList] -- floating replacements
@@ -744,8 +745,8 @@ extendGoalSCCoverage obsv lvvls (tvarSCs,_)
               xtndCoverage obsv ffvls vscs' rest
       | otherwise  =  xtndCoverage obsv ffvls vscs rest
       where 
-         vsC = uset mvsC `S.union` uset mvsCd
-         justcov = VSC gv disjTrue mvsC mvsCd
+         vsC = nset mvsC `S.union` nset mvsCd
+         justcov = VSC gv disjNA mvsC mvsCd
 \end{code}
 
 \newpage

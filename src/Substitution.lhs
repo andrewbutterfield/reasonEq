@@ -20,6 +20,7 @@ import Data.List
 import Data.Maybe
 import Control.Applicative
 
+import NotApplicable
 import Utilities (alookup,injMap)
 import Control (mapfst,mapsnd)
 import UnivSets
@@ -510,7 +511,7 @@ lvlvlSubstitute (SubCtxt (vscs,_) vts)
                 vrt@(Var tk v@(Vbl i  vc vw)) vtl lvlvl
                                    -- vc in {ExprV,PredV}
   = do (vsc,mwhen) <- gv `mentionedBy` vscs
-       -- for now we don't expand contents of vsD, uvsC, uvsCd
+       -- for now we don't expand contents of vsD, nvsC, nvsCd
        scan vsc v lvlvl
   where
     gv = StdVar v
@@ -549,15 +550,15 @@ lvlvlSubstitute (SubCtxt (vscs,_) vts)
     processExpansions vsc chgd ko [] []  = return $ (chgd,reverse ko)
     processExpansions vsc _    ko _  []  = fail "lvlvSub.procExp: short repl." 
     processExpansions vsc _    ko []  _  = fail "lvlvSub.procExp: short target" 
-    processExpansions vsc@(VSC _ vD uvsC uvsCd) chgd ko (tv:tvl) (rv:rvl)
-      | gv `S.member` vD  =  fail "lvlvSub.procExpr: disjoint target"
-      | gv `cvdby` uvsC   =  processExpansions vsc chgd ((tv,rv):ko) tvl rvl
-      | gv `cvdby` uvsCd  =  processExpansions vsc chgd ((tv,rv):ko) tvl rvl
+    processExpansions vsc@(VSC _ nvsD nvsC nvsCd) chgd ko (tv:tvl) (rv:rvl)
+      | gv `nmbr`  nvsD   =  fail "lvlvSub.procExpr: disjoint target"
+      | gv `cvdby` nvsC   =  processExpansions vsc chgd ((tv,rv):ko) tvl rvl
+      | gv `cvdby` nvsCd  =  processExpansions vsc chgd ((tv,rv):ko) tvl rvl
       | otherwise         =  processExpansions vsc True ko tvl rvl
       where
         gv = StdVar tv
-        gv `cvdby` Everything  =  False -- denotes "vacuously true"
-        gv `cvdby` (Listed vs) = gv `S.member` vs
+        gv `cvdby` NA  =  False -- denotes "vacuously true"
+        gv `cvdby` (The vs) = gv `S.member` vs
 
     mkTVSubst vrt [] =  vrt
     mkTVSubst vrt vtl = Sub (termtype vrt) vrt $ jSubstn vtl []
@@ -698,10 +699,10 @@ lvlvSub sctx@(SubCtxt sc vdata) tk v@(Vbl i vc vw)
   -- vc = ExprV,PredV
   = case (StdVar v) `mentionedBy` fst sc of
       Nothing  ->  Right [lvlv] -- v not mentioned 
-      Just ( (VSC gv' vsD uvsC uvsCd), Nothing ) -- gv==StdVar v
-        | gtlv `S.member` vsD 
+      Just ( (VSC gv' nvsD nvsC nvsCd), Nothing ) -- gv==StdVar v
+        | gtlv `nmbr` nvsD 
             ->  Right [] -- tlv mentioned in disjoint-set
-        | gtlv `umbr` uvsC
+        | gtlv `nmbr` nvsC
             ->  possub vw lvlv -- tlv in coverage
         | otherwise  ->  Left lvlv 
       _  ->  Right [lvlv] -- this shouldn't happen for Term Vars?
@@ -837,14 +838,14 @@ $$
 We have to check this for all $T/V$ pairs in the substitution.
 \begin{code}
 vscSimplify :: VarSideConds -> GenVar -> Substn -> Substn
-vscSimplify (VSC _ vsD mvsC mvsCd) gv sub  
-  =  mSimp mvsCd $ mSimp mvsC $ targetsCheck not vsD sub
+vscSimplify (VSC _ mvsD mvsC mvsCd) gv sub  
+  =  mSimp mvsCd $ mSimp mvsC $ targetsCheck not mvsD sub
   where 
-    mSimp Everything sub    =  sub
-    mSimp (Listed vs) sub  =  targetsCheck id  vs sub
+    mSimp mvs sub  =  targetsCheck id mvs sub
 
-targetsCheck :: (Bool -> Bool) -> VarSet -> Substn -> Substn
-targetsCheck keep vs (Substn ts lvs)
+targetsCheck :: (Bool -> Bool) -> NVarSet -> Substn -> Substn
+targetsCheck keep NA sub  =  sub
+targetsCheck keep (The vs) (Substn ts lvs)
   = let tl'  = filter (varTargetsCheck  keep vs) $ S.toList ts
         lvl' = filter (lvarTargetsCheck keep vs) $ S.toList lvs
     in jSubstn tl' lvl'
@@ -1584,16 +1585,16 @@ subComplete2 :: SubContext -> Variable -> Substn -> Substn
 subComplete2 (SubCtxt sc _) tv sub1@(Substn ts lvs)
   = case findGenVarInSC gtv sc of
       Nothing  ->  sub1
-      Just (VSC _ _ uvsC uvsCd)  
+      Just (VSC _ _ nvsC nvsCd)  
         ->  jSubstn ts' (S.toList lvs)
             where
               ts' = filter allowed $ S.toList ts
               allowed (t,_) 
                 = let gt = StdVar t
-                  in gt `lmbr` uvsCd || gt `lmbr` uvsC 
+                  in gt `lmbr` nvsCd || gt `lmbr` nvsC 
   where
-    lmbr gv Everything = False -- Everything really means irrelevant!!!
-    lmbr gv (Listed vs) = gv `S.member` vs
+    lmbr gv NA = False -- NA really means irrelevant!!!
+    lmbr gv (The vs) = gv `S.member` vs
     gtv = StdVar tv
 \end{code}
 Given \m{\setof{s,s'} \supseteq_a a},

@@ -21,6 +21,7 @@ import qualified Data.Set as S
 import Data.Map(Map)
 import qualified Data.Map as M
 
+import NotApplicable
 import YesBut
 import Utilities (injMap, unlines')
 import Control (mapboth,mapaccum,mapsnd)
@@ -621,12 +622,12 @@ normSC vv (vscs,fvs)
       -- this should not fail, but just in case ...
       But msgs  ->  error ("normSC: "++unlines' msgs)
 
-normASC vv (VSC gv vsD mvsC mvsCd)  
-  =  mkVSC (normQGVar vv gv) (normQVSet vv vsD) 
-            (normQVMset vv mvsC) (normQVMset vv mvsCd)
+normASC vv (VSC gv nvsD nvsC nvsCd)  
+  =  mkVSC (normQGVar vv gv) (normQVNset vv nvsD) 
+            (normQVNset vv nvsC) (normQVNset vv nvsCd)
 
-normQVMset _ Everything = Everything
-normQVMset vv (Listed vs) = Listed $ normQVSet vv vs
+normQVNset _ NA = NA
+normQVNset vv (The vs) = The $ normQVSet vv vs
 
 normFresh vv vs = normQVSet vv vs
 \end{code}

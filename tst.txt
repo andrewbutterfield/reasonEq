@@ -1,19 +1,214 @@
-@scDchg'3.vscL: -- b disj O$
-VSC (GV (VR (Id "b" 0,VP,WS)))   -- b
-    (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])  -- disj  O$
-    Everything  -- v. true
-    Everything  -- v. true
-@scDchg'3.vscG:  -- b sub  s,s'
-VSC (GV (VR (Id "b" 0,VP,WS)))  -- b 
-    (fromList [])  -- v. true
-    Everything     -- v. true
-    (Listed [GV (VR (Id "s" 0,VO,WB))   -- s
-            ,GV (VR (Id "s" 0,VO,WA))]) -- s'
-@scDchg'3.obsv: -- ls.ls',s,s'
-[GV (VR (Id "ls" 0,VO,WB))  -- ls
-,GV (VR (Id "ls" 0,VO,WA))  -- ls'
-,GV (VR (Id "s" 0,VO,WB))   -- s
-,GV (VR (Id "s" 0,VO,WA))]  -- s'
+proof: tm 1 ;_def
+@CG: NA
+@CdG: NA
+@CL: NA
+@C': NA
+@CdL: [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]
+@CdG: NA
+@Cd':[GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]
+@DG:[GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]
+@C'': NA
+@DL: NA
+@D': NA
+@D'': NA
+@D''': NA
+@OBSV:[GV (VR (Id "ls" 0,VO,WB)),GV (VR (Id "ls" 0,VO,WA))
+      ,GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]
+@Cd'': fromList []
+@FINAL-vsc: VSC (GV (VR (Id "E1" 0,VE,WS))) NA NA (The (fromList []))
 
-@scDchg'3.vsc': -- v. true
-VSC (GV (VR (Id "b" 0,VP,WS))) (fromList []) Everything Everything
+@CG: NA
+@CdG NA
+@CL: NA
+@C': NA
+@CdL: GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]
+@CdG: NA
+@Cd': [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]
+@DG: [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]
+@C'': NA
+@DL: NA
+@D': NA
+@D'': NA
+@D''': NA
+@OBSV: [GV (VR (Id "ls" 0,VO,WB)),GV (VR (Id "ls" 0,VO,WA))
+       ,GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]
+@Cd'': fromList []
+@FINAL-vsc: VSC (GV (VR (Id "E2" 0,VE,WS))) NA NA (The (fromList []))
+
+@CG: NA
+@CdG: NA
+@CL: NA
+@C': NA
+@CdL: [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]
+@CdG: NA
+@Cd': [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]
+@DG: [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]
+@C'': NA
+@DL: NA
+@D': NA
+@D'': NA
+@D''': NA
+@OBSV: [GV (VR (Id "ls" 0,VO,WB)),GV (VR (Id "ls" 0,VO,WA))
+       ,GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]
+@Cd'': fromList []
+@FINAL-vsc: VSC (GV (VR (Id "N1" 0,VE,WS))) NA NA (The (fromList []))
+
+
+@CG:
+NA
+@CdG:
+NA
+@CL:
+NA
+@C':
+NA
+@CdL:
+The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])
+@CdG:
+NA
+@Cd':
+The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])
+@DG:
+The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])
+@C'':
+NA
+@DL:
+NA
+@D':
+NA
+@D'':
+NA
+@D''':
+NA
+@OBSV:
+fromList [GV (VR (Id "ls" 0,VO,WB)),GV (VR (Id "ls" 0,VO,WA)),GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]
+@Cd'':
+The (fromList [])
+@FINAL-vsc:VSC (GV (VR (Id "N2" 0,VE,WS))) NA NA (The (fromList []))
+
+@CG:
+NA
+@CdG:
+NA
+@CL:
+NA
+@C':
+NA
+@CdL:
+The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])
+@CdG:
+NA
+@Cd':
+The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])
+@DG:
+The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])
+@C'':
+NA
+@DL:
+NA
+@D':
+NA
+@D'':
+NA
+@D''':
+NA
+@OBSV:
+fromList [GV (VR (Id "ls" 0,VO,WB)),GV (VR (Id "ls" 0,VO,WA)),GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]
+@Cd'':
+The (fromList [])
+@FINAL-vsc: VSC (GV (VR (Id "R1" 0,VE,WS))) NA NA (The (fromList []))
+
+@CG:
+NA
+@CdG:
+NA
+@CL:
+NA
+@C':
+NA
+@CdL:
+The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])
+@CdG:
+NA
+@Cd':
+The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])
+@DG:
+The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])
+@C'':
+NA
+@DL:
+NA
+@D':
+NA
+@D'':
+NA
+@D''':
+NA
+@OBSV:
+fromList [GV (VR (Id "ls" 0,VO,WB)),GV (VR (Id "ls" 0,VO,WA)),GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]
+@Cd'':
+The (fromList [])
+@FINAL-vsc: VSC (GV (VR (Id "R2" 0,VE,WS))) NA NA (The (fromList []))
+
+
+@CG:
+NA
+@CdG:
+The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))])
+@DG:
+NA
+@D':
+The (fromList [])
+@D'':
+The (fromList [])
+@CL:
+NA
+@C':
+NA
+@CdL:
+The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])
+@CdG:
+The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))])
+@Cd':
+The (fromList [])
+@C'':
+NA
+@D''':
+The (fromList [])
+@OBSV:
+fromList [GV (VR (Id "ls" 0,VO,WB)),GV (VR (Id "ls" 0,VO,WA)),GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]
+@Cd'':
+The (fromList [])
+@FINAL-vsc: VSC (GV (VR (Id "a" 0,VP,WS))) (The (fromList [])) NA (The (fromList []))
+
+@CG:
+NA
+@CdG:
+The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))])
+@DG:
+NA
+@D':
+The (fromList [])
+@D'':
+The (fromList [])
+@CL:
+NA
+@C':
+NA
+@CdL:
+The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])
+@CdG:
+The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))])
+@Cd':
+The (fromList [])
+@C'':
+NA
+@D''':
+The (fromList [])
+@OBSV:
+fromList [GV (VR (Id "ls" 0,VO,WB)),GV (VR (Id "ls" 0,VO,WA)),GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]
+@Cd'':
+The (fromList [])
+@FINAL-vsc:
+VSC (GV (VR (Id "b" 0,VP,WS))) (The (fromList [])) NA (The (fromList []))
+Match against `;_def'[1] OK

@@ -1120,16 +1120,16 @@ We cannot immediately assume it's true as the antecedent doesn't prevent
 $ls_1 \in N$. However, if $ls_1$ is fresh, this will be the case.
 
 \begin{code}
-vscDischarge obsv (VSC gv nvsDG uvsCG uvsCdG) (VSC _ nvsDL uvsCL uvsCdL)
-  = do  nvsD'    <- ddDischarge obsv nvsDG  nvsDL
-        nvsD''   <- cdDischarge obsv uvsCG  nvsD'
-        nvsD'''  <- cdDischarge obsv uvsCdG nvsD''
+vscDischarge obsv (VSC gv nvsDG nvsCG nvsCdG) (VSC _ nvsDL nvsCL nvsCdL)
+  = do  nvsD'    <- ddDischarge obsv  nvsDG  nvsDL
+        nvsD''   <- cdDischarge obsv  nvsCG  nvsD'
+        nvsD'''  <- cdDischarge obsv  nvsCdG nvsD''
 
-        nvsC'   <- ccDischarge obsv uvsCG  uvsCL
-        nvsC''  <- dcDischarge obsv nvsDG   nvsC'
+        nvsC'    <- ccDischarge obsv  nvsCG  nvsCL
+        nvsC''   <- dcDischarge obsv  nvsDG  nvsC'
 
-        nvsCd'  <- ccDischarge obsv uvsCdG uvsCdL
-        nvsCd'' <- dcDischarge obsv nvsDG   nvsCd'
+        nvsCd'   <- ccDischarge obsv  nvsCdG nvsCdL
+        nvsCd''  <- dcDischarge obsv  nvsDG  nvsCd'
         -- this is assymetric between G and L -- G=NA means it has no effect!
         --  obsCdDischarge converts nvsCd'' to NA if gv is in obsv
         case mkVSC gv nvsD''' nvsC'' (obsCdDischarge obsv gv nvsCd'') of

@@ -2,38 +2,42 @@
 
 ## URGENT
 
-We STILL have the issue with `Equiv.non_subst`. 
-It shouldn't match `a[O$_1/O$']` to yield `a`.
+```
+proof: tm 1 A_def
+@scDchg'3.vscL:
+VSC (GV (VR (Id "E" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA
+@scDchg'3.vscG:
+VSC (GV (VR (Id "E" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA
+@scDchg'3.obsv:
+fromList [GV (VR (Id "ls" 0,VO,WB)),GV (VR (Id "ls" 0,VO,WA)),GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]
+@scDchg'3.vsc':
+VSC (GV (VR (Id "E" 0,VE,WS))) (The (fromList [])) NA NA
+@scDchg'3.vscL:
+VSC (GV (VR (Id "N" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA
+@scDchg'3.vscG:
+VSC (GV (VR (Id "N" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA
+@scDchg'3.obsv:
+fromList [GV (VR (Id "ls" 0,VO,WB)),GV (VR (Id "ls" 0,VO,WA)),GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]
+@scDchg'3.vsc':
+VSC (GV (VR (Id "N" 0,VE,WS))) (The (fromList [])) NA NA
+@scDchg'3.vscL:
+VSC (GV (VR (Id "a" 0,VP,WS))) NA NA (The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]))
+@scDchg'3.vscG:
+VSC (GV (VR (Id "a" 0,VP,WS))) NA NA (The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]))
+@scDchg'3.obsv:
+fromList [GV (VR (Id "ls" 0,VO,WB)),GV (VR (Id "ls" 0,VO,WA)),GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]
+@scDchg'3.vsc':
+VSC (GV (VR (Id "a" 0,VP,WS))) (The (fromList [])) NA NA
+Match against `A_def'[1] OK
+Binding: { A  ⟼ A, E  ⟼ E, N  ⟼ N, a  ⟼ a }
+Instantiated Law = X(E,a,E,N)
+Instantiated Law S.C. = O$,O$'∉E, O$,O$'∉N, s,s'⊇ₐa
+Goal S.C. = O$,O$'∉E, O$,O$'∉N, s,s'⊇ₐa
+Discharged Law S.C. = 
+
+hit <enter> to continue
 
 ```
-Match against `non_subst'[1] OK
-Binding: { P  ⟼ a, e$  ⟼ ⟨O$_1⟩, x$  ⟼ ⟨O$'⟩ }
-Instantiated Law = a
-Instantiated Law S.C. = O$'∉a
-Goal S.C. = O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1
-Discharged Law S.C. = ⊤
-```
-
-Discharge is wrong:  `O$={ls,s} /\ s,s' ⊇ₐ a =/=> O$' ∉ a`
-
-Another example of breaking things:
-```
-5 : “and_exists_scope” [≡rhs]
-    ((a ∧ b) ∧ E2 ⊆ ls \ R1 ∪ N1) ∧ (∃ s  • ls' = (ls \ R1 ∪ N1) \ R2 ∪ N2)
-    O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1 ⟹ s∉E2, s∉N1, s∉R1, s∉a, s∉b, s∉ls
-
-proof: tm 2 and_exists_scope
-Match against `and_exists_scope'[2] OK
-Binding: { P  ⟼ (a ∧ b) ∧ E2 ⊆ ls \ R1 ∪ N1, Q  ⟼ ls' = (ls \ R1 ∪ N1) \ R2 ∪ N2, ∧  ⟼ ∧, x$  ⟼ {s}, y$  ⟼ {} }
-Instantiated Law = ((a ∧ b) ∧ E2 ⊆ ls \ R1 ∪ N1) ∧ (∃ s  • ls' = (ls \ R1 ∪ N1) \ R2 ∪ N2)
-Instantiated Law S.C. = s∉E2, s∉N1, s∉R1, s∉a, s∉b, s∉ls
-Goal S.C. = O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:O$_1
-Discharged Law S.C. = ⊤
-```
-
-Discharge is wrong:  `O$={ls,s} /\ s,s' ⊇ₐ a =/=> s ∉ a`
-
-**Goal S.C discharging disjoint works when s.c. is disjoint, but fails when s.c is covered**
 
 ### Next in Line
 

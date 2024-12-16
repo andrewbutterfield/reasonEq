@@ -1112,7 +1112,8 @@ ddDischarge obsv vsDG vsDL = return (vsDL `S.difference` vsDG)
 \\ & = & \false, \quad \IF \quad C_G \disj C_L \land isStdObs(V)
 \\ & = & (C_G \cap C_L)\cup C_{?L} \supseteq V, \quad \textbf{otherwise}
 \end{eqnarray*}
-Remember, here \texttt{Everything} denotes the universal set.
+\textbf{Old idea, wrong:} Remember, here \texttt{Everything} denotes the universal set.
+\textbf{Reality: }\textsl{In fact, \texttt{Everything} denotes irrelevancy!}
 \begin{code}
 ccDischarge :: MonadFail m 
             => VarSet -> UVarSet -> UVarSet 

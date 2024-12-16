@@ -2,6 +2,19 @@
 
 ## URGENT
 
+Go back through `xxDischarge` 
+and change the 3rd pattern from using `nvsXX` to `(The vsXX)`
+
+Explore using `VarTable`s to expand contents of `vsD`, `vsC` and `vsCd` components of side-conditions, as they are built within a theory,
+rather than expanding them on-demand in `xxDischarge` (which requires `vts` plumbing).
+
+
+
+
+
+
+
+
 ```
 (E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1 ; (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2
  O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, 

@@ -3,40 +3,26 @@
 ## URGENT
 
 ```
-proof: tm 1 A_def
-@scDchg'3.vscL:
-VSC (GV (VR (Id "E" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA
-@scDchg'3.vscG:
-VSC (GV (VR (Id "E" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA
-@scDchg'3.obsv:
-fromList [GV (VR (Id "ls" 0,VO,WB)),GV (VR (Id "ls" 0,VO,WA)),GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]
-@scDchg'3.vsc':
-VSC (GV (VR (Id "E" 0,VE,WS))) (The (fromList [])) NA NA
-@scDchg'3.vscL:
-VSC (GV (VR (Id "N" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA
-@scDchg'3.vscG:
-VSC (GV (VR (Id "N" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA
-@scDchg'3.obsv:
-fromList [GV (VR (Id "ls" 0,VO,WB)),GV (VR (Id "ls" 0,VO,WA)),GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]
-@scDchg'3.vsc':
-VSC (GV (VR (Id "N" 0,VE,WS))) (The (fromList [])) NA NA
-@scDchg'3.vscL:
-VSC (GV (VR (Id "a" 0,VP,WS))) NA NA (The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]))
-@scDchg'3.vscG:
-VSC (GV (VR (Id "a" 0,VP,WS))) NA NA (The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]))
-@scDchg'3.obsv:
-fromList [GV (VR (Id "ls" 0,VO,WB)),GV (VR (Id "ls" 0,VO,WA)),GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]
-@scDchg'3.vsc':
-VSC (GV (VR (Id "a" 0,VP,WS))) (The (fromList [])) NA NA
-Match against `A_def'[1] OK
-Binding: { A  ⟼ A, E  ⟼ E, N  ⟼ N, a  ⟼ a }
-Instantiated Law = X(E,a,E,N)
-Instantiated Law S.C. = O$,O$'∉E, O$,O$'∉N, s,s'⊇ₐa
-Goal S.C. = O$,O$'∉E, O$,O$'∉N, s,s'⊇ₐa
-Discharged Law S.C. = 
-
-hit <enter> to continue
-
+(E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1 ; (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2
+ O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, 
+ s,s'⊇ₐa, s,s'⊇ₐb
+Match against `;_def'[1] OK
+Binding: 
+{ ;  ⟼ ;
+, P  ⟼ (E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1
+, Q  ⟼ (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2
+, 0  ⟼ 0
+, O$  ⟼ ⟨O$⟩ }
+Instantiated Law = 
+(∃ O$_0  • ((E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$'] 
+         ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_0/O$])
+Instantiated Law S.C. = 
+O$,O$'⊇ₐE1, O$,O$'⊇ₐE2, O$,O$'⊇ₐN1, O$,O$'⊇ₐN2, O$,O$'⊇ₐR1, O$,O$'⊇ₐR2, 
+O$,O$'⊇ₐa, O$,O$'⊇ₐb, O$,O$'⊇ₐls, O$,O$'⊇ₐls', fresh:O$_0
+Goal S.C. = 
+O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, 
+s,s'⊇ₐa, s,s'⊇ₐb
+Discharged Law S.C. = O$,O$'⊇ₐls, O$,O$'⊇ₐls', fresh:O$_0
 ```
 
 ### Next in Line

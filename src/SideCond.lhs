@@ -283,15 +283,18 @@ We don't look for evident falsity because we have no way to indicate that here.
 \begin{code}
 mkVSC :: GenVar -> NVarSet -> NVarSet -> NVarSet -> Maybe VarSideConds
 mkVSC gv nvsD nvsC nvsCd
-  = if nvsD' == disjNA && nvsC' == covByNA && nvsCd' == covByNA
-    then Nothing -- denotes True
+  = if isTrue nvsD' nvsC' nvsCd'
+    then Nothing 
     else Just $ VSC gv nvsD' nvsC' nvsCd'
   where
-    nvsD'   =  checkSC obviousDisj  gv nvsD
+    nvsD'  =  checkSC obviousDisj  gv nvsD
     nvsC'  =  checkSC obviousCovBy gv nvsC
     nvsCd' =  checkSC obviousDCov  gv nvsCd
-    checkSC obvious gv NA  = NA
-    checkSC obvious  gv (The vs) = The $ S.filter (not . obvious gv) vs
+    checkSC obvious gv NA        =  NA
+    checkSC obvious gv (The vs)  =  The $ S.filter (not . obvious gv) vs
+    isTrue NA NA NA         =  True 
+    isTrue (The vsD) NA NA  =  S.null vsD
+    isTrue _ _ _            =  False
 \end{code}
 The idea is that we can deduce $g \mathcal R V$ if for all $g' \in V$,
 we can definitively deduce $g \mathcal R \setof{g'}$.
@@ -1027,8 +1030,8 @@ scDischarge' obsv        (vscG@(VSC gvG _ _ _):restG)
                      rest' <- scDischarge' obsv restG restL
                      return (vscL:rest')
   | otherwise  =  do -- use vscG to discharge vscL
-                     vsc' <- vscDischarge (pdbg "scDchg'3.obsv" obsv) (pdbg "scDchg'3.vscG" vscG) $ pdbg "scDchg'3.vscL" vscL
-                     vscChecked <- vscCheck $ pdbg "scDchg'3.vsc'" vsc'
+                     vsc' <- vscDischarge obsv vscG vscL
+                     vscChecked <- vscCheck vsc'
                      case vscChecked of
                        Nothing ->  scDischarge' obsv restG restL
                        Just vsc'' -> do

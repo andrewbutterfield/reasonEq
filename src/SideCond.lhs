@@ -1166,8 +1166,8 @@ Edge cases:
   \m{C_G = \emptyset} means no change to law s.c.
 \newline
   If \m{V} is a term variable, 
-  then it is possible that \m{fv(V)=\emptyset},
-  in which case the fact that \m{C_L \disj C_G} is irrelevant.
+  then it is possible that \m{\fv(V)=\emptyset},
+  in which case the fact that \m{C_G \disj C_L} is irrelevant.
 \begin{eqnarray*}
    \_ \discharges C_L \supseteq V
    & = & C_L \supseteq V
@@ -1180,6 +1180,7 @@ Edge cases:
 ccDischarge :: MonadFail m 
             => VarSet -> GenVar -> NVarSet -> NVarSet 
             -> m NVarSet
+ccDischarge _    _  _  NA     =  return NA
 ccDischarge _    _  NA uvsCL  =  return uvsCL
 ccDischarge obsv gv uvsCG uvsCL
   | S.null (the uvsCG)        =  return uvsCL
@@ -1188,7 +1189,7 @@ ccDischarge obsv gv uvsCG uvsCL
     && isObsGVar gv           =  fail "CC - disjoint coverage"
   | otherwise  =  return ((uvsCG `nintsct` uvsCL) `nunion` uvsCLf)
   where uvsCLf = case uvsCL of
-                   NA    ->  NA
+                   NA    ->  NA -- redundant, see first pattern above
                    The vsCL  ->  The $ S.filter isFloatingGVar vsCL
 \end{code}
 
@@ -1208,45 +1209,78 @@ Edge cases: \m{D_G = \emptyset} means no change to law s.c.
 ddDischarge :: MonadFail m 
             => VarSet -> GenVar -> NVarSet -> NVarSet 
             -> m NVarSet
-ddDischarge _    _  NA    nvsDL = return nvsDL
-ddDischarge obsv gv nvsDG nvsDL = return (nvsDL `ndiff` nvsDG)
+ddDischarge _    _  _     NA     =  return NA
+ddDischarge _    _  NA    nvsDL  =  return nvsDL
+ddDischarge obsv gv nvsDG nvsDL  =  return (nvsDL `ndiff` nvsDG)
 \end{code}
 
+\newpage
 \subsubsection{Pairwise Discharging (C:D)}
+General idea (assuming \m{C_G \supset \emptyset}): 
+\newline
+  \m{C_G \supseteq V} discharges \m{D_L \disj V} if \m{C_G \disj D_L}
+\newline
+  \m{C_G \supseteq V} falsifies \m{D_L \disj V} if \m{C_G \subseteq D_L}
+\newline
+  The outcome remains as \m{D_L \disj V} if neither of the above apply
+  (we don't know if the \m{V} inside \m{C_G} overlaps with \m{D_L}).
 
-
+Edge cases:
+\newline
+  \m{C_G = \emptyset} discharges \m{D_L \disj V} 
+  because it implies \m{\fv(V)=\emptyset}
+\newline
+  If \m{V} is a term variable, 
+  then it is possible that \m{fv(V)=\emptyset},
+  in which case the fact that \m{C_G \subseteq D_L} is irrelevant.
 \begin{eqnarray*}
-   C_G \supseteq V \discharges D_L \disj V
-   & = & \true
-         \quad\cond{C_G\cap D_L = \emptyset}\quad
-         D_L \disj V
+   \_ \discharges D_L \disj V
+   & = & D_L \disj V
+\\ C_G \supseteq V \discharges D_L \disj V
+   & = & \true, \quad \IF \quad C_G \disj D_L
+\\ & = & \false, \quad \IF \quad C_G \subseteq D_L \land isObsVar(V)
+\\ & = & (D_L \setminus C_G)\disj V, \quad \textbf{otherwise}
 \end{eqnarray*}
+
 \begin{code}
 cdDischarge :: MonadFail m 
             => VarSet -> GenVar -> NVarSet -> NVarSet 
             -> m NVarSet
-cdDischarge obsv gv NA nvsDL                =  return nvsDL
-cdDischarge obsv vg (The vsCG) (The vsDL)  
-  =  return $ The (vsCG `S.intersection` vsDL) 
+cdDischarge _    _  _  NA                  =  return NA
+cdDischarge obsv gv NA nvsDL               =  return nvsDL
+cdDischarge obsv gv nvsCG nvsDL
+  | S.null (the nvsCG)                     =  return nvsDL
+  | nvsCG `ndisj` nvsDL                    =  return NA -- discharged !
+  | nvsCG `nsubset` nvsDL && isObsGVar gv  =  fail "CD - cover under disjoint"
+  | otherwise                              = return (nvsDL `ndiff` nvsCG)
 \end{code}
 
 \subsubsection{Pairwise Discharging (D:C)}
+General idea (assuming \m{D_G \supset \emptyset}):
+\newline
+\m{D_G \disj V} falsifies \m{C_L \supseteq V} if \m{C_L \subseteq D_G}
+and \m{V} is an observable.
+
+Edge cases: \m{D_G = \emptyset} means no change to law s.c.
+\newline
 
 
 \begin{eqnarray*}
    D_G \disj V \discharges C_L \supseteq V
    & = & \false
-         \quad\cond{C_L \subseteq D_G \land isStdObs(V)}\quad
+         \quad\cond{C_L \subseteq D_G \land isObsVar(V)}\quad
          (C_L \setminus D_G) \supseteq V
 \end{eqnarray*}
 \begin{code}
 dcDischarge :: MonadFail m 
             => VarSet -> GenVar -> NVarSet -> NVarSet 
             -> m NVarSet
-dcDischarge obsv gv _          NA          =  return NA
-dcDischarge obsv gv NA         nvsCL       =  return nvsCL
-dcDischarge obsv gv (The vsDG) (The vsCL)  
-  =  return $ The (vsCL `S.difference` vsDG)
+dcDischarge _    _  _     NA          =  return NA
+dcDischarge obsv gv NA    nvsCL       =  return nvsCL
+dcDischarge obsv gv nvsDG nvsCL 
+  | S.null (the nvsDG)  =  return nvsCL
+  | nvsCL `nsubset` nvsDG && isObsGVar gv = fail "DC - cover under disjoint"
+  | otherwise = return (nvsCL `ndiff` nvsDG)
 \end{code}
 
 \newpage

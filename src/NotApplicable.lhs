@@ -6,7 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 module NotApplicable (
-  NA(..)
+  NA(..), isNA, isThe, the
 )
 where
 \end{code}
@@ -29,4 +29,16 @@ data NA t
 instance Functor NA where
   fmap f (The x)    =  The $ f x
   fmap f NA         =  NA
+\end{code}
+
+\subsection{Queries}
+
+\begin{code}
+isNa, isThe :: NA t -> Bool 
+isNA NA  = True  ; isNA (The _)  = False
+isThe NA = False ; isThe (The _) = True
+
+the :: NA t -> t  -- partial function
+the NA       =  error "the: applied to NA"
+the (The t)  =  t
 \end{code}

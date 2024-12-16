@@ -8,7 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module SideCond (
   NVarSet, nset
-, isThere, nsngl, nmbr, ndiff, nunion, nintsct, nsubset
+, isThere, nsngl, nmbr, ndiff, nunion, nintsct, nsubset, ndisj
 , VarSideConds(..)
 , termVar, disjointFrom, coveredBy, coveredDynamic
 , mkVSC
@@ -24,7 +24,7 @@ module SideCond (
 , scDischarge
 , isFloatingVSC
 , addFreshVars
-, notin, covers, dyncover, fresh
+, covers, dyncover, fresh
 , findGenVarInSC, findAllGenVar
 , findDisjointGenVar, findCoveredGenVar, findDynCvrdGenVar
 , mentionedBy
@@ -42,7 +42,7 @@ import qualified Data.Map as M
 
 import NotApplicable
 import YesBut
-import UnivSets
+-- import UnivSets
 import Utilities
 import LexBase
 import Variables
@@ -241,6 +241,11 @@ nsubset :: NVarSet -> NVarSet -> Bool
 nsubset _        NA   =  True
 nsubset NA  _         =  False
 nsubset (The s) (The t)  =  s `S.isSubsetOf` t
+
+ndisj :: NVarSet -> NVarSet -> Bool
+NA `ndisj` _  =  False
+_ `ndisj` NA  =  False
+(The s) `ndisj` (The t)  =  s `S.disjoint` t
 \end{code}
 
 
@@ -1005,13 +1010,6 @@ vscMrg (vsc:vscs) = mrgVarConds vsc vscs
 %   | otherwise           =  nvsCd
 % \end{code}
 
-\textbf{USED BELOW BUT NOT SURE WHY !!!!}
-\begin{code}
-obsCdDischarge :: VarSet -> GenVar -> NVarSet -> NVarSet
-obsCdDischarge freshObs gv nvsCd
-  | gv `S.member` freshObs  =  NA
-  | otherwise           =  nvsCd
-\end{code}
 
 \newpage
 \subsection{Term-Variable  Condition  Discharge}
@@ -1039,7 +1037,7 @@ scDischarge' obsv        (vscG@(VSC gvG _ _ _):restG)
                          return (vsc'':rest')
 \end{code}
 
-\newpage
+
 \subsubsection{VSC Discharge}
 
 At this point we have the form, for given term-variable $T$:
@@ -1084,6 +1082,7 @@ vscDischarge _ _ (VSC (StdVar (Vbl _ ObsV _)) _ (The vsC) _)
   | S.null vsC  =  fail ("Empty set cannot cover a standard obs. variable")
 \end{code}
 
+\newpage
 Any occurrences of a floating variable in a translated law side-condition
 should be retained.
 We let $D_{?L}$ and $C_{?L}$ denote
@@ -1119,17 +1118,25 @@ given that $ls \in \lst O$.
 We cannot immediately assume it's true as the antecedent doesn't prevent
 $ls_1 \in N$. However, if $ls_1$ is fresh, this will be the case.
 
+The plan is that we first use each component (\m{D,C,Cd}) of the goal
+to simplify the corresponding instantiated law components.
+Then we look at the  crossovers.
+We start with the \m{C} and \m{Cd} components because $\subseteq$
+is strong enough to potentially falsify some side-conditions, 
+whereas $\disj$ is too weak for this.
+
 \begin{code}
 vscDischarge obsv (VSC gv nvsDG nvsCG nvsCdG) (VSC _ nvsDL nvsCL nvsCdL)
-  = do  nvsD'    <- ddDischarge obsv  nvsDG  nvsDL
-        nvsD''   <- cdDischarge obsv  nvsCG  nvsD'
-        nvsD'''  <- cdDischarge obsv  nvsCdG nvsD''
+  = do  nvsC'    <- ccDischarge obsv gv nvsCG  nvsCL
+        nvsCd'   <- ccDischarge obsv gv nvsCdG nvsCdL
+        nvsD'    <- ddDischarge obsv gv nvsDG  nvsDL
 
-        nvsC'    <- ccDischarge obsv  nvsCG  nvsCL
-        nvsC''   <- dcDischarge obsv  nvsDG  nvsC'
+        nvsD''   <- cdDischarge obsv gv nvsCG  nvsD'
+        nvsD'''  <- cdDischarge obsv gv nvsCdG nvsD''
 
-        nvsCd'   <- ccDischarge obsv  nvsCdG nvsCdL
-        nvsCd''  <- dcDischarge obsv  nvsDG  nvsCd'
+        nvsC''   <- dcDischarge obsv gv nvsDG  nvsC'
+
+        nvsCd''  <- dcDischarge obsv gv nvsDG  nvsCd'
         -- this is assymetric between G and L -- G=NA means it has no effect!
         --  obsCdDischarge converts nvsCd'' to NA if gv is in obsv
         case mkVSC gv nvsD''' nvsC'' (obsCdDischarge obsv gv nvsCd'') of
@@ -1137,53 +1144,76 @@ vscDischarge obsv (VSC gv nvsDG nvsCG nvsCdG) (VSC _ nvsDL nvsCL nvsCdL)
           Just vsc  ->  return vsc
 \end{code}
 
-\newpage
-\subsubsection{Pairwise Discharging}
+\textbf{USED JUST ABOVE BUT NOT FOR MUCH LONGER !!!!}
+\begin{code}
+obsCdDischarge :: VarSet -> GenVar -> NVarSet -> NVarSet
+obsCdDischarge freshObs gv nvsCd
+  | gv `S.member` freshObs  =  NA
+  | otherwise           =  nvsCd
+\end{code}
 
+
+\newpage
+\subsubsection{Pairwise Discharging (C:C)}
+General idea (assuming \m{C_G \supset \emptyset}): 
+\newline
+  \m{C_G \supseteq V} discharges \m{C_L \supseteq V} if \m{C_G \subseteq C_L}
+\newline
+  \m{C_G \supseteq V} falsifies \m{C_L \supseteq V} if \m{C_G \disj C_L}
+
+Edge cases:
+\newline
+  \m{C_G = \emptyset} means no change to law s.c.
+\newline
+  If \m{V} is a term variable, 
+  then it is possible that \m{fv(V)=\emptyset},
+  in which case the fact that \m{C_L \disj C_G} is irrelevant.
+\begin{eqnarray*}
+   \_ \discharges C_L \supseteq V
+   & = & C_L \supseteq V
+\\ C_G \supseteq V \discharges C_L \supseteq V
+   & = & \true, \quad \IF \quad C_G \subseteq C_L
+\\ & = & \false, \quad \IF \quad C_G \disj C_L \land isObsVar(V)
+\\ & = & (C_G \cap C_L)\cup C_{?L} \supseteq V, \quad \textbf{otherwise}
+\end{eqnarray*}
+\begin{code}
+ccDischarge :: MonadFail m 
+            => VarSet -> GenVar -> NVarSet -> NVarSet 
+            -> m NVarSet
+ccDischarge _    _  NA uvsCL  =  return uvsCL
+ccDischarge obsv gv uvsCG uvsCL
+  | S.null (the uvsCG)        =  return uvsCL
+  | uvsCG `nsubset` uvsCL     =  return NA -- discharged!
+  | uvsCL `ndisj` uvsCG 
+    && isObsGVar gv           =  fail "CC - disjoint coverage"
+  | otherwise  =  return ((uvsCG `nintsct` uvsCL) `nunion` uvsCLf)
+  where uvsCLf = case uvsCL of
+                   NA    ->  NA
+                   The vsCL  ->  The $ S.filter isFloatingGVar vsCL
+\end{code}
+
+\subsubsection{Pairwise Discharging (D:D)}
+General idea (assuming \m{D_G \supset \emptyset}):
+\newline
+\m{D_G \disj V} discharges \m{D_L \disj V} if \m{D_L \subseteq D_G}
+
+Edge cases: \m{D_G = \emptyset} means no change to law s.c.
+\newline
 \begin{eqnarray*}
    D_G \disj V \discharges D_L \disj V
    & = & \true
          \quad\cond{D_L \subseteq D_G}\quad (D_L\setminus D_G) \disj V
 \end{eqnarray*}
 \begin{code}
-ddDischarge :: MonadFail m => VarSet -> NVarSet -> NVarSet -> m NVarSet
-ddDischarge obsv nvsDG nvsDL = return (nvsDL `ndiff` nvsDG)
-\end{code}
-
-\begin{eqnarray*}
-   \_ \discharges C_L \supseteq V
-   & = & \true, \quad \IF \quad V \in Obs \land C_L = Obs
-\\ C_G \supseteq V \discharges C_L \supseteq V
-   & = & \true, \quad \IF \quad C_G \subseteq C_L
-\\ & = & \false, \quad \IF \quad C_G \disj C_L \land isStdObs(V)
-\\ & = & (C_G \cap C_L)\cup C_{?L} \supseteq V, \quad \textbf{otherwise}
-\end{eqnarray*}
-\textbf{Old idea, wrong:} Remember, here \texttt{NA} denotes the universal set.
-\textbf{Reality: }\textsl{In fact, \texttt{NA} denotes irrelevancy!}
-\begin{code}
-ccDischarge :: MonadFail m 
-            => VarSet -> NVarSet -> NVarSet 
+ddDischarge :: MonadFail m 
+            => VarSet -> GenVar -> NVarSet -> NVarSet 
             -> m NVarSet
-ccDischarge obsv uvsCG uvsCL
-  | uvsCG `nsubset` uvsCL  =  return NA
-  | otherwise              =  return ((uvsCG `nintsct` uvsCL) `nunion` uvsCLf)
-  where uvsCLf = case uvsCL of
-                   NA    ->  NA
-                   The vsCL  ->  The $ S.filter isFloatingGVar vsCL
+ddDischarge _    _  NA    nvsDL = return nvsDL
+ddDischarge obsv gv nvsDG nvsDL = return (nvsDL `ndiff` nvsDG)
 \end{code}
 
-\begin{eqnarray*}
-   D_G \disj V \discharges C_L \supseteq V
-   & = & \false
-         \quad\cond{C_L \subseteq D_G \land isStdObs(V)}\quad
-         (C_L \setminus D_G) \supseteq V
-\end{eqnarray*}
-\begin{code}
-dcDischarge :: MonadFail m => VarSet -> NVarSet -> NVarSet -> m NVarSet
-dcDischarge obsv _          NA          =  return NA
-dcDischarge obsv NA         nvsCL       =  return nvsCL
-dcDischarge obsv (The vsDG) (The vsCL)  =  return $ The (vsCL `S.difference` vsDG)
-\end{code}
+\subsubsection{Pairwise Discharging (C:D)}
+
 
 \begin{eqnarray*}
    C_G \supseteq V \discharges D_L \disj V
@@ -1192,10 +1222,31 @@ dcDischarge obsv (The vsDG) (The vsCL)  =  return $ The (vsCL `S.difference` vsD
          D_L \disj V
 \end{eqnarray*}
 \begin{code}
-cdDischarge :: MonadFail m => VarSet -> NVarSet -> NVarSet -> m NVarSet
-cdDischarge obsv NA nvsDL                =  return nvsDL
-cdDischarge obsv (The vsCG) (The vsDL)  
+cdDischarge :: MonadFail m 
+            => VarSet -> GenVar -> NVarSet -> NVarSet 
+            -> m NVarSet
+cdDischarge obsv gv NA nvsDL                =  return nvsDL
+cdDischarge obsv vg (The vsCG) (The vsDL)  
   =  return $ The (vsCG `S.intersection` vsDL) 
+\end{code}
+
+\subsubsection{Pairwise Discharging (D:C)}
+
+
+\begin{eqnarray*}
+   D_G \disj V \discharges C_L \supseteq V
+   & = & \false
+         \quad\cond{C_L \subseteq D_G \land isStdObs(V)}\quad
+         (C_L \setminus D_G) \supseteq V
+\end{eqnarray*}
+\begin{code}
+dcDischarge :: MonadFail m 
+            => VarSet -> GenVar -> NVarSet -> NVarSet 
+            -> m NVarSet
+dcDischarge obsv gv _          NA          =  return NA
+dcDischarge obsvgv NA         nvsCL       =  return nvsCL
+dcDischarge obsv gv (The vsDG) (The vsCL)  
+  =  return $ The (vsCL `S.difference` vsDG)
 \end{code}
 
 \newpage

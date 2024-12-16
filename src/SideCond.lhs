@@ -24,7 +24,7 @@ module SideCond (
 , scDischarge
 , isFloatingVSC
 , addFreshVars
-, covers, dyncover, fresh
+, notin, covers, dyncover, fresh
 , findGenVarInSC, findAllGenVar
 , findDisjointGenVar, findCoveredGenVar, findDynCvrdGenVar
 , mentionedBy

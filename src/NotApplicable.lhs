@@ -34,7 +34,7 @@ instance Functor NA where
 \subsection{Queries}
 
 \begin{code}
-isNa, isThe :: NA t -> Bool 
+isNA, isThe :: NA t -> Bool 
 isNA NA  = True  ; isNA (The _)  = False
 isThe NA = False ; isThe (The _) = True
 

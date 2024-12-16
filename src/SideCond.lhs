@@ -1244,7 +1244,7 @@ dcDischarge :: MonadFail m
             => VarSet -> GenVar -> NVarSet -> NVarSet 
             -> m NVarSet
 dcDischarge obsv gv _          NA          =  return NA
-dcDischarge obsvgv NA         nvsCL       =  return nvsCL
+dcDischarge obsv gv NA         nvsCL       =  return nvsCL
 dcDischarge obsv gv (The vsDG) (The vsCL)  
   =  return $ The (vsCL `S.difference` vsDG)
 \end{code}

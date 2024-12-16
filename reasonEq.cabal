@@ -35,6 +35,7 @@ library
       LiveProofs
       MatchContext
       Matching
+      NotApplicable
       Persistence
       Proofs
       Ranking

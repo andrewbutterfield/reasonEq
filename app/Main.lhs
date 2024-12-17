@@ -1567,7 +1567,7 @@ tryMatch args state@( reqs, liveProof)
               , "Binding: " ++ trBinding bind
               , "Instantiated Law = " ++ trTerm 0 tPasC
               , "Instantiated Law S.C. = " ++ trSideCond scC'
-              , "Goal S.C. = " ++ trSideCond (conjSC liveProof)
+              , "Goal S.C. = " ++ trSideCond (xpndSC liveProof)
               , "Discharged Law S.C. = " ++ trSideCond scP']
           But msgs -> putStrLn $ unlines' ( (banner ++ " failed!") : msgs )
         userPause

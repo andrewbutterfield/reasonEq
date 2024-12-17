@@ -312,13 +312,13 @@ and $<$Complete Binding$>$ for application involves(?) \texttt{completeBind}.
 tryLawByName :: Assertion -> String -> [Int] -> [MatchContext]
                -> YesBut ( Binding    -- mapping from pattern to candidate
                          , Term       -- autoInstantiated Law
-                         , SideCond   -- updated candidate side-condition
+                         , SideCond   -- updated expanded candidate side-cond.
                          , SideCond ) -- discharged(?) law side-condition
 tryLawByName (Assertion tC scC) lnm parts mcs
   = do (((_,asnP),_),vts) <- findLaw lnm mcs
        let tP = assnT asnP
        (partsP,replP) <- findParts parts tP
-       let scP = assnC asnP
+       let scP = expandSCKnowns vts $ assnC asnP
        tryMatch vts tP partsP replP scP
   where
     -- below we try to do:

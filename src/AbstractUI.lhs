@@ -593,7 +593,7 @@ tryFocusAgainst :: String -> [Int] -> LiveProof
 tryFocusAgainst lawnm parts liveProof
   = let (tz,_)      =  focus liveProof
         goalt       =  getTZ tz
-        scC         =  conjSC liveProof
+        scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
     in do asn' <- mkAsn goalt scC
           tryLawByName asn' lawnm parts ctxts

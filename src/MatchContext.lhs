@@ -87,18 +87,4 @@ Expanding Known Variables in Side-Conditions
 expandSideCondKnownVars :: [MatchContext] -> SideCond -> SideCond
 expandSideCondKnownVars [] sc = sc
 expandSideCondKnownVars ((_,_,vts):_) sc  =  expandSCKnowns vts sc
-
-
-expandSCKnowns :: [VarTable] -> SideCond -> SideCond
-expandSCKnowns vts (vscs,freshvs)
-  = ( map (expandVSCKnowns vts) vscs
-    , S.unions (S.map (expandKnownGenVars vts) freshvs ) )
-
-expandVSCKnowns :: [VarTable] -> VarSideConds -> VarSideConds
-expandVSCKnowns vts vsc = vsc
-
-expandKnownGenVars :: [VarTable] -> GenVar -> VarSet
-expandKnownGenVars vts gv = S.singleton gv
 \end{code}
-
-

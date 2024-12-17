@@ -6,6 +6,21 @@
 Explore using `VarTable`s to expand contents of `vsD`, `vsC` and `vsCd` components of side-conditions, as they are built within a theory,
 rather than expanding them on-demand in `xxDischarge` (which requires `vts` plumbing).
 
+Reminder:
+
+```
+CG ⊇ V => CL ⊇ V      if   CL ⊇ CG       CG not empty
+CG ⊇ V => ¬(CL ⊇ V)   if   CL ∉ CG       V is obs-var
+
+DG ∉ V => DL ∉ V      if   DG ⊇ DL       DG not empty
+
+CG ⊇ V => DL ∉ V      if   DL ∉ CG       CG not empty
+CG ⊇ V => ¬(DL ∉ V)   if   DL ⊇ CG       V is obs-var
+
+DG ∉ V => ¬(CL ⊇ V)   if   DG ⊇ CL       DG not empty
+```
+
+
 
 Consider:
  inst. law sc: `O$,O$'∉E1,O$,O$'⊇ₐb, O$,O$'⊇ₐls, fresh:O$_0`
@@ -45,29 +60,18 @@ DECISION 1 : we use `vts` to do expansion at start of a proof. We don't want to 
 All examples above are C:C or D:D discharges. We need to check C:D and D:C as well.
 
 
-
+`s,s' ⊇ₐ b  ==>  M$,M$' ∉ b`  where `M$={ok,wait}`.
 
 ```
-(E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1 ; (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2
- O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, 
- s,s'⊇ₐa, s,s'⊇ₐb
-Match against `;_def'[1] OK
-Binding: 
-{ ;  ⟼ ;
-, P  ⟼ (E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1
-, Q  ⟼ (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2
-, 0  ⟼ 0
-, O$  ⟼ ⟨O$⟩ }
-Instantiated Law = 
-(∃ O$_0  • ((E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$'] 
-         ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_0/O$])
-Instantiated Law S.C. = 
-O$,O$'⊇ₐE1, O$,O$'⊇ₐE2, O$,O$'⊇ₐN1, O$,O$'⊇ₐN2, O$,O$'⊇ₐR1, O$,O$'⊇ₐR2, 
-O$,O$'⊇ₐa, O$,O$'⊇ₐb, O$,O$'⊇ₐls, O$,O$'⊇ₐls', fresh:O$_0
-Goal S.C. = 
-O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, 
-s,s'⊇ₐa, s,s'⊇ₐb
-Discharged Law S.C. = O$,O$'⊇ₐls, O$,O$'⊇ₐls', fresh:O$_0
+s,s' ⊇ₐ b  ==>  ok,wait,ok',wait' ∉ b
+s,s' ⊇ₐ b  ==>  M$,M$',ok,wait,ok',wait' ∉ b
+```
+
+Here we can ony falsify:
+```
+O$ ∉ c  ==>  s ⊇ₐ c
+ls,s ∉ c  ==>  s ⊇ₐ c
+O$,ls,s ∉ c  ==>  s ⊇ₐ c
 ```
 
 ### Next in Line

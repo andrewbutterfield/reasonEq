@@ -1180,17 +1180,15 @@ Edge cases:
 ccDischarge :: MonadFail m 
             => VarSet -> GenVar -> NVarSet -> NVarSet 
             -> m NVarSet
-ccDischarge _    _  _  NA     =  return NA
-ccDischarge _    _  NA uvsCL  =  return uvsCL
-ccDischarge obsv gv uvsCG uvsCL
-  | S.null (the uvsCG)        =  return uvsCL
-  | uvsCG `nsubset` uvsCL     =  return NA -- discharged!
-  | uvsCL `ndisj` uvsCG 
+ccDischarge _  _  _  NA     =  return NA
+ccDischarge _  _  NA uvsCL  =  return uvsCL
+ccDischarge obsv gv (The vsCG) tvsCL@(The vsCL)
+  | S.null vsCG               =  return tvsCL
+  | vsCG `S.isSubsetOf` vsCL  =  return NA -- discharged!
+  | vsCL `S.disjoint` vsCG 
     && isObsGVar gv           =  fail "CC - disjoint coverage"
-  | otherwise  =  return ((uvsCG `nintsct` uvsCL) `nunion` uvsCLf)
-  where uvsCLf = case uvsCL of
-                   NA    ->  NA -- redundant, see first pattern above
-                   The vsCL  ->  The $ S.filter isFloatingGVar vsCL
+  | otherwise  =  return $ The ((vsCG `S.intersection` vsCL) `S.union` vsCLf)
+  where vsCLf = S.filter isFloatingGVar vsCL
 \end{code}
 
 \subsubsection{Pairwise Discharging (D:D)}
@@ -1211,7 +1209,9 @@ ddDischarge :: MonadFail m
             -> m NVarSet
 ddDischarge _    _  _     NA     =  return NA
 ddDischarge _    _  NA    nvsDL  =  return nvsDL
-ddDischarge obsv gv nvsDG nvsDL  =  return (nvsDL `ndiff` nvsDG)
+ddDischarge obsv gv (The vsDG) tvsDL@(The vsDL) 
+  | S.null vsDG  =  return tvsDL
+  | otherwise    =  return $ The (vsDL S.\\ vsDG)
 \end{code}
 
 \newpage
@@ -1246,13 +1246,14 @@ Edge cases:
 cdDischarge :: MonadFail m 
             => VarSet -> GenVar -> NVarSet -> NVarSet 
             -> m NVarSet
-cdDischarge _    _  _  NA                  =  return NA
-cdDischarge obsv gv NA nvsDL               =  return nvsDL
-cdDischarge obsv gv nvsCG nvsDL
-  | S.null (the nvsCG)                     =  return nvsDL
-  | nvsCG `ndisj` nvsDL                    =  return NA -- discharged !
-  | nvsCG `nsubset` nvsDL && isObsGVar gv  =  fail "CD - cover under disjoint"
-  | otherwise                              = return (nvsDL `ndiff` nvsCG)
+cdDischarge _    _  _  NA     =  return NA
+cdDischarge obsv gv NA nvsDL  =  return nvsDL
+cdDischarge obsv gv (The vsCG) tvsDL@(The vsDL)
+  | S.null vsCG               =  return tvsDL
+  | vsCG `S.disjoint` vsDL    =  return NA -- discharged !
+  | vsCG `S.isSubsetOf` vsDL 
+    && isObsGVar gv           =  fail "CD - cover under disjoint"
+  | otherwise                 = return $ The (vsDL S.\\ vsCG)
 \end{code}
 
 \subsubsection{Pairwise Discharging (D:C)}
@@ -1275,12 +1276,13 @@ Edge cases: \m{D_G = \emptyset} means no change to law s.c.
 dcDischarge :: MonadFail m 
             => VarSet -> GenVar -> NVarSet -> NVarSet 
             -> m NVarSet
-dcDischarge _    _  _     NA          =  return NA
-dcDischarge obsv gv NA    nvsCL       =  return nvsCL
-dcDischarge obsv gv nvsDG nvsCL 
-  | S.null (the nvsDG)  =  return nvsCL
-  | nvsCL `nsubset` nvsDG && isObsGVar gv = fail "DC - cover under disjoint"
-  | otherwise = return (nvsCL `ndiff` nvsDG)
+dcDischarge _    _  _     NA     =  return NA
+dcDischarge obsv gv NA    nvsCL  =  return nvsCL
+dcDischarge obsv gv (The vsDG) tvsCL@(The vsCL)
+  | S.null vsDG                  =  return tvsCL
+  | vsCL `S.isSubsetOf` vsDG 
+    && isObsGVar gv              =  fail "DC - cover under disjoint"
+  | otherwise                    =  return $ The (vsCL S.\\ vsDG)
 \end{code}
 
 \newpage

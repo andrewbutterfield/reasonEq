@@ -2,15 +2,47 @@
 
 ## URGENT
 
-Go back through `xxDischarge` 
-and change the 3rd pattern from using `nvsXX` to `(The vsXX)`
 
 Explore using `VarTable`s to expand contents of `vsD`, `vsC` and `vsCd` components of side-conditions, as they are built within a theory,
 rather than expanding them on-demand in `xxDischarge` (which requires `vts` plumbing).
 
 
+Consider:
+ inst. law sc: `O$,O$'∉E1,O$,O$'⊇ₐb, O$,O$'⊇ₐls, fresh:O$_0`
+  goal s.c.: `O$,O$'∉E1, s,s'⊇ₐb`
+  vts: `O$ = {ls,s}, O$'={ls',s'}`.
 
+Want to show that goal discharges law.
 
+`O$,O$'∉E1, s,s'⊇ₐb  ==>  O$,O$'∉E1, O$,O$'⊇ₐb, O$,O$'⊇ₐls`
+
+This breaks into the following:
+
+```
+E1 :  O$,O$' ∉ E1,   ==>  O$,O$' ∉ E1
+b  :  s,s' ⊇ₐ b      ==>  O$,O$' ⊇ₐ b
+ls :  true           ==>  O$,O$' ⊇ₐ ls
+```
+
+We could replace `O$` by `ls,s` throughout:
+
+```
+E1 :  ls,s,ls',s' ∉ E1  ==>  ls,s,ls',s' ∉ E1
+b  :  s,s' ⊇ₐ b         ==>  ls,s,ls',s' ⊇ₐ b
+ls :  true              ==>  ls,s,ls',s' ⊇ₐ ls
+```
+
+We could add `ls,s` alongside  `O$` throughout:
+
+```
+E1 :  O$,O$',ls,s,ls',s' ∉ E1  ==>  O$,O$',ls,s,ls',s' ∉ E1
+b  :  s,s' ⊇ₐ b                ==>  O$,O$',ls,s,ls',s' ⊇ₐ b
+ls :  true                     ==>  O$,O$',ls,s,ls',s' ⊇ₐ ls
+```
+
+DECISION 1 : we use `vts` to do expansion at start of a proof. We don't want to clutter the top level theory presentation with these expansions.
+
+All examples above are C:C or D:D discharges. We need to check C:D and D:C as well.
 
 
 

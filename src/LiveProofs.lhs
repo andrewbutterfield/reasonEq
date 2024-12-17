@@ -100,6 +100,8 @@ data LiveProof
     , fPath :: [Int] -- current term zipper descent arguments
     , matches :: Matches -- current matches
     , stepsSoFar :: [CalcStep]  -- calculation steps so far, most recent first
+    -- derived fron conjSC, using mtchCtxts
+    , xpndSC :: SideCond -- side condition with known vars expanded
     }
   deriving (Eq, Show, Read)
 
@@ -123,6 +125,8 @@ matches__ f lp = lp{ matches = f $ matches lp}
 matches_ = matches__ . const
 stepsSoFar__ f lp = lp{ stepsSoFar = f $ stepsSoFar lp}
 stepsSoFar_ = stepsSoFar__ . const
+xpndSC__ f lp = lp{ xpndSC = f $ xpndSC lp}
+xpndSC_ = xpndSC__ . const
 \end{code}
 
 \section{Live Proof Collection}
@@ -170,6 +174,7 @@ writeLiveProof lp
     -- matches not saved
     writePerLine stepsKEY show (stepsSoFar lp) ++
     [ lprfTRL ]
+    -- xpndSC not saved
 
 readLiveProof :: MonadFail m => Theories -> [String] -> m (LiveProof,[String])
 readLiveProof thrys txts
@@ -194,7 +199,8 @@ readLiveProof thrys txts
                    , focus = fcs
                    , fPath = fpth
                    , matches = []
-                   , stepsSoFar = steps }
+                   , stepsSoFar = steps 
+                   , xpndSC = expandSCKnowns mctxts sc }
               , rest10 )
 \end{code}
 
@@ -227,30 +233,6 @@ readLiveProofs thrys txts
 \newpage
 \section{Proof Starting and Stopping}
 
-% \subsection{Starting a Proof with default strategy}
-
-
-% We need to setup a proof from a conjecture:
-% \begin{code}
-% startProof :: [Theory] -> String -> String -> Assertion -> LiveProof
-% startProof thys thnm cjnm asn@(Assertion t sc)
-%   =  LP { conjThName = thnm
-%         , conjName = cjnm
-%         , conjecture = asn
-%         , conjSC = sc
-%         , strategy = strat
-%         , mtchCtxts =  mcs
-%         , focus =  sz
-%         , fPath = []
-%         , matches = []
-%         , stepsSoFar = []
-%         }
-%   where
-%     (strat,sequent) = fromJust $ reduce thys (cjnm,(t,sc))
-%     sz = leftConjFocus sequent
-%     mcs = buildMatchContext thys
-% \end{code}
-
 \subsection{Starting a Proof with given strategy}
 
 \begin{code}
@@ -267,6 +249,7 @@ launchProof thys thnm cjnm asn@(Assertion t sc) (strat,sequent)
        , fPath = []
        , matches = []
        , stepsSoFar = []
+       , xpndSC = expandSCKnowns mcs sc
        }
   where
     sz = leftConjFocus sequent

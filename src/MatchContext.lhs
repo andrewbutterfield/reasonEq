@@ -9,6 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module MatchContext
  ( MatchContext
  , buildMatchContext
+ , expandSCKnowns
  ) where
 
 import Data.Maybe
@@ -80,4 +81,11 @@ buildMatchContext (thy:thys) -- thys not null
   = let mcs'@((_,_,vts'):_) = buildMatchContext thys
     in (thName thy, laws thy, known thy : vts') : mcs'
 \end{code}
+
+Expanding Known Variables in Side-Conditions
+\begin{code}
+expandSCKnowns :: [MatchContext] -> SideCond -> SideCond
+expandSCKnowns mcs sc = sc
+\end{code}
+
 

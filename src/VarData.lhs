@@ -52,6 +52,7 @@ import Data.Set (Set)
 import qualified Data.Set as S
 import Data.List (nub, deleteBy, deleteFirstsBy, intersectBy, (\\), partition)
 
+import NotApplicable
 import Utilities
 import LexBase
 import Variables
@@ -1013,6 +1014,7 @@ mapTS vts svg (gv@(LstVar (LVbl v _ _)):gvs)
       _           ->  mapTS vts (gv:svg)           gvs
 \end{code}
 
+\section{Expanding Knowns in Side-Conditions}
 \begin{code}
 expandSCKnowns :: [VarTable] -> SideCond -> SideCond
 expandSCKnowns vts (vscs,freshvs)
@@ -1020,10 +1022,17 @@ expandSCKnowns vts (vscs,freshvs)
     , S.unions (S.map (expandKnownGenVars vts) freshvs ) )
 
 expandVSCKnowns :: [VarTable] -> VarSideConds -> VarSideConds
-expandVSCKnowns vts vsc = vsc
+expandVSCKnowns vts (VSC gv nvsD nvsC nvsCd) 
+ = VSC gv (expandNVarSet vts nvsD) 
+          (expandNVarSet vts nvsC) 
+          (expandNVarSet vts nvsCd)
+
+expandNVarSet :: [VarTable] -> NVarSet -> NVarSet
+expandNVarSet vts NA = NA
+expandNVarSet vts (The vs) = The $ mapVToverVarSet vts vs
 
 expandKnownGenVars :: [VarTable] -> GenVar -> VarSet
-expandKnownGenVars vts gv = S.singleton gv
+expandKnownGenVars vts gv = mapVToverVarSet vts $ S.singleton gv
 \end{code}
 
 

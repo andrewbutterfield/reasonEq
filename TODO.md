@@ -2,14 +2,15 @@
 
 ## URGENT
 
-Explore using `VarTable`s to expand contents of `vsD`, `vsC` and `vsCd` components of side-conditions, as they are built within a theory,
-rather than expanding them on-demand in `xxDischarge` (which requires `vts` plumbing).
+DONE  in `LiveProof`:
 
-DECISION 1 : we use `vts` to do expansion at start of a proof. We don't want to clutter the top level theory presentation with these expansions.
+1. Retain both versions 
 
-DECISION 2 : we *replace* `O$` and the like by their expansions (`ls,s`).
+TODO
 
-POSSIBILITY : retain both versions and allow user to toggle between which one is displayed, while always using the expanded version to do discharge.
+ 2. Allow user to toggle between which one is displayed
+    (currently both are)
+ 3. Always use the expanded version to do discharge.
 
 Reminder:
 

@@ -9,7 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module MatchContext
  ( MatchContext
  , buildMatchContext
- , expandSCKnowns
+ , expandSideCondKnownVars
  ) where
 
 import Data.Maybe
@@ -84,8 +84,21 @@ buildMatchContext (thy:thys) -- thys not null
 
 Expanding Known Variables in Side-Conditions
 \begin{code}
-expandSCKnowns :: [MatchContext] -> SideCond -> SideCond
-expandSCKnowns mcs sc = sc
+expandSideCondKnownVars :: [MatchContext] -> SideCond -> SideCond
+expandSideCondKnownVars [] sc = sc
+expandSideCondKnownVars ((_,_,vts):_) sc  =  expandSCKnowns vts sc
+
+
+expandSCKnowns :: [VarTable] -> SideCond -> SideCond
+expandSCKnowns vts (vscs,freshvs)
+  = ( map (expandVSCKnowns vts) vscs
+    , S.unions (S.map (expandKnownGenVars vts) freshvs ) )
+
+expandVSCKnowns :: [VarTable] -> VarSideConds -> VarSideConds
+expandVSCKnowns vts vsc = vsc
+
+expandKnownGenVars :: [VarTable] -> GenVar -> VarSet
+expandKnownGenVars vts gv = S.singleton gv
 \end{code}
 
 

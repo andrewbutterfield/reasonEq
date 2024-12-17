@@ -13,6 +13,7 @@ module LiveProofs
  , conjecture__, conjecture_, conjSC__, conjSC_
  , strategy__, strategy_, mtchCtxts__, mtchCtxts_, focus__, focus_
  , fPath__, fPath_, matches__, matches_, stepsSoFar__, stepsSoFar_
+ , xpndSC__, xpndSC_
  , LiveProofs
  , writeLiveProofs, readLiveProofs
  , dispLiveProof
@@ -200,7 +201,7 @@ readLiveProof thrys txts
                    , fPath = fpth
                    , matches = []
                    , stepsSoFar = steps 
-                   , xpndSC = expandSCKnowns mctxts sc }
+                   , xpndSC = expandSideCondKnownVars mctxts sc }
               , rest10 )
 \end{code}
 
@@ -249,7 +250,7 @@ launchProof thys thnm cjnm asn@(Assertion t sc) (strat,sequent)
        , fPath = []
        , matches = []
        , stepsSoFar = []
-       , xpndSC = expandSCKnowns mcs sc
+       , xpndSC = expandSideCondKnownVars mcs sc
        }
   where
     sz = leftConjFocus sequent
@@ -1000,6 +1001,7 @@ dispLiveProof maxm liveProof
        ( displayMatches maxm (mtchCtxts liveProof) (matches liveProof)
          : [ "-----------" -- underline "           "
            , dispSeqZip (fPath liveProof) (conjSC liveProof) (focus liveProof)
+           , "XPNDD:\n"++(trSideCond $ xpndSC liveProof)
            , "" ]
        )
  where (trm,sc) = unwrapASN $ conjecture liveProof

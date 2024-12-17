@@ -42,7 +42,6 @@ import qualified Data.Map as M
 
 import NotApplicable
 import YesBut
--- import UnivSets
 import Utilities
 import LexBase
 import Variables

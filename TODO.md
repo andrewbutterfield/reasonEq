@@ -70,7 +70,7 @@ s,s' ⊇ₐ b  ==>  ok,wait,ok',wait' ∉ b
 s,s' ⊇ₐ b  ==>  M$,M$',ok,wait,ok',wait' ∉ b
 ```
 
-Here we can ony falsify:
+Here we can only falsify:
 ```
 O$ ∉ c  ==>  s ⊇ₐ c
 ls,s ∉ c  ==>  s ⊇ₐ c

@@ -465,10 +465,13 @@ assumeDepConj' thys (depthy:depthys)
         assumeDepConj' thys' depthys
 \end{code}
 
+This sequence, or very similar, occurs twice in \h{AbstractUI.lhs}:
+\begin{verbatim}
 currTh = currTheory reqs
 getCurrConj reqs = fromJust $ getTheoryConjectures currTh thys
 thys = theories reqs
 thylist = fromJust $ getTheoryDeps currTh thys
+\end{verbatim}
 
 \begin{code}
 lawDemote :: MonadFail m => String -> Theory -> m Theory

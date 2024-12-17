@@ -291,40 +291,46 @@ mkVSC gv nvsD nvsC nvsCd
     then Nothing 
     else Just $ VSC gv nvsD' nvsC' nvsCd'
   where
-    nvsD'  =  checkSC obviousDisj  gv nvsD
-    nvsC'  =  checkSC obviousCovBy gv nvsC
-    nvsCd' =  checkSC obviousDCov  gv nvsCd
-    checkSC obvious gv NA        =  NA
-    checkSC obvious gv (The vs)  =  The $ S.filter (not . obvious gv) vs
-    isTrue NA NA NA         =  True 
+    nvsD'  =  obviousDisj   gv nvsD
+    nvsC'  =  obviousCovBy  gv nvsC
+    nvsCd' =  obviousCovBy  gv nvsCd
+    obviousDisj gv NA = NA
+    obviousDisj gv nvsD@(The vsD)
+      |  gv `S.member` vsD  =  nvsD
+      |  otherwise          =  NA
+    obviousCovBy  gv NA     =  NA
+    obviousCovBy  gv nvsC@(The vsC)
+      |  gv `S.member` vsC  =  NA
+      |  otherwise          =  nvsC
+    isTrue NA        NA NA  =  True 
     isTrue (The vsD) NA NA  =  S.null vsD
     isTrue _ _ _            =  False
 \end{code}
-The idea is that we can deduce $g \mathcal R V$ if for all $g' \in V$,
-we can definitively deduce $g \mathcal R \setof{g'}$.
-In effect we return of all $g' \in V$ for which we cannot definitely assert that $\mathcal R$ holds.
+% The idea is that we can deduce $g \mathcal R V$ if for all $g' \in V$,
+% we can definitively deduce $g \mathcal R \setof{g'}$.
+% In effect we return of all $g' \in V$ for which we cannot definitely assert that $\mathcal R$ holds.
 
-So, $\h{chk}_R~g~V = \h{filter}~(\lnot \circ (g\mathcal{R}))~V$.
+% So, $\h{chk}_R~g~V = \h{filter}~(\lnot \circ (g\mathcal{R}))~V$.
 
-When can we deduce that $g \disj \setof{g'}$ is obviously true?
-\begin{code}
-obviousDisj (StdVar (Vbl i1 c1 w1)) (StdVar (Vbl i2 c2 w2))
-                     =  i1 == i2 && c1 == c2 && w1 /= w2
-obviousDisj (LstVar (LVbl (Vbl i1 c1 w1) is1 js1))
-            (LstVar (LVbl (Vbl i2 c2 w2) is2 js2))
-                     =  i1 == i2 && c1 == c2 && w1 /= w2
-obviousDisj _ _      =  False
-\end{code}
-When can we deduce that $g \subseteq \setof{g'}$ is obviously true?
-\begin{code}
-obviousCovBy gv gv'  =  gv == gv' 
-\end{code}
+% When can we deduce that $g \disj \setof{g'}$ is obviously true?
+% \begin{code}
+% obviousDisj (StdVar (Vbl i1 c1 w1)) (StdVar (Vbl i2 c2 w2))
+%                      =  i1 == i2 && c1 == c2 && w1 /= w2
+% obviousDisj (LstVar (LVbl (Vbl i1 c1 w1) is1 js1))
+%             (LstVar (LVbl (Vbl i2 c2 w2) is2 js2))
+%                      =  i1 == i2 && c1 == c2 && w1 /= w2
+% obviousDisj _ _      =  False
+% \end{code}
+% When can we deduce that $g \subseteq \setof{g'}$ is obviously true?
+% \begin{code}
+% obviousCovBy gv gv'  =  gv == gv' 
+% \end{code}
 
-\newpage
-When can we deduce that $g \subseteq_a \setof{g'}$ is obviously true?
-\begin{code}
-obviousDCov gv gv'   =  isDynGVar gv  && gv == gv' 
-\end{code}
+% \newpage
+% When can we deduce that $g \subseteq_a \setof{g'}$ is obviously true?
+% \begin{code}
+% obviousDCov gv gv'   =  isDynGVar gv  && gv == gv' 
+% \end{code}
 
 
 Collecting all sets explicitly mentioned:
@@ -882,16 +888,6 @@ We need a gallery of ``interesting'' side-conditions:
    \lst O' \disj a \mapsto \bot \qquad (\lst O' \cap a = \setof{s'})
 \end{mathpar}
 
-\textbf{
-  This whole section needs rework. 
-  In particular code like \h{knownObsDischarge} seems to assume that
-  the sets $C$ and $Cd$ coincide with $\lst O,\lst O'$.
-  This is not the case in general.
-  We also need to note that $\lst O' = (\lst O)'$ only for homogenous
-  relations.
-  Perhaps we should use freshness early to simplify things?
-  (e.g., $\fresh x_1 \land N \disj \lst O,\lst O' \implies x_1 \notin N$)
-}
 
 Here we simply check validity of $sc'_G \implies sc'_L$,
 where $sc'_G$ is the goal side-condition,
@@ -940,13 +936,10 @@ We first simplfiy the consequence
 
 \begin{code}
 scDischarge obsv anteSC@(anteVSC,anteFvs) cnsqSC@(cnsqVSC,cnsqFvs)
-  = do -- let freshObs = obsv `S.union` instFreshObsV obsv anteFvs
-       -- cnsqVSC' <- vscMrg $ map (knownObsDischarge freshObs) cnsqVSC
-       -- let cnsqSC' = (cnsqVSC',cnsqFvs)
-       if isTrivialSC cnsqSC then return scTrue
-       else if isTrivialSC anteSC then return cnsqSC
-       else do vsc' <- scDischarge' obsv anteVSC cnsqVSC
-               freshDischarge obsv anteFvs cnsqFvs vsc'
+  = if isTrivialSC cnsqSC then return scTrue
+    else if isTrivialSC anteSC then return cnsqSC
+    else do vsc' <- scDischarge' obsv anteVSC cnsqVSC
+            freshDischarge obsv anteFvs cnsqFvs vsc'
     
 instFreshObsV :: VarSet -> VarSet -> VarSet
 instFreshObsV obsv freshvs 
@@ -966,50 +959,6 @@ vscMrg [] = return []
 vscMrg (vsc:vscs) = mrgVarConds vsc vscs    
 \end{code}
 
-
-% \newpage
-% \subsection{Known Observable  Discharge}
-
-% Here we ask how does $fresh: f_n$
-% modify $g \disj D \land g \subseteq C \land g \subseteq_c Cd$
-% and $f_n \disj D \land f_n \subseteq C \land f_n \subseteq_c Cd$.
-
-% Examples (based on $\lst O = \setof{ls,s}$): 
-% \begin{itemize}
-%   \item
-%     $fresh: \lst O_1 \implies fresh: ls_1 \implies ls_1 \notin T$
-%     where $T$ is a term-variable from the goal.
-%     \newline
-%     \textbf{Note: }
-%     \textsl{here $T$ corresponds to \h{gv} below,
-%     while \h{vsD} contains $ls_1$}    
-% \end{itemize}
-% \textbf{Note:}
-% For disjointness there is a symmetry:  
-% $g \disj \setof{u,v}$ 
-% can be 
-% $\setof{g} \disj \setof{u} ,\setof{g} \disj \setof{v}$ 
-% which is
-% $\setof{u} \disj \setof{g} ,\setof{} \disj \setof{vg}$
-% which collapses to
-% $u,v \disj g$.
-% \begin{code}
-% knownObsDischarge :: VarSet -> VarSideConds -> VarSideConds
-% knownObsDischarge freshObs ( VSC gv nvsD nvsC nvsCd )
-%                     =   VSC gv vsD -- (vsD S.\\ freshObs) 
-%                                nvsC -- (obsCdDischarge freshObs gv nvsC) 
-%                                nvsCd -- (obsCdDischarge freshObs gv nvsCd)
-% \end{code}
-
-
-% \begin{code}
-% obsDDischarge :: VarSet -> GenVar -> NVarSet -> NVarSet
-% obsDDischarge freshObs gv nvsCd
-%   | gv `S.member` freshObs  =  NA
-%   | otherwise           =  nvsCd
-% \end{code}
-
-
 \newpage
 \subsection{Term-Variable  Condition  Discharge}
 
@@ -1021,7 +970,7 @@ scDischarge'  :: MonadFail m => VarSet
 scDischarge' _ _ []      =  return []     --  discharged
 scDischarge' _ [] vscL  =  return vscL  --  not discharged
 scDischarge' obsv        (vscG@(VSC gvG _ _ _):restG) 
-                  vscLs@(vscL@(VSC gvL _ _ _):restL)
+                   vscLs@(vscL@(VSC gvL _ _ _):restL)
   | gvG < gvL  =  scDischarge' obsv restG vscLs -- vscG not needed
   | gvG > gvL  =  do -- nothing available to discharge vscL
                      rest' <- scDischarge' obsv restG restL
@@ -1029,7 +978,7 @@ scDischarge' obsv        (vscG@(VSC gvG _ _ _):restG)
   | otherwise  =  do -- use vscG to discharge vscL
                      vsc' <- vscDischarge obsv vscG vscL
                      vscChecked <- vscCheck vsc'
-                     case vscChecked of
+                     case  vscChecked of
                        Nothing ->  scDischarge' obsv restG restL
                        Just vsc'' -> do
                          rest' <- scDischarge' obsv restG restL
@@ -1136,21 +1085,10 @@ vscDischarge obsv (VSC gv nvsDG nvsCG nvsCdG) (VSC _ nvsDL nvsCL nvsCdL)
         nvsC''   <- dcDischarge obsv gv nvsDG  nvsC'
 
         nvsCd''  <- dcDischarge obsv gv nvsDG  nvsCd'
-        -- this is assymetric between G and L -- G=NA means it has no effect!
-        --  obsCdDischarge converts nvsCd'' to NA if gv is in obsv
-        case mkVSC gv nvsD''' nvsC'' (obsCdDischarge obsv gv nvsCd'') of
+        case mkVSC gv nvsD''' nvsC'' nvsCd'' of
           Nothing   ->  return $ vscTrue gv
           Just vsc  ->  return vsc
 \end{code}
-
-\textbf{USED JUST ABOVE BUT NOT FOR MUCH LONGER !!!!}
-\begin{code}
-obsCdDischarge :: VarSet -> GenVar -> NVarSet -> NVarSet
-obsCdDischarge freshObs gv nvsCd
-  | gv `S.member` freshObs  =  NA
-  | otherwise           =  nvsCd
-\end{code}
-
 
 \newpage
 \subsubsection{Pairwise Discharging (C:C)}
@@ -1209,8 +1147,9 @@ ddDischarge :: MonadFail m
 ddDischarge _    _  _     NA     =  return NA
 ddDischarge _    _  NA    nvsDL  =  return nvsDL
 ddDischarge obsv gv (The vsDG) tvsDL@(The vsDL) 
-  | S.null vsDG  =  return tvsDL
-  | otherwise    =  return $ The (vsDL S.\\ vsDG)
+  | S.null vsDG                  =  return tvsDL
+  | vsDL `S.isSubsetOf` vsDG     =  return NA -- discharged!
+  | otherwise                    =  return $ The (vsDL S.\\ vsDG)
 \end{code}
 
 \newpage

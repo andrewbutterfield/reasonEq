@@ -2,9 +2,14 @@
 
 ## URGENT
 
-
 Explore using `VarTable`s to expand contents of `vsD`, `vsC` and `vsCd` components of side-conditions, as they are built within a theory,
 rather than expanding them on-demand in `xxDischarge` (which requires `vts` plumbing).
+
+DECISION 1 : we use `vts` to do expansion at start of a proof. We don't want to clutter the top level theory presentation with these expansions.
+
+DECISION 2 : we *replace* `O$` and the like by their expansions (`ls,s`).
+
+POSSIBILITY : retain both versions and allow user to toggle between which one is displayed, while always using the expanded version to do discharge.
 
 Reminder:
 
@@ -54,8 +59,6 @@ E1 :  O$,O$',ls,s,ls',s' ∉ E1  ==>  O$,O$',ls,s,ls',s' ∉ E1
 b  :  s,s' ⊇ₐ b                ==>  O$,O$',ls,s,ls',s' ⊇ₐ b
 ls :  true                     ==>  O$,O$',ls,s,ls',s' ⊇ₐ ls
 ```
-
-DECISION 1 : we use `vts` to do expansion at start of a proof. We don't want to clutter the top level theory presentation with these expansions.
 
 All examples above are C:C or D:D discharges. We need to check C:D and D:C as well.
 

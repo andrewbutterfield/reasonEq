@@ -8,6 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Assertions (
   Assertion, pattern Assertion, mkAsn, unwrapASN
+, unsafeASN
 , pattern AssnT, assnT, pattern AssnC, assnC
 , normaliseQuantifiers
 -- for testing onl
@@ -184,6 +185,13 @@ mkAsn tm sc
                    , "s.c. = " ++ show sc
                    ]
 \end{code}
+
+We also have an unsafe version (for use by \h{domatch}):
+\begin{code}
+unsafeASN :: Term -> SideCond -> Assertion
+unsafeASN tm sc  =  ASN (tm, sc)
+\end{code}
+
 
 We can select assertion components by function,
 and unwrap completely:

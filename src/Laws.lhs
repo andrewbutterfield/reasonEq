@@ -11,7 +11,7 @@ module Laws
  , flattenEquiv, flattenImp, flattenAnd
  , flattenAssoc
  , LeftRight(..), GroupSpec(..), groupAssoc
- , NmdAssertion
+ , NmdAssertion(..)
  , Provenance(..)
  , Law, lawName, lawNamedAssn, lawProvenance
  , isAxiom, isProven, isAssumed

@@ -1563,7 +1563,7 @@ tryMatch args state@( reqs, liveProof)
   = do  case tryFocusAgainst lawnm parts liveProof of
           Yes (bind,tPasC,scC',scP') ->
             putStrLn $ unlines
-              [ banner ++ " OK"
+              [ banner ++ " was successful"
               , "Binding: " ++ trBinding bind
               , "Instantiated Law = " ++ trTerm 0 tPasC
               , "Instantiated Law S.C. = " ++ trSideCond scC'

@@ -575,14 +575,20 @@ and if its top-level is a \texttt{Cons}
 with at least two sub-components, we try all possible partial matches.
 \begin{code}
 domatch :: [VarTable] -> TermSC -> Law -> Matches
-domatch vts asnC law@((_,(Assertion tP@(Cons _ _ i tsP@(_:_:_)) _)),_)
-  =    basicMatch MatchAll vts law theTrue asnC tP
-    ++ doPartialMatch i vts law asnC tsP
+domatch vts asnC law@((lname,(Assertion tP@(Cons _ _ i tsP@(_:_:_)) scP)),prov)
+  =    basicMatch MatchAll vts law' theTrue asnC tP
+    ++ doPartialMatch i vts law' asnC tsP
+  where
+    xscP = expandSCKnowns vts scP
+    law' =(((lname,unsafeASN tP xscP)),prov)
 \end{code}
 Otherwise we just match against the whole law.
 \begin{code}
-domatch vts asnC law@((_,(Assertion tP _)),_)
-  =  basicMatch MatchAll vts law theTrue asnC tP
+domatch vts asnC law@((lname,(Assertion tP scP)),prov)
+  =  basicMatch MatchAll vts law' theTrue asnC tP
+  where
+    xscP = expandSCKnowns vts scP
+    law' =(((lname,unsafeASN tP xscP)),prov)
 \end{code}
 
 
@@ -795,6 +801,12 @@ The other part, with such variables that are not ``known``,
 can be addressed by binding them to a version of themselves
 that is marked in some distinguishing way.
 We refer to these marked versions as being ``floating'' variables.
+
+\textbf{NOTE: }
+\textsl{
+ What happens if such a floating $P$ is mentioned in a side-condition?
+ Does it come out in the wash as a result of the process detailed just below?
+}
 
 When a match is chosen to be applied,
 as part of a proof-step,

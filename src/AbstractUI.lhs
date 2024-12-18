@@ -1,6 +1,6 @@
 \chapter{Abstract User-Interface}
 \begin{verbatim}
-Copyright (c) Andrew Buttefield 2017--2022
+Copyright (c) Andrew Buttefield 2017--2024
               Saqib Zardari     2023
               Aaron Bruce       2023
 
@@ -564,7 +564,7 @@ matchFocus :: MonadFail m => Ranking -> LiveProof -> m LiveProof
 matchFocus ranking liveProof
   = let (tz,_)      =  focus liveProof
         goalt       =  getTZ tz
-        scC         =  conjSC liveProof
+        scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
     in do asn' <- mkAsn goalt scC 
           let rankedM = ranking ctxts $ matchInContexts ctxts asn'
@@ -577,7 +577,7 @@ matchFocusAgainst :: MonadFail m => String -> LiveProof -> m LiveProof
 matchFocusAgainst lawnm liveProof
   = let (tz,_)      =  focus liveProof
         goalt       =  getTZ tz
-        scC         =  conjSC liveProof
+        scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
     in do asn' <- mkAsn goalt scC
           case matchLawByName asn' lawnm ctxts of
@@ -669,7 +669,7 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
         (Assertion conj _) = conjecture liveProof
         ss = S.elems $ S.map theSubscript $ S.filter isDuring
                      $ S.map gvarWhen $ mentionedVars conj
-        scC = conjSC liveProof
+        scC = xpndSC liveProof
         obsv = getDynamicObservables vtbls
         ictxt = ICtxt obsv scC
         (tz,seq') = focus liveProof

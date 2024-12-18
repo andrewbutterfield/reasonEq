@@ -7,92 +7,12 @@ DONE  in `LiveProof`:
 1. Retain both versions 
 2. Always use the expanded version to do discharge.
 3. Discharge the `true ==> law-sc` cases.
-
-TODO
-
-
  4. Consider how to handle the binding `O$  ⟼ ⟨O$⟩` given that `fresh:ls_0,s_0`.
+ 
+TODO?
+ 
  5. Allow user to toggle between which one is displayed
     (currently both are)
-
-
- ```
- proof: tm 1 ;_def
-Match against `;_def'[1] OK
-Binding: { ;  ⟼ ;, P  ⟼ (E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1, Q  ⟼ (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2, 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }
-Instantiated Law = (∃ O$_0  • ((E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$'] ∧ ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R2 ∪ N2)[O$_0/O$])
-Instantiated Law S.C. = ls,ls',s,s'⊇ₐE1, ls,ls',s,s'⊇ₐE2, ls,ls',s,s'⊇ₐN1, ls,ls',s,s'⊇ₐN2, ls,ls',s,s'⊇ₐR1, ls,ls',s,s'⊇ₐR2, ls,ls',s,s'⊇ₐa, ls,ls',s,s'⊇ₐb, ls',s,s'⊇ₐls, ls,s,s'⊇ₐls', fresh:ls_0,s_0
-Goal S.C. = ls,ls',s,s'∉E1, ls,ls',s,s'∉E2, ls,ls',s,s'∉N1, ls,ls',s,s'∉N2, ls,ls',s,s'∉R1, ls,ls',s,s'∉R2, s,s'⊇ₐa, s,s'⊇ₐb
-Discharged Law S.C. = ls',s,s'⊇ₐls, ls,s,s'⊇ₐls', fresh:ls_0,s_0
- ```
-
- What remains is `true ==> ls',s,s'⊇ₐls, ls,s,s'⊇ₐls'` to be implemented
-
-Reminder:
-
-```
-CG ⊇ V => CL ⊇ V      if   CL ⊇ CG       CG not empty
-CG ⊇ V => ¬(CL ⊇ V)   if   CL ∉ CG       V is obs-var
-
-DG ∉ V => DL ∉ V      if   DG ⊇ DL       DG not empty
-
-CG ⊇ V => DL ∉ V      if   DL ∉ CG       CG not empty
-CG ⊇ V => ¬(DL ∉ V)   if   DL ⊇ CG       V is obs-var
-
-DG ∉ V => ¬(CL ⊇ V)   if   DG ⊇ CL       DG not empty
-```
-
-
-
-Consider:
- inst. law sc: `O$,O$'∉E1,O$,O$'⊇ₐb, O$,O$'⊇ₐls, fresh:O$_0`
-  goal s.c.: `O$,O$'∉E1, s,s'⊇ₐb`
-  vts: `O$ = {ls,s}, O$'={ls',s'}`.
-
-Want to show that goal discharges law.
-
-`O$,O$'∉E1, s,s'⊇ₐb  ==>  O$,O$'∉E1, O$,O$'⊇ₐb, O$,O$'⊇ₐls`
-
-This breaks into the following:
-
-```
-E1 :  O$,O$' ∉ E1,   ==>  O$,O$' ∉ E1
-b  :  s,s' ⊇ₐ b      ==>  O$,O$' ⊇ₐ b
-ls :  true           ==>  O$,O$' ⊇ₐ ls
-```
-
-We could replace `O$` by `ls,s` throughout:
-
-```
-E1 :  ls,s,ls',s' ∉ E1  ==>  ls,s,ls',s' ∉ E1
-b  :  s,s' ⊇ₐ b         ==>  ls,s,ls',s' ⊇ₐ b
-ls :  true              ==>  ls,s,ls',s' ⊇ₐ ls
-```
-
-We could add `ls,s` alongside  `O$` throughout:
-
-```
-E1 :  O$,O$',ls,s,ls',s' ∉ E1  ==>  O$,O$',ls,s,ls',s' ∉ E1
-b  :  s,s' ⊇ₐ b                ==>  O$,O$',ls,s,ls',s' ⊇ₐ b
-ls :  true                     ==>  O$,O$',ls,s,ls',s' ⊇ₐ ls
-```
-
-All examples above are C:C or D:D discharges. We need to check C:D and D:C as well.
-
-
-`s,s' ⊇ₐ b  ==>  M$,M$' ∉ b`  where `M$={ok,wait}`.
-
-```
-s,s' ⊇ₐ b  ==>  ok,wait,ok',wait' ∉ b
-s,s' ⊇ₐ b  ==>  M$,M$',ok,wait,ok',wait' ∉ b
-```
-
-Here we can only falsify:
-```
-O$ ∉ c  ==>  s ⊇ₐ c
-ls,s ∉ c  ==>  s ⊇ₐ c
-O$,ls,s ∉ c  ==>  s ⊇ₐ c
-```
 
 ### Next in Line
 

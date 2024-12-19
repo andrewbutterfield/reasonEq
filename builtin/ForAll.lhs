@@ -148,7 +148,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-axOrAllScope = preddef ("lor" -.- "forall" -.- "scope")
+axOrAllScope = preddef ("or" -.- "forall" -.- "scope")
   ( p \/ (forAll [xs,ys] q)
     === forAll [xs] ( p \/ forAll [ys] q) )
   ([xs] `notin` gvP)

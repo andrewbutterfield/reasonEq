@@ -709,8 +709,9 @@ doNewProof args reqs
   = case newProof1 (args2int args) reqs of
      Nothing -> do putStrLn "invalid conjecture number"
                    return reqs
-     Just (nconj,strats)
-      -> do putStrLn "Select proof strategy:"
+     Just (nconj@(nm,_),strats)
+      -> do putStrLn ("Selected conjecture: "++nm)
+            putStrLn "Select proof strategy:"
             putStrLn $ numberList presentSeq $ strats
             putStr "Select sequent by number: "
             hFlush stdout

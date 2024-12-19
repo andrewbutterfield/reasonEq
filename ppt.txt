@@ -1,205 +1,43 @@
-@tlv:
-LV (VR (Id "O" 0, VO, WA), [], [])
-@tlvknown:
-Just
-( KS
-  ( { GV (VR (Id "ls" 0, VO, WA))
-    , GV (VR (Id "s" 0, VO, WA)) } )
-  ( { VR (Id "ls" 0, VO, WA)
-    , VR (Id "s" 0, VO, WA) } )
-  2
-, []
-, [] )
-@rlv:
-LV (VR (Id "O" 0, VO, WD "1"), [], [])
-@rlvknown:
-Just
-( KS
-  ( { GV (VR (Id "ls" 0, VO, WD "1"))
-    , GV (VR (Id "s" 0, VO, WD "1")) } )
-  ( { VR (Id "ls" 0, VO, WD "1")
-    , VR (Id "s" 0, VO, WD "1") } )
-  2
-, []
-, [] )
-@tmr:
-KS
-( { GV (VR (Id "ls" 0, VO, WA))
-  , GV (VR (Id "s" 0, VO, WA)) } )
-( { VR (Id "ls" 0, VO, WA)
-  , VR (Id "s" 0, VO, WA) } )
-2
-@rmr:
-KS
-( { GV (VR (Id "ls" 0, VO, WD "1"))
-  , GV (VR (Id "s" 0, VO, WD "1")) } )
-( { VR (Id "ls" 0, VO, WD "1")
-  , VR (Id "s" 0, VO, WD "1") } )
-2
-@txpnd:
-[ VR (Id "ls" 0, VO, WA)
-, VR (Id "s" 0, VO, WA) ]
-@rxpnd:
-[ VR (Id "ls" 0, VO, WD "1")
-, VR (Id "s" 0, VO, WD "1") ]
-@tlrlComp1:
-( True
-, [ (VR (Id "ls" 0, VO, WA), V T (VR (Id "ls" 0, VO, WD "1")))
-  , (VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1"))) ]
-, [] )
-@subComplete1:
-SN
-( { (VR (Id "ls" 0, VO, WA), V T (VR (Id "ls" 0, VO, WD "1")))
-  , (VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1"))) } )
-( {} )
+@mVC.vsc:
+VSC
+(GV (VR (Id "a" 0, VP, WS)))
+NA
+NA
+( The
+  ( { GV (VR (Id "s" 0, VO, WB))
+    , GV (VR (Id "s" 0, VO, WA)) } ) )
+@mVC(Just).vscs:
+[ VSC
+  (GV (VR (Id "E1" 0, VE, WS)))
+  ( The
+    ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+      , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) )
+  NA
+  NA ]
+@mVC.vsc':
+VSC
+(GV (VR (Id "a" 0, VP, WS)))
+NA
+NA
+( The
+  ( { GV (VR (Id "s" 0, VO, WB))
+    , GV (VR (Id "s" 0, VO, WA)) } ) )
 
-    subComplete1 X-X-comp example: [Failed]
-expected: 
-SN
-( { (VR (Id "ls" 0, VO, WD "1"), V T (VR (Id "ls_R_N" 0, VE, WS)))
-  , (VR (Id "ls" 0, VO, WA), V T (VR (Id "ls" 0, VO, WD "1")))
-  , (VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1"))) } )
-( {} )
- but got: 
-SN
-( { (VR (Id "ls" 0, VO, WA), V T (VR (Id "ls" 0, VO, WD "1")))
-  , (VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1"))) } )
-( {} )
 
-    subComplete2 X-X-comp example: [Failed]
-expected: 
-SN
-( { (VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1"))) } )
-( {} )
- but got: 
-SN
-( { (VR (Id "ls" 0, VO, WD "1"), V T (VR (Id "ls_R_N" 0, VE, WS)))
-  , (VR (Id "ls" 0, VO, WA), V T (VR (Id "ls" 0, VO, WD "1")))
-  , (VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1"))) } )
-( {} )
 
-    substComplete X-X-comp example: [Failed]
-expected: 
-SN
-( { (VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1"))) } )
-( {} )
- but got: 
-SN
-( { (VR (Id "ls" 0, VO, WA), V T (VR (Id "ls" 0, VO, WD "1")))
-  , (VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1"))) } )
-( {} )
-@vts:
-[ VD
-  ( "UTCP"
-  , { (VR (Id "A" 0, VO, WS), KV (TG (Id "B" 0)))
-    , (VR (Id "X" 0, VO, WS), KV (TG (Id "B" 0)))
-    , (VR (Id "atom" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TG (Id "B" 0))))
-    , (VR (Id "cpll" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
-    , (VR (Id "cplus" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
-    , (VR (Id "cseq" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
-    , (VR (Id "cskip" 0, VO, WS), KV (TG (Id "B" 0)))
-    , (VR (Id "cstar" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TG (Id "B" 0))))
-    , (VR (Id "g" 0, VO, WS), KV (TG (Id "GE" 0)))
-    , (VR (Id "in" 0, VO, WS), KV (TG (Id "LE" 0)))
-    , (VR (Id "ls" 0, VO, WB), KV (TC (Id "P" 0) [TG (Id "LE" 0)]))
-    , (VR (Id "ls" 0, VO, WA), KV (TC (Id "P" 0) [TG (Id "LE" 0)]))
-    , (VR (Id "out" 0, VO, WS), KV (TG (Id "LE" 0)))
-    , (VR (Id "s" 0, VO, WB), KV (TG (Id "S" 0)))
-    , (VR (Id "s" 0, VO, WA), KV (TG (Id "S" 0))) }
-  , {}
-  , { ( (Id "O" 0, VO)
-      , DS
-        ( { Id "ls" 0
-          , Id "s" 0 } )
-        ( {} )
-        ( { Id "ls" 0
-          , Id "s" 0 } )
-        2 ) } )
-, VD
-  ( "UTPBase"
-  , { (VR (Id ":=" 0, VO, WS), KV (TF (TV (Id "t" 0)) (TF (TV (Id "t" 0)) (TG (Id "B" 0)))))
-    , (VR (Id ";" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
-    , (VR (Id "II" 0, VO, WS), KV (TG (Id "B" 0)))
-    , (VR (Id "bot" 0, VO, WS), KV (TG (Id "B" 0)))
-    , (VR (Id "cond" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))))
-    , (VR (Id "refines" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
-    , (VR (Id "sqcap" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
-    , (VR (Id "top" 0, VO, WS), KV (TG (Id "B" 0))) }
-  , {}
-  , { ( (Id "O" 0, VO)
-      , DS
-        ( {} )
-        ( {} )
-        ( {} )
-        0 ) } )
-, VD
-  ( "UClose"
-  , {}
-  , {}
-  , {} )
-, VD
-  ( "Sets"
-  , { (VR (Id "#" 0, VO, WS), KV (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TG (Id "Z" 0))))
-    , (VR (Id "\\" 0, VO, WS), KV (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TC (Id "P" 0) [TV (Id "t" 0)]))))
-    , (VR (Id "emptyset" 0, VO, WS), KV (TC (Id "P" 0) [TV (Id "t" 0)]))
-    , (VR (Id "intsct" 0, VO, WS), KV (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TC (Id "P" 0) [TV (Id "t" 0)]))))
-    , (VR (Id "mbr" 0, VO, WS), KV (TF (TV (Id "t" 0)) (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))))
-    , (VR (Id "subseteq" 0, VO, WS), KV (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))))
-    , (VR (Id "union" 0, VO, WS), KV (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TC (Id "P" 0) [TV (Id "t" 0)])))) }
-  , {}
-  , {} )
-, VD
-  ( "Exists"
-  , {}
-  , {}
-  , {} )
-, VD
-  ( "Arithmetic"
-  , { (VR (Id "*" 0, VO, WS), KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0)))))
-    , (VR (Id "+" 0, VO, WS), KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0)))))
-    , (VR (Id "-" 0, VO, WS), KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0)))))
-    , (VR (Id "div" 0, VO, WS), KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0)))))
-    , (VR (Id "mod" 0, VO, WS), KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0)))))
-    , (VR (Id "neg" 0, VO, WS), KV (TF (TG (Id "Z" 0)) (TG (Id "Z" 0)))) }
-  , {}
-  , {} )
-, VD
-  ( "ForAll"
-  , {}
-  , {}
-  , {} )
-, VD
-  ( "Equality"
-  , { (VR (Id "=" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))) }
-  , {}
-  , {} )
-, VD
-  ( "Implies"
-  , { (VR (Id "imp" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))) }
-  , {}
-  , {} )
-, VD
-  ( "AndOrInvert"
-  , {}
-  , {}
-  , {} )
-, VD
-  ( "And"
-  , { (VR (Id "and" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))) }
-  , {}
-  , {} )
-, VD
-  ( "Or"
-  , { (VR (Id "or" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))) }
-  , {}
-  , {} )
-, VD
-  ( "Not"
-  , { (VR (Id "not" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) }
-  , {}
-  , {} )
-, VD
-  ( "Equiv"
-  , { (VR (Id "eqv" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))) }
-  , {}
-  , {} ) ]
+@mVC.vsc:
+VSC
+(GV (VR (Id "E1" 0, VE, WS)))
+( The
+  ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+    , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) )
+NA
+NA
+@mVC(Nothing).vscs:
+[ VSC
+  (GV (VR (Id "a" 0, VP, WS)))
+  NA
+  NA
+  ( The
+    ( { GV (VR (Id "s" 0, VO, WB))
+      , GV (VR (Id "s" 0, VO, WA)) } ) ) ]

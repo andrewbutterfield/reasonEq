@@ -14,7 +14,7 @@ module SideCond (
 , mkVSC
 , vscTrue, disjNA, covByNA, isTrueVSC
 , vscVSet
-, disjfrom, coveredby, dyncovered, ucoveredby, udyncovered
+, disjfrom, coveredby, dyncovered, udisjfrom, ucoveredby, udyncovered
 , SideCond, scTrue, isTrivialSC
 , onlyFreshSC -- , onlyInvolving, onlyFreshOrInvolved
 -- , scGVars
@@ -309,32 +309,6 @@ mkVSC gv nvsD nvsC nvsCd
     isTrue (The vsD) NA NA  =  S.null vsD
     isTrue _ _ _            =  False
 \end{code}
-% The idea is that we can deduce $g \mathcal R V$ if for all $g' \in V$,
-% we can definitively deduce $g \mathcal R \setof{g'}$.
-% In effect we return of all $g' \in V$ for which we cannot definitely assert that $\mathcal R$ holds.
-
-% So, $\h{chk}_R~g~V = \h{filter}~(\lnot \circ (g\mathcal{R}))~V$.
-
-% When can we deduce that $g \disj \setof{g'}$ is obviously true?
-% \begin{code}
-% obviousDisj (StdVar (Vbl i1 c1 w1)) (StdVar (Vbl i2 c2 w2))
-%                      =  i1 == i2 && c1 == c2 && w1 /= w2
-% obviousDisj (LstVar (LVbl (Vbl i1 c1 w1) is1 js1))
-%             (LstVar (LVbl (Vbl i2 c2 w2) is2 js2))
-%                      =  i1 == i2 && c1 == c2 && w1 /= w2
-% obviousDisj _ _      =  False
-% \end{code}
-% When can we deduce that $g \subseteq \setof{g'}$ is obviously true?
-% \begin{code}
-% obviousCovBy gv gv'  =  gv == gv' 
-% \end{code}
-
-% \newpage
-% When can we deduce that $g \subseteq_a \setof{g'}$ is obviously true?
-% \begin{code}
-% obviousDCov gv gv'   =  isDynGVar gv  && gv == gv' 
-% \end{code}
-
 
 Collecting all sets explicitly mentioned:
 \begin{code}
@@ -356,10 +330,12 @@ disjfrom, coveredby, dyncovered :: GenVar -> VarSet -> VarSideConds
 gv `disjfrom`   vs  =  VSC gv (The vs) covByNA  covByNA
 gv `coveredby`  vs  =  VSC gv disjNA   (The vs) covByNA
 gv `dyncovered` vs  =  VSC gv disjNA   covByNA  (The vs)
-ucoveredby, udyncovered :: GenVar -> NVarSet -> VarSideConds
-gv `ucoveredby`  NA    =  vscTrue gv
+udisjfrom,ucoveredby, udyncovered :: GenVar -> NVarSet -> VarSideConds
+gv `udisjfrom`   NA        =  vscTrue gv
+gv `udisjfrom`   (The vs)  =  gv `disjfrom`  vs
+gv `ucoveredby`  NA        =  vscTrue gv
 gv `ucoveredby`  (The vs)  =  gv `coveredby`  vs
-gv `udyncovered` NA    =  vscTrue gv
+gv `udyncovered` NA        =  vscTrue gv
 gv `udyncovered` (The vs)  =  gv `dyncovered` vs
 \end{code}
 

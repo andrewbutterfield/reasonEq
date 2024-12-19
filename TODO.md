@@ -2,9 +2,11 @@
 
 ## URGENT
 
-FUnction `areUTPStcObs` is broken, as is `mrgSideConds` !
+Function `areUTPStcObs` is broken, as is `mrgSideConds` !
 
 `areUTPStcObs  (map StdVar [vE1,vE2,vR1,vR2,vN1,vN2])` results in `O$,O$'∉N2`.
+
+Affects disjointness only, not coverage.
 
 
 DONE  in `LiveProof`:

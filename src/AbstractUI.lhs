@@ -669,6 +669,7 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
         (Assertion conj _) = conjecture liveProof
         ss = S.elems $ S.map theSubscript $ S.filter isDuring
                      $ S.map gvarWhen $ mentionedVars conj
+        mctxts = mtchCtxts liveProof
         scC = xpndSC liveProof
         obsv = getDynamicObservables vtbls
         ictxt = ICtxt obsv scC
@@ -685,13 +686,14 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
                     let knownVs = zipperVarsMentioned $ focus liveProof
                     -- knownVs is all variables in entire goal and sequent
                     let (fbind,fresh)
-                                   = generateFreshVars knownVs freshneeded sbind
-                    let scC' = addFreshVars fresh scCX
+                          = generateFreshVars knownVs freshneeded sbind
+                    let scC' = addFreshVars fresh $ conjSC liveProof
                     brepl  <- instantiate ictxt fbind repl
                     asn' <- mkAsn conjpart (conjSC liveProof)
                     return ( focus_ ((setTZ brepl tz),seq')
                            $ matches_ []
                            $ conjSC_ scC'
+                           $ xpndSC_ (expandSideCondKnownVars mctxts scC')
                            $ stepsSoFar__
                               (( UseLaw (ByMatch $ mClass mtch)
                                         (mName mtch)

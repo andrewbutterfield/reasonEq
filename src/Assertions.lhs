@@ -631,7 +631,7 @@ normSC vv (vscs,fvs)
       But msgs  ->  error ("normSC: "++unlines' msgs)
 
 normASC vv (VSC gv nvsD nvsC nvsCd)  
-  =  mkVSC (normQGVar vv gv) (normQVNset vv nvsD) 
+  =  fromJust $ mkVSC (normQGVar vv gv) (normQVNset vv nvsD) 
             (normQVNset vv nvsC) (normQVNset vv nvsCd)
 
 normQVNset _ NA = NA

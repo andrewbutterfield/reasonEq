@@ -4,6 +4,15 @@
 
 Make `mkVSC` monadic!
 
+Impact: `SideCond`, `Assertions`, `Instantiate`.
+
+Done this but instantiateSC seems to be broken and exists-1-pt fails in X-X-comp proof !!!!
+
+**WORKS**
+
+**ISSUE IS MUST RESTART PROOF FROM BEGINNING - OTHERWISE SIDE_CONDS CAN BE OUT OF SYNC**
+
+
 DONE  in `LiveProof`:
 
 1. Retain both versions 

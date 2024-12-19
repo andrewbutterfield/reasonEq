@@ -282,29 +282,26 @@ We need a smart builder here:
 we first compare \h{gv} with the three sets to see
 if we can deduce truth/falsity here and now;
 then we check to see if everything has reduced to true.
-We do checks for evident truth. 
-We don't look for evident falsity because we have no way to indicate that here.
-(We'd need to monadise it.)
-However we can see sometimes when disjoint is evidently false,
-just as we can see sometimes when coverage is evidently true.
 \begin{code}
-mkVSC :: GenVar -> NVarSet -> NVarSet -> NVarSet -> Maybe VarSideConds
-mkVSC gv nvsD nvsC nvsCd
-  = if isTrue nvsD' nvsC' nvsCd'
-    then Nothing 
-    else Just $ VSC gv nvsD nvsC' nvsCd'
+mkVSC :: MonadFail m
+      => GenVar -> NVarSet -> NVarSet -> NVarSet 
+      -> m (Maybe VarSideConds)
+mkVSC gv nvsD nvsC nvsCd  =  do
+    nvsD'  <- obviousDisj   gv nvsD 
+    nvsC'  <- obviousCovBy  gv nvsC
+    nvsCd' <- obviousCovBy  gv nvsCd
+    if isTrue nvsD' nvsC' nvsCd'
+    then return Nothing 
+    else return $ Just $ VSC gv nvsD nvsC' nvsCd'
   where
-    nvsD'  =  obviousDisj   gv nvsD -- POINTLESS
-    nvsC'  =  obviousCovBy  gv nvsC
-    nvsCd' =  obviousCovBy  gv nvsCd
-    obviousDisj gv NA = NA
+    obviousDisj gv NA = return NA
     obviousDisj gv nvsD@(The vsD)
-      |  gv `S.member` vsD  =  nvsD -- evidently false, but cant be reported
-      |  otherwise          =  nvsD -- not evidently true
-    obviousCovBy  gv NA     =  NA
+      |  gv `S.member` vsD  =  fail "gv is member of the disjoint set"
+      |  otherwise          =  return nvsD 
+    obviousCovBy  gv NA     =  return NA
     obviousCovBy  gv nvsC@(The vsC)
-      |  gv `S.member` vsC  =  NA
-      |  otherwise          =  nvsC
+      |  gv `S.member` vsC  =  return NA
+      |  otherwise          =  return nvsC
     isTrue NA        NA NA  =  True 
     isTrue (The vsD) NA NA  =  S.null vsD
     isTrue _ _ _            =  False
@@ -361,7 +358,7 @@ vscCheck (VSC gv nvsD nvsC nvsCd)
   = do  nvsD'  <- disjointCheck  gv nvsD
         nvsC'  <- coveredByCheck gv nvsC
         nvsCd' <- dynCvrgCheck   gv nvsCd
-        return $ mkVSC gv nvsD' nvsC' nvsCd'
+        mkVSC gv nvsD' nvsC' nvsCd'
 \end{code}
 
 The key trick is to take \m{g ~R~ \setof{g_1,\dots,g_n}}
@@ -605,7 +602,7 @@ mrgSameGVSC (VSC gv nvsD1 uvsC1 uvsCd1) (VSC _ nvsD2 uvsC2 uvsCd2)
       nvsD'   = nvsD1  `nunion` nvsD2
       nvsC'  =  uvsC1  `nintsct` uvsC2
       nvsCd' =  uvsCd1 `nintsct` uvsCd2
-    in return $ mkVSC gv nvsD' nvsC' nvsCd'
+    in mkVSC gv nvsD' nvsC' nvsCd'
 \end{code}
 
 Finally, something to merge lists (and lists of lists) of VSCs:
@@ -1065,8 +1062,9 @@ vscDischarge obsv (VSC gv nvsDG nvsCG nvsCdG) (VSC _ nvsDL nvsCL nvsCdL)
 
         nvsCd''  <- dcDischarge obsv gv nvsDG  nvsCd'
         case mkVSC gv nvsD''' nvsC'' nvsCd'' of
-          Nothing   ->  return $ vscTrue gv
-          Just vsc  ->  return vsc
+          Nothing          ->  fail "vsc-dishcarged failed"
+          Just Nothing     ->  return $ vscTrue gv
+          Just (Just vsc)  ->  return vsc
 \end{code}
 
 \newpage
@@ -1293,20 +1291,30 @@ based on the idea that $G_F \disj V$ by construction
    &\mapsto&  Cd_L \setminus G_F \supseteq_a V
 \end{eqnarray*}
 \begin{code}
-freshTVarDischarge obsv gF (VSC gv nvsD nvsC nvsCd)
-  | vsc' == vscTrue gv  =  return []
-  | otherwise  =  return [vsc']
-  where
-    nvsgF = The gF
-    nvsD' = nvsD `ndiff` nvsgF
-    nvsC' = nvsC `ndiff` nvsgF
-    nvsCd' = if gv `S.member` obsv
-             then nvsCd `ndiff` nvsgF
-             else NA
-    vsc' = case mkVSC gv nvsD' nvsC' nvsCd' of
-             Nothing   ->  vscTrue gv
-             Just vsc  ->  vsc
+freshTVarDischarge obsv gF (VSC gv nvsD nvsC nvsCd) = do
+  let nvsgF = The gF
+  let nvsD' = nvsD `ndiff` nvsgF
+  let nvsC' = nvsC `ndiff` nvsgF
+  let nvsCd' = if gv `S.member` obsv then nvsCd `ndiff` nvsgF else NA
+  case mkVSC gv nvsD' nvsC' nvsCd' of
+    Nothing  ->  fail "fresh-var s.c. discharge failed"
+    Just Nothing -> return []
+    Just (Just vsc')  ->  return [vsc']
 \end{code}
+  % | vsc' == vscTrue gv  =  return []
+  % | otherwise  =  return [vsc']
+  % where
+  %   nvsgF = The gF
+  %   nvsD' = nvsD `ndiff` nvsgF
+  %   nvsC' = nvsC `ndiff` nvsgF
+  %   nvsCd' = if gv `S.member` obsv
+  %            then nvsCd `ndiff` nvsgF
+  %            else NA
+  %   vsc' = case mkVSC gv nvsD' nvsC' nvsCd' of
+  %            Nothinh
+  %            Nothing   ->  vscTrue gv
+  %            Just vsc  ->  vsc
+
 
 \newpage
 \section{Check for Floating Conditions}
@@ -1603,10 +1611,10 @@ tst_scChkDisjoint
  = testGroup "disjfrom  (no known vars)"
     [ testCase "Definitely True: ls   `disj` ls'"
        ( mkVSC (StdVar vls) (nsngl $ StdVar vls') NA NA 
-         @?= Nothing )
+         @?= Just Nothing )
     , testCase "Definitely True: ls_1 `disj` ls"
        ( mkVSC (StdVar vls1) (nsngl $ StdVar vls) NA NA 
-         @?= Nothing )
+         @?= Just Nothing )
     , testCase "gv_a `disjoint` empty is True"
        ( vscCheck (disjfrom  gv_a S.empty) @?= tstTrue )
     , testCase "v_e `disjoint` empty is True"

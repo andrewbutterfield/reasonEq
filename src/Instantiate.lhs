@@ -415,12 +415,12 @@ instVarSet insctxt binding vs
   = do fvss <- sequence $ map (instGVar insctxt binding) $ S.toList vs
        return $ mrgFreeVarList fvss
 
-type UFreeVars = (NVarSet,[(GenVar,VarSet)])
-instUVarSet :: MonadFail m 
+type NFreeVars = (NVarSet,[(GenVar,VarSet)])
+instNVarSet :: MonadFail m 
             => InsContext -> Binding -> NVarSet 
-            -> m UFreeVars
-instUVarSet _       _        NA   =  return (NA,[]) 
-instUVarSet insctxt binding (The vs)  
+            -> m NFreeVars
+instNVarSet _       _        NA   =  return (NA,[]) 
+instNVarSet insctxt binding (The vs)  
   =  do (f,less) <- instVarSet insctxt binding vs 
         return (The f,less)
 \end{code}
@@ -663,9 +663,9 @@ instantiateVSC :: MonadFail m
                 -> m [VarSideConds]
 instantiateVSC insctxt bind vsc@(VSC gT mvsD mvsC mvsCd)
   = do let (fvsT,diffsT) = instantiateGVar insctxt bind gT
-       fmvsD   <-  instUVarSet insctxt bind mvsD
-       fmvsC   <-  instUVarSet insctxt bind mvsC
-       fmvsCd  <-  instUVarSet insctxt bind mvsCd
+       fmvsD   <-  instNVarSet insctxt bind mvsD
+       fmvsC   <-  instNVarSet insctxt bind mvsC
+       fmvsCd  <-  instNVarSet insctxt bind mvsCd
        if null diffsT
          then do vscss <- mapM (instVSC insctxt fmvsD fmvsC fmvsCd) 
                                 (S.toList fvsT)
@@ -683,13 +683,13 @@ instantiateVSC insctxt bind vsc@(VSC gT mvsD mvsC mvsCd)
 \end{eqnarray*}
 \begin{code}
 instVSC :: MonadFail m 
-         => InsContext -> UFreeVars -> UFreeVars -> UFreeVars -> GenVar
+         => InsContext -> NFreeVars -> NFreeVars -> NFreeVars -> GenVar
          -> m [VarSideConds]
 -- we ignore the vBless components for now
 instVSC insctxt fvsD@(mvsD,_) fmvsC@(mvsC,_) fmvsCd@(mvsCd,_) gT 
-  = do let mvscsD =  mkVSC gT mvsD   covByNA covByNA
-       let mvscsC =  mkVSC gT disjNA mvsC    covByNA
-       let mvscCd =  mkVSC gT disjNA covByNA mvsCd 
+  = do mvscsD <- mkVSC gT mvsD   covByNA covByNA
+       mvscsC <- mkVSC gT disjNA mvsC    covByNA
+       mvscCd <- mkVSC gT disjNA covByNA mvsCd 
        return $ catMaybes [mvscsD,mvscsC,mvscCd]
 \end{code}
 
@@ -731,7 +731,7 @@ $F \disj F_i$, $F \disj B_i$:
 
 % \begin{code}
 % instCovers :: MonadFail m 
-%            => InsContext -> UFreeVars -> GenVar-- UFreeVars !!!
+%            => InsContext -> NFreeVars -> GenVar-- NFreeVars !!!
 %            -> m [VarSideConds]
 % instCovers insctxt (Nothing,_)       gv  =  return []
 % instCovers insctxt (Just fF,vLessBs) gv  =  return (vsc1s ++ vsc2s)
@@ -768,7 +768,7 @@ We include $e_i$ if $e_i \in D \land e_i \notin B_i$.
 
 % \begin{code}
 % instDynCvg :: MonadFail m 
-%            => InsContext -> UFreeVars -> GenVar
+%            => InsContext -> NFreeVars -> GenVar
 %            -> m [VarSideConds]
 % instDynCvg insctxt (Nothing,vLessBs)    gv    =  return []
 % instDynCvg insctxt (Just vsCd,vLessBs)  gv  =  return (vsc1s ++ vsc2s)

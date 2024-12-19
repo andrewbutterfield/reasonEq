@@ -1019,7 +1019,8 @@ mapTS vts svg (gv@(LstVar (LVbl v _ _)):gvs)
 expandSCKnowns :: [VarTable] -> SideCond -> SideCond
 expandSCKnowns vts (vscs,freshvs)
   = ( map (expandVSCKnowns vts) vscs
-    , S.unions (S.map (expandKnownGenVars vts) freshvs ) )
+    , mapVToverVarSet vts freshvs ) 
+--    , S.unions (S.map (expandKnownGenVars vts) freshvs ) )
 
 expandVSCKnowns :: [VarTable] -> VarSideConds -> VarSideConds
 expandVSCKnowns vts (VSC gv nvsD nvsC nvsCd) 

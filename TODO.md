@@ -2,26 +2,6 @@
 
 ## URGENT
 
-```
-¬((∀ y$  • (¬P)[e$/x$]))
- x$∉e$
-Focus = [1,1]
-
-Target (RHS): 
-(∃ y$  • P[e$/x$])
-XPNDD:
-x$∉e$
-
-
-proof: s
-alookup: not found
-not uniform or not supported
-variable GV (VR (Id "P" 0,VP,WS)) not mentioned
-```
-
-We should be able to drive `[e$/x$]` into `¬P` to yield `¬(P[e$/x$])`.
-
-Perhaps variables "not mentioned" just retain the substitution?
 
 DONE  in `LiveProof`:
 
@@ -39,6 +19,14 @@ TODO?
 
 Trivial quantifiers are being shown even when disabled
 
+Ranking seems busted:
+
+```
+3 : “exists_def” [≡rhs]  (∃ x$  • P)               ⊤ ⟹ ⊤
+2 : “exists_def” [≡lhs]   ¬(¬(¬((∀ x$  • ¬P))))    ⊤ ⟹ ⊤
+1 : “not_def” [≡lhs]      (∀ x$  • ¬P) ≡ false     ⊤ ⟹ ⊤
+
+```
 
 The following laws in UTP base seem to match anything:
 ```

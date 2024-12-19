@@ -2,6 +2,10 @@
 
 ## URGENT
 
+FUnction `areUTPStcObs` is broken, as is `mrgSideConds` !
+
+`areUTPStcObs  (map StdVar [vE1,vE2,vR1,vR2,vN1,vN2])` results in `O$,O$'∉N2`.
+
 
 DONE  in `LiveProof`:
 
@@ -18,6 +22,11 @@ TODO?
 ### Next in Line
 
 Trivial quantifiers are being shown even when disabled
+
+```
+1 : “exists_def” [≡lhs] ¬(¬(X(E1,a,R1,N1)))
+ls,ls',s,s'∉N2, s,s'⊇ₐa, s,s'⊇ₐb ⟹ ⊤
+```
 
 Ranking seems busted:
 

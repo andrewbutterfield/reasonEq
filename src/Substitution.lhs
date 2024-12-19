@@ -510,9 +510,9 @@ that is limited to those variables we know can be in (the alphabet of) $v$.
 lvlvlSubstitute (SubCtxt (vscs,_) vts) 
                 vrt@(Var tk v@(Vbl i  vc vw)) vtl lvlvl
                                    -- vc in {ExprV,PredV}
-  = do (vsc,mwhen) <- gv `mentionedBy` vscs
-       -- for now we don't expand contents of vsD, nvsC, nvsCd
-       scan vsc v lvlvl
+  = case gv `mentionedBy` vscs of
+      Nothing           ->  return $ Sub (termtype vrt) vrt $ jSubstn vtl lvlvl
+      Just (vsc,mwhen)  ->  scan vsc v lvlvl
   where
     gv = StdVar v
 

@@ -284,20 +284,23 @@ if we can deduce truth/falsity here and now;
 then we check to see if everything has reduced to true.
 We do checks for evident truth. 
 We don't look for evident falsity because we have no way to indicate that here.
+(We'd need to monadise it.)
+However we can see sometimes when disjoint is evidently false,
+just as we can see sometimes when coverage is evidently true.
 \begin{code}
 mkVSC :: GenVar -> NVarSet -> NVarSet -> NVarSet -> Maybe VarSideConds
 mkVSC gv nvsD nvsC nvsCd
   = if isTrue nvsD' nvsC' nvsCd'
     then Nothing 
-    else Just $ VSC gv nvsD' nvsC' nvsCd'
+    else Just $ VSC gv nvsD nvsC' nvsCd'
   where
-    nvsD'  =  obviousDisj   gv nvsD
+    nvsD'  =  obviousDisj   gv nvsD -- POINTLESS
     nvsC'  =  obviousCovBy  gv nvsC
     nvsCd' =  obviousCovBy  gv nvsCd
     obviousDisj gv NA = NA
     obviousDisj gv nvsD@(The vsD)
-      |  gv `S.member` vsD  =  nvsD
-      |  otherwise          =  NA
+      |  gv `S.member` vsD  =  nvsD -- evidently false, but cant be reported
+      |  otherwise          =  nvsD -- not evidently true
     obviousCovBy  gv NA     =  NA
     obviousCovBy  gv nvsC@(The vsC)
       |  gv `S.member` vsC  =  NA

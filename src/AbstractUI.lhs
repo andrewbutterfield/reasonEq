@@ -825,7 +825,7 @@ substituteFocus thrys liveProof
         dpath = fPath liveProof
         t = getTZ tz
         -- vts = concat $ map thd3 $ mtchCtxts liveProof
-        scC = conjSC liveProof
+        scC = xpndSC liveProof
         (Assertion conj _) = conjecture liveProof
         sctxt = mkSubCtxt scC $ thd3 $ head $ mtchCtxts liveProof
     in case t of

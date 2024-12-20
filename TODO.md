@@ -2,7 +2,7 @@
 
 ## URGENT
 
-nothing right now
+`a[O$_1/O$']` is not `a` if `s,s'⊇ₐ` and `O$={ls,s}` (and hence `O$'={ls,s}`).
 
 ## Next in Line
 
@@ -10,6 +10,8 @@ TODO?
  
  5. Allow user to toggle between which s.c. version is displayed
     (currently both are)
+
+Need to be able to save proof from within a live proof.
 
 Trivial quantifiers are being shown even when disabled
 

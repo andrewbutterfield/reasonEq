@@ -259,12 +259,12 @@ If we have $v[\dots,r,\dots/\dots,v,\dots]$ we return $r$:
 Then we see if we have a uniform substitution, 
 provided that $\vv v$ is dynamic:
 \begin{code}
-     <|> ( uniformSubstitute sctx vrt vtl lvlvl )
+--     <|> ( uniformSubstitute sctx vrt vtl lvlvl )
 \end{code}
 Next we scan the list-variable  pairs, with the side-conditions in hand,
 looking for a list-variable that covers $\vv v$:
 \begin{code}
-     <|> ( lvlvlSubstitute sctx vrt vtl lvlvl )
+     <|> ( lvlvlSubstitute (pdbg "lv2Sub.SCTX" sctx) (pdbg "lv2Sub.VRT" vrt) (pdbg "lv2Sub.VTL" vtl) $ pdbg "lv2Sub.LVLVL" lvlvl )
 \end{code}
 If nothing is found we return the substitution 
 after running it through semantic completion:
@@ -475,7 +475,9 @@ lvlvlSubstitute (SubCtxt sc vts) vrt@(Var tk v@(Vbl i  ObsV vw)) vtl lvlvl
     getVarList :: MonadFail m => KnownExpansion -> m [Variable]
     getVarList (KnownVarList _ expansion _,_,_) = return expansion
     getVarList _ = vfail "not known var-list"
-
+\end{code}
+\newpage
+\begin{code}
     search :: MonadFail m => Variable -> [Variable] -> [Variable] -> m Variable
     search v [] _ = fail "short target list"
     search v _ [] = fail "short repl. list"
@@ -484,7 +486,6 @@ lvlvlSubstitute (SubCtxt sc vts) vrt@(Var tk v@(Vbl i  ObsV vw)) vtl lvlvl
       | otherwise  =  search v tvK rvK
 \end{code}
 
-\newpage
 Now we deal with term variables.
 
 Recall:
@@ -519,9 +520,9 @@ lvlvlSubstitute (SubCtxt (vscs,_) vts)
     scan :: MonadFail m => VarSideConds -> Variable -> [LVarSub] -> m Term
     scan vsc v [] = return vrt
     scan vsc v (lvlv:lvlvs)
-      = case getLVarExpansions v lvlv of
+      = case pdbg "getLVX" $ getLVarExpansions (pdbg "lv2Sub.v" v) $ pdbg "lv2Sub.lvlv" lvlv of
           Nothing               ->  scan vsc v lvlvs
-          Just (tlvExp,rlvExp)  ->  handleExpansions v lvlvs vsc tlvExp rlvExp
+          Just (tlvExp,rlvExp)  ->  handleExpansions v lvlvs (pdbg "hndlXs" vsc) tlvExp rlvExp
 
     getLVarExpansions :: MonadFail m 
                       => Variable -> LVarSub -> m ([Variable],[Variable])
@@ -537,12 +538,17 @@ lvlvlSubstitute (SubCtxt (vscs,_) vts)
     getVarList _ = fail "lvlvSub.search(term): not known var-list"
 
     handleExpansions v lvlvs vsc tlvExp rlvExp
-      = case processExpansions vsc False [] tlvExp rlvExp of
+      = case pdbg "procXs" $ processExpansions vsc False [] tlvExp rlvExp of
           Nothing  ->  scan vsc v lvlvs
           Just (False,_)   ->  fail "lvlvSub.search(term): no change"
           Just (_,[])      ->  return $ mkTVSubst vrt vtl
           Just (_,vtl')  ->  return $ mkTVSubst vrt (map liftRepl vtl'++vtl)
+\end{code}
+\newpage
 
+We have \h{gv} (e.g. \m{a}) and \h{vsc} (e.g. \m{s',s \supseteq_a a}),
+and \h{tlv} (e.g. \m{\seqof{s',ls'}}) and \h{rlv} (e.g. \m{\seqof{s_1,ls_1}}).
+\begin{code}
     processExpansions :: MonadFail m 
                       => VarSideConds -> Bool -> [(Variable,Variable)]
                       -> [Variable] -> [Variable]

@@ -2,30 +2,14 @@
 
 ## URGENT
 
-Make `mkVSC` monadic!
+nothing right now
 
-Impact: `SideCond`, `Assertions`, `Instantiate`.
+## Next in Line
 
-Done this but instantiateSC seems to be broken and exists-1-pt fails in X-X-comp proof !!!!
-
-**WORKS**
-
-**ISSUE IS MUST RESTART PROOF FROM BEGINNING - OTHERWISE SIDE_CONDS CAN BE OUT OF SYNC**
-
-
-DONE  in `LiveProof`:
-
-1. Retain both versions 
-2. Always use the expanded version to do discharge.
-3. Discharge the `true ==> law-sc` cases.
- 4. Consider how to handle the binding `O$  ⟼ ⟨O$⟩` given that `fresh:ls_0,s_0`.
- 
 TODO?
  
- 5. Allow user to toggle between which one is displayed
+ 5. Allow user to toggle between which s.c. version is displayed
     (currently both are)
-
-### Next in Line
 
 Trivial quantifiers are being shown even when disabled
 
@@ -44,12 +28,14 @@ Ranking seems busted:
 ```
 
 The following laws in UTP base seem to match anything:
+
 ```
    6. ⊤  “II_def”           II ≡ (O$'=O$)  ⊤
    8. ⊤  “bot_def”          ⊥ ≡ true  ⊤
    9. ⊤  “top_def”          ⊤ ≡ false  ⊤
 ```
 e.g.,
+
 ```
 Matches:
 5 : “eqv_refl” true  ⊤ ⟹ ⊤ *
@@ -63,6 +49,7 @@ Focus = []
 ```
 
 Example:
+
 ```
 Proof for A_alt
 	A(E,a,N) ≡ (E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N  ⊤

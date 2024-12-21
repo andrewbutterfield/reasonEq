@@ -2,7 +2,7 @@
 
 ## URGENT
 
-`a[O$_1/O$']` is not `a` if `s,s'⊇ₐ` and `O$={ls,s}` (and hence `O$'={ls,s}`).
+nothing right now
 
 ## Next in Line
 

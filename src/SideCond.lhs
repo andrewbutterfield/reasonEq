@@ -208,7 +208,7 @@ type NVarSet = NA VarSet
 
 isThere :: NVarSet -> Bool
 isThere (The _)  =  True
-isThere _           =  False
+isThere _        =  False
 
 nsngl :: GenVar -> NVarSet
 nsngl x = The $ S.singleton x
@@ -218,7 +218,7 @@ nsngl x = The $ S.singleton x
 -- USE CASE 1  - both sets have same status 
 -- USE CASE 2  - set 1 is the relevant one, unchanged if set 2 is NA
 nmbr :: GenVar -> NVarSet -> Bool
-nmbr _ NA  =  True
+nmbr _ NA       =  False
 nmbr x (The s)  =  x `S.member` s
 
 ndiff :: NVarSet -> NVarSet -> NVarSet
@@ -237,7 +237,7 @@ nintsct NA  uset2     =  uset2
 nintsct (The s) (The t)  =  The (s `S.intersection` t)
 
 nsubset :: NVarSet -> NVarSet -> Bool
-nsubset _        NA   =  True
+nsubset _        NA   =  False
 nsubset NA  _         =  False
 nsubset (The s) (The t)  =  s `S.isSubsetOf` t
 

@@ -264,7 +264,7 @@ provided that $\vv v$ is dynamic:
 Next we scan the list-variable  pairs, with the side-conditions in hand,
 looking for a list-variable that covers $\vv v$:
 \begin{code}
-     <|> ( lvlvlSubstitute (pdbg "lv2Sub.SCTX" sctx) (pdbg "lv2Sub.VRT" vrt) (pdbg "lv2Sub.VTL" vtl) $ pdbg "lv2Sub.LVLVL" lvlvl )
+     <|> ( lvlvlSubstitute sctx vrt vtl lvlvl )
 \end{code}
 If nothing is found we return the substitution 
 after running it through semantic completion:
@@ -546,23 +546,40 @@ lvlvlSubstitute (SubCtxt (vscs,_) vts)
 \end{code}
 \newpage
 
-We have \h{gv} (e.g. \m{a}) and \h{vsc} (e.g. \m{s',s \supseteq_a a}),
+We have \h{vsc} (e.g. \m{s',s \supseteq_a a}),
 and \h{tlv} (e.g. \m{\seqof{s',ls'}}) and \h{rlv} (e.g. \m{\seqof{s_1,ls_1}}).
+Note that \h{tlv} and \h{rlv} should have the same length.
 \begin{code}
     processExpansions :: MonadFail m 
-                      => VarSideConds -> Bool -> [(Variable,Variable)]
-                      -> [Variable] -> [Variable]
+                      => VarSideConds 
+                      -> Bool  -- true if a change has been made
+                      -> [(Variable,Variable)]  -- result accumulator
+                      -> [Variable] -- target (list) variables
+                      -> [Variable] -- replacement (list) variables
                       -> m (Bool,[(Variable,Variable)])
+\end{code}
+End cases, noting that both lists should end together:
+\begin{code}
     processExpansions vsc chgd ko [] []  = return $ (chgd,reverse ko)
     processExpansions vsc _    ko _  []  = fail "lvlvSub.procExp: short repl." 
     processExpansions vsc _    ko []  _  = fail "lvlvSub.procExp: short target" 
+\end{code}
+All these side-conditions are for a particular term-variable,
+and we want to decide, for a particular element of \h{tlv},
+whether it is possible that it could be present 
+in some future incarnation of \h{gv}.
+This is established by comparing the target variable \h{tv} 
+with the side-condition \h{vsc} associated with that term variable.
+Basically, if \h{tv} is disjoint then we drop it,
+if covered, we definitely keep it.
+\begin{code}
     processExpansions vsc@(VSC _ nvsD nvsC nvsCd) chgd ko (tv:tvl) (rv:rvl)
-      | gv `nmbr`  nvsD   =  fail "lvlvSub.procExpr: disjoint target"
-      | gv `cvdby` nvsC   =  processExpansions vsc chgd ((tv,rv):ko) tvl rvl
-      | gv `cvdby` nvsCd  =  processExpansions vsc chgd ((tv,rv):ko) tvl rvl
-      | otherwise         =  processExpansions vsc True ko tvl rvl
+      | gtgt `nmbr`  nvsD   =  processExpansions vsc True ko tvl rvl
+      | gtgt `cvdby` nvsC   =  processExpansions vsc chgd ((tv,rv):ko) tvl rvl
+      | gtgt `cvdby` nvsCd  =  processExpansions vsc chgd ((tv,rv):ko) tvl rvl
+      | otherwise           =  processExpansions vsc True ko tvl rvl
       where
-        gv = StdVar tv
+        gtgt = StdVar tv
         gv `cvdby` NA  =  False -- denotes "vacuously true"
         gv `cvdby` (The vs) = gv `S.member` vs
 
@@ -571,15 +588,6 @@ and \h{tlv} (e.g. \m{\seqof{s',ls'}}) and \h{rlv} (e.g. \m{\seqof{s_1,ls_1}}).
 
     liftRepl (tv,rv) = (tv, fromJust $ var ArbType rv)
 \end{code}
-
-
-
-% lvlvlSubstitute sctxt vrt@(Var tk v@(Vbl i  vc vw)) lvlvl
-%   = case lvlvlSubstScan sctxt tk v [] lvlvl of
-%       Left (tlv, rlv@(LVbl (Vbl r_ _  rw) _ _))  
-%                 ->  pure $ jVar tk (Vbl i vc rw)
-%       Right []  ->  return vrt
-%       Right lvlvl'  -> return $ Sub tk vrt $ jSubstn [] lvlvl'
 \begin{code}
 lvlvlSubstScan sctxt tk v poss [] = Right poss
 lvlvlSubstScan sctxt tk v poss (lvlv:lvlvl)

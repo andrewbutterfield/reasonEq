@@ -15,9 +15,7 @@ The substitutions on `a` and `b` should **not** change.
 
 `(a[s_1/s'])[ls \ R1 ∪ N1/ls_1]` is not `a`, it's `a[s_1/s']`.
 
-**It's a subst-comp bug !**
-`{ s'|-> s_1[(ls \ R1) U N1/ls_1] } = { s' |-> s_1 }`
-
+See `ppt.txt` -- issue is `applySubst` -- see `SUB'` and `SUB''` values!
 ## Next in Line
 
 TODO?

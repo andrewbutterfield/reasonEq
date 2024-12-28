@@ -320,7 +320,7 @@ applySubst sctx sub bt@(Bnd tk i vs tm)
   | otherwise 
     = do  alpha <- captureAvoidance (subSC sctx) vs tm effsub
           let vs' = S.fromList $ quantsSubst alpha $ S.toList vs
-          asub <- substComp alpha effsub --- succeeds as alpha is var-only
+          asub <- substCompose alpha effsub --- succeeds as alpha is var-only
           let asub' = substComplete sctx tm asub
           tm' <- applySubst sctx asub' tm
           bnd tk i vs' tm'
@@ -333,7 +333,7 @@ applySubst sctx sub lt@(Lam tk i vl tm)
   | otherwise 
     = do  alpha <- captureAvoidance (subSC sctx) vs tm effsub
           let vl' = quantsSubst alpha vl
-          asub <- substComp alpha effsub --- succeeds as alpha is var-only
+          asub <- substCompose alpha effsub --- succeeds as alpha is var-only
           let asub' = substComplete sctx tm asub
           tm' <- applySubst sctx asub' tm
           lam tk i vl' tm'
@@ -382,10 +382,10 @@ applySubst sctx sub st@(Sub tk bt _)
 \end{eqnarray*}
 \begin{code}
 applySubst sctx sub bt@(Sub tk tm s)
-  = case substComp s sub of
-     Just sub' -> let sub'' = substComplete sctx tm sub'
-                  in applySubst sctx sub'' tm
-     -- Nothing NEVER occurs, substComp is total
+  = case substCompose s sub of
+     Just sub' -> let sub'' = substComplete sctx tm $ pdbg "SUB'" sub'
+                  in applySubst sctx (pdbg "SUB''" sub'') $ pdbg "TM" tm
+     -- Nothing NEVER occurs, substCompose is total
      Nothing   -> return $ Sub tk bt sub
 \end{code}
 
@@ -1410,11 +1410,11 @@ $$
 $$
 where $[G'/Y']$ is $[G/Y]$ restricted to elements of $Y$ not in $X$.
 \begin{code}
-substComp :: MonadFail m
-          => Substn  -- 1st substitution performed
-          -> Substn  -- 2nd substitution performed
-          -> m Substn -- always `returns`
-substComp (Substn ts1 lvs1) sub2@(Substn ts2 lvs2)
+substCompose :: MonadFail m
+             => Substn  -- 1st substitution performed
+             -> Substn  -- 2nd substitution performed
+             -> m Substn -- always `returns`
+substCompose (Substn ts1 lvs1) sub2@(Substn ts2 lvs2)
   = let 
       -- compute G',Y'
       tl1 = S.toList ts1
@@ -1572,7 +1572,7 @@ this transforms
 \newline
 into 
 \m{\xxaCmpOneNonRec}.
-Given that \h{substComp} currently returns 
+Given that \h{substCompose} currently returns 
 \m{\xxaCompRec}
 we actually get \m{\xxaCmpOneRec}.
 
@@ -1629,7 +1629,7 @@ $$
    \text{no recursion}
    & \xxaExample
    & \text{recursive}
-\\ & \h{substComp}
+\\ & \h{substCompose}
 \\ ~\xxaCompNonRec 
    && \xxaCompRec
 \\ & \h{subComplete1}
@@ -1671,7 +1671,7 @@ A default sub-context:
 \begin{code}
 subctxt0 = SubCtxt scTrue []
 dosub tm sub = fromJust $ applySubst subctxt0 sub tm
-subsyncomp sub1 sub2 = fromJust $ substComp sub1 sub2
+subsyncomp sub1 sub2 = fromJust $ substCompose sub1 sub2
 subsemcomp sctx tm sub1 sub2 = substComplete sctx tm $ subsyncomp sub1 sub2
 \end{code}
 A collection of standard constants:
@@ -1709,7 +1709,7 @@ subCompTest what expr sub1 sub2
 The most important are when $e$ is a single variable $v$,
 
 \begin{code}
-varSubstCompTests  =  testGroup "substComp applied to var"
+varSubstCompTests  =  testGroup "substCompose applied to var"
  [ subCompTest "var in no substitution" tz s12wx s34xy
  , subCompTest "var in 1st substitution" tw s12wx s34xy
  , subCompTest "var in both substitutions" tx s12wx s34xy
@@ -1773,7 +1773,7 @@ xx_subls = jSubstn [(vls1,ls_R_N)] []
 xx_a_subOO_subls = Sub ArbType (Sub ArbType a xx_subOO) xx_subls
 \end{code}
 
-After \h{substComp}: \m\xxaCompRec
+After \h{substCompose}: \m\xxaCompRec
 \begin{code}
 xx_subOls = jSubstn [(vls1,ls_R_N)] [(lO',lO1)]
 xx_a_subOls = Sub ArbType a xx_subOls
@@ -1791,9 +1791,9 @@ xx_a_subss = Sub ArbType a xx_subss
 \end{code}
 
 \begin{code}
-xxSubstCompTests  =  testGroup "substComp used for UTCP:X_X_comp"
-  [ testCase "substComp X-X-comp example" 
-      (substComp xx_subOO xx_subls @?= Just xx_subOls)
+xxSubstCompTests  =  testGroup "substCompose used for UTCP:X_X_comp"
+  [ testCase "substCompose X-X-comp example" 
+      (substCompose xx_subOO xx_subls @?= Just xx_subOls)
   , testCase "subComplete1 X-X-comp example"
       (subComplete1 xxSCtxt xx_subOls @?= xx_sublssls)
   , testCase "subComplete2 X-X-comp example"
@@ -1809,7 +1809,7 @@ xxSubstCompTests  =  testGroup "substComp used for UTCP:X_X_comp"
 
 
 \begin{code}
-substCompTests  =  testGroup "Substitution.substComp"
+substCompTests  =  testGroup "Substitution.substCompose"
  [ varSubstCompTests
  ]
 \end{code}

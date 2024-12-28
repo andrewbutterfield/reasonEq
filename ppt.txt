@@ -19,7 +19,7 @@
 @LVLVS: {}
 
 
-@VTS:  -- { s'|-> ...s_1[(ls \ R1) U N1/ls_1] }
+@VTS:  -- { s'|-> ...s_1[(ls \ R1) U N1/ls_1] } = { s' |-> s_1 }
 { ( VR (Id "s" 0, VO, WA)
   , S T 
       (V T (VR (Id "s" 0, VO, WD "1"))) 

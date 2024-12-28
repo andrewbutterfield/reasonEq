@@ -247,12 +247,15 @@ applySubst sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
 
 If we have $v[\dots,r,\dots/\dots,v,\dots]$ we return $r$:
 \begin{code}
-     ( alookup v vtl )
+     ( alookup (pdbg "V" v) $ pdbg "VTL" vtl )
 \end{code}
 \textbf{NOTE: }
 \textsl{Otherwise, if \h{v} is a term-variable, we need to look at side-conditions,
 to see if any vtl targets are possibly applicable. 
 If so, we keep those targets.}
+\begin{code}
+     <|> ( termVarSubstitute sctx (pdbg "VRT" vrt) vtl )
+\end{code}
 
 \textbf{Note:}
 \textsf{
@@ -403,6 +406,14 @@ applySubst sctx sub tm = return tm
 \newpage 
 \subsection{Helper Functions}
 
+\subsubsection{Do target variables overlap with term free variables?}
+
+\begin{code}
+termVarSubstitute :: MonadFail m
+                  => SubContext -> Term -> [TermSub] -> m Term
+termVarSubstitute (SubCtxt sc _) vrt@(Var tk v) vtl 
+  = fail "termVarSubstitute NYI"
+\end{code}
 \subsubsection{Does a list-variable cover the standard variable?}
 
 We assume that the variable-term substitutions did not apply,

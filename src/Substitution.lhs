@@ -1496,8 +1496,11 @@ at the term variable level.
 
 \begin{code}
 substComplete :: SubContext -> Term -> Substn -> Substn
-substComplete sctxt (Var _ tv@(Vbl _ vc _)) sub
-  | vc /= ObsV  =  subComplete sctxt tv sub
+substComplete sctxt (Var _ tv@(Vbl _ ObsV _)) sub@(Substn tvs lvlvs)
+  = case subVarLookup (pdbg "SUB" sub) $ pdbg "TV" tv of
+      Nothing  ->  jSubstn [] (S.toList lvlvs) -- lvlvs might apply
+      Just repl ->  jSubstn [(tv,repl)] []  -- covered by this substitution.
+substComplete sctxt (Var _ tv@(Vbl _ _ _)) sub  =  subComplete sctxt tv sub
 substComplete sctxt tm sub = sub
 
 subComplete :: SubContext -> Variable -> Substn -> Substn

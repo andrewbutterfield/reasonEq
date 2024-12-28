@@ -249,15 +249,15 @@ If we have $v[\dots,r,\dots/\dots,v,\dots]$ we return $r$:
 \begin{code}
      ( alookup v vtl )
 \end{code}
+\textbf{NOTE: }
+\textsl{Otherwise, if \h{v} is a term-variable, we need to look at side-conditions,
+to see if any vtl targets are possibly applicable. 
+If so, we keep those targets.}
+
 \textbf{Note:}
 \textsf{
-  we need to handle uniform substitutions here as well.
-  Or do we catch that below?  
+  dump uniform substitutions below?  
 }
-\textbf{LETS DO UNIFORMITY HERE - SIMPLEST}
-
-Then we see if we have a uniform substitution, 
-provided that $\vv v$ is dynamic:
 \begin{code}
 --     <|> ( uniformSubstitute sctx vrt vtl lvlvl )
 \end{code}
@@ -520,9 +520,9 @@ lvlvlSubstitute (SubCtxt (vscs,_) vts)
     scan :: MonadFail m => VarSideConds -> Variable -> [LVarSub] -> m Term
     scan vsc v [] = return vrt
     scan vsc v (lvlv:lvlvs)
-      = case pdbg "getLVX" $ getLVarExpansions (pdbg "lv2Sub.v" v) $ pdbg "lv2Sub.lvlv" lvlv of
+      = case getLVarExpansions v lvlv of
           Nothing               ->  scan vsc v lvlvs
-          Just (tlvExp,rlvExp)  ->  handleExpansions v lvlvs (pdbg "hndlXs" vsc) tlvExp rlvExp
+          Just (tlvExp,rlvExp)  ->  handleExpansions v lvlvs vsc tlvExp rlvExp
 
     getLVarExpansions :: MonadFail m 
                       => Variable -> LVarSub -> m ([Variable],[Variable])
@@ -538,7 +538,7 @@ lvlvlSubstitute (SubCtxt (vscs,_) vts)
     getVarList _ = fail "lvlvSub.search(term): not known var-list"
 
     handleExpansions v lvlvs vsc tlvExp rlvExp
-      = case pdbg "procXs" $ processExpansions vsc False [] tlvExp rlvExp of
+      = case processExpansions vsc False [] tlvExp rlvExp of
           Nothing  ->  scan vsc v lvlvs
           Just (False,_)   ->  fail "lvlvSub.search(term): no change"
           Just (_,[])      ->  return $ mkTVSubst vrt vtl

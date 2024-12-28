@@ -2,7 +2,18 @@
 
 ## URGENT
 
-nothing right now
+Another dodgy substitute:
+
+```
+(∃ s_1  • ((E1 ⊆ ls ∧ a[s_1/s']) ∧ ((E2 ⊆ ls_1 ∧ b[s_1/s]) ∧ ls' = ls_1 \ R2 ∪ N2))[ls \ R1 ∪ N1/ls_1])
+   = 'substitute @[1]'
+(∃ s_1  • (E1 ⊆ ls ∧ a) ∧ ((E2 ⊆ ls \ R1 ∪ N1 ∧ b) ∧ ls' = (ls \ R1 ∪ N1) \ R2 ∪ N2))
+ O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1
+```
+
+The substitutions on `a` and `b` should **not** change.
+
+`(a[s_1/s'])[ls \ R1 ∪ N1/ls_1]` is not `a`, it's `a[s_1/s']`.
 
 ## Next in Line
 

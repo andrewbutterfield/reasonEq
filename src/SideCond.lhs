@@ -1428,15 +1428,18 @@ findDGV gv ((VSC gv' (The vsD) _ _):vscs)
 findDGV gv (_:vscs)                =  findDGV gv vscs
 \end{code}
 
-For (regular) coverage we look for precisely the given general variable.
+For regular coverage we look for precisely the given general variable,
+while for dynamic coverage we ignore differences in temporality.
 \begin{code}
 findCoveredGenVar :: MonadFail m => GenVar -> SideCond -> m VarSet
 findCoveredGenVar gv ( vscs, _ ) = findCGV gv vscs
 
-findCGV gv []         =  fail ("Covered "++show gv ++ " not found")
+findCGV gv []           =  fail ("Covered "++show gv ++ " not found")
 findCGV gv ((VSC gv' _ (The vs) _):vscs)
-  | gv == gv'         =  return vs
-findCGV gv (_:vscs)  =  findCGV gv vscs
+  | gv == gv'           =  return vs
+findCGV gv ((VSC gv' _ _ (The vs)):vscs)
+  | gv == gv'           =  return vs
+findCGV gv (_:vscs)     =  findCGV gv vscs
 \end{code}
 
 For dynamic coverage we don't care about temporality,

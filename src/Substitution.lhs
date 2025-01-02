@@ -247,14 +247,14 @@ applySubst sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
 
 If we have $v[\dots,r,\dots/\dots,v,\dots]$ we return $r$:
 \begin{code}
-     ( alookup (pdbg "V" v) $ pdbg "VTL" vtl )
+     ( alookup v vtl )
 \end{code}
 \textbf{NOTE: }
 \textsl{Otherwise, if \h{v} is a term-variable, we need to look at side-conditions,
 to see if any vtl targets are possibly applicable. 
 If so, we keep those targets.}
 \begin{code}
-     <|> ( termVarSubstitute sctx (pdbg "VRT" vrt) vtl )
+     <|> ( termVarSubstitute sctx (pdbg "VRT" vrt) (pdbg "VTL" vtl) $ pdbg "LVLVL" lvlvl)
 \end{code}
 
 \textbf{Note:}
@@ -386,8 +386,8 @@ applySubst sctx sub st@(Sub tk bt _)
 \begin{code}
 applySubst sctx sub bt@(Sub tk tm s)
   = case substCompose s sub of
-     Just sub' -> let sub'' = substComplete sctx tm $ pdbg "SUB'" sub'
-                  in applySubst sctx (pdbg "SUB''" sub'') $ pdbg "TM" tm
+     Just sub' -> let sub'' = substComplete sctx tm sub'
+                  in applySubst sctx sub'' tm
      -- Nothing NEVER occurs, substCompose is total
      Nothing   -> return $ Sub tk bt sub
 \end{code}
@@ -406,14 +406,33 @@ applySubst sctx sub tm = return tm
 \newpage 
 \subsection{Helper Functions}
 
-\subsubsection{Do target variables overlap with term free variables?}
+\subsubsection{Do target variables overlap with possible term free variables?}
 
 \begin{code}
 termVarSubstitute :: MonadFail m
-                  => SubContext -> Term -> [TermSub] -> m Term
-termVarSubstitute (SubCtxt sc _) vrt@(Var tk v) vtl 
-  = fail "termVarSubstitute NYI"
+                  => SubContext -> Term -> [TermSub] -> [LVarSub] -> m Term
+termVarSubstitute (SubCtxt sc _) vrt@(Var tk v) vtl lvlvl
+  = do let (fvs,_) = freeVars sc vrt -- no bound vars to be subtracted here
+       let (_,vtl') = keepMentionedTermSubs (pdbg "FVS" fvs) False [] $ pdbg "kMTS.VTL" vtl
+       if null vtl' then fail "termVarSubstitute: complete overlap"
+                    else return $ Sub tk vrt $ jSubstn (pdbg "VTL'" vtl') lvlvl
+       
+
+termVarSubstitute _ _ _ _
+  = fail "termVarSubstitute: not a variable term"
 \end{code}
+
+We keep term/variable substitutions if the targets appear in the variable set:
+\begin{code}
+keepMentionedTermSubs :: VarSet -> Bool -> [TermSub] -> [TermSub]
+                      -> (Bool,[TermSub])
+keepMentionedTermSubs vs chgd ltv [] = (chgd,reverse ltv)
+keepMentionedTermSubs vs chgd ltv (vt@(tv,_):vtl)
+  | (StdVar tv) `S.member` vs  =  keepMentionedTermSubs vs chgd (vt:ltv) vtl
+  | otherwise                  =  keepMentionedTermSubs vs True ltv      vtl 
+\end{code}
+
+
 \subsubsection{Does a list-variable cover the standard variable?}
 
 We assume that the variable-term substitutions did not apply,
@@ -1508,7 +1527,7 @@ at the term variable level.
 \begin{code}
 substComplete :: SubContext -> Term -> Substn -> Substn
 substComplete sctxt (Var _ tv@(Vbl _ ObsV _)) sub@(Substn tvs lvlvs)
-  = case subVarLookup (pdbg "SUB" sub) $ pdbg "TV" tv of
+  = case subVarLookup sub tv of
       Nothing  ->  jSubstn [] (S.toList lvlvs) -- lvlvs might apply
       Just repl ->  jSubstn [(tv,repl)] []  -- covered by this substitution.
 substComplete sctxt (Var _ tv@(Vbl _ _ _)) sub  =  subComplete sctxt tv sub

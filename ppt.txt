@@ -1,69 +1,51 @@
--- applySubst (Var ...)
-    -- alookup
-@VTL:
-[ 
-(VR (Id "ls" 0, VO, WD "1")
-, C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "union" 0) [C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0, VO, WB)), V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R1" 0, VE, WS))], V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N1" 0, VE, WS))]) 
-]
-@V: VR (Id "s" 0, VO, WD "1")
-    -- termVarSubstitute
-@VRT: V T (VR (Id "s" 0, VO, WD "1"))
 
--- applySubst (Sub ...)
-   -- into substComplete
-@SUB':
+
+
+(a[s_1/s'])[ls \ R1 ∪ N1/ls_1]
+
+
+@cmps.Sub.SUB: -- [ls \ R1 ∪ N1/ls_1]
+SN
+( { (VR (Id "ls" 0, VO, WD "1"), C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "union" 0) [C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0, VO, WB)), V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R1" 0, VE, WS))], V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N1" 0, VE, WS))]) } )
+( {} )
+@cmps.Sub.S: - [s_1/s']
+SN
+( { (VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1"))) } )
+( {} )
+@alookup.VTL:  -- [ls \ R1 ∪ N1/ls_1]
+[ (VR (Id "ls" 0, VO, WD "1"), C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "union" 0) [C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0, VO, WB)), V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R1" 0, VE, WS))], V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N1" 0, VE, WS))]) ]
+@alookup.V:
+VR (Id "s" 0, VO, WD "1")
+@tVSD.VRT:
+V T (VR (Id "s" 0, VO, WD "1"))
+@SUB': -- [s_1,ls \ R1 ∪ N1/s,ls_1] -- CORRECT!
 SN
 ({ 
-(VR (Id "ls" 0, VO, WD "1")
-, C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "union" 0) [C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0, VO, WB)), V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R1" 0, VE, WS))], V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N1" 0, VE, WS))])
-, 
-(VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1"))) 
+    ( VR (Id "ls" 0, VO, WD "1") -- [ls \ R1 ∪ N1/ls_1]
+    , C (TC (Id "P" 0) [TV (Id "t" 0)]) 
+        True 
+        (Id "union" 0) 
+        [ C (TC (Id "P" 0) [TV (Id "t" 0)]) 
+            True 
+            (Id "\\" 0) 
+            [ V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0, VO, WB))
+            , V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R1" 0, VE, WS))
+            ]
+        , V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N1" 0, VE, WS))
+        ]
+    )
+  , ( VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1")))  -- [s_1/s']
 })
-( {} )
-    -- from substComplete, into recursive applySubst
+({})
 @SUB'':
 SN
 ( { (VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1"))) } )
 ( {} )
-@TM: V (TF TB (TG (Id "B" 0))) (VR (Id "a" 0, VP, WS))
-
--- applySubst (Var ...)
-    -- alookup
-@VTL: [ (VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1"))) ]
-@V: VR (Id "a" 0, VP, WS)
-    -- termVarSubstitute
-@VRT: V (TF TB (TG (Id "B" 0))) (VR (Id "a" 0, VP, WS))
-
-
-NO `SUB`, just `SUB'` and `SUB''` !
-
-
-
-
-
-
-
-
-
-
-
-@TS1:
-{ (VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1"))) }
-@TL1':
+@TM:
+V (TF TB (TG (Id "B" 0))) (VR (Id "a" 0, VP, WS))
+@alookup.VTL:
 [ (VR (Id "s" 0, VO, WA), V T (VR (Id "s" 0, VO, WD "1"))) ]
-@TS2:
-{ (VR (Id "ls" 0, VO, WD "1"), C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "union" 0) [C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0, VO, WB)), V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R1" 0, VE, WS))], V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N1" 0, VE, WS))]) }
-@TL2':
-[ (VR (Id "ls" 0, VO, WD "1"), C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "union" 0) [C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0, VO, WB)), V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R1" 0, VE, WS))], V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N1" 0, VE, WS))]) ]
-@VTS:
-{ (VR (Id "ls" 0, VO, WD "1"), C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "union" 0) [C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0, VO, WB)), V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R1" 0, VE, WS))], V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N1" 0, VE, WS))]) }
-@V:
-VR (Id "s" 0, VO, WD "1")
-@LVLVS:
-{}
-@VTS:
-{ (VR (Id "s" 0, VO, WA), S T (V T (VR (Id "s" 0, VO, WD "1"))) (SN (fromList [(VR (Id "ls" 0, VO, WD "1"), C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "union" 0) [C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0, VO, WB)), V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R1" 0, VE, WS))], V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N1" 0, VE, WS))])]) (fromList []))) }
-@V:
+@alookup.V:
 VR (Id "a" 0, VP, WS)
-@LVLVS:
-{}
+@tVSD.VRT:
+V (TF TB (TG (Id "B" 0))) (VR (Id "a" 0, VP, WS))

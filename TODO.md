@@ -2,7 +2,8 @@
 
 ## URGENT
 
-Now, something different:
+
+What happens:
 
 ```
 (∃ s  • (a[s_1/s'] ∧ b[s_1/s])
@@ -21,6 +22,32 @@ scC=ls,ls',s,s'∉E1, ls,ls',s,s'∉E2, ls,ls',s,s'∉N1, ls,ls',s,s'∉N2, ls,l
 ---
 vsMatch: pattern list-var's binding not in candidate set.
 ```
+
+What's going on:
+
+```
+@bind: 
+BD  ( [ ((Id "P" 0,VP),BV (VR (Id "a" 0,VP,WS)))
+      , ((Id "Q" 0,VP),BV (VR (Id "b" 0,VP,WS)))
+      , ((Id "and" 0,VO),BV (VR (Id "and" 0,VO,WS)))
+      ]
+    , [("0","1")]
+    , [((Id "O" 0,VO,[],[]),BX [Right (V T (VR (Id "s" 0,VO,WB)))])]
+    )
+
+@vsC:    [GV (VR (Id "s" 0,VO,WB))]
+@vsP:    [GL (LV (VR (Id "O" 0,VO,WD "0"),[],[]))]  -- aka lvP
+
+@lkpLB: Just (BX [Right (V T (VR (Id "s" 0,VO,WD "1")))])
+
+@vsB:   [GV (VR (Id "s" 0,VO,WD "1"))]
+
+@vsBS:   [GV (VR (Id "s" 0,VO,WD "1"))]
+@vsCS:   [GV (VR (Id "s" 0,VO,WB))]
+@vsCSx:  [GV (VR (Id "s" 0,VO,WB))]
+```
+
+**WE SHOULDN'T BE MATCHING `s` against `O$_1` !!!**
 
 
 Set matches still fail

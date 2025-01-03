@@ -205,6 +205,7 @@ data DynamicLstVarRole -- Dynamic ListVar Matching Roles
  deriving (Eq, Ord, Show, Read)
 \end{code}
 
+\newpage
 We will want to convert
 a \texttt{DynamicLstVarRole} into a \texttt{LstVarMatchRole}
 when results are returned.
@@ -213,10 +214,12 @@ This can be done by providing a variable class and temporality:
 mapDLVRtoLVMR :: VarClass -> VarWhen -> DynamicLstVarRole -> LstVarMatchRole
 mapDLVRtoLVMR vc vw (DL is js xs n)
   =  KL (map (id2gvar vc vw) is ++ map (id2glvar vc vw) js)
-        (map (id2var vc vw) xs) n
+        (map (id2var vc vw) xs) 
+        n
 mapDLVRtoLVMR vc vw (DS is js xs n)
   =  KS (S.map (id2gvar vc vw) is `S.union` S.map (id2glvar vc vw) js)
-        (S.map (id2var vc vw) xs)n
+        (S.map (id2var vc vw) xs) 
+        n
 mapDLVRtoLVMR _ _ DAL  =  AL
 mapDLVRtoLVMR _ _ DAS  =  AS
 mapDLVRtoLVMR _ _ UD   =  UL
@@ -649,6 +652,7 @@ lookupLVarTable (VD (_,_,_,dtable)) lvar@(Vbl i vc vw)
      Just dlvr  ->  mapDLVRtoLVMR vc vw dlvr
 \end{code}
 
+\newpage
 \subsection{Searching Lists of Tables}
 
 We also have a version that searches a list of tables:

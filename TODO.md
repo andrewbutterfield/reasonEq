@@ -2,7 +2,11 @@
 
 ## URGENT
 
-Set matches fail
+We now have the following to discharge !: 
+
+```Discharged Law S.C. = s∉ls, s∉ls'```
+
+Set matches still fail
 
 ```
 X(E1 ∪ E2 \ N1,a ; b,R1 ∪ R2,N1 \ R2 ∪ N2)

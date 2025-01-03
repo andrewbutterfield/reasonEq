@@ -2,9 +2,26 @@
 
 ## URGENT
 
-We now have the following to discharge !: 
+Now, something different:
 
-```Discharged Law S.C. = s∉ls, s∉ls'```
+```
+(∃ s  • (a[s_1/s'] ∧ b[s_1/s])
+ O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1
+XPNDD:
+ls,ls',s,s'∉E1, ls,ls',s,s'∉E2, ls,ls',s,s'∉N1, ls,ls',s,s'∉N2, ls,ls',s,s'∉R1, ls,ls',s,s'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1
+proof: tm 2 ;_def
+(∃ s  • a[s_1/s'] ∧ b[s_1/s]) :: (∃ O$_0  • P[O$_0/O$'] ∧ Q[O$_0/O$])
+
+lnm[parts]=;_def[2]
+tP=(P ; Q) ≡ (∃ O$_0  • P[O$_0/O$'] ∧ Q[O$_0/O$])
+partsP=(∃ O$_0  • P[O$_0/O$'] ∧ Q[O$_0/O$])
+replP=P ; Q
+tC=(∃ s  • a[s_1/s'] ∧ b[s_1/s])
+scC=ls,ls',s,s'∉E1, ls,ls',s,s'∉E2, ls,ls',s,s'∉N1, ls,ls',s,s'∉N2, ls,ls',s,s'∉R1, ls,ls',s,s'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1
+---
+vsMatch: pattern list-var's binding not in candidate set.
+```
+
 
 Set matches still fail
 

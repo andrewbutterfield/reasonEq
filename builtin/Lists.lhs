@@ -98,22 +98,25 @@ i_len   = jId "len"   ; lenlIntro   = mkConsIntro i_len   $ len_t   contt
 \newpage
 All list expressions are substitutable.
 \begin{code}
+r2T = reconcile2Types ; rTs = reconcileTypes
+tOf = termtype ; j2T = join2Types ; jTs = joinTypes  -- shorthand
+
 nilseq :: Term
-nilseq = fromJust $ var seqt $ StaticVar i_nil
+nilseq      =  fromJust $ var seqt $ StaticVar i_nil
 lenum :: [Term] -> Term
-lenum ts = Cons seqt True i_seq ts
+lenum ts    =  Cons (jTs ts) True i_seq ts
 lsngl :: Term -> Term
-lsngl t = lenum [t]
+lsngl t     =  lenum [t]
 hd, tl, elems, len, rev :: Term -> Term
-hd lst  = Cons (hd_t contt)    True i_hd    [lst]
-tl lst  = Cons (seqf_1 contt)  True i_tl    [lst]
-elems s = Cons (elems_t contt) True i_elems [s]
-len s   = Cons (len_t contt)   True i_len   [s]
-rev s   = Cons (seqf_1 contt)  True i_rev   [s]
+hd lst      =  Cons (tOf lst)         True i_hd    [lst]
+tl lst      =  Cons (star $ tOf lst)  True i_tl    [lst]
+elems lst   =  Cons (power $ tOf lst) True i_elems [lst]
+len lst     =  Cons int               True i_len   [lst]
+rev lst     =  Cons (tOf lst)         True i_rev   [lst]
 cons, cat, pfx :: Term -> Term -> Term
-cons x lst = Cons (cons_t contt) True i_cons [x,lst]
-cat s1 s2  = Cons (seqf_2 contt) True i_cat  [s1,s2]
-pfx s1 s2  = Cons (pfx_t contt)  True i_pfx  [s1,s2]
+cons x lst  =  Cons (r2T (star $ tOf x) (tOf lst)) True i_cons [x,lst]
+cat s1 s2   =  Cons (j2T s1 s2)                    True i_cat  [s1,s2]
+pfx s1 s2   =  Cons (j2T s1 s2)                    True i_pfx  [s1,s2]
 \end{code}
 
 

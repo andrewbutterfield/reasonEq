@@ -85,19 +85,22 @@ i_crd = jId "#"       ; cardIntro    = mkConsIntro i_crd $ card_t elemt
 \end{code}
 
 \begin{code}
+r2T = reconcile2Types ; rTs = reconcileTypes
+tOf = termtype ; j2T = join2Types ; jTs = joinTypes  -- shorthand
+
 mtset :: Term
-mtset = fromJust $ var sett $ StaticVar i_mt
+mtset           =  fromJust $ var sett $ StaticVar i_mt
 senum :: [Term] -> Term
-senum ts = Cons sett True i_set ts
+senum ts        =  Cons (jTs ts) True i_set ts
 ssingle :: Term -> Term
-ssingle t = senum [t]
+ssingle t       =  senum [t]
 mbr :: Term -> Term -> Term
-mbr e s        = Cons (mbr_t elemt) True i_mbr [e,s]
-subseteq s1 s2 = Cons bool          True i_SS  [s1,s2]
-sunion s1 s2   = Cons sett          True i_U   [s1,s2]
-sintsct s1 s2  = Cons sett          True i_I   [s1,s2]
-sdiff s1 s2    = Cons sett          True i_D   [s1,s2]
-scard s        = Cons int           True i_crd [s]
+mbr e s         =  Cons (mbr_t elemt) True i_mbr [e,s]
+subseteq s1 s2  =  Cons bool          True i_SS  [s1,s2]
+sunion s1 s2    =  Cons (j2T s1 s2)   True i_U   [s1,s2]
+sintsct s1 s2   =  Cons (j2T s1 s2)   True i_I   [s1,s2]
+sdiff s1 s2     =  Cons (j2T s1 s2)   True i_D   [s1,s2]
+scard s         =  Cons int           True i_crd [s]
 \end{code}
 
 

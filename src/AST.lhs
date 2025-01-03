@@ -13,7 +13,7 @@ module AST ( Type
            , pattern AlgType, pattern FunType, pattern GivenType
            , pattern BottomType
            , isPType, isEType
-           , isSubTypeOf
+           , isSubTypeOf, reconcile2Types, reconcileTypes
            , Value, pattern Boolean, pattern Integer
            , TermSub, TermSubs, LVarSub, LVarSubs
            , Substn, pattern Substn, substn, substnxx
@@ -29,6 +29,7 @@ module AST ( Type
            , lam,  eLam,  pLam
            , binderClass
            , termtype, settype
+           , join2Types, joinTypes
            , isVar, isExpr, isPred, isAtomic
            , theVar, theGVar, varAsTerm, termAsVar
            , icomma, lvarCons
@@ -161,11 +162,15 @@ We can immediately identify the following laws:
    ~~\where~~ \tau_{a_2} \subseteq_T \tau_{a_1} 
             \land
             \tau_{r_1} \subseteq_T \tau_{r_2}
+\\ \gg{g}   &\subseteq_T& t
 \\ \gg{g}_1 &\subseteq_T& \gg{g}_2 ~~\where~~ \gg{g}_1=\gg{g}_2
 \\ \bot &\subseteq_T& \tau
 \end{eqnarray*}
-Note that $t$, $TC()$, $DT\seqof{}$, and $\gg{g}$ are mutually incomparable,
+Note that $t$, $TC()$, and $DT\seqof{}$ are mutually incomparable,
 and also the contravariance of the function argument types.
+Given a mix of type-variables and given-types,
+we assume the latter are subtypes of the former for now
+(\textsl{~this hopefully won't interact too badly with type-inference~}!)
 The contravariance extends to higher-order functions as follows:
 $$
 \sigma_1 \fun \dots \sigma_{n-1} \fun \sigma_n
@@ -200,7 +205,7 @@ so we extend our relation by adding:
 isSubTypeOf :: Type -> Type -> Bool
 isSubTypeOf t1 t2
   | lasttype t1 == bool && t2 == arbpred  =  True
-isSubTypeOf t1  t2                        =  t1 `isSTOf` t2
+  | otherwise                             =  t1 `isSTOf` t2
 
 isSTOf :: Type -> Type -> Bool
 -- true outcomes first, to catch t==t case
@@ -208,13 +213,17 @@ _            `isSTOf` T        =  True
 T            `isSTOf` _        =  False
 TB           `isSTOf` _        =  True
 _            `isSTOf` TB       =  False
+(TV i1)      `isSTOf` (TV i2)  =  i1 == i2
+(TG _)       `isSTOf` (TV _)   =  True
+(TG i1)      `isSTOf` (TG i2)  =  i1 == i2
 (TC i1 ts1)  `isSTOf` (TC i2 ts2) | i1==i2 = ts1 `areSTOf` ts2
 (TA i1 fs1)  `isSTOf` (TA i2 fs2) | i1==i2 = fs1 `areSFOf` fs2
 (TF tf1 ta1) `isSTOf` (TF tf2 ta2)  
                                =  tf2 `isSTOf` tf1 && ta1 `isSTOf` ta2
-(TG i1)      `isSTOf` (TG i2)  =  i1 == i2
 _            `isSTOf` _        = False
 \end{code}
+\textbf{NOTE: }
+\textsl{What if $t_1$ is a type-variable $t$ while $t_2$ is a given type $\mathbb{G}$?}
 
 
 \begin{code}
@@ -232,6 +241,20 @@ areSFOf :: [(Identifier,[Type])] -> [(Identifier,[Type])] -> Bool
  | i1 == i2      =  ts1 `areSTOf` ts2 && fs1 `areSFOf` fs2
 _ `areSFOf` _    =  False
 \end{code}
+
+We also need to reconcile a pair of types, 
+returning a type that is at least as general as both.
+\begin{code}
+reconcile2Types :: Type -> Type -> Type
+reconcile2Types t1 t2 
+  |  t1 `isSubTypeOf` t2  =  t2
+  |  t2 `isSubTypeOf` t1  =  t1
+  |  otherwise            =  T
+
+reconcileTypes :: [Type] -> Type
+reconcileTypes = foldl reconcile2Types TB
+\end{code}
+This is a course-grained approximation, but adequate for most purposes.
 
 \newpage
 \section{Substitutions}
@@ -575,8 +598,7 @@ binderClass (B _ _ gvs    _)  =  return $ whatGVar $ S.elemAt 0 gvs
 binderClass _ = fail "binderClass: not a binding term."
 \end{code}
 
-
-It can help to test if a term is an variable, expression or predicate:
+Ways to interrogate and modify types will be helpful:
 \begin{code}
 termtype :: Term -> Type
 termtype (Val typ k)                 =  typ
@@ -598,6 +620,16 @@ settype typ (Sub _ tm s)              =  (Sub typ tm s)
 settype typ (Iter _ sa na si ni lvs)  =  (Iter typ sa na si ni lvs)
 settype _ t                          =  t
 
+-- NEEDED TO BUILD EXPRESSIONS
+join2Types :: Term -> Term -> Type
+join2Types t1 t2 = reconcile2Types (termtype t1) (termtype t2)
+
+joinTypes :: [Term] -> Type
+joinTypes = reconcileTypes . map termtype
+\end{code}
+
+It can help to test if a term is an variable, expression or predicate:
+\begin{code}
 isVar, isExpr, isPred, isAtomic :: Term -> Bool
 isVar (Var _ _) = True ; isVar _ = False
 isExpr t

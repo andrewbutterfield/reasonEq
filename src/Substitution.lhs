@@ -254,7 +254,7 @@ If we have $v[\dots,r,\dots/\dots,v,\dots]$ we return $r$:
 to see if any vtl targets are possibly applicable. 
 If so, we keep those targets.}
 \begin{code}
-     <|> ( termVarSubstitute sctx (pdbg "VRT" vrt) (pdbg "VTL" vtl) $ pdbg "LVLVL" lvlvl)
+     <|> ( termVarSubstitute sctx vrt vtl lvlvl )
 \end{code}
 
 \textbf{Note:}
@@ -413,9 +413,9 @@ termVarSubstitute :: MonadFail m
                   => SubContext -> Term -> [TermSub] -> [LVarSub] -> m Term
 termVarSubstitute (SubCtxt sc _) vrt@(Var tk v) vtl lvlvl
   = do let (fvs,_) = freeVars sc vrt -- no bound vars to be subtracted here
-       let (_,vtl') = keepMentionedTermSubs (pdbg "FVS" fvs) False [] $ pdbg "kMTS.VTL" vtl
+       let (_,vtl') = keepMentionedTermSubs fvs False [] vtl
        if null vtl' then fail "termVarSubstitute: complete overlap"
-                    else return $ Sub tk vrt $ jSubstn (pdbg "VTL'" vtl') lvlvl
+                    else return $ Sub tk vrt $ jSubstn vtl' lvlvl
        
 
 termVarSubstitute _ _ _ _

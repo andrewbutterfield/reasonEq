@@ -809,12 +809,12 @@ builtins or tests.
 We start with some examples that arise from key theories:
 \begin{description}
   \item[ForAll.forall\_remove]
-    Instantiated Law = $\lnot P$ \newline
+    Instantiated Replacement = $\lnot P$ \newline
     Instantiated Law S.C. = $\lst x \disj P$ \newline
     Goal S.C. = $\lst x \disj P$ \newline
     Discharged Law S.C. = $\top$  (CORRECT)
   \item[ForAll.forall\_one\_point]
-    Instantiated Law = $\forall \lst y \bullet (\lnot P)[\lst e/\lst x]$ \newline
+    Instantiated Replacement = $\forall \lst y \bullet (\lnot P)[\lst e/\lst x]$ \newline
     Instantiated Law S.C. = $\lst x \disj \lst e$ \newline
     Goal S.C. = $\lst x \disj \lst e$ \newline
     Discharged Law S.C. = $\top$  (CORRECT)

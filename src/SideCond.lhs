@@ -297,14 +297,16 @@ mkVSC gv nvsD nvsC nvsCd  =  do
     obviousDisj gv NA = return NA
     obviousDisj gv nvsD@(The vsD)
       |  gv `S.member` vsD  =  fail "gv is member of the disjoint set"
-      |  otherwise          =  return nvsD 
-    obviousCovBy  gv NA     =  return NA
+      |  isObsGVar gv 
+         && all isObsGVar (S.toList vsD)  =  return NA
+      |  otherwise                        =  return nvsD 
+    obviousCovBy  gv NA                   =  return NA
     obviousCovBy  gv nvsC@(The vsC)
-      |  gv `S.member` vsC  =  return NA
-      |  otherwise          =  return nvsC
-    isTrue NA        NA NA  =  True 
-    isTrue (The vsD) NA NA  =  S.null vsD
-    isTrue _ _ _            =  False
+      |  gv `S.member` vsC                =  return NA
+      |  otherwise                        =  return nvsC
+    isTrue NA        NA NA                =  True 
+    isTrue (The vsD) NA NA                =  S.null vsD
+    isTrue _ _ _                          =  False
 \end{code}
 
 Collecting all sets explicitly mentioned:
@@ -833,13 +835,20 @@ We start with some examples that arise from key theories:
     Instantiated Law S.C. = $\lst O' \disj a$ \newline
     Goal S.C.: \newline
     $\lst O,\lst O' \disj E1, \lst O,\lst O' \disj E2, \lst O,\lst O' \disj N1, \lst O,\lst O' \disj N2, \lst O,\lst O' \disj R1, \lst O,\lst O' \disj R2,$ \newline
-    Discharged Law S.C. = $\top$ (INCORRECT)\newline
-    Should be $\bot$ (FALSE).
-    Discharge is wrong:  
+    Discharged Law S.C. = $\bot$ (FALSE):
     $\lst O=\setof{ls,s} \land \setof{s,s'} \supseteq_a  a 
      \not\implies 
      \lst O' \disj a$.
      It implies $\lnot(\lst O' \disj a)$, because $s \in a$.
+  \item[UTCP.X\_X\_comp]~
+    Instantiated Law S.C. =  % s∉E1, s∉E2, s∉N1, s∉N2, s∉R1, s∉R2, s∉ls, s∉ls'
+    $s \disj E1,E2,N1,N2,R1,R2,ls,ls'$
+    \newline
+    Goal S.C. =  % ls,ls',s,s'∉E1, ls,ls',s,s'∉E2, ls,ls',s,s'∉N1, ls,ls',s,s'∉N2, ls,ls',s,s'∉R1, ls,ls',s,s'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1
+    $ls,ls,s,s \disj E1,E2,N1,N2,R1,R2, s,s \supseteq_a a,b, fresh: ls_1,s_1$
+    \newline
+    Discharged Law S.C. = $s \disj ls,ls'$ (INCORRECT) \newline
+    Should be $\top$.
 \end{description}
 General comment about freshness: 
 if $fresh: f$, 

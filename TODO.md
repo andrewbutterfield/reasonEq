@@ -7,39 +7,18 @@
 
 
 
-Set matches still fail
+**Set matches now succeed!**
 
-```
-X(E1 ∪ E2 \ N1,a ; b,R1 ∪ R2,N1 \ R2 ∪ N2)
-proof: tm 1 X_def
-X(E1 ∪ E2 \ N1,a ; b,R1 ∪ R2,N1 \ R2 ∪ N2) :: X(E,a,R,N)
-lnm[parts]=X_def[1]
-tP=X(E,a,R,N) ≡ (E ⊆ ls ∧ a) ∧ ls' = ls \ R ∪ N
-partsP=X(E,a,R,N)
-replP=(E ⊆ ls ∧ a) ∧ ls' = ls \ R ∪ N
-tC=X(E1 ∪ E2 \ N1,a ; b,R1 ∪ R2,N1 \ R2 ∪ N2)
-scC=ls,ls',s,s'∉E1, ls,ls',s,s'∉E2, ls,ls',s,s'∉N1, ls,ls',s,s'∉N2, ls,ls',s,s'∉R1, ls,ls',s,s'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1,s_2
----
-tMatch: incompatible types!
-tC = C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "union" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E1" 0,VE,WS)),C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E2" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N1" 0,VE,WS))]]
-kC = TC (Id "P" 0) [TV (Id "t" 0)]
-tP = V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E" 0,VE,WS))
-kP = TC (Id "P" 0) [TG (Id "LE" 0)]
-bind = BD (fromList [((Id "X" 0,VO),BV (VR (Id "X" 0,VO,WS)))],fromList [],fromList [])
-```
-
-Issue is that code like `Sets.sunion` use generic types for the construction,
-when in fact they should take type hints from the types of the actual arguments.
-
-Instead of `sunion s1 s2 = Cons sett True i_U [s1,s2]` 
-where `elemt = TypeVar $ jId "t" ; sett = power elemt`,
-we should have:
-
-```
-sunion s1 s2 = Cons (f(types(s1,s2))) True i_U [s1,s2]
-```
 
 ## Next in Line
+
+Need to expand the `Sets` theory to capture interactions between set operators,
+and the `Equality` theory to support reasoning like:
+
+```
+x=e /\ E(x)        ===  x=e /\ E[e/x]   ===?  E[e/x]
+expr=u /\ E(expr)  ===  expr=u /\ E(u)  ===?  E(u)
+```
 
 TODO?
  

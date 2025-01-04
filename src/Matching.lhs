@@ -1832,7 +1832,7 @@ applyBindingsToSets
   :: (MonadPlus mp, MonadFail mp)
   => [VarTable] -> Binding -> VarSet -> VarSet -> mp (VarSet,VarSet)
 applyBindingsToSets vts bind vsC vsP
- = applyBindingsToSets' vts bind [] (pdbg "FAIL.vsC" vsC) $ pdbg "FAIL.vsP" $ S.toList vsP
+ = applyBindingsToSets' vts bind [] vsC $ S.toList vsP
 
 applyBindingsToSets'
   :: (MonadPlus mp, MonadFail mp)
@@ -1861,7 +1861,7 @@ applyBindingsToSets' vts bind vlP' vsC (gP@(StdVar vP):vlP)
 When the first pattern variable is a list-variable:
 \begin{code}
 applyBindingsToSets' vts bind vlP' vsC (gP@(LstVar lvP):vlP)
- = case pdbg "FAIL.lkpLB" $ lookupLstBind bind lvP of
+ = case lookupLstBind bind lvP of
     Nothing -> applyBindingsToSets' vts bind (gP:vlP') vsC vlP
     Just (BindSet vsB) -> checkBinding vts vsB
     Just (BindList vlB) -> checkBinding vts $ S.fromList vlB
@@ -1877,17 +1877,18 @@ applyBindingsToSets' vts bind vlP' vsC (gP@(LstVar lvP):vlP)
         lvs :: [ListVar]
         lvs = lvsOf tlvs
   where
-    checkBinding vts vsB
-      | (pdbg "FAIL.vsBS" vsBS) `withinS` (pdbg "FAIL.vsCS" vsCS)
+    checkBinding vts vsB 
+      | vsBS `withinS` vsCS
         = applyBindingsToSets' vts bind vlP' (vsCS `removeS` vsBS) vlP
-      | vsBS `withinS` (pdbg "FAIL.vsCSx" vsCSx)
+      | vsBSx `withinS` vsCSx
         = applyBindingsToSets' vts bind vlP' (vsCSx `removeS` vsBS) vlP
       | otherwise
         = fail $ unlines'
            [ "vsMatch: pattern list-var binding not in candidate set."
            , show bind ]
        where
-         vsBS = subsumeS $ pdbg "FAIL.vsB" vsB
+         vsBS = subsumeS vsB
+         vsBSx = mapVToverVarSet vts vsB
          vsCS = subsumeS vsC
          vsCSx = mapVToverVarSet vts vsCS
 \end{code}
@@ -2745,8 +2746,8 @@ $ \lst v_{P} \mapsto
             \seqof{v_{C1},\dots;\dots \lst v_{Cr}}$.
 \begin{code}
 lvsMatch vts bind cbvs pbvs tsC lvsC [(vsP,esP)]
-  = do bind' <- bindLVarToVList (pdbg "lvsM.vsP" vsP) (pdbg "lvsM.cTgts" cTgts) $ pdbg "lvsM.bind" bind
-       mdbg "lvsM.bLVSR" $ bindLVarSubstRepl (pdbg "lvsM.esP" esP) (pdbg "lvsM.cLVTs" cLVTs) $ pdbg "lvsM.bind'" bind'
+  = do bind' <- bindLVarToVList vsP cTgts bind
+       bindLVarSubstRepl esP cLVTs bind'
   where
     cVars = map fst tsC ; cTgtL = map fst lvsC
     cTgts = (map StdVar cVars ++ map LstVar cTgtL)

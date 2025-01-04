@@ -29,14 +29,14 @@ module VarData ( VarMatchRole
                , isUnknownVar, isUnknownLVar, isUnknownGVar
                , gVarIsUnknownVar, gVarIsUnknownLVar
                , dEq, dvEq, dlEq, dgEq
-               , insideS                    -- member modulo During
-               , withinS                    -- subset modulo During
+               , insideS                    -- member modulo Dynamic
+               , withinS                    -- subset modulo Dynamic
                , subsumeS                   -- simplifies VarSets
                , subsumeL                   -- simplifies VarLists
                , subsumedS                  -- simplify, then withinS
-               , delS, delSl, delL          -- delete modulo During
-               , removeS, removeSl, removeL -- remove modulo During
-               , intsctS, intsctSl          -- intersection modulo During
+               , delS, delSl, delL          -- delete modulo Dynamic
+               , removeS, removeSl, removeL -- remove modulo Dynamic
+               , intsctS, intsctSl          -- intersection modulo Dynamic
                , KnownExpansion
                , expandKnown
                , genExpandToList
@@ -701,15 +701,14 @@ gVarIsUnknownLVar _   _            =  False
 \end{code}
 
 \newpage
-\section{Operations ``modulo \texttt{During}''}
+\section{Operations ``modulo \texttt{Dynamic}''}
 
 When matching variable lists and sets,
-we often need to do equality comparisons
-that ignore \texttt{During} subscript values.
+we often need to do equivalence comparisons
+that ignore differences between \h{Before}, \h{During}, and \h{After}:
 \begin{code}
 dEq :: VarWhen -> VarWhen -> Bool
-(During _) `dEq` (During _)  =  True
-vw1        `dEq` vw2         =  vw1 == vw2
+vw1 `dEq` vw2  =  (vw1 == vw2) || (isDynamic vw1 && isDynamic vw2)
 
 dvEq :: Variable -> Variable -> Bool
 (Vbl i1 vc1 vw1) `dvEq` (Vbl i2 vc2 vw2)
@@ -729,7 +728,7 @@ We need to various relations and operators
 to work with the above ``subscript-blind'' comparisons.
 
 
-\subsection{Membership/Subset Relation ``modulo \texttt{During}''}
+\subsection{Membership/Subset Relation ``modulo \texttt{Dynamic}''}
 
 \begin{code}
 insideS :: GenVar -> VarSet -> Bool
@@ -749,7 +748,7 @@ vl1 `withinL` vl2 -- for all v in vl1, v in vl2 (mod. During-subscripts)
  = all (insideL vl2) vl1
 \end{code}
 
-\subsection{Delete/Difference Operation ``modulo \texttt{During}''}
+\subsection{Delete/Difference Operation ``modulo \texttt{Dynamic}''}
 
 \begin{code}
 delS :: GenVar -> VarSet -> VarSet
@@ -770,7 +769,7 @@ removeL :: VarList -> VarList -> VarList
 vl1 `removeL` vl2 = deleteFirstsBy dgEq vl1 vl2
 \end{code}
 
-\subsection{Intersect Operation ``modulo \texttt{During}''}
+\subsection{Intersect Operation ``modulo \texttt{Dynamic}''}
 
 Note that order is important here.
 All the intersection values will come from the first argument.
@@ -785,7 +784,7 @@ intsctL :: VarList -> VarList -> VarList
 vl1 `intsctL` vl2 = intersectBy dgEq vl1 vl2
 \end{code}
 
-\subsection{Subsumption Check ``modulo \texttt{During}''}
+\subsection{Subsumption Check ``modulo \texttt{Dynamic}''}
 
 We also want to support the idea that a single general variable
 can be ``part'' of a single list variable.

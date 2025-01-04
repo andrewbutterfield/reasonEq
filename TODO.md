@@ -3,62 +3,7 @@
 ## URGENT
 
 
-What happens:
-
-```
-∃ s  • (a[s_1/s'] ∧ b[s_1/s])
- O$,O$'∉E1, O$,O$'∉E2, O$,O$'∉N1, O$,O$'∉N2, O$,O$'∉R1, O$,O$'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1
-XPNDD:
-ls,ls',s,s'∉E1, ls,ls',s,s'∉E2, ls,ls',s,s'∉N1, ls,ls',s,s'∉N2, ls,ls',s,s'∉R1, ls,ls',s,s'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1
-proof: tm 2 ;_def
-(∃ s  • a[s_1/s'] ∧ b[s_1/s]) :: (∃ O$_0  • P[O$_0/O$'] ∧ Q[O$_0/O$])
-
-lnm[parts]=;_def[2]
-tP=(P ; Q) ≡ (∃ O$_0  • P[O$_0/O$'] ∧ Q[O$_0/O$])
-partsP=(∃ O$_0  • P[O$_0/O$'] ∧ Q[O$_0/O$])
-replP=P ; Q
-tC=(∃ s  • a[s_1/s'] ∧ b[s_1/s])
-scC=ls,ls',s,s'∉E1, ls,ls',s,s'∉E2, ls,ls',s,s'∉N1, ls,ls',s,s'∉N2, ls,ls',s,s'∉R1, ls,ls',s,s'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1
----
-vsMatch: pattern list-var's binding not in candidate set.
-```
-
-What happens:
-
-```
-@lvsM.vsP: -- O$'
-LV (VR (Id "O" 0, VO, WA), [], [])
-@lvsM.bind: -- P -> a  ;  and -> and
-BD
-( { ( (Id "P" 0, VP)
-    , BV (VR (Id "a" 0, VP, WS)) )
-  , ( (Id "and" 0, VO)
-    , BV (VR (Id "and" 0, VO, WS)) ) }
-, {}
-, {} )
-@lvsM.cTgts: --  [s']
-[ GV (VR (Id "s" 0, VO, WA)) ]
-@lvsM.esP: --  O$'
-LV (VR (Id "O" 0, VO, WD "0"), [], [])
-@lvsM.bind': -- P -> a  ;  and -> and  ;  O$ -> s
-BD
-( { ( (Id "P" 0, VP)
-    , BV (VR (Id "a" 0, VP, WS)) )
-  , ( (Id "and" 0, VO)
-    , BV (VR (Id "and" 0, VO, WS)) ) }
-, {}
-, { ( (Id "O" 0, VO, [], [])
-    , BL
-      [ GV (VR (Id "s" 0, VO, WB)) ] ) } )
-@lvsM.cLVTs: -- s_1
-[ Right
-  (V T (VR (Id "s" 0, VO, WD "1"))) ]
-@lvsM.bLVSR: -- P -> a  ;  and -> and  ;  0 -> 1  ;  O$ -> s
-```
-
-The binding `P -> a  ;  and -> and  ;  0 -> 1  ;  O$ -> s` is correct. 
-
-**It looks like a lookup failure!**
+**modulo During should have been modulo Dynamic!**
 
 
 

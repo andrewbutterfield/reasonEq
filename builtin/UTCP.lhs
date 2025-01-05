@@ -322,6 +322,12 @@ and that our semantic predicates are closed under mumbling.
 
 We know that $\lst O = \setof{s,ls}$, and similarly  for $\lst O'$,
 but we also need to assert that $\setof{E,N,R} \disj \setof{\lst O,\lst O'}$.
+\textbf{Note:}
+\textsl{
+  We don't need to assert $E \disj \lst O$,
+  as we shuld be able to deduce this from the facts
+  that $E$ is a term-variable and $\lst O$ denotes a set of obs-variables.
+}
 We need to define some variables ($E$, $a$, $R$, $N$)
 \begin{code}
 vE = ExprVar (jId "E") Static ; tE = jVar ls_t vE ; gE = StdVar vE

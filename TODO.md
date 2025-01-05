@@ -21,9 +21,12 @@ expr=u /\ E(expr)  ===  expr=u /\ E(u)  ===?  E(u)
 ```
 
 TODO?
+
+Future improvement:  given `E` is an `ExprVar` and `O$` maps to `ObsV`,
+it should be obvious that `O$,O$' ∉ E`. No need for an explicit side-condition.
  
- 5. Allow user to toggle between which s.c. version is displayed
-    (currently both are)
+ Allow user to toggle between which s.c. version is displayed
+    (currently both are)?
 
 Need to be able to save proof from within a live proof.
 

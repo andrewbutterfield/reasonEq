@@ -2,13 +2,14 @@
 
 ## URGENT
 
+**Need useability improvements**
 
-**modulo During should have been modulo Dynamic!**
-
-
-
-**Set matches now succeed!**
-
+* better theory load/save support
+* better proof display settings:
+  * better setting command syntax
+  * finer control of proof-so-far display
+  * finer control of level of detail (e.g. don't show scTrue as T, leave blank)
+* add some form of archiving
 
 ## Next in Line
 

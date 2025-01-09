@@ -1,6 +1,19 @@
 # To Do
 
-## URGENT
+## URGENT or NEXT
+
+Ranking seems busted:
+
+```
+3 : “exists_def” [≡rhs]  (∃ x$  • P)               ⊤ ⟹ ⊤
+2 : “exists_def” [≡lhs]   ¬(¬(¬((∀ x$  • ¬P))))    ⊤ ⟹ ⊤
+1 : “not_def” [≡lhs]      (∀ x$  • ¬P) ≡ false     ⊤ ⟹ ⊤
+```
+
+**No - the ranking in use favours `[≡lhs]` over `[≡rhs]`**
+
+*We need to add a predicate in `Binding` that identifies if all list-variables in the domain of a binding are mapped to empty. Use this instead of `AST.onlyTrivialQuantifiers` in `Ranking`.*
+
 
 **Need useability improvements**
 
@@ -38,13 +51,6 @@ Trivial quantifiers are being shown even when disabled
 ls,ls',s,s'∉N2, s,s'⊇ₐa, s,s'⊇ₐb ⟹ ⊤
 ```
 
-Ranking seems busted:
-
-```
-3 : “exists_def” [≡rhs]  (∃ x$  • P)               ⊤ ⟹ ⊤
-2 : “exists_def” [≡lhs]   ¬(¬(¬((∀ x$  • ¬P))))    ⊤ ⟹ ⊤
-1 : “not_def” [≡lhs]      (∀ x$  • ¬P) ≡ false     ⊤ ⟹ ⊤
-```
 
 ## Parked for Now
 
@@ -76,6 +82,8 @@ so that syntax changes only affect those files, and not the settings.
 
 So proof settings should not be in `project.req`, for instance.
 Lets use `settings.req` instead.
+
+**Should proof settings should be per proof??**
 
 Proof settings command syntax is dreadful!
 Should be the same in main and proof REPLs

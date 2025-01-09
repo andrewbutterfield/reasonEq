@@ -30,6 +30,7 @@ module Binding
 , lookupLstBind
 , bindLVarsToNull, bindLVarsToEmpty
 , mappedVars
+, onlyTrivialListVarBindings
 , findUnboundVars, bindKnown
 , termLVarPairings, mkEquivClasses
 , mkFloatingBinding, bindFloating
@@ -1615,7 +1616,18 @@ allLVWhen whens (i,vc,is,ij)
   where lvbl is ij v = LVbl v is ij
 \end{code}
 
-\newpage
+\subsection{Are All Listvars bound to Null?}
+
+\begin{code}
+onlyTrivialListVarBindings :: Binding -> Bool
+onlyTrivialListVarBindings (BD (_,_,lbind))  
+  =  all onlyTrivialListVarBinding $ M.assocs lbind
+
+onlyTrivialListVarBinding (_,BL vl)   =  null vl
+onlyTrivialListVarBinding (_,BS vs)   =  S.null vs
+onlyTrivialListVarBinding (_,BX lvts) =  null lvts
+\end{code}
+
 \subsection{Finding Unbound Replacement Variables}
 
 \begin{code}

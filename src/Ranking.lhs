@@ -1,6 +1,6 @@
 \chapter{Term and Match Ranking}
 \begin{verbatim}
-Copyright  Andrew Butterfield (c) 2017--18
+Copyright  Andrew Butterfield (c) 2017--25
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -60,7 +60,6 @@ type OrderFunction ord = [MatchContext] -> Match -> ord
 type Ranking = [MatchContext] -> Matches -> Matches
 \end{code}
 
-\newpage
 \section{Ranking Match Lists}
 
 Simple sorting according to rank,
@@ -136,7 +135,7 @@ Often we do not want matches in which all pattern list-variables
 are mapped to empty sets and lists.
 \begin{code}
 nonTrivialQuantifiers :: FilterFunction
-nonTrivialQuantifiers _  =  not . onlyTrivialQuantifiers . mRepl
+nonTrivialQuantifiers _  =  not . onlyTrivialListVarBindings . mBind
 \end{code}
 
 \subsection{Accept Empty Substitutions}

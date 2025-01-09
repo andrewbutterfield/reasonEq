@@ -43,6 +43,12 @@ Andrew Butterfield
 \setcounter{tocdepth}{1}
 \tableofcontents
 
+\part{\reasonEq\ Application}
+\input{app/Main.lhs}
+
+
+
+
 % \input{src/HiddenTypeDictionary.tex}
 
 \part{\reasonEq\ Libraries}
@@ -52,9 +58,9 @@ Andrew Butterfield
 % \newpage\input{src/LexBase.lhs}
 % \newpage\input{src/Variables.lhs}
 % \newpage\input{src/AST.lhs}
-\newpage\input{src/SideCond.lhs}
+% \newpage\input{src/SideCond.lhs}
 % \newpage\input{src/FreeVars.lhs}
-% \newpage\input{src/VarData.lhs}
+% \newpage\input{src/Var/Data.lhs}
 % \newpage\input{src/Binding.lhs}
 % \newpage\input{src/Substitution.lhs}
 % \newpage\input{src/Assertions.lhs}
@@ -71,7 +77,7 @@ Andrew Butterfield
 % \newpage\input{src/Sequents.lhs}
 % \newpage\input{src/MatchContext.lhs}
 % \newpage\input{src/Typing.lhs}
-\newpage\input{src/LiveProofs.lhs}
+% \newpage\input{src/LiveProofs.lhs}
 % \newpage\input{src/REqState.lhs}
 % \newpage\input{src/Persistence.lhs}
 % \newpage\input{src/AbstractUI.lhs}
@@ -80,12 +86,11 @@ Andrew Butterfield
 % \newpage\input{src/Ranking.lhs}
 % \newpage\input{src/REPL.lhs}
 % \newpage\input{src/Dev.lhs}
+\newpage\input{src/ProverTUI.lhs}
+\newpage\input{src/TopTUI.lhs}
+\newpage\input{src/TopGUI.lhs}
 % \newpage\input{src/Syntax.lhs}
 % \newpage\input{src/Builder.lhs}
-
-% \part{\reasonEq\ Application}
-% \input{app/Main.lhs}
-
 
 
 \part{\reasonEq\ Built-in Theories}
@@ -99,12 +104,12 @@ Andrew Butterfield
 % \newpage\input{builtin/Conjunction.lhs}
 % \newpage\input{builtin/AndOrInvert.lhs}
 % \newpage\input{builtin/Implication.lhs}
+% \newpage\input{builtin/Equality.lhs}
 % \newpage\input{builtin/ForAll.lhs}
 % \newpage\input{builtin/Exists.lhs}
 % \newpage\input{builtin/UClose.lhs}
 % \newpage\input{builtin/LTL.lhs}
 
-% \newpage\input{builtin/Equality.lhs}
 % \newpage\input{builtin/Arithmetic.lhs}
 % \newpage\input{builtin/Sets.lhs}
 % \newpage\input{builtin/Lists.lhs}
@@ -136,7 +141,7 @@ Andrew Butterfield
 \appendix
 
 %\newpage\input{doc/LawClasses}
-\input{doc/Matching-Features}
-\input{doc/GenVar-Set-Theory.tex}
+% \input{doc/Matching-Features}
+% \input{doc/GenVar-Set-Theory.tex}
 
 \end{document}

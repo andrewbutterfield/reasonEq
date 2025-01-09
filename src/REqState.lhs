@@ -10,7 +10,7 @@ module REqState ( REqSettings(..)
                 , initREqSettings
                 , rEqSettingStrings, showSettingStrings, showSettings
                 , changeSettings
-                , REqState(..)
+                , REqState(..), reqstate0
                 , projectDir__, projectDir_
                 , modified__, modified_, changed
                 , theories__, theories_
@@ -297,6 +297,14 @@ currTheory__ f r = r{currTheory = f $ currTheory r}
 currTheory_      = currTheory__ . const
 liveProofs__ f r = r{liveProofs = f $ liveProofs r}
 liveProofs_      = liveProofs__ . const
+
+reqstate0 = REqState { inDevMode = False
+                     , projectDir = ""
+                     , modified = False
+                     , settings = initREqSettings
+                     , theories = noTheories
+                     , currTheory = ""
+                     , liveProofs = M.empty }
 \end{code}
 
 \newpage

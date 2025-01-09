@@ -44,41 +44,6 @@ Ranking seems busted:
 3 : “exists_def” [≡rhs]  (∃ x$  • P)               ⊤ ⟹ ⊤
 2 : “exists_def” [≡lhs]   ¬(¬(¬((∀ x$  • ¬P))))    ⊤ ⟹ ⊤
 1 : “not_def” [≡lhs]      (∀ x$  • ¬P) ≡ false     ⊤ ⟹ ⊤
-
-```
-
-The following laws in UTP base seem to match anything:
-
-```
-   6. ⊤  “II_def”           II ≡ (O$'=O$)  ⊤
-   8. ⊤  “bot_def”          ⊥ ≡ true  ⊤
-   9. ⊤  “top_def”          ⊤ ≡ false  ⊤
-```
-e.g.,
-
-```
-Matches:
-5 : “eqv_refl” true  ⊤ ⟹ ⊤ *
-4 : “II_def” (O$'=O$)  ⊤ ⟹ ⊤ trivial!1
-3 : “top_def” false  ⊤ ⟹ ⊤ trivial!1
-2 : “bot_def” true  ⊤ ⟹ ⊤ trivial!1
-1 : “exists_def” ¬¬((E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N ≡ (E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N)  ⊤ ⟹ ⊤ ≡lhs
-⊢
-(E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N ≡ (E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N    ⊤
-Focus = []
-```
-
-Example:
-
-```
-Proof for A_alt
-	A(E,a,N) ≡ (E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N  ⊤
-by red-All
-A(E,a,N) ≡ (E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N
-   = 'match-eqv-pvar(1) II_def@[]'
- ...
-⊢
-(O$'=O$)    ⊤
 ```
 
 ## Parked for Now

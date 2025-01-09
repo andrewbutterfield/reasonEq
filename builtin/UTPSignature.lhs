@@ -14,10 +14,10 @@ module UTPSignature (
 , i_while, while
 , listwiseVarBinPred
 , i_asg, (.:=), (.::=), simassign
-, i_skip, skip, g_skip
+, i_skip, v_skip, skip, g_skip
 , i_ndc, ndc
-, i_abort, abort
-, i_miracle, miracle
+, i_abort, v_abort, abort
+, i_miracle, v_miracle, miracle
 ) where
 
 import Data.Maybe
@@ -159,9 +159,11 @@ $$ \bot \qquad \top $$
 \begin{code}
 abort :: Term
 i_abort  =  jId "bot"
-abort    =  jVar p1 $ Vbl i_abort PredV Static
+v_abort  =  Vbl i_abort PredV Static
+abort    =  jVar p1 v_abort 
 
 miracle :: Term
 i_miracle  =  jId "top"
-miracle    =  jVar p1 $ Vbl i_miracle PredV Static
+v_miracle  =  Vbl i_miracle PredV Static
+miracle    =  jVar p1 v_miracle
 \end{code}

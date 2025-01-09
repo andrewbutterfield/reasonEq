@@ -635,7 +635,7 @@ $$
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
-skipIntro = mkConsIntro i_skip bool
+skipIntro = mkKnownVar v_skip bool
 (axSkipDef,alSkipDef) 
   = bookdef ("II" -.- "def") "Def2.3.2"
       ( skip  ===  Iter arbpred True land True equals [ lO', lO ] )
@@ -822,7 +822,7 @@ $$
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
-abortIntro = mkConsIntro i_abort bool
+abortIntro = mkKnownVar v_abort bool
 (axAbortDef,alAbortDef) = bookdef ("bot" -.- "def") "Def2.4.2"
                            ( abort  ===  trueP )
                            scTrue
@@ -841,7 +841,7 @@ $$
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
-miracleIntro = mkConsIntro i_miracle bool
+miracleIntro = mkKnownVar v_miracle bool
 (axMiracleDef,alMiracleDef) = bookdef ("top" -.- "def") "Def2.5.1"
                            ( miracle  ===  falseP )
                            scTrue

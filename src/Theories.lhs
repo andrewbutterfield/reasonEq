@@ -1,6 +1,6 @@
 \chapter{Theories}
 \begin{verbatim}
-Copyright (c) Andrew Buttefield 2018-22
+Copyright (c) Andrew Butterfield 2018-22
               Saqib Zardari     2023
 
 LICENSE: BSD3, see file LICENSE at reasonEq root

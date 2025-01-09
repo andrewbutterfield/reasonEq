@@ -1,6 +1,6 @@
 \chapter{Term and Match Ranking}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2017--18
+Copyright  Andrew Butterfield (c) 2017--18
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

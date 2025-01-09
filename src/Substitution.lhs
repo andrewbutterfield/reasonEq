@@ -1,6 +1,6 @@
 \chapter{Substitution}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2019-24
+Copyright  Andrew Butterfield (c) 2019-24
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

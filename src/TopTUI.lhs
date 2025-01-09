@@ -1,8 +1,8 @@
 \chapter{Top-level TUI}
 \begin{verbatim}
-Copyright (c) Andrew Buttefield 2017--24
-              Saqid Zardari     2023
-              Aaron Bruce       2023
+Copyright (c) Andrew Butterfield 2017--25
+              Saqid Zardari      2023
+              Aaron Bruce        2023
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

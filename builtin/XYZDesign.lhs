@@ -1,6 +1,6 @@
 \section{XYZ Design Theory}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2019
+Copyright  Andrew Butterfield (c) 2019
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

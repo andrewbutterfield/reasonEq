@@ -1,6 +1,6 @@
 module FreeVarTest ( tst_FreeVar )
 {-
-Copyright  Andrew Buttefield (c) 2017-21
+Copyright  Andrew Butterfield (c) 2017-21
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 -}

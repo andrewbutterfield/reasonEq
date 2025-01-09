@@ -1,6 +1,6 @@
 \section{Stratified DAGs}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2018-2022
+Copyright  Andrew Butterfield (c) 2018-2022
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

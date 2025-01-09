@@ -1,6 +1,6 @@
 \section{Test Parsing}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2018-22
+Copyright  Andrew Butterfield (c) 2018-22
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

@@ -1,7 +1,7 @@
 \section{SAT Solver}
 \begin{verbatim}
 Copyright (c) Aaron Bruce       2023 
-              Andrew Buttefield 2023
+              Andrew Butterfield 2023
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

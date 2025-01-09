@@ -1,6 +1,6 @@
 \chapter{Standard Type Signature}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2018--2019
+Copyright  Andrew Butterfield (c) 2018--2019
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

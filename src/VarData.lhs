@@ -1,6 +1,6 @@
 \chapter{Variable Data}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2017-24
+Copyright  Andrew Butterfield (c) 2017-24
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

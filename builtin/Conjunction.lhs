@@ -1,6 +1,6 @@
 \section{Propositional Theorems (Conjunction)}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2018
+Copyright  Andrew Butterfield (c) 2018
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

@@ -1,6 +1,6 @@
 \chapter{Assertions}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2021-22
+Copyright  Andrew Butterfield (c) 2021-22
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

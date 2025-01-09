@@ -1,6 +1,6 @@
 \chapter{Abstract User-Interface}
 \begin{verbatim}
-Copyright (c) Andrew Buttefield 2017--2024
+Copyright (c) Andrew Butterfield 2017--2024
               Saqib Zardari     2023
               Aaron Bruce       2023
 

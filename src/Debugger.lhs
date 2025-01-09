@@ -1,6 +1,6 @@
 \section{Debug Support}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 20232
+Copyright  Andrew Butterfield (c) 20232
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

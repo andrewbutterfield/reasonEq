@@ -1,6 +1,6 @@
 \chapter{Program Identity}
 \begin{verbatim}
-Copyright (c) Andrew Buttefield 2025
+Copyright (c) Andrew Butterfield 2025
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

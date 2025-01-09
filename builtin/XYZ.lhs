@@ -1,6 +1,6 @@
 \section{XYZ Theory}
 \begin{verbatim}
-Copyright  Andrew Buttefield, Danny Thomas (c) 2019
+Copyright  Andrew Butterfield, Danny Thomas (c) 2019
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

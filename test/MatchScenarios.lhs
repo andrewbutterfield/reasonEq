@@ -1,6 +1,6 @@
 \section{Match Scenarios}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2017
+Copyright  Andrew Butterfield (c) 2017
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

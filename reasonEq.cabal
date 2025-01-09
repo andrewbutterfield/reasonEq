@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           reasonEq
-version:        0.9.0.0
+version:        0.9.1.0
 description:    Please see README.md here
 author:         Andrew Butterfield
 maintainer:     Andrew.Butterfield@scss.tcd.ie
@@ -37,7 +37,9 @@ library
       Matching
       NotApplicable
       Persistence
+      ProgramIdentity
       Proofs
+      ProverTUI
       Ranking
       REPL
       REqState
@@ -52,6 +54,8 @@ library
       TestParsing
       TestRendering
       Theories
+      TopGUI
+      TopTUI
       Typing
       UnivSets
       Utilities

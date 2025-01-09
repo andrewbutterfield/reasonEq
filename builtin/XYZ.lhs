@@ -141,8 +141,8 @@ qfs = LstVar lvfs
 $$ P[e/x] \qquad P[\lst e/\lst x]$$
 \begin{code}
 -- note that [ a / v]  becomes (v,a) !
-psub var expr pred = Sub pred1 pred $ fromJust $substn [(var,expr)] []
-esub var expr1 expr2 = Sub ArbType expr2 $ fromJust $substn [(var,expr1)] []
+psub var expr pred = Sub pred1 pred $ fromJust $ substn [(var,expr)] []
+esub var expr1 expr2 = Sub ArbType expr2 $ fromJust $ substn [(var,expr1)] []
 sub_x_by_e p = psub vx e p
 sub_xs_by_es p = Sub pred1 p $ fromJust $ substn [] [(lvxs,lves)]
 lvxs = LVbl vx [] []
@@ -164,7 +164,7 @@ xyzKnown  =   fromJust $ addKnownVar vx  int
             $ fromJust $ addKnownVar vx' int
             $ fromJust $ addKnownVar vy' int
             $ fromJust $ addKnownVar vz' int
-            $ newVarTable
+            $ newNamedVarTable xyzName
 \end{code}
 
 \newpage
@@ -400,7 +400,7 @@ hypSubSwap = preddef
            ( psub vx e (psub vy f p)
              ===
              psub vx e (psub vy f p) )
-           ( fromJust ( mrgSideCond []
+           ( fromJust ( mrgSideCond
                           ([StdVar vx] `notin` StdVar vf)
                           ([StdVar vy] `notin` StdVar ve) ) )
 \end{code}

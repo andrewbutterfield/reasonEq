@@ -58,7 +58,8 @@ sub p = Sub pred1 p $ fromJust $ substn [] [(lvxs,lves)]
 
 \begin{code}
 impKnown :: VarTable
-impKnown =  fromJust $ addKnownVar v_imp boolf_2 $ newVarTable
+impKnown =  fromJust $ addKnownVar v_imp boolf_2 
+                     $ newNamedVarTable implName
 \end{code}
 
 
@@ -410,6 +411,22 @@ cjImpSubst
            , sub ( p ==> q) === sub p ==> sub q )
 \end{code}
 
+This last conjecture is not a theorem,
+but is a launchpad to explore implications involving two conjunctions:
+
+\begin{eqnarray*}
+  P \land Q &\implies& R \land S
+\end{eqnarray*}
+
+\vspace{-8pt}
+\begin{code}
+cjConjImpConj
+ = propdef ( "conj" -.- "imp" -.- "conj"
+           , ( p /\ q) ==> (r /\ s) )
+\end{code}
+
+
+
 
 
 Pulling them all together:
@@ -425,6 +442,7 @@ implConjs
     , cjAnteOrDistr, cjAnteAndDistr, cjCnsqOrDistr, cjCnsqAndDistr
     , cjAnteAsImp
     , cjImpSubst
+    , cjConjImpConj
     ]
 \end{code}
 

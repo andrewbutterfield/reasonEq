@@ -67,7 +67,8 @@ sub e = Sub ArbType e $ fromJust $ substn [] [(lvxs,lves)]
 
 \begin{code}
 eqKnown :: VarTable
-eqKnown =  fromJust $ addKnownVar v_eq boolf_2 $ newVarTable
+eqKnown =  fromJust $ addKnownVar v_eq boolf_2 
+                    $ newNamedVarTable equalityName
 \end{code}
 
 

@@ -6,6 +6,8 @@
 
 \def\h#1{{\color{purple}{\texttt{#1}}}}
 
+\def\m#1{\ensuremath{\color{blue}{#1}}}
+
 % basic types
 \def\Bool{\mathbb{B}}
 \def\True{True}
@@ -50,6 +52,7 @@
 \def\maplet#1#2{{#1}\mapsto{#2}}
 \def\override{\oplus}
 \def\inv#1{\mathit{inv-}{#1}}
+\def\rel{\mathop{\mathcal{R}}}
 
 % variables, terms
 \def\isdyn{\mathsf{isdyn}}
@@ -59,11 +62,16 @@
 \def\fresh{\mathop{\mathsf{fresh\!\!:}}}
 \def\ispre{\mathop{\mathsf{pre\!\!:}}}
 \def\scvarexp{\mathrel{\mathsf{scvarexp}}}
-\def\ascsvarexp{\mathrel{\mathsf{ascsvarexp}}}
+\def\vscsvarexp{\mathrel{\mathsf{vscsvarexp}}}
 \def\scdiffexp{\mathrel{\mathsf{scdiffexp}}}
 \def\xlbr{(\!|}
 \def\xrbr{|\!)}
 
+\def\prv#1{{}^{{\scriptscriptstyle<}}{#1}}
+\def\psv#1{{#1}^{{\scriptscriptstyle>}}}
+\def\dyn#1{\hat{#1}}
+
+\def\G#1{\mathsf G~#1} \def\gg#1{\mathsf{#1}}
 \def\K#1{\mathsf K~#1} \def\kk#1{\mathsf{#1}}
 \def\V#1{\mathsf V~#1} \def\vv#1{\textit{\textsf{#1}}}
 \def\C#1#2{\mathsf C~#1~#2} \def\cc#1#2{{#1}({#2})}

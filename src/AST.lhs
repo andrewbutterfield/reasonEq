@@ -13,11 +13,11 @@ module AST ( Type
            , pattern AlgType, pattern FunType, pattern GivenType
            , pattern BottomType
            , isPType, isEType
-           , isSubTypeOf
+           , isSubTypeOf, reconcile2Types, reconcileTypes
            , Value, pattern Boolean, pattern Integer
-           , TermSub, LVarSub
+           , TermSub, TermSubs, LVarSub, LVarSubs
            , Substn, pattern Substn, substn, substnxx
-           , pattern TermSub, pattern LVarSub
+           , pattern TermSubs, pattern LVarSubs
            , setVTWhen, setLVLVWhen
            , subVarLookup, subLVarLookup, isNullSubstn, subTargets
            , Term, Subable, readTerm
@@ -29,6 +29,7 @@ module AST ( Type
            , lam,  eLam,  pLam
            , binderClass
            , termtype, settype
+           , join2Types, joinTypes
            , isVar, isExpr, isPred, isAtomic
            , theVar, theGVar, varAsTerm, termAsVar
            , icomma, lvarCons
@@ -36,6 +37,7 @@ module AST ( Type
            , assignVar, isAssignVar, theAssignment, isAssignment
            , subTerms
            , mentionedVars, mentionedVarLists, mentionedVarSets
+           , onlyTrivialQuantifiers, anyTrivialSubstitution
            , termSize
            -- test only below here
            , int_tst_AST
@@ -74,6 +76,29 @@ Types are a restrictive form of terms,
 whose main reason here is to prevent large numbers of spurious matches
 occurring with expressions.
 
+We have the following type expressions:
+\begin{description}
+  \item [Arbitrary] $\top$, most general, or \emph{universal} (a.k.a. ``top'').
+  \item [Variables] $n$.
+  \item [Constructors] $n(\tau,\dots)$.
+  \item [Algebraic] $n\seqof{n(\tau,\dots)}$, can be recursive.
+  \item [Given] $\gg g$.
+  \item [Bottom] $\bot$, the empty type.
+\end{description}
+
+
+\begin{eqnarray*}
+   t,TC,DT,DC &\in& Name
+\\ \tau \in Type &::=& \top 
+                  \mid t 
+                  \mid TC(\tau,\dots)
+                  \mid DT\seqof{DC(\tau,\dots)}
+                  \mid \tau\fun\tau
+                  \mid \gg g 
+                  \mid \bot
+\end{eqnarray*}
+
+
 \begin{code}
 data Type -- most general types first
  = T  -- arbitrary type -- top of sub-type relation
@@ -92,7 +117,7 @@ isAtmType (TG _)  =  True
 isAtmType TB      =  True
 \end{code}
 The ordering of data-constructors here is important,
-as type-matching relies on it.
+as type-matching relies on it. \textbf{How?}
 
 
 \begin{code}
@@ -105,7 +130,7 @@ pattern GivenType i = TG i
 pattern BottomType = TB
 
 bool  = TG $ jId $ "B"
-arbpred = TF TB bool
+arbpred = TF TB bool -- top of the predicate subtype lattice (see below)
 
 -- isPtype t if t has shape  t1 -> t2 -> ... -> tn -> bool
 -- which is really t1 -> (t2 -> (... -> (tn -> bool)...))
@@ -119,55 +144,86 @@ isEType           =  not . isPType
 
 \subsection{Sub-Typing}
 
-We want a pattern of type $\bot \fun \Bool$
-to match a candidate of type $t \fun (\Set t \fun \Bool)$.
-We might try asking is the candidate a subtype of the pattern?
-$$ t \fun (\Set t \fun \Bool)  \subseteq \bot \fun \Bool$$
-However a simple contravariant test won't work.
-as it as it requires:
-$$ \bot \subseteq t 
-   \quad\land\quad
-   (\Set t \fun \Bool)  \subseteq \Bool
+We say that $\tau_1$ is a subtype of $\tau_2$ ($\tau_1\subseteq_T\tau_2$)
+if every value in $\tau_1$ is also in $\tau_2$.
+This means we can use a value of type $\tau_1$ whenever a value of type $\tau_2$ is expected.
+We can immediately identify the following laws:
+\begin{eqnarray*}
+   \tau &\subseteq_T& \top
+\\ t_1 &\subseteq_T& t_2 ~~\where~~ t_1=t_2
+\\ TC(\tau_1,\dots,\tau_n) 
+   &\subseteq_T& 
+   TC(\tau'_1,\dots,\tau'_n) ~~\where~~ \forall i . \tau_i \subseteq_T \tau'_i, 
+\\ DT(\seqof{TC_1(\dots),\dots,TC_n(\dots)})
+   &\subseteq_T& 
+   DT(\seqof{TC_1(\dots'),\dots,TC_n(\dots'),\dots}) 
+\\ && \where~~ \forall i . TC_i(\dots) \subseteq_T TC_i(\dots') 
+\\ \tau_{a_1} \fun \tau_{r_1} &\subseteq_T& \tau_{a_2} \fun \tau_{r_2}
+   ~~\where~~ \tau_{a_2} \subseteq_T \tau_{a_1} 
+            \land
+            \tau_{r_1} \subseteq_T \tau_{r_2}
+\\ \gg{g}   &\subseteq_T& t
+\\ \gg{g}_1 &\subseteq_T& \gg{g}_2 ~~\where~~ \gg{g}_1=\gg{g}_2
+\\ \bot &\subseteq_T& \tau
+\end{eqnarray*}
+Note that $t$, $TC()$, and $DT\seqof{}$ are mutually incomparable,
+and also the contravariance of the function argument types.
+Given a mix of type-variables and given-types,
+we assume the latter are subtypes of the former for now
+(\textsl{~this hopefully won't interact too badly with type-inference~}!)
+The contravariance extends to higher-order functions as follows:
 $$
-The first test always succeeds, but the second does not in this case.
-What we want is that any function-type whose "last" input is boolean,
-can match a pattern of type $\bot \fun \Bool$.
-We can generalise $\Bool$ to be any type.
-
-So, given a function $\bot \fun t$ we define "sub-typing" as follows:
+\sigma_1 \fun \dots \sigma_{n-1} \fun \sigma_n
+~\subseteq_T~
+\tau_1 \fun \dots \tau_{n-1} \fun \tau_n
 $$
-t_1 \fun t_2 \fun \dots \fun t_n \fun t'
-\subseteq
-\bot \fun t, \qquad \IF \quad t' \subseteq t
+is equivalent to:
 $$
-Here neither $t$ nor $t'$ are function types.
-
-
+ \tau_1 \subseteq_T \sigma_1 
+ ~\land~
+ \dots
+ ~\land~
+ \tau_{n-1} \subseteq_T \sigma_{n-1}
+ ~\land~
+ \sigma_n \subseteq_T \tau_n
+$$
+In the type system here, an expression of type bool,
+has its type represented by $\Bool$,
+while predicates have a type of the form $t1\fun \dots tn \fun \Bool$.
+For subtyping below these should be treated as the same,
+so we extend our relation by adding:
+\begin{eqnarray*}
+   \Bool &\subseteq_T& \bot\fun\Bool
+\\ \tau \fun \Bool &\subseteq_T& \bot\fun\Bool
+\\ \tau_1 \fun \tau_2 \fun \Bool &\subseteq_T& \bot\fun\Bool
+\\  &\vdots
+\end{eqnarray*}
 \begin{code}
+
+
+
 isSubTypeOf :: Type -> Type -> Bool
-isSubTypeOf (TF tf1 ta1) (TF TB ta2)   =  lasttype ta1 `isSTOf` ta2
-isSubTypeOf t1           t2            =  t1 `isSTOf` t2
+isSubTypeOf t1 t2
+  | lasttype t1 == bool && t2 == arbpred  =  True
+  | otherwise                             =  t1 `isSTOf` t2
 
 isSTOf :: Type -> Type -> Bool
--- normal subtyping
--- true outcomes first, to catch x==x case
-
-_       `isSTOf` T        =  True
-T       `isSTOf` _        =  False
-TB      `isSTOf` _        =  True
-_       `isSTOf` TB       =  False
-
-_       `isSTOf` (TV _)   =  True
-(TG i1) `isSTOf` (TG i2)  =  i1 == i2
-
-(TC i1 ts1) `isSTOf` (TC i2 ts2) | i1==i2 = ts1 `areSTOf` ts2
-(TA i1 fs1) `isSTOf` (TA i2 fs2) | i1==i2 = fs1 `areSFOf` fs2
-
+-- true outcomes first, to catch t==t case
+_            `isSTOf` T        =  True
+T            `isSTOf` _        =  False
+TB           `isSTOf` _        =  True
+_            `isSTOf` TB       =  False
+(TV i1)      `isSTOf` (TV i2)  =  i1 == i2
+(TG _)       `isSTOf` (TV _)   =  True
+(TG i1)      `isSTOf` (TG i2)  =  i1 == i2
+(TC i1 ts1)  `isSTOf` (TC i2 ts2) | i1==i2 = ts1 `areSTOf` ts2
+(TA i1 fs1)  `isSTOf` (TA i2 fs2) | i1==i2 = fs1 `areSFOf` fs2
 (TF tf1 ta1) `isSTOf` (TF tf2 ta2)  
-                             =  tf2 `isSTOf` tf1 && ta1 `isSTOf` ta2
-
-_ `isSTOf` _       = False
+                               =  tf2 `isSTOf` tf1 && ta1 `isSTOf` ta2
+_            `isSTOf` _        = False
 \end{code}
+\textbf{NOTE: }
+\textsl{What if $t_1$ is a type-variable $t$ while $t_2$ is a given type $\mathbb{G}$?}
 
 
 \begin{code}
@@ -182,9 +238,23 @@ _        `areSTOf` _         =  False
 areSFOf :: [(Identifier,[Type])] -> [(Identifier,[Type])] -> Bool
 [] `areSFOf` []  =  True
 ((i1,ts1):fs1) `areSFOf` ((i2,ts2):fs2)
- | i1 == i2             =  ts1 `areSTOf` ts2 && fs1 `areSFOf` fs2
+ | i1 == i2      =  ts1 `areSTOf` ts2 && fs1 `areSFOf` fs2
 _ `areSFOf` _    =  False
 \end{code}
+
+We also need to reconcile a pair of types, 
+returning a type that is at least as general as both.
+\begin{code}
+reconcile2Types :: Type -> Type -> Type
+reconcile2Types t1 t2 
+  |  t1 `isSubTypeOf` t2  =  t2
+  |  t2 `isSubTypeOf` t1  =  t1
+  |  otherwise            =  T
+
+reconcileTypes :: [Type] -> Type
+reconcileTypes = foldl reconcile2Types TB
+\end{code}
+This is a course-grained approximation, but adequate for most purposes.
 
 \newpage
 \section{Substitutions}
@@ -195,25 +265,28 @@ We also want to allow list-variables of the appropriate kind
 to occur for things, but only when the target variable is also
 a list variable.
 \begin{code}
-type TermSub = Set (Variable,Term) -- target variable, then replacememt term
-type LVarSub = Set (ListVar,ListVar) -- target list-variable, then replacement l.v.
+type TermSub  = (Variable,Term) -- target, then replacememt 
+type TermSubs = Set TermSub
+type LVarSub  = (ListVar,ListVar) -- target, then replacement
+type LVarSubs = Set LVarSub
 data Substn --  pair-sets below are unique in fst part
-  = SN TermSub LVarSub
+  = SN TermSubs LVarSubs
   deriving (Eq,Ord,Show,Read)
 \end{code}
+\textbf{ADD EXPLICIT UNIFORMITY INDICATOR TO \h{Substn} ?}
 
 Patterns:
 \begin{code}
 pattern Substn ts lvs  <-  SN ts lvs
-pattern TermSub ts     <-  SN ts _
-pattern LVarSub lvs    <-  SN _  lvs
+pattern TermSubs ts     <-  SN ts _
+pattern LVarSubs lvs    <-  SN _  lvs
 \end{code}
 
 Builders: we have two variants, one (\verb"substn"), the most generally useful, 
 removes trivial substitutions ($[x/x]$),
 while another (\verb"substnxx"), for special situations, retains them.
 \begin{code}
-substn :: (Monad m, MonadFail m) => [(Variable,Term)] -> [(ListVar,ListVar)]
+substn :: MonadFail m => [(Variable,Term)] -> [(ListVar,ListVar)]
        -> m Substn
 substn ts lvs
  | null ts && null lvs  =  return $ SN S.empty S.empty
@@ -224,12 +297,12 @@ substn ts lvs
   ts'  = filter nontrivial     $ sort ts
   lvs' = filter (uncurry (/=)) $ sort lvs
 
-substnxx :: (Monad m, MonadFail m) => [(Variable,Term)] -> [(ListVar,ListVar)]
+substnxx :: MonadFail m => [(Variable,Term)] -> [(ListVar,ListVar)]
        -> m Substn
 substnxx ts lvs
  | null ts && null lvs  =  return $ SN S.empty S.empty
- | dupKeys ts           =  fail "Term substitution has duplicate variables."
- | dupKeys lvs          =  fail "List-var subst. has duplicate variables."
+ | dupKeys $ sort ts    =  fail "Term substitution has duplicate variables."
+ | dupKeys $ sort lvs   =  fail "List-var subst. has duplicate variables."
  | otherwise            =  return $ SN (S.fromList ts) (S.fromList lvs)
 
 nontrivial :: (Variable,Term) -> Bool
@@ -292,17 +365,17 @@ lve = ExprLVar Before (i_e) [] []
 lvf = ExprLVar Before (i_f) [] []
 
 lvs_ord_unq = [(lva,lvf),(lvb,lve)]
-test_substn_lvs_id = testCase "LVarSub ordered, unique"
+test_substn_lvs_id = testCase "LVarSubs ordered, unique"
  ( substn [] lvs_ord_unq  @?= Just (SN S.empty (S.fromList lvs_ord_unq)) )
 
 lvs_unord_unq = [(lvb,lve),(lva,lvf)]
 
-test_substn_lvs_sort = testCase "LVarSub unordered, unique"
+test_substn_lvs_sort = testCase "LVarSubs unordered, unique"
  ( substn [] lvs_unord_unq  @?= Just (SN S.empty (S.fromList lvs_ord_unq)) )
 
 lvs_unord_dup = [(lva,lva),(lvb,lve),(lva,lvf)]
 
-test_substn_lvs_dup = testCase "LVarSub with duplicates"
+test_substn_lvs_dup = testCase "LVarSubs with duplicates"
  ( substn [] lvs_unord_dup  @?= Nothing )
 
 substnTests = testGroup "AST.substn"
@@ -461,10 +534,10 @@ pattern Var  typ v                <-  V typ v
 pattern Cons typ sb n ts          =   C typ sb n ts
 pattern Bnd  typ n vs tm          <-  B typ n vs tm
 pattern Lam  typ n vl tm          <-  L typ n vl tm
-pattern Cls     n    tm          =   X n tm
-pattern Sub  typ tm s             =   S typ tm s
+pattern Cls      n    tm          =   X n tm
+pattern Sub  typ      tm s        =   S typ tm s
 pattern Iter typ sa na si ni lvs  =   I typ sa na si ni lvs
-pattern Typ  typ                 =   ET typ
+pattern Typ  typ                  =   ET typ
 \end{code}
 
 
@@ -473,7 +546,7 @@ Smart constructors for variables and binders.
 
 Variable must match term-class.
 \begin{code}
-var :: (Monad m, MonadFail m) => Type -> Variable -> m Term
+var :: MonadFail m => Type -> Variable -> m Term
 var tp@(TF _ t) v | t == bool && isPredVar v  =  return $ V tp v
 var typ       v   | not $ isPredVar v         =  return $ V typ v
 var _       _   =   fail "var: Type/VarClass mismatch"
@@ -519,14 +592,13 @@ uniformVarList (gv:vl) = uvl (whatGVar gv) vl
 
 It will also be good to enquire the class of a binder:
 \begin{code}
-binderClass :: (Monad m, MonadFail m) => Term -> m VarClass
+binderClass :: MonadFail m => Term -> m VarClass
 binderClass (L _ _ (gv:_) _)  =  return $ whatGVar gv
 binderClass (B _ _ gvs    _)  =  return $ whatGVar $ S.elemAt 0 gvs
 binderClass _ = fail "binderClass: not a binding term."
 \end{code}
 
-
-It can help to test if a term is an variable, expression or predicate:
+Ways to interrogate and modify types will be helpful:
 \begin{code}
 termtype :: Term -> Type
 termtype (Val typ k)                 =  typ
@@ -548,6 +620,16 @@ settype typ (Sub _ tm s)              =  (Sub typ tm s)
 settype typ (Iter _ sa na si ni lvs)  =  (Iter typ sa na si ni lvs)
 settype _ t                          =  t
 
+-- NEEDED TO BUILD EXPRESSIONS
+join2Types :: Term -> Term -> Type
+join2Types t1 t2 = reconcile2Types (termtype t1) (termtype t2)
+
+joinTypes :: [Term] -> Type
+joinTypes = reconcileTypes . map termtype
+\end{code}
+
+It can help to test if a term is an variable, expression or predicate:
+\begin{code}
 isVar, isExpr, isPred, isAtomic :: Term -> Bool
 isVar (Var _ _) = True ; isVar _ = False
 isExpr t
@@ -578,7 +660,7 @@ varAsTerm v                =  V T v
 
 Dropping a term (safely) to a variable:
 \begin{code}
-termAsVar :: (Monad m, MonadFail m) => Term -> m Variable
+termAsVar :: MonadFail m => Term -> m Variable
 termAsVar (V _ v) = return v
 termAsVar t = fail ("termAsVar: not a variable - "++show t)
 \end{code}
@@ -717,6 +799,39 @@ subTerms t@(S _ t' (SN tsub _))
 subTerms t               =  [t]
 -- t = head $ subTerms t !!
 \end{code}
+
+\subsection{Trivial Quantifiers}
+
+A quantifier match is trivial if all its list-variables
+are bound to empty sets or lists.
+
+
+\begin{code}
+onlyTrivialQuantifiers :: Term -> Bool
+onlyTrivialQuantifiers term = all trivialQuantifier $ subTerms term
+
+trivialQuantifier :: Term -> Bool
+trivialQuantifier (B _ _ vs _)  =  S.null vs
+trivialQuantifier (L _ _ vl _)  =    null vl
+trivialQuantifier _ = False
+\end{code}
+
+
+\subsection{Trivial Substitution}
+
+A substitution is trivial if both its substitution lists are null.
+
+\begin{code}
+anyTrivialSubstitution :: Term -> Bool
+anyTrivialSubstitution term = any trivialSubst $ subTerms term
+
+trivialSubst :: Term -> Bool
+trivialSubst (S _ _ (SN ts lvs))  =  S.null ts && S.null lvs
+trivialSubst _                    =  False
+\end{code}
+
+
+
 
 \subsection{(General) Variables}
 

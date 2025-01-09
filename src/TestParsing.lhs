@@ -320,7 +320,7 @@ falseP = fromJust $ pVar ArbType false
 \subsubsection{Top level term parser}
 
 \begin{code}
-sTermParse :: (Monad m, MonadFail m) => Type -> [TToken] -> m (Term, [TToken])
+sTermParse :: MonadFail m => Type -> [TToken] -> m (Term, [TToken])
 sTermParse tk [] =  fail "sTermParse: nothing to parse"
 
 sTermParse tk (TNum n:tts)
@@ -380,9 +380,9 @@ sAppParse' tk id1 smretbus tts
 
 Handy specialisations:
 \begin{code}
-sExprParse :: (Monad m, MonadFail m) => String -> m (Term, [TToken])
+sExprParse :: MonadFail m => String -> m (Term, [TToken])
 sExprParse = sTermParse ArbType . tlex
-sPredParse :: (Monad m, MonadFail m) => String -> m (Term, [TToken])
+sPredParse :: MonadFail m => String -> m (Term, [TToken])
 sPredParse = sTermParse arbpred . tlex
 \end{code}
 

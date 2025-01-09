@@ -58,7 +58,7 @@ type SDAG a       =  [SDAGLevel a]
 \subsection{SDAG Lookup}
 
 \begin{code}
-lkpSDAG :: (Eq a, Monad m, MonadFail m) => a -> SDAG a -> m [a]
+lkpSDAG :: (Eq a, MonadFail m) => a -> SDAG a -> m [a]
 lkpSDAG _ [] = fail "not found"
 lkpSDAG n (lvl:lvls) = lkpSDAG' n lvls lvl
 
@@ -103,7 +103,7 @@ mrg res@(nPresent,_,_) f  =  if nPresent then res else f res
 \subsubsection{Insertion}
 
 \begin{code}
-insSDAG :: (Eq a, Show a, Monad m, MonadFail m)
+insSDAG :: (Eq a, Show a, MonadFail m)
         => String -> String -> a -> [a] -> SDAG a
         -> m (SDAG a)
 insSDAG domain range n ns sdag

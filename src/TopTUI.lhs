@@ -1,0 +1,657 @@
+\chapter{Top-level TUI}
+\begin{verbatim}
+Copyright (c) Andrew Buttefield 2017--24
+              Saqid Zardari     2023
+              Aaron Bruce       2023
+
+LICENSE: BSD3, see file LICENSE at reasonEq root
+\end{verbatim}
+\begin{code}
+module TopTUI where
+
+import System.Environment
+import System.IO
+import System.FilePath
+import System.Directory
+import System.Exit
+import Data.Map (Map)
+import qualified Data.Map as M
+import Data.Set (Set)
+import qualified Data.Set as S
+import Data.List
+import Data.Maybe
+import Data.Char
+
+import Symbols hiding (help)
+
+import YesBut
+import Utilities
+import StratifiedDAG
+import Persistence
+
+import ProgramIdentity
+import LexBase
+import Variables
+import AST
+import VarData
+import Binding
+import Typing
+import SideCond
+import Assertions
+import Ranking
+import REqState
+import AbstractUI
+import UTPSignature
+import Instantiate
+import TestRendering
+import TestParsing
+import REPL
+import Dev
+import SAT
+import Classifier
+import LiveProofs
+import ProverTUI
+
+import Debugger
+\end{code}
+
+
+\newpage
+\section{Top-Level REPL Definitions}
+
+We define our reasonEq REPL types first:
+\begin{code}
+type REqCmd       =  REPLCmd      REqState
+type REqCmdDescr  =  REPLCmdDescr REqState
+type REqExit      =  REPLExit     REqState
+type REqCommands  =  REPLCommands REqState
+type REqConfig    =  REPLConfig   REqState
+\end{code}
+
+Now we work down through the configuration components.
+\begin{code}
+reqPrompt :: Bool -> REqState -> String
+reqPrompt _ reqs = devMk ++ takeBaseName (projectDir reqs)++ "."
+                         ++ currTheory reqs
+                         ++ chgd ++ "> "
+ where
+   chgd = if modified reqs then "*" else ""
+   devMk = if inDevMode reqs then "\x1f6e0 " else ""
+
+reqEOFreplacmement = [nquit]
+
+reqParser = wordParse
+
+reqQuitCmds = [nquit] ; nquit = "quit"
+
+reqQuit :: REqExit
+reqQuit _ reqs
+ | inDevMode reqs  =  byeBye
+ | modified  reqs  =  saveAndGo reqs
+ | otherwise       =  byeBye
+ where
+   saveAndGo reqs
+    = do putStrLn ("Changes made, saving ....")
+         writeAllState reqs
+         byeBye
+   byeBye = putStrLn "\nGoodbye!\n" >> return (True, reqs)
+
+reqHelpCmds = ["?","help"]
+
+reqCommands :: REqCommands
+reqCommands = [ cmdShow, cmdSet, cmdNew
+              , cmdNewProof, cmdRet2Proof
+              , cmdSave, cmdLoad
+              , cmdSaveConj, cmdLoadConj
+              , cmdAssume, cmdDemote
+              , cmdBuiltin
+              , cmdClassify ]
+
+-- we don't use these features in the top-level REPL
+reqEndCondition _ = False
+reqEndTidy _ reqs = return reqs
+\end{code}
+
+\newpage
+
+The configuration:
+\begin{code}
+reqConfig
+  = REPLC reqPrompt reqEOFreplacmement reqParser
+          reqQuitCmds reqQuit reqHelpCmds
+          reqCommands
+          reqEndCondition reqEndTidy
+\end{code}
+
+Running the REPL:
+\begin{code}
+tui :: REqState -> IO ()
+tui reqs0
+  = do runREPL reqWelcome reqConfig reqs0
+       return ()
+
+reqWelcome = unlines
+ [ "Welcome to the "++progName++" "++progVersion++" TUI"
+ , "Type '?' for help."
+ ]
+\end{code}
+
+
+\newpage
+\section{Show Command }
+\begin{code}
+cmdShow :: REqCmdDescr
+cmdShow
+  = ( shName
+    , "show parts of the prover state"
+    , unlines
+        [ shName++" "++shWork++" -- show workspace info"
+        , shName++" "++shSettings++" -- show settings"
+        , shName++" "++shSig++" -- show logic signature"
+        , shName++" "++shTheories++" -- show theories"
+        , shName++" "++shLaws++" -- show laws"
+        , shName++" "++shLaws++" -u -- show variable uniqueness"
+        , shName++" "++shKnown++" -- show known names"
+        , shName++" "++shCurrThry++" -- show 'current' theory"
+        , shName++" "++shConj++" -- show current conjectures"
+        , shName++" "++shConj++" -u -- show variable uniqueness"
+        , shName++" "++shLivePrf++" -- show current (live) proof"
+        , shName++" "++shProofs++" -- show completed theory proofs"
+        , shName++" "++shProofs++" * -- show all completed proofs"
+        , shName++" "++shProofs++" <nm> -- show proof transcript for <nm>"
+        ]
+    , showState )
+
+shName = "sh"
+shWork = "w"
+shSettings = "X"
+shSig = "s"
+shTheories = "t"
+shLaws = "L"
+shKnown = "k"
+shCurrThry = "T"
+shConj = "c"
+shLivePrf = "p"
+shProofs = "P"
+
+-- these are not robust enough - need to check if component is present.
+showState (cmd:args) reqs
+ | cmd == shProofs    =  doshow reqs $ observeCompleteProofs args reqs
+ | cmd == shWork      =  showWorkspaces args reqs
+ | cmd == shSig       =  doshow reqs $ observeSig reqs
+ | cmd == shTheories  =  doshow reqs $ observeTheories reqs
+ | cmd == shLaws      =  doshow reqs $ observeLaws reqs args
+ | cmd == shKnown     =  doshow reqs $ observeKnowns reqs args
+ | cmd == shCurrThry  =  doshow reqs $ observeCurrTheory reqs
+ | cmd == shConj      =  doshow reqs $ observeCurrConj reqs args
+ | cmd == shLivePrf   =  doshow reqs $ observeLiveProofs reqs
+ | cmd == shSettings  =  doshow reqs $ observeSettings reqs
+showState _ reqs      =  doshow reqs "unknown/unimplemented 'show' option."
+
+doshow :: REqState -> String -> IO REqState
+doshow reqs str  =  putStrLn str >> return reqs
+
+
+showWorkspaces :: [String] -> REqState -> IO REqState
+showWorkspaces args reqs
+  = do (appFP,projects) <- getWorkspaces progName
+       putStrLn ("Application Data:\n\t"++appFP)
+       putStrLn ("Project Folders:\n"++unlines (map (('\t':) . thd3) projects))
+       return reqs
+\end{code}
+
+\newpage
+\section{State Save and Restore}
+
+We save and load theories by default,
+but can also handle smaller objects such as axioms, conjetures, and proofs.
+\begin{code}
+prfObj = "prf"
+\end{code}
+
+
+\begin{code}
+cmdSave :: REqCmdDescr
+cmdSave
+  = ( "save"
+    , "save prover state to file"
+    , unlines
+        [ "save          -- save all prover state to current workspace"
+        , "save .        -- save current theory to current workspace"
+        , "save <thry>   -- save theory <thry> to current workspace"
+        , "save " ++ prfObj
+                  ++" <proof>  -- save proof <proof> to current workspace"
+        , "To come:"
+        , "save cnj <conj>  -- save conjecture <cnj> to current workspace"
+        , "save ax <axiom>  -- save axiom <axiom> to current workspace"
+        ]
+    , saveState )
+
+saveState [] reqs = writeAllState reqs
+saveState [nm] reqs
+  = let nm' = if nm == "." then (currTheory reqs) else nm
+    in
+    case getTheory nm' $ theories reqs of
+      Nothing
+       -> do putStrLn ("No such theory: '"++nm'++"'")
+             return reqs
+      Just thry
+       -> do writeNamedTheory (projectDir reqs) (nm',thry)
+             return reqs
+saveState [what,nm] reqs
+  | what == prfObj  
+      = case ( getTheory (currTheory reqs) (theories reqs) 
+               >>= find (pnm nm) . proofs
+             ) of
+          Nothing 
+            ->  do  putStrLn ("No such proof: '"++nm++"'")
+                    return reqs
+          Just prf 
+            ->  do  writeProof reqs nm prf
+                    putStrLn ("Proof '"++nm++"' saved")
+                    return reqs
+  where pnm nm (pn,_,_,_) = nm == pn
+saveState _ reqs  =  doshow reqs "unknown 'save' option."
+\end{code}
+
+\newpage
+
+\begin{code}
+cmdLoad :: REqCmdDescr
+cmdLoad
+  = ( "load"
+    , "load prover state from file"
+    , unlines
+
+        [ "load -- load prover state from current workspace"
+        , "load <thry> -- load theory <thry> from current workspace"
+        , "            -- warns if it modifies an existing theory"
+        , "load " ++ prfObj 
+                  ++ " <proof>  -- load proof <proof> to current workspace"
+        , "To come:"
+        , "load cnj <conj>  -- load conjecture <cnj> to current workspace"
+        , "load ax <axiom>  -- load axiom <axiom> to current workspace"
+        ]
+    , loadState )
+
+loadState [] reqs
+  = do let dirfp = projectDir reqs
+       reqs' <- readAllState reqs dirfp
+       return reqs'{ inDevMode = inDevMode reqs}
+loadState [nm] reqs
+  = do let dirfp = projectDir reqs
+       (ok,old,theories') <- readNamedTheory (theories reqs) dirfp nm
+       if ok
+        then ( if old
+               then do putStr "keep change? (y/N)? "
+                       hFlush stdout
+                       response <- fmap trim $ getLine
+                       if take 1 response == "y"
+                       then return $ changed $ theories_ theories' reqs
+                       else return reqs
+               else return $ changed $ theories_ theories' reqs )
+        else return reqs
+       
+loadState [what,nm] reqs
+  | what == prfObj
+    = do result <- readProof dirfp nm
+         case result of
+           Nothing -> return reqs
+           Just prf -> do putStrLn ("Loaded:\n"++show prf++"\n Not Yet Stored")
+                          return reqs
+  where dirfp = projectDir reqs
+
+-- addTheoryProof :: String -> Proof -> Theories -> Theories
+-- addTheoryProof thname prf thrys
+
+loadState _ reqs  =  doshow reqs "unknown 'load' option."
+\end{code}
+
+\newpage
+\section{Conjecture Management}
+
+\begin{code}
+cmdSaveConj :: REqCmdDescr
+cmdSaveConj
+  = ( "svc"
+    , "save conjectures"
+    , unlines
+        [ "svc -- save all laws in current theory as conjectures"
+        ]
+    , saveConjectures )
+
+saveConjectures _ reqs
+  = case getTheory (currTheory reqs) $ theories reqs of
+      Nothing
+       -> do putStrLn ("Can't find current theory!!!\BEL")
+             return reqs
+      Just thry
+       -> do let lawConjs = map lawNamedAssn (laws thry)
+             let allConjs = lawConjs ++ conjs thry
+             writeConjectures reqs (thName thry) allConjs
+             return reqs
+\end{code}
+
+\begin{code}
+cmdLoadConj :: REqCmdDescr
+cmdLoadConj
+  = ( "ldc"
+    , "load conjectures"
+    , unlines
+        [ "ldc <nm> -- display conjectures in <nm>.cnj "
+        , "         -- proper loading to be implemented later, as needed."
+        ]
+    , displayConjectures )
+
+displayConjectures [nm] reqs
+  = do savedConjs <- readFiledConjectures (projectDir reqs) nm
+       putStrLn $ unlines' $ map (trNmdAsn) savedConjs
+       return reqs
+displayConjectures _ reqs  =  doshow reqs "unknown 'ldc' option."
+\end{code}
+
+\section{Classify Command}
+\begin{code}
+cmdClassify :: REqCmdDescr
+cmdClassify
+  = ( "classify"
+    , "activate classifier"
+    , unlines 
+       [ "classify n - classify law 'n'"
+       , "classify . - classify all current theory laws"
+       , "classify * - classify all dependency theory laws"
+       ]
+    , doClassify)
+
+doClassify args reqs
+  =  case classifyLaw (currTheory reqs) lwnm reqs of
+         But lns     ->  doshow reqs  (unlines' lns)
+         Yes reqs'   ->  doshow reqs' ("Classify " ++ lwnm)
+ where lwnm = args2str args
+
+\end{code}
+
+\newpage
+\section{Set Command}
+\begin{code}
+cmdSet :: REqCmdDescr
+cmdSet
+  = ( "set"
+    , "set parts of the prover state"
+    , unlines
+        ( [ "set "++setCurrThry++" 'name' -- set current theory to 'name'"
+          , "set "++setSettings++" 'setting' 'value' -- set setting=value"
+          ]
+          ++ map (("      "++) .showSettingStrings) rEqSettingStrings
+          ++ ["  e.g. set X mmd 42"]
+        )
+    , setState )
+
+setCurrThry = shCurrThry
+setSettings = shSettings
+
+setState (cmd:rest) reqs
+ | cmd == setCurrThry
+    =  case setCurrentTheory nm reqs of
+         But msgs   ->  doshow reqs $ unlines' msgs
+         Yes reqs'  ->  doshow reqs' ("Current Theory now '" ++ nm ++ "'")
+ | cmd == setSettings
+    =  case modifySettings rest reqs of
+         But msgs    ->  doshow reqs $ unlines' msgs
+         Yes reqs'  ->  doshow reqs' ("Settings updated")
+ where nm = args2str rest
+setState _ reqs      =  doshow reqs "unknown/unimplemented 'set' option."
+\end{code}
+
+\section{New Command}
+\begin{code}
+cmdNew :: REqCmdDescr
+cmdNew
+  = ( "new"
+    , "generate new prover items"
+    , unlines
+        ( [ "new "++shWork++" nm /absdirpath -- new workspace"
+          , "       -- do not use '~' or environment variables"
+          , "new "++shConj++" 'np1' .. 'npk' -- new conjecture 'np1-..-npk'"
+          ] ++ s_syntax )
+    , newThing )
+
+newThing cmdargs@[cmd,nm,fp] reqs
+ | cmd == shWork = newWorkspace nm fp reqs
+newThing (cmd:rest) reqs
+ | cmd == shConj = newConj rest reqs
+newThing _ reqs      =  doshow reqs "unknown 'new' option."
+\end{code}
+
+\newpage
+
+New WorkSpace:
+\begin{code}
+newWorkspace wsName wsPath reqs
+  = if '~' `elem` wsPath || '$' `elem` wsPath || take 1 wsPath /= "/"
+    then doshow reqs $ unlines'
+           [ "Absolute path required"
+           , "Cannot use '~' or environment variables" ]
+    else do  putStrLn ("Creating workspace '"++wsName++"' at "++wsPath++"/")
+             let newReqs = projectDir_ wsPath reqstate0
+             createWorkspace wsName newReqs
+             (usfp,wss) <- getWorkspaces progName
+             putWorkspaces progName ((False,wsName,wsPath):wss)
+             putStrLn ("New workspace recorded at "++usfp)
+             return reqs
+\end{code}
+
+\newpage
+
+New Conjecture:
+\begin{code}
+newConj args reqs
+  = do  let cjnm = mkLawName args
+        let prompt = unlines' s_syntax 
+                     ++ "New conj, '"++cjnm++"', enter term :- "
+        let preview = trTerm 0
+        (ok,term) <- getConfirmedObject prompt parse preview
+        if ok
+          then 
+            do  asn' <- mkAsn term scTrue
+                case newConjecture 
+                      (currTheory reqs) (cjnm,asn') reqs of
+                  But msgs  -> doshow reqs (unlines' msgs)
+                  Yes reqs' -> 
+                    do putStrLn ("Conjecture '"++cjnm++"' installed")
+                       return reqs'
+          else return reqs
+
+  where
+    parse txt =
+      case sPredParse txt of
+        But msgs      ->  But msgs
+        Yes (term,_)  ->  Yes term
+\end{code}
+                  
+
+\newpage
+\section{Faking It}
+
+Simply assuming conjectures as laws:
+\begin{code}
+cmdAssume :: REqCmdDescr
+cmdAssume
+  = ( "Assume"
+    , "assume conjecture as law"
+    , unlines
+       [ "Assume name - assume conjecture 'name'"
+       , "Assume lo hi - assume conjectures numbered lo,..,hi (incl.)"
+       , "Assume . - assume all current theory conjectures"
+       , "Assume * - assume all dependency theory conjectures"
+       ]
+    , doAssumption )
+
+doAssumption args reqs
+  =  case assumeConjecture (currTheory reqs) args reqs of
+         But lns     ->  doshow reqs  (unlines' lns)
+         Yes reqs'  ->  doshow reqs' ("Assumed " ++ args2str args)
+\end{code}
+
+
+Reverting proven or assumed laws back to conjectures.
+\begin{code}
+cmdDemote :: REqCmdDescr
+cmdDemote
+  = ( "Demote"
+    , "demote law to conjectures"
+    , unlines
+       [ "Demote n - demote law 'n'"
+       , "Demote [] - demote all current theory proven laws"
+       , "Demote * - demote all current theory assumed laws"
+       ]
+    , doDemotion )
+
+doDemotion args reqs
+  =  case demoteLaw (currTheory reqs) lwnm reqs of
+         But lns     ->  doshow reqs  (unlines' lns)
+         Yes reqs'  ->  doshow reqs' ("Demoted " ++ lwnm)
+ where lwnm = args2str args
+\end{code}
+
+
+\newpage
+\section{Proof Access Commands}
+
+\subsection{New Proof} 
+
+\begin{code}
+cmdNewProof :: REqCmdDescr
+cmdNewProof
+  = ( "N"
+    , "new proof"
+    , unlines
+       [ "N i - start new proof for a conjecture."
+       , "i : conjecture number"
+       ]
+    , doNewProof )
+
+doNewProof args reqs
+  = case newProof1 (args2int args) reqs of
+     Nothing -> do putStrLn "invalid conjecture number"
+                   return reqs
+     Just (nconj@(nm,_),strats)
+      -> do putStrLn ("Selected conjecture: "++nm)
+            putStrLn "Select proof strategy:"
+            putStrLn $ numberList presentSeq $ strats
+            putStr "Select sequent by number: "
+            hFlush stdout
+            choice <- getLine
+            case newProof2 nconj strats (readNat choice) reqs of
+             Nothing -> doshow reqs "Invalid strategy no"
+             Just liveProof -> proofREPL reqs liveProof
+\end{code}
+
+\newpage
+\subsection{Return to Live Proof}
+
+\begin{code}
+cmdRet2Proof :: REqCmdDescr
+cmdRet2Proof
+  = ( "r"
+    , "return to live proof"
+    , unlines
+       [ "r i - return to a live proof."
+       , "i : optional live proof number"
+       , "    - if more than one."
+       ]
+    , doBack2Proof )
+
+doBack2Proof args reqs
+  = case resumeProof (args2int args) reqs of
+      Nothing -> do putStrLn "Can't find requested live proof"
+                    return reqs
+      Just liveProof -> proofREPL reqs liveProof
+\end{code}
+
+Presenting a sequent for choosing:
+\begin{code}
+presentSeq (str,seq)
+  = "'" ++ str ++ "':  "
+    ++ presentHyp (hyp seq)
+    ++ trTerm 0 (cleft seq)
+    ++ strdir str
+    ++ trTerm 0 (cright seq)
+  where
+    
+presentHyp hthy
+  | null hstring  = ""
+  | otherwise =  hstring ++ "  " ++ _vdash ++ "    "
+  where
+    hstring  = intercalate "," 
+               $ map (trTerm 0 . assnT . snd . fst) 
+               $ laws hthy
+
+strdir str
+  | str == reduceBoth  =  "  --> ? <--  "
+  | otherwise          =  "     -->     "
+\end{code}
+
+\newpage
+\section{Development Commands}
+
+\subsection{Builtin Theory Handling}
+
+\begin{code}
+cmdBuiltin :: REqCmdDescr
+cmdBuiltin
+  = ( "b"
+    , "builtin theory handling"
+    , unlines
+        [ "b "++binExists++" -- list all existing builtin theories"
+        , "b "++binInstalled++" -- list all installed theories"
+        , "b "++binInstall++" <name> -- install builtin theory <name>"
+        , "    -- fails if theory already installed"
+        , "b "++binReset++" <name> -- reset builtin theory <name>"
+        , "    -- replaces already installed theory by builtin version"
+        , "                               (a.k.a. 'factory setting')"
+        , "b "++binUpdate++" <name> -- update builtin theory <name>"
+        , "    -- adds in new material from builtin version"
+        , "    -- asks user regarding revisions to existing material"
+        , "b "++binUForce++" <name> -- force-update builtin theory <name>"
+        , "    -- adds in new and revised material from builtin version"
+        , "    -- does not ask user to confirm revisions"
+        ]
+    , buildIn )
+
+binExists = "e" ; binInstalled = "i" ; binInstall = "I"
+binReset = "R" ; binUpdate = "U" ; binUForce = "F"
+
+buildIn (cmd:_) reqs
+ | cmd == binExists
+    =  doshow reqs (devListAllBuiltins ++ '\n':devBIRemind)
+ | cmd == binInstalled
+   = doshow reqs $ observeTheoryNames reqs
+
+buildIn (cmd:nm:_) reqs
+ | cmd == binInstall
+   = do (outcome,reqs') <- devInstallBuiltin reqs nm
+        case outcome of
+          Just msg -> doshow reqs msg
+          Nothing -> return reqs'
+
+ | cmd == binReset
+   = do (outcome,reqs') <- devResetBuiltin reqs nm
+        case outcome of
+          Just msg -> doshow reqs msg
+          Nothing -> return reqs'
+
+ | cmd == binUpdate
+   = do (outcome,reqs') <- devUpdateBuiltin reqs nm False
+        case outcome of
+          Just msg -> doshow reqs msg
+          Nothing -> return reqs'
+
+ | cmd == binUForce
+   = do (outcome,reqs') <- devUpdateBuiltin reqs nm True
+        case outcome of
+          Just msg -> doshow reqs msg
+          Nothing -> return reqs'
+
+buildIn _ reqs = doshow reqs "unrecognised 'b' option"
+\end{code}

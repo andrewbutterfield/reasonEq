@@ -252,7 +252,7 @@ as a (typically short) non-empty sequence of basic components.
 \begin{code}
 newtype SimpleForm = SF [BasicComp] deriving (Eq,Ord,Show,Read)
 pattern SimpleForm bs <- SF bs
-simpleform :: (Monad m, MonadFail m) => [BasicComp] -> m SimpleForm
+simpleform :: MonadFail m => [BasicComp] -> m SimpleForm
 simpleform []  =  fail "Syntax.simpleform: empty basic-comp list."
 simpleform bs  =  return $ SF bs
 \end{code}
@@ -491,7 +491,7 @@ We define six constructor functions, that check arguments.
 
 \subsubsection{Closed-Mixfix Concrete Form}
 \begin{code}
-closedMixfix :: (Monad m, MonadFail m) => FormSpec -> [Token] -> m ConcreteForm
+closedMixfix :: MonadFail m => FormSpec -> [Token] -> m ConcreteForm
 closedMixfix (IterateSpec _ _) _
  = fail "Syntax.closedMixfix: not compatible with the iteration form."
 closedMixfix fs@(SimpleSpec (SimpleForm sf)) toks
@@ -534,7 +534,7 @@ closedMixfixTests
 \newpage
 \subsubsection{Delimited Container (Open) Concrete Form}
 \begin{code}
-delimContOpen :: (Monad m, MonadFail m) => FormSpec
+delimContOpen :: MonadFail m => FormSpec
               -> [Token] -> Token -> Token -> Token
               -> m ConcreteForm
 delimContOpen (IterateSpec _ _) _ _ _ _
@@ -576,7 +576,7 @@ delimContOpenTests
 \newpage
 \subsubsection{Delimited Container (Closed) Concrete Form}
 \begin{code}
-delimContClosed :: (Monad m, MonadFail m) => FormSpec
+delimContClosed :: MonadFail m => FormSpec
                 -> [Token] -> Token -> Token -> Token
                 -> m ConcreteForm
 delimContClosed (IterateSpec _ _) _ _ _ _
@@ -618,7 +618,7 @@ delimContClosedTests
 \newpage
 \subsubsection{Name Application Concrete Form}
 \begin{code}
-nameApplication :: (Monad m, MonadFail m) => FormSpec
+nameApplication :: MonadFail m => FormSpec
                 -> Token -> Token -> Token -> Token
                 -> m ConcreteForm
 nameApplication fs nm ldelim sep rdelim
@@ -646,7 +646,7 @@ nameApplTests
 \newpage
 \subsubsection{Open Fixed Concrete Form}
 \begin{code}
-openFixed :: (Monad m, MonadFail m) => FormSpec -> [Token] -> m ConcreteForm
+openFixed :: MonadFail m => FormSpec -> [Token] -> m ConcreteForm
 openFixed (IterateSpec _ _) _
  = fail "Syntax.openFixed: not compatible with the iteration form."
 openFixed fs@(SimpleSpec (SimpleForm sf)) toks
@@ -683,7 +683,7 @@ openFixedTests
 \newpage
 \subsubsection{Open Iterated Concrete Form}
 \begin{code}
-openIterated :: (Monad m, MonadFail m) => FormSpec -> Token -> m ConcreteForm
+openIterated :: MonadFail m => FormSpec -> Token -> m ConcreteForm
 openIterated (SimpleSpec _) _
  = fail "Syntax.openIterated: not compatible with the simple form."
 openIterated fs@(IterateSpec _ _) tok

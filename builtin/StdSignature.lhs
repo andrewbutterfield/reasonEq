@@ -7,8 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module StdSignature (
-  mkKnownVar, mkConsVar, mkConsIntro
-, trueP
+  trueP
 , falseP
 , equiv, mkEquiv, mkEquivs, (===)
 , lnot, mkNot
@@ -18,7 +17,7 @@ module StdSignature (
 , equals, isEqualTo, areEqualTo
 , propdef
 , flattenEquiv
-, forall, exists, univ, sat
+, forAll, exists, univ, sat
 , preddef, mkNmdAsn
 ) where
 
@@ -96,19 +95,6 @@ The propositional constants, along with key propositional operators
 are also exported in a logical signature,
 as they have significance for proof strategies.
 
-Constructor names, if required to be known,
-should be declared as known static observation variables.
-
-\begin{code}
-mkKnownVar :: Variable -> Type -> VarTable -> VarTable
-mkKnownVar v t  = fromJust . addKnownVar v t
-
-mkConsVar ::  Identifier -> Type -> Variable
-mkConsVar i t = Vbl i ObsV Static
-
-mkConsIntro :: Identifier -> Type -> VarTable -> VarTable
-mkConsIntro i t = mkKnownVar (mkConsVar i t) t
-\end{code}
 
 \subsection{Propositional Variables}
 
@@ -178,7 +164,7 @@ propdef ( name, prop ) = ( name, fromJust $ mkAsn prop scTrue )
 
 \begin{code}
 forallId = jId "forall"
-forall vl p = fromJust $ pBnd forallId (S.fromList vl) p
+forAll vl p = fromJust $ pBnd forallId (S.fromList vl) p
 
 existsId = jId "exists"
 exists vl p = fromJust $ pBnd existsId (S.fromList vl) p

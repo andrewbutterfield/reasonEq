@@ -1,4 +1,4 @@
-\section{Proof Support}
+\chapter{Proof Support}
 \begin{verbatim}
 Copyright (c) Andrew Buttefield 2018--2021
               Aaron Bruce       2023
@@ -39,7 +39,7 @@ import Debugger
 We consider a proof as being a transcript of the steps taken
 to get from an initial goal to a final succesful outcome.
 
-\subsection{Proof Structure}
+\section{Proof Structure}
 
 \emph{On notation: } we shall use lower-case letters $p,q,r,h,c,a$ to denote predicate
 terms of arbitrary form,
@@ -142,7 +142,7 @@ means that the tables describing known variables need to be
 linked to specific collections of laws.
 
 \newpage
-\subsection{Proof Calculations}
+\section{Proof Calculations}
 
 We will represent proofs as
 a straight calculation from the starting assertion
@@ -229,7 +229,7 @@ a goal (sub-)term:
 \end{description}
 In both cases the match binding is used to build the replacement term.
 
-\subsubsection{Partial Matching}
+\subsection{Partial Matching}
 
 Given a sub-term and a law-term
 there may a number of different ways in which we can match
@@ -446,7 +446,7 @@ labelAsProven nasn (prfnm,_,_,_) =  (nasn, Proven prfnm)
 \end{code}
 
 \newpage
-\subsection{Showing Proofs}
+\section{Showing Proofs}
 
 \textbf{This should all be done via proper generic rendering code}
 

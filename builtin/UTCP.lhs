@@ -209,8 +209,8 @@ Label-set handling:
 
 \begin{eqnarray*}
    s, s' &:& \mathcal S
-\\ ls, ls' &:& \mathcal P (R)
-\\ g &:& G           \qquad \textbf{(also }g':G\textbf{ ?)}
+\\ ls, ls' &:& \mathcal P (LExpr)
+\\ g &:&  GExpr         \qquad \textbf{(also }g':G\textbf{ ?)}
 \\ in,out &:& LExpr  \qquad \textbf{(also }in',out':LExpr\textbf{ ?)}
 \\ \lst O &=& \setof{s,ls}
 \end{eqnarray*}
@@ -239,8 +239,12 @@ iout  = jId "out"
 vout =  Vbl iout ObsV Static
 out_t = lexpr_t
 obs_out_Intro  = mkKnownVar vout lexpr_t
-o = jId "O"  ;  vO = PreVar o
-obsIntro = fromJust . addKnownVarSet vO (S.fromList $ map StdVar [vs,vls])
+o = jId "O"  
+vO  = PreVar o  ; lO  = LVbl vO [] []  ; gO  = LstVar lO
+vO' = PostVar o ; lO' = LVbl vO' [] [] ; gO' = LstVar lO'
+dynAlf = [gO,gO']
+stAlf  = map StdVar [vin,vg,vout]
+obsIntro = fromJust . addKnownVarList vO (map StdVar [vs,vls])
 \end{code}
 
 
@@ -255,7 +259,7 @@ and noting that these do \emph{not} mention $r$
 \\ P ; Q
    &~\defs~&
    \exists s_m,ls_m \bullet P[s_m,ls_m/s',ls'] \land Q[s_m,ls_m/s,ls]
-   \lref{defn-$;$}
+   & \lref{defn-$;$}
 \\ c * P
    &=&
    P ; c * P \cond c \Skip & \lref{unfold-loop}
@@ -316,52 +320,82 @@ and that our semantic predicates are closed under mumbling.
 
 \subsubsection{Basic Definitions}
 
+We know that $\lst O = \setof{s,ls}$, and similarly  for $\lst O'$,
+but we also need to assert that $\setof{E,N,R} \disj \setof{\lst O,\lst O'}$.
+\textbf{Note:}
+\textsl{
+  We don't need to assert $E \disj \lst O$,
+  as we shuld be able to deduce this from the facts
+  that $E$ is a term-variable and $\lst O$ denotes a set of obs-variables.
+}
+We need to define some variables ($E$, $a$, $R$, $N$)
+\begin{code}
+vE = ExprVar (jId "E") Static ; tE = jVar ls_t vE ; gE = StdVar vE
+vN = ExprVar (jId "N") Static ; tN = jVar ls_t vN ; gN = StdVar vN
+vR = ExprVar (jId "R") Static ; tR = jVar ls_t vR
+va = Vbl (jId "a") PredV Static ; a = fromJust $ pVar ArbType va 
+tls = jVar ls_t vls
+tls' = jVar ls_t vls'
+eNotObs = [gO,gO'] `notin` gE
+nNotObs = [gO,gO'] `notin` gN
+eNO = [gE] `notin` gO  -- but this is really gE notin fv(gO), gO is listvar
+nNO = [gN] `notin` gO  -- but this is really gN notin fv(gO), gO is listvar
+\end{code}
+We also need the fact that the alphabet of $a$ is limited
+to $\setof{s,s'}$:
+\begin{code}
+isUTCPAtomic  :: GenVar -> SideCond
+isUTCPAtomic  gc  = [StdVar vs,StdVar vs'] `dyncover` gc
+areUTCPAtomic :: [GenVar] -> SideCond
+areUTCPAtomic gcs = mrgscs $ map isUTCPAtomic gcs
+\end{code}
+
 \RLEQNS{
    X(E|a|R|N)
-   &~\defs~&
-   ls(E) \land a \land ls'=(ls\setminus R)\cup N & \lref{defn-$X$}
-\\ A(E|a|N)
-   &\defs&
-   X(E|a|E|N) & \lref{defn-$A$}
+   ~\defs~
+   ls(E) \land a \land ls'=(ls\setminus R)\cup N 
+   & \setof{E,N,R} \disj \setof{\lst O,\lst O'}
+     ;
+     \setof{s,s'} \supseteq_a \setof{a}
+   & \lref{defn-$X$}
 }
 \begin{code}
--- X(E|a|R|A)
 xact :: Term -> Term -> Term -> Term -> Term
 i_xact = jId "X"
 xact e act r a = Cons arbpred False i_xact [e,act,r,a]
 xactIntro = mkConsIntro i_xact bool
--- A(E|a|N)
+xactSC = isUTCPAtomic  (StdVar va) .: areUTPStcObs (map StdVar [vE,vR,vN])
+axXDef = ( "X" -.- "def"
+         , ( (xact tE a tR tN)
+             ===
+             ((tE `subseteq` tls) /\ a) /\
+             (tls' `isEqualTo` ((tls `sdiff` tR) `sunion` tN))
+           , xactSC ) )
+\end{code}
+
+\RLEQNS{
+   A(E|a|N)
+   ~\defs~
+   X(E|a|E|N) 
+   & \setof{E,N} \disj \setof{\lst O,\lst O'}
+     ;
+     \setof{s,s'} \supseteq_a \setof{a}
+   & \lref{defn-$A$}
+}
+\begin{code}
 i_aact = jId "A"
 aact e act n = Cons arbpred False i_aact [e,act,n]
 aactIntro = mkConsIntro i_aact bool
-\end{code}
-
-We need to define some variables ($E$, $a$, $R$, $N$)
-\begin{code}
-vE = jVar ls_t $ ExprVar (jId "E") Static
-vR = jVar ls_t $ ExprVar (jId "R") Static
-vN = jVar ls_t $ ExprVar (jId "N") Static
-va = Vbl (jId "a") PredV Static 
-a = fromJust $ pVar ArbType va ; ga = StdVar va
-tls = jVar ls_t vls
-tls' = jVar ls_t vls'
--- X(E|a|R|N)
-axXDef = ( "X" -.- "def"
-         , ( (xact vE a vR vN)
-             ===
-             ((vE `subseteq` tls) /\ a) /\
-             (tls' `isEqualTo` ((tls `sdiff` vR) `sunion` vN))
-           , scTrue ) ) 
--- A(E|a|N)
+aactSC = isUTCPAtomic  (StdVar va) .: areUTPStcObs (map StdVar [vE,vN] )
 axADef = ( "A" -.- "def"
-         , ( (aact vE a vN) === (xact vE a vE vN)
-           , scTrue ) )
+         , ( (aact tE a tN) === (xact tE a tE tN)
+           , aactSC ) )
 cjAAlt = ( "A" -.- "alt"
-         , ( (aact vE a vN)
+         , ( (aact tE a tN)
              ===
-             ((vE `subseteq` tls) /\ a) /\
-             (tls' `isEqualTo` ((tls `sdiff` vE) `sunion` vN))
-           , scTrue ) )
+             ((tE `subseteq` tls) /\ a) /\
+             (tls' `isEqualTo` ((tls `sdiff` tE) `sunion` tN))
+           , aactSC ) ) 
 \end{code}
 
 \newpage
@@ -379,26 +413,32 @@ of $X$-actions:
        \mid R_1 \cup R_2
        \mid (N_1 \sminus R_2) \cup  N_2)
        & \lref{$X$-$X$-comp}
+\\ && \lst O,\lst O' \supseteq_a a,b
+      \qquad
+      \lst O,\lst O' \disj E_1,R_1,N_1,E_2,R_2,N_2
 }
 \begin{code}
-vE1 = jVar ls_t $ ExprVar (jId "E1") Static
-vE2 = jVar ls_t $ ExprVar (jId "E2") Static
-vb = Vbl (jId "b") PredV Static ; b = fromJust $ pVar ArbType vb ; gb = StdVar vb
-vR1 = jVar ls_t $ ExprVar (jId "R1") Static
-vR2 = jVar ls_t $ ExprVar (jId "R2") Static
-vN1 = jVar ls_t $ ExprVar (jId "N1") Static
-vN2 = jVar ls_t $ ExprVar (jId "N2") Static
+vb = Vbl (jId "b") PredV Static ; b = fromJust $ pVar ArbType vb
+vE1 = ExprVar (jId "E1") Static ; sE1 = jVar ls_t vE1
+vE2 = ExprVar (jId "E2") Static ; sE2 = jVar ls_t vE2
+vR1 = ExprVar (jId "R1") Static ; sR1 = jVar ls_t vR1
+vR2 = ExprVar (jId "R2") Static ; sR2 = jVar ls_t vR2
+vN1 = ExprVar (jId "N1") Static ; sN1 = jVar ls_t vN1
+vN2 = ExprVar (jId "N2") Static ; sN2 = jVar ls_t vN2
 cjXXComp = ( "X" -.- "X" -.- "comp"
-           , ( mkSeq (xact vE1 a vR1 vN1) (xact vE2 b vR2 vN2)
+           , ( mkSeq (xact sE1 a sR1 sN1) (xact sE2 b sR2 sN2)
                ===
-               (vE2 `sunion` (vR1 `sdiff` vN1) `isEqualTo` mtset)
+               (sE2 `sunion` (sR1 `sdiff` sN1) `isEqualTo` mtset)
                /\
                (xact 
-                 (vE1 `sunion` (vE2 `sdiff` vN1)) 
+                 (sE1 `sunion` (sE2 `sdiff` sN1)) 
                  (mkSeq a b) 
-                 (vR1 `sunion` vR2) 
-                 ((vN1 `sdiff` vR2) `sunion` vN2) )
-             , assertAreUTP [ga,gb] ))
+                 (sR1 `sunion` sR2) 
+                 ((sN1 `sdiff` sR2) `sunion` sN2) )
+             ,    areUTCPAtomic (map StdVar [va])
+               .: areUTCPAtomic (map StdVar [vb])
+               .: areUTPStcObs  (map StdVar [vE1,vE2,vR1,vR2,vN1,vN2]) 
+               ) )
 \end{code}
 
 \subsection{Commands}
@@ -616,7 +656,7 @@ utcpKnown
    obs_g_Intro $
    obs_in_Intro $
    obs_out_Intro $
-   newVarTable
+   newNamedVarTable utcpName
 \end{code}
 
 
@@ -649,6 +689,7 @@ utcpTheory :: Theory
 utcpTheory
   =  nullTheory { thName  =  utcpName
             , thDeps  =  [ utpBaseName
+                         , setName
                          , uCloseName
                          , existsName
                          , forallName
@@ -1197,22 +1238,3 @@ The miraculous stuff:
          \lor A(r|ii|r2) \lor ii \lor A(r2!|ii|r!) ~)^i )
 \end{eqnarray*}
 Looks like we need the calculator!!!
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -55,7 +55,8 @@ sub p = Sub pred1 p $ fromJust $ substn [] [(lvxs,lves)]
 
 \begin{code}
 andKnown :: VarTable
-andKnown =  fromJust $ addKnownVar v_and boolf_2 $ newVarTable
+andKnown =  fromJust $ addKnownVar v_and boolf_2 
+                     $ newNamedVarTable conjName
 \end{code}
 
 

@@ -1,6 +1,6 @@
 \section{YesBut Datatype}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2017-22
+Copyright  Andrew Butterfield (c) 2017-22
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -39,7 +39,6 @@ instance Applicative YesBut where
   But msgs1 <*> But msgs2  =  But (msgs1++msgs2)
 
 instance Monad YesBut where
-  return x        =  Yes x
   Yes x   >>= f   =  f x
   But msgs >>= f  =  But msgs
 

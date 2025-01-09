@@ -1,0 +1,74 @@
+\chapter{Hidden Types}
+
+Copyright  Andrew Buttefield \copyright\ 2024
+
+LICENSE: BSD3, see file LICENSE at reasonEq root
+
+
+Here we keep copies of internal DS definitions
+for easy reference when looking at \h{Show} output
+\newpage
+
+Format: maps a (short) Data Constructor and its associated Types to the corresponding Type Name.
+\begin{code}
+DC ty1 ... tyn -->  TypeName
+\end{code}
+
+
+\begin{code}
+AL  -->  LstVarMatchRole
+AS  -->  LstVarMatchRole
+B Type Identifier VarSet Term  -->  Term
+BD (VarBinding, SubBinding, ListVarBinding)  -->  Binding
+BI Identifier  -->  VarBind
+BL  VarList  -->  LstVarBind
+BLV ListVar   -->  VarBind
+BS  VarSet  -->  LstVarBind
+BT Term  -->  VarBind
+BV Variable   -->  VarBind
+BX  [LVarOrTerm]   -->  LstVarBind
+C Type Subable Identifier [Term]  -->  Term
+DAL  -->  DynamicLstVarRole
+DAS  -->  DynamicLstVarRole
+DL [Identifier] [Identifier] [Identifier] Int  -->  DynamicLstVarRole
+DS (Set Identifier) (Set Identifier) (Set Identifier) Int --> DynamicLstVarRole
+ET Type   -->  Term
+GL ListVar   -->  GenVar
+GV Variable -->  GenVar
+I Type Subable Identifier Subable Identifier [ListVar]  -->  Term
+Id String Int  --> Identifier
+K Type Value  -->  Term
+KC Term = KV Type = KG = KI Variable = UV   -->  VarMatchRole
+KC Term = KV Type = KG = KI Variable = UV   -->  VarMatchRole
+KC Term = KV Type = KG = KI Variable = UV   -->  VarMatchRole
+KC Term = KV Type = KG = KI Variable = UV   -->  VarMatchRole
+KC Term = KV Type = KG = KI Variable = UV   -->  VarMatchRole
+KL VarList [Variable] Int  -->  LstVarMatchRole
+KS VarSet (Set Variable) Int  -->  LstVarMatchRole
+L Type Identifier VarList Term  -->  Term
+S Type Term Substn -->  Term
+SN TermSubs LVarSubs   -->  Substn
+T  -->  Type
+TA Identifier [(Identifier,[Type])]  -->  Type
+TB   -->  Type
+TC Identifier [Type]  -->  Type
+TF Type Type  -->  Type
+TG Identifier -->  Type
+TV Identifier  -->  Type
+UD   -->  DynamicLstVarRole
+UL   -->  LstVarMatchRole
+V Type Variable  -->  Term
+VB Bool = VI Integer   -->  Value
+VB Bool = VI Integer   -->  Value
+VE  -->  VarClass
+VO  -->  VarClass
+VP   -->  VarClass
+VR (Identifier, VarClass, VarWhen)  -->  Variable
+WA  -->  VarWhen
+WB  -->  VarWhen
+WD Subscript  -->  VarWhen
+WS  -->  VarWhen
+WT   -->  VarWhen
+X Identifier Term  -->  Term
+\end{code}
+Last revised: 14th November 2024

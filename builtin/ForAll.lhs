@@ -115,7 +115,7 @@ $$
 \vspace{-5pt}
 \begin{code}
 axAllRemove = preddef ("forall" -.- "remove")
-                    (forall [xs] p  ===  p)
+                    (forAll [xs] p  ===  p)
                     ([xs] `notin` gvP)
 \end{code}
 
@@ -124,9 +124,9 @@ $$\begin{array}{lll}
 \end{array}$$\par\vspace{-5pt}
 \begin{code}
 axAllOne = preddef ("forall" -.- "one" -.- "point")
-  ( (forall [xs,ys] ((lvxs `areEqualTo` lves) ==> p) )
+  ( (forAll [xs,ys] ((lvxs `areEqualTo` lves) ==> p) )
     ===
-    (forall [ys] (mksub p esxs)) )
+    (forAll [ys] (mksub p esxs)) )
   ([xs] `notin` gves)
 \end{code}
 
@@ -137,7 +137,7 @@ $$
 $$\par\vspace{-4pt}
 \begin{code}
 axAllAndDistr = preddef ("forall" -.- "and" -.- "distr")
-  ( (forall [xs] (p /\ q)) === (forall [xs] p) /\ (forall [xs] q) )
+  ( (forAll [xs] (p /\ q)) === (forAll [xs] p) /\ (forAll [xs] q) )
   scTrue
 \end{code}
 
@@ -148,9 +148,9 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-axOrAllScope = preddef ("lor" -.- "forall" -.- "scope")
-  ( p \/ (forall [xs,ys] q)
-    === forall [xs] ( p \/ forall [ys] q) )
+axOrAllScope = preddef ("or" -.- "forall" -.- "scope")
+  ( p \/ (forAll [xs,ys] q)
+    === forAll [xs] ( p \/ forAll [ys] q) )
   ([xs] `notin` gvP)
 \end{code}
 
@@ -162,9 +162,9 @@ $$
 $$\par\vspace{-8pt}
 \begin{code}
 axAllInst = preddef ("forall" -.- "inst")
-  ( (forall [xs,ys] p)
+  ( (forAll [xs,ys] p)
     ==>
-    (forall [ys] (mksub p esxs)) )
+    (forAll [ys] (mksub p esxs)) )
   scTrue
 \end{code}
 
@@ -178,9 +178,9 @@ $$\par
 \vspace{-8pt}
 \begin{code}
 axAllDumRen = preddef ("forall" -.- "alpha" -.- "rename")
-  ( (forall [xs] p)
+  ( (forAll [xs] p)
     ===
-    (forall [ys] (mksub p ysxs)) )
+    (forAll [ys] (mksub p ysxs)) )
   ([ys] `notin` gvP)
 \end{code}
 
@@ -220,7 +220,7 @@ $$
 \vspace{-5pt}
 \begin{code}
 cjAllTrue = preddef ("forall" -.- "true")
-                    (forall [xs] trueP  ===  trueP)
+                    (forAll [xs] trueP  ===  trueP)
                     scTrue
 \end{code}
 
@@ -232,17 +232,39 @@ $$
 \vspace{-5pt}
 \begin{code}
 cjAllSwap = preddef ("forall" -.- "swap")
-                    (forall [xs] (forall [ys] p)  
+                    (forAll [xs] (forAll [ys] p)  
                      ===  
-                     forall [ys] (forall [xs] p))
+                     forAll [ys] (forAll [xs] p))
                     scTrue
 \end{code}
+
+$$
+  \begin{array}{lll}
+     \lst x = \lst e \land P \equiv P[\lst e/\lst x]
+     & \lst x \notin \lst e
+     & \QNAME{one-point}
+  \end{array}
+$$
+\vspace{-5pt}
+\begin{code}
+cjOnePoint = preddef ("one" -.- "point")
+                    (((lvxs `areEqualTo` lves) /\ p) 
+                     ===  
+                     (mksub p esxs) )
+                    ([xs] `notin` gves)
+\end{code} 
+\textsf{ 
+  Should this be \m{\lst x = \lst e \implies P \equiv P[\lst e/\lst x]}?
+  We could then exploit the law 
+  \m{A \land (A \implies B) \equiv A \land B} somehow.
+}
+
 
 We now collect our conjecture set:
 \begin{code}
 forallConjs :: [NmdAssertion]
 forallConjs
-  = [ cjAllTrue, cjAllSwap ]
+  = [ cjAllTrue, cjAllSwap, cjOnePoint ]
 \end{code}
 
 
@@ -262,6 +284,7 @@ forallTheory
                          , notName
                          , equivName
                          ]
+            , known = newNamedVarTable forallName
             , laws    =  forallAxioms
             , conjs   =  forallConjs
             }

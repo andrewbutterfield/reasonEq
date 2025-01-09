@@ -1,25 +1,87 @@
 # To Do
 
-## Urgent/Now
+## URGENT
 
+**Need useability improvements**
 
-BIGGER ISSUE
+* better theory load/save support
+* better proof display settings:
+  * better setting command syntax
+  * finer control of proof-so-far display
+  * finer control of level of detail (e.g. don't show scTrue as T, leave blank)
+* add some form of archiving
+
+## Next in Line
+
+Need to expand the `Sets` theory to capture interactions between set operators,
+and the `Equality` theory to support reasoning like:
 
 ```
-(E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1 ; (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R1 ∪ N1    ⊤
+x=e /\ E(x)        ===  x=e /\ E[e/x]   ===?  E[e/x]
+expr=u /\ E(expr)  ===  expr=u /\ E(u)  ===?  E(u)
+```
+
+TODO?
+
+Future improvement:  given `E` is an `ExprVar` and `O$` maps to `ObsV`,
+it should be obvious that `O$,O$' ∉ E`. No need for an explicit side-condition.
+ 
+ Allow user to toggle between which s.c. version is displayed
+    (currently both are)?
+
+Need to be able to save proof from within a live proof.
+
+Trivial quantifiers are being shown even when disabled
+
+```
+1 : “exists_def” [≡lhs] ¬(¬(X(E1,a,R1,N1)))
+ls,ls',s,s'∉N2, s,s'⊇ₐa, s,s'⊇ₐb ⟹ ⊤
+```
+
+Ranking seems busted:
+
+```
+3 : “exists_def” [≡rhs]  (∃ x$  • P)               ⊤ ⟹ ⊤
+2 : “exists_def” [≡lhs]   ¬(¬(¬((∀ x$  • ¬P))))    ⊤ ⟹ ⊤
+1 : “not_def” [≡lhs]      (∀ x$  • ¬P) ≡ false     ⊤ ⟹ ⊤
+
+```
+
+The following laws in UTP base seem to match anything:
+
+```
+   6. ⊤  “II_def”           II ≡ (O$'=O$)  ⊤
+   8. ⊤  “bot_def”          ⊥ ≡ true  ⊤
+   9. ⊤  “top_def”          ⊤ ≡ false  ⊤
+```
+e.g.,
+
+```
+Matches:
+5 : “eqv_refl” true  ⊤ ⟹ ⊤ *
+4 : “II_def” (O$'=O$)  ⊤ ⟹ ⊤ trivial!1
+3 : “top_def” false  ⊤ ⟹ ⊤ trivial!1
+2 : “bot_def” true  ⊤ ⟹ ⊤ trivial!1
+1 : “exists_def” ¬¬((E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N ≡ (E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N)  ⊤ ⟹ ⊤ ≡lhs
+⊢
+(E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N ≡ (E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N    ⊤
 Focus = []
-
-Target (RHS): 
-E2 ∪ R1 \ N1 = Ø ∧ X(E1 ∪ E2 \ N1,a ; b,R1 ∪ R2,N1 \ R2 ∪ N2)
-
-
-Instantiated Law S.C. 
-  = O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇N2, O$,O$'⊇R1, O$,O$'⊇R2, 
-    O$,O$'⊇ls, O$,O$'⊇ls', fresh:O$_0
 ```
 
-**We need to create a new `CoversDynamic` atomic side-condition.**
+Example:
 
+```
+Proof for A_alt
+	A(E,a,N) ≡ (E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N  ⊤
+by red-All
+A(E,a,N) ≡ (E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N
+   = 'match-eqv-pvar(1) II_def@[]'
+ ...
+⊢
+(O$'=O$)    ⊤
+```
+
+## Parked for Now
 
 ### Works for handling actual theory observables
 
@@ -43,98 +105,6 @@ Start Developing theories for:
 * Designs
 * Reactive Systems
 
-Seq. Comp: `";_def"`
-```
-(P ; Q) ≡ (∃ O$_0  • P[O$_0/O$'] ∧ Q[O$_0/O$])  O$,O$'⊇P, O$,O$'⊇Q, fresh:O$_0
-```
-
-Command `tm 1 ;_def` reports:
-```
-Match against `;_def'[1] OK
-Binding: { ;  ⟼ ;, P  ⟼ X(E1,a,R1,N1), Q  ⟼ X(E2,b,R1,N1), 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }
-Instantiated Law = (∃ O$_0  • (X(E1,a,R1,N1))[O$_0/O$'] ∧ (X(E2,b,R1,N1))[O$_0/O$])
-
-Law S.C. = O$,O$'⊇P, O$,O$'⊇Q, fresh:O$_0
-
-
-
-Instantiated Law S.C. = O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇R1, O$,O$'⊇a, O$,O$'⊇b, fresh:O$_0
-Goal S.C. = ⊤
-Discharged Law S.C. = O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇R1, O$,O$'⊇a, O$,O$'⊇b, fresh:O$_0
-```
-The issue is that these side-conditions *should* only apply to dynamic variables,
-and `a` and `b` should be predicate variables.
-
-It happens also if we expand the X definitions:
-```
-⊢
-(E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1 ; (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R1 ∪ N1    ⊤
-
-
-proof: tm 1 ;_def
-Match against `;_def'[1] OK
-Binding: 
-  { ;  ⟼ ;
-  , P  ⟼ (E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1
-  , Q  ⟼ (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R1 ∪ N1
-  , 0  ⟼ 0
-  , O$  ⟼ ⟨O$⟩ 
-  }
-Instantiated Law 
-  = ∃ O$_0  • 
-       ((E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$'] 
-       ∧ 
-       ((E2 ⊆ ls ∧ b) ∧ ls' = ls \ R1 ∪ N1)[O$_0/O$]
-
-Instantiated Law S.C.
- = O$,O$' ⊇ (E1 ⊆ ls ∧ a) ∧ ls' = ls \ R1 ∪ N1
- , O$,O$' ⊇ (E2 ⊆ ls ∧ b) ∧ ls' = ls \ R1 ∪ N1
-
- 
-
-
-= O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇R1, O$,O$'⊇a, O$,O$'⊇b, O$,O$'⊇ls, O$,O$'⊇ls', fresh:O$_0
-Goal S.C. = ⊤
-Discharged Law S.C. = O$,O$'⊇E1, O$,O$'⊇E2, O$,O$'⊇N1, O$,O$'⊇R1, O$,O$'⊇a, O$,O$'⊇b, O$,O$'⊇ls, O$,O$'⊇ls', fresh:O$_0
-```
-
-
-
-
-## Next in Line
-
-The following laws in UTP base seem to match anything:
-```
-   6. ⊤  “II_def”           II ≡ (O$'=O$)  ⊤
-   8. ⊤  “bot_def”          ⊥ ≡ true  ⊤
-   9. ⊤  “top_def”          ⊤ ≡ false  ⊤
-```
-e.g.,
-```
-Matches:
-5 : “eqv_refl” true  ⊤ ⟹ ⊤ *
-4 : “II_def” (O$'=O$)  ⊤ ⟹ ⊤ trivial!1
-3 : “top_def” false  ⊤ ⟹ ⊤ trivial!1
-2 : “bot_def” true  ⊤ ⟹ ⊤ trivial!1
-1 : “exists_def” ¬¬((E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N ≡ (E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N)  ⊤ ⟹ ⊤ ≡lhs
-⊢
-(E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N ≡ (E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N    ⊤
-Focus = []
-```
-
-Example:
-```
-Proof for A_alt
-	A(E,a,N) ≡ (E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N  ⊤
-by red-All
-A(E,a,N) ≡ (E ⊆ ls ∧ a) ∧ ls' = ls \ E ∪ N
-   = 'match-eqv-pvar(1) II_def@[]'
- ...
-⊢
-(O$'=O$)    ⊤
-```
-
-### Parked for Now
 
 Want to have general settings away from files that contain syntax,
 so that syntax changes only affect those files, and not the settings.
@@ -160,12 +130,9 @@ Done but not yet ready to be hooked in.
 
 Adding in Arithmetic and Set theories to test out the need for typechecking.
 
-
 * We really need to have symmetric forms of key results, e.g., we have `P∨true≡true`, but should also have `true∨P≡true`.
 
-
 For now, we simply hide all trivial and floating stuff by default.
-
 
 ### Theory and Proof Management.
 
@@ -285,7 +252,6 @@ In particular, extracting `VarTable`s from the top-level `mtchCntxt` component o
 ### Complete UTPBase proofs
 
 Doing this has shown that proof ranking and short-listing needs improvement.
-
 
 We really need to able to tune things - using negation-involution to add a double-negation can be really useful.
 

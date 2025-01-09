@@ -7,10 +7,10 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Instantiate
-( InsContext, mkInsCtxt
+( InsContext(..), mkInsCtxt
 , instantiate
 , instVarSet
-, instASC
+, instVSC
 , instantiateSC
 ) where
 import Data.Maybe
@@ -21,7 +21,10 @@ import Data.Map(Map)
 import qualified Data.Map as M
 import Data.List
 
+import NotApplicable
 import Utilities
+import Control
+import UnivSets
 import LexBase
 import Variables
 import AST
@@ -38,7 +41,7 @@ import Debugger
 \section{Introduction}
 
 We take a pattern term and a binding,
-along with relevant context imformation,
+along with relevant context information,
 and produce a re-constructed candidate term,
 provided every variable in the pattern is also in the binding.
 If $\beta$ is a binding, and $t$ is a term,
@@ -76,18 +79,20 @@ Given a variable $v$ we use $\beta(v)$ to denote a binding lookup.
 All instantiations need a context argument that describes the following
 aspects of the current state of a proof:
 \begin{itemize}
+  \item Set of known dynamic observables
   \item Side-Conditions
-  % \item dynamic \texttt{Subscript}s in scope
 \end{itemize}
 \begin{code}
 data InsContext
-  =  ICtxt  { icVTs :: [VarTable]
+  =  ICtxt  { icDV :: VarSet
             , icSC :: SideCond
             }
   deriving Show  
 
-mkInsCtxt = ICtxt
+mkInsCtxt :: [VarTable] -> SideCond -> InsContext
+mkInsCtxt vts sc = ICtxt (getDynamicObservables vts) sc
 \end{code}
+
 
 
 \newpage
@@ -316,15 +321,17 @@ and assignments.
 While this obviously requires separate treatment for the two cases,
 it turns out that the pair-lists in the \texttt{Substn} part
 are processed the same way.
-
+\begin{eqnarray*}
+   \beta.\ss {}{v^n} {t^n} &=& \ss {} {\beta^*(v^n)} {\beta^*.t^n}
+\end{eqnarray*}
 \begin{code}
 instSub :: MonadFail m => InsContext -> Binding -> Substn -> m Substn
 instSub insctxt binding (Substn ts lvs)
   = do ts'  <- instZip (instStdVar insctxt binding)
                        (instantiate insctxt binding) (S.toList ts)
        ts'' <- sequence $ map getTheTargetVar ts'
-       vtlvss' <- instZip (instLLVar insctxt binding) (instLLVar insctxt binding)
-                          (S.toList lvs)
+       vtlvss' <- instZip (instLLVar insctxt binding) 
+                          (instLLVar insctxt binding) (S.toList lvs)
        let (lvtlvss,rvtlvss) = unzip vtlvss'
        let (vtts,lvts) = unzip lvtlvss
        let (vtrs,lvrs) = unzip rvtlvss
@@ -359,15 +366,17 @@ getTheVar fvs@(vs,diffs)
 
 \newpage
 This code is used for list-var in substitutions only.
+We need to keep in mind that list-variables can be bound to 
+lists and sets of general variables,
+and lists containing a mix of terms and list-variables.
+
 \begin{code}
 instLLVar :: MonadFail m => InsContext
           -> Binding -> ListVar -> m ([Term],[ListVar])
 instLLVar insctxt binding lv
   = case lookupLstBind binding lv of
-      Just (BindList vl')  ->  do lvs <- fromGVarToLVar vl'
-                                  return ([],lvs)
-      Just (BindSet  vs')  ->  do lvs <- fromGVarToLVar $ S.toList vs'
-                                  return ([],lvs)
+      Just (BindList vl')  ->  return $ fromGVarsToTermLVarLists [] [] vl'
+      Just (BindSet  vs')  ->  return $ fromGVarsToTermLVarLists [] []$ S.toList vs'
       Just (BindTLVs tlvs) ->  return (tmsOf tlvs, lvsOf tlvs)
       Nothing              ->  fail $ unlines
                                      [ "instLLVar: l-var not found"
@@ -375,18 +384,23 @@ instLLVar insctxt binding lv
                                      , "bind = " ++ trBinding binding
                                      ]
 
-fromGVarToLVar :: MonadFail m => VarList -> m [ListVar]
-fromGVarToLVar [] = return []
-fromGVarToLVar (StdVar v:vl)
- = fail ("fromGVarToLVar: Std variable found - " ++ show v)
-fromGVarToLVar (LstVar lv:vl)
-  = do lvs <- fromGVarToLVar vl
-       return (lv:lvs)
+fromGVarsToTermLVarLists :: [Term] -> [ListVar] -> VarList -> ([Term],[ListVar])
+fromGVarsToTermLVarLists smret sravl []  =  (reverse smret, reverse sravl)
+fromGVarsToTermLVarLists smret sravl (StdVar v@(Vbl _ vc _):vl)
+  | vc == PredV  =  fromGVarsToTermLVarLists (jpVar v : smret) sravl vl
+  | otherwise    =  fromGVarsToTermLVarLists (jeVar v : smret) sravl vl
+fromGVarsToTermLVarLists smret sravl (LstVar lv:vl)
+  = fromGVarsToTermLVarLists smret (lv:sravl) vl
 \end{code}
 
 \newpage
 \subsubsection{Instantiate Variable Collections}
 
+When we use a binding to instantiate variables and variable-sets/lists,
+we need to keep in mind that some variables might be bound to terms,
+in which case we need to return the free-variables for that term.
+This is why all the functions here return \texttt{FreeVars} 
+rather than \texttt{VarSet}.
 The following code needs updating to handle free-variables properly.
 
 Let $g$ denote a general variable, and $G$ a set of same.
@@ -394,10 +408,21 @@ Let $g$ denote a general variable, and $G$ a set of same.
    \beta.G &=& \textstyle \bigcup_{g \in G} \beta.g
 \end{eqnarray*}
 \begin{code}
-instVarSet :: MonadFail m => InsContext -> Binding -> VarSet -> m FreeVars
+instVarSet :: MonadFail m 
+           => InsContext -> Binding -> VarSet 
+           -> m FreeVars
 instVarSet insctxt binding vs
   = do fvss <- sequence $ map (instGVar insctxt binding) $ S.toList vs
        return $ mrgFreeVarList fvss
+
+type NFreeVars = (NVarSet,[(GenVar,VarSet)])
+instNVarSet :: MonadFail m 
+            => InsContext -> Binding -> NVarSet 
+            -> m NFreeVars
+instNVarSet _       _        NA   =  return (NA,[]) 
+instNVarSet insctxt binding (The vs)  
+  =  do (f,less) <- instVarSet insctxt binding vs 
+        return (The f,less)
 \end{code}
 
 
@@ -472,12 +497,13 @@ instLGVar insctxt binding gv@(LstVar lv)
 \section{Side-Condition Instantiation (Total)}
 
 Doing it again, with side-conditions.
-Bascially we drill down to the atomic side-conditions,
+Basically we drill down to the atomic side-conditions,
 instantiate and simplify those,
 and merge together.
 
 \begin{code}
-instantiateSC :: MonadFail m => InsContext -> Binding -> SideCond -> m SideCond
+instantiateSC :: MonadFail m 
+              => InsContext -> Binding -> SideCond -> m SideCond
 \end{code}
 side-conditions:
 \begin{eqnarray*}
@@ -487,10 +513,11 @@ side-conditions:
 \\ \beta(\fresh F) &=& \fresh \beta(F)
 \end{eqnarray*}
 \begin{code}
-instantiateSC insctxt bind (ascs,freshvs)
-  = do ascss' <-sequence $ map (instantiateASC insctxt bind) ascs
+instantiateSC insctxt bind (vscs,freshvs)
+  = do vscss' <- sequence $ map (instantiateVSC insctxt bind) vscs
+       vscs' <- concatVarConds vscss'
        freshvs' <- instVarSet insctxt bind freshvs
-       mkSideCond [] (concat ascss') $ theFreeVars freshvs'
+       mkSideCond vscs' $ theFreeVars freshvs'
 \end{code}
 For atomic side-conditions:
 \begin{eqnarray*}
@@ -498,6 +525,9 @@ For atomic side-conditions:
 \\ \beta.(C \supseteq T)  &=& \beta.C \supseteq \fv(\beta(T))
 \\ \beta(\ispre \supseteq T) &=& \ispre \supseteq \fv(\beta(T))
 \end{eqnarray*}
+
+\subsection{SC Instantiation Examples}
+
 Consider this example:
 \begin{description}
 \item[Law] $P[\lst e/\lst x] = P, \qquad \lst x \notin P$
@@ -613,31 +643,56 @@ We define dynamic free variables ($\dfv$) as:
 \\ \dfv(t) &\defs& filter(isDynamic,\fv(t)) 
 \end{eqnarray*}
 
-\begin{code}
-instantiateASC :: MonadFail m => InsContext
-               -> Binding -> AtmSideCond -> m [AtmSideCond]
-instantiateASC insctxt bind asc
-  = do (vsCD,diffs) <- instVarSet insctxt bind $ ascVSet asc
-       if null diffs
-         then instASC insctxt vsCD fvsT asc
-         else fail "instantiateASC: explicit diffs in var-set not handled."
-  where
-     fvsT = instantiateGVar insctxt bind $ ascGVar asc
-\end{code}
-\textbf{
-  The use of \texttt{ascVSet} is problematic --- loss of uniformity info.
-}
-
-
-\begin{code}
-instASC :: MonadFail m => InsContext
-               -> VarSet -> FreeVars -> AtmSideCond -> m [AtmSideCond]
-instASC insctxt vsD fvT (Disjoint _ _ _)   =  instDisjoint insctxt vsD fvT
-instASC insctxt vsC fvT (CoveredBy u _ _)  =  instCovers u insctxt vsC fvT
-\end{code}
-
-
 \newpage
+\subsection{Instantiating TVCS}
+
+\begin{eqnarray*}
+\lefteqn{\beta.(T,D,C,Cd)}
+\\ &\approx& (\fv(\beta(T)),\beta.D,\beta.C,\beta.Cd)
+\\ &=& \bigwedge_{t \in \fv(\beta(T))}
+          ( t , \bigcup(\power\beta.D) 
+              , \bigcup(\power\beta.C) , \bigcup(\power\beta.Cd) )
+\end{eqnarray*}
+Remember that free-variables are denoted by an expression of the form:
+$(F \cup \bigcup_i\setof{\dots,(e_i \setminus B_i),\dots})$ 
+where $e_i$ are expression or predicate variables, 
+and $F$ is disjoint from any $e_i,B_i$.
+\begin{code}
+instantiateVSC :: MonadFail m 
+                => InsContext -> Binding -> VarSideConds 
+                -> m [VarSideConds]
+instantiateVSC insctxt bind vsc@(VSC gT mvsD mvsC mvsCd)
+  = do let (fvsT,diffsT) = instantiateGVar insctxt bind gT
+       fmvsD   <-  instNVarSet insctxt bind mvsD
+       fmvsC   <-  instNVarSet insctxt bind mvsC
+       fmvsCd  <-  instNVarSet insctxt bind mvsCd
+       if null diffsT
+         then do vscss <- mapM (instVSC insctxt fmvsD fmvsC fmvsCd) 
+                                (S.toList fvsT)
+                 return $ concat vscss
+         else fail "instantiateVSC: explicit diffs in var-set not handled."
+\end{code}
+
+\begin{eqnarray*}
+\lefteqn{\textsf{for } t \in \fv(\beta(T)):}
+\\&& ( t , \bigcup(\power\beta.D) 
+              , \bigcup(\power\beta.C) , \bigcup(\power\beta.Cd) )
+\\&=& t \notin \bigcup(\power\beta.D) 
+        \land t \in \bigcup(\power\beta.C)
+        \land t \in \bigcup(\power\beta.Cd)\mid_D
+\end{eqnarray*}
+\begin{code}
+instVSC :: MonadFail m 
+         => InsContext -> NFreeVars -> NFreeVars -> NFreeVars -> GenVar
+         -> m [VarSideConds]
+-- we ignore the vBless components for now
+instVSC insctxt fvsD@(mvsD,_) fmvsC@(mvsC,_) fmvsCd@(mvsCd,_) gT 
+  = do mvscsD <- mkVSC gT mvsD   covByNA covByNA
+       mvscsC <- mkVSC gT disjNA mvsC    covByNA
+       mvscCd <- mkVSC gT disjNA covByNA mvsCd 
+       return $ catMaybes [mvscsD,mvscsC,mvscCd]
+\end{code}
+
 \subsection{Disjointedness}
 
 \begin{eqnarray*}
@@ -648,17 +703,17 @@ instASC insctxt vsC fvT (CoveredBy u _ _)  =  instCovers u insctxt vsC fvT
 \end{eqnarray*}
 where $\fv(\beta(T)) = F \cup \{e_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj e_i$, $F \disj B_i$.
-\begin{code}
-instDisjoint :: MonadFail m 
-             => InsContext -> VarSet -> FreeVars -> m [AtmSideCond]
-instDisjoint insctxt vsD (fF,vLessBs)
-  =  return (asc1s ++ asc2s)
-  where
-    asc1s = map (mkDisj vsD) $ S.toList fF
-    mkDisj vsD gv = gv `disjfrom` vsD
-    asc2s = map (f2 vsD) vLessBs
-    f2 vsD (evF,vsB) = mkDisj (vsD S.\\ vsB) evF
-\end{code}
+% \begin{code}
+% instDisjoint :: MonadFail m 
+%              => InsContext -> FreeVars -> GenVar -> m [VarSideConds]
+% instDisjoint insctxt fvsD@(fF,vLessBs) gv
+%   =  return (vsc1s ++ vsc2s)
+%   where
+%     vsc1s = map (mkDisj vsD) $ S.toList fF
+%     mkDisj vsD gv = gv `disjfrom` vsD
+%     vsc2s = map (f2 vsD) vLessBs
+%     f2 vsD (evF,vsB) = mkDisj (vsD S.\\ vsB) evF
+% \end{code}
 
 \subsection{Covering}
 
@@ -673,31 +728,65 @@ $F \disj F_i$, $F \disj B_i$:
 \\ &=& \beta.C \supseteq F \land \{\beta.C \supseteq (e_i\setminus B_i)\}
 \\ &=& \beta.C \supseteq F \land \{(\beta.C \cup B_i) \supseteq e_i\}
 \end{eqnarray*}
-We next observe that if $C \supseteq T$ is uniform,
-then it is interpreted as $C \supseteq_a T$.
-We assume here that $S$ is all non-dynamic variables.
+
+% \begin{code}
+% instCovers :: MonadFail m 
+%            => InsContext -> NFreeVars -> GenVar-- NFreeVars !!!
+%            -> m [VarSideConds]
+% instCovers insctxt (Nothing,_)       gv  =  return []
+% instCovers insctxt (Just fF,vLessBs) gv  =  return (vsc1s ++ vsc2s)
+%   where
+%     vsc1s = map (mkCovers vsC) (S.toList fF)
+%     mkCovers vsC gv = gv `coveredby` vsC
+%     vsc2s = map (f2 vsC) vLessBs
+%     f2 vsC (evF,vsB) = mkCovers (vsC `S.union` vsB) evF
+% \end{code}
+
+\newpage
+\subsection{Dynamic Coverage}
+
+The general case, 
+where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
+$F \disj F_i$, $F \disj B_i$:
+
+We assume here that $D$ covers all dynamic variables.
 \begin{eqnarray*}
    \beta.(C \supseteq_a T)
    &=& \beta.C \supseteq \dfv(\beta(T))
-\\ &=& \beta.C \supseteq (\fv(\beta(T)) \setminus S)
-\\ &=& \beta.C \supseteq (F \cup \{e_i\setminus B_i\}) \setminus S
-\\ &=& \beta.C \supseteq (F \setminus S \cup \{e_i\setminus (B_i \cup S)\}) 
-\\ &=& \beta.C \supseteq F \setminus S \land \{\beta.C \supseteq (e_i\setminus (B_i \cup S))\}
-\\ &=& \beta.C \supseteq F \land \{(\beta.C \cup B_i) \supseteq e_i\}
+\\ &=& \beta.C \supseteq (\fv(\beta(T)) \mid_D)
+\\ &=& \beta.C \supseteq (F \cup \{e_i\setminus B_i\})  \mid_D
+\\ &=& \beta.C \supseteq (F  \mid_D \cup \{e_i\setminus B_i\} \mid_D) 
+\\ &=& \beta.C \supseteq (F  \mid_D \cup \{(e_i \mid_D)\setminus B_i\} ) 
+\\ &=& \beta.C \supseteq (F  \mid_D \cup \{(e_i \cap D)\setminus B_i\} ) 
+\\ &=& \beta.C \supseteq F \mid_D 
+       \land \{\beta.C \supseteq ((e_i \cap D)\setminus B_i)\} 
+\\ &=& \beta.C \supseteq F \mid_D 
+       \land \{e_i \in \beta.C \cond{e_i \in D \land e_i \notin B_i} \true \} 
 \end{eqnarray*}
+We include $e_i$ if $e_i \in D \land e_i \notin B_i$.
 
-\begin{code}
-instCovers :: MonadFail m 
-           => Uniformity -> InsContext -> VarSet -> FreeVars 
-           -> m [AtmSideCond]
-instCovers u insctxt vsC (fF,vLessBs)
-  =  return (asc1s ++ asc2s)
-  where
-    asc1s = map (mkCovers vsC) (S.toList fF)
-    mkCovers vsC gv = gv `coveredby` vsC
-    asc2s = map (f2 vsC) vLessBs
-    f2 vsC (evF,vsB) = mkCovers (vsC `S.union` vsB) evF
-\end{code}
+
+% \begin{code}
+% instDynCvg :: MonadFail m 
+%            => InsContext -> NFreeVars -> GenVar
+%            -> m [VarSideConds]
+% instDynCvg insctxt (Nothing,vLessBs)    gv    =  return []
+% instDynCvg insctxt (Just vsCd,vLessBs)  gv  =  return (vsc1s ++ vsc2s)
+%   where
+%     restrict2 vS vR
+%       | S.null vR  =  vS
+%       | otherwise  =  vS `S.intersection` vR 
+%     mkDynCovers vs gv = gv `dyncovered` vs
+%     vsD = icDV insctxt
+%     fFD = fF `restrict2` vsD
+%     isIn vsD (ev,_) = ev `S.member` vsD
+%     vDLessBs = filter (isIn vsD) vLessBs
+%     isSeparate (ev,vsB) = not ( ev `S.member` vsB)
+%     vDNotInBs = filter isSeparate vDLessBs
+%     f2 vs (evFD,vsB) = mkDynCovers vs evFD
+%     vsc1s = map (mkDynCovers vsCd) (S.toList fFD)
+%     vsc2s = map (f2 vsCd) vDNotInBs
+% \end{code}
 
 \newpage
 \subsection{Side-condition Variable Instantiation}
@@ -738,11 +827,11 @@ $e$ are non. obs. variables that don't occur in the $F$,
 and $x$ are obs. vars. or list-vars.
 It represents the variable-set: $F \cup \bigcup_i (e_i\setminus B_i)$
 \begin{eqnarray*}
-   \fv_{(ascs,\_)}(t) 
+   \fv_{(vscs,\_)}(t) 
    &=& 
-   \bigcup_{v \in \pi_1\fv(t)} \scvarexp_{ascs}(v)
+   \bigcup_{v \in \pi_1\fv(t)} \scvarexp_{vscs}(v)
    \cup
-   \bigcup_{(e,B) \in \pi_2\fv(t)} \scdiffexp_{ascs}(e,B)
+   \bigcup_{(e,B) \in \pi_2\fv(t)} \scdiffexp_{vscs}(e,B)
 \end{eqnarray*}
 \begin{code}
 deduceFreeVars :: InsContext -> Term -> FreeVars
@@ -758,8 +847,8 @@ deduceFreeVars insctxt t
 
 \begin{eqnarray*}
    \scvarexp_{sc}(v) &=& \setof v, \qquad v \text{ is obs. var.}
-\\ \scvarexp_{(ascs,\_)}(e) 
-   &=& \ascsvarexp(e,ascs(e)) \cond{e \in ascs} \setof e
+\\ \scvarexp_{(vscs,\_)}(e) 
+   &=& \vscsvarexp(e,vscs(e)) \cond{e \in vscs} \setof e
 \end{eqnarray*}
 \begin{code}
 scVarExpand :: SideCond -> GenVar -> FreeVars
@@ -767,31 +856,26 @@ scVarExpand _ v@(StdVar (Vbl _ ObsV _)) = injVarSet $ S.singleton v
 scVarExpand sc gv 
   = case findAllGenVar gv sc of
       []    ->  injVarSet $ S.singleton gv
-      ascs  ->  ascsVarExpand gv ascs
+      vscs  ->  vscsVarExpand gv vscs
 \end{code}
 
 \newpage
 
-For any given variable, we can end up with one of three possibilities: 
-disjoint ($v \disj D$), covered ($C \supseteq v$), 
-or a mix of the two cases with $C$ and $D$ mutually disjoint.
-Note that we also need to take uniformity into account:
-we use $e \approx e'$ here to denote that either $e=e'$ 
-or uniformity is in effect and $e$ and $e'$ are dynamic 
-and differ only in temporality.
+For any given variable, we can end up with one of these possibilities: 
+disjoint ($v \disj D$), covered ($C \supseteq v$),
+dynamic coverage ($Cd \supseteq_a v$),  
+or a mix of the cases with $C$ and $Cd$ disjoint from $D$.
 \begin{eqnarray*}
-   \ascsvarexp(e,\seqof{C \supseteq e'})     &=& C \cond{e \approx e'} \setof e 
-\\ \ascsvarexp(e,\seqof{\_,C \supseteq e'})  &=& C \cond{e \approx e'} \setof e 
-\\ \ascsvarexp(e,\seqof{\_ \disj \_})        &=& \setof{e}
+   \vscsvarexp(e,\seqof{C \supseteq e'})     &=& C \cond{e = e'} \setof e 
+\\ \vscsvarexp(e,\seqof{\_,C \supseteq e'})  &=& C \cond{e = e'} \setof e 
+\\ \vscsvarexp(e,\seqof{\_ \disj \_})        &=& \setof{e}
 \end{eqnarray*}
 \begin{code}
-ascsVarExpand :: GenVar -> [AtmSideCond] -> FreeVars
-ascsVarExpand e []  =  injVarSet $ S.singleton e
-ascsVarExpand e (CoveredBy Unif e' cC' : _)
-  |  e `usameg` e'  =  injVarSet (S.map (gsetWhen $ gvarWhen e ) cC')
-ascsVarExpand e (CoveredBy _ e' cC' : _)
-  |  e == e'        =  injVarSet cC'
-ascsVarExpand e (_:ascs) = ascsVarExpand e ascs
+vscsVarExpand :: GenVar -> [VarSideConds] -> FreeVars
+vscsVarExpand e []  =  injVarSet $ S.singleton e
+vscsVarExpand e (VSC e' _ (The vsC) _ : _)
+  |  e == e'        =  injVarSet vsC
+vscsVarExpand e (_:vscs) = vscsVarExpand e vscs
 \end{code}
 
 

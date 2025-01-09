@@ -13,6 +13,7 @@ module LiveProofs
  , conjecture__, conjecture_, conjSC__, conjSC_
  , strategy__, strategy_, mtchCtxts__, mtchCtxts_, focus__, focus_
  , fPath__, fPath_, matches__, matches_, stepsSoFar__, stepsSoFar_
+ , xpndSC__, xpndSC_
  , LiveProofs
  , writeLiveProofs, readLiveProofs
  , dispLiveProof
@@ -100,6 +101,8 @@ data LiveProof
     , fPath :: [Int] -- current term zipper descent arguments
     , matches :: Matches -- current matches
     , stepsSoFar :: [CalcStep]  -- calculation steps so far, most recent first
+    -- derived fron conjSC, using mtchCtxts
+    , xpndSC :: SideCond -- side condition with known vars expanded
     }
   deriving (Eq, Show, Read)
 
@@ -123,6 +126,8 @@ matches__ f lp = lp{ matches = f $ matches lp}
 matches_ = matches__ . const
 stepsSoFar__ f lp = lp{ stepsSoFar = f $ stepsSoFar lp}
 stepsSoFar_ = stepsSoFar__ . const
+xpndSC__ f lp = lp{ xpndSC = f $ xpndSC lp}
+xpndSC_ = xpndSC__ . const
 \end{code}
 
 \section{Live Proof Collection}
@@ -170,15 +175,17 @@ writeLiveProof lp
     -- matches not saved
     writePerLine stepsKEY show (stepsSoFar lp) ++
     [ lprfTRL ]
+    -- xpndSC not saved
 
-readLiveProof :: (Monad m, MonadFail m) => [Theory] -> [String] -> m (LiveProof,[String])
-readLiveProof thylist txts
+readLiveProof :: MonadFail m => Theories -> [String] -> m (LiveProof,[String])
+readLiveProof thrys txts
   = do rest1          <- readThis lprfHDR          txts
        (thnm, rest2)  <- readKey (lpthKEY "") id   rest1
        (cjnm, rest3)  <- readKey (lpcjKEY "") id   rest2
        (conj, rest4)  <- readKey conjKEY read      rest3
        (sc,   rest5)  <- readKey cjscKEY read      rest4
        (strt, rest6)  <- readKey (strtKey "") id   rest5
+       let thylist = fromJust $ getTheoryDeps thnm thrys
        let mctxts = buildMatchContext thylist
        (fcs,  rest7)  <- readSeqZip thylist        rest6
        (fpth, rest8)  <- readKey fpathKEY read     rest7
@@ -193,7 +200,8 @@ readLiveProof thylist txts
                    , focus = fcs
                    , fPath = fpth
                    , matches = []
-                   , stepsSoFar = steps }
+                   , stepsSoFar = steps 
+                   , xpndSC = expandSideCondKnownVars mctxts sc }
               , rest10 )
 \end{code}
 
@@ -214,10 +222,10 @@ writeLiveProofs liveProofs
     writeMap liveproofs writeLiveProof liveProofs ++
     [ lprfsTRL ]
 
-readLiveProofs :: (Monad m, MonadFail m) => [Theory] -> [String] -> m (LiveProofs,[String])
-readLiveProofs thylist txts
+readLiveProofs :: MonadFail m => Theories -> [String] -> m (LiveProofs,[String])
+readLiveProofs thrys txts
   = do rest1         <- readThis lprfsHDR txts
-       (lprfs,rest2) <- readMap liveproofs rdKey (readLiveProof thylist) rest1
+       (lprfs,rest2) <- readMap liveproofs rdKey (readLiveProof thrys) rest1
        rest3         <- readThis lprfsTRL rest2
        return (lprfs,rest3)
 \end{code}
@@ -225,30 +233,6 @@ readLiveProofs thylist txts
 
 \newpage
 \section{Proof Starting and Stopping}
-
-% \subsection{Starting a Proof with default strategy}
-
-
-% We need to setup a proof from a conjecture:
-% \begin{code}
-% startProof :: [Theory] -> String -> String -> Assertion -> LiveProof
-% startProof thys thnm cjnm asn@(Assertion t sc)
-%   =  LP { conjThName = thnm
-%         , conjName = cjnm
-%         , conjecture = asn
-%         , conjSC = sc
-%         , strategy = strat
-%         , mtchCtxts =  mcs
-%         , focus =  sz
-%         , fPath = []
-%         , matches = []
-%         , stepsSoFar = []
-%         }
-%   where
-%     (strat,sequent) = fromJust $ reduce thys (cjnm,(t,sc))
-%     sz = leftConjFocus sequent
-%     mcs = buildMatchContext thys
-% \end{code}
 
 \subsection{Starting a Proof with given strategy}
 
@@ -266,6 +250,7 @@ launchProof thys thnm cjnm asn@(Assertion t sc) (strat,sequent)
        , fPath = []
        , matches = []
        , stepsSoFar = []
+       , xpndSC = expandSideCondKnownVars mcs sc
        }
   where
     sz = leftConjFocus sequent
@@ -327,13 +312,13 @@ and $<$Complete Binding$>$ for application involves(?) \texttt{completeBind}.
 tryLawByName :: Assertion -> String -> [Int] -> [MatchContext]
                -> YesBut ( Binding    -- mapping from pattern to candidate
                          , Term       -- autoInstantiated Law
-                         , SideCond   -- updated candidate side-condition
+                         , SideCond   -- updated expanded candidate side-cond.
                          , SideCond ) -- discharged(?) law side-condition
-tryLawByName asn@(Assertion tC scC) lnm parts mcs
+tryLawByName (Assertion tC scC) lnm parts mcs
   = do (((_,asnP),_),vts) <- findLaw lnm mcs
        let tP = assnT asnP
        (partsP,replP) <- findParts parts tP
-       let scP = assnC asnP
+       let scP = expandSCKnowns vts $ assnC asnP
        tryMatch vts tP partsP replP scP
   where
     -- below we try to do:
@@ -404,7 +389,7 @@ and we generate names for these that make their floating nature visible.
       = case
                 bindFloating vts kbind tP
         of
-          Yes fbind  ->  tryInstantiate
+          Yes fbind  ->  tryInstantiate vts
                            (mkInsCtxt vts scC) 
                            fbind tP partsP replP scP
           But msgs
@@ -427,15 +412,16 @@ and we generate names for these that make their floating nature visible.
 Next, instantiate the law using the bindings.
 \begin{code}
 -- tryLawByName asn@(tC,scC) lnm parts mcs
-    tryInstantiate insctxt fbind tP partsP replP scP
+    tryInstantiate vts insctxt fbind tP partsP replP scP
       = case
                 instantiate insctxt fbind replP
         of
-          Yes tP'  ->  tryInstantiateSC insctxt fbind tP' partsP replP scP
+          Yes tP'  ->  tryInstantiateSC vts insctxt fbind tP' partsP replP scP
           But msgs
            -> But ([ "try law instantiation failed"
                    , ""
-                   , trBinding fbind ++ "("++trSideCond scP++")"
+                   , trBinding fbind
+                   , "&& "++trSideCond scP
                    , ""
                    , "lnm[parts]="++lnm++show parts
                    , "tC="++trTerm 0 tC
@@ -450,15 +436,16 @@ Next, instantiate the law using the bindings.
 Next, instantiate the pattern side-condition using the bindings.
 \begin{code}
 -- tryLawByName asn@(tC,scC) lnm parts mcs
-    tryInstantiateSC insctxt fbind tP' partsP replP scP
+    tryInstantiateSC vts insctxt fbind tP' partsP replP scP
       = case
                 instantiateSC insctxt fbind scP
         of
-          Yes scP'  ->  trySCDischarge insctxt fbind tP' partsP replP $ pdbg "tISC.scP'" scP'
+          Yes scP'  ->  trySCDischarge vts fbind tP' partsP replP scP'
           But msgs
            -> But ([ "try s.c. instantiation failed"
                    , ""
-                   , trBinding fbind ++ "("++trSideCond scP++")"
+                   , trBinding fbind
+                   , "&& "++trSideCond scP
                    , ""
                    , "lnm[parts]="++lnm++show parts
                    , "tC="++trTerm 0 tC
@@ -474,9 +461,9 @@ Next, instantiate the pattern side-condition using the bindings.
 Finally, try to discharge the instantiated side-condition:
 \begin{code}
 -- tryLawByName asn@(tC,scC) lnm parts mcs
-    trySCDischarge insctxt fbind tP' partsP replP scP'
+    trySCDischarge vts fbind tP' partsP replP scP'
       = case
-                scDischarge ss scC scP'
+                scDischarge (getDynamicObservables vts) scC scP'
         of
           Yes scP'' -> Yes (fbind,tP',scP',scP'')
           But whynots -> But [ "try s.c. discharge failed"
@@ -496,8 +483,6 @@ Finally, try to discharge the instantiated side-condition:
                              , "fbind:\n"
                              , trBinding fbind
                              ]
-     where ss = S.elems $ S.map theSubscript $ S.filter isDuring
-                          $ S.map gvarWhen $ mentionedVars tC
 \end{code}
 
 Done.
@@ -508,13 +493,16 @@ Done.
 \newpage
 \subsection{Finding parts of laws}
 
-Looking up a law by name:
+Looking up a law by name.
+We always want to return the var data tables for the theory from which
+the lookup is made, rather than the theory where the law is found.
 \begin{code}
-findLaw :: (Monad m, MonadFail m) => String -> [MatchContext] -> m (Law,[VarTable])
-findLaw lnm [] = fail ("Law '"++lnm++"' not found")
-findLaw lnm ((thnm,lws,vts):mcs)
+findLaw :: MonadFail m => String -> [MatchContext] -> m (Law,[VarTable])
+findLaw lnm mcs@((_,_,vts):_) = findLaw' vts lnm (map snd3 mcs)
+findLaw' vts lnm [] = fail ("Law '"++lnm++"' not found")
+findLaw' vts  lnm (lws:lwss)
  = case filter (\law -> lawName law == lnm) lws of
-     []       ->  findLaw lnm mcs
+     []       ->  findLaw' vts lnm lwss
      (law:_)  ->  return (law,vts)
 \end{code}
 
@@ -554,25 +542,26 @@ foundCons tk sn n ts   =  Cons tk sn n ts
 \newpage
 \section{Matching in Context}
 
-First, given list of match-contexts, systematically work through them.
+First, given list of match-contexts, systematically work through them,
+carrying the top-level view of the variable-tables along.
 \begin{code}
 matchInContexts :: [MatchContext] -> Assertion -> Matches
-matchInContexts mcs asn
-  = concat $ map (matchLaws asn) mcs
+matchInContexts mcs@((_,lws,vts):_) asn
+  = concat $ map (matchLaws vts asn) mcs
 \end{code}
 
 Now, the code to match laws, given a context.
 Bascially we run down the list of laws,
 returning any matches we find.
 \begin{code}
-matchLaws :: Assertion -> MatchContext -> Matches
-matchLaws asn (_,lws,vts)
+matchLaws :: [VarTable] -> Assertion -> MatchContext -> Matches
+matchLaws vts asn (_,lws,_)
   = concat $ map (domatch vts $ unwrapASN asn) lws
 \end{code}
 
 Sometimes we are interested in a specific (named) law.
 \begin{code}
-matchLawByName :: (Monad m, MonadFail m)
+matchLawByName :: MonadFail m
                => Assertion -> String -> [MatchContext]
                -> m Matches
 matchLawByName asn lnm mcs
@@ -586,14 +575,20 @@ and if its top-level is a \texttt{Cons}
 with at least two sub-components, we try all possible partial matches.
 \begin{code}
 domatch :: [VarTable] -> TermSC -> Law -> Matches
-domatch vts asnC law@((_,(Assertion tP@(Cons _ _ i tsP@(_:_:_)) _)),_)
-  =    basicMatch MatchAll vts law theTrue asnC tP
-    ++ doPartialMatch i vts law asnC tsP
+domatch vts asnC law@((lname,(Assertion tP@(Cons _ _ i tsP@(_:_:_)) scP)),prov)
+  =    basicMatch MatchAll vts law' theTrue asnC tP
+    ++ doPartialMatch i vts law' asnC tsP
+  where
+    xscP = expandSCKnowns vts scP
+    law' =(((lname,unsafeASN tP xscP)),prov)
 \end{code}
 Otherwise we just match against the whole law.
 \begin{code}
-domatch vts asnC law@((_,(Assertion tP _)),_)
-  =  basicMatch MatchAll vts law theTrue asnC tP
+domatch vts asnC law@((lname,(Assertion tP scP)),prov)
+  =  basicMatch MatchAll vts law' theTrue asnC tP
+  where
+    xscP = expandSCKnowns vts scP
+    law' =(((lname,unsafeASN tP xscP)),prov)
 \end{code}
 
 
@@ -807,6 +802,12 @@ can be addressed by binding them to a version of themselves
 that is marked in some distinguishing way.
 We refer to these marked versions as being ``floating'' variables.
 
+\textbf{NOTE: }
+\textsl{
+ What happens if such a floating $P$ is mentioned in a side-condition?
+ Does it come out in the wash as a result of the process detailed just below?
+}
+
 When a match is chosen to be applied,
 as part of a proof-step,
 then the user will be asked to supply instantiations for all variables
@@ -853,7 +854,8 @@ Produce:
 \\ --- Law side-condition in Goal space $SCL'$
 \\ --- Side-condition discharge outcome $sc$
 \\ --- Replacement Predicate in Goal space $C'$
-\\ --- Goal with updated focus $G(C')$
+\\ --- Goal with updated focus $G(C')$ 
+\\ --- Goal side-condition $SCG$ extended with any fresh variables introduced in $sc$.
 
 Process:
 \begin{eqnarray*}
@@ -862,6 +864,7 @@ Process:
 \\ sc &=& discharge(SCG\implies SCL')
 \\ C' &=&\beta'(C)
 \\ G(C') &=& G(C)[C'/C]
+\\ sc' &=& SCG \cup freshvars(sc)
 \end{eqnarray*}
 
 Summary:
@@ -882,23 +885,20 @@ basicMatch :: MatchClass
             -> TermSC  -- candidate assertion
             -> Term       -- sub-part of law being matched
             -> Matches
-basicMatch mc vts law@((n,asn@(Assertion tP scP)),_) repl asnC@(tC,scC) partsP
+basicMatch mc vts law@((n,asnP@(Assertion tP scP)),_) replP (tC,scC) partsP
   =  do bind <- match vts tC partsP
-        kbind <- bindKnown vts bind repl
-        fbind <- bindFloating vts kbind repl
-        let ictxt = mkInsCtxt vts scC
-        scPinC <- instantiateSC ictxt fbind scP
-        scD <- scDischarge ss scC scPinC
+        kbind <- bindKnown vts bind tP
+        fbind <- bindFloating vts kbind tP -- was replP 
+        let insctxt = mkInsCtxt vts scC
+        tP' <- instantiate insctxt fbind replP
+        scP' <- instantiateSC insctxt fbind scP
+        scP'' <- scDischarge (getDynamicObservables vts) scC scP'
 
-        if all isFloatingASC (fst scD)
-          then do mrepl <- instantiate ictxt fbind repl
-                  return $ MT n (unwrapASN asn) (chkPatn mc partsP)
-                              fbind repl scC scPinC mrepl
+        if all isFloatingVSC (fst scP'')
+          then return $ MT n (unwrapASN asnP) (chkPatn mc partsP)
+                             fbind replP scC scP' tP'
           else fail "undischargeable s.c."
   where
-    ss = S.elems $ S.map theSubscript $ S.filter isDuring
-                 $ S.map gvarWhen $ mentionedVars tC
-
     chkPatn MatchEqvLHS (Var _ v)
       | lookupVarTables vts v == UnknownVar  =  MatchEqvVar 1
     chkPatn MatchEqvRHS (Var _ v)
@@ -1010,10 +1010,10 @@ dispLiveProof maxm liveProof
  = unlines $
        shProof liveProof
        ++
-       ( " ..."
-         : displayMatches maxm (mtchCtxts liveProof) (matches liveProof)
-         : [ underline "           "
+       ( displayMatches maxm (mtchCtxts liveProof) (matches liveProof)
+         : [ "-----------" -- underline "           "
            , dispSeqZip (fPath liveProof) (conjSC liveProof) (focus liveProof)
+           , "XPNDD:\n"++(trSideCond $ xpndSC liveProof)
            , "" ]
        )
  where (trm,sc) = unwrapASN $ conjecture liveProof
@@ -1028,15 +1028,15 @@ dispEndProof liveProof = unlines $ shProof liveProof
 shProof :: LiveProof -> [String]
 shProof liveProof
  =   ( ("\nProof for "++red (widthHack 2 $ conjName liveProof))
-       : ("\t" ++ green(trTerm 0 trm ++ "  "++ trSideCond sc))
+       : ("\t" ++ green(trTerm 0 trm ++ "\n\t"++ trSideCond sc))
        : ("by "++strategy liveProof)
        : map shLiveStep (reverse (stepsSoFar liveProof))
        ) 
  where (trm,sc) = unwrapASN $ conjecture liveProof
 
 shLiveStep :: CalcStep -> String
-shLiveStep ( just, asn )
-  = unlines' [ trAsn asn
+shLiveStep ( just, asn@(Assertion tm sc) )
+  = unlines' [ trTerm 0 tm
              , showJustification just]
 
 displayMatches :: Int -> [MatchContext] -> Matches -> String
@@ -1047,18 +1047,12 @@ displayMatches maxm mctxts matches
   where vts = concat $ map thd3 mctxts
 
 shMatch vts (i, mtch)
- = show i ++ " : "++ ldq ++ green (truelawname $ mName mtch) ++ rdq
-   ++ " "
-   ++ (bold $ blue $ trTerm 0 $ mRepl mtch)
-   ++ "  " ++ shSCImplication (mLocSC mtch) (mLawSC mtch)
+ = show i ++ " : "++ ldq ++ red (truelawname $ mName mtch) ++ rdq
    ++ " " ++ shMClass (mClass mtch)
+   ++ lnindent ++ (bold $ blue $ trTerm 0 $ mRepl mtch)
+   ++ lnindent ++ shSCImplication (mLocSC mtch) (mLawSC mtch)
  where
-    -- bind = mBind mtch
-    -- repl = mRepl mtch
-    -- arepl = case bindFloating vts bind repl of
-    --           But msgs   ->  But msgs
-    --           Yes abind  ->  instantiate abind repl
-    -- (_,lsc) = mAsn mtch
+    lnindent = "\n    "
     showRepl (But msgs) = unlines ("auto-instantiate failed!!":msgs)
     showRepl (Yes brepl) = trTerm 0 brepl
 
@@ -1090,13 +1084,13 @@ shMappedCond vts scC bind lsc
       Nothing    ->  trSideCond lsc ++ (red " (law-sc!)")
       Just ilsc  ->  trSideCond ilsc
 
-shMClass MatchAll         =  green "*"
-shMClass MatchEqvLHS      =  green (_eqv++"lhs")
-shMClass MatchEqvRHS      =  green (_eqv++"rhs")
-shMClass (MatchEqv is)    =  green (_eqv++show is)
-shMClass MatchAnte        =  green ("* "++_imp)
-shMClass MatchCnsq        =  green (_imp++"  *")
-shMClass (MatchEqvVar i)  =  red ("trivial!"++show i)
+shMClass MatchAll         =  green "[*]"
+shMClass MatchEqvLHS      =  green ("["++_eqv++"lhs]")
+shMClass MatchEqvRHS      =  green ("["++_eqv++"rhs]")
+shMClass (MatchEqv is)    =  green ("["++_eqv++show is++"]")
+shMClass MatchAnte        =  green ("[*"++_imp++" ]")
+shMClass MatchCnsq        =  green ("["++_imp++" *]")
+shMClass (MatchEqvVar i)  =  red ("[trivial!"++show i++"]")
 \end{code}
 
 We can display laws from a context (again, this should be done elsewhere).

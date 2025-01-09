@@ -10,7 +10,7 @@ module REqState ( REqSettings(..)
                 , initREqSettings
                 , rEqSettingStrings, showSettingStrings, showSettings
                 , changeSettings
-                , REqState(..)
+                , REqState(..), reqstate0
                 , projectDir__, projectDir_
                 , modified__, modified_, changed
                 , theories__, theories_
@@ -77,6 +77,7 @@ data REqSettings
      -- Section 2 - settings that specify behaviour
      , showTrivialMatches :: Bool -- tm, trivialmatch --> matchFilter
      , showTrivialQuantifiers :: Bool -- tq, trivialquant --> matchFilter
+     , showTrivialSubst :: Bool -- ts, trivialsubst --> matchFilter
      , showFloatingVariables :: Bool -- fv, floatvars --> matchFilter
      -- Section 3 - settings that implement behaviour from Section 2
      , matchFilter :: FilterFunction
@@ -101,6 +102,10 @@ showTrivialQuantifiers__ f r
   =  matchFilterUpdate r{showTrivialQuantifiers = f $ showTrivialQuantifiers r}
 showTrivialQuantifiers_   =  showTrivialQuantifiers__ . const
 
+showTrivialSubst__ f r
+  =  matchFilterUpdate r{showTrivialSubst = f $ showTrivialSubst r}
+showTrivialSubst_   =  showTrivialSubst__ . const
+
 showFloatingVariables__ f r
   =  matchFilterUpdate r{showFloatingVariables = f $ showFloatingVariables r}
 showFloatingVariables_   =  showFloatingVariables__ . const
@@ -122,6 +127,7 @@ matchFilterUpdate r
     filterSpecs
       = [ ( not $ showTrivialMatches r,     isNonTrivial          )
         , ( not $ showTrivialQuantifiers r, nonTrivialQuantifiers )
+        , ( not $ showTrivialSubst r,       nonTrivialSubstitution)
         , ( not $ showFloatingVariables r,  noFloatingVariables   )
         ]
 \end{code}
@@ -141,10 +147,11 @@ andIfWanted wanted newf currf ctxt mtch
 \begin{code}
 initREqSettings
   = matchFilterUpdate $ REqSet {
-      maxMatchDisplay = 20
-    , showTrivialMatches = True
-    , showTrivialQuantifiers = True 
-    , showFloatingVariables = False 
+      maxMatchDisplay        = 30
+    , showTrivialMatches     = False
+    , showTrivialQuantifiers = False 
+    , showTrivialSubst       = False
+    , showFloatingVariables  = True 
     , matchFilter = acceptAll
     }
 \end{code}
@@ -158,6 +165,7 @@ type SettingStrings = (String,String,String) -- short,type,long
 rEqSettingStrings = [ ("mm","Number","Max. Match Display")
                     , ("tm","Bool","Show Trivial Matches")
                     , ("tq","Bool","Show Trivial Quantifiers")
+                    , ("ts","Bool","Show Trivial Subsitutions")
                     , ("fv","Bool","Show Floating Variables")
                     ]
 showSettingStrings (short,typ,long)
@@ -175,11 +183,12 @@ showSettings rsettings
     disp r ("mm",_,text) = text ++ " = " ++ show (maxMatchDisplay r)
     disp r ("tm",_,text) = text ++ " = " ++ show (showTrivialMatches r)
     disp r ("tq",_,text) = text ++ " = " ++ show (showTrivialQuantifiers r)
+    disp r ("ts",_,text) = text ++ " = " ++ show (showTrivialSubst r)
     disp r ("fv",_,text) = text ++ " = " ++ show (showFloatingVariables r)
 \end{code}
 
 \begin{code}
-changeSettings :: (Monad m, MonadFail m) => String -> String -> REqSettings -> m REqSettings
+changeSettings :: MonadFail m => String -> String -> REqSettings -> m REqSettings
 changeSettings name valstr rqset
   = case lookupSettingShort name rEqSettingStrings of
       Nothing -> fail ("No such setting: "++name)
@@ -192,7 +201,7 @@ lookupSettingShort n (sss@(s,_,_):ssss)
 \end{code}
 
 \begin{code}
-changeSetting :: (Monad m, MonadFail m) => SettingStrings  -> String -> REqSettings
+changeSetting :: MonadFail m => SettingStrings  -> String -> REqSettings
                          -> m REqSettings
 changeSetting (short,typ,_) valstr reqs
  | typ == "Bool"    =  changeBoolSetting short (readBool valstr) reqs
@@ -201,16 +210,17 @@ changeSetting (short,typ,_) valstr reqs
 \end{code}
 
 \begin{code}
-changeBoolSetting :: (Monad m, MonadFail m) => String  -> Bool -> REqSettings -> m REqSettings
+changeBoolSetting :: MonadFail m => String  -> Bool -> REqSettings -> m REqSettings
 changeBoolSetting name value reqs
  | name == "tm"  =  return $ showTrivialMatch_ value reqs
  | name == "tq"  =  return $ showTrivialQuantifiers_ value reqs
+ | name == "ts"  =  return $ showTrivialSubst_ value reqs
  | name == "fv"  =  return $ showFloatingVariables_ value reqs
  | otherwise     =  fail ("changeBoolSetting - unknown field: "++name)
 \end{code}
 
 \begin{code}
-changeNumberSetting :: (Monad m, MonadFail m) => String  -> Int -> REqSettings -> m REqSettings
+changeNumberSetting :: MonadFail m => String  -> Int -> REqSettings -> m REqSettings
 changeNumberSetting name value reqs
  | name == "mm"  =  return $ maxMatchDisplay_ value reqs
  | otherwise        =  fail ("changeNumberSetting - unknown field: "++name)
@@ -223,6 +233,7 @@ reqsetHDR = "BEGIN "++reqset ; reqsetTRL = "END "++ reqset
 mmKey = "MM = "
 tmKey = "TM = "
 tqKey = "TQ = "
+tsKey = "TX = "  -- TS is in use
 fvKey = "FV = "
 
 writeREqSettings :: REqSettings -> [String]
@@ -231,25 +242,28 @@ writeREqSettings rqset
     , mmKey ++ show (maxMatchDisplay rqset)
     , tmKey ++ show (showTrivialMatches rqset)
     , tqKey ++ show (showTrivialQuantifiers rqset)
+    , tsKey ++ show (showTrivialSubst rqset)
     , fvKey ++ show (showFloatingVariables rqset)
     , reqsetTRL ]
 
-readREqSettings :: (Monad m, MonadFail m) => [String] -> m (REqSettings, [String])
+readREqSettings :: MonadFail m => [String] -> m (REqSettings, [String])
 readREqSettings [] = fail "readREqSettings: no text"
 readREqSettings txts
   = do rest1 <- readThis reqsetHDR txts
        (theMMD,rest2) <- readKey mmKey read rest1
        (theMHT,rest3) <- readKey tmKey readBool rest2
        (theMHQ,rest4) <- readKey tqKey readBool rest3
-       (theMHF,rest5) <- readKey fvKey readBool rest4
-       rest6 <- readThis reqsetTRL rest5
+       (theMHS,rest5) <- readKey tsKey readBool rest4
+       (theMHF,rest6) <- readKey fvKey readBool rest5
+       rest7 <- readThis reqsetTRL rest6
        return ( matchFilterUpdate
                  ( REqSet theMMD
                           theMHT
                           theMHQ
+                          theMHS
                           theMHF
                           acceptAll )
-              , rest6 )
+              , rest7 )
 \end{code}
 
 \newpage
@@ -283,6 +297,14 @@ currTheory__ f r = r{currTheory = f $ currTheory r}
 currTheory_      = currTheory__ . const
 liveProofs__ f r = r{liveProofs = f $ liveProofs r}
 liveProofs_      = liveProofs__ . const
+
+reqstate0 = REqState { inDevMode = False
+                     , projectDir = ""
+                     , modified = False
+                     , settings = initREqSettings
+                     , theories = noTheories
+                     , currTheory = ""
+                     , liveProofs = M.empty }
 \end{code}
 
 \newpage
@@ -314,7 +336,7 @@ writeREqState reqs
 
 We have to split this into two phases:
 \begin{code}
-readREqState1 :: (Monad m, MonadFail m) => [String]
+readREqState1 :: MonadFail m => [String]
               -> m ([String],[String])
 readREqState1 [] = fail "readREqState1: no text."
 readREqState1 txts
@@ -322,14 +344,13 @@ readREqState1 txts
        (thryNms,rest2) <- readTheories1 rest1
        return (thryNms,rest2)
 
-readREqState2 :: (Monad m, MonadFail m) => REqSettings ->  [(String,Theory)]
+readREqState2 :: MonadFail m => REqSettings ->  [(String,Theory)]
               -> [String] -> m REqState
 readREqState2 _ _ [] = fail "readREqState2: no text."
 readREqState2 theSet thMap txts
   = do (thrys,rest1) <- readTheories2 thMap txts
        (cThNm,rest2) <- readKey currThKEY id rest1
-       let thylist = fromJust $ getTheoryDeps cThNm thrys
-       (lPrfs,rest3) <- readLiveProofs thylist rest2
+       (lPrfs,rest3) <- readLiveProofs thrys rest2
        readThis reqstateTLR rest3 -- ignore any junk after trailer.
        return $ REqState { inDevMode = False
                          , projectDir = ""

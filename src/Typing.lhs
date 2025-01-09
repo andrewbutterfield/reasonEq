@@ -267,7 +267,7 @@ addVarType vts fis env v@(Vbl n _ _)
 \newpage
 \subsection{Infer Types}
 
-We use some special names to identify lambdas and explixit application operators
+We use some special names to identify lambdas and explicit application operators
 \begin{code}
 lambda = jId "lambda"
 app = jId "@"

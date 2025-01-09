@@ -72,7 +72,7 @@ data Term'
   | Lam'    Type Identifier VarList
   | Cls'             Identifier
   | Sub'    Type Substn
-  | Substn' Type Term LVarSub TermSubL  -- subst-pairs before, reversed
+  | Substn' Type Term LVarSubs TermSubL  -- subst-pairs before, reversed
                                   Variable -- focus target variable
                                   TermSubL  -- subst-pairs after focus
   deriving (Eq,Show,Read)

@@ -1,10 +1,11 @@
 BEGIN THEORY Equality
 DEPS = ["Implies","Equiv"]
-KNOWN = VD (fromList [(VR (Id "=" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList [])
+KNOWN = VD ("Equality",fromList [(VR (Id "=" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList [])
 BEGIN LIST LAWS
 (("=_refl",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "e" 0,VO,WS)),V T (VR (Id "e" 0,VO,WS))],([],fromList []))),Axiom)
 (("=_symm",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "e" 0,VO,WS)),V T (VR (Id "f" 0,VO,WS))],C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "f" 0,VO,WS)),V T (VR (Id "e" 0,VO,WS))]],([],fromList []))),Axiom)
 (("=_trans",ASN (C (TF TB (TG (Id "B" 0))) True (Id "imp" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "e" 0,VO,WS)),V T (VR (Id "f" 0,VO,WS))],C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "f" 0,VO,WS)),V T (VR (Id "g" 0,VO,WS))]],C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "e" 0,VO,WS)),V T (VR (Id "g" 0,VO,WS))]],([],fromList []))),Axiom)
+(("=_subst",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [S T (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "e" 0,VO,WS)),V T (VR (Id "f" 0,VO,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VO,WS),[],[]))])),C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [S T (V T (VR (Id "e" 0,VO,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VO,WS),[],[]))])),S T (V T (VR (Id "f" 0,VO,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VO,WS),[],[]))]))]],([],fromList []))),Assumed)
 END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS
@@ -15,6 +16,5 @@ END LIST DEFFOLD
 BEGIN LIST DEFUNFOLD
 END LIST DEFUNFOLD
 BEGIN LIST CONJECTURES
-("=_subst",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [S T (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "e" 0,VO,WS)),V T (VR (Id "f" 0,VO,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VO,WS),[],[]))])),C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [S T (V T (VR (Id "e" 0,VO,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VO,WS),[],[]))])),S T (V T (VR (Id "f" 0,VO,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VO,WS),[],[]))]))]],([],fromList [])))
 END LIST CONJECTURES
 END THEORY Equality

@@ -56,7 +56,7 @@ apred2 = FunType (tnvar 1) $ FunType (tnvar 2) bool
 
 \begin{code}
 nat    = GivenType $ jId "N"
-int    = GivenType $ jId $ "Z"
+int    = GivenType $ jId "Z"
 \end{code}
 
 

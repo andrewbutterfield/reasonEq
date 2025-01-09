@@ -1,4 +1,4 @@
-\section{Assertions}
+\chapter{Assertions}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2021-22
 
@@ -8,6 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Assertions (
   Assertion, pattern Assertion, mkAsn, unwrapASN
+, unsafeASN
 , pattern AssnT, assnT, pattern AssnC, assnC
 , normaliseQuantifiers
 -- for testing onl
@@ -21,9 +22,11 @@ import qualified Data.Set as S
 import Data.Map(Map)
 import qualified Data.Map as M
 
+import NotApplicable
 import YesBut
 import Utilities (injMap, unlines')
 import Control (mapboth,mapaccum,mapsnd)
+import UnivSets
 import LexBase
 import Variables
 import AST
@@ -40,7 +43,7 @@ import Debugger
 
 
 \newpage
-\subsection{Introduction}
+\section{Introduction}
 
 
 An assertion is a predicate term coupled with side-conditions.
@@ -172,7 +175,7 @@ pattern AssnC sc         <-  ASN (_,  sc)
 We make an assertion by checking side-condition safety,
 and then returning the assertion or signalling failure.
 \begin{code}
-mkAsn :: (Monad m, MonadFail m) => Term -> SideCond -> m Assertion
+mkAsn :: MonadFail m => Term -> SideCond -> m Assertion
 mkAsn tm sc
   | safeSideCondition tm sc  = return $ ASN (tm, sc)
   | otherwise                = fail msg
@@ -182,6 +185,13 @@ mkAsn tm sc
                    , "s.c. = " ++ show sc
                    ]
 \end{code}
+
+We also have an unsafe version (for use by \h{domatch}):
+\begin{code}
+unsafeASN :: Term -> SideCond -> Assertion
+unsafeASN tm sc  =  ASN (tm, sc)
+\end{code}
+
 
 We can select assertion components by function,
 and unwrap completely:
@@ -197,7 +207,7 @@ unwrapASN (ASN tsc)  =  tsc
 \end{code}
 
 
-\subsection{Safe Side-Conditions}
+\section{Safe Side-Conditions}
 
 A side-condition is safe w.r.t. a term if any observational variable
 it mentions only occurs in the term as free, or bound, but not both.
@@ -417,7 +427,7 @@ safeSideCondition tm sc  =  all (\ x -> scSafe x tm) $ S.toList $ scVarSet sc
   The use of \texttt{scVarSet} is problematic --- loss of uniformity info.
 }
 
-\subsection{Normalising Bound Variables}
+\section{Normalising Bound Variables}
 
 \textbf{Note:}
 \textsf{Currently buggy as free variables that occur syntactically later
@@ -602,7 +612,7 @@ normQ vv trm = (trm, vv) -- Val, Typ
 \end{code}
 
 
-\subsection{Normalising Side-Conditions}
+\section{Normalising Side-Conditions}
 
 Working on side-conditions is tricky,
 as they mention a variable that might have have been bound more than
@@ -614,14 +624,18 @@ we need to produce $n+1$ side-conditions, for $v_0$ \dots $v_n$.
 We call this process ``spanning''.
 \begin{code}
 normSC :: VarVersions -> SideCond -> SideCond
-normSC vv (ascs,fvs)
-  = case mkSideCond [] (map (normASC vv) ascs) (normFresh vv fvs) of
+normSC vv (vscs,fvs)
+  = case mkSideCond (map (fromJust . normASC vv) vscs) (normFresh vv fvs) of
       Yes sc    ->  sc
       -- this should not fail, but just in case ...
       But msgs  ->  error ("normSC: "++unlines' msgs)
 
-normASC vv (Disjoint  u gv vs)  =  Disjoint  u (normQGVar vv gv) (normQVSet vv vs)
-normASC vv (CoveredBy u gv vs)  =  CoveredBy u (normQGVar vv gv) (normQVSet vv vs)
+normASC vv (VSC gv nvsD nvsC nvsCd)  
+  =  fromJust $ mkVSC (normQGVar vv gv) (normQVNset vv nvsD) 
+            (normQVNset vv nvsC) (normQVNset vv nvsCd)
+
+normQVNset _ NA = NA
+normQVNset vv (The vs) = The $ normQVSet vv vs
 
 normFresh vv vs = normQVSet vv vs
 \end{code}

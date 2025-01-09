@@ -38,8 +38,10 @@ import Data.List (nub, sort, (\\), intercalate)
 import Data.List.Split (splitOn)
 import Data.Char
 
+import NotApplicable
 import Symbols
 import Utilities
+import UnivSets
 import LexBase
 import Variables
 import AST
@@ -330,9 +332,12 @@ a marked focus term needs highlighting:
 \begin{code}
 trterm trid ctxtp (Cons tk _ s [t])
  | s == focusMark  =  highlightFocus $ trterm trid ctxtp t
- | s == jId "not"  =  trid s ++ trterm trid 99 t
+ | s == jId "not"  =  trnot s t
  | s == jId "neg"  =  trunary s t
  where  
+  trnot s t
+    | isAtomic t  =  trid s ++ trterm trid 99 t    
+    | otherwise   =  (trid s)++"("++trterm trid 0 t++")"
   trunary s t
     | isAtomic t  =  '(':(trid s)++trterm trid 0 t++")"
     | otherwise   =  trid s ++ trterm trid 99 t
@@ -528,19 +533,29 @@ trtz trid (t,wayup) = trterm trid 0 $ exitTZ (markfocus t,wayup)
 \begin{code}
 trSideCond = trsidecond trId
 trSideCondU = trsidecond trIdU
-trsidecond trid sc@(ascs,fvs)
+trsidecond trid sc@(vscs,fvs)
   | isTrivialSC sc  =  _top
-  | otherwise       =  intcalNN ", " (    map (tratmsidecond trid) ascs
-                                      ++ [trfresh trid fvs] )
+  | otherwise       =  intcalNN ", " 
+                         ( concat (map (trtvarsidecond trid) vscs)
+                           ++ [trfresh trid fvs] )
 
-tratmsidecond trid (Disjoint _ gv vs)
-  = trovset trid vs ++ _notin ++ trgvar trid gv
+trtvarsidecond trid (VSC gv NA NA NA) = [_top]
+trtvarsidecond trid (VSC gv mvsD mvsC mvsCd)
+  = [trDisjSC trid gv mvsD, trCovByM trid gv mvsC, trDynCovM trid gv mvsCd]
 
-tratmsidecond trid (CoveredBy _ gv vs) 
-  = trovset trid vs ++ _supseteq ++ trgvar trid gv
+trDisjSC trid gv NA = ""
+trDisjSC trid gv (The vsD)
+  | S.null vsD  =  ""
+  | otherwise   =  trovset trid vsD ++ _notin ++ trgvar trid gv
 
-tratmsidecond trid (DynamicCoverage _ gv vs) 
-  = trovset trid vs ++ _supseteq ++ _subStr "a" ++ trgvar trid gv
+trCovByM trid gv NA = ""
+trCovByM trid gv (The vsC) 
+  = trovset trid vsC ++ _supseteq ++ trgvar trid gv
+
+trDynCovM trid gv NA = ""
+trDynCovM trid gv (The vsC) 
+  = trovset trid vsC ++ _supseteq ++_subStr "a" ++ trgvar trid gv
+
 
 trfresh trid fvs
   | S.null fvs  =  ""

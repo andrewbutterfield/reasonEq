@@ -169,7 +169,7 @@ xyzDKnown  =   fromJust $ addKnownConst skip skipDef
             $ fromJust $ addKnownVar vz' int
             $ fromJust $ addKnownVar vok int
             $ fromJust $ addKnownVar vok' int
-            $ newVarTable
+            $ newNamedVarTable xyzDName
 \end{code}
 
 \newpage

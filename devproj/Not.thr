@@ -1,9 +1,15 @@
 BEGIN THEORY Not
 DEPS = ["Equiv"]
-KNOWN = VD (fromList [(VR (Id "not" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TG (Id "B" 0))))],fromList [],fromList [])
+KNOWN = VD ("Not",fromList [(VR (Id "not" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TG (Id "B" 0))))],fromList [],fromList [])
 BEGIN LIST LAWS
 (("false_def",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [K (TF TB (TG (Id "B" 0))) (VB False),C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [K (TF TB (TG (Id "B" 0))) (VB True)]],([],fromList []))),Axiom)
 (("not_eqv_distr",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))],V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],([],fromList []))),Axiom)
+(("not_eqv_swap",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))],V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]]],([],fromList []))),Assumed)
+(("not_invol",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))]],V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))],([],fromList []))),Assumed)
+(("false_neg",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [K (TF TB (TG (Id "B" 0))) (VB False)],K (TF TB (TG (Id "B" 0))) (VB True)],([],fromList []))),Assumed)
+(("not_def",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),K (TF TB (TG (Id "B" 0))) (VB False)]],([],fromList []))),Assumed)
+(("false_subst",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [S (TF TB (TG (Id "B" 0))) (K (TF TB (TG (Id "B" 0))) (VB False)) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),K (TF TB (TG (Id "B" 0))) (VB False)],([],fromList []))),Assumed)
+(("not_subst",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [S (TF TB (TG (Id "B" 0))) (C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [S (TF TB (TG (Id "B" 0))) (V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))]],([],fromList []))),Assumed)
 END LIST LAWS
 BEGIN LIST PROOFS
 END LIST PROOFS
@@ -14,11 +20,5 @@ END LIST DEFFOLD
 BEGIN LIST DEFUNFOLD
 END LIST DEFUNFOLD
 BEGIN LIST CONJECTURES
-("not_eqv_swap",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))],V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]]],([],fromList [])))
-("not_invol",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))]],V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))],([],fromList [])))
-("false_neg",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [K (TF TB (TG (Id "B" 0))) (VB False)],K (TF TB (TG (Id "B" 0))) (VB True)],([],fromList [])))
-("not_def",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),K (TF TB (TG (Id "B" 0))) (VB False)]],([],fromList [])))
-("false_subst",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [S (TF TB (TG (Id "B" 0))) (K (TF TB (TG (Id "B" 0))) (VB False)) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),K (TF TB (TG (Id "B" 0))) (VB False)],([],fromList [])))
-("not_subst",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [S (TF TB (TG (Id "B" 0))) (C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [S (TF TB (TG (Id "B" 0))) (V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))]],([],fromList [])))
 END LIST CONJECTURES
 END THEORY Not

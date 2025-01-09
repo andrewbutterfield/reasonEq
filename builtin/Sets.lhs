@@ -72,10 +72,11 @@ card_t t = FunType (power t) int
 \\ \subseteq &:& \Set t \fun \Set t \fun \Bool
 \\ \# && \Set t \fun \Int
 \end{eqnarray*}
+All of the above are substitutable.
 \begin{code}
 i_mt = jId "emptyset" ; mtIntro      = mkConsIntro i_mt  sett
 i_set = jId "set"   
-i_mbr = jId "mbr"     ; inIntro     = mkConsIntro  i_mbr $ mbr_t  elemt
+i_mbr = jId "mbr"     ; inIntro      = mkConsIntro i_mbr $ mbr_t  elemt
 i_U = jId "union"     ; unionIntro   = mkConsIntro i_U   $ setf_2 elemt
 i_I = jId "intsct"    ; intsctIntro  = mkConsIntro i_I   $ setf_2 elemt
 i_D = jId "\\"        ; setdiffIntro = mkConsIntro i_D   $ setf_2 elemt
@@ -84,19 +85,22 @@ i_crd = jId "#"       ; cardIntro    = mkConsIntro i_crd $ card_t elemt
 \end{code}
 
 \begin{code}
+r2T = reconcile2Types ; rTs = reconcileTypes
+tOf = termtype ; j2T = join2Types ; jTs = joinTypes  -- shorthand
+
 mtset :: Term
-mtset = fromJust $ var sett $ StaticVar i_mt
+mtset           =  fromJust $ var sett $ StaticVar i_mt
 senum :: [Term] -> Term
-senum ts = Cons sett True i_set ts
+senum ts        =  Cons (jTs ts) True i_set ts
 ssingle :: Term -> Term
-ssingle t = senum [t]
+ssingle t       =  senum [t]
 mbr :: Term -> Term -> Term
-mbr e s = Cons (mbr_t elemt) False i_mbr [e,s]
-subseteq s1 s2 = Cons bool False i_SS [s1,s2]
-sunion s1 s2 = Cons sett False i_U [s1,s2]
-sintsct s1 s2 = Cons sett False i_I [s1,s2]
-sdiff s1 s2 = Cons sett False i_D [s1,s2]
-scard s = Cons int False i_crd [s]
+mbr e s         =  Cons (mbr_t elemt) True i_mbr [e,s]
+subseteq s1 s2  =  Cons bool          True i_SS  [s1,s2]
+sunion s1 s2    =  Cons (j2T s1 s2)   True i_U   [s1,s2]
+sintsct s1 s2   =  Cons (j2T s1 s2)   True i_I   [s1,s2]
+sdiff s1 s2     =  Cons (j2T s1 s2)   True i_D   [s1,s2]
+scard s         =  Cons int           True i_crd [s]
 \end{code}
 
 
@@ -126,7 +130,7 @@ setKnown
     setdiffIntro $
     subsetIntro $
     cardIntro $
-    newVarTable
+    newNamedVarTable setName
 \end{code}
 
 
@@ -168,13 +172,13 @@ cjMofSingle = ( "mbr" -.- "set" -.- "self"
 axSetEqDef = ( "set" -.- "=" -.- "def"
              , ( (s1 `isEqualTo` s2) 
                  ===
-                 forall [gvx]
+                 forAll [gvx]
                  (x `mbr` s1 === x `mbr` s2)
              , scTrue ) )
 axSubSetEqDef = ( "subseteq" -.- "def"
                 , ( (s1 `subseteq` s2) 
                     ===
-                    forall [gvx]
+                    forAll [gvx]
                     (x `mbr` s1 ==> x `mbr` s2)
                 , scTrue ) )
 \end{code}
@@ -221,7 +225,7 @@ axMofIntsct = ( "mbr" -.- "intsct" -.- "def"
                  ((x `mbr` s1) /\ (x `mbr` s2))
              , scTrue ) )
 cjIZero = ( "intsct" -.- "zero"
-           , ( (s `sintsct` mtset) `isEqualTo` mtset
+           , ( (s `sintsct` mtset) `isEqualTo` mtset 
            , scTrue ) )
 cjISymm  = ( "intsct" -.- "symm"
            , ( (s1 `sintsct` s2) `isEqualTo` (s2 `sintsct` s1)
@@ -239,6 +243,9 @@ cjIAssoc  = ( "intsct" -.- "assoc"
    x \mof (S \setminus T) &=& x \mof S \land \lnot(x \mof T)
 \\ S \setminus \emptyset      &=& S
 \\ (S_1 \setminus S_2) \setminus S_3 &=& S_1 \setminus (S_2 \cup S_3)
+\\ S_1 \setminus (S_2 \setminus S_3) 
+   &=& 
+   (S_1 \setminus S_2) \cup (S_1 \cap S_3)
 \end{eqnarray*}
 \begin{code}
 axMofDiff = ( "mbr" -.- "\\" -.- "def"
@@ -249,13 +256,74 @@ axMofDiff = ( "mbr" -.- "\\" -.- "def"
 cjDRUnit = ( "\\" -.-"r" -.- "unit"
            , ( (s `sdiff` mtset) `isEqualTo` s
            , scTrue ) )
-cjDSymm  = ( "\\" -.- "l" -.- "assoc"
-           , ( ((s1 `sdiff` s2) `sdiff` s3)
-              `isEqualTo` 
-              (s1 `sdiff` (s2 `sunion` s3))
-           , scTrue ) )
+cjDLSymm  = ( "\\" -.- "l" -.- "assoc"
+            , ( ((s1 `sdiff` s2) `sdiff` s3)
+               `isEqualTo` 
+               (s1 `sdiff` (s2 `sunion` s3))
+            , scTrue ) )
+cjDRSymm  = ( "\\" -.- "r" -.- "assoc"
+            , ( (s1 `sdiff` (s2 `sdiff` s3))
+               `isEqualTo` 
+               ((s1 `sdiff` s2) `sunion` (s1 `sintsct` s3))
+            , scTrue ) )
 \end{code}
 
+
+\newpage
+\subsection{Mixed Set Operators}
+
+\begin{eqnarray*}
+   (S_1 \cup S_2) \cap S_3 &=& (S_1 \cap S_3) \cup (S_2 \cap S_3)
+\\ (S_1 \cap S_2) \cup S_3 &=& (S_1 \cup S_3) \cap (S_2 \cup S_3)
+\\ (S_1 \cup S_2) \setminus S_3 &=& (S_1 \setminus S_3) \cup (S_2 \setminus S_3)
+\\ (S_1 \cap S_2) \setminus S_3 &=& (S_1 \setminus S_3) \cap (S_2 \setminus S_3)
+\\ S_1 \setminus (S_2 \cup S_3) &=& (S_1 \setminus S_2) \cap (S_1 \setminus S_3)
+\\ S_1 \setminus (S_2 \cap S_3) &=& (S_1 \setminus S_2) \cup (S_1 \setminus S_3)
+\\ (S_1 \setminus S_2) \cup S_3 &=& (S_1 \cup S_3) \setminus (S_2 \setminus S_3)
+\\ (S_1 \setminus S_2) \cap S_3 &=& (S_1 \cap S_3) \setminus S_2
+\end{eqnarray*}
+\begin{code}
+cjUIDistr = ( "union" -.-"intsct" -.- "distr"
+            , ( ( (s1 `sunion` s2) `sintsct` s3 )
+                `isEqualTo` 
+                ( (s1 `sintsct` s3) `sunion` (s2 `sintsct` s3))
+            , scTrue ) )
+cjIUDistr = ( "intsct" -.-"union" -.- "distr"
+            , ( ( (s1 `sintsct` s2) `sunion` s3 )
+                `isEqualTo` 
+                ( (s1 `sunion` s3) `sintsct` (s2 `sunion` s3))
+            , scTrue ) )
+cjUDDistr = ( "union" -.-"\\" -.- "distr"
+            , ( ( (s1 `sunion` s2) `sdiff` s3 )
+                `isEqualTo` 
+                ( (s1 `sdiff` s3) `sunion` (s2 `sdiff` s3))
+            , scTrue ) )
+cjIDDistr = ( "intsct" -.-"\\" -.- "distr"
+            , ( ( (s1 `sintsct` s2) `sdiff` s3 )
+                `isEqualTo` 
+                ( (s1 `sdiff` s3) `sintsct` (s2 `sdiff` s3))
+            , scTrue ) )
+cjDURDistr = ( "\\" -.-"union" -.- "r" -.- "distr"
+            , ( (s1 `sdiff` (s2 `sunion` s3 ))
+                `isEqualTo` 
+                ((s1 `sdiff` s2) `sintsct` (s1 `sdiff` s3))
+            , scTrue ) )
+cjDIRDistr = ( "\\" -.-"intsct" -.- "r" -.- "distr"
+            , ( ( s1 `sdiff` (s2 `sintsct` s3 ))
+                `isEqualTo` 
+                ( (s1 `sdiff` s2) `sunion` (s1 `sdiff` s3))
+            , scTrue ) )
+cjDULDistr = ( "\\" -.-"union" -.- "l" -.- "distr"
+             , ( ((s1 `sdiff` s2) `sunion` s3)
+                `isEqualTo` 
+                ( (s1 `sunion` s3) `sdiff` (s2 `sdiff` s3))
+            , scTrue ) )
+cjDILDistr = ( "\\" -.-"intsct" -.- "l" -.- "distr"
+             , ( ((s1 `sdiff` s2) `sintsct` s3)
+                `isEqualTo` 
+                ((s1 `sintsct` s3) `sdiff` s2)
+             , scTrue ) )
+\end{code}
 
 \subsection{Set Cardinality}
 
@@ -277,7 +345,6 @@ axCardUnion = ( "#" -.- "union" -.- "def"
                   (scard s1 `add` scard s2 `sub` scard (s1 `sintsct` s2))
               , scTrue ) )
 \end{code}
-
 
 
 We collect these together:
@@ -315,7 +382,9 @@ setConjectures
      [ cjMofSingle
      , cjURUnit, cjUSymm, cjUAssoc 
      , cjIZero, cjISymm, cjIAssoc
-     , cjDRUnit, cjDSymm
+     , cjDRUnit, cjDLSymm, cjDRSymm
+     , cjUIDistr, cjIUDistr, cjUDDistr, cjIDDistr
+     , cjDURDistr, cjDIRDistr, cjDULDistr, cjDILDistr
      ]
 \end{code}
 

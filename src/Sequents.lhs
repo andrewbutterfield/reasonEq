@@ -1,4 +1,4 @@
-\section{Sequents}
+\chapter{Sequents}
 \begin{verbatim}
 Copyright  Andrew Buttefield (c) 2018-22
 
@@ -57,7 +57,7 @@ import Debugger
 We define types, including zippers,for sequents.
 
 \newpage
-\subsection{Sequent Type}
+\section{Sequent Type}
 
 A sequent is a collection containing
 (i) $\mathcal L$ and $\mathcal H$ as a list of theories
@@ -80,7 +80,7 @@ data Sequent
   deriving (Eq, Show, Read)
 \end{code}
 
-\subsection{Sequent Strategies}
+\section{Sequent Strategies}
 
 Here we unwrap \texttt{Assertion}s.
 \begin{code}
@@ -110,12 +110,12 @@ availableStrategies theories thnm (nm,(Assertion tconj sc))
 \end{code}
 and then use the following functions to produce a sequent, if possible.
 
-\subsubsection{No Hypotheses}
+\subsection{No Hypotheses}
 \begin{code}
 noHyps nm = nullTheory{ thName   =  "H."++nm }
 \end{code}
 
-\subsubsection{Strategy \textit{redAll}}
+\subsection{Strategy \textit{redAll}}
 
 \begin{eqnarray*}
    redAll(C)
@@ -123,7 +123,7 @@ noHyps nm = nullTheory{ thName   =  "H."++nm }
    \mathcal L \vdash C \equiv \true
 \end{eqnarray*}
 \begin{code}
-redAll :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
+redAll :: MonadFail m => [Theory] -> NamedTermSC
        -> m (String, Sequent)
 redAll thys (nm,(t,sc))
   = return ( reduceAll, Sequent thys (noHyps nm) sc t $ theTrue )
@@ -133,7 +133,7 @@ reduceAll = "red-All"
 
 
 \newpage
-\subsubsection{Strategy \textit{redboth}}
+\subsection{Strategy \textit{redboth}}
 
 \begin{eqnarray*}
    redboth(C_1 \equiv C_2)
@@ -141,7 +141,7 @@ reduceAll = "red-All"
    \mathcal L \vdash C_1 \equiv C_2
 \end{eqnarray*}
 \begin{code}
-redboth :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
+redboth :: MonadFail m => [Theory] -> NamedTermSC
         -> m (String, Sequent)
 redboth thys (nm,(t@(Cons tk sb i [tl,tr]),sc))
   | i == theEqv
@@ -150,7 +150,7 @@ redboth thys (nm,(t,sc)) = fail "redboth not applicable"
 reduceBoth = "red-bth"
 \end{code}
 
-\subsubsection{Strategy \textit{redR2L}}
+\subsection{Strategy \textit{redR2L}}
 
 We will need to convert $\seqof{P_1,\dots,P_n}$, for $n\geq 1$
 to $P_1 \equiv \dots \equiv P_n$,
@@ -167,7 +167,7 @@ bEqv sn n ps = Cons arbpred sn n ps
    \mathcal L \vdash (C_2 \equiv \dots \equiv C_n) \equiv C_1
 \end{eqnarray*}
 \begin{code}
-redR2L :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
+redR2L :: MonadFail m => [Theory] -> NamedTermSC
         -> m (String, Sequent)
 redR2L thys (nm,(t@(Cons tk si i (c1:cs@(_:_))),sc))
   | i == theEqv
@@ -177,7 +177,7 @@ redR2L thys (nm,(t,sc)) = fail "redR2L not applicable"
 reduceToLeftmost = "red-R2L"
 \end{code}
 
-\subsubsection{Strategy \textit{redL2R}}
+\subsection{Strategy \textit{redL2R}}
 
 \begin{eqnarray*}
    redL2R(C_1 \equiv \dots \equiv C_{n-1} \equiv C_n)
@@ -186,7 +186,7 @@ reduceToLeftmost = "red-R2L"
 \end{eqnarray*}
 We prefer to put the smaller simpler part on the right.
 \begin{code}
-redL2R :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
+redL2R :: MonadFail m => [Theory] -> NamedTermSC
         -> m (String, Sequent)
 redL2R thys (nm,(t@(Cons tk si i cs@(_:_:_)),sc))
   | i == theEqv
@@ -198,7 +198,7 @@ reduceToRightmost = "red-L2R"
 \end{code}
 
 \newpage
-\subsubsection{Strategy \textit{deduce}}
+\subsection{Strategy \textit{deduce}}
 
 \begin{eqnarray*}
    deduce(H \implies C)
@@ -206,7 +206,7 @@ reduceToRightmost = "red-L2R"
    \mathcal L,\splitand(H) \vdash (C \equiv \true)
 \end{eqnarray*}
 \begin{code}
-deduce :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
+deduce :: MonadFail m => [Theory] -> NamedTermSC
        -> m (String, Sequent)
 deduce thys (nm,(t@(Cons tk si i [ta,tc]),sc))
   | i == theImp
@@ -229,7 +229,7 @@ splitAnte t     =  [t]
 \end{code}
 
 \newpage
-\subsubsection{Strategy \textit{asmboth}}
+\subsection{Strategy \textit{asmboth}}
 
 
 \begin{eqnarray*}
@@ -238,12 +238,12 @@ splitAnte t     =  [t]
    \mathcal L,\splitand(H) \vdash C_1 \equiv C_2
 \end{eqnarray*}
 \begin{code}
-asmboth :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
+asmboth :: MonadFail m => [Theory] -> NamedTermSC
         -> m (String, Sequent)
 asmboth thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{code}
 
-\subsubsection{Strategy \textit{shunt}}
+\subsection{Strategy \textit{shunt}}
 
 \begin{eqnarray*}
    shunt(H_1 \implies \dots H_m \implies C)
@@ -252,12 +252,12 @@ asmboth thys (nm,(t,sc)) = fail "asmboth not applicable"
 \end{eqnarray*}
 \begin{code}
 -- actually, this is done under the hood
-shunt :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
+shunt :: MonadFail m => [Theory] -> NamedTermSC
       -> m (String, Sequent)
 shunt thys (nm,(t,sc)) = fail "shunt not applicable"
 \end{code}
 
-\subsubsection{Strategy \textit{shntboth}}
+\subsection{Strategy \textit{shntboth}}
 
 
 \begin{eqnarray*}
@@ -267,12 +267,12 @@ shunt thys (nm,(t,sc)) = fail "shunt not applicable"
 \end{eqnarray*}
 \begin{code}
 -- actually, this is done under the hood
-shntboth :: (Monad m, MonadFail m) => [Theory] -> NamedTermSC
+shntboth :: MonadFail m => [Theory] -> NamedTermSC
         -> m (String, Sequent)
 shntboth thys (nm,(t,sc)) = fail "shntboth not applicable"
 \end{code}
 
-\subsubsection{Splitting Conjoined Hypotheses}
+\subsection{Splitting Conjoined Hypotheses}
 
 \begin{eqnarray*}
    \splitand(H_1 \land \dots \land H_n)
@@ -288,7 +288,7 @@ splitAnd t       =  [t]
 
 
 \newpage
-\subsection{Making Unknown Variables Known}
+\section{Making Unknown Variables Known}
 
 A key function is one that makes all unknown variables in a term become known.
 \begin{code}
@@ -327,12 +327,12 @@ checkLVarStatus vts vt lv@(LVbl v _ _)
 
 
 \newpage
-\subsection{Sequent Zipper}
+\section{Sequent Zipper}
 
 We will need a zipper for sequents as we can focus in on any term
 in \texttt{hyp}, \texttt{cleft} or \texttt{cright}.
 
-\subsubsection{Sequent Zipper Algebra}
+\subsection{Sequent Zipper Algebra}
 
 The sequent type can be summarised algebraically as
 \begin{eqnarray*}
@@ -434,7 +434,7 @@ We now refactor this by expanding the $A_i$ and merging
 
 
 \newpage
-\subsubsection{Sequent Zipper Types}
+\subsection{Sequent Zipper Types}
 
 We start with the top-level common part:
 $$S'(t) = T^* \times SC \times ( {\cdots + \cdots} )$$
@@ -463,7 +463,7 @@ writeSequent' seq'
     , laws'KEY ++ show (laws' seq')
     , seq'TRL ]
 
-readSequent' :: (Monad m, MonadFail m) => [Theory] -> [String] -> m (Sequent',[String])
+readSequent' :: MonadFail m => [Theory] -> [String] -> m (Sequent',[String])
 readSequent' thylist txts
   = do rest1 <- readThis seq'HDR txts
        -- theories are supplied, reconstructed in REqState read.
@@ -530,7 +530,7 @@ writeSeqZip (tz,seq')
     writeSequent' seq' ++
     [ szTRL ]
 
-readSeqZip :: (Monad m, MonadFail m) => [Theory] -> [String] -> m (SeqZip,[String])
+readSeqZip :: MonadFail m => [Theory] -> [String] -> m (SeqZip,[String])
 readSeqZip thylist txts
   = do rest1 <- readThis szHDR txts
        (tz,rest2) <- readKey tzKEY read rest1
@@ -551,7 +551,7 @@ sequentFocus (_,seq')
 \end{code}
 
 \newpage
-\subsubsection{Sequent Zipper Construction}
+\subsection{Sequent Zipper Construction}
 
 
 To create a sequent-zipper,
@@ -576,7 +576,7 @@ rightConjFocus sequent
 For a hypothesis conjecture, making the sequent-zipper
 is a little more tricky:
 \begin{code}
-hypConjFocus :: (Monad m, MonadFail m) => Int -> Sequent -> m SeqZip
+hypConjFocus :: MonadFail m => Int -> Sequent -> m SeqZip
 hypConjFocus i sequent
   = do let hthry = hyp sequent
        (before,((hnm,hasn),hprov),after) <- peel i $ laws hthry
@@ -589,7 +589,7 @@ hypConjFocus i sequent
                                 (cleft sequent) (cright sequent) )
 \end{code}
 
-\subsubsection{Sequent Zipper Destructor}
+\subsection{Sequent Zipper Destructor}
 
 Exiting a zipper:
 \begin{code}
@@ -619,7 +619,7 @@ exitLaws currT  (HLaws' hnm hkn hbef fnm fsc fprov horig haft cl cr)
 \end{code}
 
 \newpage
-\subsubsection{Sequent Zipper Moves}
+\subsection{Sequent Zipper Moves}
 
 The usual up/down actions just invoke the corresponding \texttt{TermZip} action.
 \begin{code}
@@ -679,7 +679,7 @@ getHypotheses' (HLaws' hn hk hbef _ _ _ _ haft _ _)
 \end{code}
 
 
-\subsection{Sequent Mentioned Variables}
+\section{Sequent Mentioned Variables}
 
 When generating fresh variables,
 we need to know the state of the entire goal conjecture
@@ -721,7 +721,7 @@ lawVarsMentioned = mentionedVars . assnT . snd . fst
 \end{code}
 
 \newpage
-\subsection{Showing Sequents}
+\section{Showing Sequents}
 
 \textbf{This should all be done via proper generic rendering code}
 
@@ -762,7 +762,7 @@ dispHypotheses hthry  =  numberList' showHyp $ laws $ hthry
 showHyp ((_,(Assertion trm _)),_) = trTerm 0 trm
 
 dispGoal tz sc
-  = [ trTermZip tz++"    "++trSideCond sc ]
+  = [ trTermZip tz++"\n "++blue (trSideCond sc) ]
 
 dispContext fp what formula
   = [ "Focus = " ++ show fp, ""

@@ -107,14 +107,14 @@ arithmeticKnown
     mulIntro $
     divIntro $
     modIntro $
-    newVarTable
+    newNamedVarTable arithmeticName
 \end{code}
 
 
 \section{Arithmetic Laws}
 
 We do addition and multiplication first,
-then subtraxction ansd negation,
+then subtraction and negation,
 and then finish with integer divisions, and mixed laws.
 
 \subsection{Laws of Addition}

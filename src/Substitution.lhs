@@ -1,6 +1,6 @@
 \chapter{Substitution}
 \begin{verbatim}
-Copyright  Andrew Buttefield (c) 2019-22
+Copyright  Andrew Buttefield (c) 2019-24
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -8,7 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Substitution
 ( SubContext, mkSubCtxt, subContext0
-, substitute
+, applySubst
 -- test stuff below
 , int_tst_Subst
 ) where
@@ -20,8 +20,10 @@ import Data.List
 import Data.Maybe
 import Control.Applicative
 
+import NotApplicable
 import Utilities (alookup,injMap)
-import Control (mapsnd)
+import Control (mapfst,mapsnd)
+import UnivSets
 import LexBase
 import Variables
 import AST
@@ -139,9 +141,9 @@ tempSubMiss tm sub
 \subsection{Target Completeness}
 
 There are two main sources of substitution in UTP: 
-for a few variables in assigments,
+for a few variables in assignments,
 and for all the observation variables in sequential composition.
-These lead to substitions that look like:
+These drill down to substitutions that look like:
 $$f_1[e,O\less x/x_1,O_1\less x]$$
 Here the target covers all observations $O_1$, 
 and we consider $f_1$ to be a variable, representing an arbitrary term.
@@ -182,6 +184,9 @@ $$
 $$
 Reminder: we require temporal uniformity as well.
 If we have a complete substitution we want to know the target temporality.
+\textbf{NOTE: 
+ not used anywhere but similar code appears in \h{uniformSubstitute} below.
+ }
 \begin{code}
 isCompleteSubst :: MonadFail m => Substn -> m VarWhen
 isCompleteSubst (Substn ts lvs) = isCompSubst (S.toList ts) (S.toList lvs)
@@ -204,269 +209,80 @@ All substitutions need a context argument that describes the following
 aspects of the current state of a proof:
 \begin{itemize}
   \item side-conditions
-  \item dynamic \texttt{Subscript}s in scope
+  \item list-var variable data
 \end{itemize}
 \begin{code}
 data SubContext
-  =  SCtxt  { scSC :: SideCond
+  = SubCtxt { subSC :: SideCond
+            , subVD :: [VarTable]
             }
-  deriving (Eq,Ord,Show,Read)
+  deriving (Eq,Show)
 
-mkSubCtxt = SCtxt
+mkSubCtxt = SubCtxt
 
-subContext0 = mkSubCtxt scTrue
+subContext0 = mkSubCtxt scTrue []
 \end{code}
 
 \newpage
 \section{Term Substitution}
 
 \begin{code}
-substitute :: (MonadFail m, Alternative m) 
+applySubst :: (MonadFail m, Alternative m) 
            => SubContext -> Substn -> Term -> m Term
 \end{code}
 We first note that $P[/] = P$:
 \begin{code}
-substitute _ sub tm | isNullSubstn sub  =  return tm
+applySubst _ sub tm | isNullSubstn sub  =  return tm
 \end{code}
 
 \subsection{Variable Term Substitution}
 
-We treat observational variables ($\vv v$) 
-and term variables ($\vv e,\vv P$) differently.
-
-We assume here that $P$ is static, 
-while $e$, and hence $e'$, $e_1$, are dynamic
-(and similarly for $f$.)
-We also let $e_a$ and $e_b$ denote variables 
-with different temporality
-drawn from $e,e',e_0,e_1,\dots$.
-
-
-\subsubsection{Obs.-Variable Term Substitution}
-
-\begin{eqnarray*}
-   \vv v \ss {} {v^n} {r^n}  
-   &\defs&  
-   r_i \cond{~\exists i \bullet \vv v=v_i~} \vv v 
-\\ \vv v_a \ss {} {\lst x_a^n} {\lst x_b^n}
-   &\defs&
-   \vv v_b
-   \cond{~\exists i \bullet \vv v_a \subseteq \lst x_{a,i}~}
-   \vv v_a \ss {} {\lst x_a^n} {\lst x_b^n}
-\end{eqnarray*}
-The test for $v_d \subseteq \lst x_{d,i}$ 
-is hard, generally requiring side-conditions,
-so we ignore this possibility for now.
-Note also that it implies that the entire substitution is temporally uniform.
+We are dealing with the case $\vv v \ss {} {g^n} {r^n}$,
+where $v$ denotes a standard variable. 
 \begin{code}
-substitute sctx sub@(Substn ts lvs) vrt@(Var tk v@(Vbl i ObsV whn))
-  = (subVarLookup sub v) <|> (pure vrt)
+applySubst sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
+  =  let vtl = S.toList vts ; lvlvl = S.toList lvlvs in
+  -- ADD UNIFORMITY TO \h{Substn} ????
 \end{code}
 
-\subsubsection{Term-Variable Term Substitution}
-
-This is the only case where we look at side-conditions.
-
-\textbf{Notes:} typical side-conditions found are as follows:
-\begin{mathpar}
- x\notin P \and y \notin e \and  fresh:O_0
- \and
- \lst x \notin P \and \lst x \notin \lst e \and \lst x \supseteq P
- \and
- O \supseteq e \and O,O' \supseteq P
-\end{mathpar}
-Typical substitutions in law definitions include:
-\begin{mathpar}
-  ~[\lst e/\lst x] \and [O_0/O] \and [O_0/O']  
-  \and
-  \and [e/x] \and [x/y] \and [e[f/x]/x]
-\end{mathpar}
-Typical substitutions in proofs include:
-\begin{mathpar}
-  P[x/y] \and \Skip[O_1/O] \and R[O_1/O'] \and R[O_1/O'][O'/O_1]
-  \and 
-  Q[O_1,O_2/O,O']
-  \and
-  (\exists O_2 \bullet Q[O_2/O'] \land R[O_2/O])[O_1/O]
-\end{mathpar}
-Some failing examples using \texttt{substitute}:
-\begin{eqnarray*}
-  O,O' \supseteq \Skip : \Skip[O_1/O] &\mapsto_s& \Skip, 
-  \qquad \text{---should be } \Skip[O_1/O]
-\\ O,O' \supseteq R : R[O_1/O']   &\mapsto_s& R, 
-  \qquad \text{---should be } R[O_1/O']
-\end{eqnarray*}
-
-Remember, here $P$ is static while $e$ is dynamic.
-\begin{eqnarray*}
-   \vv P \ss {} {v^n} {r^n}
-   &\defs&  r_i \cond{~\exists i \bullet \vv v_i=P~} \vv P \ss {} {v^n} {r^n} 
-\\ \vv P \ss {} {x^m;\lst x^n} {y^m;\lst y^n}
-   &\defs&
-   \vv P
-   \cond{~P \disj \cup_i\seqof{x^m,\lst x^n}~}
-   \vv P \ss {} {x^m;\lst x^n} {y^m;\lst y^n}
-\\ \vv e_a \ss {} {\lst x_a^n} {\lst x_b^n}
-   &\defs&
-   \vv e_b
-   \cond{~\exists i \bullet \vv v_a \subseteq \lst x_{a,i}~}
-   \vv e_a \ss {} {\lst x_a^n} {\lst x_b^n}
-\end{eqnarray*}
+If we have $v[\dots,r,\dots/\dots,v,\dots]$ we return $r$:
 \begin{code}
-substitute sctx sub@(Substn ts lvs) vrt@(Var tk v)  -- v is not ObsV
-  = do resultTerm <- ((subVarLookup sub v) <|> (pure $ Sub tk vrt sub))
-       return $ sctxSimplify sctx resultTerm
+     ( alookup v vtl )
+\end{code}
+\textbf{NOTE: }
+\textsl{Otherwise, if \h{v} is a term-variable, we need to look at side-conditions,
+to see if any vtl targets are possibly applicable. 
+If so, we keep those targets.}
+\begin{code}
+     <|> ( termVarSubstitute sctx vrt vtl lvlvl )
 \end{code}
 
-% There is also a special case of $P_d[\dots]$ when
-% all the targets have the same temporality as each other 
-% and cover all the free variables of $P_d$,
-% while all the replacements also have the same temporality as each other
-% (which might differ from that of the targets).
-% We shall refer to this as ``complete temporal consistency'' (c.t.c).
-% We might show it as:
-% $$
-%   P_d
-%   [ e_e,f_e,z_e,\dots,\lst u_e,\dots
-%   /
-%     x_d,y_d,z_d,\dots,\lst u_d,\dots
-%   ]
-% $$
-% where $x,y,z,\dots,\lst u,\dots$ covers all free variables of $P$,
-% and some targets (here $z_d,\dots,\lst u_d,\dots$)
-% are replaced by versions of themselves with the replacement temporality.
-% This will simplify to
-% $$
-%   P_e[e_e,f_e/x_e,y_e]
-% $$
-% We refer to $[e_e,f_e/x_e,y_e]$ as the ``effective'' substitution.
-% Note that the temporalities involved need not be dynamic.
-
-% We check for disjoint variable target temporality,
-% and then for c.t.c.s.
-
-  % | tempSubMiss vrt sub   =  return vrt
-  % | isObsVar v            =  return $ subsVar v ts lvs
-  % | hasCoverage && isCTC  =  return $ ctcSub tk (jVar tk $ setVarWhen repw v)
-  %                                   $ jSub effTSRepl effLVSRepl
-  % | otherwise             =  return $ subsVar v ts lvs
-  % where
-  %   (hasCoverage,cover)       = checkCoverage (subTargets sub) (scSC sctx) v
-  %   (isCTC,repw,effTS,effLVS) = assessCTC (varWhen v) (S.elems ts) (S.elems lvs)
-  %   effTSRepl                 = map (setVTWhen repw) effTS
-  %   effLVSRepl                = map (setLVLVWhen repw) effLVS
-  %   ctcSub tk tm sub@(Substn sts slvs)
-  %     | S.null sts && S.null slvs  =  tm
-  %     | otherwise                  =  Sub tk tm sub
+\textbf{Note:}
+\textsf{
+  dump uniform substitutions below?  
+}
+\begin{code}
+--     <|> ( uniformSubstitute sctx vrt vtl lvlvl )
+\end{code}
+Next we scan the list-variable  pairs, with the side-conditions in hand,
+looking for a list-variable that covers $\vv v$:
+\begin{code}
+     <|> ( lvlvlSubstitute sctx vrt vtl lvlvl )
+\end{code}
+If nothing is found we return the substitution 
+after running it through semantic completion:
+\begin{code}
+     -- <|> ( pure (Sub tk vrt $ substComplete sctx vrt sub) )
+\end{code}
+\textbf{Note:}
+\textsf{
+   It is possible that \h{lvlvlSubstitute} could do the work
+   of \h{uniformSubstitute} if we had a boolean indicating 
+   if the original substitution was \emph{uniform}.
+}
+\textbf{DUMP \h{uniformSubstitute}.}
 
 
-% \newpage
-
-% Checking coverage, given targets $tgts$, side-condition $sc$,
-% and non-observation variable $pev$:
-% does $\lst v \supseteq pev$ appear uniformly in $sc$?
-% If so check that $tgts$ match $\lst v$.
-% \begin{code}
-%     checkCoverage tgts sc pev@(Vbl _ _ vw)
-%       = case findGenVar (StdVar pev) sc of
-%           Just (CoveredBy Unif _ vs)
-%             -> let
-%                  tgtl = map (setGVarWhen vw) $ subsumeL $ S.elems tgts
-%                  vl = map (setGVarWhen vw) $ subsumeL $ S.elems vs
-%                in  (vl == tgtl,vl) -- too strong?
-%           -- we only consider uniform coverage for now
-%           _                          ->  (False,[])
-% \end{code}
-
-% Checking non-observational variable $v$ for complete temporal consistency,
-% given substitution mappings.
-% Not yet seen replacement:
-% \begin{code}
-%     assessCTC sw []            []  =  notCTC
-%     assessCTC sw (vt@( Vbl ti tc tw, Var tk (Vbl ri rc rw) ):ts ) lvs
-%       | sw /= tw              =  notCTC
-%       | ti == ri && tc == rc  =  assessCTC' sw rw [] [] ts lvs
-%       | otherwise             =  assessCTC' sw rw [vt] [] ts lvs
-%     assessCTC sw ts
-%                ( lvlv@( ( LVbl (Vbl ti tc tw) tis tjs
-%                  ,      LVbl (Vbl ri rc rw) ris rjs) )
-%                  : lvs )
-%       | sw /= tw   =  notCTC
-%       | ti == ri && tc == rc && tis == ris && tjs == rjs
-%                    =  assessCTC' sw rw [] [] ts lvs
-%       | otherwise  =  assessCTC' sw rw [] [lvlv] ts lvs
-%     -- just expect replacement variables for now.
-%     assessCTC _ _ _  =  notCTC
-%     notCTC  =  (False,undefined,undefined,undefined)
-% \end{code}
-
-% Have seen replacement:
-% \begin{code}
-%     assessCTC' sw repw effTS effLVS [] []
-%       =  ( True, repw
-%          , map (setVTWhen repw) effTS
-%          , map (setLVLVWhen repw) effLVS )
-%     assessCTC' sw repw effTS effLVS
-%                 ( vt@( Vbl ti tc tw, Var tk (Vbl ri rc rw) ):ts ) lvs
-%       | sw /= tw              =  notCTC
-%       | repw /= rw            =  notCTC
-%       | ti == ri && tc == rc  =  assessCTC' sw rw effTS      effLVS  ts lvs
-%       | otherwise             =  assessCTC' sw rw (vt:effTS) effLVS  ts lvs
-%     assessCTC' sw repw effTS effLVS ts
-%                 ( lvlv@( ( LVbl (Vbl ti tc tw) tis tjs
-%                   ,      LVbl (Vbl ri rc rw) ris rjs) )
-%                   : lvs )
-%       | sw /= tw   =  notCTC
-%       | repw /= rw            =  notCTC
-%       | ti == ri && tc == rc && tis == ris && tjs == rjs
-%                    =  assessCTC' sw repw effTS effLVS        ts lvs
-%       | otherwise  =  assessCTC' sw repw effTS (lvlv:effLVS) ts lvs
-%     -- just expect replacement variables for now.
-%     assessCTC' sw repw effTS effLVS ts lvs = notCTC
-% \end{code}
-
-% \newpage
-% Working through substitution pairs:
-% \begin{code}
-%     -- work through std-var/term substitutions
-%     subsVar :: Variable -> TermSub -> LVarSub -> Term
-%     subsVar v ts lvs
-%       | isObsVar v  =  subsVar' v (S.toList lvs) (S.toList ts)
-%       | otherwise   =  Sub tk vrt sub
-
-%     subsVar' :: Variable -> [(ListVar,ListVar)] -> [(Variable,Term)] -> Term
-%     subsVar' v lvs [] = subsLVar v lvs
-%     subsVar' v lvs ((tgtv,rplt):rest)
-%       | v == tgtv  =  rplt
-%       | otherwise  =  subsVar' v lvs rest
-
-%     -- work through lst-var/lst-var substitutions
-%     subsLVar v []
-%       | varClass v == ObsV     =  vrt
-%       | isDynamic $ varWhen v  =  vrt
-%       | otherwise              =  Sub tk vrt sub
-%     subsLVar v ((tgtlv,rpllv):rest)
-%       | varWhen v /= lvarWhen tgtlv  =  subsLVar v rest
-%       | otherwise
-%       = case findGenVar (StdVar v) (scSC sctx) of
-%           Just (CoveredBy NonU _ vs)
-%             ->  if vs == S.singleton (LstVar tgtlv)
-%                    && varWhen v == lvarWhen tgtlv
-%                 then v `replacedByRpl` rpllv
-%                 else vrt
-%           Just (CoveredBy Unif _ vs)
-%             ->  if S.size vs == 1
-%                    && getIdClass (LstVar tgtlv) == getIdClass (S.elemAt 0 vs)
-%                    && varWhen v == lvarWhen tgtlv
-%                 then v `replacedByRpl` rpllv
-%                 else vrt
-%           _  ->  subsLVar v rest
-
-%     replacedByRpl v@(Vbl i vc vw) (LVbl (Vbl _ _ lvw) is js)
-%       -- we need to know if v's temporality matches that of tgtlv
-%       | i `elem` is  =  vrt -- not really covered!
-%       | otherwise    =  jVar tk $ Vbl i vc lvw
-% \end{code}
 
 \subsection{Cons-Term Substitution}
 
@@ -478,13 +294,13 @@ substitute sctx sub@(Substn ts lvs) vrt@(Var tk v)  -- v is not ObsV
    (\cc i {ts}) \ss {} {v^n} {t^n}
 \end{eqnarray*}
 \begin{code}
-substitute sctx sub ct@(Cons tk subable i ts)
-  | subable    =  do ts' <- sequence $ map (substitute sctx sub) ts
+applySubst sctx sub ct@(Cons tk subable i ts)
+  | subable    =  do ts' <- sequence $ map (applySubst sctx sub) ts
                      return $ Cons tk subable i ts'
   | otherwise  =     return $ Sub tk ct sub
 \end{code}
 
-
+\newpage
 \subsection{Binding-Term Substitution}
 
 Given $(\bb n {x^+} t) \ss {} {v^n} {t^n}$,
@@ -502,30 +318,46 @@ we do the following:
 \end{enumerate}
 We handle $(\ll n {x^+} t) \ss {} {v^n} {t^n}$ in a similar fashion.
 \begin{code}
-substitute sctx sub bt@(Bnd tk i vs tm)
+applySubst sctx sub bt@(Bnd tk i vs tm)
   | isNullSubstn effsub  =  return bt
   | otherwise 
-    = do  alpha <- captureAvoidance (scSC sctx) vs tm effsub
+    = do  alpha <- captureAvoidance (subSC sctx) vs tm effsub
           let vs' = S.fromList $ quantsSubst alpha $ S.toList vs
-          asub <- substComp alpha effsub --- succeeds as alpha is var-only
-          tm' <- substitute sctx asub tm
+          asub <- substCompose alpha effsub --- succeeds as alpha is var-only
+          let asub' = substComplete sctx tm asub
+          tm' <- applySubst sctx asub' tm
           bnd tk i vs' tm'
   where
     effsub = computeEffSubst vs sub
 --  effsubst = computeEffSubst sctx vs sub
 --  if null effsubset then return bt else ....
-substitute sctx sub lt@(Lam tk i vl tm)
+applySubst sctx sub lt@(Lam tk i vl tm)
   | isNullSubstn effsub  =  return lt
   | otherwise 
-    = do  alpha <- captureAvoidance (scSC sctx) vs tm effsub
+    = do  alpha <- captureAvoidance (subSC sctx) vs tm effsub
           let vl' = quantsSubst alpha vl
-          asub <- substComp alpha effsub --- succeeds as alpha is var-only
-          tm' <- substitute sctx asub tm
+          asub <- substCompose alpha effsub --- succeeds as alpha is var-only
+          let asub' = substComplete sctx tm asub
+          tm' <- applySubst sctx asub' tm
           lam tk i vl' tm'
   where
     vs = S.fromList vl
     effsub = computeEffSubst vs sub
 \end{code}
+
+\subsection{Iteration Substitution}
+
+\begin{eqnarray*}
+   (\ii \bigoplus n {lvs}) \ss {} {v^n} {t^n}
+   &\defs&
+   (\ii \bigoplus n {lvs \ss {} {v^n} {t^n}})
+\end{eqnarray*}
+\begin{code}
+applySubst sctx (Substn _ lvlvs) bt@(Iter tk sa na si ni lvs)
+  = return $ Iter tk sa na si ni
+           $ map (listVarSubstitute sctx (S.toList lvlvs)) lvs
+\end{code}
+
 
 \newpage
 \subsection{Substitution-Term Substitution}
@@ -538,9 +370,10 @@ we need to treat such seperately, noting that it is n.s.::
    (x:=e)[t^n/v^v] &=& (x:=e)[t^n/v^v]
 \end{eqnarray*}
 \begin{code}
-substitute sctx sub bt@(Sub tk _ _)
-  | isAssignment bt  =  return $ Sub tk bt sub
+applySubst sctx sub st@(Sub tk bt _)
+  | isAssignment bt  =  return $ Sub tk st sub
 \end{code}
+
 
 \subsubsection{Substitution Substitution}
 
@@ -551,21 +384,14 @@ substitute sctx sub bt@(Sub tk _ _)
      \quad \text{if } \ss {} {v^m} {t^m};  \ss {} {v^n} {t^n} \text{ defined}
 \end{eqnarray*}
 \begin{code}
-substitute sctx sub bt@(Sub tk tm s)
-  = case substComp s sub of
-     Just sub' -> substitute sctx sub' tm
+applySubst sctx sub bt@(Sub tk tm s)
+  = case substCompose s sub of
+     Just sub' -> let sub'' = substComplete sctx tm sub'
+                  in applySubst sctx sub'' tm
+     -- Nothing NEVER occurs, substCompose is total
      Nothing   -> return $ Sub tk bt sub
 \end{code}
-\begin{eqnarray*}
-   (\ii \bigoplus n {lvs}) \ss {} {v^n} {t^n}
-   &\defs&
-   (\ii \bigoplus n {lvs \ss {} {v^n} {t^n}})
-\end{eqnarray*}
-\begin{code}
-substitute sctx (Substn _ lvlvs) bt@(Iter tk sa na si ni lvs)
-  = return $ Iter tk sa na si ni
-           $ map (listVarSubstitute sctx (S.toList lvlvs)) lvs
-\end{code}
+
 
 \subsection{Non-Substitutable Terms}
 
@@ -574,14 +400,449 @@ substitute sctx (Substn _ lvlvs) bt@(Iter tk sa na si ni lvs)
 \\ \xx n t \ss {} {v^n} {t^n} &\defs& \xx n t
 \end{eqnarray*}
 \begin{code}
-substitute sctx sub tm = return tm
+applySubst sctx sub tm = return tm
 \end{code}
 
 \newpage 
 \subsection{Helper Functions}
 
+\subsubsection{Do target variables overlap with possible term free variables?}
+
+\begin{code}
+termVarSubstitute :: MonadFail m
+                  => SubContext -> Term -> [TermSub] -> [LVarSub] -> m Term
+termVarSubstitute (SubCtxt sc _) vrt@(Var tk v) vtl lvlvl
+  = do let (fvs,_) = freeVars sc vrt -- no bound vars to be subtracted here
+       let (_,vtl') = keepMentionedTermSubs fvs False [] vtl
+       if null vtl' then fail "termVarSubstitute: complete overlap"
+                    else return $ Sub tk vrt $ jSubstn vtl' lvlvl
+       
+
+termVarSubstitute _ _ _ _
+  = fail "termVarSubstitute: not a variable term"
+\end{code}
+
+We keep term/variable substitutions if the targets appear in the variable set:
+\begin{code}
+keepMentionedTermSubs :: VarSet -> Bool -> [TermSub] -> [TermSub]
+                      -> (Bool,[TermSub])
+keepMentionedTermSubs vs chgd ltv [] = (chgd,reverse ltv)
+keepMentionedTermSubs vs chgd ltv (vt@(tv,_):vtl)
+  | (StdVar tv) `S.member` vs  =  keepMentionedTermSubs vs chgd (vt:ltv) vtl
+  | otherwise                  =  keepMentionedTermSubs vs True ltv      vtl 
+\end{code}
+
+
+\subsubsection{Does a list-variable cover the standard variable?}
+
+We assume that the variable-term substitutions did not apply,
+so we have the case 
+$$v[\lst r_1,\dots \lst r_N/\lst t_1,\dots,\lst t_N].$$
+We first ask is there there an $\lst t_i$ that can cover $v$?
+This requires $\lst t_i$ having an expansion 
+as a target \emph{list} of standard variables, 
+and $\lst r_i$ expanding to such a replacement list of the same length.
+
+If $v$ is an observation variable, 
+and occurs at position $j$ in the target list,
+then the outcome is a term based on the variable 
+at position $j$ in the replacement list.
+
+\textbf{Note:}
+\textsl{
+ we may be able to handle uniform substitution here, 
+ if we had a uniformity flag passed in.
+ Then the check for $v$ occuring in the target list would ignore
+ dynamicity, while the replacement dynamicity would be adjusted to match $v$'s.
+  Some of the local scan code here could probably be global and shared
+  by both the obs-var and term-var code here. 
+  This would help with the check and replacement customisation needed.
+}
+
+If $v$ is an expression or predicate variable, 
+we check for a side-condition that mentions $v$, 
+in which we also expand any list variables mentioned there.
+We then construct a substitution term $v[\dots/\dots]$ 
+that is limited to those variables we know can be in (the alphabet of) $v$.
+
+
+\begin{code}
+type PossLVSub = Either LVarSub [LVarSub]
+lvlvlSubstitute :: MonadFail m
+                => SubContext -> Term -> [TermSub] -> [LVarSub] 
+                -> m Term
+\end{code}
+
+We treat observation variables first.
+
+Recall:
+$$v[\lst r_1,\dots \lst r_N/\lst t_1,\dots,\lst t_N].$$
+If $v$ is an observation variable, 
+and occurs at location $j$ in the expansion of $\lst t_i$,
+then the outcome is a variable-term based on the variable 
+at position $j$ in the expansion of $\lst r_i$.
+\begin{code}
+lvlvlSubstitute (SubCtxt sc vts) vrt@(Var tk v@(Vbl i  ObsV vw)) vtl lvlvl
+  = scan v lvlvl
+  where 
+    vfail reason = fail ("lvlvSub.search(obs): "++show v++" "++reason)
+
+    scan :: MonadFail m => Variable -> [LVarSub] -> m Term
+    scan v [] = return vrt
+    scan v (lvlv:lvlvs)
+      = case check v lvlv of
+          Nothing  ->  scan v lvlvs
+          Just rv  ->  return $ jVar tk rv
+
+    check :: MonadFail m => Variable -> LVarSub -> m Variable
+    check v (tlv,rlv) = do
+      tlvK <- expandKnown vts tlv
+      rlvK <- expandKnown vts rlv
+      tlvExp <- getVarList tlvK
+      rlvExp <- getVarList rlvK
+      search v tlvExp rlvExp
+
+    getVarList :: MonadFail m => KnownExpansion -> m [Variable]
+    getVarList (KnownVarList _ expansion _,_,_) = return expansion
+    getVarList _ = vfail "not known var-list"
+\end{code}
+\newpage
+\begin{code}
+    search :: MonadFail m => Variable -> [Variable] -> [Variable] -> m Variable
+    search v [] _ = fail "short target list"
+    search v _ [] = fail "short repl. list"
+    search v (tv:tvK) (rv:rvK)
+      | v == tv  =  return rv
+      | otherwise  =  search v tvK rvK
+\end{code}
+
+Now we deal with term variables.
+
+Recall:
+$$v[\lst r_1,\dots \lst r_N/\lst t_1,\dots,\lst t_N].$$
+If $v$ is an expression or predicate variable, 
+we check for a side-condition that mentions $v$, 
+in which we also expand any list variables mentioned there.
+If there is no such side-condition, then we fail.
+We then search the substitution pairs.
+For each $\lst r_i/\lst t_i$ pair, 
+we check that both list-vars are known variable sequences of the same length
+($[y_1,\dots,y_N/x_1,\dots,x_N]$),
+We then check the target sequence against the side conditions,
+by computing $(\seqof{x_i}\setminus D)\cap C$.
+If this is non-empty and different to $[x_1,\dots,x_N]$,
+then we succeed and return a revised substitution.
+If it is empty, and any $x_i \in D$,
+we succeed but return the variable without any substitution.
+If not, we skip to the next pair.
+We then construct a substitution term $v[\dots/\dots]$ 
+that is limited to those variables we know can be in (the alphabet of) $v$.
+\begin{code}
+lvlvlSubstitute (SubCtxt (vscs,_) vts) 
+                vrt@(Var tk v@(Vbl i  vc vw)) vtl lvlvl
+                                   -- vc in {ExprV,PredV}
+  = case gv `mentionedBy` vscs of
+      Nothing           ->  return $ Sub (termtype vrt) vrt $ jSubstn vtl lvlvl
+      Just (vsc,mwhen)  ->  scan vsc v lvlvl
+  where
+    gv = StdVar v
+
+    scan :: MonadFail m => VarSideConds -> Variable -> [LVarSub] -> m Term
+    scan vsc v [] = return vrt
+    scan vsc v (lvlv:lvlvs)
+      = case getLVarExpansions v lvlv of
+          Nothing               ->  scan vsc v lvlvs
+          Just (tlvExp,rlvExp)  ->  handleExpansions v lvlvs vsc tlvExp rlvExp
+
+    getLVarExpansions :: MonadFail m 
+                      => Variable -> LVarSub -> m ([Variable],[Variable])
+    getLVarExpansions v (tlv,rlv) = do
+      tlvK <- expandKnown vts tlv
+      rlvK <- expandKnown vts rlv
+      tlvExp <- getVarList tlvK
+      rlvExp <- getVarList rlvK
+      return (tlvExp,rlvExp)
+      
+    getVarList :: MonadFail m => KnownExpansion -> m [Variable]
+    getVarList (KnownVarList _ expansion _,_,_) = return expansion
+    getVarList _ = fail "lvlvSub.search(term): not known var-list"
+
+    handleExpansions v lvlvs vsc tlvExp rlvExp
+      = case processExpansions vsc False [] tlvExp rlvExp of
+          Nothing  ->  scan vsc v lvlvs
+          Just (False,_)   ->  fail "lvlvSub.search(term): no change"
+          Just (_,[])      ->  return $ mkTVSubst vrt vtl
+          Just (_,vtl')  ->  return $ mkTVSubst vrt (map liftRepl vtl'++vtl)
+\end{code}
+\newpage
+
+We have \h{vsc} (e.g. \m{s',s \supseteq_a a}),
+and \h{tlv} (e.g. \m{\seqof{s',ls'}}) and \h{rlv} (e.g. \m{\seqof{s_1,ls_1}}).
+Note that \h{tlv} and \h{rlv} should have the same length.
+\begin{code}
+    processExpansions :: MonadFail m 
+                      => VarSideConds 
+                      -> Bool  -- true if a change has been made
+                      -> [(Variable,Variable)]  -- result accumulator
+                      -> [Variable] -- target (list) variables
+                      -> [Variable] -- replacement (list) variables
+                      -> m (Bool,[(Variable,Variable)])
+\end{code}
+End cases, noting that both lists should end together:
+\begin{code}
+    processExpansions vsc chgd ko [] []  = return $ (chgd,reverse ko)
+    processExpansions vsc _    ko _  []  = fail "lvlvSub.procExp: short repl." 
+    processExpansions vsc _    ko []  _  = fail "lvlvSub.procExp: short target" 
+\end{code}
+All these side-conditions are for a particular term-variable,
+and we want to decide, for a particular element of \h{tlv},
+whether it is possible that it could be present 
+in some future incarnation of \h{gv}.
+This is established by comparing the target variable \h{tv} 
+with the side-condition \h{vsc} associated with that term variable.
+Basically, if \h{tv} is disjoint then we drop it,
+if covered, we definitely keep it.
+\begin{code}
+    processExpansions vsc@(VSC _ nvsD nvsC nvsCd) chgd ko (tv:tvl) (rv:rvl)
+      | gtgt `nmbr`  nvsD   =  processExpansions vsc True ko tvl rvl
+      | gtgt `cvdby` nvsC   =  processExpansions vsc chgd ((tv,rv):ko) tvl rvl
+      | gtgt `cvdby` nvsCd  =  processExpansions vsc chgd ((tv,rv):ko) tvl rvl
+      | otherwise           =  processExpansions vsc True ko tvl rvl
+      where
+        gtgt = StdVar tv
+        gv `cvdby` NA  =  False -- denotes "vacuously true"
+        gv `cvdby` (The vs) = gv `S.member` vs
+
+    mkTVSubst vrt [] =  vrt
+    mkTVSubst vrt vtl = Sub (termtype vrt) vrt $ jSubstn vtl []
+
+    liftRepl (tv,rv) = (tv, fromJust $ var ArbType rv)
+\end{code}
+\begin{code}
+lvlvlSubstScan sctxt tk v poss [] = Right poss
+lvlvlSubstScan sctxt tk v poss (lvlv:lvlvl)
+  = case lvlvSubstitute sctxt tk v lvlv of
+      Right []   ->  lvlvlSubstScan sctxt tk v    poss  lvlvl
+      Right [p]  ->  lvlvlSubstScan sctxt tk v (p:poss) lvlvl
+      left       ->  left
+\end{code}
+
+% OBSOLETE?
+Given $v[\ell^R/\ell^T]$ we ask the following questions:
+\begin{enumerate}
+  \item Is $v$ definitely in $\ell^T$?  
+        If so, report this substitution as the one: 
+        ($\h{Left}~(\ell^T,\ell^R)$).
+  \item Is $v$ definitely not in $\ell^T$ ?
+        If so, report this as not applicable: 
+        ($\h{Right}~\seqof{}$).
+  \item Otherwise, $v$ might be in $\ell^T$,
+        so report it as possible:
+        ($\h{Right}~\seqof{(\ell^T,\ell^R)}$).
+\end{enumerate}
+
+First we look at cases that definitely rule the substitution out.
+\begin{code}
+lvlvSubstitute :: SubContext -> Type -> Variable -> LVarSub -> PossLVSub
+lvlvSubstitute sctx@(SubCtxt sc vdata) tk v@(Vbl i  vc vw) 
+                  lvlv@( tlv@(LVbl tv@(Vbl ti _  tw) tis _) 
+                       , rlv@(LVbl rv@(Vbl ri _  rw) ris _) )
+  | diffdynamic  = Right [] -- v,tv dynamicity differs, both being dynamic
+  -- vw notdyn || vw=tw 
+  | ti /= ri  = Right [] -- ti,ri differ
+  -- vw notdyn || vw=tw ; ti==ri 
+  | i `elem` tis || i `elem` ris  =  Right [] -- v removed
+  -- vw notdyn || vw=tw ; ti==ri ; i notelem tis,ris
+  | otherwise = lvlvSub sctx tk v lvlv
+  where
+    diffdynamic = isDynamic vw && vw /= tw
+\end{code}
+
+At this point we get into details, concerning $v[\ell^R/\ell^T]$.
+We have two sources of extra information, variable data and side-conditions.
+
+Here are examples of where observation variables are being substituted:
+\begin{eqnarray*}
+    ls[\lst O_1/\lst O'] 
+    ~~~\text{given}~~~
+     \lst O = \setof{s,ls}       
+   &\mapsto& ls
+\\ ls'[\lst O_1/\lst O'] 
+   ~~~\text{given}~~~
+   \lst O = \setof{s,ls}       
+   &\mapsto& ls_1
+\\  ls[\lst O_1/\lst O] 
+    ~~~\text{given}~~~
+     \lst O = \setof{s,ls}       
+   &\mapsto& ls_1
+\\ ls'[\lst O_1/\lst O] 
+   ~~~\text{given}~~~
+   \lst O = \setof{s,ls}  
+   &\mapsto& ls' 
+\\ ls[\lst O_1/\lst O] 
+   ~~~\text{given}~~~
+   \lst O = \setof{s}  
+   &\mapsto& ls 
+\end{eqnarray*}
+For $a$ should we have $a \subseteq \lst O,\lst O$,
+rather than $a \subseteq_a \lst O,\lst O$?
+
+The basic idea seems to be, if $v$ is an observable, then look at variable-data,
+otherwise look to side-conditions.
+
+Observation Variables should be associated with $\lst O$,
+or at least whatever list-variable is being used for the substitution target.
+\begin{code}
+lvlvSub sctx@(SubCtxt sc vdata) tk v@(Vbl i ObsV vw) 
+        lvlv@( tlv@(LVbl tv@(Vbl ti _  tw) tis _) 
+             , rlv@(LVbl rv@(Vbl ri _  rw) ris _) )
+  -- vw notdyn || vw=tw ; ti==ri ; i notelem tis,ris
+  = case lookupLVarTs vdata tlv of
+      KnownVarList vl _ _  ->  lvlvObsSub vl
+      KnownVarSet  vs _ _  ->  lvlvObsSub (S.toList vs)
+      _  ->  Right [lvlv] 
+  where
+    lvlvObsSub vl = if (StdVar v) `elem` vl then Left lvlv else Right []
+\end{code}
+
+
+For term variables we have the following examples:
+\begin{eqnarray*}
+   E_1[\lst O_1/\lst O'] 
+   ~~~\text{given}~~~ 
+   E_1 \disj \lst O,\lst O'     
+   &\mapsto& E_1
+\\   a[\lst O_1/\lst O'] 
+   ~~~\text{given}~~~ 
+   a \subseteq_a \lst O,\lst O' 
+   &=& a[\lst O_1/\lst O']
+\\ E_2[\lst O_1/\lst O] 
+   ~~~\text{given}~~~ 
+   E_2 \disj \lst O,\lst O'     
+   &\mapsto& E_2
+\\   a[\lst O_1/\lst O] 
+   ~~~\text{given}~~~ 
+   a \subseteq_a \lst O,\lst O' 
+   &=& a[\lst O_1/\lst O]
+\\   a[\lst O_1/\lst O] 
+   ~~~\text{given}~~~ 
+   a \subseteq_a \setof{s,s'} \land \lst O = \setof{s,ls}
+   &\mapsto& a[s_1/s]
+\\   a[\lst O_1/\lst O] 
+   ~~~\text{given}~~~ 
+   a \subseteq_a \setof{s,s',ls,ls',\dots} \land \lst O = \setof{s,ls}
+   &\mapsto& a[s_1,ls_1/s,ls]
+\end{eqnarray*}
+
+Term Variables should have side-conditions: 
+\begin{code}
+lvlvSub sctx@(SubCtxt sc vdata) tk v@(Vbl i vc vw) 
+        lvlv@( tlv@(LVbl tv@(Vbl ti _  tw) tis _) 
+             , rlv@(LVbl rv@(Vbl ri _  rw) ris _) )
+  -- vw notdyn || vw=tw ; ti==ri ; i notelem tis,ris
+  -- vc = ExprV,PredV
+  = case (StdVar v) `mentionedBy` fst sc of
+      Nothing  ->  Right [lvlv] -- v not mentioned 
+      Just ( (VSC gv' nvsD nvsC nvsCd), Nothing ) -- gv==StdVar v
+        | gtlv `nmbr` nvsD 
+            ->  Right [] -- tlv mentioned in disjoint-set
+        | gtlv `nmbr` nvsC
+            ->  possub vw lvlv -- tlv in coverage
+        | otherwise  ->  Left lvlv 
+      _  ->  Right [lvlv] -- this shouldn't happen for Term Vars?
+    where
+      gtlv = LstVar tlv 
+      possub vw lvlv = if isDynamic vw then Left lvlv else Right [lvlv]
+\end{code}
+
+
+\newpage
+\subsubsection{Does a uniform substitution cover the standard variable?}
+
+The last thing we try is to see if we have a uniform substitution.
+This means that:
+(i) the target variables all have the same temporality;
+(ii) they ``cover'' a complete list variable;
+(iii) the replacements all have the same temporality;
+(iv) they  ``cover'' a complete list variable.
+For example:
+$$[e,f,\lst O\less{x,y}/x_1,y_1,\lst O_1\less{x,y}]$$
+Here the targets cover $\lst O_1$ while the replacements cover $\lst O$.
+
+Here we only look for simple patterns such as above.
+Basically we look for one or more var-term entries,
+with terms that are variable terms,
+and one listvar entry, where the removed variables are precisely
+the target variables on the var-term list.
+We also have that all target variables have the same temporality $t$,
+and the replacement all have the same temporality $d$:
+$$
+   \seqof{(x_t,tv1_d),(y_t,tv2_d),(z_t,tv3_d)}
+   \quad
+   \seqof{(\lst\ell_t\less{x,y,z},\lst\rho_d\less{x,y,z})}
+$$
+However,
+we do have a variable ($v_t$) being substituted.
+$$
+  v_t[tv1_d,tv2_d,tv3_d,\lst\rho_d\less{x,y,z}/x_t,y_t,z_t,\lst\ell_t\less{x,y,z}] 
+  =  
+  v_t[tv1_d,tv2_d,tv3_d/x_d,y_d,z_d]
+$$
+which can be simplifed further if $v_r$ is an observable,
+to either one of the $tvN_r$ if $v_r$ is one of $x_r$, $y_r$, $z_r$,
+or just $v_r$ (fail) if not.
+\textbf{
+  NOTE: if $\lst\ell_t$ is ``known'', and $v_t \notin \setof{x_t,y_t,z_t}$,
+  then its replacement may be available.
+}
+
+The first thing we do is check that the temporality of $v$ matches that
+of the first target variable. 
+If not, there is no uniform substitution that can work here,
+and there is only one target variable, then we can simply return $v$,
+otherwise we fail.
+\begin{code}
+uniformSubstitute :: MonadFail m
+                  => SubContext -> Term -- (Var tk v) 
+                  -> [(Variable,Term)] -> [(ListVar,ListVar)]
+                  -> m Term
+uniformSubstitute sctx@(SubCtxt sc vdata) vrt@(Var tk v)  
+                      vtl@((u,_):_) 
+                      [ ( tlv@(LVbl (Vbl tid _ _) tis [])
+                        , rlv@(LVbl (Vbl rid _ _) ris []) ) ]
+  | tid /= rid              = usfail "different id in list-vars"
+  | varWhen v /= varWhen u  = if length vtl == 1 
+                              then return vrt 
+                              else usfail "uniformity is inapplicable"
+  | length tvws /= 1        =  usfail "vars not uniform"
+  | tvw /= tlvw             =  usfail "targets not uniform"
+  | length ttws /= 1        =  usfail "terms not uniform"
+  | ttw /= rlvw             =  usfail "replacements not uniform"
+  | otherwise               =  doUnifSub ttw tk v vtl 
+  where
+    usfail msg = fail ("uniformSubstitute: "++msg)
+    tvws = nub $ map (varWhen . fst) vtl
+    tvw = head tvws
+    tlvw = lvarWhen tlv
+    ttws = nub $ concat 
+                $ map ( (map gvarWhen) . S.toList . fst .
+                                      freeVars sc . snd ) 
+                      vtl
+    ttw = head $ ttws
+    rlvw = lvarWhen rlv
+uniformSubstitute _ _ _ _ = fail "not uniform or not supported"
+
+doUnifSub rw tk v vtl  
+  = return $ Sub tk (jVar tk $ setVarWhen rw v) 
+                  $ jSubstn (mapfst (setVarWhen rw) vtl) []
+-- we'll do the simplification for observables later
+\end{code}
+
+
 \subsubsection{Side-condition Simplification}
 
+
+\textbf{NOTE: not currently used anywhere!!!!!}
 Here we use side-condition information to simplify substitutions.
 We drill down to the atomic side-condition, 
 if any, 
@@ -589,14 +850,14 @@ that mentions the term-variable.
 \begin{code}
 sctxSimplify :: SubContext -> Term -> Term
 sctxSimplify sctx (Sub tk vrt@(Var _ v) sub)  -- P[../..]
-  = Sub tk vrt $ scSimplify (scSC sctx) (StdVar v) sub
+  = Sub tk vrt $ scSimplify (subSC sctx) (StdVar v) sub
 sctxSimplify _ tm = tm
 
 scSimplify :: SideCond -> GenVar -> Substn -> Substn
 scSimplify sc gv sub 
-  = case findGenVar gv sc of
+  = case findGenVarInSC gv sc of
       Nothing   ->  sub
-      Just asc  ->  ascSimplify asc gv sub
+      Just vsc  ->  vscSimplify vsc gv sub
 \end{code}
 
 We have the following situation $P[T/V$] 
@@ -620,12 +881,15 @@ $$
 $$
 We have to check this for all $T/V$ pairs in the substitution.
 \begin{code}
-ascSimplify :: AtmSideCond -> GenVar -> Substn -> Substn
-ascSimplify (Disjoint  u _ vs) gv sub  =  targetsCheck not vs sub
-ascSimplify (CoveredBy u _ vs) gv sub  =  targetsCheck id  vs sub
+vscSimplify :: VarSideConds -> GenVar -> Substn -> Substn
+vscSimplify (VSC _ mvsD mvsC mvsCd) gv sub  
+  =  mSimp mvsCd $ mSimp mvsC $ targetsCheck not mvsD sub
+  where 
+    mSimp mvs sub  =  targetsCheck id mvs sub
 
-targetsCheck :: (Bool -> Bool) -> VarSet -> Substn -> Substn
-targetsCheck keep vs (Substn ts lvs)
+targetsCheck :: (Bool -> Bool) -> NVarSet -> Substn -> Substn
+targetsCheck keep NA sub  =  sub
+targetsCheck keep (The vs) (Substn ts lvs)
   = let tl'  = filter (varTargetsCheck  keep vs) $ S.toList ts
         lvl' = filter (lvarTargetsCheck keep vs) $ S.toList lvs
     in jSubstn tl' lvl'
@@ -693,7 +957,7 @@ captureAvoidance sc vs tm sub
        let knownVars = theFreeVars ( tfv `mrgFreeVars` rplvs )
        mkFresh knownVars [] [] needsRenaming
 
-mkFresh :: (Monad m, MonadFail m)
+mkFresh :: MonadFail m
         => VarSet
         -> [(Variable,Term)]
         -> [(ListVar,ListVar)]
@@ -839,7 +1103,7 @@ Also
 
 Useful test bits:
 \begin{code}
-subC ctxt sub tm = fromJust $ substitute ctxt sub tm
+subC ctxt sub tm = fromJust $ applySubst ctxt sub tm
 sub0 = subC subContext0
 \end{code}
 
@@ -854,7 +1118,7 @@ ie = jId "e" ; ve = PreExpr ie ; e = jeVar ve
 ix = jId "x" ; vx = PreVar ix  ; vx' = PostVar ix; vx1 = MidVar ix "1"
 iC = jId "C" ; c t = Cons arbpred True iC [t]
 e_for_x = jSubstn [(vx,e)] []
-tstDeep = testCase "substitute [e/x] in (P)=(P[e/x])"
+tstDeep = testCase "applySubst [e/x] in (P)=(P[e/x])"
               ( sub0 e_for_x (c p) @?=  c (Sub arbpred p e_for_x) )
 \end{code}
 
@@ -885,7 +1149,7 @@ vO1 = MidVar  iO "1" ; lO1 = LVbl vO1 [] []
 
 obs_covers_f = [(LstVar lO)] `covers` StdVar vf
 
-subObsF     = mkSubCtxt obs_covers_f 
+subObsF     = mkSubCtxt obs_covers_f []
 
 mid_for_pre = jSubstn [] [(lO,lO1)]
 mid_for_post = jSubstn [] [(lO',lO1)]
@@ -931,8 +1195,8 @@ Given $O \supseteq e,f$:
 \begin{code}
 obs_covers_e  = [(LstVar lO)] `covers` StdVar ve
 obs_covers_ef = obs_covers_e .: obs_covers_f
-subObsE   = mkSubCtxt obs_covers_e
-subObsEF  = mkSubCtxt obs_covers_ef
+subObsE   = mkSubCtxt obs_covers_e []
+subObsEF  = mkSubCtxt obs_covers_ef []
 
 
 oless o is  = o `less` (is,[])
@@ -1046,7 +1310,7 @@ and we let $U = X \cup Y$, and $Z = X \cap Y$.
 We partition $X$ into $X'=X\setminus Z$ and $Z$,
 and let $F'$ be the replacements in $F$ for $X'$, 
 and $F_Z$ the replacements for $Z$.
-We treat $Y$ and  $G$ similarly to get $Y'$, $Y_Z$, $G'$ and $G_Z$.
+We treat $Y$ and  $G$ similarly to get $Y'$, $Z$, $G'$ and $G_Z$.
 $$
   (e[F',F_Z/X',Z])[G',G_Z/Y',Z] 
 $$
@@ -1055,15 +1319,18 @@ Now consider a variable $v \in U$.
    v \notin X \land v \notin Y 
    &\implies& (v[F',F_Z/X',Z])[G',G_Z/Y',Z] = v
 \\ v \notin X \land v   \in  Y 
-   &\implies& (v[F',F_Z/X',Z])[G',G_Z/Y',Z] = G' 
+   &\implies& (v[F',F_Z/X',Z])[G',G_Z/Y',Z] = G'(v)
    \quad \textbf{as } v \in Y'
 \\ v   \in  X \land v \notin Y 
-   &\implies& (v[F',F_Z/X',Z])[G',G_Z/Y',Z] = F'[G',G_Z/Y',Z] 
+   &\implies& (v[F',F_Z/X',Z])[G',G_Z/Y',Z] = (F'[G',G_Z/Y',Z])(v)
    \quad \textbf{as } v \in X'
 \\ v   \in  X \land v   \in  Y 
-   &\implies& (v[F',F_Z/X',Z])[G',G_Z/Y',Z] = F_Z[G',G_Z/Y',Z] 
+   &\implies& (v[F',F_Z/X',Z])[G',G_Z/Y',Z] = (F_Z[G',G_Z/Y',Z])(v) 
    \quad \textbf{as } v \in Z
 \end{eqnarray*}
+Here $H(v)$ denotes the application of substitution component in $H$ 
+that targets $v$.
+
 This suggests the following:
 $$
  e[F'[G',G_Z/Y',Z],G',F_Z[G',G_Z/Y',Z]/X',Y',Z]
@@ -1086,21 +1353,98 @@ Trickiest part is the variable case which has a 4-way case split.
 
 \newpage
 
+\def\xxaExample{(a[\lst O_1/\lst O'])[ls \setminus R_1 \cup N_1/ls_1]}
+\def\xxaCompNonRec{
+ [\lst O_1[ls\setminus R_1\cup N_1/ls_1],ls\setminus R_1\cup N_1/\lst O',ls_1]
+ }
+\def\xxaCompRec{
+ [ls\setminus R_1\cup N_1,\lst O_1/ls_1,\lst O']
+}
+\def\xxaCmpOneNonRec{
+   [s_1,ls\setminus R_1\cup N_1,ls\setminus R_1\cup N_1 / s',ls',ls_1]
+}
+\def\xxaCmpOneRec{
+   [ls\setminus R_1\cup N_1,s_1,ls_1/ls_1,s',ls']
+}
+\def\xxaCmpTwo{[s_1/s']}
+
+Now we consider the following concrete example: 
+\m{\xxaExample}.
+
+Given that $\lst O = \setof{s,ls}$, uniformly,
+and that $\setof{a,a'} \supseteq_a a$, we can proceed as follows:
+\begin{eqnarray*}
+\lefteqn{\xxaExample}
+\EQ{expand $\lst O$}
+\\&& (a[s_1,ls_1/s',ls'])[ls \setminus R_1 \cup N_1/ls_1]
+\EQ{$s,s' \supseteq_a a$}
+\\&& (a\xxaCmpTwo)[ls \setminus R_1 \cup N_1/ls_1]
+\EQ{now we have $s,s_1 \supseteq_a a\xxaCmpTwo$}
+\\&& (a\xxaCmpTwo)[ls \setminus R_1 \cup N_1/ls_1]
+\\&& a\xxaCmpTwo
+\end{eqnarray*}
+
+
+Now lets ignore what $\lst O$ and $a$ actually are,
+and do the composition (we shall call this \emph{syntactic} composition).
+
+So, 
+$F$ = \m{\seqof{\lst O_1}}, 
+$X$ = \m{\seqof{\lst O'}},
+$G$ = \m{\seqof{ls\setminus R_1\cup N_1}},
+$Y$ = \m{\seqof{ls_1}}.
+
+We compute $Y'$ as \m{\seqof{ls_1}} (i.e., $Y$),
+and $G'$ as \m{\seqof{ls\setminus R_1\cup N_1}}.
+
+So the result $[F[G/Y],G'/X,Y']$
+becomes 
+\m{ \xxaCompNonRec}.
+
+If all these are just arbitrary variables then it simplies thus:
+\m{[  \lst O_1,ls\setminus R_1\cup N_1 /  \lst O',ls_1 ]},
+and applying to \m{a} simply results in \m{a}.
+
+However, if we \emph{know} that $\lst O = \setof{s,ls}$, uniformly,
+and that $\setof{a,a'} \supseteq_a a$, then a different result emerges:
+\begin{eqnarray*}
+\lefteqn{a[\lst O_1[ls\setminus R_1\cup N_1/ls_1],ls\setminus R_1\cup N_1 
+           /\lst O',ls_1]}
+\EQ{defn. of $\lst O$ applied to $\lst O_1$ (repl.) and $\lst O'$ (tgt.)}
+\\&& a[\seqof{s_1,ls_1}[ls\setminus R_1\cup N_1/ls_1],ls\setminus R_1\cup N_1 
+           /\seqof{s',ls'},ls_1]
+\EQ{apply subst}
+\\&& a[\seqof{s_1,ls\setminus R_1\cup N_1},ls\setminus R_1\cup N_1 
+           /\seqof{s',ls'},ls_1]
+\EQ{flatten}
+\\&& a\xxaCmpOneNonRec
+\EQ{$s,s' \supseteq_a a$}
+\\&& a\xxaCmpTwo
+\end{eqnarray*}
+We have shown that side-conditions need not play a role here,
+while computing the composition.
+\emph{It is clear that the requirement that list-variables
+in substitution/quantifier lists be disjoint 
+is crucial for allowing this separation.}
+Such considerations should be applied 
+after syntactic composition has been done.
+The post-processing step is basically a \emph{semantic} completion.
+
+\newpage
+
+\subsection{Syntactic Substitution Composition}
+
 Specification of substitution composition:
 $$
  (e[F/X])[G/Y]  =  e[F[G/Y],G'/X,Y'] 
 $$
 where $[G'/Y']$ is $[G/Y]$ restricted to elements of $Y$ not in $X$.
-
-Note that side-conditions play no role here. 
-Such considerations should be applied 
-after \texttt{substComp} has (fully) returned.
 \begin{code}
-substComp :: MonadFail m
-          => Substn  -- 1st substitution performed
-          -> Substn  -- 2nd substitution performed
-          -> m Substn
-substComp (Substn ts1 lvs1) sub2@(Substn ts2 lvs2)
+substCompose :: MonadFail m
+             => Substn  -- 1st substitution performed
+             -> Substn  -- 2nd substitution performed
+             -> m Substn -- always `returns`
+substCompose (Substn ts1 lvs1) sub2@(Substn ts2 lvs2)
   = let 
       -- compute G',Y'
       tl1 = S.toList ts1
@@ -1115,14 +1459,14 @@ substComp (Substn ts1 lvs1) sub2@(Substn ts2 lvs2)
       tl1'  = mapsnd (applySub sub2) tl1
       lvl1' = mapsnd (applyLSub tl2 lvl2) lvl1
       -- compute  [ F[G/Y],G'  /  X,Y' ]
-    in substn (tl1'++tl2') (lvl1'++lvl2')
+    in substn (tl1'++tl2') (lvl1'++lvl2') -- should never `fail`
 
 notTargetedIn :: Eq t => [t] -> (t,r) -> Bool
 notTargetedIn ts (t,_) = not (t `elem` ts)
 
 applySub ::  Substn -> Term -> Term
 applySub sub t  
-  =  case substitute subContext0 sub t of
+  =  case applySubst subContext0 sub t of -- note effective recursion !
        Nothing  ->  Sub (termtype t) t sub
        Just t'  ->  t
 
@@ -1134,6 +1478,198 @@ applyLSub ts lvs lv
       Nothing   ->  lv
       Just lv'  ->  lv'
 \end{code}
+This should transform \m{\xxaExample} into \m{\xxaCompNonRec}.
+In fact, due to the (recursive) call to \h{applySubst},
+this returns \m{\xxaCompRec}.
+It turns out this makes no difference to the final outcome,
+so we leave it.
+ 
+\newpage
+\subsection{Semantic Substitution Completion}
+
+We have a result from syntactic substitution composition of the form:
+\[[F[G/Y],G'/X,Y']\]
+However, this also in the context of some term $t$ being substituted.
+
+The general case is that some list-variables will be known,
+and have definitions in terms of observation variables.
+We will also have side-conditions associated with term variables.
+
+This process has two phases: the first is independent of the term,
+and simply uses the list-variable data:
+\begin{eqnarray*}
+\lefteqn{t[\lst O_1[ls\setminus R_1\cup N_1/ls_1],ls\setminus R_1\cup N_1 
+           /\lst O',ls_1]}
+\EQ{defn. of $\lst O$ applied to $\lst O_1$ (repl.) and $\lst O'$ (tgt.)}
+\\&& t[\seqof{s_1,ls_1}[ls\setminus R_1\cup N_1/ls_1],ls\setminus R_1\cup N_1 
+           /\seqof{s',ls'},ls_1]
+\EQ{apply subst}
+\\&& t[\seqof{s_1,ls\setminus R_1\cup N_1},ls\setminus R_1\cup N_1 
+           /\seqof{s',ls'},ls_1]
+\EQ{flatten}
+\\&& t\xxaCmpOneNonRec
+\end{eqnarray*}
+The second phase looks at the actual term being substituted:
+\begin{eqnarray*}
+\lefteqn{a\xxaCmpOneNonRec}
+\EQ{$s,s' \supseteq_a a$}
+\\&& a\xxaCmpTwo
+\end{eqnarray*}
+Note, this second phase is best done 
+when we have drilled down to a single term-variable.
+However, 
+should the first phase be done before we get down to these variables?
+What if $\lst O$ (say) occurs elsewhere in $t$?
+
+For now we only trigger both phases of semantic completion,
+at the term variable level.
+
+\begin{code}
+substComplete :: SubContext -> Term -> Substn -> Substn
+substComplete sctxt (Var _ tv@(Vbl _ ObsV _)) sub@(Substn tvs lvlvs)
+  = case subVarLookup sub tv of
+      Nothing  ->  jSubstn [] (S.toList lvlvs) -- lvlvs might apply
+      Just repl ->  jSubstn [(tv,repl)] []  -- covered by this substitution.
+substComplete sctxt (Var _ tv@(Vbl _ _ _)) sub  =  subComplete sctxt tv sub
+substComplete sctxt tm sub = sub
+
+subComplete :: SubContext -> Variable -> Substn -> Substn
+subComplete sctxt tv sub 
+  = let sub1 = subComplete1 sctxt sub
+    in subComplete2 sctxt tv sub1
+\end{code}
+\textbf{Note: }
+\textsf{
+This completion is in fact independent of substitution \textbf{composition},
+as it uses the sub-context to simplify a single substitution.
+This need not be limited to those produced by composition.
+}
+
+\newpage
+\subsubsection{Semantic completion, phase 1}
+Expand list-variable definitions.
+
+\begin{code}
+subComplete1 :: SubContext -> Substn -> Substn
+subComplete1 (SubCtxt _ vts) sub@(Substn ts lvs)
+  | chgd       =  jSubstn (ts1++S.toList ts) lvl1
+  | otherwise  =  sub
+  where (chgd,ts1,lvl1) = lvsComplete1 vts lvs
+
+lvsComplete1 :: [VarTable] -> LVarSubs -> (Bool,[TermSub],[LVarSub])
+lvsComplete1 vts lvs  = lvsComp1 vts False [] [] $ S.toList lvs
+
+lvsComp1 _   chgd ts' lvs' []              = (chgd,ts',lvs')
+lvsComp1 vts chgd ts' lvs' (trlv:lvl)
+  = lvsComp1 vts chgd' (newts++ts') (modlvs++lvs') lvl
+  where (chgd',newts,modlvs) = tlrlComp1 vts chgd trlv
+\end{code}
+
+Here we are processing a single list-var substitution: $[\lst r/\lst \ell]$.
+\begin{code}
+tlrlComp1 :: [VarTable] -> Bool -> LVarSub -> (Bool,[TermSub],[LVarSub])
+tlrlComp1 vts chgd trlv@(tlv,rlv) 
+  = case (tlvknown,rlvknown) of
+      (Just (tmr,[],[]),Just (rmr,[],[]))  ->  tlrlRoles1 chgd trlv tmr rmr
+      -- (Just (texp,tis,tjs),Just (rexp,ris,rjs))
+      -- need to do case when is,js aren't null !!!
+      _                                  ->  (chgd,[],[trlv])
+  where 
+    tlvknown  =  expandKnown vts tlv
+    rlvknown  =  expandKnown vts rlv
+
+tlrlRoles1 :: Bool -> LVarSub -> LstVarMatchRole -> LstVarMatchRole 
+           -> (Bool,[TermSub],[LVarSub])
+tlrlRoles1 chgd trlv 
+           (KnownVarList _ txpnd tlen) 
+           (KnownVarList _ rxpnd rlen)
+  | tlen == rlen  = (True,fuse1 txpnd rxpnd,[])
+tlrlRoles1 chgd trlv 
+           (KnownVarSet _ txpnd tlen) 
+           (KnownVarSet _ rxpnd rlen)
+  | tlen == rlen  = (True,fuse1 (S.toList txpnd) (S.toList rxpnd),[])
+tlrlRoles1 chgd trlv tmr rmr = (chgd,[],[trlv])
+
+fuse1 :: [Variable] -> [Variable] -> [TermSub]
+fuse1 tvars rvars = map fuse1' $ zip tvars rvars
+
+fuse1' :: (Variable,Variable) -> TermSub
+fuse1' (tvar,rvar) = (tvar,fromJust $ var ArbType rvar)
+\end{code}
+Given \m{\lst O = \setof{s,ls}} uniformly,
+this transforms
+\m{\xxaCompNonRec}
+\newline
+into 
+\m{\xxaCmpOneNonRec}.
+Given that \h{substCompose} currently returns 
+\m{\xxaCompRec}
+we actually get \m{\xxaCmpOneRec}.
+
+
+\newpage
+\subsubsection{Semantic completion, phase 2}
+Tailor substitution for given term-variable.
+Consider a term-variable \m{T},
+with general side condition 
+\m{T \disj D \land T \subseteq C \land T \subseteq_a C_d}.
+Given a target variable \m{t} and replacement term \m{r},
+we want to ask when we can definitely state that \m{T[r/t]=T},
+based on $t$'s membership of $D$, $C$, and $C_d$.
+We note that \m{D \disj C \cup C_d} by construction.
+We can consider cases:
+\begin{itemize}
+  \item \m{t \in D}: then \m{T[r/t]=T}.
+  \item \m{t \in C \cup C_d}: then \m{T[r/t]=T[r/t]}
+  \item \m{t \notin D \cup C \cup C_d}: then \m{T[r/t]=T}
+\end{itemize}
+In short, 
+if \m{t} is in the coverage of \m{T} 
+then we retain the \m{[r/t]} substitution,
+otherwise we drop it as it won't apply.
+\begin{code}
+subComplete2 :: SubContext -> Variable -> Substn -> Substn
+subComplete2 (SubCtxt sc _) tv sub1@(Substn ts lvs)
+  = case findGenVarInSC gtv sc of
+      Nothing  ->  sub1
+      Just (VSC _ _ nvsC nvsCd)  
+        ->  jSubstn ts' (S.toList lvs)
+            where
+              ts' = filter allowed $ S.toList ts
+              allowed (t,_) 
+                = let gt = StdVar t
+                  in gt `lmbr` nvsCd || gt `lmbr` nvsC 
+  where
+    lmbr gv NA = False -- NA really means irrelevant!!!
+    lmbr gv (The vs) = gv `S.member` vs
+    gtv = StdVar tv
+\end{code}
+Given \m{\setof{s,s'} \supseteq_a a},
+this transforms 
+\m{\xxaCmpOneNonRec}
+into \m{\xxaCmpTwo}.
+Given that \h{subComplete1} currently returns 
+\m{\xxaCmpOneRec}
+we would get \m{\xxaCmpTwo.}
+
+The overall picture looks as follows, 
+where the current implementation is recursive:
+$$
+\begin{array}{lcr}
+   \text{no recursion}
+   & \xxaExample
+   & \text{recursive}
+\\ & \h{substCompose}
+\\ ~\xxaCompNonRec 
+   && \xxaCompRec
+\\ & \h{subComplete1}
+\\ ~\xxaCmpOneNonRec
+   && \xxaCmpOneRec
+\\ & \h{subComplete2}
+\\ ~\xxaCmpTwo && \xxaCmpTwo
+\end{array}
+$$
+
 
 
 \newpage
@@ -1163,9 +1699,10 @@ sub2 t3 t4 = jSubstn [(x,t3),(y,t4)] []
 \end{code}
 A default sub-context:
 \begin{code}
-subctxt = SCtxt scTrue
-dosub tm sub = fromJust $ substitute subctxt sub tm
-subcomp sub1 sub2 = fromJust $ substComp sub1 sub2
+subctxt0 = SubCtxt scTrue []
+dosub tm sub = fromJust $ applySubst subctxt0 sub tm
+subsyncomp sub1 sub2 = fromJust $ substCompose sub1 sub2
+subsemcomp sctx tm sub1 sub2 = substComplete sctx tm $ subsyncomp sub1 sub2
 \end{code}
 A collection of standard constants:
 \begin{code}
@@ -1183,22 +1720,26 @@ s34xy = sub2 k3 k4
 
 \subsection{Substitution Composition}
 
-Most of the tests are of the form: 
+\subsubsection{End-to-end Tests}
+
+These are tests are of the form: 
  $(e\sigma_1)\sigma_2 = e(\sigma_1;\sigma_2)$
-where $e$ can be constant, variable or composite.
+where $e$ can be constant, variable or composite,
+and there are no known variables or side-conditions
+(i.e. just syntactic substitution composition).
 \begin{code}
 subCompTest what expr sub1 sub2
   = testCase what
       ( dosub (dosub expr sub1) sub2
         @?=
-        dosub expr (sub1 `subcomp` sub2)
+        dosub expr (sub1 `subsyncomp` sub2)
       )
 \end{code}
 
 The most important are when $e$ is a single variable $v$,
 
 \begin{code}
-varSubstCompTests  =  testGroup "substComp applied to var"
+varSubstCompTests  =  testGroup "substCompose applied to var"
  [ subCompTest "var in no substitution" tz s12wx s34xy
  , subCompTest "var in 1st substitution" tw s12wx s34xy
  , subCompTest "var in both substitutions" tx s12wx s34xy
@@ -1207,6 +1748,90 @@ varSubstCompTests  =  testGroup "substComp applied to var"
 \end{code}
 
 
+\subsubsection{Scenario Tests}
+
+The scenario we have in mind is from the proof of UTCP law X\_X\_comp.
+\m{\xxaExample}
+where $\lst O = \setof{ls,s}$
+and $\setof{s,s'} \supseteq_a a$.
+The syntactic step results in 
+\m{a[\lst O_1,ls\setminus R_1\cup N_1 /  \lst O',ls_1 ]}
+while the semantic post-processing gives \m{a\xxaCmpTwo}.
+\begin{code}
+is  = jId "s" 
+vs = Vbl is ObsV Before
+vs' = Vbl is ObsV After
+vs1 = Vbl is ObsV (During "1")
+ts1 = fromJust $ eVar ArbType vs1
+obs_vs_Intro  = mkKnownVar vs ArbType
+obs_vs'_Intro = mkKnownVar vs' ArbType
+
+ils  = jId "ls" 
+vls = Vbl ils ObsV Before
+vls' = Vbl ils ObsV After
+vls1 = Vbl ils ObsV (During "1")
+tls1 = fromJust $ eVar ArbType vls1
+obs_vls_Intro  = mkKnownVar vls ArbType
+obs_vls'_Intro = mkKnownVar vls' ArbType
+
+-- o = jId "O"  ;  vO = PreVar o
+-- lO = PreVars o  ;  lO' = PostVars o  ;  lO0 = MidVars o "0"
+gO = LstVar lO  ;  gO' = LstVar lO'  -- lO1 = MidVars o "1"
+obsIntro = fromJust . addKnownVarSet vO (S.fromList $ map StdVar [vs,vls])
+
+vN = ExprVar (jId "N") Static ; tN = jVar ArbType vN ; gN = StdVar vN
+vR = ExprVar (jId "R") Static ; tR = jVar ArbType vR ; gR = StdVar vR
+va = Vbl (jId "a") PredV Static ; a = fromJust $ pVar ArbType va 
+xxSc = ([StdVar vs,StdVar vs'] `dyncover`  (StdVar va)) 
+       --   .: ([gO,gO'] `notin` gN)
+       --   .: ([gO,gO'] `notin` gR)
+xxVts 
+  = obsIntro 
+  $ obs_vls_Intro 
+  $ obs_vls'_Intro 
+  $ obs_vs_Intro 
+  $ obs_vs'_Intro 
+  $ newNamedVarTable "XX_Test"
+xxSCtxt = mkSubCtxt xxSc [xxVts]
+ls_R_N  = fromJust $ eVar ArbType $ ExprVar (jId "ls_R_N") Static
+\end{code}
+
+Starting point:\m{\xxaExample}
+\begin{code}
+xx_subOO = jSubstn [] [(lO',lO1)]
+xx_subls = jSubstn [(vls1,ls_R_N)] []
+xx_a_subOO_subls = Sub ArbType (Sub ArbType a xx_subOO) xx_subls
+\end{code}
+
+After \h{substCompose}: \m\xxaCompRec
+\begin{code}
+xx_subOls = jSubstn [(vls1,ls_R_N)] [(lO',lO1)]
+xx_a_subOls = Sub ArbType a xx_subOls
+\end{code}
+
+After \h{subComplete1}: \m\xxaCmpOneRec
+\begin{code}
+xx_sublssls  = jSubstn [(vls1,ls_R_N),(vs',ts1),(vls',tls1)] []
+\end{code}
+
+After \h{subComplete2}: \m\xxaCmpTwo
+\begin{code}
+xx_subss  = jSubstn [(vs',ts1)] []
+xx_a_subss = Sub ArbType a xx_subss
+\end{code}
+
+\begin{code}
+xxSubstCompTests  =  testGroup "substCompose used for UTCP:X_X_comp"
+  [ testCase "substCompose X-X-comp example" 
+      (substCompose xx_subOO xx_subls @?= Just xx_subOls)
+  , testCase "subComplete1 X-X-comp example"
+      (subComplete1 xxSCtxt xx_subOls @?= xx_sublssls)
+  , testCase "subComplete2 X-X-comp example"
+      (subComplete2 xxSCtxt va xx_sublssls @?= xx_subss)
+  , testCase "substComplete X-X-comp example"
+      (substComplete xxSCtxt a xx_subOls @?= xx_subss)
+  ]
+\end{code}
 
 
 
@@ -1214,7 +1839,7 @@ varSubstCompTests  =  testGroup "substComp applied to var"
 
 
 \begin{code}
-substCompTests  =  testGroup "Substitution.substComp"
+substCompTests  =  testGroup "Substitution.substCompose"
  [ varSubstCompTests
  ]
 \end{code}
@@ -1227,6 +1852,7 @@ int_tst_Subst
  = [ testGroup "\nSubstitution Internal"
      [ substTests
      , substCompTests
+     , xxSubstCompTests
      ]
 {-  , testGroup "QuickCheck Ident"
      [

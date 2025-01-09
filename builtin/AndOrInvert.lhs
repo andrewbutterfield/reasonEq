@@ -54,7 +54,7 @@ s = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "S") PredV Static
 We have none.
 \begin{code}
 aoiKnown :: VarTable
-aoiKnown =  newVarTable
+aoiKnown =  newNamedVarTable aoiName
 \end{code}
 
 \subsection{MixOne Conjectures}

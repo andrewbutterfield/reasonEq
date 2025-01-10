@@ -65,24 +65,32 @@ type Ranking = [MatchContext] -> Matches -> Matches
 Simple sorting according to rank,
 with duplicate replacements removed
 (this requires us to instantiate the replacements).
+
 \begin{code}
 filterAndSort :: Ord ord
               => (FilterFunction, OrderFunction ord) -> [MatchContext]
               -> Matches -> Matches
 filterAndSort (ff,rf) ctxts ms
-  =  reverse $ remDupRepl $ reverse sms
-  -- we double reverse to ensure duplicates favour "earlier" theories
-  -- such as `Equiv`.
-  where
-    fms = filter (ff ctxts) ms
-    sms = map snd $ sortOn fst $ zip (map (rf ctxts) fms) fms
+  =  remDupRepl $ map snd $ sortOn fst $ zip (map (rf ctxts) fms) fms
+  where  fms = filter (ff ctxts) ms
+\end{code}
 
-remDupRepl :: [ ProofMatch  ] -> [ ProofMatch ]
---  original mRepl matches with unique instantiations.
+Note: given the same instantiated replacement from different laws,
+we want the most general law, 
+which is found in the theory furthest down the theory SDAG
+(closest to \h{Equiv}).
+We do this because ``lower'' theories are more stable so lessening the risk
+that the proof will break%
+\footnote{
+ This will only matter when we get to the point of replaying proofs to check them
+ }%
+.
+\begin{code}
+remDupRepl :: Matches -> Matches
 remDupRepl []       =  []
 remDupRepl [m]  =  [m]
 remDupRepl (m1:rest@(m2:ms))
-  | sameRepl m1 m2  =       remDupRepl (m1:ms)
+  | sameRepl m1 m2  =       remDupRepl (m2:ms) -- prefer "earlier" laws
   | otherwise       =  m1 : remDupRepl rest
 
 sameRepl :: ProofMatch -> ProofMatch -> Bool

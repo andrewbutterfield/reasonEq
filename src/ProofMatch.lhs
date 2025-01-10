@@ -23,9 +23,9 @@ import Proofs
 import Sequents
 \end{code}
 
-\newpage
-\section{Matches}
+\section{Proof Matches}
 
+This data-structure records data about a law match needed by the prover.
 \begin{code}
 data ProofMatch
  = MT { mName    ::  String     -- assertion name

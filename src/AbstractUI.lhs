@@ -66,6 +66,7 @@ import VarData
 import MatchContext
 import Instantiate
 import Sequents
+import ProofSettings
 import REqState
 import Persistence
 import ProofMatch
@@ -123,7 +124,7 @@ a number of return formats.
 
 \begin{code}
 observeSettings :: REqState -> String
-observeSettings reqs = showSettings $ settings reqs
+observeSettings reqs = showPrfSettings $ prfSettings reqs
 \end{code}
 
 \subsection{Observing Current Logic}
@@ -228,9 +229,9 @@ observeCompleteProofs args reqs
 \begin{code}
 modifySettings :: MonadFail m => [String] -> REqState -> m REqState
 modifySettings [name,value] reqs
-  = case changeSettings name value (settings reqs) of
+  = case changePrfSettings name value (prfSettings reqs) of
       But msgs  ->  fail $ unlines' msgs
-      Yes set'  ->  return $ settings_ set' reqs
+      Yes set'  ->  return $ prfSettings_ set' reqs
 modifySettings args reqs = fail "Expected setting short name and value"
 \end{code}
 

@@ -38,6 +38,7 @@ import Typing
 import SideCond
 import Assertions
 import Ranking
+import ProofSettings
 import REqState
 import AbstractUI
 import UTPSignature
@@ -71,7 +72,7 @@ proofREPLprompt justHelped (reqs,liveProof)
   | otherwise   =  unlines' [ clear -- clear screen, move to top-left
                             , dispLiveProof maxm liveProof
                             , "proof: "]
-  where maxm = maxMatchDisplay $ settings reqs
+  where maxm = maxMatchDisplay $ prfSettings reqs
 
 proofEOFReplacement = []
 
@@ -186,7 +187,7 @@ modPrfSettingsDescr
     , "modify proof-settings"
     , unlines
         ( [ "mps 'setting' 'value' -- set setting=value" ]
-          ++ map (("      "++) .showSettingStrings) rEqSettingStrings
+          ++ map (("      "++) .showPrfSettingStrings) prfSettingStrings
           ++ [ "Aliases for True: true t on yes y (any case), num > 0"
              , "Aliases for False: anything else"
              , "  e.g. mps tq on" ]
@@ -313,7 +314,7 @@ matchLawCommand [] (reqs, liveProof)
              waitForReturn
              return (reqs, matches_ [] liveProof)
   where
-    ranking = filterAndSort (matchFilter $ settings reqs, favourDefLHSOrd)
+    ranking = filterAndSort (matchFilter $ prfSettings reqs, favourDefLHSOrd)
 
 matchLawCommand args state@(reqs, liveProof)
   =  case matchFocusAgainst lawnm liveProof of

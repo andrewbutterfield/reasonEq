@@ -27,6 +27,7 @@ import AST
 import VarData
 import SideCond
 import Theories
+import ProofSettings
 import REqState
 import StdSignature
 import Equivalence
@@ -82,7 +83,7 @@ devInitState
  = REqState { inDevMode = True
             , projectDir = devProjectDir
             , modified = False
-            , settings = initREqSettings
+            , prfSettings = initProofSettings
             , theories = devTheories
             , currTheory = equivName
             , liveProofs = M.empty }

@@ -1,7 +1,7 @@
-BEGIN REQSET
-MM = 100
+BEGIN PRFSET
+MM = 30
 TM = False
 TQ = False
 TX = False
-FV = True
-END REQSET
+FV = False
+END PRFSET

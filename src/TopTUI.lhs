@@ -39,6 +39,7 @@ import Typing
 import SideCond
 import Assertions
 import Ranking
+import ProofSettings
 import REqState
 import AbstractUI
 import UTPSignature
@@ -382,7 +383,7 @@ cmdSet
         ( [ "set "++setCurrThry++" 'name' -- set current theory to 'name'"
           , "set "++setSettings++" 'setting' 'value' -- set setting=value"
           ]
-          ++ map (("      "++) .showSettingStrings) rEqSettingStrings
+          ++ map (("      "++) .showPrfSettingStrings) prfSettingStrings
           ++ ["  e.g. set X mmd 42"]
         )
     , setState )

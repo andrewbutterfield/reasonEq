@@ -291,11 +291,11 @@ readAllState reqs projdirfp
             (thnms,rest1) <- readREqState1 $ lines ptxt
             nmdThrys <- getNamedTheories projdirfp thnms
             stext <- readFile $ settingsPath projdirfp
-            (ssettings,_) <- readREqSettings $ lines stext
+            (ssettings,_) <- readProofSettings $ lines stext
             nmdThrys <- getNamedTheories projdirfp thnms
             newreqs <- readREqState2 ssettings nmdThrys rest1
             putStrLn ("Read project details from "++projfp)
-            return newreqs{projectDir = projdirfp, settings = ssettings}
+            return newreqs{projectDir = projdirfp, prfSettings = ssettings}
 
 getNamedTheories projfp nms
   = ifDirectoryExists "Theories" [] projfp (getNamedTheories' projfp nms)

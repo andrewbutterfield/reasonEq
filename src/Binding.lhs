@@ -1618,11 +1618,16 @@ allLVWhen whens (i,vc,is,ij)
 
 \subsection{Are All Listvars bound to Null?}
 
+The returns true if the listvar binding itself is non-empty,
+but all the listvars are bound to empty sets/lists.
 \begin{code}
 onlyTrivialListVarBindings :: Binding -> Bool
-onlyTrivialListVarBindings (BD (_,_,lbind))  
-  =  all onlyTrivialListVarBinding $ M.assocs lbind
+onlyTrivialListVarBindings (BD (_,_,lbind))
+  | null lpairs  =  False
+  | otherwise    =  all onlyTrivialListVarBinding lpairs
+  where lpairs   =  M.assocs lbind
 
+onlyTrivialListVarBinding :: (ListVarKey,LstVarBind) -> Bool
 onlyTrivialListVarBinding (_,BL vl)   =  null vl
 onlyTrivialListVarBinding (_,BS vs)   =  S.null vs
 onlyTrivialListVarBinding (_,BX lvts) =  null lvts

@@ -2,26 +2,28 @@
 
 ## URGENT or NEXT
 
-Ranking seems busted:
+### RANKING BUSTED
 
-```
-3 : “exists_def” [≡rhs]  (∃ x$  • P)               ⊤ ⟹ ⊤
-2 : “exists_def” [≡lhs]   ¬(¬(¬((∀ x$  • ¬P))))    ⊤ ⟹ ⊤
-1 : “not_def” [≡lhs]      (∀ x$  • ¬P) ≡ false     ⊤ ⟹ ⊤
-```
+It needs a complete redesign
+It should define and export DS + functions to define its settings.
 
-**No - the ranking in use favours `[≡lhs]` over `[≡rhs]`**
+### Proof Rentry (r) NEEDS work
 
-*We need to add a predicate in `Binding` that identifies if all list-variables in the domain of a binding are mapped to empty. Use this instead of `AST.onlyTrivialQuantifiers` in `Ranking`.*
-
+It fails uninformatively if `r` is used with more that one live proof.
+It should be a numeric select command (like `a` for applying matches).
+It like other numeric select commands, should report more accurately.
 
 **Need useability improvements**
 
 * better theory load/save support
 * better proof display settings:
   * better setting command syntax
+  * improve `ll` command 
   * finer control of proof-so-far display
   * finer control of level of detail (e.g. don't show scTrue as T, leave blank)
+  * report total matches found?
+  * proof help should appear before proof prompt (after matches), and NOT wait for use to hit the return key.
+  * proof show output likewise.
 * add some form of archiving
 
 ## Next in Line

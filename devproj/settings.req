@@ -1,5 +1,5 @@
 BEGIN REQSET
-MM = 30
+MM = 100
 TM = False
 TQ = False
 TX = False

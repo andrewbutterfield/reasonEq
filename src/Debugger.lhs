@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Debugger
- ( dbg, pdbg, mdbg, trc ) 
+ ( dbg, pdbg, mdbg, fdbg, trc ) 
 where
 
 import Debug.Trace
@@ -46,4 +46,9 @@ Finally, a version of \texttt{trace} for local customisations:
 \begin{code}
 trc :: Show a => [Char] -> a -> a
 trc = trace 
+\end{code}
+
+What about?
+\begin{code}
+fdbg f nm x  =  trace ('@':nm++":\n"++show (f x)) x
 \end{code}

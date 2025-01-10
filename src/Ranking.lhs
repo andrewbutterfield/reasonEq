@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 module Ranking
   ( FilterFunction, OrderFunction, Ranking
-  , filterAndSort -- used in Main
+  , filterAndSort -- used in ProverTUI
   -- exported Filters
   , acceptAll -- used in REqState
   , isNonTrivial-- used in REqState
@@ -16,7 +16,7 @@ module Ranking
   , noFloatingVariables -- used in REqState
   -- exported Orderings
   , sizeOrd -- not used
-  , favourDefLHSOrd -- used in Main
+  , favourDefLHSOrd -- used in ProverTUI
   -- exported rankings
   , sizeRanking -- not used
   , favouriteRanking -- not used

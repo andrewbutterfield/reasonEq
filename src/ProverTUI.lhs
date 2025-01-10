@@ -48,7 +48,7 @@ import REPL
 import Dev
 import SAT
 import Classifier
-import LiveProofs
+import ProofMatch
 
 import Debugger
 \end{code}

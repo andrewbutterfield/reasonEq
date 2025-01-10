@@ -34,7 +34,7 @@ import Laws
 import Proofs
 import Instantiate
 import MatchContext
-import LiveProofs
+import ProofMatch
 import TestRendering
 
 import Debugger
@@ -55,8 +55,8 @@ to be used in sorting comparisons.
 The values should belong to a type that has an instance of \texttt{Ord},
 so that the tuple itself is also an instance of \texttt{Ord}.
 \begin{code}
-type FilterFunction = [MatchContext] -> Match -> Bool
-type OrderFunction ord = [MatchContext] -> Match -> ord
+type FilterFunction = [MatchContext] -> ProofMatch -> Bool
+type OrderFunction ord = [MatchContext] -> ProofMatch -> ord
 type Ranking = [MatchContext] -> Matches -> Matches
 \end{code}
 
@@ -77,7 +77,7 @@ filterAndSort (ff,rf) ctxts ms
     fms = filter (ff ctxts) ms
     sms = map snd $ sortOn fst $ zip (map (rf ctxts) fms) fms
 
-remDupRepl :: [ Match  ] -> [ Match ]
+remDupRepl :: [ ProofMatch  ] -> [ ProofMatch ]
 --  original mRepl matches with unique instantiations.
 remDupRepl []       =  []
 remDupRepl [m]  =  [m]
@@ -85,7 +85,7 @@ remDupRepl (m1:rest@(m2:ms))
   | sameRepl m1 m2  =       remDupRepl (m1:ms)
   | otherwise       =  m1 : remDupRepl rest
 
-sameRepl :: Match -> Match -> Bool
+sameRepl :: ProofMatch -> ProofMatch -> Bool
 sameRepl m1 m2 = mRepl m1 == mRepl m2
 \end{code}
 

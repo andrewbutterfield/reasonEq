@@ -7,8 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module LiveProofs
- ( Match(..), Matches
- , LiveProof(..)
+ ( LiveProof(..)
  , conjThName__, conjThName_, conjName__, conjName_
  , conjecture__, conjecture_, conjSC__, conjSC_
  , strategy__, strategy_, mtchCtxts__, mtchCtxts_, focus__, focus_
@@ -57,6 +56,7 @@ import Theories
 import Sequents
 import MatchContext
 import Typing
+import ProofMatch
 
 import Symbols
 import TestRendering
@@ -65,24 +65,6 @@ import StdTypeSignature
 import StdSignature
 
 import Debugger
-\end{code}
-
-\newpage
-\section{Matches}
-
-\begin{code}
-data Match
- = MT { mName    ::  String     -- assertion name
-      , mAsn     ::  TermSC     -- matched assertion
-      , mClass   ::  MatchClass -- match class
-      , mBind    ::  Binding    -- resulting binding
-      , mLawPart ::  Term       -- replacement term from law
-      , mLocSC   ::  SideCond   -- goal side-condition local update
-      , mLawSC   ::  SideCond   -- law side-condition mapped to goal
-      , mRepl    ::  Term       -- replacement term, instantiated with binding
-      } deriving (Eq,Show,Read)
-
-type Matches = [Match]
 \end{code}
 
 \newpage
@@ -1056,7 +1038,7 @@ shMatch vts (i, mtch)
     showRepl (But msgs) = unlines ("auto-instantiate failed!!":msgs)
     showRepl (Yes brepl) = trTerm 0 brepl
 
--- instantiateRepl :: [VarTable] -> Match -> YesBut Term
+-- instantiateRepl :: [VarTable] -> ProofMatch -> YesBut Term
 -- instantiateRepl vts mtch
 --   = case bindFloating vts bind repl of
 --             But msgs   ->  But msgs
@@ -1065,7 +1047,7 @@ shMatch vts (i, mtch)
 --     bind = mBind mtch
 --     repl = mRepl mtch
 --
--- instReplInMatch :: [VarTable] -> Match -> Match
+-- instReplInMatch :: [VarTable] -> ProofMatch -> ProofMatch
 -- instReplInMatch vts mtch
 --   =  case instantiateRepl vts mtch of
 --        But _      ->  mtch

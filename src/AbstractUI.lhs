@@ -68,6 +68,7 @@ import Instantiate
 import Sequents
 import REqState
 import Persistence
+import ProofMatch
 import Ranking
 import SAT
 
@@ -625,7 +626,7 @@ and return those along with the match.
 \begin{code}
 applyMatchToFocus1 :: MonadFail m
                    => Int -> LiveProof
-                   -> m ( Match       -- the chosen match
+                   -> m ( ProofMatch       -- the chosen match
                         , [Variable]  -- unresolved floating variables
                         , [Term]      -- potential variable replacements
                         , [ListVar]   -- unresolved floating list-variables
@@ -657,7 +658,7 @@ We then try to discharge the side-condition.
 If successful, we replace the focus.
 \begin{code}
 applyMatchToFocus2 :: MonadFail m => [VarTable]
-                   -> Match
+                   -> ProofMatch
                    -> [(Variable,Term)]   -- floating Variables -> Term
                    -> [(ListVar,VarList)] -- floating ListVar -> VarList
                    -> LiveProof -> m LiveProof

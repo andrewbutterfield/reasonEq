@@ -38,6 +38,7 @@ library
       NotApplicable
       Persistence
       ProgramIdentity
+      ProofMatch
       Proofs
       ProverTUI
       Ranking

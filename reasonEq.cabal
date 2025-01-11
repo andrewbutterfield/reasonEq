@@ -23,7 +23,6 @@ library
       Assertions
       AST
       Binding
-      Builder
       Classifier
       Control
       Debugger
@@ -51,7 +50,6 @@ library
       StratifiedDAG
       Substitution
       Symbols
-      Syntax
       TermZipper
       TestParsing
       TestRendering

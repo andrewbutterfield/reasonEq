@@ -6,14 +6,13 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module LexBase
- ( Identifier, readId
+module LexBase  -- NU (Not Used) means can delete defn too
+ ( Identifier
  , pattern Identifier
  , ident, uident, brktIdent
- , validIdent, isNameId, isSymbId
- , idName, idUName, splitClosureId
- , Token
- , pattern ArbTok, pattern IdTok
+ , isSymbId
+ , idName
+ , splitClosureId
  -- test only below here
  , int_tst_LexBase
  , jId, jIdU, identi
@@ -83,9 +82,6 @@ This is typically initialised to zero when an identifier is built.
 \begin{code}
 data Identifier = Id String Int deriving (Eq, Ord, Show, Read)
 
-readId :: String -> Identifier
-readId = read
-
 pattern Identifier nm u <- Id nm u
 
 decorChar = "'_$?"
@@ -123,9 +119,6 @@ isSymbId (Id (c:_) _)  =  isValidSymbol c
 
 idName :: Identifier -> String
 idName (Id nm _) = nm
-
-idUName :: Identifier -> String
-idUName (Id nm u) = nm ++ show u
 \end{code}
 
 \begin{code}
@@ -159,26 +152,10 @@ identTests
 \end{code}
 
 \newpage
-\section{Tokens}
-
-We define a basic notion of tokens as the union of the above ``wrapped'' strings
-\begin{code}
-data Token
- = TA String
- | TI Identifier
- deriving (Eq,Ord,Show,Read)
-pattern ArbTok s = TA s
-pattern IdTok i = TI i
-\end{code}
-
-\newpage
-
 \section{Exported Test Group}
 
 
-
 \begin{code}
-
 jId :: String -> Identifier
 jId = fromJust . ident
 jIdU :: String -> Int -> Identifier

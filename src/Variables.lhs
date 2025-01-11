@@ -15,22 +15,23 @@ module Variables
  , isDynamic, isDuring, theSubscript
  , Variable
  , pattern Vbl
- , varClass, varWhen, isDynVar
+ , varClass, varWhen
  , pattern ObsVar, pattern ExprVar, pattern PredVar
  , pattern StaticVar, pattern PreVar, pattern MidVar, pattern PostVar
  , pattern ScriptVar
- , pattern PreCond, pattern PostCond, pattern MidCond
- , pattern PreExpr, pattern PostExpr, pattern MidExpr
- , isPreVar, isObsVar, isExprVar, isPredVar, dynVarEq
+ , pattern PreCond, pattern PostCond -- tests only ?
+ , pattern PreExpr, pattern PostExpr, pattern MidExpr -- all tests only?
+ , isPreVar, isObsVar
+ , isPredVar, dynVarEq
  , whatVar, timeVar
  , ListVar
  , pattern LVbl
- , lvarClass, lvarWhen, isDynLVar
- , pattern ObsLVar, pattern VarLVar, pattern ExprLVar, pattern PredLVar
- , pattern StaticVars, pattern PreVars, pattern PostVars, pattern MidVars
- , pattern ScriptVars
- , pattern PreExprs, pattern PrePreds
- , isPreListVar, isObsLVar, isExprLVar, isPredLVar, dynLVarEq
+ , lvarClass, lvarWhen
+ , pattern ObsLVar, pattern VarLVar, pattern ExprLVar, pattern PredLVar -- tests only?
+ , pattern StaticVars -- tests only
+ , pattern PreVars, pattern PostVars, pattern MidVars
+ , pattern PreExprs, pattern PrePreds -- tests only
+ -- currently here while checking for export usage
  , whatLVar, timeLVar
  , less, lessVars, makeVars
  , GenVar, pattern StdVar, pattern LstVar
@@ -234,7 +235,6 @@ newtype Variable  = VR (Identifier, VarClass, VarWhen)
 pattern Vbl idnt cls whn = VR (idnt, cls, whn)
 varClass (Vbl _ vc _)  =  vc
 varWhen  (Vbl _ _ vw)  =  vw
-isDynVar = isDynamic . varWhen
 
 pattern ObsVar  i vw = VR (i, VO, vw)
 pattern ExprVar i vw = VR (i, VE, vw)

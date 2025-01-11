@@ -10,8 +10,6 @@ import SideCond
 import FreeVars
 import Substitution
 import Binding
-import Syntax
-import Builder
 import TermZipper
 import FreeVarTest
 import VarDataTest
@@ -29,8 +27,6 @@ tests = [testCase "reasonEq Tests\n==============" (2+2 @?= 4)]
 --  ++ int_tst_SideCond
     ++ int_tst_Subst
 --  ++ int_tst_Binding
---  ++ int_tst_Syntax
---  ++ int_tst_Builder
 --  ++ int_tst_TermZip
 --  ++ int_tst_FreeVar
 --  ++ tst_FreeVar

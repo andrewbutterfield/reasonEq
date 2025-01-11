@@ -31,20 +31,19 @@ module Variables
  , pattern StaticVars -- tests only
  , pattern PreVars, pattern PostVars, pattern MidVars
  , pattern PreExprs, pattern PrePreds -- tests only
- -- currently here while checking for export usage
  , whatLVar, timeLVar
- , less, lessVars, makeVars
+ , less, makeVars
  , GenVar, pattern StdVar, pattern LstVar
  , isStdV, isLstV, theStdVar, theLstVar
  , getIdClass, sameIdClass
  , gvarClass, gvarWhen, isDynGVar
- , isPreGenVar, isObsGVar, isExprGVar, isPredGVar, dynGVarEq
+ , isObsGVar, isExprGVar, isPredGVar
+ , dynGVarEq
  , whatGVar, timeGVar
  , setVarWhen, setLVarWhen, setGVarWhen
  , VarList
  , varId, varOf, idsOf, stdVarsOf, listVarsOf
  , VarSet, stdVarSetOf, listVarSetOf
- , isPreVarSet
  , liftLess
  , dnWhen, dnVar, dnLVar, dnGVar
  , unVar, unLVar, unGVar
@@ -303,7 +302,6 @@ newtype ListVar = LV (Variable, [Identifier], [Identifier])
 pattern LVbl v is js = LV (v,is,js)
 lvarClass (LVbl v _ _)  =  varClass v
 lvarWhen  (LVbl v _ _)  =  varWhen  v
-isDynLVar = isDynamic . lvarWhen
 
 pattern ObsLVar  k i is js = LV (VR (i,VO,k), is,js)
 pattern VarLVar    i is js = LV (VR (i,VO,WT),is,js)

@@ -60,7 +60,7 @@ We divide settings into three types:
 
 \begin{code}
 data ProofSettings
-  = REqSet {
+  = PrfSet {
      -- Section 1 - standalone settings
        maxMatchDisplay :: Int -- mm, maxmatches
      -- Section 2 - settings that specify behaviour
@@ -135,7 +135,7 @@ andIfWanted wanted newf currf ctxt mtch
 
 \begin{code}
 initProofSettings
-  = matchFilterUpdate $ REqSet {
+  = matchFilterUpdate $ PrfSet {
       maxMatchDisplay        = 30
     , showTrivialMatches     = False
     , showTrivialQuantifiers = False 
@@ -229,7 +229,7 @@ reqsetHDR = "BEGIN "++prfset ; reqsetTRL = "END "++ prfset
 mmKey = "MM = "
 tmKey = "TM = "
 tqKey = "TQ = "
-tsKey = "TX = "  -- TS is in use
+tsKey = "TS = "  
 fvKey = "FV = "
 
 writeProofSettings :: ProofSettings -> [String]
@@ -253,7 +253,7 @@ readProofSettings txts
        (theMHF,rest6) <- readKey fvKey readBool rest5
        rest7 <- readThis reqsetTRL rest6
        return ( matchFilterUpdate
-                 ( REqSet theMMD
+                 ( PrfSet theMMD
                           theMHT
                           theMHQ
                           theMHS

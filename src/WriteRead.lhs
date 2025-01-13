@@ -30,7 +30,7 @@ terms, side-conditions, laws, are all one-liners,
 but aggregates of these such as proofs, or theory
 will be multiline, so allowing effective version control.
 
-We generally worth with a list of strings,
+We generally work with a list of strings,
 representing the lines in the text file.
 We have functions with names of the form \texttt{readXXX}
 that take zero or more specification arguments,

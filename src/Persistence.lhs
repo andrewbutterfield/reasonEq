@@ -27,6 +27,16 @@ import REqState
 import Debugger
 \end{code}
 
+\section{Workspace}
+
+\begin{code}
+type WorkSpace = ( Bool -- True if this is the current workspace
+                 , String -- workspace name
+                 , String -- path to workspace 
+                 )
+\end{code}
+
+\newpage
 \section{Startup}
 
 We check first for the existence of the ``user application''
@@ -36,18 +46,12 @@ If not present, we assume this is the first time running,
 so we create it, and create a default workspace
 in the current working directory.
 
-
-\section{User Application Directory}
+\subsection{User Application Directory}
 
 We return the path of the user application directory,
 plus the contents of its workspaces file.
 
 \begin{code}
-type WorkSpace = ( Bool -- True if the current workspace
-                 , String -- workspace name
-                 , String -- path to workspace 
-                 )
-
 getWorkspaces :: String -> IO (FilePath, [WorkSpace])
 getWorkspaces appname
  = do userAppPath <- getAppUserDataDirectory appname
@@ -64,6 +68,7 @@ putWorkspaces appname wss
             (do createUserAppDir userAppPath
                 putAllWorkspaces userAppPath wss)
 \end{code}
+
 
 Useful names, markers and separators:
 \begin{code}
@@ -96,7 +101,12 @@ getAllWorkspaces dirpath
    doGetWS wsfp = do projTxt <- readFile wsfp
                      wsps <- parseWorkspaces $ lines projTxt
                      return (dirpath, wsps)
+\end{code}
 
+\newpage
+\subsection{Workspace Parsing}
+
+\begin{code}
 parseWorkspaces :: [String] -> IO [WorkSpace]
 parseWorkspaces lns = parseWSs [] lns
 parseWSs ssw [] = return $ reverse ssw
@@ -164,7 +174,7 @@ createWorkspace wsName wsReq
                return (True,projFP)
 \end{code}
 
-\newpage
+
 \section{Current Workspace}
 
 

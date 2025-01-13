@@ -41,6 +41,7 @@ import ProofSettings
 import Debugger
 \end{code}
 
+\newpage
 \section{Settings}
 
 We divide settings into three types:
@@ -65,9 +66,10 @@ We divide settings into three types:
 
 
 \newpage
-\section{Prover State Type}
+\section{\reasonEq\ State Type}
 
-Here we simply aggregate the semantic equational-reasoning prover state
+Here we simply aggregate all the various theorem prover compoments: 
+theories, proofs, settings, etc.
 
 \begin{code}
 data REqState
@@ -159,6 +161,7 @@ readREqState2 theSet thMap txts
                          , liveProofs = lPrfs }
 \end{code}
 
+\newpage
 \section{Test Functions}
 
 For \texttt{andIfWanted}

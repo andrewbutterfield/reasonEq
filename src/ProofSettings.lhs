@@ -34,7 +34,10 @@ import Ranking
 import Debugger
 \end{code}
 
+\newpage
 \section{Settings}
+
+\textbf{NOTE: this should really live somewhere else!}
 
 We divide settings into three types:
 \begin{enumerate}
@@ -145,6 +148,7 @@ initProofSettings
     }
 \end{code}
 
+\newpage
 \subsection{Settings Help}
 
 For every setting we provide both a short and long string,
@@ -175,6 +179,8 @@ showPrfSettings rsettings
     disp r ("ts",_,text) = text ++ " = " ++ show (showTrivialSubst r)
     disp r ("fv",_,text) = text ++ " = " ++ show (showFloatingVariables r)
 \end{code}
+
+\subsection{Change Proof Settings}
 
 \begin{code}
 changePrfSettings :: MonadFail m 
@@ -222,6 +228,7 @@ changeNumberPrfSetting name value reqs
  | otherwise        =  fail ("changeNumberPrfSetting - unknown field: "++name)
 \end{code}
 
+\subsection{Write and Read Proof Settings}
 
 \begin{code}
 prfset = "PRFSET"

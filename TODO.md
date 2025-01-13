@@ -2,6 +2,11 @@
 
 ## URGENT or NEXT
 
+Plan: have proof settings on a per-live proof basis,
+but also keep one in REqState as the (modifiable) default.
+
+**NOTE: proofs are currently saved as one-liners using show**
+
 ### RANKING BUSTED
 
 It needs a complete redesign
@@ -16,6 +21,9 @@ It like other numeric select commands, should report more accurately.
 **Need useability improvements**
 
 * better theory load/save support
+  * keep theory information in folder `ThName`? Or `ThName/ThName.thr` ?
+  * keep proofs as separate files in `ThName/law_name.prf`
+  * if theory is updated, allow proofs to be loaded in rather than redone
 * better proof display settings:
   * better setting command syntax
   * improve `ll` command 

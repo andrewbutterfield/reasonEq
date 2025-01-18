@@ -306,7 +306,10 @@ readAllState reqs projdirfp
             newreqs <- readREqState2 ssettings nmdThrys rest1
             putStrLn ("Read project details from "++projfp)
             return newreqs{projectDir = projdirfp, prfSettings = ssettings}
+\end{code}
 
+\begin{code}
+getNamedTheories :: FilePath -> [FilePath] -> IO [(String, Theory)]
 getNamedTheories projfp nms
   = ifDirectoryExists "Theories" [] projfp (getNamedTheories' projfp nms)
 

@@ -5,6 +5,11 @@
 Plan: have proof settings on a per-live proof basis,
 but also keep one in REqState as the (modifiable) default.
 
+Step 1 - save Theory less proofs in `ThNm/ThNm.thr`,
+and proofs in `ThNm/PrfNm.prf`. Do *not* produce a list of proof-names.
+
+Step 2 - restore theory by reading `.thr` file, and by loading all `.prf` files found in `ThNm/`.
+
 **NOTE: proofs are currently saved as one-liners using show**
 
 ### RANKING BUSTED
@@ -21,8 +26,8 @@ It like other numeric select commands, should report more accurately.
 **Need useability improvements**
 
 * better theory load/save support
-  * keep theory information in folder `ThName`? Or `ThName/ThName.thr` ?
-  * keep proofs as separate files in `ThName/law_name.prf`
+  * keep theory information in folder `ThName`? as `ThName/ThName.thr`.
+  * keep proofs as separate files in `ThName/law_name.prf`.
   * if theory is updated, allow proofs to be loaded in rather than redone
 * better proof display settings:
   * better setting command syntax

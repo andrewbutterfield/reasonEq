@@ -277,36 +277,33 @@ cmdLoad
         ]
     , loadState )
 
-loadState [] reqs
-  = do let dirfp = projectDir reqs
-       reqs' <- readAllState reqs dirfp
-       return reqs'{ inDevMode = inDevMode reqs}
-loadState [nm] reqs
-  = do let dirfp = projectDir reqs
-       (ok,old,theories') <- readNamedTheory (theories reqs) dirfp nm
-       if ok
-        then ( if old
-               then do putStr "keep change? (y/N)? "
-                       hFlush stdout
-                       response <- fmap trim $ getLine
-                       if take 1 response == "y"
-                       then return $ changed $ theories_ theories' reqs
-                       else return reqs
-               else return $ changed $ theories_ theories' reqs )
-        else return reqs
+loadState [] reqs = do 
+  let dirfp = projectDir reqs
+  reqs' <- readAllState reqs dirfp
+  return reqs'{ inDevMode = inDevMode reqs}
+loadState [nm] reqs = do
+  let dirfp = projectDir reqs
+  (ok,old,theories') <- readNamedTheory (theories reqs) dirfp nm
+  if ok
+  then ( if old
+          then do putStr "keep change? (y/N)? "
+                  hFlush stdout
+                  response <- fmap trim $ getLine
+                  if take 1 response == "y"
+                  then return $ changed $ theories_ theories' reqs
+                  else return reqs
+          else return $ changed $ theories_ theories' reqs )
+  else return reqs
        
-loadState [what,nm] reqs
-  | what == prfObj
-    = do let thnm = currTheory reqs
-         result <- readProof dirfp thnm nm
-         case result of
-           Nothing -> return reqs
-           Just prf -> do putStrLn ("Loaded:\n"++show prf++"\n Not Yet Stored")
-                          return reqs
-  where dirfp = projectDir reqs
-
--- addTheoryProof :: String -> Proof -> Theories -> Theories
--- addTheoryProof thname prf thrys
+loadState [what,nm] reqs | what == prfObj  = do
+  let thnm = currTheory reqs
+  let dirfp = projectDir reqs
+  result <- readProof dirfp thnm nm
+  case result of
+    Nothing -> return reqs
+    Just prf -> do 
+      putStrLn ("Loading proof for "++nm)
+      return $ theories__ (addTheoryProof thnm prf) reqs
 
 loadState _ reqs  =  doshow reqs "unknown 'load' option."
 \end{code}

@@ -5,17 +5,12 @@
 Plan: have proof settings on a per-live proof basis,
 but also keep one in REqState as the (modifiable) default.
 
-Step 1 - save Theory less proofs in `ThNm/ThNm.thr`,
-and proofs in `ThNm/PrfNm.prf`. Do *not* produce a list of proof-names.
-
-Step 2 - restore theory by reading `.thr` file, and by loading all `.prf` files found in `ThNm/`.
-
-Step 1 now works for theories wth pre-existing theory folders set up.
-Step 2 now works for theories.
-Both work for proofs except we still don't install a singled out proof
-We need to fix up the proof stuff.
+Steps 1&2  Load/Save Theories/Proofs DONE
 
 **NOTE: proofs are currently saved as one-liners using show**
+
+Step 3 - Proof Settings per live proof.
+
 
 ### RANKING BUSTED
 

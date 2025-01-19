@@ -270,6 +270,7 @@ cmdLoad
         , "            -- warns if it modifies an existing theory"
         , "load " ++ prfObj 
                   ++ " <proof>  -- load proof <proof> to current workspace"
+        , "      CAUTION (will search for and load into current theory (!))"
         , "To come:"
         , "load cnj <conj>  -- load conjecture <cnj> to current workspace"
         , "load ax <axiom>  -- load axiom <axiom> to current workspace"
@@ -296,7 +297,8 @@ loadState [nm] reqs
        
 loadState [what,nm] reqs
   | what == prfObj
-    = do result <- readProof dirfp "unknown-theory" nm
+    = do let thnm = currTheory reqs
+         result <- readProof dirfp thnm nm
          case result of
            Nothing -> return reqs
            Just prf -> do putStrLn ("Loaded:\n"++show prf++"\n Not Yet Stored")

@@ -12,6 +12,7 @@ Step 2 - restore theory by reading `.thr` file, and by loading all `.prf` files 
 
 Step 1 now works for theories wth pre-existing theory folders set up.
 Step 2 now works for theories.
+Both work for proofs except we still don't install a singled out proof
 We need to fix up the proof stuff.
 
 **NOTE: proofs are currently saved as one-liners using show**

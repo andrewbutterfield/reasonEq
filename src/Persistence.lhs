@@ -399,7 +399,7 @@ getNamedTheory thDir nm
         putStrLn "got"
         prffiles <- fmap (filter isProofFile) $ listDirectory thDir 
         putStrLn ("prffiles:\n"++show prffiles)
-        prfTxts <- sequence $ map readFile prffiles
+        prfTxts <- sequence $ map (readFile . (thDir </>)) prffiles
         (thry,_) <- readTheory (lines thryTxt, prfTxts)
         putStrLn ("Read theory '"++nm++"' from "++thryfp)
         return (nm,thry)
@@ -455,20 +455,27 @@ proofPath projDir thname proofName
 
 \begin{code}
 writeProof :: REqState -> String -> String -> Proof -> IO ()
-writeProof reqs thnm prfnm proof
-  = let fp = proofPath (projectDir reqs) thnm prfnm
-    in ifFileExists "Proof" () fp (writeFile fp $ show proof)
+writeProof reqs thnm prfnm proof = do
+  let prjDir = theoryDir (projectDir reqs) thnm
+  let fp = proofPath (projectDir reqs) thnm prfnm
+  putStrLn ("writeProof.fp = "++fp)
+  ifDirectoryExists "Proof" () prjDir (writeFile fp $ show proof)
 \end{code}
 
 \begin{code}
 readProof :: FilePath -> String -> String -> IO (Maybe Proof)
-readProof projfp thnm prfnm
-  = let fp = proofPath projfp thnm prfnm
-    in ifFileExists "Proof" Nothing fp (doReadProof fp prfnm)
+readProof projfp thnm prfnm = do
+  let fp = proofPath projfp thnm prfnm
+  putStrLn ("readProof.fp = "++fp)
+  ifFileExists "Proof" Nothing fp (doReadProof fp prfnm)
   where
     doReadProof fp nm
       =  do txt <- readFile fp
-            return $ Just $ read txt
+            let proof@(pnm,_,_,_) = read txt
+            if nm == pnm 
+            then return $ Just proof
+            else return   Nothing
+             
             -- SHOULD REALLY CHECK PROOF NAME AGAINST FILENAME
 \end{code}
 

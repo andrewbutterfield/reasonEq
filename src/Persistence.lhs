@@ -323,11 +323,15 @@ getNamedTheories projfp nms
 -- assumes that projfp exists
 getNamedTheories' _ [] = return []
 getNamedTheories' projfp (nm:nms)
-  = let fp = theoryPath projfp nm
-    in ifFileExists "Theory" [] fp (doGetNamedTheories projfp fp nm nms)
+  = let 
+      thfile = theoryPath projfp nm
+      thDir  = theoryDir  projfp nm
+    in ifFileExists "Theory" [] thfile (doGetNamedTheories projfp thDir nm nms)
   where
-    doGetNamedTheories projfp fp nm nms
-      =  do nmdThry <- getNamedTheory fp nm
+    doGetNamedTheories projfp thDir nm nms
+      =  do putStrLn ("getting '"++nm++"' from "++thDir)
+            nmdThry <- getNamedTheory thDir nm
+            putStrLn ("got it!")
             nmdThrys <- getNamedTheories' projfp nms
             return (nmdThry:nmdThrys)
 \end{code}
@@ -339,7 +343,8 @@ We also have files called \texttt{<thryName>/<thryName>.thr}
 for every theory called $\langle thryName\rangle$.
 \begin{code}
 theoryExt      =  "thr"
-theoryPath projDir thname = projDir </> thname </> thname <.> theoryExt
+theoryDir  projDir thname  =  projDir </> thname
+theoryPath projDir thname  =  projDir </> thname </> thname <.> theoryExt
 \end{code}
 
 
@@ -387,9 +392,13 @@ readNamedTheory thrys projfp nm
 
 -- assumes fp exists
 getNamedTheory :: String -> String -> IO (String,Theory)
-getNamedTheory thryfp nm 
-  = do  thryTxt <- readFile thryfp
-        prffiles <- listDirectory (nm </> ".prf")
+getNamedTheory thDir nm 
+  = do  let thryfp = thDir </> nm <.> "thr"
+        putStrLn ("getting theory named "++nm++" from "++thryfp)
+        thryTxt <- readFile thryfp
+        putStrLn "got"
+        prffiles <- fmap (filter isProofFile) $ listDirectory thDir 
+        putStrLn ("prffiles:\n"++show prffiles)
         prfTxts <- sequence $ map readFile prffiles
         (thry,_) <- readTheory (lines thryTxt, prfTxts)
         putStrLn ("Read theory '"++nm++"' from "++thryfp)
@@ -439,6 +448,7 @@ readShown (ln:lns)
 For proof files, we use the extension \texttt{.prf}.
 \begin{code}
 proofExt = "prf"
+isProofFile fp =  takeExtension fp == '.':proofExt
 proofPath projDir thname proofName 
   = projDir </> thname </> proofName <.> proofExt
 \end{code}

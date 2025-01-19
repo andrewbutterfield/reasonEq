@@ -10,6 +10,8 @@ and proofs in `ThNm/PrfNm.prf`. Do *not* produce a list of proof-names.
 
 Step 2 - restore theory by reading `.thr` file, and by loading all `.prf` files found in `ThNm/`.
 
+Step 1 now works for theories wth pre-existing theory folders set up.
+
 **NOTE: proofs are currently saved as one-liners using show**
 
 ### RANKING BUSTED

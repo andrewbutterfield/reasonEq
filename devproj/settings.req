@@ -2,6 +2,6 @@ BEGIN PRFSET
 MM = 30
 TM = False
 TQ = False
-TX = False
-FV = False
+TS = False
+FV = True
 END PRFSET

@@ -12,8 +12,6 @@ BEGIN LIST LAWS
 (("bot_def",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "bot" 0,VP,WS)),K (TF TB (TG (Id "B" 0))) (VB True)],([],fromList []))),Axiom)
 (("top_def",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "top" 0,VP,WS)),K (TF TB (TG (Id "B" 0))) (VB False)],([],fromList []))),Axiom)
 END LIST LAWS
-BEGIN LIST PROOFS
-END LIST PROOFS
 BEGIN LIST SIMPLIFIERS
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD

@@ -1,0 +1,18 @@
+mkdir And
+mkdir AndOrInvert
+mkdir Arithmetic
+mkdir Equality
+mkdir Equiv
+mkdir Exists
+mkdir ForAll
+mkdir Implies
+mkdir LTL
+mkdir Lists
+mkdir Not
+mkdir Or
+mkdir Sets
+mkdir UClose
+mkdir UTCP
+mkdir UTPBase
+mkdir XYZ
+

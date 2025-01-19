@@ -126,42 +126,46 @@ foldKEY = "DEFFOLD"
 unflKEY = "DEFUNFOLD"
 conjKEY = "CONJECTURES"
 
-writeTheory :: Theory -> [String]
+writeTheory :: Theory 
+            -> ( [String]    -- lines theoryfile
+               , [String] )  -- [prooffiles]
 writeTheory thry
-  = [ thryHDR nm
-    , depsKEY ++ show (thDeps thry)
-    , knwnKEY ++ show (known thry) ] ++
-    writePerLine lawsKEY show (laws thry) ++
-    writePerLine prfsKEY show (proofs thry) ++
-    writePerLine simpKEY show (simps $ auto thry) ++
-    writePerLine foldKEY id (folds $ auto thry) ++
-    writePerLine unflKEY id (unfolds $ auto thry) ++
-    writePerLine conjKEY show (conjs thry) ++
-    [ thryTRL nm ]
+  = ( [ thryHDR nm
+      , depsKEY ++ show (thDeps thry)
+      , knwnKEY ++ show (known thry) ] ++
+      writePerLine lawsKEY show (laws thry) ++
+      writePerLine simpKEY show (simps $ auto thry) ++
+      writePerLine foldKEY id (folds $ auto thry) ++
+      writePerLine unflKEY id (unfolds $ auto thry) ++
+      writePerLine conjKEY show (conjs thry) ++
+      [ thryTRL nm ]
+    , map show $ proofs thry )
   where nm = thName thry
 
-readTheory :: MonadFail m => [String] -> m (Theory,[String])
-readTheory [] = fail "readTheory: no text."
-readTheory txts
+readTheory :: MonadFail m 
+           => ( [String]   -- lines theoryfile
+              ,[String] )  -- [prooffiles]
+           -> m (Theory,[String])
+readTheory ([],_) = fail "readTheory: no text."
+readTheory (txts,ptxts)
   = do (nm,  rest1) <- readKey (thryHDR "") id txts
        (deps,rest2) <- readKey depsKEY read     rest1
        (knwn,rest3) <- readKey knwnKEY read     rest2
        (lws, rest4) <- readPerLine lawsKEY read rest3
-       (prfs,rest5) <- readPerLine prfsKEY read rest4
-       (simp,rest6) <- readPerLine simpKEY read rest5
-       (fold,rest7) <- readPerLine foldKEY id   rest6
-       (unfl,rest8) <- readPerLine unflKEY id   rest7
-       (conj,rest9) <- readPerLine conjKEY read rest8
-       rest10       <- readThis (thryTRL nm)    rest9
+       (simp,rest5) <- readPerLine simpKEY read rest4
+       (fold,rest6) <- readPerLine foldKEY id   rest5
+       (unfl,rest7) <- readPerLine unflKEY id   rest6
+       (conj,rest8) <- readPerLine conjKEY read rest7
+       rest9        <- readThis (thryTRL nm)    rest8
        return ( Theory { thName   =  nm
                        , thDeps   =  deps
                        , known    =  knwn
                        , laws     =  lws
-                       , proofs   =  prfs
+                       , proofs   =  map read ptxts
                        , auto     =  AutoLaws simp fold unfl
                        , conjs    =  conj
                        }
-              , rest10 )
+              , rest9 )
 \end{code}
 
 \newpage
@@ -199,13 +203,15 @@ thnmsKEY = "THNAMES = "
 sdagKEY = "SDAG = "
 
 type NamedTheoryText  =  ( String      -- Theory Name
-                         , [String] )  -- Theory text
+                         , ( [String] -- Theory text
+                           , [String] ) )   -- Proof Strings
 type NamedTheoryTexts = [ NamedTheoryText ]
 
 writeTheories :: Theories
-              -> ( [String]           -- Theories text
-                 , [ ( String         -- Theory Name
-                     , [String] ) ] ) -- Theory text
+              -> ( [String]                -- Theories text
+                 , [ ( String              -- Theory Name
+                     , ( [String]          -- Theory text
+                       , [String] ) ) ] )  -- Proof texts)
 writeTheories theories
   = ( [ thrysHDR
       , thnmsKEY ++ show (M.keys tmp)
@@ -214,7 +220,7 @@ writeTheories theories
     , map genThryText (M.assocs tmp) )
   where
     tmp = tmap theories
-    genThryText (nm,thry) = (nm, writeTheory thry)
+    genThryText (nm,thry) = (nm, writeTheory thry )
 
 -- we split theory reading into two phases.
 -- First get the list of theories.

@@ -18,6 +18,7 @@ where
 
 import System.Directory
 import System.FilePath
+import qualified Data.Map as M
 
 import Utilities
 import YesBut
@@ -298,13 +299,19 @@ readAllState reqs projdirfp
     doReadAll projdirfp
       = do  let projfp = projectPath projdirfp
             ptxt <- readFile projfp
+            putStrLn "Read Project File"
             (thnms,rest1) <- readREqState1 $ lines ptxt
+            putStrLn "read req-state 1"
             nmdThrys <- getNamedTheories projdirfp thnms
+            putStrLn "got named theories"
             stext <- readFile $ settingsPath projdirfp
             (ssettings,_) <- readProofSettings $ lines stext
+            putStrLn "Read Settings File"
             nmdThrys <- getNamedTheories projdirfp thnms
-            newreqs <- readREqState2 ssettings nmdThrys rest1
+            putStrLn "Read Theory Files"
+            newreqs <- readREqState2 ssettings nmdThrys rest1 -- pure
             putStrLn ("Read project details from "++projfp)
+            putStrLn ("Read "++show (M.size . tmap $ theories newreqs))
             return newreqs{projectDir = projdirfp, prfSettings = ssettings}
 \end{code}
 
@@ -328,11 +335,11 @@ getNamedTheories' projfp (nm:nms)
 \newpage
 \section{Persistent Theory}
 
-We also have files called \texttt{<thryName>.thr}
+We also have files called \texttt{<thryName>/<thryName>.thr}
 for every theory called $\langle thryName\rangle$.
 \begin{code}
 theoryExt      =  "thr"
-theoryPath projDir thname = projDir </> thname <.> theoryExt
+theoryPath projDir thname = projDir </> thname </> thname <.> theoryExt
 \end{code}
 
 
@@ -343,13 +350,14 @@ writeNamedTheory pjdir (nm,theory)
   where
     doWriteTheory pjdir nm theory 
       =  do let fp = theoryPath pjdir nm
-            writeFile fp $ unlines $ writeTheory theory
+            let (thryTxt,pTxts) = writeTheory theory
+            writeFile fp $ unlines thryTxt
             putStrLn ("Theory '"++nm++"' written to '"++pjdir++"'.")
 \end{code}
 
 \begin{code}
-writeNamedTheoryTxt :: FilePath -> (FilePath, [String]) -> IO ()
-writeNamedTheoryTxt pjdir (nm,thTxt)
+writeNamedTheoryTxt :: FilePath -> (FilePath, ([String],[String])) -> IO ()
+writeNamedTheoryTxt pjdir (nm,(thTxt,pTxts))
   = ifDirectoryExists "Theory" () pjdir (doWriteTheoryTxt pjdir nm thTxt)
   where
     doWriteTheoryTxt pjdir nm thTxt
@@ -361,12 +369,13 @@ writeNamedTheoryTxt pjdir (nm,thTxt)
 \begin{code}
 readNamedTheory :: Theories -> String -> String -> IO (Bool,Bool,Theories)
 readNamedTheory thrys projfp nm
-  = let fp = theoryPath projfp nm
+  = let 
+      thryfp = theoryPath projfp nm
     in ifFileExists "Theory" (False,False,undefined) 
-                    fp (doReadNamedTheory thrys fp nm)
+                    thryfp (doReadNamedTheory thrys thryfp nm)
   where
-    doReadNamedTheory thrys fp nm
-      = do  (nm,thry) <- getNamedTheory fp nm
+    doReadNamedTheory thrys thryfp nm
+      = do  (nm,thry) <- getNamedTheory thryfp nm
             let isOld = nm `isATheoryIn` thrys
             let thrys' = ( if isOld
                            then replaceTheory' thry thrys
@@ -378,10 +387,12 @@ readNamedTheory thrys projfp nm
 
 -- assumes fp exists
 getNamedTheory :: String -> String -> IO (String,Theory)
-getNamedTheory fp nm 
-  = do  txt <- readFile fp
-        (thry,_) <- readTheory $ lines txt
-        putStrLn ("Read theory '"++nm++"' from "++fp)
+getNamedTheory thryfp nm 
+  = do  thryTxt <- readFile thryfp
+        prffiles <- listDirectory (nm </> ".prf")
+        prfTxts <- sequence $ map readFile prffiles
+        (thry,_) <- readTheory (lines thryTxt, prfTxts)
+        putStrLn ("Read theory '"++nm++"' from "++thryfp)
         return (nm,thry)
 \end{code}
 
@@ -428,21 +439,22 @@ readShown (ln:lns)
 For proof files, we use the extension \texttt{.prf}.
 \begin{code}
 proofExt = "prf"
-proofPath projDir proofName = projDir </> proofName <.> proofExt
+proofPath projDir thname proofName 
+  = projDir </> thname </> proofName <.> proofExt
 \end{code}
 
 \begin{code}
-writeProof :: REqState -> String -> Proof -> IO ()
-writeProof reqs nm proof
-  = let fp = proofPath (projectDir reqs) nm
+writeProof :: REqState -> String -> String -> Proof -> IO ()
+writeProof reqs thnm prfnm proof
+  = let fp = proofPath (projectDir reqs) thnm prfnm
     in ifFileExists "Proof" () fp (writeFile fp $ show proof)
 \end{code}
 
 \begin{code}
-readProof :: FilePath -> String -> IO (Maybe Proof)
-readProof projfp nm
-  = let fp = proofPath projfp nm
-    in ifFileExists "Proof" Nothing fp (doReadProof fp nm)
+readProof :: FilePath -> String -> String -> IO (Maybe Proof)
+readProof projfp thnm prfnm
+  = let fp = proofPath projfp thnm prfnm
+    in ifFileExists "Proof" Nothing fp (doReadProof fp prfnm)
   where
     doReadProof fp nm
       =  do txt <- readFile fp

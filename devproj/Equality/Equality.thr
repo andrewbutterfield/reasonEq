@@ -6,8 +6,6 @@ BEGIN LIST LAWS
 (("=_symm",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "e" 0,VO,WS)),V T (VR (Id "f" 0,VO,WS))],C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "f" 0,VO,WS)),V T (VR (Id "e" 0,VO,WS))]],([],fromList []))),Axiom)
 (("=_trans",ASN (C (TF TB (TG (Id "B" 0))) True (Id "imp" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "e" 0,VO,WS)),V T (VR (Id "f" 0,VO,WS))],C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "f" 0,VO,WS)),V T (VR (Id "g" 0,VO,WS))]],C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "e" 0,VO,WS)),V T (VR (Id "g" 0,VO,WS))]],([],fromList []))),Axiom)
 END LIST LAWS
-BEGIN LIST PROOFS
-END LIST PROOFS
 BEGIN LIST SIMPLIFIERS
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD

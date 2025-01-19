@@ -28,8 +28,6 @@ BEGIN LIST LAWS
 (("*_div_same",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "div" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],V T (VR (Id "f" 0,VE,WS))],V T (VR (Id "e" 0,VE,WS))],([],fromList []))),Axiom)
 (("*_mod_same",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "mod" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],V T (VR (Id "f" 0,VE,WS))],K (TG (Id "Z" 0)) (VI 0)],([],fromList []))),Axiom)
 END LIST LAWS
-BEGIN LIST PROOFS
-END LIST PROOFS
 BEGIN LIST SIMPLIFIERS
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD

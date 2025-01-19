@@ -4,8 +4,6 @@ KNOWN = VD ("Implies",fromList [(VR (Id "imp" 0,VO,WS),KV (TF (TG (Id "B" 0)) (T
 BEGIN LIST LAWS
 (("imp_def",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "imp" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],([],fromList []))),Axiom)
 END LIST LAWS
-BEGIN LIST PROOFS
-END LIST PROOFS
 BEGIN LIST SIMPLIFIERS
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD

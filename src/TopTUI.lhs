@@ -240,17 +240,18 @@ saveState [nm] reqs
        -> do writeNamedTheory (projectDir reqs) (nm',thry)
              return reqs
 saveState [what,nm] reqs
-  | what == prfObj  
-      = case ( getTheory (currTheory reqs) (theories reqs) 
-               >>= find (pnm nm) . proofs
-             ) of
-          Nothing 
-            ->  do  putStrLn ("No such proof: '"++nm++"'")
-                    return reqs
-          Just prf 
-            ->  do  writeProof reqs nm prf
-                    putStrLn ("Proof '"++nm++"' saved")
-                    return reqs
+  | what == prfObj  = do
+    let thnm = currTheory reqs 
+    case ( getTheory thnm (theories reqs) 
+            >>= find (pnm nm) . proofs
+          ) of
+      Nothing 
+        ->  do  putStrLn ("No such proof: '"++nm++"'")
+                return reqs
+      Just prf 
+        ->  do  writeProof reqs thnm nm prf
+                putStrLn ("Proof '"++nm++"' saved")
+                return reqs
   where pnm nm (pn,_,_,_) = nm == pn
 saveState _ reqs  =  doshow reqs "unknown 'save' option."
 \end{code}
@@ -295,7 +296,7 @@ loadState [nm] reqs
        
 loadState [what,nm] reqs
   | what == prfObj
-    = do result <- readProof dirfp nm
+    = do result <- readProof dirfp "unknown-theory" nm
          case result of
            Nothing -> return reqs
            Just prf -> do putStrLn ("Loaded:\n"++show prf++"\n Not Yet Stored")

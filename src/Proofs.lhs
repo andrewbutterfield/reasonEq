@@ -430,7 +430,7 @@ isStraightCalc ( _, calc ) = all isStraightStep calc
 \end{code}
 
 A proof has a name
-(same as that of the orginating conjecture),
+(same as that of the originating conjecture),
 the assertion, a string denoting a known strategy,
 and the relevant calculation.
 \begin{code}

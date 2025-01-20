@@ -19,7 +19,7 @@ module AbstractUI
 , newConjecture
 , assumeConjecture, demoteLaw , classifyLaw
 , newProof1, newProof2, resumeProof
-, abandonProof, saveProof, completeProof
+, abandonProof, updateProof, completeProof
 , moveFocusDown, moveFocusUp, switchConsequentFocus
 , moveFocusToHypothesis, moveFocusFromHypothesis
 , matchFocus, matchFocusAgainst
@@ -442,8 +442,8 @@ abandonProof reqs liveProof
 \subsection{Saving a Proof}
 
 \begin{code}
-saveProof :: REqState -> LiveProof -> REqState
-saveProof reqs liveProof
+updateProof :: REqState -> LiveProof -> REqState
+updateProof reqs liveProof
   = changed $ liveProofs__ upd reqs
   where upd = M.insert (conjThName liveProof,conjName liveProof) liveProof
 \end{code}

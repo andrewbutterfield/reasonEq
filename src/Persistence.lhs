@@ -9,10 +9,10 @@ module Persistence
   ( getWorkspaces, putWorkspaces
   , currentWorkspace, createWorkspace
   , ifDirectoryExists, ifFileExists
-  , writeAllState, readAllState
+  , saveAllState, loadAllState
   , writeNamedTheory, readNamedTheory
-  , writeConjectures, readFiledConjectures
-  , writeProof, readProof
+  , saveConjectures, loadConjectures
+  , saveProof, loadProof
   )
 where
 
@@ -166,12 +166,12 @@ createWorkspace wsName wsReq
                if fileExists
                then do putStrLn ("Workspace already present: "++wsPath )
                        return (False,projFP)
-               else do writeAllState wsReq
+               else do saveAllState wsReq
                        return (True,projFP)
        else do putStrLn ("Creating "++wsPath)
                createDirectoryIfMissing True wsPath
                putStrLn ("Creating "++projFP)
-               writeAllState wsReq
+               saveAllState wsReq
                return (True,projFP)
 \end{code}
 
@@ -272,8 +272,8 @@ settingsPath projDir = projDir </> settingsFile
 \end{code}
 
 \begin{code}
-writeAllState :: REqState -> IO REqState
-writeAllState reqs
+saveAllState :: REqState -> IO REqState
+saveAllState reqs
   = do let pjdir = projectDir reqs
        ifDirectoryExists "REQ-STATE" reqs pjdir (doWriteAll reqs pjdir)
   where
@@ -292,8 +292,8 @@ writeAllState reqs
 
 
 \begin{code}
-readAllState :: REqState -> FilePath -> IO REqState
-readAllState reqs projdirfp
+loadAllState :: REqState -> FilePath -> IO REqState
+loadAllState reqs projdirfp
   = ifDirectoryExists "REQ-STATE" reqs projdirfp (doReadAll projdirfp)
   where
     doReadAll projdirfp
@@ -353,9 +353,9 @@ writeNamedTheory pjdir (nm,theory)
   where
     doWriteTheory pjdir nm theory 
       =  do let fp = theoryPath pjdir nm
-            let (thryTxt,pTxts) = writeTheory theory
+            let (thryTxt,_) = writeTheory theory
             writeFile fp $ unlines thryTxt
-            sequence (writeProof pjdir thnm prfnm) $ proofs theory
+            sequence $ map (saveProof pjdir) (proofs theory)
             putStrLn ("Theory '"++nm++"' written to '"++pjdir++"'.")
 \end{code}
 
@@ -427,8 +427,8 @@ writeConjectures reqs nm conjs
 \end{code}
 
 \begin{code}
-readFiledConjectures :: FilePath -> String -> IO [NmdAssertion]
-readFiledConjectures projfp nm
+loadConjectures :: FilePath -> String -> IO [NmdAssertion]
+loadConjectures projfp nm
   = let fp = conjPath projfp nm
     in ifFileExists "Conjecture" [] fp (doReadFiledConj fp)
   where
@@ -453,28 +453,26 @@ proofPath projDir thname proofName
 \end{code}
 
 \begin{code}
-writeProof :: FilePath -> Proof -> IO ()
-writeProof prjdir proof@(thnm,prfnm,_,_,_) = do
+saveProof :: FilePath -> Proof -> IO ()
+saveProof prjdir proof@(thnm,prfnm,_,_,_) = do
   let fp = proofPath prjdir thnm prfnm
-  putStrLn ("writeProof.fp = "++fp)
-  ifDirectoryExists "Proof" () prjDir (writeFile fp $ show proof)
+  putStrLn ("saveProof.fp = "++fp)
+  ifDirectoryExists "Proof" () prjdir (writeFile fp $ show proof)
 \end{code}
 
 \begin{code}
-readProof :: FilePath -> String -> String -> IO (Maybe Proof)
-readProof projfp thnm prfnm = do
-  let fp = proofPath projfp thnm prfnm
-  putStrLn ("readProof.fp = "++fp)
+loadProof :: FilePath -> String -> String -> IO (Maybe Proof)
+loadProof projdir thnm prfnm = do
+  let fp = proofPath projdir thnm prfnm
+  putStrLn ("loadProof.fp = "++fp)
   ifFileExists "Proof" Nothing fp (doReadProof fp prfnm)
   where
     doReadProof fp nm
       =  do txt <- readFile fp
-            let proof@(_,pnm,_,_,_) = read txt
-            if nm == pnm 
+            let proof@(tnm,pnm,_,_,_) = read txt
+            if thnm == tnm && nm == pnm 
             then return $ Just proof
             else return   Nothing
-             
-            -- SHOULD REALLY CHECK PROOF NAME AGAINST FILENAME
 \end{code}
 
 

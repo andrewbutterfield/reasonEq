@@ -93,7 +93,7 @@ reqQuit _ reqs
  where
    saveAndGo reqs
     = do putStrLn ("Changes made, saving ....")
-         writeAllState reqs
+         saveAllState reqs
          byeBye
    byeBye = putStrLn "\nGoodbye!\n" >> return (True, reqs)
 
@@ -228,7 +228,7 @@ cmdSave
         ]
     , saveState )
 
-saveState [] reqs = writeAllState reqs
+saveState [] reqs = saveAllState reqs
 saveState [nm] reqs
   = let nm' = if nm == "." then (currTheory reqs) else nm
     in
@@ -279,7 +279,7 @@ cmdLoad
 
 loadState [] reqs = do 
   let dirfp = projectDir reqs
-  reqs' <- readAllState reqs dirfp
+  reqs' <- loadAllState reqs dirfp
   return reqs'{ inDevMode = inDevMode reqs}
 loadState [nm] reqs = do
   let dirfp = projectDir reqs
@@ -298,7 +298,7 @@ loadState [nm] reqs = do
 loadState [what,nm] reqs | what == prfObj  = do
   let thnm = currTheory reqs
   let dirfp = projectDir reqs
-  result <- readProof dirfp thnm nm
+  result <- loadProof dirfp thnm nm
   case result of
     Nothing -> return reqs
     Just prf -> do 
@@ -319,9 +319,9 @@ cmdSaveConj
     , unlines
         [ "svc -- save all laws in current theory as conjectures"
         ]
-    , saveConjectures )
+    , saveAsConjectures )
 
-saveConjectures _ reqs
+saveAsConjectures _ reqs
   = case getTheory (currTheory reqs) $ theories reqs of
       Nothing
        -> do putStrLn ("Can't find current theory!!!\BEL")
@@ -329,7 +329,7 @@ saveConjectures _ reqs
       Just thry
        -> do let lawConjs = map lawNamedAssn (laws thry)
              let allConjs = lawConjs ++ conjs thry
-             writeConjectures reqs (thName thry) allConjs
+             saveConjectures reqs (thName thry) allConjs
              return reqs
 \end{code}
 
@@ -345,7 +345,7 @@ cmdLoadConj
     , displayConjectures )
 
 displayConjectures [nm] reqs
-  = do savedConjs <- readFiledConjectures (projectDir reqs) nm
+  = do savedConjs <- loadConjectures (projectDir reqs) nm
        putStrLn $ unlines' $ map (trNmdAsn) savedConjs
        return reqs
 displayConjectures _ reqs  =  doshow reqs "unknown 'ldc' option."

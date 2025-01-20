@@ -86,7 +86,7 @@ proofREPLQuit args (reqs,liveProof)
        inp <- getLine
        if trim inp == "Y"
         then return (True,(abandonProof reqs liveProof, liveProof))
-        else return (True,(saveProof reqs liveProof, liveProof))
+        else return (True,(updateProof reqs liveProof, liveProof))
 
 proofREPLHelpCmds = ["?"]
 

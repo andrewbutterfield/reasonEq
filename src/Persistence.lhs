@@ -307,8 +307,6 @@ readAllState reqs projdirfp
             stext <- readFile $ settingsPath projdirfp
             (ssettings,_) <- readProofSettings $ lines stext
             putStrLn "Read Settings File"
-            nmdThrys <- getNamedTheories projdirfp thnms
-            putStrLn "Read Theory Files"
             newreqs <- readREqState2 ssettings nmdThrys rest1 -- pure
             putStrLn ("Read project details from "++projfp)
             putStrLn ("Read "++show (M.size . tmap $ theories newreqs))
@@ -357,6 +355,7 @@ writeNamedTheory pjdir (nm,theory)
       =  do let fp = theoryPath pjdir nm
             let (thryTxt,pTxts) = writeTheory theory
             writeFile fp $ unlines thryTxt
+            sequence (writeProof pjdir thnm prfnm) $ proofs theory
             putStrLn ("Theory '"++nm++"' written to '"++pjdir++"'.")
 \end{code}
 
@@ -454,10 +453,9 @@ proofPath projDir thname proofName
 \end{code}
 
 \begin{code}
-writeProof :: REqState -> String -> String -> Proof -> IO ()
-writeProof reqs thnm prfnm proof = do
-  let prjDir = theoryDir (projectDir reqs) thnm
-  let fp = proofPath (projectDir reqs) thnm prfnm
+writeProof :: FilePath -> Proof -> IO ()
+writeProof prjdir proof@(thnm,prfnm,_,_,_) = do
+  let fp = proofPath prjdir thnm prfnm
   putStrLn ("writeProof.fp = "++fp)
   ifDirectoryExists "Proof" () prjDir (writeFile fp $ show proof)
 \end{code}

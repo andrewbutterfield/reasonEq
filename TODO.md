@@ -9,7 +9,8 @@ Steps 1&2  Load/Save Theories/Proofs DONE
 
 **NOTE: proofs are currently saved as one-liners using show**
 
-Step 3 - Proof Settings per live proof.
+Step 3 - Proof should contain explicit Theory Name
+Step 4 - Proof Settings per live proof.
 
 
 ### RANKING BUSTED

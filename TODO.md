@@ -78,11 +78,11 @@ Plan: have proof settings on a per-live proof basis,
 but also keep one in REqState as the (modifiable) default.
 
 Steps 1&2  Load/Save Theories/Proofs DONE
-Step 3 - Proof does contain explicit Theory Name
+
+Step 3 - Proof does contain explicit Theory Name and is now 'saved'.
 
 **NOTE: proofs are currently saved as one-liners using show**
 
-Step 3' - proofs are not being saved when the 'save' command is given at top-level.
 Step 4 - Proof Settings per live proof.
 
 

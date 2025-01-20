@@ -371,7 +371,7 @@ writeNamedTheoryTxt pjdir (nm,(thTxt,pTxts))
 \end{code}
 
 \begin{code}
-readNamedTheory :: Theories -> String -> String -> IO (Bool,Bool,Theories)
+readNamedTheory :: TheoryDAG -> String -> String -> IO (Bool,Bool,TheoryDAG)
 readNamedTheory thrys projfp nm
   = let 
       thryfp = theoryPath projfp nm
@@ -414,8 +414,8 @@ conjPath projDir conjName = projDir </> conjName <.> conjExt
 \end{code}
 
 \begin{code}
-writeConjectures :: Show a => REqState -> String -> [a] -> IO ()
-writeConjectures reqs nm conjs
+saveConjectures :: Show a => REqState -> String -> [a] -> IO ()
+saveConjectures reqs nm conjs
   = let projfp = projectDir reqs
     in ifDirectoryExists "Conjecture" () projfp 
        (doWriteConjs projfp nm conjs)

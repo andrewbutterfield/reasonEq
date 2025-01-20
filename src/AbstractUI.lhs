@@ -774,7 +774,7 @@ applySAT liveproof
 \textbf{Deprecated. Should be done under the hood as required}
 
 \begin{code}
-normQuantFocus :: MonadFail m => Theories -> LiveProof -> m LiveProof
+normQuantFocus :: MonadFail m => TheoryDAG -> LiveProof -> m LiveProof
 normQuantFocus thrys liveProof
  | conjSC liveProof == scTrue
    =  let (tz,seq') = focus liveProof
@@ -796,7 +796,7 @@ normQuantFocus thrys liveProof
 \subsection{Simplify Nested Quantifiers Substitution}
 
 \begin{code}
-nestSimpFocus :: MonadFail m => Theories -> LiveProof -> m LiveProof
+nestSimpFocus :: MonadFail m => TheoryDAG -> LiveProof -> m LiveProof
 nestSimpFocus thrys liveProof
   = let (tz,seq') = focus liveProof
         dpath = fPath liveProof
@@ -821,7 +821,7 @@ This could be done by `substituteFocus` below
 
 \begin{code}
 substituteFocus :: (MonadFail m, Alternative m)
-                => Theories -> LiveProof -> m LiveProof
+                => TheoryDAG -> LiveProof -> m LiveProof
 substituteFocus thrys liveProof
   = let (tz,seq') = focus liveProof
         dpath = fPath liveProof

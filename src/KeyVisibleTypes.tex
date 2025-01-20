@@ -81,9 +81,14 @@ data Theory
     , conjs       :: [NmdAssertion]
     }
 type TheoryMap = Map String Theory
-data Theories
-  = Theories { tmap :: TheoryMap
+data TheoryDAG
+  = TheoryDAG { tmap :: TheoryMap
              , sdag :: SDAG String }
+
+type NamedTheoryText  =  ( String      -- Theory Name
+                         , ( [String] -- Theory text
+                           , [String] ) )   -- Proof Strings
+type NamedTheoryTexts = [ NamedTheoryText ]
 \end{code}
 
 
@@ -124,6 +129,7 @@ data LiveProof
     , xpndSC :: SideCond -- side condition with known vars expanded
     }
 
+type LiveProofs = Map (String,String) LiveProof
 \end{code}
 
 \newpage
@@ -137,7 +143,7 @@ data REqState
     , modified    ::  Bool -- True if anything modified but not saved
     -- all below are saved
     , prfSettings ::  ProofSettings
-    , theories    ::  Theories
+    , theories    ::  TheoryDAG
     , currTheory  ::  String
     , liveProofs  ::  LiveProofs
     }

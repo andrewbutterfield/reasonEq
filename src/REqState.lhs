@@ -79,7 +79,7 @@ data REqState
     , modified    ::  Bool -- True if anything modified but not saved
     -- all below are saved
     , prfSettings ::  ProofSettings
-    , theories    ::  Theories
+    , theories    ::  TheoryDAG
     , currTheory  ::  String
     , liveProofs  ::  LiveProofs
     }

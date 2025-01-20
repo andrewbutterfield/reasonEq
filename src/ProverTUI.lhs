@@ -692,7 +692,7 @@ whichApply "f" = True
 whichApply "u" = True
 whichApply _ = False
 
-allAutos :: Theory -> Theories -> AutoLaws
+allAutos :: Theory -> TheoryDAG -> AutoLaws
 allAutos thry thys 
   = do  let depthys = getTheoryDeps' (thName thry) thys
         combineAutos nullAutoLaws ((depAutos [] depthys) ++ [auto thry])

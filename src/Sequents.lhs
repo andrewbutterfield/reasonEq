@@ -94,7 +94,7 @@ we want to determine which strategies apply
 and provide a choice of sequents.
 We flatten the implication when considering assumption-based sequents
 \begin{code}
-availableStrategies :: Theories -> String -> NmdAssertion
+availableStrategies :: TheoryDAG -> String -> NmdAssertion
                     -> [(String,Sequent)]
 availableStrategies theories thnm (nm,(Assertion tconj sc))
   = catMaybes

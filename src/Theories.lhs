@@ -18,7 +18,7 @@ module Theories
  , auto__, auto_
  , nullTheory
  , writeTheory, readTheory
- , TheoryMap, Theories(..)
+ , TheoryMap, TheoryDAG(..)
  , NamedTheoryTexts, writeTheories, readTheories1, readTheories2
  , noTheories
  , addTheory, addTheory', getTheory
@@ -183,8 +183,8 @@ In the implementation, the SDAG is built over theory names,
 with a separate mapping linking those names to the corresponding theories.
 \begin{code}
 type TheoryMap = Map String Theory
-data Theories
-  = Theories { tmap :: TheoryMap
+data TheoryDAG
+  = TheoryDAG { tmap :: TheoryMap
              , sdag :: SDAG String }
   deriving (Show,Read)
 
@@ -207,8 +207,8 @@ type NamedTheoryText  =  ( String      -- Theory Name
                            , [String] ) )   -- Proof Strings
 type NamedTheoryTexts = [ NamedTheoryText ]
 
-writeTheories :: Theories
-              -> ( [String]                -- Theories text
+writeTheories :: TheoryDAG
+              -> ( [String]                -- Theories as text
                  , [ ( String              -- Theory Name
                      , ( [String]          -- Theory text
                        , [String] ) ) ] )  -- Proof texts)
@@ -232,19 +232,19 @@ readTheories1 txts
        return (thnms, rest2)
 -- Second get rest
 readTheories2 :: MonadFail m => [(String,Theory)] -> [String]
-              -> m (Theories,[String])
+              -> m (TheoryDAG,[String])
 readTheories2 _ [] = fail "readTheories2: no text."
 readTheories2 tmp txts
   = do (sdg,rest1)  <- readKey  sdagKEY read  txts
        rest2        <- readThis thrysTRL     rest1
-       return (Theories (M.fromList tmp) sdg, rest2)
+       return (TheoryDAG (M.fromList tmp) sdg, rest2)
 \end{code}
 
 \section{No Theories}
 
 We start by defining a state of zero knowledge:
 \begin{code}
-noTheories = Theories{ tmap = M.empty, sdag = [] }
+noTheories = TheoryDAG{ tmap = M.empty, sdag = [] }
 \end{code}
 
 \newpage
@@ -258,15 +258,15 @@ by trying to add to that component first.
 If that succeeds,
 then we just add to the map component without any further checks.
 \begin{code}
-addTheory :: MonadFail m => Theory -> Theories -> m Theories
+addTheory :: MonadFail m => Theory -> TheoryDAG -> m TheoryDAG
 addTheory thry theories
   = do let nm = thName thry
        sdag' <- insSDAG "theory" "dependencies"
                         nm (thDeps thry) $ sdag theories
        let tmap' = M.insert nm thry $ tmap theories
-       return Theories{ tmap = tmap', sdag = sdag' }
+       return TheoryDAG{ tmap = tmap', sdag = sdag' }
 
-addTheory' :: Theory -> Theories -> Theories
+addTheory' :: Theory -> TheoryDAG -> TheoryDAG
 addTheory' thry theories
   = case addTheory thry theories of
       Nothing        -> theories
@@ -276,7 +276,7 @@ addTheory' thry theories
 \section{Retrieving a Theory}
 
 \begin{code}
-getTheory :: MonadFail m => String -> Theories -> m Theory
+getTheory :: MonadFail m => String -> TheoryDAG -> m Theory
 getTheory thnm thrys
  = case M.lookup thnm $ tmap thrys of
      Nothing    ->  fail ("Theory '"++thnm++"' not found.")
@@ -289,7 +289,7 @@ getTheory thnm thrys
 We also need to generate a list of theories from the mapping,
 given a starting point:
 \begin{code}
-getTheoryDeps :: MonadFail m => String -> Theories -> m [Theory]
+getTheoryDeps :: MonadFail m => String -> TheoryDAG -> m [Theory]
 getTheoryDeps nm theories
   = case getSDAGdeps nm $ sdag theories of
       []  ->  fail ("No such theory: '"++nm++"'")
@@ -302,7 +302,7 @@ getTheoryDeps nm theories
 \end{code}
 Sometimes we don't want to distinguish failure  and having no theories:
 \begin{code}
-getTheoryDeps' :: String -> Theories -> [Theory]
+getTheoryDeps' :: String -> TheoryDAG -> [Theory]
 getTheoryDeps' nm theories
   = case getTheoryDeps nm theories of
       Nothing     ->  []
@@ -311,7 +311,7 @@ getTheoryDeps' nm theories
 
 Sometimes we just want all the theories in dependency order:
 \begin{code}
-getAllTheories :: Theories -> [Theory]
+getAllTheories :: TheoryDAG -> [Theory]
 getAllTheories theories
  = let thryNms = topDownSDAG $ sdag theories
    in catMaybes $ map (lookin $ tmap theories) thryNms
@@ -324,14 +324,14 @@ getAllTheories theories
 \subsection{List all theories}
 
 \begin{code}
-listTheories :: Theories -> [String]
+listTheories :: TheoryDAG -> [String]
 listTheories thrys = M.keys $ tmap thrys
 \end{code}
 
 \subsection{Get Conjectures of current theory}
 
 \begin{code}
-getTheoryConjectures :: MonadFail m => String -> Theories -> m [NmdAssertion]
+getTheoryConjectures :: MonadFail m => String -> TheoryDAG -> m [NmdAssertion]
 getTheoryConjectures thNm thrys
   = do case M.lookup thNm (tmap thrys) of
          Nothing    ->  fail ("Conjectures: theory '"++thNm++", not found")
@@ -341,10 +341,10 @@ getTheoryConjectures thNm thrys
 \subsection{Get Proofs from current theory}
 
 \begin{code}
-isATheoryIn :: String -> Theories -> Bool
+isATheoryIn :: String -> TheoryDAG -> Bool
 nm `isATheoryIn` thrys = isJust $ M.lookup nm (tmap thrys)
 
-getTheoryProofs :: MonadFail m => String -> Theories -> m [Proof]
+getTheoryProofs :: MonadFail m => String -> TheoryDAG -> m [Proof]
 getTheoryProofs thNm thrys
   = do case M.lookup thNm (tmap thrys) of
          Nothing    ->  fail ("Proofs: theory '"++thNm++", not found")
@@ -359,12 +359,12 @@ We insist, for now at least,
 that the dependencies do not change.
 \begin{code}
 replaceTheory :: MonadFail m 
-              => String -> Theory -> Theories -> m Theories
-replaceTheory thnm thry' (Theories tmap sdag)
+              => String -> Theory -> TheoryDAG -> m TheoryDAG
+replaceTheory thnm thry' (TheoryDAG tmap sdag)
   = case M.lookup thnm tmap of
       Nothing    ->  fail ("replaceTheory: '"++thnm++"' not found.")
       Just thry  ->  if thDeps thry' == thDeps thry
-                     then return $ Theories (M.insert thnm thry' tmap)
+                     then return $ TheoryDAG (M.insert thnm thry' tmap)
                                             sdag
                       else fail ( "replaceTheory: '"
                                 ++ thnm ++ "' dependencies have changed" )
@@ -374,7 +374,7 @@ This code is a total version,
 in that it ``fails'' silently,
 by simply returning its input.
 \begin{code}
-replaceTheory' :: Theory -> Theories -> Theories
+replaceTheory' :: Theory -> TheoryDAG -> TheoryDAG
 replaceTheory' thry theories
  = case replaceTheory (thName thry) thry theories of
      Nothing         ->  theories
@@ -384,8 +384,8 @@ replaceTheory' thry theories
 \subsection{Theory Update}
 
 \begin{code}
-updateTheory :: MonadFail m => String -> Theory -> Bool -> Theories -> m Theories
-updateTheory thnm thry0 force (Theories tmap sdag)
+updateTheory :: MonadFail m => String -> Theory -> Bool -> TheoryDAG -> m TheoryDAG
+updateTheory thnm thry0 force (TheoryDAG tmap sdag)
   = case M.lookup thnm tmap of
       Nothing    ->  fail ("updateTheory: '"++thnm++"' not found.")
       Just thry  ->
@@ -401,7 +401,7 @@ updateTheory thnm thry0 force (Theories tmap sdag)
            then
              do  let thry' = addLaws thry newL
                  let thry'' = addConjs thry' newC
-                 return $ Theories (M.insert thnm thry'' tmap) sdag
+                 return $ TheoryDAG (M.insert thnm thry'' tmap) sdag
            else
              fail $ unlines
               [ "updateTheory: can't handle law/conj. updates right now"
@@ -459,7 +459,7 @@ assumeConjRange lo hi thry
 \end{code}
 
 \begin{code}
-assumeDepConj :: MonadFail m => String -> Theories -> m Theories
+assumeDepConj :: MonadFail m => String -> TheoryDAG -> m TheoryDAG
 assumeDepConj thnm thys
   = do depthys <- fmap ttail $ getTheoryDeps thnm thys
        assumeDepConj' thys depthys
@@ -507,8 +507,8 @@ lawDemote lnm thry
 
 This code also ``fails'' silently.
 \begin{code}
-addTheoryProof :: String -> Proof -> Theories -> Theories
-addTheoryProof thname prf thrys@(Theories tmap sdag)
+addTheoryProof :: String -> Proof -> TheoryDAG -> TheoryDAG
+addTheoryProof thname prf thrys@(TheoryDAG tmap sdag)
   = case M.lookup thname tmap of
       Nothing ->  thrys
       Just thry ->
@@ -522,14 +522,14 @@ addTheoryProof thname prf thrys@(Theories tmap sdag)
 \subsection{Upgrade (proven) Conjecture to Law}
 
 \begin{code}
-upgradeConj2Law  :: String -> String -> Theories -> Theories
-upgradeConj2Law thnm cjnm thrys@(Theories tmap sdag)
+upgradeConj2Law  :: String -> String -> TheoryDAG -> TheoryDAG
+upgradeConj2Law thnm cjnm thrys@(TheoryDAG tmap sdag)
   = case M.lookup thnm tmap of
       Nothing  ->  thrys
       Just thry
        -> case upgrade cjnm thry [ ]$ conjs thry of
             Nothing -> thrys
-            Just thry' -> Theories (M.insert thnm thry' tmap) sdag
+            Just thry' -> TheoryDAG (M.insert thnm thry' tmap) sdag
 
 upgrade _ _ _ [] = Nothing
 upgrade cjnm thry sjc (cj@(nm,asn):cjs)
@@ -545,7 +545,7 @@ upgrade cjnm thry sjc (cj@(nm,asn):cjs)
 lawClassify :: MonadFail m => [Law] -> Theory -> m Theory
 lawClassify lw thry = return $ auto_ (addLawsClass (lw) (auto thry)) thry
 
-lawDepClassify :: MonadFail m => String -> Theories -> m Theories
+lawDepClassify :: MonadFail m => String -> TheoryDAG -> m TheoryDAG
 lawDepClassify thnm thys
   = do depthys <- fmap ttail $ getTheoryDeps thnm thys
        lawDepClassify' thys depthys

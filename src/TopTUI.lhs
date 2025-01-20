@@ -249,7 +249,7 @@ saveState [what,nm] reqs
         ->  do  putStrLn ("No such proof: '"++nm++"'")
                 return reqs
       Just prf 
-        ->  do  writeProof (projectDir reqs) thnm nm prf
+        ->  do  saveProof (projectDir reqs) prf
                 putStrLn ("Proof '"++nm++"' saved")
                 return reqs
   where pnm nm (_,pn,_,_,_) = nm == pn

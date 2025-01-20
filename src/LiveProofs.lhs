@@ -159,7 +159,7 @@ writeLiveProof lp
     [ lprfTRL ]
     -- xpndSC not saved
 
-readLiveProof :: MonadFail m => Theories -> [String] -> m (LiveProof,[String])
+readLiveProof :: MonadFail m => TheoryDAG -> [String] -> m (LiveProof,[String])
 readLiveProof thrys txts
   = do rest1          <- readThis lprfHDR          txts
        (thnm, rest2)  <- readKey (lpthKEY "") id   rest1
@@ -204,7 +204,8 @@ writeLiveProofs liveProofs
     writeMap liveproofs writeLiveProof liveProofs ++
     [ lprfsTRL ]
 
-readLiveProofs :: MonadFail m => Theories -> [String] -> m (LiveProofs,[String])
+readLiveProofs :: MonadFail m 
+               => TheoryDAG -> [String] -> m (LiveProofs,[String])
 readLiveProofs thrys txts
   = do rest1         <- readThis lprfsHDR txts
        (lprfs,rest2) <- readMap liveproofs rdKey (readLiveProof thrys) rest1

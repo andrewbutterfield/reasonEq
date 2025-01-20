@@ -122,7 +122,6 @@ currThKEY = "CURRTHEORY = "
 writeREqState :: REqState -> ([String],[String],NamedTheoryTexts)
 writeREqState reqs
   = ( [ reqstateHDR ] ++
-      -- writeProofSettings (prfSettings reqs) ++
       thrysTxt ++
       [currThKEY ++ (currTheory reqs)] ++
       writeLiveProofs (liveProofs reqs) ++
@@ -136,8 +135,7 @@ writeREqState reqs
 
 We have to split this into two phases:
 \begin{code}
-readREqState1 :: MonadFail m => [String]
-              -> m ([String],[String])
+readREqState1 :: MonadFail m => [String] -> m ([String],[String])
 readREqState1 [] = fail "readREqState1: no text."
 readREqState1 txts
   = do rest1 <- readThis reqstateHDR txts

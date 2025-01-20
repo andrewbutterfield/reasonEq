@@ -2,6 +2,61 @@
 
 ## URGENT or NEXT
 
+**CURRENT STATE OF PERSISTENCE STUFF**
+
+Format:
+
+```
+Module.FnName :: Type
+  invoking modules
+```
+
+Key persistence functions
+
+```
+Persistence.writeAllState :: REqState -> IO REqState
+  TopTUI
+
+Persistence.writeNamedTheory :: FilePath -> (FilePath, Theory) -> IO ()
+  TopTUI
+
+Persistence.writeProof :: FilePath -> Proof -> IO ()
+  TopTUI
+
+Persistence.writeNamedTheoryTxt
+ :: FilePath -> (FilePath, ([String],[String])) -> IO ()
+  (local only)
+
+writeTheory :: Theory -> ( [String], [String] )
+  Persistence
+
+Persistence.readAllState :: REqState -> FilePath -> IO REqState
+  Main TopTUI
+
+REqState.readREqState1 :: MonadFail m => [String] -> m ([String],[String])
+  Persistence
+
+REqState.readREqState2 
+ :: MonadFail m => ProofSettings ->  [(String,Theory)] -> [String] -> m REqState
+  Persistence
+
+Persistence.getNamedTheories :: FilePath -> [FilePath] -> IO [(String, Theory)]
+  (local)
+
+Persistence.getNamedTheory :: String -> String -> IO (String,Theory)
+  (local)
+
+Persistence.readNamedTheory :: Theories -> String -> String -> IO (Bool,Bool,Theories)
+  TopTUI
+
+Persistence.readProof :: FilePath -> String -> String -> IO (Maybe Proof)
+  TopTUI
+
+Theories.readTheory 
+  :: MonadFail m => ( [String],[String] )  -> m (Theory,[String])
+  Persistence
+```
+
 Plan: have proof settings on a per-live proof basis,
 but also keep one in REqState as the (modifiable) default.
 
@@ -10,6 +65,7 @@ Step 3 - Proof does contain explicit Theory Name
 
 **NOTE: proofs are currently saved as one-liners using show**
 
+Step 3' - proofs are not being saved when the 'save' command is given at top-level.
 Step 4 - Proof Settings per live proof.
 
 

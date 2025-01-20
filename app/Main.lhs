@@ -195,14 +195,14 @@ initState flags
                  putStrLn ("Project Name: "++pname)
                  putStrLn ("Project Path: "++projfp)
                  putStrLn "Loading..."
-                 readAllState reqstate0 projfp
+                 loadAllState reqstate0 projfp
       Just fp ->
         do ok <- doesDirectoryExist fp
            if ok
            then if dev flags
                 then return $ devInitState{ projectDir = fp }
                 else do putStrLn "Running user mode, loading project state."
-                        readAllState reqstate0 fp
+                        loadAllState reqstate0 fp
            else die ("invalid workspace: "++fp)
 \end{code}
 

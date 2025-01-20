@@ -429,20 +429,21 @@ isStraightCalc :: Calculation -> Bool
 isStraightCalc ( _, calc ) = all isStraightStep calc
 \end{code}
 
-A proof has a name
-(same as that of the originating conjecture),
+A proof has the name of the theory from which it came,
+its own name (same as that of the originating conjecture),
 the assertion, a string denoting a known strategy,
 and the relevant calculation.
 \begin{code}
 type Proof
-  = ( String -- assertion name
+  = ( String -- theory name
+    , String -- assertion name
     , Assertion
     , String -- Strategy
     , Calculation -- Simple calculational proofs for now
     )
 
 labelAsProven :: NmdAssertion -> Proof -> Law
-labelAsProven nasn (prfnm,_,_,_) =  (nasn, Proven prfnm)
+labelAsProven nasn (_,prfnm,_,_,_) =  (nasn, Proven prfnm)
 \end{code}
 
 \newpage
@@ -492,8 +493,8 @@ showSeqFocus (Hyp i) = "hyp. "++show i
 
 \begin{code}
 displayProof :: Proof -> String
-displayProof (pnm,asn,strat,(trm',steps))
- = unlines' ( (pnm ++ " : " ++ trAsn asn)
+displayProof (thnm,pnm,asn,strat,(trm',steps))
+ = unlines' ( (thnm ++ "." ++ pnm ++ " : " ++ trAsn asn)
               : ("by '"++strat++"'")
               : "---"
               : ( map shStep steps )
@@ -515,7 +516,7 @@ shStep ( just, asn )  =  unlines' [ trAsn asn
 
 Showing Proofs:
 \begin{code}
-showProof (pnm,(Assertion trm sc),strat,(trm',steps))
+showProof (_,pnm,(Assertion trm sc),strat,(trm',steps))
  = " " ++ pnm ++ "  (" ++ strat ++ ", size:" ++ show (length steps) ++ ")"
 
 showProofs _ []      =  "No Proofs yet."
@@ -526,10 +527,10 @@ showProofs _ proofs
        : map showProof proofs )
 
 showNamedProof _ [] = "No such proof"
-showNamedProof nm (prf@(pnm,_,_,_):rest)
+showNamedProof nm (prf@(_,pnm,_,_,_):rest)
   | nm == pnm  =  displayProof prf
   | otherwise  =   showNamedProof nm rest
 
-listProof (pnm,(trm,sc),strat,(trm',steps))
+listProof (thnm,pnm,(trm,sc),strat,(trm',steps))
  = "listProof NYI"
 \end{code}

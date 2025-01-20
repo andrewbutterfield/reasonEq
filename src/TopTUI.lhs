@@ -252,7 +252,7 @@ saveState [what,nm] reqs
         ->  do  writeProof reqs thnm nm prf
                 putStrLn ("Proof '"++nm++"' saved")
                 return reqs
-  where pnm nm (pn,_,_,_) = nm == pn
+  where pnm nm (_,pn,_,_,_) = nm == pn
 saveState _ reqs  =  doshow reqs "unknown 'save' option."
 \end{code}
 

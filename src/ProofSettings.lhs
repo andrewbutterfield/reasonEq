@@ -28,7 +28,7 @@ import Debugger
 \end{code}
 
 
-\section{ProofSettings Datatype}
+\section{Proof Settings Datatype}
 
 \begin{code}
 data ProofSettings

@@ -68,7 +68,7 @@ import Debugger
 \end{code}
 
 \newpage
-\section{Live Proof Type}
+\section{Live  Type}
 
 \begin{code}
 data LiveProof
@@ -264,7 +264,8 @@ We need to convert a complete live proof to a proof:
 \begin{code}
 finaliseProof :: LiveProof -> Proof
 finaliseProof liveProof
-  = ( conjName liveProof
+  = ( conjThName liveProof
+    , conjName liveProof
     , conjecture liveProof
     , strategy liveProof
     , ( exitTZ $ fst $ focus liveProof
@@ -945,11 +946,12 @@ makeEquivalence :: String -> LiveProof
                    , Law    -- the new law
                    , Proof ) -- the relevant proof
 makeEquivalence nm liveProof
-  = (  conjThName liveProof
+  = (  thnm
     , ( ( nm, asn ), Proven nm )
-    , ( nm, asn, strategy liveProof, calc )
+    , ( thnm, nm, asn, strategy liveProof, calc )
     )
   where
+     thnm = conjThName liveProof
      -- hack - should refer to logicSig
      equiv = fromJust $ ident "equiv"
      mkEquivs ps = Cons arbpred True equiv ps

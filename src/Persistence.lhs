@@ -471,7 +471,7 @@ readProof projfp thnm prfnm = do
   where
     doReadProof fp nm
       =  do txt <- readFile fp
-            let proof@(pnm,_,_,_) = read txt
+            let proof@(_,pnm,_,_,_) = read txt
             if nm == pnm 
             then return $ Just proof
             else return   Nothing

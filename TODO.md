@@ -13,8 +13,8 @@ We need to split 'AllState' handling below into distinct parts:
   
 Processes:
 
-- Write: (Obj -> text) ; (text -> File) 
-- Read: (File -> text) ; (text -> Obj)
+- Save :: Obj -> File = Render :: (Obj -> text)  ; Write :: (text -> File) 
+- Load :: File -> Obj = Read   :: (File -> text) ; Parse :: (text -> Obj)
 
 **CURRENT STATE OF PERSISTENCE STUFF**
 
@@ -31,6 +31,9 @@ Key persistence functions
 Persistence.writeAllState :: REqState -> IO REqState
   TopTUI
 
+REqState.writeREqState :: REqState -> ([String],[String],NamedTheoryTexts)
+  Persistence
+  
 Persistence.writeNamedTheory :: FilePath -> (FilePath, Theory) -> IO ()
   TopTUI
 

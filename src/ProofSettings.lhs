@@ -21,45 +21,14 @@ import qualified Data.Map as M
 import Data.Maybe (fromJust)
 
 import Utilities
-import Control
 import WriteRead
-import TermZipper
-import Laws
-import Proofs
-import Theories
-import Sequents
-import LiveProofs
 import Ranking
 
 import Debugger
 \end{code}
 
-\newpage
-\section{Settings}
 
-\textbf{NOTE: this should really live somewhere else!}
-
-We divide settings into three types:
-\begin{enumerate}
-  \item
-    Standalone settings,
-    whose associated behaviour is directly implemented
-    at the relevant point in the code.
-  \item
-   Specification settings, that specify more complex behaviour tuning,
-   for which it is worth to compute behaviour once when they are changed.
-  \item
-   Implementation settings,
-   are related to the specification settings above.
-   These are never directly set by the user,
-   but are computed from user-changes to the specification settings above.
-   The relationship is not one-to-one.
-   In particular,
-   a given implementation setting may be a blend
-   of several related specification settings.
-\end{enumerate}
-
-\subsection{Settings Record}
+\section{ProofSettings Datatype}
 
 \begin{code}
 data ProofSettings
@@ -76,14 +45,14 @@ data ProofSettings
      }
 \end{code}
 
-\subsubsection{Section 1 Updaters}
+\subsection{Section 1 Updaters}
 
 \begin{code}
 maxMatchDisplay__ f r = r{maxMatchDisplay = f $ maxMatchDisplay r}
 maxMatchDisplay_      = maxMatchDisplay__ . const
 \end{code}
 
-\subsubsection{Section 2 Updaters}
+\subsection{Section 2 Updaters}
 
 \begin{code}
 showTrivialMatch__ f r
@@ -103,11 +72,10 @@ showFloatingVariables__ f r
 showFloatingVariables_   =  showFloatingVariables__ . const
 \end{code}
 
-\subsubsection{Section 3 Updaters}
+\section{Section 3 Updater}
 
 
-
-Section 3 updaters --- not exported, internal use only.
+Section 3 updater --- not exported, internal use only.
 NOW WORKS INCORRECTLY (hide became show in field names but not HERE)
 
 \begin{code}
@@ -124,16 +92,24 @@ matchFilterUpdate r
         ]
 \end{code}
 
+The following code, 
+given list \m{\seqof{(e_1,p_1),\dots,(e_n,p_n)}}
+where boolean \m{e_i} enables check denoted by predicate \m{p_i},
+results in the following outcome: 
+\m{(e_1 \implies p_1)\land\dots\land(e_n \implies p_n)}.
+Any false \m{e_j} render the corresponding check as \true.
 \begin{code}
-andIfWanted :: Bool -> (ctx -> mtc -> Bool) -> (ctx -> mtc -> Bool)
-                    -> ctx -> mtc -> Bool
+andIfWanted :: Bool -- True means we want to apply newf
+            -> (ctx -> mtc -> Bool)  -- newf
+            -> (ctx -> mtc -> Bool)  -- currf
+            -> (ctx -> mtc -> Bool)  -- resulting filter
 andIfWanted wanted newf currf ctxt mtch
  | wanted     =  currf ctxt mtch && newf ctxt mtch
  | otherwise  =  currf ctxt mtch
 \end{code}
 
-
-\subsection{Startup/Default Settings}
+\newpage
+\section{Startup/Default Settings}
 
 
 \begin{code}
@@ -148,7 +124,7 @@ initProofSettings
     }
 \end{code}
 
-\newpage
+
 \subsection{Settings Help}
 
 For every setting we provide both a short and long string,
@@ -180,7 +156,8 @@ showPrfSettings rsettings
     disp r ("fv",_,text) = text ++ " = " ++ show (showFloatingVariables r)
 \end{code}
 
-\subsection{Change Proof Settings}
+\newpage
+\section{Change Proof Settings}
 
 \begin{code}
 changePrfSettings :: MonadFail m 
@@ -228,7 +205,8 @@ changeNumberPrfSetting name value reqs
  | otherwise        =  fail ("changeNumberPrfSetting - unknown field: "++name)
 \end{code}
 
-\subsection{Write and Read Proof Settings}
+\newpage
+\section{Write and Read Proof Settings}
 
 \begin{code}
 prfset = "PRFSET"

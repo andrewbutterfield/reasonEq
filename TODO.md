@@ -26,8 +26,6 @@ It like other numeric select commands, should report more accurately.
 **Need useability improvements**
 
 * better theory load/save support
-  * keep theory information in folder `ThName`? as `ThName/ThName.thr`.
-  * keep proofs as separate files in `ThName/law_name.prf`.
   * if theory is updated, allow proofs to be loaded in rather than redone
 * better proof display settings:
   * better setting command syntax

@@ -2,6 +2,20 @@
 
 ## URGENT or NEXT
 
+We need to split 'AllState' handling below into distinct parts:
+ 
+1. project.req
+1. settings.req
+1. Theory folders:  
+  2. Theory.thr
+  3. zero or more Proof.prf
+  4. zero of more Conj.cnj ?
+  
+Processes:
+
+- Write: (Obj -> text) ; (text -> File) 
+- Read: (File -> text) ; (text -> Obj)
+
 **CURRENT STATE OF PERSISTENCE STUFF**
 
 Format:

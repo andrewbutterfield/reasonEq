@@ -2,19 +2,8 @@
 
 ## URGENT or NEXT
 
-We need to split 'AllState' handling below into distinct parts:
- 
-1. project.req
-1. settings.req
-1. Theory folders:  
-  2. Theory.thr
-  3. zero or more Proof.prf
 
-TODO: 
-  4. zero or more Conj.cnj ?
-  
-
-Step 4 - Proof Settings per live proof.
+Proof Settings per live proof.
 
 
 ### RANKING BUSTED

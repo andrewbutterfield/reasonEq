@@ -329,7 +329,7 @@ saveAsConjectures _ reqs
       Just thry
        -> do let lawConjs = map lawNamedAssn (laws thry)
              let allConjs = lawConjs ++ conjs thry
-             saveConjectures reqs (thName thry) allConjs
+             saveConjectures (projectDir reqs) (thName thry) allConjs
              return reqs
 \end{code}
 
@@ -339,11 +339,16 @@ cmdLoadConj
   = ( "ldc"
     , "load conjectures"
     , unlines
-        [ "ldc <nm> -- display conjectures in <nm>.cnj "
+        [ "ldc      -- display conjectures in current theory"
+        , "ldc <nm> -- display conjectures in <nm>.cnj "
         , "         -- proper loading to be implemented later, as needed."
         ]
     , displayConjectures )
 
+displayConjectures [] reqs
+  = do savedConjs <- loadConjectures (projectDir reqs) (currTheory reqs)
+       putStrLn $ unlines' $ map (trNmdAsn) savedConjs
+       return reqs
 displayConjectures [nm] reqs
   = do savedConjs <- loadConjectures (projectDir reqs) nm
        putStrLn $ unlines' $ map (trNmdAsn) savedConjs

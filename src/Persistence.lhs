@@ -412,32 +412,36 @@ getNamedTheory thDir nm
 For conjecture files, we use the extension \texttt{.cnj}.
 \begin{code}
 conjExt = "cnj"
-conjPath projDir conjName = projDir </> conjName <.> conjExt
+conjsName = "Conjectures"
+conjsPath projDir thname 
+  = projDir </> thname </> conjsName <.> conjExt
+conjPath projDir thname conjName 
+  = projDir </> thname </> conjName <.> conjExt
 \end{code}
 
 \begin{code}
-saveConjectures :: Show a => REqState -> String -> [a] -> IO ()
-saveConjectures reqs nm conjs
-  = let projfp = projectDir reqs
-    in ifDirectoryExists "Conjecture" () projfp 
-       (doWriteConjs projfp nm conjs)
+saveConjectures :: FilePath -> String -> [NmdAssertion] -> IO ()
+saveConjectures projfp thnm conjs
+  = ifDirectoryExists "Conjecture" () projfp 
+       (renderConjs projfp thnm conjs)
   where
-    doWriteConjs projfp nm conjs
-      = do let fp = conjPath projfp nm
+    renderConjs projfp thnm conjs
+      = do let fp = conjsPath projfp thnm
            writeFile fp $ unlines $ map show conjs
            return ()
 \end{code}
 
 \begin{code}
 loadConjectures :: FilePath -> String -> IO [NmdAssertion]
-loadConjectures projfp nm
-  = let fp = conjPath projfp nm
-    in ifFileExists "Conjecture" [] fp (doReadFiledConj fp)
+loadConjectures projfp thnm
+  = let fp = conjsPath projfp thnm
+    in ifFileExists "Conjecture" [] fp (parseConjs fp)
   where
-    doReadFiledConj fp
+    parseConjs fp
       =  do  txt <- readFile fp
              return $ readShown $ lines txt
 
+readShown :: [String] -> [NmdAssertion]
 readShown [] = []
 readShown (ln:lns)
  | null (trim ln) = readShown lns

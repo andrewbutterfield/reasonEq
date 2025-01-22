@@ -19,7 +19,8 @@ module Theories
  , nullTheory
  , writeTheory, readTheory
  , TheoryMap, TheoryDAG(..)
- , NamedTheoryTexts, writeTheories, readTheories1, readTheories2
+ , NamedTheoryText, NamedTheoryTexts
+ , writeTheories, readTheories1, readTheories2
  , noTheories
  , addTheory, addTheory', getTheory
  , getTheoryDeps, getTheoryDeps', getAllTheories
@@ -128,7 +129,7 @@ conjKEY = "CONJECTURES"
 
 writeTheory :: Theory 
             -> ( [String]    -- lines theoryfile
-               , [String] )  -- [prooffiles]
+               , [(String,String)] )  -- [namedprooffiles]
 writeTheory thry
   = ( [ thryHDR nm
       , depsKEY ++ show (thDeps thry)
@@ -139,8 +140,10 @@ writeTheory thry
       writePerLine unflKEY id (unfolds $ auto thry) ++
       writePerLine conjKEY show (conjs thry) ++
       [ thryTRL nm ]
-    , map show $ proofs thry )
-  where nm = thName thry
+    , map showproof $ proofs thry )
+  where 
+  nm = thName thry
+  showproof prf@(_,pnm,_,_,_) = (pnm,show prf)
 
 readTheory :: MonadFail m 
            => ( [String]   -- lines theoryfile
@@ -204,14 +207,12 @@ sdagKEY = "SDAG = "
 
 type NamedTheoryText  =  ( String      -- Theory Name
                          , ( [String] -- Theory text
-                           , [String] ) )   -- Proof Strings
+                           , [(String,String)] ) )   -- Proof Strings
 type NamedTheoryTexts = [ NamedTheoryText ]
 
 writeTheories :: TheoryDAG
-              -> ( [String]                -- Theories as text
-                 , [ ( String              -- Theory Name
-                     , ( [String]          -- Theory text
-                       , [String] ) ) ] )  -- Proof texts)
+              -> ( [String]            -- Theory Names
+                 , NamedTheoryTexts )  -- Proof names and texts)
 writeTheories theories
   = ( [ thrysHDR
       , thnmsKEY ++ show (M.keys tmp)

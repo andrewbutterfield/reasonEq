@@ -14,7 +14,7 @@ module LiveProofs
  , fPath__, fPath_, matches__, matches_, stepsSoFar__, stepsSoFar_
  , xpndSC__, xpndSC_
  , LiveProofs
- , writeLiveProofs, readLiveProofs
+ , renderLiveProofs, parseLiveProofs
  , dispLiveProof
  , dispEndProof
  , launchProof
@@ -143,8 +143,8 @@ focusKEY = "FOCUS = "
 fpathKEY = "FPATH: "
 stepsKEY = "STEPS"
 
-writeLiveProof :: LiveProof -> [String]
-writeLiveProof lp
+renderLiveProof :: LiveProof -> [String]
+renderLiveProof lp
   = [ lprfHDR
     , lpthKEY (conjThName lp)
     , lpcjKEY (conjName lp)
@@ -159,8 +159,8 @@ writeLiveProof lp
     [ lprfTRL ]
     -- xpndSC not saved
 
-readLiveProof :: MonadFail m => TheoryDAG -> [String] -> m (LiveProof,[String])
-readLiveProof thrys txts
+parseLiveProof :: MonadFail m => TheoryDAG -> [String] -> m (LiveProof,[String])
+parseLiveProof thrys txts
   = do rest1          <- readThis lprfHDR          txts
        (thnm, rest2)  <- readKey (lpthKEY "") id   rest1
        (cjnm, rest3)  <- readKey (lpcjKEY "") id   rest2
@@ -198,17 +198,17 @@ lprfsHDR = "BEGIN "++liveproofs ; lprfsTRL ="END "++liveproofs
 
 lprfsKEY = "LIVEPROOFS = "
 
-writeLiveProofs :: LiveProofs -> [String]
-writeLiveProofs liveProofs
+renderLiveProofs :: LiveProofs -> [String]
+renderLiveProofs liveProofs
   = [ lprfsHDR ] ++
-    writeMap liveproofs writeLiveProof liveProofs ++
+    writeMap liveproofs renderLiveProof liveProofs ++
     [ lprfsTRL ]
 
-readLiveProofs :: MonadFail m 
+parseLiveProofs :: MonadFail m 
                => TheoryDAG -> [String] -> m (LiveProofs,[String])
-readLiveProofs thrys txts
+parseLiveProofs thrys txts
   = do rest1         <- readThis lprfsHDR txts
-       (lprfs,rest2) <- readMap liveproofs rdKey (readLiveProof thrys) rest1
+       (lprfs,rest2) <- readMap liveproofs rdKey (parseLiveProof thrys) rest1
        rest3         <- readThis lprfsTRL rest2
        return (lprfs,rest3)
 \end{code}

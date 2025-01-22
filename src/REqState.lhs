@@ -11,8 +11,8 @@ module REqState ( REqState(..), reqstate0
                 , theories__, theories_
                 , prfSettings__, prfSettings_
                 , currTheory__, currTheory_, liveProofs__, liveProofs_
-                , writeREqState
-                , readREqState1, readProofSettings, readREqState2
+                , renderREqState
+                , parseREqState1, parseProofSettings, parseREqState2
                 , module TermZipper
                 , module Laws
                 , module Proofs
@@ -108,7 +108,7 @@ reqstate0 = REqState { inDevMode = False
 \end{code}
 
 \newpage
-\section{Writing and Reading State}
+\section{Rendering and Parsing State}
 
 \begin{code}
 reqstate = "REQSTATE"
@@ -116,39 +116,39 @@ reqstateHDR = "BEGIN "++reqstate ; reqstateTLR ="END "++reqstate
 currThKEY = "CURRTHEORY = "
 \end{code}
 
-\subsection{Write State}
+\subsection{Render State}
 
 \begin{code}
-writeREqState :: REqState -> ([String],[String],NamedTheoryTexts)
-writeREqState reqs
+renderREqState :: REqState -> ([String],[String],NamedTheoryTexts)
+renderREqState reqs
   = ( [ reqstateHDR ] ++
       thrysTxt ++
       [currThKEY ++ (currTheory reqs)] ++
-      writeLiveProofs (liveProofs reqs) ++
+      renderLiveProofs (liveProofs reqs) ++
       [ reqstateTLR ]
-    , writeProofSettings (prfSettings reqs)
+    , renderProofSettings (prfSettings reqs)
     , nmdTxts )
-  where (thrysTxt,nmdTxts) = writeTheories (theories reqs)
+  where (thrysTxt,nmdTxts) = renderTheories (theories reqs)
 \end{code}
 
-\subsection{Read State}
+\subsection{Parse State}
 
 We have to split this into two phases:
 \begin{code}
-readREqState1 :: MonadFail m => [String] -> m ([String],[String])
-readREqState1 [] = fail "readREqState1: no text."
-readREqState1 txts
+parseREqState1 :: MonadFail m => [String] -> m ([String],[String])
+parseREqState1 [] = fail "parseREqState1: no text."
+parseREqState1 txts
   = do rest1 <- readThis reqstateHDR txts
-       (thryNms,rest2) <- readTheories1 rest1
+       (thryNms,rest2) <- renderTheories1 rest1
        return (thryNms,rest2)
 
-readREqState2 :: MonadFail m => ProofSettings ->  [(String,Theory)]
+parseREqState2 :: MonadFail m => ProofSettings ->  [(String,Theory)]
               -> [String] -> m REqState
-readREqState2 _ _ [] = fail "readREqState2: no text."
-readREqState2 theSet thMap txts
-  = do (thrys,rest1) <- readTheories2 thMap txts
+parseREqState2 _ _ [] = fail "parseREqState2: no text."
+parseREqState2 theSet thMap txts
+  = do (thrys,rest1) <- renderTheories2 thMap txts
        (cThNm,rest2) <- readKey currThKEY id rest1
-       (lPrfs,rest3) <- readLiveProofs thrys rest2
+       (lPrfs,rest3) <- parseLiveProofs thrys rest2
        readThis reqstateTLR rest3 -- ignore any junk after trailer.
        return $ REqState { inDevMode = False
                          , projectDir = ""

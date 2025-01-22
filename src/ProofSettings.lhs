@@ -8,7 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module ProofSettings ( ProofSettings(..)
                 , maxMatchDisplay__, maxMatchDisplay_
                 , initProofSettings
-                , writeProofSettings, readProofSettings
+                , renderProofSettings, parseProofSettings
                 , prfSettingStrings, showPrfSettingStrings
                 , showPrfSettings
                 , changePrfSettings
@@ -217,8 +217,8 @@ tqKey = "TQ = "
 tsKey = "TS = "  
 fvKey = "FV = "
 
-writeProofSettings :: ProofSettings -> [String]
-writeProofSettings rqset
+renderProofSettings :: ProofSettings -> [String]
+renderProofSettings rqset
   = [ reqsetHDR
     , mmKey ++ show (maxMatchDisplay rqset)
     , tmKey ++ show (showTrivialMatches rqset)
@@ -227,9 +227,9 @@ writeProofSettings rqset
     , fvKey ++ show (showFloatingVariables rqset)
     , reqsetTRL ]
 
-readProofSettings :: MonadFail m => [String] -> m (ProofSettings, [String])
-readProofSettings [] = fail "readProofSettings: no text"
-readProofSettings txts
+parseProofSettings :: MonadFail m => [String] -> m (ProofSettings, [String])
+parseProofSettings [] = fail "parseProofSettings: no text"
+parseProofSettings txts
   = do rest1 <- readThis reqsetHDR txts
        (theMMD,rest2) <- readKey mmKey read rest1
        (theMHT,rest3) <- readKey tmKey readBool rest2

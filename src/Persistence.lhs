@@ -10,7 +10,7 @@ module Persistence
   , currentWorkspace, createWorkspace
   , ifDirectoryExists, ifFileExists
   , saveAllState, loadAllState
-  , writeNamedTheory, readNamedTheory
+  , renderNamedTheory, parseNamedTheory
   , saveConjectures, loadConjectures
   , saveProof, loadProof
   )
@@ -278,7 +278,7 @@ saveAllState reqs
        ifDirectoryExists "REQ-STATE" reqs pjdir (doWriteAll reqs pjdir)
   where
     doWriteAll reqs pjdir
-      = do  let (tsTxt,setsTxt,nTsTxts) = writeREqState reqs
+      = do  let (tsTxt,setsTxt,nTsTxts) = renderREqState reqs
             let fp = projectPath pjdir
             writeFile fp $ unlines tsTxt
             let sp = settingsPath pjdir
@@ -300,14 +300,14 @@ loadAllState reqs projdirfp
       = do  let projfp = projectPath projdirfp
             ptxt <- readFile projfp
             putStrLn "Read Project File"
-            (thnms,rest1) <- readREqState1 $ lines ptxt
+            (thnms,rest1) <- parseREqState1 $ lines ptxt
             putStrLn "read req-state 1"
             nmdThrys <- getNamedTheories projdirfp thnms
             putStrLn "got named theories"
             stext <- readFile $ settingsPath projdirfp
-            (ssettings,_) <- readProofSettings $ lines stext
+            (ssettings,_) <- parseProofSettings $ lines stext
             putStrLn "Read Settings File"
-            newreqs <- readREqState2 ssettings nmdThrys rest1 -- pure
+            newreqs <- parseREqState2 ssettings nmdThrys rest1 -- pure
             putStrLn ("Read project details from "++projfp)
             putStrLn ("Read "++show (M.size . tmap $ theories newreqs))
             return newreqs{projectDir = projdirfp, prfSettings = ssettings}
@@ -347,13 +347,13 @@ theoryPath projDir thname  =  projDir </> thname </> thname <.> theoryExt
 
 
 \begin{code}
-writeNamedTheory :: FilePath -> (FilePath, Theory) -> IO ()
-writeNamedTheory pjdir (nm,theory)
+renderNamedTheory :: FilePath -> (FilePath, Theory) -> IO ()
+renderNamedTheory pjdir (nm,theory)
   = ifDirectoryExists "Theory" () pjdir (doWriteTheory pjdir nm theory)
   where
     doWriteTheory pjdir nm theory 
       =  do let fp = theoryPath pjdir nm
-            let (thryTxt,_) = writeTheory theory
+            let (thryTxt,_) = renderTheory theory
             writeFile fp $ unlines thryTxt
             sequence $ map (saveProof pjdir) (proofs theory)
             putStrLn ("Theory '"++nm++"' written to '"++pjdir++"'.")
@@ -373,8 +373,8 @@ writeNamedTheoryTxt pjdir (thnm,(thTxt,pTxts))
 \end{code}
 
 \begin{code}
-readNamedTheory :: TheoryDAG -> String -> String -> IO (Bool,Bool,TheoryDAG)
-readNamedTheory thrys projfp nm
+parseNamedTheory :: TheoryDAG -> String -> String -> IO (Bool,Bool,TheoryDAG)
+parseNamedTheory thrys projfp nm
   = let 
       thryfp = theoryPath projfp nm
     in ifFileExists "Theory" (False,False,undefined) 
@@ -401,7 +401,7 @@ getNamedTheory thDir nm
         prffiles <- fmap (filter isProofFile) $ listDirectory thDir 
         putStrLn ("prffiles:\n"++show prffiles)
         prfTxts <- sequence $ map (readFile . (thDir </>)) prffiles
-        (thry,_) <- readTheory (lines thryTxt, prfTxts)
+        (thry,_) <- parseTheory (lines thryTxt, prfTxts)
         putStrLn ("Read theory '"++nm++"' from "++thryfp)
         return (nm,thry)
 \end{code}

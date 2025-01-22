@@ -17,10 +17,10 @@ module Theories
  , conjs__, conjs_
  , auto__, auto_
  , nullTheory
- , writeTheory, readTheory
+ , renderTheory, parseTheory
  , TheoryMap, TheoryDAG(..)
  , NamedTheoryText, NamedTheoryTexts
- , writeTheories, readTheories1, readTheories2
+ , renderTheories, renderTheories1, renderTheories2
  , noTheories
  , addTheory, addTheory', getTheory
  , getTheoryDeps, getTheoryDeps', getAllTheories
@@ -127,10 +127,10 @@ foldKEY = "DEFFOLD"
 unflKEY = "DEFUNFOLD"
 conjKEY = "CONJECTURES"
 
-writeTheory :: Theory 
+renderTheory :: Theory 
             -> ( [String]    -- lines theoryfile
                , [(String,String)] )  -- [namedprooffiles]
-writeTheory thry
+renderTheory thry
   = ( [ thryHDR nm
       , depsKEY ++ show (thDeps thry)
       , knwnKEY ++ show (known thry) ] ++
@@ -145,12 +145,12 @@ writeTheory thry
   nm = thName thry
   showproof prf@(_,pnm,_,_,_) = (pnm,show prf)
 
-readTheory :: MonadFail m 
+parseTheory :: MonadFail m 
            => ( [String]   -- lines theoryfile
               ,[String] )  -- [prooffiles]
            -> m (Theory,[String])
-readTheory ([],_) = fail "readTheory: no text."
-readTheory (txts,ptxts)
+parseTheory ([],_) = fail "parseTheory: no text."
+parseTheory (txts,ptxts)
   = do (nm,  rest1) <- readKey (thryHDR "") id txts
        (deps,rest2) <- readKey depsKEY read     rest1
        (knwn,rest3) <- readKey knwnKEY read     rest2
@@ -210,10 +210,10 @@ type NamedTheoryText  =  ( String      -- Theory Name
                            , [(String,String)] ) )   -- Proof Strings
 type NamedTheoryTexts = [ NamedTheoryText ]
 
-writeTheories :: TheoryDAG
+renderTheories :: TheoryDAG
               -> ( [String]            -- Theory Names
                  , NamedTheoryTexts )  -- Proof names and texts)
-writeTheories theories
+renderTheories theories
   = ( [ thrysHDR
       , thnmsKEY ++ show (M.keys tmp)
       , sdagKEY  ++ show (sdag theories)
@@ -221,21 +221,21 @@ writeTheories theories
     , map genThryText (M.assocs tmp) )
   where
     tmp = tmap theories
-    genThryText (nm,thry) = (nm, writeTheory thry )
+    genThryText (nm,thry) = (nm, renderTheory thry )
 
 -- we split theory reading into two phases.
 -- First get the list of theories.
-readTheories1 :: MonadFail m => [String] -> m ([String],[String])
-readTheories1 [] = fail "readTheories1: no text."
-readTheories1 txts
+renderTheories1 :: MonadFail m => [String] -> m ([String],[String])
+renderTheories1 [] = fail "renderTheories1: no text."
+renderTheories1 txts
   = do rest1         <- readThis thrysHDR      txts
        (thnms,rest2) <- readKey thnmsKEY read rest1
        return (thnms, rest2)
 -- Second get rest
-readTheories2 :: MonadFail m => [(String,Theory)] -> [String]
+renderTheories2 :: MonadFail m => [(String,Theory)] -> [String]
               -> m (TheoryDAG,[String])
-readTheories2 _ [] = fail "readTheories2: no text."
-readTheories2 tmp txts
+renderTheories2 _ [] = fail "renderTheories2: no text."
+renderTheories2 tmp txts
   = do (sdg,rest1)  <- readKey  sdagKEY read  txts
        rest2        <- readThis thrysTRL     rest1
        return (TheoryDAG (M.fromList tmp) sdg, rest2)

@@ -237,7 +237,7 @@ saveState [nm] reqs
        -> do putStrLn ("No such theory: '"++nm'++"'")
              return reqs
       Just thry
-       -> do writeNamedTheory (projectDir reqs) (nm',thry)
+       -> do renderNamedTheory (projectDir reqs) (nm',thry)
              return reqs
 saveState [what,nm] reqs
   | what == prfObj  = do
@@ -283,7 +283,7 @@ loadState [] reqs = do
   return reqs'{ inDevMode = inDevMode reqs}
 loadState [nm] reqs = do
   let dirfp = projectDir reqs
-  (ok,old,theories') <- readNamedTheory (theories reqs) dirfp nm
+  (ok,old,theories') <- parseNamedTheory (theories reqs) dirfp nm
   if ok
   then ( if old
           then do putStr "keep change? (y/N)? "

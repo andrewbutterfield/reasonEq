@@ -57,6 +57,7 @@ import Sequents
 import MatchContext
 import Typing
 import ProofMatch
+import ProofSettings
 
 import Symbols
 import TestRendering
@@ -79,14 +80,15 @@ data LiveProof
     , conjSC :: SideCond -- side condition
     , strategy :: String -- strategy
     , mtchCtxts :: [MatchContext] -- current matching contexts
+    , liveSettings :: ProofSettings
     , focus :: SeqZip  -- current sub-term of interest
     , fPath :: [Int] -- current term zipper descent arguments
     , matches :: Matches -- current matches
-    , stepsSoFar :: [CalcStep]  -- calculation steps so far, most recent first
+    , stepsSoFar :: [CalcStep]  -- calc steps so far, most recent first
     -- derived fron conjSC, using mtchCtxts
     , xpndSC :: SideCond -- side condition with known vars expanded
     }
-  deriving (Eq, Show, Read)
+  -- deriving (Eq, Show, Read)
 
 conjThName__ f lp = lp{ conjThName = f $ conjThName lp}
 conjThName_ = conjThName__ . const
@@ -179,6 +181,7 @@ parseLiveProof thrys txts
                    , conjSC = sc
                    , strategy = strt
                    , mtchCtxts = mctxts
+                   , liveSettings = initProofSettings
                    , focus = fcs
                    , fPath = fpth
                    , matches = []
@@ -229,6 +232,7 @@ launchProof thys thnm cjnm asn@(Assertion t sc) (strat,sequent)
        , conjSC = sc
        , strategy = strat
        , mtchCtxts =  mcs
+       , liveSettings = initProofSettings
        , focus =  sz
        , fPath = []
        , matches = []

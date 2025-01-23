@@ -186,7 +186,7 @@ showState (cmd:args) reqs
  | cmd == shCurrThry  =  doshow reqs $ observeCurrTheory reqs
  | cmd == shConj      =  doshow reqs $ observeCurrConj reqs args
  | cmd == shLivePrf   =  doshow reqs $ observeLiveProofs reqs
- | cmd == shSettings  =  doshow reqs $ observeSettings reqs
+ | cmd == shSettings  =  doshow reqs $ observeSettings (prfSettings reqs)
 showState _ reqs      =  doshow reqs "unknown/unimplemented 'show' option."
 
 doshow :: REqState -> String -> IO REqState
@@ -402,9 +402,10 @@ setState (cmd:rest) reqs
          But msgs   ->  doshow reqs $ unlines' msgs
          Yes reqs'  ->  doshow reqs' ("Current Theory now '" ++ nm ++ "'")
  | cmd == setSettings
-    =  case modifySettings rest reqs of
-         But msgs    ->  doshow reqs $ unlines' msgs
-         Yes reqs'  ->  doshow reqs' ("Settings updated")
+    =  case modifyProofSettings rest (prfSettings reqs) of
+         But msgs     ->  doshow reqs $ unlines' msgs
+         Yes prfset'  ->  doshow (prfSettings_ prfset' reqs) 
+                                ("Settings updated")
  where nm = args2str rest
 setState _ reqs      =  doshow reqs "unknown/unimplemented 'set' option."
 \end{code}

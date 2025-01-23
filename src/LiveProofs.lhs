@@ -10,7 +10,9 @@ module LiveProofs
  ( LiveProof(..)
  , conjThName__, conjThName_, conjName__, conjName_
  , conjecture__, conjecture_, conjSC__, conjSC_
- , strategy__, strategy_, mtchCtxts__, mtchCtxts_, focus__, focus_
+ , strategy__, strategy_, mtchCtxts__, mtchCtxts_
+ , liveSettings__, liveSettings_
+ , focus__, focus_
  , fPath__, fPath_, matches__, matches_, stepsSoFar__, stepsSoFar_
  , xpndSC__, xpndSC_
  , LiveProofs
@@ -102,6 +104,8 @@ strategy__ f lp = lp{ strategy = f $ strategy lp}
 strategy_ = strategy__ . const
 mtchCtxts__ f lp = lp{ mtchCtxts = f $ mtchCtxts lp}
 mtchCtxts_ = mtchCtxts__ . const
+liveSettings__ f lp = lp{ liveSettings = f $ liveSettings lp}
+liveSettings_ = liveSettings__ . const
 focus__ f lp = lp{ focus = f $ focus lp}
 focus_ = focus__ . const
 fPath__ f lp = lp{ fPath = f $ fPath lp}

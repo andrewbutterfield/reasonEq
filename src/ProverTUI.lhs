@@ -146,8 +146,10 @@ proofREPLConfig
 This repl runs a proof.
 \begin{code}
 proofREPL reqs liveProof
- = do (reqs',_) <- runREPL
-                       (clear++"Prover starting...\n"++ observeSettings reqs)
+ = do (reqs',liveProof) 
+       <- runREPL
+                       (clear++"Prover starting...\n"++ observeSettings 
+                       (liveSettings liveProof))
                        proofREPLConfig
                        (reqs,liveProof)
       return reqs'
@@ -174,8 +176,8 @@ showProofSettingsDescr = ( "sps"
                          , "show proof settings"
                          , showPrfSettingsCommand )
 showPrfSettingsCommand :: REPLCmd (REqState, LiveProof)
-showPrfSettingsCommand _ pstate@(reqs, _)
-  =  do putStrLn $ observeSettings reqs
+showPrfSettingsCommand _ pstate@(reqs, liveProof)
+  =  do putStrLn $ observeSettings $ liveSettings liveProof
         waitForReturn
         return pstate
 \end{code}
@@ -197,11 +199,11 @@ modPrfSettingsDescr
 modProofSettings :: REPLCmd (REqState, LiveProof)
 modProofSettings args@[name,val] state@(reqs, liveProof)
 -- | cmd == setSettings
-    =  case modifySettings args reqs of
+    =  case modifyProofSettings args (liveSettings liveProof) of
          But msgs  ->  do putStrLn $ unlines' ("mps failed":msgs)
                           waitForReturn
                           return (reqs, liveProof)
-         Yes reqs' -> return (reqs', liveProof)
+         Yes prfset' -> return (reqs, liveSettings_ prfset' liveProof)
 modProofSettings _ state = return state
 \end{code}
 

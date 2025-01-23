@@ -14,7 +14,7 @@ module AbstractUI
 , observeKnowns
 , observeCurrTheory, observeCurrConj
 , observeLiveProofs, observeCompleteProofs
-, modifySettings
+, modifyProofSettings
 , setCurrentTheory
 , newConjecture
 , assumeConjecture, demoteLaw , classifyLaw
@@ -122,9 +122,10 @@ a number of return formats.
 
 \subsection{Observing Settings}
 
+-- should be defined in ProofSettings !
 \begin{code}
-observeSettings :: REqState -> String
-observeSettings reqs = showPrfSettings $ prfSettings reqs
+observeSettings :: ProofSettings -> String
+observeSettings pset = showPrfSettings pset
 \end{code}
 
 \subsection{Observing Current Logic}
@@ -227,12 +228,12 @@ observeCompleteProofs args reqs
 \subsection{Modifying Settings}
 
 \begin{code}
-modifySettings :: MonadFail m => [String] -> REqState -> m REqState
-modifySettings [name,value] reqs
-  = case changePrfSettings name value (prfSettings reqs) of
+modifyProofSettings :: MonadFail m => [String] -> ProofSettings -> m ProofSettings
+modifyProofSettings [name,value] prfset
+  = case changePrfSettings name value prfset of
       But msgs  ->  fail $ unlines' msgs
-      Yes set'  ->  return $ prfSettings_ set' reqs
-modifySettings args reqs = fail "Expected setting short name and value"
+      Yes set'  ->  return set'
+modifyProofSettings args reqs = fail "Expected setting short name and value"
 \end{code}
 
 \subsection{Setting Current Theory}

@@ -154,6 +154,7 @@ renderLiveProof lp
     , cjscKEY ++ show (conjSC lp)
     , strtKey (strategy lp) ] ++
     -- match contexts not saved
+    renderProofSettings (liveSettings lp) ++
     writeSeqZip (focus lp) ++
     [ fpathKEY ++ show (fPath lp) ] ++
     -- matches not saved
@@ -171,23 +172,24 @@ parseLiveProof thrys txts
        (strt, rest6)  <- readKey (strtKey "") id   rest5
        let thylist = fromJust $ getTheoryDeps thnm thrys
        let mctxts = buildMatchContext thylist
-       (fcs,  rest7)  <- readSeqZip thylist        rest6
-       (fpth, rest8)  <- readKey fpathKEY read     rest7
-       (steps, rest9) <- readPerLine stepsKEY read rest8
-       rest10         <- readThis lprfTRL          rest9
+       (pset,rest7) <- parseProofSettings          rest6
+       (fcs,  rest8)  <- readSeqZip thylist        rest7
+       (fpth, rest9)  <- readKey fpathKEY read     rest8
+       (steps, rest10) <- readPerLine stepsKEY read rest9
+       rest11         <- readThis lprfTRL          rest10
        return ( LP { conjThName = thnm
                    , conjName = cjnm
                    , conjecture = conj
                    , conjSC = sc
                    , strategy = strt
                    , mtchCtxts = mctxts
-                   , liveSettings = initProofSettings
+                   , liveSettings = pset
                    , focus = fcs
                    , fPath = fpth
                    , matches = []
                    , stepsSoFar = steps 
                    , xpndSC = expandSideCondKnownVars mctxts sc }
-              , rest10 )
+              , rest11 )
 \end{code}
 
 

@@ -3,9 +3,34 @@ BEGIN THEORIES
 THNAMES = ["And","AndOrInvert","Arithmetic","Equality","Equiv","Exists","ForAll","Implies","LTL","Lists","Not","Or","Sets","UClose","UTCP","UTPBase"]
 SDAG = [[("UTCP",["UTPBase","Sets","UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("UTPBase",["UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Lists",["Implies","Equiv","Equality","ForAll","Arithmetic","Sets"]),("LTL",["Equality","Exists","ForAll","Implies","AndOrInvert","And","Or","Not","Equiv"]),("UClose",["Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Sets",["Implies","Equiv","Equality","ForAll","Arithmetic"]),("Exists",["ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Arithmetic",["Implies","Equiv","Equality"]),("ForAll",["Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Equality",["Implies","Equiv"])],[("Implies",["AndOrInvert","And","Or","Not","Equiv"])],[("AndOrInvert",["And","Or","Not","Equiv"])],[("And",["Or","Not","Equiv"])],[("Or",["Not","Equiv"])],[("Not",["Equiv"])],[("Equiv",[])]]
 END THEORIES
-CURRTHEORY = Not
+CURRTHEORY = Equiv
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("Equiv","eqv_id")
+BEGIN LIVE-PROOF
+TH-NAME: Equiv
+CJ-NAME: eqv_id
+CONJ = ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [K (TF TB (TG (Id "B" 0))) (VB True),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],([],fromList []))
+SIDE = ([],fromList [])
+STRAT red-All
+BEGIN PRFSET
+MM = 99
+TM = False
+TQ = False
+TS = False
+FV = True
+END PRFSET
+BEGIN SEQZIP
+TERMZIP = (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [K (TF TB (TG (Id "B" 0))) (VB True),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],[])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.eqv_id", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K (TF TB (TG (Id "B" 0))) (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

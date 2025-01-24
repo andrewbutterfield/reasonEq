@@ -51,6 +51,7 @@ import Dev
 import SAT
 import Classifier
 import LiveProofs
+import TUISupport
 import ProverTUI
 
 import Debugger
@@ -563,17 +564,16 @@ cmdRet2Proof
   = ( "r"
     , "return to live proof"
     , unlines
-       [ "r i - return to a live proof."
-       , "i : optional live proof number"
-       , "    - if more than one."
+       [ "r  - return to a live proof."
        ]
     , doBack2Proof )
 
-doBack2Proof args reqs
-  = case resumeProof (args2int args) reqs of
-      Nothing -> do putStrLn "Can't find requested live proof"
-                    return reqs
-      Just liveProof -> proofREPL reqs liveProof
+doBack2Proof _ reqs = do
+  let lps = M.assocs $ liveProofs reqs
+  mlp <- selectByNumber (show . fst) lps
+  case mlp of
+    Just (_,liveProof) -> proofREPL reqs liveProof
+    Nothing ->  return reqs
 \end{code}
 
 Presenting a sequent for choosing:

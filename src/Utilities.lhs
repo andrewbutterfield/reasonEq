@@ -274,10 +274,7 @@ peel n xs = ent [] n xs
 \begin{code}
 trim = ltrim . reverse . ltrim . reverse
 
-ltrim "" = ""
-ltrim str@(c:cs)
- | isSpace c  =  ltrim cs
- | otherwise  =  str
+ltrim = dropWhile isSpace
 \end{code}
 
 \section{Specialised Zips}

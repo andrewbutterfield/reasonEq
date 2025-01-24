@@ -534,25 +534,28 @@ cmdNewProof
   = ( "N"
     , "new proof"
     , unlines
-       [ "N i - start new proof for a conjecture."
-       , "i : conjecture number"
+       [ "N - start new proof for a conjecture in current theory"       , "i : conjecture number"
        ]
     , doNewProof )
 
-doNewProof args reqs
-  = case newProof1 (args2int args) reqs of
-     Nothing -> do putStrLn "invalid conjecture number"
-                   return reqs
-     Just (nconj@(nm,_),strats)
-      -> do putStrLn ("Selected conjecture: "++nm)
-            putStrLn "Select proof strategy:"
-            putStrLn $ numberList presentSeq $ strats
-            putStr "Select sequent by number: "
-            hFlush stdout
-            choice <- getLine
-            case newProof2 nconj strats (readNat choice) reqs of
-             Nothing -> doshow reqs "Invalid strategy no"
-             Just liveProof -> proofREPL reqs liveProof
+doNewProof _ reqs = do
+  let currTh = currTheory reqs
+  let thys = theories reqs
+  let conjs = fromJust $ getTheoryConjectures currTh thys
+  mconj <- selectByNumber fst conjs 
+  case mconj of 
+    Nothing -> return reqs
+    Just nconj -> 
+      case newProof1 nconj reqs of
+        Nothing -> return reqs
+        Just (nconj,strats) -> do 
+          mstrat <- selectByNumber presentSeq strats
+          case mstrat of
+            Nothing -> return reqs
+            Just seqnt -> 
+              case newProof2 nconj seqnt reqs of
+                Nothing -> return reqs
+                Just liveProof -> proofREPL reqs liveProof
 \end{code}
 
 \newpage

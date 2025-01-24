@@ -13,19 +13,6 @@ In general proofs involving prop logic, esp. and/or/not  rhs matches are as good
 `eqv_refl [*]` should beat `eqv_def [≡[1,2]]` !!! 
  `true` vs `P ∧ P ∨ ¬P ∧ ¬P` !!!`
 
-### Proof Rentry (r) NEEDS work
-
-It fails uninformatively if `r` is used with more that one live proof.
-It should be a numeric select command (like `a` for applying matches).
-It like other numeric select commands, should report more accurately.
-
-TopTUI:   
-  'N' uses `newProof1` with `args1int args` (defaults to 0!) and does a lookup (FIX)
-  and then, for strategies, uses `numberList` , then prompt for number (FIX)
-  'r' uses resumeProof with an optional argument, expecting the 'sh c' to have been done just before. (FIX)
-
-**all select-by-number should: get options list: if null fail, if unit pick it, if multiple, list and request number.**
-
 
 **Need useability improvements**
 
@@ -39,7 +26,7 @@ TopTUI:
   * report total matches found?
   * proof help should appear before proof prompt (after matches), and NOT wait for use to hit the return key.
   * proof show output likewise.
-* add some form of archiving - effectively done
+* add some form of archiving - effectively done by having per-proof files.
 
 ## Next in Line
 

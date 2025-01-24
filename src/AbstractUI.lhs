@@ -340,32 +340,23 @@ returning various items that need to be used by the concrete UI
 to collect arguments for the next call.
 
 \begin{code}
-newProof1 :: MonadFail m => Int -> REqState
+newProof1 :: MonadFail m => NmdAssertion -> REqState
           -> m ( NmdAssertion
                , [(String,Sequent)] ) -- named strategy list
-newProof1 i reqs
-  = case nlookup i' (getCurrConj reqs) of
-      Nothing  ->  fail "invalid conjecture number"
-      Just nconj@(nm,asn)
-        | shadowFree asn
-            -> return
-                ( nconj
-                , availableStrategies thys currTh nconj )
-        | otherwise -> fail "shadowed bound-vars. in conjecture"
+newProof1 nconj@(nm,asn) reqs
+  | shadowFree asn  =  return ( nconj
+                              , availableStrategies thys currTh nconj )
+  | otherwise       =  fail "shadowed bound-vars. in conjecture"
   where
-    i' = if i == 0 then 1 else i
     currTh = currTheory reqs
     getCurrConj reqs = fromJust $ getTheoryConjectures currTh thys
     thys = theories reqs
     thylist = fromJust $ getTheoryDeps currTh thys
 
-newProof2 :: MonadFail m => NmdAssertion -> [(String,Sequent)] -> Int -> REqState
+newProof2 :: MonadFail m => NmdAssertion -> (String,Sequent) -> REqState
           -> m LiveProof
-newProof2 (nm,asn) strats six reqs
-  = case nlookup six strats of
-               Nothing   -> fail "Invalid strategy no"
-               Just seqnt
-                 -> return $ launchProof thylist currTh nm asn seqnt
+newProof2 (nm,asn) seqnt reqs
+  = return $ launchProof thylist currTh nm asn seqnt
   where
     currTh = currTheory reqs
     getCurrConj reqs = fromJust $ getTheoryConjectures currTh thys

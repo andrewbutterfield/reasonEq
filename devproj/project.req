@@ -6,6 +6,156 @@ END THEORIES
 CURRTHEORY = UTPBase
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("UTCP","A_alt")
+BEGIN LIVE-PROOF
+TH-NAME: UTCP
+CJ-NAME: A_alt
+CONJ = ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) False (Id "A" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E" 0,VE,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "a" 0,VP,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0,VE,WS))],C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "subseteq" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB))],V (TF TB (TG (Id "B" 0))) (VR (Id "a" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WA)),C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "union" 0) [C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E" 0,VE,WS))],V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0,VE,WS))]]]],([VSC (GV (VR (Id "E" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "N" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "a" 0,VP,WS))) NA NA (The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]))],fromList []))
+SIDE = ([VSC (GV (VR (Id "E" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "N" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "a" 0,VP,WS))) NA NA (The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]))],fromList [])
+STRAT red-All
+BEGIN PRFSET
+MM = 30
+TM = False
+TQ = False
+TS = False
+FV = True
+END PRFSET
+BEGIN SEQZIP
+TERMZIP = (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) False (Id "A" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E" 0,VE,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "a" 0,VP,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0,VE,WS))],C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "subseteq" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB))],V (TF TB (TG (Id "B" 0))) (VR (Id "a" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WA)),C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "union" 0) [C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E" 0,VE,WS))],V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0,VE,WS))]]]],[])
+BEGIN SEQUENT'
+SIDECOND = ([VSC (GV (VR (Id "E" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "N" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "a" 0,VP,WS))) NA NA (The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]))],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.A_alt", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K (TF TB (TG (Id "B" 0))) (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+END LIST STEPS
+END LIVE-PROOF
+("UTCP","X_X_comp")
+BEGIN LIVE-PROOF
+TH-NAME: UTCP
+CJ-NAME: X_X_comp
+CONJ = ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) False (Id ";" 0) [C (TF TB (TG (Id "B" 0))) False (Id "X" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E1" 0,VE,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "a" 0,VP,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R1" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N1" 0,VE,WS))],C (TF TB (TG (Id "B" 0))) False (Id "X" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E2" 0,VE,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "b" 0,VP,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R2" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N2" 0,VE,WS))]],C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "union" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E2" 0,VE,WS)),C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R1" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N1" 0,VE,WS))]],V (TC (Id "P" 0) [TV (Id "t" 0)]) (VR (Id "emptyset" 0,VO,WS))],C (TF TB (TG (Id "B" 0))) False (Id "X" 0) [C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "union" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E1" 0,VE,WS)),C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E2" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N1" 0,VE,WS))]],C (TF TB (TG (Id "B" 0))) False (Id ";" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "a" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "b" 0,VP,WS))],C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "union" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R1" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R2" 0,VE,WS))],C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "union" 0) [C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N1" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R2" 0,VE,WS))],V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N2" 0,VE,WS))]]]],([VSC (GV (VR (Id "E1" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "E2" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "N1" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "N2" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "R1" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "R2" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "a" 0,VP,WS))) NA NA (The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))])),VSC (GV (VR (Id "b" 0,VP,WS))) NA NA (The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]))],fromList []))
+SIDE = ([VSC (GV (VR (Id "E1" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "E2" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "N1" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "N2" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "R1" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "R2" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "a" 0,VP,WS))) NA NA (The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))])),VSC (GV (VR (Id "b" 0,VP,WS))) NA NA (The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]))],fromList [])
+STRAT red-All
+BEGIN PRFSET
+MM = 30
+TM = False
+TQ = False
+TS = False
+FV = True
+END PRFSET
+BEGIN SEQZIP
+TERMZIP = (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) False (Id ";" 0) [C (TF TB (TG (Id "B" 0))) False (Id "X" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E1" 0,VE,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "a" 0,VP,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R1" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N1" 0,VE,WS))],C (TF TB (TG (Id "B" 0))) False (Id "X" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E2" 0,VE,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "b" 0,VP,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R2" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N2" 0,VE,WS))]],C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "union" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E2" 0,VE,WS)),C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R1" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N1" 0,VE,WS))]],V (TC (Id "P" 0) [TV (Id "t" 0)]) (VR (Id "emptyset" 0,VO,WS))],C (TF TB (TG (Id "B" 0))) False (Id "X" 0) [C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "union" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E1" 0,VE,WS)),C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E2" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N1" 0,VE,WS))]],C (TF TB (TG (Id "B" 0))) False (Id ";" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "a" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "b" 0,VP,WS))],C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "union" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R1" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R2" 0,VE,WS))],C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "union" 0) [C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N1" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "R2" 0,VE,WS))],V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N2" 0,VE,WS))]]]],[])
+BEGIN SEQUENT'
+SIDECOND = ([VSC (GV (VR (Id "E1" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "E2" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "N1" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "N2" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "R1" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "R2" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "a" 0,VP,WS))) NA NA (The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))])),VSC (GV (VR (Id "b" 0,VP,WS))) NA NA (The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]))],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.X_X_comp", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K (TF TB (TG (Id "B" 0))) (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+END LIST STEPS
+END LIVE-PROOF
+("UTPBase","cond_absorb")
+BEGIN LIVE-PROOF
+TH-NAME: UTPBase
+CJ-NAME: cond_absorb
+CONJ = ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "cond" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "b" 0,VP,WB)),C (TF TB (TG (Id "B" 0))) True (Id "cond" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "b" 0,VP,WB)),V (TF TB (TG (Id "B" 0))) (VR (Id "R" 0,VP,WS))]],C (TF TB (TG (Id "B" 0))) True (Id "cond" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "b" 0,VP,WB)),V (TF TB (TG (Id "B" 0))) (VR (Id "R" 0,VP,WS))]],([],fromList []))
+SIDE = ([],fromList [])
+STRAT red-L2R
+BEGIN PRFSET
+MM = 30
+TM = False
+TQ = False
+TS = False
+FV = True
+END PRFSET
+BEGIN SEQZIP
+TERMZIP = (C (TF TB (TG (Id "B" 0))) True (Id "cond" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "b" 0,VP,WB)),C (TF TB (TG (Id "B" 0))) True (Id "cond" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "b" 0,VP,WB)),V (TF TB (TG (Id "B" 0))) (VR (Id "R" 0,VP,WS))]],[])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.cond_absorb", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = C (TF TB (TG (Id "B" 0))) True (Id "cond" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "b" 0,VP,WB)),V (TF TB (TG (Id "B" 0))) (VR (Id "R" 0,VP,WS))]}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+END LIST STEPS
+END LIVE-PROOF
+("UTPBase","cond_symm")
+BEGIN LIVE-PROOF
+TH-NAME: UTPBase
+CJ-NAME: cond_symm
+CONJ = ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "cond" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "b" 0,VP,WB)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "cond" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS)),C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "b" 0,VP,WB))],V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))]],([],fromList []))
+SIDE = ([],fromList [])
+STRAT red-All
+BEGIN PRFSET
+MM = 30
+TM = False
+TQ = False
+TS = False
+FV = True
+END PRFSET
+BEGIN SEQZIP
+TERMZIP = (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "cond" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "b" 0,VP,WB)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "cond" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS)),C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "b" 0,VP,WB))],V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))]],[])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.cond_symm", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K (TF TB (TG (Id "B" 0))) (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+END LIST STEPS
+END LIVE-PROOF
+("UTPBase","refines_lor_distr")
+BEGIN LIVE-PROOF
+TH-NAME: UTPBase
+CJ-NAME: refines_lor_distr
+CONJ = ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) False (Id "refines" 0) [C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],V (TF TB (TG (Id "B" 0))) (VR (Id "R" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) False (Id "refines" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "R" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) False (Id "refines" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "R" 0,VP,WS))]]],([],fromList []))
+SIDE = ([],fromList [])
+STRAT red-All
+BEGIN PRFSET
+MM = 30
+TM = False
+TQ = False
+TS = False
+FV = True
+END PRFSET
+BEGIN SEQZIP
+TERMZIP = (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) False (Id "refines" 0) [C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],V (TF TB (TG (Id "B" 0))) (VR (Id "R" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) False (Id "refines" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "R" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) False (Id "refines" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "R" 0,VP,WS))]]],[])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.refines_lor_distr", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K (TF TB (TG (Id "B" 0))) (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+END LIST STEPS
+END LIVE-PROOF
+("UTPBase","refines_trans")
+BEGIN LIVE-PROOF
+TH-NAME: UTPBase
+CJ-NAME: refines_trans
+CONJ = ASN (C (TF TB (TG (Id "B" 0))) True (Id "imp" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) False (Id "refines" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) False (Id "refines" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "R" 0,VP,WS))]],C (TF TB (TG (Id "B" 0))) False (Id "refines" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "R" 0,VP,WS))]],([],fromList []))
+SIDE = ([],fromList [])
+STRAT red-All
+BEGIN PRFSET
+MM = 30
+TM = False
+TQ = False
+TS = False
+FV = True
+END PRFSET
+BEGIN SEQZIP
+TERMZIP = (C (TF TB (TG (Id "B" 0))) True (Id "imp" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [C (TF TB (TG (Id "B" 0))) False (Id "refines" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) False (Id "refines" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "R" 0,VP,WS))]],C (TF TB (TG (Id "B" 0))) False (Id "refines" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "R" 0,VP,WS))]],[])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.refines_trans", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K (TF TB (TG (Id "B" 0))) (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

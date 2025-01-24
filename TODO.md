@@ -3,13 +3,15 @@
 ## URGENT or NEXT
 
 
-Proof Settings per live proof.
-
-
 ### RANKING BUSTED
 
 It needs a complete redesign
 It should define and export DS + functions to define its settings.
+
+In general proofs involving prop logic, esp. and/or/not  rhs matches are as good as lhs ones!
+
+`eqv_refl [*]` should beat `eqv_def [≡[1,2]]` !!! 
+ `true` vs `P ∧ P ∨ ¬P ∧ ¬P` !!!`
 
 ### Proof Rentry (r) NEEDS work
 
@@ -17,19 +19,27 @@ It fails uninformatively if `r` is used with more that one live proof.
 It should be a numeric select command (like `a` for applying matches).
 It like other numeric select commands, should report more accurately.
 
+TopTUI:   
+  'N' uses `newProof1` with `args1int args` (defaults to 0!) and does a lookup (FIX)
+  and then, for strategies, uses `numberList` , then prompt for number (FIX)
+  'r' uses resumeProof with an optional argument, expecting the 'sh c' to have been done just before. (FIX)
+
+**all select-by-number should: get options list: if null fail, if unit pick it, if multiple, list and request number.**
+
+
 **Need useability improvements**
 
 * better theory load/save support
   * if theory is updated, allow proofs to be loaded in rather than redone
 * better proof display settings:
   * better setting command syntax
-  * improve `ll` command 
+  * improve `ll` command - specify theory, law_name, ...
   * finer control of proof-so-far display
   * finer control of level of detail (e.g. don't show scTrue as T, leave blank)
   * report total matches found?
   * proof help should appear before proof prompt (after matches), and NOT wait for use to hit the return key.
   * proof show output likewise.
-* add some form of archiving
+* add some form of archiving - effectively done
 
 ## Next in Line
 

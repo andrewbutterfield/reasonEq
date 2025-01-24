@@ -1,5 +1,5 @@
 BEGIN PRFSET
-MM = 42
+MM = 30
 TM = False
 TQ = False
 TS = False

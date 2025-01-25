@@ -299,17 +299,14 @@ loadAllState reqs projdirfp
     doReadAll projdirfp
       = do  let projfp = projectPath projdirfp
             ptxt <- readFile projfp
-            putStrLn "Read Project File"
             (thnms,rest1) <- parseREqState1 $ lines ptxt
-            putStrLn "read req-state 1"
             nmdThrys <- getNamedTheories projdirfp thnms
-            putStrLn "got named theories"
             stext <- readFile $ settingsPath projdirfp
             (ssettings,_) <- parseProofSettings $ lines stext
-            putStrLn "Read Settings File"
             newreqs <- parseREqState2 ssettings nmdThrys rest1 -- pure
-            putStrLn ("Read project details from "++projfp)
-            putStrLn ("Read "++show (M.size . tmap $ theories newreqs))
+            putStrLn ( "Loaded "
+                       ++show (M.size . tmap $ theories newreqs)++
+                       " Theories" )
             return newreqs{projectDir = projdirfp, prfSettings = ssettings}
 \end{code}
 
@@ -327,9 +324,7 @@ getNamedTheories' projfp (nm:nms)
     in ifFileExists "Theory" [] thfile (doGetNamedTheories projfp thDir nm nms)
   where
     doGetNamedTheories projfp thDir nm nms
-      =  do putStrLn ("getting '"++nm++"' from "++thDir)
-            nmdThry <- getNamedTheory thDir nm
-            putStrLn ("got it!")
+      =  do nmdThry <- getNamedTheory thDir nm
             nmdThrys <- getNamedTheories' projfp nms
             return (nmdThry:nmdThrys)
 \end{code}
@@ -395,14 +390,11 @@ parseNamedTheory thrys projfp nm
 getNamedTheory :: String -> String -> IO (String,Theory)
 getNamedTheory thDir nm 
   = do  let thryfp = thDir </> nm <.> "thr"
-        putStrLn ("getting theory named "++nm++" from "++thryfp)
         thryTxt <- readFile thryfp
-        putStrLn "got"
         prffiles <- fmap (filter isProofFile) $ listDirectory thDir 
-        putStrLn ("prffiles:\n"++show prffiles)
         prfTxts <- sequence $ map (readFile . (thDir </>)) prffiles
         (thry,_) <- parseTheory (lines thryTxt, prfTxts)
-        putStrLn ("Read theory '"++nm++"' from "++thryfp)
+        putStrLn ("Loaded theory '"++nm++"' ("++thryfp++")")
         return (nm,thry)
 \end{code}
 

@@ -524,7 +524,7 @@ doDemotion args reqs
 
 
 \newpage
-\section{Proof Access Commands}
+\section{Proof Access Commands
 
 \subsection{New Proof} 
 
@@ -557,6 +557,7 @@ doNewProof _ reqs = do
                 Nothing -> return reqs
                 Just liveProof -> proofREPL reqs liveProof
 \end{code}
+
 
 \newpage
 \subsection{Return to Live Proof}

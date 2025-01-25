@@ -839,10 +839,17 @@ substituteFocus thrys liveProof
 \subsection{Observing Laws in Scope}
 
 \begin{code}
-observeLawsInScope :: LiveProof -> String
-observeLawsInScope liveProof
-  = let mctxts = mtchCtxts liveProof
-    in hdr ++ (intercalate hdr $ map showContextLaws $ reverse mctxts)
+observeLawsInScope :: [String] -> LiveProof -> String
+observeLawsInScope [] liveProof
+  = renderContextLaws $ mtchCtxts liveProof
+
+observeLawsInScope thnms liveProof
+  = renderContextLaws $ filter (wantedMCtxt thnms) $ mtchCtxts liveProof
+
+wantedMCtxt wanted (thnm,_,_) = thnm `elem` wanted
+
+renderContextLaws mctxts
+  = hdr ++ (intercalate hdr $ map showContextLaws $ reverse mctxts)
   where hdr = "\n---\n"
 \end{code}
 

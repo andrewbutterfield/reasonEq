@@ -212,20 +212,26 @@ modProofSettings _ state = return state
 
 Listing laws in scope for the current live proof.
 \begin{code}
-listScopeLawsDescr = ( "ll", "list laws"
-                     , "ll -- list all laws in scope", listScopeLaws)
+listScopeLawsDescr = ( "ll"
+                     , "list laws"
+                     , unlines
+                        [ "ll -- list all laws in scope"
+                        , "ll thnm1 ... thnmN -- in these theories only" ]
+                     , listScopeLaws )
 
 listScopeLaws :: REPLCmd (REqState, LiveProof)
-listScopeLaws _ state@( _, liveProof)
-  = do putStrLn $ observeLawsInScope liveProof
+listScopeLaws args state@( _, liveProof)
+  = do putStrLn $ observeLawsInScope args liveProof
        userPause
        return state
 \end{code}
 
 Listing knowns in scope for the current live proof.
 \begin{code}
-listScopeKnownsDescr = ( "lk", "list knowns"
-                     , "lk -- list all known names in scope", listScopeKnowns)
+listScopeKnownsDescr = ( "lk"
+                       , "list knowns"
+                       , "lk -- list all known names in scope"
+                       , listScopeKnowns )
 
 listScopeKnowns :: REPLCmd (REqState, LiveProof)
 listScopeKnowns _ state@( reqs, liveProof)

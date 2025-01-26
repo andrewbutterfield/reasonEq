@@ -263,7 +263,7 @@ newConjecture thnm nasn reqs
                              $ theories__ (replaceTheory' thry') $ reqs
 \end{code}
 
-\subsection{Parsing a Conjecture
+\subsection{Parsing a Conjecture}
 
 We expect the first line of a conjecture text to be the conjecture name,
 while the rest is then parsed for the actual conjecture term.

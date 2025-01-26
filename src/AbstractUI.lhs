@@ -855,6 +855,15 @@ renderContextLaws mctxts
 
 \subsection{Observing Knowns Names in Scope}
 
+\textbf{NOTE: }
+\textsf{
+ The top level match-context has all the knowns from dependent theories,
+to avoid doing lookups down through the chain of theories.
+It means there is no point in adding the facility provided for laws for 
+specifying the theories of interest.
+Perhaps this is all over-engineered?  
+}
+
 \begin{code}
 observeKnownsInScope :: LiveProof -> String
 observeKnownsInScope liveProof

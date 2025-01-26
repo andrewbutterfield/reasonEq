@@ -420,16 +420,15 @@ cmdNew
     , unlines
         ( [ "new "++shWork++" nm /absdirpath -- new workspace"
           , "       -- do not use '~' or environment variables"
-          , "new "++shConj++" 'np1' .. 'npk' -- new conjecture 'np1-..-npk'"
-          , "        the npi are components for the conjecture name"
+          , "new "++shConj++" 'conj_name' -- new conjecture 'conj_name'"
           ] ++ s_syntax )
     , newThing )
 
 newThing cmdargs@[cmd,nm,fp] reqs
  | cmd == shWork = newWorkspace nm fp reqs
-newThing (cmd:rest) reqs
- | cmd == shConj = newConj rest reqs
-newThing _ reqs      =  doshow reqs "unknown 'new' option."
+newThing (cmd:cnm:_) reqs
+ | cmd == shConj = newConj cnm reqs
+newThing _ reqs  =  doshow reqs "unknown 'new' option."
 \end{code}
 
 \newpage
@@ -454,9 +453,8 @@ newWorkspace wsName wsPath reqs
 
 New Conjecture:
 \begin{code}
-newConj args reqs
-  = do  let cjnm = mkLawName args
-        let prompt = unlines' s_syntax 
+newConj cjnm reqs
+  = do  let prompt = unlines s_syntax 
                      ++ "New conj, '"++cjnm++"', enter term :- "
         let preview = trTerm 0
         (ok,term) <- getConfirmedObject prompt parse preview

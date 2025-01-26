@@ -17,6 +17,7 @@ module AbstractUI
 , modifyProofSettings
 , setCurrentTheory
 , newConjecture
+, parseConjecture
 , assumeConjecture, demoteLaw , classifyLaw
 , newProof1, newProof2, resumeProof
 , abandonProof, updateProof, completeProof
@@ -56,6 +57,7 @@ import LexBase
 import Variables
 import SideCond
 import Assertions
+import Laws
 import TermZipper
 import AST
 import FreeVars
@@ -74,6 +76,7 @@ import Ranking
 import SAT
 
 import TestRendering
+import TestParsing
 
 import StdTypeSignature
 
@@ -122,7 +125,6 @@ a number of return formats.
 
 \subsection{Observing Settings}
 
--- should be defined in ProofSettings !
 \begin{code}
 observeSettings :: ProofSettings -> String
 observeSettings pset = showPrfSettings pset
@@ -246,6 +248,7 @@ setCurrentTheory thnm reqs
       Just _   ->  return ( changed $ currTheory_ thnm reqs)
 \end{code}
 
+\newpage
 \subsection{Adding a new conjecture}
 
 Easy, so long as we check for name clashes.
@@ -259,6 +262,26 @@ newConjecture thnm nasn reqs
                       return $ changed
                              $ theories__ (replaceTheory' thry') $ reqs
 \end{code}
+
+\subsection{Parsing a Conjecture
+
+We expect the first line of a conjecture text to be the conjecture name,
+while the rest is then parsed for the actual conjecture term.
+
+\begin{code}
+parseConjecture :: MonadFail m => String -> REqState -> m REqState
+parseConjecture text reqs
+  | null body = fail "no conjecture term found"
+  | otherwise = 
+      case termParse body of
+        Just (term,resttoks) | null resttoks 
+          -> fail (cname++" parsed as "++trTerm 0 term)
+        _ -> fail "bad parse"
+  where
+    (cname,rest) = span (/= '\n') text
+    body = ttail rest
+\end{code}
+
 
 \subsection{Assuming Conjectures}
 

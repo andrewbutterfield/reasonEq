@@ -1,0 +1,2 @@
+test_conjecture
+=(+(x,y),+(y,x))

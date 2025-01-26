@@ -105,6 +105,7 @@ reqCommands = [ cmdShow, cmdSet, cmdNew
               , cmdNewProof, cmdRet2Proof
               , cmdSave, cmdLoad
               , cmdSaveConj, cmdLoadConj
+              , cmdParseConj
               , cmdAssume, cmdDemote
               , cmdBuiltin
               , cmdClassify ]
@@ -206,9 +207,10 @@ showWorkspaces args reqs
 \section{State Save and Restore}
 
 We save and load theories by default,
-but can also handle smaller objects such as axioms, conjetures, and proofs.
+but can also handle smaller objects such as axioms, conjectures, and proofs.
 \begin{code}
 prfObj = "prf"
+cnjObj = "cnj"
 \end{code}
 
 
@@ -312,6 +314,7 @@ loadState _ reqs  =  doshow reqs "unknown 'load' option."
 \newpage
 \section{Conjecture Management}
 
+
 \subsection{Save Laws as Conjectures}
 
 \begin{code}
@@ -363,15 +366,33 @@ displayConjectures [nm] reqs
 displayConjectures _ reqs  =  doshow reqs "unknown 'ldc' option."
 \end{code}
 
+\newpage
 \subsection{Parse Conjectures}
 
 Pull conjectures in from a text file using a simple (clunky) syntax
 
-\textbf{TBD}
 
 \begin{code}
 cmdParseConj :: REqCmdDescr
-cmdParseConj = error "cmdParseConj NYI"
+cmdParseConj
+  = ( "prs"
+    , "parse stuff"
+    , unlines [ "prs "++cnjObj++" fname - parse conjecture from file" ]
+    , parseEntities )
+
+parseEntities [cnj,fname] reqs
+  | cnj == cnjObj = do
+    putStrLn ("parsing conjecture from '"++fname++"'")
+    fileExists <- doesFileExist fname
+    if fileExists
+    then do
+      text <- readFile fname
+      putStrLn text
+      case parseConjecture text reqs of
+        Yes conj ->  doshow reqs "Parsed successfully"
+        But msgs  -> doshow reqs $ unlines msgs
+    else doshow reqs "file not found"
+parseEntities _ reqs = doshow reqs "unknown parse option"
 \end{code}
 
 \section{Classify Command}

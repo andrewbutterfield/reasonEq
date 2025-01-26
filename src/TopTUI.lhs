@@ -312,6 +312,8 @@ loadState _ reqs  =  doshow reqs "unknown 'load' option."
 \newpage
 \section{Conjecture Management}
 
+\subsection{Save Laws as Conjectures}
+
 \begin{code}
 cmdSaveConj :: REqCmdDescr
 cmdSaveConj
@@ -334,6 +336,10 @@ saveAsConjectures _ reqs
              return reqs
 \end{code}
 
+\subsection{Load Conjectures}
+
+\textbf{Just displays them for now}
+
 \begin{code}
 cmdLoadConj :: REqCmdDescr
 cmdLoadConj
@@ -355,6 +361,17 @@ displayConjectures [nm] reqs
        putStrLn $ unlines' $ map (trNmdAsn) savedConjs
        return reqs
 displayConjectures _ reqs  =  doshow reqs "unknown 'ldc' option."
+\end{code}
+
+\subsection{Parse Conjectures}
+
+Pull conjectures in from a text file using a simple (clunky) syntax
+
+\textbf{TBD}
+
+\begin{code}
+cmdParseConj :: REqCmdDescr
+cmdParseConj = error "cmdParseConj NYI"
 \end{code}
 
 \section{Classify Command}

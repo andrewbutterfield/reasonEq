@@ -9,8 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module TestParsing (
   mkLawName
 , s_syntax
-, sExprParse
-, sPredParse
+, termParse
 )
 
 where
@@ -364,10 +363,8 @@ sAppParse' tk id1 smretbus tts
 
 Handy specialisations:
 \begin{code}
-sExprParse :: MonadFail m => String -> m (Term, [TToken])
-sExprParse = sTermParse ArbType . tlex
-sPredParse :: MonadFail m => String -> m (Term, [TToken])
-sPredParse = sTermParse arbpred . tlex
+termParse :: MonadFail m => String -> m (Term, [TToken])
+termParse = sTermParse arbpred . tlex
 \end{code}
 
 \newpage
@@ -383,7 +380,7 @@ showMacro macro
 
 \begin{code}
 tparse str 
-  = case sPredParse str of
+  = case termParse str of
       Yes (term,tokens) 
         | null tokens -> putStrLn $ trTerm 0 term
         | otherwise   -> putStrLn ("tokens leftover: "++show tokens)

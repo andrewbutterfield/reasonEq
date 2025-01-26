@@ -473,7 +473,7 @@ newConj args reqs
 
   where
     parse txt =
-      case sPredParse txt of
+      case termParse txt of
         But msgs      ->  But msgs
         Yes (term,_)  ->  Yes term
 \end{code}

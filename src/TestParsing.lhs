@@ -1,6 +1,6 @@
-\section{Test Parsing}
+\chapter{Test Parsing}
 \begin{verbatim}
-Copyright  Andrew Butterfield (c) 2018-22
+Copyright  Andrew Butterfield (c) 2018-25
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -32,20 +32,20 @@ import SideCond
 import TestRendering
 \end{code}
 
-\subsection{Test Parsing Intro.}
+\section{Test Parsing Intro.}
 
 We provide a simple, clunky way to parse terms,
 in prefix-style only.
 
 For now we have simple literals,
-composites done as prefix-functions applied to (-delimited lists of sub-terms,
+composites done as prefix-functions applied to delimited lists of sub-terms,
 and binders in standard mixfix style.
 
 \newpage
 
-\subsection{Lexical Basics}
+\section{Lexical Basics}
 
-\subsubsection{Tokens}
+\subsection{Tokens}
 
 We have the following token classes:
 \begin{description}
@@ -112,7 +112,7 @@ and is not really used for anything else in a math context.
 whenChar = '?'
 \end{code}
 
-\subsubsection{Character Classes}
+\subsection{Character Classes}
 
 We shall predefine delimiters as constant for now.
 Later on these will be parameters to the whole parsing process.
@@ -133,7 +133,7 @@ issymbol c
   | otherwise  =  True
 \end{code}
 
-\subsubsection{Word Classes}
+\subsection{Word Classes}
 
 Making symbols and identifiers:
 \begin{code}
@@ -178,7 +178,6 @@ tlex str@(c:cs)
   | c `elem` openings    =  TOpen [c]  : tlex cs
   | c `elem` closings    =  TClose [c] : tlex cs
   | c `elem` separators  =  TSep [c]   : tlex cs
-  | c == '_'             =  tlexMacro [c] cs
   | otherwise            =  tlexSym [c] cs
 \end{code}
 
@@ -191,11 +190,15 @@ tlexNum mun str@(c:cs)
   | otherwise  =  mkNum mun : tlex str
 
 mkNum mun = TNum $ read $ reverse mun
+\end{code}
 
+We have seen a minus sign. If followed immediately by a number
+it is then merged with it to form a negative literal.
+Otherwise it is treated as a symbol.
+\begin{code}
 tlexMinus "" = [ mkSym "-" ]
 tlexMinus str@(c:cs)
   | isDigit c  =  tlexNum [c,'-'] cs
-  | issymbol c  =  tlexSym [c,'-'] cs
   | otherwise  =  mkSym "-" : tlex str
 \end{code}
 
@@ -226,26 +229,7 @@ tlexDuring di bus str@(c:cs)
   | otherwise  =  mkId (reverse di ++ reverse bus) : tlex str
 \end{code}
 
-Macros begin with an underscore.
-They are used to lookup names.
-Typically macro ``\texttt{\_}\textsf{macro}'' refers to whatever is 
-denoted by \LaTeX\ macro ``$\mathtt\backslash$\textsf{macro}''.
-\begin{code}
-tlexMacro orcam "" = [ mkCam orcam ]
-tlexMacro orcam str@(c:cs)
- | isAlpha c  =  tlexMacro (c:orcam) cs
- | otherwise  =  mkCam orcam : tlex str
-
-mkCam = mkMac . reverse
-mkMac macro
-  = case findSym macro of
-      Nothing  ->  TErr ("Invalid macro: "++macro)
-      Just str
-       -> case ident str of
-            But msgs -> TErr ("Macro expansion bad: "++unlines' msgs)
-            Yes i -> TSym i
-\end{code}
-
+If none of the above apply, we parse a maximum-munch symbol:
 \begin{code}
 tlexSym mys ""  = [ mkMys mys ]
 tlexSym mys str@(c:cs)
@@ -253,7 +237,7 @@ tlexSym mys str@(c:cs)
   | otherwise  =  mkMys mys : tlex str
 \end{code}
 
-\subsection{Law Name Parser}
+\section{Law Name Parser}
 
 \begin{code}
 mkLawName :: [String] -> String
@@ -266,7 +250,7 @@ mkLawName ss
     showTTok ttok      = _redQ
 \end{code}
 
-\subsection{Simple Term Parser}
+\section{Simple Term Parser}
 
 The abstract syntax:
 \begin{eqnarray*}
@@ -294,7 +278,7 @@ s_syntax
    , "<v$> ::=  v | v $"
    , "<t> ::= <b> | n | v | i ( t , ... , t ) | <q> i <v$> , ... ,<v$> @ <t>"
    , "keywords: true false QS QL"
-   , "keysymbols: $ , @"
+   , "keysymbols: '?_$(,)@'"
    ]
 
 keyTrue = "true"
@@ -317,7 +301,7 @@ falseP = fromJust $ pVar ArbType false
 
 \newpage
 
-\subsubsection{Top level term parser}
+\subsection{Top level term parser}
 
 \begin{code}
 sTermParse :: MonadFail m => Type -> [TToken] -> m (Term, [TToken])
@@ -386,7 +370,8 @@ sPredParse :: MonadFail m => String -> m (Term, [TToken])
 sPredParse = sTermParse arbpred . tlex
 \end{code}
 
-\subsection{Random test/prototype bits}
+\newpage
+\section{Random test/prototype bits}
 
 \begin{code}
 showMacro :: String -> IO ()
@@ -397,5 +382,10 @@ showMacro macro
 \end{code}
 
 \begin{code}
-tparse = putStrLn . trTerm 0 . fst . fromJust .sPredParse
+tparse str 
+  = case sPredParse str of
+      Yes (term,tokens) 
+        | null tokens -> putStrLn $ trTerm 0 term
+        | otherwise   -> putStrLn ("tokens leftover: "++show tokens)
+      But msgs -> putStrLn $ unlines' msgs
 \end{code}

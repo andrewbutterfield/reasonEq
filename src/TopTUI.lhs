@@ -421,6 +421,7 @@ cmdNew
         ( [ "new "++shWork++" nm /absdirpath -- new workspace"
           , "       -- do not use '~' or environment variables"
           , "new "++shConj++" 'np1' .. 'npk' -- new conjecture 'np1-..-npk'"
+          , "        the npi are components for the conjecture name"
           ] ++ s_syntax )
     , newThing )
 
@@ -524,7 +525,7 @@ doDemotion args reqs
 
 
 \newpage
-\section{Proof Access Commands
+\section{Proof Access Commands}
 
 \subsection{New Proof} 
 

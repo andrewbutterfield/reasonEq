@@ -313,7 +313,7 @@ showLogic logicsig
 
 Showing known names:
 \begin{code}
-showKnowns vts = unlines' (map trVarTable vts)
+showKnowns vts = unlines' $ filter (not . null) $ (map trVarTable vts)
 \end{code}
 
 Showing laws:

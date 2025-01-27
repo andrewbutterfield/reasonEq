@@ -266,14 +266,14 @@ s_syntax
  = [ "Lexical Tokens:"
    , "n : int with optional leading minus"
    , "i : reasonEq identifier"
-   , "v ::= i | ?i | i? | i_i"
+   , "v ::= i | ?i | i? | i?i"
    , "Term Syntax:"
    , "<b> ::= true | false"
    , "<q> ::= QS | QL"
    , "<v$> ::=  v | v $"
    , "<t> ::= <b> | n | v | i ( t , ... , t ) | <q> i <v$> , ... ,<v$> @ <t>"
    , "keywords: true false QS QL"
-   , "keysymbols: '?_$(,)@'"
+   , "keysymbols: ? $ ( , ) @"
    ]
 
 keyTrue = "true"

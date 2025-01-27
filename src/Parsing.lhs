@@ -29,6 +29,8 @@ import Variables
 import AST
 import SideCond
 import TestRendering
+
+import Debugger
 \end{code}
 
 \section{Parsing Intro.}
@@ -140,27 +142,26 @@ mkSym str
       Yes i     ->  TSym i
 
 mkName tcons str
-  = case ident str of
+  = let (root,temp) = extractTemporality str
+    in case ident root of
       But msgs  ->  TErr $ unlines' msgs
-      Yes i     ->  let (i',vw') = extractTemporality i str
-                    in tcons i' vw'
+      Yes i     ->  tcons i temp
 
 mkId str   = mkName TId str
 
 mkLVar str = mkName TLVar str
 
-extractTemporality i cs -- non-empty
- | c1 == whenChar       =  ( fromJust $ ident $ tail cs, Before)
- | last cs == whenChar  =  ( fromJust $ ident $ init cs, After )
- | have root && have subscr && all isAlpha subscr
-                        =  ( fromJust $ ident root,      During subscr )
- | otherwise = ( i, Static )
+extractTemporality cs -- non-empty
+ | c1 == whenChar       =  ( tail cs, Before)
+ | last cs == whenChar  =  ( init cs, After )
+ | have root && have subscr && all isAlphaNum subscr
+                        =  ( root,    During subscr )
+ | otherwise = ( cs, Static )
  where
     c1 = head cs
     (root,rest) = break (== whenChar) cs
     have [] = False ; have _ = True
     subscr = ttail rest
-    ttail [] = [] ; ttail (_:cs) = cs
 
 -- tail recursion often requires reversal at end of accumulated lists
 mkMys  =  mkSym . reverse   ;   mkDi   =  mkId . reverse
@@ -224,11 +225,13 @@ tlexId hasDC di str@(c:cs)
   where
     derr c di = TErr ("Overdecorated: " ++ reverse (c:di))
 
+-- here we accept alphanumeric subscripts
 tlexDuring di ""  ""  =  [ mkDi di ]
 tlexDuring di bus ""  =  [ mkId (reverse di ++ reverse bus) ]
 tlexDuring di bus str@(c:cs)
   | c == keyLstVar  =  mkLVar (reverse di ++ reverse bus) : tlex cs
   | isAlpha c  =  tlexDuring di (c:bus) cs
+  | isDigit c  =  tlexDuring di (c:bus) cs
   | otherwise  =  mkId (reverse di ++ reverse bus) : tlex str
 \end{code}
 
@@ -369,7 +372,7 @@ sAppParse' tk id1 smretbus tts
 Handy specialisations:
 \begin{code}
 termParse :: MonadFail m => String -> m (Term, [Token])
-termParse = sTermParse arbpred . tlex
+termParse = sTermParse arbpred . pdbg "TLEX" . tlex
 \end{code}
 
 \newpage

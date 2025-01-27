@@ -45,7 +45,7 @@ import AbstractUI
 import UTPSignature
 import Instantiate
 import TestRendering
-import TestParsing
+import Parsing
 import REPL
 import Dev
 import SAT

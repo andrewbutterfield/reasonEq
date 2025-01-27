@@ -76,7 +76,7 @@ import Ranking
 import SAT
 
 import TestRendering
-import TestParsing
+import Parsing
 
 import StdTypeSignature
 

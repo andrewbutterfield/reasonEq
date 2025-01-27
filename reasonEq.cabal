@@ -35,6 +35,7 @@ library
       MatchContext
       Matching
       NotApplicable
+      Parsing
       Persistence
       ProgramIdentity
       ProofMatch
@@ -51,7 +52,6 @@ library
       Substitution
       Symbols
       TermZipper
-      TestParsing
       TestRendering
       Theories
       TopGUI

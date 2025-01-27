@@ -77,6 +77,7 @@ We have the following token classes:
 data Token
   =  TNum   Integer
   |  TId    Identifier VarWhen
+  |  TLVar  Identifier VarWhen  -- i$
   |  TOpen  String
   |  TClose String
   |  TSep   String
@@ -138,11 +139,15 @@ mkSym str
       But msgs  ->  TErr $ unlines' msgs
       Yes i     ->  TSym i
 
-mkId str
+mkName tcons str
   = case ident str of
       But msgs  ->  TErr $ unlines' msgs
       Yes i     ->  let (i',vw') = extractTemporality i str
-                    in TId i' vw'
+                    in tcons i' vw'
+
+mkId str   = mkName TId str
+
+mkLVar str = mkName TLVar str
 
 extractTemporality i cs -- non-empty
  | c1 == whenChar       =  ( fromJust $ ident $ tail cs, Before)
@@ -159,6 +164,7 @@ extractTemporality i cs -- non-empty
 
 -- tail recursion often requires reversal at end of accumulated lists
 mkMys  =  mkSym . reverse   ;   mkDi   =  mkId . reverse
+mkRavL = mkLVar . reverse
 \end{code}
 
 Now we define the lexer:
@@ -213,6 +219,7 @@ tlexId hasDC di str@(c:cs)
   | c == whenChar
       = if hasDC then (derr c di) : tlex cs
                  else  tlexDuring (c:di) [] cs
+  | c == keyLstVar = mkRavL di : tlex str 
   | otherwise  =  mkDi di : tlex str
   where
     derr c di = TErr ("Overdecorated: " ++ reverse (c:di))
@@ -220,6 +227,7 @@ tlexId hasDC di str@(c:cs)
 tlexDuring di ""  ""  =  [ mkDi di ]
 tlexDuring di bus ""  =  [ mkId (reverse di ++ reverse bus) ]
 tlexDuring di bus str@(c:cs)
+  | c == keyLstVar  =  mkLVar (reverse di ++ reverse bus) : tlex cs
   | isAlpha c  =  tlexDuring di (c:bus) cs
   | otherwise  =  mkId (reverse di ++ reverse bus) : tlex str
 \end{code}
@@ -267,11 +275,12 @@ s_syntax
    , "n : int with optional leading minus"
    , "i : reasonEq identifier"
    , "v ::= i | ?i | i? | i?i"
+   , "lv ::= v$"
    , "Term Syntax:"
    , "<b> ::= true | false"
    , "<q> ::= QS | QL"
-   , "<v$> ::=  v | v $"
-   , "<t> ::= <b> | n | v | i ( t , ... , t ) | <q> i <v$> , ... ,<v$> @ <t>"
+   , "<gv> ::=  v | lv"
+   , "<t> ::= <b> | n | v | i ( t , ... , t ) | <q> i <gv> , ... ,<gv> @ <t>"
    , "keywords: true false QS QL"
    , "keysymbols: ? $ ( , ) @"
    ]
@@ -280,9 +289,9 @@ keyTrue = "true"
 keyFalse = "false"
 keySetBind = "QS"
 keyListBind = "QL"
-keyLstVar = "$"
-keySep = ","
-keyQBody = "@"
+keyLstVar = '$'
+keySep = ','
+keyQBody = '@'
 \end{code}
 
 

@@ -220,7 +220,7 @@ tlexId hasDC di str@(c:cs)
   | c == whenChar
       = if hasDC then (derr c di) : tlex cs
                  else  tlexDuring (c:di) [] cs
-  | c == keyLstVar = mkRavL di : tlex str 
+  | c == keyLstVar = mkRavL di : tlex cs 
   | otherwise  =  mkDi di : tlex str
   where
     derr c di = TErr ("Overdecorated: " ++ reverse (c:di))

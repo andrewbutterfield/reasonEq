@@ -283,7 +283,8 @@ s_syntax
    , "<b> ::= true | false"
    , "<q> ::= QS | QL"
    , "<gv> ::=  v | lv"
-   , "<t> ::= <b> | n | v | i ( t , ... , t ) | <q> i <gv> , ... ,<gv> @ <t>"
+   , "<t> ::= <b>  |  n  |  v  |  i ( t , ... , t )"
+   , "             |  <q> i <gv> , ... ,<gv> @ <t>"
    , "keywords: true false QS QL"
    , "keysymbols: ? $ ( , ) @"
    ]
@@ -319,7 +320,7 @@ sTermParse tk (TNum n:tts)
 sTermParse tk (TId i vw:tts)
   | n == keyTrue      =  return ( mkTrue tk,  tts)
   | n == keyFalse     =  return ( mkFalse tk, tts)
-  | n == keySetBind   =  fail "sTermParse: var-set binders NYI"
+  | n == keySetBind   =  setQParse tts
   | n == keyListBind  =  fail "sTermParse: var-list binders NYI"
   | otherwise         =  sIdParse tk i vw tts
   where n = idName i
@@ -369,10 +370,17 @@ sAppParse' tk id1 smretbus tts
   =  fail ("sAppParse': expected ',' or ')'")
 \end{code}
 
+Seen QL or QS, parse the quantifier
+\begin{code}
+setQParse [] = fail "setQParse: premature end"
+setQParse (TId i Static : tts) = fail ("setQParse: NYI "++show tts)
+setQParse (tok:_) = fail ("setQParse: exp. ident, found: "++show tok)
+\end{code}
+
 Handy specialisations:
 \begin{code}
 termParse :: MonadFail m => String -> m (Term, [Token])
-termParse = sTermParse arbpred . pdbg "TLEX" . tlex
+termParse = sTermParse arbpred . tlex
 \end{code}
 
 \newpage

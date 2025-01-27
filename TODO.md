@@ -4,6 +4,11 @@
 
 We will use the need to expand the `Sets` theory to drive a mechanism to read conjectures from a text file.
 
+* the original conjecture parser has been tweaked and can now be read from a file.
+* no file naming convention as of yet (`TheoryName/conj_name-conj.txt` ?)
+* need to handle quantifiers
+* need to define syntax for and handle substitutions
+
 
 ### RANKING BUSTED
 

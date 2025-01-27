@@ -178,15 +178,16 @@ observeKnowns reqs _
 \end{code}
 
 
-
 \subsection{Observing Current Theory}
 
 \begin{code}
 observeCurrTheory :: REqState -> String
 observeCurrTheory reqs
- = case getTheory (currTheory reqs) (theories reqs) of
+ = case getCurrentTheory reqs of
      Nothing    ->  "No current theory."
      Just thry  ->  showTheoryLong (trTerm 0, trSideCond) thry
+
+getCurrentTheory reqs = getTheory (currTheory reqs) (theories reqs)
 \end{code}
 
 \subsection{Observing Current Conjectures}
@@ -194,11 +195,11 @@ observeCurrTheory reqs
 \begin{code}
 observeCurrConj :: REqState -> [String] -> String
 observeCurrConj reqs ["-u"]
-  = case getTheory (currTheory reqs) (theories reqs) of
+  = case getCurrentTheory reqs of
       Nothing    ->  "No current theory."
       Just thry  ->  showNmdAssns (trTermU 0, trSideCondU) $ conjs thry
 observeCurrConj reqs _
-  = case getTheory (currTheory reqs) (theories reqs) of
+  = case getCurrentTheory reqs of
       Nothing    ->  "No current theory."
       Just thry  ->  showNmdAssns (trTerm 0, trSideCond) $ conjs thry
 \end{code}
@@ -220,7 +221,7 @@ observeCompleteProofs ["*"] reqs
 observeCompleteProofs [nm] reqs
   = showProofs [nm] $ concat $ map proofs $ getAllTheories $ theories reqs
 observeCompleteProofs args reqs
-  = case getTheory (currTheory reqs) (theories reqs) of
+  = case getCurrentTheory reqs of
       Nothing    ->  "No current theory."
       Just thry  ->  showProofs args $ proofs thry
 \end{code}
@@ -274,9 +275,16 @@ parseConjecture text reqs
   | null body = fail "no conjecture term found"
   | otherwise = 
       case termParse body of
-        Just (term,resttoks) | null resttoks 
-          -> fail (cname++" parsed as "++trTerm 0 term)
-        _ -> fail "bad parse"
+        Yes (term,resttoks)
+          | null resttoks -> do
+              thry <- getCurrentTheory reqs
+              newasn <- mkAsn term scTrue
+              let newconj = (cname,newasn)
+              let thry' = conjs__ ([newconj]++) thry
+              thrys <- replaceTheory'' thry' $ theories reqs
+              return $ changed $ theories_ thrys reqs 
+          | otherwise -> fail ("junk at end: "++show resttoks)
+        But msgs -> fail ("conjecture parse failed:\n"++unlines' msgs)
   where
     (cname,rest) = span (/= '\n') text
     body = ttail rest

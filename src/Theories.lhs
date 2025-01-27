@@ -26,7 +26,7 @@ module Theories
  , getTheoryDeps, getTheoryDeps', getAllTheories
  , listTheories, getTheoryConjectures, getTheoryProofs
  , isATheoryIn
- , replaceTheory, replaceTheory'
+ , replaceTheory, replaceTheory', replaceTheory''
  , updateTheory
  , newTheoryConj
  , assumeConj, assumeConjRange, assumeDepConj, lawDemote
@@ -42,6 +42,7 @@ import qualified Data.Map as M
 import Data.List
 import Data.Maybe (catMaybes, isJust)
 
+import YesBut
 import Utilities
 import StratifiedDAG
 import Substitution
@@ -381,6 +382,16 @@ replaceTheory' thry theories
      Nothing         ->  theories
      Just theories'  ->  theories'
 \end{code}
+
+Another version that fails louder:
+\begin{code}
+replaceTheory'' :: MonadFail m => Theory -> TheoryDAG -> m TheoryDAG
+replaceTheory'' thry theories
+ = case replaceTheory (thName thry) thry theories of
+     But msgs       ->  fail $ unlines' msgs
+     Yes theories'  ->  return theories'
+\end{code}
+
 
 \subsection{Theory Update}
 

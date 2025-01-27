@@ -389,7 +389,7 @@ parseEntities [cnj,fname] reqs
       text <- readFile fname
       putStrLn text
       case parseConjecture text reqs of
-        Yes conj ->  doshow reqs "Parsed successfully"
+        Yes reqs' ->  doshow reqs' "Parsed successfully"
         But msgs  -> doshow reqs $ unlines msgs
     else doshow reqs "file not found"
 parseEntities _ reqs = doshow reqs "unknown parse option"

@@ -277,14 +277,14 @@ s_syntax
  = [ "Lexical Tokens:"
    , "n : int with optional leading minus"
    , "i : reasonEq identifier"
-   , "v ::= i | ?i | i? | i?i"
-   , "lv ::= v$"
+   , "<v> ::= i | ?i | i? | i?i"
+   , "<lv> ::= <v>$"
    , "Term Syntax:"
    , "<b> ::= true | false"
    , "<q> ::= QS | QL"
-   , "<gv> ::=  v | lv"
-   , "<t> ::= <b>  |  n  |  v  |  i ( t , ... , t )"
-   , "             |  <q> i <gv> , ... ,<gv> @ <t>"
+   , "<gv> ::=  <v> | <lv>"
+   , "<t> ::= <b>  |  n  |  <v>  |  i ( <t> , ... , <t> )"
+   , "             |  <q> i <gv> , ... , <gv> @ <t>"
    , "keywords: true false QS QL"
    , "keysymbols: ? $ ( , ) @"
    ]
@@ -314,9 +314,20 @@ falseP = fromJust $ pVar ArbType false
 \begin{code}
 sTermParse :: MonadFail m => Type -> [Token] -> m (Term, [Token])
 sTermParse tk [] =  fail "sTermParse: nothing to parse"
+\end{code}
 
-sTermParse tk (TNum n:tts)
-  = return ( Val tk $ Integer n, tts)
+Numbers:
+\begin{code}
+sTermParse tk (TNum n:tts) = return ( Val tk $ Integer n, tts)
+\end{code}
+
+Symbols:
+\begin{code}
+sTermParse tk (TSym i:tts) = sIdParse tk i Static tts
+\end{code}
+
+Dispatch on first tokens:
+\begin{code}
 sTermParse tk (TId i vw:tts)
   | n == keyTrue      =  return ( mkTrue tk,  tts)
   | n == keyFalse     =  return ( mkFalse tk, tts)
@@ -324,9 +335,15 @@ sTermParse tk (TId i vw:tts)
   | n == keyListBind  =  fail "sTermParse: var-list binders NYI"
   | otherwise         =  sIdParse tk i vw tts
   where n = idName i
-sTermParse tk (TSym i:tts) = sIdParse tk i Static tts
-sTermParse tk (tt:tts)  = fail ("sTermParse: unexpected token: "++show tt)
+\end{code}
 
+Unexpected starting token:
+\begin{code}
+sTermParse tk (tt:tts)  = fail ("sTermParse: unexpected token: "++show tt)
+\end{code}
+
+Makes bool values.  Note that use of \verb@_mathbb "B"@ here is wrong
+\begin{code}
 mkTrue t | isPType t  =  trueP
 mkTrue _
   =  Val (GivenType (fromJust $ ident $ _mathbb "B")) $ Boolean True
@@ -350,6 +367,7 @@ mkVar tp id1 vw
 \end{code}
 
 Seen identifier and opening parenthesis.
+$$ i(~~~t_1,\dots,t_n) $$
 Look for sub-term, or closing parenthesis.
 \begin{code}
 sAppParse tk id1 smretbus (TClose ")" : tts)
@@ -359,6 +377,7 @@ sAppParse tk id1 smretbus tts
        sAppParse' tk id1 (tsub':smretbus) tts'
 \end{code}
 
+\newpage
 Seen (sub-) term.
 Looking for comma or closing parenthesis
 \begin{code}
@@ -370,7 +389,9 @@ sAppParse' tk id1 smretbus tts
   =  fail ("sAppParse': expected ',' or ')'")
 \end{code}
 
-Seen QL or QS, parse the quantifier
+Seen QS, 
+$$ QS~~~i~g_1 , \dots , g_n \bullet t $$
+parse the quantifier:
 \begin{code}
 setQParse [] = fail "setQParse: premature end"
 setQParse (TId i Static : tts) = fail ("setQParse: NYI "++show tts)

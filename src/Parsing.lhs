@@ -16,7 +16,7 @@ where
 
 import Data.Maybe(fromJust)
 -- import Data.Map as M (fromList,assocs)
--- import qualified Data.Set as S
+import qualified Data.Set as S
 import Data.List (nub, sort, (\\), intercalate)
 import Data.Char
 
@@ -295,21 +295,40 @@ keySetBind = "QS"
 keyListBind = "QL"
 keyLstVar = '$'
 keySep = ','
-keyQBody = '@'
+keyQBody = "@"
 \end{code}
 
 
-
+Truth builders:
 \begin{code}
 true = Vbl (fromJust $ ident "true") PredV Static
 trueP = fromJust $ pVar ArbType true
 false = Vbl (fromJust $ ident "false") PredV Static
 falseP = fromJust $ pVar ArbType false
+mkTrue t | isPType t  =  trueP
+mkTrue _ =  Val bool $ Boolean True
+mkFalse t | isPType t  =  falseP
+mkFalse _  =  Val bool $ Boolean False
 \end{code}
+
+Making variables and terms:
+\begin{code}
+mkV tp id1 vw 
+  | isPType tp  =  Vbl id1 PredV vw
+  | otherwise   =  Vbl id1 ObsV  vw
+
+mkLV tp id1 vw  = LVbl (mkV tp id1 vw) [] []
+
+mkVarTerm tp id1 vw =  fromJust $ var tp $ mkV tp id1 vw
+
+tok2GVar (TId i vw)    = StdVar $ mkV ArbType i vw
+tok2GVar (TLVar i vw ) = LstVar $ mkLV ArbType i vw
+\end{code}
+
 
 \newpage
 
-\subsection{Top level term parser}
+\subsection{Term Parser}
 
 \begin{code}
 sTermParse :: MonadFail m => Type -> [Token] -> m (Term, [Token])
@@ -346,27 +365,14 @@ sTermParse tk (TId i vw:tts)
 sTermParse tk (tt:tts)  = fail ("sTermParse: unexpected token: "++show tt)
 \end{code}
 
-Makes bool values. 
-\begin{code}
-mkTrue t | isPType t  =  trueP
-mkTrue _ =  Val bool $ Boolean True
-mkFalse t | isPType t  =  falseP
-mkFalse _  =  Val bool $ Boolean False
-\end{code}
-
+\subsubsection{Constructions}
 
 Seen an identifier, check for an opening parenthesis:
 \begin{code}
 sIdParse tk id1 vw (TOpen "(" : tts)  =  sAppParse tk id1 [] tts
-sIdParse tk id1 vw tts                =  return (mkVar tk id1 vw, tts)
+sIdParse tk id1 vw tts                =  return (mkVarTerm tk id1 vw, tts)
 \end{code}
 
-Making a variable term:
-\begin{code}
-mkVar tp id1 vw 
-  | isPType tp  =  fromJust $ var tp $ Vbl id1 PredV vw
-  | otherwise   =  fromJust $ var tp $ Vbl id1 ObsV  vw
-\end{code}
 
 Seen identifier and opening parenthesis.
 $$ i(~~~t_1,\dots,t_n) $$
@@ -391,24 +397,50 @@ sAppParse' tk id1 smretbus tts
   =  fail ("sAppParse': expected ',' or ')'")
 \end{code}
 
+\subsubsection{Quantifiers}
+
 Seen \texttt{QS}, 
 $$ QS~~~i~g_1 , \dots , g_n \bullet t $$
 parse the quantifier:
 \begin{code}
 setQParse [] = fail "setQParse: premature end"
-setQParse (TId i Static : tts) = setQParse1 i tts
+setQParse (TId i Static : tts) = do
+  (i,sg,term,tts') <- quantParse i [] tts
+  qsterm <- pBnd i (S.fromList $ map tok2GVar sg) term
+  return (qsterm,tts')
 setQParse (tok:_) = fail ("setQParse: exp. ident, found: "++show tok)
 \end{code}
 
-Seen \texttt{QS i}, 
-$$ QS~i~~~g_1 , \dots , g_n \bullet t $$
+Seen \texttt{Qx i}, 
+$$ Qx~i~~~g_1 , \dots , g_n \bullet t $$
 parse the quantifier:
 \begin{code}
-setQParse1 i [] = fail "setQParse1: premature end"
+quantParse i _ [] = fail ("quantParse: "++trId i++" (premature end)")
+quantParse i sg (TSym s : tts)
+  | idName s == keyQBody  =  quantParseBody i sg tts
+quantParse i sg (v@(TId _ _)    : tts)   =  quantParse' i (v:sg) tts
+quantParse i sg (lv@(TLVar _ _) : tts)   =  quantParse' i (lv:sg) tts
+
+quantParse' i sg [] = fail ("quantParse': "++trId i++" (premature end)")
+quantParse' i sg (TSep "," : tts) = quantParse i sg tts
+quantParse' i sg (TSym s : tts)
+  | idName s == keyQBody  = quantParseBody i sg tts
+quantParse' i sg (tok:_) 
+  = fail ("quantParse': saw "++show tok++" when ',' or '@' expected")
 \end{code}
 
+Seen \texttt{Qx i g\_1,..,g\_n @}, 
+$$ Qx~i~g_1 , \dots , g_n \bullet ~~~ t $$
+parse the body term
+\begin{code}
+quantParseBody i _ [] = fail ("quantParse: "++trId i++" (missing body)")
+quantParseBody i sg tts = do
+  (term,toks) <- sTermParse arbpred tts
+  return (i,sg,term,toks)
+\end{code}
 
-Handy specialisations:
+\subsection{Top-Level Term Parser}
+
 \begin{code}
 termParse :: MonadFail m => String -> m (Term, [Token])
 termParse = sTermParse arbpred . tlex

@@ -316,17 +316,20 @@ sTermParse :: MonadFail m => Type -> [Token] -> m (Term, [Token])
 sTermParse tk [] =  fail "sTermParse: nothing to parse"
 \end{code}
 
-Numbers:
+\subsubsection{Numbers}
+
 \begin{code}
 sTermParse tk (TNum n:tts) = return ( Val tk $ Integer n, tts)
 \end{code}
 
-Symbols:
+\subsubsection{Symbols}
+
 \begin{code}
 sTermParse tk (TSym i:tts) = sIdParse tk i Static tts
 \end{code}
 
-Dispatch on first tokens:
+\subsubsection{Identifiers}
+
 \begin{code}
 sTermParse tk (TId i vw:tts)
   | n == keyTrue      =  return ( mkTrue tk,  tts)
@@ -337,19 +340,18 @@ sTermParse tk (TId i vw:tts)
   where n = idName i
 \end{code}
 
-Unexpected starting token:
+\subsubsection{Bad Start}
+
 \begin{code}
 sTermParse tk (tt:tts)  = fail ("sTermParse: unexpected token: "++show tt)
 \end{code}
 
-Makes bool values.  Note that use of \verb@_mathbb "B"@ here is wrong
+Makes bool values. 
 \begin{code}
 mkTrue t | isPType t  =  trueP
-mkTrue _
-  =  Val (GivenType (fromJust $ ident $ _mathbb "B")) $ Boolean True
+mkTrue _ =  Val bool $ Boolean True
 mkFalse t | isPType t  =  falseP
-mkFalse _
-  =  Val (GivenType (fromJust $ ident $ _mathbb "B")) $ Boolean False
+mkFalse _  =  Val bool $ Boolean False
 \end{code}
 
 
@@ -389,14 +391,22 @@ sAppParse' tk id1 smretbus tts
   =  fail ("sAppParse': expected ',' or ')'")
 \end{code}
 
-Seen QS, 
+Seen \texttt{QS}, 
 $$ QS~~~i~g_1 , \dots , g_n \bullet t $$
 parse the quantifier:
 \begin{code}
 setQParse [] = fail "setQParse: premature end"
-setQParse (TId i Static : tts) = fail ("setQParse: NYI "++show tts)
+setQParse (TId i Static : tts) = setQParse1 i tts
 setQParse (tok:_) = fail ("setQParse: exp. ident, found: "++show tok)
 \end{code}
+
+Seen \texttt{QS i}, 
+$$ QS~i~~~g_1 , \dots , g_n \bullet t $$
+parse the quantifier:
+\begin{code}
+setQParse1 i [] = fail "setQParse1: premature end"
+\end{code}
+
 
 Handy specialisations:
 \begin{code}

@@ -354,7 +354,7 @@ sTermParse tk (TId i vw:tts)
   | n == keyTrue      =  return ( mkTrue tk,  tts)
   | n == keyFalse     =  return ( mkFalse tk, tts)
   | n == keySetBind   =  setQParse tts
-  | n == keyListBind  =  fail "sTermParse: var-list binders NYI"
+  | n == keyListBind  =  listQParse tts
   | otherwise         =  sIdParse tk i vw tts
   where n = idName i
 \end{code}
@@ -411,6 +411,18 @@ setQParse (TId i Static : tts) = do
 setQParse (tok:_) = fail ("setQParse: exp. ident, found: "++show tok)
 \end{code}
 
+Seen \texttt{QL}, 
+$$ QL~~~i~g_1 , \dots , g_n \bullet t $$
+parse the quantifier:
+\begin{code}
+listQParse [] = fail "listQParse: premature end"
+listQParse (TId i Static : tts) = do
+  (i,sg,term,tts') <- quantParse i [] tts
+  lsterm <- pLam i (reverse $ map tok2GVar sg) term
+  return (lsterm,tts')
+listQParse (tok:_) = fail ("listQParse: exp. ident, found: "++show tok)
+\end{code}
+
 Seen \texttt{Qx i}, 
 $$ Qx~i~~~g_1 , \dots , g_n \bullet t $$
 parse the quantifier:
@@ -420,6 +432,7 @@ quantParse i sg (TSym s : tts)
   | idName s == keyQBody  =  quantParseBody i sg tts
 quantParse i sg (v@(TId _ _)    : tts)   =  quantParse' i (v:sg) tts
 quantParse i sg (lv@(TLVar _ _) : tts)   =  quantParse' i (lv:sg) tts
+quantParse i sg (tok : _)  = fail ("quantParse: unexpected token "++show tok)
 
 quantParse' i sg [] = fail ("quantParse': "++trId i++" (premature end)")
 quantParse' i sg (TSep "," : tts) = quantParse i sg tts

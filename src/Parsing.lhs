@@ -9,6 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Parsing (
   mkLawName
 , term_syntax
+, renderToken'
 , termParse
 )
 
@@ -61,11 +62,10 @@ We have the following token classes:
     and unicode macro expansion.
     \textbf{Keywords} form a subset of these.
     We expect identifiers to have one of the following concrete forms:
-    \textsf{ident},
-    \texttt{?}\textsf{ident},
-    \textsf{ident}\texttt{?},
-    \textsf{indent}\texttt\_\textsf{alphas},
-    \texttt{\_}\textsf{macro}.
+      \textsf{ident}%
+    , \texttt{?}\textsf{ident}%
+    , \textsf{ident}\texttt{?}%
+    , \textsf{ident}\texttt{?}\textsf{alphas}.
     We only expect the ``dangling space'' permitted in identifiers
     to arise as the result of macro expansion.
   \item [Delimiters]~
@@ -75,20 +75,6 @@ We have the following token classes:
     Tokens assembled from everything else,
     provided they satisfy \texttt{LexBase.validIdent}.
 \end{description}
-
-\begin{code}
-data Token
-  =  TNum   Integer
-  |  TId    Identifier VarWhen
-  |  TLVar  Identifier VarWhen  -- i$
-  |  TOpen  String
-  |  TClose String
-  |  TSep   String
-  |  TSym   Identifier
-  |  TErr   String
-  deriving (Eq,Show)
-\end{code}
-
 We shall use the question-mark as a decoration to indicate variable temporality.
 We choose this character because
 it is on both Apple, Windows and ``unix'' keyboards,
@@ -110,6 +96,39 @@ whenChar = '?'
   After & $v'$ & \texttt{v?}
 \\\hline
 \end{tabular}
+
+\subsection{Token Data Type}
+
+\begin{code}
+data Token
+  =  TNum   Integer
+  |  TId    Identifier VarWhen
+  |  TLVar  Identifier VarWhen  -- i$
+  |  TOpen  String
+  |  TClose String
+  |  TSep   String
+  |  TSym   Identifier
+  |  TErr   String
+  deriving (Eq,Show)
+\end{code}
+
+We provide some rendering code, mostly for error reporting:
+\begin{code}
+renderToken :: Token -> String
+renderToken (TNum i) = show i
+renderToken (TId i Static) = idName i
+renderToken (TId i Before) = whenChar : idName i
+renderToken (TId i (During d)) = idName i ++ whenChar : d
+renderToken (TId i After) = idName i ++ [whenChar]
+renderToken (TOpen str) = str
+renderToken (TClose str) = str
+renderToken (TSep str) = str
+renderToken (TSym i) = idName i
+renderToken (TErr str) = str
+
+-- useful for lists
+renderToken' tok = ' ' : renderToken tok
+\end{code}
 
 
 \subsection{Character Classes}
@@ -376,7 +395,7 @@ sTermParse (TId i vw:tts)
 \subsubsection{Bad Start}
 
 \begin{code}
-sTermParse (tt:tts)  = fail ("sTermParse: unexpected token: "++show tt)
+sTermParse (tt:tts)  = fail ("sTermParse: unexpected token: "++renderToken tt)
 \end{code}
 
 \subsubsection{Constructions}
@@ -422,7 +441,7 @@ setQParse (TId i Static : tts) = do
   (i,sg,term,tts') <- quantParse i [] tts
   qsterm <- pBnd i (S.fromList $ map tok2GVar sg) term
   return (qsterm,tts')
-setQParse (tok:_) = fail ("setQParse: exp. ident, found: "++show tok)
+setQParse (tok:_) = fail ("setQParse: exp. ident, found: "++renderToken tok)
 \end{code}
 
 Seen \texttt{QL}, 
@@ -434,7 +453,7 @@ listQParse (TId i Static : tts) = do
   (i,sg,term,tts') <- quantParse i [] tts
   lsterm <- pLam i (reverse $ map tok2GVar sg) term
   return (lsterm,tts')
-listQParse (tok:_) = fail ("listQParse: exp. ident, found: "++show tok)
+listQParse (tok:_) = fail ("listQParse: exp. ident, found: "++renderToken tok)
 \end{code}
 
 Seen \texttt{Qx i}, and zero or more \texttt{g\_i}:
@@ -446,7 +465,7 @@ quantParse i sg (TSym s : tts)
   | idName s == keyQBody  =  quantParseBody i sg tts
 quantParse i sg (v@(TId _ _)    : tts)   =  quantParse i (v:sg) tts
 quantParse i sg (lv@(TLVar _ _) : tts)   =  quantParse i (lv:sg) tts
-quantParse i sg (tok : _)  = fail ("quantParse: unexpected token "++show tok)
+quantParse i sg (tok : _)  = fail ("quantParse: unexpected token "++renderToken tok)
 \end{code}
 
 Seen \texttt{Qx i g\_1 .. g\_n @}, 
@@ -482,6 +501,7 @@ tparse str
   = case termParse str of
       Yes (term,tokens) 
         | null tokens -> putStrLn $ trTerm 0 term
-        | otherwise   -> putStrLn ("tokens leftover: "++show tokens)
+        | otherwise   -> putStrLn ( "tokens leftover: " ++
+                                     concat (map renderToken' tokens) )
       But msgs -> putStrLn $ unlines' msgs
 \end{code}

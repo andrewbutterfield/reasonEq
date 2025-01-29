@@ -512,8 +512,10 @@ newConj cjnm reqs
   where
     parse txt =
       case termParse txt of
-        But msgs      ->  But msgs
-        Yes (term,_)  ->  Yes term
+        But msgs         ->  But msgs
+        Yes (term,[])    ->  Yes term
+        Yes (term,xtra)  ->  But [ "Error: leftover tokens" 
+                                 , concat (map renderToken' xtra) ]
 \end{code}
                   
 

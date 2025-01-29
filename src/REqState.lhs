@@ -11,6 +11,7 @@ module REqState ( REqState(..), reqstate0
                 , theories__, theories_
                 , prfSettings__, prfSettings_
                 , currTheory__, currTheory_, liveProofs__, liveProofs_
+                , getCurrentTheory
                 , renderREqState
                 , parseREqState1, parseProofSettings, parseREqState2
                 , module TermZipper
@@ -106,6 +107,17 @@ reqstate0 = REqState { inDevMode = False
                      , currTheory = ""
                      , liveProofs = M.empty }
 \end{code}
+
+\newpage
+\section{Compound State Queries}
+
+\subsection{Get The Current Theory}
+
+\begin{code}
+getCurrentTheory :: MonadFail m => REqState -> m Theory
+getCurrentTheory reqs = getTheory (currTheory reqs) (theories reqs)
+\end{code}
+
 
 \newpage
 \section{Rendering and Parsing State}

@@ -186,8 +186,6 @@ observeCurrTheory reqs
  = case getCurrentTheory reqs of
      Nothing    ->  "No current theory."
      Just thry  ->  showTheoryLong (trTerm 0, trSideCond) thry
-
-getCurrentTheory reqs = getTheory (currTheory reqs) (theories reqs)
 \end{code}
 
 \subsection{Observing Current Conjectures}

@@ -6,8 +6,9 @@ We will use the need to expand the `Sets` theory to drive a mechanism to read co
 
 * the original conjecture parser has been tweaked and can now be read from a file.
 * no file naming convention as of yet (`TheoryName/conj_name-conj.txt` ?)
-* need to add the project path, and maybe the theory name as a prefix to the user supplied filename.
 * need to define syntax for and handle substitutions
+* need to be able to declare variables
+* need to have proper line/position numbers for better error messages
 
 
 ### RANKING BUSTED

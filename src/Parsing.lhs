@@ -8,7 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Parsing (
   mkLawName
-, s_syntax
+, term_syntax
 , termParse
 )
 
@@ -29,6 +29,7 @@ import Variables
 import AST
 import SideCond
 import TestRendering
+import StdTypeSignature
 
 import Debugger
 \end{code}
@@ -263,30 +264,36 @@ The abstract syntax:
    b &\in& Bool
 \\ n &\in& Num
 \\ i &\in& Ident
-\\ v &\in& Var = Ident \times \dots
+\\ v &\in& Var = Ident \times VarWhen
+\\ \lst v &\in& LVar = Var \times Less
+\\ g &\in& GVar =  Var \uplus LVar
+\\ gs &\in& GVarList = GVar^*
 \\ t &\in& Term ::= b
                \mid n
                \mid v
                \mid i~(t_1,\dots,t_n)
-               \mid \mathcal Q ~i ~\lst v \bullet t
+               \mid \mathcal Q ~i ~gs \bullet t
 \end{eqnarray*}
 
 The concrete syntax (non-terminals in \verb@<..>@):
 \begin{code}
-s_syntax
- = [ "Lexical Tokens:"
+term_syntax
+ = [ "** Lexical Tokens:"
    , "n : int with optional leading minus"
    , "i : reasonEq identifier"
+   , "** Variable Syntax:"
    , "<v> ::= i | ?i | i? | i?i"
+   , "lowercase i are ObsVar, uppercase are TermVar"
    , "<lv> ::= <v>$"
-   , "Term Syntax:"
+   , "<gv> ::=  <v> | <lv>"
+   , "** Term Syntax:"
    , "<b> ::= true | false"
    , "<q> ::= QS | QL"
-   , "<gv> ::=  <v> | <lv>"
-   , "<t> ::= <b>  |  n  |  <v>  |  i ( <t> , ... , <t> )"
-   , "             |  <q> i <gv> , ... , <gv> @ <t>"
-   , "keywords: true false QS QL"
-   , "keysymbols: ? $ ( , ) @"
+   , "<t> ::= <b>  |  n  |  <v>"
+   , "     |  i ( <t> , ... , <t> )"
+   , "     |  <q> i <gv> ... <gv> @ <t>"
+   , "** Keywords:   true  false  QS  QL"
+   , "** Keysymbols: ?  $  (  ,  )  @"
    ]
 
 keyTrue = "true"
@@ -305,24 +312,31 @@ true = Vbl (fromJust $ ident "true") PredV Static
 trueP = fromJust $ pVar ArbType true
 false = Vbl (fromJust $ ident "false") PredV Static
 falseP = fromJust $ pVar ArbType false
-mkTrue t | isPType t  =  trueP
+mkTrue n | isUpper $ head n  =  trueP
 mkTrue _ =  Val bool $ Boolean True
-mkFalse t | isPType t  =  falseP
+mkFalse n | isUpper $ head n  =  falseP
 mkFalse _  =  Val bool $ Boolean False
 \end{code}
 
-Making variables and terms:
+Making variables and variable-terms
+
+For now the variable class is determined by the first character
+of the identifier.
+The simplest is the case, lower being an observable, higher a term.
+
+
 \begin{code}
-mkV tp id1 vw 
-  | isPType tp  =  Vbl id1 PredV vw
-  | otherwise   =  Vbl id1 ObsV  vw
+mkV id1 vw 
+  | isUpper $ head iname  =  Vbl id1 PredV vw
+  | otherwise             =  Vbl id1 ObsV  vw
+  where iname = idName id1
 
-mkLV tp id1 vw  = LVbl (mkV tp id1 vw) [] []
+mkLV id1 vw  = LVbl (mkV id1 vw) [] []
 
-mkVarTerm tp id1 vw =  fromJust $ var tp $ mkV tp id1 vw
+mkVarTerm id1 vw =  fromJust $ var ArbType $ mkV id1 vw
 
-tok2GVar (TId i vw)    = StdVar $ mkV ArbType i vw
-tok2GVar (TLVar i vw ) = LstVar $ mkLV ArbType i vw
+tok2GVar (TId i vw)    = StdVar $ mkV i vw
+tok2GVar (TLVar i vw ) = LstVar $ mkLV i vw
 \end{code}
 
 
@@ -331,46 +345,46 @@ tok2GVar (TLVar i vw ) = LstVar $ mkLV ArbType i vw
 \subsection{Term Parser}
 
 \begin{code}
-sTermParse :: MonadFail m => Type -> [Token] -> m (Term, [Token])
-sTermParse tk [] =  fail "sTermParse: nothing to parse"
+sTermParse :: MonadFail m => [Token] -> m (Term, [Token])
+sTermParse [] =  fail "sTermParse: nothing to parse"
 \end{code}
 
 \subsubsection{Numbers}
 
 \begin{code}
-sTermParse tk (TNum n:tts) = return ( Val tk $ Integer n, tts)
+sTermParse (TNum n:tts) = return ( Val int $ Integer n, tts)
 \end{code}
 
 \subsubsection{Symbols}
 
 \begin{code}
-sTermParse tk (TSym i:tts) = sIdParse tk i Static tts
+sTermParse (TSym i:tts) = sIdParse i Static tts
 \end{code}
 
 \subsubsection{Identifiers}
 
 \begin{code}
-sTermParse tk (TId i vw:tts)
-  | n == keyTrue      =  return ( mkTrue tk,  tts)
-  | n == keyFalse     =  return ( mkFalse tk, tts)
+sTermParse (TId i vw:tts)
+  | n == keyTrue      =  return ( mkTrue n,  tts)
+  | n == keyFalse     =  return ( mkFalse n, tts)
   | n == keySetBind   =  setQParse tts
   | n == keyListBind  =  listQParse tts
-  | otherwise         =  sIdParse tk i vw tts
+  | otherwise         =  sIdParse i vw tts
   where n = idName i
 \end{code}
 
 \subsubsection{Bad Start}
 
 \begin{code}
-sTermParse tk (tt:tts)  = fail ("sTermParse: unexpected token: "++show tt)
+sTermParse (tt:tts)  = fail ("sTermParse: unexpected token: "++show tt)
 \end{code}
 
 \subsubsection{Constructions}
 
 Seen an identifier, check for an opening parenthesis:
 \begin{code}
-sIdParse tk id1 vw (TOpen "(" : tts)  =  sAppParse tk id1 [] tts
-sIdParse tk id1 vw tts                =  return (mkVarTerm tk id1 vw, tts)
+sIdParse id1 vw (TOpen "(" : tts)  =  sAppParse id1 [] tts
+sIdParse id1 vw tts                =  return (mkVarTerm id1 vw, tts)
 \end{code}
 
 
@@ -378,29 +392,29 @@ Seen identifier and opening parenthesis.
 $$ i(~~~t_1,\dots,t_n) $$
 Look for sub-term, or closing parenthesis.
 \begin{code}
-sAppParse tk id1 smretbus (TClose ")" : tts)
-  = return ( Cons tk True id1 $ reverse smretbus, tts)
-sAppParse tk id1 smretbus tts
-  = do (tsub',tts') <- sTermParse tk tts
-       sAppParse' tk id1 (tsub':smretbus) tts'
+sAppParse id1 smretbus (TClose ")" : tts)
+  = return ( Cons arbpred True id1 $ reverse smretbus, tts)
+sAppParse id1 smretbus tts
+  = do (tsub',tts') <- sTermParse tts
+       sAppParse' id1 (tsub':smretbus) tts'
 \end{code}
 
 \newpage
 Seen (sub-) term.
 Looking for comma or closing parenthesis
 \begin{code}
-sAppParse' tk id1 smretbus (TSep "," : tts)
-  =  sAppParse tk id1 smretbus tts
-sAppParse' tk id1 smretbus (TClose ")" : tts)
-  =  return ( Cons tk True id1 $ reverse smretbus, tts)
-sAppParse' tk id1 smretbus tts
+sAppParse' id1 smretbus (TSep "," : tts)
+  =  sAppParse id1 smretbus tts
+sAppParse' id1 smretbus (TClose ")" : tts)
+  =  return ( Cons arbpred True id1 $ reverse smretbus, tts)
+sAppParse' id1 smretbus tts
   =  fail ("sAppParse': expected ',' or ')'")
 \end{code}
 
 \subsubsection{Quantifiers}
 
 Seen \texttt{QS}, 
-$$ QS~~~i~g_1 , \dots , g_n \bullet t $$
+$$ QS~~~i~g_1 \dots g_n \bullet t $$
 parse the quantifier:
 \begin{code}
 setQParse [] = fail "setQParse: premature end"
@@ -412,7 +426,7 @@ setQParse (tok:_) = fail ("setQParse: exp. ident, found: "++show tok)
 \end{code}
 
 Seen \texttt{QL}, 
-$$ QL~~~i~g_1 , \dots , g_n \bullet t $$
+$$ QL~~~i~g_1 \dots g_n \bullet t $$
 parse the quantifier:
 \begin{code}
 listQParse [] = fail "listQParse: premature end"
@@ -423,32 +437,25 @@ listQParse (TId i Static : tts) = do
 listQParse (tok:_) = fail ("listQParse: exp. ident, found: "++show tok)
 \end{code}
 
-Seen \texttt{Qx i}, 
-$$ Qx~i~~~g_1 , \dots , g_n \bullet t $$
+Seen \texttt{Qx i}, and zero or more \texttt{g\_i}:
+$$ Qx~i~g_1 \dots g_i ~~~~~ g_{i+1} \dots g_n \bullet t $$
 parse the quantifier:
 \begin{code}
 quantParse i _ [] = fail ("quantParse: "++trId i++" (premature end)")
 quantParse i sg (TSym s : tts)
   | idName s == keyQBody  =  quantParseBody i sg tts
-quantParse i sg (v@(TId _ _)    : tts)   =  quantParse' i (v:sg) tts
-quantParse i sg (lv@(TLVar _ _) : tts)   =  quantParse' i (lv:sg) tts
+quantParse i sg (v@(TId _ _)    : tts)   =  quantParse i (v:sg) tts
+quantParse i sg (lv@(TLVar _ _) : tts)   =  quantParse i (lv:sg) tts
 quantParse i sg (tok : _)  = fail ("quantParse: unexpected token "++show tok)
-
-quantParse' i sg [] = fail ("quantParse': "++trId i++" (premature end)")
-quantParse' i sg (TSep "," : tts) = quantParse i sg tts
-quantParse' i sg (TSym s : tts)
-  | idName s == keyQBody  = quantParseBody i sg tts
-quantParse' i sg (tok:_) 
-  = fail ("quantParse': saw "++show tok++" when ',' or '@' expected")
 \end{code}
 
-Seen \texttt{Qx i g\_1,..,g\_n @}, 
-$$ Qx~i~g_1 , \dots , g_n \bullet ~~~ t $$
+Seen \texttt{Qx i g\_1 .. g\_n @}, 
+$$ Qx~i~g_1 \dots g_n \bullet ~~~ t $$
 parse the body term
 \begin{code}
 quantParseBody i _ [] = fail ("quantParse: "++trId i++" (missing body)")
 quantParseBody i sg tts = do
-  (term,toks) <- sTermParse arbpred tts
+  (term,toks) <- sTermParse tts
   return (i,sg,term,toks)
 \end{code}
 
@@ -456,7 +463,7 @@ quantParseBody i sg tts = do
 
 \begin{code}
 termParse :: MonadFail m => String -> m (Term, [Token])
-termParse = sTermParse arbpred . tlex
+termParse = sTermParse . tlex
 \end{code}
 
 \newpage

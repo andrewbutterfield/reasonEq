@@ -2,13 +2,15 @@
 
 ## URGENT or NEXT
 
+When a numbered list is a singleton and is automatically chosen, it should identify what was chosen.
+
 We will use the need to expand the `Sets` theory to drive a mechanism to read conjectures from a text file.
 
-* the original conjecture parser has been tweaked and can now be read from a file.
 * no file naming convention as of yet (`TheoryName/conj_name-conj.txt` ?)
 * need to define syntax for and handle substitutions
 * need to be able to declare variables
 * need to have proper line/position numbers for better error messages
+* should save live-proofs outside `project.req`.
 
 
 ### RANKING BUSTED
@@ -53,9 +55,6 @@ it should be obvious that `O$,O$' ∉ E`. No need for an explicit side-condition
  Allow user to toggle between which s.c. version is displayed
     (currently both are)?
 
-Need to be able to save proof from within a live proof.
-
-Trivial quantifiers are being shown even when disabled
 
 ```
 1 : “exists_def” [≡lhs] ¬(¬(X(E1,a,R1,N1)))
@@ -90,11 +89,6 @@ Start Developing theories for:
 
 Want to have general settings away from files that contain syntax,
 so that syntax changes only affect those files, and not the settings.
-
-So proof settings should not be in `project.req`, for instance.
-Lets use `settings.req` instead.
-
-**Should proof settings should be per proof??**
 
 Proof settings command syntax is dreadful!
 Should be the same in main and proof REPLs

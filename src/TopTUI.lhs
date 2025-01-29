@@ -382,16 +382,18 @@ cmdParseConj
 
 parseEntities [cnj,fname] reqs
   | cnj == cnjObj = do
-    putStrLn ("parsing conjecture from '"++fname++"'")
-    fileExists <- doesFileExist fname
+    thry <- getCurrentTheory reqs
+    let projpath = projectDir reqs </> thName thry </> fname
+    putStrLn ("Parsing conjecture from "++projpath)
+    fileExists <- doesFileExist projpath
     if fileExists
     then do
-      text <- readFile fname
+      text <- readFile projpath
       putStrLn text
       case parseConjecture text reqs of
         Yes reqs' ->  doshow reqs' "Parsed successfully"
         But msgs  -> doshow reqs $ unlines msgs
-    else doshow reqs "file not found"
+    else doshow reqs "File not found"
 parseEntities _ reqs = doshow reqs "unknown parse option"
 \end{code}
 
@@ -459,7 +461,7 @@ cmdNew
         ( [ "new "++shWork++" nm /absdirpath -- new workspace"
           , "       -- do not use '~' or environment variables"
           , "new "++shConj++" 'conj_name' -- new conjecture 'conj_name'"
-          ] ++ s_syntax )
+          ] ++ term_syntax )
     , newThing )
 
 newThing cmdargs@[cmd,nm,fp] reqs
@@ -492,7 +494,7 @@ newWorkspace wsName wsPath reqs
 New Conjecture:
 \begin{code}
 newConj cjnm reqs
-  = do  let prompt = unlines s_syntax 
+  = do  let prompt = unlines term_syntax 
                      ++ "New conj, '"++cjnm++"', enter term :- "
         let preview = trTerm 0
         (ok,term) <- getConfirmedObject prompt parse preview

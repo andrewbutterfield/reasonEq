@@ -125,6 +125,7 @@ proofREPLConfig
             , substituteDescr
             , showProofSettingsDescr
             , modPrfSettingsDescr
+            , saveLiveProofDescr
             , flatEquivDescr
             , groupEquivDescr
             , lawInstantiateDescr
@@ -206,6 +207,25 @@ modProofSettings args@[name,val] state@(reqs, liveProof)
          Yes prfset' -> return (reqs, liveSettings_ prfset' liveProof)
 modProofSettings _ state = return state
 \end{code}
+
+\section{Saving}
+
+Saving the proof to a file:
+\begin{code}
+saveLiveProofDescr = ( "save"
+                     , "save live-proof snapshot"
+                     , ""
+                     , saveLiveProofCommand )
+
+saveLiveProofCommand :: REPLCmd (REqState, LiveProof)
+saveLiveProofCommand _ pstate@(reqs, liveProof)
+  =  do let reqs' = updateProof reqs liveProof
+        reqs'' <- saveAllState reqs'
+        putStrLn "Live proof saved"
+        waitForReturn
+        return (reqs'', liveProof)
+\end{code}
+
 
 
 \section{Listings}

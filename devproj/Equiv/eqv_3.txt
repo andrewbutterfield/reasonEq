@@ -1,0 +1,2 @@
+eqv_3
+eqv(eqv(P,eqv(P,P)),P)

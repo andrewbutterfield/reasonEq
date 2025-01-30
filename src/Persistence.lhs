@@ -362,9 +362,9 @@ writeNamedTheoryTxt pjdir (thnm,(thTxt,pTxts))
     doWriteTheoryTxt pjdir thnm thTxt
       = do  let fp = theoryPath pjdir thnm
             writeFile fp $ unlines thTxt
-            putStrLn ("Theory '"++thnm++"' written to '"++pjdir++"'.")
+            -- putStrLn ("Theory '"++thnm++"' written to '"++pjdir++"'.")
             sequence_ $ map (writeProof pjdir thnm) pTxts
-            putStrLn ("Proofs in '"++thnm++"' written to '"++pjdir++"'.")
+            -- putStrLn ("Proofs in '"++thnm++"' written to '"++pjdir++"'.")
 \end{code}
 
 \begin{code}
@@ -461,9 +461,9 @@ saveProof prjdir proof@(thnm,prfnm,_,_,_) = do
 \begin{code}
 writeProof :: FilePath -> String -> (String,String) -> IO ()
 writeProof  prjdir thnm (prfnm,pfstr) 
-  = do  putStrLn ("writeProof "++show [thnm,prfnm])
+  = do  -- putStrLn ("writeProof "++show [thnm,prfnm])
         let fp = proofPath prjdir thnm prfnm
-        putStrLn ("writeProof.fp = "++fp)
+        -- putStrLn ("writeProof.fp = "++fp)
         ifDirectoryExists "Proof" () prjdir (writeFile fp pfstr)   
 
 \end{code}

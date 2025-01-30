@@ -2,6 +2,22 @@
 
 ## URGENT or NEXT
 
+Still a strange matching going on in X-X-simple.
+
+5 is OK as goal has `∃ s_1`, but 6 magics up a `∃ s`. Both are [≡rhs].
+
+
+```
+6 : “and_exists_scope” [≡rhs]
+    (E1 ⊆ ls ∧ (E2 ⊆ ls \ R1 ∪ N1 ∧ ls' = (ls \ R1 ∪ N1) \ R2 ∪ N2)) ∧ (∃ s  • (a[s_1/s'] ∧ b[s_1/s]))
+    ls,ls',s,s'∉E1, ls,ls',s,s'∉E2, ls,ls',s,s'∉N1, ls,ls',s,s'∉N2, ls,ls',s,s'∉R1, ls,ls',s,s'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1 ⟹ s∉E1, s∉E2, s∉N1, s∉N2, s∉R1, s∉R2
+5 : “and_exists_scope” [≡rhs]
+    (E1 ⊆ ls ∧ (E2 ⊆ ls \ R1 ∪ N1 ∧ ls' = (ls \ R1 ∪ N1) \ R2 ∪ N2)) ∧ (∃ s_1  • (a[s_1/s'] ∧ b[s_1/s]))
+    ls,ls',s,s'∉E1, ls,ls',s,s'∉E2, ls,ls',s,s'∉N1, ls,ls',s,s'∉N2, ls,ls',s,s'∉R1, ls,ls',s,s'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1 ⟹ s_1∉E1, s_1∉E2, s_1∉N1, s_1∉N2, s_1∉R1, s_1∉R2
+```
+
+This also happens with laws `exists_swap` ([≡lhs],[≡rhs]), `exists_def` ([≡lhs]).
+
 When a numbered list is a singleton and is automatically chosen, it should identify what was chosen.
 
 We will use the need to expand the `Sets` theory to drive a mechanism to read conjectures from a text file.

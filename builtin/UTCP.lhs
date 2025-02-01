@@ -350,6 +350,8 @@ areUTCPAtomic :: [GenVar] -> SideCond
 areUTCPAtomic gcs = mrgscs $ map isUTCPAtomic gcs
 \end{code}
 
+\subsubsection{Extended Atomic Actions}
+
 \RLEQNS{
    X(E|a|R|N)
    ~\defs~
@@ -372,6 +374,10 @@ axXDef = ( "X" -.- "def"
              (tls' `isEqualTo` ((tls `sdiff` tR) `sunion` tN))
            , xactSC ) )
 \end{code}
+
+We note that the following is true: \m{X(E|a|R|N) = X(E|a|(R\setminus N)|N)}.
+
+\subsubsection{``Regular'' Atomic Actions}
 
 \RLEQNS{
    A(E|a|N)
@@ -398,8 +404,33 @@ cjAAlt = ( "A" -.- "alt"
            , aactSC ) ) 
 \end{code}
 
+We note that \m{A(E_1|a|N_1) ; A(E_2|a|N_2)}
+is \m{X(E_1|a|E_1|N_1) ; X(E_2|a|E_2|N_2)}
+which expands to
+$$
+E_2 \cap (E_1\sminus N_1) = \emptyset
+\land
+X(E_1 \cup (E_2\sminus N_1)
+       \mid a\seq b
+       \mid E_1 \cup E_2
+       \mid (N_1 \sminus E_2) \cup  N_2)
+$$
+(see conjecture below)
+Noting that \m{E_i \disj N_i} this collapses to:
+$$
+E_2 \cap E_1  = \emptyset
+\land
+X(E_1 \cup (E_2\sminus N_1)
+       \mid a\seq b
+       \mid E_1 \cup E_2
+       \mid (N_1 \sminus E_2) \cup  N_2)
+$$
+
+
+
+
 \newpage
-\subsubsection{Atomic Action Composition}
+\subsubsection{eXtended Atomic Action Composition}
 
 The most important law we need is that regarding sequential composition
 of $X$-actions:

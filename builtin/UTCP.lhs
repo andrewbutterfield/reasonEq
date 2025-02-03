@@ -459,7 +459,7 @@ vN2 = ExprVar (jId "N2") Static ; sN2 = jVar ls_t vN2
 cjXXComp = ( "X" -.- "X" -.- "comp"
            , ( mkSeq (xact sE1 a sR1 sN1) (xact sE2 b sR2 sN2)
                ===
-               (sE2 `sunion` (sR1 `sdiff` sN1) `isEqualTo` mtset)
+               (sE2 `sintsct` (sR1 `sdiff` sN1) `isEqualTo` mtset)
                /\
                (xact 
                  (sE1 `sunion` (sE2 `sdiff` sN1)) 

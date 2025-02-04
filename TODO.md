@@ -22,7 +22,7 @@ When a numbered list is a singleton and is automatically chosen, it should ident
 
 We will use the need to expand the `Sets` theory to drive a mechanism to read conjectures from a text file.
 
-* no file naming convention as of yet (`TheoryName/conj_name-conj.txt` ?)
+* Now have conjecture naming convention: `conj_name-conj.txt`.
 * need to define syntax for and handle substitutions
 * need to be able to declare variables
 * need to have proper line/position numbers for better error messages

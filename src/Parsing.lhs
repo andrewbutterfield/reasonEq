@@ -352,7 +352,7 @@ mkV id1 vw
 
 mkLV id1 vw  = LVbl (mkV id1 vw) [] []
 
-mkVarTerm id1 vw =  fromJust $ var ArbType $ mkV id1 vw
+mkVarTerm id1 vw  =  fromJust $ var arbpred $ mkV id1 vw
 
 tok2GVar (TId i vw)    = StdVar $ mkV i vw
 tok2GVar (TLVar i vw ) = LstVar $ mkLV i vw

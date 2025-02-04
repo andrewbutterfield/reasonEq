@@ -377,13 +377,18 @@ cmdParseConj :: REqCmdDescr
 cmdParseConj
   = ( "prs"
     , "parse stuff"
-    , unlines [ "prs "++cnjObj++" fname - parse conjecture from file" ]
+    , unlines 
+        [ "prs "++cnjObj++" conjname - parse conjecture from file" 
+        , "    conjecture in <projdir>/<thnm>/<conjname>-conj.txt"
+        ]
     , parseEntities )
 
-parseEntities [cnj,fname] reqs
+conjtxt = "-conj.txt"
+
+parseEntities [cnj,cname] reqs
   | cnj == cnjObj = do
     thry <- getCurrentTheory reqs
-    let projpath = projectDir reqs </> thName thry </> fname
+    let projpath = projectDir reqs </> thName thry </> (cname++conjtxt)
     putStrLn ("Parsing conjecture from "++projpath)
     fileExists <- doesFileExist projpath
     if fileExists

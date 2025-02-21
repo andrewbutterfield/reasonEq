@@ -188,6 +188,7 @@ mkMys  =  mkSym . reverse   ;   mkDi   =  mkId . reverse
 mkRavL = mkLVar . reverse
 \end{code}
 
+\newpage 
 Now we define the lexer:
 \begin{code}
 tlex :: String -> [Token]
@@ -204,7 +205,7 @@ tlex str@(c:cs)
   | otherwise            =  tlexSym [c] cs
 \end{code}
 
-\newpage
+
 Just digits
 \begin{code}
 tlexNum mun ""  = [ mkNum mun ]
@@ -283,6 +284,7 @@ The abstract syntax:
    b &\in& Bool
 \\ n &\in& Num
 \\ i &\in& Ident
+\\ s &\in& \setof{nonsub,cansub}
 \\ v &\in& Var = Ident \times VarWhen
 \\ \lst v &\in& LVar = Var \times Less
 \\ g &\in& GVar =  Var \uplus LVar
@@ -290,7 +292,7 @@ The abstract syntax:
 \\ t &\in& Term ::= b
                \mid n
                \mid v
-               \mid i~(t_1,\dots,t_n)
+               \mid i~s~(t_1,\dots,t_n)
                \mid \mathcal Q ~i ~gs \bullet t
 \end{eqnarray*}
 
@@ -300,6 +302,7 @@ term_syntax
  = [ "** Lexical Tokens:"
    , "n : int with optional leading minus"
    , "i : reasonEq identifier"
+   , "s : substitutability non(N) can(S))"
    , "** Variable Syntax:"
    , "<v> ::= i | ?i | i? | i?i"
    , "lowercase i are ObsVar, uppercase are TermVar"
@@ -309,7 +312,7 @@ term_syntax
    , "<b> ::= true | false"
    , "<q> ::= QS | QL"
    , "<t> ::= <b>  |  n  |  <v>"
-   , "     |  i ( <t> , ... , <t> )"
+   , "     |  i s ( <t> , ... , <t> )"
    , "     |  <q> i <gv> ... <gv> @ <t>"
    , "** Keywords:   true  false  QS  QL"
    , "** Keysymbols: ?  $  (  ,  )  @"
@@ -400,10 +403,13 @@ sTermParse (tt:tts)  = fail ("sTermParse: unexpected token: "++renderToken tt)
 
 \subsubsection{Constructions}
 
-Seen an identifier, check for an opening parenthesis:
+Seen an identifier, check for a substitutability indicator,
+followed by an opening parenthesis:
 \begin{code}
-sIdParse id1 vw (TOpen "(" : tts)  =  sAppParse id1 [] tts
-sIdParse id1 vw tts                =  return (mkVarTerm id1 vw, tts)
+sIdParse id1 vw (TId (Identifier subable _) _ : TOpen "(" : tts)
+  |  subable == "N"  =  sAppParse id1 False [] tts
+  |  subable == "S"  =  sAppParse id1 True  [] tts
+sIdParse id1 vw tts  =  return (mkVarTerm id1 vw, tts)
 \end{code}
 
 
@@ -411,22 +417,22 @@ Seen identifier and opening parenthesis.
 $$ i(~~~t_1,\dots,t_n) $$
 Look for sub-term, or closing parenthesis.
 \begin{code}
-sAppParse id1 smretbus (TClose ")" : tts)
-  = return ( Cons arbpred True id1 $ reverse smretbus, tts)
-sAppParse id1 smretbus tts
+sAppParse id1 subable smretbus (TClose ")" : tts)
+  = return ( Cons arbpred subable id1 $ reverse smretbus, tts)
+sAppParse id1 subable smretbus tts
   = do (tsub',tts') <- sTermParse tts
-       sAppParse' id1 (tsub':smretbus) tts'
+       sAppParse' id1 subable (tsub':smretbus) tts'
 \end{code}
 
 \newpage
 Seen (sub-) term.
 Looking for comma or closing parenthesis
 \begin{code}
-sAppParse' id1 smretbus (TSep "," : tts)
-  =  sAppParse id1 smretbus tts
-sAppParse' id1 smretbus (TClose ")" : tts)
-  =  return ( Cons arbpred True id1 $ reverse smretbus, tts)
-sAppParse' id1 smretbus tts
+sAppParse' id1 subable smretbus (TSep "," : tts)
+  =  sAppParse id1 subable smretbus tts
+sAppParse' id1 subable smretbus (TClose ")" : tts)
+  =  return ( Cons arbpred subable id1 $ reverse smretbus, tts)
+sAppParse' id1 subable smretbus tts
   =  fail ("sAppParse': expected ',' or ')'")
 \end{code}
 

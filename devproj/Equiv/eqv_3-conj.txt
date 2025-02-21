@@ -1,2 +1,2 @@
 eqv_3
-eqv(eqv(P,eqv(P,P)),P)
+eqv S (eqv S (P,eqv S (P,P)),P)

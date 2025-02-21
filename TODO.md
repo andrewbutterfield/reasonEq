@@ -2,6 +2,8 @@
 
 ## URGENT or NEXT
 
+Want to improve the "simple language"
+
 Still a strange matching going on in X-X-simple.
 
 5 is OK as goal has `∃ s_1`, but 6 magics up a `∃ s`. Both are [≡rhs].

@@ -2,14 +2,11 @@
 
 ## URGENT or NEXT
 
-`UTPSignature` defines the signature of the while-language plus refinement.
-The `bookdef` function belongs somewhere else (`UTPBook` module?).
-
-Need to identify which `UTPBase` semantics defns work in both Chp2 (naïve)
-and Chp 3 (Designs).
-Need a `Designs` theory. 
-Need a `NaiveWhile` theory.
-Need a `DesignWhile` theory.
+* `UTPSignature` defines the signature of the while-language plus refinement. The `bookdef` function belongs somewhere else (`UTPBook` module?). *DONE*
+* Need a `NaiveWhile` theory. *DONE*
+* Need to identify which `UTPBase` semantics defns work in both Chp2 (naïve) and Chp 3 (Designs).
+* Need a `Designs` theory. 
+* Need a `DesignWhile` theory.
 
 Want to improve the "simple language"
 

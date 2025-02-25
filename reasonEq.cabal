@@ -81,10 +81,9 @@ library
       StdTypeSignature
       UClose
       UTCP
-      UTPBase
-      UTPSignature
-      XYZ
-      XYZDesign
+      UTPNaiveWhile
+      UTPReading
+      UTPWhileRefineSig
   other-modules:
       Paths_reasonEq
   hs-source-dirs:

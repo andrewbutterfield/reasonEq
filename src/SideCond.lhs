@@ -697,7 +697,7 @@ It is worth noting side conditions currently in use:
      $\lst x \disj P \qquad \lst x \disj e \qquad \lst y \disj P$
    \item[UClose]~\\
     $\lst x \supseteq P \qquad \emptyset \supseteq P$
-  \item[UTPBase]~\\
+  \item[UTPNaiveWhile]~\\
     $
       \lst O,\lst O' \supseteq_a P
       \quad

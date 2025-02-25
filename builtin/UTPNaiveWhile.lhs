@@ -1,4 +1,4 @@
-\chapter{UTP Base}
+\chapter{UTP Na\"{i}ve While}
 \begin{verbatim}
 Copyright  Andrew Butterfield, Danny Thomas (c) 2019
 
@@ -6,7 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module UTPBase (
+module UTPNaiveWhile (
   isUTPDynObs, areUTPDynObs, isUTPCond, areUTPCond, isUTPStcObs
 , areUTPStcObs
 , utpBaseConjs, utpBaseName, utpBaseTheory
@@ -54,9 +54,9 @@ import Debugger
 \section{Introduction}
 
 
-By ``UTP Base'' we mean the basic most common UTP definitions
-introduced in Chapter 1 and the first part of Chapter 2
-in the UTP book \cite{UTP-book}.
+By ``UTP Na\"{i}ve While'' we mean 
+the basic most common UTP definitions introduced in Chapter 1 
+and the first part of Chapter 2 of the UTP book \cite{UTP-book}.
 
 The term ``refinement calculus'' is used in the book in Sec. 3.1,
 but the refinement notation ($\sqsubseteq$) is not.
@@ -920,7 +920,7 @@ utpBaseAliases
 
 \begin{code}
 utpBaseName :: String
-utpBaseName = "UTPBase"
+utpBaseName = "UTPNaiveWhile"
 utpBaseTheory :: Theory
 utpBaseTheory
   =  nullTheory { thName  =  utpBaseName

@@ -46,7 +46,7 @@ import ForAll
 import Exists
 import UClose
 import UTPWhileRefineSig
-import UTPBase
+import UTPNaiveWhile
 import Arithmetic
 import Sets
 import Lists

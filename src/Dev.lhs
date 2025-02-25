@@ -44,7 +44,7 @@ import Equality
 import Arithmetic
 import Sets
 import Lists
-import UTPBase
+import UTPNaiveWhile
 import UTCP
 --import XYZ
 --import XYZDesign

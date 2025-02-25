@@ -42,7 +42,7 @@ import Ranking
 import ProofSettings
 import REqState
 import AbstractUI
-import UTPSignature
+import UTPWhileRefineSig
 import Instantiate
 import TestRendering
 import Parsing

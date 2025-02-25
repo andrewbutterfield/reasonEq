@@ -1,4 +1,4 @@
-\section{UTP Signature}
+\section{UTP While-Refinement Signatrue}
 \begin{verbatim}
 Copyright  Andrew Butterfield (c) 2018--2019
 
@@ -6,9 +6,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module UTPSignature (
-  bookdef
-, i_refines, refines
+module UTPWhileRefineSig (
+  i_refines, refines
 , i_cond, cond
 , i_seq, mkSeq
 , i_while, while
@@ -23,7 +22,7 @@ module UTPSignature (
 import Data.Maybe
 import qualified Data.Set as S
 
-import Symbols
+import Symbols 
 
 import Control (mapsnd)
 import Utilities
@@ -39,6 +38,7 @@ import Theories
 import TestRendering
 import StdTypeSignature
 import StdSignature
+import UTPReading
 \end{code}
 
 
@@ -46,14 +46,6 @@ import StdSignature
 
 To be done
 
-We want to map definition and law numbers
-from the book to law names.
-\begin{code}
-bookdef :: String -> String -> Term -> SideCond
-        -> (NmdAssertion, (String, String))
-bookdef name alias prop sc
-  = (preddef name prop sc,(alias,name))
-\end{code}
 
 \subsection{Propositional Infrastructure}
 

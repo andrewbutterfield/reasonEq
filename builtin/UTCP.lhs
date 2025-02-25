@@ -45,7 +45,7 @@ import Equality
 import ForAll
 import Exists
 import UClose
-import UTPSignature
+import UTPWhileRefineSig
 import UTPBase
 import Arithmetic
 import Sets

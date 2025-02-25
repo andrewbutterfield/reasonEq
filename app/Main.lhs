@@ -41,7 +41,7 @@ import Assertions
 import Ranking
 import REqState
 import AbstractUI
-import UTPSignature
+import UTPWhileRefineSig
 import Instantiate
 import TestRendering
 import Parsing

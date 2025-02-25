@@ -1,6 +1,6 @@
 \chapter{UTP Na\"{i}ve While}
 \begin{verbatim}
-Copyright  Andrew Butterfield, Danny Thomas (c) 2019
+Copyright  Andrew Butterfield, Danny Thomas (c) 2019--2025
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

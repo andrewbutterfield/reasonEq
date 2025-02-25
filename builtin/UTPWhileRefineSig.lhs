@@ -1,6 +1,6 @@
-\section{UTP While-Refinement Signatrue}
+\chapter{UTP While-Refinement Signatrue}
 \begin{verbatim}
-Copyright  Andrew Butterfield (c) 2018--2019
+Copyright  Andrew Butterfield (c) 2018--2025
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -42,18 +42,18 @@ import UTPReading
 \end{code}
 
 
-\subsection{Introduction}
+\section{Introduction}
 
 To be done
 
 
-\subsection{Propositional Infrastructure}
+\section{Propositional Infrastructure}
 
 
 We need to build some infrastructure here.
 This consists of the predicate variables $P$, $Q$ and $R$.
 
-\subsubsection{Propositional Variables}
+\subsection{Propositional Variables}
 
 \begin{code}
 p = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "P") PredV Static
@@ -62,9 +62,9 @@ r = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "R") PredV Static
 \end{code}
 
 
-\subsection{Base Language Operators}
+\section{Base Language Operators}
 
-\subsubsection{Refinement}
+\subsection{Refinement}
 $$ P \sqsupseteq Q $$
 \begin{code}
 refines :: Term -> Term -> Term
@@ -72,7 +72,7 @@ i_refines    =  jId "refines"
 refines p q  =  Cons arbpred False i_refines [p, q]
 \end{code}
 
-\subsubsection{Conditionals}
+\subsection{Conditionals}
 $$ P \cond b Q $$
 \begin{code}
 cond :: Term -> Term -> Term -> Term
@@ -80,7 +80,7 @@ i_cond       =  jId "cond"
 cond p b q   =  Cons arbpred True i_cond [p, b, q]
 \end{code}
 
-\subsubsection{Sequential Composition}
+\subsection{Sequential Composition}
 $$ P \seq Q $$
 \begin{code}
 mkSeq :: Term -> Term -> Term
@@ -88,7 +88,7 @@ i_seq        =  jId ";"
 mkSeq p q    =  Cons arbpred False i_seq [p, q]
 \end{code}
 
-\subsubsection{While Loop}
+\subsection{While Loop}
 $$ c \circledast P$$
 \begin{code}
 while :: Term -> Term -> Term
@@ -96,7 +96,7 @@ i_while = jId "while"
 while c p = Cons arbpred False i_while [c, p]
 \end{code}
 
-\subsubsection{(Simultaneous) Assignement}
+\subsection{(Simultaneous) Assignement}
 $$ \lst x := \lst e $$
 \begin{code}
 listwiseVarBinPred :: Type -> Identifier -> Identifier
@@ -128,7 +128,7 @@ v .:= e      =  simassign [(v,e)] []
 lv .::= le   =  simassign [] [(lv,le)]
 \end{code}
 
-\subsubsection{Skip}
+\subsection{Skip}
 $$ \Skip $$
 \begin{code}
 skip :: Term
@@ -138,7 +138,7 @@ g_skip  =  StdVar v_skip
 skip    =  jVar p1 v_skip 
 \end{code}
 
-\subsubsection{Non-deterministic Choice}
+\subsection{Non-deterministic Choice}
 $$ P \sqcap Q $$
 \begin{code}
 ndc :: Term -> Term -> Term
@@ -146,7 +146,8 @@ i_ndc    =  jId "sqcap"
 ndc p q  =  Cons arbpred True i_ndc [p, q]
 \end{code}
 
-\subsubsection{Abort and Miracle}
+\newpage
+\subsection{Abort and Miracle}
 $$ \bot \qquad \top $$
 \begin{code}
 abort :: Term

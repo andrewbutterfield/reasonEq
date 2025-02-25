@@ -1,4 +1,4 @@
-\section{UTP Reading}
+\chapter{UTP Reading}
 \begin{verbatim}
 Copyright  Andrew Butterfield (c) 2025
 
@@ -32,7 +32,7 @@ import StdSignature
 \end{code}
 
 
-\subsection{Introduction}
+\section{Introduction}
 
 Code to generate a reference to the literature.
 

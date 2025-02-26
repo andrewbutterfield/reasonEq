@@ -83,6 +83,7 @@ library
       UTCP
       UTPCommonWhile
       UTPNaiveWhile
+      UTPObservations
       UTPReading
       UTPWhileRefineSig
   other-modules:

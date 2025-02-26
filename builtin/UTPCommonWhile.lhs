@@ -7,10 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module UTPCommonWhile (
-  isUTPDynObs, areUTPDynObs, isUTPCond, areUTPCond, isUTPStcObs
-, areUTPStcObs
-, utpBaseConjs, utpBaseName, utpBaseTheory
-, utpBaseAliases
+  utpCW_Conjs, utpCW_Name, utpCW_Theory
+, utpCW_Aliases
 ) where
 
 import Data.Maybe
@@ -44,6 +42,7 @@ import Exists
 import UClose
 import StdTypeSignature
 import UTPReading
+import UTPObservations
 import UTPWhileRefineSig
 import TestRendering
 
@@ -57,50 +56,19 @@ Here we give semantics to elements of the ``While'' signature
 whose definitions do not change 
 when we move from na\"{i}ve to design-based theories.
 
-Key definition \cite[Defn 3.1.1, p76]{UTP-book} is
-$$
- (P \design Q) ~~\defs~~ (ok \land P) \implies (ok' \land Q)
-$$
 
-In \cite[Defn 3.1.3, p78]{UTP-book} a specific Design definition
-is given for assignment.
 
 In \cite[Thm 3.1.4, p79]{UTP-book} it is claimed that 
 NDC, conditionals and sequential composition have unchanged definitions.
-
 Finally, \cite[Thm 3.1.5, p80]{UTP-book} states that designs form
 a complete lattice under implication ordering, 
 with bottom $\bot_{\mathbf{D}}=(\false\design\true)$
 and top $\top_{\mathbf{D}}=(\true\design\false)=\lnot ok$.
 This means the semantics of the while-loop is essentially the same.
 
+These are everything except skip assignment,
+which have different definitions in each.
 
-
-
-
-
-
-
-\textbf{NEED TO PRUNE BELOW}
-
-By ``UTP Na\"{i}ve While'' we mean 
-the basic most common UTP definitions introduced in Chapter 1 
-and the first part of Chapter 2 of the UTP book \cite{UTP-book}.
-
-The term ``refinement calculus'' is used in the book in Sec. 3.1,
-but the refinement notation ($\sqsubseteq$) is not.
-The notion of refinement (an implementation $P$ satisfies specification $S$)
-is described in Sec 1.5, p34 as being the following closed predicate:
-$ [ P \implies S ] $.
-
-In Chapter 2, the concepts of
-conditionals,
-sequential composition,
-assignment,
-``Skip'',
-and non-deterministic choice are first introduced.
-Here we collect those 1st-order concepts.
-The higher-order concepts in Chapter 2 are not collected here.
 
 \newpage
 \section{UTP Refinement}
@@ -381,36 +349,6 @@ cjCondAlt2 = preddef ("cond" -.- "alt" -.- "def2")
 \newpage
 \section{UTP Sequential Composition}
 
-\subsection{Defn. of Sequential Composition}
-
-We need to be able to specify that a term variable $P$
-is a standard UTP predicate in that defines a homogenous relation 
-using dynamic observables ($O \cup O'\supseteq_a P$):
-\begin{code}
-isUTPDynObs  :: GenVar -> SideCond
-isUTPDynObs  gP  = [gO,gO'] `dyncover` gP
-areUTPDynObs :: [GenVar] -> SideCond
-areUTPDynObs gPs = mrgscs $ map isUTPDynObs gPs
-\end{code}
-We also want to be able to specify that a term variable $c$
-is a UTP condition ($O \supseteq_a c$):
-\begin{code}
-isUTPCond  :: GenVar -> SideCond
-isUTPCond  gc  = [gO] `dyncover` gc
-areUTPCond :: [GenVar] -> SideCond
-areUTPCond gcs = mrgscs $ map isUTPCond gcs
-\end{code}
-We also need to specify a term variable $S$ 
-that only contains static observables:
-($O \cup O'\disj S$):
-\begin{code}
-isUTPStcObs  :: GenVar -> SideCond
-isUTPStcObs  gS  = [gO,gO'] `notin` gS
-areUTPStcObs :: [GenVar] -> SideCond
-areUTPStcObs gSs = mrgscs $ map isUTPStcObs gSs
-\end{code}
-
-
 
 From \cite[Defn 2.2.1,p49]{UTP-book}
 
@@ -478,228 +416,6 @@ $$\par\vspace{-8pt}
                               )
                               (areUTPDynObs [gP,gQ,gR] .: isUTPCond gb)
 \end{code}
-
-\newpage
-\section{UTP Assignment}
-
-\subsection{Defn. of Assignment}
-
-From \cite[Defn 2.3.1,p50]{UTP-book}
-
-We start by defining simultaneous assignment,
-based loosely on \cite[2.3\textbf{L2}, p50]{UTP-book}.
-$$
-  \begin{array}{lll}
-     \lst x := \lst e
-     ~\defs~
-     \lst x' = \lst e \land O'\less {\lst x} = O \less {\lst x}
-     && \QNAME{$:=$-def}
-  \end{array}
-$$ %\par\vspace{-8pt}
-\begin{code}
-asgIntro = mkConsIntro i_asg apred11
-(axAsgDef,alAsgDef) = bookdef (":=" -.- "def") "2.3L2"
-                       ( lvxs .::= lves
-                         ===
-                         (lvx' `areEqualTo` lves)
-                         /\
-                         ( (lO' `less` ([],[ix]))
-                           `areEqualTo`
-                           (lO  `less` ([],[ix])) )
-                       )
-                       scTrue
-\end{code}
-
-
-
-\subsection{UTP Assignment Laws}
-
-We start with another axiom that describes the ``fusion'' of predicates
-over lists of variables, structured in a particular way:
-$$
-  P(x_1,y_1) \diamond P(x_2,y_2) \diamond \dots \diamond P(x_n,y_n)
-$$
-Here $P(x_i,y_i)$ is a binary predicate
-whose only free variables are $x_i$ and $y_i$,
-while $\diamond$ is an associative and commutative
-binary propositional operator.
-We are interested in a form that mixes standard and \emph{known} list variables,
-and where, for any given $i$,
-that $(x_i,y_i)$ is equal to $(v,v')$ for some $v$:
-$$
-  \dots \diamond P(v,v') \diamond \dots \diamond P(O\less V,O'\less V) \diamond \dots
-$$
-By ``fusion'' we mean simplifying the above by observing that
-$\setof{v,O\less V}$ can be reduced to $\setof{O\less{(V\setminus\setof{v})}}$
-if $v \in V$.
-This leads to the following general axiom,
-in which all variables are list-variables:
-$$
-  \begin{array}{lll}
-     P(\lst x',\lst x)
-     \diamond
-     P(O' \less{\lst x,\lst y},O \less{\lst x,\lst y})
-     ~\defs~
-     P(O' \less{\lst y},O \less{\lst y})
-     && \QNAME{var-list-fusion}
-  \end{array}
-$$ %\par\vspace{-8pt}
-\begin{code}
-axFusionDef
-  = preddef ("var" -.- "list" -.- "fusion")
-            ( fusion [ (lvx',lvx)
-                     , ( lO' `less` ([],[ix,iy]), (lO `less` ([],[ix,iy])) ) ]
-              ===
-              fusion [ ( lO' `less` ([],[iy]), (lO `less` ([],[iy])) ) ]
-            )
-            scTrue
-  where
-    fusion lvlvs  =  listwiseVarBinPred pred1 land equals [] lvlvs
-\end{code}
-
-
-\newpage
-The following (\cite[Defn 2.3.1,p50]{UTP-book}) is now a conjecture:
-$$
-  \begin{array}{lll}
-     x := e
-     ~\defs~
-     x' = e \land O'\less x = O \less x
-     && \QNAME{$:=$-def}
-  \end{array}
-$$ %\par\vspace{-8pt}
-\begin{code}
-(cjAsgSimple,alAsgSimple) = bookdef (":=" -.- "simple") "Def2.3.1"
-                       ( vx .:= e
-                         ===
-                         (x' `isEqualTo` e)
-                         /\
-                         ( (lO' `less` ([ix],[]))
-                           `areEqualTo`
-                           (lO  `less` ([ix],[])) )
-                       )
-                       scTrue
-\end{code}
-
-
-From \cite[2.3\textbf{L1}, p50]{UTP-book}
-$$
-  \begin{array}{lll}
-     x := e  =  (x,y := e,y)
-     && \QNAME{$:=$-unchanged}
-  \\ = x' = e \land y' = y \land O'\less {\lst x,\lst y} = O \less {\lst x, \lst y}
-  \end{array}
-$$
-\begin{code}
-(cjAsgUnchanged,alAsgUnchanged)
-  = bookdef (":=" -.- "unchanged") "2.3L3"
-     ( (vx .:= e)
-       ===
-       simassign [(vx,e),(vy,y)] []
-     )
-     scTrue
-\end{code}
-
-
-
-From \cite[2.3\textbf{L2}, p50]{UTP-book}
-$$
-  \begin{array}{lll}
-     (x,y,z := e,f,g)  =  (y,x,z := f,e,g)
-     && \QNAME{$:=$-reorder}
-  \end{array}
-$$
-This property is guaranteed by the use of substitution as the underlying
-representation.
-
-\newpage
-From \cite[2.3\textbf{L3}, p50]{UTP-book}
-$$
-  \begin{array}{lll}
-     x := e \seq x := f =  x := f[e/x]
-     & x,e,f \in O
-     & \QNAME{$:=$-seq-same}
-  \end{array}
-$$
-\begin{code}
-(cjAsgSeqSame,alAsgSeqSame)
-  = bookdef (":=" -.- "seq" -.- "same") "2.3L3"
-     ( mkSeq (vx .:= e) (vx .:= f)
-       ===
-       ( vx .:= Sub ArbType f e_for_x )
-     )
-     (areUTPCond [gx,qe,qf])
-\end{code}
-
-From \cite[2.3\textbf{L4}, p50]{UTP-book}
-$$
-  \begin{array}{lll}
-     x := e \seq P \cond b Q =  (x:=e \seq P) \cond{b[e/x]} (x:=e \seq Q)
-     & x,e,b \in O, ~~ O,O'\supseteq P,Q
-     & \QNAME{$:=$-seq-$\cond\_$}
-  \end{array}
-$$
-\begin{code}
-(cjAsgSeqCond,alAsgSeqCond)
-  = bookdef (":=" -.- "seq" -.- "cond") "2.3L4"
-     ( mkSeq (vx .:= e) (cond p b q)
-       ===
-       ( cond (mkSeq (vx .:= e) p)
-              (Sub ArbType b e_for_x)
-              (mkSeq (vx .:= e) q) )
-     )
-     (areUTPDynObs [gP,gQ] .: areUTPCond [gx,qe,gb])
-\end{code}
-
-\newpage
-\section{UTP ``Skip''}
-
-\subsection{Defn. of Skip}
-
-From \cite[Defn 2.3.2,p50]{UTP-book}
-
-$$
-  \begin{array}{lll}
-     \Skip ~\defs~ O' = O
-     && \QNAME{$\Skip$-def}
-  \end{array}
-$$ %\par\vspace{-8pt}
-\begin{code}
-skipIntro = mkKnownVar v_skip bool
-(axSkipDef,alSkipDef) 
-  = bookdef ("II" -.- "def") "Def2.3.2"
-      ( skip  ===  Iter arbpred True land True equals [ lO', lO ] )
-      scTrue
-\end{code}
-
-\subsection{UTP Skip Laws}
-
-From \cite[2.3\textbf{L5}, p50]{UTP-book}
-$$
-  \begin{array}{lll}
-     R \seq \Skip \equiv R   & O,O'\supseteq R
-     & \QNAME{$;$-runit}
-  \end{array}
-$$\par\vspace{-8pt}
-\begin{code}
-(cjSkipL5a,alSkipL5a) = bookdef (";" -.- "runit") "2.3L5a"
-                         (mkSeq r skip === r)
-                         (areUTPDynObs [gR,g_skip])
-\end{code}
-
-From \cite[2.3\textbf{L5}, p50]{UTP-book}
-$$
-  \begin{array}{lll}
-     \Skip \seq R \equiv R   & O,O'\supseteq R
-     & \QNAME{$;$-lunit}
-  \end{array}
-$$\par\vspace{-8pt}
-\begin{code}
-(cjSkipL5b,alSkipL5b) = bookdef (";" -.- "lunit") "2.3L5b"
-                         (mkSeq skip r === r)
-                         (areUTPDynObs [gR,g_skip])
-\end{code}
-
 
 \newpage
 \section{UTP Non-deterministic Choice}
@@ -877,36 +593,78 @@ miracleIntro = mkKnownVar v_miracle bool
                            scTrue
 \end{code}
 
+\section{Variable List Fusion}
+
+We start with another axiom that describes the ``fusion'' of predicates
+over lists of variables, structured in a particular way:
+$$
+  P(x_1,y_1) \diamond P(x_2,y_2) \diamond \dots \diamond P(x_n,y_n)
+$$
+Here $P(x_i,y_i)$ is a binary predicate
+whose only free variables are $x_i$ and $y_i$,
+while $\diamond$ is an associative and commutative
+binary propositional operator.
+We are interested in a form that mixes standard and \emph{known} list variables,
+and where, for any given $i$,
+that $(x_i,y_i)$ is equal to $(v,v')$ for some $v$:
+$$
+  \dots \diamond P(v,v') \diamond \dots \diamond P(O\less V,O'\less V) \diamond \dots
+$$
+By ``fusion'' we mean simplifying the above by observing that
+$\setof{v,O\less V}$ can be reduced to $\setof{O\less{(V\setminus\setof{v})}}$
+if $v \in V$.
+This leads to the following general axiom,
+in which all variables are list-variables:
+$$
+  \begin{array}{lll}
+     P(\lst x',\lst x)
+     \diamond
+     P(O' \less{\lst x,\lst y},O \less{\lst x,\lst y})
+     ~\defs~
+     P(O' \less{\lst y},O \less{\lst y})
+     && \QNAME{var-list-fusion}
+  \end{array}
+$$ %\par\vspace{-8pt}
+\begin{code}
+axFusionDef
+  = preddef ("var" -.- "list" -.- "fusion")
+            ( fusion [ (lvx',lvx)
+                     , ( lO' `less` ([],[ix,iy]), (lO `less` ([],[ix,iy])) ) ]
+              ===
+              fusion [ ( lO' `less` ([],[iy]), (lO `less` ([],[iy])) ) ]
+            )
+            scTrue
+  where
+    fusion lvlvs  =  listwiseVarBinPred pred1 land equals [] lvlvs
+\end{code}
+
+
 \newpage
 \section{UTP Base Theory}
 
 We collect our known variables:
 \begin{code}
-utpBaseKnown
+utpCW_Known
  = refinesIntro $
    condIntro $
    seqIntro $
    obsIntro $
-   asgIntro $
-   skipIntro $
    ndcIntro $
    abortIntro $
    miracleIntro $
-   newNamedVarTable utpBaseName
+   newNamedVarTable utpCW_Name
 \end{code}
 
 
 We now collect our axiom set:
 \begin{code}
-utpBaseAxioms :: [Law]
-utpBaseAxioms
+utpCW_Axioms :: [Law]
+utpCW_Axioms
   = map labelAsAxiom
       [ axRefsDef
       , axCondDef
       , axSeqDef
-      , axAsgDef
       , axFusionDef
-      , axSkipDef
       , axNDCDef
       , axAbortDef, axMiracleDef
       ]
@@ -915,14 +673,12 @@ utpBaseAxioms
 
 We now collect our conjecture set:
 \begin{code}
-utpBaseConjs :: [NmdAssertion]
-utpBaseConjs
+utpCW_Conjs :: [NmdAssertion]
+utpCW_Conjs
   = [ cjRefsOrDistr, cjRefsTrans
     , cjCondL1, cjCondL2, cjCondL3, cjCondL4, cjCondL5a
     , cjCondL5b, cjCondL6, cjCondL7, cjCondMutual, cjCondAlt, cjCondAlt2
     , cjSeqAssoc, cjSeqLDistr
-    , cjAsgSimple, cjAsgUnchanged, cjAsgSeqSame, cjAsgSeqCond
-    , cjSkipL5a, cjSkipL5b
     , cjNDCSymm, cjNDCAssoc, cjNDCIdem, cjNDCDistr
     , cjCondNDCDistr, cjSeqNDCLDistr, cjSeqNDCRDistr, cjNDCCondDistr
     ]
@@ -931,15 +687,13 @@ utpBaseConjs
 
 We now collect our alias set:
 \begin{code}
-utpBaseAliases :: [(String,String)]
-utpBaseAliases
+utpCW_Aliases :: [(String,String)]
+utpCW_Aliases
   = [ alRefsDef, alRefsOrDistr, alRefsTrans
     , alCondL1, alCondL2, alCondL3, alCondL4
     , alCondL5a, alCondL5b, alCondL6, alCondL7
     , alCondMutual
     , alSeqDef, alSeqAssoc, alSeqLDistr
-    , alAsgDef, alAsgUnchanged, alAsgSeqSame, alAsgSeqCond
-    , alSkipDef, alSkipL5a, alSkipL5b
     , alNDCDef, alNDCSymm, alNDCAssoc, alNDCIdem, alNDCDistr
     , alCondNDCDistr, alSeqNDCLDistr, alSeqNDCRDistr, alNDCCondDistr
     , alAbortDef, alMiracleDef
@@ -948,25 +702,25 @@ utpBaseAliases
 
 
 \begin{code}
-utpBaseName :: String
-utpBaseName = "UTPCommonWhile"
-utpBaseTheory :: Theory
-utpBaseTheory
-  =  nullTheory { thName  =  utpBaseName
-            , thDeps  =  [ uCloseName
-                         , existsName
-                         , forallName
-                         , equalityName
-                         , implName
-                         , aoiName
-                         , conjName
-                         , disjName
-                         , notName
-                         , equivName
-                         ]
-            , known   =  utpBaseKnown
-            , laws    =  utpBaseAxioms
-            , conjs   =  utpBaseConjs
+utpCW_Name :: String
+utpCW_Name = "UTPCommonWhile"
+utpCW_Theory :: Theory
+utpCW_Theory
+  =  nullTheory { thName  =  utpCW_Name
+                , thDeps  = [ uCloseName
+                            , existsName
+                            , forallName
+                            , equalityName
+                            , implName
+                            , aoiName
+                            , conjName
+                            , disjName
+                            , notName
+                            , equivName
+                            ]
+            , known   =  utpCW_Known
+            , laws    =  utpCW_Axioms
+            , conjs   =  utpCW_Conjs
             }
 \end{code}
 

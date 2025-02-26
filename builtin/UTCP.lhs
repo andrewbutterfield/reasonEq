@@ -46,7 +46,8 @@ import ForAll
 import Exists
 import UClose
 import UTPWhileRefineSig
-import UTPNaiveWhile
+import UTPObservations
+import UTPCommonWhile
 import Arithmetic
 import Sets
 import Lists
@@ -719,7 +720,7 @@ utcpName = "UTCP"
 utcpTheory :: Theory
 utcpTheory
   =  nullTheory { thName  =  utcpName
-            , thDeps  =  [ utpBaseName
+            , thDeps  =  [ utpCW_Name
                          , setName
                          , uCloseName
                          , existsName

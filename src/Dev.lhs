@@ -44,6 +44,7 @@ import Equality
 import Arithmetic
 import Sets
 import Lists
+import UTPCommonWhile
 import UTPNaiveWhile
 import UTCP
 --import XYZ
@@ -108,10 +109,9 @@ devKnownBuiltins  = [ equivTheory
                     , arithmeticTheory
                     , setTheory
                     , listTheory
-                    , utpBaseTheory
+                    , utpCW_Theory
+                    , utpNW_Theory
                     , utcpTheory
-                    -- , xyzTheory
-                    -- , xyzDTheory
                     ]
 
 \end{code}

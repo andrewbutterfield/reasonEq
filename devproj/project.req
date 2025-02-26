@@ -1,9 +1,9 @@
 BEGIN REQSTATE
 BEGIN THEORIES
-THNAMES = ["And","AndOrInvert","Arithmetic","Equality","Equiv","Exists","ForAll","Implies","LTL","Lists","Not","Or","Sets","UClose","UTCP","UTPCommonWhile","UTPNaiveWhile"]
-SDAG = [[("UTCP",["UTPCommonWhile","Sets","UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"]),("UTPNaiveWhile",["UTPCommonWhile","UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("UTPCommonWhile",["UClose","Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Lists",["Implies","Equiv","Equality","ForAll","Arithmetic","Sets"]),("LTL",["Equality","Exists","ForAll","Implies","AndOrInvert","And","Or","Not","Equiv"]),("UClose",["Exists","ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Sets",["Implies","Equiv","Equality","ForAll","Arithmetic"]),("Exists",["ForAll","Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Arithmetic",["Implies","Equiv","Equality"]),("ForAll",["Equality","Implies","AndOrInvert","And","Or","Not","Equiv"])],[("Equality",["Implies","Equiv"])],[("Implies",["AndOrInvert","And","Or","Not","Equiv"])],[("AndOrInvert",["And","Or","Not","Equiv"])],[("And",["Or","Not","Equiv"])],[("Or",["Not","Equiv"])],[("Not",["Equiv"])],[("Equiv",[])]]
+THNAMES = ["AOI","And","Arith","EQV","Equal","Exists","Forall","Impl","LTL","Lists","Not","Or","Sets","UClose","UTCP","U_CWhl","U_NvWhl"]
+SDAG = [[("UTCP",["U_CWhl","Sets","UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"]),("U_NvWhl",["U_CWhl","UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("U_CWhl",["UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Lists",["Impl","EQV","Equal","Forall","Arith","Sets"]),("LTL",["Equal","Exists","Forall","Impl","AOI","And","Or","Not","EQV"]),("UClose",["Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Sets",["Impl","EQV","Equal","Forall","Arith"]),("Exists",["Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Arith",["Impl","EQV","Equal"]),("Forall",["Equal","Impl","AOI","And","Or","Not","EQV"])],[("Equal",["Impl","EQV"])],[("Impl",["AOI","And","Or","Not","EQV"])],[("AOI",["And","Or","Not","EQV"])],[("And",["Or","Not","EQV"])],[("Or",["Not","EQV"])],[("Not",["EQV"])],[("EQV",[])]]
 END THEORIES
-CURRTHEORY = UTPNaiveWhile
+CURRTHEORY = UTCP
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
 END MAP LIVE-PROOFS

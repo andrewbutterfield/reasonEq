@@ -1,0 +1,41 @@
+BEGIN THEORY Arith
+DEPS = ["Impl","EQV","Equal"]
+KNOWN = VD ("Arith",fromList [(VR (Id "*" 0,VO,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))),(VR (Id "+" 0,VO,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))),(VR (Id "-" 0,VO,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))),(VR (Id "div" 0,VO,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))),(VR (Id "mod" 0,VO,WS),KV (TF (TG (Id "Z" 0)) (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))),(VR (Id "neg" 0,VO,WS),KV (TF (TG (Id "Z" 0)) (TG (Id "Z" 0))))],fromList [],fromList [])
+BEGIN LIST LAWS
+(("neg_def",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "neg" 0) [V T (VR (Id "e" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "-" 0) [K (TG (Id "Z" 0)) (VI 0),V T (VR (Id "e" 0,VE,WS))]],([],fromList []))),Axiom)
+(("+_l_unit",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "+" 0) [K (TG (Id "Z" 0)) (VI 0),V T (VR (Id "e" 0,VE,WS))],V T (VR (Id "e" 0,VE,WS))],([],fromList []))),Axiom)
+(("+_r_unit",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "e" 0,VE,WS)),K (TG (Id "Z" 0)) (VI 0)],V T (VR (Id "e" 0,VE,WS))],([],fromList []))),Axiom)
+(("+_symm",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "e" 0,VE,WS))]],([],fromList []))),Axiom)
+(("+_assoc",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "e" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],C (TG (Id "Z" 0)) True (Id "+" 0) [C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],V T (VR (Id "g" 0,VE,WS))]],([],fromList []))),Axiom)
+(("+_cancel",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],([],fromList []))),Axiom)
+(("-_r_unit",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "-" 0) [V T (VR (Id "e" 0,VE,WS)),K (TG (Id "Z" 0)) (VI 0)],V T (VR (Id "e" 0,VE,WS))],([],fromList []))),Axiom)
+(("-_zero",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "-" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "e" 0,VE,WS))],K (TG (Id "Z" 0)) (VI 0)],([],fromList []))),Axiom)
+(("*_l_unit",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [K (TG (Id "Z" 0)) (VI 1),V T (VR (Id "e" 0,VE,WS))],V T (VR (Id "e" 0,VE,WS))],([],fromList []))),Axiom)
+(("*_r_unit",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),K (TG (Id "Z" 0)) (VI 1)],V T (VR (Id "e" 0,VE,WS))],([],fromList []))),Axiom)
+(("*_l_unit",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [K (TG (Id "Z" 0)) (VI 0),V T (VR (Id "e" 0,VE,WS))],K (TG (Id "Z" 0)) (VI 0)],([],fromList []))),Axiom)
+(("*_r_unit",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),K (TG (Id "Z" 0)) (VI 0)],K (TG (Id "Z" 0)) (VI 0)],([],fromList []))),Axiom)
+(("*_symm",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "e" 0,VE,WS))]],([],fromList []))),Axiom)
+(("*_assoc",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],C (TG (Id "Z" 0)) True (Id "*" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],V T (VR (Id "g" 0,VE,WS))]],([],fromList []))),Axiom)
+(("*_cancel",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],([],fromList []))),Axiom)
+(("neg_*_distr",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [C (TG (Id "Z" 0)) True (Id "neg" 0) [V T (VR (Id "e" 0,VE,WS))],V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "neg" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))]]],([],fromList []))),Axiom)
+(("div_r_unit",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "div" 0) [V T (VR (Id "e" 0,VE,WS)),K (TG (Id "Z" 0)) (VI 1)],V T (VR (Id "e" 0,VE,WS))],([],fromList []))),Axiom)
+(("div_r_unit",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "div" 0) [K (TG (Id "Z" 0)) (VI 0),V T (VR (Id "e" 0,VE,WS))],K (TG (Id "Z" 0)) (VI 0)],([],fromList []))),Axiom)
+(("div_self",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "div" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "e" 0,VE,WS))],K (TG (Id "Z" 0)) (VI 1)],([],fromList []))),Axiom)
+(("neg_div_distr",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "div" 0) [C (TG (Id "Z" 0)) True (Id "neg" 0) [V T (VR (Id "e" 0,VE,WS))],V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "neg" 0) [C (TG (Id "Z" 0)) True (Id "div" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))]]],([],fromList []))),Axiom)
+(("*_+_distr",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],C (TG (Id "Z" 0)) True (Id "+" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]]],([],fromList []))),Axiom)
+(("+_inv",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "e" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "neg" 0) [V T (VR (Id "e" 0,VE,WS))]],K (TG (Id "Z" 0)) (VI 0)],([],fromList []))),Axiom)
+(("-_alt_def",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "-" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "+" 0) [V T (VR (Id "e" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "neg" 0) [V T (VR (Id "f" 0,VE,WS))]]],([],fromList []))),Axiom)
+(("*_div_same",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "div" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],V T (VR (Id "f" 0,VE,WS))],V T (VR (Id "e" 0,VE,WS))],([],fromList []))),Axiom)
+(("*_mod_same",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "mod" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],V T (VR (Id "f" 0,VE,WS))],K (TG (Id "Z" 0)) (VI 0)],([],fromList []))),Axiom)
+(("*_-_distr",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "-" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],C (TG (Id "Z" 0)) True (Id "-" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]]],([],fromList []))),Assumed)
+(("neg_zero",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "neg" 0) [K (TG (Id "Z" 0)) (VI 0)],K (TG (Id "Z" 0)) (VI 0)],([],fromList []))),Assumed)
+END LIST LAWS
+BEGIN LIST SIMPLIFIERS
+END LIST SIMPLIFIERS
+BEGIN LIST DEFFOLD
+END LIST DEFFOLD
+BEGIN LIST DEFUNFOLD
+END LIST DEFUNFOLD
+BEGIN LIST CONJECTURES
+END LIST CONJECTURES
+END THEORY Arith

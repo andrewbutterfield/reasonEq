@@ -189,7 +189,7 @@ with a separate mapping linking those names to the corresponding theories.
 type TheoryMap = Map String Theory
 data TheoryDAG
   = TheoryDAG { tmap :: TheoryMap
-             , sdag :: SDAG String }
+              , sdag :: SDAG String }
   deriving (Show,Read)
 
 -- composable updaters
@@ -577,15 +577,23 @@ lawDepClassify' thys (depthy:depthys)
 
 
 \begin{code}
-showTheories thrys = showTheories' $ M.assocs $ tmap thrys
-showTheories' [] = "No theories present."
-showTheories' thrys = unlines' $ map (showTheoryShort . snd) thrys
+showTheories (TheoryDAG thmap thdag) = 
+  let
+    tdTheories = topDownSDAG thdag
+  in unlines' $ map (showTheories' thmap) tdTheories
+
+
+
+showTheories' thmap thname
+  = case M.lookup thname thmap of
+      Nothing -> (thname++"?")
+      Just thry -> showTheoryShort thry
 
 showTheoryShort thry
   = thName thry
     ++ if null deps
-        then ""
-        else "( "++intercalate " ; " (thDeps thry)++" )"
+        then "[]"
+        else "["++intercalate "," (thDeps thry)++"]"
   where deps = thDeps thry
 
 showTheoryLaws dm thry

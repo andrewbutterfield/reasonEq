@@ -152,7 +152,7 @@ equalityConjectures
 
 \begin{code}
 equalityName :: String
-equalityName = "Equality"
+equalityName = "Equal"
 equalityTheory :: Theory
 equalityTheory
   =  nullTheory { thName  =  equalityName

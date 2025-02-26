@@ -210,7 +210,7 @@ equivConjs = map mkNmdAsn [ cjEqvId, cjTrueSubst, cjEqvSubst ]
 
 \begin{code}
 equivName :: String
-equivName = "Equiv"
+equivName = "EQV"
 equivTheory :: Theory
 equivTheory
   =  nullTheory { thName  =  equivName

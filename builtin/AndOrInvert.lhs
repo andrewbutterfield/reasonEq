@@ -257,7 +257,7 @@ aoiConjs = map mkNmdAsn
 
 \begin{code}
 aoiName :: String
-aoiName = "AndOrInvert"
+aoiName = "AOI"
 aoiTheory :: Theory
 aoiTheory
   =  nullTheory { thName  =  aoiName

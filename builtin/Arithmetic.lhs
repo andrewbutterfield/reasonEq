@@ -325,7 +325,7 @@ arithmeticConjectures
 
 \begin{code}
 arithmeticName :: String
-arithmeticName = "Arithmetic"
+arithmeticName = "Arith"
 arithmeticTheory :: Theory
 arithmeticTheory
   =  nullTheory { thName  =  arithmeticName

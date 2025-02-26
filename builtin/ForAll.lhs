@@ -272,7 +272,7 @@ forallConjs
 
 \begin{code}
 forallName :: String
-forallName = "ForAll"
+forallName = "Forall"
 forallTheory :: Theory
 forallTheory
   =  nullTheory { thName  =  forallName

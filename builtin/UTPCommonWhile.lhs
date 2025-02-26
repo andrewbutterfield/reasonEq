@@ -703,7 +703,7 @@ utpCW_Aliases
 
 \begin{code}
 utpCW_Name :: String
-utpCW_Name = "UTPCommonWhile"
+utpCW_Name = "U_CWhl"
 utpCW_Theory :: Theory
 utpCW_Theory
   =  nullTheory { thName  =  utpCW_Name

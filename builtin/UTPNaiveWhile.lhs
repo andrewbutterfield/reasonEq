@@ -287,7 +287,7 @@ utpNW_Aliases
 
 \begin{code}
 utpNW_Name :: String
-utpNW_Name = "UTPNaiveWhile"
+utpNW_Name = "U_NvWhl"
 utpNW_Theory :: Theory
 utpNW_Theory
   =  nullTheory { thName  =  utpNW_Name

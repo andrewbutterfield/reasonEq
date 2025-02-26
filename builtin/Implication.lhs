@@ -450,7 +450,7 @@ implConjs
 
 \begin{code}
 implName :: String
-implName = "Implies"
+implName = "Impl"
 implTheory :: Theory
 implTheory
   =  nullTheory { thName  =  implName

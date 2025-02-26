@@ -9,7 +9,22 @@
 * Need a `Designs` theory. 
 * Need a `DesignWhile` theory.
 
-Want to improve the "simple language"
+### Simple Input Format
+
+We want a text format for theory artifacts that is easy to parse,
+rather than being readable.
+
+We will use the need to expand the `Sets` theory to drive a mechanism to read conjectures from a text file.
+
+* Now have conjecture naming convention: `conj_name-conj.txt`.
+* need to define syntax for and handle substitutions
+* need to be able to declare variables
+* need to have proper line/position numbers for better error messages
+* should save live-proofs outside `project.req`.
+
+
+### Matching Issues
+
 
 Still a strange matching going on in X-X-simple.
 
@@ -27,15 +42,7 @@ Still a strange matching going on in X-X-simple.
 
 This also happens with laws `exists_swap` ([≡lhs],[≡rhs]), `exists_def` ([≡lhs]).
 
-When a numbered list is a singleton and is automatically chosen, it should identify what was chosen.
 
-We will use the need to expand the `Sets` theory to drive a mechanism to read conjectures from a text file.
-
-* Now have conjecture naming convention: `conj_name-conj.txt`.
-* need to define syntax for and handle substitutions
-* need to be able to declare variables
-* need to have proper line/position numbers for better error messages
-* should save live-proofs outside `project.req`.
 
 
 ### RANKING BUSTED

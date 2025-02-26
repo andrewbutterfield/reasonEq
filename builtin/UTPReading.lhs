@@ -10,24 +10,9 @@ module UTPReading (
   bookdef
 ) where
 
-import Data.Maybe
-import qualified Data.Set as S
-
-import Symbols
-
-import Control (mapsnd)
-import Utilities
-import LexBase
-import Variables
 import AST
-import Assertions (mkAsn)
 import SideCond
-import VarData
 import Laws
-import Proofs
-import Theories
-import TestRendering
-import StdTypeSignature
 import StdSignature
 \end{code}
 

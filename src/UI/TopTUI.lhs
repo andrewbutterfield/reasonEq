@@ -42,7 +42,7 @@ import Ranking
 import ProofSettings
 import REqState
 import AbstractUI
-import UTP.WhileRefineSig
+import UTP.While.RefineSig
 import Instantiate
 import TestRendering
 import Parsing

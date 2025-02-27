@@ -6,7 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module UTP.NaiveWhile (
+module UTP.While.Naive (
   utpNW_Conjs, utpNW_Name, utpNW_Theory
 , utpNW_Aliases
 ) where
@@ -42,9 +42,9 @@ import Exists
 import UClose
 import StdTypeSignature
 import UTP.Reading
-import UTP.WhileRefineSig
+import UTP.While.RefineSig
 import UTP.Observations
-import UTP.CommonWhile
+import UTP.While.Common
 
 import TestRendering
 

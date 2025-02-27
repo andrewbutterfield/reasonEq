@@ -6,7 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module UTP.WhileRefineSig (
+module UTP.While.RefineSig (
   i_refines, refines
 , i_cond, cond
 , i_seq, mkSeq

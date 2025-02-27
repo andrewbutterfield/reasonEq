@@ -42,7 +42,7 @@ import Exists
 import UClose
 import StdTypeSignature
 import UTP.Reading
-import UTP.WhileRefineSig
+import UTP.While.RefineSig
 import TestRendering
 
 import Debugger

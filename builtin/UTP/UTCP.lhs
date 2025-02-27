@@ -45,9 +45,9 @@ import Equality
 import ForAll
 import Exists
 import UClose
-import UTP.WhileRefineSig
+import UTP.While.RefineSig
 import UTP.Observations
-import UTP.CommonWhile
+import UTP.While.Common
 import Arithmetic
 import Sets
 import Lists

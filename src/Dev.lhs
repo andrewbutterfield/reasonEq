@@ -44,8 +44,8 @@ import Equality
 import Arithmetic
 import Sets
 import Lists
-import UTP.CommonWhile
-import UTP.NaiveWhile
+import UTP.While.Common
+import UTP.While.Naive
 import UTP.UTCP
 --import XYZ
 --import XYZDesign

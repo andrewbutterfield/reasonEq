@@ -80,12 +80,12 @@ library
       StdSignature
       StdTypeSignature
       UClose
-      UTP.CommonWhile
-      UTP.NaiveWhile
       UTP.Observations
       UTP.Reading
       UTP.UTCP
-      UTP.WhileRefineSig
+      UTP.While.Common
+      UTP.While.Naive
+      UTP.While.RefineSig
   other-modules:
       Paths_reasonEq
   hs-source-dirs:

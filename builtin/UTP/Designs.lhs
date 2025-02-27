@@ -116,7 +116,6 @@ designIntro = mkConsIntro i_design boolf_2
 \end{code}
 
 
-
 \begin{code}
 designAxioms :: [Law]
 designAxioms  =  map labelAsAxiom [ axDsgDef ]
@@ -124,6 +123,34 @@ designAxioms  =  map labelAsAxiom [ axDsgDef ]
 
 \subsection{Design Conjectures}
 
+From: \cite[Thm 3.1.2,p77]{UTP-book}:
+$$
+[(P_1 \design Q_1) \implies (P_2 \design Q_2)] 
+~~\mathbf{iff}~~
+[P_2 \implies P_1]
+~~\mathbf{and}~~
+[(P_2 \land Q_2)\implies Q_2]
+$$
+
+P77:
+$$
+ [(P \design Q) \equiv (P \design P \land Q)]
+ ~~\text{and}~~
+ [(P \design Q) \equiv (P \design P \implies Q)]
+$$
+
+$$
+[(P \design Q) \equiv (P \design R)] 
+~~\mathbf{iff}~~
+[(P \land Q) \implies R]
+~~\text{and}~~
+[R \implies (P \implies Q)]
+$$
+
+From \cite[\textbf{L1},p78]{UTP-book}:
+$$
+  \true ; (P \design Q) = \true
+$$
 
 Pulling them all together:
 \begin{code}

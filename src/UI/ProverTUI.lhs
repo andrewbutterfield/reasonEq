@@ -7,7 +7,7 @@ Copyright (c) Andrew Butterfield 2017--25
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module ProverTUI where
+module UI.ProverTUI where
 
 import System.Environment
 import System.IO

@@ -50,8 +50,8 @@ import Dev
 import SAT
 import Classifier
 import LiveProofs
-import ProverTUI
-import TopTUI
+import UI.ProverTUI
+import UI.TopTUI
 
 import Debugger
 \end{code}

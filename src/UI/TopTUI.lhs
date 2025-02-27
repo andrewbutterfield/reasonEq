@@ -7,7 +7,7 @@ Copyright (c) Andrew Butterfield 2017--25
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module TopTUI where
+module UI.TopTUI where
 
 import System.Environment
 import System.IO
@@ -51,8 +51,8 @@ import Dev
 import SAT
 import Classifier
 import LiveProofs
-import TUISupport
-import ProverTUI
+import UI.TSupport
+import UI.ProverTUI
 
 import Debugger
 \end{code}

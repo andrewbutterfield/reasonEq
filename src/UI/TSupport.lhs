@@ -5,7 +5,7 @@ Copyright (c) Andrew Butterfield 2025
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module TUISupport
+module UI.TSupport
   ( selectByNumber
   ) 
 where

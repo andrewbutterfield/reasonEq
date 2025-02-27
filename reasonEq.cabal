@@ -41,7 +41,6 @@ library
       ProofMatch
       Proofs
       ProofSettings
-      ProverTUI
       Ranking
       REPL
       REqState
@@ -54,10 +53,11 @@ library
       TermZipper
       TestRendering
       Theories
-      TopGUI
-      TopTUI
-      TUISupport
       Typing
+      UI.ProverTUI
+      UI.TopGUI
+      UI.TopTUI
+      UI.TSupport
       UnivSets
       Utilities
       VarData

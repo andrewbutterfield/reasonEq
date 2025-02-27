@@ -46,6 +46,7 @@ import Sets
 import Lists
 import UTP.While.Common
 import UTP.While.Naive
+import UTP.Designs
 import UTP.UTCP
 --import XYZ
 --import XYZDesign
@@ -57,7 +58,7 @@ import Debugger
 \subsection{Introduction}
 
 This module provides behaviours that are only enabled if the prover 
-is started in ``devdelopment mode''.
+is started in ``development mode''.
 The precise behaviour of enabling development mode may change over time.
 
 \subsection{Development State}
@@ -111,6 +112,7 @@ devKnownBuiltins  = [ equivTheory
                     , listTheory
                     , utpCW_Theory
                     , utpNW_Theory
+                    , designTheory
                     , utcpTheory
                     ]
 

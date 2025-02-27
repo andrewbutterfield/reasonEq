@@ -15,6 +15,7 @@ module
   , _epsilon, _tau, _sigma, _Sigma, _omega, _lambda, _Lambda
   , _top, _bot, _sqcap, _sqcup, _sqsubseteq, _sqsupseteq
   , _skip, _lif, _rif, _while
+  , _design
   , _true , _false , _not, _and, _or, _imp, _eqv
   , _forall, _exists
   , _powerset, _emptyset, _union, _intsct, _setminus
@@ -153,6 +154,7 @@ theSymbolList
   , ("skip", SymForm "II" "II")
   , ("lif", SymForm "<|"  "\x25c1"), ("rif", SymForm "|>"  "\x25b7")
   , ("while", SymForm "*" "\x229b")
+  , ("design", SymForm "|-"  "\x22a2")
 
   , ("not", SymForm "~"  "\x00ac")
   , ("and", SymForm "/\\"  "\x2227"), ("or", SymForm "\\/"  "\x2228")
@@ -218,6 +220,7 @@ _sqsubseteq = nicesym "sqsubseteq" ; _sqsupseteq = nicesym "sqsupseteq"
 _skip = nicesym "skip"
 _lif = nicesym "lif" ; _rif = nicesym "rif"
 _while = nicesym "while"
+_design = nicesym "vdash"
 
 _true = nicesym "true" ; _false = nicesym "false"
 _not = nicesym "not" ; _and = nicesym "and" ; _or = nicesym "or"

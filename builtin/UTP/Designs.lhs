@@ -7,8 +7,10 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module UTP.Designs (
-  tok, tok', 
-  i_design, design
+  tok, tok' 
+, i_design, design
+, designName
+, designTheory
 ) where
 
 import Data.Maybe
@@ -70,7 +72,21 @@ tok = jVar bool vok  ;  tok' = jVar bool vok'
 \end{code}
 
 
-\section{Design Constructor}
+
+
+\section{The Design Theory}
+
+
+\subsection{Known Variables}
+
+\begin{code}
+designKnown :: VarTable
+designKnown =  fromJust $ addKnownVar v_design boolf_2 
+                        $ newNamedVarTable designName
+\end{code}
+
+
+\subsection{Design Axioms}
 
 Given a pre-condition $P$ and post-condition $Q$ 
 over an alphabet that does not mention $ok$ or $ok'$,
@@ -81,6 +97,7 @@ vP = Vbl (jId "P") PredV Static ; p = fromJust $ pVar ArbType vP ; gP = StdVar v
 vQ = Vbl (jId "Q") PredV Static ; q = fromJust $ pVar ArbType vQ ; gQ = StdVar vQ
 design :: Term -> Term -> Term
 i_design    =  jId "design"
+v_design    =  Vbl i_design ObsV Static
 design p q  =  Cons arbpred False i_design [p, q]
 \end{code}
 
@@ -98,5 +115,40 @@ designIntro = mkConsIntro i_design boolf_2
                          scTrue
 \end{code}
 
+
+
+\begin{code}
+designAxioms :: [Law]
+designAxioms  =  map labelAsAxiom [ axDsgDef ]
+\end{code}
+
+\subsection{Design Conjectures}
+
+
+Pulling them all together:
+\begin{code}
+designConjs :: [NmdAssertion]
+designConjs
+  = [ 
+    ]
+\end{code}
+
+
+\begin{code}
+designName :: String
+designName = "Designs"
+designTheory :: Theory
+designTheory
+  =  nullTheory { thName  =  designName
+                , thDeps  =  [ aoiName
+                            , conjName
+                            , disjName
+                            , notName
+                            , equivName ]
+                , known   =  designKnown
+                , laws    =  designAxioms
+                , conjs   =  designConjs
+                }
+\end{code}
 
 

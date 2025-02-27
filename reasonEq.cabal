@@ -80,6 +80,7 @@ library
       StdSignature
       StdTypeSignature
       UClose
+      UTP.Designs
       UTP.Observations
       UTP.Reading
       UTP.UTCP

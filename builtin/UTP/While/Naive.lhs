@@ -240,6 +240,44 @@ $$\par\vspace{-8pt}
 \end{code}
 
 
+\newpage
+\section{UTP Abort}
+
+\subsection{Defn. of Abort}
+
+From \cite[Defn 2.4.2,p53]{UTP-book}
+
+$$
+  \begin{array}{lll}
+     \bot  = \true
+     && \QNAME{$\bot$-def}
+  \end{array}
+$$ %\par\vspace{-8pt}
+\begin{code}
+abortIntro = mkKnownVar v_abort bool
+(axAbortDef,alAbortDef) = bookdef ("bot" -.- "def") "Def2.4.2"
+                           ( abort  ===  trueP )
+                           scTrue
+\end{code}
+
+\section{UTP Miracle}
+
+\subsection{Defn. of Miracle}
+
+From \cite[Defn 2.5.1,p55]{UTP-book}
+
+$$
+  \begin{array}{lll}
+     \top  = \false
+     && \QNAME{$\top$-def}
+  \end{array}
+$$ %\par\vspace{-8pt}
+\begin{code}
+miracleIntro = mkKnownVar v_miracle bool
+(axMiracleDef,alMiracleDef) = bookdef ("top" -.- "def") "Def2.5.1"
+                           ( miracle  ===  falseP )
+                           scTrue
+\end{code}
 
 
 \newpage
@@ -250,6 +288,8 @@ We collect our known variables:
 utpNW_Known
  = asgIntro $
    skipIntro $
+   abortIntro $
+   miracleIntro $
    newNamedVarTable utpNW_Name
 \end{code}
 
@@ -261,6 +301,8 @@ utpNW_Axioms
   = map labelAsAxiom
       [ axAsgDef
       , axSkipDef
+      , axAbortDef
+      , axMiracleDef
       ]
 \end{code}
 
@@ -281,6 +323,7 @@ utpNW_Aliases :: [(String,String)]
 utpNW_Aliases
   = [ alAsgDef, alAsgUnchanged, alAsgSeqSame, alAsgSeqCond
     , alSkipDef, alSkipL5a, alSkipL5b
+    , alAbortDef, alMiracleDef
     ]
 \end{code}
 

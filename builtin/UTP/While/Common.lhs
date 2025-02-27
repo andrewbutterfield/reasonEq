@@ -554,44 +554,6 @@ $$ %\par\vspace{-8pt}
              scTrue
 \end{code}
 
-\newpage
-\section{UTP Abort}
-
-\subsection{Defn. of Abort}
-
-From \cite[Defn 2.4.2,p53]{UTP-book}
-
-$$
-  \begin{array}{lll}
-     \bot  = \true
-     && \QNAME{$\bot$-def}
-  \end{array}
-$$ %\par\vspace{-8pt}
-\begin{code}
-abortIntro = mkKnownVar v_abort bool
-(axAbortDef,alAbortDef) = bookdef ("bot" -.- "def") "Def2.4.2"
-                           ( abort  ===  trueP )
-                           scTrue
-\end{code}
-
-\section{UTP Miracle}
-
-\subsection{Defn. of Miracle}
-
-From \cite[Defn 2.5.1,p55]{UTP-book}
-
-$$
-  \begin{array}{lll}
-     \top  = \false
-     && \QNAME{$\top$-def}
-  \end{array}
-$$ %\par\vspace{-8pt}
-\begin{code}
-miracleIntro = mkKnownVar v_miracle bool
-(axMiracleDef,alMiracleDef) = bookdef ("top" -.- "def") "Def2.5.1"
-                           ( miracle  ===  falseP )
-                           scTrue
-\end{code}
 
 \section{Variable List Fusion}
 
@@ -650,8 +612,6 @@ utpCW_Known
    seqIntro $
    obsIntro $
    ndcIntro $
-   abortIntro $
-   miracleIntro $
    newNamedVarTable utpCW_Name
 \end{code}
 
@@ -666,7 +626,6 @@ utpCW_Axioms
       , axSeqDef
       , axFusionDef
       , axNDCDef
-      , axAbortDef, axMiracleDef
       ]
 \end{code}
 
@@ -696,7 +655,6 @@ utpCW_Aliases
     , alSeqDef, alSeqAssoc, alSeqLDistr
     , alNDCDef, alNDCSymm, alNDCAssoc, alNDCIdem, alNDCDistr
     , alCondNDCDistr, alSeqNDCLDistr, alSeqNDCRDistr, alNDCCondDistr
-    , alAbortDef, alMiracleDef
     ]
 \end{code}
 

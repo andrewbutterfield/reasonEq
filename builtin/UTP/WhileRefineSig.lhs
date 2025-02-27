@@ -1,4 +1,4 @@
-\chapter{UTP While-Refinement Signatrue}
+\chapter{UTP While-Refinement Signature}
 \begin{verbatim}
 Copyright  Andrew Butterfield (c) 2018--2025
 
@@ -6,7 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module UTPWhileRefineSig (
+module UTP.WhileRefineSig (
   i_refines, refines
 , i_cond, cond
 , i_seq, mkSeq
@@ -38,7 +38,7 @@ import Theories
 import TestRendering
 import StdTypeSignature
 import StdSignature
-import UTPReading
+import UTP.Reading
 \end{code}
 
 

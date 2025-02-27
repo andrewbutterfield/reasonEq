@@ -6,7 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module UTPObservations (
+module UTP.Observations (
   isUTPDynObs, areUTPDynObs, isUTPCond, areUTPCond, isUTPStcObs
 , areUTPStcObs
 ) where
@@ -41,8 +41,8 @@ import ForAll
 import Exists
 import UClose
 import StdTypeSignature
-import UTPReading
-import UTPWhileRefineSig
+import UTP.Reading
+import UTP.WhileRefineSig
 import TestRendering
 
 import Debugger

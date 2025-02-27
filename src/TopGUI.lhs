@@ -41,7 +41,7 @@ import Assertions
 import Ranking
 import REqState
 import AbstractUI
-import UTPWhileRefineSig
+import UTP.WhileRefineSig
 import Instantiate
 import TestRendering
 import Parsing

@@ -6,7 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module UTCP (
+module UTP.UTCP (
   i_atom, atom
 , i_cskip, cskip
 , i_cseq, cseq
@@ -45,9 +45,9 @@ import Equality
 import ForAll
 import Exists
 import UClose
-import UTPWhileRefineSig
-import UTPObservations
-import UTPCommonWhile
+import UTP.WhileRefineSig
+import UTP.Observations
+import UTP.CommonWhile
 import Arithmetic
 import Sets
 import Lists

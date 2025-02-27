@@ -6,7 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module UTPCommonWhile (
+module UTP.CommonWhile (
   utpCW_Conjs, utpCW_Name, utpCW_Theory
 , utpCW_Aliases
 ) where
@@ -41,9 +41,9 @@ import ForAll
 import Exists
 import UClose
 import StdTypeSignature
-import UTPReading
-import UTPObservations
-import UTPWhileRefineSig
+import UTP.Reading
+import UTP.Observations
+import UTP.WhileRefineSig
 import TestRendering
 
 import Debugger

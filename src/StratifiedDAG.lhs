@@ -1,4 +1,4 @@
-\section{Stratified DAGs}
+\chapter{Stratified DAGs}
 \begin{verbatim}
 Copyright  Andrew Butterfield (c) 2018-2022
 
@@ -22,7 +22,7 @@ import qualified Data.Map as M
 import Utilities
 \end{code}
 
-\subsection{Introduction}
+\section{Introduction}
 
 We have a directed acyclic graph (DAG)
 implemented as $\delta : N \fun \power N$.
@@ -32,7 +32,7 @@ and $n_1,..,n_k$ are already present, in its domain.
 Note this means that we can only enter
 $n \mapsto \emptyset$ into an empty DAG.
 
-\subsection{Types}
+\section{Types}
 
 
 Given $n \in \dom\delta$, we want to generate a list of all nodes
@@ -55,7 +55,7 @@ type SDAGLevel a  =  [SDAGEntry a]
 type SDAG a       =  [SDAGLevel a]
 \end{code}
 
-\subsection{SDAG Lookup}
+\section{SDAG Lookup}
 
 \begin{code}
 lkpSDAG :: (Eq a, MonadFail m) => a -> SDAG a -> m [a]
@@ -68,9 +68,9 @@ lkpSDAG' n lvls ((m,ms):rest)
  | otherwise  =  lkpSDAG' n lvls rest
 \end{code}
 
-\subsection{SDAG Insertion}
+\section{SDAG Insertion}
 
-\subsubsection{Insertion pre-condition}
+\subsection{Insertion pre-condition}
 
 \begin{code}
 type SDAGStats a
@@ -100,7 +100,7 @@ mrg :: SDAGStats a -> (SDAGStats a -> SDAGStats a) -> SDAGStats a
 mrg res@(nPresent,_,_) f  =  if nPresent then res else f res
 \end{code}
 
-\subsubsection{Insertion}
+\subsection{Insertion}
 
 \begin{code}
 insSDAG :: (Eq a, Show a, MonadFail m)
@@ -123,7 +123,7 @@ insSDAGLvl n ns i (lvl:lvls)  =  lvl : insSDAGLvl n ns (i-1) lvls
 \end{code}
 
 \newpage
-\subsection{Dependency extraction}
+\section{Dependency extraction}
 
 Extracting a node and all its dependencies, ordered by layer.
 \begin{code}
@@ -163,7 +163,7 @@ bottomUpSDAG :: SDAG a -> [a]
 bottomUpSDAG = reverse . topDownSDAG
 \end{code}
 
-\subsection{Misc. stuff}
+\section{Misc. stuff}
 
 \begin{code}
 lvlDom :: SDAGLevel a -> [a]
@@ -189,7 +189,7 @@ n `inSDAGDom` sdag = n `elem`  sdagDOM sdag
 \end{code}
 
 \newpage
-\subsection{Test examples}
+\section{Test examples}
 
 \begin{code}
 -- well-formed

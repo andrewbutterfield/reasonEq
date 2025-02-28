@@ -4,6 +4,7 @@
 
 * Continue developing the  `Designs` theory. 
 * Add a  `While.Design` theory.
+* Need a pre/post-condition theory that covers sec 2.8 of the book (Hoare Triples, Floyd assertions, Weakest precondition).
 
 ### Simple Input Format
 

@@ -123,8 +123,10 @@ designAxioms  =  map labelAsAxiom [ axDsgDef ]
 
 \subsection{Design Conjectures}
 
-For now we just list definitions and theorems in Chp 2.
+For now we just list definitions and theorems in Chp 3.
 Some regarding assignment and skip should end up in \h{UTP.While.Design}
+
+\subsubsection{Design Foundations and Concepts}
 
 From: \cite[Thm 3.1.2,p77]{UTP-book}:
 $$
@@ -201,13 +203,122 @@ $$
          (P_1 \cond{b} P_2 \design Q_1 \cond{b}r Q_2)
 \\ (3) & (P_1\design Q_1);(P_2 \design Q)
          =
-         ( \lnot(\lnot P_1;\true) \land \lnot(Q_1;\lnot Q_2
+         ( \lnot(\lnot P_1;\true) \land \lnot(Q_1;\lnot P_2)
            \design 
            Q_1 ;Q_2 )
 \end{array}
 $$
+
+
+From \cite[\textbf{Thm. 3.1.5},p80]{UTP-book}:
+$$
+\begin{array}{ll}
+   (1) & \bigsqcap_i(P_i \design Q_i) 
+         = 
+         (\bigwedge_i P_i) \design (\bigvee_i Q_i)
+\\ (2) & \bigsqcup_i(P_i \design Q_i) 
+         = 
+         (\bigvee_i P_i) \design (\bigwedge_i (P_i \implies Q_i))
+\end{array}
+$$
+
+
+From \cite[p80]{UTP-book}:
+$$
+\top_\Design ~~ \defs ~~ (\true \design \false) ~=~ \lnot ok
+$$
+
+From \cite[\textbf{Thm. 3.1.6},p81]{UTP-book}:
+$$
+\begin{array}{rl}
+                & \mu(X,Y)\bullet(F(X,Y)\design G(X,Y)) = (P(Q)\design Q)
+\\ \text{where} & P(Y) = \nu X \bullet F(X,Y)
+\\   \text{and} & Q = \mu Y \bullet (P(Y)\implies G(P(Y),Y))
+\end{array}
+$$
+
+From \cite[\textbf{Exc 3.1.7},p82]{UTP-book}:
+$$
+\begin{array}{ll}
+   (1) & \text{Prove that } \top_\Design ; (P \design Q) = \top_\Design
+\\ (2) & \text{Prove that } (x:=e);\true ~~=~~ \true;(x:=e) ~~=~~ \true
+\end{array}
+$$
+
+
+\subsubsection{Healthiness Conditions}
+
+From \cite[\textbf{Defn 3.2.1},p82]{UTP-book}:
+$$
+\begin{array}{ll}
+   \H{H1} & R = (ok \implies R)
+\\ \H{H2} & [R[false/ok']\implies R[true/ok']]
+\\ \H{H3} & R = R ; \Skip
+\\ \H{H4} & R ; \true = true
+\end{array}
+$$
+
+From \cite[\textbf{Thm 3.2.2},p83]{UTP-book}:
+A predicate is \H{H1} ~~\IFF~~ it satisfies left-zero and left-unit
+$$
+\true;R = R = \Skip ; R
+$$
+
+From \cite[\textbf{Thm 3.2.3},p83]{UTP-book}:
+A predicate is \H{H1} and \H{H2}~~\IFF~~ it is a design.
+$$
+\H{H1} \land \H{H2} \equiv \text{isDesign}
+$$
+
+From \cite[\textbf{Thm 3.2.4},p84]{UTP-book}:
+A design is \H{H3} if its assumption $P$ can be expressed as a condition $p$.
+$$
+(p\design Q) = (p\design Q);\Skip
+$$
+Being \H{H3} allows us to simplify Thm 3.1.4(3) to
+$$
+(p_1\design Q_1);(p_2 \design Q)
+         =
+         ( p_1 \land \lnot(Q_1;\lnot p_2)
+           \design 
+           Q_1 ;Q_2 )
+$$
+
+From \cite[\textbf{Thm 3.2.5},p85]{UTP-book}:
+
+$P\design Q$ satisfies \H{H4} ~~\IFF~~ $[\exists ok',x',\dots,z'\bullet (P\design  Q)]$.
+
+
+
+From \cite[\textbf{Exc. 3.2.6},p85]{UTP-book}:
+$$
+\begin{array}{ll}
+   (1) & \text{prove } ~~;~~\ndc~~\cond{\_}\text{ preserve healthiness}
+\\ (2) & \text{Given } b(v) \design Q(v,v') \text{ is predeterministic if}
+\\     & \qquad [(b(v)\land Q(v,v_1)\land Q(v,v_2))\implies(v_1=v_2)]
+\\     & \text{Prove } ~~;~~ \cond{\_} \text{ preserve predeterminism}
+\\ (3) & b \text{ is stable if }  b = b \land ok
+\\     & \text{Given healthy } R \text{ and stable } b
+\\     & \text{Prove }  R \wp b \text{ is stable}
+\\     & \text{Prove }  R \wp false 
+\end{array}
+$$
+
 % From \cite[\textbf{Xn},pNN]{UTP-book}:
+% $$
+% \begin{array}{ll}
+%    (1) & stuff
+% \end{array}
+% $$
+
 % From \cite[\textbf{Xn},pNN]{UTP-book}:
+% $$
+% \begin{array}{ll}
+%    (1) & stuff
+% \end{array}
+% $$
+
+
 
 Pulling them all together:
 \begin{code}

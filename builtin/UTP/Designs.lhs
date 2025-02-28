@@ -123,6 +123,9 @@ designAxioms  =  map labelAsAxiom [ axDsgDef ]
 
 \subsection{Design Conjectures}
 
+For now we just list definitions and theorems in Chp 2.
+Some regarding assignment and skip should end up in \h{UTP.While.Design}
+
 From: \cite[Thm 3.1.2,p77]{UTP-book}:
 $$
 [(P_1 \design Q_1) \implies (P_2 \design Q_2)] 
@@ -151,6 +154,60 @@ From \cite[\textbf{L1},p78]{UTP-book}:
 $$
   \true ; (P \design Q) = \true
 $$
+
+From \cite[\textbf{Def. 3.1.3},p78]{UTP-book}:
+$$
+x := e ~~\defs~~ (\true \design x'=e \land y'=y \dots z'=z)
+$$
+Also
+$$
+x := e ~~\defs~~ (\mathcal D e \design x'=e \land y'=y \dots z'=z)
+$$
+Also (p79)
+$$
+P \cond b Q ~~\defs~~ (\mathcal D b \implies (b \land P \lor \lnot b \land Q))
+$$
+
+From \cite[\textbf{L2},p79]{UTP-book}:
+$$
+ (v:=e;v:=f(v)) ~~=~~ (v:=f(e))
+$$
+
+From \cite[\textbf{L3},pp79]{UTP-book}:
+$$
+ v:=e;(P \cond{b(v)} Q) ~~=~~ (v:=e;P) \cond{b(e)} (v:=e;Q)
+$$
+
+
+From \cite[p79]{UTP-book}:
+$$
+  \Skip ~~\defs~~ (\true \design x'=x \land \dots \land z'=z)
+$$
+
+
+From \cite[\textbf{L4},p79]{UTP-book}:
+$$
+  \Skip ; ( P \design Q) = (P \design Q)
+$$
+
+From \cite[\textbf{Theorem 3.1.4},p79]{UTP-book}:
+$$
+\begin{array}{ll}
+   (1) & (P_1\design Q_1)\ndc(P_2 \design Q) 
+         = 
+         (P_1 \land P_2 \design Q_1 \lor Q_2)
+\\ (2) & (P_1\design Q_1)\cond{b}(P_2 \design Q)
+         =
+         (P_1 \cond{b} P_2 \design Q_1 \cond{b}r Q_2)
+\\ (3) & (P_1\design Q_1);(P_2 \design Q)
+         =
+         ( \lnot(\lnot P_1;\true) \land \lnot(Q_1;\lnot Q_2
+           \design 
+           Q_1 ;Q_2 )
+\end{array}
+$$
+% From \cite[\textbf{Xn},pNN]{UTP-book}:
+% From \cite[\textbf{Xn},pNN]{UTP-book}:
 
 Pulling them all together:
 \begin{code}

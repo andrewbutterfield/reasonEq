@@ -66,8 +66,19 @@ with bottom $\bot_{\mathbf{D}}=(\false\design\true)$
 and top $\top_{\mathbf{D}}=(\true\design\false)=\lnot ok$.
 This means the semantics of the while-loop is essentially the same.
 
-These are everything except skip assignment,
+These are everything except assignment and skip,
 which have different definitions in each.
+However, most of the conjectures regarding assignment and skip are the same.
+There are some involving $\true$, $\false$, $\Skip$ and sequential composition that are true in the na\"{i}ve theory, but are false for Designs.
+The following are true in the na\"{i}ve theory, 
+but are not value for ``real'' programs (a.k.a. designs)
+\begin{eqnarray*}
+   (\mu X \bullet X);P = P   &&  \text{pp59-60}
+\\ (\false \ndc P) = P       &&  \text{p61}
+\end{eqnarray*}
+We want  the law $\true;P = \true = P;\true$,
+except when $P$ is $\false$, 
+in which case $\true;\false = \false = \false;\true$.
 
 
 \newpage

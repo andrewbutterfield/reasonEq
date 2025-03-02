@@ -56,9 +56,8 @@ import Debugger
 
 
 Here we provide semantics for the elements of the Na\"{i}"ve While theory,
-were it differ from the corresponding Design semantics.
-
-This only affects assignment and skip.
+were they differ from the corresponding Design semantics.
+They are assignment, skip, abort and miracle.
 
 
 \section{UTP Assignment}
@@ -281,7 +280,7 @@ miracleIntro = mkKnownVar v_miracle bool
 
 
 \newpage
-\section{UTP Na\"{i}ve" Theory}
+\section{UTP Na\"{i}ve Theory}
 
 We collect our known variables:
 \begin{code}

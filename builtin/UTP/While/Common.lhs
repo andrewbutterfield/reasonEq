@@ -55,6 +55,17 @@ import Debugger
 Here we give semantics to elements of the ``While'' signature
 whose definitions do not change 
 when we move from na\"{i}ve to design-based theories.
+These are 
+refinement ($\sqsupseteq$), 
+conditionals ($\cond{\_}$),
+sequential composition ($;$), 
+and non-deterministic choice ($\ndc$).
+We also provide conjectures covering the laws that can be proven for that subset.
+The parts of the ``While'' signature not treated as common are 
+assignment ($:=$),
+skip ($\Skip$),
+abort ($\bot$),
+and miracle ($\top$).
 
 
 
@@ -71,7 +82,7 @@ which have different definitions in each.
 However, most of the conjectures regarding assignment and skip are the same.
 There are some involving $\true$, $\false$, $\Skip$ and sequential composition that are true in the na\"{i}ve theory, but are false or qualified for Designs.
 The following are true in the na\"{i}ve theory, 
-but are not value for ``real'' programs (a.k.a. designs)
+but are not valid for ``real'' programs (a.k.a. designs)
 \begin{eqnarray*}
    (\mu X \bullet X);P = P   &&  \text{pp59-60}
 \\ (\false \ndc P) = P       &&  \text{p61}
@@ -585,6 +596,8 @@ $$ %\par\vspace{-8pt}
 
 
 \section{Variable List Fusion}
+
+\textbf{THIS DOES NOT BELONG HERE}
 
 We start with another axiom that describes the ``fusion'' of predicates
 over lists of variables, structured in a particular way:

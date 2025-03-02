@@ -69,7 +69,7 @@ This means the semantics of the while-loop is essentially the same.
 These are everything except assignment and skip,
 which have different definitions in each.
 However, most of the conjectures regarding assignment and skip are the same.
-There are some involving $\true$, $\false$, $\Skip$ and sequential composition that are true in the na\"{i}ve theory, but are false for Designs.
+There are some involving $\true$, $\false$, $\Skip$ and sequential composition that are true in the na\"{i}ve theory, but are false or qualified for Designs.
 The following are true in the na\"{i}ve theory, 
 but are not value for ``real'' programs (a.k.a. designs)
 \begin{eqnarray*}
@@ -79,6 +79,24 @@ but are not value for ``real'' programs (a.k.a. designs)
 We want  the law $\true;P = \true = P;\true$,
 except when $P$ is $\false$, 
 in which case $\true;\false = \false = \false;\true$.
+We get the following correspondences:
+$$
+\begin{array}{|rcl|rcl|c|}
+  \hline
+  \multicolumn{3}{|c}{\text{Na\"{i}ve}}
+  & \multicolumn{3}{|c|}{\text{Design}}
+  & H1,H2 \text{ plus } \dots
+\\\hline
+  \Skip;P &=& P   &  \Skip;(P\design Q) &=& (P\design Q) &  
+\\\hline
+  P;\Skip &=& P   &  (P\design Q);\Skip &=& (P\design Q) &  H3
+\\\hline
+  \true;P &=& \true   &  \true;(P\design Q) &=& \true & 
+\\\hline
+  P;\true &=& \true  &  (P\design Q);\true &=& \true &  H4
+\\\hline
+\end{array}
+$$
 
 
 \newpage

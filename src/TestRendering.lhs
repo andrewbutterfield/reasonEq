@@ -204,7 +204,7 @@ precTable
     [ ( ";"        , (1,LAssoc))
     , ( ":="       , (1,NotAssoc))
     , ( "refines"  , (1,LAssoc))
-    , ( "vdash"    , (2,LAssoc))
+    , ( "design"   , (2,LAssoc))
     , ( "eqv"      , (3,LAssoc))
     , ( "sqcap"    , (4,LAssoc))
     , ( "imp"      , (4,LAssoc))

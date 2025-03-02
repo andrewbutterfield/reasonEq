@@ -45,6 +45,7 @@ import UClose
 import StdTypeSignature
 import UTP.Reading
 import UTP.While.RefineSig
+import UTP.While.Common
 import TestRendering
 
 import Debugger
@@ -110,7 +111,7 @@ $$
 $$\par\vspace{-8pt}
 \begin{code}
 designIntro = mkConsIntro i_design boolf_2
-(axDsgDef,alDsgDef) = bookdef ("refines" -.- "def") "defd1.5p34"
+(axDsgDef,alDsgDef) = bookdef ("design" -.- "def") "defd1.5p34"
                          (design p q === (tok /\ p ==> tok' /\ q))
                          scTrue
 \end{code}
@@ -334,8 +335,9 @@ designName :: String
 designName = "Designs"
 designTheory :: Theory
 designTheory
-  =  nullTheory { thName  =  designName
-                , thDeps  =  [ aoiName
+  = nullTheory  { thName  =  designName
+                , thDeps  = [ utpCW_Name
+                            , aoiName
                             , conjName
                             , disjName
                             , notName

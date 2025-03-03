@@ -82,8 +82,10 @@ tok = jVar bool vok  ;  tok' = jVar bool vok'
 
 \begin{code}
 designKnown :: VarTable
-designKnown =  fromJust $ addKnownVar v_design boolf_2 
-                        $ newNamedVarTable designName
+designKnown =  mkKnownVar v_design boolf_2 $
+               mkKnownVar vok bool $
+               mkKnownVar vok' bool $
+               newNamedVarTable designName
 \end{code}
 
 
@@ -155,8 +157,20 @@ $$
 
 From \cite[\textbf{L1},p78]{UTP-book}:
 $$
-  \true ; (P \design Q) = \true
-$$
+  \begin{array}{lll}
+     \true ; (P \design Q) = \true
+     && \QNAME{design-$;$-lzero}
+  \end{array}
+$$\par\vspace{-8pt}
+\begin{code}
+cjDesignLZero 
+  = preddef ("design" -.- ";" -.- "lzero")
+            (mkSeq trueP (design p q) === trueP)
+            scTrue
+\end{code}
+
+
+
 
 From \cite[\textbf{Def. 3.1.3},p78]{UTP-book}:
 $$
@@ -325,7 +339,7 @@ Pulling them all together:
 \begin{code}
 designConjs :: [NmdAssertion]
 designConjs
-  = [ 
+  = [ cjDesignLZero
     ]
 \end{code}
 

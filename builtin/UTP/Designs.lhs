@@ -45,6 +45,7 @@ import UClose
 import StdTypeSignature
 import UTP.Reading
 import UTP.While.RefineSig
+import UTP.Observations
 import UTP.While.Common
 import TestRendering
 
@@ -113,9 +114,10 @@ $$
 $$\par\vspace{-8pt}
 \begin{code}
 designIntro = mkConsIntro i_design boolf_2
-(axDsgDef,alDsgDef) = bookdef ("design" -.- "def") "defd1.5p34"
-                         (design p q === (tok /\ p ==> tok' /\ q))
-                         scTrue
+(axDsgDef,alDsgDef) 
+  = bookdef ("design" -.- "def") "defd1.5p34"
+            (design p q === (tok /\ p ==> tok' /\ q))
+            (areUTPDynObs [gP,gQ,StdVar vok,StdVar vok'])
 \end{code}
 
 

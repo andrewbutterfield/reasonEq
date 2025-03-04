@@ -1,0 +1,16 @@
+BEGIN THEORY Designs
+DEPS = ["U_CWhl","AOI","And","Or","Not","EQV"]
+KNOWN = VD ("Designs",fromList [(VR (Id "design" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "ok" 0,VO,WB),KV (TG (Id "B" 0))),(VR (Id "ok" 0,VO,WA),KV (TG (Id "B" 0)))],fromList [],fromList [])
+BEGIN LIST LAWS
+(("design_def",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) False (Id "design" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "imp" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "ok" 0,VO,WB)),V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "ok" 0,VO,WA)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]]],([],fromList []))),Axiom)
+END LIST LAWS
+BEGIN LIST SIMPLIFIERS
+END LIST SIMPLIFIERS
+BEGIN LIST DEFFOLD
+END LIST DEFFOLD
+BEGIN LIST DEFUNFOLD
+END LIST DEFUNFOLD
+BEGIN LIST CONJECTURES
+("design_;_lzero",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) False (Id ";" 0) [K (TF TB (TG (Id "B" 0))) (VB True),C (TF TB (TG (Id "B" 0))) False (Id "design" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],K (TF TB (TG (Id "B" 0))) (VB True)],([],fromList [])))
+END LIST CONJECTURES
+END THEORY Designs

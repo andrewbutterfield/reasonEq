@@ -1,11 +1,37 @@
 BEGIN REQSTATE
 BEGIN THEORIES
-THNAMES = ["AOI","And","Arith","EQV","Equal","Exists","Forall","Impl","LTL","Lists","Not","Or","Sets","UClose","UTCP","U_CWhl","U_NvWhl"]
-SDAG = [[("UTCP",["U_CWhl","Sets","UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"]),("U_NvWhl",["U_CWhl","UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("U_CWhl",["UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Lists",["Impl","EQV","Equal","Forall","Arith","Sets"]),("LTL",["Equal","Exists","Forall","Impl","AOI","And","Or","Not","EQV"]),("UClose",["Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Sets",["Impl","EQV","Equal","Forall","Arith"]),("Exists",["Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Arith",["Impl","EQV","Equal"]),("Forall",["Equal","Impl","AOI","And","Or","Not","EQV"])],[("Equal",["Impl","EQV"])],[("Impl",["AOI","And","Or","Not","EQV"])],[("AOI",["And","Or","Not","EQV"])],[("And",["Or","Not","EQV"])],[("Or",["Not","EQV"])],[("Not",["EQV"])],[("EQV",[])]]
+THNAMES = ["AOI","And","Arith","Designs","EQV","Equal","Exists","Forall","Impl","LTL","Lists","Not","Or","Sets","UClose","UTCP","U_CWhl","U_NvWhl"]
+SDAG = [[("UTCP",["U_CWhl","Sets","UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"]),("Designs",["U_CWhl","AOI","And","Or","Not","EQV"]),("U_NvWhl",["U_CWhl","UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("U_CWhl",["UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Lists",["Impl","EQV","Equal","Forall","Arith","Sets"]),("LTL",["Equal","Exists","Forall","Impl","AOI","And","Or","Not","EQV"]),("UClose",["Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Sets",["Impl","EQV","Equal","Forall","Arith"]),("Exists",["Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Arith",["Impl","EQV","Equal"]),("Forall",["Equal","Impl","AOI","And","Or","Not","EQV"])],[("Equal",["Impl","EQV"])],[("Impl",["AOI","And","Or","Not","EQV"])],[("AOI",["And","Or","Not","EQV"])],[("And",["Or","Not","EQV"])],[("Or",["Not","EQV"])],[("Not",["EQV"])],[("EQV",[])]]
 END THEORIES
-CURRTHEORY = UTCP
+CURRTHEORY = Designs
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("Designs","design_;_lzero")
+BEGIN LIVE-PROOF
+TH-NAME: Designs
+CJ-NAME: design_;_lzero
+CONJ = ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TF TB (TG (Id "B" 0))) False (Id ";" 0) [K (TF TB (TG (Id "B" 0))) (VB True),C (TF TB (TG (Id "B" 0))) False (Id "design" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],K (TF TB (TG (Id "B" 0))) (VB True)],([],fromList []))
+SIDE = ([],fromList [])
+STRAT red-L2R
+BEGIN PRFSET
+MM = 30
+TM = False
+TQ = False
+TS = False
+FV = True
+END PRFSET
+BEGIN SEQZIP
+TERMZIP = (C (TF TB (TG (Id "B" 0))) False (Id ";" 0) [K (TF TB (TG (Id "B" 0))) (VB True),C (TF TB (TG (Id "B" 0))) True (Id "imp" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "ok" 0,VO,WB)),V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "ok" 0,VO,WA)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]]],[])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.design_;_lzero", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = [], unfolds = []}, conjs = []}, whichC = Lft, otherC = K (TF TB (TG (Id "B" 0))) (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+(UseLaw (ByMatch MEL) "design_def" (BD (fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS))),((Id "Q" 0,VP),BV (VR (Id "Q" 0,VP,WS))),((Id "design" 0,VO),BV (VR (Id "design" 0,VO,WS))),((Id "ok" 0,VO),BI (Id "ok" 0))],fromList [],fromList [])) [2],ASN (C (TF TB (TG (Id "B" 0))) False (Id ";" 0) [K (TF TB (TG (Id "B" 0))) (VB True),C (TF TB (TG (Id "B" 0))) False (Id "design" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]],([],fromList [])))
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

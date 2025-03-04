@@ -572,7 +572,8 @@ The following should fail as $\lst x (O_m)$ is in $P (R[O_m/O'])$.
 \item[Known Vars] $ok,ok':\Bool$.
 \item[Law] $P;Q = \exists O_0 \bullet P[O_0/O'] \land Q[O_0/O], 
 \qquad O,O' \supseteq_a P; O,O' \supseteq_a Q; \fresh O_0$
-\item[Goal] $\true ;(ok \land P \implies ok' \land Q)$
+\item[Goal] $\true ;(ok \land P \implies ok' \land Q),
+            \qquad O,O' \supseteq_a P,Q,ok,ok'$
 \item[Bind] 
    $\beta
     =
@@ -590,6 +591,73 @@ The following should fail as $\lst x (O_m)$ is in $P (R[O_m/O'])$.
 What is missing here is that $ok \in O$ 
 and that $O$ should also cover $P$ and $Q$.
 Perhaps the left-zero law should stipulate this?
+
+Match predicate:
+\begin{eqnarray*}
+\lefteqn{\beta(\exists O_0 \bullet P[O_0/O'] \land Q[O_0/O])}
+\\ &=& \exists O_0 \bullet \beta(P[O_0/O']) \land \beta(Q[O_0/O])
+\\ &=& \exists O_0 \bullet \beta(P)[O_0/O'] \land \beta(Q)[O_0/O]
+\\ &=& \exists O_0 \bullet \true[O_0/O'] 
+                     \land (ok \land P \implies ok' \land Q)[O_0/O]
+\\ &=& \exists O_0 
+       \bullet 
+       (ok[O_0/O] \land P[O_0/O] \implies ok'[O_0/O] \land Q[O_0/O])
+\\ &=& \exists O_0 
+       \bullet 
+       (ok_0 \land P[O_0/O] \implies ok' \land Q[O_0/O])
+       \qquad \text{if we can show/use fact that } ok \in O
+\\ &=& \exists ok_0,O_0\less{ok} 
+       \bullet 
+       (ok_0 \land P[O_0/O] \implies ok' \land Q[O_0/O])
+       \qquad \text{if we can show/use fact that } ok \in O
+\\ &=& (\exists O_0\less{ok} 
+       \bullet 
+       (false \land P[O_0/O] \implies ok' \land Q[O_0/O]))
+\\  && \lor
+\\  && (\exists O_0\less{ok} 
+       \bullet 
+       (true \land P[O_0/O] \implies ok' \land Q[O_0/O]))
+\\ &=& (\exists O_0\less{ok} 
+       \bullet 
+       \true)
+\\  && \lor
+\\  && (\exists O_0\less{ok} 
+       \bullet 
+       (true \land P[O_0/O] \implies ok' \land Q[O_0/O]))
+\\ &=& \true
+\end{eqnarray*}
+
+Law side-condition:
+\begin{eqnarray*}
+\lefteqn{\beta(O,O' \supseteq_a P; O,O' \supseteq_a Q; \fresh O_0)}
+\\ &=&  \beta(O,O' \supseteq_a P) \land 
+        \beta(O,O' \supseteq_a Q) \land \beta(\fresh O_0)
+\\ &=&  O,O' \supseteq_a \beta(P) \land 
+        O,O' \supseteq_a \beta(Q) \land \fresh O_0
+\\ &=&  O,O' \supseteq_a \dfv(\true) \land 
+        O,O' \supseteq_a \dfv(ok \land P \implies ok' \land Q) \land \fresh O_0
+\\ &=&  O,O' \supseteq_a \emptyset \land 
+        O,O' \supseteq_a 
+            (\dfv(ok) \cup \dfv(P) \cup \dfv(ok') \cup \dfv(Q)) 
+            \land \fresh O_0
+\\ &=&  true \land
+        O,O' \supseteq_a 
+            (\setof{ok,ok'} \cup \dfv(P) \cup \dfv(Q)) 
+            \land \fresh O_0
+\\ &=&  O,O' \supseteq_a 
+            (\setof{ok,ok'} \cup \dfv(P) \cup \dfv(Q)) 
+            \land \fresh O_0
+\end{eqnarray*}
+
+We now ask does the goal s.c. imply the law s.c. in ``goalspace''?
+$$
+ (O,O' \supseteq_a P,Q,ok,ok')
+ \implies\!?~~
+ (O,O' \supseteq_a 
+            (\setof{ok,ok'} \cup \dfv(P) \cup \dfv(Q)))
+$$
+Quite clearly, it does!
+
 
 
 \newpage

@@ -605,6 +605,10 @@ trlstvarmatchrole trid (KnownVarList vl _ _)
   =  spaced _triangleq ++ trvlist trid vl
 trlstvarmatchrole trid (KnownVarSet  vs _ _)
   =  spaced _triangleq ++ trvset trid vs
+trlstvarmatchrole trid AbstractList
+  =  " : arbitrary list"
+trlstvarmatchrole trid AbstractSet
+  =  " : arbitrary set"
 trlstvarmatchrole trid UnknownListVar     =  " ?"
 \end{code}
 

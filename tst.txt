@@ -1,14 +1,6 @@
-@iSC.vscs:
+@xSCK.vscs:
+[VSC (GV (VR (Id "P" 0,VP,WB))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),VSC (GV (VR (Id "Q" 0,VP,WB))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))]))]
+@xSCK.vts:
+[VD ("Designs",fromList [(VR (Id "design" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "ok" 0,VO,WB),KV (TG (Id "B" 0))),(VR (Id "ok" 0,VO,WA),KV (TG (Id "B" 0)))],fromList [],fromList []),VD ("U_CWhl",fromList [(VR (Id ";" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "cond" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))),(VR (Id "refines" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "sqcap" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList [((Id "O" 0,VO),DS (fromList []) (fromList []) (fromList []) 0)]),VD ("UClose",fromList [],fromList [],fromList []),VD ("Exists",fromList [],fromList [],fromList []),VD ("Forall",fromList [],fromList [],fromList []),VD ("Equal",fromList [(VR (Id "=" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD ("Impl",fromList [(VR (Id "imp" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD ("AOI",fromList [],fromList [],fromList []),VD ("And",fromList [(VR (Id "and" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD ("Or",fromList [(VR (Id "or" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList []),VD ("Not",fromList [(VR (Id "not" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TG (Id "B" 0))))],fromList [],fromList []),VD ("EQV",fromList [(VR (Id "eqv" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))],fromList [],fromList [])]
+@xSCK.expanded:
 [VSC (GV (VR (Id "P" 0,VP,WB))) NA NA (The (fromList [])),VSC (GV (VR (Id "Q" 0,VP,WB))) NA NA (The (fromList []))]
-@iSC.bind:
-BD (fromList [((Id ";" 0,VO),BV (VR (Id ";" 0,VO,WS))),((Id "P" 0,VP),BT (K (TF TB (TG (Id "B" 0))) (VB True))),((Id "Q" 0,VP),BT (C (TF TB (TG (Id "B" 0))) True (Id "imp" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "ok" 0,VO,WB)),V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "ok" 0,VO,WA)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]]))],fromList [("0","0")],fromList [((Id "O" 0,VO,[],[]),BL [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])])
-@iSC.insctxt:
-ICtxt {icDV = fromList [], icSC = ([VSC (GV (VR (Id "P" 0,VP,WS))) NA NA (The (fromList [])),VSC (GV (VR (Id "Q" 0,VP,WS))) NA NA (The (fromList [])),VSC (GV (VR (Id "ok" 0,VO,WB))) NA NA (The (fromList [])),VSC (GV (VR (Id "ok" 0,VO,WA))) NA NA (The (fromList []))],fromList [])}
-@iSC.vscss0:
-[[],[VSC (GV (VR (Id "ok" 0,VO,WB))) NA NA (The (fromList [])),VSC (GV (VR (Id "ok" 0,VO,WA))) NA NA (The (fromList []))]]
-@iSC.freshvs:
-fromList []
-@iSC.freshvs':
-(fromList [],[])
-@iSC.vscs':
-[VSC (GV (VR (Id "ok" 0,VO,WB))) NA NA (The (fromList [])),VSC (GV (VR (Id "ok" 0,VO,WA))) NA NA (The (fromList []))]

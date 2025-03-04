@@ -25,10 +25,22 @@ fbind:
 { ;  ⟼ ;, P  ⟼ true, Q  ⟼ ok ∧ P ⟹   ok' ∧ Q, 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }
 ```
  
-Is the issue the fact that we have binding `O$  ⟼ ⟨O$⟩` ?
-It looks like discharge is breaking in that it reduces `O$,O$'` to `Ø`
+NO - ListVar `O` needs to be abstract in `U_CWhl`.
 
-IT'S THE XPNDD PART THAT'S TO BLAME (`VarData.expandSCKnowns`)
+
+A substitute bug in `U_CWhl`, proving `;_cond_l_distr`:
+
+```
+(∃ O$_1  • ((P◁b▷Q))[O$_1/O$'] ∧ R[O$_1/O$])
+   = 'substitute @[1,1]'
+(∃ O$_1  • (P◁b▷Q) ∧ R[O$_1/O$])
+ ```
+
+ Still broken if we expand the conditional. 
+
+ IS THIS BECAUSE `O$` is now abstract????  PROBABLY
+
+ **We need to make `mapVToverVarSet` work for abstract sets/lists**
 
 * Continue developing the  `Designs` theory. 
 * Add a  `While.Design` theory.

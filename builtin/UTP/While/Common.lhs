@@ -412,9 +412,10 @@ seqIntro = mkConsIntro i_seq boolf_2
 \end{code}
 We want to assert $O \supseteq P$, and rely on unformity to get the rest.
 
-We also need to ensure that $O$, $O'$, and $O_m$ are ``known''.
+We also need to ensure that $O$, $O'$, and $O_m$ are ``known'',
+but here they are \emph{abstract}:
 \begin{code}
-obsIntro = fromJust . addKnownVarSet vO S.empty
+obsIntro = mkAbsSetVar vO
 \end{code}
 We need to be able to make use of the following properties in proofs:
 $$

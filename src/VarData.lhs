@@ -23,7 +23,7 @@ module VarData ( VarMatchRole
                , addKnownLListVar, addKnownSListVar
                , addKnownVarList , addKnownVarSet
                , addAbstractVarList, addAbstractVarSet
-               , mkKnownVar, mkConsVar, mkConsIntro
+               , mkKnownVar, mkConsVar, mkConsIntro, mkAbsSetVar
                , lookupLVarTs, lookupVarTable, lookupVarTables
                , lookupLVar, lookupLVarTable, lookupLVarTables
                , isUnknownVar, isUnknownLVar, isUnknownGVar
@@ -589,7 +589,7 @@ addAbstractVarSet lv@(Vbl _ _ Static) (VD (nm,vtable,stable,dtable))
      Nothing -> return $ VD (nm,vtable,M.insert lv AS stable,dtable)
      _ -> fail "addAbstractVarSet(Static): already present"
 
-addAbstractVarSe lv@(Vbl i vc vw) (VD (nm,vtable,stable,dtable))
+addAbstractVarSet lv@(Vbl i vc vw) (VD (nm,vtable,stable,dtable))
  = case M.lookup (i,vc) dtable of
      Nothing -> return $ VD (nm,vtable,stable,M.insert (i,vc) DAS dtable)
      _ -> fail "addAbstractVarSet(dynamic): already present"
@@ -610,6 +610,9 @@ mkConsVar i t = Vbl i ObsV Static
 
 mkConsIntro :: Identifier -> Type -> VarTable -> VarTable
 mkConsIntro i t = mkKnownVar (mkConsVar i t) t
+
+mkAbsSetVar :: Variable -> VarTable -> VarTable
+mkAbsSetVar v = fromJust . addAbstractVarSet v
 \end{code}
 
 
@@ -1019,9 +1022,10 @@ mapTS vts svg (gv@(LstVar (LVbl v _ _)):gvs)
 
 \section{Expanding Knowns in Side-Conditions}
 \begin{code}
+xdb what = pdbg ("xSCK."++what)
 expandSCKnowns :: [VarTable] -> SideCond -> SideCond
 expandSCKnowns vts (vscs,freshvs)
-  = ( map (expandVSCKnowns vts) vscs
+  = ( xdb "expanded" $ map (expandVSCKnowns $ xdb "vts" vts) $ xdb "vscs" vscs
     , mapVToverVarSet vts freshvs ) 
 --    , S.unions (S.map (expandKnownGenVars vts) freshvs ) )
 

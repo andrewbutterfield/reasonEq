@@ -2,22 +2,31 @@
 
 ## URGENT or NEXT
 
-Trying to prove `design_;_zero`:
+Trying to prove `design_;_lzero`:
+
+When we add side-conds to law, we get 
 
 ```
-true ; P ⊢ Q
-   = 'match-lhs ⊢_def@[2]'
-true ; ok ∧ P ⟹   ok' ∧ Q
 proof: tm 1 ;_def
-Match against `;_def'[1] was successful
-Binding: { ;  ⟼ ;, P  ⟼ true, Q  ⟼ ok ∧ P ⟹   ok' ∧ Q, 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }
-Instantiated Replacement = (∃ O$_0  • true[O$_0/O$'] ∧ (ok ∧ P ⟹   ok' ∧ Q)[O$_0/O$])
-Law S.C.: = O$,O$'⊇ₐP, O$,O$'⊇ₐQ, fresh:O$_0
-Instantiated Law S.C. = Ø⊇ₐP, Ø⊇ₐQ, Ø⊇ₐok, Ø⊇ₐok'
-Goal S.C. = ⊤
-Discharged Law S.C. = Ø⊇ₐP, Ø⊇ₐQ, Ø⊇ₐok, Ø⊇ₐok'```
+Match against `;_def'[1] failed!
+try s.c. discharge failed
+atomic dyncover fails (null)
+gv = GV (VR (Id "ok" 0,VO,WB))
+vsCd = fromList []
+Ø⊇ₐP, Ø⊇ₐQ, Ø⊇ₐok, Ø⊇ₐok' ⟹ Ø⊇ₐok, Ø⊇ₐok'
+lnm[parts]=;_def[1]
+tC=true ; ok ∧ P ⟹   ok' ∧ Q
+scC=Ø⊇ₐP, Ø⊇ₐQ, Ø⊇ₐok, Ø⊇ₐok'
+tP'=(∃ O$_0  • true[O$_0/O$'] ∧ (ok ∧ P ⟹   ok' ∧ Q)[O$_0/O$])
+partsP=P ; Q
+replP=(∃ O$_0  • P[O$_0/O$'] ∧ Q[O$_0/O$])
+scP'=Ø⊇ₐok, Ø⊇ₐok'
+fbind:
+{ ;  ⟼ ;, P  ⟼ true, Q  ⟼ ok ∧ P ⟹   ok' ∧ Q, 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }
+```
  
 Is the issue the fact that we have binding `O$  ⟼ ⟨O$⟩` ?
+It looks like discharge is breaking in that it reduces `O$,O$'` to `Ø`
 
 * Continue developing the  `Designs` theory. 
 * Add a  `While.Design` theory.

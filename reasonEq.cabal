@@ -18,7 +18,6 @@ extra-source-files:
 
 library
   exposed-modules:
-      AbstractUI
       AlphaEquiv
       Assertions
       AST
@@ -54,6 +53,7 @@ library
       TestRendering
       Theories
       Typing
+      UI.AbstractUI
       UI.ProverTUI
       UI.TopGUI
       UI.TopTUI

@@ -305,15 +305,16 @@ and $<$Complete Binding$>$ for application involves(?) \texttt{completeBind}.
 \begin{code}
 tryLawByName :: Assertion -> String -> [Int] -> [MatchContext]
                -> YesBut ( Binding    -- mapping from pattern to candidate
+                         , SideCond   -- Law side-condition
                          , Term       -- autoInstantiated Law
                          , SideCond   -- updated expanded candidate side-cond.
                          , SideCond ) -- discharged(?) law side-condition
 tryLawByName (Assertion tC scC) lnm parts mcs
-  = do (((_,asnP),_),vts) <- findLaw lnm mcs
-       let tP = assnT asnP
+  = do (((_,(Assertion tP scP)),_),vts) <- findLaw lnm mcs
        (partsP,replP) <- findParts parts tP
-       let scP = expandSCKnowns vts $ assnC asnP
-       tryMatch vts tP partsP replP scP
+       let scXP = expandSCKnowns vts scP
+       (bind,instlaw,expsc,dischsc) <- tryMatch vts tP partsP replP scXP
+       return (bind,scP,instlaw,expsc,dischsc)
   where
     -- below we try to do:
     -- bind          <- match vts tC partsP

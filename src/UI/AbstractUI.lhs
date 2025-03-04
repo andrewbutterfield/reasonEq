@@ -7,7 +7,7 @@ Copyright (c) Andrew Butterfield 2017--2024
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module AbstractUI
+module UI.AbstractUI
 ( REqState
 , observeSettings
 , observeSig, observeTheories, observeTheoryNames, observeLaws
@@ -612,7 +612,7 @@ matchFocusAgainst lawnm liveProof
 Third, a deep dive to apply \texttt{match} so we can get back errors.
 \begin{code}
 tryFocusAgainst :: String -> [Int] -> LiveProof
-                -> YesBut (Binding,Term,SideCond,SideCond)
+                -> YesBut (Binding,SideCond,Term,SideCond,SideCond)
 tryFocusAgainst lawnm parts liveProof
   = let (tz,_)      =  focus liveProof
         goalt       =  getTZ tz

@@ -41,7 +41,7 @@ import Assertions
 import Ranking
 import ProofSettings
 import REqState
-import AbstractUI
+import UI.AbstractUI
 import UTP.While.RefineSig
 import Instantiate
 import TestRendering

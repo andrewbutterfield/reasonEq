@@ -40,7 +40,7 @@ import Assertions
 import Ranking
 import ProofSettings
 import REqState
-import AbstractUI
+import UI.AbstractUI
 import UTP.While.RefineSig
 import Instantiate
 import TestRendering
@@ -813,11 +813,12 @@ tryMatch :: REPLCmd (REqState, LiveProof)
 tryMatch [] state = return state
 tryMatch args state@( reqs, liveProof)
   = do  case tryFocusAgainst lawnm parts liveProof of
-          Yes (bind,tPasC,scC',scP') ->
+          Yes (bind,scP,tPasC,scC',scP') ->
             putStrLn $ unlines
               [ banner ++ " was successful"
               , "Binding: " ++ trBinding bind
               , "Instantiated Replacement = " ++ trTerm 0 tPasC
+              , "Law S.C.: = " ++ trSideCond scP 
               , "Instantiated Law S.C. = " ++ trSideCond scC'
               , "Goal S.C. = " ++ trSideCond (xpndSC liveProof)
               , "Discharged Law S.C. = " ++ trSideCond scP']

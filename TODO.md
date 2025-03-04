@@ -2,6 +2,23 @@
 
 ## URGENT or NEXT
 
+Trying to prove `design_;_zero`:
+
+```
+true ; P ⊢ Q
+   = 'match-lhs ⊢_def@[2]'
+true ; ok ∧ P ⟹   ok' ∧ Q
+proof: tm 1 ;_def
+Match against `;_def'[1] was successful
+Binding: { ;  ⟼ ;, P  ⟼ true, Q  ⟼ ok ∧ P ⟹   ok' ∧ Q, 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }
+Instantiated Replacement = (∃ O$_0  • true[O$_0/O$'] ∧ (ok ∧ P ⟹   ok' ∧ Q)[O$_0/O$])
+Law S.C.: = O$,O$'⊇ₐP, O$,O$'⊇ₐQ, fresh:O$_0
+Instantiated Law S.C. = Ø⊇ₐP, Ø⊇ₐQ, Ø⊇ₐok, Ø⊇ₐok'
+Goal S.C. = ⊤
+Discharged Law S.C. = Ø⊇ₐP, Ø⊇ₐQ, Ø⊇ₐok, Ø⊇ₐok'```
+ 
+Is the issue the fact that we have binding `O$  ⟼ ⟨O$⟩` ?
+
 * Continue developing the  `Designs` theory. 
 * Add a  `While.Design` theory.
 * Most of the laws/conjectures for naive and design while-languages are the same. However `While.Common` is not the place for those. The conjectures need to be in or "above" a theory that gives the specific semantics.

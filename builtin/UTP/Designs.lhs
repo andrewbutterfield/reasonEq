@@ -117,7 +117,7 @@ designIntro = mkConsIntro i_design boolf_2
 (axDsgDef,alDsgDef) 
   = bookdef ("design" -.- "def") "defd1.5p34"
             (design p q === (tok /\ p ==> tok' /\ q))
-            (areUTPDynObs [gP,gQ,StdVar vok,StdVar vok'])
+            scTrue
 \end{code}
 
 
@@ -168,7 +168,7 @@ $$\par\vspace{-8pt}
 cjDesignLZero 
   = preddef ("design" -.- ";" -.- "lzero")
             (mkSeq trueP (design p q) === trueP)
-            scTrue
+            (areUTPDynObs [gP,gQ,StdVar vok,StdVar vok'])
 \end{code}
 
 

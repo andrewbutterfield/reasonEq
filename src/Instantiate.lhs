@@ -528,6 +528,8 @@ For atomic side-conditions:
 
 \subsection{SC Instantiation Examples}
 
+\subsubsection{INSTANTIATING Substitution}
+
 Consider this example:
 \begin{description}
 \item[Law] $P[\lst e/\lst x] = P, \qquad \lst x \notin P$
@@ -563,7 +565,36 @@ The following should fail as $\lst x (O_m)$ is in $P (R[O_m/O'])$.
 \\ &=&  \false
 \end{eqnarray*}
 
-Now consider another example (UTCP theory):
+\newpage
+\subsubsection{INSTANTIATING Design $(P \design Q)$}
+
+\begin{description}
+\item[Known Vars] $ok,ok':\Bool$.
+\item[Law] $P;Q = \exists O_0 \bullet P[O_0/O'] \land Q[O_0/O], 
+\qquad O,O' \supseteq_a P; O,O' \supseteq_a Q; \fresh O_0$
+\item[Goal] $\true ;(ok \land P \implies ok' \land Q)$
+\item[Bind] 
+   $\beta
+    =
+    \setof{
+      P \mapsto \true
+      ,
+      Q \mapsto (ok \land P \implies ok' \land Q)
+      ,
+      0 \mapsto 0
+      ,
+      O \mapsto \seqof{O}
+    }
+   $
+\end{description}
+What is missing here is that $ok \in O$ 
+and that $O$ should also cover $P$ and $Q$.
+Perhaps the left-zero law should stipulate this?
+
+
+\newpage
+\subsubsection{INSTANTIATING  UTCP $X(E,a,R,N)$}
+
 \begin{description}
 \item[Static Vars (not in $O,O'$.)]
    $E_i, R_i, N_i$.

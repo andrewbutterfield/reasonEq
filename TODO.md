@@ -4,6 +4,30 @@
 
 Trying to prove `design_;_lzero`:
 
+**This should not fail:**
+
+```
+proof: tm 1 and_subst
+Match against `and_subst'[1] failed!
+try match failed
+
+(ok ∧ P)[O$_1/O$] :: (P ∧ Q)[e$/x$]
+
+lnm[parts]=and_subst[1]
+tP=(P ∧ Q)[e$/x$] ≡ P[e$/x$] ∧ Q[e$/x$]
+partsP=(P ∧ Q)[e$/x$]
+replP=P[e$/x$] ∧ Q[e$/x$]
+tC=(ok ∧ P)[O$_1/O$]
+scC=O$,O$'⊇ₐP, O$,O$'⊇ₐQ, O$,O$'⊇ₐok, O$,O$'⊇ₐok', fresh:O$_1
+---
+vMatch: class mismatch
+vC = VR (Id "ok" 0,VO,WB)
+vP = VR (Id "P" 0,VP,WS)
+```
+
+Static predicate-var `P` should be fine matched against dynamic var `ok`.
+
+
 When we add side-conds to law, we get 
 
 ```
@@ -40,7 +64,10 @@ A substitute bug in `U_CWhl`, proving `;_cond_l_distr`:
 
  IS THIS BECAUSE `O$` is now abstract????  PROBABLY
 
+ Basically substitute does not apply if target (list)var is abstract
+
  **We need to make `mapVToverVarSet` work for abstract sets/lists**
+ *it already does, it leaves abstract stuff unchanged*
 
 * Continue developing the  `Designs` theory. 
 * Add a  `While.Design` theory.

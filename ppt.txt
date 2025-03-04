@@ -1,27 +1,33 @@
 @xSCK.vscs:
 [ VSC
-  (GV (VR (Id "P" 0, VP, WB)))
+  (GV (VR (Id "P" 0, VP, WS)))
   NA
   NA
   ( The
     ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
       , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) )
 , VSC
-  (GV (VR (Id "Q" 0, VP, WB)))
+  (GV (VR (Id "Q" 0, VP, WS)))
   NA
   NA
   ( The
     ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
-      , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) ) ]
+      , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) )
+, VSC
+  (GV (VR (Id "R" 0, VP, WS)))
+  NA
+  NA
+  ( The
+    ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+      , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) )
+, VSC
+  (GV (VR (Id "b" 0, VP, WB)))
+  NA
+  NA
+  ( The
+    ( { GL (LV (VR (Id "O" 0, VO, WB), [], [])) } ) ) ]
 @xSCK.vts:
 [ VD
-  ( "Designs"
-  , { (VR (Id "design" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
-    , (VR (Id "ok" 0, VO, WB), KV (TG (Id "B" 0)))
-    , (VR (Id "ok" 0, VO, WA), KV (TG (Id "B" 0))) }
-  , {}
-  , {} )
-, VD
   ( "U_CWhl"
   , { (VR (Id ";" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
     , (VR (Id "cond" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))))
@@ -29,11 +35,7 @@
     , (VR (Id "sqcap" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))) }
   , {}
   , { ( (Id "O" 0, VO)
-      , DS
-        ( {} )
-        ( {} )
-        ( {} )
-        0 ) } )
+      , DAS ) } )
 , VD
   ( "UClose"
   , {}
@@ -86,14 +88,29 @@
   , {} ) ]
 @xSCK.expanded:
 [ VSC
-  (GV (VR (Id "P" 0, VP, WB)))
+  (GV (VR (Id "P" 0, VP, WS)))
   NA
   NA
   ( The
-    ( {} ) )
+    ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+      , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) )
 , VSC
-  (GV (VR (Id "Q" 0, VP, WB)))
+  (GV (VR (Id "Q" 0, VP, WS)))
   NA
   NA
   ( The
-    ( {} ) ) ]
+    ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+      , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) )
+, VSC
+  (GV (VR (Id "R" 0, VP, WS)))
+  NA
+  NA
+  ( The
+    ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+      , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) )
+, VSC
+  (GV (VR (Id "b" 0, VP, WB)))
+  NA
+  NA
+  ( The
+    ( { GL (LV (VR (Id "O" 0, VO, WB), [], [])) } ) ) ]

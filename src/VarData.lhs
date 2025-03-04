@@ -1008,6 +1008,7 @@ What it says on the tin --- keep total for now
 mapVToverVarSet :: [VarTable] -> VarSet -> VarSet
 mapVToverVarSet vts vs = S.fromList $ mapTS vts [] $ S.toList vs
 
+mapTS :: [VarTable] -> [GenVar] -> [GenVar] -> [GenVar]
 mapTS vts svg [] =  svg
 mapTS vts svg (gv@(StdVar v):gvs)
   = case lookupVarTables vts v of
@@ -1017,7 +1018,7 @@ mapTS vts svg (gv@(LstVar (LVbl v _ _)):gvs)
   = case lookupLVarTables vts v of
       KL kvl _ _  ->  mapTS vts (kvl++svg)          gvs
       KS kvs _ _  ->  mapTS vts (S.toList kvs++svg) gvs
-      _           ->  mapTS vts (gv:svg)           gvs
+      _           ->  mapTS vts (gv:svg)            gvs
 \end{code}
 
 \section{Expanding Knowns in Side-Conditions}

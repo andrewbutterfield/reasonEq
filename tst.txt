@@ -1,15 +1,14 @@
-ghci> isUTCPAtomic (StdVar va) .: isUTPStcObs (StdVar vE1)
-@mVC.vsc:
-VSC (GV (VR (Id "a" 0,VP,WS))) NA NA (The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]))
-@mVC(Just).vscs:
-[VSC (GV (VR (Id "E1" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA]
-@mVC.vsc':
-VSC (GV (VR (Id "a" 0,VP,WS))) NA NA (The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]))
-([VSC (GV (VR (Id "E1" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA,VSC (GV (VR (Id "a" 0,VP,WS))) NA NA (The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]))],fromList [])
-ghci> 
-ghci> isUTPStcObs (StdVar vE1) .: isUTCPAtomic (StdVar va)
-@mVC.vsc:
-VSC (GV (VR (Id "E1" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])) NA NA
-@mVC(Nothing).vscs:
-[VSC (GV (VR (Id "a" 0,VP,WS))) NA NA (The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]))]
-([VSC (GV (VR (Id "a" 0,VP,WS))) NA NA (The (fromList [GV (VR (Id "s" 0,VO,WB)),GV (VR (Id "s" 0,VO,WA))]))],fromList [])
+@iSC.vscs:
+[VSC (GV (VR (Id "P" 0,VP,WB))) NA NA (The (fromList [])),VSC (GV (VR (Id "Q" 0,VP,WB))) NA NA (The (fromList []))]
+@iSC.bind:
+BD (fromList [((Id ";" 0,VO),BV (VR (Id ";" 0,VO,WS))),((Id "P" 0,VP),BT (K (TF TB (TG (Id "B" 0))) (VB True))),((Id "Q" 0,VP),BT (C (TF TB (TG (Id "B" 0))) True (Id "imp" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "ok" 0,VO,WB)),V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "ok" 0,VO,WA)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]]))],fromList [("0","0")],fromList [((Id "O" 0,VO,[],[]),BL [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])])
+@iSC.insctxt:
+ICtxt {icDV = fromList [], icSC = ([VSC (GV (VR (Id "P" 0,VP,WS))) NA NA (The (fromList [])),VSC (GV (VR (Id "Q" 0,VP,WS))) NA NA (The (fromList [])),VSC (GV (VR (Id "ok" 0,VO,WB))) NA NA (The (fromList [])),VSC (GV (VR (Id "ok" 0,VO,WA))) NA NA (The (fromList []))],fromList [])}
+@iSC.vscss0:
+[[],[VSC (GV (VR (Id "ok" 0,VO,WB))) NA NA (The (fromList [])),VSC (GV (VR (Id "ok" 0,VO,WA))) NA NA (The (fromList []))]]
+@iSC.freshvs:
+fromList []
+@iSC.freshvs':
+(fromList [],[])
+@iSC.vscs':
+[VSC (GV (VR (Id "ok" 0,VO,WB))) NA NA (The (fromList [])),VSC (GV (VR (Id "ok" 0,VO,WA))) NA NA (The (fromList []))]

@@ -28,6 +28,8 @@ fbind:
 Is the issue the fact that we have binding `O$  ⟼ ⟨O$⟩` ?
 It looks like discharge is breaking in that it reduces `O$,O$'` to `Ø`
 
+IT'S THE XPNDD PART THAT'S TO BLAME (`VarData.expandSCKnowns`)
+
 * Continue developing the  `Designs` theory. 
 * Add a  `While.Design` theory.
 * Most of the laws/conjectures for naive and design while-languages are the same. However `While.Common` is not the place for those. The conjectures need to be in or "above" a theory that gives the specific semantics.

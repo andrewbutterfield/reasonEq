@@ -1,6 +1,6 @@
 \chapter{Side Conditions}
 \begin{verbatim}
-Copyright  Andrew Butterfield (c) 2017-2022
+Copyright  Andrew Butterfield (c) 2017-2024
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

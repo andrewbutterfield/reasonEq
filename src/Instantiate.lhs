@@ -513,6 +513,7 @@ side-conditions:
 \\ \beta(\fresh F) &=& \fresh \beta(F)
 \end{eqnarray*}
 \begin{code}
+idb what = pdbg ("iSC."++what)
 instantiateSC insctxt bind (vscs,freshvs)
   = do vscss' <- sequence $ map (instantiateVSC insctxt bind) vscs
        vscs' <- concatVarConds vscss'

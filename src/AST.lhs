@@ -505,7 +505,7 @@ data Term
  | C Type Subable Identifier [Term]  -- Constructor
  | B Type Identifier VarSet Term     -- Binder (unordered)
  | L Type Identifier VarList Term    -- Binder (ordered)
- | X Identifier Term                     -- Closure (always a predicate)
+ | X Identifier Term                 -- Closure (always a predicate)
  | S Type Term Substn                -- Substitution
  | I Type                            -- Iterator
      Subable Identifier  -- top grouping constructor

@@ -896,31 +896,101 @@ tkvMatch _ _ _ _ _ _ = fail "tkvMatch: candidate not this known variable."
 \section{Variable Matching}
 
 The rules regarding suitable matches for pattern variables
-depend on what class of variable we have (\texttt{VarWhat})
+depend on: 
+what class and type of variable we have,
+the temporalities,
 and what we know about them (\texttt{VarMatchRole}).
+We screen them in that order.
 
-First, rules based on classification:
 
-\begin{tabular}{|c|c|c|}
+Now, onto variable matching:
+\begin{code}
+vMatch :: MonadFail m
+       => [VarTable] -> Binding -> CBVS -> PBVS
+       -> Variable -> Variable
+       -> m Binding
+\end{code}
+
+What bindings make sense from a class and type perspective? 
+Consider observation variables $x$ and $y$, 
+expression variables $e$ and $f$, 
+and predicate variables $P$ and $Q$.
+
+\begin{tabular}{|c|l|}
 \hline
-Class & \texttt{VarWhat} & Allowed Candidates
+Match Binding & Commentary
+\\\hline\hline
+ $x \mapsto  y$ & OK
 \\\hline
- Observation & \texttt{ObsV} & Observation, Expression
+ $x \mapsto f$ or $x \mapsto Q$
+ & doesn't work (think free-variables)
 \\\hline
- Variable & \texttt{VarV} & Variable
+ $e \mapsto  f$ & OK
 \\\hline
- Expression & \texttt{ExprV} & Expression
+ $e \mapsto  y$ & OK, $y$ is a simple expr.
 \\\hline
-  Predicate & \texttt{PredV} & Predicate
+ $e \mapsto  Q$ & OK
+\\\hline
+ $P \mapsto  Q$ & OK
+\\\hline
+ $P \mapsto x$ & Provided $x$ is of type $\Bool$.
+\\\hline
+ $P \mapsto f$ & Provided $f$ is of type $t^n \fun\Bool, ~~n \geq 0$.
 \\\hline
 \end{tabular}
 
-Next, rules based on knowledge:
+Rules based on the static or dynamic nature of variables,
+\begin{itemize}
+  \item Static variables can match static or dynamic variables.
+  \item Dynamic variables can only match those that have the
+  same \texttt{VarWhen} value,
+  except that the string in \texttt{During} may differ.
+\end{itemize}
+
+
+We first screen by variable class (and type?):
+\begin{code}
+vMatch vts bind cbvs pvbs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
+  | vwC == vwP    =  vMatch' vts bind cbvs pvbs vC vP
+  | vwP == ExprV  =  vMatch' vts bind cbvs pvbs vC vP
+
+
+vMatch vts bind cbvs pvbs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
+ | pbound      =  bvMatch vts bind cbvs vC vP
+ | vC == vP    =  bindVarToVar vP vC bind 
+ | vwC == vwP  =  vMatch''' vts bind vmr vC vP
+ | vwC == ExprV && vwP == ObsV  =  vMatch''' vts bind vmr vC vP
+ | otherwise   =  fail $ unlines [ "vMatch: class mismatch"
+                                 , "vC = " ++ show vC
+                                 , "vP = " ++ show vP ]
+ where
+    pbound = StdVar vP `S.member` pvbs
+    vmr = lookupVarTables vts vP
+\end{code}
+
+
+Here variable class (and types?) are compatible, 
+so we screen based on temporality:
+
+\begin{code}
+vMatch' vts bind cbvs pvbs vC vP
+  | whenCompVar vC vP = vMatch'' vts bind cbvs pvbs vC vP
+\end{code}
+
+We then check for bound-variables
+\begin{code}
+vMatch'' vts bind cbvs pvbs vC vP
+  | pbound      =  bvMatch vts bind cbvs vC vP
+  where
+    pbound = StdVar vP `S.member` pvbs
+    vmr = lookupVarTables vts vP
+\end{code}
+
 
 \begin{tabular}{|c|c|c|}
 \hline
 Knowledge & \texttt{VarMatchRole} & Allowed Candidates
-\\\hline
+\\\hline\hline
 Unknown & \texttt{UnknownVar} & Anything as per classification.
 \\\hline
 Known variable & \texttt{KnownVar} & Itself only
@@ -933,66 +1003,23 @@ Generic variable & \texttt{GenericVar}
 Instance variable & \texttt{InstanceVar} & Itself only
 \\\hline
 \end{tabular}
+Next, rules based on knowledge 
+(noting that bound variables are never ``known''):
 
-Finally, rules based on the static or dynamic nature of known variables,
-(that do not apply if the variable is bound(????)).
-\begin{itemize}
-  \item Static variables can match static or dynamic variables.
-  \item Dynamic variables can only match those that have the
-  same \texttt{VarWhen} value,
-  except that the string in \texttt{During} may differ.
-\end{itemize}
-\begin{code}
-whenCompVar :: Variable -> Variable -> Bool
-whenCompVar (Vbl _ _ vkC) (Vbl _ _ vkP) = whenCompKind vkC vkP
 
-whenCompKind :: VarWhen -> VarWhen -> Bool  -- candidate, pattern
-whenCompKind _          Static      =  True
-whenCompKind Textual    Textual     =  True
-whenCompKind Before     Before      =  True
-whenCompKind (During _) (During _)  =  True
-whenCompKind After      After       =  True
-whenCompKind _          _           =  False
-\end{code}
 
-\newpage
-Now, onto variable matching:
-\begin{code}
-vMatch :: MonadFail m
-       => [VarTable] -> Binding -> CBVS -> PBVS
-       -> Variable -> Variable
-       -> m Binding
-\end{code}
-
-Observation pattern variables may match either
-observation or expression variables,
-while other variable classes may only match their own class.
-\begin{code}
-vMatch vts bind cbvs pvbs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
- | pbound      =  bvMatch vts bind cbvs vC vP
- | vC == vP    =  bindVarToVar vP vC bind 
- | vwC == vwP  =  vMatch' vts bind vmr vC vP
- | vwC == ExprV && vwP == ObsV  =  vMatch' vts bind vmr vC vP
- | otherwise   =  fail $ unlines [ "vMatch: class mismatch"
-                                 , "vC = " ++ show vC
-                                 , "vP = " ++ show vP ]
- where
-    pbound = StdVar vP `S.member` pvbs
-    vmr = lookupVarTables vts vP
-\end{code}
-Variable classes are compatible, but is the pattern ``known''?
 \begin{code}
 -- vC /= vP
-vMatch' _ bind UnknownVar vC vP   =  bindVarToVar vP vC bind
-vMatch' _ bind (KnownConst (Var _ v)) vC vP
+vMatch''' _ bind UnknownVar vC vP   =  bindVarToVar vP vC bind
+vMatch''' _ bind (KnownConst (Var _ v)) vC vP
   | vC == v                       =   bindVarToVar vP vC bind
-vMatch' vts bind GenericVar vC vP
+vMatch''' vts bind GenericVar vC vP
   = case lookupVarTables vts vC of
       (InstanceVar v) | v == vP  ->   bindVarToVar vP vC bind
       _ ->  fail $ unlines [ "vMatch: wrong generic"
                            , "vC = " ++ show vC
                            , "vP = " ++ show vP ]
-vMatch' _ _ what vC vP  = fail $ unlines [ "vMatch: knowledge mismatch."
+vMatch''' _ _ what vC vP  = fail $ unlines [ "vMatch: knowledge mismatch."
                                          , "vC = " ++ show vC
                                          , "vP = " ++ show vP
                                          , "what(vP) = " ++ show what
@@ -1020,6 +1047,21 @@ bvMatch vts bind cbvs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
  | vwC /= vwP  =  fail "bvMatch: variable class mismatch."
  | StdVar vC `S.member` cbvs  =  bindVarToVar vP vC bind
  | otherwise  =  fail "bvMatch: candidate not a bound variable."
+\end{code}
+
+
+\textbf{NOT USED ANYWHERE!!!!}
+\begin{code}
+whenCompVar :: Variable -> Variable -> Bool
+whenCompVar (Vbl _ _ vkC) (Vbl _ _ vkP) = whenCompKind vkC vkP
+
+whenCompKind :: VarWhen -> VarWhen -> Bool  -- candidate, pattern
+whenCompKind _          Static      =  True
+whenCompKind Textual    Textual     =  True
+whenCompKind Before     Before      =  True
+whenCompKind (During _) (During _)  =  True
+whenCompKind After      After       =  True
+whenCompKind _          _           =  False
 \end{code}
 
 \newpage

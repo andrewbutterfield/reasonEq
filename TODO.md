@@ -20,9 +20,7 @@ replP=P[e$/x$] ∧ Q[e$/x$]
 tC=(ok ∧ P)[O$_1/O$]
 scC=O$,O$'⊇ₐP, O$,O$'⊇ₐQ, O$,O$'⊇ₐok, O$,O$'⊇ₐok', fresh:O$_1
 ---
-vMatch: class mismatch
-vC = VR (Id "ok" 0,VO,WB)
-vP = VR (Id "P" 0,VP,WS)
+bindVarToVar: incompatible Static classes
 ```
 
 Static predicate-var `P` should be fine matched against dynamic var `ok`.

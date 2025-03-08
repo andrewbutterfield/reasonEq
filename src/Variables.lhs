@@ -12,10 +12,11 @@ module Variables
  , Subscript, VarWhen
  , pattern Static
  , pattern Before, pattern During, pattern After, pattern Textual
- , isDynamic, isDuring, theSubscript
+ , isDynamic, isDuring, theSubscript, whenMatches
  , Variable
  , pattern Vbl
  , varClass, varWhen
+ , whenVarMatches
  , pattern ObsVar, pattern ExprVar, pattern PredVar
  , pattern StaticVar, pattern PreVar, pattern MidVar, pattern PostVar
  , pattern ScriptVar
@@ -194,6 +195,22 @@ theSubscript :: VarWhen -> Subscript
 theSubscript (During s) = s
 \end{code}
 
+For matching, 
+we have restrictions on the temporalities of candidate and pattern variables.
+Basically static pattern variables match anything,
+while dynamic pattern variables can only match candidates 
+with the same temporality, modulo the ``during'' index.
+\begin{code}
+whenMatches :: VarWhen -> VarWhen -> Bool  -- candidate, pattern
+whenMatches _          Static      =  True
+whenMatches Textual    Textual     =  True
+whenMatches Before     Before      =  True
+whenMatches (During _) (During _)  =  True
+whenMatches After      After       =  True
+whenMatches _          _           =  False
+\end{code}
+
+
 \subsection{More about variables}
 
 \subsubsection{Observational Variables}
@@ -267,6 +284,13 @@ isPredVar (VR (_, vw, _))  =  vw == VP
 whatVar (VR (_,vc,_))  =  vc
 timeVar (VR (_,_,vt))  =  vt
 \end{code}
+
+
+\begin{code}
+whenVarMatches :: Variable -> Variable -> Bool
+whenVarMatches (Vbl _ _ vkC) (Vbl _ _ vkP) = whenMatches vkC vkP
+\end{code}
+
 
 Sometimes we want to compare two variables, while ignoring their temporality.
 Such a comparison can fail, or succeed, returning the temporality of the 2nd variable.

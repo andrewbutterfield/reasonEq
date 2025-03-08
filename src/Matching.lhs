@@ -895,14 +895,6 @@ tkvMatch _ _ _ _ _ _ = fail "tkvMatch: candidate not this known variable."
 \newpage
 \section{Variable Matching}
 
-The rules regarding suitable matches for pattern variables
-depend on: 
-what class and type of variable we have,
-the temporalities,
-and what we know about them (\texttt{VarMatchRole}).
-We screen them in that order.
-
-
 Now, onto variable matching:
 \begin{code}
 vMatch :: MonadFail m
@@ -910,6 +902,14 @@ vMatch :: MonadFail m
        -> Variable -> Variable
        -> m Binding
 \end{code}
+The rules regarding suitable matches for pattern variables
+depend on: 
+what class of variable we have,
+the temporalities,
+and what we know about them (\texttt{VarMatchRole}).
+We screen them in that order.
+We do not have type information here, 
+but that is screened before we get here.
 
 What bindings make sense from a class and type perspective? 
 Consider observation variables $x$ and $y$, 
@@ -933,59 +933,48 @@ Match Binding & Commentary
 \\\hline
  $P \mapsto  Q$ & OK
 \\\hline
- $P \mapsto x$ & Provided $x$ is of type $\Bool$.
+ $P \mapsto x$ & Here $x$ should be $\Bool$.
 \\\hline
- $P \mapsto f$ & Provided $f$ is of type $t^n \fun\Bool, ~~n \geq 0$.
+ $P \mapsto f$ & Here $f$ should be $t^n \fun\Bool, ~~n \geq 0$.
 \\\hline
 \end{tabular}
 
-Rules based on the static or dynamic nature of variables,
+Rules based on the static or dynamic nature of variables:
 \begin{itemize}
   \item Static variables can match static or dynamic variables.
   \item Dynamic variables can only match those that have the
   same \texttt{VarWhen} value,
   except that the string in \texttt{During} may differ.
 \end{itemize}
-
-
-We first screen by variable class (and type?):
+We first screen by variable class:
 \begin{code}
 vMatch vts bind cbvs pvbs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
-  | vwC == vwP    =  vMatch' vts bind cbvs pvbs vC vP
-  | vwP == ExprV  =  vMatch' vts bind cbvs pvbs vC vP
-
-
-vMatch vts bind cbvs pvbs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
- | pbound      =  bvMatch vts bind cbvs vC vP
- | vC == vP    =  bindVarToVar vP vC bind 
- | vwC == vwP  =  vMatch''' vts bind vmr vC vP
- | vwC == ExprV && vwP == ObsV  =  vMatch''' vts bind vmr vC vP
- | otherwise   =  fail $ unlines [ "vMatch: class mismatch"
+  | vwC == vwP   =  vMatch' vts bind cbvs pvbs vC vP
+  | vwP /= ObsV  =  vMatch' vts bind cbvs pvbs vC vP
+  | otherwise    =  fail $ unlines [ "vMatch: class mismatch"
                                  , "vC = " ++ show vC
                                  , "vP = " ++ show vP ]
- where
-    pbound = StdVar vP `S.member` pvbs
-    vmr = lookupVarTables vts vP
 \end{code}
-
-
-Here variable class (and types?) are compatible, 
-so we screen based on temporality:
-
+Here variable class are compatible, 
+so we now screen based on temporality:
 \begin{code}
 vMatch' vts bind cbvs pvbs vC vP
-  | whenCompVar vC vP = vMatch'' vts bind cbvs pvbs vC vP
+  | whenVarMatches vC vP  =  vMatch'' vts bind cbvs pvbs vC vP
+  | otherwise             =  fail $ unlines [ "vMatch: temporality mismatch"
+                                            , "vC = " ++ show vC
+                                            , "vP = " ++ show vP ]
 \end{code}
 
 We then check for bound-variables
 \begin{code}
 vMatch'' vts bind cbvs pvbs vC vP
-  | pbound      =  bvMatch vts bind cbvs vC vP
+  | pbound     =  bvMatch   vts bind cbvs vC vP
+  | otherwise  =  vMatch''' vts bind vmr  vC vP
   where
     pbound = StdVar vP `S.member` pvbs
     vmr = lookupVarTables vts vP
 \end{code}
-
+Next, rules based on knowledge about the pattern variable:
 
 \begin{tabular}{|c|c|c|}
 \hline
@@ -1003,27 +992,23 @@ Generic variable & \texttt{GenericVar}
 Instance variable & \texttt{InstanceVar} & Itself only
 \\\hline
 \end{tabular}
-Next, rules based on knowledge 
-(noting that bound variables are never ``known''):
-
-
-
 \begin{code}
--- vC /= vP
-vMatch''' _ bind UnknownVar vC vP   =  bindVarToVar vP vC bind
+vMatch''' _ bind UnknownVar   vC vP  =  bindVarToVar vP vC bind
+vMatch''' _ bind (KnownVar _) vC vP
+  | vC == vP                         =  bindVarToVar vP vC bind
 vMatch''' _ bind (KnownConst (Var _ v)) vC vP
-  | vC == v                       =   bindVarToVar vP vC bind
+  | vC == v                          =  bindVarToVar vP vC bind
 vMatch''' vts bind GenericVar vC vP
   = case lookupVarTables vts vC of
-      (InstanceVar v) | v == vP  ->   bindVarToVar vP vC bind
+      (InstanceVar v) | v == vP     ->  bindVarToVar vP vC bind
       _ ->  fail $ unlines [ "vMatch: wrong generic"
                            , "vC = " ++ show vC
                            , "vP = " ++ show vP ]
-vMatch''' _ _ what vC vP  = fail $ unlines [ "vMatch: knowledge mismatch."
-                                         , "vC = " ++ show vC
-                                         , "vP = " ++ show vP
-                                         , "what(vP) = " ++ show what
-                                         ]
+vMatch''' _ _ what vC vP  =  fail $ unlines [ "vMatch: knowledge mismatch."
+                                            , "vC = " ++ show vC
+                                            , "vP = " ++ show vP
+                                            , "what(vP) = " ++ show what
+                                            ]
 \end{code}
 
 \subsection{Bound Pattern Variable}
@@ -1047,21 +1032,6 @@ bvMatch vts bind cbvs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
  | vwC /= vwP  =  fail "bvMatch: variable class mismatch."
  | StdVar vC `S.member` cbvs  =  bindVarToVar vP vC bind
  | otherwise  =  fail "bvMatch: candidate not a bound variable."
-\end{code}
-
-
-\textbf{NOT USED ANYWHERE!!!!}
-\begin{code}
-whenCompVar :: Variable -> Variable -> Bool
-whenCompVar (Vbl _ _ vkC) (Vbl _ _ vkP) = whenCompKind vkC vkP
-
-whenCompKind :: VarWhen -> VarWhen -> Bool  -- candidate, pattern
-whenCompKind _          Static      =  True
-whenCompKind Textual    Textual     =  True
-whenCompKind Before     Before      =  True
-whenCompKind (During _) (During _)  =  True
-whenCompKind After      After       =  True
-whenCompKind _          _           =  False
 \end{code}
 
 \newpage

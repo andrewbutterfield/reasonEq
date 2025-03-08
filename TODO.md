@@ -4,26 +4,25 @@
 
 Trying to prove `design_;_lzero`:
 
-**This should not fail:**
+**This should not succeed:**
 
 ```
-proof: tm 1 and_subst
-Match against `and_subst'[1] failed!
-try match failed
-
-(ok ∧ P)[O$_1/O$] :: (P ∧ Q)[e$/x$]
-
-lnm[parts]=and_subst[1]
-tP=(P ∧ Q)[e$/x$] ≡ P[e$/x$] ∧ Q[e$/x$]
-partsP=(P ∧ Q)[e$/x$]
-replP=P[e$/x$] ∧ Q[e$/x$]
-tC=(ok ∧ P)[O$_1/O$]
-scC=O$,O$'⊇ₐP, O$,O$'⊇ₐQ, O$,O$'⊇ₐok, O$,O$'⊇ₐok', fresh:O$_1
----
-bindVarToVar: incompatible Static classes
+proof: tm 1 non_subst
+Match against `non_subst'[1] was successful
+Binding: { P  ⟼ ok, e$  ⟼ ⟨O$_1⟩, x$  ⟼ ⟨O$⟩ }
+Instantiated Replacement = ok
+Law S.C.: = x$∉P
+Instantiated Law S.C. = ⊤
+Goal S.C. = O$,O$'⊇ₐP, O$,O$'⊇ₐQ, O$,O$'⊇ₐok, O$,O$'⊇ₐok', fresh:O$_1
+Discharged Law S.C. = ⊤
 ```
+The issue is that  `bind(x$∉P)` is `O$∉ok` which is the same as `ok∉O$`.
 
-Static predicate-var `P` should be fine matched against dynamic var `ok`.
+From `O$,O$'⊇ₐok` we cannot prove or refute that.
+
+From `O$⊇ₐok` we can refute it.
+
+This is an issue for `instantiateSC`.
 
 
 When we add side-conds to law, we get 

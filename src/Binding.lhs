@@ -1,4 +1,3 @@
-1136
 \chapter{Binding}
 \begin{verbatim}
 Copyright  Andrew Butterfield (c) 2017-22
@@ -72,10 +71,11 @@ From the outside a binding has two mappings:
   \item \texttt{ListVar} to \texttt{VarList} or \texttt{VarSet}
     or \texttt{[Term]} and maybe \texttt{[ListVar]}.
 \end{itemize}
-However,
-we have a number of constraints regarding compatibility
+We have a number of constraints regarding compatibility
 between pattern variables  and their corresponding candidate bindings,
 based on variable class and temporality.
+These constraints are enforced by the matching algorithms,
+and are \emph{not} enforced here.
 
 Basically observation variables can be bound to both observation
 and expression variables, as can expression variables%
@@ -543,11 +543,11 @@ any non-\texttt{Textual} thing in the appropriate class.
 \begin{code}
 bindVarToVar (Vbl vi vc Static) x@(Vbl xi xc xw)
              (BD (vbind,sbind,lbind))
- | validVarClassBinding vc xc
+-- | validVarClassBinding vc xc
    =  do vbind' <- insertDR (rangeEq "bindVarToVar(Static)")
                             (vi,vc) (BV x) vbind
          return $ BD (vbind',sbind,lbind)
- | otherwise      =  fail "bindVarToVar: incompatible Static classes"
+-- | otherwise      =  fail "bindVarToVar: incompatible Static classes"
 \end{code}
 
 A \texttt{During} variable can only bind to a \texttt{During} variable
@@ -555,12 +555,12 @@ in the appropriate class.
 \begin{code}
 bindVarToVar (Vbl vi vc (During m)) x@(Vbl xi xc (During n))
              (BD (vbind,sbind,lbind))
- | validVarClassBinding vc xc
+-- | validVarClassBinding vc xc
    =  do vbind' <- insertDR (rangeEq "bindVarToVar(During)")
                             (vi,vc) (BI xi) vbind
          sbind' <- insertDR (rangeEq "bindVarToVar(Subscript)") m n sbind
          return $ BD (vbind',sbind',lbind)
- | otherwise  =  fail "bindVarToVar: incompatible During classes"
+-- | otherwise  =  fail "bindVarToVar: incompatible During classes"
 \end{code}
 
 A dynamic variable can only bind to a dynamic variable of the same
@@ -568,17 +568,17 @@ temporality in the appropriate class.
 \begin{code}
 bindVarToVar dv@(Vbl vi vc vw) rv@(Vbl xi xc xw)
              (BD (vbind,sbind,lbind))
- | vw /= xw   =  fail "bindVarToVar: different temporalities"
- | validVarClassBinding vc xc
+-- | vw /= xw   =  fail "bindVarToVar: different temporalities"
+-- | validVarClassBinding vc xc
    =  do vbind' <- insertDR (rangeEq "bindVarToVar(dynamic)")
                             (vi,vc) (BI xi) vbind
          return $ BD (vbind',sbind,lbind)
- | otherwise
-    =  fail $ unlines
-          [ "bindVarToVar: incompatible variables"
-          , "dv = " ++ show dv
-          , "rv = " ++ show rv
-          ]
+-- | otherwise
+--   =  fail $ unlines
+--          [ "bindVarToVar: incompatible variables"
+--          , "dv = " ++ show dv
+--          , "rv = " ++ show rv
+--          ]
 \end{code}
 
 Can be useful to bind a list of (pattern/candidate) variables pairs:

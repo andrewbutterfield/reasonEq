@@ -546,7 +546,7 @@ trtvarsidecond trid (VSC gv mvsD mvsC mvsCd)
 trDisjSC trid gv NA = ""
 trDisjSC trid gv (The vsD)
   | S.null vsD  =  ""
-  | otherwise   =  trovset trid vsD ++ _notin ++ trgvar trid gv
+  | otherwise   =  trovset trid vsD ++ _disj ++ trgvar trid gv
 
 trCovByM trid gv NA = ""
 trCovByM trid gv (The vsC) 

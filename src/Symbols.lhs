@@ -20,7 +20,7 @@ module
   , _forall, _exists
   , _powerset, _emptyset, _union, _intsct, _setminus
   , _mbr, _subseteq, _supseteq, _varnothing
-  , _neq, _notin, _nexists, _nsubseteq
+  , _neq, _notin, _disj, _nexists, _nsubseteq
   , _langle, _rangle
   , _parallel, _Cap
   , _infty, _star
@@ -162,7 +162,7 @@ theSymbolList
 
   , ("neg", SymForm "-" "-")
   , ("next", SymForm "()" "\x25cb")
-  , ( "until", SymForm "U" "\x1200"), ( "U", SymForm "U" "\x1200")
+  , ("until", SymForm "U" "\x1200"), ("U", SymForm "U" "\x1200")
   , ("eventually", SymForm "<>" "\x25c7")
   , ("always", SymForm "[]" "\x25fb")
 
@@ -180,6 +180,7 @@ theSymbolList
   , ("setminus", SymForm "\\"  "\x2216"), ("varnothing", SymForm "()" "\x2205")
 
   , ("neq", SymForm "neq"  "\x2260"), ("notin", SymForm "notin"  "\x2209")
+  , ("disj", SymForm "disj" "\x22d4")
   , ("nexists", SymForm "nexists" "\x2204"), ("nsubseteq", SymForm "nsubseteq" "\x2288")
 
   , ("langle", SymForm "<"  "\x27e8"), ("rangle", SymForm ">"  "\x27e9")
@@ -237,6 +238,7 @@ _subseteq = nicesym "subseteq" ; _supseteq = nicesym "supseteq"
 _setminus = nicesym "setminus" ; _varnothing = nicesym "varnothing"
 
 _neq = nicesym "neq" ; _notin = nicesym "notin"
+_disj = nicesym "disj"
 _nexists = nicesym "nexists" ;_nsubseteq = nicesym "nsubseteq"
 
 _langle = nicesym "langle" ; _rangle = nicesym "rangle"
@@ -653,6 +655,7 @@ niceSyms
    , ("_varnothing", _varnothing)
    , ("_neq", _neq)
    , ("_notin", _notin)
+   , ("_disj", _disj)
    , ("_nexists", _nexists)
    , ("_nsubseteq", _nsubseteq)
    , ("_langle", _langle)

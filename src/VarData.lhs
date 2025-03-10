@@ -1023,10 +1023,9 @@ mapTS vts svg (gv@(LstVar (LVbl v _ _)):gvs)
 
 \section{Expanding Knowns in Side-Conditions}
 \begin{code}
-xdb what = pdbg ("xSCK."++what)
 expandSCKnowns :: [VarTable] -> SideCond -> SideCond
 expandSCKnowns vts (vscs,freshvs)
-  = ( xdb "expanded" $ map (expandVSCKnowns $ xdb "vts" vts) $ xdb "vscs" vscs
+  = ( map (expandVSCKnowns vts) vscs
     , mapVToverVarSet vts freshvs ) 
 --    , S.unions (S.map (expandKnownGenVars vts) freshvs ) )
 

@@ -7,8 +7,10 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module UTP.Observations (
-  isUTPDynObs, areUTPDynObs, isUTPCond, areUTPCond, isUTPStcObs
-, areUTPStcObs
+  isUTPDynObs, areUTPDynObs
+, isUTPCond, areUTPCond
+, isUTPCond', areUTPCond'
+, isUTPStcObs, areUTPStcObs
 ) where
 
 import Data.Maybe
@@ -71,12 +73,17 @@ areUTPDynObs :: [GenVar] -> SideCond
 areUTPDynObs gPs = mrgscs $ map isUTPDynObs gPs
 \end{code}
 We also want to be able to specify that a term variable $c$
-is a UTP condition ($O \supseteq_a c$):
+is either a UTP (pre-)condition ($O \supseteq_a c$)
+or a post-condition ($O' \supseteq_a c'$):
 \begin{code}
 isUTPCond  :: GenVar -> SideCond
 isUTPCond  gc  = [gO] `dyncover` gc
 areUTPCond :: [GenVar] -> SideCond
 areUTPCond gcs = mrgscs $ map isUTPCond gcs
+isUTPCond'  :: GenVar -> SideCond
+isUTPCond'  gc'  = [gO'] `dyncover` gc'
+areUTPCond' :: [GenVar] -> SideCond
+areUTPCond' gcs' = mrgscs $ map isUTPCond' gcs'
 \end{code}
 We also need to specify a term variable $S$ 
 that only contains static observables:

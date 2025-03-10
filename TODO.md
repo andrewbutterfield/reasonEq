@@ -4,67 +4,11 @@
 
 Trying to prove `design_;_lzero`:
 
-**This should not succeed:**
+Solved the `non_subst` problem
 
-```
-proof: tm 1 non_subst
-Match against `non_subst'[1] was successful
-Binding: { P  ⟼ ok, e$  ⟼ ⟨O$_1⟩, x$  ⟼ ⟨O$⟩ }
-Instantiated Replacement = ok
-Law S.C.: = x$∉P
-Instantiated Law S.C. = ⊤
-Goal S.C. = O$,O$'⊇ₐP, O$,O$'⊇ₐQ, O$,O$'⊇ₐok, O$,O$'⊇ₐok', fresh:O$_1
-Discharged Law S.C. = ⊤
-```
-The issue is that  `bind(x$∉P)` is `O$∉ok` which is the same as `ok∉O$`.
-
-From `O$,O$'⊇ₐok` we cannot prove or refute that.
-
-From `O$⊇ₐok` we can refute it.
-
-This is an issue for `instantiateSC`.
-
-
-When we add side-conds to law, we get 
-
-```
-proof: tm 1 ;_def
-Match against `;_def'[1] failed!
-try s.c. discharge failed
-atomic dyncover fails (null)
-gv = GV (VR (Id "ok" 0,VO,WB))
-vsCd = fromList []
-Ø⊇ₐP, Ø⊇ₐQ, Ø⊇ₐok, Ø⊇ₐok' ⟹ Ø⊇ₐok, Ø⊇ₐok'
-lnm[parts]=;_def[1]
-tC=true ; ok ∧ P ⟹   ok' ∧ Q
-scC=Ø⊇ₐP, Ø⊇ₐQ, Ø⊇ₐok, Ø⊇ₐok'
-tP'=(∃ O$_0  • true[O$_0/O$'] ∧ (ok ∧ P ⟹   ok' ∧ Q)[O$_0/O$])
-partsP=P ; Q
-replP=(∃ O$_0  • P[O$_0/O$'] ∧ Q[O$_0/O$])
-scP'=Ø⊇ₐok, Ø⊇ₐok'
-fbind:
-{ ;  ⟼ ;, P  ⟼ true, Q  ⟼ ok ∧ P ⟹   ok' ∧ Q, 0  ⟼ 0, O$  ⟼ ⟨O$⟩ }
-```
- 
-NO - ListVar `O` needs to be abstract in `U_CWhl`.
-
-
-A substitute bug in `U_CWhl`, proving `;_cond_l_distr`:
-
-```
-(∃ O$_1  • ((P◁b▷Q))[O$_1/O$'] ∧ R[O$_1/O$])
-   = 'substitute @[1,1]'
-(∃ O$_1  • (P◁b▷Q) ∧ R[O$_1/O$])
- ```
-
- Still broken if we expand the conditional. 
-
- IS THIS BECAUSE `O$` is now abstract????  PROBABLY
-
- Basically substitute does not apply if target (list)var is abstract
-
- **We need to make `mapVToverVarSet` work for abstract sets/lists**
- *it already does, it leaves abstract stuff unchanged*
+However `s` converts `Q[O$_1/O$]` to `Q` even with s.c. `O$,O$'⊇ₐQ`
+and `ok[O$_1/O$]` to `ok` even with `O$⊇ₐok`.
+(it should remain unchanged).
 
 * Continue developing the  `Designs` theory. 
 * Add a  `While.Design` theory.

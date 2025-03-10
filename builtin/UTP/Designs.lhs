@@ -168,7 +168,9 @@ $$\par\vspace{-8pt}
 cjDesignLZero 
   = preddef ("design" -.- ";" -.- "lzero")
             (mkSeq trueP (design p q) === trueP)
-            (areUTPDynObs [gP,gQ,StdVar vok,StdVar vok'])
+            ( areUTPDynObs [gP,gQ] 
+              .: isUTPCond (StdVar vok)
+              .: isUTPCond' (StdVar vok') )
 \end{code}
 
 

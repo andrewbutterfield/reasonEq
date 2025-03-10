@@ -38,13 +38,13 @@ module Variables
  , isStdV, isLstV, theStdVar, theLstVar
  , getIdClass, sameIdClass
  , gvarClass, gvarWhen, isDynGVar
- , isObsGVar, isExprGVar, isPredGVar
+ , isObsGVar, isExprGVar, isPredGVar, isStdObs
  , dynGVarEq
  , whatGVar, timeGVar
  , setVarWhen, setLVarWhen, setGVarWhen
  , VarList
- , varId, varOf, idsOf, stdVarsOf, listVarsOf
- , VarSet, stdVarSetOf, listVarSetOf
+ , varId, varOf, idsOf, stdVarsOf, listVarsOf, allStdObsL
+ , VarSet, stdVarSetOf, listVarSetOf, allStdObsS
  , liftLess
  , dnWhen, dnVar, dnLVar, dnGVar
  , unVar, unLVar, unGVar
@@ -419,6 +419,7 @@ Some useful predicates/functions:
 isStdV (StdVar _)  =  True ;  isStdV _  =  False
 isLstV (LstVar _)  =  True ;  isLstV _  =  False
 
+
 theStdVar :: GenVar -> Variable
 theStdVar (GV v) = v ; theStdVar _ = error "theStdVar: applied to LstVar"
 
@@ -450,6 +451,9 @@ isExprGVar (GV v)   =  isExprVar v
 isExprGVar (GL lv)  =  isExprLVar lv
 isPredGVar (GV v)   =  isPredVar v
 isPredGVar (GL lv)  =  isPredLVar lv
+
+isStdObs gv = isStdV gv && isObsGVar gv
+
 
 whatGVar (GV v)   =  whatVar v
 whatGVar (GL lv)  =  whatLVar lv
@@ -502,6 +506,9 @@ listVarsOf :: VarList -> [ListVar]
 listVarsOf []             =  []
 listVarsOf ((GL lv:gvs))  =  lv:listVarsOf gvs
 listVarsOf (_:gvs)        =  listVarsOf gvs
+
+allStdObsL :: VarList -> Bool
+allStdObsL vl = null (filter (not . isStdObs) vl)
 \end{code}
 
 \section{Variable Sets}
@@ -520,6 +527,10 @@ stdVarSetOf vs  =  S.map getV $ S.filter isStdV vs where getV (GV v)  = v
 
 listVarSetOf :: VarSet -> Set ListVar
 listVarSetOf vs =  S.map getL $ S.filter isLstV vs where getL (GL lv) = lv
+
+allStdObsS :: VarSet -> Bool
+allStdObsS vs = S.null (S.filter (not . isStdObs) vs)
+
 \end{code}
 
 Given a list-variable,

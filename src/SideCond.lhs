@@ -282,6 +282,10 @@ We need a smart builder here:
 we first compare \h{gv} with the three sets to see
 if we can deduce truth/falsity here and now;
 then we check to see if everything has reduced to true.
+In general we can only draw hard conclusions here if \h{gv}
+occurs in any such set, 
+or \h{gv} is a standard observation variable,
+as are all the variables mentioned in the corresponding set.
 \begin{code}
 mkVSC :: MonadFail m
       => GenVar -> NVarSet -> NVarSet -> NVarSet 
@@ -292,22 +296,32 @@ mkVSC gv nvsD nvsC nvsCd  =  do
     nvsCd' <- obviousCovBy  gv nvsCd
     if isTrue nvsD' nvsC' nvsCd'
     then return Nothing 
-    else return $ Just $ VSC gv nvsD nvsC' nvsCd'
+    else return $ Just $ VSC gv nvsD' nvsC' nvsCd'
   where
+\end{code}
+\begin{code}
     obviousDisj gv NA = return NA
     obviousDisj gv nvsD@(The vsD)
-      |  gv `S.member` vsD  =  fail "gv is member of the disjoint set"
-      |  isObsGVar gv 
-         && all isObsGVar (S.toList vsD)  =  return NA
-      |  otherwise                        =  return nvsD 
-    obviousCovBy  gv NA                   =  return NA
-    obviousCovBy  gv nvsC@(The vsC)
-      |  gv `S.member` vsC                =  return NA
-      |  otherwise                        =  return nvsC
-    isTrue NA        NA NA                =  True 
-    isTrue (The vsD) NA NA                =  S.null vsD
-    isTrue _ _ _                          =  False
+      |  gv `S.member` vsD               =  fail not_disjoint
+      |  isObsGVar gv && allStdObsS vsD  =  return NA
+      |  otherwise                       =  return nvsD 
+      where not_disjoint = "gv is member of the disjoint set"
 \end{code}
+\begin{code}
+    obviousCovBy  gv NA                  =  return NA
+    obviousCovBy  gv nvsC@(The vsC)
+      |  gv `S.member` vsC               =  return NA
+      |  isObsGVar gv && allStdObsS vsC  =  fail not_covered
+      |  otherwise                       =  return nvsC
+      where not_covered = "gv is not in covering set"
+\end{code}
+\begin{code}
+    isTrue NA        NA NA               =  True 
+    isTrue (The vsD) NA NA               =  S.null vsD
+    isTrue _ _ _                         =  False
+\end{code}
+
+
 
 Collecting all sets explicitly mentioned:
 \begin{code}
@@ -954,8 +968,8 @@ scDischarge'  :: MonadFail m => VarSet
               -> m [VarSideConds]
 scDischarge' _ _ []      =  return []     --  discharged
 scDischarge' _ [] vscL  =  return vscL  --  not discharged
-scDischarge' obsv        (vscG@(VSC gvG _ _ _):restG) 
-                   vscLs@(vscL@(VSC gvL _ _ _):restL)
+scDischarge' obsv        (vscG@(VSC gvG _ _ _):restG) -- ante
+                   vscLs@(vscL@(VSC gvL _ _ _):restL) -- cnsq
   | gvG < gvL  =  scDischarge' obsv restG vscLs -- vscG not needed
   | gvG > gvL  =  do -- nothing available to discharge vscL
                      rest' <- scDischarge' obsv restG restL
@@ -1146,8 +1160,8 @@ General idea (assuming \m{C_G \supset \emptyset}):
 \newline
   \m{C_G \supseteq V} falsifies \m{D_L \disj V} if \m{C_G \subseteq D_L}
 \newline
-  The outcome remains as \m{D_L \disj V} if neither of the above apply
-  (we don't know if the \m{V} inside \m{C_G} overlaps with \m{D_L}).
+  The outcome becoems \m{(D_L \cap C_G)\disj V} if neither of the above apply
+  (any \m{V} inside \m{D_L} but not in \m{C_G} are not relevant).
 
 Edge cases:
 \newline
@@ -1163,7 +1177,7 @@ Edge cases:
 \\ C_G \supseteq V \discharges D_L \disj V
    & = & \true, \quad \IF \quad C_G \disj D_L
 \\ & = & \false, \quad \IF \quad C_G \subseteq D_L \land isObsVar(V)
-\\ & = & (D_L \setminus C_G)\disj V, \quad \textbf{otherwise}
+\\ & = & (D_L \cap C_G)\disj V, \quad \textbf{otherwise}
 \end{eqnarray*}
 
 \begin{code}
@@ -1176,8 +1190,8 @@ cdDischarge obsv gv (The vsCG) tvsDL@(The vsDL)
   | S.null vsCG               =  return tvsDL
   | vsCG `S.disjoint` vsDL    =  return NA -- discharged !
   | vsCG `S.isSubsetOf` vsDL 
-    && isObsGVar gv           =  fail "CD - cover under disjoint"
-  | otherwise                 = return $ The (vsDL S.\\ vsCG)
+    && isObsGVar gv           =  fail "CD - obs cover under disjoint"
+  | otherwise                 =  return $ The (vsDL `S.intersection` vsCG)
 \end{code}
 
 \subsubsection{Pairwise Discharging (D:C)}
@@ -1205,7 +1219,7 @@ dcDischarge obsv gv NA    nvsCL  =  return nvsCL
 dcDischarge obsv gv (The vsDG) tvsCL@(The vsCL)
   | S.null vsDG                  =  return tvsCL
   | vsCL `S.isSubsetOf` vsDG 
-    && isObsGVar gv              =  fail "DC - cover under disjoint"
+    && isObsGVar gv              =  fail "DC - obs cover under disjoint"
   | otherwise                    =  return $ The (vsCL S.\\ vsDG)
 \end{code}
 

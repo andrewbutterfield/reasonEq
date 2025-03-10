@@ -4,11 +4,19 @@
 
 Trying to prove `design_;_lzero`:
 
-Solved the `non_subst` problem
+
 
 However `s` converts `Q[O$_1/O$]` to `Q` even with s.c. `O$,O$'⊇ₐQ`
 and `ok[O$_1/O$]` to `ok` even with `O$⊇ₐok`.
 (it should remain unchanged).
+
+The issue is that, while we have s.c. `O$,O$'⊇ₐQ` in scope,
+and we know `Q` is mentioned,
+the substitution uses `getLVarExpansions` and `processExpand`
+to do further analysis solely based on vartable data.
+The only mention of `O$` is `O`, an abstract set in theory `U_CWhl`.
+
+This part of substitute seems to be **massively over-engineered**.
 
 * Continue developing the  `Designs` theory. 
 * Add a  `While.Design` theory.

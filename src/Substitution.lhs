@@ -229,6 +229,7 @@ subContext0 = mkSubCtxt scTrue []
 \begin{code}
 applySubst :: (MonadFail m, Alternative m) 
            => SubContext -> Substn -> Term -> m Term
+asdb what = pdbg ("appSub."++what)
 \end{code}
 We first note that $P[/] = P$:
 \begin{code}
@@ -267,7 +268,7 @@ If so, we keep those targets.}
 Next we scan the list-variable  pairs, with the side-conditions in hand,
 looking for a list-variable that covers $\vv v$:
 \begin{code}
-     <|> ( lvlvlSubstitute sctx vrt vtl lvlvl )
+     <|> ( lvlvlSubstitute (asdb "sctx" sctx) (asdb "vrt" vrt) (asdb "vtl" vtl) $ asdb "lvlvl" lvlvl )
 \end{code}
 If nothing is found we return the substitution 
 after running it through semantic completion:
@@ -541,7 +542,7 @@ that is limited to those variables we know can be in (the alphabet of) $v$.
 lvlvlSubstitute (SubCtxt (vscs,_) vts) 
                 vrt@(Var tk v@(Vbl i  vc vw)) vtl lvlvl
                                    -- vc in {ExprV,PredV}
-  = case gv `mentionedBy` vscs of
+  = case pdbg "lvlvlSub.mentionedBy" (gv `mentionedBy` vscs) of
       Nothing           ->  return $ Sub (termtype vrt) vrt $ jSubstn vtl lvlvl
       Just (vsc,mwhen)  ->  scan vsc v lvlvl
   where
@@ -550,7 +551,7 @@ lvlvlSubstitute (SubCtxt (vscs,_) vts)
     scan :: MonadFail m => VarSideConds -> Variable -> [LVarSub] -> m Term
     scan vsc v [] = return vrt
     scan vsc v (lvlv:lvlvs)
-      = case getLVarExpansions v lvlv of
+      = case pdbg "lvlvlSub.getLVarExp" (getLVarExpansions v lvlv) of
           Nothing               ->  scan vsc v lvlvs
           Just (tlvExp,rlvExp)  ->  handleExpansions v lvlvs vsc tlvExp rlvExp
 

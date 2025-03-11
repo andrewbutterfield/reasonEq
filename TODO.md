@@ -18,6 +18,9 @@ The only mention of `O$` is `O`, an abstract set in theory `U_CWhl`.
 
 This part of substitute seems to be **massively over-engineered**.
 
+Added in `check` (line 572) as a placeholder which can process that abstract `O`.
+Now just a dummy that invokes `scan`.
+
 * Continue developing the  `Designs` theory. 
 * Add a  `While.Design` theory.
 * Most of the laws/conjectures for naive and design while-languages are the same. However `While.Common` is not the place for those. The conjectures need to be in or "above" a theory that gives the specific semantics.

@@ -552,7 +552,7 @@ lvlvlSubstitute (SubCtxt (vscs,_) vts)
     scan vsc v [] = return vrt
     scan vsc v (lvlv:lvlvs)
       = case pdbg "lvlvlSub.getLVarExp" (getLVarExpansions v lvlv) of
-          Nothing               ->  scan vsc v lvlvs
+          Nothing               ->  check v vsc lvlvs
           Just (tlvExp,rlvExp)  ->  handleExpansions v lvlvs vsc tlvExp rlvExp
 
     getLVarExpansions :: MonadFail m 
@@ -567,6 +567,9 @@ lvlvlSubstitute (SubCtxt (vscs,_) vts)
     getVarList :: MonadFail m => KnownExpansion -> m [Variable]
     getVarList (KnownVarList _ expansion _,_,_) = return expansion
     getVarList _ = fail "lvlvSub.search(term): not known var-list"
+
+    -- compares v with vsc to see if they are associated
+    check v vsc lvlvs = scan vsc v lvlvs -- for now
 
     handleExpansions v lvlvs vsc tlvExp rlvExp
       = case processExpansions vsc False [] tlvExp rlvExp of

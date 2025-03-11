@@ -407,7 +407,7 @@ applySubst sctx sub tm = return tm
 \newpage 
 \subsection{Helper Functions}
 
-\subsubsection{Do target variables overlap with possible term free variables?}
+\subsubsection{Do target variables overlap with possible free term variables?}
 
 \begin{code}
 termVarSubstitute :: MonadFail m
@@ -433,21 +433,34 @@ keepMentionedTermSubs vs chgd ltv (vt@(tv,_):vtl)
   | otherwise                  =  keepMentionedTermSubs vs True ltv      vtl 
 \end{code}
 
-
+\newpage
 \subsubsection{Does a list-variable cover the standard variable?}
 
 We assume that the variable-term substitutions did not apply,
 so we have the case 
 $$v[\lst r_1,\dots \lst r_N/\lst t_1,\dots,\lst t_N].$$
 We first ask is there there an $\lst t_i$ that can cover $v$?
-This requires $\lst t_i$ having an expansion 
-as a target \emph{list} of standard variables, 
-and $\lst r_i$ expanding to such a replacement list of the same length.
 
-If $v$ is an observation variable, 
-and occurs at position $j$ in the target list,
-then the outcome is a term based on the variable 
-at position $j$ in the replacement list.
+This requires either:
+\begin{itemize}
+  \item 
+    A side-condition that indicates that $\lst t_i$ involves $v$.
+    We then return a deferred substitution $v[\lst r_i/\lst t_i]$.
+  \item 
+    $\lst t_i$ has an expansion 
+    as a target \emph{list} of standard variables, 
+    with $\lst r_i$ expanding to a replacement list of the same length.
+    If $v$ occurs at position $j$ in the target list,
+    then the outcome is a term based on the variable 
+    at position $j$ in the replacement list.
+\end{itemize}
+\textbf{NOTE:
+  it looks like we should treat the observation and term variables the
+  same way. For example, with Designs, 
+  we have term variables like $P$ (say)
+  that are mentioned in s.c.s involving $\lst O$, 
+  as well as observation variables like $ok$ that are also mentioned.
+}
 
 \textbf{Note:}
 \textsl{
@@ -474,7 +487,8 @@ lvlvlSubstitute :: MonadFail m
                 -> m Term
 \end{code}
 
-We treat observation variables first.
+\newpage
+\paragraph{Observation variables} $x$, $y$, \dots
 
 Recall:
 $$v[\lst r_1,\dots \lst r_N/\lst t_1,\dots,\lst t_N].$$
@@ -507,7 +521,7 @@ lvlvlSubstitute (SubCtxt sc vts) vrt@(Var tk v@(Vbl i  ObsV vw)) vtl lvlvl
     getVarList (KnownVarList _ expansion _,_,_) = return expansion
     getVarList _ = vfail "not known var-list"
 \end{code}
-\newpage
+
 \begin{code}
     search :: MonadFail m => Variable -> [Variable] -> [Variable] -> m Variable
     search v [] _ = fail "short target list"
@@ -517,7 +531,8 @@ lvlvlSubstitute (SubCtxt sc vts) vrt@(Var tk v@(Vbl i  ObsV vw)) vtl lvlvl
       | otherwise  =  search v tvK rvK
 \end{code}
 
-Now we deal with term variables.
+\newpage
+\paragraph{Term variables} $P$, $e$, \dots
 
 Recall:
 $$v[\lst r_1,\dots \lst r_N/\lst t_1,\dots,\lst t_N].$$
@@ -551,8 +566,9 @@ lvlvlSubstitute (SubCtxt (vscs,_) vts)
     scan :: MonadFail m => VarSideConds -> Variable -> [LVarSub] -> m Term
     scan vsc v [] = return vrt
     scan vsc v (lvlv:lvlvs)
+      | if possiblyInvolved v lvlv vsc
       = case pdbg "lvlvlSub.getLVarExp" (getLVarExpansions v lvlv) of
-          Nothing               ->  check v vsc lvlvs
+          Nothing               ->  possiblyInvolved vsc v lvlvs
           Just (tlvExp,rlvExp)  ->  handleExpansions v lvlvs vsc tlvExp rlvExp
 
     getLVarExpansions :: MonadFail m 
@@ -569,7 +585,8 @@ lvlvlSubstitute (SubCtxt (vscs,_) vts)
     getVarList _ = fail "lvlvSub.search(term): not known var-list"
 
     -- compares v with vsc to see if they are associated
-    check v vsc lvlvs = scan vsc v lvlvs -- for now
+    idb what = pdbg ("possInvlv."++what)
+    possiblyInvolved vsc v lvlvs = scan (idb "vsc" vsc) (idb "v" v) lvlvs -- for now
 
     handleExpansions v lvlvs vsc tlvExp rlvExp
       = case processExpansions vsc False [] tlvExp rlvExp of

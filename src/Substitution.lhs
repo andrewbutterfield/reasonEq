@@ -566,7 +566,7 @@ lvlvlSubstitute (SubCtxt (vscs,_) vts)
     scan :: MonadFail m => VarSideConds -> Variable -> [LVarSub] -> m Term
     scan vsc v [] = return vrt
     scan vsc v (lvlv:lvlvs)
-      | if possiblyInvolved v lvlv vsc
+      -- | if possiblyInvolved v lvlv vsc
       = case pdbg "lvlvlSub.getLVarExp" (getLVarExpansions v lvlv) of
           Nothing               ->  possiblyInvolved vsc v lvlvs
           Just (tlvExp,rlvExp)  ->  handleExpansions v lvlvs vsc tlvExp rlvExp

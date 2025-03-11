@@ -229,51 +229,39 @@ subContext0 = mkSubCtxt scTrue []
 \begin{code}
 applySubst :: (MonadFail m, Alternative m) 
            => SubContext -> Substn -> Term -> m Term
-asdb what = pdbg ("appSub."++what)
 \end{code}
 We first note that $P[/] = P$:
 \begin{code}
 applySubst _ sub tm | isNullSubstn sub  =  return tm
 \end{code}
 
-\subsection{Variable Term Substitution}
+\subsection{Variable-Term Substitution}
 
 We are dealing with the case $\vv v \ss {} {g^n} {r^n}$,
-where $v$ denotes a standard variable. 
+where $v$ denotes a standard variable.
+We have the following possibilities:
+\begin{itemize}
+  \item 
+    $v[\dots,r,\dots/\dots,v,\dots]=r$.
+  \item 
+    $v[\dots,r,\dots/\dots,t,\dots]$
+    can be $r$ or $v[r/t]$ 
+    because $t$ ``involves`` $v$ somehow (need convincing example?).
+  \item
+    $v[\dots,\lst r,\dots/\dots,\lst t,\dots]$ 
+    where $\lst t$ involves $v$, 
+    and where outcomes can include $v$, $v[\lst r/\lst t]$.
+    The connection between $\lst t$ and $v$ 
+    will usually be established via a side-condition involving both.
+\end{itemize} 
 \begin{code}
 applySubst sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
   =  let vtl = S.toList vts ; lvlvl = S.toList lvlvs in
-  -- ADD UNIFORMITY TO \h{Substn} ????
-\end{code}
-
-If we have $v[\dots,r,\dots/\dots,v,\dots]$ we return $r$:
-\begin{code}
-     ( alookup v vtl )
-\end{code}
-\textbf{NOTE: }
-\textsl{Otherwise, if \h{v} is a term-variable, we need to look at side-conditions,
-to see if any vtl targets are possibly applicable. 
-If so, we keep those targets.}
-\begin{code}
-     <|> ( termVarSubstitute sctx vrt vtl lvlvl )
-\end{code}
-
-\textbf{Note:}
-\textsf{
-  dump uniform substitutions below?  
-}
-\begin{code}
---     <|> ( uniformSubstitute sctx vrt vtl lvlvl )
-\end{code}
-Next we scan the list-variable  pairs, with the side-conditions in hand,
-looking for a list-variable that covers $\vv v$:
-\begin{code}
-     <|> ( lvlvlSubstitute (asdb "sctx" sctx) (asdb "vrt" vrt) (asdb "vtl" vtl) $ asdb "lvlvl" lvlvl )
-\end{code}
-If nothing is found we return the substitution 
-after running it through semantic completion:
-\begin{code}
-     -- <|> ( pure (Sub tk vrt $ substComplete sctx vrt sub) )
+     (alookup v vtl)  -- v[..,r,../..,v,..] = r
+     <|> 
+     (termVarSubstitute sctx vrt vtl lvlvl) -- v[..,r,../..,t,..] = r,v[r/t]
+     <|> 
+     (lvlvlSubstitute sctx vrt vtl lvlvl) -- v[..,r$,../..,t$,..]=r,v[r$/t$]
 \end{code}
 \textbf{Note:}
 \textsf{
@@ -281,7 +269,6 @@ after running it through semantic completion:
    of \h{uniformSubstitute} if we had a boolean indicating 
    if the original substitution was \emph{uniform}.
 }
-\textbf{DUMP \h{uniformSubstitute}.}
 
 
 

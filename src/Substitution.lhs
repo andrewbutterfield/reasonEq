@@ -244,13 +244,7 @@ We have the following possibilities:
   \item 
     $v[\dots,r,\dots/\dots,v,\dots]=r$.
   \item 
-    $v[\dots,r,\dots/\dots,t,\dots],  t\neq v$
-    can be $r$ or $v[r/t]$ 
-    because $t$ is known and ``involves`` $v$.
-    If $t$ is a known constant, 
-    then its expansion may mention $v$, or even be $v$!
-    However, it makes no sense to replace such a $t$ by anything other than
-    itself or the known constant.
+    $v[\dots,r,\dots/\dots,t,\dots]=v$, provided $t\neq v, t \defs v$.
   \item
     $v[\dots,\lst r,\dots/\dots,\lst t,\dots]$ 
     where $\lst t$ involves $v$, 
@@ -263,11 +257,15 @@ applySubst sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
   =  let vtl = S.toList vts ; lvlvl = S.toList lvlvs in
      (alookup v vtl)  -- v[..,r,../..,v,..] = r
      <|> 
-     (termVarSubstitute sctx vrt vtl lvlvl) -- v[..,r,../..,t,..] = r,v[r/t]
-     <|> 
      (lvlvlSubstitute sctx vrt vtl lvlvl) -- v[..,r$,../..,t$,..]=r,v[r$/t$]
+     -- <|> 
+     -- (termVarSubstitute sctx vrt vtl lvlvl) -- v[..,r,../..,t,..] = r,v[r/t]
 \end{code}
-\textbf{Note:}
+\textbf{Notes:}
+\textsf{
+    \h{termVarSubstitute} should be used when all else fails to tidy up
+    the substitution.
+}
 \textsf{
    It is possible that \h{lvlvlSubstitute} could do the work
    of \h{uniformSubstitute} if we had a boolean indicating 
@@ -400,6 +398,8 @@ applySubst sctx sub tm = return tm
 
 \subsubsection{Do target variables overlap with possible free term variables?}
 
+We keep term/variable substitutions if the targets appear 
+in the free variables of the term-variable being substituted into.
 \begin{code}
 termVarSubstitute :: MonadFail m
                   => SubContext -> Term -> [TermSub] -> [LVarSub] -> m Term
@@ -414,14 +414,13 @@ termVarSubstitute _ _ _ _
   = fail "termVarSubstitute: not a variable term"
 \end{code}
 
-We keep term/variable substitutions if the targets appear in the variable set:
 \begin{code}
 keepMentionedTermSubs :: VarSet -> Bool -> [TermSub] -> [TermSub]
                       -> (Bool,[TermSub])
-keepMentionedTermSubs vs chgd ltv [] = (chgd,reverse ltv)
-keepMentionedTermSubs vs chgd ltv (vt@(tv,_):vtl)
-  | (StdVar tv) `S.member` vs  =  keepMentionedTermSubs vs chgd (vt:ltv) vtl
-  | otherwise                  =  keepMentionedTermSubs vs True ltv      vtl 
+keepMentionedTermSubs fvs chgd ltv [] = (chgd,reverse ltv)
+keepMentionedTermSubs fvs chgd ltv (vt@(tv,_):vtl)
+  | (StdVar tv) `S.member` fvs  =  keepMentionedTermSubs fvs chgd (vt:ltv) vtl
+  | otherwise                   =  keepMentionedTermSubs fvs True ltv      vtl 
 \end{code}
 
 \newpage

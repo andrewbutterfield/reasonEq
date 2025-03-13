@@ -45,6 +45,13 @@ We will use the need to expand the `Sets` theory to drive a mechanism to read co
 * should save live-proofs outside `project.req`.
 
 
+### Known Constants and Substitution
+
+If `k` is known to be shorthand for `t`,
+then the only valid uses of `k` as a substitution target are `[k/k]` or `[t/k]`.
+
+Note that there currently is **no** use made of Known Constants.
+
 ### Matching Issues
 
 

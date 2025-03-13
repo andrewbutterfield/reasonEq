@@ -244,9 +244,13 @@ We have the following possibilities:
   \item 
     $v[\dots,r,\dots/\dots,v,\dots]=r$.
   \item 
-    $v[\dots,r,\dots/\dots,t,\dots]$
+    $v[\dots,r,\dots/\dots,t,\dots],  t\neq v$
     can be $r$ or $v[r/t]$ 
-    because $t$ ``involves`` $v$ somehow (need convincing example?).
+    because $t$ is known and ``involves`` $v$.
+    If $t$ is a known constant, 
+    then its expansion may mention $v$, or even be $v$!
+    However, it makes no sense to replace such a $t$ by anything other than
+    itself or the known constant.
   \item
     $v[\dots,\lst r,\dots/\dots,\lst t,\dots]$ 
     where $\lst t$ involves $v$, 
@@ -271,7 +275,7 @@ applySubst sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
 }
 
 
-
+\newpage
 \subsection{Cons-Term Substitution}
 
 \begin{eqnarray*}

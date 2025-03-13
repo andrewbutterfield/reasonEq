@@ -444,6 +444,12 @@ This requires either:
     then the outcome is a term based on the variable 
     at position $j$ in the replacement list.
 \end{itemize}
+\begin{code}
+data LVInvolvement
+  = Uninvolved
+  | ViaSideCond
+  | ViaLVExpansion
+\end{code}
 \textbf{NOTE:
   it looks like we should treat the observation and term variables the
   same way. For example, with Designs, 
@@ -451,6 +457,11 @@ This requires either:
   that are mentioned in s.c.s involving $\lst O$, 
   as well as observation variables like $ok$ that are also mentioned.
 }
+
+\begin{code}
+getTermVarInvolvement :: SubContext -> Variable -> LVarSub -> LVInvolvement
+getTermVarInvolvement (SubCtxt sc vts) v lvlv = Uninvolved
+\end{code}
 
 \textbf{Note:}
 \textsl{

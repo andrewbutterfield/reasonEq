@@ -447,20 +447,23 @@ This requires either:
 \begin{code}
 data LVInvolvement
   = Uninvolved
-  | ViaSideCond
+  | ViaSideCond 
   | ViaLVExpansion
 \end{code}
-\textbf{NOTE:
-  it looks like we should treat the observation and term variables the
-  same way. For example, with Designs, 
-  we have term variables like $P$ (say)
-  that are mentioned in s.c.s involving $\lst O$, 
-  as well as observation variables like $ok$ that are also mentioned.
-}
 
 \begin{code}
 getTermVarInvolvement :: SubContext -> Variable -> LVarSub -> LVInvolvement
-getTermVarInvolvement (SubCtxt sc vts) v lvlv = Uninvolved
+-- treat OsbV and TermV seperately !
+getTermVarInvolvement (SubCtxt (vscs, _) vts) v lvlv@(tlv,rlv)
+  = case gv `mentionedBy` vscs of
+      Just (vsc,mwhen) -> getSCInvolvement vsc mwhen gv lvlv
+      Nothing -> Uninvolved
+  where gv = StdVar v
+
+-- mwhen == Nothing ==> gv' == gv
+-- mwhen == Just vw'  ==>  gv' ==  gv[vw'/vw]
+getSCInvolvement (vsc@(VSC gv' nvsD nvsC nvsCd)) mwhen gv lvlv 
+  = ViaSideCond
 \end{code}
 
 \textbf{Note:}

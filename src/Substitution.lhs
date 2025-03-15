@@ -514,16 +514,17 @@ The term-variable is an observation variable.
 \end{eqnarray*}
 
 \begin{code}
-getTermVarInvolvement (SubCtxt (vscs, _) vts) v@(Vbl i Obsv vw) lvlv@(tlv,rlv)
+getTermVarInvolvement (SubCtxt (vscs, _) vts) v@(Vbl i ObsV vw) lvlv@(tlv,rlv)
   = case gv `mentionedBy` vscs of
       Just (vsc,mwhen) -> getSCInvolvement vsc mwhen gv lvlv
       Nothing -> Uninvolved
-  where gv = StdVar v
+  where 
+    gv = StdVar v
 
--- mwhen == Nothing ==> gv' == gv
--- mwhen == Just vw'  ==>  gv' ==  gv[vw'/vw]
-getSCInvolvement (vsc@(VSC gv' nvsD nvsC nvsCd)) mwhen gv lvlv 
-  = ViaSideCond
+    -- mwhen == Nothing ==> gv' == gv
+    -- mwhen == Just vw'  ==>  gv' ==  gv[vw'/vw]
+    getSCInvolvement (vsc@(VSC gv' nvsD nvsC nvsCd)) mwhen gv lvlv 
+      = ViaSideCond
 \end{code}
 The term-variable is a expression or predicate variable.
 
@@ -556,6 +557,7 @@ For term variables we have the following examples:
 \end{eqnarray*}
 \begin{code}
 getTermVarInvolvement (SubCtxt (vscs, _) vts) v@(Vbl i vc vw) lvlv@(tlv,rlv)
+  = Uninvolved
 \end{code}
 
 

@@ -444,6 +444,32 @@ This requires either:
     then the outcome is a term based on the variable 
     at position $j$ in the replacement list.
 \end{itemize}
+
+We will consider the case $x_u[\lst r_v/\lst t_w]$ 
+where $u$, $v$, $w$ are temporality-valued variables.
+We want to determine if $x_u$ is ``involved'' with $\lst t_w$.
+There are several possibilities:
+\begin{enumerate}
+  \item
+    $x_u$ is not involved: 
+    check other targets, if any,
+    otherwise return $x_u$ as the outcome.
+  \item
+    $x_u$ is involved, 
+    because the expansion of $[\lst r_v/\lst t_w]$ 
+    contains a substitution pair $[r_v/x_u]$:
+    return $r_v$.
+  \item
+    $x_u$ is involved, 
+    because $r=t$, $u=w$ and a side-condition asserts $\lst t_w \supseteq x_w$:
+    return $x_v$.
+  \item
+    $x_u$ is involved, 
+    because $u=w$ and a side-condition asserts $\lst t_w \disj x_w$:
+    check other targets, if any,
+    otherwise return $x_u$ as the outcome.
+\end{enumerate}
+
 \begin{code}
 data LVInvolvement
   = Uninvolved
@@ -453,8 +479,42 @@ data LVInvolvement
 
 \begin{code}
 getTermVarInvolvement :: SubContext -> Variable -> LVarSub -> LVInvolvement
--- treat OsbV and TermV seperately !
-getTermVarInvolvement (SubCtxt (vscs, _) vts) v lvlv@(tlv,rlv)
+\end{code}
+The term-variable is an observation variable.
+
+\begin{eqnarray*}
+    ls[\lst O_1/\lst O'] 
+    ~~~\text{given}~~~
+     \lst O = \setof{s,ls}       
+   &\mapsto& ls
+\\ ls'[\lst O_1/\lst O'] 
+   ~~~\text{given}~~~
+   \lst O = \setof{s,ls}       
+   &\mapsto& ls_1
+\\  ls[\lst O_1/\lst O] 
+    ~~~\text{given}~~~
+     \lst O = \setof{s,ls}       
+   &\mapsto& ls_1
+\\ ls'[\lst O_1/\lst O] 
+   ~~~\text{given}~~~
+   \lst O = \setof{s,ls}  
+   &\mapsto& ls' 
+\\ ls[\lst O_1/\lst O] 
+   ~~~\text{given}~~~
+   \lst O = \setof{s}  
+   &\mapsto& ls 
+\\ ok[\lst O_1/\lst O']
+   ~~~\text{given}~~~
+   \lst O = AS \land \lst O \supseteq {ok}
+   &\mapsto& ok
+\\ ok[\lst O_1/\lst O]
+   ~~~\text{given}~~~
+   \lst O = AS \land \lst O \supseteq {ok}
+   &\mapsto& ok_1
+\end{eqnarray*}
+
+\begin{code}
+getTermVarInvolvement (SubCtxt (vscs, _) vts) v@(Vbl i Obsv vw) lvlv@(tlv,rlv)
   = case gv `mentionedBy` vscs of
       Just (vsc,mwhen) -> getSCInvolvement vsc mwhen gv lvlv
       Nothing -> Uninvolved
@@ -465,6 +525,39 @@ getTermVarInvolvement (SubCtxt (vscs, _) vts) v lvlv@(tlv,rlv)
 getSCInvolvement (vsc@(VSC gv' nvsD nvsC nvsCd)) mwhen gv lvlv 
   = ViaSideCond
 \end{code}
+The term-variable is a expression or predicate variable.
+
+For term variables we have the following examples:
+\begin{eqnarray*}
+   E_1[\lst O_1/\lst O'] 
+   ~~~\text{given}~~~ 
+   E_1 \disj \lst O,\lst O'     
+   &\mapsto& E_1
+\\   a[\lst O_1/\lst O'] 
+   ~~~\text{given}~~~ 
+   a \subseteq_a \lst O,\lst O' 
+   &=& a[\lst O_1/\lst O']
+\\ E_2[\lst O_1/\lst O] 
+   ~~~\text{given}~~~ 
+   E_2 \disj \lst O,\lst O'     
+   &\mapsto& E_2
+\\   a[\lst O_1/\lst O] 
+   ~~~\text{given}~~~ 
+   a \subseteq_a \lst O,\lst O' 
+   &=& a[\lst O_1/\lst O]
+\\   a[\lst O_1/\lst O] 
+   ~~~\text{given}~~~ 
+   a \subseteq_a \setof{s,s'} \land \lst O = \setof{s,ls}
+   &\mapsto& a[s_1/s]
+\\   a[\lst O_1/\lst O] 
+   ~~~\text{given}~~~ 
+   a \subseteq_a \setof{s,s',ls,ls',\dots} \land \lst O = \setof{s,ls}
+   &\mapsto& a[s_1,ls_1/s,ls]
+\end{eqnarray*}
+\begin{code}
+getTermVarInvolvement (SubCtxt (vscs, _) vts) v@(Vbl i vc vw) lvlv@(tlv,rlv)
+\end{code}
+
 
 \textbf{Note:}
 \textsl{

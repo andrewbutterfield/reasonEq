@@ -461,7 +461,8 @@ There are several possibilities:
     return $r_v$.
   \item
     $x_u$ is involved, 
-    because $r=t$, $u=w$ and a side-condition asserts $\lst t_w \supseteq x_w$:
+    because $r=t$, $u=w$ 
+    and a side-condition asserts $\lst t_w \supseteq x_w$:
     return $x_v$.
   \item
     $x_u$ is involved, 
@@ -475,7 +476,8 @@ data LVInvolvement -- given   v[r$/t$]
   = Uninvolved  -- v has no relationship with t$, search for other t$
   | DisjInvolvement  -- v is disjoint from t$, search for other t$ 
   | CoverInvolvement  -- v is covered by t$, stop here and eval v[r$/t$]
-  | ExpandInvolvement -- v is covered by expansion of t$, stop here and?
+  | ExpandInvolvement Variable
+    -- v is covered by expansion of t$, return corr. var from expand r$
   -- if search ends without cover, return v
   -- eval v[r$/t$] depends on the class of v
   -- return cititcal info too?
@@ -488,96 +490,53 @@ The term-variable is an observation variable.
 This is covered if a side-condition implies that
 $\lst t \supseteq v$ or the expansion of $\lst t$ contains $v$.
 
-\begin{eqnarray*}
-    ls[\lst O_1/\lst O'] 
-    ~~~\text{given}~~~
-     \lst O = \setof{s,ls}       
-   &\mapsto& ls
-\\ ls'[\lst O_1/\lst O'] 
-   ~~~\text{given}~~~
-   \lst O = \setof{s,ls}       
-   &\mapsto& ls_1
-\\  ls[\lst O_1/\lst O] 
-    ~~~\text{given}~~~
-     \lst O = \setof{s,ls}       
-   &\mapsto& ls_1
-\\ ls'[\lst O_1/\lst O] 
-   ~~~\text{given}~~~
-   \lst O = \setof{s,ls}  
-   &\mapsto& ls' 
-\\ ls[\lst O_1/\lst O] 
-   ~~~\text{given}~~~
-   \lst O = \setof{s}  
-   &\mapsto& ls 
-\\ ok[\lst O_1/\lst O']
-   ~~~\text{given}~~~
-   \lst O = AS \land \lst O \supseteq {ok}
-   &\mapsto& ok
-\\ ok[\lst O_1/\lst O]
-   ~~~\text{given}~~~
-   \lst O = AS \land \lst O \supseteq {ok}
-   &\mapsto& ok_1
-\end{eqnarray*}
-
 \begin{code}
-getTermVarInvolvement (SubCtxt (vscs, _) vts) v@(Vbl i ObsV vw) lvlv@(tlv,rlv)
-  = case gv `mentionedBy` vscs of
-      Just (vsc,mwhen) -> getSCInvolvement vsc mwhen gv
-      Nothing -> Uninvolved -- need to look at expansions next
+getTermVarInvolvement (SubCtxt (vscs, _) vts) v (tlv,rlv)
+  = case gtlv `mentionedBy` vscs of
+      Just (vsc,mwhen) -> 
+        getSCInvolvement gv vsc mwhen
+      Nothing -> 
+        case lookupLVarTs vts tlv of
+          (KnownVarList tvl xtvars tsize) ->
+            getExpandInvolvement vts v xtvars tsize rlv 
+          _  ->  Uninvolved 
+        
   where 
     gv = StdVar v
-
-    -- !!!!! we don't involve tlv here !!!!!!
-    getSCInvolvement (vsc@(VSC gv' nvsD nvsC nvsCd)) mwhen gv
-      | gv' `nmbr` nvsD   =  DisjInvolvement
-      | gv' `nmbr` nvsC   =  possCoverInvolvement gv gv' mwhen
-      | gv' `nmbr` nvsCd  =  possCoverInvolvement gv gv' mwhen
-      | otherwise = Uninvolved -- should not happen
-
-    -- mwhen == Nothing ==> gv' == gv
-    possCoverInvolvement gv gv' Nothing
-      | gv == gv' =  CoverInvolvement
-      | otherwise  =  Uninvolved
-    
-    -- mwhen == Just vw'  ==>  gv' ==  gv[vw'/vw]
-    possCoverInvolvement gv gv' (Just vw')
-      = case gv `dynGVarEq` gv' of
-          Just vwd | vwd == vw'  ->  CoverInvolvement
-          _ -> Uninvolved
+    gtlv = LstVar tlv
 
 \end{code}
-The term-variable is a expression or predicate variable.
-
-For term variables we have the following examples:
-\begin{eqnarray*}
-   E_1[\lst O_1/\lst O'] 
-   ~~~\text{given}~~~ 
-   E_1 \disj \lst O,\lst O'     
-   &\mapsto& E_1
-\\   a[\lst O_1/\lst O'] 
-   ~~~\text{given}~~~ 
-   a \subseteq_a \lst O,\lst O' 
-   &=& a[\lst O_1/\lst O']
-\\ E_2[\lst O_1/\lst O] 
-   ~~~\text{given}~~~ 
-   E_2 \disj \lst O,\lst O'     
-   &\mapsto& E_2
-\\   a[\lst O_1/\lst O] 
-   ~~~\text{given}~~~ 
-   a \subseteq_a \lst O,\lst O' 
-   &=& a[\lst O_1/\lst O]
-\\   a[\lst O_1/\lst O] 
-   ~~~\text{given}~~~ 
-   a \subseteq_a \setof{s,s'} \land \lst O = \setof{s,ls}
-   &\mapsto& a[s_1/s]
-\\   a[\lst O_1/\lst O] 
-   ~~~\text{given}~~~ 
-   a \subseteq_a \setof{s,s',ls,ls',\dots} \land \lst O = \setof{s,ls}
-   &\mapsto& a[s_1,ls_1/s,ls]
-\end{eqnarray*}
+This code deals with the case where $\lst t$ is involved in a side-condition,
+which we now check to see if it involves $v$.
 \begin{code}
-getTermVarInvolvement (SubCtxt (vscs, _) vts) v@(Vbl i vc vw) lvlv@(tlv,rlv)
-  = Uninvolved
+getSCInvolvement gv (vsc@(VSC gv' nvsD nvsC nvsCd)) mwhen
+  | gv' `nmbr` nvsD   =  DisjInvolvement
+  | gv' `nmbr` nvsC   =  possCoverInvolvement gv gv' mwhen
+  | gv' `nmbr` nvsCd  =  possCoverInvolvement gv gv' mwhen
+  | otherwise = Uninvolved -- should not happen
+
+-- mwhen == Nothing ==> gv' == gv
+possCoverInvolvement gv gv' Nothing
+  | gv == gv'  =  CoverInvolvement
+  | otherwise  =  Uninvolved
+
+-- mwhen == Just vw'  ==>  gv' ==  gv[vw'/vw]
+possCoverInvolvement gv gv' (Just vw')
+  = case gv `dynGVarEq` gv' of
+      Just vwd | vwd == vw'  ->  CoverInvolvement
+      _                      ->  Uninvolved
+\end{code}
+This code deals with the case where $v$ is observable,
+and $\lst t$ is not involved in a side-condition.
+We now look at the expansion of $\lst t$, if any.
+\begin{code}
+getExpandInvolvement vts v xtvars tsize rlv 
+  = case lookupLVarTs vts rlv of
+      (KnownVarList rvl xrvars rsize) | rsize == tsize
+          ->  case alookup v $ zip xtvars xrvars of
+                Nothing  -> Uninvolved
+                Just rv  -> ExpandInvolvement rv
+      _  ->  Uninvolved
 \end{code}
 
 

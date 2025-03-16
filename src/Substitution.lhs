@@ -471,16 +471,22 @@ There are several possibilities:
 \end{enumerate}
 
 \begin{code}
-data LVInvolvement
-  = Uninvolved
-  | ViaSideCond 
-  | ViaLVExpansion
+data LVInvolvement -- given   v[r$/t$]
+  = Uninvolved  -- v has no relationship with t$, search for other t$
+  | DisjInvolvement  -- v is disjoint from t$, search for other t$ 
+  | CoverInvolvement  -- v is covered by t$, stop here and eval v[r$/t$]
+  | ExpandInvolvement -- v is covered by expansion of t$, stop here and?
+  -- if search ends without cover, return v
+  -- eval v[r$/t$] depends on the class of v
+  -- return cititcal info too?
 \end{code}
 
 \begin{code}
 getTermVarInvolvement :: SubContext -> Variable -> LVarSub -> LVInvolvement
 \end{code}
 The term-variable is an observation variable.
+This is covered if a side-condition implies that
+$\lst t \supseteq v$ or the expansion of $\lst t$ contains $v$.
 
 \begin{eqnarray*}
     ls[\lst O_1/\lst O'] 
@@ -516,15 +522,29 @@ The term-variable is an observation variable.
 \begin{code}
 getTermVarInvolvement (SubCtxt (vscs, _) vts) v@(Vbl i ObsV vw) lvlv@(tlv,rlv)
   = case gv `mentionedBy` vscs of
-      Just (vsc,mwhen) -> getSCInvolvement vsc mwhen gv lvlv
-      Nothing -> Uninvolved
+      Just (vsc,mwhen) -> getSCInvolvement vsc mwhen gv
+      Nothing -> Uninvolved -- need to look at expansions next
   where 
     gv = StdVar v
 
+    -- !!!!! we don't involve tlv here !!!!!!
+    getSCInvolvement (vsc@(VSC gv' nvsD nvsC nvsCd)) mwhen gv
+      | gv' `nmbr` nvsD   =  DisjInvolvement
+      | gv' `nmbr` nvsC   =  possCoverInvolvement gv gv' mwhen
+      | gv' `nmbr` nvsCd  =  possCoverInvolvement gv gv' mwhen
+      | otherwise = Uninvolved -- should not happen
+
     -- mwhen == Nothing ==> gv' == gv
+    possCoverInvolvement gv gv' Nothing
+      | gv == gv' =  CoverInvolvement
+      | otherwise  =  Uninvolved
+    
     -- mwhen == Just vw'  ==>  gv' ==  gv[vw'/vw]
-    getSCInvolvement (vsc@(VSC gv' nvsD nvsC nvsCd)) mwhen gv lvlv 
-      = ViaSideCond
+    possCoverInvolvement gv gv' (Just vw')
+      = case gv `dynGVarEq` gv' of
+          Just vwd | vwd == vw'  ->  CoverInvolvement
+          _ -> Uninvolved
+
 \end{code}
 The term-variable is a expression or predicate variable.
 

@@ -2,6 +2,19 @@
 
 ## URGENT or NEXT
 
+
+Working on `UTCP.X_X_comp`  on focus  `(E2 ⊆ ls)[O$_1/O$]`
+
+We get `[ExpandInvolvement ls_1]` from `getExpandInvolvement`.
+
+But it ends up with
+
+```
+alookup: not found
+no lv-target is involved with term-variable
+<return> to continue
+```
+
 Trying to prove `design_;_lzero`:
 
 

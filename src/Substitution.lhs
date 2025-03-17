@@ -419,8 +419,10 @@ keepMentionedTermSubs :: VarSet -> Bool -> [TermSub] -> [TermSub]
                       -> (Bool,[TermSub])
 keepMentionedTermSubs fvs chgd ltv [] = (chgd,reverse ltv)
 keepMentionedTermSubs fvs chgd ltv (vt@(tv,_):vtl)
-  | (StdVar tv) `S.member` fvs  =  keepMentionedTermSubs fvs chgd (vt:ltv) vtl
-  | otherwise                   =  keepMentionedTermSubs fvs True ltv      vtl 
+  | (StdVar tv) `S.member` fvs  
+    =  keepMentionedTermSubs fvs chgd (vt:ltv) vtl
+  | otherwise                   
+    =  keepMentionedTermSubs fvs True ltv      vtl 
 \end{code}
 
 \newpage
@@ -475,8 +477,9 @@ There are several possibilities:
 data LVInvolvement -- given   v[r$/t$]
   = Uninvolved  -- v has no relationship with t$, search for other t$
   | DisjInvolvement  -- v is disjoint from t$, search for other t$ 
-  | CoverInvolvement  -- v is covered by t$, stop here and eval v[r$/t$]
+  | CoverInvolvement ListVar ListVar -- v is covered by t$, eval v[r$/t$]
   | ExpandInvolvement Variable
+  deriving (Eq, Show)
     -- v is covered by expansion of t$, return corr. var from expand r$
   -- if search ends without cover, return v
   -- eval v[r$/t$] depends on the class of v
@@ -491,15 +494,17 @@ This is covered if a side-condition implies that
 $\lst t \supseteq v$ or the expansion of $\lst t$ contains $v$.
 
 \begin{code}
-getTermVarInvolvement (SubCtxt (vscs, _) vts) v (tlv,rlv)
-  = case gtlv `mentionedBy` vscs of
+idb what = pdbg ("gTVInvolve."++what)
+getTermVarInvolvement (SubCtxt (vscs, _) vts) v lvlv@(tlv,rlv)
+  = case (idb "gv" gv) `mentionedBy` (idb "vscs" vscs) of
       Just (vsc,mwhen) -> 
-        getSCInvolvement gv vsc mwhen
+        getSCInvolvement (idb "gv" gv) (idb "lvlv" lvlv) (idb "vsc" vsc) 
+          $ idb "mwhen" mwhen
       Nothing -> 
-        case lookupLVarTs vts tlv of
+        case lookupLVarTs (idb "vts" vts) $ idb "tlv"  tlv of
           (KnownVarList tvl xtvars tsize) ->
-            getExpandInvolvement vts v xtvars tsize rlv 
-          _  ->  Uninvolved 
+            getExpandInvolvement vts v (idb "xtvars" xtvars) (idb "tsize " tsize) rlv 
+          _  ->  idb "notKVL" Uninvolved 
         
   where 
     gv = StdVar v
@@ -509,31 +514,32 @@ getTermVarInvolvement (SubCtxt (vscs, _) vts) v (tlv,rlv)
 This code deals with the case where $\lst t$ is involved in a side-condition,
 which we now check to see if it involves $v$.
 \begin{code}
-getSCInvolvement gv (vsc@(VSC gv' nvsD nvsC nvsCd)) mwhen
+getSCInvolvement gv lvlv (vsc@(VSC gv' nvsD nvsC nvsCd)) mwhen
   | gv' `nmbr` nvsD   =  DisjInvolvement
-  | gv' `nmbr` nvsC   =  possCoverInvolvement gv gv' mwhen
-  | gv' `nmbr` nvsCd  =  possCoverInvolvement gv gv' mwhen
+  | gv' `nmbr` nvsC   =  possCoverInvolvement gv lvlv gv' mwhen
+  | gv' `nmbr` nvsCd  =  possCoverInvolvement gv lvlv gv' mwhen
   | otherwise = Uninvolved -- should not happen
 
 -- mwhen == Nothing ==> gv' == gv
-possCoverInvolvement gv gv' Nothing
-  | gv == gv'  =  CoverInvolvement
+possCoverInvolvement gv (tlv,rlv) gv' Nothing
+  | gv == gv'  =  CoverInvolvement tlv rlv
   | otherwise  =  Uninvolved
 
 -- mwhen == Just vw'  ==>  gv' ==  gv[vw'/vw]
-possCoverInvolvement gv gv' (Just vw')
+possCoverInvolvement gv (tlv,rlv) gv' (Just vw')
   = case gv `dynGVarEq` gv' of
-      Just vwd | vwd == vw'  ->  CoverInvolvement
+      Just vwd | vwd == vw'  ->  CoverInvolvement tlv rlv
       _                      ->  Uninvolved
 \end{code}
 This code deals with the case where $v$ is observable,
 and $\lst t$ is not involved in a side-condition.
 We now look at the expansion of $\lst t$, if any.
 \begin{code}
+edb what = pdbg ("gXInvolve."++what)
 getExpandInvolvement vts v xtvars tsize rlv 
-  = case lookupLVarTs vts rlv of
-      (KnownVarList rvl xrvars rsize) | rsize == tsize
-          ->  case alookup v $ zip xtvars xrvars of
+  = case lookupLVarTs vts $ edb "rlv" rlv of
+      (KnownVarList rvl xrvars rsize) | (edb "rsize" rsize) == tsize
+          ->  case edb "ALOOKUP" $ alookup (edb "v" v) $ edb "ZIP" $ zip xtvars (edb "xrvars" xrvars) of
                 Nothing  -> Uninvolved
                 Just rv  -> ExpandInvolvement rv
       _  ->  Uninvolved
@@ -563,168 +569,23 @@ type PossLVSub = Either LVarSub [LVarSub]
 lvlvlSubstitute :: MonadFail m
                 => SubContext -> Term -> [TermSub] -> [LVarSub] 
                 -> m Term
+
+sdb what = pdbg("lvlvlSubstitute."++what)
+lvlvlSubstitute sctx vrt@(Var tk v) vtl lvlvl = do 
+  let involvements = map (getTermVarInvolvement sctx v) $ sdb "lvlvl" lvlvl
+  let involved = filter (/= Uninvolved) $ sdb "involvements" involvements
+  if null $ sdb "involved" involved then 
+    fail "no lv-target is involved with term-variable"
+  else case head involved of
+    DisjInvolvement            ->  return vrt  -- subst. has no effect 
+    (ExpandInvolvement rv)     ->  return $ jVar tk rv -- found repl
+    (CoverInvolvement tlv rlv) ->   -- v is covered by t$, eval v[r$/t$]
+    -- **** quick fix for now
+      return $ Sub tk vrt $ jSubstn [] [(tlv,rlv)] 
 \end{code}
 
-\newpage
-\paragraph{Observation variables} $x$, $y$, \dots
 
-Recall:
-$$v[\lst r_1,\dots \lst r_N/\lst t_1,\dots,\lst t_N].$$
-If $v$ is an observation variable, 
-and occurs at location $j$ in the expansion of $\lst t_i$,
-then the outcome is a variable-term based on the variable 
-at position $j$ in the expansion of $\lst r_i$.
-\begin{code}
-lvlvlSubstitute (SubCtxt sc vts) vrt@(Var tk v@(Vbl i  ObsV vw)) vtl lvlvl
-  = scan v lvlvl
-  where 
-    vfail reason = fail ("lvlvSub.search(obs): "++show v++" "++reason)
 
-    scan :: MonadFail m => Variable -> [LVarSub] -> m Term
-    scan v [] = return vrt
-    scan v (lvlv:lvlvs)
-      = case check v lvlv of
-          Nothing  ->  scan v lvlvs
-          Just rv  ->  return $ jVar tk rv
-
-    check :: MonadFail m => Variable -> LVarSub -> m Variable
-    check v (tlv,rlv) = do
-      tlvK <- expandKnown vts tlv
-      rlvK <- expandKnown vts rlv
-      tlvExp <- getVarList tlvK
-      rlvExp <- getVarList rlvK
-      search v tlvExp rlvExp
-
-    getVarList :: MonadFail m => KnownExpansion -> m [Variable]
-    getVarList (KnownVarList _ expansion _,_,_) = return expansion
-    getVarList _ = vfail "not known var-list"
-\end{code}
-
-\begin{code}
-    search :: MonadFail m => Variable -> [Variable] -> [Variable] -> m Variable
-    search v [] _ = fail "short target list"
-    search v _ [] = fail "short repl. list"
-    search v (tv:tvK) (rv:rvK)
-      | v == tv  =  return rv
-      | otherwise  =  search v tvK rvK
-\end{code}
-
-\newpage
-\paragraph{Term variables} $P$, $e$, \dots
-
-Recall:
-$$v[\lst r_1,\dots \lst r_N/\lst t_1,\dots,\lst t_N].$$
-If $v$ is an expression or predicate variable, 
-we check for a side-condition that mentions $v$, 
-in which we also expand any list variables mentioned there.
-If there is no such side-condition, then we fail.
-We then search the substitution pairs.
-For each $\lst r_i/\lst t_i$ pair, 
-we check that both list-vars are known variable sequences of the same length
-($[y_1,\dots,y_N/x_1,\dots,x_N]$),
-We then check the target sequence against the side conditions,
-by computing $(\seqof{x_i}\setminus D)\cap C$.
-If this is non-empty and different to $[x_1,\dots,x_N]$,
-then we succeed and return a revised substitution.
-If it is empty, and any $x_i \in D$,
-we succeed but return the variable without any substitution.
-If not, we skip to the next pair.
-We then construct a substitution term $v[\dots/\dots]$ 
-that is limited to those variables we know can be in (the alphabet of) $v$.
-\begin{code}
-lvlvlSubstitute (SubCtxt (vscs,_) vts) 
-                vrt@(Var tk v@(Vbl i  vc vw)) vtl lvlvl
-                                   -- vc in {ExprV,PredV}
-  = case pdbg "lvlvlSub.mentionedBy" (gv `mentionedBy` vscs) of
-      Nothing           ->  return $ Sub (termtype vrt) vrt $ jSubstn vtl lvlvl
-      Just (vsc,mwhen)  ->  scan vsc v lvlvl
-  where
-    gv = StdVar v
-
-    scan :: MonadFail m => VarSideConds -> Variable -> [LVarSub] -> m Term
-    scan vsc v [] = return vrt
-    scan vsc v (lvlv:lvlvs)
-      -- | if possiblyInvolved v lvlv vsc
-      = case pdbg "lvlvlSub.getLVarExp" (getLVarExpansions v lvlv) of
-          Nothing               ->  possiblyInvolved vsc v lvlvs
-          Just (tlvExp,rlvExp)  ->  handleExpansions v lvlvs vsc tlvExp rlvExp
-
-    getLVarExpansions :: MonadFail m 
-                      => Variable -> LVarSub -> m ([Variable],[Variable])
-    getLVarExpansions v (tlv,rlv) = do
-      tlvK <- expandKnown vts tlv
-      rlvK <- expandKnown vts rlv
-      tlvExp <- getVarList tlvK
-      rlvExp <- getVarList rlvK
-      return (tlvExp,rlvExp)
-      
-    getVarList :: MonadFail m => KnownExpansion -> m [Variable]
-    getVarList (KnownVarList _ expansion _,_,_) = return expansion
-    getVarList _ = fail "lvlvSub.search(term): not known var-list"
-
-    -- compares v with vsc to see if they are associated
-    idb what = pdbg ("possInvlv."++what)
-    possiblyInvolved vsc v lvlvs = scan (idb "vsc" vsc) (idb "v" v) lvlvs -- for now
-
-    handleExpansions v lvlvs vsc tlvExp rlvExp
-      = case processExpansions vsc False [] tlvExp rlvExp of
-          Nothing  ->  scan vsc v lvlvs
-          Just (False,_)   ->  fail "lvlvSub.search(term): no change"
-          Just (_,[])      ->  return $ mkTVSubst vrt vtl
-          Just (_,vtl')  ->  return $ mkTVSubst vrt (map liftRepl vtl'++vtl)
-\end{code}
-\newpage
-
-We have \h{vsc} (e.g. \m{s',s \supseteq_a a}),
-and \h{tlv} (e.g. \m{\seqof{s',ls'}}) and \h{rlv} (e.g. \m{\seqof{s_1,ls_1}}).
-Note that \h{tlv} and \h{rlv} should have the same length.
-\begin{code}
-    processExpansions :: MonadFail m 
-                      => VarSideConds 
-                      -> Bool  -- true if a change has been made
-                      -> [(Variable,Variable)]  -- result accumulator
-                      -> [Variable] -- target (list) variables
-                      -> [Variable] -- replacement (list) variables
-                      -> m (Bool,[(Variable,Variable)])
-\end{code}
-End cases, noting that both lists should end together:
-\begin{code}
-    processExpansions vsc chgd ko [] []  = return $ (chgd,reverse ko)
-    processExpansions vsc _    ko _  []  = fail "lvlvSub.procExp: short repl." 
-    processExpansions vsc _    ko []  _  = fail "lvlvSub.procExp: short target" 
-\end{code}
-All these side-conditions are for a particular term-variable,
-and we want to decide, for a particular element of \h{tlv},
-whether it is possible that it could be present 
-in some future incarnation of \h{gv}.
-This is established by comparing the target variable \h{tv} 
-with the side-condition \h{vsc} associated with that term variable.
-Basically, if \h{tv} is disjoint then we drop it,
-if covered, we definitely keep it.
-\begin{code}
-    processExpansions vsc@(VSC _ nvsD nvsC nvsCd) chgd ko (tv:tvl) (rv:rvl)
-      | gtgt `nmbr`  nvsD   =  processExpansions vsc True ko tvl rvl
-      | gtgt `cvdby` nvsC   =  processExpansions vsc chgd ((tv,rv):ko) tvl rvl
-      | gtgt `cvdby` nvsCd  =  processExpansions vsc chgd ((tv,rv):ko) tvl rvl
-      | otherwise           =  processExpansions vsc True ko tvl rvl
-      where
-        gtgt = StdVar tv
-        gv `cvdby` NA  =  False -- denotes "vacuously true"
-        gv `cvdby` (The vs) = gv `S.member` vs
-
-    mkTVSubst vrt [] =  vrt
-    mkTVSubst vrt vtl = Sub (termtype vrt) vrt $ jSubstn vtl []
-
-    liftRepl (tv,rv) = (tv, fromJust $ var ArbType rv)
-\end{code}
-\begin{code}
-lvlvlSubstScan sctxt tk v poss [] = Right poss
-lvlvlSubstScan sctxt tk v poss (lvlv:lvlvl)
-  = case lvlvSubstitute sctxt tk v lvlv of
-      Right []   ->  lvlvlSubstScan sctxt tk v    poss  lvlvl
-      Right [p]  ->  lvlvlSubstScan sctxt tk v (p:poss) lvlvl
-      left       ->  left
-\end{code}
 
 % OBSOLETE?
 Given $v[\ell^R/\ell^T]$ we ask the following questions:

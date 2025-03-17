@@ -1,10 +1,26 @@
-@appSub.sctx:
-SubCtxt
-{ subSC = ( [ ..., O$,O$'  covers_a Q ,...], { O$_1 } )
-, subVD = [ Designs(design,ok,ok'), ... , EQV(eqv)]
-}
-@appSub.vrt:  Q
-@lvlvlSub.mentionedBy:
-Just(O$,O$' covers_a Q, Nothing )
-
-@appSub.lvlvl:  -- [O$_1/O$]
+@gXInvolve.rlv:
+LV (VR (Id "O" 0, VO, WD "1"), [], [])
+@gXInvolve.rsize:
+2
+@gTVInvolve.tsize :
+2
+@gTVInvolve.xtvars:
+[ VR (Id "s" 0, VO, WB)
+, VR (Id "ls" 0, VO, WB) ]
+@gXInvolve.xrvars:
+[ VR (Id "s" 0, VO, WD "1")
+, VR (Id "ls" 0, VO, WD "1") ]
+@gXInvolve.ZIP:
+[ (VR (Id "s" 0, VO, WB), VR (Id "s" 0, VO, WD "1"))
+, (VR (Id "ls" 0, VO, WB), VR (Id "ls" 0, VO, WD "1")) ]
+@gXInvolve.v:
+VR (Id "ls" 0, VO, WB)
+@gXInvolve.ALOOKUP:
+Just
+(VR (Id "ls" 0, VO, WD "1"))
+@lvlvlSubstitute.involvements:
+[ ExpandInvolvement
+  (VR (Id "ls" 0, VO, WD "1")) ]
+@lvlvlSubstitute.involved:
+[ ExpandInvolvement
+  (VR (Id "ls" 0, VO, WD "1")) ]

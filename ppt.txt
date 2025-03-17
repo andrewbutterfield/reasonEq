@@ -1,26 +1,10 @@
-@gXInvolve.rlv:
-LV (VR (Id "O" 0, VO, WD "1"), [], [])
-@gXInvolve.rsize:
-2
-@gTVInvolve.tsize :
-2
-@gTVInvolve.xtvars:
-[ VR (Id "s" 0, VO, WB)
-, VR (Id "ls" 0, VO, WB) ]
-@gXInvolve.xrvars:
-[ VR (Id "s" 0, VO, WD "1")
-, VR (Id "ls" 0, VO, WD "1") ]
-@gXInvolve.ZIP:
-[ (VR (Id "s" 0, VO, WB), VR (Id "s" 0, VO, WD "1"))
-, (VR (Id "ls" 0, VO, WB), VR (Id "ls" 0, VO, WD "1")) ]
-@gXInvolve.v:
-VR (Id "ls" 0, VO, WB)
-@gXInvolve.ALOOKUP:
-Just
-(VR (Id "ls" 0, VO, WD "1"))
-@lvlvlSubstitute.involvements:
-[ ExpandInvolvement
-  (VR (Id "ls" 0, VO, WD "1")) ]
-@lvlvlSubstitute.involved:
-[ ExpandInvolvement
-  (VR (Id "ls" 0, VO, WD "1")) ]
+@getSCInvolve.nvsD: NA
+@getSCInvolve.nvsC: NA
+@getSCInvolve.nvsCd: { O$ (WB) } )
+@gTVInvolve.mwhen:  WB
+@getSCInvolve.mwhen2: WB
+@getSCInvolve.gv'2:  ok (WB)
+@PCI.gv'2: ok (WB)
+@getSCInvolve.gv2: ok' (WA)
+@PCI.gv2: ok' (WA)
+@PCI.vwd: WB

@@ -494,31 +494,29 @@ This is covered if a side-condition implies that
 $\lst t \supseteq v$ or the expansion of $\lst t$ contains $v$.
 
 \begin{code}
-idb what = pdbg ("gTVInvolve."++what)
 getTermVarInvolvement (SubCtxt (vscs, _) vts) v lvlv@(tlv,rlv)
-  = case (idb "gv" gv) `mentionedBy` (idb "vscs" vscs) of
+  = case gv `mentionedBy` vscs of
       Just (vsc,mwhen) -> 
-        getSCInvolvement (idb "gv" gv) (idb "lvlv" lvlv) (idb "vsc" vsc) 
-          $ idb "mwhen" mwhen
+        getSCInvolvement gv lvlv vsc mwhen
       Nothing -> 
-        case lookupLVarTs (idb "vts" vts) $ idb "tlv"  tlv of
+        case lookupLVarTs vts tlv of
           (KnownVarList tvl xtvars tsize) ->
-            getExpandInvolvement vts v (idb "xtvars" xtvars) (idb "tsize " tsize) rlv 
-          _  ->  idb "notKVL" Uninvolved 
+            getExpandInvolvement vts v xtvars tsize rlv 
+          _  ->  Uninvolved 
         
   where 
     gv = StdVar v
-    gtlv = LstVar tlv
 
 \end{code}
 This code deals with the case where $\lst t$ is involved in a side-condition,
 which we now check to see if it involves $v$.
 \begin{code}
-getSCInvolvement gv lvlv (vsc@(VSC gv' nvsD nvsC nvsCd)) mwhen
-  | gv' `nmbr` nvsD   =  DisjInvolvement
-  | gv' `nmbr` nvsC   =  possCoverInvolvement gv lvlv gv' mwhen
-  | gv' `nmbr` nvsCd  =  possCoverInvolvement gv lvlv gv' mwhen
+getSCInvolvement gv lvlv@(tlv,rlv) (vsc@(VSC gv' nvsD nvsC nvsCd)) mwhen
+  | gtlv `nmbr` nvsD   =  DisjInvolvement
+  | gtlv `nmbr` nvsC   =  possCoverInvolvement gv lvlv gv' mwhen
+  | gtlv `nmbr` nvsCd  =  possCoverInvolvement gv lvlv gv' mwhen
   | otherwise = Uninvolved -- should not happen
+  where gtlv = LstVar tlv
 
 -- mwhen == Nothing ==> gv' == gv
 possCoverInvolvement gv (tlv,rlv) gv' Nothing
@@ -528,18 +526,17 @@ possCoverInvolvement gv (tlv,rlv) gv' Nothing
 -- mwhen == Just vw'  ==>  gv' ==  gv[vw'/vw]
 possCoverInvolvement gv (tlv,rlv) gv' (Just vw')
   = case gv `dynGVarEq` gv' of
-      Just vwd | vwd == vw'  ->  CoverInvolvement tlv rlv
-      _                      ->  Uninvolved
+      Just vwd  ->  CoverInvolvement tlv rlv
+      _         ->  Uninvolved
 \end{code}
 This code deals with the case where $v$ is observable,
 and $\lst t$ is not involved in a side-condition.
 We now look at the expansion of $\lst t$, if any.
 \begin{code}
-edb what = pdbg ("gXInvolve."++what)
 getExpandInvolvement vts v xtvars tsize rlv 
-  = case lookupLVarTs vts $ edb "rlv" rlv of
-      (KnownVarList rvl xrvars rsize) | (edb "rsize" rsize) == tsize
-          ->  case edb "ALOOKUP" $ alookup (edb "v" v) $ edb "ZIP" $ zip xtvars (edb "xrvars" xrvars) of
+  = case lookupLVarTs vts rlv of
+      (KnownVarList rvl xrvars rsize) | rsize == tsize
+          ->  case alookup v $ zip xtvars xrvars of
                 Nothing  -> Uninvolved
                 Just rv  -> ExpandInvolvement rv
       _  ->  Uninvolved
@@ -575,13 +572,16 @@ lvlvlSubstitute sctx vrt@(Var tk v) vtl lvlvl = do
   let involvements = map (getTermVarInvolvement sctx v) $ sdb "lvlvl" lvlvl
   let involved = filter (/= Uninvolved) $ sdb "involvements" involvements
   if null $ sdb "involved" involved then 
-    fail "no lv-target is involved with term-variable"
+    return vrt
   else case head involved of
     DisjInvolvement            ->  return vrt  -- subst. has no effect 
     (ExpandInvolvement rv)     ->  return $ jVar tk rv -- found repl
     (CoverInvolvement tlv rlv) ->   -- v is covered by t$, eval v[r$/t$]
-    -- **** quick fix for now
-      return $ Sub tk vrt $ jSubstn [] [(tlv,rlv)] 
+      if isObsVar v -- we have tlv covers v (modulo when)
+      then if varWhen v == lvarWhen tlv -- tlv covers v
+           then return $ jVar tk $ setVarWhen (lvarWhen rlv) v
+           else return vrt  -- target has wrong temporality
+      else return $ Sub tk vrt $ jSubstn [] [(tlv,rlv)] 
 \end{code}
 
 

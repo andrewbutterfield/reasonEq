@@ -5,22 +5,16 @@
 
 Working on `UTCP.X_X_comp`  on focus  `(E2 ⊆ ls)[O$_1/O$]`
 
-We get `[ExpandInvolvement ls_1]` from `getExpandInvolvement`.
-
-But it ends up with
-
-```
-alookup: not found
-no lv-target is involved with term-variable
-<return> to continue
-```
-
-However, `ls'[O$_1/O$']` results in `ls_1`, so that works.
-
-The issue may be the subset expression.
-
+For `a[O$_1/O$']` we get `a`, but should get `a[s_1/s']`.
 
 Trying to prove `design_;_lzero`:
+
+We now get to: 
+
+```
+(∃ O$  • ¬ok_1) ∨ (∃ O$  • (P[O$_1/O$] ⟹   ok' ∧ Q[O$_1/O$]))
+```
+We need a a way to add witness `ok_1 == false`.
 
 
 

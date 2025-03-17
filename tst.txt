@@ -1,22 +1,20 @@
-@gXInvolve.rlv:
-LV (VR (Id "O" 0,VO,WD "1"),[],[])
-@gXInvolve.rsize:
-2
-@gTVInvolve.tsize :
-2
-@gTVInvolve.xtvars:
-[VR (Id "s" 0,VO,WB),VR (Id "ls" 0,VO,WB)]
-@gXInvolve.xrvars:
-[VR (Id "s" 0,VO,WD "1"),VR (Id "ls" 0,VO,WD "1")]
-@gXInvolve.ZIP:
-[(VR (Id "s" 0,VO,WB),VR (Id "s" 0,VO,WD "1")),(VR (Id "ls" 0,VO,WB),VR (Id "ls" 0,VO,WD "1"))]
-@gXInvolve.v:
-VR (Id "ls" 0,VO,WB)
-@gXInvolve.ALOOKUP:
-Just (VR (Id "ls" 0,VO,WD "1"))
-@lvlvlSubstitute.involvements:
-[ExpandInvolvement (VR (Id "ls" 0,VO,WD "1"))]
-@lvlvlSubstitute.involved:
-[ExpandInvolvement (VR (Id "ls" 0,VO,WD "1"))]
-alookup: not found
-no lv-target is involved with term-variable
+@getSCInvolve.nvsD:
+NA
+@getSCInvolve.nvsC:
+NA
+@getSCInvolve.nvsCd:
+The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])
+@gTVInvolve.mwhen:
+Just WB
+@getSCInvolve.mwhen2:
+Just WB
+@getSCInvolve.gv'2:
+GV (VR (Id "ok" 0,VO,WB))
+@PCI.gv'2:
+GV (VR (Id "ok" 0,VO,WB))
+@getSCInvolve.gv2:
+GV (VR (Id "ok" 0,VO,WA))
+@PCI.gv2:
+GV (VR (Id "ok" 0,VO,WA))
+@PCI.vwd:
+WB

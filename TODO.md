@@ -15,6 +15,11 @@ no lv-target is involved with term-variable
 <return> to continue
 ```
 
+However, `ls'[O$_1/O$']` results in `ls_1`, so that works.
+
+The issue may be the subset expression.
+
+
 Trying to prove `design_;_lzero`:
 
 

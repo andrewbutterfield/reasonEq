@@ -258,8 +258,8 @@ applySubst sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
      (alookup v vtl)  -- v[..,r,../..,v,..] = r
      <|> 
      (lvlvlSubstitute sctx vrt vtl lvlvl) -- v[..,r$,../..,t$,..]=r,v[r$/t$]
-     -- <|> 
-     -- (termVarSubstitute sctx vrt vtl lvlvl) -- v[..,r,../..,t,..] = r,v[r/t]
+     <|> 
+     (termVarSubstitute sctx vrt vtl lvlvl) -- v[..,r,../..,t,..] = r,v[r/t]
 \end{code}
 \textbf{Notes:}
 \textsf{
@@ -569,7 +569,7 @@ lvlvlSubstitute :: MonadFail m
 
 sdb what = pdbg("lvlvlSubstitute."++what)
 lvlvlSubstitute sctx vrt@(Var tk v) vtl lvlvl = do 
-  let involvements = map (getTermVarInvolvement sctx v) $ sdb "lvlvl" lvlvl
+  let involvements = map (getTermVarInvolvement (sdb "sctx" sctx) $ sdb "v" v) $ sdb "lvlvl" lvlvl
   let involved = filter (/= Uninvolved) $ sdb "involvements" involvements
   if null $ sdb "involved" involved then 
     return vrt

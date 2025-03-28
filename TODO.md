@@ -30,8 +30,6 @@ The only mention of `O$` is `O`, an abstract set in theory `U_CWhl`.
 
 This part of substitute seems to be **massively over-engineered**.
 
-Added in `possiblyInvolved` (line 572) as a placeholder which can process that abstract `O`.
-Now just a dummy that invokes `scan`.
 
 We should search for a target that is clearly involved with the given term variable.
 There should only be one, but we could filter to see if there are multiple.

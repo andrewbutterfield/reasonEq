@@ -1,10 +1,46 @@
-@getSCInvolve.nvsD: NA
-@getSCInvolve.nvsC: NA
-@getSCInvolve.nvsCd: { O$ (WB) } )
-@gTVInvolve.mwhen:  WB
-@getSCInvolve.mwhen2: WB
-@getSCInvolve.gv'2:  ok (WB)
-@PCI.gv'2: ok (WB)
-@getSCInvolve.gv2: ok' (WA)
-@PCI.gv2: ok' (WA)
-@PCI.vwd: WB
+@lvlvlSubstitute.lvlvl: [O$1/O$']
+@lvlvlSubstitute.v: E1
+@lvlvlSubstitute.involvements: [ Uninvolved ]
+@lvlvlSubstitute.involved: []
+
+
+@lvlvlSubstitute.lvlvl: [O$1/O$']
+@lvlvlSubstitute.v: ls
+@lvlvlSubstitute.involvements: [ Uninvolved ]
+@lvlvlSubstitute.involved: []
+
+@lvlvlSubstitute.lvlvl: [O$1/O$']
+@lvlvlSubstitute.v:  a  -- VR (Id "a" 0, VP, WS)
+@lvlvlSubstitute.involvements: [ Uninvolved ]
+@lvlvlSubstitute.involved: []
+
+
+@lvlvlSubstitute.sctx:
+ls,ls',s,s'⋔E1, ls,ls',s,s'⋔E2, ls,ls',s,s'⋔N1, ls,ls',s,s'⋔N2, 
+ls,ls',s,s'⋔R1, ls,ls',s,s'⋔R2, s,s'⊇ₐa, s,s'⊇ₐb
+fresh:ls_1,s_1
+  ( "UTCP"
+  , { (VR (Id "A" 0, VO, WS), KV (TG (Id "B" 0)))
+    , (VR (Id "X" 0, VO, WS), KV (TG (Id "B" 0)))
+    , (VR (Id "atom" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TG (Id "B" 0))))
+    , (VR (Id "cpll" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+    , (VR (Id "cplus" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+    , (VR (Id "cseq" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))))
+    , (VR (Id "cskip" 0, VO, WS), KV (TG (Id "B" 0)))
+    , (VR (Id "cstar" 0, VO, WS), KV (TF (TG (Id "B" 0)) (TG (Id "B" 0))))
+    , (VR (Id "g" 0, VO, WS), KV (TG (Id "GE" 0)))
+    , (VR (Id "in" 0, VO, WS), KV (TG (Id "LE" 0)))
+    , (VR (Id "ls" 0, VO, WB), KV (TC (Id "P" 0) [TG (Id "LE" 0)]))
+    , (VR (Id "ls" 0, VO, WA), KV (TC (Id "P" 0) [TG (Id "LE" 0)]))
+    , (VR (Id "out" 0, VO, WS), KV (TG (Id "LE" 0)))
+    , (VR (Id "s" 0, VO, WB), KV (TG (Id "S" 0)))
+    , (VR (Id "s" 0, VO, WA), KV (TG (Id "S" 0))) }
+  , {}
+  , { ( (Id "O" 0, VO)
+      , DL
+        [ Id "s" 0
+        , Id "ls" 0 ]
+        []
+        [ Id "s" 0
+        , Id "ls" 0 ]
+        2 ) } )

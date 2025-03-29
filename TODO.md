@@ -9,6 +9,15 @@ For `a[O$_1/O$']` we get `a`, but should get `a[s_1/s']`.
 
 Diagnosis:
 
+Current behavior
+
+`possSC := {s,s'} ⊇ₐ a` for `[O$_1/O$']`.
+`possER := {s_1,ls_1}`. Along the way we find `O$' = {s',ls'}` (xtvars).
+
+We take the intersection `{s,s'} x {s',ls'}` to get `{s'}`.
+We "substitute" `O$_1` for `O$` in the intersection `{s'}` to get `{s_1}`.
+
+
 We check for `a` mentioned by s.c.s, and get `{s,s'} ⊇ₐ a`
 If true we do involvement analysis with tlv `O$'` and  `{s,s'} ⊇ₐ a`.
 This reports uninvolved, naturally.

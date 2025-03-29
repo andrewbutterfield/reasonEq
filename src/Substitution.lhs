@@ -477,69 +477,79 @@ There are several possibilities:
 data LVInvolvement -- given   v[r$/t$]
   = Uninvolved  -- v has no relationship with t$, search for other t$
   | DisjInvolvement  -- v is disjoint from t$, search for other t$ 
-  | CoverInvolvement ListVar ListVar -- v is covered by t$, eval v[r$/t$]
+  | CoverInvolvement VarSet -- v is covered by t$, eval v[r$/t$]
   | ExpandInvolvement Variable
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
     -- v is covered by expansion of t$, return corr. var from expand r$
   -- if search ends without cover, return v
   -- eval v[r$/t$] depends on the class of v
-  -- return cititcal info too?
+  -- return critical info too?
 \end{code}
 
 \begin{code}
-getTermVarInvolvement :: SubContext -> Variable -> LVarSub -> LVInvolvement
+getTermVarInvolvement :: SubContext -> Variable -> LVarSub 
+                      -> ( LVInvolvement, ( ListVar, ListVar ) )
 \end{code}
 The term-variable is an observation variable.
 This is covered if a side-condition implies that
 $\lst t \supseteq v$ or the expansion of $\lst t$ contains $v$.
 
 \begin{code}
-getTermVarInvolvement (SubCtxt (vscs, _) vts) v lvlv@(tlv,rlv)
-  = case gv `mentionedBy` vscs of
-      Just (vsc,mwhen) -> 
-        getSCInvolvement gv lvlv (sdb "gTVI.vsc" vsc) $ sdb "gTVI.mwhen" mwhen
-      Nothing -> 
-        case lookupLVarTs vts (sdb "gTVI.tlv" tlv) of
-          (KnownVarList tvl xtvars tsize) ->
-            getExpandInvolvement vts v xtvars tsize rlv 
-          _  ->  sdb "gTVI.Uninvolved" Uninvolved 
-        
-  where 
-    gv = StdVar v
-
+getTermVarInvolvement (SubCtxt (vscs, _) vts) v lvlv@(tlv,rlv) =
+  let possSC = possibleSideConditionOption vscs (StdVar v) tlv rlv
+      (possER,xtvars,xrvars) = possibleExpansionReplacement vts v tlv rlv
+      poss = max (sdb "possSC" possSC) $ sdb "possER" possER 
+  in if null (sdb "gTVI.xrvars" xrvars)
+     then ( poss, lvlv )
+     else if v `elem` xrvars -- compare sc to xrvars
+          then ( CoverInvolvement S.empty, lvlv )
+          else sdb "gTVI..poss" ( poss, lvlv ) -- 
 \end{code}
 This code deals with the case where $\lst t$ is involved in a side-condition,
 which we now check to see if it involves $v$.
-\begin{code}
-getSCInvolvement gv lvlv@(tlv,rlv) (vsc@(VSC gv' nvsD nvsC nvsCd)) mwhen
-  | gtlv `nmbr` nvsD   =  sdb "gSCI.DisjInvolvement" DisjInvolvement
-  | gtlv `nmbr` nvsC   =  possCoverInvolvement gv lvlv gv' mwhen
-  | gtlv `nmbr` nvsCd  =  possCoverInvolvement gv lvlv gv' mwhen
-  | otherwise = sdb "gSCI.Uninvolved" Uninvolved -- should not happen
-  where gtlv = LstVar $ sdb "gSCI.tlv" tlv
+\begin{code}  
+possibleSideConditionOption vscs gv tlv rlv
+  = case gv `mentionedBy` vscs of
+      Just (vsc,mwhen) -> 
+        getSCInvolvement gv tlv rlv vsc mwhen
+      Nothing ->  Uninvolved
+
+getSCInvolvement gv  tlv rlv (vsc@(VSC gv' nvsD nvsC nvsCd)) mwhen
+  | gtlv `nmbr` (sdb "gSCI.nvsD" nvsD)   =  DisjInvolvement
+  | gtlv `nmbr` (sdb "gSCI.nvsC" nvsC)    =  possCoverInvolvement gv gv' mwhen nvsC
+  | gtlv `nmbr` (sdb "gSCI.nvsCd" nvsCd)  =  possCoverInvolvement gv gv' mwhen nvsCd
+  | otherwise = Uninvolved -- should not happen
+  where gtlv = LstVar tlv
 
 -- mwhen == Nothing ==> gv' == gv
-possCoverInvolvement gv (tlv,rlv) gv' Nothing
-  | gv == gv'  =  sdb "pCI1.CoverInvolvement" $ CoverInvolvement tlv rlv
-  | otherwise  =  sdb "pCI1.Uninvolved" Uninvolved
+possCoverInvolvement gv gv' Nothing (The vsC)
+  | (sdb "pCI1.gv" gv) == (sdb "pCI1.gv'" gv')  =  CoverInvolvement vsC
 
 -- mwhen == Just vw'  ==>  gv' ==  gv[vw'/vw]
-possCoverInvolvement gv (tlv,rlv) gv' (Just vw')
-  = case gv `dynGVarEq` gv' of
-      Just vwd  ->  sdb "pCI2.CoverInvolvement" $ CoverInvolvement tlv rlv
-      _         ->  sdb "pCI2.Uninvolved" Uninvolved
+possCoverInvolvement gv gv' (Just vw') (The vsCd)
+  = case (sdb "pCI2.gv" gv) `dynGVarEq` (sdb "pCI1.gv'" gv') of
+      Just vwd  ->  CoverInvolvement vsCd
+      _         ->  Uninvolved
+
+possCoverInvolvement _ _ _ _  =  Uninvolved
 \end{code}
 This code deals with the case where $v$ is observable,
 and $\lst t$ is not involved in a side-condition.
 We now look at the expansion of $\lst t$, if any.
 \begin{code}
+possibleExpansionReplacement vts v tlv rlv =
+  case lookupLVarTs vts tlv of
+    kvl@(KnownVarList tvl xtvars tsize) 
+       ->  getExpandInvolvement vts v (sdb "pER.xtvars" xtvars) tsize rlv
+    _  ->  (Uninvolved,[],[])
+
 getExpandInvolvement vts v xtvars tsize rlv 
   = case lookupLVarTs vts rlv of
       (KnownVarList rvl xrvars rsize) | rsize == tsize
           ->  case alookup v $ zip xtvars xrvars of
-                Nothing  -> Uninvolved
-                Just rv  -> ExpandInvolvement rv
-      _  ->  Uninvolved
+                Nothing  -> (Uninvolved,xtvars,xrvars)
+                Just rv  -> (ExpandInvolvement rv,[],[])
+      _  ->  (Uninvolved,[],[])
 \end{code}
 
 
@@ -570,13 +580,13 @@ lvlvlSubstitute :: MonadFail m
 sdb what = pdbg("lvlvlSubstitute."++what)
 lvlvlSubstitute sctx vrt@(Var tk v) vtl lvlvl = do 
   let involvements = map (getTermVarInvolvement sctx $ sdb "v" v) $ sdb "lvlvl" lvlvl
-  let involved = filter (/= Uninvolved) $ sdb "involvements" involvements
+  let involved = filter ((/= Uninvolved) . fst) $ sdb "involvements" involvements
   if null $ sdb "involved" involved then 
     return vrt
-  else case head involved of
-    DisjInvolvement            ->  return vrt  -- subst. has no effect 
-    (ExpandInvolvement rv)     ->  return $ jVar tk rv -- found repl
-    (CoverInvolvement tlv rlv) ->   -- v is covered by t$, eval v[r$/t$]
+  else case sdb "HEAD" $ head involved of
+    (DisjInvolvement, _)              ->  return vrt  -- subst. has no effect 
+    ((ExpandInvolvement rv), _)       ->  return $ jVar tk rv -- found repl
+    (CoverInvolvement vsC,(tlv,rlv)) ->   -- v is covered by t$, eval v[r$/t$]
       if isObsVar v -- we have tlv covers v (modulo when)
       then if varWhen v == lvarWhen tlv -- tlv covers v
            then return $ jVar tk $ setVarWhen (lvarWhen rlv) v

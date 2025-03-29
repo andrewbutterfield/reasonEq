@@ -14,7 +14,7 @@ Current behavior
 `possSC := {s,s'} ⊇ₐ a` for `[O$_1/O$']`.
 `possER := {s_1,ls_1}`. Along the way we find `O$' = {s',ls'}` (xtvars).
 
-We take the intersection `{s,s'} x {s',ls'}` to get `{s'}`.
+We take the intersection `{s,s'} ∩ {s',ls'}` to get `{s'}`.
 We "substitute" `O$_1` for `O$` in the intersection `{s'}` to get `{s_1}`.
 
 

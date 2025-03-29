@@ -496,14 +496,17 @@ $\lst t \supseteq v$ or the expansion of $\lst t$ contains $v$.
 
 \begin{code}
 getTermVarInvolvement (SubCtxt (vscs, _) vts) v lvlv@(tlv,rlv) =
-  let possSC = possibleSideConditionOption vscs (StdVar v) tlv rlv
+  let (possSC,vsc) = possibleSideConditionOption vscs (StdVar v) tlv rlv
       (possER,xtvars,xrvars) = possibleExpansionReplacement vts v tlv rlv
       poss = max (sdb "possSC" possSC) $ sdb "possER" possER 
-  in if null (sdb "gTVI.xrvars" xrvars)
-     then ( poss, lvlv )
-     else if v `elem` xrvars -- compare sc to xrvars
-          then ( CoverInvolvement S.empty, lvlv )
-          else sdb "gTVI..poss" ( poss, lvlv ) -- 
+  in case poss of
+    Uninvolved -> ( poss, lvlv ) -- !!!! do intersection and substitute
+    _ ->
+      if null (sdb "gTVI.xrvars" xrvars)
+      then ( poss, lvlv )
+      else if v `elem` xrvars -- compare sc to xrvars
+              then ( CoverInvolvement S.empty, lvlv )
+              else sdb "gTVI..poss" ( poss, lvlv ) -- 
 \end{code}
 This code deals with the case where $\lst t$ is involved in a side-condition,
 which we now check to see if it involves $v$.
@@ -511,8 +514,8 @@ which we now check to see if it involves $v$.
 possibleSideConditionOption vscs gv tlv rlv
   = case gv `mentionedBy` vscs of
       Just (vsc,mwhen) -> 
-        getSCInvolvement gv tlv rlv vsc mwhen
-      Nothing ->  Uninvolved
+        ( getSCInvolvement gv tlv rlv vsc mwhen, vsc )
+      Nothing ->  (Uninvolved,vscTrue gv)
 
 getSCInvolvement gv  tlv rlv (vsc@(VSC gv' nvsD nvsC nvsCd)) mwhen
   | gtlv `nmbr` (sdb "gSCI.nvsD" nvsD)   =  DisjInvolvement

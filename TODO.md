@@ -11,22 +11,19 @@ Diagnosis:
 
 Current behavior
 
-`possSC := {s,s'} ⊇ₐ a` for `[O$_1/O$']`.
-`possER := {s_1,ls_1}`. Along the way we find `O$' = {s',ls'}` (xtvars).
+`v` is `a`
+`lvlv@(tlv,rlv)` is `[O$_1/O$']`
+`vsc` is `{s,s'} ⊇ₐ a`
+`xtvars` is `{s',ls'}`
+`xrvars` is? `{s_1,ls_1}`
 
-We take the intersection `{s,s'} ∩ {s',ls'}` to get `{s'}`.
-We "substitute" `O$_1` for `O$` in the intersection `{s'}` to get `{s_1}`.
+We return `{s'}` as part of `checkExpansion` within `CoverInvolvement`.
+But there is no way to distinguish this from returning `CoverInvolvement`
+from `possibleExpansionReplacement`.
 
+TODO:  Add another `LVInvolvement` variant?
 
-We check for `a` mentioned by s.c.s, and get `{s,s'} ⊇ₐ a`
-If true we do involvement analysis with tlv `O$'` and  `{s,s'} ⊇ₐ a`.
-This reports uninvolved, naturally.
-
-We SHOULD then check to see if `O$'` has an expansion. It does: `{s',ls'}`.
-An involvements analysis of `{s',ls'}` and `{s,s'} ⊇ₐ a` should also be done.
-
-Basically the involvement and expansion checking should both be tried.
-
+**We have use the intersection to restrict  `[s_1,ls_1/s',ls']` to `[s_1/s']`.**
 
 
 

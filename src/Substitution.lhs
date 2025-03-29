@@ -496,11 +496,15 @@ $\lst t \supseteq v$ or the expansion of $\lst t$ contains $v$.
 
 \begin{code}
 getTermVarInvolvement (SubCtxt (vscs, _) vts) v lvlv@(tlv,rlv) =
-  let (possSC,vsc) = possibleSideConditionOption vscs (StdVar v) tlv rlv
+  let (possSC,vsc) = possibleSideConditionOption vscs (StdVar v) tlv
       (possER,xtvars,xrvars) = possibleExpansionReplacement vts v tlv rlv
       poss = max (sdb "possSC" possSC) $ sdb "possER" possER 
   in case poss of
-    Uninvolved -> ( poss, lvlv ) -- !!!! do intersection and substitute
+    Uninvolved ->  -- last chance
+      case sdb "VSC" vsc of
+        (VSC _ _ _ (The vsCd)) -> checkExpansion vsCd xtvars xrvars lvlv
+        (VSC _ _ (The vsC)  _) -> checkExpansion vsC  xtvars xrvars lvlv        
+        _                      -> ( poss, lvlv ) 
     _ ->
       if null (sdb "gTVI.xrvars" xrvars)
       then ( poss, lvlv )
@@ -511,18 +515,18 @@ getTermVarInvolvement (SubCtxt (vscs, _) vts) v lvlv@(tlv,rlv) =
 This code deals with the case where $\lst t$ is involved in a side-condition,
 which we now check to see if it involves $v$.
 \begin{code}  
-possibleSideConditionOption vscs gv tlv rlv
+possibleSideConditionOption vscs gv tlv
   = case gv `mentionedBy` vscs of
       Just (vsc,mwhen) -> 
-        ( getSCInvolvement gv tlv rlv vsc mwhen, vsc )
+        ( getSCInvolvement gv (LstVar tlv) vsc mwhen, vsc )
       Nothing ->  (Uninvolved,vscTrue gv)
 
-getSCInvolvement gv  tlv rlv (vsc@(VSC gv' nvsD nvsC nvsCd)) mwhen
+getSCInvolvement gv  gtlv (vsc@(VSC gv' nvsD nvsC nvsCd)) mwhen
   | gtlv `nmbr` (sdb "gSCI.nvsD" nvsD)   =  DisjInvolvement
   | gtlv `nmbr` (sdb "gSCI.nvsC" nvsC)    =  possCoverInvolvement gv gv' mwhen nvsC
   | gtlv `nmbr` (sdb "gSCI.nvsCd" nvsCd)  =  possCoverInvolvement gv gv' mwhen nvsCd
-  | otherwise = Uninvolved -- should not happen
-  where gtlv = LstVar tlv
+  | otherwise = Uninvolved 
+
 
 -- mwhen == Nothing ==> gv' == gv
 possCoverInvolvement gv gv' Nothing (The vsC)
@@ -553,6 +557,11 @@ getExpandInvolvement vts v xtvars tsize rlv
                 Nothing  -> (Uninvolved,xtvars,xrvars)
                 Just rv  -> (ExpandInvolvement rv,[],[])
       _  ->  (Uninvolved,[],[])
+
+checkExpansion vsC xtvars xrvars lvlv@(tlv,rlv)
+  | null overlap  =  ( Uninvolved, lvlv )
+  | otherwise     =  ( CoverInvolvement $ S.fromList $ sdb "XXX.overlap" overlap, lvlv)
+  where overlap = (S.toList $ sdb "XXX.vsC" vsC) `intersect` (map StdVar $ sdb "XXX.xtvars" xtvars)
 \end{code}
 
 

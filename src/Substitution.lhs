@@ -497,12 +497,12 @@ $\lst t \supseteq v$ or the expansion of $\lst t$ contains $v$.
 getTermVarInvolvement (SubCtxt (vscs, _) vts) v lvlv@(tlv,rlv)
   = case gv `mentionedBy` vscs of
       Just (vsc,mwhen) -> 
-        getSCInvolvement gv lvlv vsc mwhen
+        getSCInvolvement gv lvlv (sdb "gTVI.vsc" vsc) $ sdb "gTVI.mwhen" mwhen
       Nothing -> 
-        case lookupLVarTs vts tlv of
+        case lookupLVarTs vts (sdb "gTVI.tlv" tlv) of
           (KnownVarList tvl xtvars tsize) ->
             getExpandInvolvement vts v xtvars tsize rlv 
-          _  ->  Uninvolved 
+          _  ->  sdb "gTVI.Uninvolved" Uninvolved 
         
   where 
     gv = StdVar v
@@ -512,22 +512,22 @@ This code deals with the case where $\lst t$ is involved in a side-condition,
 which we now check to see if it involves $v$.
 \begin{code}
 getSCInvolvement gv lvlv@(tlv,rlv) (vsc@(VSC gv' nvsD nvsC nvsCd)) mwhen
-  | gtlv `nmbr` nvsD   =  DisjInvolvement
+  | gtlv `nmbr` nvsD   =  sdb "gSCI.DisjInvolvement" DisjInvolvement
   | gtlv `nmbr` nvsC   =  possCoverInvolvement gv lvlv gv' mwhen
   | gtlv `nmbr` nvsCd  =  possCoverInvolvement gv lvlv gv' mwhen
-  | otherwise = Uninvolved -- should not happen
-  where gtlv = LstVar tlv
+  | otherwise = sdb "gSCI.Uninvolved" Uninvolved -- should not happen
+  where gtlv = LstVar $ sdb "gSCI.tlv" tlv
 
 -- mwhen == Nothing ==> gv' == gv
 possCoverInvolvement gv (tlv,rlv) gv' Nothing
-  | gv == gv'  =  CoverInvolvement tlv rlv
-  | otherwise  =  Uninvolved
+  | gv == gv'  =  sdb "pCI1.CoverInvolvement" $ CoverInvolvement tlv rlv
+  | otherwise  =  sdb "pCI1.Uninvolved" Uninvolved
 
 -- mwhen == Just vw'  ==>  gv' ==  gv[vw'/vw]
 possCoverInvolvement gv (tlv,rlv) gv' (Just vw')
   = case gv `dynGVarEq` gv' of
-      Just vwd  ->  CoverInvolvement tlv rlv
-      _         ->  Uninvolved
+      Just vwd  ->  sdb "pCI2.CoverInvolvement" $ CoverInvolvement tlv rlv
+      _         ->  sdb "pCI2.Uninvolved" Uninvolved
 \end{code}
 This code deals with the case where $v$ is observable,
 and $\lst t$ is not involved in a side-condition.
@@ -569,7 +569,7 @@ lvlvlSubstitute :: MonadFail m
 
 sdb what = pdbg("lvlvlSubstitute."++what)
 lvlvlSubstitute sctx vrt@(Var tk v) vtl lvlvl = do 
-  let involvements = map (getTermVarInvolvement (sdb "sctx" sctx) $ sdb "v" v) $ sdb "lvlvl" lvlvl
+  let involvements = map (getTermVarInvolvement sctx $ sdb "v" v) $ sdb "lvlvl" lvlvl
   let involved = filter (/= Uninvolved) $ sdb "involvements" involvements
   if null $ sdb "involved" involved then 
     return vrt

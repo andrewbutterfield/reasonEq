@@ -7,6 +7,20 @@ Working on `UTCP.X_X_comp`  on focus  `(E2 ⊆ ls)[O$_1/O$]`
 
 For `a[O$_1/O$']` we get `a`, but should get `a[s_1/s']`.
 
+Diagnosis:
+
+We check for `a` mentioned by s.c.s, and get `{s,s'} ⊇ₐ a`
+If true we do involvement analysis with tlv `O$'` and  `{s,s'} ⊇ₐ a`.
+This reports uninvolved, naturally.
+
+We SHOULD then check to see if `O$'` has an expansion. It does: `{s',ls'}`.
+An involvements analysis of `{s',ls'}` and `{s,s'} ⊇ₐ a` should also be done.
+
+Basically the involvement and expansion checking should both be tried.
+
+
+
+
 Trying to prove `design_;_lzero`:
 
 We now get to: 

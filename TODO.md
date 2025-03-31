@@ -3,30 +3,6 @@
 ## URGENT or NEXT
 
 
-Working on `UTCP.X_X_comp`  on focus  `(E2 ⊆ ls)[O$_1/O$]`
-
-For `a[O$_1/O$']` we get `a`, but should get `a[s_1/s']`.
-
-Diagnosis:
-
-Current behavior
-
-`v` is `a`
-`lvlv@(tlv,rlv)` is `[O$_1/O$']`
-`vsc` is `{s,s'} ⊇ₐ a`
-`xtvars` is `{s',ls'}`
-`xrvars` is? `{s_1,ls_1}`
-
-We return `{s'}` as part of `checkExpansion` within `CoverInvolvement`.
-But there is no way to distinguish this from returning `CoverInvolvement`
-from `possibleExpansionReplacement`.
-
-TODO:  Add another `LVInvolvement` variant?
-
-**We have use the intersection to restrict  `[s_1,ls_1/s',ls']` to `[s_1/s']`.**
-
-
-
 Trying to prove `design_;_lzero`:
 
 We now get to: 

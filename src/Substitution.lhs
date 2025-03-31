@@ -21,7 +21,7 @@ import Data.Maybe
 import Control.Applicative
 
 import NotApplicable
-import Utilities (alookup,injMap)
+import Utilities (alookup,restrictAList,injMap,fst3)
 import Control (mapfst,mapsnd)
 import UnivSets
 import LexBase
@@ -488,7 +488,11 @@ data LVInvolvement -- given   v[r$/t$]
 
 \begin{code}
 getTermVarInvolvement :: SubContext -> Variable -> LVarSub 
-                      -> ( LVInvolvement, ( ListVar, ListVar ) )
+                      -> ( LVInvolvement    -- nature of involvement, if any
+                         , ( ListVar, ListVar ) -- relevant subst-pair
+                         , ( [Variable]         -- target expansion, if any
+                           , [Variable] ) )     -- repl. expansion, if any
+noexp = ([],[])
 \end{code}
 The term-variable is an observation variable.
 This is covered if a side-condition implies that
@@ -498,20 +502,21 @@ $\lst t \supseteq v$ or the expansion of $\lst t$ contains $v$.
 getTermVarInvolvement (SubCtxt (vscs, _) vts) v lvlv@(tlv,rlv) =
   let (possSC,vsc) = possibleSideConditionOption vscs (StdVar v) tlv
       (possER,xtvars,xrvars) = possibleExpansionReplacement vts v tlv rlv
-      poss = max (sdb "possSC" possSC) $ sdb "possER" possER 
+      poss = max possSC possER 
   in case poss of
     Uninvolved ->  -- last chance
-      case sdb "VSC" vsc of
+      case vsc of
         (VSC _ _ _ (The vsCd)) -> checkExpansion vsCd xtvars xrvars lvlv
         (VSC _ _ (The vsC)  _) -> checkExpansion vsC  xtvars xrvars lvlv        
-        _                      -> ( poss, lvlv ) 
+        _                      -> ( poss, lvlv, noexp ) 
     _ ->
-      if null (sdb "gTVI.xrvars" xrvars)
-      then ( poss, lvlv )
+      if null xrvars
+      then ( poss, lvlv, noexp )
       else if v `elem` xrvars -- compare sc to xrvars
-              then ( CoverInvolvement S.empty, lvlv )
-              else sdb "gTVI..poss" ( poss, lvlv ) -- 
+              then ( CoverInvolvement S.empty, lvlv, (xtvars,xrvars) )
+              else ( poss, lvlv, noexp ) 
 \end{code}
+
 This code deals with the case where $\lst t$ is involved in a side-condition,
 which we now check to see if it involves $v$.
 \begin{code}  
@@ -522,24 +527,25 @@ possibleSideConditionOption vscs gv tlv
       Nothing ->  (Uninvolved,vscTrue gv)
 
 getSCInvolvement gv  gtlv (vsc@(VSC gv' nvsD nvsC nvsCd)) mwhen
-  | gtlv `nmbr` (sdb "gSCI.nvsD" nvsD)   =  DisjInvolvement
-  | gtlv `nmbr` (sdb "gSCI.nvsC" nvsC)    =  possCoverInvolvement gv gv' mwhen nvsC
-  | gtlv `nmbr` (sdb "gSCI.nvsCd" nvsCd)  =  possCoverInvolvement gv gv' mwhen nvsCd
+  | gtlv `nmbr` nvsD   =  DisjInvolvement
+  | gtlv `nmbr` nvsC   =  possCoverInvolvement gv gv' mwhen nvsC
+  | gtlv `nmbr` nvsCd  =  possCoverInvolvement gv gv' mwhen nvsCd
   | otherwise = Uninvolved 
 
 
 -- mwhen == Nothing ==> gv' == gv
 possCoverInvolvement gv gv' Nothing (The vsC)
-  | (sdb "pCI1.gv" gv) == (sdb "pCI1.gv'" gv')  =  CoverInvolvement vsC
+  | gv == gv'  =  CoverInvolvement vsC
 
 -- mwhen == Just vw'  ==>  gv' ==  gv[vw'/vw]
 possCoverInvolvement gv gv' (Just vw') (The vsCd)
-  = case (sdb "pCI2.gv" gv) `dynGVarEq` (sdb "pCI1.gv'" gv') of
+  = case gv `dynGVarEq` gv' of
       Just vwd  ->  CoverInvolvement vsCd
       _         ->  Uninvolved
 
 possCoverInvolvement _ _ _ _  =  Uninvolved
 \end{code}
+
 This code deals with the case where $v$ is observable,
 and $\lst t$ is not involved in a side-condition.
 We now look at the expansion of $\lst t$, if any.
@@ -547,7 +553,7 @@ We now look at the expansion of $\lst t$, if any.
 possibleExpansionReplacement vts v tlv rlv =
   case lookupLVarTs vts tlv of
     kvl@(KnownVarList tvl xtvars tsize) 
-       ->  getExpandInvolvement vts v (sdb "pER.xtvars" xtvars) tsize rlv
+       ->  getExpandInvolvement vts v xtvars tsize rlv
     _  ->  (Uninvolved,[],[])
 
 getExpandInvolvement vts v xtvars tsize rlv 
@@ -559,9 +565,10 @@ getExpandInvolvement vts v xtvars tsize rlv
       _  ->  (Uninvolved,[],[])
 
 checkExpansion vsC xtvars xrvars lvlv@(tlv,rlv)
-  | null overlap  =  ( Uninvolved, lvlv )
-  | otherwise     =  ( CoverInvolvement $ S.fromList $ sdb "XXX.overlap" overlap, lvlv)
-  where overlap = (S.toList $ sdb "XXX.vsC" vsC) `intersect` (map StdVar $ sdb "XXX.xtvars" xtvars)
+  | null overlap  =  ( Uninvolved, lvlv, noexp )
+  | otherwise     =  ( CoverInvolvement $ S.fromList overlap
+                     , lvlv, (xtvars,xrvars))
+  where overlap = (S.toList vsC) `intersect` (map StdVar xtvars)
 \end{code}
 
 
@@ -589,21 +596,38 @@ lvlvlSubstitute :: MonadFail m
                 => SubContext -> Term -> [TermSub] -> [LVarSub] 
                 -> m Term
 
-sdb what = pdbg("lvlvlSubstitute."++what)
 lvlvlSubstitute sctx vrt@(Var tk v) vtl lvlvl = do 
-  let involvements = map (getTermVarInvolvement sctx $ sdb "v" v) $ sdb "lvlvl" lvlvl
-  let involved = filter ((/= Uninvolved) . fst) $ sdb "involvements" involvements
-  if null $ sdb "involved" involved then 
+  let involvements = map (getTermVarInvolvement sctx v) lvlvl
+  let involved = filter ((/= Uninvolved) . fst3) involvements
+  if null involved then 
     return vrt
-  else case sdb "HEAD" $ head involved of
-    (DisjInvolvement, _)              ->  return vrt  -- subst. has no effect 
-    ((ExpandInvolvement rv), _)       ->  return $ jVar tk rv -- found repl
-    (CoverInvolvement vsC,(tlv,rlv)) ->   -- v is covered by t$, eval v[r$/t$]
+  else case head involved of
+    (DisjInvolvement, _, _)            ->  return vrt  
+    ((ExpandInvolvement rv), _, _)     ->  return $ jVar tk rv 
+    (CoverInvolvement xvs,lvlv,xpnds)  ->  doCoverSubst vrt xvs lvlv xpnds
+
+  where
+    doCoverSubst :: MonadFail m
+                 => Term -> VarSet -> LVarSub -> ([Variable],[Variable])
+                -> m Term
+    doCoverSubst vrt@(Var tk v) xvs (tlv,rlv) (xtvars,xrvars) =
       if isObsVar v -- we have tlv covers v (modulo when)
       then if varWhen v == lvarWhen tlv -- tlv covers v
            then return $ jVar tk $ setVarWhen (lvarWhen rlv) v
            else return vrt  -- target has wrong temporality
-      else return $ Sub tk vrt $ jSubstn [] [(tlv,rlv)] 
+      else do xrterms <- sequence $ map (eVar ArbType) xrvars
+              return $ restrictSubstTo tk vrt 
+                        (S.toList xvs) (tlv,rlv) (xtvars,xrterms)
+
+    restrictSubstTo tk vrt xvs (tlv,rlv) (xtvars,xrterms)
+      | null xvs        = Sub tk vrt $ jSubstn [] [(tlv,rlv)]
+      | null restricted = Sub tk vrt $ jSubstn [] [(tlv,rlv)]
+      | otherwise       = Sub tk vrt $ jSubstn restricted []
+      where 
+        xvars = stdVarsOf xvs
+        restricted = restrictAList xvars $ zip xtvars xrterms
+
+        
 \end{code}
 
 

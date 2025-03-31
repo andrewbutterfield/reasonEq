@@ -15,6 +15,7 @@ module Utilities (
 , trim
 , zip1, zip2, zip2'
 , nlookup, alookup
+, restrictAList
 , extract, keyListDiff
 , numberList, numberList'
 , putPP, putShow, pp
@@ -134,6 +135,18 @@ alookup k ((n,v):rest)
   | k == n     =  return v
   | otherwise  =  alookup k rest
 \end{code}
+
+
+\subsection{Association-list restriction}
+\begin{code}
+restrictAList :: Eq a => [a] -> [(a,b)] -> [(a,b)]
+restrictAList _ [] = []
+restrictAList rs ((d,r):rest)
+  | d `elem` rs  =  (d,r):restrictAList rs rest
+  | otherwise    =  restrictAList rs rest
+\end{code}
+
+
 
 \subsection{Intercalation, dropping nulls}
 \begin{code}
@@ -416,7 +429,6 @@ bijExtend bij0 bijX
       = do bij' <- extdBij bij a b
            bextend bij' bijx
 \end{code}
-
 
 
 

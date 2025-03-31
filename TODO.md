@@ -2,6 +2,40 @@
 
 ## URGENT or NEXT
 
+Still have this bug(3,5,7,9,10 are OK, 4,6,8,11 are NOT):
+```
+11 : “exists_gen” [⟹ *]
+    (∃ O$  • ls_1 = ls \ R1 ∪ N1 ∧ ((E1 ⊆ ls ∧ a[s_1/s']) ∧ ((E2 ⊆ ls_1 ∧ b[s_1/s]) ∧ ls' = ls_1 \ R2 ∪ N2))) ∨ (ls_1 = ls \ R1 ∪ N1 ∧ ((E1 ⊆ ls ∧ a[s_1/s']) ∧ ((E2 ⊆ ls_1 ∧ b[s_1/s]) ∧ ls' = ls_1 \ R2 ∪ N2)))[?e$/O$]
+    ls,ls',s,s'⋔E1, ls,ls',s,s'⋔E2, ls,ls',s,s'⋔N1, ls,ls',s,s'⋔N2, ls,ls',s,s'⋔R1, ls,ls',s,s'⋔R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1 ⟹ ⊤
+10 : “exists_gen” [⟹ *]
+    (∃ O$_1  • ls_1 = ls \ R1 ∪ N1 ∧ ((E1 ⊆ ls ∧ a[s_1/s']) ∧ ((E2 ⊆ ls_1 ∧ b[s_1/s]) ∧ ls' = ls_1 \ R2 ∪ N2))) ∨ (ls_1 = ls \ R1 ∪ N1 ∧ ((E1 ⊆ ls ∧ a[s_1/s']) ∧ ((E2 ⊆ ls_1 ∧ b[s_1/s]) ∧ ls' = ls_1 \ R2 ∪ N2)))[?e$/O$_1]
+    ls,ls',s,s'⋔E1, ls,ls',s,s'⋔E2, ls,ls',s,s'⋔N1, ls,ls',s,s'⋔N2, ls,ls',s,s'⋔R1, ls,ls',s,s'⋔R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1 ⟹ ⊤
+9 : “univ_inst” [⟹ *]
+    (∃ O$_1  • ls_1 = ls \ R1 ∪ N1 ∧ ((E1 ⊆ ls ∧ a[s_1/s']) ∧ ((E2 ⊆ ls_1 ∧ b[s_1/s]) ∧ ls' = ls_1 \ R2 ∪ N2))) ∨ [(∃ O$_1  • ls_1 = ls \ R1 ∪ N1 ∧ ((E1 ⊆ ls ∧ a[s_1/s']) ∧ ((E2 ⊆ ls_1 ∧ b[s_1/s]) ∧ ls' = ls_1 \ R2 ∪ N2)))]
+    ls,ls',s,s'⋔E1, ls,ls',s,s'⋔E2, ls,ls',s,s'⋔N1, ls,ls',s,s'⋔N2, ls,ls',s,s'⋔R1, ls,ls',s,s'⋔R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1 ⟹ ⊤
+8 : “exists_swap” [≡rhs]
+    (∃ O$  • ls_1 = ls \ R1 ∪ N1 ∧ ((E1 ⊆ ls ∧ a[s_1/s']) ∧ ((E2 ⊆ ls_1 ∧ b[s_1/s]) ∧ ls' = ls_1 \ R2 ∪ N2)))
+    ls,ls',s,s'⋔E1, ls,ls',s,s'⋔E2, ls,ls',s,s'⋔N1, ls,ls',s,s'⋔N2, ls,ls',s,s'⋔R1, ls,ls',s,s'⋔R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1 ⟹ ⊤
+7 : “exists_swap” [≡rhs]
+    (∃ O$_1  • ls_1 = ls \ R1 ∪ N1 ∧ ((E1 ⊆ ls ∧ a[s_1/s']) ∧ ((E2 ⊆ ls_1 ∧ b[s_1/s]) ∧ ls' = ls_1 \ R2 ∪ N2)))
+    ls,ls',s,s'⋔E1, ls,ls',s,s'⋔E2, ls,ls',s,s'⋔N1, ls,ls',s,s'⋔N2, ls,ls',s,s'⋔R1, ls,ls',s,s'⋔R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1 ⟹ ⊤
+6 : “exists_swap” [≡lhs]
+    (∃ O$  • ls_1 = ls \ R1 ∪ N1 ∧ ((E1 ⊆ ls ∧ a[s_1/s']) ∧ ((E2 ⊆ ls_1 ∧ b[s_1/s]) ∧ ls' = ls_1 \ R2 ∪ N2)))
+    ls,ls',s,s'⋔E1, ls,ls',s,s'⋔E2, ls,ls',s,s'⋔N1, ls,ls',s,s'⋔N2, ls,ls',s,s'⋔R1, ls,ls',s,s'⋔R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1 ⟹ ⊤
+5 : “exists_swap” [≡lhs]
+    (∃ O$_1  • ls_1 = ls \ R1 ∪ N1 ∧ ((E1 ⊆ ls ∧ a[s_1/s']) ∧ ((E2 ⊆ ls_1 ∧ b[s_1/s]) ∧ ls' = ls_1 \ R2 ∪ N2)))
+    ls,ls',s,s'⋔E1, ls,ls',s,s'⋔E2, ls,ls',s,s'⋔N1, ls,ls',s,s'⋔N2, ls,ls',s,s'⋔R1, ls,ls',s,s'⋔R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1 ⟹ ⊤
+4 : “exists_one_point” [≡lhs]
+    (∃ s  • ((E1 ⊆ ls ∧ a[s_1/s']) ∧ ((E2 ⊆ ls_1 ∧ b[s_1/s]) ∧ ls' = ls_1 \ R2 ∪ N2))[ls \ R1 ∪ N1/ls_1])
+    ls,ls',s,s'⋔E1, ls,ls',s,s'⋔E2, ls,ls',s,s'⋔N1, ls,ls',s,s'⋔N2, ls,ls',s,s'⋔R1, ls,ls',s,s'⋔R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1 ⟹ ls_1⋔N1, ls_1⋔R1
+3 : “exists_one_point” [≡lhs]
+    (∃ s_1  • ((E1 ⊆ ls ∧ a[s_1/s']) ∧ ((E2 ⊆ ls_1 ∧ b[s_1/s]) ∧ ls' = ls_1 \ R2 ∪ N2))[ls \ R1 ∪ N1/ls_1])
+    ls,ls',s,s'⋔E1, ls,ls',s,s'⋔E2, ls,ls',s,s'⋔N1, ls,ls',s,s'⋔N2, ls,ls',s,s'⋔R1, ls,ls',s,s'⋔R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1 ⟹ ls_1⋔N1, ls_1⋔R1
+⊢
+(∃ O$_1  • ls_1 = ls \ R1 ∪ N1 ∧ ((E1 ⊆ ls ∧ a[s_1/s']) ∧ ((E2 ⊆ ls_1 ∧ b[s_1/s]) ∧ ls' = ls_1 \ R2 ∪ N2)))
+ O$,O$'⋔E1, O$,O$'⋔E2, O$,O$'⋔N1, O$,O$'⋔N2, O$,O$'⋔R1, O$,O$'⋔R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1
+Focus = []
+```
 
 Trying to prove `design_;_lzero`:
 

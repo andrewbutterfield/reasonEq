@@ -7,6 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 module ProofSettings ( ProofSettings(..)
                 , maxMatchDisplay__, maxMatchDisplay_
+                , showBindings__, showBindings_
                 , initProofSettings
                 , renderProofSettings, parseProofSettings
                 , prfSettingStrings, showPrfSettingStrings
@@ -35,6 +36,7 @@ data ProofSettings
   = PrfSet {
      -- Section 1 - standalone settings
        maxMatchDisplay :: Int -- mm, maxmatches
+     , showBindings :: Bool -- bd, showbinds
      -- Section 2 - settings that specify behaviour
      , showTrivialMatches :: Bool -- tm, trivialmatch --> matchFilter
      , showTrivialQuantifiers :: Bool -- tq, trivialquant --> matchFilter
@@ -50,6 +52,8 @@ data ProofSettings
 \begin{code}
 maxMatchDisplay__ f r = r{maxMatchDisplay = f $ maxMatchDisplay r}
 maxMatchDisplay_      = maxMatchDisplay__ . const
+showBindings__ f r    = r{showBindings = f $ showBindings r}
+showBindings_         = showBindings__ . const
 \end{code}
 
 \subsection{Section 2 Updaters}
@@ -116,6 +120,7 @@ andIfWanted wanted newf currf ctxt mtch
 initProofSettings
   = matchFilterUpdate $ PrfSet {
       maxMatchDisplay        = 30
+    , showBindings           = False
     , showTrivialMatches     = False
     , showTrivialQuantifiers = False 
     , showTrivialSubst       = False
@@ -132,9 +137,10 @@ the first for use in commands, the second for display
 \begin{code}
 type PrfSettingStrings = (String,String,String) -- short,type,long
 prfSettingStrings = [ ("mm","Number","Max. Match Display")
+                    , ("bd","Bool","Show Bindings")
                     , ("tm","Bool","Show Trivial Matches")
                     , ("tq","Bool","Show Trivial Quantifiers")
-                    , ("ts","Bool","Show Trivial Subsitutions")
+                    , ("ts","Bool","Show Trivial Substitutions")
                     , ("fv","Bool","Show Floating Variables")
                     ]
 showPrfSettingStrings (short,typ,long)
@@ -150,6 +156,7 @@ showPrfSettings rsettings
     displayPrfSettings r (rs:rss)  =  disp r rs : displayPrfSettings r rss
 
     disp r ("mm",_,text) = text ++ " = " ++ show (maxMatchDisplay r)
+    disp r ("bd",_,text) = text ++ " = " ++ show (showBindings r)
     disp r ("tm",_,text) = text ++ " = " ++ show (showTrivialMatches r)
     disp r ("tq",_,text) = text ++ " = " ++ show (showTrivialQuantifiers r)
     disp r ("ts",_,text) = text ++ " = " ++ show (showTrivialSubst r)
@@ -189,6 +196,7 @@ changeBoolPrfSetting :: MonadFail m
                      => String  -> Bool -> ProofSettings 
                      -> m ProofSettings
 changeBoolPrfSetting name value reqs
+ | name == "bd"  =  return $ showBindings_ value reqs
  | name == "tm"  =  return $ showTrivialMatch_ value reqs
  | name == "tq"  =  return $ showTrivialQuantifiers_ value reqs
  | name == "ts"  =  return $ showTrivialSubst_ value reqs
@@ -212,6 +220,7 @@ changeNumberPrfSetting name value reqs
 prfset = "PRFSET"
 reqsetHDR = "BEGIN "++prfset ; reqsetTRL = "END "++ prfset
 mmKey = "MM = "
+bdKey = "BD = "
 tmKey = "TM = "
 tqKey = "TQ = "
 tsKey = "TS = "  
@@ -221,6 +230,7 @@ renderProofSettings :: ProofSettings -> [String]
 renderProofSettings rqset
   = [ reqsetHDR
     , mmKey ++ show (maxMatchDisplay rqset)
+    , bdKey ++ show (showBindings rqset)
     , tmKey ++ show (showTrivialMatches rqset)
     , tqKey ++ show (showTrivialQuantifiers rqset)
     , tsKey ++ show (showTrivialSubst rqset)
@@ -232,18 +242,20 @@ parseProofSettings [] = fail "parseProofSettings: no text"
 parseProofSettings txts
   = do rest1 <- readThis reqsetHDR txts
        (theMMD,rest2) <- readKey mmKey read rest1
-       (theMHT,rest3) <- readKey tmKey readBool rest2
-       (theMHQ,rest4) <- readKey tqKey readBool rest3
-       (theMHS,rest5) <- readKey tsKey readBool rest4
-       (theMHF,rest6) <- readKey fvKey readBool rest5
-       rest7 <- readThis reqsetTRL rest6
+       (theSBD,rest3) <- readKey bdKey readBool rest2
+       (theMHT,rest4) <- readKey tmKey readBool rest3
+       (theMHQ,rest5) <- readKey tqKey readBool rest4
+       (theMHS,rest6) <- readKey tsKey readBool rest5
+       (theMHF,rest7) <- readKey fvKey readBool rest6
+       rest8 <- readThis reqsetTRL rest7
        return ( matchFilterUpdate
                  ( PrfSet theMMD
+                          theSBD
                           theMHT
                           theMHQ
                           theMHS
                           theMHF
                           acceptAll )
-              , rest7 )
+              , rest8 )
 \end{code}
 

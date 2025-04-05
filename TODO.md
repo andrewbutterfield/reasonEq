@@ -2,6 +2,8 @@
 
 ## URGENT or NEXT
 
+**ADD setting to tune match display, *including bindings* as an option**
+
 Still have this bug(3,5,7,9,10 are OK, 4,6,8,11 are NOT):
 ```
 11 : “exists_gen” [⟹ *]

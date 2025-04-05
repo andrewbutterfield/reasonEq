@@ -1001,18 +1001,20 @@ showLiveProof liveProof
 \begin{code}
 -- displays whole proof in proof REPL
 -- temporary
-dispLiveProof :: Int -> LiveProof -> String
-dispLiveProof maxm liveProof
+dispLiveProof :: LiveProof -> String
+dispLiveProof liveProof
  = unlines $
        shProof liveProof
        ++
-       ( displayMatches maxm (mtchCtxts liveProof) (matches liveProof)
+       ( displayMatches prfSet (mtchCtxts liveProof) (matches liveProof)
          : [ "-----------" -- underline "           "
            , dispSeqZip (fPath liveProof) (conjSC liveProof) (focus liveProof)
            , "XPNDD:\n"++(trSideCond $ xpndSC liveProof)
            , "" ]
        )
- where (trm,sc) = unwrapASN $ conjecture liveProof
+ where 
+   prfSet = liveSettings liveProof
+   (trm,sc) = unwrapASN $ conjecture liveProof
 
 
 -- dispLiveProof but when proof is complete
@@ -1035,20 +1037,26 @@ shLiveStep ( just, asn@(Assertion tm sc) )
   = unlines' [ trTerm 0 tm
              , showJustification just]
 
-displayMatches :: Int -> [MatchContext] -> Matches -> String
+displayMatches :: ProofSettings -> [MatchContext] -> Matches -> String
 displayMatches _ _ []  =  ""
-displayMatches maxm mctxts matches
+displayMatches prfSet mctxts matches
   =  unlines' ( ("Matches:")
-                : map (shMatch vts) (reverse $ take maxm $ zip [1..] matches) )
-  where vts = concat $ map thd3 mctxts
+                : map (shMatch showbind vts) (reverse $ take maxm $ zip [1..] matches) )
+  where 
+    vts = concat $ map thd3 mctxts
+    showbind = showBindings $ pdbg "PRFSET" prfSet
+    maxm = maxMatchDisplay prfSet
 
-shMatch vts (i, mtch)
+shMatch showbind vts (i, mtch)
  = show i ++ " : "++ ldq ++ red (truelawname $ mName mtch) ++ rdq
    ++ " " ++ shMClass (mClass mtch)
+   ++ showBinding showbind
    ++ lnindent ++ (bold $ blue $ trTerm 0 $ mRepl mtch)
    ++ lnindent ++ shSCImplication (mLocSC mtch) (mLawSC mtch)
  where
     lnindent = "\n    "
+    showBinding False = lnindent ++ "<<hide binding>>"
+    showBinding True = lnindent ++ trBinding (mBind mtch) 
     showRepl (But msgs) = unlines ("auto-instantiate failed!!":msgs)
     showRepl (Yes brepl) = trTerm 0 brepl
 

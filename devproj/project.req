@@ -15,7 +15,7 @@ SIDE = ([VSC (GV (VR (Id "E1" 0,VE,WS))) (The (fromList [GL (LV (VR (Id "O" 0,VO
 STRAT red-L2R
 BEGIN PRFSET
 MM = 30
-BD = False
+BD = True
 TM = False
 TQ = False
 TS = False

@@ -45,6 +45,14 @@ data ProofSettings
      -- Section 3 - settings that implement behaviour from Section 2
      , matchFilter :: FilterFunction
      }
+
+instance Show ProofSettings where
+  show prfset
+    = unlines 
+        [ "PROOFSETTINGS:"
+        , " MMD: " ++ show (maxMatchDisplay prfset)
+        , " SBD: " ++ show (showBindings prfset)
+        ] 
 \end{code}
 
 \subsection{Section 1 Updaters}

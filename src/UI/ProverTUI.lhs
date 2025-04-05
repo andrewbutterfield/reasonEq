@@ -816,12 +816,12 @@ tryMatch args state@( reqs, liveProof)
           Yes (bind,scP,tPasC,scC',scP') ->
             putStrLn $ unlines
               [ banner ++ " was successful"
-              , "Binding: " ++ trBinding bind
-              , "Instantiated Replacement = " ++ trTerm 0 tPasC
-              , "Law S.C.: = " ++ trSideCond scP 
-              , "Instantiated Law S.C. = " ++ trSideCond scC'
-              , "Goal S.C. = " ++ trSideCond (xpndSC liveProof)
-              , "Discharged Law S.C. = " ++ trSideCond scP']
+              , "Binding:\n  " ++ trBinding bind
+              , "Instantiated Replacement:\n  " ++ trTerm 0 tPasC
+              , "Law S.C.:\n  " ++ trSideCond scP 
+              , "Instantiated Law S.C.:\n  " ++ trSideCond scC'
+              , "Goal S.C.:\n  " ++ trSideCond (xpndSC liveProof)
+              , "Discharged Law S.C.:\n  " ++ trSideCond scP']
           But msgs -> putStrLn $ unlines' ( (banner ++ " failed!") : msgs )
         userPause
         return state
@@ -829,7 +829,7 @@ tryMatch args state@( reqs, liveProof)
     (nums,rest) = span (all isDigit) args
     parts = sort $ filter (>0) $ map read nums
     lawnm = filter (not . isSpace) $ unwords rest
-    banner = "Match against `"++lawnm++"'"++show parts
+    banner = "Match against '"++lawnm++"'"++show parts
 \end{code}
 
 

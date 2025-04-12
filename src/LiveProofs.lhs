@@ -603,7 +603,7 @@ doPartialMatch :: Identifier -> [VarTable]
 First, if we have $\equiv$ we call an $n$-way equivalence matcher:
 \begin{code}
 doPartialMatch i vts law asnC tsP
-  | i == theEqv  =   doEqvMatch vts law asnC tsP
+  | i == theEqv  =   doEqvMatch vts (pdbg "dPM.law" law) (pdbg "dPM.asnC" asnC) $ pdbg "dPM.tsP" tsP
 \end{code}
 
 If we have two sub-terms,
@@ -694,8 +694,8 @@ doEqvMatch vts law asnC [tP1,tP2]
 -- rule out matches against one-side of the reflexivity axiom
   | tP1 == tP2  =  []
 -- otherwise treat binary equivalence specially:
-  | otherwise  =     basicMatch MatchEqvLHS vts law tP2 asnC tP1
-                  ++ basicMatch MatchEqvRHS vts law tP1 asnC tP2
+  | otherwise  =     (pdbg "dEM.MELHS" $ basicMatch MatchEqvLHS vts law tP2 asnC tP1)
+                  ++ (pdbg "dEM.MERHS" $ basicMatch MatchEqvRHS vts law tP1 asnC tP2)
 \end{code}
 Then invoke Cases C and B, in that order.
 \begin{code}
@@ -881,7 +881,7 @@ basicMatch :: MatchClass
             -> Term       -- sub-part of law being matched
             -> Matches
 basicMatch mc vts law@((n,asnP@(Assertion tP scP)),_) replP (tC,scC) partsP
-  =  do bind <- match vts tC partsP
+  =  do bind <- match vts tC (pdbg "bM.partsP" partsP)
         kbind <- bindKnown vts bind tP
         fbind <- bindFloating vts kbind tP -- was replP 
         let insctxt = mkInsCtxt vts scC

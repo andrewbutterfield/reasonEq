@@ -8,8 +8,11 @@ We have traced the two (one good, one bad) matches
 from `domatch` to `doPartialMatch` to `doEqvMatch` to its `[tP1,tP2]` case,
 where two calls (LHS,RHS) are made to `basicMatch`. 
 The RHS match returns nothings, but the LHS returns (the) two matches.
-Looking at `tMatch` leads us to `vsMatch` which looks like were the 
+Looking at `tMatch` leads us to `vsMatch` which looks like where the 
 two alternative matches emerge.
+
+We now thinks that the problems occurs at the `mplus` in the body
+of `Matching.vsUnknownMatch` where `vlc == s_1` and `ullP == y`.
 
 
 

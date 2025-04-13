@@ -348,8 +348,8 @@ tMatch' vts bind cbvs pbvs (Bnd ttC nC vsC tC) (Bnd ttP nP vsP tP)
   | ttC `isSubTypeOf` ttP && nC == nP
     =  do let cbvs' = vsC `addBoundVarSet` cbvs
           let pbvs' = vsP `addBoundVarSet` pbvs
-          bindT  <-  tMatch vts bind cbvs' pbvs' tC tP
-          vsMatch vts bindT cbvs' pbvs' vsC vsP
+          bindT  <-  tMatch vts (pdbg "tM'.bind" bind) cbvs' pbvs' tC tP
+          vsMatch vts (pdbg "tM'.bindT" bindT) (pdbg "tM'.cbvs'" cbvs') (pdbg "tM'.pbvs'" pbvs') (pdbg "tM'.vsC" vsC) (pdbg "tM'.vsP" vsP)
 \end{code}
 
 However, we also have the case when the pattern binding
@@ -1834,7 +1834,7 @@ vsMatch :: (MonadPlus mp, MonadFail mp) => [VarTable] -> Binding -> CBVS -> PBVS
         -> VarSet -> VarSet -> mp Binding
 vsMatch vts bind cbvs pbvc vsC vsP = do
   (vsC',vsP') <- applyBindingsToSets vts bind vsC vsP
-  vsFreeMatch vts bind cbvs pbvc vsC' vsP'
+  vsFreeMatch vts bind cbvs pbvc (pdbg "vsM.vsC'" vsC') $ pdbg "vsM.vsP'" vsP'
 \end{code}
 
 \subsection{Applying Bindings to Sets}
@@ -1859,7 +1859,7 @@ applyBindingsToSets' vts bind vlP vsC [] = return (vsC,S.fromList vlP)
 When the first pattern variable is standard:
 \begin{code}
 applyBindingsToSets' vts bind vlP' vsC (gP@(StdVar vP):vlP)
- = case lookupVarBind bind vP of
+ = case pdbg "aBTS'.Std.lkpVBind" $ lookupVarBind bind vP of
     Nothing -> applyBindingsToSets' vts bind (gP:vlP') vsC vlP
     Just (BindTerm _) -> fail "vsMatch: pattern var already bound to term."
     Just (BindVar vB)
@@ -1873,7 +1873,7 @@ applyBindingsToSets' vts bind vlP' vsC (gP@(StdVar vP):vlP)
 When the first pattern variable is a list-variable:
 \begin{code}
 applyBindingsToSets' vts bind vlP' vsC (gP@(LstVar lvP):vlP)
- = case lookupLstBind bind lvP of
+ = case pdbg "aBTS'.LVar.lkpLBind" $ lookupLstBind bind lvP of
     Nothing -> applyBindingsToSets' vts bind (gP:vlP') vsC vlP
     Just (BindSet vsB) -> checkBinding vts vsB
     Just (BindList vlB) -> checkBinding vts $ S.fromList vlB
@@ -1954,19 +1954,21 @@ vsFreeMatch :: (MonadPlus mp, MonadFail mp)
               -> VarSet -> VarSet
               -> mp Binding
 vsFreeMatch vts bind cbvs pbvs vsC vsP
-  = let (uvsP,kvsP,ulsP,klsP) = vsClassify vts vsP in
-    if kvsP `withinS` vsC
-    then do let kvlC = stdVarsOf (vsC `intsctSl` kvsP)
-            let kvlP = stdVarsOf $ S.toList kvsP
-            bind' <- bindVarsToVars (zip kvlP kvlC) bind
-            let vsC' = vsC `removeS` kvsP
-            let klCommonP = klsP `intsctSl` vsC'
-            let klCommonC = vsC' `intsctSl` klsP
-            bind'' <- bindLVarSTuples
-                       (zip (listVarsOf klCommonP) $ listVarsOf klCommonC) bind'
-            let klsP' = klsP `removeSl` vsC'
-            let vsC'' = S.fromList ((S.toList vsC') `removeL` klCommonP)
-            vsKnownMatch vts bind'' cbvs pbvs vsC'' (uvsP,ulsP) klsP'
+  = let (uvsP,kvsP,ulsP,klsP) = vsClassify vts (pdbg "vsFM.vsP" vsP) in
+    if (pdbg "vsFM.kvsP" kvsP) `withinS` (pdbg "vsFM.vsC" vsC)
+    then do 
+      let kvlC = stdVarsOf (vsC `intsctSl` kvsP)
+      let kvlP = stdVarsOf $ S.toList kvsP
+      bind' <- bindVarsToVars (zip kvlP kvlC) bind
+      let vsC' = vsC `removeS` kvsP
+      let klCommonP = klsP `intsctSl` vsC'
+      let klCommonC = vsC' `intsctSl` klsP
+      bind'' <- bindLVarSTuples
+                  ( zip (listVarsOf klCommonP) 
+                       $ listVarsOf klCommonC ) $ pdbg "vsFM.bind'" bind'
+      let klsP' = klsP `removeSl` vsC'
+      let vsC'' = S.fromList ((S.toList vsC') `removeL` klCommonP)
+      vsKnownMatch vts (pdbg "vsFM.bind''" bind'') cbvs pbvs (pdbg "vsFM.vsC''" vsC'') ((pdbg "vsFM.uvsP" uvsP),(pdbg "vsFM.ulsP" ulsP)) (pdbg "vsFM.klsP'" klsP')
     else fail "vsFreeMatch: known vars missing."
 \end{code}
 
@@ -2512,8 +2514,8 @@ vsUnknownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
                                      (stdVarsOf stdC1)) bind
         let vlC = (stdC2 ++ S.toList lstC)
         let ullP = (listVarsOf $ S.toList ulsP)
-        ( vsUnkLVarOneEach bind' vlC ullP
-          `mplus`
+        ( vsUnkLVarOneEach bind' (pdbg "vsUM.vlc" vlC) (pdbg "vsUM.ullP" ullP)
+          `mplus`  -- ***** exists matching bug here ????
           vsUnkLVarOneForAll vts bind' cbvs pbvs vlC ullP )
  where
    uvsPs = S.size uvsP

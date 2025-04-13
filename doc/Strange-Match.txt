@@ -41,7 +41,7 @@ Discharged Law S.C.:
   ⊤
 
 
-WITH SHOW-BINING ENABLED
+WITH SHOW-BINDING ENABLED
 
 “exists_one_point”  (∃ x$,y$  • (x$=e$) ∧ P) ≡ (∃ y$  • P[e$/x$])  x$⋔e$
 

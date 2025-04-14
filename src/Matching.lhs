@@ -2515,8 +2515,9 @@ vsUnknownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
         let vlC = (stdC2 ++ S.toList lstC)
         let ullP = (listVarsOf $ S.toList ulsP)
         ( vsUnkLVarOneEach bind' (pdbg "vsUM.vlc" vlC) (pdbg "vsUM.ullP" ullP)
-          `mplus`  -- ***** exists matching bug here ????
-          vsUnkLVarOneForAll vts bind' cbvs pbvs vlC ullP )
+        --  `mplus`  -- ***** exists matching bug here ????
+        --  vsUnkLVarOneForAll vts bind' cbvs pbvs vlC ullP 
+         )
  where
    uvsPs = S.size uvsP
    (uvsC,kvsC,ulsC,klsC) = vsClassify vts vsC

@@ -14,6 +14,35 @@ two alternative matches emerge.
 We now thinks that the problems occurs at the `mplus` in the body
 of `Matching.vsUnknownMatch` where `vlc == s_1` and `ullP == y`.
 
+Commenting out use of `vsUnkLVarOneForAll` makes bug go away.
+Need to check that we haven't broken other stuff.
+
+This shouldn't happen!!!
+
+```
+1 : “forall_remove” [≡lhs]
+    { P  ⟼ (∀ y$  • P), x$  ⟼ {x$} }
+    (∀ y$  • P)
+    ⊤ ⟹ ⊤
+⊢
+(∀ x$  • (∀ y$  • P)) ≡ (∀ y$  • (∀ x$  • P))
+```
+
+
+Substitution seems broken again !!!!! 
+ `a` should be `a[s_1/s']` ; `b` should be `b[s_1/s]`.
+
+It still works properly for substitutions involving `O$_1`.
+
+```
+(∃ s_1  • ((E1 ⊆ ls ∧ a[s_1/s']) ∧ ((E2 ⊆ ls_1 ∧ b[s_1/s]) ∧ ls' = ls_1 \ R2 ∪ N2))
+  [ls \ R1 ∪ N1/ls_1])
+   = 'substitute @[1]'
+(∃ s_1  • (E1 ⊆ ls ∧ a) ∧ ((E2 ⊆ ls \ R1 ∪ N1 ∧ b) ∧ ls' = (ls \ R1 ∪ N1) \ R2 ∪ N2))
+ O$,O$'⋔E1, O$,O$'⋔E2, O$,O$'⋔N1, O$,O$'⋔N2, O$,O$'⋔R1, O$,O$'⋔R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1
+```
+
+
 
 
 Trying to prove `design_;_lzero`:

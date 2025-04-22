@@ -4,29 +4,6 @@
 
 Trying to prove `X_X_comp`:
 
-We have traced the two (one good, one bad) matches
-from `domatch` to `doPartialMatch` to `doEqvMatch` to its `[tP1,tP2]` case,
-where two calls (LHS,RHS) are made to `basicMatch`. 
-The RHS match returns nothings, but the LHS returns (the) two matches.
-Looking at `tMatch` leads us to `vsMatch` which looks like where the 
-two alternative matches emerge.
-
-We now thinks that the problems occurs at the `mplus` in the body
-of `Matching.vsUnknownMatch` where `vlc == s_1` and `ullP == y`.
-
-Commenting out use of `vsUnkLVarOneForAll` makes bug go away.
-Need to check that we haven't broken other stuff.
-
-This shouldn't happen!!!
-
-```
-1 : “forall_remove” [≡lhs]
-    { P  ⟼ (∀ y$  • P), x$  ⟼ {x$} }
-    (∀ y$  • P)
-    ⊤ ⟹ ⊤
-⊢
-(∀ x$  • (∀ y$  • P)) ≡ (∀ y$  • (∀ x$  • P))
-```
 
 
 Substitution seems broken again !!!!! 

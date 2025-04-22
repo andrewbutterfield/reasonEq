@@ -132,7 +132,7 @@ So the picture we now have is:
 \\  \fv(\vv v)  &\defs&  (\{\vv v\},\emptyset)
 \\ \fv(\bb n {v^+} t) 
    &\defs& 
-   (\fv(t)\setminus\setof{\dots,e_i,\dots},\setof{\dots,(e_i,B_i),\dots}
+   (\fv(t)\setminus\setof{\dots,e_i,\dots},\setof{\dots,(e_i,B_i),\dots})
 \end{eqnarray*}
 
 \subsection{Need to Record Substitutions?}

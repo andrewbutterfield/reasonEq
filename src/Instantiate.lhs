@@ -766,8 +766,8 @@ instantiateVSC insctxt bind vsc@(VSC gT mvsD mvsC mvsCd)
        fmvsC   <-  instNVarSet insctxt bind mvsC
        fmvsCd  <-  instNVarSet insctxt bind mvsCd
        if null diffsT
-         then do vscss <- mapM (instVSC insctxt fmvsD fmvsC fmvsCd) 
-                                (S.toList fvsT)
+         then do vscss <- mapM (instVSC insctxt fmvsD fmvsC fmvsCd)
+                               (S.toList fvsT)
                  return $ concat vscss
          else fail "instantiateVSC: explicit diffs in var-set not handled."
 \end{code}
@@ -890,6 +890,11 @@ We include $e_i$ if $e_i \in D \land e_i \notin B_i$.
 \newpage
 \subsection{Side-condition Variable Instantiation}
 
+In general we will find that bindings can map variables to both variables
+and terms. 
+For terms, it is their free-variables that are of interest,
+hence the return type below being \h{FreeVars}.
+
 Instantiate a (std./list)-variable either according to the binding,
 or by itself if not bound:
 \begin{code}
@@ -898,6 +903,7 @@ instantiateGVar insctxt bind (StdVar v)   =  instantiateVar  insctxt bind v
 instantiateGVar insctxt bind (LstVar lv)  =  instantiateLstVar insctxt bind lv
 \end{code}
 
+Instantiating a standard variable ($v$):
 \begin{eqnarray*}
    \beta(v) &=& v, \qquad  v \notin \beta
 \\ \beta(v) &=& \beta.v, \qquad \mbox{if $\beta.v$ is an variable}
@@ -911,6 +917,35 @@ instantiateVar insctxt bind v
         Just (BindVar v')  ->  (S.singleton $ StdVar v',[])
         Just (BindTerm t)  ->  deduceFreeVars insctxt t
 \end{code}
+
+
+Instantiating a list variable ($\lst v$):
+\begin{eqnarray*}
+   \beta(\lst v) &=& \setof{\lst v}, \qquad\qquad \lst v \notin \beta
+\\ \beta(\lst v) &=& \elems(\beta.\lst v),
+    \qquad\qquad \mbox{if $\beta.\lst v$ is a list}
+\\ \beta(\lst v) &=& \beta.\lst v,
+      \qquad\qquad \mbox{if $\beta.\lst v$ is a set}
+\\ \beta(\lst v) &=& L \cup \bigcup \fv_{sc}^*(T)
+     \quad \mbox{if $\beta.\lst v$ has form $(L,T)$}
+\end{eqnarray*}
+\begin{code}
+instantiateLstVar :: InsContext -> Binding -> ListVar -> FreeVars
+instantiateLstVar insctxt bind lv
+  = case lookupLstBind bind lv of
+      Nothing             ->  (S.singleton $ LstVar lv, [])
+      Just (BindList vl)  ->  (S.fromList vl, [])
+      Just (BindSet  vs)  ->  (vs, [])
+      Just (BindTLVs tlvs)
+       -> let (ts,lvs) = (tmsOf tlvs, lvsOf tlvs)
+          in  mrgFreeVarList
+               ( ( S.fromList $ map LstVar lvs,[]) 
+                 : map (deduceFreeVars insctxt) ts )
+\end{code}
+
+\newpage
+\subsubsection{Free-variable Deduction}
+
 We note here that \texttt{FreeVars} represents the following structure:
 $$ 
 (F,D)
@@ -947,7 +982,7 @@ deduceFreeVars insctxt t
 \begin{eqnarray*}
    \scvarexp_{sc}(v) &=& \setof v, \qquad v \text{ is obs. var.}
 \\ \scvarexp_{(vscs,\_)}(e) 
-   &=& \vscsvarexp(e,vscs(e)) \cond{e \in vscs} \setof e
+   &=& \vscsvarexp(~e,~vscs(e) \cond{e \in vscs} \setof e~)
 \end{eqnarray*}
 \begin{code}
 scVarExpand :: SideCond -> GenVar -> FreeVars
@@ -957,8 +992,6 @@ scVarExpand sc gv
       []    ->  injVarSet $ S.singleton gv
       vscs  ->  vscsVarExpand gv vscs
 \end{code}
-
-\newpage
 
 For any given variable, we can end up with one of these possibilities: 
 disjoint ($v \disj D$), covered ($C \supseteq v$),
@@ -977,37 +1010,17 @@ vscsVarExpand e (VSC e' _ (The vsC) _ : _)
 vscsVarExpand e (_:vscs) = vscsVarExpand e vscs
 \end{code}
 
-
+Given the expression $e_i \setminus B_i$,
+we need to consider the following: 
 \begin{eqnarray*}
-\scdiffexp_{sc}(e,B) 
-    &=& dosomethingwith
-         ( \scvarexp_{sc}(e)
-         , \power(\scvarexp_{sc})(B)
-         )
+\scdiffexp_{sc}(e_i,B_i) 
+    &=& \scvarexp_{sc}(e_i) \setminus \power(\scvarexp_{sc})(B_i)
 \end{eqnarray*}
 \begin{code}
-scDiffExpand sc (e,bB) = noFreevars -- for now
+scDiffExpand :: SideCond -> (GenVar,VarSet) -> FreeVars
+scDiffExpand sc (e,bB)
+  = let fve = scVarExpand sc e
+        fvBs = map (scVarExpand sc) $ S.toList bB
+    in mrgFreeVars fve (mrgFreeVarList fvBs)
 \end{code}
 
-\begin{eqnarray*}
-   \beta(\lst v) &=& \setof{\lst v}, \qquad\qquad \lst v \notin \beta
-\\ \beta(\lst v) &=& \elems(\beta.\lst v),
-    \qquad\qquad \mbox{if $\beta.\lst v$ is a list}
-\\ \beta(\lst v) &=& \beta.\lst v,
-      \qquad\qquad \mbox{if $\beta.\lst v$ is a set}
-\\ \beta(\lst v) &=& L \cup \bigcup \fv_{sc}^*(T)
-     \quad \mbox{if $\beta.\lst v$ has form $(L,T)$}
-\end{eqnarray*}
-\begin{code}
-instantiateLstVar :: InsContext -> Binding -> ListVar -> FreeVars
-instantiateLstVar insctxt bind lv
-  = case lookupLstBind bind lv of
-      Nothing             ->  (S.singleton $ LstVar lv, [])
-      Just (BindList vl)  ->  (S.fromList vl, [])
-      Just (BindSet  vs)  ->  (vs, [])
-      Just (BindTLVs tlvs)
-       -> let (ts,lvs) = (tmsOf tlvs, lvsOf tlvs)
-          in  mrgFreeVarList
-               ( ( S.fromList $ map LstVar lvs,[]) 
-                 : map (deduceFreeVars insctxt) ts )
-\end{code}

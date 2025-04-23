@@ -6,6 +6,14 @@ Trying to prove `X_X_comp`:
 
 Now we need some set algebra
 
+We need to get from here:
+
+((E1 ⊆ ls ∧ E2 ⊆ ls \ R1 ∪ N1) ∧ (a ; b)) ∧ ls' = (ls \ R1 ∪ N1) \ R2 ∪ N2
+
+to there: 
+
+E2 ∩ (R1 \ N1) = Ø ∧ X(E1 ∪ E2 \ N1,a ; b,R1 ∪ R2,N1 \ R2 ∪ N2)
+
 Trying to prove `design_;_lzero`:
 
 We now get to: 

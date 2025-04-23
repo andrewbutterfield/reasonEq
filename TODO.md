@@ -21,6 +21,30 @@ We now get to:
 ```
 (∃ O$  • ¬ok_1) ∨ (∃ O$  • (P[O$_1/O$] ⟹   ok' ∧ Q[O$_1/O$]))
 ```
+
+Experimenting reveals the need to connect up the typing info:
+
+```
+4 : “*_cancel” [≡rhs]
+    { =  ⟼ =, e  ⟼ ?e, f  ⟼ E2 ∩ (R1 \ N1), g  ⟼ Ø }
+    ?e * (E2 ∩ (R1 \ N1)) = ?e * Ø
+    ls,ls',s,s'⋔E1, ls,ls',s,s'⋔E2, ls,ls',s,s'⋔N1, ls,ls',s,s'⋔N2, ls,ls',s,s'⋔R1, ls,ls',s,s'⋔R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1,s_2 ⟹ ⊤
+3 : “+_cancel” [≡rhs]
+    { =  ⟼ =, e  ⟼ ?e, f  ⟼ E2 ∩ (R1 \ N1), g  ⟼ Ø }
+    ?e + E2 ∩ (R1 \ N1) = ?e + Ø
+    ls,ls',s,s'⋔E1, ls,ls',s,s'⋔E2, ls,ls',s,s'⋔N1, ls,ls',s,s'⋔N2, ls,ls',s,s'⋔R1, ls,ls',s,s'⋔R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1,s_2 ⟹ ⊤
+⊢
+E2 ∩ (R1 \ N1) = Ø ∧ ....
+```
+
+
+
+
+
+
+
+
+
 We need a a way to add witness `ok_1 == false`.
 
 
@@ -70,25 +94,6 @@ then the only valid uses of `k` as a substitution target are `[k/k]` or `[t/k]`.
 Note that there currently is **no** use made of Known Constants.
 
 ### Matching Issues
-
-
-Still a strange matching going on in X-X-simple.
-
-5 is OK as goal has `∃ s_1`, but 6 magics up a `∃ s`. Both are [≡rhs].
-
-
-```
-6 : “and_exists_scope” [≡rhs]
-    (E1 ⊆ ls ∧ (E2 ⊆ ls \ R1 ∪ N1 ∧ ls' = (ls \ R1 ∪ N1) \ R2 ∪ N2)) ∧ (∃ s  • (a[s_1/s'] ∧ b[s_1/s]))
-    ls,ls',s,s'∉E1, ls,ls',s,s'∉E2, ls,ls',s,s'∉N1, ls,ls',s,s'∉N2, ls,ls',s,s'∉R1, ls,ls',s,s'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1 ⟹ s∉E1, s∉E2, s∉N1, s∉N2, s∉R1, s∉R2
-5 : “and_exists_scope” [≡rhs]
-    (E1 ⊆ ls ∧ (E2 ⊆ ls \ R1 ∪ N1 ∧ ls' = (ls \ R1 ∪ N1) \ R2 ∪ N2)) ∧ (∃ s_1  • (a[s_1/s'] ∧ b[s_1/s]))
-    ls,ls',s,s'∉E1, ls,ls',s,s'∉E2, ls,ls',s,s'∉N1, ls,ls',s,s'∉N2, ls,ls',s,s'∉R1, ls,ls',s,s'∉R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1 ⟹ s_1∉E1, s_1∉E2, s_1∉N1, s_1∉N2, s_1∉R1, s_1∉R2
-```
-
-This also happens with laws `exists_swap` ([≡lhs],[≡rhs]), `exists_def` ([≡lhs]).
-
-
 
 
 ### RANKING BUSTED
@@ -158,7 +163,7 @@ Start Developing theories for:
 * UTCP  (in progress)
   depends on:
   * Arithmetic (done)
-  * Sets (done)
+  * Sets (in progress)
   * Lists (done)
 * Designs
 * Reactive Systems
@@ -184,6 +189,17 @@ Time to add type-inference!
 Done but not yet ready to be hooked in.
 
 Adding in Arithmetic and Set theories to test out the need for typechecking.
+
+Type-check need confirmed with X_X_comp, as per following excerpt:
+
+```
+4 : “*_cancel” [≡rhs]
+    ?e * (E2 ∩ (R1 \ N1)) = ?e * Ø
+ 3 : “+_cancel” [≡rhs]
+    ?e + E2 ∩ (R1 \ N1) = ?e + Ø
+ ⊢
+E2 ∩ (R1 \ N1) = Ø ∧ ...
+```
 
 * We really need to have symmetric forms of key results, e.g., we have `P∨true≡true`, but should also have `true∨P≡true`.
 
@@ -331,10 +347,6 @@ But how would `Design [P..]` capture the idea that `O` contains `ok`?
 
 ## Upgrade No. 4
 
-Need to re-design `TestRendering` so we can have meaningful 
-official names (`or`,`refines`) 
-that map to nice symbols (`∨`,`⊒`),
-rather than be called by their LaTeX names (`lor`,`sqsupseteq`).
 
 Need proof transcripts to show assumptions, when `assume` strategy is used.
 

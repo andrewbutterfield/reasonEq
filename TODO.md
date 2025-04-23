@@ -108,7 +108,6 @@ In general proofs involving prop logic, esp. and/or/not  rhs matches are as good
   * if theory is updated, allow proofs to be loaded in rather than redone
 * better proof display settings:
   * better setting command syntax
-  * finer control of proof-so-far display
   * finer control of level of detail (e.g. don't show scTrue as T, leave blank)
   * report total matches found?
   * proof help should appear before proof prompt (after matches), and NOT wait for use to hit the return key.

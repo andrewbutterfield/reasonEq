@@ -405,6 +405,8 @@ trterm trid ctxtp (Cons tk sub opn@(Identifier nm _) ts@(_:_:_))
         in (x:xs',y)
 \end{code}
 
+
+
 Rendering an infix operator with two or more arguments.
 We ensure that sub-terms are rendered with the infix operator precedence
 as their context precedence.
@@ -428,6 +430,14 @@ trterm trid _ (Cons tk _ n ts)
     trRoot (Val _ (Integer i)) = show i
     trRoot (Val _ (Boolean b)) = if b then "!" else ""
     trRoot _ = ""
+\end{code}
+
+We sometimes tailor standard functional application a little bit,
+i.e., $X$ and $A$ in the UTCP theory.
+\begin{code}
+trterm trid _ (Cons tk _ n ts)
+  | n `elem` [jId "A", jId "X"]
+  =  trId n ++ trcontainer trid ( "(", "|", ")" ) ts
 \end{code}
 
 In all other cases we simply use classical function application notation

@@ -4,23 +4,7 @@
 
 Trying to prove `X_X_comp`:
 
-
-
-Substitution seems broken again !!!!! 
- `a` should be `a[s_1/s']` ; `b` should be `b[s_1/s]`.
-
-It still works properly for substitutions involving `O$_1`.
-
-```
-(∃ s_1  • ((E1 ⊆ ls ∧ a[s_1/s']) ∧ ((E2 ⊆ ls_1 ∧ b[s_1/s]) ∧ ls' = ls_1 \ R2 ∪ N2))
-  [ls \ R1 ∪ N1/ls_1])
-   = 'substitute @[1]'
-(∃ s_1  • (E1 ⊆ ls ∧ a) ∧ ((E2 ⊆ ls \ R1 ∪ N1 ∧ b) ∧ ls' = (ls \ R1 ∪ N1) \ R2 ∪ N2))
- O$,O$'⋔E1, O$,O$'⋔E2, O$,O$'⋔N1, O$,O$'⋔N2, O$,O$'⋔R1, O$,O$'⋔R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1
-```
-
-
-
+Now we need some set algebra
 
 Trying to prove `design_;_lzero`:
 

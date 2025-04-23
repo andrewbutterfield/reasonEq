@@ -257,15 +257,11 @@ applySubst sctx@(SubCtxt sc vdata) sub@(Substn vts lvlvs) vrt@(Var tk v)
   =  let vtl = S.toList vts ; lvlvl = S.toList lvlvs in
      (alookup v vtl)  -- v[..,r,../..,v,..] = r
      <|> 
-     (lvlvlSubstitute sctx vrt vtl lvlvl) -- v[..,r$,../..,t$,..]=r,v[r$/t$]
+     (termVarSubstitute sctx vrt vtl lvlvl) -- v[..,r,../..,t,..] = r,v[r/t]     
      <|> 
-     (termVarSubstitute sctx vrt vtl lvlvl) -- v[..,r,../..,t,..] = r,v[r/t]
+     (lvlvlSubstitute sctx vrt vtl lvlvl) -- v[..,r$,../..,t$,..]=r,v[r$/t$]
 \end{code}
 \textbf{Notes:}
-\textsf{
-    \h{termVarSubstitute} should be used when all else fails to tidy up
-    the substitution.
-}
 \textsf{
    It is possible that \h{lvlvlSubstitute} could do the work
    of \h{uniformSubstitute} if we had a boolean indicating 

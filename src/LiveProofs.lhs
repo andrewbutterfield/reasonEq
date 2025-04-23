@@ -1028,9 +1028,18 @@ shProof liveProof
  =   ( ("\nProof for "++red (widthHack 2 $ conjName liveProof))
        : ("\t" ++ green(trTerm 0 trm ++ "\n\t"++ trSideCond sc))
        : ("by "++strategy liveProof)
-       : map shLiveStep (reverse (stepsSoFar liveProof))
+       : showsteps
        ) 
- where (trm,sc) = unwrapASN $ conjecture liveProof
+ where 
+   prfSet = liveSettings liveProof
+   maxstep = maxStepDisplay prfSet
+   allsteps = stepsSoFar liveProof
+   showsteps = shProofSteps maxstep allsteps
+   (trm,sc) = unwrapASN $ conjecture liveProof
+
+shProofSteps maxstep steps
+ | maxstep >= length steps  =  map shLiveStep $ reverse steps
+ | otherwise  =  "..." : ( map shLiveStep $ reverse $ take maxstep steps )
 
 shLiveStep :: CalcStep -> String
 shLiveStep ( just, asn@(Assertion tm sc) )

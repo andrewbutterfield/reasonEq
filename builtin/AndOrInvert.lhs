@@ -205,38 +205,6 @@ cjEqvDef
      , scTrue ) )
 \end{code}
 
-\def\CJTestOne{stuff1}
-\def\CJTestOneN{\QNAME{test-one}}
-$$
-  \begin{array}{ll}
-    \CJTestOne & \CJTestOneN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-cjTestOne
- = ( "test" -.- "1"
-   , ( (p \/ p) /\ q === p /\ q
-     , scTrue ) )
-\end{code}
-
-\def\CJTestTwo{stuff2}
-\def\CJTestTwoN{\QNAME{test-two}}
-$$
-  \begin{array}{ll}
-    \CJTestTwo & \CJTestTwoN
-  \end{array}
-$$
-
-\vspace{-8pt}
-\begin{code}
-cjTestTwo
- = ( "test" -.- "2"
-   , ( ((p === q) === (p \/ q)) /\ (p /\ r) === p /\ (q /\ r)
-     , scTrue ) )
-\end{code}
-
 
 
 Assemble it all:
@@ -248,8 +216,6 @@ aoiConjs = map mkNmdAsn
     , cjDeMorganNand, cjDeMorganNor
     , cjEqvRepl
     , cjEqvDef
-    , cjTestOne
-    , cjTestTwo
     ]
 \end{code}
 

@@ -1,4 +1,4 @@
-\section{Generic REPL Code}
+\chapter{Generic REPL Code}
 \begin{verbatim}
 Copyright  Andrew Butterfield (c) 2017--18
 
@@ -34,7 +34,7 @@ import YesBut
 import Utilities
 \end{code}
 
-\subsection{REPL Introduction}
+\section{REPL Introduction}
 
 A ``REPL''%
 \footnote{
@@ -157,7 +157,7 @@ defEndTidy _ s = return s
 \end{code}
 
 \newpage
-\subsubsection{Command Respository Lookup}
+\subsection{Command Respository Lookup}
 \begin{code}
 cmdLookup :: String -> REPLCommands state -> Maybe (REPLCmdDescr state)
 cmdLookup s []= Nothing
@@ -261,9 +261,9 @@ longHELP cmd ((nm,_,lhelp,_):cmds)
 \end{code}
 
 \newpage
-\subsection{REPL Utilities}
+\section{REPL Utilities}
 
-\subsubsection{Useful IO bits and pieces}
+\subsection{Useful IO bits and pieces}
 
 Prompting:
 \begin{code}
@@ -283,7 +283,7 @@ userPause = userPrompt "hit <enter> to continue"
 \end{code}
 
 
-\subsubsection{Response Waiting}
+\subsection{Response Waiting}
 
 We sometimes want to wait:
 \begin{code}
@@ -310,7 +310,7 @@ showAndQuery str
 
 
 
-\subsubsection{Screen Clearing}
+\subsection{Screen Clearing}
 
 Screen clearing for help strings:
 \begin{code}
@@ -318,7 +318,7 @@ clearLong :: REPLCmdDescr s -> REPLCmdDescr s
 clearLong (nm,short,long,func) = (nm,short,clearIt long,func)
 \end{code}
 
-\subsubsection{Dislaying List as One-liner}
+\subsection{Dislaying List as One-liner}
 
 \begin{code}
 putListOneLine showx [] = putStrLn ""
@@ -327,7 +327,7 @@ putListOneLine showx (x:xs)
   = putStr (showx x ++ " ") >> putListOneLine showx xs
 \end{code}
 
-\subsubsection{List Picking by Number}
+\subsection{List Picking by Number}
 
 \begin{code}
 pickByNumber :: String -> (t -> String) -> t -> IO Int
@@ -340,7 +340,7 @@ pickByNumber prompt showx x
 
 \newpage
 
-\subsubsection{Pair Picking by Number}
+\subsection{Pair Picking by Number}
 
 Basic picker, assuming context already displayed.
 \begin{code}
@@ -391,7 +391,7 @@ pickPairing
 \end{code}
 
 
-\subsection{Better(?) Pickers}
+\section{Better(?) Pickers}
 
 \begin{code}
 inRange :: Int -> Int -> Bool
@@ -475,7 +475,7 @@ takeThings hdr showThing things
        else if all (inRange size) choices && choices == nub choices
          then do let (wanted,leftover) = takeOut choices things
                  putStrLn ("Taken "++unwords (map showThing wanted))
-                 putStrLn ("Rermaining "++unwords (map showThing leftover))
+                 putStrLn ("Remaining "++unwords (map showThing leftover))
                  return (True,(wanted,leftover))
          else return (False,error "Bad takings!")
   where

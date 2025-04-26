@@ -45,11 +45,11 @@ import UTP.While.RefineSig
 import Instantiate
 import TestRendering
 import Parsing
-import REPL
 import Dev
 import SAT
 import Classifier
 import LiveProofs
+import UI.REPL
 import UI.ProverTUI
 import UI.TopTUI
 

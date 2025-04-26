@@ -41,7 +41,6 @@ library
       Proofs
       ProofSettings
       Ranking
-      REPL
       REqState
       SAT
       Sequents
@@ -55,6 +54,7 @@ library
       Typing
       UI.AbstractUI
       UI.ProverTUI
+      UI.REPL
       UI.TopGUI
       UI.TopTUI
       UI.TSupport

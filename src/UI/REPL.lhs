@@ -5,7 +5,7 @@ Copyright  Andrew Butterfield (c) 2017--18
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
-module REPL (
+module UI.REPL (
     REPLParser, REPLArguments, idParse, wordParse, charTypeParse
   , REPLCmd, REPLCmdDescr, REPLExit, REPLCommands
   , REPLConfig(..)

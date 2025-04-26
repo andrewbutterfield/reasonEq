@@ -46,7 +46,7 @@ import UTP.While.RefineSig
 import Instantiate
 import TestRendering
 import Parsing
-import REPL
+import UI.REPL
 import Dev
 import SAT
 import Classifier

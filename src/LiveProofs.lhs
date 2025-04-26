@@ -1006,15 +1006,19 @@ dispLiveProof liveProof
  = unlines $
        shProof liveProof
        ++
-       ( displayMatches prfSet (mtchCtxts liveProof) (matches liveProof)
-         : [ "-----------" -- underline "           "
+       ( displayMatches prfSet (mtchCtxts liveProof) mtchs
+         : [ "-----------("++dcount++"/"++mcount++")" -- underline "           "
            , dispSeqZip (fPath liveProof) (conjSC liveProof) (focus liveProof)
            , "XPNDD:\n"++(trSideCond $ xpndSC liveProof)
            , "" ]
        )
- where 
-   prfSet = liveSettings liveProof
-   (trm,sc) = unwrapASN $ conjecture liveProof
+  where 
+    prfSet = liveSettings liveProof
+    mtchs = matches liveProof
+    mcount = show $ length mtchs
+    dmatches = take (maxMatchDisplay prfSet) mtchs
+    dcount = show $ length dmatches
+    (trm,sc) = unwrapASN $ conjecture liveProof
 
 
 -- dispLiveProof but when proof is complete
@@ -1048,13 +1052,13 @@ shLiveStep ( just, asn@(Assertion tm sc) )
 
 displayMatches :: ProofSettings -> [MatchContext] -> Matches -> String
 displayMatches _ _ []  =  ""
-displayMatches prfSet mctxts matches
+displayMatches prfSet mctxts mtchs
   =  unlines' ( ("Matches:")
-                : map (shMatch showbind vts) (reverse $ take maxm $ zip [1..] matches) )
+                : map (shMatch showbind vts) (reverse $ zip [1..] mtchs) )
   where 
     vts = concat $ map thd3 mctxts
     showbind = showBindings prfSet
-    maxm = maxMatchDisplay prfSet
+    
 
 shMatch showbind vts (i, mtch)
  = show i ++ " : "++ ldq ++ red (truelawname $ mName mtch) ++ rdq

@@ -361,6 +361,7 @@ inferTypes vts fis env t = return (fis,(M.empty,ArbType))
 -- missing:
 \end{code}
 
+\newpage
 \subsubsection{Support}
 
 We convert a lambda with multiple abstraction variables

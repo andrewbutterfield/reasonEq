@@ -48,8 +48,6 @@ import UTP.While.Common
 import UTP.While.Naive
 import UTP.Designs
 import UTP.UTCP
---import XYZ
---import XYZDesign
 
 import Debugger
 \end{code}

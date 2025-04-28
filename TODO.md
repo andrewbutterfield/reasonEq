@@ -2,6 +2,13 @@
 
 ## URGENT or NEXT
 
+`LiveProofs.undoCalcStep` needs fixing!
+
+
+For type-checking look at uses of `mkAsn` 
+that should become `AbstractUI.mkTypedAsn`.
+
+
 Trying to prove `X_X_comp`:
 
 Now we need some set algebra

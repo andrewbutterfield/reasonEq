@@ -66,6 +66,7 @@ import Substitution
 import Binding
 import VarData
 import MatchContext
+import Typing
 import Instantiate
 import Sequents
 import ProofSettings
@@ -581,7 +582,12 @@ moveFocusFromHypothesis liveProof
 
 \subsection{Match Laws against Focus}
 
-First, matching all laws.
+Infer goal type:
+\begin{code}
+mkTypedAsn vts asn sc =  mkAsn asn sc
+\end{code}
+
+Matching all laws:
 \begin{code}
 matchFocus :: MonadFail m => Ranking -> LiveProof -> m LiveProof 
 matchFocus ranking liveProof
@@ -589,12 +595,12 @@ matchFocus ranking liveProof
         goalt       =  getTZ tz
         scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
-    in do asn' <- mkAsn goalt scC 
+    in do asn' <- mkTypedAsn [] goalt scC 
           let rankedM = ranking ctxts $ matchInContexts ctxts asn'
           return $ matches_ rankedM liveProof
 \end{code}
 
-Second, matching a specific law.
+Matching a specific law:
 \begin{code}
 matchFocusAgainst :: MonadFail m => String -> LiveProof -> m LiveProof
 matchFocusAgainst lawnm liveProof
@@ -602,7 +608,7 @@ matchFocusAgainst lawnm liveProof
         goalt       =  getTZ tz
         scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
-    in do asn' <- mkAsn goalt scC
+    in do asn' <- mkTypedAsn [] goalt scC
           case matchLawByName asn' lawnm ctxts of
             Yes []    -> fail ("No matches against focus for '"++lawnm++"'")
             Yes mtchs -> return $ matches_ mtchs liveProof
@@ -618,7 +624,7 @@ tryFocusAgainst lawnm parts liveProof
         goalt       =  getTZ tz
         scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
-    in do asn' <- mkAsn goalt scC
+    in do asn' <- mkTypedAsn [] goalt scC
           tryLawByName asn' lawnm parts ctxts
 \end{code}
 

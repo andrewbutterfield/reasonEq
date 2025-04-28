@@ -47,8 +47,9 @@ Once we start to deal with predicates that refer to data items such as
 numbers, sets, lists, etc., 
 we need typing information to prevent spurious matches
 (e.g. $42 = 42 \land 42$ or $\True = \True + 0$).
-The plan is that when a proof is setup, 
-it ensures that the \h{TermKind} component indicates the correct type.
+The plan is that when matching is done
+it ensures that the \h{Type} component of the \emph{focus} term 
+indicates the correct type.
 
 We implement the W algorithm for type inferencing, 
 by adapting a version by Martin Grabm{\"u}ller (MG)

@@ -25,7 +25,7 @@ module Utilities (
 , getJust
 , pulledFrom, getitem, choose
 , injMap, extdBij, bijExtend
-, pspace, spacep, spaced, intcalNN
+, pspace, spacep, space2p, spaced, intcalNN
 , pad
 , splitBetween
 , splitLast, splitAround
@@ -536,6 +536,7 @@ rrun nekot = Run $ reverse nekot
 
 pspace s = ' ':s
 spacep s = s ++ " "
+space2p = spacep . spacep
 spaced s = ' ':pspace s ++ " "
 \end{code}
 

@@ -136,8 +136,8 @@ trType (TypeCons i ts)   =  trId i ++ "(" ++ trTypes ts ++ ")"
 trType (AlgType i itss)  =  "ADT"
 -- fun-types are right-associative
 trType (FunType ft@(FunType _ _) tr)   
-  =  "(" ++ trType ft ++ ")" ++ spacep _fun ++ trType tr
-trType (FunType ta tr)   =  trType ta ++ spacep _fun ++ trType tr
+  =  "(" ++ trType ft ++ ")" ++  _fun ++ trType tr
+trType (FunType ta tr)   =  trType ta ++ _fun ++ trType tr
 trType (GivenType (Identifier i _)) 
   -- hack - should be done in Symbols
   | i == "B"  =  " \x1d539 "
@@ -150,7 +150,7 @@ trType (GivenType (Identifier i _))
   | i == "*"  =  "\x002a"
 trType (GivenType i)      =  trId i
 
-trType BottomType = _bot
+trType BottomType = spacep _bot
 
 trTypes = seplist " " trType
 

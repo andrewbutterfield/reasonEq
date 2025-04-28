@@ -584,7 +584,10 @@ moveFocusFromHypothesis liveProof
 
 Infer goal type:
 \begin{code}
-mkTypedAsn vts asn sc =  mkAsn asn sc
+mkTypedAsn vts term sc 
+  = case typeInference vts term of
+      Nothing            ->  mkAsn term sc
+      Just (typ',term')  ->  mkAsn term' sc
 \end{code}
 
 Matching all laws:
@@ -595,7 +598,8 @@ matchFocus ranking liveProof
         goalt       =  getTZ tz
         scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
-    in do asn' <- mkTypedAsn [] goalt scC 
+        vts         =  concat $ map thd3 ctxts
+    in do asn' <- mkTypedAsn vts goalt scC 
           let rankedM = ranking ctxts $ matchInContexts ctxts asn'
           return $ matches_ rankedM liveProof
 \end{code}
@@ -608,7 +612,8 @@ matchFocusAgainst lawnm liveProof
         goalt       =  getTZ tz
         scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
-    in do asn' <- mkTypedAsn [] goalt scC
+        vts         =  concat $ map thd3 ctxts
+    in do asn' <- mkTypedAsn vts goalt scC
           case matchLawByName asn' lawnm ctxts of
             Yes []    -> fail ("No matches against focus for '"++lawnm++"'")
             Yes mtchs -> return $ matches_ mtchs liveProof
@@ -624,7 +629,8 @@ tryFocusAgainst lawnm parts liveProof
         goalt       =  getTZ tz
         scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
-    in do asn' <- mkTypedAsn [] goalt scC
+        vts         =  concat $ map thd3 ctxts
+    in do asn' <- mkTypedAsn vts goalt scC
           tryLawByName asn' lawnm parts ctxts
 \end{code}
 

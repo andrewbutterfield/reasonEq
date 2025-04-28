@@ -735,21 +735,21 @@ dispConjParts fp tz sc (CLaws' hthry Lft rightC)
   =  (dispHypotheses hthry)
      : [ _vdash ]
      ++ dispGoal tz sc
-     ++ dispContext fp "Target (RHS): " (red $ trTerm 0 rightC)
+     ++ dispContext fp tz "Target (RHS): " (red $ trTerm 0 rightC)
 
 
 dispConjParts fp tz sc (CLaws' hthry Rght leftC)
   =  (dispHypotheses hthry)
      : [ _vdash ]
      ++ dispGoal tz sc
-     ++ dispContext fp "Target (LHS): " (red $ trTerm 0 leftC)
+     ++ dispContext fp tz "Target (LHS): " (red $ trTerm 0 leftC)
 
 
 dispConjParts fp tz sc seq'@(HLaws' hn hk hbef _ _ _ horig haft _ _)
   =  (dispHypotheses $ getHypotheses' seq')
      : [ _vdash ]
      ++ dispGoal tz sc
-     ++ dispContext fp "Hypothesis: " (trTerm 0 horig++"  "++trSideCond sc)
+     ++ dispContext fp tz "Hypothesis: " (trTerm 0 horig++"  "++trSideCond sc)
   where
      hthry =  nullTheory { 
                 thName   =  hn
@@ -764,8 +764,13 @@ showHyp ((_,(Assertion trm _)),_) = trTerm 0 trm
 dispGoal tz sc
   = [ trTermZip tz++"\n "++blue (trSideCond sc) ]
 
-dispContext fp what formula
-  = [ "Focus = " ++ show fp, ""
+dispType :: TermZip -> [ String ]
+dispType (trm,_) = [ " :: " ++ trType (termtype trm) ]
+
+
+dispContext fp (trm,_) what formula
+  = [ "Focus = " ++ show fp ++ " :: " ++ trType (termtype trm)
+    , ""
     , what
     , formula
     ]

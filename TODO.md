@@ -2,11 +2,23 @@
 
 ## URGENT or NEXT
 
-`LiveProofs.undoCalcStep` needs fixing!
+
 
 
 For type-checking look at uses of `mkAsn` 
 that should become `AbstractUI.mkTypedAsn`.
+
+Current state of (typing) play:
+
+```
+((E1 ⊆ ls ∧ E2 ⊆ ls \ R1 ∪ N1) ∧ (a ; b)) ∧ ls' = (ls \ R1 ∪ N1) \ R2 ∪ N2
+ O$,O$'⋔E1, O$,O$'⋔E2, O$,O$'⋔N1, O$,O$'⋔N2, O$,O$'⋔R1, O$,O$'⋔R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1,s_2
+Focus = [1] :: ⊥⟶  𝔹 
+```
+
+Still succeeds with `tm 2 +_cancel`.
+
+`LiveProofs.undoCalcStep` needs fixing!
 
 
 Trying to prove `X_X_comp`:

@@ -354,7 +354,7 @@ designName = "Designs"
 designTheory :: Theory
 designTheory
   = nullTheory  { thName  =  designName
-                , thDeps  = [ utpCW_Name
+                , thDeps  = [ utpWC_Name
                             , aoiName
                             , conjName
                             , disjName

@@ -1,4 +1,4 @@
-\chapter{UTP Common While}
+\chapter{UTP While Common}
 \begin{verbatim}
 Copyright  Andrew Butterfield (c) 2025
 
@@ -7,8 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module UTP.While.Common (
-  utpCW_Conjs, utpCW_Name, utpCW_Theory
-, utpCW_Aliases
+  utpWC_Conjs, utpWC_Name, utpWC_Theory
+, utpWC_Aliases
 ) where
 
 import Data.Maybe
@@ -649,20 +649,20 @@ axFusionDef
 
 We collect our known variables:
 \begin{code}
-utpCW_Known
+utpWC_Known
  = refinesIntro $
    condIntro $
    seqIntro $
    obsIntro $
    ndcIntro $
-   newNamedVarTable utpCW_Name
+   newNamedVarTable utpWC_Name
 \end{code}
 
 
 We now collect our axiom set:
 \begin{code}
-utpCW_Axioms :: [Law]
-utpCW_Axioms
+utpWC_Axioms :: [Law]
+utpWC_Axioms
   = map labelAsAxiom
       [ axRefsDef
       , axCondDef
@@ -675,8 +675,8 @@ utpCW_Axioms
 
 We now collect our conjecture set:
 \begin{code}
-utpCW_Conjs :: [NmdAssertion]
-utpCW_Conjs
+utpWC_Conjs :: [NmdAssertion]
+utpWC_Conjs
   = [ cjRefsOrDistr, cjRefsTrans
     , cjCondL1, cjCondL2, cjCondL3, cjCondL4, cjCondL5a
     , cjCondL5b, cjCondL6, cjCondL7, cjCondMutual, cjCondAlt, cjCondAlt2
@@ -689,8 +689,8 @@ utpCW_Conjs
 
 We now collect our alias set:
 \begin{code}
-utpCW_Aliases :: [(String,String)]
-utpCW_Aliases
+utpWC_Aliases :: [(String,String)]
+utpWC_Aliases
   = [ alRefsDef, alRefsOrDistr, alRefsTrans
     , alCondL1, alCondL2, alCondL3, alCondL4
     , alCondL5a, alCondL5b, alCondL6, alCondL7
@@ -703,11 +703,11 @@ utpCW_Aliases
 
 
 \begin{code}
-utpCW_Name :: String
-utpCW_Name = "U_CWhl"
-utpCW_Theory :: Theory
-utpCW_Theory
-  =  nullTheory { thName  =  utpCW_Name
+utpWC_Name :: String
+utpWC_Name = "U_CWhl"
+utpWC_Theory :: Theory
+utpWC_Theory
+  =  nullTheory { thName  =  utpWC_Name
                 , thDeps  = [ uCloseName
                             , existsName
                             , forallName
@@ -719,9 +719,9 @@ utpCW_Theory
                             , notName
                             , equivName
                             ]
-            , known   =  utpCW_Known
-            , laws    =  utpCW_Axioms
-            , conjs   =  utpCW_Conjs
+            , known   =  utpWC_Known
+            , laws    =  utpWC_Axioms
+            , conjs   =  utpWC_Conjs
             }
 \end{code}
 

@@ -333,7 +333,7 @@ utpNW_Name = "U_NvWhl"
 utpNW_Theory :: Theory
 utpNW_Theory
   =  nullTheory { thName  =  utpNW_Name
-                , thDeps  = [ utpCW_Name
+                , thDeps  = [ utpWC_Name
                             , uCloseName
                             , existsName
                             , forallName

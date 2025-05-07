@@ -720,7 +720,7 @@ utcpName = "UTCP"
 utcpTheory :: Theory
 utcpTheory
   =  nullTheory { thName  =  utcpName
-            , thDeps  =  [ utpCW_Name
+            , thDeps  =  [ utpWC_Name
                          , setName
                          , uCloseName
                          , existsName

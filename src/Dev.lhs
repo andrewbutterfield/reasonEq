@@ -108,7 +108,7 @@ devKnownBuiltins  = [ equivTheory
                     , arithmeticTheory
                     , setTheory
                     , listTheory
-                    , utpCW_Theory
+                    , utpWC_Theory
                     , utpNW_Theory
                     , designTheory
                     , utcpTheory

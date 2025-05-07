@@ -1068,7 +1068,7 @@ shMatch showbind vts (i, mtch)
    ++ lnindent ++ shSCImplication (mLocSC mtch) (mLawSC mtch)
  where
     lnindent = "\n    "
-    showBinding False = lnindent ++ "<<hide binding>>"
+    showBinding False = ""
     showBinding True = lnindent ++ trBinding (mBind mtch) 
     showRepl (But msgs) = unlines ("auto-instantiate failed!!":msgs)
     showRepl (Yes brepl) = trTerm 0 brepl

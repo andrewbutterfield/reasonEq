@@ -22,7 +22,7 @@ import StdSignature
 Code to generate a reference to the literature.
 
 We want to map definition and law numbers
-from the a document to law names.
+from the document to law names.
 \begin{code}
 bookdef :: String -> String -> Term -> SideCond
         -> (NmdAssertion, (String, String))

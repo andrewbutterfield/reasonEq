@@ -55,7 +55,7 @@ import Debugger
 \section{Introduction}
 
 
-Here we provide semantics for the elements of the Na\"{i}"ve While theory,
+Here we provide semantics for the elements of the Na\"{i}ve While theory,
 were they differ from the corresponding Design semantics.
 They are assignment, skip, abort and miracle.
 

@@ -13,6 +13,11 @@ BEGIN LIST LAWS
 (("eqv_subst",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [S (TF TB (TG (Id "B" 0))) (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [S (TF TB (TG (Id "B" 0))) (V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),S (TF TB (TG (Id "B" 0))) (V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))]],([],fromList []))),Assumed)
 END LIST LAWS
 BEGIN LIST SIMPLIFIERS
+("id_subst",Leftwards)
+("non_subst",Leftwards)
+("eqv_id",Leftwards)
+("true_subst",Leftwards)
+("eqv_subst",Rightwards)
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
 END LIST DEFFOLD

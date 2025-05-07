@@ -13,10 +13,18 @@ BEGIN LIST LAWS
 (("and_subst",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [S (TF TB (TG (Id "B" 0))) (C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [S (TF TB (TG (Id "B" 0))) (V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),S (TF TB (TG (Id "B" 0))) (V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))]],([],fromList []))),Assumed)
 END LIST LAWS
 BEGIN LIST SIMPLIFIERS
+("and_idem",Leftwards)
+("and_unit",Leftwards)
+("and_zero",Leftwards)
+("and_and_distr",Rightwards)
+("contradiction",Leftwards)
+("and_subst",Rightwards)
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
+golden-rule
 END LIST DEFFOLD
 BEGIN LIST DEFUNFOLD
+golden-rule
 END LIST DEFUNFOLD
 BEGIN LIST CONJECTURES
 END LIST CONJECTURES

@@ -13,6 +13,13 @@ BEGIN LIST LAWS
 (("exists_swap",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [B (TF TB (TG (Id "B" 0))) (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (B (TF TB (TG (Id "B" 0))) (Id "exists" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)))),B (TF TB (TG (Id "B" 0))) (Id "exists" 0) (fromList [GL (LV (VR (Id "y" 0,VO,WS),[],[]))]) (B (TF TB (TG (Id "B" 0))) (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))))],([],fromList []))),Assumed)
 END LIST LAWS
 BEGIN LIST SIMPLIFIERS
+("exists_def",Rightwards)
+("exists_remove",Leftwards)
+("exists_false",Leftwards)
+("exists_one_point",Leftwards)
+("exists_or_distr",Rightwards)
+("and_exists_scope",Rightwards)
+("exists_alpha_rename",Rightwards)
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
 END LIST DEFFOLD

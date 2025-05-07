@@ -14,6 +14,11 @@ BEGIN LIST LAWS
 (("or_subst",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [S (TF TB (TG (Id "B" 0))) (C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),C (TF TB (TG (Id "B" 0))) True (Id "or" 0) [S (TF TB (TG (Id "B" 0))) (V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),S (TF TB (TG (Id "B" 0))) (V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))]],([],fromList []))),Assumed)
 END LIST LAWS
 BEGIN LIST SIMPLIFIERS
+("or_idem",Leftwards)
+("or_zero",Leftwards)
+("or_unit",Leftwards)
+("or_or_distr",Rightwards)
+("or_subst",Rightwards)
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
 END LIST DEFFOLD

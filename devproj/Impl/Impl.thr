@@ -32,10 +32,34 @@ BEGIN LIST LAWS
 (("conj_imp_conj",ASN (C (TF TB (TG (Id "B" 0))) True (Id "imp" 0) [C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "Q" 0,VP,WS))],C (TF TB (TG (Id "B" 0))) True (Id "and" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "R" 0,VP,WS)),V (TF TB (TG (Id "B" 0))) (VR (Id "S" 0,VP,WS))]],([],fromList []))),Assumed)
 END LIST LAWS
 BEGIN LIST SIMPLIFIERS
+("contrapositive",Rightwards)
+("imp_eqv_distr",Rightwards)
+("GS3.66",Leftwards)
+("GS3.67",Leftwards)
+("GS3.68",Leftwards)
+("GS3.69",Leftwards)
+("GS3.70",Leftwards)
+("imp_refl",Leftwards)
+("imp_r-zero",Leftwards)
+("imp_l-unit",Leftwards)
+("not_def2",Leftwards)
+("GS3.75",Leftwards)
+("ante_or_distr",Rightwards)
+("ante_and_distr",Rightwards)
+("cnsq_and_distr",Rightwards)
+("cnsq_and_distr",Rightwards)
+("ante_as_imp",Rightwards)
+("imp_subst",Rightwards)
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
+imp_def
+imp_def2
+imp_meet
 END LIST DEFFOLD
 BEGIN LIST DEFUNFOLD
+imp_def
+imp_def2
+imp_meet
 END LIST DEFUNFOLD
 BEGIN LIST CONJECTURES
 END LIST CONJECTURES

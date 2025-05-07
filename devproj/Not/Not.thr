@@ -12,10 +12,16 @@ BEGIN LIST LAWS
 (("not_subst",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [S (TF TB (TG (Id "B" 0))) (C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))])),C (TF TB (TG (Id "B" 0))) True (Id "not" 0) [S (TF TB (TG (Id "B" 0))) (V (TF TB (TG (Id "B" 0))) (VR (Id "P" 0,VP,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VE,WS),[],[]))]))]],([],fromList []))),Assumed)
 END LIST LAWS
 BEGIN LIST SIMPLIFIERS
+("false_def",Rightwards)
+("not_invol",Leftwards)
+("false_neg",Leftwards)
+("false_subst",Leftwards)
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
+not_def
 END LIST DEFFOLD
 BEGIN LIST DEFUNFOLD
+not_def
 END LIST DEFUNFOLD
 BEGIN LIST CONJECTURES
 END LIST CONJECTURES

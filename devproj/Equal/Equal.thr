@@ -8,6 +8,7 @@ BEGIN LIST LAWS
 (("=_subst",ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [S T (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [V T (VR (Id "e" 0,VO,WS)),V T (VR (Id "f" 0,VO,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VO,WS),[],[]))])),C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [S T (V T (VR (Id "e" 0,VO,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VO,WS),[],[]))])),S T (V T (VR (Id "f" 0,VO,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VO,WS),[],[]))]))]],([],fromList []))),Assumed)
 END LIST LAWS
 BEGIN LIST SIMPLIFIERS
+("=_subst",Rightwards)
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
 END LIST DEFFOLD

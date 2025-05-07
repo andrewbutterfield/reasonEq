@@ -17,6 +17,15 @@ BEGIN LIST LAWS
 (("len_cons_def",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "len" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))]],C (TG (Id "Z" 0)) True (Id "+" 0) [K (TG (Id "Z" 0)) (VI 1),C (TG (Id "Z" 0)) True (Id "len" 0) [V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))]]],([],fromList []))),Axiom)
 END LIST LAWS
 BEGIN LIST SIMPLIFIERS
+("hd_def",Leftwards)
+("tl_def",Leftwards)
+("nil_cat_def",Leftwards)
+("lsngl_def",Rightwards)
+("rev_nil_def",Leftwards)
+("rev_cons_def",Rightwards)
+("elems_nil_def",Leftwards)
+("elems_cons_def",Rightwards)
+("len_nil_def",Leftwards)
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
 END LIST DEFFOLD

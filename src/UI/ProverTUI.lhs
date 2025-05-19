@@ -768,7 +768,7 @@ applyFolds' :: MonadFail m
             => String -> AutoLaws -> (REqState, LiveProof) -> m LiveProof
 applyFolds' input autos (reqs, liveProof) 
   = do  let match = if input == "f" then checkIsFold else checkIsUnFold
-        let lws = if input == "f" then folds autos else unfolds autos
+        let lws = folds autos -- if input == "f" then folds autos else unfolds autos
         applyFolds match lws (reqs, liveProof)
 
 applyFolds :: MonadFail m 

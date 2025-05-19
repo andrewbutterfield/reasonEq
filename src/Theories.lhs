@@ -125,7 +125,6 @@ lawsKEY = "LAWS"
 prfsKEY = "PROOFS"
 simpKEY = "SIMPLIFIERS"
 foldKEY = "DEFFOLD"
-unflKEY = "DEFUNFOLD"
 conjKEY = "CONJECTURES"
 
 renderTheory :: Theory 
@@ -138,7 +137,6 @@ renderTheory thry
       writePerLine lawsKEY show (laws thry) ++
       writePerLine simpKEY show (simps $ auto thry) ++
       writePerLine foldKEY id (folds $ auto thry) ++
-      writePerLine unflKEY id (unfolds $ auto thry) ++
       writePerLine conjKEY show (conjs thry) ++
       [ thryTRL nm ]
     , map showproof $ proofs thry )
@@ -158,18 +156,17 @@ parseTheory (txts,ptxts)
        (lws, rest4) <- readPerLine lawsKEY read rest3
        (simp,rest5) <- readPerLine simpKEY read rest4
        (fold,rest6) <- readPerLine foldKEY id   rest5
-       (unfl,rest7) <- readPerLine unflKEY id   rest6
-       (conj,rest8) <- readPerLine conjKEY read rest7
-       rest9        <- readThis (thryTRL nm)    rest8
+       (conj,rest7) <- readPerLine conjKEY read rest6
+       rest8        <- readThis (thryTRL nm)    rest7
        return ( Theory { thName   =  nm
                        , thDeps   =  deps
                        , known    =  knwn
                        , laws     =  lws
                        , proofs   =  map read ptxts
-                       , auto     =  AutoLaws simp fold unfl
+                       , auto     =  AutoLaws simp fold
                        , conjs    =  conj
                        }
-              , rest9 )
+              , rest8 )
 \end{code}
 
 \newpage

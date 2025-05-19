@@ -37,7 +37,6 @@ data Direction
 data AutoLaws = AutoLaws
   { simps    :: [(String, Direction)]
   , folds    :: [String]
-  , unfolds  :: [String]
   }
   deriving (Eq,Show,Read)
 \end{code}
@@ -48,14 +47,12 @@ data AutoLaws = AutoLaws
 nullAutoLaws
   = AutoLaws {  simps = []
              ,  folds = []
-             ,  unfolds = []
              }
 
 combineTwoAuto :: AutoLaws -> AutoLaws -> AutoLaws
 combineTwoAuto a b = AutoLaws {  simps = simps a ++ simps b
-                            , folds = folds a ++ folds b
-                            , unfolds = unfolds a ++ unfolds b
-                            }
+                              , folds = folds a ++ folds b
+                              }
 
 combineAutos :: AutoLaws -> [AutoLaws] -> AutoLaws
 combineAutos auto [] = auto
@@ -85,7 +82,6 @@ showFolds (x:xs) n = "\n\t" ++ show n ++ ". " ++ x ++ showFolds xs (n + 1)
 
 showAuto alaws = "   i. simps:"  ++ showSimps (simps alaws) 1  ++ "\n\n"
               ++ "  ii. folds:"  ++ showFolds (folds alaws) 1  ++ "\n\n"
-              ++ " iii. unfolds:"  ++ showFolds (unfolds alaws) 1 ++ "\n\n"
 \end{code}
 
 \section{Classifier Top Level}
@@ -94,9 +90,8 @@ showAuto alaws = "   i. simps:"  ++ showSimps (simps alaws) 1  ++ "\n\n"
 addLawClassifier :: NmdAssertion -> AutoLaws -> AutoLaws
 addLawClassifier (nme, asser) au 
   = removeFoldSimps 
-      $ AutoLaws { simps = simps au ++ addSimp nme (assnT asser)
-                 , folds = folds au ++ (addFold nme (assnT asser))
-                 , unfolds = unfolds au ++ addFold nme (assnT asser)
+      $ AutoLaws { simps   = simps au   ++ addSimp nme (assnT asser)
+                 , folds   = folds au   ++ addFold nme (assnT asser)
                  }
 \end{code}
 
@@ -169,6 +164,7 @@ checkQ (Cons _ _ n _) i  =  n /= i
 checkQ _ _ = True
 \end{code}
 
+Exported only:
 \begin{code}
 checkIsSimp :: (String, Direction) -> MatchClass -> Bool
 checkIsSimp (_, Rightwards) MatchEqvRHS = True
@@ -199,7 +195,6 @@ removeFoldSimps :: AutoLaws -> AutoLaws
 removeFoldSimps au 
   = AutoLaws { simps = removeSimpsList (folds au) (simps au)
              , folds = folds au
-             , unfolds = unfolds au
              }
 
 removeSimpsList :: [String] -> [(String, Direction)] -> [(String, Direction)]

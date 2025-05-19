@@ -29,11 +29,28 @@ BEGIN LIST LAWS
 (("*_mod_same",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "mod" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],V T (VR (Id "f" 0,VE,WS))],K (TG (Id "Z" 0)) (VI 0)],([],fromList []))),Axiom)
 END LIST LAWS
 BEGIN LIST SIMPLIFIERS
+("neg_def",Rightwards)
+("+_l_unit",Leftwards)
+("+_r_unit",Leftwards)
+("+_cancel",Leftwards)
+("-_r_unit",Leftwards)
+("-_zero",Leftwards)
+("*_l_unit",Leftwards)
+("*_r_unit",Leftwards)
+("*_l_unit",Leftwards)
+("*_r_unit",Leftwards)
+("*_cancel",Leftwards)
+("div_r_unit",Leftwards)
+("div_r_unit",Leftwards)
+("div_self",Leftwards)
+("*_+_distr",Rightwards)
+("+_inv",Leftwards)
+("-_alt_def",Rightwards)
+("*_div_same",Leftwards)
+("*_mod_same",Leftwards)
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
 END LIST DEFFOLD
-BEGIN LIST DEFUNFOLD
-END LIST DEFUNFOLD
 BEGIN LIST CONJECTURES
 ("*_-_distr",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),C (TG (Id "Z" 0)) True (Id "-" 0) [V T (VR (Id "f" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]],C (TG (Id "Z" 0)) True (Id "-" 0) [C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "f" 0,VE,WS))],C (TG (Id "Z" 0)) True (Id "*" 0) [V T (VR (Id "e" 0,VE,WS)),V T (VR (Id "g" 0,VE,WS))]]],([],fromList [])))
 ("neg_zero",ASN (C (TF TB (TG (Id "B" 0))) True (Id "=" 0) [C (TG (Id "Z" 0)) True (Id "neg" 0) [K (TG (Id "Z" 0)) (VI 0)],K (TG (Id "Z" 0)) (VI 0)],([],fromList [])))

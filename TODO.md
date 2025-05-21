@@ -2,11 +2,10 @@
 
 ## URGENT or NEXT
 
-Adding in `Views.tex` from `utpcalculator`.
 
-This provides set-theoretic laws we need to complete proofs about `A` and `X`
-in the `UTCP` theory.
-
+The proof of `ls_union_N` gets stuck because in the proof
+for the conjecture we have sets with element type  `TG (Id "LE" 0)`
+while the set laws are being instantiated with the element type `TV (Id "t" 0)`.
 
 
 For type-checking look at uses of `mkAsn` 

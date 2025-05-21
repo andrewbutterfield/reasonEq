@@ -337,20 +337,40 @@ do not involve $ls$.
 
 We present the laws, with proofs in ``classical'' set notation.
 
+We use $N$ denote new labels added on, 
+$R$ for labels being removed,
+and $C$ for labels being mixed in.
+We also use $E$ when defining $X$ and $A$.
+\begin{code}
+[iS,iN,iR,iC,iE] = map jId ["S","N","R","C","E"]
+mkLblSetVar iS = Vbl iS ExprV Static
+[vS,vN,vR,vC,vE] = map mkLblSetVar [iS,iN,iR,iC,iE]
+mkLblSetVarTerm vS = jVar ls_t vS
+[tS,tN,tR,tC,tE] = map mkLblSetVarTerm [vS,vN,vR,vC,vE]
+\end{code}
+
 \subsubsection{Union becomes Difference}
 
 \RLEQNS{
-   (ls \cup A)(S)      &=& ls(S\setminus A)
+   (ls \cup N)(S)      &=& ls(S\setminus N)
 }
+\begin{code}
+lmLSunion = 
+  ( "ls" -.- "union" -.- "N"
+  , ( (tS `subseteq` (tls `sunion` tN))
+      ===
+      ((tS `sdiff` tN) `subseteq` tls)
+    , scTrue ) )
+\end{code}
 \RLEQNS{
-\lefteqn{S \subseteq (ls \cup A)}
-\\&=& x \in S \implies x \in (ls \cup A) & \say{``set definitions''}
-\\&=& x \in S \implies x \in ls \lor x \in A & \say{``defn $\cup$''}
-\\&=& x \notin S \lor x \in ls \lor x \in A & \say{``defn $\implies$''}
-\\&=& x \notin S \lor x \in A \lor x \in ls & \say{``rearrange''}
-\\&=& (x \in S \land x \notin A) \implies x \in ls 
+\lefteqn{S \subseteq (ls \cup N)}
+\\&=& x \in S \implies x \in (ls \cup N) & \say{``set definitions''}
+\\&=& x \in S \implies x \in ls \lor x \in N & \say{``defn $\cup$''}
+\\&=& x \notin S \lor x \in ls \lor x \in N & \say{``defn $\implies$''}
+\\&=& x \notin S \lor x \in N \lor x \in ls & \say{``rearrange''}
+\\&=& (x \in S \land x \notin N) \implies x \in ls 
     & \say{``De-Morgan, defn $\implies$''}
-\\&=& (S \setminus A) \subseteq ls & \say{``defn $\subseteq$''}
+\\&=& (S \setminus N) \subseteq ls & \say{``defn $\subseteq$''}
 }
 
 \subsubsection{Difference becomes Conditional Intersection}
@@ -381,87 +401,87 @@ We present the laws, with proofs in ``classical'' set notation.
 \subsubsection{Intersection becomes Conditional}
 
 \RLEQNS{
-  (ls \cap M)(S)      &=& ls(S) \land S \subseteq M
+  (ls \cap C)(S)      &=& ls(S) \land S \subseteq C
 }
 \RLEQNS{
-\lefteqn{S \subseteq (ls \cap M)}
-\\&& x \in S \implies x \in ls \land x \in M
+\lefteqn{S \subseteq (ls \cap C)}
+\\&& x \in S \implies x \in ls \land x \in C
  & \say{``set definitions''}
-\\&& x \notin S \lor x \in ls \land x \in M
+\\&& x \notin S \lor x \in ls \land x \in C
  & \say{``defn $\implies$''}
 \\&& (x \notin S \lor x \in ls)
      \land
-     (x \notin S \lor x \in M)
+     (x \notin S \lor x \in C)
  & \say{``distribution''}
 \\&& (x \in S \implies x \in ls)
      \land
-     (x \in S \implies x \in M)
+     (x \in S \implies x \in C)
  & \say{``defn $\implies$''}
-\\&& S \subseteq ls \land S \subseteq M
+\\&& S \subseteq ls \land S \subseteq C
  & \say{``def $\subseteq$''}
 }
 
 \subsubsection{Difference then Union becomes Conditional Intersection of Difference}
 
 \RLEQNS{
-  ((ls \setminus R) \cup A)(S)
-   &=& ls(S \setminus A) \land (S \setminus A) \cap R = \emptyset
+  ((ls \setminus R) \cup N)(S)
+   &=& ls(S \setminus N) \land (S \setminus N) \cap R = \emptyset
 }
 \RLEQNS{
-\lefteqn{((ls \setminus R) \cup A)(S)}
-\\&& (ls \setminus R)(S \setminus A)
+\lefteqn{((ls \setminus R) \cup N)(S)}
+\\&& (ls \setminus R)(S \setminus N)
  & \say{``laws above''}
-\\&& ls(S \setminus A) \land (S \setminus A) \cap R = \emptyset
+\\&& ls(S \setminus N) \land (S \setminus N) \cap R = \emptyset
  & \say{``laws above''}
 }
 
 \subsubsection{Difference then Union Twice is Complicated}
 
 \RLEQNS{
-\\ (((ls\setminus R_1) \cup A_1)\setminus R_2) \cup A_2
-  &=& (ls \setminus (R_1 \cup R_2)) \cup ((A_1\setminus R_2) \cup A_2)
+\\ (((ls\setminus R_1) \cup N_1)\setminus R_2) \cup N_2
+  &=& (ls \setminus (R_1 \cup R_2)) \cup ((N_1\setminus R_2) \cup N_2)
 }
 
 We note the following:
 \RLEQNS{
-\lefteqn{x \in (ls\setminus R_1) \cup A_1}
-\\&& x \in (ls\setminus R_1) \lor x \in  A_1
+\lefteqn{x \in (ls\setminus R_1) \cup N_1}
+\\&& x \in (ls\setminus R_1) \lor x \in  N_1
  & \say{``defn $\cup$''}
-\\&& x \in ls \land x \notin R_1 \lor x \in  A_1
+\\&& x \in ls \land x \notin R_1 \lor x \in  N_1
  & \say{``defn $\setminus$''}
 }
 Then proceed:
 \RLEQNS{
-\lefteqn{x \in (((ls\setminus R_1) \cup A_1)\setminus R_2) \cup A_2}
-\\&& x \in (ls\setminus R_1) \cup A_1) \land x \notin R_2 \lor x \in  A_2
+\lefteqn{x \in (((ls\setminus R_1) \cup N_1)\setminus R_2) \cup N_2}
+\\&& x \in (ls\setminus R_1) \cup N_1) \land x \notin R_2 \lor x \in  N_2
  & \say{``above law''}
-\\&& (x \in ls \land x \notin R_1 \lor x \in  A_1) \land x \notin R_2 \lor x \in  A_2
+\\&& (x \in ls \land x \notin R_1 \lor x \in  N_1) \land x \notin R_2 \lor x \in  N_2
  & \say{``above law''}
 \\&& (x \in ls \land x \notin R_1 \land x \notin R_2)
      \lor
-     (x \in  A_1 \land x \notin R_2)
-     \lor x \in  A_2
+     (x \in  N_1 \land x \notin R_2)
+     \lor x \in  N_2
  & \say{``distributivity''}
 \\&& (x \in ls \land \lnot(x \in R_1 \lor x \in R_2))
      \lor
-     x \in  A_1 \setminus R_2
-     \lor x \in  A_2
+     x \in  N_1 \setminus R_2
+     \lor x \in  N_2
  & \say{``de-Morgan, defn $\setminus$''}
 \\&& (x \in ls \land \lnot(x \in R_1 \cup R_2))
      \lor
-     x \in  A_1 \setminus R_2 \cup  A_2
+     x \in  N_1 \setminus R_2 \cup  N_2
  & \say{``defn $\cup$, twice''}
 \\&& (x \in ls \land x \notin R_1 \cup R_2)
      \lor
-     x \in  A_1 \setminus R_2 \cup  A_2
+     x \in  N_1 \setminus R_2 \cup  N_2
  & \say{``tweak''}
 \\&& x \in (ls \setminus R_1 \cup R_2)
      \lor
-     x \in  A_1 \setminus R_2 \cup  A_2
+     x \in  N_1 \setminus R_2 \cup  N_2
  & \say{``definition of $\setminus$''}
 \\&& x \in (ls \setminus R_1 \cup R_2)
      \cup
-     (A_1 \setminus R_2 \cup  A_2)
+     (N_1 \setminus R_2 \cup  N_2)
  & \say{``definition of $\cup$''}
 }
 
@@ -480,9 +500,8 @@ but we also need to assert that $\setof{E,N,R} \disj \setof{\lst O,\lst O'}$.
 }
 We need to define some variables ($E$, $a$, $R$, $N$)
 \begin{code}
-vE = ExprVar (jId "E") Static ; tE = jVar ls_t vE ; gE = StdVar vE
-vN = ExprVar (jId "N") Static ; tN = jVar ls_t vN ; gN = StdVar vN
-vR = ExprVar (jId "R") Static ; tR = jVar ls_t vR
+gE = StdVar vE
+gN = StdVar vN
 va = Vbl (jId "a") PredV Static ; a = fromJust $ pVar ArbType va 
 tls = jVar ls_t vls
 tls' = jVar ls_t vls'
@@ -858,7 +877,8 @@ We now collect our conjecture set:
 utcpConjs :: [NmdAssertion]
 utcpConjs
   = map mkNmdAsn
-      [ cjAAlt, cjXXComp
+      [ lmLSunion
+      , cjAAlt, cjXXComp
       ]
 \end{code}
 

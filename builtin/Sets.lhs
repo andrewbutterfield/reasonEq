@@ -107,9 +107,9 @@ scard s         =  Cons int           True i_crd [s]
 \subsection{Set Constants and Variables}
 
 \begin{code}
-vS = StaticVar (jId "S") 
+vS = ExprVar (jId "S") Static
 s = fromJust $ eVar sett vS
-vSn n = StaticVar (jId ("S"++show n)) 
+vSn n = ExprVar (jId ("S"++show n)) Static
 sn n = fromJust $ eVar sett $ vSn n
 s1 = sn 1; s2 = sn 2; s3 = sn 3
 vx = StaticVar (jId "x"); gvx = StdVar vx

@@ -431,16 +431,18 @@ Ask the user to specify a replacement term for each floating standard variable:
       = do (chosen,term) 
              <- pickOrProvideThing 
                   ("Choose term to replace "++(trVar v))
-                  (trTerm 0) str2Term gterms
+                  (trTerm 0) (str2Term v) gterms
            if chosen
             then do putStrLn ("-chosen term is "++trTerm 0 term)
                     fixFloatVars ((v,term):vts) gterms stdvars
             else return (False,vts)
 
-    str2Term s 
+    str2Term v s 
       = case ident s of
-          Yes i -> jeVar $ StaticVar i
-          But msgs -> jeVar $ StaticVar $ jId "InvalidIdentifier"
+          Yes i -> mkVarLike v i
+          But msgs -> mkVarLike v $ jId "InvalidIdentifier"
+      where
+        mkVarLike v@(Vbl _ cls whn) i = jeVar $ Vbl i cls whn
 \end{code}
 
 \newpage

@@ -1,0 +1,1045 @@
+\chapter{Math support for Views}\label{ha:mViews}
+
+\section{The Big Plan}
+
+We go for a new formulation
+\RLEQNS{
+   X(E|a|R|A) &\defs&
+   ls(E) \land s' \in \sem a s \land ls' = (ls\setminus R)\cup A
+\\ A(E|a|N) &\defs& X(E|a|E|N)
+\\ \W(P) &\defs& \true * (\Skip \lor P)
+\\       &=& \bigvee_{i \in \Nat} \Skip \seq P^i
+\\ atm(a) &=& \W(A(in|a|out) \land [in|out])
+\\ C &=& \W(actions(C) \land [in|out|g] \land I_C)
+}
+where $I_C$ is some more $C$-specific invariants.
+
+\section{Set Inclusion/Membership}
+
+An atomic action $A(E|a|N)$ is enabled if $E$ is contained
+in the global label-set ($ls(E)$)
+and results in $E$ being removed from that set, and new labels
+$N$ being added ($ls'=(ls\setminus E)\cup N$).
+We need a way to reason about containment in such an $ls'$
+in terns of $E$ and $N$, and to compute sequential compositions
+of such forms, which will take the more general form $X(E|a|R|A)$.
+
+We find we get assertions of the form $(F(ls))(E)$,
+asserting that $E$ is a subset of $F(ls)$ where $F$ is a set-function
+composed of named/enumerated sets and standard set-operations.
+We want to transform it into $ls(G) \land P$ where $G$ and $P$
+do not involve $ls$.
+
+We present the laws,
+then the proofs
+\RLEQNS{
+   (ls \cup A)(S)      &=& ls(S\setminus A)
+\\ (ls \setminus R)(S) &=& ls(S) \land S \cap R = \emptyset
+\\ (ls \cap M)(S)      &=& ls(S) \land S \subseteq M
+\\ ((ls \setminus R) \cup A)(S)
+   &=& ls(S \setminus A) \land (S \setminus A) \cap R = \emptyset
+\\ (((ls\setminus R_1) \cup A_1)\setminus R_2) \cup A_2
+  &=& (ls \setminus (R_1 \cup R_2)) \cup ((A_1\setminus R_2) \cup A_2)
+}
+
+We do the proofs in ``classical'' set notation
+\RLEQNS{
+  && S \subseteq (ls \cup A)
+\EQ{set definitions}
+\\&& x \in S \implies x \in (ls \cup A)
+\EQ{defn $\cup$}
+\\&& x \in S \implies x \in ls \lor x \in A
+\EQ{defn $\implies$}
+\\&& x \notin S \lor x \in ls \lor x \in A
+\EQ{rearrange}
+\\&& x \notin S \lor x \in A \lor x \in ls
+\EQ{De-Morgan, defn $\implies$}
+\\&& (x \in S \land x \notin A) \implies x \in ls
+\EQ{defn subset}
+\\&& (S \setminus A) \subseteq ls
+}
+
+\RLEQNS{
+  && S \subseteq (ls \setminus R)
+\EQ{set definitions}
+\\&& x \in S \implies x \in (ls \setminus R)
+\EQ{set definition}
+\\&& x \in S \implies x \in ls \land x \notin R
+\EQ{defn $\implies$}
+\\&& x \notin S \lor x \in ls \land x \notin R
+\EQ{distribution}
+\\&& (x \notin S \lor x \in ls)
+     \land
+     ( x \notin S \lor x \notin R)
+\EQ{defn implies, de-morgan}
+\\&& (x \in S \implies x \in ls)
+     \land
+     \lnot( x \in S \land x \in R)
+\EQ{defn subset}
+\\&&S \subseteq ls \land S \cap R = \emptyset
+}
+
+\RLEQNS{
+  && S \subseteq (ls \cap M)
+\EQ{set definitions}
+\\&& x \in S \implies x \in ls \land x \in M
+\EQ{defn $\implies$}
+\\&& x \notin S \lor x \in ls \land x \in M
+\EQ{distribution}
+\\&& (x \notin S \lor x \in ls)
+     \land
+     (x \notin S \lor x \in M)
+\EQ{defn $implies$}
+\\&& (x \in S \implies x \in ls)
+     \land
+     (x \in S \implies x \in M)
+\EQ{def subset}
+\\&& S \subseteq ls \land S \subseteq M
+}
+
+\RLEQNS{
+  && ((ls \setminus R) \cup A)(S)
+\EQ{laws above}
+\\&& (ls \setminus R)(S \setminus A)
+\EQ{laws above}
+\\&& ls(S \setminus A) \land (S \setminus A) \cap R = \emptyset
+}
+
+\RLEQNS{
+  && x \in (ls\setminus R_1) \cup A_1
+\EQ{defn $\cup$}
+\\&& x \in (ls\setminus R_1) \lor x \in  A_1
+\EQ{defn $\setminus$}
+\\&& x \in ls \land x \notin R_1 \lor x \in  A_1
+}
+
+\RLEQNS{
+  && x \in (((ls\setminus R_1) \cup A_1)\setminus R_2) \cup A_2
+\EQ{above law}
+\\&& x \in (ls\setminus R_1) \cup A_1) \land x \notin R_2 \lor x \in  A_2
+\EQ{above law}
+\\&& (x \in ls \land x \notin R_1 \lor x \in  A_1) \land x \notin R_2 \lor x \in  A_2
+\EQ{distributivity}
+\\&& (x \in ls \land x \notin R_1 \land x \notin R_2)
+     \lor
+     (x \in  A_1 \land x \notin R_2)
+     \lor x \in  A_2
+\EQ{de-Morgan, defn $\setminus$}
+\\&& (x \in ls \land \lnot(x \in R_1 \lor x \in R_2))
+     \lor
+     x \in  A_1 \setminus R_2
+     \lor x \in  A_2
+\EQ{defn $\cup$, twice}
+\\&& (x \in ls \land \lnot(x \in R_1 \cup R_2))
+     \lor
+     x \in  A_1 \setminus R_2 \cup  A_2
+\EQ{tweak}
+\\&& (x \in ls \land x \notin R_1 \cup R_2)
+     \lor
+     x \in  A_1 \setminus R_2 \cup  A_2
+\EQ{definition of $\setminus$}
+\\&& x \in (ls \setminus R_1 \cup R_2)
+     \lor
+     x \in  A_1 \setminus R_2 \cup  A_2
+\EQ{definition of $cup$}
+\\&& x \in (ls \setminus R_1 \cup R_2)
+     \cup
+     (A_1 \setminus R_2 \cup  A_2)
+}
+
+\section{Basic Actions}
+
+We define a basic operation form that is closed
+under sequential composition, modulo some `ground' side-conditions.
+\RLEQNS{
+   X(E|a|R|A)
+   &\defs&
+   ls(E) \land [a] \land ls' = (ls\setminus R) \cup A
+}
+Composing these requires us decouple the enabling labels
+from those removed---they are the same for a basic action,
+but differ as they are sequentially composed.
+
+The general composition:
+\RLEQNS{
+  && X(E_1|a|R_1|A_1)\seq X(E_2|b|R_2|A_2)
+\EQ{Defn $X$}
+\\&& ls(E_1) \land [a] \land ls' = (ls\setminus R_1) \cup A_1
+     \quad\seq\quad
+     ls(E_2) \land [b] \land ls' = (ls\setminus R_2) \cup A_2
+\EQ{Defn $\seq$}
+\\&& \exists s_m,ls_m @
+\\&& \quad ls(E_1) \land
+           [a][s_m/s'] \land
+           ls_m = (ls\setminus R_1) \cup A_1 \land {}
+\\&& \quad ls_m(E_2) \land
+           [b][s_m/s] \land
+           ls' = (ls_m\setminus R_2) \cup A_2
+\EQ{1-pt rule ($ls_m$), re-arrange}
+\\&& \exists s_m @
+\\&& \quad ls(E_1) \land
+           ((ls\setminus R_1) \cup A_1)(E_2) \land {}
+\\&& \quad [a][s_m/s'] \land
+           [b][s_m/s] \land {}
+\\&& \quad ls' = (((ls\setminus R_1) \cup A_1)\setminus R_2) \cup A_2
+\EQ{shrink $s_m$ scope, use $ls(-)$ laws above}
+\\&& ls(E_1) \land
+     ls(E_2\setminus A_1) \land
+     (E_2\setminus A_1) \cap R_1 = \emptyset \land {}
+\\&& (\exists s_m @ [a][s_m/s'] \land [b][s_m/s]) \land {}
+\\&& ls' = (((ls\setminus R_1) \cup A_1)\setminus R_2) \cup A_2
+\EQ{defn $\seq$, prop of $ls(-)$, simplification from above}
+\\&& ls(E_1 \cup (E_2\setminus A_1)) \land
+     (E_2\setminus A_1) \cap R_1 = \emptyset \land {}
+\\&& [a;b] \land {}
+\\&& ls' = (ls \setminus R_1 \cup R_2)
+           \cup
+           (A_1 \setminus R_2 \cup  A_2)
+\EQ{defn of $X$}
+\\&& X(E_1 \cup (E_2\setminus A_1)
+       |a\seq b
+       |R_1 \cup R_2
+       |A_1 \setminus R_2 \cup  A_2)
+       \land (E_2\setminus A_1) \cap R_1 = \emptyset
+}
+Here the `ground' side-condition is
+ $(E_2\setminus A_1) \cap R_1 = \emptyset$.
+
+Composing a basic operation with itself:
+\RLEQNS{
+  && X(E|a|R|A) \seq X(E|a|R|A)
+\EQ{by above}
+\\&& X(E \cup (E\setminus A)
+       |a\seq a
+       |R \cup R
+       |A \setminus R \cup  A)
+       \land (E\setminus A) \cap R = \emptyset
+\EQ{simplify}
+\\&& X(E|a\seq a|R|A)
+       \land (E\setminus A) \cap R = \emptyset
+}
+
+A basic action identifies $E$ and $R$:
+\RLEQNS{
+  && A(E|a|N) \defs X(E|a|E|N)
+\\
+\\&& A(E_1|a|N_1) \seq A(E_2|a|N_2)
+\EQ{by defn}
+\\&& A(E_1|a|E_1|N_1) \seq A(E_2|a|E_2|N_2)
+\EQ{by calc above, with $R_i = E_i$}
+\\&& X(E_1 \cup (E_2\setminus A_1)
+       |a\seq b
+       |E_1 \cup E_2
+       |A_1 \setminus E_2 \cup  A_2)
+       \land (E_2\setminus A_1) \cap E_1 = \emptyset
+}
+We cannot transform this into the form $A(-|a\seq b|-)$
+unless it happens to be the case that
+\\$E_1 \cup (E_2\setminus A_1)= E_1 \cup E_2$.
+For an $A$ composed with itself:
+\RLEQNS{
+  && A(E|a|N) \seq A(E|a|N)
+\EQ{defn $A$}
+\\&& X(E|a|E|N) \seq X(E|a|E|N)
+\EQ{calc above}
+\\&& X(E|a\seq a|E|A)
+       \land (E\setminus A) \cap E = \emptyset
+}
+We see that we get a $\false$ result unless we have $E \subseteq A$,
+in which everything we remove is added back in, plus possibly some extra.
+We get the following which is similar
+\[
+  X(E|a\seq a|\emptyset|A)
+\]
+This is a consequence of the following easy law:
+\[
+ (ls \setminus R) \cup A
+ =
+ (ls \setminus (R \setminus A)) \cup A
+ =
+ (ls \cup A) \setminus (R \setminus A)
+\]
+
+Following on, we can pre-compute mixed combinations:
+\RLEQNS{
+  && X(E_1|a|R_1|A_1) \seq A(E_2|b|N_2)
+\EQ{defn $A$}
+\\&& X(E_1|a|R_1|A_1) \seq X(E_2|b|E_2|N_2)
+\EQ{law for $X$ above}
+\\&& X(E_1 \cup (E_2 \setminus A_1)
+      | a\seq b
+      | R_1 \cup E_2
+      | A_1 \setminus E_2 \cup N_2)
+     \land
+     (E_2 \setminus A_1) \cap R_1 = \emptyset
+}
+and flipped:
+\RLEQNS{
+  && A(E_1|a|N_1) \seq X(E_2|b|R_2|A_2)
+\EQ{defn $A$}
+\\&& X(E_1|a|E_1|N_1) \seq X(E_2|b|R_2|A_2)
+\EQ{law for $X$ above}
+\\&& X(E_1 \cup (E_2 \setminus N_1)
+      | a\seq b
+      | E_1 \cup R_2
+      | N_1 \setminus R_2 \cup A_2)
+     \land
+     (E_2 \setminus N_1) \cap E_1 = \emptyset
+}
+
+\subsection{Laws of Actions}
+Here we summarise the main results:
+\RLEQNS{
+  && X(E_1|a|R_1|A_1)\seq X(E_2|b|R_2|A_2)
+\EQ{proof above}
+\\&& X(E_1 \cup (E_2\setminus A_1)
+       \mid a\seq b
+       \mid R_1 \cup R_2
+       \mid A_1 \setminus R_2 \cup  A_2)
+\\&& {} \land (E_2\setminus A_1) \cap R_1 = \emptyset
+\\
+\\&& \\&& A(E_1|a|N_1) \seq A(E_2|a|N_2)
+\EQ{proof above}
+\\&& X(E_1 \cup (E_2\setminus N_1)
+       \mid a\seq b
+       \mid E_1 \cup E_2
+       \mid N_1 \setminus E_2 \cup  N_2)
+\\&& {} \land (E_2\setminus N_1) \cap E_1 = \emptyset
+\\
+\\&& A(E|a|N) \seq A(E|a|N)
+\EQ{proof above}
+\\&& X(E|a\seq a|E|N)   \land   (E\setminus N) \cap E = \emptyset
+\EQ{simplify}
+\\&& X(E|a\seq a|\emptyset|N)   \land   E \subseteq N
+}
+
+We now want to throw program variables into the mix.
+We get the following possibilities, 
+where $\sigma$ can be the empty substitution, 
+or $[\ell_G,G::,\ell_{G:}/in,g,out]$ for some generator $G$.
+\RLEQNS{
+  && A(E|a|N) \seq C\sigma
+\\&& C\sigma \seq A(E|a|N)
+\\&& X(E|a|R|N) \seq C\sigma
+\\&& C\sigma \seq X(E|a|R|N)
+}
+
+
+\newpage
+\section{Working with the Invariant}
+
+We have introduced the following notation:
+\[
+  [ L_1 | L_2 | \dots | L_n ]
+\]
+Its first intended meaning is to assert that
+all the $L_i$ are mutually disjoint:
+\RLEQNS{
+   \forall i,j \in 1\dots n @ i \neq j \implies L_i \cap L_j = \emptyset
+}
+It also states that if any one of its members overlaps with $ls$,
+then none of the others do (and similarly for $ls'$):
+\RLEQNS{
+  &&   \forall i,j \in 1\dots n @
+        i \neq j \land L_i \cap ls \neq \emptyset
+        \implies L_j \cap ls = \emptyset
+\\&&   \forall i,j \in 1\dots n @
+        i \neq j \land L_i \cap ls' \neq \emptyset
+        \implies L_j \cap ls' = \emptyset
+}
+
+By \emph{design}, our labels and generator scheme
+establishes the following (weakest) invariant:
+\[ [in|out|g]\]
+and for any generator expression $G$ we can split it into
+four disjoint parts (also by design) to get
+\[  [\ell_G|G_{:}|G_1|G_2] . \]
+So we can always strengthen our invariant by splitting some $G$
+in this way:
+\RLEQNS{
+  && [in|out|g]
+\EQ{split $g$}
+\\&& [in|out|\ell_g|\g:|\g1|\g2]
+\EQ{split $\g:$}
+\\&& [in|out|\ell_g| \ell_{g:}|\g{::}|\g{:1}|\g{:2}|\g1|\g2]
+}
+However, sometimes we don't want to do this.
+The hope is that by requiring $[in|out|g]$ at each level,
+that we get the right level of exclusivity vs. sharing of $ls$
+by generated labels.
+
+
+\subsection{Nested Invariants}
+
+
+All of these comments above are true if the invariant is just about disjointness.
+It is not true in general when we consider exclusivity.
+For example in parallel execution it is perfectly reasonable to have both
+$\ell_{g1}$ and $\ell_{g2:}$ (or $\ell_{g2}$) together in the label-set,
+but not both $\ell_{g1}$ and $\ell_{g1:}$
+or both $\ell_{g2}$ and $\ell_{g2:}$.
+
+Notationally, we can represent this as follows:
+$$
+[in \mid [\ell_{g1}|\ell_{g1:}],[\ell_{g2}|\ell_{g2:}] \mid out].
+$$
+In effect this declares, at the top, that we have
+$$
+[in \mid \ell_{g1},\ell_{g1:},\ell_{g2},\ell_{g2:} \mid out]
+$$
+with finer grained details for the generated labels,
+where a comma is a form of set union,
+so we can have something from
+either or both of $[\ell_{g1}|\ell_{g1:}]$ and $[\ell_{g2}|\ell_{g2:}]$
+but within each of these we have mutual exclusion.
+
+In effect we have a tree-like structure with ``$|$''-branches
+and ``$,$``-branches, and labels as leaves.
+We should be able to flatten cases where a subnode has the same branch type,
+so
+\RLEQNS{
+   [L_1 \mid [L_{21}|L_{22}] \mid L_3]
+   &=&
+   [L_1|L_{21}|L_{22}|L_3]
+\\ L_1 , ( L_{21}, L_{22})  , L_3
+   &=&
+   L_1,L_{21},L_{22},L_3
+}
+
+
+
+Invariants are based on the following general construct:
+\RLEQNS{
+   EXC_{i=1}^n A_i
+   &\defs&
+   \forall i,j \in 1\dots n @ i\neq j \land A_i \implies \lnot A_j
+}
+which we can also write as $EXC(A_1,\dots,A_n)$.
+A quick calculation shows that
+(using hardware logic notation for compactness):
+\[
+ EXC(A,B,C) = \B A ~ \B B  + \B A ~ \B C + \B B ~ \B C
+\]
+Do the following laws hold?
+\RLEQNS{
+   EXC(EXC(A,B),EXC(B,C)) &=& EXC(A,B,C)
+\\ EXC(EXC(A,B),EXC(C,D)) &=& EXC(A,B,C,D)
+}
+No - the first lhs asserts that either $A$ and $B$ are exclusive,
+or $B$ and $C$ are exclusive, but not both,
+i.e. we have $EXC(A,B) \implies \lnot EXC(B,C)$.
+
+How about:
+\RLEQNS{
+   EXC(A,B) \land EXC(B,C) &=& EXC(A,B,C)
+\\ EXC(A,B) \land EXC(C,D) &=& EXC(A,B,C,D)
+}
+No, The first doesn't force the exclusivity of $A$ and $C$.
+
+We need full information, so the following is required:
+\RLEQNS{
+   EXC(A,B) \land EXC(B,C) \land EXC(A,C) &=& EXC(A,B,C)
+}
+This works
+
+Not sure interpreting $[L|M]$ or $EX(L,M)$ as predicates is helpful.
+It might be better being viewed as a tree and defining a satisfaction relation
+between it an a label-set.
+
+
+\subsection{Using $A$ with invariants}
+
+Noting that $[L_1|L_2|\dots]$ implies that if $ls(L_1)$ is true,
+then $ls(L_2)$ is false:
+\RLEQNS{
+  && X(L_1|a|L_1,L_2|L_3) & [L_1|L_2|\dots]
+\EQ{defn $X$}
+\\&& ls(L_1) \land [a] \land ls'=(ls\setminus(L_1 \cup L_2)) \cup L_3
+\EQ{no need to remove $L_2$ from $ls$ if it is not there}
+\\&& ls(L_1) \land [a] \land ls'=(ls\setminus L_1) \cup L_3
+\EQ{defn $X$}
+\\&& X(L_1|a|L_1|L_3)
+\EQ{defn $A$}
+\\&& A(L_1|a|L_3)
+}
+
+
+Two actions meant to work together:
+\RLEQNS{
+  && A(L_1|a|L_2) \seq A(L_2|b|L_3) & [L_1|L_2|L_3]
+\EQ{law $A^2$}
+\\&& L_2\setminus L_2 \cap L_1 = \emptyset \land {}
+\\&& X(    L_1 \cup L_2\setminus L_2
+      \mid a\seq b
+      \mid L_1 \cup L_2
+      \mid L_2\setminus L_2 \cup L_3 )
+\EQ{simplify}
+\\&& X(    L_1
+      \mid a\seq b
+      \mid L_1 \cup L_2
+      \mid  L_3 )
+\EQ{prev law, given invariant}
+\\&& X( L_1 |  a\seq b | L_1 | L_3 )
+\EQ{defn $A$}
+\\&& A( L_1 |  a\seq b | L_3 )
+}
+
+Two actions meant to be mutually exclusive (the hint being the invariant):
+\RLEQNS{
+  && A(L_1|a|L_2) \seq A(L_3|b|L_4) & [L_1|L_2|L_3|L_4]
+\EQ{law $A^2$}
+\\&& L_3\setminus L_2 \cap L_1 = \emptyset \and {}
+\\&& X(    L_1 \cup L_3\setminus L_2
+      \mid a\seq b
+      \mid L_1 \cup L_3
+      \mid L_2\setminus L_3 \cup L_4 )
+\EQ{simplify, noting invariant}
+\\&& X(    L_1 \cup L_3
+      \mid a\seq b
+      \mid L_1 \cup L_3
+      \mid L_2 \cup L_4 )
+\EQ{Falsifies $[L_1|L_3|\ldots]$}
+\\&& \false
+}
+This law also works with invariant fragments
+$[L_1|L_3|\dots]$ and $[L_2|L_4|\dots]$
+
+\newpage
+\section{Semantic Definitions}
+
+\RLEQNS{
+   X(E|a|R|A) &\defs&
+   ls(E) \land s' \in \sem a s \land ls' = (ls\setminus R)\cup A
+\\ A(E|a|N) &\defs& X(E|a|E|N)
+\\ \W(P) &\defs& \true * (\Skip \lor P)
+\\       &=& \bigvee_{i \in \Nat} \Skip \seq P^i
+\\
+\\ atm(a) &=& \W(A(in|a|out)) \land [in|out]
+\\
+\\ C \cseq D
+   &\defs&
+   \W( C[\ell_g,\g{:1}/out,g] \lor
+       D[\ell_g,\g{:2}/in,g] ) \land [in|\ell_g|out]
+\\
+\\ C + D
+   &\defs&
+   \W(~ A(in|ii|\ell_{g1}) \lor
+        A(in|ii|\ell_{g2}) \lor {}
+\\&& ~~ C[g_{1:},\ell_{g1}/g,in] \lor
+       D[g_{2:},\ell_{g2}/g,in]~ )
+\\&& {}\land [in|\ell_{g1}|\ell_{g2}|out]
+\\
+\\ C \parallel D
+   &\defs&
+   \W(~
+      A(in|ii|\ell_{g1},\ell_{g2}) \lor
+      A(\ell_{g1:},\ell_{g2:}|ii|out) \lor {}
+\\&& ~~
+       C[g_{1::},\ell_{g1},\ell_{g1:}/g,in,out] \lor
+       D[g_{2::},\ell_{g2},\ell_{g2:}/g,in,out] ~)
+\\&& {} \land [in \mid [\ell_{g1}|\ell_{g1:}],[\ell_{g2}|\ell_{g2:}] \mid out]
+\\
+\\ C^*
+   &\defs&
+   \W(~ A(in|ii|out) \lor
+       A(in|ii|\ell_g) \lor
+       C[\g:,\ell_g,in/g,in,out] ~)
+\\&& {} \land [in|\ell_g|out]
+}
+
+We note that $\W(P) \land I = \W(P \land I)$ for our invariants.
+
+\newpage
+\section{Semantic Calculations}
+
+Semantic calculations will be based on the following form:
+\[
+  \W(P) = \Skip \lor \left(\bigvee_{i=1,\dots} P^i\right)
+\]
+So all we need to do is to compute $P^i$ for $i>1$
+until we get either $\false$ or a prior result as outcome.
+The semantics is the the disjunction of all of the results.
+
+Note: where iteration is concerned, $P^i$ may never vanish
+or converge, so the treatment there will be a little different.
+
+
+\subsection{Atomic Action}
+
+\[ atm(a) \defs \W(A(in|a|out)) \land [in|out] \]
+
+\[ P = A(in|a|out) \qquad I = [in|out] \]
+
+\RLEQNS{
+  && P^2
+\EQ{expand $P$}
+\\&& A(in|a|out) \seq A(in|a|out)
+\EQ{$A^2$ law}
+\\&& X(in|a\seq a|\emptyset|out) \land in \subseteq out
+\EQ{$I$ implies $in$, $out$ are disjoint}
+\\&& \false
+}
+
+So, we can declare that:
+\RLEQNS{
+  && atm(a)
+\EQ{calculations above}
+\\&& (~\Skip \lor A(in|a|out)~) \land [in|out]
+}
+
+\newpage
+\subsection{Sequential Composition}
+
+\[
+  C \cseq D
+   \defs
+   \W( C[\ell_g,\g{:1}/out,g] \lor
+       D[\ell_g,\g{:2}/in,g] ) \land [in|\ell_g|out]
+\]
+
+\[ P =  atm(a)[\ell_g,\g{:1}/out,g] \lor
+       atm(b)[\ell_g,\g{:2}/in,g]\qquad I = [in|\ell_g|out] \]
+
+\RLEQNS{
+  && P
+\EQ{expand $P$}
+\\&& atm(a)[\ell_g,\g{:1}/out,g]
+     \lor
+     atm(b)[\ell_g,\g{:2}/in,g]
+\EQ{expand $atm$s}
+\\&& ((\Skip \lor A(in|a|out)) \land [in|out])[\ell_g,\g{:1}/out,g]
+     \lor {}
+\\&& ((\Skip \lor A(in|b|out)) \land [in|out])[\ell_g,\g{:2}/in,g]
+\EQ{substitution}
+\\&& (\Skip \lor A(in|a|\ell_g)) \land [in|\ell_g]
+     \lor {}
+\\&& (\Skip \lor A(\ell_g|b|out) \land [\ell_g|out]
+\EQ{$I$ subsumes both $atm$ invariants}
+\\&& \Skip \lor A(in|a|\ell_g)
+     \lor
+     \Skip \lor A(\ell_g|b|out)
+\EQ{tidy-up}
+\\&& \Skip \lor A(in|a|\ell_g) \lor A(\ell_g|b|out)
+}
+
+We note that
+\[
+ \Skip \lor (\Skip \lor Q) \lor (\Skip \lor Q)^2
+ \lor (\Skip \lor Q)^3 \lor \dots
+\]
+reduces to
+\[
+ \Skip \lor Q \lor Q^2 \lor Q^3 \lor \dots
+\]
+
+So we proceed with $Q$
+\[
+  Q = A(in|a|\ell_g) \lor A(\ell_g|b|out)
+  \qquad
+  I = [in|\ell_g|out]
+\]
+
+\RLEQNS{
+  && Q^2
+\EQ{expand $Q$}
+\\&& (A(in|a|\ell_g) \lor A(\ell_g|b|out))
+     \seq
+     (A(in|a|\ell_g) \lor A(\ell_g|b|out))
+\EQ{distribute}
+\\&&     A(in|a|\ell_g)
+         \seq
+         A(in|a|\ell_g)
+\\&\lor& A(in|a|\ell_g)
+         \seq
+         A(\ell_g|b|out)
+\\&\lor& A(\ell_g|b|out)
+         \seq
+         A(in|a|\ell_g)
+\\&\lor& A(\ell_g|b|out)
+         \seq
+         A(\ell_g|b|out)
+\EQ{prop $A^2$}
+\\&&     in\setminus \ell_g \cap in = \emptyset \land \dots
+\\&\lor& \ell_g\setminus \ell_g \cap in = \emptyset
+         \land X( in\cup\ell_g\setminus \ell_g
+                \mid a \seq b
+                \mid in,\ell_g
+                \mid \ell_g\setminus\ell_g\cup out )
+\\&\lor& in\setminus out \cap \ell_g = \emptyset
+         \land X(\ell_g\cup in \setminus out
+                \mid b\seq a
+                \mid \ell_g,in
+                \mid out\setminus in \cup\ell_g )
+\\&\lor& \ell_g\setminus out \cap \ell_g = \emptyset \land \dots
+\EQ{simplify}
+\\&&     X( in
+                \mid a \seq b
+                \mid in,\ell_g
+                \mid out )
+\\&\lor& X( \ell_g,in
+                \mid b\seq a
+                \mid \ell_g,in
+                \mid out, \ell_g )
+\EQ{2nd disjunct falsifies $[in|\ell_g|out]$}
+\\&&     X( in |a \seq b | in,\ell_g | out )
+\EQ{$[in|\ell_g|out]$ implies there will be no $\ell_g$ to remove}
+\\&&     X( in |a \seq b | in | out )
+\EQ{defn $A$}
+\\&&     A( in |a \seq b | out )
+}
+
+
+\RLEQNS{
+  && Q^3
+\EQ{expand $Q\seq Q^2$}
+\\&& (A(in|a|\ell_g) \lor A(\ell_g|b|out))
+     \seq  X( in |a \seq b | in,\ell_g | out )
+\EQ{distribute, expand $A$}
+\\&&     X( in | a | in | \ell_g)
+         \seq
+         X( in |a \seq b | in,\ell_g | out )
+\\&\lor& X( \ell_g | b | \ell_g | out)
+         \seq
+         X( in |a \seq b | in,\ell_g | out )
+\EQ{prop $X^2$}
+\\&&     in \setminus \ell_g \cap in = \emptyset \land\dots
+\\&\lor& in\setminus out \cap \ell_g = \emptyset \land {}
+         X( \ell_g \cup in \setminus out
+          | b\seq a\seq b
+          | in,\ell_g
+          | out\setminus\setof{in,\ell_g} \cup out )
+\EQ{simplify}
+\\&& X( \ell_g,in
+      | b\seq a\seq b
+      | in,\ell_g
+      | out )
+\EQ{Falsifies $[in|\ell_g|out]$}
+\\&& \false
+}
+So we see that $Q^n$ vanishes for $n\geq 3$.
+
+So we have
+\RLEQNS{
+  && atm(a)\seq atm(b)
+\EQ{$Q$ expansion}
+\\&& \Skip \lor Q \lor Q^2 \lor Q^3 \lor \dots
+\EQ{$Q^n = \false$ for $n \geq 3$}
+\\&& \Skip \lor Q \lor Q^2
+\EQ{expand $Q^i$}
+\\&&     \Skip
+\\&\lor& A(in|a|\ell_g) \lor A(\ell_g|b|out)
+\\&\lor& A( in |a \seq b | out )
+}
+
+
+\newpage
+\subsection{Choice}
+
+
+\RLEQNS{
+   C + D
+   &\defs&
+   \W(~ A(in|ii|\ell_{g1}) \lor
+        A(in|ii|\ell_{g2}) \lor {}
+\\&& \quad~~ C[g_{1:},\ell_{g1}/g,in] \lor
+       D[g_{2:},\ell_{g2}/g,in]~ )
+\\&& {}\land [in|\ell_{g1}|\ell_{g2}|out]
+}
+
+\RLEQNS{
+   P &=& A(in|ii|\ell_{g1}) \lor
+         A(in|ii|\ell_{g2}) \lor {}
+\\   & & atm(a)[g_{1:},\ell_{g1}/g,in] \lor
+         atm(b)[g_{2:},\ell_{g2}/g,in]
+\\
+\\ I &=& [in|\ell_{g1}|\ell_{g2}|out]
+}
+
+\RLEQNS{
+  && P
+\EQ{expand $P$}
+\\&& A(in|ii|\ell_{g1}) \lor
+     A(in|ii|\ell_{g2}) \lor {}
+\\&& atm(a)[g_{1:},\ell_{g1}/g,in] \lor
+     atm(b)[g_{2:},\ell_{g2}/g,in]
+\EQ{expand $atm$}
+\\&& A(in|ii|\ell_{g1}) \lor
+     A(in|ii|\ell_{g2}) \lor {}
+\\&& ((\Skip \lor A(in|a|out)) \land [in|out])
+     [g_{1:},\ell_{g1}/g,in] \lor {}
+\\&& ((\Skip \lor A(in|b|out)) \land [in|out])
+     [g_{2:},\ell_{g2}/g,in]
+\EQ{substitute}
+\\&& A(in|ii|\ell_{g1}) \lor
+     A(in|ii|\ell_{g2}) \lor {}
+\\&& (\Skip \lor A(\ell_{g1}|a|out)) \land [\ell_{g1}|out] \lor
+     (\Skip \lor A(\ell_{g2}|b|out)) \land [\ell_{g2}|out]
+\EQ{sub-invariants subsumed by $I$}
+\\&& A(in|ii|\ell_{g1}) \lor
+     A(in|ii|\ell_{g2}) \lor {}
+\\&& \Skip \lor A(\ell_{g1}|a|out) \lor
+     \Skip \lor A(\ell_{g2}|b|out)
+\EQ{re-arrange, simplify}
+\\&& \Skip \lor A(in|ii|\ell_{g1}) \lor
+     A(in|ii|\ell_{g2}) \lor
+     A(\ell_{g1}|a|out) \lor
+     A(\ell_{g2}|b|out)
+\EQ{$Q$ again}
+\\&& \Skip \lor Q
+}
+
+\RLEQNS{
+  && Q^2
+\EQ{defn $Q$}
+\\&& (~ A(in|ii|\ell_{g1}) \lor
+     A(in|ii|\ell_{g2}) \lor
+     A(\ell_{g1}|a|out) \lor
+     A(\ell_{g2}|b|out)~) \seq{}
+\\&& (~ A(in|ii|\ell_{g1}) \lor
+     A(in|ii|\ell_{g2}) \lor
+     A(\ell_{g1}|a|out) \lor
+     A(\ell_{g2}|b|out)~)
+\EQ{distribute,
+    noting condition $(E_2\setminus N_1)\cap E_1=\emptyset $}
+\\&    & A(in|ii|\ell_{g1}) \seq A(in|ii|\ell_{g1}) \quad \mbox{--- fail}
+\\&\lor& A(in|ii|\ell_{g1}) \seq A(in|ii|\ell_{g2}) \quad \mbox{--- fail}
+\\&\lor& A(in|ii|\ell_{g1}) \seq A(\ell_{g1}|a|out) \quad \mbox{--- ok}
+\\&\lor& A(in|ii|\ell_{g1}) \seq A(\ell_{g2}|b|out) \quad \mbox{--- ok}
+\\&\lor& A(in|ii|\ell_{g2}) \seq A(in|ii|\ell_{g1}) \quad \mbox{--- fail}
+\\&\lor& A(in|ii|\ell_{g2}) \seq A(in|ii|\ell_{g2}) \quad \mbox{--- fail}
+\\&\lor& A(in|ii|\ell_{g2}) \seq A(\ell_{g1}|a|out) \quad \mbox{--- ok}
+\\&\lor& A(in|ii|\ell_{g2}) \seq A(\ell_{g2}|b|out) \quad \mbox{--- ok}
+\\&\lor& A(\ell_{g1}|a|out) \seq A(in|ii|\ell_{g1}) \quad \mbox{--- ok}
+\\&\lor& A(\ell_{g1}|a|out) \seq A(in|ii|\ell_{g2}) \quad \mbox{--- ok}
+\\&\lor& A(\ell_{g1}|a|out) \seq A(\ell_{g1}|a|out) \quad \mbox{--- fail}
+\\&\lor& A(\ell_{g1}|a|out) \seq A(\ell_{g2}|b|out) \quad \mbox{--- ok}
+\\&\lor& A(\ell_{g2}|b|out) \seq A(in|ii|\ell_{g1}) \quad \mbox{--- ok}
+\\&\lor& A(\ell_{g2}|b|out) \seq A(in|ii|\ell_{g2}) \quad \mbox{--- ok}
+\\&\lor& A(\ell_{g2}|b|out) \seq A(\ell_{g1}|a|out) \quad \mbox{--- ok}
+\\&\lor& A(\ell_{g2}|b|out) \seq A(\ell_{g2}|b|out) \quad \mbox{--- fail}
+\EQ{drop fails, apply $A^2$ work together law w.r.t $I$}
+\\&    & A(in|ii\seq a|out)
+\\&\lor& A(in|ii|\ell_{g1}) \seq A(\ell_{g2}|b|out)
+\\&\lor& A(in|ii|\ell_{g2}) \seq A(\ell_{g1}|a|out)
+\\&\lor& A(in|ii \seq b|out)
+\\&\lor& A(\ell_{g1}|a|out) \seq A(in|ii|\ell_{g1})
+\\&\lor& A(\ell_{g1}|a|out) \seq A(in|ii|\ell_{g2})
+\\&\lor& A(\ell_{g1}|a|out) \seq A(\ell_{g2}|b|out)
+\\&\lor& A(\ell_{g2}|b|out) \seq A(in|ii|\ell_{g1})
+\\&\lor& A(\ell_{g2}|b|out) \seq A(in|ii|\ell_{g2})
+\\&\lor& A(\ell_{g2}|b|out) \seq A(\ell_{g1}|a|out)
+\EQ{apply $A^2$ mutually-exclusive law w.r.t. $I$}
+\\&    & A(in|ii\seq a|out)
+\\&\lor& A(in|ii\seq b|out)
+\EQ{$ii$ is unit for $\seq$ over $s$, $s'$}
+\\&& A(in|a|out) \lor A(in|b|out)
+}
+
+\RLEQNS{
+  && Q^3
+\EQ{split as $Q^2 \seq Q$}
+\\&& (A(in|a|out) \lor A(in|b|out)) \seq {}
+\\&& (~ A(in|ii|\ell_{g1}) \lor
+     A(in|ii|\ell_{g2}) \lor
+     A(\ell_{g1}|a|out) \lor
+     A(\ell_{g2}|b|out)~)
+\EQ{distribute}
+\\&    & A(in|a|out) \seq A(in|ii|\ell_{g1}) \quad \mbox{--- $A^2$ cond fail}
+\\&\lor& A(in|a|out) \seq A(in|ii|\ell_{g2}) \quad \mbox{--- $A^2$ cond fail}
+\\&\lor& A(in|a|out) \seq A(\ell_{g1}|a|out) \quad \mbox{--- mut-exc fail}
+\\&\lor& A(in|a|out) \seq A(\ell_{g2}|b|out) \quad \mbox{--- mut-exc fail}
+\\&\lor& A(in|b|out) \seq A(in|ii|\ell_{g1}) \quad \mbox{--- $A^2$ cond fail}
+\\&\lor& A(in|b|out) \seq A(in|ii|\ell_{g2}) \quad \mbox{--- $A^2$ cond fail}
+\\&\lor& A(in|b|out) \seq A(\ell_{g1}|a|out) \quad \mbox{--- mut-exc fail}
+\\&\lor& A(in|b|out) \seq A(\ell_{g2}|b|out) \quad \mbox{--- mut-exc fail}
+\EQ{all gone!}
+\\&& \false
+}
+So, we go as far as $Q^2$:
+
+\RLEQNS{
+  && atm(a)+atm(b)
+\EQ{$Q$ expansion}
+\\&& \Skip \lor Q \lor Q^2
+\EQ{expand $Q^i$}
+\\&& \Skip \lor A(in|ii|\ell_{g1}) \lor A(in|ii|\ell_{g2}) \lor {}
+\\&& A(\ell_{g1}|a|out) \lor A(\ell_{g2}|b|out) \lor{}
+\\&& A(in|a|out) \lor A(in|b|out)
+}
+
+\newpage
+\subsection{Parallel Composition}
+
+
+\RLEQNS{
+   C \parallel D
+   &\defs&
+   \W(~
+      A(in|ii|\ell_{g1},\ell_{g2}) \lor
+      A(\ell_{g1:},\ell_{g2:}|ii|out) \lor {}
+\\&& ~~
+       C[g_{1::},\ell_{g1},\ell_{g1:}/g,in,out] \lor
+       D[g_{2::},\ell_{g2},\ell_{g2:}/g,in,out] ~)
+\\&& {} \land [in|\ell_{g1},\ell_{g2}|\ell_{g1:},\ell_{g2:}|out]
+}
+
+\RLEQNS{
+   P &=& A(in|ii|\ell_{g1},\ell_{g2}) \lor
+         A(\ell_{g1:},\ell_{g2:}|ii|out) \lor {}
+\\   & & atm(a)[g_{1::},\ell_{g1},\ell_{g1:}/g,in,out] \lor
+         atm(b)[g_{2::},\ell_{g2},\ell_{g2:}/g,in,out]
+\\
+\\ I &=& [in\mid[\ell_{g1}|\ell_{g1:}],[\ell_{g2}|\ell_{g2:}]\mid out]
+\\ && \mbox{Note the new complicated invariant!}
+}
+
+\RLEQNS{
+  && P
+\EQ{expand $P$}
+\\&& A(in|ii|\ell_{g1},\ell_{g2}) \lor
+     A(\ell_{g1:},\ell_{g2:}|ii|out) \lor {}
+\\&& atm(a)[g_{1::},\ell_{g1},\ell_{g1:}/g,in,out] \lor
+     atm(b)[g_{2::},\ell_{g2},\ell_{g2:}/g,in,out]
+\EQ{expand $atm$}
+\\&& A(in|ii|\ell_{g1},\ell_{g2}) \lor
+     A(\ell_{g1:},\ell_{g2:}|ii|out) \lor {}
+\\&& ((\Skip \lor A(in|a|out)) \land [in|out])
+     [g_{1::},\ell_{g1},\ell_{g1:}/g,in,out] \lor {}
+\\&& ((\Skip \lor A(in|b|out)) \land [in|out])
+     [g_{2::},\ell_{g2},\ell_{g2:}/g,in,out]
+\EQ{substitution}
+\\&& A(in|ii|\ell_{g1},\ell_{g2}) \lor
+     A(\ell_{g1:},\ell_{g2:}|ii|out) \lor {}
+\\&& (\Skip \lor A(\ell_{g1}|a|\ell_{g1:})) \land [\ell_{g1}|\ell_{g1:}] \lor {}
+\\&& (\Skip \lor A(\ell_{g2}|b|\ell_{g2:})) \land [\ell_{g2}|\ell_{g2:}]
+\EQ{atomic invariants subsumed by $I$}
+\\&& A(in|ii|\ell_{g1},\ell_{g2}) \lor
+     A(\ell_{g1:},\ell_{g2:}|ii|out) \lor {}
+\\&& \Skip \lor A(\ell_{g1}|a|\ell_{g1:}) \lor \Skip \lor A(\ell_{g2}|b|\ell_{g2:})
+\EQ{re-arrange, simplify}
+\\&& \Skip \lor
+     A(in|ii|\ell_{g1},\ell_{g2}) \lor
+     A(\ell_{g1:},\ell_{g2:}|ii|out) \lor
+     A(\ell_{g1}|a|\ell_{g1:}) \lor
+     A(\ell_{g2}|b|\ell_{g2:})
+\EQ{$Q$ again}
+\\&& \Skip \lor Q
+}
+
+\RLEQNS{
+  && Q^2
+\EQ{expand $Q$}
+\\&& (~ A(in|ii|\ell_{g1},\ell_{g2}) \lor
+        A(\ell_{g1:},\ell_{g2:}|ii|out) \lor {}
+\\&& ~~ A(\ell_{g1}|a|\ell_{g1:}) \lor
+        A(\ell_{g2}|b|\ell_{g2:}) ~) \seq {}
+\\&& (~ A(in|ii|\ell_{g1},\ell_{g2}) \lor
+        A(\ell_{g1:},\ell_{g2:}|ii|out) \lor {}
+\\&& ~~ A(\ell_{g1}|a|\ell_{g1:}) \lor
+        A(\ell_{g2}|b|\ell_{g2:}) ~)
+\EQ{distr., assess w.r.t $A^2$, $[in|\ell_{g1},\ell_{g2}|\ell_{g1:},\ell_{g2:}|out]$}
+\\&\lor& A(in|ii|\ell_{g1},\ell_{g2})
+    \seq A(in|ii|\ell_{g1},\ell_{g2})    & fail
+\\&\lor& A(in|ii|\ell_{g1},\ell_{g2})
+    \seq A(\ell_{g1:},\ell_{g2:}|ii|out) & fail
+\\&\lor& A(in|ii|\ell_{g1},\ell_{g2})
+    \seq A(\ell_{g1}|a|\ell_{g1:})       & ok
+\\&\lor& A(in|ii|\ell_{g1},\ell_{g2})
+    \seq A(\ell_{g2}|b|\ell_{g2:})       & ok
+\\&\lor& A(\ell_{g1:},\ell_{g2:}|ii|out)
+    \seq A(in|ii|\ell_{g1},\ell_{g2})    & fail
+\\&\lor& A(\ell_{g1:},\ell_{g2:}|ii|out)
+    \seq A(\ell_{g1:},\ell_{g2:}|ii|out) & fail
+\\&\lor& A(\ell_{g1:},\ell_{g2:}|ii|out)
+    \seq A(\ell_{g1}|a|\ell_{g1:})       & fail
+\\&\lor& A(\ell_{g1:},\ell_{g2:}|ii|out)
+    \seq A(\ell_{g2}|b|\ell_{g2:})       & fail
+\\&\lor& A(\ell_{g1}|a|\ell_{g1:})
+    \seq A(in|ii|\ell_{g1},\ell_{g2})    & fail
+\\&\lor& A(\ell_{g1}|a|\ell_{g1:})
+    \seq A(\ell_{g1:},\ell_{g2:}|ii|out) & ok
+\\&\lor& A(\ell_{g1}|a|\ell_{g1:})
+    \seq A(\ell_{g1}|a|\ell_{g1:})       & fail
+\\&\lor& A(\ell_{g1}|a|\ell_{g1:})
+    \seq A(\ell_{g2}|b|\ell_{g2:})       & ok
+\\&\lor& A(\ell_{g2}|b|\ell_{g2:})
+    \seq A(in|ii|\ell_{g1},\ell_{g2})    & fail
+\\&\lor& A(\ell_{g2}|b|\ell_{g2:})
+    \seq A(\ell_{g1:},\ell_{g2:}|ii|out) & ok
+\\&\lor& A(\ell_{g2}|b|\ell_{g2:})
+    \seq A(\ell_{g1}|a|\ell_{g1:})       & ok
+\\&\lor& A(\ell_{g2}|b|\ell_{g2:})
+    \seq A(\ell_{g2}|b|\ell_{g2:})       & fail
+\EQ{drop fails}
+\\&\lor& A(in|ii|\ell_{g1},\ell_{g2})
+    \seq A(\ell_{g1}|a|\ell_{g1:})       & ok
+\\&\lor& A(in|ii|\ell_{g1},\ell_{g2})
+    \seq A(\ell_{g2}|b|\ell_{g2:})       & ok
+\\&\lor& A(\ell_{g1}|a|\ell_{g1:})
+    \seq A(\ell_{g1:},\ell_{g2:}|ii|out) & ok
+\\&\lor& A(\ell_{g1}|a|\ell_{g1:})
+    \seq A(\ell_{g2}|b|\ell_{g2:})       & ok
+\\&\lor& A(\ell_{g2}|b|\ell_{g2:})
+    \seq A(\ell_{g1:},\ell_{g2:}|ii|out) & ok
+\\&\lor& A(\ell_{g2}|b|\ell_{g2:})
+    \seq A(\ell_{g1}|a|\ell_{g1:})       & ok
+\EQ{law $A^2$}
+\\&& \mbox{the calculator might be a good idea at this point!}
+}
+We will need to go to $Q^4$, and show that $Q^5$ is $\false$.
+
+\newpage
+\subsection{Iteration}
+
+A quick pen'n'paper calculation for $atm(a)^*$ yields:
+\[\begin{array}{rcccc}
+   Q   &=& in\arr{} out & in\arr{}\ell_g & in\arr{a} in
+\\ Q^2 &=& in \arr{a} in & \ell_g \arr{a} out & \ell_g \arr{a} \ell_g
+\\ Q^3   &=& in\arr{a} out & in\arr{a}\ell_g & in\arr{aa} in
+\\ Q^4 &=& in \arr{aa} in & \ell_g \arr{aa} out & \ell_g \arr{aa} \ell_g
+\\ Q^5   &=& in\arr{aa} out & in\arr{aa}\ell_g & in\arr{aaa} in
+\\ Q^6 &=& in \arr{aaa} in & \ell_g \arr{aaa} out & \ell_g \arr{aaa} \ell_g
+\end{array}\]
+
+
+\newpage
+\section{Semantic Results}
+
+\RLEQNS{
+   atm(a)
+   &=&
+   (~\Skip \lor A(in|a|out)~) \land [in|out]
+\\ atm(a)\seq atm(b)
+   &=& (~\Skip \lor
+         A(in|a|\ell_g) \lor
+         A(\ell_g|b|out) \lor
+         A(in|a \seq b| out) ~)
+\\&& {} \land [in|\ell_g|out]
+\\ atm(a)+atm(b)
+   &=& (~\Skip \lor A(in|ii|\ell_{g1}) \lor A(in|ii|\ell_{g2}) \lor {}
+\\&& A(\ell_{g1}|a|out) \lor A(\ell_{g2}|b|out) \lor{}
+\\&& A(in|a|out) \lor A(in|b|out)~)
+\\&& {} \land [in|\ell_{g1}|\ell_{g2}|out]
+}
+
+
+Better formatting(?): 1st line is invariant,
+other lines are the disjuncts (poss. several on one line), with $\Skip$ ommitted
+
+\RLEQNS{
+   atm(a)
+   &=& [in|out]
+\\ & & A(in|a|out)
+\\
+\\ atm(a)\seq atm(b)
+   &=& [in|\ell_g|out]
+\\ & & A(in|a|\ell_g) \quad A(\ell_g|b|out)
+\\ & & A(in|a \seq b|out)
+\\
+\\ atm(a)+atm(b)
+   &=& [in|\ell_{g1}|\ell_{g2}|out]
+\\ & & A(in|ii|\ell_{g1}) \quad A(in|ii|\ell_{g2})
+\\ & & A(\ell_{g1}|a|out) \quad A(\ell_{g2}|b|out)
+\\ & & A(in|a|out) \quad A(in|b|out)
+}
+

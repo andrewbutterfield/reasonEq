@@ -2,6 +2,10 @@
 
 ## URGENT or NEXT
 
+Adding in `Views.tex` from `utpcalculator`.
+
+This provides set-theoretic laws we need to complete proofs about `A` and `X`
+in the `UTCP` theory.
 
 
 

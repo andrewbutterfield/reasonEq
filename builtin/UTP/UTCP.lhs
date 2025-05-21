@@ -317,6 +317,155 @@ and that our semantic predicates are closed under mumbling.
 
 \section{UTCP Semantics}
 
+\subsection{Label-Set Membership Lemmas}
+
+To do the X-composition proof we need some lemmas:
+
+An atomic action $A(E|a|N)$ is enabled if $E$ is contained
+in the global label-set ($ls(E)$)
+and results in $E$ being removed from that set, and new labels
+$N$ being added ($ls'=(ls\setminus E)\cup N$).
+We need a way to reason about containment in such an $ls'$
+in terns of $E$ and $N$, and to compute sequential compositions
+of such forms, which will take the more general form $X(E|a|R|A)$.
+
+We find we get assertions of the form $(F(ls))(E)$,
+asserting that $E$ is a subset of $F(ls)$ where $F$ is a set-function
+composed of named/enumerated sets and standard set-operations.
+We want to transform it into $ls(G) \land P$ where $G$ and $P$
+do not involve $ls$.
+
+We present the laws, with proofs in ``classical'' set notation.
+
+\subsubsection{Union becomes Difference}
+
+\RLEQNS{
+   (ls \cup A)(S)      &=& ls(S\setminus A)
+}
+\RLEQNS{
+\lefteqn{S \subseteq (ls \cup A)}
+\\&=& x \in S \implies x \in (ls \cup A) & \say{``set definitions''}
+\\&=& x \in S \implies x \in ls \lor x \in A & \say{``defn $\cup$''}
+\\&=& x \notin S \lor x \in ls \lor x \in A & \say{``defn $\implies$''}
+\\&=& x \notin S \lor x \in A \lor x \in ls & \say{``rearrange''}
+\\&=& (x \in S \land x \notin A) \implies x \in ls 
+    & \say{``De-Morgan, defn $\implies$''}
+\\&=& (S \setminus A) \subseteq ls & \say{``defn $\subseteq$''}
+}
+
+\subsubsection{Difference becomes Conditional Intersection}
+
+\RLEQNS{
+   (ls \setminus R)(S) &=& ls(S) \land S \cap R = \emptyset
+}
+\RLEQNS{
+\lefteqn{S \subseteq (ls \setminus R)}
+\\&& x \in S \implies x \in (ls \setminus R)
+ & \say{``set definitions''}
+\\&& x \in S \implies x \in ls \land x \notin R
+ & \say{``set definition''}
+\\&& x \notin S \lor x \in ls \land x \notin R
+ & \say{``defn $\implies$''}
+\\&& (x \notin S \lor x \in ls)
+     \land
+     ( x \notin S \lor x \notin R)
+ & \say{``distribution''}
+\\&& (x \in S \implies x \in ls)
+     \land
+     \lnot( x \in S \land x \in R)
+ & \say{``defn $\implies$, de-morgan''}
+\\&&S \subseteq ls \land S \cap R = \emptyset
+ & \say{``defn $\subseteq$''}
+}
+
+\subsubsection{Intersection becomes Conditional}
+
+\RLEQNS{
+  (ls \cap M)(S)      &=& ls(S) \land S \subseteq M
+}
+\RLEQNS{
+\lefteqn{S \subseteq (ls \cap M)}
+\\&& x \in S \implies x \in ls \land x \in M
+ & \say{``set definitions''}
+\\&& x \notin S \lor x \in ls \land x \in M
+ & \say{``defn $\implies$''}
+\\&& (x \notin S \lor x \in ls)
+     \land
+     (x \notin S \lor x \in M)
+ & \say{``distribution''}
+\\&& (x \in S \implies x \in ls)
+     \land
+     (x \in S \implies x \in M)
+ & \say{``defn $\implies$''}
+\\&& S \subseteq ls \land S \subseteq M
+ & \say{``def $\subseteq$''}
+}
+
+\subsubsection{Difference then Union becomes Conditional Intersection of Difference}
+
+\RLEQNS{
+  ((ls \setminus R) \cup A)(S)
+   &=& ls(S \setminus A) \land (S \setminus A) \cap R = \emptyset
+}
+\RLEQNS{
+\lefteqn{((ls \setminus R) \cup A)(S)}
+\\&& (ls \setminus R)(S \setminus A)
+ & \say{``laws above''}
+\\&& ls(S \setminus A) \land (S \setminus A) \cap R = \emptyset
+ & \say{``laws above''}
+}
+
+\subsubsection{Difference then Union Twice is Complicated}
+
+\RLEQNS{
+\\ (((ls\setminus R_1) \cup A_1)\setminus R_2) \cup A_2
+  &=& (ls \setminus (R_1 \cup R_2)) \cup ((A_1\setminus R_2) \cup A_2)
+}
+
+We note the following:
+\RLEQNS{
+\lefteqn{x \in (ls\setminus R_1) \cup A_1}
+\\&& x \in (ls\setminus R_1) \lor x \in  A_1
+ & \say{``defn $\cup$''}
+\\&& x \in ls \land x \notin R_1 \lor x \in  A_1
+ & \say{``defn $\setminus$''}
+}
+Then proceed:
+\RLEQNS{
+\lefteqn{x \in (((ls\setminus R_1) \cup A_1)\setminus R_2) \cup A_2}
+\\&& x \in (ls\setminus R_1) \cup A_1) \land x \notin R_2 \lor x \in  A_2
+ & \say{``above law''}
+\\&& (x \in ls \land x \notin R_1 \lor x \in  A_1) \land x \notin R_2 \lor x \in  A_2
+ & \say{``above law''}
+\\&& (x \in ls \land x \notin R_1 \land x \notin R_2)
+     \lor
+     (x \in  A_1 \land x \notin R_2)
+     \lor x \in  A_2
+ & \say{``distributivity''}
+\\&& (x \in ls \land \lnot(x \in R_1 \lor x \in R_2))
+     \lor
+     x \in  A_1 \setminus R_2
+     \lor x \in  A_2
+ & \say{``de-Morgan, defn $\setminus$''}
+\\&& (x \in ls \land \lnot(x \in R_1 \cup R_2))
+     \lor
+     x \in  A_1 \setminus R_2 \cup  A_2
+ & \say{``defn $\cup$, twice''}
+\\&& (x \in ls \land x \notin R_1 \cup R_2)
+     \lor
+     x \in  A_1 \setminus R_2 \cup  A_2
+ & \say{``tweak''}
+\\&& x \in (ls \setminus R_1 \cup R_2)
+     \lor
+     x \in  A_1 \setminus R_2 \cup  A_2
+ & \say{``definition of $\setminus$''}
+\\&& x \in (ls \setminus R_1 \cup R_2)
+     \cup
+     (A_1 \setminus R_2 \cup  A_2)
+ & \say{``definition of $\cup$''}
+}
+
+
 \subsection{Atomic Actions}
 
 \subsubsection{Basic Definitions}
@@ -472,141 +621,6 @@ cjXXComp = ( "X" -.- "X" -.- "comp"
                .: areUTPStcObs  (map StdVar [vE1,vE2,vR1,vR2,vN1,vN2]) 
                ) )
 \end{code}
-
-\section{Set Inclusion/Membership Lemmas}
-
-To do the X-composition proof we need some lemmas:
-
-An atomic action $A(E|a|N)$ is enabled if $E$ is contained
-in the global label-set ($ls(E)$)
-and results in $E$ being removed from that set, and new labels
-$N$ being added ($ls'=(ls\setminus E)\cup N$).
-We need a way to reason about containment in such an $ls'$
-in terns of $E$ and $N$, and to compute sequential compositions
-of such forms, which will take the more general form $X(E|a|R|A)$.
-
-We find we get assertions of the form $(F(ls))(E)$,
-asserting that $E$ is a subset of $F(ls)$ where $F$ is a set-function
-composed of named/enumerated sets and standard set-operations.
-We want to transform it into $ls(G) \land P$ where $G$ and $P$
-do not involve $ls$.
-
-We present the laws,
-then the proofs
-\RLEQNS{
-   (ls \cup A)(S)      &=& ls(S\setminus A)
-\\ (ls \setminus R)(S) &=& ls(S) \land S \cap R = \emptyset
-\\ (ls \cap M)(S)      &=& ls(S) \land S \subseteq M
-\\ ((ls \setminus R) \cup A)(S)
-   &=& ls(S \setminus A) \land (S \setminus A) \cap R = \emptyset
-\\ (((ls\setminus R_1) \cup A_1)\setminus R_2) \cup A_2
-  &=& (ls \setminus (R_1 \cup R_2)) \cup ((A_1\setminus R_2) \cup A_2)
-}
-
-We do the proofs in ``classical'' set notation
-\RLEQNS{
-  && S \subseteq (ls \cup A)
-\EQ{set definitions}
-\\&& x \in S \implies x \in (ls \cup A)
-\EQ{defn $\cup$}
-\\&& x \in S \implies x \in ls \lor x \in A
-\EQ{defn $\implies$}
-\\&& x \notin S \lor x \in ls \lor x \in A
-\EQ{rearrange}
-\\&& x \notin S \lor x \in A \lor x \in ls
-\EQ{De-Morgan, defn $\implies$}
-\\&& (x \in S \land x \notin A) \implies x \in ls
-\EQ{defn subset}
-\\&& (S \setminus A) \subseteq ls
-}
-
-\RLEQNS{
-  && S \subseteq (ls \setminus R)
-\EQ{set definitions}
-\\&& x \in S \implies x \in (ls \setminus R)
-\EQ{set definition}
-\\&& x \in S \implies x \in ls \land x \notin R
-\EQ{defn $\implies$}
-\\&& x \notin S \lor x \in ls \land x \notin R
-\EQ{distribution}
-\\&& (x \notin S \lor x \in ls)
-     \land
-     ( x \notin S \lor x \notin R)
-\EQ{defn implies, de-morgan}
-\\&& (x \in S \implies x \in ls)
-     \land
-     \lnot( x \in S \land x \in R)
-\EQ{defn subset}
-\\&&S \subseteq ls \land S \cap R = \emptyset
-}
-
-\RLEQNS{
-  && S \subseteq (ls \cap M)
-\EQ{set definitions}
-\\&& x \in S \implies x \in ls \land x \in M
-\EQ{defn $\implies$}
-\\&& x \notin S \lor x \in ls \land x \in M
-\EQ{distribution}
-\\&& (x \notin S \lor x \in ls)
-     \land
-     (x \notin S \lor x \in M)
-\EQ{defn $implies$}
-\\&& (x \in S \implies x \in ls)
-     \land
-     (x \in S \implies x \in M)
-\EQ{def subset}
-\\&& S \subseteq ls \land S \subseteq M
-}
-
-\RLEQNS{
-  && ((ls \setminus R) \cup A)(S)
-\EQ{laws above}
-\\&& (ls \setminus R)(S \setminus A)
-\EQ{laws above}
-\\&& ls(S \setminus A) \land (S \setminus A) \cap R = \emptyset
-}
-
-\RLEQNS{
-  && x \in (ls\setminus R_1) \cup A_1
-\EQ{defn $\cup$}
-\\&& x \in (ls\setminus R_1) \lor x \in  A_1
-\EQ{defn $\setminus$}
-\\&& x \in ls \land x \notin R_1 \lor x \in  A_1
-}
-
-\RLEQNS{
-  && x \in (((ls\setminus R_1) \cup A_1)\setminus R_2) \cup A_2
-\EQ{above law}
-\\&& x \in (ls\setminus R_1) \cup A_1) \land x \notin R_2 \lor x \in  A_2
-\EQ{above law}
-\\&& (x \in ls \land x \notin R_1 \lor x \in  A_1) \land x \notin R_2 \lor x \in  A_2
-\EQ{distributivity}
-\\&& (x \in ls \land x \notin R_1 \land x \notin R_2)
-     \lor
-     (x \in  A_1 \land x \notin R_2)
-     \lor x \in  A_2
-\EQ{de-Morgan, defn $\setminus$}
-\\&& (x \in ls \land \lnot(x \in R_1 \lor x \in R_2))
-     \lor
-     x \in  A_1 \setminus R_2
-     \lor x \in  A_2
-\EQ{defn $\cup$, twice}
-\\&& (x \in ls \land \lnot(x \in R_1 \cup R_2))
-     \lor
-     x \in  A_1 \setminus R_2 \cup  A_2
-\EQ{tweak}
-\\&& (x \in ls \land x \notin R_1 \cup R_2)
-     \lor
-     x \in  A_1 \setminus R_2 \cup  A_2
-\EQ{definition of $\setminus$}
-\\&& x \in (ls \setminus R_1 \cup R_2)
-     \lor
-     x \in  A_1 \setminus R_2 \cup  A_2
-\EQ{definition of $cup$}
-\\&& x \in (ls \setminus R_1 \cup R_2)
-     \cup
-     (A_1 \setminus R_2 \cup  A_2)
-}
 
 
 \subsection{Commands}

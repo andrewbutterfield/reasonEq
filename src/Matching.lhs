@@ -9,7 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Matching
 ( match, itop
   -- below exported for testing
-, termMatch, tsMatch
+, typeMatch, termMatch, tsMatch
 , tvMatch, tkvMatch
 , vMatch, bvMatch
 , vsMatch, vlMatch
@@ -143,43 +143,29 @@ match vts cand patn  =  termMatch vts emptyBinding noBVS noBVS cand patn
 \newpage
 \section{Type Matching}
 
+If we match a pattern of arbitrary type,
+there is nothing we can do in terms of bindings.
+Instead, we may need to run type-inference after instantiation.
+
 \begin{verbatim}
-isSubTypeOf :: Type -> Type -> Bool
-isSubTypeOf t1 t2
-  | lasttype t1 == bool && t2 == arbpred  =  True
-  | otherwise                             =  t1 `isSTOf` t2
-
-isSTOf :: Type -> Type -> Bool
--- true outcomes first, to catch t==t case
-_            `isSTOf` T        =  True
-T            `isSTOf` _        =  False
-TB           `isSTOf` _        =  True
-_            `isSTOf` TB       =  False
-(TV i1)      `isSTOf` (TV i2)  =  i1 == i2
-(TG _)       `isSTOf` (TV _)   =  True
-(TG i1)      `isSTOf` (TG i2)  =  i1 == i2
-(TC i1 ts1)  `isSTOf` (TC i2 ts2) | i1==i2 = ts1 `areSTOf` ts2
-(TA i1 fs1)  `isSTOf` (TA i2 fs2) | i1==i2 = fs1 `areSFOf` fs2
-(TF tf1 ta1) `isSTOf` (TF tf2 ta2)  
-                               =  tf2 `isSTOf` tf1 && ta1 `isSTOf` ta2
-_            `isSTOf` _        = False
-
-areSTOf :: [Type] -> [Type] -> Bool -- are SubTypesOf
-[]       `areSTOf` []        =  True
-(t1:ts1) `areSTOf` (t2:ts2)  =  t1 `isSTOf` t2 && ts1 `areSTOf` ts2
-_        `areSTOf` _         =  False
-
--- areSubFieldsOf
-areSFOf :: [(Identifier,[Type])] -> [(Identifier,[Type])] -> Bool
-[] `areSFOf` []  =  True
-((i1,ts1):fs1) `areSFOf` ((i2,ts2):fs2)
- | i1 == i2      =  ts1 `areSTOf` ts2 && fs1 `areSFOf` fs2
-_ `areSFOf` _    =  False
+ArbType 
+TypeVar i 
+TypeCons i ts 
+AlgType i fs 
+FunType tf ta 
+GivenType i 
+BottomType 
 \end{verbatim}
 
-
 \begin{code}
-typeMatch bind typC typP = return bind
+typeMatch bind typC ArbType       =  return bind -- no binding possible
+typeMatch bind typC@(TypeVar iC) (TypeVar iP)
+  | iC == iP                      =  bindTypeVarToType iP typC bind
+typeMatch bind typC (TypeVar iP)  =  bindTypeVarToType iP typC bind
+typeMatch bind typC typP 
+  = fail $ unlines [ "typeMatch: distinct types"
+                   , "typC = " ++ show typC
+                   , "typP = " ++ show typP ]
 \end{code}
 
 \newpage
@@ -2744,9 +2730,11 @@ vtsMatch vts bind cbvs pbvs tsC tsP
  = manyToMultiple (matchPair matchVar matchTerm) defCombine id
               (S.toList tsC) (S.toList tsP) bind
  where
-   matchVar  ::  (MonadPlus mp, MonadFail mp) => BasicM mp Binding Variable Variable
+   matchVar :: (MonadPlus mp, MonadFail mp) 
+            => BasicM mp Binding Variable Variable
    matchVar vC vP bind = vMatch vts bind cbvs pbvs ArbType vC ArbType vP
-   matchTerm ::  (MonadPlus mp, MonadFail mp) => BasicM mp Binding Candidate Pattern
+   matchTerm :: (MonadPlus mp, MonadFail mp) 
+             => BasicM mp Binding Candidate Pattern
    matchTerm tC tP bind =  termMatch vts bind cbvs pbvs tC tP
 \end{code}
 

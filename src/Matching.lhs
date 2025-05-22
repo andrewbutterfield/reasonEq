@@ -9,7 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Matching
 ( match, itop
   -- below exported for testing
-, tMatch, tsMatch
+, termMatch, tsMatch
 , tvMatch, tkvMatch
 , vMatch, bvMatch
 , vsMatch, vlMatch
@@ -153,12 +153,12 @@ We note that the \texttt{Type} of pattern and candidate must agree,
 in that the candidate is a subtype of the pattern.
 Note that predicate-type $t$ is the same as expression-type $t\fun\Bool$.
 \begin{code}
-tMatch vts bind cbvs pbvs tC tP
+termMatch vts bind cbvs pbvs tC tP
  = let kC = termtype tC ; kP = termtype tP
    in if kC `isSubTypeOf` kP
-      then tMatch' vts bind cbvs pbvs tC tP
+      then termMatch' vts bind cbvs pbvs tC tP
       else fail $ unlines'
-            [ "tMatch: incompatible types!"
+            [ "termMatch: incompatible types!"
             , "tC = "++show tC
             , "kC = "++show kC
             , "tP = "++show tP
@@ -181,10 +181,10 @@ $$
    {{\kk k}_C = {\kk k}_P}
    {\beta \vdash {\kk k}_C :: {\kk k}_P \leadsto \beta}
    \quad
-   \texttt{tMatch Val}
+   \texttt{termMatch Val}
 $$
 \begin{code}
-tMatch' _ bind _ _ kC@(Val _ _) kP@(Val _ _)
+termMatch' _ bind _ _ kC@(Val _ _) kP@(Val _ _)
  | kC == kP  =  return bind
 \end{code}
 
@@ -196,10 +196,10 @@ $$
    {\beta \vdash t_C :: v_P \leadsto \beta'}
    {\beta \vdash t_C :: {\vv v}_P \leadsto \beta'}
    \quad
-   \texttt{tMatch Var}
+   \texttt{termMatch Var}
 $$
 \begin{code}
-tMatch' vts bind cbvs pbvs tC (Var ttP vP)
+termMatch' vts bind cbvs pbvs tC (Var ttP vP)
   | termtype tC `isSubTypeOf` ttP  =  tvMatch vts bind cbvs pbvs tC ttP vP
 \end{code}
 
@@ -218,11 +218,11 @@ $$
     \leadsto
     \uplus_{i \in 0\dots n}\{\beta_i\}}
    \quad
-   \texttt{tMatch Cons}
+   \texttt{termMatch Cons}
 $$
 Here $ts_X = \langle t_{X_1}, t_{X_2}, \dots t_{X_n} \rangle$.
 \begin{code}
-tMatch' vts bind cbvs pbvs (Cons ttC sbC nC tsC) (Cons ttP sbP nP tsP)
+termMatch' vts bind cbvs pbvs (Cons ttC sbC nC tsC) (Cons ttP sbP nP tsP)
  | ttC `isSubTypeOf` ttP && sbC == sbP
    =  do bind0 <- consBind vts bind cbvs pbvs ttC nC nP
          tsMatch vts bind0 cbvs pbvs tsC tsP
@@ -247,10 +247,10 @@ $$
      \{ \itop \mapsto na_C \}
      \uplus
      \{ ts_P[i] \mapsto lvs_C[i] \}_{i \in 1\dots\#lvs_C}}
-  \quad\texttt{tMatch Single-Iter}
+  \quad\texttt{termMatch Single-Iter}
 $$
 \begin{code}
-tMatch' vts bind cbvs pbvs (Iter ttC saC naC siC niC lvsC) (Cons ttP sbP nP tsP)
+termMatch' vts bind cbvs pbvs (Iter ttC saC naC siC niC lvsC) (Cons ttP sbP nP tsP)
   | ttC `isSubTypeOf` ttP && niC == nP && siC == sbP
     =  do bind0 <- consBind vts bind cbvs pbvs ttC niC nP
           -- ignore above Cons bind for now
@@ -274,7 +274,7 @@ $$
      \beta \uplus \{lvs_P[i] \mapsto t_I[i]\}_{i \in 1\dots\#lvs_P}
    }
    \quad
-   \texttt{tMatch Iter-Single}
+   \texttt{termMatch Iter-Single}
 $$
 
 
@@ -286,7 +286,7 @@ $$
      \leadsto
      \beta \uplus (\frown) \beta_j}
   \quad
-  \texttt{tMatch Cons-Iter}
+  \texttt{termMatch Cons-Iter}
 $$
 
 $$
@@ -314,7 +314,7 @@ $$
      \beta \uplus (\frown) \beta_j
    }
    \quad
-   \texttt{tMatch Iter-Cons}
+   \texttt{termMatch Iter-Cons}
 $$
 We use $(\frown)$ to denote the ``striping'' of the mappings,
 e.g.
@@ -341,14 +341,14 @@ $$
      \beta \uplus \beta'_t \uplus \beta'_{vs}
    }
    \quad
-   \texttt{tMatch Binding}
+   \texttt{termMatch Binding}
 $$
 \begin{code}
-tMatch' vts bind cbvs pbvs (Bnd ttC nC vsC tC) (Bnd ttP nP vsP tP)
+termMatch' vts bind cbvs pbvs (Bnd ttC nC vsC tC) (Bnd ttP nP vsP tP)
   | ttC `isSubTypeOf` ttP && nC == nP
     =  do let cbvs' = vsC `addBoundVarSet` cbvs
           let pbvs' = vsP `addBoundVarSet` pbvs
-          bindT  <-  tMatch vts bind cbvs' pbvs' tC tP
+          bindT  <-  termMatch vts bind cbvs' pbvs' tC tP
           vsMatch vts bindT cbvs' pbvs' vsC vsP
 \end{code}
 
@@ -370,14 +370,14 @@ $$
      \beta \uplus \beta'_t \uplus \beta'_{vs}
    }
    \quad
-   \texttt{tMatch Binding0}
+   \texttt{termMatch Binding0}
 $$
 \begin{code}
-tMatch' vts bind cbvs pbvs tC (Bnd ttP nP vsP tP)
+termMatch' vts bind cbvs pbvs tC (Bnd ttP nP vsP tP)
   | all (gVarIsUnknownLVar vts) vlP
     =  do bind' <- bindLVarsToEmpty bind $ listVarsOf vlP
           let pbvs' = vsP `addBoundVarSet` pbvs
-          tMatch vts bind' cbvs pbvs' tC tP
+          termMatch vts bind' cbvs pbvs' tC tP
   where vlP = S.toList vsP
 \end{code}
 
@@ -397,14 +397,14 @@ $$
      \beta \uplus \beta'_t \uplus \beta'_{vl}
    }
    \quad
-   \texttt{tMatch Lambda}
+   \texttt{termMatch Lambda}
 $$
 \begin{code}
-tMatch' vts bind cbvs pbvs (Lam ttC nC vlC tC) (Lam ttP nP vlP tP)
+termMatch' vts bind cbvs pbvs (Lam ttC nC vlC tC) (Lam ttP nP vlP tP)
   | ttC `isSubTypeOf` ttP && nC == nP
     =  do let cbvs' = vlC `addBoundVarList` cbvs
           let pbvs' = vlP `addBoundVarList` pbvs
-          bindT  <-  tMatch vts bind cbvs' pbvs' tC tP
+          bindT  <-  termMatch vts bind cbvs' pbvs' tC tP
           vlMatch vts bindT cbvs' pbvs' vlC vlP
 \end{code}
 We also have special handling here for when we have only unknown list-variables:
@@ -421,14 +421,14 @@ $$
      \beta \uplus \beta'_t \uplus \beta'_{vl}
    }
    \quad
-   \texttt{tMatch Lambda0}
+   \texttt{termMatch Lambda0}
 $$
 \begin{code}
-tMatch' vts bind cbvs pbvs tC (Lam ttP nP vlP tP)
+termMatch' vts bind cbvs pbvs tC (Lam ttP nP vlP tP)
   | all (gVarIsUnknownLVar vts) vlP
     =  do bind' <- bindLVarsToEmpty bind $ listVarsOf vlP
           let pbvs' = vlP `addBoundVarList` pbvs
-          tMatch vts bind' cbvs pbvs' tC tP
+          termMatch vts bind' cbvs pbvs' tC tP
 \end{code}
 
 \newpage
@@ -445,12 +445,12 @@ $$
      \beta \uplus \beta'
    }
    \quad
-   \texttt{tMatch Closure}
+   \texttt{termMatch Closure}
 $$
 Note that here we only close w.r.t. free \emph{observational} variables.
 \begin{code}
-tMatch' vts bind cbvs pbvs (Cls nC tC) (Cls nP tP)
-  | nC == nP  =  tMatch vts bind cbvs' pbvs' tC tP
+termMatch' vts bind cbvs pbvs (Cls nC tC) (Cls nP tP)
+  | nC == nP  =  termMatch vts bind cbvs' pbvs' tC tP
   where
     cbvs' = S.filter isObsGVar $ theFreeVars $ freeVars scTrue tC -- safe?
     pbvs' = S.filter isObsGVar $ theFreeVars $ freeVars scTrue tP -- safe?
@@ -471,12 +471,12 @@ $$
      \beta \uplus \beta'_t \uplus \beta'_\sigma
    }
    \quad
-   \texttt{tMatch Subst}
+   \texttt{termMatch Subst}
 $$
 \begin{code}
-tMatch' vts bind cbvs pbvs (Sub ttC tC subC) (Sub ttP tP subP)
+termMatch' vts bind cbvs pbvs (Sub ttC tC subC) (Sub ttP tP subP)
   | ttC `isSubTypeOf` ttP 
-    = do  bindT  <-  tMatch vts bind cbvs pbvs tC tP
+    = do  bindT  <-  termMatch vts bind cbvs pbvs tC tP
           sMatch vts bindT cbvs pbvs subC subP
 \end{code}
 
@@ -495,10 +495,10 @@ $$
      \beta \uplus \{lvs_P[i] \mapsto lvs_C[i]\}_{i \in 1\dots\#lvs_P}
    }
    \quad
-   \texttt{tMatch Iter-Self}
+   \texttt{termMatch Iter-Self}
 $$
 \begin{code}
-tMatch' vts bind cbvs pbvs (Iter ttC saC naC siC niC lvsC)
+termMatch' vts bind cbvs pbvs (Iter ttC saC naC siC niC lvsC)
                            (Iter ttP saP naP siP niP lvsP)
   | ttP == ttC && naC == naP && niC == niP
                && saC == saP && siC == siP
@@ -507,7 +507,7 @@ tMatch' vts bind cbvs pbvs (Iter ttC saC naC siC niC lvsC)
                      bind1 <- consBind vts bind0 cbvs pbvs ttC niC niP
                      -- iibind bind1 $ zip lvsP lvsC
                      iibind bind $ zip lvsP lvsC -- no cons just now
-  | otherwise  =  fail "tMatch: incompatible Iter."
+  | otherwise  =  fail "termMatch: incompatible Iter."
   where
     iibind bind [] = return bind
     iibind bind ((lvP,lvC):rest)
@@ -527,10 +527,10 @@ $$
      \beta \uplus \{lvs_P[i] \mapsto t_I[i]\}_{i \in 1\dots\#lvs_P}
    }
    \quad
-   \texttt{tMatch Iter-Single}
+   \texttt{termMatch Iter-Single}
 $$
 \begin{code}
-tMatch' vts bind cbvs pbvs tC@(Cons ttC siC niC tsC)
+termMatch' vts bind cbvs pbvs tC@(Cons ttC siC niC tsC)
                            tP@(Iter ttP saP naP siP niP lvsP)
   | ttP == ttC && niC == niP && siC == siP
                = do bind0 <- consBind vts bind  cbvs pbvs ttC naP naP
@@ -597,7 +597,7 @@ $$
      \beta \uplus (\frown) \beta_j
    }
    \quad
-   \texttt{tMatch Iter-Cons}
+   \texttt{termMatch Iter-Cons}
 $$
 We use $(\frown)$ to denote the ``striping'' of the mappings,
 e.g.
@@ -612,7 +612,7 @@ then each ${t_C}_j$ will produce a list of length $\#lvs_P$,
 and the transpose of this list will provide the "striped" bindings.
 
 \begin{code}
-tMatch' vts bind cbvs pbvs tC@(Cons ttC saC naC tsC)
+termMatch' vts bind cbvs pbvs tC@(Cons ttC saC naC tsC)
                            tP@(Iter ttP saP naP siP niP lvsP)
   | ttP == ttC && naC == naP && saC == saP
                = do bind0 <- consBind vts bind  cbvs pbvs ttC naC naP
@@ -623,7 +623,7 @@ tMatch' vts bind cbvs pbvs tC@(Cons ttC saC naC tsC)
                     itBind bind lvsP bindLists -- for now
   | otherwise
      = fail $ unlines
-         [ "tMatch': General Cons not compatible with Iter."
+         [ "termMatch': General Cons not compatible with Iter."
          , "ttP  = " ++ show ttP
          , "ttC  = " ++ show ttC
          , "naP  = " ++ show naP
@@ -654,7 +654,7 @@ tMatch' vts bind cbvs pbvs tC@(Cons ttC saC naC tsC)
     itBind bind (lvP:lvsP) (as:aas)
       = do bind' <- bindLVarSubstRepl lvP as bind
            itBind bind' lvsP aas
-    itBind _ _ _ = fail "internal error in tMatch' Cons vs. Iter"
+    itBind _ _ _ = fail "internal error in termMatch' Cons vs. Iter"
 \end{code}
 
 
@@ -673,17 +673,17 @@ tMatch' vts bind cbvs pbvs tC@(Cons ttC saC naC tsC)
 %      \beta \uplus \{lvs_P[i] \mapsto \seqof{t_C[i]}_j\}_{i \in 1\dots\#lvs_P}
 %    }
 %    \quad
-%    \texttt{tMatch Iter-Only-Cons}
+%    \texttt{termMatch Iter-Only-Cons}
 % $$
 % This does not cater for a partial expansion!
 % \begin{code}
-% tMatch' vts bind cbvs pbvs tC@(Cons ttC saC naC tsC)
+% termMatch' vts bind cbvs pbvs tC@(Cons ttC saC naC tsC)
 %                               (Iter ttP saP naP siP niP lvsP)
 %   | ttP == ttC && naC == naP && saC == saP && all isNiP tsC
 %                = ibind bind $ zip lvsP $ transpose $ map unNiP tsC
 %   | otherwise
 %      = fail $ unlines
-%          [ "tMatch: full Cons not compatible with Iter."
+%          [ "termMatch: full Cons not compatible with Iter."
 %          , "ttP  = " ++ show ttP
 %          , "ttC  = " ++ show ttC
 %          , "naP  = " ++ show naP
@@ -708,9 +708,9 @@ tMatch' vts bind cbvs pbvs tC@(Cons ttC saC naC tsC)
 
 Any other situation results in failure:
 \begin{code}
-tMatch' _ _ _ _ tC tP
+termMatch' _ _ _ _ tC tP
  = fail $ unlines
-    [ "tMatch: structural mismatch."
+    [ "termMatch: structural mismatch."
     , "tC = " ++ show tC
     , "tP = " ++ show tP
     ]
@@ -723,7 +723,7 @@ tMatch' _ _ _ _ tC tP
 Matching two constructor names:
 \begin{code}
 consBind vts bind cbvs pbvs ttC nC nP
-  = vMatch vts bind cbvs pbvs vC vP
+  = vMatch vts bind cbvs pbvs ttC vC ttC vP
   where
     vC = Vbl nC ObsV Static
     vP = Vbl nP ObsV Static
@@ -744,7 +744,7 @@ tsMatch vts bind cbvs pvbs cts pts
 -- here both lists are the same length
 tsMatch' _ bind _ _ [] [] = return bind
 tsMatch' vts bind cbvs pvbs (tC:tsC) (tP:tsP)
- = do bind1 <- tMatch vts bind cbvs pvbs tC tP
+ = do bind1 <- termMatch vts bind cbvs pvbs tC tP
       tsMatch vts bind1 cbvs pvbs tsC tsP
 -- should not occur!
 tsMatch' _ _ _ _ _ _  =  error "tsMatch': unexpected mismatch case."
@@ -768,7 +768,7 @@ First, if the candidate is a variable
 we do variable-on-variable matching:
 \begin{code}
 tvMatch vts bind cbvs pbvs (Var ttC vC) ttP vP
-  = vMatch vts bind cbvs pbvs vC vP
+  = vMatch vts bind cbvs pbvs ttC vC ttP vP
 \end{code}
 
 Otherwise we check if the pattern is
@@ -900,7 +900,7 @@ Now, onto variable matching:
 \begin{code}
 vMatch :: MonadFail m
        => [VarTable] -> Binding -> CBVS -> PBVS
-       -> Variable -> Variable
+       -> Type -> Variable -> Type -> Variable
        -> m Binding
 \end{code}
 The rules regarding suitable matches for pattern variables
@@ -949,7 +949,7 @@ Rules based on the static or dynamic nature of variables:
 \end{itemize}
 We first screen by variable class:
 \begin{code}
-vMatch vts bind cbvs pvbs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
+vMatch vts bind cbvs pvbs ttC vC@(Vbl _ vwC _) ttP vP@(Vbl _ vwP _)
   | vwC == vwP   =  vMatch' vts bind cbvs pvbs vC vP
   | vwP /= ObsV  =  vMatch' vts bind cbvs pvbs vC vP
   | otherwise    =  fail $ unlines [ "vMatch: class mismatch"
@@ -1244,7 +1244,7 @@ vlFreeMatch vts bind cbvs pbvs [] (StdVar vP:_)
   = fail "vlMatch: too many std. pattern variables."
 
 vlFreeMatch vts bind cbvs pbvs ((StdVar vC):vlC) ((StdVar vP):vlP)
-  = do bind' <- vMatch vts bind cbvs pbvs vC vP
+  = do bind' <- vMatch vts bind cbvs pbvs ArbType vC ArbType vP
        vlFreeMatch vts bind' cbvs pbvs vlC vlP
 
 vlFreeMatch vts bind cbvs pbvs vlC ((StdVar _):_)
@@ -2703,9 +2703,9 @@ vtsMatch vts bind cbvs pbvs tsC tsP
               (S.toList tsC) (S.toList tsP) bind
  where
    matchVar  ::  (MonadPlus mp, MonadFail mp) => BasicM mp Binding Variable Variable
-   matchVar vC vP bind = vMatch vts bind cbvs pbvs vC vP
+   matchVar vC vP bind = vMatch vts bind cbvs pbvs ArbType vC ArbType vP
    matchTerm ::  (MonadPlus mp, MonadFail mp) => BasicM mp Binding Candidate Pattern
-   matchTerm tC tP bind =  tMatch vts bind cbvs pbvs tC tP
+   matchTerm tC tP bind =  termMatch vts bind cbvs pbvs tC tP
 \end{code}
 
 \newpage

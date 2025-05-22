@@ -756,6 +756,7 @@ tsMatch' _ _ _ _ _ _  =  error "tsMatch': unexpected mismatch case."
 
 We assume here that candidate term and pattern variable
 have the same \texttt{Type}.
+\textbf{NOT TRUE! The candidate type is a subtype of the pattern type.}
 \begin{code}
 
 tvMatch :: MonadFail m

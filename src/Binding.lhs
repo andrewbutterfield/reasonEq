@@ -16,7 +16,8 @@ module Binding
 , Binding
 , emptyBinding
 , mergeBindings
-, bindVarToVar, bindVarsToVars, bindVarToSelf, bindVarsToSelves
+, bindTypeVarToType, bindVarToVar, bindVarsToVars
+, bindVarToSelf, bindVarsToSelves
 , bindVarToTerm
 , bindVarToLVar
 , bindLVarToVList
@@ -26,6 +27,7 @@ module Binding
 , bindLVarSubstRepl
 , bindGVarToGVar
 , bindGVarToVList
+, lookupTypeVarBind
 , lookupVarBind
 , lookupLstBind
 , bindLVarsToNull, bindLVarsToEmpty
@@ -529,25 +531,23 @@ rangeEq nAPI d binding r r0
                   ]
 \end{code}
 
-\newpage
-\subsection{Binding Subscript to Subscript}
+
+\subsection{Binding Type-Variable to Type}
 
 \begin{code}
-bindSubscriptToSubscript :: MonadFail m
-                         => String -> VarWhen -> VarWhen -> SubBinding
-                         -> m SubBinding
-bindSubscriptToSubscript what (During m) (During n) sbind
-  = insertDR (rangeEq what) m n sbind
-bindSubscriptToSubscript what vw1 vw2 sbind
- | vw1 == vw2      =  return sbind
- | vw1 == Static   =  return sbind
- | otherwise  =  fail $ unlines'
-                  [ what
-                  , "incompatible temporality"
-                  , "vw1 = "++show vw1
-                  , "vw2 = "++show vw2
-                  ]
+bindTypeVarToType :: MonadFail m 
+                  => Identifier -> Type -> Binding -> m Binding
 \end{code}
+
+
+A \texttt{Static} variable can bind to
+any non-\texttt{Textual} thing in the appropriate class.
+\begin{code}
+bindTypeVarToType tv typ (BD (tbind,vbind,sbind,lbind))
+   =  do tbind' <- insertDR (rangeEq "bindTypeVarToType") tv typ tbind
+         return $ BD (tbind',vbind,sbind,lbind)
+\end{code}
+
 
 \newpage
 \subsection{Binding Variable to Variable}
@@ -623,8 +623,27 @@ bindVarsToSelves (v:vs) bind
        bindVarsToSelves vs bind'
 \end{code}
 
-
 \newpage
+\subsection{Binding Subscript to Subscript}
+
+\begin{code}
+bindSubscriptToSubscript :: MonadFail m
+                         => String -> VarWhen -> VarWhen -> SubBinding
+                         -> m SubBinding
+bindSubscriptToSubscript what (During m) (During n) sbind
+  = insertDR (rangeEq what) m n sbind
+bindSubscriptToSubscript what vw1 vw2 sbind
+ | vw1 == vw2      =  return sbind
+ | vw1 == Static   =  return sbind
+ | otherwise  =  fail $ unlines'
+                  [ what
+                  , "incompatible temporality"
+                  , "vw1 = "++show vw1
+                  , "vw2 = "++show vw2
+                  ]
+\end{code}
+
+
 \subsection{Binding Variable to Term}
 
 An observation or expression variable can bind to an expression
@@ -668,6 +687,7 @@ bindVarToTerm pv@(Vbl v ObsV _) ct binds
  = fail "bindVarToTerm: dynamic observable cannot bind to term."
 \end{code}
 
+\newpage
 Dynamic expression variables can only bind to
 expression terms, all of whose dynamic variables have the same temporality.
 Regardless of the temporality of the pattern variable,
@@ -691,7 +711,7 @@ bindVarToTerm v@(Vbl vi ExprV vt) ct (BD (tbind,vbind,sbind,lbind))
    thectw = S.elemAt 0 ctws
 \end{code}
 
-\newpage
+
 Dynamic predicate variables can only bind to
 predicate terms, all of whose dynamic variables have the same temporality.
 \begin{code}
@@ -1516,6 +1536,16 @@ Binding lookup is very straightforward,
 with the minor wrinkle that we need to ensure we lookup
 the subscript binding if the lookup variable has \texttt{During} temporality.
 
+\subsection{Lookup Type-Variables}
+
+\begin{code}
+lookupTypeVarBind :: MonadFail m => Binding -> Identifier -> m Type
+lookupTypeVarBind (BD (tbind,_,_,_)) tvi
+  = case M.lookup tvi tbind of
+      Nothing 
+        -> fail ("lookupTypeVarBind: Typevar "++show tvi++" not found.")
+      Just typ  ->  return typ
+\end{code}
 
 \subsection{Lookup (Standard) Variables}
 

@@ -134,13 +134,13 @@ currThKEY = "CURRTHEORY = "
 renderREqState :: REqState -> ([String],[String],NamedTheoryTexts)
 renderREqState reqs
   = ( [ reqstateHDR ] ++
-      (pdbg "THRYSTXT" thrysTxt) ++
+      thrysTxt ++
       [currThKEY ++ (currTheory reqs)] ++
       renderLiveProofs (liveProofs reqs) ++
       [ reqstateTLR ]
     , renderProofSettings (prfSettings reqs)
-    , pdbg "NMDTXTS" nmdTxts )
-  where (thrysTxt,nmdTxts) = renderTheories $ pdbg "THEORIES" (theories reqs)
+    , nmdTxts )
+  where (thrysTxt,nmdTxts) = renderTheories (theories reqs)
 \end{code}
 
 \subsection{Parse State}

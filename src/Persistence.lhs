@@ -279,11 +279,11 @@ saveAllState reqs
   where
     doWriteAll reqs pjdir
       = do  let (tsTxt,setsTxt,nTsTxts) = renderREqState reqs
-            let fp = projectPath $ pdbg "PJDIR" pjdir
-            writeFile fp $ unlines $ pdbg "TSTXT" tsTxt
+            let fp = projectPath pjdir
+            writeFile fp $ unlines tsTxt
             let sp = settingsPath pjdir
-            writeFile sp $ unlines $ pdbg "SETSTXT" setsTxt
-            sequence_ $ map (writeNamedTheoryTxt pjdir) $ pdbg "NTSTXTS" nTsTxts
+            writeFile sp $ unlines setsTxt
+            sequence_ $ map (writeNamedTheoryTxt pjdir) nTsTxts
             putStrLn ("REQ-STATE written to '"++projectDir reqs++"'.")
             return reqs{ modified = False }
 \end{code}
@@ -357,13 +357,13 @@ renderNamedTheory pjdir (nm,theory)
 \begin{code}
 writeNamedTheoryTxt :: FilePath -> NamedTheoryText -> IO ()
 writeNamedTheoryTxt pjdir (thnm,(thTxt,pTxts))
-  = ifDirectoryExists "Theory" () pjdir (doWriteTheoryTxt pjdir thnm $ pdbg "THTXT" thTxt)
+  = ifDirectoryExists "Theory" () pjdir (doWriteTheoryTxt pjdir thnm thTxt)
   where
     doWriteTheoryTxt pjdir thnm thTxt
       = do  let fp = theoryPath pjdir thnm
-            writeFile fp $ unlines $ pdbg "THTXT2" thTxt
+            writeFile fp $ unlines thTxt
             putStrLn ("Theory '"++thnm++"' written to '"++pjdir++"'.")
-            sequence_ $ map (writeProof pjdir thnm) $ pdbg "PTXTS" pTxts
+            sequence_ $ map (writeProof pjdir thnm) pTxts
             putStrLn ("Proofs in '"++thnm++"' written to '"++pjdir++"'.")
 \end{code}
 

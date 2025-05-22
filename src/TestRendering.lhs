@@ -667,13 +667,16 @@ trBindingU = trbinding trIdU
 
 trbinding trid = trbinding' trid . dumpBinding
 
-trbinding' trid (vb,sb,lb)
- = "{ " ++ seplist ", " id (map (trvb trid) vb ++
+trbinding' trid (tb,vb,sb,lb)
+ = "{ " ++ seplist ", " id (map (trtb trid) tb ++
+                            map (trvb trid) vb ++
                             map (trsb trid) sb ++
                             map (trlb trid) lb)
         ++ " }"
 
 trAssoc tr pairs = "{ " ++ seplist ", " tr pairs ++ " }"
+
+trtb trid (i,typ) = trid i ++ spaced _maplet ++ trType typ
 
 trvb trid ((i,vc),vb)
  = trVC vc (trid i) ++ spaced _maplet ++ trvarbind trid vb

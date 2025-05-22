@@ -137,14 +137,56 @@ $$
 match :: (MonadPlus mp, MonadFail mp) 
       => [VarTable] 
       -> Candidate -> Pattern -> mp Binding
-match vts cand patn  =  tMatch vts emptyBinding noBVS noBVS cand patn
+match vts cand patn  =  termMatch vts emptyBinding noBVS noBVS cand patn
+\end{code}
+
+\newpage
+\section{Type Matching}
+
+\begin{verbatim}
+isSubTypeOf :: Type -> Type -> Bool
+isSubTypeOf t1 t2
+  | lasttype t1 == bool && t2 == arbpred  =  True
+  | otherwise                             =  t1 `isSTOf` t2
+
+isSTOf :: Type -> Type -> Bool
+-- true outcomes first, to catch t==t case
+_            `isSTOf` T        =  True
+T            `isSTOf` _        =  False
+TB           `isSTOf` _        =  True
+_            `isSTOf` TB       =  False
+(TV i1)      `isSTOf` (TV i2)  =  i1 == i2
+(TG _)       `isSTOf` (TV _)   =  True
+(TG i1)      `isSTOf` (TG i2)  =  i1 == i2
+(TC i1 ts1)  `isSTOf` (TC i2 ts2) | i1==i2 = ts1 `areSTOf` ts2
+(TA i1 fs1)  `isSTOf` (TA i2 fs2) | i1==i2 = fs1 `areSFOf` fs2
+(TF tf1 ta1) `isSTOf` (TF tf2 ta2)  
+                               =  tf2 `isSTOf` tf1 && ta1 `isSTOf` ta2
+_            `isSTOf` _        = False
+
+areSTOf :: [Type] -> [Type] -> Bool -- are SubTypesOf
+[]       `areSTOf` []        =  True
+(t1:ts1) `areSTOf` (t2:ts2)  =  t1 `isSTOf` t2 && ts1 `areSTOf` ts2
+_        `areSTOf` _         =  False
+
+-- areSubFieldsOf
+areSFOf :: [(Identifier,[Type])] -> [(Identifier,[Type])] -> Bool
+[] `areSFOf` []  =  True
+((i1,ts1):fs1) `areSFOf` ((i2,ts2):fs2)
+ | i1 == i2      =  ts1 `areSTOf` ts2 && fs1 `areSFOf` fs2
+_ `areSFOf` _    =  False
+\end{verbatim}
+
+
+\begin{code}
+typeMatch bind typC typP = return bind
 \end{code}
 
 \newpage
 \section{Term Matching}
 
 \begin{code}
-tMatch, tMatch' :: (MonadPlus mp, MonadFail mp) 
+termMatch, termMatch' :: (MonadPlus mp, MonadFail mp) 
                 => [VarTable] -> Binding -> CBVS -> PBVS
                 -> Candidate -> Pattern -> mp Binding
 \end{code}

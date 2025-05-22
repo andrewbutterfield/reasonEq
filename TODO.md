@@ -8,6 +8,9 @@ for the conjecture we have sets with element type  `TG (Id "LE" 0)`
 while the set laws are being instantiated with the element type `TV (Id "t" 0)`.
 The crucial thing here is that we need to instantiate `t` to `LE`.
 
+`AST.isSubsetOf` to be deprecated in favour of `Matching.typeMatch`.
+
+
 
 For type-checking look at uses of `mkAsn` 
 that should become `AbstractUI.mkTypedAsn`.

@@ -646,43 +646,43 @@ seeSMB = seeBind smBinding
 test_composition
  = testGroup "Composition"
     [ testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches itself"
-       (nub( tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAqm eOpAqm )
+       (nub( termMatch [vtS_Design] emptyBinding S.empty S.empty eOpAqm eOpAqm )
         @?= [ bindVV gvp gvp $ bindVV gvq gvq $ bindLL gOm gOm
             $ bindLL gO gO $ bindLL gO' gO'
             $ bindLSR gOm [] [lOm]
             $ andBinding] )
     , testCase "P[Om/O'] matches itself"
-       (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty
+       (nub ( termMatch [vtS_Design] emptyBinding S.empty S.empty
                                             (endO2mid "m" p) (endO2mid "m" p) )
         @?= [ bindVV gvp gvp -- $ bindLS gOm gOm
             $ bindLSR gOm [] [lOm]
             $ emptyBinding ] )
     , testCase "Q[Om/O] matches itself"
-       (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty
+       (nub ( termMatch [vtS_Design] emptyBinding S.empty S.empty
                                             (begO2mid "m" q) (begO2mid "m" q) )
         @?= [ bindVV gvq gvq -- $ bindLS gOm gOm
             $ bindLSR gOm [] [lOm]
             $ emptyBinding ] )
     , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when n replaces m"
-       (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty eOpAqn eOpAqm )
+       (nub ( termMatch [vtS_Design] emptyBinding S.empty S.empty eOpAqn eOpAqm )
         @?= [ bindVV gvp gvp $ bindVV gvq gvq
             $ bindLS gO gO $ bindLS gO' gO' $ bindLS gOm gOn
             $ bindLSR gOm [] [lOn]
             $ andBinding] )
     , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when M,S replaces O"
-       (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty eMSpAqm eOpAqm )
+       (nub ( termMatch [vtS_Design] emptyBinding S.empty S.empty eMSpAqm eOpAqm )
         @?= [ bindVV gvp gvp $ bindVV gvq gvq
             $ bindLs gO [gM,gS] $ bindLs gO' [gM',gS'] $ bindLs gOm [gMm,gSm]
             $ bindLSR gOm [] [lMm,lSm]
             $ andBinding] )
     , testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when M,S;n replaces O;m"
-       (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty eMSpAqn eOpAqm )
+       (nub ( termMatch [vtS_Design] emptyBinding S.empty S.empty eMSpAqn eOpAqm )
         @?= [ bindVV gvp gvp $ bindVV gvq gvq
             $ bindLs gO [gM,gS] $ bindLs gO' [gM',gS'] $ bindLs gOm [gMn,gSn]
             $ bindLSR gOm [] [lMn,lSn]
             $ andBinding] )
     ,  testCase "E Om @ P[Om/O'] /\\ Q[Om/O] matches when ok,S replaces O"
-       (nub ( tMatch [vtS_Design] emptyBinding S.empty S.empty eoSpAqm eOpAqm )
+       (nub ( termMatch [vtS_Design] emptyBinding S.empty S.empty eoSpAqm eOpAqm )
         @?= [ bindVV gvp gvp $ bindVV gvq gvq
             $ bindLl gO [gok,gS] $ bindLl gO' [gok',gS']
             $ bindLSR gOm [tokm] [lSm]
@@ -755,12 +755,12 @@ test_assignment
 test_simple_assignment
  = testGroup "Simple Assignment (<< ... >> denotes definition expansion)"
     [ testCase "Design |- y := 42  :: v := e, should succeed"
-       ( tMatch [vtS_Design] emptyBinding S.empty S.empty
+       ( termMatch [vtS_Design] emptyBinding S.empty S.empty
            (wy .:= e42) (v .:= eie)
            @?= (Just $ bindVV gtv gsy $ bindVT ge e42 $ asgBinding)
        )
     , testCase "Design |- << y := 42 >> :: << v := e >>, should succeed"
-       ( tMatch [vtS_Design] emptyBinding S.empty S.empty
+       ( termMatch [vtS_Design] emptyBinding S.empty S.empty
            (wy `assigned` e42) (v `assigned` eie)
            @?= ( Just $ bindVV gtv gsy $ bindVT ge e42
                $ bindVV gok gok $ bindVV gok' gok'
@@ -816,17 +816,17 @@ x'1y'2 = ((evar int x' `equal` e1) `lAnd` (evar int y' `equal` e2))
 test_simultaneous_assignment
  = testGroup "Simultaneous Assignment"
      [ testCase "<< v$ := e$>> :: << v$ := e$>>"
-         ( tMatch [vtS_Design] emptyBinding S.empty S.empty
+         ( termMatch [vtS_Design] emptyBinding S.empty S.empty
                   vs_becomes_es vs_becomes_es
            @?= ( Just $ bindLL gvs' gvs' $ bindLL ges ges
                 $ bindLL gSvs gSvs $ bindLL gS'vs gS'vs $ andBinding ) )
      , testCase "<< u$ := f$>> :: << v$ := e$>>"
-         ( tMatch [vtS_Design] emptyBinding S.empty S.empty
+         ( termMatch [vtS_Design] emptyBinding S.empty S.empty
                   us_becomes_fs vs_becomes_es
            @?= ( Just $ bindLL gvs' gus' $ bindLL ges gfs
                 $ bindLL gSvs gSus $ bindLL gS'vs gS'us $ andBinding ) )
      , testCase "(x'=1 /\\ y'=2) /\\ S'\\z = S\\z  :: << v$ := e$>>"
-         ( tMatch [vtS_Design] emptyBinding S.empty S.empty
+         ( termMatch [vtS_Design] emptyBinding S.empty S.empty
                   x'1y'2 vs_becomes_es
            @?= ( Just $ bindLt gvs' [tx',ty'] $ bindLt ges [e1,e2]
                 $ bindLL gSvs gSzs $ bindLL gS'vs gS'zs $ andBinding ) )

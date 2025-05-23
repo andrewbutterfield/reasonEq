@@ -10,6 +10,13 @@ for the conjecture we have sets with element type  `TG (Id "LE" 0)`
 while the set laws are being instantiated with the element type `TV (Id "t" 0)`.
 The crucial thing here is that we need to instantiate `t` to `LE`.
 
+Currently:
+ `S ⊆ ls ∪ N` has `S`, `ls`, and `N` of type `ℙ LE`.
+But applying `subseteq_def` 
+results in `(∀ x  • x ∈ S ⟹   x ∈ ls ∪ N)`
+where `x` has type `t` and `S`, `ls`, and `N` have changed to type `ℙ t`.
+
+
 `AST.isSubsetOf` to be deprecated in favour of `Matching.typeMatch`.
 
 

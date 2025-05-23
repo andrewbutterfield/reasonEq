@@ -16,6 +16,37 @@ But applying `subseteq_def`
 results in `(∀ x  • x ∈ S ⟹   x ∈ ls ∪ N)`
 where `x` has type `t` and `S`, `ls`, and `N` have changed to type `ℙ t`.
 
+Here's one reason why (Binding should be subtype-aware):
+
+```
+(∀ y  • y ∈ S \ N ⟹   y ∈ ls)
+ ⊤
+Focus = [] :: ⊥ ⟶ 𝔹 
+Target (LHS): 
+(∀ y  • y ∈ S \ N ⟹   y ∈ ls)
+proof: tm 2 subseteq_def
+Match against 'subseteq_def'[2] failed!
+try match failed
+(∀ y  • y ∈ S \ N ⟹   y ∈ ls) :: (∀ x  • x ∈ S1 ⟹   x ∈ S2)
+lnm[parts]=subseteq_def[2]
+tP=S1 ⊆ S2 ≡ (∀ x  • x ∈ S1 ⟹   x ∈ S2)
+partsP=(∀ x  • x ∈ S1 ⟹   x ∈ S2)
+replP=S1 ⊆ S2
+tC=(∀ y  • y ∈ S \ N ⟹   y ∈ ls)
+scC=⊤
+---
+bindTypeVarToType: already bound differently(1).
+d = Id "t" 0
+old r = TV (Id "t" 0)
+new r = TG (Id "LE" 0)
+bind:
+fromList [(Id "B" 0,TG (Id "B" 0)),(Id "P" 0,TV (Id "P" 0)),(Id "t" 0,TV (Id "t" 0))]
+hit <enter> to continue
+```
+
+
+
+
 
 `AST.isSubsetOf` to be deprecated in favour of `Matching.typeMatch`.
 

@@ -298,7 +298,7 @@ These calls are:
 where $<$Complete Binding$>$ for matching involves:
 \begin{verbatim}
 findUnboundVars termLVarPairings mkEquivClasses questionableBinding
-mergeBindings instantiate
+mergeBindings instTerm
 \end{verbatim}
 and $<$Complete Binding$>$ for application involves(?) \texttt{completeBind}.
 
@@ -320,7 +320,7 @@ tryLawByName (Assertion tC scC) lnm parts mcs
     -- bind          <- match vts tC partsP
     -- (kbind,tPasC) <- bindKnown vts bind tP
     -- (fbind,_)     <- bindFloating vts kbind tP
-    -- tP'           <- instantiate fbind replP
+    -- tP'           <- instTerm fbind replP
     -- scP'          <- instantiateSC fbind scP of
     -- scP''         <- scDischarge scC scP' of
     -- return (fbind,tP',scP',scP'')
@@ -361,7 +361,7 @@ First we see if any of these are ``known''.
         of
           Yes kbind  ->  tryInstantiateFloating vts tP partsP replP scP kbind
           But msgs
-           -> But ([ "instantiate knowns failed"
+           -> But ([ "instTerm knowns failed"
                    , ""
                    , trTerm 0 tC ++ " :: " ++ trTerm 0 partsP
                    , ""
@@ -388,7 +388,7 @@ and we generate names for these that make their floating nature visible.
                            (mkInsCtxt vts scC) 
                            fbind tP partsP replP scP
           But msgs
-           -> But ([ "instantiate floating failed"
+           -> But ([ "instTerm floating failed"
                    , ""
                    , trTerm 0 tC ++ " :: " ++ trTerm 0 partsP
                    , ""
@@ -409,7 +409,7 @@ Next, instantiate the law using the bindings.
 -- tryLawByName asn@(tC,scC) lnm parts mcs
     tryInstantiate vts insctxt fbind tP partsP replP scP
       = case
-                instantiate insctxt fbind replP
+                instTerm insctxt fbind replP
         of
           Yes tP'  ->  tryInstantiateSC vts insctxt fbind tP' partsP replP scP
           But msgs
@@ -885,7 +885,7 @@ basicMatch mc vts law@((n,asnP@(Assertion tP scP)),_) replP (tC,scC) partsP
         kbind <- bindKnown vts bind tP
         fbind <- bindFloating vts kbind tP -- was replP 
         let insctxt = mkInsCtxt vts scC
-        tP' <- instantiate insctxt fbind replP
+        tP' <- instTerm insctxt fbind replP
         scP' <- instantiateSC insctxt fbind scP
         scP'' <- scDischarge (getDynamicObservables vts) scC scP'
 
@@ -1070,14 +1070,14 @@ shMatch showbind vts (i, mtch)
     lnindent = "\n    "
     showBinding False = ""
     showBinding True = lnindent ++ trBinding (mBind mtch) 
-    showRepl (But msgs) = unlines ("auto-instantiate failed!!":msgs)
+    showRepl (But msgs) = unlines ("auto-instTerm failed!!":msgs)
     showRepl (Yes brepl) = trTerm 0 brepl
 
 -- instantiateRepl :: [VarTable] -> ProofMatch -> YesBut Term
 -- instantiateRepl vts mtch
 --   = case bindFloating vts bind repl of
 --             But msgs   ->  But msgs
---             Yes abind  ->  instantiate abind repl
+--             Yes abind  ->  instTerm abind repl
 --   where
 --     bind = mBind mtch
 --     repl = mRepl mtch

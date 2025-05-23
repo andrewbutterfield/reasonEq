@@ -8,7 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module Instantiate
 ( InsContext(..), mkInsCtxt
-, instantiate
+, instTerm
 , instVarSet
 , instVSC
 , instantiateSC
@@ -94,24 +94,43 @@ mkInsCtxt vts sc = ICtxt (getDynamicObservables vts) sc
 \end{code}
 
 
+\section{Instantiating Types}
 
-\newpage
-\section{Instantiating Term with a (Total) Binding}
-
-Here we require every free variable in the term to be also in the binding.
 \begin{code}
-instantiate :: MonadFail m => InsContext -> Binding -> Term -> m Term
+instType :: MonadFail m => Binding -> Type -> m Type
+instType _ ArbType = return ArbType
+instType bind (TypeVar t) = lookupTypeVarBind bind t
+instType bind (TypeCons i ts) = do
+  bts <- instTypes bind ts
+  return $ TypeCons i bts
+instType _ typ = fail ("Cannot instantiate type "++show typ)
+
+instTypes bind [] = return []
+instTypes bind (t:ts) = do
+  bt <- instType bind t
+  bts <- instTypes bind ts
+  return (bt:bts)
 \end{code}
 
-\subsection{Instantiating Values and Types}
+\newpage
+\section{Instantiating Terms}
+
+Here we require every free variable and type-variable in the term to be also in the binding.
+\begin{code}
+instTerm :: MonadFail m => InsContext -> Binding -> Term -> m Term
+\end{code}
+
+\subsection{Instantiating Values and Type-Terms}
 
 \begin{eqnarray*}
-   \beta.\kk k &=& \kk k
-\\ \beta.\tt \tau &=& \tt \tau
+   \beta.\kk k : t &=& \kk k : \beta.t
+\\ \beta.(\tt \tau) &=& \tt{(\beta.\tau)}
 \end{eqnarray*}
 \begin{code}
-instantiate _ binding v@(Val _ _)  =  return v
-instantiate _ binding t@(Typ _)    =  return t
+instTerm _ binding (Val typ k) = do
+  typ' <- instType binding typ
+  return $ Val typ' k
+instTerm _ binding t@(Typ typ) = fmap Typ $ instType binding typ
 \end{code}
 
 \subsection{Instantiating Variables}
@@ -121,17 +140,18 @@ instantiate _ binding t@(Typ _)    =  return t
 \end{eqnarray*}
 Here we do not expect any bindings to list-variables.
 \begin{code}
-instantiate insctxt binding vt@(Var tk v)
-  = case lookupVarBind binding v of
-      Just (BindVar v')   ->  var tk v'
-      Just (BindTerm t')  ->  return t'
-      Just (BindLVar lv)  ->  fail $ unlines
-                                     [ "instantiate: naked list-variable!"]
-      Nothing             ->  fail $ unlines
-                                     [ "instantiate: variable not found"
-                                     , "var = " ++ trVar v
-                                     , "bind = " ++ trBinding binding
-                                     ]
+instTerm insctxt binding vt@(Var tk v) = do
+  tk' <- instType binding tk
+  case lookupVarBind binding v of
+    Just (BindVar v')   ->  var tk' v'
+    Just (BindTerm t')  ->  return t'
+    Just (BindLVar lv)  ->  fail $ unlines
+                                    [ "instTerm: naked list-variable!"]
+    Nothing             ->  fail $ unlines
+                                    [ "instTerm: variable not found"
+                                    , "var = " ++ trVar v
+                                    , "bind = " ++ trBinding binding
+                                    ]
 \end{code}
 
 \newpage
@@ -152,11 +172,11 @@ This results in a one-place iteration:
    \quad \text{ provided }  \itop \in \beta \land \forall_i \cdot \beta.v_i = \lst x_i, 
 \end{eqnarray*}
 \begin{code}
-instantiate insctxt binding (Cons tk sb n ts)
-  | all isVar ts && all isBLVar bts && have_itop
-      = return $ (Iter tk sb (jId "and") sb n) $ map theBLVar bts
-  | otherwise 
-      = fmap (Cons tk sb n) $ sequence $ map (instantiate insctxt binding) ts
+instTerm insctxt binding (Cons tk sb n ts) = do
+  tk' <- instType binding tk
+  if all isVar ts && all isBLVar bts && have_itop
+    then return $ (Iter tk' sb (jId "and") sb n) $ map theBLVar bts
+    else fmap (Cons tk' sb n) $ sequence $ map (instTerm insctxt binding) ts
   where 
     bts = catMaybes $ map (lookupVarBind binding . theVar) ts
     isBLVar (BindLVar _) = True
@@ -177,16 +197,16 @@ instantiate insctxt binding (Cons tk sb n ts)
 \\ \beta.(\xx n t)       &=& \xx {n} {\beta.t}
 \end{eqnarray*}
 \begin{code}
-instantiate insctxt binding (Bnd tk n vs tm)
+instTerm insctxt binding (Bnd tk n vs tm)
   = do vs' <- fmap theFreeVars $ instVarSet insctxt binding vs
-       tm' <- instantiate insctxt binding tm
+       tm' <- instTerm insctxt binding tm
        bnd tk n vs' tm'
-instantiate insctxt binding (Lam tk n vl tm)
+instTerm insctxt binding (Lam tk n vl tm)
   = do vl' <- instVarList insctxt binding vl
-       tm' <- instantiate insctxt binding tm
+       tm' <- instTerm insctxt binding tm
        lam tk n vl' tm'
-instantiate insctxt binding (Cls n tm)
-  = do tm' <- instantiate insctxt binding tm
+instTerm insctxt binding (Cls n tm)
+  = do tm' <- instTerm insctxt binding tm
        return $ Cls n tm'
 \end{code}
 
@@ -201,11 +221,11 @@ then we have an assignment.
 \\ \beta.(\ss t {v^n} {t^n}) &=& \ss {\beta.t} {\beta^*(v^n)} {\beta^*.t^n}
 \end{eqnarray*}
 \begin{code}
-instantiate insctxt binding (Sub tk tm s)
+instTerm insctxt binding (Sub tk tm s)
   = do s' <- instSub insctxt binding s
        tm' <- if isAssignment tm
               then return tm
-              else instantiate insctxt binding tm
+              else instTerm insctxt binding tm
        return $ Sub tk tm' s'
 \end{code}
 
@@ -232,7 +252,7 @@ Note that all lists must be of the same length,
 and at any list position $i$, the general variables $g^1_i, \dots, g^a_i$
 are of the same type (std/list).
 \begin{code}
-instantiate insctxt binding (Iter tk sa na si ni lvs)
+instTerm insctxt binding (Iter tk sa na si ni lvs)
   = do lvtss <- instIterLVS insctxt binding lvs
        -- all have same non-zero length
        -- have the same kind of object (list-var/term)
@@ -328,7 +348,7 @@ are processed the same way.
 instSub :: MonadFail m => InsContext -> Binding -> Substn -> m Substn
 instSub insctxt binding (Substn ts lvs)
   = do ts'  <- instZip (instStdVar insctxt binding)
-                       (instantiate insctxt binding) (S.toList ts)
+                       (instTerm insctxt binding) (S.toList ts)
        ts'' <- sequence $ map getTheTargetVar ts'
        vtlvss' <- instZip (instLLVar insctxt binding) 
                           (instLLVar insctxt binding) (S.toList lvs)

@@ -723,7 +723,7 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
                     let (fbind,fresh)
                           = generateFreshVars knownVs freshneeded sbind
                     let scC' = addFreshVars fresh $ conjSC liveProof
-                    brepl  <- instantiate ictxt fbind repl
+                    brepl  <- instTerm ictxt fbind repl
                     asn' <- mkAsn conjpart (conjSC liveProof)
                     return ( focus_ ((setTZ brepl tz),seq')
                            $ matches_ []
@@ -1017,7 +1017,7 @@ lawInstantiate3 vts law@((lnm,(Assertion lawt lsc)),lprov) varTerms liveProof
        let ss = S.elems $ S.map theSubscript $ S.filter isDuring
                         $ S.map gvarWhen $ mentionedVars conj
        nsc <- mrgSideCond scC ilsc
-       ilawt <- instantiate ictxt lbind lawt
+       ilawt <- instTerm ictxt lbind lawt
        let (tz,seq') = focus liveProof
        let dpath = fPath liveProof
        asn' <- mkAsn (exitTZ tz) (conjSC liveProof)

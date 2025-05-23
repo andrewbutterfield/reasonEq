@@ -143,7 +143,7 @@ match vts cand patn  =  termMatch vts emptyBinding noBVS noBVS cand patn
 \newpage
 \section{Type Matching}
 
-If we match a pattern of arbitrary type,
+If we match a pattern of extremal type,
 there is nothing we can do in terms of bindings.
 Instead, we may need to run type-inference after instantiation.
 
@@ -158,14 +158,41 @@ BottomType
 \end{verbatim}
 
 \begin{code}
-typeMatch bind typC ArbType       =  return bind -- no binding possible
+typeMatch bind typC ArbType       =  return bind 
+
 typeMatch bind typC@(TypeVar iC) (TypeVar iP)
   | iC == iP                      =  bindTypeVarToType iP typC bind
 typeMatch bind typC (TypeVar iP)  =  bindTypeVarToType iP typC bind
+
+typeMatch bind typC@(TypeCons iC tsC) (TypeCons iP tsP)
+  | iC == iP = do
+    bindI <- bindTypeVarToType iP (TypeVar iC) bind
+    typesMatch bindI tsC tsP
+
+typeMatch bind typC@(AlgType iC fsC) (AlgType iP fsP)
+  | iC == iP && fsC == fsP   =  bindTypeVarToType iP typC bind
+  -- temporary: we should typeMatch fsC!!i :: fsP!!i
+
+typeMatch bind typC@(FunType tdC trC) (FunType tdP trP) = do
+  bindD <- typeMatch bind tdC tdP
+  typeMatch bindD trC trP
+
+typeMatch bind BottomType BottomType = return bind  
+
+typeMatch bind typC@(GivenType iC) (GivenType iP)
+  | iC == iP                      =  bindTypeVarToType iP typC bind
+
 typeMatch bind typC typP 
   = fail $ unlines [ "typeMatch: distinct types"
                    , "typC = " ++ show typC
                    , "typP = " ++ show typP ]
+
+typesMatch bind [] [] = return bind
+typesMatch bind (tC:tsC) (tP:tsP) = do
+  bindH <- typeMatch bind tC tP
+  typesMatch bindH tsC tsP
+typesMatch bind tsC tsP = fail $ unlines
+  [ "typesMatch: length difference "++show (length tsP - length tsC)]
 \end{code}
 
 \newpage
@@ -182,18 +209,13 @@ in that the candidate is a subtype of the pattern.
 Note that predicate-type $t$ is the same as expression-type $t\fun\Bool$.
 \begin{code}
 termMatch vts bind cbvs pbvs tC tP
- = let kC = termtype tC ; kP = termtype tP
-   in if kC `isSubTypeOf` kP
-      then termMatch' vts bind cbvs pbvs tC tP
-      else fail $ unlines'
-            [ "termMatch: incompatible types!"
-            , "tC = "++show tC
-            , "kC = "++show kC
-            , "tP = "++show tP
-            , "kP = "++show kP
-            , "bind = "++show bind
-            ]
-\end{code}
+ = let typC = termtype tC ; typP = termtype tP
+   in do
+     bindT <- typeMatch bind typC typP
+     termMatch' vts bindT cbvs pbvs tC tP
+\end{code} 
+
+
 
 Term-matching is defined inductively over the pattern type.
 We also introduce a special identifier (\itop) used when 

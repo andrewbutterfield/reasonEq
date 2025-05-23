@@ -125,7 +125,7 @@ pattern ArbType = T
 pattern TypeVar i  = TV i
 pattern TypeCons i ts = TC i ts
 pattern AlgType i fs = TA i fs
-pattern FunType tf ta = TF tf ta
+pattern FunType td tr = TF td tr
 pattern GivenType i = TG i
 pattern BottomType = TB
 
@@ -134,7 +134,7 @@ arbpred = TF TB bool -- top of the predicate subtype lattice (see below)
 
 -- isPtype t if t has shape  t1 -> t2 -> ... -> tn -> bool
 -- which is really t1 -> (t2 -> (... -> (tn -> bool)...))
-lasttype (TF _ ta)  =  lasttype ta
+lasttype (TF _ tr)  =  lasttype tr
 lasttype t          =  t
 
 isPType (TF _ t)  =  lasttype t == bool
@@ -218,8 +218,8 @@ _            `isSTOf` TB       =  False
 (TG i1)      `isSTOf` (TG i2)  =  i1 == i2
 (TC i1 ts1)  `isSTOf` (TC i2 ts2) | i1==i2 = ts1 `areSTOf` ts2
 (TA i1 fs1)  `isSTOf` (TA i2 fs2) | i1==i2 = fs1 `areSFOf` fs2
-(TF tf1 ta1) `isSTOf` (TF tf2 ta2)  
-                               =  tf2 `isSTOf` tf1 && ta1 `isSTOf` ta2
+(TF td1 tr1) `isSTOf` (TF td2 tr2)  
+                               =  td2 `isSTOf` td1 && tr1 `isSTOf` tr2
 _            `isSTOf` _        = False
 \end{code}
 \textbf{NOTE: }

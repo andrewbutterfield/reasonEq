@@ -27,6 +27,7 @@ import Control
 import UnivSets
 import LexBase
 import Variables
+import Types
 import AST
 import SideCond
 import Binding
@@ -99,10 +100,19 @@ mkInsCtxt vts sc = ICtxt (getDynamicObservables vts) sc
 \begin{code}
 instType :: MonadFail m => Binding -> Type -> m Type
 instType _ ArbType = return ArbType
-instType bind (TypeVar t) = lookupTypeVarBind bind t
-instType bind (TypeCons i ts) = do
-  bts <- instTypes bind ts
-  return $ TypeCons i bts
+instType bind (TypeVar i) = lookupTypeVarBind bind i
+instType bind (TypeCons i ts) = do 
+  i' <- case lookupTypeVarBind bind i of
+          Just (TypeVar i') -> return i'
+          _ -> fail "instType: expected TypeVar"
+  ts' <- instTypes bind ts
+  return $ TypeCons i' ts'
+instType bind (FunType td tr) = do
+  td' <- instType bind td
+  tr' <- instType bind tr
+  return $ FunType td' tr'
+instType bind (GivenType i) = lookupTypeVarBind bind i
+instType _ BottomType = return BottomType
 instType _ typ = fail ("Cannot instantiate type "++show typ)
 
 instTypes bind [] = return []
@@ -126,6 +136,7 @@ instTerm :: MonadFail m => InsContext -> Binding -> Term -> m Term
    \beta.\kk k : t &=& \kk k : \beta.t
 \\ \beta.(\tt \tau) &=& \tt{(\beta.\tau)}
 \end{eqnarray*}
+
 \begin{code}
 instTerm _ binding (Val typ k) = do
   typ' <- instType binding typ
@@ -139,6 +150,7 @@ instTerm _ binding t@(Typ typ) = fmap Typ $ instType binding typ
    \beta.(\vv v) &=& \beta(v)
 \end{eqnarray*}
 Here we do not expect any bindings to list-variables.
+
 \begin{code}
 instTerm insctxt binding vt@(Var tk v) = do
   tk' <- instType binding tk
@@ -171,6 +183,7 @@ This results in a one-place iteration:
    \beta.(\cc n {vs}) &=& \ii {\beta(\itop)} n {(\beta^*.vs)}
    \quad \text{ provided }  \itop \in \beta \land \forall_i \cdot \beta.v_i = \lst x_i, 
 \end{eqnarray*}
+
 \begin{code}
 instTerm insctxt binding (Cons tk sb n ts) = do
   tk' <- instType binding tk

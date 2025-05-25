@@ -43,6 +43,7 @@ import Utilities
 import WriteRead
 import LexBase
 import Variables
+import Types
 import AST
 import SideCond
 import Assertions

@@ -3,7 +3,13 @@
 ## URGENT or NEXT
 
 
-We need to plumb in type-matching.
+Term `y ∈ ls ∪ N` should have type `𝔹` and not type `LE ⟶ ℙLE ⟶ 𝔹`.
+The latter is the type of `∈`.
+
+**PLAN**
+
+Predicates are of type boolean, and not  arbtype -> boolean.
+
 
 The proof of `ls_union_N` gets stuck because in the proof
 for the conjecture we have sets with element type  `TG (Id "LE" 0)`
@@ -49,6 +55,12 @@ hit <enter> to continue
 
 
 `AST.isSubsetOf` to be deprecated in favour of `Matching.typeMatch`.
+
+Type `VarBind` has a `BindId` variants, 
+but it is only used for variables of dynamicity `During`.  
+We should really use this to bind constructor identifiers.
+
+
 
 
 

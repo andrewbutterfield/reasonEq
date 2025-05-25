@@ -16,6 +16,7 @@ module SAT
 import Data.List ( nub, subsequences )
 import Data.Maybe ( listToMaybe )
 import LexBase
+import Types
 import AST
 import TestRendering ( trTerm )
 

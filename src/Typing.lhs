@@ -24,6 +24,7 @@ import qualified Data.Map as M
 import YesBut
 import LexBase
 import Variables
+import Types
 import AST
 import FreeVars
 import VarData

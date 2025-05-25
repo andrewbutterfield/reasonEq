@@ -51,6 +51,7 @@ library
       TermZipper
       TestRendering
       Theories
+      Types
       Typing
       UI.AbstractUI
       UI.ProverTUI

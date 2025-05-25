@@ -25,6 +25,7 @@ import Utilities
 import Symbols
 import WriteRead
 import LexBase
+import Types
 import AST
 import SideCond
 import Assertions

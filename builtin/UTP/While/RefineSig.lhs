@@ -28,6 +28,7 @@ import Control (mapsnd)
 import Utilities
 import LexBase
 import Variables
+import Types
 import AST
 import Assertions (mkAsn)
 import SideCond

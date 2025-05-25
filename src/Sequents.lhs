@@ -38,6 +38,7 @@ import Data.Maybe
 import Utilities
 import WriteRead
 import Variables
+import Types
 import AST
 import FreeVars
 import SideCond

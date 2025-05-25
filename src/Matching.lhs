@@ -27,6 +27,7 @@ import Utilities
 import Control
 import LexBase
 import Variables
+import Types
 import AST
 import SideCond
 import FreeVars
@@ -177,7 +178,7 @@ typeMatch bind typC@(FunType tdC trC) (FunType tdP trP) = do
   bindD <- typeMatch bind tdC tdP
   typeMatch bindD trC trP
 
-typeMatch bind BottomType BottomType = return bind  
+typeMatch bind _ BottomType = return bind  
 
 typeMatch bind typC@(GivenType iC) (GivenType iP)
   | iC == iP                      =  bindTypeVarToType iP typC bind
@@ -225,7 +226,9 @@ itop = jId "_itop"
 \end{code}
 
 \subsection{Value Term-Pattern (\texttt{Val})}
+
 Values only match themselves, and add no new bindings.
+
 $$
 \inferrule
    {{\kk k}_C = {\kk k}_P}
@@ -233,14 +236,17 @@ $$
    \quad
    \texttt{termMatch Val}
 $$
+
 \begin{code}
 termMatch' _ bind _ _ kC@(Val _ _) kP@(Val _ _)
  | kC == kP  =  return bind
 \end{code}
 
 \subsection{Variable Term-Pattern (\texttt{Var})}
+
 Variable matching is complicated, so we farm it out,
 as long as \texttt{Type}s match.
+
 $$
 \inferrule
    {\beta \vdash t_C :: v_P \leadsto \beta'}
@@ -248,6 +254,7 @@ $$
    \quad
    \texttt{termMatch Var}
 $$
+
 \begin{code}
 termMatch' vts bind cbvs pbvs tC (Var ttP vP)
   | termtype tC `isSubTypeOf` ttP  =  tvMatch vts bind cbvs pbvs tC ttP vP
@@ -255,9 +262,11 @@ termMatch' vts bind cbvs pbvs tC (Var ttP vP)
 
 \newpage
 \subsection{Constructor Term-Pattern (\texttt{Cons})}
+
 Constructors match if they have the same kind,
 their names match (as static observation variables)
 and the term-lists are of the same length and corresponding terms match.
+
 $$
 \inferrule
    { \beta \vdash n_C :: n_P \leadsto \beta_0
@@ -270,6 +279,7 @@ $$
    \quad
    \texttt{termMatch Cons}
 $$
+
 Here $ts_X = \langle t_{X_1}, t_{X_2}, \dots t_{X_n} \rangle$.
 \begin{code}
 termMatch' vts bind cbvs pbvs (Cons ttC sbC nC tsC) (Cons ttP sbP nP tsP)
@@ -770,7 +780,10 @@ termMatch' _ _ _ _ tC tP
 
 \subsection{Term Matching Support}
 
-Matching two constructor names:
+Matching two constructor names.
+This is really a match between two identifiers 
+that we wrap as static observables:
+
 \begin{code}
 consBind vts bind cbvs pbvs ttC nC nP
   = vMatch vts bind cbvs pbvs ttC vC ttC vP
@@ -778,6 +791,9 @@ consBind vts bind cbvs pbvs ttC nC nP
     vC = Vbl nC ObsV Static
     vP = Vbl nP ObsV Static
 \end{code}
+
+\textbf{We should store a mapping from nP to nC as a BindId component,
+rather than wrapping it up as a static observation variable.}
 
 \section{Term-List Matching}
 

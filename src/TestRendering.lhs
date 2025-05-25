@@ -44,6 +44,7 @@ import Utilities
 import UnivSets
 import LexBase
 import Variables
+import Types
 import AST
 import SideCond
 import Assertions

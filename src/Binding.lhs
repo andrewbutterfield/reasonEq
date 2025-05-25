@@ -58,6 +58,7 @@ import YesBut
 import Utilities
 import LexBase
 import Variables
+import Types
 import AST
 import VarData
 

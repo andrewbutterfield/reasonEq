@@ -29,6 +29,7 @@ import Control (mapboth,mapaccum,mapsnd)
 import UnivSets
 import LexBase
 import Variables
+import Types
 import AST
 import FreeVars
 import SideCond

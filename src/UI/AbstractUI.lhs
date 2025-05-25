@@ -59,6 +59,7 @@ import SideCond
 import Assertions
 import Laws
 import TermZipper
+import Types
 import AST
 import FreeVars
 import AlphaEquiv

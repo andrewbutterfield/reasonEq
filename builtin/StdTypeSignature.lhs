@@ -17,6 +17,7 @@ module StdTypeSignature (
 ) where
 
 import LexBase
+import Types
 import AST
 \end{code}
 

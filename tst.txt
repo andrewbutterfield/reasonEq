@@ -1,8 +1,2 @@
-termMatch: structural mismatch.
-@tC:
-C (TF TB (TG (Id "B" 0))) True (Id "imp" 0) [C (TF (TV (Id "t" 0)) (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))) True (Id "mbr" 0) [V (TV (Id "t" 0)) (VR (Id "y" 0,VO,WS)),C (TC (Id "P" 0) [TV (Id "t" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TV (Id "t" 0)]) (VR (Id "S" 0,VE,WS)),V (TC (Id "P" 0) [TV (Id "t" 0)]) (VR (Id "N" 0,VE,WS))]],C (TF (TV (Id "t" 0)) (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))) True (Id "mbr" 0) [V (TV (Id "t" 0)) (VR (Id "y" 0,VO,WS)),V (TC (Id "P" 0) [TV (Id "t" 0)]) (VR (Id "ls" 0,VO,WB))]]
-
-@tP:
-B (TF TB (TG (Id "B" 0))) (Id "forall" 0) (fromList [GV (VR (Id "x" 0,VO,WS))]) (C (TF TB (TG (Id "B" 0))) True (Id "imp" 0) [C (TF (TV (Id "t" 0)) (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))) True (Id "mbr" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "P" 0) [TV (Id "t" 0)]) (VR (Id "S1" 0,VE,WS))],C (TF (TV (Id "t" 0)) (TF (TC (Id "P" 0) [TV (Id "t" 0)]) (TG (Id "B" 0)))) True (Id "mbr" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "P" 0) [TV (Id "t" 0)]) (VR (Id "S2" 0,VE,WS))]])
-
-hit <enter> to continue
+@TYPECONS-BIND:
+BD (fromList [(Id "B" 0,TG (Id "B" 0)),(Id "P" 0,TV (Id "P" 0)),(Id "t" 0,TG (Id "LE" 0))],fromList [((Id "S1" 0,VE),BV (VR (Id "S" 0,VE,WS))),((Id "S2" 0,VE),BT (C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "union" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0,VE,WS))])),((Id "subseteq" 0,VO),BV (VR (Id "subseteq" 0,VO,WS))),((Id "x" 0,VO),BV (VR (Id "?x" 0,VO,WS)))],fromList [],fromList [])

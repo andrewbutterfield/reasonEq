@@ -10,6 +10,7 @@ module UTP.Reading (
   bookdef
 ) where
 
+import Types
 import AST
 import SideCond
 import Laws

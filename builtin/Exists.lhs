@@ -18,6 +18,7 @@ import Symbols
 import Utilities
 import LexBase
 import Variables
+import Types
 import AST
 import SideCond
 import VarData

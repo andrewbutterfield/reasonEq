@@ -17,6 +17,7 @@ import qualified Data.Map as M
 
 import LexBase
 import Variables
+import Types
 import AST
 import SideCond
 import VarData

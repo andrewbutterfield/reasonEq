@@ -26,6 +26,7 @@ import Control (mapfst,mapsnd)
 import UnivSets
 import LexBase
 import Variables
+import Types
 import AST
 import SideCond
 import FreeVars

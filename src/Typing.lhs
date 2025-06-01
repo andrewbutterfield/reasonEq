@@ -26,10 +26,7 @@ import LexBase
 import Variables
 import Types
 import AST
-import FreeVars
 import VarData
-import Binding
-import MatchContext
 
 import StdTypeSignature
 

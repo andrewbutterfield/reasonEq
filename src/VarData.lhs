@@ -43,7 +43,6 @@ module VarData ( VarMatchRole
                , genExpandToSet
                , getDynamicObservables
                , mapVToverVarSet
-               , expandSCKnowns
                ) where
 import Data.Maybe (fromJust)
 import Data.Map (Map)
@@ -1021,28 +1020,5 @@ mapTS vts svg (gv@(LstVar (LVbl v _ _)):gvs)
       KS kvs _ _  ->  mapTS vts (S.toList kvs++svg) gvs
       _           ->  mapTS vts (gv:svg)            gvs
 \end{code}
-
-\section{Expanding Knowns in Side-Conditions}
-\begin{code}
-expandSCKnowns :: [VarTable] -> SideCond -> SideCond
-expandSCKnowns vts (vscs,freshvs)
-  = ( map (expandVSCKnowns vts) vscs
-    , mapVToverVarSet vts freshvs ) 
---    , S.unions (S.map (expandKnownGenVars vts) freshvs ) )
-
-expandVSCKnowns :: [VarTable] -> VarSideConds -> VarSideConds
-expandVSCKnowns vts (VSC gv nvsD nvsC nvsCd) 
- = VSC gv (expandNVarSet vts nvsD) 
-          (expandNVarSet vts nvsC) 
-          (expandNVarSet vts nvsCd)
-
-expandNVarSet :: [VarTable] -> NVarSet -> NVarSet
-expandNVarSet vts NA = NA
-expandNVarSet vts (The vs) = The $ mapVToverVarSet vts vs
-
-expandKnownGenVars :: [VarTable] -> GenVar -> VarSet
-expandKnownGenVars vts gv = mapVToverVarSet vts $ S.singleton gv
-\end{code}
-
 
 

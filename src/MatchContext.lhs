@@ -9,7 +9,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module MatchContext
  ( MatchContext
  , buildMatchContext
- , expandSideCondKnownVars
+ , expandSideCondKnownVars         
+ , expandSCKnowns
  ) where
 
 import Data.Maybe
@@ -19,6 +20,7 @@ import qualified Data.Set as S
 import Data.Map (Map)
 import qualified Data.Map as M
 
+import NotApplicable
 import YesBut 
 import Utilities
 import WriteRead
@@ -88,3 +90,27 @@ expandSideCondKnownVars :: [MatchContext] -> SideCond -> SideCond
 expandSideCondKnownVars [] sc = sc
 expandSideCondKnownVars ((_,_,vts):_) sc  =  expandSCKnowns vts sc
 \end{code}
+
+\section{Expanding Knowns in Side-Conditions}
+\begin{code}
+expandSCKnowns :: [VarTable] -> SideCond -> SideCond
+expandSCKnowns vts (vscs,freshvs)
+  = ( map (expandVSCKnowns vts) vscs
+    , mapVToverVarSet vts freshvs ) 
+--    , S.unions (S.map (expandKnownGenVars vts) freshvs ) )
+
+expandVSCKnowns :: [VarTable] -> VarSideConds -> VarSideConds
+expandVSCKnowns vts (VSC gv nvsD nvsC nvsCd) 
+ = VSC gv (expandNVarSet vts nvsD) 
+          (expandNVarSet vts nvsC) 
+          (expandNVarSet vts nvsCd)
+
+expandNVarSet :: [VarTable] -> NVarSet -> NVarSet
+expandNVarSet vts NA = NA
+expandNVarSet vts (The vs) = The $ mapVToverVarSet vts vs
+
+expandKnownGenVars :: [VarTable] -> GenVar -> VarSet
+expandKnownGenVars vts gv = mapVToverVarSet vts $ S.singleton gv
+\end{code}
+
+

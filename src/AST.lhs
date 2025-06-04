@@ -352,11 +352,12 @@ Smart constructors for variables and binders.
 Variable must match term-class.
 \begin{code}
 var :: MonadFail m => Type -> Variable -> m Term
-var tp@(FunType _ t) v | t == bool && isPredVar v  =  return $ V tp v
-var typ       v   | not $ isPredVar v         =  return $ V typ v
+var tp               v | tp == bool && isPredVar v  =  return $ V tp v
+-- var tp@(FunType _ t) v | t == bool && isPredVar v   =  return $ V tp v
+var tp               v | not $ isPredVar v          =  return $ V tp v
 var _       _   =   fail "var: Type/VarClass mismatch"
 eVar t v = var t v
-pVar t v = var arbpred v
+pVar t v = var bool v
 \end{code}
 
 \newpage

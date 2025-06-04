@@ -6,24 +6,51 @@ END THEORIES
 CURRTHEORY = UTCP
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("UTCP","ls_union_N")
+("AOI","or_and_absorb")
 BEGIN LIVE-PROOF
-TH-NAME: UTCP
-CJ-NAME: ls_union_N
-CONJ = ASN (C (TF TB (TG (Id "B" 0))) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "subseteq" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "S" 0,VE,WS)),C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "union" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0,VE,WS))]],C (TG (Id "B" 0)) True (Id "subseteq" 0) [C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "S" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0,VE,WS))],V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB))]],([],fromList []))
+TH-NAME: AOI
+CJ-NAME: or_and_absorb
+CONJ = ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]],V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],([],fromList []))
 SIDE = ([],fromList [])
-STRAT red-L2R
+STRAT red-All
 BEGIN PRFSET
 MM = 30
 MS = 6
-BD = True
+BD = False
 TM = False
 TQ = False
 TS = False
 FV = True
 END PRFSET
 BEGIN SEQZIP
-TERMZIP = (C (TG (Id "B" 0)) True (Id "subseteq" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "S" 0,VE,WS)),C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "union" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0,VE,WS))]],[])
+TERMZIP = (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]],V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],[])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.or_and_absorb", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = K (TG (Id "B" 0)) (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+END LIST STEPS
+END LIVE-PROOF
+("UTCP","ls_union_N")
+BEGIN LIVE-PROOF
+TH-NAME: UTCP
+CJ-NAME: ls_union_N
+CONJ = ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "subseteq" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "S" 0,VE,WS)),C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "union" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0,VE,WS))]],C (TG (Id "B" 0)) True (Id "subseteq" 0) [C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "S" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0,VE,WS))],V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB))]],([],fromList []))
+SIDE = ([],fromList [])
+STRAT red-L2R
+BEGIN PRFSET
+MM = 30
+MS = 6
+BD = False
+TM = False
+TQ = False
+TS = False
+FV = True
+END PRFSET
+BEGIN SEQZIP
+TERMZIP = (B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GV (VR (Id "x" 0,VO,WS))]) (C (TG (Id "B" 0)) True (Id "imp" 0) [C (TF (TG (Id "LE" 0)) (TF (TC (Id "P" 0) [TG (Id "LE" 0)]) (TG (Id "B" 0)))) True (Id "mbr" 0) [V (TG (Id "LE" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "S" 0,VE,WS))],C (TF (TG (Id "LE" 0)) (TF (TC (Id "P" 0) [TG (Id "LE" 0)]) (TG (Id "B" 0)))) True (Id "mbr" 0) [V (TG (Id "LE" 0)) (VR (Id "x" 0,VO,WS)),C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "union" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0,VE,WS))]]]),[])
 BEGIN SEQUENT'
 SIDECOND = ([],fromList [])
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.ls_union_N", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = C (TG (Id "B" 0)) True (Id "subseteq" 0) [C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "\\" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "S" 0,VE,WS)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0,VE,WS))],V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB))]}
@@ -31,6 +58,7 @@ END SEQUENT'
 END SEQZIP
 FPATH: []
 BEGIN LIST STEPS
+(UseLaw (ByMatch MEL) "subseteq_def" (BD (fromList [(Id "B" 0,TG (Id "B" 0)),(Id "P" 0,TV (Id "P" 0)),(Id "t" 0,TG (Id "LE" 0))],fromList [((Id "S1" 0,VE),BV (VR (Id "S" 0,VE,WS))),((Id "S2" 0,VE),BT (C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "union" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0,VE,WS))])),((Id "subseteq" 0,VO),BV (VR (Id "subseteq" 0,VO,WS))),((Id "x" 0,VO),BV (VR (Id "x" 0,VO,WS)))],fromList [],fromList [])) [],ASN (C (TG (Id "B" 0)) True (Id "subseteq" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "S" 0,VE,WS)),C (TC (Id "P" 0) [TG (Id "LE" 0)]) True (Id "union" 0) [V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "ls" 0,VO,WB)),V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0,VE,WS))]],([],fromList [])))
 END LIST STEPS
 END LIVE-PROOF
 END MAP LIVE-PROOFS

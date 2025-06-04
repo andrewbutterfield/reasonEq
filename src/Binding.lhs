@@ -120,15 +120,6 @@ validVarClassBinding ExprV ExprV  =  True
 validVarClassBinding PredV PredV  =  True
 validVarClassBinding _     _      =  False
 \end{code}
-A similar predicate for binding to terms
-(currently deprecated):
-\begin{code}
-validVarTermBinding :: VarClass -> Type -> Bool
-validVarTermBinding _     _  =  True
---validVarTermBinding ObsV  t  =  isEType t
---validVarTermBinding ExprV t  =  isEType t
---validVarTermBinding PredV t  =  isPType t
-\end{code}
 
 As far as temporality goes,
 Static can bind to anything.
@@ -669,15 +660,8 @@ Static patterns bind to anything in the appropriate class,
 as per Fig.\ref{fig:utp-perm-class-bind}.
 \begin{code}
 bindVarToTerm v@(Vbl vi vc Static) ct (BD (tbind,vbind,sbind,lbind))
- | validVarTermBinding vc (termtype ct)
-   = do vbind' <- insertDR (rangeEq "bindVarToTerm") (vi,vc) (BT ct) vbind
-        return $ BD (tbind,vbind',sbind,lbind)
- | otherwise 
-    = fail $ unlines'
-        [ "bindVarToTerm: incompatible variable and term."
-        , "variable: " ++ show v
-        , "term:     " ++ show ct
-        ]
+  = do vbind' <- insertDR (rangeEq "bindVarToTerm") (vi,vc) (BT ct) vbind
+       return $ BD (tbind,vbind',sbind,lbind)
 \end{code}
 
 All remaining pattern cases are non-\texttt{Textual} dynamic variables.
@@ -1437,18 +1421,17 @@ bindLVarSubstRepl (LVbl (Vbl _ _ Textual) _ _) _ binds
 Static patterns bind to anything in the appropriate class,
 as per Fig.\ref{fig:utp-perm-class-bind}.
 \begin{code}
-bindLVarSubstRepl lv@(LVbl (Vbl vi vc Static) is ij) cndTsVL (BD (tbind,vbind,sbind,lbind))
- | all (validVarTermBinding vc) (map termtype cndTs)
-    = do feasibility <- feasibleSelfReference lv $ map LstVar cndVL
-         lbind' <- insertDR (rangeEqvLSSub "bindLVarSubstRepl(static)")
-                            (vi,vc,is,ij) (BX cndTsVL) lbind
-         case feasibility of
-           Nothing -> return $ BD (tbind,vbind,sbind,lbind')
-           Just (vs,lv')
-            -> do bind' <- attemptFeasibleBinding lv lv'
-                                                  (BD (tbind,vbind,sbind,lbind'))
-                  return bind'
- | otherwise  =  fail "bindLVarSubstRepl: incompatible variable and terms."
+bindLVarSubstRepl lv@(LVbl (Vbl vi vc Static) is ij) cndTsVL 
+                  (BD (tbind,vbind,sbind,lbind))
+  = do  feasibility <- feasibleSelfReference lv $ map LstVar cndVL
+        lbind' <- insertDR (rangeEqvLSSub "bindLVarSubstRepl(static)")
+                          (vi,vc,is,ij) (BX cndTsVL) lbind
+        case feasibility of
+          Nothing -> return $ BD (tbind,vbind,sbind,lbind')
+          Just (vs,lv') -> do 
+            bind' <- attemptFeasibleBinding lv lv' 
+                       (BD (tbind,vbind,sbind,lbind'))
+            return bind'
  where
    (cndVL,cndTs) = partitionEithers cndTsVL
 \end{code}
@@ -1460,7 +1443,8 @@ predicate terms, all of whose dynamic variables have the same temporality.
 Dynamic observable and expression list-variables can only bind to
 expression terms, all of whose dynamic variables have the same temporality.
 \begin{code}
-bindLVarSubstRepl lv@(LVbl (Vbl vi vc vt) is ij) cndTsVL (BD (tbind,vbind,sbind,lbind))
+bindLVarSubstRepl lv@(LVbl (Vbl vi vc vt) is ij) cndTsVL 
+                  (BD (tbind,vbind,sbind,lbind))
  | vc == PredV && any isExpr cndTs
            =  fail "bindLVarSubstRepl: pred. l-var. cannot bind to expression."
  | vc /= PredV && any isPred cndTs

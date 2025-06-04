@@ -12,7 +12,7 @@ module Types ( Type
            , pattern ArbType,  pattern TypeVar, pattern TypeCons
            , pattern AlgType, pattern FunType, pattern GivenType
            , pattern BottomType
-           , isPType, isEType
+           , isEType
            , isSubTypeOf, reconcile2Types, reconcileTypes
            ) where
 import Data.Char
@@ -36,6 +36,10 @@ import Debugger
 \end{code}
 
 \section{Types}
+
+In the Isabelle/HOL ``prog-prove'' tutorial 
+(\url{https://isabelle.in.tum.de/dist/Isabelle2025/doc/prog-prove.pdf})
+we are told that ``\textbf{Formulas} are terms of type $bool$.''
 
 We mainly use types to prevent large numbers of spurious matches
 occurring with expressions.
@@ -71,7 +75,7 @@ data Type -- most general types first
  | TA Identifier [(Identifier,[Type])] -- algebraic data type
  | TF Type Type -- function type
  | TG Identifier -- given type
- | TB -- bottom type,  bottom of sub-type relation
+ | TB -- bottom type,  bottom of sub-type relation, infeasible/error type
  deriving (Eq, Ord, Show, Read)
 
 isAtmType :: Type -> Bool
@@ -93,17 +97,9 @@ pattern FunType td tr = TF td tr
 pattern GivenType i = TG i
 pattern BottomType = TB
 
-bool  = TG $ jId $ "B"
-arbpred = TF TB bool -- top of the predicate subtype lattice (see below)
-
--- isPtype t if t has shape  t1 -> t2 -> ... -> tn -> bool
--- which is really t1 -> (t2 -> (... -> (tn -> bool)...))
-lasttype (TF _ tr)  =  lasttype tr
-lasttype t          =  t
-
-isPType (TF _ t)  =  lasttype t == bool
-isPType _         =  False
-isEType           =  not . isPType
+bool     =  TG $ jId $ "B"
+arbpred  =  bool -- was TF TB bool, now deprecated
+isEType  =  (/= bool)
 \end{code}
 
 \subsection{Sub-Typing}
@@ -151,59 +147,37 @@ $$
  ~\land~
  \sigma_n \subseteq_T \tau_n
 $$
-In the type system here, an expression of type bool,
-has its type represented by $\Bool$,
-while predicates have a type of the form $t1\fun \dots tn \fun \Bool$.
-For subtyping below these should be treated as the same,
-so we extend our relation by adding:
-\begin{eqnarray*}
-   \Bool &\subseteq_T& \bot\fun\Bool
-\\ \tau \fun \Bool &\subseteq_T& \bot\fun\Bool
-\\ \tau_1 \fun \tau_2 \fun \Bool &\subseteq_T& \bot\fun\Bool
-\\  &\vdots
-\end{eqnarray*}
 \begin{code}
-
-
-
 isSubTypeOf :: Type -> Type -> Bool
-isSubTypeOf t1 t2
-  | lasttype t1 == bool && t2 == arbpred  =  True
-  | otherwise                             =  t1 `isSTOf` t2
+isSubTypeOf t1 t2  
+  =  t1 `isSTOf` t2
+  where
+    isSTOf :: Type -> Type -> Bool
+    -- true outcomes first, to catch t==t case
+    _            `isSTOf` T        =  True
+    T            `isSTOf` _        =  False
+    TB           `isSTOf` _        =  True
+    _            `isSTOf` TB       =  False
+    (TV i1)      `isSTOf` (TV i2)  =  i1 == i2
+    (TG _)       `isSTOf` (TV _)   =  True
+    (TG i1)      `isSTOf` (TG i2)  =  i1 == i2
+    (TC i1 ts1)  `isSTOf` (TC i2 ts2) | i1==i2 = ts1 `areSTOf` ts2
+    (TA i1 fs1)  `isSTOf` (TA i2 fs2) | i1==i2 = fs1 `areSFOf` fs2
+    (TF td1 tr1) `isSTOf` (TF td2 tr2)  
+                                   =  td2 `isSTOf` td1 && tr1 `isSTOf` tr2
+    _            `isSTOf` _        = False
 
-isSTOf :: Type -> Type -> Bool
--- true outcomes first, to catch t==t case
-_            `isSTOf` T        =  True
-T            `isSTOf` _        =  False
-TB           `isSTOf` _        =  True
-_            `isSTOf` TB       =  False
-(TV i1)      `isSTOf` (TV i2)  =  i1 == i2
-(TG _)       `isSTOf` (TV _)   =  True
-(TG i1)      `isSTOf` (TG i2)  =  i1 == i2
-(TC i1 ts1)  `isSTOf` (TC i2 ts2) | i1==i2 = ts1 `areSTOf` ts2
-(TA i1 fs1)  `isSTOf` (TA i2 fs2) | i1==i2 = fs1 `areSFOf` fs2
-(TF td1 tr1) `isSTOf` (TF td2 tr2)  
-                               =  td2 `isSTOf` td1 && tr1 `isSTOf` tr2
-_            `isSTOf` _        = False
-\end{code}
-\textbf{NOTE: }
-\textsl{What if $t_1$ is a type-variable $t$ while $t_2$ is a given type $\mathbb{G}$?}
+    areSTOf :: [Type] -> [Type] -> Bool -- are SubTypesOf
+    []       `areSTOf` []        =  True
+    (t1:ts1) `areSTOf` (t2:ts2)  =  t1 `isSTOf` t2 && ts1 `areSTOf` ts2
+    _        `areSTOf` _         =  False
 
-
-\begin{code}
-areSTOf :: [Type] -> [Type] -> Bool -- are SubTypesOf
-[]       `areSTOf` []        =  True
-(t1:ts1) `areSTOf` (t2:ts2)  =  t1 `isSTOf` t2 && ts1 `areSTOf` ts2
-_        `areSTOf` _         =  False
-\end{code}
-
-\begin{code}
--- areSubFieldsOf
-areSFOf :: [(Identifier,[Type])] -> [(Identifier,[Type])] -> Bool
-[] `areSFOf` []  =  True
-((i1,ts1):fs1) `areSFOf` ((i2,ts2):fs2)
- | i1 == i2      =  ts1 `areSTOf` ts2 && fs1 `areSFOf` fs2
-_ `areSFOf` _    =  False
+    -- areSubFieldsOf
+    areSFOf :: [(Identifier,[Type])] -> [(Identifier,[Type])] -> Bool
+    []             `areSFOf` []  =  True
+    ((i1,ts1):fs1) `areSFOf` ((i2,ts2):fs2)
+      | i1 == i2                 =  ts1 `areSTOf` ts2 && fs1 `areSFOf` fs2
+    _              `areSFOf` _   =  False
 \end{code}
 
 We also need to reconcile a pair of types, 

@@ -69,7 +69,7 @@ type TypeVariable = Identifier
 A type-scheme quantifies over type-variables 
 ($\forall t_1,\dots,t_n \bullet t$).
 \begin{code}
-data TypeScheme = TS [TypeVariable] Type
+data TypeScheme = TS [TypeVariable] Type deriving Show
 pattern Scheme qvars typ = TS qvars typ
 \end{code}
 
@@ -88,13 +88,15 @@ instance Types Type where
     ftv (TypeVar n)      =  S.singleton n
     ftv (GivenType _)    =  S.empty
     ftv (FunType t1 t2)  =  ftv t1 `S.union` ftv t2
+    ftv ArbType          =  S.empty
     ftv t                =  error ("Type.ftv NYfI: "++show t)
 
     apply s t@(TypeVar n)    =  case M.lookup n s of
-                               Nothing  ->  t
-                               Just t'  ->  t'
-    apply s (FunType t1 t2)  = FunType (apply s t1) (apply s t2)
-    apply _ t@(GivenType _)  = t
+                                  Nothing  ->  t
+                                  Just t'  ->  t'
+    apply s (FunType t1 t2)  =  FunType (apply s t1) (apply s t2)
+    apply _ t@(GivenType _)  =  t
+    apply _ ArbType          =  ArbType
     apply s t                =  error ("Type.apply NYfI: "++show t)
 
 instance Types a => Types [a] where
@@ -239,7 +241,7 @@ typeInference vts trm
         let tk = termtype trm
         let trm' = if isEType tk
                    then settype typ' trm
-                   else trm
+                   else settype typ' trm
         return (typ',trm')
 
 getVars :: Term -> [Variable]

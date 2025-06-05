@@ -121,7 +121,7 @@ proofREPLConfig
             , matchLawDescr
             , applyMatchDescr
             -- , testDescr
-            , normQuantDescr
+            -- , normQuantDescr
             , simpNestDescr
             , substituteDescr
             , showProofSettingsDescr
@@ -476,23 +476,23 @@ with one floating variable. Is this too restrictive?):
 
 \subsection{Quantifier Handling}
 
-Normalise Quantifiers
-\begin{code}
-normQuantDescr = ( "nq"
-                 , "normalise quantifiers"
-                 , unlines
-                    [ "n       -- normalise quantifiers" ]
-                 , normQuantCommand )
+% Normalise Quantifiers
+% \begin{code}
+% normQuantDescr = ( "nq"
+%                  , "normalise quantifiers"
+%                  , unlines
+%                     [ "n       -- normalise quantifiers" ]
+%                  , normQuantCommand )
 
-normQuantCommand :: REPLCmd (REqState, LiveProof)
-normQuantCommand _ state@(reqs, liveProof)
-  =  case normQuantFocus (theories reqs) liveProof of
-      Yes liveProof'  ->  return (reqs, liveProof')
-      But msgs
-       -> do putStrLn $ unlines' msgs
-             waitForReturn
-             return (reqs, matches_ [] liveProof)
-\end{code}
+% normQuantCommand :: REPLCmd (REqState, LiveProof)
+% normQuantCommand _ state@(reqs, liveProof)
+%   =  case normQuantFocus (theories reqs) liveProof of
+%       Yes liveProof'  ->  return (reqs, liveProof')
+%       But msgs
+%        -> do putStrLn $ unlines' msgs
+%              waitForReturn
+%              return (reqs, matches_ [] liveProof)
+% \end{code}
 
 
 Simplify Nested Quantifiers

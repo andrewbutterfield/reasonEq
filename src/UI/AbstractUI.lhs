@@ -26,7 +26,7 @@ module UI.AbstractUI
 , matchFocus, matchFocusAgainst
 , applyMatchToFocus1, applyMatchToFocus2
 , applySAT
-, normQuantFocus
+-- , normQuantFocus
 , nestSimpFocus
 , substituteFocus
 , tryFocusAgainst

@@ -85,18 +85,20 @@ class Types a where
 We have instances for types, lists of types, and type-schemes:
 \begin{code}
 instance Types Type where
+    ftv ArbType          =  S.empty
     ftv (TypeVar n)      =  S.singleton n
+    ftv (TypeCons i ts)  =  S.unions $ map ftv ts
     ftv (GivenType _)    =  S.empty
     ftv (FunType t1 t2)  =  ftv t1 `S.union` ftv t2
-    ftv ArbType          =  S.empty
     ftv t                =  error ("Type.ftv NYfI: "++show t)
 
+    apply _ ArbType          =  ArbType
     apply s t@(TypeVar n)    =  case M.lookup n s of
                                   Nothing  ->  t
                                   Just t'  ->  t'
+    apply s (TypeCons i ts)  =  TypeCons i $ map (apply s) ts
     apply s (FunType t1 t2)  =  FunType (apply s t1) (apply s t2)
     apply _ t@(GivenType _)  =  t
-    apply _ ArbType          =  ArbType
     apply s t                =  error ("Type.apply NYfI: "++show t)
 
 instance Types a => Types [a] where
@@ -235,17 +237,19 @@ typeInference :: MonadFail mf
               -> Term 
               -> mf (Type,Term)
 typeInference vts trm
-  = do  let (fis,env) = buildTypeEnv vts [1..] M.empty (getVars trm)
-        (_,(sub, typ)) <- inferTypes vts fis (TypeEnv env) trm
-        let typ' = apply sub typ
+  = do  let (fis,env) = buildTypeEnv vts [1..] M.empty (pdbg "GOTVARS" $ getVars $ pdbg "TRM" trm)
+        -- ! fis is infinite !
+        (_,(sub, typ)) <- inferTypes vts fis (TypeEnv $ pdbg "ENV" env) trm
+        let typ' = apply (pdbg "SUB" sub) $ pdbg "TYP" typ
         let tk = termtype trm
-        let trm' = if isEType tk
+        let trm' = if isEType $ pdbg "TK" tk
                    then settype typ' trm
                    else settype typ' trm
         return (typ',trm')
 
 getVars :: Term -> [Variable]
-getVars = stdVarsOf . S.toList . mentionedVars
+getVars = stdVarsOf . S.toList . mentionedIds
+
 
 buildTypeEnv :: [VarTable] -> FreshInts -> Env -> [Variable] 
              -> (FreshInts,Env)

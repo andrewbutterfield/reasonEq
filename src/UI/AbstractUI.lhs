@@ -587,8 +587,8 @@ Infer goal type:
 \begin{code}
 mkTypedAsn vts term sc 
   = case typeInference vts term of
-      Nothing            ->  mkAsn term sc
-      Just (typ',term')  ->  mkAsn term' sc
+      But msgs          ->  mkAsn (pdbg (unlines msgs++"TERM") term) sc
+      Yes (typ',term')  ->  mkAsn (pdbg "TERM'" term') sc
 \end{code}
 
 Matching all laws:

@@ -29,6 +29,7 @@ module AST ( Value, pattern Boolean, pattern Integer
            , assignVar, isAssignVar, theAssignment, isAssignment
            , subTerms
            , mentionedVars, mentionedVarLists, mentionedVarSets
+           , mentionedIds
            , onlyTrivialQuantifiers, anyTrivialSubstitution
            , termSize
            -- test only below here
@@ -700,6 +701,29 @@ mentionedVarSets (S _ t (SN tsub lvsub))  = mentionedVarSets t ++ tvs ++ rvs
 mentionedVarSets (I _ _ _ _ _ lvs)        =  [S.fromList $ map LstVar lvs]
 mentionedVarSets _                        =  []
 \end{code}
+
+Sometimes we need to include cons-identifiers (as static variables ?):
+\begin{code}
+mentionedIds :: Term -> VarSet
+mentionedIds (V _ v)            =  S.singleton $ StdVar v
+mentionedIds (C _ _ n ts)       
+  =  S.singleton (StdVar $ StaticVar n) `S.union` (S.unions $ map mentionedIds ts)
+mentionedIds (B _ _ vs t)       =  mentionedIds t `S.union` vs
+mentionedIds (L _ _ vl t)       =  mentionedIds t `S.union` (S.fromList vl)
+mentionedIds (X _ t)            =  mentionedIds t
+mentionedIds (S _ t (SN tsub lvsub))
+  = (mentionedIds t `S.union` tvs) `S.union` rvs
+  where
+     (tsvl,rtl) = unzip $ S.toList tsub
+     (tlvl,rlvl) = unzip $ S.toList lvsub
+     tvs = S.fromList (map StdVar tsvl ++ map LstVar tlvl)
+     rvs = S.unions (map mentionedIds rtl)
+           `S.union`
+           (S.map LstVar $ S.fromList rlvl)
+mentionedIds (I _ _ _ _ _ lvs)  =  S.fromList $ map LstVar lvs
+mentionedIds _                  =  S.empty
+\end{code}
+
 
 
 Term Sizes

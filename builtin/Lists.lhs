@@ -56,16 +56,16 @@ the constants $\nil$, $\cons$, $\hd$, $\tl$, $\cat$, $\pfx$,
 
 These include:
 \begin{code}
-contt     = TypeVar $ jId "t"
-seqt      = star contt
-seqf_1 t  = FunType (star t) (star t)
-seqf_2 t  = FunType (star t) (seqf_1 t)
-cons_t t  = FunType t        (seqf_1 t)
-hd_t t    = FunType (star t) t
-pfx_t t   = FunType (star t) $ FunType (star t) bool
-sngl_t t  = FunType t        (star t)
-elems_t t = FunType (star t) (power t)
-len_t t   = FunType (star t) int
+contt     = TypeVar $ jId "t"    --   t
+seqt      = star contt    --   t*
+seqf_1 t  = FunType (star t) (star t)    --  t*->t*
+seqf_2 t  = FunType (star t) (seqf_1 t)    --  t*->(t*->t*)
+cons_t t  = FunType t        (seqf_1 t)    --  t->(t*->t*)
+hd_t t    = FunType (star t) t    -- t*->t
+pfx_t t   = FunType (star t) $ FunType (star t) bool    -- t*->(t*->B)
+sngl_t t  = FunType t        (star t)    -- t->t*
+elems_t t = FunType (star t) (power t)    -- t*->P t
+len_t t   = FunType (star t) int    -- t*->N
 \end{code}
 
 \subsection{List Values/Operators}

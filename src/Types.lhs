@@ -79,10 +79,12 @@ data Type -- most general types first
  deriving (Eq, Ord, Show, Read)
 
 isAtmType :: Type -> Bool
-isAtmType T       =  True
-isAtmType (TV _)  =  True
-isAtmType (TG _)  =  True
-isAtmType TB      =  True
+isAtmType T         =  True
+isAtmType (TV _)    =  True
+isAtmType (TC _ _)  =  False
+isAtmType (TA _ _)  =  False
+isAtmType (TG _)    =  True
+isAtmType TB        =  True
 \end{code}
 The ordering of data-constructors here is important,
 as type-matching relies on it. \textbf{How?}

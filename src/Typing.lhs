@@ -247,7 +247,8 @@ typeInference vts trm
 getVars :: Term -> [Variable]
 getVars = stdVarsOf . S.toList . mentionedVars
 
-buildTypeEnv :: [VarTable] -> FreshInts -> Env -> [Variable] -> (FreshInts,Env)
+buildTypeEnv :: [VarTable] -> FreshInts -> Env -> [Variable] 
+             -> (FreshInts,Env)
 buildTypeEnv vts fis env [] = (fis,env)
 buildTypeEnv vts fis env (v:vs) 
   = let (fis',env') = addVarType vts fis env v
@@ -274,7 +275,7 @@ lambda = jId "lambda"
 app = jId "@"
 \end{code}
 
-\TLEGEND
+\TLEGEND 
 
 \begin{code}
 inferTypes :: MonadFail mf

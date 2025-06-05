@@ -128,20 +128,20 @@ trType :: Type -> String
 trType ArbType           =  _tau
 trType (TypeVar i)       =  trId i
 trType (TypeCons (Identifier i _) [t])
-  | i == "P"             =  "\x2119 "
+  | i == "P"             =  "\x2119"
                             ++ (trBracketIf (not $ isAtmType t) (trType t)) 
   | i == "*"             =  (trBracketIf (not $ isAtmType t) (trType t)) 
-                             ++ "\x002a "
+                             ++ "\x002a"
 trType (TypeCons i [t])  =  trId i ++ " " ++ trType t
 trType (TypeCons i ts)   =  trId i ++ "(" ++ trTypes ts ++ ")"
 trType (AlgType i itss)  =  "ADT"
 -- fun-types are right-associative
 trType (FunType ft@(FunType _ _) tr)   
-  =  "(" ++ trType ft ++ ")" ++  _fun ++ trType tr
-trType (FunType ta tr)   =  trType ta ++ _fun ++ trType tr
+  =  "(" ++ trType ft ++ ")" ++  trFun ++ trType tr
+trType (FunType ta tr)   =  trType ta ++ trFun ++ trType tr
 trType (GivenType (Identifier i _)) 
   -- hack - should be done in Symbols
-  | i == "B"  =  " \x1d539 "
+  | i == "B"  =  "\x1d539 "
   | i == "N"  =  "\x2115"
   | i == "Z"  =  "\x2124"
   | i == "Q"  =  "\x211a"
@@ -154,6 +154,8 @@ trType (GivenType i)      =  trId i
 trType BottomType = spacep _bot
 
 trTypes = seplist " " trType
+
+trFun = _fun ++ " "
 
 seplist :: [a] -> (b -> [a]) -> [b] -> [a]
 seplist sep tr = intercalate sep . map tr

@@ -6,74 +6,41 @@
 Term `y ∈ ls ∪ N` should have type `𝔹` and not type `LE ⟶ ℙLE ⟶ 𝔹`.
 The latter is the type of `∈`.
 
-In lists we have
-
-```
-atches:
-2 : “=_trans” [⟹ *]
-    (x : σ) = (x : σ) ∨ (x : σ) = ?f ∧ ?f = (x : σ)
-    ⊤ ⟹ ⊤
-1 : “=_symm” [≡rhs]
-    (x : σ) = (x : σ)
-    ⊤ ⟹ ⊤
------------(2/2)
-⊢
-(x : σ) = (x : σ)
- ⊤
-Focus = [] :: 𝔹 
-Target (RHS): 
-true
-XPNDD:
-⊤
-proof: tm =_refl
-Match against '=_refl'[] failed!
-try match failed
-(x : σ) = (x : σ) :: e = e
-lnm[parts]==_refl[]
-tP=e = e
-partsP=e = e
-replP=true
-tC=(x : σ) = (x : σ)
-scC=⊤
----
-bindVarToTerm: already bound differently(1).
-```
 
 
-Reported bind failure:
+In lists we observe:
+
+Given `(hd(x : σ) : tl(x : σ)) = (x : σ)` we find that the rhs `(x : σ)` has the correct type `t*`, while the lhs has incorrect type `(t*)*`.
+When we use `hd` and `tl` laws we see that the lhs (now `(x : σ)`)
+is still erroneous, event thought `x : t` and `σ : t*`.
+If we use `=_symm` to swap them then the lhs is ok but the rhs is not!!!
 
 ```
-d = (Id "e" 0,VO)
-old r = 
-BT (C (TC (Id "*" 0) [TC (Id "*" 0) [TV (Id "t" 0)]])  -- (t*)* !!!!!!
-      True 
-      (Id "cons" 0) 
-      [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS))
-      ,V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))
-      ]
-    )
-new r = 
-BT (C (TC (Id "*" 0) [TV (Id "t" 0)])  -- t*  
-      True 
-      (Id "cons" 0) 
-      [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS))
-      ,V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))
-      ]
-    )
-bind:
-[ ( (Id "=" 0,VO), 
-    BV (VR (Id "=" 0,VO,WS)) )
-, ( (Id "e" 0,VO),
-    BT (C (TC (Id "*" 0) [TC (Id "*" 0) [TV (Id "t" 0)]])  -- (t*)* -- !!!!
-          True 
-          (Id "cons" 0) 
-          [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS))
-          ,V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))
-          ]
-       )
-  )
-]
+Theory 'Lists'
+⌢ : t*⟶ t*⟶ t*
+: : t⟶ t*⟶ t*
+elems : t*⟶ ℙt
+hd : t*⟶ t
+len : t*⟶ ℤ
+lsngl : t⟶ t*
+nil : t*
+≼ : t*⟶ t*⟶ 𝔹 
+rev : t*⟶ t*
+tl : t*⟶ t*
 ```
+
+Now getting somewhere substantial:
+
+```
+@mgu types don't unify:
+  t1 is TG (Id "B" 0)
+  t2 is TC (Id "*" 0) [TV (Id "a2" 0)]
+```
+
+(see ppt.txt)
+
+
+
 
 **PLAN**
 

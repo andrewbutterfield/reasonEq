@@ -56,6 +56,62 @@ by adapting a version by Martin Grabm{\"u}ller (MG)
 
 \section{Datatypes}
 
+We show the MG abstract syntax and then connect these with our own types.
+
+
+\subsection{Literals}
+
+From MG:
+$$
+\begin{array}{l@{\quad}l}
+\textbf{data}~Lit & {} = LInt~Integer
+\\ & {} \mid ~LBool~Bool
+\\ & {} \textbf{deriving}~(Eq,Ord)
+\end{array}
+$$
+
+From \reasonEq:
+$$
+\begin{array}{l@{\quad}l} 
+\h{data Value} & = \h{Boolean b}
+\\ & {} \mid \h{Integer i}
+\end{array}
+$$
+
+\subsection{Expressions}
+
+From MG:
+$$
+\begin{array}{l@{\quad}l}
+\textbf{data}~Exp & {} = EVar~String
+\\ & {} \mid ~ELit~Lit
+\\ & {} \mid ~EApp~Exp~Exp
+\\ & {} \mid ~EAbs~String~Exp
+\\ & {} \mid ~ELet~String~Exp~Exp
+\\ & {} \textbf{deriving}~(Eq,Ord)
+\end{array}
+$$
+From \reasonEq: 
+$$
+\begin{array}{l@{\quad}l} 
+\h{data Term} & {} = \h{Var typ v}
+\\ & {} \mid ~\h{Val typ k} 
+\\ & {} \mid ~\h{Cons typ sb "@" [Term,Term]} 
+\\ & {} \mid ~\h{Lam typ "lambda" Term}
+\\ & {} \mid ~\dots
+\end{array}
+$$
+We don't have a let-term, but also have the following:
+$$
+\begin{array}{l@{\quad}l} 
+\h{data Term} & {} = \dots
+\\ & {} \mid ~\h{Bnd typ n vs Term} 
+\\ & {} \mid ~\h{Cls n Term} 
+\\ & {} \mid ~\h{Sub typ Term sub}
+\\ & {} \mid ~\h{Iter typ sa na si ni lvs}
+\\ & {} \mid ~\h{Typ typ}
+\end{array}
+$$
 
 \subsection{Type Variables}
 

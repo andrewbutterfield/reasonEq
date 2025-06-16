@@ -3,38 +3,9 @@ BEGIN THEORIES
 THNAMES = ["AOI","And","Arith","Designs","EQV","Equal","Exists","Forall","Impl","LTL","Lists","Not","Or","Sets","UClose","UTCP","U_CWhl","U_NvWhl"]
 SDAG = [[("UTCP",["U_CWhl","Sets","UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"]),("Designs",["U_CWhl","AOI","And","Or","Not","EQV"]),("U_NvWhl",["U_CWhl","UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("U_CWhl",["UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Lists",["Impl","EQV","Equal","Forall","Arith","Sets"]),("LTL",["Equal","Exists","Forall","Impl","AOI","And","Or","Not","EQV"]),("UClose",["Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Sets",["Impl","EQV","Equal","Forall","Arith"]),("Exists",["Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Arith",["Impl","EQV","Equal"]),("Forall",["Equal","Impl","AOI","And","Or","Not","EQV"])],[("Equal",["Impl","EQV"])],[("Impl",["AOI","And","Or","Not","EQV"])],[("AOI",["And","Or","Not","EQV"])],[("And",["Or","Not","EQV"])],[("Or",["Not","EQV"])],[("Not",["EQV"])],[("EQV",[])]]
 END THEORIES
-CURRTHEORY = Lists
+CURRTHEORY = EQV
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("Lists","hd_cons_tl")
-BEGIN LIVE-PROOF
-TH-NAME: Lists
-CJ-NAME: hd_cons_tl
-CONJ = ASN (C (TG (Id "B" 0)) True (Id "=" 0) [C (TC (Id "*" 0) [TC (Id "*" 0) [TV (Id "t" 0)]]) True (Id "cons" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "hd" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))]],C (TC (Id "*" 0) [TC (Id "*" 0) [TV (Id "t" 0)]]) True (Id "tl" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))]]],C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))]],([],fromList []))
-SIDE = ([],fromList [])
-STRAT red-All
-BEGIN PRFSET
-MM = 30
-MS = 6
-BD = False
-TM = False
-TQ = False
-TS = False
-FV = True
-END PRFSET
-BEGIN SEQZIP
-TERMZIP = (C (TG (Id "B" 0)) True (Id "=" 0) [C (TC (Id "*" 0) [TC (Id "*" 0) [TV (Id "t" 0)]]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))],C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))]],[])
-BEGIN SEQUENT'
-SIDECOND = ([],fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.hd_cons_tl", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = K (TG (Id "B" 0)) (VB True)}
-END SEQUENT'
-END SEQZIP
-FPATH: []
-BEGIN LIST STEPS
-(UseLaw (ByMatch MEL) "tl_def" (BD (fromList [(Id "*" 0,TV (Id "*" 0)),(Id "t" 0,TV (Id "t" 0))],fromList [((Id "cons" 0,VO),BV (VR (Id "cons" 0,VO,WS))),((Id "sigma" 0,VO),BV (VR (Id "sigma" 0,VO,WS))),((Id "tl" 0,VO),BV (VR (Id "tl" 0,VO,WS))),((Id "x" 0,VO),BV (VR (Id "x" 0,VO,WS)))],fromList [],fromList [])) [1,2],ASN (C (TG (Id "B" 0)) True (Id "=" 0) [C (TC (Id "*" 0) [TC (Id "*" 0) [TV (Id "t" 0)]]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),C (TC (Id "*" 0) [TC (Id "*" 0) [TV (Id "t" 0)]]) True (Id "tl" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))]]],C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))]],([],fromList [])))
-(UseLaw (ByMatch MEL) "hd_def" (BD (fromList [(Id "*" 0,TV (Id "*" 0)),(Id "t" 0,TV (Id "t" 0))],fromList [((Id "cons" 0,VO),BV (VR (Id "cons" 0,VO,WS))),((Id "hd" 0,VO),BV (VR (Id "hd" 0,VO,WS))),((Id "sigma" 0,VO),BV (VR (Id "sigma" 0,VO,WS))),((Id "x" 0,VO),BV (VR (Id "x" 0,VO,WS)))],fromList [],fromList [])) [1,1],ASN (C (TG (Id "B" 0)) True (Id "=" 0) [C (TC (Id "*" 0) [TC (Id "*" 0) [TV (Id "t" 0)]]) True (Id "cons" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "hd" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))]],C (TC (Id "*" 0) [TC (Id "*" 0) [TV (Id "t" 0)]]) True (Id "tl" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))]]],C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))]],([],fromList [])))
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

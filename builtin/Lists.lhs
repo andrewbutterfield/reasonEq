@@ -109,11 +109,11 @@ lenum ts    =  Cons (jTs ts) True i_seq ts
 lsngl :: Term -> Term
 lsngl t     =  lenum [t]
 hd, tl, elems, len, rev :: Term -> Term
-hd lst      =  Cons (tOf lst)         True i_hd    [lst]
-tl lst      =  Cons (star $ tOf lst)  True i_tl    [lst]
-elems lst   =  Cons (power $ tOf lst) True i_elems [lst]
-len lst     =  Cons int               True i_len   [lst]
-rev lst     =  Cons (tOf lst)         True i_rev   [lst]
+hd lst      =  Cons contt         True i_hd    [lst]
+tl lst      =  Cons seqt          True i_tl    [lst]
+elems lst   =  Cons (power contt) True i_elems [lst]
+len lst     =  Cons int           True i_len   [lst]
+rev lst     =  Cons (tOf lst)     True i_rev   [lst]
 cons, cat, pfx :: Term -> Term -> Term
 cons x lst  =  Cons (r2T (star $ tOf x) (tOf lst)) True i_cons [x,lst]
 cat s1 s2   =  Cons (j2T s1 s2)                    True i_cat  [s1,s2]

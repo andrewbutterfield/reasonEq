@@ -235,6 +235,7 @@ for type-checking.
 For instance, we expect $x$, $x'$ and $x_1$ to have the same type,
 but we don't expect $x$ and $\lst x$ to have the same type.
 In fact, the notion of a type for $\lst x$ isn't particularly useful.
+At best, it would resolve into a product type once it was bound in a match to something concrete.
 While a static variable $x$ is different from a dynamic $x$,
 it is not helpful to have static variables that use the same identifiers
 as dynamic ones.
@@ -315,7 +316,7 @@ mgu fis ArbType ArbType = return (fis,M.empty)
 mgu fis (TypeVar u) t          =  do ts <- varBind u t ; return (fis,ts)
 mgu fis t (TypeVar u)          =  do ts <- varBind u t ; return (fis,ts)
 mgu fis tc1@(TypeCons _ _) tc2@(TypeCons _ _)
-  | tc1 == tc2                 =  return (fis,M.empty)
+  | pdbg "TC1" tc1 == pdbg "TC2" tc2                 =  return (fis,M.empty)
 mgu fis ta1@(AlgType _ _) ta2@(AlgType _ _)
   | ta1 == ta2                 =  return (fis,M.empty)
 mgu fis (FunType l r) (FunType l' r')  
@@ -344,11 +345,12 @@ typeInference vts trm
         -- ! fis is infinite !
         (_,(sub, typ)) <- inferTypes vts fis (TypeEnv $ pdbg "ENV" env) trm
         let typ' = apply (pdbg "SUB" sub) $ pdbg "TYP" typ
-        let tk = termtype trm
-        let trm' = if isEType $ pdbg "TK" tk
-                   then settype typ' trm
-                   else settype typ' trm
-        return (typ',trm')
+        return (pdbg "TYP'" typ',settype typ' trm)
+
+--        let tk = termtype trm
+--        let trm' = if isEType $ pdbg "TK" tk
+--                   then settype typ' trm
+--                   else settype typ' trm
 
 getVars :: Term -> [Variable]
 getVars = stdVarsOf . S.toList . mentionedIds

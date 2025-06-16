@@ -142,11 +142,17 @@ mkAnd p q = mkAnds [p,q]
 infix 4 /\ ; (/\) = mkAnd
 
 lnot = theNot ; mkNot p = Cons arbpred True lnot [p]
+\end{code}
+
+\section{Equality}
+
+\begin{code}
+i_t = jId "t" ;tvar = TypeVar i_t
+eqpred = FunType tvar $ FunType tvar bool
 
 equals = jId "="
-p1 = arbpred
-isEqualTo   e1  e2  = Cons p1 True           equals [ e1, e2]
-areEqualTo es1 es2  = Iter p1 True land True equals [es1,es2]
+isEqualTo   e1  e2  = Cons bool True           equals [ e1, e2]
+areEqualTo es1 es2  = Iter bool True land True equals [es1,es2]
 \end{code}
 
 

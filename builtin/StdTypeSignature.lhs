@@ -10,6 +10,7 @@ module StdTypeSignature (
   boolf_1, boolf_2, boolf_3
 , pred1
 , apred1, apred11, apred2
+, eqpred
 , nat, int
 , valueType
 , powerSym, powerset, power
@@ -48,6 +49,7 @@ tnvar n = TypeVar $ i_tn n
 apred1 = FunType tvar bool
 apred11 = FunType tvar apred1
 apred2 = FunType (tnvar 1) $ FunType (tnvar 2) bool
+eqpred = FunType tvar $ FunType tvar bool
 \end{code}
 
 \section{Expressions}

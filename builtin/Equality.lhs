@@ -43,8 +43,10 @@ This consists of the expression variables $e$, $f$ and $g$,
 the constant $=$,
 and expression list-variables $\lst e,\lst f$.
 
+\newpage
 \section{Equality Variables}
 
+$$=,e,\lst e,f,g,x,\lst x$$
 \begin{code}
 v_eq = Vbl equals ObsV Static
 ve = Vbl (jId "e") ObsV Static; lves = LVbl ve [] []
@@ -60,15 +62,17 @@ vx = Vbl (jId "x") ObsV Static  ; lvxs = LVbl vx [] []
 
 \section{Equality Constants}
 
+$$[\lst e/\lst x]$$
 \begin{code}
 sub e = Sub ArbType e $ fromJust $ substn [] [(lvxs,lves)]
 \end{code}
 
 \section{Equality Known Variables}
 
+$$ (=) : t \fun t \fun \Bool $$
 \begin{code}
 eqKnown :: VarTable
-eqKnown =  fromJust $ addKnownVar v_eq boolf_2 
+eqKnown =  fromJust $ addKnownVar v_eq eqpred 
                     $ newNamedVarTable equalityName
 \end{code}
 

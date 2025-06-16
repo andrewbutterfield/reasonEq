@@ -92,11 +92,11 @@ tOf = termtype ; j2T = join2Types ; jTs = joinTypes  -- shorthand
 mtset :: Term
 mtset           =  fromJust $ var sett $ StaticVar i_mt
 senum :: [Term] -> Term
-senum ts        =  Cons (jTs ts) True i_set ts
+senum ts        =  Cons (power $ jTs ts) True i_set ts
 ssingle :: Term -> Term
 ssingle t       =  senum [t]
 mbr :: Term -> Term -> Term
-mbr e s         =  Cons (mbr_t elemt) True i_mbr [e,s]
+mbr e s         =  Cons bool True i_mbr [e,s]
 subseteq s1 s2  =  Cons bool          True i_SS  [s1,s2]
 sunion s1 s2    =  Cons (j2T s1 s2)   True i_U   [s1,s2]
 sintsct s1 s2   =  Cons (j2T s1 s2)   True i_I   [s1,s2]

@@ -1,9 +1,24 @@
-proof: m
+
 @TRM:
-C (TG (Id "B" 0)) True (Id "=" 0) [C (TC (Id "*" 0) [TC (Id "*" 0) [TV (Id "t" 0)]]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))],C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))]]
+C (TV (Id "t" 0)) True (Id "hd" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))]]
 @GOTVARS:
-[VR (Id "=" 0,VO,WS),VR (Id "cons" 0,VO,WS),VR (Id "sigma" 0,VO,WS),VR (Id "x" 0,VO,WS)]
+[VR (Id "cons" 0,VO,WS),VR (Id "hd" 0,VO,WS),VR (Id "sigma" 0,VO,WS),VR (Id "x" 0,VO,WS)]
 @ENV:
-fromList [(Id "=" 0,TS [] (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(Id "cons" 0,TS [] (TF (TV (Id "t" 0)) (TF (TC (Id "*" 0) [TV (Id "t" 0)]) (TC (Id "*" 0) [TV (Id "t" 0)])))),(Id "sigma" 0,TS [] (TV (Id "a1" 0))),(Id "x" 0,TS [] (TV (Id "a2" 0)))]
-@TERM:
-C (TG (Id "B" 0)) True (Id "=" 0) [C (TC (Id "*" 0) [TC (Id "*" 0) [TV (Id "t" 0)]]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))],C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))]]
+fromList [(Id "cons" 0,TS [] (TF (TV (Id "t" 0)) (TF (TC (Id "*" 0) [TV (Id "t" 0)]) (TC (Id "*" 0) [TV (Id "t" 0)])))),(Id "hd" 0,TS [] (TF (TC (Id "*" 0) [TV (Id "t" 0)]) (TV (Id "t" 0)))),(Id "sigma" 0,TS [] (TV (Id "a1" 0))),(Id "x" 0,TS [] (TV (Id "a2" 0)))]
+@TC2:
+TC (Id "*" 0) [TV (Id "a2" 0)]
+@TC1:
+TC (Id "*" 0) [TV (Id "a2" 0)]
+@TYP:
+TV (Id "a3" 0)
+@SUB:
+fromList [(Id "a1" 0,TC (Id "*" 0) [TV (Id "a3" 0)]),(Id "a2" 0,TV (Id "a3" 0)),(Id "a4" 0,TC (Id "*" 0) [TV (Id "a3" 0)]),(Id "a5" 0,TF (TC (Id "*" 0) [TV (Id "a3" 0)]) (TC (Id "*" 0) [TV (Id "a3" 0)])),(Id "t" 0,TV (Id "a3" 0))]
+@TERM':
+C (TV (Id "a3" 0)) True (Id "hd" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))]]
+
+termMatch: structural mismatch.
+@tC:
+C (TV (Id "a3" 0)) True (Id "hd" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))]]
+@tP:
+C (TV (Id "t" 0)) True (Id "hd" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))]]
+hit <enter> to continue

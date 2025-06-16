@@ -51,7 +51,7 @@ indicates the correct type.
 
 We implement the W algorithm for type inferencing, 
 by adapting a version by Martin Grabm{\"u}ller (MG)
-(https://github.com/mgrabmueller), which is closely based on THIH by Mark P. Jones
+(\url{https://github.com/mgrabmueller}), which is closely based on THIH by Mark P. Jones
 
 
 \section{Datatypes}
@@ -166,7 +166,29 @@ data TypeScheme = TS [TypeVariable] Type deriving Show
 pattern Scheme qvars typ = TS qvars typ
 \end{code}
 
+
+\subsection{Type Substitutions}
+
+A type-substitution is a mapping from type-variables to types.
+\begin{code}
+type TypeSubst = Map TypeVariable Type
+nullSubst :: TypeSubst
+nullSubst = M.empty
+
+composeSubst         :: TypeSubst -> TypeSubst -> TypeSubst
+composeSubst s1 s2   = (M.map (apply s1) s2) `M.union` s1
+\end{code}
+
 \subsection{Types Class}
+
+From MG:
+$$
+\begin{array}{lll}
+\lefteqn{\textbf{class}~Types~a~\textbf{where}}
+\\ \quad ftv & :: & a \fun Set~String
+\\ \quad apply & :: & Subst \fun a \fun a
+\end{array}
+$$
 
 We use the MG \h{Types} class as is:
 \begin{code}
@@ -194,26 +216,14 @@ instance Types Type where
     apply _ t@(GivenType _)  =  t
     apply s t                =  error ("Type.apply NYfI: "++show t)
 
-instance Types a => Types [a] where
-    apply s  =  map (apply s)
-    ftv l    =  foldr S.union S.empty (map ftv l)
-
 instance Types TypeScheme where
     ftv (Scheme vars t)      =  (ftv t) `S.difference` (S.fromList vars)
 
     apply s (Scheme vars t)  =  Scheme vars (apply (foldr M.delete s vars) t)
-\end{code}
 
-\subsection{Type Substitutions}
-
-A type-substition is a mapping from type-variables to types.
-\begin{code}
-type TypeSubst = Map TypeVariable Type
-nullSubst :: TypeSubst
-nullSubst = M.empty
-
-composeSubst         :: TypeSubst -> TypeSubst -> TypeSubst
-composeSubst s1 s2   = (M.map (apply s1) s2) `M.union` s1
+instance Types a => Types [a] where
+    apply s  =  map (apply s)
+    ftv l    =  foldr S.union S.empty (map ftv l)
 \end{code}
 
 \subsection{Type Environments}

@@ -2,6 +2,12 @@
 
 ## URGENT or NEXT
 
+**The type of a Cons should be that of the fully applied construct**
+
+*The type of `hd(x:xs)` should be `t`, and not `t* -> t`!*
+
+*given `cons :: a -> b` then   `Cons typ  "cons" [aval]` should have `typ` set to `b` and not to `a->b`.*
+
 
 Term `y ∈ ls ∪ N` should have type `𝔹` and not type `LE ⟶ ℙLE ⟶ 𝔹`.
 The latter is the type of `∈`.

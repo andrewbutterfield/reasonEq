@@ -2,48 +2,34 @@
 
 ## URGENT or NEXT
 
-**The type of a Cons should be that of the fully applied construct**
-
-*The type of `hd(x:xs)` should be `t`, and not `t* -> t`!*
-
-*given `cons :: a -> b` then   `Cons typ  "cons" [aval]` should have `typ` set to `b` and not to `a->b`.*
-
-
-Term `y ∈ ls ∪ N` should have type `𝔹` and not type `LE ⟶ ℙLE ⟶ 𝔹`.
-The latter is the type of `∈`.
-
-
-
-In lists we observe:
-
-Given `(hd(x : σ) : tl(x : σ)) = (x : σ)` we find that the rhs `(x : σ)` has the correct type `t*`, while the lhs has incorrect type `(t*)*`.
-When we use `hd` and `tl` laws we see that the lhs (now `(x : σ)`)
-is still erroneous, event thought `x : t` and `σ : t*`.
-If we use `=_symm` to swap them then the lhs is ok but the rhs is not!!!
+Matching `hd(x : σ)` against `hd_def` in `Lists` results in:
 
 ```
-Theory 'Lists'
-⌢ : t*⟶ t*⟶ t*
-: : t⟶ t*⟶ t*
-elems : t*⟶ ℙt
-hd : t*⟶ t
-len : t*⟶ ℤ
-lsngl : t⟶ t*
-nil : t*
-≼ : t*⟶ t*⟶ 𝔹 
-rev : t*⟶ t*
-tl : t*⟶ t*
+@SUB:
+{ a1 => a3*
+, a2 => a3
+, a4 => a3*
+, a5 => a3* -> a3*
+, t => a3
+}
+@tC:
+C
+( TV
+  (Id "a3" 0) )
+True
+(Id "hd" 0)
+[STUFF]
+@tP:
+C
+( TV
+  (Id "t" 0) )
+True
+(Id "hd" 0)
+[STUFF]
 ```
 
-Now getting somewhere substantial:
-
-```
-@mgu types don't unify:
-  t1 is TG (Id "B" 0)
-  t2 is TC (Id "*" 0) [TV (Id "a2" 0)]
-```
-
-(see ppt.txt)
+The issue is that we miss the `t => a3` binding information.
+I think we need to make use of the type-inference substitution in matching?
 
 
 

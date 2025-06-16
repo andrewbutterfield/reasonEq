@@ -120,7 +120,44 @@ We represent type-variables with our identifiers:
 type TypeVariable = Identifier
 \end{code}
 
+From MG:
+$$
+\begin{array}{l@{\quad}l}
+\textbf{data}~Type & {} = Tvar~String
+\\ & {} \mid ~TInt
+\\ & {} \mid ~TBool
+\\ & {} \mid ~TFun~Type~Type
+\\ & {} \textbf{deriving}~(Eq,Ord)
+\end{array}
+$$
+
+From \reasonEq:
+$$
+\begin{array}{l@{\quad}l} 
+\h{data Type} & = \h{ArbType} 
+\\ & {} \mid ~\h{TypeVar Identifier}
+\\ & {} \mid ~\h{TypeCons Identifier [Type]}
+\\ & {} \mid ~\h{AlgType Identifier [(Identifier,[Type])]}
+\\ & {} \mid ~\h{FunType Type Type}
+\\ & {} \mid ~\h{GivenType Identifier}
+\\ & {} \mid ~\h{BottomType}
+\end{array}
+$$
+Here $TInt$ and $TBool$ are modelled respectively 
+by \h{GivenType "Z"} and \h{GivenType "B"}.
+
+For \h{AlgType} (of which \h{TypeCons} is a special case),
+we should refer to \url{https://stanford-cs242.github.io/f19/lectures/03-2-algebraic-data-types.html}.
+
+
 \subsection{Type Schemes}
+
+From MG:
+$$
+\begin{array}{l@{\quad}l}
+\textbf{data}~Scheme & {} = Scheme~[String]~Type
+\end{array}
+$$
 
 A type-scheme quantifies over type-variables 
 ($\forall t_1,\dots,t_n \bullet t$).

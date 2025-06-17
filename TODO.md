@@ -2,6 +2,13 @@
 
 ## URGENT or NEXT
 
+**Typing is invoked by `mkTypedAsn` only, in matching commands. We need to get type bindings back and compute typvar equivalence classes here and fix the reported type so all works**
+
+Fix 1:  changes types of `hd` and `tl` to `ArbType`.
+
+Now we have `(x : σ) = (x : σ)` where `(x : σ)` has type `τ`,
+while both `x` and `σ` have the expected types.
+
 Matching `hd(x : σ)` against `hd_def` in `Lists` results in:
 
 ```
@@ -27,9 +34,6 @@ True
 (Id "hd" 0)
 [STUFF]
 ```
-
-The issue is that we miss the `t => a3` binding information.
-I think we need to make use of the type-inference substitution in matching?
 
 
 

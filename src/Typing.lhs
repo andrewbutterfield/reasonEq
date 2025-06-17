@@ -7,6 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Typing ( TypeVariable
+              , TypeSubst
               , TypeScheme(..), pattern Scheme
               , TermVariable
               , Env

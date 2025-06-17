@@ -473,9 +473,6 @@ untilEq f x
  where x' = f x
 \end{code}
 
-\newpage
-\section{Possible Failure Monad}
-
 
 \newpage
 \section{Pretty-printing Derived Show}

@@ -1,10 +1,16 @@
 @TRM:
 C
-( TV
-  (Id "t" 0) )
+( TG
+  (Id "B" 0) )
 True
-(Id "hd" 0)
+(Id "=" 0)
 [ C
+  T
+  True
+  (Id "cons" 0)
+  [ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS))
+  , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS)) ]
+, C
   ( TC
     (Id "*" 0)
     [ TV
@@ -14,59 +20,30 @@ True
   [ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS))
   , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS)) ] ]
 @GOTVARS:
-[ VR (Id "cons" 0, VO, WS)
-, VR (Id "hd" 0, VO, WS)
+[ VR (Id "=" 0, VO, WS)
+, VR (Id "cons" 0, VO, WS)
 , VR (Id "sigma" 0, VO, WS)
 , VR (Id "x" 0, VO, WS) ]
 @ENV:
-{ ( Id "cons" 0 -- t -> ( t* -> t*)
-  , TS [] ( TF (TV (Id "t" 0)) 
-               ( TF (TC (Id "*" 0) [TV (Id "t" 0)]) 
-                    (TC (Id "*" 0) [TV (Id "t" 0)])
-               )
-          )
-  )
-, ( Id "hd" 0 --   t* -> t
-  , TS [] ( TF (TC (Id "*" 0) [TV (Id "t" 0)]) 
-               (TV (Id "t" 0))
-          ) )
-, ( Id "sigma" 0  -- a1
-  , TS [] (TV (Id "a1" 0)) )
-, ( Id "x" 0  -- a2
-  , TS [] (TV (Id "a2" 0)) ) }
-@TC2: a2*
-TC
-(Id "*" 0)
-[ TV
-  (Id "a2" 0) ]
-@TC1:  a2*
-TC
-(Id "*" 0)
-[ TV
-  (Id "a2" 0) ]
-@TYP:
-TV
-(Id "a3" 0)
-@SUB:
-{ ( Id "a1" 0  -- a1 => a3*
-  , TC (Id "*" 0) [TV (Id "a3" 0)] )
-, ( Id "a2" 0  -- a2 => a3
-  , TV (Id "a3" 0))
-, ( Id "a4" 0  -- a4 => a3*
-  , TC (Id "*" 0) [TV (Id "a3" 0)])
-, ( Id "a5" 0  -- a5 => a3* -> a3*
-  , TF (TC (Id "*" 0) [TV (Id "a3" 0)]) 
-       (TC (Id "*" 0) [TV (Id "a3" 0)]))
-, ( Id "t" 0 -- t => a3
-  , TV (Id "a3" 0)) 
-}
-@TERM':
+{ (Id "=" 0, TS [] (TF (TV (Id "t" 0)) (TF (TV (Id "t" 0)) (TG (Id "B" 0)))))
+, (Id "cons" 0, TS [] (TF (TV (Id "t" 0)) (TF (TC (Id "*" 0) [TV (Id "t" 0)]) (TC (Id "*" 0) [TV (Id "t" 0)]))))
+, (Id "sigma" 0, TS [] (TV (Id "a1" 0)))
+, (Id "x" 0, TS [] (TV (Id "a2" 0))) }
+@occurs check fails: 
+Id "a2" 0 vs. TC (Id "*" 0) [TV (Id "a2" 0)]
+@TERM:
 C
-( TV
-  (Id "a3" 0) )
+( TG
+  (Id "B" 0) )
 True
-(Id "hd" 0)
+(Id "=" 0)
 [ C
+  T
+  True
+  (Id "cons" 0)
+  [ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS))
+  , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS)) ]
+, C
   ( TC
     (Id "*" 0)
     [ TV
@@ -75,35 +52,4 @@ True
   (Id "cons" 0)
   [ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS))
   , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS)) ] ]
-
-@tC:
-C
-( TV
-  (Id "a3" 0) )
-True
-(Id "hd" 0)
-[ C
-  ( TC
-    (Id "*" 0)
-    [ TV
-      (Id "t" 0) ] )
-  True
-  (Id "cons" 0)
-  [ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS))
-  , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS)) ] ]
-
-@tP:
-C
-( TV
-  (Id "t" 0) )
-True
-(Id "hd" 0)
-[ C
-  ( TC
-    (Id "*" 0)
-    [ TV
-      (Id "t" 0) ] )
-  True
-  (Id "cons" 0)
-  [ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS))
-  , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS)) ] ]
+---

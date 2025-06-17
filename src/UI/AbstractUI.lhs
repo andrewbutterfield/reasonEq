@@ -583,13 +583,6 @@ moveFocusFromHypothesis liveProof
 
 \subsection{Match Laws against Focus}
 
-Infer goal type:
-\begin{code}
-mkTypedAsn vts term sc 
-  = case typeInference vts term of
-      But msgs          ->  mkAsn (pdbg (unlines msgs++"TERM") term) sc
-      Yes (typ',term')  ->  mkAsn (pdbg "TERM'" term') sc
-\end{code}
 
 Matching all laws:
 \begin{code}

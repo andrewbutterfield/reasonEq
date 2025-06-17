@@ -7,8 +7,10 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Assertions (
-  Assertion, pattern Assertion, mkAsn, unwrapASN
+  Assertion, pattern Assertion
+, mkAsn, unwrapASN
 , unsafeASN
+, mkTypedAsn
 , pattern AssnT, assnT, pattern AssnC, assnC
 , normaliseQuantifiers
 -- for testing onl
@@ -33,6 +35,8 @@ import Types
 import AST
 import FreeVars
 import SideCond
+import VarData
+import Typing
 
 -- import Test.HUnit hiding (Assertion)
 -- import Test.Framework as TF (defaultMain, testGroup, Test)
@@ -692,4 +696,15 @@ normQLVar vv (LVbl v is js) = LVbl (normQVar vv v) is js
 
 normQVar vv v@(Vbl (Identifier nm _) cls whn)
  = setVarIdNumber (M.findWithDefault 0 (nm,cls,whn) vv) v
+\end{code}
+
+
+\section{Making a Typed Assertion}
+
+\begin{code}
+mkTypedAsn vts term sc 
+  = case typeInference vts term of
+      But msgs          ->  mkAsn (tidbg msgs term) sc
+      Yes (typ',term')  ->  mkAsn (pdbg "TERM'" term') sc
+  where tidbg msgs trm = pdbg (unlines msgs++"\n@TERM") trm
 \end{code}

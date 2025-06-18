@@ -14,6 +14,7 @@ module Typing ( TypeVariable
               , TypeEnv(..)
               , typeInference
               , CanonicalMap
+              , typeVarEquivalence
               )
 where
 
@@ -332,7 +333,7 @@ mgu fis ArbType ArbType = return (fis,M.empty)
 mgu fis (TypeVar u) t          =  do ts <- varBind u t ; return (fis,ts)
 mgu fis t (TypeVar u)          =  do ts <- varBind u t ; return (fis,ts)
 mgu fis tc1@(TypeCons _ _) tc2@(TypeCons _ _)
-  | pdbg "TC1" tc1 == pdbg "TC2" tc2                 =  return (fis,M.empty)
+  | tc1 == tc2                 =  return (fis,M.empty)
 mgu fis ta1@(AlgType _ _) ta2@(AlgType _ _)
   | ta1 == ta2                 =  return (fis,M.empty)
 mgu fis (FunType l r) (FunType l' r')  
@@ -355,13 +356,13 @@ This is the main entry point:
 typeInference :: MonadFail mf 
               => [VarTable] 
               -> Term 
-              -> mf (Type,Term)
+              -> mf (Type,Term,TypeSubst)
 typeInference vts trm
-  = do  let (fis,env) = buildTypeEnv vts [1..] M.empty (pdbg "GOTVARS" $ getVars $ pdbg "TRM" trm)
+  = do  let (fis,env) = buildTypeEnv vts [1..] M.empty (getVars trm)
         -- ! fis is infinite !
-        (_,(sub, typ)) <- inferTypes vts fis (TypeEnv $ pdbg "ENV" env) trm
-        let typ' = apply (pdbg "SUB" sub) $ pdbg "TYP" typ
-        return (pdbg "TYP'" typ',settype typ' trm)
+        (_,(sub, typ)) <- inferTypes vts fis (TypeEnv env) trm
+        let typ' = apply sub typ
+        return (typ',settype typ' trm,sub)
 
 --        let tk = termtype trm
 --        let trm' = if isEType $ pdbg "TK" tk

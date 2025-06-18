@@ -702,9 +702,17 @@ normQVar vv v@(Vbl (Identifier nm _) cls whn)
 \section{Making a Typed Assertion}
 
 \begin{code}
+mkTypedAsn :: MonadFail m 
+           => [VarTable] -> Term -> SideCond 
+           -> m (Assertion, CanonicalMap)
 mkTypedAsn vts term sc 
   = case typeInference vts term of
-      But msgs          ->  mkAsn (tidbg msgs term) sc
-      Yes (typ',term')  ->  mkAsn (pdbg "TERM'" term') sc
+      But msgs                 ->  addTypeInfo sc ArbType term M.empty
+      Yes (typ',term',typsub)  ->  addTypeInfo sc typ' term' typsub
   where tidbg msgs trm = pdbg (unlines msgs++"\n@TERM") trm
+
+addTypeInfo sc typ term typsub = do
+  let (tvstyps,tvmap) = typeVarEquivalence typsub
+  asn <- mkAsn term sc
+  return (asn,tvmap) 
 \end{code}

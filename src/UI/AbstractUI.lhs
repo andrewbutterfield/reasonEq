@@ -593,7 +593,7 @@ matchFocus ranking liveProof
         scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
         vts         =  concat $ map thd3 ctxts
-    in do asn' <- mkTypedAsn vts goalt scC 
+    in do (asn',tvmap) <- mkTypedAsn vts goalt scC 
           let rankedM = ranking ctxts $ matchInContexts ctxts asn'
           return $ matches_ rankedM liveProof
 \end{code}
@@ -607,7 +607,7 @@ matchFocusAgainst lawnm liveProof
         scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
         vts         =  concat $ map thd3 ctxts
-    in do asn' <- mkTypedAsn vts goalt scC
+    in do (asn',tvmap) <- mkTypedAsn vts goalt scC
           case matchLawByName asn' lawnm ctxts of
             Yes []    -> fail ("No matches against focus for '"++lawnm++"'")
             Yes mtchs -> return $ matches_ mtchs liveProof
@@ -624,7 +624,7 @@ tryFocusAgainst lawnm parts liveProof
         scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
         vts         =  concat $ map thd3 ctxts
-    in do asn' <- mkTypedAsn vts goalt scC
+    in do (asn',tvmap) <- mkTypedAsn vts goalt scC
           tryLawByName asn' lawnm parts ctxts
 \end{code}
 

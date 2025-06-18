@@ -7,6 +7,10 @@
 Need to pass CanonicalMap into matching.
 Or rather a predicate that uses a canonical map to decide if two type-variables and/or types are the same.
 
+Add new `TypCmp` parameter to the following `LiveProofs` functions: 
+`matchInContext`, `matchLawByname`, and `tryLawByName`. 
+These all feed into `domatch`. Add it just after the `vts` argument.
+
 ```
 (hd(x : σ) : tl(x : σ)) = (x : σ)
 Focus = [1,1] :: t

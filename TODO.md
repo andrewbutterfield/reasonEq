@@ -2,6 +2,41 @@
 
 ## URGENT or NEXT
 
+**PAIN POINT FOUND**  `TypeVar A3 /= TypeVar t`.
+
+Need to pass CanonicalMap into matching.
+Or rather a predicate that uses a canonical map to decide if two type-variables and/or types are the same.
+
+```
+(hd(x : σ) : tl(x : σ)) = (x : σ)
+Focus = [1,1] :: t
+Match against 'hd_def'[1] failed!
+try match failed
+hd(x : σ) :: hd(x : σ)
+lnm[parts]=hd_def[1]
+tP=hd(x : σ) = x
+partsP=hd(x : σ)
+replP=x
+tC=hd(x : σ)
+scC=⊤
+---
+termMatch: structural mismatch.
+tC = 
+C (TV (Id "A3" 0)) True (Id "hd" 0) 
+  [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) 
+     [ V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS))
+     , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))
+     ]
+  ]
+tP = 
+C (TV (Id "t" 0)) True (Id "hd" 0) 
+  [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) 
+     [ V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS))
+     , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))
+     ]
+  ]
+```
+
 **Typing is invoked by `mkTypedAsn` only, in matching commands. We need to get type bindings back and compute typvar equivalence classes here and fix the reported type so all works**
 
 Fix 1:  changes types of `hd` and `tl` to `ArbType`.

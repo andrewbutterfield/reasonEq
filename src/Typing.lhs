@@ -17,6 +17,7 @@ module Typing ( TypeVariable
 where
 
 import Data.Maybe
+import Data.List (nub,singleton,sort)
 import Data.Set (Set)
 import qualified Data.Set as S
 import Data.Map (Map)
@@ -525,6 +526,8 @@ mkApply f e = (Cons ArbType True app [f,e])
 \newpage
 \section{Type-Variable Equivalence}
 
+
+
 Unification is used for type inference and results in a type-substitution that
 maps type variables to types.
 Of particular interest are mappings from type-variables
@@ -532,12 +535,14 @@ to types that are just a single type-variable,
 as these effectively define the two variables as equivalent.
 We want to make that equivalence relation manifest.
 
+\subsection{Motivating Example}
+
 Consider the following type-substitution:
 \begin{eqnarray*}
    {-}_1{} &\mapsto& {-}_3{}^*
 \\ {-}_2{} &\mapsto& {-}_3{}
 \\ {-}_4{} &\mapsto& {-}_3{}^*
-\\ {-}_5{} &\mapsto& {-}_3{}^* \fun {-}_3{}^*
+\\ {-}_5{} &\mapsto& ({-}_3{}^* \fun {-}_3{}^*)
 \\ t   &\mapsto& {-}_3{}
 \end{eqnarray*}
 Here, $t$ was used in the type-signature for \h{hd} in the \h{Lists} theory,
@@ -552,14 +557,14 @@ into a equivalence $s \cong t$, which results in the following:
    {-}_1{} &\mapsto& {-}_3{}^*
 \\ {-}_2{} & \cong & {-}_3{}
 \\ {-}_4{} &\mapsto& {-}_3{}^*
-\\ {-}_5{} &\mapsto& {-}_3{}^* \fun {-}_3{}^*
+\\ {-}_5{} &\mapsto& ({-}_3{}^* \fun {-}_3{}^*)
 \\ t   & \cong & {-}_3{}
 \end{eqnarray*}
 We immediately get the following equivalence classes:
-$$
+$
   \setof{{-}_1{}}, \setof{{-}_2{},{-}_3{},t}, \setof{{-}_4{}}, \setof{{-}_5{}}
-$$
-We note that ${-}_1{}$ and ${-}_4{}$ maps to the same things,
+$.
+We note that ${-}_1{}$ and ${-}_4{}$ map to the same things,
 so they are also equivalent:
 $$
   \setof{{-}_1{},{-}_4{}}, \setof{{-}_2{},{-}_3{},t}, \setof{{-}_5{}}
@@ -570,5 +575,97 @@ So, for every type-variable, we want to answer the following two questions:
   \item Which of the equivalent type-variables should be the chosen representative?
 \end{itemize}
 We never want to choose a pattern type-variable,
-so we will choose the ${-}_i$ with the lowest-valued subscript $i$.
+so we will choose the candidate type-variable ${-}_i$ 
+with the lowest-valued subscript $i$.
+The above example simplifies to:
+\begin{eqnarray*}
+   {-}_1{} &\mapsto& {-}_2{}^*
+\\ {-}_5{} &\mapsto& ({-}_2{}^* \fun {-}_2{}^*)
+\end{eqnarray*}
+
+Example coded up:
+\begin{code}
+hdConsTl = M.fromList 
+    [ (_1, TypeCons star [TypeVar _3]) 
+    , (_2, TypeVar _3)
+    , (_4, TypeCons star [TypeVar _3])
+    , (_5, FunType (TypeCons star [TypeVar _3]) (TypeCons star [TypeVar _3]))
+    , ( t, TypeVar _3)]
+  where mktyvar n = jId ("_"++show n)
+        [_1,_2,_3,_4,_5] = map mktyvar  [1..5]
+        star = jId "*"
+        t = jId "t"
+\end{code}
+
+\newpage
+\subsection{Implementation}
+
+We represent 
+$
+\setof{i_{11},\dots,i_{1N_1}},
+\dots,
+\setof{i_{k1},\dots,i_{kN_k}}
+\dots,
+\setof{i_{N1},\dots,i_{NN_N}}
+$
+by sorted nested lists, to begin with.
+In reality we may want to also have a map from type-variables to their canonical form.
+\begin{code}
+typeVarEquivalence :: TypeSubst -> [[TypeVariable]]
+typeVarEquivalence tsubst = 
+  let
+    tvtyps = M.toList tsubst
+    eqvtyppairs = map mkEqvTypePair tvtyps
+    groups = pdbg "GROUPS" $ sort $ groupByType eqvtyppairs
+  in map fst groups
+\end{code}
+
+We switch to having ordered lists of equivalent type-variables
+\begin{eqnarray*}
+   \seqof{{-}_1{}} &\mapsto& {-}_3{}^*
+\\ \seqof{{-}_2{}} &\mapsto& {-}_3{}
+\\ \seqof{{-}_4{}} &\mapsto& {-}_3{}^*
+\\ \seqof{{-}_5{}} &\mapsto& ({-}_3{}^* \fun {-}_3{}^*)
+\\ \seqof{t}   &\mapsto& {-}_3{}
+\end{eqnarray*}
+\begin{code}
+mkEqvTypePair :: (TypeVariable,Type) -> ([TypeVariable],Type)
+mkEqvTypePair (tv,typ@(TypeVar tv')) = ([tv,tv'],typ)
+mkEqvTypePair (tv,typ) = ([tv],typ)
+\end{code}
+
+We then group type-variable lists by their associated type
+\begin{eqnarray*}
+   \seqof{{-}_1{},{-}_4{}} &\mapsto& {-}_3{}^*
+\\ \seqof{{-}_2{},{-}_3{},t} &\mapsto& {-}_3{}
+\\ \seqof{{-}_5{}} &\mapsto& ({-}_3{}^* \fun {-}_3{}^*)
+\end{eqnarray*}
+\begin{code}
+groupByType :: [([TypeVariable],Type)] -> [([TypeVariable],Type)]
+groupByType [] = []
+groupByType ((tvs,typ):tvstyps) 
+  = grpByType tvs typ $ groupByType tvstyps
+
+grpByType tvs typ [] = [(tvs,typ)]
+grpByType tvs typ (tvstyp@(tvs',typ'):tvstyps)
+  | typ == typ'  =  grpByType (tvs `mrg` tvs') typ tvstyps
+  | otherwise    =  tvstyp : grpByType tvs typ tvstyps
+
+xs `mrg` ys =  nub $ sort (xs++ys)
+\end{code}
+
+Finally, we replace all type-variables in the types 
+by their corresponding canonical type-variable:
+\begin{eqnarray*}
+   \seqof{{-}_1{},{-}_4{}} &\mapsto& {-}_2{}^*
+\\ \seqof{{-}_2{},{-}_3{},t} &\mapsto& {-}_2{}
+\\ \seqof{{-}_5{}} &\mapsto& ({-}_2{}^* \fun {-}_2{}^*)
+\end{eqnarray*}
+\begin{code}
+-- t.b.d.
+\end{code}
+
+
+
+
 

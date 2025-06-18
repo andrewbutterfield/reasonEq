@@ -526,7 +526,7 @@ Quantifier normalisation:
 \begin{code}
 normaliseQuantifiers :: Term -> SideCond -> (Term, SideCond)
 normaliseQuantifiers tm sc
-  = error ("normaliseQuantifiers is currently broken. Do not use.")
+  = (tm,sc)  -- normaliseQuantifiers is currently broken. Do not use
   -- = let (tm', vv') = normQ M.empty tm
   --   in  (tm', normSC vv' sc)
 \end{code}

@@ -2,55 +2,32 @@
 
 ## URGENT or NEXT
 
-**PAIN POINT FOUND**  `TypeVar A3 /= TypeVar t`.
-
-Types for matching look good now.
-
-The binding process needs to see the CanonicalMap!!!!!
-
-
-
+Most of the `Lists` conjectures need **induction**.
 
 **PLAN**
 
 
-The proof of `ls_union_N` gets stuck because in the proof
-for the conjecture we have sets with element type  `TG (Id "LE" 0)`
-while the set laws are being instantiated with the element type `TV (Id "t" 0)`.
-The crucial thing here is that we need to instantiate `t` to `LE`.
-
-Currently:
- `S ⊆ ls ∪ N` has `S`, `ls`, and `N` of type `ℙ LE`.
-But applying `subseteq_def` 
-results in `(∀ x  • x ∈ S ⟹   x ∈ ls ∪ N)`
-where `x` has type `t` and `S`, `ls`, and `N` have changed to type `ℙ t`.
-
-Here's one reason why (Binding should be subtype-aware):
+Need to fix types in UTCP definitions:
 
 ```
-(∀ y  • y ∈ S \ N ⟹   y ∈ ls)
- ⊤
-Focus = [] :: ⊥ ⟶ 𝔹 
-Target (LHS): 
-(∀ y  • y ∈ S \ N ⟹   y ∈ ls)
-proof: tm 2 subseteq_def
-Match against 'subseteq_def'[2] failed!
+A(E|a|N)      O$,O$'⋔E, O$,O$'⋔N, s,s'⊇ₐa
+Focus = [] :: 𝔹 
+XPNDD: ls,ls',s,s'⋔E, ls,ls',s,s'⋔N, s,s'⊇ₐa
+proof: tm 1 A_def
+Match against 'A_def'[1] failed!
 try match failed
-(∀ y  • y ∈ S \ N ⟹   y ∈ ls) :: (∀ x  • x ∈ S1 ⟹   x ∈ S2)
-lnm[parts]=subseteq_def[2]
-tP=S1 ⊆ S2 ≡ (∀ x  • x ∈ S1 ⟹   x ∈ S2)
-partsP=(∀ x  • x ∈ S1 ⟹   x ∈ S2)
-replP=S1 ⊆ S2
-tC=(∀ y  • y ∈ S \ N ⟹   y ∈ ls)
-scC=⊤
+A(E|a|N) :: A(E|a|N)
+lnm[parts]=A_def[1]
+tP=A(E|a|N) ≡ X(E|a|E|N)
+partsP=A(E|a|N)
+replP=X(E|a|E|N)
+tC=A(E|a|N)
+scC=ls,ls',s,s'⋔E, ls,ls',s,s'⋔N, s,s'⊇ₐa
 ---
-bindTypeVarToType: already bound differently(1).
-d = Id "t" 0
-old r = TV (Id "t" 0)
-new r = TG (Id "LE" 0)
-bind:
-fromList [(Id "B" 0,TG (Id "B" 0)),(Id "P" 0,TV (Id "P" 0)),(Id "t" 0,TV (Id "t" 0))]
-hit <enter> to continue
+typeMatch: distinct types
+typC = T
+typP = TG (Id "B" 0)
+
 ```
 
 
@@ -60,16 +37,6 @@ We should really use this to bind constructor identifiers.
 
 
 
-For type-checking look at uses of `mkAsn` 
-that should become `AbstractUI.mkTypedAsn`.
-
-Current state of (typing) play:
-
-```
-((E1 ⊆ ls ∧ E2 ⊆ ls \ R1 ∪ N1) ∧ (a ; b)) ∧ ls' = (ls \ R1 ∪ N1) \ R2 ∪ N2
- O$,O$'⋔E1, O$,O$'⋔E2, O$,O$'⋔N1, O$,O$'⋔N2, O$,O$'⋔R1, O$,O$'⋔R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1,s_2
-Focus = [1] :: ⊥⟶  𝔹 
-```
 
 Still succeeds with `tm 2 +_cancel`.
 

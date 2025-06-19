@@ -304,17 +304,17 @@ mergeBindings instTerm
 and $<$Complete Binding$>$ for application involves(?) \texttt{completeBind}.
 
 \begin{code}
-tryLawByName :: Assertion -> String -> [Int] -> [MatchContext]
+tryLawByName :: Assertion -> String -> [Int] -> [MatchContext] -> TypCmp
                -> YesBut ( Binding    -- mapping from pattern to candidate
                          , SideCond   -- Law side-condition
                          , Term       -- autoInstantiated Law
                          , SideCond   -- updated expanded candidate side-cond.
                          , SideCond ) -- discharged(?) law side-condition
-tryLawByName (Assertion tC scC) lnm parts mcs
+tryLawByName (Assertion tC scC) lnm parts mcs fits
   = do (((_,(Assertion tP scP)),_),vts) <- findLaw lnm mcs
        (partsP,replP) <- findParts parts tP
        let scXP = expandSCKnowns vts scP
-       (bind,instlaw,expsc,dischsc) <- tryMatch vts tP partsP replP scXP
+       (bind,instlaw,expsc,dischsc) <- tryMatch vts fits tP partsP replP scXP
        return (bind,scP,instlaw,expsc,dischsc)
   where
     -- below we try to do:
@@ -330,9 +330,9 @@ tryLawByName (Assertion tC scC) lnm parts mcs
 First, try the structural match.
 \begin{code}
 -- tryLawByName asn@(tC,scC) lnm parts mcs
-    tryMatch vts tP partsP replP scP
+    tryMatch vts fits tP partsP replP scP
       = case
-                match vts tC partsP
+                match vts fits tC partsP
         of
           Yes bind  ->  tryInstantiateKnown vts tP partsP replP scP bind
           But msgs
@@ -541,28 +541,28 @@ foundCons tk sn n ts   =  Cons tk sn n ts
 First, given list of match-contexts, systematically work through them,
 carrying the top-level view of the variable-tables along.
 \begin{code}
-matchInContexts :: [MatchContext] -> Assertion -> Matches
-matchInContexts mcs@((_,lws,vts):_) asn
-  = concat $ map (matchLaws vts asn) mcs
+matchInContexts :: [MatchContext] -> TypCmp -> Assertion -> Matches
+matchInContexts mcs@((_,lws,vts):_) fits asn
+  = concat $ map (matchLaws vts fits asn) mcs
 \end{code}
 
 Now, the code to match laws, given a context.
 Bascially we run down the list of laws,
 returning any matches we find.
 \begin{code}
-matchLaws :: [VarTable] -> Assertion -> MatchContext -> Matches
-matchLaws vts asn (_,lws,_)
-  = concat $ map (domatch vts $ unwrapASN asn) lws
+matchLaws :: [VarTable] -> TypCmp -> Assertion -> MatchContext -> Matches
+matchLaws vts fits asn (_,lws,_)
+  = concat $ map (domatch vts fits $ unwrapASN asn) lws
 \end{code}
 
 Sometimes we are interested in a specific (named) law.
 \begin{code}
 matchLawByName :: MonadFail m
-               => Assertion -> String -> [MatchContext]
+               => Assertion -> String -> [MatchContext] -> TypCmp
                -> m Matches
-matchLawByName asn lnm mcs
+matchLawByName asn lnm mcs fits
  = do (law,vts) <- findLaw lnm mcs
-      return $ domatch vts (unwrapASN asn) law
+      return $ domatch vts fits (unwrapASN asn) law
 \end{code}
 
 For each law,
@@ -570,18 +570,18 @@ we match the whole thing,
 and if its top-level is a \texttt{Cons}
 with at least two sub-components, we try all possible partial matches.
 \begin{code}
-domatch :: [VarTable] -> TermSC -> Law -> Matches
-domatch vts asnC law@((lname,(Assertion tP@(Cons _ _ i tsP@(_:_:_)) scP)),prov)
-  =    basicMatch MatchAll vts law' theTrue asnC tP
-    ++ doPartialMatch i vts law' asnC tsP
+domatch :: [VarTable] -> TypCmp -> TermSC -> Law -> Matches
+domatch vts fits asnC law@((lname,(Assertion tP@(Cons _ _ i tsP@(_:_:_)) scP)),prov)
+  =    basicMatch MatchAll vts fits law' theTrue asnC tP
+    ++ doPartialMatch i vts fits law' asnC tsP
   where
     xscP = expandSCKnowns vts scP
     law' =(((lname,unsafeASN tP xscP)),prov)
 \end{code}
 Otherwise we just match against the whole law.
 \begin{code}
-domatch vts asnC law@((lname,(Assertion tP scP)),prov)
-  =  basicMatch MatchAll vts law' theTrue asnC tP
+domatch vts fits asnC law@((lname,(Assertion tP scP)),prov)
+  =  basicMatch MatchAll vts fits law' theTrue asnC tP
   where
     xscP = expandSCKnowns vts scP
     law' =(((lname,unsafeASN tP xscP)),prov)
@@ -596,15 +596,15 @@ domatch vts asnC law@((lname,(Assertion tP scP)),prov)
 Here we have a top-level \texttt{Cons}
 with at least two sub-terms.
 \begin{code}
-doPartialMatch :: Identifier -> [VarTable]
+doPartialMatch :: Identifier -> [VarTable] -> TypCmp
                -> Law -> TermSC -> [Term]
                -> Matches
 \end{code}
 
 First, if we have $\equiv$ we call an $n$-way equivalence matcher:
 \begin{code}
-doPartialMatch i vts law asnC tsP
-  | i == theEqv  =   doEqvMatch vts law asnC tsP
+doPartialMatch i vts fits law asnC tsP
+  | i == theEqv  =   doEqvMatch vts fits law asnC tsP
 \end{code}
 
 If we have two sub-terms,
@@ -619,20 +619,20 @@ with binding $\beta$,
 then we can replace $C$ by $P\beta \land Q\beta$.
 If we match $Q$, we can replace $C$ by $Q\beta \lor P\beta$
 \begin{code}
-doPartialMatch i vts law asnC tsP@[ltP,rtP]
+doPartialMatch i vts fits law asnC tsP@[ltP,rtP]
   | i == equals
-    =    basicMatch MatchEqvLHS vts law rtP asnC ltP
-      ++ basicMatch MatchEqvRHS vts law ltP asnC rtP
+    =    basicMatch MatchEqvLHS vts fits law rtP asnC ltP
+      ++ basicMatch MatchEqvRHS vts fits law ltP asnC rtP
   | i == theImp
-    =    basicMatch MatchAnte vts law 
+    =    basicMatch MatchAnte vts fits law 
                     (Cons pred1 True theAnd [ltP,rtP]) asnC ltP
-      ++ basicMatch MatchCnsq vts law 
+      ++ basicMatch MatchCnsq vts fits law 
                     (Cons pred1 True theOr  [rtP,ltP]) asnC rtP
 \end{code}
 
 Anything else won't match (right now we don't support $\impliedby$).
 \begin{code}
-doPartialMatch i vts law asnC tsP
+doPartialMatch i vts fits law asnC tsP
   = fail ("doPartialMatch `"++trId i++"`, too many sub-terms")
 \end{code}
 
@@ -688,31 +688,31 @@ We fully support Cases A and B and give some support to Case C.
 First, Case A is automatically done above by \texttt{basicMatch},
 so we need not return any matches here.
 \begin{code}
-doEqvMatch :: [VarTable] -> Law -> TermSC
+doEqvMatch :: [VarTable] -> TypCmp -> Law -> TermSC
            -> [Term]    -- top-level equivalence components in law
            -> Matches
-doEqvMatch vts law asnC [tP1,tP2]
+doEqvMatch vts fits law asnC [tP1,tP2]
 -- rule out matches against one-side of the reflexivity axiom
   | tP1 == tP2  =  []
 -- otherwise treat binary equivalence specially:
-  | otherwise  =     basicMatch MatchEqvLHS vts law tP2 asnC tP1
-                  ++ basicMatch MatchEqvRHS vts law tP1 asnC tP2
+  | otherwise  =     basicMatch MatchEqvLHS vts fits law tP2 asnC tP1
+                  ++ basicMatch MatchEqvRHS vts fits law tP1 asnC tP2
 \end{code}
 Then invoke Cases C and B, in that order.
 \begin{code}
-doEqvMatch vts law asnC tsP
-  = doEqvMatchC vts law asnC tsP
+doEqvMatch vts fits law asnC tsP
+  = doEqvMatchC vts fits law asnC tsP
     ++
-    doEqvMatchB vts law asnC [] [] tsP
+    doEqvMatchB vts fits law asnC [] [] tsP
 \end{code}
 
 Next, Case B.
 \begin{code}
-doEqvMatchB vts law asnC mtchs _ [] = mtchs
-doEqvMatchB vts law@((_,(Assertion _ scP)),_) asnC mtchs sPt (tP:tPs)
+doEqvMatchB vts fits law asnC mtchs _ [] = mtchs
+doEqvMatchB vts fits law@((_,(Assertion _ scP)),_) asnC mtchs sPt (tP:tPs)
   = let mtchs' = basicMatch (MatchEqv [length sPt + 1])
-                     vts law (eqv (reverse sPt ++ tPs)) asnC tP
-    in doEqvMatchB vts law asnC (mtchs'++mtchs) (tP:sPt) tPs
+                     vts fits law (eqv (reverse sPt ++ tPs)) asnC tP
+    in doEqvMatchB vts fits law asnC (mtchs'++mtchs) (tP:sPt) tPs
   where
     eqv []   =  theTrue
     eqv [t]  =  t
@@ -726,27 +726,27 @@ the first $m$ pattern components ($\setof{1\dots m}$),
 or the last $m$ (\setof{n+1-m\dots n}).
 \begin{code}
 -- doEqvMatchC vts law asnC tsP
-doEqvMatchC :: [VarTable] -> Law -> TermSC ->[Term]
+doEqvMatchC :: [VarTable] -> TypCmp -> Law -> TermSC ->[Term]
             -> Matches
-doEqvMatchC vts law@((_,(Assertion _ scP)),_)
+doEqvMatchC vts fits law@((_,(Assertion _ scP)),_)
                          asnC@(tC@(Cons tk si i tsC),scC) tsP
  | i == theEqv
    && cLen < pLen  = doEqvMatchC' cLen [1..cLen]
-                       vts law scC tsC tsP
+                       vts fits law scC tsC tsP
                      ++
                      doEqvMatchC' cLen [pLen+1-cLen .. pLen]
-                       vts law scC (reverse tsC) (reverse tsP)
+                       vts fits law scC (reverse tsC) (reverse tsP)
  where
     cLen = length tsC
     pLen = length tsP
-doEqvMatchC _ _ _ _ = []
+doEqvMatchC _ _ _ _ _ = []
 
 -- we assume cLen < pLen here
-doEqvMatchC' :: Int -> [Int] -> [VarTable] -> Law
+doEqvMatchC' :: Int -> [Int] -> [VarTable] -> TypCmp -> Law
              -> SideCond -> [Term] -> [Term]
              -> Matches
-doEqvMatchC' cLen is vts law@((_,(Assertion _ scP)),_) scC tsC tsP
-  = basicMatch (MatchEqv is) vts law (eqv tsP'') (eqv tsC,scC) (eqv tsP')
+doEqvMatchC' cLen is vts fits law@((_,(Assertion _ scP)),_) scC tsC tsP
+  = basicMatch (MatchEqv is) vts fits law (eqv tsP'') (eqv tsC,scC) (eqv tsP')
   where
     (tsP',tsP'') = splitAt cLen tsP
     eqv []   =  theTrue 
@@ -876,13 +876,14 @@ including side-condition checking.
 \begin{code}
 basicMatch :: MatchClass
             -> [VarTable] -- known variables in scope at this law
+            -> TypCmp  -- checks type compatibility 
             -> Law        -- law of interest
             -> Term       -- sub-part of law not being matched
             -> TermSC  -- candidate assertion
             -> Term       -- sub-part of law being matched
             -> Matches
-basicMatch mc vts law@((n,asnP@(Assertion tP scP)),_) replP (tC,scC) partsP
-  =  do bind <- match vts tC partsP
+basicMatch mc vts fits law@((n,asnP@(Assertion tP scP)),_) replP (tC,scC) partsP
+  =  do bind <- match vts fits tC partsP
         kbind <- bindKnown vts bind tP
         fbind <- bindFloating vts kbind tP -- was replP 
         let insctxt = mkInsCtxt vts scC

@@ -583,6 +583,13 @@ moveFocusFromHypothesis liveProof
 
 \subsection{Match Laws against Focus}
 
+In all matching cases we use a type-comparison operator that is 
+the canonisisation of the sub-type relation:
+\begin{code}
+cSubType :: CanonicalMap -> TypCmp
+cSubType = canonise isSubTypeOf
+\end{code}
+
 
 Matching all laws:
 \begin{code}
@@ -594,7 +601,8 @@ matchFocus ranking liveProof
         ctxts       =  mtchCtxts liveProof
         vts         =  concat $ map thd3 ctxts
     in do (asn',tvmap) <- mkTypedAsn vts goalt scC 
-          let rankedM = ranking ctxts $ matchInContexts ctxts asn'
+          let fits  =  cSubType tvmap
+          let rankedM = ranking ctxts $ matchInContexts ctxts fits asn'
           return $ matches_ rankedM liveProof
 \end{code}
 
@@ -608,7 +616,8 @@ matchFocusAgainst lawnm liveProof
         ctxts       =  mtchCtxts liveProof
         vts         =  concat $ map thd3 ctxts
     in do (asn',tvmap) <- mkTypedAsn vts goalt scC
-          case matchLawByName asn' lawnm ctxts of
+          let fits  =  cSubType tvmap
+          case matchLawByName asn' lawnm ctxts fits of
             Yes []    -> fail ("No matches against focus for '"++lawnm++"'")
             Yes mtchs -> return $ matches_ mtchs liveProof
             But msgs  -> fail $ unlines msgs
@@ -625,7 +634,8 @@ tryFocusAgainst lawnm parts liveProof
         ctxts       =  mtchCtxts liveProof
         vts         =  concat $ map thd3 ctxts
     in do (asn',tvmap) <- mkTypedAsn vts goalt scC
-          tryLawByName asn' lawnm parts ctxts
+          let fits  =  cSubType tvmap
+          tryLawByName asn' lawnm parts ctxts fits
 \end{code}
 
 \newpage

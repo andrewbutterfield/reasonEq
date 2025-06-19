@@ -587,7 +587,7 @@ In all matching cases we use a type-comparison operator that is
 the canonisisation of the sub-type relation:
 \begin{code}
 cSubType :: CanonicalMap -> TypCmp
-cSubType = canonise isSubTypeOf
+cSubType = canoniseTypes isSubTypeOf
 \end{code}
 
 

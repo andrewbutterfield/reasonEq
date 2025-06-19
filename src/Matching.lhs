@@ -148,55 +148,45 @@ match vts fits cand patn
 \newpage
 \section{Type Matching}
 
-If we match a pattern of extremal type,
-there is nothing we can do in terms of bindings.
-Instead, we may need to run type-inference after instantiation.
-
-\begin{verbatim}
-ArbType 
-TypeVar i 
-TypeCons i ts 
-AlgType i fs 
-FunType tf ta 
-GivenType i 
-BottomType 
-\end{verbatim}
 
 \begin{code}
-typeMatch bind typC ArbType       =  return bind 
+type TVCmp = Identifier -> Identifier -> Bool
+typeMatch :: MonadFail m => TVCmp -> Binding -> Type -> Type -> m Binding
+typeMatch _ bind typC ArbType       =  return bind 
 
-typeMatch bind typC@(TypeVar iC) (TypeVar iP)
-  | iC == iP                      =  bindTypeVarToType iP typC bind
-typeMatch bind typC (TypeVar iP)  =  bindTypeVarToType iP typC bind
+typeMatch vfits bind typC@(TypeVar iC) (TypeVar iP)
+  | iC `vfits` iP                    =  bindTypeVarToType iP typC bind
+typeMatch _ bind typC (TypeVar iP)  =  bindTypeVarToType iP typC bind
 
-typeMatch bind typC@(TypeCons iC tsC) (TypeCons iP tsP)
-  | iC == iP = do
+typeMatch vfits bind typC@(TypeCons iC tsC) (TypeCons iP tsP)
+  | iC `vfits` iP = do
     bindI <- bindTypeVarToType iP (TypeVar iC) bind
-    typesMatch bindI tsC tsP
+    typesMatch vfits bindI tsC tsP
 
-typeMatch bind typC@(AlgType iC fsC) (AlgType iP fsP)
-  | iC == iP && fsC == fsP   =  bindTypeVarToType iP typC bind
+typeMatch vfits bind typC@(AlgType iC fsC) (AlgType iP fsP)
+  | iC `vfits` iP && fsC == fsP   =  bindTypeVarToType iP typC bind
   -- temporary: we should typeMatch fsC!!i :: fsP!!i
 
-typeMatch bind typC@(FunType tdC trC) (FunType tdP trP) = do
-  bindD <- typeMatch bind tdC tdP
-  typeMatch bindD trC trP
+typeMatch vfits bind typC@(FunType tdC trC) (FunType tdP trP) = do
+  bindD <- typeMatch vfits bind tdC tdP
+  typeMatch vfits bindD trC trP
 
-typeMatch bind _ BottomType = return bind  
+typeMatch _ bind _ BottomType = return bind  
 
-typeMatch bind typC@(GivenType iC) (GivenType iP)
-  | iC == iP                      =  bindTypeVarToType iP typC bind
+-- `vfits` not relevant here
+typeMatch _ bind typC@(GivenType iC) (GivenType iP)
+  | iC == iP  =  bindTypeVarToType iP typC bind
 
-typeMatch bind typC typP 
+typeMatch vfits bind typC typP 
   = fail $ unlines [ "typeMatch: distinct types"
                    , "typC = " ++ show typC
                    , "typP = " ++ show typP ]
 
-typesMatch bind [] [] = return bind
-typesMatch bind (tC:tsC) (tP:tsP) = do
-  bindH <- typeMatch bind tC tP
-  typesMatch bindH tsC tsP
-typesMatch bind tsC tsP = fail $ unlines
+typesMatch vfits bind [] [] = return bind
+typesMatch vfits bind (tC:tsC) (tP:tsP) = do
+  bindH <- typeMatch vfits bind tC tP
+  typesMatch vfits bindH tsC tsP
+typesMatch vfits bind tsC tsP = fail $ unlines
   [ "typesMatch: length difference "++show (length tsP - length tsC)]
 \end{code}
 
@@ -214,10 +204,11 @@ in that the candidate is a subtype of the pattern.
 Note that predicate-type $t$ is the same as expression-type $t\fun\Bool$.
 \begin{code}
 termMatch vts fits bind cbvs pbvs tC tP
- = let typC = termtype tC ; typP = termtype tP
-   in do
-     bindT <- typeMatch bind typC typP
-     termMatch' vts fits bindT cbvs pbvs tC tP
+  = let typC = termtype tC ; typP = termtype tP
+    in do
+      bindT <- typeMatch vfits bind typC typP
+      termMatch' vts fits bindT cbvs pbvs tC tP
+  where vfits iC iP = fits (TypeVar iC) (TypeVar iP)
 \end{code} 
 
 

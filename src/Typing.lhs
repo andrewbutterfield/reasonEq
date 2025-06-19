@@ -16,7 +16,7 @@ module Typing ( TypeVariable
               , CanonicalMap
               , typeVarEquivalence
               , TypCmp
-              , canonise
+              , canoniseTypes
               )
 where
 
@@ -725,8 +725,8 @@ Finally, building a type-variable binary relation from a canonical map:
 type TypCmp = Type -> Type -> Bool
 
 
-canonise :: TypCmp -> CanonicalMap -> TypCmp
-canonise typcmp canon t1 t2
+canoniseTypes :: TypCmp -> CanonicalMap -> TypCmp
+canoniseTypes typcmp canon t1 t2
   = mkCanonicalTypes canon t1 `typcmp` mkCanonicalTypes canon t2
 \end{code}
 

@@ -16,7 +16,7 @@ module Typing ( TypeVariable
               , CanonicalMap
               , typeVarEquivalence
               , TypCmp
-              , areEqvTypes
+              , canonise
               )
 where
 
@@ -720,12 +720,14 @@ applyMap mapping x
       Just y  -> y
 \end{code}
 
-Finally, building a type-variable equivalence predicate from a canonicl map:
+Finally, building a type-variable binary relation from a canonical map:
 \begin{code}
 type TypCmp = Type -> Type -> Bool
-areEqvTypes :: CanonicalMap -> TypCmp
-areEqvTypes canon t1 t2
-  = mkCanonicalTypes canon t1 == mkCanonicalTypes canon t2
+
+
+canonise :: TypCmp -> CanonicalMap -> TypCmp
+canonise typcmp canon t1 t2
+  = mkCanonicalTypes canon t1 `typcmp` mkCanonicalTypes canon t2
 \end{code}
 
 

@@ -54,16 +54,9 @@ hit <enter> to continue
 ```
 
 
-
-
-
-`AST.isSubsetOf` to be deprecated in favour of `Matching.typeMatch`.
-
 Type `VarBind` has a `BindId` variants, 
 but it is only used for variables of dynamicity `During`.  
 We should really use this to bind constructor identifiers.
-
-
 
 
 

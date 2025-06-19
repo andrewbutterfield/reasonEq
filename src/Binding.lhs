@@ -61,6 +61,8 @@ import Variables
 import Types
 import AST
 import VarData
+import Typing
+
 
 import Debugger
 \end{code}
@@ -523,20 +525,37 @@ rangeEq nAPI d binding r r0
                   ]
 \end{code}
 
+A very specific case is when we bind type-variables to types produced
+as a result of type-inferencing. This generates equivalence classes,
+and want to use a canonical representative in the binding.
+\begin{code}
+tvtypEq :: MonadFail m
+        => TypCmp -> String -> UpdateCheck m TypeVariable Type
+tvtypEq fits nAPI d binding r r0
+ | r `fits` r0    =  return r
+ | otherwise  =  fail $ unlines
+                  [ (nAPI++": already bound differently(1).")
+                  , "d = " ++ show d
+                  , "old r = " ++ show r0
+                  , "new r = " ++ show r
+                  , "bind:\n" ++ show binding
+                  ]
+\end{code}
+
 
 \subsection{Binding Type-Variable to Type}
 
 \begin{code}
 bindTypeVarToType :: MonadFail m 
-                  => Identifier -> Type -> Binding -> m Binding
+                  => TypCmp -> Identifier -> Type -> Binding -> m Binding
 \end{code}
 
 
 A \texttt{Static} variable can bind to
 any non-\texttt{Textual} thing in the appropriate class.
 \begin{code}
-bindTypeVarToType tv typ (BD (tbind,vbind,sbind,lbind))
-   =  do tbind' <- insertDR (rangeEq "bindTypeVarToType") tv typ tbind
+bindTypeVarToType fits tv typ (BD (tbind,vbind,sbind,lbind))
+   =  do tbind' <- insertDR (tvtypEq fits "bindTypeVarToType") tv typ tbind
          return $ BD (tbind',vbind,sbind,lbind)
 \end{code}
 

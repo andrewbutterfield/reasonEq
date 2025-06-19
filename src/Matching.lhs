@@ -151,42 +151,45 @@ match vts fits cand patn
 
 \begin{code}
 type TVCmp = Identifier -> Identifier -> Bool
-typeMatch :: MonadFail m => TVCmp -> Binding -> Type -> Type -> m Binding
+typeMatch :: MonadFail m 
+          => (TypCmp,TVCmp) -> Binding -> Type -> Type
+          -> m Binding
 typeMatch _ bind typC ArbType       =  return bind 
 
-typeMatch vfits bind typC@(TypeVar iC) (TypeVar iP)
-  | iC `vfits` iP                    =  bindTypeVarToType iP typC bind
-typeMatch _ bind typC (TypeVar iP)  =  bindTypeVarToType iP typC bind
+typeMatch (fits,vfits) bind typC@(TypeVar iC) (TypeVar iP)
+  | iC `vfits` iP  =  bindTypeVarToType fits iP typC bind
+typeMatch (fits,_) bind typC (TypeVar iP) 
+                   =  bindTypeVarToType fits iP typC bind
 
-typeMatch vfits bind typC@(TypeCons iC tsC) (TypeCons iP tsP)
+typeMatch (fits,vfits) bind typC@(TypeCons iC tsC) (TypeCons iP tsP)
   | iC `vfits` iP = do
-    bindI <- bindTypeVarToType iP (TypeVar iC) bind
-    typesMatch vfits bindI tsC tsP
+    bindI <- bindTypeVarToType fits iP (TypeVar iC) bind
+    typesMatch (fits,vfits) bindI tsC tsP
 
-typeMatch vfits bind typC@(AlgType iC fsC) (AlgType iP fsP)
-  | iC `vfits` iP && fsC == fsP   =  bindTypeVarToType iP typC bind
+typeMatch (fits,vfits) bind typC@(AlgType iC fsC) (AlgType iP fsP)
+  | iC `vfits` iP && fsC == fsP   =  bindTypeVarToType fits iP typC bind
   -- temporary: we should typeMatch fsC!!i :: fsP!!i
 
-typeMatch vfits bind typC@(FunType tdC trC) (FunType tdP trP) = do
-  bindD <- typeMatch vfits bind tdC tdP
-  typeMatch vfits bindD trC trP
+typeMatch (fits,vfits) bind typC@(FunType tdC trC) (FunType tdP trP) = do
+  bindD <- typeMatch (fits,vfits) bind tdC tdP
+  typeMatch (fits,vfits) bindD trC trP
 
 typeMatch _ bind _ BottomType = return bind  
 
 -- `vfits` not relevant here
-typeMatch _ bind typC@(GivenType iC) (GivenType iP)
-  | iC == iP  =  bindTypeVarToType iP typC bind
+typeMatch (fits,_) bind typC@(GivenType iC) (GivenType iP)
+  | iC == iP  =  bindTypeVarToType fits iP typC bind
 
-typeMatch vfits bind typC typP 
+typeMatch (fits,vfits) bind typC typP 
   = fail $ unlines [ "typeMatch: distinct types"
                    , "typC = " ++ show typC
                    , "typP = " ++ show typP ]
 
-typesMatch vfits bind [] [] = return bind
-typesMatch vfits bind (tC:tsC) (tP:tsP) = do
-  bindH <- typeMatch vfits bind tC tP
-  typesMatch vfits bindH tsC tsP
-typesMatch vfits bind tsC tsP = fail $ unlines
+typesMatch (fits,vfits) bind [] [] = return bind
+typesMatch (fits,vfits) bind (tC:tsC) (tP:tsP) = do
+  bindH <- typeMatch (fits,vfits) bind tC tP
+  typesMatch (fits,vfits) bindH tsC tsP
+typesMatch (fits,vfits) bind tsC tsP = fail $ unlines
   [ "typesMatch: length difference "++show (length tsP - length tsC)]
 \end{code}
 
@@ -206,7 +209,7 @@ Note that predicate-type $t$ is the same as expression-type $t\fun\Bool$.
 termMatch vts fits bind cbvs pbvs tC tP
   = let typC = termtype tC ; typP = termtype tP
     in do
-      bindT <- typeMatch vfits bind typC typP
+      bindT <- typeMatch (fits,vfits) bind typC typP
       termMatch' vts fits bindT cbvs pbvs tC tP
   where vfits iC iP = fits (TypeVar iC) (TypeVar iP)
 \end{code} 

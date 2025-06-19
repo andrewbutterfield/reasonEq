@@ -15,6 +15,8 @@ module Typing ( TypeVariable
               , typeInference
               , CanonicalMap
               , typeVarEquivalence
+              , TypCmp
+              , areEqvTypes
               )
 where
 
@@ -716,6 +718,14 @@ applyMap mapping x
   = case M.lookup x mapping of
       Nothing -> x
       Just y  -> y
+\end{code}
+
+Finally, building a type-variable equivalence predicate from a canonicl map:
+\begin{code}
+type TypCmp = Type -> Type -> Bool
+areEqvTypes :: CanonicalMap -> TypCmp
+areEqvTypes canon t1 t2
+  = mkCanonicalTypes canon t1 == mkCanonicalTypes canon t2
 \end{code}
 
 

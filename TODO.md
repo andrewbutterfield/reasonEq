@@ -4,82 +4,14 @@
 
 **PAIN POINT FOUND**  `TypeVar A3 /= TypeVar t`.
 
-Need to pass CanonicalMap into matching.
-Or rather a predicate that uses a canonical map to decide if two type-variables and/or types are the same.
+Types for matching look good now.
 
-Add new `TypCmp` parameter to the following `LiveProofs` functions: 
-`matchInContext`, `matchLawByname`, and `tryLawByName`. 
-These all feed into `domatch`. Add it just after the `vts` argument.
-
-```
-(hd(x : σ) : tl(x : σ)) = (x : σ)
-Focus = [1,1] :: t
-Match against 'hd_def'[1] failed!
-try match failed
-hd(x : σ) :: hd(x : σ)
-lnm[parts]=hd_def[1]
-tP=hd(x : σ) = x
-partsP=hd(x : σ)
-replP=x
-tC=hd(x : σ)
-scC=⊤
----
-termMatch: structural mismatch.
-tC = 
-C (TV (Id "A3" 0)) True (Id "hd" 0) 
-  [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) 
-     [ V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS))
-     , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))
-     ]
-  ]
-tP = 
-C (TV (Id "t" 0)) True (Id "hd" 0) 
-  [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) 
-     [ V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS))
-     , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))
-     ]
-  ]
-```
-
-**Typing is invoked by `mkTypedAsn` only, in matching commands. We need to get type bindings back and compute typvar equivalence classes here and fix the reported type so all works**
-
-Fix 1:  changes types of `hd` and `tl` to `ArbType`.
-
-Now we have `(x : σ) = (x : σ)` where `(x : σ)` has type `τ`,
-while both `x` and `σ` have the expected types.
-
-Matching `hd(x : σ)` against `hd_def` in `Lists` results in:
-
-```
-@SUB:
-{ a1 => a3*
-, a2 => a3
-, a4 => a3*
-, a5 => a3* -> a3*
-, t => a3
-}
-@tC:
-C
-( TV
-  (Id "a3" 0) )
-True
-(Id "hd" 0)
-[STUFF]
-@tP:
-C
-( TV
-  (Id "t" 0) )
-True
-(Id "hd" 0)
-[STUFF]
-```
+The binding process needs to see the CanonicalMap!!!!!
 
 
 
 
 **PLAN**
-
-Predicates are of type boolean, and not  arbtype -> boolean.
 
 
 The proof of `ls_union_N` gets stuck because in the proof

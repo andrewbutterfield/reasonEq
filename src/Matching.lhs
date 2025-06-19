@@ -32,6 +32,7 @@ import AST
 import SideCond
 import FreeVars
 import VarData
+import Typing
 import Binding
 
 
@@ -125,6 +126,8 @@ At the top-level we have the known-variable information
 in the form of a sequence $\kappa s$ of known variable tables,
 and the pattern and candidate terms,
 and we hope to get at least one binding.
+We also need a canonical type-variable mapping,
+obtained from type inference.
 We initialise the bound-variable sets to empty ($\emptyset$)
 and the bindings already obtained to the null map ($\theta$).
 $$
@@ -136,9 +139,10 @@ $$
 $$
 \begin{code}
 match :: (MonadPlus mp, MonadFail mp) 
-      => [VarTable] 
+      => [VarTable]-> TypCmp
       -> Candidate -> Pattern -> mp Binding
-match vts cand patn  =  termMatch vts emptyBinding noBVS noBVS cand patn
+match vts fits cand patn  
+  =  termMatch vts fits emptyBinding noBVS noBVS cand patn
 \end{code}
 
 \newpage
@@ -201,7 +205,7 @@ typesMatch bind tsC tsP = fail $ unlines
 
 \begin{code}
 termMatch, termMatch' :: (MonadPlus mp, MonadFail mp) 
-                => [VarTable] -> Binding -> CBVS -> PBVS
+                => [VarTable] -> TypCmp -> Binding -> CBVS -> PBVS
                 -> Candidate -> Pattern -> mp Binding
 \end{code}
 
@@ -209,11 +213,11 @@ We note that the \texttt{Type} of pattern and candidate must agree,
 in that the candidate is a subtype of the pattern.
 Note that predicate-type $t$ is the same as expression-type $t\fun\Bool$.
 \begin{code}
-termMatch vts bind cbvs pbvs tC tP
+termMatch vts fits bind cbvs pbvs tC tP
  = let typC = termtype tC ; typP = termtype tP
    in do
      bindT <- typeMatch bind typC typP
-     termMatch' vts bindT cbvs pbvs tC tP
+     termMatch' vts fits bindT cbvs pbvs tC tP
 \end{code} 
 
 
@@ -238,7 +242,7 @@ $$
 $$
 
 \begin{code}
-termMatch' _ bind _ _ kC@(Val _ _) kP@(Val _ _)
+termMatch' _ _ bind _ _ kC@(Val _ _) kP@(Val _ _)
  | kC == kP  =  return bind
 \end{code}
 
@@ -256,8 +260,8 @@ $$
 $$
 
 \begin{code}
-termMatch' vts bind cbvs pbvs tC (Var ttP vP)
-  | termtype tC `isSubTypeOf` ttP  =  tvMatch vts bind cbvs pbvs tC ttP vP
+termMatch' vts fits bind cbvs pbvs tC (Var ttP vP)
+  | termtype tC `fits` ttP  =  tvMatch vts fits bind cbvs pbvs tC ttP vP
 \end{code}
 
 \newpage
@@ -282,10 +286,10 @@ $$
 
 Here $ts_X = \langle t_{X_1}, t_{X_2}, \dots t_{X_n} \rangle$.
 \begin{code}
-termMatch' vts bind cbvs pbvs (Cons ttC sbC nC tsC) (Cons ttP sbP nP tsP)
- | ttC `isSubTypeOf` ttP && sbC == sbP
-   =  do bind0 <- consBind vts bind cbvs pbvs ttC nC nP
-         tsMatch vts bind0 cbvs pbvs tsC tsP
+termMatch' vts fits bind cbvs pbvs (Cons ttC sbC nC tsC) (Cons ttP sbP nP tsP)
+ | ttC `fits` ttP && sbC == sbP
+   =  do bind0 <- consBind vts fits bind cbvs pbvs ttC nC nP
+         tsMatch vts fits bind0 cbvs pbvs tsC tsP
 \end{code}
 
 
@@ -310,12 +314,12 @@ $$
   \quad\texttt{termMatch Single-Iter}
 $$
 \begin{code}
-termMatch' vts bind cbvs pbvs (Iter ttC saC naC siC niC lvsC) (Cons ttP sbP nP tsP)
-  | ttC `isSubTypeOf` ttP && niC == nP && siC == sbP
-    =  do bind0 <- consBind vts bind cbvs pbvs ttC niC nP
+termMatch' vts fits bind cbvs pbvs (Iter ttC saC naC siC niC lvsC) (Cons ttP sbP nP tsP)
+  | ttC `fits` ttP && niC == nP && siC == sbP
+    =  do bind0 <- consBind vts fits bind cbvs pbvs ttC niC nP
           -- ignore above Cons bind for now
-          bind1 <- consBind vts bind cbvs pbvs ttC naC itop
-          -- tsMatch vts bind0 cbvs pbvs tsC tsP
+          bind1 <- consBind vts fits bind cbvs pbvs ttC naC itop
+          -- tsMatch vts fits bind0 cbvs pbvs tsC tsP
           iterVarsMatch bind1 tsP lvsC  
   where
     iterVarsMatch bind [] [] = return bind
@@ -404,12 +408,12 @@ $$
    \texttt{termMatch Binding}
 $$
 \begin{code}
-termMatch' vts bind cbvs pbvs (Bnd ttC nC vsC tC) (Bnd ttP nP vsP tP)
-  | ttC `isSubTypeOf` ttP && nC == nP
+termMatch' vts fits bind cbvs pbvs (Bnd ttC nC vsC tC) (Bnd ttP nP vsP tP)
+  | ttC `fits` ttP && nC == nP
     =  do let cbvs' = vsC `addBoundVarSet` cbvs
           let pbvs' = vsP `addBoundVarSet` pbvs
-          bindT  <-  termMatch vts bind cbvs' pbvs' tC tP
-          vsMatch vts bindT cbvs' pbvs' vsC vsP
+          bindT  <-  termMatch vts fits bind cbvs' pbvs' tC tP
+          vsMatch vts fits bindT cbvs' pbvs' vsC vsP
 \end{code}
 
 However, we also have the case when the pattern binding
@@ -433,11 +437,11 @@ $$
    \texttt{termMatch Binding0}
 $$
 \begin{code}
-termMatch' vts bind cbvs pbvs tC (Bnd ttP nP vsP tP)
+termMatch' vts fits bind cbvs pbvs tC (Bnd ttP nP vsP tP)
   | all (gVarIsUnknownLVar vts) vlP
     =  do bind' <- bindLVarsToEmpty bind $ listVarsOf vlP
           let pbvs' = vsP `addBoundVarSet` pbvs
-          termMatch vts bind' cbvs pbvs' tC tP
+          termMatch vts fits bind' cbvs pbvs' tC tP
   where vlP = S.toList vsP
 \end{code}
 
@@ -460,12 +464,12 @@ $$
    \texttt{termMatch Lambda}
 $$
 \begin{code}
-termMatch' vts bind cbvs pbvs (Lam ttC nC vlC tC) (Lam ttP nP vlP tP)
-  | ttC `isSubTypeOf` ttP && nC == nP
+termMatch' vts fits bind cbvs pbvs (Lam ttC nC vlC tC) (Lam ttP nP vlP tP)
+  | ttC `fits` ttP && nC == nP
     =  do let cbvs' = vlC `addBoundVarList` cbvs
           let pbvs' = vlP `addBoundVarList` pbvs
-          bindT  <-  termMatch vts bind cbvs' pbvs' tC tP
-          vlMatch vts bindT cbvs' pbvs' vlC vlP
+          bindT  <-  termMatch vts fits bind cbvs' pbvs' tC tP
+          vlMatch vts fits bindT cbvs' pbvs' vlC vlP
 \end{code}
 We also have special handling here for when we have only unknown list-variables:
 $$
@@ -484,11 +488,11 @@ $$
    \texttt{termMatch Lambda0}
 $$
 \begin{code}
-termMatch' vts bind cbvs pbvs tC (Lam ttP nP vlP tP)
+termMatch' vts fits bind cbvs pbvs tC (Lam ttP nP vlP tP)
   | all (gVarIsUnknownLVar vts) vlP
     =  do bind' <- bindLVarsToEmpty bind $ listVarsOf vlP
           let pbvs' = vlP `addBoundVarList` pbvs
-          termMatch vts bind' cbvs pbvs' tC tP
+          termMatch vts fits bind' cbvs pbvs' tC tP
 \end{code}
 
 \newpage
@@ -509,8 +513,8 @@ $$
 $$
 Note that here we only close w.r.t. free \emph{observational} variables.
 \begin{code}
-termMatch' vts bind cbvs pbvs (Cls nC tC) (Cls nP tP)
-  | nC == nP  =  termMatch vts bind cbvs' pbvs' tC tP
+termMatch' vts fits bind cbvs pbvs (Cls nC tC) (Cls nP tP)
+  | nC == nP  =  termMatch vts fits bind cbvs' pbvs' tC tP
   where
     cbvs' = S.filter isObsGVar $ theFreeVars $ freeVars scTrue tC -- safe?
     pbvs' = S.filter isObsGVar $ theFreeVars $ freeVars scTrue tP -- safe?
@@ -534,10 +538,10 @@ $$
    \texttt{termMatch Subst}
 $$
 \begin{code}
-termMatch' vts bind cbvs pbvs (Sub ttC tC subC) (Sub ttP tP subP)
-  | ttC `isSubTypeOf` ttP 
-    = do  bindT  <-  termMatch vts bind cbvs pbvs tC tP
-          sMatch vts bindT cbvs pbvs subC subP
+termMatch' vts fits bind cbvs pbvs (Sub ttC tC subC) (Sub ttP tP subP)
+  | ttC `fits` ttP 
+    = do  bindT  <-  termMatch vts fits bind cbvs pbvs tC tP
+          sMatch vts fits bindT cbvs pbvs subC subP
 \end{code}
 
 
@@ -558,13 +562,13 @@ $$
    \texttt{termMatch Iter-Self}
 $$
 \begin{code}
-termMatch' vts bind cbvs pbvs (Iter ttC saC naC siC niC lvsC)
+termMatch' vts fits bind cbvs pbvs (Iter ttC saC naC siC niC lvsC)
                            (Iter ttP saP naP siP niP lvsP)
   | ttP == ttC && naC == naP && niC == niP
                && saC == saP && siC == siP
                && length lvsP == length lvsC
-               =  do bind0 <- consBind vts bind  cbvs pbvs ttC naC naP
-                     bind1 <- consBind vts bind0 cbvs pbvs ttC niC niP
+               =  do bind0 <- consBind vts fits bind  cbvs pbvs ttC naC naP
+                     bind1 <- consBind vts fits bind0 cbvs pbvs ttC niC niP
                      -- iibind bind1 $ zip lvsP lvsC
                      iibind bind $ zip lvsP lvsC -- no cons just now
   | otherwise  =  fail "termMatch: incompatible Iter."
@@ -590,11 +594,11 @@ $$
    \texttt{termMatch Iter-Single}
 $$
 \begin{code}
-termMatch' vts bind cbvs pbvs tC@(Cons ttC siC niC tsC)
+termMatch' vts fits bind cbvs pbvs tC@(Cons ttC siC niC tsC)
                            tP@(Iter ttP saP naP siP niP lvsP)
   | ttP == ttC && niC == niP && siC == siP
-               = do bind0 <- consBind vts bind  cbvs pbvs ttC naP naP
-                    bind1 <- consBind vts bind0 cbvs pbvs ttC niC niP
+               = do bind0 <- consBind vts fits bind  cbvs pbvs ttC naP naP
+                    bind1 <- consBind vts fits bind0 cbvs pbvs ttC niC niP
                     -- iterLVarsMatch bind1 lvsP tsC
                     iterLVarsMatch bind lvsP tsC -- no cons for now
   where
@@ -672,11 +676,11 @@ then each ${t_C}_j$ will produce a list of length $\#lvs_P$,
 and the transpose of this list will provide the "striped" bindings.
 
 \begin{code}
-termMatch' vts bind cbvs pbvs tC@(Cons ttC saC naC tsC)
+termMatch' vts fits bind cbvs pbvs tC@(Cons ttC saC naC tsC)
                            tP@(Iter ttP saP naP siP niP lvsP)
   | ttP == ttC && naC == naP && saC == saP
-               = do bind0 <- consBind vts bind  cbvs pbvs ttC naC naP
-                    bind1 <- consBind vts bind0 cbvs pbvs ttC niP niP
+               = do bind0 <- consBind vts fits bind  cbvs pbvs ttC naC naP
+                    bind1 <- consBind vts fits bind0 cbvs pbvs ttC niP niP
                     termLists <- sequence $ map (itMatch len lvsP) tsC
                     let bindLists = transpose termLists
                     -- itBind bind1 lvsP bindLists
@@ -737,7 +741,7 @@ termMatch' vts bind cbvs pbvs tC@(Cons ttC saC naC tsC)
 % $$
 % This does not cater for a partial expansion!
 % \begin{code}
-% termMatch' vts bind cbvs pbvs tC@(Cons ttC saC naC tsC)
+% termMatch' vts fits bind cbvs pbvs tC@(Cons ttC saC naC tsC)
 %                               (Iter ttP saP naP siP niP lvsP)
 %   | ttP == ttC && naC == naP && saC == saP && all isNiP tsC
 %                = ibind bind $ zip lvsP $ transpose $ map unNiP tsC
@@ -768,7 +772,7 @@ termMatch' vts bind cbvs pbvs tC@(Cons ttC saC naC tsC)
 
 Any other situation results in failure:
 \begin{code}
-termMatch' _ _ _ _ tC tP
+termMatch' _ _ _ _ _ tC tP
  = fail $ unlines
     [ "termMatch: structural mismatch."
     , "tC = " ++ show tC
@@ -785,8 +789,8 @@ This is really a match between two identifiers
 that we wrap as static observables:
 
 \begin{code}
-consBind vts bind cbvs pbvs ttC nC nP
-  = vMatch vts bind cbvs pbvs ttC vC ttC vP
+consBind vts fits bind cbvs pbvs ttC nC nP
+  = vMatch vts fits bind cbvs pbvs ttC vC ttC vP
   where
     vC = Vbl nC ObsV Static
     vP = Vbl nP ObsV Static
@@ -801,19 +805,19 @@ A simple zip-like walk along both lists
 (precomputing length to abort early).
 \begin{code}
 tsMatch :: (MonadPlus mp, MonadFail mp)
-        => [VarTable] -> Binding -> CBVS -> PBVS
+        => [VarTable] -> TypCmp -> Binding -> CBVS -> PBVS
         -> [Candidate] -> [Pattern] -> mp Binding
-tsMatch vts bind cbvs pvbs cts pts
+tsMatch vts fits bind cbvs pvbs cts pts
  | length cts /= length pts = fail "tsMatch: length mismatch"
- | otherwise  =  tsMatch' vts bind cbvs pvbs cts pts
+ | otherwise  =  tsMatch' vts fits bind cbvs pvbs cts pts
 
 -- here both lists are the same length
-tsMatch' _ bind _ _ [] [] = return bind
-tsMatch' vts bind cbvs pvbs (tC:tsC) (tP:tsP)
- = do bind1 <- termMatch vts bind cbvs pvbs tC tP
-      tsMatch vts bind1 cbvs pvbs tsC tsP
+tsMatch' _ _ bind _ _ [] [] = return bind
+tsMatch' vts fits bind cbvs pvbs (tC:tsC) (tP:tsP)
+ = do bind1 <- termMatch vts fits bind cbvs pvbs tC tP
+      tsMatch vts fits bind1 cbvs pvbs tsC tsP
 -- should not occur!
-tsMatch' _ _ _ _ _ _  =  error "tsMatch': unexpected mismatch case."
+tsMatch' _ _ _ _ _ _ _  =  error "tsMatch': unexpected mismatch case."
 \end{code}
 
 
@@ -826,22 +830,22 @@ have the same \texttt{Type}.
 \begin{code}
 
 tvMatch :: MonadFail m
-       => [VarTable] -> Binding -> CBVS -> PBVS
+       => [VarTable] -> TypCmp -> Binding -> CBVS -> PBVS
        -> Candidate -> Type -> Variable -> m Binding
 \end{code}
 
 First, if the candidate is a variable
 we do variable-on-variable matching:
 \begin{code}
-tvMatch vts bind cbvs pbvs (Var ttC vC) ttP vP
-  = vMatch vts bind cbvs pbvs ttC vC ttP vP
+tvMatch vts fits bind cbvs pbvs (Var ttC vC) ttP vP
+  = vMatch vts fits bind cbvs pbvs ttC vC ttP vP
 \end{code}
 
 Otherwise we check if the pattern is
 bound, known, or arbitrary,
 and act accordingly.
 \begin{code}
-tvMatch vts bind cbvs pvbs tC ttP vP@(Vbl _ _ vt)
+tvMatch vts fits bind cbvs pvbs tC ttP vP@(Vbl _ _ vt)
  | vt == Textual              =  fail "tvMatch: var-variable cannot match term."
  | StdVar vP `S.member` pvbs
      =  fail $ unlines
@@ -849,7 +853,7 @@ tvMatch vts bind cbvs pvbs tC ttP vP@(Vbl _ _ vt)
           , "pvbs = " ++ show pvbs
           , "vP   = " ++ show vP
           ]
- | vPmr /= UnknownVar  =  tkvMatch vts bind tC vPmr ttP vP
+ | vPmr /= UnknownVar  =  tkvMatch vts fits bind tC vPmr ttP vP
 \end{code}
 \subsection{Arbitrary Pattern Variable}
 $$
@@ -863,7 +867,7 @@ $$
    \texttt{tvMatch Arbitrary}
 $$
 \begin{code}
---tvMatch vts bind cbvs pvbs tC ttP vP@(Vbl _ vw _)
+--tvMatch vts fits bind cbvs pvbs tC ttP vP@(Vbl _ vw _)
  | otherwise                  =  bindVarToTerm vP tC bind
  where
    vPmr = lookupVarTables vts vP
@@ -874,7 +878,7 @@ $$
 
 Here the candidate term is NOT a variable term.
 \begin{code}
-tkvMatch :: MonadFail m => [VarTable] -> Binding
+tkvMatch :: MonadFail m => [VarTable] -> TypCmp -> Binding
        ->  Candidate -> VarMatchRole -> Type -> Variable -> m Binding
 -- know vP is not in pbvs, but is in vts, known as whatP
 \end{code}
@@ -913,7 +917,7 @@ $$
 \begin{code}
 -- know vP is not in pbvs, but is in vts, known as whatP
 -- THIS NEVER ARISES AS THIS FN IS ONLY USED BY tvMatch
---tkvMatch vts bind tC@(Var _ vC) whatP ttP vP
+--tkvMatch vts fits bind tC@(Var _ vC) whatP ttP vP
 -- | vC == vP                                    =  bindVarToVar vP vP bind
 -- | isKnownConst whatP && tC == vmrConst whatP  =  bindVarToVar vP vC bind
 \end{code}
@@ -951,12 +955,12 @@ $$
 $$
 \begin{code}
 -- know vP is not in pbvs, but is in vts, known as whatP
-tkvMatch vts bind tC whatP ttP vP
+tkvMatch vts fits bind tC whatP ttP vP
  | isKnownVar whatP = fail "tkvMatch: known-var can only match self"
  | isKnownConst whatP && tC == vmrConst whatP  =  bindVarToTerm vP tC bind
  | isEType ttP && isKnownVar whatP
    && vmrType whatP == ttP                     =  bindVarToTerm vP tC bind
-tkvMatch _ _ _ _ _ _ = fail "tkvMatch: candidate not this known variable."
+tkvMatch _ _ _ _ _ _ _ = fail "tkvMatch: candidate not this known variable."
 \end{code}
 
 \newpage
@@ -965,7 +969,7 @@ tkvMatch _ _ _ _ _ _ = fail "tkvMatch: candidate not this known variable."
 Now, onto variable matching:
 \begin{code}
 vMatch :: MonadFail m
-       => [VarTable] -> Binding -> CBVS -> PBVS
+       => [VarTable] -> TypCmp -> Binding -> CBVS -> PBVS
        -> Type -> Variable -> Type -> Variable
        -> m Binding
 \end{code}
@@ -1015,9 +1019,9 @@ Rules based on the static or dynamic nature of variables:
 \end{itemize}
 We first screen by variable class:
 \begin{code}
-vMatch vts bind cbvs pvbs ttC vC@(Vbl _ vwC _) ttP vP@(Vbl _ vwP _)
-  | vwC == vwP   =  vMatch' vts bind cbvs pvbs vC vP
-  | vwP /= ObsV  =  vMatch' vts bind cbvs pvbs vC vP
+vMatch vts fits bind cbvs pvbs ttC vC@(Vbl _ vwC _) ttP vP@(Vbl _ vwP _)
+  | vwC == vwP   =  vMatch' vts fits bind cbvs pvbs vC vP
+  | vwP /= ObsV  =  vMatch' vts fits bind cbvs pvbs vC vP
   | otherwise    =  fail $ unlines [ "vMatch: class mismatch"
                                  , "vC = " ++ show vC
                                  , "vP = " ++ show vP ]
@@ -1025,8 +1029,8 @@ vMatch vts bind cbvs pvbs ttC vC@(Vbl _ vwC _) ttP vP@(Vbl _ vwP _)
 Here variable class are compatible, 
 so we now screen based on temporality:
 \begin{code}
-vMatch' vts bind cbvs pvbs vC vP
-  | whenVarMatches vC vP  =  vMatch'' vts bind cbvs pvbs vC vP
+vMatch' vts fits bind cbvs pvbs vC vP
+  | whenVarMatches vC vP  =  vMatch'' vts fits bind cbvs pvbs vC vP
   | otherwise             =  fail $ unlines [ "vMatch: temporality mismatch"
                                             , "vC = " ++ show vC
                                             , "vP = " ++ show vP ]
@@ -1034,9 +1038,9 @@ vMatch' vts bind cbvs pvbs vC vP
 
 We then check for bound-variables
 \begin{code}
-vMatch'' vts bind cbvs pvbs vC vP
-  | pbound     =  bvMatch   vts bind cbvs vC vP
-  | otherwise  =  vMatch''' vts bind vmr  vC vP
+vMatch'' vts fits bind cbvs pvbs vC vP
+  | pbound     =  bvMatch   vts fits bind cbvs vC vP
+  | otherwise  =  vMatch''' vts fits bind vmr  vC vP
   where
     pbound = StdVar vP `S.member` pvbs
     vmr = lookupVarTables vts vP
@@ -1060,18 +1064,18 @@ Instance variable & \texttt{InstanceVar} & Itself only
 \\\hline
 \end{tabular}
 \begin{code}
-vMatch''' _ bind UnknownVar   vC vP  =  bindVarToVar vP vC bind
-vMatch''' _ bind (KnownVar _) vC vP
+vMatch''' _ _ bind UnknownVar   vC vP  =  bindVarToVar vP vC bind
+vMatch''' _ _ bind (KnownVar _) vC vP
   | vC == vP                         =  bindVarToVar vP vC bind
-vMatch''' _ bind (KnownConst (Var _ v)) vC vP
+vMatch''' _ _ bind (KnownConst (Var _ v)) vC vP
   | vC == v                          =  bindVarToVar vP vC bind
-vMatch''' vts bind GenericVar vC vP
+vMatch''' vts fits bind GenericVar vC vP
   = case lookupVarTables vts vC of
       (InstanceVar v) | v == vP     ->  bindVarToVar vP vC bind
       _ ->  fail $ unlines [ "vMatch: wrong generic"
                            , "vC = " ++ show vC
                            , "vP = " ++ show vP ]
-vMatch''' _ _ what vC vP  =  fail $ unlines [ "vMatch: knowledge mismatch."
+vMatch''' _ _ _ what vC vP  =  fail $ unlines [ "vMatch: knowledge mismatch."
                                             , "vC = " ++ show vC
                                             , "vP = " ++ show vP
                                             , "what(vP) = " ++ show what
@@ -1092,10 +1096,10 @@ $$
 $$
 In addition, both variables must have the same class.
 \begin{code}
-bvMatch :: MonadFail m => [VarTable] -> Binding -> CBVS
+bvMatch :: MonadFail m => [VarTable] -> TypCmp -> Binding -> CBVS
         -> Variable -> Variable -> m Binding
 -- we know vP is in pbvs
-bvMatch vts bind cbvs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
+bvMatch vts fits bind cbvs vC@(Vbl _ vwC _) vP@(Vbl _ vwP _)
  | vwC /= vwP  =  fail "bvMatch: variable class mismatch."
  | StdVar vC `S.member` cbvs  =  bindVarToVar vP vC bind
  | otherwise  =  fail "bvMatch: candidate not a bound variable."
@@ -1161,7 +1165,7 @@ where some candidates may be leftover, to be bound by collection variables.
 \section{Variable-List Matching}
 
 \begin{code}
-vlMatch :: (MonadPlus mp, MonadFail mp) => [VarTable] -> Binding -> CBVS -> PBVS
+vlMatch :: (MonadPlus mp, MonadFail mp) => [VarTable] -> TypCmp -> Binding -> CBVS -> PBVS
         -> VarList -> VarList -> mp Binding
 \end{code}
 
@@ -1184,11 +1188,11 @@ if any of the candidate or pattern list-variables are recorded as
 \begin{code}
 -- we expect both vlC and vlP to be non-null here, at top level
 -- this is because binders don't have null binder containers.
-vlMatch vts bind cbvs pbvs vlC [] = fail "vlMatch: null pattern."
-vlMatch vts bind cbvs pbvs [] vlP = fail "vlMatch: null candidate."
-vlMatch vts bind cbvs pbvs vlC vlP
+vlMatch vts fits bind cbvs pbvs vlC [] = fail "vlMatch: null pattern."
+vlMatch vts fits bind cbvs pbvs [] vlP = fail "vlMatch: null candidate."
+vlMatch vts fits bind cbvs pbvs vlC vlP
   = do (vlC',vlP') <- applyBindingsToLists bind vlC vlP
-       vlFreeMatch vts bind cbvs pbvs vlC' vlP'
+       vlFreeMatch vts fits bind cbvs pbvs vlC' vlP'
 \end{code}
 
 \subsection{Applying Bindings to Lists}
@@ -1285,7 +1289,7 @@ from left to right and tries to bind the head pattern variable
 against some prefix of the candidate list.
 \begin{code}
 vlFreeMatch :: (MonadPlus mp, MonadFail mp)
-              => [VarTable] -> Binding
+              => [VarTable] -> TypCmp -> Binding
               -> CBVS -> PBVS
               -> VarList -> VarList
               -> mp Binding
@@ -1293,12 +1297,12 @@ vlFreeMatch :: (MonadPlus mp, MonadFail mp)
 
 If both lists are empty, we are done:
 \begin{code}
-vlFreeMatch vts bind cbvs pbvs [] [] = return bind
+vlFreeMatch vts fits bind cbvs pbvs [] [] = return bind
 \end{code}
 
 If there are leftover candidate variables, we fail
 \begin{code}
-vlFreeMatch vts bind cbvs pbvs vlC []
+vlFreeMatch vts fits bind cbvs pbvs vlC []
   = fail "vlMatch: too many candidate variables."
 \end{code}
 
@@ -1306,14 +1310,14 @@ Standard pattern variable matches are easy.
 The head of the candidate list must be a pattern variable.
 It must also match according to the rules for variable matching.
 \begin{code}
-vlFreeMatch vts bind cbvs pbvs [] (StdVar vP:_)
+vlFreeMatch vts fits bind cbvs pbvs [] (StdVar vP:_)
   = fail "vlMatch: too many std. pattern variables."
 
-vlFreeMatch vts bind cbvs pbvs ((StdVar vC):vlC) ((StdVar vP):vlP)
-  = do bind' <- vMatch vts bind cbvs pbvs ArbType vC ArbType vP
-       vlFreeMatch vts bind' cbvs pbvs vlC vlP
+vlFreeMatch vts fits bind cbvs pbvs ((StdVar vC):vlC) ((StdVar vP):vlP)
+  = do bind' <- vMatch vts fits bind cbvs pbvs ArbType vC ArbType vP
+       vlFreeMatch vts fits bind' cbvs pbvs vlC vlP
 
-vlFreeMatch vts bind cbvs pbvs vlC ((StdVar _):_)
+vlFreeMatch vts fits bind cbvs pbvs vlC ((StdVar _):_)
   = fail "vlMatch: std pattern cannot match list candidate."
 \end{code}
 
@@ -1327,38 +1331,38 @@ match the next $n$ candidate variables, for $n$ in the range $0\dots N$,
 for some fixed $N$.
 For now, we take $N=2$.
 \begin{code}
-vlFreeMatch vts bind cbvs pbvs vlC (gvP@(LstVar lvP):vlP)
+vlFreeMatch vts fits bind cbvs pbvs vlC (gvP@(LstVar lvP):vlP)
   = let bc = lvarClass lvP in
     case expandKnown vts lvP of
      Nothing
-       -> vlFreeMatchN vts bind cbvs pbvs bc vlC lvP vlP 0
+       -> vlFreeMatchN vts fits bind cbvs pbvs bc vlC lvP vlP 0
           `mplus`
-          vlFreeMatchN vts bind cbvs pbvs bc vlC lvP vlP 1
+          vlFreeMatchN vts fits bind cbvs pbvs bc vlC lvP vlP 1
           `mplus`
-          vlFreeMatchN vts bind cbvs pbvs bc vlC lvP vlP 2
+          vlFreeMatchN vts fits bind cbvs pbvs bc vlC lvP vlP 2
      Just (AbstractList, uis, ujs)
        | null vlC -> fail "vlMatch: not enough candidates."
        | gvP /= head vlC  ->  fail "vlMatch: abstract lvar. only matches self."
        | otherwise
            -> do bind' <- bindLVarToVList lvP [gvP] bind
-                 vlFreeMatch vts bind' cbvs pbvs (tail vlC) vlP
+                 vlFreeMatch vts fits bind' cbvs pbvs (tail vlC) vlP
      Just kX@(KnownVarList vlK vlX xLen, uis, ujs)
        | length uis > length vlX
           -> fail "vlMatch: invalid known epxansion"
        | otherwise
-          -> do (bind',vlC') <- vlKnownMatch vts bind cbvs pbvs
+          -> do (bind',vlC') <- vlKnownMatch vts fits bind cbvs pbvs
                                      bc vlC gvP vlK vlX uis ujs
-                vlFreeMatch vts bind' cbvs pbvs vlC' vlP
+                vlFreeMatch vts fits bind' cbvs pbvs vlC' vlP
      _ -> fail "vlMatch: pattern list-variable is set-valued."
 \end{code}
 
 We have a simple, ``slightly greedy'' algorithm
 that matches a list-variable against the first \texttt{n} candidates.
 \begin{code}
-vlFreeMatchN vts bind cbvs pbvs bc vlC lvP vlP n
+vlFreeMatchN vts fits bind cbvs pbvs bc vlC lvP vlP n
   | precise
      =  do bind' <- bindLVarToVList lvP firstnC bind
-           vlFreeMatch vts bind' cbvs pbvs restC vlP
+           vlFreeMatch vts fits bind' cbvs pbvs restC vlP
   | otherwise  =  fail "vlFreeMatchN: vlC too short."
  where
     (firstnC,restC)  =  splitAt n vlC
@@ -1378,7 +1382,7 @@ its definition, or its expansion as variables,
 are a prefix of the candidate list.
 \begin{code}
 -- not null vlC
-vlKnownMatch vts bind cbvs pbvs
+vlKnownMatch vts fits bind cbvs pbvs
                 bc vlC gvP vlK vlX uis ujs
  | not (null vlC) && gvP == head vlC -- covers lvP known to be Abstract
     = do bind' <- bindLVarToVList lvP [gvP] bind
@@ -1897,11 +1901,11 @@ We follow a similar pattern to variable-list matching.
 First apply any bindings we have, and then try to match what is left.
 The key difference here, obviously, is that order does not matter.
 \begin{code}
-vsMatch :: (MonadPlus mp, MonadFail mp) => [VarTable] -> Binding -> CBVS -> PBVS
+vsMatch :: (MonadPlus mp, MonadFail mp) => [VarTable] -> TypCmp -> Binding -> CBVS -> PBVS
         -> VarSet -> VarSet -> mp Binding
-vsMatch vts bind cbvs pbvc vsC vsP = do
+vsMatch vts fits bind cbvs pbvc vsC vsP = do
   (vsC',vsP') <- applyBindingsToSets vts bind vsC vsP
-  vsFreeMatch vts bind cbvs pbvc vsC' vsP'
+  vsFreeMatch vts fits bind cbvs pbvc vsC' vsP'
 \end{code}
 
 \subsection{Applying Bindings to Sets}
@@ -2016,11 +2020,11 @@ Can this mapping be built incrementally over a list of \texttt{VarTable}s?
 
 \begin{code}
 vsFreeMatch :: (MonadPlus mp, MonadFail mp)
-              => [VarTable] -> Binding
+              => [VarTable] -> TypCmp -> Binding
               -> CBVS -> PBVS
               -> VarSet -> VarSet
               -> mp Binding
-vsFreeMatch vts bind cbvs pbvs vsC vsP
+vsFreeMatch vts fits bind cbvs pbvs vsC vsP
   = let (uvsP,kvsP,ulsP,klsP) = vsClassify vts vsP in
     if kvsP `withinS` vsC
     then do 
@@ -2035,7 +2039,7 @@ vsFreeMatch vts bind cbvs pbvs vsC vsP
                        $ listVarsOf klCommonC ) bind'
       let klsP' = klsP `removeSl` vsC'
       let vsC'' = S.fromList ((S.toList vsC') `removeL` klCommonP)
-      vsKnownMatch vts bind'' cbvs pbvs vsC'' (uvsP,ulsP) klsP'
+      vsKnownMatch vts fits bind'' cbvs pbvs vsC'' (uvsP,ulsP) klsP'
     else fail "vsFreeMatch: known vars missing."
 \end{code}
 
@@ -2078,7 +2082,7 @@ in order.
 
 \begin{code}
 vsKnownMatch :: (MonadPlus mp, MonadFail mp)
-              => [VarTable] -> Binding
+              => [VarTable] -> TypCmp -> Binding
               -> CBVS -> PBVS
               -> VarSet
               -> (VarSet, VarSet)
@@ -2088,21 +2092,21 @@ vsKnownMatch :: (MonadPlus mp, MonadFail mp)
 
 Simplest case---no more known pattern list-variables
 \begin{code}
-vsKnownMatch vts bind cbvs pbvs vsC (uvsP,ulsP) []
-  = vsUnknownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
+vsKnownMatch vts fits bind cbvs pbvs vsC (uvsP,ulsP) []
+  = vsUnknownMatch vts fits bind cbvs pbvs vsC (uvsP,ulsP)
 \end{code}
 
 
 \begin{code}
 -- klsC and kllP are disjoint
-vsKnownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
+vsKnownMatch vts fits bind cbvs pbvs vsC (uvsP,ulsP)
                                 (kvP@(LstVar lvP@(LVbl vP _ _)):kslP)
 -- lvP is known
   = case expandKnown vts lvP of
       Just (AbstractSet, uis, ujs)
         | kvP `insideS` vsC
           -> do bind' <- bindLVarToVSet lvP (S.singleton kvP) bind
-                vsKnownMatch vts bind' cbvs pbvs (delS kvP vsC)
+                vsKnownMatch vts fits bind' cbvs pbvs (delS kvP vsC)
                                                  (uvsP,ulsP) kslP
         | otherwise -> fail "vsMatch: abstract lvar only matches self"
       Just kX@(KnownVarSet vsK vsX xSize, uis, ujs)
@@ -2116,7 +2120,7 @@ vsKnownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
                       vsC
                       (vsX,uis,ujs,S.size vsX-length uis) -- pattern expansion
                 bind'' <- bindLVarToVSet lvP vsC1 bind'
-                vsKnownMatch vts bind'' cbvs pbvs vsC2 (uvsP,ulsP) kslP
+                vsKnownMatch vts fits bind'' cbvs pbvs vsC2 (uvsP,ulsP) kslP
       _ -> fail "vsMatch: pattern-list variable is not set-valued."
 {-
     = do
@@ -2560,11 +2564,11 @@ and candidate sets:
 
 \begin{code}
 vsUnknownMatch :: (MonadPlus mp, MonadFail mp)
-               => [VarTable] -> Binding -> CBVS -> PBVS
+               => [VarTable] -> TypCmp -> Binding -> CBVS -> PBVS
                -> VarSet
                -> (VarSet, VarSet)
                -> mp Binding
-vsUnknownMatch vts bind cbvs pbvs vsC (uvsP,ulsP)
+vsUnknownMatch vts fits bind cbvs pbvs vsC (uvsP,ulsP)
  | S.size ulsP == 0 && (uvsPs < stdCs || S.size lstC > 0)
    = fail $ unlines
        [ "vsUnknownMatch: not enough general pattern variables"
@@ -2728,11 +2732,11 @@ $$
 $$
 \begin{code}
 sMatch :: (MonadPlus mp, MonadFail mp)
-       => [VarTable] -> Binding -> CBVS -> PBVS
+       => [VarTable] -> TypCmp -> Binding -> CBVS -> PBVS
        -> Substn -> Substn
        -> mp Binding
-sMatch vts bind cbvs pbvs subC subP
-  | isFeasibleSubstnMatch subC subP  =  sMatch' vts bind cbvs pbvs subC subP
+sMatch vts fits bind cbvs pbvs subC subP
+  | isFeasibleSubstnMatch subC subP  =  sMatch' vts fits bind cbvs pbvs subC subP
   | otherwise                        =  fail "infeasible substition match"
 \end{code}
 
@@ -2742,9 +2746,9 @@ against their candidate counterparts.
 For each outcome, we then try to match the list-variables pairs
 against what remains.
 \begin{code}
-sMatch' vts bind cbvs pbvs subC@(Substn tsC lvsC) subP@(Substn tsP lvsP)
- = do (bind',tsC')  <- vtsMatch vts bind cbvs pbvs tsC tsP
-      lvsMatch vts bind' cbvs pbvs tsC' (S.toList lvsC) (S.toList lvsP)
+sMatch' vts fits bind cbvs pbvs subC@(Substn tsC lvsC) subP@(Substn tsP lvsP)
+ = do (bind',tsC')  <- vtsMatch vts fits bind cbvs pbvs tsC tsP
+      lvsMatch vts fits bind' cbvs pbvs tsC' (S.toList lvsC) (S.toList lvsP)
 \end{code}
 
 \subsection{Substitution Term/Variable matching}
@@ -2761,19 +2765,19 @@ We expect bindings of the form
 for all $i \in 1\dots m$, and $m$ values of $j$ drawn from $1\dots p$;
 \begin{code}
 vtsMatch :: (MonadPlus mp, MonadFail mp)
-         => [VarTable] -> Binding -> CBVS -> PBVS
+         => [VarTable] -> TypCmp -> Binding -> CBVS -> PBVS
          -> TermSubs -> TermSubs
          -> mp (Binding,[(Variable,Term)])
-vtsMatch vts bind cbvs pbvs tsC tsP
+vtsMatch vts fits bind cbvs pbvs tsC tsP
  = manyToMultiple (matchPair matchVar matchTerm) defCombine id
               (S.toList tsC) (S.toList tsP) bind
  where
    matchVar :: (MonadPlus mp, MonadFail mp) 
             => BasicM mp Binding Variable Variable
-   matchVar vC vP bind = vMatch vts bind cbvs pbvs ArbType vC ArbType vP
+   matchVar vC vP bind = vMatch vts fits bind cbvs pbvs ArbType vC ArbType vP
    matchTerm :: (MonadPlus mp, MonadFail mp) 
              => BasicM mp Binding Candidate Pattern
-   matchTerm tC tP bind =  termMatch vts bind cbvs pbvs tC tP
+   matchTerm tC tP bind =  termMatch vts fits bind cbvs pbvs tC tP
 \end{code}
 
 \newpage
@@ -2804,12 +2808,12 @@ For now we produce specific cases,
 and leave a general solution for later.
 \begin{code}
 lvsMatch :: (MonadPlus mp, MonadFail mp)
-       => [VarTable] -> Binding -> CBVS -> PBVS
+       => [VarTable] -> TypCmp -> Binding -> CBVS -> PBVS
        -> [(Variable,Term)] -> [(ListVar,ListVar)] -> [(ListVar,ListVar)]
        -> mp Binding
 
-lvsMatch vts bind cbvs pbvs [] [] [] = return bind
-lvsMatch vts bind cbvs pbvs _  _  [] = fail "lvsMatch: no patn. for candidates."
+lvsMatch vts fits bind cbvs pbvs [] [] [] = return bind
+lvsMatch vts fits bind cbvs pbvs _  _  [] = fail "lvsMatch: no patn. for candidates."
 \end{code}
 
 One pattern element only is easy
@@ -2829,7 +2833,7 @@ and
 $ \lst v_{P} \mapsto
             \seqof{v_{C1},\dots;\dots \lst v_{Cr}}$.
 \begin{code}
-lvsMatch vts bind cbvs pbvs tsC lvsC [(vsP,esP)]
+lvsMatch vts fits bind cbvs pbvs tsC lvsC [(vsP,esP)]
   = do bind' <- bindLVarToVList vsP cTgts bind
        bindLVarSubstRepl esP cLVTs bind'
   where
@@ -2840,19 +2844,19 @@ lvsMatch vts bind cbvs pbvs tsC lvsC [(vsP,esP)]
 \end{code}
 Next case, candidate is only list variables:
 \begin{code}
-lvsMatch vts bind cbvs pbvs [] lvsC lvsP -- = fail "lvsMatch [] lvsC lvsP NYI"
+lvsMatch vts fits bind cbvs pbvs [] lvsC lvsP -- = fail "lvsMatch [] lvsC lvsP NYI"
  = do (bind',lvsC') <- manyToMultiple (matchPair matchLVar matchLVar)
                                           defCombine id lvsC lvsP bind
       return bind'
  where
    matchLVar  ::  (MonadPlus mp, MonadFail mp) => BasicM mp Binding ListVar ListVar
-   matchLVar lvC lvP bind = vsMatch vts bind cbvs pbvs
+   matchLVar lvC lvP bind = vsMatch vts fits bind cbvs pbvs
                                     (S.singleton $ LstVar lvC)
                                     (S.singleton $ LstVar lvP)
 \end{code}
 Right now my head hurts.
 \begin{code}
-lvsMatch vts bind cbvs pbvs tsC lvsC lvsP
+lvsMatch vts fits bind cbvs pbvs tsC lvsC lvsP
   = fail $ unlines'
       [ "lvsMatch NYfI"
       , "@tsC: "++show tsC

@@ -210,18 +210,20 @@ instance Types Type where
     ftv ArbType          =  S.empty
     ftv (TypeVar n)      =  S.singleton n
     ftv (TypeCons i ts)  =  S.unions $ map ftv ts
-    ftv (GivenType _)    =  S.empty
+    ftv (AlgType i fs)   =  error ("AlgType.ftv NYfI: "++show i)
     ftv (FunType t1 t2)  =  ftv t1 `S.union` ftv t2
-    ftv t                =  error ("Type.ftv NYfI: "++show t)
+    ftv (GivenType _)    =  S.empty
+    ftv BottomType       =  S.empty
 
     apply _ ArbType          =  ArbType
     apply s t@(TypeVar n)    =  case M.lookup n s of
                                   Nothing  ->  t
                                   Just t'  ->  t'
     apply s (TypeCons i ts)  =  TypeCons i $ map (apply s) ts
+    apply s (AlgType i fs)   =  error ("AlgType.apply NYfI: "++show i)
     apply s (FunType t1 t2)  =  FunType (apply s t1) (apply s t2)
     apply _ t@(GivenType _)  =  t
-    apply s t                =  error ("Type.apply NYfI: "++show t)
+    apply _ BottomType       =  BottomType
 
 instance Types TypeScheme where
     ftv (Scheme vars t)      =  (ftv t) `S.difference` (S.fromList vars)
@@ -362,18 +364,12 @@ typeInference :: MonadFail mf
 typeInference vts trm
   = do  let (fis,env) = buildTypeEnv vts [1..] M.empty (getVars trm)
         -- ! fis is infinite !
-        (_,(sub, typ)) <- inferTypes vts fis (TypeEnv env) trm
-        let typ' = apply sub typ
-        return (typ',settype typ' trm,sub)
-
---        let tk = termtype trm
---        let trm' = if isEType $ pdbg "TK" tk
---                   then settype typ' trm
---                   else settype typ' trm
+        (_,(sub, typ)) <- inferTypes vts fis (TypeEnv env) $ pdbg "tI.trm" trm
+        let typ' = apply (pdbg "tI.sub" sub) $ pdbg "tI.typ" typ
+        return (pdbg "tI.typ'" typ',settype typ' trm,sub)
 
 getVars :: Term -> [Variable]
 getVars = stdVarsOf . S.toList . mentionedIds
-
 
 buildTypeEnv :: [VarTable] -> FreshInts -> Env -> [Variable] 
              -> (FreshInts,Env)
@@ -454,7 +450,7 @@ inferTypes vts fis env (Lam typ lmbd (StdVar (Vbl n _ _):vl) e)
 $\IAPP$
 \begin{code}
 inferTypes vts fis env (Cons _ True f [e1,e2])
-  | f == app 
+  | f == app -- !!!!!
   = do  let (fis1,tv) = newTyVar fis 
         (fis2,(s1, t1)) <- inferTypes vts fis1 env e1
         (fis3,(s2, t2)) <- inferTypes vts fis2 (apply s1 env) e2
@@ -487,7 +483,7 @@ inferTypes vts fis env (Sub _ e2 (Substn ves lvlvs))
 \end{code}
 
 \begin{code}
-inferTypes vts fis env t = return (fis,(M.empty,ArbType))
+inferTypes vts fis env t = return (fis,(M.empty,BottomType))
 -- missing:
 \end{code}
 
@@ -521,11 +517,11 @@ into nested applications $(@~(\dots(@~(@~f~ e_1)~e_2)\dots)~e_n)$.
 \begin{code}
 consToApp :: Term -> Term
 consToApp (Cons _ _ f es)
-  = foldl mkApply (fromJust $ eVar ArbType (StaticVar f)) es
+  = foldl mkApply (fromJust $ eVar BottomType (StaticVar f)) es
 consToApp cons = cons
 
 mkApply :: Term -> Term -> Term
-mkApply f e = (Cons ArbType True app [f,e])
+mkApply f e = (Cons BottomType True app [f,e])
 \end{code}
 
 \newpage

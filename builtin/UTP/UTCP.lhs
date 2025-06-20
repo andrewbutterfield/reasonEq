@@ -129,34 +129,34 @@ then the low-level semantics that defines basic building blocks.
 \begin{code}
 atom :: Term -> Term
 i_atom  =  jId "atom"
-atom a  =  Cons arbpred False i_atom [a]
+atom a  =  Cons bool False i_atom [a]
 atomIntro  =  mkConsIntro i_atom boolf_1
 
 cskip :: Term
 i_cskip  =  jId "cskip"
 v_cskip  =  Vbl i_cskip PredV Static
 g_cskip  =  StdVar v_cskip
-cskip    =  jVar arbpred v_cskip 
+cskip    =  jVar bool v_cskip 
 cskipIntro  =  mkConsIntro i_cskip bool
 
 cseq :: Term -> Term -> Term
 i_cseq = jId "cseq"
-cseq c d = Cons arbpred True i_cseq [c,d]
+cseq c d = Cons bool True i_cseq [c,d]
 cseqIntro  =  mkConsIntro i_cseq boolf_2
 
 cplus :: Term -> Term -> Term
 i_cplus = jId "cplus"
-cplus c d = Cons arbpred True i_cplus [c,d]
+cplus c d = Cons bool True i_cplus [c,d]
 cplusIntro  =  mkConsIntro i_cplus boolf_2
 
 cpll :: Term -> Term -> Term
 i_cpll = jId "cpll"
-cpll c d = Cons arbpred True i_cpll [c,d]
+cpll c d = Cons bool True i_cpll [c,d]
 cpllIntro  =  mkConsIntro i_cpll boolf_2
 
 cstar :: Term -> Term
 i_cstar  =  jId "cstar"
-cstar c  =  Cons arbpred True i_cstar [c]
+cstar c  =  Cons bool True i_cstar [c]
 cstarIntro  =  mkConsIntro i_cstar boolf_1
 \end{code}
 
@@ -534,8 +534,9 @@ areUTCPAtomic gcs = mrgscs $ map isUTCPAtomic gcs
 \begin{code}
 xact :: Term -> Term -> Term -> Term -> Term
 i_xact = jId "X"
-xact e act r a = Cons arbpred False i_xact [e,act,r,a]
-xactIntro = mkConsIntro i_xact bool
+typeX = FunType ls_t (FunType bool (FunType ls_t (FunType ls_t bool)))
+xactIntro = mkConsIntro i_xact typeX
+xact e act r a = Cons bool False i_xact [e,act,r,a]
 xactSC = isUTCPAtomic  (StdVar va) .: areUTPStcObs (map StdVar [vE,vR,vN])
 axXDef = ( "X" -.- "def"
          , ( (xact tE a tR tN)
@@ -560,8 +561,9 @@ We note that the following is true: \m{X(E|a|R|N) = X(E|a|(R\setminus N)|N)}.
 }
 \begin{code}
 i_aact = jId "A"
-aact e act n = Cons arbpred False i_aact [e,act,n]
-aactIntro = mkConsIntro i_aact bool
+typeA = FunType ls_t (FunType bool (FunType ls_t bool))
+aactIntro = mkConsIntro i_aact typeA
+aact e act n = Cons bool False i_aact [e,act,n]
 aactSC = isUTCPAtomic  (StdVar va) .: areUTPStcObs (map StdVar [vE,vN] )
 axADef = ( "A" -.- "def"
          , ( (aact tE a tN) === (xact tE a tE tN)

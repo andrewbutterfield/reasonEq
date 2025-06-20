@@ -706,10 +706,9 @@ mkTypedAsn :: MonadFail m
            => [VarTable] -> Term -> SideCond 
            -> m (Assertion, CanonicalMap)
 mkTypedAsn vts term sc 
-  = case typeInference vts term of
+  = case typeInference vts $ pdbg "mkTA.term" term of
       But msgs                 ->  addTypeInfo sc ArbType term M.empty
-      Yes (typ',term',typsub)  ->  addTypeInfo sc typ' term' typsub
-  where tidbg msgs trm = pdbg (unlines msgs++"\n@TERM") trm
+      Yes (typ',term',typsub)  ->  addTypeInfo sc typ' (pdbg "mkTA.term'" term') typsub
 
 addTypeInfo sc typ term typsub = do
   let (tvstyps,tvmap) = typeVarEquivalence typsub

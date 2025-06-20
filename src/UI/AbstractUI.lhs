@@ -633,9 +633,9 @@ tryFocusAgainst lawnm parts liveProof
         scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
         vts         =  concat $ map thd3 ctxts
-    in do (asn',tvmap) <- mkTypedAsn vts goalt scC
+    in do (asn',tvmap) <- mkTypedAsn vts (pdbg "GOALT" goalt) scC
           let fits  =  cSubType tvmap
-          tryLawByName asn' lawnm parts ctxts fits
+          tryLawByName (pdbg "ASN'" asn') lawnm parts ctxts fits
 \end{code}
 
 \newpage

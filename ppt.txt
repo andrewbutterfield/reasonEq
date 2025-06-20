@@ -1,29 +1,72 @@
-@GROUPS:
-[ ( [ Id "_1" 0
-    , Id "_4" 0 ]
-  , TC
-    (Id "*" 0)
-    [ TV
-      (Id "_3" 0) ] )
-, ( [ Id "_2" 0
-    , Id "_3" 0
-    , Id "t" 0 ]
-  , TV
-    (Id "_3" 0) )
-, ( [ Id "_5" 0 ]
-  , TF
-    ( TC
-      (Id "*" 0)
-      [ TV
-        (Id "_3" 0) ] )
-    ( TC
-      (Id "*" 0)
-      [ TV
-        (Id "_3" 0) ] ) ) ]
-@RESULT:
-[ [ Id "_1" 0
-  , Id "_4" 0 ]
-, [ Id "_2" 0
-  , Id "_3" 0
-  , Id "t" 0 ]
-, [ Id "_5" 0 ] ]
+@GOALT:
+C
+( TG
+  (Id "B" 0) )
+False
+(Id "A" 0)
+[ V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E" 0, VE, WS))
+, V (TG (Id "B" 0)) (VR (Id "a" 0, VP, WS))
+, V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0, VE, WS)) ]
+@mkTA.term:
+C
+( TG
+  (Id "B" 0) )
+False
+(Id "A" 0)
+[ V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E" 0, VE, WS))
+, V (TG (Id "B" 0)) (VR (Id "a" 0, VP, WS))
+, V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0, VE, WS)) ]
+@tI.trm:
+C
+( TG
+  (Id "B" 0) )
+False
+(Id "A" 0)
+[ V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E" 0, VE, WS))
+, V (TG (Id "B" 0)) (VR (Id "a" 0, VP, WS))
+, V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0, VE, WS)) ]
+@tI.typ:
+TB
+@mkTA.term':
+C
+TB
+False
+(Id "A" 0)
+[ V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E" 0, VE, WS))
+, V (TG (Id "B" 0)) (VR (Id "a" 0, VP, WS))
+, V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0, VE, WS)) ]
+@ASN':
+ASN
+( C
+  TB
+  False
+  (Id "A" 0)
+  [ V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E" 0, VE, WS))
+  , V (TG (Id "B" 0)) (VR (Id "a" 0, VP, WS))
+  , V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0, VE, WS)) ]
+, ( [ VSC
+      (GV (VR (Id "E" 0, VE, WS)))
+      ( The
+        ( { GV (VR (Id "ls" 0, VO, WB))
+          , GV (VR (Id "ls" 0, VO, WA))
+          , GV (VR (Id "s" 0, VO, WB))
+          , GV (VR (Id "s" 0, VO, WA)) } ) )
+      NA
+      NA
+    , VSC
+      (GV (VR (Id "N" 0, VE, WS)))
+      ( The
+        ( { GV (VR (Id "ls" 0, VO, WB))
+          , GV (VR (Id "ls" 0, VO, WA))
+          , GV (VR (Id "s" 0, VO, WB))
+          , GV (VR (Id "s" 0, VO, WA)) } ) )
+      NA
+      NA
+    , VSC
+      (GV (VR (Id "a" 0, VP, WS)))
+      NA
+      NA
+      ( The
+        ( { GV (VR (Id "s" 0, VO, WB))
+          , GV (VR (Id "s" 0, VO, WA)) } ) ) ]
+  , {} ) )

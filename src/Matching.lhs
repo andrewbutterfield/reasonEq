@@ -180,6 +180,9 @@ typeMatch _ bind _ BottomType = return bind
 typeMatch (fits,_) bind typC@(GivenType iC) (GivenType iP)
   | iC == iP  =  bindTypeVarToType fits iP typC bind
 
+-- typeMatch (fits,_) bind typC typP@(GivenType iP)
+--   | typC `fits` typP  =  bindTypeVarToType fits iP typC bind
+
 typeMatch (fits,vfits) bind typC typP 
   = fail $ unlines [ "typeMatch: distinct types"
                    , "typC = " ++ show typC

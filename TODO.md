@@ -7,28 +7,7 @@ Most of the `Lists` conjectures need **induction**.
 **PLAN**
 
 
-Need to fix types in UTCP definitions:
-
-```
-A(E|a|N)      O$,O$'⋔E, O$,O$'⋔N, s,s'⊇ₐa
-Focus = [] :: 𝔹 
-XPNDD: ls,ls',s,s'⋔E, ls,ls',s,s'⋔N, s,s'⊇ₐa
-proof: tm 1 A_def
-Match against 'A_def'[1] failed!
-try match failed
-A(E|a|N) :: A(E|a|N)
-lnm[parts]=A_def[1]
-tP=A(E|a|N) ≡ X(E|a|E|N)
-partsP=A(E|a|N)
-replP=X(E|a|E|N)
-tC=A(E|a|N)
-scC=ls,ls',s,s'⋔E, ls,ls',s,s'⋔N, s,s'⊇ₐa
----
-typeMatch: distinct types
-typC = T
-typP = TG (Id "B" 0)
-
-```
+Issue now is that `inferTypes` is badly incomplete when handling `Cons`.
 
 
 Type `VarBind` has a `BindId` variants, 

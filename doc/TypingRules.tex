@@ -51,13 +51,13 @@
  {\TJUDGE\TENV{\vv v}{t}\emptyset}
 }
 
-\def\ITABS{
+\def\ITLAM{
   \TINFER
     {t=\newv \and \TJUDGE{\TENV,x:t}{e}{t'}S}
     {\TJUDGE\TENV{\lambda x \bullet e}{St \fun t'}{S}}
 }
 
-\def\ITABSN{
+\def\ITLAMN{
   \TINFER
     {  t_1=\newv,\dots,t_n=\newv 
        \and 
@@ -80,10 +80,16 @@
     {\TJUDGE\TENV{e_0~e_1}{S_2 t'}{S_2 S_1 S_0}}
 }
 
-\def\ICONS{
+\def\ICURRY{
   \TINFER
     {\TJUDGE\TENV{((\dots((f~ e_1)~e_2)\dots)~e_n)}{t}{S}}
     {\TJUDGE\TENV{(f~e_1~e_2~\dots~e_n)}{t}{S}}
+}
+
+\def\IDATA{
+  \TINFER
+    {\TJUDGE\TENV{((\dots((c~ e_1)~e_2)\dots)~e_n)}{t}{S}}
+    {\TJUDGE\TENV{(c~e_1~e_2~\dots~e_n)}{t}{S}}
 }
 
 \def\ILET{

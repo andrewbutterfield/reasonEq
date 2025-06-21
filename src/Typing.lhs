@@ -425,18 +425,23 @@ inferTypes vts fis (TypeEnv env) (Var _ (Vbl n _ _))
                          return (fis,(nullSubst, t))
 \end{code}
 
-\subsubsection{Abstraction}
+\subsubsection{Lambda Abstraction}
 
-$\ITABS$
+$\ITLAM$
 
-$\ITABSN$
 \begin{code}
 inferTypes vts fis env (Lam _ lmbd [StdVar (Vbl n _ _)] e)
   | lmbd == lambda 
   = do let (fis1,tv,env') = abstractLambdaVar fis env n
        (fis2,(s1, t1)) <- inferTypes vts fis1 env' e
        return (fis2,(s1, FunType (apply s1 tv) t1))
--- for multiple abs-variables we just do a recursive trick
+\end{code} 
+
+\newpage
+For multiple abs-variables we just do a recursive trick:
+
+$\ITLAMN$
+\begin{code}
 inferTypes vts fis env (Lam typ lmbd (StdVar (Vbl n _ _):vl) e)
   | lmbd == lambda
   = do let (fis1,tv,env') = abstractLambdaVar fis env n
@@ -445,12 +450,12 @@ inferTypes vts fis env (Lam typ lmbd (StdVar (Vbl n _ _):vl) e)
   where lam' = fromJust $ eLam typ lmbd vl e
 \end{code} 
 
-\subsubsection{Application}
+\subsubsection{Function Application}
 
 $\IAPP$
 \begin{code}
 inferTypes vts fis env (Cons _ True f [e1,e2])
-  | f == app -- !!!!!
+  | f == app 
   = do  let (fis1,tv) = newTyVar fis 
         (fis2,(s1, t1)) <- inferTypes vts fis1 env e1
         (fis3,(s2, t2)) <- inferTypes vts fis2 (apply s1 env) e2
@@ -458,13 +463,20 @@ inferTypes vts fis env (Cons _ True f [e1,e2])
         return (fis4,(s3 `composeSubst` s2 `composeSubst` s1, apply s3 tv))
 \end{code}
 
-$\ICONS$
+\subsubsection{Curried Application}
+
+$\ICURRY$
+
+$\IDATA$
 \begin{code}
-inferTypes vts fis env econs@(Cons _ True _ _)
+inferTypes vts fis env econs@(Cons _ _ _ _)
   = inferTypes vts fis env $ consToApp econs
 \end{code}
 
+
 \subsubsection{Substitution}
+
+We work with substitution written as a let-expression.
 
 $\ILET$
 \begin{code}
@@ -483,8 +495,7 @@ inferTypes vts fis env (Sub _ e2 (Substn ves lvlvs))
 \end{code}
 
 \begin{code}
-inferTypes vts fis env t = return (fis,(M.empty,BottomType))
--- missing:
+inferTypes vts fis env t = return (fis,(M.empty,ArbType))
 \end{code}
 
 \newpage
@@ -517,11 +528,11 @@ into nested applications $(@~(\dots(@~(@~f~ e_1)~e_2)\dots)~e_n)$.
 \begin{code}
 consToApp :: Term -> Term
 consToApp (Cons _ _ f es)
-  = foldl mkApply (fromJust $ eVar BottomType (StaticVar f)) es
+  = foldl mkApply (fromJust $ eVar ArbType (StaticVar f)) es
 consToApp cons = cons
 
 mkApply :: Term -> Term -> Term
-mkApply f e = (Cons BottomType True app [f,e])
+mkApply f e = (Cons ArbType True app [f,e])
 \end{code}
 
 \newpage

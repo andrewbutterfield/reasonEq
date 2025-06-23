@@ -7,13 +7,26 @@ Most of the `Lists` conjectures need **induction**.
 **PLAN**
 
 
-Issue now is that `inferTypes` is badly incomplete when handling `Cons`.
+Issue now is that `inferTypes` is possibly incomplete when handling quantifiers.
+
+```
+(∃ O$_1  • ls_1 = ls \ R1 ∪ N1 ∧ ((E1 ⊆ ls ∧ a[s_1/s']) ∧ ((E2 ⊆ ls_1 ∧ b[s_1/s]) ∧ ls' = ls_1 \ R2 ∪ N2))) :: (∃ x$,y$  • (x$=e$) ∧ P)
+lnm[parts]=exists_one_point[1]
+tP=(∃ x$,y$  • (x$=e$) ∧ P) ≡ (∃ y$  • P[e$/x$])
+partsP=(∃ x$,y$  • (x$=e$) ∧ P)
+replP=(∃ y$  • P[e$/x$])
+tC=(∃ O$_1  • ls_1 = ls \ R1 ∪ N1 ∧ ((E1 ⊆ ls ∧ a[s_1/s']) ∧ ((E2 ⊆ ls_1 ∧ b[s_1/s]) ∧ ls' = ls_1 \ R2 ∪ N2)))
+scC=ls,ls',s,s'⋔E1, ls,ls',s,s'⋔E2, ls,ls',s,s'⋔N1, ls,ls',s,s'⋔N2, ls,ls',s,s'⋔R1, ls,ls',s,s'⋔R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1
+---
+typeMatch: distinct types
+typC = T
+typP = TG (Id "B" 0)
+```
 
 
-Type `VarBind` has a `BindId` variants, 
+Type `VarBind` has a `BindId` variant, 
 but it is only used for variables of dynamicity `During`.  
 We should really use this to bind constructor identifiers.
-
 
 
 

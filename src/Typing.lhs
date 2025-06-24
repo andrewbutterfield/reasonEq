@@ -370,7 +370,9 @@ typeInference vts trm
 
 getVars :: Term -> [Variable]
 getVars = stdVarsOf . S.toList . mentionedIds
+\end{code}
 
+\begin{code}
 buildTypeEnv :: [VarTable] -> FreshInts -> Env -> [Variable] 
              -> (FreshInts,Env)
 buildTypeEnv vts fis env [] = (fis,env)
@@ -425,31 +427,6 @@ inferTypes vts fis (TypeEnv env) (Var _ (Vbl n _ _))
                          return (fis,(nullSubst, t))
 \end{code}
 
-\subsubsection{Lambda Abstraction}
-
-$\ITLAM$
-
-\begin{code}
-inferTypes vts fis env (Lam _ lmbd [StdVar (Vbl n _ _)] e)
-  | lmbd == lambda 
-  = do let (fis1,tv,env') = abstractLambdaVar fis env n
-       (fis2,(s1, t1)) <- inferTypes vts fis1 env' e
-       return (fis2,(s1, FunType (apply s1 tv) t1))
-\end{code} 
-
-\newpage
-For multiple abs-variables we just do a recursive trick:
-
-$\ITLAMN$
-\begin{code}
-inferTypes vts fis env (Lam typ lmbd (StdVar (Vbl n _ _):vl) e)
-  | lmbd == lambda
-  = do let (fis1,tv,env') = abstractLambdaVar fis env n
-       (fis2,(s1, t1)) <- inferTypes vts fis1 env' lam'
-       return (fis2,(s1, FunType (apply s1 tv) t1))
-  where lam' = fromJust $ eLam typ lmbd vl e
-\end{code} 
-
 \subsubsection{Function Application}
 
 $\IAPP$
@@ -474,6 +451,40 @@ inferTypes vts fis env econs@(Cons _ _ _ _)
 \end{code}
 
 
+\subsubsection{Variable Binding Constructs}
+
+Both quantifier bindings ($\forall x \bullet p$)
+and function abstractions ($\lambda x \bullet e$)
+are handled in almost exact same way as far as type inference is concerned.
+The difference is that the type of the quantifier is that of its body,
+while the type of the abstraction is a higher-order function 
+from the types of the binders to the type of the body.
+
+$$\IQUANTS$$
+
+\begin{code}
+inferTypes vts fis env (Bnd typ quant vs e)
+  = do  let ids = getStdIds $ S.toList vs
+        let (fis1,vl1,env1) = abstractBindingVars fis env ids
+        (fis2,(s1, t1)) <- inferTypes vts fis1 env1 e
+        return (fis2,(s1,t1))
+\end{code}
+
+$$\ITLAMN$$
+
+\begin{code}
+inferTypes vts fis env (Lam typ lmbd vl e)
+  = do  let ids = getStdIds vl
+        let (fis1,vl1,env1) = abstractBindingVars fis env ids
+        (fis2,(s1, t1)) <- inferTypes vts fis1 env1 e
+        let vts = map (apply s1) vl1
+        return (fis2,(s1, curryType vts t1))
+  where 
+    curryType [] r = r
+    curryType (d:ds) r = FunType d $ curryType ds r
+\end{code} 
+
+
 \subsubsection{Substitution}
 
 We work with substitution written as a let-expression.
@@ -494,6 +505,12 @@ inferTypes vts fis env (Sub _ e2 (Substn ves lvlvs))
     ((Vbl x _ _),e1) = head vel
 \end{code}
 
+
+
+\subsubsection{Unimplemented}
+
+In all other cases (if any) we simply return an empty type-substitution
+and the arbitrary type:
 \begin{code}
 inferTypes vts fis env t = return (fis,(M.empty,ArbType))
 \end{code}
@@ -501,26 +518,30 @@ inferTypes vts fis env t = return (fis,(M.empty,ArbType))
 \newpage
 \subsubsection{Support}
 
-We convert a lambda with multiple abstraction variables
+Extracting standard variable identifiers from a general variable list:
+\begin{code}
+getStdIds :: VarList -> [Identifier]
+getStdIds = fst . idsOf
+\end{code}
+
+We convert a quantifier with multiple abstraction variables
 into a recursive nesting of lambdas with a single abstraction variable.
 \begin{code}
-abstractLambdaVar :: FreshInts -> TypeEnv -> Identifier 
+abstractBindingVars  :: FreshInts -> TypeEnv -> [Identifier] 
+                  -> (FreshInts,[Type],TypeEnv)
+abstractBindingVars fis env []  =  (fis,[],env)
+abstractBindingVars fis env (n:ns)
+  =  let (fis1,tv,env1) = abstractBindingVar fis env n
+         (fis2,tvs,env2) = abstractBindingVars fis1 env1 ns
+     in  (fis2,tv:tvs,env2) 
+
+abstractBindingVar :: FreshInts -> TypeEnv -> Identifier 
                   -> (FreshInts,Type,TypeEnv)
-abstractLambdaVar fis env n
+abstractBindingVar fis env n
   = let (fis1,tv) = newTyVar fis 
         TypeEnv env' = remove env n
         env'' = TypeEnv (env' `M.union` (M.singleton n (Scheme [] tv)))
     in (fis1,tv,env'')
-
-abstractLambdaVars  :: FreshInts -> TypeEnv -> [Identifier] 
-                  -> (FreshInts,[Type],TypeEnv)
-abstractLambdaVars fis env [n] 
-  = let (fis',tv,env') = abstractLambdaVar fis env n
-    in  (fis',[tv],env')
-abstractLambdaVars fis env (n:ns)
-  =  let (fis1,tv,env1) = abstractLambdaVar fis env n
-         (fis2,tvs,env2) = abstractLambdaVars fis1 env1 ns
-     in  (fis2,tv:tvs,env2) 
 \end{code}
 
 We convert a cons $(f~e_1~e_2~\dots~e_n)$

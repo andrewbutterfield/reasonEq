@@ -6,81 +6,21 @@ Most of the `Lists` conjectures need **induction**.
 
 **PLAN**
 
+We cannot prove `X_X_comp` without the relevant invariants.
 
-Issue now is that `inferTypes` is possibly incomplete when handling quantifiers.
+Time to get `Designs` going and then to the proper UTCP semantics
 
-```
-(∃ O$_1  • ls_1 = ls \ R1 ∪ N1 ∧ ((E1 ⊆ ls ∧ a[s_1/s']) ∧ ((E2 ⊆ ls_1 ∧ b[s_1/s]) ∧ ls' = ls_1 \ R2 ∪ N2))) :: (∃ x$,y$  • (x$=e$) ∧ P)
-lnm[parts]=exists_one_point[1]
-tP=(∃ x$,y$  • (x$=e$) ∧ P) ≡ (∃ y$  • P[e$/x$])
-partsP=(∃ x$,y$  • (x$=e$) ∧ P)
-replP=(∃ y$  • P[e$/x$])
-tC=(∃ O$_1  • ls_1 = ls \ R1 ∪ N1 ∧ ((E1 ⊆ ls ∧ a[s_1/s']) ∧ ((E2 ⊆ ls_1 ∧ b[s_1/s]) ∧ ls' = ls_1 \ R2 ∪ N2)))
-scC=ls,ls',s,s'⋔E1, ls,ls',s,s'⋔E2, ls,ls',s,s'⋔N1, ls,ls',s,s'⋔N2, ls,ls',s,s'⋔R1, ls,ls',s,s'⋔R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1
----
-typeMatch: distinct types
-typC = T
-typP = TG (Id "B" 0)
-```
-
+We need a a way to add witness `ok_1 == false`.
 
 Type `VarBind` has a `BindId` variant, 
 but it is only used for variables of dynamicity `During`.  
 We should really use this to bind constructor identifiers.
 
 
-
-Still succeeds with `tm 2 +_cancel`.
-
 `LiveProofs.undoCalcStep` needs fixing!
 
 
-Trying to prove `X_X_comp`:
-
-Now we need some set algebra
-
-We need to get from here:
-
-((E1 ⊆ ls ∧ E2 ⊆ ls \ R1 ∪ N1) ∧ (a ; b)) ∧ ls' = (ls \ R1 ∪ N1) \ R2 ∪ N2
-
-to there: 
-
-E2 ∩ (R1 \ N1) = Ø ∧ X(E1 ∪ E2 \ N1,a ; b,R1 ∪ R2,N1 \ R2 ∪ N2)
-
-Trying to prove `design_;_lzero`:
-
-We now get to: 
-
-```
-(∃ O$  • ¬ok_1) ∨ (∃ O$  • (P[O$_1/O$] ⟹   ok' ∧ Q[O$_1/O$]))
-```
-
-Experimenting reveals the need to connect up the typing info:
-
-```
-4 : “*_cancel” [≡rhs]
-    { =  ⟼ =, e  ⟼ ?e, f  ⟼ E2 ∩ (R1 \ N1), g  ⟼ Ø }
-    ?e * (E2 ∩ (R1 \ N1)) = ?e * Ø
-    ls,ls',s,s'⋔E1, ls,ls',s,s'⋔E2, ls,ls',s,s'⋔N1, ls,ls',s,s'⋔N2, ls,ls',s,s'⋔R1, ls,ls',s,s'⋔R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1,s_2 ⟹ ⊤
-3 : “+_cancel” [≡rhs]
-    { =  ⟼ =, e  ⟼ ?e, f  ⟼ E2 ∩ (R1 \ N1), g  ⟼ Ø }
-    ?e + E2 ∩ (R1 \ N1) = ?e + Ø
-    ls,ls',s,s'⋔E1, ls,ls',s,s'⋔E2, ls,ls',s,s'⋔N1, ls,ls',s,s'⋔N2, ls,ls',s,s'⋔R1, ls,ls',s,s'⋔R2, s,s'⊇ₐa, s,s'⊇ₐb, fresh:ls_1,s_1,s_2 ⟹ ⊤
-⊢
-E2 ∩ (R1 \ N1) = Ø ∧ ....
-```
-
-
-
-
-
-
-
-
-
-We need a a way to add witness `ok_1 == false`.
-
-
+**still an issue?**
 
 However `s` converts `Q[O$_1/O$]` to `Q` even with s.c. `O$,O$'⊇ₐQ`
 and `ok[O$_1/O$]` to `ok` even with `O$⊇ₐok`.

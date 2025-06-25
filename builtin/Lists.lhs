@@ -157,6 +157,33 @@ listKnown
 \newpage
 \section{List Laws}
 
+\subsection{List Induction}
+
+\begin{eqnarray*}
+   (\forall \ell \bullet P(\ell))
+   &\equiv&
+   P(\nil) \land \forall x \bullet ( P(\ell) \implies P(x \cons \ell))
+\\ &\equiv&
+   \forall \ell \bullet
+     P[\nil/\ell] \land \forall x \bullet ( P  \implies P[x \cons \ell/\ell] )
+\\ &\equiv&
+   \forall \ell,x \bullet
+     P[\nil/\ell] \land ( P  \implies P[x \cons \ell/\ell] )
+\\ P &\equiv?& P[\nil/\ell] \land ( P  \implies P[x \cons \ell/\ell] )
+\end{eqnarray*}
+\vspace{-8pt}
+\begin{code}
+vLP = Vbl (jId "LP") PredV Static
+gvLP = StdVar vLP
+lP = jVar pred1 $ vLP
+mksub p vts  = Sub pred1 p $ fromJust $ substn vts [] 
+axListInduction = ( "list" -.- "induction"
+                  , ( lP 
+                      ===
+                      mksub lP []
+                    , scTrue ) )
+\end{code}
+
 \subsection{Construction/Destruction}
 
 \begin{eqnarray*}
@@ -342,7 +369,8 @@ We collect these together:
 listAxioms :: [Law]
 listAxioms
   = map (labelAsAxiom . mkNmdAsn)
-      [ axHdDef, axTlDef
+      [ axListInduction
+      , axHdDef, axTlDef
       , axNilCatDef, axConsCatDef
       , axNilPfx, axConsPfx
       , axSnglDef

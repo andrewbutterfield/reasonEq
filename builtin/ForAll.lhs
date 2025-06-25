@@ -1,4 +1,4 @@
-\chapter{Universal Quantification (For-All)}
+\chapter{Universal Quantification}
 \begin{verbatim}
 Copyright  Andrew Butterfield (c) 2018
 

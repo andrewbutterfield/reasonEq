@@ -177,10 +177,13 @@ vLP = Vbl (jId "LP") PredV Static
 gvLP = StdVar vLP
 lP = jVar pred1 $ vLP
 mksub p vts  = Sub pred1 p $ fromJust $ substn vts [] 
+lst = Vbl (jId "lst") ExprV Static
 axListInduction = ( "list" -.- "induction"
                   , ( lP 
                       ===
-                      mksub lP []
+                      mksub lP [(vS,nilseq)]
+                      /\
+                      (lP ==> mksub lP [(vS,x `cons` s)])
                     , scTrue ) )
 \end{code}
 

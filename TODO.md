@@ -4,6 +4,26 @@
 
 Most of the `Lists` conjectures need **induction**.
 
+Need to look at types for induction:
+
+```
+Match against 'list_induction'[1] failed!
+try law instantiation failed
+{ B  ⟼ 𝔹 , LP  ⟼ (σ ⌢ nil) = σ, nil  ⟼ nil, σ  ⟼ ?sigma, x  ⟼ ?x }
+&& ⊤
+lnm[parts]=list_induction[1]
+tC=(σ ⌢ nil) = σ
+scC=⊤
+tP=LP ≡ LP[nil/σ] ∧ (LP ⟹   LP[x : σ/σ])
+partsP=LP
+replP=LP[nil/σ] ∧ (LP ⟹   LP[x : σ/σ])
+scP=⊤
+instType (TypeVar Id "*" 0): expected TypeVar
+instType (TypeVar Id "*" 0): expected TypeVar
+```
+
+See `ppt.txt`.
+
 **PLAN**
 
 We cannot prove `X_X_comp` without the relevant invariants.

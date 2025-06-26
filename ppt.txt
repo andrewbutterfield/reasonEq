@@ -2,71 +2,85 @@
 C
 ( TG
   (Id "B" 0) )
-False
-(Id "A" 0)
-[ V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E" 0, VE, WS))
-, V (TG (Id "B" 0)) (VR (Id "a" 0, VP, WS))
-, V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0, VE, WS)) ]
+True
+(Id "=" 0)
+[ C
+  ( TC
+    (Id "*" 0)
+    [ TV
+      (Id "t" 0) ] )
+  True
+  (Id "cat" 0)
+  [ V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS))
+  , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0, VO, WS)) 
+  ]
+, V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS)) 
+]
 @mkTA.term:
 C
 ( TG
   (Id "B" 0) )
-False
-(Id "A" 0)
-[ V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E" 0, VE, WS))
-, V (TG (Id "B" 0)) (VR (Id "a" 0, VP, WS))
-, V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0, VE, WS)) ]
+True
+(Id "=" 0)
+[ C
+  ( TC
+    (Id "*" 0)
+    [ TV
+      (Id "t" 0) ] )
+  True
+  (Id "cat" 0)
+  [ V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS))
+  , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0, VO, WS)) 
+  ]
+, V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS)) 
+]
 @tI.trm:
 C
 ( TG
   (Id "B" 0) )
-False
-(Id "A" 0)
-[ V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E" 0, VE, WS))
-, V (TG (Id "B" 0)) (VR (Id "a" 0, VP, WS))
-, V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0, VE, WS)) ]
-@tI.typ:
-TB
-@mkTA.term':
-C
-TB
-False
-(Id "A" 0)
-[ V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E" 0, VE, WS))
-, V (TG (Id "B" 0)) (VR (Id "a" 0, VP, WS))
-, V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0, VE, WS)) ]
+True
+(Id "=" 0)
+[ C
+  ( TC
+    (Id "*" 0)
+    [ TV
+      (Id "t" 0) ] )
+  True
+  (Id "cat" 0)
+  [ V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS))
+  , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0, VO, WS)) 
+  ]
+, V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS)) 
+]
 @ASN':
 ASN
-( C
-  TB
-  False
-  (Id "A" 0)
-  [ V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "E" 0, VE, WS))
-  , V (TG (Id "B" 0)) (VR (Id "a" 0, VP, WS))
-  , V (TC (Id "P" 0) [TG (Id "LE" 0)]) (VR (Id "N" 0, VE, WS)) ]
-, ( [ VSC
-      (GV (VR (Id "E" 0, VE, WS)))
-      ( The
-        ( { GV (VR (Id "ls" 0, VO, WB))
-          , GV (VR (Id "ls" 0, VO, WA))
-          , GV (VR (Id "s" 0, VO, WB))
-          , GV (VR (Id "s" 0, VO, WA)) } ) )
-      NA
-      NA
-    , VSC
-      (GV (VR (Id "N" 0, VE, WS)))
-      ( The
-        ( { GV (VR (Id "ls" 0, VO, WB))
-          , GV (VR (Id "ls" 0, VO, WA))
-          , GV (VR (Id "s" 0, VO, WB))
-          , GV (VR (Id "s" 0, VO, WA)) } ) )
-      NA
-      NA
-    , VSC
-      (GV (VR (Id "a" 0, VP, WS)))
-      NA
-      NA
-      ( The
-        ( { GV (VR (Id "s" 0, VO, WB))
-          , GV (VR (Id "s" 0, VO, WA)) } ) ) ]
-  , {} ) )
+( C ( TG (Id "B" 0) ) True (Id "=" 0)
+  [ C ( TC (Id "*" 0) [ TV (Id "t" 0) ] ) True (Id "cat" 0)
+      [ V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS))
+      , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0, VO, WS)) ]
+  , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS)) ]
+, ( [], {} ) )
+@iT.lTVB.bind:
+BD
+( { (Id "B" 0, TG (Id "B" 0)) }
+, { ( (Id "LP" 0, VP)
+    , BT (C (TG (Id "B" 0)) True (Id "=" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cat" 0) [V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS)), V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0, VO, WS))], V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS))]) )
+  , ( (Id "nil" 0, VO), BV (VR (Id "nil" 0, VO, WS)) )
+  , ( (Id "sigma" 0, VO), BV (VR (Id "?sigma" 0, VO, WS)) )
+  , ( (Id "x" 0, VO), BV (VR (Id "?x" 0, VO, WS)) ) }
+, {}
+, {} )
+@iT.lTVB.bind:
+BD
+( { (Id "B" 0, TG (Id "B" 0)) }
+, { ( (Id "LP" 0, VP)
+    , BT ( C (TG (Id "B" 0)) True (Id "=" 0) 
+         [ C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cat" 0) 
+             [ V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS))
+             , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0, VO, WS)) ]
+         , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS)) ] ) )
+  , ( (Id "nil" 0, VO), BV (VR (Id "nil" 0, VO, WS)) )
+  , ( (Id "sigma" 0, VO), BV (VR (Id "?sigma" 0, VO, WS)) )
+  , ( (Id "x" 0, VO), BV (VR (Id "?x" 0, VO, WS)) ) }
+, {}
+, {} )

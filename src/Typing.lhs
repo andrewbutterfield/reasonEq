@@ -169,8 +169,8 @@ $$
 A type-scheme quantifies over type-variables 
 ($\forall t_1,\dots,t_n \bullet t$).
 \begin{code}
-data TypeScheme = TS [TypeVariable] Type deriving Show
-pattern Scheme qvars typ = TS qvars typ
+data TypeScheme = TypeScheme [TypeVariable] Type deriving Show
+pattern Scheme qvars typ = TypeScheme qvars typ
 \end{code}
 
 

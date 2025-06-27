@@ -94,11 +94,20 @@
 
 \def\ILET{
   \TINFER
-   { \TJUDGE\TENV{e}{t}{S_0}
+   { \TJUDGE\TENV{e_1}{t}{S_0}
      \and
-     \TJUDGE{S_0\TENV,x:\TGEN{S_0\TENV}}{e_1}{t'}{S_1}
+     \TJUDGE{S_0\TENV,x:\TGEN{S_0\TENV}}{e_2}{t'}{S_1}
    }
-   {\TJUDGE\TENV{\LET x = e_0 \IN e_1}{t'}{S_1 S_0}}
+   {\TJUDGE\TENV{\LET x = e_1 \IN e_2}{t'}{S_1 S_0}}
+}
+
+\def\ISUBST{
+  \TINFER
+   { \TJUDGE\TENV{e_1}{t}{S_0}
+     \and
+     \TJUDGE{S_0\TENV,x:\TGEN{S_0\TENV}}{e_2}{t'}{S_1}
+   }
+   {\TJUDGE\TENV{e_2[e_1/x]}{t'}{S_1 S_0}}
 }
 
 

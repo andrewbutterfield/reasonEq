@@ -104,7 +104,8 @@ instType bind (TypeVar i) = lookupTypeVarBind bind i
 instType bind (TypeCons i ts) = do 
   i' <- case lookupTypeVarBind (pdbg "iT.lTVB.bind" bind) i of
           Just (TypeVar i') -> return i'
-          _ -> fail ("instType (TypeVar "++show i++"): expected TypeVar")
+          _ -> return i
+          -- _ -> fail ("instType (TypeVar "++show i++"): expected TypeVar")
   ts' <- instTypes bind ts
   return $ TypeCons i' ts'
 instType bind (FunType td tr) = do

@@ -94,20 +94,30 @@
 
 \def\ILET{
   \TINFER
-   { \TJUDGE\TENV{e_1}{t}{S_0}
+   { \TJUDGE\TENV{e_1}{t}{S_1}
      \and
-     \TJUDGE{S_0\TENV,x:\TGEN{S_0\TENV}}{e_2}{t'}{S_1}
+     \TJUDGE{S_1\TENV,x:\TGEN{S_0\TENV}}{e_2}{t'}{S_2}
    }
-   {\TJUDGE\TENV{\LET x = e_1 \IN e_2}{t'}{S_1 S_0}}
+   {\TJUDGE\TENV{\LET x = e_1 \IN e_2}{t'}{S_2 S_1}}
+}
+
+\def\ISUBSTONE{
+  \TINFER
+   { \TJUDGE\TENV{e_1}{t}{S_1}
+     \and
+     \TJUDGE{S_1\TENV,x:\TGEN{S_1\TENV}}{e_2}{t'}{S_2}
+   }
+   {\TJUDGE\TENV{e_2[e_1/x]}{t'}{S_2 S_1}}
 }
 
 \def\ISUBST{
   \TINFER
-   { \TJUDGE\TENV{e_1}{t}{S_0}
+   { \TJUDGE\TENV{e_i}{t_i}{S_i}  
      \and
-     \TJUDGE{S_0\TENV,x:\TGEN{S_0\TENV}}{e_2}{t'}{S_1}
+     \TJUDGE{S_i\TENV,x_i:\TGEN{S_i\TENV}}{e_0}{t'}{S_0}
    }
-   {\TJUDGE\TENV{e_2[e_1/x]}{t'}{S_1 S_0}}
+   {\TJUDGE\TENV{e_0[e_1,\dots,e_n/x_1,\dots,x_n]}{t'}{S_0 S_n \dots S_1}}
+   \textbf{ for } i \in 1,\dots,n
 }
 
 

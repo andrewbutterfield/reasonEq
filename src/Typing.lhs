@@ -461,7 +461,7 @@ inferTypes vts fis env econs@(Cons _ _ _ _)
   = inferTypes vts fis env $ consToApp econs
 \end{code}
 
-
+\newpage
 \subsubsection{Variable Binding Constructs}
 
 Both quantifier bindings ($\forall x \bullet p$)
@@ -476,6 +476,10 @@ We start with function abstraction.
 From MG:
 
 \includegraphics[scale=0.5]{doc/images/TI-EAbs}
+
+$$\ITLAM$$
+
+We then generalise to multiples
 
 $$\ITLAMN$$
 
@@ -504,30 +508,33 @@ inferTypes vts fis env (Bnd typ quant vs e)
 \end{code}
 
 
-
+\newpage
 \subsubsection{Substitution}
-
-$\ILET$
-
-$\ISUBST$
-
-We work with substitution written as a let-expression
-(based on the idea that $e_1[e_0/x]$ is the same as $\LET x=e_0 \IN e_1$).
-
 
 From MG:
 
 \includegraphics[scale=0.5]{doc/images/TI-ELet}
 
-$\ILET$
+$$\ILET$$
+
+We note that a let-expression $\LET x=e_1 \IN e_2$
+is basically a substitution $e_2[e_1/x]$.
+
+
+$$\ISUBSTONE$$
+
+Generalising to multiple substitution:
+
+$$\ISUBST$$
 
 \begin{code}
 inferTypes vts fis env (Sub _ e2 (Substn ves lvlvs))
-  | islet vel && S.null lvlvs
-  = do  (fis1,(s1, t1)) <- inferTypes vts fis env e1
-        let TypeEnv env' = remove env x
-        let t' = generalize (apply s1 env) t1
-        let env'' = TypeEnv (M.insert x t' env')
+  | islet vel && S.null lvlvs -- remove this, assume nothing about ves
+  = do  (fis1,(s1, t1)) <- inferTypes vts fis env e1 -- do this for all e_i
+        let TypeEnv env' = remove env x -- x_1 .. x_N
+        let t' = generalize (apply s1 env) t1  -- t'_i = g (a s_i env) t_i
+        let env'' = TypeEnv (M.insert x t' env')  -- insert x_i t'_i forall i
+        -- compose all s_i here as "s_1" ?
         (fis2,(s2, t2)) <- inferTypes vts fis1 (apply s1 env'') e2
         return (fis2,(s1 `composeSubst` s2, t2))
   where

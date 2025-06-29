@@ -2,6 +2,23 @@
 
 ## URGENT or NEXT
 
+In `Design` we get an unsafe side-cond error when trying reduce `true[O$_1/O$']`
+down to `true`:
+
+```
+(∃ O$_1  • true[O$_1/O$'] ∧ (P ⊢ Q)[O$_1/O$]) ∨ (true[O$_1/O$'] ∧ (P ⊢ Q)[O$_1/O$])[/]
+ O$,O$'⊇ₐP, O$,O$'⊇ₐQ, O$⊇ₐok, O$'⊇ₐok', fresh:O$_1
+Focus = [2,1,1] :: 𝔹 
+proof: s
+mkAsn: unsafe side-condition
+term = C (TG (Id "B" 0)) True (Id "or" 0) [B (TG (Id "B" 0)) (Id "exists" 0) (fromList [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))]) (C (TG (Id "B" 0)) True (Id "and" 0) [S (TG (Id "B" 0)) (K (TG (Id "B" 0)) (VB True)) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))])),S (TG (Id "B" 0)) (C (TG (Id "B" 0)) False (Id "design" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WB),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))]),S (TG (Id "B" 0)) (C (TG (Id "B" 0)) True (Id "and" 0) [S (TG (Id "B" 0)) (K (TG (Id "B" 0)) (VB True)) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))])),S (TG (Id "B" 0)) (C (TG (Id "B" 0)) False (Id "design" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WB),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))]) (SN (fromList []) (fromList []))]
+s.c. = ([VSC (GV (VR (Id "P" 0,VP,WS))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),VSC (GV (VR (Id "Q" 0,VP,WS))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),VSC (GV (VR (Id "ok" 0,VO,WB))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])),VSC (GV (VR (Id "ok" 0,VO,WA))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WA),[],[]))]))],fromList [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))])
+```
+
+This also happens if we expand out `P ⊢ Q` first.
+
+Add in Hoare-Triple and WP theories together as `PrePost`, based on `Designs`.
+
 Most of the `Lists` conjectures need **induction**.
 
 Need to look at types for induction:

@@ -1,32 +1,95 @@
-@tI.trm:
-C ( TG (Id "B" 0) ) True (Id "=" 0)
-  [ C ( TC (Id "*" 0) [ TV (Id "t" 0) ] ) True (Id "cat" 0)
-      [ V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS))
-      , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0, VO, WS)) ]
-  , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS)) 
-  ]
-
-@tI.env:
-{ ( Id "=" 0
-  , TS [] (TF (TV (Id "t" 0)) (TF (TV (Id "t" 0)) (TG (Id "B" 0)))) )
-, ( Id "cat" 0
-  , TS [] (TF (TC (Id "*" 0) [TV (Id "t" 0)]) 
-              (TF (TC (Id "*" 0) [TV (Id "t" 0)]) 
-                  (TC (Id "*" 0) [TV (Id "t" 0)]) )) )
-, ( Id "nil" 0, TS [] (TC (Id "*" 0) [TV (Id "t" 0)]) )
-, ( Id "sigma" 0, TS [] (TV (Id "A1" 0))) 
-}
-
-@iT.lTVB.bind:
-BD
-( { (Id "B" 0, TG (Id "B" 0)) }
-, { ( (Id "LP" 0, VP)
-    , BT (C (TG (Id "B" 0)) True (Id "=" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cat" 0) [V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS)), V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0, VO, WS))], V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS))]) )
-  , ( (Id "nil" 0, VO)
-    , BV (VR (Id "nil" 0, VO, WS)) )
-  , ( (Id "sigma" 0, VO)
-    , BV (VR (Id "?sigma" 0, VO, WS)) )
-  , ( (Id "x" 0, VO)
-    , BV (VR (Id "?x" 0, VO, WS)) ) }
-, {}
-, {} )
+@term:
+C
+( TG
+  (Id "B" 0) )
+True
+(Id "or" 0)
+[ B
+  ( TG
+    (Id "B" 0) )
+  (Id "exists" 0)
+  ( { GL (LV (VR (Id "O" 0, VO, WD "1"), [], [])) } )
+  ( C
+    ( TG
+      (Id "B" 0) )
+    True
+    (Id "and" 0)
+    [ S
+      ( TG
+        (Id "B" 0) )
+      (K (TG (Id "B" 0)) (VB True))
+      ( SN
+        ( {} )
+        ( { (LV (VR (Id "O" 0, VO, WA), [], []), LV (VR (Id "O" 0, VO, WD "1"), [], [])) } ) )
+    , S
+      ( TG
+        (Id "B" 0) )
+      ( C
+        ( TG
+          (Id "B" 0) )
+        False
+        (Id "design" 0)
+        [ V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS))
+        , V (TG (Id "B" 0)) (VR (Id "Q" 0, VP, WS)) ] )
+      ( SN
+        ( {} )
+        ( { (LV (VR (Id "O" 0, VO, WB), [], []), LV (VR (Id "O" 0, VO, WD "1"), [], [])) } ) ) ] )
+, S
+  ( TG
+    (Id "B" 0) )
+  ( C
+    ( TG
+      (Id "B" 0) )
+    True
+    (Id "and" 0)
+    [ S
+      ( TG
+        (Id "B" 0) )
+      (K (TG (Id "B" 0)) (VB True))
+      ( SN
+        ( {} )
+        ( { (LV (VR (Id "O" 0, VO, WA), [], []), LV (VR (Id "O" 0, VO, WD "1"), [], [])) } ) )
+    , S
+      ( TG
+        (Id "B" 0) )
+      ( C
+        ( TG
+          (Id "B" 0) )
+        False
+        (Id "design" 0)
+        [ V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS))
+        , V (TG (Id "B" 0)) (VR (Id "Q" 0, VP, WS)) ] )
+      ( SN
+        ( {} )
+        ( { (LV (VR (Id "O" 0, VO, WB), [], []), LV (VR (Id "O" 0, VO, WD "1"), [], [])) } ) ) ] )
+  ( SN
+    ( {} )
+    ( {} ) ) ]
+@sc:
+( [ VSC
+    (GV (VR (Id "P" 0, VP, WS)))
+    NA
+    NA
+    ( The
+      ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+        , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) )
+  , VSC
+    (GV (VR (Id "Q" 0, VP, WS)))
+    NA
+    NA
+    ( The
+      ( { GL (LV (VR (Id "O" 0, VO, WB), [], []))
+        , GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) )
+  , VSC
+    (GV (VR (Id "ok" 0, VO, WB)))
+    NA
+    NA
+    ( The
+      ( { GL (LV (VR (Id "O" 0, VO, WB), [], [])) } ) )
+  , VSC
+    (GV (VR (Id "ok" 0, VO, WA)))
+    NA
+    NA
+    ( The
+      ( { GL (LV (VR (Id "O" 0, VO, WA), [], [])) } ) ) ]
+, { GL (LV (VR (Id "O" 0, VO, WD "1"), [], [])) } )

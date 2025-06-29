@@ -278,7 +278,7 @@ parseConjecture text reqs
         Yes (term,resttoks)
           | null resttoks -> do
               thry <- getCurrentTheory reqs
-              newasn <- mkAsn term scTrue
+              let newasn = mkAsn term scTrue
               let newconj = (cname,newasn)
               let thry' = conjs__ ([newconj]++) thry
               thrys <- replaceTheory'' thry' $ theories reqs
@@ -528,7 +528,7 @@ switchConsequentFocus liveProof
       sz = focus liveProof
       (ok,sw',sz') = switchLeftRight sz
     in if ok
-        then do asn' <- mkAsn (exitTZ $ fst sz) (conjSC liveProof)
+        then do let asn' = mkAsn (exitTZ $ fst sz) (conjSC liveProof)
                 return ( focus_ sz'
                        $ matches_ []
                        $ fPath_ []
@@ -550,7 +550,7 @@ moveFocusToHypothesis i liveProof
       hthry' = getHypotheses seq'
       mcs = buildMatchContext (hthry':ante0 seq')
     in if ok
-        then do asn' <- mkAsn (exitTZ $ fst sz) (conjSC liveProof)
+        then do let asn' = mkAsn (exitTZ $ fst sz) (conjSC liveProof)
                 return ( mtchCtxts_ mcs
                        $ focus_ sz'
                        $ matches_ []
@@ -572,7 +572,7 @@ moveFocusFromHypothesis liveProof
       hthry' = getHypotheses seq'
       mcs = buildMatchContext (hthry':ante0 seq')
     in if ok
-        then do asn' <- mkAsn (exitTZ $ fst sz) (conjSC liveProof)
+        then do let asn' = mkAsn (exitTZ $ fst sz) (conjSC liveProof)
                 return ( mtchCtxts_ mcs
                        $ focus_ sz'
                        $ matches_ []
@@ -600,7 +600,7 @@ matchFocus ranking liveProof
         scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
         vts         =  concat $ map thd3 ctxts
-    in do (asn',tvmap) <- mkTypedAsn vts goalt scC 
+    in do let (asn',tvmap) = mkTypedAsn vts goalt scC 
           let fits  =  cSubType tvmap
           let rankedM = ranking ctxts $ matchInContexts ctxts fits asn'
           return $ matches_ rankedM liveProof
@@ -615,7 +615,7 @@ matchFocusAgainst lawnm liveProof
         scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
         vts         =  concat $ map thd3 ctxts
-    in do (asn',tvmap) <- mkTypedAsn vts goalt scC
+    in do let (asn',tvmap) = mkTypedAsn vts goalt scC
           let fits  =  cSubType tvmap
           case matchLawByName asn' lawnm ctxts fits of
             Yes []    -> fail ("No matches against focus for '"++lawnm++"'")
@@ -633,7 +633,7 @@ tryFocusAgainst lawnm parts liveProof
         scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
         vts         =  concat $ map thd3 ctxts
-    in do (asn',tvmap) <- mkTypedAsn vts goalt scC
+    in do let (asn',tvmap) = mkTypedAsn vts goalt scC
           let fits  =  cSubType $ pdbg "tFA.tvmap" tvmap
           tryLawByName asn' lawnm parts ctxts fits
 \end{code}
@@ -728,7 +728,7 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
                           = generateFreshVars knownVs freshneeded sbind
                     let scC' = addFreshVars fresh $ conjSC liveProof
                     brepl  <- instTerm ictxt fbind repl
-                    asn' <- mkAsn conjpart (conjSC liveProof)
+                    let asn' = mkAsn conjpart (conjSC liveProof)
                     return ( focus_ ((setTZ brepl tz),seq')
                            $ matches_ []
                            $ conjSC_ scC'
@@ -799,7 +799,7 @@ applySAT liveproof
   = do  let (tz, seq) = focus liveproof
         let goalt = getTZ tz
         (tsat,nottsat) <- satsolve goalt
-        asn <- mkAsn (exitTZ tz) (conjSC liveproof)
+        let asn = mkAsn (exitTZ tz) (conjSC liveproof)
         let stepcons = ((SAT tsat nottsat (fPath liveproof), asn) :)
         return (focus_ (setTZ (Val pred1 (Boolean tsat)) tz, seq)
                        $ stepsSoFar__ stepcons liveproof)
@@ -818,7 +818,7 @@ normQuantFocus thrys liveProof
           dpath = fPath liveProof
           t = getTZ tz
           t' = fst $ normaliseQuantifiers t scTrue
-      in do asn' <- mkAsn (exitTZ tz) (conjSC liveProof)
+      in do let asn' = mkAsn (exitTZ tz) (conjSC liveProof)
             return ( focus_ ((setTZ t' tz),seq')
                  $ matches_ []
                  $ stepsSoFar__
@@ -839,7 +839,7 @@ nestSimpFocus thrys liveProof
         dpath = fPath liveProof
         t = getTZ tz
     in case nestSimplify t of
-        Yes t' -> do asn' <- mkAsn (exitTZ tz) (conjSC liveProof)
+        Yes t' -> do let asn' = mkAsn (exitTZ tz) (conjSC liveProof)
                      return ( focus_ ((setTZ t' tz),seq')
                          $ matches_ []
                          $ stepsSoFar__
@@ -870,7 +870,7 @@ substituteFocus thrys liveProof
     in case t of
          (Sub _ tm s)
             -> do t' <- applySubst sctxt s tm
-                  asn' <- mkAsn (exitTZ tz) (conjSC liveProof)
+                  let asn' = mkAsn (exitTZ tz) (conjSC liveProof)
                   return ( focus_ ((setTZ t' tz),seq')
                          $ matches_ []
                          $ stepsSoFar__
@@ -928,7 +928,7 @@ flattenAssociative opI liveProof
         t = getTZ tz
     in case flattenAssoc opI t of
         But msgs -> fail $ unlines' msgs
-        Yes t' -> do asn' <- mkAsn (exitTZ tz) (conjSC liveProof)
+        Yes t' -> do let asn' = mkAsn (exitTZ tz) (conjSC liveProof)
                      return ( focus_ ((setTZ t' tz),seq')
                             $ matches_ []
                             $ stepsSoFar__ (((Flatten opI,asn')):)
@@ -944,7 +944,7 @@ groupAssociative opI gs liveProof
         t = getTZ tz
     in case groupAssoc opI gs t of
         But msgs -> fail $ unlines' msgs
-        Yes t' -> do asn' <- mkAsn (exitTZ tz) (conjSC liveProof)
+        Yes t' -> do let asn' = mkAsn (exitTZ tz) (conjSC liveProof)
                      return ( focus_ ((setTZ t' tz),seq')
                             $ matches_ []
                             $ stepsSoFar__ (((Associate opI gs,asn')):)
@@ -1024,7 +1024,7 @@ lawInstantiate3 vts law@((lnm,(Assertion lawt lsc)),lprov) varTerms liveProof
        ilawt <- instTerm ictxt lbind lawt
        let (tz,seq') = focus liveProof
        let dpath = fPath liveProof
-       asn' <- mkAsn (exitTZ tz) (conjSC liveProof)
+       let asn' = mkAsn (exitTZ tz) (conjSC liveProof)
        return ( focus_ (setTZ ilawt tz,seq')
                 $ stepsSoFar__
                   ( ( (UseLaw ByInstantiation lnm lbind dpath)
@@ -1063,7 +1063,7 @@ cloneHypothesis i land liveProof
     in case nlookup i hypos of
         Nothing -> fail ("No such hypothesis: "++show i)
         Just ((_,(Assertion hypt _)),_)
-          -> do asn' <- mkAsn (exitTZ tz) (conjSC liveProof)
+          -> do let asn' = mkAsn (exitTZ tz) (conjSC liveProof)
                 return ( focus_ (mkTZ $ Cons arbpred True land [hypt,currt],seq')
                        $ matches_ []
                        $ stepsSoFar__ ((CloneH i, asn'):)

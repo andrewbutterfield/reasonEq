@@ -576,7 +576,7 @@ domatch vts fits asnC law@((lname,(Assertion tP@(Cons _ _ i tsP@(_:_:_)) scP)),p
     ++ doPartialMatch i vts fits law' asnC tsP
   where
     xscP = expandSCKnowns vts scP
-    law' =(((lname,unsafeASN tP xscP)),prov)
+    law' =(((lname,mkAsn tP xscP)),prov)
 \end{code}
 Otherwise we just match against the whole law.
 \begin{code}
@@ -584,7 +584,7 @@ domatch vts fits asnC law@((lname,(Assertion tP scP)),prov)
   =  basicMatch MatchAll vts fits law' theTrue asnC tP
   where
     xscP = expandSCKnowns vts scP
-    law' =(((lname,unsafeASN tP xscP)),prov)
+    law' =(((lname,mkAsn tP xscP)),prov)
 \end{code}
 
 
@@ -973,7 +973,7 @@ makeEquivalence nm liveProof
      step0 = assnT $ conjecture liveProof
      step' = exitTZ $ fst $ focus liveProof
      sc = conjSC liveProof
-     asn = fromJust $ mkAsn (step0 === step') sc
+     asn = mkAsn (step0 === step') sc
      calc = ( step' , reverse $ stepsSoFar liveProof )
 \end{code}
 

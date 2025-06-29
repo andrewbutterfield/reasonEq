@@ -214,7 +214,7 @@ deduce thys (nm,(t@(Cons tk si i [ta,tc]),sc))
     = return ( "deduce", Sequent thys hthry sc tc $ theTrue )
   where
     hlaws = map mkHLaw $ zip [1..] $ splitAnte ta
-    mkasn trm = fromJust $ mkAsn trm scTrue -- always succeeds
+    mkasn trm = mkAsn trm scTrue 
     mkHLaw (i,trm) = labelAsAxiom ("H."++nm++"."++show i,mkasn trm)
     hthry = nullTheory { 
       thName   =  "H."++nm
@@ -615,8 +615,8 @@ exitLaws currT  (HLaws' hnm hkn hbef fnm fsc fprov horig haft cl cr)
       , known    =  hkn
       }
      , cl, cr)
-  where horig' = fromJust $ mkAsn horig fsc
-        currT' = fromJust $ mkAsn currT fsc
+  where horig' = mkAsn horig fsc
+        currT' = mkAsn currT fsc
 \end{code}
 
 \newpage

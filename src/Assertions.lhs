@@ -9,7 +9,6 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module Assertions (
   Assertion, pattern Assertion
 , mkAsn, unwrapASN
-, unsafeASN
 , mkTypedAsn
 , pattern AssnT, assnT, pattern AssnC, assnC
 , normaliseQuantifiers
@@ -180,26 +179,13 @@ pattern AssnC sc         <-  ASN (_,  sc)
 We make an assertion by checking side-condition safety,
 and then returning the assertion or signalling failure.
 \begin{code}
-mkAsn :: MonadFail m => Term -> SideCond -> m Assertion
-mkAsn tm sc
-  | safeSideCondition tm sc  = return $ ASN (tm, sc)
-  | otherwise                = fail msg
-  where
-    msg = unlines' ["mkAsn: unsafe side-condition"
-                   , "term = " ++ show tm
-                   , "s.c. = " ++ show sc
-                   ]
+mkAsn :: Term -> SideCond -> Assertion
+mkAsn tm sc = ASN (tm, sc)
 \end{code}
-
-We also have an unsafe version (for use by \h{domatch}):
-\begin{code}
-unsafeASN :: Term -> SideCond -> Assertion
-unsafeASN tm sc  =  ASN (tm, sc)
-\end{code}
-
 
 We can select assertion components by function,
 and unwrap completely:
+
 \begin{code}
 assnT :: Assertion -> Term
 assnT (ASN (tm, _))  =  tm
@@ -702,16 +688,14 @@ normQVar vv v@(Vbl (Identifier nm _) cls whn)
 \section{Making a Typed Assertion}
 
 \begin{code}
-mkTypedAsn :: MonadFail m 
-           => [VarTable] -> Term -> SideCond 
-           -> m (Assertion, CanonicalMap)
+mkTypedAsn :: [VarTable] -> Term -> SideCond -> (Assertion, CanonicalMap)
 mkTypedAsn vts term sc 
   = case typeInference vts term of
       But msgs                 ->  addTypeInfo sc ArbType term M.empty
       Yes (typ',term',typsub)  ->  addTypeInfo sc typ' term' typsub
 
-addTypeInfo sc typ term typsub = do
-  let (tvstyps,tvmap) = typeVarEquivalence typsub
-  asn <- mkAsn term sc
-  return (asn,tvmap) 
+addTypeInfo sc typ term typsub 
+  = let (tvstyps,tvmap) = typeVarEquivalence typsub
+        asn = mkAsn term sc
+    in (asn,tvmap) 
 \end{code}

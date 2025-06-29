@@ -161,7 +161,7 @@ areEqualTo es1 es2  = Iter bool True land True equals [es1,es2]
 All \emph{propositional} laws are characterised by not having
 any side-conditions:
 \begin{code}
-propdef ( name, prop ) = ( name, fromJust $ mkAsn prop scTrue )
+propdef ( name, prop ) = ( name, mkAsn prop scTrue )
 \end{code}
 
 \section{Predicate Infrastructure}
@@ -189,10 +189,10 @@ sat p = Cls satId p
 General predicate laws often have side-conditions:
 \begin{code}
 preddef :: String -> Term -> SideCond -> NmdAssertion
-preddef name pred sc = ( name, fromJust $ mkAsn pred sc )
+preddef name pred sc = ( name, mkAsn pred sc )
 \end{code}
 
 \begin{code}
 mkNmdAsn :: (String, (Term, SideCond)) -> NmdAssertion
-mkNmdAsn (name, (pred, sc)) = (name, fromJust $ mkAsn pred sc)
+mkNmdAsn (name, (pred, sc)) = (name, mkAsn pred sc)
 \end{code}

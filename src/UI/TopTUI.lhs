@@ -505,7 +505,7 @@ newConj cjnm reqs
         (ok,term) <- getConfirmedObject prompt parse preview
         if ok
           then 
-            do  asn' <- mkAsn term scTrue
+            do  let asn' = mkAsn term scTrue
                 case newConjecture 
                       (currTheory reqs) (cjnm,asn') reqs of
                   But msgs  -> doshow reqs (unlines' msgs)

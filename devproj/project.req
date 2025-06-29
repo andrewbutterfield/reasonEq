@@ -6,35 +6,6 @@ END THEORIES
 CURRTHEORY = Designs
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("Designs","design_;_lzero")
-BEGIN LIVE-PROOF
-TH-NAME: Designs
-CJ-NAME: design_;_lzero
-CONJ = ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) False (Id ";" 0) [K (TG (Id "B" 0)) (VB True),C (TG (Id "B" 0)) False (Id "design" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]],K (TG (Id "B" 0)) (VB True)],([VSC (GV (VR (Id "P" 0,VP,WS))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),VSC (GV (VR (Id "Q" 0,VP,WS))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),VSC (GV (VR (Id "ok" 0,VO,WB))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])),VSC (GV (VR (Id "ok" 0,VO,WA))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WA),[],[]))]))],fromList []))
-SIDE = ([VSC (GV (VR (Id "P" 0,VP,WS))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),VSC (GV (VR (Id "Q" 0,VP,WS))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),VSC (GV (VR (Id "ok" 0,VO,WB))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])),VSC (GV (VR (Id "ok" 0,VO,WA))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WA),[],[]))]))],fromList [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))])
-STRAT red-L2R
-BEGIN PRFSET
-MM = 30
-MS = 6
-BD = False
-TM = False
-TQ = False
-TS = False
-FV = True
-END PRFSET
-BEGIN SEQZIP
-TERMZIP = (S (TG (Id "B" 0)) (K (TG (Id "B" 0)) (VB True)) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))])),[Cons' (TG (Id "B" 0)) True (Id "and" 0) [] [S (TG (Id "B" 0)) (C (TG (Id "B" 0)) False (Id "design" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WB),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))],Sub' (TG (Id "B" 0)) (SN (fromList []) (fromList [])),Cons' (TG (Id "B" 0)) True (Id "or" 0) [B (TG (Id "B" 0)) (Id "exists" 0) (fromList [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))]) (C (TG (Id "B" 0)) True (Id "and" 0) [S (TG (Id "B" 0)) (K (TG (Id "B" 0)) (VB True)) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))])),S (TG (Id "B" 0)) (C (TG (Id "B" 0)) False (Id "design" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WB),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))])] []])
-BEGIN SEQUENT'
-SIDECOND = ([VSC (GV (VR (Id "P" 0,VP,WS))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),VSC (GV (VR (Id "Q" 0,VP,WS))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),VSC (GV (VR (Id "ok" 0,VO,WB))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])),VSC (GV (VR (Id "ok" 0,VO,WA))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WA),[],[]))]))],fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.design_;_lzero", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = K (TG (Id "B" 0)) (VB True)}
-END SEQUENT'
-END SEQZIP
-FPATH: [2,1,1]
-BEGIN LIST STEPS
-(UseLaw (ByMatch MIC) "exists_gen" (BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BT (C (TG (Id "B" 0)) True (Id "and" 0) [S (TG (Id "B" 0)) (K (TG (Id "B" 0)) (VB True)) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))])),S (TG (Id "B" 0)) (C (TG (Id "B" 0)) False (Id "design" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WB),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))]))],fromList [],fromList [((Id "e" 0,VE,[],[]),BL [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))]),((Id "x" 0,VO,[],[]),BS (fromList [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))])),((Id "y" 0,VO,[],[]),BS (fromList []))])) [],ASN (B (TG (Id "B" 0)) (Id "exists" 0) (fromList [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))]) (C (TG (Id "B" 0)) True (Id "and" 0) [S (TG (Id "B" 0)) (K (TG (Id "B" 0)) (VB True)) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WA),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))])),S (TG (Id "B" 0)) (C (TG (Id "B" 0)) False (Id "design" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "O" 0,VO,WB),[],[]),LV (VR (Id "O" 0,VO,WD "1"),[],[]))]))]),([VSC (GV (VR (Id "P" 0,VP,WS))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),VSC (GV (VR (Id "Q" 0,VP,WS))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),VSC (GV (VR (Id "ok" 0,VO,WB))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])),VSC (GV (VR (Id "ok" 0,VO,WA))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WA),[],[]))]))],fromList [GL (LV (VR (Id "O" 0,VO,WD "1"),[],[]))])))
-(UseLaw (ByMatch MEL) ";_def" (BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id ";" 0,VO),BV (VR (Id ";" 0,VO,WS))),((Id "P" 0,VP),BT (K (TG (Id "B" 0)) (VB True))),((Id "Q" 0,VP),BT (C (TG (Id "B" 0)) False (Id "design" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]))],fromList [("0","1")],fromList [((Id "O" 0,VO,[],[]),BL [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])])) [],ASN (C (TG (Id "B" 0)) False (Id ";" 0) [K (TG (Id "B" 0)) (VB True),C (TG (Id "B" 0)) False (Id "design" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]],([VSC (GV (VR (Id "P" 0,VP,WS))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),VSC (GV (VR (Id "Q" 0,VP,WS))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[])),GL (LV (VR (Id "O" 0,VO,WA),[],[]))])),VSC (GV (VR (Id "ok" 0,VO,WB))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WB),[],[]))])),VSC (GV (VR (Id "ok" 0,VO,WA))) NA NA (The (fromList [GL (LV (VR (Id "O" 0,VO,WA),[],[]))]))],fromList [])))
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

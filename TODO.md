@@ -2,6 +2,19 @@
 
 ## URGENT or NEXT
 
+
+**We may need to offer something like `O$_2` in the dialogue below 
+when instantiating the `exists_gen` law**
+
+```
+proof: a5
+Choose variables to replace ?e$
+   1. O$
+   2. O$_1
+   3. e$
+Select by numbers: 
+```
+
 In `Design` we get an unsafe side-cond error when trying reduce `true[O$_1/O$']`
 down to `true`:
 

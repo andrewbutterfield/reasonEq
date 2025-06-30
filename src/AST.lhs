@@ -297,7 +297,7 @@ there is little to differentiate the two approaches.
 The one exception is the ``zipper'' used to focus in on sub-predicates
 and sub-expressions.
 This is much simplified by having a unified notion of ``term''.
-We identify predicates as terms whose type has the form $t \fun \Bool$.
+We identify predicates as terms whose type is $\Bool$.
 
 \newpage
 \subsection{Terms}

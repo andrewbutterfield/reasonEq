@@ -2,28 +2,35 @@
 
 ## URGENT or NEXT
 
-**SAFE SIDE_CONDITIONS are bunkum!!!!**
+
 
 Add in Hoare-Triple and WP theories together as `PrePost`, based on `Designs`.
 
-Most of the `Lists` conjectures need **induction**.
 
-Need to look at types for induction:
+Need to look at types for induction.
+
+Note that adding (x:t) to list_induction RHS does NOT help.
 
 ```
+proof: tm 1 list_induction
+ << see ppt.txt >>
 Match against 'list_induction'[1] failed!
 try law instantiation failed
+
 { B  ⟼ 𝔹 , LP  ⟼ (σ ⌢ nil) = σ, nil  ⟼ nil, σ  ⟼ ?sigma, x  ⟼ ?x }
 && ⊤
+
 lnm[parts]=list_induction[1]
 tC=(σ ⌢ nil) = σ
 scC=⊤
-tP=LP ≡ LP[nil/σ] ∧ (LP ⟹   LP[x : σ/σ])
+tP=LP ≡ (x:t) ∧ (LP[nil/σ] ∧ (LP ⟹   LP[x : σ/σ]))
 partsP=LP
-replP=LP[nil/σ] ∧ (LP ⟹   LP[x : σ/σ])
+replP=(x:t) ∧ (LP[nil/σ] ∧ (LP ⟹   LP[x : σ/σ]))
 scP=⊤
-instType (TypeVar Id "*" 0): expected TypeVar
-instType (TypeVar Id "*" 0): expected TypeVar
+
+lookupTypeVarBind: Typevar Id "t" 0 not found.
+lookupTypeVarBind: Typevar Id "t" 0 not found.
+lookupTypeVarBind: Typevar Id "t" 0 not found.
 ```
 
 See `ppt.txt`.

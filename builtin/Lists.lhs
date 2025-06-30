@@ -169,7 +169,8 @@ listKnown
 \\ &\equiv&
    \forall \ell,x \bullet
      P[\nil/\ell] \land ( P  \implies P[x \cons \ell/\ell] )
-\\ P &\equiv?& P[\nil/\ell] \land ( P  \implies P[x \cons \ell/\ell] )
+\\ P &\equiv?& 
+    x : t \land \ell : t^* \land P[\nil/\ell] \land ( P  \implies P[x \cons \ell/\ell] )
 \end{eqnarray*}
 \vspace{-8pt}
 \begin{code}
@@ -181,9 +182,11 @@ lst = Vbl (jId "lst") ExprV Static
 axListInduction = ( "list" -.- "induction"
                   , ( lP 
                       ===
-                      mksub lP [(vS,nilseq)]
+                      VTyp contt vx
                       /\
-                      (lP ==> mksub lP [(vS,x `cons` s)])
+                      ( mksub lP [(vS,nilseq)]
+                      /\
+                      (lP ==> mksub lP [(vS,x `cons` s)]) )
                     , scTrue ) )
 \end{code}
 

@@ -3,9 +3,36 @@ BEGIN THEORIES
 THNAMES = ["AOI","And","Arith","Designs","EQV","Equal","Exists","Forall","Impl","LTL","Lists","Not","Or","Sets","UClose","UTCP","U_CWhl","U_NvWhl"]
 SDAG = [[("UTCP",["U_CWhl","Sets","UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"]),("Designs",["U_CWhl","AOI","And","Or","Not","EQV"]),("U_NvWhl",["U_CWhl","UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("U_CWhl",["UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Lists",["Impl","EQV","Equal","Forall","Arith","Sets"]),("LTL",["Equal","Exists","Forall","Impl","AOI","And","Or","Not","EQV"]),("UClose",["Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Sets",["Impl","EQV","Equal","Forall","Arith"]),("Exists",["Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Arith",["Impl","EQV","Equal"]),("Forall",["Equal","Impl","AOI","And","Or","Not","EQV"])],[("Equal",["Impl","EQV"])],[("Impl",["AOI","And","Or","Not","EQV"])],[("AOI",["And","Or","Not","EQV"])],[("And",["Or","Not","EQV"])],[("Or",["Not","EQV"])],[("Not",["EQV"])],[("EQV",[])]]
 END THEORIES
-CURRTHEORY = Designs
+CURRTHEORY = Lists
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("Lists","cat_nil")
+BEGIN LIVE-PROOF
+TH-NAME: Lists
+CJ-NAME: cat_nil
+CONJ = ASN (C (TG (Id "B" 0)) True (Id "=" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cat" 0) [V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0,VO,WS))],V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))],([],fromList []))
+SIDE = ([],fromList [])
+STRAT red-All
+BEGIN PRFSET
+MM = 30
+MS = 6
+BD = False
+TM = False
+TQ = False
+TS = False
+FV = True
+END PRFSET
+BEGIN SEQZIP
+TERMZIP = (C (TG (Id "B" 0)) True (Id "=" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cat" 0) [V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0,VO,WS))],V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))],[])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.cat_nil", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = K (TG (Id "B" 0)) (VB True)}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

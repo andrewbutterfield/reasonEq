@@ -15,7 +15,7 @@ module AST ( Value, pattern Boolean, pattern Integer
            , Term, Subable, readTerm
            , pattern Val, pattern Var, pattern Cons
            , pattern Bnd, pattern Lam, pattern Cls
-           , pattern Sub, pattern Iter, pattern Typ
+           , pattern Sub, pattern Iter, pattern VTyp
            , var,  eVar,  pVar
            , bnd, eBnd, pBnd
            , lam,  eLam,  pLam
@@ -221,7 +221,7 @@ We consider a term as having the following forms:
     $\S t v r$, $\ss t {v^n} {r^n}$ or $t\sigma$.
   \item [I] An iteration of a term over a sequence of list-variables:
     $\I \oplus n {lv^+}$ or $\ii \bigoplus n {lvs}$.
-  \item [T] An embedding of Types: $\T \tau$ or $\tt\tau$.
+  \item [T] A variable type delcaration: $\T \tau v$ or $\tt\tau v$.
 \end{description}
 
 \begin{eqnarray*}
@@ -237,7 +237,7 @@ We consider a term as having the following forms:
                 ~|~ \S t V R
                 ~|~ \X n t
                 ~|~ \I \oplus n {lv^+}
-                ~|~ \T \tau
+                ~|~ \T \tau v
 \\ &=& \kk k
      ~|~ \vv v
      ~|~ \cc n {ts}
@@ -246,7 +246,7 @@ We consider a term as having the following forms:
      ~|~ \ss t {v^n} {r^n}
      ~|~ \xx n t
      ~|~ \ii \bigoplus n {lvs}
-     ~|~ \tt \tau
+     ~|~ \tt \tau v
 \end{eqnarray*}
 We need to distinguish between predicate terms and expression terms.
 The key difference is that predicates are all of ``type'' $Env \fun \Bool$,
@@ -317,7 +317,7 @@ data Term
      Subable Identifier  -- top grouping constructor
      Subable Identifier  -- component constructor, with arity a
      [ListVar]   -- list-variables, same length as component arity
- | ET Type                               -- Embedded TypeVar
+ | VT Type Variable                 -- Variable Type declaration
  deriving (Eq, Ord, Show, Read)
 
 type Subable = Bool  -- True if we can substitute into sub-terms
@@ -343,7 +343,7 @@ pattern Lam  typ n vl tm          <-  L typ n vl tm
 pattern Cls      n    tm          =   X n tm
 pattern Sub  typ      tm s        =   S typ tm s
 pattern Iter typ sa na si ni lvs  =   I typ sa na si ni lvs
-pattern Typ  typ                  =   ET typ
+pattern VTyp typ v                =   VT typ v
 \end{code}
 
 
@@ -737,7 +737,7 @@ termSize (Lam _ _ vl t)       =  1 + length vl + termSize t
 termSize (Cls _ t)            =  1 + termSize t
 termSize (Sub _ t subs)       =  1 + termSize t + subsSize subs
 termSize (Iter _ _ _ _ _ vl)  =  3 + length vl
-termSize (Typ _)              =  2
+termSize (VTyp _ _)           =  2
 
 subsSize (Substn ts lvs)      =  3 * S.size ts + 2 * S.size lvs
 \end{code}

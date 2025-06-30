@@ -241,21 +241,22 @@ ival i = Val kint (Integer i)
 i42 = ival 42
 box p = Cons p1 True (fromJust $ ident "BOX") [p]
 x = fromJust $ ident "x"
-vx = fromJust $ var kint $ Vbl x ObsV Static
-tint = Typ int
+vx = Vbl x ObsV Static
+tx = fromJust $ var kint vx
+tint = VTyp int vx
 iter = Iter p1 True (fromJust $ ident "and") True (fromJust $ ident "=") []
 f = fromJust $ ident "F"
 g = fromJust $ ident "G"
-cons0 = Cons p1 True f [i42,vx,tint,iter]
-cons1 p = Cons p1 True f [p,vx,tint,iter]
+cons0 = Cons p1 True f [i42,tx,tint,iter]
+cons1 p = Cons p1 True f [p,tx,tint,iter]
 cons2 p = Cons p1 True f [i42,p,tint,iter]
-cons3 p = Cons p1 True f [i42,vx,p,iter]
-cons4 p = Cons p1 True f [i42,vx,tint,p]
+cons3 p = Cons p1 True f [i42,tx,p,iter]
+cons4 p = Cons p1 True f [i42,tx,tint,p]
 i99 = ival 99
-ccons p = Cons p1 True f [i42,Cons p1 True g [tint,p,vx],iter]
+ccons p = Cons p1 True f [i42,Cons p1 True g [tint,p,tx],iter]
 bcons 0 p = box $ ccons p
-bcons 1 p = Cons p1 True f [i42,box $ Cons p1 True g [tint,p,vx],iter]
-bcons 2 p = Cons p1 True f [i42,Cons p1 True g [tint,box p,vx],iter]
+bcons 1 p = Cons p1 True f [i42,box $ Cons p1 True g [tint,p,tx],iter]
+bcons 2 p = Cons p1 True f [i42,Cons p1 True g [tint,box p,tx],iter]
 \end{code}
 
 \begin{code}
@@ -265,9 +266,9 @@ tstZipper
      [ zipTest'' "42 boxed@top is BOX.42" i42 [] box
      , zipTest'' "42 boxed@1 is BOX.42" i42 [1] box
      , zipTest'' "42 boxed@2;1 is BOX.42" i42 [2,1] box
-     , zipTest'' "x boxed@top is BOX.x" vx [] box
-     , zipTest'' "x boxed@1 is BOX.x" vx [1] box
-     , zipTest'' "x boxed@1;1 is BOX.x" vx [1,1] box
+     , zipTest'' "x boxed@top is BOX.x" tx [] box
+     , zipTest'' "x boxed@1 is BOX.x" tx [1] box
+     , zipTest'' "x boxed@1;1 is BOX.x" tx [1,1] box
      , zipTest'' (tZ++" boxed@top is BOX.x") tint [] box
      , zipTest'' (tZ++" boxed@1 is BOX.x") tint [1] box
      , zipTest'' (tZ++" boxed@1;1 is BOX.x") tint [1,1] box
@@ -280,7 +281,7 @@ tstZipper
      , zipTest' "F(42,x,Z,/\\{=()}) boxed@1 is F(BOX.42,..)"
                cons1 [1] box i42
      , zipTest' "F(42,x,Z,/\\{=()}) boxed@2 is F(..,BOX.x,..)"
-               cons2 [2] box vx
+               cons2 [2] box tx
      , zipTest' "F(42,x,Z,/\\{=()}) boxed@3 is F(..,BOX.Z,..)"
                cons3 [3] box tint
      , zipTest' "F(42,x,Z,/\\{=()}) boxed@4 is F(..,BOX./\\{..})"

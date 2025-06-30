@@ -57,7 +57,7 @@ Given a variable $v$ we use $\beta(v)$ to denote a binding lookup.
 \\ \beta.(\ll n {v^+} t) &=& \ll n {\beta^*.v^+} {\beta.t}
 \\ \beta.(\ss t {v^n} {t^n}) &=& \ss {\beta.t} {\beta^*(v^n)} {\beta^*.t^n}
 \\ \beta.(\xx n t) &=& \xx {n} {\beta.t}
-\\ \beta.(\tt \tau) &=& \tt \tau
+\\ \beta.(\tt \tau v) &=& \tt \tau v
 \\ \beta.(\bigoplus(p)\seqof{\lst l^1,\dots,\lst l^a})
    &=& I\seqof{g^1_1,\dots,g^a_1}
        \oplus\dots\oplus
@@ -131,18 +131,16 @@ Here we require every free variable and type-variable in the term to be also in 
 instTerm :: MonadFail m => InsContext -> Binding -> Term -> m Term
 \end{code}
 
-\subsection{Instantiating Values and Type-Terms}
+\subsection{Instantiating Values}
 
 \begin{eqnarray*}
    \beta.\kk k : t &=& \kk k : \beta.t
-\\ \beta.(\tt \tau) &=& \tt{(\beta.\tau)}
 \end{eqnarray*}
 
 \begin{code}
 instTerm _ binding (Val typ k) = do
   typ' <- instType binding typ
   return $ Val typ' k
-instTerm _ binding t@(Typ typ) = fmap Typ $ instType binding typ
 \end{code}
 
 \subsection{Instantiating Variables}
@@ -278,6 +276,26 @@ instTerm insctxt binding (Iter tk sa na si ni lvs)
     mkI lvts@(Right _:_) = Cons tk si ni $ tmsOf lvts
     mkI lvts@(Left  _:_) = Iter tk sa na si ni $ lvsOf lvts
 \end{code}
+
+\subsection{Instantiating Variable Type Declarations}
+
+
+\begin{eqnarray*}
+   \beta.(\tt \tau v) &=& \tt{(\beta.\tau)}{v'}
+\\ \textbf{provided} && \beta.v = (\setof{v'},\emptyset)
+\end{eqnarray*}
+
+\begin{code}
+instTerm insctxt binding t@(VTyp typ v) 
+  = do  typ' <- instType binding typ
+        (vs,vmap) <- instStdVar insctxt binding v
+        if null vmap then fail "instTerm: typed-var instance too complex"
+        else if S.size vs /= 1 then fail "instTerm: one typed var expected"
+        else case head $ S.toList vs of
+          LstVar _ -> fail "instTerm: typed-var instantiates as list-var"
+          StdVar v' -> return $ VTyp typ' v'
+\end{code}
+
 
 \newpage
 

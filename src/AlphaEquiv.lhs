@@ -310,8 +310,9 @@ isAEquiv bij (Iter tk1 sa1 na1 si1 ni1 lvs1)
 
 Types must be equal:
 \begin{code}
-isAEquiv bij (Typ typ1) (Typ typ2)
-  | typ1 == typ2  =  return bij
+isAEquiv bij (VTyp typ1 v1) (VTyp typ2 v2)
+  | typ1 /= typ2  =  afail "type-declaration types differ"
+  | otherwise     =  isAEquivVar bij v1 v2
 \end{code}
 
 Everything else is a fail.

@@ -266,9 +266,9 @@ trterm :: (Identifier -> String) -> Int -> Term -> String
 \subsubsection{Atomic Terms}
 
 \begin{code}
-trterm trid p (Val tk k)           =  trValue k
-trterm trid p (Var tk v)           =  trVar v
-trterm trid p (Typ t)              =  trType t
+trterm trid p (Val tk k)  =  trValue k
+trterm trid p (Var tk v)  =  trVar v
+trterm trid p (VTyp t v)  =  "("++trVar v++":"++trType t++")"
 \end{code}
 
 \subsubsection{Rendering Binders and Substitution}

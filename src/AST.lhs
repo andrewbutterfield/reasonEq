@@ -721,6 +721,7 @@ mentionedIds (S _ t (SN tsub lvsub))
            `S.union`
            (S.map LstVar $ S.fromList rlvl)
 mentionedIds (I _ _ _ _ _ lvs)  =  S.fromList $ map LstVar lvs
+mentionedIds (VT _ v)           =  S.singleton $ StdVar v
 mentionedIds _                  =  S.empty
 \end{code}
 

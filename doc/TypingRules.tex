@@ -51,20 +51,13 @@
  {\TJUDGE\TENV{\vv v}{t}\emptyset}
 }
 
-\def\ITLAM{
-  \TINFER
-    {t=\newv \and \TJUDGE{\TENV,x:t}{e}{t'}S}
-    {\TJUDGE\TENV{\lambda x \bullet e}{St \fun t'}{S}}
-}
-
-\def\ITLAMN{
-  \TINFER
-    {  t_1=\newv,\dots,t_n=\newv 
-       \and 
-       \TJUDGE{\TENV,x_1:t_1,\dots,x_n:t_n}{e}{t'}S_i
-    }
-    {\TJUDGE\TENV{\lambda x_1,\dots,x_n \bullet e}
-     {St_1 \fun \dots \fun St_n \fun t'}{S}}
+\def\ITTVAR{
+\TINFER
+ {t'=\newv
+  \and
+  S = \mgu(t',\tau)
+ }
+ {\TJUDGE\TENV{(\tt \tau v)}{\Bool}S}
 }
 
 \def\IAPP{
@@ -91,6 +84,39 @@
     {\TJUDGE\TENV{((\dots((c~ e_1)~e_2)\dots)~e_n)}{t}{S}}
     {\TJUDGE\TENV{(c~e_1~e_2~\dots~e_n)}{t}{S}}
 }
+
+\def\ITLAM{
+  \TINFER
+    {t=\newv \and \TJUDGE{\TENV,x:t}{e}{t'}S}
+    {\TJUDGE\TENV{\lambda x \bullet e}{St \fun t'}{S}}
+}
+
+\def\ITLAMN{
+  \TINFER
+    {  t_1=\newv,\dots,t_n=\newv 
+       \and 
+       \TJUDGE{\TENV,x_1:t_1,\dots,x_n:t_n}{e}{t'}S_i
+    }
+    {\TJUDGE\TENV{\lambda x_1,\dots,x_n \bullet e}
+     {St_1 \fun \dots \fun St_n \fun t'}{S}}
+}
+
+
+\def\IQUANT{
+  \TINFER
+    {t=\newv \and \TJUDGE{\TENV,x:t}{e}{t'}S}
+    {\TJUDGE\TENV{\mathcal Q x \bullet e}{t'}{S}}
+}
+
+\def\IQUANTS{
+  \TINFER
+    {  t_1=\newv,\dots,t_n=\newv 
+       \and 
+       \TJUDGE{\TENV,x_1:t_1,\dots,x_n:t_n}{e}{t'}S_i
+    }
+    {\TJUDGE\TENV{\mathcal{Q} x_1,\dots,x_n \bullet e}{t'}{S}}
+}
+
 
 \def\ILET{
   \TINFER
@@ -121,18 +147,5 @@
 }
 
 
-\def\IQUANT{
-  \TINFER
-    {t=\newv \and \TJUDGE{\TENV,x:t}{e}{t'}S}
-    {\TJUDGE\TENV{\mathcal Q x \bullet e}{t'}{S}}
-}
 
-\def\IQUANTS{
-  \TINFER
-    {  t_1=\newv,\dots,t_n=\newv 
-       \and 
-       \TJUDGE{\TENV,x_1:t_1,\dots,x_n:t_n}{e}{t'}S_i
-    }
-    {\TJUDGE\TENV{\mathcal{Q} x_1,\dots,x_n \bullet e}{t'}{S}}
-}
 

@@ -9,6 +9,8 @@ Add in Hoare-Triple and WP theories together as `PrePost`, based on `Designs`.
 
 Need to look at types for induction.
 
+**Need to add induction strategies** at the same level as `red-All`, etc.
+
 Note that adding (x:t) to list_induction RHS does NOT help.
 
 ```

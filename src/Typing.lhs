@@ -403,22 +403,6 @@ inferTypes :: MonadFail mf
            -> mf (FreshInts,(TypeSubst, Type))
 \end{code}
 
-\subsubsection{Variables}
-
-From MG:
-
-\includegraphics[scale=0.5]{doc/images/TI-EVar}
-
-$\ITVAR$
-\begin{code}
-inferTypes vts fis (TypeEnv env) (Var _ (Vbl n _ _)) 
-  = case M.lookup n env of
-      Nothing     ->  fail $ "unbound variable: " ++ show n
-      Just sigma  ->  do let (fis',t) = instantiate fis sigma
-                         return (fis,(nullSubst, t))
-\end{code}
-
-\newpage
 \subsubsection{Values}
 
 From MG:
@@ -430,6 +414,37 @@ $\ITLIT$
 inferTypes vts fis _ (Val _ l) = return (fis,(nullSubst,valueType l))
 \end{code}
 
+
+\newpage
+\subsubsection{Variables}
+
+From MG:
+
+\includegraphics[scale=0.5]{doc/images/TI-EVar}
+
+$$\ITVAR$$
+\begin{code}
+inferTypes vts fis (TypeEnv env) (Var _ (Vbl n _ _)) 
+  = case M.lookup n env of
+      Nothing     ->  fail $ "unbound variable: " ++ show n
+      Just sigma  ->  do let (fis',t) = instantiate fis sigma
+                         return (fis,(nullSubst, t))
+\end{code}
+
+\subsubsection{Typed Variables}
+
+The term $\tt \tau v$ is an assertion that $v$ has type $\tau$,
+and so it is itself of type $\Bool$.
+However we need to record this in the type system.
+
+$$\ITTVAR$$
+
+\begin{code}
+inferTypes vts fis (TypeEnv env) (VTyp t (Vbl n _ _)) 
+  = do  let (fis1,tv) = newTyVar fis 
+        (fis2,s) <- mgu fis1 tv t
+        return (fis2,(s,t))
+\end{code}
 
 
 
@@ -542,7 +557,6 @@ inferTypes vts fis env (Sub _ e2 (Substn ves lvlvs))
     islet [_] = True; islet _ = False
     ((Vbl x _ _),e1) = head vel
 \end{code}
-
 
 
 \subsubsection{Unimplemented}

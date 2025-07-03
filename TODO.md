@@ -13,6 +13,10 @@ Need to look at types for induction.
 
 Note that adding (x:t) to list_induction RHS does NOT help.
 
+**Idea: take types of all signature elements used in conjecture, extract all the type-variables present and add those in at the start of type-referencing**
+
+*For `cat_nil` we lookup `cat` which has type `t*⟶ t*⟶ t*` to we get typevar `t` into the mix*
+
 ```
 proof: tm 1 list_induction
  << see ppt.txt >>

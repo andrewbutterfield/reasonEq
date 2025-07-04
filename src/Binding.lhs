@@ -1546,8 +1546,8 @@ the subscript binding if the lookup variable has \texttt{During} temporality.
 lookupTypeVarBind :: MonadFail m => Binding -> Identifier -> m Type
 lookupTypeVarBind (BD (tbind,_,_,_)) tvi
   = case M.lookup tvi tbind of
-      Nothing 
-        -> fail ("lookupTypeVarBind: Typevar "++show tvi++" not found.")
+      -- typevars are common to candidate and pattern by design
+      Nothing   ->  return $ TypeVar tvi
       Just typ  ->  return typ
 \end{code}
 

@@ -102,7 +102,7 @@ instType :: MonadFail m => Binding -> Type -> m Type
 instType _ ArbType = return ArbType
 instType bind (TypeVar i) = lookupTypeVarBind bind i
 instType bind (TypeCons i ts) = do 
-  i' <- case lookupTypeVarBind (pdbg "iT.lTVB.bind" bind) i of
+  i' <- case lookupTypeVarBind bind i of
           Just (TypeVar i') -> return i'
           _ -> return i
           -- _ -> fail ("instType (TypeVar "++show i++"): expected TypeVar")

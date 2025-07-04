@@ -157,20 +157,44 @@ listKnown
 \newpage
 \section{List Laws}
 
-\subsection{List Induction}
+\subsubsection{List Constructors are Disjoint}
 
 \begin{eqnarray*}
-   (\forall \ell \bullet P(\ell))
-   &\equiv&
-   P(\nil) \land \forall x \bullet ( P(\ell) \implies P(x \cons \ell))
-\\ &\equiv&
-   \forall \ell \bullet
-     P[\nil/\ell] \land \forall x \bullet ( P  \implies P[x \cons \ell/\ell] )
-\\ &\equiv&
-   \forall \ell,x \bullet
-     P[\nil/\ell] \land ( P  \implies P[x \cons \ell/\ell] )
-\\ P &\equiv?& 
-    x : t \land \ell : t^* \land P[\nil/\ell] \land ( P  \implies P[x \cons \ell/\ell] )
+    \nil \neq (x \cons \ell)
+    \equiv
+    \false
+\end{eqnarray*}
+\vspace{-8pt}
+\begin{code}
+axListConsDisjoint 
+  = ( "nil" -.- "cons" -.- "disj"
+    , ( ( nilseq  `isEqualTo` (x `cons` s) )  ===  falseP
+      , scTrue ) )
+\end{code}
+
+\subsubsection{List Constructor Equality}
+
+\begin{eqnarray*}
+    ((x_1 \cons \ell_1) = (x_2 \cons \ell_2))
+    \equiv
+    ( x_1 = x_2 \land \ell_1 = \ell_2)
+\end{eqnarray*}
+\vspace{-8pt}
+\begin{code}
+axConsEquality 
+  = ( "cons" -.- "equality"
+    , ( ( (x `cons` s1) `isEqualTo` (y `cons` s2))
+        ===
+        ( (x `isEqualTo` y) /\ (s1 `isEqualTo` s2) )    
+      , scTrue ) )
+\end{code}
+
+\subsection{List Axioms}
+
+\subsubsection{List Induction}
+
+\begin{eqnarray*}
+   P &\equiv&  P[\nil/\ell] \land ( P  \implies P[x \cons \ell/\ell] )
 \end{eqnarray*}
 \vspace{-8pt}
 \begin{code}
@@ -182,8 +206,6 @@ lst = Vbl (jId "lst") ExprV Static
 axListInduction = ( "list" -.- "induction"
                   , ( lP 
                       ===
-                      VTyp contt vx
-                      /\
                       ( mksub lP [(vS,nilseq)]
                       /\
                       (lP ==> mksub lP [(vS,x `cons` s)]) )
@@ -375,7 +397,7 @@ We collect these together:
 listAxioms :: [Law]
 listAxioms
   = map (labelAsAxiom . mkNmdAsn)
-      [ axListInduction
+      [ axListConsDisjoint, axConsEquality, axListInduction
       , axHdDef, axTlDef
       , axNilCatDef, axConsCatDef
       , axNilPfx, axConsPfx

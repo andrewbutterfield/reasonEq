@@ -7,39 +7,47 @@
 Add in Hoare-Triple and WP theories together as `PrePost`, based on `Designs`.
 
 
-Need to look at types for induction.
-
-**Need to add induction strategies** at the same level as `red-All`, etc.
-
-Note that adding (x:t) to list_induction RHS does NOT help.
-
-**Idea: take types of all signature elements used in conjecture, extract all the type-variables present and add those in at the start of type-referencing**
-
-*For `cat_nil` we lookup `cat` which has type `t*⟶ t*⟶ t*` to we get typevar `t` into the mix*
+**Just needed all the list axioms: types were irrelevant**
 
 ```
-proof: tm 1 list_induction
- << see ppt.txt >>
-Match against 'list_induction'[1] failed!
-try law instantiation failed
-
-{ B  ⟼ 𝔹 , LP  ⟼ (σ ⌢ nil) = σ, nil  ⟼ nil, σ  ⟼ ?sigma, x  ⟼ ?x }
-&& ⊤
-
-lnm[parts]=list_induction[1]
-tC=(σ ⌢ nil) = σ
-scC=⊤
-tP=LP ≡ (x:t) ∧ (LP[nil/σ] ∧ (LP ⟹   LP[x : σ/σ]))
-partsP=LP
-replP=(x:t) ∧ (LP[nil/σ] ∧ (LP ⟹   LP[x : σ/σ]))
-scP=⊤
-
-lookupTypeVarBind: Typevar Id "t" 0 not found.
-lookupTypeVarBind: Typevar Id "t" 0 not found.
-lookupTypeVarBind: Typevar Id "t" 0 not found.
+Lists.cat_nil : (σ ⌢ nil) = σ
+by 'red-All'
+---
+(σ ⌢ nil) = σ
+ = 'match-eqv-pvar(1) list_induction @[]'
+    { B  ⟼ 𝔹 , LP  ⟼ (σ ⌢ nil) = σ, nil  ⟼ nil, σ  ⟼ σ, x  ⟼ x }
+((σ ⌢ nil) = σ)[nil/σ] ∧ ((σ ⌢ nil) = σ ⟹   ((σ ⌢ nil) = σ)[x : σ/σ])
+   = 'substitute @[1]'
+(nil ⌢ nil) = nil ∧ ((σ ⌢ nil) = σ ⟹   ((σ ⌢ nil) = σ)[x : σ/σ])
+   = 'substitute @[2,2]'
+(nil ⌢ nil) = nil ∧ ((σ ⌢ nil) = σ ⟹   ((x : σ) ⌢ nil) = (x : σ))
+ = 'match-lhs cons_cat_def @[2,2,1]'
+    { *  ⟼ *, t  ⟼ t, ⌢  ⟼ ⌢, :  ⟼ :, s1  ⟼ σ, s2  ⟼ nil, x  ⟼ x }
+(nil ⌢ nil) = nil ∧ ((σ ⌢ nil) = σ ⟹   (x : (σ ⌢ nil)) = (x : σ))
+ = 'match-lhs cons_equality @[2,2]'
+    { *  ⟼ *, B  ⟼ 𝔹 , t  ⟼ t, =  ⟼ =, :  ⟼ :, s1  ⟼ σ ⌢ nil, s2  ⟼ σ, x  ⟼ x, y  ⟼ x }
+(nil ⌢ nil) = nil ∧ ((σ ⌢ nil) = σ ⟹   x = x ∧ (σ ⌢ nil) = σ)
+ = 'match-all =_refl @[2,2,1]'
+    { B  ⟼ 𝔹 , =  ⟼ =, e  ⟼ x }
+(nil ⌢ nil) = nil ∧ ((σ ⌢ nil) = σ ⟹   true ∧ (σ ⌢ nil) = σ)
+ = 'match-lhs and_symm @[2,2]'
+    { B  ⟼ 𝔹 , P  ⟼ true, Q  ⟼ (σ ⌢ nil) = σ, ∧  ⟼ ∧ }
+(nil ⌢ nil) = nil ∧ ((σ ⌢ nil) = σ ⟹   (σ ⌢ nil) = σ ∧ true)
+ = 'match-lhs and_unit @[2,2]'
+    { B  ⟼ 𝔹 , P  ⟼ (σ ⌢ nil) = σ, ∧  ⟼ ∧ }
+(nil ⌢ nil) = nil ∧ ((σ ⌢ nil) = σ ⟹   (σ ⌢ nil) = σ)
+ = 'match-lhs imp_refl @[2]'
+    { B  ⟼ 𝔹 , P  ⟼ (σ ⌢ nil) = σ, ⟹    ⟼ ⟹   }
+(nil ⌢ nil) = nil ∧ true
+ = 'match-all nil_cat_def @[1]'
+    { *  ⟼ *, B  ⟼ 𝔹 , t  ⟼ t, =  ⟼ =, ⌢  ⟼ ⌢, nil  ⟼ nil, σ  ⟼ nil }
+true ∧ true
+ = 'match-lhs and_unit @[]'
+    { B  ⟼ 𝔹 , P  ⟼ true, ∧  ⟼ ∧ }
+true
 ```
 
-See `ppt.txt`.
+
 
 **PLAN**
 

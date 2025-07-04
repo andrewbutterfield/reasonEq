@@ -7,6 +7,7 @@ fromList [(Id "=" 0,TypeScheme [] (TF (TV (Id "t" 0)) (TF (TV (Id "t" 0)) (TG (I
 BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "LP" 0,VP),BT (C (TG (Id "B" 0)) True (Id "=" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cat" 0) [V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0,VO,WS))],V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))])),((Id "nil" 0,VO),BV (VR (Id "nil" 0,VO,WS))),((Id "sigma" 0,VO),BV (VR (Id "?sigma" 0,VO,WS))),((Id "x" 0,VO),BV (VR (Id "?x" 0,VO,WS)))],fromList [],fromList [])
 @iT.lTVB.bind:
 BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "LP" 0,VP),BT (C (TG (Id "B" 0)) True (Id "=" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cat" 0) [V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0,VO,WS))],V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))])),((Id "nil" 0,VO),BV (VR (Id "nil" 0,VO,WS))),((Id "sigma" 0,VO),BV (VR (Id "?sigma" 0,VO,WS))),((Id "x" 0,VO),BV (VR (Id "?x" 0,VO,WS)))],fromList [],fromList [])
+
 Match against 'list_induction'[1] failed!
 try law instantiation failed
 

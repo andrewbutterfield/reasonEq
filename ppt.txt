@@ -1,47 +1,5 @@
-@tI.trm:
-C
-( TG
-  (Id "B" 0) )
-True
-(Id "=" 0)
-[ C
-  ( TC
-    (Id "*" 0)
-    [ TV
-      (Id "t" 0) ] )
-  True
-  (Id "cat" 0)
-  [ V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS))
-  , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0, VO, WS)) ]
-, V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS)) ]
-@tI.env:
-{ (Id "=" 0, TypeScheme [] (TF (TV (Id "t" 0)) (TF (TV (Id "t" 0)) (TG (Id "B" 0)))))
-, (Id "cat" 0, TypeScheme [] (TF (TC (Id "*" 0) [TV (Id "t" 0)]) (TF (TC (Id "*" 0) [TV (Id "t" 0)]) (TC (Id "*" 0) [TV (Id "t" 0)]))))
-, (Id "nil" 0, TypeScheme [] (TC (Id "*" 0) [TV (Id "t" 0)]))
-, (Id "sigma" 0, TypeScheme [] (TV (Id "A1" 0))) }
-@iT.lTVB.bind:
-BD
-( { (Id "B" 0, TG (Id "B" 0)) }
-, { ( (Id "LP" 0, VP)
-    , BT (C (TG (Id "B" 0)) True (Id "=" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cat" 0) [V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS)), V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0, VO, WS))], V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS))]) )
-  , ( (Id "nil" 0, VO)
-    , BV (VR (Id "nil" 0, VO, WS)) )
-  , ( (Id "sigma" 0, VO)
-    , BV (VR (Id "?sigma" 0, VO, WS)) )
-  , ( (Id "x" 0, VO)
-    , BV (VR (Id "?x" 0, VO, WS)) ) }
-, {}
-, {} )
-@iT.lTVB.bind:
-BD
-( { (Id "B" 0, TG (Id "B" 0)) }
-, { ( (Id "LP" 0, VP)
-    , BT (C (TG (Id "B" 0)) True (Id "=" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cat" 0) [V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS)), V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0, VO, WS))], V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0, VO, WS))]) )
-  , ( (Id "nil" 0, VO)
-    , BV (VR (Id "nil" 0, VO, WS)) )
-  , ( (Id "sigma" 0, VO)
-    , BV (VR (Id "?sigma" 0, VO, WS)) )
-  , ( (Id "x" 0, VO)
-    , BV (VR (Id "?x" 0, VO, WS)) ) }
-, {}
-, {} )
+@tI.trm: (σ ⌢ nil) = σ
+@tI.env: {  = : t⟶ t⟶ 𝔹 ,  ⌢ : t*⟶ t*⟶ t*,  nil : t*,  σ : t* }
+@iT.lTVB.bind: 
+  { B  ⟼ 𝔹 , LP  ⟼ (σ ⌢ nil) = σ, nil  ⟼ nil, σ  ⟼ ?sigma, x  ⟼ ?x }
+

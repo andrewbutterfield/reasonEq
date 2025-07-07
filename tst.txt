@@ -1,27 +1,34 @@
-proof: tm 1 list_induction
+proof: m lsngl_def
 @tI.trm:
-C (TG (Id "B" 0)) True (Id "=" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cat" 0) [V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0,VO,WS))],V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))]
+C (TV (Id "t" 0)) True (Id "seq" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS))]
 @tI.env:
-fromList [(Id "=" 0,TypeScheme [] (TF (TV (Id "t" 0)) (TF (TV (Id "t" 0)) (TG (Id "B" 0))))),(Id "cat" 0,TypeScheme [] (TF (TC (Id "*" 0) [TV (Id "t" 0)]) (TF (TC (Id "*" 0) [TV (Id "t" 0)]) (TC (Id "*" 0) [TV (Id "t" 0)])))),(Id "nil" 0,TypeScheme [] (TC (Id "*" 0) [TV (Id "t" 0)])),(Id "sigma" 0,TypeScheme [] (TV (Id "A1" 0)))]
-@iT.lTVB.bind:
-BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "LP" 0,VP),BT (C (TG (Id "B" 0)) True (Id "=" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cat" 0) [V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0,VO,WS))],V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))])),((Id "nil" 0,VO),BV (VR (Id "nil" 0,VO,WS))),((Id "sigma" 0,VO),BV (VR (Id "?sigma" 0,VO,WS))),((Id "x" 0,VO),BV (VR (Id "?x" 0,VO,WS)))],fromList [],fromList [])
-@iT.lTVB.bind:
-BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "LP" 0,VP),BT (C (TG (Id "B" 0)) True (Id "=" 0) [C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cat" 0) [V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0,VO,WS))],V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "sigma" 0,VO,WS))])),((Id "nil" 0,VO),BV (VR (Id "nil" 0,VO,WS))),((Id "sigma" 0,VO),BV (VR (Id "?sigma" 0,VO,WS))),((Id "x" 0,VO),BV (VR (Id "?x" 0,VO,WS)))],fromList [],fromList [])
-
-Match against 'list_induction'[1] failed!
-try law instantiation failed
-
-{ B  ⟼ 𝔹 , LP  ⟼ (σ ⌢ nil) = σ, nil  ⟼ nil, σ  ⟼ ?sigma, x  ⟼ ?x }
-&& ⊤
-
-lnm[parts]=list_induction[1]
-tC=(σ ⌢ nil) = σ
-scC=⊤
-tP=LP ≡ (x:t) ∧ (LP[nil/σ] ∧ (LP ⟹   LP[x : σ/σ]))
-partsP=LP
-replP=(x:t) ∧ (LP[nil/σ] ∧ (LP ⟹   LP[x : σ/σ]))
-scP=⊤
-
-lookupTypeVarBind: Typevar Id "t" 0 not found.
-lookupTypeVarBind: Typevar Id "t" 0 not found.
-lookupTypeVarBind: Typevar Id "t" 0 not found.
+fromList [(Id "seq" 0,TypeScheme [] (TV (Id "A1" 0))),(Id "x" 0,TypeScheme [] (TV (Id "A2" 0)))]
+@termMatch.P:
+C (TG (Id "B" 0)) True (Id "=" 0) [C (TV (Id "t" 0)) True (Id "seq" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS))],C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0,VO,WS))]]
+@typeMatch.P:
+TG (Id "B" 0)
+@tI.typ:
+TV (Id "A3" 0)
+@tI.sub:
+fromList [(Id "A1" 0,TF (TV (Id "A2" 0)) (TV (Id "A3" 0)))]
+@termMatch.C:
+C (TV (Id "A3" 0)) True (Id "seq" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS))]
+@typeMatch.C:
+TV (Id "A3" 0)
+@termMatch.P:
+C (TV (Id "t" 0)) True (Id "seq" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS))]
+@typeMatch.P:
+TV (Id "t" 0)
+@termMatch.C:
+C (TV (Id "A3" 0)) True (Id "seq" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS))]
+@typeMatch.C:
+TV (Id "A3" 0)
+@termMatch.P:
+C (TC (Id "*" 0) [TV (Id "t" 0)]) True (Id "cons" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS)),V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0,VO,WS))]
+@typeMatch.P:
+TC (Id "*" 0) [TV (Id "t" 0)]
+@termMatch.C:
+C (TV (Id "A3" 0)) True (Id "seq" 0) [V (TV (Id "t" 0)) (VR (Id "x" 0,VO,WS))]
+@typeMatch.C:
+TV (Id "A3" 0)
+No matches against focus for 'lsngl_def'

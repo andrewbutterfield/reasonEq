@@ -1,5 +1,94 @@
-@tI.trm: (σ ⌢ nil) = σ
-@tI.env: {  = : t⟶ t⟶ 𝔹 ,  ⌢ : t*⟶ t*⟶ t*,  nil : t*,  σ : t* }
-@iT.lTVB.bind: 
-  { B  ⟼ 𝔹 , LP  ⟼ (σ ⌢ nil) = σ, nil  ⟼ nil, σ  ⟼ ?sigma, x  ⟼ ?x }
-
+@tI.trm:
+C
+( TV
+  (Id "t" 0) )
+True
+(Id "seq" 0)
+[ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS)) ]
+@tI.env:
+{ (Id "seq" 0, TypeScheme [] (TV (Id "A1" 0)))
+, (Id "x" 0, TypeScheme [] (TV (Id "A2" 0))) }
+@termMatch.P:
+C
+( TG
+  (Id "B" 0) )
+True
+(Id "=" 0)
+[ C
+  ( TV
+    (Id "t" 0) )
+  True
+  (Id "seq" 0)
+  [ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS)) ]
+, C
+  ( TC
+    (Id "*" 0)
+    [ TV
+      (Id "t" 0) ] )
+  True
+  (Id "cons" 0)
+  [ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS))
+  , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0, VO, WS)) ] ]
+@typeMatch.P:
+TG
+(Id "B" 0)
+@tI.typ:
+TV
+(Id "A3" 0)
+@tI.sub:
+{ (Id "A1" 0, TF (TV (Id "A2" 0)) (TV (Id "A3" 0))) }
+@termMatch.C:
+C
+( TV
+  (Id "A3" 0) )
+True
+(Id "seq" 0)
+[ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS)) ]
+@typeMatch.C:
+TV
+(Id "A3" 0)
+@termMatch.P:
+C
+( TV
+  (Id "t" 0) )
+True
+(Id "seq" 0)
+[ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS)) ]
+@typeMatch.P:
+TV
+(Id "t" 0)
+@termMatch.C:
+C
+( TV
+  (Id "A3" 0) )
+True
+(Id "seq" 0)
+[ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS)) ]
+@typeMatch.C:
+TV
+(Id "A3" 0)
+@termMatch.P:
+C
+( TC
+  (Id "*" 0)
+  [ TV
+    (Id "t" 0) ] )
+True
+(Id "cons" 0)
+[ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS))
+, V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0, VO, WS)) ]
+@typeMatch.P:
+TC
+(Id "*" 0)
+[ TV
+  (Id "t" 0) ]
+@termMatch.C:
+C
+( TV
+  (Id "A3" 0) )
+True
+(Id "seq" 0)
+[ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS)) ]
+@typeMatch.C:
+TV
+(Id "A3" 0)

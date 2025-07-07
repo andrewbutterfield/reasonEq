@@ -1,94 +1,165 @@
-@tI.trm:
-C
-( TV
-  (Id "t" 0) )
-True
-(Id "seq" 0)
-[ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS)) ]
-@tI.env:
-{ (Id "seq" 0, TypeScheme [] (TV (Id "A1" 0)))
-, (Id "x" 0, TypeScheme [] (TV (Id "A2" 0))) }
-@termMatch.P:
+@basic.partsP:
 C
 ( TG
   (Id "B" 0) )
 True
-(Id "=" 0)
-[ C
-  ( TV
-    (Id "t" 0) )
-  True
-  (Id "seq" 0)
-  [ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS)) ]
-, C
-  ( TC
-    (Id "*" 0)
-    [ TV
-      (Id "t" 0) ] )
-  True
-  (Id "cons" 0)
-  [ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS))
-  , V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0, VO, WS)) ] ]
-@typeMatch.P:
-TG
-(Id "B" 0)
-@tI.typ:
-TV
-(Id "A3" 0)
-@tI.sub:
-{ (Id "A1" 0, TF (TV (Id "A2" 0)) (TV (Id "A3" 0))) }
-@termMatch.C:
+(Id "eqv" 0)
+[ X
+  (Id " [_] " 0)
+  (V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS)))
+, B
+  ( TG
+    (Id "B" 0) )
+  (Id "forall" 0)
+  ( { GL (LV (VR (Id "x" 0, VO, WS), [], [])) } )
+  (V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS))) ]
+@basic.tC:
 C
-( TV
-  (Id "A3" 0) )
+( TG
+  (Id "B" 0) )
 True
-(Id "seq" 0)
-[ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS)) ]
-@typeMatch.C:
-TV
-(Id "A3" 0)
-@termMatch.P:
+(Id "eqv" 0)
+[ X
+  (Id " [_] " 0)
+  (V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS)))
+, V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS)) ]
+@basic.MATCH:
+BD
+( { ( Id "B" 0               , TG (Id "B" 0)) }
+, { ( (Id "P" 0, VP)         , BV (VR (Id "P" 0, VP, WS)) )
+  , ( (Id "eqv" 0, VO)       , BV (VR (Id "eqv" 0, VO, WS)) ) }
+, {}
+, { ( (Id "x" 0, VO, [], []) ,  { ( {} ) } ) } 
+)
+
+
+
+
+@doPM.i:
+Id "eqv" 0
+@doEqvM.tP2:
+B
+( TG
+  (Id "B" 0) )
+(Id "forall" 0)
+( { GL (LV (VR (Id "x" 0, VO, WS), [], [])) } )
+(V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS)))
+@doEqvM.tP1:
+X
+(Id " [_] " 0)
+(V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS)))
+@basic.partsP:
+X
+(Id " [_] " 0)
+(V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS)))
+@basic.tC:
 C
-( TV
-  (Id "t" 0) )
+( TG
+  (Id "B" 0) )
 True
-(Id "seq" 0)
-[ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS)) ]
-@typeMatch.P:
-TV
-(Id "t" 0)
-@termMatch.C:
+(Id "eqv" 0)
+[ X
+  (Id " [_] " 0)
+  (V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS)))
+, V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS)) ]
+@mEqvLHS:
+[]
+@basic.partsP:
+B
+( TG
+  (Id "B" 0) )
+(Id "forall" 0)
+( { GL (LV (VR (Id "x" 0, VO, WS), [], [])) } )
+(V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS)))
+@basic.tC:
 C
-( TV
-  (Id "A3" 0) )
+( TG
+  (Id "B" 0) )
 True
-(Id "seq" 0)
-[ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS)) ]
-@typeMatch.C:
-TV
-(Id "A3" 0)
-@termMatch.P:
-C
-( TC
-  (Id "*" 0)
-  [ TV
-    (Id "t" 0) ] )
-True
-(Id "cons" 0)
-[ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS))
-, V (TC (Id "*" 0) [TV (Id "t" 0)]) (VR (Id "nil" 0, VO, WS)) ]
-@typeMatch.P:
-TC
-(Id "*" 0)
-[ TV
-  (Id "t" 0) ]
-@termMatch.C:
-C
-( TV
-  (Id "A3" 0) )
-True
-(Id "seq" 0)
-[ V (TV (Id "t" 0)) (VR (Id "x" 0, VO, WS)) ]
-@typeMatch.C:
-TV
-(Id "A3" 0)
+(Id "eqv" 0)
+[ X
+  (Id " [_] " 0)
+  (V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS)))
+, V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS)) ]
+@basic.MATCH:
+BD
+( { (Id "B" 0, TG (Id "B" 0)) }
+, { ( (Id "P" 0, VP)
+    , BT (C (TG (Id "B" 0)) True (Id "eqv" 0) [X (Id " [_] " 0) (V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS))), V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS))]) ) }
+, {}
+, { ( (Id "x" 0, VO, [], [])
+    , { ( {} ) } ) } )
+@mEqvRHS:
+[ MT
+  {mName
+  =
+  "
+  []
+  _def"
+, mAsn
+  =
+  ( C
+    ( TG
+      (Id "B" 0) )
+    True
+    (Id "eqv" 0)
+    [ X
+      (Id " [_] " 0)
+      (V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS)))
+    , B
+      ( TG
+        (Id "B" 0) )
+      (Id "forall" 0)
+      ( { GL (LV (VR (Id "x" 0, VO, WS), [], [])) } )
+      (V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS))) ]
+  , ( [ VSC
+        (GV (VR (Id "P" 0, VP, WS)))
+        NA
+        ( The
+          ( { GL (LV (VR (Id "x" 0, VO, WS), [], [])) } ) )
+        NA ]
+    , {} ) )
+, mClass
+  =
+  MER
+, mBind
+  =
+  BD
+  ( { (Id "B" 0, TG (Id "B" 0)) }
+  , { ( (Id "P" 0, VP)
+      , BT (C (TG (Id "B" 0)) True (Id "eqv" 0) [X (Id " [_] " 0) (V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS))), V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS))]) ) }
+  , {}
+  , { ( (Id "x" 0, VO, [], [])
+      , { ( {} ) } ) } )
+, mLawPart
+  =
+  X
+  (Id " [_] " 0)
+  (V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS)))
+, mLocSC
+  =
+  ( [ VSC
+      (GV (VR (Id "P" 0, VP, WS)))
+      NA
+      ( The
+        ( {} ) )
+      NA ]
+  , {} )
+, mLawSC
+  =
+  ( []
+  , {} )
+, mRepl
+  =
+  X
+  (Id " [_] " 0)
+  ( C
+    ( TG
+      (Id "B" 0) )
+    True
+    (Id "eqv" 0)
+    [ X
+      (Id " [_] " 0)
+      (V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS)))
+    , V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS)) ] )
+  } ]

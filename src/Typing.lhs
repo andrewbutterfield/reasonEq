@@ -364,9 +364,9 @@ typeInference :: MonadFail mf
 typeInference vts trm
   = do  let (fis,env) = foldl (addVarType vts)  ([1..],M.empty) (getVars trm)
         -- ! fis is infinite !
-        (_,(sub, typ)) <- inferTypes vts fis (TypeEnv $ pdbg "tI.env" env) $ pdbg "tI.trm" trm
-        let typ' = apply (pdbg "tI.sub" sub) $ pdbg "tI.typ" typ
-        return (pdbg "tI.typ'" typ',settype typ' trm,sub)
+        (_,(sub, typ)) <- inferTypes vts fis (TypeEnv env) trm
+        let typ' = apply sub typ
+        return (typ',settype typ' trm,sub)
 
 getVars :: Term -> [Variable]
 getVars = stdVarsOf . S.toList . mentionedIds

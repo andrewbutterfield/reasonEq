@@ -634,7 +634,7 @@ tryFocusAgainst lawnm parts liveProof
         ctxts       =  mtchCtxts liveProof
         vts         =  concat $ map thd3 ctxts
     in do let (asn',tvmap) = mkTypedAsn vts goalt scC
-          let fits  =  cSubType $ pdbg "tFA.tvmap" tvmap
+          let fits  =  cSubType tvmap
           tryLawByName asn' lawnm parts ctxts fits
 \end{code}
 

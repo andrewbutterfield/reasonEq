@@ -2,6 +2,36 @@
 
 ## URGENT or NEXT
 
+Problem with `UClose`:  
+
+```
+[P] ≡ P  ,  Ø⊇P
+Focus = [1] :: 𝔹 
+Target (RHS): 
+true
+XPNDD:
+Ø⊇P
+proof: tm 1 []_def
+Match against '[]_def'[1] was successful
+Binding:
+  { B  ⟼ 𝔹 , P  ⟼ P, x$  ⟼ ⟨?x$⟩ }
+Instantiated Replacement:
+  (∀ ?x$  • P)
+Law S.C.:
+  x$⊇P
+Instantiated Law S.C.:
+  ?x$⊇P
+Goal S.C.:
+  Ø⊇P
+Discharged Law S.C.:
+  ?x$⊇P
+```
+
+**If we have goal s.c. `Ø⊇P` and the law s.c. `x$⊇P` then we should deduce that `x$⊇P` is satisfied, as `Ø⊇P ⟹ S⊇P` for any set `S`.**
+
+**Looks like an issue with `scDischarge` !!**
+
+
 Add in Hoare-Triple and WP theories together as `PrePost`, based on `Designs`.
 
 

@@ -2,18 +2,6 @@
 
 ## URGENT or NEXT
 
-Problems with `[x]` and typing.
-
-First, `seq` does not appear in the List signature.
-
-Secondly, form `[x]` is `Cons "seq" [x]` and form `[x,y]` is `Cons "seq" [x,y]`.
-This does not interoperate easily with `nil` and `cons`.
-We need some kind of recursive enumeration meachanism that maps between the two. In a sense the `seq` is really a syntax form,
-rather than being fundamentally semantic.
-
-Note also that we have `set` for sets, but this works OK.
-We don't have any other way to construct concrete sets.
-
 Add in Hoare-Triple and WP theories together as `PrePost`, based on `Designs`.
 
 

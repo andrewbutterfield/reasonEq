@@ -427,7 +427,7 @@ We have some containers such as sets, lists and UTCP roots:
 \begin{code}
 trterm trid _ (Cons tk _ n ts)
   | n == jId "set"  =  trcontainer trid ( "{", ",", "}" ) ts
-  | n == jId "seq"  =  trcontainer trid ( "[", ",", "]" ) ts
+  | n == jId "seq"  =  trcontainer trid ( _langle, ",", _rangle ) ts
   | n == jId "r"    =  "r"++concat (map trRoot ts)
   where 
     trRoot (Val _ (Integer i)) = show i

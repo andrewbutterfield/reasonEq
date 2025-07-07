@@ -154,7 +154,7 @@ listKnown
     tlIntro $
     catIntro $
     pfxIntro $
-    snglIntro $
+    -- snglIntro $   -- deprecated
     revIntro $
     elemslIntro $
     lenlIntro $
@@ -300,6 +300,9 @@ axNilNilPfx =  ( "s" -.-  "pfx" -.- "nil"
 \newpage
 \subsection{Singleton}
 
+This is deprecated for now,
+as it requires some infrastructure to support explicit enumeration syntax.
+
 \begin{eqnarray*}
    \sngl(x) &\defs& x \cons \nil
 \\ \nil \pfx \sngl(x) &\equiv& \true
@@ -409,7 +412,7 @@ listAxioms
       , axHdDef, axTlDef
       , axNilCatDef, axConsCatDef
       , axNilPfx, axConsPfx, axNilNilPfx
-      , axSnglDef
+      -- , axSnglDef    -- deprecated for now
       , axRevNilDef, axRevConsDef
       , axElemsNilDef, axElemsConsDef
       , axLenNilDef, axLenConsDef
@@ -424,10 +427,13 @@ listConjectures
   = map mkNmdAsn 
      [ cjHdConsTl
      , cjCatNil, cjCatAssoc
-     , cjSnglPfx
-     , cjRevRevId, cjRevCat, cjRevSngl
-     , cjElemsCat, cjElemsSngl
-     , cjLenCat, cjLenSngl, cjLenRev
+     -- , cjSnglPfx
+     , cjRevRevId, cjRevCat
+     -- , cjRevSngl   -- deprecated
+     , cjElemsCat
+     -- , cjElemsSngl   -- deprecated
+     , cjLenCat, cjLenRev
+     -- , cjLenSngl   -- deprecated
      ]
 \end{code}
 

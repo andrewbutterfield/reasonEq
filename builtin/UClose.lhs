@@ -1,6 +1,6 @@
-\section{Universal Closure}
+\chapter{Universal Closure}
 \begin{verbatim}
-Copyright  Andrew Butterfield (c) 2019
+Copyright  Andrew Butterfield (c) 2019--2025
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}

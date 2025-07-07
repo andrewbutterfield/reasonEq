@@ -51,6 +51,14 @@ type constructor $\Seq{}$, and
 the constants $\nil$, $\cons$, $\hd$, $\tl$, $\cat$, $\pfx$, 
  $\sngl$, $\rev$, $\elems$, $\len$.
 
+We also want to have explicit list enumeration: $\seqof{a,b,\dots,z}$,
+with the following mapping from this to the ``official'' nil/cons notation:
+\begin{eqnarray*}
+   \seqof{contents} &\defs& mklist(contents)
+\\ mklist() &\defs& \nil
+\\ mklist(a,rest) &\defs& a \cons mklist(rest)
+\end{eqnarray*}
+
 
 \subsection{List Types}
 
@@ -272,7 +280,7 @@ cjCatAssoc =  ( "cat" -.-  "assoc"
 \\ (x \cons \sigma) \pfx (y \cons \sigma')
    &\defs&
    x = y \land \sigma \pfx \sigma'
-\\ \sigma \pfx \nil &\equiv& \sigma = \nil
+\\ \sigma \pfx \nil &\defs& \sigma = \nil
 \end{eqnarray*}
 \vspace{-8pt}
 \begin{code}
@@ -284,9 +292,9 @@ axConsPfx = ( "cons" -.- "pfx" -.- "def"
                 ===
                 ((x `isEqualTo` y) /\ (s1 `pfx` s2))
               , scTrue ) )
-cjSPfx =  ( "s" -.-  "pfx" -.- "nil"
-          , ( (s `pfx` nilseq) === (s `isEqualTo` nilseq)
-            , scTrue ) )
+axNilNilPfx =  ( "s" -.-  "pfx" -.- "nil"
+               , ( (s `pfx` nilseq) === (s `isEqualTo` nilseq)
+                 , scTrue ) )
 \end{code}
 
 \newpage
@@ -400,7 +408,7 @@ listAxioms
       [ axListConsDisjoint, axConsEquality, axListInduction
       , axHdDef, axTlDef
       , axNilCatDef, axConsCatDef
-      , axNilPfx, axConsPfx
+      , axNilPfx, axConsPfx, axNilNilPfx
       , axSnglDef
       , axRevNilDef, axRevConsDef
       , axElemsNilDef, axElemsConsDef
@@ -416,7 +424,6 @@ listConjectures
   = map mkNmdAsn 
      [ cjHdConsTl
      , cjCatNil, cjCatAssoc
-     , cjSPfx
      , cjSnglPfx
      , cjRevRevId, cjRevCat, cjRevSngl
      , cjElemsCat, cjElemsSngl

@@ -717,7 +717,7 @@ applyMatchToFocus2 vtbls mtch vts lvvls liveProof
         conjpart = exitTZ tz
     in do let sbind = patchBinding vts lvvls cbind
           scLasC <- instantiateSC ictxt sbind scL
-          scCL <- extendGoalSCCoverage obsv lvvls scLasC
+          scCL <- extendGoalSCCoverage (pdbg "aMTF2.obsv" obsv) (pdbg "aMTF2.lvvls" lvvls) $ pdbg "aMTF2.scLasc" scLasC
           scCX <- mrgSideCond scC scCL
           scD <- scDischarge (getDynamicObservables vtbls) scCX scLasC
           if onlyFreshSC scD
@@ -786,7 +786,11 @@ extendGoalSCCoverage obsv lvvls (tvarSCs,_)
               xtndCoverage obsv ffvls vscs' rest
       | otherwise  =  xtndCoverage obsv ffvls vscs rest
       where 
-         vsC = nset mvsC `S.union` nset mvsCd
+         cunion NA (The vsCd) = vsCd
+         cunion (The vsC)  NA = vsC
+         cunion (The vsC) (The vsCd) = vsC `S.union` vsCd
+         cunion _ _ = S.empty
+         vsC = mvsC `cunion` mvsCd
          justcov = VSC gv disjNA mvsC mvsCd
 \end{code}
 

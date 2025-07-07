@@ -835,6 +835,12 @@ We start with some examples that arise from key theories:
     Instantiated Law S.C. = $\lst x \disj \lst e$ \newline
     Goal S.C. = $\lst x \disj \lst e$ \newline
     Discharged Law S.C. = $\top$  (CORRECT)
+  \item[UClose.{[}{]}\_def]
+    Instantiated Law S.C. = $?\lst x\supseteq P$  \newline
+    Goal S.C. = $\emptyset\supseteq P$ \newline
+    Discharged Law S.C. = $?\lst x\supseteq P$.
+    From $\emptyset \supseteq P$ we should be able to conclude 
+    that $A \supseteq P$ for any arbitrary set $A$.
   \item[UTCP.X\_X\_comp]~
     Instantiated Law S.C. = $ls_1 \disj N1, ls_1 \disj R1$ \newline
     Goal S.C.: \newline
@@ -895,7 +901,7 @@ and $sc'_L$ is the law side-condition translated into goal ``space''
 after a successful match.
 Because we may be handing side-conditions with ``questionable'' variables,
 we attempt to return a simplified side-condition
-that has the questionable bits that are not dischargeable.
+that has the questionable bits \emph{that are not dischargeable}.
 If we discover a contradiction,
 then we need to signal this,
 because \texttt{SideCond} cannot represent a false side-condition explicitly.
@@ -940,26 +946,27 @@ scDischarge obsv anteSC@(anteVSC,anteFvs) cnsqSC@(cnsqVSC,cnsqFvs)
     else if isTrivialSC anteSC then return cnsqSC
     else do vsc' <- scDischarge' obsv anteVSC cnsqVSC
             freshDischarge obsv anteFvs cnsqFvs vsc'
-    
-instFreshObsV :: VarSet -> VarSet -> VarSet
-instFreshObsV obsv freshvs 
-  =  S.unions $ S.map (instFreshO obsv) freshvs
-
-instFreshO :: VarSet -> GenVar -> VarSet
-instFreshO obsv fresh = S.unions $ S.map (instFreshV fresh) obsv
-
-instFreshV :: GenVar -> GenVar -> VarSet
-instFreshV fresh obs  
-  | gvarWhen obs `elem` [Before,After] && isDuring freshd 
-               =  S.singleton $ setGVarWhen freshd obs 
-  | otherwise  =  S.empty
-  where freshd = gvarWhen fresh
-
-vscMrg [] = return []
-vscMrg (vsc:vscs) = mrgVarConds vsc vscs    
 \end{code}
 
-\newpage
+% \begin{code}    
+% instFreshObsV :: VarSet -> VarSet -> VarSet
+% instFreshObsV obsv freshvs 
+%   =  S.unions $ S.map (instFreshO obsv) freshvs
+
+% instFreshO :: VarSet -> GenVar -> VarSet
+% instFreshO obsv fresh = S.unions $ S.map (instFreshV fresh) obsv
+
+% instFreshV :: GenVar -> GenVar -> VarSet
+% instFreshV fresh obs  
+%   | gvarWhen obs `elem` [Before,After] && isDuring freshd 
+%                =  S.singleton $ setGVarWhen freshd obs 
+%   | otherwise  =  S.empty
+%   where freshd = gvarWhen fresh
+
+% vscMrg [] = return []
+% vscMrg (vsc:vscs) = mrgVarConds vsc vscs    
+% \end{code}
+
 \subsection{Term-Variable  Condition  Discharge}
 
 Now onto processing those ordered Term-Variable Side-Conditions:
@@ -976,7 +983,7 @@ scDischarge' obsv        (vscG@(VSC gvG _ _ _):restG) -- ante
                      rest' <- scDischarge' obsv restG restL
                      return (vscL:rest')
   | otherwise  =  do -- use vscG to discharge vscL
-                     vsc' <- vscDischarge obsv vscG vscL
+                     vsc' <- vscDischarge obsv (pdbg "scDSCHG'.vscG" vscG) $ pdbg "scDSCHG'.vscL" vscL
                      vscChecked <- vscCheck vsc'
                      case  vscChecked of
                        Nothing ->  scDischarge' obsv restG restL
@@ -985,7 +992,7 @@ scDischarge' obsv        (vscG@(VSC gvG _ _ _):restG) -- ante
                          return (vsc'':rest')
 \end{code}
 
-
+\newpage
 \subsubsection{VSC Discharge}
 
 At this point we have the form, for given term-variable $T$:
@@ -1066,6 +1073,9 @@ given that $ls \in \lst O$.
 We cannot immediately assume it's true as the antecedent doesn't prevent
 $ls_1 \in N$. However, if $ls_1$ is fresh, this will be the case.
 
+Yet another case is $\emptyset \supseteq P \implies A \supseteq P$ 
+for \emph{any} $A$.
+
 The plan is that we first use each component (\m{D,C,Cd}) of the goal
 to simplify the corresponding instantiated law components.
 Then we look at the  crossovers.
@@ -1093,15 +1103,13 @@ vscDischarge obsv (VSC gv nvsDG nvsCG nvsCdG) (VSC _ nvsDL nvsCL nvsCdL)
 
 \newpage
 \subsubsection{Pairwise Discharging (C:C)}
-General idea (assuming \m{C_G \supset \emptyset}): 
+General idea: 
 \newline
   \m{C_G \supseteq V} discharges \m{C_L \supseteq V} if \m{C_G \subseteq C_L}
 \newline
   \m{C_G \supseteq V} falsifies \m{C_L \supseteq V} if \m{C_G \disj C_L}
 
 Edge cases:
-\newline
-  \m{C_G = \emptyset} means no change to law s.c.
 \newline
   If \m{V} is a term variable, 
   then it is possible that \m{\fv(V)=\emptyset},
@@ -1121,7 +1129,7 @@ ccDischarge :: MonadFail m
 ccDischarge _  _  _  NA     =  return NA
 ccDischarge _  _  NA uvsCL  =  return uvsCL
 ccDischarge obsv gv (The vsCG) tvsCL@(The vsCL)
-  | S.null vsCG               =  return tvsCL
+  -- | S.null vsCG               =  return tvsCL
   | vsCG `S.isSubsetOf` vsCL  =  return NA -- discharged!
   | vsCL `S.disjoint` vsCG 
     && isObsGVar gv           =  fail "CC - disjoint coverage"

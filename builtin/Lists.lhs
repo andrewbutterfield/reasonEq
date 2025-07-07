@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Lists (
-  nilseq, lenum, lsngl, hd, tl, cons, cat, pfx, rev, elems, len
+  nilseq, lenum, hd, tl, cons, cat, pfx, rev, elems, len
 , listAxioms, listName, listTheory
 ) where
 
@@ -58,6 +58,9 @@ with the following mapping from this to the ``official'' nil/cons notation:
 \\ mklist() &\defs& \nil
 \\ mklist(a,rest) &\defs& a \cons mklist(rest)
 \end{eqnarray*}
+For now the use of this enumeration style 
+as a way of constructing lists is deprecated.
+We will continue to display the lists enumeration style where this makes sense.
 
 
 \subsection{List Types}

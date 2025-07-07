@@ -23,13 +23,13 @@ TS = False
 FV = True
 END PRFSET
 BEGIN SEQZIP
-TERMZIP = (C (TG (Id "B" 0)) True (Id "eqv" 0) [X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))),V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],[])
+TERMZIP = (X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))),[Cons' (TG (Id "B" 0)) True (Id "eqv" 0) [] [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))]])
 BEGIN SEQUENT'
 SIDECOND = ([VSC (GV (VR (Id "P" 0,VP,WS))) NA (The (fromList [])) NA],fromList [])
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.univ_id_on_closed", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = K (TG (Id "B" 0)) (VB True)}
 END SEQUENT'
 END SEQZIP
-FPATH: []
+FPATH: [1]
 BEGIN LIST STEPS
 END LIST STEPS
 END LIVE-PROOF

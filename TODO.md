@@ -5,37 +5,32 @@
 Problem with `UClose`:  
 
 ```
-[P] ≡ P  ,  Ø⊇P
+Proof for univ_id_on_closed
+	[P] ≡ P
+	Ø⊇P
+by red-All
+Matches:
+...
+1 : “[]_def” [≡lhs]
+    (∀ ?x$  • P)
+    Ø⊇P ⟹ ?x$⊇P
+-----------(3/3)
+⊢
+[P] ≡ P
+ Ø⊇P
 Focus = [1] :: 𝔹 
-Target (RHS): 
-true
-XPNDD:
-Ø⊇P
-proof: tm 1 []_def
-Match against '[]_def'[1] was successful
-Binding:
-  { B  ⟼ 𝔹 , P  ⟼ P, x$  ⟼ ⟨?x$⟩ }
-Instantiated Replacement:
-  (∀ ?x$  • P)
-Law S.C.:
-  x$⊇P
-Instantiated Law S.C.:
-  ?x$⊇P
-Goal S.C.:
-  Ø⊇P
-Discharged Law S.C.:
-  ?x$⊇P
+
+proof: a1
+Choose variables to replace ?x$
+   1. x$
+Select by numbers: 
 ```
 
-**If we have goal s.c. `Ø⊇P` and the law s.c. `x$⊇P` then we should deduce that `x$⊇P` is satisfied, as `Ø⊇P ⟹ S⊇P` for any set `S`.**
-
-**Looks like an issue with `scDischarge` !!**
+**Here we need to be able to say `x$` is `Ø`.**
 
 
 Add in Hoare-Triple and WP theories together as `PrePost`, based on `Designs`.
 
-
-**Just needed all the list axioms: types were irrelevant**
 
 ```
 Lists.cat_nil : (σ ⌢ nil) = σ

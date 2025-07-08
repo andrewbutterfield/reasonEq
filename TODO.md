@@ -5,56 +5,20 @@
 Problem with `UClose`:  
 
 ```
-proof: a1
-Choose variables (zero or more) to replace ?x$
-   1. x$
-Select by numbers: 
+[P ∧ Q]  x$⊇P, x$⊇Q
+proof: tm 1 []_def
+Match against '[]_def'[1] was successful
+Binding:  { B  ⟼ 𝔹 , P  ⟼ P ∧ Q, x$  ⟼ ⟨?x$⟩ }
+Instantiated Replacement: (∀ ?x$  • P ∧ Q)
+Law S.C.:  x$⊇P
+Instantiated Law S.C.: ?x$⊇x$
+Goal S.C.:  x$⊇P, x$⊇Q
+Discharged Law S.C.: ?x$⊇x$
 ```
-
-**Here we say `x$` is `Ø` by hitting return**
+**Here we are not being asked to pick an instantiation for `?x$`.**
 
 
 Add in Hoare-Triple and WP theories together as `PrePost`, based on `Designs`.
-
-
-```
-Lists.cat_nil : (σ ⌢ nil) = σ
-by 'red-All'
----
-(σ ⌢ nil) = σ
- = 'match-eqv-pvar(1) list_induction @[]'
-    { B  ⟼ 𝔹 , LP  ⟼ (σ ⌢ nil) = σ, nil  ⟼ nil, σ  ⟼ σ, x  ⟼ x }
-((σ ⌢ nil) = σ)[nil/σ] ∧ ((σ ⌢ nil) = σ ⟹   ((σ ⌢ nil) = σ)[x : σ/σ])
-   = 'substitute @[1]'
-(nil ⌢ nil) = nil ∧ ((σ ⌢ nil) = σ ⟹   ((σ ⌢ nil) = σ)[x : σ/σ])
-   = 'substitute @[2,2]'
-(nil ⌢ nil) = nil ∧ ((σ ⌢ nil) = σ ⟹   ((x : σ) ⌢ nil) = (x : σ))
- = 'match-lhs cons_cat_def @[2,2,1]'
-    { *  ⟼ *, t  ⟼ t, ⌢  ⟼ ⌢, :  ⟼ :, s1  ⟼ σ, s2  ⟼ nil, x  ⟼ x }
-(nil ⌢ nil) = nil ∧ ((σ ⌢ nil) = σ ⟹   (x : (σ ⌢ nil)) = (x : σ))
- = 'match-lhs cons_equality @[2,2]'
-    { *  ⟼ *, B  ⟼ 𝔹 , t  ⟼ t, =  ⟼ =, :  ⟼ :, s1  ⟼ σ ⌢ nil, s2  ⟼ σ, x  ⟼ x, y  ⟼ x }
-(nil ⌢ nil) = nil ∧ ((σ ⌢ nil) = σ ⟹   x = x ∧ (σ ⌢ nil) = σ)
- = 'match-all =_refl @[2,2,1]'
-    { B  ⟼ 𝔹 , =  ⟼ =, e  ⟼ x }
-(nil ⌢ nil) = nil ∧ ((σ ⌢ nil) = σ ⟹   true ∧ (σ ⌢ nil) = σ)
- = 'match-lhs and_symm @[2,2]'
-    { B  ⟼ 𝔹 , P  ⟼ true, Q  ⟼ (σ ⌢ nil) = σ, ∧  ⟼ ∧ }
-(nil ⌢ nil) = nil ∧ ((σ ⌢ nil) = σ ⟹   (σ ⌢ nil) = σ ∧ true)
- = 'match-lhs and_unit @[2,2]'
-    { B  ⟼ 𝔹 , P  ⟼ (σ ⌢ nil) = σ, ∧  ⟼ ∧ }
-(nil ⌢ nil) = nil ∧ ((σ ⌢ nil) = σ ⟹   (σ ⌢ nil) = σ)
- = 'match-lhs imp_refl @[2]'
-    { B  ⟼ 𝔹 , P  ⟼ (σ ⌢ nil) = σ, ⟹    ⟼ ⟹   }
-(nil ⌢ nil) = nil ∧ true
- = 'match-all nil_cat_def @[1]'
-    { *  ⟼ *, B  ⟼ 𝔹 , t  ⟼ t, =  ⟼ =, ⌢  ⟼ ⌢, nil  ⟼ nil, σ  ⟼ nil }
-true ∧ true
- = 'match-lhs and_unit @[]'
-    { B  ⟼ 𝔹 , P  ⟼ true, ∧  ⟼ ∧ }
-true
-```
-
 
 
 **PLAN**

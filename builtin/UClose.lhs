@@ -278,6 +278,8 @@ and a generic binder variable: $\lst x$.
 \begin{code}
 vP = Vbl (fromJust $ ident "P") PredV Static
 gvP = StdVar vP
+vQ = Vbl (fromJust $ ident "Q") PredV Static
+gvQ = StdVar vQ
 p = fromJust $ pVar ArbType vP
 q = fromJust $ pVar ArbType $ Vbl (fromJust $ ident "Q") PredV Static
 vx = Vbl (fromJust $ ident "x") ObsV Static ; x = StdVar vx
@@ -353,7 +355,7 @@ $$\par\vspace{-8pt}
 \begin{code}
 cjAndUnivDistr = preddef ("land" -.- "[]" -.- "distr")
                 (univ p /\ univ q === univ (p /\ q))
-                scTrue
+                (([xs] `covers` gvP) .: ([xs] `covers` gvQ))
 \end{code}
 
 $$

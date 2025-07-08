@@ -447,16 +447,16 @@ pickThings hdr showThing [] = pickError "No things to be chosen"
 pickThings hdr showThing things
   = do putStrLn hdr
        putStrLn $ numberList showThing things
-       choicesTxt <- userPrompt "Select by numbers: "
+       choicesTxt <- userPrompt "Pick number (zero or more): "
        let choices =  map readNat $ words choicesTxt
-       putStrLn ("Choices = "++show choices)
+       putStrLn ("Available: "++show choices)
        if null choices
-         then return (False,error "Nothing chosen!")
+         then return (False,error "Nothing picked!")
        else if all (inRange size) choices
          then do let wanted = map (selectFrom things) choices
                  putStrLn ("Chosen "++unwords (map showThing wanted))
                  return (True,wanted)
-         else return (False,error "Bad choices!")
+         else return (False,error "Bad picks!")
   where size = length things
 \end{code}
 
@@ -467,9 +467,9 @@ takeThings hdr showThing [] = pickError "No things to be taken"
 takeThings hdr showThing things
   = do putStrLn hdr
        putStrLn $ numberList showThing things
-       choicesTxt <- userPrompt "Select by numbers: "
+       choicesTxt <- userPrompt "Take by numbers: "
        let choices =  map readNat $ words choicesTxt
-       putStrLn ("Choices = "++show choices)
+       putStrLn ("Available: "++show choices)
        if null choices
          then return (True,([],things)) -- can choose nothing!
        else if all (inRange size) choices && choices == nub choices

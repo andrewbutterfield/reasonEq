@@ -5,28 +5,13 @@
 Problem with `UClose`:  
 
 ```
-Proof for univ_id_on_closed
-	[P] ≡ P
-	Ø⊇P
-by red-All
-Matches:
-...
-1 : “[]_def” [≡lhs]
-    (∀ ?x$  • P)
-    Ø⊇P ⟹ ?x$⊇P
------------(3/3)
-⊢
-[P] ≡ P
- Ø⊇P
-Focus = [1] :: 𝔹 
-
 proof: a1
-Choose variables to replace ?x$
+Choose variables (zero or more) to replace ?x$
    1. x$
 Select by numbers: 
 ```
 
-**Here we need to be able to say `x$` is `Ø`.**
+**Here we say `x$` is `Ø` by hitting return**
 
 
 Add in Hoare-Triple and WP theories together as `PrePost`, based on `Designs`.

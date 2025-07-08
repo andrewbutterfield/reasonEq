@@ -448,9 +448,9 @@ Ask the user to specify a replacement term for each floating standard variable:
 \newpage
 
 Ask the user to specify a replacement variable-list/set
-for each floating list variable
+for each floating list variable.
 (We currently assume that each replacement variable can only be associated
-with one floating variable. Is this too restrictive?):
+with one floating variable. Is this too restrictive?  \textbf{Yes}):
 \begin{code}
     fixFloatLVars :: [(ListVar,VarList)] -- replacements so far
                   -> VarList             -- possible replacement variables
@@ -463,8 +463,9 @@ with one floating variable. Is this too restrictive?):
         empties = map fixAsEmpty lstvars
     fixFloatLVars lvvls gvars ((LstVar lv):lstvars)
       = do (chosen,choices)
-             <- takeThings ("Choose variables to replace "++(trLVar lv))
-                           trGVar gvars
+             <- takeThings 
+                 ("Choose variables (zero or more) to replace "++(trLVar lv))
+                 trGVar gvars
            if chosen
             then do let (wanted,leftover) = choices
                     putStrLn ("-chosen list is "++trVList wanted)

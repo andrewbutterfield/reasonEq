@@ -983,7 +983,7 @@ scDischarge' obsv        (vscG@(VSC gvG _ _ _):restG) -- ante
                      rest' <- scDischarge' obsv restG restL
                      return (vscL:rest')
   | otherwise  =  do -- use vscG to discharge vscL
-                     vsc' <- vscDischarge obsv (pdbg "scDSCHG'.vscG" vscG) $ pdbg "scDSCHG'.vscL" vscL
+                     vsc' <- vscDischarge obsv vscG vscL
                      vscChecked <- vscCheck vsc'
                      case  vscChecked of
                        Nothing ->  scDischarge' obsv restG restL

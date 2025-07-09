@@ -1359,8 +1359,8 @@ Only these can possibly be instantiated to satisfy the residual side-condition.
 \begin{code}
 isFloatingVSC :: VarSideConds -> Bool
 isFloatingVSC (VSC  gv nvsD nvsC nvsCd)
-  = isFloatingGVar gv || 
-    ( hasFloatingM nvsD && hasFloatingM nvsC && hasFloatingM nvsCd )
+  = isFloatingGVar gv 
+      || hasFloatingM nvsD || hasFloatingM nvsC || hasFloatingM nvsCd 
 hasFloating :: VarSet -> Bool
 hasFloating vs = any isFloatingGVar $ S.toList vs
 hasFloatingM :: NVarSet -> Bool

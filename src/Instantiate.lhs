@@ -566,10 +566,10 @@ side-conditions:
 \end{eqnarray*}
 \begin{code}
 instantiateSC insctxt bind (vscs,freshvs)
-  = do vscss' <- sequence $ map (instantiateVSC insctxt bind) vscs
+  = do vscss' <- sequence $ map (instantiateVSC insctxt bind) $ vscdbg "iSC.vscs" vscs
        vscs' <- concatVarConds vscss'
-       freshvs' <- instVarSet insctxt bind freshvs
-       mkSideCond vscs' $ theFreeVars freshvs'
+       freshvs' <- instVarSet insctxt bind $ freshvs
+       mkSideCond (vscdbg "iSC.vscs'" vscs') $ theFreeVars freshvs'
 \end{code}
 For atomic side-conditions:
 \begin{eqnarray*}
@@ -793,6 +793,36 @@ We define dynamic free variables ($\dfv$) as:
   \dfv &:& T \fun \Set V
 \\ \dfv(t) &\defs& filter(isDynamic,\fv(t)) 
 \end{eqnarray*}
+
+\newpage
+\subsubsection{INSTANTIATING  UClose  $[P \land Q]$}
+
+Consider this example:
+\begin{description}
+\item[Law] $[P] \equiv \forall \lst x \bullet P, \qquad \lst x \supseteq P$
+\item[Goal] $[P \land Q], \qquad \lst x \supseteq P,Q$.
+\item[Repl] $\exists \lst x \bullet P$
+\item[Bind] 
+   $\beta
+    =
+    \setof{
+      P \mapsto P \land Q
+    , \lst x \mapsto \seqof{?\lst x}
+    }
+   $
+\end{description}
+We have:
+\begin{eqnarray*}
+\lefteqn{\beta(\lst x \supseteq P)}
+\\ &=& \beta(\lst x) \supseteq \beta(P)
+\\ &=& ?\lst x \supseteq \fv(P \land Q)
+\\ &=& ?\lst x \supseteq \fv(P) \cup \fv(Q)
+\end{eqnarray*}
+Here it makes sense that $?\lst x$ becomes $\lst x$,
+and then all we to do us use the fact that $A \supseteq B$ and $A \supseteq C$
+means that $A \supseteq B \cup C$.
+ 
+
 
 \newpage
 \subsection{Instantiating TVCS}

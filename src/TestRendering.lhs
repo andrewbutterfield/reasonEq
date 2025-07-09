@@ -17,7 +17,7 @@ module TestRendering (
  , trTerm, trTermU, trmdbg, trmsdbg
  , trSub, trSubU
  , trTermZip, trTermZipU
- , trSideCond, trSideCondU, scdbg
+ , trSideCond, trSideCondU, scdbg, vscdbg
  , trAsn, trAsnU, trNmdAsn, trNmdAsnU
  , truelawname, (-.-), nicelawname
  , trVarMatchRole, trVarMatchRoleU
@@ -564,6 +564,8 @@ scdbg = rdbg trSideCond
 trtvarsidecond trid (VSC gv NA NA NA) = [_top]
 trtvarsidecond trid (VSC gv mvsD mvsC mvsCd)
   = [trDisjSC trid gv mvsD, trCovByM trid gv mvsC, trDynCovM trid gv mvsCd]
+
+vscdbg nm vscs = ldbg (concat . trtvarsidecond trId) nm vscs
 
 trDisjSC trid gv NA = ""
 trDisjSC trid gv (The vsD)

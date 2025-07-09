@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Debugger
- ( dbg, pdbg, pdbn, mdbg, rdbg, rdbn, ldbg, fdbg, trc ) 
+ ( dbg, pdbg, pdbn, mdbg, rdbg, rdbn, ldbg, sdbg, fdbg, trc ) 
 where
 
 import Debug.Trace
@@ -52,14 +52,19 @@ rdbg render nm x = trace ('@':nm++":  "++render x) x
 rdbn render nm x = trace ('@':nm++":\n"++render x) x
 \end{code}
 
-Being able to show aggregates is helpful. Let's start with lists:
+Being able to show aggregates is helpful. 
+Let's start with lists, and then sets
 \begin{code}
 type Dbgs a = String -> [a] -> [a]
-ldbg :: (a -> String) -> Dbgs a
-ldbg render nm xs = trace ('@':nm++":\n"++dbgs render xs) xs
+ldbg,sdbg :: (a -> String) -> Dbgs a
+ldbg render nm xs = trace ('@':nm++": (list)\n"++dbgs render xs) xs
+sdbg render nm xs = trace ('@':nm++": (set)\n"++dbgs render xs) xs
+
 
 dbgs :: (a -> String) -> [a] -> String
 dbgs render xs = unlns' $ map (("  "++) . render) xs
+
+
 \end{code}
 
 Finally, a short-name version of \texttt{trace} for local customisations:

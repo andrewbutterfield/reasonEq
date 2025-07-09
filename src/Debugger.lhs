@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Debugger
- ( dbg, pdbg, mdbg, rdbg, rdbn, fdbg, trc ) 
+ ( dbg, pdbg, pdbn, mdbg, rdbg, rdbn, ldbg, fdbg, trc ) 
 where
 
 import Debug.Trace
@@ -21,14 +21,16 @@ First,
 showing the 2nd argument of a trace 
 after displaying the 1st argument string:
 \begin{code}
-dbg :: Show a => [Char] -> a -> a
+type Dbg a  = String -> a -> a
+dbg :: Show a => Dbg a
 dbg msg x = trace (msg++show x) x
 \end{code}
 
-Secondly, marking output (with \texttt{@}) and starting a newline:
+Secondly, marking output (with \texttt{@}) and optionally starting a newline:
 \begin{code}
-pdbg :: Show a => [Char] -> a -> a
-pdbg nm x = dbg ('@':nm++":\n") x
+pdbg, pdbn :: Show a => Dbg a
+pdbg nm x = dbg ('@':nm++":  ") x
+pdbn nm x = dbg ('@':nm++":\n") x
 \end{code}
 
 Next, a version to handle monadic-fail types,
@@ -45,18 +47,37 @@ mdbg nm mx
 Now, versions of \h{pdbg} where a rendering function is supplied, 
 rather than using \h{show}, and where the newline is optional.
 \begin{code}
-rdbg, rdbn :: Show a => (a -> String) -> [Char] -> a -> a
-rdbg render nm x = trace ('@':nm++": "++render x) x
+rdbg, rdbn :: (a -> String) -> Dbg a
+rdbg render nm x = trace ('@':nm++":  "++render x) x
 rdbn render nm x = trace ('@':nm++":\n"++render x) x
 \end{code}
 
-Finally, a version of \texttt{trace} for local customisations:
+Being able to show aggregates is helpful. Let's start with lists:
 \begin{code}
-trc :: Show a => [Char] -> a -> a
+type Dbgs a = String -> [a] -> [a]
+ldbg :: (a -> String) -> Dbgs a
+ldbg render nm xs = trace ('@':nm++":\n"++dbgs render xs) xs
+
+dbgs :: (a -> String) -> [a] -> String
+dbgs render xs = unlns' $ map (("  "++) . render) xs
+\end{code}
+
+Finally, a short-name version of \texttt{trace} for local customisations:
+\begin{code}
+trc :: Show a => Dbg a
 trc = trace 
 \end{code}
 
 What about?
 \begin{code}
 fdbg f nm x  =  trace ('@':nm++":\n"++show (f x)) x
+\end{code}
+
+
+We have a debugging version of `h{unlines'}` here,
+so that \h{Utilities} can use debug features.
+\begin{code}
+unlns' [] = ""
+unlns' [s] = s
+unlns' (s:ss) = s ++ '\n':unlns' ss
 \end{code}

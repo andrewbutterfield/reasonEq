@@ -17,7 +17,7 @@ Discharged Law S.C.: ?x$⊇x$
 ```
 **Here we are not being asked to pick an instantiation for `?x$`.**
 
-**Looks like the culprit may be `instantiateSC`.**
+**Looks like the culprit may now be `isFloatingVSC`.**
 
 
 Add in Hoare-Triple and WP theories together as `PrePost`, based on `Designs`.

@@ -332,9 +332,9 @@ First, try the structural match.
 -- tryLawByName asn@(tC,scC) lnm parts mcs
     tryMatch vts fits tP partsP replP scP
       = case
-                match vts fits tC partsP
+                match vts fits (trmdbg "tryLBN.tC" tC) $ trmdbg "tryLBN.partsP" partsP
         of
-          Yes bind  ->  tryInstantiateKnown vts tP partsP replP scP bind
+          Yes bind  ->  tryInstantiateKnown vts tP partsP replP scP $ bnddbg "tryLBN.bind" bind
           But msgs
            -> But ([ "try match failed"
                    , ""
@@ -358,9 +358,9 @@ First we see if any of these are ``known''.
 -- tryLawByName asn@(tC,scC) lnm parts mcs
     tryInstantiateKnown vts tP partsP replP scP bind
       = case
-                bindKnown vts bind tP
+                bindKnown vts bind $ trmdbg "tryLBN.tP" tP
         of
-          Yes kbind  ->  tryInstantiateFloating vts tP partsP replP scP kbind
+          Yes kbind  ->  tryInstantiateFloating vts tP partsP replP scP $ bnddbg "tryLBN.kbind" kbind
           But msgs
            -> But ([ "instTerm knowns failed"
                    , ""
@@ -387,7 +387,7 @@ and we generate names for these that make their floating nature visible.
         of
           Yes fbind  ->  tryInstantiate vts
                            (mkInsCtxt vts scC) 
-                           fbind tP partsP replP scP
+                           (bnddbg "tryLBN.fbind" fbind) tP partsP replP scP
           But msgs
            -> But ([ "instTerm floating failed"
                    , ""
@@ -412,7 +412,8 @@ Next, instantiate the law using the bindings.
       = case
                 instTerm insctxt fbind replP
         of
-          Yes tP'  ->  tryInstantiateSC vts insctxt fbind tP' partsP replP scP
+          Yes tP'  
+            ->  tryInstantiateSC vts insctxt fbind (trmdbg "tryLBN.tP'" tP') partsP replP scP
           But msgs
            -> But ([ "try law instantiation failed"
                    , ""
@@ -434,9 +435,9 @@ Next, instantiate the pattern side-condition using the bindings.
 -- tryLawByName asn@(tC,scC) lnm parts mcs
     tryInstantiateSC vts insctxt fbind tP' partsP replP scP
       = case
-                instantiateSC insctxt fbind scP
+                instantiateSC insctxt fbind $ scdbg "tryLBN.scP" scP
         of
-          Yes scP'  ->  trySCDischarge vts fbind tP' partsP replP scP'
+          Yes scP'  ->  trySCDischarge vts fbind tP' partsP replP $ scdbg "tryLBN.scP'" scP'
           But msgs
            -> But ([ "try s.c. instantiation failed"
                    , ""
@@ -461,7 +462,7 @@ Finally, try to discharge the instantiated side-condition:
       = case
                 scDischarge (getDynamicObservables vts) scC scP'
         of
-          Yes scP'' -> Yes (fbind,tP',scP',scP'')
+          Yes scP'' -> Yes (fbind,tP',scP',scdbg "tryLBN.scP''" scP'')
           But whynots -> But [ "try s.c. discharge failed"
                              , unlines' whynots
                              , ""
@@ -605,7 +606,7 @@ doPartialMatch :: Identifier -> [VarTable] -> TypCmp
 First, if we have $\equiv$ we call an $n$-way equivalence matcher:
 \begin{code}
 doPartialMatch i vts fits law asnC tsP
-  | i == theEqv  =   doEqvMatch vts fits law asnC tsP
+  | (iddbg "doPM.i" i) == theEqv  =   doEqvMatch vts fits law asnC tsP
 \end{code}
 
 If we have two sub-terms,

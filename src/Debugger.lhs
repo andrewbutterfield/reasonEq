@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Debugger
- ( dbg, pdbg, mdbg, rdbg, fdbg, trc ) 
+ ( dbg, pdbg, mdbg, rdbg, rdbn, fdbg, trc ) 
 where
 
 import Debug.Trace
@@ -42,11 +42,12 @@ mdbg nm mx
      But msgs  ->  fail $ pdbg nm (unlines msgs)
 \end{code}
 
-Now, a version of \h{pdbg} where a rendering function is supplied, 
-rather than using \h{show}:
+Now, versions of \h{pdbg} where a rendering function is supplied, 
+rather than using \h{show}, and where the newline is optional.
 \begin{code}
-rdbg :: Show a => (a -> String) -> [Char] -> a -> a
-rdbg render nm x = trace ('@':nm++":\n"++render x) x
+rdbg, rdbn :: Show a => (a -> String) -> [Char] -> a -> a
+rdbg render nm x = trace ('@':nm++": "++render x) x
+rdbn render nm x = trace ('@':nm++":\n"++render x) x
 \end{code}
 
 Finally, a version of \texttt{trace} for local customisations:

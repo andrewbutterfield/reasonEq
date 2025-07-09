@@ -694,7 +694,7 @@ doEqvMatch :: [VarTable] -> TypCmp -> Law -> TermSC
            -> Matches
 doEqvMatch vts fits law asnC [tP1,tP2]
 -- rule out matches against one-side of the reflexivity axiom
-  | tP1 == tP2  =  []
+  | (trmdbg "doEqvMatch.tP1" tP1) == (trmdbg "doEqvMatch.tP2" tP2)  =  []
 -- otherwise treat binary equivalence specially:
   | otherwise  =     basicMatch MatchEqvLHS vts fits law tP2 asnC tP1
                   ++ basicMatch MatchEqvRHS vts fits law tP1 asnC tP2

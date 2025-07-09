@@ -1,13 +1,13 @@
-\section{Debug Support}
+\chapter{Debug Support}
 \begin{verbatim}
-Copyright  Andrew Butterfield (c) 20232
+Copyright  Andrew Butterfield (c) 2023-25
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module Debugger
- ( dbg, pdbg, mdbg, fdbg, trc ) 
+ ( dbg, pdbg, mdbg, rdbg, fdbg, trc ) 
 where
 
 import Debug.Trace
@@ -40,6 +40,13 @@ mdbg nm mx
   = case mx of 
      Yes y     ->  return $ pdbg nm y
      But msgs  ->  fail $ pdbg nm (unlines msgs)
+\end{code}
+
+Now, a version of \h{pdbg} where a rendering function is supplied, 
+rather than using \h{show}:
+\begin{code}
+rdbg :: Show a => (a -> String) -> [Char] -> a -> a
+rdbg render nm x = trace ('@':nm++":\n"++render x) x
 \end{code}
 
 Finally, a version of \texttt{trace} for local customisations:

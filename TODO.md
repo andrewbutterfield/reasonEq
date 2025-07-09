@@ -2,22 +2,32 @@
 
 ## URGENT or NEXT
 
-Problem with `UClose`:  
+Next problem with `UClose`:   **Back to typing once more**
 
 ```
-[P ∧ Q]  x$⊇P, x$⊇Q
-proof: tm 1 []_def
-Match against '[]_def'[1] was successful
-Binding:  { B  ⟼ 𝔹 , P  ⟼ P ∧ Q, x$  ⟼ ⟨?x$⟩ }
-Instantiated Replacement: (∀ ?x$  • P ∧ Q)
-Law S.C.:  x$⊇P
-Instantiated Law S.C.: ?x$⊇x$
-Goal S.C.:  x$⊇P, x$⊇Q
-Discharged Law S.C.: ?x$⊇x$
-```
-**Here we are not being asked to pick an instantiation for `?x$`.**
+(∀ x$  • P) ∧ (∀ x$  • Q)
+ x$⊇P, x$⊇Q
+Focus = [1] :: 𝔹 
+proof: tm 2 []_def
+@tryLBN.partsP:  (∀ x$  • P)
+@tryLBN.tC:  (∀ x$  • P)
+Match against '[]_def'[2] failed!
+try match failed
 
-**Looks like the culprit may now be `isFloatingVSC`.**
+(∀ x$  • P) :: (∀ x$  • P)
+
+lnm[parts]=[]_def[2]
+tP=[P] ≡ (∀ x$  • P)
+partsP=(∀ x$  • P)
+replP=[P]
+tC=(∀ x$  • P)
+scC=x$⊇P, x$⊇Q
+---
+typeMatch: distinct types
+typC = TV (Id "A1" 0)
+typP = TG (Id "B" 0)
+```
+
 
 
 Add in Hoare-Triple and WP theories together as `PrePost`, based on `Designs`.

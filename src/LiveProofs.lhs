@@ -887,13 +887,13 @@ basicMatch :: MatchClass
 basicMatch mc vts fits 
            law@((n,asnP@(Assertion tP scP)),_) replP 
            (tC,scC) partsP
-  =  do bind <- match vts fits (trmdbg "bM.tC" tC) $ trmdbg "bM.partsP" partsP
+  =  do bind <- match vts fits (pdbg "bM.tC" tC) $ pdbg "bM.partsP" partsP
         kbind <- bindKnown vts (bnddbg "bM.bind" bind) $ trmdbg "bM.tP" tP
         fbind <- bindFloating vts (bnddbg "bM.kbind" kbind) tP -- was replP 
         let insctxt = mkInsCtxt vts scC
         tP' <- instTerm insctxt (bnddbg "bM.fbind" fbind) $ trmdbg "bM.replP" replP
         scP' <- instantiateSC insctxt fbind $ scdbg "bM.scP" scP
-        scP'' <- scDischarge (getDynamicObservables vts) scC $ scdbg "bM.scP'" scP'
+        scP'' <- scDischarge (getDynamicObservables vts) scC $ pdbg "bM.scP'" scP'
 
         if all isFloatingVSC (fst $ scdbg "bM.scP''" scP'')
           then return $ MT n (unwrapASN asnP) (chkPatn mc partsP)

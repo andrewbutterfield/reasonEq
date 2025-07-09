@@ -1,0 +1,33 @@
+@bM.partsP:  [P] ≡ (∀ x$  • P)
+@bM.tC:  [P ∧ Q]
+@doPM.i:  ≡
+@doPM.tsP:
+  [P]
+  (∀ x$  • P)
+@doEM.tP2:  (∀ x$  • P)
+@doEM.tP1:  [P]
+@doEM.MELHS:
+(("[]_def",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))),B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))],([VSC (GV (VR (Id "P" 0,VP,WS))) NA (The (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])) NA],fromList []))),Axiom)
+@bM.partsP:  [P]
+@bM.tC:  [P ∧ Q]
+@bM.tP:  [P] ≡ (∀ x$  • P)
+@bM.bind:  { B  ⟼ 𝔹 , P  ⟼ P ∧ Q }
+@bM.replP:  (∀ x$  • P)
+@bM.kbind:  { B  ⟼ 𝔹 , P  ⟼ P ∧ Q }
+@bM.fbind:  { B  ⟼ 𝔹 , P  ⟼ P ∧ Q, x$  ⟼ ⟨?x$⟩ }
+@bM.scP:  x$⊇P
+@bM.scP':  ?x$⊇x$
+@bM.scP'':  ?x$⊇x$
+@doEM.MERHS:
+(("[]_def",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))),B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))],([VSC (GV (VR (Id "P" 0,VP,WS))) NA (The (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])) NA],fromList []))),Axiom)
+@bM.partsP:  (∀ x$  • P)
+@bM.tC:  [P ∧ Q]
+@bM.tP:  [P] ≡ (∀ x$  • P)
+@bM.bind:  { B  ⟼ 𝔹 , P  ⟼ [P ∧ Q], x$  ⟼ {} }
+@bM.replP:  [P]
+@bM.kbind:  { B  ⟼ 𝔹 , P  ⟼ [P ∧ Q], x$  ⟼ {} }
+@bM.fbind:  { B  ⟼ 𝔹 , P  ⟼ [P ∧ Q], x$  ⟼ {} }
+@bM.scP:  x$⊇P
+@bM.scP':  ⊤
+@bM.scP'':  ⊤
+@bM.tP':  [[P ∧ Q]]

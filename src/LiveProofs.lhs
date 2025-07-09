@@ -606,7 +606,7 @@ doPartialMatch :: Identifier -> [VarTable] -> TypCmp
 First, if we have $\equiv$ we call an $n$-way equivalence matcher:
 \begin{code}
 doPartialMatch i vts fits law asnC tsP
-  | (iddbg "doPM.i" i) == theEqv  =   doEqvMatch vts fits law asnC tsP
+  | (iddbg "doPM.i" i) == theEqv  =   doEqvMatch vts fits law asnC $ trmsdbg "doPM.tsP" tsP
 \end{code}
 
 If we have two sub-terms,
@@ -695,10 +695,10 @@ doEqvMatch :: [VarTable] -> TypCmp -> Law -> TermSC
            -> Matches
 doEqvMatch vts fits law asnC [tP1,tP2]
 -- rule out matches against one-side of the reflexivity axiom
-  | (trmdbg "doEqvMatch.tP1" tP1) == (trmdbg "doEqvMatch.tP2" tP2)  =  []
+  | (trmdbg "doEM.tP1" tP1) == (trmdbg "doEM.tP2" tP2)  =  []
 -- otherwise treat binary equivalence specially:
-  | otherwise  =     basicMatch MatchEqvLHS vts fits law tP2 asnC tP1
-                  ++ basicMatch MatchEqvRHS vts fits law tP1 asnC tP2
+  | otherwise  =     basicMatch MatchEqvLHS vts fits (pdbn "doEM.MELHS" law) tP2 asnC tP1
+                  ++ basicMatch MatchEqvRHS vts fits (pdbn "doEM.MERHS" law) tP1 asnC tP2
 \end{code}
 Then invoke Cases C and B, in that order.
 \begin{code}
@@ -887,17 +887,17 @@ basicMatch :: MatchClass
 basicMatch mc vts fits 
            law@((n,asnP@(Assertion tP scP)),_) replP 
            (tC,scC) partsP
-  =  do bind <- match vts fits tC partsP
-        kbind <- bindKnown vts bind tP
-        fbind <- bindFloating vts kbind tP -- was replP 
+  =  do bind <- match vts fits (trmdbg "bM.tC" tC) $ trmdbg "bM.partsP" partsP
+        kbind <- bindKnown vts (bnddbg "bM.bind" bind) $ trmdbg "bM.tP" tP
+        fbind <- bindFloating vts (bnddbg "bM.kbind" kbind) tP -- was replP 
         let insctxt = mkInsCtxt vts scC
-        tP' <- instTerm insctxt fbind replP
-        scP' <- instantiateSC insctxt fbind scP
-        scP'' <- scDischarge (getDynamicObservables vts) scC scP'
+        tP' <- instTerm insctxt (bnddbg "bM.fbind" fbind) $ trmdbg "bM.replP" replP
+        scP' <- instantiateSC insctxt fbind $ scdbg "bM.scP" scP
+        scP'' <- scDischarge (getDynamicObservables vts) scC $ scdbg "bM.scP'" scP'
 
-        if all isFloatingVSC (fst scP'')
+        if all isFloatingVSC (fst $ scdbg "bM.scP''" scP'')
           then return $ MT n (unwrapASN asnP) (chkPatn mc partsP)
-                             fbind replP scC scP' tP'
+                             fbind replP scC scP' $ trmdbg "bM.tP'" tP'
           else fail "undischargeable s.c."
   where
     chkPatn MatchEqvLHS (Var _ v)

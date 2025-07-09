@@ -7,24 +7,24 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module TestRendering (
-   trId, trIdU
+   trId, trIdU, iddbg
  , trVar, trVarU, trLVar, trLVarU, trGVar, trGVarU
  , trVSet, trVSetU, trOVSet, trOVSetU
  , trVList, trVListU, trVariableSet, trVariableSetU
  , trMap
  , trType
  , trValue
- , trTerm, trTermU
+ , trTerm, trTermU, trmdbg, trmsdbg
  , trSub, trSubU
  , trTermZip, trTermZipU
- , trSideCond, trSideCondU
+ , trSideCond, trSideCondU, scdbg
  , trAsn, trAsnU, trNmdAsn, trNmdAsnU
  , truelawname, (-.-), nicelawname
  , trVarMatchRole, trVarMatchRoleU
  , trLstVarMatchRole, trLstVarMatchRoleU
  , trVarTable, trVarTableU
  , trLstLVarOrTerm, trLstLVarOrTermU
- , trBinding, trBindingU
+ , trBinding, trBindingU, bnddbg
  , seplist
  , seeV, seeLV, seeGV, seeVL, seeVS
  , seeType, seeVal, seeTerm, seeBind, seeVarTable
@@ -68,8 +68,10 @@ and hides it otherwise.
 one (\texttt{trXXX}) that hides the ``unique number'' component,
 and another (\texttt{trXXXU}) that displays it.
 
+NEW: lets provide debug support here too!
+
 \newpage
-\section{Variables}
+\section{Identifiers}
 
 \begin{code}
 trId :: Identifier -> String
@@ -80,6 +82,11 @@ trId (Identifier s u)
 trIdU :: Identifier -> String
 trIdU (Identifier s u)  =  widthHack 2 $ (nicesym s ++ _subNum u)
 
+iddbg =  rdbg trId
+\end{code}
+\section{Variables}
+
+\begin{code}
 -- can't handle nesting of bold, underline and colours right now...
 trVC :: VarClass -> String -> String
 trVC ObsV   =  id
@@ -261,6 +268,7 @@ trTerm = trterm trId
 trTermU :: Int -> Term -> String
 trTermU = trterm trIdU
 trterm :: (Identifier -> String) -> Int -> Term -> String
+trmdbg = rdbg (trTerm 0) ; trmsdbg = ldbg (trTerm 0)
 \end{code}
 
 \subsubsection{Atomic Terms}
@@ -551,6 +559,7 @@ trsidecond trid sc@(vscs,fvs)
   | otherwise       =  intcalNN ", " 
                          ( concat (map (trtvarsidecond trid) vscs)
                            ++ [trfresh trid fvs] )
+scdbg = rdbg trSideCond
 
 trtvarsidecond trid (VSC gv NA NA NA) = [_top]
 trtvarsidecond trid (VSC gv mvsD mvsC mvsCd)
@@ -667,6 +676,7 @@ trtlv trid = either (trlvar trid) (trterm trid 0)
 \begin{code}
 trBinding = trbinding trId
 trBindingU = trbinding trIdU
+bnddbg = rdbg trBinding
 
 trbinding trid = trbinding' trid . dumpBinding
 

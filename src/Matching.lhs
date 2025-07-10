@@ -425,9 +425,10 @@ $$
    \quad
    \texttt{termMatch Binding}
 $$
+Remember, the type of $\forall \lst x \bullet P$ is the type of $P$:
 \begin{code}
 termMatch' vts fits bind cbvs pbvs (Bnd ttC nC vsC tC) (Bnd ttP nP vsP tP)
-  | ttC `fits` ttP && nC == nP
+  | (termtype tC) `fits` (termtype tP) && nC == nP
     =  do let cbvs' = vsC `addBoundVarSet` cbvs
           let pbvs' = vsP `addBoundVarSet` pbvs
           bindT  <-  termMatch vts fits bind cbvs' pbvs' tC tP

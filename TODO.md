@@ -4,28 +4,14 @@
 
 Next problem with `UClose`:   **Back to typing once more**
 
+Why does this occur:
+
 ```
-(∀ x$  • P) ∧ (∀ x$  • Q)
- x$⊇P, x$⊇Q
-Focus = [1] :: 𝔹 
-proof: tm 2 []_def
-@tryLBN.partsP:  (∀ x$  • P)
-@tryLBN.tC:  (∀ x$  • P)
-Match against '[]_def'[2] failed!
-try match failed
-
-(∀ x$  • P) :: (∀ x$  • P)
-
-lnm[parts]=[]_def[2]
-tP=[P] ≡ (∀ x$  • P)
-partsP=(∀ x$  • P)
-replP=[P]
-tC=(∀ x$  • P)
-scC=x$⊇P, x$⊇Q
----
-typeMatch: distinct types
-typC = TV (Id "A1" 0)
-typP = TG (Id "B" 0)
+@tM.bind:  BD (fromList [(Id "A1" 0,TG (Id "B" 0))],fromList [],fromList [],fromList [((Id "x" 0,VO,[],[]),BS (fromList []))])
+...
+termMatch: structural mismatch.
+tC = B (TV (Id "A1" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))
+tP = V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))
 ```
 
 

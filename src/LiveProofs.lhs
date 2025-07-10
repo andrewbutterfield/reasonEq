@@ -697,8 +697,8 @@ doEqvMatch vts fits law asnC [tP1,tP2]
 -- rule out matches against one-side of the reflexivity axiom
   | (trmdbg "doEM.tP1" tP1) == (trmdbg "doEM.tP2" tP2)  =  []
 -- otherwise treat binary equivalence specially:
-  | otherwise  =     basicMatch MatchEqvLHS vts fits (pdbn "doEM.MELHS" law) tP2 asnC tP1
-                  ++ basicMatch MatchEqvRHS vts fits (pdbn "doEM.MERHS" law) tP1 asnC tP2
+  | otherwise  =     basicMatch MatchEqvLHS vts fits (lawdbg "doEM.MELHS" law) tP2 asnC tP1
+                  ++ basicMatch MatchEqvRHS vts fits (lawdbg "doEM.MERHS" law) tP1 asnC tP2
 \end{code}
 Then invoke Cases C and B, in that order.
 \begin{code}
@@ -887,13 +887,13 @@ basicMatch :: MatchClass
 basicMatch mc vts fits 
            law@((n,asnP@(Assertion tP scP)),_) replP 
            (tC,scC) partsP
-  =  do bind <- match vts fits (pdbg "bM.tC" tC) $ pdbg "bM.partsP" partsP
+  =  do bind <- match vts fits (trmdbg "bM.tC" tC) $ trmdbg "bM.partsP" partsP
         kbind <- bindKnown vts (bnddbg "bM.bind" bind) $ trmdbg "bM.tP" tP
         fbind <- bindFloating vts (bnddbg "bM.kbind" kbind) tP -- was replP 
         let insctxt = mkInsCtxt vts scC
         tP' <- instTerm insctxt (bnddbg "bM.fbind" fbind) $ trmdbg "bM.replP" replP
         scP' <- instantiateSC insctxt fbind $ scdbg "bM.scP" scP
-        scP'' <- scDischarge (getDynamicObservables vts) scC $ pdbg "bM.scP'" scP'
+        scP'' <- scDischarge (getDynamicObservables vts) scC $ scdbg "bM.scP'" scP'
 
         if all isFloatingVSC (fst $ scdbg "bM.scP''" scP'')
           then return $ MT n (unwrapASN asnP) (chkPatn mc partsP)

@@ -601,7 +601,7 @@ matchFocus ranking liveProof
         ctxts       =  mtchCtxts liveProof
         vts         =  concat $ map thd3 ctxts
     in do let (asn',tvmap) = mkTypedAsn vts goalt scC 
-          let fits  =  cSubType tvmap
+          let fits  =  cSubType $ cmapdbg "mF.tvmap" tvmap
           let rankedM = ranking ctxts $ matchInContexts ctxts fits asn'
           return $ matches_ rankedM liveProof
 \end{code}
@@ -616,7 +616,7 @@ matchFocusAgainst lawnm liveProof
         ctxts       =  mtchCtxts liveProof
         vts         =  concat $ map thd3 ctxts
     in do let (asn',tvmap) = mkTypedAsn vts goalt scC
-          let fits  =  cSubType tvmap
+          let fits  =  cSubType ((cmapdbg "mFA.tvmap") $! tvmap)
           case matchLawByName asn' lawnm ctxts fits of
             Yes []    -> fail ("No matches against focus for '"++lawnm++"'")
             Yes mtchs -> return $ matches_ mtchs liveProof
@@ -634,7 +634,7 @@ tryFocusAgainst lawnm parts liveProof
         ctxts       =  mtchCtxts liveProof
         vts         =  concat $ map thd3 ctxts
     in do let (asn',tvmap) = mkTypedAsn vts goalt scC
-          let fits  =  cSubType tvmap
+          let fits  =  cSubType $ cmapdbg "tFA.tvmap" tvmap
           tryLawByName asn' lawnm parts ctxts fits
 \end{code}
 

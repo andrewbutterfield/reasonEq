@@ -12,7 +12,8 @@ module TestRendering (
  , trVSet, trVSetU, trOVSet, trOVSetU
  , trVList, trVListU, trVariableSet, trVariableSetU
  , trMap
- , trType
+ , trType, typdbg
+ , trCMap, cmapdbg
  , trValue
  , trTerm, trTermU, trmdbg, trmsdbg
  , trSub, trSubU
@@ -45,6 +46,7 @@ import UnivSets
 import LexBase
 import Variables
 import Types
+import Typing
 import AST
 import SideCond
 import Assertions
@@ -128,7 +130,9 @@ trgvar trid (StdVar v)   =  trvar trid v
 trgvar trid (LstVar lv)  =  trlvar trid lv
 \end{code}
 
-\section{Types}
+\section{Typing Matters}
+
+\subsection{Types}
 
 \begin{code}
 trType :: Type -> String
@@ -160,6 +164,8 @@ trType (GivenType i)      =  trId i
 
 trType BottomType = spacep _bot
 
+typdbg = rdbg trType
+
 trTypes = seplist " " trType
 
 trFun = _fun ++ " "
@@ -167,6 +173,16 @@ trFun = _fun ++ " "
 seplist :: [a] -> (b -> [a]) -> [b] -> [a]
 seplist sep tr = intercalate sep . map tr
 \end{code}
+
+\subsection{Typing}
+
+\begin{code}
+-- CanonicalMap = Map TypeVariable TypeVariable
+trCMap = trMap trId trId 
+
+cmapdbg = rdbg trCMap
+\end{code}
+
 
 \section{Terms}
 
@@ -599,7 +615,11 @@ trNmdAsn = trnmdasn trId
 trNmdAsnU = trnmdasn trIdU
 
 trnmdasn trid (lawnm,asn) =  truelawname lawnm ++ ": " ++ trasn trid asn
+\end{code}
 
+\section{Laws}
+
+\begin{code}
 truelawname, nicelawname :: String -> String
 truelawname  =  id
 nicelawname  =  widthHack 2 . foldl1 (-.-) . map nicesym . splitOn nicesplit

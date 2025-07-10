@@ -160,6 +160,9 @@ typeMatch (fits,vfits) bind typC@(TypeVar iC) (TypeVar iP)
   | iC `vfits` iP  =  bindTypeVarToType fits iP typC bind
 typeMatch (fits,_) bind typC (TypeVar iP) 
                    =  bindTypeVarToType fits iP typC bind
+-- !! will this work?
+typeMatch (fits,_) bind (TypeVar iC) typP 
+                   =  bindTypeVarToType fits iC typP bind
 
 typeMatch (fits,vfits) bind typC@(TypeCons iC tsC) (TypeCons iP tsP)
   | iC `vfits` iP = do
@@ -212,8 +215,8 @@ Note that predicate-type $t$ is the same as expression-type $t\fun\Bool$.
 termMatch vts fits bind cbvs pbvs tC tP
   = let typC = termtype tC ; typP = termtype tP
     in do
-      bindT <- typeMatch (fits,vfits) bind typC typP
-      termMatch' vts fits bindT cbvs pbvs tC tP
+      bindT <- typeMatch (fits,vfits) (pdbg "tM.bind" bind) (pdbg "tM.typC" typC) $ pdbg "tM.typP" typP
+      termMatch' vts fits (pdbg "tM.bindT" bindT) cbvs pbvs tC tP
   where vfits iC iP = fits (TypeVar iC) (TypeVar iP)
 \end{code} 
 
@@ -245,15 +248,33 @@ termMatch' _ _ bind _ _ kC@(Val _ _) kP@(Val _ _)
 
 \subsection{Variable Term-Pattern (\texttt{Var})}
 
+Here we have 
 Variable matching is complicated, so we farm it out,
 as long as \texttt{Type}s match.
+Here we have an issue if \h{tC} is a \h{Bnd},
+in which case we expect the type of its \emph{body} 
+to fit with the type of \h{vP}.
+
+$$
+\inferrule
+   {type(t_C) \cong type(v_P)
+    \and
+    \beta \vdash \bb{n_C}{vs_C}{t_C} :: v_P \leadsto \beta'}
+   {\beta \vdash \bb{n_C}{vs_C}{t_C}  :: {\vv v}_P \leadsto \beta'}
+   \quad
+   \texttt{termMatch Bind vs Var}
+$$
+\begin{code}
+termMatch' vts fits bind cbvs pbvs tC@(Bnd ttC nC vsC tbodyC) (Var ttP vP)
+  | termtype tbodyC `fits` ttP  =  tvMatch vts fits bind cbvs pbvs tC ttP vP
+\end{code}
 
 $$
 \inferrule
    {\beta \vdash t_C :: v_P \leadsto \beta'}
    {\beta \vdash t_C :: {\vv v}_P \leadsto \beta'}
    \quad
-   \texttt{termMatch Var}
+   \texttt{termMatch non-Bind vs Var}
 $$
 
 \begin{code}
@@ -294,7 +315,7 @@ Constructor patterns with variable-only sub-terms
 can also match against Iterations.
 Here we have an issue where we have nothing in the constructor
 that matches the outer name of the Iterator, 
-and the replacement term has an occurence of the iterator.
+and the replacement term has an occurrence of the iterator.
 We use the special (meta-)variable \itop\ to record this.
 
 Single case:
@@ -771,7 +792,7 @@ Any other situation results in failure:
 \begin{code}
 termMatch' _ _ _ _ _ tC tP
  = fail $ unlines
-    [ "termMatch: structural mismatch."
+    [ "termMatch': structural mismatch."
     , "tC = " ++ show tC
     , "tP = " ++ show tP
     ]
@@ -821,11 +842,18 @@ tsMatch' _ _ _ _ _ _ _  =  error "tsMatch': unexpected mismatch case."
 \newpage
 \section{Term-Variable Matching}
 
-We assume here that candidate term and pattern variable
-have the same \texttt{Type}.
-\textbf{NOT TRUE! The candidate type is a subtype of the pattern type.}
-\begin{code}
+Here we are matching a candidate term \m{t_C} against a variable pattern \m{v_P}.
+$$
+\inferrule
+   {  conditions }
+   { \Gamma 
+     \vdash t_C :: v_P
+    \leadsto
+    \beta \uplus \{ v_P \mapsto t_C \}
+  }  
+$$
 
+\begin{code}
 tvMatch :: MonadFail m
        => [VarTable] -> TypCmp -> Binding -> CBVS -> PBVS
        -> Candidate -> Type -> Variable -> m Binding
@@ -838,13 +866,15 @@ tvMatch vts fits bind cbvs pbvs (Var ttC vC) ttP vP
   = vMatch vts fits bind cbvs pbvs ttC vC ttP vP
 \end{code}
 
+
+
 Otherwise we check if the pattern is
 bound, known, or arbitrary,
 and act accordingly.
 \begin{code}
 tvMatch vts fits bind cbvs pvbs tC ttP vP@(Vbl _ _ vt)
- | vt == Textual              =  fail "tvMatch: var-variable cannot match term."
- | StdVar vP `S.member` pvbs
+ | (pdbg "tvM.vt" vt) == Textual  =  fail "tvMatch: var-variable cannot match term."
+ | StdVar vP `S.member` (pdbg "tvM.pvbs" pvbs)
      =  fail $ unlines
           [ "tvMatch: bound pattern cannot match term."
           , "pvbs = " ++ show pvbs

@@ -17,8 +17,9 @@ module Laws
  , isAxiom, isProven, isAssumed
  , labelAsAxiom, labelAsProof, labelAsAssumed
  , showLogic, showKnowns, showNmdAssns
- , showLaw, showLaws, showConj, showConjs
+ , showProv, showLaw, showLaws, showConj, showConjs
  , showLeftRight, showGroupSpec
+ , trLaw, trLawU, lawdbg 
  ) where
 
 import Utilities
@@ -335,6 +336,17 @@ showLaw dm w (nasn,prov)
 showProv Axiom           =  _top
 showProv (Proven pname)  =  _qed
 showProv Assumed         =  "!"
+
+
+-- Note: Laws imports TestRendering
+
+trLaw = trlaw trId
+trLawU = trlaw trIdU
+
+trlaw trid (nasn,prov)  = showProv prov ++ " "++trNmdAsn nasn
+
+lawdbg = rdbg trLaw
+
 
 showConjs _ []    =  "NONE."
 showConjs dm cjs  =  numberList (showConj dm $ nameWidth $ cjs) cjs

@@ -6,13 +6,13 @@ END THEORIES
 CURRTHEORY = UClose
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("UClose","land_[]_distr")
+("UClose","univ_forall_closed")
 BEGIN LIVE-PROOF
 TH-NAME: UClose
-CJ-NAME: land_[]_distr
-CONJ = ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))),X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)))],X (Id "[_]" 0) (C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))])],([VSC (GV (VR (Id "P" 0,VP,WS))) NA (The (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])) NA,VSC (GV (VR (Id "Q" 0,VP,WS))) NA (The (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])) NA],fromList []))
-SIDE = ([VSC (GV (VR (Id "P" 0,VP,WS))) NA (The (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])) NA,VSC (GV (VR (Id "Q" 0,VP,WS))) NA (The (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])) NA],fromList [])
-STRAT red-R2L
+CJ-NAME: univ_forall_closed
+CONJ = ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))),X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))],([],fromList []))
+SIDE = ([],fromList [])
+STRAT red-L2R
 BEGIN PRFSET
 MM = 30
 MS = 6
@@ -23,16 +23,15 @@ TS = False
 FV = True
 END PRFSET
 BEGIN SEQZIP
-TERMZIP = (B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))),[Cons' (TG (Id "B" 0)) True (Id "and" 0) [B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))] []])
+TERMZIP = (B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))),[])
 BEGIN SEQUENT'
-SIDECOND = ([VSC (GV (VR (Id "P" 0,VP,WS))) NA (The (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])) NA,VSC (GV (VR (Id "Q" 0,VP,WS))) NA (The (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])) NA],fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.land_[]_distr", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = C (TG (Id "B" 0)) True (Id "and" 0) [X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))),X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)))]}
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.univ_forall_closed", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))}
 END SEQUENT'
 END SEQZIP
-FPATH: [2]
+FPATH: []
 BEGIN LIST STEPS
-(UseLaw (ByMatch MEL) "forall_and_distr" (BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS))),((Id "Q" 0,VP),BV (VR (Id "Q" 0,VP,WS))),((Id "and" 0,VO),BV (VR (Id "and" 0,VO,WS)))],fromList [],fromList [((Id "x" 0,VO,[],[]),BS (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]))])) [],ASN (B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]),([VSC (GV (VR (Id "P" 0,VP,WS))) NA (The (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])) NA,VSC (GV (VR (Id "Q" 0,VP,WS))) NA (The (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])) NA],fromList [])))
-(UseLaw (ByMatch MEL) "[]_def" (BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BT (C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]))],fromList [],fromList [((Id "x" 0,VO,[],[]),BL [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])])) [],ASN (X (Id "[_]" 0) (C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]),([VSC (GV (VR (Id "P" 0,VP,WS))) NA (The (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])) NA,VSC (GV (VR (Id "Q" 0,VP,WS))) NA (The (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])) NA],fromList [])))
+(UseLaw (ByMatch MEL) "[]_def" (BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS)))],fromList [],fromList [((Id "x" 0,VO,[],[]),BL [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])])) [1],ASN (B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))),([],fromList [])))
 END LIST STEPS
 END LIVE-PROOF
 END MAP LIVE-PROOFS

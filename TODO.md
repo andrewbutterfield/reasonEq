@@ -2,19 +2,7 @@
 
 ## URGENT or NEXT
 
-Next problem with `UClose`:   **Back to typing once more**
-
-The binding is bogus: `{ A1  ⟼ 𝔹 , P  ⟼ (∀ x$  • Q), x$  ⟼ {} }`
-
-It should be `{ A1  ⟼ 𝔹 , P  ⟼ Q, x$  ⟼ {x$} }`
-
-```
-@tryLBN.tP:  [P] ≡ (∀ x$  • P)
-@tryLBN.bind:  { A1  ⟼ 𝔹 , P  ⟼ (∀ x$  • Q), x$  ⟼ {} }
-@tryLBN.kbind:  { A1  ⟼ 𝔹 , P  ⟼ (∀ x$  • Q), x$  ⟼ {} }
-@tryLBN.fbind:  { A1  ⟼ 𝔹 , P  ⟼ (∀ x$  • Q), x$  ⟼ {} }
-```
-
+We have nothing that matches `(∀ x$  • (∀ x$  • P))` !!
 
 Add in Hoare-Triple and WP theories together as `PrePost`, based on `Designs`.
 

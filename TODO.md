@@ -4,16 +4,16 @@
 
 Next problem with `UClose`:   **Back to typing once more**
 
-Why does this occur:
+The binding is bogus: `{ A1  ⟼ 𝔹 , P  ⟼ (∀ x$  • Q), x$  ⟼ {} }`
+
+It should be `{ A1  ⟼ 𝔹 , P  ⟼ Q, x$  ⟼ {x$} }`
 
 ```
-@tM.bind:  BD (fromList [(Id "A1" 0,TG (Id "B" 0))],fromList [],fromList [],fromList [((Id "x" 0,VO,[],[]),BS (fromList []))])
-...
-termMatch: structural mismatch.
-tC = B (TV (Id "A1" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))
-tP = V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))
+@tryLBN.tP:  [P] ≡ (∀ x$  • P)
+@tryLBN.bind:  { A1  ⟼ 𝔹 , P  ⟼ (∀ x$  • Q), x$  ⟼ {} }
+@tryLBN.kbind:  { A1  ⟼ 𝔹 , P  ⟼ (∀ x$  • Q), x$  ⟼ {} }
+@tryLBN.fbind:  { A1  ⟼ 𝔹 , P  ⟼ (∀ x$  • Q), x$  ⟼ {} }
 ```
-
 
 
 Add in Hoare-Triple and WP theories together as `PrePost`, based on `Designs`.

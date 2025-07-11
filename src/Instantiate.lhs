@@ -537,7 +537,7 @@ instLGVar :: MonadFail m => InsContext -> Binding -> GenVar -> m VarList
 instLGVar insctxt binding (StdVar v)
   =  do fvs' <- instStdVar insctxt binding v
         v' <- getTheVar fvs'
-        return [StdVar v]
+        return [StdVar v']
 instLGVar insctxt binding gv@(LstVar lv)
   = case lookupLstBind binding lv of
       Nothing              ->  return [gv]  -- maps to self !

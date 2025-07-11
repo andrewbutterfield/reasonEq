@@ -49,12 +49,16 @@ If $\beta$ is a binding, and $t$ is a term,
 we use $\beta.t$ to denote the result of this instantiation.
 Given a variable $v$ we use $\beta(v)$ to denote a binding lookup.
 
+For terms this is quite straightforward noting that both the cons and susbtitution have special cases ($\itop$,$(:=)$):
 \begin{eqnarray*}
    \beta.\kk k &=& \kk k
 \\ \beta.(\vv v) &=& \beta(v)
+\\ \beta.(\cc n {vs}) &=& \ii {\beta(\itop)} n {(\beta^*.vs)}
+   \quad \text{ provided }  \itop \in \beta \land \forall_i \cdot \beta.v_i = \lst x_i
 \\ \beta.(\cc n {ts}) &=& \cc n {(\beta^*.ts)}
 \\ \beta.(\bb n {v^+} t) &=& \bb n {\beta^*.v^+} {\beta.t}
 \\ \beta.(\ll n {v^+} t) &=& \ll n {\beta^*.v^+} {\beta.t}
+\\ \beta.(\ss {(:=)} {v^n} {t^n}) &=& \ss {(:=)} {\beta^*(v^n)} {\beta^*.t^n}
 \\ \beta.(\ss t {v^n} {t^n}) &=& \ss {\beta.t} {\beta^*(v^n)} {\beta^*.t^n}
 \\ \beta.(\xx n t) &=& \xx {n} {\beta.t}
 \\ \beta.(\tt \tau v) &=& \tt \tau v
@@ -180,7 +184,7 @@ and there is a binding from \itop\ to a variable.
 This results in a one-place iteration:
 \begin{eqnarray*}
    \beta.(\cc n {vs}) &=& \ii {\beta(\itop)} n {(\beta^*.vs)}
-   \quad \text{ provided }  \itop \in \beta \land \forall_i \cdot \beta.v_i = \lst x_i, 
+   \quad \text{ provided }  \itop \in \beta \land \forall_i \cdot \beta.v_i = \lst x_i 
 \end{eqnarray*}
 
 \begin{code}
@@ -532,6 +536,7 @@ instVarList insctxt binding vl
   = fmap concat $ sequence $ map (instLGVar insctxt binding) vl
 \end{code}
 We do not expect these to map to terms.
+\textbf{Why not?}
 \begin{code}
 instLGVar :: MonadFail m => InsContext -> Binding -> GenVar -> m VarList
 instLGVar insctxt binding (StdVar v)
@@ -549,21 +554,35 @@ instLGVar insctxt binding gv@(LstVar lv)
 \section{Side-Condition Instantiation (Total)}
 
 Doing it again, with side-conditions.
-Basically we drill down to the atomic side-conditions,
+(Basically) we drill down to the atomic side-conditions,
 instantiate and simplify those,
 and merge together.
+\textbf{There's nothing basic here.}
 
 \begin{code}
 instantiateSC :: MonadFail m 
               => InsContext -> Binding -> SideCond -> m SideCond
 \end{code}
-side-conditions:
+Side-conditions (semantically):
 \begin{eqnarray*}
    \beta.(D \disj  T) &=& \beta.D \disj \fv(\beta(T))
 \\ \beta.(C \supseteq T)  &=& \beta.C \supseteq \fv(\beta(T))
 \\ \beta(\ispre \supseteq T) &=& \ispre \supseteq \fv(\beta(T))
 \\ \beta(\fresh F) &=& \fresh \beta(F)
 \end{eqnarray*}
+Remember, $T$ is a variable denoting a term,
+and in general $\beta(T)$ can be a term, or a general variable.
+
+In particular, an atomic side-condition of one kind (disjoint/superset)
+can be instantiated into a complicated condition involving many variables.
+
+Remember that a variable side-condition $(V,D,C,Cd)$ 
+means that $D$, $C$, $Cd$ are mutually disjoint,
+and the interpetation is:
+$$
+  V \notin D \land V \in (C \cup Cd)
+$$
+Note that if $V$ is dynamic then $V \in Cd$, otherwise $V \in C$.
 \begin{code}
 instantiateSC insctxt bind (vscs,freshvs)
   = do vscss' <- sequence $ map (instantiateVSC insctxt bind) $ vscdbg "iSC.vscs" vscs

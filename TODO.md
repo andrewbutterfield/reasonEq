@@ -4,6 +4,10 @@
 
 We have nothing that matches `(∀ x$  • (∀ x$  • P))` !!
 
+However, `forall_remove` should match it,
+with an instantiated side condition that is `x$ ⋔ (∀ x$  • P)`.
+Right now it seems that s.c. instantiation is not quite right.
+
 Add in Hoare-Triple and WP theories together as `PrePost`, based on `Designs`.
 
 

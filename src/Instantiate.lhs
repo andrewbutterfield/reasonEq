@@ -823,6 +823,30 @@ and then all we to do us use the fact that $A \supseteq B$ and $A \supseteq C$
 means that $A \supseteq B \cup C$.
  
 
+Consider also this example:
+\begin{description}
+\item[Law] $(\forall \lst x \bullet P) \equiv P, \qquad \lst x \disj P$
+\item[Goal] $\forall \lst x \bullet \forall \lst y \bullet P, \qquad \lst y \supseteq \lst x$.
+\item[Repl] $\forall \lst y \bullet P$
+\item[Bind] 
+   $\beta
+    =
+    \setof{
+      P \mapsto (\forall\lst y \bullet P)
+    , \lst x \mapsto \seqof{\lst x}
+    }
+   $
+\end{description}
+We have:
+\begin{eqnarray*}
+\lefteqn{\beta(\lst x \disj P)}
+\\ &=& \beta(\lst x) \disj \beta(P)
+\\ &=& \lst x \disj \fv(\forall \lst y \bullet P )
+\\ &=& \lst x \disj (\fv(P) \setminus \lst y)
+\\ &\impliedby& \lst y \supseteq \lst x
+\end{eqnarray*}
+This really belongs the \h{Forall} theory, and it's dual in \h{Exists}.
+
 
 \newpage
 \subsection{Instantiating TVCS}

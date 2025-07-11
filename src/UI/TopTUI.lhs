@@ -585,23 +585,27 @@ cmdNewProof
     , doNewProof )
 
 doNewProof _ reqs = do
+  putStrLn "Starting new proof:"
   let currTh = currTheory reqs
   let thys = theories reqs
   let conjs = fromJust $ getTheoryConjectures currTh thys
   mconj <- selectByNumber fst conjs 
   case mconj of 
-    Nothing -> return reqs
-    Just nconj -> 
+    But msgs -> errorPause msgs reqs
+    Yes nconj -> do
       case newProof1 nconj reqs of
-        Nothing -> return reqs
-        Just (nconj,strats) -> do 
+        But msgs -> errorPause msgs reqs
+        Yes (nconj,strats) -> do 
+          putStrLn "got strategy-list"
           mstrat <- selectByNumber presentSeq strats
           case mstrat of
-            Nothing -> return reqs
-            Just seqnt -> 
+            But msgs -> errorPause msgs reqs
+            Yes seqnt -> do
+              putStrLn "got sequent"
               case newProof2 nconj seqnt reqs of
-                Nothing -> return reqs
-                Just liveProof -> proofREPL reqs liveProof
+                But msgs -> errorPause msgs reqs
+                Yes liveProof -> proofREPL reqs liveProof
+-- !!! there must be a way to listify the above!
 \end{code}
 
 

@@ -7,11 +7,13 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 module UI.TSupport
   ( selectByNumber
+  , errorPause
   ) 
 where
 import System.IO
 
 import Utilities
+import UI.REPL (userPause)
 
 import Debugger
 \end{code}
@@ -21,6 +23,16 @@ import Debugger
 
 This module provides useful functions to support 
 the Terminal User Interfaces (TUI).
+
+\section{Error Reporting}
+
+Sometimes we want to show an error before refreshing things:
+\begin{code}
+errorPause msgs state = do
+  putStrLn $ unlines' msgs
+  userPause
+  return state
+\end{code}
 
 \section{Selecting from a List}
 

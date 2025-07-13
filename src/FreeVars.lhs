@@ -124,7 +124,7 @@ as its possible removal by $B_i$ has no effect
 on its presence as a free variable.
 So we have the following structure: $(F,\setof{\dots,(e_i,B_i),\dots})$
 where all $e_i$ are distinct non.-obs. standard variables,
-and for all $i$, we have $F \disj \setof{e_i}\cup B_i$.
+and for all $i$, we have $F \disj (\setof{e_i}\cup B_i)$.
 
 So the picture we now have is:
 \begin{eqnarray*}
@@ -214,6 +214,7 @@ We then see the following calculation:
 \end{eqnarray*}
 
 
+\newpage
 \section{Free Variable Definitions}
 
 
@@ -520,8 +521,6 @@ We expect the following to hold:
 $$
 \fvsc(R[O_m/O']) =  (\setof{O_m},\setof{(R,\setof{O'})}) 
 $$
-Right now we have $\fvsc(R[O_m/O']) = R$!
-
 We can imagine the following process to compute $\fvsc(P[r^n/t^n])$ :
 \begin{itemize}
    \item Let $fvp = \fvsc(P)$.
@@ -570,18 +569,11 @@ substRelFree sc tfv (Substn ts lvs) = (tgtvs,rplvs)
            `mrgFreeVars`
            ( injVarSet $ S.map (LstVar .snd) lvs' )
 \end{code}
-\begin{verbatim}
-freeVars sc (Sub tk tm s) =  mrgFreeVars (subVarSet tfv tgtvs) rplvs
-   where
-     tfv            =  freeVars sc tm
-     (tgtvs,rplvs)  =  substRelFree sc tfv s
-\end{verbatim}
-
 A target/replacement pair is ``applicable'' if the target variable
 is in the free variables of the term being substituted.
 \begin{code}
 applicable :: (tgt -> GenVar) -> FreeVars -> (tgt,rpl) -> Bool
-applicable wrap tfv (t,_) = wrap t `inFreeVars` tfv
+applicable toGV tfv (t,_) = toGV t `inFreeVars` tfv
 \end{code}
 
 \newpage
@@ -634,6 +626,7 @@ zeroGVarIdNumber :: GenVar -> GenVar
 zeroGVarIdNumber (StdVar v) = StdVar $ zeroVarIdNumber v
 zeroGVarIdNumber (LstVar lv) = LstVar $ zeroLVarIdNumber lv
 
+zeroLVarIdNumber :: ListVar -> ListVar
 zeroLVarIdNumber (LVbl v is js) = LVbl (zeroVarIdNumber v) is js
 
 zeroVarIdNumber :: Variable -> Variable
@@ -659,17 +652,12 @@ So we have to hardwire the basic simplification laws:
    (\bb n {V_i }{\bb n {V_j} P})
    &=& (\bb n {(V_i \cup V_j)}  P)
 \\ (\bb i {V_i} {\bb j {V_j} P)}
-   &=& (\bb i {(V_i\setminus V_j)} {\bb j {V_j}  P})
-\\ &=& \bb j {V_j}  P, \qquad \IF ~V_i \subseteq V_j
+   &=& \bb j {V_j}  P, \qquad\qquad\qquad\qquad\quad \IF ~V_i \subseteq V_j~,
+\\ &=& (\bb i {(V_i\setminus V_j)} {\bb j {V_j}  P}), \qquad \otherwise.
 \\ (\ll n {\sigma_i } {\ll n {\sigma_j \cat \sigma_k} P})
    &=& (\ll n {(\sigma_i \cat \sigma_j)}  {\ll n {\sigma_k} P}),
        \qquad \elems \sigma_i \disj \elems \sigma_j
 \end{eqnarray*}
-
-\textbf{This code may be rendered obsolete by the addition of unique numbers
-to Identifiers along with quantifier normalisation
-}
-
 Function \texttt{nestSimplify} returns a simplified term
 if one of the laws above applies, otherwise it fails.
 \begin{code}
@@ -677,8 +665,8 @@ nestSimplify :: MonadFail m => Term -> m Term
 
 nestSimplify (Bnd tk1 n1 vs1 t1@(Bnd tk2 n2 vs2 t2))
  | tk1 /= tk2              =  fail ("nestSimplify: mixed bind term-kinds")
- | n1 /= n2                =  bnd tk1 n1 (vs1 S.\\ vs2) t2
  | vs1 `S.isSubsetOf` vs2  =  return t1
+ | n1 /= n2                =  bnd tk1 n1 (vs1 S.\\ vs2) t2
  | otherwise               =  bnd tk1 n1 (vs1 `S.union` vs2) t2
 
 nestSimplify (Lam tk1 n1 vl1 (Lam tk2 n2 vl2 t2))
@@ -689,12 +677,6 @@ nestSimplify (Lam tk1 n1 vl1 (Lam tk2 n2 vl2 t2))
 nestSimplify trm = fail "nestSimplify: not nested similar quantifiers"
 \end{code}
 
-\textbf{NOT VERY SATISFACTORY IN THE \texttt{[]\_idem} PROOF}
-
-\textsf{
-We need something that simplifies $\bb i {V_i }{\bb j {V_j} P}$
-to $\bb j {V_j} P$, because $V_j \supseteq \fvsc(P)$.
-}
 
 \newpage
 

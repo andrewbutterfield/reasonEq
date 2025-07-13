@@ -898,8 +898,8 @@ instantiateVSC insctxt bind vsc@(VSC gV mvsD mvsC mvsCd)
        fmvsCd  <-  instNVarSet insctxt bind $ pdbg "iVSC.mvsCd" mvsCd
        if null $ pdbg "iVSC.diffsT" diffsT
          then do vscss <- mapM (instVSC insctxt fmvsD fmvsC fmvsCd)
-                               (S.toList fvsT)
-                 return $ concat vscss
+                               (S.toList $ pdbg "iVSC.fvsT" fvsT)
+                 return $ pdbg "iVSC.vscss.cat" $ concat $ vscss
          else fail "instantiateVSC: explicit diffs in var-set not handled."
 \end{code}
 

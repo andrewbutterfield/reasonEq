@@ -1,12 +1,18 @@
-@bM.partsP:  B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))
+@bM.partsP:  
+B (TG (Id "B" 0)) (Id "forall" 0) 
+  (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) 
+  (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))
+
 @bM.tC:
-B
-( TV
-  (Id "A1" 0) )
-(Id "forall" 0)
+B (TV (Id "A1" 0) ) (Id "forall" 0)
 ( { GL (LV (VR (Id "x" 0, VO, WS), [], [])) } )
 (V (TG (Id "B" 0)) (VR (Id "P" 0, VP, WS)))
-@bM.partsP:  B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))
+
+
+@
+bM.partsP:  
+B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))
+
 @bM.tC:
 B
 ( TV

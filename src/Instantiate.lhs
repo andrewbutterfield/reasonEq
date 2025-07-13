@@ -155,7 +155,7 @@ instTerm _ binding (Val typ k) = do
 Here we do not expect any bindings to list-variables.
 
 \begin{code}
-instTerm insctxt binding vt@(Var tk v) = do
+instTerm ictx binding vt@(Var tk v) = do
   tk' <- instType binding tk
   case lookupVarBind binding v of
     Just (BindVar v')   ->  var tk' v'
@@ -188,11 +188,11 @@ This results in a one-place iteration:
 \end{eqnarray*}
 
 \begin{code}
-instTerm insctxt binding (Cons tk sb n ts) = do
+instTerm ictx binding (Cons tk sb n ts) = do
   tk' <- instType binding tk
   if all isVar ts && all isBLVar bts && have_itop
     then return $ (Iter tk' sb (jId "and") sb n) $ map theBLVar bts
-    else fmap (Cons tk' sb n) $ sequence $ map (instTerm insctxt binding) ts
+    else fmap (Cons tk' sb n) $ sequence $ map (instTerm ictx binding) ts
   where 
     bts = catMaybes $ map (lookupVarBind binding . theVar) ts
     isBLVar (BindLVar _) = True
@@ -213,16 +213,16 @@ instTerm insctxt binding (Cons tk sb n ts) = do
 \\ \beta.(\xx n t)       &=& \xx {n} {\beta.t}
 \end{eqnarray*}
 \begin{code}
-instTerm insctxt binding (Bnd tk n vs tm)
-  = do vs' <- fmap theFreeVars $ instVarSet insctxt binding vs
-       tm' <- instTerm insctxt binding tm
+instTerm ictx binding (Bnd tk n vs tm)
+  = do vs' <- fmap theFreeVars $ instVarSet ictx binding vs
+       tm' <- instTerm ictx binding tm
        bnd tk n vs' tm'
-instTerm insctxt binding (Lam tk n vl tm)
-  = do vl' <- instVarList insctxt binding vl
-       tm' <- instTerm insctxt binding tm
+instTerm ictx binding (Lam tk n vl tm)
+  = do vl' <- instVarList ictx binding vl
+       tm' <- instTerm ictx binding tm
        lam tk n vl' tm'
-instTerm insctxt binding (Cls n tm)
-  = do tm' <- instTerm insctxt binding tm
+instTerm ictx binding (Cls n tm)
+  = do tm' <- instTerm ictx binding tm
        return $ Cls n tm'
 \end{code}
 
@@ -237,11 +237,11 @@ then we have an assignment.
 \\ \beta.(\ss t {v^n} {t^n}) &=& \ss {\beta.t} {\beta^*(v^n)} {\beta^*.t^n}
 \end{eqnarray*}
 \begin{code}
-instTerm insctxt binding (Sub tk tm s)
-  = do s' <- instSub insctxt binding s
+instTerm ictx binding (Sub tk tm s)
+  = do s' <- instSub ictx binding s
        tm' <- if isAssignment tm
               then return tm
-              else instTerm insctxt binding tm
+              else instTerm ictx binding tm
        return $ Sub tk tm' s'
 \end{code}
 
@@ -268,8 +268,8 @@ Note that all lists must be of the same length,
 and at any list position $i$, the general variables $g^1_i, \dots, g^a_i$
 are of the same type (std/list).
 \begin{code}
-instTerm insctxt binding (Iter tk sa na si ni lvs)
-  = do lvtss <- instIterLVS insctxt binding lvs
+instTerm ictx binding (Iter tk sa na si ni lvs)
+  = do lvtss <- instIterLVS ictx binding lvs
        -- all have same non-zero length
        -- have the same kind of object (list-var/term)
        case lvtss of
@@ -290,9 +290,9 @@ instTerm insctxt binding (Iter tk sa na si ni lvs)
 \end{eqnarray*}
 
 \begin{code}
-instTerm insctxt binding t@(VTyp typ v) 
+instTerm ictx binding t@(VTyp typ v) 
   = do  typ' <- instType binding typ
-        (vs,vmap) <- instStdVar insctxt binding v
+        (vs,vmap) <- instStdVar ictx binding v
         if null vmap then fail "instTerm: typed-var instance too complex"
         else if S.size vs /= 1 then fail "instTerm: one typed var expected"
         else case head $ S.toList vs of
@@ -324,8 +324,8 @@ $
 \begin{code}
 instIterLVS :: MonadFail m => InsContext
             -> Binding -> [ListVar] -> m [[LVarOrTerm]]
-instIterLVS insctxt binding lvs
-  = do lvtss <- sequence $ map (instTLGVar insctxt binding) lvs
+instIterLVS ictx binding lvs
+  = do lvtss <- sequence $ map (instTLGVar ictx binding) lvs
        let lvtss' = transpose lvtss
        checkAndGroup arity [] lvtss'
        -- fail "instIterLVS NYI"
@@ -335,7 +335,7 @@ instIterLVS insctxt binding lvs
 
 \begin{code}
 instTLGVar :: MonadFail m => InsContext -> Binding -> ListVar -> m [LVarOrTerm]
-instTLGVar insctxt binding lv
+instTLGVar ictx binding lv
   = case lookupLstBind binding lv of
       Nothing              ->  return $ [injLV lv]  -- maps to self !
       Just (BindList vl')  ->  return $ map injGV vl'
@@ -382,12 +382,12 @@ are processed the same way.
 \end{eqnarray*}
 \begin{code}
 instSub :: MonadFail m => InsContext -> Binding -> Substn -> m Substn
-instSub insctxt binding (Substn ts lvs)
-  = do ts'  <- instZip (instStdVar insctxt binding)
-                       (instTerm insctxt binding) (S.toList ts)
+instSub ictx binding (Substn ts lvs)
+  = do ts'  <- instZip (instStdVar ictx binding)
+                       (instTerm ictx binding) (S.toList ts)
        ts'' <- sequence $ map getTheTargetVar ts'
-       vtlvss' <- instZip (instLLVar insctxt binding) 
-                          (instLLVar insctxt binding) (S.toList lvs)
+       vtlvss' <- instZip (instLLVar ictx binding) 
+                          (instLLVar ictx binding) (S.toList lvs)
        let (lvtlvss,rvtlvss) = unzip vtlvss'
        let (vtts,lvts) = unzip lvtlvss
        let (vtrs,lvrs) = unzip rvtlvss
@@ -429,7 +429,7 @@ and lists containing a mix of terms and list-variables.
 \begin{code}
 instLLVar :: MonadFail m => InsContext
           -> Binding -> ListVar -> m ([Term],[ListVar])
-instLLVar insctxt binding lv
+instLLVar ictx binding lv
   = case lookupLstBind binding lv of
       Just (BindList vl')  ->  return $ fromGVarsToTermLVarLists [] [] vl'
       Just (BindSet  vs')  ->  return $ fromGVarsToTermLVarLists [] []$ S.toList vs'
@@ -467,8 +467,8 @@ Let $g$ denote a general variable, and $G$ a set of same.
 instVarSet :: MonadFail m 
            => InsContext -> Binding -> VarSet 
            -> m FreeVars
-instVarSet insctxt binding vs
-  = do fvss <- sequence $ map (instGVar insctxt binding) $ S.toList vs
+instVarSet ictx binding vs
+  = do fvss <- sequence $ map (instGVar ictx binding) $ S.toList vs
        return $ mrgFreeVarList fvss
 
 type NFreeVars = (NVarSet,[(GenVar,VarSet)])
@@ -476,8 +476,8 @@ instNVarSet :: MonadFail m
             => InsContext -> Binding -> NVarSet 
             -> m NFreeVars
 instNVarSet _       _        NA   =  return (NA,[]) 
-instNVarSet insctxt binding (The vs)  
-  =  do (f,less) <- instVarSet insctxt binding vs 
+instNVarSet ictx binding (The vs)  
+  =  do (f,less) <- instVarSet ictx binding vs 
         return (The f,less)
 \end{code}
 
@@ -491,24 +491,24 @@ For a general variable:
 \end{eqnarray*}
 \begin{code}
 instGVar :: MonadFail m => InsContext -> Binding -> GenVar -> m FreeVars
-instGVar insctxt binding (StdVar v)  = instStdVar insctxt binding v
-instGVar insctxt binding (LstVar lv) = instLstVar insctxt binding lv
+instGVar ictx binding (StdVar v)  = instStdVar ictx binding v
+instGVar ictx binding (LstVar lv) = instLstVar ictx binding lv
 \end{code}
 
 \begin{code}
 instStdVar :: MonadFail m => InsContext -> Binding -> Variable -> m FreeVars
-instStdVar insctxt binding v
+instStdVar ictx binding v
   = case lookupVarBind binding v of
       Nothing             ->  return $ single v  -- maps to self !
       Just (BindVar v')   ->  return $ single v'
-      Just (BindTerm t')  ->  return $ freeVars (icSC insctxt) t'
+      Just (BindTerm t')  ->  return $ freeVars (icSC ictx) t'
       _  ->  fail "instStdVar: bound to identifier."
   where single v = (S.singleton (StdVar v),[])
 \end{code}
 
 \begin{code}
 instLstVar :: MonadFail m => InsContext -> Binding -> ListVar -> m FreeVars
-instLstVar insctxt binding lv
+instLstVar ictx binding lv
   = case lookupLstBind binding lv of
       Nothing              ->  return $ single lv  -- maps to self !
       Just (BindList vl')  ->  return (S.fromList vl',[])
@@ -532,18 +532,18 @@ With $L$ a list of general variables
 \end{eqnarray*}
 \begin{code}
 instVarList :: MonadFail m => InsContext -> Binding -> VarList -> m VarList
-instVarList insctxt binding vl
-  = fmap concat $ sequence $ map (instLGVar insctxt binding) vl
+instVarList ictx binding vl
+  = fmap concat $ sequence $ map (instLGVar ictx binding) vl
 \end{code}
 We do not expect these to map to terms.
 \textbf{Why not?}
 \begin{code}
 instLGVar :: MonadFail m => InsContext -> Binding -> GenVar -> m VarList
-instLGVar insctxt binding (StdVar v)
-  =  do fvs' <- instStdVar insctxt binding v
+instLGVar ictx binding (StdVar v)
+  =  do fvs' <- instStdVar ictx binding v
         v' <- getTheVar fvs'
         return [StdVar v']
-instLGVar insctxt binding gv@(LstVar lv)
+instLGVar ictx binding gv@(LstVar lv)
   = case lookupLstBind binding lv of
       Nothing              ->  return [gv]  -- maps to self !
       Just (BindList vl')  ->  return vl'
@@ -584,10 +584,10 @@ $$
 $$
 Note that if $V$ is dynamic then $V \in Cd$, otherwise $V \in C$.
 \begin{code}
-instantiateSC insctxt bind (vscs,freshvs)
-  = do vscss' <- sequence $ map (instantiateVSC insctxt bind) $ vscdbg "iSC.vscs" vscs
+instantiateSC ictx bind (vscs,freshvs)
+  = do vscss' <- sequence $ map (instantiateVSC ictx bind) $ vscdbg "iSC.vscs" vscs
        vscs' <- concatVarConds vscss'
-       freshvs' <- instVarSet insctxt bind $ freshvs
+       freshvs' <- instVarSet ictx bind $ freshvs
        mkSideCond (vscdbg "iSC.vscs'" vscs') $ theFreeVars freshvs'
 \end{code}
 
@@ -891,13 +891,13 @@ and $F$ is disjoint from any $e_i,B_i$.
 instantiateVSC :: MonadFail m 
                 => InsContext -> Binding -> VarSideConds 
                 -> m [VarSideConds]
-instantiateVSC insctxt bind vsc@(VSC gV mvsD mvsC mvsCd)
-  = do let (fvsT,diffsT) = instantiateGVar insctxt bind $ pdbg "iVSC.gV" gV
-       fmvsD   <-  instNVarSet insctxt bind $ pdbg "iVSC.mvsD" mvsD
-       fmvsC   <-  instNVarSet insctxt bind $ pdbg "iVSC.mvsC" mvsC
-       fmvsCd  <-  instNVarSet insctxt bind $ pdbg "iVSC.mvsCd" mvsCd
+instantiateVSC ictx bind vsc@(VSC gV mvsD mvsC mvsCd)
+  = do let (fvsT,diffsT) = instantiateSCGVar ictx bind $ pdbg "iVSC.gV" gV
+       fmvsD   <-  instNVarSet ictx bind $ pdbg "iVSC.mvsD" mvsD
+       fmvsC   <-  instNVarSet ictx bind $ pdbg "iVSC.mvsC" mvsC
+       fmvsCd  <-  instNVarSet ictx bind $ pdbg "iVSC.mvsCd" mvsCd
        if null $ pdbg "iVSC.diffsT" diffsT
-         then do vscss <- mapM (instVSC insctxt fmvsD fmvsC fmvsCd)
+         then do vscss <- mapM (instVSC ictx fmvsD fmvsC fmvsCd)
                                (S.toList $ pdbg "iVSC.fvsT" fvsT)
                  return $ pdbg "iVSC.vscss.cat" $ concat $ vscss
          else fail "instantiateVSC: explicit diffs in var-set not handled."
@@ -907,20 +907,21 @@ instantiateVSC insctxt bind vsc@(VSC gV mvsD mvsC mvsCd)
 \lefteqn{\textsf{for } v \in \fv(\beta(V)):}
 \\&& ( v , \bigcup(\power(beta)D) 
               , \bigcup(\power(beta)C) , \bigcup(\power(beta)Cd) )
-\\&=& v \notin \bigcup(\power(beta)D) 
-        \land v \in \bigcup(\power(beta)C)
-        \land v \in \bigcup(\power(beta)Cd)\mid_D
+\\&=& v \notin \bigcup(\power(beta)D) \land 
+           ( v \in \bigcup(\power(beta)C)
+                       \lor 
+             v \in \bigcup(\power(beta)Cd) )
 \end{eqnarray*}
 \begin{code}
 instVSC :: MonadFail m 
          => InsContext -> NFreeVars -> NFreeVars -> NFreeVars -> GenVar
          -> m [VarSideConds]
 -- we ignore the vBless components for now
-instVSC insctxt fvsD@(mvsD,_) fmvsC@(mvsC,_) fmvsCd@(mvsCd,_) gV 
-  = do mvscsD <- mkVSC gV mvsD   covByNA covByNA
-       mvscsC <- mkVSC gV disjNA mvsC    covByNA
-       mvscCd <- mkVSC gV disjNA covByNA mvsCd 
-       return $ catMaybes [mvscsD,mvscsC,mvscCd]
+instVSC ictx fvsD@(mvsD,_) fmvsC@(mvsC,_) fmvsCd@(mvsCd,_) gV 
+  = do mvscsD <- mdbg "IV.mkD" $ mkVSC (pdbg "instVSC.gV" gV) mvsD   covByNA covByNA
+       mvscsC <- mdbg "IV.mkC" $ mkVSC gV disjNA mvsC    covByNA
+       mvscCd <- mdbg "IV.mkCd" $ mkVSC gV disjNA covByNA mvsCd 
+       return $ catMaybes [pdbg "instVSC.mvscsD" mvscsD,pdbg "instVSC.mvscsC" mvscsC,pdbg "instVSC.mvscsCd" mvscCd]
 \end{code}
 
 \subsection{Disjointedness}
@@ -936,7 +937,7 @@ $F \disj e_i$, $F \disj B_i$.
 % \begin{code}
 % instDisjoint :: MonadFail m 
 %              => InsContext -> FreeVars -> GenVar -> m [VarSideConds]
-% instDisjoint insctxt fvsD@(fF,vLessBs) gv
+% instDisjoint ictx fvsD@(fF,vLessBs) gv
 %   =  return (vsc1s ++ vsc2s)
 %   where
 %     vsc1s = map (mkDisj vsD) $ S.toList fF
@@ -963,8 +964,8 @@ $F \disj F_i$, $F \disj B_i$:
 % instCovers :: MonadFail m 
 %            => InsContext -> NFreeVars -> GenVar-- NFreeVars !!!
 %            -> m [VarSideConds]
-% instCovers insctxt (Nothing,_)       gv  =  return []
-% instCovers insctxt (Just fF,vLessBs) gv  =  return (vsc1s ++ vsc2s)
+% instCovers ictx (Nothing,_)       gv  =  return []
+% instCovers ictx (Just fF,vLessBs) gv  =  return (vsc1s ++ vsc2s)
 %   where
 %     vsc1s = map (mkCovers vsC) (S.toList fF)
 %     mkCovers vsC gv = gv `coveredby` vsC
@@ -1000,14 +1001,14 @@ We include $e_i$ if $e_i \in D \land e_i \notin B_i$.
 % instDynCvg :: MonadFail m 
 %            => InsContext -> NFreeVars -> GenVar
 %            -> m [VarSideConds]
-% instDynCvg insctxt (Nothing,vLessBs)    gv    =  return []
-% instDynCvg insctxt (Just vsCd,vLessBs)  gv  =  return (vsc1s ++ vsc2s)
+% instDynCvg ictx (Nothing,vLessBs)    gv    =  return []
+% instDynCvg ictx (Just vsCd,vLessBs)  gv  =  return (vsc1s ++ vsc2s)
 %   where
 %     restrict2 vS vR
 %       | S.null vR  =  vS
 %       | otherwise  =  vS `S.intersection` vR 
 %     mkDynCovers vs gv = gv `dyncovered` vs
-%     vsD = icDV insctxt
+%     vsD = icDV ictx
 %     fFD = fF `restrict2` vsD
 %     isIn vsD (ev,_) = ev `S.member` vsD
 %     vDLessBs = filter (isIn vsD) vLessBs
@@ -1029,9 +1030,9 @@ hence the return type below being \h{FreeVars}.
 Instantiate a (std./list)-variable either according to the binding,
 or by itself if not bound:
 \begin{code}
-instantiateGVar :: InsContext -> Binding -> GenVar -> FreeVars
-instantiateGVar insctxt bind (StdVar v)   =  instantiateVar  insctxt bind v
-instantiateGVar insctxt bind (LstVar lv)  =  instantiateLstVar insctxt bind lv
+instantiateSCGVar :: InsContext -> Binding -> GenVar -> FreeVars
+instantiateSCGVar ictx bind (StdVar v)   =  instantiateSCVar  ictx bind v
+instantiateSCGVar ictx bind (LstVar lv)  =  instantiateSCLVar ictx bind lv
 \end{code}
 
 Instantiating a standard variable ($v$):
@@ -1041,12 +1042,12 @@ Instantiating a standard variable ($v$):
 \\ \beta(v) &=& \fv_{sc}(\beta.v), \quad \mbox{if $\beta.v$ is a term}
 \end{eqnarray*}
 \begin{code}
-instantiateVar :: InsContext -> Binding -> Variable -> FreeVars
-instantiateVar insctxt bind v
+instantiateSCVar :: InsContext -> Binding -> Variable -> FreeVars
+instantiateSCVar ictx bind v
   = case lookupVarBind bind v of
         Nothing            ->  (S.singleton $ StdVar v,[])
         Just (BindVar v')  ->  (S.singleton $ StdVar v',[])
-        Just (BindTerm t)  ->  deduceFreeVars insctxt t
+        Just (BindTerm t)  ->  deduceFreeVars ictx t
 \end{code}
 
 
@@ -1061,8 +1062,8 @@ Instantiating a list variable ($\lst v$):
      \quad \mbox{if $\beta.\lst v$ has form $(L,T)$}
 \end{eqnarray*}
 \begin{code}
-instantiateLstVar :: InsContext -> Binding -> ListVar -> FreeVars
-instantiateLstVar insctxt bind lv
+instantiateSCLVar :: InsContext -> Binding -> ListVar -> FreeVars
+instantiateSCLVar ictx bind lv
   = case lookupLstBind bind lv of
       Nothing             ->  (S.singleton $ LstVar lv, [])
       Just (BindList vl)  ->  (S.fromList vl, [])
@@ -1071,7 +1072,7 @@ instantiateLstVar insctxt bind lv
        -> let (ts,lvs) = (tmsOf tlvs, lvsOf tlvs)
           in  mrgFreeVarList
                ( ( S.fromList $ map LstVar lvs,[]) 
-                 : map (deduceFreeVars insctxt) ts )
+                 : map (deduceFreeVars ictx) ts )
 \end{code}
 
 \newpage
@@ -1100,14 +1101,15 @@ It represents the variable-set: $F \cup \bigcup_i (e_i\setminus B_i)$
 \end{eqnarray*}
 \begin{code}
 deduceFreeVars :: InsContext -> Term -> FreeVars
-deduceFreeVars insctxt t 
+deduceFreeVars ictx t 
   = mrgFreeVarList 
-      ( map (scVarExpand sc) (S.toList fF)
+      ( map (scVarExpand sc) (S.toList $ vsdbg "dFV.fF" fF)
         ++
-        map (scDiffExpand sc) dD )
+        map (scDiffExpand sc) (fdifdbg "dFV.dD" dD) )
   where
-     sc = icSC insctxt
-     (fF,dD) = freeVars sc t
+     sc = icSC ictx
+     fvs = freeVars sc $ trmdbg "dFV.t" t
+     (fF,dD) = fvsdbg "dFV.fvs"  fvs
 \end{code}
 
 \begin{eqnarray*}

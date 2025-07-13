@@ -230,6 +230,22 @@ cjAnySwap = preddef ("exists" -.- "swap")
                     scTrue
 \end{code}
 
+$$
+  \begin{array}{lll}
+    \exists \lst x \bullet \exists \lst x \bullet P
+    \equiv
+    \exists \lst x \bullet P
+    & \QNAME{$\exists$-idem}
+  \end{array}
+$$
+\begin{code}
+cjAnyIdem = preddef ("exists" -.- "idem")
+                    (exists [xs] (exists [xs] p)  
+                     ===  
+                     (exists [xs] p))
+                    scTrue
+\end{code}
+
 
 % %% TEMPLATE
 % $$
@@ -248,7 +264,7 @@ We now collect all of the rest above as conjectures:
 existsConjs :: [NmdAssertion]
 existsConjs
   = [ cjAnyRemove, cjAnyFalse, cjAnyOne, cjAnyOrDistr
-    , axAndAllScope, cjAnyInst, cjAnyDumRen, cjAnySwap ]
+    , axAndAllScope, cjAnyInst, cjAnyDumRen, cjAnySwap, cjAnyIdem ]
 \end{code}
 
 

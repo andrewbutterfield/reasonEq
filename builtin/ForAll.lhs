@@ -233,10 +233,28 @@ $$
 \vspace{-5pt}
 \begin{code}
 cjAllSwap = preddef ("forall" -.- "swap")
-                    (forAll [xs] (forAll [ys] p)  
+                    (forAll [ys] (forAll [ys] p)  
                      ===  
                      forAll [ys] (forAll [xs] p))
                     scTrue
+\end{code}
+
+$$
+  \begin{array}{lll}
+    \forall \lst x \bullet \forall \lst y \bullet P
+    \equiv
+    \forall \lst y \bullet P
+    & \lst y \supseteq \lst x
+    & \QNAME{$\forall$-idem}
+  \end{array}
+$$
+\begin{code}
+cjAllIdem = preddef ("forall" -.- "idem")
+                    (forAll [xs] (forAll [ys] p)  
+                     ===  
+                     (forAll [ys] p))
+                    -- ([xs `coveredby` (S.singleton ys)],S.empty)
+                    ([ys] `covers` xs) -- [xs `coveredby` (S.singleton ys)],S.empty)
 \end{code}
 
 $$
@@ -265,7 +283,7 @@ We now collect our conjecture set:
 \begin{code}
 forallConjs :: [NmdAssertion]
 forallConjs
-  = [ cjAllTrue, cjAllSwap, cjOnePoint ]
+  = [ cjAllTrue, cjAllSwap, cjAllIdem, cjOnePoint ]
 \end{code}
 
 

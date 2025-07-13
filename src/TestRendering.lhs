@@ -9,7 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module TestRendering (
    trId, trIdU, iddbg
  , trVar, trVarU, trLVar, trLVarU, trGVar, trGVarU
- , trVSet, trVSetU, trOVSet, trOVSetU
+ , trVSet, trVSetU, trOVSet, trOVSetU, vsdbg
  , trVList, trVListU, trVariableSet, trVariableSetU
  , trMap
  , trType, typdbg
@@ -19,6 +19,8 @@ module TestRendering (
  , trSub, trSubU
  , trTermZip, trTermZipU
  , trSideCond, trSideCondU, scdbg, vscdbg
+ , trDiffs, trDiffsU, fdifdbg
+ , trFreeVars, trFreeVarsU, fvsdbg
  , trAsn, trAsnU, trNmdAsn, trNmdAsnU
  , truelawname, (-.-), nicelawname
  , trVarMatchRole, trVarMatchRoleU
@@ -49,6 +51,7 @@ import Types
 import Typing
 import AST
 import SideCond
+import FreeVars 
 import Assertions
 import VarData
 import Binding
@@ -538,12 +541,11 @@ trvlist trid vl  =  _langle ++ trvl trid vl ++ _rangle
 trVSet = trvset trId
 trVSetU = trvset trIdU
 trvset trid vs   =  "{" ++ trovset trid vs ++ "}"
+vsdbg = rdbg trVSet
 
 trOVSet = trovset trId
 trOVSetU = trovset trIdU
-trovset trid vs
- | S.null vs  =  _emptyset
- | otherwise  =  trvl trid (S.toList vs)
+trovset trid vs  =  trvl trid (S.toList vs)
 
 trVariableSet = trvariableset trId
 trVariableSetU = trvariableset trIdU
@@ -600,6 +602,32 @@ trDynCovM trid gv (The vsC)
 trfresh trid fvs
   | S.null fvs  =  ""
   | otherwise   =  "fresh:" ++ trovset trid fvs
+\end{code}
+
+\section{Free Variables}
+
+\begin{code}
+trFreeVars :: FreeVars ->  String
+trFreeVars = trfreevars trId
+trFreeVarsU = trfreevars trIdU
+
+trfreevars trid (fvars,diffs)
+  = trvset trid fvars 
+    ++ " " ++ _union ++ " " ++
+    trdiffs trid diffs
+
+trDiffs = trdiffs trId
+trDiffsU = trdiffs trIdU
+
+trdiffs trid []  =  ""
+trdiffs trid diffs = "(" ++ trdiffl trid diffs ++ ")"
+trdiffl trid =  seplist " , " $ trdiff trid
+
+fdifdbg = rdbg trDiffs
+
+trdiff trid (gv,vs) = trgvar trid gv ++ " \\ " ++ trvset trid vs
+
+fvsdbg = rdbg trFreeVars
 \end{code}
 
 \section{Assertions}

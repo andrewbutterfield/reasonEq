@@ -25,6 +25,8 @@ Goal S.C.: y$⊇x$
 The 2nd-last line is incorrect - it should be `(x$\y$) ⋔ P`.
 The goal s.c. `y$⊇x$` then reduces it to `Ø ⋔ P`, a.k.a. true.
 
+**Problem: `(x$\y$) ⋔ P` is not representable**
+
 
 Add in Hoare-Triple and WP theories together as `PrePost`, based on `Designs`.
 

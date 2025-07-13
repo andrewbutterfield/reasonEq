@@ -83,10 +83,6 @@ import Parsing
 import StdTypeSignature
 
 import Debugger
-tdbg nm t = trc (nm++" = "++trTerm 0 t) t
-scdbg nm sc = trc (nm++" = "++trSideCond sc) sc
-bdbg nm b = trc (nm++" = "++trBinding b) b
-vsdbg nm vs = trc (nm++" = "++trVSet vs) vs
 \end{code}
 
 \section{Introduction}

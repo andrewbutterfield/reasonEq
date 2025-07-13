@@ -563,15 +563,15 @@ and merge together.
 instantiateSC :: MonadFail m 
               => InsContext -> Binding -> SideCond -> m SideCond
 \end{code}
-Side-conditions (semantically):
+(Atomic) Side-conditions (semantically):
 \begin{eqnarray*}
-   \beta.(D \disj  T) &=& \beta.D \disj \fv(\beta(T))
-\\ \beta.(C \supseteq T)  &=& \beta.C \supseteq \fv(\beta(T))
-\\ \beta(\ispre \supseteq T) &=& \ispre \supseteq \fv(\beta(T))
+   \beta.(D \disj  V) &=& \beta.D \disj \fv(\beta(V))
+\\ \beta.(C \supseteq V)  &=& \beta.C \supseteq \fv(\beta(V))
+\\ \beta.(Cd \supseteq V)  &=& \beta.Cd \supseteq \dfv(\beta(V))
 \\ \beta(\fresh F) &=& \fresh \beta(F)
 \end{eqnarray*}
-Remember, $T$ is a variable denoting a term,
-and in general $\beta(T)$ can be a term, or a general variable.
+Remember, $V$ is a variable denoting a variable, term, or list-variable.
+and in general $\beta(V)$ can be a term, or a general variable.
 
 In particular, an atomic side-condition of one kind (disjoint/superset)
 can be instantiated into a complicated condition involving many variables.
@@ -590,12 +590,6 @@ instantiateSC insctxt bind (vscs,freshvs)
        freshvs' <- instVarSet insctxt bind $ freshvs
        mkSideCond (vscdbg "iSC.vscs'" vscs') $ theFreeVars freshvs'
 \end{code}
-For atomic side-conditions:
-\begin{eqnarray*}
-   \beta.(D \disj  T) &=& \beta.D \disj \fv(\beta(T))
-\\ \beta.(C \supseteq T)  &=& \beta.C \supseteq \fv(\beta(T))
-\\ \beta(\ispre \supseteq T) &=& \ispre \supseteq \fv(\beta(T))
-\end{eqnarray*}
 
 \subsection{SC Instantiation Examples}
 
@@ -838,7 +832,7 @@ We have:
 \\ &=& ?\lst x \supseteq \fv(P) \cup \fv(Q)
 \end{eqnarray*}
 Here it makes sense that $?\lst x$ becomes $\lst x$,
-and then all we to do us use the fact that $A \supseteq B$ and $A \supseteq C$
+and then all we to do is use the fact that $A \supseteq B$ and $A \supseteq C$
 means that $A \supseteq B \cup C$.
  
 
@@ -862,7 +856,9 @@ We have:
 \\ &=& \beta(\lst x) \disj \beta(P)
 \\ &=& \lst x \disj \fv(\forall \lst y \bullet P )
 \\ &=& \lst x \disj (\fv(P) \setminus \lst y)
-\\ &\impliedby& \lst y \supseteq \lst x
+\\ &=& (\lst x \setminus \lst y) \disj \fv(P)
+\\ &=& \emptyset \disj \fv(P), \qquad \lst y \supseteq \lst x
+\\ &=& \true
 \end{eqnarray*}
 This really belongs the \h{Forall} theory, and it's dual in \h{Exists}.
 
@@ -870,12 +866,22 @@ This really belongs the \h{Forall} theory, and it's dual in \h{Exists}.
 \newpage
 \subsection{Instantiating TVCS}
 
+$$
+  (V,D,C,Cd) ~\equiv~ V \notin D \land V \in (C \cup Cd) 
+  \qquad \where \qquad V ::= v \mid T \mid \lst\ell
+$$
+
+$$ \beta.D  ~~=~~ \bigcup(\power(\beta)D)  $$
+
 \begin{eqnarray*}
-\lefteqn{\beta.(T,D,C,Cd)}
-\\ &\approx& (\fv(\beta(T)),\beta.D,\beta.C,\beta.Cd)
-\\ &=& \bigwedge_{t \in \fv(\beta(T))}
-          ( t , \bigcup(\power\beta.D) 
-              , \bigcup(\power\beta.C) , \bigcup(\power\beta.Cd) )
+\lefteqn{\beta.(V,D,C,Cd)}
+\\ &=& (\fv(\beta(V)),\beta.D,\beta.C,\beta.Cd)
+\\ &=& \fv(\beta(V)) \disj \beta.D 
+       \land 
+       \fv(\beta(V)) \subseteq \beta.C \cup \beta.Cd
+\\ &=& \bigwedge_{v \in \fv(\beta(V))}
+          ( v , \bigcup(\power(beta)D) 
+              , \bigcup(\power(beta)C) , \bigcup(\power(beta)Cd) )
 \end{eqnarray*}
 Remember that free-variables are denoted by an expression of the form:
 $(F \cup \bigcup_i\setof{\dots,(e_i \setminus B_i),\dots})$ 
@@ -885,12 +891,12 @@ and $F$ is disjoint from any $e_i,B_i$.
 instantiateVSC :: MonadFail m 
                 => InsContext -> Binding -> VarSideConds 
                 -> m [VarSideConds]
-instantiateVSC insctxt bind vsc@(VSC gT mvsD mvsC mvsCd)
-  = do let (fvsT,diffsT) = instantiateGVar insctxt bind gT
-       fmvsD   <-  instNVarSet insctxt bind mvsD
-       fmvsC   <-  instNVarSet insctxt bind mvsC
-       fmvsCd  <-  instNVarSet insctxt bind mvsCd
-       if null diffsT
+instantiateVSC insctxt bind vsc@(VSC gV mvsD mvsC mvsCd)
+  = do let (fvsT,diffsT) = instantiateGVar insctxt bind $ pdbg "iVSC.gV" gV
+       fmvsD   <-  instNVarSet insctxt bind $ pdbg "iVSC.mvsD" mvsD
+       fmvsC   <-  instNVarSet insctxt bind $ pdbg "iVSC.mvsC" mvsC
+       fmvsCd  <-  instNVarSet insctxt bind $ pdbg "iVSC.mvsCd" mvsCd
+       if null $ pdbg "iVSC.diffsT" diffsT
          then do vscss <- mapM (instVSC insctxt fmvsD fmvsC fmvsCd)
                                (S.toList fvsT)
                  return $ concat vscss
@@ -898,34 +904,34 @@ instantiateVSC insctxt bind vsc@(VSC gT mvsD mvsC mvsCd)
 \end{code}
 
 \begin{eqnarray*}
-\lefteqn{\textsf{for } t \in \fv(\beta(T)):}
-\\&& ( t , \bigcup(\power\beta.D) 
-              , \bigcup(\power\beta.C) , \bigcup(\power\beta.Cd) )
-\\&=& t \notin \bigcup(\power\beta.D) 
-        \land t \in \bigcup(\power\beta.C)
-        \land t \in \bigcup(\power\beta.Cd)\mid_D
+\lefteqn{\textsf{for } v \in \fv(\beta(V)):}
+\\&& ( v , \bigcup(\power(beta)D) 
+              , \bigcup(\power(beta)C) , \bigcup(\power(beta)Cd) )
+\\&=& v \notin \bigcup(\power(beta)D) 
+        \land v \in \bigcup(\power(beta)C)
+        \land v \in \bigcup(\power(beta)Cd)\mid_D
 \end{eqnarray*}
 \begin{code}
 instVSC :: MonadFail m 
          => InsContext -> NFreeVars -> NFreeVars -> NFreeVars -> GenVar
          -> m [VarSideConds]
 -- we ignore the vBless components for now
-instVSC insctxt fvsD@(mvsD,_) fmvsC@(mvsC,_) fmvsCd@(mvsCd,_) gT 
-  = do mvscsD <- mkVSC gT mvsD   covByNA covByNA
-       mvscsC <- mkVSC gT disjNA mvsC    covByNA
-       mvscCd <- mkVSC gT disjNA covByNA mvsCd 
+instVSC insctxt fvsD@(mvsD,_) fmvsC@(mvsC,_) fmvsCd@(mvsCd,_) gV 
+  = do mvscsD <- mkVSC gV mvsD   covByNA covByNA
+       mvscsC <- mkVSC gV disjNA mvsC    covByNA
+       mvscCd <- mkVSC gV disjNA covByNA mvsCd 
        return $ catMaybes [mvscsD,mvscsC,mvscCd]
 \end{code}
 
 \subsection{Disjointedness}
 
 \begin{eqnarray*}
-   \beta.(D \disj  T) &=& \beta.D \disj \fv(\beta(T))
+   \beta.(D \disj  V) &=& \beta.D \disj \fv(\beta(V))
 \\ &=& \beta.D \disj (F \cup \{e_i\setminus B_i\}_{i \in 1\dots N})
 \\ &=& \beta.D \disj F \land \{\beta.D \disj (e_i\setminus B_i)\}_{i \in 1\dots N}
 \\ &=& \beta.D \disj F \land \{(\beta.D\setminus B_i) \disj e_i\}_{i \in 1\dots N}
 \end{eqnarray*}
-where $\fv(\beta(T)) = F \cup \{e_i\setminus B_i\}_{i \in 1\dots N}$,
+where $\fv(\beta(V)) = F \cup \{e_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj e_i$, $F \disj B_i$.
 % \begin{code}
 % instDisjoint :: MonadFail m 
@@ -943,11 +949,11 @@ $F \disj e_i$, $F \disj B_i$.
 
 
 The general case, 
-where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
+where $\fv(\beta(V)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj F_i$, $F \disj B_i$:
 \begin{eqnarray*}
-   \beta.(C \supseteq T)
-   &=& \beta.C \supseteq \fv(\beta(T))
+   \beta.(C \supseteq V)
+   &=& \beta.C \supseteq \fv(\beta(V))
 \\ &=& \beta.C \supseteq (F \cup \{e_i\setminus B_i\})
 \\ &=& \beta.C \supseteq F \land \{\beta.C \supseteq (e_i\setminus B_i)\}
 \\ &=& \beta.C \supseteq F \land \{(\beta.C \cup B_i) \supseteq e_i\}
@@ -970,14 +976,14 @@ $F \disj F_i$, $F \disj B_i$:
 \subsection{Dynamic Coverage}
 
 The general case, 
-where $\fv(\beta(T)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
+where $\fv(\beta(V)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
 $F \disj F_i$, $F \disj B_i$:
 
 We assume here that $D$ covers all dynamic variables.
 \begin{eqnarray*}
-   \beta.(C \supseteq_a T)
-   &=& \beta.C \supseteq \dfv(\beta(T))
-\\ &=& \beta.C \supseteq (\fv(\beta(T)) \mid_D)
+   \beta.(C \supseteq_a V)
+   &=& \beta.C \supseteq \dfv(\beta(V))
+\\ &=& \beta.C \supseteq (\fv(\beta(V)) \mid_D)
 \\ &=& \beta.C \supseteq (F \cup \{e_i\setminus B_i\})  \mid_D
 \\ &=& \beta.C \supseteq (F  \mid_D \cup \{e_i\setminus B_i\} \mid_D) 
 \\ &=& \beta.C \supseteq (F  \mid_D \cup \{(e_i \mid_D)\setminus B_i\} ) 

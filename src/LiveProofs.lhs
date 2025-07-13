@@ -332,9 +332,9 @@ First, try the structural match.
 -- tryLawByName asn@(tC,scC) lnm parts mcs
     tryMatch vts fits tP partsP replP scP
       = case
-                match vts fits (trmdbg "tryLBN.tC" tC) $ trmdbg "tryLBN.partsP" partsP
+                match vts fits tC partsP
         of
-          Yes bind  ->  tryInstantiateKnown vts tP partsP replP scP $ bnddbg "tryLBN.bind" bind
+          Yes bind  ->  tryInstantiateKnown vts tP partsP replP scP bind
           But msgs
            -> But ([ "try match failed"
                    , ""
@@ -358,9 +358,9 @@ First we see if any of these are ``known''.
 -- tryLawByName asn@(tC,scC) lnm parts mcs
     tryInstantiateKnown vts tP partsP replP scP bind
       = case
-                bindKnown vts bind $ trmdbg "tryLBN.tP" tP
+                bindKnown vts bind tP
         of
-          Yes kbind  ->  tryInstantiateFloating vts tP partsP replP scP $ bnddbg "tryLBN.kbind" kbind
+          Yes kbind  ->  tryInstantiateFloating vts tP partsP replP scP kbind
           But msgs
            -> But ([ "instTerm knowns failed"
                    , ""
@@ -387,7 +387,7 @@ and we generate names for these that make their floating nature visible.
         of
           Yes fbind  ->  tryInstantiate vts
                            (mkInsCtxt vts scC) 
-                           (bnddbg "tryLBN.fbind" fbind) tP partsP replP scP
+                           fbind tP partsP replP scP
           But msgs
            -> But ([ "instTerm floating failed"
                    , ""
@@ -413,7 +413,7 @@ Next, instantiate the law using the bindings.
                 instTerm insctxt fbind replP
         of
           Yes tP'  
-            ->  tryInstantiateSC vts insctxt fbind (trmdbg "tryLBN.tP'" tP') partsP replP scP
+            ->  tryInstantiateSC vts insctxt fbind tP' partsP replP scP
           But msgs
            -> But ([ "try law instantiation failed"
                    , ""
@@ -435,9 +435,9 @@ Next, instantiate the pattern side-condition using the bindings.
 -- tryLawByName asn@(tC,scC) lnm parts mcs
     tryInstantiateSC vts insctxt fbind tP' partsP replP scP
       = case
-                instantiateSC insctxt fbind $ scdbg "tryLBN.scP" scP
+                instantiateSC insctxt fbind scP
         of
-          Yes scP'  ->  trySCDischarge vts fbind tP' partsP replP $ scdbg "tryLBN.scP'" scP'
+          Yes scP'  ->  trySCDischarge vts fbind tP' partsP replP scP'
           But msgs
            -> But ([ "try s.c. instantiation failed"
                    , ""
@@ -462,7 +462,7 @@ Finally, try to discharge the instantiated side-condition:
       = case
                 scDischarge (getDynamicObservables vts) scC scP'
         of
-          Yes scP'' -> Yes (fbind,tP',scP',scdbg "tryLBN.scP''" scP'')
+          Yes scP'' -> Yes (fbind,tP',scP',scP'')
           But whynots -> But [ "try s.c. discharge failed"
                              , unlines' whynots
                              , ""
@@ -695,7 +695,7 @@ doEqvMatch :: [VarTable] -> TypCmp -> Law -> TermSC
            -> Matches
 doEqvMatch vts fits law asnC [tP1,tP2]
 -- rule out matches against one-side of the reflexivity axiom
-  | (trmdbg "doEM.tP1" tP1) == (trmdbg "doEM.tP2" tP2)  =  []
+  | tP1 == tP2  =  []
 -- otherwise treat binary equivalence specially:
   | otherwise  =     basicMatch MatchEqvLHS vts fits (lawdbg "doEM.MELHS" law) tP2 asnC tP1
                   ++ basicMatch MatchEqvRHS vts fits (lawdbg "doEM.MERHS" law) tP1 asnC tP2
@@ -887,17 +887,17 @@ basicMatch :: MatchClass
 basicMatch mc vts fits 
            law@((n,asnP@(Assertion tP scP)),_) replP 
            (tC,scC) partsP
-  =  do bind <- match vts fits (trmdbg "bM.tC" tC) $ trmdbg "bM.partsP" partsP
-        kbind <- bindKnown vts (bnddbg "bM.bind" bind) $ trmdbg "bM.tP" tP
-        fbind <- bindFloating vts (bnddbg "bM.kbind" kbind) tP -- was replP 
+  =  do bind <- match vts fits tC partsP
+        kbind <- bindKnown vts bind tP
+        fbind <- bindFloating vts kbind tP -- was replP 
         let insctxt = mkInsCtxt vts scC
-        tP' <- instTerm insctxt (bnddbg "bM.fbind" fbind) $ trmdbg "bM.replP" replP
-        scP' <- instantiateSC insctxt fbind $ scdbg "bM.scP" scP
-        scP'' <- scDischarge (getDynamicObservables vts) scC $ scdbg "bM.scP'" scP'
+        tP' <- instTerm insctxt fbind replP
+        scP' <- instantiateSC insctxt fbind scP
+        scP'' <- scDischarge (getDynamicObservables vts) scC scP'
 
-        if all isFloatingVSC (fst $ scdbg "bM.scP''" scP'')
+        if all isFloatingVSC (fst scP'')
           then return $ MT n (unwrapASN asnP) (chkPatn mc partsP)
-                             fbind replP scC scP' $ trmdbg "bM.tP'" tP'
+                             fbind replP scC scP' tP'
           else fail "undischargeable s.c."
   where
     chkPatn MatchEqvLHS (Var _ v)

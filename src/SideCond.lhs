@@ -251,7 +251,7 @@ _ `ndisj` NA  =  False
 
 Now we define side-conditions for a given general variable:
 \begin{code}
-data  VarSideConds -- (T,D,C,Cd)
+data  VarSideConds -- (V,D,C,Cd)
   = VSC  GenVar       --  v,T,l$
          (NA VarSet)  --  D, if applicable
          (NA VarSet)  --  C, if applicable

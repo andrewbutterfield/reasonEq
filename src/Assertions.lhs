@@ -695,7 +695,7 @@ mkTypedAsn vts term sc
       Yes (typ',term',typsub)  ->  addTypeInfo sc typ' term' typsub
 
 addTypeInfo sc typ term typsub 
-  = let (tvstyps,tvmap) = typeVarEquivalence $ pdbg "addTI.typsub" typsub
-        asn = mkAsn (pdbg "addTI.term'" term) sc
+  = let (tvstyps,tvmap) = typeVarEquivalence typsub
+        asn = mkAsn term sc
     in (asn,tvmap) 
 \end{code}

@@ -215,8 +215,8 @@ Note that predicate-type $t$ is the same as expression-type $t\fun\Bool$.
 termMatch vts fits bind cbvs pbvs tC tP
   = let typC = termtype tC ; typP = termtype tP
     in do
-      bindT <- typeMatch (fits,vfits) (pdbg "tM.bind" bind) (pdbg "tM.typC" typC) $ pdbg "tM.typP" typP
-      termMatch' vts fits (pdbg "tM.bindT" bindT) cbvs pbvs tC tP
+      bindT <- typeMatch (fits,vfits) bind typC typP
+      termMatch' vts fits bindT cbvs pbvs tC tP
   where vfits iC iP = fits (TypeVar iC) (TypeVar iP)
 \end{code} 
 
@@ -874,8 +874,8 @@ bound, known, or arbitrary,
 and act accordingly.
 \begin{code}
 tvMatch vts fits bind cbvs pvbs tC ttP vP@(Vbl _ _ vt)
- | (pdbg "tvM.vt" vt) == Textual  =  fail "tvMatch: var-variable cannot match term."
- | StdVar vP `S.member` (pdbg "tvM.pvbs" pvbs)
+ | vt == Textual  =  fail "tvMatch: var-variable cannot match term."
+ | StdVar vP `S.member` pvbs
      =  fail $ unlines
           [ "tvMatch: bound pattern cannot match term."
           , "pvbs = " ++ show pvbs

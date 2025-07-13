@@ -433,7 +433,7 @@ Ask the user to specify a replacement term for each floating standard variable:
                   ("Choose term to replace "++(trVar v))
                   (trTerm 0) (str2Term v) gterms
            if chosen
-            then do putStrLn ("-chosen term is "++trTerm 0 term)
+            then do putStrLn ("Chosen term is "++trTerm 0 term)
                     fixFloatVars ((v,term):vts) gterms stdvars
             else return (False,vts)
 
@@ -468,7 +468,7 @@ with one floating variable. Is this too restrictive?  \textbf{Yes}):
                  trGVar gvars
            if chosen
             then do let (wanted,leftover) = choices
-                    putStrLn ("-chosen list is "++trVList wanted)
+                    putStrLn ("Chosen list is "++trVList wanted)
                     fixFloatLVars ((lv,wanted):lvvls) leftover lstvars
             else return (False,lvvls)
 \end{code}
@@ -542,9 +542,9 @@ Law Instantiation.
 Replacing \textit{true} by a law, with unknown variables
 suitably instantiated.
 \textbf{
-Ideally this should replace the focus $F$ (any focus)
+Ideally this should replace the focus $F$ (any focus of type Bool)
 by itself conjoined with the instantiation of any law $L$
-($P(F)=P(F \land L)$)
+($P(F)=P(F \land L[\lst e/\lst x])$)
 }
 \begin{code}
 lawInstantiateDescr = ( "i", "instantiate"

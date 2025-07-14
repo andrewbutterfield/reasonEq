@@ -24,6 +24,7 @@ import Data.List
 import NotApplicable
 import Utilities
 import Control
+import Symbols
 import UnivSets
 import LexBase
 import Variables
@@ -551,51 +552,17 @@ instLGVar ictx binding gv@(LstVar lv)
 \end{code}
 
 \newpage
-\section{Side-Condition Instantiation (Total)}
+\section{Side-Condition Instantiation Calculus}
 
-Doing it again, with side-conditions.
-(Basically) we drill down to the atomic side-conditions,
-instantiate and simplify those,
-and merge together.
-\textbf{There's nothing basic here.}
-
-\begin{code}
-instantiateSC :: MonadFail m 
-              => InsContext -> Binding -> SideCond -> m SideCond
-\end{code}
-(Atomic) Side-conditions (semantically):
-\begin{eqnarray*}
-   \beta.(D \disj  V) &=& \beta.D \disj \fv(\beta(V))
-\\ \beta.(C \supseteq V)  &=& \beta.C \supseteq \fv(\beta(V))
-\\ \beta.(Cd \supseteq V)  &=& \beta.Cd \supseteq \dfv(\beta(V))
-\\ \beta(\fresh F) &=& \fresh \beta(F)
-\end{eqnarray*}
-Remember, $V$ is a variable denoting a variable, term, or list-variable.
-and in general $\beta(V)$ can be a term, or a general variable.
-
-In particular, an atomic side-condition of one kind (disjoint/superset)
-can be instantiated into a complicated condition involving many variables.
-
-Remember that a variable side-condition $(V,D,C,Cd)$ 
-means that $D$, $C$, $Cd$ are mutually disjoint,
-and the interpetation is:
-$$
-  V \notin D \land V \in (C \cup Cd)
-$$
-Note that if $V$ is dynamic then $V \in Cd$, otherwise $V \in C$.
-\begin{code}
-instantiateSC ictx bind (vscs,freshvs)
-  = do vscss' <- sequence $ map (instantiateVSC ictx bind) $ vscdbg "iSC.vscs" vscs
-       vscs' <- concatVarConds vscss'
-       freshvs' <- instVarSet ictx bind $ freshvs
-       mkSideCond (vscdbg "iSC.vscs'" vscs') $ theFreeVars freshvs'
-\end{code}
+The process of instantiating side-conditions 
+requires generating and simplifying
+predicates and expressions over sets of general variables,
+as evidenced by the examples below.
 
 \subsection{SC Instantiation Examples}
 
 \subsubsection{INSTANTIATING Substitution}
 
-Consider this example:
 \begin{description}
 \item[Law] $P[\lst e/\lst x] = P, \qquad \lst x \notin P$
 \item[Goal] $R[O_m/O'])[O'/O_m], \qquad O',O \supseteq R$.
@@ -799,7 +766,7 @@ Now, the law side-condition:
 \\ &=& O,O' \supseteq \setof{ls,ls'} \cup \fv(a) 
        \land  
        O,O' \supseteq \setof{ls,ls'} \cup \fv(b)
-\\ &=& \true, \qquad \text{uses } \fv(a),\fv(b) \subseteq O,O'
+\\ &=& \true, \qquad \text{uses } ls,ls',\fv(a),\fv(b) \subseteq O,O'
 \end{eqnarray*}
 We define dynamic free variables ($\dfv$) as:
 \begin{eqnarray*}
@@ -860,7 +827,200 @@ We have:
 \\ &=& \emptyset \disj \fv(P), \qquad \lst y \supseteq \lst x
 \\ &=& \true
 \end{eqnarray*}
-This really belongs the \h{Forall} theory, and it's dual in \h{Exists}.
+This really belongs the \h{Forall} theory, and its dual in \h{Exists}.
+
+\newpage
+\subsection{The Calculus}
+
+
+We need an intermediate set-expression language over general variables,
+with enumerations \m{\setof{\dots}}, operators \m\cup, \m\setminus, and relations \m\disj, \m\supseteq.
+In effect this is based on variable-sets.
+\textbf{Should this become THE representation for side conditions?}.
+
+\subsubsection{Variable Set-Expression Syntax}
+
+\begin{code}
+data VSetExpr 
+  =  VSEnum  VarSet             -- variable enumerations
+  |  VSUnion VSetExpr VSetExpr  -- set operation
+  |  VSMinus VSetExpr VSetExpr  -- set operation
+  -- should the below be of a different type?
+  |  VSDisj  VSetExpr VSetExpr  -- relation on sets
+  |  VSSup   VSetExpr VSetExpr  -- relation on sets
+  deriving (Eq,Ord,Show)
+
+trVSExpr = trvsexpr trId
+trVSExprU = trvsexpr trIdU
+trvsexpr trid (VSEnum vse) = trvset trid vse -- 
+trvsexpr trid (VSUnion vse1 vse2) 
+  = "("++trvsexpr trid vse1++_union++trvsexpr trid vse2++")"
+trvsexpr trid (VSMinus vse1 vse2) 
+  = "("++trvsexpr trid vse1++_setminus++trvsexpr trid vse2++")"
+trvsexpr trid (VSDisj vse1 vse2) 
+  = "("++trvsexpr trid vse1++_disj++trvsexpr trid vse2++")"
+trvsexpr trid (VSSup vse1 vse2) 
+  = "("++trvsexpr trid vse1++_supseteq++trvsexpr trid vse2++")"
+
+trvsets trid = seplist "," $ trvset trid
+
+vsedbg = rdbg (seplist ";" $ trVSExpr)
+\end{code}
+
+\subsubsection{From Side Condition to Set-Expression}
+
+We map a variable side-condition to a list of set-expressions,
+one for each non-trivial side-condition.
+This list is interpreted as a logical conjunction of its elements
+\begin{code}
+vsc2vse :: VarSideConds -> [VSetExpr]
+vsc2vse (VSC gv nvsD nvsC nvsCd)
+  = mkVSE VSDisj gv nvsD ++ mkVSE VSSup gv nvsC ++ mkVSE VSSup gv nvsCd
+
+mkVSE :: (VSetExpr -> VSetExpr -> VSetExpr) -> GenVar -> NVarSet 
+      -> [VSetExpr]
+mkVSE _ _ NA           =  []
+mkVSE rel gv (The vs)  =  [ VSEnum (S.singleton gv) `rel` VSEnum vs  ]
+\end{code}
+
+\newpage
+\subsubsection{From Set-Expression to Side-Condition}
+
+Here we expect set-expressions each of the form 
+\m{gv \mathrel{rel} enum}.
+First, converting such into at variable side-condition.
+\begin{code}
+vse2vsc :: MonadFail mf => VSetExpr -> mf (Maybe VarSideConds)
+vse2vsc (VSDisj (VSEnum gvs) (VSEnum anyvs))
+  = case S.toList gvs of
+      [gv] -> mkVSC gv (The anyvs) NA NA
+      _ -> fail "vse2vsc (disj): exactly one g.v. expected on LHS"
+vse2vsc (VSSup (VSEnum gvs) (VSEnum anyvs))
+  = case S.toList gvs of
+      [gv] | isDynGVar gv && all isDynGVar anyvs 
+               -> mkVSC gv NA NA (The anyvs)
+           | otherwise -> mkVSC gv NA (The anyvs) NA
+      _ -> fail "vse2vsc (supset): exactly one g.v. expected on LHS"
+vse2vsc vse 
+  = fail $ unlines'
+      [ "vse2vsc: " ++ trVSExpr vse
+      , "not single gvar disjoint or superset"
+      ]
+\end{code}
+
+When walk \h{vse2vsc} over a list to convert
+\begin{code}
+vses2vscs :: MonadFail mf => [VSetExpr] -> mf [VarSideConds]
+vses2vscs [] = return []
+vses2vscs (vse:vses) = do
+  mvsc <- vse2vsc vse
+  case mvsc of
+    Nothing  ->  vses2vscs vses -- here Nothing denotes 'true'
+    Just vsc  ->  do  vscs <- vses2vscs vses
+                      mrgVarConds vsc vscs
+\end{code}
+
+\newpage
+\subsubsection{Simplifying Set-Expressions}
+
+We start by listing some of the simplifications used in the examples above.
+In each case we start at the point where all the uses of \m\fv\ have been expanded, or we have \m{\fv(T)} for a term variable, 
+which we just write as \m T.
+\begin{eqnarray*}
+   \setof{O,O'}\setminus\setof{O'} &=& \setof{O}
+\\ \setof{O}\cup\setof{O_m} &=& \setof{O,O_m}
+\\ \setof{O_m} \disj \setof{O,O_m} &=& \false
+\\ \setof{O,O'} \supseteq \setof{ls,ls',a} 
+   \land \setof{O,O'} \supseteq \setof{a}
+   &=& \setof{O,O'} \supseteq \setof{ls,ls',a}
+\\ \lst x \disj (P\setminus \lst y)
+   &=&
+   (\lst x \setminus \lst y) \disj \setof{P}
+\\ \lst y \supseteq \lst x &\implies& (\lst x \setminus \lst y) = \emptyset
+\end{eqnarray*}
+The variables used above fall into the following classes:
+\begin{description}
+  \item[Term Variables] \m{a}, \m{P} 
+    (generically \m{T,T_i}) 
+  \item[Observation Variables] (generically \m{v,v',v_m,v_i})
+    \begin{description}
+      \item[List Variables] \m{O}, \m{O'}, \m{O_m}, \m{\lst x}, \m{\lst y}
+        (generically \m{\lst\ell,\lst\ell_i})
+      \item[Observation Variables] \m{ls}, \m{ls'}
+        (generically \m{x,x',x_m,x_i})
+    \end{description}
+\end{description}
+The key thing to keep in mind is that we are trying to get singleton term-variable sets into the LHS of the disjoint and superset expressions.
+
+
+Here we assume that the VSE have been produced by \h{vsc2vse} above
+\begin{code}
+instVSE :: MonadFail mf
+        => InsContext -> Binding -> VSetExpr -> mf [VSetExpr]
+-- instVSE ictx bind (VSUnion (VSEnum sgv) (VSEnum vs))
+instVSE ictx bind (VSDisj (VSEnum sgv) (VSEnum vs))
+  | S.size sgv == 1 = do
+      let sgvfvs = instantiateSCGVar ictx (bnddbg "BIND" bind) (pdbg "SGV" $ head $ S.toList sgv)
+      return $ fvs2vses $ fvsdbg "SGVFVS" sgvfvs
+instVSE _ _ vse 
+  = fail ("instVSE: cannot instantiate "++trVSExpr vse)
+\end{code}
+
+
+Here we convert free-variables into set-expressions:
+\begin{code}
+fvs2vses :: FreeVars -> [VSetExpr]
+fvs2vses (fvs,diffs) = VSEnum fvs : map diff2vses diffs
+
+diff2vses :: (GenVar,VarSet) -> VSetExpr
+diff2vses (gv,vs) = VSMinus (VSEnum $ S.singleton gv) (VSEnum vs)
+\end{code}
+
+
+\newpage
+\section{Side-Condition Instantiation (Total)}
+
+Doing it again, with side-conditions.
+(Basically) we drill down to the atomic side-conditions,
+instantiate and simplify those,
+and merge together.
+\textbf{There's nothing basic here.}
+
+\begin{code}
+instantiateSC :: MonadFail m 
+              => InsContext -> Binding -> SideCond -> m SideCond
+\end{code}
+
+(Atomic) Side-conditions (semantically):
+\begin{eqnarray*}
+   \beta.(D \disj  V) &=& \beta.D \disj \fv(\beta(V))
+\\ \beta.(C \supseteq V)  &=& \beta.C \supseteq \fv(\beta(V))
+\\ \beta.(Cd \supseteq V)  &=& \beta.Cd \supseteq \dfv(\beta(V))
+\\ \beta(\fresh F) &=& \fresh \beta(F)
+\end{eqnarray*}
+Remember, $V$ is a variable denoting a variable, term, or list-variable.
+and in general $\beta(V)$ can be a term, or a general variable.
+
+In particular, an atomic side-condition of one kind (disjoint/superset)
+can be instantiated into a complicated condition involving many variables.
+
+Remember that a variable side-condition $(V,D,C,Cd)$ 
+means that $D$, $C$, $Cd$ are mutually disjoint,
+and the interpetation is:
+$$
+  V \notin D \land V \in (C \cup Cd)
+$$
+Note that if $V$ is dynamic then $V \in Cd$, otherwise $V \in C$.
+\begin{code}
+instantiateSC ictx bind (vscs,freshvs)
+  = do let vses = concat $ map vsc2vse vscs
+       vsess <- sequence $ map (instVSE ictx bind) $ vsedbg "VSES"  vses
+       vscs2 <- vses2vscs $ vsedbg "VSESS" (concat vsess)
+       vscss' <- sequence $ map (instantiateVSC ictx bind) $ vscdbg "iSC.vscs2" vscs2
+       vscs' <- concatVarConds vscss'
+       freshvs' <- instVarSet ictx bind $ freshvs
+       mkSideCond (vscdbg "iSC.vscs'" vscs') $ theFreeVars freshvs'
+\end{code}
 
 
 \newpage
@@ -897,7 +1057,7 @@ instantiateVSC ictx bind vsc@(VSC gV mvsD mvsC mvsCd)
        fmvsC   <-  instNVarSet ictx bind $ pdbg "iVSC.mvsC" mvsC
        fmvsCd  <-  instNVarSet ictx bind $ pdbg "iVSC.mvsCd" mvsCd
        if null $ pdbg "iVSC.diffsT" diffsT
-         then do vscss <- mapM (instVSC ictx fmvsD fmvsC fmvsCd)
+         then do vscss <- mapM (instVSC ictx (pdbg "iVSC.fmvsD" fmvsD) (pdbg "iVSC.fmvsC" fmvsC) $ pdbg "iVSC.fmvsCd" fmvsCd)
                                (S.toList $ pdbg "iVSC.fvsT" fvsT)
                  return $ pdbg "iVSC.vscss.cat" $ concat $ vscss
          else fail "instantiateVSC: explicit diffs in var-set not handled."
@@ -1047,7 +1207,7 @@ instantiateSCVar ictx bind v
   = case lookupVarBind bind v of
         Nothing            ->  (S.singleton $ StdVar v,[])
         Just (BindVar v')  ->  (S.singleton $ StdVar v',[])
-        Just (BindTerm t)  ->  deduceFreeVars ictx t
+        Just (BindTerm t)  ->  freeVars (icSC ictx) t
 \end{code}
 
 
@@ -1101,16 +1261,17 @@ It represents the variable-set: $F \cup \bigcup_i (e_i\setminus B_i)$
 \end{eqnarray*}
 \begin{code}
 deduceFreeVars :: InsContext -> Term -> FreeVars
-deduceFreeVars ictx t 
-  = mrgFreeVarList 
-      ( map (scVarExpand sc) (S.toList $ vsdbg "dFV.fF" fF)
-        ++
-        map (scDiffExpand sc) (fdifdbg "dFV.dD" dD) )
-  where
-     sc = icSC ictx
-     fvs = freeVars sc $ trmdbg "dFV.t" t
-     (fF,dD) = fvsdbg "dFV.fvs"  fvs
+deduceFreeVars ictx t = freeVars (icSC ictx) t
 \end{code}
+  % = mrgFreeVarList 
+  %     ( map (scVarExpand sc) (S.toList fF)
+  %       ++
+  %       map (scDiffExpand sc) dD )
+  % where
+  %    sc = icSC ictx
+  %    fvs = freeVars sc t
+  %    (fF,dD) = fvsdbg "deduce.fvs" fvs
+
 
 \begin{eqnarray*}
    \scvarexp_{sc}(v) &=& \setof v, \qquad v \text{ is obs. var.}
@@ -1137,10 +1298,12 @@ or a mix of the cases with $C$ and $Cd$ disjoint from $D$.
 \end{eqnarray*}
 \begin{code}
 vscsVarExpand :: GenVar -> [VarSideConds] -> FreeVars
-vscsVarExpand e []  =  injVarSet $ S.singleton e
+vscsVarExpand e []            =  injVarSet $ S.singleton e
 vscsVarExpand e (VSC e' _ (The vsC) _ : _)
-  |  e == e'        =  injVarSet vsC
-vscsVarExpand e (_:vscs) = vscsVarExpand e vscs
+  |  e == e'                  =  injVarSet vsC
+vscsVarExpand e (VSC e' _ _ (The vsCd) : _)
+  | isDynGVar e && (e == e')  =  injVarSet vsCd
+vscsVarExpand e (_:vscs)      =  vscsVarExpand e vscs
 \end{code}
 
 Given the expression $e_i \setminus B_i$,

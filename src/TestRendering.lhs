@@ -9,7 +9,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module TestRendering (
    trId, trIdU, iddbg
  , trVar, trVarU, trLVar, trLVarU, trGVar, trGVarU
- , trVSet, trVSetU, trOVSet, trOVSetU, vsdbg
+ , trVSet, trVSetU, trvset
+ , trOVSet, trOVSetU, vsdbg
  , trVList, trVListU, trVariableSet, trVariableSetU
  , trMap
  , trType, typdbg
@@ -611,10 +612,13 @@ trFreeVars :: FreeVars ->  String
 trFreeVars = trfreevars trId
 trFreeVarsU = trfreevars trIdU
 
+-- trfreevars trid (fvars,[])  =  trvset trid fvars 
 trfreevars trid (fvars,diffs)
-  = trvset trid fvars 
-    ++ " " ++ _union ++ " " ++
-    trdiffs trid diffs
+  -- | S.null fvars            =  trdiffs trid diffs
+  | otherwise               =  "( " ++ trvset trid fvars 
+                               ++ " , " ++
+                               trdiffs trid diffs
+                               ++ " )"
 
 trDiffs = trdiffs trId
 trDiffsU = trdiffs trIdU

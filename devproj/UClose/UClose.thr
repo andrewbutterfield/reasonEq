@@ -5,6 +5,7 @@ BEGIN LIST LAWS
 (("[]_def",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))),B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))],([VSC (GV (VR (Id "P" 0,VP,WS))) NA (The (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])) NA],fromList []))),Axiom)
 (("sat_def",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [X (Id "langle_rangle" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))),C (TG (Id "B" 0)) True (Id "not" 0) [X (Id "[_]" 0) (C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))])]],([],fromList []))),Axiom)
 (("land_[]_distr",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))),X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)))],X (Id "[_]" 0) (C (TG (Id "B" 0)) True (Id "and" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))])],([VSC (GV (VR (Id "P" 0,VP,WS))) NA (The (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])) NA,VSC (GV (VR (Id "Q" 0,VP,WS))) NA (The (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])) NA],fromList []))),Proven "land_[]_distr")
+(("[]_idem",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [X (Id "[_]" 0) (X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))),X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))],([],fromList []))),Proven "[]_idem")
 END LIST LAWS
 BEGIN LIST SIMPLIFIERS
 END LIST SIMPLIFIERS
@@ -14,7 +15,6 @@ BEGIN LIST CONJECTURES
 ("univ_id_on_closed",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))),V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],([VSC (GV (VR (Id "P" 0,VP,WS))) NA (The (fromList [])) NA],fromList [])))
 ("univ_true",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [X (Id "[_]" 0) (K (TG (Id "B" 0)) (VB True)),K (TG (Id "B" 0)) (VB True)],([],fromList [])))
 ("univ_False",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [X (Id "[_]" 0) (K (TG (Id "B" 0)) (VB False)),K (TG (Id "B" 0)) (VB False)],([],fromList [])))
-("[]_idem",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [X (Id "[_]" 0) (X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))),X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))],([],fromList [])))
 ("univ_forall_closed",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [B (TG (Id "B" 0)) (Id "forall" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))),X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))],([],fromList [])))
 ("univ_exists_closed",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [B (TG (Id "B" 0)) (Id "exists" 0) (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))]) (X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))),X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)))],([],fromList [])))
 ("univ_inst",ASN (C (TG (Id "B" 0)) True (Id "imp" 0) [X (Id "[_]" 0) (V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))),V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],([],fromList [])))

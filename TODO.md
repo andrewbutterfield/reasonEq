@@ -2,34 +2,7 @@
 
 ## URGENT or NEXT
 
-We have nothing that matches `(∀ y$  • (∀ x$  • P))`  with  `y$⊇x$`.
-
-When matching `forall_remove` we observe:
-
-```
-@iSC.vscs: (list) x$⋔P
-@iVSC.mvsD:  The (fromList [GL (LV (VR (Id "x" 0,VO,WS),[],[]))])
-@iVSC.mvsC:  NA
-@iVSC.mvsCd:  NA
-@iVSC.gV:  GV (VR (Id "P" 0,VP,WS))
-@iVSC.diffsT:  []
-@iSC.vscs': (list) x$⋔P x$⋔y$
-Match against 'forall_remove'[1] was successful
-Binding: { A1  ⟼ 𝔹 , B  ⟼ 𝔹 , P  ⟼ (∀ y$  • P), x$  ⟼ {x$} }
-Instantiated Replacement: (∀ y$  • P)
-Law S.C.: x$⋔P
-Instantiated Law S.C.: x$⋔P, x$⋔y$
-Goal S.C.: y$⊇x$
-```
-
-The 2nd-last line is incorrect - it should be `(x$\y$) ⋔ P`.
-The goal s.c. `y$⊇x$` then reduces it to `Ø ⋔ P`, a.k.a. true.
-
-**Problem: `(x$\y$) ⋔ P` is not representable**
-
-
 Add in Hoare-Triple and WP theories together as `PrePost`, based on `Designs`.
-
 
 **PLAN**
 

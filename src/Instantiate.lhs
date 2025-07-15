@@ -872,16 +872,20 @@ vsedbg = rdbg trVSExpr
 vsesdbg = rdbg (seplist ";" $ trVSExpr)
 \end{code}
 
+\newpage
 \subsubsection{Smart Set-Expression Constructors}
 
-We do the obvious simplifications for enumeration, union and removal.
+Empty and singleton sets:
 \begin{code}
 vsEmpty :: VSetExpr
 vsEmpty = VSEnum S.empty
 
 vsSngl :: GenVar -> VSetExpr
 vsSngl = VSEnum . S.singleton
+\end{code}
 
+We do the obvious simplifications for enumeration, union and removal.
+\begin{code}
 vsUnion :: [VSetExpr] -> VSetExpr
 vsUnion vses
   = case filter (/= vsEmpty) vses of
@@ -914,6 +918,7 @@ mkVSE _ _ NA           =  []
 mkVSE rel gv (The vs)  =  [ vsSngl gv `rel` VSEnum vs  ]
 \end{code}
 
+\newpage
 \subsubsection{From Set-Expression to Side-Condition}
 
 Here we expect set-expressions each of the form 
@@ -921,14 +926,25 @@ Here we expect set-expressions each of the form
 First, converting such into a variable side-condition.
 \begin{code}
 vse2vsc :: MonadFail mf => VSetExpr -> mf (Maybe VarSideConds)
+
 vse2vsc (VSEnum vs) | S.null vs  = return Nothing
-vse2vsc (VSDisj (VSEnum gvs) (VSEnum vs))  
-  =  mkVSC gv (The vs) NA NA
-  where gv = head $ S.toList gvs -- !!!!!!!!!!!!!!!
+
+vse2vsc (VSDisj (VSEnum gvs) (VSEnum vs))
+  | S.null vs  =  return Nothing
+  | sz == 0    =  return Nothing
+  | sz == 1    =  mkVSC (head $ S.toList gvs) (The vs) NA NA
+  where
+    sz = S.size gvs 
+
 vse2vsc (VSSup  (VSEnum gvs) (VSEnum vs))
-  | all isDynGVar gvs && all isDynGVar vs  =  mkVSC gv NA NA (The vs)
-  | otherwise                              =  mkVSC gv NA (The vs) NA
-  where gv = head $ S.toList gvs -- !!!!!!!!!!!!!!
+  | S.null vs  =  return Nothing
+  | sz == 1  =  if isDynGVar gv && all isDynGVar vs
+                then mkVSC gv NA NA (The vs)
+                else mkVSC gv NA (The vs) NA
+  where
+    sz = S.size gvs 
+    gv = head $ S.toList gvs 
+
 vse2vsc vse 
   = fail $ unlines'
       [ "vse2vsc: " ++ trVSExpr vse
@@ -936,12 +952,12 @@ vse2vsc vse
       ]
 \end{code}
 
-When walk \h{vse2vsc} over a list to convert
+Then walk \h{vse2vsc} over a list to convert:
 \begin{code}
 vses2vscs :: MonadFail mf => [VSetExpr] -> mf [VarSideConds]
 vses2vscs [] = return []
 vses2vscs (vse:vses) = do
-  mvsc <- vse2vsc $ pdbg "VSE-for-VSC" vse
+  mvsc <- vse2vsc vse
   case mvsc of
     Nothing  ->  vses2vscs vses -- here Nothing denotes 'true'
     Just vsc  ->  do  vscs <- vses2vscs vses
@@ -955,12 +971,14 @@ Here we assume that the VSE have been produced by \h{vsc2vse} above.
 instVSE :: MonadFail mf
         => InsContext -> Binding -> VSetExpr -> mf VSetExpr
 -- instVSE ictx bind (VSSup (VSEnum sgv) (VSEnum vs))
-instVSE ictx bind (VSDisj (VSEnum gvs) (VSEnum vs))
-  | S.size gvs == 1 = do
-      let sgvfvs = instantiateSCGVars ictx (bnddbg "BIND" bind) (S.toList $ pdbg "GVS" gvs)
-      let vsfvs = instantiateSCGVars ictx bind (S.toList $ pdbg "VS" vs)
-      return $ VSDisj (fvs2vses $ fvsdbg "SGVFVS" sgvfvs) 
-                      (fvs2vses $ fvsdbg "VSFVS" vsfvs)
+instVSE ictx bind (VSDisj (VSEnum gvs) (VSEnum vs)) = do
+  let sgvfvs = instantiateSCGVars ictx bind (S.toList gvs)
+  let vsfvs = instantiateSCGVars ictx bind (S.toList vs)
+  return $ VSDisj (fvs2vses sgvfvs) (fvs2vses vsfvs)
+instVSE ictx bind (VSSup (VSEnum gvs) (VSEnum vs)) = do
+  let sgvfvs = instantiateSCGVars ictx bind (S.toList gvs)
+  let vsfvs = instantiateSCGVars ictx bind (S.toList vs)
+  return $ VSSup (fvs2vses sgvfvs) (fvs2vses vsfvs)
 instVSE _ _ vse 
   = fail ("instVSE: cannot instantiate "++trVSExpr vse)
 \end{code}
@@ -1024,23 +1042,29 @@ simplifyVSetExpr (VSSup   vse1 vse2)
   = simpstep $ VSSup   (simplifyVSetExpr vse1) (simplifyVSetExpr vse2)
 \end{code}
 
-Now, the simple simplification step
+\newpage
+Now, the simple simplification steps.
+These should \emph{not} reduce the relations to \true\ or \false.
 \begin{code}
 simpstep :: VSetExpr -> VSetExpr
 \end{code}  
-  $(P \setminus X) \disj Y = P \disj (Y \setminus X)$
+
+$(P \setminus X) \disj Y = P \disj (Y \setminus X)$
 \begin{code}
 simpstep ((p `VSMinus` x) `VSDisj` y)  
                = (p `VSDisj` (y `vsMinus` x))
 \end{code} 
+
+
 All other cases: no change 
 \begin{code}
-simpstep vse = vsedbg "not-simstep" vse 
+simpstep vse = vse 
 \end{code}  
 
 
 
 \newpage
+
 \section{Side-Condition Instantiation (Total)}
 
 Doing it again, with side-conditions.
@@ -1077,13 +1101,11 @@ Note that if $V$ is dynamic then $V \in Cd$, otherwise $V \in C$.
 \begin{code}
 instantiateSC ictx bind (vscs,freshvs)
   = do let vses = concat $ map vsc2vse vscs
-       vses' <- sequence $ map (instVSE ictx bind) $ vsesdbg "VSES"  vses
-       let vses2 = map simplifyVSetExpr $ vsesdbg "VSES'" vses'
-       vscs2 <- vses2vscs $ vsesdbg "VSES2" vses2 
-       -- vscss' <- sequence $ map (instantiateVSC ictx bind)  vscs2
-       -- vscs' <- concatVarConds $ pdbg "iSC.vscs2" vscs2
+       vses' <- sequence $ map (instVSE ictx bind) vses
+       let vses2 = map simplifyVSetExpr vses'
+       vscs2 <- vses2vscs vses2 
        freshvs' <- instVarSet ictx bind $ freshvs
-       mkSideCond (vscdbg "iSC.vscs2" vscs2) $ theFreeVars freshvs'
+       mkSideCond vscs2 $ theFreeVars freshvs'
 \end{code}
 
 
@@ -1116,14 +1138,14 @@ instantiateVSC :: MonadFail m
                 => InsContext -> Binding -> VarSideConds 
                 -> m [VarSideConds]
 instantiateVSC ictx bind vsc@(VSC gV mvsD mvsC mvsCd)
-  = do let (fvsT,diffsT) = instantiateSCGVar ictx bind $ pdbg "iVSC.gV" gV
-       fmvsD   <-  instNVarSet ictx bind $ pdbg "iVSC.mvsD" mvsD
-       fmvsC   <-  instNVarSet ictx bind $ pdbg "iVSC.mvsC" mvsC
-       fmvsCd  <-  instNVarSet ictx bind $ pdbg "iVSC.mvsCd" mvsCd
-       if null $ pdbg "iVSC.diffsT" diffsT
-         then do vscss <- mapM (instVSC ictx (pdbg "iVSC.fmvsD" fmvsD) (pdbg "iVSC.fmvsC" fmvsC) $ pdbg "iVSC.fmvsCd" fmvsCd)
-                               (S.toList $ pdbg "iVSC.fvsT" fvsT)
-                 return $ pdbg "iVSC.vscss.cat" $ concat $ vscss
+  = do let (fvsT,diffsT) = instantiateSCGVar ictx bind gV
+       fmvsD   <-  instNVarSet ictx bind mvsD
+       fmvsC   <-  instNVarSet ictx bind mvsC
+       fmvsCd  <-  instNVarSet ictx bind mvsCd
+       if null diffsT
+         then do vscss <- mapM (instVSC ictx fmvsD fmvsC fmvsCd)
+                               (S.toList fvsT)
+                 return $ concat $ vscss
          else fail "instantiateVSC: explicit diffs in var-set not handled."
 \end{code}
 
@@ -1142,10 +1164,10 @@ instVSC :: MonadFail m
          -> m [VarSideConds]
 -- we ignore the vBless components for now
 instVSC ictx fvsD@(mvsD,_) fmvsC@(mvsC,_) fmvsCd@(mvsCd,_) gV 
-  = do mvscsD <- mdbg "IV.mkD" $ mkVSC (pdbg "instVSC.gV" gV) mvsD   covByNA covByNA
-       mvscsC <- mdbg "IV.mkC" $ mkVSC gV disjNA mvsC    covByNA
-       mvscCd <- mdbg "IV.mkCd" $ mkVSC gV disjNA covByNA mvsCd 
-       return $ catMaybes [pdbg "instVSC.mvscsD" mvscsD,pdbg "instVSC.mvscsC" mvscsC,pdbg "instVSC.mvscsCd" mvscCd]
+  = do mvscsD <- mkVSC gV mvsD   covByNA covByNA
+       mvscsC <- mkVSC gV disjNA mvsC    covByNA
+       mvscCd <- mkVSC gV disjNA covByNA mvsCd 
+       return $ catMaybes [mvscsD,mvscsC,mvscCd]
 \end{code}
 
 \subsection{Disjointedness}
@@ -1335,15 +1357,6 @@ It represents the variable-set: $F \cup \bigcup_i (e_i\setminus B_i)$
 deduceFreeVars :: InsContext -> Term -> FreeVars
 deduceFreeVars ictx t = freeVars (icSC ictx) t
 \end{code}
-  % = mrgFreeVarList 
-  %     ( map (scVarExpand sc) (S.toList fF)
-  %       ++
-  %       map (scDiffExpand sc) dD )
-  % where
-  %    sc = icSC ictx
-  %    fvs = freeVars sc t
-  %    (fF,dD) = fvsdbg "deduce.fvs" fvs
-
 
 \begin{eqnarray*}
    \scvarexp_{sc}(v) &=& \setof v, \qquad v \text{ is obs. var.}

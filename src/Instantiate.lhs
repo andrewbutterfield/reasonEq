@@ -852,7 +852,11 @@ data VSetExpr
 
 trVSExpr = trvsexpr trId
 trVSExprU = trvsexpr trIdU
-trvsexpr trid (VSEnum vse) = trvset trid vse -- 
+trvsexpr trid (VSEnum vse) 
+  | sz == 0    =  _emptyset
+  | sz == 1    =  trgvar trid $ head $ S.toList vse
+  | otherwise  =  trvset trid vse 
+  where sz = S.size vse
 trvsexpr trid (VSUnion vses) 
   = _union++"("++seplist "," (trvsexpr trid) vses++")"
 trvsexpr trid (VSMinus vse1 vse2) 
@@ -869,17 +873,19 @@ vsedbg = rdbg (seplist ";" $ trVSExpr)
 
 \subsubsection{Smart Set-Expression Constructors}
 
-We do the obvious simplifications for union and removal.
+We do the obvious simplifications for enumeration, union and removal.
 \begin{code}
 vsEmpty :: VSetExpr
 vsEmpty = VSEnum S.empty
+
+vsSngl = VSEnum . S.singleton
 
 vsUnion :: [VSetExpr] -> VSetExpr
 vsUnion vses
   = case filter (/= vsEmpty) vses of
       []     ->  vsEmpty
       [vse]  ->  vse
-      vses'  ->  VSUnion vses'
+      vses'  ->  VSUnion $ sort vses'
 
 vsMinus :: VSetExpr -> VSetExpr -> VSetExpr
 vsMinus vsplus vsminus
@@ -902,7 +908,7 @@ vsc2vse (VSC gv nvsD nvsC nvsCd)
 mkVSE :: (VSetExpr -> VSetExpr -> VSetExpr) -> GenVar -> NVarSet 
       -> [VSetExpr]
 mkVSE _ _ NA           =  []
-mkVSE rel gv (The vs)  =  [ VSEnum (S.singleton gv) `rel` VSEnum vs  ]
+mkVSE rel gv (The vs)  =  [ vsSngl gv `rel` VSEnum vs  ]
 \end{code}
 
 \newpage
@@ -913,18 +919,14 @@ Here we expect set-expressions each of the form
 First, converting such into a variable side-condition.
 \begin{code}
 vse2vsc :: MonadFail mf => VSetExpr -> mf (Maybe VarSideConds)
-vse2vsc (VSEnum vs)
-  | S.null vs  = return Nothing
-vse2vsc (VSDisj (VSEnum gvs) (VSEnum anyvs))
-  = case S.toList $ vsdbg "GVS" gvs of
-      [gv] -> mkVSC gv (The anyvs) NA NA
-      _ -> fail "vse2vsc (disj): exactly one g.v. expected on LHS"
-vse2vsc (VSSup (VSEnum gvs) (VSEnum anyvs))
-  = case S.toList gvs of
-      [gv] | isDynGVar gv && all isDynGVar anyvs 
-               -> mkVSC gv NA NA (The anyvs)
-           | otherwise -> mkVSC gv NA (The anyvs) NA
-      _ -> fail "vse2vsc (supset): exactly one g.v. expected on LHS"
+vse2vsc (VSEnum vs) | S.null vs  = return Nothing
+vse2vsc (VSDisj (VSEnum gvs) (VSEnum vs))  
+  =  mkVSC gv (The vs) NA NA
+  where gv = head $ S.toList gvs
+vse2vsc (VSSup  (VSEnum gvs) (VSEnum vs))
+  | all isDynGVar gvs && all isDynGVar vs  =  mkVSC gv NA NA (The vs)
+  | otherwise                              =  mkVSC gv NA (The vs) NA
+  where gv = head $ S.toList gvs
 vse2vsc vse 
   = fail $ unlines'
       [ "vse2vsc: " ++ trVSExpr vse
@@ -982,10 +984,10 @@ Here we assume that the VSE have been produced by \h{vsc2vse} above.
 instVSE :: MonadFail mf
         => InsContext -> Binding -> VSetExpr -> mf VSetExpr
 -- instVSE ictx bind (VSSup (VSEnum sgv) (VSEnum vs))
-instVSE ictx bind (VSDisj (VSEnum sgv) (VSEnum vs))
-  | S.size sgv == 1 = do
-      let sgvfvs = instantiateSCGVar ictx (bnddbg "BIND" bind) (pdbg "SGV" $ head $ S.toList sgv)
-      let vsfvs = instantiateSCGVar ictx bind (pdbg "VS" $ head $ S.toList vs)
+instVSE ictx bind (VSDisj (VSEnum gvs) (VSEnum vs))
+  | S.size gvs == 1 = do
+      let sgvfvs = instantiateSCGVars ictx (bnddbg "BIND" bind) (S.toList $ pdbg "GVS" gvs)
+      let vsfvs = instantiateSCGVars ictx bind (S.toList $ pdbg "VS" vs)
       return $ VSDisj (fvs2vses $ fvsdbg "SGVFVS" sgvfvs) 
                       (fvs2vses $ fvsdbg "VSFVS" vsfvs)
 instVSE _ _ vse 
@@ -999,7 +1001,7 @@ fvs2vses :: FreeVars -> VSetExpr
 fvs2vses (fvs,diffs) = vsUnion (VSEnum fvs : map diff2vses diffs)
 
 diff2vses :: (GenVar,VarSet) -> VSetExpr
-diff2vses (gv,vs) = VSMinus (VSEnum $ S.singleton gv) (VSEnum vs)
+diff2vses (gv,vs) = vsMinus (vsSngl gv) (VSEnum vs)
 \end{code}
 
 
@@ -1220,6 +1222,14 @@ instantiateSCGVar :: InsContext -> Binding -> GenVar -> FreeVars
 instantiateSCGVar ictx bind (StdVar v)   =  instantiateSCVar  ictx bind v
 instantiateSCGVar ictx bind (LstVar lv)  =  instantiateSCLVar ictx bind lv
 \end{code}
+
+We will want to do batch processing too:
+\begin{code}
+instantiateSCGVars :: InsContext -> Binding -> [GenVar] -> FreeVars
+instantiateSCGVars ictx bind gvs  
+  =  mrgFreeVarList $ map (instantiateSCGVar ictx bind) gvs
+\end{code}
+
 
 Instantiating a standard variable ($v$):
 \begin{eqnarray*}

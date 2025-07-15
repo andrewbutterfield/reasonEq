@@ -612,20 +612,17 @@ trFreeVars :: FreeVars ->  String
 trFreeVars = trfreevars trId
 trFreeVarsU = trfreevars trIdU
 
--- trfreevars trid (fvars,[])  =  trvset trid fvars 
+trfreevars trid (fvars,[])  =  trvset trid fvars 
 trfreevars trid (fvars,diffs)
-  -- | S.null fvars            =  trdiffs trid diffs
-  | otherwise               =  "( " ++ trvset trid fvars 
-                               ++ " , " ++
-                               trdiffs trid diffs
-                               ++ " )"
+  | S.null fvars  =  trdiffs trid diffs 
+  | otherwise     =  trvset trid fvars ++ _union ++ trdiffs trid diffs
 
 trDiffs = trdiffs trId
 trDiffsU = trdiffs trIdU
 
 trdiffs trid []  =  ""
 trdiffs trid diffs = "(" ++ trdiffl trid diffs ++ ")"
-trdiffl trid =  seplist " , " $ trdiff trid
+trdiffl trid =  seplist _union $ trdiff trid
 
 fdifdbg = rdbg trDiffs
 

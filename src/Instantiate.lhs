@@ -819,12 +819,12 @@ Consider also this example:
 \end{description}
 We have:
 \begin{eqnarray*}
-\lefteqn{\beta(\lst x \disj P)}
-\\ &=& \beta(\lst x) \disj \beta(P)
-\\ &=& \lst x \disj \fv(\forall \lst y \bullet P )
-\\ &=& \lst x \disj (\fv(P) \setminus \lst y)
-\\ &=& (\lst x \setminus \lst y) \disj \fv(P)
-\\ &=& \emptyset \disj \fv(P), \qquad \lst y \supseteq \lst x
+\lefteqn{\beta(P \disj \lst x)}
+\\ &=&  \beta(P) \disj \beta(\lst x) 
+\\ &=& \fv(\forall \lst y \bullet P ) \disj \lst x 
+\\ &=& (\fv(P) \setminus \lst y) \disj \lst x 
+\\ &=& \fv(P) \disj(\lst x \setminus \lst y) 
+\\ &=& \fv(P) \disj \emptyset, \qquad \lst y \supseteq \lst x
 \\ &=& \true
 \end{eqnarray*}
 This really belongs the \h{Forall} theory, and its dual in \h{Exists}.
@@ -843,7 +843,7 @@ In effect this is based on variable-sets.
 \begin{code}
 data VSetExpr 
   =  VSEnum  VarSet             -- variable enumerations
-  |  VSUnion VSetExpr VSetExpr  -- set operation
+  |  VSUnion [VSetExpr]         -- set operation
   |  VSMinus VSetExpr VSetExpr  -- set operation
   -- should the below be of a different type?
   |  VSDisj  VSetExpr VSetExpr  -- relation on sets
@@ -853,8 +853,8 @@ data VSetExpr
 trVSExpr = trvsexpr trId
 trVSExprU = trvsexpr trIdU
 trvsexpr trid (VSEnum vse) = trvset trid vse -- 
-trvsexpr trid (VSUnion vse1 vse2) 
-  = "("++trvsexpr trid vse1++_union++trvsexpr trid vse2++")"
+trvsexpr trid (VSUnion vses) 
+  = _union++"("++seplist "," (trvsexpr trid) vses++")"
 trvsexpr trid (VSMinus vse1 vse2) 
   = "("++trvsexpr trid vse1++_setminus++trvsexpr trid vse2++")"
 trvsexpr trid (VSDisj vse1 vse2) 
@@ -866,6 +866,28 @@ trvsets trid = seplist "," $ trvset trid
 
 vsedbg = rdbg (seplist ";" $ trVSExpr)
 \end{code}
+
+\subsubsection{Smart Set-Expression Constructors}
+
+We do the obvious simplifications for union and removal.
+\begin{code}
+vsEmpty :: VSetExpr
+vsEmpty = VSEnum S.empty
+
+vsUnion :: [VSetExpr] -> VSetExpr
+vsUnion vses
+  = case filter (/= vsEmpty) vses of
+      []     ->  vsEmpty
+      [vse]  ->  vse
+      vses'  ->  VSUnion vses'
+
+vsMinus :: VSetExpr -> VSetExpr -> VSetExpr
+vsMinus vsplus vsminus
+  | vsplus  == vsEmpty  =  vsplus
+  | vsminus == vsEmpty  =  vsplus
+  | otherwise           =  VSMinus vsplus vsminus
+\end{code}
+
 
 \subsubsection{From Side Condition to Set-Expression}
 
@@ -888,11 +910,13 @@ mkVSE rel gv (The vs)  =  [ VSEnum (S.singleton gv) `rel` VSEnum vs  ]
 
 Here we expect set-expressions each of the form 
 \m{gv \mathrel{rel} enum}.
-First, converting such into at variable side-condition.
+First, converting such into a variable side-condition.
 \begin{code}
 vse2vsc :: MonadFail mf => VSetExpr -> mf (Maybe VarSideConds)
+vse2vsc (VSEnum vs)
+  | S.null vs  = return Nothing
 vse2vsc (VSDisj (VSEnum gvs) (VSEnum anyvs))
-  = case S.toList gvs of
+  = case S.toList $ vsdbg "GVS" gvs of
       [gv] -> mkVSC gv (The anyvs) NA NA
       _ -> fail "vse2vsc (disj): exactly one g.v. expected on LHS"
 vse2vsc (VSSup (VSEnum gvs) (VSEnum anyvs))
@@ -913,7 +937,7 @@ When walk \h{vse2vsc} over a list to convert
 vses2vscs :: MonadFail mf => [VSetExpr] -> mf [VarSideConds]
 vses2vscs [] = return []
 vses2vscs (vse:vses) = do
-  mvsc <- vse2vsc vse
+  mvsc <- vse2vsc $ pdbg "VSE-for-VSC" vse
   case mvsc of
     Nothing  ->  vses2vscs vses -- here Nothing denotes 'true'
     Just vsc  ->  do  vscs <- vses2vscs vses
@@ -933,9 +957,9 @@ which we just write as \m T.
 \\ \setof{O,O'} \supseteq \setof{ls,ls',a} 
    \land \setof{O,O'} \supseteq \setof{a}
    &=& \setof{O,O'} \supseteq \setof{ls,ls',a}
-\\ \lst x \disj (P\setminus \lst y)
+\\ (P\setminus \lst y) \disj \lst x 
    &=&
-   (\lst x \setminus \lst y) \disj \setof{P}
+   \setof{P} \disj (\lst x \setminus \lst y) 
 \\ \lst y \supseteq \lst x &\implies& (\lst x \setminus \lst y) = \emptyset
 \end{eqnarray*}
 The variables used above fall into the following classes:
@@ -953,15 +977,17 @@ The variables used above fall into the following classes:
 The key thing to keep in mind is that we are trying to get singleton term-variable sets into the LHS of the disjoint and superset expressions.
 
 
-Here we assume that the VSE have been produced by \h{vsc2vse} above
+Here we assume that the VSE have been produced by \h{vsc2vse} above.
 \begin{code}
 instVSE :: MonadFail mf
-        => InsContext -> Binding -> VSetExpr -> mf [VSetExpr]
--- instVSE ictx bind (VSUnion (VSEnum sgv) (VSEnum vs))
+        => InsContext -> Binding -> VSetExpr -> mf VSetExpr
+-- instVSE ictx bind (VSSup (VSEnum sgv) (VSEnum vs))
 instVSE ictx bind (VSDisj (VSEnum sgv) (VSEnum vs))
   | S.size sgv == 1 = do
       let sgvfvs = instantiateSCGVar ictx (bnddbg "BIND" bind) (pdbg "SGV" $ head $ S.toList sgv)
-      return $ fvs2vses $ fvsdbg "SGVFVS" sgvfvs
+      let vsfvs = instantiateSCGVar ictx bind (pdbg "VS" $ head $ S.toList vs)
+      return $ VSDisj (fvs2vses $ fvsdbg "SGVFVS" sgvfvs) 
+                      (fvs2vses $ fvsdbg "VSFVS" vsfvs)
 instVSE _ _ vse 
   = fail ("instVSE: cannot instantiate "++trVSExpr vse)
 \end{code}
@@ -969,8 +995,8 @@ instVSE _ _ vse
 
 Here we convert free-variables into set-expressions:
 \begin{code}
-fvs2vses :: FreeVars -> [VSetExpr]
-fvs2vses (fvs,diffs) = VSEnum fvs : map diff2vses diffs
+fvs2vses :: FreeVars -> VSetExpr
+fvs2vses (fvs,diffs) = vsUnion (VSEnum fvs : map diff2vses diffs)
 
 diff2vses :: (GenVar,VarSet) -> VSetExpr
 diff2vses (gv,vs) = VSMinus (VSEnum $ S.singleton gv) (VSEnum vs)
@@ -1014,12 +1040,12 @@ Note that if $V$ is dynamic then $V \in Cd$, otherwise $V \in C$.
 \begin{code}
 instantiateSC ictx bind (vscs,freshvs)
   = do let vses = concat $ map vsc2vse vscs
-       vsess <- sequence $ map (instVSE ictx bind) $ vsedbg "VSES"  vses
-       vscs2 <- vses2vscs $ vsedbg "VSESS" (concat vsess)
-       vscss' <- sequence $ map (instantiateVSC ictx bind) $ vscdbg "iSC.vscs2" vscs2
-       vscs' <- concatVarConds vscss'
+       vses' <- sequence $ map (instVSE ictx bind) $ vsedbg "VSES"  vses
+       vscs2 <- vses2vscs $ vsedbg "VSES'" vses' -- (concat vsess)
+       -- vscss' <- sequence $ map (instantiateVSC ictx bind)  vscs2
+       -- vscs' <- concatVarConds $ pdbg "iSC.vscs2" vscs2
        freshvs' <- instVarSet ictx bind $ freshvs
-       mkSideCond (vscdbg "iSC.vscs'" vscs') $ theFreeVars freshvs'
+       mkSideCond (vscdbg "iSC.vscs2" vscs2) $ theFreeVars freshvs'
 \end{code}
 
 

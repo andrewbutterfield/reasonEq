@@ -868,7 +868,8 @@ trvsexpr trid (VSSup vse1 vse2)
 
 trvsets trid = seplist "," $ trvset trid
 
-vsedbg = rdbg (seplist ";" $ trVSExpr)
+vsedbg = rdbg trVSExpr
+vsesdbg = rdbg (seplist ";" $ trVSExpr)
 \end{code}
 
 \subsubsection{Smart Set-Expression Constructors}
@@ -878,6 +879,7 @@ We do the obvious simplifications for enumeration, union and removal.
 vsEmpty :: VSetExpr
 vsEmpty = VSEnum S.empty
 
+vsSngl :: GenVar -> VSetExpr
 vsSngl = VSEnum . S.singleton
 
 vsUnion :: [VSetExpr] -> VSetExpr
@@ -889,6 +891,7 @@ vsUnion vses
 
 vsMinus :: VSetExpr -> VSetExpr -> VSetExpr
 vsMinus vsplus vsminus
+  | vsplus  == vsminus  =  vsEmpty
   | vsplus  == vsEmpty  =  vsplus
   | vsminus == vsEmpty  =  vsplus
   | otherwise           =  VSMinus vsplus vsminus
@@ -911,7 +914,6 @@ mkVSE _ _ NA           =  []
 mkVSE rel gv (The vs)  =  [ vsSngl gv `rel` VSEnum vs  ]
 \end{code}
 
-\newpage
 \subsubsection{From Set-Expression to Side-Condition}
 
 Here we expect set-expressions each of the form 
@@ -922,11 +924,11 @@ vse2vsc :: MonadFail mf => VSetExpr -> mf (Maybe VarSideConds)
 vse2vsc (VSEnum vs) | S.null vs  = return Nothing
 vse2vsc (VSDisj (VSEnum gvs) (VSEnum vs))  
   =  mkVSC gv (The vs) NA NA
-  where gv = head $ S.toList gvs
+  where gv = head $ S.toList gvs -- !!!!!!!!!!!!!!!
 vse2vsc (VSSup  (VSEnum gvs) (VSEnum vs))
   | all isDynGVar gvs && all isDynGVar vs  =  mkVSC gv NA NA (The vs)
   | otherwise                              =  mkVSC gv NA (The vs) NA
-  where gv = head $ S.toList gvs
+  where gv = head $ S.toList gvs -- !!!!!!!!!!!!!!
 vse2vsc vse 
   = fail $ unlines'
       [ "vse2vsc: " ++ trVSExpr vse
@@ -946,7 +948,34 @@ vses2vscs (vse:vses) = do
                       mrgVarConds vsc vscs
 \end{code}
 
-\newpage
+\subsubsection{Instantiating Set-Expressions}
+
+Here we assume that the VSE have been produced by \h{vsc2vse} above.
+\begin{code}
+instVSE :: MonadFail mf
+        => InsContext -> Binding -> VSetExpr -> mf VSetExpr
+-- instVSE ictx bind (VSSup (VSEnum sgv) (VSEnum vs))
+instVSE ictx bind (VSDisj (VSEnum gvs) (VSEnum vs))
+  | S.size gvs == 1 = do
+      let sgvfvs = instantiateSCGVars ictx (bnddbg "BIND" bind) (S.toList $ pdbg "GVS" gvs)
+      let vsfvs = instantiateSCGVars ictx bind (S.toList $ pdbg "VS" vs)
+      return $ VSDisj (fvs2vses $ fvsdbg "SGVFVS" sgvfvs) 
+                      (fvs2vses $ fvsdbg "VSFVS" vsfvs)
+instVSE _ _ vse 
+  = fail ("instVSE: cannot instantiate "++trVSExpr vse)
+\end{code}
+
+Here we convert free-variables into set-expressions:
+\begin{code}
+fvs2vses :: FreeVars -> VSetExpr
+fvs2vses (fvs,diffs) = vsUnion (VSEnum fvs : map diff2vses diffs)
+
+diff2vses :: (GenVar,VarSet) -> VSetExpr
+diff2vses (gv,vs) = vsMinus (vsSngl gv) (VSEnum vs)
+\end{code}
+
+
+
 \subsubsection{Simplifying Set-Expressions}
 
 We start by listing some of the simplifications used in the examples above.
@@ -978,31 +1007,37 @@ The variables used above fall into the following classes:
 \end{description}
 The key thing to keep in mind is that we are trying to get singleton term-variable sets into the LHS of the disjoint and superset expressions.
 
+We simplify a set-expression (\h{simplifyVSetExpr}) by working bottom-up,
+applying a one-step simplifier (\h{simpstep}) at each stage.
+The one-step simplifier uses the smart constructors.
 
-Here we assume that the VSE have been produced by \h{vsc2vse} above.
 \begin{code}
-instVSE :: MonadFail mf
-        => InsContext -> Binding -> VSetExpr -> mf VSetExpr
--- instVSE ictx bind (VSSup (VSEnum sgv) (VSEnum vs))
-instVSE ictx bind (VSDisj (VSEnum gvs) (VSEnum vs))
-  | S.size gvs == 1 = do
-      let sgvfvs = instantiateSCGVars ictx (bnddbg "BIND" bind) (S.toList $ pdbg "GVS" gvs)
-      let vsfvs = instantiateSCGVars ictx bind (S.toList $ pdbg "VS" vs)
-      return $ VSDisj (fvs2vses $ fvsdbg "SGVFVS" sgvfvs) 
-                      (fvs2vses $ fvsdbg "VSFVS" vsfvs)
-instVSE _ _ vse 
-  = fail ("instVSE: cannot instantiate "++trVSExpr vse)
+simplifyVSetExpr :: VSetExpr -> VSetExpr
+simplifyVSetExpr vse@(VSEnum _) = vse 
+simplifyVSetExpr (VSUnion vses) 
+  = simpstep $ vsUnion $ map simplifyVSetExpr vses
+simplifyVSetExpr (VSMinus vse1 vse2) 
+  = simpstep $ vsMinus (simplifyVSetExpr vse1) (simplifyVSetExpr vse2)
+simplifyVSetExpr (VSDisj  vse1 vse2) 
+  = simpstep $ VSDisj  (simplifyVSetExpr vse1) (simplifyVSetExpr vse2)
+simplifyVSetExpr (VSSup   vse1 vse2) 
+  = simpstep $ VSSup   (simplifyVSetExpr vse1) (simplifyVSetExpr vse2)
 \end{code}
 
-
-Here we convert free-variables into set-expressions:
+Now, the simple simplification step
 \begin{code}
-fvs2vses :: FreeVars -> VSetExpr
-fvs2vses (fvs,diffs) = vsUnion (VSEnum fvs : map diff2vses diffs)
+simpstep :: VSetExpr -> VSetExpr
+\end{code}  
+  $(P \setminus X) \disj Y = P \disj (Y \setminus X)$
+\begin{code}
+simpstep ((p `VSMinus` x) `VSDisj` y)  
+               = (p `VSDisj` (y `vsMinus` x))
+\end{code} 
+All other cases: no change 
+\begin{code}
+simpstep vse = vsedbg "not-simstep" vse 
+\end{code}  
 
-diff2vses :: (GenVar,VarSet) -> VSetExpr
-diff2vses (gv,vs) = vsMinus (vsSngl gv) (VSEnum vs)
-\end{code}
 
 
 \newpage
@@ -1042,8 +1077,9 @@ Note that if $V$ is dynamic then $V \in Cd$, otherwise $V \in C$.
 \begin{code}
 instantiateSC ictx bind (vscs,freshvs)
   = do let vses = concat $ map vsc2vse vscs
-       vses' <- sequence $ map (instVSE ictx bind) $ vsedbg "VSES"  vses
-       vscs2 <- vses2vscs $ vsedbg "VSES'" vses' -- (concat vsess)
+       vses' <- sequence $ map (instVSE ictx bind) $ vsesdbg "VSES"  vses
+       let vses2 = map simplifyVSetExpr $ vsesdbg "VSES'" vses'
+       vscs2 <- vses2vscs $ vsesdbg "VSES2" vses2 
        -- vscss' <- sequence $ map (instantiateVSC ictx bind)  vscs2
        -- vscs' <- concatVarConds $ pdbg "iSC.vscs2" vscs2
        freshvs' <- instVarSet ictx bind $ freshvs

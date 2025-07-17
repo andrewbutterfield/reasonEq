@@ -1170,7 +1170,22 @@ instVSC ictx fvsD@(mvsD,_) fmvsC@(mvsC,_) fmvsCd@(mvsCd,_) gV
        return $ catMaybes [mvscsD,mvscsC,mvscCd]
 \end{code}
 
-\subsection{Disjointedness}
+\newpage
+\subsection{Instantiating Atomic Side-Conditions}
+
+Theoretical overview.
+
+Here we assume: 
+$$\fv(\beta(V)) 
+  = 
+  F \cup \{e_i\setminus B_i\}_{i \in 1\dots N},
+  \qquad 
+  F \disj e_i, F \disj B_i
+$$
+
+\subsubsection{Disjointedness}
+
+
 
 \begin{eqnarray*}
    \beta.(D \disj  V) &=& \beta.D \disj \fv(\beta(V))
@@ -1178,8 +1193,6 @@ instVSC ictx fvsD@(mvsD,_) fmvsC@(mvsC,_) fmvsCd@(mvsCd,_) gV
 \\ &=& \beta.D \disj F \land \{\beta.D \disj (e_i\setminus B_i)\}_{i \in 1\dots N}
 \\ &=& \beta.D \disj F \land \{(\beta.D\setminus B_i) \disj e_i\}_{i \in 1\dots N}
 \end{eqnarray*}
-where $\fv(\beta(V)) = F \cup \{e_i\setminus B_i\}_{i \in 1\dots N}$,
-$F \disj e_i$, $F \disj B_i$.
 % \begin{code}
 % instDisjoint :: MonadFail m 
 %              => InsContext -> FreeVars -> GenVar -> m [VarSideConds]
@@ -1192,12 +1205,8 @@ $F \disj e_i$, $F \disj B_i$.
 %     f2 vsD (evF,vsB) = mkDisj (vsD S.\\ vsB) evF
 % \end{code}
 
-\subsection{Covering}
+\subsubsection{Covering}
 
-
-The general case, 
-where $\fv(\beta(V)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
-$F \disj F_i$, $F \disj B_i$:
 \begin{eqnarray*}
    \beta.(C \supseteq V)
    &=& \beta.C \supseteq \fv(\beta(V))
@@ -1219,12 +1228,7 @@ $F \disj F_i$, $F \disj B_i$:
 %     f2 vsC (evF,vsB) = mkCovers (vsC `S.union` vsB) evF
 % \end{code}
 
-\newpage
-\subsection{Dynamic Coverage}
-
-The general case, 
-where $\fv(\beta(V)) = F \cup \{F_i\setminus B_i\}_{i \in 1\dots N}$,
-$F \disj F_i$, $F \disj B_i$:
+\subsubsection{Dynamic Coverage}
 
 We assume here that $D$ covers all dynamic variables.
 \begin{eqnarray*}

@@ -6,6 +6,27 @@ Add in Hoare-Triple and WP theories together as `PrePost`, based on `Designs`.
 
 **PLAN**
 
+```
+[(∀ x$  • P)]
+ ⊤
+Focus = [] :: 𝔹 
+proof: tm 1 []_def
+Match against '[]_def'[1] failed!
+try s.c. instantiation failed
+{ B  ⟼ 𝔹 , P  ⟼ (∀ x$  • P), x$  ⟼ ⟨?x$⟩ }  &&   x$⊇P
+lnm[parts]=[]_def[1]
+tC=[(∀ x$  • P)]
+scC=⊤
+tP'=(∀ ?x$  • (∀ x$  • P))
+partsP=[P]
+replP=(∀ x$  • P)
+scP=x$⊇P
+vsp2vsc: (P⊇(?x$∖x$))
+not single gvar disjoint or superset
+```
+
+
+
 We cannot prove `X_X_comp` without the relevant invariants.
 
 Time to get `Designs` going and then to the proper UTCP semantics

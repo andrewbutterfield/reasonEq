@@ -842,10 +842,12 @@ In effect this is based on variable-sets.
 
 \begin{code}
 data VSetExpr 
-  =  VSEnum  VarSet             -- variable enumerations
-  |  VSUnion [VSetExpr]         -- set operation
-  |  VSMinus VSetExpr VSetExpr  -- set operation
-  -- should the below be of a different type?
+  =  VSEnum  VarSet             
+  |  VSUnion VSetExpr VSetExpr  
+  |  VSMinus VSetExpr VSetExpr 
+  deriving (Eq,Ord,Show)
+data VSetPred
+  =  VSTrueP
   |  VSDisj  VSetExpr VSetExpr  -- relation on sets
   |  VSSup   VSetExpr VSetExpr  -- relation on sets
   deriving (Eq,Ord,Show)
@@ -857,19 +859,28 @@ trvsexpr trid (VSEnum vse)
   | sz == 1    =  trgvar trid $ head $ S.toList vse
   | otherwise  =  trvset trid vse 
   where sz = S.size vse
-trvsexpr trid (VSUnion vses) 
-  = _union++"("++seplist "," (trvsexpr trid) vses++")"
+trvsexpr trid (VSUnion vse1 vse2) 
+  = "("++trvsexpr trid vse1++_union++trvsexpr trid vse2++")"
 trvsexpr trid (VSMinus vse1 vse2) 
   = "("++trvsexpr trid vse1++_setminus++trvsexpr trid vse2++")"
-trvsexpr trid (VSDisj vse1 vse2) 
-  = "("++trvsexpr trid vse1++_disj++trvsexpr trid vse2++")"
-trvsexpr trid (VSSup vse1 vse2) 
-  = "("++trvsexpr trid vse1++_supseteq++trvsexpr trid vse2++")"
 
 trvsets trid = seplist "," $ trvset trid
 
 vsedbg = rdbg trVSExpr
 vsesdbg = rdbg (seplist ";" $ trVSExpr)
+
+trVSPred = trvspred trId
+trVSPredU = trvspred trIdU
+trvspred trid VSTrueP = "true"
+trvspred trid (VSDisj vse1 vse2) 
+  = "("++trvsexpr trid vse1++_disj++trvsexpr trid vse2++")"
+trvspred trid (VSSup vse1 vse2) 
+  = "("++trvsexpr trid vse1++_supseteq++trvsexpr trid vse2++")"
+
+trvspreds trid = seplist "," $ trvspred trid
+
+vspdbg = rdbg trVSPred
+vspsdbg = rdbg (seplist "_land" $ trVSPred)
 \end{code}
 
 \newpage
@@ -886,12 +897,12 @@ vsSngl = VSEnum . S.singleton
 
 We do the obvious simplifications for enumeration, union and removal.
 \begin{code}
-vsUnion :: [VSetExpr] -> VSetExpr
-vsUnion vses
-  = case filter (/= vsEmpty) vses of
-      []     ->  vsEmpty
-      [vse]  ->  vse
-      vses'  ->  VSUnion $ sort vses'
+vsUnion :: VSetExpr -> VSetExpr -> VSetExpr
+vsUnion (VSEnum vs1) (VSEnum vs2) = VSEnum (vs1 `S.union` vs2)
+vsUnion vse1 vse2
+  | vse1 == vsEmpty  =  vse2
+  | vse2 == vsEmpty  =  vse1
+  | otherwise = VSUnion vse1 vse1
 
 vsMinus :: VSetExpr -> VSetExpr -> VSetExpr
 vsMinus vsplus vsminus
@@ -902,41 +913,41 @@ vsMinus vsplus vsminus
 \end{code}
 
 
-\subsubsection{From Side Condition to Set-Expression}
+\subsubsection{From Side Condition to Set-Predicates}
 
 We map a variable side-condition to a list of set-expressions,
 one for each non-trivial side-condition.
 This list is interpreted as a logical conjunction of its elements
 \begin{code}
-vsc2vse :: VarSideConds -> [VSetExpr]
-vsc2vse (VSC gv nvsD nvsC nvsCd)
-  = mkVSE VSDisj gv nvsD ++ mkVSE VSSup gv nvsC ++ mkVSE VSSup gv nvsCd
+vsc2vsp :: VarSideConds -> [VSetPred]
+vsc2vsp (VSC gv nvsD nvsC nvsCd)
+  = mkVSP VSDisj gv nvsD ++ mkVSP VSSup gv nvsC ++ mkVSP VSSup gv nvsCd
 
-mkVSE :: (VSetExpr -> VSetExpr -> VSetExpr) -> GenVar -> NVarSet 
-      -> [VSetExpr]
-mkVSE _ _ NA           =  []
-mkVSE rel gv (The vs)  =  [ vsSngl gv `rel` VSEnum vs  ]
+mkVSP :: (VSetExpr -> VSetExpr -> VSetPred) -> GenVar -> NVarSet 
+      -> [VSetPred]
+mkVSP _ _ NA           =  []
+mkVSP rel gv (The vs)  =  [ vsSngl gv `rel` VSEnum vs  ]
 \end{code}
 
 \newpage
-\subsubsection{From Set-Expression to Side-Condition}
+\subsubsection{From Set-Predicate to Side-Condition}
 
-Here we expect set-expressions each of the form 
+Here we expect set-predicates each of the form 
 \m{gv \mathrel{rel} enum}.
 First, converting such into a variable side-condition.
 \begin{code}
-vse2vsc :: MonadFail mf => VSetExpr -> mf (Maybe VarSideConds)
+vsp2vsc :: MonadFail mf => VSetPred -> mf (Maybe VarSideConds)
 
-vse2vsc (VSEnum vs) | S.null vs  = return Nothing
+vsp2vsc VSTrueP  =  return Nothing
 
-vse2vsc (VSDisj (VSEnum gvs) (VSEnum vs))
+vsp2vsc (VSDisj (VSEnum gvs) (VSEnum vs))
   | S.null vs  =  return Nothing
   | sz == 0    =  return Nothing
   | sz == 1    =  mkVSC (head $ S.toList gvs) (The vs) NA NA
   where
     sz = S.size gvs 
 
-vse2vsc (VSSup  (VSEnum gvs) (VSEnum vs))
+vsp2vsc (VSSup  (VSEnum gvs) (VSEnum vs))
   | S.null vs  =  return Nothing
   | sz == 1  =  if isDynGVar gv && all isDynGVar vs
                 then mkVSC gv NA NA (The vs)
@@ -945,73 +956,58 @@ vse2vsc (VSSup  (VSEnum gvs) (VSEnum vs))
     sz = S.size gvs 
     gv = head $ S.toList gvs 
 
-vse2vsc vse 
+vsp2vsc vsp 
   = fail $ unlines'
-      [ "vse2vsc: " ++ trVSExpr vse
+      [ "vsp2vsc: " ++ trVSPred vsp
       , "not single gvar disjoint or superset"
       ]
 \end{code}
 
-Then walk \h{vse2vsc} over a list to convert:
+Then walk \h{vsp2vsc} over a list to convert:
 \begin{code}
-vses2vscs :: MonadFail mf => [VSetExpr] -> mf [VarSideConds]
-vses2vscs [] = return []
-vses2vscs (vse:vses) = do
-  mvsc <- vse2vsc vse
+vsps2vscs :: MonadFail mf => [VSetPred] -> mf [VarSideConds]
+vsps2vscs [] = return []
+vsps2vscs (vse:vses) = do
+  mvsc <- vsp2vsc vse
   case mvsc of
-    Nothing  ->  vses2vscs vses -- here Nothing denotes 'true'
-    Just vsc  ->  do  vscs <- vses2vscs vses
+    Nothing  ->  vsps2vscs vses -- here Nothing denotes 'true'
+    Just vsc  ->  do  vscs <- vsps2vscs vses
                       mrgVarConds vsc vscs
 \end{code}
 
 \subsubsection{Instantiating Set-Expressions}
 
-Here we assume that the VSE have been produced by \h{vsc2vse} above.
+Here we assume that the VSE have been produced by \h{vsc2vsp} above.
 \begin{code}
-instVSE :: MonadFail mf
-        => InsContext -> Binding -> VSetExpr -> mf VSetExpr
--- instVSE ictx bind (VSSup (VSEnum sgv) (VSEnum vs))
-instVSE ictx bind (VSDisj (VSEnum gvs) (VSEnum vs)) = do
+instVSP :: MonadFail mf
+        => InsContext -> Binding -> VSetPred -> mf VSetPred
+-- instVSP ictx bind (VSSup (VSEnum sgv) (VSEnum vs))
+instVSP ictx bind (VSDisj (VSEnum gvs) (VSEnum vs)) = do
   let sgvfvs = instantiateSCGVars ictx bind (S.toList gvs)
   let vsfvs = instantiateSCGVars ictx bind (S.toList vs)
   return $ VSDisj (fvs2vses sgvfvs) (fvs2vses vsfvs)
-instVSE ictx bind (VSSup (VSEnum gvs) (VSEnum vs)) = do
+instVSP ictx bind (VSSup (VSEnum gvs) (VSEnum vs)) = do
   let sgvfvs = instantiateSCGVars ictx bind (S.toList gvs)
   let vsfvs = instantiateSCGVars ictx bind (S.toList vs)
   return $ VSSup (fvs2vses sgvfvs) (fvs2vses vsfvs)
-instVSE _ _ vse 
-  = fail ("instVSE: cannot instantiate "++trVSExpr vse)
+instVSP _ _ vsp
+  = fail ("instVSP: cannot instantiate "++trVSPred vsp)
 \end{code}
 
 Here we convert free-variables into set-expressions:
 \begin{code}
 fvs2vses :: FreeVars -> VSetExpr
-fvs2vses (fvs,diffs) = vsUnion (VSEnum fvs : map diff2vses diffs)
+fvs2vses (fvs,diffs) 
+  = foldl vsUnion (VSEnum fvs) (map diff2vses diffs)
 
 diff2vses :: (GenVar,VarSet) -> VSetExpr
 diff2vses (gv,vs) = vsMinus (vsSngl gv) (VSEnum vs)
 \end{code}
 
 
+\subsection{Required Simplifications}
 
-\subsubsection{Simplifying Set-Expressions}
-
-We start by listing some of the simplifications used in the examples above.
-In each case we start at the point where all the uses of \m\fv\ have been expanded, or we have \m{\fv(T)} for a term variable, 
-which we just write as \m T.
-\begin{eqnarray*}
-   \setof{O,O'}\setminus\setof{O'} &=& \setof{O}
-\\ \setof{O}\cup\setof{O_m} &=& \setof{O,O_m}
-\\ \setof{O_m} \disj \setof{O,O_m} &=& \false
-\\ \setof{O,O'} \supseteq \setof{ls,ls',a} 
-   \land \setof{O,O'} \supseteq \setof{a}
-   &=& \setof{O,O'} \supseteq \setof{ls,ls',a}
-\\ (P\setminus \lst y) \disj \lst x 
-   &=&
-   \setof{P} \disj (\lst x \setminus \lst y) 
-\\ \lst y \supseteq \lst x &\implies& (\lst x \setminus \lst y) = \emptyset
-\end{eqnarray*}
-The variables used above fall into the following classes:
+The variables used below fall into the following classes:
 \begin{description}
   \item[Term Variables] \m{a}, \m{P} 
     (generically \m{T,T_i}) 
@@ -1023,43 +1019,80 @@ The variables used above fall into the following classes:
         (generically \m{x,x',x_m,x_i})
     \end{description}
 \end{description}
-The key thing to keep in mind is that we are trying to get singleton term-variable sets into the LHS of the disjoint and superset expressions.
 
-We simplify a set-expression (\h{simplifyVSetExpr}) by working bottom-up,
-applying a one-step simplifier (\h{simpstep}) at each stage.
-The one-step simplifier uses the smart constructors.
+We start by listing some of the simplifications used in the examples above.
+In each case we start at the point where all the uses of \m\fv\ have been expanded, or we have \m{\fv(T)} for a term variable, 
+which we just write as \m T.
 
-\begin{code}
-simplifyVSetExpr :: VSetExpr -> VSetExpr
-simplifyVSetExpr vse@(VSEnum _) = vse 
-simplifyVSetExpr (VSUnion vses) 
-  = simpstep $ vsUnion $ map simplifyVSetExpr vses
-simplifyVSetExpr (VSMinus vse1 vse2) 
-  = simpstep $ vsMinus (simplifyVSetExpr vse1) (simplifyVSetExpr vse2)
-simplifyVSetExpr (VSDisj  vse1 vse2) 
-  = simpstep $ VSDisj  (simplifyVSetExpr vse1) (simplifyVSetExpr vse2)
-simplifyVSetExpr (VSSup   vse1 vse2) 
-  = simpstep $ VSSup   (simplifyVSetExpr vse1) (simplifyVSetExpr vse2)
-\end{code}
+
+
+\subsubsection{Simplifying Set-Expressions}
+
+\begin{eqnarray*}
+   \setof{O,O'}\setminus\setof{O'} &=& \setof{O}
+\\ \setof{O}\cup\setof{O_m} &=& \setof{O,O_m}
+\\ \setof{O_m} \disj \setof{O,O_m} &=& \false
+\end{eqnarray*}
+The key thing to keep in mind is that we are trying to get singleton term-variable sets into the LHS of the disjoint and superset predicates.
 
 \newpage
-Now, the simple simplification steps.
+\subsubsection{Simplifying Set-Predicates}
+
+\begin{eqnarray*}
+   \setof{O,O'} \supseteq \setof{ls,ls',a} 
+   \land \setof{O,O'} \supseteq \setof{a}
+   &=& \setof{O,O'} \supseteq \setof{ls,ls',a}
+\\ (P\setminus \lst y) \disj \lst x 
+   &=&
+   \setof{P} \disj (\lst x \setminus \lst y) 
+\\ \lst y \supseteq \lst x &\implies& (\lst x \setminus \lst y) = \emptyset
+\end{eqnarray*}
+
+Here we are interested in single relations ($\disj$,$\supseteq$)
+with a single distinguished term variable $P$ embedded inside set operations ($\cup$,$\setminus$).
+We want to pull $P$ out to be the sole 1st argument of the relation.
 These should \emph{not} reduce the relations to \true\ or \false.
+In general we may need extra terms not involving $P$ in the output.
+We want to distinguish there so we keep them separate.
 \begin{code}
-simpstep :: VSetExpr -> VSetExpr
+simplifyVSetPred :: VSetPred -> (VSetPred,[VSetPred])
 \end{code}  
-
-$(P \setminus X) \disj Y = P \disj (Y \setminus X)$
+$$(P \setminus X) \disj Y ~=~ P \disj (Y \setminus X)$$
 \begin{code}
-simpstep ((p `VSMinus` x) `VSDisj` y)  
-               = (p `VSDisj` (y `vsMinus` x))
+simplifyVSetPred ((p `VSMinus` x) `VSDisj` y)  
+             =  (p `VSDisj` (y `vsMinus` x), [])
 \end{code} 
-
-
+$$ 
+   (P \cup X) \disj Y 
+   ~=~ 
+   (P \disj Y) \land (X \disj Y)
+$$
+\begin{code}
+simplifyVSetPred ((p `VSUnion` x) `VSDisj` y)  
+               = (p `VSDisj` y , [x `VSDisj` y ] )
+\end{code} 
+$$  
+   (P \setminus X) \supseteq Y 
+   ~=~ 
+   P \supseteq (Y \setminus X) \land (X \disj Y)
+$$
+\begin{code}
+simplifyVSetPred ((p `VSMinus` x) `VSSup` y) 
+  = ( p `VSSup` (y `vsMinus` x) , [x `VSDisj` y  ] )
+\end{code} 
+$$ (P \cup X) \supseteq Y 
+   ~=~ 
+   P \supseteq (Y \setminus X)
+$$
+\begin{code}
+simplifyVSetPred ((p `VSUnion` x) `VSSup` y)  
+             =  (p `VSSup` (y `vsMinus` x), [])
+\end{code} 
 All other cases: no change 
 \begin{code}
-simpstep vse = vse 
+simplifyVSetPred vse = (vse,[]) 
 \end{code}  
+
 
 
 
@@ -1100,12 +1133,20 @@ $$
 Note that if $V$ is dynamic then $V \in Cd$, otherwise $V \in C$.
 \begin{code}
 instantiateSC ictx bind (vscs,freshvs)
-  = do let vses = concat $ map vsc2vse vscs
-       vses' <- sequence $ map (instVSE ictx bind) vses
-       let vses2 = map simplifyVSetExpr vses'
-       vscs2 <- vses2vscs vses2 
+  = do let vsps = concat $ map vsc2vsp vscs
+       vsps' <- sequence $ map (instVSP ictx bind) vsps
+       let vsps2 = mergeSimplifiedVSetPreds $ map simplifyVSetPred vsps'
+       vscs2 <- vsps2vscs vsps2 
        freshvs' <- instVarSet ictx bind $ freshvs
        mkSideCond vscs2 $ theFreeVars freshvs'
+
+mergeSimplifiedVSetPreds :: [(VSetPred,[VSetPred])] -> [VSetPred]
+mergeSimplifiedVSetPreds simplified
+  = let (tvarPreds,adjunctPredss) = unzip simplified
+    in tvarPreds ++ concat adjunctPredss
+-- we should really analyse the adjunctPredss to shrink them
+-- the shrink could expose contradictions
+-- but those should get smoked out when we convert back to VSCs.
 \end{code}
 
 

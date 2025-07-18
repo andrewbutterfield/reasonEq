@@ -2,29 +2,22 @@
 
 ## URGENT or NEXT
 
-Add in Hoare-Triple and WP theories together as `PrePost`, based on `Designs`.
+Sorted!
+
+```
+UClose.[]_idem : [[P]] ≡ [P]
+by 'red-L2R'
+---
+[[P]]
+ = 'match-lhs univ_id_on_closed @[]'
+    { B  ⟼ 𝔹 , P  ⟼ [P] }
+[P]
+```
+
 
 **PLAN**
 
-```
-[(∀ x$  • P)]
- ⊤
-Focus = [] :: 𝔹 
-proof: tm 1 []_def
-Match against '[]_def'[1] failed!
-try s.c. instantiation failed
-{ B  ⟼ 𝔹 , P  ⟼ (∀ x$  • P), x$  ⟼ ⟨?x$⟩ }  &&   x$⊇P
-lnm[parts]=[]_def[1]
-tC=[(∀ x$  • P)]
-scC=⊤
-tP'=(∀ ?x$  • (∀ x$  • P))
-partsP=[P]
-replP=(∀ x$  • P)
-scP=x$⊇P
-vsp2vsc: (P⊇(?x$∖x$))
-not single gvar disjoint or superset
-```
-
+Add in Hoare-Triple and WP theories together as `PrePost`, based on `Designs`.
 
 
 We cannot prove `X_X_comp` without the relevant invariants.

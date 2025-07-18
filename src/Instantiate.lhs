@@ -940,6 +940,7 @@ vsp2vsc :: MonadFail mf => VSetPred -> mf (Maybe VarSideConds)
 
 vsp2vsc VSTrueP  =  return Nothing
 
+
 vsp2vsc (VSDisj (VSEnum gvs) (VSEnum vs))
   | S.null vs  =  return Nothing
   | sz == 0    =  return Nothing
@@ -959,7 +960,8 @@ vsp2vsc (VSSup  (VSEnum gvs) (VSEnum vs))
 vsp2vsc vsp 
   = fail $ unlines'
       [ "vsp2vsc: " ++ trVSPred vsp
-      , "not single gvar disjoint or superset"
+      , "X-vsp2vsc: " ++ show vsp
+      , "not single gvar disjoint or superset with enumeration"
       ]
 \end{code}
 

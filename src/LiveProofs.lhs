@@ -563,7 +563,7 @@ matchLawByName :: MonadFail m
                -> m Matches
 matchLawByName asn lnm mcs fits
  = do (law,vts) <- findLaw lnm mcs
-      return $ domatch vts fits (unwrapASN asn) law
+      return $ domatch vts fits (unwrapASN asn) $ lawdbg "mLBN.law" law
 \end{code}
 
 For each law,
@@ -606,7 +606,7 @@ doPartialMatch :: Identifier -> [VarTable] -> TypCmp
 First, if we have $\equiv$ we call an $n$-way equivalence matcher:
 \begin{code}
 doPartialMatch i vts fits law asnC tsP
-  | (iddbg "doPM.i" i) == theEqv  =   doEqvMatch vts fits law asnC $ trmsdbg "doPM.tsP" tsP
+  | i == theEqv  =   doEqvMatch vts fits law asnC tsP
 \end{code}
 
 If we have two sub-terms,
@@ -697,8 +697,8 @@ doEqvMatch vts fits law asnC [tP1,tP2]
 -- rule out matches against one-side of the reflexivity axiom
   | tP1 == tP2  =  []
 -- otherwise treat binary equivalence specially:
-  | otherwise  =     basicMatch MatchEqvLHS vts fits (lawdbg "doEM.MELHS" law) tP2 asnC tP1
-                  ++ basicMatch MatchEqvRHS vts fits (lawdbg "doEM.MERHS" law) tP1 asnC tP2
+  | otherwise  =     basicMatch MatchEqvLHS vts fits law tP2 asnC tP1
+                  ++ basicMatch MatchEqvRHS vts fits law tP1 asnC tP2
 \end{code}
 Then invoke Cases C and B, in that order.
 \begin{code}

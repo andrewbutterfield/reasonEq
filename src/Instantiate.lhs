@@ -933,51 +933,52 @@ mkVSP rel gv (The vs)  =  [ vsSngl gv `rel` VSEnum vs  ]
 \subsubsection{From Set-Predicate to Side-Condition}
 
 Here we expect set-predicates each of the form 
-\m{gv \mathrel{rel} enum}.
-First, converting such into a variable side-condition.
+\m{gvs \mathrel{rel} enum}.
+First, converting such into a list of variable side-conditions.
 \begin{code}
-vsp2vsc :: MonadFail mf => VSetPred -> mf (Maybe VarSideConds)
+vsp2vsc :: MonadFail mf => VSetPred -> mf [Maybe VarSideConds]
 
-vsp2vsc VSTrueP  =  return Nothing
+vsp2vsc VSTrueP  =  return []
 
 
 vsp2vsc (VSDisj (VSEnum gvs) (VSEnum vs))
-  | S.null vs  =  return Nothing
-  | sz == 0    =  return Nothing
-  | sz == 1    =  mkVSC (head $ S.toList gvs) (The vs) NA NA
-  where
-    sz = S.size gvs 
+  | S.null vs  =  return []
+  | otherwise  =  sequence $ map (mkDisjVSC vs) (S.toList gvs)
 
 vsp2vsc (VSSup  (VSEnum gvs) (VSEnum vs))
-  | S.null vs  =  return Nothing
-  | sz == 1  =  if isDynGVar gv && all isDynGVar vs
-                then mkVSC gv NA NA (The vs)
-                else mkVSC gv NA (The vs) NA
-  where
-    sz = S.size gvs 
-    gv = head $ S.toList gvs 
+  | S.null vs  =  return []
+  | otherwise  =  sequence $ map (mkCovVSC vs) (pdbg "vsp2vsc.VSSup.gvs" $ S.toList gvs)
 
 vsp2vsc vsp 
   = fail $ unlines'
       [ "vsp2vsc: " ++ trVSPred vsp
       , "X-vsp2vsc: " ++ show vsp
-      , "not single gvar disjoint or superset with enumeration"
+      , "not disjoint or superset with enumerations"
       ]
+
+mkDisjVSC :: MonadFail mf 
+          => VarSet -> GenVar -> mf (Maybe VarSideConds)
+mkDisjVSC vs gv = mkVSC gv (The vs) NA NA
+
+mkCovVSC :: MonadFail mf 
+         => Set GenVar -> GenVar -> mf (Maybe VarSideConds)
+mkCovVSC vs gv
+  =  if isDynGVar gv && all isDynGVar vs
+     then mdbg "mkVSC-Dynamic" $ mkVSC gv NA NA (The vs)
+     else mdbg "mkVSC-Static" $ mkVSC gv NA (The vs) NA
 \end{code}
 
 Then walk \h{vsp2vsc} over a list to convert:
 \begin{code}
 vsps2vscs :: MonadFail mf => [VSetPred] -> mf [VarSideConds]
-vsps2vscs [] = return []
-vsps2vscs (vse:vses) = do
-  mvsc <- vsp2vsc vse
-  case mvsc of
-    Nothing  ->  vsps2vscs vses -- here Nothing denotes 'true'
-    Just vsc  ->  do  vscs <- vsps2vscs vses
-                      mrgVarConds vsc vscs
+-- **** right now vsps is a singleton (tm 1 univ_id_on_closed)
+vsps2vscs vsps = do
+  mvscss <- sequence (map vsp2vsc vsps)
+  let vscs = catMaybes $ concat $ pdbg "vsps2vscs.mvscss" mvscss
+  mergeVarConds vscs
 \end{code}
 
-\subsubsection{Instantiating Set-Expressions}
+\subsubsection{Instantiating Set-Predicates}
 
 Here we assume that the VSE have been produced by \h{vsc2vsp} above.
 \begin{code}
@@ -1135,12 +1136,12 @@ $$
 Note that if $V$ is dynamic then $V \in Cd$, otherwise $V \in C$.
 \begin{code}
 instantiateSC ictx bind (vscs,freshvs)
-  = do let vsps = concat $ map vsc2vsp vscs
-       vsps' <- sequence $ map (instVSP ictx bind) vsps
-       let vsps2 = mergeSimplifiedVSetPreds $ map simplifyVSetPred vsps'
-       vscs2 <- vsps2vscs vsps2 
+  = do let vsps = concat $ map vsc2vsp $ pdbg "iSC.vscs" vscs
+       vsps' <- sequence $ map (instVSP ictx bind) $ pdbg "iSC.vsps" vsps
+       let vsps2 = mergeSimplifiedVSetPreds $ map simplifyVSetPred $ pdbg "iSC.vsps'" vsps'
+       vscs2 <- vsps2vscs $ pdbg "iSC.vsps2" vsps2 
        freshvs' <- instVarSet ictx bind $ freshvs
-       mkSideCond vscs2 $ theFreeVars freshvs'
+       mkSideCond (pdbg "iSC.vscs2" vscs2) $ theFreeVars freshvs'
 
 mergeSimplifiedVSetPreds :: [(VSetPred,[VSetPred])] -> [VSetPred]
 mergeSimplifiedVSetPreds simplified

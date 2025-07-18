@@ -19,7 +19,7 @@ module SideCond (
 , onlyFreshSC -- , onlyInvolving, onlyFreshOrInvolved
 -- , scGVars
 , scVarSet
-, mrgVarConds, joinVarConds, concatVarConds
+, mrgVarConds, mergeVarConds, joinVarConds, concatVarConds
 , mrgSideCond, mrgSideConds, mkSideCond
 , scDischarge
 , isFloatingVSC
@@ -295,7 +295,7 @@ mkVSC gv nvsD nvsC nvsCd  =  do
     nvsD'  <- obviousDisj   gv nvsD 
     nvsC'  <- obviousCovBy  gv nvsC
     nvsCd' <- obviousCovBy  gv nvsCd
-    if isTrue nvsD' nvsC' nvsCd'
+    if isTrue (pdbg "mkVSC.nvsD'" nvsD') (pdbg "mkVSC.nvsC'" nvsC') $ pdbg "mkVSC.nvsCd'" nvsCd'
     then return Nothing 
     else return $ Just $ VSC gv nvsD' nvsC' nvsCd'
   where
@@ -606,6 +606,13 @@ mrgVSC vsc' vscs@(vsc1:vscs')
   where
     v' = termVar vsc'
     v1 = termVar vsc1
+\end{code}
+
+Finally, given a list of un-merged VSCs,  we want to merge them:
+\begin{code}
+mergeVarConds :: MonadFail mf => [VarSideConds] -> mf [VarSideConds]
+mergeVarConds [] = return []
+mergeVarConds (vsc:vscs) = mrgVSC vsc vscs
 \end{code}
 
 \subsection{Merging two (checked) VSCs}

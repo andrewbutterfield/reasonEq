@@ -295,7 +295,7 @@ mkVSC gv nvsD nvsC nvsCd  =  do
     nvsD'  <- obviousDisj   gv nvsD 
     nvsC'  <- obviousCovBy  gv nvsC
     nvsCd' <- obviousCovBy  gv nvsCd
-    if isTrue (pdbg "mkVSC.nvsD'" nvsD') (pdbg "mkVSC.nvsC'" nvsC') $ pdbg "mkVSC.nvsCd'" nvsCd'
+    if isTrue nvsD' nvsC' nvsCd'
     then return Nothing 
     else return $ Just $ VSC gv nvsD' nvsC' nvsCd'
   where

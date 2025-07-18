@@ -13,26 +13,6 @@
 
 ## URGENT or NEXT
 
-Law `univ_id_on_closed` should not succeed on `[(P ⟹   R) ∧ (Q ⟹   R)]` !
-
-```
-proof: tm 1 univ_id_on_closed
-Match against 'univ_id_on_closed'[1] was successful
-Binding:
-  { B  ⟼ 𝔹 , P  ⟼ (P ⟹   R) ∧ (Q ⟹   R) }
-Instantiated Replacement:
-  (P ⟹   R) ∧ (Q ⟹   R)
-Law S.C.:
-  Ø⊇P
-Instantiated Law S.C.:
-  ⊤
-Goal S.C.:
-  ⊤
-Discharged Law S.C.:
-  ⊤
-```
-
-Here `instSC bind Ø⊇P` should be `Ø⊇P ∧ Ø⊇Q ∧ Ø⊇R` !!!
 
 ## ISSUES
 

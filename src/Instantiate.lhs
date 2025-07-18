@@ -946,7 +946,7 @@ vsp2vsc (VSDisj (VSEnum gvs) (VSEnum vs))
   | otherwise  =  sequence $ map (mkDisjVSC vs) (S.toList gvs)
 
 vsp2vsc (VSSup  (VSEnum gvs) (VSEnum vs))
-  = sequence $ map (mkCovVSC vs) (pdbg "vsp2vsc.VSSup.gvs" $ S.toList gvs)
+  = sequence $ map (mkCovVSC vs) (S.toList gvs)
 
 vsp2vsc vsp 
   = fail $ unlines'
@@ -973,7 +973,7 @@ vsps2vscs :: MonadFail mf => [VSetPred] -> mf [VarSideConds]
 -- **** right now vsps is a singleton (tm 1 univ_id_on_closed)
 vsps2vscs vsps = do
   mvscss <- sequence (map vsp2vsc vsps)
-  let vscs = catMaybes $ concat $ pdbg "vsps2vscs.mvscss" mvscss
+  let vscs = catMaybes $ concat mvscss
   mergeVarConds vscs
 \end{code}
 
@@ -1135,12 +1135,12 @@ $$
 Note that if $V$ is dynamic then $V \in Cd$, otherwise $V \in C$.
 \begin{code}
 instantiateSC ictx bind (vscs,freshvs)
-  = do let vsps = concat $ map vsc2vsp $ pdbg "iSC.vscs" vscs
-       vsps' <- sequence $ map (instVSP ictx bind) $ pdbg "iSC.vsps" vsps
-       let vsps2 = mergeSimplifiedVSetPreds $ map simplifyVSetPred $ pdbg "iSC.vsps'" vsps'
-       vscs2 <- vsps2vscs $ pdbg "iSC.vsps2" vsps2 
+  = do let vsps = concat $ map vsc2vsp vscs
+       vsps' <- sequence $ map (instVSP ictx bind) vsps
+       let vsps2 = mergeSimplifiedVSetPreds $ map simplifyVSetPred vsps'
+       vscs2 <- vsps2vscs vsps2 
        freshvs' <- instVarSet ictx bind $ freshvs
-       mkSideCond (pdbg "iSC.vscs2" vscs2) $ theFreeVars freshvs'
+       mkSideCond vscs2 $ theFreeVars freshvs'
 
 mergeSimplifiedVSetPreds :: [(VSetPred,[VSetPred])] -> [VSetPred]
 mergeSimplifiedVSetPreds simplified

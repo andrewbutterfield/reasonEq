@@ -541,12 +541,16 @@ trvlist trid vl  =  _langle ++ trvl trid vl ++ _rangle
 
 trVSet = trvset trId
 trVSetU = trvset trIdU
-trvset trid vs   =  "{" ++ trovset trid vs ++ "}"
+trvset trid vs
+  | S.null vs  = _emptyset
+  | otherwise  =  "{" ++ trovset trid vs ++ "}"
 vsdbg = rdbg trVSet
 
 trOVSet = trovset trId
 trOVSetU = trovset trIdU
-trovset trid vs  =  trvl trid (S.toList vs)
+trovset trid vs
+  | S.null vs  =  _emptyset
+  | otherwise  =  trvl trid (S.toList vs)
 
 trVariableSet = trvariableset trId
 trVariableSetU = trvariableset trIdU

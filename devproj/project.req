@@ -3,9 +3,45 @@ BEGIN THEORIES
 THNAMES = ["AOI","And","Arith","Designs","EQV","Equal","Exists","Forall","Impl","LTL","Lists","Not","Or","Sets","UClose","UTCP","U_CWhl","U_NvWhl"]
 SDAG = [[("UTCP",["U_CWhl","Sets","UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"]),("Designs",["U_CWhl","AOI","And","Or","Not","EQV"]),("U_NvWhl",["U_CWhl","UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("U_CWhl",["UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Lists",["Impl","EQV","Equal","Forall","Arith","Sets"]),("LTL",["Equal","Exists","Forall","Impl","AOI","And","Or","Not","EQV"]),("UClose",["Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Sets",["Impl","EQV","Equal","Forall","Arith"]),("Exists",["Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Arith",["Impl","EQV","Equal"]),("Forall",["Equal","Impl","AOI","And","Or","Not","EQV"])],[("Equal",["Impl","EQV"])],[("Impl",["AOI","And","Or","Not","EQV"])],[("AOI",["And","Or","Not","EQV"])],[("And",["Or","Not","EQV"])],[("Or",["Not","EQV"])],[("Not",["EQV"])],[("EQV",[])]]
 END THEORIES
-CURRTHEORY = UClose
+CURRTHEORY = U_CWhl
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
+("U_CWhl","refines_lor_distr")
+BEGIN LIVE-PROOF
+TH-NAME: U_CWhl
+CJ-NAME: refines_lor_distr
+CONJ = ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) False (Id "refines" 0) [C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) False (Id "refines" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))],C (TG (Id "B" 0)) False (Id "refines" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]]],([],fromList []))
+SIDE = ([],fromList [])
+STRAT red-L2R
+BEGIN PRFSET
+MM = 30
+MS = 6
+BD = False
+TM = False
+TQ = False
+TS = False
+FV = True
+END PRFSET
+BEGIN SEQZIP
+TERMZIP = (X (Id "[_]" 0) (C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]]),[])
+BEGIN SEQUENT'
+SIDECOND = ([],fromList [])
+LAWS' = CLaws' {hyp0 = Theory {thName = "H.refines_lor_distr", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) False (Id "refines" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))],C (TG (Id "B" 0)) False (Id "refines" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]]}
+END SEQUENT'
+END SEQZIP
+FPATH: []
+BEGIN LIST STEPS
+(UseLaw (ByMatch MER) "imp_def2" (BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BV (VR (Id "Q" 0,VP,WS))),((Id "Q" 0,VP),BV (VR (Id "R" 0,VP,WS))),((Id "not" 0,VO),BV (VR (Id "not" 0,VO,WS))),((Id "or" 0,VO),BV (VR (Id "or" 0,VO,WS)))],fromList [],fromList [])) [1,2],ASN (X (Id "[_]" 0) (C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "or" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]]),([],fromList [])))
+(UseLaw (ByMatch MEL) "or_symm" (BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BV (VR (Id "R" 0,VP,WS))),((Id "Q" 0,VP),BT (C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))])),((Id "or" 0,VO),BV (VR (Id "or" 0,VO,WS)))],fromList [],fromList [])) [1,2],ASN (X (Id "[_]" 0) (C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS)),C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]]]),([],fromList [])))
+(UseLaw (ByMatch MER) "imp_def2" (BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS))),((Id "Q" 0,VP),BV (VR (Id "R" 0,VP,WS))),((Id "not" 0,VO),BV (VR (Id "not" 0,VO,WS))),((Id "or" 0,VO),BV (VR (Id "or" 0,VO,WS)))],fromList [],fromList [])) [1,1],ASN (X (Id "[_]" 0) (C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "or" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS)),C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]]]),([],fromList [])))
+(UseLaw (ByMatch MEL) "or_symm" (BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BV (VR (Id "R" 0,VP,WS))),((Id "Q" 0,VP),BT (C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))])),((Id "or" 0,VO),BV (VR (Id "or" 0,VO,WS)))],fromList [],fromList [])) [1,1],ASN (X (Id "[_]" 0) (C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS)),C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))]],C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS)),C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]]]),([],fromList [])))
+(UseLaw (ByMatch MEL) "or_and_distr" (BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BV (VR (Id "R" 0,VP,WS))),((Id "Q" 0,VP),BT (C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))])),((Id "R" 0,VP),BT (C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))])),((Id "and" 0,VO),BV (VR (Id "and" 0,VO,WS))),((Id "or" 0,VO),BV (VR (Id "or" 0,VO,WS)))],fromList [],fromList [])) [1],ASN (X (Id "[_]" 0) (C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS)),C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]]]),([],fromList [])))
+(UseLaw (ByMatch MEL) "or_symm" (BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BT (C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]])),((Id "Q" 0,VP),BV (VR (Id "R" 0,VP,WS))),((Id "or" 0,VO),BV (VR (Id "or" 0,VO,WS)))],fromList [],fromList [])) [1],ASN (X (Id "[_]" 0) (C (TG (Id "B" 0)) True (Id "or" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "not" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]],V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]),([],fromList [])))
+(UseLaw (ByMatch MEL) "deMorgan_or" (BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BV (VR (Id "P" 0,VP,WS))),((Id "Q" 0,VP),BV (VR (Id "Q" 0,VP,WS))),((Id "not" 0,VO),BV (VR (Id "not" 0,VO,WS))),((Id "or" 0,VO),BV (VR (Id "or" 0,VO,WS)))],fromList [],fromList [])) [1,1],ASN (X (Id "[_]" 0) (C (TG (Id "B" 0)) True (Id "or" 0) [C (TG (Id "B" 0)) True (Id "not" 0) [C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]],V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]),([],fromList [])))
+(UseLaw (ByMatch MEL) "imp_def2" (BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BT (C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))])),((Id "Q" 0,VP),BV (VR (Id "R" 0,VP,WS))),((Id "imp" 0,VO),BV (VR (Id "imp" 0,VO,WS)))],fromList [],fromList [])) [1],ASN (X (Id "[_]" 0) (C (TG (Id "B" 0)) True (Id "imp" 0) [C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]),([],fromList [])))
+(UseLaw (ByMatch MEL) "refines_def" (BD (fromList [(Id "B" 0,TG (Id "B" 0))],fromList [((Id "P" 0,VP),BT (C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))])),((Id "Q" 0,VP),BV (VR (Id "R" 0,VP,WS))),((Id "refines" 0,VO),BV (VR (Id "refines" 0,VO,WS)))],fromList [],fromList [])) [],ASN (C (TG (Id "B" 0)) False (Id "refines" 0) [C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))],([],fromList [])))
+END LIST STEPS
+END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

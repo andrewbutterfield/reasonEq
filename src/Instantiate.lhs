@@ -946,8 +946,7 @@ vsp2vsc (VSDisj (VSEnum gvs) (VSEnum vs))
   | otherwise  =  sequence $ map (mkDisjVSC vs) (S.toList gvs)
 
 vsp2vsc (VSSup  (VSEnum gvs) (VSEnum vs))
-  | S.null vs  =  return []
-  | otherwise  =  sequence $ map (mkCovVSC vs) (pdbg "vsp2vsc.VSSup.gvs" $ S.toList gvs)
+  = sequence $ map (mkCovVSC vs) (pdbg "vsp2vsc.VSSup.gvs" $ S.toList gvs)
 
 vsp2vsc vsp 
   = fail $ unlines'

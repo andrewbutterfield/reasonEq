@@ -563,7 +563,7 @@ matchLawByName :: MonadFail m
                -> m Matches
 matchLawByName asn lnm mcs fits
  = do (law,vts) <- findLaw lnm mcs
-      return $ domatch vts fits (unwrapASN asn) $ lawdbg "mLBN.law" law
+      return $ domatch vts fits (unwrapASN asn) law
 \end{code}
 
 For each law,

@@ -1,28 +1,20 @@
 # To Do
 
+## PLAN
+
+* Continue developing the  `Designs` theory. 
+* Add a  `While.Design` theory.
+* Most of the laws/conjectures for naive and design while-languages are the same. However `While.Common` is not the place for those. The conjectures need to be in or "above" a theory that gives the specific semantics.
+* In effect there should be a copy of all these conjectures in both the theories that have the semantic axioms. Ideally their names will be distinct.
+* For sequential composition in Designs, the right-unit law requires **H3**, while the right-zero law requires **H4**.
+* Need a pre/post-condition theory that covers sec 2.8 of the book (Hoare Triples, Floyd assertions, Weakest precondition).
+* Do proper UTCP Semantics with Designs and invariants
+
+
 ## URGENT or NEXT
 
-Sorted!
 
-```
-UClose.[]_idem : [[P]] ≡ [P]
-by 'red-L2R'
----
-[[P]]
- = 'match-lhs univ_id_on_closed @[]'
-    { B  ⟼ 𝔹 , P  ⟼ [P] }
-[P]
-```
-
-
-**PLAN**
-
-Add in Hoare-Triple and WP theories together as `PrePost`, based on `Designs`.
-
-
-We cannot prove `X_X_comp` without the relevant invariants.
-
-Time to get `Designs` going and then to the proper UTCP semantics
+## ISSUES
 
 We need a a way to add witness `ok_1 == false`.
 
@@ -32,7 +24,6 @@ We should really use this to bind constructor identifiers.
 
 
 `LiveProofs.undoCalcStep` needs fixing!
-
 
 **still an issue?**
 
@@ -52,12 +43,6 @@ This part of substitute seems to be **massively over-engineered**.
 We should search for a target that is clearly involved with the given term variable.
 There should only be one, but we could filter to see if there are multiple.
 
-* Continue developing the  `Designs` theory. 
-* Add a  `While.Design` theory.
-* Most of the laws/conjectures for naive and design while-languages are the same. However `While.Common` is not the place for those. The conjectures need to be in or "above" a theory that gives the specific semantics.
-In effect there should be a copy of all these conjectures in both the theories that have the semantic axioms. Ideally their names will be distinct.
-* For sequential composition in Designs, the right-unit law requires **H3**, while the right-zero law requires **H4**.
-* Need a pre/post-condition theory that covers sec 2.8 of the book (Hoare Triples, Floyd assertions, Weakest precondition).
 
 ### Simple Input Format
 

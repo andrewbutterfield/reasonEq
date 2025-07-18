@@ -355,7 +355,7 @@ $$\par\vspace{-8pt}
 \begin{code}
 cjAndUnivDistr = preddef ("land" -.- "[]" -.- "distr")
                 (univ p /\ univ q === univ (p /\ q))
-                (([xs] `covers` gvP) .: ([xs] `covers` gvQ))
+                scTrue
 \end{code}
 
 $$

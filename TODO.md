@@ -34,6 +34,8 @@ Other symbols currently used in filenames:
 
 The `EQV` theory:   `≡ : 𝔹⟶ 𝔹⟶ 𝔹` looks compressed on screen.
 
+In `Arith`, operator precedence needs fixing:  `*(e,+(f,g)) = +(*(e,f),*(e,g))`
+
 
 
 

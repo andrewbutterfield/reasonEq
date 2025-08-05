@@ -22,6 +22,7 @@ Stick to `[a-zA-Z0-9-._]`.
 
 Other symbols currently used in filenames:  
 
+  * Std Defs : ` 𝔹 `
   * `Equal` : ` = `
   * `Sets` : ` \ `   *Windows breaking*
   * `UCLose` : ` [ ] `

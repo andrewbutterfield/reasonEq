@@ -13,6 +13,26 @@
 
 ## URGENT or NEXT
 
+**CANNOT CLONE REPO ON WINDOWS!!!!**
+
+Illegal characters used in  proof-file *name* :  `*_-_distr.prf` ,
+introduced in commit: `f70b1bb	19 Jun 2025 at 22:40`.
+```
+
+Windows forbids the following characters in filenames:  ` \ / : ? " < > | `.
+
+Fixed by replacing `+*-` by `add`, `mul`, `sub`, and `neg`, 
+and manually renaming the errant file to `mul_sub_distr.prf`.
+
+**NEED TO ENSURE GENERATED FILENAMES ARE SAFE**
+
+Stick to `[a-zA-Z0-9-._]`.
+
+
+
+
+
+
 The `sps` proof command should show the short settings codes,
 so we don't have to lookup the `mps` command.
 

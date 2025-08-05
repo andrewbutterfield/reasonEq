@@ -22,7 +22,7 @@ Stick to `[a-zA-Z0-9-._]`.
 
 Other symbols currently used in filenames:  
 
-  * Std Defs : ` 𝔹 `
+  * Std Defs : ` 𝔹 `   *now done*
   * `Equal` : ` = `
   * `Sets` : ` \ `   *Windows breaking*
   * `UCLose` : ` [ ] `
@@ -30,6 +30,9 @@ Other symbols currently used in filenames:
   * `U_NWhl` : ` := `   *Windows breaking*
   * `Designs` :  ` ; `
 
+**CURRENT ISSUEs**
+
+The `EQV` theory:   `≡ : 𝔹⟶ 𝔹⟶ 𝔹` looks compressed on screen.
 
 
 

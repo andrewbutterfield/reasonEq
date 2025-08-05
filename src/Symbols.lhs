@@ -24,6 +24,7 @@ module
   , _langle, _rangle
   , _parallel, _Cap
   , _infty, _star
+  , _B, _N, _Z, _Q, _R, _P, _seq
   , _bullet, _fun, _pfun, _ffun, _maplet, _times
   , _triangleq, _vdash
   , _qed, _redQ
@@ -65,6 +66,10 @@ data SymbolFormat
             , u8 :: String -- Unicode, UTF-8
             -- extendable if good alternatives come along
             }
+
+instance Show SymbolFormat where
+  show (SymForm aaform u8form)
+    = "  " ++ aaform ++ " :: " ++ u8form ++ "\n"
 
 type SymbolMap = Map String SymbolFormat
 \end{code}
@@ -170,6 +175,7 @@ theSymbolList
   , ("eventually", SymForm "<>" "\x25c7")
   , ("always", SymForm "[]" "\x25fb")
 
+  , ("*", SymForm "*"  "\x002a")
   , ("cons", SymForm ":" ":"), ("cat", SymForm "^" "\x2322")
   , ("pfx", SymForm "<=" "\x227c")
 
@@ -177,7 +183,7 @@ theSymbolList
 
   , ("cup", SymForm "U"  "\x222a"), ("cap", SymForm "I"  "\x2229")
 
-  , ("powerset", SymForm "P" "\x2119")
+  , ("powerset", SymForm "P" "\x2119"), ("tP", SymForm "P" "\x2119")
   , ("emptyset", SymForm "{}"  "\x00d8"), ("mbr", SymForm "mbr"  "\x2208")
   , ("union", SymForm "U"  "\x222a"), ("intsct", SymForm "I"  "\x2229")
   , ("subseteq", SymForm "subset" "\x2286"), ("supseteq", SymForm "supset" "\x2287")
@@ -185,13 +191,18 @@ theSymbolList
 
   , ("neq", SymForm "neq"  "\x2260"), ("notin", SymForm "notin"  "\x2209")
   , ("disj", SymForm "disj" "\x22d4")
-  , ("nexists", SymForm "nexists" "\x2204"), ("nsubseteq", SymForm "nsubseteq" "\x2288")
+  , ("nexists", SymForm "nexists" "\x2204")
+  , ("nsubseteq", SymForm "nsubseteq" "\x2288")
 
   , ("langle", SymForm "<"  "\x27e8"), ("rangle", SymForm ">"  "\x27e9")
 
   , ("parallel", SymForm "||"  "\x2016"), ("Cap", SymForm "II"  "\x22d2")
 
   , ("infty", SymForm "inf"  "\x221e"), ("star", SymForm "*"  "\x2605")
+
+  , ("tB", SymForm "B"  "\x1d539"), ("tN", SymForm "N"  "\x2115")
+  , ("tZ", SymForm "Z"  "\x2124"), ("tQ", SymForm "Q"  "\x211a")
+  , ("tR", SymForm "R"  "\x211d"), ("tC", SymForm "C"  "\x2102")
 
   , ("bullet", SymForm "@"  "\x2022"), ("times", SymForm "x"  "\x2a09")
   , ("fun", SymForm "->"  "\x27f6"), ("pfun", SymForm "-+>"  "\x21f8")
@@ -250,6 +261,11 @@ _langle = nicesym "langle" ; _rangle = nicesym "rangle"
 _parallel = nicesym "parallel" ; _Cap = nicesym "Cap"
 
 _infty = nicesym "infty" ; _star = nicesym "star"
+
+_B = nicesym "tB" ; _N = nicesym "tN"
+_Z = nicesym "tZ" ; _Q = nicesym "tQ" 
+_R = nicesym "tR" ; _C = nicesym "tC"
+_P = nicesym "powerset" ; _seq = nicesym "*"
 
 _bullet = nicesym "bullet" ; _times = nicesym "times"
 _fun = nicesym "fun" ; _pfun = nicesym "pfun"
@@ -649,6 +665,7 @@ niceSyms
    , ("_eqv", _eqv)
    , ("_exists", _exists)
    , ("_forall", _forall)
+   , ("_powerset", _powerset)
    , ("_emptyset", _emptyset)
    , ("_cup", _cup)
    , ("_cap", _cap)
@@ -667,6 +684,13 @@ niceSyms
    , ("_parallel", _parallel)
    , ("_Cap", _Cap)
    , ("_infty", _infty)
+   , ("_B", _B)
+   , ("_N", _N)
+   , ("_Z", _Z)
+   , ("_Q", _Q)
+   , ("_R", _R) 
+   , ("_C", _C)
+   , ("_P", _P)   
    , ("_star", _star)
    , ("_bullet", _bullet)
    , ("_fun", _fun)

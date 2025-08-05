@@ -142,11 +142,11 @@ trgvar trid (LstVar lv)  =  trlvar trid lv
 trType :: Type -> String
 trType ArbType           =  _tau
 trType (TypeVar i)       =  trId i
-trType (TypeCons (Identifier i _) [t])
-  | i == "P"             =  "\x2119"
+trType (TypeCons i@(Identifier s _) [t])
+  | s == "P"             =  nicesym "tP" -- $ "powerset"
                             ++ (trBracketIf (not $ isAtmType t) (trType t)) 
-  | i == "*"             =  (trBracketIf (not $ isAtmType t) (trType t)) 
-                             ++ "\x002a"
+  | s == "*"             =  (trBracketIf (not $ isAtmType t) (trType t)) 
+                             ++ trId i
 trType (TypeCons i [t])  =  trId i ++ " " ++ trType t
 trType (TypeCons i ts)   =  trId i ++ "(" ++ trTypes ts ++ ")"
 trType (AlgType i itss)  =  "ADT"
@@ -154,17 +154,7 @@ trType (AlgType i itss)  =  "ADT"
 trType (FunType ft@(FunType _ _) tr)   
   =  "(" ++ trType ft ++ ")" ++  trFun ++ trType tr
 trType (FunType ta tr)   =  trType ta ++ trFun ++ trType tr
-trType (GivenType (Identifier i _)) 
-  -- hack - should be done in Symbols
-  | i == "B"  =  "\x1d539 "
-  | i == "N"  =  "\x2115"
-  | i == "Z"  =  "\x2124"
-  | i == "Q"  =  "\x211a"
-  | i == "R"  =  "\x211d"
-  | i == "C"  =  "\x2102"
-  | i == "P"  =  "\x2119"
-  | i == "*"  =  "\x002a"
-trType (GivenType i)      =  trId i
+trType (GivenType i@(Identifier s _))  =  widthHack 2 $ nicesym ('t':s)
 
 trType BottomType = spacep _bot
 

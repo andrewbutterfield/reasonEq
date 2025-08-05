@@ -9,7 +9,7 @@ version:        0.9.1.0
 description:    Please see README.md here
 author:         Andrew Butterfield
 maintainer:     Andrew.Butterfield@scss.tcd.ie
-copyright:      (c) 2017-24 Andrew Butterfield
+copyright:      (c) 2017-25 Andrew Butterfield
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple

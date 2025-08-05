@@ -64,9 +64,9 @@ intf_2 = FunType int intf_1  -- Z -> Z -> Z
 \end{eqnarray*}
 \begin{code}
 i_neg = jId "neg" ; negIntro = mkConsIntro i_neg intf_1
-i_add = jId "+"   ; addIntro = mkConsIntro i_add intf_2
-i_sub = jId "-"   ; subIntro = mkConsIntro i_sub intf_2
-i_mul = jId "*"   ; mulIntro = mkConsIntro i_mul intf_2
+i_add = jId "add" ; addIntro = mkConsIntro i_add intf_2
+i_sub = jId "sub" ; subIntro = mkConsIntro i_sub intf_2
+i_mul = jId "mul" ; mulIntro = mkConsIntro i_mul intf_2
 i_div = jId "div" ; divIntro = mkConsIntro i_div intf_2
 i_mod = jId "mod" ; modIntro = mkConsIntro i_mod intf_2
 \end{code}
@@ -130,15 +130,15 @@ $$
 \end{array}
 $$\par\vspace{-4pt}
 \begin{code}
-axAddLUnit = ( "+" -.- "l" -.- "unit",
+axAddLUnit = ( "add" -.- "l" -.- "unit",
                (zero `add` e) `isEqualTo` e )
-axAddRUnit = ( "+" -.- "r" -.- "unit",
+axAddRUnit = ( "add" -.- "r" -.- "unit",
                (e `add` zero) `isEqualTo` e )
-axAddSymm = ( "+" -.- "symm",
+axAddSymm = ( "add" -.- "symm",
                (e `add` f) `isEqualTo` (f `add` e) )
-axAddAssoc = ( "+" -.- "assoc",
+axAddAssoc = ( "add" -.- "assoc",
                (e `add` (f `add` g)) `isEqualTo` ((e `add` f) `add` g) )
-axAddCancel = ( "+" -.- "cancel",
+axAddCancel = ( "add" -.- "cancel",
                ((e `add` f) `isEqualTo` (e `add` g)) 
                === 
                (f `isEqualTo` g) )
@@ -159,19 +159,19 @@ $$
 $$\par\vspace{-4pt}
 
 \begin{code}
-axMulLUnit = ( "*" -.- "l" -.- "unit",
+axMulLUnit = ( "mul" -.- "l" -.- "unit",
                (one `mul` e) `isEqualTo` e )
-axMulRUnit = ( "*" -.- "r" -.- "unit",
+axMulRUnit = ( "mul" -.- "r" -.- "unit",
                (e `mul` one) `isEqualTo` e )
-axMulLZero = ( "*" -.- "l" -.- "unit",
+axMulLZero = ( "mul" -.- "l" -.- "unit",
                (zero `mul` e) `isEqualTo` zero )
-axMulRZero = ( "*" -.- "r" -.- "unit",
+axMulRZero = ( "mul" -.- "r" -.- "unit",
                (e `mul` zero) `isEqualTo` zero )
-axMulSymm = ( "*" -.- "symm",
+axMulSymm = ( "mul" -.- "symm",
                (e `mul` f) `isEqualTo` (f `mul` e) )
-axMulAssoc = ( "*" -.- "assoc",
+axMulAssoc = ( "mul" -.- "assoc",
                (e `mul` (f `mul` g)) `isEqualTo` ((e `mul` f) `mul` g) )
-axMulCancel = ( "*" -.- "cancel",
+axMulCancel = ( "mul" -.- "cancel",
                ((e `mul` f) `isEqualTo` (e `mul` g)) 
                === 
                (f `isEqualTo` g) )
@@ -187,8 +187,8 @@ $$
   \end{array}
 $$\par\vspace{-4pt}
 \begin{code}
-axSubRUnit = ( "-" -.- "r" -.- "unit", (e `sub` zero) `isEqualTo` e )
-axSubZero = ( "-" -.- "zero", (e `sub` e) `isEqualTo` zero )
+axSubRUnit = ( "sub" -.- "r" -.- "unit", (e `sub` zero) `isEqualTo` e )
+axSubZero = ( "sub" -.- "zero", (e `sub` e) `isEqualTo` zero )
 \end{code}
 
 \subsection{Laws of Negation}
@@ -253,20 +253,20 @@ $$
 \end{array}
 $$\par\vspace{-4pt}
 \begin{code}
-axMulAddDistr = ( "*"-.-"+"-.-"distr" 
+axMulAddDistr = ( "mul"-.-"add"-.-"distr" 
                 , ( e `mul` (f `add` g) 
                     `isEqualTo` 
                     ((e `mul` f) `add` (e `mul` g)) )
                 )
-axAddInv = ( "+" -.- "inv"
+axAddInv = ( "add" -.- "inv"
            ,   (e `add` (neg e) `isEqualTo` zero ) )
-axSubAltDef = ( "-" -.- "alt" -.- "def"
+axSubAltDef = ( "sub" -.- "alt" -.- "def"
            ,   ((e `sub` f) `isEqualTo` (e `add` (neg f)) ) )
-axNegMulDistr = ( "neg" -.- "*" -.- "distr"
+axNegMulDistr = ( "neg" -.- "mul" -.- "distr"
                 ,   ( (neg e) `mul` f )
                    `isEqualTo` 
                    neg (e `mul` f ) )
-axMulDivSame = ( "*" -.- "div" -.- "same"
+axMulDivSame = ( "mul" -.- "div" -.- "same"
                ,   ( ((e `mul` f) `idiv` f)
                    `isEqualTo` 
                    e ) )
@@ -274,7 +274,7 @@ axNegDivDistr = ( "neg" -.- "div" -.- "distr"
                 ,   ( (neg e) `idiv` f )
                    `isEqualTo` 
                    neg (e `idiv` f ) )
-axMulModSame = ( "*" -.- "mod" -.- "same"
+axMulModSame = ( "mul" -.- "mod" -.- "same"
                ,   ( ((e `mul` f) `imod` f)
                    `isEqualTo` 
                    zero ) )
@@ -306,7 +306,7 @@ $$
 \end{array}
 $$\par\vspace{-4pt}
 \begin{code}
-cjMulSubDistr = ( "*" -.- "-" -.- "distr"
+cjMulSubDistr = ( "mul" -.- "sub" -.- "distr"
                 , e `mul` (f `sub` g) 
                   `isEqualTo`
                   ((e `mul` f) `sub` (e `mul` g)) )

@@ -161,6 +161,10 @@ theSymbolList
   , ("imp", SymForm "==>"  "\x27f9"), ("eqv", SymForm "=="  "\x2261")
 
   , ("neg", SymForm "-" "-")
+  , ("add", SymForm "+" "+")
+  , ("sub", SymForm "-" "-")
+  , ("mul", SymForm "*" "*")
+  
   , ("next", SymForm "()" "\x25cb")
   , ("until", SymForm "U" "\x1200"), ("U", SymForm "U" "\x1200")
   , ("eventually", SymForm "<>" "\x25c7")

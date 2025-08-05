@@ -13,6 +13,10 @@
 
 ## URGENT or NEXT
 
+The `sps` proof command should show the short settings codes,
+so we don't have to lookup the `mps` command.
+
+Note that setting `mps fv 0` doesn't stop disply of `?P` variables!!!
 
 ## ISSUES
 

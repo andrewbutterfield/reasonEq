@@ -183,7 +183,7 @@ theSymbolList
 
   , ("cup", SymForm "U"  "\x222a"), ("cap", SymForm "I"  "\x2229")
 
-  , ("powerset", SymForm "P" "\x2119"), ("tP", SymForm "P" "\x2119")
+  , ("powerset", SymForm "P" "\x2119")
   , ("emptyset", SymForm "{}"  "\x00d8"), ("mbr", SymForm "mbr"  "\x2208")
   , ("union", SymForm "U"  "\x222a"), ("intsct", SymForm "I"  "\x2229")
   , ("subseteq", SymForm "subset" "\x2286"), ("supseteq", SymForm "supset" "\x2287")
@@ -596,7 +596,9 @@ dia_lrarrow c = [c]
 \begin{code}
 widthHack :: Int -> String -> String
 
-tst str = putStrLn $ unlines [ str, widthHack 1 str, widthHack 2 str ]
+tst str = putStrLn $ unlines [ "W=0 "++str
+                             , "W=1 "++widthHack 1 str
+                             , "W=2 "++widthHack 2 str ]
 tstop op = tst (" A"++op++"B ; A "++op++" B .")
 
 widthHelp = sequence_ (fmap (tstop . snd) niceSyms)
@@ -614,7 +616,9 @@ whack ss (c:cs)
  where
    cs' = whack ss cs
 
-badWidths = _imp ++ _star ++ _fun ++ _pfun ++ _ffun ++ _maplet
+-- _B is included here because
+-- its from a different unicode page than _C, _N, _R, _Q, _Z
+badWidths = _imp ++ _star ++ _fun ++ _pfun ++ _ffun ++ _maplet ++ _B
 #endif
 \end{code}
 

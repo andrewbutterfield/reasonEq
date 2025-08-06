@@ -67,10 +67,7 @@ import Debugger
 We provide a simple, almost certainly un-parsable,
 rendering of datatypes to ease debugging.
 
-We support one way of viewing identifiers,
-which basically shows the number component if non-zero,
-and hides it otherwise.
-
+We support two ways of viewing identifiers,
 one (\texttt{trXXX}) that hides the ``unique number'' component,
 and another (\texttt{trXXXU}) that displays it.
 
@@ -82,8 +79,8 @@ NEW: lets provide debug support here too!
 \begin{code}
 trId :: Identifier -> String
 trId (Identifier s u)  
-  | u == 0     =  widthHack 2 $ nicesym s
-  | otherwise  =  widthHack 2 $ (nicesym s ++ _subNum u)
+  | u == 0     =  widthHack 1 $ nicesym s
+  | otherwise  =  widthHack 1 $ (nicesym s ++ _subNum u)
 
 trIdU :: Identifier -> String
 trIdU (Identifier s u)  =  widthHack 2 $ (nicesym s ++ _subNum u)
@@ -143,7 +140,7 @@ trType :: Type -> String
 trType ArbType           =  _tau
 trType (TypeVar i)       =  trId i
 trType (TypeCons i@(Identifier s _) [t])
-  | s == "P"             =  nicesym "tP" -- $ "powerset"
+  | s == "P"             =  nicesym "powerset" 
                             ++ (trBracketIf (not $ isAtmType t) (trType t)) 
   | s == "*"             =  (trBracketIf (not $ isAtmType t) (trType t)) 
                              ++ trId i

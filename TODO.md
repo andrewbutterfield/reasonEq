@@ -13,36 +13,17 @@
 
 ## URGENT or NEXT
 
-`
-**NEED TO ENSURE GENERATED FILENAMES ARE SAFE**
 
-Windows forbids the following characters in filenames:  ` \ / : ? " < > | `.
-
-Stick to `[a-zA-Z0-9-._]`.
-
-Other symbols currently used in filenames,
-as a result of being used in lawnames.
-
-  * Std Defs : `𝔹`,...   *now done*
-  * `Equal` : ` = `  to become `eq`  *now done*
-  * `Sets` : ` \ `  to become `sdiff`  *Windows breaking, now done*
-  * `Sets` : ` # ` to become `card` *now done*
-  * `UClose` : ` [] ` to become `uclose` *now done*
-  * `U_CWhl` : ` ; ` to become `sqcmp` *now done*
-  * `U_NWhl` : ` := `  to become `asg`  *Windows breaking, now done*
-
-Note that `UTCP` now has `tS`, `tGE` and `tLE` instead of `S`, `GE` and `LE`.
-
-We should extract a UTP Base theory 
 
 **CURRENT ISSUEs**
 
 
+ * The `set T xxx` should run `sh T` at the end.
+ * The `sps` proof command should show the short settings codes, so we don't have to lookup the `mps` command.
+ * setting `mps fv 0` doesn't stop display of `?P` variables!!!
+ * LiveProof returns `(bind,local_scC)` - need to get `local_scC` into proof step?
 
-The `sps` proof command should show the short settings codes,
-so we don't have to lookup the `mps` command.
 
-Note that setting `mps fv 0` doesn't stop disply of `?P` variables!!!
 
 ## ISSUES
 
@@ -186,21 +167,9 @@ We should treat `=` like `≡` in pattern matching.
 
 ## Issues
 
-Time to add type-inference!
-Done but not yet ready to be hooked in.
-
-Adding in Arithmetic and Set theories to test out the need for typechecking.
 
 Type-check need confirmed with X_X_comp, as per following excerpt:
 
-```
-4 : “*_cancel” [≡rhs]
-    ?e * (E2 ∩ (R1 \ N1)) = ?e * Ø
- 3 : “+_cancel” [≡rhs]
-    ?e + E2 ∩ (R1 \ N1) = ?e + Ø
- ⊢
-E2 ∩ (R1 \ N1) = Ø ∧ ...
-```
 
 * We really need to have symmetric forms of key results, e.g., we have `P∨true≡true`, but should also have `true∨P≡true`.
 
@@ -511,9 +480,6 @@ We need to either have unique q.v.s, or be very careful.
 
 ## Next Task(s)
 
-
- 
-* LiveProof returns `(bind,local_scC)` - need to get `local_scC` into proof step.
 
 
 

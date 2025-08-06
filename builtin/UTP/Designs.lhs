@@ -167,7 +167,7 @@ $$
 $$\par\vspace{-8pt}
 \begin{code}
 cjDesignLZero 
-  = preddef ("design" -.- ";" -.- "lzero")
+  = preddef ("design" -.- "sqcmp" -.- "lzero")
             (mkSeq trueP (design p q) === trueP)
             ( areUTPDynObs [gP,gQ] 
               .: isUTPCond (StdVar vok)

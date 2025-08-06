@@ -1,6 +1,6 @@
 \chapter{Theory of Sets}
 \begin{verbatim}
-Copyright  Andrew Butterfield (c) 2024
+Copyright  Andrew Butterfield (c) 2024-25
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -75,14 +75,14 @@ card_t t = FunType (power t) int
 \end{eqnarray*}
 All of the above are substitutable.
 \begin{code}
-i_mt = jId "emptyset" ; mtIntro      = mkConsIntro i_mt  sett
+i_mt  = jId "emptyset" ; mtIntro      = mkConsIntro i_mt  sett
 i_set = jId "set"   
-i_mbr = jId "mbr"     ; inIntro      = mkConsIntro i_mbr $ mbr_t  elemt
-i_U = jId "union"     ; unionIntro   = mkConsIntro i_U   $ setf_2 elemt
-i_I = jId "intsct"    ; intsctIntro  = mkConsIntro i_I   $ setf_2 elemt
-i_D = jId "\\"        ; setdiffIntro = mkConsIntro i_D   $ setf_2 elemt
-i_SS = jId "subseteq" ; subsetIntro  = mkConsIntro i_SS  $ subs_t elemt
-i_crd = jId "#"       ; cardIntro    = mkConsIntro i_crd $ card_t elemt
+i_mbr = jId "mbr"      ; inIntro      = mkConsIntro i_mbr $ mbr_t  elemt
+i_U   = jId "union"    ; unionIntro   = mkConsIntro i_U   $ setf_2 elemt
+i_I   = jId "intsct"   ; intsctIntro  = mkConsIntro i_I   $ setf_2 elemt
+i_D   = jId "sdiff"    ; setdiffIntro = mkConsIntro i_D   $ setf_2 elemt
+i_SS  = jId "subseteq" ; subsetIntro  = mkConsIntro i_SS  $ subs_t elemt
+i_crd = jId "card"     ; cardIntro    = mkConsIntro i_crd $ card_t elemt
 \end{code}
 
 \begin{code}
@@ -170,7 +170,7 @@ cjMofSingle = ( "mbr" -.- "set" -.- "self"
 \\ S \subseteq T &=& \forall x \bullet x \mof S \implies x \mof T
 \end{eqnarray*}
 \begin{code}
-axSetEqDef = ( "set" -.- "=" -.- "def"
+axSetEqDef = ( "set" -.- "eq" -.- "def"
              , ( (s1 `isEqualTo` s2) 
                  ===
                  forAll [gvx]
@@ -249,20 +249,20 @@ cjIAssoc  = ( "intsct" -.- "assoc"
    (S_1 \setminus S_2) \cup (S_1 \cap S_3)
 \end{eqnarray*}
 \begin{code}
-axMofDiff = ( "mbr" -.- "\\" -.- "def"
+axMofDiff = ( "mbr" -.- "sdiff" -.- "def"
              , ( (x `mbr` (s1 `sdiff` s2))
                  ===
                  ((x `mbr` s1) /\ mkNot(x `mbr` s2))
              , scTrue ) )
-cjDRUnit = ( "\\" -.-"r" -.- "unit"
+cjDRUnit = ( "sdiff" -.-"r" -.- "unit"
            , ( (s `sdiff` mtset) `isEqualTo` s
            , scTrue ) )
-cjDLSymm  = ( "\\" -.- "l" -.- "assoc"
+cjDLSymm  = ( "sdiff" -.- "l" -.- "assoc"
             , ( ((s1 `sdiff` s2) `sdiff` s3)
                `isEqualTo` 
                (s1 `sdiff` (s2 `sunion` s3))
             , scTrue ) )
-cjDRSymm  = ( "\\" -.- "r" -.- "assoc"
+cjDRSymm  = ( "sdiff" -.- "r" -.- "assoc"
             , ( (s1 `sdiff` (s2 `sdiff` s3))
                `isEqualTo` 
                ((s1 `sdiff` s2) `sunion` (s1 `sintsct` s3))
@@ -294,32 +294,32 @@ cjIUDistr = ( "intsct" -.-"union" -.- "distr"
                 `isEqualTo` 
                 ( (s1 `sunion` s3) `sintsct` (s2 `sunion` s3))
             , scTrue ) )
-cjUDDistr = ( "union" -.-"\\" -.- "distr"
+cjUDDistr = ( "union" -.-"sdiff" -.- "distr"
             , ( ( (s1 `sunion` s2) `sdiff` s3 )
                 `isEqualTo` 
                 ( (s1 `sdiff` s3) `sunion` (s2 `sdiff` s3))
             , scTrue ) )
-cjIDDistr = ( "intsct" -.-"\\" -.- "distr"
+cjIDDistr = ( "intsct" -.-"sdiff" -.- "distr"
             , ( ( (s1 `sintsct` s2) `sdiff` s3 )
                 `isEqualTo` 
                 ( (s1 `sdiff` s3) `sintsct` (s2 `sdiff` s3))
             , scTrue ) )
-cjDURDistr = ( "\\" -.-"union" -.- "r" -.- "distr"
+cjDURDistr = ( "sdiff" -.-"union" -.- "r" -.- "distr"
             , ( (s1 `sdiff` (s2 `sunion` s3 ))
                 `isEqualTo` 
                 ((s1 `sdiff` s2) `sintsct` (s1 `sdiff` s3))
             , scTrue ) )
-cjDIRDistr = ( "\\" -.-"intsct" -.- "r" -.- "distr"
+cjDIRDistr = ( "sdiff" -.-"intsct" -.- "r" -.- "distr"
             , ( ( s1 `sdiff` (s2 `sintsct` s3 ))
                 `isEqualTo` 
                 ( (s1 `sdiff` s2) `sunion` (s1 `sdiff` s3))
             , scTrue ) )
-cjDULDistr = ( "\\" -.-"union" -.- "l" -.- "distr"
+cjDULDistr = ( "sdiff" -.-"union" -.- "l" -.- "distr"
              , ( ((s1 `sdiff` s2) `sunion` s3)
                 `isEqualTo` 
                 ( (s1 `sunion` s3) `sdiff` (s2 `sdiff` s3))
             , scTrue ) )
-cjDILDistr = ( "\\" -.-"intsct" -.- "l" -.- "distr"
+cjDILDistr = ( "sdiff" -.-"intsct" -.- "l" -.- "distr"
              , ( ((s1 `sdiff` s2) `sintsct` s3)
                 `isEqualTo` 
                 ((s1 `sintsct` s3) `sdiff` s2)
@@ -334,13 +334,13 @@ cjDILDistr = ( "\\" -.-"intsct" -.- "l" -.- "distr"
 \\ \#(S \cup T) &=& \# S + \# T + \#(S \cap T)
 \end{eqnarray*}
 \begin{code}
-axCardEmpty = ( "#" -.- "emptyset" -.- "def"
+axCardEmpty = ( "card" -.- "emptyset" -.- "def"
               , ( scard mtset `isEqualTo` zero
               , scTrue ) )
-axCardSingle = ( "#" -.- "single" -.- "def"
+axCardSingle = ( "card" -.- "single" -.- "def"
               , ( scard (ssingle x) `isEqualTo` one
               , scTrue ) )
-axCardUnion = ( "#" -.- "union" -.- "def"
+axCardUnion = ( "card" -.- "union" -.- "def"
               , ( ( scard (s1 `sunion` s2) )
                   `isEqualTo` 
                   (scard s1 `add` scard s2 `sub` scard (s1 `sintsct` s2))
@@ -369,7 +369,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjEqualSubst
- = ( "=" -.- "subst"
+ = ( "eq" -.- "subst"
    , (s === s 
    , scTrue ) )
 \end{code}

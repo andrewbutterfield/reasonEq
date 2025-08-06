@@ -117,7 +117,7 @@ A possible future modification might require a size difference threshold.
 addSimp :: String -> Term -> [(String, Direction)]
 addSimp nme (Cons _ _ (Identifier "eqv" 0) (p:q:[]))
   = checkSimp nme p q
-addSimp nme (Cons _ _ (Identifier "=" 0) (e:f:[]))
+addSimp nme (Cons _ _ (Identifier "eq" 0) (e:f:[]))
   = checkSimp nme e f
 addSimp _ _ = []
 

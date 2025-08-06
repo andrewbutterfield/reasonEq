@@ -244,7 +244,7 @@ x = fromJust $ ident "x"
 vx = Vbl x ObsV Static
 tx = fromJust $ var kint vx
 tint = VTyp int vx
-iter = Iter p1 True (fromJust $ ident "and") True (fromJust $ ident "=") []
+iter = Iter p1 True (fromJust $ ident "and") True (fromJust $ ident "eq") []
 f = fromJust $ ident "F"
 g = fromJust $ ident "G"
 cons0 = Cons p1 True f [i42,tx,tint,iter]

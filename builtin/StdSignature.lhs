@@ -150,7 +150,7 @@ lnot = theNot ; mkNot p = Cons arbpred True lnot [p]
 i_t = jId "t" ;tvar = TypeVar i_t
 eqpred = FunType tvar $ FunType tvar bool
 
-equals = jId "="
+equals = jId "eq"
 isEqualTo   e1  e2  = Cons bool True           equals [ e1, e2]
 areEqualTo es1 es2  = Iter bool True land True equals [es1,es2]
 \end{code}

@@ -79,7 +79,7 @@ $$
 $$ %\par\vspace{-8pt}
 \begin{code}
 asgIntro = mkConsIntro i_asg apred11
-(axAsgDef,alAsgDef) = bookdef (":=" -.- "def") "2.3L2"
+(axAsgDef,alAsgDef) = bookdef ("asg" -.- "def") "2.3L2"
                        ( lvxs .::= lves
                          ===
                          (lvx' `areEqualTo` lves)
@@ -108,7 +108,7 @@ $$
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
-(cjAsgSimple,alAsgSimple) = bookdef (":=" -.- "simple") "Def2.3.1"
+(cjAsgSimple,alAsgSimple) = bookdef ("asg" -.- "simple") "Def2.3.1"
                        ( vx .:= e
                          ===
                          (x' `isEqualTo` e)
@@ -131,7 +131,7 @@ $$
 $$
 \begin{code}
 (cjAsgUnchanged,alAsgUnchanged)
-  = bookdef (":=" -.- "unchanged") "2.3L3"
+  = bookdef ("asg" -.- "unchanged") "2.3L3"
      ( (vx .:= e)
        ===
        simassign [(vx,e),(vy,y)] []
@@ -162,7 +162,7 @@ $$
 $$
 \begin{code}
 (cjAsgSeqSame,alAsgSeqSame)
-  = bookdef (":=" -.- "seq" -.- "same") "2.3L3"
+  = bookdef ("asg" -.- "seq" -.- "same") "2.3L3"
      ( mkSeq (vx .:= e) (vx .:= f)
        ===
        ( vx .:= Sub ArbType f e_for_x )
@@ -180,7 +180,7 @@ $$
 $$
 \begin{code}
 (cjAsgSeqCond,alAsgSeqCond)
-  = bookdef (":=" -.- "seq" -.- "cond") "2.3L4"
+  = bookdef ("asg" -.- "seq" -.- "cond") "2.3L4"
      ( mkSeq (vx .:= e) (cond p b q)
        ===
        ( cond (mkSeq (vx .:= e) p)
@@ -221,7 +221,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-(cjSkipL5a,alSkipL5a) = bookdef (";" -.- "runit") "2.3L5a"
+(cjSkipL5a,alSkipL5a) = bookdef ("sqcmp" -.- "runit") "2.3L5a"
                          (mkSeq r skip === r)
                          (areUTPDynObs [gR,g_skip])
 \end{code}
@@ -234,7 +234,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-(cjSkipL5b,alSkipL5b) = bookdef (";" -.- "lunit") "2.3L5b"
+(cjSkipL5b,alSkipL5b) = bookdef ("sqcmp" -.- "lunit") "2.3L5b"
                          (mkSeq skip r === r)
                          (areUTPDynObs [gR,g_skip])
 \end{code}

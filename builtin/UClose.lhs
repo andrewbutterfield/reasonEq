@@ -308,7 +308,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-axUnivDef = preddef ("[]" -.- "def")
+axUnivDef = preddef ("uclose" -.- "def")
                     (univ p  === forAll [xs] p)
                     ([xs] `covers` gvP)
 \end{code}
@@ -353,7 +353,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-cjAndUnivDistr = preddef ("land" -.- "[]" -.- "distr")
+cjAndUnivDistr = preddef ("land" -.- "uclose" -.- "distr")
                 (univ p /\ univ q === univ (p /\ q))
                 scTrue
 \end{code}
@@ -364,7 +364,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-cjUnivIdem = preddef ("[]" -.- "idem")
+cjUnivIdem = preddef ("uclose" -.- "idem")
                      (univ (univ p) === univ p)
                      scTrue
 \end{code}

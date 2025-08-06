@@ -402,7 +402,7 @@ $$
 $$\par\vspace{-8pt}
 \begin{code}
 seqIntro = mkConsIntro i_seq boolf_2
-(axSeqDef,alSeqDef) = bookdef (";" -.- "def") "Def2.2.1"
+(axSeqDef,alSeqDef) = bookdef ("sqcmp" -.- "def") "Def2.2.1"
                        ( mkSeq p q
                          === exists [gO0]
                               ( (Sub pred1 p o0'sub) /\ (Sub pred1 q o0sub) )
@@ -435,7 +435,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-(cjSeqAssoc,alSeqAssoc) = bookdef (";" -.- "assoc") "2.2L1"
+(cjSeqAssoc,alSeqAssoc) = bookdef ("sqcmp" -.- "assoc") "2.2L1"
                            ( mkSeq p (mkSeq q r) ===  mkSeq (mkSeq p q) r )
                            (areUTPDynObs [gP,gQ,gR] )
 \end{code}
@@ -451,7 +451,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-(cjSeqLDistr,alSeqLDistr) = bookdef (";" -.- "cond" -.- "l" -.- "distr") "2.2L2"
+(cjSeqLDistr,alSeqLDistr) = bookdef ("sqcmp" -.- "cond" -.- "l" -.- "distr") "2.2L2"
                               ( mkSeq (cond p b q) r
                                 ===
                                 cond (mkSeq p r) b (mkSeq q r)
@@ -562,7 +562,7 @@ $$
 $$ %\par\vspace{-8pt}
 \begin{code}
 (cjSeqNDCLDistr,alSeqNDCLDistr)
-   = bookdef (";" -.- "sqcap" -.- "ldistr") "2.4L6"
+   = bookdef ("sqcmp" -.- "sqcap" -.- "ldistr") "2.4L6"
              ( mkSeq (p `ndc` q) r  ===  (mkSeq p r) `ndc` (mkSeq q r) )
              (areUTPDynObs [gP,gQ,gR])
 \end{code}
@@ -577,7 +577,7 @@ $$
 $$ %\par\vspace{-8pt}
 \begin{code}
 (cjSeqNDCRDistr,alSeqNDCRDistr)
-   = bookdef (";" -.- "sqcap" -.- "rdistr") "2.4L7"
+   = bookdef ("sqcmp" -.- "sqcap" -.- "rdistr") "2.4L7"
              ( mkSeq p (q `ndc` r)  ===  (mkSeq p q) `ndc` (mkSeq p r) )
              (areUTPDynObs [gP,gQ,gR])
 \end{code}

@@ -87,7 +87,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 axEqualRefl
- = ( "=" -.- "refl"
+ = ( "eq" -.- "refl"
    , ( e `isEqualTo` e
    , scTrue ) )
 \end{code}
@@ -99,7 +99,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 axEqualSymm
- = ( "=" -.- "symm"
+ = ( "eq" -.- "symm"
    , ( (e `isEqualTo` f) === (f `isEqualTo` e)
    , scTrue ) )
 \end{code}
@@ -111,7 +111,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 axEqualTrans
- = ( "=" -.- "trans"
+ = ( "eq" -.- "trans"
    , ( ( e `isEqualTo` f) /\ ( f `isEqualTo` g) ==> (e `isEqualTo` g)
    , scTrue ) )
 \end{code}
@@ -140,7 +140,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjEqualSubst
- = ( "=" -.- "subst"
+ = ( "eq" -.- "subst"
    , ( sub ( e `isEqualTo` f) === ((sub e) `isEqualTo` (sub f))
    , scTrue ) )
 \end{code}

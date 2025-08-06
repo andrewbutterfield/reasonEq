@@ -17,6 +17,7 @@ module
   , _skip, _lif, _rif, _while
   , _design
   , _true , _false , _not, _and, _or, _imp, _eqv
+  , _eq
   , _forall, _exists
   , _powerset, _emptyset, _union, _intsct, _setminus
   , _mbr, _subseteq, _supseteq, _varnothing
@@ -149,21 +150,14 @@ theSymbolList
   , ("omega", SymForm "omega"  "\x03c9")
   , ("lambda", SymForm "lambda"  "\x03bb"), ("Lambda", SymForm "Lambda"  "\x039b")
 
-  , ("top", SymForm "T"  "\x22a4"), ("bot", SymForm "_|_"  "\x22a5")
-  , ("sqcap", SymForm "|~|"  "\x2293"), ("sqcup", SymForm "|_|"  "\x2294")
-  , ("sqsubseteq", SymForm "|=" "\x2291"), ("sqsupseteq", SymForm "=|" "\x2292")
-
-  , ("lif", SymForm "<|"  "\x25c1"), ("rif", SymForm "|>"  "\x25b7")
-
-  , ("refines", SymForm "=|" "\x2292")
-  , ("skip", SymForm "II" "II")
-  , ("lif", SymForm "<|"  "\x25c1"), ("rif", SymForm "|>"  "\x25b7")
-  , ("while", SymForm "*" "\x229b")
-  , ("design", SymForm "|-"  "\x22a2")
-
   , ("not", SymForm "~"  "\x00ac")
   , ("and", SymForm "/\\"  "\x2227"), ("or", SymForm "\\/"  "\x2228")
   , ("imp", SymForm "==>"  "\x27f9"), ("eqv", SymForm "=="  "\x2261")
+
+  , ("eq", SymForm "=" "=")
+
+  , ("forall", SymForm "forall" "\x2200"), ("exists", SymForm "exists" "\x2203")
+  , ("uclose", SymForm "[]" "[]")
 
   , ("neg", SymForm "-" "-")
   , ("add", SymForm "+" "+")
@@ -175,11 +169,22 @@ theSymbolList
   , ("eventually", SymForm "<>" "\x25c7")
   , ("always", SymForm "[]" "\x25fb")
 
+  , ("top", SymForm "T"  "\x22a4"), ("bot", SymForm "_|_"  "\x22a5")
+  , ("sqcap", SymForm "|~|"  "\x2293"), ("sqcup", SymForm "|_|"  "\x2294")
+  , ("sqsubseteq", SymForm "|=" "\x2291"), ("sqsupseteq", SymForm "=|" "\x2292")
+
+  , ("refines", SymForm "=|" "\x2292")
+  , ("skip", SymForm "II" "II")
+  , ("asg", SymForm ":=" ":=")
+  , ("sqcmp", SymForm ";" ";")
+  , ("lif", SymForm "<|"  "\x25c1"), ("rif", SymForm "|>"  "\x25b7")
+  , ("while", SymForm "*" "\x229b")
+  , ("design", SymForm "|-"  "\x22a2")
+
+
   , ("*", SymForm "*"  "\x002a")
   , ("cons", SymForm ":" ":"), ("cat", SymForm "^" "\x2322")
   , ("pfx", SymForm "<=" "\x227c")
-
-  , ("forall", SymForm "forall" "\x2200"), ("exists", SymForm "exists" "\x2203")
 
   , ("cup", SymForm "U"  "\x222a"), ("cap", SymForm "I"  "\x2229")
 
@@ -187,7 +192,8 @@ theSymbolList
   , ("emptyset", SymForm "{}"  "\x00d8"), ("mbr", SymForm "mbr"  "\x2208")
   , ("union", SymForm "U"  "\x222a"), ("intsct", SymForm "I"  "\x2229")
   , ("subseteq", SymForm "subset" "\x2286"), ("supseteq", SymForm "supset" "\x2287")
-  , ("setminus", SymForm "\\"  "\x2216"), ("varnothing", SymForm "()" "\x2205")
+  , ("sdiff", SymForm "\\"  "\x2216"), ("varnothing", SymForm "()" "\x2205")
+  , ("card", SymForm "#" "#")
 
   , ("neq", SymForm "neq"  "\x2260"), ("notin", SymForm "notin"  "\x2209")
   , ("disj", SymForm "disj" "\x22d4")
@@ -242,6 +248,8 @@ _true = nicesym "true" ; _false = nicesym "false"
 _not = nicesym "not" ; _and = nicesym "and" ; _or = nicesym "or"
 _imp = nicesym "imp" ; _eqv = nicesym "eqv"
 
+_eq = nicesym "eq"
+
 _forall = nicesym "forall" ; _exists = nicesym "exists"
 
 _cup = nicesym "cup" ; _cap = nicesym "cap"
@@ -250,7 +258,7 @@ _powerset = nicesym "powerset"
 _emptyset = nicesym "emptyset" ; _mbr = nicesym "mbr"
 _union = nicesym "union" ; _intsct = nicesym "intsct"
 _subseteq = nicesym "subseteq" ; _supseteq = nicesym "supseteq"
-_setminus = nicesym "setminus" ; _varnothing = nicesym "varnothing"
+_setminus = nicesym "sdiff" ; _varnothing = nicesym "varnothing"
 
 _neq = nicesym "neq" ; _notin = nicesym "notin"
 _disj = nicesym "disj"

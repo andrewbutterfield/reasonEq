@@ -218,8 +218,8 @@ Suggested Precedence Table:
 \begin{code}
 precTable
  = M.fromList
-    [ ( ";"        , (1,LAssoc))
-    , ( ":="       , (1,NotAssoc))
+    [ ( "sqcmp"    , (1,LAssoc))   , ( ";"        , (1,LAssoc))
+    , ( "asg"      , (1,NotAssoc)) , ( ":="       , (1,NotAssoc))
     , ( "refines"  , (1,LAssoc))
     , ( "design"   , (2,LAssoc))
     , ( "eqv"      , (3,LAssoc))
@@ -230,17 +230,17 @@ precTable
     , ( "and"      , (6,LAssoc)) 
     , ( "cons"     , (7,RAssoc))
     , ( "cat"      , (7,RAssoc))
-    , ( "="        , (7,NotAssoc))
+    , ( "eq"       , (7,NotAssoc)) , ( "="        , (7,NotAssoc))
     , ( "pfx"      , (7,NotAssoc))
     , ( "mbr"      , (7,NotAssoc))
     , ( "subseteq" , (7,NotAssoc))
     , ( "until"    , (8,NotAssoc))
     , ( "wait"     , (8,NotAssoc))
-    , ( "+"        , (8,LAssoc))
+    , ( "add"      , (8,LAssoc))   , ( "+"        , (8,LAssoc))
     , ( "union"    , (8,LAssoc))
-    , ( "-"        , (8,NotAssoc))
-    , ( "\\"       , (9,NotAssoc))
-    , ( "*"        , (9,LAssoc))
+    , ( "sub"      , (8,NotAssoc)) , ( "-"        , (8,NotAssoc))
+    , ( "sdiff"    , (9,NotAssoc)) , ( "\\"       , (9,NotAssoc))
+    , ( "mul"      , (9,LAssoc))   , ( "*"        , (9,LAssoc))
     , ( "intsct"   , (9,LAssoc))
     , ( "div"      , (9,NotAssoc))
     , ( "mod"      , (9,NotAssoc))
@@ -293,7 +293,7 @@ Binders and substitution are straightforward:
 trterm trid p (Bnd tk n vs t)  =  trabs trid p tk n (S.toList vs) t
 trterm trid p (Lam tk n vl t)  =  trabs trid p tk n vl            t
 -- give assignment special treatment
-trterm trid p (Sub tk (Var _ (Vbl (Identifier ":=" _) _ _)) sub)
+trterm trid p (Sub tk (Var _ (Vbl (Identifier "asg" _) _ _)) sub)
   =  trasg trid sub
 trterm trid p (Sub tk t sub)
   | isAtomic t  =       trterm trid p t      ++ trsub trid p sub

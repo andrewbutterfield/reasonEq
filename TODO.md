@@ -13,30 +13,29 @@
 
 ## URGENT or NEXT
 
-
+`
 **NEED TO ENSURE GENERATED FILENAMES ARE SAFE**
 
 Windows forbids the following characters in filenames:  ` \ / : ? " < > | `.
 
 Stick to `[a-zA-Z0-9-._]`.
 
-Other symbols currently used in filenames:  
+Other symbols currently used in filenames,
+as a result of being used in lawnames.
 
-  * Std Defs : ` 𝔹 `   *now done*
-  * `Equal` : ` = `
-  * `Sets` : ` \ `   *Windows breaking*
-  * `UCLose` : ` [ ] `
-  * `U_CWhl` : ` ; `
-  * `U_NWhl` : ` := `   *Windows breaking*
-  * `Designs` :  ` ; `
+  * Std Defs : `𝔹`,...   *now done*
+  * `Equal` : ` = `  to become `eq`  *now done*
+  * `Sets` : ` \ `  to become `sdiff`  *Windows breaking, now done*
+  * `Sets` : ` # ` to become `card` *now done*
+  * `UClose` : ` [] ` to become `uclose` *now done*
+  * `U_CWhl` : ` ; ` to become `sqcmp` *now done*
+  * `U_NWhl` : ` := `  to become `asg`  *Windows breaking, now done*
+
+Note that `UTCP` now has `tS`, `tGE` and `tLE` instead of `S`, `GE` and `LE`.
+
+We should extract a UTP Base theory 
 
 **CURRENT ISSUEs**
-
-The `EQV` theory:   `≡ : 𝔹⟶ 𝔹⟶ 𝔹` looks compressed on screen.
-
-In `Arith`, operator precedence needs fixing:  `*(e,+(f,g)) = +(*(e,f),*(e,g))`
-
-
 
 
 

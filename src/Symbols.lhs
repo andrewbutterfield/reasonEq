@@ -210,6 +210,9 @@ theSymbolList
   , ("tZ", SymForm "Z"  "\x2124"), ("tQ", SymForm "Q"  "\x211a")
   , ("tR", SymForm "R"  "\x211d"), ("tC", SymForm "C"  "\x2102")
 
+  , ("tS", SymForm "S" "S")
+  , ("tLE", SymForm "LE" "LE"), ("tGE", SymForm "GE" "GE")
+
   , ("bullet", SymForm "@"  "\x2022"), ("times", SymForm "x"  "\x2a09")
   , ("fun", SymForm "->"  "\x27f6"), ("pfun", SymForm "-+>"  "\x21f8")
   , ("ffun", SymForm "-++>"  "\x21fb"), ("maplet", SymForm "|->"  "\x27fc")

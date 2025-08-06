@@ -605,9 +605,7 @@ widthHelp = sequence_ (fmap (tstop . snd) niceSyms)
 \end{code}
 
 \begin{code}
-#ifndef NOT_NICE
-
-widthHack s cs = whack (replicate s ' ') cs
+u8_widthHack s cs = whack (replicate s ' ') cs
 
 whack _ [] = []
 whack ss (c:cs)
@@ -619,15 +617,19 @@ whack ss (c:cs)
 -- _B is included here because
 -- its from a different unicode page than _C, _N, _R, _Q, _Z
 badWidths = _imp ++ _star ++ _fun ++ _pfun ++ _ffun ++ _maplet ++ _B
+
+#ifndef NOT_NICE
+widthHack = u8_widthHack
 #endif
 \end{code}
 
 \subsection{Width Hack for Windows}
 
 \begin{code}
-#ifdef NOT_NICE
+aa_widthHack _ = id
 
-widthHack _ = id
+#ifdef NOT_NICE
+widthHack = aa_widthHack
 #endif
 \end{code}
 

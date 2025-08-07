@@ -18,7 +18,6 @@
 **CURRENT ISSUEs**
 
 
- * The `set T xxx` should run `sh T` at the end.
  * The `sps` proof command should show the short settings codes, so we don't have to lookup the `mps` command.
  * setting `mps fv 0` doesn't stop display of `?P` variables!!!
  

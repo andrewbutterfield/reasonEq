@@ -446,7 +446,13 @@ setState (cmd:rest) reqs
  | cmd == setCurrThry
     =  case setCurrentTheory nm reqs of
          But msgs   ->  doshow reqs $ unlines' msgs
-         Yes reqs'  ->  doshow reqs' ("Current Theory now '" ++ nm ++ "'")
+         Yes reqs'  ->  do
+           case getCurrentTheory reqs' of
+             But msgs'  ->  doshow reqs $ unlines' msgs'
+             Yes thry' ->
+               doshow reqs' 
+                 ( (showTheoryLong (trTerm 0, trSideCond) thry')
+                   ++ "Current Theory now '" ++ nm ++ "'" )
  | cmd == setSettings
     =  case modifyProofSettings rest (prfSettings reqs) of
          But msgs     ->  doshow reqs $ unlines' msgs

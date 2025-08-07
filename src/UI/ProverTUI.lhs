@@ -205,7 +205,10 @@ modProofSettings args@[name,val] state@(reqs, liveProof)
          But msgs  ->  do putStrLn $ unlines' ("mps failed":msgs)
                           waitForReturn
                           return (reqs, liveProof)
-         Yes prfset' -> return (reqs, liveSettings_ prfset' liveProof)
+         Yes prfset' -> do
+           putStrLn $ observeSettings prfset'
+           waitForReturn
+           return (reqs, liveSettings_ prfset' liveProof)
 modProofSettings _ state = return state
 \end{code}
 

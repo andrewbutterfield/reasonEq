@@ -166,16 +166,17 @@ showPrfSettings :: ProofSettings -> String
 showPrfSettings rsettings
   = unlines' $ displayPrfSettings rsettings prfSettingStrings
   where
-    displayPrfSettings _ []        =  []
-    displayPrfSettings r (rs:rss)  =  disp r rs : displayPrfSettings r rss
+    displayPrfSettings r =  map (disp r)
 
-    disp r ("mm",_,text) = text ++ " = " ++ show (maxMatchDisplay r)
-    disp r ("ms",_,text) = text ++ " = " ++ show (maxStepDisplay r)
-    disp r ("bd",_,text) = text ++ " = " ++ show (showBindings r)
-    disp r ("tm",_,text) = text ++ " = " ++ show (showTrivialMatches r)
-    disp r ("tq",_,text) = text ++ " = " ++ show (showTrivialQuantifiers r)
-    disp r ("ts",_,text) = text ++ " = " ++ show (showTrivialSubst r)
-    disp r ("fv",_,text) = text ++ " = " ++ show (showFloatingVariables r)
+    disp r (code@"mm",_,text) = disp2 code text $ show (maxMatchDisplay r)
+    disp r (code@"ms",_,text) = disp2 code text $ show (maxStepDisplay r)
+    disp r (code@"bd",_,text) = disp2 code text $ show (showBindings r)
+    disp r (code@"tm",_,text) = disp2 code text $ show (showTrivialMatches r)
+    disp r (code@"tq",_,text) = disp2 code text $ show (showTrivialQuantifiers r)
+    disp r (code@"ts",_,text) = disp2 code text $ show (showTrivialSubst r)
+    disp r (code@"fv",_,text) = disp2 code text $ show (showFloatingVariables r)
+
+    disp2 code text shown = text ++ " ("++code++") "++shown
 \end{code}
 
 \newpage

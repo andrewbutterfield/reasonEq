@@ -9,11 +9,11 @@ module Ranking
   ( FilterFunction, OrderFunction, Ranking
   , filterAndSort -- used in ProverTUI
   -- exported Filters
-  , acceptAll -- used in REqState
-  , isNonTrivial-- used in REqState
-  , nonTrivialQuantifiers -- used in REqState
-  , nonTrivialSubstitution -- used in REqState
-  , noFloatingVariables -- used in REqState
+  , acceptAll -- used in ProofSettings
+  , isNonTrivial-- used in ProofSettings
+  , nonTrivialQuantifiers -- used in ProofSettings
+  , nonTrivialSubstitution -- used in ProofSettings
+  , noFloatingVariables -- used in ProofSettings
   -- exported Orderings
   , sizeOrd -- not used
   , favourDefLHSOrd -- used in ProverTUI

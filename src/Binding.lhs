@@ -1677,7 +1677,7 @@ but all the listvars are bound to empty sets/lists.
 \begin{code}
 onlyTrivialListVarBindings :: Binding -> Bool
 onlyTrivialListVarBindings (BD (_,_,_,lbind))
-  | null lpairs  =  False
+  | null lpairs  =  False -- all pred [] returns True !
   | otherwise    =  all onlyTrivialListVarBinding lpairs
   where lpairs   =  M.assocs lbind
 

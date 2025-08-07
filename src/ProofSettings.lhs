@@ -88,6 +88,7 @@ showFloatingVariables__ f r
 showFloatingVariables_   =  showFloatingVariables__ . const
 \end{code}
 
+\newpage
 \section{Section 3 Updater}
 
 
@@ -127,6 +128,7 @@ andIfWanted wanted newf currf ctxt mtch
 \newpage
 \section{Startup/Default Settings}
 
+Here we keep verbosity and complexity to a minimum.
 
 \begin{code}
 initProofSettings
@@ -137,7 +139,7 @@ initProofSettings
     , showTrivialMatches     = False
     , showTrivialQuantifiers = False 
     , showTrivialSubst       = False
-    , showFloatingVariables  = True 
+    , showFloatingVariables  = False 
     , matchFilter = acceptAll
     }
 \end{code}

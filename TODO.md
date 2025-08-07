@@ -13,12 +13,43 @@
 
 ## URGENT or NEXT
 
-
-4
 **CURRENT ISSUEs**
 
+**RANKING+PROOFSETTINGS ARE BROKEN**
+
+*It all needs to be redesigned, with less HOF magic going on*
 
  * setting `mps fv 0` doesn't stop display of `?P` variables!!!
+
+Proving `Arith.neg_zero` with goal `(-0) = 0`  gives us the
+following match:
+
+```
+4 : “eq_trans” [⟹ *]
+    (-0) = 0 ∨ (-0) = ?f ∧ ?f = 0
+```
+ Doing `tm 2 eq_trans` gives:
+
+
+```
+@Binding:
+  { B  ⟼ 𝔹  , e  ⟼ (-0), =  ⟼ =, f  ⟼ ?f, g  ⟼ 0 }
+Instantiated Replacement:
+REPL:  
+C (TG (Id "B" 0)) True (Id "and" 0) 
+  [ C (TG (Id "B" 0)) True (Id "eq" 0) 
+      [ C (TG (Id "Z" 0)) True (Id "neg" 0) 
+          [ K (TG (Id "Z" 0)) (VI 0) ]
+      , V T (VR (Id "?f" 0,VO,WS))
+      ]
+    , C (TG (Id "B" 0)) True (Id "eq" 0) 
+        [ V T (VR (Id "?f" 0,VO,WS))
+        , K (TG (Id "Z" 0)) (VI 0) ]
+  ]
+  (-0) = ?f ∧ ?f = 0
+Instantiated Variables: {?f}
+Floating Vars?: True
+```
  
 
 

@@ -824,7 +824,9 @@ tryMatch args state@( reqs, liveProof)
             putStrLn $ unlines
               [ banner ++ " was successful"
               , "Binding:\n  " ++ trBinding bind
-              , "Instantiated Replacement:\n  " ++ trTerm 0 tPasC
+              , "Instantiated Replacement:\n  " ++ trTerm 0 (pdbg "REPL" tPasC)
+              , "Instantiated Variables: "  ++ trVSet (mentionedVars tPasC)
+              , "Floating Vars?: " ++ show (any isFloatingGVar $ mentionedVars tPasC)
               , "Law S.C.:\n  " ++ trSideCond scP 
               , "Instantiated Law S.C.:\n  " ++ trSideCond scC'
               , "Goal S.C.:\n  " ++ trSideCond (xpndSC liveProof)

@@ -1,4 +1,4 @@
-\chapter{UTP While Common}
+\chapter{UTP While Theory}
 \begin{verbatim}
 Copyright  Andrew Butterfield (c) 2025
 
@@ -53,20 +53,23 @@ import Debugger
 
 \section{Introduction}
 
-Here we give semantics to elements of the ``While'' signature
-whose definitions do not change 
-when we move from na\"{i}ve to design-based theories.
-These are 
+Here we define the signature of the ``While'' language,
+and the semantic definitions that are common to the two main variants
+(the ``na\"{i}ve'' version, and that based on \emph{Designs}).
+These with common semantic definitions are: 
 refinement ($\sqsupseteq$), 
 conditionals ($\cond{\_}$),
 sequential composition ($;$), 
 and non-deterministic choice ($\ndc$).
-We also provide conjectures covering the laws that can be proven for that subset.
-The parts of the ``While'' signature not treated as common are 
+We also provide 
 assignment ($:=$),
 skip ($\Skip$),
 abort ($\bot$),
 and miracle ($\top$).
+
+\begin{code}
+asgIntro = mkConsIntro i_asg apred11
+\end{code}
 
 
 
@@ -650,12 +653,16 @@ axFusionDef
 
 We collect our known variables:
 \begin{code}
-utpWC_Known
+utpWC_Knowns
  = refinesIntro $
    condIntro $
    seqIntro $
    obsIntro $
    ndcIntro $
+   asgIntro $
+   -- skipIntro $
+   -- abortIntro $
+   -- miracleIntro $
    newNamedVarTable utpWC_Name
 \end{code}
 
@@ -705,7 +712,7 @@ utpWC_Aliases
 
 \begin{code}
 utpWC_Name :: String
-utpWC_Name = "U_CWhl"
+utpWC_Name = "UWhile"
 utpWC_Theory :: Theory
 utpWC_Theory
   =  nullTheory { thName  =  utpWC_Name
@@ -720,7 +727,7 @@ utpWC_Theory
                             , notName
                             , equivName
                             ]
-            , known   =  utpWC_Known
+            , known   =  utpWC_Knowns
             , laws    =  utpWC_Axioms
             , conjs   =  utpWC_Conjs
             }

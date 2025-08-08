@@ -1,4 +1,4 @@
-\chapter{UTP Na\"{i}ve While}
+\chapter{UTP While}
 \begin{verbatim}
 Copyright  Andrew Butterfield, Danny Thomas (c) 2019--2025
 
@@ -6,7 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module UTP.While.Naive (
+module UTP.While.Design (
   utpNW_Conjs, utpNW_Name, utpNW_Theory
 , utpNW_Aliases
 ) where
@@ -56,9 +56,7 @@ import Debugger
 \section{Introduction}
 
 
-Here we provide semantics for the elements of the Na\"{i}ve While theory,
-were they differ from the corresponding Design semantics.
-They are assignment, skip, abort and miracle.
+Here we provide a Design semantics for the While language.
 
 
 \section{UTP Assignment}
@@ -281,7 +279,7 @@ miracleIntro = mkKnownVar v_miracle bool
 
 
 \newpage
-\section{UTP Na\"{i}ve Theory}
+\section{UTP While Design}
 
 We collect our known variables:
 \begin{code}

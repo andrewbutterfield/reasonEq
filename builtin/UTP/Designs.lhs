@@ -62,7 +62,9 @@ constructors,
 healthiness conditions,
 and related theorems.
 
-\section{Observables}
+\section{Signature}
+
+\subsection{Observables}
 
 We have two Design-specific observables\cite[Defn 3.0.1, p75]{UTP-book}:
 $$ 
@@ -75,10 +77,12 @@ tok = jVar bool vok  ;  tok' = jVar bool vok'
 \end{code}
 
 
+\subsection{Constructors}
 
-
-\section{The Design Theory}
-
+Given a pre-relation $P$ and post-relation $Q$ 
+over an alphabet that does not mention $ok$ or $ok'$,
+we define a constructor that produces a health predicate that does include them:
+$$ P \design Q $$
 
 \subsection{Known Variables}
 
@@ -91,12 +95,9 @@ designKnown =  mkKnownVar v_design boolf_2 $
 \end{code}
 
 
-\subsection{Design Axioms}
+\section{Axioms}
 
-Given a pre-condition $P$ and post-condition $Q$ 
-over an alphabet that does not mention $ok$ or $ok'$,
-we define a constructor that produces a health predicate that does include them:
-$$ P \design Q $$
+
 \begin{code}
 vP = Vbl (jId "P") PredV Static ; p = fromJust $ pVar ArbType vP ; gP = StdVar vP
 vQ = Vbl (jId "Q") PredV Static ; q = fromJust $ pVar ArbType vQ ; gQ = StdVar vQ
@@ -121,13 +122,43 @@ designIntro = mkConsIntro i_design boolf_2
             scTrue
 \end{code}
 
+For \H{H1}, \H{H2}, and \H{H4}, this is all we need.
+
+From \cite[\textbf{Defn 3.2.1},p82]{UTP-book}:
+$$
+\begin{array}{ll}
+   \H{H1} & R = (ok \implies R)
+\\ \H{H2} & [R[false/ok']\implies R[true/ok']]
+\\ \H{H4} & R ; \true = true
+\end{array}
+$$
+
+For \H{H3} we need \m{\Skip}.
+
+From \cite[p79]{UTP-book} (modified):
+$$
+  \Skip ~~\defs~~ (\true \design S'=S)
+$$
+
+
+
+
+
+From \cite[\textbf{Defn 3.2.1},p82]{UTP-book}:
+$$
+\begin{array}{ll}
+   \H{H3} & R = R ; \Skip
+\end{array}
+$$
+
+
 
 \begin{code}
 designAxioms :: [Law]
 designAxioms  =  map labelAsAxiom [ axDsgDef ]
 \end{code}
 
-\subsection{Design Conjectures}
+\section{Conjectures}
 
 For now we just list definitions and theorems in Chp 3.
 Some regarding assignment and skip should end up in \h{UTP.While.Design}
@@ -200,11 +231,6 @@ $$
  v:=e;(P \cond{b(v)} Q) ~~=~~ (v:=e;P) \cond{b(e)} (v:=e;Q)
 $$
 
-
-From \cite[p79]{UTP-book}:
-$$
-  \Skip ~~\defs~~ (\true \design x'=x \land \dots \land z'=z)
-$$
 
 
 From \cite[\textbf{L4},p79]{UTP-book}:

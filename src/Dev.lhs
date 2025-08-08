@@ -44,6 +44,7 @@ import Equality
 import Arithmetic
 import Sets
 import Lists
+import UTP.Base
 import UTP.While.Common
 import UTP.While.Design
 import UTP.Designs
@@ -108,9 +109,10 @@ devKnownBuiltins  = [ equivTheory
                     , arithmeticTheory
                     , setTheory
                     , listTheory
+                    , utpBase_Theory
                     , utpWC_Theory
-                    , utpNW_Theory
                     , designTheory
+                    , utpWD_Theory
                     , utcpTheory
                     ]
 

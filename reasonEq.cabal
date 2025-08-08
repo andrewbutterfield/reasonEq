@@ -81,13 +81,13 @@ library
       StdSignature
       StdTypeSignature
       UClose
+      UTP.Base
       UTP.Designs
       UTP.Observations
       UTP.Reading
       UTP.UTCP
       UTP.While.Common
       UTP.While.Design
-      UTP.While.RefineSig
   other-modules:
       Paths_reasonEq
   hs-source-dirs:

@@ -1,4 +1,4 @@
-\chapter{UTP While}
+\chapter{UTP While Designs}
 \begin{verbatim}
 Copyright  Andrew Butterfield, Danny Thomas (c) 2019--2025
 
@@ -7,8 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module UTP.While.Design (
-  utpNW_Conjs, utpNW_Name, utpNW_Theory
-, utpNW_Aliases
+  utpWD_Conjs, utpWD_Name, utpWD_Theory
+, utpWD_Aliases
 ) where
 
 import Data.Maybe
@@ -43,9 +43,10 @@ import Exists
 import UClose
 import StdTypeSignature
 import UTP.Reading
-import UTP.While.RefineSig
 import UTP.Observations
+import UTP.Base
 import UTP.While.Common
+import UTP.Designs
 
 import TestRendering
 
@@ -283,19 +284,19 @@ miracleIntro = mkKnownVar v_miracle bool
 
 We collect our known variables:
 \begin{code}
-utpNW_Known
+utpWD_Known
  = asgIntro $
    skipIntro $
    abortIntro $
    miracleIntro $
-   newNamedVarTable utpNW_Name
+   newNamedVarTable utpWD_Name
 \end{code}
 
 
 We now collect our axiom set:
 \begin{code}
-utpNW_Axioms :: [Law]
-utpNW_Axioms
+utpWD_Axioms :: [Law]
+utpWD_Axioms
   = map labelAsAxiom
       [ axAsgDef
       , axSkipDef
@@ -307,8 +308,8 @@ utpNW_Axioms
 
 We now collect our conjecture set:
 \begin{code}
-utpNW_Conjs :: [NmdAssertion]
-utpNW_Conjs
+utpWD_Conjs :: [NmdAssertion]
+utpWD_Conjs
   = [ cjAsgSimple, cjAsgUnchanged, cjAsgSeqSame, cjAsgSeqCond
     , cjSkipL5a, cjSkipL5b
     ]
@@ -317,8 +318,8 @@ utpNW_Conjs
 
 We now collect our alias set:
 \begin{code}
-utpNW_Aliases :: [(String,String)]
-utpNW_Aliases
+utpWD_Aliases :: [(String,String)]
+utpWD_Aliases
   = [ alAsgDef, alAsgUnchanged, alAsgSeqSame, alAsgSeqCond
     , alSkipDef, alSkipL5a, alSkipL5b
     , alAbortDef, alMiracleDef
@@ -327,12 +328,13 @@ utpNW_Aliases
 
 
 \begin{code}
-utpNW_Name :: String
-utpNW_Name = "U_NvWhl"
-utpNW_Theory :: Theory
-utpNW_Theory
-  =  nullTheory { thName  =  utpNW_Name
-                , thDeps  = [ utpWC_Name
+utpWD_Name :: String
+utpWD_Name = "DWhile"
+utpWD_Theory :: Theory
+utpWD_Theory
+  =  nullTheory { thName  =  utpWD_Name
+                , thDeps  = [ designName
+                            , utpWC_Name
                             , uCloseName
                             , existsName
                             , forallName
@@ -344,9 +346,9 @@ utpNW_Theory
                             , notName
                             , equivName
                             ]
-            , known   =  utpNW_Known
-            , laws    =  utpNW_Axioms
-            , conjs   =  utpNW_Conjs
+            , known   =  utpWD_Known
+            , laws    =  utpWD_Axioms
+            , conjs   =  utpWD_Conjs
             }
 \end{code}
 

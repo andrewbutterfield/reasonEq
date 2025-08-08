@@ -2,12 +2,8 @@
 
 ## PLAN
 
-**Note:** *UTP.While.RefineSig has the While signature*
-* Put signature items for refinement, ndc, abort and miracle into `UBase` theory, with semantics for refinement and ndc.
-* Put signature items for skip, assignement, seq-comp, conditionals, and iteration,  into `UWhile` theory, with semantics for seq-comp, conditionals, and iteration.
-* Junk the naive theory
 * Continue developing the  `Designs` theory. 
-* Add a  `DWhile` theory based on designs.
+* Add a  `DWhile` theory based on designs (created but not yet design-based)
 * Add a `PrePost` theory covering sec 2.8 of the book (Hoare Triples, Floyd assertions, Weakest precondition).
 * Do proper UTCP Semantics with Designs and invariants
 

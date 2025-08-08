@@ -7,7 +7,13 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module UTP.While.Common (
-  utpWC_Conjs, utpWC_Name, utpWC_Theory
+  i_cond, cond
+, i_seq, mkSeq
+, i_while, while
+, listwiseVarBinPred
+, i_asg, (.:=), (.::=), simassign
+, i_skip, v_skip, skip, g_skip
+, utpWC_Conjs, utpWC_Name, utpWC_Theory
 , utpWC_Aliases
 ) where
 
@@ -44,7 +50,7 @@ import UClose
 import StdTypeSignature
 import UTP.Reading
 import UTP.Observations
-import UTP.While.RefineSig
+import UTP.Base
 import TestRendering
 
 import Debugger
@@ -53,166 +59,114 @@ import Debugger
 
 \section{Introduction}
 
-Here we define the signature of the ``While'' language,
-and the semantic definitions that are common to the two main variants
-(the ``na\"{i}ve'' version, and that based on \emph{Designs}).
-These with common semantic definitions are: 
-refinement ($\sqsupseteq$), 
-conditionals ($\cond{\_}$),
-sequential composition ($;$), 
-and non-deterministic choice ($\ndc$).
-We also provide 
-assignment ($:=$),
-skip ($\Skip$),
-abort ($\bot$),
-and miracle ($\top$).
+Here we define the the ``While'' language,
+which is a simple turing-complete imperative language.
+We define six signature items: 
+all program variables (\m{O},\m{O'},\m{O_m}),
+seq-comp (\m{;}), 
+conditionals (\m{\cond{\_}}), 
+iteration (\m{\circledast}),
+assignment (\m{:=}),
+and 
+skip (\m{\Skip}).
+We also provide semantics for seq-comp, conditionals, and iteration,
+which do not change across most variants.
 
+\section{UTP While Signatures}
+
+\subsection{Set of all program variables}
+
+We also need to ensure that $O$, $O'$, and $O_m$ are ``known'',
+but here they are \emph{abstract}:
 \begin{code}
+obsIntro = mkAbsSetVar vO
+\end{code}
+We need to be able to make use of the following properties in proofs:
+$$
+  O \cup O' \supseteq P \qquad O \cup O' \supseteq Q \qquad \dots
+$$
+
+
+\subsection{Conditionals}
+$$ P \cond b Q $$
+\begin{code}
+cond :: Term -> Term -> Term -> Term
+i_cond       =  jId "cond"
+cond p b q   =  Cons arbpred True i_cond [p, b, q]
+condIntro = mkConsIntro i_cond boolf_3
+\end{code}
+
+\subsection{Sequential Composition}
+$$ P \seq Q $$
+\begin{code}
+mkSeq :: Term -> Term -> Term
+i_seq        =  jId ";"
+mkSeq p q    =  Cons arbpred False i_seq [p, q]
+seqIntro = mkConsIntro i_seq boolf_2
+\end{code}
+
+\subsection{While Loop}
+$$ c \circledast P$$
+\begin{code}
+while :: Term -> Term -> Term
+i_while = jId "while"
+while c p = Cons arbpred False i_while [c, p]
+\end{code}
+
+\subsection{(Simultaneous) Assignement}
+$$ \lst x := \lst e $$
+\begin{code}
+listwiseVarBinPred :: Type -> Identifier -> Identifier
+                    -> [(Variable,Variable)] -> [(ListVar,ListVar)] -> Term
+listwiseVarBinPred tk na ni vvs lvlvs
+  | null vvs    =  doiter lvlvs
+  | null lvlvs  =  docons vvs
+  | otherwise   =  Cons tk True na [docons vvs,doiter lvlvs]
+  where
+    docons [vv]       =  mkcons vv
+    docons vvs        =  Cons tk True na $ map mkcons vvs
+    mkcons (v1,v2)    =  Cons tk True ni [varAsTerm v1,varAsTerm v2]
+    doiter [lvlv]     =  mkiter lvlv
+    doiter lvlvs      =  Cons tk True na $ map mkiter lvlvs
+    mkiter (lv1,lv2)  =  Iter tk True na True ni [lv1,lv2]
+
+
+p1 = arbpred
+i_asg        =  assignmentId
+p_asg        =  jVar p1 $ Vbl i_asg PredV Textual
+
+simassign :: [(Variable,Term)] -> [(ListVar,ListVar)] -> Term
+simassign vts lvlvs  =  Sub p1 p_asg $ jSubstn vts lvlvs
+
+(.:=) :: Variable -> Term -> Term
+v .:= e      =  simassign [(v,e)] []
+
+(.::=) :: ListVar -> ListVar -> Term
+lv .::= le   =  simassign [] [(lv,le)]
+
 asgIntro = mkConsIntro i_asg apred11
 \end{code}
 
-
-
-In \cite[Thm 3.1.4, p79]{UTP-book} it is claimed that 
-NDC, conditionals and sequential composition have unchanged definitions.
-Finally, \cite[Thm 3.1.5, p80]{UTP-book} states that designs form
-a complete lattice under implication ordering, 
-with bottom $\bot_{\mathbf{D}}=(\false\design\true)$
-and top $\top_{\mathbf{D}}=(\true\design\false)=\lnot ok$.
-This means the semantics of the while-loop is essentially the same.
-
-These are everything except assignment and skip,
-which have different definitions in each.
-However, most of the conjectures regarding assignment and skip are the same.
-There are some involving $\true$, $\false$, $\Skip$ and sequential composition that are true in the na\"{i}ve theory, but are false or qualified for Designs.
-The following are true in the na\"{i}ve theory, 
-but are not valid for ``real'' programs (a.k.a. designs)
-\begin{eqnarray*}
-   (\mu X \bullet X);P = P   &&  \text{pp59-60}
-\\ (\false \ndc P) = P       &&  \text{p61}
-\end{eqnarray*}
-We want  the law $\true;P = \true = P;\true$,
-except when $P$ is $\false$, 
-in which case $\true;\false = \false = \false;\true$.
-We get the following correspondences:
-$$
-\begin{array}{|rcl|rcl|c|}
-  \hline
-  \multicolumn{3}{|c}{\text{Na\"{i}ve}}
-  & \multicolumn{3}{|c|}{\text{Design}}
-  & H1,H2 \text{ plus } \dots
-\\\hline
-  \Skip;P &=& P   &  \Skip;(P\design Q) &=& (P\design Q) &  
-\\\hline
-  P;\Skip &=& P   &  (P\design Q);\Skip &=& (P\design Q) &  H3
-\\\hline
-  \true;P &=& \true   &  \true;(P\design Q) &=& \true & 
-\\\hline
-  P;\true &=& \true  &  (P\design Q);\true &=& \true &  H4
-\\\hline
-\end{array}
-$$
-
-
-\newpage
-\section{UTP Refinement}
-
-\subsection{Defn. of Refinement}
-
-From \cite[Sec 1.5,p34]{UTP-book},
-with addition of the notation using the $\sqsupseteq$ symbol:
-$$
-  \begin{array}{lll}
-     P \sqsupseteq Q ~\defs~ [P \implies Q] &
-     & \QNAME{$\sqsupseteq$-def}
-  \end{array}
-$$\par\vspace{-8pt}
+\subsection{Skip}
+$$ \Skip $$
 \begin{code}
-refinesIntro = mkConsIntro i_refines boolf_2
-(axRefsDef,alRefsDef) = bookdef ("refines" -.- "def") "defd1.5p34"
-                         (refines p q === univ (p ==> q))
-                         scTrue
+skip :: Term
+i_skip  =  jId "II"
+v_skip  =  Vbl i_skip PredV Static
+g_skip  =  StdVar v_skip
+skip    =  jVar p1 v_skip 
 \end{code}
 
-\subsection{UTP Refinement Laws}
+
+\section{UTP While Semantics}
 
 
-From \cite[Sec 1.5,p35]{UTP-book}
-$$
-  \begin{array}{lll}
-     (P \lor Q \sqsupseteq R)
-     \equiv
-     (P \sqsupseteq R) \land (Q \sqsupseteq R)  &
-     & \QNAME{$\sqsupseteq$-$\lor$-distr}
-  \end{array}
-$$\par\vspace{-8pt}
-\begin{code}
-(cjRefsOrDistr,alRefsOrDistr)
-  = bookdef ("refines" -.- "lor" -.- "distr") "assrt1.5p35"
-            ( (p \/ q) `refines` r
-              ===
-              (p `refines` r) /\ (q `refines` r))
-            scTrue
-\end{code}
 
-From \cite[Sec 1.5,pp35-36]{UTP-book}
-$$
-  \begin{array}{lll}
-     (P \sqsupseteq Q) \land (Q \sqsupseteq R) \implies (P \sqsupseteq R)  &
-     & \QNAME{$\sqsupseteq$-trans}
-  \end{array}
-$$\par\vspace{-8pt}
-\begin{code}
-(cjRefsTrans,alRefsTrans)
-  = bookdef ("refines" -.- "trans") "assrt1.5p36a"
-            ( (p `refines` q) /\ (q `refines` r)
-              ==>
-              (p `refines` r) )
-            scTrue
-\end{code}
 
-Other ``laws'' regarding refinement in Chapter 1:
 
-$$
- [D \land E \implies S] \land [P \implies D] \land [Q \implies E]
- \implies
- [P \land Q \implies S]
- \qquad\textrm{p36}
-$$
+\subsection{UTP Conditionals}
 
-$$
- F\textrm{ monotonic} \land [Y \implies X] \implies [F(X)\implies F(Y)]
- \qquad\textrm{p37}
-$$
-
-$$
-[X \land Q \implies S]
-\equiv
-[X \implies (\forall \lst x \bullet Q \implies S)]
-, \textrm{ given }\lst x \notin X
-\qquad\textrm{p39}
-$$
-
-$$
-  [ ( \exists \lst c \bullet D(\lst c)
-      \land L(\lst c,\lst a) )
-    \implies S(\lst a)
-  ]
-  \equiv
-  [ D(\lst c)
-    \implies
-    ( \forall \lst a \bullet L(\lst c,\lst a) \implies S(\lst a) )
-  ]
-, \textrm{ given }\lst c \not{\!\cap}\; \lst a
-  \qquad\textrm{p41}
-$$
-
-We may implement these later.
-
-\newpage
-\section{UTP Conditionals}
-
-\subsection{Defn. of Conditional}
+\subsubsection{Defn. of Conditional}
 
 From \cite[Defn 2.1.1,p47]{UTP-book}
 $$
@@ -222,14 +176,13 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-condIntro = mkConsIntro i_cond boolf_3
 (axCondDef,alCondDef) = bookdef ("cond" -.- "def") "Def2.1.1"
                          (cond p b q === (b /\ p) \/ (mkNot b /\ q))
                          scTrue
 \end{code}
 
 
-\subsection{UTP Conditional Laws}
+\subsubsection{UTP Conditional Laws}
 
 From \cite[2.1\textbf{L1}, p47]{UTP-book}
 $$
@@ -390,9 +343,9 @@ cjCondAlt2 = preddef ("cond" -.- "alt" -.- "def2")
 \end{code}
 
 
-\newpage
-\section{UTP Sequential Composition}
+\subsection{UTP Sequential Composition}
 
+\subsubsection{Defn. Sequential Composition}
 
 From \cite[Defn 2.2.1,p49]{UTP-book}
 
@@ -404,7 +357,6 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-seqIntro = mkConsIntro i_seq boolf_2
 (axSeqDef,alSeqDef) = bookdef ("sqcmp" -.- "def") "Def2.2.1"
                        ( mkSeq p q
                          === exists [gO0]
@@ -416,17 +368,8 @@ seqIntro = mkConsIntro i_seq boolf_2
 \end{code}
 We want to assert $O \supseteq P$, and rely on unformity to get the rest.
 
-We also need to ensure that $O$, $O'$, and $O_m$ are ``known'',
-but here they are \emph{abstract}:
-\begin{code}
-obsIntro = mkAbsSetVar vO
-\end{code}
-We need to be able to make use of the following properties in proofs:
-$$
-  O \cup O' \supseteq P \qquad O \cup O' \supseteq Q \qquad \dots
-$$
 
-\subsection{UTP Seq. Composition Laws}
+\subsubsection{UTP Seq. Composition Laws}
 
 From \cite[2.2\textbf{L1}, p49]{UTP-book}
 
@@ -462,82 +405,10 @@ $$\par\vspace{-8pt}
                               (areUTPDynObs [gP,gQ,gR] .: isUTPCond gb)
 \end{code}
 
-\newpage
+
 \section{UTP Non-deterministic Choice}
 
-\subsection{Defn. of N.-D.-Choice}
-
-From \cite[Defn 2.4.1,p51]{UTP-book}
-
-$$
-  \begin{array}{lll}
-     P \sqcap Q = P \lor Q
-     && \QNAME{$\sqcap$-def}
-  \end{array}
-$$ %\par\vspace{-8pt}
-\begin{code}
-v_ndc = Vbl i_ndc PredV Static
-ndcIntro = mkConsIntro i_ndc boolf_2
-(axNDCDef,alNDCDef) = bookdef ("sqcap" -.- "def") "Def2.4.1"
-                         ( p `ndc` q  ===  p \/ q )
-                         scTrue
-\end{code}
-
-\subsection{UTP N.-D.-Choice Laws}
-
-From \cite[2.4\textbf{L1}, p52]{UTP-book}
-$$
-  \begin{array}{lll}
-     P \sqcap Q = P \lor Q
-     && \QNAME{$\sqcap$-symm}
-  \end{array}
-$$ %\par\vspace{-8pt}
-\begin{code}
-(cjNDCSymm,alNDCSymm) = bookdef ("sqcap" -.- "symm") "2.4L1"
-                         ( p `ndc` q  ===  q `ndc` p )
-                         scTrue
-\end{code}
-
-From \cite[2.4\textbf{L2}, p52]{UTP-book}
-$$
-  \begin{array}{lll}
-     P \sqcap Q = P \lor Q
-     && \QNAME{$\sqcap$-symm}
-  \end{array}
-$$ %\par\vspace{-8pt}
-\begin{code}
-(cjNDCAssoc,alNDCAssoc) = bookdef ("sqcap" -.- "assoc") "2.4L2"
-                         ( p `ndc` (q `ndc` r)  ===  (p `ndc` q) `ndc` r )
-                         scTrue
-\end{code}
-
-From \cite[2.4\textbf{L3}, p52]{UTP-book}
-$$
-  \begin{array}{lll}
-     P \sqcap P = P
-     && \QNAME{$\sqcap$-idemp}
-  \end{array}
-$$ %\par\vspace{-8pt}
-\begin{code}
-(cjNDCIdem,alNDCIdem) = bookdef ("sqcap" -.- "idem") "2.4L3"
-                         ( p `ndc` p  ===  p )
-                         scTrue
-\end{code}
-
-From \cite[2.4\textbf{L4}, p52]{UTP-book}
-$$
-  \begin{array}{lll}
-     P \sqcap (Q \sqcap R) = (P \sqcap Q) \sqcap (P \sqcap R)
-     && \QNAME{$\sqcap$-self-distr}
-  \end{array}
-$$ %\par\vspace{-8pt}
-\begin{code}
-(cjNDCDistr,alNDCDistr)
-   = bookdef ("sqcap" -.- "distr") "2.4L4"
-             ( p `ndc` (q `ndc` r)  ===  (p `ndc` q) `ndc` (p `ndc` r) )
-             scTrue
-\end{code}
-
+Here we have laws involving n.d.c. and some While operators.
 
 From \cite[2.4\textbf{L5}, p52]{UTP-book}
 $$
@@ -654,15 +525,10 @@ axFusionDef
 We collect our known variables:
 \begin{code}
 utpWC_Knowns
- = refinesIntro $
-   condIntro $
+ = condIntro $
    seqIntro $
    obsIntro $
-   ndcIntro $
    asgIntro $
-   -- skipIntro $
-   -- abortIntro $
-   -- miracleIntro $
    newNamedVarTable utpWC_Name
 \end{code}
 
@@ -672,12 +538,10 @@ We now collect our axiom set:
 utpWC_Axioms :: [Law]
 utpWC_Axioms
   = map labelAsAxiom
-      [ axRefsDef
-      , axCondDef
+      [ axCondDef
       , axSeqDef
       , axFusionDef
-      , axNDCDef
-      ]
+     ]
 \end{code}
 
 
@@ -685,11 +549,9 @@ We now collect our conjecture set:
 \begin{code}
 utpWC_Conjs :: [NmdAssertion]
 utpWC_Conjs
-  = [ cjRefsOrDistr, cjRefsTrans
-    , cjCondL1, cjCondL2, cjCondL3, cjCondL4, cjCondL5a
+  = [ cjCondL1, cjCondL2, cjCondL3, cjCondL4, cjCondL5a
     , cjCondL5b, cjCondL6, cjCondL7, cjCondMutual, cjCondAlt, cjCondAlt2
     , cjSeqAssoc, cjSeqLDistr
-    , cjNDCSymm, cjNDCAssoc, cjNDCIdem, cjNDCDistr
     , cjCondNDCDistr, cjSeqNDCLDistr, cjSeqNDCRDistr, cjNDCCondDistr
     ]
 \end{code}
@@ -699,12 +561,10 @@ We now collect our alias set:
 \begin{code}
 utpWC_Aliases :: [(String,String)]
 utpWC_Aliases
-  = [ alRefsDef, alRefsOrDistr, alRefsTrans
-    , alCondL1, alCondL2, alCondL3, alCondL4
+  = [ alCondL1, alCondL2, alCondL3, alCondL4
     , alCondL5a, alCondL5b, alCondL6, alCondL7
     , alCondMutual
     , alSeqDef, alSeqAssoc, alSeqLDistr
-    , alNDCDef, alNDCSymm, alNDCAssoc, alNDCIdem, alNDCDistr
     , alCondNDCDistr, alSeqNDCLDistr, alSeqNDCRDistr, alNDCCondDistr
     ]
 \end{code}
@@ -716,7 +576,8 @@ utpWC_Name = "UWhile"
 utpWC_Theory :: Theory
 utpWC_Theory
   =  nullTheory { thName  =  utpWC_Name
-                , thDeps  = [ uCloseName
+                , thDeps  = [ utpBase_Name
+                            , uCloseName
                             , existsName
                             , forallName
                             , equalityName
@@ -733,7 +594,7 @@ utpWC_Theory
             }
 \end{code}
 
-\section{UTP Base Infrastructure}
+\section{UTP While Infrastructure}
 
 Most variables have an ``underlying'' definition
 that is then ``wrapped'' in different ways depending on where it is used.

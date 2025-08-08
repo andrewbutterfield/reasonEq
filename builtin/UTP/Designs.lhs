@@ -45,9 +45,9 @@ import Exists
 import UClose
 import StdTypeSignature
 import UTP.Reading
-import UTP.While.RefineSig
 import UTP.Observations
-import UTP.While.Common
+import UTP.Base
+import UTP.While.Common -- need seq-comp
 import TestRendering
 
 import Debugger
@@ -382,6 +382,7 @@ designTheory :: Theory
 designTheory
   = nullTheory  { thName  =  designName
                 , thDeps  = [ utpWC_Name
+                            , utpBase_Name
                             , aoiName
                             , conjName
                             , disjName

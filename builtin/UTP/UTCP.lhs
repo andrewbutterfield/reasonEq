@@ -46,9 +46,9 @@ import Equality
 import ForAll
 import Exists
 import UClose
-import UTP.While.RefineSig
 import UTP.Observations
 import UTP.While.Common
+import UTP.Designs
 import Arithmetic
 import Sets
 import Lists
@@ -893,7 +893,8 @@ utcpName = "UTCP"
 utcpTheory :: Theory
 utcpTheory
   =  nullTheory { thName  =  utcpName
-            , thDeps  =  [ utpWC_Name
+            , thDeps  =  [ designName
+                         , utpWC_Name
                          , setName
                          , uCloseName
                          , existsName

@@ -41,11 +41,9 @@ import Assertions
 import Ranking
 import REqState
 import UI.AbstractUI
-import UTP.While.RefineSig
 import Instantiate
 import TestRendering
 import Parsing
--- import UI.REPL
 import Dev
 import SAT
 import Classifier

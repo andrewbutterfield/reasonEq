@@ -1,4 +1,4 @@
-\chapter{UTP While Designs}
+\chapter{UTP While Design}
 \begin{verbatim}
 Copyright  Andrew Butterfield, Danny Thomas (c) 2019--2025
 
@@ -58,7 +58,11 @@ import Debugger
 
 
 Here we provide a Design semantics for the While language.
+This requires a design-specific  semantics for both assignment and skip.
 
+\textbf{EVERYTHING BELOW IS FROM CHAPTER 2 AND IS PRE-DESIGN}
+
+\section{While-Design Signature}
 
 \section{UTP Assignment}
 
@@ -592,3 +596,44 @@ axFusionDef
 \end{code}
 
 
+\section{Chapter 3 STUFF}
+
+For now we just list definitions and theorems in Chp 3.
+Some regarding assignment and skip should end up in \h{UTP.While.Design}
+
+From \cite[p79]{UTP-book} (modified):
+$$
+  \Skip ~~\defs~~ (\true \design S'=S)
+$$
+
+
+
+
+
+From \cite[\textbf{Exc. 3.2.6},p85]{UTP-book}:
+$$
+\begin{array}{ll}
+   (1) & \text{prove } ~~;~~\ndc~~\cond{\_}\text{ preserve healthiness}
+\\ (2) & \text{Given } b(v) \design Q(v,v') \text{ is predeterministic if}
+\\     & \qquad [(b(v)\land Q(v,v_1)\land Q(v,v_2))\implies(v_1=v_2)]
+\\     & \text{Prove } ~~;~~ \cond{\_} \text{ preserve predeterminism}
+\\ (3) & b \text{ is stable if }  b = b \land ok
+\\     & \text{Given healthy } R \text{ and stable } b
+\\     & \text{Prove }  R \wp b \text{ is stable}
+\\     & \text{Prove }  R \wp false 
+\end{array}
+$$
+
+% From \cite[\textbf{Xn},pNN]{UTP-book}:
+% $$
+% \begin{array}{ll}
+%    (1) & stuff
+% \end{array}
+% $$
+
+% From \cite[\textbf{Xn},pNN]{UTP-book}:
+% $$
+% \begin{array}{ll}
+%    (1) & stuff
+% \end{array}
+% $$

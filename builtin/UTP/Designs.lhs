@@ -175,75 +175,14 @@ cjDesignLZero
 
 \subsubsection{\H{H1} Definition(s)}
 
+$$
+\begin{array}{ll}
+   \H{H1} & R = (ok \implies R)
+\end{array}
+$$
+
+
 \subsubsection{\H{H1} Laws}
-
-\subsection{Healthiness \H{H2}}
-
-\subsubsection{\H{H2} Definition(s)}
-
-\subsubsection{\H{H2} Laws}
-
-\subsection{Healthiness \H{H3}}
-
-\subsubsection{\H{H3} Definition(s)}
-
-\subsubsection{\H{H3} Laws}
-
-\subsection{Healthiness \H{H4}}
-
-\subsubsection{\H{H4} Definition(s)}
-
-\subsubsection{\H{H4} Laws}
-
-For \H{H1}, \H{H2}, and \H{H4}, this is all we need.
-
-From \cite[\textbf{Defn 3.2.1},p82]{UTP-book}:
-$$
-\begin{array}{ll}
-   \H{H1} & R = (ok \implies R)
-\\ \H{H2} & [R[false/ok']\implies R[true/ok']]
-\\ \H{H4} & R ; \true = true
-\end{array}
-$$
-
-For \H{H3} we need \m{\Skip}.
-
-From \cite[p79]{UTP-book} (modified):
-$$
-  \Skip ~~\defs~~ (\true \design S'=S)
-$$
-
-
-
-
-
-From \cite[\textbf{Defn 3.2.1},p82]{UTP-book}:
-$$
-\begin{array}{ll}
-   \H{H3} & R = R ; \Skip
-\end{array}
-$$
-
-
-
-\section{Chapter 3 STUFF}
-
-For now we just list definitions and theorems in Chp 3.
-Some regarding assignment and skip should end up in \h{UTP.While.Design}
-
-
-
-\subsubsection{Healthiness Conditions}
-
-From \cite[\textbf{Defn 3.2.1},p82]{UTP-book}:
-$$
-\begin{array}{ll}
-   \H{H1} & R = (ok \implies R)
-\\ \H{H2} & [R[false/ok']\implies R[true/ok']]
-\\ \H{H3} & R = R ; \Skip
-\\ \H{H4} & R ; \true = true
-\end{array}
-$$
 
 From \cite[\textbf{Thm 3.2.2},p83]{UTP-book}:
 A predicate is \H{H1} ~~\IFF~~ it satisfies left-zero and left-unit
@@ -251,11 +190,40 @@ $$
 \true;R = R = \Skip ; R
 $$
 
+
+
+\subsection{Healthiness \H{H2}}
+
+\subsubsection{\H{H2} Definition(s)}
+
+$$
+\begin{array}{ll}
+   \H{H2} & [R[false/ok']\implies R[true/ok']]
+\end{array}
+$$
+
+
+\subsubsection{\H{H2} Laws}
+
 From \cite[\textbf{Thm 3.2.3},p83]{UTP-book}:
 A predicate is \H{H1} and \H{H2}~~\IFF~~ it is a design.
 $$
 \H{H1} \land \H{H2} \equiv \text{isDesign}
 $$
+
+
+\subsection{Healthiness \H{H3}}
+
+\subsubsection{\H{H3} Definition(s)}
+
+$$
+\begin{array}{ll}
+   \H{H3} & R = R ; \Skip
+\end{array}
+$$
+
+
+\subsubsection{\H{H3} Laws}
 
 From \cite[\textbf{Thm 3.2.4},p84]{UTP-book}:
 A design is \H{H3} if its assumption $P$ can be expressed as a condition $p$.
@@ -271,39 +239,25 @@ $$
            Q_1 ;Q_2 )
 $$
 
+
+\subsection{Healthiness \H{H4}}
+
+\subsubsection{\H{H4} Definition(s)}
+
+$$
+\begin{array}{ll}
+   \H{H4} & R ; \true = true
+\end{array}
+$$
+
+
+\subsubsection{\H{H4} Laws}
+
 From \cite[\textbf{Thm 3.2.5},p85]{UTP-book}:
 
 $P\design Q$ satisfies \H{H4} ~~\IFF~~ $[\exists ok',x',\dots,z'\bullet (P\design  Q)]$.
 
 
-
-From \cite[\textbf{Exc. 3.2.6},p85]{UTP-book}:
-$$
-\begin{array}{ll}
-   (1) & \text{prove } ~~;~~\ndc~~\cond{\_}\text{ preserve healthiness}
-\\ (2) & \text{Given } b(v) \design Q(v,v') \text{ is predeterministic if}
-\\     & \qquad [(b(v)\land Q(v,v_1)\land Q(v,v_2))\implies(v_1=v_2)]
-\\     & \text{Prove } ~~;~~ \cond{\_} \text{ preserve predeterminism}
-\\ (3) & b \text{ is stable if }  b = b \land ok
-\\     & \text{Given healthy } R \text{ and stable } b
-\\     & \text{Prove }  R \wp b \text{ is stable}
-\\     & \text{Prove }  R \wp false 
-\end{array}
-$$
-
-% From \cite[\textbf{Xn},pNN]{UTP-book}:
-% $$
-% \begin{array}{ll}
-%    (1) & stuff
-% \end{array}
-% $$
-
-% From \cite[\textbf{Xn},pNN]{UTP-book}:
-% $$
-% \begin{array}{ll}
-%    (1) & stuff
-% \end{array}
-% $$
 
 
 \section{Designs Theory}

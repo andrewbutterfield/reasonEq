@@ -454,3 +454,141 @@ gO = LstVar lO  ;  gO' = LstVar lO'  ;  gO0 = LstVar lO0
 o0'sub = jSubstn[] [(lO',lO0)]
 o0sub  = jSubstn[] [(lO,lO0)]
 \end{code}
+
+\section{Design Foundations and Concepts}
+
+
+To be distributed above as appropriate
+
+From \cite[\textbf{Def. 3.1.3},p78]{UTP-book}:
+$$
+x := e ~~\defs~~ (\true \design x'=e \land y'=y \dots z'=z)
+$$
+Also
+$$
+x := e ~~\defs~~ (\mathcal D e \design x'=e \land y'=y \dots z'=z)
+$$
+Also (p79)
+$$
+P \cond b Q ~~\defs~~ (\mathcal D b \implies (b \land P \lor \lnot b \land Q))
+$$
+
+From \cite[\textbf{L2},p79]{UTP-book}:
+$$
+ (v:=e;v:=f(v)) ~~=~~ (v:=f(e))
+$$
+
+From \cite[\textbf{L3},pp79]{UTP-book}:
+$$
+ v:=e;(P \cond{b(v)} Q) ~~=~~ (v:=e;P) \cond{b(e)} (v:=e;Q)
+$$
+
+
+
+From \cite[\textbf{L4},p79]{UTP-book}:
+$$
+  \Skip ; ( P \design Q) = (P \design Q)
+$$
+
+From \cite[\textbf{Theorem 3.1.4},p79]{UTP-book}:
+$$
+\begin{array}{ll}
+   (1) & (P_1\design Q_1)\ndc(P_2 \design Q) 
+         = 
+         (P_1 \land P_2 \design Q_1 \lor Q_2)
+\\ (2) & (P_1\design Q_1)\cond{b}(P_2 \design Q)
+         =
+         (P_1 \cond{b} P_2 \design Q_1 \cond{b}r Q_2)
+\\ (3) & (P_1\design Q_1);(P_2 \design Q)
+         =
+         ( \lnot(\lnot P_1;\true) \land \lnot(Q_1;\lnot P_2)
+           \design 
+           Q_1 ;Q_2 )
+\end{array}
+$$
+
+
+From \cite[\textbf{Thm. 3.1.5},p80]{UTP-book}:
+$$
+\begin{array}{ll}
+   (1) & \bigsqcap_i(P_i \design Q_i) 
+         = 
+         (\bigwedge_i P_i) \design (\bigvee_i Q_i)
+\\ (2) & \bigsqcup_i(P_i \design Q_i) 
+         = 
+         (\bigvee_i P_i) \design (\bigwedge_i (P_i \implies Q_i))
+\end{array}
+$$
+
+
+From \cite[p80]{UTP-book}:
+$$
+\top_\Design ~~ \defs ~~ (\true \design \false) ~=~ \lnot ok
+$$
+
+From \cite[\textbf{Thm. 3.1.6},p81]{UTP-book}:
+$$
+\begin{array}{rl}
+                & \mu(X,Y)\bullet(F(X,Y)\design G(X,Y)) = (P(Q)\design Q)
+\\ \text{where} & P(Y) = \nu X \bullet F(X,Y)
+\\   \text{and} & Q = \mu Y \bullet (P(Y)\implies G(P(Y),Y))
+\end{array}
+$$
+
+From \cite[\textbf{Exc 3.1.7},p82]{UTP-book}:
+$$
+\begin{array}{ll}
+   (1) & \text{Prove that } \top_\Design ; (P \design Q) = \top_\Design
+\\ (2) & \text{Prove that } (x:=e);\true ~~=~~ \true;(x:=e) ~~=~~ \true
+\end{array}
+$$
+
+
+\section{Variable List Fusion}
+
+\textbf{Is associated with assignment!!!}
+
+We start with another axiom that describes the ``fusion'' of predicates
+over lists of variables, structured in a particular way:
+$$
+  P(x_1,y_1) \diamond P(x_2,y_2) \diamond \dots \diamond P(x_n,y_n)
+$$
+Here $P(x_i,y_i)$ is a binary predicate
+whose only free variables are $x_i$ and $y_i$,
+while $\diamond$ is an associative and commutative
+binary propositional operator.
+We are interested in a form that mixes standard and \emph{known} list variables,
+and where, for any given $i$,
+that $(x_i,y_i)$ is equal to $(v,v')$ for some $v$:
+$$
+  \dots \diamond P(v,v') \diamond \dots \diamond P(O\less V,O'\less V) \diamond \dots
+$$
+By ``fusion'' we mean simplifying the above by observing that
+$\setof{v,O\less V}$ can be reduced to $\setof{O\less{(V\setminus\setof{v})}}$
+if $v \in V$.
+This leads to the following general axiom,
+in which all variables are list-variables:
+$$
+  \begin{array}{lll}
+     P(\lst x',\lst x)
+     \diamond
+     P(O' \less{\lst x,\lst y},O \less{\lst x,\lst y})
+     ~\defs~
+     P(O' \less{\lst y},O \less{\lst y})
+     && \QNAME{var-list-fusion}
+  \end{array}
+$$ %\par\vspace{-8pt}
+\begin{code}
+axFusionDef
+  = preddef ("var" -.- "list" -.- "fusion")
+            ( fusion [ (lvx',lvx)
+                     , ( lO' `less` ([],[ix,iy]), (lO `less` ([],[ix,iy])) ) ]
+              ===
+              fusion [ ( lO' `less` ([],[iy]), (lO `less` ([],[iy])) ) ]
+            )
+            scTrue
+  where
+    fusion lvlvs  =  listwiseVarBinPred pred1 land equals [] lvlvs
+\end{code}
+
+

@@ -9,8 +9,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module UTP.Designs (
   tok, tok' 
 , i_design, design
-, designName
-, designTheory
+, i_h1, i_h2, i_h3, i_h4
+, designConjs, designName, designTheory
 ) where
 
 import Data.Maybe
@@ -130,53 +130,6 @@ $$\par\vspace{-8pt}
 
 \subsubsection{Design Laws}
 
-\subsection{Healthiness \H{H1}}
-
-\subsection{Healthiness \H{H2}}
-
-\subsection{Healthiness \H{H3}}
-
-\subsection{Healthiness \H{H4}}
-
-
-For \H{H1}, \H{H2}, and \H{H4}, this is all we need.
-
-From \cite[\textbf{Defn 3.2.1},p82]{UTP-book}:
-$$
-\begin{array}{ll}
-   \H{H1} & R = (ok \implies R)
-\\ \H{H2} & [R[false/ok']\implies R[true/ok']]
-\\ \H{H4} & R ; \true = true
-\end{array}
-$$
-
-For \H{H3} we need \m{\Skip}.
-
-From \cite[p79]{UTP-book} (modified):
-$$
-  \Skip ~~\defs~~ (\true \design S'=S)
-$$
-
-
-
-
-
-From \cite[\textbf{Defn 3.2.1},p82]{UTP-book}:
-$$
-\begin{array}{ll}
-   \H{H3} & R = R ; \Skip
-\end{array}
-$$
-
-
-
-\section{Conjectures}
-
-For now we just list definitions and theorems in Chp 3.
-Some regarding assignment and skip should end up in \h{UTP.While.Design}
-
-\subsubsection{Design Foundations and Concepts}
-
 From: \cite[Thm 3.1.2,p77]{UTP-book}:
 $$
 [(P_1 \design Q_1) \implies (P_2 \design Q_2)] 
@@ -218,90 +171,66 @@ cjDesignLZero
 \end{code}
 
 
+\subsection{Healthiness \H{H1}}
 
+\subsubsection{\H{H1} Definition(s)}
 
-From \cite[\textbf{Def. 3.1.3},p78]{UTP-book}:
-$$
-x := e ~~\defs~~ (\true \design x'=e \land y'=y \dots z'=z)
-$$
-Also
-$$
-x := e ~~\defs~~ (\mathcal D e \design x'=e \land y'=y \dots z'=z)
-$$
-Also (p79)
-$$
-P \cond b Q ~~\defs~~ (\mathcal D b \implies (b \land P \lor \lnot b \land Q))
-$$
+\subsubsection{\H{H1} Laws}
 
-From \cite[\textbf{L2},p79]{UTP-book}:
-$$
- (v:=e;v:=f(v)) ~~=~~ (v:=f(e))
-$$
+\subsection{Healthiness \H{H2}}
 
-From \cite[\textbf{L3},pp79]{UTP-book}:
-$$
- v:=e;(P \cond{b(v)} Q) ~~=~~ (v:=e;P) \cond{b(e)} (v:=e;Q)
-$$
+\subsubsection{\H{H2} Definition(s)}
 
+\subsubsection{\H{H2} Laws}
 
+\subsection{Healthiness \H{H3}}
 
-From \cite[\textbf{L4},p79]{UTP-book}:
-$$
-  \Skip ; ( P \design Q) = (P \design Q)
-$$
+\subsubsection{\H{H3} Definition(s)}
 
-From \cite[\textbf{Theorem 3.1.4},p79]{UTP-book}:
+\subsubsection{\H{H3} Laws}
+
+\subsection{Healthiness \H{H4}}
+
+\subsubsection{\H{H4} Definition(s)}
+
+\subsubsection{\H{H4} Laws}
+
+For \H{H1}, \H{H2}, and \H{H4}, this is all we need.
+
+From \cite[\textbf{Defn 3.2.1},p82]{UTP-book}:
 $$
 \begin{array}{ll}
-   (1) & (P_1\design Q_1)\ndc(P_2 \design Q) 
-         = 
-         (P_1 \land P_2 \design Q_1 \lor Q_2)
-\\ (2) & (P_1\design Q_1)\cond{b}(P_2 \design Q)
-         =
-         (P_1 \cond{b} P_2 \design Q_1 \cond{b}r Q_2)
-\\ (3) & (P_1\design Q_1);(P_2 \design Q)
-         =
-         ( \lnot(\lnot P_1;\true) \land \lnot(Q_1;\lnot P_2)
-           \design 
-           Q_1 ;Q_2 )
+   \H{H1} & R = (ok \implies R)
+\\ \H{H2} & [R[false/ok']\implies R[true/ok']]
+\\ \H{H4} & R ; \true = true
 \end{array}
 $$
 
+For \H{H3} we need \m{\Skip}.
 
-From \cite[\textbf{Thm. 3.1.5},p80]{UTP-book}:
+From \cite[p79]{UTP-book} (modified):
+$$
+  \Skip ~~\defs~~ (\true \design S'=S)
+$$
+
+
+
+
+
+From \cite[\textbf{Defn 3.2.1},p82]{UTP-book}:
 $$
 \begin{array}{ll}
-   (1) & \bigsqcap_i(P_i \design Q_i) 
-         = 
-         (\bigwedge_i P_i) \design (\bigvee_i Q_i)
-\\ (2) & \bigsqcup_i(P_i \design Q_i) 
-         = 
-         (\bigvee_i P_i) \design (\bigwedge_i (P_i \implies Q_i))
+   \H{H3} & R = R ; \Skip
 \end{array}
 $$
 
 
-From \cite[p80]{UTP-book}:
-$$
-\top_\Design ~~ \defs ~~ (\true \design \false) ~=~ \lnot ok
-$$
 
-From \cite[\textbf{Thm. 3.1.6},p81]{UTP-book}:
-$$
-\begin{array}{rl}
-                & \mu(X,Y)\bullet(F(X,Y)\design G(X,Y)) = (P(Q)\design Q)
-\\ \text{where} & P(Y) = \nu X \bullet F(X,Y)
-\\   \text{and} & Q = \mu Y \bullet (P(Y)\implies G(P(Y),Y))
-\end{array}
-$$
+\section{Chapter 3 STUFF}
 
-From \cite[\textbf{Exc 3.1.7},p82]{UTP-book}:
-$$
-\begin{array}{ll}
-   (1) & \text{Prove that } \top_\Design ; (P \design Q) = \top_\Design
-\\ (2) & \text{Prove that } (x:=e);\true ~~=~~ \true;(x:=e) ~~=~~ \true
-\end{array}
-$$
+For now we just list definitions and theorems in Chp 3.
+Some regarding assignment and skip should end up in \h{UTP.While.Design}
+
 
 
 \subsubsection{Healthiness Conditions}

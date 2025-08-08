@@ -181,6 +181,8 @@ theSymbolList
   , ("while", SymForm "*" "\x229b")
   , ("design", SymForm "|-"  "\x22a2")
 
+  , ("H1", SymForm "H1" (bold "H1")), ("H2", SymForm "H2" (bold "H2"))
+  , ("H3", SymForm "H3" (bold "H3")), ("H4", SymForm "H4" (bold "H4"))
 
   , ("*", SymForm "*"  "\x002a")
   , ("cons", SymForm ":" ":"), ("cat", SymForm "^" "\x2322")

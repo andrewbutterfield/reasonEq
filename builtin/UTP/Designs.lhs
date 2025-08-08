@@ -62,7 +62,7 @@ constructors,
 healthiness conditions,
 and related theorems.
 
-\section{Signature}
+\section{Design Signature}
 
 \subsection{Observables}
 
@@ -83,27 +83,34 @@ Given a pre-relation $P$ and post-relation $Q$
 over an alphabet that does not mention $ok$ or $ok'$,
 we define a constructor that produces a health predicate that does include them:
 $$ P \design Q $$
+\begin{code}
+i_design    =  jId "design"
+v_design    =  Vbl i_design ObsV Static
+designIntro = mkConsIntro i_design boolf_2
+\end{code}
 
-\subsection{Known Variables}
+\subsection{Healthiness}
+
+We have four healthiness conditions: \H{H1-4}.
 
 \begin{code}
-designKnown :: VarTable
-designKnown =  mkKnownVar v_design boolf_2 $
-               mkKnownVar vok bool $
-               mkKnownVar vok' bool $
-               newNamedVarTable designName
+i_h1 = jId "H1" ; vH1 = StaticVar i_h1
+i_h2 = jId "H2" ; vH2 = StaticVar i_h2
+i_h3 = jId "H3" ; vH3 = StaticVar i_h3
+i_h4 = jId "H4" ; vH4 = StaticVar i_h4
 \end{code}
 
 
-\section{Axioms}
+\section{Design Semantics}
 
+
+
+\subsection{Design Constructor}
+
+\subsubsection{Design Definition}
 
 \begin{code}
-vP = Vbl (jId "P") PredV Static ; p = fromJust $ pVar ArbType vP ; gP = StdVar vP
-vQ = Vbl (jId "Q") PredV Static ; q = fromJust $ pVar ArbType vQ ; gQ = StdVar vQ
 design :: Term -> Term -> Term
-i_design    =  jId "design"
-v_design    =  Vbl i_design ObsV Static
 design p q  =  Cons arbpred False i_design [p, q]
 \end{code}
 
@@ -115,12 +122,22 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-designIntro = mkConsIntro i_design boolf_2
 (axDsgDef,alDsgDef) 
   = bookdef ("design" -.- "def") "defd1.5p34"
             (design p q === (tok /\ p ==> tok' /\ q))
             scTrue
 \end{code}
+
+\subsubsection{Design Laws}
+
+\subsection{Healthiness \H{H1}}
+
+\subsection{Healthiness \H{H2}}
+
+\subsection{Healthiness \H{H3}}
+
+\subsection{Healthiness \H{H4}}
+
 
 For \H{H1}, \H{H2}, and \H{H4}, this is all we need.
 
@@ -152,11 +169,6 @@ $$
 $$
 
 
-
-\begin{code}
-designAxioms :: [Law]
-designAxioms  =  map labelAsAxiom [ axDsgDef ]
-\end{code}
 
 \section{Conjectures}
 
@@ -365,8 +377,28 @@ $$
 % $$
 
 
+\section{Designs Theory}
 
-Pulling them all together:
+Known:
+\begin{code}
+designKnown :: VarTable
+designKnown =  mkKnownVar vok bool $
+               mkKnownVar vok' bool $
+               mkKnownVar v_design boolf_2 $
+               mkKnownVar vH1 boolf_1 $
+               mkKnownVar vH2 boolf_1 $
+               mkKnownVar vH3 boolf_1 $
+               mkKnownVar vH4 boolf_1 $
+               newNamedVarTable designName
+\end{code}
+
+Axioms:
+\begin{code}
+designAxioms :: [Law]
+designAxioms  =  map labelAsAxiom [ axDsgDef ]
+\end{code}
+
+Conjectures:
 \begin{code}
 designConjs :: [NmdAssertion]
 designConjs
@@ -394,4 +426,10 @@ designTheory
                 }
 \end{code}
 
+\section{Designs Infrastructure}
 
+
+\begin{code}
+vP = Vbl (jId "P") PredV Static ; p = fromJust $ pVar ArbType vP ; gP = StdVar vP
+vQ = Vbl (jId "Q") PredV Static ; q = fromJust $ pVar ArbType vQ ; gQ = StdVar vQ
+\end{code}

@@ -77,7 +77,6 @@ $$
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
-asgIntro = mkConsIntro i_asg apred11
 (axAsgDef,alAsgDef) = bookdef ("asg" -.- "def") "2.3L2"
                        ( lvxs .::= lves
                          ===
@@ -203,7 +202,6 @@ $$
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
-skipIntro = mkKnownVar v_skip bool
 (axSkipDef,alSkipDef) 
   = bookdef ("II" -.- "def") "Def2.3.2"
       ( skip  ===  Iter arbpred True land True equals [ lO', lO ] )
@@ -253,7 +251,6 @@ $$
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
-abortIntro = mkKnownVar v_abort bool
 (axAbortDef,alAbortDef) = bookdef ("bot" -.- "def") "Def2.4.2"
                            ( abort  ===  trueP )
                            scTrue
@@ -272,7 +269,6 @@ $$
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
-miracleIntro = mkKnownVar v_miracle bool
 (axMiracleDef,alMiracleDef) = bookdef ("top" -.- "def") "Def2.5.1"
                            ( miracle  ===  falseP )
                            scTrue
@@ -282,14 +278,9 @@ miracleIntro = mkKnownVar v_miracle bool
 \newpage
 \section{UTP While Design}
 
-We collect our known variables:
+All known variables are declared in imported theories.
 \begin{code}
-utpWD_Known
- = asgIntro $
-   skipIntro $
-   abortIntro $
-   miracleIntro $
-   newNamedVarTable utpWD_Name
+utpWD_Known = newNamedVarTable utpWD_Name
 \end{code}
 
 

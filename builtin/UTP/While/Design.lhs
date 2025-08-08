@@ -289,7 +289,7 @@ We now collect our axiom set:
 utpWD_Axioms :: [Law]
 utpWD_Axioms
   = map labelAsAxiom
-      [ axAsgDef
+      [ axAsgDef, axFusionDef
       , axSkipDef
       , axAbortDef
       , axMiracleDef

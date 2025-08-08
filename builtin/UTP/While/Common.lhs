@@ -492,7 +492,6 @@ utpWC_Axioms
   = map labelAsAxiom
       [ axCondDef
       , axSeqDef
-      , axFusionDef -- associated with assgnment
      ]
 \end{code}
 

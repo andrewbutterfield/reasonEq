@@ -2,7 +2,31 @@
 
 ## PLAN
 
-* Continue developing the  `Designs` theory. 
+* Continue developing the  `Designs` theory.
+
+Now have this:
+
+```
+Theory 'Designs'
+depends on: UWhile,UBase,AOI,And,Or,Not,EQV
+Knowns:
+H1 : 𝔹  ⟶ 𝔹  
+H2 : 𝔹  ⟶ 𝔹  
+H3 : 𝔹  ⟶ 𝔹  
+H4 : 𝔹  ⟶ 𝔹  
+⊢ : 𝔹  ⟶ 𝔹  ⟶ 𝔹  
+ok : 𝔹  
+ok' : 𝔹  
+Laws:
+   1. ⊤  “design_def”  (P ⊢ Q) ≡ ok ∧ P ⟹  ok' ∧ Q  ⊤
+   2. ⊤  “H1_def”      H1(R) ≡ R = (ok ⟹  R)  ⊤
+   3. ⊤  “H2_def”      H2(R) ≡ (R[false/ok'] ⊒ R[true/ok'])  ⊤
+   4. ⊤  “H3_def”      H3(R) ≡ (R ; II)  ⊤
+   5. ⊤  “H4_def”      H4(R) ≡ (R ; true)  ⊤
+```
+
+
+
 * Add a  `DWhile` theory based on designs (created but not yet design-based)
 * Add a `PrePost` theory covering sec 2.8 of the book (Hoare Triples, Floyd assertions, Weakest precondition).
 * Do proper UTCP Semantics with Designs and invariants

@@ -175,6 +175,7 @@ cjDesignLZero
 Code to support UTP Healthiness Conditions.
 
 \begin{code}
+applyH :: Identifier -> Term -> Term
 applyH hname p  = Cons bool False hname [p]
 \end{code}
 
@@ -197,7 +198,7 @@ h1 = jId "H1"
 \end{code}
 
 
-\subsubsection{\H{H1} Definition(s)}
+\subsubsection{\H{H1} Definition}
 
 
 $$
@@ -237,7 +238,7 @@ h2 = jId "H2"
 
 
 
-\subsubsection{\H{H2} Definition(s)}
+\subsubsection{\H{H2} Definition}
 
 $$
 \begin{array}{ll}
@@ -274,7 +275,7 @@ isH3 r =  mkSeq r skip
 h3 = jId "H3"
 \end{code}
 
-\subsubsection{\H{H3} Definition(s)}
+\subsubsection{\H{H3} Definition}
 
 $$
 \begin{array}{ll}
@@ -317,7 +318,7 @@ h4 = jId "H4"
 \end{code}
 
 
-\subsubsection{\H{H4} Definition(s)}
+\subsubsection{\H{H4} Definition}
 
 $$
 \begin{array}{ll}

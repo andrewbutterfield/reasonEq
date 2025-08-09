@@ -186,8 +186,8 @@ trTK _ = "" -- ignore for now
 -- trTK (E t) = trType t
 
 trValue :: Value -> String
-trValue (Boolean False)  =  nicesym "false"
-trValue (Boolean True)   =  nicesym "true"
+trValue (Boolean False)  =  nicesym "falseP"
+trValue (Boolean True)   =  nicesym "trueP"
 trValue (Integer i)      =  show i
 \end{code}
 

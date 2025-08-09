@@ -123,7 +123,7 @@ $$
 $$\par\vspace{-8pt}
 \begin{code}
 (axDsgDef,alDsgDef) 
-  = bookdef ("design" -.- "def") "defd1.5p34"
+  = bookdef ("design" -.- "def") "defd3.1.1p76"
             (design p q === (tok /\ p ==> tok' /\ q))
             scTrue
 \end{code}
@@ -175,22 +175,30 @@ cjDesignLZero
 Code to support UTP Healthiness Conditions.
 
 \begin{code}
-h1 = undefined
+applyH hname p  = Cons bool False hname [p]
 \end{code}
 
-This should be in a seperate module once everything has settled
+All up to {\Large\textbf{Healthiness}} should be in a seperate module once everything has settled.
 
 
+\newpage
 \subsection{Healthiness \H{H1}}
 
 \begin{eqnarray*}
    \H{isH1}(R) &\defs& R = (ok \implies R)
-\\ \H{isH1}(R) &\equiv& (\true;P = R) \land (R = \Skip;R)
+\\ \H{isH1}(R) &\equiv& (\true;R = R) \land (\Skip;R = R)
 \\ \H{mkH1}(R) &\defs& ok \implies R
 \end{eqnarray*}
 We need to show that \H{mkH1} is monotonic and idempotent.
+\begin{code}
+mkH1 r =  tok ==> r
+isH1 r =  r `isEqualTo` mkH1 r
+h1 = jId "H1"
+\end{code}
+
 
 \subsubsection{\H{H1} Definition(s)}
+
 
 $$
 \begin{array}{ll}
@@ -198,7 +206,10 @@ $$
 \end{array}
 $$
 \begin{code}
-axH1Def = undefined
+(axH1Def,alH1Def) 
+  = bookdef ("H1" -.- "def") "defd3.2.1_1p82"
+            (applyH h1 r  === isH1 r)
+            scTrue
 \end{code}
 
 
@@ -214,6 +225,18 @@ $$
 
 \subsection{Healthiness \H{H2}}
 
+
+\begin{eqnarray*}
+   \H{isH2}(R) &\defs& [R[false/ok']\implies R[true/ok']]
+\end{eqnarray*}
+\begin{code}
+setOk' r b =  Sub bool r $ jSubstn [(vok',Val bool b)] []
+isH2 r =  setOk' r (Boolean False) `refines` setOk' r (Boolean True)
+h2 = jId "H2"
+\end{code}
+
+
+
 \subsubsection{\H{H2} Definition(s)}
 
 $$
@@ -221,6 +244,12 @@ $$
    \H{H2} & [R[false/ok']\implies R[true/ok']]
 \end{array}
 $$
+\begin{code}
+(axH2Def,alH2Def) 
+  = bookdef ("H2" -.- "def") "defd3.2.1_2p82"
+            ( applyH h2 r === isH2 r )
+            scTrue
+\end{code}
 
 
 \subsubsection{\H{H2} Laws}
@@ -234,6 +263,17 @@ $$
 
 \subsection{Healthiness \H{H3}}
 
+\begin{eqnarray*}
+   \H{isH3}(R) &\defs& R = R ; \Skip
+\\ \H{isH3}(P \design Q) &\equiv& \fv(P)\subseteq O
+\\ \H{mkH3}(R) &\defs& R ; \Skip
+\end{eqnarray*}
+We need to show that \H{mkH3} is monotonic and idempotent.
+\begin{code}
+isH3 r =  mkSeq r skip
+h3 = jId "H3"
+\end{code}
+
 \subsubsection{\H{H3} Definition(s)}
 
 $$
@@ -241,7 +281,12 @@ $$
    \H{H3} & R = R ; \Skip
 \end{array}
 $$
-
+\begin{code}
+(axH3Def,alH3Def) 
+  = bookdef ("H3" -.- "def") "defd3.2.1_3p82"
+            ( applyH h3 r === isH3 r )
+            scTrue
+\end{code}
 
 \subsubsection{\H{H3} Laws}
 
@@ -262,6 +307,16 @@ $$
 
 \subsection{Healthiness \H{H4}}
 
+\begin{eqnarray*}
+   \H{isH4}(R) &\defs& R ; \true = \true
+\\ \H{isH4}(R) &\defs& [\exists O' \bullet R]
+\end{eqnarray*}
+\begin{code}
+isH4 r =  mkSeq r trueP
+h4 = jId "H4"
+\end{code}
+
+
 \subsubsection{\H{H4} Definition(s)}
 
 $$
@@ -269,6 +324,12 @@ $$
    \H{H4} & R ; \true = true
 \end{array}
 $$
+\begin{code}
+(axH4Def,alH4Def) 
+  = bookdef ("H4" -.- "def") "defd3.2.1_4p82"
+            ( applyH h4 r === isH4 r )
+            scTrue
+\end{code}
 
 
 \subsubsection{\H{H4} Laws}
@@ -298,7 +359,9 @@ designKnown =  mkKnownVar vok bool $
 Axioms:
 \begin{code}
 designAxioms :: [Law]
-designAxioms  =  map labelAsAxiom [ axDsgDef ]
+designAxioms  
+  =  map labelAsAxiom [ axDsgDef 
+                      , axH1Def, axH2Def, axH3Def, axH4Def ]
 \end{code}
 
 Conjectures:
@@ -335,4 +398,5 @@ designTheory
 \begin{code}
 vP = Vbl (jId "P") PredV Static ; p = fromJust $ pVar ArbType vP ; gP = StdVar vP
 vQ = Vbl (jId "Q") PredV Static ; q = fromJust $ pVar ArbType vQ ; gQ = StdVar vQ
+vR = Vbl (jId "R") PredV Static ; r = fromJust $ pVar ArbType vR ; gR = StdVar vR
 \end{code}

@@ -150,6 +150,9 @@ theSymbolList
   , ("omega", SymForm "omega"  "\x03c9")
   , ("lambda", SymForm "lambda"  "\x03bb"), ("Lambda", SymForm "Lambda"  "\x039b")
 
+  , ("trueP", SymForm "true" (bold "true"))
+  , ("falseP", SymForm "false" (bold "false"))
+
   , ("not", SymForm "~"  "\x00ac")
   , ("and", SymForm "/\\"  "\x2227"), ("or", SymForm "\\/"  "\x2228")
   , ("imp", SymForm "==>"  "\x27f9"), ("eqv", SymForm "=="  "\x2261")

@@ -170,8 +170,25 @@ cjDesignLZero
               .: isUTPCond' (StdVar vok') )
 \end{code}
 
+\section*{Healthiness}
+
+Code to support UTP Healthiness Conditions.
+
+\begin{code}
+h1 = undefined
+\end{code}
+
+This should be in a seperate module once everything has settled
+
 
 \subsection{Healthiness \H{H1}}
+
+\begin{eqnarray*}
+   \H{isH1}(R) &\defs& R = (ok \implies R)
+\\ \H{isH1}(R) &\equiv& (\true;P = R) \land (R = \Skip;R)
+\\ \H{mkH1}(R) &\defs& ok \implies R
+\end{eqnarray*}
+We need to show that \H{mkH1} is monotonic and idempotent.
 
 \subsubsection{\H{H1} Definition(s)}
 
@@ -180,6 +197,9 @@ $$
    \H{H1} & R = (ok \implies R)
 \end{array}
 $$
+\begin{code}
+axH1Def = undefined
+\end{code}
 
 
 \subsubsection{\H{H1} Laws}

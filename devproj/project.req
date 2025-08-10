@@ -1,38 +1,11 @@
 BEGIN REQSTATE
 BEGIN THEORIES
-THNAMES = ["AOI","And","Arith","Designs","EQV","Equal","Exists","Forall","Impl","LTL","Lists","Not","Or","Sets","UClose","UTCP","U_CWhl","U_NvWhl"]
-SDAG = [[("UTCP",["U_CWhl","Sets","UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"]),("Designs",["U_CWhl","AOI","And","Or","Not","EQV"]),("U_NvWhl",["U_CWhl","UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("U_CWhl",["UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Lists",["Impl","EQV","Equal","Forall","Arith","Sets"]),("LTL",["Equal","Exists","Forall","Impl","AOI","And","Or","Not","EQV"]),("UClose",["Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Sets",["Impl","EQV","Equal","Forall","Arith"]),("Exists",["Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Arith",["Impl","EQV","Equal"]),("Forall",["Equal","Impl","AOI","And","Or","Not","EQV"])],[("Equal",["Impl","EQV"])],[("Impl",["AOI","And","Or","Not","EQV"])],[("AOI",["And","Or","Not","EQV"])],[("And",["Or","Not","EQV"])],[("Or",["Not","EQV"])],[("Not",["EQV"])],[("EQV",[])]]
+THNAMES = ["AOI","And","Arith","DWhile","Designs","EQV","Equal","Exists","Forall","Impl","LTL","Lists","Not","Or","Sets","UBase","UClose","UTCP","UWhile"]
+SDAG = [[("UTCP",["Designs","UWhile","Sets","UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"]),("DWhile",["Designs","UWhile","UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Designs",["UWhile","UBase","AOI","And","Or","Not","EQV"])],[("UWhile",["UBase","UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("UBase",["UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Lists",["Impl","EQV","Equal","Forall","Arith","Sets"]),("LTL",["Equal","Exists","Forall","Impl","AOI","And","Or","Not","EQV"]),("UClose",["Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Sets",["Impl","EQV","Equal","Forall","Arith"]),("Exists",["Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Arith",["Impl","EQV","Equal"]),("Forall",["Equal","Impl","AOI","And","Or","Not","EQV"])],[("Equal",["Impl","EQV"])],[("Impl",["AOI","And","Or","Not","EQV"])],[("AOI",["And","Or","Not","EQV"])],[("And",["Or","Not","EQV"])],[("Or",["Not","EQV"])],[("Not",["EQV"])],[("EQV",[])]]
 END THEORIES
-CURRTHEORY = Arith
+CURRTHEORY = EQV
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
-("Arith","neg_zero")
-BEGIN LIVE-PROOF
-TH-NAME: Arith
-CJ-NAME: neg_zero
-CONJ = ASN (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TG (Id "Z" 0)) True (Id "neg" 0) [K (TG (Id "Z" 0)) (VI 0)],K (TG (Id "Z" 0)) (VI 0)],([],fromList []))
-SIDE = ([],fromList [])
-STRAT red-All
-BEGIN PRFSET
-MM = 30
-MS = 6
-BD = False
-TM = False
-TQ = False
-TS = False
-FV = False
-END PRFSET
-BEGIN SEQZIP
-TERMZIP = (C (TG (Id "B" 0)) True (Id "eq" 0) [C (TG (Id "Z" 0)) True (Id "neg" 0) [K (TG (Id "Z" 0)) (VI 0)],K (TG (Id "Z" 0)) (VI 0)],[])
-BEGIN SEQUENT'
-SIDECOND = ([],fromList [])
-LAWS' = CLaws' {hyp0 = Theory {thName = "H.neg_zero", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = K (TG (Id "B" 0)) (VB True)}
-END SEQUENT'
-END SEQZIP
-FPATH: []
-BEGIN LIST STEPS
-END LIST STEPS
-END LIVE-PROOF
 END MAP LIVE-PROOFS
 END LIVE-PROOFS
 END REQSTATE

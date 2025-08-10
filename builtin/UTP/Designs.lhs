@@ -100,6 +100,13 @@ i_h3 = jId "H3" ; vH3 = StaticVar i_h3
 i_h4 = jId "H4" ; vH4 = StaticVar i_h4
 \end{code}
 
+We need side-conditions that note that $ok \in O$ and $ok' \in O$:
+\begin{code}
+designSCs :: VarList -> SideCond
+designSCs gPs 
+  =  areUTPDynObs gPs .: isUTPCond (StdVar vok) .: isUTPCond' (StdVar vok')
+\end{code}
+
 
 \section{Design Semantics}
 
@@ -165,9 +172,7 @@ $$\par\vspace{-8pt}
 cjDesignLZero 
   = preddef ("design" -.- "sqcmp" -.- "lzero")
             (mkSeq trueP (design p q) === trueP)
-            ( areUTPDynObs [gP,gQ] 
-              .: isUTPCond (StdVar vok)
-              .: isUTPCond' (StdVar vok') )
+            ( designSCs [gP,gQ] )
 \end{code}
 
 \section*{Healthiness}
@@ -187,7 +192,7 @@ All up to {\Large\textbf{Healthiness}} should be in a seperate module once every
 
 \begin{eqnarray*}
    \H{isH1}(R) &\defs& R = (ok \implies R)
-\\ \H{isH1}(R) &\equiv& (\true;R = R) \land (\Skip;R = R)
+\\ \H{isH1}(R) &\equiv& (\true;R = \true) \land (\Skip;R = R)
 \\ \H{mkH1}(R) &\defs& ok \implies R
 \end{eqnarray*}
 We need to show that \H{mkH1} is monotonic and idempotent.
@@ -219,8 +224,19 @@ $$
 From \cite[\textbf{Thm 3.2.2},p83]{UTP-book}:
 A predicate is \H{H1} ~~\IFF~~ it satisfies left-zero and left-unit
 $$
-\true;R = R = \Skip ; R
+\H{isH1}(R) \equiv (\true;R = \true) \land (\Skip;R = R)
 $$
+\begin{code}
+cjH1satLZeroRUnit 
+  = preddef ("H1" -.- "sat" -.- "lzero"-.-"lunit")
+            ( applyH h1 r 
+              === 
+              ( (mkSeq trueP r `isEqualTo` trueP) 
+              /\ 
+              (mkSeq skip r `isEqualTo` r) ) 
+            )
+            ( designSCs [gR] )
+\end{code}
 
 
 
@@ -370,6 +386,7 @@ Conjectures:
 designConjs :: [NmdAssertion]
 designConjs
   = [ cjDesignLZero
+    , cjH1satLZeroRUnit
     ]
 \end{code}
 

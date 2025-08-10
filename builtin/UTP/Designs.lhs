@@ -191,19 +191,22 @@ All up to {\Large\textbf{Healthiness}} should be in a seperate module once every
 \subsection{Healthiness \H{H1}}
 
 \begin{eqnarray*}
-   \H{isH1}(R) &\defs& R = (ok \implies R)
+   \H{mkH1}(R) &\defs& ok \implies R
+\\ P \refines Q &\implies& \H{mkH1}(P) \refines \H{mkH1}(Q)
+\\ \H{mkH1}(\H{mkH1}(R)) &=& \H{mkH1}(R)
+\\ \H{isH1}(R) &\defs& R = (ok \implies R)
 \\ \H{isH1}(R) &\equiv& (\true;R = \true) \land (\Skip;R = R)
-\\ \H{mkH1}(R) &\defs& ok \implies R
 \end{eqnarray*}
 We need to show that \H{mkH1} is monotonic and idempotent.
 \begin{code}
 mkH1 r =  tok ==> r
 isH1 r =  r `isEqualTo` mkH1 r
+mkh1 = jId "mkH1"
 h1 = jId "H1"
 \end{code}
 
 
-\subsubsection{\H{H1} Definition}
+\subsubsection{\H{H1} Definitions}
 
 
 $$
@@ -212,14 +215,38 @@ $$
 \end{array}
 $$
 \begin{code}
+(axMkH1Def,alMkH1Def) 
+  = bookdef ("mkH1" -.- "def") "defd3.2.1_1p82"
+            (applyH mkh1 r  === mkH1 r)
+            scTrue
+\end{code}
+
+\begin{code}
 (axH1Def,alH1Def) 
   = bookdef ("H1" -.- "def") "defd3.2.1_1p82"
-            (applyH h1 r  === isH1 r)
+            (applyH h1 r  === r `isEqualTo` mkH1 r)
             scTrue
 \end{code}
 
 
 \subsubsection{\H{H1} Laws}
+
+\begin{eqnarray*}
+   P \refines Q &\implies& \H{mkH1}(P) \refines \H{mkH1}(Q)
+\\ \H{mkH1}(\H{mkH1}(R)) &=& \H{mkH1}(R)
+\end{eqnarray*}
+\begin{code}
+cjMkH1Monotonic 
+  = preddef ("mkH1" -.- "mono")
+            ( (p `refines` q) ==> ( mkH1 p `refines` mkH1 q ) ) 
+            ( scTrue )
+
+cjMkH1Idempotent 
+  = preddef ("mkH1" -.- "idem")
+            ( mkH1 (mkH1 r) `isEqualTo` mkH1 r ) 
+            ( scTrue )
+\end{code}
+
 
 From \cite[\textbf{Thm 3.2.2},p83]{UTP-book}:
 A predicate is \H{H1} ~~\IFF~~ it satisfies left-zero and left-unit
@@ -378,7 +405,10 @@ Axioms:
 designAxioms :: [Law]
 designAxioms  
   =  map labelAsAxiom [ axDsgDef 
-                      , axH1Def, axH2Def, axH3Def, axH4Def ]
+                      , axMkH1Def, axH1Def
+                      , axH2Def
+                      , axH3Def
+                      , axH4Def ]
 \end{code}
 
 Conjectures:
@@ -387,6 +417,7 @@ designConjs :: [NmdAssertion]
 designConjs
   = [ cjDesignLZero
     , cjH1satLZeroRUnit
+    , cjMkH1Idempotent, cjMkH1Monotonic
     ]
 \end{code}
 

@@ -1,0 +1,20 @@
+BEGIN THEORY UBase
+DEPS = ["UClose","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"]
+KNOWN = VD ("UBase",fromList [(VR (Id "bot" 0,VO,WS),KV (TG (Id "B" 0))),(VR (Id "refines" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "sqcap" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "top" 0,VO,WS),KV (TG (Id "B" 0)))],fromList [],fromList [])
+BEGIN LIST LAWS
+(("refines_def",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) False (Id "refines" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],X (Id "[_]" 0) (C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))])],([],fromList []))),Axiom)
+(("sqcap_def",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "sqcap" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]],([],fromList []))),Axiom)
+END LIST LAWS
+BEGIN LIST SIMPLIFIERS
+END LIST SIMPLIFIERS
+BEGIN LIST DEFFOLD
+END LIST DEFFOLD
+BEGIN LIST CONJECTURES
+("refines_lor_distr",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) False (Id "refines" 0) [C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) False (Id "refines" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))],C (TG (Id "B" 0)) False (Id "refines" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]]],([],fromList [])))
+("refines_trans",ASN (C (TG (Id "B" 0)) True (Id "imp" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) False (Id "refines" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) False (Id "refines" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]],C (TG (Id "B" 0)) False (Id "refines" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]],([],fromList [])))
+("sqcap_symm",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "sqcap" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "sqcap" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))]],([],fromList [])))
+("sqcap_assoc",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "sqcap" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),C (TG (Id "B" 0)) True (Id "sqcap" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]],C (TG (Id "B" 0)) True (Id "sqcap" 0) [C (TG (Id "B" 0)) True (Id "sqcap" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]],([],fromList [])))
+("sqcap_idem",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "sqcap" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS))],([],fromList [])))
+("sqcap_distr",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "sqcap" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),C (TG (Id "B" 0)) True (Id "sqcap" 0) [V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]],C (TG (Id "B" 0)) True (Id "sqcap" 0) [C (TG (Id "B" 0)) True (Id "sqcap" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "sqcap" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "R" 0,VP,WS))]]],([],fromList [])))
+END LIST CONJECTURES
+END THEORY UBase

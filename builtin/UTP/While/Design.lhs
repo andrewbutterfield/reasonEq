@@ -40,7 +40,7 @@ import Implication
 import Equality
 import ForAll
 import Exists
-import UClose
+import Closure
 import StdTypeSignature
 import UTP.Reading
 import UTP.Observations
@@ -330,7 +330,7 @@ utpWD_Theory
   =  nullTheory { thName  =  utpWD_Name
                 , thDeps  = [ designName
                             , utpWC_Name
-                            , uCloseName
+                            , closureName
                             , existsName
                             , forallName
                             , equalityName

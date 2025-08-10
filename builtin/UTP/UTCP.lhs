@@ -45,7 +45,7 @@ import Implication
 import Equality
 import ForAll
 import Exists
-import UClose
+import Closure
 import UTP.Observations
 import UTP.While.Common
 import UTP.Designs
@@ -896,7 +896,7 @@ utcpTheory
             , thDeps  =  [ designName
                          , utpWC_Name
                          , setName
-                         , uCloseName
+                         , closureName
                          , existsName
                          , forallName
                          , equalityName

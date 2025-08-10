@@ -717,7 +717,7 @@ It is worth noting side conditions currently in use:
 \begin{description}
   \item[Forall/Exists]~\\
      $\lst x \disj P \qquad \lst x \disj e \qquad \lst y \disj P$
-   \item[UClose]~\\
+   \item[Closure]~\\
     $\lst x \supseteq P \qquad \emptyset \supseteq P$
   \item[UTPNaiveWhile]~\\
     $
@@ -842,7 +842,7 @@ We start with some examples that arise from key theories:
     Instantiated Law S.C. = $\lst x \disj \lst e$ \newline
     Goal S.C. = $\lst x \disj \lst e$ \newline
     Discharged Law S.C. = $\top$  (CORRECT)
-  \item[UClose.{[}{]}\_def]
+  \item[Closure.{[}{]}\_def]
     Instantiated Law S.C. = $?\lst x\supseteq P$  \newline
     Goal S.C. = $\emptyset\supseteq P$ \newline
     Discharged Law S.C. = $?\lst x\supseteq P$.

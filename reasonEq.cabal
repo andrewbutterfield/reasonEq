@@ -67,6 +67,7 @@ library
       YesBut
       AndOrInvert
       Arithmetic
+      Closure
       Conjunction
       Disjunction
       Equality
@@ -80,7 +81,6 @@ library
       Sets
       StdSignature
       StdTypeSignature
-      UClose
       UTP.Base
       UTP.Designs
       UTP.Observations

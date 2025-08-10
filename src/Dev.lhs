@@ -38,7 +38,7 @@ import AndOrInvert
 import Implication
 import ForAll
 import Exists
-import UClose
+import Closure
 import LTL
 import Equality
 import Arithmetic
@@ -104,7 +104,7 @@ devKnownBuiltins  = [ equivTheory
                     , equalityTheory
                     , forallTheory
                     , existsTheory
-                    , uCloseTheory
+                    , closureTheory
                     , ltlTheory
                     , arithmeticTheory
                     , setTheory

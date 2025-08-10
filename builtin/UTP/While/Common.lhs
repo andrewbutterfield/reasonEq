@@ -46,7 +46,7 @@ import Implication
 import Equality
 import ForAll
 import Exists
-import UClose
+import Closure
 import StdTypeSignature
 import UTP.Reading
 import UTP.Observations
@@ -528,7 +528,7 @@ utpWC_Theory :: Theory
 utpWC_Theory
   =  nullTheory { thName  =  utpWC_Name
                 , thDeps  = [ utpBase_Name
-                            , uCloseName
+                            , closureName
                             , existsName
                             , forallName
                             , equalityName

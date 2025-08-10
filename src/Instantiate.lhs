@@ -775,7 +775,7 @@ We define dynamic free variables ($\dfv$) as:
 \end{eqnarray*}
 
 \newpage
-\subsubsection{INSTANTIATING  UClose  $[P \land Q]$}
+\subsubsection{INSTANTIATING  Closure  $[P \land Q]$}
 
 Consider this example:
 \begin{description}

@@ -44,7 +44,7 @@ import Implication
 import Equality
 import ForAll
 import Exists
-import UClose
+import Closure
 import StdTypeSignature
 import UTP.Reading
 import TestRendering
@@ -334,7 +334,7 @@ utpBase_Name = "UBase"
 utpBase_Theory :: Theory
 utpBase_Theory
   =  nullTheory { thName  =  utpBase_Name
-                , thDeps  = [ uCloseName
+                , thDeps  = [ closureName
                             , existsName
                             , forallName
                             , equalityName

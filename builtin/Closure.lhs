@@ -6,8 +6,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module UClose (
-  uCloseConjs, uCloseName, uCloseTheory
+module Closure (
+  closureConjs, closureName, closureTheory
 ) where
 
 import Data.Maybe
@@ -326,8 +326,8 @@ axSatDef = preddef ("sat" -.- "def")
 
 We now collect our axiom set:
 \begin{code}
-uCloseAxioms :: [Law]
-uCloseAxioms
+closureAxioms :: [Law]
+closureAxioms
   = map labelAsAxiom
       [ axUnivDef, axSatDef ]
 \end{code}
@@ -473,8 +473,8 @@ cjNecPoss = preddef ("necessary" -.- "poss")
 
 We now collect our conjecture set:
 \begin{code}
-uCloseConjs :: [NmdAssertion]
-uCloseConjs
+closureConjs :: [NmdAssertion]
+closureConjs
   = [ cjUnivIdOnClosed
     , cjUnivTrue, cjUnivFalse
     , cjUnivIdem, cjAndUnivDistr
@@ -487,11 +487,11 @@ uCloseConjs
 \subsection{The Predicate Theory}
 
 \begin{code}
-uCloseName :: String
-uCloseName = "UClose"
-uCloseTheory :: Theory
-uCloseTheory
-  =  nullTheory { thName  =  uCloseName
+closureName :: String
+closureName = "Closure"
+closureTheory :: Theory
+closureTheory
+  =  nullTheory { thName  =  closureName
             , thDeps  =  [ existsName
                          , forallName
                          , equalityName
@@ -502,8 +502,8 @@ uCloseTheory
                          , notName
                          , equivName
                          ]
-            , known   =  newNamedVarTable uCloseName
-            , laws    =  uCloseAxioms
-            , conjs   =  uCloseConjs
+            , known   =  newNamedVarTable closureName
+            , laws    =  closureAxioms
+            , conjs   =  closureConjs
             }
 \end{code}

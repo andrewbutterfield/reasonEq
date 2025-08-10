@@ -4,15 +4,11 @@
 
 * Continue developing the  `Designs` theory.
 
-* bolding and coloring don't interact well:
+We need to extend the `UClose` theory to make it easier to prove
+things like `[P ⟹  Q] ⟹  [ok ∧ P ⟹  Q]`.
+Should rename the theory to `Closure` because here the `U` denotes "Universal",
+and not "UTP" as used elswhere.
 
-```
-H1(R) ≡ (true ; R) = true ∧ (II ; R) = R
- ⊤
-Focus = [] :: 𝔹  
-```
-At the top level `H1` is bolded and coloured, 
-but all the rest is not coloured (but the `true` are bolded).
 
 * Add a  `DWhile` theory based on designs (created but not yet design-based)
 * Add a `PrePost` theory covering sec 2.8 of the book (Hoare Triples, Floyd assertions, Weakest precondition).

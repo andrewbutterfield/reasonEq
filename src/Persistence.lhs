@@ -347,7 +347,9 @@ renderNamedTheory pjdir (nm,theory)
   = ifDirectoryExists "Theory" () pjdir (doWriteTheory pjdir nm theory)
   where
     doWriteTheory pjdir nm theory 
-      =  do let fp = theoryPath pjdir nm
+      =  do let thryDir = theoryDir pjdir nm
+            createDirectoryIfMissing True thryDir
+            let fp = theoryPath pjdir nm
             let (thryTxt,_) = renderTheory theory
             writeFile fp $ unlines thryTxt
             sequence $ map (saveProof pjdir) (proofs theory)
@@ -360,7 +362,9 @@ writeNamedTheoryTxt pjdir (thnm,(thTxt,pTxts))
   = ifDirectoryExists "Theory" () pjdir (doWriteTheoryTxt pjdir thnm thTxt)
   where
     doWriteTheoryTxt pjdir thnm thTxt
-      = do  let fp = theoryPath pjdir thnm
+      = do  let thryDir = theoryDir pjdir thnm
+            createDirectoryIfMissing True thryDir
+            let fp = theoryPath pjdir thnm
             writeFile fp $ unlines thTxt
             putStrLn ("Theory '"++thnm++"' written to '"++pjdir++"'.")
             sequence_ $ map (writeProof pjdir thnm) pTxts

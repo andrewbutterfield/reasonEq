@@ -150,8 +150,8 @@ theSymbolList
   , ("omega", SymForm "omega"  "\x03c9")
   , ("lambda", SymForm "lambda"  "\x03bb"), ("Lambda", SymForm "Lambda"  "\x039b")
 
-  , ("trueP", SymForm "true" (bold "true"))
-  , ("falseP", SymForm "false" (bold "false"))
+  , ("trueP", SymForm "true" "true") -- (bold "true"))
+  , ("falseP", SymForm "false" "false") -- (bold "false"))
 
   , ("not", SymForm "~"  "\x00ac")
   , ("and", SymForm "/\\"  "\x2227"), ("or", SymForm "\\/"  "\x2228")
@@ -184,8 +184,10 @@ theSymbolList
   , ("while", SymForm "*" "\x229b")
   , ("design", SymForm "|-"  "\x22a2")
 
-  , ("H1", SymForm "H1" (bold "H1")), ("H2", SymForm "H2" (bold "H2"))
-  , ("H3", SymForm "H3" (bold "H3")), ("H4", SymForm "H4" (bold "H4"))
+  , ("H1", SymForm "H1" "H1") -- (bold "H1"))
+  , ("H2", SymForm "H2" "H2") -- (bold "H2"))
+  , ("H3", SymForm "H3" "H3") -- (bold "H3"))
+  , ("H4", SymForm "H4" "H4") -- (bold "H4"))
 
   , ("*", SymForm "*"  "\x002a")
   , ("cons", SymForm ":" ":"), ("cat", SymForm "^" "\x2322")
@@ -631,7 +633,7 @@ whack ss (c:cs)
    cs' = whack ss cs
 
 -- _B is included here because
--- its from a different unicode page than _C, _N, _R, _Q, _Z
+-- it is from a different unicode page than _C, _N, _R, _Q, _Z
 badWidths = _imp ++ _star ++ _fun ++ _pfun ++ _ffun ++ _maplet ++ _B
 
 #ifndef NOT_NICE

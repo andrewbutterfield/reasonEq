@@ -3,7 +3,7 @@ BEGIN THEORIES
 THNAMES = ["AOI","And","Arith","Closure","DWhile","Designs","EQV","Equal","Exists","Forall","Impl","LTL","Lists","Not","Or","Sets","UBase","UTCP","UWhile"]
 SDAG = [[("UTCP",["Designs","UWhile","Sets","Closure","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"]),("DWhile",["Designs","UWhile","Closure","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Designs",["UWhile","UBase","AOI","And","Or","Not","EQV"])],[("UWhile",["UBase","Closure","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("UBase",["Closure","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Lists",["Impl","EQV","Equal","Forall","Arith","Sets"]),("LTL",["Equal","Exists","Forall","Impl","AOI","And","Or","Not","EQV"]),("Closure",["Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Sets",["Impl","EQV","Equal","Forall","Arith"]),("Exists",["Forall","Equal","Impl","AOI","And","Or","Not","EQV"])],[("Arith",["Impl","EQV","Equal"]),("Forall",["Equal","Impl","AOI","And","Or","Not","EQV"])],[("Equal",["Impl","EQV"])],[("Impl",["AOI","And","Or","Not","EQV"])],[("AOI",["And","Or","Not","EQV"])],[("And",["Or","Not","EQV"])],[("Or",["Not","EQV"])],[("Not",["EQV"])],[("EQV",[])]]
 END THEORIES
-CURRTHEORY = Closure
+CURRTHEORY = DWhile
 BEGIN LIVE-PROOFS
 BEGIN MAP LIVE-PROOFS
 END MAP LIVE-PROOFS

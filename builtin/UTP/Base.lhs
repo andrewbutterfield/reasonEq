@@ -96,7 +96,7 @@ $$ \bot $$
 abort :: Term
 i_abort  =  jId "bot"
 v_abort  =  Vbl i_abort PredV Static
-abort    =  jVar arbpred v_abort 
+abort    =  jVar bool v_abort 
 abortIntro = mkConsIntro i_abort bool
 \end{code}
 
@@ -106,7 +106,7 @@ $$ \top $$
 miracle :: Term
 i_miracle  =  jId "top"
 v_miracle  =  Vbl i_miracle PredV Static
-miracle    =  jVar arbpred v_miracle
+miracle    =  jVar bool v_miracle
 miracleIntro = mkConsIntro i_miracle bool
 \end{code}
 

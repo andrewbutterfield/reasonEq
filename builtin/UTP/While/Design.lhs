@@ -103,12 +103,12 @@ $$ %\par\vspace{-8pt}
 
 
 \newpage
-The following (\cite[Defn 2.3.1,p50]{UTP-book}) is now a conjecture:
+The following (\cite[Defn 3.1.3, p78]{UTP-book}) is now a conjecture:
 $$
   \begin{array}{lll}
      x := e
      ~\defs~
-     x' = e \land O'\less x = O \less x
+     (\true \design x' = e \land O'\less{ok,x} = O \less{ok,x})
      && \QNAME{$:=$-def}
   \end{array}
 $$ %\par\vspace{-8pt}
@@ -116,17 +116,17 @@ $$ %\par\vspace{-8pt}
 (cjAsgSimple,alAsgSimple) = bookdef ("asg" -.- "simple") "Def2.3.1"
                        ( vx .:= e
                          ===
-                         (x' `isEqualTo` e)
-                         /\
-                         ( (lO' `less` ([ix],[]))
-                           `areEqualTo`
-                           (lO  `less` ([ix],[])) )
-                       )
+                         ( trueP 
+                           `design`
+                           ( (x' `isEqualTo` e)
+                           /\
+                           ( (lO' `less` ([ok,ix],[]))
+                             `areEqualTo`
+                           (lO  `less` ([ok,ix],[])) ) ) ) )
                        scTrue
 \end{code}
 
-
-From \cite[2.3\textbf{L1}, p50]{UTP-book}
+Adapted for designs from \cite[2.3\textbf{L1}, p50]{UTP-book}
 $$
   \begin{array}{lll}
      x := e  =  (x,y := e,y)
@@ -210,8 +210,12 @@ $$
 $$ %\par\vspace{-8pt}
 \begin{code}
 (axSkipDef,alSkipDef) 
-  = bookdef ("II" -.- "def") "Def2.3.2"
-      ( skip  ===  Iter arbpred True land True equals [ lO', lO ] )
+  = bookdef ("II" -.- "def") "Def3.1.3 L3 p79"
+      ( skip  ===  ( trueP
+                     `design`
+                     ( Iter arbpred True land True equals 
+                      [ lO' `less` ([ok],[]), lO `less` ([ok],[])] ) )
+      )
       scTrue
 \end{code}
 
@@ -249,16 +253,28 @@ $$\par\vspace{-8pt}
 
 \subsection{Defn. of Abort}
 
-From \cite[Defn 2.4.2,p53]{UTP-book}
+From \cite[Theorem 3.1.5, p80]{UTP-book}
 
 $$
   \begin{array}{lll}
-     \bot  = \true
+     \bot  = \false \design \true
      && \QNAME{$\bot$-def}
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
-(axAbortDef,alAbortDef) = bookdef ("bot" -.- "def") "Def2.4.2"
+(axAbortDef,alAbortDef) = bookdef ("bot" -.- "def") "Thm3.1.5 p80"
+                           ( abort  ===  falseP `design` trueP )
+                           scTrue
+\end{code}
+
+$$
+  \begin{array}{lll}
+     \bot  = \true
+     && \QNAME{$\bot$-is-$\true$}
+  \end{array}
+$$ %\par\vspace{-8pt}
+\begin{code}
+(cjAbortTrue,alAbortTrue) = bookdef ("bot" -.- "true") "Thm3.1.5 p80"
                            ( abort  ===  trueP )
                            scTrue
 \end{code}
@@ -267,17 +283,29 @@ $$ %\par\vspace{-8pt}
 
 \subsection{Defn. of Miracle}
 
-From \cite[Defn 2.5.1,p55]{UTP-book}
+From \cite[Theorem 3.1.5, p80]{UTP-book}
 
 $$
   \begin{array}{lll}
-     \top  = \false
+     \top  = \true \design \false
      && \QNAME{$\top$-def}
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
-(axMiracleDef,alMiracleDef) = bookdef ("top" -.- "def") "Def2.5.1"
-                           ( miracle  ===  falseP )
+(axMiracleDef,alMiracleDef) = bookdef ("top" -.- "def") "Thm3.1.5 p80"
+                           ( miracle  ===  trueP `design` falseP )
+                           scTrue
+\end{code}
+
+$$
+  \begin{array}{lll}
+     \top  = \true \design \false
+     && \QNAME{$\top$-is-not-$ok$}
+  \end{array}
+$$ %\par\vspace{-8pt}
+\begin{code}
+(cjMiracleNOK,alMiracleNOK) = bookdef ("top" -.- "nok") "Thm3.1.5 p80"
+                           ( miracle  ===  mkNot tok )
                            scTrue
 \end{code}
 
@@ -310,6 +338,8 @@ utpWD_Conjs :: [NmdAssertion]
 utpWD_Conjs
   = [ cjAsgSimple, cjAsgUnchanged, cjAsgSeqSame, cjAsgSeqCond
     , cjSkipL5a, cjSkipL5b
+    , cjAbortTrue
+    , cjMiracleNOK
     ]
 \end{code}
 

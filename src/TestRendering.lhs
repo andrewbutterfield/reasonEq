@@ -330,13 +330,16 @@ we have three cases:
 ~
 
 \begin{code}
-trterm trid _ (Iter tk _ na _ ni lvs@(_:_:_))
- | isSymbId ni  = silentId na ++ "(" ++ seplist (trid ni) (trlvar trid) lvs ++ ")"
- where silentId na@(Identifier i _)
-  -- logical-and is the 'default' for na, so we keep it 'silent'
-        | i == "land"  =  ""
-        | i == "and"   =  ""
-        | otherwise    =  trid na
+trterm trid _ (Iter tk _ ida@(Identifier na _) 
+                       _ idi@(Identifier ni _) lvs@(_:_:_))
+ | isSymbId (jId nni)  
+     = silentId na ++ "(" ++ seplist (trid $ jId ni) (trlvar trid) lvs ++ ")"
+ where 
+   nni = nicesym ni
+   nna = nicesym na
+   silentId i -- logical-and is the 'default' for na, so we keep it 'silent'
+     | i == "and"   =  ""
+     | otherwise    =  trid $ jId nna
 
 trterm trid _ (Iter tk _ na _ ni lvs)
   =  trid na ++ "{" ++ trid ni ++ "(" ++ seplist "," (trlvar trid) lvs ++ ")}"

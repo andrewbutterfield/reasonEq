@@ -7,7 +7,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module UTP.Designs (
-  tok, tok' 
+  ok, vok, vok', tok, tok' 
 , i_design, design
 , i_h1, i_h2, i_h3, i_h4
 , designConjs, designName, designTheory

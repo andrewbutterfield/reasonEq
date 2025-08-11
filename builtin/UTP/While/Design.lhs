@@ -71,24 +71,27 @@ This requires a design-specific  semantics for both assignment and skip.
 From \cite[Defn 2.3.1,p50]{UTP-book}
 
 We start by defining simultaneous assignment,
-based loosely on \cite[2.3\textbf{L2}, p50]{UTP-book}.
+based loosely on \cite[2.3\textbf{L2}, p50, and Def 3.1.3, p78]{UTP-book}
 $$
   \begin{array}{lll}
      \lst x := \lst e
      ~\defs~
-     \lst x' = \lst e \land O'\less {\lst x} = O \less {\lst x}
+     \true \design
+     \lst x' = \lst e \land O'\less {ok,\lst x} = O \less {ok,\lst x}
      && \QNAME{$:=$-def}
   \end{array}
 $$ %\par\vspace{-8pt}
 \begin{code}
-(axAsgDef,alAsgDef) = bookdef ("asg" -.- "def") "2.3L2"
+(axAsgDef,alAsgDef) = bookdef ("asg" -.- "def") "Def3.1.3p78"
                        ( lvxs .::= lves
                          ===
-                         (lvx' `areEqualTo` lves)
-                         /\
-                         ( (lO' `less` ([],[ix]))
-                           `areEqualTo`
-                           (lO  `less` ([],[ix])) )
+                         ( trueP
+                           `design`
+                           ( (lvx' `areEqualTo` lves)
+                             /\
+                             ( (lO' `less` ([ok],[ix]))
+                               `areEqualTo`
+                               (lO  `less` ([ok],[ix])) ) ) )
                        )
                        scTrue
 \end{code}

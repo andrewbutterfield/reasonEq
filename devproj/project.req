@@ -12,7 +12,7 @@ TH-NAME: DWhile
 CJ-NAME: bot_true
 CONJ = ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [V (TG (Id "B" 0)) (VR (Id "bot" 0,VP,WS)),K (TG (Id "B" 0)) (VB True)],([],fromList []))
 SIDE = ([],fromList [])
-STRAT red-L2R
+STRAT red-All
 BEGIN PRFSET
 MM = 30
 MS = 6
@@ -23,7 +23,7 @@ TS = False
 FV = False
 END PRFSET
 BEGIN SEQZIP
-TERMZIP = (V (TG (Id "B" 0)) (VR (Id "bot" 0,VP,WS)),[])
+TERMZIP = (C (TG (Id "B" 0)) True (Id "eqv" 0) [V (TG (Id "B" 0)) (VR (Id "bot" 0,VP,WS)),K (TG (Id "B" 0)) (VB True)],[])
 BEGIN SEQUENT'
 SIDECOND = ([],fromList [])
 LAWS' = CLaws' {hyp0 = Theory {thName = "H.bot_true", thDeps = [], known = VD ("",fromList [],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = []}, conjs = []}, whichC = Lft, otherC = K (TG (Id "B" 0)) (VB True)}

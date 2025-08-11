@@ -24,6 +24,7 @@ reasonEq%
 ```
 
 For now we totalise `var`. Perhaps this should be permanent!!!!
+However the "A1" type results in a structural mismatch.
 
 
 * Add a `PrePost` theory covering sec 2.8 of the book (Hoare Triples, Floyd assertions, Weakest precondition).

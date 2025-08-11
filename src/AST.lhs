@@ -488,7 +488,7 @@ using the substitution form,
 \\ as $(:=)[e,\lst f/x,\lst y]$.
 
 \begin{code}
-assignmentId             =  jId ":="
+assignmentId             =  jId "asg"
 assignVar                =  ScriptVar assignmentId 
 isAssignVar (Vbl i _ _)  =  i == assignmentId
 theAssignment            =  varAsTerm $ PredVar assignmentId Static

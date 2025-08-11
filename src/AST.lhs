@@ -351,12 +351,17 @@ pattern VTyp typ v                =   VT typ v
 Smart constructors for variables and binders.
 
 Variable must match term-class.
+\textbf{
+ THIS INTERACTS BADLY WITH TYPE INFERENCE RIGHT NOW.
+ Perhaps we just trust ourselves here?
+ }
 \begin{code}
 var :: MonadFail m => Type -> Variable -> m Term
 var tp               v | tp == bool && isPredVar v  =  return $ V tp v
 -- var tp@(FunType _ t) v | t == bool && isPredVar v   =  return $ V tp v
 var tp               v | not $ isPredVar v          =  return $ V tp v
-var _       _   =   fail "var: Type/VarClass mismatch"
+-- var _       _   =   fail "var: Type/VarClass mismatch"
+var tp v = return $ V tp v
 eVar t v = var t v
 pVar t v = var bool v
 \end{code}
@@ -419,7 +424,7 @@ termtype (Iter typ sa na si ni lvs)  =  typ
 
 settype :: Type -> Term -> Term
 settype typ (Val _ k)                 =  (Val typ k)
-settype typ (Var _ v)                 =  fromJust $ var typ v
+settype typ (Var _ v)                 =  fromJust $ mdbg "settype.Var.var" $ var (pdbg "settype.Var.typ" typ) $ pdbg "settype.Var.v" v
 settype typ (Cons _ sb n ts)          =  (Cons typ sb n ts) 
 settype typ (Bnd _ n vs tm)           =  fromJust $ bnd typ n vs tm 
 settype typ (Lam _ n vl tm)           =  fromJust $ lam typ n vl tm 

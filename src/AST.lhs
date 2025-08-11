@@ -424,7 +424,7 @@ termtype (Iter typ sa na si ni lvs)  =  typ
 
 settype :: Type -> Term -> Term
 settype typ (Val _ k)                 =  (Val typ k)
-settype typ (Var _ v)                 =  fromJust $ mdbg "settype.Var.var" $ var (pdbg "settype.Var.typ" typ) $ pdbg "settype.Var.v" v
+settype typ (Var _ v)                 =  fromJust $ var typ v
 settype typ (Cons _ sb n ts)          =  (Cons typ sb n ts) 
 settype typ (Bnd _ n vs tm)           =  fromJust $ bnd typ n vs tm 
 settype typ (Lam _ n vl tm)           =  fromJust $ lam typ n vl tm 

@@ -363,6 +363,7 @@ utpWD_Theory
   =  nullTheory { thName  =  utpWD_Name
                 , thDeps  = [ designName
                             , utpWC_Name
+                            , utpBase_Name
                             , closureName
                             , existsName
                             , forallName

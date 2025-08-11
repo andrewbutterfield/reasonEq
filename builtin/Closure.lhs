@@ -353,7 +353,7 @@ $$
   \end{array}
 $$\par\vspace{-8pt}
 \begin{code}
-cjAndUnivDistr = preddef ("land" -.- "uclose" -.- "distr")
+cjAndUnivDistr = preddef ("and" -.- "uclose" -.- "distr")
                 (univ p /\ univ q === univ (p /\ q))
                 scTrue
 \end{code}

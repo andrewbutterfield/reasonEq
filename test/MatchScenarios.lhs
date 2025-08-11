@@ -525,7 +525,7 @@ semiBinding = fromJust $ bindVarToVar v_semi v_semi emptyBinding
 semiKnown = fromJust $ addKnownVar v_semi ArbType $ newVarTable
 
 
-land = jId "land"
+land = jId "and"
 v_land = Vbl land PredV Static
 p `lAnd` q = Cons  ArbType True land [p,q]
 andBinding = fromJust $ bindVarToVar v_land v_land emptyBinding

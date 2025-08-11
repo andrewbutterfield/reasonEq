@@ -66,6 +66,15 @@ and related theorems.
 
 \subsection{Observables}
 
+We have general observabvles:
+$$ O', O, O_0, [O_0/O'], [O_0/O']$$
+\begin{code}
+o = jId "O"  ;  vO = PreVar o
+lO = PreVars o  ;  lO' = PostVars o  ;  lO0 = MidVars o "0"
+gO = LstVar lO  ;  gO' = LstVar lO'  ;  gO0 = LstVar lO0
+\end{code}
+
+
 We have two Design-specific observables\cite[Defn 3.0.1, p75]{UTP-book}:
 $$ 
   ok, ok' : \Bool
@@ -179,10 +188,25 @@ cjDesignLZero
 
 Code to support UTP Healthiness Conditions.
 
+Construct $\H{H}(P)$
 \begin{code}
 applyH :: Identifier -> Term -> Term
 applyH hname p  = Cons bool False hname [p]
 \end{code}
+
+Construct conjecture that $\H{mkH}$ is monotonic:
+\begin{code}
+mkHisMonotonic :: (Term -> Term) -> Term -> Term -> Term
+mkHisMonotonic mkH p q = (p `refines` q) ==> ( mkH p `refines` mkH q)
+\end{code}
+
+Construct conjecture that $\H{mkH}$ is idempotent:
+\begin{code}
+mkHisIdempotent :: (Term -> Term) -> Term -> Term
+mkHisIdempotent mkH p  = mkH (mkH r) `isEqualTo` mkH r
+\end{code}
+
+
 
 All up to {\Large\textbf{Healthiness}} should be in a seperate module once everything has settled.
 
@@ -197,7 +221,6 @@ All up to {\Large\textbf{Healthiness}} should be in a seperate module once every
 \\ \H{isH1}(R) &\defs& R = (ok \implies R)
 \\ \H{isH1}(R) &\equiv& (\true;R = \true) \land (\Skip;R = R)
 \end{eqnarray*}
-We need to show that \H{mkH1} is monotonic and idempotent.
 \begin{code}
 mkH1 r =  tok ==> r
 isH1 r =  r `isEqualTo` mkH1 r
@@ -238,12 +261,12 @@ $$
 \begin{code}
 cjMkH1Monotonic 
   = preddef ("mkH1" -.- "mono")
-            ( (p `refines` q) ==> ( mkH1 p `refines` mkH1 q ) ) 
+            ( mkHisMonotonic mkH1 p q )
             ( scTrue )
 
 cjMkH1Idempotent 
   = preddef ("mkH1" -.- "idem")
-            ( mkH1 (mkH1 r) `isEqualTo` mkH1 r ) 
+            ( mkHisIdempotent mkH1 r ) 
             ( scTrue )
 \end{code}
 
@@ -298,6 +321,11 @@ $$
 
 \subsubsection{\H{H2} Laws}
 
+None at present
+
+\subsection{Designs are \H{H1} and \H{H2}}
+
+
 From \cite[\textbf{Thm 3.2.3},p83]{UTP-book}:
 A predicate is \H{H1} and \H{H2}~~\IFF~~ it is a design.
 $$
@@ -308,13 +336,14 @@ $$
 \subsection{Healthiness \H{H3}}
 
 \begin{eqnarray*}
-   \H{isH3}(R) &\defs& R = R ; \Skip
+   \H{mkH3}(R) &\defs& R ; \Skip
+\\ \H{isH3}(R) &\defs& R = \H{mkH3}(R)
 \\ \H{isH3}(P \design Q) &\equiv& \fv(P)\subseteq O
-\\ \H{mkH3}(R) &\defs& R ; \Skip
 \end{eqnarray*}
-We need to show that \H{mkH3} is monotonic and idempotent.
 \begin{code}
-isH3 r =  mkSeq r skip
+mkH3 r =  mkSeq r skip
+isH3 r =  r `isEqualTo` mkSeq r skip
+mkh3 = jId "mkH3"
 h3 = jId "H3"
 \end{code}
 
@@ -326,9 +355,13 @@ $$
 \end{array}
 $$
 \begin{code}
+(axMkH3Def,alMkH3Def) 
+  = bookdef ("mkH3" -.- "def") "defd3.2.1_3p82"
+            ( applyH mkh3 r === mkH3 r )
+            scTrue
 (axH3Def,alH3Def) 
   = bookdef ("H3" -.- "def") "defd3.2.1_3p82"
-            ( applyH h3 r === isH3 r )
+            ( applyH h3 r === r `isEqualTo` mkH3 r )
             scTrue
 \end{code}
 
@@ -336,9 +369,19 @@ $$
 
 From \cite[\textbf{Thm 3.2.4},p84]{UTP-book}:
 A design is \H{H3} if its assumption $P$ can be expressed as a condition $p$.
+We shall show that such a design has $\Skip$ as a right-unit:
 $$
-(p\design Q) = (p\design Q);\Skip
+(p\design Q);\Skip = (p\design Q)
 $$
+\begin{code}
+cjPrecondDesignIsH3 
+  = preddef ("H3" -.- "absorbs" -.- "right" -.- "skip")
+            ( applyH h3 (mkSeq (pc `design` q) skip)
+              === 
+              ( pc `design` q ) ) 
+            ( isUTPCond gp .: isUTPDynObs gQ )
+\end{code}
+
 Being \H{H3} allows us to simplify Thm 3.1.4(3) to
 $$
 (p_1\design Q_1);(p_2 \design Q)
@@ -353,7 +396,7 @@ $$
 
 \begin{eqnarray*}
    \H{isH4}(R) &\defs& R ; \true = \true
-\\ \H{isH4}(R) &\defs& [\exists O' \bullet R]
+\\ \H{isH4}(R) &\equiv& [\exists O' \bullet R]
 \end{eqnarray*}
 \begin{code}
 isH4 r =  mkSeq r trueP
@@ -382,6 +425,16 @@ From \cite[\textbf{Thm 3.2.5},p85]{UTP-book}:
 
 $P\design Q$ satisfies \H{H4} ~~\IFF~~ $[\exists ok',x',\dots,z'\bullet (P\design  Q)]$.
 
+\begin{code}
+cjH4isFeasible 
+  = preddef ("H4" -.- "is" -.- "feasible")
+            ( applyH h4 r 
+              === 
+              ( univ (exists [gO'] r) ) 
+            )
+            ( designSCs [gR] )
+\end{code}
+
 
 
 
@@ -407,7 +460,7 @@ designAxioms
   =  map labelAsAxiom [ axDsgDef 
                       , axMkH1Def, axH1Def
                       , axH2Def
-                      , axH3Def
+                      , axMkH3Def, axH3Def
                       , axH4Def ]
 \end{code}
 
@@ -418,6 +471,8 @@ designConjs
   = [ cjDesignLZero
     , cjH1satLZeroRUnit
     , cjMkH1Idempotent, cjMkH1Monotonic
+    , cjPrecondDesignIsH3
+    , cjH4isFeasible
     ]
 \end{code}
 
@@ -445,7 +500,8 @@ designTheory
 
 
 \begin{code}
-vP = Vbl (jId "P") PredV Static ; p = fromJust $ pVar ArbType vP ; gP = StdVar vP
-vQ = Vbl (jId "Q") PredV Static ; q = fromJust $ pVar ArbType vQ ; gQ = StdVar vQ
-vR = Vbl (jId "R") PredV Static ; r = fromJust $ pVar ArbType vR ; gR = StdVar vR
+vP = Vbl (jId "P") PredV Static; p =  fromJust $ pVar ArbType vP; gP = StdVar vP
+vp = Vbl (jId "p") PredV Static; pc = fromJust $ pVar ArbType vp; gp = StdVar vp
+vQ = Vbl (jId "Q") PredV Static; q =  fromJust $ pVar ArbType vQ; gQ = StdVar vQ
+vR = Vbl (jId "R") PredV Static; r =  fromJust $ pVar ArbType vR; gR = StdVar vR
 \end{code}

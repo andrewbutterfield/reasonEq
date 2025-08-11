@@ -3,11 +3,8 @@
 ## PLAN
 
 * Continue developing the  `Designs` theory.
-
-We need to extend the `UClose` theory to make it easier to prove
+We need to extend the `Closure` theory to make it easier to prove
 things like `[P ⟹  Q] ⟹  [ok ∧ P ⟹  Q]`.
-Should rename the theory to `Closure` because here the `U` denotes "Universal",
-and not "UTP" as used elswhere.
 
 
 * Add a  `DWhile` theory based on designs (created but not yet design-based)

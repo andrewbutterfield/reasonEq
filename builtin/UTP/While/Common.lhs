@@ -136,7 +136,7 @@ i_asg        =  assignmentId
 p_asg        =  jVar p1 $ Vbl i_asg PredV Textual
 
 simassign :: [(Variable,Term)] -> [(ListVar,ListVar)] -> Term
-simassign vts lvlvs  =  Sub p1 p_asg $ jSubstn vts lvlvs
+simassign vts lvlvs  =  Sub p1 p_asg $ xSubstn vts lvlvs
 
 (.:=) :: Variable -> Term -> Term
 v .:= e      =  simassign [(v,e)] []

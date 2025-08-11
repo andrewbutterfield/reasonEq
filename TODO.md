@@ -3,11 +3,29 @@
 ## PLAN
 
 * Continue developing the  `Designs` theory.
+
 We need to extend the `Closure` theory to make it easier to prove
 things like `[P ⟹  Q] ⟹  [ok ∧ P ⟹  Q]`.
 
 
 * Add a  `DWhile` theory based on designs (created but not yet design-based)
+
+We have a type hookup problem here
+
+```
+proof: m
+@settype.Var.typ:  TV (Id "A1" 0)
+@settype.Var.v:  VR (Id "bot" 0,VP,WS)
+req: Maybe.fromJust: Nothing
+CallStack (from HasCallStack):
+  error, called at libraries/base/Data/Maybe.hs:150:21 in base:Data.Maybe
+  fromJust, called at src/AST.lhs:422:42 in reasonEq-0.9.1.0-75lNoKKAYUdKhUkb3HnJYP:AST
+reasonEq% 
+```
+
+For now we totalise `var`. Perhaps this should be permanent!!!!
+
+
 * Add a `PrePost` theory covering sec 2.8 of the book (Hoare Triples, Floyd assertions, Weakest precondition).
 * Do proper UTCP Semantics with Designs and invariants
 

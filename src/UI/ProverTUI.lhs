@@ -40,6 +40,7 @@ import Assertions
 import Ranking
 import ProofSettings
 import REqState
+import MatchContext
 import UI.AbstractUI
 import Instantiate
 import TestRendering
@@ -414,7 +415,7 @@ applyMatch args pstate@(reqs, liveProof)
                      waitForReturn
                      return pstate
   where
-    vts = concat $ map thd3 $ mtchCtxts liveProof
+    vts = getVarTables $ mtchCtxts liveProof
 \end{code}
 
 
@@ -570,7 +571,7 @@ lawInstantiateProof _ ps@(reqs, liveProof )
                    lawt vs ts
                  if cancel then return (reqs,liveProof)
                  else do
-                  let vts = concat $ map thd3 $ mtchCtxts liveProof
+                  let vts = getVarTables $ mtchCtxts liveProof
                   liveProof' <- lawInstantiate3 vts lawt vs2ts liveProof
                   return (reqs, liveProof' )
 \end{code}
@@ -764,7 +765,7 @@ applySimps f (x:xs) (reqs, liveProof)
                   Yes liveProof'' -> return liveProof''
                   But msgs -> applySimps f xs (reqs, liveProof)
       But msgs  ->  applySimps f xs (reqs, liveProof)
-  where vts = concat $ map thd3 $ mtchCtxts liveProof
+  where vts = getVarTables $ mtchCtxts liveProof
 \end{code}
 
 Applying Fold/Unfolds
@@ -794,7 +795,7 @@ applyFolds f (x:xs) (reqs, liveProof)
                   Yes liveProof'' -> return liveProof''
                   But msgs        -> applyFolds f xs (reqs, liveProof)
       But msgs       ->  applyFolds f xs (reqs, liveProof)
-  where vts = concat $ map thd3 $ mtchCtxts liveProof
+  where vts = getVarTables $ mtchCtxts liveProof
 \end{code}
 
 

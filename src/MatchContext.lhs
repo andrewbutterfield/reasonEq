@@ -11,6 +11,7 @@ module MatchContext
  , buildMatchContext
  , expandSideCondKnownVars         
  , expandSCKnowns
+ , getVarTables
  ) where
 
 import Data.Maybe
@@ -113,4 +114,12 @@ expandKnownGenVars :: [VarTable] -> GenVar -> VarSet
 expandKnownGenVars vts gv = mapVToverVarSet vts $ S.singleton gv
 \end{code}
 
-
+We commonly want to get all the \h{VarTables}s 
+found in a list of match-contexts:
+\begin{code}  
+getVarTables :: [MatchContext] -> [VarTable]
+-- old version: getVarTables = concat . map thd3
+--new version  
+getVarTables [] = []
+getVarTables (mc:_) = thd3 mc
+\end{code}

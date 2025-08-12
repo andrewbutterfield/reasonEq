@@ -595,7 +595,7 @@ matchFocus ranking liveProof
         goalt       =  getTZ tz
         scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
-        vts         =  concat $ map thd3 ctxts
+        vts         =  getVarTables ctxts
     in do let (asn',tvmap) = mkTypedAsn vts goalt scC 
           let fits  =  cSubType $ cmapdbg "mF.tvmap" tvmap
           let rankedM = ranking ctxts $ matchInContexts ctxts fits asn'
@@ -610,7 +610,7 @@ matchFocusAgainst lawnm liveProof
         goalt       =  getTZ tz
         scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
-        vts         =  concat $ map thd3 ctxts
+        vts         =  getVarTables ctxts
     in do let (asn',tvmap) = mkTypedAsn vts goalt scC
           let fits  =  cSubType ((cmapdbg "mFA.tvmap") $! tvmap)
           case matchLawByName asn' lawnm ctxts fits of
@@ -628,7 +628,7 @@ tryFocusAgainst lawnm parts liveProof
         goalt       =  getTZ tz
         scC         =  xpndSC liveProof
         ctxts       =  mtchCtxts liveProof
-        vts         =  concat $ map thd3 ctxts
+        vts         =  getVarTables ctxts
     in do let (asn',tvmap) = mkTypedAsn vts goalt scC
           let fits  =  cSubType $ cmapdbg "tFA.tvmap" tvmap
           tryLawByName asn' lawnm parts ctxts fits
@@ -863,7 +863,7 @@ substituteFocus thrys liveProof
   = let (tz,seq') = focus liveProof
         dpath = fPath liveProof
         t = getTZ tz
-        -- vts = concat $ map thd3 $ mtchCtxts liveProof
+        -- vts = getVarTables $ mtchCtxts liveProof
         scC = xpndSC liveProof
         (Assertion conj _) = conjecture liveProof
         sctxt = mkSubCtxt scC $ thd3 $ head $ mtchCtxts liveProof
@@ -999,7 +999,7 @@ lawInstantiate2 rslaws i liveProof
        let (tz,seq') = focus liveProof
        let psc = conjSC liveProof
        let dpath = fPath liveProof
-       let vts = concat $ map thd3 $ mtchCtxts liveProof
+       let vts = getVarTables $ mtchCtxts liveProof
        let lFreeV = stdVarSetOf $ S.filter (isUnknownGVar vts)
                                 $ theFreeVars $ freeVars lsc lawt
        let goalTerms = reverse $ subTerms (exitTZ tz)

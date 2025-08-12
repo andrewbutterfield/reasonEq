@@ -1062,7 +1062,7 @@ displayMatches prfSet mctxts mtchs
   =  unlines' ( ("Matches:")
                 : map (shMatch showbind vts) (reverse $ zip [1..] mtchs) )
   where 
-    vts = concat $ map thd3 mctxts
+    vts = getVarTables mctxts
     showbind = showBindings prfSet
     
 

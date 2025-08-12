@@ -10,8 +10,7 @@ things like `[P ⟹  Q] ⟹  [ok ∧ P ⟹  Q]`.
 
 * Add a  `DWhile` theory based on designs (created but not yet design-based)
 
-No - we simply needed "bot" and "top" to be predicate variables
-in both the laws and the var-tables.
+In progress.
 
 
 * Add a `PrePost` theory covering sec 2.8 of the book (Hoare Triples, Floyd assertions, Weakest precondition).
@@ -182,7 +181,7 @@ Start Developing theories for:
   * Arithmetic (done)
   * Sets (in progress)
   * Lists (done)
-* Designs
+* Designs (in progress)
 * Reactive Systems
 
 

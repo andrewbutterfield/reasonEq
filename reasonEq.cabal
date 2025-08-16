@@ -31,10 +31,10 @@ library
       Laws
       LexBase
       LiveProofs
+      LoadSave
       MatchContext
       Matching
       NotApplicable
-      Parsing
       Persistence
       ProgramIdentity
       ProofMatch

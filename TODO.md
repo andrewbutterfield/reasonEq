@@ -2,6 +2,10 @@
 
 ## PLAN
 
+* The `Parsing` module  becomes `LoadSave`,and can save what it loads, and vice-versa.
+
+
+
 * Continue developing the  `Designs` theory.
 
 We need to extend the `Closure` theory to make it easier to prove

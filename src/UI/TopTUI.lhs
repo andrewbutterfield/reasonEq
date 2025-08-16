@@ -44,7 +44,7 @@ import REqState
 import UI.AbstractUI
 import Instantiate
 import TestRendering
-import Parsing
+import LoadSave
 import UI.REPL
 import Dev
 import SAT
@@ -388,13 +388,13 @@ parseEntities [cnj,cname] reqs
   | cnj == cnjObj = do
     thry <- getCurrentTheory reqs
     let projpath = projectDir reqs </> thName thry </> (cname++conjtxt)
-    putStrLn ("Parsing conjecture from "++projpath)
+    putStrLn ("Load conjecture from "++projpath)
     fileExists <- doesFileExist projpath
     if fileExists
     then do
       text <- readFile projpath
       putStrLn text
-      case parseConjecture text reqs of
+      case readConjecture text reqs of
         Yes reqs' ->  doshow reqs' "Parsed successfully"
         But msgs  -> doshow reqs $ unlines msgs
     else doshow reqs "File not found"
@@ -521,7 +521,7 @@ newConj cjnm reqs
 
   where
     parse txt =
-      case termParse txt of
+      case loadTerm txt of
         But msgs         ->  But msgs
         Yes (term,[])    ->  Yes term
         Yes (term,xtra)  ->  But [ "Error: leftover tokens" 

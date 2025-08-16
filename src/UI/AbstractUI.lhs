@@ -17,7 +17,7 @@ module UI.AbstractUI
 , modifyProofSettings
 , setCurrentTheory
 , newConjecture
-, parseConjecture
+, readConjecture
 , assumeConjecture, demoteLaw , classifyLaw
 , newProof1, newProof2, resumeProof
 , abandonProof, updateProof, completeProof
@@ -78,7 +78,7 @@ import Ranking
 import SAT
 
 import TestRendering
-import Parsing
+import LoadSave
 
 import StdTypeSignature
 
@@ -260,17 +260,17 @@ newConjecture thnm nasn reqs
                              $ theories__ (replaceTheory' thry') $ reqs
 \end{code}
 
-\subsection{Parsing a Conjecture}
+\subsection{Load a Conjecture}
 
 We expect the first line of a conjecture text to be the conjecture name,
 while the rest is then parsed for the actual conjecture term.
 
 \begin{code}
-parseConjecture :: MonadFail m => String -> REqState -> m REqState
-parseConjecture text reqs
+readConjecture :: MonadFail m => String -> REqState -> m REqState
+readConjecture text reqs
   | null body = fail "no conjecture term found"
   | otherwise = 
-      case termParse body of
+      case loadTerm body of
         Yes (term,resttoks)
           | null resttoks -> do
               thry <- getCurrentTheory reqs

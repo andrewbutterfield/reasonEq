@@ -1,4 +1,4 @@
-\chapter{Parsing}
+\chapter{Theory Load and Save}
 \begin{verbatim}
 Copyright  Andrew Butterfield (c) 2018-25
 
@@ -6,11 +6,11 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module Parsing (
+module LoadSave (
   mkLawName
 , term_syntax
 , renderToken'
-, termParse
+, loadTerm
 )
 
 where
@@ -36,10 +36,10 @@ import StdTypeSignature
 import Debugger
 \end{code}
 
-\section{Parsing Intro.}
+\section{Reading Intro.}
 
-We provide a simple, clunky way to parse terms,
-in prefix-style only.
+We provide a simple, clunky way to read terms,
+using a simple grammar mostly using prefix-based constructs.
 
 For now we have simple literals,
 composites done as prefix-functions applied to delimited lists of sub-terms,
@@ -257,7 +257,7 @@ tlexDuring di bus str@(c:cs)
   | otherwise  =  mkId (reverse di ++ reverse bus) : tlex str
 \end{code}
 
-If none of the above apply, we parse a maximum-munch symbol:
+If none of the above apply, we gobble up a maximum-munch symbol:
 \begin{code}
 tlexSym mys ""  = [ mkMys mys ]
 tlexSym mys str@(c:cs)
@@ -265,7 +265,7 @@ tlexSym mys str@(c:cs)
   | otherwise  =  mkMys mys : tlex str
 \end{code}
 
-\section{Law Name Parser}
+\section{Law Name Reader}
 
 \begin{code}
 mkLawName :: [String] -> String
@@ -278,7 +278,7 @@ mkLawName ss
     showTTok ttok      = _redQ
 \end{code}
 
-\section{Simple Term Parser}
+\section{Simple Term Reader}
 
 The abstract syntax:
 \begin{eqnarray*}
@@ -365,29 +365,29 @@ tok2GVar (TLVar i vw ) = LstVar $ mkLV i vw
 
 \newpage
 
-\subsection{Term Parser}
+\subsection{Term Reader}
 
 \begin{code}
-sTermParse :: MonadFail m => [Token] -> m (Term, [Token])
-sTermParse [] =  fail "sTermParse: nothing to parse"
+sTermRead :: MonadFail m => [Token] -> m (Term, [Token])
+sTermRead [] =  fail "sTermRead: nothing to parse"
 \end{code}
 
 \subsubsection{Numbers}
 
 \begin{code}
-sTermParse (TNum n:tts) = return ( Val int $ Integer n, tts)
+sTermRead (TNum n:tts) = return ( Val int $ Integer n, tts)
 \end{code}
 
 \subsubsection{Symbols}
 
 \begin{code}
-sTermParse (TSym i:tts) = sIdParse i Static tts
+sTermRead (TSym i:tts) = sIdParse i Static tts
 \end{code}
 
 \subsubsection{Identifiers}
 
 \begin{code}
-sTermParse (TId i vw:tts)
+sTermRead (TId i vw:tts)
   | n == keyTrue      =  return ( mkTrue n,  tts)
   | n == keyFalse     =  return ( mkFalse n, tts)
   | n == keySetBind   =  setQParse tts
@@ -399,7 +399,7 @@ sTermParse (TId i vw:tts)
 \subsubsection{Bad Start}
 
 \begin{code}
-sTermParse (tt:tts)  = fail ("sTermParse: unexpected token: "++renderToken tt)
+sTermRead (tt:tts)  = fail ("sTermRead: unexpected token: "++renderToken tt)
 \end{code}
 
 \subsubsection{Constructions}
@@ -421,7 +421,7 @@ Look for sub-term, or closing parenthesis.
 sAppParse id1 subable smretbus (TClose ")" : tts)
   = return ( Cons arbpred subable id1 $ reverse smretbus, tts)
 sAppParse id1 subable smretbus tts
-  = do (tsub',tts') <- sTermParse tts
+  = do (tsub',tts') <- sTermRead tts
        sAppParse' id1 subable (tsub':smretbus) tts'
 \end{code}
 
@@ -445,7 +445,7 @@ parse the quantifier:
 \begin{code}
 setQParse [] = fail "setQParse: premature end"
 setQParse (TId i Static : tts) = do
-  (i,sg,term,tts') <- quantParse i [] tts
+  (i,sg,term,tts') <- quantread i [] tts
   qsterm <- pBnd i (S.fromList $ map tok2GVar sg) term
   return (qsterm,tts')
 setQParse (tok:_) = fail ("setQParse: exp. ident, found: "++renderToken tok)
@@ -457,7 +457,7 @@ parse the quantifier:
 \begin{code}
 listQParse [] = fail "listQParse: premature end"
 listQParse (TId i Static : tts) = do
-  (i,sg,term,tts') <- quantParse i [] tts
+  (i,sg,term,tts') <- quantread i [] tts
   lsterm <- pLam i (reverse $ map tok2GVar sg) term
   return (lsterm,tts')
 listQParse (tok:_) = fail ("listQParse: exp. ident, found: "++renderToken tok)
@@ -467,29 +467,29 @@ Seen \texttt{Qx i}, and zero or more \texttt{g\_i}:
 $$ Qx~i~g_1 \dots g_i ~~~~~ g_{i+1} \dots g_n \bullet t $$
 parse the quantifier:
 \begin{code}
-quantParse i _ [] = fail ("quantParse: "++trId i++" (premature end)")
-quantParse i sg (TSym s : tts)
-  | idName s == keyQBody  =  quantParseBody i sg tts
-quantParse i sg (v@(TId _ _)    : tts)   =  quantParse i (v:sg) tts
-quantParse i sg (lv@(TLVar _ _) : tts)   =  quantParse i (lv:sg) tts
-quantParse i sg (tok : _)  = fail ("quantParse: unexpected token "++renderToken tok)
+quantread i _ [] = fail ("quantread: "++trId i++" (premature end)")
+quantread i sg (TSym s : tts)
+  | idName s == keyQBody  =  quantreadBody i sg tts
+quantread i sg (v@(TId _ _)    : tts)   =  quantread i (v:sg) tts
+quantread i sg (lv@(TLVar _ _) : tts)   =  quantread i (lv:sg) tts
+quantread i sg (tok : _)  = fail ("quantread: unexpected token "++renderToken tok)
 \end{code}
 
 Seen \texttt{Qx i g\_1 .. g\_n @}, 
 $$ Qx~i~g_1 \dots g_n \bullet ~~~ t $$
 parse the body term
 \begin{code}
-quantParseBody i _ [] = fail ("quantParse: "++trId i++" (missing body)")
-quantParseBody i sg tts = do
-  (term,toks) <- sTermParse tts
+quantreadBody i _ [] = fail ("quantread: "++trId i++" (missing body)")
+quantreadBody i sg tts = do
+  (term,toks) <- sTermRead tts
   return (i,sg,term,toks)
 \end{code}
 
-\subsection{Top-Level Term Parser}
+\subsection{Top-Level Term Reader}
 
 \begin{code}
-termParse :: MonadFail m => String -> m (Term, [Token])
-termParse = sTermParse . tlex
+loadTerm :: MonadFail m => String -> m (Term, [Token])
+loadTerm = sTermRead . tlex
 \end{code}
 
 \newpage
@@ -504,8 +504,8 @@ showMacro macro
 \end{code}
 
 \begin{code}
-tparse str 
-  = case termParse str of
+tread str 
+  = case loadTerm str of
       Yes (term,tokens) 
         | null tokens -> putStrLn $ trTerm 0 term
         | otherwise   -> putStrLn ( "tokens leftover: " ++

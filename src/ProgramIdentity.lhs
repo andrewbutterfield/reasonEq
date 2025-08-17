@@ -9,6 +9,6 @@ module ProgramIdentity ( progName, progVersion, progNameVersion )
 where
 
 progName = "reasonEq"
-progVersion = "0.9.1.0"
+progVersion = "0.9.2.0"
 progNameVersion = progName++" "++progVersion
 \end{code}

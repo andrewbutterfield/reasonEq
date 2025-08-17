@@ -9,7 +9,7 @@ module Persistence
   ( getWorkspaces, putWorkspaces
   , currentWorkspace, createWorkspace
   , ifDirectoryExists, ifFileExists
-  , saveAllState, loadAllState
+  , dumpAllState, grabAllState
   , renderNamedTheory, parseNamedTheory
   , saveConjectures, loadConjectures
   , saveProof, loadProof
@@ -166,12 +166,12 @@ createWorkspace wsName wsReq
                if fileExists
                then do putStrLn ("Workspace already present: "++wsPath )
                        return (False,projFP)
-               else do saveAllState wsReq
+               else do dumpAllState wsReq
                        return (True,projFP)
        else do putStrLn ("Creating "++wsPath)
                createDirectoryIfMissing True wsPath
                putStrLn ("Creating "++projFP)
-               saveAllState wsReq
+               dumpAllState wsReq
                return (True,projFP)
 \end{code}
 
@@ -272,8 +272,8 @@ settingsPath projDir = projDir </> settingsFile
 \end{code}
 
 \begin{code}
-saveAllState :: REqState -> IO REqState
-saveAllState reqs
+dumpAllState :: REqState -> IO REqState
+dumpAllState reqs
   = do let pjdir = projectDir reqs
        ifDirectoryExists "REQ-STATE" reqs pjdir (doWriteAll reqs pjdir)
   where
@@ -292,8 +292,8 @@ saveAllState reqs
 
 
 \begin{code}
-loadAllState :: REqState -> FilePath -> IO REqState
-loadAllState reqs projdirfp
+grabAllState :: REqState -> FilePath -> IO REqState
+grabAllState reqs projdirfp
   = ifDirectoryExists "REQ-STATE" reqs projdirfp (doReadAll projdirfp)
   where
     doReadAll projdirfp

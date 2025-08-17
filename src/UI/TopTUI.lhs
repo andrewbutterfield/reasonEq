@@ -92,8 +92,8 @@ reqQuit _ reqs
  | otherwise       =  byeBye
  where
    saveAndGo reqs
-    = do putStrLn ("Changes made, saving ....")
-         saveAllState reqs
+    = do putStrLn ("Changes made, dumping ....")
+         dumpAllState reqs
          byeBye
    byeBye = putStrLn "\nGoodbye!\n" >> return (True, reqs)
 
@@ -102,7 +102,7 @@ reqHelpCmds = ["?","help"]
 reqCommands :: REqCommands
 reqCommands = [ cmdShow, cmdSet, cmdNew
               , cmdNewProof, cmdRet2Proof
-              , cmdSave, cmdLoad
+              , cmdDump, cmdGrab
               , cmdSaveConj, cmdLoadConj
               , cmdParseConj
               , cmdAssume, cmdDemote
@@ -210,12 +210,12 @@ artefacts, and we will ``load'' and ``save'' from those.
 These files will also be how we DEFINE theories, 
 and will replace all the Haskell modules currently used
 (the contents of \h{builtin/}).
-We will still keep the formats for live project files,
+We will still keep these formats for live project files,
 for tracking proofs, etc.,
 but will switch to terminology ``dump'' and ``grab''
 }
 
-We save and load theories by default,
+We dump and load theories by default,
 but can also handle smaller objects such as axioms, conjectures, and proofs.
 \begin{code}
 prfObj = "prf"
@@ -224,24 +224,24 @@ cnjObj = "cnj"
 
 
 \begin{code}
-cmdSave :: REqCmdDescr
-cmdSave
-  = ( "save"
-    , "save prover state to file"
+cmdDump :: REqCmdDescr
+cmdDump
+  = ( "dump"
+    , "dump prover state to file"
     , unlines
-        [ "save          -- save all prover state to current workspace"
-        , "save .        -- save current theory to current workspace"
-        , "save <thry>   -- save theory <thry> to current workspace"
-        , "save " ++ prfObj
-                  ++" <proof>  -- save proof <proof> to current workspace"
+        [ "dump          -- dump all prover state to current workspace"
+        , "dump .        -- dump current theory to current workspace"
+        , "dump <thry>   -- dump theory <thry> to current workspace"
+        , "dump " ++ prfObj
+                  ++" <proof>  -- dump proof <proof> to current workspace"
         , "To come:"
-        , "save cnj <conj>  -- save conjecture <cnj> to current workspace"
-        , "save ax <axiom>  -- save axiom <axiom> to current workspace"
+        , "dump cnj <conj>  -- dump conjecture <cnj> to current workspace"
+        , "dump ax <axiom>  -- dump axiom <axiom> to current workspace"
         ]
-    , saveState )
+    , dumpState )
 
-saveState [] reqs = saveAllState reqs
-saveState [nm] reqs
+dumpState [] reqs = dumpAllState reqs
+dumpState [nm] reqs
   = let nm' = if nm == "." then (currTheory reqs) else nm
     in
     case getTheory nm' $ theories reqs of
@@ -251,7 +251,7 @@ saveState [nm] reqs
       Just thry
        -> do renderNamedTheory (projectDir reqs) (nm',thry)
              return reqs
-saveState [what,nm] reqs
+dumpState [what,nm] reqs
   | what == prfObj  = do
     let thnm = currTheory reqs 
     case ( getTheory thnm (theories reqs) 
@@ -265,33 +265,33 @@ saveState [what,nm] reqs
                 putStrLn ("Proof '"++nm++"' saved")
                 return reqs
   where pnm nm (_,pn,_,_,_) = nm == pn
-saveState _ reqs  =  doshow reqs "unknown 'save' option."
+dumpState _ reqs  =  doshow reqs "unknown 'dump' option."
 \end{code}
 
 \newpage
 
 \begin{code}
-cmdLoad :: REqCmdDescr
-cmdLoad
-  = ( "load"
-    , "load prover state from file"
+cmdGrab :: REqCmdDescr
+cmdGrab
+  = ( "grab"
+    , "grab prover state from file"
     , unlines
 
-        [ "load -- load prover state from current workspace"
-        , "load <thry> -- load theory <thry> from current workspace"
+        [ "grab -- grab prover state from current workspace"
+        , "grab <thry> -- grab theory <thry> from current workspace"
         , "            -- warns if it modifies an existing theory"
-        , "load " ++ prfObj 
-                  ++ " <proof>  -- load proof <proof> to current workspace"
-        , "      CAUTION (will search for and load into current theory (!))"
+        , "grab " ++ prfObj 
+                  ++ " <proof>  -- grab proof <proof> from current workspace"
+        , "      CAUTION (will search for and grab into current theory (!))"
         , "To come:"
-        , "load cnj <conj>  -- load conjecture <cnj> to current workspace"
-        , "load ax <axiom>  -- load axiom <axiom> to current workspace"
+        , "grab cnj <conj>  -- grab conjecture <cnj> from current workspace"
+        , "grab ax <axiom>  -- grab axiom <axiom> from current workspace"
         ]
     , loadState )
 
 loadState [] reqs = do 
   let dirfp = projectDir reqs
-  reqs' <- loadAllState reqs dirfp
+  reqs' <- grabAllState reqs dirfp
   return reqs'{ inDevMode = inDevMode reqs}
 loadState [nm] reqs = do
   let dirfp = projectDir reqs
@@ -317,7 +317,7 @@ loadState [what,nm] reqs | what == prfObj  = do
       putStrLn ("Loading proof for "++nm)
       return $ theories__ (addTheoryProof thnm prf) reqs
 
-loadState _ reqs  =  doshow reqs "unknown 'load' option."
+loadState _ reqs  =  doshow reqs "unknown 'grab' option."
 \end{code}
 
 \newpage

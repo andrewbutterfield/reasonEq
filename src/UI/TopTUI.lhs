@@ -267,9 +267,15 @@ cmdSave
         ]
     , saveState )
 
-saveState _ reqs = do 
+saveState _ reqs = do
+  let nm = currTheory reqs
+  case getTheory nm $ theories reqs of
+    Nothing    ->  saveState2 (thName_ nm nullTheory) reqs
+    Just thry  ->  saveState2 thry reqs
+
+saveState2 theory reqs = do
   putStrLn "saving proto.txt"
-  let proto_text = saveTheory nullTheory
+  let proto_text = saveTheory theory
   putStrLn ("Contents of proto.txt:\n"++proto_text)
   writeFile "proto.txt" proto_text
   userPause

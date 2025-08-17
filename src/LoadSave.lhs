@@ -19,6 +19,7 @@ where
 import Data.Maybe(fromJust)
 -- import Data.Map as M (fromList,assocs)
 import qualified Data.Set as S
+import qualified Data.Map as M
 import Data.List (nub, sort, (\\), intercalate)
 import Data.Char
 
@@ -31,6 +32,8 @@ import Variables
 import Types
 import AST
 import SideCond
+import Laws
+import VarData
 import Theories
 import TestRendering
 import StdTypeSignature
@@ -66,10 +69,22 @@ The automatic laws can be re-generated once the theory is loaded.
 Here is a first cut for a theory:
 \begin{verbatim}
 name <TheoryName>
-deps <DepThryName>  ... <DepThryName> 
-known <entry> ... <entry>
-laws  <law> ... <law>
-conjs <conj> ... <conj>
+dependsOn <DepThryName>  ... <DepThryName> 
+knownVariables
+  begin vartable <TheoryName>
+    <entry> 
+    ... 
+  end vartable <TheoryName>
+laws  
+  begin laws
+    <law> 
+    ...
+  end laws
+conjectures
+  begin conjectures
+    <conj> 
+    ... 
+  end conjectures
 \end{verbatim}
 
 \subsection{Load Theory}
@@ -85,11 +100,76 @@ loadTheory text = fail "loadTheory NYI"
 saveTheory :: Theory -> String
 saveTheory theory = unlines $ 
   [ "name " ++ thName theory
-  , "deps " ++ intercalate " " (thDeps theory)
+  , "dependsOn " ++ intercalate " " (thDeps theory)
+  , "knownVariables"
+  ,   saveVarTable (known theory)
+  , "laws"
+  ,   saveLaws (laws theory)
+  , "conjectures"
+  ,   saveConjectures (conjs theory)
   ]
 \end{code}
 
-\newpage
+\section{VarTables}
+
+\subsection{Load VarTable}
+
+\begin{code}
+loadVarTable :: MonadFail mf => String -> mf VarTable
+loadVarTable text = fail "loadVarTable NYI"
+\end{code}
+
+\subsection{Save VarTable}
+
+\begin{code}
+saveVarTable :: VarTable -> String
+saveVarTable (VarData (vtname,vtable,stable,dtable)) = unlines' $ 
+  [ "  begin vartable " ++ vtname
+  , "    variables " ++ show (M.size vtable)
+  , "    listvars " ++ show (M.size stable)
+  , "    dynamics " ++ show (M.size dtable)
+  , "  end vartable " ++ vtname
+  ]
+\end{code}
+
+\section{Laws}
+
+\subsection{Load Laws}
+
+\begin{code}
+loadLaws :: MonadFail mf => String -> mf [Law]
+loadLaws text = fail "loadLaws NYI"
+\end{code}
+
+\subsection{Save Laws}
+
+\begin{code}
+saveLaws :: [Law] -> String
+saveLaws laws = unlines' $ 
+  [ "  begin laws"
+  , "    laws " ++ show (length laws)
+  , "  end laws "
+  ]
+\end{code}
+
+\subsection{Load Conjectures}
+
+\begin{code}
+loadConjectures :: MonadFail mf => String -> mf [NmdAssertion]
+loadConjectures text = fail "loadConjectures NYI"
+\end{code}
+
+\subsection{Save Conjectures}
+
+\begin{code}
+saveConjectures :: [NmdAssertion] -> String
+saveConjectures nmdassns = unlines' $ 
+  [ "  begin conjectures"
+  , "    conjectures " ++ show (length nmdassns)
+  , "  end conjectures"
+  ]
+\end{code}
+
 
 
 \section{Law Name Reader}

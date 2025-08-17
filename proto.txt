@@ -1,1 +1,16 @@
-saving 0 NYI
+name UTCP
+dependsOn Designs UWhile Sets Closure Exists Forall Equal Impl AOI And Or Not EQV
+knownVariables
+  begin vartable UTCP
+    variables 15
+    listvars 0
+    dynamics 1
+  end vartable UTCP
+laws
+  begin laws
+    laws 2
+  end laws 
+conjectures
+  begin conjectures
+    conjectures 3
+  end conjectures

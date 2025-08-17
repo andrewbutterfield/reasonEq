@@ -16,6 +16,7 @@ module VarData ( VarMatchRole
                , pattern AbstractList, pattern AbstractSet
                , pattern UnknownListVar
                , VarTable
+               , pattern VarData
                , vtList, stList, dtList
                , newVarTable, newNamedVarTable
                , addKnownConst, addKnownVar
@@ -258,6 +259,7 @@ newtype VarTable
        , Map IdAndClass DynamicLstVarRole
        )
   deriving (Eq, Show, Read)
+pattern VarData vardata = VD vardata
 \end{code}
 
 

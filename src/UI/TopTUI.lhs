@@ -205,6 +205,16 @@ showWorkspaces args reqs
 \newpage
 \section{State Save and Restore}
 
+\textbf{We are introducing a simple text syntax for theories and related
+artefacts, and we will ``load'' and ``save'' from those.
+These files will also be how we DEFINE theories, 
+and will replace all the Haskell modules currently used
+(the contents of \h{builtin/}).
+We will still keep the formats for live project files,
+for tracking proofs, etc.,
+but will switch to terminology ``dump'' and ``grab''
+}
+
 We save and load theories by default,
 but can also handle smaller objects such as axioms, conjectures, and proofs.
 \begin{code}

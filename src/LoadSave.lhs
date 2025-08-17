@@ -10,6 +10,7 @@ module LoadSave (
   mkLawName
 , term_syntax
 , renderToken'
+, loadTheory, saveTheory
 , loadTerm
 )
 
@@ -30,20 +31,42 @@ import Variables
 import Types
 import AST
 import SideCond
+import Theories
 import TestRendering
 import StdTypeSignature
 
 import Debugger
 \end{code}
 
-\section{Reading Intro.}
+\section{Load-Save Intro.}
 
-We provide a simple, clunky way to read terms,
+We provide a simple, clunky way to read and write theory objects
 using a simple grammar mostly using prefix-based constructs.
+
+The plan is that we will use this as the main way to create
+new theories,
+so we don't have to use Haskell modules.
 
 For now we have simple literals,
 composites done as prefix-functions applied to delimited lists of sub-terms,
 and binders in standard mixfix style.
+
+We start here with code to load and save \emph{entire} theories
+We will gradually flesh this out.
+
+\subsection{Load Theory}
+
+\begin{code}
+loadTheory :: MonadFail mf => String -> mf Theory
+loadTheory text = fail "loadTheory NYI"
+\end{code}
+
+\subsection{Save Theory}
+
+\begin{code}
+saveTheory :: Theory -> String
+saveTheory thry = "saving "++thName thry++" NYI"
+\end{code}
 
 \newpage
 

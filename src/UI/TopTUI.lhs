@@ -102,6 +102,7 @@ reqHelpCmds = ["?","help"]
 reqCommands :: REqCommands
 reqCommands = [ cmdShow, cmdSet, cmdNew
               , cmdNewProof, cmdRet2Proof
+              , cmdLoad, cmdSave
               , cmdDump, cmdGrab
               , cmdSaveConj, cmdLoadConj
               , cmdParseConj
@@ -205,22 +206,82 @@ showWorkspaces args reqs
 \newpage
 \section{State Save and Restore}
 
-\textbf{We are introducing a simple text syntax for theories and related
-artefacts, and we will ``load'' and ``save'' from those.
-These files will also be how we DEFINE theories, 
-and will replace all the Haskell modules currently used
-(the contents of \h{builtin/}).
-We will still keep these formats for live project files,
-for tracking proofs, etc.,
-but will switch to terminology ``dump'' and ``grab''
-}
-
-We dump and load theories by default,
+We process theories by default,
 but can also handle smaller objects such as axioms, conjectures, and proofs.
 \begin{code}
 prfObj = "prf"
 cnjObj = "cnj"
 \end{code}
+
+\textbf{We are introducing a simple text syntax for theories and related
+artefacts, and we will ``load'' and ``save'' from those.
+These files will also be how we DEFINE theories, 
+and will replace all the Haskell modules currently used
+(the contents of \h{builtin/}).}
+
+\begin{code}
+cmdLoad :: REqCmdDescr
+cmdLoad
+  = ( "load"
+    , "load prover state from file"
+    , unlines
+        [ "load -- load theory from 'proto.txt'"
+        , " UNDER DEVELOPMENT: will eventually support:"
+        , "load <thry> -- load theory <thry> from current workspace"
+        , "            -- warns if it modifies an existing theory"
+        , "load " ++ prfObj 
+                  ++ " <proof>  -- load proof <proof> from current workspace"
+        , "      CAUTION (will search for and load into current theory (!))"
+        , "load cnj <conj>  -- load conjecture <cnj> from current workspace"
+        , "load ax <axiom>  -- load axiom <axiom> from current workspace"
+        ]
+    , loadState )
+
+loadState _ reqs = do 
+  putStrLn "loading proto.txt"
+  haveProto <- doesFileExist "proto.txt"
+  if haveProto then do 
+    proto_text <- readFile "proto.txt"
+    putStrLn ("Contents of proto.txt:\n"++proto_text)
+  else putStrLn "loadState: cannot find proto.txt"
+  userPause
+  return reqs
+\end{code}
+
+\begin{code}
+cmdSave :: REqCmdDescr
+cmdSave
+  = ( "save"
+    , "save prover state to file"
+    , unlines
+        [ "save -- save theory to 'proto.txt'"
+        , " UNDER DEVELOPMENT: will eventually support:"
+        , "save          -- save all prover state to current workspace"
+        , "save .        -- save current theory to current workspace"
+        , "save <thry>   -- save theory <thry> to current workspace"
+        , "save " ++ prfObj
+                  ++" <proof>  -- save proof <proof> to current workspace"
+        , "To come:"
+        , "save cnj <conj>  -- save conjecture <cnj> to current workspace"
+        , "save ax <axiom>  -- save axiom <axiom> to current workspace"
+        ]
+    , saveState )
+
+saveState _ reqs = do 
+  putStrLn "saving proto.txt"
+  let proto_text = saveTheory nullTheory
+  putStrLn ("Contents of proto.txt:\n"++proto_text)
+  writeFile "proto.txt" proto_text
+  userPause
+  return reqs
+\end{code}
+
+\textbf{
+We still keep these Show/Read-based formats for live project files,
+for tracking proofs, etc.,
+but so have switched here to terminology ``dump'' and ``grab''
+}
+
 
 
 \begin{code}
@@ -287,13 +348,13 @@ cmdGrab
         , "grab cnj <conj>  -- grab conjecture <cnj> from current workspace"
         , "grab ax <axiom>  -- grab axiom <axiom> from current workspace"
         ]
-    , loadState )
+    , grabState )
 
-loadState [] reqs = do 
+grabState [] reqs = do 
   let dirfp = projectDir reqs
   reqs' <- grabAllState reqs dirfp
   return reqs'{ inDevMode = inDevMode reqs}
-loadState [nm] reqs = do
+grabState [nm] reqs = do
   let dirfp = projectDir reqs
   (ok,old,theories') <- parseNamedTheory (theories reqs) dirfp nm
   if ok
@@ -307,7 +368,7 @@ loadState [nm] reqs = do
           else return $ changed $ theories_ theories' reqs )
   else return reqs
        
-loadState [what,nm] reqs | what == prfObj  = do
+grabState [what,nm] reqs | what == prfObj  = do
   let thnm = currTheory reqs
   let dirfp = projectDir reqs
   result <- loadProof dirfp thnm nm
@@ -317,7 +378,7 @@ loadState [what,nm] reqs | what == prfObj  = do
       putStrLn ("Loading proof for "++nm)
       return $ theories__ (addTheoryProof thnm prf) reqs
 
-loadState _ reqs  =  doshow reqs "unknown 'grab' option."
+grabState _ reqs  =  doshow reqs "unknown 'grab' option."
 \end{code}
 
 \newpage

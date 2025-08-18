@@ -2,6 +2,14 @@
 
 ## PLAN
 
+Terminology Q:
+
+Currently: we use `dump` and `grab` to denote theory saving via Show/Read,
+and `save` and `load` to denote saving to readable/parseable text files.
+
+Perhave save/load should revert to being the Show/Read stuff,
+and we use export/import for the read/parse part?
+
 * The `Parsing` module  becomes `LoadSave`,and can save what it loads, and vice-versa.
 
 

@@ -68,24 +68,33 @@ The automatic laws can be re-generated once the theory is loaded.
 
 Here is a first cut for a theory:
 \begin{verbatim}
-name <TheoryName>
-dependsOn <DepThryName>  ... <DepThryName> 
-knownVariables
-  begin vartable <TheoryName>
-    <entry> 
-    ... 
-  end vartable <TheoryName>
-laws  
-  begin laws
-    <law> 
-    ...
-  end laws
-conjectures
-  begin conjectures
-    <conj> 
-    ... 
-  end conjectures
+Theory <TheoryName>
+DependsOn 
+  <DepThryName>  ... 
+  <DepThryName>  ...
+Done
+KnownVariables
+  <entry> 
+  ... 
+Done
+Laws  
+  <law> 
+  ...
+Done
+Conjectures
+  <conj> 
+  ... 
+Done
 \end{verbatim}
+Keywords:
+\begin{code}
+kTheory = "Theory"
+kDependsOn = "DependsOn"
+kKnownVariables = "KnownVariables"
+kLaws = "Laws"
+kConjectures = "Conjectures"
+kDone = "Done"
+\end{code}
 
 \subsection{Load Theory}
 
@@ -99,14 +108,19 @@ loadTheory text = fail "loadTheory NYI"
 \begin{code}
 saveTheory :: Theory -> String
 saveTheory theory = unlines $ 
-  [ "name " ++ thName theory
-  , "dependsOn " ++ intercalate " " (thDeps theory)
-  , "knownVariables"
+  [ kTheory ++ " " ++ thName theory
+  , kDependsOn
+  ,   saveIndentedNameList 2 80 (thDeps theory) -- magic numbers
+  , kDone
+  , '\n':kKnownVariables
   ,   saveVarTable (known theory)
-  , "laws"
+  , kDone
+  , '\n':kLaws
   ,   saveLaws (laws theory)
-  , "conjectures"
+  , kDone
+  , '\n':kConjectures
   ,   saveConjectures (conjs theory)
+  , kDone
   ]
 \end{code}
 
@@ -124,11 +138,9 @@ loadVarTable text = fail "loadVarTable NYI"
 \begin{code}
 saveVarTable :: VarTable -> String
 saveVarTable (VarData (vtname,vtable,stable,dtable)) = unlines' $ 
-  [ "  begin vartable " ++ vtname
-  , "    variables " ++ show (M.size vtable)
-  , "    listvars " ++ show (M.size stable)
-  , "    dynamics " ++ show (M.size dtable)
-  , "  end vartable " ++ vtname
+  [ "  variables " ++ show (M.size vtable)
+  , "  listvars " ++ show (M.size stable)
+  , "  dynamics " ++ show (M.size dtable)
   ]
 \end{code}
 
@@ -146,9 +158,7 @@ loadLaws text = fail "loadLaws NYI"
 \begin{code}
 saveLaws :: [Law] -> String
 saveLaws laws = unlines' $ 
-  [ "  begin laws"
-  , "    laws " ++ show (length laws)
-  , "  end laws "
+  [ "  laws " ++ show (length laws)
   ]
 \end{code}
 
@@ -164,9 +174,7 @@ loadConjectures text = fail "loadConjectures NYI"
 \begin{code}
 saveConjectures :: [NmdAssertion] -> String
 saveConjectures nmdassns = unlines' $ 
-  [ "  begin conjectures"
-  , "    conjectures " ++ show (length nmdassns)
-  , "  end conjectures"
+  [ "  conjectures " ++ show (length nmdassns)
   ]
 \end{code}
 
@@ -642,4 +650,32 @@ tread str
         | otherwise   -> putStrLn ( "tokens leftover: " ++
                                      concat (map renderToken' tokens) )
       But msgs -> putStrLn $ unlines' msgs
+\end{code}
+
+
+\section{Useful Writers}
+
+\begin{code}
+saveIndentedNameList  :: Int -> Int -> [String] -> String
+saveIndentedNameList ind width names
+  = let widths = map length names
+        actualwidth = width - ind
+        partitions = sizepack actualwidth $ zip names widths
+        indent = replicate ind ' '
+    in unlines' $ map ((indent++) . intercalate " ") partitions
+
+sizepack :: Int -> [(a,Int)] -> [[a]]
+-- packed = sizepack w xws ==> max (map (sum . map snd) xws) <= w
+sizepack wall [] = []
+sizepack wall xws
+  = let (xs,xws') = packfst wall 0 [] xws
+    in xs : sizepack wall xws'
+
+packfst :: Int -> Int -> [a] -> [(a,Int)] -> ([a],[(a,Int)])
+packfst wall _ xs [] = (reverse xs,[])
+packfst wall wsofar accum xws@((x,w):xws')
+  |  wnext <= wall  =  packfst wall wnext (x:accum) xws' 
+  |  otherwise      =  (reverse accum,xws)
+  where
+    wnext = wsofar + w
 \end{code}

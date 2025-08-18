@@ -254,7 +254,7 @@ cmdSave
   = ( "save"
     , "save prover state to file"
     , unlines
-        [ "save -- save theory to 'proto.txt'"
+        [ "save -- save current theory to 'proto.txt'"
         , " UNDER DEVELOPMENT: will eventually support:"
         , "save          -- save all prover state to current workspace"
         , "save .        -- save current theory to current workspace"

@@ -25,6 +25,7 @@ import Data.Char
 
 
 import YesBut
+import Control
 import Utilities
 import Symbols
 import LexBase
@@ -63,7 +64,7 @@ We will gradually flesh this out.
 For now we concern ourselves with theory names, dependencies, knowns, laws,
 and conjectures.
 Proofs are complex, and only arise by running \reasonEq,
-and we will rely on dump and grab to handle them.
+and we will rely on dump and grab (export and import?) to handle them.
 The automatic laws can be re-generated once the theory is loaded.
 
 Here is a first cut for a theory:
@@ -86,6 +87,13 @@ Conjectures
   ... 
 Done
 \end{verbatim}
+The theory name should be first,
+while all the other ``WhatThisIs''\dots Done sections
+can occur in any order, and multiple times.
+Their contents are gathered and kept in sequence.
+When we output theories like this, 
+each section will appear once in the above order.
+
 Keywords:
 \begin{code}
 kTheory = "Theory"
@@ -98,9 +106,15 @@ kDone = "Done"
 
 \subsection{Load Theory}
 
+
+
 \begin{code}
 loadTheory :: MonadFail mf => String -> mf Theory
-loadTheory text = fail "loadTheory NYI"
+loadTheory text = importTheory nullTheory $ zip [1..] (lines text)
+
+importTheory sofar [] = fail "Empty theory file!"
+importTheory sofar nlines 
+  = fail $ unlines ["loadTheory NYI",show (mapsnd tlex nlines)]
 \end{code}
 
 \subsection{Save Theory}
@@ -445,24 +459,31 @@ We shall use the question-mark as a decoration to indicate variable temporality.
 We choose this character because
 it is on both Apple, Windows and ``unix'' keyboards,
 and is not really used for anything else in a math context.
-\textbf{}
+\textbf{Perhaps try backquote? Or use `{\`{}}' (before) and `'` (after)?}
 \begin{code}
-whenChar = '?'
+-- beforeChar = '?'
+-- afterChar = '?'
+beforeChar = '`'
+afterChar = '\''
+lstvChar = '$'
 \end{code}
 
-\begin{tabular}{|l|c|l|}
+\begin{tabular}{|l|c|l|l|}
 \hline
-  Temp. & Math. & String
+  Temp. & Math. & ?-variant & tick-variant 
 \\\hline
-  Static & $v$ & \texttt{v}
+  Static & $v$ & \texttt{v} & \texttt{v}
 \\\hline
-  Before & $v$ & \texttt{?v}
+  Before & $v$ & \texttt{?v} & \verb"`v"
 \\\hline
-  During & $v_m$ & \texttt{v?m}
+  During & $v_m$ & \texttt{v?m} & \verb"v'm"
 \\\hline
-  After & $v'$ & \texttt{v?}
+  After & $v'$ & \texttt{v?} & \verb"v'"
 \\\hline
 \end{tabular}
+
+If any of the above is immediately followed by `\$',
+then it denotes the corresponding list-variable.
 
 \subsection{Token Data Type}
 
@@ -484,9 +505,9 @@ We provide some rendering code, mostly for error reporting:
 renderToken :: Token -> String
 renderToken (TNum i) = show i
 renderToken (TId i Static) = idName i
-renderToken (TId i Before) = whenChar : idName i
-renderToken (TId i (During d)) = idName i ++ whenChar : d
-renderToken (TId i After) = idName i ++ [whenChar]
+renderToken (TId i Before) = beforeChar : idName i
+renderToken (TId i (During d)) = idName i ++ afterChar : d
+renderToken (TId i After) = idName i ++ [afterChar]
 renderToken (TOpen str) = str
 renderToken (TClose str) = str
 renderToken (TSep str) = str
@@ -514,7 +535,7 @@ issymbol c
   | isSpace c  =  False
   | isDigit c  =  False
   | isAlpha c  =  False
-  | c `elem` whenChar : openings ++ closings ++ separators
+  | c `elem` beforeChar : afterChar : openings ++ closings ++ separators
                =  False
   | otherwise  =  True
 \end{code}
@@ -538,17 +559,30 @@ mkId str   = mkName TId str
 
 mkLVar str = mkName TLVar str
 
+--  !!!!! does not handle final $ properly for during
+--  x'm  results in TId   (Id "x" 0) (WD "m")
+--  x'm$ results in TLVar (Id "m" 0) (WD "x") !!!  m'x$
+-- Issue: this returns ("a'm$",WS) for "a'm$"
 extractTemporality cs -- non-empty
- | c1 == whenChar       =  ( tail cs, Before)
- | last cs == whenChar  =  ( init cs, After )
- | have root && have subscr && all isAlphaNum subscr
-                        =  ( root,    During subscr )
+ | c1 == beforeChar      =  ( tail cs, Before) --  `nm
+ | last cs == afterChar  =  ( init cs, After ) --  nm'
+ --    nm       nm$    nm'$    nm'subscr    nm'subscr$
+ --     v        v      v         v             v
+ --   (nm,S) (nm$,S) (nm$,A) (nm,D subscr) (nm$,D subscr)
+ | null rest = ( cs, Static )  -- nm ,  nm$
+ | last subscr == lstvChar && null (init subscr)   -- nm'$
+                         =  ( root++[lstvChar], After) 
+ | have root && have subscr && all isAlphaNum subscr -- nm'subscr
+                         =  ( root,    During subscr )
+ | have root && have subscr && last subscr == lstvChar  -- nm'subscr$
+                         =  ( root++[lstvChar], During $ init subscr )
  | otherwise = ( cs, Static )
  where
     c1 = head cs
-    (root,rest) = break (== whenChar) cs
+    (root,rest) = break (== afterChar) cs
     have [] = False ; have _ = True
     subscr = ttail rest
+ 
 
 -- tail recursion often requires reversal at end of accumulated lists
 mkMys  =  mkSym . reverse   ;   mkDi   =  mkId . reverse
@@ -565,7 +599,7 @@ tlex str@(c:cs)
   | isDigit c            =  tlexNum [c] cs
   | c == '-'             =  tlexMinus cs
   | isAlpha c            =  tlexId False [c] cs
-  | c == whenChar        =  tlexId True  [c] cs
+  | c == beforeChar      =  tlexId True  [c] cs
   | c `elem` openings    =  TOpen [c]  : tlex cs
   | c `elem` closings    =  TClose [c] : tlex cs
   | c `elem` separators  =  TSep [c]   : tlex cs
@@ -573,7 +607,7 @@ tlex str@(c:cs)
 \end{code}
 
 
-Just digits
+Seen one or more digits, keep looking for more.
 \begin{code}
 tlexNum mun ""  = [ mkNum mun ]
 tlexNum mun str@(c:cs)
@@ -593,19 +627,24 @@ tlexMinus str@(c:cs)
   | otherwise  =  mkSym "-" : tlex str
 \end{code}
 
-A \texttt{whenChar} may end an identifier,
+A \texttt{afterChar} may end an identifier,
 or indicate that we expect a During subscript,
 provided none exists at the start.
 Otherwise it is an error.
-Also a subscript appearing when a \texttt{whenChar} is already present
+Also a subscript appearing when a \texttt{afterChar} is already present
 is an error.
+
+
 \begin{code}
+-- tlexId isBefore di rest-of-ident
 -- note, the di component is never empty when this is called
-tlexId _ di ""  = [ mkDi di ]
+tlexId _ di ""     =  [ mkDi di ] -- std-var
+tlexId _ di [c] 
+  | c == lstvChar  =  [ mkRavL di ] -- lst-var
 tlexId hasDC di str@(c:cs)
   | isAlpha c  =  tlexId hasDC (c:di) cs
   | isDigit c  =  tlexId hasDC (c:di) cs
-  | c == whenChar
+  | c == afterChar
       = if hasDC then (derr c di) : tlex cs
                  else  tlexDuring (c:di) [] cs
   | c == keyLstVar = mkRavL di : tlex cs 
@@ -614,8 +653,12 @@ tlexId hasDC di str@(c:cs)
     derr c di = TErr ("Overdecorated: " ++ reverse (c:di))
 
 -- here we accept alphanumeric subscripts
-tlexDuring di ""  ""  =  [ mkDi di ]
-tlexDuring di bus ""  =  [ mkId (reverse di ++ reverse bus) ]
+tlexDuring di ""  ""   =  [ mkDi di ]
+tlexDuring di ""  [c]
+  | c == lstvChar      =  [ mkRavL di ]
+tlexDuring di bus ""   =  [ mkId (reverse di ++ reverse bus) ]
+tlexDuring di bus [c]  
+  | c == lstvChar      =  [ mkRavL (reverse di ++ reverse bus) ]
 tlexDuring di bus str@(c:cs)
   | c == keyLstVar  =  mkLVar (reverse di ++ reverse bus) : tlex cs
   | isAlpha c  =  tlexDuring di (c:bus) cs

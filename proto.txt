@@ -1,18 +1,43 @@
-Theory UTCP
+Theory AOI
 DependsOn
-  Designs UWhile Sets Closure Exists Forall Equal Impl AOI And Or Not EQV
-Done
-
-KnownVariables
-  variables 15
-  listvars 0
-  dynamics 1
-Done
-
-Laws
-  laws 2
+  And Or Not EQV
 Done
 
 Conjectures
-  conjectures 3
+  or_and_absorb
+  % termText
+  % scText
+  .
+  and_not_or_absorb
+  % termText
+  % scText
+  .
+  and_not_or_absorb
+  % termText
+  % scText
+  .
+  or_and_distr
+  % termText
+  % scText
+  .
+  and_or_distr
+  % termText
+  % scText
+  .
+  deMorgan_and
+  % termText
+  % scText
+  .
+  deMorgan_or
+  % termText
+  % scText
+  .
+  eqv_replace
+  % termText
+  % scText
+  .
+  eqv_def
+  % termText
+  % scText
+  .
 Done

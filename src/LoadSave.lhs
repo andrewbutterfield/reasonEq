@@ -35,6 +35,7 @@ import AST
 import SideCond
 import Laws
 import VarData
+import Assertions
 import Theories
 import TestRendering
 import StdTypeSignature
@@ -130,12 +131,10 @@ validFileChars = ['a'..'z'] ++ ['A'..'Z'] ++ "_-"
 
 \begin{code}
 loadTheory :: MonadFail mf => String -> mf Theory
-loadTheory text 
-  = importTheory nullTheory 
-     $ filter nonNull $ zip [1..] (lines text)
-  where nonNull (_,[]) = False ; nonNull _ = True
+loadTheory text  =  importTheory nullTheory $ prepare text
 
-importTheory :: MonadFail mf  => Theory -> [(Int,String)] -> mf Theory
+
+importTheory :: MonadFail mf  => Theory -> [(NumberedLine)] -> mf Theory
 importTheory thry [] = fail "Empty theory file!"
 importTheory thry ((lno,headline):rest)
   = case words headline of
@@ -147,11 +146,12 @@ importTheory thry ((lno,headline):rest)
                             , "  got: " ++ headline
                             ]
 
-importBodies :: MonadFail mf => Theory -> [(Int,String)] -> mf Theory  
+importBodies :: MonadFail mf => Theory -> [(NumberedLine)] -> mf Theory  
 importBodies thry []  =  return thry
 importBodies thry nlines@((lno,blockheader):rest)
   | blockheader == kDependsOn  =  importDeps thry [] rest
-  | blockheader `elem` [kKnownVariables,kLaws,kConjectures]
+  | blockheader == kConjectures  =  importConjs thry [] rest
+  | blockheader `elem` [kKnownVariables,kLaws]
     = fail $ unlines
        [ "loadTheory not yet able to handle "++blockheader 
          ++" at line "++show lno
@@ -184,31 +184,24 @@ importDepLine thry sped rest lno (dep:deps)
 saveTheory :: Theory -> String
 saveTheory theory = unlines (
   (kTheory ++ " " ++ thName theory)
-   :
-  ( saveDeps (thDeps theory))
-   :
-  ( saveKnownVars (known theory))
-   :
-  ( saveTheLaws (laws theory))
-   :
-  [ saveConjs (conjs theory) ] )
+   : ( saveDeps (thDeps theory) ++
+       saveKnownVars (known theory) ++
+       saveTheLaws (laws theory) ++
+       saveConjs (conjs theory)        ) )
 
-saveDeps [] = ""
-saveDeps deps = unlines 
-  ( kDependsOn : (saveIndentedNameList 2 80 deps) : [kDone] )
+saveDeps [] = []
+saveDeps deps = 
+  [ kDependsOn , saveIndentedNameList 2 80 deps , kDone] 
 
 saveKnownVars vtab@(VarData (name,vtable,stable,dtable))
-  | M.null vtable && M.null stable && M.null dtable  =  ""
-  | otherwise = '\n' : unlines (kKnownVariables : saveVarTable vtab : [kDone])
+  | M.null vtable && M.null stable && M.null dtable  =  []
+  | otherwise = [ "" , kKnownVariables , saveVarTable vtab , kDone ]
 
-saveTheLaws [] = ""
-saveTheLaws laws = unlines 
-  ( kLaws : (saveLaws laws) : [kDone] )
+saveTheLaws [] = []
+saveTheLaws laws =  [ "" , kLaws , saveLaws laws, kDone ] 
 
-saveConjs [] = ""
-saveConjs conjs = unlines 
-  ( kConjectures : (saveConjectures conjs) : [kDone] )
- 
+saveConjs [] = []
+saveConjs conjs = [ "" , kConjectures , saveConjectures conjs, kDone ] 
 \end{code}
 
 \newpage
@@ -237,6 +230,8 @@ saveVarTable (VarData (vtname,vtable,stable,dtable)) = unlines' $
 
 \subsection{Load Laws}
 
+A law starts on a new line,
+but can also involve many lines.
 
 \begin{code}
 loadLaws :: MonadFail mf => String -> mf [Law]
@@ -255,22 +250,41 @@ saveLaws laws = unlines' $
 
 \subsection{Load Conjectures}
 
+A conjecture starts on a new line,
+but can also involve many lines.
+
 \begin{code}
 loadConjectures :: MonadFail mf => String -> mf [NmdAssertion]
 loadConjectures text = fail "loadConjectures NYI"
+
+
+importConjs :: MonadFail mf 
+            => Theory -> [NmdAssertion] -> [NumberedLine] -> mf Theory
+importConjs thry sjnoc []
+  = fail $ unlines [ "premature file end after "++kConjectures ]
+importConjs thry sjnoc ((lno,line):rest)
+  | line == kDone
+     =  importBodies (conjs__ (++(reverse sjnoc)) thry) rest
+  | otherwise  = importConjecture thry sjnoc rest lno line
+
+importConjecture thry sjnoc rest lno line
+ = fail "importConjecture NYI"
+
 \end{code}
 
 \subsection{Save Conjectures}
 
 \begin{code}
 saveConjectures :: [NmdAssertion] -> String
-saveConjectures nmdassns = unlines' $ 
-  [ "  conjectures " ++ show (length nmdassns)
-  ]
+saveConjectures nmdassns  =  unlines' $ map saveConjecture nmdassns
 \end{code}
-
-
-
+Possible format: {\color{red}\verb"name % term % sidecondition ."}
+with arbitrary line breaks?
+\begin{code}
+saveConjecture :: NmdAssertion -> String
+saveConjecture (name,Assertion tm sc)
+  = unlines' $ map ("  "++) [name,"% termText","% scText","."]
+\end{code}
 
 \newpage
 \section{Term Reader}

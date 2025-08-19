@@ -141,7 +141,8 @@ importBodies thry nlines@((lno,blockheader):rest)
   | blockheader == kDependsOn  =  importDeps thry [] rest
   | blockheader `elem` [kKnownVariables,kLaws,kConjectures]
     = fail $ unlines
-       [ "loadTheory not yet able to handle "++blockheader ++" at line "++show lno
+       [ "loadTheory not yet able to handle "++blockheader 
+         ++" at line "++show lno
        , "got so far: " ++ show thry
        ]
   | otherwise
@@ -169,21 +170,33 @@ importDepLine thry sped rest lno (dep:deps)
 
 \begin{code}
 saveTheory :: Theory -> String
-saveTheory theory = unlines $ 
-  [ kTheory ++ " " ++ thName theory
-  , kDependsOn
-  ,   saveIndentedNameList 2 80 (thDeps theory) -- magic numbers
-  , kDone
-  , '\n':kKnownVariables
-  ,   saveVarTable (known theory)
-  , kDone
-  , '\n':kLaws
-  ,   saveLaws (laws theory)
-  , kDone
-  , '\n':kConjectures
-  ,   saveConjectures (conjs theory)
-  , kDone
-  ]
+saveTheory theory = unlines (
+  (kTheory ++ " " ++ thName theory)
+   :
+  ( saveDeps (thDeps theory))
+   :
+  ( saveKnownVars (known theory))
+   :
+  ( saveTheLaws (laws theory))
+   :
+  [ saveConjs (conjs theory) ] )
+
+saveDeps [] = ""
+saveDeps deps = unlines 
+  ( kDependsOn : (saveIndentedNameList 2 80 deps) : [kDone] )
+
+saveKnownVars vtab@(VarData (name,vtable,stable,dtable))
+  | M.null vtable && M.null stable && M.null dtable  =  ""
+  | otherwise = '\n' : unlines (kKnownVariables : saveVarTable vtab : [kDone])
+
+saveTheLaws [] = ""
+saveTheLaws laws = unlines 
+  ( kLaws : (saveLaws laws) : [kDone] )
+
+saveConjs [] = ""
+saveConjs conjs = unlines 
+  ( kConjectures : (saveConjectures conjs) : [kDone] )
+ 
 \end{code}
 
 \newpage

@@ -234,7 +234,7 @@ term_syntax
    , "i : reasonEq identifier"
    , "s : substitutability non(N) can(S))"
    , "** Variable Syntax:"
-   , "<v> ::= i | ?i | i? | i?i"
+   , "<v> ::= i | 'i | i' | i'i"
    , "lowercase i are ObsVar, uppercase are TermVar"
    , "<lv> ::= <v>$"
    , "<gv> ::=  <v> | <lv>"
@@ -455,30 +455,24 @@ We have the following token classes:
     Tokens assembled from everything else,
     provided they satisfy \texttt{LexBase.validIdent}.
 \end{description}
-We shall use the question-mark as a decoration to indicate variable temporality.
-We choose this character because
-it is on both Apple, Windows and ``unix'' keyboards,
-and is not really used for anything else in a math context.
-\textbf{Perhaps try backquote? Or use `{\`{}}' (before) and `'` (after)?}
+We shall use the dash/prime character as a decoration to indicate variable temporality.
 \begin{code}
--- beforeChar = '?'
--- afterChar = '?'
-beforeChar = '`'
+beforeChar = '\'' -- backquote is visibly disruptive
 afterChar = '\''
 lstvChar = '$'
 \end{code}
 
-\begin{tabular}{|l|c|l|l|}
+\begin{tabular}{|l|c|l|}
 \hline
-  Temp. & Math. & ?-variant & tick-variant 
+  Temp. & Math. & Script 
 \\\hline
-  Static & $v$ & \texttt{v} & \texttt{v}
+  Static & $v$ & \texttt{v}
 \\\hline
-  Before & $v$ & \texttt{?v} & \verb"`v"
+  Before & $v$ & \verb"'v"
 \\\hline
-  During & $v_m$ & \texttt{v?m} & \verb"v'm"
+  During & $v_m$ & \verb"v'm"
 \\\hline
-  After & $v'$ & \texttt{v?} & \verb"v'"
+  After & $v'$ & \verb"v'"
 \\\hline
 \end{tabular}
 
@@ -559,10 +553,6 @@ mkId str   = mkName TId str
 
 mkLVar str = mkName TLVar str
 
---  !!!!! does not handle final $ properly for during
---  x'm  results in TId   (Id "x" 0) (WD "m")
---  x'm$ results in TLVar (Id "m" 0) (WD "x") !!!  m'x$
--- Issue: this returns ("a'm$",WS) for "a'm$"
 extractTemporality cs -- non-empty
  | c1 == beforeChar      =  ( tail cs, Before) --  `nm
  | last cs == afterChar  =  ( init cs, After ) --  nm'

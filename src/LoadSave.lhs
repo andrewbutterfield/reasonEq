@@ -55,7 +55,7 @@ For now we have simple literals,
 composites done as prefix-functions applied to delimited lists of sub-terms,
 and binders in standard mixfix style.
 
-
+\newpage
 \section{Theories}
 
 We start here with code to load and save \emph{entire} theories
@@ -106,16 +106,64 @@ kDone = "Done"
 
 \subsection{Load Theory}
 
+Thery names become filenames,
+so they are resticted to the ``safe'' character set 
+less the extension dot: \verb"[a-zA-Z0-9-_]",
+\begin{code}
+validFileName name = all validFileChar name
+validFileChar c = c `elem` validFileChars
+validFileChars = ['a'..'z'] ++ ['A'..'Z'] ++ "_-"
+\end{code}
 
 
 \begin{code}
 loadTheory :: MonadFail mf => String -> mf Theory
-loadTheory text = importTheory nullTheory $ zip [1..] (lines text)
+loadTheory text 
+  = importTheory nullTheory 
+     $ filter nonNull $ zip [1..] (lines text)
+  where nonNull (_,[]) = False ; nonNull _ = True
 
-importTheory sofar [] = fail "Empty theory file!"
-importTheory sofar nlines 
-  = fail $ unlines ["loadTheory NYI",show (mapsnd tlex nlines)]
+importTheory :: MonadFail mf  => Theory -> [(Int,String)] -> mf Theory
+importTheory thry [] = fail "Empty theory file!"
+importTheory thry ((lno,headline):rest)
+  = case words headline of
+      [key,name] | key == kTheory && validFileName name 
+         -> importBodies (thName_ name thry) rest      
+      _  ->  fail $ unlines [ "loadTheory headline parse error at line "
+                              ++ show lno 
+                            , "  expected: "++kTheory++" theoryname"
+                            , "  got: " ++ headline
+                            ]
+
+importBodies :: MonadFail mf => Theory -> [(Int,String)] -> mf Theory  
+importBodies thry []  =  return thry
+importBodies thry nlines@((lno,blockheader):rest)
+  | blockheader == kDependsOn  =  importDeps thry [] rest
+  | blockheader `elem` [kKnownVariables,kLaws,kConjectures]
+    = fail $ unlines
+       [ "loadTheory not yet able to handle "++blockheader ++" at line "++show lno
+       , "got so far: " ++ show thry
+       ]
+  | otherwise
+      = fail $ unlines [ "loadTheory expected block header at " ++ show lno
+                       , "got: "++blockheader
+                       ] 
+
+importDeps thry sped [] 
+  = fail $ unlines [ "premature file end after "++kDependsOn ]
+importDeps thry sped ((lno,line):rest) 
+  | line == kDone  
+     =  importBodies (thDeps__ (++(reverse sped)) thry) rest
+  | otherwise = importDepLine thry sped rest lno $ words line
+
+importDepLine thry sped rest lno [] = importDeps thry sped rest
+importDepLine thry sped rest lno (dep:deps)
+  | validFileName dep = importDepLine thry (dep:sped) rest lno deps
+  | otherwise = fail $ unlines
+     [ "invalid dependency at line "++show lno
+     , "  saw "++dep ]
 \end{code}
+
 
 \subsection{Save Theory}
 
@@ -138,6 +186,7 @@ saveTheory theory = unlines $
   ]
 \end{code}
 
+\newpage
 \section{VarTables}
 
 \subsection{Load VarTable}
@@ -158,9 +207,11 @@ saveVarTable (VarData (vtname,vtable,stable,dtable)) = unlines' $
   ]
 \end{code}
 
+\newpage
 \section{Laws}
 
 \subsection{Load Laws}
+
 
 \begin{code}
 loadLaws :: MonadFail mf => String -> mf [Law]
@@ -168,6 +219,7 @@ loadLaws text = fail "loadLaws NYI"
 \end{code}
 
 \subsection{Save Laws}
+
 
 \begin{code}
 saveLaws :: [Law] -> String
@@ -194,20 +246,9 @@ saveConjectures nmdassns = unlines' $
 
 
 
-\section{Law Name Reader}
 
-\begin{code}
-mkLawName :: [String] -> String
-mkLawName ss
-  = intercalate "_" $ map showTTok $ concat $ map tlex ss
-  where
-    showTTok (TNum n)  = show n
-    showTTok (TId i _) = idName i
-    showTTok (TSym i)  = idName i
-    showTTok ttok      = _redQ
-\end{code}
-
-\section{Simple Term Reader}
+\newpage
+\section{Term Reader}
 
 The abstract syntax:
 \begin{eqnarray*}
@@ -424,6 +465,10 @@ loadTerm = sTermRead . tlex
 \newpage
 \section{Lexical Basics}
 
+We limit everything to the ASCII subset,
+simply because UTF8 Unicode is a message
+(and it's the nicest one!).
+
 \subsection{Tokens}
 
 We have the following token classes:
@@ -434,7 +479,7 @@ We have the following token classes:
     with no whitespace between it and the one or more (decimal) digits.
   \item [Identifiers]~
     Identifiers as per \texttt{LexBase},
-    with added decoration for variable classification
+    with added decoration for variable classification.
     and unicode macro expansion.
     \textbf{Keywords} form a subset of these.
     We expect identifiers to have one of the following concrete forms:
@@ -442,12 +487,6 @@ We have the following token classes:
     , \texttt{?}\textsf{ident}%
     , \textsf{ident}\texttt{?}%
     , \textsf{ident}\texttt{?}\textsf{alphas}.
-    We only expect the ``dangling space'' permitted in identifiers
-    to arise as the result of macro expansion.
-    \textbf{
-      This dangling space is only used to render some UTF8 characters 
-      properly by TestRendering. It will not be used here.
-    }
   \item [Delimiters]~
     Small tokens used for general punctuation,
     further classified into: matched (Open/Close) bracketing; and separators.
@@ -579,7 +618,21 @@ mkMys  =  mkSym . reverse   ;   mkDi   =  mkId . reverse
 mkRavL = mkLVar . reverse
 \end{code}
 
+\subsection{Law Name Reader}
+
+\begin{code}
+mkLawName :: [String] -> String
+mkLawName ss
+  = intercalate "_" $ map showTTok $ concat $ map tlex ss
+  where
+    showTTok (TNum n)  = show n
+    showTTok (TId i _) = idName i
+    showTTok (TSym i)  = idName i
+    showTTok ttok      = _redQ
+\end{code}
+
 \newpage 
+\subsection{Lexer}
 Now we define the lexer:
 \begin{code}
 tlex :: String -> [Token]

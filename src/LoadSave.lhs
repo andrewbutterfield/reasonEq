@@ -55,6 +55,18 @@ For now we have simple literals,
 composites done as prefix-functions applied to delimited lists of sub-terms,
 and binders in standard mixfix style.
 
+In general we will take a text file,
+and add line numbers, and remove blank lines before processing.
+
+\begin{code}
+type NumberedLine = (Int,String)
+prepare :: String -> [NumberedLine]
+prepare 
+  = filter nonNull . zip [1..] . lines
+  where nonNull (_,string) = not $ all isSpace string
+\end{code}
+
+
 \newpage
 \section{Theories}
 

@@ -238,13 +238,13 @@ cmdLoad
     , loadState )
 
 loadState _ reqs = do 
-  putStrLn "loading proto.txt"
   haveProto <- doesFileExist "proto.txt"
   if haveProto then do 
     proto_text <- readFile "proto.txt"
-    putStrLn ("Contents of proto.txt:\n"++proto_text)
+    case loadTheory proto_text of
+      Yes thry ->  putStrLn ("Parsed as:\n"++show thry)
+      But msgs -> putStrLn $ unlines' ("theory parse failed":msgs)
   else putStrLn "loadState: cannot find proto.txt"
-  userPause
   return reqs
 \end{code}
 
@@ -278,7 +278,6 @@ saveState2 theory reqs = do
   let proto_text = saveTheory theory
   putStrLn ("Contents of proto.txt:\n"++proto_text)
   writeFile "proto.txt" proto_text
-  userPause
   return reqs
 \end{code}
 

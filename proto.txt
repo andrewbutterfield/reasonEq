@@ -1,43 +1,10 @@
-Theory AOI
-DependsOn
-  And Or Not EQV
-Done
+Theory Proto
 
 Conjectures
-  or_and_absorb
-  % termText
-  % scText
-  .
-  and_not_or_absorb
-  % termText
-  % scText
-  .
-  and_not_or_absorb
-  % termText
-  % scText
-  .
-  or_and_distr
-  % termText
-  % scText
-  .
-  and_or_distr
-  % termText
-  % scText
-  .
-  deMorgan_and
-  % termText
-  % scText
-  .
-  deMorgan_or
-  % termText
-  % scText
-  .
-  eqv_replace
-  % termText
-  % scText
-  .
-  eqv_def
-  % termText
-  % scText
+  true
+  %
+  true
+  %
+  scText
   .
 Done

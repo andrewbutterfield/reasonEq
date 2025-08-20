@@ -5,12 +5,12 @@ BEGIN LIST LAWS
 (("eq_refl",ASN (C (TG (Id "B" 0)) True (Id "eq" 0) [V T (VR (Id "e" 0,VO,WS)),V T (VR (Id "e" 0,VO,WS))],([],fromList []))),Axiom)
 (("eq_symm",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "eq" 0) [V T (VR (Id "e" 0,VO,WS)),V T (VR (Id "f" 0,VO,WS))],C (TG (Id "B" 0)) True (Id "eq" 0) [V T (VR (Id "f" 0,VO,WS)),V T (VR (Id "e" 0,VO,WS))]],([],fromList []))),Axiom)
 (("eq_trans",ASN (C (TG (Id "B" 0)) True (Id "imp" 0) [C (TG (Id "B" 0)) True (Id "and" 0) [C (TG (Id "B" 0)) True (Id "eq" 0) [V T (VR (Id "e" 0,VO,WS)),V T (VR (Id "f" 0,VO,WS))],C (TG (Id "B" 0)) True (Id "eq" 0) [V T (VR (Id "f" 0,VO,WS)),V T (VR (Id "g" 0,VO,WS))]],C (TG (Id "B" 0)) True (Id "eq" 0) [V T (VR (Id "e" 0,VO,WS)),V T (VR (Id "g" 0,VO,WS))]],([],fromList []))),Axiom)
-(("eq_subst",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [S T (C (TG (Id "B" 0)) True (Id "eq" 0) [V T (VR (Id "e" 0,VO,WS)),V T (VR (Id "f" 0,VO,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VO,WS),[],[]))])),C (TG (Id "B" 0)) True (Id "eq" 0) [S T (V T (VR (Id "e" 0,VO,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VO,WS),[],[]))])),S T (V T (VR (Id "f" 0,VO,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VO,WS),[],[]))]))]],([],fromList []))),Assumed)
 END LIST LAWS
 BEGIN LIST SIMPLIFIERS
 END LIST SIMPLIFIERS
 BEGIN LIST DEFFOLD
 END LIST DEFFOLD
 BEGIN LIST CONJECTURES
+("eq_subst",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [S T (C (TG (Id "B" 0)) True (Id "eq" 0) [V T (VR (Id "e" 0,VO,WS)),V T (VR (Id "f" 0,VO,WS))]) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VO,WS),[],[]))])),C (TG (Id "B" 0)) True (Id "eq" 0) [S T (V T (VR (Id "e" 0,VO,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VO,WS),[],[]))])),S T (V T (VR (Id "f" 0,VO,WS))) (SN (fromList []) (fromList [(LV (VR (Id "x" 0,VO,WS),[],[]),LV (VR (Id "e" 0,VO,WS),[],[]))]))]],([],fromList [])))
 END LIST CONJECTURES
 END THEORY Equal

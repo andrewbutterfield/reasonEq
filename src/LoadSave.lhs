@@ -119,8 +119,8 @@ kDone = "Done"
 
 \subsection{Load Theory}
 
-Thery names become filenames,
-so they are resticted to the ``safe'' character set 
+Theory names become filenames,
+so they are restricted to the ``safe'' character set 
 less the extension dot: \verb"[a-zA-Z0-9-_]",
 \begin{code}
 validFileName name = all validFileChar name
@@ -283,11 +283,11 @@ with arbitrary line breaks?
 \begin{code}
 saveConjecture :: NmdAssertion -> String
 saveConjecture (name,Assertion tm sc)
-  = unlines' $ map ("  "++) [name,"% termText","% scText","."]
+  = unlines' $ map ("  "++) [name,"%",saveTerm tm,"%","scText","."]
 \end{code}
 
 \newpage
-\section{Term Reader}
+\section{Terms}
 
 The abstract syntax:
 \begin{eqnarray*}
@@ -299,11 +299,18 @@ The abstract syntax:
 \\ \lst v &\in& LVar = Var \times Less
 \\ g &\in& GVar =  Var \uplus LVar
 \\ gs &\in& GVarList = GVar^*
+\\ T &\in& Type
 \\ t &\in& Term ::= b
                \mid n
                \mid v
                \mid i~s~(t_1,\dots,t_n)
                \mid \mathcal Q ~i ~gs \bullet t
+               \mid \mathcal X ~i ~t
+               \mid v : T
+\\ && \quad \mid t [t_1,\dots,t_n/g_1,\dots,g_n]
+\\ && \quad \mid \mathcal I ~i_{top} ~ s_{top} ~i_{ix} ~ s_{ix} 
+                    ~(\lst v_1,\dots,\lst v_n)
+\\ && \quad \mid (~t~)
 \end{eqnarray*}
 
 The concrete syntax (non-terminals in \verb@<..>@):
@@ -315,7 +322,10 @@ term_syntax
    , "s : substitutability non(N) can(S))"
    , "** Variable Syntax:"
    , "<v> ::= i | 'i | i' | i'i"
-   , "lowercase i are ObsVar, uppercase are TermVar"
+   , "by default lowercase i are ObsVar, uppercase are TermVar"
+   , "we could have more nuanced defaults"
+   , "we could declare variables seperately and post-process them"
+   , "should the known variables (so far) be passed as a parameter?"
    , "<lv> ::= <v>$"
    , "<gv> ::=  <v> | <lv>"
    , "** Term Syntax:"
@@ -328,14 +338,37 @@ term_syntax
    , "** Keysymbols: ?  $  (  ,  )  @"
    ]
 
-keyTrue = "true"
-keyFalse = "false"
-keySetBind = "QS"
-keyListBind = "QL"
-keyLstVar = '$'
-keySep = ','
-keyQBody = "@"
+kTrue = "true"
+kFalse = "false"
+kSetBind = "QS"
+kListBind = "QL"
+kLstVar = '$'
+kSep = ','
+kQBody = "@"
 \end{code}
+
+
+\subsection{Save Term}
+
+\begin{code}
+saveTerm :: Term -> String
+saveTerm (Val typ (Boolean b)) = if b then kTrue else kFalse
+saveTerm (Val typ (Integer i)) = show i
+saveTerm (Var typ var) = saveVariable var
+saveTerm (Cons typ subable nm terms) = "C-stuff?"
+saveTerm (Bnd typ n vs term) = "B-stuff?"
+saveTerm (Lam typ n vl term) = "L-stuff?"
+saveTerm (Cls typ term) = "X-stuff?"
+saveTerm (Sub typ term sub) = "S-stuff?"
+saveTerm (Iter typ sa na si ni lvs) = "I-stuff?"
+saveTerm (VTyp typ var) = "VT-stuff?"
+\end{code}
+
+
+
+\subsection{Load Term}
+
+
 
 
 Truth builders:
@@ -381,37 +414,37 @@ sTermRead :: MonadFail m => [Token] -> m (Term, [Token])
 sTermRead [] =  fail "sTermRead: nothing to parse"
 \end{code}
 
-\subsubsection{Numbers}
+\paragraph{Numbers}
 
 \begin{code}
 sTermRead (TNum n:tts) = return ( Val int $ Integer n, tts)
 \end{code}
 
-\subsubsection{Symbols}
+\paragraph{Symbols}
 
 \begin{code}
 sTermRead (TSym i:tts) = sIdParse i Static tts
 \end{code}
 
-\subsubsection{Identifiers}
+\paragraph{Identifiers}
 
 \begin{code}
 sTermRead (TId i vw:tts)
-  | n == keyTrue      =  return ( mkTrue n,  tts)
-  | n == keyFalse     =  return ( mkFalse n, tts)
-  | n == keySetBind   =  setQParse tts
-  | n == keyListBind  =  listQParse tts
+  | n == kTrue      =  return ( mkTrue n,  tts)
+  | n == kFalse     =  return ( mkFalse n, tts)
+  | n == kSetBind   =  setQParse tts
+  | n == kListBind  =  listQParse tts
   | otherwise         =  sIdParse i vw tts
   where n = idName i
 \end{code}
 
-\subsubsection{Bad Start}
+\paragraph{Bad Start}
 
 \begin{code}
 sTermRead (tt:tts)  = fail ("sTermRead: unexpected token: "++renderToken tt)
 \end{code}
 
-\subsubsection{Constructions}
+\paragraph{Constructions}
 
 Seen an identifier, check for a substitutability indicator,
 followed by an opening parenthesis:
@@ -446,7 +479,7 @@ sAppParse' id1 subable smretbus tts
   =  fail ("sAppParse': expected ',' or ')'")
 \end{code}
 
-\subsubsection{Quantifiers}
+\paragraph{Quantifiers}~
 
 Seen \texttt{QS}, 
 $$ QS~~~i~g_1 \dots g_n \bullet t $$
@@ -478,7 +511,7 @@ parse the quantifier:
 \begin{code}
 quantread i _ [] = fail ("quantread: "++trId i++" (premature end)")
 quantread i sg (TSym s : tts)
-  | idName s == keyQBody  =  quantreadBody i sg tts
+  | idName s == kQBody  =  quantreadBody i sg tts
 quantread i sg (v@(TId _ _)    : tts)   =  quantread i (v:sg) tts
 quantread i sg (lv@(TLVar _ _) : tts)   =  quantread i (lv:sg) tts
 quantread i sg (tok : _)  = fail ("quantread: unexpected token "++renderToken tok)
@@ -494,18 +527,67 @@ quantreadBody i sg tts = do
   return (i,sg,term,toks)
 \end{code}
 
-\subsection{Top-Level Term Reader}
+\subsubsection{Top-Level Term Reader}
 
 \begin{code}
-loadTerm :: MonadFail m => String -> m (Term, [Token])
+loadTerm :: MonadFail mf => String -> mf (Term, [Token])
 loadTerm = sTermRead . tlex
 \end{code}
+
+
+\section{Variables}
+
+
+\subsection{Save Variable}
+
+\begin{code}
+saveVariable :: Variable -> String
+saveVariable (Vbl i vc Before)      = '\'' : idName i
+saveVariable (Vbl i vc (During d))  =  idName i ++ '\'' : d
+saveVariable (Vbl i vc After)       = idName i ++ "\'"
+saveVariable (Vbl i vc _)           = idName i 
+\end{code}
+
+\subsection{Load Variable}
+
+The Identifier datatype, enforced by \h{validIdent} includes decorations, 
+like dashes and dollars,
+and can also have symbols and trailing spaces.
+\begin{code}
+validVarRoot (c:rest)
+  | isAlpha c  =  all validVarChar rest
+validVarRoot _ = False
+validVarChar '_' = True
+validVarChar c  =  isAlphaNum c
+\end{code}
+
+For UTP variables we need to tighten this up a bit.
+
+Here, for now, we simply make observation variables,
+and let post-processing sort things out.
+\begin{code}
+loadVariable :: MonadFail mf => String -> mf Variable
+loadVariable ('\'' : string)
+    | validVarRoot string  =  return $ Vbl (jId string) ObsV Before
+loadVariable string
+  | validVarRoot name
+    = case post of
+       ("\'")    ->  return $ Vbl ident ObsV After
+       ('\'':d)  ->  return $ Vbl ident ObsV $ During d
+       _         ->  return $ Vbl ident ObsV Static
+  where 
+    (name,post) = break (=='\'') string
+    ident = jId name
+loadVariable string = fail ("loadVariable: invalid variable - "++string)
+\end{code}
+
+
 
 \newpage
 \section{Lexical Basics}
 
 We limit everything to the ASCII subset,
-simply because UTF8 Unicode is a message
+simply because UTF8 Unicode is a mess
 (and it's the nicest one!).
 
 \subsection{Tokens}
@@ -517,9 +599,10 @@ We have the following token classes:
     with a minus-sign to start if negative,
     with no whitespace between it and the one or more (decimal) digits.
   \item [Identifiers]~
-    Identifiers as per \texttt{LexBase},
-    with added decoration for variable classification.
-    and unicode macro expansion.
+    These start with an alpha, 
+    and can follow with alpha, numeric, and underscore
+    (\h{Lexbase.validIdent} is too liberal).
+    with added decoration for UTP variable classification.
     \textbf{Keywords} form a subset of these.
     We expect identifiers to have one of the following concrete forms:
       \textsf{ident}%
@@ -535,7 +618,7 @@ We have the following token classes:
 \end{description}
 We shall use the dash/prime character as a decoration to indicate variable temporality.
 \begin{code}
-beforeChar = '\'' -- backquote is visibly disruptive
+beforeChar = '\'' -- backquote is visually disruptive
 afterChar = '\''
 lstvChar = '$'
 \end{code}
@@ -729,7 +812,7 @@ tlexId hasDC di str@(c:cs)
   | c == afterChar
       = if hasDC then (derr c di) : tlex cs
                  else  tlexDuring (c:di) [] cs
-  | c == keyLstVar = mkRavL di : tlex cs 
+  | c == kLstVar = mkRavL di : tlex cs 
   | otherwise  =  mkDi di : tlex str
   where
     derr c di = TErr ("Overdecorated: " ++ reverse (c:di))
@@ -742,7 +825,7 @@ tlexDuring di bus ""   =  [ mkId (reverse di ++ reverse bus) ]
 tlexDuring di bus [c]  
   | c == lstvChar      =  [ mkRavL (reverse di ++ reverse bus) ]
 tlexDuring di bus str@(c:cs)
-  | c == keyLstVar  =  mkLVar (reverse di ++ reverse bus) : tlex cs
+  | c == kLstVar  =  mkLVar (reverse di ++ reverse bus) : tlex cs
   | isAlpha c  =  tlexDuring di (c:bus) cs
   | isDigit c  =  tlexDuring di (c:bus) cs
   | otherwise  =  mkId (reverse di ++ reverse bus) : tlex str

@@ -78,6 +78,7 @@ library
       Lists
       LTL
       Negation
+      Proto
       Sets
       StdSignature
       StdTypeSignature

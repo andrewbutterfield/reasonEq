@@ -9,6 +9,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 module LexBase  -- NU (Not Used) means can delete defn too
  ( Identifier
  , pattern Identifier
+ , validIdent
  , ident, uident, brktIdent
  , isSymbId
  , idName

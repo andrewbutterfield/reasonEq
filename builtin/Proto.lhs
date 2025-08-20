@@ -83,11 +83,27 @@ protoAxioms
 \begin{code}
 tmConj name term = ( name, ( term, scTrue ))
 
+mkV nm vc vw = Vbl (jId nm) vc vw
+
 tmTrue = tmConj "true" (Val arbpred (Boolean True))
 tmFalse = tmConj "false" (Val arbpred (Boolean False))
 tmNumPos = tmConj "fortytwo" (Val arbpred (Integer 42))
 tmNumNeg = tmConj "neg99" (Val arbpred (Integer (-99)))
-tmVarOS = tmConj ("obs" -.- "static") (jVar arbpred $ Vbl (jId "os") ObsV Static)
+tmVarOS = tmConj ("obs" -.- "static") (jVar arbpred $ mkV "Vo" ObsV Static)
+tmVar'OS = tmConj ("obs" -.- "before") (jVar arbpred $ mkV "Vo" ObsV Before)
+tmVarOS' = tmConj ("obs" -.- "after") (jVar arbpred $ mkV "Vo" ObsV After)
+tmVarOS'd = tmConj ("obs" -.- "during") (jVar arbpred $ mkV "Vo" ObsV (During "d"))
+
+tmVarES = tmConj ("expr" -.- "static") (jVar arbpred $ mkV "Ve" ExprV Static)
+tmVar'ES = tmConj ("expr" -.- "before") (jVar arbpred $ mkV "Ve" ExprV Before)
+tmVarES' = tmConj ("expr" -.- "after") (jVar arbpred $ mkV "Ve" ExprV After)
+tmVarES'd = tmConj ("expr" -.- "during") (jVar arbpred $ mkV "Ve" ExprV (During "d"))
+
+tmVarPS = tmConj ("pred" -.- "static") (jVar arbpred $ mkV "Vp" PredV Static)
+tmVar'PS = tmConj ("pred" -.- "before") (jVar arbpred $ mkV "Vp" PredV Before)
+tmVarPS' = tmConj ("pred" -.- "after") (jVar arbpred $ mkV "Vp" PredV After)
+tmVarPS'd = tmConj ("pred" -.- "during") (jVar arbpred $ mkV "Vp" PredV (During "d"))
+
 \end{code}
 
 
@@ -98,7 +114,8 @@ protoConjs :: [NmdAssertion]
 protoConjs = map mkNmdAsn 
   [ tmTrue, tmFalse
   , tmNumPos, tmNumNeg 
-  , tmVarOS
+  , tmVarES, tmVar'ES, tmVarES', tmVarES'd
+  , tmVarPS, tmVar'PS, tmVarPS', tmVarPS'd
   ]
 \end{code}
 

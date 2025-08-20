@@ -281,9 +281,14 @@ saveConjectures nmdassns  =  unlines' $ map saveConjecture nmdassns
 Possible format: {\color{red}\verb"name % term % sidecondition ."}
 with arbitrary line breaks?
 \begin{code}
+
 saveConjecture :: NmdAssertion -> String
 saveConjecture (name,Assertion tm sc)
-  = unlines' $ map ("  "++) [name,"%",saveTerm tm,"%","scText","."]
+  = unlines' $ map ("  "++) 
+      [ "Name: " ++ name
+      , "Pred:", "  "++saveTerm tm
+      , "SC:","  "++ "scText"
+      , "End.", "" ]
 \end{code}
 
 \newpage
@@ -351,11 +356,17 @@ kQBody = "@"
 \subsection{Save Term}
 
 \begin{code}
+saveSBBL s = if s then "CS" else "NS"
+
 saveTerm :: Term -> String
 saveTerm (Val typ (Boolean b)) = if b then kTrue else kFalse
 saveTerm (Val typ (Integer i)) = show i
 saveTerm (Var typ var) = saveVariable var
-saveTerm (Cons typ subable nm terms) = "C-stuff?"
+saveTerm (Cons typ subable (Identifier i _) terms) 
+  = i ++ " " ++ (saveSBBL subable) ++ " "
+      ++ "("
+      ++ (intercalate [kSep] $ map saveTerm terms)
+      ++ ")"
 saveTerm (Bnd typ n vs term) = "B-stuff?"
 saveTerm (Lam typ n vl term) = "L-stuff?"
 saveTerm (Cls typ term) = "X-stuff?"

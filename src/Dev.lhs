@@ -49,6 +49,7 @@ import UTP.While.Common
 import UTP.While.Design
 import UTP.Designs
 import UTP.UTCP
+import Proto
 
 import Debugger
 \end{code}
@@ -114,6 +115,7 @@ devKnownBuiltins  = [ equivTheory
                     , designTheory
                     , utpWD_Theory
                     , utcpTheory
+                    , protoTheory
                     ]
 
 \end{code}

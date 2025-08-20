@@ -40,20 +40,6 @@ This is an isolated theory for prototyping stuff
 Right now we use conjectures to provide terms for testing save/load.
 
 
-Some useful local definitions:
-\begin{code}
-v_equiv = Vbl equiv ObsV Static
-vP = Vbl (jId "P") PredV Static
-gvP = StdVar vP
-p = jVar pred1 $ vP
-q = jVar pred1 $ Vbl (jId "Q") PredV Static
-r = jVar pred1 $ Vbl (jId "R") PredV Static
-vx = Vbl (jId "x") ObsV Static  ; lvxs = LVbl vx [] []
-xs = LstVar lvxs
-ve = Vbl (jId "e") ExprV Static ; lves = LVbl ve [] []
-sub p   = Sub pred1 p $ jSubstn [] [(lvxs,lves)]
-subid p = Sub pred1 p $ xSubstn [] [(lvxs,lvxs)]
-\end{code}
 
 \subsubsection{Known Variables}
 
@@ -83,26 +69,54 @@ protoAxioms
 \begin{code}
 tmConj name term = ( name, ( term, scTrue ))
 
-mkV nm vc vw = Vbl (jId nm) vc vw
+-- Values
 
 tmTrue = tmConj "true" (Val arbpred (Boolean True))
 tmFalse = tmConj "false" (Val arbpred (Boolean False))
+
 tmNumPos = tmConj "fortytwo" (Val arbpred (Integer 42))
 tmNumNeg = tmConj "neg99" (Val arbpred (Integer (-99)))
-tmVarOS = tmConj ("obs" -.- "static") (jVar arbpred $ mkV "Vo" ObsV Static)
-tmVar'OS = tmConj ("obs" -.- "before") (jVar arbpred $ mkV "Vo" ObsV Before)
-tmVarOS' = tmConj ("obs" -.- "after") (jVar arbpred $ mkV "Vo" ObsV After)
-tmVarOS'd = tmConj ("obs" -.- "during") (jVar arbpred $ mkV "Vo" ObsV (During "d"))
 
-tmVarES = tmConj ("expr" -.- "static") (jVar arbpred $ mkV "Ve" ExprV Static)
-tmVar'ES = tmConj ("expr" -.- "before") (jVar arbpred $ mkV "Ve" ExprV Before)
-tmVarES' = tmConj ("expr" -.- "after") (jVar arbpred $ mkV "Ve" ExprV After)
-tmVarES'd = tmConj ("expr" -.- "during") (jVar arbpred $ mkV "Ve" ExprV (During "d"))
+-- Variables 
 
-tmVarPS = tmConj ("pred" -.- "static") (jVar arbpred $ mkV "Vp" PredV Static)
-tmVar'PS = tmConj ("pred" -.- "before") (jVar arbpred $ mkV "Vp" PredV Before)
-tmVarPS' = tmConj ("pred" -.- "after") (jVar arbpred $ mkV "Vp" PredV After)
-tmVarPS'd = tmConj ("pred" -.- "during") (jVar arbpred $ mkV "Vp" PredV (During "d"))
+mkV nm vc vw = jVar arbpred $ Vbl (jId nm) vc vw
+
+tmVarOS = tmConj ("obs"-.-"static") (mkV "Vo" ObsV Static)
+tmVar'OS = tmConj ("obs"-.-"before") (mkV "Vo" ObsV Before)
+tmVarOS' = tmConj ("obs"-.-"after") (mkV "Vo" ObsV After)
+tmVarOS'd = tmConj ("obs"-.-"during") (mkV "Vo" ObsV (During "d"))
+
+tmVarES = tmConj ("expr"-.-"static") (mkV "Ve" ExprV Static)
+tmVar'ES = tmConj ("expr"-.-"before") (mkV "Ve" ExprV Before)
+tmVarES' = tmConj ("expr"-.-"after") (mkV "Ve" ExprV After)
+tmVarES'd = tmConj ("expr"-.-"during") (mkV "Ve" ExprV (During "d"))
+
+tmVarPS = tmConj ("pred"-.-"static") (mkV "Vp" PredV Static)
+tmVar'PS = tmConj ("pred"-.-"before") (mkV "Vp" PredV Before)
+tmVarPS' = tmConj ("pred"-.-"after") (mkV "Vp" PredV After)
+tmVarPS'd = tmConj ("pred"-.-"during") (mkV "Vp" PredV (During "d"))
+
+-- Constructions
+
+cs = True ; ns = False -- Subable
+vT = mkV "T" PredV Static
+mkCons nm subable ts = Cons arbpred subable (jId nm) ts
+
+
+
+tmConsS0 = tmConj ("cons"-.-"S"-.-"zero") (mkCons "cs0" cs [])
+tmConsS1 = tmConj ("cons"-.-"S"-.-"one")  (mkCons "cs1" cs [vT])
+tmConsS2 = tmConj ("cons"-.-"S"-.-"two")  (mkCons "cs2" cs [vT,vT])
+
+tmConsN0 = tmConj ("cons"-.-"N"-.-"zero") (mkCons "ns0" ns [])
+tmConsN1 = tmConj ("cons"-.-"N"-.-"one")  (mkCons "ns1" ns [vT])
+tmConsN2 = tmConj ("cons"-.-"N"-.-"two")  (mkCons "ns2" ns [vT,vT])
+
+tmConsNest = tmConj ("cons"-.-"nesting")
+              (mkCons "nest" cs [ mkCons "sub1" cs []
+                                , mkCons "sub2" cs [vT] 
+                                , mkCons "sub3" cs [] 
+                                ])
 
 \end{code}
 
@@ -116,6 +130,8 @@ protoConjs = map mkNmdAsn
   , tmNumPos, tmNumNeg 
   , tmVarES, tmVar'ES, tmVarES', tmVarES'd
   , tmVarPS, tmVar'PS, tmVarPS', tmVarPS'd
+  , tmConsS0, tmConsS1, tmConsS2
+  , tmConsN0, tmConsN2, tmConsN2, tmConsNest
   ]
 \end{code}
 

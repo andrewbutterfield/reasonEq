@@ -1,0 +1,31 @@
+BEGIN THEORY Proto
+DEPS = []
+KNOWN = VD ("Proto",fromList [],fromList [],fromList [])
+BEGIN LIST LAWS
+END LIST LAWS
+BEGIN LIST SIMPLIFIERS
+END LIST SIMPLIFIERS
+BEGIN LIST DEFFOLD
+END LIST DEFFOLD
+BEGIN LIST CONJECTURES
+("true",ASN (K (TG (Id "B" 0)) (VB True),([],fromList [])))
+("false",ASN (K (TG (Id "B" 0)) (VB False),([],fromList [])))
+("fortytwo",ASN (K (TG (Id "B" 0)) (VI 42),([],fromList [])))
+("neg99",ASN (K (TG (Id "B" 0)) (VI (-99)),([],fromList [])))
+("expr_static",ASN (V (TG (Id "B" 0)) (VR (Id "Ve" 0,VE,WS)),([],fromList [])))
+("expr_before",ASN (V (TG (Id "B" 0)) (VR (Id "Ve" 0,VE,WB)),([],fromList [])))
+("expr_after",ASN (V (TG (Id "B" 0)) (VR (Id "Ve" 0,VE,WA)),([],fromList [])))
+("expr_during",ASN (V (TG (Id "B" 0)) (VR (Id "Ve" 0,VE,WD "d")),([],fromList [])))
+("pred_static",ASN (V (TG (Id "B" 0)) (VR (Id "Vp" 0,VP,WS)),([],fromList [])))
+("pred_before",ASN (V (TG (Id "B" 0)) (VR (Id "Vp" 0,VP,WB)),([],fromList [])))
+("pred_after",ASN (V (TG (Id "B" 0)) (VR (Id "Vp" 0,VP,WA)),([],fromList [])))
+("pred_during",ASN (V (TG (Id "B" 0)) (VR (Id "Vp" 0,VP,WD "d")),([],fromList [])))
+("cons_S_zero",ASN (C (TG (Id "B" 0)) True (Id "cs0" 0) [],([],fromList [])))
+("cons_S_one",ASN (C (TG (Id "B" 0)) True (Id "cs1" 0) [V (TG (Id "B" 0)) (VR (Id "T" 0,VP,WS))],([],fromList [])))
+("cons_S_two",ASN (C (TG (Id "B" 0)) True (Id "cs2" 0) [V (TG (Id "B" 0)) (VR (Id "T" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "T" 0,VP,WS))],([],fromList [])))
+("cons_N_zero",ASN (C (TG (Id "B" 0)) False (Id "ns0" 0) [],([],fromList [])))
+("cons_N_two",ASN (C (TG (Id "B" 0)) False (Id "ns2" 0) [V (TG (Id "B" 0)) (VR (Id "T" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "T" 0,VP,WS))],([],fromList [])))
+("cons_N_two",ASN (C (TG (Id "B" 0)) False (Id "ns2" 0) [V (TG (Id "B" 0)) (VR (Id "T" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "T" 0,VP,WS))],([],fromList [])))
+("cons_nesting",ASN (C (TG (Id "B" 0)) True (Id "nest" 0) [C (TG (Id "B" 0)) True (Id "sub1" 0) [],C (TG (Id "B" 0)) True (Id "sub2" 0) [V (TG (Id "B" 0)) (VR (Id "T" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "sub3" 0) []],([],fromList [])))
+END LIST CONJECTURES
+END THEORY Proto

@@ -80,41 +80,36 @@ Proofs are complex, and only arise by running \reasonEq,
 and we will rely on dump and grab (export and import?) to handle them.
 The automatic laws can be re-generated once the theory is loaded.
 
-Here is a first cut for a theory:
+Lesson 1 : Don't base it on blocks like Laws \dots Done.
+Instead: allow arbitrary interleaving on input,
+with each item flagged by a leading keyword (.eg. Law),
+and terminated by End.
+
+Here is a second cut for a theory:
 \begin{verbatim}
 Theory <TheoryName>
 DependsOn 
   <DepThryName>  ... 
   <DepThryName>  ...
 Done
-KnownVariables
-  <entry> 
-  ... 
-Done
-Laws  
-  <law> 
-  ...
-Done
-Conjectures
-  <conj> 
-  ... 
-Done
+( KnownVariable <entry> end | Law <law> end | Conjecture <conj> end)+
 \end{verbatim}
-The theory name should be first,
-while all the other ``WhatThisIs''\dots Done sections
+The theory name and dependencies should be first,
+while all the other items
 can occur in any order, and multiple times.
 Their contents are gathered and kept in sequence.
 When we output theories like this, 
-each section will appear once in the above order.
+all the items in the same category will appear together.
 
 Keywords:
 \begin{code}
 kTheory = "Theory"
-kDependsOn = "DependsOn"
-kKnownVariables = "KnownVariables"
-kLaws = "Laws"
-kConjectures = "Conjectures"
-kDone = "Done"
+kNeeds = "Needs"
+kKnownVariable = "KnownVariable"
+kLaw = "Law"
+kConjecture = "Conjecture"
+kBegin = "{"
+kEnd = "}"
 \end{code}
 
 \subsection{Load Theory}
@@ -138,35 +133,28 @@ importTheory :: MonadFail mf  => Theory -> [(NumberedLine)] -> mf Theory
 importTheory thry [] = fail "Empty theory file!"
 importTheory thry ((lno,headline):rest)
   = case words headline of
-      [key,name] | key == kTheory && validFileName name 
-         -> importBodies (thName_ name thry) rest      
+      [key,name] | key == kTheory && validFileName name -> do
+        (thry',rest') <- importDependencies (thName_ name thry) rest 
+        importDefinitions thry' rest'   
       _  ->  fail $ unlines [ "loadTheory headline parse error at line "
                               ++ show lno 
                             , "  expected: "++kTheory++" theoryname"
                             , "  got: " ++ headline
                             ]
 
-importBodies :: MonadFail mf => Theory -> [(NumberedLine)] -> mf Theory  
-importBodies thry []  =  return thry
-importBodies thry nlines@((lno,blockheader):rest)
-  | blockheader == kDependsOn  =  importDeps thry [] rest
-  | blockheader == kConjectures  =  importConjs thry [] rest
-  | blockheader `elem` [kKnownVariables,kLaws]
-    = fail $ unlines
-       [ "loadTheory not yet able to handle "++blockheader 
-         ++" at line "++show lno
-       , "got so far: " ++ show thry
-       ]
-  | otherwise
-      = fail $ unlines [ "loadTheory expected block header at " ++ show lno
-                       , "got: "++blockheader
-                       ] 
+importDependencies :: MonadFail mf 
+                   => Theory -> [(NumberedLine)] 
+                   -> mf (Theory,[(NumberedLine)])
+importDependencies thry []  =  return (thry,[])
+importDependencies thry nlines@((lno,header):rest)
+  | header == kNeeds  =  importDeps thry [] rest
+  | otherwise = return (thry,nlines) -- no dependencies is fine
 
 importDeps thry sped [] 
-  = fail $ unlines [ "premature file end after "++kDependsOn ]
+  = fail $ unlines [ "premature file end after "++kNeeds ]
 importDeps thry sped ((lno,line):rest) 
-  | line == kDone  
-     =  importBodies (thDeps__ (++(reverse sped)) thry) rest
+  | line == kEnd  
+     =  return ((thDeps__ (++(reverse sped)) thry), rest)
   | otherwise = importDepLine thry sped rest lno $ words line
 
 importDepLine thry sped rest lno [] = importDeps thry sped rest
@@ -175,6 +163,30 @@ importDepLine thry sped rest lno (dep:deps)
   | otherwise = fail $ unlines
      [ "invalid dependency at line "++show lno
      , "  saw "++dep ]
+
+
+importDefinitions :: MonadFail mf => Theory -> [(NumberedLine)] -> mf Theory  
+importDefinitions thry []  =  return thry
+importDefinitions thry nlines@((lno,line):rest)
+  = case words line of
+      [] ->  importDefinitions thry rest -- shouldn't happen
+      [category,name] 
+        | category == kConjecture -> do
+           (conj',rest') <- importConjecture thry name rest
+           importDefinitions (conjs__ (++[conj']) thry) rest'
+        | category == kLaw -> do
+           (thry',rest') <- importLaw thry name rest
+           importDefinitions thry' rest'
+        | category == kKnownVariable -> do
+           (thry',rest') <- importVarData thry name rest
+           importDefinitions thry' rest'
+      _ ->  fail $ unlines [ "loadTheory expected known/law/conj at " 
+                             ++ show lno
+                            , "but got: "++category
+                            ] 
+  where category = head $ words line
+
+
 \end{code}
 
 
@@ -185,23 +197,13 @@ saveTheory :: Theory -> String
 saveTheory theory = unlines (
   (kTheory ++ " " ++ thName theory)
    : ( saveDeps (thDeps theory) ++
-       saveKnownVars (known theory) ++
-       saveTheLaws (laws theory) ++
-       saveConjs (conjs theory)        ) )
+       ["",saveVarTable (known theory)] ++
+       ["",saveLaws (laws theory)] ++
+       [saveConjectures (conjs theory)] ) )
 
 saveDeps [] = []
 saveDeps deps = 
-  [ kDependsOn , saveIndentedNameList 2 80 deps , kDone] 
-
-saveKnownVars vtab@(VarData (name,vtable,stable,dtable))
-  | M.null vtable && M.null stable && M.null dtable  =  []
-  | otherwise = [ "" , kKnownVariables , saveVarTable vtab , kDone ]
-
-saveTheLaws [] = []
-saveTheLaws laws =  [ "" , kLaws , saveLaws laws, kDone ] 
-
-saveConjs [] = []
-saveConjs conjs = [ "" , kConjectures , saveConjectures conjs, kDone ] 
+  [ kNeeds , saveIndentedNameList 2 80 deps , kEnd] 
 \end{code}
 
 \newpage
@@ -210,32 +212,51 @@ saveConjs conjs = [ "" , kConjectures , saveConjectures conjs, kDone ]
 \subsection{Load VarTable}
 
 \begin{code}
-loadVarTable :: MonadFail mf => String -> mf VarTable
-loadVarTable text = fail "loadVarTable NYI"
+importVarData :: MonadFail mf 
+              => Theory -> String -> [NumberedLine] ->mf (Theory,[NumberedLine])
+importVarData thry name _ = fail "loadVarData NYI"
 \end{code}
 
 \subsection{Save VarTable}
 
 \begin{code}
 saveVarTable :: VarTable -> String
-saveVarTable (VarData (vtname,vtable,stable,dtable)) = unlines' $ 
-  [ "  variables " ++ show (M.size vtable)
-  , "  listvars " ++ show (M.size stable)
-  , "  dynamics " ++ show (M.size dtable)
-  ]
+saveVarTable (VarData (vtname,vtable,stable,dtable))
+  = showNonEmpty "variables" vtable ++
+    showNonEmpty "listvars " stable ++
+    showNonEmpty "dynamics " dtable
+  where 
+    showNonEmpty label m  
+       = if M.size m == 0 then "" else ('\n':label ++ ' ':(show (M.size m)))
 \end{code}
 
 \newpage
 \section{Laws}
 
-\subsection{Load Laws}
+\subsection{Load Law}
 
 A law starts on a new line,
 but can also involve many lines.
+The format is:
+\begin{verbatim}
+Law conj_name 
+Provenance:
+Term: 
+  <term-text>
+SideCond:
+  <sc-text>
+End
+\end{verbatim}
 
 \begin{code}
-loadLaws :: MonadFail mf => String -> mf [Law]
-loadLaws text = fail "loadLaws NYI"
+importLaw :: MonadFail mf 
+          => Theory -> String -> [NumberedLine] 
+          -> mf (Theory,[NumberedLine])
+importLaw thry lawname []
+  = fail $ unlines [ "premature file end after "++kLaw++" "++lawname ]
+importLaw thry lawname  ((lno,line):rest)
+  = fail ("importLaw "++lawname++" NYI at "++show lno)
+
 \end{code}
 
 \subsection{Save Laws}
@@ -243,32 +264,44 @@ loadLaws text = fail "loadLaws NYI"
 
 \begin{code}
 saveLaws :: [Law] -> String
-saveLaws laws = unlines' $ 
-  [ "  laws " ++ show (length laws)
-  ]
+saveLaws laws  =  unlines' $ map saveLaw laws
+
+saveLaw :: Law -> String
+saveLaw ((name,Assertion tm sc),provenance)
+  = unlines' ( [ "", kLaw ++ " " ++ name
+               , kBegin ++ " " ++ saveProv provenance
+               , "," , saveTerm tm ]
+               ++ (if isTrivialSC sc then [] else [",",saveSideCond sc])
+               ++ [ kEnd ] )
+
+saveProv Axiom            =  "axiom"
+saveProv (Proven proof)   =  "proven " ++ proof
+saveProv (Suspect proof)  =  "suspect " ++ proof
+saveProv Assumed          =  "assumed"
 \end{code}
 
-\subsection{Load Conjectures}
+\subsection{Load Conjecture}
 
 A conjecture starts on a new line,
 but can also involve many lines.
+The format is
+\begin{verbatim}
+Conjecture conj_name
+{
+  <term-text>
+, 
+  <sc-text>
+}
+\end{verbatim}
 
 \begin{code}
-loadConjectures :: MonadFail mf => String -> mf [NmdAssertion]
-loadConjectures text = fail "loadConjectures NYI"
-
-
-importConjs :: MonadFail mf 
-            => Theory -> [NmdAssertion] -> [NumberedLine] -> mf Theory
-importConjs thry sjnoc []
-  = fail $ unlines [ "premature file end after "++kConjectures ]
-importConjs thry sjnoc ((lno,line):rest)
-  | line == kDone
-     =  importBodies (conjs__ (++(reverse sjnoc)) thry) rest
-  | otherwise  = importConjecture thry sjnoc rest lno line
-
-importConjecture thry sjnoc rest lno line
- = fail "importConjecture NYI"
+importConjecture :: MonadFail mf 
+                 => Theory -> String -> [NumberedLine] 
+                 -> mf (NmdAssertion,[NumberedLine])
+importConjecture thry conjname []
+  = fail $ unlines [ "premature file end after "++kConjecture++" "++conjname ]
+importConjecture thry conjname  ((lno,line):rest)
+  = fail ("importConjecture "++conjname++" NYI at "++show lno)
 
 \end{code}
 
@@ -278,17 +311,15 @@ importConjecture thry sjnoc rest lno line
 saveConjectures :: [NmdAssertion] -> String
 saveConjectures nmdassns  =  unlines' $ map saveConjecture nmdassns
 \end{code}
-Possible format: {\color{red}\verb"name % term % sidecondition ."}
-with arbitrary line breaks?
 \begin{code}
 
 saveConjecture :: NmdAssertion -> String
 saveConjecture (name,Assertion tm sc)
-  = unlines' $ map ("  "++) 
-      [ "Name: " ++ name
-      , "Pred:", "  "++saveTerm tm
-      , "SC:","  "++ "scText"
-      , "End.", "" ]
+  = unlines'  ( [ "", kConjecture ++ " " ++ name
+                , kBegin 
+                , saveTerm tm ]
+                ++ (if isTrivialSC sc then [] else [",",saveSideCond sc])
+                ++ [ kEnd ] )
 \end{code}
 
 \newpage
@@ -543,6 +574,15 @@ quantreadBody i sg tts = do
 \begin{code}
 loadTerm :: MonadFail mf => String -> mf (Term, [Token])
 loadTerm = sTermRead . tlex
+\end{code}
+
+\section{Side-Conditions}
+
+\subsection{Save Side-Condition}
+
+\begin{code}
+saveSideCond :: SideCond -> String
+saveSideCond sc = "saveSideCond NYI"
 \end{code}
 
 

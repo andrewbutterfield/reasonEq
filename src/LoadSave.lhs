@@ -20,7 +20,7 @@ import Data.Maybe(fromJust)
 -- import Data.Map as M (fromList,assocs)
 import qualified Data.Set as S
 import qualified Data.Map as M
-import Data.List (nub, sort, (\\), intercalate)
+import Data.List (nub, sort, (\\), intercalate, stripPrefix)
 import Data.Char
 
 
@@ -231,6 +231,36 @@ saveVarTable (VarData (vtname,vtable,stable,dtable))
 \end{code}
 
 \newpage
+\section{Blocks}
+
+We have a notion of blocks
+which are a contiguous run of text bracketed by `\{` and `\}`.
+
+\begin{code}
+getBlock :: MonadFail mf => [NumberedLine] -> mf ([NumberedLine],[NumberedLine])
+getBlock [] = fail "no block"
+getBlock ((lno,line):rest)
+  | null toks            =  getBlock rest  -- shouldn't happen
+  | head toks == kBegin  =  scanBlock [] ((lno,leftover):rest)
+  | otherwise            =  fail ("getBlock: "++kBegin++" expected")
+  where 
+    toks = words line
+    leftover = unwords $ tail toks
+
+-- 
+scanBlock sofar [] = fail "premature end while scanning block"
+scanBlock sofar ((lno,line):rest)
+  | null toks  = scanBlock sofar rest -- shouldn't happen
+  | first == kEnd  =  return (reverse sofar,((lno,leftover):rest))
+  | otherwise  =  scanBlock ((lno,first):sofar) ((lno,leftover):rest)
+  where
+    toks = words line
+    first = head toks
+    leftover = unwords $ tail toks
+\end{code}
+
+
+\newpage
 \section{Laws}
 
 \subsection{Load Law}
@@ -240,12 +270,10 @@ but can also involve many lines.
 The format is:
 \begin{verbatim}
 Law conj_name 
-Provenance:
-Term: 
-  <term-text>
-SideCond:
-  <sc-text>
-End
+{ provenance
+, <term-text>
+, <side-cond>
+}
 \end{verbatim}
 
 \begin{code}
@@ -300,9 +328,9 @@ importConjecture :: MonadFail mf
                  -> mf (NmdAssertion,[NumberedLine])
 importConjecture thry conjname []
   = fail $ unlines [ "premature file end after "++kConjecture++" "++conjname ]
-importConjecture thry conjname  ((lno,line):rest)
-  = fail ("importConjecture "++conjname++" NYI at "++show lno)
-
+importConjecture thry conjname nlines = do
+  (block,rest) <- getBlock nlines
+  fail ("importConjecture "++conjname++" NYfI at "++show block)
 \end{code}
 
 \subsection{Save Conjectures}

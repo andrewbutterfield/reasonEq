@@ -2,6 +2,10 @@
 
 ## PLAN
 
+Feedback from viewing saveProto output:
+
+
+
 Terminology Q:
 
 Currently: we use `dump` and `grab` to denote theory saving via Show/Read,

@@ -1,137 +1,135 @@
 Theory Proto
 
-Conjectures
-  Name: true
-  Pred:
-    true
-  SC:
-    scText
-  End.
-  
-  Name: false
-  Pred:
-    false
-  SC:
-    scText
-  End.
-  
-  Name: fortytwo
-  Pred:
-    42
-  SC:
-    scText
-  End.
-  
-  Name: neg99
-  Pred:
-    -99
-  SC:
-    scText
-  End.
-  
-  Name: expr_static
-  Pred:
-    Ve
-  SC:
-    scText
-  End.
-  
-  Name: expr_before
-  Pred:
-    'Ve
-  SC:
-    scText
-  End.
-  
-  Name: expr_after
-  Pred:
-    Ve'
-  SC:
-    scText
-  End.
-  
-  Name: expr_during
-  Pred:
-    Ve'd
-  SC:
-    scText
-  End.
-  
-  Name: pred_static
-  Pred:
-    Vp
-  SC:
-    scText
-  End.
-  
-  Name: pred_before
-  Pred:
-    'Vp
-  SC:
-    scText
-  End.
-  
-  Name: pred_after
-  Pred:
-    Vp'
-  SC:
-    scText
-  End.
-  
-  Name: pred_during
-  Pred:
-    Vp'd
-  SC:
-    scText
-  End.
-  
-  Name: cons_S_zero
-  Pred:
-    cs0 CS ()
-  SC:
-    scText
-  End.
-  
-  Name: cons_S_one
-  Pred:
-    cs1 CS (T)
-  SC:
-    scText
-  End.
-  
-  Name: cons_S_two
-  Pred:
-    cs2 CS (T,T)
-  SC:
-    scText
-  End.
-  
-  Name: cons_N_zero
-  Pred:
-    ns0 NS ()
-  SC:
-    scText
-  End.
-  
-  Name: cons_N_two
-  Pred:
-    ns2 NS (T,T)
-  SC:
-    scText
-  End.
-  
-  Name: cons_N_two
-  Pred:
-    ns2 NS (T,T)
-  SC:
-    scText
-  End.
-  
-  Name: cons_nesting
-  Pred:
-    nest CS (sub1 CS (),sub2 CS (T),sub3 CS ())
-  SC:
-    scText
-  End.
-  
-Done
+Conjecture true
+Term:
+  true
+SideCond:
+  scText
+End
+
+Conjecture false
+Term:
+  false
+SideCond:
+  scText
+End
+
+Conjecture fortytwo
+Term:
+  42
+SideCond:
+  scText
+End
+
+Conjecture neg99
+Term:
+  -99
+SideCond:
+  scText
+End
+
+Conjecture expr_static
+Term:
+  Ve
+SideCond:
+  scText
+End
+
+Conjecture expr_before
+Term:
+  'Ve
+SideCond:
+  scText
+End
+
+Conjecture expr_after
+Term:
+  Ve'
+SideCond:
+  scText
+End
+
+Conjecture expr_during
+Term:
+  Ve'd
+SideCond:
+  scText
+End
+
+Conjecture pred_static
+Term:
+  Vp
+SideCond:
+  scText
+End
+
+Conjecture pred_before
+Term:
+  'Vp
+SideCond:
+  scText
+End
+
+Conjecture pred_after
+Term:
+  Vp'
+SideCond:
+  scText
+End
+
+Conjecture pred_during
+Term:
+  Vp'd
+SideCond:
+  scText
+End
+
+Conjecture cons_S_zero
+Term:
+  cs0 CS ()
+SideCond:
+  scText
+End
+
+Conjecture cons_S_one
+Term:
+  cs1 CS (T)
+SideCond:
+  scText
+End
+
+Conjecture cons_S_two
+Term:
+  cs2 CS (T,T)
+SideCond:
+  scText
+End
+
+Conjecture cons_N_zero
+Term:
+  ns0 NS ()
+SideCond:
+  scText
+End
+
+Conjecture cons_N_two
+Term:
+  ns2 NS (T,T)
+SideCond:
+  scText
+End
+
+Conjecture cons_N_two
+Term:
+  ns2 NS (T,T)
+SideCond:
+  scText
+End
+
+Conjecture cons_nesting
+Term:
+  nest CS (sub1 CS (),sub2 CS (T),sub3 CS ())
+SideCond:
+  scText
+End
+

@@ -1,135 +1,100 @@
 Theory Proto
 
+
+
+
+
 Conjecture true
-Term:
-  true
-SideCond:
-  scText
-End
+{ true false 
+hello 
+world }
 
 Conjecture false
-Term:
-  false
-SideCond:
-  scText
-End
+{
+false
+}
 
 Conjecture fortytwo
-Term:
-  42
-SideCond:
-  scText
-End
+{
+42
+}
 
 Conjecture neg99
-Term:
-  -99
-SideCond:
-  scText
-End
+{
+-99
+}
 
 Conjecture expr_static
-Term:
-  Ve
-SideCond:
-  scText
-End
+{
+Ve
+}
 
 Conjecture expr_before
-Term:
-  'Ve
-SideCond:
-  scText
-End
+{
+'Ve
+}
 
 Conjecture expr_after
-Term:
-  Ve'
-SideCond:
-  scText
-End
+{
+Ve'
+}
 
 Conjecture expr_during
-Term:
-  Ve'd
-SideCond:
-  scText
-End
+{
+Ve'd
+}
 
 Conjecture pred_static
-Term:
-  Vp
-SideCond:
-  scText
-End
+{
+Vp
+}
 
 Conjecture pred_before
-Term:
-  'Vp
-SideCond:
-  scText
-End
+{
+'Vp
+}
 
 Conjecture pred_after
-Term:
-  Vp'
-SideCond:
-  scText
-End
+{
+Vp'
+}
 
 Conjecture pred_during
-Term:
-  Vp'd
-SideCond:
-  scText
-End
+{
+Vp'd
+}
 
 Conjecture cons_S_zero
-Term:
-  cs0 CS ()
-SideCond:
-  scText
-End
+{
+cs0 CS ()
+}
 
 Conjecture cons_S_one
-Term:
-  cs1 CS (T)
-SideCond:
-  scText
-End
+{
+cs1 CS (T)
+}
 
 Conjecture cons_S_two
-Term:
-  cs2 CS (T,T)
-SideCond:
-  scText
-End
+{
+cs2 CS (T,T)
+}
 
 Conjecture cons_N_zero
-Term:
-  ns0 NS ()
-SideCond:
-  scText
-End
+{
+ns0 NS ()
+}
 
 Conjecture cons_N_two
-Term:
-  ns2 NS (T,T)
-SideCond:
-  scText
-End
+{
+ns2 NS (T,T)
+}
 
 Conjecture cons_N_two
-Term:
-  ns2 NS (T,T)
-SideCond:
-  scText
-End
+{
+ns2 NS (T,T)
+}
 
 Conjecture cons_nesting
-Term:
-  nest CS (sub1 CS (),sub2 CS (T),sub3 CS ())
-SideCond:
-  scText
-End
-
+{
+nest CS (sub1 CS (),sub2 CS (T),sub3 CS ())
+}

@@ -495,41 +495,51 @@ sTermRead ((_,TNum n):tts) = return ( Val int $ Integer n, tts)
 
 \paragraph{Symbols}
 
+Symbols are valid identifiers
+
 \begin{code}
-sTermRead ((_,TSym i):tts) = sIdParse i Static tts
+sTermRead ((_,TSym i1):(_,TId i2 Static ):(_,TOpen "("):tts)
+  | subable == "N" = sAppParse i1 False [] tts
+  | subable == "S" = sAppParse i1 True  [] tts
+  where 
+    consName = idName i1
+    subable  = idName i2
+sTermRead ((_,TSym i):tts) = return (mkVarTerm i Static, tts)
 \end{code}
+
+\paragraph{Constructions}
+
+Important: we must check for constructions before we
+check for lone identifiers.
 
 \paragraph{Identifiers}
 
+We check for constructions first \dots
+
 \begin{code}
+sTermRead ((_,TId i1 vw):(_,TId i2 Static ):(_,TOpen "("):tts)
+  | subable == "NS" = sAppParse i1 False [] tts
+  | subable == "CS" = sAppParse i1 True  [] tts
+  where 
+    consName = idName i1
+    subable  = idName i2
 sTermRead ((_,TId i vw):tts)
   | n == kTrue      =  return ( mkTrue n,  tts)
   | n == kFalse     =  return ( mkFalse n, tts)
   | n == kSetBind   =  setQParse tts
   | n == kListBind  =  listQParse tts
-  | otherwise       =  sIdParse i vw tts
+  | otherwise       =  return (mkVarTerm i vw, tts)
   where n = idName i
 \end{code}
 
 \paragraph{Bad Start}
 
+
 \begin{code}
 sTermRead (tt:tts)  = fail ("sTermRead: unexpected token: "++renderToken tt)
 \end{code}
 
-\paragraph{Constructions}
-
-Seen an identifier, check for a substitutability indicator,
-followed by an opening parenthesis:
-\begin{code}
-sIdParse :: MonadFail mf 
-         => Identifier -> VarWhen -> [Token]-> mf (Term,[Token])
-sIdParse id1 vw ((_,TId (Identifier subable _) _ ) : (_,TOpen "(") : tts)
-  |  subable == "N"  =  sAppParse id1 False [] tts
-  |  subable == "S"  =  sAppParse id1 True  [] tts
-sIdParse id1 vw tts  =  return (mkVarTerm id1 vw, tts)
-\end{code}
-
+\subsection{Term Helpers}
 
 Seen identifier and opening parenthesis.
 $$ i(~~~t_1,\dots,t_n) $$
@@ -557,6 +567,7 @@ sAppParse' id1 subable smretbus ((_,TClose ")") : tts)
 sAppParse' id1 subable smretbus tts
   =  fail ("sAppParse': expected ',' or ')'")
 \end{code}
+
 
 \paragraph{Quantifiers}~
 

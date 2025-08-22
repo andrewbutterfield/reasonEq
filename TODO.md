@@ -2,8 +2,10 @@
 
 ## PLAN
 
-Feedback from viewing saveProto output:
 
+The term parser fails on `Cons` because constructor name is parsed
+as a variable, and the  next token is `(`.
+We need some lookahead to spot a cons.
 
 
 Terminology Q:

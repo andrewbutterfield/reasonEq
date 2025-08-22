@@ -162,14 +162,14 @@ importDefinitions thry []  =  return thry
 importDefinitions thry ((lno,TId (Identifier category _) Static)
                        :(_,TId (Identifier name _) Static):rest)
   | category == kConjecture = do
-      (conj',rest') <- importConjecture thry name rest
+      (conj',rest') <- importConjecture name rest
       importDefinitions (conjs__ (++[conj']) thry) rest'
   | category == kLaw = do
-      (thry',rest') <- importLaw thry name rest
-      importDefinitions thry' rest'
+      (law',rest') <- importLaw name rest
+      importDefinitions (laws__ (++[law']) thry) rest'
   | category == kKnownVariable = do
-      (thry',rest') <- importVarData thry name rest
-      importDefinitions thry' rest'
+      (known',rest') <- importVarData name rest
+      importDefinitions (known_ known' thry) rest'
 importDefinitions thry (tok@(lno,_):_)
   = fail $ unlines [ "loadTheory expected known/law/conj at " 
                         ++ show lno
@@ -201,8 +201,8 @@ saveDeps deps =
 
 \begin{code}
 importVarData :: MonadFail mf 
-              => Theory -> String -> [Token] ->mf (Theory,[Token])
-importVarData thry name _ = fail "loadVarData NYI"
+              => String -> [Token] ->mf (VarTable,[Token])
+importVarData name _ = fail "loadVarData NYI"
 \end{code}
 
 \subsection{Save VarTable}
@@ -260,13 +260,47 @@ Law conj_name
 
 \begin{code}
 importLaw :: MonadFail mf 
-          => Theory -> String -> [Token] 
-          -> mf (Theory,[Token])
-importLaw thry lawname []
-  = fail $ unlines [ "premature file end after "++kLaw++" "++lawname ]
-importLaw thry lawname  ((lno,line):rest)
-  = fail ("importLaw "++lawname++" NYI at "++show lno)
+          => String -> [Token] 
+          -> mf (Law,[Token])
+importLaw lawname []
+  = fail ( "premature file end after "++kLaw++" "++lawname++" "++kBegin )
+importLaw lawname tokens = do
+  (block,beyond) <- getBlock tokens
+  (provenance,rest1) <- importProvenace block
+  case rest1 of
+    [] -> fail $ unlines' 
+           [ "premature file end after "++kLaw++" "++show provenance ]
+    ((_,TSep ","):rest2) -> do
+      (term,rest3) <- sTermRead rest2
+      case rest3 of
+        [] -> return (((lawname,(mkAsn term scTrue)),provenance),beyond)
+        ((_,TSep ","):rest4) -> do
+          (sc,rest5) <- loadSideCond rest4
+          return (((lawname,(mkAsn term sc)),provenance),beyond)
+        (tok@(lno,_):_) -> fail $ unlines'
+          [ "importLaw: unexpected token after provenance"
+          , renderToken tok ++ " at line "++show lno ]
+    (tok@(lno,_):_) -> fail $ unlines'
+      [ "importLaw: unexpected token after provenance"
+      , renderToken tok ++ " at line "++show lno ]
 
+importProvenace :: MonadFail mf => [Token] -> mf (Provenance,[Token])
+importProvenace [] = 
+  fail ( "premature file end after "++kBegin )
+importProvenace ((_,TId (Identifier "axiom" _) Static):rest) 
+  = return (Axiom,rest)
+importProvenace ((_,TId (Identifier "assumed" _) Static):rest) 
+  = return (Assumed,rest)
+importProvenace ((_,TId (Identifier "proven" _) Static)
+                :(_,TId i Static):rest) 
+  = return (Proven (idName i),rest)
+importProvenace ((_,TId (Identifier "suspect" _) Static)
+                :(_,TId i Static):rest) 
+  = return (Suspect (idName i),rest)
+importProvenace (tok@(lno,_):_)
+  = fail $ unlines'
+      [ "importProvenace: unexpected token after "++kBegin 
+      , renderToken tok ++ "at line " ++ show lno ]
 \end{code}
 
 \subsection{Save Laws}
@@ -290,6 +324,7 @@ saveProv (Suspect proof)  =  "suspect " ++ proof
 saveProv Assumed          =  "assumed"
 \end{code}
 
+
 \subsection{Load Conjecture}
 
 A conjecture starts on a new line,
@@ -306,11 +341,11 @@ Conjecture conj_name
 
 \begin{code}
 importConjecture :: MonadFail mf 
-                 => Theory -> String -> [Token] 
+                 => String -> [Token] 
                  -> mf (NmdAssertion,[Token])
-importConjecture thry conjname []
+importConjecture conjname []
   = fail $ unlines [ "premature file end after "++kConjecture++" "++conjname ]
-importConjecture thry conjname tokens = do
+importConjecture conjname tokens = do
   (block,beyond) <- getBlock tokens
   (term,rest2) <- sTermRead block
   case rest2 of
@@ -565,7 +600,9 @@ sAppParse' id1 subable smretbus ((_,TSep ",") : tts)
 sAppParse' id1 subable smretbus ((_,TClose ")") : tts)
   =  return ( Cons arbpred subable id1 $ reverse smretbus, tts)
 sAppParse' id1 subable smretbus tts
-  =  fail ("sAppParse': expected ',' or ')'")
+  =  fail $ unlines'
+       [ "sAppParse': expected ',' or ')'"
+       , "got "++show (take 3 tts)++" ..." ]
 \end{code}
 
 

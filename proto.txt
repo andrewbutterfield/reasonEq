@@ -4,25 +4,23 @@ Theory Proto
 
 
 
-Conjecture true
-{
+Law true
+{ axiom
+,
 true
 }
 
-Conjecture false
-{
-false
+Law false
+{ proven by_hand
+, false
 }
 
-Conjecture fortytwo
-{
-42
-}
+Law fortytwo
+{ assumed,42}
 
-Conjecture neg99
-{
--99
-}
+Law neg99
+{ suspect excluded_middle,
+-99 }
 
 Conjecture expr_static
 {

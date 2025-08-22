@@ -56,17 +56,6 @@ For now we have simple literals,
 composites done as prefix-functions applied to delimited lists of sub-terms,
 and binders in standard mixfix style.
 
-In general we will take a text file,
-and add line numbers, and remove blank lines before processing.
-
-\begin{code}
-type NumberedLine = (Int,String)
-prepare :: String -> [NumberedLine]
-prepare 
-  = filter nonNull . zip [1..] . lines
-  where nonNull (_,string) = not $ all isSpace string
-\end{code}
-
 
 \newpage
 \section{Theories}
@@ -126,67 +115,66 @@ validFileChars = ['a'..'z'] ++ ['A'..'Z'] ++ "_-"
 
 \begin{code}
 loadTheory :: MonadFail mf => String -> mf Theory
-loadTheory text  =  importTheory nullTheory $ prepare text
+loadTheory text  =  importTheory nullTheory $ tlex $ prepare text
 
 
-importTheory :: MonadFail mf  => Theory -> [(NumberedLine)] -> mf Theory
+importTheory :: MonadFail mf  => Theory -> [Token] -> mf Theory
 importTheory thry [] = fail "Empty theory file!"
-importTheory thry ((lno,headline):rest)
-  = case words headline of
-      [key,name] | key == kTheory && validFileName name -> do
+importTheory thry ( (lno,TId (Identifier key _) Static)
+                   :(_,TId (Identifier name _) Static):rest)
+  | key == kTheory && validFileName name = do
         (thry',rest') <- importDependencies (thName_ name thry) rest 
         importDefinitions thry' rest'   
-      _  ->  fail $ unlines [ "loadTheory headline parse error at line "
-                              ++ show lno 
-                            , "  expected: "++kTheory++" theoryname"
-                            , "  got: " ++ headline
-                            ]
+  | otherwise  =  fail $ unlines  [ "loadTheory headline parse error at line "
+                                    ++ show lno 
+                                  , "  expected: "++kTheory++" theoryname"
+                                  , "  got: " ++ key ++ " " ++ name
+                                  ]
 
 importDependencies :: MonadFail mf 
-                   => Theory -> [(NumberedLine)] 
-                   -> mf (Theory,[(NumberedLine)])
+                   => Theory -> [Token] 
+                   -> mf (Theory,[Token])
 importDependencies thry []  =  return (thry,[])
-importDependencies thry nlines@((lno,header):rest)
-  | header == kNeeds  =  importDeps thry [] rest
+importDependencies thry nlines@((lno,TId (Identifier needs _) Static):rest)
+  | needs == kNeeds  =  importDeps thry [] rest
   | otherwise = return (thry,nlines) -- no dependencies is fine
 
 importDeps thry sped [] 
   = fail $ unlines [ "premature file end after "++kNeeds ]
-importDeps thry sped ((lno,line):rest) 
-  | line == kEnd  
+importDeps thry sped ((lno,TClose close):rest) 
+  | close == kEnd  
      =  return ((thDeps__ (++(reverse sped)) thry), rest)
-  | otherwise = importDepLine thry sped rest lno $ words line
+importDeps thry sped ((lno,TId (Identifier i _) Static):rest) 
+  | validFileName i = importDeps thry (i:sped) rest 
+importDeps thry sped (tok@(lno,_):rest) 
+  = fail $ unlines
+      [ "invalid dependency at line "++show lno
+      , "  saw "++renderToken tok ]
 
-importDepLine thry sped rest lno [] = importDeps thry sped rest
-importDepLine thry sped rest lno (dep:deps)
-  | validFileName dep = importDepLine thry (dep:sped) rest lno deps
-  | otherwise = fail $ unlines
-     [ "invalid dependency at line "++show lno
-     , "  saw "++dep ]
+-- importDepLine thry sped rest lno [] = importDeps thry sped rest
+-- importDepLine thry sped rest lno ((_,TId (Identifier dep _) Static):deps)
+--   | validFileName dep = importDepLine thry (dep:sped) rest lno deps
+--   | otherwise = 
 
 
-importDefinitions :: MonadFail mf => Theory -> [(NumberedLine)] -> mf Theory  
+importDefinitions :: MonadFail mf => Theory -> [Token] -> mf Theory  
 importDefinitions thry []  =  return thry
-importDefinitions thry nlines@((lno,line):rest)
-  = case words line of
-      [] ->  importDefinitions thry rest -- shouldn't happen
-      [category,name] 
-        | category == kConjecture -> do
-           (conj',rest') <- importConjecture thry name rest
-           importDefinitions (conjs__ (++[conj']) thry) rest'
-        | category == kLaw -> do
-           (thry',rest') <- importLaw thry name rest
-           importDefinitions thry' rest'
-        | category == kKnownVariable -> do
-           (thry',rest') <- importVarData thry name rest
-           importDefinitions thry' rest'
-      _ ->  fail $ unlines [ "loadTheory expected known/law/conj at " 
-                             ++ show lno
-                            , "but got: "++category
-                            ] 
-  where category = head $ words line
-
-
+importDefinitions thry ((lno,TId (Identifier category _) Static)
+                       :(_,TId (Identifier name _) Static):rest)
+  | category == kConjecture = do
+      (conj',rest') <- importConjecture thry name rest
+      importDefinitions (conjs__ (++[conj']) thry) rest'
+  | category == kLaw = do
+      (thry',rest') <- importLaw thry name rest
+      importDefinitions thry' rest'
+  | category == kKnownVariable = do
+      (thry',rest') <- importVarData thry name rest
+      importDefinitions thry' rest'
+importDefinitions thry (tok@(lno,_):_)
+  = fail $ unlines [ "loadTheory expected known/law/conj at " 
+                        ++ show lno
+                   , "but got: "++renderToken tok
+                   ] 
 \end{code}
 
 
@@ -213,7 +201,7 @@ saveDeps deps =
 
 \begin{code}
 importVarData :: MonadFail mf 
-              => Theory -> String -> [NumberedLine] ->mf (Theory,[NumberedLine])
+              => Theory -> String -> [Token] ->mf (Theory,[Token])
 importVarData thry name _ = fail "loadVarData NYI"
 \end{code}
 
@@ -237,28 +225,22 @@ We have a notion of blocks
 which are a contiguous run of text bracketed by `\{` and `\}`.
 
 \begin{code}
-getBlock :: MonadFail mf => [NumberedLine] -> mf ([NumberedLine],[NumberedLine])
+getBlock :: MonadFail mf => [Token] -> mf ([Token],[Token])
 getBlock [] = fail "no block"
-getBlock ((lno,line):rest)
-  | null toks            =  getBlock rest  -- shouldn't happen
-  | head toks == kBegin  =  scanBlock [] ((lno,leftover):rest)
-  | otherwise            =  fail ("getBlock: "++kBegin++" expected")
-  where 
-    toks = words line
-    leftover = unwords $ tail toks
+getBlock ((lno,TOpen open):rest)
+  | open == kBegin  =  scanBlock [] rest
+getBlock (tok@(lno,_):_)
+  = fail $ unlines' [ "getBlock: "++kBegin++" expected"
+                    , "but "++renderToken tok++" found at line "++show lno
+                    ]
 
 -- 
+scanBlock :: MonadFail mf => [Token] -> [Token] -> mf ([Token],[Token])
 scanBlock sofar [] = fail "premature end while scanning block"
-scanBlock sofar ((lno,line):rest)
-  | null toks  = scanBlock sofar rest -- shouldn't happen
-  | first == kEnd  =  return (reverse sofar,((lno,leftover):rest))
-  | otherwise  =  scanBlock ((lno,first):sofar) ((lno,leftover):rest)
-  where
-    toks = words line
-    first = head toks
-    leftover = unwords $ tail toks
+scanBlock sofar ((lno,TClose close):rest)
+  | close == kEnd           =  return (reverse sofar, rest)
+scanBlock sofar (tok:rest)  =  scanBlock (tok:sofar) rest
 \end{code}
-
 
 \newpage
 \section{Laws}
@@ -278,8 +260,8 @@ Law conj_name
 
 \begin{code}
 importLaw :: MonadFail mf 
-          => Theory -> String -> [NumberedLine] 
-          -> mf (Theory,[NumberedLine])
+          => Theory -> String -> [Token] 
+          -> mf (Theory,[Token])
 importLaw thry lawname []
   = fail $ unlines [ "premature file end after "++kLaw++" "++lawname ]
 importLaw thry lawname  ((lno,line):rest)
@@ -324,13 +306,22 @@ Conjecture conj_name
 
 \begin{code}
 importConjecture :: MonadFail mf 
-                 => Theory -> String -> [NumberedLine] 
-                 -> mf (NmdAssertion,[NumberedLine])
+                 => Theory -> String -> [Token] 
+                 -> mf (NmdAssertion,[Token])
 importConjecture thry conjname []
   = fail $ unlines [ "premature file end after "++kConjecture++" "++conjname ]
-importConjecture thry conjname nlines = do
-  (block,rest) <- getBlock nlines
-  fail ("importConjecture "++conjname++" NYfI at "++show block)
+importConjecture thry conjname tokens = do
+  (block,beyond) <- mdbg "GETBLOCK" $ getBlock tokens
+  (term,rest2) <- mdbg "TERMREAD" $ sTermRead $ pdbg "BLOCK" block
+  case rest2 of
+    [] -> return ( ( conjname, mkAsn term scTrue ), beyond )
+    ((_,TSep ","):rest3) -> do
+      (sc,rest4) <- loadSideCond rest3
+      return ( ( conjname, mkAsn term sc ), beyond )
+    (tok@(lno,_):_) -> 
+      fail $ unlines
+        [ "importConjecture: unexpected token after term"
+        , renderToken tok ++ " at line "++show lno ]
 \end{code}
 
 \subsection{Save Conjectures}
@@ -377,9 +368,11 @@ The abstract syntax:
 \\ && \quad \mid (~t~)
 \end{eqnarray*}
 
-The concrete syntax (non-terminals in \verb@<..>@):
+The concrete syntax (non-terminals in \verb@<..>@).
+First, the bits and pieces, then the term syntax,
+and finally the key words and symbols.
 \begin{code}
-term_syntax
+syntax_bits
  = [ "** Lexical Tokens:"
    , "n : int with optional leading minus"
    , "i : reasonEq identifier"
@@ -392,16 +385,24 @@ term_syntax
    , "should the known variables (so far) be passed as a parameter?"
    , "<lv> ::= <v>$"
    , "<gv> ::=  <v> | <lv>"
-   , "** Term Syntax:"
+   ]
+\end{code}
+\begin{code}
+term_definition
+ = [ "** Term Syntax:"
    , "<b> ::= true | false"
    , "<q> ::= QS | QL"
-   , "<t> ::= <b>  |  n  |  <v>"
+   , "<t> ::= <b>  |  n  | <v>"
    , "     |  i s ( <t> , ... , <t> )"
    , "     |  <q> i <gv> ... <gv> @ <t>"
-   , "** Keywords:   true  false  QS  QL"
+   ]
+\end{code}
+The tokens that can start a term are: \verb"true false n <v> i <q> (". 
+\begin{code}
+key_names 
+ = [ "** Keywords:   true  false  QS  QL"
    , "** Keysymbols: ?  $  (  ,  )  @"
    ]
-
 kTrue = "true"
 kFalse = "false"
 kSetBind = "QS"
@@ -409,6 +410,7 @@ kListBind = "QL"
 kLstVar = '$'
 kSep = ','
 kQBody = "@"
+term_syntax = syntax_bits ++ term_definition ++ key_names
 \end{code}
 
 
@@ -470,8 +472,9 @@ mkLV id1 vw  = LVbl (mkV id1 vw) [] []
 
 mkVarTerm id1 vw  =  fromJust $ var arbpred $ mkV id1 vw
 
-tok2GVar (TId i vw)    = StdVar $ mkV i vw
-tok2GVar (TLVar i vw ) = LstVar $ mkLV i vw
+tok2GVar :: Token -> GenVar
+tok2GVar (_,(TId i vw))    = StdVar $ mkV i vw
+tok2GVar (_,(TLVar i vw )) = LstVar $ mkLV i vw
 \end{code}
 
 
@@ -487,24 +490,24 @@ sTermRead [] =  fail "sTermRead: nothing to parse"
 \paragraph{Numbers}
 
 \begin{code}
-sTermRead (TNum n:tts) = return ( Val int $ Integer n, tts)
+sTermRead ((_,TNum n):tts) = return ( Val int $ Integer n, tts)
 \end{code}
 
 \paragraph{Symbols}
 
 \begin{code}
-sTermRead (TSym i:tts) = sIdParse i Static tts
+sTermRead ((_,TSym i):tts) = sIdParse i Static tts
 \end{code}
 
 \paragraph{Identifiers}
 
 \begin{code}
-sTermRead (TId i vw:tts)
+sTermRead ((_,TId i vw):tts)
   | n == kTrue      =  return ( mkTrue n,  tts)
   | n == kFalse     =  return ( mkFalse n, tts)
   | n == kSetBind   =  setQParse tts
   | n == kListBind  =  listQParse tts
-  | otherwise         =  sIdParse i vw tts
+  | otherwise       =  sIdParse i vw tts
   where n = idName i
 \end{code}
 
@@ -519,7 +522,9 @@ sTermRead (tt:tts)  = fail ("sTermRead: unexpected token: "++renderToken tt)
 Seen an identifier, check for a substitutability indicator,
 followed by an opening parenthesis:
 \begin{code}
-sIdParse id1 vw (TId (Identifier subable _) _ : TOpen "(" : tts)
+sIdParse :: MonadFail mf 
+         => Identifier -> VarWhen -> [Token]-> mf (Term,[Token])
+sIdParse id1 vw ((_,TId (Identifier subable _) _ ) : (_,TOpen "(") : tts)
   |  subable == "N"  =  sAppParse id1 False [] tts
   |  subable == "S"  =  sAppParse id1 True  [] tts
 sIdParse id1 vw tts  =  return (mkVarTerm id1 vw, tts)
@@ -530,7 +535,9 @@ Seen identifier and opening parenthesis.
 $$ i(~~~t_1,\dots,t_n) $$
 Look for sub-term, or closing parenthesis.
 \begin{code}
-sAppParse id1 subable smretbus (TClose ")" : tts)
+sAppParse :: MonadFail mf 
+          => Identifier -> Bool -> [Term] -> [Token]-> mf (Term,[Token])
+sAppParse id1 subable smretbus ((_,TClose ")") : tts)
   = return ( Cons arbpred subable id1 $ reverse smretbus, tts)
 sAppParse id1 subable smretbus tts
   = do (tsub',tts') <- sTermRead tts
@@ -541,9 +548,11 @@ sAppParse id1 subable smretbus tts
 Seen (sub-) term.
 Looking for comma or closing parenthesis
 \begin{code}
-sAppParse' id1 subable smretbus (TSep "," : tts)
+sAppParse' :: MonadFail mf 
+           => Identifier -> Bool -> [Term] -> [Token]-> mf (Term,[Token])
+sAppParse' id1 subable smretbus ((_,TSep ",") : tts)
   =  sAppParse id1 subable smretbus tts
-sAppParse' id1 subable smretbus (TClose ")" : tts)
+sAppParse' id1 subable smretbus ((_,TClose ")") : tts)
   =  return ( Cons arbpred subable id1 $ reverse smretbus, tts)
 sAppParse' id1 subable smretbus tts
   =  fail ("sAppParse': expected ',' or ')'")
@@ -555,8 +564,9 @@ Seen \texttt{QS},
 $$ QS~~~i~g_1 \dots g_n \bullet t $$
 parse the quantifier:
 \begin{code}
+setQParse :: MonadFail mf => [Token] -> mf (Term,[Token])
 setQParse [] = fail "setQParse: premature end"
-setQParse (TId i Static : tts) = do
+setQParse ((_,TId i Static) : tts) = do
   (i,sg,term,tts') <- quantread i [] tts
   qsterm <- pBnd i (S.fromList $ map tok2GVar sg) term
   return (qsterm,tts')
@@ -567,8 +577,9 @@ Seen \texttt{QL},
 $$ QL~~~i~g_1 \dots g_n \bullet t $$
 parse the quantifier:
 \begin{code}
+listQParse :: MonadFail mf => [Token] -> mf (Term,[Token])
 listQParse [] = fail "listQParse: premature end"
-listQParse (TId i Static : tts) = do
+listQParse ((_,TId i Static) : tts) = do
   (i,sg,term,tts') <- quantread i [] tts
   lsterm <- pLam i (reverse $ map tok2GVar sg) term
   return (lsterm,tts')
@@ -580,10 +591,10 @@ $$ Qx~i~g_1 \dots g_i ~~~~~ g_{i+1} \dots g_n \bullet t $$
 parse the quantifier:
 \begin{code}
 quantread i _ [] = fail ("quantread: "++trId i++" (premature end)")
-quantread i sg (TSym s : tts)
+quantread i sg ((_,TSym s) : tts)
   | idName s == kQBody  =  quantreadBody i sg tts
-quantread i sg (v@(TId _ _)    : tts)   =  quantread i (v:sg) tts
-quantread i sg (lv@(TLVar _ _) : tts)   =  quantread i (lv:sg) tts
+quantread i sg (v@(_,TId _ _)    : tts)   =  quantread i (v:sg) tts
+quantread i sg (lv@(_,TLVar _ _) : tts)   =  quantread i (lv:sg) tts
 quantread i sg (tok : _)  = fail ("quantread: unexpected token "++renderToken tok)
 \end{code}
 
@@ -601,7 +612,7 @@ quantreadBody i sg tts = do
 
 \begin{code}
 loadTerm :: MonadFail mf => String -> mf (Term, [Token])
-loadTerm = sTermRead . tlex
+loadTerm = sTermRead . tlex . prepare
 \end{code}
 
 \section{Side-Conditions}
@@ -611,6 +622,13 @@ loadTerm = sTermRead . tlex
 \begin{code}
 saveSideCond :: SideCond -> String
 saveSideCond sc = "saveSideCond NYI"
+\end{code}
+
+\subsection{Load Side-Condition}
+
+\begin{code}
+loadSideCond :: MonadFail mf => [Token] -> mf (SideCond, [Token])
+loadSideCond sc = fail "loadSideCond NYI"
 \end{code}
 
 
@@ -669,6 +687,20 @@ We limit everything to the ASCII subset,
 simply because UTF8 Unicode is a mess
 (and it's the nicest one!).
 
+In general we will take a text file,
+and add line numbers, and remove blank lines before processing.
+
+
+
+\begin{code}
+type NumberedLine = (Int,String)
+prepare :: String -> [NumberedLine]
+prepare 
+  = filter nonNull . zip [1..] . lines
+  where nonNull (_,string) = not $ all isSpace string
+\end{code}
+
+
 \subsection{Tokens}
 
 We have the following token classes:
@@ -722,7 +754,7 @@ then it denotes the corresponding list-variable.
 \subsection{Token Data Type}
 
 \begin{code}
-data Token
+data TokenType
   =  TNum   Integer
   |  TId    Identifier VarWhen
   |  TLVar  Identifier VarWhen  -- i$
@@ -732,23 +764,26 @@ data Token
   |  TSym   Identifier
   |  TErr   String
   deriving (Eq,Show)
+type Token = (Int,TokenType)
 \end{code}
 
 We provide some rendering code, mostly for error reporting:
 \begin{code}
-renderToken :: Token -> String
-renderToken (TNum i) = show i
-renderToken (TId i Static) = idName i
-renderToken (TId i Before) = beforeChar : idName i
-renderToken (TId i (During d)) = idName i ++ afterChar : d
-renderToken (TId i After) = idName i ++ [afterChar]
-renderToken (TOpen str) = str
-renderToken (TClose str) = str
-renderToken (TSep str) = str
-renderToken (TSym i) = idName i
-renderToken (TErr str) = str
+renderTokTyp :: TokenType -> String
+renderTokTyp (TNum i) = show i
+renderTokTyp (TId i Static) = idName i
+renderTokTyp (TId i Before) = beforeChar : idName i
+renderTokTyp (TId i (During d)) = idName i ++ afterChar : d
+renderTokTyp (TId i After) = idName i ++ [afterChar]
+renderTokTyp (TOpen str) = str
+renderTokTyp (TClose str) = str
+renderTokTyp (TSep str) = str
+renderTokTyp (TSym i) = idName i
+renderTokTyp (TErr str) = str
 
+renderToken (lno,toktyp) = renderTokTyp toktyp
 -- useful for lists
+
 renderToken' tok = ' ' : renderToken tok
 \end{code}
 
@@ -824,39 +859,41 @@ mkRavL = mkLVar . reverse
 \begin{code}
 mkLawName :: [String] -> String
 mkLawName ss
-  = intercalate "_" $ map showTTok $ concat $ map tlex ss
+  = intercalate "_" $ map showTTok $ concat $ map (tlex . prepare) ss
   where
-    showTTok (TNum n)  = show n
-    showTTok (TId i _) = idName i
-    showTTok (TSym i)  = idName i
-    showTTok ttok      = _redQ
+    showTTok (_,(TNum n))  = show n
+    showTTok (_,(TId i _)) = idName i
+    showTTok (_,(TSym i))  = idName i
+    showTTok ttok          = _redQ
 \end{code}
 
 \newpage 
 \subsection{Lexer}
 Now we define the lexer:
 \begin{code}
-tlex :: String -> [Token]
-tlex "" = []
-tlex str@(c:cs)
-  | isSpace c            =  tlex cs
-  | isDigit c            =  tlexNum [c] cs
-  | c == '-'             =  tlexMinus cs
-  | isAlpha c            =  tlexId False [c] cs
-  | c == beforeChar      =  tlexId True  [c] cs
-  | c `elem` openings    =  TOpen [c]  : tlex cs
-  | c `elem` closings    =  TClose [c] : tlex cs
-  | c `elem` separators  =  TSep [c]   : tlex cs
-  | otherwise            =  tlexSym [c] cs
+tlex :: [NumberedLine] -> [Token]
+tlex []                  = []
+tlex ((lno,""):rest)     =  tlex rest
+tlex ((lno,str@(c:cs)):rest)
+  | isSpace c            =  tlex ((lno,cs):rest)
+  | isDigit c            =  tlexNum lno rest [c] cs
+  | c == '-'             =  tlexMinus lno rest cs
+  | c == '_'             =  tlexId lno rest False [c] cs
+  | isAlpha c            =  tlexId lno rest False [c] cs
+  | c == beforeChar      =  tlexId lno rest True  [c] cs
+  | c `elem` openings    =  (lno,TOpen [c])  : tlex ((lno,cs):rest)
+  | c `elem` closings    =  (lno,TClose [c]) : tlex ((lno,cs):rest)
+  | c `elem` separators  =  (lno,TSep [c])   : tlex ((lno,cs):rest)
+  | otherwise            =  tlexSym lno rest [c] cs
 \end{code}
 
 
 Seen one or more digits, keep looking for more.
 \begin{code}
-tlexNum mun ""  = [ mkNum mun ]
-tlexNum mun str@(c:cs)
-  | isDigit c  =  tlexNum (c:mun) cs
-  | otherwise  =  mkNum mun : tlex str
+tlexNum lno rest mun ""  = (lno,mkNum mun) : tlex rest
+tlexNum lno rest mun str@(c:cs)
+  | isDigit c  =  tlexNum lno rest (c:mun) cs
+  | otherwise  =  (lno,mkNum mun) : tlex ((lno,str):rest)
 
 mkNum mun = TNum $ read $ reverse mun
 \end{code}
@@ -865,10 +902,10 @@ We have seen a minus sign. If followed immediately by a number
 it is then merged with it to form a negative literal.
 Otherwise it is treated as a symbol.
 \begin{code}
-tlexMinus "" = [ mkSym "-" ]
-tlexMinus str@(c:cs)
-  | isDigit c  =  tlexNum [c,'-'] cs
-  | otherwise  =  mkSym "-" : tlex str
+tlexMinus lno rest "" = [ (lno, mkSym "-") ]
+tlexMinus lno rest str@(c:cs)
+  | isDigit c  =  tlexNum lno rest [c,'-'] cs
+  | otherwise  =  (lno,mkSym "-") : tlex ((lno,str):rest)
 \end{code}
 
 A \texttt{afterChar} may end an identifier,
@@ -882,40 +919,44 @@ is an error.
 \begin{code}
 -- tlexId isBefore di rest-of-ident
 -- note, the di component is never empty when this is called
-tlexId _ di ""     =  [ mkDi di ] -- std-var
-tlexId _ di [c] 
-  | c == lstvChar  =  [ mkRavL di ] -- lst-var
-tlexId hasDC di str@(c:cs)
-  | isAlpha c  =  tlexId hasDC (c:di) cs
-  | isDigit c  =  tlexId hasDC (c:di) cs
+tlexId lno rest _ di ""     =  (lno, mkDi di) : tlex rest -- std-var
+tlexId lno rest _ di [c] 
+  | c == lstvChar  =  (lno, mkRavL di) : tlex rest -- lst-var
+tlexId lno rest hasDC di str@(c:cs)
+  | isAlpha c  =  tlexId lno rest hasDC (c:di) cs
+  | isDigit c  =  tlexId lno rest hasDC (c:di) cs
+  | c == '_'   =  tlexId lno rest hasDC (c:di) cs
   | c == afterChar
-      = if hasDC then (derr c di) : tlex cs
-                 else  tlexDuring (c:di) [] cs
-  | c == kLstVar = mkRavL di : tlex cs 
-  | otherwise  =  mkDi di : tlex str
+      = if hasDC then (lno,derr c di) : tlex ((lno,cs):rest)
+                 else  tlexDuring lno rest (c:di) [] cs
+  | c == kLstVar = (lno,mkRavL di) : tlex ((lno,cs):rest) 
+  | otherwise  =  (lno, mkDi di) : tlex ((lno,str):rest)
   where
     derr c di = TErr ("Overdecorated: " ++ reverse (c:di))
 
 -- here we accept alphanumeric subscripts
-tlexDuring di ""  ""   =  [ mkDi di ]
-tlexDuring di ""  [c]
-  | c == lstvChar      =  [ mkRavL di ]
-tlexDuring di bus ""   =  [ mkId (reverse di ++ reverse bus) ]
-tlexDuring di bus [c]  
-  | c == lstvChar      =  [ mkRavL (reverse di ++ reverse bus) ]
-tlexDuring di bus str@(c:cs)
-  | c == kLstVar  =  mkLVar (reverse di ++ reverse bus) : tlex cs
-  | isAlpha c  =  tlexDuring di (c:bus) cs
-  | isDigit c  =  tlexDuring di (c:bus) cs
-  | otherwise  =  mkId (reverse di ++ reverse bus) : tlex str
+tlexDuring lno rest di ""  ""   =  (lno, mkDi di) : tlex rest
+tlexDuring lno rest di ""  [c]
+  | c == lstvChar      =  (lno, mkRavL di) : tlex rest
+tlexDuring lno rest di bus ""  
+                       =  (lno,mkId (reverse di ++ reverse bus)) : tlex rest
+tlexDuring lno rest di bus [c]  
+  | c == lstvChar      =  (lno,mkRavL (reverse di ++ reverse bus)) : tlex rest
+tlexDuring lno rest di bus str@(c:cs)
+  | c == kLstVar      =  (lno,mkLVar (reverse di ++ reverse bus)) 
+                         : tlex ((lno,cs):rest)
+  | isAlpha c         =  tlexDuring lno rest di (c:bus) cs
+  | isDigit c         =  tlexDuring lno rest di (c:bus) cs
+  | otherwise         =  (lno,mkId (reverse di ++ reverse bus)) 
+                         : tlex ((lno,str):rest)
 \end{code}
 
 If none of the above apply, we gobble up a maximum-munch symbol:
 \begin{code}
-tlexSym mys ""  = [ mkMys mys ]
-tlexSym mys str@(c:cs)
-  | issymbol c  =  tlexSym (c:mys) cs
-  | otherwise  =  mkMys mys : tlex str
+tlexSym lno rest mys ""  = (lno, mkMys mys) : tlex rest
+tlexSym lno rest mys str@(c:cs)
+  | issymbol c  =  tlexSym lno rest (c:mys) cs
+  | otherwise  =  (lno,mkMys mys) : tlex ((lno,str):rest)
 \end{code}
 
 \newpage

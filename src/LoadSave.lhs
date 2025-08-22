@@ -311,8 +311,8 @@ importConjecture :: MonadFail mf
 importConjecture thry conjname []
   = fail $ unlines [ "premature file end after "++kConjecture++" "++conjname ]
 importConjecture thry conjname tokens = do
-  (block,beyond) <- mdbg "GETBLOCK" $ getBlock tokens
-  (term,rest2) <- mdbg "TERMREAD" $ sTermRead $ pdbg "BLOCK" block
+  (block,beyond) <- getBlock tokens
+  (term,rest2) <- sTermRead block
   case rest2 of
     [] -> return ( ( conjname, mkAsn term scTrue ), beyond )
     ((_,TSep ","):rest3) -> do

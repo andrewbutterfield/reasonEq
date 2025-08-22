@@ -5,9 +5,9 @@ Theory Proto
 
 
 Conjecture true
-{ true false 
-hello 
-world }
+{
+true
+}
 
 Conjecture false
 {

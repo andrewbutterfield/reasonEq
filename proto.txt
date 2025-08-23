@@ -1,7 +1,8 @@
 Theory Proto
 
 
-
+Conjecture xxxx
+{ f CS (  y , 3 ) }
 
 
 Law true

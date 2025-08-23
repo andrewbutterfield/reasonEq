@@ -120,8 +120,8 @@ loadTheory text  =  importTheory nullTheory $ tlex $ prepare text
 
 importTheory :: MonadFail mf  => Theory -> [Token] -> mf Theory
 importTheory thry [] = fail "Empty theory file!"
-importTheory thry ( (lno,TId (Identifier key _) Static)
-                   :(_,TId (Identifier name _) Static):rest)
+importTheory thry ( (lno,TVar key Static)
+                   :(_,TVar name Static):rest)
   | key == kTheory && validFileName name = do
         (thry',rest') <- importDependencies (thName_ name thry) rest 
         importDefinitions thry' rest'   
@@ -135,7 +135,7 @@ importDependencies :: MonadFail mf
                    => Theory -> [Token] 
                    -> mf (Theory,[Token])
 importDependencies thry []  =  return (thry,[])
-importDependencies thry nlines@((lno,TId (Identifier needs _) Static):rest)
+importDependencies thry nlines@((lno,TVar  needs Static):rest)
   | needs == kNeeds  =  importDeps thry [] rest
   | otherwise = return (thry,nlines) -- no dependencies is fine
 
@@ -144,7 +144,7 @@ importDeps thry sped []
 importDeps thry sped ((lno,TClose close):rest) 
   | close == kEnd  
      =  return ((thDeps__ (++(reverse sped)) thry), rest)
-importDeps thry sped ((lno,TId (Identifier i _) Static):rest) 
+importDeps thry sped ((lno,TVar i Static):rest) 
   | validFileName i = importDeps thry (i:sped) rest 
 importDeps thry sped (tok@(lno,_):rest) 
   = fail $ unlines
@@ -152,15 +152,15 @@ importDeps thry sped (tok@(lno,_):rest)
       , "  saw "++renderToken tok ]
 
 -- importDepLine thry sped rest lno [] = importDeps thry sped rest
--- importDepLine thry sped rest lno ((_,TId (Identifier dep _) Static):deps)
+-- importDepLine thry sped rest lno ((_,TVar  dep Static):deps)
 --   | validFileName dep = importDepLine thry (dep:sped) rest lno deps
 --   | otherwise = 
 
 
 importDefinitions :: MonadFail mf => Theory -> [Token] -> mf Theory  
 importDefinitions thry []  =  return thry
-importDefinitions thry ((lno,TId (Identifier category _) Static)
-                       :(_,TId (Identifier name _) Static):rest)
+importDefinitions thry ((lno,TVar category Static)
+                       :(_,TVar name Static):rest)
   | category == kConjecture = do
       (conj',rest') <- importConjecture name rest
       importDefinitions (conjs__ (++[conj']) thry) rest'
@@ -287,16 +287,16 @@ importLaw lawname tokens = do
 importProvenace :: MonadFail mf => [Token] -> mf (Provenance,[Token])
 importProvenace [] = 
   fail ( "premature file end after "++kBegin )
-importProvenace ((_,TId (Identifier "axiom" _) Static):rest) 
+importProvenace ((_,TVar  "axiom" Static):rest) 
   = return (Axiom,rest)
-importProvenace ((_,TId (Identifier "assumed" _) Static):rest) 
+importProvenace ((_,TVar  "assumed" Static):rest) 
   = return (Assumed,rest)
-importProvenace ((_,TId (Identifier "proven" _) Static)
-                :(_,TId i Static):rest) 
-  = return (Proven (idName i),rest)
-importProvenace ((_,TId (Identifier "suspect" _) Static)
-                :(_,TId i Static):rest) 
-  = return (Suspect (idName i),rest)
+importProvenace ((_,TVar  "proven" Static)
+                :(_,TVar i Static):rest) 
+  = return (Proven i,rest)
+importProvenace ((_,TVar  "suspect" Static)
+                :(_,TVar i Static):rest) 
+  = return ((Suspect i),rest)
 importProvenace (tok@(lno,_):_)
   = fail $ unlines'
       [ "importProvenace: unexpected token after "++kBegin 
@@ -508,8 +508,8 @@ mkLV id1 vw  = LVbl (mkV id1 vw) [] []
 mkVarTerm id1 vw  =  fromJust $ var arbpred $ mkV id1 vw
 
 tok2GVar :: Token -> GenVar
-tok2GVar (_,(TId i vw))    = StdVar $ mkV i vw
-tok2GVar (_,(TLVar i vw )) = LstVar $ mkLV i vw
+tok2GVar (_,(TVar  nm vw)) = StdVar $ mkV  (jId nm) vw
+tok2GVar (_,(TLVar nm vw)) = LstVar $ mkLV (jId nm) vw
 \end{code}
 
 
@@ -533,13 +533,11 @@ sTermRead ((_,TNum n):tts) = return ( Val int $ Integer n, tts)
 Symbols are valid identifiers
 
 \begin{code}
-sTermRead ((_,TSym i1):(_,TId i2 Static ):(_,TOpen "("):tts)
-  | subable == "N" = sAppParse i1 False [] tts
-  | subable == "S" = sAppParse i1 True  [] tts
-  where 
-    consName = idName i1
-    subable  = idName i2
-sTermRead ((_,TSym i):tts) = return (mkVarTerm i Static, tts)
+sTermRead ((_,TSym consName):(_,TVar subable Static ):(_,TOpen "("):tts)
+  | subable == "N" = sAppParse cons False [] tts
+  | subable == "S" = sAppParse cons True  [] tts
+  where cons = jId consName
+sTermRead ((_,TSym sym):tts) = return (mkVarTerm (jId sym) Static, tts)
 \end{code}
 
 \paragraph{Constructions}
@@ -552,19 +550,17 @@ check for lone identifiers.
 We check for constructions first \dots
 
 \begin{code}
-sTermRead ((_,TId i1 vw):(_,TId i2 Static ):(_,TOpen "("):tts)
-  | subable == "NS" = sAppParse i1 False [] tts
-  | subable == "CS" = sAppParse i1 True  [] tts
+sTermRead ((_,TVar consName vw):(_,TVar subable Static ):(_,TOpen "("):tts)
+  | subable == "NS" = sAppParse cons False [] tts
+  | subable == "CS" = sAppParse cons True  [] tts
   where 
-    consName = idName i1
-    subable  = idName i2
-sTermRead ((_,TId i vw):tts)
-  | n == kTrue      =  return ( mkTrue n,  tts)
-  | n == kFalse     =  return ( mkFalse n, tts)
-  | n == kSetBind   =  setQParse tts
-  | n == kListBind  =  listQParse tts
-  | otherwise       =  return (mkVarTerm i vw, tts)
-  where n = idName i
+    cons = jId consName
+sTermRead ((_,TVar nm vw):tts)
+  | nm == kTrue      =  return ( mkTrue nm,  tts)
+  | nm == kFalse     =  return ( mkFalse nm, tts)
+  | nm == kSetBind   =  setQParse tts
+  | nm == kListBind  =  listQParse tts
+  | otherwise       =  return (mkVarTerm (jId nm) vw, tts)
 \end{code}
 
 \paragraph{Bad Start}
@@ -614,7 +610,8 @@ parse the quantifier:
 \begin{code}
 setQParse :: MonadFail mf => [Token] -> mf (Term,[Token])
 setQParse [] = fail "setQParse: premature end"
-setQParse ((_,TId i Static) : tts) = do
+setQParse ((_,TVar nm Static) : tts) = do
+  let i = jId nm
   (i,sg,term,tts') <- quantread i [] tts
   qsterm <- pBnd i (S.fromList $ map tok2GVar sg) term
   return (qsterm,tts')
@@ -627,7 +624,8 @@ parse the quantifier:
 \begin{code}
 listQParse :: MonadFail mf => [Token] -> mf (Term,[Token])
 listQParse [] = fail "listQParse: premature end"
-listQParse ((_,TId i Static) : tts) = do
+listQParse ((_,TVar nm Static) : tts) = do
+  let i = jId nm
   (i,sg,term,tts') <- quantread i [] tts
   lsterm <- pLam i (reverse $ map tok2GVar sg) term
   return (lsterm,tts')
@@ -639,9 +637,9 @@ $$ Qx~i~g_1 \dots g_i ~~~~~ g_{i+1} \dots g_n \bullet t $$
 parse the quantifier:
 \begin{code}
 quantread i _ [] = fail ("quantread: "++trId i++" (premature end)")
-quantread i sg ((_,TSym s) : tts)
-  | idName s == kQBody  =  quantreadBody i sg tts
-quantread i sg (v@(_,TId _ _)    : tts)   =  quantread i (v:sg) tts
+quantread i sg ((_,TSym sym) : tts)
+  | sym == kQBody  =  quantreadBody i sg tts
+quantread i sg (v@(_,TVar _ _)    : tts)   =  quantread i (v:sg) tts
 quantread i sg (lv@(_,TLVar _ _) : tts)   =  quantread i (lv:sg) tts
 quantread i sg (tok : _)  = fail ("quantread: unexpected token "++renderToken tok)
 \end{code}
@@ -804,12 +802,12 @@ then it denotes the corresponding list-variable.
 \begin{code}
 data TokenType
   =  TNum   Integer
-  |  TId    Identifier VarWhen
-  |  TLVar  Identifier VarWhen  -- i$
+  |  TVar   String VarWhen
+  |  TLVar  String VarWhen  -- i$
   |  TOpen  String
   |  TClose String
   |  TSep   String
-  |  TSym   Identifier
+  |  TSym   String
   |  TErr   String
   deriving (Eq,Show)
 type Token = (Int,TokenType)
@@ -819,14 +817,14 @@ We provide some rendering code, mostly for error reporting:
 \begin{code}
 renderTokTyp :: TokenType -> String
 renderTokTyp (TNum i) = show i
-renderTokTyp (TId i Static) = idName i
-renderTokTyp (TId i Before) = beforeChar : idName i
-renderTokTyp (TId i (During d)) = idName i ++ afterChar : d
-renderTokTyp (TId i After) = idName i ++ [afterChar]
+renderTokTyp (TVar nm Static) = nm
+renderTokTyp (TVar nm Before) = beforeChar : nm
+renderTokTyp (TVar nm (During d)) = nm ++ afterChar : d
+renderTokTyp (TVar nm After) = nm ++ [afterChar]
 renderTokTyp (TOpen str) = str
 renderTokTyp (TClose str) = str
 renderTokTyp (TSep str) = str
-renderTokTyp (TSym i) = idName i
+renderTokTyp (TSym sym) = sym
 renderTokTyp (TErr str) = str
 
 renderToken (lno,toktyp) = renderTokTyp toktyp
@@ -862,17 +860,16 @@ issymbol c
 Making symbols and identifiers:
 \begin{code}
 mkSym str
-  = case ident str of
-      But msgs  ->  TErr $ unlines' msgs
-      Yes i     ->  TSym i
+  | validIdent str  =  TSym str
+  | otherwise =  TErr ("mkSym: invalid symbol "++str)
 
 mkName tcons str
   = let (root,temp) = extractTemporality str
-    in case ident root of
-      But msgs  ->  TErr $ unlines' msgs
-      Yes i     ->  tcons i temp
+    in if validIdent root 
+        then tcons root temp
+        else TErr ("mkSym: invalid name "++str)
 
-mkId str   = mkName TId str
+mkId str   = mkName TVar str
 
 mkLVar str = mkName TLVar str
 
@@ -909,10 +906,10 @@ mkLawName :: [String] -> String
 mkLawName ss
   = intercalate "_" $ map showTTok $ concat $ map (tlex . prepare) ss
   where
-    showTTok (_,(TNum n))  = show n
-    showTTok (_,(TId i _)) = idName i
-    showTTok (_,(TSym i))  = idName i
-    showTTok ttok          = _redQ
+    showTTok (_,(TNum n))     =  show n
+    showTTok (_,(TVar nm _))  =  nm
+    showTTok (_,(TSym nm))    =  nm
+    showTTok ttok             =  _redQ
 \end{code}
 
 \newpage 

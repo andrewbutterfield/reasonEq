@@ -1,27 +1,33 @@
 Theory Proto
 
 
-Conjecture xxxx
-{ f CS (  y , 3 ) }
+a : TYPE
+aterm : TYPE
+atermf : TYPE
 
 
-Law true
-{ axiom
-,
+
+
+
+Conjecture true
+{
 true
 }
 
-Law false
-{ proven by_hand
-, false
+Conjecture false
+{
+false
 }
 
-Law fortytwo
-{ assumed,42}
+Conjecture fortytwo
+{
+42
+}
 
-Law neg99
-{ suspect excluded_middle,
--99 }
+Conjecture neg99
+{
+-99
+}
 
 Conjecture expr_static
 {

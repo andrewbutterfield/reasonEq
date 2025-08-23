@@ -15,6 +15,9 @@ module VarData ( VarMatchRole
                , pattern KnownVarList, pattern KnownVarSet
                , pattern AbstractList, pattern AbstractSet
                , pattern UnknownListVar
+               , DynamicLstVarRole, IdAndClass
+               , pattern DynamicList, pattern DynamicSet
+               , pattern DynamicAbsList, pattern DynamicAbsSet
                , VarTable
                , pattern VarData
                , vtList, stList, dtList
@@ -207,6 +210,12 @@ data DynamicLstVarRole -- Dynamic ListVar Matching Roles
  | DAS                  -- Abstract Known Set
  | UD         -- Unknown Dynamic List-Variable
  deriving (Eq, Ord, Show, Read)
+
+pattern DynamicList vis lvis expand len = DL vis lvis expand len
+pattern DynamicSet vis lvis expand len  = DS vis lvis expand len
+pattern DynamicAbsList                  = DAL
+pattern DynamicAbsSet                   = DAS
+
 \end{code}
 
 \newpage

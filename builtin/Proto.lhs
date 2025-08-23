@@ -16,6 +16,7 @@ import qualified Data.Map as M
 
 import Symbols
 
+import YesBut
 import Utilities
 import LexBase
 import Variables
@@ -43,11 +44,19 @@ Right now we use conjectures to provide terms for testing save/load.
 
 \subsubsection{Known Variables}
 
-We have none.
-The value $true$ is defined as a value, and not a known variable.
+\begin{code}
+atermIntro  =  mkConsIntro (jId "aterm") bool
+atermfIntro =  mkConsIntro (jId "atermf") boolf_1
+varAIntro = mkKnownVar (Vbl (jId "a") ObsV Before) (GivenType $ jId "N")
+\end{code}
+
 \begin{code}
 protoKnown :: VarTable
-protoKnown =  newNamedVarTable protoName
+protoKnown 
+  = atermIntro $
+    atermfIntro $
+    varAIntro $
+    newNamedVarTable protoName
 \end{code}
 
 \newpage

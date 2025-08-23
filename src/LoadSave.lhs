@@ -210,12 +210,45 @@ importVarData name _ = fail "loadVarData NYI"
 \begin{code}
 saveVarTable :: VarTable -> String
 saveVarTable (VarData (vtname,vtable,stable,dtable))
-  = showNonEmpty "variables" vtable ++
-    showNonEmpty "listvars " stable ++
-    showNonEmpty "dynamics " dtable
-  where 
-    showNonEmpty label m  
-       = if M.size m == 0 then "" else ('\n':label ++ ' ':(show (M.size m)))
+  = '\n':showTable saveKnownVar (M.assocs vtable) ++
+    '\n':showTable saveKnownLstVar (M.assocs stable) ++
+    '\n':showTable saveKnownDynamic (M.assocs dtable)
+  where  showTable showMapping alist  =  unlines' $ map showMapping alist 
+
+saveKnownVar :: (Variable,VarMatchRole) -> String
+saveKnownVar (v,KnownConst trm) = "constant "++trVar v ++ " = " ++ saveTerm trm
+saveKnownVar (v,KnownVar typ) = trVar v ++ " : TYPE" 
+saveKnownVar (v,vmr) = trVar v ++ " to VMR"
+
+saveVMR (KnownConst trm) = " "
+
+saveKnownLstVar :: (Variable,LstVarMatchRole) -> String
+saveKnownLstVar (lv,KnownVarList vl _ _) 
+  = trVar lv ++ "$ = <" ++ intercalate "," (map trGVar vl) ++ ">"
+saveKnownLstVar (lv,KnownVarSet vs _ _) 
+  = trVar lv ++ "$ = {" 
+    ++ intercalate "," (S.toList (S.map trGVar vs)) ++ "}"
+saveKnownLstVar (lv,lvmr) = trVar lv ++ "$ |-> LVMR"
+
+saveKnownDynamic :: (IdAndClass,DynamicLstVarRole) -> String
+saveKnownDynamic ((id,vc),DynamicList vl lvl _ _) 
+-- we can infer vc from the classes of vl and lvl 
+-- which should also be known-var
+  =  trId id ++ " = <"
+    ++ intercalate "," (map idName vl)
+    ++ (if length vl > 0 && length lvl > 0 then "," else "")
+    ++ intercalate "," (map ((++"$") . idName) lvl)
+    ++ ">"
+saveKnownDynamic ((id,vc),DynamicSet vs lvs _ _) 
+  =  trId id ++ " = {"
+    ++ intercalate "," (S.toList (S.map idName vs))
+    ++ (if S.size vs > 0 && S.size lvs > 0 then "," else "")
+    ++ intercalate "," (S.toList (S.map ((++"$") . idName) lvs))
+    ++ "}"
+saveKnownDynamic ((id,vc),DynamicAbsList) =  trId id ++" :: list "
+saveKnownDynamic ((id,vc),DynamicAbsSet) =  trId id ++" :: set "
+saveKnownDynamic ((id,vc),dlvr) 
+  =  trId id ++"," ++ show vc ++ " |-> " ++ show dlvr
 \end{code}
 
 \newpage

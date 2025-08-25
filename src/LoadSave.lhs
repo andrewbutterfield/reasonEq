@@ -217,7 +217,7 @@ saveVarTable (VarData (vtname,vtable,stable,dtable))
 
 saveKnownVar :: (Variable,VarMatchRole) -> String
 saveKnownVar (v,KnownConst trm) = "constant "++trVar v ++ " = " ++ saveTerm trm
-saveKnownVar (v,KnownVar typ) = trVar v ++ " : TYPE" 
+saveKnownVar (v,KnownVar typ) = trVar v ++ " : " ++ saveType typ 
 saveKnownVar (v,vmr) = trVar v ++ " to VMR"
 
 saveVMR (KnownConst trm) = " "
@@ -757,7 +757,16 @@ loadVariable string
 loadVariable string = fail ("loadVariable: invalid variable - "++string)
 \end{code}
 
+\section{Types}
 
+\begin{code}
+saveType :: Type -> String
+saveType ArbType = "T"
+saveType (TypeVar i) = idName i
+saveType (GivenType i) = idName i
+saveType (FunType td tr) = "( "++saveType td++" -> "++saveType tr++" )"
+saveType _ = "TYPE"
+\end{code}
 
 \newpage
 \section{Lexical Basics}

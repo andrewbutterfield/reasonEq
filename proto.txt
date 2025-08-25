@@ -1,9 +1,9 @@
 Theory Proto
 
 
-a : TYPE
-aterm : TYPE
-atermf : TYPE
+a : N
+aterm : B
+atermf : ( B -> B )
 
 
 

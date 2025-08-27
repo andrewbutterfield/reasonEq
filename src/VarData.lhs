@@ -27,6 +27,7 @@ module VarData ( VarMatchRole
                , addKnownLListVar, addKnownSListVar
                , addKnownVarList , addKnownVarSet
                , addAbstractVarList, addAbstractVarSet
+               , mkKnownConst
                , mkKnownVar
                , mkConsVar, mkConsIntro
                , mkPredVar, mkPredIntro
@@ -312,7 +313,7 @@ addKnownConst :: MonadFail m => Variable -> Term -> VarTable -> m VarTable
 
 We no longer require free variables in a term entry
 to be ``known''.
-Only static variables may name a constant,
+Only static non-observation variables may name a constant,
 and we must check that we won't introduce any cycles.
 \begin{code}
 addKnownConst var@(Vbl _ _ Static) trm vt@(VD (nm,vtable,stable,dtable))
@@ -612,10 +613,13 @@ addAbstractVarSet lv@(Vbl i vc vw) (VD (nm,vtable,stable,dtable))
 
 \subsection{Common VarData Builders}
 
-Constructor names, if required to be known,
+Constants and Constructor names, if required to be known,
 should be declared as known static observation variables.
 
 \begin{code}
+mkKnownConst :: Variable -> Term -> VarTable -> VarTable
+mkKnownConst v t = fromJust . addKnownConst v t
+
 mkKnownVar :: Variable -> Type -> VarTable -> VarTable
 mkKnownVar v t  = fromJust . addKnownVar v t
 

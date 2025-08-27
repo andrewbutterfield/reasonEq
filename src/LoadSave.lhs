@@ -94,7 +94,7 @@ Keywords:
 \begin{code}
 kTheory = "Theory"
 kNeeds = "Needs"
-kKnownVariable = "KnownVariable"
+kKnown = "Known"
 kLaw = "Law"
 kConjecture = "Conjecture"
 kBegin = "{"
@@ -167,8 +167,9 @@ importDefinitions thry ((lno,TVar category Static)
   | category == kLaw = do
       (law',rest') <- importLaw name rest
       importDefinitions (laws__ (++[law']) thry) rest'
-  | category == kKnownVariable = do
-      (known',rest') <- importVarData name rest
+importDefinitions thry ((lno,TVar category Static):rest)
+  | category == kKnown = do
+      (known',rest') <- importKnown (known thry) rest
       importDefinitions (known_ known' thry) rest'
 importDefinitions thry (tok@(lno,_):_)
   = fail $ unlines [ "loadTheory expected known/law/conj at " 
@@ -200,55 +201,85 @@ saveDeps deps =
 \subsection{Load VarTable}
 
 \begin{code}
-importVarData :: MonadFail mf 
-              => String -> [Token] ->mf (VarTable,[Token])
-importVarData name _ = fail "loadVarData NYI"
+importKnown :: MonadFail mf => VarTable -> [Token] -> mf (VarTable,[Token])
+importKnown vt [] = return (vt,[])
+importKnown vt toks@((lno,TVar str vw):rest)  =  importKVar lno str vw rest
+importKnown name (tok:rest) 
+  = fail "loadVarData NYfI"
 \end{code}
+
+\subsubsection{Load Known Variable}
+
+\begin{code}
+importKVar _ str vw ((lno,TSym ":"):rest)  =  importKVarOfType lno str vw rest
+importKVar _ str vw ((lno,TSym "="):rest)  =  importKVarIsConst lno str vw rest
+importKVar _ str vw ((lno,ttyp):_)
+  = fail ( "importKVar: unexpected token "
+           ++show ttyp++" at line "++show lno )
+importKVar lno str vw [] 
+  = fail ( "premature end while importing known var "
+            ++str++" at line "++show lno )
+\end{code}
+
+\begin{code}
+importKVarOfType lno str vw rest
+  = fail ("importKVarOfType("++str++") NYI at line "++show lno)
+\end{code}
+
+\begin{code}
+importKVarIsConst lno str vw rest
+  = fail ("importKVarIsConst("++str++") NYI at line "++show lno)
+\end{code}
+
 
 \subsection{Save VarTable}
 
+
+We start every entry with the ``Known'' keyword:
 \begin{code}
 saveVarTable :: VarTable -> String
 saveVarTable (VarData (vtname,vtable,stable,dtable))
   = '\n':showTable saveKnownVar (M.assocs vtable) ++
     '\n':showTable saveKnownLstVar (M.assocs stable) ++
     '\n':showTable saveKnownDynamic (M.assocs dtable)
-  where  showTable showMapping alist  =  unlines' $ map showMapping alist 
+  where showTable showMapping alist  
+          =  unlines' $ map ( ((kKnown++" ")++) . showMapping ) alist 
 
 saveKnownVar :: (Variable,VarMatchRole) -> String
-saveKnownVar (v,KnownConst trm) = "constant "++trVar v ++ " = " ++ saveTerm trm
-saveKnownVar (v,KnownVar typ) = trVar v ++ " : " ++ saveType typ 
-saveKnownVar (v,vmr) = trVar v ++ " to VMR"
+saveKnownVar (v,KnownConst trm) = saveVariable v ++ " = " 
+  ++ kBegin ++ " " ++ saveTerm trm ++ " " ++ kEnd
+saveKnownVar (v,KnownVar typ) = saveVariable v ++ " : " ++ saveType typ ++ " ."
+saveKnownVar (v,vmr) = saveVariable v ++ " to VMR"
 
 saveVMR (KnownConst trm) = " "
 
 saveKnownLstVar :: (Variable,LstVarMatchRole) -> String
 saveKnownLstVar (lv,KnownVarList vl _ _) 
-  = trVar lv ++ "$ = <" ++ intercalate "," (map trGVar vl) ++ ">"
+  = saveVariable lv ++ "$ = <" ++ intercalate "," (map trGVar vl) ++ ">"
 saveKnownLstVar (lv,KnownVarSet vs _ _) 
-  = trVar lv ++ "$ = {" 
+  = saveVariable lv ++ "$ = {" 
     ++ intercalate "," (S.toList (S.map trGVar vs)) ++ "}"
-saveKnownLstVar (lv,lvmr) = trVar lv ++ "$ |-> LVMR"
+saveKnownLstVar (lv,lvmr) = saveVariable lv ++ "$ |-> LVMR"
 
 saveKnownDynamic :: (IdAndClass,DynamicLstVarRole) -> String
 saveKnownDynamic ((id,vc),DynamicList vl lvl _ _) 
 -- we can infer vc from the classes of vl and lvl 
 -- which should also be known-var
-  =  trId id ++ " = <"
+  =  trId id ++ "$ = <"
     ++ intercalate "," (map idName vl)
     ++ (if length vl > 0 && length lvl > 0 then "," else "")
     ++ intercalate "," (map ((++"$") . idName) lvl)
     ++ ">"
 saveKnownDynamic ((id,vc),DynamicSet vs lvs _ _) 
-  =  trId id ++ " = {"
+  =  trId id ++ "$ = {"
     ++ intercalate "," (S.toList (S.map idName vs))
     ++ (if S.size vs > 0 && S.size lvs > 0 then "," else "")
     ++ intercalate "," (S.toList (S.map ((++"$") . idName) lvs))
     ++ "}"
-saveKnownDynamic ((id,vc),DynamicAbsList) =  trId id ++" :: list "
-saveKnownDynamic ((id,vc),DynamicAbsSet) =  trId id ++" :: set "
+saveKnownDynamic ((id,vc),DynamicAbsList) =  trId id ++"$ :: list "
+saveKnownDynamic ((id,vc),DynamicAbsSet) =  trId id ++"$ :: set "
 saveKnownDynamic ((id,vc),dlvr) 
-  =  trId id ++"," ++ show vc ++ " |-> " ++ show dlvr
+  =  trId id ++"$ ," ++ show vc ++ " |-> " ++ show dlvr
 \end{code}
 
 \newpage
@@ -766,6 +797,11 @@ saveType (TypeVar i) = idName i
 saveType (GivenType i) = idName i
 saveType (FunType td tr) = "( "++saveType td++" -> "++saveType tr++" )"
 saveType _ = "TYPE"
+\end{code}
+
+\begin{code}
+loadType :: MonadFail mf => String -> mf Type
+loadType str = return ArbType
 \end{code}
 
 \newpage

@@ -1,6 +1,6 @@
 BEGIN THEORY Proto
 DEPS = []
-KNOWN = VD ("Proto",fromList [],fromList [],fromList [])
+KNOWN = VD ("Proto",fromList [(VR (Id "a" 0,VO,WB),KV (TG (Id "N" 0))),(VR (Id "aterm" 0,VO,WS),KV (TG (Id "B" 0))),(VR (Id "atermf" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TG (Id "B" 0)))),(VR (Id "mol" 0,VE,WS),KC (K (TG (Id "Z" 0)) (VI 42)))],fromList [],fromList [])
 BEGIN LIST LAWS
 END LIST LAWS
 BEGIN LIST SIMPLIFIERS

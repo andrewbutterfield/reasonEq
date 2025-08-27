@@ -38,16 +38,13 @@ import TestRendering
 
 This is an isolated theory for prototyping stuff
 
-Right now we use conjectures to provide terms for testing save/load.
-
-
-
 \subsubsection{Known Variables}
 
 \begin{code}
 atermIntro  =  mkConsIntro (jId "aterm") bool
 atermfIntro =  mkConsIntro (jId "atermf") boolf_1
 varAIntro = mkKnownVar (Vbl (jId "a") ObsV Before) (GivenType $ jId "N")
+molIntro = mkKnownConst (Vbl (jId "mol") ExprV Static) (Val int $ Integer 42)
 \end{code}
 
 \begin{code}
@@ -56,6 +53,7 @@ protoKnown
   = atermIntro $
     atermfIntro $
     varAIntro $
+    molIntro $
     newNamedVarTable protoName
 \end{code}
 

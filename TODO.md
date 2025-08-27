@@ -2,9 +2,13 @@
 
 ## PLAN
 
+The following VarData variants are currently in use: `KC KV DL DAS` .
+
+
+
 
 The term parser fails on `Cons` because constructor name is parsed
-as a variable, and the  next token is `(`.
+as a variable, and the next token is `(`.
 We need some lookahead to spot a cons.
 
 

@@ -760,7 +760,11 @@ jSub ts lvs  =  fromJust $ substn ts lvs
 
 jVar :: Type -> Variable -> Term
 jVar typ v        =  fromJust $ var typ v
+
+jBnd :: Type -> Identifier -> VarSet -> Term ->Term
 jBnd typ n vs tm  =  fromJust $ bnd typ n vs tm
+
+jLam :: Type -> Identifier -> VarList -> Term ->Term
 jLam typ n vl tm  =  fromJust $ lam typ n vl tm
 
 jeVar v = fromJust $ eVar ArbType v

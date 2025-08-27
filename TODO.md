@@ -2,7 +2,9 @@
 
 ## PLAN
 
-The following VarData variants are currently in use: `KC KV DL DAS` .
+The following VarData variants are currently in use
+in mainstream theories: `KV DL DAS` .
+Added in by `Proto` are `KC AS`.
 
 
 

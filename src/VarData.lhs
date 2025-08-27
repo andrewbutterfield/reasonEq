@@ -31,7 +31,7 @@ module VarData ( VarMatchRole
                , mkKnownVar
                , mkConsVar, mkConsIntro
                , mkPredVar, mkPredIntro
-               , mkAbsSetVar
+               , mkAbsSetVar, mkAbsListVar
                , lookupLVarTs, lookupVarTable, lookupVarTables
                , lookupLVar, lookupLVarTable, lookupLVarTables
                , isUnknownVar, isUnknownLVar, isUnknownGVar
@@ -637,6 +637,9 @@ mkPredIntro i t = mkKnownVar (mkPredVar i t) t
 
 mkAbsSetVar :: Variable -> VarTable -> VarTable
 mkAbsSetVar v = fromJust . addAbstractVarSet v
+
+mkAbsListVar :: Variable -> VarTable -> VarTable
+mkAbsListVar v = fromJust . addAbstractVarList v
 \end{code}
 
 

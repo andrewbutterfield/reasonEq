@@ -13,6 +13,7 @@ module Proto (
 
 import Data.Maybe
 import qualified Data.Map as M
+import qualified Data.Set as S
 
 import Symbols
 
@@ -41,10 +42,30 @@ This is an isolated theory for prototyping stuff
 \subsubsection{Known Variables}
 
 \begin{code}
+--variables
 atermIntro  =  mkConsIntro (jId "aterm") bool
 atermfIntro =  mkConsIntro (jId "atermf") boolf_1
-varAIntro = mkKnownVar (Vbl (jId "a") ObsV Before) (GivenType $ jId "N")
+var'AIntro = mkKnownVar (Vbl (jId "a") ObsV Before) (GivenType $ jId "N")
+varA'Intro = mkKnownVar (Vbl (jId "a") ObsV After) (GivenType $ jId "N")
 molIntro = mkKnownConst (Vbl (jId "mol") ExprV Static) (Val int $ Integer 42)
+genvar = Vbl (jId "gen") ExprV Static
+genVarIntro = fromJust . addGenericVar genvar
+instvar = Vbl (jId "inst") ExprV Static
+instVarIntro = fromJust . addInstanceVar instvar genvar
+--static list variables
+klLVar = LVbl (Vbl (jId "klist") ObsV Static) [] []
+klistIntro = fromJust . addKnownLListVar klLVar []
+ksLVar = LVbl (Vbl (jId "kset") ObsV Static) [] []
+ksetIntro = fromJust . addKnownSListVar ksLVar S.empty
+kabsSetIntro = mkAbsSetVar (Vbl (jId "aset") ObsV Static)
+kabsListIntro = mkAbsListVar (Vbl (jId "alist") ObsV Static)
+--dynamic list variables
+dlLVar = LVbl (Vbl (jId "dlist") ObsV Before) [] []
+dlistIntro = fromJust . addKnownLListVar dlLVar []
+dsLVar = LVbl (Vbl (jId "dset") ObsV After) [] []
+dsetIntro = fromJust . addKnownSListVar dsLVar S.empty
+dabsSetIntro = mkAbsSetVar (Vbl (jId "daset") ObsV Before)
+dabsListIntro = mkAbsListVar (Vbl (jId "dalist") ObsV After)
 \end{code}
 
 \begin{code}
@@ -52,8 +73,21 @@ protoKnown :: VarTable
 protoKnown 
   = atermIntro $
     atermfIntro $
-    varAIntro $
+    var'AIntro $
+    varA'Intro $
     molIntro $
+    instVarIntro $
+    genVarIntro $ 
+
+    klistIntro $
+    ksetIntro $
+    kabsListIntro $
+    kabsSetIntro $
+ 
+    dlistIntro $
+    dsetIntro $
+    dabsListIntro $
+    dabsSetIntro $
     newNamedVarTable protoName
 \end{code}
 

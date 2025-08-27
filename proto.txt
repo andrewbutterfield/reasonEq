@@ -1,119 +1,115 @@
-Theory UWhile
-Needs
-  UBase Closure Exists Forall Equal Impl AOI And Or Not EQV
-}
+Theory Proto
 
 
-Known ; : ( B -> ( B -> B ) ) .
-Known asg : ( t -> ( t -> B ) ) .
-Known cond : ( B -> ( B -> ( B -> B ) ) ) .
+Known 'a : N .
+Known a' : N .
+Known aterm : B .
+Known atermf : ( B -> B ) .
+Known gen :: generic
+Known inst instanceof gen
+Known mol = { 42 }
+Known alist$ :: list
+Known aset$ :: set
+Known klist$ = <>
+Known kset$ = {}
+Known dalist$ :: list 
+Known daset$ :: set 
+Known dlist$ = <>
+Known dset$ = {}
 
-Known O$ :: set 
 
 
-Law cond_def
-{ axiom
-,
-eqv CS (cond CS (P,'b,Q),or CS (and CS ('b,P),and CS (not CS ('b),Q)))
-}
-
-Law sqcmp_def
-{ axiom
-,
-eqv CS (; NS (P,Q),B-stuff?)
-,
-saveSideCond NYI
-}
-
-Conjecture cond_idem
+Conjecture true
 {
-eqv CS (cond CS (P,'b,P),P)
+true
 }
 
-Conjecture cond_symm
+Conjecture false
 {
-eqv CS (cond CS (P,'b,Q),cond CS (Q,not CS ('b),P))
+false
 }
 
-Conjecture cond_assoc
+Conjecture fortytwo
 {
-eqv CS (cond CS (cond CS (P,'b,Q),'c,R),cond CS (P,and CS ('b,'c),cond CS (Q,'c,R)))
+42
 }
 
-Conjecture cond_distr
+Conjecture neg99
 {
-eqv CS (cond CS (P,'b,cond CS (Q,'c,R)),cond CS (cond CS (P,'b,Q),'c,cond CS (P,'b,R)))
+-99
 }
 
-Conjecture cond_runit
+Conjecture expr_static
 {
-eqv CS (cond CS (P,true,Q),P)
+Ve
 }
 
-Conjecture cond_lunit
+Conjecture expr_before
 {
-eqv CS (cond CS (Q,false,P),P)
+'Ve
 }
 
-Conjecture cond_absorb
+Conjecture expr_after
 {
-eqv CS (cond CS (P,'b,cond CS (Q,'b,R)),cond CS (P,'b,R))
+Ve'
 }
 
-Conjecture cond_merge
+Conjecture expr_during
 {
-eqv CS (cond CS (P,'b,cond CS (P,'c,Q)),cond CS (P,or CS ('b,'c),Q))
+Ve'd
 }
 
-Conjecture cond_mdistr
+Conjecture pred_static
 {
-eqv CS (cond CS (star CS (P,Q),'b,star CS (R,S)),star CS (cond CS (P,'b,R),cond CS (Q,'b,S)))
+Vp
 }
 
-Conjecture cond_alt_def
+Conjecture pred_before
 {
-eqv CS (cond CS (P,'b,Q),and CS (imp CS ('b,P),imp CS (not CS ('b),Q)))
+'Vp
 }
 
-Conjecture cond_alt_def2
+Conjecture pred_after
 {
-eqv CS (cond CS (P,'b,Q),eqv CS (or CS (not CS ('b),P),or CS ('b,Q)))
+Vp'
 }
 
-Conjecture sqcmp_assoc
+Conjecture pred_during
 {
-eqv CS (; NS (P,; NS (Q,R)),; NS (; NS (P,Q),R))
-,
-saveSideCond NYI
+Vp'd
 }
 
-Conjecture sqcmp_cond_l_distr
+Conjecture cons_S_zero
 {
-eqv CS (; NS (cond CS (P,'b,Q),R),cond CS (; NS (P,R),'b,; NS (Q,R)))
-,
-saveSideCond NYI
+cs0 CS ()
 }
 
-Conjecture cond_sqcap_distr
+Conjecture cons_S_one
 {
-eqv CS (cond CS (P,'b,sqcap CS (Q,R)),sqcap CS (cond CS (P,'b,Q),cond CS (P,'b,R)))
+cs1 CS (T)
 }
 
-Conjecture sqcmp_sqcap_ldistr
+Conjecture cons_S_two
 {
-eqv CS (; NS (sqcap CS (P,Q),R),sqcap CS (; NS (P,R),; NS (Q,R)))
-,
-saveSideCond NYI
+cs2 CS (T,T)
 }
 
-Conjecture sqcmp_sqcap_rdistr
+Conjecture cons_N_zero
 {
-eqv CS (; NS (P,sqcap CS (Q,R)),sqcap CS (; NS (P,Q),; NS (P,R)))
-,
-saveSideCond NYI
+ns0 NS ()
 }
 
-Conjecture sqcap_cond_distr
+Conjecture cons_N_two
 {
-eqv CS (sqcap CS (P,cond CS (Q,'b,R)),cond CS (sqcap CS (P,Q),'b,sqcap CS (P,R)))
+ns2 NS (T,T)
+}
+
+Conjecture cons_N_two
+{
+ns2 NS (T,T)
+}
+
+Conjecture cons_nesting
+{
+nest CS (sub1 CS (),sub2 CS (T),sub3 CS ())
 }

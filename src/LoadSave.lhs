@@ -205,7 +205,7 @@ importKnown :: MonadFail mf => VarTable -> [Token] -> mf (VarTable,[Token])
 importKnown vt [] = return (vt,[])
 importKnown vt toks@((lno,TVar str vw):rest)  =  importKVar lno str vw rest
 importKnown name (tok:rest) 
-  = fail "loadVarData NYfI"
+  = fail ("loadVarData NYfI - tok:"++show tok)
 \end{code}
 
 \subsubsection{Load Known Variable}
@@ -249,7 +249,10 @@ saveKnownVar :: (Variable,VarMatchRole) -> String
 saveKnownVar (v,KnownConst trm) = saveVariable v ++ " = " 
   ++ kBegin ++ " " ++ saveTerm trm ++ " " ++ kEnd
 saveKnownVar (v,KnownVar typ) = saveVariable v ++ " : " ++ saveType typ ++ " ."
-saveKnownVar (v,vmr) = saveVariable v ++ " to VMR"
+saveKnownVar (gv,GenericVar) = saveVariable gv ++ " :: generic"
+saveKnownVar (iv,InstanceVar gv) 
+  = saveVariable iv ++ " instanceof " ++ saveVariable gv
+saveKnownVar (v,vmr) = "" -- unknown variable
 
 saveVMR (KnownConst trm) = " "
 
@@ -259,7 +262,11 @@ saveKnownLstVar (lv,KnownVarList vl _ _)
 saveKnownLstVar (lv,KnownVarSet vs _ _) 
   = saveVariable lv ++ "$ = {" 
     ++ intercalate "," (S.toList (S.map trGVar vs)) ++ "}"
-saveKnownLstVar (lv,lvmr) = saveVariable lv ++ "$ |-> LVMR"
+saveKnownLstVar (lv,AbstractList) 
+  = saveVariable lv ++ "$ :: list"
+saveKnownLstVar (lv,AbstractSet) 
+  = saveVariable lv ++ "$ :: set"
+saveKnownLstVar (lv,lvmr) = ""
 
 saveKnownDynamic :: (IdAndClass,DynamicLstVarRole) -> String
 saveKnownDynamic ((id,vc),DynamicList vl lvl _ _) 
@@ -278,8 +285,7 @@ saveKnownDynamic ((id,vc),DynamicSet vs lvs _ _)
     ++ "}"
 saveKnownDynamic ((id,vc),DynamicAbsList) =  trId id ++"$ :: list "
 saveKnownDynamic ((id,vc),DynamicAbsSet) =  trId id ++"$ :: set "
-saveKnownDynamic ((id,vc),dlvr) 
-  =  trId id ++"$ ," ++ show vc ++ " |-> " ++ show dlvr
+saveKnownDynamic ((id,vc),dlvr) = ""
 \end{code}
 
 \newpage

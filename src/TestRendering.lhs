@@ -660,6 +660,8 @@ trVarMatchRoleU = trvmr trIdU
 
 trvmr trid (KnownConst t)  =  spaced _triangleq ++ trterm trid 0 t
 trvmr trid (KnownVar t)    =  " : " ++ trType t
+trvmr trid GenericVar      =  " generic"
+trvmr trid (InstanceVar gv) =  " inst("++trVar gv++")"
 trvmr trid UnknownVar      =  " ?"
 \end{code}
 

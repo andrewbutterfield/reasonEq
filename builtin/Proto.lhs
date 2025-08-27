@@ -53,19 +53,19 @@ genVarIntro = fromJust . addGenericVar genvar
 instvar = Vbl (jId "inst") ExprV Static
 instVarIntro = fromJust . addInstanceVar instvar genvar
 --static list variables
-klLVar = LVbl (Vbl (jId "klist") ObsV Static) [] []
+klLVar = LVbl (Vbl (jId "list") ObsV Static) [] []
 klistIntro = fromJust . addKnownLListVar klLVar []
-ksLVar = LVbl (Vbl (jId "kset") ObsV Static) [] []
+ksLVar = LVbl (Vbl (jId "set") ObsV Static) [] []
 ksetIntro = fromJust . addKnownSListVar ksLVar S.empty
 kabsSetIntro = mkAbsSetVar (Vbl (jId "aset") ObsV Static)
 kabsListIntro = mkAbsListVar (Vbl (jId "alist") ObsV Static)
 --dynamic list variables
-dlLVar = LVbl (Vbl (jId "dlist") ObsV Before) [] []
+dlLVar = LVbl (Vbl (jId "list") ObsV Before) [] []
 dlistIntro = fromJust . addKnownLListVar dlLVar []
-dsLVar = LVbl (Vbl (jId "dset") ObsV After) [] []
+dsLVar = LVbl (Vbl (jId "set") ObsV After) [] []
 dsetIntro = fromJust . addKnownSListVar dsLVar S.empty
-dabsSetIntro = mkAbsSetVar (Vbl (jId "daset") ObsV Before)
-dabsListIntro = mkAbsListVar (Vbl (jId "dalist") ObsV After)
+dabsSetIntro = mkAbsSetVar (Vbl (jId "aset") ObsV Before)
+dabsListIntro = mkAbsListVar (Vbl (jId "alist") ObsV After)
 \end{code}
 
 \begin{code}
@@ -159,6 +159,27 @@ tmConsNest = tmConj ("cons"-.-"nesting")
                                 , mkCons "sub3" cs [] 
                                 ])
 
+-- Quantifiers
+
+
+mkBody = mkV "body" PredV Static
+mkQ str vs body = jBnd ArbType (jId str) (S.fromList vs) mkBody
+va = Vbl (jId "a") ObsV Before ; gva = StdVar va
+lva = LVbl va [] [] ; glva = LstVar lva
+va' = Vbl (jId "a") ObsV After ; gva' = StdVar va'
+lva' = LVbl va' [] [] ; glva' = LstVar lva'
+
+tmForall0 = tmConj ("forall"-.-"zero")
+            (mkQ "forall" [] mkBody)
+tmForall1 = tmConj ("forall"-.-"one")
+            (mkQ "forall" [gva] mkBody)
+tmForall2 = tmConj ("forall"-.-"two")
+            (mkQ "forall" [gva,gva'] mkBody)
+tmForall3 = tmConj ("forall"-.-"three")
+            (mkQ "forall" [gva,gva',glva] mkBody)
+tmForall4 = tmConj ("forall"-.-"four")
+            (mkQ "forall" [gva,gva',glva,glva'] mkBody)
+
 \end{code}
 
 
@@ -168,6 +189,7 @@ Collected\dots
 protoConjs :: [NmdAssertion]
 protoConjs = map mkNmdAsn 
   [ tmTrue, tmFalse
+  , tmForall0, tmForall1, tmForall2, tmForall3, tmForall4
   , tmNumPos, tmNumNeg 
   , tmVarES, tmVar'ES, tmVarES', tmVarES'd
   , tmVarPS, tmVar'PS, tmVarPS', tmVarPS'd

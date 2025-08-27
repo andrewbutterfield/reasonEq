@@ -1,6 +1,6 @@
 BEGIN THEORY Proto
 DEPS = []
-KNOWN = VD ("Proto",fromList [(VR (Id "a" 0,VO,WB),KV (TG (Id "N" 0))),(VR (Id "a" 0,VO,WA),KV (TG (Id "N" 0))),(VR (Id "aterm" 0,VO,WS),KV (TG (Id "B" 0))),(VR (Id "atermf" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TG (Id "B" 0)))),(VR (Id "gen" 0,VE,WS),KG),(VR (Id "inst" 0,VE,WS),KI (VR (Id "gen" 0,VE,WS))),(VR (Id "mol" 0,VE,WS),KC (K (TG (Id "Z" 0)) (VI 42)))],fromList [(VR (Id "alist" 0,VO,WS),AL),(VR (Id "aset" 0,VO,WS),AS),(VR (Id "klist" 0,VO,WS),KL [] [] 0),(VR (Id "kset" 0,VO,WS),KS (fromList []) (fromList []) 0)],fromList [((Id "dalist" 0,VO),DAL),((Id "daset" 0,VO),DAS),((Id "dlist" 0,VO),DL [] [] [] 0),((Id "dset" 0,VO),DS (fromList []) (fromList []) (fromList []) 0)])
+KNOWN = VD ("Proto",fromList [(VR (Id "a" 0,VO,WB),KV (TG (Id "N" 0))),(VR (Id "a" 0,VO,WA),KV (TG (Id "N" 0))),(VR (Id "aterm" 0,VO,WS),KV (TG (Id "B" 0))),(VR (Id "atermf" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TG (Id "B" 0)))),(VR (Id "gen" 0,VE,WS),KG),(VR (Id "inst" 0,VE,WS),KI (VR (Id "gen" 0,VE,WS))),(VR (Id "mol" 0,VE,WS),KC (K (TG (Id "Z" 0)) (VI 42)))],fromList [(VR (Id "alist" 0,VO,WS),AL),(VR (Id "aset" 0,VO,WS),AS),(VR (Id "list" 0,VO,WS),KL [] [] 0),(VR (Id "set" 0,VO,WS),KS (fromList []) (fromList []) 0)],fromList [((Id "alist" 0,VO),DAL),((Id "aset" 0,VO),DAS),((Id "list" 0,VO),DL [] [] [] 0),((Id "set" 0,VO),DS (fromList []) (fromList []) (fromList []) 0)])
 BEGIN LIST LAWS
 END LIST LAWS
 BEGIN LIST SIMPLIFIERS

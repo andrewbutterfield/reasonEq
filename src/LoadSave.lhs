@@ -254,8 +254,6 @@ saveKnownVar (iv,InstanceVar gv)
   = saveVariable iv ++ " instanceof " ++ saveVariable gv
 saveKnownVar (v,vmr) = "" -- unknown variable
 
-saveVMR (KnownConst trm) = " "
-
 saveKnownLstVar :: (Variable,LstVarMatchRole) -> String
 saveKnownLstVar (lv,KnownVarList vl _ _) 
   = saveVariable lv ++ "$ = <" ++ intercalate "," (map trGVar vl) ++ ">"
@@ -272,19 +270,19 @@ saveKnownDynamic :: (IdAndClass,DynamicLstVarRole) -> String
 saveKnownDynamic ((id,vc),DynamicList vl lvl _ _) 
 -- we can infer vc from the classes of vl and lvl 
 -- which should also be known-var
-  =  trId id ++ "$ = <"
+  =  trId id ++ "$' = <"
     ++ intercalate "," (map idName vl)
     ++ (if length vl > 0 && length lvl > 0 then "," else "")
     ++ intercalate "," (map ((++"$") . idName) lvl)
     ++ ">"
 saveKnownDynamic ((id,vc),DynamicSet vs lvs _ _) 
-  =  trId id ++ "$ = {"
+  =  trId id ++ "$' = {"
     ++ intercalate "," (S.toList (S.map idName vs))
     ++ (if S.size vs > 0 && S.size lvs > 0 then "," else "")
     ++ intercalate "," (S.toList (S.map ((++"$") . idName) lvs))
     ++ "}"
-saveKnownDynamic ((id,vc),DynamicAbsList) =  trId id ++"$ :: list "
-saveKnownDynamic ((id,vc),DynamicAbsSet) =  trId id ++"$ :: set "
+saveKnownDynamic ((id,vc),DynamicAbsList) =  trId id ++"$' :: list "
+saveKnownDynamic ((id,vc),DynamicAbsSet) =  trId id ++"$' :: set "
 saveKnownDynamic ((id,vc),dlvr) = ""
 \end{code}
 

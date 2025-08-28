@@ -254,6 +254,7 @@ saveKnownVar (iv,InstanceVar gv)
   = saveVariable iv ++ " instanceof " ++ saveVariable gv
 saveKnownVar (v,vmr) = "" -- unknown variable
 
+-- static list variables
 saveKnownLstVar :: (Variable,LstVarMatchRole) -> String
 saveKnownLstVar (lv,KnownVarList vl _ _) 
   = saveVariable lv ++ "$ = <" ++ intercalate "," (map trGVar vl) ++ ">"
@@ -265,6 +266,7 @@ saveKnownLstVar (lv,AbstractList)
 saveKnownLstVar (lv,AbstractSet) 
   = saveVariable lv ++ "$ :: set"
 saveKnownLstVar (lv,lvmr) = ""
+
 
 saveKnownDynamic :: (IdAndClass,DynamicLstVarRole) -> String
 saveKnownDynamic ((id,vc),DynamicList vl lvl _ _) 
@@ -884,8 +886,8 @@ then it denotes the corresponding list-variable.
 \begin{code}
 data TokenType
   =  TNum   Integer
-  |  TVar   String VarWhen
-  |  TLVar  String VarWhen  -- i$
+  |  TVar   String VarWhen  -- v 'v v'm v'
+  |  TLVar  String VarWhen  -- v$ 'v$ v$'m v$'
   |  TOpen  String
   |  TClose String
   |  TSep   String
@@ -955,9 +957,15 @@ mkId str   = mkName TVar str
 
 mkLVar str = mkName TLVar str
 
+-- v 'v v'm v'
+-- v$ 'v$ v$'m v$'
 extractTemporality cs -- non-empty
- | c1 == beforeChar      =  ( tail cs, Before) --  `nm
- | last cs == afterChar  =  ( init cs, After ) --  nm'
+ | c1 == beforeChar      =  ( tail cs, Before) --  ' v    ' v$
+ | last cs == afterChar  =  ( init cs, After ) --  v '    v$ '
+ -- remaining: v v$ v'm  v$'m
+
+-- NEED TO REWORK BELOW
+
  --    nm       nm$    nm'$    nm'subscr    nm'subscr$
  --     v        v      v         v             v
  --   (nm,S) (nm$,S) (nm$,A) (nm,D subscr) (nm$,D subscr)
@@ -1046,6 +1054,9 @@ is an error.
 \begin{code}
 -- tlexId isBefore di rest-of-ident
 -- note, the di component is never empty when this is called
+-- v 'v v'm v'
+-- v$ 'v$ v$'m v$'
+-- seen ' or v
 tlexId lno rest _ di ""     =  (lno, mkDi di) : tlex rest -- std-var
 tlexId lno rest _ di [c] 
   | c == lstvChar  =  (lno, mkRavL di) : tlex rest -- lst-var

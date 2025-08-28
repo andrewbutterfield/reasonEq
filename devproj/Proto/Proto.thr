@@ -10,6 +10,11 @@ END LIST DEFFOLD
 BEGIN LIST CONJECTURES
 ("true",ASN (K (TG (Id "B" 0)) (VB True),([],fromList [])))
 ("false",ASN (K (TG (Id "B" 0)) (VB False),([],fromList [])))
+("forall_zero",ASN (V (TG (Id "B" 0)) (VR (Id "body" 0,VP,WS)),([],fromList [])))
+("forall_one",ASN (B T (Id "forall" 0) (fromList [GV (VR (Id "a" 0,VO,WB))]) (V (TG (Id "B" 0)) (VR (Id "body" 0,VP,WS))),([],fromList [])))
+("forall_two",ASN (B T (Id "forall" 0) (fromList [GV (VR (Id "a" 0,VO,WB)),GV (VR (Id "a" 0,VO,WA))]) (V (TG (Id "B" 0)) (VR (Id "body" 0,VP,WS))),([],fromList [])))
+("forall_three",ASN (B T (Id "forall" 0) (fromList [GV (VR (Id "a" 0,VO,WB)),GV (VR (Id "a" 0,VO,WA)),GL (LV (VR (Id "a" 0,VO,WB),[],[]))]) (V (TG (Id "B" 0)) (VR (Id "body" 0,VP,WS))),([],fromList [])))
+("forall_four",ASN (B T (Id "forall" 0) (fromList [GV (VR (Id "a" 0,VO,WB)),GV (VR (Id "a" 0,VO,WA)),GL (LV (VR (Id "a" 0,VO,WB),[],[])),GL (LV (VR (Id "a" 0,VO,WA),[],[]))]) (V (TG (Id "B" 0)) (VR (Id "body" 0,VP,WS))),([],fromList [])))
 ("fortytwo",ASN (K (TG (Id "B" 0)) (VI 42),([],fromList [])))
 ("neg99",ASN (K (TG (Id "B" 0)) (VI (-99)),([],fromList [])))
 ("expr_static",ASN (V (TG (Id "B" 0)) (VR (Id "Ve" 0,VE,WS)),([],fromList [])))

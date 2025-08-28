@@ -29,6 +29,31 @@ Conjecture false
 false
 }
 
+Conjecture forall_zero
+{
+body
+}
+
+Conjecture forall_one
+{
+B-stuff?
+}
+
+Conjecture forall_two
+{
+B-stuff?
+}
+
+Conjecture forall_three
+{
+B-stuff?
+}
+
+Conjecture forall_four
+{
+B-stuff?
+}
+
 Conjecture fortytwo
 {
 42
@@ -112,29 +137,4 @@ ns2 NS (T,T)
 Conjecture cons_nesting
 {
 nest CS (sub1 CS (),sub2 CS (T),sub3 CS ())
-}
-
-Conjecture forall_zero
-{
-body
-}
-
-Conjecture forall_one
-{
-B-stuff?
-}
-
-Conjecture forall_two
-{
-B-stuff?
-}
-
-Conjecture forall_three
-{
-B-stuff?
-}
-
-Conjecture forall_four
-{
-B-stuff?
 }

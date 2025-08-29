@@ -901,10 +901,14 @@ We provide some rendering code, mostly for error reporting:
 \begin{code}
 renderTokTyp :: TokenType -> String
 renderTokTyp (TNum i) = show i
-renderTokTyp (TVar nm Static) = nm
-renderTokTyp (TVar nm Before) = beforeChar : nm
-renderTokTyp (TVar nm (During d)) = nm ++ afterChar : d
-renderTokTyp (TVar nm After) = nm ++ [afterChar]
+renderTokTyp (TVar  nm Static)     = nm
+renderTokTyp (TVar  nm Before)     = beforeChar : nm
+renderTokTyp (TVar  nm (During d)) = nm ++ afterChar : d
+renderTokTyp (TVar  nm After)      = nm ++ [afterChar]
+renderTokTyp (TLVar nm Static)     = nm ++ "$"
+renderTokTyp (TLVar nm Before)     = beforeChar : nm ++ "$"
+renderTokTyp (TLVar nm (During d)) = nm ++ '$' : afterChar : d
+renderTokTyp (TLVar nm After)      = nm ++ ['$',afterChar]
 renderTokTyp (TOpen str) = str
 renderTokTyp (TClose str) = str
 renderTokTyp (TSep str) = str
@@ -1007,19 +1011,18 @@ mkLawName ss
 Now we define the lexer:
 \begin{code}
 tlex :: [NumberedLine] -> [Token]
-tlex []                  = []
-tlex ((lno,""):rest)     =  tlex rest
+tlex []                    = []
+tlex ((lno,""):rest)       =  tlex rest
 tlex ((lno,str@(c:cs)):rest)
-  | isSpace c            =  tlex ((lno,cs):rest)
-  | isDigit c            =  tlexNum lno rest [c] cs
-  | c == '-'             =  tlexMinus lno rest cs
-  | c == '_'             =  tlexId lno rest False [c] cs
-  | isAlpha c            =  tlexId lno rest False [c] cs
-  | c == beforeChar      =  tlexId lno rest True  [c] cs
-  | c `elem` openings    =  (lno,TOpen [c])  : tlex ((lno,cs):rest)
-  | c `elem` closings    =  (lno,TClose [c]) : tlex ((lno,cs):rest)
-  | c `elem` separators  =  (lno,TSep [c])   : tlex ((lno,cs):rest)
-  | otherwise            =  tlexSym lno rest [c] cs
+  | isSpace c              =  tlex ((lno,cs):rest)
+  | isDigit c              =  tlexNum lno rest [c] cs
+  | c == '-'               =  tlexMinus lno rest cs
+  | isAlpha c || c == '_'  =  tlexVar lno rest [c] cs
+  | c == beforeChar        =  tlexBeforeId lno rest cs
+  | c `elem` openings      =  (lno,TOpen [c])  : tlex ((lno,cs):rest)
+  | c `elem` closings      =  (lno,TClose [c]) : tlex ((lno,cs):rest)
+  | c `elem` separators    =  (lno,TSep [c])   : tlex ((lno,cs):rest)
+  | otherwise              =  tlexSym lno rest [c] cs
 \end{code}
 
 
@@ -1052,42 +1055,49 @@ is an error.
 
 
 \begin{code}
--- tlexId isBefore di rest-of-ident
--- note, the di component is never empty when this is called
--- v 'v v'm v'
--- v$ 'v$ v$'m v$'
--- seen ' or v
-tlexId lno rest _ di ""     =  (lno, mkDi di) : tlex rest -- std-var
-tlexId lno rest _ di [c] 
-  | c == lstvChar  =  (lno, mkRavL di) : tlex rest -- lst-var
-tlexId lno rest hasDC di str@(c:cs)
-  | isAlpha c  =  tlexId lno rest hasDC (c:di) cs
-  | isDigit c  =  tlexId lno rest hasDC (c:di) cs
-  | c == '_'   =  tlexId lno rest hasDC (c:di) cs
-  | c == afterChar
-      = if hasDC then (lno,derr c di) : tlex ((lno,cs):rest)
-                 else  tlexDuring lno rest (c:di) [] cs
-  | c == kLstVar = (lno,mkRavL di) : tlex ((lno,cs):rest) 
-  | otherwise  =  (lno, mkDi di) : tlex ((lno,str):rest)
-  where
-    derr c di = TErr ("Overdecorated: " ++ reverse (c:di))
+-- seen '  expecting  v v$ 
+tlexBeforeId lno rest "" 
+  =  (lno,TErr "' found without variable part") : tlex rest
+tlexBeforeId lno rest cs@(c:cs')
+  | isAlpha c  =  tlexBeforeGVar lno rest [c] cs'
+  | otherwise  =  (lno,TErr "' found without variable part") : tlex ((lno,cs):rest) 
 
--- here we accept alphanumeric subscripts
-tlexDuring lno rest di ""  ""   =  (lno, mkDi di) : tlex rest
-tlexDuring lno rest di ""  [c]
-  | c == lstvChar      =  (lno, mkRavL di) : tlex rest
-tlexDuring lno rest di bus ""  
-                       =  (lno,mkId (reverse di ++ reverse bus)) : tlex rest
-tlexDuring lno rest di bus [c]  
-  | c == lstvChar      =  (lno,mkRavL (reverse di ++ reverse bus)) : tlex rest
-tlexDuring lno rest di bus str@(c:cs)
-  | c == kLstVar      =  (lno,mkLVar (reverse di ++ reverse bus)) 
-                         : tlex ((lno,cs):rest)
-  | isAlpha c         =  tlexDuring lno rest di (c:bus) cs
-  | isDigit c         =  tlexDuring lno rest di (c:bus) cs
-  | otherwise         =  (lno,mkId (reverse di ++ reverse bus)) 
-                         : tlex ((lno,str):rest)
+--seen 'v   expecting 'v  'v$
+tlexBeforeGVar lno rest di "" 
+  =  (lno,TVar (reverse di) Before) : tlex rest
+tlexBeforeGVar lno rest di cs@(c:cs')
+  | isAlpha c  =  tlexBeforeGVar lno rest (c:di) cs'
+  | c == '_'   =  tlexBeforeGVar lno rest (c:di) cs'
+  | c == '$'   =  (lno,TLVar (reverse di) Before) : tlex ((lno,cs'):rest)
+  | otherwise  =  (lno,TLVar (reverse di) Before) : tlex ((lno,cs):rest)
+
+-- tlexVar lno rest di cs   (di is non-empty)
+--  seen  v  expecting  v  v'  v'm  v$ v$' v$'m
+tlexVar lno rest di ""     =  (lno, mkDi di) : tlex rest -- std-var
+tlexVar lno rest di cs@(c:cs') 
+  | isAlpha c       =  tlexVar lno rest (c:di) cs'
+  | c == '_'        =  tlexVar lno rest (c:di) cs'
+  | c == afterChar  =  tlexLater lno rest (reverse di) TVar "" cs' -- v'
+  | c == lstvChar   =  tlexLVar   lno rest (reverse di) cs' -- v$
+  | otherwise = (lno,mkDi di) : tlex ((lno,cs):rest)
+
+-- seen v$  expecting v$ v$' v$'m
+tlexLVar lno rest var "" = (lno,TLVar var Static) : tlex rest
+tlexLVar lno rest var cs@(c:cs')
+  | c == afterChar  =  tlexLater lno rest var TLVar "" cs' -- v$'
+  | otherwise       =  (lno,TLVar var Static) : tlex ((lno,cs):rest)
+
+-- seen v' v$'   expecting  v' v'm v$' v$'m
+tlexLater lno rest var tvar rud ""  -- v'   v$'
+  =  (lno,tvar var $ mkLater rud) : tlex rest 
+tlexLater lno rest var tvar rud cs@(c:cs')
+  | isAlpha c  =  tlexLater lno rest var tvar (c:rud) cs' 
+  | isDigit c  =  tlexLater lno rest var tvar (c:rud) cs'
+  | otherwise  =  (lno,tvar var $ mkLater rud) : tlex ((lno,cs):rest)
+
+mkLater rud = if null rud then After else During (reverse rud)
 \end{code}
+
 
 If none of the above apply, we gobble up a maximum-munch symbol:
 \begin{code}

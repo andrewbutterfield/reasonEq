@@ -200,35 +200,56 @@ saveDeps deps =
 
 \subsection{Load VarTable}
 
+Seen \h{kKnown}:
 \begin{code}
 importKnown :: MonadFail mf => VarTable -> [Token] -> mf (VarTable,[Token])
 importKnown vt [] = return (vt,[])
-importKnown vt toks@((lno,TVar str vw):rest)  =  importKVar lno str vw rest
+importKnown vt toks@((lno,TVar var vw):rest) = importKVar vt lno var vw rest
 importKnown name (tok:rest) 
   = fail ("loadVarData NYfI - tok:"++show tok)
+
+dot = TSym "."  -- used to terminate var data entries
 \end{code}
 
 \subsubsection{Load Known Variable}
 
+Seen \h{Known var}
 \begin{code}
-importKVar _ str vw ((lno,TSym ":"):rest)  =  importKVarOfType lno str vw rest
-importKVar _ str vw ((lno,TSym "="):rest)  =  importKVarIsConst lno str vw rest
-importKVar _ str vw ((lno,ttyp):_)
+importKVar :: MonadFail mf 
+           => VarTable -> Int -> String -> VarWhen -> [Token] 
+           -> mf (VarTable,[Token])
+importKVar vt _ var vw ((lno,TSym ":"):rest) 
+                                      =  importKVarOfType vt lno var vw rest
+importKVar vt _ var vw ((lno,TSym "="):rest)  
+                                      =  importKVarIsConst vt lno var vw rest
+importKVar vt _ var vw ((lno,ttyp):_)
   = fail ( "importKVar: unexpected token "
            ++show ttyp++" at line "++show lno )
-importKVar lno str vw [] 
+importKVar vt lno var vw [] 
   = fail ( "premature end while importing known var "
-            ++str++" at line "++show lno )
+            ++var++" at line "++show lno )
+\end{code}
+
+Seen \h{Known var :}, expect a type terminated by \h{.}
+\begin{code}
+importKVarOfType :: MonadFail mf 
+                 => VarTable -> Int -> String -> VarWhen -> [Token] 
+                 -> mf (VarTable,[Token])
+importKVarOfType vt lno var vw []
+  = fail ("premature end while importing type "++var++" at line "++show lno)
+importKVarOfType vt lno var vw rest = do
+  (typ,rest') <- importType rest
+  rest'' <- expectToken dot rest'
+  vt' <- addKnownVar (Vbl (jId var) ObsV vw) typ vt
+  return (vt',rest'')
 \end{code}
 
 \begin{code}
-importKVarOfType lno str vw rest
-  = fail ("importKVarOfType("++str++") NYI at line "++show lno)
-\end{code}
-
-\begin{code}
-importKVarIsConst lno str vw rest
-  = fail ("importKVarIsConst("++str++") NYI at line "++show lno)
+importKVarIsConst :: MonadFail mf 
+                  => VarTable -> Int -> String -> VarWhen -> [Token] 
+                  -> mf (VarTable,[Token])
+importKVarIsConst vt lno var vw rest
+  = fail ("importKVarIsConst("++var++") NYI at line "++show lno)
 \end{code}
 
 
@@ -731,6 +752,7 @@ loadTerm :: MonadFail mf => String -> mf (Term, [Token])
 loadTerm = sTermRead . tlex . prepare
 \end{code}
 
+
 \section{Side-Conditions}
 
 \subsection{Save Side-Condition}
@@ -806,8 +828,10 @@ saveType _ = "TYPE"
 \end{code}
 
 \begin{code}
-loadType :: MonadFail mf => String -> mf Type
-loadType str = return ArbType
+importType :: MonadFail mf => [Token] -> mf (Type,[Token])
+importType toks = fail $ unlines'
+  [ "importType NYI"
+  , show (take 15 toks) ]
 \end{code}
 
 \newpage
@@ -949,6 +973,7 @@ Making symbols and identifiers:
 \begin{code}
 mkSym str
   | validIdent str  =  TSym str
+  | str == "."      =  TSym str
   | otherwise =  TErr ("mkSym: invalid symbol "++str)
 
 mkName tcons str
@@ -1106,6 +1131,19 @@ tlexSym lno rest mys str@(c:cs)
   | issymbol c  =  tlexSym lno rest (c:mys) cs
   | otherwise  =  (lno,mkMys mys) : tlex ((lno,str):rest)
 \end{code}
+
+\section{Token Parsing Utilities}
+
+\begin{code}
+expectToken :: MonadFail mf => TokenType -> [Token] -> mf [Token]
+expectToken tok [] = fail ("premature end while expecting "++show tok)
+expectToken tok ((lno,tok'):rest)
+  | tok == tok'  =  return rest
+  | otherwise    =  fail $ unlines'
+                      [ "was expecting "++show tok
+                      , "but found "++show tok' ]
+\end{code}
+
 
 \newpage
 \section{Random test/prototype bits}

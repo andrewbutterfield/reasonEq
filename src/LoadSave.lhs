@@ -819,12 +819,18 @@ loadVariable string = fail ("loadVariable: invalid variable - "++string)
 \section{Types}
 
 \begin{code}
+arbTypeString = "T"
+bottomTypeString = "_"
 saveType :: Type -> String
-saveType ArbType = "T"
+saveType ArbType = arbTypeString
 saveType (TypeVar i) = idName i
 saveType (GivenType i) = idName i
 saveType (FunType td tr) = "( "++saveType td++" -> "++saveType tr++" )"
-saveType _ = "TYPE"
+saveType (TypeCons i []) = idName i 
+saveType (TypeCons i ts)
+  = idName i ++ " " ++ intercalate ") (" (map saveType ts)  ++ ")"
+saveType (AlgType i fs) = "(ALGTYPE "++idName i++")"
+saveType BottomType = bottomTypeString
 \end{code}
 
 \begin{code}

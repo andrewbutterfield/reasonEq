@@ -2,17 +2,7 @@
 
 ## PLAN
 
-The following VarData variants are currently in use
-in mainstream theories: `KV DL DAS` .
-Added in by `Proto` are `KC AS`.
-
-
-
-
-The term parser fails on `Cons` because constructor name is parsed
-as a variable, and the next token is `(`.
-We need some lookahead to spot a cons.
-
+Implement `importType`.
 
 Terminology Q:
 

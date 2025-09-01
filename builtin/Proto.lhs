@@ -48,6 +48,8 @@ atermfIntro =  mkConsIntro (jId "atermf") boolf_1
 var'AIntro = mkKnownVar (Vbl (jId "a") ObsV Before) (GivenType $ jId "N")
 varA'Intro = mkKnownVar (Vbl (jId "a") ObsV After) (GivenType $ jId "N")
 molIntro = mkKnownConst (Vbl (jId "mol") ExprV Static) (Val int $ Integer 42)
+prodIntro =  mkConsIntro (jId "prodt") 
+                          (TypeCons (jId "Prod") [(GivenType $ jId "A"),bool])
 genvar = Vbl (jId "gen") ExprV Static
 genVarIntro = fromJust . addGenericVar genvar
 instvar = Vbl (jId "inst") ExprV Static
@@ -76,6 +78,7 @@ protoKnown
     var'AIntro $
     varA'Intro $
     molIntro $
+    prodIntro $
     instVarIntro $
     genVarIntro $ 
 

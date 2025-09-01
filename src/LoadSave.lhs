@@ -822,21 +822,27 @@ loadVariable string = fail ("loadVariable: invalid variable - "++string)
 arbTypeString = "T"
 bottomTypeString = "_"
 saveType :: Type -> String
-saveType ArbType = arbTypeString
-saveType (TypeVar i) = idName i
-saveType (GivenType i) = idName i
-saveType (FunType td tr) = "( "++saveType td++" -> "++saveType tr++" )"
-saveType (TypeCons i []) = idName i 
-saveType (TypeCons i ts)
-  = idName i ++ " " ++ intercalate ") (" (map saveType ts)  ++ ")"
+saveType ArbType          = arbTypeString
+saveType (TypeVar i)      = idName i
+saveType (GivenType i)    = idName i
+saveType (FunType td tr)  = wrapNonAtomic td++" -> "++saveType tr
+saveType (TypeCons i [])  = idName i 
+saveType (TypeCons i ts)  = idName i ++ " " 
+                            ++ intercalate " " (map wrapNonAtomic ts)
 saveType (AlgType i fs) = "(ALGTYPE "++idName i++")"
 saveType BottomType = bottomTypeString
+
+wrapNonAtomic t
+  | isAtmType t = saveType t
+  | otherwise  = "("++saveType t++")"
 \end{code}
 
 \begin{code}
 importType :: MonadFail mf => [Token] -> mf (Type,[Token])
+importType ((lno,TVar var _):rest)  =  return (TypeVar (jId var),rest)
+importType [] = fail "importType: premature end of input"
 importType toks = fail $ unlines'
-  [ "importType NYI"
+  [ "importType NYfI"
   , show (take 15 toks) ]
 \end{code}
 
@@ -1069,12 +1075,12 @@ mkNum mun = TNum $ read $ reverse mun
 
 We have seen a minus sign. If followed immediately by a number
 it is then merged with it to form a negative literal.
-Otherwise it is treated as a symbol.
+Otherwise it is treated as a (part of a) symbol.
 \begin{code}
 tlexMinus lno rest "" = [ (lno, mkSym "-") ]
 tlexMinus lno rest str@(c:cs)
   | isDigit c  =  tlexNum lno rest [c,'-'] cs
-  | otherwise  =  (lno,mkSym "-") : tlex ((lno,str):rest)
+  | otherwise  =  tlexSym lno rest [c,'-'] cs
 \end{code}
 
 A \texttt{afterChar} may end an identifier,
@@ -1100,7 +1106,7 @@ tlexBeforeGVar lno rest di cs@(c:cs')
   | isAlpha c  =  tlexBeforeGVar lno rest (c:di) cs'
   | c == '_'   =  tlexBeforeGVar lno rest (c:di) cs'
   | c == '$'   =  (lno,TLVar (reverse di) Before) : tlex ((lno,cs'):rest)
-  | otherwise  =  (lno,TLVar (reverse di) Before) : tlex ((lno,cs):rest)
+  | otherwise  =  (lno,TVar (reverse di) Before) : tlex ((lno,cs):rest)
 
 -- tlexVar lno rest di cs   (di is non-empty)
 --  seen  v  expecting  v  v'  v'm  v$ v$' v$'m
@@ -1140,14 +1146,28 @@ tlexSym lno rest mys str@(c:cs)
 
 \section{Token Parsing Utilities}
 
+Called when a specific token is expected:
 \begin{code}
 expectToken :: MonadFail mf => TokenType -> [Token] -> mf [Token]
-expectToken tok [] = fail ("premature end while expecting "++show tok)
+expectToken tok [] = fail ("premature end while expecting "++renderTokTyp tok)
 expectToken tok ((lno,tok'):rest)
   | tok == tok'  =  return rest
   | otherwise    =  fail $ unlines'
                       [ "was expecting "++show tok
                       , "but found "++show tok' ]
+\end{code}
+
+Called to parse something inside delimiters.
+Called when the opening delimiter has been seen.
+\begin{code}
+delimitedParse :: MonadFail mf =>
+  TokenType -> ([Token] -> mf (a, [Token])) -> [Token] -> mf (a, [Token])
+delimitedParse close parser [] 
+  = fail ("premature end while parsing before "++renderTokTyp close)
+delimitedParse close parser tokens = do
+  (thing,rest) <- parser tokens
+  rest' <- expectToken close rest
+  return (thing,rest')
 \end{code}
 
 

@@ -145,7 +145,7 @@ trType (TypeCons i@(Identifier s _) [t])
   | s == "*"             =  (trBracketIf (not $ isAtmType t) (trType t)) 
                              ++ trId i
 trType (TypeCons i [t])  =  trId i ++ " " ++ trType t
-trType (TypeCons i ts)   =  trId i ++ "(" ++ trTypes ts ++ ")"
+trType (TypeCons i ts)   =  trId i ++ " " ++ trTypes ts 
 trType (AlgType i itss)  =  "ADT"
 -- fun-types are right-associative
 trType (FunType ft@(FunType _ _) tr)   
@@ -157,7 +157,9 @@ trType BottomType = spacep _bot
 
 typdbg = rdbg trType
 
-trTypes = seplist " " trType
+trTypes = seplist " " wrapType
+
+wrapType t = trBracketIf (not $ isAtmType t) (trType t)
 
 trFun = _fun ++ " "
 

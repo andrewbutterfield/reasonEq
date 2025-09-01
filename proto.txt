@@ -4,10 +4,11 @@ Theory Proto
 Known 'a : N .
 Known a' : N .
 Known aterm : B .
-Known atermf : ( B -> B ) .
+Known atermf : B -> B .
 Known gen :: generic
 Known inst instanceof gen
 Known mol = { 42 }
+Known prodt : Prod A B .
 Known alist$ :: list
 Known aset$ :: set
 Known list$ = <>

@@ -835,11 +835,17 @@ saveType BottomType = bottomTypeString
 wrapNonAtomic t
   | isAtmType t = saveType t
   | otherwise  = "("++saveType t++")"
+
+powerCons = "P"
+starCons  = "*"
 \end{code}
 
 \begin{code}
 importType :: MonadFail mf => [Token] -> mf (Type,[Token])
-importType ((lno,TVar var _):rest)  =  return (TypeVar (jId var),rest)
+importType ((lno,TVar var _):rest)
+  | var == powerCons  =  return (TypeCons (jId var) [],rest)
+  | var == starCons   =  return (TypeCons (jId var) [],rest)
+  | otherwise         =  return (TypeVar (jId var),rest)
 importType [] = fail "importType: premature end of input"
 importType toks = fail $ unlines'
   [ "importType NYfI"
@@ -1153,7 +1159,7 @@ expectToken tok [] = fail ("premature end while expecting "++renderTokTyp tok)
 expectToken tok ((lno,tok'):rest)
   | tok == tok'  =  return rest
   | otherwise    =  fail $ unlines'
-                      [ "was expecting "++show tok
+                      [ "was expecting "++show tok++" at line "++show lno
                       , "but found "++show tok' ]
 \end{code}
 

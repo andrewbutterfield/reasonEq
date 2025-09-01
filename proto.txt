@@ -1,141 +1,166 @@
-Theory Proto
-
-
-Known 'a : N .
-Known a' : N .
-Known aterm : B .
-Known atermf : B -> B .
-Known gen :: generic
-Known inst instanceof gen
-Known mol = { 42 }
-Known prodt : Prod A B .
-Known alist$ :: list
-Known aset$ :: set
-Known list$ = <>
-Known set$ = {}
-Known alist$' :: list 
-Known aset$' :: set 
-Known list$' = <>
-Known set$' = {}
-
-
-
-Conjecture true
-{
-true
+Theory Sets
+Needs
+  Impl EQV Equal Forall Arith
 }
 
-Conjecture false
-{
-false
+
+Known card : (P t) -> Z .
+Known emptyset : P t .
+Known intsct : (P t) -> (P t) -> P t .
+Known mbr : t -> (P t) -> B .
+Known sdiff : (P t) -> (P t) -> P t .
+Known subseteq : (P t) -> (P t) -> B .
+Known union : (P t) -> (P t) -> P t .
+
+
+
+
+Law mbr_emptyset
+{ axiom
+,
+eq CS (mbr CS (x,emptyset),false)
 }
 
-Conjecture forall_zero
-{
-body
+Law mbr_singleton
+{ axiom
+,
+eq CS (mbr CS (x,set CS (y)),eq CS (x,y))
 }
 
-Conjecture forall_one
-{
-B-stuff?
+Law set_eq_def
+{ axiom
+,
+eqv CS (eq CS (S1,S2),B-stuff?)
 }
 
-Conjecture forall_two
-{
-B-stuff?
+Law subseteq_def
+{ axiom
+,
+eqv CS (subseteq CS (S1,S2),B-stuff?)
 }
 
-Conjecture forall_three
-{
-B-stuff?
+Law mbr_union_def
+{ axiom
+,
+eqv CS (mbr CS (x,union CS (S1,S2)),or CS (mbr CS (x,S1),mbr CS (x,S2)))
 }
 
-Conjecture forall_four
-{
-B-stuff?
+Law mbr_intsct_def
+{ axiom
+,
+eqv CS (mbr CS (x,intsct CS (S1,S2)),and CS (mbr CS (x,S1),mbr CS (x,S2)))
 }
 
-Conjecture fortytwo
-{
-42
+Law mbr_sdiff_def
+{ axiom
+,
+eqv CS (mbr CS (x,sdiff CS (S1,S2)),and CS (mbr CS (x,S1),not CS (mbr CS (x,S2))))
 }
 
-Conjecture neg99
-{
--99
+Law card_emptyset_def
+{ axiom
+,
+eq CS (card CS (emptyset),0)
 }
 
-Conjecture expr_static
-{
-Ve
+Law card_single_def
+{ axiom
+,
+eq CS (card CS (set CS (x)),1)
 }
 
-Conjecture expr_before
-{
-'Ve
+Law card_union_def
+{ axiom
+,
+eq CS (card CS (union CS (S1,S2)),sub CS (add CS (card CS (S1),card CS (S2)),card CS (intsct CS (S1,S2))))
 }
 
-Conjecture expr_after
+Conjecture mbr_set_self
 {
-Ve'
+eq CS (mbr CS (x,set CS (x)),true)
 }
 
-Conjecture expr_during
+Conjecture union_r_unit
 {
-Ve'd
+eq CS (union CS (S,emptyset),S)
 }
 
-Conjecture pred_static
+Conjecture union_symm
 {
-Vp
+eq CS (union CS (S1,S2),union CS (S2,S1))
 }
 
-Conjecture pred_before
+Conjecture union_assoc
 {
-'Vp
+eq CS (union CS (S1,union CS (S2,S3)),union CS (union CS (S1,S2),S3))
 }
 
-Conjecture pred_after
+Conjecture intsct_zero
 {
-Vp'
+eq CS (intsct CS (S,emptyset),emptyset)
 }
 
-Conjecture pred_during
+Conjecture intsct_symm
 {
-Vp'd
+eq CS (intsct CS (S1,S2),intsct CS (S2,S1))
 }
 
-Conjecture cons_S_zero
+Conjecture intsct_assoc
 {
-cs0 CS ()
+eq CS (intsct CS (S1,intsct CS (S2,S3)),intsct CS (intsct CS (S1,S2),S3))
 }
 
-Conjecture cons_S_one
+Conjecture sdiff_r_unit
 {
-cs1 CS (T)
+eq CS (sdiff CS (S,emptyset),S)
 }
 
-Conjecture cons_S_two
+Conjecture sdiff_l_assoc
 {
-cs2 CS (T,T)
+eq CS (sdiff CS (sdiff CS (S1,S2),S3),sdiff CS (S1,union CS (S2,S3)))
 }
 
-Conjecture cons_N_zero
+Conjecture sdiff_r_assoc
 {
-ns0 NS ()
+eq CS (sdiff CS (S1,sdiff CS (S2,S3)),union CS (sdiff CS (S1,S2),intsct CS (S1,S3)))
 }
 
-Conjecture cons_N_two
+Conjecture union_intsct_distr
 {
-ns2 NS (T,T)
+eq CS (intsct CS (union CS (S1,S2),S3),union CS (intsct CS (S1,S3),intsct CS (S2,S3)))
 }
 
-Conjecture cons_N_two
+Conjecture intsct_union_distr
 {
-ns2 NS (T,T)
+eq CS (union CS (intsct CS (S1,S2),S3),intsct CS (union CS (S1,S3),union CS (S2,S3)))
 }
 
-Conjecture cons_nesting
+Conjecture union_sdiff_distr
 {
-nest CS (sub1 CS (),sub2 CS (T),sub3 CS ())
+eq CS (sdiff CS (union CS (S1,S2),S3),union CS (sdiff CS (S1,S3),sdiff CS (S2,S3)))
+}
+
+Conjecture intsct_sdiff_distr
+{
+eq CS (sdiff CS (intsct CS (S1,S2),S3),intsct CS (sdiff CS (S1,S3),sdiff CS (S2,S3)))
+}
+
+Conjecture sdiff_union_r_distr
+{
+eq CS (sdiff CS (S1,union CS (S2,S3)),intsct CS (sdiff CS (S1,S2),sdiff CS (S1,S3)))
+}
+
+Conjecture sdiff_intsct_r_distr
+{
+eq CS (sdiff CS (S1,intsct CS (S2,S3)),union CS (sdiff CS (S1,S2),sdiff CS (S1,S3)))
+}
+
+Conjecture sdiff_union_l_distr
+{
+eq CS (union CS (sdiff CS (S1,S2),S3),sdiff CS (union CS (S1,S3),sdiff CS (S2,S3)))
+}
+
+Conjecture sdiff_intsct_l_distr
+{
+eq CS (intsct CS (sdiff CS (S1,S2),S3),sdiff CS (intsct CS (S1,S3),S2))
 }

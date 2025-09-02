@@ -50,6 +50,13 @@ varA'Intro = mkKnownVar (Vbl (jId "a") ObsV After) (GivenType $ jId "N")
 molIntro = mkKnownConst (Vbl (jId "mol") ExprV Static) (Val int $ Integer 42)
 prodIntro =  mkConsIntro (jId "prodt") 
                           (TypeCons (jId "Prod") [(GivenType $ jId "A"),bool])
+sumIntro = mkConsIntro (jId "sumt")
+  ( AlgType (jId "Sum")
+      [ ((jId "Sum1"),[])
+      , ((jId "Sum2"),[(GivenType $ jId "B")])
+      , ((jId "Sum3"),[boolf_1,(GivenType $ jId "A"),bool])
+      ] 
+  )
 genvar = Vbl (jId "gen") ExprV Static
 genVarIntro = fromJust . addGenericVar genvar
 instvar = Vbl (jId "inst") ExprV Static
@@ -79,6 +86,7 @@ protoKnown
     varA'Intro $
     molIntro $
     prodIntro $
+    sumIntro $
     instVarIntro $
     genVarIntro $ 
 

@@ -818,6 +818,23 @@ loadVariable string = fail ("loadVariable: invalid variable - "++string)
 
 \section{Types}
 
+\subsection{Type Grammar}
+
+\begin{eqnarray*}
+   t \in Type 
+   &::=& 
+   \top \mid \bot \mid id \mid \tau_1 \fun t_2
+   \mid id~\tau_1~\tau_2~\dots~\tau_n \mid ~
+\\ && id_0~ `|`~id_1~\tau_{11} \dots \tau_{1k_1} 
+            `|` \dots `|`
+            id_n~\tau_{n1} \dots \tau_{nk_n} 
+\\ \tau \in WrapType
+   &&  \top,\bot,id \text{ are rendered as-is}
+\\ &&  \text{non-atomic are enclosed in parentheses}
+\end{eqnarray*}
+
+\subsection{Save Type}
+
 \begin{code}
 arbTypeString = "T"
 bottomTypeString = "_"
@@ -826,11 +843,16 @@ saveType ArbType          = arbTypeString
 saveType (TypeVar i)      = idName i
 saveType (GivenType i)    = idName i
 saveType (FunType td tr)  = wrapNonAtomic td++" -> "++saveType tr
-saveType (TypeCons i [])  = idName i 
-saveType (TypeCons i ts)  = idName i ++ " " 
-                            ++ intercalate " " (map wrapNonAtomic ts)
-saveType (AlgType i fs) = "(ALGTYPE "++idName i++")"
+saveType (TypeCons i [])  = idName i  -- degenerate, GivenType?
+saveType (TypeCons i ts)  = saveCons (i,ts)
+saveType (AlgType i fs) 
+ = idName i ++ "   \n| "++
+    intercalate "   \n| " (map saveCons fs)
+   
 saveType BottomType = bottomTypeString
+
+saveCons (i,ts) = idName i ++ " " ++ intercalate " " (map wrapNonAtomic ts)
+
 
 wrapNonAtomic t
   | isAtmType t = saveType t
@@ -839,6 +861,8 @@ wrapNonAtomic t
 powerCons = "P"
 starCons  = "*"
 \end{code}
+
+\subsection{Load Type}
 
 \begin{code}
 importType :: MonadFail mf => [Token] -> mf (Type,[Token])

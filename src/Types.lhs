@@ -83,6 +83,7 @@ isAtmType T         =  True
 isAtmType (TV _)    =  True
 isAtmType (TC _ _)  =  False
 isAtmType (TA _ _)  =  False
+isAtmType (TF _ _)  =  False
 isAtmType (TG _)    =  True
 isAtmType TB        =  True
 \end{code}

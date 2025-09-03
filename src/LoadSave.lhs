@@ -208,7 +208,8 @@ importKnown vt toks@((lno,TVar var vw):rest) = importKVar vt lno var vw rest
 importKnown name (tok:rest) 
   = fail ("loadVarData NYfI - tok:"++show tok)
 
-dot = TSym "."  -- used to terminate var data entries
+dot = "."
+dotTok = TSym dot  -- used to terminate var data entries
 \end{code}
 
 \subsubsection{Load Known Variable}
@@ -239,7 +240,7 @@ importKVarOfType vt lno var vw []
   = fail ("premature end while importing type "++var++" at line "++show lno)
 importKVarOfType vt lno var vw rest = do
   (typ,rest') <- importType rest
-  rest'' <- expectToken dot rest'
+  rest'' <- expectToken dotTok rest'
   vt' <- addKnownVar (Vbl (jId var) ObsV vw) typ vt
   return (vt',rest'')
 \end{code}
@@ -845,25 +846,26 @@ loadVariable string = fail ("loadVariable: invalid variable - "++string)
 \begin{code}
 arbTypeString = "T"
 bottomTypeString = "_"
+funTypeString = "->"
+altTypeString = "|"
 saveType :: Type -> String
 saveType ArbType          = arbTypeString
+saveType BottomType = bottomTypeString
 saveType (TypeVar i)      = idName i
 saveType (GivenType i)    = idName i
-saveType (FunType td tr)  = wrapNonAtomic td++" -> "++saveType tr
+saveType (FunType td tr)  = wrapNonAtomic td++funTypeString++saveType tr
 saveType (TypeCons i [])  = idName i  -- degenerate, GivenType?
 saveType (TypeCons i ts)  = saveCons (i,ts)
 saveType (AlgType i fs) 
- = idName i ++ "   \n| "++
-    intercalate "   \n| " (map saveCons fs)
-   
-saveType BottomType = bottomTypeString
+ = idName i  ++ "    \n"++altTypeString++" "++
+    intercalate ("   \n"++altTypeString++" ") (map saveCons fs)
 
 saveCons (i,ts) = idName i ++ " " ++ intercalate " " (map wrapNonAtomic ts)
 
-
+openParString = "(" ; closeParString = ")"
 wrapNonAtomic t
   | isAtmType t = saveType t
-  | otherwise  = "("++saveType t++")"
+  | otherwise  = openParString++saveType t++closeParString
 
 powerCons = "P"
 starCons  = "*"
@@ -875,28 +877,84 @@ starCons  = "*"
 \typegrammar
 
 Tokens that can start a type:  $\top~\bot~id~($
+\begin{code}
+importType :: MonadFail mf => [Token] -> mf (Type,[Token])
+importType [] = fail "importType: premature end of input"
+importType ((lno,TVar nm _):rest)  =  gotTypeName nm rest
+importType ((lno,TSym nm):rest)    =  gotTypeName nm rest
+importType ((lno,TOpen open):rest)  
+  | open == openParString          =  gotTypeLeftPar rest
+importType ((lno,tok):rest)        = fail $ unlines'
+  [ "importType syntax error"
+  , "expecting variable, symbol, or opening left parenthesis"
+  , "got \""++renderTokTyp tok++"\" at line "++show lno ]
+\end{code}
 
 Tokens that can occur after $\top~\bot~id$ are: $.~\fun~|~)~\top~\bot~id~($
+If we encounter $.$ or $)$ we leave it in place
+\begin{code}
+gotTypeName :: MonadFail mf => String -> [Token] -> mf (Type,[Token])
+gotTypeName nm [] = fail ("gotTypeName \""++nm++"\" : premature end of input")
+gotTypeName nm toks@((lno,TSym sym):rest)
+  | sym == dot             =  return (vartype,toks)
+  | sym == funTypeString   =  gotFunArrow vartype rest
+  | sym == altTypeString   =  gotAltBar nm [] rest
+  where vartype = TypeVar $ jId nm
+gotTypeName nm toks@((lno,TOpen open):rest)
+  | open == openParString  =  return (TypeVar (jId nm),toks)
+gotTypeName nm rest
+ = fail ("gotTypeName \""++nm++"\" NYfI")
+--  | var == powerCons  =  return (TypeCons (jId var) [],rest)
+--  | var == starCons   =  return (TypeCons (jId var) [],rest)
+--  | otherwise         =  return (TypeVar (jId var),rest)
+\end{code}
 
 Tokens that can occur after $($ are: $\top~\bot~id~(~)$
+\begin{code}
+rightParTok = TClose closeParString
+gotTypeLeftPar :: MonadFail mf => [Token] -> mf (Type,[Token])
+gotTypeLeftPar rest = do
+  (typ,rest') <- importType rest
+  rest'' <- expectToken rightParTok rest'
+  return (typ,rest'')
+\end{code}
+
+Tokens that can occur after $\fun$ are: $\top~\bot~id~($
+\begin{code}
+gotFunArrow  :: MonadFail mf => Type -> [Token] -> mf (Type,[Token])
+gotFunArrow dtype rest = do
+  (rtype,rest') <- importType rest
+  return (FunType dtype rtype,rest')
+\end{code}
+
+Tokens that can occur after $|$ are: $id~$
+\begin{code}
+gotAltBar :: MonadFail mf 
+          => String -> [(Identifier,[Type])] -> [Token] 
+          -> mf (Type,[Token])
+gotAltBar sumNm variants []  = fail "gotAltBar: premature end of input"
+gotAltBar sumNm variants ((lno,TVar nm _):rest) 
+  = gettingProduct sumNm nm variants [] rest
+gotAltBar sumNm variants ((lno,tok):rest) 
+ = fail $ unlines'
+    [ "importType (sum-of-products) syntax error"
+    , "expected product constructor name"
+    , "but got "++renderTokTyp tok++" at line "++show lno
+    ]
+\end{code}
+
+Tokens that can occur after $|~id$ are $\top~\bot~id~(~|$
+\begin{code}
+gettingProduct :: MonadFail mf 
+               => String -> String -> [(Identifier,[Type])] -> [Type] 
+               -> [Token] -> mf (Type,[Token])
+gettingProduct sumNm prodNm variants [] rest
+  = fail "gettingProduct NYI"
+\end{code}
 
 Tokens that can occur after $.$ are returned with parsed item.
 
-Tokens that can occur after $\fun$ are: $\top~\bot~id~($
 
-Tokens that can occur after $|$ are: $id~$
-
-\begin{code}
-importType :: MonadFail mf => [Token] -> mf (Type,[Token])
-importType ((lno,TVar var _):rest)
-  | var == powerCons  =  return (TypeCons (jId var) [],rest)
-  | var == starCons   =  return (TypeCons (jId var) [],rest)
-  | otherwise         =  return (TypeVar (jId var),rest)
-importType [] = fail "importType: premature end of input"
-importType toks = fail $ unlines'
-  [ "importType NYfI"
-  , show (take 15 toks) ]
-\end{code}
 
 \newpage
 \section{Lexical Basics}

@@ -820,8 +820,10 @@ loadVariable string = fail ("loadVariable: invalid variable - "++string)
 
 \subsection{Type Grammar}
 
+\def\typegrammar{
 \begin{eqnarray*}
-   t \in Type 
+   Tokens: && \top~\bot~id~\fun~|~(~)~.
+\\ t \in Type 
    &::=& 
    \top \mid \bot \mid id \mid \tau_1 \fun t_2
    \mid id~\tau_1~\tau_2~\dots~\tau_n \mid ~
@@ -832,8 +834,13 @@ loadVariable string = fail ("loadVariable: invalid variable - "++string)
    &&  \top,\bot,id \text{ are rendered as-is}
 \\ &&  \text{non-atomic are enclosed in parentheses}
 \end{eqnarray*}
+}
+
+\typegrammar
 
 \subsection{Save Type}
+
+
 
 \begin{code}
 arbTypeString = "T"
@@ -862,7 +869,22 @@ powerCons = "P"
 starCons  = "*"
 \end{code}
 
+\newpage
 \subsection{Load Type}
+
+\typegrammar
+
+Tokens that can start a type:  $\top~\bot~id~($
+
+Tokens that can occur after $\top~\bot~id$ are: $.~\fun~|~)~\top~\bot~id~($
+
+Tokens that can occur after $($ are: $\top~\bot~id~(~)$
+
+Tokens that can occur after $.$ are returned with parsed item.
+
+Tokens that can occur after $\fun$ are: $\top~\bot~id~($
+
+Tokens that can occur after $|$ are: $id~$
 
 \begin{code}
 importType :: MonadFail mf => [Token] -> mf (Type,[Token])

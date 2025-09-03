@@ -823,16 +823,16 @@ loadVariable string = fail ("loadVariable: invalid variable - "++string)
 
 \def\typegrammar{
 \begin{eqnarray*}
-   Tokens: && \top~\bot~id~\fun~|~(~)~.
+   Tokens: && id~\fun~|~(~)~.
 \\ t \in Type 
    &::=& 
-   \top \mid \bot \mid id \mid \tau_1 \fun t_2
+   id \mid \tau_1 \fun t_2
    \mid id~\tau_1~\tau_2~\dots~\tau_n \mid ~
 \\ && id_0~ `|`~id_1~\tau_{11} \dots \tau_{1k_1} 
             `|` \dots `|`
             id_n~\tau_{n1} \dots \tau_{nk_n} 
 \\ \tau \in WrapType
-   &&  \top,\bot,id \text{ are rendered as-is}
+   &&  id \text{ are rendered as-is}
 \\ &&  \text{non-atomic are enclosed in parentheses}
 \end{eqnarray*}
 }
@@ -850,7 +850,7 @@ funTypeString = "->"
 altTypeString = "|"
 saveType :: Type -> String
 saveType ArbType          = arbTypeString
-saveType BottomType = bottomTypeString
+saveType BottomType       = bottomTypeString
 saveType (TypeVar i)      = idName i
 saveType (GivenType i)    = idName i
 saveType (FunType td tr)  = wrapNonAtomic td++funTypeString++saveType tr
@@ -876,7 +876,10 @@ starCons  = "*"
 
 \typegrammar
 
-Tokens that can start a type:  $\top~\bot~id~($
+Once parsing is complete we post-process 
+names to pull out $\top$ and $\bot$ types.
+
+Tokens that can start a type:  $id~($
 \begin{code}
 importType :: MonadFail mf => [Token] -> mf (Type,[Token])
 importType [] = fail "importType: premature end of input"
@@ -890,26 +893,28 @@ importType ((lno,tok):rest)        = fail $ unlines'
   , "got \""++renderTokTyp tok++"\" at line "++show lno ]
 \end{code}
 
-Tokens that can occur after $\top~\bot~id$ are: $.~\fun~|~)~\top~\bot~id~($
+Tokens that can occur after $id$ are: $.~\fun~|~)~id~($
 If we encounter $.$ or $)$ we leave it in place
 \begin{code}
 gotTypeName :: MonadFail mf => String -> [Token] -> mf (Type,[Token])
 gotTypeName nm [] = fail ("gotTypeName \""++nm++"\" : premature end of input")
 gotTypeName nm toks@((lno,TSym sym):rest)
-  | sym == dot             =  return (vartype,toks)
-  | sym == funTypeString   =  gotFunArrow vartype rest
-  | sym == altTypeString   =  gotAltBar nm [] rest
+  | sym == dot                            =  return (vartype,toks)
+  | sym == funTypeString                  =  gotFunArrow vartype rest
+  | sym == altTypeString                  =  gotAltBar nm [] rest
   where vartype = TypeVar $ jId nm
+gotTypeName nm ((lno,TVar var _):rest) 
+                              =  getProduct (jId nm) [TypeVar (jId var)] rest
 gotTypeName nm toks@((lno,TOpen open):rest)
-  | open == openParString  =  return (TypeVar (jId nm),toks)
-gotTypeName nm rest
- = fail ("gotTypeName \""++nm++"\" NYfI")
---  | var == powerCons  =  return (TypeCons (jId var) [],rest)
---  | var == starCons   =  return (TypeCons (jId var) [],rest)
---  | otherwise         =  return (TypeVar (jId var),rest)
+  | open == openParString                 =  getProduct (jId nm) [] toks
+gotTypeName nm toks@((lno,TClose close):rest)
+  | close == closeParString               =  return ((TypeVar $ jId nm),toks)
+gotTypeName nm ((lno,tok):rest) = fail $ unlines'
+  [ "gotTypeName \""++nm++"\" NYfI"
+  , "Seeing "++renderTokTyp tok++" at line "++show lno ]
 \end{code}
 
-Tokens that can occur after $($ are: $\top~\bot~id~(~)$
+Tokens that can occur after $($ are: $id~(~)$
 \begin{code}
 rightParTok = TClose closeParString
 gotTypeLeftPar :: MonadFail mf => [Token] -> mf (Type,[Token])
@@ -919,11 +924,12 @@ gotTypeLeftPar rest = do
   return (typ,rest'')
 \end{code}
 
-Tokens that can occur after $\fun$ are: $\top~\bot~id~($
+Tokens that can occur after $\fun$ are: $id~($
 \begin{code}
 gotFunArrow  :: MonadFail mf => Type -> [Token] -> mf (Type,[Token])
 gotFunArrow dtype rest = do
   (rtype,rest') <- importType rest
+  -- we should look for more arrows !!!!!
   return (FunType dtype rtype,rest')
 \end{code}
 
@@ -934,7 +940,7 @@ gotAltBar :: MonadFail mf
           -> mf (Type,[Token])
 gotAltBar sumNm variants []  = fail "gotAltBar: premature end of input"
 gotAltBar sumNm variants ((lno,TVar nm _):rest) 
-  = gettingProduct sumNm nm variants [] rest
+  = getAltProduct sumNm nm variants [] rest
 gotAltBar sumNm variants ((lno,tok):rest) 
  = fail $ unlines'
     [ "importType (sum-of-products) syntax error"
@@ -943,13 +949,22 @@ gotAltBar sumNm variants ((lno,tok):rest)
     ]
 \end{code}
 
-Tokens that can occur after $|~id$ are $\top~\bot~id~(~|$
+When we see $id_0~id_1$ or $id_0~($
+we expect a sequence of types, whose first token is $id_0$ or $($.
 \begin{code}
-gettingProduct :: MonadFail mf 
+getProduct :: MonadFail mf 
+           => Identifier -> [Type] -> [Token] -> mf (Type,[Token])
+getProduct conid types rest = fail "getProduct NYI"
+\end{code}
+
+
+Tokens that can occur after $|~id$ are $id~(~|$
+\begin{code}
+getAltProduct :: MonadFail mf 
                => String -> String -> [(Identifier,[Type])] -> [Type] 
                -> [Token] -> mf (Type,[Token])
-gettingProduct sumNm prodNm variants [] rest
-  = fail "gettingProduct NYI"
+getAltProduct sumNm prodNm variants [] rest
+  = fail "getAltProduct NYI"
 \end{code}
 
 Tokens that can occur after $.$ are returned with parsed item.

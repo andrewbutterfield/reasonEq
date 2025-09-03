@@ -4,15 +4,15 @@ Theory Proto
 Known 'a : N .
 Known a' : N .
 Known aterm : B .
-Known atermf : B -> B .
+Known atermf : B->B .
 Known gen :: generic
 Known inst instanceof gen
 Known mol = { 42 }
 Known prodt : Prod A B .
-Known sumt : Sum   
+Known sumt : Sum    
 | Sum1    
 | Sum2 B   
-| Sum3 (B -> B) A B .
+| Sum3 (B->B) A B .
 Known alist$ :: list
 Known aset$ :: set
 Known list$ = <>

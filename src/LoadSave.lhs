@@ -208,7 +208,8 @@ importKnown name (tok:rest)
   = fail ("loadVarData NYfI - tok:"++show tok)
 
 dot = "."
-dotTok = TSym dot  -- used to terminate var data entries
+dotTok = TSym dot  -- used to terminate var data type entries
+kInstanceOf = "instanceof"
 \end{code}
 
 \subsubsection{Load Known Variable}
@@ -224,8 +225,8 @@ importKVar vt _ var vw ((lno,TSym "="):rest)
                                   =  importKVarIsConst vt lno var vw rest
 importKVar vt _ var vw ((lno,TSym "::"):rest)  
                                   =  importKVarIsGeneric vt lno var vw rest
-importKVar vt _ var vw ((lno,TVar "instanceof" _):rest)  
-                                  =  importKVarInstance vt lno var vw rest
+importKVar vt _ var vw ((lno,TVar iof _):rest)
+  | iof == kInstanceOf  =  importKVarInstance vt lno var vw rest
 importKVar vt _ var vw ((lno,ttyp):_)
   = fail ( "importKVar: unexpected token "
            ++show ttyp++" at line "++show lno )
@@ -303,7 +304,7 @@ saveKnownVar (v,KnownConst trm) = saveVariable v ++ " = "
 saveKnownVar (v,KnownVar typ) = saveVariable v ++ " : " ++ saveType typ ++ " ."
 saveKnownVar (gv,GenericVar) = saveVariable gv ++ " :: generic"
 saveKnownVar (iv,InstanceVar gv) 
-  = saveVariable iv ++ " instanceof " ++ saveVariable gv
+  = saveVariable iv ++ " "++kInstanceOf++" " ++ saveVariable gv
 saveKnownVar (v,vmr) = "" -- unknown variable
 
 -- static list variables

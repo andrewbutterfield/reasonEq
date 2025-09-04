@@ -251,8 +251,18 @@ Seen \h{Known var =}, expect a term wrapped with \h{\{\}}
 importKVarIsConst :: MonadFail mf 
                   => VarTable -> Int -> String -> VarWhen -> [Token] 
                   -> mf (VarTable,[Token])
-importKVarIsConst vt lno var vw rest
-  = fail ("importKVarIsConst("++var++") NYI at line "++show lno)
+importKVarIsConst vt lno var vw tokens = do
+  (block,beyond) <- getBlock tokens
+  (term,rest) <- sTermRead block
+  if null rest 
+  then do
+    vt' <- addKnownConst (Vbl (jId var) ExprV Static) term vt
+    return (vt',beyond)
+  else fail $ unlines'
+        [ "importKVarIsConst("++var++")"
+        , "after term: "++trTerm 0 term
+        , "has junk "++renderTokTyp (snd (head rest))
+        , "at line no "++show (fst (head rest)) ]
 \end{code}
 
 Seen \h{Known var ::}, expect keyword \h{generic}

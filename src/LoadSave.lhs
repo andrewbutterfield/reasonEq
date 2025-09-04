@@ -920,8 +920,8 @@ Tokens that can start a type:  $id~($
 \begin{code}
 importType :: MonadFail mf => [Token] -> mf (Type,[Token])
 importType [] = premDuring ["importType"]
-importType ((lno,TVar nm _):rest)  =  gotTypeName (pdbg "iT.nm" nm) $ pdbg "iT.rest" rest
-importType ((lno,TSym nm):rest)    =  gotTypeName nm rest
+importType ((lno,TVar nm _):rest)  =  gotTypeFirstName nm rest
+importType ((lno,TSym nm):rest)    =  gotTypeFirstName nm rest
 importType ((lno,TOpen open):rest)  
   | open == openParString          =  gotTypeLeftPar rest
 importType ((lno,tok):rest)        = fail $ unlines'
@@ -933,24 +933,24 @@ importType ((lno,tok):rest)        = fail $ unlines'
 Tokens that can occur after $id$ are: $.~\fun~|~)~id~($
 If we encounter $.$ or $)$ we leave it in place.
 \begin{code}
-gotTypeName :: MonadFail mf => String -> [Token] -> mf (Type,[Token])
-gotTypeName nm [] = premDuring ["gotTypeName", "'"++nm++"'"]
-gotTypeName nm toks@((lno,TSym sym):rest)
+gotTypeFirstName :: MonadFail mf => String -> [Token] -> mf (Type,[Token])
+gotTypeFirstName nm [] = premDuring ["gotTypeFirstName", "'"++nm++"'"]
+gotTypeFirstName nm toks@((lno,TSym sym):rest)
   | sym == dot                            =  return (vartype,toks)
   | sym == funTypeString                  =  gotFunArrow vartype rest
   | sym == altTypeString                  =  gotAltBar nm [] rest
   where vartype = TypeVar $ jId nm
-gotTypeName nm ((lno,TVar var _):rest) 
-                              =  getProduct (jId nm) [TypeVar (jId $ pdbg "gTN.var" var)] $ pdbg "gTN.rest" rest
-gotTypeName nm toks@((lno,TOpen open):rest)
+gotTypeFirstName nm ((lno,TVar var _):rest) 
+                              =  getProduct (jId nm) [TypeVar (jId var)] rest
+gotTypeFirstName nm toks@((lno,TOpen open):rest)
   | open == openParString =  do
      (typ,rest) <- getProduct (jId nm) [] toks
      rest' <- expectToken (TClose closeParString) rest
      return (typ,rest')
-gotTypeName nm toks@((lno,TClose close):rest)
+gotTypeFirstName nm toks@((lno,TClose close):rest)
   | close == closeParString               =  return ((TypeVar $ jId nm),toks)
-gotTypeName nm ((lno,tok):rest) = fail $ unlines'
-  [ "gotTypeName \""++nm++"\" NYfI"
+gotTypeFirstName nm ((lno,tok):rest) = fail $ unlines'
+  [ "gotTypeFirstName \""++nm++"\" NYfI"
   , "Seeing "++renderTokTyp tok++" at line "++show lno ]
 \end{code}
 
@@ -998,13 +998,10 @@ getProduct :: MonadFail mf
            => Identifier -> [Type] -> [Token] -> mf (Type,[Token])
 getProduct conid types [] = premDuring ("product":trId conid:map trType types)
 getProduct conid types rest = do
-  (typ',rest') <- importType $ pdbg "gP.rest" rest
-  case pdbg "gP.rest'" rest' of
-    [] ->  premAfter ["product"]
-    ((lno,tok):rest'')
-      | pdbg "gP.tok" tok == dotTok || tok == TSym altTypeString
-        ->  return (TypeCons conid (reverse (typ':types)),rest')
-      | otherwise -> getProduct conid (typ':types) rest'
+  (types',rest') <- importTypes types rest
+  return (TypeCons conid (reverse types'),rest')
+
+importTypes types toks = fail "importTypes NYI"
 \end{code}
 
 

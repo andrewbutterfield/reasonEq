@@ -1,4 +1,145 @@
 Theory Proto
 
-Known prodt : Prod A B C D E F .
 
+Known 'a : N .
+Known a' : N .
+Known aterm : B .
+Known atermf : B->B .
+Known gen :: generic
+Known inst instanceof gen
+Known mol = { 42 }
+Known prodt : Prod A B .
+Known sumt : Sum    
+  | Sum1    
+  | Sum2 B   
+  | Sum3 (B->B) A B .
+Known alist$ :: list
+Known aset$ :: set
+Known list$ = <>
+Known set$ = {}
+Known alist$' :: list 
+Known aset$' :: set 
+Known list$' = <>
+Known set$' = {}
+
+
+
+Conjecture true
+{
+true
+}
+
+Conjecture false
+{
+false
+}
+
+Conjecture forall_zero
+{
+body
+}
+
+Conjecture forall_one
+{
+B-stuff?
+}
+
+Conjecture forall_two
+{
+B-stuff?
+}
+
+Conjecture forall_three
+{
+B-stuff?
+}
+
+Conjecture forall_four
+{
+B-stuff?
+}
+
+Conjecture fortytwo
+{
+42
+}
+
+Conjecture neg99
+{
+-99
+}
+
+Conjecture expr_static
+{
+Ve
+}
+
+Conjecture expr_before
+{
+'Ve
+}
+
+Conjecture expr_after
+{
+Ve'
+}
+
+Conjecture expr_during
+{
+Ve'd
+}
+
+Conjecture pred_static
+{
+Vp
+}
+
+Conjecture pred_before
+{
+'Vp
+}
+
+Conjecture pred_after
+{
+Vp'
+}
+
+Conjecture pred_during
+{
+Vp'd
+}
+
+Conjecture cons_S_zero
+{
+cs0 CS ()
+}
+
+Conjecture cons_S_one
+{
+cs1 CS (T)
+}
+
+Conjecture cons_S_two
+{
+cs2 CS (T,T)
+}
+
+Conjecture cons_N_zero
+{
+ns0 NS ()
+}
+
+Conjecture cons_N_two
+{
+ns2 NS (T,T)
+}
+
+Conjecture cons_N_two
+{
+ns2 NS (T,T)
+}
+
+Conjecture cons_nesting
+{
+nest CS (sub1 CS (),sub2 CS (T),sub3 CS ())
+}

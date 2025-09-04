@@ -220,15 +220,17 @@ importKVar :: MonadFail mf
            => VarTable -> Int -> String -> VarWhen -> [Token] 
            -> mf (VarTable,[Token])
 importKVar vt _ var vw ((lno,TSym ":"):rest) 
-                                      =  importKVarOfType vt lno var vw rest
+                                  =  importKVarOfType vt lno var vw rest
 importKVar vt _ var vw ((lno,TSym "="):rest)  
-                                      =  importKVarIsConst vt lno var vw rest
+                                  =  importKVarIsConst vt lno var vw rest
+importKVar vt _ var vw ((lno,TSym "::"):rest)  
+                                  =  importKVarIsGeneric vt lno var vw rest
+importKVar vt _ var vw ((lno,TVar "instanceof" _):rest)  
+                                  =  importKVarInstance vt lno var vw rest
 importKVar vt _ var vw ((lno,ttyp):_)
   = fail ( "importKVar: unexpected token "
            ++show ttyp++" at line "++show lno )
-importKVar vt lno var vw [] 
-  = fail ( "premature end while importing known var "
-            ++var++" at line "++show lno )
+importKVar vt lno var vw []  =  premImport "known var" var lno 
 \end{code}
 
 Seen \h{Known var :}, expect a type terminated by \h{.}
@@ -245,12 +247,42 @@ importKVarOfType vt lno var vw rest = do
   return (vt',rest'')
 \end{code}
 
+Seen \h{Known var =}, expect a term wrapped with \h{\{\}}
 \begin{code}
 importKVarIsConst :: MonadFail mf 
                   => VarTable -> Int -> String -> VarWhen -> [Token] 
                   -> mf (VarTable,[Token])
 importKVarIsConst vt lno var vw rest
   = fail ("importKVarIsConst("++var++") NYI at line "++show lno)
+\end{code}
+
+Seen \h{Known var ::}, expect keyword \h{generic}
+\begin{code}
+importKVarIsGeneric :: MonadFail mf 
+                  => VarTable -> Int -> String -> VarWhen -> [Token] 
+                  -> mf (VarTable,[Token])
+importKVarIsGeneric vt lno var vw []  =  premImport "generic" var lno
+importKVarIsGeneric vt lno var vw ((lno',TVar "generic" _):rest) = do
+  vt' <- addGenericVar (Vbl (jId var) ExprV Static) vt
+  return (vt',rest)
+importKVarIsGeneric vt lno var vw ((lno',tok):rest)
+  = fail ( "importKVarGeneric("++var++"): unexpected token "
+           ++renderTokTyp tok++" at line "++show lno' )
+\end{code}
+
+Seen \h{Known var instanceof}, expect (generic) variable.
+\begin{code}
+importKVarInstance :: MonadFail mf 
+                  => VarTable -> Int -> String -> VarWhen -> [Token] 
+                  -> mf (VarTable,[Token])
+importKVarInstance vt lno var vw []  =  premImport "instance" var lno
+importKVarInstance vt lno var vw ((lno',TVar gvar _):rest) = do
+  vt' <- addInstanceVar (Vbl (jId var) ExprV Static) 
+           (Vbl (jId gvar) ExprV Static) vt
+  return (vt',rest)
+importKVarInstance vt lno var vw ((lno',tok):rest)
+  = fail ( "importKVarInstance("++var++"): unexpected token "
+           ++renderTokTyp tok++" at line "++show lno' )
 \end{code}
 
 
@@ -857,8 +889,8 @@ saveType (FunType td tr)  = wrapNonAtomic td++funTypeString++saveType tr
 saveType (TypeCons i [])  = idName i  -- degenerate, GivenType?
 saveType (TypeCons i ts)  = saveCons (i,ts)
 saveType (AlgType i fs) 
- = idName i  ++ "    \n"++altTypeString++" "++
-    intercalate ("   \n"++altTypeString++" ") (map saveCons fs)
+ = idName i  ++ "    \n  "++altTypeString++" "++
+    intercalate ("   \n  "++altTypeString++" ") (map saveCons fs)
 
 saveCons (i,ts) = idName i ++ " " ++ intercalate " " (map wrapNonAtomic ts)
 

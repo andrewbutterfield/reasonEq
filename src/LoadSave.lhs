@@ -139,8 +139,7 @@ importDependencies thry nlines@((lno,TVar  needs Static):rest)
   | needs == kNeeds  =  importDeps thry [] rest
   | otherwise = return (thry,nlines) -- no dependencies is fine
 
-importDeps thry sped [] 
-  = fail $ unlines [ "premature file end after "++kNeeds ]
+importDeps thry sped []  =  premAfter [ kNeeds ]
 importDeps thry sped ((lno,TClose close):rest) 
   | close == kEnd  
      =  return ((thDeps__ (++(reverse sped)) thry), rest)
@@ -238,8 +237,7 @@ Seen \h{Known var :}, expect a type terminated by \h{.}
 importKVarOfType :: MonadFail mf 
                  => VarTable -> Int -> String -> VarWhen -> [Token] 
                  -> mf (VarTable,[Token])
-importKVarOfType vt lno var vw []
-  = fail ("premature end while importing type "++var++" at line "++show lno)
+importKVarOfType vt lno var vw []  =  premImport "type" var lno
 importKVarOfType vt lno var vw rest = do
   (typ,rest') <- importType rest
   rest'' <- expectToken dotTok rest'
@@ -360,7 +358,7 @@ getBlock (tok@(lno,_):_)
 
 -- 
 scanBlock :: MonadFail mf => [Token] -> [Token] -> mf ([Token],[Token])
-scanBlock sofar [] = fail "premature end while scanning block"
+scanBlock sofar []  =  premDuring ["scanning block"]
 scanBlock sofar ((lno,TClose close):rest)
   | close == kEnd           =  return (reverse sofar, rest)
 scanBlock sofar (tok:rest)  =  scanBlock (tok:sofar) rest
@@ -386,14 +384,12 @@ Law conj_name
 importLaw :: MonadFail mf 
           => String -> [Token] 
           -> mf (Law,[Token])
-importLaw lawname []
-  = fail ( "premature file end after "++kLaw++" "++lawname++" "++kBegin )
+importLaw lawname []  =  premAfter [kLaw,lawname,kBegin]
 importLaw lawname tokens = do
   (block,beyond) <- getBlock tokens
   (provenance,rest1) <- importProvenace block
   case rest1 of
-    [] -> fail $ unlines' 
-           [ "premature file end after "++kLaw++" "++show provenance ]
+    []  ->  premAfter [kLaw,show provenance ]
     ((_,TSep ","):rest2) -> do
       (term,rest3) <- sTermRead rest2
       case rest3 of
@@ -409,8 +405,7 @@ importLaw lawname tokens = do
       , renderToken tok ++ " at line "++show lno ]
 
 importProvenace :: MonadFail mf => [Token] -> mf (Provenance,[Token])
-importProvenace [] = 
-  fail ( "premature file end after "++kBegin )
+importProvenace []  =  premAfter [kBegin]
 importProvenace ((_,TVar  "axiom" Static):rest) 
   = return (Axiom,rest)
 importProvenace ((_,TVar  "assumed" Static):rest) 
@@ -467,8 +462,7 @@ Conjecture conj_name
 importConjecture :: MonadFail mf 
                  => String -> [Token] 
                  -> mf (NmdAssertion,[Token])
-importConjecture conjname []
-  = fail $ unlines [ "premature file end after "++kConjecture++" "++conjname ]
+importConjecture conjname []  =  premAfter [kConjecture,conjname]
 importConjecture conjname tokens = do
   (block,beyond) <- getBlock tokens
   (term,rest2) <- sTermRead block
@@ -733,7 +727,7 @@ $$ QS~~~i~g_1 \dots g_n \bullet t $$
 parse the quantifier:
 \begin{code}
 setQParse :: MonadFail mf => [Token] -> mf (Term,[Token])
-setQParse [] = fail "setQParse: premature end"
+setQParse []  =  premDuring ["setQParse"]
 setQParse ((_,TVar nm Static) : tts) = do
   let i = jId nm
   (i,sg,term,tts') <- quantread i [] tts
@@ -747,7 +741,7 @@ $$ QL~~~i~g_1 \dots g_n \bullet t $$
 parse the quantifier:
 \begin{code}
 listQParse :: MonadFail mf => [Token] -> mf (Term,[Token])
-listQParse [] = fail "listQParse: premature end"
+listQParse []  = premDuring ["listQParse"]
 listQParse ((_,TVar nm Static) : tts) = do
   let i = jId nm
   (i,sg,term,tts') <- quantread i [] tts
@@ -760,7 +754,7 @@ Seen \texttt{Qx i}, and zero or more \texttt{g\_i}:
 $$ Qx~i~g_1 \dots g_i ~~~~~ g_{i+1} \dots g_n \bullet t $$
 parse the quantifier:
 \begin{code}
-quantread i _ [] = fail ("quantread: "++trId i++" (premature end)")
+quantread i _ []  =  premDuring ["quantread:",trId i]
 quantread i sg ((_,TSym sym) : tts)
   | sym == kQBody  =  quantreadBody i sg tts
 quantread i sg (v@(_,TVar _ _)    : tts)   =  quantread i (v:sg) tts
@@ -914,7 +908,7 @@ names to pull out $\top$ and $\bot$ types.
 Tokens that can start a type:  $id~($
 \begin{code}
 importType :: MonadFail mf => [Token] -> mf (Type,[Token])
-importType [] = fail "importType: premature end of input"
+importType [] = premDuring ["importType"]
 importType ((lno,TVar nm _):rest)  =  gotTypeName nm rest
 importType ((lno,TSym nm):rest)    =  gotTypeName nm rest
 importType ((lno,TOpen open):rest)  
@@ -929,7 +923,7 @@ Tokens that can occur after $id$ are: $.~\fun~|~)~id~($
 If we encounter $.$ or $)$ we leave it in place
 \begin{code}
 gotTypeName :: MonadFail mf => String -> [Token] -> mf (Type,[Token])
-gotTypeName nm [] = fail ("gotTypeName \""++nm++"\" : premature end of input")
+gotTypeName nm [] = premDuring ["gotTypeName", "'"++nm++"'"]
 gotTypeName nm toks@((lno,TSym sym):rest)
   | sym == dot                            =  return (vartype,toks)
   | sym == funTypeString                  =  gotFunArrow vartype rest
@@ -970,7 +964,7 @@ Tokens that can occur after $|$ are: $id~$
 gotAltBar :: MonadFail mf 
           => String -> [(Identifier,[Type])] -> [Token] 
           -> mf (Type,[Token])
-gotAltBar sumNm variants []  = fail "gotAltBar: premature end of input"
+gotAltBar sumNm variants []  =  premDuring ["gotAltBar"]
 gotAltBar sumNm variants ((lno,TVar nm _):rest) 
   = getAltProduct sumNm nm variants [] rest
 gotAltBar sumNm variants ((lno,tok):rest) 
@@ -1302,6 +1296,16 @@ tlexSym lno rest mys str@(c:cs)
 \end{code}
 
 \section{Token Parsing Utilities}
+
+When input ends unexpectedly:
+\begin{code}
+premAfter strs
+  = fail ("premature file end after "++intercalate " " strs)
+premDuring strs
+  = fail ("premature file end during "++intercalate " " strs)
+premImport what got lno 
+  = fail ("premature end while importing "++what++" "++got++" at line "++show lno)
+\end{code}
 
 Called when a specific token is expected:
 \begin{code}

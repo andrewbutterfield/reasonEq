@@ -920,7 +920,7 @@ Tokens that can start a type:  $id~($
 \begin{code}
 importType :: MonadFail mf => [Token] -> mf (Type,[Token])
 importType [] = premDuring ["importType"]
-importType ((lno,TVar nm _):rest)  =  gotTypeName nm rest
+importType ((lno,TVar nm _):rest)  =  gotTypeName (pdbg "iT.nm" nm) $ pdbg "iT.rest" rest
 importType ((lno,TSym nm):rest)    =  gotTypeName nm rest
 importType ((lno,TOpen open):rest)  
   | open == openParString          =  gotTypeLeftPar rest
@@ -931,7 +931,7 @@ importType ((lno,tok):rest)        = fail $ unlines'
 \end{code}
 
 Tokens that can occur after $id$ are: $.~\fun~|~)~id~($
-If we encounter $.$ or $)$ we leave it in place
+If we encounter $.$ or $)$ we leave it in place.
 \begin{code}
 gotTypeName :: MonadFail mf => String -> [Token] -> mf (Type,[Token])
 gotTypeName nm [] = premDuring ["gotTypeName", "'"++nm++"'"]
@@ -941,9 +941,12 @@ gotTypeName nm toks@((lno,TSym sym):rest)
   | sym == altTypeString                  =  gotAltBar nm [] rest
   where vartype = TypeVar $ jId nm
 gotTypeName nm ((lno,TVar var _):rest) 
-                              =  getProduct (jId nm) [TypeVar (jId var)] rest
+                              =  getProduct (jId nm) [TypeVar (jId $ pdbg "gTN.var" var)] $ pdbg "gTN.rest" rest
 gotTypeName nm toks@((lno,TOpen open):rest)
-  | open == openParString                 =  getProduct (jId nm) [] toks
+  | open == openParString =  do
+     (typ,rest) <- getProduct (jId nm) [] toks
+     rest' <- expectToken (TClose closeParString) rest
+     return (typ,rest')
 gotTypeName nm toks@((lno,TClose close):rest)
   | close == closeParString               =  return ((TypeVar $ jId nm),toks)
 gotTypeName nm ((lno,tok):rest) = fail $ unlines'
@@ -987,11 +990,21 @@ gotAltBar sumNm variants ((lno,tok):rest)
 \end{code}
 
 When we see $id_0~id_1$ or $id_0~($
-we expect a sequence of types, whose first token is $id_0$ or $($.
+we expect a sequence of types, whose first token is $id_1$ or $($.
+This sequence should end with either $.$ or $|$,
+which we leave in place.
 \begin{code}
 getProduct :: MonadFail mf 
            => Identifier -> [Type] -> [Token] -> mf (Type,[Token])
-getProduct conid types rest = fail "getProduct NYI"
+getProduct conid types [] = premDuring ("product":trId conid:map trType types)
+getProduct conid types rest = do
+  (typ',rest') <- importType $ pdbg "gP.rest" rest
+  case pdbg "gP.rest'" rest' of
+    [] ->  premAfter ["product"]
+    ((lno,tok):rest'')
+      | pdbg "gP.tok" tok == dotTok || tok == TSym altTypeString
+        ->  return (TypeCons conid (reverse (typ':types)),rest')
+      | otherwise -> getProduct conid (typ':types) rest'
 \end{code}
 
 
@@ -1274,7 +1287,7 @@ tlexBeforeGVar lno rest di cs@(c:cs')
 --  seen  v  expecting  v  v'  v'm  v$ v$' v$'m
 tlexVar lno rest di ""     =  (lno, mkDi di) : tlex rest -- std-var
 tlexVar lno rest di cs@(c:cs') 
-  | isAlpha c       =  tlexVar lno rest (c:di) cs'
+  | isAlphaNum c    =  tlexVar lno rest (c:di) cs'
   | c == '_'        =  tlexVar lno rest (c:di) cs'
   | c == afterChar  =  tlexLater lno rest (reverse di) TVar "" cs' -- v'
   | c == lstvChar   =  tlexLVar   lno rest (reverse di) cs' -- v$

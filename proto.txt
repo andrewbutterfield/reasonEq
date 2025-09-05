@@ -7,7 +7,7 @@ Known aterm : B .
 Known atermf : FUN B TO B ENDF .
 Known gen :: generic
 Known inst instanceof gen
-Known mol = { 42 }
+Known mol = BEGIN 42 END
 Known prodt : PROD Prod A B ENDP .
 Known sumt : SUM Sum
   VARIANT Sum1  ENDV
@@ -25,122 +25,98 @@ Known set$' = {}
 
 
 
-Conjecture true
-{
-true
-}
+Conjecture true BEGIN
+ true
+END
 
-Conjecture false
-{
-false
-}
+Conjecture false BEGIN
+ false
+END
 
-Conjecture forall_zero
-{
-body
-}
+Conjecture forall_zero BEGIN
+ body
+END
 
-Conjecture forall_one
-{
-B-stuff?
-}
+Conjecture forall_one BEGIN
+ B-stuff?
+END
 
-Conjecture forall_two
-{
-B-stuff?
-}
+Conjecture forall_two BEGIN
+ B-stuff?
+END
 
-Conjecture forall_three
-{
-B-stuff?
-}
+Conjecture forall_three BEGIN
+ B-stuff?
+END
 
-Conjecture forall_four
-{
-B-stuff?
-}
+Conjecture forall_four BEGIN
+ B-stuff?
+END
 
-Conjecture fortytwo
-{
-42
-}
+Conjecture fortytwo BEGIN
+ 42
+END
 
-Conjecture neg99
-{
--99
-}
+Conjecture neg99 BEGIN
+ -99
+END
 
-Conjecture expr_static
-{
-Ve
-}
+Conjecture expr_static BEGIN
+ Ve
+END
 
-Conjecture expr_before
-{
-'Ve
-}
+Conjecture expr_before BEGIN
+ 'Ve
+END
 
-Conjecture expr_after
-{
-Ve'
-}
+Conjecture expr_after BEGIN
+ Ve'
+END
 
-Conjecture expr_during
-{
-Ve'd
-}
+Conjecture expr_during BEGIN
+ Ve'd
+END
 
-Conjecture pred_static
-{
-Vp
-}
+Conjecture pred_static BEGIN
+ Vp
+END
 
-Conjecture pred_before
-{
-'Vp
-}
+Conjecture pred_before BEGIN
+ 'Vp
+END
 
-Conjecture pred_after
-{
-Vp'
-}
+Conjecture pred_after BEGIN
+ Vp'
+END
 
-Conjecture pred_during
-{
-Vp'd
-}
+Conjecture pred_during BEGIN
+ Vp'd
+END
 
-Conjecture cons_S_zero
-{
-cs0 CS ()
-}
+Conjecture cons_S_zero BEGIN
+ cs0 CS ()
+END
 
-Conjecture cons_S_one
-{
-cs1 CS (T)
-}
+Conjecture cons_S_one BEGIN
+ cs1 CS (T)
+END
 
-Conjecture cons_S_two
-{
-cs2 CS (T,T)
-}
+Conjecture cons_S_two BEGIN
+ cs2 CS (T,T)
+END
 
-Conjecture cons_N_zero
-{
-ns0 NS ()
-}
+Conjecture cons_N_zero BEGIN
+ ns0 NS ()
+END
 
-Conjecture cons_N_two
-{
-ns2 NS (T,T)
-}
+Conjecture cons_N_two BEGIN
+ ns2 NS (T,T)
+END
 
-Conjecture cons_N_two
-{
-ns2 NS (T,T)
-}
+Conjecture cons_N_two BEGIN
+ ns2 NS (T,T)
+END
 
-Conjecture cons_nesting
-{
-nest CS (sub1 CS (),sub2 CS (T),sub3 CS ())
-}
+Conjecture cons_nesting BEGIN
+ nest CS (sub1 CS (),sub2 CS (T),sub3 CS ())
+END

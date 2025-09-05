@@ -858,6 +858,16 @@ loadVariable string = fail ("loadVariable: invalid variable - "++string)
 
 \subsection{Type Grammar}
 
+Alternate grammar?
+
+\begin{eqnarray*}
+\lefteqn{t \in Type}
+\\ &::=&  name
+\\ &\mid& \mathbf{fun} ~t~ \mathbf{to} ~t
+\\ &\mid& \mathbf{prod}~name~t~\dots~t
+\\ &\mid& \mathbf{sum}~name~(\mathbf{variant}~name~~t~\dots~t)^*
+\end{eqnarray*}
+
 \def\typegrammar{
 \begin{eqnarray*}
    Tokens: && id~\fun~|~(~)~.
@@ -873,8 +883,15 @@ loadVariable string = fail ("loadVariable: invalid variable - "++string)
 \\ &&  \text{non-atomic are enclosed in parentheses}
 \end{eqnarray*}
 }
+\def\typestart{Tokens that can start a type:  $id~($}
+\def\typefollow{Tokens that can follow and continue a type: $\fun~id~($}
+\def\typeover{Tokens that can \emph{end} a type: $.~)$}
 
 \typegrammar
+
+\typestart
+
+\typeover
 
 \subsection{Save Type}
 
@@ -890,14 +907,21 @@ saveType ArbType          = arbTypeString
 saveType BottomType       = bottomTypeString
 saveType (TypeVar i)      = idName i
 saveType (GivenType i)    = idName i
-saveType (FunType td tr)  = wrapNonAtomic td++funTypeString++saveType tr
+saveType (FunType td tr)  = "FUN "++saveType td++" TO "++saveType tr++" ENDF"
+--saveType (FunType td tr)  = wrapNonAtomic td++funTypeString++saveType tr
 saveType (TypeCons i [])  = idName i  -- degenerate, GivenType?
-saveType (TypeCons i ts)  = saveCons (i,ts)
+saveType (TypeCons i ts)  = "PROD "++saveCons (i,ts)++" ENDP"
+-- saveType (TypeCons i ts)  = saveCons (i,ts)
 saveType (AlgType i fs) 
- = idName i  ++ "    \n  "++altTypeString++" "++
-    intercalate ("   \n  "++altTypeString++" ") (map saveCons fs)
+ = "SUM "++idName i  ++ "\n  VARIANT "++
+    intercalate ("\n  VARIANT ") (map saveCons fs)
+    ++ "\n  ENDS"
+-- saveType (AlgType i fs) 
+--  = idName i  ++ "    \n  "++altTypeString++" "++
+--     intercalate ("   \n  "++altTypeString++" ") (map saveCons fs)
 
-saveCons (i,ts) = idName i ++ " " ++ intercalate " " (map wrapNonAtomic ts)
+saveCons (i,ts) = idName i ++ " " ++ intercalate " " (map saveType ts)
+--saveCons (i,ts) = idName i ++ " " ++ intercalate " " (map wrapNonAtomic ts)
 
 openParString = "(" ; closeParString = ")"
 wrapNonAtomic t
@@ -916,7 +940,10 @@ starCons  = "*"
 Once parsing is complete we post-process 
 names to pull out $\top$ and $\bot$ types.
 
-Tokens that can start a type:  $id~($
+\typestart
+
+\typeover
+
 \begin{code}
 importType :: MonadFail mf => [Token] -> mf (Type,[Token])
 importType [] = premDuring ["importType"]
@@ -929,6 +956,41 @@ importType ((lno,tok):rest)        = fail $ unlines'
   , "expecting variable, symbol, or opening left parenthesis"
   , "got \""++renderTokTyp tok++"\" at line "++show lno ]
 \end{code}
+
+\typestart
+
+\begin{code}
+typeStart :: Token -> Bool
+typeStart (_,TVar _ _)                            =  True
+typeStart (_,TSym _)                              =  True
+typeStart (_,TOpen open) | open == openParString  =  True
+typeStart _                                       =  False
+\end{code}
+
+
+\typeover
+
+\begin{code}
+typeOver :: Token -> Bool
+typeOver (_,TSym sym)     | sym   == dot             =  True
+-- typeOver (_,TClose close) | close == closeParString  =  True
+typeOver _                                           =  False
+\end{code}
+
+
+\begin{code}
+importTypes types rest@[] = return (types,rest)
+importTypes types toks@(tok@(lno,ttyp):rest)
+  | typeOver tok = return (reverse types,rest)
+  | typeStart tok = do
+      (typ',rest) <- importType toks
+      importTypes (typ':types) rest
+  | otherwise = fail $ unlines'
+      [ "importTypes: expecting type-start or type-over tokens"
+      , "but saw "++renderTokTyp ttyp++" at line "++show lno
+      ]
+\end{code}
+
 
 Tokens that can occur after $id$ are: $.~\fun~|~)~id~($
 If we encounter $.$ or $)$ we leave it in place.
@@ -961,6 +1023,7 @@ gotTypeLeftPar :: MonadFail mf => [Token] -> mf (Type,[Token])
 gotTypeLeftPar rest = do
   (typ,rest') <- importType rest
   rest'' <- expectToken rightParTok rest'
+  -- !!!! now we need to look for -> !!!!
   return (typ,rest'')
 \end{code}
 
@@ -1000,9 +1063,8 @@ getProduct conid types [] = premDuring ("product":trId conid:map trType types)
 getProduct conid types rest = do
   (types',rest') <- importTypes types rest
   return (TypeCons conid (reverse types'),rest')
-
-importTypes types toks = fail "importTypes NYI"
 \end{code}
+
 
 
 Tokens that can occur after $|~id$ are $id~(~|$

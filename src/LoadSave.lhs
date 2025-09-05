@@ -926,11 +926,14 @@ saveType (TypeCons i [])  = idName i  -- degenerate, GivenType?
 saveType (TypeCons i ts)  = startProd ++" "++saveCons (i,ts)++" "++endProd
 saveType (AlgType i fs)   = startSum ++" "++idName i 
                             ++ '\n' : unlines' (map saveVariant fs)
+                            ++ '\n' : endSum
 
-saveCons :: (Identifier,[Type]) -> String
+type Variant = (Identifier,[Type])
+
+saveCons :: Variant -> String
 saveCons (i,ts) = idName i ++ " " ++ intercalate " " (map saveType ts)
 
-saveVariant :: (Identifier,[Type]) -> String
+saveVariant :: Variant -> String
 saveVariant its
   = "  "++startVariant++" "++saveCons its++" "++endVariant
 
@@ -969,7 +972,7 @@ importType (tok:_)
   = fail ("importType: invalid start "++show tok)
 \end{code}
 
-Seen: \textbf{fun}
+Seen: \textbf{fun}.
 \begin{code}
 importFunType [] = premDuring ["importFunType"]
 importFunType toks = do
@@ -980,7 +983,7 @@ importFunType toks = do
   return (FunType dtype rtype,rest4)
 \end{code}
 
-Seen: \textbf{prod}
+Seen: \textbf{prod}.
 \begin{code}
 importProdType [] = premDuring ["importProdType"]
 importProdType ((lno,TVar nm _):rest1)
@@ -992,12 +995,48 @@ importProdType (tok:_)
   = fail ("importProdType: invalid name "++show tok)
 \end{code}
 
-Seen: \textbf{sum}
+Seen: \textbf{sum}.
 \begin{code}
 importSumType [] = premDuring ["importSumType"]
-importSumType toks =  fail ("SUM NYI @ "++show (take 1 toks))
+importSumType ((lno,TVar nm _):rest1)
+  | not( nm `elem` typeKeys) = do 
+      (variants,rest2) <- importVariants (jId nm) [] rest1
+      rest3 <- expectToken (TVar endSum Static) rest2
+      return (AlgType (jId nm) variants,rest3)
+importSumType (tok:_) 
+  = fail ("importSumType: invalid name "++show tok)
 \end{code}
 
+Seen: \textbf{variant}.
+\begin{code}
+importVariant [] = premDuring ["importVariant"]
+importVariant ((lno,TVar nm _):rest1)
+  | not( nm `elem` typeKeys) = do
+      (types,rest2) <- importTypes [] rest1
+      rest3 <- expectToken (TVar endVariant Static) rest2
+      return ((jId nm,types),rest3)
+importVariant (tok:_) 
+  = fail ("importVariant: invalid name "++show tok)
+\end{code}
+
+Seen \textbf{sum} sumname.
+Expecting a list of zero or more types, ended by \textbf{endp} or \textbf{endv}.
+\begin{code}
+importVariants :: MonadFail mf 
+               => Identifier -> [Variant] -> [Token] 
+               -> mf ([Variant],[Token])
+importVariants vid stnairav toks@[] = return (reverse stnairav,toks)
+importVariants vid stnairav toks@(tok@(lno,TVar str _):rest1)
+  | str == endSum  =  return (reverse stnairav,toks)
+  | str /= startVariant  = fail ("importVariants: invalid key "++show tok)
+  | otherwise = do
+      (variant,rest2) <- importVariant rest1
+      case rest2 of 
+        [] -> premDuring ["importVariants",endVariant]
+        _ -> importVariants vid (variant:stnairav) rest2
+\end{code}
+
+Expecting a list of zero or more types, ended by \textbf{endp} or \textbf{endv}.
 \begin{code}
 importTypes :: MonadFail mf => [Type] -> [Token] -> mf ([Type],[Token])
 importTypes sepyt toks@[]            = return (reverse sepyt,toks)
@@ -1080,7 +1119,7 @@ typeOver _                                           =  False
 % Tokens that can occur after $|$ are: $id~$
 % \begin{code}
 % gotAltBar :: MonadFail mf 
-%           => String -> [(Identifier,[Type])] -> [Token] 
+%           => String -> [Variant] -> [Token] 
 %           -> mf (Type,[Token])
 % gotAltBar sumNm variants []  =  premDuring ["gotAltBar"]
 % gotAltBar sumNm variants ((lno,TVar nm _):rest) 
@@ -1111,7 +1150,7 @@ typeOver _                                           =  False
 % Tokens that can occur after $|~id$ are $id~(~|$
 % \begin{code}
 % getAltProduct :: MonadFail mf 
-%                => String -> String -> [(Identifier,[Type])] -> [Type] 
+%                => String -> String -> [Variant] -> [Type] 
 %                -> [Token] -> mf (Type,[Token])
 % getAltProduct sumNm prodNm variants [] rest
 %   = fail "getAltProduct NYI"

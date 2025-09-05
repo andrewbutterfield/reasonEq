@@ -12,7 +12,8 @@ Known prodt : PROD Prod A B ENDP .
 Known sumt : SUM Sum
   VARIANT Sum1  ENDV
   VARIANT Sum2 B ENDV
-  VARIANT Sum3 FUN B TO B ENDF A B ENDV .
+  VARIANT Sum3 FUN B TO B ENDF A B ENDV
+ENDS .
 Known alist$ :: list
 Known aset$ :: set
 Known list$ = <>

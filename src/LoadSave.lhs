@@ -859,33 +859,37 @@ loadVariable string = fail ("loadVariable: invalid variable - "++string)
 \subsection{Type Grammar}
 
 Alternate grammar?
-
+\def\typegrammar{
 \begin{eqnarray*}
 \lefteqn{t \in Type}
 \\ &::=&  name
-\\ &\mid& \mathbf{fun} ~t~ \mathbf{to} ~t
-\\ &\mid& \mathbf{prod}~name~t~\dots~t
-\\ &\mid& \mathbf{sum}~name~(\mathbf{variant}~name~~t~\dots~t)^*
-\end{eqnarray*}
-
-\def\typegrammar{
-\begin{eqnarray*}
-   Tokens: && id~\fun~|~(~)~.
-\\ t \in Type 
-   &::=& 
-   id \mid \tau_1 \fun t_2
-   \mid id~\tau_1~\tau_2~\dots~\tau_n \mid ~
-\\ && id_0~ `|`~id_1~\tau_{11} \dots \tau_{1k_1} 
-            `|` \dots `|`
-            id_n~\tau_{n1} \dots \tau_{nk_n} 
-\\ \tau \in WrapType
-   &&  id \text{ are rendered as-is}
-\\ &&  \text{non-atomic are enclosed in parentheses}
+\\ &\mid& \mathbf{fun} ~t~ \mathbf{to} ~t~\mathbf{endf}
+\\ &\mid& \mathbf{prod}~name~t~\dots~t~\mathbf{endp}
+\\ &\mid& \mathbf{sum}~name~v^*~\mathbf{ends}
+\\\lefteqn{v \in Variant}
+\\ &::=& \mathbf{variant}~name~~t~\dots~t~\mathbf{endv}
 \end{eqnarray*}
 }
-\def\typestart{Tokens that can start a type:  $id~($}
+\def\typestart{Tokens that can start a type:  $id~fun~prod~sum$}
 \def\typefollow{Tokens that can follow and continue a type: $\fun~id~($}
-\def\typeover{Tokens that can \emph{end} a type: $.~)$}
+\def\typeover{Tokens that can \emph{end} a type: $endf~endp~ends$}
+
+
+% \def\typegrammar{
+% \begin{eqnarray*}
+%    Tokens: && id~\fun~|~(~)~.
+% \\ t \in Type 
+%    &::=& 
+%    id \mid \tau_1 \fun t_2
+%    \mid id~\tau_1~\tau_2~\dots~\tau_n \mid ~
+% \\ && id_0~ `|`~id_1~\tau_{11} \dots \tau_{1k_1} 
+%             `|` \dots `|`
+%             id_n~\tau_{n1} \dots \tau_{nk_n} 
+% \\ \tau \in WrapType
+%    &&  id \text{ are rendered as-is}
+% \\ &&  \text{non-atomic are enclosed in parentheses}
+% \end{eqnarray*}
+% }
 
 \typegrammar
 
@@ -900,36 +904,49 @@ Alternate grammar?
 \begin{code}
 arbTypeString = "T"
 bottomTypeString = "_"
-funTypeString = "->"
-altTypeString = "|"
+
+startFun = "FUN" ; funArrow = "TO" ; endFun = "ENDF"
+startProd = "PROD" ; endProd = "ENDP"
+startSum = "SUM" ; endSum = "ENDS"
+startVariant = "VARIANT" ; endVariant = "ENDV"
+
+typeKeys = [ arbTypeString, bottomTypeString
+           , startFun, funArrow, endFun
+           , startProd, endProd
+           , startSum, endSum, startVariant, endVariant ]
+
 saveType :: Type -> String
 saveType ArbType          = arbTypeString
 saveType BottomType       = bottomTypeString
 saveType (TypeVar i)      = idName i
 saveType (GivenType i)    = idName i
-saveType (FunType td tr)  = "FUN "++saveType td++" TO "++saveType tr++" ENDF"
---saveType (FunType td tr)  = wrapNonAtomic td++funTypeString++saveType tr
+saveType (FunType td tr)  
+  = startFun++" "++saveType td++" "++funArrow++" "++saveType tr++" "++endFun
 saveType (TypeCons i [])  = idName i  -- degenerate, GivenType?
-saveType (TypeCons i ts)  = "PROD "++saveCons (i,ts)++" ENDP"
+saveType (TypeCons i ts)  = startProd ++" "++saveCons (i,ts)++" "++endProd
+saveType (AlgType i fs)   = startSum ++" "++idName i 
+                            ++ '\n' : unlines' (map saveVariant fs)
+
+saveCons :: (Identifier,[Type]) -> String
+saveCons (i,ts) = idName i ++ " " ++ intercalate " " (map saveType ts)
+
+saveVariant :: (Identifier,[Type]) -> String
+saveVariant its
+  = "  "++startVariant++" "++saveCons its++" "++endVariant
+
+--saveType (FunType td tr)  = wrapNonAtomic td++funTypeString++saveType tr
 -- saveType (TypeCons i ts)  = saveCons (i,ts)
-saveType (AlgType i fs) 
- = "SUM "++idName i  ++ "\n  VARIANT "++
-    intercalate ("\n  VARIANT ") (map saveCons fs)
-    ++ "\n  ENDS"
 -- saveType (AlgType i fs) 
 --  = idName i  ++ "    \n  "++altTypeString++" "++
 --     intercalate ("   \n  "++altTypeString++" ") (map saveCons fs)
 
-saveCons (i,ts) = idName i ++ " " ++ intercalate " " (map saveType ts)
+
 --saveCons (i,ts) = idName i ++ " " ++ intercalate " " (map wrapNonAtomic ts)
 
-openParString = "(" ; closeParString = ")"
-wrapNonAtomic t
-  | isAtmType t = saveType t
-  | otherwise  = openParString++saveType t++closeParString
-
-powerCons = "P"
-starCons  = "*"
+--openParString = "(" ; closeParString = ")"
+-- wrapNonAtomic t
+--   | isAtmType t = saveType t
+--  | otherwise  = openParString++saveType t++closeParString
 \end{code}
 
 \newpage
@@ -940,22 +957,59 @@ starCons  = "*"
 Once parsing is complete we post-process 
 names to pull out $\top$ and $\bot$ types.
 
-\typestart
-
-\typeover
-
 \begin{code}
 importType :: MonadFail mf => [Token] -> mf (Type,[Token])
 importType [] = premDuring ["importType"]
-importType ((lno,TVar nm _):rest)  =  gotTypeFirstName nm rest
-importType ((lno,TSym nm):rest)    =  gotTypeFirstName nm rest
-importType ((lno,TOpen open):rest)  
-  | open == openParString          =  gotTypeLeftPar rest
-importType ((lno,tok):rest)        = fail $ unlines'
-  [ "importType syntax error"
-  , "expecting variable, symbol, or opening left parenthesis"
-  , "got \""++renderTokTyp tok++"\" at line "++show lno ]
+importType ((lno,TVar nm _):rest)
+  | nm == startFun   =  importFunType rest
+  | nm == startProd  =  importProdType rest
+  | nm == startSum   =  importSumType rest
+  | otherwise  = return (TypeVar (jId nm),rest)
+importType (tok:_)
+  = fail ("importType: invalid start "++show tok)
 \end{code}
+
+Seen: \textbf{fun}
+\begin{code}
+importFunType [] = premDuring ["importFunType"]
+importFunType toks = do
+  (dtype,rest1) <- importType toks
+  rest2 <- expectToken (TVar funArrow Static) rest1
+  (rtype,rest3) <- importType rest2
+  rest4 <- expectToken (TVar endFun Static) rest3
+  return (FunType dtype rtype,rest4)
+\end{code}
+
+Seen: \textbf{prod}
+\begin{code}
+importProdType [] = premDuring ["importProdType"]
+importProdType ((lno,TVar nm _):rest1)
+  | not( nm `elem` typeKeys) = do
+      (types,rest2) <- importTypes [] rest1
+      rest3 <- expectToken (TVar endProd Static) rest2
+      return (TypeCons (jId nm) types,rest3)
+importProdType (tok:_) 
+  = fail ("importProdType: invalid name "++show tok)
+\end{code}
+
+Seen: \textbf{sum}
+\begin{code}
+importSumType [] = premDuring ["importSumType"]
+importSumType toks =  fail ("SUM NYI @ "++show (take 1 toks))
+\end{code}
+
+\begin{code}
+importTypes :: MonadFail mf => [Type] -> [Token] -> mf ([Type],[Token])
+importTypes sepyt toks@[]            = return (reverse sepyt,toks)
+importTypes sepyt toks@((lno,TVar end _):rest)
+  | end `elem` [endProd,endVariant]  =  return (reverse sepyt,toks)
+importTypes sepyt toks = do
+  (typ',rest1) <- importType toks
+  importTypes (typ':sepyt) rest1
+\end{code}
+
+
+
 
 \typestart
 
@@ -963,7 +1017,7 @@ importType ((lno,tok):rest)        = fail $ unlines'
 typeStart :: Token -> Bool
 typeStart (_,TVar _ _)                            =  True
 typeStart (_,TSym _)                              =  True
-typeStart (_,TOpen open) | open == openParString  =  True
+--typeStart (_,TOpen open) | open == openParString  =  True
 typeStart _                                       =  False
 \end{code}
 
@@ -978,105 +1032,92 @@ typeOver _                                           =  False
 \end{code}
 
 
-\begin{code}
-importTypes types rest@[] = return (types,rest)
-importTypes types toks@(tok@(lno,ttyp):rest)
-  | typeOver tok = return (reverse types,rest)
-  | typeStart tok = do
-      (typ',rest) <- importType toks
-      importTypes (typ':types) rest
-  | otherwise = fail $ unlines'
-      [ "importTypes: expecting type-start or type-over tokens"
-      , "but saw "++renderTokTyp ttyp++" at line "++show lno
-      ]
-\end{code}
 
+% Tokens that can occur after $id$ are: $.~\fun~|~)~id~($
+% If we encounter $.$ or $)$ we leave it in place.
+% \begin{code}
+% gotTypeFirstName :: MonadFail mf => String -> [Token] -> mf (Type,[Token])
+% gotTypeFirstName nm [] = premDuring ["gotTypeFirstName", "'"++nm++"'"]
+% gotTypeFirstName nm toks@((lno,TSym sym):rest)
+%   | sym == dot                            =  return (vartype,toks)
+%   | sym == funTypeString                  =  gotFunArrow vartype rest
+%   | sym == altTypeString                  =  gotAltBar nm [] rest
+%   where vartype = TypeVar $ jId nm
+% gotTypeFirstName nm ((lno,TVar var _):rest) 
+%                               =  getProduct (jId nm) [TypeVar (jId var)] rest
+% gotTypeFirstName nm toks@((lno,TOpen open):rest)
+%   | open == openParString =  do
+%      (typ,rest) <- getProduct (jId nm) [] toks
+%      rest' <- expectToken (TClose closeParString) rest
+%      return (typ,rest')
+% gotTypeFirstName nm toks@((lno,TClose close):rest)
+%   | close == closeParString               =  return ((TypeVar $ jId nm),toks)
+% gotTypeFirstName nm ((lno,tok):rest) = fail $ unlines'
+%   [ "gotTypeFirstName \""++nm++"\" NYfI"
+%   , "Seeing "++renderTokTyp tok++" at line "++show lno ]
+% \end{code}
 
-Tokens that can occur after $id$ are: $.~\fun~|~)~id~($
-If we encounter $.$ or $)$ we leave it in place.
-\begin{code}
-gotTypeFirstName :: MonadFail mf => String -> [Token] -> mf (Type,[Token])
-gotTypeFirstName nm [] = premDuring ["gotTypeFirstName", "'"++nm++"'"]
-gotTypeFirstName nm toks@((lno,TSym sym):rest)
-  | sym == dot                            =  return (vartype,toks)
-  | sym == funTypeString                  =  gotFunArrow vartype rest
-  | sym == altTypeString                  =  gotAltBar nm [] rest
-  where vartype = TypeVar $ jId nm
-gotTypeFirstName nm ((lno,TVar var _):rest) 
-                              =  getProduct (jId nm) [TypeVar (jId var)] rest
-gotTypeFirstName nm toks@((lno,TOpen open):rest)
-  | open == openParString =  do
-     (typ,rest) <- getProduct (jId nm) [] toks
-     rest' <- expectToken (TClose closeParString) rest
-     return (typ,rest')
-gotTypeFirstName nm toks@((lno,TClose close):rest)
-  | close == closeParString               =  return ((TypeVar $ jId nm),toks)
-gotTypeFirstName nm ((lno,tok):rest) = fail $ unlines'
-  [ "gotTypeFirstName \""++nm++"\" NYfI"
-  , "Seeing "++renderTokTyp tok++" at line "++show lno ]
-\end{code}
+% Tokens that can occur after $($ are: $id~(~)$
+% \begin{code}
+% rightParTok = TClose closeParString
+% gotTypeLeftPar :: MonadFail mf => [Token] -> mf (Type,[Token])
+% gotTypeLeftPar rest = do
+%   (typ,rest') <- importType rest
+%   rest'' <- expectToken rightParTok rest'
+%   -- !!!! now we need to look for -> !!!!
+%   return (typ,rest'')
+% \end{code}
 
-Tokens that can occur after $($ are: $id~(~)$
-\begin{code}
-rightParTok = TClose closeParString
-gotTypeLeftPar :: MonadFail mf => [Token] -> mf (Type,[Token])
-gotTypeLeftPar rest = do
-  (typ,rest') <- importType rest
-  rest'' <- expectToken rightParTok rest'
-  -- !!!! now we need to look for -> !!!!
-  return (typ,rest'')
-\end{code}
+% Tokens that can occur after $\fun$ are: $id~($
+% \begin{code}
+% gotFunArrow  :: MonadFail mf => Type -> [Token] -> mf (Type,[Token])
+% gotFunArrow dtype rest = do
+%   (rtype,rest') <- importType rest
+%   -- we should look for more arrows !!!!!
+%   return (FunType dtype rtype,rest')
+% \end{code}
 
-Tokens that can occur after $\fun$ are: $id~($
-\begin{code}
-gotFunArrow  :: MonadFail mf => Type -> [Token] -> mf (Type,[Token])
-gotFunArrow dtype rest = do
-  (rtype,rest') <- importType rest
-  -- we should look for more arrows !!!!!
-  return (FunType dtype rtype,rest')
-\end{code}
+% Tokens that can occur after $|$ are: $id~$
+% \begin{code}
+% gotAltBar :: MonadFail mf 
+%           => String -> [(Identifier,[Type])] -> [Token] 
+%           -> mf (Type,[Token])
+% gotAltBar sumNm variants []  =  premDuring ["gotAltBar"]
+% gotAltBar sumNm variants ((lno,TVar nm _):rest) 
+%   = getAltProduct sumNm nm variants [] rest
+% gotAltBar sumNm variants ((lno,tok):rest) 
+%  = fail $ unlines'
+%     [ "importType (sum-of-products) syntax error"
+%     , "expected product constructor name"
+%     , "but got "++renderTokTyp tok++" at line "++show lno
+%     ]
+% \end{code}
 
-Tokens that can occur after $|$ are: $id~$
-\begin{code}
-gotAltBar :: MonadFail mf 
-          => String -> [(Identifier,[Type])] -> [Token] 
-          -> mf (Type,[Token])
-gotAltBar sumNm variants []  =  premDuring ["gotAltBar"]
-gotAltBar sumNm variants ((lno,TVar nm _):rest) 
-  = getAltProduct sumNm nm variants [] rest
-gotAltBar sumNm variants ((lno,tok):rest) 
- = fail $ unlines'
-    [ "importType (sum-of-products) syntax error"
-    , "expected product constructor name"
-    , "but got "++renderTokTyp tok++" at line "++show lno
-    ]
-\end{code}
-
-When we see $id_0~id_1$ or $id_0~($
-we expect a sequence of types, whose first token is $id_1$ or $($.
-This sequence should end with either $.$ or $|$,
-which we leave in place.
-\begin{code}
-getProduct :: MonadFail mf 
-           => Identifier -> [Type] -> [Token] -> mf (Type,[Token])
-getProduct conid types [] = premDuring ("product":trId conid:map trType types)
-getProduct conid types rest = do
-  (types',rest') <- importTypes types rest
-  return (TypeCons conid (reverse types'),rest')
-\end{code}
+% When we see $id_0~id_1$ or $id_0~($
+% we expect a sequence of types, whose first token is $id_1$ or $($.
+% This sequence should end with either $.$ or $|$,
+% which we leave in place.
+% \begin{code}
+% getProduct :: MonadFail mf 
+%            => Identifier -> [Type] -> [Token] -> mf (Type,[Token])
+% getProduct conid types [] = premDuring ("product":trId conid:map trType types)
+% getProduct conid types rest = do
+%   (types',rest') <- importTypes types rest
+%   return (TypeCons conid (reverse types'),rest')
+% \end{code}
 
 
 
-Tokens that can occur after $|~id$ are $id~(~|$
-\begin{code}
-getAltProduct :: MonadFail mf 
-               => String -> String -> [(Identifier,[Type])] -> [Type] 
-               -> [Token] -> mf (Type,[Token])
-getAltProduct sumNm prodNm variants [] rest
-  = fail "getAltProduct NYI"
-\end{code}
+% Tokens that can occur after $|~id$ are $id~(~|$
+% \begin{code}
+% getAltProduct :: MonadFail mf 
+%                => String -> String -> [(Identifier,[Type])] -> [Type] 
+%                -> [Token] -> mf (Type,[Token])
+% getAltProduct sumNm prodNm variants [] rest
+%   = fail "getAltProduct NYI"
+% \end{code}
 
-Tokens that can occur after $.$ are returned with parsed item.
+% Tokens that can occur after $.$ are returned with parsed item.
 
 
 

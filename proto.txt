@@ -10,10 +10,9 @@ Known inst instanceof gen
 Known mol = { 42 }
 Known prodt : PROD Prod A B ENDP .
 Known sumt : SUM Sum
-  VARIANT Sum1 
-  VARIANT Sum2 B
-  VARIANT Sum3 FUN B TO B ENDF A B
-  ENDS .
+  VARIANT Sum1  ENDV
+  VARIANT Sum2 B ENDV
+  VARIANT Sum3 FUN B TO B ENDF A B ENDV .
 Known alist$ :: list
 Known aset$ :: set
 Known list$ = <>

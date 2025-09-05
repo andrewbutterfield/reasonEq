@@ -97,8 +97,8 @@ kNeeds = "Needs"
 kKnown = "Known"
 kLaw = "Law"
 kConjecture = "Conjecture"
-kBegin = "{"
-kEnd = "}"
+kBegin = "BEGIN"
+kEnd = "END"
 \end{code}
 
 \subsection{Load Theory}
@@ -442,9 +442,9 @@ saveLaws laws  =  unlines' $ map saveLaw laws
 
 saveLaw :: Law -> String
 saveLaw ((name,Assertion tm sc),provenance)
-  = unlines' ( [ "", kLaw ++ " " ++ name
-               , kBegin ++ " " ++ saveProv provenance
-               , "," , saveTerm tm ]
+  = unlines' ( [ "", kLaw ++ " " ++ name ++ " " ++ kBegin
+               , " " ++ saveProv provenance
+               , " ," , saveTerm tm ]
                ++ (if isTrivialSC sc then [] else [",",saveSideCond sc])
                ++ [ kEnd ] )
 
@@ -498,9 +498,8 @@ saveConjectures nmdassns  =  unlines' $ map saveConjecture nmdassns
 
 saveConjecture :: NmdAssertion -> String
 saveConjecture (name,Assertion tm sc)
-  = unlines'  ( [ "", kConjecture ++ " " ++ name
-                , kBegin 
-                , saveTerm tm ]
+  = unlines'  ( [ "", kConjecture ++ " " ++ name ++ " " ++ kBegin 
+                , " " ++ saveTerm tm ]
                 ++ (if isTrivialSC sc then [] else [",",saveSideCond sc])
                 ++ [ kEnd ] )
 \end{code}

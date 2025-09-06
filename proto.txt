@@ -16,11 +16,11 @@ Known sumt : SUM Sum
 ENDS .
 Known alist$ :: list
 Known aset$ :: set
-Known list$ = <>
+Known list$ = <1,2,3>
 Known set$ = {}
 Known alist$' :: list 
 Known aset$' :: set 
-Known list$' = <>
+Known list$' = <  >
 Known set$' = {}
 
 

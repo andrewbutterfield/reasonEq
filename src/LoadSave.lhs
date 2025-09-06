@@ -204,6 +204,7 @@ Seen \h{kKnown}:
 importKnown :: MonadFail mf => VarTable -> [Token] -> mf (VarTable,[Token])
 importKnown vt [] = return (vt,[])
 importKnown vt toks@((lno,TVar var vw):rest) = importKVar vt lno var vw rest
+importKnown vt toks@((lno,TLVar var vw):rest) = importKLVar vt lno var vw rest
 importKnown name (tok:rest) 
   = fail ("loadVarData NYfI - tok:"++show tok)
 
@@ -213,6 +214,13 @@ kInstanceOf = "instanceof"
 \end{code}
 
 \subsubsection{Load Known Variable}
+
+\begin{verbatim}
+Known v : <type> .
+Known t = BEGIN <term> END
+Known g :: generic
+Known i instanceof g
+\end{verbatim}
 
 Seen \h{Known var}
 \begin{code}
@@ -246,13 +254,13 @@ importKVarOfType vt lno var vw rest = do
   return (vt',rest'')
 \end{code}
 
-Seen \h{Known var =}, expect a term wrapped with \h{\{\}}
+Seen \h{Known var =}, expect a term wrapped with \h{BEGIN \dots END}
 \begin{code}
 importKVarIsConst :: MonadFail mf 
                   => VarTable -> Int -> String -> VarWhen -> [Token] 
                   -> mf (VarTable,[Token])
 importKVarIsConst vt lno var vw tokens = do
-  (block,beyond) <- getBlock tokens
+  (block,beyond) <- getBlock beBlock tokens
   (term,rest) <- sTermRead block
   if null rest 
   then do
@@ -294,6 +302,73 @@ importKVarInstance vt lno var vw ((lno',tok):rest)
            ++renderTokTyp tok++" at line "++show lno' )
 \end{code}
 
+\subsubsection{Load Known List-Variable}
+
+\begin{verbatim}
+Known al$ :: list
+Known as$ :: set
+Known lst$ = '<' gv1 , ... , gvn '>'
+Known set$ = { gv1 , ... , gvn }
+\end{verbatim}
+
+Seen \h{Known var\$}
+\begin{code}
+importKLVar :: MonadFail mf 
+           => VarTable -> Int -> String -> VarWhen -> [Token] 
+           -> mf (VarTable,[Token])
+importKLVar vt _ lvar vw ((lno,TSym "="):rest)  
+                              =  importKLVarIsContainer vt lno lvar vw rest
+importKLVar vt _ lvar vw ((lno,TSym "::"):rest)  
+                          =  importKLVarIsAbsContainer vt lno lvar vw rest
+importKLVar vt _ lvar vw ((lno,ttyp):_)
+  = fail ( "importKLVar: unexpected token "
+           ++show ttyp++" at line "++show lno )
+importKLVar vt lno lvar vw []  =  premImport "known list-var" lvar lno 
+\end{code}
+
+Seen \h{Known var\$ =}, 
+expect a list enumeration wrapped with \h{< \dots >},
+or a set enumeration wrapped with \h{\{ \dots \}}
+\begin{code}
+listOpen = TSym "<"; listClose = TSym ">"; listBlock = (listOpen,listClose)
+setOpen = TOpen "{"; setClose = TClose "}"; setBlock = (setOpen,setClose)
+
+importKLVarIsContainer :: MonadFail mf 
+                  => VarTable -> Int -> String -> VarWhen -> [Token] 
+                  -> mf (VarTable,[Token])
+importKLVarIsContainer vt lno lvar vw [] = premAfter ["Known",lvar,show lno]
+importKLVarIsContainer vt _   lvar vw tokens@((lno,tok):_)
+  | tok == listOpen  = do
+      (block,beyond) <- getBlock listBlock tokens
+      (list,rest) <- sepListParse (TSym ",") undefined block
+      fail ("importKLVarIsContainer(list): NYfI "++show block++" @ "++show lno)
+  | tok == setOpen  = do
+      (block,beyond) <- getBlock setBlock tokens
+      fail ("importKLVarIsContainer(set): NYfI "++show block++" @ "++show lno)
+  | otherwise = fail $ unlines'
+      [ "importKLVarIsContainer: expected '<' or '{'"
+      , "but got "++renderTokTyp tok++" at line "++show lno ]
+\end{code}
+
+
+Seen \h{Known var\$ ::}, expect keyword \h{list} or \h{set}.
+\begin{code}
+importKLVarIsAbsContainer :: MonadFail mf 
+                  => VarTable -> Int -> String -> VarWhen -> [Token] 
+                  -> mf (VarTable,[Token])
+importKLVarIsAbsContainer vt lno lvar vw []  =  premImport "list or set" lvar lno
+importKLVarIsAbsContainer vt lno lvar vw ((lno',TVar abstract _):rest)
+  | abstract == "list" = do
+      vt' <- addAbstractVarList (Vbl (jId lvar) ExprV vw) vt
+      return (vt',rest)
+  | abstract == "set" = do
+      vt' <- addAbstractVarSet (Vbl (jId lvar) ExprV vw) vt
+      return (vt',rest)
+importKLVarIsAbsContainer vt lno lvar vw ((lno',tok):rest)
+  = fail ( "importKLVarIsAbsContainer("++lvar++"): unexpected token "
+           ++renderTokTyp tok++" at line "++show lno' )
+\end{code}
+
 
 \subsection{Save VarTable}
 
@@ -320,7 +395,7 @@ saveKnownVar (v,vmr) = "" -- unknown variable
 -- static list variables
 saveKnownLstVar :: (Variable,LstVarMatchRole) -> String
 saveKnownLstVar (lv,KnownVarList vl _ _) 
-  = saveVariable lv ++ "$ = <" ++ intercalate "," (map trGVar vl) ++ ">"
+  = saveVariable lv ++ "$ = < " ++ intercalate "," (map trGVar vl) ++ " >"
 saveKnownLstVar (lv,KnownVarSet vs _ _) 
   = saveVariable lv ++ "$ = {" 
     ++ intercalate "," (S.toList (S.map trGVar vs)) ++ "}"
@@ -335,11 +410,11 @@ saveKnownDynamic :: (IdAndClass,DynamicLstVarRole) -> String
 saveKnownDynamic ((id,vc),DynamicList vl lvl _ _) 
 -- we can infer vc from the classes of vl and lvl 
 -- which should also be known-var
-  =  trId id ++ "$' = <"
+  =  trId id ++ "$' = < "
     ++ intercalate "," (map idName vl)
     ++ (if length vl > 0 && length lvl > 0 then "," else "")
     ++ intercalate "," (map ((++"$") . idName) lvl)
-    ++ ">"
+    ++ " >"
 saveKnownDynamic ((id,vc),DynamicSet vs lvs _ _) 
   =  trId id ++ "$' = {"
     ++ intercalate "," (S.toList (S.map idName vs))
@@ -355,24 +430,31 @@ saveKnownDynamic ((id,vc),dlvr) = ""
 \section{Blocks}
 
 We have a notion of blocks
-which are a contiguous run of text bracketed by `\{` and `\}`.
+which are a contiguous run of text bracketed by `BEGIN` and `END`.
 
 \begin{code}
-getBlock :: MonadFail mf => [Token] -> mf ([Token],[Token])
-getBlock [] = fail "no block"
-getBlock ((lno,TOpen open):rest)
-  | open == kBegin  =  scanBlock [] rest
-getBlock (tok@(lno,_):_)
-  = fail $ unlines' [ "getBlock: "++kBegin++" expected"
+getBlock :: MonadFail mf 
+         => (TokenType,TokenType) -> [Token] -> mf ([Token],[Token])
+getBlock _ [] = fail "no block"
+getBlock (tBegin,tEnd) ((lno,tok):rest)
+  | tok == tBegin  =  scanBlock tEnd [] rest
+getBlock (tBegin,tEnd) (tok@(lno,_):_)
+  = fail $ unlines' [ "getBlock: "++renderTokTyp tBegin++" expected"
                     , "but "++renderToken tok++" found at line "++show lno
                     ]
 
 -- 
-scanBlock :: MonadFail mf => [Token] -> [Token] -> mf ([Token],[Token])
-scanBlock sofar []  =  premDuring ["scanning block"]
-scanBlock sofar ((lno,TClose close):rest)
-  | close == kEnd           =  return (reverse sofar, rest)
-scanBlock sofar (tok:rest)  =  scanBlock (tok:sofar) rest
+scanBlock :: MonadFail mf 
+             => TokenType -> [Token] -> [Token] -> mf ([Token],[Token])
+scanBlock _ sofar []  =  premDuring ["scanning block"]
+scanBlock tEnd sofar ((lno,tok):rest)
+  | tok == tEnd           =  return (reverse sofar, rest)
+scanBlock tEnd sofar (tok:rest)  =  scanBlock tEnd (tok:sofar) rest
+\end{code}
+
+Laws, Conjectures and know Terms use \h{BEGIN} \dots \h{END} blocks:
+\begin{code}
+beBlock = (TVar "BEGIN" Static,TVar "END" Static)
 \end{code}
 
 \newpage
@@ -384,11 +466,11 @@ A law starts on a new line,
 but can also involve many lines.
 The format is:
 \begin{verbatim}
-Law conj_name 
-{ provenance
+Law conj_name BEGIN
+  provenance
 , <term-text>
 , <side-cond>
-}
+END
 \end{verbatim}
 
 \begin{code}
@@ -397,7 +479,7 @@ importLaw :: MonadFail mf
           -> mf (Law,[Token])
 importLaw lawname []  =  premAfter [kLaw,lawname,kBegin]
 importLaw lawname tokens = do
-  (block,beyond) <- getBlock tokens
+  (block,beyond) <- getBlock beBlock tokens
   (provenance,rest1) <- importProvenace block
   case rest1 of
     []  ->  premAfter [kLaw,show provenance ]
@@ -462,11 +544,11 @@ but can also involve many lines.
 The format is
 \begin{verbatim}
 Conjecture conj_name
-{
+BEGIN
   <term-text>
 , 
   <sc-text>
-}
+END
 \end{verbatim}
 
 \begin{code}
@@ -475,7 +557,7 @@ importConjecture :: MonadFail mf
                  -> mf (NmdAssertion,[Token])
 importConjecture conjname []  =  premAfter [kConjecture,conjname]
 importConjecture conjname tokens = do
-  (block,beyond) <- getBlock tokens
+  (block,beyond) <- getBlock beBlock tokens
   (term,rest2) <- sTermRead block
   case rest2 of
     [] -> return ( ( conjname, mkAsn term scTrue ), beyond )
@@ -1491,6 +1573,12 @@ delimitedParse close parser tokens = do
   (thing,rest) <- parser tokens
   rest' <- expectToken close rest
   return (thing,rest')
+\end{code}
+
+Called to parse a list of items with a separator symbol,
+and consumes entire input.
+\begin{code}
+sepListParse sep objparser tokens = fail "sepListParser NYI"
 \end{code}
 
 

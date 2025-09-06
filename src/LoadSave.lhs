@@ -340,7 +340,7 @@ importKLVarIsContainer vt lno lvar vw [] = premAfter ["Known",lvar,show lno]
 importKLVarIsContainer vt _   lvar vw tokens@((lno,tok):_)
   | tok == listOpen  = do
       (block,beyond) <- getBlock listBlock tokens
-      (list,rest) <- sepListParse (TSym ",") undefined block
+      (list,rest) <- loadSepList (TSym ",") loadGenVar block
       fail ("importKLVarIsContainer(list): NYfI "++show block++" @ "++show lno)
   | tok == setOpen  = do
       (block,beyond) <- getBlock setBlock tokens
@@ -891,6 +891,49 @@ loadSideCond sc = fail "loadSideCond NYI"
 
 \section{Variables}
 
+\subsection{Save General Variable}
+
+\begin{code}
+saveGenVar :: GenVar -> String
+saveGenVar (StdVar v) = saveVariable v
+saveGenVar (LstVar lv) = saveListVariable lv
+\end{code}
+
+\subsection{Load General Variable}
+
+
+\begin{code}
+loadGenVar :: MonadFail mf => [Token] -> mf (GenVar,[Token])
+loadGenVar [] = premDuring ["loadGenVar"]
+loadGenVar toks@((lno,TVar nm vw):_) = do
+  (var,rest) <- loadVariable toks
+  return (StdVar var,rest)
+loadGenVar toks@((lno,TLVar nm vw):_) = do
+  (lvar,rest) <- loadListVariable toks
+  return (LstVar lvar,rest)
+loadGenVar ((lno,tok):_) = fail $ unlines'
+  [ "loadGenVar: expecting standard or list variable"
+  , "but got "++renderTokTyp tok++" at line "++show lno]
+\end{code}
+
+\subsection{Save List Variable}
+
+\begin{code}
+saveListVariable :: ListVar -> String
+saveListVariable (LVbl v is js) = saveVariable v ++ "$"
+\end{code}
+
+\subsection{Load List Variable}
+
+\begin{code}
+loadListVariable :: MonadFail mf => [Token] -> mf (ListVar,[Token])
+loadListVariable [] = premDuring ["loadListVariable"]
+loadListVariable ((lno,TLVar nm vw):rest) 
+  = return (LVbl (Vbl (jId nm) ObsV vw) [] [],rest)
+loadListVariable ((lno,tok):_) = fail $ unlines'
+  [ "loadListVariable: expecting list variable"
+  , "but got "++renderTokTyp tok++" at line "++show lno]
+\end{code}
 
 \subsection{Save Variable}
 
@@ -920,26 +963,18 @@ For UTP variables we need to tighten this up a bit.
 Here, for now, we simply make observation variables,
 and let post-processing sort things out.
 \begin{code}
-loadVariable :: MonadFail mf => String -> mf Variable
-loadVariable ('\'' : string)
-    | validVarRoot string  =  return $ Vbl (jId string) ObsV Before
-loadVariable string
-  | validVarRoot name
-    = case post of
-       ("\'")    ->  return $ Vbl ident ObsV After
-       ('\'':d)  ->  return $ Vbl ident ObsV $ During d
-       _         ->  return $ Vbl ident ObsV Static
-  where 
-    (name,post) = break (=='\'') string
-    ident = jId name
-loadVariable string = fail ("loadVariable: invalid variable - "++string)
+loadVariable :: MonadFail mf => [Token] -> mf (Variable,[Token])
+loadVariable [] = premDuring ["loadVariable"]
+loadVariable ((lno,TVar nm vw):rest) = return (Vbl (jId nm) ObsV vw,rest)
+loadVariable ((lno,tok):_) = fail $ unlines'
+  [ "loadVariable: expecting standard variable"
+  , "but got "++renderTokTyp tok++" at line "++show lno]
 \end{code}
 
 \section{Types}
 
 \subsection{Type Grammar}
 
-Alternate grammar?
 \def\typegrammar{
 \begin{eqnarray*}
 \lefteqn{t \in Type}
@@ -955,23 +990,6 @@ Alternate grammar?
 \def\typefollow{Tokens that can follow and continue a type: $\fun~id~($}
 \def\typeover{Tokens that can \emph{end} a type: $endf~endp~ends$}
 
-
-% \def\typegrammar{
-% \begin{eqnarray*}
-%    Tokens: && id~\fun~|~(~)~.
-% \\ t \in Type 
-%    &::=& 
-%    id \mid \tau_1 \fun t_2
-%    \mid id~\tau_1~\tau_2~\dots~\tau_n \mid ~
-% \\ && id_0~ `|`~id_1~\tau_{11} \dots \tau_{1k_1} 
-%             `|` \dots `|`
-%             id_n~\tau_{n1} \dots \tau_{nk_n} 
-% \\ \tau \in WrapType
-%    &&  id \text{ are rendered as-is}
-% \\ &&  \text{non-atomic are enclosed in parentheses}
-% \end{eqnarray*}
-% }
-
 \typegrammar
 
 \typestart
@@ -979,8 +997,6 @@ Alternate grammar?
 \typeover
 
 \subsection{Save Type}
-
-
 
 \begin{code}
 arbTypeString = "T"
@@ -1128,9 +1144,6 @@ importTypes sepyt toks = do
   importTypes (typ':sepyt) rest1
 \end{code}
 
-
-
-
 \typestart
 
 \begin{code}
@@ -1140,7 +1153,6 @@ typeStart (_,TSym _)                              =  True
 --typeStart (_,TOpen open) | open == openParString  =  True
 typeStart _                                       =  False
 \end{code}
-
 
 \typeover
 
@@ -1152,94 +1164,21 @@ typeOver _                                           =  False
 \end{code}
 
 
+\subsection{Load Separated List}
 
-% Tokens that can occur after $id$ are: $.~\fun~|~)~id~($
-% If we encounter $.$ or $)$ we leave it in place.
-% \begin{code}
-% gotTypeFirstName :: MonadFail mf => String -> [Token] -> mf (Type,[Token])
-% gotTypeFirstName nm [] = premDuring ["gotTypeFirstName", "'"++nm++"'"]
-% gotTypeFirstName nm toks@((lno,TSym sym):rest)
-%   | sym == dot                            =  return (vartype,toks)
-%   | sym == funTypeString                  =  gotFunArrow vartype rest
-%   | sym == altTypeString                  =  gotAltBar nm [] rest
-%   where vartype = TypeVar $ jId nm
-% gotTypeFirstName nm ((lno,TVar var _):rest) 
-%                               =  getProduct (jId nm) [TypeVar (jId var)] rest
-% gotTypeFirstName nm toks@((lno,TOpen open):rest)
-%   | open == openParString =  do
-%      (typ,rest) <- getProduct (jId nm) [] toks
-%      rest' <- expectToken (TClose closeParString) rest
-%      return (typ,rest')
-% gotTypeFirstName nm toks@((lno,TClose close):rest)
-%   | close == closeParString               =  return ((TypeVar $ jId nm),toks)
-% gotTypeFirstName nm ((lno,tok):rest) = fail $ unlines'
-%   [ "gotTypeFirstName \""++nm++"\" NYfI"
-%   , "Seeing "++renderTokTyp tok++" at line "++show lno ]
-% \end{code}
-
-% Tokens that can occur after $($ are: $id~(~)$
-% \begin{code}
-% rightParTok = TClose closeParString
-% gotTypeLeftPar :: MonadFail mf => [Token] -> mf (Type,[Token])
-% gotTypeLeftPar rest = do
-%   (typ,rest') <- importType rest
-%   rest'' <- expectToken rightParTok rest'
-%   -- !!!! now we need to look for -> !!!!
-%   return (typ,rest'')
-% \end{code}
-
-% Tokens that can occur after $\fun$ are: $id~($
-% \begin{code}
-% gotFunArrow  :: MonadFail mf => Type -> [Token] -> mf (Type,[Token])
-% gotFunArrow dtype rest = do
-%   (rtype,rest') <- importType rest
-%   -- we should look for more arrows !!!!!
-%   return (FunType dtype rtype,rest')
-% \end{code}
-
-% Tokens that can occur after $|$ are: $id~$
-% \begin{code}
-% gotAltBar :: MonadFail mf 
-%           => String -> [Variant] -> [Token] 
-%           -> mf (Type,[Token])
-% gotAltBar sumNm variants []  =  premDuring ["gotAltBar"]
-% gotAltBar sumNm variants ((lno,TVar nm _):rest) 
-%   = getAltProduct sumNm nm variants [] rest
-% gotAltBar sumNm variants ((lno,tok):rest) 
-%  = fail $ unlines'
-%     [ "importType (sum-of-products) syntax error"
-%     , "expected product constructor name"
-%     , "but got "++renderTokTyp tok++" at line "++show lno
-%     ]
-% \end{code}
-
-% When we see $id_0~id_1$ or $id_0~($
-% we expect a sequence of types, whose first token is $id_1$ or $($.
-% This sequence should end with either $.$ or $|$,
-% which we leave in place.
-% \begin{code}
-% getProduct :: MonadFail mf 
-%            => Identifier -> [Type] -> [Token] -> mf (Type,[Token])
-% getProduct conid types [] = premDuring ("product":trId conid:map trType types)
-% getProduct conid types rest = do
-%   (types',rest') <- importTypes types rest
-%   return (TypeCons conid (reverse types'),rest')
-% \end{code}
-
-
-
-% Tokens that can occur after $|~id$ are $id~(~|$
-% \begin{code}
-% getAltProduct :: MonadFail mf 
-%                => String -> String -> [Variant] -> [Type] 
-%                -> [Token] -> mf (Type,[Token])
-% getAltProduct sumNm prodNm variants [] rest
-%   = fail "getAltProduct NYI"
-% \end{code}
-
-% Tokens that can occur after $.$ are returned with parsed item.
-
-
+Called to parse a list of items with a separator symbol,
+and consumes entire input.
+\begin{code}
+loadSepList :: MonadFail m 
+            => TokenType -> ([Token] -> m (a, [Token])) -> [Token] 
+            -> m ([a], [Token])
+loadSepList sep objparser [] = return ([],[])
+loadSepList sep objparser tokens = do
+  (obj,rest1) <- objparser tokens
+  rest2 <- expectToken sep rest1
+  (objs,rest3) <- loadSepList sep objparser rest2
+  return (obj:objs,rest3)
+\end{code}
 
 \newpage
 \section{Lexical Basics}
@@ -1573,12 +1512,6 @@ delimitedParse close parser tokens = do
   (thing,rest) <- parser tokens
   rest' <- expectToken close rest
   return (thing,rest')
-\end{code}
-
-Called to parse a list of items with a separator symbol,
-and consumes entire input.
-\begin{code}
-sepListParse sep objparser tokens = fail "sepListParser NYI"
 \end{code}
 
 

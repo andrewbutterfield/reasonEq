@@ -14,9 +14,13 @@ Known sumt : SUM Sum
   VARIANT Sum2 B ENDV
   VARIANT Sum3 FUN B TO B ENDF A B ENDV
 ENDS .
+Known x : B .
+Known y : B .
 Known alist$ :: list
 Known aset$ :: set
-Known list$ = <1,2,3>
+Known klist0$ = <  >
+Known klist1$ = < x >
+Known klist2$ = < x,y >
 Known set$ = {}
 Known alist$' :: list 
 Known aset$' :: set 

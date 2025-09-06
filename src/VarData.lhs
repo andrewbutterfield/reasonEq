@@ -454,9 +454,7 @@ checkVariableList vt lv@(Vbl i vc0 vw0) setsOK vl
   chkVL invalid srav len [] = return (reverse srav, len)
 
   chkVL invalid srav len (StdVar v@(Vbl _ vc vw):vl)
-    | vc /= vc0   
-        =  fail ( "checkVariableList."++vi
-                  ++": stdvar."++vs++" class mismatch" )
+    | vc /= vc0   =  cMiss "stdvar" vi vs vc0 vc
     | invalid vw  
         =  fail ( "checkVariableList."++vi
                   ++": stdvar."++vs++" temporality mismatch" )
@@ -467,9 +465,7 @@ checkVariableList vt lv@(Vbl i vc0 vw0) setsOK vl
     where vs = show v
 
   chkVL invalid srav len (LstVar (LVbl v@(Vbl _ vc vw) _ _):vl)
-    | vc /= vc0   
-        =  fail ("checkVariableList."++vi
-                 ++": lstvar."++vs++" class mismatch")
+    | vc /= vc0   =  cMiss "lstvar" vi vs vc0 vc
     | invalid vw  
         =  fail ("checkVariableList."
                  ++vi++": lstvar."++vs++" temporality mismatch")
@@ -484,6 +480,10 @@ checkVariableList vt lv@(Vbl i vc0 vw0) setsOK vl
            AS | setsOK  ->  chkVL invalid (v:srav)             (len+1)     vl
            _ -> fail ("checkVariableList."++vi++": sets not permitted.")
     where vs = show v
+
+cMiss what vi vs vc0 vc = fail $ unlines
+  [ "checkVariableList: "++what++" "++vi++" vs. "++vs
+  , "class mismatch "++show vc0++" vs. "++show vc ]
 \end{code}
 
 \subsection{Inserting Known Variable-List}

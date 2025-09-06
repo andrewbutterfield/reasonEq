@@ -317,7 +317,7 @@ importKLVar :: MonadFail mf
            => VarTable -> Int -> String -> VarWhen -> [Token] 
            -> mf (VarTable,[Token])
 importKLVar vt _ lvar vw ((lno,TSym "="):rest)  
-                              =  importKLVarIsContainer vt lno lvar vw rest
+                              =  importKLVarIsContainer vt lno (pdbg "CONTAINER.lvar" lvar) vw rest
 importKLVar vt _ lvar vw ((lno,TSym "::"):rest)  
                           =  importKLVarIsAbsContainer vt lno lvar vw rest
 importKLVar vt _ lvar vw ((lno,ttyp):_)
@@ -340,8 +340,9 @@ importKLVarIsContainer vt lno lvar vw [] = premAfter ["Known",lvar,show lno]
 importKLVarIsContainer vt _   lvar vw tokens@((lno,tok):_)
   | tok == listOpen  = do
       (block,beyond) <- getBlock listBlock tokens
-      (list,rest) <- loadSepList (TSym ",") loadGenVar block
-      fail ("importKLVarIsContainer(list): NYfI "++show block++" @ "++show lno)
+      (list,rest) <- loadSepList (TSep ",") loadGenVar block
+      vt' <- addKnownVarList (pdbg "aKVL.Vbl.lvar" (Vbl (jId lvar) ObsV vw)) list $ pdbg "aKVL.vt" vt
+      return (pdbg "aKVL.vt'" vt',rest)
   | tok == setOpen  = do
       (block,beyond) <- getBlock setBlock tokens
       fail ("importKLVarIsContainer(set): NYfI "++show block++" @ "++show lno)
@@ -1175,9 +1176,12 @@ loadSepList :: MonadFail m
 loadSepList sep objparser [] = return ([],[])
 loadSepList sep objparser tokens = do
   (obj,rest1) <- objparser tokens
-  rest2 <- expectToken sep rest1
-  (objs,rest3) <- loadSepList sep objparser rest2
-  return (obj:objs,rest3)
+  case rest1 of
+    [] ->  return ([obj],rest1)
+    _  -> do
+      rest2 <- expectToken sep rest1
+      (objs,rest3) <- loadSepList sep objparser rest2
+      return (obj:objs,rest3)
 \end{code}
 
 \newpage

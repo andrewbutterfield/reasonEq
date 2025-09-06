@@ -1,39 +1,6 @@
-🛠 devproj.EQV> load
-@iT.rest:  [(3,TVar "A" WS),(3,TVar "B" WS),(3,TVar "C" WS),(3,TVar "D" WS),(3,TVar "E" WS),(3,TSym ".")]
-@gTN.rest:  [(3,TVar "B" WS),(3,TVar "C" WS),(3,TVar "D" WS),(3,TVar "E" WS),(3,TSym ".")]
-@gP.rest:  [(3,TVar "B" WS),(3,TVar "C" WS),(3,TVar "D" WS),(3,TVar "E" WS),(3,TSym ".")]
-@iT.rest:  [(3,TVar "C" WS),(3,TVar "D" WS),(3,TVar "E" WS),(3,TSym ".")]
-@gTN.rest:  [(3,TVar "D" WS),(3,TVar "E" WS),(3,TSym ".")]
-@gP.rest:  [(3,TVar "D" WS),(3,TVar "E" WS),(3,TSym ".")]
-@iT.rest:  [(3,TVar "E" WS),(3,TSym ".")]
-@gTN.rest:  [(3,TSym ".")]
-@gP.rest:  [(3,TSym ".")]
-theory parse failed
-premature file end during gotTypeName '.'
-🛠 devproj.EQV> load
-@iT.rest:  [(3,TVar "A" WS),(3,TVar "B" WS),(3,TVar "C" WS),(3,TVar "D" WS),(3,TVar "E" WS),(3,TVar "F" WS),(3,TSym ".")]
-@gTN.rest:  [(3,TVar "B" WS),(3,TVar "C" WS),(3,TVar "D" WS),(3,TVar "E" WS),(3,TVar "F" WS),(3,TSym ".")]
-@gP.rest:  [(3,TVar "B" WS),(3,TVar "C" WS),(3,TVar "D" WS),(3,TVar "E" WS),(3,TVar "F" WS),(3,TSym ".")]
-@iT.rest:  [(3,TVar "C" WS),(3,TVar "D" WS),(3,TVar "E" WS),(3,TVar "F" WS),(3,TSym ".")]
-@gTN.rest:  [(3,TVar "D" WS),(3,TVar "E" WS),(3,TVar "F" WS),(3,TSym ".")]
-@gP.rest:  [(3,TVar "D" WS),(3,TVar "E" WS),(3,TVar "F" WS),(3,TSym ".")]
-@iT.rest:  [(3,TVar "E" WS),(3,TVar "F" WS),(3,TSym ".")]
-@gTN.rest:  [(3,TVar "F" WS),(3,TSym ".")]
-@gP.rest:  [(3,TVar "F" WS),(3,TSym ".")]
-@iT.rest:  [(3,TSym ".")]
-@gP.rest':  [(3,TSym ".")]
-@gP.tok:  TSym "."
-@gP.rest':  [(3,TSym ".")]
-@gP.tok:  TSym "."
-@gP.rest':  [(3,TSym ".")]
-@gP.tok:  TSym "."
+🛠 devproj.Proto*> load
+@aKVL.vt:  VD ("",fromList [(VR (Id "a" 0,VO,WB),KV (TV (Id "N" 0))),(VR (Id "a" 0,VO,WA),KV (TV (Id "N" 0))),(VR (Id "aterm" 0,VO,WS),KV (TV (Id "B" 0))),(VR (Id "atermf" 0,VO,WS),KV (TF (TV (Id "B" 0)) (TV (Id "B" 0)))),(VR (Id "gen" 0,VE,WS),KG),(VR (Id "inst" 0,VE,WS),KI (VR (Id "gen" 0,VE,WS))),(VR (Id "mol" 0,VE,WS),KC (K (TG (Id "Z" 0)) (VI 42))),(VR (Id "prodt" 0,VO,WS),KV (TC (Id "Prod" 0) [TV (Id "A" 0),TV (Id "B" 0)])),(VR (Id "sumt" 0,VO,WS),KV (TA (Id "Sum" 0) [(Id "Sum1" 0,[]),(Id "Sum2" 0,[TV (Id "B" 0)]),(Id "Sum3" 0,[TF (TV (Id "B" 0)) (TV (Id "B" 0)),TV (Id "A" 0),TV (Id "B" 0)])])),(VR (Id "x" 0,VO,WS),KV (TV (Id "B" 0))),(VR (Id "y" 0,VO,WS),KV (TV (Id "B" 0)))],fromList [(VR (Id "alist" 0,VE,WS),AL),(VR (Id "aset" 0,VE,WS),AS)],fromList [])
 Parsed as:
-@iT.nm:  "Prod"
-@gTN.var:  "A"
-@iT.nm:  "B"
-@gTN.var:  "C"
-@iT.nm:  "D"
-@gTN.var:  "E"
-@iT.nm:  "F"
-Theory {thName = "Proto", thDeps = [], known = VD ("",fromList [(VR (Id "prodt" 0,VO,WS),KV (TC (Id "Prod" 0) [TV (Id "A" 0),TC (Id "B" 0) [TV (Id "C" 0),TC (Id "D" 0) [TV (Id "E" 0),TV (Id "F" 0)]]]))],fromList [],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = []}, conjs = []}
-🛠 devproj.EQV> 
+@aKVL.vt':  VD ("",fromList [(VR (Id "a" 0,VO,WB),KV (TV (Id "N" 0))),(VR (Id "a" 0,VO,WA),KV (TV (Id "N" 0))),(VR (Id "aterm" 0,VO,WS),KV (TV (Id "B" 0))),(VR (Id "atermf" 0,VO,WS),KV (TF (TV (Id "B" 0)) (TV (Id "B" 0)))),(VR (Id "gen" 0,VE,WS),KG),(VR (Id "inst" 0,VE,WS),KI (VR (Id "gen" 0,VE,WS))),(VR (Id "mol" 0,VE,WS),KC (K (TG (Id "Z" 0)) (VI 42))),(VR (Id "prodt" 0,VO,WS),KV (TC (Id "Prod" 0) [TV (Id "A" 0),TV (Id "B" 0)])),(VR (Id "sumt" 0,VO,WS),KV (TA (Id "Sum" 0) [(Id "Sum1" 0,[]),(Id "Sum2" 0,[TV (Id "B" 0)]),(Id "Sum3" 0,[TF (TV (Id "B" 0)) (TV (Id "B" 0)),TV (Id "A" 0),TV (Id "B" 0)])])),(VR (Id "x" 0,VO,WS),KV (TV (Id "B" 0))),(VR (Id "y" 0,VO,WS),KV (TV (Id "B" 0)))],fromList [(VR (Id "alist" 0,VE,WS),AL),(VR (Id "aset" 0,VE,WS),AS),(VR (Id "list0" 0,VE,WS),KL [] [] 0)],fromList [])
+Theory {thName = "Proto", thDeps = [], known = VD ("",fromList [(VR (Id "a" 0,VO,WB),KV (TV (Id "N" 0))),(VR (Id "a" 0,VO,WA),KV (TV (Id "N" 0))),(VR (Id "aterm" 0,VO,WS),KV (TV (Id "B" 0))),(VR (Id "atermf" 0,VO,WS),KV (TF (TV (Id "B" 0)) (TV (Id "B" 0)))),(VR (Id "gen" 0,VE,WS),KG),(VR (Id "inst" 0,VE,WS),KI (VR (Id "gen" 0,VE,WS))),(VR (Id "mol" 0,VE,WS),KC (K (TG (Id "Z" 0)) (VI 42))),(VR (Id "prodt" 0,VO,WS),KV (TC (Id "Prod" 0) [TV (Id "A" 0),TV (Id "B" 0)])),(VR (Id "sumt" 0,VO,WS),KV (TA (Id "Sum" 0) [(Id "Sum1" 0,[]),(Id "Sum2" 0,[TV (Id "B" 0)]),(Id "Sum3" 0,[TF (TV (Id "B" 0)) (TV (Id "B" 0)),TV (Id "A" 0),TV (Id "B" 0)])])),(VR (Id "x" 0,VO,WS),KV (TV (Id "B" 0))),(VR (Id "y" 0,VO,WS),KV (TV (Id "B" 0)))],fromList [(VR (Id "alist" 0,VE,WS),AL),(VR (Id "aset" 0,VE,WS),AS),(VR (Id "list0" 0,VE,WS),KL [] [] 0)],fromList []), laws = [], proofs = [], auto = AutoLaws {simps = [], folds = []}, conjs = []}
+🛠 devproj.Proto*> 

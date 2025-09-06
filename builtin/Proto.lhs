@@ -33,6 +33,8 @@ import Theories
 import StdTypeSignature
 import StdSignature
 import TestRendering
+
+import Debugger
 \end{code}
 
 \subsection{Introduction}
@@ -61,14 +63,30 @@ genvar = Vbl (jId "gen") ExprV Static
 genVarIntro = fromJust . addGenericVar genvar
 instvar = Vbl (jId "inst") ExprV Static
 instVarIntro = fromJust . addInstanceVar instvar genvar
+
 --static list variables
-klLVar = LVbl (Vbl (jId "list") ObsV Static) [] []
-klistIntro = fromJust . addKnownLListVar klLVar []
+klLVar0 = LVbl (Vbl (jId "klist0") ObsV Static) [] []
+klist0Intro = fromJust . addKnownLListVar klLVar0 []
+
+klLVar1 = LVbl (Vbl (jId "klist1") ObsV Static) [] []
+klist1Intro = fromJust . addKnownLListVar klLVar1 
+                   [StdVar $ Vbl (jId "x") ObsV Static]
+klLVar2 = LVbl (Vbl (jId "klist2") ObsV Static) [] []
+klist2Intro = fromJust . addKnownLListVar klLVar2 
+                   [StdVar $ Vbl (jId "x") ObsV Static
+                   ,StdVar $ Vbl (jId "y") ObsV Static]
+
 ksLVar = LVbl (Vbl (jId "set") ObsV Static) [] []
 ksetIntro = fromJust . addKnownSListVar ksLVar S.empty
 kabsSetIntro = mkAbsSetVar (Vbl (jId "aset") ObsV Static)
 kabsListIntro = mkAbsListVar (Vbl (jId "alist") ObsV Static)
+
+xIntro = mkConsIntro (jId "x") bool
+yIntro = mkConsIntro (jId "y") bool
+
+
 --dynamic list variables
+
 dlLVar = LVbl (Vbl (jId "list") ObsV Before) [] []
 dlistIntro = fromJust . addKnownLListVar dlLVar []
 dsLVar = LVbl (Vbl (jId "set") ObsV After) [] []
@@ -90,8 +108,11 @@ protoKnown
     instVarIntro $
     genVarIntro $ 
 
-    klistIntro $
     ksetIntro $
+    klist2Intro $
+    klist0Intro $
+    klist1Intro $
+    xIntro $ yIntro $
     kabsListIntro $
     kabsSetIntro $
  

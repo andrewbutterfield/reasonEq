@@ -449,29 +449,41 @@ checkVariableList vt lv@(Vbl i vc0 vw0) setsOK vl
      Static  ->  chkVL (const False)   [] 0 vl
      _       ->  chkVL (not . dEq vw0) [] 0 vl
  where
+  vi = idName i
 
   chkVL invalid srav len [] = return (reverse srav, len)
 
   chkVL invalid srav len (StdVar v@(Vbl _ vc vw):vl)
-    | vc /= vc0   =  fail "checkVariableList: class mismatch"
-    | invalid vw  =  fail "checkVariableList: temporality mismatch"
+    | vc /= vc0   
+        =  fail ( "checkVariableList."++vi
+                  ++": stdvar."++vs++" class mismatch" )
+    | invalid vw  
+        =  fail ( "checkVariableList."++vi
+                  ++": stdvar."++vs++" temporality mismatch" )
     | otherwise
        = case lookupVarTable vt v of
-           UV  ->  fail ("checkVariableList: unknown variable "++show v)
+           UV  ->  fail ("checkVariableList."++vi++": unknown variable "++show v)
            _   ->  chkVL invalid (v:srav) (len+1) vl
+    where vs = show v
 
   chkVL invalid srav len (LstVar (LVbl v@(Vbl _ vc vw) _ _):vl)
-    | vc /= vc0   =  fail "checkVariableList: class mismatch"
-    | invalid vw  =  fail "checkVariableList: temporality mismatch"
+    | vc /= vc0   
+        =  fail ("checkVariableList."++vi
+                 ++": lstvar."++vs++" class mismatch")
+    | invalid vw  
+        =  fail ("checkVariableList."
+                 ++vi++": lstvar."++vs++" temporality mismatch")
     | otherwise
        = case lookupLVarTable vt v of
-           UL  ->  fail "checkVariableList: unknown list-variable"
+           UL  ->  fail ( "checkVariableList."++vi
+                          ++": unknown list-variable "++vs)
            KL _ kvl klen  ->  chkVL invalid (reverse kvl++srav) (len+klen) vl
            AL             ->  chkVL invalid (v:srav)            (len+1)    vl
            KS _ kvs ksize | setsOK
                         ->  chkVL invalid (S.toList kvs++srav) (len+ksize) vl
            AS | setsOK  ->  chkVL invalid (v:srav)             (len+1)     vl
-           _ -> fail "checkVariableList: sets not permitted."
+           _ -> fail ("checkVariableList."++vi++": sets not permitted.")
+    where vs = show v
 \end{code}
 
 \subsection{Inserting Known Variable-List}

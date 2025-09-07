@@ -176,10 +176,10 @@ forAll vl p = fromJust $ pBnd forallId (S.fromList vl) p
 existsId = jId "exists"
 exists vl p = fromJust $ pBnd existsId (S.fromList vl) p
 
-univId = fromJust $ brktIdent "[" "]"
+univId = jId "universal"
 univ p = Cls univId p
 
-satId = fromJust $ brktIdent "langle" "rangle"
+satId = jId "existential"
 sat p = Cls satId p
 \end{code}
 

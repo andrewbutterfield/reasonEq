@@ -655,6 +655,7 @@ kTrue = "true"
 kFalse = "false"
 kSetBind = "QS"
 kListBind = "QL"
+kCLosure = "CLOSURE"
 kLstVar = '$'
 kSep = ','
 kQBody = "@"
@@ -678,15 +679,16 @@ saveTerm (Cons typ subable (Identifier i _) terms)
       ++ ")"
 saveTerm (Bnd typ (Identifier quant _) vs term)
   = kSetBind ++ " " ++ quant
-    ++ " " ++ intercalate "," (S.toList (S.map trGVar vs))
+    ++ " " ++ intercalate [kSep] (S.toList (S.map trGVar vs))
     ++ "\n  " ++ kQBody 
     ++ "  " ++ saveTerm term
 saveTerm (Lam typ (Identifier lambda _) vl term)
   = kListBind ++ " " ++ lambda
-    ++ " " ++  intercalate "," (map trGVar vl)
+    ++ " " ++  intercalate [kSep] (map trGVar vl)
     ++ "\n  " ++kQBody 
     ++ " " ++ saveTerm term
-saveTerm (Cls typ term) = "X-stuff?"
+saveTerm (Cls (Identifier kind _) term) 
+  = kCLosure ++ " "++kind++" "++saveTerm term
 saveTerm (Sub typ term sub) = "S-stuff?"
 saveTerm (Iter typ sa na si ni lvs) = "I-stuff?"
 saveTerm (VTyp typ var) = "VT-stuff?"

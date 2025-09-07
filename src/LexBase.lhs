@@ -122,6 +122,7 @@ idName :: Identifier -> String
 idName (Id nm _) = nm
 \end{code}
 
+Now obsolete --- a bad idea!
 \begin{code}
 splitClosureId (Id clsnm _)
   = case splitAround '_' clsnm of

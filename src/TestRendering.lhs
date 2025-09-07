@@ -304,11 +304,13 @@ trterm trid p (Sub tk t sub)
 
 \subsubsection{Rendering Closure}
 
-A closure expects the identifier to be of the form leftbracket\_rightbracket
+A closure expected the identifier to be of the form leftbracket\_rightbracket.
+Here we map known identifiers to such a form.
 \begin{code}
-trterm trid p (Cls n t)
-  =  nicesym lbr ++ trterm trid 0 t ++ nicesym rbr
-  where (lbr,rbr) = splitClosureId n
+trterm trid p (Cls (Identifier n _) t)
+  | n == "universal"  =  "[" ++ trterm trid 0 t ++ "]"
+  | n == "existential"  =  _langle ++ trterm trid 0 t ++ _rangle
+  | otherwise = n ++ " " ++ trterm trid 0 t ++ " " ++ n
 \end{code}
 
 \subsubsection{Rendering Iterated Constructions}

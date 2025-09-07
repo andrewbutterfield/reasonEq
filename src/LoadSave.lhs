@@ -676,8 +676,16 @@ saveTerm (Cons typ subable (Identifier i _) terms)
       ++ "("
       ++ (intercalate [kSep] $ map saveTerm terms)
       ++ ")"
-saveTerm (Bnd typ n vs term) = "B-stuff?"
-saveTerm (Lam typ n vl term) = "L-stuff?"
+saveTerm (Bnd typ (Identifier quant _) vs term)
+  = kSetBind ++ " " ++ quant
+    ++ " " ++ intercalate "," (S.toList (S.map trGVar vs))
+    ++ "\n  " ++ kQBody 
+    ++ "  " ++ saveTerm term
+saveTerm (Lam typ (Identifier lambda _) vl term)
+  = kListBind ++ " " ++ lambda
+    ++ " " ++  intercalate "," (map trGVar vl)
+    ++ "\n  " ++kQBody 
+    ++ " " ++ saveTerm term
 saveTerm (Cls typ term) = "X-stuff?"
 saveTerm (Sub typ term sub) = "S-stuff?"
 saveTerm (Iter typ sa na si ni lvs) = "I-stuff?"

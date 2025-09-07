@@ -11,7 +11,7 @@ module Proto (
 , protoTheory
 ) where
 
-import Data.Maybe
+import Data.Maybe 
 import qualified Data.Map as M
 import qualified Data.Set as S
 
@@ -195,7 +195,7 @@ tmConsNest = tmConj ("cons"-.-"nesting")
 
 
 mkBody = mkV "body" PredV Static
-mkQ str vs body = jBnd ArbType (jId str) (S.fromList vs) mkBody
+mkQ str vs body = jBnd ArbType (jId str) (S.fromList vs) body
 va = Vbl (jId "a") ObsV Before ; gva = StdVar va
 lva = LVbl va [] [] ; glva = LstVar lva
 va' = Vbl (jId "a") ObsV After ; gva' = StdVar va'
@@ -204,7 +204,7 @@ lva' = LVbl va' [] [] ; glva' = LstVar lva'
 tmForall0 = tmConj ("forall"-.-"zero")
             (mkQ "forall" [] mkBody)
 tmForall1 = tmConj ("forall"-.-"one")
-            (mkQ "forall" [gva] mkBody)
+            (mkQ "forall" [gva] (mkCons "csQ" cs [vT,vT]))
 tmForall2 = tmConj ("forall"-.-"two")
             (mkQ "forall" [gva,gva'] mkBody)
 tmForall3 = tmConj ("forall"-.-"three")
@@ -213,6 +213,8 @@ tmForall4 = tmConj ("forall"-.-"four")
             (mkQ "forall" [gva,gva',glva,glva'] mkBody)
 
 \end{code}
+
+-- Lambdas
 
 
 

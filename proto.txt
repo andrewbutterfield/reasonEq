@@ -42,19 +42,23 @@ Conjecture forall_zero BEGIN
 END
 
 Conjecture forall_one BEGIN
- B-stuff?
+ QS forall a
+  @  csQ CS (T,T)
 END
 
 Conjecture forall_two BEGIN
- B-stuff?
+ QS forall a,a'
+  @  body
 END
 
 Conjecture forall_three BEGIN
- B-stuff?
+ QS forall a,a$,a'
+  @  body
 END
 
 Conjecture forall_four BEGIN
- B-stuff?
+ QS forall a,a$,a$',a'
+  @  body
 END
 
 Conjecture fortytwo BEGIN

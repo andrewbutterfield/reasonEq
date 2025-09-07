@@ -214,7 +214,6 @@ tmForall4 = tmConj ("forall"-.-"four")
 
 \end{code}
 
--- Lambdas
 
 
 

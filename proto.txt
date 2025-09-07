@@ -1,73 +1,130 @@
-Theory Closure
-Needs
-  Exists Forall Equal Impl AOI And Or Not EQV
+Theory Proto
+
+
+Known 'a : N .
+Known a' : N .
+Known aterm : B .
+Known atermf : FUN B TO B ENDF .
+Known gen :: generic
+Known inst instanceof gen
+Known mol = BEGIN 42 END
+Known prodt : PROD Prod A B ENDP .
+Known sumt : SUM Sum
+  VARIANT Sum1  ENDV
+  VARIANT Sum2 B ENDV
+  VARIANT Sum3 FUN B TO B ENDF A B ENDV
+ENDS .
+Known x : B .
+Known y : B .
+Known alist$ :: list
+Known aset$ :: set
+Known klist0$ = <  >
+Known klist1$ = < x >
+Known klist2$ = < x,y >
+Known set$ = {}
+Known alist$' :: list 
+Known aset$' :: set 
+Known list$' = <  >
+Known set$' = {}
+
+
+
+Conjecture true BEGIN
+ true
 END
 
-
-
-
-
-
-
-Law uclose_def BEGIN
- axiom
- ,
-eqv CS (CLOSURE universal P,QS forall x$
-  @  P)
-,
-saveSideCond NYI
+Conjecture false BEGIN
+ false
 END
 
-Law sat_def BEGIN
- axiom
- ,
-eqv CS (CLOSURE existential P,not CS (CLOSURE universal not CS (P)))
+Conjecture forall_zero BEGIN
+ body
 END
 
-Conjecture univ_id_on_closed BEGIN
- eqv CS (CLOSURE universal P,P)
-,
-saveSideCond NYI
+Conjecture forall_one BEGIN
+ QS forall a
+  @  csQ CS (T,T)
 END
 
-Conjecture univ_true BEGIN
- eqv CS (CLOSURE universal true,true)
+Conjecture forall_two BEGIN
+ QS forall a a'
+  @  body
 END
 
-Conjecture univ_False BEGIN
- eqv CS (CLOSURE universal false,false)
+Conjecture forall_three BEGIN
+ QS forall a a$ a'
+  @  body
 END
 
-Conjecture uclose_idem BEGIN
- eqv CS (CLOSURE universal CLOSURE universal P,CLOSURE universal P)
+Conjecture forall_four BEGIN
+ QS forall a a$ a$' a'
+  @  body
 END
 
-Conjecture and_uclose_distr BEGIN
- eqv CS (and CS (CLOSURE universal P,CLOSURE universal Q),CLOSURE universal and CS (P,Q))
+Conjecture fortytwo BEGIN
+ 42
 END
 
-Conjecture univ_forall_closed BEGIN
- eqv CS (QS forall x$
-  @  CLOSURE universal P,CLOSURE universal P)
+Conjecture neg99 BEGIN
+ -99
 END
 
-Conjecture univ_exists_closed BEGIN
- eqv CS (QS exists x$
-  @  CLOSURE universal P,CLOSURE universal P)
+Conjecture expr_static BEGIN
+ Ve
 END
 
-Conjecture univ_inst BEGIN
- imp CS (CLOSURE universal P,P)
+Conjecture expr_before BEGIN
+ 'Ve
 END
 
-Conjecture univ_inst_gen BEGIN
- imp CS (CLOSURE universal P,S-stuff?)
+Conjecture expr_after BEGIN
+ Ve'
 END
 
-Conjecture univ_mono BEGIN
- imp CS (CLOSURE universal imp CS (P,Q),imp CS (CLOSURE universal P,CLOSURE universal Q))
+Conjecture expr_during BEGIN
+ Ve'd
 END
 
-Conjecture necessary_poss BEGIN
- imp CS (CLOSURE existential P,CLOSURE universal CLOSURE existential P)
+Conjecture pred_static BEGIN
+ Vp
+END
+
+Conjecture pred_before BEGIN
+ 'Vp
+END
+
+Conjecture pred_after BEGIN
+ Vp'
+END
+
+Conjecture pred_during BEGIN
+ Vp'd
+END
+
+Conjecture cons_S_zero BEGIN
+ cs0 CS ()
+END
+
+Conjecture cons_S_one BEGIN
+ cs1 CS (T)
+END
+
+Conjecture cons_S_two BEGIN
+ cs2 CS (T,T)
+END
+
+Conjecture cons_N_zero BEGIN
+ ns0 NS ()
+END
+
+Conjecture cons_N_two BEGIN
+ ns2 NS (T,T)
+END
+
+Conjecture cons_N_two BEGIN
+ ns2 NS (T,T)
+END
+
+Conjecture cons_nesting BEGIN
+ nest CS (sub1 CS (),sub2 CS (T),sub3 CS ())
 END

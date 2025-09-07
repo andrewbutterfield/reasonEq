@@ -679,12 +679,12 @@ saveTerm (Cons typ subable (Identifier i _) terms)
       ++ ")"
 saveTerm (Bnd typ (Identifier quant _) vs term)
   = kSetBind ++ " " ++ quant
-    ++ " " ++ intercalate [kSep] (S.toList (S.map trGVar vs))
+    ++ " " ++ intercalate " " (S.toList (S.map trGVar vs))
     ++ "\n  " ++ kQBody 
     ++ "  " ++ saveTerm term
 saveTerm (Lam typ (Identifier lambda _) vl term)
   = kListBind ++ " " ++ lambda
-    ++ " " ++  intercalate [kSep] (map trGVar vl)
+    ++ " " ++  intercalate " " (map trGVar vl)
     ++ "\n  " ++kQBody 
     ++ " " ++ saveTerm term
 saveTerm (Cls (Identifier kind _) term) 
@@ -745,7 +745,7 @@ sTermRead :: MonadFail m => [Token] -> m (Term, [Token])
 sTermRead [] =  fail "sTermRead: nothing to parse"
 \end{code}
 
-\paragraph{Numbers}
+\paragraph{Numbers}~
 
 \begin{code}
 sTermRead ((_,TNum n):tts) = return ( Val int $ Integer n, tts)
@@ -786,7 +786,7 @@ sTermRead ((_,TVar nm vw):tts)
   | otherwise       =  return (mkVarTerm (jId nm) vw, tts)
 \end{code}
 
-\paragraph{Bad Start}
+\paragraph{Bad Start}~
 
 
 \begin{code}
@@ -864,7 +864,9 @@ quantread i sg ((_,TSym sym) : tts)
   | sym == kQBody  =  quantreadBody i sg tts
 quantread i sg (v@(_,TVar _ _)    : tts)   =  quantread i (v:sg) tts
 quantread i sg (lv@(_,TLVar _ _) : tts)   =  quantread i (lv:sg) tts
-quantread i sg (tok : _)  = fail ("quantread: unexpected token "++renderToken tok)
+quantread i sg ((lno,ttyp) : _)  
+  = fail ( "quantread: unexpected token "++renderTokTyp ttyp
+           ++" at line "++show lno)
 \end{code}
 
 Seen \texttt{Qx i g\_1 .. g\_n @}, 

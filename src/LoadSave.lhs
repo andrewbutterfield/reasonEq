@@ -341,11 +341,13 @@ importKLVarIsContainer vt _   lvar vw tokens@((lno,tok):_)
   | tok == listOpen  = do
       (block,beyond) <- getBlock listBlock tokens
       (list,rest) <- loadSepList (TSep ",") loadGenVar block
-      vt' <- addKnownVarList (pdbg "aKVL.Vbl.lvar" (Vbl (jId lvar) ObsV vw)) list $ pdbg "aKVL.vt" vt
-      return (pdbg "aKVL.vt'" vt',rest)
+      vt' <- addKnownVarList (Vbl (jId lvar) ObsV vw) list  vt
+      return (vt',beyond)
   | tok == setOpen  = do
       (block,beyond) <- getBlock setBlock tokens
-      fail ("importKLVarIsContainer(set): NYfI "++show block++" @ "++show lno)
+      (list,rest) <- loadSepList (TSep ",") loadGenVar block
+      vt' <- addKnownVarSet (Vbl (jId lvar) ObsV vw) (S.fromList list)  vt
+      return (vt',beyond)
   | otherwise = fail $ unlines'
       [ "importKLVarIsContainer: expected '<' or '{'"
       , "but got "++renderTokTyp tok++" at line "++show lno ]

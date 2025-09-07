@@ -242,7 +242,9 @@ loadState _ reqs = do
   if haveProto then do 
     proto_text <- readFile "proto.txt"
     case loadTheory proto_text of
-      Yes thry ->  putStrLn ("Parsed as:\n"++show thry)
+      Yes thry ->  do
+        putStrLn ("Parsed as:\n"++show thry)
+        putStrLn ("Renders as:\n"++showTheoryLong (trTerm 0,trSideCond) thry)
       But msgs -> putStrLn $ unlines' ("theory parse failed":msgs)
   else putStrLn "loadState: cannot find proto.txt"
   return reqs

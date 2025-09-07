@@ -317,7 +317,7 @@ importKLVar :: MonadFail mf
            => VarTable -> Int -> String -> VarWhen -> [Token] 
            -> mf (VarTable,[Token])
 importKLVar vt _ lvar vw ((lno,TSym "="):rest)  
-                              =  importKLVarIsContainer vt lno (pdbg "CONTAINER.lvar" lvar) vw rest
+                              =  importKLVarIsContainer vt lno lvar vw rest
 importKLVar vt _ lvar vw ((lno,TSym "::"):rest)  
                           =  importKLVarIsAbsContainer vt lno lvar vw rest
 importKLVar vt _ lvar vw ((lno,ttyp):_)

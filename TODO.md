@@ -4,6 +4,9 @@
 
 Implement `loadSideCond`.
 
+**We need to handle assignment properly**
+*represented using substitutions*
+
 
 Terminology Q:
 

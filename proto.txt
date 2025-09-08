@@ -1,196 +1,57 @@
-Theory Proto
+Theory EQV
 
 
-Known 'a : N .
-Known a' : N .
-Known aterm : B .
-Known atermf : FUN B TO B ENDF .
-Known gen :: generic
-Known inst instanceof gen
-Known mol = BEGIN 42 END
-Known prodt : PROD Prod A B ENDP .
-Known sumt : SUM Sum
-  VARIANT Sum1  ENDV
-  VARIANT Sum2 B ENDV
-  VARIANT Sum3 FUN B TO B ENDF A B ENDV
-ENDS .
-Known x : B .
-Known y : B .
-Known alist$ :: list
-Known aset$ :: set
-Known klist0$ = <  >
-Known klist1$ = < x >
-Known klist2$ = < x,y >
-Known set$ = {}
-Known alist$' :: list 
-Known aset$' :: set 
-Known list$' = <  >
-Known set$' = {}
+Known eqv : FUN B TO FUN B TO B ENDF ENDF .
 
 
 
-Conjecture true BEGIN
- true
+
+Law true BEGIN
+ axiom
+ ,
+true
 END
 
-Conjecture false BEGIN
- false
+Law eqv_refl BEGIN
+ axiom
+ ,
+eqv CS (P,P)
 END
 
-Conjecture univ_closure BEGIN
- CLS universal
-  body
+Law eqv_assoc BEGIN
+ axiom
+ ,
+eqv CS (eqv CS (eqv CS (P,Q),R),eqv CS (P,eqv CS (Q,R)))
 END
 
-Conjecture exist_closure BEGIN
- CLS existential
-  body
+Law eqv_symm BEGIN
+ axiom
+ ,
+eqv CS (P,Q,Q,P)
 END
 
-Conjecture univ_closure BEGIN
- CLS universal
-  QS forall a a'
-  @  body
+Law id_subst BEGIN
+ axiom
+ ,
+eqv CS (SUB [ (x$,x$)] P,P)
 END
 
-Conjecture exist_closure BEGIN
- CLS existential
-  QS exists a
-  @  csQ CS (T,T)
+Law non_subst BEGIN
+ axiom
+ ,
+eqv CS (SUB [ (x$,e$)] P,P)
+,
+saveSideCond NYI
 END
 
-Conjecture sub_none_none BEGIN
- SUB [ ] body
+Conjecture eqv_id BEGIN
+ eqv CS (eqv CS (true,Q),Q)
 END
 
-Conjecture sub_one_none BEGIN
- SUB [('a,body) ] body
+Conjecture true_subst BEGIN
+ eqv CS (SUB [ (x$,e$)] true,true)
 END
 
-Conjecture sub_none_one BEGIN
- SUB [ (a$',a$'d)] body
-END
-
-Conjecture sub_one_none BEGIN
- SUB [('a,body) (a$',a$'d)] body
-END
-
-Conjecture sub_two_two BEGIN
- SUB [('a,42) ('b,ns2 NS (T,T)) (a$',a$'d) ('b$,b$')] body
-END
-
-Conjecture forall_zero BEGIN
- body
-END
-
-Conjecture exists_one BEGIN
- QS exists a
-  @  csQ CS (T,T)
-END
-
-Conjecture forall_two BEGIN
- QS forall a a'
-  @  body
-END
-
-Conjecture exists_three BEGIN
- QS exists a a$ a'
-  @  body
-END
-
-Conjecture forall_four BEGIN
- QS forall a a$ a$' a'
-  @  body
-END
-
-Conjecture lambda_zero BEGIN
- body
-END
-
-Conjecture lambda_one BEGIN
- QL lambda a
-  @ csQ CS (T,T)
-END
-
-Conjecture lambda_two BEGIN
- QL lambda a a'
-  @ body
-END
-
-Conjecture lambda_three BEGIN
- QL lambda a a' a$
-  @ body
-END
-
-Conjecture lambda_four BEGIN
- QL lambda a a' a$ a$'
-  @ body
-END
-
-Conjecture fortytwo BEGIN
- 42
-END
-
-Conjecture neg99 BEGIN
- -99
-END
-
-Conjecture expr_static BEGIN
- Ve
-END
-
-Conjecture expr_before BEGIN
- 'Ve
-END
-
-Conjecture expr_after BEGIN
- Ve'
-END
-
-Conjecture expr_during BEGIN
- Ve'd
-END
-
-Conjecture pred_static BEGIN
- Vp
-END
-
-Conjecture pred_before BEGIN
- 'Vp
-END
-
-Conjecture pred_after BEGIN
- Vp'
-END
-
-Conjecture pred_during BEGIN
- Vp'd
-END
-
-Conjecture cons_S_zero BEGIN
- cs0 CS ()
-END
-
-Conjecture cons_S_one BEGIN
- cs1 CS (T)
-END
-
-Conjecture cons_S_two BEGIN
- cs2 CS (T,T)
-END
-
-Conjecture cons_N_zero BEGIN
- ns0 NS ()
-END
-
-Conjecture cons_N_two BEGIN
- ns2 NS (T,T)
-END
-
-Conjecture cons_N_two BEGIN
- ns2 NS (T,T)
-END
-
-Conjecture cons_nesting BEGIN
- nest CS (sub1 CS (),sub2 CS (T),sub3 CS ())
+Conjecture eqv_subst BEGIN
+ eqv CS (SUB [ (x$,e$)] eqv CS (P,Q),eqv CS (SUB [ (x$,e$)] P,SUB [ (x$,e$)] Q))
 END

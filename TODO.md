@@ -2,22 +2,7 @@
 
 ## PLAN
 
-Implement `importType`.
-
-Big problem with `importDefinitions` and `importKLVar'.
-
-From 
-
-```
-Known klist0$ = <  >
-Known klist1$ = < x >
-Known klist2$ = < x,y >
-```
-
-we just find thst `klist0$` is added to var-data 
-while `klist1$` and `klist2$` are not.
-
-**Fixed** Needed to return `beyond`, not `rest` !!!
+Implement `loadSideCond`.
 
 
 Terminology Q:

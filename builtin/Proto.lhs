@@ -142,6 +142,7 @@ protoAxioms
 \begin{code}
 tmConj name term = ( name, ( term, scTrue ))
 
+
 -- Values
 
 tmTrue = tmConj "true" (Val arbpred (Boolean True))
@@ -151,6 +152,8 @@ tmNumPos = tmConj "fortytwo" (Val arbpred (Integer 42))
 tmNumNeg = tmConj "neg99" (Val arbpred (Integer (-99)))
 
 -- Variables 
+
+
 
 mkV nm vc vw = jVar arbpred $ Vbl (jId nm) vc vw
 
@@ -193,24 +196,71 @@ tmConsNest = tmConj ("cons"-.-"nesting")
 
 -- Quantifiers
 
+mkVs nm vc vw = (v,gv,lv,glv)
+ where v  = Vbl (jId nm) vc vw ; gv = StdVar v
+       lv = LVbl v [] [] ; glv = LstVar lv
+
+(va,gva,lva,glva) = mkVs "a" ObsV Before
+(va',gva',lva',glva') = mkVs "a" ObsV After
+
 
 mkBody = mkV "body" PredV Static
-mkQ str vs body = jBnd ArbType (jId str) (S.fromList vs) body
-va = Vbl (jId "a") ObsV Before ; gva = StdVar va
-lva = LVbl va [] [] ; glva = LstVar lva
-va' = Vbl (jId "a") ObsV After ; gva' = StdVar va'
-lva' = LVbl va' [] [] ; glva' = LstVar lva'
+mkQ str vl body = jBnd ArbType (jId str) (S.fromList vl) body
 
 tmForall0 = tmConj ("forall"-.-"zero")
             (mkQ "forall" [] mkBody)
-tmForall1 = tmConj ("forall"-.-"one")
-            (mkQ "forall" [gva] (mkCons "csQ" cs [vT,vT]))
-tmForall2 = tmConj ("forall"-.-"two")
-            (mkQ "forall" [gva,gva'] mkBody)
-tmForall3 = tmConj ("forall"-.-"three")
-            (mkQ "forall" [gva,gva',glva] mkBody)
+exists1 = mkQ "exists" [gva] (mkCons "csQ" cs [vT,vT])
+tmExists1 = tmConj ("exists"-.-"one") exists1
+forall2 = mkQ "forall" [gva,gva'] mkBody
+tmForall2 = tmConj ("forall"-.-"two") forall2
+tmExists3 = tmConj ("exists"-.-"three")
+            (mkQ "exists" [gva,gva',glva] mkBody)
 tmForall4 = tmConj ("forall"-.-"four")
             (mkQ "forall" [gva,gva',glva,glva'] mkBody)
+
+mkL str vl body = jLam ArbType (jId str) vl body
+
+tmLambda0 = tmConj ("lambda"-.-"zero")
+            (mkL "lambda" [] mkBody)
+tmLambda1 = tmConj ("lambda"-.-"one")
+            (mkL "lambda" [gva] (mkCons "csQ" cs [vT,vT]))
+tmLambda2 = tmConj ("lambda"-.-"two")
+            (mkL "lambda" [gva,gva'] mkBody)
+tmLambda3 = tmConj ("lambda"-.-"three")
+            (mkL "lambda" [gva,gva',glva] mkBody)
+tmLambda4 = tmConj ("lambda"-.-"four")
+            (mkL "lambda" [gva,gva',glva,glva'] mkBody)
+
+-- Closures
+
+universe = "universal"
+existence = "existential"
+
+tmUniversal1 = tmConj ("univ"-.-"closure") (Cls (jId universe) mkBody)
+tmUniversal2 = tmConj ("univ"-.-"closure") (Cls (jId universe) forall2)
+tmExistential1 = tmConj ("exist"-.-"closure") (Cls (jId existence) mkBody)
+tmExistential2 = tmConj ("exist"-.-"closure") (Cls (jId existence) exists1)
+
+-- Substitution
+
+
+
+mkS term vs lvlvs =  Sub ArbType term $ jSubstn (zip vs (repeat mkBody)) lvlvs
+
+(va'd,gva'd,lva'd,glva'd) = mkVs "a" ObsV (During "d")
+(vb,gvb,lvb,glvb) = mkVs "b" ObsV Before
+(vb',gvb',lvb',glvb') = mkVs "b" ObsV After
+(vb'd,gvb'd,lvb'd,glvb'd) = mkVs "b" ObsV (During "d")
+
+
+tmSub00 = tmConj ("sub"-.-"none"-.-"none") (mkS mkBody [] [])
+tmSub10 = tmConj ("sub"-.-"one"-.-"none") (mkS mkBody [va] [])
+tmSub01 = tmConj ("sub"-.-"none"-.-"one") (mkS mkBody [] [(lva',lva'd)])
+tmSub11 = tmConj ("sub"-.-"one"-.-"none") (mkS mkBody [va] [(lva',lva'd)])
+tmSub22 = tmConj ("sub"-.-"two"-.-"two") 
+     (mkS mkBody [va,vb] [(lva',lva'd),(lvb,lvb')])
+
+
 
 \end{code}
 
@@ -222,7 +272,10 @@ Collected\dots
 protoConjs :: [NmdAssertion]
 protoConjs = map mkNmdAsn 
   [ tmTrue, tmFalse
-  , tmForall0, tmForall1, tmForall2, tmForall3, tmForall4
+  , tmUniversal1, tmExistential1, tmUniversal2, tmExistential2
+  , tmSub00, tmSub10, tmSub01, tmSub11, tmSub22
+  , tmForall0, tmExists1, tmForall2, tmExists3, tmForall4
+  , tmLambda0, tmLambda1, tmLambda2, tmLambda3, tmLambda4
   , tmNumPos, tmNumNeg 
   , tmVarES, tmVar'ES, tmVarES', tmVarES'd
   , tmVarPS, tmVar'PS, tmVarPS', tmVarPS'd

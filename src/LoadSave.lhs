@@ -643,19 +643,25 @@ term_definition
    , "<t> ::= <b>  |  n  | <v>"
    , "     |  i s ( <t> , ... , <t> )"
    , "     |  <q> i <gv> ... <gv> @ <t>"
+   , "     |  CLS i <t>"
+   , "     |  SUB [ (<v>,<t>)* ]<t> "
    ]
 \end{code}
-The tokens that can start a term are: \verb"true false n <v> i <q> (". 
+
+\newpage
+The tokens that can start a term are: 
+\verb"true false n <v> i <q> CLS SUB (". 
 \begin{code}
 key_names 
- = [ "** Keywords:   true  false  QS  QL"
+ = [ "** Keywords:   true  false  QS  QL CLS"
    , "** Keysymbols: ?  $  (  ,  )  @"
    ]
 kTrue = "true"
 kFalse = "false"
 kSetBind = "QS"
 kListBind = "QL"
-kCLosure = "CLOSURE"
+kClosure = "CLS"
+kSubst = "SUB"
 kLstVar = '$'
 kSep = ','
 kQBody = "@"
@@ -688,17 +694,26 @@ saveTerm (Lam typ (Identifier lambda _) vl term)
     ++ "\n  " ++kQBody 
     ++ " " ++ saveTerm term
 saveTerm (Cls (Identifier kind _) term) 
-  = kCLosure ++ " "++kind++" "++saveTerm term
-saveTerm (Sub typ term sub) = "S-stuff?"
+  = kClosure ++ " "++kind++"\n  "++saveTerm term
+saveTerm (Sub typ term (Substn vts lvlvs))
+  = kSubst ++ " [" ++ saveTermVarSubs (S.toList vts) ++ " "
+                   ++ saveLVarSubs (S.toList lvlvs) ++ "] "
+    ++ saveTerm term
 saveTerm (Iter typ sa na si ni lvs) = "I-stuff?"
 saveTerm (VTyp typ var) = "VT-stuff?"
 \end{code}
 
+\begin{code}
+saveTermVarSubs vts = intercalate " " $ map saveTermVarSub vts
+saveTermVarSub (v,t) = "("++saveVariable v++","++saveTerm t++")"
+
+saveLVarSubs lvlvs = intercalate " " $ map saveLVarSub lvlvs
+saveLVarSub (tlv,rlv) 
+  = "("++saveListVariable tlv++","++saveListVariable rlv++")"
+\end{code}
 
 
 \subsection{Load Term}
-
-
 
 
 Truth builders:
@@ -783,6 +798,8 @@ sTermRead ((_,TVar nm vw):tts)
   | nm == kFalse     =  return ( mkFalse nm, tts)
   | nm == kSetBind   =  setQParse tts
   | nm == kListBind  =  listQParse tts
+  | nm == kClosure   =  closureParse tts
+  | nm == kSubst     =  substituteParse tts
   | otherwise       =  return (mkVarTerm (jId nm) vw, tts)
 \end{code}
 
@@ -877,6 +894,21 @@ quantreadBody i _ [] = fail ("quantread: "++trId i++" (missing body)")
 quantreadBody i sg tts = do
   (term,toks) <- sTermRead tts
   return (i,sg,term,toks)
+\end{code}
+
+
+\paragraph{Closure}~
+
+
+\begin{code}
+closureParse tts = fail ("closureParse NYI at "++show (take 1 tts))
+\end{code}
+
+
+\paragraph{Substitution}~
+
+\begin{code}
+substituteParse tts = fail ("substituteParse NYI at "++show (take 1 tts))
 \end{code}
 
 \subsubsection{Top-Level Term Reader}

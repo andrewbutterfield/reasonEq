@@ -37,12 +37,50 @@ Conjecture false BEGIN
  false
 END
 
+Conjecture univ_closure BEGIN
+ CLS universal body
+END
+
+Conjecture exist_closure BEGIN
+ CLS existential body
+END
+
+Conjecture univ_closure BEGIN
+ CLS universal QS forall a a'
+  @  body
+END
+
+Conjecture exist_closure BEGIN
+ CLS existential QS exists a
+  @  csQ CS (T,T)
+END
+
+Conjecture sub_none_none BEGIN
+ SUB [ ] body
+END
+
+Conjecture sub_one_none BEGIN
+ SUB [('a,body) ] body
+END
+
+Conjecture sub_none_one BEGIN
+ SUB [ (a'$,a'd$)] body
+END
+
+Conjecture sub_one_none BEGIN
+ SUB [('a,body) (a'$,a'd$)] body
+END
+
+Conjecture sub_two_two BEGIN
+ SUB [('a,body) ('b,body) (a'$,a'd$) ('b$,b'$)] body
+END
+
 Conjecture forall_zero BEGIN
  body
 END
 
-Conjecture forall_one BEGIN
- QS forall a
+Conjecture exists_one BEGIN
+ QS exists a
   @  csQ CS (T,T)
 END
 
@@ -51,14 +89,38 @@ Conjecture forall_two BEGIN
   @  body
 END
 
-Conjecture forall_three BEGIN
- QS forall a a$ a'
+Conjecture exists_three BEGIN
+ QS exists a a$ a'
   @  body
 END
 
 Conjecture forall_four BEGIN
  QS forall a a$ a$' a'
   @  body
+END
+
+Conjecture lambda_zero BEGIN
+ body
+END
+
+Conjecture lambda_one BEGIN
+ QL lambda a
+  @ csQ CS (T,T)
+END
+
+Conjecture lambda_two BEGIN
+ QL lambda a a'
+  @ body
+END
+
+Conjecture lambda_three BEGIN
+ QL lambda a a' a$
+  @ body
+END
+
+Conjecture lambda_four BEGIN
+ QL lambda a a' a$ a$'
+  @ body
 END
 
 Conjecture fortytwo BEGIN

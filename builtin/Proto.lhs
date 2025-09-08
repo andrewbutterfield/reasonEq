@@ -148,7 +148,8 @@ tmConj name term = ( name, ( term, scTrue ))
 tmTrue = tmConj "true" (Val arbpred (Boolean True))
 tmFalse = tmConj "false" (Val arbpred (Boolean False))
 
-tmNumPos = tmConj "fortytwo" (Val arbpred (Integer 42))
+fortytwo = Val arbpred (Integer 42)
+tmNumPos = tmConj "fortytwo" fortytwo
 tmNumNeg = tmConj "neg99" (Val arbpred (Integer (-99)))
 
 -- Variables 
@@ -186,7 +187,8 @@ tmConsS2 = tmConj ("cons"-.-"S"-.-"two")  (mkCons "cs2" cs [vT,vT])
 
 tmConsN0 = tmConj ("cons"-.-"N"-.-"zero") (mkCons "ns0" ns [])
 tmConsN1 = tmConj ("cons"-.-"N"-.-"one")  (mkCons "ns1" ns [vT])
-tmConsN2 = tmConj ("cons"-.-"N"-.-"two")  (mkCons "ns2" ns [vT,vT])
+consN2 = mkCons "ns2" ns [vT,vT]
+tmConsN2 = tmConj ("cons"-.-"N"-.-"two")  consN2
 
 tmConsNest = tmConj ("cons"-.-"nesting")
               (mkCons "nest" cs [ mkCons "sub1" cs []
@@ -245,7 +247,9 @@ tmExistential2 = tmConj ("exist"-.-"closure") (Cls (jId existence) exists1)
 
 
 
-mkS term vs lvlvs =  Sub ArbType term $ jSubstn (zip vs (repeat mkBody)) lvlvs
+simpleSub term vs lvlvs =  Sub ArbType term $ jSubstn (zip vs (repeat mkBody)) lvlvs
+
+mkS term vts lvlvs = Sub (termtype term) term $ jSubstn vts lvlvs
 
 (va'd,gva'd,lva'd,glva'd) = mkVs "a" ObsV (During "d")
 (vb,gvb,lvb,glvb) = mkVs "b" ObsV Before
@@ -253,12 +257,12 @@ mkS term vs lvlvs =  Sub ArbType term $ jSubstn (zip vs (repeat mkBody)) lvlvs
 (vb'd,gvb'd,lvb'd,glvb'd) = mkVs "b" ObsV (During "d")
 
 
-tmSub00 = tmConj ("sub"-.-"none"-.-"none") (mkS mkBody [] [])
-tmSub10 = tmConj ("sub"-.-"one"-.-"none") (mkS mkBody [va] [])
-tmSub01 = tmConj ("sub"-.-"none"-.-"one") (mkS mkBody [] [(lva',lva'd)])
-tmSub11 = tmConj ("sub"-.-"one"-.-"none") (mkS mkBody [va] [(lva',lva'd)])
+tmSub00 = tmConj ("sub"-.-"none"-.-"none") (simpleSub mkBody [] [])
+tmSub10 = tmConj ("sub"-.-"one"-.-"none") (simpleSub mkBody [va] [])
+tmSub01 = tmConj ("sub"-.-"none"-.-"one") (simpleSub mkBody [] [(lva',lva'd)])
+tmSub11 = tmConj ("sub"-.-"one"-.-"none") (simpleSub mkBody [va] [(lva',lva'd)])
 tmSub22 = tmConj ("sub"-.-"two"-.-"two") 
-     (mkS mkBody [va,vb] [(lva',lva'd),(lvb,lvb')])
+     (mkS mkBody [(va,fortytwo),(vb,consN2)] [(lva',lva'd),(lvb,lvb')])
 
 
 

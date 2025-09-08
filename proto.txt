@@ -68,15 +68,15 @@ Conjecture sub_one_none BEGIN
 END
 
 Conjecture sub_none_one BEGIN
- SUB [ (a'$,a'd$)] body
+ SUB [ (a$',a$'d)] body
 END
 
 Conjecture sub_one_none BEGIN
- SUB [('a,body) (a'$,a'd$)] body
+ SUB [('a,body) (a$',a$'d)] body
 END
 
 Conjecture sub_two_two BEGIN
- SUB [('a,body) ('b,body) (a'$,a'd$) ('b$,b'$)] body
+ SUB [('a,42) ('b,ns2 NS (T,T)) (a$',a$'d) ('b$,b$')] body
 END
 
 Conjecture forall_zero BEGIN

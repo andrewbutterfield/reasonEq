@@ -800,7 +800,7 @@ sTermRead ((_,TVar nm vw):tts)
   | nm == kListBind  =  listQParse tts
   | nm == kClosure   =  closureParse tts
   | nm == kSubst     =  substituteParse tts
-  | otherwise       =  return (mkVarTerm (jId nm) vw, tts)
+  | otherwise        =  return (mkVarTerm (jId nm) vw, tts)
 \end{code}
 
 \paragraph{Bad Start}~
@@ -899,16 +899,62 @@ quantreadBody i sg tts = do
 
 \paragraph{Closure}~
 
-
+Seen \texttt{CLS}.
 \begin{code}
-closureParse tts = fail ("closureParse NYI at "++show (take 1 tts))
+closureParse [] = premDuring ["closureParse"]
+closureParse ((lno,TVar nm _):rest1) = do
+  (term,rest2) <- sTermRead rest1
+  return (Cls (jId nm) term,rest2)
+closureParse ((lno,ttyp):rest) = fail $ unlines'
+  [ "closureParse: expected name"
+  , "but got "++renderTokTyp ttyp++" at line "++show lno]
+  
 \end{code}
 
 
 \paragraph{Substitution}~
 
+Seen \texttt{SUB}.
 \begin{code}
-substituteParse tts = fail ("substituteParse NYI at "++show (take 1 tts))
+substituteParse [] = premDuring ["substituteParse"]
+substituteParse ((lno,TOpen open):rest1)
+  | open == "["  =  do
+     ((vts,lvlvs),rest2) <- subsPairsParse [] [] rest1
+     rest3 <- expectToken (TClose "]") rest2
+     (term,rest4) <- sTermRead rest3
+     sub <- substn vts lvlvs
+     return (Sub (termtype term) term sub,rest4)
+substituteParse ((lno,ttyp):rest) = fail $ unlines'
+  [ "substituteParse: expected '['"
+  , "but got "++renderTokTyp ttyp++" at line "++show lno]
+
+subsPairsParse vts lvlvs []                      = return ((vts,lvlvs),[])
+subsPairsParse vts lvlvs toks@((_,TClose "]"):_) = return ((vts,lvlvs),toks)
+
+subsPairsParse vts lvlvs
+   ((lno,TOpen "(")
+   :vart@(_,TVar v _)
+   :(_,TSep ","):rest1) = do
+     (term,rest2) <- sTermRead rest1
+     rest3 <- expectToken (TClose ")") rest2
+     subsPairsParse ((var,term):vts) lvlvs rest3
+  where 
+       (var,_) = fromJust $ loadVariable [vart]
+       -- (term,_) = fromJust $ sTermRead [tt]
+
+subsPairsParse vts lvlvs
+   ((lno,TOpen "(")
+   :lvart@(_,TLVar v _)
+   :(_,TSep ",")
+   :lvarr@(_,TLVar t _)
+   :(_,TClose ")"):rest1) = subsPairsParse vts ((tlv,rlv):lvlvs) rest1
+ where 
+       (tlv,_) = fromJust $ loadListVariable [lvart]
+       (rlv,_) = fromJust $ loadListVariable [lvarr]
+
+subsPairsParse vts lvlvs toks = fail $ unlines'
+  [ "subsPairsParse: expecting zero or more (v,t) or (tv$,rv$)" 
+  , " but got "++show (take 5 toks)]
 \end{code}
 
 \subsubsection{Top-Level Term Reader}
@@ -967,7 +1013,14 @@ loadGenVar ((lno,tok):_) = fail $ unlines'
 
 \begin{code}
 saveListVariable :: ListVar -> String
-saveListVariable (LVbl v is js) = saveVariable v ++ "$"
+saveListVariable (LVbl (Vbl i vc Before) is js) 
+  = '\'' : idName i ++ "$"
+saveListVariable (LVbl (Vbl i vc (During d)) is js)  
+  =  idName i ++ "$" ++ '\'' : d
+saveListVariable (LVbl (Vbl i vc After) is js)       
+  = idName i ++ "$" ++ "\'"
+saveListVariable (LVbl (Vbl i vc _) is js)           
+  = idName i ++ "$" 
 \end{code}
 
 \subsection{Load List Variable}

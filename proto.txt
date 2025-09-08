@@ -38,20 +38,24 @@ Conjecture false BEGIN
 END
 
 Conjecture univ_closure BEGIN
- CLS universal body
+ CLS universal
+  body
 END
 
 Conjecture exist_closure BEGIN
- CLS existential body
+ CLS existential
+  body
 END
 
 Conjecture univ_closure BEGIN
- CLS universal QS forall a a'
+ CLS universal
+  QS forall a a'
   @  body
 END
 
 Conjecture exist_closure BEGIN
- CLS existential QS exists a
+ CLS existential
+  QS exists a
   @  csQ CS (T,T)
 END
 

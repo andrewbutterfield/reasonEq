@@ -23,7 +23,7 @@ import qualified Data.Map as M
 import Data.List (nub, sort, (\\), intercalate, stripPrefix)
 import Data.Char
 
-
+import NotApplicable
 import YesBut
 import Control
 import Utilities
@@ -971,7 +971,31 @@ loadTerm = sTermRead . tlex . prepare
 
 \begin{code}
 saveSideCond :: SideCond -> String
-saveSideCond sc = "saveSideCond NYI"
+saveSideCond ([],fvs) | S.null fvs  =  "true"
+saveSideCond (vscs,fvs)  
+  =  saveVSCs vscs ++ saveFVs (null vscs) fvs
+
+saveVSCs [] = ""
+saveVSCs vscs = "  VSC " ++ (intercalate " " $ map saveVSC vscs)
+
+saveVSC (VSC gv nvsD nvsC nvsCd) 
+  = intcalNN " " [saveD gv nvsD, saveC gv nvsC, saveCd gv nvsCd]
+
+saveD _ NA = ""
+saveD gv (The vs) = "(DISJ "++saveGenVar gv++" "++saveVS vs++")"
+
+saveC _ NA = ""
+saveC gv (The vs)  = "(COV "++saveGenVar gv++" "++saveVS vs++")"
+
+saveCd _ NA = ""
+saveCd gv (The vs) = "(DYNCOV "++saveGenVar gv++" "++saveVS vs++")"
+
+saveFVs noVSC fvs
+  | S.null fvs  =  ""
+  | otherwise   =  start ++ "  FV " ++ saveVS fvs
+  where start = if noVSC then "" else "\n"
+
+saveVS vs = intercalate " " $ map saveGenVar $ S.toList vs
 \end{code}
 
 \subsection{Load Side-Condition}

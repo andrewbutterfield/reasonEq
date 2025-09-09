@@ -289,6 +289,7 @@ tmSCfree1 = mkSC ("free"-.-"a") ([],S.singleton gva)
 tmSCvarDisj = mkvsc ("P"-.-"disj"-.-"a") (gvP `disjfrom` just_a)
 tmSCvarCov = mkvsc ("P"-.-"cov"-.-"a") (gvP `coveredby` just_a)
 tmSCvarDCov = mkvsc ("P"-.-"dyncov"-.-"a") (gvP `dyncovered` just_a)
+tmSCmixed = mkSC ("mixed") ([gvP `disjfrom` just_a],S.singleton gva)
 \end{code}
 
 
@@ -305,6 +306,7 @@ protoConjs = map mkNmdAsn
   , tmSCtrue
   , tmSCfree1
   , tmSCvarDisj, tmSCvarCov, tmSCvarDCov
+  , tmSCmixed
   , tmVbecomesE
   , tmUniversal1, tmExistential1, tmUniversal2, tmExistential2
   , tmSub00, tmSub10, tmSub01, tmSub11, tmSub22

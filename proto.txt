@@ -44,25 +44,32 @@ END
 Conjecture sc_free_a BEGIN
  body
 ,
-saveSideCond NYI
+  FV 'a
 END
 
 Conjecture sc_P_disj_a BEGIN
  body
 ,
-saveSideCond NYI
+  VSC (DISJ P 'a)
 END
 
 Conjecture sc_P_cov_a BEGIN
  body
 ,
-saveSideCond NYI
+  VSC (COV P 'a)
 END
 
 Conjecture sc_P_dyncov_a BEGIN
  body
 ,
-saveSideCond NYI
+  VSC (DYNCOV P 'a)
+END
+
+Conjecture sc_mixed BEGIN
+ body
+,
+  VSC (DISJ P 'a)
+  FV 'a
 END
 
 Conjecture v_becomes_e BEGIN

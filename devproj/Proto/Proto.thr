@@ -10,6 +10,7 @@ END LIST DEFFOLD
 BEGIN LIST CONJECTURES
 ("true",ASN (K (TG (Id "B" 0)) (VB True),([],fromList [])))
 ("false",ASN (K (TG (Id "B" 0)) (VB False),([],fromList [])))
+("v_becomes_e",ASN (S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "asg" 0,VP,WT))) (SN (fromList [(VR (Id "v" 0,VO,WB),V (TG (Id "Z" 0)) (VR (Id "e" 0,VE,WB)))]) (fromList [])),([],fromList [])))
 ("univ_closure",ASN (X (Id "universal" 0) (V (TG (Id "B" 0)) (VR (Id "body" 0,VP,WS))),([],fromList [])))
 ("exist_closure",ASN (X (Id "existential" 0) (V (TG (Id "B" 0)) (VR (Id "body" 0,VP,WS))),([],fromList [])))
 ("univ_closure",ASN (X (Id "universal" 0) (B T (Id "forall" 0) (fromList [GV (VR (Id "a" 0,VO,WB)),GV (VR (Id "a" 0,VO,WA))]) (V (TG (Id "B" 0)) (VR (Id "body" 0,VP,WS)))),([],fromList [])))

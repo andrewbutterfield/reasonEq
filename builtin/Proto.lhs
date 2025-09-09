@@ -245,8 +245,6 @@ tmExistential2 = tmConj ("exist"-.-"closure") (Cls (jId existence) exists1)
 
 -- Substitution
 
-
-
 simpleSub term vs lvlvs =  Sub ArbType term $ jSubstn (zip vs (repeat mkBody)) lvlvs
 
 mkS term vts lvlvs = Sub (termtype term) term $ jSubstn vts lvlvs
@@ -264,7 +262,19 @@ tmSub11 = tmConj ("sub"-.-"one"-.-"none") (simpleSub mkBody [va] [(lva',lva'd)])
 tmSub22 = tmConj ("sub"-.-"two"-.-"two") 
      (mkS mkBody [(va,fortytwo),(vb,consN2)] [(lva',lva'd),(lvb,lvb')])
 
+-- Assignment
 
+p1 = arbpred
+i_asg        =  assignmentId
+p_asg        =  jVar p1 $ Vbl i_asg PredV Textual
+
+simassign :: [(Variable,Term)] -> [(ListVar,ListVar)] -> Term
+simassign vts lvlvs  =  Sub p1 p_asg $ xSubstn vts lvlvs
+
+vv = Vbl (jId "v") ObsV Before
+ve = jVar int $ Vbl (jId "e") ExprV Before
+tmVbecomesE = tmConj ("v"-.-"becomes"-.-"e")
+                  (mkS p_asg [(vv,ve)] [])
 
 \end{code}
 
@@ -276,6 +286,7 @@ Collected\dots
 protoConjs :: [NmdAssertion]
 protoConjs = map mkNmdAsn 
   [ tmTrue, tmFalse
+  , tmVbecomesE
   , tmUniversal1, tmExistential1, tmUniversal2, tmExistential2
   , tmSub00, tmSub10, tmSub01, tmSub11, tmSub22
   , tmForall0, tmExists1, tmForall2, tmExists3, tmForall4

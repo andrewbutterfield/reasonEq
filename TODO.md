@@ -6,6 +6,7 @@ Implement `loadSideCond`.
 
 **We need to handle assignment properly**
 *represented using substitutions*
+**Works just fine using substitution notation**
 
 
 Terminology Q:

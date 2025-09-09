@@ -143,7 +143,7 @@ paired with an index $j$ that identifies $s_j$.
 LTL entailment $(\sigma,j) \models p$ states 
 that property $p$ holds \emph{at} position $j$ in $\sigma$.
 
-We use ``WVS.n'' to refer to axiom or theorem (n) 
+We use ``WVS\_n'' to refer to axiom or theorem (n) 
 from \cite{DBLP:journals/csur/WarfordVS20}.
 
 
@@ -487,7 +487,7 @@ $$
 $$\par
 \vspace{-4pt}
 \begin{code}
-cjWVS24 = ( "WVS.24"
+cjWVS24 = ( "WVS"-.-"24"
         , ( (mkNot p `mkU` (q `mkU` r)) /\ p `mkU` q ==> q `mkU` r
           , scTrue ) )
 \end{code}
@@ -502,7 +502,7 @@ $$
 $$\par
 \vspace{-4pt}
 \begin{code}
-cjWVS25 = ( "WVS.25"
+cjWVS25 = ( "WVS"-.-"25"
         , ( (p `mkU` (mkNot q `mkU` r)) /\ q `mkU` r ==> p `mkU` r
           , scTrue ) )
 \end{code}
@@ -515,7 +515,7 @@ $$
 $$\par
 \vspace{-4pt}
 \begin{code}
-cjWVS26 = ( "WVS.26"
+cjWVS26 = ( "WVS"-.-"26"
         , ( (p `mkU` q) /\ (mkNot q `mkU` p) ==> p
           , scTrue ) )
 \end{code}
@@ -528,7 +528,7 @@ $$
 $$\par
 \vspace{-4pt}
 \begin{code}
-cjWVS27 = ( "WVS.27"
+cjWVS27 = ( "WVS"-.-"27"
         , ( p /\ (mkNot p `mkU` q) ==> q
           , scTrue ) )
 \end{code}
@@ -541,7 +541,7 @@ $$
 $$\par
 \vspace{-4pt}
 \begin{code}
-cjWVS28 = ( "WVS.28"
+cjWVS28 = ( "WVS"-.-"28"
         , ( p `mkU` q ==> p \/ q
           , scTrue ) )
 \end{code}
@@ -567,7 +567,7 @@ $$
 $$\par
 \vspace{-4pt}
 \begin{code}
-cjWVS30 = ( "WVS.30"
+cjWVS30 = ( "WVS"-.-"30"
         , ( p /\ q ==> p `mkU` q
           , scTrue ) )
 \end{code}
@@ -581,7 +581,7 @@ $$
 $$\par
 \vspace{-4pt}
 \begin{code}
-cjUntilAbs31 = ( "absorb"-.-"WVS.31"
+cjUntilAbs31 = ( "absorb"-.-"WVS"-.-"31"
         , ( p \/ p `mkU` q === p \/ q
           , scTrue ) )
 \end{code} 
@@ -594,7 +594,7 @@ $$
 $$\par
 \vspace{-4pt}
 \begin{code}
-cjUntilAbs32 = ( "absorb"-.-"WVS.32"
+cjUntilAbs32 = ( "absorb"-.-"WVS"-.-"32"
         , ( p `mkU` q \/ q === p `mkU` q
           , scTrue ) )
 \end{code}
@@ -607,7 +607,7 @@ $$
 $$\par
 \vspace{-4pt}
 \begin{code}
-cjUntilAbs33 = ( "absorb"-.-"WVS.33"
+cjUntilAbs33 = ( "absorb"-.-"WVS"-.-"33"
         , ( p `mkU` q /\ q === q
           , scTrue ) )
 \end{code}
@@ -620,7 +620,7 @@ $$
 $$\par
 \vspace{-4pt}
 \begin{code}
-cjUntilAbs34 = ( "absorb"-.-"WVS.34"
+cjUntilAbs34 = ( "absorb"-.-"WVS"-.-"34"
         , ( p `mkU` q \/ (p /\ q) ===  p `mkU` q
           , scTrue ) )
 \end{code}
@@ -633,7 +633,7 @@ $$
 $$\par
 \vspace{-4pt}
 \begin{code}
-cjUntilAbs35 = ( "absorb"-.-"WVS.35"
+cjUntilAbs35 = ( "absorb"-.-"WVS"-.-"35"
         , ( p `mkU` q /\ (p \/ q) === p `mkU` q
           , scTrue ) )
 \end{code}

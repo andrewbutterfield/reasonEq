@@ -1,236 +1,54 @@
-Theory Proto
-
-
-Known 'a : N .
-Known a' : N .
-Known aterm : B .
-Known atermf : FUN B TO B ENDF .
-Known gen :: generic
-Known inst instanceof gen
-Known mol = BEGIN 42 END
-Known prodt : PROD Prod A B ENDP .
-Known sumt : SUM Sum
-  VARIANT Sum1  ENDV
-  VARIANT Sum2 B ENDV
-  VARIANT Sum3 FUN B TO B ENDF A B ENDV
-ENDS .
-Known x : B .
-Known y : B .
-Known alist$ :: list
-Known aset$ :: set
-Known klist0$ = <  >
-Known klist1$ = < x >
-Known klist2$ = < x,y >
-Known set$ = {}
-Known alist$' :: list 
-Known aset$' :: set 
-Known list$' = <  >
-Known set$' = {}
-
-
-
-Conjecture true BEGIN
-  true
+Theory UTCP
+Needs
+  Designs UWhile Sets Closure Exists Forall Equal Impl AOI And Or Not EQV
 END
 
-Conjecture false BEGIN
-  false
+
+Known A : FUN PROD P LE ENDP TO FUN B TO FUN PROD P LE ENDP TO B ENDF ENDF ENDF .
+Known X : FUN PROD P LE ENDP TO FUN B TO FUN PROD P LE ENDP TO FUN PROD P LE ENDP TO B ENDF ENDF ENDF ENDF .
+Known atom : FUN B TO B ENDF .
+Known cpll : FUN B TO FUN B TO B ENDF ENDF .
+Known cplus : FUN B TO FUN B TO B ENDF ENDF .
+Known cseq : FUN B TO FUN B TO B ENDF ENDF .
+Known cskip : B .
+Known cstar : FUN B TO B ENDF .
+Known g : GE .
+Known in : LE .
+Known 'ls : PROD P LE ENDP .
+Known ls' : PROD P LE ENDP .
+Known out : LE .
+Known 's : S .
+Known s' : S .
+
+Known O$' = < s,ls >
+
+
+Law X_def BEGIN
+ axiom
+ ,
+eqv CS (X NS (E,a,R,N),and CS (and CS (subseteq CS (E,'ls),a),eq CS (ls',union CS (sdiff CS ('ls,R),N))))
+,
+VREL (DISJ E FROM 'O$ O$') (DISJ N FROM 'O$ O$') (DISJ R FROM 'O$ O$') (DYNCOV a BY 's s')
 END
 
-Conjecture sc_true BEGIN
-  body
+Law A_def BEGIN
+ axiom
+ ,
+eqv CS (A NS (E,a,N),X NS (E,a,E,N))
+,
+VREL (DISJ E FROM 'O$ O$') (DISJ N FROM 'O$ O$') (DYNCOV a BY 's s')
 END
 
-Conjecture sc_free_a BEGIN
-  body
-, FREE 'a
+Conjecture ls_union_N BEGIN
+  eqv CS (subseteq CS (S,union CS ('ls,N)),subseteq CS (sdiff CS (S,N),'ls))
 END
 
-Conjecture sc_P_disj_a BEGIN
-  body
-, VREL (DISJ P FROM 'a)
+Conjecture A_alt BEGIN
+  eqv CS (A NS (E,a,N),and CS (and CS (subseteq CS (E,'ls),a),eq CS (ls',union CS (sdiff CS ('ls,E),N))))
+, VREL (DISJ E FROM 'O$ O$') (DISJ N FROM 'O$ O$') (DYNCOV a BY 's s')
 END
 
-Conjecture sc_P_cov_a BEGIN
-  body
-, VREL (COV P BY 'a)
-END
-
-Conjecture sc_P_dyncov_a BEGIN
-  body
-, VREL (DYNCOVV P BY 'a)
-END
-
-Conjecture sc_mixed BEGIN
-  body
-, VREL (DISJ P FROM 'a)
-  FREE 'a
-END
-
-Conjecture sc_all BEGIN
-  body
-, VREL (DISJ P FROM 'a) (COV Q BY 'a b$') (DYNCOVV Q BY b' 'a$)
-  FREE 'a b$'
-END
-
-Conjecture v_becomes_e BEGIN
-  SUB [('v,'e) ] asg
-END
-
-Conjecture univ_closure BEGIN
-  CLS universal
-  body
-END
-
-Conjecture exist_closure BEGIN
-  CLS existential
-  body
-END
-
-Conjecture univ_closure BEGIN
-  CLS universal
-  QS forall a a'
-  @  body
-END
-
-Conjecture exist_closure BEGIN
-  CLS existential
-  QS exists a
-  @  csQ CS (T,T)
-END
-
-Conjecture sub_none_none BEGIN
-  SUB [ ] body
-END
-
-Conjecture sub_one_none BEGIN
-  SUB [('a,body) ] body
-END
-
-Conjecture sub_none_one BEGIN
-  SUB [ (a$',a$'d)] body
-END
-
-Conjecture sub_one_none BEGIN
-  SUB [('a,body) (a$',a$'d)] body
-END
-
-Conjecture sub_two_two BEGIN
-  SUB [('a,42) ('b,ns2 NS (T,T)) (a$',a$'d) ('b$,b$')] body
-END
-
-Conjecture forall_zero BEGIN
-  body
-END
-
-Conjecture exists_one BEGIN
-  QS exists a
-  @  csQ CS (T,T)
-END
-
-Conjecture forall_two BEGIN
-  QS forall a a'
-  @  body
-END
-
-Conjecture exists_three BEGIN
-  QS exists a a$ a'
-  @  body
-END
-
-Conjecture forall_four BEGIN
-  QS forall a a$ a$' a'
-  @  body
-END
-
-Conjecture lambda_zero BEGIN
-  body
-END
-
-Conjecture lambda_one BEGIN
-  QL lambda a
-  @ csQ CS (T,T)
-END
-
-Conjecture lambda_two BEGIN
-  QL lambda a a'
-  @ body
-END
-
-Conjecture lambda_three BEGIN
-  QL lambda a a' a$
-  @ body
-END
-
-Conjecture lambda_four BEGIN
-  QL lambda a a' a$ a$'
-  @ body
-END
-
-Conjecture fortytwo BEGIN
-  42
-END
-
-Conjecture neg99 BEGIN
-  -99
-END
-
-Conjecture expr_static BEGIN
-  Ve
-END
-
-Conjecture expr_before BEGIN
-  'Ve
-END
-
-Conjecture expr_after BEGIN
-  Ve'
-END
-
-Conjecture expr_during BEGIN
-  Ve'd
-END
-
-Conjecture pred_static BEGIN
-  Vp
-END
-
-Conjecture pred_before BEGIN
-  'Vp
-END
-
-Conjecture pred_after BEGIN
-  Vp'
-END
-
-Conjecture pred_during BEGIN
-  Vp'd
-END
-
-Conjecture cons_S_zero BEGIN
-  cs0 CS ()
-END
-
-Conjecture cons_S_one BEGIN
-  cs1 CS (T)
-END
-
-Conjecture cons_S_two BEGIN
-  cs2 CS (T,T)
-END
-
-Conjecture cons_N_zero BEGIN
-  ns0 NS ()
-END
-
-Conjecture cons_N_two BEGIN
-  ns2 NS (T,T)
-END
-
-Conjecture cons_N_two BEGIN
-  ns2 NS (T,T)
-END
-
-Conjecture cons_nesting BEGIN
-  nest CS (sub1 CS (),sub2 CS (T),sub3 CS ())
+Conjecture X_X_comp BEGIN
+  eqv CS (; NS (X NS (E1,a,R1,N1),X NS (E2,b,R2,N2)),and CS (eq CS (intsct CS (E2,sdiff CS (R1,N1)),emptyset),X NS (union CS (E1,sdiff CS (E2,N1)),; NS (a,b),union CS (R1,R2),union CS (sdiff CS (N1,R2),N2))))
+, VREL (DISJ E1 FROM 'O$ O$') (DISJ E2 FROM 'O$ O$') (DISJ N1 FROM 'O$ O$') (DISJ N2 FROM 'O$ O$') (DISJ R1 FROM 'O$ O$') (DISJ R2 FROM 'O$ O$') (DYNCOV a BY 's s') (DYNCOV b BY 's s')
 END

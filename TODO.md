@@ -2,12 +2,10 @@
 
 ## PLAN
 
-Implement `loadSideCond`.
+We neet to use `star` instead of `*` for "set-of". 
+Right now `Lists` are not load-able.
 
-**We need to handle assignment properly**
-*represented using substitutions*
-**Works just fine using substitution notation**
-
+For theroy `Forall`  we need to implement load/save for `Iter`.
 
 Terminology Q:
 

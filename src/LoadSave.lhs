@@ -125,11 +125,10 @@ importTheory thry ( (lno,TVar key Static)
   | key == kTheory && validFileName name = do
         (thry',rest') <- importDependencies (thName_ name thry) rest 
         importDefinitions thry' rest'   
-  | otherwise  =  fail $ unlines  [ "loadTheory headline parse error at line "
-                                    ++ show lno 
-                                  , "  expected: "++kTheory++" theoryname"
-                                  , "  got: " ++ key ++ " " ++ name
-                                  ]
+  | otherwise  =  fail $ unlines  
+      [ "loadTheory headline parse error at line " ++ show lno 
+      , "  expected: "++kTheory++" theoryname"
+      , "  got: " ++ key ++ " " ++ name ]
 
 importDependencies :: MonadFail mf 
                    => Theory -> [Token] 
@@ -140,11 +139,14 @@ importDependencies thry nlines@((lno,TVar  needs Static):rest)
   | otherwise = return (thry,nlines) -- no dependencies is fine
 
 importDeps thry sped []  =  premAfter [ kNeeds ]
-importDeps thry sped ((lno,TClose close):rest) 
+
+importDeps thry sped ((lno,TVar close _):rest) 
   | close == kEnd  
      =  return ((thDeps__ (++(reverse sped)) thry), rest)
+
 importDeps thry sped ((lno,TVar i Static):rest) 
   | validFileName i = importDeps thry (i:sped) rest 
+
 importDeps thry sped (tok@(lno,_):rest) 
   = fail $ unlines
       [ "invalid dependency at line "++show lno
@@ -1010,7 +1012,7 @@ saveC _ NA = ""
 saveC gv (The vs)  = "("++kCovBy++" "++saveGenVar gv++" BY "++saveVS vs++")"
 
 saveCd _ NA = ""
-saveCd gv (The vs) = "("++kDynCov++"V "++saveGenVar gv++" BY "++saveVS vs++")"
+saveCd gv (The vs) = "("++kDynCov++" "++saveGenVar gv++" BY "++saveVS vs++")"
 
 saveFVs noVSC fvs
   | S.null fvs  =  ""

@@ -129,7 +129,7 @@ $$
 \vspace{-8pt}
 \begin{code}
 axExclMidl
- = ( "excl-middle"
+ = ( "excl"-.-"middle"
    , ( p \/ mkNot p
    , scTrue ) )
 \end{code}

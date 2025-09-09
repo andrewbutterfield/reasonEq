@@ -10,6 +10,13 @@ END LIST DEFFOLD
 BEGIN LIST CONJECTURES
 ("true",ASN (K (TG (Id "B" 0)) (VB True),([],fromList [])))
 ("false",ASN (K (TG (Id "B" 0)) (VB False),([],fromList [])))
+("sc_true",ASN (V (TG (Id "B" 0)) (VR (Id "body" 0,VP,WS)),([],fromList [])))
+("sc_free_a",ASN (V (TG (Id "B" 0)) (VR (Id "body" 0,VP,WS)),([],fromList [GV (VR (Id "a" 0,VO,WB))])))
+("sc_P_disj_a",ASN (V (TG (Id "B" 0)) (VR (Id "body" 0,VP,WS)),([VSC (GV (VR (Id "P" 0,VP,WS))) (The (fromList [GV (VR (Id "a" 0,VO,WB))])) NA NA],fromList [])))
+("sc_P_cov_a",ASN (V (TG (Id "B" 0)) (VR (Id "body" 0,VP,WS)),([VSC (GV (VR (Id "P" 0,VP,WS))) NA (The (fromList [GV (VR (Id "a" 0,VO,WB))])) NA],fromList [])))
+("sc_P_dyncov_a",ASN (V (TG (Id "B" 0)) (VR (Id "body" 0,VP,WS)),([VSC (GV (VR (Id "P" 0,VP,WS))) NA NA (The (fromList [GV (VR (Id "a" 0,VO,WB))]))],fromList [])))
+("sc_mixed",ASN (V (TG (Id "B" 0)) (VR (Id "body" 0,VP,WS)),([VSC (GV (VR (Id "P" 0,VP,WS))) (The (fromList [GV (VR (Id "a" 0,VO,WB))])) NA NA],fromList [GV (VR (Id "a" 0,VO,WB))])))
+("sc_all",ASN (V (TG (Id "B" 0)) (VR (Id "body" 0,VP,WS)),([VSC (GV (VR (Id "P" 0,VP,WS))) (The (fromList [GV (VR (Id "a" 0,VO,WB))])) NA NA,VSC (GV (VR (Id "Q" 0,VP,WS))) NA (The (fromList [GV (VR (Id "a" 0,VO,WB)),GL (LV (VR (Id "b" 0,VO,WA),[],[]))])) NA,VSC (GV (VR (Id "Q" 0,VP,WS))) NA NA (The (fromList [GV (VR (Id "b" 0,VO,WA)),GL (LV (VR (Id "a" 0,VO,WB),[],[]))]))],fromList [GV (VR (Id "a" 0,VO,WB)),GL (LV (VR (Id "b" 0,VO,WA),[],[]))])))
 ("v_becomes_e",ASN (S (TG (Id "B" 0)) (V (TG (Id "B" 0)) (VR (Id "asg" 0,VP,WT))) (SN (fromList [(VR (Id "v" 0,VO,WB),V (TG (Id "Z" 0)) (VR (Id "e" 0,VE,WB)))]) (fromList [])),([],fromList [])))
 ("univ_closure",ASN (X (Id "universal" 0) (V (TG (Id "B" 0)) (VR (Id "body" 0,VP,WS))),([],fromList [])))
 ("exist_closure",ASN (X (Id "existential" 0) (V (TG (Id "B" 0)) (VR (Id "body" 0,VP,WS))),([],fromList [])))

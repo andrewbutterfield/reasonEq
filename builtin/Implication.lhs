@@ -164,7 +164,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjAndImp
- = propdef ( "GS3.66"
+ = propdef ( "GS3"-.-"66"
            , p /\ (p ==> q) === p /\ q  )
 \end{code}
 
@@ -176,7 +176,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjAndPmi
- = propdef ( "GS3.67"
+ = propdef ( "GS3"-.-"67"
            , p /\ (q ==> p) === p  )
 \end{code}
 
@@ -188,7 +188,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjOrImp
- = propdef ( "GS3.68"
+ = propdef ( "GS3"-.-"68"
            , p \/ (p ==> q) === trueP )
 \end{code}
 
@@ -201,7 +201,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjOrPmi
- = propdef ( "GS3.69"
+ = propdef ( "GS3"-.-"69"
            , p \/ (q ==> p) === q ==> p )
 \end{code}
 
@@ -213,7 +213,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjOrImpAnd
- = propdef ( "GS3.70"
+ = propdef ( "GS3"-.-"70"
            , p \/ q ==> p /\ q === (p === q) )
 \end{code}
 
@@ -239,7 +239,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjImpRZero
- = propdef ( "imp" -.- "r-zero"
+ = propdef ( "imp" -.- "r"-.-"zero"
            , p ==> trueP === trueP )
 \end{code}
 
@@ -251,7 +251,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjImpLUnit
- = propdef ( "imp" -.- "l-unit"
+ = propdef ( "imp" -.- "l"-.-"unit"
            , trueP ==> p === p )
 \end{code}
 
@@ -275,7 +275,7 @@ $$\begin{array}{ll}
 \vspace{-8pt}
 \begin{code}
 cjFalseImp
- = propdef ( "GS3.75"
+ = propdef ( "GS3"-.-"75"
            , falseP ==> p === trueP )
 \end{code}
 

@@ -37,6 +37,34 @@ Conjecture false BEGIN
  false
 END
 
+Conjecture sc_true BEGIN
+ body
+END
+
+Conjecture sc_free_a BEGIN
+ body
+,
+saveSideCond NYI
+END
+
+Conjecture sc_P_disj_a BEGIN
+ body
+,
+saveSideCond NYI
+END
+
+Conjecture sc_P_cov_a BEGIN
+ body
+,
+saveSideCond NYI
+END
+
+Conjecture sc_P_dyncov_a BEGIN
+ body
+,
+saveSideCond NYI
+END
+
 Conjecture v_becomes_e BEGIN
  SUB [('v,'e) ] asg
 END

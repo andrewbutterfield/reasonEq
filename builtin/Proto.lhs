@@ -26,6 +26,7 @@ import AST
 import SideCond
 import VarData
 import Substitution
+import Assertions
 import Laws
 import Proofs
 import Theories
@@ -142,7 +143,6 @@ protoAxioms
 \begin{code}
 tmConj name term = ( name, ( term, scTrue ))
 
-
 -- Values
 
 tmTrue = tmConj "true" (Val arbpred (Boolean True))
@@ -153,8 +153,6 @@ tmNumPos = tmConj "fortytwo" fortytwo
 tmNumNeg = tmConj "neg99" (Val arbpred (Integer (-99)))
 
 -- Variables 
-
-
 
 mkV nm vc vw = jVar arbpred $ Vbl (jId nm) vc vw
 
@@ -276,9 +274,27 @@ ve = jVar int $ Vbl (jId "e") ExprV Before
 tmVbecomesE = tmConj ("v"-.-"becomes"-.-"e")
                   (mkS p_asg [(vv,ve)] [])
 
+-- Side Conditions
+
+mkSC :: String -> SideCond -> (String,(Term,SideCond))
+mkSC name sc = ( "sc"-.-name, ( mkBody, sc ))
+
+mkvsc name vsc = mkSC name ([vsc],S.empty)
+
+vP = Vbl (jId "P") PredV Static ; gvP = StdVar vP
+just_a = S.singleton gva
+
+tmSCtrue = mkSC "true" scTrue
+tmSCfree1 = mkSC ("free"-.-"a") ([],S.singleton gva)
+tmSCvarDisj = mkvsc ("P"-.-"disj"-.-"a") (gvP `disjfrom` just_a)
+tmSCvarCov = mkvsc ("P"-.-"cov"-.-"a") (gvP `coveredby` just_a)
+tmSCvarDCov = mkvsc ("P"-.-"dyncov"-.-"a") (gvP `dyncovered` just_a)
 \end{code}
 
 
+gv `disjfrom`   vs  =  VSC gv (The vs) covByNA  covByNA
+gv `coveredby`  vs  =  VSC gv disjNA   (The vs) covByNA
+gv `dyncovered` vs  =  VSC gv disjNA   cov
 
 
 Collected\dots
@@ -286,6 +302,9 @@ Collected\dots
 protoConjs :: [NmdAssertion]
 protoConjs = map mkNmdAsn 
   [ tmTrue, tmFalse
+  , tmSCtrue
+  , tmSCfree1
+  , tmSCvarDisj, tmSCvarCov, tmSCvarDCov
   , tmVbecomesE
   , tmUniversal1, tmExistential1, tmUniversal2, tmExistential2
   , tmSub00, tmSub10, tmSub01, tmSub11, tmSub22

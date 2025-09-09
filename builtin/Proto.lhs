@@ -282,14 +282,22 @@ mkSC name sc = ( "sc"-.-name, ( mkBody, sc ))
 mkvsc name vsc = mkSC name ([vsc],S.empty)
 
 vP = Vbl (jId "P") PredV Static ; gvP = StdVar vP
+vQ = Vbl (jId "Q") PredV Static ; gvQ = StdVar vQ
 just_a = S.singleton gva
+a_and_bl = S.fromList [gva,glvb']
 
 tmSCtrue = mkSC "true" scTrue
 tmSCfree1 = mkSC ("free"-.-"a") ([],S.singleton gva)
 tmSCvarDisj = mkvsc ("P"-.-"disj"-.-"a") (gvP `disjfrom` just_a)
 tmSCvarCov = mkvsc ("P"-.-"cov"-.-"a") (gvP `coveredby` just_a)
 tmSCvarDCov = mkvsc ("P"-.-"dyncov"-.-"a") (gvP `dyncovered` just_a)
-tmSCmixed = mkSC ("mixed") ([gvP `disjfrom` just_a],S.singleton gva)
+tmSCmixed = mkSC ("mixed") ([gvP `disjfrom` just_a],just_a)
+tmSCall = mkSC "all" 
+  ( [ gvP `disjfrom` just_a
+    , gvQ `coveredby` S.fromList [gva,glvb']
+    , gvQ `dyncovered` S.fromList [glva,gvb'] ]
+  , S.fromList [gva,glvb']
+  )
 \end{code}
 
 
@@ -306,7 +314,7 @@ protoConjs = map mkNmdAsn
   , tmSCtrue
   , tmSCfree1
   , tmSCvarDisj, tmSCvarCov, tmSCvarDCov
-  , tmSCmixed
+  , tmSCmixed, tmSCall
   , tmVbecomesE
   , tmUniversal1, tmExistential1, tmUniversal2, tmExistential2
   , tmSub00, tmSub10, tmSub01, tmSub11, tmSub22

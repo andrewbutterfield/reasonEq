@@ -584,8 +584,8 @@ saveConjectures nmdassns  =  unlines' $ map saveConjecture nmdassns
 saveConjecture :: NmdAssertion -> String
 saveConjecture (name,Assertion tm sc)
   = unlines'  ( [ "", kConjecture ++ " " ++ name ++ " " ++ kBegin 
-                , " " ++ saveTerm tm ]
-                ++ (if isTrivialSC sc then [] else [",",saveSideCond sc])
+                , "  " ++ saveTerm tm ]
+                ++ (if isTrivialSC sc then [] else [", " ++ saveSideCond sc])
                 ++ [ kEnd ] )
 \end{code}
 
@@ -967,6 +967,28 @@ loadTerm = sTermRead . tlex . prepare
 
 \section{Side-Conditions}
 
+\begin{code}
+sidecond_definition
+ = [ "<sc>     ::= NONE"
+   , "          | opt( <vsc>+ )  opt( FREE <fvs> )"
+   , "<vsc>    ::= VREL (opt( <disj>) | opt( <cov> )|  opt( <dyncov> ))"
+   , "<fvs>    ::= (<v>)+"
+   , "<disj>   ::= ( DISJ <v> FROM <v>+)"
+   , "<cov>    ::= ( COV <v> BY <v>+)"
+   , "<dyncov> ::= ( DYNCOV <v> BY <v>+)"
+  ]
+
+kNone = "NONE"
+kFree = "FREE"
+kVRel = "VREL"
+kDisj = "DISJ"
+kCovBy = "COV"
+kDynCov = "DYNCOV"
+kFrom = "FROM"
+kBy = "BY"
+\end{code}
+
+
 \subsection{Save Side-Condition}
 
 \begin{code}
@@ -976,35 +998,160 @@ saveSideCond (vscs,fvs)
   =  saveVSCs vscs ++ saveFVs (null vscs) fvs
 
 saveVSCs [] = ""
-saveVSCs vscs = "  VSC " ++ (intercalate " " $ map saveVSC vscs)
+saveVSCs vscs = kVRel ++ " " ++ (intercalate " " $ map saveVSC vscs)
 
 saveVSC (VSC gv nvsD nvsC nvsCd) 
   = intcalNN " " [saveD gv nvsD, saveC gv nvsC, saveCd gv nvsCd]
 
 saveD _ NA = ""
-saveD gv (The vs) = "(DISJ "++saveGenVar gv++" "++saveVS vs++")"
+saveD gv (The vs) = "("++kDisj++" "++saveGenVar gv++" FROM "++saveVS vs++")"
 
 saveC _ NA = ""
-saveC gv (The vs)  = "(COV "++saveGenVar gv++" "++saveVS vs++")"
+saveC gv (The vs)  = "("++kCovBy++" "++saveGenVar gv++" BY "++saveVS vs++")"
 
 saveCd _ NA = ""
-saveCd gv (The vs) = "(DYNCOV "++saveGenVar gv++" "++saveVS vs++")"
+saveCd gv (The vs) = "("++kDynCov++"V "++saveGenVar gv++" BY "++saveVS vs++")"
 
 saveFVs noVSC fvs
   | S.null fvs  =  ""
-  | otherwise   =  start ++ "  FV " ++ saveVS fvs
-  where start = if noVSC then "" else "\n"
+  | otherwise   =  start ++ kFree++" " ++ saveVS fvs
+  where start = if noVSC then "" else "\n  "
 
 saveVS vs = intercalate " " $ map saveGenVar $ S.toList vs
 \end{code}
 
 \subsection{Load Side-Condition}
 
+Expecting on of \texttt{NONE}, \texttt{VREL}, and \texttt{FREE}.
 \begin{code}
 loadSideCond :: MonadFail mf => [Token] -> mf (SideCond, [Token])
-loadSideCond sc = fail "loadSideCond NYI"
+loadSideCond [] = premDuring [ "loadSideCond" ]
+loadSideCond toks@(tok@(lno,TVar nm _):rest)
+  | nm == kNone  =  return (scTrue,rest)
+  | nm == kVRel  =  parseVRel [] rest
+  | nm == kFree  =  parseFree [] [] rest
+loadSideCond ((lno,ttyp):_) = fail $ unlines'
+  [ "loadSideCond: expected "++kNone++", "++kVRel++", "++kFree
+  , " got "++renderTokTyp ttyp++" at line "++show lno ]
 \end{code}
 
+Seen \texttt{VREL}, zero or more \texttt{(\dots)},
+expecting \texttt{(}, \texttt{FREE}, 
+ended by \texttt{END}.
+\begin{code}
+parseVRel :: MonadFail mf 
+          => [VarSideConds] -> [Token] -> mf (SideCond,[Token])
+parseVRel vscs []  =  checkSC vscs [] []
+parseVRel vscs toks@((lno,TVar nm _):rest)
+  |  nm == kEnd  =  checkSC vscs [] toks
+  |  nm == kFree  = parseFree vscs [] rest
+parseVRel vscs ((lno,TOpen open):rest)
+  | open == "("  =  parseVSC vscs rest  
+parseVRel _ ((lno,ttyp):_) = fail $ unlines'
+  [ "parseVRel: expected var-sidecond '(...)'"
+  , " got "++renderTokTyp ttyp++" at line "++show lno ]
+\end{code}
+
+Seen \texttt{(}, expected \texttt{DISJ}, \texttt{COV}, \texttt{DYNCOV},
+followed by gen-var, \texttt{FROM} or \texttt{BY}, gen-vars, and \texttt{)}.
+\begin{code}
+parseVSC :: MonadFail mf 
+          => [VarSideConds] -> [Token] -> mf (SideCond,[Token])
+parseVSC vscs [] = premDuring ["parseVRel"]
+parseVSC vscs ((lno,TVar nm _):rest)
+  | nm == kDisj    = parseSCRel1 kFrom disjfrom   vscs rest
+  | nm == kCovBy   = parseSCRel1 kBy   coveredby  vscs rest
+  | nm == kDynCov  = parseSCRel1 kBy   dyncovered vscs rest
+parseVSC _ ((lno,ttyp):_) = fail $ unlines'
+  [ "parseVSC: expected DISJ, COV, DYNCOV"
+  , " got "++renderTokTyp ttyp++" at line "++show lno ]
+\end{code}
+
+
+Seen \texttt{(} and one of texttt{DISJ}, \texttt{COV}, or \texttt{DYNCOV}.
+Expecting a general variable \dots
+\begin{code}
+parseSCRel1 :: MonadFail mf
+            => String 
+            -> (GenVar -> VarSet -> VarSideConds) 
+            -> [VarSideConds]
+            -> [Token]
+            -> mf (SideCond,[Token])
+parseSCRel1 sepk makesc vscs [] = premDuring ["parseSCRel1"]
+
+parseSCRel1 sepk makesc vscs toks@((_,TVar nm _):_) = do
+  (var,rest1) <- loadVariable toks
+  rest2 <- expectToken (TVar sepk Static) rest1
+  parseSCRel2 makesc vscs (StdVar var) [] rest2
+
+parseSCRel1 sepk makesc vscs toks@((_,TLVar nm _):_) = do
+  (lvar,rest1) <- loadListVariable toks
+  rest2 <- expectToken (TVar sepk Static) rest1
+  parseSCRel2 makesc vscs (LstVar lvar) [] rest2
+
+parseSCRel1 sepk _ _ ((lno,ttyp):_) = fail $ unlines'
+  [ "parseSCRel1: expected gv "++sepk++"varlist"
+  , " got "++renderTokTyp ttyp++" at line "++show lno ]
+\end{code}
+
+Seen \texttt{( what gvar sepk}. 
+Expecting a list of general variables followed by \texttt{)}.
+\begin{code}
+parseSCRel2 :: MonadFail mf
+            => (GenVar -> VarSet -> VarSideConds) 
+            -> [VarSideConds]
+            -> GenVar
+            -> [GenVar]
+            -> [Token]
+            -> mf (SideCond,[Token])
+parseSCRel2 makesc vscs gv gvs [] = premDuring ["parseSCRel2"]
+
+parseSCRel2 makesc vscs gv gvs ((lno,TClose ")"):rest)
+  = parseVRel (makesc gv (S.fromList gvs):vscs) rest
+
+parseSCRel2 makesc vscs gv gvs toks@((lno,TVar nm _):_) = do
+  (var,rest1) <- loadVariable toks
+  parseSCRel2 makesc vscs gv (StdVar var:gvs) rest1
+
+parseSCRel2 makesc vscs gv gvs toks@((lno,TLVar nm _):_) = do
+  (lvar,rest1) <- loadListVariable toks
+  parseSCRel2 makesc vscs gv (LstVar lvar:gvs) rest1
+
+parseSCRel2 sepk _ _ _ ((lno,ttyp):_) = fail $ unlines'
+  [ "parseSCRel2: expected varlist"
+  , " got "++renderTokTyp ttyp++" at line "++show lno ]
+\end{code}
+
+
+Seen \texttt{FREE}, zero or more \texttt{genvar},
+expecting \texttt{genvar}, 
+ended by \texttt{END}.
+\begin{code}
+parseFree :: MonadFail mf 
+          => [VarSideConds] -> VarList -> [Token] -> mf (SideCond,[Token])
+parseFree vscs gvs []  =  checkSC vscs gvs []
+parseFree vscs gvs toks@((lno,TVar nm _):rest)
+  |  nm == kEnd  =  checkSC vscs gvs toks
+  |  otherwise   =  do
+       (var,rest) <- loadVariable toks
+       parseFree vscs (StdVar var:gvs) rest
+parseFree vscs gvs toks@((lno,TLVar nm _):rest)
+  |  nm == kEnd  =  checkSC vscs gvs toks
+  |  otherwise   =  do
+       (lvar,rest) <- loadListVariable toks
+       parseFree vscs (LstVar lvar:gvs) rest
+parseFree _ _ ((lno,ttyp):_) = fail $ unlines'
+  [ "parseFree: expected gen-var"
+  , " got "++renderTokTyp ttyp++" at line "++show lno ]
+\end{code}
+
+\begin{code}
+checkSC :: MonadFail mf 
+        => [VarSideConds] -> VarList -> [Token] -> mf(SideCond,[Token])
+checkSC vscs gvs rest = do
+  vscs' <- mergeVarConds vscs
+  return ((vscs',S.fromList gvs),rest)
+\end{code}
 
 \section{Variables}
 

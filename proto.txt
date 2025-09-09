@@ -30,206 +30,207 @@ Known set$' = {}
 
 
 Conjecture true BEGIN
- true
+  true
 END
 
 Conjecture false BEGIN
- false
+  false
 END
 
 Conjecture sc_true BEGIN
- body
+  body
 END
 
 Conjecture sc_free_a BEGIN
- body
-,
-  FV 'a
+  body
+, FREE 'a
 END
 
 Conjecture sc_P_disj_a BEGIN
- body
-,
-  VSC (DISJ P 'a)
+  body
+, VREL (DISJ P FROM 'a)
 END
 
 Conjecture sc_P_cov_a BEGIN
- body
-,
-  VSC (COV P 'a)
+  body
+, VREL (COV P BY 'a)
 END
 
 Conjecture sc_P_dyncov_a BEGIN
- body
-,
-  VSC (DYNCOV P 'a)
+  body
+, VREL (DYNCOVV P BY 'a)
 END
 
 Conjecture sc_mixed BEGIN
- body
-,
-  VSC (DISJ P 'a)
-  FV 'a
+  body
+, VREL (DISJ P FROM 'a)
+  FREE 'a
+END
+
+Conjecture sc_all BEGIN
+  body
+, VREL (DISJ P FROM 'a) (COV Q BY 'a b$') (DYNCOVV Q BY b' 'a$)
+  FREE 'a b$'
 END
 
 Conjecture v_becomes_e BEGIN
- SUB [('v,'e) ] asg
+  SUB [('v,'e) ] asg
 END
 
 Conjecture univ_closure BEGIN
- CLS universal
+  CLS universal
   body
 END
 
 Conjecture exist_closure BEGIN
- CLS existential
+  CLS existential
   body
 END
 
 Conjecture univ_closure BEGIN
- CLS universal
+  CLS universal
   QS forall a a'
   @  body
 END
 
 Conjecture exist_closure BEGIN
- CLS existential
+  CLS existential
   QS exists a
   @  csQ CS (T,T)
 END
 
 Conjecture sub_none_none BEGIN
- SUB [ ] body
+  SUB [ ] body
 END
 
 Conjecture sub_one_none BEGIN
- SUB [('a,body) ] body
+  SUB [('a,body) ] body
 END
 
 Conjecture sub_none_one BEGIN
- SUB [ (a$',a$'d)] body
+  SUB [ (a$',a$'d)] body
 END
 
 Conjecture sub_one_none BEGIN
- SUB [('a,body) (a$',a$'d)] body
+  SUB [('a,body) (a$',a$'d)] body
 END
 
 Conjecture sub_two_two BEGIN
- SUB [('a,42) ('b,ns2 NS (T,T)) (a$',a$'d) ('b$,b$')] body
+  SUB [('a,42) ('b,ns2 NS (T,T)) (a$',a$'d) ('b$,b$')] body
 END
 
 Conjecture forall_zero BEGIN
- body
+  body
 END
 
 Conjecture exists_one BEGIN
- QS exists a
+  QS exists a
   @  csQ CS (T,T)
 END
 
 Conjecture forall_two BEGIN
- QS forall a a'
+  QS forall a a'
   @  body
 END
 
 Conjecture exists_three BEGIN
- QS exists a a$ a'
+  QS exists a a$ a'
   @  body
 END
 
 Conjecture forall_four BEGIN
- QS forall a a$ a$' a'
+  QS forall a a$ a$' a'
   @  body
 END
 
 Conjecture lambda_zero BEGIN
- body
+  body
 END
 
 Conjecture lambda_one BEGIN
- QL lambda a
+  QL lambda a
   @ csQ CS (T,T)
 END
 
 Conjecture lambda_two BEGIN
- QL lambda a a'
+  QL lambda a a'
   @ body
 END
 
 Conjecture lambda_three BEGIN
- QL lambda a a' a$
+  QL lambda a a' a$
   @ body
 END
 
 Conjecture lambda_four BEGIN
- QL lambda a a' a$ a$'
+  QL lambda a a' a$ a$'
   @ body
 END
 
 Conjecture fortytwo BEGIN
- 42
+  42
 END
 
 Conjecture neg99 BEGIN
- -99
+  -99
 END
 
 Conjecture expr_static BEGIN
- Ve
+  Ve
 END
 
 Conjecture expr_before BEGIN
- 'Ve
+  'Ve
 END
 
 Conjecture expr_after BEGIN
- Ve'
+  Ve'
 END
 
 Conjecture expr_during BEGIN
- Ve'd
+  Ve'd
 END
 
 Conjecture pred_static BEGIN
- Vp
+  Vp
 END
 
 Conjecture pred_before BEGIN
- 'Vp
+  'Vp
 END
 
 Conjecture pred_after BEGIN
- Vp'
+  Vp'
 END
 
 Conjecture pred_during BEGIN
- Vp'd
+  Vp'd
 END
 
 Conjecture cons_S_zero BEGIN
- cs0 CS ()
+  cs0 CS ()
 END
 
 Conjecture cons_S_one BEGIN
- cs1 CS (T)
+  cs1 CS (T)
 END
 
 Conjecture cons_S_two BEGIN
- cs2 CS (T,T)
+  cs2 CS (T,T)
 END
 
 Conjecture cons_N_zero BEGIN
- ns0 NS ()
+  ns0 NS ()
 END
 
 Conjecture cons_N_two BEGIN
- ns2 NS (T,T)
+  ns2 NS (T,T)
 END
 
 Conjecture cons_N_two BEGIN
- ns2 NS (T,T)
+  ns2 NS (T,T)
 END
 
 Conjecture cons_nesting BEGIN
- nest CS (sub1 CS (),sub2 CS (T),sub3 CS ())
+  nest CS (sub1 CS (),sub2 CS (T),sub3 CS ())
 END

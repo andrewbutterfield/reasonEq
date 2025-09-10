@@ -664,6 +664,9 @@ kSetBind = "QS"
 kListBind = "QL"
 kClosure = "CLS"
 kSubst = "SUB"
+kIter = "ITER"
+kCS = "CS"
+kNS = "NS"
 kLstVar = '$'
 kSep = ','
 kQBody = "@"
@@ -674,7 +677,7 @@ term_syntax = syntax_bits ++ term_definition ++ key_names
 \subsection{Save Term}
 
 \begin{code}
-saveSBBL s = if s then "CS" else "NS"
+saveSBBL s = if s then kCS else kNS
 
 saveTerm :: Term -> String
 saveTerm (Val typ (Boolean b)) = if b then kTrue else kFalse
@@ -701,7 +704,11 @@ saveTerm (Sub typ term (Substn vts lvlvs))
   = kSubst ++ " [" ++ saveTermVarSubs (S.toList vts) ++ " "
                    ++ saveLVarSubs (S.toList lvlvs) ++ "] "
     ++ saveTerm term
-saveTerm (Iter typ sa na si ni lvs) = "I-stuff?"
+saveTerm (Iter typ sa na si ni lvs)
+  = kIter 
+    ++ " " ++ saveSBBL sa ++ " " ++ idName na
+    ++ " " ++ saveSBBL si ++ " " ++ idName ni
+    ++ " ["++intercalate " " (map saveListVariable lvs)++"]"
 saveTerm (VTyp typ var) = "VT-stuff?"
 \end{code}
 
@@ -736,7 +743,6 @@ For now the variable class is determined by the first character
 of the identifier.
 The simplest is the case, lower being an observable, higher a term.
 
-
 \begin{code}
 mkV id1 vw 
   | isUpper $ head iname  =  Vbl id1 PredV vw
@@ -750,6 +756,15 @@ mkVarTerm id1 vw  =  fromJust $ var arbpred $ mkV id1 vw
 tok2GVar :: Token -> GenVar
 tok2GVar (_,(TVar  nm vw)) = StdVar $ mkV  (jId nm) vw
 tok2GVar (_,(TLVar nm vw)) = LstVar $ mkLV (jId nm) vw
+\end{code}
+
+Subability:
+\begin{code}
+loadSBBL str
+  | str == kCS  =  return True
+  | str == kNS  =  return False
+  | otherwise = fail 
+     ( "load-subability: expected "++kCS++" or "++kNS ++ "but got "++str )
 \end{code}
 
 
@@ -791,8 +806,8 @@ We check for constructions first \dots
 
 \begin{code}
 sTermRead ((_,TVar consName vw):(_,TVar subable Static ):(_,TOpen "("):tts)
-  | subable == "NS" = sAppParse cons False [] tts
-  | subable == "CS" = sAppParse cons True  [] tts
+  | subable == kNS = sAppParse cons False [] tts
+  | subable == kCS = sAppParse cons True  [] tts
   where 
     cons = jId consName
 sTermRead ((_,TVar nm vw):tts)
@@ -802,6 +817,7 @@ sTermRead ((_,TVar nm vw):tts)
   | nm == kListBind  =  listQParse tts
   | nm == kClosure   =  closureParse tts
   | nm == kSubst     =  substituteParse tts
+  | nm == kIter      =  iterativeParse tts
   | otherwise        =  return (mkVarTerm (jId nm) vw, tts)
 \end{code}
 
@@ -957,6 +973,25 @@ subsPairsParse vts lvlvs
 subsPairsParse vts lvlvs toks = fail $ unlines'
   [ "subsPairsParse: expecting zero or more (v,t) or (tv$,rv$)" 
   , " but got "++show (take 5 toks)]
+\end{code}
+
+\paragraph{Iteration}
+
+Seen \h{ITER}.
+Expect subable,identifier,subable,identifier,list-variable list. 
+\begin{code}
+iterativeParse [] = premDuring ["iterativeParse"]
+iterativeParse 
+  ( (lno,TVar sa _) : (_,TVar na _) :
+    (_,TVar si _) : (_,TVar ni _) : (_,TOpen "[") : rest1 ) = do
+      asub <- loadSBBL sa
+      isub <- loadSBBL si
+      (lvars,rest2) <- loadListVariables "]" rest1
+      return ( Iter ArbType asub (jId na) isub (jId ni) lvars
+             , rest2 )
+iterativeParse ((lno,ttyp):rest) = fail $ unlines'
+  [ "iterativeParse: expected subable indicator"
+  , "but got "++renderTokTyp ttyp++" at line "++show lno]
 \end{code}
 
 \subsubsection{Top-Level Term Reader}
@@ -1206,6 +1241,17 @@ loadListVariable ((lno,TLVar nm vw):rest)
 loadListVariable ((lno,tok):_) = fail $ unlines'
   [ "loadListVariable: expecting list variable"
   , "but got "++renderTokTyp tok++" at line "++show lno]
+
+loadListVariables :: MonadFail mf 
+                  => String -> [Token] -> mf ([ListVar],[Token])
+loadListVariables close [] 
+  = premDuring ["loadListVariables",close]
+loadListVariables close ((lno,TClose str):rest)
+  | str == close  =  return ([],rest)
+loadListVariables close toks = do
+  (lvar,rest1) <- loadListVariable toks
+  (lvars,rest2) <- loadListVariables close rest1
+  return (lvar:lvars,rest2)
 \end{code}
 
 \subsection{Save Variable}

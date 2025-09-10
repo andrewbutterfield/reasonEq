@@ -186,14 +186,14 @@ importDefinitions thry (tok@(lno,_):_)
 genTheory :: Theory -> String
 genTheory theory = unlines (
   (kTheory ++ " " ++ thName theory)
-   : ( saveDeps (thDeps theory) ++
-       ["",saveVarTable (known theory)] ++
-       ["",saveLaws (laws theory)] ++
-       [saveConjectures (conjs theory)] ) )
+   : ( genDeps (thDeps theory) ++
+       ["",genVarTable (known theory)] ++
+       ["",genLaws (laws theory)] ++
+       [genConjectures (conjs theory)] ) )
 
-saveDeps [] = []
-saveDeps deps = 
-  [ kNeeds , saveIndentedNameList 2 80 deps , kEnd] 
+genDeps [] = []
+genDeps deps = 
+  [ kNeeds , genIndentedNameList 2 80 deps , kEnd] 
 \end{code}
 
 \newpage
@@ -380,39 +380,39 @@ importKLVarIsAbsContainer vt lno lvar vw ((lno',tok):rest)
 
 We start every entry with the ``Known'' keyword:
 \begin{code}
-saveVarTable :: VarTable -> String
-saveVarTable (VarData (vtname,vtable,stable,dtable))
-  = '\n':showTable saveKnownVar (M.assocs vtable) ++
-    '\n':showTable saveKnownLstVar (M.assocs stable) ++
-    '\n':showTable saveKnownDynamic (M.assocs dtable)
+genVarTable :: VarTable -> String
+genVarTable (VarData (vtname,vtable,stable,dtable))
+  = '\n':showTable genKnownVar (M.assocs vtable) ++
+    '\n':showTable genKnownLstVar (M.assocs stable) ++
+    '\n':showTable genKnownDynamic (M.assocs dtable)
   where showTable showMapping alist  
           =  unlines' $ map ( ((kKnown++" ")++) . showMapping ) alist 
 
-saveKnownVar :: (Variable,VarMatchRole) -> String
-saveKnownVar (v,KnownConst trm) = saveVariable v ++ " = " 
-  ++ kBegin ++ " " ++ saveTerm trm ++ " " ++ kEnd
-saveKnownVar (v,KnownVar typ) = saveVariable v ++ " : " ++ saveType typ ++ " ."
-saveKnownVar (gv,GenericVar) = saveVariable gv ++ " :: generic"
-saveKnownVar (iv,InstanceVar gv) 
-  = saveVariable iv ++ " "++kInstanceOf++" " ++ saveVariable gv
-saveKnownVar (v,vmr) = "" -- unknown variable
+genKnownVar :: (Variable,VarMatchRole) -> String
+genKnownVar (v,KnownConst trm) = genVariable v ++ " = " 
+  ++ kBegin ++ " " ++ genTerm trm ++ " " ++ kEnd
+genKnownVar (v,KnownVar typ) = genVariable v ++ " : " ++ genType typ ++ " ."
+genKnownVar (gv,GenericVar) = genVariable gv ++ " :: generic"
+genKnownVar (iv,InstanceVar gv) 
+  = genVariable iv ++ " "++kInstanceOf++" " ++ genVariable gv
+genKnownVar (v,vmr) = "" -- unknown variable
 
 -- static list variables
-saveKnownLstVar :: (Variable,LstVarMatchRole) -> String
-saveKnownLstVar (lv,KnownVarList vl _ _) 
-  = saveVariable lv ++ "$ = < " ++ intercalate "," (map trGVar vl) ++ " >"
-saveKnownLstVar (lv,KnownVarSet vs _ _) 
-  = saveVariable lv ++ "$ = {" 
+genKnownLstVar :: (Variable,LstVarMatchRole) -> String
+genKnownLstVar (lv,KnownVarList vl _ _) 
+  = genVariable lv ++ "$ = < " ++ intercalate "," (map trGVar vl) ++ " >"
+genKnownLstVar (lv,KnownVarSet vs _ _) 
+  = genVariable lv ++ "$ = {" 
     ++ intercalate "," (S.toList (S.map trGVar vs)) ++ "}"
-saveKnownLstVar (lv,AbstractList) 
-  = saveVariable lv ++ "$ :: list"
-saveKnownLstVar (lv,AbstractSet) 
-  = saveVariable lv ++ "$ :: set"
-saveKnownLstVar (lv,lvmr) = ""
+genKnownLstVar (lv,AbstractList) 
+  = genVariable lv ++ "$ :: list"
+genKnownLstVar (lv,AbstractSet) 
+  = genVariable lv ++ "$ :: set"
+genKnownLstVar (lv,lvmr) = ""
 
 
-saveKnownDynamic :: (IdAndClass,DynamicLstVarRole) -> String
-saveKnownDynamic ((id,vc),DynamicList vl lvl _ _) 
+genKnownDynamic :: (IdAndClass,DynamicLstVarRole) -> String
+genKnownDynamic ((id,vc),DynamicList vl lvl _ _) 
 -- we can infer vc from the classes of vl and lvl 
 -- which should also be known-var
   =  trId id ++ "$' = < "
@@ -420,15 +420,15 @@ saveKnownDynamic ((id,vc),DynamicList vl lvl _ _)
     ++ (if length vl > 0 && length lvl > 0 then "," else "")
     ++ intercalate "," (map ((++"$") . idName) lvl)
     ++ " >"
-saveKnownDynamic ((id,vc),DynamicSet vs lvs _ _) 
+genKnownDynamic ((id,vc),DynamicSet vs lvs _ _) 
   =  trId id ++ "$' = {"
     ++ intercalate "," (S.toList (S.map idName vs))
     ++ (if S.size vs > 0 && S.size lvs > 0 then "," else "")
     ++ intercalate "," (S.toList (S.map ((++"$") . idName) lvs))
     ++ "}"
-saveKnownDynamic ((id,vc),DynamicAbsList) =  trId id ++"$' :: list "
-saveKnownDynamic ((id,vc),DynamicAbsSet) =  trId id ++"$' :: set "
-saveKnownDynamic ((id,vc),dlvr) = ""
+genKnownDynamic ((id,vc),DynamicAbsList) =  trId id ++"$' :: list "
+genKnownDynamic ((id,vc),DynamicAbsSet) =  trId id ++"$' :: set "
+genKnownDynamic ((id,vc),dlvr) = ""
 \end{code}
 
 \newpage
@@ -524,21 +524,21 @@ importProvenace (tok@(lno,_):_)
 
 
 \begin{code}
-saveLaws :: [Law] -> String
-saveLaws laws  =  unlines' $ map saveLaw laws
+genLaws :: [Law] -> String
+genLaws laws  =  unlines' $ map genLaw laws
 
-saveLaw :: Law -> String
-saveLaw ((name,Assertion tm sc),provenance)
+genLaw :: Law -> String
+genLaw ((name,Assertion tm sc),provenance)
   = unlines' ( [ "", kLaw ++ " " ++ name ++ " " ++ kBegin
-               , " " ++ saveProv provenance
-               , " ," , saveTerm tm ]
-               ++ (if isTrivialSC sc then [] else [",",saveSideCond sc])
+               , " " ++ genProv provenance
+               , " ," , genTerm tm ]
+               ++ (if isTrivialSC sc then [] else [",",genSideCond sc])
                ++ [ kEnd ] )
 
-saveProv Axiom            =  "axiom"
-saveProv (Proven proof)   =  "proven " ++ proof
-saveProv (Suspect proof)  =  "suspect " ++ proof
-saveProv Assumed          =  "assumed"
+genProv Axiom            =  "axiom"
+genProv (Proven proof)   =  "proven " ++ proof
+genProv (Suspect proof)  =  "suspect " ++ proof
+genProv Assumed          =  "assumed"
 \end{code}
 
 
@@ -578,16 +578,16 @@ importConjecture conjname tokens = do
 \subsection{Save Conjectures}
 
 \begin{code}
-saveConjectures :: [NmdAssertion] -> String
-saveConjectures nmdassns  =  unlines' $ map saveConjecture nmdassns
+genConjectures :: [NmdAssertion] -> String
+genConjectures nmdassns  =  unlines' $ map genConjecture nmdassns
 \end{code}
 \begin{code}
 
-saveConjecture :: NmdAssertion -> String
-saveConjecture (name,Assertion tm sc)
+genConjecture :: NmdAssertion -> String
+genConjecture (name,Assertion tm sc)
   = unlines'  ( [ "", kConjecture ++ " " ++ name ++ " " ++ kBegin 
-                , "  " ++ saveTerm tm ]
-                ++ (if isTrivialSC sc then [] else [", " ++ saveSideCond sc])
+                , "  " ++ genTerm tm ]
+                ++ (if isTrivialSC sc then [] else [", " ++ genSideCond sc])
                 ++ [ kEnd ] )
 \end{code}
 
@@ -677,48 +677,48 @@ term_syntax = syntax_bits ++ term_definition ++ key_names
 \subsection{Save Term}
 
 \begin{code}
-saveSBBL s = if s then kCS else kNS
+genSBBL s = if s then kCS else kNS
 
-saveTerm :: Term -> String
-saveTerm (Val typ (Boolean b)) = if b then kTrue else kFalse
-saveTerm (Val typ (Integer i)) = show i
-saveTerm (Var typ var) = saveVariable var
-saveTerm (Cons typ subable (Identifier i _) terms) 
-  = i ++ " " ++ (saveSBBL subable) ++ " "
+genTerm :: Term -> String
+genTerm (Val typ (Boolean b)) = if b then kTrue else kFalse
+genTerm (Val typ (Integer i)) = show i
+genTerm (Var typ var) = genVariable var
+genTerm (Cons typ subable (Identifier i _) terms) 
+  = i ++ " " ++ (genSBBL subable) ++ " "
       ++ "("
-      ++ (intercalate [kSep] $ map saveTerm terms)
+      ++ (intercalate [kSep] $ map genTerm terms)
       ++ ")"
-saveTerm (Bnd typ (Identifier quant _) vs term)
+genTerm (Bnd typ (Identifier quant _) vs term)
   = kSetBind ++ " " ++ quant
-    ++ " " ++ intercalate " " (S.toList (S.map saveGenVar vs))
+    ++ " " ++ intercalate " " (S.toList (S.map genGenVar vs))
     ++ "\n  " ++ kQBody 
-    ++ "  " ++ saveTerm term
-saveTerm (Lam typ (Identifier lambda _) vl term)
+    ++ "  " ++ genTerm term
+genTerm (Lam typ (Identifier lambda _) vl term)
   = kListBind ++ " " ++ lambda
-    ++ " " ++  intercalate " " (map saveGenVar vl)
+    ++ " " ++  intercalate " " (map genGenVar vl)
     ++ "\n  " ++kQBody 
-    ++ " " ++ saveTerm term
-saveTerm (Cls (Identifier kind _) term) 
-  = kClosure ++ " "++kind++"\n  "++saveTerm term
-saveTerm (Sub typ term (Substn vts lvlvs))
-  = kSubst ++ " [" ++ saveTermVarSubs (S.toList vts) ++ " "
-                   ++ saveLVarSubs (S.toList lvlvs) ++ "] "
-    ++ saveTerm term
-saveTerm (Iter typ sa na si ni lvs)
+    ++ " " ++ genTerm term
+genTerm (Cls (Identifier kind _) term) 
+  = kClosure ++ " "++kind++"\n  "++genTerm term
+genTerm (Sub typ term (Substn vts lvlvs))
+  = kSubst ++ " [" ++ genTermVarSubs (S.toList vts) ++ " "
+                   ++ genLVarSubs (S.toList lvlvs) ++ "] "
+    ++ genTerm term
+genTerm (Iter typ sa na si ni lvs)
   = kIter 
-    ++ " " ++ saveSBBL sa ++ " " ++ idName na
-    ++ " " ++ saveSBBL si ++ " " ++ idName ni
-    ++ " ["++intercalate " " (map saveListVariable lvs)++"]"
-saveTerm (VTyp typ var) = "VT-stuff?"
+    ++ " " ++ genSBBL sa ++ " " ++ idName na
+    ++ " " ++ genSBBL si ++ " " ++ idName ni
+    ++ " ["++intercalate " " (map genListVariable lvs)++"]"
+genTerm (VTyp typ var) = "VT-stuff?"
 \end{code}
 
 \begin{code}
-saveTermVarSubs vts = intercalate " " $ map saveTermVarSub vts
-saveTermVarSub (v,t) = "("++saveVariable v++","++saveTerm t++")"
+genTermVarSubs vts = intercalate " " $ map genTermVarSub vts
+genTermVarSub (v,t) = "("++genVariable v++","++genTerm t++")"
 
-saveLVarSubs lvlvs = intercalate " " $ map saveLVarSub lvlvs
-saveLVarSub (tlv,rlv) 
-  = "("++saveListVariable tlv++","++saveListVariable rlv++")"
+genLVarSubs lvlvs = intercalate " " $ map genLVarSub lvlvs
+genLVarSub (tlv,rlv) 
+  = "("++genListVariable tlv++","++genListVariable rlv++")"
 \end{code}
 
 
@@ -1029,32 +1029,32 @@ kBy = "BY"
 \subsection{Save Side-Condition}
 
 \begin{code}
-saveSideCond :: SideCond -> String
-saveSideCond ([],fvs) | S.null fvs  =  "true"
-saveSideCond (vscs,fvs)  
-  =  saveVSCs vscs ++ saveFVs (null vscs) fvs
+genSideCond :: SideCond -> String
+genSideCond ([],fvs) | S.null fvs  =  "true"
+genSideCond (vscs,fvs)  
+  =  genVSCs vscs ++ genFVs (null vscs) fvs
 
-saveVSCs [] = ""
-saveVSCs vscs = kVRel ++ " " ++ (intercalate " " $ map saveVSC vscs)
+genVSCs [] = ""
+genVSCs vscs = kVRel ++ " " ++ (intercalate " " $ map genVSC vscs)
 
-saveVSC (VSC gv nvsD nvsC nvsCd) 
-  = intcalNN " " [saveD gv nvsD, saveC gv nvsC, saveCd gv nvsCd]
+genVSC (VSC gv nvsD nvsC nvsCd) 
+  = intcalNN " " [genD gv nvsD, genC gv nvsC, genCd gv nvsCd]
 
-saveD _ NA = ""
-saveD gv (The vs) = "("++kDisj++" "++saveGenVar gv++" FROM "++saveVS vs++")"
+genD _ NA = ""
+genD gv (The vs) = "("++kDisj++" "++genGenVar gv++" FROM "++genVS vs++")"
 
-saveC _ NA = ""
-saveC gv (The vs)  = "("++kCovBy++" "++saveGenVar gv++" BY "++saveVS vs++")"
+genC _ NA = ""
+genC gv (The vs)  = "("++kCovBy++" "++genGenVar gv++" BY "++genVS vs++")"
 
-saveCd _ NA = ""
-saveCd gv (The vs) = "("++kDynCov++" "++saveGenVar gv++" BY "++saveVS vs++")"
+genCd _ NA = ""
+genCd gv (The vs) = "("++kDynCov++" "++genGenVar gv++" BY "++genVS vs++")"
 
-saveFVs noVSC fvs
+genFVs noVSC fvs
   | S.null fvs  =  ""
-  | otherwise   =  start ++ kFree++" " ++ saveVS fvs
+  | otherwise   =  start ++ kFree++" " ++ genVS fvs
   where start = if noVSC then "" else "\n  "
 
-saveVS vs = intercalate " " $ map saveGenVar $ S.toList vs
+genVS vs = intercalate " " $ map genGenVar $ S.toList vs
 \end{code}
 
 \subsection{Load Side-Condition}
@@ -1195,9 +1195,9 @@ checkSC vscs gvs rest = do
 \subsection{Save General Variable}
 
 \begin{code}
-saveGenVar :: GenVar -> String
-saveGenVar (StdVar v) = saveVariable v
-saveGenVar (LstVar lv) = saveListVariable lv
+genGenVar :: GenVar -> String
+genGenVar (StdVar v) = genVariable v
+genGenVar (LstVar lv) = genListVariable lv
 \end{code}
 
 \subsection{Load General Variable}
@@ -1220,14 +1220,14 @@ loadGenVar ((lno,tok):_) = fail $ unlines'
 \subsection{Save List Variable}
 
 \begin{code}
-saveListVariable :: ListVar -> String
-saveListVariable (LVbl (Vbl i vc Before) is js) 
+genListVariable :: ListVar -> String
+genListVariable (LVbl (Vbl i vc Before) is js) 
   = '\'' : idName i ++ "$"
-saveListVariable (LVbl (Vbl i vc (During d)) is js)  
+genListVariable (LVbl (Vbl i vc (During d)) is js)  
   =  idName i ++ "$" ++ '\'' : d
-saveListVariable (LVbl (Vbl i vc After) is js)       
+genListVariable (LVbl (Vbl i vc After) is js)       
   = idName i ++ "$" ++ "\'"
-saveListVariable (LVbl (Vbl i vc _) is js)           
+genListVariable (LVbl (Vbl i vc _) is js)           
   = idName i ++ "$" 
 \end{code}
 
@@ -1257,11 +1257,11 @@ loadListVariables close toks = do
 \subsection{Save Variable}
 
 \begin{code}
-saveVariable :: Variable -> String
-saveVariable (Vbl i vc Before)      = '\'' : idName i
-saveVariable (Vbl i vc (During d))  =  idName i ++ '\'' : d
-saveVariable (Vbl i vc After)       = idName i ++ "\'"
-saveVariable (Vbl i vc _)           = idName i 
+genVariable :: Variable -> String
+genVariable (Vbl i vc Before)      = '\'' : idName i
+genVariable (Vbl i vc (During d))  =  idName i ++ '\'' : d
+genVariable (Vbl i vc After)       = idName i ++ "\'"
+genVariable (Vbl i vc _)           = idName i 
 \end{code}
 
 \subsection{Load Variable}
@@ -1331,41 +1331,41 @@ typeKeys = [ arbTypeString, bottomTypeString
            , startProd, endProd
            , startSum, endSum, startVariant, endVariant ]
 
-saveType :: Type -> String
-saveType ArbType          = arbTypeString
-saveType BottomType       = bottomTypeString
-saveType (TypeVar i)      = idName i
-saveType (GivenType i)    = idName i
-saveType (FunType td tr)  
-  = startFun++" "++saveType td++" "++funArrow++" "++saveType tr++" "++endFun
-saveType (TypeCons i [])  = idName i  -- degenerate, GivenType?
-saveType (TypeCons i ts)  = startProd ++" "++saveCons (i,ts)++" "++endProd
-saveType (AlgType i fs)   = startSum ++" "++idName i 
-                            ++ '\n' : unlines' (map saveVariant fs)
+genType :: Type -> String
+genType ArbType          = arbTypeString
+genType BottomType       = bottomTypeString
+genType (TypeVar i)      = idName i
+genType (GivenType i)    = idName i
+genType (FunType td tr)  
+  = startFun++" "++genType td++" "++funArrow++" "++genType tr++" "++endFun
+genType (TypeCons i [])  = idName i  -- degen, GivenType?
+genType (TypeCons i ts)  = startProd ++" "++genCons (i,ts)++" "++endProd
+genType (AlgType i fs)   = startSum ++" "++idName i 
+                            ++ '\n' : unlines' (map genVariant fs)
                             ++ '\n' : endSum
 
 type Variant = (Identifier,[Type])
 
-saveCons :: Variant -> String
-saveCons (i,ts) = idName i ++ " " ++ intercalate " " (map saveType ts)
+genCons :: Variant -> String
+genCons (i,ts) = idName i ++ " " ++ intercalate " " (map genType ts)
 
-saveVariant :: Variant -> String
-saveVariant its
-  = "  "++startVariant++" "++saveCons its++" "++endVariant
+genVariant :: Variant -> String
+genVariant its
+  = "  "++startVariant++" "++genCons its++" "++endVariant
 
---saveType (FunType td tr)  = wrapNonAtomic td++funTypeString++saveType tr
--- saveType (TypeCons i ts)  = saveCons (i,ts)
--- saveType (AlgType i fs) 
+--genType (FunType td tr)  = wrapNonAtomic td++funTypeString++genType tr
+-- genType (TypeCons i ts)  = genCons (i,ts)
+-- genType (AlgType i fs) 
 --  = idName i  ++ "    \n  "++altTypeString++" "++
---     intercalate ("   \n  "++altTypeString++" ") (map saveCons fs)
+--     intercalate ("   \n  "++altTypeString++" ") (map genCons fs)
 
 
---saveCons (i,ts) = idName i ++ " " ++ intercalate " " (map wrapNonAtomic ts)
+--genCons (i,ts) = idName i ++ " " ++ intercalate " " (map wrapNonAtomic ts)
 
 --openParString = "(" ; closeParString = ")"
 -- wrapNonAtomic t
---   | isAtmType t = saveType t
---  | otherwise  = openParString++saveType t++closeParString
+--   | isAtmType t = genType t
+--  | otherwise  = openParString++genType t++closeParString
 \end{code}
 
 \newpage
@@ -1862,8 +1862,8 @@ tread str
 \section{Useful Writers}
 
 \begin{code}
-saveIndentedNameList  :: Int -> Int -> [String] -> String
-saveIndentedNameList ind width names
+genIndentedNameList  :: Int -> Int -> [String] -> String
+genIndentedNameList ind width names
   = let widths = map length names
         actualwidth = width - ind
         partitions = sizepack actualwidth $ zip names widths

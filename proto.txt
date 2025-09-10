@@ -1,54 +1,100 @@
-Theory UTCP
+Theory UWhile
 Needs
-  Designs UWhile Sets Closure Exists Forall Equal Impl AOI And Or Not EQV
+  UBase Closure Exists Forall Equal Impl AOI And Or Not EQV
 END
 
 
-Known A : FUN PROD P LE ENDP TO FUN B TO FUN PROD P LE ENDP TO B ENDF ENDF ENDF .
-Known X : FUN PROD P LE ENDP TO FUN B TO FUN PROD P LE ENDP TO FUN PROD P LE ENDP TO B ENDF ENDF ENDF ENDF .
-Known atom : FUN B TO B ENDF .
-Known cpll : FUN B TO FUN B TO B ENDF ENDF .
-Known cplus : FUN B TO FUN B TO B ENDF ENDF .
-Known cseq : FUN B TO FUN B TO B ENDF ENDF .
-Known cskip : B .
-Known cstar : FUN B TO B ENDF .
-Known g : GE .
-Known in : LE .
-Known 'ls : PROD P LE ENDP .
-Known ls' : PROD P LE ENDP .
-Known out : LE .
-Known 's : S .
-Known s' : S .
+Known asg : FUN t TO FUN t TO B ENDF ENDF .
+Known cond : FUN B TO FUN B TO FUN B TO B ENDF ENDF ENDF .
+Known sqcmp : FUN B TO FUN B TO B ENDF ENDF .
 
-Known O$' = < s,ls >
+Known O$' :: set 
 
 
-Law X_def BEGIN
+Law cond_def BEGIN
  axiom
  ,
-eqv CS (X NS (E,a,R,N),and CS (and CS (subseteq CS (E,'ls),a),eq CS (ls',union CS (sdiff CS ('ls,R),N))))
-,
-VREL (DISJ E FROM 'O$ O$') (DISJ N FROM 'O$ O$') (DISJ R FROM 'O$ O$') (DYNCOV a BY 's s')
+eqv CS (cond CS (P,'b,Q),or CS (and CS ('b,P),and CS (not CS ('b),Q)))
 END
 
-Law A_def BEGIN
+Law sqcmp_def BEGIN
  axiom
  ,
-eqv CS (A NS (E,a,N),X NS (E,a,E,N))
+eqv CS (sqcmp NS (P,Q),QS exists O$_0
+  @  and CS (SUB [ (O$',O$'0)] P,SUB [ ('O$,O$'0)] Q))
 ,
-VREL (DISJ E FROM 'O$ O$') (DISJ N FROM 'O$ O$') (DYNCOV a BY 's s')
+VREL (DYNCOV 'P BY 'O$ O$') (DYNCOV 'Q BY 'O$ O$')
+  FREE O$'0
 END
 
-Conjecture ls_union_N BEGIN
-  eqv CS (subseteq CS (S,union CS ('ls,N)),subseteq CS (sdiff CS (S,N),'ls))
+Conjecture cond_idem BEGIN
+  eqv CS (cond CS (P,'b,P),P)
 END
 
-Conjecture A_alt BEGIN
-  eqv CS (A NS (E,a,N),and CS (and CS (subseteq CS (E,'ls),a),eq CS (ls',union CS (sdiff CS ('ls,E),N))))
-, VREL (DISJ E FROM 'O$ O$') (DISJ N FROM 'O$ O$') (DYNCOV a BY 's s')
+Conjecture cond_symm BEGIN
+  eqv CS (cond CS (P,'b,Q),cond CS (Q,not CS ('b),P))
 END
 
-Conjecture X_X_comp BEGIN
-  eqv CS (; NS (X NS (E1,a,R1,N1),X NS (E2,b,R2,N2)),and CS (eq CS (intsct CS (E2,sdiff CS (R1,N1)),emptyset),X NS (union CS (E1,sdiff CS (E2,N1)),; NS (a,b),union CS (R1,R2),union CS (sdiff CS (N1,R2),N2))))
-, VREL (DISJ E1 FROM 'O$ O$') (DISJ E2 FROM 'O$ O$') (DISJ N1 FROM 'O$ O$') (DISJ N2 FROM 'O$ O$') (DISJ R1 FROM 'O$ O$') (DISJ R2 FROM 'O$ O$') (DYNCOV a BY 's s') (DYNCOV b BY 's s')
+Conjecture cond_assoc BEGIN
+  eqv CS (cond CS (cond CS (P,'b,Q),'c,R),cond CS (P,and CS ('b,'c),cond CS (Q,'c,R)))
+END
+
+Conjecture cond_distr BEGIN
+  eqv CS (cond CS (P,'b,cond CS (Q,'c,R)),cond CS (cond CS (P,'b,Q),'c,cond CS (P,'b,R)))
+END
+
+Conjecture cond_runit BEGIN
+  eqv CS (cond CS (P,true,Q),P)
+END
+
+Conjecture cond_lunit BEGIN
+  eqv CS (cond CS (Q,false,P),P)
+END
+
+Conjecture cond_absorb BEGIN
+  eqv CS (cond CS (P,'b,cond CS (Q,'b,R)),cond CS (P,'b,R))
+END
+
+Conjecture cond_merge BEGIN
+  eqv CS (cond CS (P,'b,cond CS (P,'c,Q)),cond CS (P,or CS ('b,'c),Q))
+END
+
+Conjecture cond_mdistr BEGIN
+  eqv CS (cond CS (star CS (P,Q),'b,star CS (R,S)),star CS (cond CS (P,'b,R),cond CS (Q,'b,S)))
+END
+
+Conjecture cond_alt_def BEGIN
+  eqv CS (cond CS (P,'b,Q),and CS (imp CS ('b,P),imp CS (not CS ('b),Q)))
+END
+
+Conjecture cond_alt_def2 BEGIN
+  eqv CS (cond CS (P,'b,Q),eqv CS (or CS (not CS ('b),P),or CS ('b,Q)))
+END
+
+Conjecture sqcmp_assoc BEGIN
+  eqv CS (sqcmp NS (P,sqcmp NS (Q,R)),sqcmp NS (sqcmp NS (P,Q),R))
+, VREL (DYNCOV P BY 'O$ O$') (DYNCOV Q BY 'O$ O$') (DYNCOV R BY 'O$ O$')
+END
+
+Conjecture sqcmp_cond_l_distr BEGIN
+  eqv CS (sqcmp NS (cond CS (P,'b,Q),R),cond CS (sqcmp NS (P,R),'b,sqcmp NS (Q,R)))
+, VREL (DYNCOV P BY 'O$ O$') (DYNCOV Q BY 'O$ O$') (DYNCOV R BY 'O$ O$') (DYNCOV 'b BY 'O$)
+END
+
+Conjecture cond_sqcap_distr BEGIN
+  eqv CS (cond CS (P,'b,sqcap CS (Q,R)),sqcap CS (cond CS (P,'b,Q),cond CS (P,'b,R)))
+END
+
+Conjecture sqcmp_sqcap_ldistr BEGIN
+  eqv CS (sqcmp NS (sqcap CS (P,Q),R),sqcap CS (sqcmp NS (P,R),sqcmp NS (Q,R)))
+, VREL (DYNCOV P BY 'O$ O$') (DYNCOV Q BY 'O$ O$') (DYNCOV R BY 'O$ O$')
+END
+
+Conjecture sqcmp_sqcap_rdistr BEGIN
+  eqv CS (sqcmp NS (P,sqcap CS (Q,R)),sqcap CS (sqcmp NS (P,Q),sqcmp NS (P,R)))
+, VREL (DYNCOV P BY 'O$ O$') (DYNCOV Q BY 'O$ O$') (DYNCOV R BY 'O$ O$')
+END
+
+Conjecture sqcap_cond_distr BEGIN
+  eqv CS (sqcap CS (P,cond CS (Q,'b,R)),cond CS (sqcap CS (P,Q),'b,sqcap CS (P,R)))
 END

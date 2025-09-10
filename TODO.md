@@ -2,10 +2,16 @@
 
 ## PLAN
 
-We neet to use `star` instead of `*` for "set-of". 
-Right now `Lists` are not load-able.
+We use `star` and `sqcmp` now.
 
-For theroy `Forall`  we need to implement load/save for `Iter`.
+Now `UWhile` fails with:
+
+```
+theory parse failed
+bnd: var.-set has mixed variables.
+```
+
+For theory `Forall`  we need to implement load/save for `Iter`.
 
 Terminology Q:
 

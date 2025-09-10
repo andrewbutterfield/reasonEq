@@ -8,7 +8,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 {-# LANGUAGE PatternSynonyms #-}
 module UTP.While.Common (
   i_cond, cond
-, i_seq, mkSeq
+, sqcmp, i_seq, mkSeq
 , i_while, while
 , listwiseVarBinPred
 , i_asg, (.:=), (.::=), simassign
@@ -100,7 +100,8 @@ condIntro = mkConsIntro i_cond boolf_3
 $$ P \seq Q $$
 \begin{code}
 mkSeq :: Term -> Term -> Term
-i_seq        =  jId ";"
+sqcmp = "sqcmp"
+i_seq        =  jId sqcmp
 mkSeq p q    =  Cons arbpred False i_seq [p, q]
 seqIntro = mkConsIntro i_seq boolf_2
 \end{code}

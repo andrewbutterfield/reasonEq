@@ -83,7 +83,7 @@ power t   =  TypeCons powerSym [t]
 \subsection{Lists}
 
 \begin{code}
-starSym  =  jId "*"
+starSym  =  jId "star"
 listof   =  GivenType starSym
 star t   =  TypeCons starSym [t]
 \end{code}

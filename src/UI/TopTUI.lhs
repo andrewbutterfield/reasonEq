@@ -102,9 +102,9 @@ reqHelpCmds = ["?","help"]
 reqCommands :: REqCommands
 reqCommands = [ cmdShow, cmdSet, cmdNew
               , cmdNewProof, cmdRet2Proof
-              , cmdLoad, cmdSave
+              , cmdLoad, cmdGenerate
               , cmdDump, cmdGrab
-              , cmdSaveConj, cmdLoadConj
+              , cmdGenerateConj, cmdLoadConj
               , cmdParseConj
               , cmdAssume, cmdDemote
               , cmdBuiltin
@@ -214,7 +214,7 @@ cnjObj = "cnj"
 \end{code}
 
 \textbf{We are introducing a simple text syntax for theories and related
-artefacts, and we will ``load'' and ``save'' from those.
+artefacts, and we will ``load'' form and ``generate'' to those.
 These files will also be how we DEFINE theories, 
 and will replace all the Haskell modules currently used
 (the contents of \h{builtin/}).}
@@ -223,63 +223,56 @@ and will replace all the Haskell modules currently used
 cmdLoad :: REqCmdDescr
 cmdLoad
   = ( "load"
-    , "load prover state from file"
+    , "loads prover state from file"
     , unlines
-        [ "load -- load theory from 'proto.txt'"
-        , " UNDER DEVELOPMENT: will eventually support:"
-        , "load <thry> -- load theory <thry> from current workspace"
+        [ "load <thry> -- load theory <thry>.src from current workspace"
         , "            -- warns if it modifies an existing theory"
-        , "load " ++ prfObj 
-                  ++ " <proof>  -- load proof <proof> from current workspace"
-        , "      CAUTION (will search for and load into current theory (!))"
-        , "load cnj <conj>  -- load conjecture <cnj> from current workspace"
-        , "load ax <axiom>  -- load axiom <axiom> from current workspace"
+        , "            -- creates a new theory if none exists"
         ]
-    , loadState )
+    , loadTheoryFile )
 
-loadState _ reqs = do 
-  haveProto <- doesFileExist "proto.txt"
-  if haveProto then do 
-    proto_text <- readFile "proto.txt"
-    case loadTheory proto_text of
+loadTheoryFile [thName] reqs = do
+  let fname = projectDir reqs </> thName </> thName <.> "src" 
+  putStrLn("loading from "++fname)
+  haveSource <- doesFileExist fname
+  if haveSource then do 
+    theory_text <- readFile fname
+    case loadTheory theory_text of
       Yes thry ->  do
         putStrLn ("Parsed as:\n"++show thry)
         putStrLn ("Renders as:\n"++showTheoryLong (trTerm 0,trSideCond) thry)
+        putStrLn "**** NOT YET INSTALLED ****"
       But msgs -> putStrLn $ unlines' ("theory parse failed":msgs)
-  else putStrLn "loadState: cannot find proto.txt"
+  else putStrLn ("loadTheoryFile: cannot find "++fname)
   return reqs
+loadTheoryFile args reqs = do
+  putStrLn ("load: expected single theory name"); return reqs
 \end{code}
 
 \begin{code}
-cmdSave :: REqCmdDescr
-cmdSave
-  = ( "save"
-    , "save prover state to file"
+cmdGenerate :: REqCmdDescr
+cmdGenerate
+  = ( "generate"
+    , "generate theory source file"
     , unlines
-        [ "save -- save current theory to 'proto.txt'"
-        , " UNDER DEVELOPMENT: will eventually support:"
-        , "save          -- save all prover state to current workspace"
-        , "save .        -- save current theory to current workspace"
-        , "save <thry>   -- save theory <thry> to current workspace"
-        , "save " ++ prfObj
-                  ++" <proof>  -- save proof <proof> to current workspace"
-        , "To come:"
-        , "save cnj <conj>  -- save conjecture <cnj> to current workspace"
-        , "save ax <axiom>  -- save axiom <axiom> to current workspace"
+        [ "generate -- save current theory to '<thName>.src'"
         ]
-    , saveState )
+    , generateState )
 
-saveState _ reqs = do
+generateState _ reqs = do
   let nm = currTheory reqs
   case getTheory nm $ theories reqs of
-    Nothing    ->  saveState2 (thName_ nm nullTheory) reqs
-    Just thry  ->  saveState2 thry reqs
+    Nothing    ->  generateState2 (thName_ nm nullTheory) reqs
+    Just thry  ->  generateState2 thry reqs
 
-saveState2 theory reqs = do
-  putStrLn "saving proto.txt"
-  let proto_text = saveTheory theory
-  putStrLn ("Contents of proto.txt:\n"++proto_text)
-  writeFile "proto.txt" proto_text
+generateState2 theory reqs = do
+  let thnm = thName theory
+  let fname = projectDir reqs </> thnm </> thnm <.> "src"
+  putStrLn("generating to "++fname)
+  putStrLn ("saving "++fname)
+  let theory_text = genTheory theory
+  putStrLn ("Contents of "++fname++":\n"++theory_text)
+  writeFile fname theory_text
   return reqs
 \end{code}
 
@@ -395,8 +388,8 @@ grabState _ reqs  =  doshow reqs "unknown 'grab' option."
 \subsection{Save Laws as Conjectures}
 
 \begin{code}
-cmdSaveConj :: REqCmdDescr
-cmdSaveConj
+cmdGenerateConj :: REqCmdDescr
+cmdGenerateConj
   = ( "svc"
     , "save conjectures"
     , unlines

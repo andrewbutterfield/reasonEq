@@ -1,0 +1,57 @@
+Theory EQV
+
+
+Known eqv : FUN B TO FUN B TO B ENDF ENDF .
+
+
+
+
+Law true BEGIN
+ axiom
+ ,
+true
+END
+
+Law eqv_refl BEGIN
+ axiom
+ ,
+eqv CS (P,P)
+END
+
+Law eqv_assoc BEGIN
+ axiom
+ ,
+eqv CS (eqv CS (eqv CS (P,Q),R),eqv CS (P,eqv CS (Q,R)))
+END
+
+Law eqv_symm BEGIN
+ axiom
+ ,
+eqv CS (P,Q,Q,P)
+END
+
+Law id_subst BEGIN
+ axiom
+ ,
+eqv CS (SUB [ (x$,x$)] P,P)
+END
+
+Law non_subst BEGIN
+ axiom
+ ,
+eqv CS (SUB [ (x$,e$)] P,P)
+,
+VREL (DISJ P FROM x$)
+END
+
+Conjecture eqv_id BEGIN
+  eqv CS (eqv CS (true,Q),Q)
+END
+
+Conjecture true_subst BEGIN
+  eqv CS (SUB [ (x$,e$)] true,true)
+END
+
+Conjecture eqv_subst BEGIN
+  eqv CS (SUB [ (x$,e$)] eqv CS (P,Q),eqv CS (SUB [ (x$,e$)] P,SUB [ (x$,e$)] Q))
+END

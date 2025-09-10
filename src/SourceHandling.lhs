@@ -1,4 +1,4 @@
-\chapter{Theory Load and Save}
+\chapter{Theory Load and Generate}
 \begin{verbatim}
 Copyright  Andrew Butterfield (c) 2018-25
 
@@ -10,7 +10,7 @@ module SourceHandling (
   mkLawName
 , term_syntax
 , renderToken'
-, loadTheory, saveTheory
+, loadTheory, genTheory
 , loadTerm
 )
 
@@ -183,8 +183,8 @@ importDefinitions thry (tok@(lno,_):_)
 \subsection{Save Theory}
 
 \begin{code}
-saveTheory :: Theory -> String
-saveTheory theory = unlines (
+genTheory :: Theory -> String
+genTheory theory = unlines (
   (kTheory ++ " " ++ thName theory)
    : ( saveDeps (thDeps theory) ++
        ["",saveVarTable (known theory)] ++

@@ -31,7 +31,6 @@ library
       Laws
       LexBase
       LiveProofs
-      LoadSave
       MatchContext
       Matching
       NotApplicable
@@ -45,6 +44,7 @@ library
       SAT
       Sequents
       SideCond
+      SourceHandling
       StratifiedDAG
       Substitution
       Symbols

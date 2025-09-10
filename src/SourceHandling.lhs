@@ -6,7 +6,7 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
-module LoadSave (
+module SourceHandling (
   mkLawName
 , term_syntax
 , renderToken'

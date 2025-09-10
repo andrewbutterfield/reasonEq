@@ -372,7 +372,9 @@ All variables in a binder variable-set must have the same class.
 bnd typ n vs tm
  | S.null vs  =  return tm  -- vacuous binder
  | uniformVarSet vs  =  return $ B typ n vs tm
- | otherwise = fail "bnd: var.-set has mixed variables."
+ | otherwise = fail $ unlines'
+     [ "bnd: var.-set has mixed variables."
+     , show vs ]
 
 eBnd typ n vs tm  =  bnd typ n vs tm
 pBnd     n vs tm  =  bnd arbpred       n vs tm
@@ -383,7 +385,9 @@ All variables in a lambda variable-list must have the same class.
 lam typ n vl tm
  | null vl  =  return tm  -- vacuous binder
  | uniformVarList vl  =  return $ L typ n vl tm
- | otherwise = fail "lam: var.-list has mixed variables."
+ | otherwise = fail $ unlines'
+     [ "lam: var.-list has mixed variables."
+     , show vl ]
 
 eLam typ n vl tm  =  lam typ n vl tm
 pLam     n vl tm  =  lam arbpred       n vl tm

@@ -690,12 +690,12 @@ saveTerm (Cons typ subable (Identifier i _) terms)
       ++ ")"
 saveTerm (Bnd typ (Identifier quant _) vs term)
   = kSetBind ++ " " ++ quant
-    ++ " " ++ intercalate " " (S.toList (S.map trGVar vs))
+    ++ " " ++ intercalate " " (S.toList (S.map saveGenVar vs))
     ++ "\n  " ++ kQBody 
     ++ "  " ++ saveTerm term
 saveTerm (Lam typ (Identifier lambda _) vl term)
   = kListBind ++ " " ++ lambda
-    ++ " " ++  intercalate " " (map trGVar vl)
+    ++ " " ++  intercalate " " (map saveGenVar vl)
     ++ "\n  " ++kQBody 
     ++ " " ++ saveTerm term
 saveTerm (Cls (Identifier kind _) term) 

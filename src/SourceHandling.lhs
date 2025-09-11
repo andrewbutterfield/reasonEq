@@ -66,7 +66,7 @@ We will gradually flesh this out.
 For now we concern ourselves with theory names, dependencies, knowns, laws,
 and conjectures.
 Proofs are complex, and only arise by running \reasonEq,
-and we will rely on dump and grab (export and import?) to handle them.
+and we will rely on save and restore to handle them.
 The automatic laws can be re-generated once the theory is loaded.
 
 Lesson 1 : Don't base it on blocks like Laws \dots Done.
@@ -115,64 +115,64 @@ validFileChars = ['a'..'z'] ++ ['A'..'Z'] ++ "_-"
 
 \begin{code}
 loadTheory :: MonadFail mf => String -> mf Theory
-loadTheory text  =  importTheory nullTheory $ tlex $ prepare text
+loadTheory text  =  loadTheoryParts nullTheory $ tlex $ prepare text
 
 
-importTheory :: MonadFail mf  => Theory -> [Token] -> mf Theory
-importTheory thry [] = fail "Empty theory file!"
-importTheory thry ( (lno,TVar key Static)
+loadTheoryParts :: MonadFail mf  => Theory -> [Token] -> mf Theory
+loadTheoryParts thry [] = fail "Empty theory file!"
+loadTheoryParts thry ( (lno,TVar key Static)
                    :(_,TVar name Static):rest)
   | key == kTheory && validFileName name = do
-        (thry',rest') <- importDependencies (thName_ name thry) rest 
-        importDefinitions thry' rest'   
+        (thry',rest') <- loadDependencies (thName_ name thry) rest 
+        loadDefinitions thry' rest'   
   | otherwise  =  fail $ unlines  
       [ "loadTheory headline parse error at line " ++ show lno 
       , "  expected: "++kTheory++" theoryname"
       , "  got: " ++ key ++ " " ++ name ]
 
-importDependencies :: MonadFail mf 
+loadDependencies :: MonadFail mf 
                    => Theory -> [Token] 
                    -> mf (Theory,[Token])
-importDependencies thry []  =  return (thry,[])
-importDependencies thry nlines@((lno,TVar  needs Static):rest)
-  | needs == kNeeds  =  importDeps thry [] rest
+loadDependencies thry []  =  return (thry,[])
+loadDependencies thry nlines@((lno,TVar  needs Static):rest)
+  | needs == kNeeds  =  loadDeps thry [] rest
   | otherwise = return (thry,nlines) -- no dependencies is fine
 
-importDeps thry sped []  =  premAfter [ kNeeds ]
+loadDeps thry sped []  =  premAfter [ kNeeds ]
 
-importDeps thry sped ((lno,TVar close _):rest) 
+loadDeps thry sped ((lno,TVar close _):rest) 
   | close == kEnd  
      =  return ((thDeps__ (++(reverse sped)) thry), rest)
 
-importDeps thry sped ((lno,TVar i Static):rest) 
-  | validFileName i = importDeps thry (i:sped) rest 
+loadDeps thry sped ((lno,TVar i Static):rest) 
+  | validFileName i = loadDeps thry (i:sped) rest 
 
-importDeps thry sped (tok@(lno,_):rest) 
+loadDeps thry sped (tok@(lno,_):rest) 
   = fail $ unlines
       [ "invalid dependency at line "++show lno
       , "  saw "++renderToken tok ]
 
--- importDepLine thry sped rest lno [] = importDeps thry sped rest
--- importDepLine thry sped rest lno ((_,TVar  dep Static):deps)
---   | validFileName dep = importDepLine thry (dep:sped) rest lno deps
+-- loadDepLine thry sped rest lno [] = loadDeps thry sped rest
+-- loadDepLine thry sped rest lno ((_,TVar  dep Static):deps)
+--   | validFileName dep = loadDepLine thry (dep:sped) rest lno deps
 --   | otherwise = 
 
 
-importDefinitions :: MonadFail mf => Theory -> [Token] -> mf Theory  
-importDefinitions thry []  =  return thry
-importDefinitions thry ((lno,TVar category Static)
+loadDefinitions :: MonadFail mf => Theory -> [Token] -> mf Theory  
+loadDefinitions thry []  =  return thry
+loadDefinitions thry ((lno,TVar category Static)
                        :(_,TVar name Static):rest)
   | category == kConjecture = do
-      (conj',rest') <- importConjecture name rest
-      importDefinitions (conjs__ (++[conj']) thry) rest'
+      (conj',rest') <- loadConjecture name rest
+      loadDefinitions (conjs__ (++[conj']) thry) rest'
   | category == kLaw = do
-      (law',rest') <- importLaw name rest
-      importDefinitions (laws__ (++[law']) thry) rest'
-importDefinitions thry ((lno,TVar category Static):rest)
+      (law',rest') <- loadLaw name rest
+      loadDefinitions (laws__ (++[law']) thry) rest'
+loadDefinitions thry ((lno,TVar category Static):rest)
   | category == kKnown = do
-      (known',rest') <- importKnown (known thry) rest
-      importDefinitions (known_ known' thry) rest'
-importDefinitions thry (tok@(lno,_):_)
+      (known',rest') <- loadKnown (known thry) rest
+      loadDefinitions (known_ known' thry) rest'
+loadDefinitions thry (tok@(lno,_):_)
   = fail $ unlines [ "loadTheory expected known/law/conj at " 
                         ++ show lno
                    , "but got: "++renderToken tok
@@ -203,11 +203,11 @@ genDeps deps =
 
 Seen \h{kKnown}:
 \begin{code}
-importKnown :: MonadFail mf => VarTable -> [Token] -> mf (VarTable,[Token])
-importKnown vt [] = return (vt,[])
-importKnown vt toks@((lno,TVar var vw):rest) = importKVar vt lno var vw rest
-importKnown vt toks@((lno,TLVar var vw):rest) = importKLVar vt lno var vw rest
-importKnown name (tok:rest) 
+loadKnown :: MonadFail mf => VarTable -> [Token] -> mf (VarTable,[Token])
+loadKnown vt [] = return (vt,[])
+loadKnown vt toks@((lno,TVar var vw):rest) = loadKVar vt lno var vw rest
+loadKnown vt toks@((lno,TLVar var vw):rest) = loadKLVar vt lno var vw rest
+loadKnown name (tok:rest) 
   = fail ("loadVarData NYfI - tok:"++show tok)
 
 dot = "."
@@ -226,31 +226,31 @@ Known i instanceof g
 
 Seen \h{Known var}
 \begin{code}
-importKVar :: MonadFail mf 
+loadKVar :: MonadFail mf 
            => VarTable -> Int -> String -> VarWhen -> [Token] 
            -> mf (VarTable,[Token])
-importKVar vt _ var vw ((lno,TSym ":"):rest) 
-                                  =  importKVarOfType vt lno var vw rest
-importKVar vt _ var vw ((lno,TSym "="):rest)  
-                                  =  importKVarIsConst vt lno var vw rest
-importKVar vt _ var vw ((lno,TSym "::"):rest)  
-                                  =  importKVarIsGeneric vt lno var vw rest
-importKVar vt _ var vw ((lno,TVar iof _):rest)
-  | iof == kInstanceOf  =  importKVarInstance vt lno var vw rest
-importKVar vt _ var vw ((lno,ttyp):_)
-  = fail ( "importKVar: unexpected token "
+loadKVar vt _ var vw ((lno,TSym ":"):rest) 
+                                  =  loadKVarOfType vt lno var vw rest
+loadKVar vt _ var vw ((lno,TSym "="):rest)  
+                                  =  loadKVarIsConst vt lno var vw rest
+loadKVar vt _ var vw ((lno,TSym "::"):rest)  
+                                  =  loadKVarIsGeneric vt lno var vw rest
+loadKVar vt _ var vw ((lno,TVar iof _):rest)
+  | iof == kInstanceOf  =  loadKVarInstance vt lno var vw rest
+loadKVar vt _ var vw ((lno,ttyp):_)
+  = fail ( "loadKVar: unexpected token "
            ++show ttyp++" at line "++show lno )
-importKVar vt lno var vw []  =  premImport "known var" var lno 
+loadKVar vt lno var vw []  =  premImport "known var" var lno 
 \end{code}
 
 Seen \h{Known var :}, expect a type terminated by \h{.}
 \begin{code}
-importKVarOfType :: MonadFail mf 
+loadKVarOfType :: MonadFail mf 
                  => VarTable -> Int -> String -> VarWhen -> [Token] 
                  -> mf (VarTable,[Token])
-importKVarOfType vt lno var vw []  =  premImport "type" var lno
-importKVarOfType vt lno var vw rest = do
-  (typ,rest') <- importType rest
+loadKVarOfType vt lno var vw []  =  premImport "type" var lno
+loadKVarOfType vt lno var vw rest = do
+  (typ,rest') <- loadType rest
   rest'' <- expectToken dotTok rest'
   vt' <- addKnownVar (Vbl (jId var) ObsV vw) typ vt
   return (vt',rest'')
@@ -258,10 +258,10 @@ importKVarOfType vt lno var vw rest = do
 
 Seen \h{Known var =}, expect a term wrapped with \h{BEGIN \dots END}
 \begin{code}
-importKVarIsConst :: MonadFail mf 
+loadKVarIsConst :: MonadFail mf 
                   => VarTable -> Int -> String -> VarWhen -> [Token] 
                   -> mf (VarTable,[Token])
-importKVarIsConst vt lno var vw tokens = do
+loadKVarIsConst vt lno var vw tokens = do
   (block,beyond) <- getBlock beBlock tokens
   (term,rest) <- parseTerm block
   if null rest 
@@ -269,7 +269,7 @@ importKVarIsConst vt lno var vw tokens = do
     vt' <- addKnownConst (Vbl (jId var) ExprV Static) term vt
     return (vt',beyond)
   else fail $ unlines'
-        [ "importKVarIsConst("++var++")"
+        [ "loadKVarIsConst("++var++")"
         , "after term: "++trTerm 0 term
         , "has junk "++renderTokTyp (snd (head rest))
         , "at line no "++show (fst (head rest)) ]
@@ -277,30 +277,30 @@ importKVarIsConst vt lno var vw tokens = do
 
 Seen \h{Known var ::}, expect keyword \h{generic}
 \begin{code}
-importKVarIsGeneric :: MonadFail mf 
+loadKVarIsGeneric :: MonadFail mf 
                   => VarTable -> Int -> String -> VarWhen -> [Token] 
                   -> mf (VarTable,[Token])
-importKVarIsGeneric vt lno var vw []  =  premImport "generic" var lno
-importKVarIsGeneric vt lno var vw ((lno',TVar "generic" _):rest) = do
+loadKVarIsGeneric vt lno var vw []  =  premImport "generic" var lno
+loadKVarIsGeneric vt lno var vw ((lno',TVar "generic" _):rest) = do
   vt' <- addGenericVar (Vbl (jId var) ExprV Static) vt
   return (vt',rest)
-importKVarIsGeneric vt lno var vw ((lno',tok):rest)
-  = fail ( "importKVarGeneric("++var++"): unexpected token "
+loadKVarIsGeneric vt lno var vw ((lno',tok):rest)
+  = fail ( "loadKVarGeneric("++var++"): unexpected token "
            ++renderTokTyp tok++" at line "++show lno' )
 \end{code}
 
 Seen \h{Known var instanceof}, expect (generic) variable.
 \begin{code}
-importKVarInstance :: MonadFail mf 
+loadKVarInstance :: MonadFail mf 
                   => VarTable -> Int -> String -> VarWhen -> [Token] 
                   -> mf (VarTable,[Token])
-importKVarInstance vt lno var vw []  =  premImport "instance" var lno
-importKVarInstance vt lno var vw ((lno',TVar gvar _):rest) = do
+loadKVarInstance vt lno var vw []  =  premImport "instance" var lno
+loadKVarInstance vt lno var vw ((lno',TVar gvar _):rest) = do
   vt' <- addInstanceVar (Vbl (jId var) ExprV Static) 
            (Vbl (jId gvar) ExprV Static) vt
   return (vt',rest)
-importKVarInstance vt lno var vw ((lno',tok):rest)
-  = fail ( "importKVarInstance("++var++"): unexpected token "
+loadKVarInstance vt lno var vw ((lno',tok):rest)
+  = fail ( "loadKVarInstance("++var++"): unexpected token "
            ++renderTokTyp tok++" at line "++show lno' )
 \end{code}
 
@@ -315,17 +315,17 @@ Known set$ = { gv1 , ... , gvn }
 
 Seen \h{Known var\$}
 \begin{code}
-importKLVar :: MonadFail mf 
+loadKLVar :: MonadFail mf 
            => VarTable -> Int -> String -> VarWhen -> [Token] 
            -> mf (VarTable,[Token])
-importKLVar vt _ lvar vw ((lno,TSym "="):rest)  
-                              =  importKLVarIsContainer vt lno lvar vw rest
-importKLVar vt _ lvar vw ((lno,TSym "::"):rest)  
-                          =  importKLVarIsAbsContainer vt lno lvar vw rest
-importKLVar vt _ lvar vw ((lno,ttyp):_)
-  = fail ( "importKLVar: unexpected token "
+loadKLVar vt _ lvar vw ((lno,TSym "="):rest)  
+                              =  loadKLVarIsContainer vt lno lvar vw rest
+loadKLVar vt _ lvar vw ((lno,TSym "::"):rest)  
+                          =  loadKLVarIsAbsContainer vt lno lvar vw rest
+loadKLVar vt _ lvar vw ((lno,ttyp):_)
+  = fail ( "loadKLVar: unexpected token "
            ++show ttyp++" at line "++show lno )
-importKLVar vt lno lvar vw []  =  premImport "known list-var" lvar lno 
+loadKLVar vt lno lvar vw []  =  premImport "known list-var" lvar lno 
 \end{code}
 
 Seen \h{Known var\$ =}, 
@@ -335,11 +335,11 @@ or a set enumeration wrapped with \h{\{ \dots \}}
 listOpen = TSym "<"; listClose = TSym ">"; listBlock = (listOpen,listClose)
 setOpen = TOpen "{"; setClose = TClose "}"; setBlock = (setOpen,setClose)
 
-importKLVarIsContainer :: MonadFail mf 
+loadKLVarIsContainer :: MonadFail mf 
                   => VarTable -> Int -> String -> VarWhen -> [Token] 
                   -> mf (VarTable,[Token])
-importKLVarIsContainer vt lno lvar vw [] = premAfter ["Known",lvar,show lno]
-importKLVarIsContainer vt _   lvar vw tokens@((lno,tok):_)
+loadKLVarIsContainer vt lno lvar vw [] = premAfter ["Known",lvar,show lno]
+loadKLVarIsContainer vt _   lvar vw tokens@((lno,tok):_)
   | tok == listOpen  = do
       (block,beyond) <- getBlock listBlock tokens
       (list,rest) <- loadSepList (TSep ",") loadGenVar block
@@ -351,26 +351,26 @@ importKLVarIsContainer vt _   lvar vw tokens@((lno,tok):_)
       vt' <- addKnownVarSet (Vbl (jId lvar) ObsV vw) (S.fromList list)  vt
       return (vt',beyond)
   | otherwise = fail $ unlines'
-      [ "importKLVarIsContainer: expected '<' or '{'"
+      [ "loadKLVarIsContainer: expected '<' or '{'"
       , "but got "++renderTokTyp tok++" at line "++show lno ]
 \end{code}
 
 
 Seen \h{Known var\$ ::}, expect keyword \h{list} or \h{set}.
 \begin{code}
-importKLVarIsAbsContainer :: MonadFail mf 
+loadKLVarIsAbsContainer :: MonadFail mf 
                   => VarTable -> Int -> String -> VarWhen -> [Token] 
                   -> mf (VarTable,[Token])
-importKLVarIsAbsContainer vt lno lvar vw []  =  premImport "list or set" lvar lno
-importKLVarIsAbsContainer vt lno lvar vw ((lno',TVar abstract _):rest)
+loadKLVarIsAbsContainer vt lno lvar vw []  =  premImport "list or set" lvar lno
+loadKLVarIsAbsContainer vt lno lvar vw ((lno',TVar abstract _):rest)
   | abstract == "list" = do
       vt' <- addAbstractVarList (Vbl (jId lvar) ExprV vw) vt
       return (vt',rest)
   | abstract == "set" = do
       vt' <- addAbstractVarSet (Vbl (jId lvar) ExprV vw) vt
       return (vt',rest)
-importKLVarIsAbsContainer vt lno lvar vw ((lno',tok):rest)
-  = fail ( "importKLVarIsAbsContainer("++lvar++"): unexpected token "
+loadKLVarIsAbsContainer vt lno lvar vw ((lno',tok):rest)
+  = fail ( "loadKLVarIsAbsContainer("++lvar++"): unexpected token "
            ++renderTokTyp tok++" at line "++show lno' )
 \end{code}
 
@@ -479,13 +479,13 @@ END
 \end{verbatim}
 
 \begin{code}
-importLaw :: MonadFail mf 
+loadLaw :: MonadFail mf 
           => String -> [Token] 
           -> mf (Law,[Token])
-importLaw lawname []  =  premAfter [kLaw,lawname,kBegin]
-importLaw lawname tokens = do
+loadLaw lawname []  =  premAfter [kLaw,lawname,kBegin]
+loadLaw lawname tokens = do
   (block,beyond) <- getBlock beBlock tokens
-  (provenance,rest1) <- importProvenace block
+  (provenance,rest1) <- loadProvenace block
   case rest1 of
     []  ->  premAfter [kLaw,show provenance ]
     ((_,TSep ","):rest2) -> do
@@ -496,27 +496,27 @@ importLaw lawname tokens = do
           (sc,rest5) <- loadSideCond rest4
           return (((lawname,(mkAsn term sc)),provenance),beyond)
         (tok@(lno,_):_) -> fail $ unlines'
-          [ "importLaw: unexpected token after provenance"
+          [ "loadLaw: unexpected token after provenance"
           , renderToken tok ++ " at line "++show lno ]
     (tok@(lno,_):_) -> fail $ unlines'
-      [ "importLaw: unexpected token after provenance"
+      [ "loadLaw: unexpected token after provenance"
       , renderToken tok ++ " at line "++show lno ]
 
-importProvenace :: MonadFail mf => [Token] -> mf (Provenance,[Token])
-importProvenace []  =  premAfter [kBegin]
-importProvenace ((_,TVar  "axiom" Static):rest) 
+loadProvenace :: MonadFail mf => [Token] -> mf (Provenance,[Token])
+loadProvenace []  =  premAfter [kBegin]
+loadProvenace ((_,TVar  "axiom" Static):rest) 
   = return (Axiom,rest)
-importProvenace ((_,TVar  "assumed" Static):rest) 
+loadProvenace ((_,TVar  "assumed" Static):rest) 
   = return (Assumed,rest)
-importProvenace ((_,TVar  "proven" Static)
+loadProvenace ((_,TVar  "proven" Static)
                 :(_,TVar i Static):rest) 
   = return (Proven i,rest)
-importProvenace ((_,TVar  "suspect" Static)
+loadProvenace ((_,TVar  "suspect" Static)
                 :(_,TVar i Static):rest) 
   = return ((Suspect i),rest)
-importProvenace (tok@(lno,_):_)
+loadProvenace (tok@(lno,_):_)
   = fail $ unlines'
-      [ "importProvenace: unexpected token after "++kBegin 
+      [ "loadProvenace: unexpected token after "++kBegin 
       , renderToken tok ++ "at line " ++ show lno ]
 \end{code}
 
@@ -557,11 +557,11 @@ END
 \end{verbatim}
 
 \begin{code}
-importConjecture :: MonadFail mf 
+loadConjecture :: MonadFail mf 
                  => String -> [Token] 
                  -> mf (NmdAssertion,[Token])
-importConjecture conjname []  =  premAfter [kConjecture,conjname]
-importConjecture conjname tokens = do
+loadConjecture conjname []  =  premAfter [kConjecture,conjname]
+loadConjecture conjname tokens = do
   (block,beyond) <- getBlock beBlock tokens
   (term,rest2) <- parseTerm block
   case rest2 of
@@ -571,7 +571,7 @@ importConjecture conjname tokens = do
       return ( ( conjname, mkAsn term sc ), beyond )
     (tok@(lno,_):_) -> 
       fail $ unlines
-        [ "importConjecture: unexpected token after term"
+        [ "loadConjecture: unexpected token after term"
         , renderToken tok ++ " at line "++show lno ]
 \end{code}
 
@@ -1377,90 +1377,90 @@ Once parsing is complete we post-process
 names to pull out $\top$ and $\bot$ types.
 
 \begin{code}
-importType :: MonadFail mf => [Token] -> mf (Type,[Token])
-importType [] = premDuring ["importType"]
-importType ((lno,TVar nm _):rest)
-  | nm == startFun   =  importFunType rest
-  | nm == startProd  =  importProdType rest
-  | nm == startSum   =  importSumType rest
+loadType :: MonadFail mf => [Token] -> mf (Type,[Token])
+loadType [] = premDuring ["loadType"]
+loadType ((lno,TVar nm _):rest)
+  | nm == startFun   =  loadFunType rest
+  | nm == startProd  =  loadProdType rest
+  | nm == startSum   =  loadSumType rest
   | otherwise  = return (TypeVar (jId nm),rest)
-importType (tok:_)
-  = fail ("importType: invalid start "++show tok)
+loadType (tok:_)
+  = fail ("loadType: invalid start "++show tok)
 \end{code}
 
 Seen: \textbf{fun}.
 \begin{code}
-importFunType [] = premDuring ["importFunType"]
-importFunType toks = do
-  (dtype,rest1) <- importType toks
+loadFunType [] = premDuring ["loadFunType"]
+loadFunType toks = do
+  (dtype,rest1) <- loadType toks
   rest2 <- expectToken (TVar funArrow Static) rest1
-  (rtype,rest3) <- importType rest2
+  (rtype,rest3) <- loadType rest2
   rest4 <- expectToken (TVar endFun Static) rest3
   return (FunType dtype rtype,rest4)
 \end{code}
 
 Seen: \textbf{prod}.
 \begin{code}
-importProdType [] = premDuring ["importProdType"]
-importProdType ((lno,TVar nm _):rest1)
+loadProdType [] = premDuring ["loadProdType"]
+loadProdType ((lno,TVar nm _):rest1)
   | not( nm `elem` typeKeys) = do
-      (types,rest2) <- importTypes [] rest1
+      (types,rest2) <- loadTypes [] rest1
       rest3 <- expectToken (TVar endProd Static) rest2
       return (TypeCons (jId nm) types,rest3)
-importProdType (tok:_) 
-  = fail ("importProdType: invalid name "++show tok)
+loadProdType (tok:_) 
+  = fail ("loadProdType: invalid name "++show tok)
 \end{code}
 
 Seen: \textbf{sum}.
 \begin{code}
-importSumType [] = premDuring ["importSumType"]
-importSumType ((lno,TVar nm _):rest1)
+loadSumType [] = premDuring ["loadSumType"]
+loadSumType ((lno,TVar nm _):rest1)
   | not( nm `elem` typeKeys) = do 
-      (variants,rest2) <- importVariants (jId nm) [] rest1
+      (variants,rest2) <- loadVariants (jId nm) [] rest1
       rest3 <- expectToken (TVar endSum Static) rest2
       return (AlgType (jId nm) variants,rest3)
-importSumType (tok:_) 
-  = fail ("importSumType: invalid name "++show tok)
+loadSumType (tok:_) 
+  = fail ("loadSumType: invalid name "++show tok)
 \end{code}
 
 Seen: \textbf{variant}.
 \begin{code}
-importVariant [] = premDuring ["importVariant"]
-importVariant ((lno,TVar nm _):rest1)
+loadVariant [] = premDuring ["loadVariant"]
+loadVariant ((lno,TVar nm _):rest1)
   | not( nm `elem` typeKeys) = do
-      (types,rest2) <- importTypes [] rest1
+      (types,rest2) <- loadTypes [] rest1
       rest3 <- expectToken (TVar endVariant Static) rest2
       return ((jId nm,types),rest3)
-importVariant (tok:_) 
-  = fail ("importVariant: invalid name "++show tok)
+loadVariant (tok:_) 
+  = fail ("loadVariant: invalid name "++show tok)
 \end{code}
 
 Seen \textbf{sum} sumname.
 Expecting a list of zero or more types, ended by \textbf{endp} or \textbf{endv}.
 \begin{code}
-importVariants :: MonadFail mf 
+loadVariants :: MonadFail mf 
                => Identifier -> [Variant] -> [Token] 
                -> mf ([Variant],[Token])
-importVariants vid stnairav toks@[] = return (reverse stnairav,toks)
-importVariants vid stnairav toks@(tok@(lno,TVar str _):rest1)
+loadVariants vid stnairav toks@[] = return (reverse stnairav,toks)
+loadVariants vid stnairav toks@(tok@(lno,TVar str _):rest1)
   | str == endSum  =  return (reverse stnairav,toks)
-  | str /= startVariant  = fail ("importVariants: invalid key "++show tok)
+  | str /= startVariant  = fail ("loadVariants: invalid key "++show tok)
   | otherwise = do
-      (variant,rest2) <- importVariant rest1
+      (variant,rest2) <- loadVariant rest1
       case rest2 of 
-        [] -> premDuring ["importVariants",endVariant]
-        _ -> importVariants vid (variant:stnairav) rest2
+        [] -> premDuring ["loadVariants",endVariant]
+        _ -> loadVariants vid (variant:stnairav) rest2
 \end{code}
 
 Expecting a list of zero or more types, ended by \textbf{endp} or \textbf{endv}.
 \begin{code}
-importTypes :: MonadFail mf => [Type] -> [Token] -> mf ([Type],[Token])
-importTypes sepyt toks@[]            = return (reverse sepyt,toks)
-importTypes sepyt toks@((lno,TVar end _):rest)
+loadTypes :: MonadFail mf => [Type] -> [Token] -> mf ([Type],[Token])
+loadTypes sepyt toks@[]            = return (reverse sepyt,toks)
+loadTypes sepyt toks@((lno,TVar end _):rest)
   | end `elem` [endProd,endVariant]  =  return (reverse sepyt,toks)
-importTypes sepyt toks = do
-  (typ',rest1) <- importType toks
-  importTypes (typ':sepyt) rest1
+loadTypes sepyt toks = do
+  (typ',rest1) <- loadType toks
+  loadTypes (typ':sepyt) rest1
 \end{code}
 
 \typestart
@@ -1809,7 +1809,7 @@ premAfter strs
 premDuring strs
   = fail ("premature file end during "++intercalate " " strs)
 premImport what got lno 
-  = fail ("premature end while importing "++what++" "++got++" at line "++show lno)
+  = fail ("premature end while loading "++what++" "++got++" at line "++show lno)
 \end{code}
 
 Called when a specific token is expected:

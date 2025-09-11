@@ -3,20 +3,6 @@
 ## PLAN
 
 
-We will now have new text-based source files for theories (`MyTheory.src`),
-which should live in the same workspace as the backups (`MyTheory/`).
-We will talk about *loading* and *generating* these files.
-
-We have Haskell sources files for theories at present (`.lhs`), 
-stored in `builtin/`. 
-These are managed with the `b` commands in the top-level UI.
-These will (rapidly?) be deprecated.
-
-We have backup versions (`.thr`) stored in a workspace (e.g. `devproj/`).
-The `REqState` module manages parsing and rendering the program state,
-while `Persistence` imports it and does both top-level and low-level input/output.
-This continues as normal where the program *restores* from backups at startup, 
-and *saves* to them in order to save changes.
 
 * Continue developing the  `Designs` theory.
 

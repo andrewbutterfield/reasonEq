@@ -2,6 +2,7 @@
 
 ## PLAN
 
+**We start in EQV theory regardless of what was saved as the current theory**
 
 
 * Continue developing the  `Designs` theory.

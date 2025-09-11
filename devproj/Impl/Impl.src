@@ -1,0 +1,124 @@
+Theory Impl
+Needs
+  AOI And Or Not EQV
+END
+
+
+Known imp : FUN B TO FUN B TO B ENDF ENDF .
+
+
+
+
+Law imp_def BEGIN
+ axiom
+ ,
+eqv CS (imp CS (P,Q),eqv CS (or CS (P,Q),Q))
+END
+
+Conjecture imp_def2 BEGIN
+  eqv CS (imp CS (P,Q),or CS (not CS (P),Q))
+END
+
+Conjecture imp_meet BEGIN
+  eqv CS (imp CS (P,Q),eqv CS (and CS (P,Q),P))
+END
+
+Conjecture contrapositive BEGIN
+  eqv CS (imp CS (P,Q),imp CS (not CS (Q),not CS (P)))
+END
+
+Conjecture imp_eqv_distr BEGIN
+  eqv CS (imp CS (P,eqv CS (Q,R)),eqv CS (imp CS (P,Q),imp CS (P,R)))
+END
+
+Conjecture shunting BEGIN
+  eqv CS (imp CS (and CS (P,Q),R),imp CS (P,imp CS (Q,R)))
+END
+
+Conjecture GS3_66 BEGIN
+  eqv CS (and CS (P,imp CS (P,Q)),and CS (P,Q))
+END
+
+Conjecture GS3_67 BEGIN
+  eqv CS (and CS (P,imp CS (Q,P)),P)
+END
+
+Conjecture GS3_68 BEGIN
+  eqv CS (or CS (P,imp CS (P,Q)),true)
+END
+
+Conjecture GS3_69 BEGIN
+  eqv CS (or CS (P,imp CS (Q,P)),imp CS (Q,P))
+END
+
+Conjecture GS3_70 BEGIN
+  eqv CS (imp CS (or CS (P,Q),and CS (P,Q)),eqv CS (P,Q))
+END
+
+Conjecture imp_refl BEGIN
+  eqv CS (imp CS (P,P),true)
+END
+
+Conjecture imp_r_zero BEGIN
+  eqv CS (imp CS (P,true),true)
+END
+
+Conjecture imp_l_unit BEGIN
+  eqv CS (imp CS (true,P),P)
+END
+
+Conjecture not_def2 BEGIN
+  eqv CS (imp CS (P,false),not CS (P))
+END
+
+Conjecture GS3_75 BEGIN
+  eqv CS (imp CS (false,P),true)
+END
+
+Conjecture imp_trans BEGIN
+  imp CS (and CS (imp CS (P,Q),imp CS (Q,R)),imp CS (P,R))
+END
+
+Conjecture eqv_imp_trans BEGIN
+  imp CS (and CS (eqv CS (P,Q),imp CS (Q,R)),imp CS (P,R))
+END
+
+Conjecture imp_eqv_trans BEGIN
+  imp CS (and CS (imp CS (P,Q),eqv CS (Q,R)),imp CS (P,R))
+END
+
+Conjecture strengthen_ante BEGIN
+  imp CS (and CS (P,Q),P)
+END
+
+Conjecture weaken_cnsq BEGIN
+  imp CS (P,or CS (P,Q))
+END
+
+Conjecture ante_or_distr BEGIN
+  eqv CS (imp CS (or CS (P,Q),R),and CS (imp CS (P,R),imp CS (Q,R)))
+END
+
+Conjecture ante_and_distr BEGIN
+  eqv CS (imp CS (and CS (P,Q),R),or CS (imp CS (P,R),imp CS (Q,R)))
+END
+
+Conjecture cnsq_and_distr BEGIN
+  eqv CS (imp CS (P,or CS (Q,R)),or CS (imp CS (P,Q),imp CS (P,R)))
+END
+
+Conjecture cnsq_and_distr BEGIN
+  eqv CS (imp CS (P,and CS (Q,R)),and CS (imp CS (P,Q),imp CS (P,R)))
+END
+
+Conjecture ante_as_imp BEGIN
+  eqv CS (imp CS (imp CS (P,Q),R),and CS (imp CS (not CS (P),R),imp CS (Q,R)))
+END
+
+Conjecture imp_subst BEGIN
+  eqv CS (SUB [ (x$,e$)] imp CS (P,Q),imp CS (SUB [ (x$,e$)] P,SUB [ (x$,e$)] Q))
+END
+
+Conjecture conj_imp_conj BEGIN
+  imp CS (and CS (P,Q),and CS (R,S))
+END

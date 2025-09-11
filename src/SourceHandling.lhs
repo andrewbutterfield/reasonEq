@@ -43,7 +43,7 @@ import StdTypeSignature
 import Debugger
 \end{code}
 
-\section{Load-Save Intro.}
+\section{Load-Generate Intro.}
 
 We provide a simple, clunky way to read and write theory objects
 using a simple grammar mostly using prefix-based constructs.
@@ -180,7 +180,7 @@ importDefinitions thry (tok@(lno,_):_)
 \end{code}
 
 
-\subsection{Save Theory}
+\subsection{Generate Theory}
 
 \begin{code}
 genTheory :: Theory -> String
@@ -263,7 +263,7 @@ importKVarIsConst :: MonadFail mf
                   -> mf (VarTable,[Token])
 importKVarIsConst vt lno var vw tokens = do
   (block,beyond) <- getBlock beBlock tokens
-  (term,rest) <- sTermRead block
+  (term,rest) <- parseTerm block
   if null rest 
   then do
     vt' <- addKnownConst (Vbl (jId var) ExprV Static) term vt
@@ -375,7 +375,7 @@ importKLVarIsAbsContainer vt lno lvar vw ((lno',tok):rest)
 \end{code}
 
 
-\subsection{Save VarTable}
+\subsection{Generate VarTable}
 
 
 We start every entry with the ``Known'' keyword:
@@ -489,7 +489,7 @@ importLaw lawname tokens = do
   case rest1 of
     []  ->  premAfter [kLaw,show provenance ]
     ((_,TSep ","):rest2) -> do
-      (term,rest3) <- sTermRead rest2
+      (term,rest3) <- parseTerm rest2
       case rest3 of
         [] -> return (((lawname,(mkAsn term scTrue)),provenance),beyond)
         ((_,TSep ","):rest4) -> do
@@ -520,7 +520,7 @@ importProvenace (tok@(lno,_):_)
       , renderToken tok ++ "at line " ++ show lno ]
 \end{code}
 
-\subsection{Save Laws}
+\subsection{Generate Laws}
 
 
 \begin{code}
@@ -563,7 +563,7 @@ importConjecture :: MonadFail mf
 importConjecture conjname []  =  premAfter [kConjecture,conjname]
 importConjecture conjname tokens = do
   (block,beyond) <- getBlock beBlock tokens
-  (term,rest2) <- sTermRead block
+  (term,rest2) <- parseTerm block
   case rest2 of
     [] -> return ( ( conjname, mkAsn term scTrue ), beyond )
     ((_,TSep ","):rest3) -> do
@@ -575,7 +575,7 @@ importConjecture conjname tokens = do
         , renderToken tok ++ " at line "++show lno ]
 \end{code}
 
-\subsection{Save Conjectures}
+\subsection{Generate Conjectures}
 
 \begin{code}
 genConjectures :: [NmdAssertion] -> String
@@ -674,7 +674,7 @@ term_syntax = syntax_bits ++ term_definition ++ key_names
 \end{code}
 
 
-\subsection{Save Term}
+\subsection{Generate Term}
 
 \begin{code}
 genSBBL s = if s then kCS else kNS
@@ -770,17 +770,17 @@ loadSBBL str
 
 \newpage
 
-\subsection{Term Reader}
+\subsection{Term Parser}
 
 \begin{code}
-sTermRead :: MonadFail m => [Token] -> m (Term, [Token])
-sTermRead [] =  fail "sTermRead: nothing to parse"
+parseTerm :: MonadFail m => [Token] -> m (Term, [Token])
+parseTerm [] =  fail "parseTerm: nothing to parse"
 \end{code}
 
 \paragraph{Numbers}~
 
 \begin{code}
-sTermRead ((_,TNum n):tts) = return ( Val int $ Integer n, tts)
+parseTerm ((_,TNum n):tts) = return ( Val int $ Integer n, tts)
 \end{code}
 
 \paragraph{Symbols}
@@ -788,11 +788,11 @@ sTermRead ((_,TNum n):tts) = return ( Val int $ Integer n, tts)
 Symbols are valid identifiers
 
 \begin{code}
-sTermRead ((_,TSym consName):(_,TVar subable Static ):(_,TOpen "("):tts)
-  | subable == "N" = sAppParse cons False [] tts
-  | subable == "S" = sAppParse cons True  [] tts
+parseTerm ((_,TSym consName):(_,TVar subable Static ):(_,TOpen "("):tts)
+  | subable == "N" = parseCons cons False [] tts
+  | subable == "S" = parseCons cons True  [] tts
   where cons = jId consName
-sTermRead ((_,TSym sym):tts) = return (mkVarTerm (jId sym) Static, tts)
+parseTerm ((_,TSym sym):tts) = return (mkVarTerm (jId sym) Static, tts)
 \end{code}
 
 \paragraph{Constructions}
@@ -805,19 +805,19 @@ check for lone identifiers.
 We check for constructions first \dots
 
 \begin{code}
-sTermRead ((_,TVar consName vw):(_,TVar subable Static ):(_,TOpen "("):tts)
-  | subable == kNS = sAppParse cons False [] tts
-  | subable == kCS = sAppParse cons True  [] tts
+parseTerm ((_,TVar consName vw):(_,TVar subable Static ):(_,TOpen "("):tts)
+  | subable == kNS = parseCons cons False [] tts
+  | subable == kCS = parseCons cons True  [] tts
   where 
     cons = jId consName
-sTermRead ((_,TVar nm vw):tts)
+parseTerm ((_,TVar nm vw):tts)
   | nm == kTrue      =  return ( mkTrue nm,  tts)
   | nm == kFalse     =  return ( mkFalse nm, tts)
-  | nm == kSetBind   =  setQParse tts
-  | nm == kListBind  =  listQParse tts
-  | nm == kClosure   =  closureParse tts
-  | nm == kSubst     =  substituteParse tts
-  | nm == kIter      =  iterativeParse tts
+  | nm == kSetBind   =  parseSetQ tts
+  | nm == kListBind  =  parseListQ tts
+  | nm == kClosure   =  parseClosure tts
+  | nm == kSubst     =  parseSubstn tts
+  | nm == kIter      =  parseIter tts
   | otherwise        =  return (mkVarTerm (jId nm) vw, tts)
 \end{code}
 
@@ -825,7 +825,7 @@ sTermRead ((_,TVar nm vw):tts)
 
 
 \begin{code}
-sTermRead (tt:tts)  = fail ("sTermRead: unexpected token: "++renderToken tt)
+parseTerm (tt:tts)  = fail ("parseTerm: unexpected token: "++renderToken tt)
 \end{code}
 
 \subsection{Term Helpers}
@@ -834,28 +834,28 @@ Seen identifier and opening parenthesis.
 $$ i(~~~t_1,\dots,t_n) $$
 Look for sub-term, or closing parenthesis.
 \begin{code}
-sAppParse :: MonadFail mf 
+parseCons :: MonadFail mf 
           => Identifier -> Bool -> [Term] -> [Token]-> mf (Term,[Token])
-sAppParse id1 subable smretbus ((_,TClose ")") : tts)
+parseCons id1 subable smretbus ((_,TClose ")") : tts)
   = return ( Cons arbpred subable id1 $ reverse smretbus, tts)
-sAppParse id1 subable smretbus tts
-  = do (tsub',tts') <- sTermRead tts
-       sAppParse' id1 subable (tsub':smretbus) tts'
+parseCons id1 subable smretbus tts
+  = do (tsub',tts') <- parseTerm tts
+       parseCons' id1 subable (tsub':smretbus) tts'
 \end{code}
 
 \newpage
 Seen (sub-) term.
 Looking for comma or closing parenthesis
 \begin{code}
-sAppParse' :: MonadFail mf 
+parseCons' :: MonadFail mf 
            => Identifier -> Bool -> [Term] -> [Token]-> mf (Term,[Token])
-sAppParse' id1 subable smretbus ((_,TSep ",") : tts)
-  =  sAppParse id1 subable smretbus tts
-sAppParse' id1 subable smretbus ((_,TClose ")") : tts)
+parseCons' id1 subable smretbus ((_,TSep ",") : tts)
+  =  parseCons id1 subable smretbus tts
+parseCons' id1 subable smretbus ((_,TClose ")") : tts)
   =  return ( Cons arbpred subable id1 $ reverse smretbus, tts)
-sAppParse' id1 subable smretbus tts
+parseCons' id1 subable smretbus tts
   =  fail $ unlines'
-       [ "sAppParse': expected ',' or ')'"
+       [ "parseCons': expected ',' or ')'"
        , "got "++show (take 3 tts)++" ..." ]
 \end{code}
 
@@ -866,41 +866,41 @@ Seen \texttt{QS},
 $$ QS~~~i~g_1 \dots g_n \bullet t $$
 parse the quantifier:
 \begin{code}
-setQParse :: MonadFail mf => [Token] -> mf (Term,[Token])
-setQParse []  =  premDuring ["setQParse"]
-setQParse ((_,TVar nm Static) : tts) = do
+parseSetQ :: MonadFail mf => [Token] -> mf (Term,[Token])
+parseSetQ []  =  premDuring ["parseSetQ"]
+parseSetQ ((_,TVar nm Static) : tts) = do
   let i = jId nm
-  (i,sg,term,tts') <- quantread i [] tts
+  (i,sg,term,tts') <- parseQVars i [] tts
   qsterm <- pBnd i (S.fromList $ map tok2GVar sg) term
   return (qsterm,tts')
-setQParse (tok:_) = fail ("setQParse: exp. ident, found: "++renderToken tok)
+parseSetQ (tok:_) = fail ("parseSetQ: exp. ident, found: "++renderToken tok)
 \end{code}
 
 Seen \texttt{QL}, 
 $$ QL~~~i~g_1 \dots g_n \bullet t $$
 parse the quantifier:
 \begin{code}
-listQParse :: MonadFail mf => [Token] -> mf (Term,[Token])
-listQParse []  = premDuring ["listQParse"]
-listQParse ((_,TVar nm Static) : tts) = do
+parseListQ :: MonadFail mf => [Token] -> mf (Term,[Token])
+parseListQ []  = premDuring ["parseListQ"]
+parseListQ ((_,TVar nm Static) : tts) = do
   let i = jId nm
-  (i,sg,term,tts') <- quantread i [] tts
+  (i,sg,term,tts') <- parseQVars i [] tts
   lsterm <- pLam i (reverse $ map tok2GVar sg) term
   return (lsterm,tts')
-listQParse (tok:_) = fail ("listQParse: exp. ident, found: "++renderToken tok)
+parseListQ (tok:_) = fail ("parseListQ: exp. ident, found: "++renderToken tok)
 \end{code}
 
 Seen \texttt{Qx i}, and zero or more \texttt{g\_i}:
 $$ Qx~i~g_1 \dots g_i ~~~~~ g_{i+1} \dots g_n \bullet t $$
 parse the quantifier:
 \begin{code}
-quantread i _ []  =  premDuring ["quantread:",trId i]
-quantread i sg ((_,TSym sym) : tts)
-  | sym == kQBody  =  quantreadBody i sg tts
-quantread i sg (v@(_,TVar _ _)    : tts)   =  quantread i (v:sg) tts
-quantread i sg (lv@(_,TLVar _ _) : tts)   =  quantread i (lv:sg) tts
-quantread i sg ((lno,ttyp) : _)  
-  = fail ( "quantread: unexpected token "++renderTokTyp ttyp
+parseQVars i _ []  =  premDuring ["parseQVars:",trId i]
+parseQVars i sg ((_,TSym sym) : tts)
+  | sym == kQBody  =  parseQBody i sg tts
+parseQVars i sg (v@(_,TVar _ _)    : tts)   =  parseQVars i (v:sg) tts
+parseQVars i sg (lv@(_,TLVar _ _) : tts)   =  parseQVars i (lv:sg) tts
+parseQVars i sg ((lno,ttyp) : _)  
+  = fail ( "parseQVars: unexpected token "++renderTokTyp ttyp
            ++" at line "++show lno)
 \end{code}
 
@@ -908,9 +908,9 @@ Seen \texttt{Qx i g\_1 .. g\_n @},
 $$ Qx~i~g_1 \dots g_n \bullet ~~~ t $$
 parse the body term
 \begin{code}
-quantreadBody i _ [] = fail ("quantread: "++trId i++" (missing body)")
-quantreadBody i sg tts = do
-  (term,toks) <- sTermRead tts
+parseQBody i _ [] = fail ("parseQVars: "++trId i++" (missing body)")
+parseQBody i sg tts = do
+  (term,toks) <- parseTerm tts
   return (i,sg,term,toks)
 \end{code}
 
@@ -919,12 +919,12 @@ quantreadBody i sg tts = do
 
 Seen \texttt{CLS}.
 \begin{code}
-closureParse [] = premDuring ["closureParse"]
-closureParse ((lno,TVar nm _):rest1) = do
-  (term,rest2) <- sTermRead rest1
+parseClosure [] = premDuring ["parseClosure"]
+parseClosure ((lno,TVar nm _):rest1) = do
+  (term,rest2) <- parseTerm rest1
   return (Cls (jId nm) term,rest2)
-closureParse ((lno,ttyp):rest) = fail $ unlines'
-  [ "closureParse: expected name"
+parseClosure ((lno,ttyp):rest) = fail $ unlines'
+  [ "parseClosure: expected name"
   , "but got "++renderTokTyp ttyp++" at line "++show lno]
   
 \end{code}
@@ -934,44 +934,44 @@ closureParse ((lno,ttyp):rest) = fail $ unlines'
 
 Seen \texttt{SUB}.
 \begin{code}
-substituteParse [] = premDuring ["substituteParse"]
-substituteParse ((lno,TOpen open):rest1)
+parseSubstn [] = premDuring ["parseSubstn"]
+parseSubstn ((lno,TOpen open):rest1)
   | open == "["  =  do
-     ((vts,lvlvs),rest2) <- subsPairsParse [] [] rest1
+     ((vts,lvlvs),rest2) <- parseSubPairs [] [] rest1
      rest3 <- expectToken (TClose "]") rest2
-     (term,rest4) <- sTermRead rest3
+     (term,rest4) <- parseTerm rest3
      sub <- substn vts lvlvs
      return (Sub (termtype term) term sub,rest4)
-substituteParse ((lno,ttyp):rest) = fail $ unlines'
-  [ "substituteParse: expected '['"
+parseSubstn ((lno,ttyp):rest) = fail $ unlines'
+  [ "parseSubstn: expected '['"
   , "but got "++renderTokTyp ttyp++" at line "++show lno]
 
-subsPairsParse vts lvlvs []                      = return ((vts,lvlvs),[])
-subsPairsParse vts lvlvs toks@((_,TClose "]"):_) = return ((vts,lvlvs),toks)
+parseSubPairs vts lvlvs []                      = return ((vts,lvlvs),[])
+parseSubPairs vts lvlvs toks@((_,TClose "]"):_) = return ((vts,lvlvs),toks)
 
-subsPairsParse vts lvlvs
+parseSubPairs vts lvlvs
    ((lno,TOpen "(")
    :vart@(_,TVar v _)
    :(_,TSep ","):rest1) = do
-     (term,rest2) <- sTermRead rest1
+     (term,rest2) <- parseTerm rest1
      rest3 <- expectToken (TClose ")") rest2
-     subsPairsParse ((var,term):vts) lvlvs rest3
+     parseSubPairs ((var,term):vts) lvlvs rest3
   where 
        (var,_) = fromJust $ loadVariable [vart]
-       -- (term,_) = fromJust $ sTermRead [tt]
+       -- (term,_) = fromJust $ parseTerm [tt]
 
-subsPairsParse vts lvlvs
+parseSubPairs vts lvlvs
    ((lno,TOpen "(")
    :lvart@(_,TLVar v _)
    :(_,TSep ",")
    :lvarr@(_,TLVar t _)
-   :(_,TClose ")"):rest1) = subsPairsParse vts ((tlv,rlv):lvlvs) rest1
+   :(_,TClose ")"):rest1) = parseSubPairs vts ((tlv,rlv):lvlvs) rest1
  where 
        (tlv,_) = fromJust $ loadListVariable [lvart]
        (rlv,_) = fromJust $ loadListVariable [lvarr]
 
-subsPairsParse vts lvlvs toks = fail $ unlines'
-  [ "subsPairsParse: expecting zero or more (v,t) or (tv$,rv$)" 
+parseSubPairs vts lvlvs toks = fail $ unlines'
+  [ "parseSubPairs: expecting zero or more (v,t) or (tv$,rv$)" 
   , " but got "++show (take 5 toks)]
 \end{code}
 
@@ -980,8 +980,8 @@ subsPairsParse vts lvlvs toks = fail $ unlines'
 Seen \h{ITER}.
 Expect subable,identifier,subable,identifier,list-variable list. 
 \begin{code}
-iterativeParse [] = premDuring ["iterativeParse"]
-iterativeParse 
+parseIter [] = premDuring ["parseIter"]
+parseIter 
   ( (lno,TVar sa _) : (_,TVar na _) :
     (_,TVar si _) : (_,TVar ni _) : (_,TOpen "[") : rest1 ) = do
       asub <- loadSBBL sa
@@ -989,8 +989,8 @@ iterativeParse
       (lvars,rest2) <- loadListVariables "]" rest1
       return ( Iter ArbType asub (jId na) isub (jId ni) lvars
              , rest2 )
-iterativeParse ((lno,ttyp):rest) = fail $ unlines'
-  [ "iterativeParse: expected subable indicator"
+parseIter ((lno,ttyp):rest) = fail $ unlines'
+  [ "parseIter: expected subable indicator"
   , "but got "++renderTokTyp ttyp++" at line "++show lno]
 \end{code}
 
@@ -998,7 +998,7 @@ iterativeParse ((lno,ttyp):rest) = fail $ unlines'
 
 \begin{code}
 loadTerm :: MonadFail mf => String -> mf (Term, [Token])
-loadTerm = sTermRead . tlex . prepare
+loadTerm = parseTerm . tlex . prepare
 \end{code}
 
 
@@ -1026,7 +1026,7 @@ kBy = "BY"
 \end{code}
 
 
-\subsection{Save Side-Condition}
+\subsection{Generate Side-Condition}
 
 \begin{code}
 genSideCond :: SideCond -> String
@@ -1192,7 +1192,7 @@ checkSC vscs gvs rest = do
 
 \section{Variables}
 
-\subsection{Save General Variable}
+\subsection{Generate General Variable}
 
 \begin{code}
 genGenVar :: GenVar -> String
@@ -1217,7 +1217,7 @@ loadGenVar ((lno,tok):_) = fail $ unlines'
   , "but got "++renderTokTyp tok++" at line "++show lno]
 \end{code}
 
-\subsection{Save List Variable}
+\subsection{Generate List Variable}
 
 \begin{code}
 genListVariable :: ListVar -> String
@@ -1254,7 +1254,7 @@ loadListVariables close toks = do
   return (lvar:lvars,rest2)
 \end{code}
 
-\subsection{Save Variable}
+\subsection{Generate Variable}
 
 \begin{code}
 genVariable :: Variable -> String
@@ -1315,7 +1315,7 @@ loadVariable ((lno,tok):_) = fail $ unlines'
 
 \typeover
 
-\subsection{Save Type}
+\subsection{Generate Type}
 
 \begin{code}
 arbTypeString = "T"

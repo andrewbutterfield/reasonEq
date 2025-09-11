@@ -224,7 +224,7 @@ saveLiveProofDescr = ( "save"
 saveLiveProofCommand :: REPLCmd (REqState, LiveProof)
 saveLiveProofCommand _ pstate@(reqs, liveProof)
   =  do let reqs' = updateProof reqs liveProof
-        reqs'' <- dumpAllState reqs'
+        reqs'' <- saveAllState reqs'
         putStrLn "Live proof saved"
         waitForReturn
         return (reqs'', liveProof)

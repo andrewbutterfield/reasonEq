@@ -1,6 +1,6 @@
 \chapter{Persistent Storage}
 \begin{verbatim}
-Copyright  Andrew Butterfield (c) 2017--24
+Copyright  Andrew Butterfield (c) 2017--25
 
 LICENSE: BSD3, see file LICENSE at reasonEq root
 \end{verbatim}
@@ -9,10 +9,10 @@ module Persistence
   ( getWorkspaces, putWorkspaces
   , currentWorkspace, createWorkspace
   , ifDirectoryExists, ifFileExists
-  , dumpAllState, grabAllState
-  , renderNamedTheory, parseNamedTheory
-  , saveConjectures, loadConjectures
-  , saveProof, loadProof
+  , saveAllState, restoreAllState
+  , saveNamedTheory, restoreNamedTheory
+  , saveConjectures, restoreConjectures
+  , saveProof, restoreProof
   )
 where
 
@@ -42,7 +42,7 @@ type WorkSpace = ( Bool -- True if this is the current workspace
 
 We check first for the existence of the ``user application''
 directory. If it exists, then we use its contents
-to identify the workspace and load up the prover state.
+to identify the workspace and restore the prover state.
 If not present, we assume this is the first time running,
 so we create it, and create a default workspace
 in the current working directory.
@@ -166,12 +166,12 @@ createWorkspace wsName wsReq
                if fileExists
                then do putStrLn ("Workspace already present: "++wsPath )
                        return (False,projFP)
-               else do dumpAllState wsReq
+               else do saveAllState wsReq
                        return (True,projFP)
        else do putStrLn ("Creating "++wsPath)
                createDirectoryIfMissing True wsPath
                putStrLn ("Creating "++projFP)
-               dumpAllState wsReq
+               saveAllState wsReq
                return (True,projFP)
 \end{code}
 
@@ -272,8 +272,8 @@ settingsPath projDir = projDir </> settingsFile
 \end{code}
 
 \begin{code}
-dumpAllState :: REqState -> IO REqState
-dumpAllState reqs
+saveAllState :: REqState -> IO REqState
+saveAllState reqs
   = do let pjdir = projectDir reqs
        ifDirectoryExists "REQ-STATE" reqs pjdir (doWriteAll reqs pjdir)
   where
@@ -292,8 +292,8 @@ dumpAllState reqs
 
 
 \begin{code}
-grabAllState :: REqState -> FilePath -> IO REqState
-grabAllState reqs projdirfp
+restoreAllState :: REqState -> FilePath -> IO REqState
+restoreAllState reqs projdirfp
   = ifDirectoryExists "REQ-STATE" reqs projdirfp (doReadAll projdirfp)
   where
     doReadAll projdirfp
@@ -342,8 +342,8 @@ theoryPath projDir thname  =  projDir </> thname </> thname <.> theoryExt
 
 
 \begin{code}
-renderNamedTheory :: FilePath -> (FilePath, Theory) -> IO ()
-renderNamedTheory pjdir (nm,theory)
+saveNamedTheory :: FilePath -> (FilePath, Theory) -> IO ()
+saveNamedTheory pjdir (nm,theory)
   = ifDirectoryExists "Theory" () pjdir (doWriteTheory pjdir nm theory)
   where
     doWriteTheory pjdir nm theory 
@@ -372,8 +372,8 @@ writeNamedTheoryTxt pjdir (thnm,(thTxt,pTxts))
 \end{code}
 
 \begin{code}
-parseNamedTheory :: TheoryDAG -> String -> String -> IO (Bool,Bool,TheoryDAG)
-parseNamedTheory thrys projfp nm
+restoreNamedTheory :: TheoryDAG -> String -> String -> IO (Bool,Bool,TheoryDAG)
+restoreNamedTheory thrys projfp nm
   = let 
       thryfp = theoryPath projfp nm
     in ifFileExists "Theory" (False,False,undefined) 
@@ -428,8 +428,8 @@ saveConjectures projfp thnm conjs
 \end{code}
 
 \begin{code}
-loadConjectures :: FilePath -> String -> IO [NmdAssertion]
-loadConjectures projfp thnm
+restoreConjectures :: FilePath -> String -> IO [NmdAssertion]
+restoreConjectures projfp thnm
   = let fp = conjsPath projfp thnm
     in ifFileExists "Conjecture" [] fp (parseConjs fp)
   where
@@ -473,10 +473,10 @@ writeProof  prjdir thnm (prfnm,pfstr)
 \end{code}
 
 \begin{code}
-loadProof :: FilePath -> String -> String -> IO (Maybe Proof)
-loadProof projdir thnm prfnm = do
+restoreProof :: FilePath -> String -> String -> IO (Maybe Proof)
+restoreProof projdir thnm prfnm = do
   let fp = proofPath projdir thnm prfnm
-  putStrLn ("loadProof.fp = "++fp)
+  putStrLn ("restoreProof.fp = "++fp)
   ifFileExists "Proof" Nothing fp (doReadProof fp prfnm)
   where
     doReadProof fp nm

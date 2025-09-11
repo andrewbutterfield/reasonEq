@@ -92,8 +92,8 @@ reqQuit _ reqs
  | otherwise       =  byeBye
  where
    saveAndGo reqs
-    = do putStrLn ("Changes made, dumping ....")
-         dumpAllState reqs
+    = do putStrLn ("Changes made, saving ....")
+         saveAllState reqs
          byeBye
    byeBye = putStrLn "\nGoodbye!\n" >> return (True, reqs)
 
@@ -276,33 +276,27 @@ generateState2 theory reqs = do
   return reqs
 \end{code}
 
-\textbf{
-We still keep these Show/Read-based formats for live project files,
-for tracking proofs, etc.,
-but so have switched here to terminology ``dump'' and ``grab''
-}
-
 
 
 \begin{code}
 cmdDump :: REqCmdDescr
 cmdDump
-  = ( "dump"
-    , "dump prover state to file"
+  = ( "save"
+    , "save prover state to file"
     , unlines
-        [ "dump          -- dump all prover state to current workspace"
-        , "dump .        -- dump current theory to current workspace"
-        , "dump <thry>   -- dump theory <thry> to current workspace"
-        , "dump " ++ prfObj
-                  ++" <proof>  -- dump proof <proof> to current workspace"
+        [ "save          -- save all prover state to current workspace"
+        , "save .        -- save current theory to current workspace"
+        , "save <thry>   -- save theory <thry> to current workspace"
+        , "save " ++ prfObj
+                  ++" <proof>  -- save proof <proof> to current workspace"
         , "To come:"
-        , "dump cnj <conj>  -- dump conjecture <cnj> to current workspace"
-        , "dump ax <axiom>  -- dump axiom <axiom> to current workspace"
+        , "save cnj <conj>  -- save conjecture <cnj> to current workspace"
+        , "save ax <axiom>  -- save axiom <axiom> to current workspace"
         ]
-    , dumpState )
+    , saveState )
 
-dumpState [] reqs = dumpAllState reqs
-dumpState [nm] reqs
+saveState [] reqs = saveAllState reqs
+saveState [nm] reqs
   = let nm' = if nm == "." then (currTheory reqs) else nm
     in
     case getTheory nm' $ theories reqs of
@@ -310,9 +304,9 @@ dumpState [nm] reqs
        -> do putStrLn ("No such theory: '"++nm'++"'")
              return reqs
       Just thry
-       -> do renderNamedTheory (projectDir reqs) (nm',thry)
+       -> do saveNamedTheory (projectDir reqs) (nm',thry)
              return reqs
-dumpState [what,nm] reqs
+saveState [what,nm] reqs
   | what == prfObj  = do
     let thnm = currTheory reqs 
     case ( getTheory thnm (theories reqs) 
@@ -326,7 +320,7 @@ dumpState [what,nm] reqs
                 putStrLn ("Proof '"++nm++"' saved")
                 return reqs
   where pnm nm (_,pn,_,_,_) = nm == pn
-dumpState _ reqs  =  doshow reqs "unknown 'dump' option."
+saveState _ reqs  =  doshow reqs "unknown 'save' option."
 \end{code}
 
 \newpage
@@ -334,29 +328,29 @@ dumpState _ reqs  =  doshow reqs "unknown 'dump' option."
 \begin{code}
 cmdGrab :: REqCmdDescr
 cmdGrab
-  = ( "grab"
-    , "grab prover state from file"
+  = ( "restore"
+    , "restore prover state from file"
     , unlines
 
-        [ "grab -- grab prover state from current workspace"
-        , "grab <thry> -- grab theory <thry> from current workspace"
+        [ "restore -- restore prover state from current workspace"
+        , "restore <thry> -- restore theory <thry> from current workspace"
         , "            -- warns if it modifies an existing theory"
-        , "grab " ++ prfObj 
-                  ++ " <proof>  -- grab proof <proof> from current workspace"
-        , "      CAUTION (will search for and grab into current theory (!))"
+        , "restore " ++ prfObj 
+                  ++ " <proof>  -- restore proof <proof> from current workspace"
+        , "      CAUTION (will search for and restore into current theory (!))"
         , "To come:"
-        , "grab cnj <conj>  -- grab conjecture <cnj> from current workspace"
-        , "grab ax <axiom>  -- grab axiom <axiom> from current workspace"
+        , "restore cnj <conj>  -- restore conjecture <cnj> from current workspace"
+        , "restore ax <axiom>  -- restore axiom <axiom> from current workspace"
         ]
-    , grabState )
+    , restoreState )
 
-grabState [] reqs = do 
+restoreState [] reqs = do 
   let dirfp = projectDir reqs
-  reqs' <- grabAllState reqs dirfp
+  reqs' <- restoreAllState reqs dirfp
   return reqs'{ inDevMode = inDevMode reqs}
-grabState [nm] reqs = do
+restoreState [nm] reqs = do
   let dirfp = projectDir reqs
-  (ok,old,theories') <- parseNamedTheory (theories reqs) dirfp nm
+  (ok,old,theories') <- restoreNamedTheory (theories reqs) dirfp nm
   if ok
   then ( if old
           then do putStr "keep change? (y/N)? "
@@ -368,17 +362,17 @@ grabState [nm] reqs = do
           else return $ changed $ theories_ theories' reqs )
   else return reqs
        
-grabState [what,nm] reqs | what == prfObj  = do
+restoreState [what,nm] reqs | what == prfObj  = do
   let thnm = currTheory reqs
   let dirfp = projectDir reqs
-  result <- loadProof dirfp thnm nm
+  result <- restoreProof dirfp thnm nm
   case result of
     Nothing -> return reqs
     Just prf -> do 
       putStrLn ("Loading proof for "++nm)
       return $ theories__ (addTheoryProof thnm prf) reqs
 
-grabState _ reqs  =  doshow reqs "unknown 'grab' option."
+restoreState _ reqs  =  doshow reqs "unknown 'restore' option."
 \end{code}
 
 \newpage
@@ -409,31 +403,31 @@ saveAsConjectures _ reqs
              return reqs
 \end{code}
 
-\subsection{Load Conjectures}
+\subsection{Restore Conjectures}
 
 \textbf{Just displays them for now}
 
 \begin{code}
 cmdLoadConj :: REqCmdDescr
 cmdLoadConj
-  = ( "ldc"
-    , "load conjectures"
+  = ( "resc"
+    , "restore conjectures"
     , unlines
-        [ "ldc      -- display conjectures in current theory"
-        , "ldc <nm> -- display conjectures in <nm>.cnj "
-        , "         -- proper loading to be implemented later, as needed."
+        [ "resc     -- display conjectures in current theory"
+        , "resc <nm> -- display conjectures in <nm>.cnj "
+        , "         -- Probably obsolete !!!"
         ]
     , displayConjectures )
 
 displayConjectures [] reqs
-  = do savedConjs <- loadConjectures (projectDir reqs) (currTheory reqs)
+  = do savedConjs <- restoreConjectures (projectDir reqs) (currTheory reqs)
        putStrLn $ unlines' $ map (trNmdAsn) savedConjs
        return reqs
 displayConjectures [nm] reqs
-  = do savedConjs <- loadConjectures (projectDir reqs) nm
+  = do savedConjs <- restoreConjectures (projectDir reqs) nm
        putStrLn $ unlines' $ map (trNmdAsn) savedConjs
        return reqs
-displayConjectures _ reqs  =  doshow reqs "unknown 'ldc' option."
+displayConjectures _ reqs  =  doshow reqs "unknown 'resc' option."
 \end{code}
 
 \newpage
@@ -450,6 +444,7 @@ cmdParseConj
     , unlines 
         [ "prs "++cnjObj++" conjname - parse conjecture from file" 
         , "    conjecture in <projdir>/<thnm>/<conjname>-conj.txt"
+        , "   Probably obsolete"
         ]
     , parseEntities )
 

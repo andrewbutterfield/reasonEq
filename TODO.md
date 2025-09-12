@@ -4,6 +4,7 @@
 
 **We start in EQV theory regardless of what was saved as the current theory**
 
+add `-r` to to a `restore` on startup.
 
 * Continue developing the  `Designs` theory.
 

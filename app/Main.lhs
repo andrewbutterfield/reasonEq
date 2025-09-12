@@ -94,7 +94,8 @@ versionFlag     = "-v"
 versionLongFlag = "--version"
 
 guiFlag        = "-g"    --          use GUI
-replFlag       = "-r"    --          use REPL (default)
+replFlag       = "-t"    --          use TUI (default)
+restoreFlag    = "-r"
 workspaceFlag  = "-w"    -- <path>   path to prover workspace
 userFlag       = "-u"    --          run in 'User' mode
 devFlag        = "-d"    --          run in 'Dev' mode
@@ -105,8 +106,9 @@ helpinfo
      [ "Usage:\n"
      , "req [command-line-options]\n"
 --     , option guiFlag "start-up GUI"
-     , option replFlag "start-up REPL"
-     , option (workspaceFlag++" <dir>") "workspace directory"
+     , option replFlag "start-up TUI (default)"
+     , option restoreFlag "restore on startup"
+     , option (workspaceFlag++" <dir>") "workspace directory (default '.')"
      , option userFlag "start-up in User mode (default)"
      , option devFlag "start-up in Dev mode"
      , ""
@@ -124,10 +126,12 @@ We shall define a record to record flag data,
 and a corresponding parser:
 \begin{code}
 data CMDFlags = CMDFlags { usegui  :: Bool
+                         , restore :: Bool
                          , wspath :: Maybe FilePath
                          , dev     :: Bool}
 
 defFlags = CMDFlags { usegui  = False
+                    , restore = False
                     , wspath = Nothing
                     , dev     = False }
 
@@ -140,10 +144,11 @@ parseArgs args = parse defFlags args where
            | isValid fp  =  Just fp
            | otherwise   =  Nothing
   parse flags (f:ss)
-   | f == guiFlag      =  parse flags{ usegui = True  }   ss
-   | f == replFlag     =  parse flags{ usegui = False }   ss
-   | f == userFlag     =  parse flags{ dev    = False }   ss
-   | f == devFlag      =  parse flags{ dev    = True  }   ss
+   | f == guiFlag      =  parse flags{ usegui  = True  }   ss
+   | f == restoreFlag  =  parse flags{ restore = True }   ss
+   | f == replFlag     =  parse flags{ usegui  = False }   ss
+   | f == userFlag     =  parse flags{ dev     = False }   ss
+   | f == devFlag      =  parse flags{ dev     = True  }   ss
    -- ignore anything else
    | otherwise         =  parse flags                     ss
 \end{code}
@@ -184,7 +189,10 @@ initState flags
   = case wspath flags of
       Nothing ->
         if dev flags
-        then return $ devInitState
+        then do let devstate0 = devInitState
+                if restore flags
+                then restoreAllState devstate0 $ projectDir devstate0
+                else return devstate0
         else do  putStrLn "Running user mode, default initial state."
                  (appFP,projects) <- getWorkspaces progName
                  putStrLn ("appFP = "++appFP)
@@ -198,7 +206,10 @@ initState flags
         do ok <- doesDirectoryExist fp
            if ok
            then if dev flags
-                then return $ devInitState{ projectDir = fp }
+                then do let devstatefp = devInitState{ projectDir = fp }
+                        if restore flags
+                        then restoreAllState devstatefp fp
+                        else return devstatefp
                 else do putStrLn "Running user mode, loading project state."
                         restoreAllState reqstate0 fp
            else die ("invalid workspace: "++fp)

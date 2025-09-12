@@ -4,18 +4,18 @@ Needs
 END
 
 
-Known A : FUN PROD P LE ENDP TO FUN B TO FUN PROD P LE ENDP TO B ENDF ENDF ENDF .
-Known X : FUN PROD P LE ENDP TO FUN B TO FUN PROD P LE ENDP TO FUN PROD P LE ENDP TO B ENDF ENDF ENDF ENDF .
-Known atom : FUN B TO B ENDF .
-Known cpll : FUN B TO FUN B TO B ENDF ENDF .
-Known cplus : FUN B TO FUN B TO B ENDF ENDF .
-Known cseq : FUN B TO FUN B TO B ENDF ENDF .
+Known A : ( ( P LE) -> ( B -> ( ( P LE) -> B ) ) ) .
+Known X : ( ( P LE) -> ( B -> ( ( P LE) -> ( ( P LE) -> B ) ) ) ) .
+Known atom : ( B -> B ) .
+Known cpll : ( B -> ( B -> B ) ) .
+Known cplus : ( B -> ( B -> B ) ) .
+Known cseq : ( B -> ( B -> B ) ) .
 Known cskip : B .
-Known cstar : FUN B TO B ENDF .
+Known cstar : ( B -> B ) .
 Known g : GE .
 Known in : LE .
-Known 'ls : PROD P LE ENDP .
-Known ls' : PROD P LE ENDP .
+Known 'ls : ( P LE) .
+Known ls' : ( P LE) .
 Known out : LE .
 Known 's : S .
 Known s' : S .

@@ -2,9 +2,8 @@
 
 ## PLAN
 
-**We start in EQV theory regardless of what was saved as the current theory**
 
-add `-r` to to a `restore` on startup.
+Should we have the unit type `()` with the sole value `()` ?
 
 * Continue developing the  `Designs` theory.
 

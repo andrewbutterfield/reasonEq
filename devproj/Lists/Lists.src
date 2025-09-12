@@ -1,0 +1,227 @@
+Theory Lists
+Needs
+  Impl EQV Equal Forall Arith Sets
+END
+
+
+Known cat : 
+    ( 
+      ( star 
+        t
+      ) 
+    -> 
+      ( 
+        ( star 
+          t
+        ) 
+      -> 
+        ( star 
+          t
+        ) 
+      ) 
+    ) .
+Known cons : 
+    ( t 
+    -> 
+      ( 
+        ( star 
+          t
+        ) 
+      -> 
+        ( star 
+          t
+        ) 
+      ) 
+    ) .
+Known elems : 
+    ( 
+      ( star 
+        t
+      ) 
+    -> 
+      ( P 
+        t
+      ) 
+    ) .
+Known hd : 
+    ( 
+      ( star 
+        t
+      ) 
+    -> t 
+    ) .
+Known len : 
+    ( 
+      ( star 
+        t
+      ) 
+    -> Z 
+    ) .
+Known nil : 
+    ( star 
+      t
+    ) .
+Known pfx : 
+    ( 
+      ( star 
+        t
+      ) 
+    -> 
+      ( 
+        ( star 
+          t
+        ) 
+      -> B 
+      ) 
+    ) .
+Known rev : 
+    ( 
+      ( star 
+        t
+      ) 
+    -> 
+      ( star 
+        t
+      ) 
+    ) .
+Known tl : 
+    ( 
+      ( star 
+        t
+      ) 
+    -> 
+      ( star 
+        t
+      ) 
+    ) .
+
+
+
+
+Law nil_cons_disj BEGIN
+ axiom
+ ,
+eqv CS (eq CS (nil,cons CS (x,sigma)),false)
+END
+
+Law cons_equality BEGIN
+ axiom
+ ,
+eqv CS (eq CS (cons CS (x,s1),cons CS (y,s2)),and CS (eq CS (x,y),eq CS (s1,s2)))
+END
+
+Law list_induction BEGIN
+ axiom
+ ,
+eqv CS (LP,and CS (SUB [(sigma,nil) ] LP,imp CS (LP,SUB [(sigma,cons CS (x,sigma)) ] LP)))
+END
+
+Law hd_def BEGIN
+ axiom
+ ,
+eq CS (hd CS (cons CS (x,sigma)),x)
+END
+
+Law tl_def BEGIN
+ axiom
+ ,
+eq CS (tl CS (cons CS (x,sigma)),sigma)
+END
+
+Law nil_cat_def BEGIN
+ axiom
+ ,
+eq CS (cat CS (nil,sigma),sigma)
+END
+
+Law cons_cat_def BEGIN
+ axiom
+ ,
+eq CS (cat CS (cons CS (x,s1),s2),cons CS (x,cat CS (s1,s2)))
+END
+
+Law nil_pfx_def BEGIN
+ axiom
+ ,
+pfx CS (nil,sigma)
+END
+
+Law cons_pfx_def BEGIN
+ axiom
+ ,
+eqv CS (pfx CS (cons CS (x,s1),cons CS (y,s2)),and CS (eq CS (x,y),pfx CS (s1,s2)))
+END
+
+Law s_pfx_nil BEGIN
+ axiom
+ ,
+eqv CS (pfx CS (sigma,nil),eq CS (sigma,nil))
+END
+
+Law rev_nil_def BEGIN
+ axiom
+ ,
+eq CS (rev CS (nil),nil)
+END
+
+Law rev_cons_def BEGIN
+ axiom
+ ,
+eq CS (rev CS (cons CS (x,sigma)),cat CS (rev CS (sigma),seq CS (x)))
+END
+
+Law elems_nil_def BEGIN
+ axiom
+ ,
+eq CS (elems CS (nil),emptyset)
+END
+
+Law elems_cons_def BEGIN
+ axiom
+ ,
+eq CS (elems CS (cons CS (x,sigma)),union CS (set CS (x),elems CS (sigma)))
+END
+
+Law len_nil_def BEGIN
+ axiom
+ ,
+eq CS (len CS (nil),0)
+END
+
+Law len_cons_def BEGIN
+ axiom
+ ,
+eq CS (len CS (cons CS (x,sigma)),add CS (1,len CS (sigma)))
+END
+
+Conjecture hd_cons_tl BEGIN
+  eq CS (cons CS (hd CS (cons CS (x,sigma)),tl CS (cons CS (x,sigma))),cons CS (x,sigma))
+END
+
+Conjecture cat_nil BEGIN
+  eq CS (cat CS (sigma,nil),sigma)
+END
+
+Conjecture cat_assoc BEGIN
+  eq CS (cat CS (s1,cat CS (s2,s3)),cat CS (cat CS (s1,s2),s3))
+END
+
+Conjecture rev_rev_id BEGIN
+  eq CS (rev CS (rev CS (sigma)),sigma)
+END
+
+Conjecture rev_cat BEGIN
+  eq CS (rev CS (cat CS (s1,s2)),cat CS (rev CS (s2),rev CS (s1)))
+END
+
+Conjecture elems_cat BEGIN
+  union CS (eq CS (elems CS (cat CS (s1,s2)),elems CS (s1)),elems CS (s2))
+END
+
+Conjecture len_cat BEGIN
+  eq CS (len CS (cat CS (s1,s2)),add CS (len CS (s1),len CS (s2)))
+END
+
+Conjecture len_rev BEGIN
+  eq CS (len CS (rev CS (sigma)),len CS (sigma))
+END

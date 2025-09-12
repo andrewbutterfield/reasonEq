@@ -251,7 +251,7 @@ loadKVarOfType :: MonadFail mf
 loadKVarOfType vt lno var vw []  =  premImport "type" var lno
 loadKVarOfType vt lno var vw rest = do
   (typ,rest') <- loadType rest
-  rest'' <- expectToken dotTok rest'
+  rest'' <- expectToken "loadKVarOfType" dotTok rest'
   vt' <- addKnownVar (Vbl (jId var) ObsV vw) typ vt
   return (vt',rest'')
 \end{code}
@@ -391,7 +391,7 @@ genVarTable (VarData (vtname,vtable,stable,dtable))
 genKnownVar :: (Variable,VarMatchRole) -> String
 genKnownVar (v,KnownConst trm) = genVariable v ++ " = " 
   ++ kBegin ++ " " ++ genTerm trm ++ " " ++ kEnd
-genKnownVar (v,KnownVar typ) = genVariable v ++ " : " ++ genType typ ++ " ."
+genKnownVar (v,KnownVar typ) = genVariable v ++ " : " ++ genType 4 typ ++ " ."
 genKnownVar (gv,GenericVar) = genVariable gv ++ " :: generic"
 genKnownVar (iv,InstanceVar gv) 
   = genVariable iv ++ " "++kInstanceOf++" " ++ genVariable gv
@@ -938,7 +938,7 @@ parseSubstn [] = premDuring ["parseSubstn"]
 parseSubstn ((lno,TOpen open):rest1)
   | open == "["  =  do
      ((vts,lvlvs),rest2) <- parseSubPairs [] [] rest1
-     rest3 <- expectToken (TClose "]") rest2
+     rest3 <- expectToken "parseSubstn" (TClose "]") rest2
      (term,rest4) <- parseTerm rest3
      sub <- substn vts lvlvs
      return (Sub (termtype term) term sub,rest4)
@@ -954,7 +954,7 @@ parseSubPairs vts lvlvs
    :vart@(_,TVar v _)
    :(_,TSep ","):rest1) = do
      (term,rest2) <- parseTerm rest1
-     rest3 <- expectToken (TClose ")") rest2
+     rest3 <- expectToken "parseSubPairs" (TClose ")") rest2
      parseSubPairs ((var,term):vts) lvlvs rest3
   where 
        (var,_) = fromJust $ loadVariable [vart]
@@ -1118,12 +1118,12 @@ parseSCRel1 sepk makesc vscs [] = premDuring ["parseSCRel1"]
 
 parseSCRel1 sepk makesc vscs toks@((_,TVar nm _):_) = do
   (var,rest1) <- loadVariable toks
-  rest2 <- expectToken (TVar sepk Static) rest1
+  rest2 <- expectToken "parseSCRel1-var" (TVar sepk Static) rest1
   parseSCRel2 makesc vscs (StdVar var) [] rest2
 
 parseSCRel1 sepk makesc vscs toks@((_,TLVar nm _):_) = do
   (lvar,rest1) <- loadListVariable toks
-  rest2 <- expectToken (TVar sepk Static) rest1
+  rest2 <- expectToken "parseSCRel1-lvar" (TVar sepk Static) rest1
   parseSCRel2 makesc vscs (LstVar lvar) [] rest2
 
 parseSCRel1 sepk _ _ ((lno,ttyp):_) = fail $ unlines'
@@ -1290,82 +1290,76 @@ loadVariable ((lno,tok):_) = fail $ unlines'
   , "but got "++renderTokTyp tok++" at line "++show lno]
 \end{code}
 
+\newpage
 \section{Types}
 
 \subsection{Type Grammar}
 
+Experimentation makes it clear that keywords are too heavy,
+so we use parentheses a lot!
+\def\typestart{Tokens that can start a type:  $id~($}
+\def\typefollow{Tokens that can follow and continue a type: $\fun~id~(~$}
+\def\typeopenfollow{(The) Token that can follow ( or $<$ is: $id$}
+\def\typeidfollow{Tokens that can follow a name and continue a type: $id~(~<$}
+\def\typeover{Tokens that can \emph{end} a type: $)$}
+\def\varstart{Tokens that can start a variant:  $<$}
+\def\varover{Tokens that can \emph{end} a variant: $>$}
 \def\typegrammar{
 \begin{eqnarray*}
 \lefteqn{t \in Type}
 \\ &::=&  name
-\\ &\mid& \mathbf{fun} ~t~ \mathbf{to} ~t~\mathbf{endf}
-\\ &\mid& \mathbf{prod}~name~t~\dots~t~\mathbf{endp}
-\\ &\mid& \mathbf{sum}~name~v^*~\mathbf{ends}
+\\ &\mid& \mathbf{(} ~t~ \fun ~t~\mathbf{)}
+\\ &\mid& \mathbf{(}~name~t~\dots~t~\mathbf{)}
+\\ &\mid& \mathbf{(}~name~v^*~\mathbf{)}
 \\\lefteqn{v \in Variant}
-\\ &::=& \mathbf{variant}~name~~t~\dots~t~\mathbf{endv}
+\\ &::=& \mathbf{<}~name~~t~\dots~t~\mathbf{>}
 \end{eqnarray*}
 }
-\def\typestart{Tokens that can start a type:  $id~fun~prod~sum$}
-\def\typefollow{Tokens that can follow and continue a type: $\fun~id~($}
-\def\typeover{Tokens that can \emph{end} a type: $endf~endp~ends$}
-
 \typegrammar
-
-\typestart
-
-\typeover
+\newline\typestart
+\newline\typefollow 
+\newline\typeopenfollow
+\newline\typeidfollow
+\newline\typeover
+\newline\varstart
+\newline\varover
 
 \subsection{Generate Type}
 
 \begin{code}
 arbTypeString = "T"
 bottomTypeString = "_"
+funArrow = "->"
+startCompType = "(" ; endCompType = ")"
+startVariant = "<" ; endVariant = ">"
+typeKeys = [ arbTypeString, bottomTypeString, funArrow
+           , startCompType, endCompType, startVariant, endVariant ]
 
-startFun = "FUN" ; funArrow = "TO" ; endFun = "ENDF"
-startProd = "PROD" ; endProd = "ENDP"
-startSum = "SUM" ; endSum = "ENDS"
-startVariant = "VARIANT" ; endVariant = "ENDV"
-
-typeKeys = [ arbTypeString, bottomTypeString
-           , startFun, funArrow, endFun
-           , startProd, endProd
-           , startSum, endSum, startVariant, endVariant ]
-
-genType :: Type -> String
-genType ArbType          = arbTypeString
-genType BottomType       = bottomTypeString
-genType (TypeVar i)      = idName i
-genType (GivenType i)    = idName i
-genType (FunType td tr)  
-  = startFun++" "++genType td++" "++funArrow++" "++genType tr++" "++endFun
-genType (TypeCons i [])  = idName i  -- degen, GivenType?
-genType (TypeCons i ts)  = startProd ++" "++genCons (i,ts)++" "++endProd
-genType (AlgType i fs)   = startSum ++" "++idName i 
-                            ++ '\n' : unlines' (map genVariant fs)
-                            ++ '\n' : endSum
+genType :: Int -> Type -> String
+genType _ ArbType          = arbTypeString
+genType _ BottomType       = bottomTypeString
+genType _ (TypeVar i)      = idName i
+genType _ (GivenType i)    = idName i
+genType i (FunType td tr)  
+  = startCompType++" "++genType (i+2) td++" "++
+    funArrow++" "++genType (i+2) tr++" "++endCompType
+genType _ (TypeCons i [])  = idName i  -- degen, GivenType?
+genType i (TypeCons consi ts)  
+  = startCompType ++ " " ++ genCons (i+2) (consi,ts) ++ endCompType
+genType i (AlgType algi fs)   
+  = nl i startCompType ++" "++idName algi ++ 
+    intercalate "" (map (genVariant (i+2)) fs) ++ nl i endCompType
 
 type Variant = (Identifier,[Type])
 
-genCons :: Variant -> String
-genCons (i,ts) = idName i ++ " " ++ intercalate " " (map genType ts)
+genCons :: Int -> Variant -> String
+genCons i (consi,ts) 
+  = idName consi ++ " " ++ (intercalate " " (map (genType i) ts))
 
-genVariant :: Variant -> String
-genVariant its
-  = "  "++startVariant++" "++genCons its++" "++endVariant
+genVariant :: Int -> Variant -> String
+genVariant i its
+  = nl i startVariant ++ " " ++ genCons (i+2) its ++endVariant
 
---genType (FunType td tr)  = wrapNonAtomic td++funTypeString++genType tr
--- genType (TypeCons i ts)  = genCons (i,ts)
--- genType (AlgType i fs) 
---  = idName i  ++ "    \n  "++altTypeString++" "++
---     intercalate ("   \n  "++altTypeString++" ") (map genCons fs)
-
-
---genCons (i,ts) = idName i ++ " " ++ intercalate " " (map wrapNonAtomic ts)
-
---openParString = "(" ; closeParString = ")"
--- wrapNonAtomic t
---   | isAtmType t = genType t
---  | otherwise  = openParString++genType t++closeParString
 \end{code}
 
 \newpage
@@ -1379,77 +1373,98 @@ names to pull out $\top$ and $\bot$ types.
 \begin{code}
 loadType :: MonadFail mf => [Token] -> mf (Type,[Token])
 loadType [] = premDuring ["loadType"]
-loadType ((lno,TVar nm _):rest)
-  | nm == startFun   =  loadFunType rest
-  | nm == startProd  =  loadProdType rest
-  | nm == startSum   =  loadSumType rest
-  | otherwise  = return (TypeVar (jId nm),rest)
-loadType (tok:_)
-  = fail ("loadType: invalid start "++show tok)
+loadType ((lno,TVar name _):rest) = return (TypeVar $ jId name,rest)
+loadType ((lno,TOpen open):rest)
+  | open == startCompType   =  loadCompositeType rest
+loadType toks = fail ("loadType: invalid start "++show (take 5 toks))
 \end{code}
 
-Seen: \textbf{fun}.
+\typeopenfollow
+
+Seen: \textbf{(}.
+Expects an initial name, then looks at second token to determine what follows.
 \begin{code}
-loadFunType [] = premDuring ["loadFunType"]
-loadFunType toks = do
-  (dtype,rest1) <- loadType toks
-  rest2 <- expectToken (TVar funArrow Static) rest1
-  (rtype,rest3) <- loadType rest2
-  rest4 <- expectToken (TVar endFun Static) rest3
-  return (FunType dtype rtype,rest4)
+loadCompositeType [] = premDuring ["loadCompositeType"]
+loadCompositeType ((lno,TVar name _):rest1) 
+  = loadCompType2 (TypeVar $ jId name) rest1
+loadCompositeType toks@((lno,TOpen open):_)
+  | open == startCompType = do
+      (typ,rest1) <- loadType toks
+      rest2 <- expectToken "loadCompositeType" (TClose endCompType) rest1
+      loadCompType2 typ rest2
+loadCompositeType toks
+  = fail ("loadCompositeType: invalid start "++show (take 5 toks))
 \end{code}
 
-Seen: \textbf{prod}.
+Seen: \textbf{( type1} (a.k.a the ``head type'' \textbf).
+Now looking for:
+\\ (1) \textbf{)} ---result: \textbf{type1}.
+\\ (2) \textbf{$\mathbf{\fun}$ type2)}  
+---result: $\mathbf{type1 \fun type2}$.
+\\ (3) \textbf{$\{\mathbf{<}$ nm $\mathbf{type^*}~>\}^*~\mathbf{)}$}
+--- result: \textbf{name}~$\{\mathbf{<}$ nm $\mathbf{type^*}~>\}^*$,
+only valid if head type is \textbf{name}.
+\\ (4) \textbf{$\mathbf{type^+}$)} 
+---result: $\mathbf{name(type^+)}$, 
+only valid if head type is \textbf{name}.
+
 \begin{code}
-loadProdType [] = premDuring ["loadProdType"]
-loadProdType ((lno,TVar nm _):rest1)
-  | not( nm `elem` typeKeys) = do
-      (types,rest2) <- loadTypes [] rest1
-      rest3 <- expectToken (TVar endProd Static) rest2
-      return (TypeCons (jId nm) types,rest3)
-loadProdType (tok:_) 
-  = fail ("loadProdType: invalid name "++show tok)
+loadCompType2 htype [] = premDuring["loadCompType2",show htype]
+-- (1)   ?  )
+loadCompType2 head toks@((_,TClose close):rest1) = return (head,rest1)
+-- (2)   ?  -> 
+loadCompType2 dtyp toks@((_,TSym sym):rest1)
+  | sym == funArrow  = do
+      (rtyp,rest2) <- loadType rest1
+      rest3 <- expectToken "loadCompType2 ->" (TClose endCompType) rest2
+      return (FunType dtyp rtyp,rest3)
+-- (3)   ?  <
+loadCompType2 (TypeVar tid) toks@((_,TSym sym):_)
+  | sym == startVariant  =  do
+      (variants,rest1) <- loadVariants [] toks
+      rest2 <- expectToken "loadCompType2 <" (TClose endCompType) rest1
+      return (AlgType tid variants,rest2)
+-- (4)   ?  terms
+loadCompType2 (TypeVar tid) toks = loadProdType tid [] toks
+-- ???
+loadCompType2 typ toks = fail 
+    ("loadCompType2  expected ')' \"->\" type '<',  got "++show (take 5 toks))
 \end{code}
 
-Seen: \textbf{sum}.
+Seen: \textbf{( name $t^*$}.
+Expecting a type or \textbf{)}.
 \begin{code}
-loadSumType [] = premDuring ["loadSumType"]
-loadSumType ((lno,TVar nm _):rest1)
-  | not( nm `elem` typeKeys) = do 
-      (variants,rest2) <- loadVariants (jId nm) [] rest1
-      rest3 <- expectToken (TVar endSum Static) rest2
-      return (AlgType (jId nm) variants,rest3)
-loadSumType (tok:_) 
-  = fail ("loadSumType: invalid name "++show tok)
+loadProdType pid _ [] = premDuring ["loadProdType",idName pid]
+loadProdType pid sepyt ((lno,TClose close):rest1)
+  | close == endCompType  
+     -- we need to check below for function arrows
+     =  return (TypeCons pid (reverse sepyt),rest1)
+loadProdType pid sepyt toks = do
+  (typ,rest1) <- loadType toks
+  loadProdType pid (typ:sepyt) rest1
 \end{code}
 
 Seen: \textbf{variant}.
 \begin{code}
-loadVariant [] = premDuring ["loadVariant"]
-loadVariant ((lno,TVar nm _):rest1)
-  | not( nm `elem` typeKeys) = do
-      (types,rest2) <- loadTypes [] rest1
-      rest3 <- expectToken (TVar endVariant Static) rest2
-      return ((jId nm,types),rest3)
-loadVariant (tok:_) 
-  = fail ("loadVariant: invalid name "++show tok)
+loadVariant name [] = premDuring ["loadVariant"]
+loadVariant name (tok:_) 
+  = fail ("loadVariant("++name++"): NYI "++show tok)
 \end{code}
 
 Seen \textbf{sum} sumname.
 Expecting a list of zero or more types, ended by \textbf{endp} or \textbf{endv}.
 \begin{code}
 loadVariants :: MonadFail mf 
-               => Identifier -> [Variant] -> [Token] 
-               -> mf ([Variant],[Token])
-loadVariants vid stnairav toks@[] = return (reverse stnairav,toks)
-loadVariants vid stnairav toks@(tok@(lno,TVar str _):rest1)
-  | str == endSum  =  return (reverse stnairav,toks)
+               => [Variant] -> [Token] -> mf ([Variant],[Token])
+loadVariants stnairav toks@[] = return (reverse stnairav,toks)
+loadVariants stnairav toks@(tok@(lno,TVar str _):rest1)
+  | str == endCompType  =  return (reverse stnairav,toks)
   | str /= startVariant  = fail ("loadVariants: invalid key "++show tok)
   | otherwise = do
-      (variant,rest2) <- loadVariant rest1
+      (variant,rest2) <- loadVariant "??" rest1
       case rest2 of 
         [] -> premDuring ["loadVariants",endVariant]
-        _ -> loadVariants vid (variant:stnairav) rest2
+        _ -> loadVariants (variant:stnairav) rest2
 \end{code}
 
 Expecting a list of zero or more types, ended by \textbf{endp} or \textbf{endv}.
@@ -1457,7 +1472,7 @@ Expecting a list of zero or more types, ended by \textbf{endp} or \textbf{endv}.
 loadTypes :: MonadFail mf => [Type] -> [Token] -> mf ([Type],[Token])
 loadTypes sepyt toks@[]            = return (reverse sepyt,toks)
 loadTypes sepyt toks@((lno,TVar end _):rest)
-  | end `elem` [endProd,endVariant]  =  return (reverse sepyt,toks)
+  | end `elem` [endCompType,endVariant]  =  return (reverse sepyt,toks)
 loadTypes sepyt toks = do
   (typ',rest1) <- loadType toks
   loadTypes (typ':sepyt) rest1
@@ -1483,7 +1498,7 @@ typeOver _                                           =  False
 \end{code}
 
 
-\subsection{Load Separated List}
+\section{Load Separated List}
 
 Called to parse a list of items with a separator symbol,
 and consumes entire input.
@@ -1497,12 +1512,24 @@ loadSepList sep objparser tokens = do
   case rest1 of
     [] ->  return ([obj],rest1)
     _  -> do
-      rest2 <- expectToken sep rest1
+      rest2 <- expectToken "loadSepList" sep rest1
       (objs,rest3) <- loadSepList sep objparser rest2
       return (obj:objs,rest3)
 \end{code}
 
-\newpage
+\section{Indentation}
+
+We need to keep things readable, using indentation when we generate sources.
+
+Indenting occurs immediately after a newline,
+so we define an indentation-aware newline function,
+that takes an indent and string as parameters:
+\begin{code}
+nl :: Int -> String -> String
+nl i s = '\n':replicate i ' ' ++ s
+\end{code}
+
+
 \section{Lexical Basics}
 
 We limit everything to the ASCII subset,
@@ -1814,13 +1841,16 @@ premImport what got lno
 
 Called when a specific token is expected:
 \begin{code}
-expectToken :: MonadFail mf => TokenType -> [Token] -> mf [Token]
-expectToken tok [] = fail ("premature end while expecting "++renderTokTyp tok)
-expectToken tok ((lno,tok'):rest)
+expectToken :: MonadFail mf => String -> TokenType -> [Token] -> mf [Token]
+expectToken msg tok [] = fail $ unlines'
+  [ "premature end ("++msg++")"
+  , "while expecting "++renderTokTyp tok ]
+expectToken msg tok toks@((lno,tok'):rest)
   | tok == tok'  =  return rest
   | otherwise    =  fail $ unlines'
-                      [ "was expecting "++show tok++" at line "++show lno
-                      , "but found "++show tok' ]
+                      [ "expectToken("++msg++") error"
+                      , "was expecting "++show tok++" at line "++show lno
+                      , "but found "++show (take 5 toks)]
 \end{code}
 
 Called to parse something inside delimiters.
@@ -1832,7 +1862,7 @@ delimitedParse close parser []
   = fail ("premature end while parsing before "++renderTokTyp close)
 delimitedParse close parser tokens = do
   (thing,rest) <- parser tokens
-  rest' <- expectToken close rest
+  rest' <- expectToken "delimitedParse" close rest
   return (thing,rest')
 \end{code}
 

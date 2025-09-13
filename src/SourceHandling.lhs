@@ -415,16 +415,17 @@ genKnownDynamic :: (IdAndClass,DynamicLstVarRole) -> String
 genKnownDynamic ((id,vc),DynamicList vl lvl _ _) 
 -- we can infer vc from the classes of vl and lvl 
 -- which should also be known-var
-  =  trId id ++ "$' = < "
-    ++ intercalate "," (map idName vl)
+-- we render using before-variables:  'lst$ = .. 'v ... 'lv$
+  =  "'" ++ trId id ++ "$ = < "
+    ++ intercalate "," (map (("'"++) . idName) vl)
     ++ (if length vl > 0 && length lvl > 0 then "," else "")
-    ++ intercalate "," (map ((++"$") . idName) lvl)
+    ++ intercalate "," (map (("'"++) . (++"$") . idName) lvl)
     ++ " >"
 genKnownDynamic ((id,vc),DynamicSet vs lvs _ _) 
-  =  trId id ++ "$' = {"
-    ++ intercalate "," (S.toList (S.map idName vs))
+  =  "'" ++ trId id ++ "$ = {"
+    ++ intercalate "," (S.toList (S.map (("'"++) . idName) vs))
     ++ (if S.size vs > 0 && S.size lvs > 0 then "," else "")
-    ++ intercalate "," (S.toList (S.map ((++"$") . idName) lvs))
+    ++ intercalate "," (S.toList (S.map (("'"++) . (++"$") . idName) lvs))
     ++ "}"
 genKnownDynamic ((id,vc),DynamicAbsList) =  trId id ++"$' :: list "
 genKnownDynamic ((id,vc),DynamicAbsSet) =  trId id ++"$' :: set "
@@ -1345,7 +1346,7 @@ genType i (FunType td tr)
     funArrow++" "++genType (i+2) tr++" "++endCompType
 genType _ (TypeCons i [])  = idName i  -- degen, GivenType?
 genType i (TypeCons consi ts)  
-  = startCompType ++ " " ++ genCons (i+2) (consi,ts) ++ endCompType
+  = startCompType ++ " " ++ genCons (i+2) (consi,ts) ++ " " ++ endCompType
 genType i (AlgType algi fs)   
   = nl i startCompType ++" "++idName algi ++ 
     intercalate "" (map (genVariant (i+2)) fs) ++ nl i endCompType
@@ -1358,7 +1359,7 @@ genCons i (consi,ts)
 
 genVariant :: Int -> Variant -> String
 genVariant i its
-  = nl i startVariant ++ " " ++ genCons (i+2) its ++endVariant
+  = nl i startVariant ++ " " ++ genCons (i+2) its ++" "++endVariant
 
 \end{code}
 
@@ -1390,8 +1391,7 @@ loadCompositeType ((lno,TVar name _):rest1)
 loadCompositeType toks@((lno,TOpen open):_)
   | open == startCompType = do
       (typ,rest1) <- loadType toks
-      rest2 <- expectToken "loadCompositeType" (TClose endCompType) rest1
-      loadCompType2 typ rest2
+      loadCompType2 typ rest1
 loadCompositeType toks
   = fail ("loadCompositeType: invalid start "++show (take 5 toks))
 \end{code}
@@ -1444,35 +1444,51 @@ loadProdType pid sepyt toks = do
   loadProdType pid (typ:sepyt) rest1
 \end{code}
 
-Seen: \textbf{variant}.
-\begin{code}
-loadVariant name [] = premDuring ["loadVariant"]
-loadVariant name (tok:_) 
-  = fail ("loadVariant("++name++"): NYI "++show tok)
-\end{code}
 
-Seen \textbf{sum} sumname.
-Expecting a list of zero or more types, ended by \textbf{endp} or \textbf{endv}.
+Seen \textbf{sum sumname}, 
+called from top-level knowning that the next token is $\mathbf{<}$.
 \begin{code}
 loadVariants :: MonadFail mf 
                => [Variant] -> [Token] -> mf ([Variant],[Token])
 loadVariants stnairav toks@[] = return (reverse stnairav,toks)
-loadVariants stnairav toks@(tok@(lno,TVar str _):rest1)
-  | str == endCompType  =  return (reverse stnairav,toks)
-  | str /= startVariant  = fail ("loadVariants: invalid key "++show tok)
-  | otherwise = do
-      (variant,rest2) <- loadVariant "??" rest1
-      case rest2 of 
+loadVariants stnairav toks@(tok@(lno,TClose close):rest1)
+  | close == endCompType  =  return (reverse stnairav,toks)
+loadVariants stnairav toks@(tok@(lno,TSym str):_)
+ | str /= startVariant  
+     = fail ("loadVariants: expecting '<' but got "++show tok)
+ | otherwise = do
+      (variant,rest1) <- loadVariant toks
+      case rest1 of 
         [] -> premDuring ["loadVariants",endVariant]
-        _ -> loadVariants (variant:stnairav) rest2
+        _ -> loadVariants (variant:stnairav) rest1
+loadVariants stnairav toks = fail $ unlines'
+  [ "loadVariants("++show (length stnairav)++" so far):  expected ')' or '<'"
+  , "but got "++show (take 5 toks) ]
 \end{code}
+
+Looks for $\mathbf{<}~name~t_1~t_2~\dots~t_n~\mathbf{>}$
+\begin{code}
+loadVariant [] = premDuring ["loadVariant"]
+loadVariant ((lno,TSym sym):rest1)
+  | sym == startVariant  = do
+      (Vbl vid _ _,rest2) <- loadVariable rest1
+      (types,rest3) <- loadTypes [] rest2
+      rest4 <- expectToken "loadVariant" (TSym endVariant) rest3
+      return ((vid,types),rest4)
+loadVariant toks = fail $ unlines'
+  [ "loadVariant: expecting '<'"
+  , "but saw "++show (take 5 toks) ]
+\end{code}
+
 
 Expecting a list of zero or more types, ended by \textbf{endp} or \textbf{endv}.
 \begin{code}
 loadTypes :: MonadFail mf => [Type] -> [Token] -> mf ([Type],[Token])
 loadTypes sepyt toks@[]            = return (reverse sepyt,toks)
-loadTypes sepyt toks@((lno,TVar end _):rest)
-  | end `elem` [endCompType,endVariant]  =  return (reverse sepyt,toks)
+loadTypes sepyt toks@((lno,TClose end):rest)
+  | end == endCompType  =  return (reverse sepyt,toks)
+loadTypes sepyt toks@((lno,TSym end):rest)
+  | end == endVariant  =  return (reverse sepyt,toks)
 loadTypes sepyt toks = do
   (typ',rest1) <- loadType toks
   loadTypes (typ':sepyt) rest1

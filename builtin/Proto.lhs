@@ -54,10 +54,10 @@ molIntro = mkKnownConst (Vbl (jId "mol") ExprV Static) (Val int $ Integer 42)
 prodIntro =  mkConsIntro (jId "prodt") 
                           (TypeCons (jId "Prod") [(GivenType $ jId "A"),bool])
 sumIntro = mkConsIntro (jId "sumt")
-  ( AlgType (jId "Sum")
-      [ ((jId "Sum1"),[])
-      , ((jId "Sum2"),[(GivenType $ jId "B")])
-      , ((jId "Sum3"),[boolf_1,(GivenType $ jId "A"),bool])
+  ( AlgType (jId "S")
+      [ ((jId "P1"),[])
+      , ((jId "P2"),[(GivenType $ jId "B")])
+      , ((jId "P3"),[boolf_1,(GivenType $ jId "A"),bool])
       ] 
   )
 genvar = Vbl (jId "gen") ExprV Static
@@ -88,10 +88,12 @@ yIntro = mkConsIntro (jId "y") bool
 
 --dynamic list variables
 
+u = Vbl (jId "u") ObsV Before ; gu = StdVar u ; uIntro = mkKnownVar u bool 
+v = Vbl (jId "v") ObsV Before ; gv = StdVar v ; vIntro = mkKnownVar v bool 
 dlLVar = LVbl (Vbl (jId "list") ObsV Before) [] []
-dlistIntro = fromJust . addKnownLListVar dlLVar []
+dlistIntro = fromJust . addKnownLListVar dlLVar [gu,gv]
 dsLVar = LVbl (Vbl (jId "set") ObsV After) [] []
-dsetIntro = fromJust . addKnownSListVar dsLVar S.empty
+dsetIntro = fromJust . addKnownSListVar dsLVar (S.fromList [gu,gv])
 dabsSetIntro = mkAbsSetVar (Vbl (jId "aset") ObsV Before)
 dabsListIntro = mkAbsListVar (Vbl (jId "alist") ObsV After)
 \end{code}
@@ -113,12 +115,14 @@ protoKnown
     klist2Intro $
     klist0Intro $
     klist1Intro $
-    xIntro $ yIntro $
+    xIntro $ 
+    yIntro $
     kabsListIntro $
     kabsSetIntro $
  
     dlistIntro $
     dsetIntro $
+    uIntro $ vIntro $
     dabsListIntro $
     dabsSetIntro $
     newNamedVarTable protoName

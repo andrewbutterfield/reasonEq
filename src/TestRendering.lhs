@@ -146,7 +146,7 @@ trType (TypeCons i@(Identifier s _) [t])
                              ++ trId i
 trType (TypeCons i [t])  =  trId i ++ " " ++ trType t
 trType (TypeCons i ts)   =  trId i ++ " " ++ trTypes ts 
-trType (AlgType i itss)  =  "ADT"
+trType (AlgType i itss)  =  concat (trId i:map trVariant itss)
 -- fun-types are right-associative
 trType (FunType ft@(FunType _ _) tr)   
   =  "(" ++ trType ft ++ ")" ++  trFun ++ trType tr
@@ -160,6 +160,8 @@ typdbg = rdbg trType
 trTypes = seplist " " wrapType
 
 wrapType t = trBracketIf (not $ isAtmType t) (trType t)
+
+trVariant (i,ts) = " | "++trId i++" "++trTypes ts
 
 trFun = _fun ++ " "
 

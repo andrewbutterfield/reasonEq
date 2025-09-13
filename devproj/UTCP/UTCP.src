@@ -4,8 +4,8 @@ Needs
 END
 
 
-Known A : ( ( P LE) -> ( B -> ( ( P LE) -> B ) ) ) .
-Known X : ( ( P LE) -> ( B -> ( ( P LE) -> ( ( P LE) -> B ) ) ) ) .
+Known A : ( ( P LE ) -> ( B -> ( ( P LE ) -> B ) ) ) .
+Known X : ( ( P LE ) -> ( B -> ( ( P LE ) -> ( ( P LE ) -> B ) ) ) ) .
 Known atom : ( B -> B ) .
 Known cpll : ( B -> ( B -> B ) ) .
 Known cplus : ( B -> ( B -> B ) ) .
@@ -14,13 +14,13 @@ Known cskip : B .
 Known cstar : ( B -> B ) .
 Known g : GE .
 Known in : LE .
-Known 'ls : ( P LE) .
-Known ls' : ( P LE) .
+Known 'ls : ( P LE ) .
+Known ls' : ( P LE ) .
 Known out : LE .
 Known 's : S .
 Known s' : S .
 
-Known O$' = < s,ls >
+Known 'O$ = < 's,'ls >
 
 
 Law X_def BEGIN

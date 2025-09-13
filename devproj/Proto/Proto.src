@@ -8,13 +8,15 @@ Known atermf : ( B -> B ) .
 Known gen :: generic
 Known inst instanceof gen
 Known mol = BEGIN 42 END
-Known prodt : ( Prod A B) .
+Known prodt : ( Prod A B ) .
 Known sumt : 
-    ( Sum
-      < Sum1 >
-      < Sum2 B>
-      < Sum3 ( B -> B ) A B>
+    ( S
+      < P1  >
+      < P2 B >
+      < P3 ( B -> B ) A B >
     ) .
+Known 'u : B .
+Known 'v : B .
 Known x : B .
 Known y : B .
 Known alist$ :: list
@@ -25,8 +27,8 @@ Known klist2$ = < x,y >
 Known set$ = {}
 Known alist$' :: list 
 Known aset$' :: set 
-Known list$' = <  >
-Known set$' = {}
+Known 'list$ = < 'u,'v >
+Known 'set$ = {'u,'v}
 
 
 

@@ -390,7 +390,7 @@ genVarTable (VarData (vtname,vtable,stable,dtable))
 
 genKnownVar :: (Variable,VarMatchRole) -> String
 genKnownVar (v,KnownConst trm) = genVariable v ++ " = " 
-  ++ kBegin ++ " " ++ genTerm trm ++ " " ++ kEnd
+  ++ kBegin ++ " " ++ genTerm 0 trm ++ " " ++ kEnd
 genKnownVar (v,KnownVar typ) = genVariable v ++ " : " ++ genType 4 typ ++ " ."
 genKnownVar (gv,GenericVar) = genVariable gv ++ " :: generic"
 genKnownVar (iv,InstanceVar gv) 
@@ -532,7 +532,7 @@ genLaw :: Law -> String
 genLaw ((name,Assertion tm sc),provenance)
   = unlines' ( [ "", kLaw ++ " " ++ name ++ " " ++ kBegin
                , " " ++ genProv provenance
-               , " ," , genTerm tm ]
+               , " ," , genTerm 0 tm ]
                ++ (if isTrivialSC sc then [] else [",",genSideCond sc])
                ++ [ kEnd ] )
 
@@ -587,7 +587,7 @@ genConjectures nmdassns  =  unlines' $ map genConjecture nmdassns
 genConjecture :: NmdAssertion -> String
 genConjecture (name,Assertion tm sc)
   = unlines'  ( [ "", kConjecture ++ " " ++ name ++ " " ++ kBegin 
-                , "  " ++ genTerm tm ]
+                , "  " ++ genTerm 0 tm ]
                 ++ (if isTrivialSC sc then [] else [", " ++ genSideCond sc])
                 ++ [ kEnd ] )
 \end{code}
@@ -680,42 +680,42 @@ term_syntax = syntax_bits ++ term_definition ++ key_names
 \begin{code}
 genSBBL s = if s then kCS else kNS
 
-genTerm :: Term -> String
-genTerm (Val typ (Boolean b)) = if b then kTrue else kFalse
-genTerm (Val typ (Integer i)) = show i
-genTerm (Var typ var) = genVariable var
-genTerm (Cons typ subable (Identifier i _) terms) 
-  = i ++ " " ++ (genSBBL subable) ++ " "
+genTerm :: Int -> Term -> String
+genTerm _ (Val typ (Boolean b)) = if b then kTrue else kFalse
+genTerm _ (Val typ (Integer n)) = show n
+genTerm _ (Var typ var) = genVariable var
+genTerm i (Cons typ subable (Identifier consi _) terms) 
+  = consi ++ " " ++ (genSBBL subable) ++ " "
       ++ "("
-      ++ (intercalate [kSep] $ map genTerm terms)
+      ++ (intercalate [kSep] $ map (genTerm (i+2)) terms)
       ++ ")"
-genTerm (Bnd typ (Identifier quant _) vs term)
+genTerm i (Bnd typ (Identifier quant _) vs term)
   = kSetBind ++ " " ++ quant
     ++ " " ++ intercalate " " (S.toList (S.map genGenVar vs))
     ++ "\n  " ++ kQBody 
-    ++ "  " ++ genTerm term
-genTerm (Lam typ (Identifier lambda _) vl term)
+    ++ "  " ++ genTerm (i+2) term
+genTerm i (Lam typ (Identifier lambda _) vl term)
   = kListBind ++ " " ++ lambda
     ++ " " ++  intercalate " " (map genGenVar vl)
     ++ "\n  " ++kQBody 
-    ++ " " ++ genTerm term
-genTerm (Cls (Identifier kind _) term) 
-  = kClosure ++ " "++kind++"\n  "++genTerm term
-genTerm (Sub typ term (Substn vts lvlvs))
-  = kSubst ++ " [" ++ genTermVarSubs (S.toList vts) ++ " "
+    ++ " " ++ genTerm (i+2) term
+genTerm i (Cls (Identifier kind _) term) 
+  = kClosure ++ " "++kind++"\n  "++genTerm (i+2) term
+genTerm i (Sub typ term (Substn vts lvlvs))
+  = kSubst ++ " [" ++ genTermVarSubs 0 (S.toList vts) ++ " "
                    ++ genLVarSubs (S.toList lvlvs) ++ "] "
-    ++ genTerm term
-genTerm (Iter typ sa na si ni lvs)
+    ++ genTerm (i+2) term
+genTerm _ (Iter typ sa na si ni lvs)
   = kIter 
     ++ " " ++ genSBBL sa ++ " " ++ idName na
     ++ " " ++ genSBBL si ++ " " ++ idName ni
     ++ " ["++intercalate " " (map genListVariable lvs)++"]"
-genTerm (VTyp typ var) = "VT-stuff?"
+genTerm _ (VTyp typ var) = "VT-stuff?"
 \end{code}
 
 \begin{code}
-genTermVarSubs vts = intercalate " " $ map genTermVarSub vts
-genTermVarSub (v,t) = "("++genVariable v++","++genTerm t++")"
+genTermVarSubs i vts   = intercalate " " $ map (genTermVarSub i) vts
+genTermVarSub  i (v,t) = "("++genVariable v++","++genTerm (i+2) t++")"
 
 genLVarSubs lvlvs = intercalate " " $ map genLVarSub lvlvs
 genLVarSub (tlv,rlv) 

@@ -687,7 +687,7 @@ genTerm _ (Var typ var) = genVariable var
 genTerm i (Cons typ subable (Identifier consi _) terms) 
   = consi ++ " " ++ (genSBBL subable) ++ " "
       ++ "("
-      ++ (intercalate [kSep] $ map (genTerm (i+2)) terms)
+      ++ intercalate [kSep] (map (genTerm (i+2)) terms)
       ++ ")"
 genTerm i (Bnd typ (Identifier quant _) vs term)
   = kSetBind ++ " " ++ quant

@@ -1,0 +1,94 @@
+Theory Designs
+Needs
+  UWhile UBase AOI And Or Not EQV
+END
+
+
+Known H1 {O NS} : ( B -> B ) .
+Known H2 {O NS} : ( B -> B ) .
+Known H3 {O NS} : ( B -> B ) .
+Known H4 {O NS} : ( B -> B ) .
+Known design {O NS} : ( B -> ( B -> B ) ) .
+Known 'ok {O} : B .
+Known ok' {O} : B .
+
+
+
+IDSUBS:
+fromList [(Id "H1" 0,False),(Id "H2" 0,False),(Id "H3" 0,False),(Id "H4" 0,False),(Id "and" 0,True),(Id "design" 0,False),(Id "eq" 0,True),(Id "eqv" 0,True),(Id "imp" 0,True),(Id "mkH1" 0,False),(Id "mkH3" 0,False),(Id "refines" 0,False),(Id "sqcmp" 0,False)]
+
+
+
+
+Law design_def BEGIN
+ axiom
+ ,
+eqv CS (design NS (P,Q),imp CS (and CS ('ok,P),and CS (ok',Q)))
+END
+
+Law mkH1_def BEGIN
+ axiom
+ ,
+eqv CS (mkH1 NS (R),imp CS ('ok,R))
+END
+
+Law H1_def BEGIN
+ axiom
+ ,
+eqv CS (H1 NS (R),eq CS (R,imp CS ('ok,R)))
+END
+
+Law H2_def BEGIN
+ axiom
+ ,
+eqv CS (H2 NS (R),refines NS (SUB [(ok',false) ] R,SUB [(ok',true) ] R))
+END
+
+Law mkH3_def BEGIN
+ axiom
+ ,
+eqv CS (mkH3 NS (R),sqcmp NS (R,II))
+END
+
+Law H3_def BEGIN
+ axiom
+ ,
+eqv CS (H3 NS (R),eq CS (R,sqcmp NS (R,II)))
+END
+
+Law H4_def BEGIN
+ axiom
+ ,
+eqv CS (H4 NS (R),sqcmp NS (R,true))
+END
+
+Conjecture design_sqcmp_lzero BEGIN
+  eqv CS (sqcmp NS (true,design NS (P,Q)),true)
+, VREL (DYNCOV P BY 'O$ O$') (DYNCOV Q BY 'O$ O$') (DYNCOV 'ok BY 'O$) (DYNCOV ok' BY O$')
+END
+
+Conjecture H1_sat_lzero_lunit BEGIN
+  eqv CS (H1 NS (R),and CS (eq CS (sqcmp NS (true,R),true),eq CS (sqcmp NS (II,R),R)))
+, VREL (DYNCOV R BY 'O$ O$') (DYNCOV 'ok BY 'O$) (DYNCOV ok' BY O$')
+END
+
+Conjecture mkH1_idem BEGIN
+  eq CS (imp CS ('ok,imp CS ('ok,R)),imp CS ('ok,R))
+END
+
+Conjecture mkH1_mono BEGIN
+  imp CS (refines NS (P,Q),refines NS (imp CS ('ok,P),imp CS ('ok,Q)))
+END
+
+Conjecture H3_absorbs_right_skip BEGIN
+  eqv CS (H3 NS (sqcmp NS (design NS (p,Q),II)),design NS (p,Q))
+, VREL (DYNCOV Q BY 'O$ O$') (DYNCOV p BY 'O$)
+END
+
+Conjecture H4_is_feasible BEGIN
+  eqv CS (H4 NS (R),CLS universal
+  QS exists O$'
+  @
+    R)
+, VREL (DYNCOV R BY 'O$ O$') (DYNCOV 'ok BY 'O$) (DYNCOV ok' BY O$')
+END

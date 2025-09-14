@@ -19,6 +19,7 @@ where
 import Data.Maybe(fromJust)
 -- import Data.Map as M (fromList,assocs)
 import qualified Data.Set as S
+import Data.Map (Map)
 import qualified Data.Map as M
 import Data.List (nub, sort, (\\), intercalate, stripPrefix)
 import Data.Char
@@ -52,11 +53,6 @@ The plan is that we will use this as the main way to create
 new theories,
 so we don't have to use Haskell modules.
 
-For now we have simple literals,
-composites done as prefix-functions applied to delimited lists of sub-terms,
-and binders in standard mixfix style.
-
-
 \newpage
 \section{Theories}
 
@@ -89,6 +85,22 @@ can occur in any order, and multiple times.
 Their contents are gathered and kept in sequence.
 When we output theories like this, 
 all the items in the same category will appear together.
+
+Constructor names are defined as known with a type
+(e.g. $\equiv ~:~ \Bool \fun \Bool -> \Bool$).
+But we really also need to know if its construct is substitutable or not.
+We define a function that runs over all axioms, 
+constructing a map from constructor names to their substitutability.
+\begin{code}
+type IdSubMap = Map Identifier Subable
+collectConsSubstitutability :: Theory -> IdSubMap
+collectConsSubstitutability theory = collConsSub $ laws theory
+
+collConsSub [] = M.empty
+collConsSub (((_,Assertion tm _),_):rest)
+  = M.fromList (termIdSubability tm) `M.union` collConsSub rest
+\end{code}
+
 
 Keywords:
 \begin{code}
@@ -187,10 +199,10 @@ genTheory :: Theory -> String
 genTheory theory = unlines (
   (kTheory ++ " " ++ thName theory)
    : ( genDeps (thDeps theory) ++
-       ["",genVarTable (known theory)] ++
+       ["",genVarTable id2sub (known theory)] ++
        ["",genLaws (laws theory)] ++
        [genConjectures (conjs theory)] ) )
-
+  where id2sub = collectConsSubstitutability theory
 genDeps [] = []
 genDeps deps = 
   [ kNeeds , genIndentedNameList 2 80 deps , kEnd] 
@@ -380,22 +392,33 @@ loadKLVarIsAbsContainer vt lno lvar vw ((lno',tok):rest)
 
 We start every entry with the ``Known'' keyword:
 \begin{code}
-genVarTable :: VarTable -> String
-genVarTable (VarData (vtname,vtable,stable,dtable))
-  = '\n':showTable genKnownVar (M.assocs vtable) ++
+genVarTable :: IdSubMap -> VarTable -> String
+genVarTable idsubs (VarData (vtname,vtable,stable,dtable))
+  = '\n':showTable (genKnownVar idsubs) (M.assocs vtable) ++
     '\n':showTable genKnownLstVar (M.assocs stable) ++
     '\n':showTable genKnownDynamic (M.assocs dtable)
   where showTable showMapping alist  
           =  unlines' $ map ( ((kKnown++" ")++) . showMapping ) alist 
 
-genKnownVar :: (Variable,VarMatchRole) -> String
-genKnownVar (v,KnownConst trm) = genVariable v ++ " = " 
+genKnownVar :: IdSubMap -> (Variable,VarMatchRole) -> String
+genKnownVar _ (v,KnownConst trm) = genVariable v ++ " = " 
   ++ kBegin ++ " " ++ genTerm 0 trm ++ " " ++ kEnd
-genKnownVar (v,KnownVar typ) = genVariable v ++ " : " ++ genType 4 typ ++ " ."
-genKnownVar (gv,GenericVar) = genVariable gv ++ " :: generic"
-genKnownVar (iv,InstanceVar gv) 
+genKnownVar idsubs (v@(Vbl idnt vc _),KnownVar typ)
+ = genVariable v ++ " " 
+   ++ varInfo idsubs idnt vc 
+   ++ " : " ++ genType 4 typ ++ " ."
+genKnownVar _ (gv,GenericVar) = genVariable gv ++ " :: generic"
+genKnownVar _ (iv,InstanceVar gv) 
   = genVariable iv ++ " "++kInstanceOf++" " ++ genVariable gv
-genKnownVar (v,vmr) = "" -- unknown variable
+genKnownVar _ (v,vmr) = "" -- unknown variable
+
+varInfo idsubs idnt vc
+  = case M.lookup idnt idsubs of
+      Nothing    ->  "{"++vcLetter vc++"}"
+      Just sbbl  ->  "{"++vcLetter vc++" "++sbblLetter sbbl++"}"
+
+vcLetter ObsV = "O" ; vcLetter ExprV = "E" ; vcLetter PredV = "P"
+sbblLetter True = "CS" ; sbblLetter False = "NS"
 
 -- static list variables
 genKnownLstVar :: (Variable,LstVarMatchRole) -> String
@@ -684,8 +707,8 @@ genTerm :: Int -> Term -> String
 genTerm _ (Val typ (Boolean b)) = if b then kTrue else kFalse
 genTerm _ (Val typ (Integer n)) = show n
 genTerm _ (Var typ var) = genVariable var
-genTerm i (Cons typ subable (Identifier consi _) terms) 
-  = consi ++ " " ++ (genSBBL subable) ++ " "
+genTerm i (Cons typ _ (Identifier consi _) terms) 
+  = consi ++ " " --  ++ (genSBBL subable) ++ " "
       ++ "("
       ++ intercalate [kSep] (map (genTerm (i+2)) terms)
       ++ ")"
@@ -693,7 +716,7 @@ genTerm i (Bnd typ (Identifier quant _) vs term)
   = kSetBind ++ " " ++ quant
     ++ " " ++ intercalate " " (S.toList (S.map genGenVar vs))
     ++ "\n  " ++ kQBody 
-    ++ "  " ++ genTerm (i+2) term
+    ++  nl i (genTerm (i+2) term)
 genTerm i (Lam typ (Identifier lambda _) vl term)
   = kListBind ++ " " ++ lambda
     ++ " " ++  intercalate " " (map genGenVar vl)
@@ -707,8 +730,8 @@ genTerm i (Sub typ term (Substn vts lvlvs))
     ++ genTerm (i+2) term
 genTerm _ (Iter typ sa na si ni lvs)
   = kIter 
-    ++ " " ++ genSBBL sa ++ " " ++ idName na
-    ++ " " ++ genSBBL si ++ " " ++ idName ni
+    ++ " " ++ idName na
+    ++ " " ++ idName ni
     ++ " ["++intercalate " " (map genListVariable lvs)++"]"
 genTerm _ (VTyp typ var) = "VT-stuff?"
 \end{code}

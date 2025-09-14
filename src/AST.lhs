@@ -27,7 +27,7 @@ module AST ( Value, pattern Boolean, pattern Integer
            , icomma, lvarCons
            , assignmentId
            , assignVar, isAssignVar, theAssignment, isAssignment
-           , subTerms
+           , subTerms, termIdSubability
            , mentionedVars, mentionedVarLists, mentionedVarSets
            , mentionedIds
            , onlyTrivialQuantifiers, anyTrivialSubstitution
@@ -615,6 +615,20 @@ subTerms t@(S _ t' (SN tsub _))
 subTerms t               =  [t]
 -- t = head $ subTerms t !!
 \end{code}
+
+Sometimes we want constructor identifiers with their substitutability.
+\begin{code}
+termIdSubability :: Term -> [(Identifier,Subable)]
+termIdSubability (C _ sbbl nm ts)  
+  =  nub ((nm,sbbl) : (concat $ map termIdSubability ts))
+termIdSubability t@(B _ _ _ t')  =  nub $ termIdSubability t'
+termIdSubability t@(L _ _ _ t')  =  nub $ termIdSubability t'
+termIdSubability t@(X _ t')      =  nub $ termIdSubability t'
+termIdSubability t@(S _ t' (SN tsub _))
+  =  nub $ concat $ map termIdSubability (t':map snd (S.toList tsub))
+termIdSubability t               =  []
+\end{code}
+
 
 \subsection{Trivial Quantifiers}
 

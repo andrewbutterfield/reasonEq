@@ -1,7 +1,12 @@
 Theory EQV
 
 
-Known eqv : FUN B TO FUN B TO B ENDF ENDF .
+Known eqv {O CS} : ( B -> ( B -> B ) ) .
+
+
+
+IDSUBS:
+fromList [(Id "eqv" 0,True)]
 
 
 

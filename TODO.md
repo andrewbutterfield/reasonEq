@@ -19,7 +19,7 @@ A possible syntax is `{ [varclass] [subable] }`
 where `varclass` is `O`, `E`, or `P`, and `subable` is `CS` or `NS`.
 The subable marking is only used if the identifier appears as a `Cons` name.
 
-Note that `mol` is static, and should not be used a `Cons` name.
+Note that `mol` is static, and should not be used as a `Cons` name.
 
 ```
 Known atermf {E} : ( B -> B ) .
@@ -30,7 +30,7 @@ Known A {P NS} : ( ( P LE ) -> ( B -> ( ( P LE ) -> B ) ) ) .
 Known 's {O} : S .
 ```
 
-A mapping from identifier to varclass is built and then used when building new identoifoers
+A mapping from identifier to varclass is built and then used when building new identifiers.
 
 Should we have the unit type `()` with the sole value `()` ?
 

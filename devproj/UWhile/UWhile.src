@@ -1,0 +1,101 @@
+Theory UWhile
+Needs
+  UBase Closure Exists Forall Equal Impl AOI And Or Not EQV
+END
+
+
+Known asg {O} : ( t -> ( t -> B ) ) .
+Known cond {O CS} : ( B -> ( B -> ( B -> B ) ) ) .
+Known sqcmp {O NS} : ( B -> ( B -> B ) ) .
+
+Known O$' :: set 
+
+
+Law cond_def BEGIN
+ axiom
+ ,
+eqv (cond (P,'b,Q),or (and ('b,P),and (not ('b),Q)))
+END
+
+Law sqcmp_def BEGIN
+ axiom
+ ,
+eqv (sqcmp (P,Q),QS exists O$'0
+  @
+  and (SUB [ (O$',O$'0)] P,SUB [ ('O$,O$'0)] Q))
+,
+VREL (DYNCOV 'P BY 'O$ O$') (DYNCOV 'Q BY 'O$ O$')
+  FREE O$'0
+END
+
+Conjecture cond_idem BEGIN
+  eqv (cond (P,'b,P),P)
+END
+
+Conjecture cond_symm BEGIN
+  eqv (cond (P,'b,Q),cond (Q,not ('b),P))
+END
+
+Conjecture cond_assoc BEGIN
+  eqv (cond (cond (P,'b,Q),'c,R),cond (P,and ('b,'c),cond (Q,'c,R)))
+END
+
+Conjecture cond_distr BEGIN
+  eqv (cond (P,'b,cond (Q,'c,R)),cond (cond (P,'b,Q),'c,cond (P,'b,R)))
+END
+
+Conjecture cond_runit BEGIN
+  eqv (cond (P,true,Q),P)
+END
+
+Conjecture cond_lunit BEGIN
+  eqv (cond (Q,false,P),P)
+END
+
+Conjecture cond_absorb BEGIN
+  eqv (cond (P,'b,cond (Q,'b,R)),cond (P,'b,R))
+END
+
+Conjecture cond_merge BEGIN
+  eqv (cond (P,'b,cond (P,'c,Q)),cond (P,or ('b,'c),Q))
+END
+
+Conjecture cond_mdistr BEGIN
+  eqv (cond (star (P,Q),'b,star (R,S)),star (cond (P,'b,R),cond (Q,'b,S)))
+END
+
+Conjecture cond_alt_def BEGIN
+  eqv (cond (P,'b,Q),and (imp ('b,P),imp (not ('b),Q)))
+END
+
+Conjecture cond_alt_def2 BEGIN
+  eqv (cond (P,'b,Q),eqv (or (not ('b),P),or ('b,Q)))
+END
+
+Conjecture sqcmp_assoc BEGIN
+  eqv (sqcmp (P,sqcmp (Q,R)),sqcmp (sqcmp (P,Q),R))
+, VREL (DYNCOV P BY 'O$ O$') (DYNCOV Q BY 'O$ O$') (DYNCOV R BY 'O$ O$')
+END
+
+Conjecture sqcmp_cond_l_distr BEGIN
+  eqv (sqcmp (cond (P,'b,Q),R),cond (sqcmp (P,R),'b,sqcmp (Q,R)))
+, VREL (DYNCOV P BY 'O$ O$') (DYNCOV Q BY 'O$ O$') (DYNCOV R BY 'O$ O$') (DYNCOV 'b BY 'O$)
+END
+
+Conjecture cond_sqcap_distr BEGIN
+  eqv (cond (P,'b,sqcap (Q,R)),sqcap (cond (P,'b,Q),cond (P,'b,R)))
+END
+
+Conjecture sqcmp_sqcap_ldistr BEGIN
+  eqv (sqcmp (sqcap (P,Q),R),sqcap (sqcmp (P,R),sqcmp (Q,R)))
+, VREL (DYNCOV P BY 'O$ O$') (DYNCOV Q BY 'O$ O$') (DYNCOV R BY 'O$ O$')
+END
+
+Conjecture sqcmp_sqcap_rdistr BEGIN
+  eqv (sqcmp (P,sqcap (Q,R)),sqcap (sqcmp (P,Q),sqcmp (P,R)))
+, VREL (DYNCOV P BY 'O$ O$') (DYNCOV Q BY 'O$ O$') (DYNCOV R BY 'O$ O$')
+END
+
+Conjecture sqcap_cond_distr BEGIN
+  eqv (sqcap (P,cond (Q,'b,R)),cond (sqcap (P,Q),'b,sqcap (P,R)))
+END

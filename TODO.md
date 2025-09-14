@@ -2,35 +2,10 @@
 
 ## PLAN
 
-Current Known syntax:
-
-```
-Known atermf : ( B -> B ) .
-Known gen :: generic
-Known inst instanceof gen
-Known mol = BEGIN 42 END
-Known A : ( ( P LE ) -> ( B -> ( ( P LE ) -> B ) ) ) .
-Known 's : S .
-```
-
-We need to add more information about the variables here, 
-such as variable class. 
-A possible syntax is `{ [varclass] [subable] }` 
-where `varclass` is `O`, `E`, or `P`, and `subable` is `CS` or `NS`.
-The subable marking is only used if the identifier appears as a `Cons` name.
-
-Note that `mol` is static, and should not be used as a `Cons` name.
-
-```
-Known atermf {E} : ( B -> B ) .
-Known gen {E} :: generic
-Known inst {E} instanceof gen
-Known mol = BEGIN 42 END
-Known A {P NS} : ( ( P LE ) -> ( B -> ( ( P LE ) -> B ) ) ) .
-Known 's {O} : S .
-```
-
-A mapping from identifier to varclass is built and then used when building new identifiers.
+When `load`ing a file of a theory
+we need to apply `collectConsSubstitutability` 
+to not just that theory, but also all of the theories 
+on which it depends.
 
 Should we have the unit type `()` with the sole value `()` ?
 

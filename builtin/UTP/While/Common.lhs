@@ -11,7 +11,6 @@ module UTP.While.Common (
 , sqcmp, i_seq, mkSeq
 , i_while, while
 , listwiseVarBinPred
-, i_asg, (.:=), (.::=), simassign
 , i_skip, v_skip, skip, g_skip
 , utpWC_Conjs, utpWC_Name, utpWC_Theory
 , utpWC_Aliases
@@ -130,22 +129,6 @@ listwiseVarBinPred tk na ni vvs lvlvs
     doiter [lvlv]     =  mkiter lvlv
     doiter lvlvs      =  Cons tk True na $ map mkiter lvlvs
     mkiter (lv1,lv2)  =  Iter tk True na True ni [lv1,lv2]
-
-
-p1 = arbpred
-i_asg        =  assignmentId
-p_asg        =  jVar p1 $ Vbl i_asg PredV Textual
-
-simassign :: [(Variable,Term)] -> [(ListVar,ListVar)] -> Term
-simassign vts lvlvs  =  Sub p1 p_asg $ xSubstn vts lvlvs
-
-(.:=) :: Variable -> Term -> Term
-v .:= e      =  simassign [(v,e)] []
-
-(.::=) :: ListVar -> ListVar -> Term
-lv .::= le   =  simassign [] [(lv,le)]
-
-asgIntro = mkConsIntro i_asg apred11
 \end{code}
 
 \subsection{Skip}
@@ -155,6 +138,7 @@ skip :: Term
 i_skip  =  jId "II"
 v_skip  =  Vbl i_skip PredV Static
 g_skip  =  StdVar v_skip
+p1 = arbpred
 skip    =  jVar p1 v_skip 
 \end{code}
 
@@ -481,7 +465,6 @@ utpWC_Knowns
  = condIntro $
    seqIntro $
    obsIntro $
-   asgIntro $
    newNamedVarTable utpWC_Name
 \end{code}
 

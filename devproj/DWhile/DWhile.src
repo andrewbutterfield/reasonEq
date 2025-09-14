@@ -1,0 +1,76 @@
+Theory DWhile
+Needs
+  Designs UWhile UBase Closure Exists Forall Equal Impl AOI And Or Not EQV
+END
+
+
+Known asg {O} : ( t -> ( t -> B ) ) .
+
+
+
+
+Law asg_def BEGIN
+ axiom
+ ,
+eqv (SUB [ ('x$,'e$)] asg,design (true,and (ITER and eq [x$' 'e$],ITER and eq [O$' 'O$])))
+END
+
+Law var_list_fusion BEGIN
+ axiom
+ ,
+eqv (and (ITER and eq [x$' 'x$],ITER and eq [O$' 'O$]),ITER and eq [O$' 'O$])
+END
+
+Law II_def BEGIN
+ axiom
+ ,
+eqv (II,design (true,ITER and eq [O$' 'O$]))
+END
+
+Law bot_def BEGIN
+ axiom
+ ,
+eqv (bot,design (false,true))
+END
+
+Law top_def BEGIN
+ axiom
+ ,
+eqv (top,design (true,false))
+END
+
+Conjecture asg_simple BEGIN
+  eqv (SUB [('x,'e) ] asg,design (true,and (eq (x','e),ITER and eq [O$' 'O$])))
+END
+
+Conjecture asg_unchanged BEGIN
+  eqv (SUB [('x,'e) ] asg,SUB [('x,'e) ('y,'y) ] asg)
+END
+
+Conjecture asg_seq_same BEGIN
+  eqv (sqcmp (SUB [('x,'e) ] asg,SUB [('x,'f) ] asg),SUB [('x,SUB [('x,'e) ] 'f) ] asg)
+, VREL (DYNCOV 'e BY 'O$) (DYNCOV 'f BY 'O$) (DYNCOV 'x BY 'O$)
+END
+
+Conjecture asg_seq_cond BEGIN
+  eqv (sqcmp (SUB [('x,'e) ] asg,cond (P,'b,Q)),cond (sqcmp (SUB [('x,'e) ] asg,P),SUB [('x,'e) ] 'b,sqcmp (SUB [('x,'e) ] asg,Q)))
+, VREL (DYNCOV P BY 'O$ O$') (DYNCOV Q BY 'O$ O$') (DYNCOV 'b BY 'O$) (DYNCOV 'e BY 'O$) (DYNCOV 'x BY 'O$)
+END
+
+Conjecture sqcmp_runit BEGIN
+  eqv (sqcmp (R,II),R)
+, VREL (DYNCOV II BY 'O$ O$') (DYNCOV R BY 'O$ O$')
+END
+
+Conjecture sqcmp_lunit BEGIN
+  eqv (sqcmp (II,R),R)
+, VREL (DYNCOV II BY 'O$ O$') (DYNCOV R BY 'O$ O$')
+END
+
+Conjecture bot_true BEGIN
+  eqv (bot,true)
+END
+
+Conjecture top_nok BEGIN
+  eqv (top,not ('ok))
+END

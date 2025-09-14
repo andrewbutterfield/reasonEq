@@ -7,7 +7,8 @@ LICENSE: BSD3, see file LICENSE at reasonEq root
 \begin{code}
 {-# LANGUAGE PatternSynonyms #-}
 module UTP.While.Design (
-  utpWD_Conjs, utpWD_Name, utpWD_Theory
+  i_asg, (.:=), (.::=), simassign
+, utpWD_Conjs, utpWD_Name, utpWD_Theory
 , utpWD_Aliases
 ) where
 
@@ -65,6 +66,24 @@ This requires a design-specific  semantics for both assignment and skip.
 \section{While-Design Signature}
 
 \section{UTP Assignment}
+
+
+\begin{code}
+p1 = arbpred
+i_asg        =  assignmentId
+p_asg        =  jVar p1 $ Vbl i_asg PredV Textual
+
+simassign :: [(Variable,Term)] -> [(ListVar,ListVar)] -> Term
+simassign vts lvlvs  =  Sub p1 p_asg $ xSubstn vts lvlvs
+
+(.:=) :: Variable -> Term -> Term
+v .:= e      =  simassign [(v,e)] []
+
+(.::=) :: ListVar -> ListVar -> Term
+lv .::= le   =  simassign [] [(lv,le)]
+
+asgIntro = mkConsIntro i_asg apred11
+\end{code}
 
 \subsection{Defn. of Assignment}
 
@@ -315,7 +334,9 @@ $$ %\par\vspace{-8pt}
 
 All known variables are declared in imported theories.
 \begin{code}
-utpWD_Known = newNamedVarTable utpWD_Name
+utpWD_Knowns
+ =    asgIntro $
+      newNamedVarTable utpWD_Name
 \end{code}
 
 
@@ -375,7 +396,7 @@ utpWD_Theory
                             , notName
                             , equivName
                             ]
-            , known   =  utpWD_Known
+            , known   =  utpWD_Knowns
             , laws    =  utpWD_Axioms
             , conjs   =  utpWD_Conjs
             }

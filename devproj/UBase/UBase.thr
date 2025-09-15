@@ -1,6 +1,6 @@
 BEGIN THEORY UBase
 DEPS = ["Closure","Exists","Forall","Equal","Impl","AOI","And","Or","Not","EQV"]
-KNOWN = VD ("UBase",fromList [(VR (Id "bot" 0,VP,WS),KV (TG (Id "B" 0))),(VR (Id "refines" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "sqcap" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0))))),(VR (Id "top" 0,VP,WS),KV (TG (Id "B" 0)))],fromList [],fromList [])
+KNOWN = VD ("UBase",fromList [(VR (Id "bot" 0,VP,WS),KV (TG (Id "B" 0)) Nothing),(VR (Id "refines" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) (Just True)),(VR (Id "sqcap" 0,VO,WS),KV (TF (TG (Id "B" 0)) (TF (TG (Id "B" 0)) (TG (Id "B" 0)))) (Just True)),(VR (Id "top" 0,VP,WS),KV (TG (Id "B" 0)) Nothing)],fromList [],fromList [])
 BEGIN LIST LAWS
 (("refines_def",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) False (Id "refines" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],X (Id "universal" 0) (C (TG (Id "B" 0)) True (Id "imp" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))])],([],fromList []))),Axiom)
 (("sqcap_def",ASN (C (TG (Id "B" 0)) True (Id "eqv" 0) [C (TG (Id "B" 0)) True (Id "sqcap" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))],C (TG (Id "B" 0)) True (Id "or" 0) [V (TG (Id "B" 0)) (VR (Id "P" 0,VP,WS)),V (TG (Id "B" 0)) (VR (Id "Q" 0,VP,WS))]],([],fromList []))),Axiom)
